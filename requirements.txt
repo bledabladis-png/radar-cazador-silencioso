@@ -1,0 +1,6 @@
+pandas 
+numpy 
+yfinance 
+tiingo 
+python-telegram-bot 
+requests 
