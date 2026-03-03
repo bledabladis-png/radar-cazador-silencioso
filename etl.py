@@ -17,11 +17,11 @@ CLEAN_DATA_FILE = os.path.join(DATA_PATH, 'data_clean.pkl')
 
 # Lista de tickers (ampliable)
 TICKERS = [
-    'SPY', 'QQQ', 'IWM', 'DIA',  # índices
-    'XLF', 'XLK', 'XLV', 'XLI', 'XLB', 'XLE', 'XLU', 'XLP', 'XLY', 'XLRE',  # sectores
-    'TLT', 'IEF', 'SHY', 'LQD', 'HYG', 'JNK',  # bonos
-    'EFA', 'EEM', 'VWO', 'EWJ', 'EWG', 'EWU', 'EWQ',  # internacional
-    'ARKK', 'ICLN', 'TAN', 'PBW', 'ROBO', 'BOTZ',  # temáticos
+    'SPY', 'QQQ', 'IWM',           # índices principales
+    'XLF', 'XLK', 'XLV',           # sectores clave (financiero, tecnología, salud)
+    'TLT', 'LQD', 'HYG',            # bonos representativos
+    'EFA', 'EEM',                   # internacional
+    'ARKK',                          # temático popular
 ]
 
 # Función para obtener API key de Tiingo de forma segura
@@ -58,52 +58,79 @@ def download_ticker(ticker, api_key, start_date='2000-01-01', end_date=None):
     url = f"https://api.tiingo.com/tiingo/daily/{ticker}/prices"
     headers = {'Content-Type': 'application/json', 'Authorization': f'Token {api_key}'}
     params = {'startDate': start_date, 'endDate': end_date, 'format': 'json'}
+    
     for intento in range(3):
         try:
             response = requests.get(url, headers=headers, params=params, timeout=30)
+            
             if response.status_code == 429:
                 print(f"   ⏳ Límite de tasa alcanzado. Esperando 60 segundos...")
                 time.sleep(60)
                 continue
+                
             if response.status_code != 200:
                 raise Exception(f"HTTP {response.status_code}: {response.text[:100]}")
+            
             data = response.json()
             if not data:
                 raise Exception("No data")
+            
+            # Crear DataFrame con los datos
             df = pd.DataFrame(data)
+            
+            # Convertir la columna 'date' a datetime y establecerla como índice
             df['date'] = pd.to_datetime(df['date'])
             df.set_index('date', inplace=True)
-            # Renombrar columnas al formato estándar
-            df.rename(columns={
-                'adjOpen': 'open',
-                'adjHigh': 'high',
-                'adjLow': 'low',
-                'adjClose': 'close',
-                'adjVolume': 'volume'
-            }, inplace=True)
-            df = df[['open', 'high', 'low', 'close', 'volume']]
+            
+            # Las columnas que necesitamos ya vienen en los datos
+            columnas_necesarias = ['open', 'high', 'low', 'close', 'volume']
+            
+            # Verificar que todas las columnas existen
+            for col in columnas_necesarias:
+                if col not in df.columns:
+                    raise Exception(f"Columna {col} no encontrada en los datos")
+            
+            # Quedarnos solo con esas columnas
+            df = df[columnas_necesarias]
+            
             # Añadir columna de retorno diario
             df['return'] = df['close'].pct_change()
+            
             return df
+            
         except Exception as e:
             print(f"   Error con {ticker} (intento {intento+1}): {e}")
             time.sleep(5)
+    
     return None
 
 # Validación básica de datos
 def validate_data(df):
-    """Comprueba que los datos son mínimamente consistentes."""
+    """Comprueba que los datos son mínimamente consistentes (solo columnas esenciales)."""
     if df is None or df.empty:
         return False
-    if df.isnull().any().any():
-        print("   ⚠️ Datos con nulos")
-        return False
-    if (df[['open','high','low','close']] <= 0).any().any():
+    
+    # Columnas que deben existir y no tener nulos
+    columnas_esenciales = ['open', 'high', 'low', 'close', 'volume']
+    
+    for col in columnas_esenciales:
+        if col not in df.columns:
+            print(f"   ⚠️ Falta columna {col}")
+            return False
+        if df[col].isnull().any():
+            print(f"   ⚠️ Nulos en columna {col}")
+            return False
+    
+    # Verificar que los precios sean positivos
+    if (df[columnas_esenciales[:4]] <= 0).any().any():
         print("   ⚠️ Precios no positivos")
         return False
+    
+    # Verificar que el volumen sea no negativo
     if (df['volume'] < 0).any():
         print("   ⚠️ Volumen negativo")
         return False
+    
     return True
 
 # Función principal de ETL
