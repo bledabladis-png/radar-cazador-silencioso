@@ -1,0 +1,149 @@
+# config.yaml - Radar Macro Rotación Global v2.1
+# Versión: v2.3.1 (ejemplo)
+
+# Parámetros de indicadores
+indicators:
+  trend:
+    ma_period: 200
+    trend_scale: 5.0
+    slope_scale: 50.0
+  credit:
+    ratio_etfs: ["JNK", "LQD"]
+    z_score_clip: 3.0
+  curve:
+    ticker: "DGS10"  # FRED, 10-Year Treasury
+    ticker_2y: "DGS2"
+    lookback_days: 2520  # 10 años aprox
+    percentil_bajo: 10
+    penalizacion_curva: -0.5
+    delta_weight: 0.1  # peso para el delta de curva
+  drawdown:
+    lookback_days: 126
+    percentil_drawdown: 70
+  leadership:
+    max_conf: 0.9
+    slope_scale: 100.0
+  geographic:
+    em_etf: "EEM"
+    dm_etf: "EFA"
+    world_etf: "ACWI"
+    corr_threshold: 0.8
+    corr_window: 90
+  stress:
+    vix_ticker: "VIX"
+    atr_period: 20
+    vix_percentil_alto: 90
+    compression:
+      ema_period: 10
+      percentil_bajo: 30
+      price_move_threshold: 0.05
+    drawdown_credit:
+      umbral: -0.05
+      ventana: 3
+      retorno_periodo: 10
+
+# Pesos base de los módulos (suman 100%)
+weights:
+  base:
+    regime: 0.40
+    leadership: 0.30
+    geo: 0.15
+    stress: 0.15
+  dynamic:
+    vix_ajuste: true
+    vix_umbral: 25
+    vix_factor: 0.01  # exponencial
+
+# Señal de acumulación
+accumulation_signal:
+  weights: [0.2, 0.25, 0.15, 0.2, 0.2]  # curva, small, compresión, drawdown, dispersión
+  small_threshold: 0.2
+
+# Dispersión
+dispersion:
+  weights: [0.4, 0.3, 0.15]  # regime, leadership, geo
+  riesgo_alto: 0.8
+  acumulacion_alta: 0.8
+  regimen_fuerte_disp: 0.3
+  regimen_fuerte_score: 0.6
+
+# Exposición base
+exposicion:
+  base_tramos:
+    - min: -1.0
+      exp: 0.0
+      id: "muy_bajo"
+    - min: -0.5
+      exp_min: 0.0
+      exp_max: 0.3
+      id: "bajo"
+    - min: 0.0
+      exp_min: 0.3
+      exp_max: 0.7
+      id: "medio"
+    - min: 0.5
+      exp_min: 0.7
+      exp_max: 1.0
+      id: "alto"
+  cash_forzado:
+    VIX_umbral: 30
+    escalones:
+      - hasta: 1.2
+        factor: 0.8
+      - hasta: 1.4
+        factor: 0.5
+      - hasta: 1.5
+        factor: 0.2
+      - hasta: null
+        factor: 0.0
+  dispersion_reduccion:
+    umbral: 0.8
+    max_penalizacion: 0.5
+  spread_alert:
+    umbral: 0.005
+    slope: 0.01
+    min_factor: 0.5
+  turnover:
+    cost_factor: 0.001
+    commission: 5.0
+
+# Backtesting
+backtest:
+  window_base: 1260  # 5 años en días
+  vol_window: 20
+  vol_referencia: 0.02
+  t_stat_penalizacion: 5.0
+  r2_min: 0.05
+  auc_min: 0.55
+  slippage:
+    SPY: 0.001
+    EEM: 0.003
+    JNK: 0.002
+    default: 0.002
+  commission_fija: 5.0
+
+# Logging
+logging:
+  schema_file: "config/schemas/log_schema.json"
+  retention_days: 1825  # 5 años
+
+# Data sources
+data:
+  tiingo_key_file: "tiingo_key.txt"
+  fallback_sources: ["yahoo", "fred"]
+  tickers:
+    macro:
+      - "JNK"
+      - "LQD"
+      - "IWM"
+      - "SPY"
+      - "XLY"
+      - "XLP"
+      - "EEM"
+      - "EFA"
+      - "ACWI"
+      - "^VIX"
+    # Puedes añadir más si quieres
+  fred_series:
+    DGS10: "10-Year Treasury Constant Maturity Rate"
+    DGS2: "2-Year Treasury Constant Maturity Rate"
