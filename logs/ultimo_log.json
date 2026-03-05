@@ -1,16 +1,19 @@
 {
-  "timestamp": "2026-03-05T00:13:18.028510Z",
+  "timestamp": "2026-03-05T17:28:12.636216Z",
   "status": "success",
-  "score_global": 0.0,
-  "freeze_activated": true,
+  "score_global": -0.15721572828942548,
+  "score_smoothed": -0.21352567744020856,
+  "dispersion": 0.34503862580377026,
+  "regime_state": "RISK_OFF_MODERATE",
+  "exposicion": 0.18486840321698653,
+  "freeze_activated": false,
+  "vix": 22.81999969482422,
   "modules": {
-    "data_layer": "ok",
-    "regime_engine": "ok",
-    "leadership_engine": "ok",
-    "geographic_engine": "ok",
-    "stress_engine": "ok",
-    "scoring": "ok",
-    "risk": "ok"
+    "regime": "ok",
+    "leadership": "ok",
+    "geo": "ok",
+    "bonds": "ok",
+    "stress": "ok"
   },
   "errors": []
 }

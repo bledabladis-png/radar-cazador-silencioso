@@ -1,5 +1,17 @@
 # config.yaml - Radar Macro Rotación Global v2.1
 # Versión: v2.3.1 (ejemplo)
+version: "v2.3.1"
+
+# Umbrales críticos unificados
+thresholds:
+  z_credito: 3
+  curve_penalty: -0.5
+  curve_delta_window: 20
+  max_leadership_conf: 0.8
+  geo_corr_threshold: 0.7
+  drawdown_credit: -0.05
+  stress_vix_percentile: 90
+  vol_comp_percentile: 30
 
 # Parámetros de indicadores
 indicators:
@@ -45,10 +57,11 @@ indicators:
 # Pesos base de los módulos (suman 100%)
 weights:
   base:
-    regime: 0.40
-    leadership: 0.30
-    geo: 0.15
-    stress: 0.15
+    regime: 0.35
+    leadership: 0.25
+    geo: 0.20
+    bonds: 0.10
+    stress: 0.10
   dynamic:
     vix_ajuste: true
     vix_umbral: 25
@@ -71,17 +84,22 @@ dispersion:
 exposicion:
   base_tramos:
     - min: -1.0
-      exp: 0.0
+      max: -0.5
+      exp_min: 0.0
+      exp_max: 0.0
       id: "muy_bajo"
     - min: -0.5
+      max: 0.0
       exp_min: 0.0
       exp_max: 0.3
       id: "bajo"
     - min: 0.0
+      max: 0.5
       exp_min: 0.3
       exp_max: 0.7
       id: "medio"
     - min: 0.5
+      max: 1.0
       exp_min: 0.7
       exp_max: 1.0
       id: "alto"
@@ -106,6 +124,35 @@ exposicion:
   turnover:
     cost_factor: 0.001
     commission: 5.0
+
+# Persistencia de señales por módulo
+persistence:
+  regime_N: 2
+  leadership_N: 2
+  geo_N: 3
+  bonds_N: 2
+  stress_N: 2
+
+# Filtro de liquidez
+liquidity_filter:
+  spread_threshold: 0.005
+  min_volume_ratio: 0.5
+  apply_to: ['geo', 'bonds']
+
+# Ponderación dinámica por volatilidad
+dynamic_weighting:
+  enabled: true
+  vix_umbral: 25
+  vix_factor: 0.01
+  module_vol_window: 20
+  min_weight: 0.5
+  max_weight: 1.2
+
+# Normalización de módulos (opcional)
+module_normalization:
+  enabled: true
+  window: 252
+  method: 'zscore_tanh'
 
 # Backtesting
 backtest:
@@ -143,7 +190,27 @@ data:
       - "EFA"
       - "ACWI"
       - "^VIX"
+      - "AAXJ"
+      - "EWT"
+      - "IBGL"
+      - "QQQ"
+      - "TLT"   # <--- AÑADIDO
     # Puedes añadir más si quieres
   fred_series:
     DGS10: "10-Year Treasury Constant Maturity Rate"
     DGS2: "2-Year Treasury Constant Maturity Rate"
+
+# Control de volatilidad por subcartera
+vol_control:
+  enabled: true
+  lookback_days: 60
+  subcarteras:
+    - nombre: "US_Equity"
+      tickers: ["SPY", "IWM", "XLY", "XLP"]
+      target_vol: 0.15
+    - nombre: "Credit"
+      tickers: ["JNK", "LQD"]
+      target_vol: 0.08
+    - nombre: "Global_Equity"
+      tickers: ["EEM", "EFA", "ACWI"]
+      target_vol: 0.18

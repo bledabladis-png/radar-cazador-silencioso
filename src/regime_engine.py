@@ -1,16 +1,21 @@
 """
-regime_engine.py - Motor de régimen estructural
-Calcula:
-- Tendencia primaria (SPY vs MA200, pendiente)
-- Riesgo crédito (ratio JNK/LQD, z-score)
-- Curva de tipos (spread 10y-2y desde columna 'spread_10y2y')
-- Drawdown previo SPY (bandera)
+regime_engine.py - Motor de régimen macroeconómico
+Calcula el score de régimen usando:
+- Crédito: JNK / LQD
+- Tamaño: IWM / SPY
+- Consumo: XLY / XLP
+Con momentum multi-horizonte (3,6,12m) y normalización.
 """
 
 import pandas as pd
 import numpy as np
 import yaml
 import logging
+import sys
+import os
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from src.utils.normalization import normalize_signal, persistence_factor
 
 logger = logging.getLogger(__name__)
 
@@ -19,97 +24,75 @@ class RegimeEngine:
         with open(config_path, 'r') as f:
             self.config = yaml.safe_load(f)
 
-        self.trend_scale = self.config['indicators']['trend']['trend_scale']
-        self.slope_scale = self.config['indicators']['trend']['slope_scale']
-        self.ma_period = self.config['indicators']['trend']['ma_period']
+        # Parámetros de persistencia
+        self.persistence_N = self.config.get('persistence', {}).get('regime_N', 2)
+        self.persistence_enabled = True
 
-        self.z_score_clip = self.config['indicators']['credit']['z_score_clip']
-
-        self.curve_penalty = self.config['indicators']['curve']['penalizacion_curva']
-        self.delta_weight = self.config['indicators']['curve']['delta_weight']
-        self.curve_percentil = self.config['indicators']['curve']['percentil_bajo']
-        self.curve_lookback = self.config['indicators']['curve']['lookback_days']
-
-        self.drawdown_lookback = self.config['indicators']['drawdown']['lookback_days']
-        self.drawdown_percentil = self.config['indicators']['drawdown']['percentil_drawdown']
-
-    def calcular_tendencia(self, df):
-        spy = df['SPY']
-        ma200 = spy.rolling(self.ma_period).mean()
-        distance = (spy - ma200) / ma200
-        score_trend_base = np.tanh(distance * self.trend_scale)
-
-        slope_ma200 = ma200 - ma200.shift(20)
-        slope_factor = 0.5 + 0.5 * np.tanh(slope_ma200 * self.slope_scale)
-
-        score_trend = score_trend_base * slope_factor
-        return score_trend
-
-    def calcular_credito(self, df):
-        jnk = df['JNK']
-        lqd = df['LQD']
-        ratio = jnk / lqd
-
-        mean_200 = ratio.rolling(200).mean()
-        std_200 = ratio.rolling(200).std()
-        z = (ratio - mean_200) / std_200
-        z = np.clip(z, -self.z_score_clip, self.z_score_clip)
-        score_credito = np.tanh(z)
-        return score_credito
-
-    def calcular_curva(self, df):
+    def _momentum_ratio(self, df, num, denom):
         """
-        Usa la columna 'spread_10y2y' (calculada desde los CSV del Tesoro).
+        Calcula momentum multi-horizonte para un ratio num/denom.
+        Retorna una Serie con el score normalizado entre -1 y 1.
         """
-        if 'spread_10y2y' not in df.columns:
-            logger.warning("Columna 'spread_10y2y' no encontrada. Curva = 0")
-            return pd.Series(0, index=df.index)
+        ratio = df[num] / df[denom]
+        ret_3m = ratio.pct_change(63)
+        ret_6m = ratio.pct_change(126)
+        ret_12m = ratio.pct_change(252)
 
-        spread = df['spread_10y2y']
+        # Normalizar cada horizonte
+        norm_3m = normalize_signal(ret_3m)
+        norm_6m = normalize_signal(ret_6m)
+        norm_12m = normalize_signal(ret_12m)
 
-        # Penalización por percentil bajo
-        umbral_bajo = spread.rolling(self.curve_lookback).quantile(self.curve_percentil / 100.0)
-        penalizacion = (spread < umbral_bajo).astype(float) * self.curve_penalty
-
-        # Delta suavizado
-        delta_20d = spread - spread.shift(20)
-        delta_suavizado = delta_20d.rolling(5).mean()  # EMA5 aproximada
-        aporte_delta = delta_suavizado * self.delta_weight
-
-        score_curva = penalizacion + aporte_delta
-        return score_curva
-
-    def calcular_drawdown_previo(self, df):
-        spy = df['SPY']
-        rolling_max = spy.rolling(self.drawdown_lookback).max()
-        drawdown = (spy - rolling_max) / rolling_max
-        max_drawdown = drawdown.rolling(self.drawdown_lookback).min()
-
-        threshold = np.percentile(max_drawdown.dropna(), self.drawdown_percentil)
-        drawdown_flag = (max_drawdown < threshold).astype(float)
-        return drawdown_flag
+        # Combinación ponderada (50% 3m, 30% 6m, 20% 12m)
+        score = 0.5 * norm_3m + 0.3 * norm_6m + 0.2 * norm_12m
+        return score
 
     def calcular_todo(self, df):
+        """
+        df: DataFrame con columnas de precios (debe incluir JNK, LQD, IWM, SPY, XLY, XLP)
+        Retorna DataFrame con columna 'score_regime'.
+        """
         resultados = pd.DataFrame(index=df.index)
-        resultados['score_tendencia'] = self.calcular_tendencia(df)
-        resultados['score_credito'] = self.calcular_credito(df)
-        resultados['score_curva'] = self.calcular_curva(df)
-        resultados['flag_drawdown'] = self.calcular_drawdown_previo(df)
 
-        # Score de régimen (media simple de tendencia y crédito, la curva ya está incluida)
-        # Según la documentación, el peso de curva es parte del régimen, pero por ahora lo promediamos todo
-        resultados['score_regime'] = (resultados['score_tendencia'] + resultados['score_credito'] + resultados['score_curva']) / 3
+        # Señales individuales
+        resultados['score_credit'] = self._momentum_ratio(df, 'JNK', 'LQD')
+        resultados['score_size']   = self._momentum_ratio(df, 'IWM', 'SPY')
+        resultados['score_consumer'] = self._momentum_ratio(df, 'XLY', 'XLP')
 
-        return resultados
+        # Aplicar filtro de persistencia (opcional)
+        if self.persistence_enabled:
+            resultados['score_credit'] *= persistence_factor(resultados['score_credit'], self.persistence_N)
+            resultados['score_size']   *= persistence_factor(resultados['score_size'], self.persistence_N)
+            resultados['score_consumer'] *= persistence_factor(resultados['score_consumer'], self.persistence_N)
+
+        # Combinación ponderada (40% crédito, 30% tamaño, 30% consumo)
+        raw_regime = (0.4 * resultados['score_credit'] +
+                      0.3 * resultados['score_size'] +
+                      0.3 * resultados['score_consumer'])
+
+        # Normalización final (opcional, pero recomendada)
+        resultados['score_regime'] = np.tanh(raw_regime)
+        # Rellenar NaN con el último valor válido (forward fill) y luego con 0 si es necesario
+        resultados['score_regime'] = resultados['score_regime'].ffill().fillna(0)
+
+        return resultados[['score_regime']]
+
 
 if __name__ == "__main__":
+    # Prueba del motor
     from data_layer import DataLayer
 
+    # Configurar logging para ver mensajes
+    logging.basicConfig(level=logging.INFO)
+
+    # Cargar datos más recientes
     dl = DataLayer()
     df = dl.load_latest()
+    print("Datos cargados. Últimas fechas:", df.index[-5:])
 
+    # Crear motor y calcular
     engine = RegimeEngine()
-    resultados = engine.calcular_todo(df)
+    resultado = engine.calcular_todo(df)
 
-    print("Últimos 5 días de scores de régimen:")
-    print(resultados.tail())
+    print("\nScore de régimen (últimos 5 días):")
+    print(resultado.tail())

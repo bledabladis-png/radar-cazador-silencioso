@@ -1,14 +1,21 @@
 """
-leadership_engine.py - Motor de liderazgo temprano
-Calcula:
-- Small vs Large (IWM/SPY) con factor de confianza
-- Cíclico vs Defensivo (XLY/XLP) con factor de confianza
+leadership_engine.py - Motor de liderazgo de mercado
+Calcula el score de liderazgo usando:
+- Small vs Large: IWM / SPY
+- Growth vs Value: QQQ / SPY
+- Cíclico vs Defensivo: XLY / XLP
+Con momentum multi-horizonte (3,6,12m) y normalización.
 """
 
 import pandas as pd
 import numpy as np
 import yaml
 import logging
+import sys
+import os
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from src.utils.normalization import normalize_signal, persistence_factor
 
 logger = logging.getLogger(__name__)
 
@@ -17,66 +24,69 @@ class LeadershipEngine:
         with open(config_path, 'r') as f:
             self.config = yaml.safe_load(f)
 
-        # Parámetros de liderazgo
-        self.max_conf = self.config['indicators']['leadership']['max_conf']
-        self.slope_scale = self.config['indicators']['leadership']['slope_scale']
+        # Parámetros de persistencia
+        self.persistence_N = self.config.get('persistence', {}).get('leadership_N', 2)
+        self.persistence_enabled = True
 
-    def _calcular_ratio_score(self, df, num_ticker, denom_ticker):
+    def _momentum_ratio(self, df, num, denom):
         """
-        Calcula el score para un ratio (ej. IWM/SPY) usando la metodología:
-        - EMA5 y EMA200 del ratio
-        - spread = EMA5 - EMA200
-        - z-score del spread con std rolling 200
-        - clip a ±3 y tanh
-        - factor de confianza basado en pendiente de EMA20
+        Calcula momentum multi-horizonte para un ratio num/denom.
+        Retorna una Serie con el score normalizado entre -1 y 1.
         """
-        ratio = df[num_ticker] / df[denom_ticker]
+        ratio = df[num] / df[denom]
+        ret_3m = ratio.pct_change(63)
+        ret_6m = ratio.pct_change(126)
+        ret_12m = ratio.pct_change(252)
 
-        ema5 = ratio.ewm(span=5, adjust=False).mean()
-        ema200 = ratio.ewm(span=200, adjust=False).mean()
-        spread = ema5 - ema200
+        norm_3m = normalize_signal(ret_3m)
+        norm_6m = normalize_signal(ret_6m)
+        norm_12m = normalize_signal(ret_12m)
 
-        std_200 = ratio.rolling(200).std()
-        z = spread / std_200
-        z = np.clip(z, -3, 3)
-        score_base = np.tanh(z)
-
-        # Factor de confianza basado en pendiente de EMA20
-        ema20 = ratio.ewm(span=20, adjust=False).mean()
-        slope = ema20 - ema20.shift(10)
-        conf = 0.5 + 0.5 * np.tanh(slope * self.slope_scale)
-        conf = np.clip(conf, 0.5, self.max_conf)
-
-        score = score_base * conf
+        score = 0.5 * norm_3m + 0.3 * norm_6m + 0.2 * norm_12m
         return score
 
-    def calcular_small_vs_large(self, df):
-        """Score small vs large (IWM/SPY)"""
-        return self._calcular_ratio_score(df, 'IWM', 'SPY')
-
-    def calcular_ciclico_vs_defensivo(self, df):
-        """Score cíclico vs defensivo (XLY/XLP)"""
-        return self._calcular_ratio_score(df, 'XLY', 'XLP')
-
     def calcular_todo(self, df):
+        """
+        df: DataFrame con columnas de precios (IWM, SPY, QQQ, XLY, XLP)
+        Retorna DataFrame con columna 'score_leadership'.
+        """
         resultados = pd.DataFrame(index=df.index)
-        resultados['score_small'] = self.calcular_small_vs_large(df)
-        resultados['score_cyclical'] = self.calcular_ciclico_vs_defensivo(df)
 
-        # Score de liderazgo (media simple, se puede ponderar después)
-        resultados['score_leadership'] = (resultados['score_small'] + resultados['score_cyclical']) / 2
+        # Señales individuales
+        resultados['score_size']   = self._momentum_ratio(df, 'IWM', 'SPY')
+        resultados['score_growth'] = self._momentum_ratio(df, 'QQQ', 'SPY')
+        resultados['score_cyclicals'] = self._momentum_ratio(df, 'XLY', 'XLP')
 
-        return resultados
+        # Aplicar filtro de persistencia
+        if self.persistence_enabled:
+            resultados['score_size']   *= persistence_factor(resultados['score_size'], self.persistence_N)
+            resultados['score_growth'] *= persistence_factor(resultados['score_growth'], self.persistence_N)
+            resultados['score_cyclicals'] *= persistence_factor(resultados['score_cyclicals'], self.persistence_N)
+
+        # Combinación ponderada (40% size, 30% growth, 30% cyclicals)
+        raw_leadership = (0.4 * resultados['score_size'] +
+                          0.3 * resultados['score_growth'] +
+                          0.3 * resultados['score_cyclicals'])
+
+        # Normalización final
+        resultados['score_leadership'] = np.tanh(raw_leadership)
+        # Rellenar NaN con el último valor válido y luego con 0
+        resultados['score_leadership'] = resultados['score_leadership'].ffill().fillna(0)
+
+        return resultados[['score_leadership']]
 
 
 if __name__ == "__main__":
     from data_layer import DataLayer
 
+    logging.basicConfig(level=logging.INFO)
+
     dl = DataLayer()
     df = dl.load_latest()
+    print("Datos cargados. Últimas fechas:", df.index[-5:])
 
     engine = LeadershipEngine()
-    resultados = engine.calcular_todo(df)
+    resultado = engine.calcular_todo(df)
 
-    print("Últimos 5 días de scores de liderazgo:")
-    print(resultados.tail())
+    print("\nScore de liderazgo (últimos 5 días):")
+    print(resultado.tail())

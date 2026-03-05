@@ -1,27 +1,24 @@
-# Archivos de clave
-tiingo_key.txt
-*.key
-*.pem
-*.secret
-
-# Archivos de datos (pueden ser grandes)
-*.pkl
-*.csv
+# Archivos de datos y caché
+data/
 *.parquet
+*.csv
+*.txt
+!requirements.txt
+!tiingo_key.txt   # si quieres subir la clave (mejor no, usa secrets)
+
+# Logs
+logs/
+*.log
 
 # Entornos virtuales
 venv/
 env/
-.env
-
-# Archivos de Python compilados
 __pycache__/
 *.pyc
 
-# Archivos de sistema
-.DS_Store
-Thumbs.db
+# Archivos temporales
+*.tmp
+*.temp
 
-# Notebooks (los usaremos solo localmente)
-*.ipynb
-.ipynb_checkpoints/
+# Configuraciones locales
+*.local
