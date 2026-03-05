@@ -2,9 +2,8 @@ name: Radar Diario
 
 on:
   schedule:
-    # Se ejecutará todos los días a las 20:00 UTC (ajusta la hora si quieres)
-    - cron: '0 20 * * *'
-  workflow_dispatch:  # Permite ejecutarlo manualmente desde GitHub
+    - cron: '0 20 * * *'   # Ejecutar a las 20:00 UTC
+  workflow_dispatch:        # Permite ejecución manual
 
 jobs:
   run-radar:
@@ -30,10 +29,24 @@ jobs:
     - name: Ejecutar el radar
       run: python run_radar.py
 
-    - name: Subir resultados (exposición y dashboard)
+    # Subir archivos importantes como artefactos (backup en la nube de GitHub)
+    - name: Subir artefactos (backup)
       uses: actions/upload-artifact@v4
       with:
-        name: resultados-radar
+        name: radar-backup-${{ github.run_id }}
         path: |
           ultima_exposicion.txt
-          dashboard.png         
+          logs/ultimo_log.json
+          historial_radar.csv
+          dashboard.png
+          freeze_watchdog.txt
+          alertas.txt
+
+    # Hacer commit de los archivos actualizados al repositorio (para tenerlos siempre visibles)
+    - name: Hacer commit de los archivos actualizados
+      run: |
+        git config --global user.name "github-actions"
+        git config --global user.email "actions@github.com"
+        git add ultima_exposicion.txt logs/ultimo_log.json historial_radar.csv
+        git diff --quiet && git diff --staged --quiet || git commit -m "Actualización automática del radar [skip ci]"
+        git push     
