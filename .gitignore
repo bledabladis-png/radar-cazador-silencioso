@@ -2,9 +2,12 @@
 data/
 *.parquet
 *.csv
-*.txt
-!requirements.txt
-!tiingo_key.txt   # si quieres subir la clave (mejor no, usa secrets)
+*.png
+*.json
+logs/
+__pycache__/
+*.pyc
+tiingo_key.txt
 
 # Logs
 logs/
