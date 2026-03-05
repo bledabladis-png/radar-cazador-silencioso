@@ -1,0 +1,16 @@
+{
+  "timestamp": "2026-03-05T00:01:02.962821Z",
+  "status": "success",
+  "score_global": 0.0,
+  "freeze_activated": false,
+  "modules": {
+    "data_layer": "ok",
+    "regime_engine": "ok",
+    "leadership_engine": "ok",
+    "geographic_engine": "ok",
+    "stress_engine": "ok",
+    "scoring": "ok",
+    "risk": "ok"
+  },
+  "errors": []
+}

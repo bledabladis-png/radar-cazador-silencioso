@@ -13,8 +13,10 @@ import numpy as np
 from datetime import datetime
 import os
 import json
+import yaml  # <--- MOVIDO AQUÍ
 
 # Importar módulos del sistema
+from src.drift_handler import handle_drift
 from src.data_layer import DataLayer
 from src.regime_engine import RegimeEngine
 from src.leadership_engine import LeadershipEngine
@@ -109,7 +111,8 @@ def main():
             print("    No se pudo leer exposición anterior, usando 0.5")
     
     capital = 100000  # capital fijo de ejemplo
-    
+
+    # --- DEFINICIÓN DEL CONTEXTO INICIAL ---
     contexto = {
         'vix': vix,
         'dispersion': dispersion,
@@ -117,11 +120,44 @@ def main():
         'exp_prev': exp_prev,
         'capital': capital
     }
-    
+
+    # --- INICIO NUEVO: detección de drift y freeze ---
+    # Cargar historial (si existe)
+    historial_path = 'historial_radar.csv'
+    if os.path.exists(historial_path):
+        df_hist = pd.read_csv(historial_path)
+    else:
+        df_hist = pd.DataFrame(columns=['score_global'])
+
+    # Leer configuración completa (necesaria para umbrales de drift)
+    with open('config/config.yaml', 'r') as f:
+        config_full = yaml.safe_load(f)
+
+    # Llamar a handle_drift para actualizar el contexto con operations_freeze
+    contexto = handle_drift(df_hist, score_global, config_full, contexto)
+
+    # Comprobar si hay freeze por watchdog
+    if os.path.exists('freeze_watchdog.txt'):
+        contexto['operations_freeze'] = True
+        print("    Freeze activado por watchdog.")
+    # --- FIN NUEVO ---
+
     # Aplicar reglas de riesgo
     rm = RiskManager()
     exp_final, penalizaciones = rm.aplicar_reglas_riesgo(score_global, contexto)
-    
+
+    # --- INICIO NUEVO: manejar el caso especial de freeze ---
+    if 'freeze' in penalizaciones and penalizaciones['freeze']:
+        print(f"    Freeze activado. Exposición forzada a 0.")
+        # Asignamos exp_final a 0 (ya debería serlo, pero por si acaso)
+        exp_final = 0.0
+        # Para el resto del código, creamos valores por defecto para las claves que se usan en los prints
+        penalizaciones['vix_factor'] = 0.0
+        penalizaciones['dispersion_factor'] = 0.0
+        penalizaciones['turnover'] = 0.0
+        penalizaciones['comision'] = 0.0
+    # --- FIN NUEVO ---
+
     print(f"    Exposición final: {exp_final:.4f}")
     print(f"    Factores aplicados:")
     print(f"      - VIX: {penalizaciones['vix_factor']:.3f}")
@@ -144,6 +180,38 @@ def main():
     print(f"Señal acumulación: {accum_signal:.2f}")
     print(f"Exposición recomendada: {exp_final:.2%}")
     print("=" * 60)
+
+    # --- INICIO NUEVO: guardar log estructurado ---
+    # Crear carpeta logs si no existe
+    os.makedirs('logs', exist_ok=True)
+
+    # Preparar el log
+    log_entry = {
+        "timestamp": datetime.utcnow().isoformat() + "Z",
+        "status": "success",
+        "score_global": score_global,
+        "freeze_activated": contexto.get('operations_freeze', False),
+        "modules": {
+            "data_layer": "ok",
+            "regime_engine": "ok",
+            "leadership_engine": "ok",
+            "geographic_engine": "ok",
+            "stress_engine": "ok",
+            "scoring": "ok",
+            "risk": "ok"
+        },
+        "errors": []
+    }
+
+    # Guardar como último log (sobrescribe)
+    with open('logs/ultimo_log.json', 'w') as f:
+        json.dump(log_entry, f, indent=2)
+
+    # También guardar con fecha (opcional, pero útil)
+    log_filename = f"logs/radar_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}.json"
+    with open(log_filename, 'w') as f:
+        json.dump(log_entry, f, indent=2)
+    # --- FIN NUEVO ---
 
 if __name__ == "__main__":
     main()

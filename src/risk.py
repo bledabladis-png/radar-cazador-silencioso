@@ -150,16 +150,12 @@ class RiskManager:
         return pesos_escalados, escalas
 
     def aplicar_reglas_riesgo(self, score, contexto):
-        """
-        Función principal que aplica todas las reglas en orden y devuelve la exposición final
-        junto con un diccionario de factores de penalización.
-        contexto: dict con al menos:
-            - vix: valor actual del VIX
-            - dispersion: valor de dispersión (de scoring)
-            - spreads: dict con spreads actuales de los ETFs
-            - exp_prev: exposición anterior
-            - capital: capital actual
-        """
+        # --- INICIO NUEVO: comprobar freeze ---
+        if contexto.get('operations_freeze', False):
+            logger.warning("Freeze activado por drift. Exposición forzada a 0.")
+            return 0.0, {'freeze': True}
+        # --- FIN NUEVO ---
+
         penalizaciones = {}
 
         # 1. Exposición base
