@@ -36,4 +36,4 @@ jobs:
         name: resultados-radar
         path: |
           ultima_exposicion.txt
-          dashboard.png
+          dashboard.png         

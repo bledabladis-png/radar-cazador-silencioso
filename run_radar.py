@@ -24,6 +24,8 @@ from src.geographic_engine import GeographicEngine
 from src.stress_engine import StressEngine
 from src.scoring import ScoringEngine
 from src.risk import RiskManager
+from datetime import datetime
+from datetime import timedelta
 
 def main():
     print("=" * 60)
@@ -31,9 +33,13 @@ def main():
     print("=" * 60)
 
     # 1. Cargar datos
-    print("\n[1] Cargando datos más recientes...")
+    print("\n[1] Cargando datos...")
     dl = DataLayer()
-    df = dl.load_latest()
+    # Definir rango de fechas (últimos 2 años para no consumir muchas requests)
+    end = datetime.now()
+    start = end - timedelta(days=730)  # 2 años aproximadamente
+    # Descargar datos (usará caché si existe, pero en Actions no hay)
+    df = dl.download_all(start_date=start, end_date=end, force=False)
     ultima_fecha = df.index[-1]
     print(f"    Última fecha disponible: {ultima_fecha.date()}")
 
