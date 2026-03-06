@@ -1,9 +1,7 @@
 """
-bond_engine.py - Motor de bonos globales
-Detecta flight‑to‑safety y ciclo de tipos mediante momentum de precios de:
-- TLT (bonos largos USA)
-- IBGL (bonos europeos)
-- LQD (corporativos USA)
+bond_engine.py - Motor de bonos (versión simplificada)
+Calcula el score de bonos usando spread de retornos JNK - LQD (high yield vs investment grade),
+con momentum multi-horizonte, persistencia y normalización unificada.
 """
 
 import pandas as pd
@@ -14,79 +12,134 @@ import sys
 import os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from src.utils.normalization import normalize_signal, persistence_factor
-
 logger = logging.getLogger(__name__)
 
 class BondEngine:
     def __init__(self, config_path='config/config.yaml'):
         with open(config_path, 'r') as f:
-            self.config = yaml.safe_load(f)
+            full_config = yaml.safe_load(f)
 
-        # Parámetros de persistencia
-        self.persistence_N = self.config.get('persistence', {}).get('bonds_N', 2)
-        self.persistence_enabled = True
-
-    def _momentum(self, df, ticker):
-        """
-        Calcula momentum multi‑horizonte para un ticker (precio).
-        """
-        serie = df[ticker]
-        ret_3m = serie.pct_change(63)
-        ret_6m = serie.pct_change(126)
-        ret_12m = serie.pct_change(252)
-
-        norm_3m = normalize_signal(ret_3m)
-        norm_6m = normalize_signal(ret_6m)
-        norm_12m = normalize_signal(ret_12m)
-
-        score = 0.5 * norm_3m + 0.3 * norm_6m + 0.2 * norm_12m
-        return score
+        # Cargar configuración específica del motor de bonos
+        cfg = full_config.get('bond_engine', {})
+        self.tickers = cfg.get('tickers', ['JNK', 'LQD'])
+        self.horizons = cfg.get('horizons', [1, 5, 21])
+        self.weights_config = cfg.get('weights', {'type': 'adaptive', 'fixed': [0.3, 0.3, 0.4]})
+        self.vol_window = cfg.get('volatility_window', 20)
+        self.persistence_days = cfg.get('persistence_days', 3)
+        self.scaling_window = cfg.get('scaling_window', 252)
 
     def calcular_todo(self, df):
         """
-        df: DataFrame con columnas TLT, IBGL, LQD.
+        df: DataFrame con columnas de precios (debe incluir JNK, LQD)
         Retorna DataFrame con columna 'score_bonds'.
         """
+        # Verificar que tenemos los tickers necesarios
+        required = self.tickers
+        for ticker in required:
+            if ticker not in df.columns:
+                raise ValueError(f"DataFrame no contiene la columna {ticker}")
+
+        # 1. Calcular retornos diarios
+        returns = df[required].pct_change().dropna()
+
+        # 2. Spread de retornos diarios (JNK - LQD)
+        spread = returns[self.tickers[0]] - returns[self.tickers[1]]
+
+        # 3. Calcular raw_score combinando horizontes (vectorial)
+        raw_score = self._calculate_raw_score_vector(spread, returns)
+
+        # 4. Aplicar persistencia (vectorial)
+        raw_score_persist = self._apply_persistence_vector(raw_score)
+
+        # 5. Normalizar con tanh usando scaling rodante
+        normalized = self._normalize_vector(raw_score_persist)
+
+        # Crear DataFrame resultado
         resultados = pd.DataFrame(index=df.index)
-
-        # Señales individuales
-        resultados['score_tlt']  = self._momentum(df, 'TLT')
-        resultados['score_ibgl'] = self._momentum(df, 'IBGL')
-        resultados['score_lqd']  = self._momentum(df, 'LQD')
-
-        # --- RELLENO INCONDICIONAL DE NaN ---
-        # Aseguramos que no haya NaN antes de persistencia
-        for col in ['score_tlt', 'score_ibgl', 'score_lqd']:
-            resultados[col] = resultados[col].ffill().fillna(0)
-
-        # Aplicar persistencia (opcional)
-        if self.persistence_enabled:
-            resultados['score_tlt']  *= persistence_factor(resultados['score_tlt'], self.persistence_N)
-            resultados['score_ibgl'] *= persistence_factor(resultados['score_ibgl'], self.persistence_N)
-            resultados['score_lqd']  *= persistence_factor(resultados['score_lqd'], self.persistence_N)
-
-        # Combinación ponderada (40% TLT, 30% IBGL, 30% LQD)
-        raw_bonds = 0.4 * resultados['score_tlt'] + 0.3 * resultados['score_ibgl'] + 0.3 * resultados['score_lqd']
-        # Rellenar posibles NaN en la combinación (por seguridad)
-        raw_bonds = raw_bonds.ffill().fillna(0)
-
-        # Normalización final
-        resultados['score_bonds'] = np.tanh(raw_bonds)
-        # Último relleno por si acaso
+        resultados['score_bonds'] = normalized
+        # Rellenar posibles NaN al inicio (por falta de datos)
         resultados['score_bonds'] = resultados['score_bonds'].ffill().fillna(0)
 
         return resultados[['score_bonds']]
 
+    def _calculate_raw_score_vector(self, spread, returns):
+        """
+        Calcula raw_score para todas las fechas de forma vectorial.
+        spread: Serie con el spread diario (índice de fechas)
+        returns: DataFrame con retornos (necesario para volatilidad del activo de riesgo)
+        """
+        # Calcular medias móviles de spread para cada horizonte
+        ma_signals = {}
+        for h in self.horizons:
+            ma = spread.rolling(window=h, min_periods=h).mean()
+            ma_signals[h] = ma
+
+        # Volatilidad del activo de riesgo (primer ticker: JNK) para pesos adaptativos
+        ret_risk = returns[self.tickers[0]]
+        # Volatilidad rolling (desviación estándar) de los últimos vol_window días, finalizando el día anterior
+        vol_risk = ret_risk.rolling(window=self.vol_window).std().shift(1) * np.sqrt(252)
+        vol_risk = vol_risk.fillna(0.2)  # valor por defecto
+
+        umbral_vol = 0.2  # 20% anualizado
+        n_horizons = len(self.horizons)
+
+        if self.weights_config['type'] == 'fixed':
+            pesos = np.array(self.weights_config['fixed'])
+            pesos = pesos / pesos.sum()
+            pesos_df = pd.DataFrame({h: pesos[i] for i, h in enumerate(self.horizons)}, index=spread.index)
+        else:  # adaptive
+            indices = np.arange(n_horizons)
+            mask_alta = vol_risk > umbral_vol
+            # Inicializar con pesos iguales
+            pesos_array = np.ones((len(spread), n_horizons)) / n_horizons
+            # Pesos para volatilidad alta: proporcionales a (1 + i)
+            raw_weights_altos = 1 + indices
+            pesos_altos = raw_weights_altos / raw_weights_altos.sum()
+            for i, h in enumerate(self.horizons):
+                pesos_array[mask_alta, i] = pesos_altos[i]
+            pesos_df = pd.DataFrame(pesos_array, index=spread.index, columns=self.horizons)
+
+        # Combinar señales ponderadas
+        raw = pd.Series(0.0, index=spread.index)
+        for h in self.horizons:
+            raw += ma_signals[h] * pesos_df[h]
+
+        return raw
+
+    def _apply_persistence_vector(self, raw_series):
+        """
+        Aplica persistencia: multiplica raw por factor basado en días consecutivos con mismo signo.
+        """
+        signo = np.sign(raw_series)
+        cambio = signo.diff() != 0
+        grupo = cambio.cumsum()
+        consecutivos = grupo.groupby(grupo).cumcount() + 1
+        factor = np.minimum(1.0, consecutivos / self.persistence_days)
+        resultado = raw_series * factor
+        resultado[signo == 0] = 0.0
+        return resultado
+
+    def _normalize_vector(self, raw_series):
+        """
+        Normaliza usando tanh(raw / scaling), con scaling rodante (excluyendo el día actual).
+        """
+        scaling = raw_series.rolling(window=self.scaling_window, min_periods=1).std().shift(1)
+        scaling = scaling.fillna(0.5)
+        scaling = scaling.replace(0, 0.5)
+        normalized = np.tanh(raw_series / scaling)
+        return normalized
+
 
 if __name__ == "__main__":
-    from data_layer import DataLayer
+    # Prueba del motor
+    from src.data_layer import DataLayer  # Ajusta la ruta según tu estructura
 
     logging.basicConfig(level=logging.INFO)
 
     dl = DataLayer()
     df = dl.load_latest()
     print("Datos cargados. Últimas fechas:", df.index[-5:])
+    print("Columnas disponibles:", df.columns.tolist())
 
     engine = BondEngine()
     resultado = engine.calcular_todo(df)

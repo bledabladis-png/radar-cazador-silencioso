@@ -1,7 +1,7 @@
 """
-scoring.py - Motor de scoring global
-Combina los cinco módulos (régimen, liderazgo, geográfico, bonos, estrés)
-aplica pesos, penalizaciones y genera el score global final.
+scoring.py - Motor de scoring global (versión simplificada)
+Combina los scores de los módulos con pesos fijos.
+Calcula la dispersión y el factor de exposición basado en estrés y dispersión.
 """
 
 import pandas as pd
@@ -12,8 +12,6 @@ import sys
 import os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from src.utils.normalization import normalize_module_series
-
 logger = logging.getLogger(__name__)
 
 class ScoringEngine:
@@ -21,147 +19,145 @@ class ScoringEngine:
         with open(config_path, 'r') as f:
             self.config = yaml.safe_load(f)
 
-        self.weights = self.config['weights']['base']
-        self.penalties = self.config.get('exposicion', {})
-        self.disp_factor = self.penalties.get('dispersion_penal_factor', 0.5)
-        self.stress_factor = self.penalties.get('stress_penalty_factor', 0.4)
+        # Pesos base de los módulos (sección weights.base)
+        weights = self.config.get('weights', {}).get('base', {})
+        self.base_weights = {
+            'regime': weights.get('regime', 0.33),
+            'leadership': weights.get('leadership', 0.24),
+            'geo': weights.get('geo', 0.19),
+            'bonds': weights.get('bonds', 0.09),
+            'stress': weights.get('stress', 0.09),
+            'liquidity': weights.get('liquidity', 0.06)
+        }
 
-        # Normalización de módulos (opcional)
-        norm_config = self.config.get('module_normalization', {})
-        self.norm_enabled = norm_config.get('enabled', False)
-        self.norm_window = norm_config.get('window', 252)
-        self.norm_method = norm_config.get('method', 'zscore_tanh')
+        # Parámetros para penalizaciones (sección exposicion o similar)
+        # Usaremos valores por defecto razonables si no están definidos
+        penalty_cfg = self.config.get('exposicion', {})
+        self.disp_factor = penalty_cfg.get('dispersion_penal_factor', 0.5)   # factor para penalización por dispersión
+        self.stress_factor = penalty_cfg.get('stress_penalty_factor', 0.5)  # factor para penalización por estrés
 
-        # Ponderación dinámica por VIX
-        dyn_config = self.config.get('dynamic_weighting', {})
-        self.dyn_enabled = dyn_config.get('enabled', False)
-        self.vix_umbral = dyn_config.get('vix_umbral', 25)
-        self.vix_factor = dyn_config.get('vix_factor', 0.01)
+        # Módulos a incluir en el cálculo de dispersión (por defecto los principales sin liquidez)
+        self.disp_modules = ['regime', 'leadership', 'geo', 'bonds', 'stress']
 
-    def _align_dataframes(self, dfs):
-        """Alinea múltiples DataFrames por índice."""
-        combined = pd.concat(dfs, axis=1)
-        combined = combined.dropna()
-        return combined
-
-    def calcular_todo(self, regime_df, leadership_df, geo_df, bond_df, stress_df, vix_series=None):
+    def calcular_todo(self, regime_df, leadership_df, geo_df, bond_df, stress_df, liquidity_df=None, vix_series=None):
         """
-        Entradas: DataFrames con una columna cada uno:
-            - regime_df: 'score_regime'
-            - leadership_df: 'score_leadership'
-            - geo_df: 'score_geo'
-            - bond_df: 'score_bonds'
-            - stress_df: 'score_stress'
-        vix_series: Serie con valores de VIX (para ponderación dinámica)
+        Entradas: DataFrames con una columna cada uno (score_regime, score_leadership, etc.)
+        liquidity_df es opcional (si no se pasa, se ignora).
+        vix_series no se usa en esta versión simplificada, se mantiene por compatibilidad.
         """
-        # Construir lista de DataFrames y renombrar columnas
-        scores_list = [
+        # Construir lista de DataFrames disponibles con sus columnas renombradas
+        dfs = [
             regime_df[['score_regime']].rename(columns={'score_regime': 'regime'}),
             leadership_df[['score_leadership']].rename(columns={'score_leadership': 'leadership'}),
-            geo_df[['score_geo']].rename(columns={'score_geo': 'geo'}),
+            geo_df[['score_geographic']].rename(columns={'score_geographic': 'geo'}),
             bond_df[['score_bonds']].rename(columns={'score_bonds': 'bonds'}),
             stress_df[['score_stress']].rename(columns={'score_stress': 'stress'})
         ]
+        if liquidity_df is not None:
+            dfs.append(liquidity_df[['score_liquidity']].rename(columns={'score_liquidity': 'liquidity'}))
 
-        # Alinear por fecha
-        df = self._align_dataframes(scores_list)
+        # Alinear todos los DataFrames por su índice (fechas)
+        combined = pd.concat(dfs, axis=1)
+        # Eliminar filas con todos NaN (si las hay)
+        combined = combined.dropna(how='all')
+        # Rellenar NaN con el último valor válido y luego 0
+        combined = combined.ffill().fillna(0)
 
-        # Normalización de módulos (opcional)
-        if self.norm_enabled:
-            for col in ['regime', 'leadership', 'geo', 'bonds', 'stress']:
-                df[col] = normalize_module_series(df[col],
-                                                   window=self.norm_window,
-                                                   method=self.norm_method)
+        # --- 1. Score global ponderado ---
+        score_global = pd.Series(0.0, index=combined.index)
+        for module, weight in self.base_weights.items():
+            if module in combined.columns:
+                score_global += combined[module] * weight
+            else:
+                logger.debug(f"Módulo {module} no presente, se omite")
 
-        # Ponderación dinámica por VIX
-        pesos = self.weights.copy()
-        if self.dyn_enabled and vix_series is not None:
-            # Usar el último VIX disponible
-            vix = vix_series.iloc[-1] if isinstance(vix_series, pd.Series) else vix_series
-            if vix > self.vix_umbral:
-                factor = np.exp(-self.vix_factor * (vix - self.vix_umbral))
-                for k in pesos:
-                    pesos[k] *= factor
-                # Renormalizar
-                total = sum(pesos.values())
-                for k in pesos:
-                    pesos[k] /= total
+        # --- 2. Dispersión entre módulos principales (sin liquidez) ---
+        # Tomamos los módulos que realmente existen
+        available_disp = [m for m in self.disp_modules if m in combined.columns]
+        if len(available_disp) > 1:
+            dispersion = combined[available_disp].std(axis=1)
+        else:
+            dispersion = pd.Series(0.0, index=combined.index)
 
-        # Calcular score base ponderado
-        df['score_base'] = (pesos['regime'] * df['regime'] +
-                            pesos['leadership'] * df['leadership'] +
-                            pesos['geo'] * df['geo'] +
-                            pesos['bonds'] * df['bonds'] +
-                            pesos['stress'] * df['stress'])
+        # --- 3. Penalización por estrés (solo si stress > 0) ---
+        if 'stress' in combined.columns:
+            # Solo la parte positiva del estrés penaliza
+            stress_positive = combined['stress'].clip(lower=0)
+            penalty_stress = stress_positive * self.stress_factor
+        else:
+            penalty_stress = pd.Series(0.0, index=combined.index)
 
-        # Penalización por dispersión entre módulos
-        df['dispersion'] = df[['regime', 'leadership', 'geo', 'bonds', 'stress']].std(axis=1)
-        df['dispersion_penalty'] = df['dispersion'] * self.disp_factor
+        # --- 4. Penalización por dispersión ---
+        penalty_disp = dispersion * self.disp_factor
+        # Acotar penalizaciones para que el factor de exposición no sea negativo
+        # (opcional, pero podemos limitar cada penalización a un máximo, ej. 0.5)
+        max_penalty = 0.8  # para que exposure_factor nunca sea menor que 0.2
+        penalty_disp = penalty_disp.clip(upper=max_penalty)
+        penalty_stress = penalty_stress.clip(upper=max_penalty)
 
-        # Penalización por estrés (solo si stress > 0)
-        df['stress_penalty'] = df['stress'].clip(lower=0) * self.stress_factor
+        # --- 5. Factor de exposición final ---
+        exposure_factor = 1.0 - penalty_disp - penalty_stress
+        exposure_factor = exposure_factor.clip(lower=0.0, upper=1.0)
 
-        # Score global final
-        df['score_global_raw'] = df['score_base'] - df['dispersion_penalty'] - df['stress_penalty']
-        df['score_global'] = np.tanh(df['score_global_raw'])
+        # --- 6. Score suavizado para visualización (media móvil de 5 días) ---
+        score_smoothed = score_global.rolling(window=5, min_periods=1).mean()
 
-        # Suavizado (media 10 días)
-        df['score_smoothed'] = df['score_global'].rolling(10, min_periods=1).mean()
+        # --- 7. Construir DataFrame de resultados ---
+        resultados = pd.DataFrame({
+            'score_global': score_global,
+            'score_smoothed': score_smoothed,
+            'exposure_factor': exposure_factor,
+            'dispersion': dispersion,
+            'penalty_disp': penalty_disp,
+            'penalty_stress': penalty_stress
+        }, index=combined.index)
 
-        # Clasificación de régimen
-        def classify(score):
-            if score > 0.6:
-                return 'RISK_ON'
-            if score > 0.2:
-                return 'RISK_ON_MODERATE'
-            if score > -0.2:
-                return 'NEUTRAL'
-            if score > -0.6:
-                return 'RISK_OFF_MODERATE'
-            return 'STRESS'
+        # Rellenar cualquier posible NaN residual
+        resultados = resultados.ffill().fillna(0)
 
-        df['regime_state'] = df['score_smoothed'].apply(classify)
-
-        # Devolver solo las columnas principales (podemos añadir más si se desea)
-        return df[['score_global', 'score_smoothed', 'dispersion', 'regime_state']]
+        return resultados
 
 
 if __name__ == "__main__":
-    from data_layer import DataLayer
-    from regime_engine import RegimeEngine
-    from leadership_engine import LeadershipEngine
-    from geographic_engine import GeographicEngine
-    from bond_engine import BondEngine
-    from stress_engine import StressEngine
+    # Ejemplo de prueba
+    from src.data_layer import DataLayer
+    from src.regime_engine import RegimeEngine
+    from src.leadership_engine import LeadershipEngine
+    from src.geographic_engine import GeographicEngine
+    from src.bond_engine import BondEngine
+    from src.stress_engine import StressEngine
+    from src.liquidity_engine import LiquidityEngine
 
     logging.basicConfig(level=logging.INFO)
 
-    # Cargar datos
     dl = DataLayer()
     df = dl.load_latest()
-    print("Datos cargados. Últimas fechas:", df.index[-5:])
 
-    # Instanciar motores
-    regime = RegimeEngine()
-    leadership = LeadershipEngine()
-    geo = GeographicEngine()
-    bond = BondEngine()
-    stress = StressEngine()
+    engines = {
+        'regime': RegimeEngine(),
+        'leadership': LeadershipEngine(),
+        'geo': GeographicEngine(),
+        'bonds': BondEngine(),
+        'stress': StressEngine(),
+        'liquidity': LiquidityEngine()
+    }
 
-    # Calcular scores individuales
-    regime_scores = regime.calcular_todo(df)
-    leadership_scores = leadership.calcular_todo(df)
-    geo_scores = geo.calcular_todo(df)
-    bond_scores = bond.calcular_todo(df)
-    stress_scores = stress.calcular_todo(df)
+    # Calcular scores de cada motor
+    module_dfs = {}
+    for name, eng in engines.items():
+        result = eng.calcular_todo(df)
+        module_dfs[name] = result
 
-    # Obtener VIX para ponderación dinámica
-    vix = df['^VIX'] if '^VIX' in df.columns else None
-
-    # Scoring global
+    # Llamar al scoring engine
     scoring = ScoringEngine()
-    resultado = scoring.calcular_todo(regime_scores, leadership_scores, geo_scores,
-                                      bond_scores, stress_scores, vix_series=vix)
+    resultados = scoring.calcular_todo(
+        regime_df=module_dfs['regime'],
+        leadership_df=module_dfs['leadership'],
+        geo_df=module_dfs['geo'],
+        bond_df=module_dfs['bonds'],
+        stress_df=module_dfs['stress'],
+        liquidity_df=module_dfs['liquidity']
+    )
 
-    print("\nScore global (últimos 5 días):")
-    print(resultado.tail())
+    print("\nResultados globales (últimos 5 días):")
+    print(resultados.tail())

@@ -29,6 +29,10 @@ jobs:
     - name: Ejecutar el radar
       run: python run_radar.py
 
+    # NUEVO: Generar informe ejecutivo
+    - name: Generar informe del asistente V2
+      run: python src/asistente_informe_v2.py
+
     # Subir archivos importantes como artefactos (backup en la nube de GitHub)
     - name: Subir artefactos (backup)
       uses: actions/upload-artifact@v4
@@ -36,17 +40,18 @@ jobs:
         name: radar-backup-${{ github.run_id }}
         path: |
           ultima_exposicion.txt
-          logs/ultimo_log.json
+          logs/json/ultimo_log.json      # Ruta actualizada
           historial_radar.csv
-          dashboard.png
           freeze_watchdog.txt
           alertas.txt
+          informe_radar.md                # Nuevo informe
+          logs/parquet/*.parquet          # Opcional: respaldo de logs de riesgo
 
-    # Hacer commit de los archivos actualizados al repositorio (para tenerlos siempre visibles)
+    # Hacer commit de los archivos actualizados al repositorio
     - name: Hacer commit de los archivos actualizados
       run: |
         git config --global user.name "github-actions"
         git config --global user.email "actions@github.com"
-        git add ultima_exposicion.txt logs/ultimo_log.json historial_radar.csv
+        git add ultima_exposicion.txt logs/json/ultimo_log.json historial_radar.csv informe_radar.md
         git diff --quiet && git diff --staged --quiet || git commit -m "Actualización automática del radar [skip ci]"
-        git push     
+        git push

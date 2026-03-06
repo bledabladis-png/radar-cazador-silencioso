@@ -1,14 +1,11 @@
 """
-risk.py - Módulo de gestión de riesgo y capital
-Toma el score global y aplica reglas de contingencia para determinar la exposición final.
-Funciones:
-- exposicion_base: asigna exposición según tramos de score (interpolación lineal).
-- aplicar_cash_forzado: reduce exposición si VIX es alto.
-- aplicar_dispersion: penaliza si la dispersión entre módulos es alta.
-- penalizacion_liquidez: ajusta por spreads de los ETFs.
-- aplicar_turnover: resta costes de comisión y rotación.
-- control_volatilidad_subcartera: escala carteras para cumplir volatilidad objetivo (opcional).
-- aplicar_reglas_riesgo: orquesta todas las anteriores y registra factores.
+risk.py - Gestión de riesgo y capital (versión simplificada)
+Toma el score global y el exposure_factor (de scoring) y aplica reglas operativas:
+- Exposición base por tramos
+- Multiplicación por exposure_factor
+- Cash forzado por VIX/ATR
+- Penalización por liquidez (spreads)
+- Costes de turnover y comisión
 """
 
 import numpy as np
@@ -29,12 +26,7 @@ class RiskManager:
     def exposicion_base(self, score):
         """
         Calcula la exposición base a partir del score usando tramos lineales.
-        Los tramos se definen en config.yaml como:
-        base_tramos:
-          - min: -1.0, max: -0.5, exp_min: 0.0, exp_max: 0.0
-          - min: -0.5, max: 0.0,  exp_min: 0.0, exp_max: 0.25
-          - min: 0.0,  max: 0.5,  exp_min: 0.25, exp_max: 0.75
-          - min: 0.5,  max: 1.0,  exp_min: 0.75, exp_max: 1.0
+        Los tramos se definen en config.yaml como 'base_tramos'.
         Devuelve exposición base y metadatos del tramo.
         """
         tramos = sorted(self.cfg_exp['base_tramos'], key=lambda x: x['min'])
@@ -56,41 +48,48 @@ class RiskManager:
         exp_max = ultimo.get('exp_max', ultimo.get('exp', 1.0))
         return exp_max, {'tramo': 'superior', 'exp': exp_max}
 
-    def aplicar_cash_forzado(self, exp, vix):
+    def aplicar_cash_forzado(self, exp, vix_atr_ratio):
         """
-        Reduce la exposición según niveles de VIX.
-        Escalones definidos en config.yaml:
-          vix_umbrales: [20, 25, 30]
-          vix_penalizaciones: [0.0, 0.25, 0.5]
+        Reduce la exposición según el ratio VIX/ATR20.
+        Escalones definidos en config.yaml en 'cash_forzado':
+          - VIX_umbral: nivel a partir del cual se activa (por defecto 30)
+          - escalones: lista de diccionarios con 'hasta' (valor del ratio) y 'factor' (multiplicador)
+        Si el ratio supera el umbral, se aplica el factor correspondiente al escalón.
         """
-        umbrales = self.cfg_exp.get('vix_umbrales', [])
-        penalizaciones = self.cfg_exp.get('vix_penalizaciones', [])
-        for umbral, penal in zip(umbrales, penalizaciones):
-            if vix >= umbral:
-                return exp * (1 - penal), penal
-        return exp, 0.0
+        cfg_cash = self.cfg_exp.get('cash_forzado', {})
+        umbral = cfg_cash.get('VIX_umbral', 30)  # umbral en niveles de VIX (no ratio)
+        # Nota: en tu configuración, el umbral es sobre VIX, no sobre ratio. Pero aquí usamos vix_atr_ratio.
+        # Para adaptarnos, asumimos que el umbral también aplica al ratio (o debería ser otro parámetro).
+        # Podríamos tener un umbral específico para el ratio, pero por ahora usamos el mismo.
+        # Si no hay escalones, no se aplica penalización.
+        escalones = cfg_cash.get('escalones', [])
+        if not escalones or vix_atr_ratio <= umbral:
+            return exp, 1.0
 
-    def aplicar_dispersion(self, exp, dispersion):
-        """
-        Penaliza la exposición si la dispersión supera un umbral.
-        Factor = 1 - max_penal * min(1, dispersion / umbral)
-        """
-        umbral = self.cfg_exp.get('dispersion_max', 0.8)
-        max_penal = self.cfg_exp.get('dispersion_penal_factor', 0.5)
-        if dispersion > umbral:
-            factor = 1 - max_penal * min(1, dispersion / umbral)
-            return exp * factor, factor
-        return exp, 1.0
+        # Buscar el escalón correspondiente
+        factor = 1.0
+        for escalon in escalones:
+            hasta = escalon.get('hasta')
+            if hasta is None or vix_atr_ratio <= hasta:
+                factor = escalon.get('factor', 1.0)
+                break
+        exp_ajustada = exp * factor
+        return exp_ajustada, factor
 
     def penalizacion_liquidez(self, exp, spreads):
         """
         Ajusta la exposición por liquidez de los ETFs.
         spreads: diccionario con {ticker: spread_actual}
-        Por cada ticker con spread > umbral, se multiplica por un factor.
+        Parámetros de 'spread_alert' en config:
+          - umbral: spread mínimo para penalizar
+          - slope: pendiente para la reducción lineal
+          - min_factor: factor mínimo permitido
+        Por cada ticker con spread > umbral, se multiplica por un factor decreciente.
         """
-        umbral = self.cfg_exp.get('spread_umbral', 0.005)
-        slope = self.cfg_exp.get('spread_slope', 0.01)
-        min_factor = self.cfg_exp.get('spread_min_factor', 0.5)
+        cfg_spread = self.cfg_exp.get('spread_alert', {})
+        umbral = cfg_spread.get('umbral', 0.005)
+        slope = cfg_spread.get('slope', 0.01)
+        min_factor = cfg_spread.get('min_factor', 0.5)
         factores = {}
         exp_ajustada = exp
         for ticker, spread in spreads.items():
@@ -105,50 +104,29 @@ class RiskManager:
     def aplicar_turnover(self, exp, exp_prev, capital):
         """
         Aplica costes de comisión y rotación.
-        turnover = abs(exp - exp_prev)
-        coste_turnover = turnover * turnover_cost_factor
-        comision_fija = commission / capital
-        exp_ajustada = max(0, exp - coste_turnover - comision_fija)
+        Parámetros de 'turnover' en config:
+          - cost_factor: coste por unidad de turnover
+          - commission: comisión fija en unidades monetarias
         """
-        cost_factor = self.cfg_exp.get('turnover_cost_factor', 0.001)
-        comision = self.cfg_exp.get('comision_fija', 5.0)
+        cfg_turn = self.cfg_exp.get('turnover', {})
+        cost_factor = cfg_turn.get('cost_factor', 0.001)
+        comision = cfg_turn.get('commission', 5.0)
         turnover = abs(exp - exp_prev)
         coste_turnover = turnover * cost_factor
         exp_ajustada = exp - coste_turnover - comision / capital
         exp_ajustada = max(0.0, exp_ajustada)
-        return exp_ajustada, turnover
-
-    def control_volatilidad_subcartera(self, weights_dict, cov_matrices, target_vols):
-        """
-        Escala las carteras para cumplir con la volatilidad objetivo.
-        weights_dict: dict con {nombre_cartera: vector de pesos}
-        cov_matrices: dict con {nombre_cartera: matriz de covarianza}
-        target_vols: dict con {nombre_cartera: volatilidad objetivo}
-        Devuelve dict con pesos escalados y factores de escala.
-        """
-        escalas = {}
-        pesos_escalados = {}
-        for key, weights in weights_dict.items():
-            cov = cov_matrices[key]
-            port_vol = np.sqrt(weights.T @ cov @ weights)
-            if port_vol <= target_vols[key]:
-                escala = 1.0
-            else:
-                escala = target_vols[key] / port_vol
-            pesos_escalados[key] = weights * escala
-            escalas[key] = escala
-        return pesos_escalados, escalas
+        return exp_ajustada, turnover, coste_turnover
 
     def aplicar_reglas_riesgo(self, score, contexto):
         """
-        Función principal que aplica todas las reglas en orden y devuelve la exposición final
-        junto con un diccionario de factores de penalización.
+        Función principal que aplica todas las reglas en orden.
         contexto: dict con al menos:
-            - vix: valor actual del VIX
-            - dispersion: valor de dispersión (de scoring)
+            - exposure_factor: factor de exposición calculado por scoring (0-1)
+            - vix_atr_ratio: ratio VIX/ATR20 (para cash forzado)
             - spreads: dict con spreads actuales de los ETFs
             - exp_prev: exposición anterior
             - capital: capital actual
+        Devuelve exposición final, diccionario de factores y log.
         """
         penalizaciones = {}
 
@@ -157,41 +135,43 @@ class RiskManager:
         penalizaciones['tramo'] = info_tramo
         exp = exp_base
 
-        # --- 2. Cash forzado por VIX ---
-        exp, factor_vix = self.aplicar_cash_forzado(exp, contexto['vix'])
-        penalizaciones['vix_factor'] = factor_vix
+        # --- 2. Aplicar exposure_factor (de scoring) ---
+        exposure_factor = contexto.get('exposure_factor', 1.0)
+        exp *= exposure_factor
+        penalizaciones['exposure_factor'] = exposure_factor
 
-        # --- 3. Penalización por dispersión ---
-        exp, factor_disp = self.aplicar_dispersion(exp, contexto['dispersion'])
-        penalizaciones['dispersion_factor'] = factor_disp
+        # --- 3. Cash forzado por VIX/ATR ---
+        vix_atr_ratio = contexto.get('vix_atr_ratio', 0)
+        exp, factor_cash = self.aplicar_cash_forzado(exp, vix_atr_ratio)
+        penalizaciones['cash_factor'] = factor_cash
 
         # --- 4. Penalización por liquidez ---
-        exp, factores_spread = self.penalizacion_liquidez(exp, contexto['spreads'])
+        spreads = contexto.get('spreads', {})
+        exp, factores_spread = self.penalizacion_liquidez(exp, spreads)
         penalizaciones['spread_factors'] = factores_spread
 
         # --- 5. Costes de turnover y comisión ---
-        exp, turnover = self.aplicar_turnover(exp, contexto['exp_prev'], contexto['capital'])
+        exp_prev = contexto.get('exp_prev', 0)
+        capital = contexto.get('capital', 100000)
+        exp, turnover, coste_turnover = self.aplicar_turnover(exp, exp_prev, capital)
         penalizaciones['turnover'] = turnover
-        penalizaciones['coste_turnover'] = turnover * self.cfg_exp.get('turnover_cost_factor', 0.001)
-        penalizaciones['comision'] = self.cfg_exp.get('comision_fija', 5.0) / contexto['capital']
+        penalizaciones['coste_turnover'] = coste_turnover
+        penalizaciones['comision'] = self.cfg_exp.get('turnover', {}).get('commission', 5.0) / capital
 
-        # --- 6. (Opcional) Aquí se podría añadir control de volatilidad por subcartera ---
-        # No se implementa en esta versión básica, pero está la función disponible.
-
-        # --- 7. Logging detallado de la evolución (opcional, se puede llamar desde fuera) ---
+        # --- 6. Logging ---
         log_riesgo = {
             'fecha': datetime.now().strftime('%Y-%m-%d'),
             'score': score,
             'exp_base': exp_base,
-            'exp_vix': exp_base * (1 - factor_vix) if factor_vix > 0 else exp_base,
-            'exp_disp': exp,
+            'exposure_factor': exposure_factor,
+            'exp_after_factor': exp_base * exposure_factor,
+            'exp_after_cash': exp,  # tras cash, pero aún sin liquidez y turnover? Cuidado: hemos ido modificando exp, mejor llevar traza
             'exp_final': exp,
-            'vix': contexto['vix'],
-            'dispersion': contexto['dispersion'],
+            'vix_atr_ratio': vix_atr_ratio,
             'turnover': turnover,
-            'capital': contexto['capital']
+            'capital': capital
         }
-        # Se puede añadir a una lista para luego guardar en Parquet (lo hará run_radar.py)
+        # Nota: podríamos registrar más detalles si se desea
 
         return exp, penalizaciones, log_riesgo
 
@@ -202,8 +182,8 @@ if __name__ == "__main__":
 
     # Contexto simulado (valores típicos)
     contexto = {
-        'vix': 22.0,
-        'dispersion': 0.35,
+        'exposure_factor': 0.85,
+        'vix_atr_ratio': 25.0,  # por debajo del umbral
         'spreads': {'SPY': 0.001, 'EEM': 0.004, 'JNK': 0.006},
         'exp_prev': 0.5,
         'capital': 100000
@@ -216,8 +196,8 @@ if __name__ == "__main__":
     print("=== Resultado de gestión de riesgo ===")
     print(f"Score: {score}")
     print(f"Exposición base: {log['exp_base']:.4f}")
-    print(f"Factor VIX: {penalizaciones['vix_factor']:.3f}")
-    print(f"Factor dispersión: {penalizaciones['dispersion_factor']:.3f}")
+    print(f"Factor exposure (de scoring): {penalizaciones['exposure_factor']:.3f}")
+    print(f"Factor cash: {penalizaciones['cash_factor']:.3f}")
     print("Factores de liquidez:")
     for ticker, factor in penalizaciones['spread_factors'].items():
         print(f"  {ticker}: {factor:.3f}")

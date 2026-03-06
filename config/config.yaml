@@ -1,8 +1,6 @@
 # config.yaml - Radar Macro Rotación Global v2.1
-# Versión: v2.3.1 (ejemplo)
 version: "v2.3.1"
 
-# Umbrales críticos unificados
 thresholds:
   z_credito: 3
   curve_penalty: -0.5
@@ -13,7 +11,6 @@ thresholds:
   stress_vix_percentile: 90
   vol_comp_percentile: 30
 
-# Parámetros de indicadores
 indicators:
   trend:
     ma_period: 200
@@ -23,12 +20,12 @@ indicators:
     ratio_etfs: ["JNK", "LQD"]
     z_score_clip: 3.0
   curve:
-    ticker: "DGS10"  # FRED, 10-Year Treasury
+    ticker: "DGS10"
     ticker_2y: "DGS2"
-    lookback_days: 2520  # 10 años aprox
+    lookback_days: 2520
     percentil_bajo: 10
     penalizacion_curva: -0.5
-    delta_weight: 0.1  # peso para el delta de curva
+    delta_weight: 0.1
   drawdown:
     lookback_days: 126
     percentil_drawdown: 70
@@ -54,33 +51,30 @@ indicators:
       ventana: 3
       retorno_periodo: 10
 
-# Pesos base de los módulos (suman 100%)
 weights:
   base:
-    regime: 0.35
-    leadership: 0.25
-    geo: 0.20
-    bonds: 0.10
-    stress: 0.10
+    regime: 0.33
+    leadership: 0.24
+    geo: 0.19
+    bonds: 0.09
+    stress: 0.09
+    liquidity: 0.06
   dynamic:
     vix_ajuste: true
     vix_umbral: 25
-    vix_factor: 0.01  # exponencial
+    vix_factor: 0.01
 
-# Señal de acumulación
 accumulation_signal:
-  weights: [0.2, 0.25, 0.15, 0.2, 0.2]  # curva, small, compresión, drawdown, dispersión
+  weights: [0.2, 0.25, 0.15, 0.2, 0.2]
   small_threshold: 0.2
 
-# Dispersión
 dispersion:
-  weights: [0.4, 0.3, 0.15]  # regime, leadership, geo
+  weights: [0.4, 0.3, 0.15]
   riesgo_alto: 0.8
   acumulacion_alta: 0.8
   regimen_fuerte_disp: 0.3
   regimen_fuerte_score: 0.6
 
-# Exposición base
 exposicion:
   base_tramos:
     - min: -1.0
@@ -125,7 +119,6 @@ exposicion:
     cost_factor: 0.001
     commission: 5.0
 
-# Persistencia de señales por módulo
 persistence:
   regime_N: 2
   leadership_N: 2
@@ -133,13 +126,11 @@ persistence:
   bonds_N: 2
   stress_N: 2
 
-# Filtro de liquidez
 liquidity_filter:
   spread_threshold: 0.005
   min_volume_ratio: 0.5
   apply_to: ['geo', 'bonds']
 
-# Ponderación dinámica por volatilidad
 dynamic_weighting:
   enabled: true
   vix_umbral: 25
@@ -148,15 +139,74 @@ dynamic_weighting:
   min_weight: 0.5
   max_weight: 1.2
 
-# Normalización de módulos (opcional)
 module_normalization:
   enabled: true
   window: 252
   method: 'zscore_tanh'
 
-# Backtesting
+regime_engine:
+  tickers: ["SPY", "TLT"]
+  horizons: [1, 5, 21]
+  weights:
+    type: "adaptive"
+    fixed: [0.3, 0.3, 0.4]
+  volatility_window: 20
+  persistence_days: 3
+  scaling_window: 252
+leadership_engine:
+  tickers: ["XLK", "XLF"]
+  horizons: [1, 5, 21]
+  weights:
+    type: "adaptive"
+    fixed: [0.3, 0.3, 0.4]
+  volatility_window: 20
+  persistence_days: 3
+  scaling_window: 252
+
+geographic_engine:
+  tickers: ["EEM", "EFA"]
+  horizons: [1, 5, 21]
+  weights:
+    type: "adaptive"
+    fixed: [0.3, 0.3, 0.4]
+  volatility_window: 20
+  persistence_days: 3
+  scaling_window: 252
+
+bond_engine:
+  tickers: ["JNK", "LQD"]
+  horizons: [1, 5, 21]
+  weights:
+    type: "adaptive"
+    fixed: [0.3, 0.3, 0.4]
+  volatility_window: 20
+  persistence_days: 3
+  scaling_window: 252
+
+stress_engine:
+  tickers: ["^VIX"]          # Un solo ticker
+  horizons: [1, 5, 21]
+  weights:
+    type: "adaptive"
+    fixed: [0.3, 0.3, 0.4]
+  volatility_window: 20
+  persistence_days: 3
+  scaling_window: 252
+  invert_signal: true        # Para que raw = -retorno (sube VIX = estrés = score negativo)
+
+liquidity_engine:
+  tickers: ["DX-Y.NYB"]
+  horizons: [1, 5, 21]
+  weights:
+    type: "adaptive"
+    fixed: [0.3, 0.3, 0.4]
+  volatility_window: 20
+  persistence_days: 3
+  scaling_window: 252
+  invert_signal: true        # Dólar sube = liquidez ajustada = score negativo
+
 backtest:
-  window_base: 1260  # 5 años en días
+  window_base: 1260
   vol_window: 20
   vol_referencia: 0.02
   t_stat_penalizacion: 5.0
@@ -168,13 +218,12 @@ backtest:
     JNK: 0.002
     default: 0.002
   commission_fija: 5.0
+  exp_decay: 0.01
 
-# Logging
 logging:
   schema_file: "config/schemas/log_schema.json"
-  retention_days: 1825  # 5 años
+  retention_days: 1825
 
-# Data sources
 data:
   tiingo_key_file: "tiingo_key.txt"
   fallback_sources: ["yahoo", "fred"]
@@ -186,6 +235,9 @@ data:
       - "SPY"
       - "XLY"
       - "XLP"
+      - "XLF"
+      - "XLK"
+      - "XLE"
       - "EEM"
       - "EFA"
       - "ACWI"
@@ -194,13 +246,12 @@ data:
       - "EWT"
       - "IBGL"
       - "QQQ"
-      - "TLT"   # <--- AÑADIDO
-    # Puedes añadir más si quieres
+      - "TLT"
+      - "DX-Y.NYB"
   fred_series:
     DGS10: "10-Year Treasury Constant Maturity Rate"
     DGS2: "2-Year Treasury Constant Maturity Rate"
 
-# Control de volatilidad por subcartera
 vol_control:
   enabled: true
   lookback_days: 60
@@ -214,3 +265,51 @@ vol_control:
     - nombre: "Global_Equity"
       tickers: ["EEM", "EFA", "ACWI"]
       target_vol: 0.18
+
+liquidity:
+  enabled: true
+  weight: 0.05
+  tickers:
+    fed_balance: "WALCL"
+    m2: "M2SL"
+    dxy: "DX-Y.NYB"
+  windows:
+    short: 63
+    medium: 126
+    long: 252
+  weights: [0.5, 0.3, 0.2]
+
+stress:
+  weights: [0.30, 0.25, 0.20, 0.15, 0.10]
+  vix_window: 252
+  atr_period: 20
+  divergence_window: 63
+  dispersion_tickers: ['XLY', 'XLP', 'XLF', 'XLK', 'XLE']
+  persistence:
+    enabled: true
+    N_days: 2
+
+correlation_adjustment:
+  enabled: true
+  window: 60
+  apply_to: ['regime', 'stress']
+
+global_dispersion:
+  enabled: true
+  min_confidence: 0.5
+  max_confidence: 1.0
+  apply_to: ['regime', 'leadership', 'geo', 'bonds', 'stress']
+
+curve_momentum:
+  enabled: true
+  delta_window: 20
+  delta_weight: 0.5
+
+# Parámetros para momentum en motores de spreads
+momentum_windows:
+  short: 63
+  medium: 126
+  long: 252
+  weights: [0.5, 0.3, 0.2]   # pesos para short, medium, long
+  soft_gate_factor: 10        # factor para la sigmoidal en direccionalidad
+  persistence_before_gate: true   # si se aplica persistencia antes del gating

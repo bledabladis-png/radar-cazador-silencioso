@@ -1,6 +1,6 @@
 """
-geographic_engine.py - Motor geográfico (versión simplificada)
-Calcula el score geográfico usando spread de retornos EEM - EFA,
+liquidity_engine.py - Motor de liquidez (versión simplificada)
+Calcula el score de liquidez usando el retorno diario del índice dólar (DX-Y.NYB) con signo invertido,
 con momentum multi-horizonte, persistencia y normalización unificada.
 """
 
@@ -14,24 +14,25 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 logger = logging.getLogger(__name__)
 
-class GeographicEngine:
+class LiquidityEngine:
     def __init__(self, config_path='config/config.yaml'):
         with open(config_path, 'r') as f:
             full_config = yaml.safe_load(f)
 
-        # Cargar configuración específica del motor geográfico
-        cfg = full_config.get('geographic_engine', {})
-        self.tickers = cfg.get('tickers', ['EEM', 'EFA'])
+        # Cargar configuración específica del motor de liquidez
+        cfg = full_config.get('liquidity_engine', {})
+        self.tickers = cfg.get('tickers', ['DX-Y.NYB'])
         self.horizons = cfg.get('horizons', [1, 5, 21])
         self.weights_config = cfg.get('weights', {'type': 'adaptive', 'fixed': [0.3, 0.3, 0.4]})
         self.vol_window = cfg.get('volatility_window', 20)
         self.persistence_days = cfg.get('persistence_days', 3)
         self.scaling_window = cfg.get('scaling_window', 252)
+        self.invert_signal = cfg.get('invert_signal', True)  # True para que subida del dólar = liquidez ajustada = score negativo
 
     def calcular_todo(self, df):
         """
-        df: DataFrame con columnas de precios (debe incluir EEM, EFA)
-        Retorna DataFrame con columna 'score_geographic'.
+        df: DataFrame con columna de precio (DX-Y.NYB)
+        Retorna DataFrame con columna 'score_liquidity'.
         """
         # Verificar que tenemos los tickers necesarios
         required = self.tickers
@@ -39,14 +40,15 @@ class GeographicEngine:
             if ticker not in df.columns:
                 raise ValueError(f"DataFrame no contiene la columna {ticker}")
 
-        # 1. Calcular retornos diarios
-        returns = df[required].pct_change().dropna()
+        # 1. Calcular retornos diarios (solo un ticker)
+        ret = df[required[0]].pct_change().dropna()
 
-        # 2. Spread de retornos diarios (EEM - EFA)
-        spread = returns[self.tickers[0]] - returns[self.tickers[1]]
+        # 2. Calcular raw_score combinando horizontes (vectorial) usando el retorno como señal
+        raw_score = self._calculate_raw_score_vector(ret)
 
-        # 3. Calcular raw_score combinando horizontes (vectorial)
-        raw_score = self._calculate_raw_score_vector(spread, returns)
+        # 3. Invertir señal si está configurado
+        if self.invert_signal:
+            raw_score = -raw_score
 
         # 4. Aplicar persistencia (vectorial)
         raw_score_persist = self._apply_persistence_vector(raw_score)
@@ -56,29 +58,26 @@ class GeographicEngine:
 
         # Crear DataFrame resultado
         resultados = pd.DataFrame(index=df.index)
-        resultados['score_geographic'] = normalized
+        resultados['score_liquidity'] = normalized
         # Rellenar posibles NaN al inicio (por falta de datos)
-        resultados['score_geographic'] = resultados['score_geographic'].ffill().fillna(0)
+        resultados['score_liquidity'] = resultados['score_liquidity'].ffill().fillna(0)
 
-        return resultados[['score_geographic']]
+        return resultados[['score_liquidity']]
 
-    def _calculate_raw_score_vector(self, spread, returns):
+    def _calculate_raw_score_vector(self, ret_series):
         """
         Calcula raw_score para todas las fechas de forma vectorial.
-        spread: Serie con el spread diario (índice de fechas)
-        returns: DataFrame con retornos (necesario para volatilidad del activo de riesgo)
+        ret_series: Serie con retornos diarios del activo único.
         """
-        # Calcular medias móviles de spread para cada horizonte
+        # Calcular medias móviles del retorno para cada horizonte
         ma_signals = {}
         for h in self.horizons:
-            ma = spread.rolling(window=h, min_periods=h).mean()
+            ma = ret_series.rolling(window=h, min_periods=h).mean()
             ma_signals[h] = ma
 
-        # Volatilidad del activo de riesgo (primer ticker: EEM) para pesos adaptativos
-        ret_risk = returns[self.tickers[0]]
-        # Volatilidad rolling (desviación estándar) de los últimos vol_window días, finalizando el día anterior
-        vol_risk = ret_risk.rolling(window=self.vol_window).std().shift(1) * np.sqrt(252)
-        vol_risk = vol_risk.fillna(0.2)  # valor por defecto
+        # Volatilidad del activo (para pesos adaptativos)
+        vol = ret_series.rolling(window=self.vol_window).std().shift(1) * np.sqrt(252)
+        vol = vol.fillna(0.2)  # valor por defecto
 
         umbral_vol = 0.2  # 20% anualizado
         n_horizons = len(self.horizons)
@@ -86,21 +85,21 @@ class GeographicEngine:
         if self.weights_config['type'] == 'fixed':
             pesos = np.array(self.weights_config['fixed'])
             pesos = pesos / pesos.sum()
-            pesos_df = pd.DataFrame({h: pesos[i] for i, h in enumerate(self.horizons)}, index=spread.index)
+            pesos_df = pd.DataFrame({h: pesos[i] for i, h in enumerate(self.horizons)}, index=ret_series.index)
         else:  # adaptive
             indices = np.arange(n_horizons)
-            mask_alta = vol_risk > umbral_vol
+            mask_alta = vol > umbral_vol
             # Inicializar con pesos iguales
-            pesos_array = np.ones((len(spread), n_horizons)) / n_horizons
+            pesos_array = np.ones((len(ret_series), n_horizons)) / n_horizons
             # Pesos para volatilidad alta: proporcionales a (1 + i)
             raw_weights_altos = 1 + indices
             pesos_altos = raw_weights_altos / raw_weights_altos.sum()
             for i, h in enumerate(self.horizons):
                 pesos_array[mask_alta, i] = pesos_altos[i]
-            pesos_df = pd.DataFrame(pesos_array, index=spread.index, columns=self.horizons)
+            pesos_df = pd.DataFrame(pesos_array, index=ret_series.index, columns=self.horizons)
 
         # Combinar señales ponderadas
-        raw = pd.Series(0.0, index=spread.index)
+        raw = pd.Series(0.0, index=ret_series.index)
         for h in self.horizons:
             raw += ma_signals[h] * pesos_df[h]
 
@@ -141,8 +140,8 @@ if __name__ == "__main__":
     print("Datos cargados. Últimas fechas:", df.index[-5:])
     print("Columnas disponibles:", df.columns.tolist())
 
-    engine = GeographicEngine()
+    engine = LiquidityEngine()
     resultado = engine.calcular_todo(df)
 
-    print("\nScore geográfico (últimos 5 días):")
+    print("\nScore de liquidez (últimos 5 días):")
     print(resultado.tail())

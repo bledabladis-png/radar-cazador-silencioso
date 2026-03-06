@@ -1,163 +1,110 @@
-"""
-dashboard.py - Visualización de resultados del Radar Macro Rotación Global v2.1
-Genera gráficos de evolución del score global, dispersión, contribuciones y exposición.
-"""
-import sys
-import os
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+# dashboard.py - Dashboard interactivo para el Radar Macro Rotación Global (versión simplificada)
+# Lee el historial_radar.csv generado por run_radar.py y muestra gráficos interactivos.
 
+import streamlit as st
 import pandas as pd
-import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib.dates as mdates
-from datetime import datetime, timedelta
+import plotly.graph_objects as go
+from plotly.subplots import make_subplots
 import os
+from datetime import datetime, timedelta
 
-# Importar módulos del sistema
-from src.data_layer import DataLayer
-from src.regime_engine import RegimeEngine
-from src.leadership_engine import LeadershipEngine
-from src.geographic_engine import GeographicEngine
-from src.stress_engine import StressEngine
-from src.scoring import ScoringEngine
-from src.risk import RiskManager
+st.set_page_config(page_title="Radar Macro Rotación Global", layout="wide")
+st.title("📡 Radar Macro Rotación Global - Dashboard Interactivo")
+st.markdown("**Versión simplificada** · Datos actualizados diariamente.")
 
-def calcular_historial(dias=500):
-    """
-    Ejecuta el pipeline para un histórico de días y devuelve un DataFrame con los resultados.
-    """
-    print(f"Calculando histórico para los últimos {dias} días...")
-    
-    dl = DataLayer()
-    df = dl.load_latest()
-    
-    # Seleccionar un subconjunto de fechas (últimos 'dias')
-    fechas = df.index[-dias:]
-    df = df.loc[fechas]
-    
-    # Calcular motores para todo el período
-    regime = RegimeEngine()
-    regime_df = regime.calcular_todo(df)
-    
-    leadership = LeadershipEngine()
-    leadership_df = leadership.calcular_todo(df)
-    
-    geo = GeographicEngine()
-    geo_df = geo.calcular_todo(df)
-    
-    stress = StressEngine()
-    stress_df = stress.calcular_stress(df)
-    
-    scoring = ScoringEngine()
-    resultados_df = scoring.calcular_todo(df, regime_df, leadership_df, geo_df, stress_df)
-    
-    # Para la exposición, necesitamos aplicar riesgo día a día con un contexto aproximado
-    # Usaremos un riesgo simplificado: solo basado en score y dispersión (sin spreads ni turnover real)
-    # Pero para visualización, podemos calcular una exposición base sin costes
-    rm = RiskManager()
-    exposiciones = []
-    vix_vals = df['^VIX'] if '^VIX' in df.columns else pd.Series(20, index=df.index)
-    
-    for fecha in resultados_df.index:
-        score = resultados_df.loc[fecha, 'score_global']
-        dispersion = resultados_df.loc[fecha, 'dispersion']
-        vix = vix_vals.loc[fecha] if not pd.isna(vix_vals.loc[fecha]) else 20
-        
-        # Contexto simplificado (sin spreads ni turnover histórico)
-        contexto = {
-            'vix': vix,
-            'dispersion': dispersion,
-            'spreads': {'SPY': 0.001, 'EEM': 0.004, 'JNK': 0.006},  # valores fijos
-            'exp_prev': 0.5,  # no tenemos histórico, usamos valor fijo
-            'capital': 100000
-        }
-        exp, _ = rm.aplicar_reglas_riesgo(score, contexto)
-        exposiciones.append(exp)
-    
-    resultados_df['exposicion'] = exposiciones
-    return resultados_df
+# Cargar datos
+historial_path = "historial_radar.csv"
+if not os.path.exists(historial_path):
+    st.error("No se encuentra el archivo `historial_radar.csv`. Ejecuta primero `run_radar.py`.")
+    st.stop()
 
-def graficar(resultados_df):
-    """
-    Genera gráficos a partir del DataFrame de resultados.
-    """
-    # Configurar estilo
-    plt.style.use('seaborn-v0_8-darkgrid')
-    fig, axes = plt.subplots(3, 2, figsize=(14, 10))
-    fig.suptitle('Radar Macro Rotación Global v2.1 - Dashboard', fontsize=16)
-    
-    # 1. Score global
-    ax = axes[0, 0]
-    ax.plot(resultados_df.index, resultados_df['score_global'], color='blue', linewidth=1.5)
-    ax.axhline(y=0, color='gray', linestyle='--', linewidth=0.5)
-    ax.set_title('Score Global')
-    ax.set_ylabel('Score')
-    ax.xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m'))
-    ax.tick_params(axis='x', rotation=45)
-    
-    # 2. Dispersión
-    ax = axes[0, 1]
-    ax.plot(resultados_df.index, resultados_df['dispersion'], color='orange', linewidth=1.5)
-    ax.set_title('Dispersión entre Componentes')
-    ax.set_ylabel('Dispersión')
-    ax.xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m'))
-    ax.tick_params(axis='x', rotation=45)
-    
-    # 3. Contribuciones de los motores (apiladas)
-    ax = axes[1, 0]
-    ax.stackplot(resultados_df.index,
-                 resultados_df['score_regime'],
-                 resultados_df['score_leadership'],
-                 resultados_df['score_geo'],
-                 resultados_df['score_stress'],
-                 labels=['Régimen', 'Liderazgo', 'Geográfico', 'Estrés'],
-                 alpha=0.7)
-    ax.set_title('Contribuciones por Motor')
-    ax.set_ylabel('Score')
-    ax.xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m'))
-    ax.tick_params(axis='x', rotation=45)
-    ax.legend(loc='upper left')
-    
-    # 4. Señal de acumulación
-    ax = axes[1, 1]
-    ax.fill_between(resultados_df.index, resultados_df['accumulation_signal'], color='green', alpha=0.5)
-    ax.set_title('Señal de Acumulación')
-    ax.set_ylabel('Señal (0-1)')
-    ax.set_ylim(0, 1)
-    ax.xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m'))
-    ax.tick_params(axis='x', rotation=45)
-    
-    # 5. Exposición recomendada
-    ax = axes[2, 0]
-    ax.plot(resultados_df.index, resultados_df['exposicion'] * 100, color='red', linewidth=1.5)
-    ax.set_title('Exposición Recomendada')
-    ax.set_ylabel('Exposición (%)')
-    ax.set_ylim(0, 100)
-    ax.xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m'))
-    ax.tick_params(axis='x', rotation=45)
-    
-    # 6. Score global vs exposición (doble eje)
-    ax = axes[2, 1]
-    color1 = 'blue'
-    color2 = 'red'
-    ax.plot(resultados_df.index, resultados_df['score_global'], color=color1, label='Score Global')
-    ax.set_ylabel('Score', color=color1)
-    ax.tick_params(axis='y', labelcolor=color1)
-    ax.xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m'))
-    ax.tick_params(axis='x', rotation=45)
-    
-    ax2 = ax.twinx()
-    ax2.plot(resultados_df.index, resultados_df['exposicion'] * 100, color=color2, label='Exposición')
-    ax2.set_ylabel('Exposición (%)', color=color2)
-    ax2.tick_params(axis='y', labelcolor=color2)
-    
-    plt.tight_layout()
-    plt.savefig('dashboard.png', dpi=150)
-    print("Gráfico guardado como 'dashboard.png'")
-    plt.show()
+df = pd.read_csv(historial_path, parse_dates=["fecha"])
+df = df.sort_values("fecha")
 
-if __name__ == "__main__":
-    # Calcular histórico (últimos 500 días)
-    resultados = calcular_historial(dias=500)
-    # Graficar
-    graficar(resultados)
+# Información general
+ultima_fecha = df["fecha"].max()
+st.sidebar.header("📅 Filtros")
+st.sidebar.info(f"Última fecha disponible: {ultima_fecha.date()}")
+
+# Selector de rango de fechas
+fecha_min = df["fecha"].min().date()
+fecha_max = df["fecha"].max().date()
+
+# Valor por defecto para inicio: últimos 90 días, pero sin salir del rango disponible
+default_inicio = fecha_max - timedelta(days=90)
+if default_inicio < fecha_min:
+    default_inicio = fecha_min
+
+fecha_inicio = st.sidebar.date_input("Fecha inicio", default_inicio,
+                                      min_value=fecha_min, max_value=fecha_max)
+fecha_fin = st.sidebar.date_input("Fecha fin", fecha_max,
+                                   min_value=fecha_min, max_value=fecha_max)
+
+# Filtrar
+mask = (df["fecha"] >= pd.Timestamp(fecha_inicio)) & (df["fecha"] <= pd.Timestamp(fecha_fin))
+df_filtrado = df.loc[mask].copy()
+
+if df_filtrado.empty:
+    st.warning("No hay datos en el rango seleccionado.")
+    st.stop()
+
+# Métricas principales (último día)
+ultimo = df_filtrado.iloc[-1]
+col1, col2, col3, col4 = st.columns(4)
+col1.metric("Score global", f"{ultimo['score_global']:.3f}")
+col2.metric("Exposición final", f"{ultimo['exposicion_final']:.2%}")
+col3.metric("Dispersión", f"{ultimo['dispersion']:.3f}")
+col4.metric("Factor exposición (scoring)", f"{ultimo['exposure_factor']:.2%}")
+
+# Gráfico 1: Score global y suavizado
+fig1 = go.Figure()
+fig1.add_trace(go.Scatter(x=df_filtrado["fecha"], y=df_filtrado["score_global"],
+                           mode="lines", name="Score global", line=dict(color="royalblue")))
+fig1.add_trace(go.Scatter(x=df_filtrado["fecha"], y=df_filtrado["score_smoothed"],
+                           mode="lines", name="Score suavizado", line=dict(color="orange", dash="dash")))
+fig1.update_layout(title="Evolución del Score Global", xaxis_title="Fecha", yaxis_title="Score",
+                   hovermode="x unified", height=400)
+st.plotly_chart(fig1, use_container_width=True)
+
+# Gráfico 2: Exposición y factor de exposición
+fig2 = go.Figure()
+fig2.add_trace(go.Scatter(x=df_filtrado["fecha"], y=df_filtrado["exposicion_final"],
+                           mode="lines", name="Exposición final", line=dict(color="green")))
+fig2.add_trace(go.Scatter(x=df_filtrado["fecha"], y=df_filtrado["exposure_factor"],
+                           mode="lines", name="Factor de exposición (scoring)", line=dict(color="red", dash="dot")))
+fig2.update_layout(title="Exposición y Factor de Exposición", xaxis_title="Fecha", yaxis_title="Factor",
+                   hovermode="x unified", height=400)
+st.plotly_chart(fig2, use_container_width=True)
+
+# Gráfico 3: Dispersión
+fig3 = go.Figure()
+fig3.add_trace(go.Scatter(x=df_filtrado["fecha"], y=df_filtrado["dispersion"],
+                           mode="lines", name="Dispersión", fill='tozeroy', line=dict(color="purple")))
+fig3.update_layout(title="Dispersión entre Módulos", xaxis_title="Fecha", yaxis_title="Dispersión",
+                   hovermode="x unified", height=300)
+st.plotly_chart(fig3, use_container_width=True)
+
+# Mostrar tabla de últimos registros
+st.subheader("📋 Últimos 20 registros")
+st.dataframe(
+    df_filtrado.tail(20)[["fecha", "score_global", "score_smoothed", "dispersion", 
+                           "exposure_factor", "exposicion_final"]]
+    .style.format({
+        "score_global": "{:.3f}",
+        "score_smoothed": "{:.3f}",
+        "dispersion": "{:.3f}",
+        "exposure_factor": "{:.2%}",
+        "exposicion_final": "{:.2%}"
+    }),
+    use_container_width=True,
+    height=400
+)
+
+# Botón para descargar datos filtrados
+csv = df_filtrado.to_csv(index=False).encode('utf-8')
+st.download_button(
+    label="📥 Descargar datos filtrados (CSV)",
+    data=csv,
+    file_name=f"radar_{fecha_inicio}_{fecha_fin}.csv",
+    mime="text/csv"
+)

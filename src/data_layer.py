@@ -248,8 +248,8 @@ class DataLayer:
         df_combined.sort_index(inplace=True)
 
         # Descargar OHLC adicionales desde Stooq para SPY, JNK, LQD
-        ohlc_tickers = ['SPY', 'JNK', 'LQD']
-        for ticker in ohlc_tickers:
+        ohlc_tickers = ['SPY', 'JNK', 'LQD', 'EEM', 'IWM', 'XLY', 'XLP', 'EFA', 'ACWI', 'TLT', 'IBGL', 'QQQ']
+        for ticker in ohlc_tickers:            
             try:
                 logger.info(f"Descargando OHLC de {ticker} desde Stooq...")
                 df_ohlc = self._fetch_stooq_ohlc(ticker, start_date, end_date)
@@ -260,6 +260,28 @@ class DataLayer:
                     logger.warning(f"No se pudo obtener OHLC de {ticker}")
             except Exception as e:
                 logger.error(f"Error con OHLC de {ticker}: {e}")
+
+        # Calcular ATR20 de SPY a partir de los datos OHLC
+        if all(col in df_combined.columns for col in ['SPY_High', 'SPY_Low', 'SPY_Close']):
+            # Calcular el rango verdadero diario
+            high = df_combined['SPY_High']
+            low = df_combined['SPY_Low']
+            close = df_combined['SPY_Close'].shift(1)
+            tr = pd.concat([high - low, (high - close).abs(), (low - close).abs()], axis=1).max(axis=1)
+            # ATR20 es la media móvil simple de 20 días del rango verdadero
+            atr20 = tr.rolling(20).mean()
+            df_combined['SPY_ATR20'] = atr20
+            logger.info("ATR20 de SPY calculado y añadido.")
+        else:
+            logger.warning("No se encontraron columnas OHLC para SPY, no se puede calcular ATR20.")
+
+        # Calcular spreads para todos los tickers con OHLC
+        spreads_df = self.calcular_spreads(df_combined)
+        if not spreads_df.empty:
+            df_combined = pd.concat([df_combined, spreads_df], axis=1)
+            logger.info("Spreads calculados y añadidos.")
+        else:
+            logger.warning("No se pudieron calcular spreads.")
 
         # Añadir curva del Tesoro
         try:
@@ -325,6 +347,41 @@ class DataLayer:
             logger.error(f"Error obteniendo spread de {ticker}: {e}")
             return None
 
+    def calcular_spreads(self, df):
+        """
+        Calcula spreads diarios usando (High - Low) / Close para cada ticker.
+        Devuelve un DataFrame con columnas 'spread_ticker'.
+        Solo calcula para tickers que tengan columnas OHLC (Open, High, Low, Close).
+        """
+        spreads = pd.DataFrame(index=df.index)
+        # DEBUG: imprimir primeras filas de SPY si existe
+        if 'SPY_High' in df.columns:
+            print("\n🔍 DEBUG: Primeras filas de SPY OHLC:")
+            print(df[['SPY_High', 'SPY_Low', 'SPY_Close']].head(10))
+        # Identificar tickers que tienen columnas OHLC (ej. 'SPY_High')
+        tickers = set()
+        for col in df.columns:
+            if col.endswith('_High'):
+                ticker = col.replace('_High', '')
+                tickers.add(ticker)
+
+        for ticker in tickers:
+            high_col = f"{ticker}_High"
+            low_col = f"{ticker}_Low"
+            close_col = f"{ticker}_Close"
+            if high_col in df.columns and low_col in df.columns and close_col in df.columns:
+                # Calcular spread: (High - Low) / Close
+                spread = (df[high_col] - df[low_col]) / df[close_col]
+                # Limitar a un máximo razonable (10%) para evitar valores anómalos
+                spread = spread.clip(lower=0, upper=0.1)
+                print(f"\n🔍 DEBUG: spread_{ticker} primeros valores:")
+                print(spread.head(10))
+                print(f"   Último valor: {spread.iloc[-1] if not spread.empty else 'N/A'}")
+                spreads[f"spread_{ticker}"] = spread
+            else:
+                # Si no hay OHLC, dejar NaN (luego se rellenará con valor por defecto)
+                spreads[f"spread_{ticker}"] = np.nan
+        return spreads
 
 # ----------------------------------------------------------------------
 # Bloque de prueba (solo si se ejecuta directamente)

@@ -10,7 +10,7 @@ from datetime import datetime, timedelta, timezone
 
 def leer_ultimo_log():
     """Lee el archivo ultimo_log.json de la carpeta logs."""
-    log_path = 'logs/ultimo_log.json'
+    log_path = 'logs/json/ultimo_log.json'
     if not os.path.exists(log_path):
         return None
     with open(log_path, 'r') as f:
