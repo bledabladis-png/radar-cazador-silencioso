@@ -39,32 +39,16 @@ class DataLayer:
             'IWM': '239710',
         }
 
-        # Leer clave de Tiingo si existe
-        tiingo_key_file = self.config['data']['tiingo_key_file']
-        if os.path.exists(tiingo_key_file):
-            with open(tiingo_key_file, 'r') as f:
-                self.tiingo_key = f.read().strip()
-            if self.tiingo_key == "":
-                logger.warning("Archivo de clave Tiingo vacío. Se usará Yahoo Finance.")
+# Leer clave de Tiingo desde variable de entorno (prioritario) o archivo
+        self.tiingo_key = os.getenv('TIINGO_KEY')
+        if not self.tiingo_key:
+            tiingo_key_file = self.config['data']['tiingo_key_file']
+            if os.path.exists(tiingo_key_file):
+                with open(tiingo_key_file, 'r') as f:
+                    self.tiingo_key = f.read().strip()
+            else:
                 self.tiingo_key = None
-        else:
-            self.tiingo_key = None
-            logger.warning("Archivo de clave Tiingo no encontrado. Se usarÃ¡ Yahoo Finance.")
-
-        # Leer clave de Twelve Data si existe
-        twelve_key_file = self.config['data'].get('twelvedata_key_file', 'twelvedata_key.txt')
-        if os.path.exists(twelve_key_file):
-            with open(twelve_key_file, 'r') as f:
-                self.twelve_key = f.read().strip()
-            if self.twelve_key == "":
-                logger.warning("Archivo de clave Twelve Data vacío.")
-                self.twelve_key = None
-        else:
-            self.twelve_key = None
-            logger.warning("Archivo de clave Twelve Data no encontrado.")
-
-        # Inicializar cliente Tiingo si hay clave vÃ¡lida
-        if self.tiingo_key:
+                logger.warning("No se encontró clave Tiingo. Se usará Yahoo Finance.")
             try:
                 self.tiingo_client = TiingoClient({'api_key': self.tiingo_key})
             except Exception as e:
