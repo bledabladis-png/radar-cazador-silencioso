@@ -463,7 +463,7 @@ def generar_informe_markdown(df_motores, fase, flujo_puro, dispersion, pend_3d, 
                              breadth_adv_score, mejora, acumulacion, pct_engine, risk_quadrant,
                              phase_probs, phase_prob, contrib_text, scenarios_text,
                              similar_periods=None, latest_dict=None, filename="informes/informe_radar.md"):
-    """Genera el informe en formato Markdown con la sección de escenarios macro."""
+    os.makedirs(os.path.dirname(filename), exist_ok=True)
     with open(filename, 'w', encoding='utf-8') as f:
         f.write(f"# 📡 INFORME RADAR CAZADOR - {datetime.now().strftime('%d/%m/%Y')}\n\n")
         
@@ -576,23 +576,21 @@ def generar_informe_pdf(df_motores, score_global, stress, breadth_score, liquidi
                         risk_quadrant, phase_probs, phase_prob, contrib_text, quick,
                         scenarios_text=None, similar_periods=None, latest_dict=None, pct_metrics=None, filename="informes/informe_radar.pdf"):
     """Genera un PDF con texto y gráficos, incluyendo escenarios y mapa de riesgo."""
+    os.makedirs(os.path.dirname(filename), exist_ok=True)
     with PdfPages(filename) as pdf:
-        # Página de resumen ejecutivo (nueva)
+        # Página de resumen ejecutivo
         fig_summary = plot_summary_page(score_global, stress, breadth_score, liquidity_score, fase, ciclo_inst, risk_quadrant, flujo_puro, dispersion, riesgo_interp)
         pdf.savefig(fig_summary)
         plt.close(fig_summary)
-        
-        
+
         fig, ax = plt.subplots(figsize=(8.5, 11))
         ax.axis('off')
-        
+
         # Interpretaciones
         liquidez_interp = interpretar_motor('Liquidez Global', liquidez_global_score)
         cftc_interp = interpretar_motor('CFTC Positioning', cftc_score)
         breadth_adv_interp = interpretar_motor('Breadth Avanzado', breadth_adv_score)
-        
-        # Escenarios
-        
+
         texto = f"""
 ASISTENTE V5.0 - INFORME RADAR (V6/V7)
 Fecha: {datetime.now().strftime('%d/%m/%Y')}
@@ -658,33 +656,33 @@ RECOMENDACIÓN
             texto += "Reducir exposición, aumentar coberturas."
         else:
             texto += "Mantener exposición moderada, esperar confirmación."
-        
+
         ax.text(0.5, 0.5, texto, fontsize=8, ha='center', va='center', wrap=True)
         pdf.savefig(fig)
         plt.close(fig)
-        
+
         # Página 2: Radar chart
         fig = plot_radar(df_motores)
         pdf.savefig(fig)
         plt.close(fig)
-        
+
         # Página 3: Heatmap
         fig = plot_heatmap(df_motores)
         pdf.savefig(fig)
         plt.close(fig)
-        
+
         # Página 4: Timeline
         if fases_historicas:
             fig = plot_timeline(fases_historicas)
             pdf.savefig(fig)
             plt.close(fig)
-        
+
         # Página 5: Mapa de riesgo
         if not quick:
             fig_risk = plot_risk_map(score_global, stress)
             pdf.savefig(fig_risk)
             plt.close(fig_risk)
-        
+
         # Página 6: Probabilidades de fase
         if phase_probs and not quick:
             fig_phase, ax_phase = plt.subplots(figsize=(6, 4))
@@ -895,6 +893,12 @@ def plot_percentile_bars(pct_engine, latest_dict, pct_metrics):
 
 if __name__ == "__main__":
     main()
+
+
+
+
+
+
 
 
 
