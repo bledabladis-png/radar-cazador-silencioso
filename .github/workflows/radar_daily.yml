@@ -1,17 +1,16 @@
-name: Radar Diario
+﻿name: Radar Diario
 
 on:
   schedule:
-    - cron: '0 20 * * *'      # Todos los días a las 20:00 UTC
-  workflow_dispatch:           # Permite ejecución manual
+    - cron: '0 20 * * *'
+  workflow_dispatch:
 
 jobs:
   ejecutar-radar:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Clonar repositorio
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       - name: Configurar Python
         uses: actions/setup-python@v5
@@ -20,7 +19,10 @@ jobs:
           cache: 'pip'
 
       - name: Instalar dependencias
-        run: pip install -r requirements.txt
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip list
 
       - name: Ejecutar run_radar.py
         run: python run_radar.py
@@ -31,7 +33,7 @@ jobs:
       - name: Ejecutar asistente
         run: python src/asistente_v5.py
 
-      - name: Subir informes como artefactos
+      - name: Subir informes
         uses: actions/upload-artifact@v4
         with:
           name: informes
