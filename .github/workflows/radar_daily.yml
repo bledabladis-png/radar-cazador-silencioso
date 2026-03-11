@@ -2,59 +2,37 @@ name: Radar Diario
 
 on:
   schedule:
-    - cron: '0 20 * * *'   # Ejecutar a las 20:00 UTC
-  workflow_dispatch:        # Permite ejecución manual
+    - cron: '0 20 * * *'      # Todos los días a las 20:00 UTC
+  workflow_dispatch:           # Permite ejecución manual
 
 jobs:
-  run-radar:
+  ejecutar-radar:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Descargar el repositorio
-      uses: actions/checkout@v4
+      - name: Clonar repositorio
+        uses: actions/checkout@v4
 
-    - name: Configurar Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: '3.10'
+      - name: Configurar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
 
-    - name: Instalar dependencias
-      run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
+      - name: Instalar dependencias
+        run: pip install -r requirements.txt
 
-    - name: Crear archivo con la clave de Tiingo
-      run: echo "${{ secrets.TIINGO_KEY }}" > tiingo_key.txt
+      - name: Ejecutar run_radar.py
+        run: python run_radar.py
+        env:
+          TIINGO_KEY: ${{ secrets.TIINGO_KEY }}
+          TWELVEDATA_KEY: ${{ secrets.TWELVEDATA_KEY }}
 
-    - name: Crear archivo con la clave de Twelve Data
-      run: echo "${{ secrets.TWELVEDATA_KEY }}" > twelvedata_key.txt
+      - name: Ejecutar asistente
+        run: python src/asistente_v5.py
 
-    - name: Ejecutar el radar
-      run: python run_radar.py
-
-    # Generar informe con el asistente V5
-    - name: Generar informe del asistente
-      run: python src/asistente_v5.py
-
-    # Subir archivos importantes como artefactos
-    - name: Subir artefactos
-      uses: actions/upload-artifact@v4
-      with:
-        name: radar-backup-${{ github.run_id }}
-        path: |
-          ultima_exposicion.txt
-          logs/json/ultimo_log.json
-          historial_radar.csv
-          freeze_watchdog.txt
-          informe_radar.md
-          logs/parquet/*.parquet
-          radar.log
-
-    # Hacer commit de los archivos actualizados al repositorio
-    - name: Hacer commit de los archivos actualizados
-      run: |
-        git config --global user.name "github-actions"
-        git config --global user.email "actions@github.com"
-        git add ultima_exposicion.txt logs/json/ultimo_log.json historial_radar.csv informe_radar.md
-        git diff --quiet && git diff --staged --quiet || git commit -m "Actualización automática del radar [skip ci]"
-        git push
+      - name: Subir informes como artefactos
+        uses: actions/upload-artifact@v4
+        with:
+          name: informes
+          path: informes/
