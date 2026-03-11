@@ -1,0 +1,106 @@
+# asistente_config.yaml - Configuración del Asistente V5.0
+umbrales:
+  pend_positiva: 0.01
+  acel_positiva: 0.01
+  motores_rotacion: 4
+  stress_alto: -0.3
+  dispersion_alta: 0.6
+  score_bajo: -0.2
+  score_medio: 0.2
+  score_alto: 0.5
+  score_muy_alto: 0.8
+  breadth_negativo: -0.3
+  breadth_positivo: 0.3
+  rotacion_sectorial_liderazgo: 0.3
+  rotacion_sectorial_motores: 3
+  divergencia_score: 0.3
+  divergencia_breadth: -0.2
+  divergencia_liderazgo: 0.0
+
+
+interpretaciones_motores:
+  Régimen:
+    muy_positivo: "Apetito por riesgo fuerte, capital entrando en equity."
+    positivo: "Ligera preferencia por riesgo."
+    neutral: "Sin dirección clara en riesgo."
+    negativo: "Preferencia por activos refugio."
+    muy_negativo: "Huida masiva hacia refugio."
+  Liderazgo:
+    muy_positivo: "Tecnología y crecimiento lideran con fuerza."
+    positivo: "Rotación hacia sectores de crecimiento."
+    neutral: "Liderazgo sin definir."
+    negativo: "Defensivos comienzan a ganar tracción."
+    muy_negativo: "Defensivos dominan, aversión al riesgo."
+  Geográfico:
+    muy_positivo: "Fuerte flujo hacia emergentes, dólar débil."
+    positivo: "Emergentes superan a desarrollados."
+    neutral: "Flujo geográfico neutral."
+    negativo: "Capital hacia desarrollados, dólar fuerte."
+    muy_negativo: "Salida masiva de emergentes, refugio en USA."
+  Bonos:
+    muy_positivo: "Crédito muy demandado, apetito por riesgo."
+    positivo: "Mejora en condiciones crediticias."
+    neutral: "Crédito estable."
+    negativo: "Deterioro en crédito, cautela."
+    muy_negativo: "Miedo a impagos, huida a calidad."
+  Estrés:
+    muy_positivo: "Estrés muy bajo, mercado tranquilo."
+    positivo: "Estrés controlado."
+    neutral: "Nivel de estrés neutral."
+    negativo: "Aumento de estrés, volatilidad."
+    muy_negativo: "Pánico, estrés extremo."
+  Liquidez:
+    muy_positivo: "Liquidez muy expansiva, dólar muy débil."
+    positivo: "Condiciones monetarias expansivas."
+    neutral: "Liquidez neutral."
+    negativo: "Liquidez restrictiva, dólar fuerte."
+    muy_negativo: "Crisis de liquidez, dólar extremadamente fuerte."
+  Breadth:
+    muy_positivo: "Amplitud de mercado excepcional, participación generalizada."
+    positivo: "Breadth positivo, mercado saludable."
+    neutral: "Breadth neutral."
+    negativo: "Breadth negativo, concentración en pocos valores."
+    muy_negativo: "Mercado muy concentrado, fragilidad."
+  Liquidez Global:
+    muy_positivo: "Expansión de liquidez global muy fuerte."
+    positivo: "Liquidez global expansiva."
+    neutral: "Liquidez global neutral."
+    negativo: "Liquidez global contractiva."
+    muy_negativo: "Contracción severa de liquidez global."
+  CFTC Positioning:
+    muy_positivo: "Posicionamiento especulativo extremadamente largo."
+    positivo: "Especuladores netamente largos."
+    neutral: "Posicionamiento neutral."
+    negativo: "Especuladores netamente cortos."
+    muy_negativo: "Posicionamiento extremadamente corto."
+  Breadth Avanzado:
+    muy_positivo: "Amplitud de mercado excepcionalmente positiva."
+    positivo: "Amplitud saludable."
+    neutral: "Amplitud neutral."
+    negativo: "Amplitud débil."
+    muy_negativo: "Amplitud extremadamente negativa, mercado frágil."
+
+# Configuración de percentiles históricos (Fase 1)
+percentiles:
+  umbrales:
+    extremo_alto: 90
+    alto: 75
+    bajo: 25
+    extremo_bajo: 10
+  metricas:
+    - nombre: score_global
+      etiqueta: "Score Global"
+    - nombre: score_breadth
+      etiqueta: "Amplitud (breadth)"
+    - nombre: score_stress
+      etiqueta: "Estrés"
+    - nombre: dispersion
+      etiqueta: "Dispersión"
+    - nombre: score_riesgo_sistemico
+      etiqueta: "Riesgo Sistémico"
+    - nombre: score_carry
+      etiqueta: "Carry Trade"
+    - nombre: score_liquidity
+      etiqueta: "Liquidez"
+    - nombre: pend_5d
+      etiqueta: "Pendiente 5d"

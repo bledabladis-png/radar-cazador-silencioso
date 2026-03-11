@@ -1,0 +1,191 @@
+﻿# config/alert_rules.yaml
+# Reglas para el motor de alertas
+
+SMART_MONEY_ACCUMULATION:
+  name: "Acumulación de Smart Money"
+  level: HIGH
+  message: "Capital institucional comenzando acumulación temprana."
+  conditions:
+    score_global: "< 0"
+    pend_3d: "> 0.01"
+    aceleracion: "> 0.01"
+    score_stress: "improving"   # Por implementar
+  threshold: 0.0
+  max: 1.0
+
+MACRO_INFLECTION:
+  name: "Inflexión Macro"
+  level: HIGH
+  message: "Posible cambio de tendencia (mejora en crédito y amplitud)."
+  conditions:
+    score_global: "< 0"
+    pend_3d: "> 0.01"
+    aceleracion: "> 0.01"
+    pend_breadth: "> 0"
+    pend_bonds: "> 0"
+  threshold: 0.0
+
+SYSTEMIC_RISK:
+  name: "Riesgo Sistémico"
+  level: CRITICAL
+  message: "Riesgo sistémico elevado en los mercados."
+  conditions:
+    score_riesgo_sistemico: "> 0.4"
+  threshold: 0.4
+  max: 1.0
+
+SYSTEMIC_RISK_HIGH:
+  name: "Riesgo Sistémico Muy Alto"
+  level: CRITICAL
+  message: "Riesgo sistémico extremo."
+  conditions:
+    score_riesgo_sistemico: "> 0.6"
+  threshold: 0.6
+  max: 1.0
+
+CARRY_TRADE_NEGATIVO:
+  name: "Carry Trade Negativo"
+  level: HIGH
+  message: "Desapalancamiento global (carry trade negativo)."
+  conditions:
+    score_carry: "< -0.3"
+  threshold: -0.3
+  max: 1.0
+
+SECTOR_ROTATION:
+  name: "Rotación Sectorial Temprana"
+  level: MEDIUM
+  message: "Rotación hacia sectores cíclicos detectada."
+  conditions:
+    score_leadership: "> 0.3"
+    score_breadth: "< 0"
+    score_global: "> 0"
+    motores_mejorando: ">= 3"
+  threshold: 0.0
+
+DIVERGENCE_RALLY:
+  name: "Rally Estrecho"
+  level: MEDIUM
+  message: "Rally concentrado en pocos sectores."
+  conditions:
+    score_global: "> 0.3"
+    score_breadth: "< -0.2"
+  threshold: 0.0
+
+DIVERGENCE_LEADERSHIP:
+  name: "Liderazgo Débil"
+  level: MEDIUM
+  message: "Liderazgo débil en mercado alcista."
+  conditions:
+    score_global: "> 0"
+    score_leadership: "< 0"
+  threshold: 0.0
+
+STRESS_HIGH:
+  name: "Estrés Elevado"
+  level: HIGH
+  message: "Estrés en niveles altos."
+  conditions:
+    score_stress: "< -0.3"
+  threshold: -0.3
+  max: 1.0
+
+DISPERSION_HIGH:
+  name: "Alta Dispersión"
+  level: MEDIUM
+  message: "Motores desalineados, señal poco fiable."
+  conditions:
+    dispersion: "> 0.6"
+  threshold: 0.6
+  max: 1.0
+
+BREADTH_POSITIVE:
+  name: "Amplitud Positiva"
+  level: LOW
+  message: "Amplitud de mercado saludable."
+  conditions:
+    score_breadth: "> 0.3"
+  threshold: 0.3
+
+BREADTH_NEGATIVE:
+  name: "Amplitud Negativa"
+  level: LOW
+  message: "Amplitud de mercado débil."
+  conditions:
+    score_breadth: "< -0.2"
+  threshold: -0.2
+
+LIQUIDITY_IMPROVING:
+  name: "Liquidez Mejorando"
+  level: LOW
+  message: "Condiciones de liquidez expansivas."
+  conditions:
+    score_liquidity: "> 0.3"
+  threshold: 0.3
+
+LIQUIDITY_DETERIORATING:
+  name: "Liquidez Deteriorándose"
+  level: LOW
+  message: "Condiciones de liquidez restrictivas."
+  conditions:
+    score_liquidity: "< -0.2"
+  threshold: -0.2
+
+CARRY_POSITIVE:
+  name: "Carry Trade Positivo"
+  level: LOW
+  message: "Ap etito por carry trade."
+  conditions:
+    score_carry: "> 0.3"
+  threshold: 0.3
+# Nuevas reglas con percentiles (Fase 3)
+NARROW_RALLY:
+  name: "Rally Estrecho (extremo)"
+  level: HIGH
+  message: "Rally muy concentrado: flujo en percentil alto pero amplitud muy baja."
+  conditions:
+    score_global_percentile: "> 80"
+    score_breadth_percentile: "< 20"
+  threshold: 0.0
+
+EXTREME_STRESS:
+  name: "Estrés Extremo con Sequía de Liquidez"
+  level: CRITICAL
+  message: "Estrés en máximos históricos y liquidez muy contractiva."
+  conditions:
+    score_stress_percentile: "> 90"
+    score_liquidity_percentile: "< 10"
+  threshold: 0.0
+
+EARLY_ACCUMULATION:
+  name: "Acumulación Temprana (por percentiles)"
+  level: HIGH
+  message: "Flujo en mínimos históricos pero con mejora reciente (posible suelo)."
+  conditions:
+    score_global_percentile: "< 20"
+    pend_5d_percentile: "> 80"
+  threshold: 0.0
+
+DISPERSION_EXTREMA:
+  name: "Dispersión Históricamente Alta"
+  level: MEDIUM
+  message: "Dispersión en percentil muy alto, señal muy poco fiable."
+  conditions:
+    dispersion_percentile: "> 90"
+  threshold: 0.0
+
+RISK_EXTREME:
+  name: "Riesgo Sistémico en Máximos"
+  level: CRITICAL
+  message: "Riesgo sistémico en percentil extremo (>95)."
+  conditions:
+    score_riesgo_sistemico_percentile: "> 95"
+  threshold: 0.0
+
+CARRY_EXTREME_NEGATIVE:
+  name: "Carry Trade en Mínimos Históricos"
+  level: HIGH
+  message: "Carry trade en percentil muy bajo, desapalancamiento extremo."
+  conditions:
+    score_carry_percentile: "< 5"
+  threshold: 0.0

@@ -1,0 +1,66 @@
+# Pesos de los motores por fase del ciclo
+# Cada fase debe tener pesos para los 7 motores: regime, leadership, geo, bonds, stress, liquidity, breadth
+# La suma debe ser 1.0
+
+CONTRACCION:
+  regime: 0.15
+  leadership: 0.10
+  geo: 0.10
+  bonds: 0.25
+  stress: 0.15
+  liquidity: 0.15
+  breadth: 0.10
+
+CAPITULACION:
+  regime: 0.10
+  leadership: 0.05
+  geo: 0.05
+  bonds: 0.30
+  stress: 0.25
+  liquidity: 0.15
+  breadth: 0.10
+
+ACUMULACION:
+  regime: 0.20
+  leadership: 0.15
+  geo: 0.10
+  bonds: 0.20
+  stress: 0.05
+  liquidity: 0.15
+  breadth: 0.15
+
+EXPANSION:
+  regime: 0.25
+  leadership: 0.20
+  geo: 0.15
+  bonds: 0.15
+  stress: 0.05
+  liquidity: 0.10
+  breadth: 0.10
+
+EUFORIA:
+  regime: 0.30
+  leadership: 0.25
+  geo: 0.15
+  bonds: 0.10
+  stress: 0.02
+  liquidity: 0.08
+  breadth: 0.10
+
+LATE_CYCLE:
+  regime: 0.20
+  leadership: 0.20
+  geo: 0.15
+  bonds: 0.15
+  stress: 0.10
+  liquidity: 0.10
+  breadth: 0.10
+
+NEUTRAL:
+  regime: 0.18
+  leadership: 0.14
+  geo: 0.10
+  bonds: 0.20
+  stress: 0.05
+  liquidity: 0.20
+  breadth: 0.13

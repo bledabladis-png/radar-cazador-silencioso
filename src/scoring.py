@@ -1,51 +1,68 @@
-"""
-scoring.py - Motor de scoring global (versión simplificada)
-Combina los scores de los módulos con pesos fijos.
-Calcula la dispersión y el factor de exposición basado en estrés y dispersión.
+﻿"""
+scoring.py - Scoring Engine v3.0 (alineado con documento de auditoría)
+- Score provisional con pesos base (para fase)
+- Determinación de fase del ciclo mediante CycleEngine
+- Pesos dinámicos por fase (desde regime_weights.yaml)
+- Score global con pesos dinámicos
+- Ajuste por correlación (PCA) vía correlation_engine
+- Score coherente = score_global * exp(-dispersion)
+- Exposure factor = coherencia - penalty_stress - penalty_breadth
 """
 
 import pandas as pd
 import numpy as np
 import yaml
 import logging
-import sys
-import os
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from pathlib import Path
+
+from src.cycle_engine import CycleEngine
+from src.correlation_engine import adjust_weights_pca
+from src.macro_engines_v7 import ciclo_institucional
 
 logger = logging.getLogger(__name__)
 
 class ScoringEngine:
     def __init__(self, config_path='config/config.yaml'):
-        with open(config_path, 'r') as f:
+        with open(config_path, 'r', encoding='utf-8') as f:
             self.config = yaml.safe_load(f)
 
-        # Pesos base de los módulos (sección weights.base)
-        weights = self.config.get('weights', {}).get('base', {})
+        # Pesos base (para score provisional)
+        wbase = self.config.get('weights', {}).get('base', {})
         self.base_weights = {
-            'regime': weights.get('regime', 0.33),
-            'leadership': weights.get('leadership', 0.24),
-            'geo': weights.get('geo', 0.19),
-            'bonds': weights.get('bonds', 0.09),
-            'stress': weights.get('stress', 0.09),
-            'liquidity': weights.get('liquidity', 0.06)
+            'regime': wbase.get('regime', 0.18),
+            'leadership': wbase.get('leadership', 0.14),
+            'geo': wbase.get('geo', 0.10),
+            'bonds': wbase.get('bonds', 0.20),
+            'stress': wbase.get('stress', 0.05),
+            'liquidity': wbase.get('liquidity', 0.20),
+            'breadth': wbase.get('breadth', 0.13)
         }
 
-        # Parámetros para penalizaciones (sección exposicion o similar)
-        # Usaremos valores por defecto razonables si no están definidos
-        penalty_cfg = self.config.get('exposicion', {})
-        self.disp_factor = penalty_cfg.get('dispersion_penal_factor', 0.5)   # factor para penalización por dispersión
-        self.stress_factor = penalty_cfg.get('stress_penalty_factor', 0.5)  # factor para penalización por estrés
+        # Factores de penalización
+        pen = self.config.get('penalties', {})
+        self.stress_factor = pen.get('stress_factor', 0.5)
+        self.breadth_factor = pen.get('breadth_factor', 0.3)
+        self.dispersion_max = pen.get('dispersion_max', 0.8)
 
-        # Módulos a incluir en el cálculo de dispersión (por defecto los principales sin liquidez)
+        # Módulos para dispersión (sin liquidez ni breadth)
         self.disp_modules = ['regime', 'leadership', 'geo', 'bonds', 'stress']
 
-    def calcular_todo(self, regime_df, leadership_df, geo_df, bond_df, stress_df, liquidity_df=None, vix_series=None):
+        # Cargar pesos por fase
+        weights_path = Path('config/regime_weights.yaml')
+        with open(weights_path, 'r', encoding='utf-8') as f:
+            self.fase_weights = yaml.safe_load(f)
+
+        # Inicializar CycleEngine
+        self.cycle_engine = CycleEngine()
+
+    def calcular_todo(self, regime_df, leadership_df, geo_df, bond_df, stress_df,
+                      liquidity_df=None, breadth_df=None):
         """
         Entradas: DataFrames con una columna cada uno (score_regime, score_leadership, etc.)
-        liquidity_df es opcional (si no se pasa, se ignora).
-        vix_series no se usa en esta versión simplificada, se mantiene por compatibilidad.
+        liquidity_df y breadth_df son opcionales.
+        Retorna DataFrame con scores y métricas.
         """
-        # Construir lista de DataFrames disponibles con sus columnas renombradas
+        # Construir lista de DataFrames disponibles
         dfs = [
             regime_df[['score_regime']].rename(columns={'score_regime': 'regime'}),
             leadership_df[['score_leadership']].rename(columns={'score_leadership': 'leadership'}),
@@ -55,109 +72,153 @@ class ScoringEngine:
         ]
         if liquidity_df is not None:
             dfs.append(liquidity_df[['score_liquidity']].rename(columns={'score_liquidity': 'liquidity'}))
+        if breadth_df is not None:
+            dfs.append(breadth_df[['score_breadth']].rename(columns={'score_breadth': 'breadth'}))
 
-        # Alinear todos los DataFrames por su índice (fechas)
+        # Alinear por índice
         combined = pd.concat(dfs, axis=1)
-        # Eliminar filas con todos NaN (si las hay)
         combined = combined.dropna(how='all')
-        # Rellenar NaN con el último valor válido y luego 0
         combined = combined.ffill().fillna(0)
 
-        # --- 1. Score global ponderado ---
-        score_global = pd.Series(0.0, index=combined.index)
-        for module, weight in self.base_weights.items():
-            if module in combined.columns:
-                score_global += combined[module] * weight
+        motores_disponibles = list(combined.columns)
+
+        # Preparar DataFrame de resultados
+        resultados = pd.DataFrame(index=combined.index)
+        resultados['score_global'] = np.nan
+        resultados['score_coherente'] = np.nan
+        resultados['exposure_factor'] = np.nan
+        resultados['dispersion'] = np.nan
+        resultados['penalty_stress'] = np.nan
+        resultados['penalty_breadth'] = np.nan
+        resultados['fase_ciclo'] = None
+        resultados['ciclo_institucional'] = None
+        resultados['pend_3d'] = np.nan
+        resultados['pend_5d'] = np.nan
+        resultados['pend_10d'] = np.nan
+        resultados['aceleracion'] = np.nan
+        resultados['motores_mejorando'] = np.nan
+
+        # Para el cálculo de fases necesitamos fila anterior
+        fila_anterior = None
+
+        for idx in combined.index:
+            fila_actual = combined.loc[idx]
+
+            # --- 1. Score provisional con pesos base (para fase) ---
+            score_prov = 0.0
+            for mod, peso in self.base_weights.items():
+                if mod in motores_disponibles:
+                    score_prov += fila_actual[mod] * peso
+
+            # --- 2. Métricas dinámicas sobre score_prov ---
+            hist_hasta_idx = combined.loc[:idx]
+            if len(hist_hasta_idx) >= 4:
+                pend_3d = (score_prov - hist_hasta_idx.iloc[-4]['regime']) / 3 if len(hist_hasta_idx) >= 4 else 0
+                pend_5d = (score_prov - hist_hasta_idx.iloc[-6]['regime']) / 5 if len(hist_hasta_idx) >= 6 else 0
+                pend_10d = (score_prov - hist_hasta_idx.iloc[-11]['regime']) / 10 if len(hist_hasta_idx) >= 11 else 0
             else:
-                logger.debug(f"Módulo {module} no presente, se omite")
+                pend_3d = pend_5d = pend_10d = 0.0
 
-        # --- 2. Dispersión entre módulos principales (sin liquidez) ---
-        # Tomamos los módulos que realmente existen
-        available_disp = [m for m in self.disp_modules if m in combined.columns]
-        if len(available_disp) > 1:
-            dispersion = combined[available_disp].std(axis=1)
-        else:
-            dispersion = pd.Series(0.0, index=combined.index)
+            pend_3d = pend_3d if not np.isnan(pend_3d) else 0.0
+            pend_5d = pend_5d if not np.isnan(pend_5d) else 0.0
+            pend_10d = pend_10d if not np.isnan(pend_10d) else 0.0
+            aceleracion = pend_3d - pend_10d
 
-        # --- 3. Penalización por estrés (solo si stress > 0) ---
-        if 'stress' in combined.columns:
-            # Solo la parte positiva del estrés penaliza
-            stress_positive = combined['stress'].clip(lower=0)
-            penalty_stress = stress_positive * self.stress_factor
-        else:
-            penalty_stress = pd.Series(0.0, index=combined.index)
+            # Motores mejorando (pendiente 5d positiva)
+            motores_mejorando = 0
+            if len(hist_hasta_idx) >= 6:
+                for mod in motores_disponibles:
+                    serie = hist_hasta_idx[mod]
+                    if len(serie) >= 6:
+                        pend_mod = (serie.iloc[-1] - serie.iloc[-6]) / 5
+                        if pend_mod > 0.01:  # umbral mínimo
+                            motores_mejorando += 1
 
-        # --- 4. Penalización por dispersión ---
-        penalty_disp = dispersion * self.disp_factor
-        # Acotar penalizaciones para que el factor de exposición no sea negativo
-        # (opcional, pero podemos limitar cada penalización a un máximo, ej. 0.5)
-        max_penalty = 0.8  # para que exposure_factor nunca sea menor que 0.2
-        penalty_disp = penalty_disp.clip(upper=max_penalty)
-        penalty_stress = penalty_stress.clip(upper=max_penalty)
+            # --- 3. Clasificar fase del ciclo (7 fases) ---
+            datos_para_fase = pd.Series({
+                'score_global': score_prov,
+                'stress': fila_actual.get('stress', 0),
+                'bonds': fila_actual.get('bonds', 0),
+                'liquidity': fila_actual.get('liquidity', 0),
+                'regime': fila_actual.get('regime', 0),
+                'leadership': fila_actual.get('leadership', 0),
+                'geo': fila_actual.get('geo', 0),
+                'pend_3d': pend_3d,
+                'pend_5d': pend_5d,
+                'pend_10d': pend_10d,
+                'aceleracion': aceleracion,
+                'motores_mejorando': motores_mejorando,
+                'dispersion': 0  # aún no calculada
+            })
+            fase, desc = self.cycle_engine.clasificar(datos_para_fase, fila_anterior)
+            fila_anterior = datos_para_fase.copy()  # guardar para próxima iteración
 
-        # --- 5. Factor de exposición final ---
-        exposure_factor = 1.0 - penalty_disp - penalty_stress
-        exposure_factor = exposure_factor.clip(lower=0.0, upper=1.0)
+            # --- 4. Pesos dinámicos según fase ---
+            pesos_fase = self.fase_weights.get(fase, self.fase_weights.get('NEUTRAL', {}))
+            # Si faltan algunos motores en pesos_fase, usar los base
+            pesos_dinamicos = {}
+            for mod in motores_disponibles:
+                if mod in pesos_fase:
+                    pesos_dinamicos[mod] = pesos_fase[mod]
+                else:
+                    pesos_dinamicos[mod] = self.base_weights.get(mod, 0)
 
-        # --- 6. Score suavizado para visualización (media móvil de 5 días) ---
-        score_smoothed = score_global.rolling(window=5, min_periods=1).mean()
+            # Renormalizar a suma 1
+            total = sum(pesos_dinamicos.values())
+            if total > 0:
+                for mod in pesos_dinamicos:
+                    pesos_dinamicos[mod] /= total
 
-        # --- 7. Construir DataFrame de resultados ---
-        resultados = pd.DataFrame({
-            'score_global': score_global,
-            'score_smoothed': score_smoothed,
-            'exposure_factor': exposure_factor,
-            'dispersion': dispersion,
-            'penalty_disp': penalty_disp,
-            'penalty_stress': penalty_stress
-        }, index=combined.index)
+            # --- 5. Ajuste por correlación (PCA) ---
+            if len(hist_hasta_idx) >= 30:
+                # Usar último año (252 días) para PCA
+                ventana_pca = hist_hasta_idx.iloc[-252:]
+                pesos_pca = adjust_weights_pca(pesos_dinamicos, ventana_pca, n_components=None)
+            else:
+                pesos_pca = pesos_dinamicos
 
-        # Rellenar cualquier posible NaN residual
-        resultados = resultados.ffill().fillna(0)
+            # --- 6. Score global con pesos ajustados ---
+            score_global = 0.0
+            for mod, peso in pesos_pca.items():
+                score_global += fila_actual[mod] * peso
+
+            # --- 7. Dispersión (desviación estándar de motores seleccionados) ---
+            valores_disp = [fila_actual[mod] for mod in self.disp_modules if mod in motores_disponibles]
+            dispersion = np.std(valores_disp) if len(valores_disp) > 1 else 0.0
+            dispersion = min(dispersion, self.dispersion_max)
+
+            # --- 8. Penalizaciones ---
+            stress = fila_actual.get('stress', 0)
+            penalty_stress = max(0, stress) * self.stress_factor if stress < 0 else 0  # stress negativo malo
+            breadth = fila_actual.get('breadth', 0)
+            penalty_breadth = max(0, -breadth) * self.breadth_factor if breadth < 0 else 0
+
+            # --- 9. Score coherente y exposure factor ---
+            coherencia = np.exp(-dispersion)
+            score_coherente = score_global * coherencia
+            exposure_factor = coherencia - penalty_stress - penalty_breadth
+            exposure_factor = np.clip(exposure_factor, 0, 1)
+
+            # --- 10. Ciclo institucional (4 fases) ---
+            ciclo_inst = ciclo_institucional({
+                'score_global': score_global,
+                'score_breadth': breadth,
+                'score_stress': stress
+            })
+
+            # Guardar resultados
+            resultados.loc[idx, 'score_global'] = score_global
+            resultados.loc[idx, 'score_coherente'] = score_coherente
+            resultados.loc[idx, 'exposure_factor'] = exposure_factor
+            resultados.loc[idx, 'dispersion'] = dispersion
+            resultados.loc[idx, 'penalty_stress'] = penalty_stress
+            resultados.loc[idx, 'penalty_breadth'] = penalty_breadth
+            resultados.loc[idx, 'fase_ciclo'] = fase
+            resultados.loc[idx, 'ciclo_institucional'] = ciclo_inst
+            resultados.loc[idx, 'pend_3d'] = pend_3d
+            resultados.loc[idx, 'pend_5d'] = pend_5d
+            resultados.loc[idx, 'pend_10d'] = pend_10d
+            resultados.loc[idx, 'aceleracion'] = aceleracion
+            resultados.loc[idx, 'motores_mejorando'] = motores_mejorando
 
         return resultados
-
-
-if __name__ == "__main__":
-    # Ejemplo de prueba
-    from src.data_layer import DataLayer
-    from src.regime_engine import RegimeEngine
-    from src.leadership_engine import LeadershipEngine
-    from src.geographic_engine import GeographicEngine
-    from src.bond_engine import BondEngine
-    from src.stress_engine import StressEngine
-    from src.liquidity_engine import LiquidityEngine
-
-    logging.basicConfig(level=logging.INFO)
-
-    dl = DataLayer()
-    df = dl.load_latest()
-
-    engines = {
-        'regime': RegimeEngine(),
-        'leadership': LeadershipEngine(),
-        'geo': GeographicEngine(),
-        'bonds': BondEngine(),
-        'stress': StressEngine(),
-        'liquidity': LiquidityEngine()
-    }
-
-    # Calcular scores de cada motor
-    module_dfs = {}
-    for name, eng in engines.items():
-        result = eng.calcular_todo(df)
-        module_dfs[name] = result
-
-    # Llamar al scoring engine
-    scoring = ScoringEngine()
-    resultados = scoring.calcular_todo(
-        regime_df=module_dfs['regime'],
-        leadership_df=module_dfs['leadership'],
-        geo_df=module_dfs['geo'],
-        bond_df=module_dfs['bonds'],
-        stress_df=module_dfs['stress'],
-        liquidity_df=module_dfs['liquidity']
-    )
-
-    print("\nResultados globales (últimos 5 días):")
-    print(resultados.tail())

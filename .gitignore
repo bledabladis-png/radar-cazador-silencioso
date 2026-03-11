@@ -25,3 +25,4 @@ __pycache__/
 
 # Configuraciones locales
 *.local
+twelvedata_key.txt

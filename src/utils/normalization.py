@@ -47,6 +47,18 @@ def persistence_factor(series, N):
         factores.append(factor)
     return pd.Series(factores, index=series.index)
 
+def robust_scale(series, window=252, epsilon=1e-6):
+    """
+    Calcula un factor de escala robusto usando la desviación absoluta mediana (MAD).
+    Retorna NaN mientras no haya al menos 'window' observaciones.
+    Se añade epsilon para evitar divisiones por cero.
+    """
+    rolling_median = series.rolling(window, min_periods=window).median()
+    abs_dev = (series - rolling_median).abs()
+    mad = abs_dev.rolling(window, min_periods=window).median()
+    scale = mad * 1.4826 + epsilon
+    return scale
+
 def normalize_module_series(series, window=252, method='zscore_tanh'):
     """
     Normaliza una serie de un módulo (opcional).

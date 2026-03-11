@@ -26,26 +26,29 @@ jobs:
     - name: Crear archivo con la clave de Tiingo
       run: echo "${{ secrets.TIINGO_KEY }}" > tiingo_key.txt
 
+    - name: Crear archivo con la clave de Twelve Data
+      run: echo "${{ secrets.TWELVEDATA_KEY }}" > twelvedata_key.txt
+
     - name: Ejecutar el radar
       run: python run_radar.py
 
-    # NUEVO: Generar informe ejecutivo
-    - name: Generar informe del asistente V2
-      run: python src/asistente_informe_v2.py
+    # Generar informe con el asistente V5
+    - name: Generar informe del asistente
+      run: python src/asistente_v5.py
 
-    # Subir archivos importantes como artefactos (backup en la nube de GitHub)
-    - name: Subir artefactos (backup)
+    # Subir archivos importantes como artefactos
+    - name: Subir artefactos
       uses: actions/upload-artifact@v4
       with:
         name: radar-backup-${{ github.run_id }}
         path: |
           ultima_exposicion.txt
-          logs/json/ultimo_log.json      # Ruta actualizada
+          logs/json/ultimo_log.json
           historial_radar.csv
           freeze_watchdog.txt
-          alertas.txt
-          informe_radar.md                # Nuevo informe
-          logs/parquet/*.parquet          # Opcional: respaldo de logs de riesgo
+          informe_radar.md
+          logs/parquet/*.parquet
+          radar.log
 
     # Hacer commit de los archivos actualizados al repositorio
     - name: Hacer commit de los archivos actualizados
