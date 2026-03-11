@@ -17,21 +17,17 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Actualizar pip e instalar pandas primero
+      - name: Instalar dependencias
         run: |
           python -m pip install --upgrade pip setuptools wheel
-          pip install pandas
-          echo "=== Versión de pandas instalada ==="
-          pip show pandas
-          python -c "import pandas; print('pandas OK')"
-
-      - name: Instalar resto de dependencias
-        run: |
+          # Instalar pandas y pyyaml explícitamente (base)
+          pip install pandas pyyaml
+          # Intentar instalar desde requirements.txt
           if [ -f requirements.txt ]; then
             pip install -r requirements.txt
           else
-            echo "❌ requirements.txt no encontrado"
-            exit 1
+            echo "❌ requirements.txt no encontrado. Instalando dependencias esenciales..."
+            pip install numpy matplotlib seaborn scikit-learn scipy yfinance tiingo requests beautifulsoup4 lxml html5lib openpyxl xlrd
           fi
           echo "=== Paquetes instalados ==="
           pip list
