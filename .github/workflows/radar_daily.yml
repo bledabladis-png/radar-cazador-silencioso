@@ -16,12 +16,24 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-          cache: 'pip'
 
-      - name: Instalar dependencias
+      - name: Actualizar pip e instalar pandas primero
         run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
+          python -m pip install --upgrade pip setuptools wheel
+          pip install pandas
+          echo "=== Versión de pandas instalada ==="
+          pip show pandas
+          python -c "import pandas; print('pandas OK')"
+
+      - name: Instalar resto de dependencias
+        run: |
+          if [ -f requirements.txt ]; then
+            pip install -r requirements.txt
+          else
+            echo "❌ requirements.txt no encontrado"
+            exit 1
+          fi
+          echo "=== Paquetes instalados ==="
           pip list
 
       - name: Ejecutar run_radar.py
