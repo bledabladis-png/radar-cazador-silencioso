@@ -3,6 +3,10 @@ import os
 import numpy as np
 import matplotlib.pyplot as plt
 from datetime import datetime
+import sys
+
+sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+from config import tickers
 
 def save_ranking_csv(ranking, output_path='outputs/rankings.csv'):
     new_row = pd.DataFrame([{
@@ -24,20 +28,23 @@ def save_ranking_csv(ranking, output_path='outputs/rankings.csv'):
     df.to_csv(output_path, index=False)
 
 def save_flow_history(flow_mom, output_path='outputs/flow_history.csv'):
+    """
+    Guarda el histórico de flujos (z-scores) para todos los sectores definidos en config.py.
+    """
     latest = flow_mom.iloc[-1]
     dispersion = flow_mom.std(axis=1).iloc[-1]
     breadth = (flow_mom.iloc[-1] > 0).sum() / len(flow_mom.columns)
-    new_row = pd.DataFrame([{
-        'fecha': pd.Timestamp.now().strftime("%Y-%m-%d %H:%M:%S"),
-        'XLF_flow': latest.get('XLF', None),
-        'XLY_flow': latest.get('XLY', None),
-        'XLK_flow': latest.get('XLK', None),
-        'XLI_flow': latest.get('XLI', None),
-        'XLP_flow': latest.get('XLP', None),
-        'XLE_flow': latest.get('XLE', None),
-        'dispersion': dispersion,
-        'breadth': breadth
-    }])
+
+    # Construir diccionario con todos los sectores de config
+    sectors = tickers['sectors']
+    row_data = {'fecha': pd.Timestamp.now().strftime("%Y-%m-%d %H:%M:%S")}
+    for sec in sectors:
+        row_data[f'{sec}_flow'] = latest.get(sec, None)
+    row_data['dispersion'] = dispersion
+    row_data['breadth'] = breadth
+
+    new_row = pd.DataFrame([row_data])
+
     if os.path.exists(output_path):
         existing = pd.read_csv(output_path)
         df = pd.concat([existing, new_row], ignore_index=True)
@@ -79,21 +86,21 @@ def save_markdown_report(ranking_price, ranking_flow, flow_dispersion, flow_brea
                          alertas, output_path='outputs/reporte_diario.md'):
     with open(output_path, 'w', encoding='utf-8') as f:
         f.write("# Radar de Rotacion Sectorial v3.15\n\n")
-        f.write(f"**Fecha:** {pd.Timestamp.now().strftime("%Y-%m-%d %H:%M:%S")}\n\n")
+        f.write(f"**Fecha:** {pd.Timestamp.now().strftime('%Y-%m-%d %H:%M:%S')}\n\n")
 
         f.write("## Ranking por Momentum de Precio\n\n")
         f.write("| Posicion | Sector | Momentum |\n")
         f.write("|----------|--------|----------|\n")
         for i, (sec, mom) in enumerate(ranking_price, 1):
-            arrow = "â†‘" if mom > 0 else "â†“"
-            f.write(f"| {i} | {sec} | {mom:.4f}|\n")
+            arrow = "↑" if mom > 0 else "↓"
+            f.write(f"| {i} | {sec} | {mom:.4f} |\n")
 
         f.write("\n## Ranking por Flujo de Dinero Estimado\n\n")
         f.write("| Posicion | Sector | Flujo (z-score) | Interpretacion |\n")
         f.write("|----------|--------|-----------------|----------------|\n")
         for i, (sec, flow) in enumerate(ranking_flow.items(), 1):
-            arrow = "â†‘" if flow > 0 else "â†“"
-            f.write(f"| {i} | {sec} | {flow:.2f}| {interpret_flow_intensity(flow)} |\n")
+            arrow = "↑" if flow > 0 else "↓"
+            f.write(f"| {i} | {sec} | {flow:.2f} | {interpret_flow_intensity(flow)} |\n")
 
         f.write("\n## Alertas del Dia\n\n")
         for alerta in alertas:
@@ -128,10 +135,3 @@ def save_markdown_report(ranking_price, ranking_flow, flow_dispersion, flow_brea
         f.write(f"**Dinero fuerte entrando en:** {ranking_flow.index[0]}\n")
         f.write(f"**Dinero saliendo de:** {ranking_flow.index[-1]}\n")
         f.write("\n---\n*Generado automaticamente por el Radar de Rotacion Sectorial v3.15*")
-
-
-
-
-
-
-

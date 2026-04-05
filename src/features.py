@@ -1,6 +1,7 @@
 ﻿import pandas as pd
 import numpy as np
 import sys, os
+
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from config import tickers
 
@@ -102,23 +103,6 @@ def compute_volume_zscore(df, sectors, window=20):
         std = dollar_vol.rolling(window).std()
         vol_z[sec] = (dollar_vol - mean) / std
     return vol_z
-def compute_price_zscore(df, sectors, benchmark='SPY', window=60):
-    price_z = pd.DataFrame(index=df.index)
-    for sec in sectors:
-        rel = df[sec] / df[benchmark]
-        mean = rel.rolling(window, min_periods=20).mean()
-        std = rel.rolling(window, min_periods=20).std()
-        price_z[sec] = (rel - mean) / std
-    return price_z
-
-def compute_acceleration_zscore(flow_acc_df, window=20):
-    acc_z = pd.DataFrame(index=flow_acc_df.index)
-    for col in flow_acc_df.columns:
-        mean = flow_acc_df[col].rolling(window, min_periods=10).mean()
-        std = flow_acc_df[col].rolling(window, min_periods=10).std()
-        acc_z[col] = (flow_acc_df[col] - mean) / std
-    return acc_z
-
 
 def compute_price_zscore(df, sectors, benchmark='SPY', window=60):
     price_z = pd.DataFrame(index=df.index)
@@ -136,4 +120,3 @@ def compute_acceleration_zscore(flow_acc_df, window=20):
         std = flow_acc_df[col].rolling(window, min_periods=10).std()
         acc_z[col] = (flow_acc_df[col] - mean) / std
     return acc_z
-

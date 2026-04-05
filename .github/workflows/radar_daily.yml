@@ -60,9 +60,16 @@ jobs:
           name: grafico-dispersion
           path: outputs/flow_dispersion.png
 
-      - name: Subir histórico
+      - name: Subir histórico de flujos
         uses: actions/upload-artifact@v4
         with:
           name: historico-flujos
           path: outputs/flow_history.csv
 
+      - name: Commit y push del histórico CFTC (si cambió)
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/cftc_history.csv
+          git commit -m "Actualizar histórico CFTC" || echo "No hay cambios"
+          git push

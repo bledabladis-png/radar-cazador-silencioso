@@ -2,11 +2,12 @@
 import os
 import numpy as np
 import pandas as pd
+
 sys.path.append(os.path.join(os.path.dirname(__file__), 'src'))
 
 from data_loader import download_market_data
 from rotation_radar import run_radar, run_flow_radar
-from utils import save_flow_history, plot_flow_dispersion, save_markdown_report, interpret_flow_intensity
+from utils import save_flow_history, plot_flow_dispersion, save_markdown_report
 from features import compute_volume_zscore, compute_flow_acceleration, compute_price_zscore, compute_acceleration_zscore, compute_features
 
 def supervision(*args, **kwargs):
@@ -154,8 +155,8 @@ def prob_distribution_binary(score, k=5):
     return 1 / (1 + np.exp(-k * (score - 0.5)))
 
 def system_confidence(vix_z, breadth, flow_dispersion):
-    conf = (0.4 * max(0, breadth) + 
-            0.3 * (1 - min(vix_z, 2) / 2) + 
+    conf = (0.4 * max(0, breadth) +
+            0.3 * (1 - min(vix_z, 2) / 2) +
             0.3 * (1 - flow_dispersion))
     return max(0, min(1, conf))
 
@@ -247,13 +248,64 @@ def compute_persistence(history_df, sector, window=3):
     else:
         return "TRANSICION"
 
-def enrich_with_cftc_sector(report_lines, cftc_raw):
-    if cftc_raw is None:
+def enrich_with_cftc_sector(report_lines, cftc_with_z, raw_file=None):
+    """
+    Genera la tabla CFTC en el reporte usando el DataFrame con z-scores (histórico).
+    Si no hay cftc_with_z, intenta usar raw_file como respaldo.
+    """
+    if cftc_with_z is not None and not cftc_with_z.empty:
+        # Usar el histórico con z-scores
+        if 'cftc_z' not in cftc_with_z.columns:
+            report_lines.append("\n## Confirmacion CFTC\n")
+            report_lines.append("No se encontró la columna 'cftc_z' en los datos históricos.\n")
+            return
+        
+        latest_date = cftc_with_z['date'].max()
+        latest_data = cftc_with_z[cftc_with_z['date'] == latest_date].copy()
+        
+        from config import CFTC_MARKETS
+        
+        sector_z = {}
+        for sector, substring in CFTC_MARKETS.items():
+            mask = latest_data['market'].str.contains(substring, case=False, na=False)
+            mask &= ~latest_data['market'].str.contains("MICRO|NANO", case=False, na=False)
+            if mask.any():
+                z_vals = latest_data.loc[mask, 'cftc_z']
+                if not z_vals.empty:
+                    sector_z[sector] = np.median(z_vals)
+        
+        if not sector_z:
+            report_lines.append("\n## Confirmacion CFTC\n")
+            report_lines.append("No se encontraron mercados relevantes en el histórico.\n")
+            return
+        
+        report_lines.append("\n## Confirmacion CFTC (posicionamiento institucional)\n")
+        report_lines.append(f"*Datos semanales al {latest_date.strftime('%Y-%m-%d')} (retraso de 3 dias)*\n\n")
+        report_lines.append("| Sector | Z-score (mediana) | Instrumentos | Interpretacion |\n")
+        report_lines.append("|--------|-------------------|--------------|----------------|\n")
+        for sector, z in sorted(sector_z.items(), key=lambda x: x[1], reverse=True):
+            if z > 1.5:
+                interp = "FUERTEMENTE ALCISTA"
+            elif z > 0.5:
+                interp = "ALCISTA"
+            elif z < -1.5:
+                interp = "FUERTEMENTE BAJISTA"
+            elif z < -0.5:
+                interp = "BAJISTA"
+            else:
+                interp = "NEUTRAL"
+            report_lines.append(f"| {sector} | {z:.2f} | - | {interp} |\n")
+        report_lines.append("\n*Nota: CFTC semanal con retraso (martes a viernes). Solo para contexto macro.*\n")
+        return
+    
+    # Fallback: usar raw_file si existe (comportamiento anterior)
+    if raw_file is None:
         report_lines.append("\n## Confirmacion CFTC\n")
-        report_lines.append("No se encontro archivo CFTC. Para activar, descargue manualmente desde\n")
+        report_lines.append("No se encontró archivo CFTC. Para activar, descargue manualmente desde\n")
         report_lines.append("https://www.cftc.gov/dea/newcot/FinFutWk.txt y guardelo como data/cftc_raw.txt\n")
         return
-    parsed = parse_cftc_financials(cftc_raw)
+    
+    parsed = parse_cftc_financials(raw_file)
     if parsed is None or parsed.empty:
         report_lines.append("\n## Confirmacion CFTC\n")
         report_lines.append("No se pudieron parsear los datos CFTC.\n")
@@ -285,22 +337,22 @@ def enrich_with_cftc_sector(report_lines, cftc_raw):
 
     report_lines.append("\n## Confirmacion CFTC (posicionamiento institucional)\n")
     report_lines.append(f"*Datos semanales al {latest_date.strftime('%Y-%m-%d')} (retraso de 3 dias)*\n\n")
-    report_lines.append("| Sector | Posicion neta (miles de contratos) | Instrumentos | Direccion |\n")
-    report_lines.append("|--------|-------------------------------------|--------------|-----------|\n")
+    report_lines.append("| Sector | Z-score (mediana) | Instrumentos | Interpretacion |\n")
+    report_lines.append("|--------|-------------------|--------------|----------------|\n")
     for sector, net_list in sorted(sector_signals.items(), key=lambda x: np.median(x[1]), reverse=True):
-        median_net = np.median(net_list)
+        median_z = np.median(net_list)
         n = len(net_list)
-        net_k = median_net / 1000.0
-        if net_k > 0:
-            arrow = "↑"
-            direccion = "LARGO"
-        elif net_k < 0:
-            arrow = "↓"
-            direccion = "CORTO"
+        if median_z > 1.5:
+            interp = "FUERTEMENTE ALCISTA"
+        elif median_z > 0.5:
+            interp = "ALCISTA"
+        elif median_z < -1.5:
+            interp = "FUERTEMENTE BAJISTA"
+        elif median_z < -0.5:
+            interp = "BAJISTA"
         else:
-            arrow = "→"
-            direccion = "NEUTRAL"
-        report_lines.append(f"| {sector} | {net_k:.1f}k {arrow} | {n} | {direccion} |\n")
+            interp = "NEUTRAL"
+        report_lines.append(f"| {sector} | {median_z:.2f} | {n} | {interp} |\n")
     report_lines.append("\n*Nota: CFTC semanal con retraso (martes a viernes). Solo para contexto macro.*\n")
 
 def compute_synthetic_factors(cftc_sector_z):
@@ -415,11 +467,8 @@ def main():
     fase_dict = {}
     direccion_dict = {}
     for sec in sectors:
-        pm = price_mom_dict.get(sec, 0)
         fm = latest_flow_mom.get(sec, 0)
-        fa = latest_flow_acc.get(sec, 0)
-        vz = latest_vol_z.get(sec, 0)
-        fase_dict[sec] = classify_phase(latest_price_z.get(sec, 0), fm, latest_acc_z.get(sec, 0), vz)
+        fase_dict[sec] = classify_phase(latest_price_z.get(sec, 0), fm, latest_acc_z.get(sec, 0), latest_vol_z.get(sec, 0))
         direccion_dict[sec] = classify_direction(fm)
 
     oportunidad_dict = {}
@@ -449,41 +498,57 @@ def main():
     # --- CFTC con histórico ---
     cftc_spy_z = None
     cftc_raw = None
-    cftc_history_df = None
+    cftc_with_z = None
     if CFTC_AVAILABLE:
         cftc_history_df = update_cftc_history()
         if cftc_history_df is not None and not cftc_history_df.empty:
-            with_signal = compute_cftc_zscore_from_history()
-            if with_signal is not None and not with_signal.empty:
-                latest = with_signal.loc[with_signal.groupby('market')['date'].idxmax()]
+            cftc_with_z = compute_cftc_zscore_from_history()
+            if cftc_with_z is not None and not cftc_with_z.empty:
+                # Hay suficientes datos históricos: usar el z-score
+                latest = cftc_with_z.loc[cftc_with_z.groupby('market')['date'].idxmax()]
                 spy_row = latest[latest['market'].str.contains("S&P 500", case=False)]
                 if not spy_row.empty:
                     cftc_spy_z = spy_row['cftc_z'].iloc[-1]
+            else:
+                # No hay suficientes datos históricos para z-score, pero tenemos el raw
+                cftc_raw = load_cftc_manual(path="data/cftc_raw.txt")
+                if cftc_raw is not None:
+                    parsed = parse_cftc_financials(cftc_raw)
+                    if parsed is not None:
+                        with_signal = compute_cftc_signal(parsed)
+                        if with_signal is not None and not with_signal.empty:
+                            spy_data = with_signal[with_signal['market'].str.contains("S&P 500", case=False)]
+                            if not spy_data.empty:
+                                cftc_spy_z = spy_data['cftc_z'].iloc[-1]
+                            # Usamos with_signal como cftc_with_z para que la tabla se genere desde el raw
+                            cftc_with_z = with_signal
         else:
+            # No hay histórico, cargar raw directamente
             cftc_raw = load_cftc_manual(path="data/cftc_raw.txt")
             if cftc_raw is not None:
                 parsed = parse_cftc_financials(cftc_raw)
                 if parsed is not None:
-                    with_signal = compute_cftc_signal(parsed)
-                    if not with_signal.empty:
-                        spy_data = with_signal[with_signal['market'].str.contains("S&P 500", case=False)]
+                    cftc_with_z = compute_cftc_signal(parsed)
+                    if cftc_with_z is not None and not cftc_with_z.empty:
+                        spy_data = cftc_with_z[cftc_with_z['market'].str.contains("S&P 500", case=False)]
                         if not spy_data.empty:
                             cftc_spy_z = spy_data['cftc_z'].iloc[-1]
 
-    # Extraer z-scores para factores sintéticos (usar histórico si existe)
     cftc_sector_z = {}
-    if cftc_history_df is not None and not cftc_history_df.empty:
-        latest_data = cftc_history_df.loc[cftc_history_df.groupby('market')['date'].idxmax()]
-        from config import CFTC_MARKETS
-        for sector, substring in CFTC_MARKETS.items():
-            mask = latest_data['market'].str.contains(substring, case=False, na=False)
-            mask &= ~latest_data['market'].str.contains("MICRO|NANO", case=False, na=False)
-            if mask.any():
-                z_vals = latest_data.loc[mask, 'cftc_z']
-                if not z_vals.empty:
-                    cftc_sector_z[sector] = np.median(z_vals)
+    if cftc_with_z is not None and not cftc_with_z.empty:
+        if 'cftc_z' in cftc_with_z.columns:
+            latest_data = cftc_with_z.loc[cftc_with_z.groupby('market')['date'].idxmax()]
+            from config import CFTC_MARKETS
+            for sector, substring in CFTC_MARKETS.items():
+                mask = latest_data['market'].str.contains(substring, case=False, na=False)
+                mask &= ~latest_data['market'].str.contains("MICRO|NANO", case=False, na=False)
+                if mask.any():
+                    z_vals = latest_data.loc[mask, 'cftc_z']
+                    if not z_vals.empty:
+                        cftc_sector_z[sector] = np.median(z_vals)
+        else:
+            print("[CFTC] Advertencia: 'cftc_z' no encontrada en los datos. Los factores sintéticos no estarán disponibles.")
 
-    # Factores sintéticos
     synthetic = compute_synthetic_factors(cftc_sector_z)
     synth_lines = [
         "\n## Factores Sintéticos (Agregados)\n",
@@ -496,7 +561,6 @@ def main():
         f"- **Pendiente de la curva (largo - corto):** {synthetic['curve_spread']:.2f}\n"
     ]
 
-    # Tabla de distribución
     dist_lines = ["\n## Confirmacion de Distribucion (dinero inteligente saliendo)\n"]
     rank_history = pd.DataFrame()
     for i in range(1, 6):
@@ -556,7 +620,6 @@ def main():
     save_flow_history(flow_mom)
     plot_flow_dispersion(flow_mom)
 
-    from utils import save_markdown_report
     temp_md = "outputs/reporte_diario_temp.md"
     save_markdown_report(ranking_price, ranking_flow, flow_dispersion, flow_breadth, regime_flow,
                          dispersion_price, breadth_price, vix_z, regime_price, accion_price,
@@ -580,7 +643,7 @@ def main():
     ]
     lines[insert_pos:insert_pos] = synth_lines + macro_lines + dist_lines
     cftc_lines = []
-    enrich_with_cftc_sector(cftc_lines, cftc_raw)
+    enrich_with_cftc_sector(cftc_lines, cftc_with_z, raw_file=cftc_raw)
     for i, line in enumerate(lines):
         if line.startswith("## Conclusión"):
             insert_pos = i

@@ -1,6 +1,7 @@
 ﻿import pandas as pd
 import numpy as np
 import sys, os
+
 sys.path.append(os.path.join(os.path.dirname(__file__)))
 from features import compute_features, compute_etf_flows_robust as compute_etf_flows
 from features import compute_flow_momentum, compute_flow_dispersion, compute_flow_breadth
@@ -47,7 +48,7 @@ def run_flow_radar(df, sectors=None):
         sectors = tickers['sectors']
     flows = compute_etf_flows(df, sectors)
     flow_mom = compute_flow_momentum(flows)
-    # Suavizado adicional para alinear horizontes (ventana 3 dias)
+    # Suavizado adicional (rolling 3) para reducir ruido - se mantiene
     flow_mom = flow_mom.rolling(3).mean()
     latest_flow = flow_mom.iloc[-1]
     ranking_flow = latest_flow.sort_values(ascending=False)
@@ -61,33 +62,11 @@ def run_flow_radar(df, sectors=None):
         regime_flow = "FLUJO SELECTIVO"
     return ranking_flow, flow_dispersion, flow_breadth, regime_flow, flow_mom
 
-# ---------- Funciones auxiliares ----------
-def compute_flow_acceleration(flow_mom, window=5):
-    return flow_mom - flow_mom.rolling(window).mean()
-
-def compute_volume_zscore(df, sectors, window=20):
-    vol_z = pd.DataFrame(index=df.index)
-    for sec in sectors:
-        dollar_vol = df[f"{sec}_dollar_vol_smoothed"]
-        mean = dollar_vol.rolling(window).mean()
-        std = dollar_vol.rolling(window).std()
-        vol_z[sec] = (dollar_vol - mean) / std
-    return vol_z
-
-# ---------- Funciones de distribucion ----------
+# ---------- Funciones de distribucion (binaria) ----------
 def divergence_score(price_mom, flow_mom):
     p = np.tanh(price_mom)
     f = np.tanh(flow_mom)
     return p * (-f)
-
-def distribution_prob_continuous(price_mom, flow_mom, flow_acc, vol_z):
-    p = np.tanh(price_mom)
-    f = np.tanh(flow_mom)
-    a = np.tanh(flow_acc)
-    v = np.tanh(vol_z)
-    x = 0.4 * (p * (-f)) + 0.3 * (-a) + 0.2 * (-f) + 0.1 * v
-    prob = 1 / (1 + np.exp(-6 * (x - 0.2)))
-    return prob
 
 def distribution_score_binary(price_mom, flow_mom, flow_acc, vol_z, weights=None):
     if weights is None:
