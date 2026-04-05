@@ -1,12 +1,12 @@
-﻿# Datos descargados (se regeneran)
+﻿# Datos descargados (se regeneran) - excepto el archivo CFTC manual
 data/
-!data/.gitkeep
+!data/cftc_raw.txt
 
-# Outputs generados (se regeneran)
+# Outputs generados
 outputs/
 !outputs/.gitkeep
 
-# Archivos de persistencia (opcional, si quieres conservar el histórico, comenta esta línea)
+# Archivos de persistencia (se cachearán, no se suben al repo)
 persistencia.csv
 flow_history_persistencia.csv
 

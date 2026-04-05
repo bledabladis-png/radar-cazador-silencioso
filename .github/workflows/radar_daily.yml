@@ -1,0 +1,62 @@
+﻿name: Radar Diario
+
+on:
+  schedule:
+    - cron: '0 22 * * *'
+  workflow_dispatch:
+
+jobs:
+  run-radar:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Clonar repositorio
+        uses: actions/checkout@v4
+
+      - name: Configurar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Restaurar caché de persistencia
+        uses: actions/cache@v4
+        with:
+          path: |
+            persistencia.csv
+            flow_history_persistencia.csv
+          key: persistencia-${{ github.run_id }}
+          restore-keys: |
+            persistencia-
+
+      - name: Instalar dependencias
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Ejecutar radar
+        run: python run.py
+
+      - name: Guardar caché de persistencia
+        uses: actions/cache@v4
+        with:
+          path: |
+            persistencia.csv
+            flow_history_persistencia.csv
+          key: persistencia-${{ github.run_id }}
+
+      - name: Subir reporte
+        uses: actions/upload-artifact@v4
+        with:
+          name: reporte-diario
+          path: outputs/reporte_diario.md
+
+      - name: Subir gráfico
+        uses: actions/upload-artifact@v4
+        with:
+          name: grafico-dispersion
+          path: outputs/flow_dispersion.png
+
+      - name: Subir histórico
+        uses: actions/upload-artifact@v4
+        with:
+          name: historico-flujos
+          path: outputs/flow_history.csv
