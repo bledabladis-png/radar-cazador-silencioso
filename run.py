@@ -7,7 +7,10 @@ sys.path.append(os.path.join(os.path.dirname(__file__), 'src'))
 from data_loader import download_market_data
 from rotation_radar import run_radar, run_flow_radar
 from utils import save_flow_history, plot_flow_dispersion, save_markdown_report, interpret_flow_intensity
-from features import compute_volume_zscore, compute_flow_acceleration, compute_price_zscore, compute_acceleration_zscore
+from features import compute_volume_zscore, compute_flow_acceleration, compute_price_zscore, compute_acceleration_zscore, compute_features
+
+def supervision(*args, **kwargs):
+    print("\nSUPERVISION: Función no disponible (placeholder)")
 
 # CFTC opcional
 try:
@@ -17,7 +20,7 @@ except ImportError:
     CFTC_AVAILABLE = False
 
 # -------------------------------
-# Funciones de distribucion v3.14 (añade persistencia informativa)
+# Funciones de distribucion v3.15 (añade persistencia informativa)
 # -------------------------------
 def distribution_score_v33(price_mom, flow_mom, flow_acc, vol_z):
     p = np.tanh(price_mom)
@@ -208,7 +211,65 @@ def save_flow_history_df(df, file="flow_history.csv"):
 
 # ------------------------------------------------------------
 
-def supervision(flow_mom, ranking_flow, ranking_price, df, sectors, distribution_prob_cont, lookback=252):
+def compute_macro_context(df, features):
+    """Calcula contexto macro (no intrusivo)"""
+    spy_ret = df['SPY'].pct_change(20).iloc[-1]
+    tlt_ret = df['TLT'].pct_change(20).iloc[-1]
+    vix_z = features['vix_z'].iloc[-1]
+    regime = 0.5 * spy_ret - 0.3 * tlt_ret - 0.2 * vix_z
+
+    # Growth vs Value (QQQ/SPY) - usar df['QQQ'] ya descargado
+    ratio_gv = df['QQQ'] / df['SPY']
+    growth_ratio = ratio_gv.iloc[-1] / ratio_gv.rolling(20).mean().iloc[-1] - 1
+
+    # Global vs US (ACWI/SPY)
+    ratio_global = df['ACWI'] / df['SPY']
+    global_ratio = ratio_global.iloc[-1] / ratio_global.rolling(20).mean().iloc[-1] - 1
+
+    return {
+        'regime': regime,
+        'growth_vs_value': growth_ratio,
+        'global_strength': global_ratio
+    }
+
+def interpret_macro(context):
+    regime = context['regime']
+    if regime > 0.05:
+        regime_label = "RISK-ON"
+    elif regime < -0.05:
+        regime_label = "RISK-OFF"
+    else:
+        regime_label = "NEUTRAL"
+    return regime_label
+
+def adjust_operability(base_level, vix_z):
+    if vix_z > 1.5:
+        downgrade = {
+            "OPORTUNIDAD CLARA": "OPORTUNIDAD MODERADA",
+            "OPORTUNIDAD MODERADA": "SEGUIR CON PRUDENCIA",
+            "SEGUIR CON PRUDENCIA": "RIESGO ALTO",
+            "NO OPERAR": "NO OPERAR"
+        }
+        return downgrade.get(base_level, base_level)
+    return base_level
+
+def compute_persistence(history_df, sector, window=3):
+    """Calcula persistencia de flujo para un sector usando histórico"""
+    if sector not in history_df.columns:
+        return "SIN_DATOS"
+    recent = history_df[sector].dropna().tail(window)
+    if len(recent) < window:
+        return "SIN_DATOS"
+    positives = (recent > 0).sum()
+    negatives = (recent < 0).sum()
+    if positives >= 2:
+        return "ESTABLE ALCISTA"
+    elif negatives >= 2:
+        return "ESTABLE BAJISTA"
+    else:
+        return "TRANSICION"
+
+
     print("\n" + "=" * 60)
     print("SUPERVISION DEL MODELO (calidad y estabilidad)")
     print("=" * 60)
@@ -345,8 +406,9 @@ def enrich_with_cftc_sector(report_lines, cftc_raw):
     report_lines.append("\n*Nota: CFTC semanal con retraso (martes a viernes). Solo para contexto macro.*\n")
 
 def main():
-    print("=== RADAR DE ROTACION SECTORIAL v3.14 (con persistencia informativa) ===\n")
+    print("=== RADAR DE ROTACION SECTORIAL v3.15 (con persistencia informativa) ===\n")
     df = download_market_data()
+    features = compute_features(df)
     
     ranking_price, dispersion_price, breadth_price, vix_z, stress, regime_price, accion_price = run_radar(df)
     ranking_flow, flow_dispersion, flow_breadth, regime_flow, flow_mom = run_flow_radar(df)
@@ -363,7 +425,7 @@ def main():
         if sec in top_flow_2:
             alertas.append(f"ALERTA VERDE: {sec} esta entre los 2 peores en precio pero entre los 2 mejores en flujo -> posible acumulacion (oportunidad).")
     
-    # ========== Confirmacion de distribucion v3.14 ==========
+    # ========== Confirmacion de distribucion v3.15 ==========
     sectors = list(ranking_flow.keys())
     flow_acc_df = compute_flow_acceleration(flow_mom, window=5)
     vol_z_df = compute_volume_zscore(df, sectors, window=20)
@@ -543,7 +605,16 @@ def main():
             insert_pos = i
             break
     
-    lines[insert_pos:insert_pos] = dist_lines
+    # Contexto macro
+    macro_context = compute_macro_context(df, features)
+    regime_label = interpret_macro(macro_context)
+    macro_lines = [
+        "\n## Contexto Macro\n",
+        f"- **Régimen de mercado:** {regime_label} ({macro_context['regime']:.2f})\n",
+        f"- **Growth vs Value (QQQ/SPY):** {macro_context['growth_vs_value']:.2%}\n",
+        f"- **Fortaleza global (ACWI/SPY):** {macro_context['global_strength']:.2%}\n"
+    ]
+    lines[insert_pos:insert_pos] = macro_lines + dist_lines
     cftc_lines = []
     enrich_with_cftc_sector(cftc_lines, cftc_raw)
     for i, line in enumerate(lines):
@@ -585,4 +656,9 @@ def main():
 
 if __name__ == '__main__':
     main()
+
+
+
+
+
 
