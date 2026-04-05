@@ -6,7 +6,7 @@ sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from config import tickers
 
 def download_market_data():
-    all_tickers = [tickers['benchmark'], tickers['bonds'], tickers['vix']] + tickers['sectors'] + [tickers['global']] + ["QQQ"]
+    all_tickers = [tickers['benchmark'], tickers['bonds'], tickers['vix']] + tickers['sectors'] + [tickers['global']] + ["QQQ"] + tickers['credit'] + tickers['rates']
     end = datetime.now()
     start = end - timedelta(days=3650)
     

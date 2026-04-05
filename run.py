@@ -9,6 +9,7 @@ from data_loader import download_market_data
 from rotation_radar import run_radar, run_flow_radar
 from utils import save_flow_history, plot_flow_dispersion, save_markdown_report
 from features import compute_volume_zscore, compute_flow_acceleration, compute_price_zscore, compute_acceleration_zscore, compute_features
+from macro_confirm import compute_macro_confirm, get_flow_regime_sign, format_macro_section
 
 def supervision(*args, **kwargs):
     pass
@@ -407,6 +408,18 @@ def main():
     ranking_price, dispersion_price, breadth_price, vix_z, stress, regime_price, accion_price = run_radar(df)
     ranking_flow, flow_dispersion, flow_breadth, regime_flow, flow_mom = run_flow_radar(df)
 
+    # --- Capa 4: Macro Confirm (solo consola, sin reporte aún)
+    flow_regime_sign = get_flow_regime_sign(flow_breadth)
+    macro_data = compute_macro_confirm(df, flow_regime_sign)
+    print("\n=== MACRO CONFIRM (prueba consola) ===")
+    print(f"Macro Score: {macro_data['macro_score']:.2f}")
+    print(f"Régimen: {macro_data['macro_regime']}")
+    print(f"Confianza: {macro_data['confidence']:.2f} ({macro_data['confidence_state']})")
+    print(f"Alineación: {macro_data['alignment']}")
+    if macro_data['warning']:
+        print(f"Advertencia: {macro_data['warning']}")
+    print("=====================================\n")
+
     alertas = []
     top_price_2 = [sec for sec, _ in ranking_price[:2]]
     bottom_flow_2 = list(ranking_flow.keys())[-2:]
@@ -641,7 +654,20 @@ def main():
         f"- **Growth vs Value (QQQ/SPY):** {macro_context['growth_vs_value']:.2%}\n",
         f"- **Fortaleza global (ACWI/SPY):** {macro_context['global_strength']:.2%}\n"
     ]
+    # Construir el reporte final con todas las secciones en orden
+    # 1. Insertar factores sintéticos + contexto macro + distribución
     lines[insert_pos:insert_pos] = synth_lines + macro_lines + dist_lines
+
+    # 2. Insertar sección macro institucional (Capa 4) DESPUÉS de las líneas de contexto macro
+    macro_confirm_lines = format_macro_section(macro_data)
+    # Buscar la línea que contiene "**Fortaleza global**" (última línea del contexto macro)
+    for i, line in enumerate(lines):
+        if "**Fortaleza global (ACWI/SPY):**" in line:
+            # Insertar la macro justo después de esta línea
+            lines[i+1:i+1] = macro_confirm_lines
+            break
+
+    # 3. Insertar CFTC
     cftc_lines = []
     enrich_with_cftc_sector(cftc_lines, cftc_with_z, raw_file=cftc_raw)
     for i, line in enumerate(lines):
