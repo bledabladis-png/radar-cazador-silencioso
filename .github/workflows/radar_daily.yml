@@ -32,6 +32,11 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
+      - name: Crear carpetas necesarias
+        run: |
+          mkdir -p data
+          mkdir -p outputs
+
       - name: Ejecutar radar
         run: python run.py
 
