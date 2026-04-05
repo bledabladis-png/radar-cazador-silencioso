@@ -51,6 +51,7 @@ def get_latest_cftc_signal_for_market(df_parsed, market_substring):
         return None
     df_market = df_market.sort_values('date')
     return df_market.iloc[-1].to_dict()
+
 def compute_cftc_signal_enhanced(df):
     net = df['asset_manager_net']
     delta = net.diff()
@@ -62,3 +63,141 @@ def compute_cftc_signal_enhanced(df):
         'net': net,
         'delta': delta
     })
+
+def update_cftc_history(raw_file="data/cftc_raw.txt", history_file="data/cftc_history.csv"):
+    """
+    Actualiza el histórico CFTC con los datos del archivo semanal raw.
+    Si el histórico no existe, lo crea.
+    Elimina duplicados por fecha y mercado.
+    """
+    import pandas as pd
+    import os
+    
+    # Cargar histórico existente
+    if os.path.exists(history_file):
+        hist = pd.read_csv(history_file)
+        hist['date'] = pd.to_datetime(hist['date'])
+    else:
+        hist = pd.DataFrame()
+    
+    # Cargar nuevo raw
+    if not os.path.exists(raw_file):
+        print(f"[CFTC] No se encontró {raw_file}. No se actualiza histórico.")
+        return hist
+    
+    df_raw = pd.read_csv(raw_file, header=None)
+    parsed = parse_cftc_financials(df_raw)
+    if parsed is None or parsed.empty:
+        print("[CFTC] No se pudieron parsear los datos nuevos.")
+        return hist
+    
+    parsed['date'] = pd.to_datetime(parsed['date'])
+    
+    # Combinar y eliminar duplicados (por fecha y mercado)
+    combined = pd.concat([hist, parsed], ignore_index=True)
+    combined = combined.drop_duplicates(subset=['date', 'market'])
+    combined = combined.sort_values('date')
+    
+    # Guardar histórico
+    combined.to_csv(history_file, index=False)
+    print(f"[CFTC] Histórico actualizado: {len(combined)} registros totales.")
+    return combined
+
+def get_cftc_history(history_file="data/cftc_history.csv"):
+    """Carga el histórico CFTC si existe."""
+    import pandas as pd
+    import os
+    if os.path.exists(history_file):
+        return pd.read_csv(history_file)
+    return Nonedef update_cftc_history(raw_file="data/cftc_raw.txt", history_file="data/cftc_history.csv"):
+    import pandas as pd
+    import os
+    # Cargar histórico existente
+    if os.path.exists(history_file):
+        hist = pd.read_csv(history_file)
+        hist['date'] = pd.to_datetime(hist['date'])
+    else:
+        hist = pd.DataFrame()
+    # Cargar nuevo raw
+    if not os.path.exists(raw_file):
+        print("[CFTC] No se encontró archivo raw. No se actualiza histórico.")
+        return hist
+    df_raw = pd.read_csv(raw_file, header=None)
+    parsed = parse_cftc_financials(df_raw)
+    if parsed is None or parsed.empty:
+        print("[CFTC] No se pudieron parsear los datos nuevos.")
+        return hist
+    parsed['date'] = pd.to_datetime(parsed['date'])
+    combined = pd.concat([hist, parsed], ignore_index=True)
+    combined = combined.drop_duplicates(subset=['date', 'market'])
+    combined = combined.sort_values('date')
+    combined.to_csv(history_file, index=False)
+    print(f"[CFTC] Histórico actualizado: {len(combined)} registros.")
+    return combined
+
+def compute_cftc_zscore_from_history(history_file="data/cftc_history.csv", window=52):
+    import pandas as pd
+    import numpy as np
+    import os
+    if not os.path.exists(history_file):
+        return None
+    hist = pd.read_csv(history_file)
+    hist['date'] = pd.to_datetime(hist['date'])
+    result = []
+    for market in hist['market'].unique():
+        df_m = hist[hist['market'] == market].copy().sort_values('date')
+        if len(df_m) < window:
+            continue
+        df_m['mean'] = df_m['net_position'].rolling(window, min_periods=10).mean()
+        df_m['std'] = df_m['net_position'].rolling(window, min_periods=10).std()
+        df_m['cftc_z'] = (df_m['net_position'] - df_m['mean']) / df_m['std']
+        result.append(df_m)
+    if result:
+        return pd.concat(result, ignore_index=True)
+    return None
+def update_cftc_history(raw_file="data/cftc_raw.txt", history_file="data/cftc_history.csv"):
+    import pandas as pd
+    import os
+    # Cargar histórico existente
+    if os.path.exists(history_file):
+        hist = pd.read_csv(history_file)
+        hist['date'] = pd.to_datetime(hist['date'])
+    else:
+        hist = pd.DataFrame()
+    # Cargar nuevo raw
+    if not os.path.exists(raw_file):
+        print("[CFTC] No se encontró archivo raw. No se actualiza histórico.")
+        return hist
+    df_raw = pd.read_csv(raw_file, header=None)
+    parsed = parse_cftc_financials(df_raw)
+    if parsed is None or parsed.empty:
+        print("[CFTC] No se pudieron parsear los datos nuevos.")
+        return hist
+    parsed['date'] = pd.to_datetime(parsed['date'])
+    combined = pd.concat([hist, parsed], ignore_index=True)
+    combined = combined.drop_duplicates(subset=['date', 'market'])
+    combined = combined.sort_values('date')
+    combined.to_csv(history_file, index=False)
+    print(f"[CFTC] Histórico actualizado: {len(combined)} registros.")
+    return combined
+
+def compute_cftc_zscore_from_history(history_file="data/cftc_history.csv", window=52):
+    import pandas as pd
+    import numpy as np
+    import os
+    if not os.path.exists(history_file):
+        return None
+    hist = pd.read_csv(history_file)
+    hist['date'] = pd.to_datetime(hist['date'])
+    result = []
+    for market in hist['market'].unique():
+        df_m = hist[hist['market'] == market].copy().sort_values('date')
+        if len(df_m) < window:
+            continue
+        df_m['mean'] = df_m['net_position'].rolling(window, min_periods=10).mean()
+        df_m['std'] = df_m['net_position'].rolling(window, min_periods=10).std()
+        df_m['cftc_z'] = (df_m['net_position'] - df_m['mean']) / df_m['std']
+        result.append(df_m)
+    if result:
+        return pd.concat(result, ignore_index=True)
+    return None

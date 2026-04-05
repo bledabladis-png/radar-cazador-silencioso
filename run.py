@@ -10,17 +10,17 @@ from utils import save_flow_history, plot_flow_dispersion, save_markdown_report,
 from features import compute_volume_zscore, compute_flow_acceleration, compute_price_zscore, compute_acceleration_zscore, compute_features
 
 def supervision(*args, **kwargs):
-    print("\nSUPERVISION: Función no disponible (placeholder)")
+    pass
 
 # CFTC opcional
 try:
-    from cftc_loader import load_cftc_manual, parse_cftc_financials, compute_cftc_signal
+    from cftc_loader import load_cftc_manual, parse_cftc_financials, compute_cftc_signal, update_cftc_history, compute_cftc_zscore_from_history
     CFTC_AVAILABLE = True
 except ImportError:
     CFTC_AVAILABLE = False
 
 # -------------------------------
-# Funciones de distribucion v3.15 (añade persistencia informativa)
+# Funciones de distribucion v3.15
 # -------------------------------
 def distribution_score_v33(price_mom, flow_mom, flow_acc, vol_z):
     p = np.tanh(price_mom)
@@ -79,7 +79,6 @@ def unified_score(prob_bin, prob_cont, conviction, vix_z):
     score = score * vol_factor
     return score
 
-# Score de oportunidad (bonifica acumulación)
 def opportunity_score(price_mom, flow_mom, flow_acc, vol_z, phase):
     base = 0.4 * flow_mom + 0.3 * price_mom + 0.2 * flow_acc + 0.1 * vol_z
     if phase in ["ACUMULACION", "ACUMULACION FUERTE"]:
@@ -88,7 +87,6 @@ def opportunity_score(price_mom, flow_mom, flow_acc, vol_z, phase):
         base -= 0.2
     return base
 
-# Operabilidad escalonada (sin cambios)
 def operability_level(score):
     if score > 0.4:
         return "OPORTUNIDAD CLARA"
@@ -99,7 +97,6 @@ def operability_level(score):
     else:
         return "NO OPERAR"
 
-# Clasificación de fase (existente, con z-scores)
 def classify_phase(price_z, flow_z, acc_z, vol_z):
     if price_z > 1.0 and flow_z < -0.5:
         return "DISTRIBUCION CONFIRMADA"
@@ -170,12 +167,7 @@ def signal_quality(price_mom, flow_mom, vol_z):
 def adjust_score_by_confidence(score, confidence):
     return score * (0.5 + 0.5 * confidence)
 
-# ---------- NUEVAS FUNCIONES DE PERSISTENCIA (solo informativa) ----------
 def calculate_persistence(flow_mom_series, window=3):
-    """
-    Calcula persistencia del flujo en los últimos N días.
-    Retorna: "PERSISTENCIA_ALCISTA", "PERSISTENCIA_BAJISTA", "TRANSICION" o "SIN_DATOS"
-    """
     if len(flow_mom_series) < window:
         return "SIN_DATOS"
     recent = flow_mom_series.tail(window)
@@ -189,9 +181,6 @@ def calculate_persistence(flow_mom_series, window=3):
         return "TRANSICION"
 
 def signal_state(persistence, phase):
-    """
-    Deriva un estado de señal legible (opcional).
-    """
     if persistence == "TRANSICION" and phase in ["ACUMULACION", "DISTRIBUCION_TEMPRANA"]:
         return "SEÑAL TEMPRANA"
     elif persistence in ["PERSISTENCIA_ALCISTA", "PERSISTENCIA_BAJISTA"]:
@@ -199,7 +188,6 @@ def signal_state(persistence, phase):
     else:
         return "NEUTRAL"
 
-# ---------- Funciones de persistencia histórica (cargar/guardar) ----------
 def load_flow_history(file="flow_history.csv"):
     if os.path.exists(file):
         return pd.read_csv(file, index_col=0)
@@ -209,23 +197,15 @@ def load_flow_history(file="flow_history.csv"):
 def save_flow_history_df(df, file="flow_history.csv"):
     df.to_csv(file)
 
-# ------------------------------------------------------------
-
 def compute_macro_context(df, features):
-    """Calcula contexto macro (no intrusivo)"""
     spy_ret = df['SPY'].pct_change(20).iloc[-1]
     tlt_ret = df['TLT'].pct_change(20).iloc[-1]
     vix_z = features['vix_z'].iloc[-1]
     regime = 0.5 * spy_ret - 0.3 * tlt_ret - 0.2 * vix_z
-
-    # Growth vs Value (QQQ/SPY) - usar df['QQQ'] ya descargado
     ratio_gv = df['QQQ'] / df['SPY']
     growth_ratio = ratio_gv.iloc[-1] / ratio_gv.rolling(20).mean().iloc[-1] - 1
-
-    # Global vs US (ACWI/SPY)
     ratio_global = df['ACWI'] / df['SPY']
     global_ratio = ratio_global.iloc[-1] / ratio_global.rolling(20).mean().iloc[-1] - 1
-
     return {
         'regime': regime,
         'growth_vs_value': growth_ratio,
@@ -235,12 +215,11 @@ def compute_macro_context(df, features):
 def interpret_macro(context):
     regime = context['regime']
     if regime > 0.05:
-        regime_label = "RISK-ON"
+        return "RISK-ON"
     elif regime < -0.05:
-        regime_label = "RISK-OFF"
+        return "RISK-OFF"
     else:
-        regime_label = "NEUTRAL"
-    return regime_label
+        return "NEUTRAL"
 
 def adjust_operability(base_level, vix_z):
     if vix_z > 1.5:
@@ -254,7 +233,6 @@ def adjust_operability(base_level, vix_z):
     return base_level
 
 def compute_persistence(history_df, sector, window=3):
-    """Calcula persistencia de flujo para un sector usando histórico"""
     if sector not in history_df.columns:
         return "SIN_DATOS"
     recent = history_df[sector].dropna().tail(window)
@@ -269,70 +247,6 @@ def compute_persistence(history_df, sector, window=3):
     else:
         return "TRANSICION"
 
-
-    print("\n" + "=" * 60)
-    print("SUPERVISION DEL MODELO (calidad y estabilidad)")
-    print("=" * 60)
-    flow_recent = flow_mom.iloc[-lookback:] if len(flow_mom) > lookback else flow_mom
-    if len(flow_recent) == 0:
-        print("No hay datos suficientes para supervision.")
-        return
-    if flow_recent.isnull().any().any():
-        print("ADVERTENCIA: Existen valores NaN en los ultimos datos.")
-    else:
-        print("No hay NaN en los ultimos datos.")
-    latest_flow = flow_mom.iloc[-1]
-    print(f"Rango de flujos (ultimo dia): min={latest_flow.min():.2f}, max={latest_flow.max():.2f}")
-    if abs(latest_flow.max()) > 5 or abs(latest_flow.min()) > 5:
-        print("ADVERTENCIA: Flujos extremos (>|5|).")
-    disp_recent = flow_mom.std(axis=1).iloc[-5:]
-    print(f"Dispersion ultimos 5 dias: {disp_recent.values.round(3)}")
-    if len(disp_recent) > 1 and disp_recent.std() > 0.2:
-        print("ADVERTENCIA: Dispersion muy variable.")
-    top_sectors_last5 = flow_mom.iloc[-5:].idxmax(axis=1)
-    unique_top = top_sectors_last5.nunique()
-    if unique_top == 1:
-        print(f"Liderazgo estable: {top_sectors_last5.iloc[-1]} lider ultimos 5 dias.")
-    else:
-        print(f"Rotacion de liderazgo: {unique_top} sectores distintos.")
-    print(f"Dias totales en flow_momentum: {len(flow_mom)}")
-    top_price_3 = [sec for sec, _ in ranking_price[:3]]
-    bottom_flow_3 = list(ranking_flow.keys())[-3:]
-    divergence_warning = set(top_price_3) & set(bottom_flow_3)
-    if divergence_warning:
-        print(f"ALERTA EXTREMA: {divergence_warning} top3 precio pero bottom3 flujo -> distribucion.")
-    
-    try:
-        from scipy.stats import spearmanr
-        future_returns = df['SPY'].pct_change().shift(-5)
-        signal_series = pd.Series(index=flow_mom.index, dtype=float)
-        for sec in sectors:
-            signal_series = signal_series.fillna(0) + distribution_prob_cont.get(sec, 0)
-        common = signal_series.dropna().index.intersection(future_returns.dropna().index)
-        if len(common) > 60:
-            ic_values = []
-            for i in range(60, len(common)):
-                idx = common[i-60:i]
-                s = signal_series.loc[idx].values
-                r = future_returns.loc[idx].values
-                if np.std(s) > 1e-9 and np.std(r) > 1e-9:
-                    ic = spearmanr(s, r)[0]
-                    ic_values.append(ic)
-                else:
-                    ic_values.append(np.nan)
-            if ic_values:
-                latest_ic = ic_values[-1]
-                if not np.isnan(latest_ic):
-                    print(f"IC rolling (60d) de la senal: {latest_ic:.3f}")
-                else:
-                    print("IC rolling: varianza cero en la ventana, no se pudo calcular")
-            else:
-                print("IC rolling: no se generaron valori")
-        else:
-            print("IC rolling: se necesitan al menos 60 observaciones")
-    except Exception as e:
-        print(f"IC rolling no disponible: {e}")
-
 def enrich_with_cftc_sector(report_lines, cftc_raw):
     if cftc_raw is None:
         report_lines.append("\n## Confirmacion CFTC\n")
@@ -344,7 +258,7 @@ def enrich_with_cftc_sector(report_lines, cftc_raw):
         report_lines.append("\n## Confirmacion CFTC\n")
         report_lines.append("No se pudieron parsear los datos CFTC.\n")
         return
-    with_signal = compute_cftc_signal(parsed)
+    with_signal = compute_cftc_signal(parsed)   # Ahora devuelve net_position en columna 'cftc_z'
     if with_signal.empty:
         report_lines.append("\n## Confirmacion CFTC\n")
         report_lines.append("Error al calcular senal CFTC.\n")
@@ -353,57 +267,93 @@ def enrich_with_cftc_sector(report_lines, cftc_raw):
     latest_date = with_signal['date'].max()
     latest_data = with_signal[with_signal['date'] == latest_date].copy()
     
-    sector_mapping = {
-        "E-MINI S&P 500": "SPY",
-        "NASDAQ-100": "XLK",
-        "RUSSELL": "XLI",
-        "UST 10Y": "XLF",
-        "FED FUNDS": "XLF",
-        "SOFR": "XLF",
-        "CRUDE OIL": "XLE",
-        "BBG COMMODITY": "XLE",
-        "USD INDEX": "MACRO",
-        "EURO FX": "MACRO",
-        "JAPANESE YEN": "MACRO",
-        "VIX": "RISK"
-    }
+    from config import CFTC_MARKETS
     
     sector_signals = {}
-    for _, row in latest_data.iterrows():
-        market = row['market']
-        z = row['cftc_z']
-        if pd.isna(z):
-            continue
-        for key, sector in sector_mapping.items():
-            if key in market:
-                if sector not in sector_signals:
-                    sector_signals[sector] = []
-                sector_signals[sector].append(z)
-                break
+    for sector, substring in CFTC_MARKETS.items():
+        mask = latest_data['market'].str.contains(substring, case=False, na=False)
+        mask &= ~latest_data['market'].str.contains("MICRO|NANO", case=False, na=False)
+        if mask.any():
+            net_vals = latest_data.loc[mask, 'cftc_z']   # posición neta
+            if not net_vals.empty:
+                sector_signals[sector] = net_vals.tolist()
+    
     if not sector_signals:
         report_lines.append("\n## Confirmacion CFTC\n")
         report_lines.append("No se encontraron mercados relevantes en los datos.\n")
         return
     
-    report_lines.append("\n## Confirmacion CFTC (conviccion institucional por sector)\n")
+    report_lines.append("\n## Confirmacion CFTC (posicionamiento institucional)\n")
     report_lines.append(f"*Datos semanales al {latest_date.strftime('%Y-%m-%d')} (retraso de 3 dias)*\n\n")
-    report_lines.append("| Sector | Z-score (mediana) | Instrumentos | Interpretacion |\n")
-    report_lines.append("|--------|-------------------|--------------|----------------|\n")
-    for sector, z_list in sorted(sector_signals.items(), key=lambda x: np.median(x[1]), reverse=True):
-        median_z = np.median(z_list)
-        n = len(z_list)
-        if median_z > 1.5:
-            interp = "Conviccion FUERTEMENTE alcista"
-        elif median_z > 0.8:
-            interp = "Conviccion alcista moderada"
-        elif median_z < -1.5:
-            interp = "Conviccion FUERTEMENTE bajista"
-        elif median_z < -0.8:
-            interp = "Conviccion bajista moderada"
+    report_lines.append("| Sector | Posicion neta (miles de contratos) | Instrumentos | Direccion |\n")
+    report_lines.append("|--------|-------------------------------------|--------------|-----------|\n")
+    for sector, net_list in sorted(sector_signals.items(), key=lambda x: np.median(x[1]), reverse=True):
+        median_net = np.median(net_list)
+        n = len(net_list)
+        net_k = median_net / 1000.0
+        if net_k > 0:
+            arrow = "↑"
+            direccion = "LARGO"
+        elif net_k < 0:
+            arrow = "↓"
+            direccion = "CORTO"
         else:
-            interp = "Neutral"
-        report_lines.append(f"| {sector} | {median_z:.2f} | {n} | {interp} |\n")
+            arrow = "→"
+            direccion = "NEUTRAL"
+        report_lines.append(f"| {sector} | {net_k:.1f}k {arrow} | {n} | {direccion} |\n")
     report_lines.append("\n*Nota: CFTC semanal con retraso (martes a viernes). Solo para contexto macro.*\n")
+
+def compute_synthetic_factors(cftc_sector_z):
+    """
+    Construye factores sintéticos a partir de los z-scores de sectores y rates.
+    """
+    # Riesgo (cíclicos)
+    risk_sectors = ['SPY', 'XLK', 'XLF', 'XLI']
+    risk_vals = [cftc_sector_z.get(s, 0) for s in risk_sectors]
+    risk = np.median(risk_vals) if risk_vals else 0.0
+
+    # Defensivo
+    def_sectors = ['XLP', 'XLV', 'XLU']
+    def_vals = [cftc_sector_z.get(s, 0) for s in def_sectors]
+    defensive = np.median(def_vals) if def_vals else 0.0
+
+    # Rotación
+    rotation = risk - defensive
+
+    # XLY inferido (más granular)
+    spy_z = cftc_sector_z.get('SPY', 0)
+    if rotation > 0.2 and spy_z > 0:
+        xly_inferred = "ACUMULACION FUERTE"
+    elif rotation > 0:
+        xly_inferred = "ACUMULACION DEBIL"
+    else:
+        xly_inferred = "NEUTRAL/DEBIL"
+
+    # Rates con pesos
+    short_vals = [
+        cftc_sector_z.get('RATES_2Y', 0) * 0.5,
+        cftc_sector_z.get('FED', 0) * 0.3,
+        cftc_sector_z.get('SOFR', 0) * 0.2
+    ]
+    short_avg = np.mean(short_vals)
+
+    long_vals = [
+        cftc_sector_z.get('RATES_10Y', 0) * 0.6,
+        cftc_sector_z.get('RATES_LONG', 0) * 0.4
+    ]
+    long_avg = np.mean(long_vals)
+
+    curve_spread = long_avg - short_avg
+
+    return {
+        'risk': risk,
+        'defensive': defensive,
+        'rotation': rotation,
+        'xly_inferred': xly_inferred,
+        'short_rates': short_avg,
+        'long_rates': long_avg,
+        'curve_spread': curve_spread
+    }
 
 def main():
     print("=== RADAR DE ROTACION SECTORIAL v3.15 (con persistencia informativa) ===\n")
@@ -425,7 +375,6 @@ def main():
         if sec in top_flow_2:
             alertas.append(f"ALERTA VERDE: {sec} esta entre los 2 peores en precio pero entre los 2 mejores en flujo -> posible acumulacion (oportunidad).")
     
-    # ========== Confirmacion de distribucion v3.15 ==========
     sectors = list(ranking_flow.keys())
     flow_acc_df = compute_flow_acceleration(flow_mom, window=5)
     vol_z_df = compute_volume_zscore(df, sectors, window=20)
@@ -446,13 +395,10 @@ def main():
     distribution_prob_cont = {}
     risk_score_dict = {}
     
-    # Cargar histórico de flujos para persistencia (usamos flow_mom diario)
     flow_history = load_flow_history("flow_history_persistencia.csv")
-    # Guardaremos los valores de flow_mom (no el score) para cada sector
     for sec in sectors:
         if sec not in flow_history.columns:
             flow_history[sec] = np.nan
-    # Actualizar con el valor más reciente
     for sec in sectors:
         flow_history.loc[pd.Timestamp.now().normalize(), sec] = latest_flow_mom.get(sec, np.nan)
     save_flow_history_df(flow_history, "flow_history_persistencia.csv")
@@ -474,7 +420,6 @@ def main():
         distribution_prob_cont[sec] = prob_cont
         risk_score_dict[sec] = risk_score
     
-    # Calcular fase y dirección
     fase_dict = {}
     direccion_dict = {}
     for sec in sectors:
@@ -485,7 +430,6 @@ def main():
         fase_dict[sec] = classify_phase(latest_price_z.get(sec, 0), fm, latest_acc_z.get(sec, 0), vz)
         direccion_dict[sec] = classify_direction(fm)
     
-    # Calcular oportunidad y operabilidad
     oportunidad_dict = {}
     operabilidad_dict = {}
     for sec in sectors:
@@ -497,7 +441,6 @@ def main():
         oportunidad_dict[sec] = opportunity_score(pm, fm, fa, vz, fase)
         operabilidad_dict[sec] = operability_level(oportunidad_dict[sec])
     
-    # Calcular persistencia (usando histórico de flow_mom)
     persistencia_dict = {}
     estado_senal_dict = {}
     for sec in sectors:
@@ -509,27 +452,62 @@ def main():
             persistencia_dict[sec] = "SIN_DATOS"
             estado_senal_dict[sec] = "NEUTRAL"
     
-    # Ordenar sectores por oportunidad (mayor a menor)
     sorted_sectors = sorted(sectors, key=lambda x: oportunidad_dict.get(x, 0), reverse=True)
     
-    # Obtener CFTC del SPY si está disponible
     cftc_spy_z = None
-    cftc_raw = None
-    if CFTC_AVAILABLE:
+cftc_raw = None
+cftc_history_df = None
+if CFTC_AVAILABLE:
+    # Actualizar histórico con el archivo semanal (si existe)
+    cftc_history_df = update_cftc_history()
+    if cftc_history_df is not None and not cftc_history_df.empty:
+        # Calcular z‑score usando el histórico (52 semanas)
+        with_signal = compute_cftc_zscore_from_history()
+        if with_signal is not None and not with_signal.empty:
+            latest = with_signal.loc[with_signal.groupby('market')['date'].idxmax()]
+            spy_row = latest[latest['market'].str.contains("S&P 500", case=False)]
+            if not spy_row.empty:
+                cftc_spy_z = spy_row['cftc_z'].iloc[-1]
+    else:
+        # Fallback: usar solo el archivo raw (sin histórico)
         cftc_raw = load_cftc_manual(path="data/cftc_raw.txt")
         if cftc_raw is not None:
-            try:
-                parsed = parse_cftc_financials(cftc_raw)
-                if parsed is not None:
-                    with_signal = compute_cftc_signal(parsed)
-                    if not with_signal.empty:
-                        spy_data = with_signal[with_signal['market'].str.contains("S&P 500", case=False)]
-                        if not spy_data.empty:
-                            cftc_spy_z = spy_data['cftc_z'].iloc[-1]
-            except:
-                pass
+            parsed = parse_cftc_financials(cftc_raw)
+            if parsed is not None:
+                with_signal = compute_cftc_signal(parsed)
+                if not with_signal.empty:
+                    spy_data = with_signal[with_signal['market'].str.contains("S&P 500", case=False)]
+                    if not spy_data.empty:
+                        cftc_spy_z = spy_data['cftc_z'].iloc[-1]
+
+# Extraer z-scores para factores sintéticos (usar histórico si existe)
+cftc_sector_z = {}
+if cftc_history_df is not None and not cftc_history_df.empty:
+    latest_data = cftc_history_df.loc[cftc_history_df.groupby('market')['date'].idxmax()]
+    from config import CFTC_MARKETS
+    for sector, substring in CFTC_MARKETS.items():
+        mask = latest_data['market'].str.contains(substring, case=False, na=False)
+        mask &= ~latest_data['market'].str.contains("MICRO|NANO", case=False, na=False)
+        if mask.any():
+            z_vals = latest_data.loc[mask, 'cftc_z']
+            if not z_vals.empty:
+                cftc_sector_z[sector] = np.median(z_vals)
+        except Exception as e:
+            print(f"Error al extraer z-scores para factores: {e}")
     
-    # Construir tabla de distribucion
+    # Calcular factores sintéticos
+    synthetic = compute_synthetic_factors(cftc_sector_z)
+    synth_lines = [
+        "\n## Factores Sintéticos (Agregados)\n",
+        f"- **Riesgo (cíclicos):** {synthetic['risk']:.2f}\n",
+        f"- **Defensivo:** {synthetic['defensive']:.2f}\n",
+        f"- **Rotación (Riesgo - Defensivo):** {synthetic['rotation']:.2f}\n",
+        f"- **XLY (inferido):** {synthetic['xly_inferred']}\n",
+        f"- **Tipos cortos (ponderado):** {synthetic['short_rates']:.2f}\n",
+        f"- **Tipos largos (ponderado):** {synthetic['long_rates']:.2f}\n",
+        f"- **Pendiente de la curva (largo - corto):** {synthetic['curve_spread']:.2f}\n"
+    ]
+    
     dist_lines = ["\n## Confirmacion de Distribucion (dinero inteligente saliendo)\n"]
     rank_history = pd.DataFrame()
     for i in range(1, 6):
@@ -586,11 +564,9 @@ def main():
         
         dist_lines.append(f"| {sec} | {pm:.3f} | {fm:.2f} | {fa:.2f} | {vz:.2f} | {div_cont:.2f} | {score_bin:.2f} | {prob_bin:.2%} | {prob_cont:.2%} | {risk_score:.2f} | {intensidad} | {clasif} | {fase} | {direccion} | {conv_ajustada:.2f} | {score_unif:.2f} | {conf_sistema:.2f} | {calidad:.2f} | {oportunidad:.2f} | {operabilidad} | {persistencia} | {estado_senal} | {alerta} |\n")
     
-    # Guardar flujos y gráfico
     save_flow_history(flow_mom)
     plot_flow_dispersion(flow_mom)
     
-    # Generar reporte Markdown
     from utils import save_markdown_report
     temp_md = "outputs/reporte_diario_temp.md"
     save_markdown_report(ranking_price, ranking_flow, flow_dispersion, flow_breadth, regime_flow,
@@ -605,7 +581,6 @@ def main():
             insert_pos = i
             break
     
-    # Contexto macro
     macro_context = compute_macro_context(df, features)
     regime_label = interpret_macro(macro_context)
     macro_lines = [
@@ -614,7 +589,7 @@ def main():
         f"- **Growth vs Value (QQQ/SPY):** {macro_context['growth_vs_value']:.2%}\n",
         f"- **Fortaleza global (ACWI/SPY):** {macro_context['global_strength']:.2%}\n"
     ]
-    lines[insert_pos:insert_pos] = macro_lines + dist_lines
+    lines[insert_pos:insert_pos] = synth_lines + macro_lines + dist_lines
     cftc_lines = []
     enrich_with_cftc_sector(cftc_lines, cftc_raw)
     for i, line in enumerate(lines):
@@ -631,7 +606,6 @@ def main():
     print("Grafico de dispersion guardado en outputs/flow_dispersion.png")
     print("Reporte diario (con CFTC y distribucion) guardado en outputs/reporte_diario.md")
     
-    # Validacion cuantitativa
     try:
         from validation import evaluate_signal
         future_returns = df['SPY'].pct_change().shift(-5)
@@ -656,9 +630,5 @@ def main():
 
 if __name__ == '__main__':
     main()
-
-
-
-
 
 
