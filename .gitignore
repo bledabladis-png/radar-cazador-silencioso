@@ -1,0 +1,33 @@
+﻿# Datos descargados (se regeneran)
+data/
+!data/.gitkeep
+
+# Outputs generados (se regeneran)
+outputs/
+!outputs/.gitkeep
+
+# Archivos de persistencia (opcional, si quieres conservar el histórico, comenta esta línea)
+persistencia.csv
+flow_history_persistencia.csv
+
+# Archivos temporales y caché
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.tmp
+*.log
+
+# Entornos virtuales
+venv/
+env/
+ENV/
+
+# Archivos de sistema
+.DS_Store
+Thumbs.db
+
+# Copias de seguridad
+*_backup.py
+*_copia.py
+*~
