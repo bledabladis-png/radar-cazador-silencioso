@@ -258,31 +258,31 @@ def enrich_with_cftc_sector(report_lines, cftc_raw):
         report_lines.append("\n## Confirmacion CFTC\n")
         report_lines.append("No se pudieron parsear los datos CFTC.\n")
         return
-    with_signal = compute_cftc_signal(parsed)   # Ahora devuelve net_position en columna 'cftc_z'
+    with_signal = compute_cftc_signal(parsed)
     if with_signal.empty:
         report_lines.append("\n## Confirmacion CFTC\n")
         report_lines.append("Error al calcular senal CFTC.\n")
         return
-    
+
     latest_date = with_signal['date'].max()
     latest_data = with_signal[with_signal['date'] == latest_date].copy()
-    
+
     from config import CFTC_MARKETS
-    
+
     sector_signals = {}
     for sector, substring in CFTC_MARKETS.items():
         mask = latest_data['market'].str.contains(substring, case=False, na=False)
         mask &= ~latest_data['market'].str.contains("MICRO|NANO", case=False, na=False)
         if mask.any():
-            net_vals = latest_data.loc[mask, 'cftc_z']   # posición neta
+            net_vals = latest_data.loc[mask, 'cftc_z']
             if not net_vals.empty:
                 sector_signals[sector] = net_vals.tolist()
-    
+
     if not sector_signals:
         report_lines.append("\n## Confirmacion CFTC\n")
         report_lines.append("No se encontraron mercados relevantes en los datos.\n")
         return
-    
+
     report_lines.append("\n## Confirmacion CFTC (posicionamiento institucional)\n")
     report_lines.append(f"*Datos semanales al {latest_date.strftime('%Y-%m-%d')} (retraso de 3 dias)*\n\n")
     report_lines.append("| Sector | Posicion neta (miles de contratos) | Instrumentos | Direccion |\n")
@@ -304,23 +304,16 @@ def enrich_with_cftc_sector(report_lines, cftc_raw):
     report_lines.append("\n*Nota: CFTC semanal con retraso (martes a viernes). Solo para contexto macro.*\n")
 
 def compute_synthetic_factors(cftc_sector_z):
-    """
-    Construye factores sintéticos a partir de los z-scores de sectores y rates.
-    """
-    # Riesgo (cíclicos)
     risk_sectors = ['SPY', 'XLK', 'XLF', 'XLI']
     risk_vals = [cftc_sector_z.get(s, 0) for s in risk_sectors]
     risk = np.median(risk_vals) if risk_vals else 0.0
 
-    # Defensivo
     def_sectors = ['XLP', 'XLV', 'XLU']
     def_vals = [cftc_sector_z.get(s, 0) for s in def_sectors]
     defensive = np.median(def_vals) if def_vals else 0.0
 
-    # Rotación
     rotation = risk - defensive
 
-    # XLY inferido (más granular)
     spy_z = cftc_sector_z.get('SPY', 0)
     if rotation > 0.2 and spy_z > 0:
         xly_inferred = "ACUMULACION FUERTE"
@@ -329,7 +322,6 @@ def compute_synthetic_factors(cftc_sector_z):
     else:
         xly_inferred = "NEUTRAL/DEBIL"
 
-    # Rates con pesos
     short_vals = [
         cftc_sector_z.get('RATES_2Y', 0) * 0.5,
         cftc_sector_z.get('FED', 0) * 0.3,
@@ -359,10 +351,10 @@ def main():
     print("=== RADAR DE ROTACION SECTORIAL v3.15 (con persistencia informativa) ===\n")
     df = download_market_data()
     features = compute_features(df)
-    
+
     ranking_price, dispersion_price, breadth_price, vix_z, stress, regime_price, accion_price = run_radar(df)
     ranking_flow, flow_dispersion, flow_breadth, regime_flow, flow_mom = run_flow_radar(df)
-    
+
     alertas = []
     top_price_2 = [sec for sec, _ in ranking_price[:2]]
     bottom_flow_2 = list(ranking_flow.keys())[-2:]
@@ -374,27 +366,27 @@ def main():
     for sec in bottom_price_2:
         if sec in top_flow_2:
             alertas.append(f"ALERTA VERDE: {sec} esta entre los 2 peores en precio pero entre los 2 mejores en flujo -> posible acumulacion (oportunidad).")
-    
+
     sectors = list(ranking_flow.keys())
     flow_acc_df = compute_flow_acceleration(flow_mom, window=5)
     vol_z_df = compute_volume_zscore(df, sectors, window=20)
     price_mom_dict = {sec: mom for sec, mom in ranking_price}
-    
+
     price_z_df = compute_price_zscore(df, sectors, window=60)
     acc_z_df = compute_acceleration_zscore(flow_acc_df, window=20)
     latest_price_z = price_z_df.iloc[-1]
     latest_acc_z = acc_z_df.iloc[-1]
-    
+
     latest_flow_mom = flow_mom.iloc[-1]
     latest_flow_acc = flow_acc_df.iloc[-1]
     latest_vol_z = vol_z_df.iloc[-1]
-    
+
     distribution_scores = {}
     distribution_probs_bin = {}
     distribution_div_cont = {}
     distribution_prob_cont = {}
     risk_score_dict = {}
-    
+
     flow_history = load_flow_history("flow_history_persistencia.csv")
     for sec in sectors:
         if sec not in flow_history.columns:
@@ -402,24 +394,24 @@ def main():
     for sec in sectors:
         flow_history.loc[pd.Timestamp.now().normalize(), sec] = latest_flow_mom.get(sec, np.nan)
     save_flow_history_df(flow_history, "flow_history_persistencia.csv")
-    
+
     for sec in sectors:
         pm = price_mom_dict.get(sec, 0)
         fm = latest_flow_mom.get(sec, 0)
         fa = latest_flow_acc.get(sec, 0)
         vz = latest_vol_z.get(sec, 0)
-        
+
         score_bin = distribution_score_binary(pm, fm, fa, vz)
         distribution_scores[sec] = score_bin
         distribution_probs_bin[sec] = prob_distribution_binary(score_bin)
         distribution_div_cont[sec] = divergence_score(pm, fm)
-        
+
         risk_score = distribution_score_v33(pm, fm, fa, vz)
         prob_cont = distribution_prob_continuous(pm, fm, fa, vz, temperature=1.5)
-        
+
         distribution_prob_cont[sec] = prob_cont
         risk_score_dict[sec] = risk_score
-    
+
     fase_dict = {}
     direccion_dict = {}
     for sec in sectors:
@@ -429,7 +421,7 @@ def main():
         vz = latest_vol_z.get(sec, 0)
         fase_dict[sec] = classify_phase(latest_price_z.get(sec, 0), fm, latest_acc_z.get(sec, 0), vz)
         direccion_dict[sec] = classify_direction(fm)
-    
+
     oportunidad_dict = {}
     operabilidad_dict = {}
     for sec in sectors:
@@ -440,7 +432,7 @@ def main():
         fase = fase_dict[sec]
         oportunidad_dict[sec] = opportunity_score(pm, fm, fa, vz, fase)
         operabilidad_dict[sec] = operability_level(oportunidad_dict[sec])
-    
+
     persistencia_dict = {}
     estado_senal_dict = {}
     for sec in sectors:
@@ -451,51 +443,47 @@ def main():
         else:
             persistencia_dict[sec] = "SIN_DATOS"
             estado_senal_dict[sec] = "NEUTRAL"
-    
-    sorted_sectors = sorted(sectors, key=lambda x: oportunidad_dict.get(x, 0), reverse=True)
-    
-    cftc_spy_z = None
-cftc_raw = None
-cftc_history_df = None
-if CFTC_AVAILABLE:
-    # Actualizar histórico con el archivo semanal (si existe)
-    cftc_history_df = update_cftc_history()
-    if cftc_history_df is not None and not cftc_history_df.empty:
-        # Calcular z‑score usando el histórico (52 semanas)
-        with_signal = compute_cftc_zscore_from_history()
-        if with_signal is not None and not with_signal.empty:
-            latest = with_signal.loc[with_signal.groupby('market')['date'].idxmax()]
-            spy_row = latest[latest['market'].str.contains("S&P 500", case=False)]
-            if not spy_row.empty:
-                cftc_spy_z = spy_row['cftc_z'].iloc[-1]
-    else:
-        # Fallback: usar solo el archivo raw (sin histórico)
-        cftc_raw = load_cftc_manual(path="data/cftc_raw.txt")
-        if cftc_raw is not None:
-            parsed = parse_cftc_financials(cftc_raw)
-            if parsed is not None:
-                with_signal = compute_cftc_signal(parsed)
-                if not with_signal.empty:
-                    spy_data = with_signal[with_signal['market'].str.contains("S&P 500", case=False)]
-                    if not spy_data.empty:
-                        cftc_spy_z = spy_data['cftc_z'].iloc[-1]
 
-# Extraer z-scores para factores sintéticos (usar histórico si existe)
-cftc_sector_z = {}
-if cftc_history_df is not None and not cftc_history_df.empty:
-    latest_data = cftc_history_df.loc[cftc_history_df.groupby('market')['date'].idxmax()]
-    from config import CFTC_MARKETS
-    for sector, substring in CFTC_MARKETS.items():
-        mask = latest_data['market'].str.contains(substring, case=False, na=False)
-        mask &= ~latest_data['market'].str.contains("MICRO|NANO", case=False, na=False)
-        if mask.any():
-            z_vals = latest_data.loc[mask, 'cftc_z']
-            if not z_vals.empty:
-                cftc_sector_z[sector] = np.median(z_vals)
-        except Exception as e:
-            print(f"Error al extraer z-scores para factores: {e}")
-    
-    # Calcular factores sintéticos
+    sorted_sectors = sorted(sectors, key=lambda x: oportunidad_dict.get(x, 0), reverse=True)
+
+    # --- CFTC con histórico ---
+    cftc_spy_z = None
+    cftc_raw = None
+    cftc_history_df = None
+    if CFTC_AVAILABLE:
+        cftc_history_df = update_cftc_history()
+        if cftc_history_df is not None and not cftc_history_df.empty:
+            with_signal = compute_cftc_zscore_from_history()
+            if with_signal is not None and not with_signal.empty:
+                latest = with_signal.loc[with_signal.groupby('market')['date'].idxmax()]
+                spy_row = latest[latest['market'].str.contains("S&P 500", case=False)]
+                if not spy_row.empty:
+                    cftc_spy_z = spy_row['cftc_z'].iloc[-1]
+        else:
+            cftc_raw = load_cftc_manual(path="data/cftc_raw.txt")
+            if cftc_raw is not None:
+                parsed = parse_cftc_financials(cftc_raw)
+                if parsed is not None:
+                    with_signal = compute_cftc_signal(parsed)
+                    if not with_signal.empty:
+                        spy_data = with_signal[with_signal['market'].str.contains("S&P 500", case=False)]
+                        if not spy_data.empty:
+                            cftc_spy_z = spy_data['cftc_z'].iloc[-1]
+
+    # Extraer z-scores para factores sintéticos (usar histórico si existe)
+    cftc_sector_z = {}
+    if cftc_history_df is not None and not cftc_history_df.empty:
+        latest_data = cftc_history_df.loc[cftc_history_df.groupby('market')['date'].idxmax()]
+        from config import CFTC_MARKETS
+        for sector, substring in CFTC_MARKETS.items():
+            mask = latest_data['market'].str.contains(substring, case=False, na=False)
+            mask &= ~latest_data['market'].str.contains("MICRO|NANO", case=False, na=False)
+            if mask.any():
+                z_vals = latest_data.loc[mask, 'cftc_z']
+                if not z_vals.empty:
+                    cftc_sector_z[sector] = np.median(z_vals)
+
+    # Factores sintéticos
     synthetic = compute_synthetic_factors(cftc_sector_z)
     synth_lines = [
         "\n## Factores Sintéticos (Agregados)\n",
@@ -507,7 +495,8 @@ if cftc_history_df is not None and not cftc_history_df.empty:
         f"- **Tipos largos (ponderado):** {synthetic['long_rates']:.2f}\n",
         f"- **Pendiente de la curva (largo - corto):** {synthetic['curve_spread']:.2f}\n"
     ]
-    
+
+    # Tabla de distribución
     dist_lines = ["\n## Confirmacion de Distribucion (dinero inteligente saliendo)\n"]
     rank_history = pd.DataFrame()
     for i in range(1, 6):
@@ -526,10 +515,10 @@ if cftc_history_df is not None and not cftc_history_df.empty:
             dist_lines.append("*Interpretación: Mercado estable*\n")
     else:
         dist_lines.append("\n**Volatilidad del ranking:** No hay datos suficientes\n")
-    
+
     dist_lines.append("| Sector | Price Mom | Flow Mom | Aceleracion | Volumen Z | Divergencia | Score (bin) | Prob (bin) | Prob (continua) | Risk Score | Intensidad | Clasificacion | Fase | Direccion | Conviccion Ajustada | Score Unificado | Confianza | Calidad | Oportunidad | Operabilidad | Persistencia | Estado Señal | Alerta |\n")
     dist_lines.append("|--------|-----------|----------|-------------|-----------|-------------|-------------|------------|-----------------|------------|------------|--------------|------|----------|--------------------|-----------------|----------|---------|-------------|--------------|--------------|--------------|--------|\n")
-    
+
     for sec in sorted_sectors:
         pm = price_mom_dict.get(sec, 0)
         fm = latest_flow_mom.get(sec, 0)
@@ -547,26 +536,26 @@ if cftc_history_df is not None and not cftc_history_df.empty:
         conv_ajustada = macro_adjustment(risk_score, cftc_spy_z)
         conv_ajustada = volatility_adjustment(conv_ajustada, vix_z)
         score_unif = unified_score(prob_bin, prob_cont, conv_ajustada, vix_z)
-        
+
         conf_sistema = system_confidence(vix_z, breadth_price, flow_dispersion)
         calidad = signal_quality(pm, fm, vz)
         oportunidad = oportunidad_dict[sec]
         operabilidad = operabilidad_dict[sec]
         persistencia = persistencia_dict[sec]
         estado_senal = estado_senal_dict[sec]
-        
+
         if score_bin >= 0.7:
             alerta = "DISTRIBUCION FUERTE"
         elif score_bin >= 0.4:
             alerta = "POSIBLE DISTRIBUCION"
         else:
             alerta = "SIN SENAL"
-        
+
         dist_lines.append(f"| {sec} | {pm:.3f} | {fm:.2f} | {fa:.2f} | {vz:.2f} | {div_cont:.2f} | {score_bin:.2f} | {prob_bin:.2%} | {prob_cont:.2%} | {risk_score:.2f} | {intensidad} | {clasif} | {fase} | {direccion} | {conv_ajustada:.2f} | {score_unif:.2f} | {conf_sistema:.2f} | {calidad:.2f} | {oportunidad:.2f} | {operabilidad} | {persistencia} | {estado_senal} | {alerta} |\n")
-    
+
     save_flow_history(flow_mom)
     plot_flow_dispersion(flow_mom)
-    
+
     from utils import save_markdown_report
     temp_md = "outputs/reporte_diario_temp.md"
     save_markdown_report(ranking_price, ranking_flow, flow_dispersion, flow_breadth, regime_flow,
@@ -574,13 +563,13 @@ if cftc_history_df is not None and not cftc_history_df.empty:
                          alertas, output_path=temp_md)
     with open(temp_md, 'r', encoding='utf-8') as f:
         lines = f.readlines()
-    
+
     insert_pos = len(lines)
     for i, line in enumerate(lines):
         if line.startswith("## Conclusión"):
             insert_pos = i
             break
-    
+
     macro_context = compute_macro_context(df, features)
     regime_label = interpret_macro(macro_context)
     macro_lines = [
@@ -597,15 +586,15 @@ if cftc_history_df is not None and not cftc_history_df.empty:
             insert_pos = i
             break
     lines[insert_pos:insert_pos] = cftc_lines
-    
+
     with open("outputs/reporte_diario.md", 'w', encoding='utf-8') as f:
         f.writelines(lines)
     os.remove(temp_md)
-    
+
     print("\nHistorico de flujos guardado en outputs/flow_history.csv")
     print("Grafico de dispersion guardado en outputs/flow_dispersion.png")
     print("Reporte diario (con CFTC y distribucion) guardado en outputs/reporte_diario.md")
-    
+
     try:
         from validation import evaluate_signal
         future_returns = df['SPY'].pct_change().shift(-5)
@@ -624,11 +613,9 @@ if cftc_history_df is not None and not cftc_history_df.empty:
             print(f"Numero de senales: {val['n_signals']}")
     except Exception as e:
         print(f"Validacion no disponible: {e}")
-    
+
     supervision(flow_mom, ranking_flow, ranking_price, df, sectors, distribution_prob_cont)
     print("\nEjecucion completada.")
 
 if __name__ == '__main__':
     main()
-
-
