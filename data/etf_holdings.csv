@@ -1,0 +1,91 @@
+etf,ticker,name,weight
+XLV,UNH,UnitedHealth Group,0.09
+XLV,LLY,Eli Lilly,0.08
+XLV,JNJ,Johnson & Johnson,0.07
+XLV,ABBV,AbbVie,0.07
+XLV,MRK,Merck & Co.,0.06
+XLV,TMO,Thermo Fisher,0.04
+XLV,ABT,Abbott Labs,0.04
+XLV,DHR,Danaher,0.03
+XLV,PFE,Pfizer,0.02
+XLV,AMGN,Amgen,0.02
+XLK,AAPL,Apple,0.22
+XLK,MSFT,Microsoft,0.20
+XLK,NVDA,Nvidia,0.18
+XLK,AVGO,Broadcom,0.06
+XLK,CRM,Salesforce,0.04
+XLK,ORCL,Oracle,0.03
+XLK,CSCO,Cisco,0.03
+XLK,ADBE,Adobe,0.03
+XLK,ACN,Accenture,0.02
+XLK,AMD,AMD,0.02
+XLF,JPM,JPMorgan,0.12
+XLF,BAC,Bank of America,0.10
+XLF,WFC,Wells Fargo,0.07
+XLF,C,Citigroup,0.05
+XLF,GS,Goldman Sachs,0.05
+XLF,MS,Morgan Stanley,0.05
+XLF,BLK,BlackRock,0.04
+XLF,SCHW,Charles Schwab,0.04
+XLF,AXP,American Express,0.04
+XLF,PNC,PNC Financial,0.03
+XLE,XOM,Exxon Mobil,0.22
+XLE,CVX,Chevron,0.18
+XLE,COP,ConocoPhillips,0.09
+XLE,EOG,EOG Resources,0.05
+XLE,SLB,Schlumberger,0.05
+XLE,MPC,Marathon Petroleum,0.04
+XLE,PSX,Phillips 66,0.04
+XLE,VLO,Valero Energy,0.04
+XLE,OXY,Occidental,0.03
+XLE,HES,Hess,0.03
+XLI,UNP,Union Pacific,0.07
+XLI,RTX,RTX Corp,0.06
+XLI,BA,Boeing,0.05
+XLI,CAT,Caterpillar,0.05
+XLI,DE,Deere,0.05
+XLI,GE,General Electric,0.05
+XLI,HON,Honeywell,0.04
+XLI,LMT,Lockheed Martin,0.04
+XLI,UPS,UPS,0.04
+XLI,FDX,FedEx,0.04
+XLP,PG,Procter & Gamble,0.15
+XLP,KO,Coca-Cola,0.10
+XLP,PEP,PepsiCo,0.10
+XLP,WMT,Walmart,0.09
+XLP,COST,Costco,0.08
+XLP,PM,Philip Morris,0.07
+XLP,MO,Altria,0.05
+XLP,CL,Colgate,0.04
+XLP,KMB,Kimberly-Clark,0.04
+XLP,MDLZ,Mondelez,0.04
+XLU,NEE,NextEra Energy,0.13
+XLU,DUK,Duke Energy,0.07
+XLU,SO,Southern Co,0.06
+XLU,D,Dom Energy,0.05
+XLU,AEP,American Electric Power,0.05
+XLU,SRE,Sempra,0.05
+XLU,XEL,Xcel Energy,0.04
+XLU,PEG,Public Service Enterprise,0.04
+XLU,ED,Con Edison,0.04
+XLU,EIX,Edison Intl,0.04
+XLRE,AMT,American Tower,0.10
+XLRE,PLD,Prologis,0.09
+XLRE,CCI,Crown Castle,0.07
+XLRE,EQIX,Equinix,0.07
+XLRE,PSA,Public Storage,0.06
+XLRE,O,Realty Income,0.05
+XLRE,SPG,Simon Property,0.05
+XLRE,DLR,Digital Realty,0.04
+XLRE,SBAC,SBA Comm,0.04
+XLRE,VICI,VICI Properties,0.04
+XLY,AMZN,Amazon,0.23
+XLY,TSLA,Tesla,0.18
+XLY,HD,Home Depot,0.06
+XLY,MCD,McDonald's,0.05
+XLY,NKE,Nike,0.04
+XLY,SBUX,Starbucks,0.04
+XLY,LOW,Lowe's,0.04
+XLY,BKNG,Booking,0.04
+XLY,TJX,TJX Companies,0.04
+XLY,F,Ford,0.03

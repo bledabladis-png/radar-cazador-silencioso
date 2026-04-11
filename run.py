@@ -10,6 +10,7 @@ from rotation_radar import run_radar, run_flow_radar
 from utils import save_flow_history, plot_flow_dispersion, save_markdown_report
 from features import compute_volume_zscore, compute_flow_acceleration, compute_price_zscore, compute_acceleration_zscore, compute_features
 from macro_confirm import compute_macro_confirm, get_flow_regime_sign, format_macro_section
+from stock_leader import prepare_multi_index, generate_leader_section
 
 def supervision(*args, **kwargs):
     pass
@@ -679,6 +680,28 @@ def main():
     with open("outputs/reporte_diario.md", 'w', encoding='utf-8') as f:
         f.writelines(lines)
     os.remove(temp_md)
+
+    # =========================================================
+    # MÓDULO DE LÍDERES SECTORIALES (solo informativo)
+    # =========================================================
+    try:
+        holdings_df = pd.read_csv("data/etf_holdings.csv")
+        df_multi = prepare_multi_index(df)
+        leader_lines = generate_leader_section(
+            fase_dict,
+            operabilidad_dict,
+            sectors,
+            df_multi,
+            holdings_df
+        )
+        if leader_lines:
+            with open("outputs/analisis_lideres.md", "w", encoding="utf-8") as f:
+                f.writelines(leader_lines)
+            print("Análisis de líderes sectoriales generado en outputs/analisis_lideres.md y .csv")
+        else:
+            print("No hay sectores favorables para análisis de líderes.")
+    except Exception as e:
+        print(f"Advertencia: no se generó el análisis de líderes: {e}")
 
     print("\nHistorico de flujos guardado en outputs/flow_history.csv")
     print("Grafico de dispersion guardado en outputs/flow_dispersion.png")
