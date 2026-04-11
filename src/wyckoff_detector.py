@@ -14,12 +14,18 @@ def range_compression(df, window=20):
     return compression
 
 def absorption_score(df, window=20):
-    """Volumen alto + precio plano → absorción."""
+    """
+    Score de absorción: volumen alto + precio plano.
+    Versión mejorada con tanh para evitar outliers.
+    """
     vol_mean = df["volume"].rolling(window).mean()
     vol_std = df["volume"].rolling(window).std()
     vol_z = (df["volume"] - vol_mean) / vol_std
+
     price_change = df["close"].pct_change(window)
-    absorption = vol_z - price_change
+
+    raw = vol_z - price_change
+    absorption = np.tanh(raw)   # rango (-1, 1)
     return absorption
 
 def detect_spring(df):

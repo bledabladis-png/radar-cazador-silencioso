@@ -14,8 +14,8 @@ from wyckoff_detector import wyckoff_score, classify_wyckoff_phase
 
 def compute_wyckoff_leadership(df):
     """
-    Calcula el Wyckoff Leadership Score (WLS) usando normalizaciones robustas (MAD).
-    Incluye RS momentum robusto, flow normalizado, persistence y RWS con percentil 70.
+    Calcula el Wyckoff Leadership Score (WLS) v2.
+    Incluye stability (signal‑to‑noise) y ponderaciones 25/25/20/20/10.
     """
     df = df.copy()
     
@@ -24,28 +24,32 @@ def compute_wyckoff_leadership(df):
     mad_rs = np.median(np.abs(df["rs_mom"] - median_rs))
     df["rs_z"] = (df["rs_mom"] - median_rs) / (mad_rs + 1e-9)
     
-    # 2. Flow robust z-score (evita sesgo sectorial)
+    # 2. Flow robust z-score
     median_flow = df["flow_z"].median()
     mad_flow = np.median(np.abs(df["flow_z"] - median_flow))
     df["flow_z_norm"] = (df["flow_z"] - median_flow) / (mad_flow + 1e-9)
     
-    # 3. Persistence normalizada (0-1)
+    # 3. Persistence normalizada
     df["persistence_norm"] = df["wyckoff_persistence"] / 5.0
     
-    # 4. RWS mejorado: baseline = percentil 70 del sector
+    # 4. RWS con percentil 70 del sector
     baseline = df.groupby("sector")["wyckoff_score"].transform(
         lambda x: np.percentile(x, 70)
     )
     df["rws"] = df["wyckoff_score"] / (baseline + 1e-9)
     
-    # 5. WLS final
-    df["wls"] = (
-        0.30 * df["rs_z"] +
-        0.30 * df["flow_z_norm"] +
-        0.20 * df["persistence_norm"] +
-        0.20 * df["rws"]
-    )
+    # 5. Stability (si no existe, asignar 1)
+    if "stability" not in df.columns:
+        df["stability"] = 1.0
     
+    # 6. WLS v2
+    df["wls"] = (
+        0.25 * df["rs_z"] +
+        0.25 * df["flow_z_norm"] +
+        0.20 * df["persistence_norm"] +
+        0.20 * df["rws"] +
+        0.10 * df["stability"]
+    )
     return df
 
 # =========================================================
@@ -203,20 +207,40 @@ def compute_stock_metrics(df, etf_ticker, stock_list):
             if len(ticker_df) >= 60:
                 wyckoff_sc = wyckoff_score(ticker_df).iloc[-1]
                 wyckoff_ph = classify_wyckoff_phase(ticker_df)
-                # Wyckoff persistence robusta (necesita la serie completa)
-                wyckoff_score_series = wyckoff_score(ticker_df)   # serie completa
-                flow_signal_series = flow_z   # ya es una serie (sin .iloc[-1])
+                # Wyckoff persistence robusta
+                wyckoff_score_series = wyckoff_score(ticker_df)
+                flow_signal_series = flow_z
                 persistence_series = wyckoff_persistence_robust(flow_signal_series, wyckoff_score_series, window=5)
                 wyckoff_persistence_val = persistence_series.iloc[-1]
                 if pd.isna(wyckoff_persistence_val):
                     wyckoff_persistence_val = 0
-
-                # Wyckoff cycle detector (con memoria)
+                # Wyckoff cycle detector
                 cycle_series = wyckoff_cycle_series(ticker_df)
                 wyckoff_cycle_val = cycle_series.iloc[-1]
+                
+                # MICROSTRUCTURE QUALITY
+                from wyckoff_detector import range_compression, absorption_score
+                comp_raw = range_compression(ticker_df).iloc[-1]
+                compression = 1 - np.clip(comp_raw, 0, 1)
+                absr_raw = absorption_score(ticker_df).iloc[-1]
+                absorption = (absr_raw + 1) / 2
+                persistence_norm = wyckoff_persistence_val / 5.0
+                structure_quality = (compression + absorption + persistence_norm) / 3.0
+                structure_quality = np.clip(structure_quality, 0, 1)
+                
+                # STABILITY
+                mean_10 = wyckoff_score_series.rolling(10).mean().iloc[-1]
+                std_10 = wyckoff_score_series.rolling(10).std().iloc[-1]
+                stability = mean_10 / (std_10 + 1e-9)
+                stability = np.clip(stability, 0, 2)
             else:
                 wyckoff_sc = np.nan
                 wyckoff_ph = "INSUFICIENTE"
+                wyckoff_persistence_val = 0
+                wyckoff_cycle_val = 0
+                structure_quality = 0.0
+                stability = 0.0
+
             # Persistence filter (últimos 3 días)
             flow_positive = (flow_z > 0).astype(int)
             persistence = flow_positive.rolling(3, min_periods=3).sum().iloc[-1]
@@ -256,7 +280,9 @@ def compute_stock_metrics(df, etf_ticker, stock_list):
                 "wyckoff_score": wyckoff_sc,
                 "wyckoff_phase": wyckoff_ph,
                 "wyckoff_persistence": wyckoff_persistence_val,
-                "wyckoff_cycle": wyckoff_cycle_val
+                "wyckoff_cycle": wyckoff_cycle_val,
+                "structure_quality": structure_quality,
+                "stability": stability
             })
         except Exception:
             continue

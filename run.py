@@ -22,6 +22,44 @@ try:
 except ImportError:
     CFTC_AVAILABLE = False
 
+def compute_regime_score(df, features):
+    """
+    Calcula el score de régimen de mercado (0 a 1) y la etiqueta cualitativa.
+    """
+    # Tendencia continua (suavizada con tanh)
+    spy_ma50 = df['SPY'].rolling(50).mean().iloc[-1]
+    spy_ma200 = df['SPY'].rolling(200).mean().iloc[-1]
+    trend_raw = (spy_ma50 / spy_ma200 - 1) * 5
+    trend = np.tanh(trend_raw)
+    trend_norm = (trend + 1) / 2   # mapear de [-1,1] a [0,1]
+    
+    # Breadth (normalizado)
+    breadth_signal = features['breadth_signal'].iloc[-1]
+    breadth_norm = np.clip((breadth_signal + 0.5) / 1.5, 0, 1)
+    
+    # VIX z-score inverso
+    vix_z = features['vix_z'].iloc[-1]
+    vix_norm = 1 - np.clip(vix_z, 0, 2) / 2
+    
+    # Crédito (HYG/LQD) – necesita robust_zscore
+    from features import robust_zscore
+    credit_ratio = df['HYG'] / df['LQD']
+    credit_z = robust_zscore(credit_ratio, window=60).iloc[-1]
+    credit_norm = 1 - np.clip(credit_z, 0, 2) / 2
+    
+    regime_score = (0.4 * trend_norm + 0.2 * breadth_norm + 
+                    0.2 * vix_norm + 0.2 * credit_norm)
+    regime_score = np.clip(regime_score, 0, 1)
+    
+    if regime_score > 0.6:
+        label = "EXPANSION"
+    elif regime_score < 0.4:
+        label = "CONTRACTION"
+    else:
+        label = "TRANSITION"
+    
+    return regime_score, label
+
 # -------------------------------
 # Funciones de distribucion v3.15
 # -------------------------------
@@ -405,6 +443,8 @@ def main():
     print("=== RADAR DE ROTACION SECTORIAL v3.15 (con persistencia informativa) ===\n")
     df = download_market_data()
     features = compute_features(df)
+    regime_score, regime_label = compute_regime_score(df, features)
+    print(f"Régimen cuantitativo: {regime_label} (score: {regime_score:.2f})")
 
     ranking_price, dispersion_price, breadth_price, vix_z, stress, regime_price, accion_price = run_radar(df)
     ranking_flow, flow_dispersion, flow_breadth, regime_flow, flow_mom = run_flow_radar(df)
@@ -651,7 +691,8 @@ def main():
     regime_label = interpret_macro(macro_context)
     macro_lines = [
         "\n## Contexto Macro\n",
-        f"- **Régimen de mercado:** {regime_label} ({macro_context['regime']:.2f})\n",
+        f"- **Régimen de mercado (cualitativo):** {regime_label} ({macro_context['regime']:.2f})\n",
+        f"- **Régimen cuantitativo (score):** {regime_score:.2f} ({regime_label})\n",
         f"- **Growth vs Value (QQQ/SPY):** {macro_context['growth_vs_value']:.2%}\n",
         f"- **Fortaleza global (ACWI/SPY):** {macro_context['global_strength']:.2%}\n"
     ]
