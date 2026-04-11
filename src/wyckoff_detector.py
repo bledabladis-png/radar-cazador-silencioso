@@ -25,7 +25,8 @@ def absorption_score(df, window=20):
     price_change = df["close"].pct_change(window)
 
     raw = vol_z - price_change
-    absorption = np.tanh(raw)   # rango (-1, 1)
+    # Sigmoide: rango (0,1); 0.5 es neutral
+    absorption = 1 / (1 + np.exp(-raw))
     return absorption
 
 def detect_spring(df):

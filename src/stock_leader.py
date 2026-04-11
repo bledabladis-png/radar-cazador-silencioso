@@ -222,8 +222,7 @@ def compute_stock_metrics(df, etf_ticker, stock_list):
                 from wyckoff_detector import range_compression, absorption_score
                 comp_raw = range_compression(ticker_df).iloc[-1]
                 compression = 1 - np.clip(comp_raw, 0, 1)
-                absr_raw = absorption_score(ticker_df).iloc[-1]
-                absorption = (absr_raw + 1) / 2
+                absorption = absorption_score(ticker_df).iloc[-1]   # ya en [0,1]
                 persistence_norm = wyckoff_persistence_val / 5.0
                 structure_quality = (compression + absorption + persistence_norm) / 3.0
                 structure_quality = np.clip(structure_quality, 0, 1)
@@ -231,7 +230,7 @@ def compute_stock_metrics(df, etf_ticker, stock_list):
                 # STABILITY
                 mean_10 = wyckoff_score_series.rolling(10).mean().iloc[-1]
                 std_10 = wyckoff_score_series.rolling(10).std().iloc[-1]
-                stability = mean_10 / (std_10 + 1e-9)
+                stability = np.log(1 + mean_10) / (std_10 + 1e-9)
                 stability = np.clip(stability, 0, 2)
             else:
                 wyckoff_sc = np.nan

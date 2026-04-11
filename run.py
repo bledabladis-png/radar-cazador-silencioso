@@ -39,7 +39,7 @@ def compute_regime_score(df, features):
     
     # VIX z-score inverso
     vix_z = features['vix_z'].iloc[-1]
-    vix_norm = 1 - np.clip(vix_z, 0, 2) / 2
+    vix_norm = np.exp(-vix_z)   # rango (0,1] para vix_z >=0; valores altos de vix_z dan cerca de 0
     
     # Crédito (HYG/LQD) – necesita robust_zscore
     from features import robust_zscore
