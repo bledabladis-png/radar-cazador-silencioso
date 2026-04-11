@@ -9,6 +9,82 @@ import numpy as np
 from wyckoff_detector import wyckoff_score, classify_wyckoff_phase
 
 # =========================================================
+# WYCKOFF LEADERSHIP ENGINE (WLE) – VERSIÓN INSTITUCIONAL
+# =========================================================
+
+def compute_wyckoff_leadership(df):
+    """
+    Calcula el Wyckoff Leadership Score (WLS) usando normalizaciones robustas (MAD).
+    Incluye RS momentum robusto, flow normalizado, persistence y RWS con percentil 70.
+    """
+    df = df.copy()
+    
+    # 1. RS momentum robust z-score (MAD)
+    median_rs = df["rs_mom"].median()
+    mad_rs = np.median(np.abs(df["rs_mom"] - median_rs))
+    df["rs_z"] = (df["rs_mom"] - median_rs) / (mad_rs + 1e-9)
+    
+    # 2. Flow robust z-score (evita sesgo sectorial)
+    median_flow = df["flow_z"].median()
+    mad_flow = np.median(np.abs(df["flow_z"] - median_flow))
+    df["flow_z_norm"] = (df["flow_z"] - median_flow) / (mad_flow + 1e-9)
+    
+    # 3. Persistence normalizada (0-1)
+    df["persistence_norm"] = df["wyckoff_persistence"] / 5.0
+    
+    # 4. RWS mejorado: baseline = percentil 70 del sector
+    baseline = df.groupby("sector")["wyckoff_score"].transform(
+        lambda x: np.percentile(x, 70)
+    )
+    df["rws"] = df["wyckoff_score"] / (baseline + 1e-9)
+    
+    # 5. WLS final
+    df["wls"] = (
+        0.30 * df["rs_z"] +
+        0.30 * df["flow_z_norm"] +
+        0.20 * df["persistence_norm"] +
+        0.20 * df["rws"]
+    )
+    
+    return df
+
+# =========================================================
+# WYCKOFF MEJORAS ROBUSTAS
+# =========================================================
+
+def wyckoff_persistence_robust(flow_signal_series, wyckoff_score_series, window=5):
+    """
+    Calcula la persistencia de acumulación robusta (intensidad, no binaria).
+    Retorna una serie con la suma de los últimos `window` días donde la intensidad supera 0.25.
+    """
+    signal = (flow_signal_series * wyckoff_score_series).clip(lower=0)
+    binary = (signal > 0.25).astype(int)
+    return binary.rolling(window).sum()
+
+def wyckoff_cycle_series(df):
+    """
+    Detecta el ciclo completo Wyckoff (Spring → Acumulación → SOS) con memoria de estado.
+    Retorna una serie con 1 en el día que se completa el ciclo.
+    """
+    from wyckoff_detector import detect_spring, detect_sos, wyckoff_score
+    spring = detect_spring(df)
+    sos = detect_sos(df)
+    score = wyckoff_score(df)
+
+    cycle = np.zeros(len(df))
+    spring_flag = False
+
+    for i in range(len(df)):
+        if spring.iloc[i] == 1:
+            spring_flag = True
+        accumulation = score.iloc[i] > 0.6
+        sos_now = sos.iloc[i] == 1
+        if spring_flag and accumulation and sos_now:
+            cycle[i] = 1
+            spring_flag = False
+    return pd.Series(cycle, index=df.index)
+
+# =========================================================
 # UTILIDADES
 # =========================================================
 
@@ -127,6 +203,17 @@ def compute_stock_metrics(df, etf_ticker, stock_list):
             if len(ticker_df) >= 60:
                 wyckoff_sc = wyckoff_score(ticker_df).iloc[-1]
                 wyckoff_ph = classify_wyckoff_phase(ticker_df)
+                # Wyckoff persistence robusta (necesita la serie completa)
+                wyckoff_score_series = wyckoff_score(ticker_df)   # serie completa
+                flow_signal_series = flow_z   # ya es una serie (sin .iloc[-1])
+                persistence_series = wyckoff_persistence_robust(flow_signal_series, wyckoff_score_series, window=5)
+                wyckoff_persistence_val = persistence_series.iloc[-1]
+                if pd.isna(wyckoff_persistence_val):
+                    wyckoff_persistence_val = 0
+
+                # Wyckoff cycle detector (con memoria)
+                cycle_series = wyckoff_cycle_series(ticker_df)
+                wyckoff_cycle_val = cycle_series.iloc[-1]
             else:
                 wyckoff_sc = np.nan
                 wyckoff_ph = "INSUFICIENTE"
@@ -167,7 +254,9 @@ def compute_stock_metrics(df, etf_ticker, stock_list):
                 "warnings": ", ".join(warnings) if warnings else "-",
                 "persistence": persistence,
                 "wyckoff_score": wyckoff_sc,
-                "wyckoff_phase": wyckoff_ph
+                "wyckoff_phase": wyckoff_ph,
+                "wyckoff_persistence": wyckoff_persistence_val,
+                "wyckoff_cycle": wyckoff_cycle_val
             })
         except Exception:
             continue
@@ -231,21 +320,28 @@ def generate_leader_section(
         lines.append(f"## Sector: {sector}\n")
         lines.append(f"- **Fase:** {fase}\n")
         lines.append(f"- **Operabilidad:** {oper}\n\n")
-        lines.append("| Ticker | RS | RS Mom | Flow (z) | RSI | Divergencia | Persistencia | Wyckoff | Warnings |\n")
-        lines.append("|--------|----|--------|-----------|-----|-------------|--------------|---------|----------|\n")
-        for _, row in metrics_df.iterrows():
-            div = "Sí" if row['divergence'] else "No"
+        # Calcular WLS para este sector (para ordenar)
+        sector_df = compute_wyckoff_leadership(metrics_df)
+        sector_df = sector_df.sort_values("wls", ascending=False)
+        top_n = 3
+        top_leaders = sector_df.head(top_n)
+        
+        lines.append(f"**Top {top_n} líderes por WLS:**\n\n")
+        lines.append("| Ticker | RS | RS Mom | Flow (z) | RSI | WLS |\n")
+        lines.append("|--------|----|--------|-----------|-----|-----|\n")
+        for _, row in top_leaders.iterrows():
             lines.append(
                 f"| {row['ticker']} | {row['rs']:.3f} | {row['rs_mom']:.2%} | "
-                f"{row['flow_z']:.2f} | {row['rsi']:.1f} | {div} | {row['persistence']}/3 | "
-                f"{row['wyckoff_phase']} | {row['warnings']} |\n"
+                f"{row['flow_z']:.2f} | {row['rsi']:.1f} | {row['wls']:.2f} |\n"
             )
-
         lines.append("\n")
 
-    # CSV global
+    # CSV global con WLE
     if all_data:
         final_df = pd.concat(all_data, ignore_index=True)
+        # Calcular WLE (añade columnas rs_z, flow_z_norm, persistence_norm, rws, wls)
+        final_df = compute_wyckoff_leadership(final_df)
+        # Ordenar por sector y WLS descendente
+        final_df = final_df.sort_values(["sector", "wls"], ascending=[True, False])
         final_df.to_csv(output_csv_path, index=False)
-
     return lines
