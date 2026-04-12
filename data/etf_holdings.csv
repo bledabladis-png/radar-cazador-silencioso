@@ -1,91 +1,126 @@
 etf,ticker,name,weight
-XLV,UNH,UnitedHealth Group,0.09
-XLV,LLY,Eli Lilly,0.08
-XLV,JNJ,Johnson & Johnson,0.07
-XLV,ABBV,AbbVie,0.07
-XLV,MRK,Merck & Co.,0.06
-XLV,TMO,Thermo Fisher,0.04
-XLV,ABT,Abbott Labs,0.04
-XLV,DHR,Danaher,0.03
-XLV,PFE,Pfizer,0.02
-XLV,AMGN,Amgen,0.02
-XLK,AAPL,Apple,0.22
-XLK,MSFT,Microsoft,0.20
-XLK,NVDA,Nvidia,0.18
-XLK,AVGO,Broadcom,0.06
-XLK,CRM,Salesforce,0.04
-XLK,ORCL,Oracle,0.03
-XLK,CSCO,Cisco,0.03
-XLK,ADBE,Adobe,0.03
-XLK,ACN,Accenture,0.02
-XLK,AMD,AMD,0.02
-XLF,JPM,JPMorgan,0.12
-XLF,BAC,Bank of America,0.10
-XLF,WFC,Wells Fargo,0.07
-XLF,C,Citigroup,0.05
-XLF,GS,Goldman Sachs,0.05
-XLF,MS,Morgan Stanley,0.05
-XLF,BLK,BlackRock,0.04
-XLF,SCHW,Charles Schwab,0.04
-XLF,AXP,American Express,0.04
-XLF,PNC,PNC Financial,0.03
+XLK,NVDA,NVIDIA Corp,0.17
+XLK,AAPL,Apple Inc,0.15
+XLK,GOOGL,Alphabet Inc Class A,0.07
+XLK,GOOG,Alphabet Inc Class C,0.06
+XLK,MSFT,Microsoft Corp,0.04
+XLK,AVGO,Broadcom Inc,0.04
+XLK,META,Meta Platforms Inc,0.03
+XLK,MU,Micron Technology Inc,0.03
+XLK,AMD,Advanced Micro Devices,0.03
+XLK,LRCX,Lam Research Corp,0.02
+XLK,AMAT,Applied Materials Inc,0.02
+XLK,PLTR,Palantir Technologies,0.02
+XLK,INTC,Intel Corp,0.02
+XLK,ORCL,Oracle Corp,0.02
+XLK,KLAC,KLA Corp,0.02
+XLF,BRKB,Berkshire Hathaway B,0.11
+XLF,JPM,JPMorgan Chase,0.11
+XLF,BAC,Bank of America,0.05
+XLF,WFC,Wells Fargo,0.04
+XLF,GS,Goldman Sachs,0.04
+XLF,C,Citigroup,0.04
+XLF,MS,Morgan Stanley,0.03
+XLF,SCHW,Charles Schwab,0.03
+XLF,BLK,BlackRock,0.03
+XLF,SPGI,S&P Global,0.02
+XLF,CB,Chubb,0.02
+XLF,PGR,Progressive Corp,0.02
+XLF,CME,CME Group,0.02
+XLF,ICE,Intercontinental Exchange,0.02
+XLF,BK,BNY Mellon,0.01
 XLE,XOM,Exxon Mobil,0.22
-XLE,CVX,Chevron,0.18
-XLE,COP,ConocoPhillips,0.09
-XLE,EOG,EOG Resources,0.05
-XLE,SLB,Schlumberger,0.05
-XLE,MPC,Marathon Petroleum,0.04
-XLE,PSX,Phillips 66,0.04
+XLE,CVX,Chevron,0.16
+XLE,COP,ConocoPhillips,0.07
+XLE,WMB,Williams Inc,0.04
+XLE,SLB,SLB NV,0.04
+XLE,EOG,EOG Resources,0.04
 XLE,VLO,Valero Energy,0.04
-XLE,OXY,Occidental,0.03
-XLE,HES,Hess,0.03
-XLI,UNP,Union Pacific,0.07
-XLI,RTX,RTX Corp,0.06
-XLI,BA,Boeing,0.05
-XLI,CAT,Caterpillar,0.05
-XLI,DE,Deere,0.05
-XLI,GE,General Electric,0.05
-XLI,HON,Honeywell,0.04
-XLI,LMT,Lockheed Martin,0.04
-XLI,UPS,UPS,0.04
-XLI,FDX,FedEx,0.04
-XLP,PG,Procter & Gamble,0.15
-XLP,KO,Coca-Cola,0.10
-XLP,PEP,PepsiCo,0.10
-XLP,WMT,Walmart,0.09
-XLP,COST,Costco,0.08
-XLP,PM,Philip Morris,0.07
+XLE,MPC,Marathon Petroleum,0.03
+XLE,PSX,Phillips 66,0.03
+XLE,KMI,Kinder Morgan,0.03
+XLE,BKR,Baker Hughes,0.03
+XLE,LNG,Cheniere Energy,0.03
+XLE,OKE,ONEOK,0.03
+XLE,TRGP,Targa Resources,0.02
+XLE,OXY,Occidental Petroleum,0.02
+XLI,CAT,Caterpillar,0.07
+XLI,GE,GE Aerospace,0.06
+XLI,RTX,RTX Corp,0.05
+XLI,GEV,GE Vernova,0.05
+XLI,BA,Boeing,0.03
+XLI,DE,Deere & Co,0.03
+XLI,ETN,Eaton Corp,0.03
+XLI,HON,Honeywell,0.03
+XLI,UNP,Union Pacific,0.03
+XLI,UBER,Uber Technologies,0.03
+XLY,AMZN,Amazon,0.15
+XLY,TSLA,Tesla,0.08
+XLY,WMT,Walmart,0.05
+XLY,NFLX,Netflix,0.05
+XLY,COST,Costco,0.04
+XLY,HD,Home Depot,0.04
+XLY,MCD,McDonalds,0.04
+XLY,TJX,TJX Companies,0.03
+XLY,DIS,Disney,0.03
+XLY,UBER,Uber Technologies,0.02
+XLY,BKNG,Booking Holdings,0.02
+XLY,LOW,Lowes,0.02
+XLY,SBUX,Starbucks,0.02
+XLY,MAR,Marriott,0.01
+XLY,ORLY,OReilly Automotive,0.01
+XLP,PG,Procter & Gamble,0.14
+XLP,KO,Coca-Cola,0.12
+XLP,PM,Philip Morris,0.10
+XLP,PEP,PepsiCo,0.09
 XLP,MO,Altria,0.05
-XLP,CL,Colgate,0.04
-XLP,KMB,Kimberly-Clark,0.04
-XLP,MDLZ,Mondelez,0.04
-XLU,NEE,NextEra Energy,0.13
-XLU,DUK,Duke Energy,0.07
+XLP,MCK,McKesson,0.04
+XLP,CVS,CVS Health,0.04
+XLP,MDLZ,Mondelez,0.03
+XLP,CL,Colgate-Palmolive,0.03
+XLP,CTVA,Corteva,0.03
+XLP,COR,Cencora,0.03
+XLP,MNST,Monster Beverage,0.03
+XLP,KR,Kroger,0.02
+XLP,SYY,Sysco,0.02
+XLP,KDP,Keurig Dr Pepper,0.02
+XLV,LLY,Eli Lilly,0.14
+XLV,JNJ,Johnson & Johnson,0.10
+XLV,ABBV,AbbVie,0.07
+XLV,MRK,Merck,0.05
+XLV,UNH,UnitedHealth,0.05
+XLV,AMGN,Amgen,0.03
+XLV,TMO,Thermo Fisher,0.03
+XLV,ABT,Abbott Labs,0.03
+XLV,GILD,Gilead Sciences,0.03
+XLV,ISRG,Intuitive Surgical,0.03
+XLV,PFE,Pfizer,0.03
+XLV,BMY,Bristol Myers,0.02
+XLV,DHR,Danaher,0.02
+XLV,SYK,Stryker,0.02
+XLV,MDT,Medtronic,0.02
+XLU,NEE,NextEra Energy,0.12
 XLU,SO,Southern Co,0.06
-XLU,D,Dom Energy,0.05
-XLU,AEP,American Electric Power,0.05
-XLU,SRE,Sempra,0.05
-XLU,XEL,Xcel Energy,0.04
-XLU,PEG,Public Service Enterprise,0.04
-XLU,ED,Con Edison,0.04
-XLU,EIX,Edison Intl,0.04
-XLRE,AMT,American Tower,0.10
+XLU,DUK,Duke Energy,0.06
+XLU,CEG,Constellation Energy,0.05
+XLU,WM,Waste Management,0.05
+XLU,AEP,American Electric Power,0.04
+XLU,SRE,Sempra,0.04
+XLU,D,Dominion Energy,0.03
+XLU,VST,Vistra Corp,0.03
+XLU,ETR,Entergy,0.03
+XLU,EXC,Exelon,0.03
+XLU,XEL,Xcel Energy,0.03
+XLU,RSG,Republic Services,0.03
+XLU,PEG,PSEG,0.02
+XLU,ED,Con Edison,0.02
+XLRE,WELL,Welltower,0.10
 XLRE,PLD,Prologis,0.09
-XLRE,CCI,Crown Castle,0.07
 XLRE,EQIX,Equinix,0.07
-XLRE,PSA,Public Storage,0.06
-XLRE,O,Realty Income,0.05
+XLRE,AMT,American Tower,0.06
 XLRE,SPG,Simon Property,0.05
-XLRE,DLR,Digital Realty,0.04
-XLRE,SBAC,SBA Comm,0.04
-XLRE,VICI,VICI Properties,0.04
-XLY,AMZN,Amazon,0.23
-XLY,TSLA,Tesla,0.18
-XLY,HD,Home Depot,0.06
-XLY,MCD,McDonald's,0.05
-XLY,NKE,Nike,0.04
-XLY,SBUX,Starbucks,0.04
-XLY,LOW,Lowe's,0.04
-XLY,BKNG,Booking,0.04
-XLY,TJX,TJX Companies,0.04
-XLY,F,Ford,0.03
+XLRE,DLR,Digital Realty,0.05
+XLRE,CBRE,CBRE Group,0.04
+XLRE,VTR,Ventas,0.04
+XLRE,PSA,Public Storage,0.04
+XLRE,O,Realty Income,0.04
