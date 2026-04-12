@@ -12,10 +12,10 @@ from wyckoff_detector import wyckoff_score, classify_wyckoff_phase
 # WYCKOFF LEADERSHIP ENGINE (WLE) – VERSIÓN INSTITUCIONAL
 # =========================================================
 
-def compute_wyckoff_leadership(df):
+def compute_wyckoff_leadership(df, weights=None):
     """
-    Calcula el Wyckoff Leadership Score (WLS) v2.
-    Incluye stability (signal‑to‑noise) y ponderaciones 25/25/20/20/10.
+    Calcula el Wyckoff Leadership Score (WLS) usando normalizaciones robustas (MAD).
+    Si weights es None, usa pesos fijos (25/25/20/20/10).
     """
     df = df.copy()
     
@@ -42,13 +42,28 @@ def compute_wyckoff_leadership(df):
     if "stability" not in df.columns:
         df["stability"] = 1.0
     
-    # 6. WLS v2
+    # 6. Aplicar pesos
+    if weights is None:
+        # Pesos por defecto (versión anterior)
+        w_rs = 0.25
+        w_flow = 0.25
+        w_persist = 0.20
+        w_structure = 0.20
+        w_stab = 0.10
+    else:
+        w_rs = weights.get("rs", 0.25)
+        w_flow = weights.get("flow", 0.25)
+        w_persist = weights.get("persist", 0.20)
+        w_structure = weights.get("structure", 0.20)
+        w_stab = weights.get("stability", 0.10)
+    
+    # 7. WLS final
     df["wls"] = (
-        0.25 * df["rs_z"] +
-        0.25 * df["flow_z_norm"] +
-        0.20 * df["persistence_norm"] +
-        0.20 * df["rws"] +
-        0.10 * df["stability"]
+        w_rs * df["rs_z"] +
+        w_flow * df["flow_z_norm"] +
+        w_persist * df["persistence_norm"] +
+        w_structure * df["rws"] +
+        w_stab * df["stability"]
     )
     return df
 
@@ -230,7 +245,7 @@ def compute_stock_metrics(df, etf_ticker, stock_list):
                 # STABILITY
                 mean_10 = wyckoff_score_series.rolling(10).mean().iloc[-1]
                 std_10 = wyckoff_score_series.rolling(10).std().iloc[-1]
-                stability = np.log(1 + mean_10) / (std_10 + 1e-9)
+                stability = (mean_10 / (std_10 + 1e-9)) * np.tanh(mean_10)
                 stability = np.clip(stability, 0, 2)
             else:
                 wyckoff_sc = np.nan
@@ -304,7 +319,8 @@ def generate_leader_section(
     sectors,
     df,
     holdings_df,
-    output_csv_path="outputs/analisis_lideres.csv"
+    output_csv_path="outputs/analisis_lideres.csv",
+    wls_weights=None   # nuevo parámetro
 ):
     """
     Genera líneas Markdown y guarda CSV con los datos de líderes sectoriales.
@@ -336,8 +352,6 @@ def generate_leader_section(
         metrics_df = compute_stock_metrics(df, etf_ticker, stocks)
         if metrics_df.empty:
             continue
-
-        # Acumular para CSV global
         metrics_df["sector"] = sector
         all_data.append(metrics_df)
 
@@ -346,7 +360,7 @@ def generate_leader_section(
         lines.append(f"- **Fase:** {fase}\n")
         lines.append(f"- **Operabilidad:** {oper}\n\n")
         # Calcular WLS para este sector (para ordenar)
-        sector_df = compute_wyckoff_leadership(metrics_df)
+        sector_df = compute_wyckoff_leadership(metrics_df, weights=wls_weights)
         sector_df = sector_df.sort_values("wls", ascending=False)
         top_n = 3
         top_leaders = sector_df.head(top_n)
@@ -364,9 +378,21 @@ def generate_leader_section(
     # CSV global con WLE
     if all_data:
         final_df = pd.concat(all_data, ignore_index=True)
-        # Calcular WLE (añade columnas rs_z, flow_z_norm, persistence_norm, rws, wls)
-        final_df = compute_wyckoff_leadership(final_df)
-        # Ordenar por sector y WLS descendente
+        final_df = compute_wyckoff_leadership(final_df, weights=wls_weights)
         final_df = final_df.sort_values(["sector", "wls"], ascending=[True, False])
+        
+        # =========================================================
+        # EDGE CONFIRMATION LAYER (ECL)
+        # =========================================================
+        def compute_edge_score(row):
+            F = np.tanh(row['flow_z'])
+            P = np.tanh(row['rs_mom'])
+            S = np.tanh(row['wls'])
+            signals = np.array([F, P, S])
+            alignment = np.mean(signals)
+            consistency = 1 - np.std(signals)
+            return alignment * consistency
+        
+        final_df['edge_score'] = final_df.apply(compute_edge_score, axis=1)
+        
         final_df.to_csv(output_csv_path, index=False)
-    return lines
