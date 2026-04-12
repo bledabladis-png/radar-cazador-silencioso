@@ -1,5 +1,6 @@
 ﻿import yfinance as yf
 import pandas as pd
+import numpy as np
 from datetime import datetime, timedelta
 import sys, os
 from tenacity import retry, stop_after_attempt, wait_exponential
@@ -7,12 +8,15 @@ from tenacity import retry, stop_after_attempt, wait_exponential
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from config import tickers
 
+# =========================================================
+# FUNCIONES DE DESCARGA INDIVIDUAL (FALLBACK)
+# =========================================================
+
 def fetch_stooq(ticker, start, end):
     """
     Descarga datos OHLCV desde Stooq para un ticker.
     Retorna DataFrame con columnas: open, high, low, close, volume.
     """
-    # Mapeo de tickers comunes a símbolos de Stooq
     mapping = {
         'SPY': 'spy.us',
         'XLK': 'xlk.us',
@@ -50,7 +54,6 @@ def fetch_stooq(ticker, start, end):
     if df.empty:
         return pd.DataFrame()
     
-    # Renombrar al formato esperado
     df = df.rename(columns={
         'Open': 'open',
         'High': 'high',
@@ -59,6 +62,10 @@ def fetch_stooq(ticker, start, end):
         'Volume': 'volume'
     })
     return df[['open', 'high', 'low', 'close', 'volume']]
+
+# =========================================================
+# FUNCIÓN DE DESCARGA MASIVA CON REINTENTOS (YAHOO)
+# =========================================================
 
 @retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=2, max=10))
 def download_with_retry(tickers, start, end):
@@ -73,7 +80,41 @@ def download_with_retry(tickers, start, end):
         threads=False
     )
 
+# =========================================================
+# CONSTRUCCIÓN DEL DATAFRAME FINAL (EVITA DUPLICACIÓN)
+# =========================================================
+
+def build_market_dataframe(prices, volumes, opens, highs, lows, all_tickers):
+    """
+    Construye el DataFrame final con columnas:
+    - precio close
+    - _volume, _open, _high, _low
+    - _dollar_vol, _dollar_vol_smoothed
+    """
+    df = prices.copy()
+    for ticker in all_tickers:
+        if ticker in prices.columns:
+            # Volumen, open, high, low
+            df[f"{ticker}_volume"] = volumes.get(ticker, pd.Series(index=prices.index, dtype=float))
+            df[f"{ticker}_open"] = opens.get(ticker, pd.Series(index=prices.index, dtype=float))
+            df[f"{ticker}_high"] = highs.get(ticker, pd.Series(index=prices.index, dtype=float))
+            df[f"{ticker}_low"] = lows.get(ticker, pd.Series(index=prices.index, dtype=float))
+            # Dólar volumen y suavizado
+            df[f"{ticker}_dollar_vol"] = prices[ticker] * df[f"{ticker}_volume"]
+            df[f"{ticker}_dollar_vol_smoothed"] = df[f"{ticker}_dollar_vol"].rolling(3, min_periods=1).mean()
+    return df.dropna(how='all')
+
+# =========================================================
+# FUNCIÓN PRINCIPAL
+# =========================================================
+
 def download_market_data(force=False):
+    """
+    Descarga datos de mercado con:
+    - caché de 23 horas
+    - prioridad Yahoo (descarga masiva con reintentos)
+    - fallback a Stooq (descarga por ticker)
+    """
     cache_file = 'data/market_data.csv'
     if not force and os.path.exists(cache_file):
         file_time = datetime.fromtimestamp(os.path.getmtime(cache_file))
@@ -88,12 +129,11 @@ def download_market_data(force=False):
     end = datetime.now()
     start = end - timedelta(days=3650)
 
-    # Intentar primero con Yahoo Finance (descarga masiva)
+    # --- Intento con Yahoo (descarga masiva) ---
     try:
         data = download_with_retry(all_tickers, start, end)
         if data is not None and not data.empty:
             print("Datos descargados desde Yahoo Finance.")
-            # Procesar datos (extraer OHLCV)
             prices = pd.DataFrame()
             volumes = pd.DataFrame()
             opens = pd.DataFrame()
@@ -106,30 +146,14 @@ def download_market_data(force=False):
                     opens[ticker] = data[ticker]['Open']
                     highs[ticker] = data[ticker]['High']
                     lows[ticker] = data[ticker]['Low']
-                else:
-                    if len(all_tickers) == 1:
-                        prices[ticker] = data['Close']
-                        volumes[ticker] = data['Volume']
-                        opens[ticker] = data['Open']
-                        highs[ticker] = data['High']
-                        lows[ticker] = data['Low']
-            # Construir DataFrame con columnas adicionales
-            df = prices.copy()
-            for ticker in all_tickers:
-                df[f"{ticker}_volume"] = volumes[ticker]
-                df[f"{ticker}_open"] = opens[ticker]
-                df[f"{ticker}_high"] = highs[ticker]
-                df[f"{ticker}_low"] = lows[ticker]
-                df[f"{ticker}_dollar_vol"] = prices[ticker] * volumes[ticker]
-                df[f"{ticker}_dollar_vol_smoothed"] = (prices[ticker] * volumes[ticker]).rolling(3, min_periods=1).mean()
-            df = df.dropna(how='all')
+            df = build_market_dataframe(prices, volumes, opens, highs, lows, all_tickers)
             df.to_csv(cache_file)
             print(f"Datos guardados desde Yahoo ({len(df)} días)")
             return df
     except Exception as e:
         print(f"Yahoo Finance falló: {e}. Intentando con Stooq como fallback...")
 
-    # Fallback a Stooq (descarga por ticker, más lento pero robusto)
+    # --- Fallback a Stooq (descarga por ticker) ---
     print("Descargando desde Stooq (puede tardar varios minutos)...")
     prices = pd.DataFrame()
     volumes = pd.DataFrame()
@@ -150,17 +174,7 @@ def download_market_data(force=False):
     if prices.empty:
         raise Exception("No se pudo descargar ningún ticker desde Stooq.")
     
-    # Construir DataFrame igual que con Yahoo
-    df = prices.copy()
-    for ticker in all_tickers:
-        if ticker in prices.columns:
-            df[f"{ticker}_volume"] = volumes[ticker] if ticker in volumes.columns else np.nan
-            df[f"{ticker}_open"] = opens[ticker] if ticker in opens.columns else np.nan
-            df[f"{ticker}_high"] = highs[ticker] if ticker in highs.columns else np.nan
-            df[f"{ticker}_low"] = lows[ticker] if ticker in lows.columns else np.nan
-            df[f"{ticker}_dollar_vol"] = prices[ticker] * volumes[ticker]
-            df[f"{ticker}_dollar_vol_smoothed"] = (prices[ticker] * volumes[ticker]).rolling(3, min_periods=1).mean()
-    df = df.dropna(how='all')
+    df = build_market_dataframe(prices, volumes, opens, highs, lows, all_tickers)
     df.to_csv(cache_file)
     print(f"Datos guardados desde Stooq ({len(df)} días)")
     return df
