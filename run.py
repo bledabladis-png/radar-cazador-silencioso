@@ -25,6 +25,7 @@ except ImportError:
 def compute_regime_score(df, features):
     """
     Calcula el score de régimen de mercado (0 a 1) y la etiqueta cualitativa.
+    Incluye tendencia del VIX.
     """
     # Tendencia continua (suavizada con tanh)
     spy_ma50 = df['SPY'].rolling(50).mean().iloc[-1]
@@ -37,9 +38,22 @@ def compute_regime_score(df, features):
     breadth_signal = features['breadth_signal'].iloc[-1]
     breadth_norm = np.clip((breadth_signal + 0.5) / 1.5, 0, 1)
     
-    # VIX z-score inverso
-    vix_z = features['vix_z'].iloc[-1]
-    vix_norm = np.exp(-vix_z)   # rango (0,1] para vix_z >=0; valores altos de vix_z dan cerca de 0
+    # VIX: nivel + tendencia
+    vix_z = features['vix_z'].iloc[-1]   # ya calculado en features
+    
+    # Calcular tendencia del VIX (pendiente de los últimos 5 días)
+    vix_series = df['^VIX'].dropna()
+    if len(vix_series) >= 5:
+        recent = vix_series.tail(5)
+        x = np.arange(len(recent))
+        slope = np.polyfit(x, recent, 1)[0]
+        vix_trend = slope
+    else:
+        vix_trend = 0.0
+    
+    # Componente de VIX combinando nivel y tendencia
+    vix_component = np.exp(-vix_z) * (1 - np.tanh(vix_trend))
+    vix_component = np.clip(vix_component, 0, 1)
     
     # Crédito (HYG/LQD) – necesita robust_zscore
     from features import robust_zscore
@@ -48,7 +62,7 @@ def compute_regime_score(df, features):
     credit_norm = 1 - np.clip(credit_z, 0, 2) / 2
     
     regime_score = (0.4 * trend_norm + 0.2 * breadth_norm + 
-                    0.2 * vix_norm + 0.2 * credit_norm)
+                    0.2 * vix_component + 0.2 * credit_norm)
     regime_score = np.clip(regime_score, 0, 1)
     
     if regime_score > 0.6:
@@ -59,6 +73,24 @@ def compute_regime_score(df, features):
         label = "TRANSITION"
     
     return regime_score, label
+
+def get_wls_weights(regime_score):
+    """
+    Calcula pesos dinámicos para el WLS en función del regime_score (0 a 1).
+    """
+    w_flow = 0.20 + 0.20 * regime_score
+    w_rs = 0.20 + 0.15 * regime_score
+    w_persist = 0.30 - 0.10 * regime_score
+    w_struct = 0.30 - 0.15 * regime_score
+    w_stability = 0.10
+    total = w_flow + w_rs + w_persist + w_struct + w_stability
+    return {
+        "flow": w_flow / total,
+        "rs": w_rs / total,
+        "persist": w_persist / total,
+        "structure": w_struct / total,
+        "stability": w_stability / total
+    }
 
 # -------------------------------
 # Funciones de distribucion v3.15
@@ -444,6 +476,7 @@ def main():
     df = download_market_data()
     features = compute_features(df)
     regime_score, regime_label = compute_regime_score(df, features)
+    wls_weights = get_wls_weights(regime_score)
     print(f"Régimen cuantitativo: {regime_label} (score: {regime_score:.2f})")
 
     ranking_price, dispersion_price, breadth_price, vix_z, stress, regime_price, accion_price = run_radar(df)
@@ -733,7 +766,8 @@ def main():
             operabilidad_dict,
             sectors,
             df_multi,
-            holdings_df
+            holdings_df,
+            wls_weights=wls_weights
         )
         if leader_lines:
             with open("outputs/analisis_lideres.md", "w", encoding="utf-8") as f:
