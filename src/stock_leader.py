@@ -394,5 +394,19 @@ def generate_leader_section(
             return alignment * consistency
         
         final_df['edge_score'] = final_df.apply(compute_edge_score, axis=1)
+
+        # =========================================================
+        # TREND READINESS (preparación para inicio de tendencia)
+        # =========================================================
+        def compute_trend_readiness(row):
+            alignment = row['edge_score']
+            structure = np.tanh(row['wls'])
+            persistence = row['wyckoff_persistence'] / 5.0
+            stability = np.tanh(row['stability'])
+            score = (0.35 * alignment + 0.25 * structure +
+                     0.20 * persistence + 0.20 * stability)
+            return np.clip(score, -1, 1)
+
+        final_df['trend_readiness'] = final_df.apply(compute_trend_readiness, axis=1)
         
         final_df.to_csv(output_csv_path, index=False)
