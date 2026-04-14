@@ -13,35 +13,63 @@ from macro_confirm import compute_macro_score, format_macro_section
 from stock_leader import prepare_multi_index, generate_leader_section
 from flow_attribution import FlowAttributionEngine
 
+def adaptive_window(volatility, base_window=60):
+    vol = np.clip(volatility, -2, 2)
+    scale = 1 - (vol * 0.25)
+    return int(np.clip(base_window * scale, 30, 90))
+
+def detect_regime_transition(macro_series, flow_series, threshold=0.2):
+    macro_delta = macro_series.diff(5)
+    flow_delta = flow_series.diff(5)
+    if macro_delta.iloc[-1] > threshold and flow_delta.iloc[-1] > threshold:
+        return 1
+    elif macro_delta.iloc[-1] < -threshold and flow_delta.iloc[-1] < -threshold:
+        return -1
+    return 0
+
+def compute_flow_momentum(flow_series):
+    delta1 = flow_series.diff(3)
+    delta2 = delta1.diff(3)
+    return delta2.ewm(span=5).mean()
+
+def is_tradeable(edge, truth, structure):
+    if structure == 0:  # RANGE
+        return False
+    if truth < 0.5:
+        return False
+    if abs(edge) < 0.3:
+        return False
+    return True
+
+def compute_alignment_score(macro, flow, structure):
+    signals = np.array([np.sign(macro), np.sign(flow), np.sign(structure)])
+    agreement = np.sum(signals == signals[0]) / len(signals)
+    return agreement
+
 # =========================================================
 # ORTOGONALIZACIÓN MACRO-FLUJO ROBUSTA
 # =========================================================
 
 def rolling_regression_residual(x, y, window=60):
-    """
-    Regresión rolling con intercepto: y = alpha + beta * x + residuo.
-    Retorna serie de residuos.
-    """
     resid = pd.Series(index=y.index, dtype=float)
     for i in range(window, len(y)):
         xw = x.iloc[i-window:i].values
         yw = y.iloc[i-window:i].values
-        # Eliminar NaNs e infinitos
         mask = np.isfinite(xw) & np.isfinite(yw)
-        xw = xw[mask]
-        yw = yw[mask]
+        xw = xw[mask]; yw = yw[mask]
         if len(xw) < 2:
             resid.iloc[i] = np.nan
             continue
-        # Si xw es constante (desviación casi nula), no se puede hacer regresión
         if np.std(xw) < 1e-9:
-            # Usar la media de y como predictor
             resid.iloc[i] = y.iloc[i] - np.mean(yw)
             continue
         try:
-            # polyfit devuelve [beta, alpha] (pendiente, intercepto)
-            beta, alpha = np.polyfit(xw, yw, 1)
-            y_hat = alpha + beta * x.iloc[i]
+            # Regresión robusta simplificada (ponderación)
+            weights = 1 / (1 + np.abs(yw - np.median(yw)))
+            X = np.vstack([np.ones(len(xw)), xw]).T
+            W = np.diag(weights)
+            beta = np.linalg.lstsq(X.T @ W @ X, X.T @ W @ yw, rcond=None)[0]
+            y_hat = beta[0] + beta[1] * x.iloc[i]
             resid.iloc[i] = y.iloc[i] - y_hat
         except:
             resid.iloc[i] = np.nan
@@ -81,7 +109,7 @@ def apply_decay(series, halflife=5):
         return series
     ewm = series_clean.ewm(halflife=halflife, adjust=False).mean()
     # reindexar para mantener el índice original y rellenar hacia adelante
-    return ewm.reindex(series.index).fillna(method='ffill')
+    return ewm.reindex(series.index).ffill()
 
 # CFTC opcional
 try:
@@ -175,19 +203,22 @@ def compute_price_structure_advanced(df):
 # EDGE SCORE CORREGIDO (dirección, acuerdo, magnitud)
 # =========================================================
 
-def compute_edge(macro, flow, structure):
-    signals = np.array([macro, flow, structure])
-    pos = np.sum(signals > 0)
-    neg = np.sum(signals < 0)
-    if pos > neg:
-        direction = 1
-    elif neg > pos:
-        direction = -1
-    else:
-        return 0.0   # conflicto real
-    agreement = max(pos, neg) / len(signals)
-    strength = np.mean(np.abs(signals))
-    edge = direction * agreement * strength
+def compute_edge_hierarchical(macro, flow, structure):
+    w_flow = 0.5
+    w_macro = 0.3
+    w_structure = 0.2
+
+    flow_s = np.tanh(flow)
+    macro_s = np.tanh(macro)
+    struct_s = structure  # ya en [-1,0,1]
+
+    weighted_score = w_flow * flow_s + w_macro * macro_s + w_structure * struct_s
+
+    signals = np.array([flow_s, macro_s, struct_s])
+    dispersion = np.std(signals)
+    consistency = 1 - dispersion
+
+    edge = weighted_score * consistency
     return np.clip(edge, -1, 1)
 
 # =========================================================
@@ -482,11 +513,17 @@ def main():
     print("=== RADAR DE ROTACION SECTORIAL v3.15 (con persistencia informativa) ===\n")
     df = download_market_data()
     features = compute_features(df)
+    
+    # Ventana adaptativa para ortogonalización (basada en VIX)
+    vix_z = features['vix_z'].iloc[-1]
+    win = adaptive_window(vix_z, base_window=60)
+    print(f"Ventana adaptativa para ortogonalización: {win} días")
+
     regime_score, regime_label = compute_regime_score(df, features)
     wls_weights = get_wls_weights(regime_score)
     print(f"Régimen cuantitativo: {regime_label} (score: {regime_score:.2f})")
 
-    ranking_price, dispersion_price, breadth_price, vix_z, stress, regime_price, accion_price = run_radar(df)
+    ranking_price, dispersion_price, breadth_price, vix_z_radar, stress, regime_price, accion_price = run_radar(df)
     ranking_flow, flow_dispersion, flow_breadth, regime_flow, flow_mom = run_flow_radar(df)
 
     sectors = list(ranking_flow.keys())
@@ -510,6 +547,7 @@ def main():
     ret_spy = spy_df['close'].pct_change().dropna()
     dv_spy = spy_df['close'] * spy_df['volume']
     spy_flow_metrics = flow_engine.compute(ret_spy, dv_spy)
+    flow_momentum = compute_flow_momentum(spy_flow_metrics['flow']).iloc[-1] if len(spy_flow_metrics) > 0 else 0
     spy_structure = compute_price_structure_advanced(spy_df)
     spy_structure_value = {"MARKUP":1, "RANGE":0, "DISTRIBUTION":-1}.get(spy_structure, 0)
     print(f"SPY Price Structure: {spy_structure}")
@@ -524,6 +562,12 @@ def main():
                           0.3 * spy_flow_metrics['intensity_orth'] -
                           0.2 * spy_flow_metrics['irregularity_orth'])
 
+    # Protección contra series vacías
+    if macro_series.dropna().empty or flow_signal_series.dropna().empty:
+        transition = 0
+    else:
+        transition = detect_regime_transition(macro_series, flow_signal_series)
+
     # Asegurar que tenemos series sin NaNs para la regresión
     macro_aligned = macro_series.reindex(flow_signal_series.index).dropna()
     flow_aligned = flow_signal_series.dropna()
@@ -532,8 +576,8 @@ def main():
     flow_clean = flow_aligned[common_idx]
 
     # Aplicar rolling robust z-score (sin look-ahead)
-    macro_z = rolling_robust_zscore(macro_clean, window=60)
-    flow_z = rolling_robust_zscore(flow_clean, window=60)
+    macro_z = rolling_robust_zscore(macro_clean, window=win)
+    flow_z = rolling_robust_zscore(flow_clean, window=win)
 
     # Limpiar infinitos y NaNs
     macro_z = macro_z.replace([np.inf, -np.inf], np.nan)
@@ -543,11 +587,18 @@ def main():
     flow_z = flow_z[valid]
 
     # Regresión rolling con intercepto
-    flow_orthogonal_series = rolling_regression_residual(macro_z, flow_z, window=60)
+    if len(macro_z) <= win or len(flow_z) <= win:
+        print(f"Advertencia: pocos datos para ortogonalización (len={len(macro_z)}). Usando flujo sin ortogonalizar.")
+        flow_orthogonal_series = flow_z
+    else:
+        flow_orthogonal_series = rolling_regression_residual(macro_z, flow_z, window=win)
 
-    # Aplicar decaimiento a macro y flujo ortogonal
+    # Aplicar decaimiento a macro y flujo ortogonal (siempre, con manejo de series vacías)
     macro_smoothed = apply_decay(macro_series, halflife=5)
-    flow_smoothed = apply_decay(flow_orthogonal_series, halflife=5) if len(flow_orthogonal_series) > 0 else pd.Series(dtype=float)
+    if len(flow_orthogonal_series) > 0:
+        flow_smoothed = apply_decay(flow_orthogonal_series, halflife=5)
+    else:
+        flow_smoothed = pd.Series(dtype=float)
 
     # Extraer el último valor no nulo
     macro_clean = macro_smoothed.dropna()
@@ -557,8 +608,10 @@ def main():
     flow_orthogonal = flow_clean.iloc[-1] if not flow_clean.empty else 0.0
 
     # Calcular edge y truth con las nuevas funciones
-    edge_new = compute_edge(macro_score_new, flow_orthogonal, spy_structure_value)
+    edge_new = compute_edge_hierarchical(macro_score_new, flow_orthogonal, spy_structure_value)
     truth_score = compute_truth(macro_score_new, flow_orthogonal, spy_structure_value)
+    alignment = compute_alignment_score(macro_score_new, flow_orthogonal, spy_structure_value)
+    tradeable = is_tradeable(edge_new, truth_score, spy_structure_value)
     print(f"Edge Score (ortogonal): {edge_new:.2f}")
     print(f"Truth Score (ortogonal): {truth_score:.2f}")
 
@@ -606,13 +659,13 @@ def main():
     distribution_prob_cont = {}
     risk_score_dict = {}
 
-    flow_history = load_flow_history("flow_history_persistencia.csv")
+    flow_history = load_flow_history("outputs/flow_history.csv")
     for sec in sectors:
         if sec not in flow_history.columns:
             flow_history[sec] = np.nan
     for sec in sectors:
         flow_history.loc[pd.Timestamp.now().normalize(), sec] = latest_flow_mom.get(sec, np.nan)
-    save_flow_history_df(flow_history, "flow_history_persistencia.csv")
+    save_flow_history_df(flow_history, "outputs/flow_history.csv")
 
     for sec in sectors:
         pm = price_mom_dict.get(sec, 0)
@@ -780,7 +833,6 @@ def main():
 
         dist_lines.append(f"| {sec} | {pm:.3f} | {fm:.2f} | {fa:.2f} | {vz:.2f} | {div_cont:.2f} | {score_bin:.2f} | {prob_bin:.2%} | {prob_cont:.2%} | {risk_score:.2f} | {intensidad} | {clasif} | {fase} | {direccion} | {conv_ajustada:.2f} | {score_unif:.2f} | {conf_sistema:.2f} | {calidad:.2f} | {oportunidad:.2f} | {operabilidad} | {persistencia} | {estado_senal} | {alerta} |\n")
 
-    save_flow_history(flow_mom)
     plot_flow_dispersion(flow_mom)
 
     temp_md = "outputs/reporte_diario_temp.md"
@@ -817,6 +869,10 @@ def main():
         f"- **Régimen cualitativo:** {macro_label}\n"
     ]
     causal_lines = []
+    causal_lines.append(f"- **Transición régimen:** {transition} (-1=risk-off, 1=risk-on)\n")
+    causal_lines.append(f"- **Flow momentum:** {flow_momentum:.3f}\n")
+    causal_lines.append(f"- **Alineación global:** {alignment:.2f}\n")
+    causal_lines.append(f"- **Operable:** {'Sí' if tradeable else 'No'}\n")
     causal_lines.append("\n## Modelo Causal (Macro → Flow → Price)\n")
     causal_lines.append(f"- **Macro Score:** {macro_score_new:.2f}\n")
     causal_lines.append(f"- **SPY Flow State:** {spy_flow_state}\n")
