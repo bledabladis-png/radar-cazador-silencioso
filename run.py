@@ -82,55 +82,49 @@ def get_wls_weights(regime_score):
 # FUNCIONES PARA EL MODELO CAUSAL (v3)
 # =========================================================
 
-def compute_price_structure(price_series):
-    if len(price_series) < 200:
+def compute_price_structure_advanced(df, wyckoff_detector=None):
+    if len(df) < 200:
         return "INSUFICIENT_DATA"
-    ma50 = price_series.rolling(50).mean()
-    ma200 = price_series.rolling(200).mean()
+    close = df['close']
+    ma50 = close.rolling(50).mean()
+    ma200 = close.rolling(200).mean()
     trend = (ma50.iloc[-1] / ma200.iloc[-1] - 1)
-    vol = price_series.pct_change().rolling(20).std().iloc[-1]
-    vol_mean = price_series.pct_change().rolling(20).std().mean()
-    if trend > 0.02 and vol < vol_mean:
+    vol = close.pct_change().rolling(20).std().iloc[-1]
+    vol_mean = close.pct_change().rolling(20).std().mean()
+    vol_norm = vol / (vol_mean + 1e-9)
+    # Compresión y wyckoff_score (necesitas tener la función range_compression y wyckoff_score)
+    from wyckoff_detector import range_compression, wyckoff_score
+    compression = range_compression(df).iloc[-1]
+    wyckoff_sc = wyckoff_score(df).iloc[-1]
+    if trend > 0.02 and vol_norm < 1 and wyckoff_sc > 0.6:
         return "MARKUP"
-    if trend < -0.02:
+    elif trend < -0.02:
         return "DISTRIBUTION"
-    return "RANGE"
+    elif compression < 0.3 and wyckoff_sc > 0.5:
+        return "ACCUMULATION"
+    else:
+        return "RANGE"
 
-def compute_edge(macro_score, flow_state, structure_state):
-    macro_sign = np.sign(macro_score)
-    if "CONVICTION_ACCUMULATION" in flow_state:
-        flow_sign = 1
-    elif "PASSIVE_RISK_ON" in flow_state:
-        flow_sign = 0.5
-    elif "HEDGING_NOISE" in flow_state:
-        flow_sign = -0.5
-    elif "DISTRIBUTION" in flow_state:
-        flow_sign = -1
-    else:
-        flow_sign = 0
-    if structure_state == "MARKUP":
-        struct_sign = 1
-    elif structure_state == "DISTRIBUTION":
-        struct_sign = -1
-    else:
-        struct_sign = 0
-    signs = [macro_sign, flow_sign, struct_sign]
-    alignment = np.mean(signs)
-    consistency = 1 - np.std(signs)
+def compute_edge_continuous(macro_score, persistence, intensity, irregularity, structure_label):
+    macro = np.tanh(macro_score)
+    flow = 0.5 * persistence + 0.3 * intensity - 0.2 * irregularity
+    flow = np.tanh(flow)
+    struct_map = {"MARKUP": 1.0, "RANGE": 0.0, "DISTRIBUTION": -1.0}
+    structure = struct_map.get(structure_label, 0.0)
+    signals = np.array([macro, flow, structure])
+    alignment = np.mean(signals)
+    consistency = 1 - np.std(signals)
     edge = alignment * consistency
     return np.clip(edge, -1, 1)
 
-def truth_gate(macro_score, flow_state, structure_state):
-    macro_risk_on = macro_score > 0.4
-    macro_risk_off = macro_score < -0.4
-    flow_risk_on = "ACCUMULATION" in flow_state or "PASSIVE_RISK_ON" in flow_state
-    flow_risk_off = "HEDGING_NOISE" in flow_state or "DISTRIBUTION" in flow_state
-    if (macro_risk_on and flow_risk_off) or (macro_risk_off and flow_risk_on):
-        return "NO_TRADE"
-    edge = compute_edge(macro_score, flow_state, structure_state)
-    if edge < 0.2:
-        return "LOW_EDGE"
-    return "VALID"
+def compute_truth_score(macro_score, persistence, intensity, irregularity, edge):
+    macro_strength = abs(macro_score)
+    flow_strength = 0.5 * persistence + 0.3 * intensity - 0.2 * irregularity
+    flow_strength = np.clip(flow_strength, -1, 1)
+    agreement = 1 - abs(np.sign(macro_score) - np.sign(flow_strength)) / 2
+    confidence = 0.4 * macro_strength + 0.4 * abs(flow_strength) + 0.2 * agreement
+    truth_score = confidence * (edge + 1) / 2
+    return np.clip(truth_score, 0, 1)
 
 # -------------------------------
 # Funciones de distribucion v3.15 (core)
@@ -427,28 +421,49 @@ def main():
     print("\n=== NUEVA MACRO (CAUSAL) ===")
     print(f"Macro Score (continuo): {macro_score_new:.2f} (-1 = RISK-OFF, +1 = RISK-ON)")
 
-    # Flow attribution
+    # Flow attribution (nueva versión ortogonal)
     flow_engine = FlowAttributionEngine(window=20)
-    spy_df = pd.DataFrame({'close': df['SPY'], 'volume': df['SPY_volume']}).dropna()
-    spy_flow_state = flow_engine.classify_flow_state(spy_df, 'close', 'volume') if len(spy_df) >= 60 else "INSUFICIENT_DATA"
-    print(f"SPY Flow State: {spy_flow_state}")
-
-    etf_flow_states = {}
-    for sec in sectors:
-        etf_df = pd.DataFrame({'close': df[sec], 'volume': df[f"{sec}_volume"]}).dropna()
-        state = flow_engine.classify_flow_state(etf_df, 'close', 'volume') if len(etf_df) >= 60 else "INSUFICIENT_DATA"
-        etf_flow_states[sec] = state
-    print("\n=== Flow Attribution por Sector ===")
-    for sec, state in etf_flow_states.items():
-        print(f"{sec}: {state}")
-
-    spy_structure = compute_price_structure(df['SPY'])
+    # Para SPY (con todas las columnas OHLCV)
+    spy_df = pd.DataFrame({
+        'open': df['SPY_open'],
+        'high': df['SPY_high'],
+        'low': df['SPY_low'],
+        'close': df['SPY'],
+        'volume': df['SPY_volume']
+    }).dropna()
+    ret_spy = spy_df['close'].pct_change().dropna()
+    dv_spy = spy_df['close'] * spy_df['volume']
+    spy_flow_metrics = flow_engine.compute(ret_spy, dv_spy)
+    spy_structure = compute_price_structure_advanced(spy_df)
     print(f"SPY Price Structure: {spy_structure}")
+    spy_flow_state = flow_engine.classify_last(spy_flow_metrics)
+    # Obtener también persistence, intensity, irregularity para edge score
+    spy_persistence = spy_flow_metrics['persistence'].iloc[-1]
+    spy_intensity = spy_flow_metrics['intensity'].iloc[-1]
+    spy_irregularity = spy_flow_metrics['irregularity'].iloc[-1]
 
-    edge_new = compute_edge(macro_score_new, spy_flow_state, spy_structure)
-    gate = truth_gate(macro_score_new, spy_flow_state, spy_structure)
-    print(f"Edge Score: {edge_new:.2f}")
-    print(f"Truth Gate: {gate}")
+    # Calcular edge y truth score
+    edge_new = compute_edge_continuous(macro_score_new, spy_persistence, spy_intensity, spy_irregularity, spy_structure)
+    truth_score = compute_truth_score(macro_score_new, spy_persistence, spy_intensity, spy_irregularity, edge_new)
+    print(f"Edge Score (continuo): {edge_new:.2f}")
+    print(f"Truth Score (probabilístico): {truth_score:.2f}")
+
+    # Para ETFs sectoriales (también necesitan OHLCV si se usan en el futuro, pero aquí solo necesitamos flow state)
+    etf_flow_states = {}
+    etf_flow_metrics = {}
+    for sec in sectors:
+        etf_df = pd.DataFrame({
+            'close': df[sec],
+            'volume': df[f"{sec}_volume"]
+        }).dropna()
+        if len(etf_df) >= 60:
+            ret_etf = etf_df['close'].pct_change().dropna()
+            dv_etf = etf_df['close'] * etf_df['volume']
+            metrics = flow_engine.compute(ret_etf, dv_etf)
+            etf_flow_metrics[sec] = metrics
+            etf_flow_states[sec] = flow_engine.classify_last(metrics)
+        else:
+            etf_flow_states[sec] = "INSUFICIENT_DATA"
 
     # --- El resto del código original (alertas, distribución, CFTC, etc.) ---
     alertas = []
@@ -698,7 +713,7 @@ def main():
     causal_lines.append(f"- **SPY Flow State:** {spy_flow_state}\n")
     causal_lines.append(f"- **SPY Price Structure:** {spy_structure}\n")
     causal_lines.append(f"- **Edge Score:** {edge_new:.2f}\n")
-    causal_lines.append(f"- **Truth Gate:** {gate}\n")
+    causal_lines.append(f"- **Truth Score:** {truth_score:.2f}\n")
     causal_lines.append("\n**Flow Attribution por Sector:**\n")
     causal_lines.append("| Sector | Flow State |\n")
     causal_lines.append("|--------|------------|\n")
