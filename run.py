@@ -757,12 +757,20 @@ def main():
     distribution_prob_cont = {}
     risk_score_dict = {}
 
+    # Cargar histórico existente (si existe)
     flow_history = load_flow_history("outputs/flow_history.csv")
+    
+    # Asegurar que todas las columnas de sectores existen (en el orden fijo de 'sectors')
     for sec in sectors:
         if sec not in flow_history.columns:
             flow_history[sec] = np.nan
+    
+    # Añadir la fila del día actual (con la fecha normalizada a las 00:00:00)
+    hoy = pd.Timestamp.now().normalize()
     for sec in sectors:
-        flow_history.loc[pd.Timestamp.now().normalize(), sec] = latest_flow_mom.get(sec, np.nan)
+        flow_history.loc[hoy, sec] = latest_flow_mom.get(sec, np.nan)
+    
+    # Guardar (sin incluir dispersion ni breadth, solo los flujos)
     save_flow_history_df(flow_history, "outputs/flow_history.csv")
 
     for sec in sectors:
