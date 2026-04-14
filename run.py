@@ -82,7 +82,7 @@ def get_wls_weights(regime_score):
 # FUNCIONES PARA EL MODELO CAUSAL (v3)
 # =========================================================
 
-def compute_price_structure_advanced(df, wyckoff_detector=None):
+def compute_price_structure_advanced(df):
     if len(df) < 200:
         return "INSUFICIENT_DATA"
     close = df['close']
@@ -92,7 +92,6 @@ def compute_price_structure_advanced(df, wyckoff_detector=None):
     vol = close.pct_change().rolling(20).std().iloc[-1]
     vol_mean = close.pct_change().rolling(20).std().mean()
     vol_norm = vol / (vol_mean + 1e-9)
-    # Compresión y wyckoff_score (necesitas tener la función range_compression y wyckoff_score)
     from wyckoff_detector import range_compression, wyckoff_score
     compression = range_compression(df).iloc[-1]
     wyckoff_sc = wyckoff_score(df).iloc[-1]
@@ -437,30 +436,23 @@ def main():
     spy_structure = compute_price_structure_advanced(spy_df)
     print(f"SPY Price Structure: {spy_structure}")
     spy_flow_state = flow_engine.classify_last(spy_flow_metrics)
-    # Obtener también persistence, intensity, irregularity para edge score
     spy_persistence = spy_flow_metrics['persistence'].iloc[-1]
     spy_intensity = spy_flow_metrics['intensity'].iloc[-1]
     spy_irregularity = spy_flow_metrics['irregularity'].iloc[-1]
 
-    # Calcular edge y truth score
     edge_new = compute_edge_continuous(macro_score_new, spy_persistence, spy_intensity, spy_irregularity, spy_structure)
     truth_score = compute_truth_score(macro_score_new, spy_persistence, spy_intensity, spy_irregularity, edge_new)
     print(f"Edge Score (continuo): {edge_new:.2f}")
     print(f"Truth Score (probabilístico): {truth_score:.2f}")
 
-    # Para ETFs sectoriales (también necesitan OHLCV si se usan en el futuro, pero aquí solo necesitamos flow state)
+    # Para ETFs sectoriales (solo para flow state)
     etf_flow_states = {}
-    etf_flow_metrics = {}
     for sec in sectors:
-        etf_df = pd.DataFrame({
-            'close': df[sec],
-            'volume': df[f"{sec}_volume"]
-        }).dropna()
+        etf_df = pd.DataFrame({'close': df[sec], 'volume': df[f"{sec}_volume"]}).dropna()
         if len(etf_df) >= 60:
             ret_etf = etf_df['close'].pct_change().dropna()
             dv_etf = etf_df['close'] * etf_df['volume']
             metrics = flow_engine.compute(ret_etf, dv_etf)
-            etf_flow_metrics[sec] = metrics
             etf_flow_states[sec] = flow_engine.classify_last(metrics)
         else:
             etf_flow_states[sec] = "INSUFICIENT_DATA"
