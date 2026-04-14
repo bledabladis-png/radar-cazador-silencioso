@@ -42,7 +42,7 @@ jobs:
           name: grafico-dispersion
           path: outputs/flow_dispersion.png
 
-      - name: Subir histórico de flujos
+      - name: Subir histórico de flujos (artifact)
         uses: actions/upload-artifact@v4
         with:
           name: historico-flujos
