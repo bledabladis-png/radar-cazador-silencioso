@@ -11,6 +11,7 @@ from utils import save_flow_history, plot_flow_dispersion, save_markdown_report
 from features import compute_volume_zscore, compute_flow_acceleration, compute_price_zscore, compute_acceleration_zscore, compute_features
 from macro_confirm import compute_macro_score, format_macro_section
 from stock_leader import prepare_multi_index, generate_leader_section
+from wyckoff_detector import wyckoff_structure_core, wyckoff_score, range_compression
 from flow_attribution import FlowAttributionEngine
 
 def adaptive_window(volatility, base_window=60):
@@ -26,6 +27,46 @@ def detect_regime_transition(macro_series, flow_series, threshold=0.2):
     elif macro_delta.iloc[-1] < -threshold and flow_delta.iloc[-1] < -threshold:
         return -1
     return 0
+
+def detect_wyckoff_transition(structure_series, score_series, lookback=5):
+    """
+    Detecta transiciones de fase Wyckoff comparando la fase actual con la de 'lookback' días atrás.
+    Retorna un string descriptivo.
+    """
+    if len(structure_series) < lookback + 1:
+        return "SIN DATOS SUFICIENTES"
+    
+    fase_actual = structure_series.iloc[-1]
+    fase_anterior = structure_series.iloc[-lookback-1]  # hace lookback días
+    score_actual = score_series.iloc[-1]
+    score_anterior = score_series.iloc[-lookback-1]
+    
+    if pd.isna(fase_actual) or pd.isna(fase_anterior):
+        return "DATOS INSUFICIENTES"
+    
+    if fase_actual == fase_anterior:
+        return f"ESTABLE ({fase_actual})"
+    
+    # Transiciones alcistas
+    if (fase_anterior == "RANGE" and fase_actual == "MARKUP") or \
+       (fase_anterior == "ACCUMULATION" and fase_actual == "MARKUP"):
+        if not pd.isna(score_actual) and not pd.isna(score_anterior):
+            intensidad = "FUERTE" if (score_actual - score_anterior) > 0.2 else "DÉBIL"
+        else:
+            intensidad = "?"
+        return f"TRANSICIÓN ALCISTA: {fase_anterior} → {fase_actual} ({intensidad})"
+    
+    # Transiciones bajistas
+    if (fase_anterior == "MARKUP" and fase_actual == "DISTRIBUTION") or \
+       (fase_anterior == "DISTRIBUTION" and fase_actual == "RANGE"):
+        if not pd.isna(score_actual) and not pd.isna(score_anterior):
+            intensidad = "FUERTE" if (score_anterior - score_actual) > 0.2 else "DÉBIL"
+        else:
+            intensidad = "?"
+        return f"TRANSICIÓN BAJISTA: {fase_anterior} → {fase_actual} ({intensidad})"
+    
+    # Cualquier otro cambio (ej. RANGE → DISTRIBUTION, etc.)
+    return f"CAMBIO DE FASE: {fase_anterior} → {fase_actual}"
 
 def compute_flow_momentum(flow_series):
     delta1 = flow_series.diff(3)
@@ -178,26 +219,36 @@ def get_wls_weights(regime_score):
 # =========================================================
 
 def compute_price_structure_advanced(df):
-    if len(df) < 200:
-        return "INSUFICIENT_DATA"
-    close = df['close']
-    ma50 = close.rolling(50).mean()
-    ma200 = close.rolling(200).mean()
-    trend = (ma50.iloc[-1] / ma200.iloc[-1] - 1)
-    vol = close.pct_change().rolling(20).std().iloc[-1]
-    vol_mean = close.pct_change().rolling(20).std().mean()
-    vol_norm = vol / (vol_mean + 1e-9)
-    from wyckoff_detector import range_compression, wyckoff_score
-    compression = range_compression(df).iloc[-1]
-    wyckoff_sc = wyckoff_score(df).iloc[-1]
-    if trend > 0.02 and vol_norm < 1 and wyckoff_sc > 0.6:
-        return "MARKUP"
-    elif trend < -0.02:
-        return "DISTRIBUTION"
-    elif compression < 0.3 and wyckoff_sc > 0.5:
-        return "ACCUMULATION"
-    else:
-        return "RANGE"
+    """Wrapper para mantener compatibilidad."""
+    return wyckoff_structure_core(df)
+
+def compute_wyckoff_structure_series(df):
+    """
+    Construye la serie histórica de fases Wyckoff (sin look-ahead).
+    Retorna Series con índice igual a df.index.
+    """
+    phases = []
+    for i in range(len(df)):
+        if i < 200:
+            phases.append(np.nan)
+            continue
+        sub_df = df.iloc[:i+1]
+        phases.append(wyckoff_structure_core(sub_df))
+    return pd.Series(phases, index=df.index)
+
+def compute_wyckoff_score_series(df):
+    """
+    Construye la serie histórica de wyckoff_score (sin look-ahead).
+    Retorna Series con índice igual a df.index.
+    """
+    scores = []
+    for i in range(len(df)):
+        if i < 60:
+            scores.append(np.nan)
+            continue
+        sub_df = df.iloc[:i+1]
+        scores.append(wyckoff_score(sub_df).iloc[-1])
+    return pd.Series(scores, index=df.index)
 
 # =========================================================
 # EDGE SCORE CORREGIDO (dirección, acuerdo, magnitud)
@@ -547,11 +598,17 @@ def main():
     ret_spy = spy_df['close'].pct_change().dropna()
     dv_spy = spy_df['close'] * spy_df['volume']
     spy_flow_metrics = flow_engine.compute(ret_spy, dv_spy)
-    # Calcular la señal de flujo combinada (más adelante se usa para ortogonalización)
-    flow_signal_series = (0.5 * spy_flow_metrics['persistence_orth'] +
-                          0.3 * spy_flow_metrics['intensity_orth'] -
-                          0.2 * spy_flow_metrics['irregularity_orth'])
-    flow_momentum = compute_flow_momentum(flow_signal_series).iloc[-1] if len(flow_signal_series) > 0 else 0
+    flow_momentum = compute_flow_momentum(
+        0.5 * spy_flow_metrics['persistence_orth'] +
+        0.3 * spy_flow_metrics['intensity_orth'] -
+        0.2 * spy_flow_metrics['irregularity_orth']
+    ).iloc[-1] if len(spy_flow_metrics) > 0 else 0
+
+    # Calcular series históricas Wyckoff y transición
+    spy_structure_series = compute_wyckoff_structure_series(spy_df)
+    wyckoff_score_series = compute_wyckoff_score_series(spy_df)
+    wyckoff_transition = detect_wyckoff_transition(spy_structure_series, wyckoff_score_series, lookback=5)
+
     spy_structure = compute_price_structure_advanced(spy_df)
     spy_structure_value = {"MARKUP":1, "RANGE":0, "DISTRIBUTION":-1}.get(spy_structure, 0)
     print(f"SPY Price Structure: {spy_structure}")
@@ -631,7 +688,37 @@ def main():
         else:
             etf_flow_states[sec] = "INSUFICIENT_DATA"
 
-    # --- El resto del código original (alertas, distribución, CFTC, etc.) ---
+    # =========================================================
+    # FASE Y TRANSICIÓN WYCKOFF POR SECTOR (bucle independiente)
+    # =========================================================
+    sector_wyckoff_phase = {}
+    sector_wyckoff_score = {}
+    sector_wyckoff_transition = {}
+    for sec in sectors:
+        sector_df = pd.DataFrame({
+            'open': df[f"{sec}_open"],
+            'high': df[f"{sec}_high"],
+            'low': df[f"{sec}_low"],
+            'close': df[sec],
+            'volume': df[f"{sec}_volume"]
+        }).dropna()
+        if len(sector_df) >= 200:
+            phase = wyckoff_structure_core(sector_df)
+            score = wyckoff_score(sector_df).iloc[-1]
+            struct_series = compute_wyckoff_structure_series(sector_df)
+            score_series = compute_wyckoff_score_series(sector_df)
+            transition = detect_wyckoff_transition(struct_series, score_series, lookback=5)
+        else:
+            phase = "INSUFICIENT_DATA"
+            score = np.nan
+            transition = "SIN DATOS SUFICIENTES"
+        sector_wyckoff_phase[sec] = phase
+        sector_wyckoff_score[sec] = score
+        sector_wyckoff_transition[sec] = transition
+
+    # =========================================================
+    # ALERTAS, DISTRIBUCIÓN, CFTC Y GENERACIÓN DEL REPORTE
+    # =========================================================
     alertas = []
     top_price_2 = [sec for sec, _ in ranking_price[:2]]
     bottom_flow_2 = list(ranking_flow.keys())[-2:]
@@ -855,12 +942,11 @@ def main():
     lines[insert_pos:insert_pos] = synth_lines + dist_lines
 
     # Ahora insertar las nuevas secciones causales (macro unificado y modelo causal) también antes de "## Conclusion"
-    # Primero localizamos de nuevo la posición (puede haber cambiado)
     for i, line in enumerate(lines):
         if line.startswith("## Conclusion"):
             insert_pos = i
             break
-    # Preparar líneas causales
+
     if macro_score_new > 0.5:
         macro_label = "RISK-ON"
     elif macro_score_new < -0.5:
@@ -877,6 +963,7 @@ def main():
     causal_lines.append(f"- **Flow momentum:** {flow_momentum:.3f}\n")
     causal_lines.append(f"- **Alineación global:** {alignment:.2f}\n")
     causal_lines.append(f"- **Operable:** {'Sí' if tradeable else 'No'}\n")
+    causal_lines.append(f"- **Transición Wyckoff:** {wyckoff_transition}\n")
     causal_lines.append("\n## Modelo Causal (Macro → Flow → Price)\n")
     causal_lines.append(f"- **Macro Score:** {macro_score_new:.2f}\n")
     causal_lines.append(f"- **SPY Flow State:** {spy_flow_state}\n")
@@ -889,12 +976,31 @@ def main():
     for sec, state in etf_flow_states.items():
         causal_lines.append(f"| {sec} | {state} |\n")
     causal_lines.append("\n")
+
+    # Añadir tabla de fase Wyckoff por sector
+    causal_lines.append("**Fase Wyckoff por Sector:**\n")
+    causal_lines.append("| Sector | Fase Wyckoff | Score |\n")
+    causal_lines.append("|--------|--------------|-------|\n")
+    for sec in sectors:
+        phase = sector_wyckoff_phase.get(sec, "N/A")
+        score = sector_wyckoff_score.get(sec, np.nan)
+        causal_lines.append(f"| {sec} | {phase} | {score:.2f} |\n")
+    causal_lines.append("\n")
+
+    # Añadir tabla de transición Wyckoff por sector (5 días)
+    causal_lines.append("**Transición Wyckoff por Sector (5 días):**\n")
+    causal_lines.append("| Sector | Transición |\n")
+    causal_lines.append("|--------|------------|\n")
+    for sec in sectors:
+        trans = sector_wyckoff_transition.get(sec, "N/A")
+        causal_lines.append(f"| {sec} | {trans} |\n")
+    causal_lines.append("\n")
+
     lines[insert_pos:insert_pos] = macro_new_lines + causal_lines
 
     # Insertar CFTC (si no existe ya en lines, la generamos)
     cftc_lines = []
     enrich_with_cftc_sector(cftc_lines, cftc_with_z, raw_file=cftc_raw)
-    # Buscar "## Conclusion" de nuevo para insertar CFTC justo antes (para que quede después de todo lo demás)
     for i, line in enumerate(lines):
         if line.startswith("## Conclusion"):
             insert_pos = i

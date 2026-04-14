@@ -59,7 +59,7 @@ def trend_suppression(df, window=50):
     return suppression.astype(int)
 
 def wyckoff_score(df):
-    """Score combinado (0 a 1)."""
+    """Score combinado (0 a 1) basado en compresión, absorción, spring, SOS y supresión."""
     comp = range_compression(df)
     absr = absorption_score(df)
     spring = detect_spring(df)
@@ -78,6 +78,35 @@ def wyckoff_score(df):
         0.10 * trend
     )
     return score.clip(0, 1)
+
+def wyckoff_structure_core(df):
+    """
+    Clasifica la fase Wyckoff para la última barra del DataFrame.
+    Retorna: "MARKUP", "DISTRIBUTION", "ACCUMULATION", "RANGE", o "INSUFICIENT_DATA"
+    """
+    if len(df) < 200:
+        return "INSUFICIENT_DATA"
+    
+    close = df['close']
+    ma50 = close.rolling(50).mean()
+    ma200 = close.rolling(200).mean()
+    trend = (ma50.iloc[-1] / ma200.iloc[-1] - 1)
+    
+    vol = close.pct_change().rolling(20).std().iloc[-1]
+    vol_mean = close.pct_change().rolling(20).std().mean()
+    vol_norm = vol / (vol_mean + 1e-9)
+    
+    compression = range_compression(df).iloc[-1]
+    wyckoff_sc = wyckoff_score(df).iloc[-1]
+    
+    if trend > 0.02 and vol_norm < 1 and wyckoff_sc > 0.6:
+        return "MARKUP"
+    elif trend < -0.02:
+        return "DISTRIBUTION"
+    elif compression < 0.3 and wyckoff_sc > 0.5:
+        return "ACCUMULATION"
+    else:
+        return "RANGE"
 
 def classify_wyckoff_phase(df):
     """Clasificación de fase para la última fila."""
