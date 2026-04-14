@@ -17,16 +17,6 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Restaurar caché de persistencia
-        uses: actions/cache@v4
-        with:
-          path: |
-            persistencia.csv
-            flow_history_persistencia.csv
-          key: persistencia-${{ github.run_id }}
-          restore-keys: |
-            persistencia-
-
       - name: Instalar dependencias
         run: |
           python -m pip install --upgrade pip
@@ -40,21 +30,13 @@ jobs:
       - name: Ejecutar radar
         run: python run.py
 
-      - name: Guardar caché de persistencia
-        uses: actions/cache@v4
-        with:
-          path: |
-            persistencia.csv
-            flow_history_persistencia.csv
-          key: persistencia-${{ github.run_id }}
-
-      - name: Subir reporte
+      - name: Subir reporte principal
         uses: actions/upload-artifact@v4
         with:
           name: reporte-diario
           path: outputs/reporte_diario.md
 
-      - name: Subir gráfico
+      - name: Subir gráfico de dispersión
         uses: actions/upload-artifact@v4
         with:
           name: grafico-dispersion
@@ -65,6 +47,15 @@ jobs:
         with:
           name: historico-flujos
           path: outputs/flow_history.csv
+
+      - name: Subir análisis de líderes (si existe)
+        uses: actions/upload-artifact@v4
+        with:
+          name: analisis-lideres
+          path: |
+            outputs/analisis_lideres.md
+            outputs/analisis_lideres.csv
+          if-no-files-found: ignore
 
       - name: Commit y push del histórico CFTC (si cambió)
         run: |
