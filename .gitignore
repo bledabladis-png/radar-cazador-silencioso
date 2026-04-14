@@ -1,14 +1,15 @@
 ﻿# Datos descargados (se regeneran) - no se suben
 data/market_data.csv
 
-# Outputs generados (no se suben)
-outputs/
+# Outputs generados: ignorar todo excepto el histórico de flujos
+outputs/*
+!outputs/flow_history.csv
 
-# Archivos de persistencia (se cachean, no se suben al repo)
+# Archivos de persistencia obsoletos (ya no se usan)
 persistencia.csv
 flow_history_persistencia.csv
 
-# Archivos temporales y caché
+# Archivos temporales y caché de Python
 __pycache__/
 *.pyc
 *.pyo
@@ -25,7 +26,7 @@ ENV/
 .DS_Store
 Thumbs.db
 
-# Copias de seguridad
+# Copias de seguridad locales
 *_backup.py
 *_copia.py
 *~
