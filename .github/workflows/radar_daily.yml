@@ -68,3 +68,15 @@ jobs:
           else
             echo "No existe data/cftc_history.csv, se omite el commit"
           fi
+
+      - name: Commit y push del histórico de flujos (si cambió)
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          if [ -f "outputs/flow_history.csv" ]; then
+            git add outputs/flow_history.csv
+            git commit -m "Actualizar histórico de flujos" || echo "No hay cambios"
+            git push
+          else
+            echo "No existe outputs/flow_history.csv, se omite el commit"
+          fi
