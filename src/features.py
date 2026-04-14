@@ -20,12 +20,15 @@ def robust_zscore(series, window=60, min_periods=20):
 # FUNCIONES DE BREADTH Y FEATURES ORIGINALES
 # ============================================================
 def weighted_breadth(df, sectors, weights=None):
+    # Si no se proporcionan pesos, usar pesos iguales para todos los sectores
     if weights is None:
-        weights = {'XLK':0.25, 'XLF':0.20, 'XLE':0.15, 'XLI':0.15, 'XLY':0.15, 'XLP':0.10}
+        n = len(sectors)
+        weights = {sec: 1.0/n for sec in sectors}
     signal = 0
-    for sec, w in weights.items():
-        if sec not in df.columns:
+    for sec in sectors:
+        if sec not in df.columns or sec not in weights:
             continue
+        w = weights[sec]
         ma = df[sec].rolling(100).mean()
         above = (df[sec] > ma).astype(int)
         signal += w * (above - 0.5)
