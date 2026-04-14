@@ -13,6 +13,16 @@ from macro_confirm import compute_macro_score, format_macro_section
 from stock_leader import prepare_multi_index, generate_leader_section
 from flow_attribution import FlowAttributionEngine
 
+def apply_decay(series, halflife=5):
+    """
+    Aplica decaimiento exponencial (EWM) con semivida dada.
+    Retorna el último valor suavizado.
+    """
+    if len(series) < halflife:
+        return series.iloc[-1]
+    ewm = series.ewm(halflife=halflife, adjust=False).mean()
+    return ewm.iloc[-1]
+
 def supervision(*args, **kwargs):
     pass
 
@@ -104,7 +114,7 @@ def compute_price_structure_advanced(df):
     else:
         return "RANGE"
 
-def compute_edge_continuous(macro_score, persistence, intensity, irregularity, structure_label):
+def compute_edge_asymmetric(macro_score, persistence, intensity, irregularity, structure_label):
     macro = np.tanh(macro_score)
     flow = 0.5 * persistence + 0.3 * intensity - 0.2 * irregularity
     flow = np.tanh(flow)
@@ -112,8 +122,10 @@ def compute_edge_continuous(macro_score, persistence, intensity, irregularity, s
     structure = struct_map.get(structure_label, 0.0)
     signals = np.array([macro, flow, structure])
     alignment = np.mean(signals)
-    consistency = 1 - np.std(signals)
-    edge = alignment * consistency
+    dispersion = np.std(signals)
+    negative_penalty = np.mean(signals < 0)   # proporción de señales negativas
+    consistency = 1 - dispersion
+    edge = alignment * consistency * (1 - 0.5 * negative_penalty)
     return np.clip(edge, -1, 1)
 
 def compute_truth_score(macro_score, persistence, intensity, irregularity, edge):
@@ -436,11 +448,17 @@ def main():
     spy_structure = compute_price_structure_advanced(spy_df)
     print(f"SPY Price Structure: {spy_structure}")
     spy_flow_state = flow_engine.classify_last(spy_flow_metrics)
-    spy_persistence = spy_flow_metrics['persistence'].iloc[-1]
-    spy_intensity = spy_flow_metrics['intensity'].iloc[-1]
-    spy_irregularity = spy_flow_metrics['irregularity'].iloc[-1]
 
-    edge_new = compute_edge_continuous(macro_score_new, spy_persistence, spy_intensity, spy_irregularity, spy_structure)
+    # Aplicar decaimiento exponencial (EWM) con semivida de 5 días
+    spy_persistence_series = spy_flow_metrics['persistence']
+    spy_intensity_series = spy_flow_metrics['intensity']
+    spy_irregularity_series = spy_flow_metrics['irregularity']
+    
+    spy_persistence = apply_decay(spy_persistence_series, halflife=5)
+    spy_intensity = apply_decay(spy_intensity_series, halflife=5)
+    spy_irregularity = apply_decay(spy_irregularity_series, halflife=5)
+
+    edge_new = compute_edge_asymmetric(macro_score_new, spy_persistence, spy_intensity, spy_irregularity, spy_structure)
     truth_score = compute_truth_score(macro_score_new, spy_persistence, spy_intensity, spy_irregularity, edge_new)
     print(f"Edge Score (continuo): {edge_new:.2f}")
     print(f"Truth Score (probabilístico): {truth_score:.2f}")

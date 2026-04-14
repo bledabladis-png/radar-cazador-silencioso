@@ -10,6 +10,17 @@ No genera señales de trading; solo información.
 import pandas as pd
 import numpy as np
 
+def hybrid_rank(series, window=60, local_weight=0.7):
+    """
+    Combina ranking local (rolling) y global para mayor estabilidad.
+    """
+    local_rank = series.rolling(window).apply(
+        lambda x: pd.Series(x).rank(pct=True).iloc[-1], raw=False
+    )
+    global_rank = series.rank(pct=True)
+    hybrid = local_weight * local_rank + (1 - local_weight) * global_rank
+    return hybrid
+
 class FlowAttributionEngine:
     def __init__(self, window=20):
         self.window = window
@@ -42,9 +53,9 @@ class FlowAttributionEngine:
             (df["flow"].abs().rolling(w).mean() + 1e-9)
         )
 
-        # Normalización robusta (rango percentil)
+        # Normalización híbrida (local + global) para estabilidad
         for col in ["persistence", "intensity", "irregularity"]:
-            df[col] = df[col].rank(pct=True)
+            df[col] = hybrid_rank(df[col], window=self.window, local_weight=0.7)
 
         # Clasificación sin umbrales fijos (usando percentiles)
         # En lugar de umbrales fijos, usamos la propia distribución para decidir
