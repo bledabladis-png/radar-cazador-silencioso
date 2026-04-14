@@ -128,8 +128,9 @@ def download_market_data(force=False):
 
     all_tickers = ([tickers['benchmark'], tickers['bonds'], tickers['vix']] +
                    tickers['sectors'] +
-                   [tickers['global'], "QQQ"] +
+                   tickers['macro'] +
                    tickers['credit'] + tickers['rates'])
+
     end = datetime.now()
     start = end - timedelta(days=3650)
 
