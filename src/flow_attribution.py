@@ -3,7 +3,7 @@ flow_attribution.py – Flow Attribution Engine (versión final)
 - Rolling robust z-score (sin look-ahead)
 - Rolling orthogonalization (correlación dinámica)
 - Rolling percentiles para clasificación estable
-- Centrado de percentiles a [-1,1]
+- Normalización con percentiles rolling reales a [-1,1]
 No genera señales de trading; solo información.
 """
 
@@ -20,7 +20,6 @@ def rolling_robust_zscore(series, window=60):
     return (series - median) / (1.4826 * mad + 1e-9)
 
 def rolling_orthogonalize(base, target, window=60):
-    """Elimina la correlación rolling entre target y base."""
     corr = base.rolling(window).corr(target)
     return target - corr * base
 
@@ -28,13 +27,12 @@ def rolling_percentile(series, window=120):
     """Percentil rolling (0-1) basado en ventana fija."""
     return series.rolling(window).apply(lambda x: pd.Series(x).rank(pct=True).iloc[-1], raw=False)
 
-def dynamic_threshold(series, window=120, q=0.7):
-    """Umbral rolling (percentil q)."""
-    return series.rolling(window).quantile(q)
+def normalize_to_minus1_1(series, window=120):
+    pct = rolling_percentile(series, window)
+    return (pct - 0.5) * 2
 
-def center_percentile(series):
-    """Centra el percentil en 0 (rango [-1,1])."""
-    return (series - 0.5) * 2
+def dynamic_threshold(series, window=120, q=0.7):
+    return series.rolling(window).quantile(q)
 
 # ------------------------------------------------------------
 # Clase principal
@@ -88,7 +86,7 @@ class FlowAttributionEngine:
 
         # Centrar percentiles (para que la señal combinada tenga media cero)
         for col in ["persistence_orth", "intensity_orth", "irregularity_orth"]:
-            df[col] = center_percentile(df[col])
+            df[col] = normalize_to_minus1_1(df[col], window=120)
 
         # Clasificación usando umbrales rolling (estable)
         p70_persist = dynamic_threshold(df["persistence_orth"], window=120, q=0.7)
