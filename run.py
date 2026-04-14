@@ -547,7 +547,11 @@ def main():
     ret_spy = spy_df['close'].pct_change().dropna()
     dv_spy = spy_df['close'] * spy_df['volume']
     spy_flow_metrics = flow_engine.compute(ret_spy, dv_spy)
-    flow_momentum = compute_flow_momentum(spy_flow_metrics['flow']).iloc[-1] if len(spy_flow_metrics) > 0 else 0
+    # Calcular la señal de flujo combinada (más adelante se usa para ortogonalización)
+    flow_signal_series = (0.5 * spy_flow_metrics['persistence_orth'] +
+                          0.3 * spy_flow_metrics['intensity_orth'] -
+                          0.2 * spy_flow_metrics['irregularity_orth'])
+    flow_momentum = compute_flow_momentum(flow_signal_series).iloc[-1] if len(flow_signal_series) > 0 else 0
     spy_structure = compute_price_structure_advanced(spy_df)
     spy_structure_value = {"MARKUP":1, "RANGE":0, "DISTRIBUTION":-1}.get(spy_structure, 0)
     print(f"SPY Price Structure: {spy_structure}")
