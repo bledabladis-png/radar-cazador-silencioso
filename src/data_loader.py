@@ -91,17 +91,21 @@ def build_market_dataframe(prices, volumes, opens, highs, lows, all_tickers):
     - _volume, _open, _high, _low
     - _dollar_vol, _dollar_vol_smoothed
     """
-    df = prices.copy()
+    # Construir DataFrame eficientemente con concat
+    df_list = [prices]
     for ticker in all_tickers:
         if ticker in prices.columns:
-            # Volumen, open, high, low
-            df[f"{ticker}_volume"] = volumes.get(ticker, pd.Series(index=prices.index, dtype=float))
-            df[f"{ticker}_open"] = opens.get(ticker, pd.Series(index=prices.index, dtype=float))
-            df[f"{ticker}_high"] = highs.get(ticker, pd.Series(index=prices.index, dtype=float))
-            df[f"{ticker}_low"] = lows.get(ticker, pd.Series(index=prices.index, dtype=float))
-            # Dólar volumen y suavizado
-            df[f"{ticker}_dollar_vol"] = prices[ticker] * df[f"{ticker}_volume"]
-            df[f"{ticker}_dollar_vol_smoothed"] = df[f"{ticker}_dollar_vol"].rolling(3, min_periods=1).mean()
+            df_list.append(volumes[[ticker]].rename(columns={ticker: f"{ticker}_volume"}))
+            df_list.append(opens[[ticker]].rename(columns={ticker: f"{ticker}_open"}))
+            df_list.append(highs[[ticker]].rename(columns={ticker: f"{ticker}_high"}))
+            df_list.append(lows[[ticker]].rename(columns={ticker: f"{ticker}_low"}))
+            # Calcular dollar_vol y smoothed
+            dollar_vol = prices[ticker] * volumes[ticker]
+            df_list.append(dollar_vol.to_frame(name=f"{ticker}_dollar_vol"))
+            smoothed = dollar_vol.rolling(3, min_periods=1).mean()
+            df_list.append(smoothed.to_frame(name=f"{ticker}_dollar_vol_smoothed"))
+    df = pd.concat(df_list, axis=1)
+    df = df.dropna(how='all')
     return df.dropna(how='all')
 
 # =========================================================
