@@ -629,6 +629,13 @@ def main():
     else:
         transition = detect_regime_transition(macro_series, flow_signal_series)
 
+    # Stability (estabilidad temporal del flujo en últimos 5 días)
+    if len(flow_signal_series) >= 5:
+        stability = 1 - flow_signal_series.rolling(5).std().iloc[-1]
+        stability = np.clip(stability, 0, 1)
+    else:
+        stability = np.nan
+
     # Asegurar que tenemos series sin NaNs para la regresión
     macro_aligned = macro_series.reindex(flow_signal_series.index).dropna()
     flow_aligned = flow_signal_series.dropna()
@@ -961,6 +968,7 @@ def main():
     causal_lines = []
     causal_lines.append(f"- **Transición régimen:** {transition} (-1=risk-off, 1=risk-on)\n")
     causal_lines.append(f"- **Flow momentum:** {flow_momentum:.3f}\n")
+    causal_lines.append(f"- **Estabilidad flujo (5d):** {stability:.2f}\n")
     causal_lines.append(f"- **Alineación global:** {alignment:.2f}\n")
     causal_lines.append(f"- **Operable:** {'Sí' if tradeable else 'No'}\n")
     causal_lines.append(f"- **Transición Wyckoff:** {wyckoff_transition}\n")
