@@ -9,8 +9,9 @@ from data_loader import download_market_data
 from rotation_radar import run_radar, run_flow_radar
 from utils import save_flow_history, plot_flow_dispersion, save_markdown_report
 from features import compute_volume_zscore, compute_flow_acceleration, compute_price_zscore, compute_acceleration_zscore, compute_features
-from macro_confirm import compute_macro_confirm, get_flow_regime_sign, format_macro_section
+from macro_confirm import compute_macro_score, format_macro_section
 from stock_leader import prepare_multi_index, generate_leader_section
+from flow_attribution import FlowAttributionEngine
 
 def supervision(*args, **kwargs):
     pass
@@ -23,25 +24,17 @@ except ImportError:
     CFTC_AVAILABLE = False
 
 def compute_regime_score(df, features):
-    """
-    Calcula el score de régimen de mercado (0 a 1) y la etiqueta cualitativa.
-    Incluye tendencia del VIX.
-    """
-    # Tendencia continua (suavizada con tanh)
+    """Calcula el score de régimen de mercado (0 a 1) y la etiqueta cualitativa."""
     spy_ma50 = df['SPY'].rolling(50).mean().iloc[-1]
     spy_ma200 = df['SPY'].rolling(200).mean().iloc[-1]
     trend_raw = (spy_ma50 / spy_ma200 - 1) * 5
     trend = np.tanh(trend_raw)
-    trend_norm = (trend + 1) / 2   # mapear de [-1,1] a [0,1]
+    trend_norm = (trend + 1) / 2
     
-    # Breadth (normalizado)
     breadth_signal = features['breadth_signal'].iloc[-1]
     breadth_norm = np.clip((breadth_signal + 0.5) / 1.5, 0, 1)
     
-    # VIX: nivel + tendencia
-    vix_z = features['vix_z'].iloc[-1]   # ya calculado en features
-    
-    # Calcular tendencia del VIX (pendiente de los últimos 5 días)
+    vix_z = features['vix_z'].iloc[-1]
     vix_series = df['^VIX'].dropna()
     if len(vix_series) >= 5:
         recent = vix_series.tail(5)
@@ -50,12 +43,9 @@ def compute_regime_score(df, features):
         vix_trend = slope
     else:
         vix_trend = 0.0
-    
-    # Componente de VIX combinando nivel y tendencia
     vix_component = np.exp(-vix_z) * (1 - np.tanh(vix_trend))
     vix_component = np.clip(vix_component, 0, 1)
     
-    # Crédito (HYG/LQD) – necesita robust_zscore
     from features import robust_zscore
     credit_ratio = df['HYG'] / df['LQD']
     credit_z = robust_zscore(credit_ratio, window=60).iloc[-1]
@@ -71,13 +61,9 @@ def compute_regime_score(df, features):
         label = "CONTRACTION"
     else:
         label = "TRANSITION"
-    
     return regime_score, label
 
 def get_wls_weights(regime_score):
-    """
-    Calcula pesos dinámicos para el WLS en función del regime_score (0 a 1).
-    """
     w_flow = 0.20 + 0.20 * regime_score
     w_rs = 0.20 + 0.15 * regime_score
     w_persist = 0.30 - 0.10 * regime_score
@@ -92,112 +78,127 @@ def get_wls_weights(regime_score):
         "stability": w_stability / total
     }
 
-# -------------------------------
-# Funciones de distribucion v3.15
-# -------------------------------
-def distribution_score_v33(price_mom, flow_mom, flow_acc, vol_z):
-    p = np.tanh(price_mom)
-    f = np.tanh(flow_mom)
-    a = np.tanh(flow_acc)
-    v = np.tanh(vol_z)
+# =========================================================
+# FUNCIONES PARA EL MODELO CAUSAL (v3)
+# =========================================================
 
-    div = p * (-f)
-    if abs(div) < 0.02:
-        div = 0.0
+def compute_price_structure(price_series):
+    if len(price_series) < 200:
+        return "INSUFICIENT_DATA"
+    ma50 = price_series.rolling(50).mean()
+    ma200 = price_series.rolling(200).mean()
+    trend = (ma50.iloc[-1] / ma200.iloc[-1] - 1)
+    vol = price_series.pct_change().rolling(20).std().iloc[-1]
+    vol_mean = price_series.pct_change().rolling(20).std().mean()
+    if trend > 0.02 and vol < vol_mean:
+        return "MARKUP"
+    if trend < -0.02:
+        return "DISTRIBUTION"
+    return "RANGE"
 
-    flow_residual = (-f) - div
-    if abs(f) < 0.2:
-        flow_residual *= 0.5
-
-    if a < 0:
-        acc_component = -a
+def compute_edge(macro_score, flow_state, structure_state):
+    macro_sign = np.sign(macro_score)
+    if "CONVICTION_ACCUMULATION" in flow_state:
+        flow_sign = 1
+    elif "PASSIVE_RISK_ON" in flow_state:
+        flow_sign = 0.5
+    elif "HEDGING_NOISE" in flow_state:
+        flow_sign = -0.5
+    elif "DISTRIBUTION" in flow_state:
+        flow_sign = -1
     else:
-        acc_component = -1.5 * a
+        flow_sign = 0
+    if structure_state == "MARKUP":
+        struct_sign = 1
+    elif structure_state == "DISTRIBUTION":
+        struct_sign = -1
+    else:
+        struct_sign = 0
+    signs = [macro_sign, flow_sign, struct_sign]
+    alignment = np.mean(signs)
+    consistency = 1 - np.std(signs)
+    edge = alignment * consistency
+    return np.clip(edge, -1, 1)
 
+def truth_gate(macro_score, flow_state, structure_state):
+    macro_risk_on = macro_score > 0.4
+    macro_risk_off = macro_score < -0.4
+    flow_risk_on = "ACCUMULATION" in flow_state or "PASSIVE_RISK_ON" in flow_state
+    flow_risk_off = "HEDGING_NOISE" in flow_state or "DISTRIBUTION" in flow_state
+    if (macro_risk_on and flow_risk_off) or (macro_risk_off and flow_risk_on):
+        return "NO_TRADE"
+    edge = compute_edge(macro_score, flow_state, structure_state)
+    if edge < 0.2:
+        return "LOW_EDGE"
+    return "VALID"
+
+# -------------------------------
+# Funciones de distribucion v3.15 (core)
+# -------------------------------
+
+def distribution_score_v33(price_mom, flow_mom, flow_acc, vol_z):
+    p = np.tanh(price_mom); f = np.tanh(flow_mom); a = np.tanh(flow_acc); v = np.tanh(vol_z)
+    div = p * (-f)
+    if abs(div) < 0.02: div = 0.0
+    flow_residual = (-f) - div
+    if abs(f) < 0.2: flow_residual *= 0.5
+    acc_component = -a if a < 0 else -1.5 * a
     volume_boost = (0.8 * v) if flow_mom < 0 else 0.0
-
     x = 2.0 * div + 0.8 * flow_residual + acc_component + volume_boost
     return x
 
 def distribution_prob_continuous(price_mom, flow_mom, flow_acc, vol_z, temperature=1.5):
     x = distribution_score_v33(price_mom, flow_mom, flow_acc, vol_z)
-    prob = 1 / (1 + np.exp(-x / temperature))
-    return prob
+    return 1 / (1 + np.exp(-x / temperature))
 
 def classify_distribution(risk_score):
-    if risk_score > 1.2:
-        return "FUERTE"
-    elif risk_score > 0.6:
-        return "MODERADA"
-    elif risk_score > 0.3:
-        return "DEBIL"
-    else:
-        return "NINGUNA"
+    if risk_score > 1.2: return "FUERTE"
+    elif risk_score > 0.6: return "MODERADA"
+    elif risk_score > 0.3: return "DEBIL"
+    else: return "NINGUNA"
 
 def compute_confidence(div_cont, vol_z, accel, risk_score):
     raw = abs(div_cont) * (0.5 * abs(vol_z) + 0.5 * abs(accel))
-    if risk_score > 1.2:
-        return "ALTA"
-    elif raw > 0.6:
-        return "ALTA"
-    elif raw > 0.3:
-        return "MEDIA"
-    else:
-        return "BAJA"
+    if risk_score > 1.2: return "ALTA"
+    elif raw > 0.6: return "ALTA"
+    elif raw > 0.3: return "MEDIA"
+    else: return "BAJA"
 
 def unified_score(prob_bin, prob_cont, conviction, vix_z):
     conv_norm = (np.tanh(conviction) + 1) / 2
     score = 0.4 * prob_bin + 0.3 * prob_cont + 0.3 * conv_norm
     vol_factor = 1 / (1 + max(0, vix_z - 0.5))
-    score = score * vol_factor
-    return score
+    return score * vol_factor
 
 def opportunity_score(price_mom, flow_mom, flow_acc, vol_z, phase):
     base = 0.4 * flow_mom + 0.3 * price_mom + 0.2 * flow_acc + 0.1 * vol_z
-    if phase in ["ACUMULACION", "ACUMULACION FUERTE"]:
-        base += 0.2
-    elif phase in ["DISTRIBUCION CONFIRMADA", "DISTRIBUCION TEMPRANA"]:
-        base -= 0.2
+    if phase in ["ACUMULACION", "ACUMULACION FUERTE"]: base += 0.2
+    elif phase in ["DISTRIBUCION CONFIRMADA", "DISTRIBUCION TEMPRANA"]: base -= 0.2
     return base
 
 def operability_level(score):
-    if score > 0.4:
-        return "OPORTUNIDAD CLARA"
-    elif score > 0.2:
-        return "OPORTUNIDAD MODERADA"
-    elif score > 0.05:
-        return "SEGUIR CON PRUDENCIA"
-    else:
-        return "NO OPERAR"
+    if score > 0.4: return "OPORTUNIDAD CLARA"
+    elif score > 0.2: return "OPORTUNIDAD MODERADA"
+    elif score > 0.05: return "SEGUIR CON PRUDENCIA"
+    else: return "NO OPERAR"
 
 def classify_phase(price_z, flow_z, acc_z, vol_z):
-    if price_z > 1.0 and flow_z < -0.5:
-        return "DISTRIBUCION CONFIRMADA"
-    if price_z > 0.5 and flow_z < 0:
-        return "DISTRIBUCION TEMPRANA"
-    if price_z < -0.5 and flow_z > 0.5:
-        return "ACUMULACION FUERTE"
-    if price_z < 0 and flow_z > 0:
-        return "ACUMULACION"
-    if flow_z > 0 and acc_z > 0:
-        return "CONFIRMACION ALCISTA"
-    if flow_z < 0 and acc_z < 0:
-        return "CONFIRMACION BAJISTA"
-    if abs(price_z) < 0.2 and flow_z < -0.5:
-        return "AGOTAMIENTO"
+    if price_z > 1.0 and flow_z < -0.5: return "DISTRIBUCION CONFIRMADA"
+    if price_z > 0.5 and flow_z < 0: return "DISTRIBUCION TEMPRANA"
+    if price_z < -0.5 and flow_z > 0.5: return "ACUMULACION FUERTE"
+    if price_z < 0 and flow_z > 0: return "ACUMULACION"
+    if flow_z > 0 and acc_z > 0: return "CONFIRMACION ALCISTA"
+    if flow_z < 0 and acc_z < 0: return "CONFIRMACION BAJISTA"
+    if abs(price_z) < 0.2 and flow_z < -0.5: return "AGOTAMIENTO"
     return "NEUTRAL"
 
 def classify_direction(flow_z):
-    if flow_z > 0.2:
-        return "ALCISTA"
-    elif flow_z < -0.2:
-        return "BAJISTA"
-    else:
-        return "TRANSICION"
+    if flow_z > 0.2: return "ALCISTA"
+    elif flow_z < -0.2: return "BAJISTA"
+    else: return "TRANSICION"
 
 def macro_adjustment(conviction, cftc_spy_z):
-    if cftc_spy_z is None:
-        return conviction
+    if cftc_spy_z is None: return conviction
     return conviction * (1 + 0.3 * cftc_spy_z)
 
 def volatility_adjustment(conviction, vix_z):
@@ -205,22 +206,16 @@ def volatility_adjustment(conviction, vix_z):
     return conviction * factor
 
 def divergence_score(price_mom, flow_mom):
-    p = np.tanh(price_mom)
-    f = np.tanh(flow_mom)
-    return p * (-f)
+    return np.tanh(price_mom) * (-np.tanh(flow_mom))
 
 def distribution_score_binary(price_mom, flow_mom, flow_acc, vol_z, weights=None):
     if weights is None:
         weights = {'divergence': 0.4, 'flow_neg': 0.2, 'flow_acc': 0.3, 'volume': 0.1}
     score = 0.0
-    if price_mom > 0 and flow_mom < 0:
-        score += weights['divergence']
-    if flow_mom < -0.1:
-        score += weights['flow_neg']
-    if flow_acc < 0:
-        score += weights['flow_acc']
-    if vol_z > 1:
-        score += weights['volume']
+    if price_mom > 0 and flow_mom < 0: score += weights['divergence']
+    if flow_mom < -0.1: score += weights['flow_neg']
+    if flow_acc < 0: score += weights['flow_acc']
+    if vol_z > 1: score += weights['volume']
     return score
 
 def prob_distribution_binary(score, k=5):
@@ -237,29 +232,21 @@ def signal_quality(price_mom, flow_mom, vol_z):
     penalty = abs(vol_z) * 0.1
     return max(0, intensity - penalty)
 
-def adjust_score_by_confidence(score, confidence):
-    return score * (0.5 + 0.5 * confidence)
-
 def calculate_persistence(flow_mom_series, window=3):
-    if len(flow_mom_series) < window:
-        return "SIN_DATOS"
+    if len(flow_mom_series) < window: return "SIN_DATOS"
     recent = flow_mom_series.tail(window)
     positive = (recent > 0).sum()
     negative = (recent < 0).sum()
-    if positive >= 2:
-        return "PERSISTENCIA_ALCISTA"
-    elif negative >= 2:
-        return "PERSISTENCIA_BAJISTA"
-    else:
-        return "TRANSICION"
+    if positive >= 2: return "PERSISTENCIA_ALCISTA"
+    elif negative >= 2: return "PERSISTENCIA_BAJISTA"
+    else: return "TRANSICION"
 
 def signal_state(persistence, phase):
     if persistence == "TRANSICION" and phase in ["ACUMULACION", "DISTRIBUCION_TEMPRANA"]:
         return "SEÑAL TEMPRANA"
     elif persistence in ["PERSISTENCIA_ALCISTA", "PERSISTENCIA_BAJISTA"]:
         return "SEÑAL CONSOLIDADA"
-    else:
-        return "NEUTRAL"
+    else: return "NEUTRAL"
 
 def load_flow_history(file="flow_history.csv"):
     if os.path.exists(file):
@@ -269,56 +256,6 @@ def load_flow_history(file="flow_history.csv"):
 
 def save_flow_history_df(df, file="flow_history.csv"):
     df.to_csv(file)
-
-def compute_macro_context(df, features):
-    spy_ret = df['SPY'].pct_change(20).iloc[-1]
-    tlt_ret = df['TLT'].pct_change(20).iloc[-1]
-    vix_z = features['vix_z'].iloc[-1]
-    regime = 0.5 * spy_ret - 0.3 * tlt_ret - 0.2 * vix_z
-    ratio_gv = df['QQQ'] / df['SPY']
-    growth_ratio = ratio_gv.iloc[-1] / ratio_gv.rolling(20).mean().iloc[-1] - 1
-    ratio_global = df['ACWI'] / df['SPY']
-    global_ratio = ratio_global.iloc[-1] / ratio_global.rolling(20).mean().iloc[-1] - 1
-    return {
-        'regime': regime,
-        'growth_vs_value': growth_ratio,
-        'global_strength': global_ratio
-    }
-
-def interpret_macro(context):
-    regime = context['regime']
-    if regime > 0.05:
-        return "RISK-ON"
-    elif regime < -0.05:
-        return "RISK-OFF"
-    else:
-        return "NEUTRAL"
-
-def adjust_operability(base_level, vix_z):
-    if vix_z > 1.5:
-        downgrade = {
-            "OPORTUNIDAD CLARA": "OPORTUNIDAD MODERADA",
-            "OPORTUNIDAD MODERADA": "SEGUIR CON PRUDENCIA",
-            "SEGUIR CON PRUDENCIA": "RIESGO ALTO",
-            "NO OPERAR": "NO OPERAR"
-        }
-        return downgrade.get(base_level, base_level)
-    return base_level
-
-def compute_persistence(history_df, sector, window=3):
-    if sector not in history_df.columns:
-        return "SIN_DATOS"
-    recent = history_df[sector].dropna().tail(window)
-    if len(recent) < window:
-        return "SIN_DATOS"
-    positives = (recent > 0).sum()
-    negatives = (recent < 0).sum()
-    if positives >= 2:
-        return "ESTABLE ALCISTA"
-    elif negatives >= 2:
-        return "ESTABLE BAJISTA"
-    else:
-        return "TRANSICION"
 
 def enrich_with_cftc_sector(report_lines, cftc_with_z, raw_file=None):
     """
@@ -482,18 +419,38 @@ def main():
     ranking_price, dispersion_price, breadth_price, vix_z, stress, regime_price, accion_price = run_radar(df)
     ranking_flow, flow_dispersion, flow_breadth, regime_flow, flow_mom = run_flow_radar(df)
 
-    # --- Capa 4: Macro Confirm (solo consola, sin reporte aún)
-    flow_regime_sign = get_flow_regime_sign(flow_breadth)
-    macro_data = compute_macro_confirm(df, flow_regime_sign)
-    print("\n=== MACRO CONFIRM (prueba consola) ===")
-    print(f"Macro Score: {macro_data['macro_score']:.2f}")
-    print(f"Régimen: {macro_data['macro_regime']}")
-    print(f"Confianza: {macro_data['confidence']:.2f} ({macro_data['confidence_state']})")
-    print(f"Alineación: {macro_data['alignment']}")
-    if macro_data['warning']:
-        print(f"Advertencia: {macro_data['warning']}")
-    print("=====================================\n")
+    sectors = list(ranking_flow.keys())
 
+    # Nueva macro causal
+    breadth_signal = features['breadth_signal'].iloc[-1]
+    macro_score_new = compute_macro_score(df, breadth_signal=breadth_signal)
+    print("\n=== NUEVA MACRO (CAUSAL) ===")
+    print(f"Macro Score (continuo): {macro_score_new:.2f} (-1 = RISK-OFF, +1 = RISK-ON)")
+
+    # Flow attribution
+    flow_engine = FlowAttributionEngine(window=20)
+    spy_df = pd.DataFrame({'close': df['SPY'], 'volume': df['SPY_volume']}).dropna()
+    spy_flow_state = flow_engine.classify_flow_state(spy_df, 'close', 'volume') if len(spy_df) >= 60 else "INSUFICIENT_DATA"
+    print(f"SPY Flow State: {spy_flow_state}")
+
+    etf_flow_states = {}
+    for sec in sectors:
+        etf_df = pd.DataFrame({'close': df[sec], 'volume': df[f"{sec}_volume"]}).dropna()
+        state = flow_engine.classify_flow_state(etf_df, 'close', 'volume') if len(etf_df) >= 60 else "INSUFICIENT_DATA"
+        etf_flow_states[sec] = state
+    print("\n=== Flow Attribution por Sector ===")
+    for sec, state in etf_flow_states.items():
+        print(f"{sec}: {state}")
+
+    spy_structure = compute_price_structure(df['SPY'])
+    print(f"SPY Price Structure: {spy_structure}")
+
+    edge_new = compute_edge(macro_score_new, spy_flow_state, spy_structure)
+    gate = truth_gate(macro_score_new, spy_flow_state, spy_structure)
+    print(f"Edge Score: {edge_new:.2f}")
+    print(f"Truth Gate: {gate}")
+
+    # --- El resto del código original (alertas, distribución, CFTC, etc.) ---
     alertas = []
     top_price_2 = [sec for sec, _ in ranking_price[:2]]
     bottom_flow_2 = list(ranking_flow.keys())[-2:]
@@ -506,7 +463,6 @@ def main():
         if sec in top_flow_2:
             alertas.append(f"ALERTA VERDE: {sec} esta entre los 2 peores en precio pero entre los 2 mejores en flujo -> posible acumulacion (oportunidad).")
 
-    sectors = list(ranking_flow.keys())
     flow_acc_df = compute_flow_acceleration(flow_mom, window=5)
     vol_z_df = compute_volume_zscore(df, sectors, window=20)
     price_mom_dict = {sec: mom for sec, mom in ranking_price}
@@ -591,13 +547,11 @@ def main():
         if cftc_history_df is not None and not cftc_history_df.empty:
             cftc_with_z = compute_cftc_zscore_from_history()
             if cftc_with_z is not None and not cftc_with_z.empty:
-                # Hay suficientes datos históricos: usar el z-score
                 latest = cftc_with_z.loc[cftc_with_z.groupby('market')['date'].idxmax()]
                 spy_row = latest[latest['market'].str.contains("S&P 500", case=False)]
                 if not spy_row.empty:
                     cftc_spy_z = spy_row['cftc_z'].iloc[-1]
             else:
-                # No hay suficientes datos históricos para z-score, pero tenemos el raw
                 cftc_raw = load_cftc_manual(path="data/cftc_raw.txt")
                 if cftc_raw is not None:
                     parsed = parse_cftc_financials(cftc_raw)
@@ -607,10 +561,8 @@ def main():
                             spy_data = with_signal[with_signal['market'].str.contains("S&P 500", case=False)]
                             if not spy_data.empty:
                                 cftc_spy_z = spy_data['cftc_z'].iloc[-1]
-                            # Usamos with_signal como cftc_with_z para que la tabla se genere desde el raw
                             cftc_with_z = with_signal
         else:
-            # No hay histórico, cargar raw directamente
             cftc_raw = load_cftc_manual(path="data/cftc_raw.txt")
             if cftc_raw is not None:
                 parsed = parse_cftc_financials(cftc_raw)
@@ -714,39 +666,53 @@ def main():
     with open(temp_md, 'r', encoding='utf-8') as f:
         lines = f.readlines()
 
+    # Insertar factores sintéticos y distribución antes de "## Conclusion"
     insert_pos = len(lines)
     for i, line in enumerate(lines):
-        if line.startswith("## Conclusión"):
+        if line.startswith("## Conclusion"):
             insert_pos = i
             break
+    lines[insert_pos:insert_pos] = synth_lines + dist_lines
 
-    macro_context = compute_macro_context(df, features)
-    regime_label = interpret_macro(macro_context)
-    macro_lines = [
-        "\n## Contexto Macro\n",
-        f"- **Régimen de mercado (cualitativo):** {regime_label} ({macro_context['regime']:.2f})\n",
-        f"- **Régimen cuantitativo (score):** {regime_score:.2f} ({regime_label})\n",
-        f"- **Growth vs Value (QQQ/SPY):** {macro_context['growth_vs_value']:.2%}\n",
-        f"- **Fortaleza global (ACWI/SPY):** {macro_context['global_strength']:.2%}\n"
-    ]
-    # Construir el reporte final con todas las secciones en orden
-    # 1. Insertar factores sintéticos + contexto macro + distribución
-    lines[insert_pos:insert_pos] = synth_lines + macro_lines + dist_lines
-
-    # 2. Insertar sección macro institucional (Capa 4) DESPUÉS de las líneas de contexto macro
-    macro_confirm_lines = format_macro_section(macro_data)
-    # Buscar la línea que contiene "**Fortaleza global**" (última línea del contexto macro)
+    # Ahora insertar las nuevas secciones causales (macro unificado y modelo causal) también antes de "## Conclusion"
+    # Primero localizamos de nuevo la posición (puede haber cambiado)
     for i, line in enumerate(lines):
-        if "**Fortaleza global (ACWI/SPY):**" in line:
-            # Insertar la macro justo después de esta línea
-            lines[i+1:i+1] = macro_confirm_lines
+        if line.startswith("## Conclusion"):
+            insert_pos = i
             break
+    # Preparar líneas causales
+    if macro_score_new > 0.5:
+        macro_label = "RISK-ON"
+    elif macro_score_new < -0.5:
+        macro_label = "RISK-OFF"
+    else:
+        macro_label = "NEUTRAL"
+    macro_new_lines = [
+        "\n## Contexto Macro (Unificado)\n",
+        f"- **Macro Score (causal):** {macro_score_new:.2f} (continuo, -1=RISK-OFF, +1=RISK-ON)\n",
+        f"- **Régimen cualitativo:** {macro_label}\n"
+    ]
+    causal_lines = []
+    causal_lines.append("\n## Modelo Causal (Macro → Flow → Price)\n")
+    causal_lines.append(f"- **Macro Score:** {macro_score_new:.2f}\n")
+    causal_lines.append(f"- **SPY Flow State:** {spy_flow_state}\n")
+    causal_lines.append(f"- **SPY Price Structure:** {spy_structure}\n")
+    causal_lines.append(f"- **Edge Score:** {edge_new:.2f}\n")
+    causal_lines.append(f"- **Truth Gate:** {gate}\n")
+    causal_lines.append("\n**Flow Attribution por Sector:**\n")
+    causal_lines.append("| Sector | Flow State |\n")
+    causal_lines.append("|--------|------------|\n")
+    for sec, state in etf_flow_states.items():
+        causal_lines.append(f"| {sec} | {state} |\n")
+    causal_lines.append("\n")
+    lines[insert_pos:insert_pos] = macro_new_lines + causal_lines
 
-    # 3. Insertar CFTC
+    # Insertar CFTC (si no existe ya en lines, la generamos)
     cftc_lines = []
     enrich_with_cftc_sector(cftc_lines, cftc_with_z, raw_file=cftc_raw)
+    # Buscar "## Conclusion" de nuevo para insertar CFTC justo antes (para que quede después de todo lo demás)
     for i, line in enumerate(lines):
-        if line.startswith("## Conclusión"):
+        if line.startswith("## Conclusion"):
             insert_pos = i
             break
     lines[insert_pos:insert_pos] = cftc_lines
@@ -755,9 +721,7 @@ def main():
         f.writelines(lines)
     os.remove(temp_md)
 
-    # =========================================================
-    # MÓDULO DE LÍDERES SECTORIALES (solo informativo)
-    # =========================================================
+    # Módulo de líderes sectoriales
     try:
         holdings_df = pd.read_csv("data/etf_holdings.csv")
         df_multi = prepare_multi_index(df)
