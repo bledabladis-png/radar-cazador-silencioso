@@ -17,7 +17,7 @@ def evaluate_signal(signal_series, forward_returns, threshold=0.7, lag=1):
     avg_return = forward_returns[high_risk].mean()
     avg_benchmark = forward_returns.mean()
     alpha = avg_return - avg_benchmark
-    hit_ratio = (forward_returns[high_risk] < 0).mean()
+    hit_ratio = (forward_returns[high_risk] > 0).mean()
     
     return {
         'alpha': alpha,

@@ -13,30 +13,44 @@ from macro_confirm import compute_macro_score, format_macro_section
 from stock_leader import prepare_multi_index, generate_leader_section
 from flow_attribution import FlowAttributionEngine
 
-def orthogonalize_macro_flow(macro_series, flow_series, window=60):
+# =========================================================
+# ORTOGONALIZACIÓN MACRO-FLUJO ROBUSTA
+# =========================================================
+
+def rolling_regression_residual(x, y, window=60):
     """
-    Elimina la parte del flujo explicada por macro (evita doble conteo).
-    Retorna una Serie con el residuo (flow_ex_macro) para los índices donde hay datos suficientes.
+    Regresión rolling con intercepto: y = alpha + beta * x + residuo.
+    Retorna serie de residuos.
     """
-    df = pd.DataFrame({"macro": macro_series, "flow": flow_series}).dropna()
-    if len(df) < window:
-        return pd.Series(index=df.index, dtype=float)
-    residuals = []
-    indices = []
-    for i in range(window, len(df)):
-        sub = df.iloc[i-window:i]
-        # beta = cov(macro, flow) / var(macro)
-        cov = np.cov(sub["macro"], sub["flow"])[0, 1]
-        var = np.var(sub["macro"])
-        if var == 0:
-            beta = 0.0
-        else:
-            beta = cov / var
-        expected = beta * df["macro"].iloc[i]
-        residual = df["flow"].iloc[i] - expected
-        residuals.append(residual)
-        indices.append(df.index[i])
-    return pd.Series(residuals, index=indices)
+    resid = pd.Series(index=y.index, dtype=float)
+    for i in range(window, len(y)):
+        xw = x.iloc[i-window:i].values
+        yw = y.iloc[i-window:i].values
+        # Eliminar NaNs e infinitos
+        mask = np.isfinite(xw) & np.isfinite(yw)
+        xw = xw[mask]
+        yw = yw[mask]
+        if len(xw) < 2:
+            resid.iloc[i] = np.nan
+            continue
+        # Si xw es constante (desviación casi nula), no se puede hacer regresión
+        if np.std(xw) < 1e-9:
+            # Usar la media de y como predictor
+            resid.iloc[i] = y.iloc[i] - np.mean(yw)
+            continue
+        try:
+            # polyfit devuelve [beta, alpha] (pendiente, intercepto)
+            beta, alpha = np.polyfit(xw, yw, 1)
+            y_hat = alpha + beta * x.iloc[i]
+            resid.iloc[i] = y.iloc[i] - y_hat
+        except:
+            resid.iloc[i] = np.nan
+    return resid
+
+def rolling_robust_zscore(series, window=60):
+    median = series.rolling(window).median()
+    mad = (series - median).abs().rolling(window).median()
+    return (series - median) / (1.4826 * mad + 1e-9)
 
 def compute_macro_series(df, features, window=60):
     """
@@ -62,14 +76,12 @@ def compute_macro_series(df, features, window=60):
     return pd.Series(macro_scores, index=dates)
 
 def apply_decay(series, halflife=5):
-    """
-    Aplica decaimiento exponencial (EWM) con semivida dada.
-    Retorna el último valor suavizado.
-    """
-    if len(series) < halflife:
-        return series.iloc[-1]
-    ewm = series.ewm(halflife=halflife, adjust=False).mean()
-    return ewm.iloc[-1]
+    series_clean = series.dropna()
+    if len(series_clean) < halflife:
+        return series
+    ewm = series_clean.ewm(halflife=halflife, adjust=False).mean()
+    # reindexar para mantener el índice original y rellenar hacia adelante
+    return ewm.reindex(series.index).fillna(method='ffill')
 
 # CFTC opcional
 try:
@@ -159,26 +171,36 @@ def compute_price_structure_advanced(df):
     else:
         return "RANGE"
 
-def compute_edge(macro_score, flow_signal, structure_label):
-    macro = np.tanh(macro_score)
-    flow = np.tanh(flow_signal)
-    struct_map = {"MARKUP": 1.0, "RANGE": 0.0, "DISTRIBUTION": -1.0}
-    structure = struct_map.get(structure_label, 0.0)
+# =========================================================
+# EDGE SCORE CORREGIDO (dirección, acuerdo, magnitud)
+# =========================================================
+
+def compute_edge(macro, flow, structure):
     signals = np.array([macro, flow, structure])
-    alignment = np.mean(signals)
-    dispersion = np.std(signals)
-    negative_penalty = np.mean(signals < 0)
-    consistency = 1 - dispersion
-    edge = alignment * consistency * (1 - 0.5 * negative_penalty)
+    pos = np.sum(signals > 0)
+    neg = np.sum(signals < 0)
+    if pos > neg:
+        direction = 1
+    elif neg > pos:
+        direction = -1
+    else:
+        return 0.0   # conflicto real
+    agreement = max(pos, neg) / len(signals)
+    strength = np.mean(np.abs(signals))
+    edge = direction * agreement * strength
     return np.clip(edge, -1, 1)
 
-def compute_truth(macro_score, flow_signal, edge):
-    macro_strength = abs(macro_score)
-    flow_strength = abs(flow_signal)
-    agreement = 1 - abs(np.sign(macro_score) - np.sign(flow_signal)) / 2
-    confidence = 0.4 * macro_strength + 0.4 * flow_strength + 0.2 * agreement
-    truth_score = confidence * (edge + 1) / 2
-    return np.clip(truth_score, 0, 1)
+# =========================================================
+# TRUTH SCORE INDEPENDIENTE (sin usar edge)
+# =========================================================
+
+def compute_truth(macro, flow, structure):
+    macro_strength = abs(macro)
+    flow_strength = abs(flow)
+    agreement = 1 if np.sign(macro) == np.sign(flow) else 0
+    structure_penalty = 0.5 if structure == 0 else 1.0
+    truth = (0.5 * macro_strength + 0.5 * flow_strength) * agreement * structure_penalty
+    return np.clip(truth, 0, 1)
 
 # -------------------------------
 # Funciones de distribucion v3.15 (core)
@@ -489,26 +511,54 @@ def main():
     dv_spy = spy_df['close'] * spy_df['volume']
     spy_flow_metrics = flow_engine.compute(ret_spy, dv_spy)
     spy_structure = compute_price_structure_advanced(spy_df)
+    spy_structure_value = {"MARKUP":1, "RANGE":0, "DISTRIBUTION":-1}.get(spy_structure, 0)
     print(f"SPY Price Structure: {spy_structure}")
     spy_flow_state = flow_engine.classify_last(spy_flow_metrics)
     
     # ----- NUEVO: Calcular serie de macro_score (necesaria para ortogonalización) -----
     macro_series = compute_macro_series(df, features, window=60)
     
-    # Calcular la señal de flujo combinada (persistence, intensity, irregularity)
-    flow_signal_series = (0.5 * spy_flow_metrics['persistence'] +
-                          0.3 * spy_flow_metrics['intensity'] -
-                          0.2 * spy_flow_metrics['irregularity'])
-    
-    # Ortogonalizar: eliminar la parte del flujo explicada por macro
-    macro_aligned = macro_series.reindex(flow_signal_series.index)
-    flow_orthogonal_series = orthogonalize_macro_flow(macro_aligned, flow_signal_series, window=60)
-    # El último valor (suavizado con decay) es el que usaremos
-    flow_orthogonal = apply_decay(flow_orthogonal_series, halflife=5) if len(flow_orthogonal_series) > 0 else 0.0
-    
-    # Calcular edge y truth usando el flujo ortogonal
-    edge_new = compute_edge(macro_score_new, flow_orthogonal, spy_structure)
-    truth_score = compute_truth(macro_score_new, flow_orthogonal, edge_new)
+    # Calcular la señal de flujo combinada (persistence, intensity, irregularity) ortogonalizada internamente
+    # Nota: spy_flow_metrics ya tiene las columnas ortogonales (persistence_orth, etc.)
+    flow_signal_series = (0.5 * spy_flow_metrics['persistence_orth'] +
+                          0.3 * spy_flow_metrics['intensity_orth'] -
+                          0.2 * spy_flow_metrics['irregularity_orth'])
+
+    # Asegurar que tenemos series sin NaNs para la regresión
+    macro_aligned = macro_series.reindex(flow_signal_series.index).dropna()
+    flow_aligned = flow_signal_series.dropna()
+    common_idx = macro_aligned.index.intersection(flow_aligned.index)
+    macro_clean = macro_aligned[common_idx]
+    flow_clean = flow_aligned[common_idx]
+
+    # Aplicar rolling robust z-score (sin look-ahead)
+    macro_z = rolling_robust_zscore(macro_clean, window=60)
+    flow_z = rolling_robust_zscore(flow_clean, window=60)
+
+    # Limpiar infinitos y NaNs
+    macro_z = macro_z.replace([np.inf, -np.inf], np.nan)
+    flow_z = flow_z.replace([np.inf, -np.inf], np.nan)
+    valid = macro_z.notna() & flow_z.notna()
+    macro_z = macro_z[valid]
+    flow_z = flow_z[valid]
+
+    # Regresión rolling con intercepto
+    flow_orthogonal_series = rolling_regression_residual(macro_z, flow_z, window=60)
+
+    # Aplicar decaimiento a macro y flujo ortogonal
+    macro_smoothed = apply_decay(macro_series, halflife=5)
+    flow_smoothed = apply_decay(flow_orthogonal_series, halflife=5) if len(flow_orthogonal_series) > 0 else pd.Series(dtype=float)
+
+    # Extraer el último valor no nulo
+    macro_clean = macro_smoothed.dropna()
+    flow_clean = flow_smoothed.dropna()
+
+    macro_score_new = macro_clean.iloc[-1] if not macro_clean.empty else macro_score_new
+    flow_orthogonal = flow_clean.iloc[-1] if not flow_clean.empty else 0.0
+
+    # Calcular edge y truth con las nuevas funciones
+    edge_new = compute_edge(macro_score_new, flow_orthogonal, spy_structure_value)
+    truth_score = compute_truth(macro_score_new, flow_orthogonal, spy_structure_value)
     print(f"Edge Score (ortogonal): {edge_new:.2f}")
     print(f"Truth Score (ortogonal): {truth_score:.2f}")
 
