@@ -13,6 +13,54 @@ from macro_confirm import compute_macro_score, format_macro_section
 from stock_leader import prepare_multi_index, generate_leader_section
 from flow_attribution import FlowAttributionEngine
 
+def orthogonalize_macro_flow(macro_series, flow_series, window=60):
+    """
+    Elimina la parte del flujo explicada por macro (evita doble conteo).
+    Retorna una Serie con el residuo (flow_ex_macro) para los índices donde hay datos suficientes.
+    """
+    df = pd.DataFrame({"macro": macro_series, "flow": flow_series}).dropna()
+    if len(df) < window:
+        return pd.Series(index=df.index, dtype=float)
+    residuals = []
+    indices = []
+    for i in range(window, len(df)):
+        sub = df.iloc[i-window:i]
+        # beta = cov(macro, flow) / var(macro)
+        cov = np.cov(sub["macro"], sub["flow"])[0, 1]
+        var = np.var(sub["macro"])
+        if var == 0:
+            beta = 0.0
+        else:
+            beta = cov / var
+        expected = beta * df["macro"].iloc[i]
+        residual = df["flow"].iloc[i] - expected
+        residuals.append(residual)
+        indices.append(df.index[i])
+    return pd.Series(residuals, index=indices)
+
+def compute_macro_series(df, features, window=60):
+    """
+    Calcula macro_score para cada día (usando los últimos 60 días de datos).
+    Retorna una Serie con índice de fechas.
+    """
+    from macro_confirm import compute_macro_score
+    macro_scores = []
+    dates = df.index
+    for i, date in enumerate(dates):
+        if i < window:
+            macro_scores.append(np.nan)
+            continue
+        sub_df = df.iloc[:i+1]   # datos hasta la fecha actual
+        # Necesitamos features también? En realidad compute_macro_score usa df directamente.
+        # Pero también requiere breadth_signal. Para simplificar, podemos usar el breadth_signal del día actual (que viene de features).
+        # Como features ya está calculado para todo el periodo, podemos obtener breadth_signal en cada fecha.
+        # Vamos a extraer breadth_signal de la serie original.
+        breadth_series = features['breadth_signal']  # ya es una serie temporal
+        breadth_val = breadth_series.loc[date] if date in breadth_series.index else 0.0
+        macro_score = compute_macro_score(sub_df, breadth_signal=breadth_val)
+        macro_scores.append(macro_score)
+    return pd.Series(macro_scores, index=dates)
+
 def apply_decay(series, halflife=5):
     """
     Aplica decaimiento exponencial (EWM) con semivida dada.
@@ -22,9 +70,6 @@ def apply_decay(series, halflife=5):
         return series.iloc[-1]
     ewm = series.ewm(halflife=halflife, adjust=False).mean()
     return ewm.iloc[-1]
-
-def supervision(*args, **kwargs):
-    pass
 
 # CFTC opcional
 try:
@@ -114,26 +159,24 @@ def compute_price_structure_advanced(df):
     else:
         return "RANGE"
 
-def compute_edge_asymmetric(macro_score, persistence, intensity, irregularity, structure_label):
+def compute_edge(macro_score, flow_signal, structure_label):
     macro = np.tanh(macro_score)
-    flow = 0.5 * persistence + 0.3 * intensity - 0.2 * irregularity
-    flow = np.tanh(flow)
+    flow = np.tanh(flow_signal)
     struct_map = {"MARKUP": 1.0, "RANGE": 0.0, "DISTRIBUTION": -1.0}
     structure = struct_map.get(structure_label, 0.0)
     signals = np.array([macro, flow, structure])
     alignment = np.mean(signals)
     dispersion = np.std(signals)
-    negative_penalty = np.mean(signals < 0)   # proporción de señales negativas
+    negative_penalty = np.mean(signals < 0)
     consistency = 1 - dispersion
     edge = alignment * consistency * (1 - 0.5 * negative_penalty)
     return np.clip(edge, -1, 1)
 
-def compute_truth_score(macro_score, persistence, intensity, irregularity, edge):
+def compute_truth(macro_score, flow_signal, edge):
     macro_strength = abs(macro_score)
-    flow_strength = 0.5 * persistence + 0.3 * intensity - 0.2 * irregularity
-    flow_strength = np.clip(flow_strength, -1, 1)
-    agreement = 1 - abs(np.sign(macro_score) - np.sign(flow_strength)) / 2
-    confidence = 0.4 * macro_strength + 0.4 * abs(flow_strength) + 0.2 * agreement
+    flow_strength = abs(flow_signal)
+    agreement = 1 - abs(np.sign(macro_score) - np.sign(flow_signal)) / 2
+    confidence = 0.4 * macro_strength + 0.4 * flow_strength + 0.2 * agreement
     truth_score = confidence * (edge + 1) / 2
     return np.clip(truth_score, 0, 1)
 
@@ -448,20 +491,26 @@ def main():
     spy_structure = compute_price_structure_advanced(spy_df)
     print(f"SPY Price Structure: {spy_structure}")
     spy_flow_state = flow_engine.classify_last(spy_flow_metrics)
-
-    # Aplicar decaimiento exponencial (EWM) con semivida de 5 días
-    spy_persistence_series = spy_flow_metrics['persistence']
-    spy_intensity_series = spy_flow_metrics['intensity']
-    spy_irregularity_series = spy_flow_metrics['irregularity']
     
-    spy_persistence = apply_decay(spy_persistence_series, halflife=5)
-    spy_intensity = apply_decay(spy_intensity_series, halflife=5)
-    spy_irregularity = apply_decay(spy_irregularity_series, halflife=5)
-
-    edge_new = compute_edge_asymmetric(macro_score_new, spy_persistence, spy_intensity, spy_irregularity, spy_structure)
-    truth_score = compute_truth_score(macro_score_new, spy_persistence, spy_intensity, spy_irregularity, edge_new)
-    print(f"Edge Score (continuo): {edge_new:.2f}")
-    print(f"Truth Score (probabilístico): {truth_score:.2f}")
+    # ----- NUEVO: Calcular serie de macro_score (necesaria para ortogonalización) -----
+    macro_series = compute_macro_series(df, features, window=60)
+    
+    # Calcular la señal de flujo combinada (persistence, intensity, irregularity)
+    flow_signal_series = (0.5 * spy_flow_metrics['persistence'] +
+                          0.3 * spy_flow_metrics['intensity'] -
+                          0.2 * spy_flow_metrics['irregularity'])
+    
+    # Ortogonalizar: eliminar la parte del flujo explicada por macro
+    macro_aligned = macro_series.reindex(flow_signal_series.index)
+    flow_orthogonal_series = orthogonalize_macro_flow(macro_aligned, flow_signal_series, window=60)
+    # El último valor (suavizado con decay) es el que usaremos
+    flow_orthogonal = apply_decay(flow_orthogonal_series, halflife=5) if len(flow_orthogonal_series) > 0 else 0.0
+    
+    # Calcular edge y truth usando el flujo ortogonal
+    edge_new = compute_edge(macro_score_new, flow_orthogonal, spy_structure)
+    truth_score = compute_truth(macro_score_new, flow_orthogonal, edge_new)
+    print(f"Edge Score (ortogonal): {edge_new:.2f}")
+    print(f"Truth Score (ortogonal): {truth_score:.2f}")
 
     # Para ETFs sectoriales (solo para flow state)
     etf_flow_states = {}
@@ -790,7 +839,6 @@ def main():
     except Exception as e:
         print(f"Validacion no disponible: {e}")
 
-    supervision(flow_mom, ranking_flow, ranking_price, df, sectors, distribution_prob_cont)
     print("\nEjecucion completada.")
 
 if __name__ == '__main__':
