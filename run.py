@@ -939,12 +939,13 @@ def main():
 
     # OMS
     causal_lines.append("\n## Options Market Structure (OMS v1.1)\n")
-    causal_lines.append(f"- **Sentimiento (PCR):** {sentiment_val:.2f}\n")
+    causal_lines.append(f"- **Sentimiento (PCR Hong Kong):** {sentiment_val:.2f}\n")
     causal_lines.append(f"- **Activity Heat:** {activity_heat_val:.2f}\n")
     causal_lines.append(f"- **Fragmentación (HHI):** {fragmentation_val:.2f}\n")
     causal_lines.append(f"- **OMS Score:** {latest_oms:.2f}\n")
     causal_lines.append(f"- **Régimen:** {oms_regime}\n")
     causal_lines.append("\n*Interpretación: ESTABLE → mercado amortigua movimientos; FRÁGIL → riesgo de amplificación.*\n")
+    causal_lines.append("\n*Nota: El Put/Call ratio utilizado en el sentimiento proviene de la Bolsa de Hong Kong (HKEX).*\n")
     if oms_mod["risk_bias"] != "NEUTRAL":
         causal_lines.append(f"*Recomendación de tamaño: {oms_mod['risk_bias']} (confianza {oms_mod['confidence_boost']:.2f})*\n")
 
