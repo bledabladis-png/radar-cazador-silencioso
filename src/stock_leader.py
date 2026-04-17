@@ -44,7 +44,6 @@ def compute_wyckoff_leadership(df, weights=None):
     
     # 6. Aplicar pesos
     if weights is None:
-        # Pesos por defecto (versión anterior)
         w_rs = 0.25
         w_flow = 0.25
         w_persist = 0.20
@@ -57,7 +56,6 @@ def compute_wyckoff_leadership(df, weights=None):
         w_structure = weights.get("structure", 0.20)
         w_stab = weights.get("stability", 0.10)
     
-    # 7. WLS final
     df["wls"] = (
         w_rs * df["rs_z"] +
         w_flow * df["flow_z_norm"] +
@@ -72,19 +70,11 @@ def compute_wyckoff_leadership(df, weights=None):
 # =========================================================
 
 def wyckoff_persistence_robust(flow_signal_series, wyckoff_score_series, window=5):
-    """
-    Calcula la persistencia de acumulación robusta (intensidad, no binaria).
-    Retorna una serie con la suma de los últimos `window` días donde la intensidad supera 0.25.
-    """
     signal = (flow_signal_series * wyckoff_score_series).clip(lower=0)
     binary = (signal > 0.25).astype(int)
     return binary.rolling(window).sum()
 
 def wyckoff_cycle_series(df):
-    """
-    Detecta el ciclo completo Wyckoff (Spring → Acumulación → SOS) con memoria de estado.
-    Retorna una serie con 1 en el día que se completa el ciclo.
-    """
     from wyckoff_detector import detect_spring, detect_sos, wyckoff_score
     spring = detect_spring(df)
     sos = detect_sos(df)
@@ -108,7 +98,6 @@ def wyckoff_cycle_series(df):
 # =========================================================
 
 def validate_series(series, min_length=60):
-    """Valida que la serie tenga datos suficientes y no esté corrupta."""
     if series is None:
         return False
     if series.isna().sum() > len(series) * 0.2:
@@ -118,52 +107,44 @@ def validate_series(series, min_length=60):
     return True
 
 def robust_zscore(series, window=60):
-    """Z-score robusto usando mediana y MAD (misma función que el radar)."""
     rolling_median = series.rolling(window).median()
     mad = (series - rolling_median).abs().rolling(window).median()
-    z = (series - rolling_median) / (mad * 1.4826)
+    z = (series - rolling_median) / (mad * 1.4826 + 1e-9)
     return z
 
 def compute_rsi(price, window=14):
-    """RSI clásico (Wilder smoothing) sin dependencias externas."""
     delta = price.diff()
     gain = delta.clip(lower=0)
     loss = -delta.clip(upper=0)
     avg_gain = gain.ewm(alpha=1/window, min_periods=window).mean()
     avg_loss = loss.ewm(alpha=1/window, min_periods=window).mean()
-    rs = avg_gain / avg_loss
+    rs = avg_gain / (avg_loss + 1e-9)
     rsi = 100 - (100 / (1 + rs))
     return rsi
 
 def prepare_multi_index(df):
     """
-    Convierte el DataFrame plano del radar a MultiIndex con niveles:
-    (ticker, "close"), (ticker, "volume"), (ticker, "open"), (ticker, "high"), (ticker, "low")
+    Convierte el DataFrame plano del radar a un DataFrame con columnas planas
+    de la forma 'TICKER_close', 'TICKER_volume', etc.
     """
     tickers = set()
     for col in df.columns:
         if "_" in col:
             continue
         tickers.add(col)
-    multi = {}
+    result = pd.DataFrame(index=df.index)
     for t in tickers:
         if t not in df.columns:
             continue
-        multi[(t, "close")] = df[t]
+        result[f"{t}_close"] = df[t]
         vol_col = f"{t}_volume"
         if vol_col in df.columns:
-            multi[(t, "volume")] = df[vol_col]
-        # Añadir open, high, low
-        open_col = f"{t}_open"
-        high_col = f"{t}_high"
-        low_col = f"{t}_low"
-        if open_col in df.columns:
-            multi[(t, "open")] = df[open_col]
-        if high_col in df.columns:
-            multi[(t, "high")] = df[high_col]
-        if low_col in df.columns:
-            multi[(t, "low")] = df[low_col]
-    return pd.DataFrame(multi)
+            result[f"{t}_volume"] = df[vol_col]
+        for suf in ['_open', '_high', '_low']:
+            col = f"{t}{suf}"
+            if col in df.columns:
+                result[f"{t}{suf}"] = df[col]
+    return result
 
 # =========================================================
 # CORE: MÉTRICAS POR ACCIÓN
@@ -171,27 +152,27 @@ def prepare_multi_index(df):
 
 def compute_stock_metrics(df, etf_ticker, stock_list):
     """
-    Calcula métricas clave para cada acción del ETF:
-    - RS, RS momentum (log), RS trend
-    - Flow z-score (suavizado con EWM)
-    - Divergencia (flow > 0.5 y rs_mom < 0)
-    - RSI, warnings (sobrecompra, extendido, clímax)
+    Calcula métricas clave para cada acción del ETF.
+    df debe tener columnas planas: 'TICKER_close', 'TICKER_volume', etc.
     """
     results = []
 
-    if (etf_ticker, "close") not in df.columns:
+    close_col = f"{etf_ticker}_close"
+    if close_col not in df.columns:
         return pd.DataFrame()
 
-    price_etf = df[(etf_ticker, "close")]
+    price_etf = df[close_col]
     if not validate_series(price_etf):
         return pd.DataFrame()
 
     for ticker in stock_list:
-        if (ticker, "close") not in df.columns or (ticker, "volume") not in df.columns:
+        close_col_ticker = f"{ticker}_close"
+        volume_col_ticker = f"{ticker}_volume"
+        if close_col_ticker not in df.columns or volume_col_ticker not in df.columns:
             continue
 
-        price = df[(ticker, "close")]
-        volume = df[(ticker, "volume")]
+        price = df[close_col_ticker]
+        volume = df[volume_col_ticker]
 
         if not validate_series(price) or not validate_series(volume):
             continue
@@ -199,7 +180,6 @@ def compute_stock_metrics(df, etf_ticker, stock_list):
         try:
             # Relative Strength
             rs = price / price_etf
-            # RS momentum con log-diferencias (estable cross-sector)
             rs_mom = np.log(rs).diff(20).iloc[-1]
             rs_trend = rs.rolling(20).mean().diff().iloc[-1]
 
@@ -208,36 +188,33 @@ def compute_stock_metrics(df, etf_ticker, stock_list):
             dollar_vol = price * volume
             flow_raw = ret * dollar_vol
             flow_z = robust_zscore(flow_raw, window=60)
-            # Suavizado con EWM para menor lag
             flow_signal = flow_z.ewm(span=5).mean().iloc[-1]
+
             # Wyckoff microstructural analysis
-            # Construir DataFrame con OHLCV para este ticker
             ticker_df = pd.DataFrame({
-                "open": df[(ticker, "open")],
-                "high": df[(ticker, "high")],
-                "low": df[(ticker, "low")],
+                "open": df[f"{ticker}_open"] if f"{ticker}_open" in df.columns else price,
+                "high": df[f"{ticker}_high"] if f"{ticker}_high" in df.columns else price,
+                "low": df[f"{ticker}_low"] if f"{ticker}_low" in df.columns else price,
                 "close": price,
                 "volume": volume
             }).dropna()
             if len(ticker_df) >= 60:
                 wyckoff_sc = wyckoff_score(ticker_df).iloc[-1]
                 wyckoff_ph = classify_wyckoff_phase(ticker_df)
-                # Wyckoff persistence robusta
                 wyckoff_score_series = wyckoff_score(ticker_df)
                 flow_signal_series = flow_z
                 persistence_series = wyckoff_persistence_robust(flow_signal_series, wyckoff_score_series, window=5)
-                wyckoff_persistence_val = persistence_series.iloc[-1]
+                wyckoff_persistence_val = persistence_series.iloc[-1] if not persistence_series.empty else 0
                 if pd.isna(wyckoff_persistence_val):
                     wyckoff_persistence_val = 0
-                # Wyckoff cycle detector
                 cycle_series = wyckoff_cycle_series(ticker_df)
-                wyckoff_cycle_val = cycle_series.iloc[-1]
+                wyckoff_cycle_val = cycle_series.iloc[-1] if not cycle_series.empty else 0
                 
                 # MICROSTRUCTURE QUALITY
                 from wyckoff_detector import range_compression, absorption_score
                 comp_raw = range_compression(ticker_df).iloc[-1]
                 compression = 1 - np.clip(comp_raw, 0, 1)
-                absorption = absorption_score(ticker_df).iloc[-1]   # ya en [0,1]
+                absorption = absorption_score(ticker_df).iloc[-1]
                 persistence_norm = wyckoff_persistence_val / 5.0
                 structure_quality = (compression + absorption + persistence_norm) / 3.0
                 structure_quality = np.clip(structure_quality, 0, 1)
@@ -298,14 +275,14 @@ def compute_stock_metrics(df, etf_ticker, stock_list):
                 "structure_quality": structure_quality,
                 "stability": stability
             })
-        except Exception:
+        except Exception as e:
+            # print(f"Error en {ticker}: {e}")  # opcional para depurar
             continue
 
     df_out = pd.DataFrame(results)
     if df_out.empty:
         return df_out
 
-    # Ordenación implícita (NO visible como score)
     df_out = df_out.sort_values(by=["rs_mom", "flow_z"], ascending=False)
     return df_out.reset_index(drop=True)
 
@@ -320,17 +297,13 @@ def generate_leader_section(
     df,
     holdings_df,
     output_csv_path="outputs/analisis_lideres.csv",
-    wls_weights=None   # nuevo parámetro
+    wls_weights=None
 ):
-    """
-    Genera líneas Markdown y guarda CSV con los datos de líderes sectoriales.
-    """
     lines = []
     all_data = []
 
     timestamp = pd.Timestamp.now().strftime('%Y-%m-%d %H:%M:%S')
 
-    # HEADER
     lines.append("# Análisis de Líderes Sectoriales\n")
     lines.append(f"**Fecha:** {timestamp}\n\n")
     lines.append("> Informe informativo. No constituye recomendación de inversión.\n\n")
@@ -355,11 +328,9 @@ def generate_leader_section(
         metrics_df["sector"] = sector
         all_data.append(metrics_df)
 
-        # Markdown sección
         lines.append(f"## Sector: {sector}\n")
         lines.append(f"- **Fase:** {fase}\n")
         lines.append(f"- **Operabilidad:** {oper}\n\n")
-        # Calcular WLS para este sector (para ordenar)
         sector_df = compute_wyckoff_leadership(metrics_df, weights=wls_weights)
         sector_df = sector_df.sort_values("wls", ascending=False)
         top_n = 3
@@ -375,15 +346,11 @@ def generate_leader_section(
             )
         lines.append("\n")
 
-    # CSV global con WLE
     if all_data:
         final_df = pd.concat(all_data, ignore_index=True)
         final_df = compute_wyckoff_leadership(final_df, weights=wls_weights)
         final_df = final_df.sort_values(["sector", "wls"], ascending=[True, False])
         
-        # =========================================================
-        # EDGE CONFIRMATION LAYER (ECL)
-        # =========================================================
         def compute_edge_score(row):
             F = np.tanh(row['flow_z'])
             P = np.tanh(row['rs_mom'])
@@ -395,9 +362,6 @@ def generate_leader_section(
         
         final_df['edge_score'] = final_df.apply(compute_edge_score, axis=1)
 
-        # =========================================================
-        # TREND READINESS (preparación para inicio de tendencia)
-        # =========================================================
         def compute_trend_readiness(row):
             alignment = row['edge_score']
             structure = np.tanh(row['wls'])

@@ -12,6 +12,12 @@ jobs:
       - name: Clonar repositorio
         uses: actions/checkout@v4
 
+      - name: Restaurar caché de datos de opciones
+        uses: actions/cache@v4
+        with:
+          path: data/options_volume
+          key: options-volume-v1
+
       - name: Configurar Python
         uses: actions/setup-python@v5
         with:
@@ -42,7 +48,7 @@ jobs:
           name: grafico-dispersion
           path: outputs/flow_dispersion.png
 
-      - name: Subir histórico de flujos
+      - name: Subir histórico de flujos (artifact)
         uses: actions/upload-artifact@v4
         with:
           name: historico-flujos
@@ -60,11 +66,23 @@ jobs:
       - name: Commit y push del histórico CFTC (si cambió)
         run: |
           git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git config.user.email "github-actions[bot]@users.noreply.github.com"
           if [ -f "data/cftc_history.csv" ]; then
             git add data/cftc_history.csv
             git commit -m "Actualizar histórico CFTC" || echo "No hay cambios"
             git push
           else
             echo "No existe data/cftc_history.csv, se omite el commit"
+          fi
+
+      - name: Commit y push del histórico de flujos (si cambió)
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          if [ -f "outputs/flow_history.csv" ]; then
+            git add outputs/flow_history.csv
+            git commit -m "Actualizar histórico de flujos" || echo "No hay cambios"
+            git push
+          else
+            echo "No existe outputs/flow_history.csv, se omite el commit"
           fi
