@@ -18,11 +18,11 @@ def download_hkex_pcr(start_date, end_date):
     if isinstance(start_date, str):
         start_date = pd.to_datetime(start_date)
     if isinstance(end_date, str):
-        end_date = pd.to_datetime(end_date)
-    
-    date_from = start_date.strftime("%Y/%#m/%#d")  # Ajuste para quitar ceros en mes/día
-    date_to = end_date.strftime("%Y/%#m/%#d")
-    
+        end_date = pd.to_datetime(end_date)   
+   
+    date_from = f"{start_date.year}/{start_date.month}/{start_date.day}"
+    date_to = f"{end_date.year}/{end_date.month}/{end_date.day}"
+
     url = "https://www.hkex.com.hk/eng/sorc/market_data/statistics_putcall_ratio.aspx"
     params = {
         'action': 'ajax',

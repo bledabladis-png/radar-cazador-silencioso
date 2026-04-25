@@ -122,28 +122,43 @@ def compute_rsi(price, window=14):
     rsi = 100 - (100 / (1 + rs))
     return rsi
 
-def prepare_multi_index(df):
+def prepare_multi_index(df, tickers_list=None):
     """
     Convierte el DataFrame plano del radar a un DataFrame con columnas planas
     de la forma 'TICKER_close', 'TICKER_volume', etc.
+    Si tickers_list no es None, solo procesa esos tickers.
+    Además, convierte cualquier columna que sea DataFrame en Serie (toma la primera columna).
     """
-    tickers = set()
-    for col in df.columns:
-        if "_" in col:
-            continue
-        tickers.add(col)
+    if tickers_list is None:
+        tickers = set()
+        for col in df.columns:
+            if "_" in col:
+                continue
+            tickers.add(col)
+    else:
+        tickers = tickers_list
+
     result = pd.DataFrame(index=df.index)
     for t in tickers:
         if t not in df.columns:
             continue
-        result[f"{t}_close"] = df[t]
+
+        def to_series(col_data):
+            if isinstance(col_data, pd.DataFrame):
+                return col_data.iloc[:, 0]
+            return col_data
+
+        result[f"{t}_close"] = to_series(df[t])
+
         vol_col = f"{t}_volume"
         if vol_col in df.columns:
-            result[f"{t}_volume"] = df[vol_col]
+            result[f"{t}_volume"] = to_series(df[vol_col])
+
         for suf in ['_open', '_high', '_low']:
             col = f"{t}{suf}"
             if col in df.columns:
-                result[f"{t}{suf}"] = df[col]
+                result[f"{t}{suf}"] = to_series(df[col])
+
     return result
 
 # =========================================================

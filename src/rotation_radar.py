@@ -48,8 +48,6 @@ def run_flow_radar(df, sectors=None):
         sectors = tickers['sectors']
     flows = compute_etf_flows(df, sectors)
     flow_mom = compute_flow_momentum(flows)
-    # Suavizado adicional (rolling 3) para reducir ruido - se mantiene
-    flow_mom = flow_mom.rolling(3).mean()
     latest_flow = flow_mom.iloc[-1]
     ranking_flow = latest_flow.sort_values(ascending=False)
     flow_dispersion = compute_flow_dispersion(flow_mom).iloc[-1]

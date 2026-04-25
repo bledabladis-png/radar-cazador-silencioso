@@ -967,21 +967,25 @@ def main():
     # Líderes
     try:
         holdings_df = pd.read_csv("data/etf_holdings.csv")
-        df_multi = prepare_multi_index(df)
-        leader_lines = generate_leader_section(
-            fase_dict,
-            operabilidad_dict,
-            sectors,
-            df_multi,
-            holdings_df,
-            wls_weights=wls_weights
-        )
-        if leader_lines:
-            with open("outputs/analisis_lideres.md", "w", encoding="utf-8") as f:
-                f.writelines(leader_lines)
-            print("Análisis de líderes generado.")
+        if 'ticker' not in holdings_df.columns:
+            print("[Líderes] El archivo de holdings no tiene columna 'ticker'. No se puede generar el análisis.")
         else:
-            print("No hay sectores favorables para líderes.")
+            tickers_para_lideres = holdings_df['ticker'].unique().tolist()
+            df_multi = prepare_multi_index(df, tickers_list=tickers_para_lideres)
+            leader_lines = generate_leader_section(
+                fase_dict,
+                operabilidad_dict,
+                sectors,
+                df_multi,
+                holdings_df,
+                wls_weights=wls_weights
+            )
+            if leader_lines:
+                with open("outputs/analisis_lideres.md", "w", encoding="utf-8") as f:
+                    f.writelines(leader_lines)
+                print("Análisis de líderes generado.")
+            else:
+                print("No hay sectores favorables para líderes.")
     except Exception as e:
         print(f"Advertencia en líderes: {e}")
 
