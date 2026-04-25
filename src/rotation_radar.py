@@ -60,25 +60,3 @@ def run_flow_radar(df, sectors=None):
         regime_flow = "FLUJO SELECTIVO"
     return ranking_flow, flow_dispersion, flow_breadth, regime_flow, flow_mom
 
-# ---------- Funciones de distribucion (binaria) ----------
-def divergence_score(price_mom, flow_mom):
-    p = np.tanh(price_mom)
-    f = np.tanh(flow_mom)
-    return p * (-f)
-
-def distribution_score_binary(price_mom, flow_mom, flow_acc, vol_z, weights=None):
-    if weights is None:
-        weights = {'divergence': 0.4, 'flow_neg': 0.2, 'flow_acc': 0.3, 'volume': 0.1}
-    score = 0.0
-    if price_mom > 0 and flow_mom < 0:
-        score += weights['divergence']
-    if flow_mom < -0.1:
-        score += weights['flow_neg']
-    if flow_acc < 0:
-        score += weights['flow_acc']
-    if vol_z > 1:
-        score += weights['volume']
-    return score
-
-def prob_distribution_binary(score, k=5):
-    return 1 / (1 + np.exp(-k * (score - 0.5)))

@@ -44,15 +44,6 @@ def compute_cftc_signal(df, window=52):
     df['cftc_z'] = (df['net_position'] - df['mean']) / df['std']
     return df
 
-def get_latest_cftc_signal_for_market(df_parsed, market_substring):
-    """Retorna la fila más reciente (última fecha) para un mercado que contiene la subcadena"""
-    mask = df_parsed['market'].str.contains(market_substring, case=False, na=False)
-    df_market = df_parsed[mask].copy()
-    if df_market.empty:
-        return None
-    df_market = df_market.sort_values('date')
-    return df_market.iloc[-1].to_dict()
-
 def update_cftc_history(raw_file="data/cftc_raw.txt", history_file="data/cftc_history.csv"):
     """
     Actualiza el histórico CFTC con los datos del archivo semanal raw.
@@ -88,12 +79,6 @@ def update_cftc_history(raw_file="data/cftc_raw.txt", history_file="data/cftc_hi
     combined.to_csv(history_file, index=False)
     print(f"[CFTC] Histórico actualizado: {len(combined)} registros totales.")
     return combined
-
-def get_cftc_history(history_file="data/cftc_history.csv"):
-    """Carga el histórico CFTC si existe."""
-    if os.path.exists(history_file):
-        return pd.read_csv(history_file)
-    return None
 
 def compute_cftc_zscore_from_history(history_file="data/cftc_history.csv", window=52):
     """

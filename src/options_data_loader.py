@@ -71,15 +71,3 @@ def get_historical_options_data(years, max_age_hours=23):
         return pd.concat(all_dfs, ignore_index=True)
     else:
         return pd.DataFrame()
-
-def get_total_options_volume(years):
-    """
-    Obtiene la serie diaria de volumen total de opciones en CBOE.
-    years: lista de años a cargar.
-    """
-    df = get_historical_options_data(years)
-    if df.empty:
-        return pd.Series(dtype=float)
-    total_vol = df.groupby('Trade Date')['Volume'].sum()
-    total_vol = total_vol.sort_index()
-    return total_vol

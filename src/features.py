@@ -68,19 +68,6 @@ def compute_etf_flows_robust(df, sectors, window=60):
         flows[s] = flow_z
     return pd.DataFrame(flows)
 
-def compute_etf_flows_original(df, sectors, window=60):
-    flows = {}
-    for s in sectors:
-        price = df[s]
-        dollar_vol = df[f"{s}_dollar_vol"]
-        ret = price.pct_change()
-        flow = ret * dollar_vol
-        mean = flow.rolling(window, min_periods=20).mean()
-        std = flow.rolling(window, min_periods=20).std()
-        flow_z = (flow - mean) / std
-        flows[s] = flow_z
-    return pd.DataFrame(flows)
-
 # Por compatibilidad, alias
 compute_etf_flows = compute_etf_flows_robust
 

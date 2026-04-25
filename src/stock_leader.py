@@ -6,8 +6,6 @@ No genera señales de trading, solo información cuantitativa.
 import pandas as pd
 import numpy as np
 
-from wyckoff_detector import wyckoff_score, classify_wyckoff_phase
-
 # =========================================================
 # WYCKOFF LEADERSHIP ENGINE (WLE) – VERSIÓN INSTITUCIONAL
 # =========================================================
@@ -73,25 +71,6 @@ def wyckoff_persistence_robust(flow_signal_series, wyckoff_score_series, window=
     signal = (flow_signal_series * wyckoff_score_series).clip(lower=0)
     binary = (signal > 0.25).astype(int)
     return binary.rolling(window).sum()
-
-def wyckoff_cycle_series(df):
-    from wyckoff_detector import detect_spring, detect_sos, wyckoff_score
-    spring = detect_spring(df)
-    sos = detect_sos(df)
-    score = wyckoff_score(df)
-
-    cycle = np.zeros(len(df))
-    spring_flag = False
-
-    for i in range(len(df)):
-        if spring.iloc[i] == 1:
-            spring_flag = True
-        accumulation = score.iloc[i] > 0.6
-        sos_now = sos.iloc[i] == 1
-        if spring_flag and accumulation and sos_now:
-            cycle[i] = 1
-            spring_flag = False
-    return pd.Series(cycle, index=df.index)
 
 # =========================================================
 # UTILIDADES
@@ -222,8 +201,6 @@ def compute_stock_metrics(df, etf_ticker, stock_list):
                 wyckoff_persistence_val = persistence_series.iloc[-1] if not persistence_series.empty else 0
                 if pd.isna(wyckoff_persistence_val):
                     wyckoff_persistence_val = 0
-                cycle_series = wyckoff_cycle_series(ticker_df)
-                wyckoff_cycle_val = cycle_series.iloc[-1] if not cycle_series.empty else 0
                 
                 # MICROSTRUCTURE QUALITY
                 from wyckoff_detector import range_compression, absorption_score
@@ -243,7 +220,6 @@ def compute_stock_metrics(df, etf_ticker, stock_list):
                 wyckoff_sc = np.nan
                 wyckoff_ph = "INSUFICIENTE"
                 wyckoff_persistence_val = 0
-                wyckoff_cycle_val = 0
                 structure_quality = 0.0
                 stability = 0.0
 
@@ -286,7 +262,6 @@ def compute_stock_metrics(df, etf_ticker, stock_list):
                 "wyckoff_score": wyckoff_sc,
                 "wyckoff_phase": wyckoff_ph,
                 "wyckoff_persistence": wyckoff_persistence_val,
-                "wyckoff_cycle": wyckoff_cycle_val,
                 "structure_quality": structure_quality,
                 "stability": stability
             })

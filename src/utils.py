@@ -8,50 +8,6 @@ import sys
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from config import tickers
 
-def save_ranking_csv(ranking, output_path='outputs/rankings.csv'):
-    new_row = pd.DataFrame([{
-        'fecha': pd.Timestamp.now().strftime("%Y-%m-%d %H:%M:%S"),
-        'top1': ranking[0][0],
-        'top1_mom': ranking[0][1],
-        'top2': ranking[1][0],
-        'top2_mom': ranking[1][1],
-        'top3': ranking[2][0],
-        'top3_mom': ranking[2][1],
-        'bottom1': ranking[-1][0],
-        'bottom1_mom': ranking[-1][1]
-    }])
-    if os.path.exists(output_path):
-        existing = pd.read_csv(output_path)
-        df = pd.concat([existing, new_row], ignore_index=True)
-    else:
-        df = new_row
-    df.to_csv(output_path, index=False)
-
-def save_flow_history(flow_mom, output_path='outputs/flow_history.csv'):
-    """
-    Guarda el histórico de flujos (z-scores) para todos los sectores definidos en config.py.
-    """
-    latest = flow_mom.iloc[-1]
-    dispersion = flow_mom.std(axis=1).iloc[-1]
-    breadth = (flow_mom.iloc[-1] > 0).sum() / len(flow_mom.columns)
-
-    # Construir diccionario con todos los sectores de config
-    sectors = tickers['sectors']
-    row_data = {'fecha': pd.Timestamp.now().strftime("%Y-%m-%d %H:%M:%S")}
-    for sec in sectors:
-        row_data[f'{sec}_flow'] = latest.get(sec, None)
-    row_data['dispersion'] = dispersion
-    row_data['breadth'] = breadth
-
-    new_row = pd.DataFrame([row_data])
-
-    if os.path.exists(output_path):
-        existing = pd.read_csv(output_path)
-        df = pd.concat([existing, new_row], ignore_index=True)
-    else:
-        df = new_row
-    df.to_csv(output_path, index=False)
-
 def plot_flow_dispersion(flow_mom, output_path='outputs/flow_dispersion.png'):
     disp = flow_mom.std(axis=1).iloc[-60:]
     if len(disp) < 5:
