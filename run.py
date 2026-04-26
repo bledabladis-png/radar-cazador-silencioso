@@ -514,10 +514,6 @@ def main():
                     stock_prices_df.index = pd.to_datetime(stock_prices_df.index)
                 stock_prices_df = stock_prices_df.reindex(df.index)
                 df = pd.concat([df, stock_prices_df], axis=1)
-                print("[DEBUG] Columnas en df después de fusión:", list(df.columns)[:10])
-                print("[DEBUG] ¿Existe 'NVDA_close'?", 'NVDA_close' in df.columns)
-                print("[DEBUG] ¿Existe 'AAPL_close'?", 'AAPL_close' in df.columns)
-                print("[DEBUG] shape de df:", df.shape)
                 print("[Líderes] Datos de acciones añadidos correctamente.")
             else:
                 print("[Líderes] Advertencia: stock_prices_df está vacío. No se añadirán datos de acciones.")
@@ -1045,14 +1041,6 @@ def main():
                 if missing_in_df:
                     print(f"[Líderes] Advertencia: los siguientes tickers no tienen datos y se omitirán: {missing_in_df}")
                 
-                print(f"[DEBUG] ¿Está 'XLK' en df_multi.columns? {'XLK' in df_multi.columns}")
-                print(f"[DEBUG] df_multi shape: {df_multi.shape}")
-                print(f"[DEBUG] Columnas de df_multi (primeras 10): {list(df_multi.columns[:10])}")
-                print(f"[DEBUG] Existe 'XLK_close' en df_multi? {'XLK_close' in df_multi.columns}")
-                print(f"[DEBUG] Existe 'NVDA_close' en df_multi? {'NVDA_close' in df_multi.columns}")                
-                print(f"[DEBUG] fase_dict['XLK'] = {fase_dict.get('XLK')}")
-                print(f"[DEBUG] operabilidad_dict['XLK'] = {operabilidad_dict.get('XLK')}")
-                print(f"[DEBUG] 'XLK' en sectors? {'XLK' in sectors}")
                 leader_lines = generate_leader_section(
                     fase_dict,
                     operabilidad_dict,

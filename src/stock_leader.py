@@ -1,6 +1,8 @@
 """
 stock_leader.py – Módulo de análisis de líderes sectoriales.
 No genera señales de trading, solo información cuantitativa.
+Versión v3.16: simplificación del CSV, WLS v2.0 (4 factores),
+penalización por colinealidad (Spearman, umbral 0.7).
 """
 
 import pandas as pd
@@ -8,13 +10,15 @@ import numpy as np
 from wyckoff_detector import wyckoff_score, classify_wyckoff_phase
 
 # =========================================================
-# WYCKOFF LEADERSHIP ENGINE (WLE) – VERSIÓN INSTITUCIONAL
+# WYCKOFF LEADERSHIP ENGINE (WLE) – VERSIÓN INSTITUCIONAL v2.0
 # =========================================================
 
 def compute_wyckoff_leadership(df, weights=None):
     """
     Calcula el Wyckoff Leadership Score (WLS) usando normalizaciones robustas (MAD).
-    Si weights es None, usa pesos fijos (25/25/20/20/10).
+    Versión v2.0: cuatro factores (RS, Flow, Estructura, Estabilidad).
+    Pesos por defecto: 0.35 RS, 0.30 Flow, 0.25 Estructura, 0.10 Estabilidad.
+    Incluye penalización por colinealidad (Spearman > 0.7 entre rs_mom y flow_z).
     """
     df = df.copy()
     
@@ -28,37 +32,52 @@ def compute_wyckoff_leadership(df, weights=None):
     mad_flow = np.median(np.abs(df["flow_z"] - median_flow))
     df["flow_z_norm"] = (df["flow_z"] - median_flow) / (mad_flow + 1e-9)
     
-    # 3. Persistence normalizada
-    df["persistence_norm"] = df["wyckoff_persistence"] / 5.0
-    
-    # 4. RWS con percentil 70 del sector
+    # 3. RWS con percentil 70 del sector (estructura relativa)
     baseline = df.groupby("sector")["wyckoff_score"].transform(
         lambda x: np.percentile(x, 70)
     )
     df["rws"] = df["wyckoff_score"] / (baseline + 1e-9)
     
-    # 5. Stability (si no existe, asignar 1)
+    # 4. Stability (si no existe, asignar 1)
     if "stability" not in df.columns:
         df["stability"] = 1.0
     
-    # 6. Aplicar pesos
+    # ============================================
+    # PENALIZACIÓN POR COLINEALIDAD (Spearman)
+    # ============================================
+    penalized_rs_z = df["rs_z"].copy()
+    penalized_flow_z_norm = df["flow_z_norm"].copy()
+    
+    for sector in df["sector"].unique():
+        mask = df["sector"] == sector
+        if mask.sum() < 5:  # mínimo de observaciones para correlación
+            continue
+        rs = df.loc[mask, "rs_mom"]
+        flow = df.loc[mask, "flow_z"]
+        rho = rs.corr(flow, method="spearman")
+        if pd.notna(rho) and rho > 0.7:
+            factor = 1 - min(1.0, (rho - 0.7) / 0.3)
+            # Penalizamos el factor flow (el que tiene mayor riesgo de redundancia)
+            penalized_flow_z_norm.loc[mask] = factor * df.loc[mask, "flow_z_norm"]
+            # (Opcionalmente también se podría penalizar el RS con un factor más suave)
+    
+    # ============================================
+    # PESOS Y CÁLCULO DEL WLS
+    # ============================================
     if weights is None:
-        w_rs = 0.25
-        w_flow = 0.25
-        w_persist = 0.20
-        w_structure = 0.20
+        w_rs = 0.35
+        w_flow = 0.30
+        w_structure = 0.25
         w_stab = 0.10
     else:
-        w_rs = weights.get("rs", 0.25)
-        w_flow = weights.get("flow", 0.25)
-        w_persist = weights.get("persist", 0.20)
-        w_structure = weights.get("structure", 0.20)
+        w_rs = weights.get("rs", 0.35)
+        w_flow = weights.get("flow", 0.30)
+        w_structure = weights.get("structure", 0.25)
         w_stab = weights.get("stability", 0.10)
     
     df["wls"] = (
-        w_rs * df["rs_z"] +
-        w_flow * df["flow_z_norm"] +
-        w_persist * df["persistence_norm"] +
+        w_rs * penalized_rs_z +
+        w_flow * penalized_flow_z_norm +
         w_structure * df["rws"] +
         w_stab * df["stability"]
     )
@@ -203,7 +222,7 @@ def compute_stock_metrics(df, etf_ticker, stock_list):
                 if pd.isna(wyckoff_persistence_val):
                     wyckoff_persistence_val = 0
                 
-                # MICROSTRUCTURE QUALITY
+                # MICROSTRUCTURE QUALITY (se mantiene internamente, pero no se exporta)
                 from wyckoff_detector import range_compression, absorption_score
                 comp_raw = range_compression(ticker_df).iloc[-1]
                 compression = 1 - np.clip(comp_raw, 0, 1)
@@ -230,10 +249,7 @@ def compute_stock_metrics(df, etf_ticker, stock_list):
             if pd.isna(persistence):
                 persistence = 0
 
-            # Divergencia inteligente
-            divergence = (flow_signal > 0.5) and (rs_mom < 0)
-
-            # RSI y warnings
+            # RSI y advertencias (solo para información del CSV simplificado, pero no se exportan)
             rsi = compute_rsi(price).iloc[-1]
             ma20 = price.rolling(20).mean().iloc[-1]
             extended = price.iloc[-1] > 1.15 * ma20
@@ -250,27 +266,23 @@ def compute_stock_metrics(df, etf_ticker, stock_list):
             if np.isnan(rs_mom) or np.isnan(flow_signal):
                 continue
 
+            # Solo añadimos las columnas que se van a exportar (10 columnas finales)
             results.append({
                 "ticker": ticker,
                 "rs": rs.iloc[-1],
                 "rs_mom": rs_mom,
-                "rs_trend": rs_trend,
                 "flow_z": flow_signal,
-                "divergence": divergence,
-                "rsi": rsi,
-                "warnings": ", ".join(warnings) if warnings else "-",
-                "persistence": persistence,
                 "wyckoff_score": wyckoff_sc,
                 "wyckoff_phase": wyckoff_ph,
-                "wyckoff_persistence": wyckoff_persistence_val,
-                "structure_quality": structure_quality,
-                "stability": stability
+                "persistence": persistence,
+                "stability": stability,
+                # Nota: 'sector' se añadirá después en generate_leader_section
             })
         except Exception as e:
+            # Error silencioso (se omite ticker problemático)
             continue
 
     df_out = pd.DataFrame(results)
-    print(f"[DEBUG compute_stock_metrics] total resultados: {len(results)}")
     if df_out.empty:
         return df_out
 
@@ -328,9 +340,10 @@ def generate_leader_section(
         lines.append("| Ticker | RS | RS Mom | Flow (z) | RSI | WLS |\n")
         lines.append("|--------|----|--------|-----------|-----|-----|\n")
         for _, row in top_leaders.iterrows():
+            # RSI se omite en la tabla porque no está en el CSV simplificado
             lines.append(
                 f"| {row['ticker']} | {row['rs']:.3f} | {row['rs_mom']:.2%} | "
-                f"{row['flow_z']:.2f} | {row['rsi']:.1f} | {row['wls']:.2f} |\n"
+                f"{row['flow_z']:.2f} | - | {row['wls']:.2f} |\n"
             )
         lines.append("\n")
 
@@ -339,30 +352,18 @@ def generate_leader_section(
         final_df = compute_wyckoff_leadership(final_df, weights=wls_weights)
         final_df = final_df.sort_values(["sector", "wls"], ascending=[True, False])
         
-        def compute_edge_score(row):
-            F = np.tanh(row['flow_z'])
-            P = np.tanh(row['rs_mom'])
-            S = np.tanh(row['wls'])
-            signals = np.array([F, P, S])
-            alignment = np.mean(signals)
-            consistency = 1 - np.std(signals)
-            return alignment * consistency
-        
-        final_df['edge_score'] = final_df.apply(compute_edge_score, axis=1)
-
-        def compute_trend_readiness(row):
-            alignment = row['edge_score']
-            structure = np.tanh(row['wls'])
-            persistence = row['wyckoff_persistence'] / 5.0
-            stability = np.tanh(row['stability'])
-            score = (0.35 * alignment + 0.25 * structure +
-                     0.20 * persistence + 0.20 * stability)
-            return np.clip(score, -1, 1)
-
-        final_df['trend_readiness'] = final_df.apply(compute_trend_readiness, axis=1)
+        # Seleccionar solo las columnas que interesan al gestor (simplificación)
+        columnas_finales = [
+            "ticker", "sector", "rs", "rs_mom", "flow_z", 
+            "wyckoff_score", "wyckoff_phase", "persistence", "stability", "wls"
+        ]
+        # Asegurar que existan (por si alguna falta)
+        columnas_existentes = [c for c in columnas_finales if c in final_df.columns]
+        final_df = final_df[columnas_existentes]
         
         final_df.to_csv(output_csv_path, index=False)
-        return lines   # <--- ESTA ES LA LÍNEA CLAVE
+        print(f"Análisis de líderes CSV generado: {output_csv_path}")
+        return lines
     else:
-        print("[DEBUG] No se pudo generar análisis de líderes: all_data vacío")
+        print("No se pudo generar análisis de líderes: all_data vacío")
         return None

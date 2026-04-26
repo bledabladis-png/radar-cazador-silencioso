@@ -1,6 +1,6 @@
 """
 backtest_wls.py – Validación estadística completa del Wyckoff Leadership Score (WLS).
-Métricas: IC, rank IC, turnover, alpha decay, horizon decay layer, stability surface.
+Métricas: IC, rank IC, turnover, alpha decay, horizon decay layer, stability surface POR RÉGIMEN.
 No genera señales de trading; solo diagnóstico.
 """
 
@@ -51,6 +51,72 @@ def load_price_data(price_csv="data/market_data.csv"):
     df_price = pd.read_csv(price_csv, index_col=0, parse_dates=True)
     ticker_cols = [c for c in df_price.columns if '_' not in c]
     return df_price[ticker_cols]
+
+def compute_regime_for_date(df, date):
+    """
+    Calcula el régimen cuantitativo para una fecha específica usando el DataFrame de mercado.
+    Retorna: "EXPANSION", "TRANSITION", "CONTRACTION"
+    """
+    # Tomar datos hasta la fecha (sin look-ahead)
+    sub_df = df.loc[:date].copy()
+    if len(sub_df) < 200:
+        return "TRANSITION"  # insuficiente histórico
+    spy_close = sub_df['SPY']
+    spy_ma50 = spy_close.rolling(50).mean().iloc[-1]
+    spy_ma200 = spy_close.rolling(200).mean().iloc[-1]
+    trend_raw = (spy_ma50 / spy_ma200 - 1) * 5
+    trend_norm = (np.tanh(trend_raw) + 1) / 2
+    
+    # Breadth simplificado (puede mejorarse, pero para régimen es suficiente)
+    sectors = ['XLK', 'XLF', 'XLE', 'XLI', 'XLY', 'XLP', 'XLV', 'XLU', 'XLRE']
+    breadth = 0
+    for sec in sectors:
+        if sec in sub_df.columns:
+            above = int(sub_df[sec].iloc[-1] > sub_df[sec].rolling(100).mean().iloc[-1])
+            breadth += above
+    breadth_signal = - (breadth / len(sectors) - 0.5) * 2  # convertir a valor en [-1,1]
+    breadth_norm = np.clip((breadth_signal + 0.5) / 1.5, 0, 1)
+    
+    # VIX
+    vix = sub_df['^VIX'].dropna()
+    if len(vix) >= 60:
+        vix_z = (vix.iloc[-1] - vix.rolling(60).mean().iloc[-1]) / vix.rolling(60).std().iloc[-1]
+    else:
+        vix_z = 0
+    if len(vix) >= 5:
+        slope = np.polyfit(range(5), vix.tail(5).values, 1)[0]
+        vix_trend = np.tanh(slope)
+    else:
+        vix_trend = 0
+    vix_component = np.exp(-vix_z) * (1 - vix_trend)
+    vix_component = np.clip(vix_component, 0, 1)
+    
+    # Crédito
+    if 'HYG' in sub_df.columns and 'LQD' in sub_df.columns:
+        credit_ratio = sub_df['HYG'] / sub_df['LQD']
+        credit_z = (credit_ratio.iloc[-1] - credit_ratio.rolling(60).mean().iloc[-1]) / (credit_ratio.rolling(60).std().iloc[-1] + 1e-9)
+        credit_norm = 1 - np.clip(credit_z, 0, 2) / 2
+    else:
+        credit_norm = 0.5
+    
+    regime_score = 0.4 * trend_norm + 0.2 * breadth_norm + 0.2 * vix_component + 0.2 * credit_norm
+    if regime_score > 0.6:
+        return "EXPANSION"
+    elif regime_score < 0.4:
+        return "CONTRACTION"
+    else:
+        return "TRANSITION"
+
+def add_regime_column(df_leaders, market_df):
+    """
+    Añade la columna 'regime' al DataFrame de líderes basándose en la fecha.
+    """
+    regimes = []
+    for fecha in df_leaders['fecha']:
+        regime = compute_regime_for_date(market_df, fecha)
+        regimes.append(regime)
+    df_leaders['regime'] = regimes
+    return df_leaders
 
 # =========================================================
 # CÁLCULO DE RETORNOS FORWARD
@@ -219,7 +285,7 @@ def interpret_weighted_alpha(weighted_alpha):
 # =========================================================
 
 if __name__ == "__main__":
-    print("=== Backtest completo del Wyckoff Leadership Score (WLS) ===\n")
+    print("=== Backtest completo del Wyckoff Leadership Score (WLS) con régimen ===\n")
     try:
         # 1. Cargar datos de líderes
         df = load_historical_leaders()
@@ -230,8 +296,24 @@ if __name__ == "__main__":
         prices = load_price_data()
         print(f"Datos de precios: {prices.shape[0]} días, {prices.shape[1]} tickers\n")
 
-        # 3. Backtest por horizonte
+        # 3. Cargar mercado para régimen
+        market_df = pd.read_csv("data/market_data.csv", index_col=0, parse_dates=True)
+        print("Añadiendo columna 'regime' a los datos de líderes...")
+        df = add_regime_column(df, market_df)
+        print(f"Regímenes encontrados: {df['regime'].unique()}")
+
+        # 4. Precalcular retornos forward para horizontes 5,10,20 días
+        print("Calculando retornos forward...")
+        for h in [5,10,20]:
+            col = f"forward_{h}d"
+            df[col] = df.apply(
+                lambda r: compute_forward_return(prices, r['ticker'], r['fecha'], h),
+                axis=1
+            )
+
+        # 5. Backtest por horizonte (global)
         res = backtest_wls(df, prices)
+        print("\n=== BACKTEST GLOBAL ===")
         for h, metrics in res.items():
             if metrics is None:
                 print(f"Horizonte {h}d: Sin datos suficientes.")
@@ -245,33 +327,29 @@ if __name__ == "__main__":
             print(f"Top decile turnover: {metrics['mean_turnover']:.2%}")
             print(f"Días válidos: {metrics['num_days']}")
 
-        # 4. Horizon Decay Layer
+        # 6. Horizon Decay Layer
         weighted_alpha, decay_weights = weighted_horizon_score(res)
         print("\n=== HORIZON DECAY LAYER (HDL) ===")
         print(f"Pesos por horizonte (λ=0.08): {decay_weights}")
         print(f"Alpha ponderado por decaimiento: {weighted_alpha:.5f}")
         print(f"Interpretación: {interpret_weighted_alpha(weighted_alpha)}")
 
-        # 5. WLS Stability Surface (si existe columna 'regime')
-        # Si no existe, se puede generar a partir del regime_score histórico.
-        # Por simplicidad, se omite si no está disponible.
-        if 'regime' in df.columns:
-            # Asegurar columnas forward_{h}d para cada horizonte
-            for h in [5,10,20]:
-                col = f'forward_{h}d'
-                if col not in df.columns:
-                    # Calcular sobre la marcha (costoso, se hace por cada ticker)
-                    # Se recomienda precalcular en el script de backtest con los precios.
-                    # Aquí asumimos que ya existen.
-                    pass
-            surface = compute_wls_stability_surface(df)
-            print("\n=== WLS STABILITY SURFACE (IC por régimen) ===")
-            print(surface)
-            ess = edge_strength_score(surface)
-            print(f"Edge Strength Score (ESS): {ess:.3f}")
-        else:
-            print("\n=== WLS STABILITY SURFACE ===")
-            print("No se encontró columna 'regime' en los datos. Omitiendo superficie.")
+        # 7. WLS Stability Surface por régimen
+        surface = compute_wls_stability_surface(df)
+        print("\n=== WLS STABILITY SURFACE (IC por régimen) ===")
+        print(surface)
+        ess = edge_strength_score(surface)
+        print(f"\nEdge Strength Score (ESS): {ess:.3f}")
+
+        # 8. IC medio por régimen (adicional)
+        print("\n=== IC MEDIO POR RÉGIMEN (Spearman, horizonte 10d) ===")
+        for regime in df['regime'].unique():
+            df_reg = df[df['regime'] == regime].dropna(subset=['forward_10d', 'wls'])
+            if len(df_reg) < 30:
+                print(f"{regime}: datos insuficientes")
+                continue
+            ic = spearmanr(df_reg['wls'], df_reg['forward_10d'])[0]
+            print(f"{regime}: IC = {ic:.3f} (n={len(df_reg)})")
 
     except Exception as e:
         print(f"Error durante el backtest: {e}")
