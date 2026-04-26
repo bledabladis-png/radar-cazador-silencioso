@@ -7,7 +7,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), 'src'))
 
 from data_loader import download_market_data
 from rotation_radar import run_radar, run_flow_radar
-from utils import save_flow_history, plot_flow_dispersion, save_markdown_report
+from utils import plot_flow_dispersion, save_markdown_report
 from features import compute_volume_zscore, compute_flow_acceleration, compute_price_zscore, compute_acceleration_zscore, compute_features
 from macro_confirm import compute_macro_score
 from stock_leader import prepare_multi_index, generate_leader_section
@@ -16,6 +16,7 @@ from flow_attribution import FlowAttributionEngine
 from oms import compute_oms, classify_oms, oms_modifier
 from options_data_loader import get_historical_options_data 
 from hkex_pcr import get_hkex_pcr_series
+from stock_data_loader import fetch_stock_prices
 
 # ------------------------------------------------------------
 # FUNCIONES AUXILIARES (sin cambios)
@@ -492,6 +493,38 @@ def compute_synthetic_factors(cftc_sector_z):
 def main():
     print("=== RADAR DE ROTACION SECTORIAL v3.15 (con persistencia informativa) ===\n")
     df = download_market_data()
+
+    # ---------------------------------------------------------
+    # CARGA DE DATOS DE ACCIONES PARA EL ANÁLISIS DE LÍDERES
+    # ---------------------------------------------------------
+    stock_prices_df = None
+    holdings_df = None
+    tickers_para_lideres = []
+    try:
+        holdings_df = pd.read_csv("data/etf_holdings.csv")
+        if 'ticker' not in holdings_df.columns:
+            print("[Líderes] El archivo de holdings no tiene columna 'ticker'. No se podrá generar análisis.")
+        else:
+            tickers_para_lideres = holdings_df['ticker'].unique().tolist()
+            print(f"[Líderes] Se descargarán/cachearán precios para {len(tickers_para_lideres)} tickers.")
+            stock_prices_df = fetch_stock_prices(tickers_para_lideres, force=False)
+            if not stock_prices_df.empty:
+                # Normalizar índices para alinear con df
+                if not isinstance(stock_prices_df.index, pd.DatetimeIndex):
+                    stock_prices_df.index = pd.to_datetime(stock_prices_df.index)
+                stock_prices_df = stock_prices_df.reindex(df.index)
+                df = pd.concat([df, stock_prices_df], axis=1)
+                print("[DEBUG] Columnas en df después de fusión:", list(df.columns)[:10])
+                print("[DEBUG] ¿Existe 'NVDA_close'?", 'NVDA_close' in df.columns)
+                print("[DEBUG] ¿Existe 'AAPL_close'?", 'AAPL_close' in df.columns)
+                print("[DEBUG] shape de df:", df.shape)
+                print("[Líderes] Datos de acciones añadidos correctamente.")
+            else:
+                print("[Líderes] Advertencia: stock_prices_df está vacío. No se añadirán datos de acciones.")
+    except Exception as e:
+        print(f"[Líderes] Error al cargar datos de acciones: {e}")
+        stock_prices_df = None
+
     features = compute_features(df)
     
     vix_z = features['vix_z'].iloc[-1]
@@ -965,29 +998,77 @@ def main():
     os.remove(temp_md)
 
     # Líderes
-    try:
-        holdings_df = pd.read_csv("data/etf_holdings.csv")
-        if 'ticker' not in holdings_df.columns:
-            print("[Líderes] El archivo de holdings no tiene columna 'ticker'. No se puede generar el análisis.")
-        else:
-            tickers_para_lideres = holdings_df['ticker'].unique().tolist()
-            df_multi = prepare_multi_index(df, tickers_list=tickers_para_lideres)
-            leader_lines = generate_leader_section(
-                fase_dict,
-                operabilidad_dict,
-                sectors,
-                df_multi,
-                holdings_df,
-                wls_weights=wls_weights
-            )
-            if leader_lines:
-                with open("outputs/analisis_lideres.md", "w", encoding="utf-8") as f:
-                    f.writelines(leader_lines)
-                print("Análisis de líderes generado.")
+    if stock_prices_df is None:
+        print("[Líderes] No se generará análisis porque no se pudieron cargar datos de acciones.")
+    else:
+        try:
+            holdings_df = pd.read_csv("data/etf_holdings.csv")
+            if 'ticker' not in holdings_df.columns:
+                print("[Líderes] El archivo de holdings no tiene columna 'ticker'.")
             else:
-                print("No hay sectores favorables para líderes.")
-    except Exception as e:
-        print(f"Advertencia en líderes: {e}")
+                tickers_para_lideres = holdings_df['ticker'].unique().tolist()
+                # Construir df_multi con columnas de acciones y de ETFs sectoriales
+                cols_to_keep = []
+                # 1. Añadir columnas de acciones (close, volume, open, high, low)
+                for t in tickers_para_lideres:
+                    close_col = f"{t}_close"
+                    vol_col = f"{t}_volume"
+                    if close_col in df.columns:
+                        cols_to_keep.append(close_col)
+                    if vol_col in df.columns:
+                        cols_to_keep.append(vol_col)
+                    for suf in ['_open', '_high', '_low']:
+                        col = f"{t}{suf}"
+                        if col in df.columns:
+                            cols_to_keep.append(col)
+                # 2. Añadir columnas de los ETFs sectoriales (precio, volumen, open, high, low)
+                for sec in sectors:
+                    if sec in df.columns:
+                        cols_to_keep.append(sec)  # precio close
+                    vol_etf = f"{sec}_volume"
+                    if vol_etf in df.columns:
+                        cols_to_keep.append(vol_etf)
+                    for suf in ['_open', '_high', '_low']:
+                        col = f"{sec}{suf}"
+                        if col in df.columns:
+                            cols_to_keep.append(col)
+                # Seleccionar columnas y construir df_multi
+                if cols_to_keep:
+                    df_multi = df[cols_to_keep]
+                    print(f"[Líderes] Construido df_multi con {len(cols_to_keep)} columnas.")
+                else:
+                    df_multi = pd.DataFrame()
+                    print("[Líderes] No se encontraron columnas de acciones o ETFs.")
+                
+                # Verificar tickers sin datos
+                missing_in_df = [t for t in tickers_para_lideres if f"{t}_close" not in df.columns]
+                if missing_in_df:
+                    print(f"[Líderes] Advertencia: los siguientes tickers no tienen datos y se omitirán: {missing_in_df}")
+                
+                print(f"[DEBUG] ¿Está 'XLK' en df_multi.columns? {'XLK' in df_multi.columns}")
+                print(f"[DEBUG] df_multi shape: {df_multi.shape}")
+                print(f"[DEBUG] Columnas de df_multi (primeras 10): {list(df_multi.columns[:10])}")
+                print(f"[DEBUG] Existe 'XLK_close' en df_multi? {'XLK_close' in df_multi.columns}")
+                print(f"[DEBUG] Existe 'NVDA_close' en df_multi? {'NVDA_close' in df_multi.columns}")                
+                print(f"[DEBUG] fase_dict['XLK'] = {fase_dict.get('XLK')}")
+                print(f"[DEBUG] operabilidad_dict['XLK'] = {operabilidad_dict.get('XLK')}")
+                print(f"[DEBUG] 'XLK' en sectors? {'XLK' in sectors}")
+                leader_lines = generate_leader_section(
+                    fase_dict,
+                    operabilidad_dict,
+                    sectors,
+                    df_multi,
+                    holdings_df,
+                    wls_weights=wls_weights
+                )
+                if leader_lines:
+                    with open("outputs/analisis_lideres.md", "w", encoding="utf-8") as f:
+                        f.writelines(leader_lines)
+                    print("Análisis de líderes generado.")
+                else:
+                    print("No hay sectores favorables para líderes.")
+        except Exception as e:
+            print(f"Advertencia en líderes: {e}")
 
     print("\nHistorico de flujos guardado en outputs/flow_history.csv")
     print("Grafico de dispersion guardado en outputs/flow_dispersion.png")

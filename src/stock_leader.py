@@ -5,6 +5,7 @@ No genera señales de trading, solo información cuantitativa.
 
 import pandas as pd
 import numpy as np
+from wyckoff_detector import wyckoff_score, classify_wyckoff_phase
 
 # =========================================================
 # WYCKOFF LEADERSHIP ENGINE (WLE) – VERSIÓN INSTITUCIONAL
@@ -151,7 +152,7 @@ def compute_stock_metrics(df, etf_ticker, stock_list):
     """
     results = []
 
-    close_col = f"{etf_ticker}_close"
+    close_col = etf_ticker   # El precio del ETF está en la columna con su ticker
     if close_col not in df.columns:
         return pd.DataFrame()
 
@@ -266,10 +267,10 @@ def compute_stock_metrics(df, etf_ticker, stock_list):
                 "stability": stability
             })
         except Exception as e:
-            # print(f"Error en {ticker}: {e}")  # opcional para depurar
             continue
 
     df_out = pd.DataFrame(results)
+    print(f"[DEBUG compute_stock_metrics] total resultados: {len(results)}")
     if df_out.empty:
         return df_out
 
@@ -306,13 +307,10 @@ def generate_leader_section(
         oper = operabilidad_dict.get(sector, "NO OPERAR")
         if fase not in VALID_FASES or oper not in VALID_OPER:
             continue
-
-        etf_ticker = sector
-        stocks = holdings_df[holdings_df['etf'] == etf_ticker]['ticker'].tolist()
+        stocks = holdings_df[holdings_df['etf'] == sector]['ticker'].tolist()
         if not stocks:
             continue
-
-        metrics_df = compute_stock_metrics(df, etf_ticker, stocks)
+        metrics_df = compute_stock_metrics(df, sector, stocks)
         if metrics_df.empty:
             continue
         metrics_df["sector"] = sector
@@ -364,3 +362,7 @@ def generate_leader_section(
         final_df['trend_readiness'] = final_df.apply(compute_trend_readiness, axis=1)
         
         final_df.to_csv(output_csv_path, index=False)
+        return lines   # <--- ESTA ES LA LÍNEA CLAVE
+    else:
+        print("[DEBUG] No se pudo generar análisis de líderes: all_data vacío")
+        return None
