@@ -1,0 +1,65 @@
+name: Validación Mensual de Líderes
+
+on:
+  schedule:
+    # Primer día de cada mes a las 8:00 UTC
+    - cron: '0 8 1 * *'
+  workflow_dispatch:   # ejecución manual
+
+permissions:
+  contents: write       # necesario para subir los CSVs históricos
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Clonar repositorio
+        uses: actions/checkout@v4
+
+      - name: Configurar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Instalar dependencias
+        run: pip install -r requirements.txt
+
+      - name: Crear carpetas necesarias
+        run: |
+          mkdir -p data data/historical_leaders outputs
+
+      - name: Ejecutar radar diario (para generar líderes del día)
+        run: python run.py
+        # Esto produce outputs/analisis_lideres.csv si hay sectores favorables
+
+      - name: Guardar líderes del mes en histórico
+        run: |
+          FECHA=$(date +%Y%m%d)
+          if [ -f outputs/analisis_lideres.csv ]; then
+            cp outputs/analisis_lideres.csv "data/historical_leaders/analisis_lideres_${FECHA}.csv"
+            echo "Histórico guardado para fecha ${FECHA}"
+          else
+            echo "No se generó análisis de líderes (sectores no favorables). No se guarda histórico."
+          fi
+
+      - name: Ejecutar validación de líderes (usando todos los históricos)
+        run: python src/validate_leaders.py
+
+      - name: Subir informe de validación como artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: leader-validation-report
+          path: outputs/leader_validation/*.txt
+
+      - name: Commit y push de los históricos acumulados
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          # Si hay cambios en data/historical_leaders, hacer commit
+          if [ -n "$(git status data/historical_leaders --porcelain)" ]; then
+            git add data/historical_leaders/*.csv
+            git commit -m "Añadir histórico de líderes del mes"
+            git push
+          else
+            echo "No hay nuevos archivos históricos para subir"
+          fi

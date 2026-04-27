@@ -249,6 +249,11 @@ def compute_stock_metrics(df, etf_ticker, stock_list):
             if pd.isna(persistence):
                 persistence = 0
 
+            # Persistencia a 10 días
+            persistence_10d = flow_positive.rolling(10, min_periods=10).sum().iloc[-1]
+            if pd.isna(persistence_10d):
+                persistence_10d = 0
+
             # RSI y advertencias (solo para información del CSV simplificado, pero no se exportan)
             rsi = compute_rsi(price).iloc[-1]
             ma20 = price.rolling(20).mean().iloc[-1]
@@ -275,8 +280,8 @@ def compute_stock_metrics(df, etf_ticker, stock_list):
                 "wyckoff_score": wyckoff_sc,
                 "wyckoff_phase": wyckoff_ph,
                 "persistence": persistence,
+                "persistence_10d": persistence_10d,
                 "stability": stability,
-                # Nota: 'sector' se añadirá después en generate_leader_section
             })
         except Exception as e:
             # Error silencioso (se omite ticker problemático)
@@ -352,10 +357,14 @@ def generate_leader_section(
         final_df = compute_wyckoff_leadership(final_df, weights=wls_weights)
         final_df = final_df.sort_values(["sector", "wls"], ascending=[True, False])
         
+        # Añadir percentil del WLS dentro de cada sector
+        final_df['sector_rank_pct'] = final_df.groupby('sector')['wls'].rank(pct=True)
+        
         # Seleccionar solo las columnas que interesan al gestor (simplificación)
         columnas_finales = [
             "ticker", "sector", "rs", "rs_mom", "flow_z", 
-            "wyckoff_score", "wyckoff_phase", "persistence", "stability", "wls"
+            "wyckoff_score", "wyckoff_phase", "persistence", "persistence_10d",
+            "stability", "wls", "sector_rank_pct"
         ]
         # Asegurar que existan (por si alguna falta)
         columnas_existentes = [c for c in columnas_finales if c in final_df.columns]

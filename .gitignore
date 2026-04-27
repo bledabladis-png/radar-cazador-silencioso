@@ -27,3 +27,6 @@ Thumbs.db
 # Copias de seguridad locales (opcional)
 *_backup.py
 *_copia.py
+
+# Históricos de líderes (sí se versionan)
+!data/historical_leaders/
