@@ -82,6 +82,6 @@ def compute_acceleration_zscore(flow_acc_df, window=20):
     acc_z = pd.DataFrame(index=flow_acc_df.index)
     for col in flow_acc_df.columns:
         mean = flow_acc_df[col].rolling(window, min_periods=10).mean()
-        std = flow_acc_df[col].rolling(window, min_periods=10).std()
+        std = flow_acc_df[col].rolling(window, min_periods=10).std() + 1e-9
         acc_z[col] = (flow_acc_df[col] - mean) / std
     return acc_z

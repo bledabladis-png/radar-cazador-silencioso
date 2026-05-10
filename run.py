@@ -243,7 +243,7 @@ def unified_score(prob_bin, prob_cont, conviction, vix_z):
     return score * vol_factor
 
 def opportunity_score(price_mom, flow_mom, flow_acc, vol_z, phase):
-    base = 0.4 * flow_mom + 0.3 * price_mom + 0.2 * flow_acc + 0.1 * vol_z
+    base = 0.4 * flow_mom + 0.3 * price_mom + 0.2 * np.tanh(flow_acc) + 0.1 * vol_z
     if phase in ["ACUMULACION", "ACUMULACION FUERTE"]: base += 0.2
     elif phase in ["DISTRIBUCION CONFIRMADA", "DISTRIBUCION TEMPRANA"]: base -= 0.2
     return base
