@@ -106,9 +106,9 @@ def generate_global_section_v4(df_global):
     # -------------------------------------------
     # LOOK-AHEAD MITIGATION
     # -------------------------------------------
-    flow_df = flow_df.shift(1).dropna()
-    direction_df = direction_df.shift(1).dropna()
-    weekly_returns_shifted = weekly_returns.shift(1).dropna()
+    flow_df = flow_df.shift(1).iloc[1:]           # elimina solo la primera fila NaN
+    direction_df = direction_df.shift(1).iloc[1:]
+    weekly_returns_shifted = weekly_returns.shift(1).iloc[1:]
 
     if flow_df.empty or direction_df.empty or weekly_returns_shifted.empty:
         lines.append("*Datos semanales insuficientes tras ajuste de look-ahead.*\n")
