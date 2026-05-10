@@ -26,9 +26,12 @@ def validate_global_data(df_global):
             issues[ticker] = 'DATA ISSUE (close <=0)'
             continue
         weekly_ret = close.pct_change(periods=5, fill_method=None).dropna()
-        if (abs(weekly_ret) > 0.25).any():
-            issues[ticker] = 'DATA ISSUE (extreme weekly return)'
+        if (abs(weekly_ret) > 0.40).any():
+            issues[ticker] = 'DATA ISSUE (extreme weekly return >40%)'
             continue
+        elif (abs(weekly_ret) > 0.25).any():
+            issues[ticker] = 'EXTREME EVENT (ret >25%, señal válida pero inusual)'
+            # no se excluye, solo se marca
         valid_cols.append(ticker)
     return valid_cols, issues
 
@@ -53,6 +56,29 @@ def compute_weekly_data(df_global, valid_tickers):
     # Retornos semanales (viernes a viernes)
     weekly_returns = closes_weekly.pct_change(fill_method=None).dropna()
     return weekly_returns, volumes_weekly, closes_weekly
+
+# ------------------------------------------------------------
+# FUNCIÓN AUXILIAR PARA EL GLOBAL RISK SCORE
+# ------------------------------------------------------------
+def compute_global_risk_score(pwm_spy, pwm_ezu, pwm_ewj, pwm_eem, hyg_pwm):
+    """Global Risk Score v4.0.1 – todas las componentes normalizadas a [0,1]."""
+    sigmoid = lambda x: (np.tanh(x) + 1) / 2
+
+    # Breadth geográfico continuo
+    geo_continuous = np.mean([
+        sigmoid(pwm_spy), sigmoid(pwm_ezu), sigmoid(pwm_ewj), sigmoid(pwm_eem)
+    ])
+    
+    # PWM alignment: fracción de bloques que coinciden en signo con la mediana
+    signs = np.sign([pwm_spy, pwm_ezu, pwm_ewj, pwm_eem])
+    median_sign = np.sign(np.median([pwm_spy, pwm_ezu, pwm_ewj, pwm_eem]))
+    pwm_align_norm = (signs == median_sign).mean()   # [0,1], independiente de geo_continuous
+    
+    # HYG confirmación continua (sin discontinuidad en cero)
+    hyg_confirm = (np.tanh(hyg_pwm) * np.tanh(pwm_spy) + 1) / 2
+    
+    score = 0.50 * geo_continuous + 0.45 * pwm_align_norm + 0.05 * hyg_confirm
+    return np.clip(score, 0, 1)
 
 # ------------------------------------------------------------
 # GENERADOR PRINCIPAL
@@ -110,7 +136,8 @@ def generate_global_section_v4(df_global):
     participation = flow_participation_ratio(flow_df, FLOW_ASSETS['equity'])
 
     # Risk metrics
-    vol_regime = compute_volatility_regime(weekly_returns_shifted, RISK_ASSETS['equity'])
+    risk_assets_available = [t for t in RISK_ASSETS['equity'] if t in weekly_returns_shifted.columns]
+    vol_regime = compute_volatility_regime(weekly_returns_shifted, risk_assets_available) if risk_assets_available else 1.0
     risk_breadth = compute_risk_breadth(direction_df, RISK_ASSETS['equity'])
 
     # Cross-Region metrics

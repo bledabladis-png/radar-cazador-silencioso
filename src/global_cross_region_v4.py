@@ -20,12 +20,12 @@ def compute_region_alignment(weekly_returns, region_map, window=4):
             region_returns[region] = weekly_returns[cols].mean(axis=1)
     
     if len(region_returns.columns) < 2:
-        return 0.5, 0.0  # neutral, sin señal
+        return 0.5  # neutral, sin señal
     
     # Correlación media entre regiones (ventana móvil)
     corr_matrix = region_returns.rolling(window).corr().dropna()
     if corr_matrix.empty:
-        return 0.5, 0.0
+        return 0.5
     
     # Última matriz de correlación
     last_corr = corr_matrix.iloc[-len(regions):]

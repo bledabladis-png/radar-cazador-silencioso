@@ -15,7 +15,8 @@ def compute_risk_direction(weekly_returns, window=20):
     for t in weekly_returns.columns:
         ret = weekly_returns[t]
         vol = ret.rolling(window).std()
-        vol_floor = max(vol.rolling(252, min_periods=20).quantile(0.1).iloc[-1], 0.01)
+        vol_rolling_quantile = vol.rolling(252, min_periods=20).quantile(0.1).iloc[-1]
+        vol_floor = max(vol_rolling_quantile, 0.01) if pd.notna(vol_rolling_quantile) else 0.01
         adj_vol = vol.clip(lower=vol_floor)
         direction_df[t] = ret / adj_vol
     
@@ -32,6 +33,9 @@ def compute_volatility_regime(weekly_returns, assets, window=20):
         if t not in weekly_returns.columns:
             continue
         ret = weekly_returns[t].dropna()
+        if len(ret) < window:        # <--- añade esta línea
+            regimes[t] = 1.0          # <--- añade esta línea
+            continue                  # <--- añade esta línea
         if len(ret) < 156:  # 3 años mínimo
             regimes[t] = 1.0
             continue
