@@ -1017,11 +1017,18 @@ def main():
 
     # Sección Radar Global (antes de CFTC)
     if GLOBAL_AVAILABLE and 'global_section' in locals() and global_section:
+        print(f"[DEBUG] Insertando sección global de {len(global_section)} líneas")
+        # Buscar la última sección antes de Conclusión para insertar al final
+        insert_pos = -1
         for i, line in enumerate(lines):
             if line.startswith("## Conclusion"):
                 insert_pos = i
                 break
-        lines[insert_pos:insert_pos] = global_section
+        if insert_pos == -1:
+            # Si no hay Conclusión, añadir al final
+            lines.extend(global_section)
+        else:
+            lines[insert_pos:insert_pos] = global_section
 
     # CFTC (llamada real, debes tener la función)
     cftc_lines = []
