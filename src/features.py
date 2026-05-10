@@ -57,31 +57,6 @@ def compute_features(df):
 # ============================================================
 # FUNCIONES DE FLUJOS (ETF FLOWS)
 # ============================================================
-def compute_etf_flows_robust(df, sectors, window=60):
-    flows = {}
-    for s in sectors:
-        price = df[s]
-        dollar_vol = df[f"{s}_dollar_vol_smoothed"]
-        ret = price.pct_change()
-        flow = ret * dollar_vol
-        flow_z = robust_zscore(flow, window=window)
-        flows[s] = flow_z
-    return pd.DataFrame(flows)
-
-# Por compatibilidad, alias
-compute_etf_flows = compute_etf_flows_robust
-
-def compute_flow_momentum(flows_z, span=10):
-    return flows_z.ewm(span=span).mean()
-
-def compute_flow_dispersion(flow_momentum):
-    return flow_momentum.std(axis=1)
-
-def compute_flow_breadth(flow_momentum):
-    positive = (flow_momentum > 0).sum(axis=1)
-    total = flow_momentum.shape[1]
-    return positive / total
-
 def compute_flow_acceleration(flow_mom, window=5):
     return flow_mom - flow_mom.rolling(window).mean()
 

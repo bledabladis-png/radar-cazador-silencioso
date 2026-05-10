@@ -3,11 +3,10 @@ import numpy as np
 import sys, os
 
 sys.path.append(os.path.join(os.path.dirname(__file__)))
-from features import compute_features, compute_etf_flows_robust as compute_etf_flows
-from features import compute_flow_momentum, compute_flow_dispersion, compute_flow_breadth
+from features import compute_features, robust_zscore
 from config import tickers
 
-# ---------- Funciones existentes (precio) ----------
+# ---------- Funciones de precio (sin cambios) ----------
 def compute_sector_momentum(df, sectors, benchmark='SPY', window=20):
     momentum = {}
     for sec in sectors:
@@ -42,21 +41,39 @@ def run_radar(df):
     regime, accion = interpret_regime(breadth, dispersion, stress, vix_z)
     return ranking, dispersion, breadth, vix_z, stress, regime, accion
 
-# ---------- RADAR DE FLUJOS ----------
+# ---------- RADAR DE FLUJOS (v3.17, histórico completo) ----------
 def run_flow_radar(df, sectors=None):
     if sectors is None:
         sectors = tickers['sectors']
-    flows = compute_etf_flows(df, sectors)
-    flow_mom = compute_flow_momentum(flows)
+
+    flow_mom = pd.DataFrame(index=df.index)
+
+    for sec in sectors:
+        close = df[sec]
+        volume = df.get(f"{sec}_volume")
+        if volume is None:
+            flow_mom[sec] = 0.0
+            continue
+        dollar_vol = close * volume
+        ret = close.pct_change()
+        flow = ret * dollar_vol
+        # Z-score robusto con ventana 60
+        flow_z = robust_zscore(flow, window=60)
+        # Suavizado EWMA (span=10) para el ranking
+        flow_mom[sec] = flow_z.ewm(span=10, min_periods=20).mean()
+
+    # Última fila para ranking
     latest_flow = flow_mom.iloc[-1]
     ranking_flow = latest_flow.sort_values(ascending=False)
-    flow_dispersion = compute_flow_dispersion(flow_mom).iloc[-1]
-    flow_breadth = compute_flow_breadth(flow_mom).iloc[-1]
+
+    flow_dispersion = flow_mom.std(axis=1).iloc[-1]
+    flow_breadth = (latest_flow > 0).mean()
+
     if flow_breadth > 0.6:
         regime_flow = "ENTRADA GENERALIZADA (riesgo-on)"
     elif flow_dispersion > 0.5:
         regime_flow = "ROTACION FUERTE (flujos dispersos)"
     else:
         regime_flow = "FLUJO SELECTIVO"
-    return ranking_flow, flow_dispersion, flow_breadth, regime_flow, flow_mom
 
+    return ranking_flow, flow_dispersion, flow_breadth, regime_flow, flow_mom

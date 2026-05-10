@@ -165,21 +165,6 @@ def compute_regime_score(df, features):
         label = "TRANSITION"
     return regime_score, label
 
-def get_wls_weights(regime_score):
-    w_flow = 0.20 + 0.20 * regime_score
-    w_rs = 0.20 + 0.15 * regime_score
-    w_persist = 0.30 - 0.10 * regime_score
-    w_struct = 0.30 - 0.15 * regime_score
-    w_stability = 0.10
-    total = w_flow + w_rs + w_persist + w_struct + w_stability
-    return {
-        "flow": w_flow / total,
-        "rs": w_rs / total,
-        "persist": w_persist / total,
-        "structure": w_struct / total,
-        "stability": w_stability / total
-    }
-
 def compute_price_structure_advanced(df):
     return wyckoff_structure_core(df)
 
@@ -491,7 +476,7 @@ def compute_synthetic_factors(cftc_sector_z):
     }
 
 def main():
-    print("=== RADAR DE ROTACION SECTORIAL v3.15 (con persistencia informativa) ===\n")
+    print("=== RADAR DE ROTACION SECTORIAL v3.17 ===\n")
     df = download_market_data()
 
     # ---------------------------------------------------------
@@ -528,7 +513,6 @@ def main():
     print(f"Ventana adaptativa para ortogonalización: {win} días")
 
     regime_score, regime_label = compute_regime_score(df, features)
-    wls_weights = get_wls_weights(regime_score)
     print(f"Régimen cuantitativo: {regime_label} (score: {regime_score:.2f})")
 
     ranking_price, dispersion_price, breadth_price, vix_z_radar, stress, regime_price, accion_price = run_radar(df)
@@ -1047,7 +1031,7 @@ def main():
                     sectors,
                     df_multi,
                     holdings_df,
-                    wls_weights=wls_weights
+                    wls_weights=None
                 )
                 if leader_lines:
                     with open("outputs/analisis_lideres.md", "w", encoding="utf-8") as f:

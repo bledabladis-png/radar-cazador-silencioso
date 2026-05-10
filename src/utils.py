@@ -41,7 +41,7 @@ def save_markdown_report(ranking_price, ranking_flow, flow_dispersion, flow_brea
                          dispersion_price, breadth_price, vix_z, regime_price, accion_price,
                          alertas, output_path='outputs/reporte_diario.md'):
     with open(output_path, 'w', encoding='utf-8') as f:
-        f.write("# Radar de Rotacion Sectorial v3.15\n\n")
+        f.write("# Radar de Rotacion Sectorial v3.17\n\n")
         f.write(f"**Fecha:** {pd.Timestamp.now().strftime('%Y-%m-%d %H:%M:%S')}\n\n")
 
         f.write("## Ranking por Momentum de Precio\n\n")
@@ -90,4 +90,4 @@ def save_markdown_report(ranking_price, ranking_flow, flow_dispersion, flow_brea
         f.write("\n## Conclusion\n\n")
         f.write(f"**Dinero fuerte entrando en:** {ranking_flow.index[0]}\n")
         f.write(f"**Dinero saliendo de:** {ranking_flow.index[-1]}\n")
-        f.write("\n---\n*Generado automaticamente por el Radar de Rotacion Sectorial v3.15*")
+        f.write("\n---\n*Generado automaticamente por el Radar de Rotacion Sectorial v3.17*")
