@@ -34,11 +34,20 @@ def compute_wyckoff_leadership(df, weights=None):
     df["flow_z_norm"] = (df["flow_z"] - median_flow) / (mad_flow + 1e-9)
     df["flow_z_norm"] = df["flow_z_norm"].clip(-3, 3)
     
-    # 3. RWS con percentil 70 del sector (estructura relativa)
+    # 3. RWS con percentil 70 del sector (estructura relativa) → normalizar a z-score simétrico
     baseline = df.groupby("sector")["wyckoff_score"].transform(
         lambda x: np.percentile(x, 70)
     )
     df["rws"] = df["wyckoff_score"] / (baseline + 1e-9)
+
+    def robust_zscore_intra(s):
+        median = s.median()
+        mad = (s - median).abs().median()
+        return (s - median) / (1.4826 * mad + 1e-9)
+
+    # RWS simétrico: puede sumar o restar al WLS
+    df["rws_z"] = df.groupby("sector")["rws"].transform(robust_zscore_intra)
+    df["rws_z"] = df["rws_z"].clip(-3, 3)
     
     # 4. Stability → normalizar con z-score robusto intra-sector
     if "stability" not in df.columns:
@@ -86,7 +95,7 @@ def compute_wyckoff_leadership(df, weights=None):
     df["wls"] = (
         w_rs * penalized_rs_z +
         w_flow * penalized_flow_z_norm +
-        w_structure * df["rws"] +
+        w_structure * df["rws_z"] +
         w_stab * df["stab_z"]
     )
     return df
