@@ -73,6 +73,7 @@ jobs:
           if [ -f "data/cftc_history.csv" ]; then
             git add data/cftc_history.csv
             git commit -m "Actualizar histórico CFTC" || echo "No hay cambios"
+            git stash --include-untracked
             git pull origin main --rebase
             git push
           else
