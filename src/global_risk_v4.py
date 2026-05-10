@@ -41,8 +41,8 @@ def compute_volatility_regime(weekly_returns, assets, window=20):
             continue
         
         vol_current = ret.iloc[-window:].std()
-        vol_median = ret.rolling(156).std().median()
-        vol_mad = (ret.rolling(156).std() - ret.rolling(156).std().median()).abs().median()
+        vol_median = ret.rolling(156, min_periods=52).std().median()
+        vol_mad = (ret.rolling(156, min_periods=52).std() - ret.rolling(156, min_periods=52).std().median()).abs().median()
         
         z_vol = (vol_current - vol_median) / (1.4826 * vol_mad + 1e-9)
         regimes[t] = z_vol

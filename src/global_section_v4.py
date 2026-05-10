@@ -63,14 +63,9 @@ def compute_global_risk_score(flow_spy, flow_ezu, flow_ewj, flow_eem, hyg_flow):
         sigmoid(flow_spy), sigmoid(flow_ezu), sigmoid(flow_ewj), sigmoid(flow_eem)
     ])
     
-    vals = [flow_spy, flow_ezu, flow_ewj, flow_eem]
-    signs = np.sign(vals)
-    median_val = np.median(vals)
-    if median_val != 0:
-        median_sign = np.sign(median_val)
-    else:
-        median_sign = np.sign(np.mean(vals))
-    flow_align_norm = (signs == median_sign).mean()   # [0,1], robusto a mediana cero
+    # Flow alignment: fracción de bloques geográficos con flujo positivo
+    n_positive = sum(1 for v in [flow_spy, flow_ezu, flow_ewj, flow_eem] if v > 0)
+    flow_align_norm = n_positive / 4.0   # [0, 0.25, 0.50, 0.75, 1.0]
     
     hyg_confirm = (np.tanh(hyg_flow) * np.tanh(flow_spy) + 1) / 2
     
@@ -239,6 +234,7 @@ def generate_global_section_v4(df_global):
     if rot_stab is not None and not np.isnan(rot_stab):
         lines.append(f"- **Estabilidad de Capital Rotation:** {rot_stab:.2f}  \n")
 
+    lines.append(f"**Global Risk Score:** {score:.2f} → {label}  \n\n")
     lines.append("### Flow Module\n")
     lines.append(f"- **Capital Rotation:** {capital_rot:.2f}  \n")
     lines.append(f"- **Flow Participation (RV):** {participation:.0%}  \n\n")
