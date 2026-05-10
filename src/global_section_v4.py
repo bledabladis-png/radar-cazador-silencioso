@@ -31,7 +31,6 @@ def validate_global_data(df_global):
             continue
         elif (abs(weekly_ret) > 0.25).any():
             issues[ticker] = 'EXTREME EVENT (ret >25%, señal válida pero inusual)'
-            # no se excluye, solo se marca
         valid_cols.append(ticker)
     return valid_cols, issues
 
@@ -45,39 +44,32 @@ def compute_weekly_data(df_global, valid_tickers):
         vol_col = f"{t}_volume"
         if vol_col in df_global.columns:
             volumes[t] = df_global[vol_col]
-    # Filtrar solo viernes (weekday=4). Si un viernes falta, se excluye esa semana.
     fridays = closes.index[closes.index.weekday == 4]
     closes_weekly = closes.loc[fridays]
     volumes_weekly = volumes.loc[fridays]
-    # Eliminar semanas sin dato en ningún activo
     closes_weekly = closes_weekly.dropna(how='all')
     volumes_weekly = volumes_weekly.dropna(how='all')
     
-    # Retornos semanales (viernes a viernes)
     weekly_returns = closes_weekly.pct_change(fill_method=None).dropna()
     return weekly_returns, volumes_weekly, closes_weekly
 
 # ------------------------------------------------------------
 # FUNCIÓN AUXILIAR PARA EL GLOBAL RISK SCORE
 # ------------------------------------------------------------
-def compute_global_risk_score(pwm_spy, pwm_ezu, pwm_ewj, pwm_eem, hyg_pwm):
-    """Global Risk Score v4.0.1 – todas las componentes normalizadas a [0,1]."""
+def compute_global_risk_score(flow_spy, flow_ezu, flow_ewj, flow_eem, hyg_flow):
     sigmoid = lambda x: (np.tanh(x) + 1) / 2
 
-    # Breadth geográfico continuo
     geo_continuous = np.mean([
-        sigmoid(pwm_spy), sigmoid(pwm_ezu), sigmoid(pwm_ewj), sigmoid(pwm_eem)
+        sigmoid(flow_spy), sigmoid(flow_ezu), sigmoid(flow_ewj), sigmoid(flow_eem)
     ])
     
-    # PWM alignment: fracción de bloques que coinciden en signo con la mediana
-    signs = np.sign([pwm_spy, pwm_ezu, pwm_ewj, pwm_eem])
-    median_sign = np.sign(np.median([pwm_spy, pwm_ezu, pwm_ewj, pwm_eem]))
-    pwm_align_norm = (signs == median_sign).mean()   # [0,1], independiente de geo_continuous
+    signs = np.sign([flow_spy, flow_ezu, flow_ewj, flow_eem])
+    median_sign = np.sign(np.median([flow_spy, flow_ezu, flow_ewj, flow_eem]))
+    flow_align_norm = (signs == median_sign).mean()
     
-    # HYG confirmación continua (sin discontinuidad en cero)
-    hyg_confirm = (np.tanh(hyg_pwm) * np.tanh(pwm_spy) + 1) / 2
+    hyg_confirm = (np.tanh(hyg_flow) * np.tanh(flow_spy) + 1) / 2
     
-    score = 0.50 * geo_continuous + 0.45 * pwm_align_norm + 0.05 * hyg_confirm
+    score = 0.50 * geo_continuous + 0.45 * flow_align_norm + 0.05 * hyg_confirm
     return np.clip(score, 0, 1)
 
 # ------------------------------------------------------------
@@ -96,7 +88,6 @@ def generate_global_section_v4(df_global):
         lines.append("*Datos semanales insuficientes.*\n")
         return lines
 
-    # Dollar volume
     dollar_vol = pd.DataFrame()
     for t in weekly_returns.columns:
         if t in closes_weekly.columns and t in volumes_weekly.columns:
@@ -113,7 +104,7 @@ def generate_global_section_v4(df_global):
     direction_df = compute_risk_direction(weekly_returns)
 
     # -------------------------------------------
-    # LOOK-AHEAD MITIGATION: desplazar 1 semana (t-1)
+    # LOOK-AHEAD MITIGATION
     # -------------------------------------------
     flow_df = flow_df.shift(1).dropna()
     direction_df = direction_df.shift(1).dropna()
@@ -124,9 +115,8 @@ def generate_global_section_v4(df_global):
         return lines
 
     # -------------------------------------------
-    # MÉTRICAS COMPUESTAS (usando datos desplazados)
+    # MÉTRICAS COMPUESTAS
     # -------------------------------------------
-    # Flow metrics
     capital_rot = compute_capital_rotation(
         flow_df, 
         FLOW_ASSETS['equity'], 
@@ -135,15 +125,12 @@ def generate_global_section_v4(df_global):
     )
     participation = flow_participation_ratio(flow_df, FLOW_ASSETS['equity'])
 
-    # Risk metrics
     risk_assets_available = [t for t in RISK_ASSETS['equity'] if t in weekly_returns_shifted.columns]
     vol_regime = compute_volatility_regime(weekly_returns_shifted, risk_assets_available) if risk_assets_available else 1.0
     risk_breadth = compute_risk_breadth(direction_df, RISK_ASSETS['equity'])
 
-    # Cross-Region metrics
     alignment = compute_region_alignment(weekly_returns_shifted, CROSS_REGION)
     
-    # Coherence v4
     spy_flow = flow_df['SPY'] if 'SPY' in flow_df.columns else pd.Series()
     global_flow = flow_df[['EZU', 'EWJ', 'EEM']].median(axis=1) if all(t in flow_df.columns for t in ['EZU', 'EWJ', 'EEM']) else pd.Series()
     spy_dir = direction_df['SPY'] if 'SPY' in direction_df.columns else pd.Series()
@@ -151,12 +138,10 @@ def generate_global_section_v4(df_global):
     
     coherence = compute_coherence_v4(spy_flow, global_flow, spy_dir, global_dir)
     
-    # Dominance flag
     spy_val = flow_df['SPY'].iloc[-1] if 'SPY' in flow_df.columns else 0
     others_median = np.median([flow_df[t].iloc[-1] for t in ['EZU', 'EWJ', 'EEM'] if t in flow_df.columns])
     dominance = compute_dominance_flag(spy_val, others_median)
 
-    # USD Regime
     uup_close = closes_weekly['UUP'] if 'UUP' in closes_weekly.columns else None
     if uup_close is not None and len(uup_close) >= 10:
         trend = uup_close.iloc[-1] / uup_close.iloc[-10] - 1
@@ -165,15 +150,50 @@ def generate_global_section_v4(df_global):
         usd = 'NEUTRAL'
 
     # -------------------------------------------
+    # GLOBAL RISK SCORE & REGIME STATE
+    # -------------------------------------------
+    score = compute_global_risk_score(
+        flow_df['SPY'].iloc[-1] if 'SPY' in flow_df.columns else 0,
+        flow_df['EZU'].iloc[-1] if 'EZU' in flow_df.columns else 0,
+        flow_df['EWJ'].iloc[-1] if 'EWJ' in flow_df.columns else 0,
+        flow_df['EEM'].iloc[-1] if 'EEM' in flow_df.columns else 0,
+        flow_df['HYG'].iloc[-1] if 'HYG' in flow_df.columns else 0
+    )
+
+    regime_state_file = 'data/global_regime_history.csv'
+    previous_label = None
+    persistence_counter = 0
+    try:
+        regime_hist = pd.read_csv(regime_state_file, index_col=0, parse_dates=True)
+        if not regime_hist.empty:
+            previous_label = regime_hist['regime'].iloc[-1]
+            if 'persistence' in regime_hist.columns:
+                persistence_counter = int(regime_hist['persistence'].iloc[-1])
+    except FileNotFoundError:
+        pass
+
+    label, persistence_counter = global_regime_label(score, previous_label, persistence_counter)
+
+    new_regime_df = pd.DataFrame({
+        'regime': [label],
+        'score': [score],
+        'persistence': [persistence_counter]
+    }, index=[pd.Timestamp.now()])
+    try:
+        old_regime = pd.read_csv(regime_state_file, index_col=0, parse_dates=True)
+        regime_combined = pd.concat([old_regime, new_regime_df])
+    except FileNotFoundError:
+        regime_combined = new_regime_df
+    regime_combined.to_csv(regime_state_file)
+
+    # -------------------------------------------
     # STABILITY LAYER & REGIME SHIFT
     # -------------------------------------------
-    # Construir series históricas para stability
-    capital_rot_series = pd.Series(dtype=float)  # Placeholder
-    risk_breadth_series = pd.Series(dtype=float) # Placeholder
-    alignment_series = pd.Series(dtype=float)    # Placeholder
-    vol_regime_series = pd.Series(dtype=float)   # Placeholder
+    capital_rot_series = pd.Series(dtype=float)
+    risk_breadth_series = pd.Series(dtype=float)
+    alignment_series = pd.Series(dtype=float)
+    vol_regime_series = pd.Series(dtype=float)
 
-    # Intentar cargar históricos si existen
     try:
         hist = pd.read_csv('data/global_metrics_history.csv', index_col=0, parse_dates=True)
         if 'capital_rotation' in hist.columns:
@@ -187,13 +207,11 @@ def generate_global_section_v4(df_global):
     except FileNotFoundError:
         pass
 
-    # Añadir el valor actual a las series para el cálculo de estabilidad
     capital_rot_series = pd.concat([capital_rot_series, pd.Series([capital_rot])])
     risk_breadth_series = pd.concat([risk_breadth_series, pd.Series([risk_breadth])])
     alignment_series = pd.concat([alignment_series, pd.Series([alignment])])
     vol_regime_series = pd.concat([vol_regime_series, pd.Series([vol_regime])])
 
-    # Guardar el histórico actualizado
     hist_df = pd.DataFrame({
         'capital_rotation': capital_rot_series,
         'risk_breadth': risk_breadth_series,
@@ -202,7 +220,6 @@ def generate_global_section_v4(df_global):
     })
     hist_df.to_csv('data/global_metrics_history.csv')
 
-    # Calcular estabilidad y regime shift
     rot_stab = signal_stability(capital_rot_series)
     shift_detected = regime_shift_detector(vol_regime_series)
     stab_flags = stability_flags(capital_rot_series, risk_breadth_series, alignment_series)
@@ -231,7 +248,7 @@ def generate_global_section_v4(df_global):
     if coherence < -0.5:
         lines.append("⚠️ Divergencia US-Global.\n")
     if dominance:
-        lines.append("⚠️ **Dominancia US:** SPY concentra la señal de flujo.\n")
+        lines.append("⚠️ **SPY Dominance Flag:** SPY domina el flujo (|flow_SPY| > 2× mediana global).\n")
     lines.append(f"- **DM USD Trend:** {usd}  \n\n")
 
     if issues:

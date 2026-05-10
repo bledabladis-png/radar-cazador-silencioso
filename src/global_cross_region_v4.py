@@ -5,7 +5,7 @@
 import pandas as pd
 import numpy as np
 
-def compute_region_alignment(weekly_returns, region_map, window=4):
+def compute_region_alignment(weekly_returns, region_map, window=12):
     """
     Region Alignment: correlación media entre los bloques geográficos.
     Alta correlación = mercados sincronizados.
@@ -36,16 +36,17 @@ def compute_region_alignment(weekly_returns, region_map, window=4):
 def compute_coherence_v4(flow_pressure_spy, flow_pressure_global, risk_direction_spy, risk_direction_global):
     """
     Coherence v4: combina alineación de flujo y dirección en un solo score.
-    Usa correlación de Spearman de las últimas 4 semanas.
+    Usa correlación de Pearson de las últimas 12 semanas.
     Rango [-1, +1].
     """
-    if len(flow_pressure_spy) < 4:
+    window = 12
+    if len(flow_pressure_spy) < window:
         return 0.0
     
     # Correlación de flow pressure
-    flow_corr = flow_pressure_spy.iloc[-4:].corr(flow_pressure_global.iloc[-4:])
+    flow_corr = flow_pressure_spy.iloc[-window:].corr(flow_pressure_global.iloc[-window:])
     # Correlación de risk direction
-    risk_corr = risk_direction_spy.iloc[-4:].corr(risk_direction_global.iloc[-4:])
+    risk_corr = risk_direction_spy.iloc[-window:].corr(risk_direction_global.iloc[-window:])
     
     if pd.isna(flow_corr) or pd.isna(risk_corr):
         return 0.0
@@ -54,9 +55,9 @@ def compute_coherence_v4(flow_pressure_spy, flow_pressure_global, risk_direction
     coherence = (flow_corr + risk_corr) / 2
     return np.clip(coherence, -1, 1)
 
-def compute_dominance_flag(pwm_spy, pwm_others_median, threshold=2.0):
+def compute_dominance_flag(flow_spy, flow_others_median, threshold=2.0):
     """
-    Detecta si SPY está dominando desproporcionadamente la señal.
-    Retorna True si SPY > 2 * mediana de otros.
+    Detecta si SPY está dominando desproporcionadamente la señal de flujo.
+    Retorna True si |flow_SPY| > 2 * mediana(|flow_ezu|, |flow_ewj|, |flow_eem|).
     """
-    return abs(pwm_spy) > threshold * abs(pwm_others_median)
+    return abs(flow_spy) > threshold * abs(flow_others_median)

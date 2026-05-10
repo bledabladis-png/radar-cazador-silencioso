@@ -10,7 +10,9 @@ def signal_stability(series, window=12):
     if len(series.dropna()) < window:
         return np.nan
     recent_std = series.iloc[-window:].std()
-    historic_std = series.dropna().std()
+    historic_std = series.dropna().rolling(252, min_periods=window).std().iloc[-1]
+    if pd.isna(historic_std) or historic_std == 0:
+        return np.nan
     if historic_std == 0:
         return 1.0
     stability = 1 - min(recent_std / historic_std, 1.0)
