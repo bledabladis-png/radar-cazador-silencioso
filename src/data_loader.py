@@ -126,9 +126,8 @@ def download_market_data(force=False):
             print(f"Usando datos cacheados ({cache_file}) - menos de 23 horas.")
             return pd.read_csv(cache_file, index_col=0, parse_dates=True)
 
-    all_tickers = ([tickers['benchmark'], tickers['bonds'], tickers['vix']] +
+    all_tickers = ([tickers['benchmark'], tickers['vix']] +
                    tickers['sectors'] +
-                   tickers['macro'] +
                    tickers['credit'] + tickers['rates'])
 
     end = datetime.now()

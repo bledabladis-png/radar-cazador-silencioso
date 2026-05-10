@@ -202,7 +202,7 @@ def compute_edge_hierarchical(macro, flow, structure):
 def compute_truth(macro, flow, structure):
     macro_strength = abs(macro)
     flow_strength = abs(flow)
-    agreement = 1 if np.sign(macro) == np.sign(flow) else 0
+    agreement = (np.tanh(macro) * np.tanh(flow) + 1) / 2  # continuo en [0,1]
     penalty = 0.5 if structure == 0 else 1.0
     return np.clip((0.5 * macro_strength + 0.5 * flow_strength) * agreement * penalty, 0, 1)
 
@@ -337,6 +337,11 @@ def enrich_with_cftc_sector(report_lines, cftc_with_z, raw_file=None):
             return
         
         latest_date = cftc_with_z['date'].max()
+        # Alerta si los datos CFTC tienen más de 8 días
+        days_old = (pd.Timestamp.now() - latest_date).days
+        if days_old > 8:
+            report_lines.append("\n⚠️ **CFTC desactualizado ({} días).** ".format(days_old))
+            report_lines.append("Los datos de posicionamiento pueden no reflejar la situación real.\n")
         latest_data = cftc_with_z[cftc_with_z['date'] == latest_date].copy()
         
         from config import CFTC_MARKETS
@@ -476,7 +481,7 @@ def compute_synthetic_factors(cftc_sector_z):
     }
 
 def main():
-    print("=== RADAR DE ROTACION SECTORIAL v3.17 ===\n")
+    print("=== RADAR DE ROTACION SECTORIAL v3.18 ===\n")
     df = download_market_data()
 
     # ---------------------------------------------------------
@@ -907,11 +912,27 @@ def main():
             break
 
     macro_label = "RISK-ON" if macro_score_new > 0.5 else "RISK-OFF" if macro_score_new < -0.5 else "NEUTRAL"
+    # Correlación media entre sectores (últimos 60 días) – v3.18
+    sector_prices = df[sectors].dropna()
+    corr_warning = ""
+    if len(sector_prices) >= 60:
+        corr_matrix = sector_prices.pct_change().tail(60).corr()
+        n = len(sectors)
+        mean_corr = (corr_matrix.values.sum() - n) / (n * (n - 1))
+        if mean_corr > 0.7:
+            corr_warning = (
+                f"\n⚠️ **Alta correlación media entre sectores ({mean_corr:.2f}).** "
+                "Las señales de oportunidad pueden ser redundantes. Diversificar con cautela.\n"
+            )
+
+    # Añadir la advertencia (si existe) a macro_new_lines
     macro_new_lines = [
         "\n## Contexto Macro (Unificado)\n",
         f"- **Macro Score (causal):** {macro_score_new:.2f}\n",
         f"- **Régimen cualitativo:** {macro_label}\n"
     ]
+    if corr_warning:
+        macro_new_lines.append(corr_warning)
     causal_lines = []
     causal_lines.append(f"- **Transición régimen:** {transition}\n")
     causal_lines.append(f"- **Flow momentum:** {flow_momentum:.3f}\n")

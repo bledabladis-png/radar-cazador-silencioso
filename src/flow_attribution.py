@@ -20,12 +20,14 @@ def rolling_robust_zscore(series, window=60):
     return (series - median) / (1.4826 * mad + 1e-9)
 
 def rolling_orthogonalize(base, target, window=60):
-    corr = base.rolling(window).corr(target)
-    return target - corr * base
+    beta = base.rolling(window).cov(target) / (base.rolling(window).var() + 1e-9)
+    return target - beta * base
 
 def rolling_percentile(series, window=120):
-    """Percentil rolling (0-1) basado en ventana fija."""
-    return series.rolling(window).apply(lambda x: pd.Series(x).rank(pct=True).iloc[-1], raw=False)
+    """Percentil rolling (0-1) – versión rápida con raw=True."""
+    return series.rolling(window).apply(
+        lambda x: (x[-1] > x[:-1]).sum() / (len(x) - 1), raw=True
+    )
 
 def normalize_to_minus1_1(series, window=120):
     pct = rolling_percentile(series, window)

@@ -5,6 +5,9 @@ No genera señales de trading, solo información complementaria.
 
 import pandas as pd
 import numpy as np
+import sys, os
+sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+from features import robust_zscore
 
 def range_compression(df, window=20):
     """Compresión del rango (high-low) / close."""
@@ -24,7 +27,9 @@ def absorption_score(df, window=20):
 
     price_change = df["close"].pct_change(window)
 
-    raw = vol_z - price_change
+    # Normalizar price_change con z-score robusto para igualar escalas
+    price_z = robust_zscore(price_change, window=60)
+    raw = vol_z - price_z
     # Sigmoide: rango (0,1); 0.5 es neutral
     absorption = 1 / (1 + np.exp(-raw))
     return absorption

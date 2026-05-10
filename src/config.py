@@ -3,11 +3,8 @@ tickers = {
     'benchmark': 'SPY',
     'vix': '^VIX',
     'sectors': ['XLK', 'XLF', 'XLE', 'XLI', 'XLY', 'XLP', 'XLV', 'XLU', 'XLRE'],
-    'global': 'ACWI',
-    'bonds': 'TLT',
-    'macro': ['TLT', 'ACWI', 'QQQ'],
-    'credit': ['HYG', 'LQD'],      # Para la capa macro
-    'rates': ['^TNX', '^IRX']      # Para la curva de tipos (10Y y 2Y)
+    'credit': ['HYG', 'LQD'],
+    'rates': ['^TNX', '^IRX']
 }
 
 windows = {

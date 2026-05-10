@@ -7,6 +7,7 @@ import pandas as pd
 import requests
 from io import StringIO
 from datetime import datetime, timedelta
+from tenacity import retry, stop_after_attempt, wait_exponential
 
 DATA_OPTIONS_DIR = "data/options_volume"
 
@@ -14,6 +15,7 @@ def get_local_csv_path(year):
     os.makedirs(DATA_OPTIONS_DIR, exist_ok=True)
     return os.path.join(DATA_OPTIONS_DIR, f"daily_volume_{year}.csv")
 
+@retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=2, max=10))
 def download_options_data_for_year(year, force=False):
     """Descarga el archivo de un año si no existe localmente o si force=True."""
     local_path = get_local_csv_path(year)
