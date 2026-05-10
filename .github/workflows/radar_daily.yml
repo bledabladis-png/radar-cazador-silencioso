@@ -73,6 +73,7 @@ jobs:
           if [ -f "data/cftc_history.csv" ]; then
             git add data/cftc_history.csv
             git commit -m "Actualizar histórico CFTC" || echo "No hay cambios"
+            git pull origin main --rebase
             git push
           else
             echo "No existe data/cftc_history.csv, se omite el commit"
@@ -85,6 +86,7 @@ jobs:
           if [ -f "outputs/flow_history.csv" ]; then
             git add outputs/flow_history.csv
             git commit -m "Actualizar histórico de flujos" || echo "No hay cambios"
+            git pull origin main --rebase
             git push
           else
             echo "No existe outputs/flow_history.csv, se omite el commit"
