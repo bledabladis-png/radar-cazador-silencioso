@@ -194,7 +194,7 @@ def compute_edge_hierarchical(macro, flow, structure):
     w_structure = 0.2
     flow_s = np.tanh(flow)
     macro_s = np.tanh(macro)
-    struct_s = structure
+    struct_s = 2 * structure - 1   # mapea [0,1] → [-1,1] para simetría con tanh
     weighted = w_flow * flow_s + w_macro * macro_s + w_structure * struct_s
     consistency = 1 - np.std([flow_s, macro_s, struct_s])
     return np.clip(weighted * consistency, -1, 1)
