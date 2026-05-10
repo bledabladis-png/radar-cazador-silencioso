@@ -18,6 +18,14 @@ from options_data_loader import get_historical_options_data
 from hkex_pcr import get_hkex_pcr_series
 from stock_data_loader import fetch_stock_prices
 
+# Radar Global v3.19 (opcional – si el módulo no existe, no impide la ejecución)
+try:
+    from global_section_v4 import generate_global_section_v4 as generate_global_section
+    from global_data_loader import download_global_market_data
+    GLOBAL_AVAILABLE = True
+except ImportError:
+    GLOBAL_AVAILABLE = False
+
 # ------------------------------------------------------------
 # FUNCIONES AUXILIARES (sin cambios)
 # ------------------------------------------------------------
@@ -481,7 +489,7 @@ def compute_synthetic_factors(cftc_sector_z):
     }
 
 def main():
-    print("=== RADAR DE ROTACION SECTORIAL v3.18 ===\n")
+    print("=== RADAR DE ROTACION SECTORIAL v4.0 ===\n")
     df = download_market_data()
 
     # ---------------------------------------------------------
@@ -690,6 +698,28 @@ def main():
         sector_wyckoff_phase[sec] = phase
         sector_wyckoff_score[sec] = score
         sector_wyckoff_transition[sec] = trans
+
+    # =========================================================
+    # RADAR GLOBAL v4.0 (capa contextual semanal)
+    # =========================================================
+    if GLOBAL_AVAILABLE:
+        try:
+            print("[Radar Global] Descargando datos globales...")
+            df_global = download_global_market_data()
+            if not df_global.empty:
+                global_section = generate_global_section(df_global)
+                if global_section:
+                    print("[Radar Global] Sección generada correctamente.")
+                else:
+                    print("[Radar Global] No se pudo generar la sección (global_section vacío).")
+            else:
+                print("[Radar Global] Datos globales vacíos.")
+        except Exception as e:
+            print(f"[Radar Global] Error: {e}")
+            import traceback
+            traceback.print_exc()
+    else:
+        print("[Radar Global] GLOBAL_AVAILABLE es False. No se ejecutará.")
 
     # =========================================================
     # ALERTAS, DISTRIBUCIÓN, CFTC Y REPORTE
@@ -912,7 +942,7 @@ def main():
             break
 
     macro_label = "RISK-ON" if macro_score_new > 0.5 else "RISK-OFF" if macro_score_new < -0.5 else "NEUTRAL"
-    # Correlación media entre sectores (últimos 60 días) – v3.18
+    # Correlación media entre sectores (últimos 60 días) – v3.19
     sector_prices = df[sectors].dropna()
     corr_warning = ""
     if len(sector_prices) >= 60:
@@ -984,6 +1014,14 @@ def main():
         causal_lines.append(f"*Recomendación de tamaño: {oms_mod['risk_bias']} (confianza {oms_mod['confidence_boost']:.2f})*\n")
 
     lines[insert_pos:insert_pos] = macro_new_lines + causal_lines
+
+    # Sección Radar Global (antes de CFTC)
+    if GLOBAL_AVAILABLE and 'global_section' in locals() and global_section:
+        for i, line in enumerate(lines):
+            if line.startswith("## Conclusion"):
+                insert_pos = i
+                break
+        lines[insert_pos:insert_pos] = global_section
 
     # CFTC (llamada real, debes tener la función)
     cftc_lines = []

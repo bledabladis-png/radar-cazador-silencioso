@@ -2,6 +2,8 @@
 data/market_data.csv
 data/stock_prices.csv
 data/options_volume/*.csv
+data/global_market_data.csv
+data/global_metrics_history.csv
 
 # Outputs: ignorar todo excepto el histórico de flujos
 outputs/*
