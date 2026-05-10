@@ -37,7 +37,7 @@ def compute_capital_rotation(flow_df, equity_assets, fixed_income_assets, commod
     fi_flow = np.median([latest.get(t, 0) for t in fixed_income_assets if t in latest.index])
     commodity_flow = np.median([latest.get(t, 0) for t in commodities_assets if t in latest.index])
     
-    risk_flow = np.median([equity_flow, commodity_flow])
+    risk_flow = (equity_flow + commodity_flow) / 2.0
     safe_flow = fi_flow
     
     rotation = risk_flow - safe_flow

@@ -18,19 +18,17 @@ def signal_stability(series, window=12):
     stability = 1 - min(recent_std / historic_std, 1.0)
     return stability
 
-def stability_flags(flow_rotation_series, risk_breadth_series, alignment_series):
+def stability_flags(flow_rotation_series, alignment_series):
     """
     Retorna una lista de avisos si alguna métrica principal es inestable.
+    Evalúa solo métricas continuas.
     """
     flags = []
     rot_stab = signal_stability(flow_rotation_series)
-    bread_stab = signal_stability(risk_breadth_series)
     align_stab = signal_stability(alignment_series)
 
     if rot_stab is not None and rot_stab < 0.5:
         flags.append("⚠️ Capital Rotation muestra alta variabilidad reciente.")
-    if bread_stab is not None and bread_stab < 0.5:
-        flags.append("⚠️ Risk Breadth muestra alta variabilidad reciente.")
     if align_stab is not None and align_stab < 0.5:
         flags.append("⚠️ Region Alignment muestra alta variabilidad reciente.")
     return flags

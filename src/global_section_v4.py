@@ -63,9 +63,14 @@ def compute_global_risk_score(flow_spy, flow_ezu, flow_ewj, flow_eem, hyg_flow):
         sigmoid(flow_spy), sigmoid(flow_ezu), sigmoid(flow_ewj), sigmoid(flow_eem)
     ])
     
-    signs = np.sign([flow_spy, flow_ezu, flow_ewj, flow_eem])
-    median_sign = np.sign(np.median([flow_spy, flow_ezu, flow_ewj, flow_eem]))
-    flow_align_norm = (signs == median_sign).mean()
+    vals = [flow_spy, flow_ezu, flow_ewj, flow_eem]
+    signs = np.sign(vals)
+    median_val = np.median(vals)
+    if median_val != 0:
+        median_sign = np.sign(median_val)
+    else:
+        median_sign = np.sign(np.mean(vals))
+    flow_align_norm = (signs == median_sign).mean()   # [0,1], robusto a mediana cero
     
     hyg_confirm = (np.tanh(hyg_flow) * np.tanh(flow_spy) + 1) / 2
     
@@ -222,7 +227,7 @@ def generate_global_section_v4(df_global):
 
     rot_stab = signal_stability(capital_rot_series)
     shift_detected = regime_shift_detector(vol_regime_series)
-    stab_flags = stability_flags(capital_rot_series, risk_breadth_series, alignment_series)
+    stab_flags = stability_flags(capital_rot_series, alignment_series)
 
     # -------------------------------------------
     # REPORTE
@@ -243,8 +248,8 @@ def generate_global_section_v4(df_global):
     lines.append(f"- **Volatility Regime (z-score):** {vol_regime:.2f}  \n\n")
 
     lines.append("### Cross-Region Module\n")
-    lines.append(f"- **Region Alignment (corr):** {alignment:.2f}  \n")
-    lines.append(f"- **Coherence US-Global:** {coherence:.2f}  \n")
+    lines.append(f"- **Region Alignment (precios):** {alignment:.2f}  \n")
+    lines.append(f"- **Coherence US-Global (señales):** {coherence:.2f}  \n")
     if coherence < -0.5:
         lines.append("⚠️ Divergencia US-Global.\n")
     if dominance:
