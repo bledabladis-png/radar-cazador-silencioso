@@ -172,7 +172,18 @@ def generate_global_section_v4(df_global):
     except FileNotFoundError:
         pass
 
-    label, persistence_counter = global_regime_label(score, previous_label, persistence_counter)
+    # Asignar etiqueta según score (sin histéresis en esta versión)
+    if score > 0.60:
+        label = 'RISK-ON'
+    elif score > 0.50:
+        label = 'WEAK RISK-ON'
+    elif score > 0.40:
+        label = 'NEUTRAL'
+    elif score > 0.30:
+        label = 'WEAK RISK-OFF'
+    else:
+        label = 'RISK-OFF'
+    persistence_counter = persistence_counter + 1 if label == previous_label else 1
 
     new_regime_df = pd.DataFrame({
         'regime': [label],
