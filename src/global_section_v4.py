@@ -263,6 +263,32 @@ def generate_global_section_v4(df_global):
         lines.append("⚠️ **SPY Dominance Flag:** SPY domina el flujo (|flow_SPY| > 2× mediana global).\n")
     lines.append(f"- **DM USD Trend:** {usd}  \n\n")
 
+    # -------------------------------------------
+    # CONTEXTO EXTENDIDO (informativo, no modifica scores)
+    # -------------------------------------------
+    extended_assets = ['VGK', 'IWM', 'FXI', 'LQD']
+    extended_data = []
+    for t in extended_assets:
+        if t in flow_df.columns:
+            flow_val = flow_df[t].iloc[-1] if len(flow_df) > 0 else 0
+            extended_data.append((t, flow_val))
+        else:
+            extended_data.append((t, 0.0))
+
+    if extended_data:
+        lines.append("### Contexto Extendido (informativo)\n")
+        lines.append("| Activo | Descripción | Flow Pressure |\n")
+        lines.append("|--------|-------------|---------------|\n")
+        for t, flow_val in extended_data:
+            desc = {
+                'VGK': 'Europa (ampliado)',
+                'IWM': 'Small Caps US',
+                'FXI': 'China Large Cap',
+                'LQD': 'Inv. Grade Bonds'
+            }.get(t, t)
+            lines.append(f"| {t} | {desc} | {flow_val:.2f} |\n")
+        lines.append("\n*Estos activos no forman parte del core y se muestran solo como contexto adicional.*\n\n")
+
     if issues:
         lines.append("### Data Issues\n")
         for t, msg in issues.items():

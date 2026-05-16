@@ -98,7 +98,8 @@ def download_global_market_data(force=False):
         FLOW_ASSETS['commodities'] +
         [FLOW_ASSETS['dollar_proxy']] +
         ['EURUSD=X', 'JPYUSD=X'] +
-        ['ACWI']
+        ['ACWI'] +
+        ['VGK', 'IWM', 'FXI', 'LQD']  # Contexto extendido
     )
     # Eliminar duplicados manteniendo el orden
     all_global = list(dict.fromkeys(all_global))
