@@ -137,6 +137,26 @@ def download_global_market_data(force=False):
             if df_stooq is not None and not df_stooq.empty:
                 all_data = pd.concat([all_data, df_stooq], axis=1)
 
+    # Segundo intento: descargar individualmente desde Yahoo los que aún faltan
+    still_missing = [t for t in all_global if f"{t}_close" not in all_data.columns]
+    if still_missing:
+        print(f"[GlobalDataLoader] Reintentando {len(still_missing)} tickers individualmente desde Yahoo...")
+        for t in still_missing:
+            try:
+                single = yf.download(t, start=start, end=end, interval='1d', auto_adjust=True, progress=False)
+                if not single.empty:
+                    temp = pd.DataFrame({
+                        f"{t}_close": single['Close'],
+                        f"{t}_volume": single['Volume'],
+                        f"{t}_open": single['Open'],
+                        f"{t}_high": single['High'],
+                        f"{t}_low": single['Low']
+                    })
+                    all_data = pd.concat([all_data, temp], axis=1)
+                    print(f"[GlobalDataLoader] {t} recuperado en segundo intento.")
+            except Exception as e:
+                print(f"[GlobalDataLoader] No se pudo recuperar {t}: {e}")
+
     if all_data.empty:
         raise Exception("No se pudieron descargar datos globales.")
 

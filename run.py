@@ -732,7 +732,7 @@ def main():
                 if global_section:
                     print("[Radar Global] Sección generada correctamente.")
                 else:
-                    print("[Radar Global] No se pudo generar la sección (global_section vacío).")
+                    print("[Radar Global] No se generó la sección por datos insuficientes.")
             else:
                 print("[Radar Global] Datos globales vacíos.")
         except Exception as e:

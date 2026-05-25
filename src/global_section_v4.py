@@ -117,12 +117,18 @@ def generate_global_section_v4(df_global):
     # -------------------------------------------
     # MÉTRICAS COMPUESTAS
     # -------------------------------------------
-    capital_rot = compute_capital_rotation(
-        flow_df, 
-        FLOW_ASSETS['equity'], 
-        FLOW_ASSETS['fixed_income'], 
-        FLOW_ASSETS['commodities']
-    )
+    # Filtrar activos disponibles para cada categoría
+    available_equity = [t for t in FLOW_ASSETS['equity'] if t in flow_df.columns]
+    available_fi = [t for t in FLOW_ASSETS['fixed_income'] if t in flow_df.columns]
+    available_comm = [t for t in FLOW_ASSETS['commodities'] if t in flow_df.columns]
+    
+    if available_equity and available_fi and available_comm:
+        capital_rot = compute_capital_rotation(flow_df, available_equity, available_fi, available_comm)
+    else:
+        capital_rot = 0.0
+        lines.append("⚠️ **Flow Module:** Faltan activos para calcular Capital Rotation.\n")
+    
+    participation = flow_participation_ratio(flow_df, available_equity) if available_equity else 0.0
     participation = flow_participation_ratio(flow_df, FLOW_ASSETS['equity'])
 
     risk_assets_available = [t for t in RISK_ASSETS['equity'] if t in weekly_returns_shifted.columns]
@@ -288,6 +294,11 @@ def generate_global_section_v4(df_global):
             }.get(t, t)
             lines.append(f"| {t} | {desc} | {flow_val:.2f} |\n")
         lines.append("\n*Estos activos no forman parte del core y se muestran solo como contexto adicional.*\n\n")
+
+    # Añadir tickers faltantes a issues
+    for t in FLOW_ASSETS['equity'] + FLOW_ASSETS['fixed_income'] + FLOW_ASSETS['commodities']:
+        if t not in flow_df.columns:
+            issues[t] = 'MISSING (no se descargaron datos)'
 
     if issues:
         lines.append("### Data Issues\n")
