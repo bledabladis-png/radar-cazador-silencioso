@@ -491,6 +491,16 @@ def compute_synthetic_factors(cftc_sector_z):
 def main():
     print("=== RADAR DE ROTACION SECTORIAL v4.0 ===\n")
     df = download_market_data()
+    # Validar integridad de los datos US
+    from data_integrity import validate_market_data
+    us_ok, us_missing, us_details = validate_market_data(df)
+    if not us_ok:
+        print("[ERROR] Datos US incompletos. Faltan tickers o días mínimos:")
+        for t in us_missing:
+            print(f"  - {t}: {us_details[t]}")
+        print("Se aborta la ejecución para no generar un reporte con NaN.")
+        return
+    print("[Integridad US] Todos los tickers requeridos tienen datos suficientes.")
 
     # ---------------------------------------------------------
     # CARGA DE DATOS DE ACCIONES PARA EL ANÁLISIS DE LÍDERES
@@ -706,6 +716,17 @@ def main():
         try:
             print("[Radar Global] Descargando datos globales...")
             df_global = download_global_market_data()
+            # Validar integridad de los datos globales
+            from data_integrity import validate_global_data
+            glob_ok, glob_missing, glob_details = validate_global_data(df_global)
+            if not glob_ok:
+                print("[ERROR] Datos globales incompletos:")
+                for t in glob_missing:
+                    print(f"  - {t}: {glob_details[t]}")
+                print("Se omite la sección del Radar Global.")
+                global_section = []
+            else:
+                print("[Integridad Global] Todos los tickers requeridos tienen datos suficientes.")
             if not df_global.empty:
                 global_section = generate_global_section(df_global)
                 if global_section:
