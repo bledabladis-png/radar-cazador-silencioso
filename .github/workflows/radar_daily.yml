@@ -13,16 +13,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Clonar repositorio
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Restaurar caché de datos de opciones
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: data/options_volume
           key: options-volume-v1
 
       - name: Configurar Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: '3.12'
 
@@ -40,7 +40,7 @@ jobs:
         run: python run.py
 
       - name: Subir reporte principal
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: reporte-diario
           path: outputs/reporte_diario.md
