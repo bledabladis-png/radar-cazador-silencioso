@@ -151,6 +151,7 @@ def download_market_data(force=False):
                     highs[ticker] = data[ticker]['High']
                     lows[ticker] = data[ticker]['Low']
             df = build_market_dataframe(prices, volumes, opens, highs, lows, all_tickers)
+            df = df.ffill()
             df.to_csv(cache_file)
             print(f"Datos guardados desde Yahoo ({len(df)} días)")
             return df

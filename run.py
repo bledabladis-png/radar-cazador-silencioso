@@ -492,7 +492,7 @@ def compute_synthetic_factors(cftc_sector_z):
     }
 
 def main():
-    print("=== RADAR DE ROTACION SECTORIAL v4.0 ===\n")
+    print("=== RADAR DE ROTACION SECTORIAL v4.0.5 ===\n")
     df = download_market_data()
     # Validar integridad de los datos US
     from data_integrity import validate_market_data
@@ -504,6 +504,11 @@ def main():
         print("Se aborta la ejecución para no generar un reporte con NaN.")
         return
     print("[Integridad US] Todos los tickers requeridos tienen datos suficientes.")
+    # Asegurar que no hay NaN en las series de precios críticas para los cálculos
+    critical_cols = ['SPY', '^VIX', 'HYG', 'LQD', '^TNX', '^IRX'] + sectors
+    for col in critical_cols:
+        if col in df.columns:
+            df[col] = df[col].ffill()
 
     # ---------------------------------------------------------
     # CARGA DE DATOS DE ACCIONES PARA EL ANÁLISIS DE LÍDERES
