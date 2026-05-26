@@ -295,10 +295,10 @@ def generate_global_section_v4(df_global):
             lines.append(f"| {t} | {desc} | {flow_val:.2f} |\n")
         lines.append("\n*Estos activos no forman parte del core y se muestran solo como contexto adicional.*\n\n")
 
-    # Añadir tickers faltantes a issues
+    # Marcar tickers del core que no están disponibles
     for t in FLOW_ASSETS['equity'] + FLOW_ASSETS['fixed_income'] + FLOW_ASSETS['commodities']:
-        if t not in flow_df.columns:
-            issues[t] = 'MISSING (no se descargaron datos)'
+        if t not in flow_df.columns and t not in issues:
+            issues[t] = 'DATA ISSUE (not available)'
 
     if issues:
         lines.append("### Data Issues\n")

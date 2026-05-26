@@ -635,6 +635,7 @@ def main():
     edge_new = compute_edge_hierarchical(macro_score_new, flow_orthogonal, spy_structure_value)
     truth_score = compute_truth(macro_score_new, flow_orthogonal, spy_structure_value)
     alignment = compute_alignment_score(macro_score_new, flow_orthogonal, spy_structure_value)
+    alignment_score = alignment   
     tradeable = is_tradeable(edge_new, truth_score, spy_structure_value)
     print(f"Edge Score: {edge_new:.2f}")
     print(f"Truth Score: {truth_score:.2f}")
