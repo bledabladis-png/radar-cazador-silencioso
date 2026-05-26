@@ -505,7 +505,8 @@ def main():
         return
     print("[Integridad US] Todos los tickers requeridos tienen datos suficientes.")
     # Asegurar que no hay NaN en las series de precios críticas para los cálculos
-    critical_cols = ['SPY', '^VIX', 'HYG', 'LQD', '^TNX', '^IRX'] + tickers['sectors']
+    sectors_list = ['XLK', 'XLF', 'XLE', 'XLI', 'XLY', 'XLP', 'XLV', 'XLU', 'XLRE']
+    critical_cols = ['SPY', '^VIX', 'HYG', 'LQD', '^TNX', '^IRX'] + sectors_list
     for col in critical_cols:
         if col in df.columns:
             df[col] = df[col].ffill()
