@@ -1137,7 +1137,7 @@ def main():
 
     try:
         from validation import evaluate_signal
-        future_returns = df['SPY'].pct_change().shift(-5)
+        future_returns = df['SPY'].pct_change(fill_method=None).shift(-5)
         signal_df = pd.DataFrame(index=flow_mom.index)
         for sec in sectors:
             signal_df[sec] = distribution_prob_cont.get(sec, 0)

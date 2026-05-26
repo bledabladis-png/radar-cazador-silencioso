@@ -4,7 +4,7 @@
 FLOW_ASSETS = {
     'equity': ['SPY', 'EZU', 'EWJ', 'EEM'],
     'fixed_income': ['TLT', 'HYG'],
-    'commodities': ['GLD', 'DBC'],
+    'commodities': ['GLD', 'DBC', 'XOP'],
     'dollar_proxy': 'UUP'
 }
 
@@ -12,7 +12,7 @@ RISK_ASSETS = {
     'equity': ['SPY', 'EZU', 'EWJ', 'EEM'],
     'credit': ['HYG'],
     'safe_havens': ['TLT', 'GLD'],
-    'commodities': ['DBC']
+    'commodities': ['DBC', 'XOP']
 }
 
 CROSS_REGION = {

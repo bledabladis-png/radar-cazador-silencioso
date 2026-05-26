@@ -7,8 +7,16 @@ REQUIRED_US_TICKERS = [
 ]
 
 REQUIRED_GLOBAL_TICKERS = [
-    'SPY', 'EZU', 'EWJ', 'EEM', 'TLT', 'HYG', 'GLD', 'DBC', 'XOP', 'UUP',
-    'EURUSD=X', 'JPYUSD=X', 'ACWI'
+    # Core
+    'SPY', 'EZU', 'EWJ', 'EEM',
+    'TLT', 'HYG',
+    'GLD', 'DBC', 'XOP',
+    'UUP',
+    'EURUSD=X', 'JPYUSD=X',
+    # Benchmark
+    'ACWI',
+    # Contexto extendido (deseables pero no críticos)
+    'VGK', 'IWM', 'FXI', 'LQD'
 ]
 
 def validate_market_data(df, required_tickers=REQUIRED_US_TICKERS, min_days=200):

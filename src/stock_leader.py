@@ -213,7 +213,7 @@ def compute_stock_metrics(df, etf_ticker, stock_list):
             rs_trend = rs.rolling(20).mean().diff().iloc[-1]
 
             # Flujo institucional
-            ret = price.pct_change()
+            ret = price.pct_change(fill_method=None)
             dollar_vol = price * volume
             flow_raw = ret * dollar_vol
             flow_z = robust_zscore(flow_raw, window=60)
