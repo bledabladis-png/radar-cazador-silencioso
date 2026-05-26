@@ -160,6 +160,7 @@ def download_global_market_data(force=False):
     if all_data.empty:
         raise Exception("No se pudieron descargar datos globales.")
 
+    all_data = all_data.ffill()
     all_data.to_csv(CACHE_FILE)
     print(f"[GlobalDataLoader] Caché global guardada en {CACHE_FILE}")
     return all_data
