@@ -11,7 +11,7 @@ def compute_sector_momentum(df, sectors, benchmark='SPY', window=20):
     momentum = {}
     for sec in sectors:
         rel = df[sec] / df[benchmark]
-        mom = rel.pct_change(window).iloc[-1]
+        mom = rel.pct_change(periods=window, fill_method=None).iloc[-1]
         momentum[sec] = mom
     return momentum
 
@@ -55,7 +55,7 @@ def run_flow_radar(df, sectors=None):
             flow_mom[sec] = 0.0
             continue
         dollar_vol = close * volume
-        ret = close.pct_change()
+        ret = close.pct_change(fill_method=None)
         flow = ret * dollar_vol
         # Z-score robusto con ventana 60
         flow_z = robust_zscore(flow, window=60)

@@ -165,6 +165,9 @@ def compute_regime_score(df, features):
     credit_norm = 1 - np.clip(credit_z, 0, 2) / 2
     regime_score = (0.4 * trend_norm + 0.2 * breadth_norm + 0.2 * vix_component + 0.2 * credit_norm)
     regime_score = np.clip(regime_score, 0, 1)
+    if np.isnan(regime_score):
+        print("[Advertencia] Régimen cuantitativo no disponible (NaN en componentes). Se asigna TRANSITION por defecto.")
+        regime_score = 0.5
     if regime_score > 0.6:
         label = "EXPANSION"
     elif regime_score < 0.4:
@@ -720,11 +723,10 @@ def main():
             from data_integrity import validate_global_data
             glob_ok, glob_missing, glob_details = validate_global_data(df_global)
             if not glob_ok:
-                print("[ERROR] Datos globales incompletos:")
+                print("[Advertencia] Datos globales incompletos (algunos tickers no disponibles):")
                 for t in glob_missing:
                     print(f"  - {t}: {glob_details[t]}")
-                print("Se omite la sección del Radar Global.")
-                global_section = []
+                print("Se generará la sección con los datos disponibles.")
             else:
                 print("[Integridad Global] Todos los tickers requeridos tienen datos suficientes.")
             if not df_global.empty:
