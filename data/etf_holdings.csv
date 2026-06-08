@@ -11,94 +11,146 @@ XLRE,EXR,Extra Space Storage Inc.,0.01827621
 XLRE,8801.T,Mitsui Fudosan Co. Ltd.,0.01600619
 XLRE,AVB,AvalonBay Communities Inc.,0.01567240
 
-XLK,NVDA,NVIDIA Corporation,0.21423046
-XLK,AAPL,Apple Inc.,0.17959603
-XLK,MSFT,Microsoft Corporation,0.12819130
-XLK,AVGO,Broadcom Inc.,0.08303148
-XLK,MU,Micron Technology Inc.,0.04184141
-XLK,AMD,Advanced Micro Devices Inc.,0.03409482
-XLK,INTC,Intel Corporation,0.02406517
-XLK,CSCO,Cisco Systems Inc.,0.01940176
-XLK,LRCX,Lam Research Corporation,0.01671866
-XLK,AMAT,Applied Materials Corporation,0.01498323
-XLK,ORCL,Oracle Corporation,0.01358090
+XLK,NVDA,NVIDIA Corporation,0.21035335
+XLK,AAPL,Apple Inc.,0.18414274
+XLK,MSFT,Microsoft Corporation,0.13206084
+XLK,AVGO,Broadcom Inc.,0.07806853
+XLK,MU,Micron Technology Inc.,0.04150736
+XLK,AMD,Advanced Micro Devices Inc.,0.03246052
+XLK,CSCO,Cisco Systems Inc.,0.02051533
+XLK,INTC,Intel Corporation,0.01987360
+XLK,LRCX,Lam Research Corporation,0.01616243
+XLK,ORCL,Oracle Corporation,0.01546023
+XLK,AMAT,Applied Materials Inc.,0.01534837
+XLK,PLTR,Palantir Technologies Inc. Class A,0.01321637
+XLK,IBM,International Business Machines Corporation,0.01136154
+XLK,TXN,Texas Instruments Incorporated,0.01104208
+XLK,KLAC,KLA Corporation,0.01079016
+XLK,SNDK,Sandisk Corporation,0.00983301
+XLK,QCOM,QUALCOMM Incorporated,0.00982990
+XLK,PANW,Palo Alto Networks Inc.,0.00939104
+XLK,ADI,Analog Devices Inc.,0.00837137
+XLK,STX,Seagate Technology Holdings PLC,0.00788866
+XLK,CRM,Salesforce Inc.,0.00741994
+XLK,WDC,Western Digital Corporation,0.00741042
+XLK,APH,Amphenol Corporation Class A,0.00728410
+XLK,CRWD,CrowdStrike Holdings Inc. Class A,0.00722557
+XLK,ANET,Arista Networks Inc,0.00679546
+XLK,APP,AppLovin Corp. Class A,0.00644280
+XLK,GLW,Corning Inc,0.00592023
+XLK,NOW,ServiceNow Inc.,0.00502146
+XLK,DELL,Dell Technologies Inc. Class C,0.00500106
+XLK,ACN,Accenture Plc Class A,0.00468799
+XLK,ADBE,Adobe Inc.,0.00440465
 
-XLF,BRK.B,Berkshire Hathaway Inc. Class B,0.12024671
-XLF,JPM,JPMorgan Chase & Co.,0.11214162
-XLF,V,Visa Inc. Class A,0.07443333
-XLF,MA,Mastercard Incorporated Class A,0.05446242
-XLF,BAC,Bank of America Corp,0.04698984
-XLF,GS,Goldman Sachs Group Inc.,0.04047184
-XLF,MS,Morgan Stanley,0.03294172
-XLF,WFC,Wells Fargo & Company,0.03253642
-XLF,C,Citigroup Inc.,0.03008949
-XLF,AXP,American Express Company,0.02259634
-XLF,BLK,BlackRock Inc.,0.02111202
+XLF,BRK.B,Berkshire Hathaway Inc. Class B,0.12045630
+XLF,JPM,JPMorgan Chase & Co.,0.11334203
+XLF,V,Visa Inc. Class A,0.07321588
+XLF,MA,Mastercard Incorporated Class A,0.05384167
+XLF,BAC,Bank of America Corp,0.04809300
+XLF,GS,Goldman Sachs Group Inc.,0.04195157
+XLF,MS,Morgan Stanley,0.03434223
+XLF,WFC,Wells Fargo & Company,0.03413307
+XLF,C,Citigroup Inc.,0.03118389
+XLF,AXP,American Express Company,0.02242218
+XLF,SCHW,Charles Schwab Corp,0.02000157
+XLF,BLK,BlackRock Inc.,0.01936235
+XLF,SPGI,S&P Global Inc.,0.01745414
+XLF,PGR,Progressive Corporation,0.01612694
+XLF,CB,Chubb Limited,0.01594788
 
-XLE,XOM,Exxon Mobil Corporation,0.29946116
-XLE,CVX,Chevron Corporation,0.16561895
-XLE,COP,ConocoPhillips,0.06831530
-XLE,WMB,Williams Companies Inc.,0.04459335
-XLE,SLB,SLB Limited,0.04147080
-XLE,EOG,EOG Resources Inc.,0.03535021
-XLE,VLO,Valero Energy Corporation,0.03522609
-XLE,MPC,Marathon Petroleum Corporation,0.03499992
-XLE,PSX,Phillips 66,0.03351301
-XLE,BKR,Baker Hughes Company Class A,0.03154329
+XLE,XOM,Exxon Mobil Corporation,0.30060799
+XLE,CVX,Chevron Corporation,0.16847003
+XLE,COP,ConocoPhillips,0.06886166
+XLE,WMB,Williams Companies Inc.,0.04216466
+XLE,SLB,SLB Limited,0.03936781
+XLE,VLO,Valero Energy Corporation,0.03743810
+XLE,MPC,Marathon Petroleum Corporation,0.03708401
+XLE,EOG,EOG Resources Inc.,0.03587065
+XLE,PSX,Phillips 66,0.03539559
+XLE,KMI,Kinder Morgan Inc.,0.02975911
+XLE,BKR,Baker Hughes Company Class A,0.02967786
+XLE,TRGP,Targa Resources Corp.,0.02720217
+XLE,OKE,ONEOK Inc.,0.02664320
+XLE,DVN,Devon Energy Corporation,0.02446063
+XLE,OXY,Occidental Petroleum Corporation,0.01964522
 
-XLI,CAT,Caterpillar Inc.,0.07793689
-XLI,GE,GE Aerospace,0.06081281
-XLI,GEV,GE Vernova Inc.,0.05318281
-XLI,RTX,RTX Corporation,0.04430901
-XLI,BA,Boeing Company,0.03169660
-XLI,UNP,Union Pacific Corporation,0.02968126
-XLI,ETN,Eaton Corp. Plc,0.02886289
-XLI,HON,Honeywell International Inc.,0.02712472
-XLI,UBER,Uber Technologies Inc.,0.02659722
-XLI,DE,Deere & Company,0.02459892
+XLI,CAT,Caterpillar Inc.,0.07765143
+XLI,GE,GE Aerospace,0.06349249
+XLI,GEV,GE Vernova Inc.,0.04643365
+XLI,RTX,RTX Corporation,0.04485648
+XLI,BA,Boeing Company,0.03123097
+XLI,UNP,Union Pacific Corporation,0.02984652
+XLI,ETN,Eaton Corporation,0.02837906
+XLI,DE,Deere & Company,0.02715402
+XLI,UBER,Uber Technologies Inc.,0.02684997
+XLI,HON,Honeywell International Inc.,0.02507416
+XLI,VRT,Vertiv Holdings Co.,0.02121120
+XLI,PH,Parker-Hannifin Corporation,0.02056256
+XLI,LMT,Lockheed Martin Corporation,0.01956425
+XLI,PWR,Quanta Services Inc.,0.01913092
+XLI,TT,Trane Technologies plc,0.01866069
 
-XLY,AMZN,Amazon.com Inc.,0.32388857
-XLY,TSLA,Tesla Inc.,0.19403903
-XLY,HD,Home Depot Inc.,0.06154492
-XLY,MCD,McDonald's Corporation,0.03960734
-XLY,TJX,TJX Companies Inc,0.03516263
-XLY,BKNG,Booking Holdings Inc.,0.02622263
-XLY,LOW,Lowe's Companies Inc.,0.02370742
-XLY,SBUX,Starbucks Corporation,0.02302806
-XLY,MAR,Marriott International Inc. Class A,0.01633687
-XLY,ROST,Ross Stores Inc.,0.01508365
+XLY,AMZN,Amazon.com Inc.,0.31363304
+XLY,TSLA,Tesla Inc.,0.18270296
+XLY,HD,Home Depot Inc.,0.06431122
+XLY,MCD,McDonald's Corporation,0.04144153
+XLY,TJX,TJX Companies Inc.,0.03711659
+XLY,BKNG,Booking Holdings Inc.,0.02780599
+XLY,LOW,Lowe's Companies Inc.,0.02459748
+XLY,SBUX,Starbucks Corporation,0.02259124
+XLY,MAR,Marriott International Inc.,0.01791132
+XLY,HLT,Hilton Worldwide Holdings Inc.,0.01632226
+XLY,ORLY,O'Reilly Automotive Inc.,0.01577979
+XLY,ROST,Ross Stores Inc.,0.01546021
+XLY,GM,General Motors Company,0.01540169
+XLY,RCL,Royal Caribbean Group,0.01462013
+XLY,DASH,DoorDash Inc.,0.01216337
 
-XLP,WMT,Walmart Inc.,0.17337894
-XLP,COST,Costco Wholesale Corporation,0.14849570
-XLP,PG,Procter & Gamble Company,0.11083138
-XLP,KO,Coca-Cola Company,0.10391202
-XLP,PM,Philip Morris International Inc.,0.09426730
-XLP,PEP,PepsiCo Inc.,0.06641965
-XLP,MO,Altria Group Inc.,0.04053249
-XLP,MDLZ,Mondelez International Inc. Class A,0.02619473
-XLP,CL,Colgate-Palmolive Company,0.02416808
-XLP,MNST,Monster Beverage Corporation,0.02080797
+XLP,WMT,Walmart Inc.,0.17487695
+XLP,COST,Costco Wholesale Corporation,0.14476182
+XLP,PG,Procter & Gamble Company,0.11428756
+XLP,KO,Coca-Cola Company,0.10326304
+XLP,PM,Philip Morris International Inc.,0.09313980
+XLP,PEP,PepsiCo Inc.,0.06509479
+XLP,MO,Altria Group Inc.,0.04067398
+XLP,MDLZ,Mondelez International Inc.,0.02669591
+XLP,CL,Colgate-Palmolive Company,0.02396962
+XLP,MNST,Monster Beverage Corporation,0.02144248
+XLP,TGT,Target Corporation,0.01863366
+XLP,KDP,Keurig Dr Pepper Inc.,0.01392895
+XLP,ADM,Archer-Daniels-Midland Company,0.01305961
+XLP,KR,Kroger Co.,0.01242866
+XLP,SYY,Sysco Corporation,0.01227117
 
-XLV,LLY,Eli Lilly and Company,0.15763216
-XLV,JNJ,Johnson & Johnson,0.10363741
-XLV,ABBV,AbbVie Inc.,0.07036407
-XLV,UNH,UnitedHealth Group Incorporated,0.06377071
-XLV,MRK,Merck & Co. Inc.,0.05551613
-XLV,AMGN,Amgen Inc.,0.03379869
-XLV,TMO,Thermo Fisher Scientific Inc.,0.03146558
-XLV,GILD,Gilead Sciences Inc.,0.03099293
-XLV,ISRG,Intuitive Surgical Inc.,0.02897996
-XLV,ABT,Abbott Laboratories,0.02815731
-XLV,PFE,Pfizer Inc.,0.02745733
+XLV,LLY,Eli Lilly and Company,0.16251908
+XLV,JNJ,Johnson & Johnson,0.10168367
+XLV,ABBV,AbbVie Inc.,0.07278928
+XLV,UNH,UnitedHealth Group Incorporated,0.06558438
+XLV,MRK,Merck & Co. Inc.,0.05434487
+XLV,AMGN,Amgen Inc.,0.03412440
+XLV,TMO,Thermo Fisher Scientific Inc.,0.03220669
+XLV,GILD,Gilead Sciences Inc.,0.02904258
+XLV,ABT,Abbott Laboratories,0.02870595
+XLV,ISRG,Intuitive Surgical Inc.,0.02717765
+XLV,PFE,Pfizer Inc.,0.02683563
+XLV,CVS,CVS Health Corporation,0.02212158
+XLV,BMY,Bristol-Myers Squibb Company,0.02114028
+XLV,DHR,Danaher Corporation,0.02101824
+XLV,VRTX,Vertex Pharmaceuticals Incorporated,0.02057228
 
-XLU,NEE,NextEra Energy Inc.,0.13054588
-XLU,SO,Southern Company,0.07409289
-XLU,DUK,Duke Energy Corporation,0.06950206
-XLU,CEG,Constellation Energy Corporation,0.06720836
-XLU,AEP,American Electric Power Company Inc.,0.05063278
-XLU,SRE,Sempra,0.04273290
-XLU,D,Dominion Energy Inc,0.04108668
-XLU,VST,Vistra Corp.,0.03748319
-XLU,ETR,Entergy Corporation,0.03622135
-XLU,XEL,Xcel Energy Inc.,0.03417372
-XLU,EXC,Exelon Corporation,0.03367243
+XLU,NEE,NextEra Energy Inc.,0.13073869
+XLU,SO,Southern Company,0.07456688
+XLU,DUK,Duke Energy Corporation,0.07064599
+XLU,CEG,Constellation Energy Corporation,0.05954240
+XLU,AEP,American Electric Power Company Inc.,0.05108065
+XLU,SRE,Sempra,0.04363604
+XLU,D,Dominion Energy Inc.,0.04177743
+XLU,ETR,Entergy Corporation,0.03663294
+XLU,VST,Vistra Corp.,0.03465072
+XLU,EXC,Exelon Corporation,0.03422345
+XLU,XEL,Xcel Energy Inc.,0.03419312
+XLU,PEG,Public Service Enterprise Group Inc.,0.02901357
+XLU,ED,Consolidated Edison Inc.,0.02804725
+XLU,PCG,PG&E Corporation,0.02750282
+XLU,WEC,WEC Energy Group Inc.,0.02688378
