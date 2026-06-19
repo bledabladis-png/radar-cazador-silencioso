@@ -1,34 +1,7 @@
-﻿# Datos descargados (se regeneran) - no se suben
+﻿__pycache__/
+*.pyc
+.pytest_cache/
 data/market_data.csv
 data/stock_prices.csv
-data/options_volume/*.csv
-data/global_market_data.csv
-data/global_metrics_history.csv
-
-# Outputs: ignorar todo excepto el histórico de flujos
-outputs/*
-!outputs/flow_history.csv
-
-# Archivos temporales y caché de Python
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
-*.tmp
-*.log
-
-# Entornos virtuales
-venv/
-env/
-ENV/
-
-# Archivos de sistema
-.DS_Store
-Thumbs.db
-
-# Copias de seguridad locales (opcional)
-*_backup.py
-*_copia.py
-
-# Históricos de líderes (sí se versionan)
-!data/historical_leaders/
+outputs/backtest_v2_results.csv
+outputs/sensitivity_results.csv
