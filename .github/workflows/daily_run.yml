@@ -31,4 +31,4 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add outputs/reporte_diario.md outputs/macro_regime.csv outputs/sector_rankings.csv
-          git diff --staged --quiet || (git commit -m "Daily report " && git push)
+          git diff --staged --quiet || (git commit -m "Daily report $(date +'%Y-%m-%d')" && git push)
