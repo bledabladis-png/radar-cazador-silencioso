@@ -3,6 +3,7 @@ import yfinance as yf
 from datetime import datetime, timedelta
 from tenacity import retry, stop_after_attempt, wait_exponential
 import os
+import time
 from config.tickers import MARKET_TICKERS
 from config.settings import CACHE_HOURS
 
@@ -24,13 +25,34 @@ def download_market_data():
             return pd.read_csv(cache_path, header=[0,1], index_col=0, parse_dates=True)
 
     tickers = _ticker_list()
-    data = yf.download(tickers, period='10y', auto_adjust=True)
-
+    
+    # Descarga por lotes para evitar bloqueos de Yahoo Finance
+    batch_size = 5
+    delay = 2  # segundos entre lotes
+    all_data = []
+    
+    for i in range(0, len(tickers), batch_size):
+        batch = tickers[i:i+batch_size]
+        print(f"Descargando lote {i//batch_size + 1}: {batch}")
+        try:
+            data_batch = yf.download(batch, period='10y', auto_adjust=True)
+            if not data_batch.empty:
+                all_data.append(data_batch)
+        except Exception as e:
+            print(f"Error en lote {batch}: {e}")
+        if i + batch_size < len(tickers):
+            time.sleep(delay)
+    
+    if not all_data:
+        raise RuntimeError("No se pudo descargar ningún ticker.")
+    
+    data = pd.concat(all_data, axis=1)
+    
     if not isinstance(data.columns, pd.MultiIndex):
         data.columns = pd.MultiIndex.from_tuples(data.columns)
-
+    
     from src.utils import clean_oil_prices
     data = clean_oil_prices(data)
-
+    
     data.to_csv(cache_path)
     return data
