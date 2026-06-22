@@ -1,5 +1,5 @@
 # MACRO SECTORIAL - Reporte Diario
-**Fecha:** 2026-06-22 23:12:18
+**Fecha:** 2026-06-22 23:25:03
 **Modelo:** v3.1 | Pesos: v3 | Indicadores: v2
 
 ## Resumen de Regimenes
@@ -74,19 +74,24 @@
 | 6 | ^STOXX50E | 3.78% |
 | 7 | ^RUT | 2.87% |
 | 8 | DX-Y.NYB | 1.84% |
-| 9 | USDJPY=X | 1.65% |
+| 9 | USDJPY=X | 1.66% |
 | 10 | TLT | 1.56% |
 | 11 | EMB | 1.22% |
 | 12 | ^NDX | 1.15% |
 | 13 | EWX | 0.80% |
 | 14 | LQD | 0.38% |
 | 15 | BIL | 0.25% |
+| 16 | HYG | 0.21% |
+| 17 | QUAL | 0.20% |
+| 18 | ELD | 0.17% |
+| 19 | IEF | 0.04% |
+| 20 | HG=F | -0.19% |
 
 ## Flujo Institucional - Otros Activos (Proxy)
 | # | Activo | Flujo (z-score) |
 |---|--------|------------------|
 | 1 | VLUE | 0.79 |
-| 2 | GC=F | 0.43 |
+| 2 | GC=F | 0.42 |
 | 3 | TLT | 0.03 |
 | 4 | NG=F | 0.00 |
 | 5 | EMB | -0.08 |
@@ -98,8 +103,13 @@
 | 11 | CL=F | -0.28 |
 | 12 | ELD | -0.28 |
 | 13 | MTUM | -0.28 |
-| 14 | HG=F | -0.31 |
+| 14 | HG=F | -0.33 |
 | 15 | BZ=F | -0.35 |
+| 16 | BIL | -0.40 |
+| 17 | EEM | -0.42 |
+| 18 | QUAL | -0.44 |
+| 19 | EWJ | -0.56 |
+| 20 | ^GSPC | -0.57 |
 
 ## Lideres Sectoriales
 *No disponibles: ningun sector en fase de acumulacion.*
