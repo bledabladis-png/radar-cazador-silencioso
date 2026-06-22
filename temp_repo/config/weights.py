@@ -1,11 +1,11 @@
 ﻿# Pesos para el Macro Score combinado (jerarquía de niveles)
 LEVEL_WEIGHTS = {
-    'critical': 0.60,    # curva, crédito, volatilidad, liquidez
-    'important': 0.30,   # dólar, materias primas, breadth
-    'contextual': 0.10,  # índices bursátiles (market_strength)
+    'critical': 0.60,
+    'important': 0.30,
+    'contextual': 0.10,
 }
 
-# Sub-pesos dentro de cada nivel
+# Sub-pesos dentro de cada nivel (v3.0 - sin real_liquidity)
 CRITICAL_WEIGHTS = {
     'curve': 0.30,
     'credit': 0.30,
@@ -23,7 +23,7 @@ CONTEXTUAL_WEIGHTS = {
     'market_strength': 1.0,
 }
 
-# Pesos para Sector Score (actualizados v1.4)
+# Pesos para Sector Score
 SECTOR_SCORE_WEIGHTS = {
     'rs_mom_20': 0.25,
     'rs_mom_50': 0.15,

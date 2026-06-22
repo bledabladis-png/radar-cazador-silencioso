@@ -103,6 +103,20 @@ def compute_wls(df_metrics, weights=None):
     # Bonus por persistencia de flujo positivo
     df['wls'] *= (1 + 0.05 * np.minimum(df['persistence_10d'] / 10, 1.0))
     df['sector_rank_pct'] = df.groupby('sector')['wls'].rank(pct=True)
+
+    # Rank Stability (leader_confidence)
+    df['leader_confidence'] = np.nan
+    for sector in df['sector'].unique():
+        mask = df['sector'] == sector
+        sector_df = df[mask]
+        if len(sector_df) >= 20:
+            current_rank = sector_df['wls'].rank()
+            historical_rank = sector_df['wls'].iloc[:-20].rank()
+            common_idx = current_rank.index.intersection(historical_rank.index)
+            if len(common_idx) > 5:
+                rho = current_rank.loc[common_idx].corr(historical_rank.loc[common_idx], method='spearman')
+                df.loc[mask, 'leader_confidence'] = (rho + 1) / 2
+
     return df.sort_values('wls', ascending=False)
 
 def generate_leader_section(df_market, df_stocks, holdings_df, fase_dict, operabilidad_dict, output_csv=None):
