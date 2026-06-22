@@ -1,10 +1,9 @@
 # MACRO SECTORIAL - Reporte Diario
-**Fecha:** 2026-06-22 22:11:51
+**Fecha:** 2026-06-23 00:25:29
 **Modelo:** v2.1 | Pesos: v3 | Indicadores: v2
 
 ## Resumen de Regimenes
-- **Macro:** RECOVERY (Score: 0.15, Confianza: 16%)
-  *Confianza baja: senhales contradictorias en el entorno actual.*
+- **Macro:** RECOVERY (Score: 0.21, Confianza: 46%)
 - **Cond. Financieras:** ESTRECHA (Score: -0.21, Confianza: 76%)
 - **Volatilidad:** STRESS (Z-Score: 1.96, Confianza: 98%)
 - **Sectores:** BROAD PARTICIPATION
@@ -51,17 +50,17 @@
 ## Flujo Institucional - Sectores (Proxy)
 | # | Sector | Flujo (z-score) |
 |---|--------|------------------|
-| 1 | Industrials (XLI) | 0.35 |
-| 2 | Financials (XLF) | 0.17 |
-| 3 | Utilities (XLU) | 0.07 |
-| 4 | Materials (XLB) | -0.03 |
-| 5 | Technology (XLK) | -0.04 |
-| 6 | Healthcare (XLV) | -0.09 |
-| 7 | Consumer Discretionary (XLY) | -0.35 |
-| 8 | Energy (XLE) | -0.38 |
-| 9 | Real Estate (XLRE) | -0.51 |
-| 10 | Consumer Staples (XLP) | -0.63 |
-| 11 | Communication Services (XLC) | -1.24 |
+| 1 | Industrials (XLI) | 0.15 |
+| 2 | Healthcare (XLV) | 0.14 |
+| 3 | Financials (XLF) | 0.07 |
+| 4 | Technology (XLK) | -0.23 |
+| 5 | Materials (XLB) | -0.29 |
+| 6 | Energy (XLE) | -0.36 |
+| 7 | Real Estate (XLRE) | -0.77 |
+| 8 | Consumer Discretionary (XLY) | -0.81 |
+| 9 | Utilities (XLU) | -0.86 |
+| 10 | Communication Services (XLC) | -0.92 |
+| 11 | Consumer Staples (XLP) | -1.10 |
 
 ## Momentum de Precio - Otros Activos (20 dias)
 | # | Activo | Retorno 20d (%) |
@@ -71,11 +70,11 @@
 | 3 | ^STOXX50E | 4.55% |
 | 4 | ^NDX | 2.94% |
 | 5 | DX-Y.NYB | 1.69% |
-| 6 | USDJPY=X | 1.66% |
+| 6 | USDJPY=X | 1.68% |
 | 7 | LQD | 0.76% |
 | 8 | ^FVX | 0.73% |
 | 9 | HYG | 0.55% |
-| 10 | HG=F | 0.35% |
+| 10 | HG=F | 0.29% |
 | 11 | ^GSPC | -0.01% |
 | 12 | USDCNY=X | -0.40% |
 | 13 | ^TNX | -1.08% |
@@ -85,21 +84,17 @@
 ## Flujo Institucional - Otros Activos (Proxy)
 | # | Activo | Flujo (z-score) |
 |---|--------|------------------|
-| 1 | EEM | 0.66 |
-| 2 | ^STOXX50E | 0.33 |
-| 3 | ^NDX | 0.16 |
-| 4 | ^RUT | 0.10 |
-| 5 | GC=F | 0.04 |
-| 6 | LQD | 0.02 |
-| 7 | ^TNX | 0.00 |
-| 8 | ^FVX | -0.00 |
-| 9 | ^TYX | 0.00 |
-| 10 | ^SPGSCI | -0.00 |
-| 11 | DX-Y.NYB | 0.00 |
-| 12 | EURUSD=X | 0.00 |
-| 13 | USDJPY=X | 0.00 |
-| 14 | USDCNY=X | -0.00 |
-| 15 | HYG | -0.10 |
+| 1 | GC=F | 0.29 |
+| 2 | EEM | -0.07 |
+| 3 | CL=F | -0.14 |
+| 4 | HG=F | -0.23 |
+| 5 | HYG | -0.26 |
+| 6 | BZ=F | -0.30 |
+| 7 | LQD | -0.47 |
+| 8 | ^STOXX50E | -0.50 |
+| 9 | ^GSPC | -0.73 |
+| 10 | ^NDX | -0.81 |
+| 11 | ^RUT | -1.39 |
 
 ## Lideres Sectoriales
 *No disponibles: ningun sector en fase de acumulacion.*

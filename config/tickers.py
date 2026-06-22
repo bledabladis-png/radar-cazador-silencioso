@@ -1,4 +1,4 @@
-# Tickers de Yahoo Finance (todos gratuitos)
+﻿# Tickers de Yahoo Finance (todos gratuitos)
 MARKET_TICKERS = {
     'equity': {
         'sp500': '^GSPC',
@@ -6,15 +6,16 @@ MARKET_TICKERS = {
         'russell2000': '^RUT',
         'eurostoxx50': '^STOXX50E',
         'msci_em': 'EEM',
+        'japan': 'EWJ',
     },
     'sectors': [
         'XLK','XLF','XLV','XLE','XLY','XLP',
         'XLI','XLB','XLU','XLRE','XLC'
     ],
     'bonds': {
-        '10y': '^TNX',
-        '5y': '^FVX',
-        '30y': '^TYX',
+        'short': 'BIL',
+        'medium': 'IEF',
+        'long': 'TLT',
     },
     'credit': {
         'hyg': 'HYG',
@@ -24,7 +25,6 @@ MARKET_TICKERS = {
         'vix': '^VIX',
         'vix3m': '^VIX3M',
         'vxn': '^VXN',
-        'iwm': 'IWM',          # Proxy Russell 2000 (calculamos volatilidad historica)
     },
     'currencies': {
         'dxy': 'DX-Y.NYB',
@@ -38,6 +38,7 @@ MARKET_TICKERS = {
         'copper': 'HG=F',
         'wti': 'CL=F',
         'brent': 'BZ=F',
+        'natgas': 'NG=F',
     },
 }
 
@@ -56,6 +57,6 @@ SECTOR_NAMES = {
     'XLC': 'Communication Services',
 }
 
-# Clasificacion de sectores
+# Clasificación de sectores
 CYCLICAL_SECTORS = ['XLK', 'XLY', 'XLI', 'XLF', 'XLB', 'XLE']
 DEFENSIVE_SECTORS = ['XLU', 'XLP', 'XLV', 'XLRE', 'XLC']

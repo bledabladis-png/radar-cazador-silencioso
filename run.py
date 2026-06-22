@@ -1,5 +1,5 @@
 ﻿"""
-Macro Sectorial v1.1 – Sistema de analisis macro y rotacion sectorial.
+Macro Sectorial v2.3 – Sistema de analisis macro y rotacion sectorial.
 El sistema implementa un conjunto consistente de reglas deterministas,
 con normalizacion robusta, separacion modular y metodologia documentada.
 No genera recomendaciones de inversion.
@@ -11,6 +11,7 @@ from src.macro_manual_loader import load_macro_manual
 from src.stock_data_loader import download_stock_prices
 from data.validator import validate_market_data
 from regimes.financial_conditions import compute_liquidity_score
+from regimes.liquidity import compute_liquidity_score as compute_real_liquidity
 from regimes.volatility_regime import compute_volatility_regime
 from regimes.macro_regime import compute_macro_regime
 from regimes.sector_regime import compute_sector_scores, compute_price_flow_rankings
@@ -43,6 +44,15 @@ def main():
     print("Calculando regimen de Cond. Financieras...")
     liquidity_score, financial_regime, liq_conf = compute_liquidity_score(df_market)
     print(f"  Cond. Financieras: {financial_regime} (conf: {liq_conf:.0%})")
+    print("Calculando liquidez real (FRED)...")
+    real_liq_score, real_liq_regime, real_liq_conf = compute_real_liquidity()
+    if real_liq_score is not None:
+        print(f"  Liquidez real: {real_liq_regime} (conf: {real_liq_conf:.0%})")
+    else:
+        print("  Liquidez real: no disponible (sin datos FRED)")
+        real_liq_score = None
+        real_liq_regime = 'N/A'
+        real_liq_conf = 0.0
 
     print("Calculando regimen de volatilidad...")
     try:

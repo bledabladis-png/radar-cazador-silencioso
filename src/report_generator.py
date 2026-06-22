@@ -3,7 +3,7 @@ import os
 from datetime import datetime
 from config.tickers import SECTOR_NAMES
 
-MODEL_VERSION = "3.1"
+MODEL_VERSION = "2.1"
 WEIGHTS_VERSION = "3"
 INDICATORS_VERSION = "2"
 

@@ -5,12 +5,13 @@ from datetime import datetime, timedelta
 from regimes.financial_conditions import compute_liquidity_score
 from regimes.volatility_regime import compute_volatility_regime
 from regimes.macro_regime import compute_macro_regime
+from regimes.liquidity import compute_liquidity_score as compute_real_liquidity
 from src.utils import get_col
 from src.macro_manual_loader import load_macro_manual
 from config.tickers import MARKET_TICKERS
 from sklearn.metrics import classification_report, confusion_matrix
 
-START = '2007-01-01'
+START = '2010-01-01'
 END = datetime.now().strftime('%Y-%m-%d')
 
 def expected_regime(date):
@@ -22,12 +23,6 @@ def expected_regime(date):
     except:
         pass
     return 'MIXED'
-
-def apply_persistence_filter(df_res, min_weeks=4):
-    df = df_res.copy()
-    df['regime_shift'] = (df['obtained'] != df['obtained'].shift()).cumsum()
-    racha_len = df.groupby('regime_shift')['obtained'].transform('count')
-    return df[racha_len >= min_weeks].copy()
 
 def run_backtest():
     print("Descargando datos completos (20 años)...")
@@ -71,8 +66,15 @@ def run_backtest():
             vol_score = None
             vol_regime = 'N/A'
         try:
+            real_liq_score, real_liq_regime, _ = compute_real_liquidity()
+            if real_liq_score is None:
+                real_liq_score = None
+        except:
+            real_liq_score = None
+
+        try:
             macro_score, macro_regime, macro_conf, _ = compute_macro_regime(
-                df_market, df_macro, liq_score, vol_score, previous_regime
+                df_market, df_macro, liq_score, vol_score, previous_regime, real_liquidity_score=real_liq_score
             )
         except:
             macro_regime = 'ERROR'
@@ -88,6 +90,7 @@ def run_backtest():
             'confidence': macro_conf,
             'liq_regime': liq_regime,
             'vol_regime': vol_regime,
+            'real_liq_regime': real_liq_regime if 'real_liq_regime' in locals() else 'N/A',
         })
         previous_regime = macro_regime
 
@@ -95,20 +98,19 @@ def run_backtest():
             print(f"Procesados {len(results)} semanas... última fecha: {test_date.date()}")
 
     df_res = pd.DataFrame(results)
-    df_res.to_csv('outputs/backtest_v2_results.csv', index=False)
+    df_res.to_csv('outputs/backtest_v3_results.csv', index=False)
     print(f"\nResultados guardados. Total semanas: {len(df_res)}")
 
-    # Métricas de clasificación originales
     y_true = df_res['expected']
     y_pred = df_res['obtained']
     labels = sorted(set(y_true) | set(y_pred))
 
-    print("\nMatriz de confusión original:")
+    print("\nMatriz de confusión:")
     cm = confusion_matrix(y_true, y_pred, labels=labels)
     cm_df = pd.DataFrame(cm, index=labels, columns=labels)
     print(cm_df)
 
-    print("\nInforme de clasificación original:")
+    print("\nInforme de clasificación:")
     print(classification_report(y_true, y_pred, labels=labels, zero_division=0))
 
     print("\n--- RENDIMIENTO DEL SPY BAJO CADA RÉGIMEN OBTENIDO ---")
@@ -121,51 +123,6 @@ def run_backtest():
             std_ret = aligned.loc[mask, 'spy_return'].std()
             sharpe = avg_ret / (std_ret + 1e-9) * np.sqrt(52)
             print(f"  {regime}: semanas={mask.sum()}, retorno semanal medio={avg_ret:.2%}, vol={std_ret:.2%}, Sharpe={sharpe:.2f}")
-
-    # Filtro de persistencia
-    df_persist = apply_persistence_filter(df_res, min_weeks=4)
-    print(f"\n--- TRAS FILTRO DE PERSISTENCIA (rachas ≥4 semanas) ---")
-    print(f"Semanas restantes: {len(df_persist)}")
-    if len(df_persist) > 0:
-        y_true_f = df_persist['expected']
-        y_pred_f = df_persist['obtained']
-        print("\nMatriz de confusión (filtrada):")
-        cm_f = confusion_matrix(y_true_f, y_pred_f, labels=labels)
-        print(pd.DataFrame(cm_f, index=labels, columns=labels))
-        print("\nInforme de clasificación (filtrado):")
-        print(classification_report(y_true_f, y_pred_f, labels=labels, zero_division=0))
-
-        # Duración media tras filtro
-        obtained_f = df_persist['obtained'].values
-        durations_f = []
-        cur_reg = obtained_f[0]
-        count = 1
-        for i in range(1, len(obtained_f)):
-            if obtained_f[i] == cur_reg:
-                count += 1
-            else:
-                durations_f.append(count)
-                cur_reg = obtained_f[i]
-                count = 1
-        durations_f.append(count)
-        avg_dur_f = np.mean(durations_f)
-        print(f"Duración media tras filtro: {avg_dur_f:.1f} semanas")
-
-    # Duración media original
-    print("\n--- DURACIÓN MEDIA DE REGÍMENES OBTENIDOS (ORIGINAL) ---")
-    obtained = df_res['obtained'].values
-    durations = []
-    cur_reg = obtained[0]
-    count = 1
-    for i in range(1, len(obtained)):
-        if obtained[i] == cur_reg:
-            count += 1
-        else:
-            durations.append(count)
-            cur_reg = obtained[i]
-            count = 1
-    durations.append(count)
-    print(f"Duración media: {np.mean(durations):.1f} semanas")
 
 if __name__ == "__main__":
     run_backtest()
