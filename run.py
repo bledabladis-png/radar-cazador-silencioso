@@ -45,6 +45,15 @@ def main():
     liquidity_score, financial_regime, liq_conf = compute_liquidity_score(df_market)
     print(f"  Cond. Financieras: {financial_regime} (conf: {liq_conf:.0%})")
     print("Calculando liquidez real (FRED)...")
+    from regimes.liquidity import compute_liquidity_score as compute_real_liquidity
+    real_liq_score, real_liq_regime, real_liq_conf = compute_real_liquidity()
+    if real_liq_score is not None:
+        print(f"  Liquidez real: {real_liq_regime} (conf: {real_liq_conf:.0%})")
+    else:
+        print("  Liquidez real: no disponible (sin datos FRED)")
+        real_liq_score = None
+        real_liq_regime = "N/A"
+        real_liq_conf = 0.0
     real_liq_score, real_liq_regime, real_liq_conf = compute_real_liquidity()
     if real_liq_score is not None:
         print(f"  Liquidez real: {real_liq_regime} (conf: {real_liq_conf:.0%})")
@@ -118,7 +127,7 @@ def main():
                           vol_score, vol_regime, vol_conf,
                           sector_results,
                           sector_price, sector_flow, otros_price, otros_flow,
-                          leader_lines=leader_lines, breadth_values=breadth_values)
+                          leader_lines=leader_lines, breadth_values=breadth_values, real_liquidity_regime=real_liq_regime, real_liquidity_conf=real_liq_conf)
     print("Reporte generado en outputs/reporte_diario.md")
 
 if __name__ == "__main__":

@@ -3,14 +3,14 @@ import os
 from datetime import datetime
 from config.tickers import SECTOR_NAMES
 
-MODEL_VERSION = "2.1"
+MODEL_VERSION = "3.1"
 WEIGHTS_VERSION = "3"
 INDICATORS_VERSION = "2"
 
 def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score, liquidity_regime, liq_conf,
                           volatility_score, vol_regime, vol_conf, sector_results,
                           sector_price_rank, sector_flow_rank, otros_price_rank, otros_flow_rank,
-                          leader_lines=None, breadth_values=None,
+                          leader_lines=None, breadth_values=None, real_liquidity_regime=None, real_liquidity_conf=None,
                           output_path='outputs/reporte_diario.md'):
     lines = []
     lines.append("# MACRO SECTORIAL - Reporte Diario\n")
@@ -22,6 +22,8 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
     if macro_conf < 0.30:
         lines.append("  *Confianza baja: senhales contradictorias en el entorno actual.*\n")
     lines.append(f"- **Cond. Financieras:** {liquidity_regime} (Score: {liquidity_score.iloc[-1]:.2f}, Confianza: {liq_conf:.0%})\n")
+    if real_liquidity_regime is not None:
+        lines.append(f"- **Liquidez Real (FRED):** {real_liquidity_regime} (Confianza: {real_liquidity_conf:.0%})\n")
     lines.append(f"- **Volatilidad:** {vol_regime} (Z-Score: {volatility_score.iloc[-1]:.2f}, Confianza: {vol_conf:.0%})\n")
 
     sector_regime = sector_results['regime']
@@ -77,7 +79,7 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
         lines.append("*No disponibles: ningun sector en fase de acumulacion.*\n")
 
     lines.append("\n---\n")
-    lines.append("*Informe generado automaticamente por Macro Sectorial v2.1. No constituye recomendacion de inversion.*\n")
+    lines.append("*Informe generado automaticamente por Macro Sectorial v3.1. No constituye recomendacion de inversion.*\n")
     lines.append("*El sistema implementa un conjunto consistente de reglas deterministas, con normalizacion robusta, separacion modular y metodologia documentada.*\n")
 
     with open(output_path, 'w', encoding='utf-8') as f:

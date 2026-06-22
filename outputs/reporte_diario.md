@@ -1,10 +1,11 @@
 # MACRO SECTORIAL - Reporte Diario
-**Fecha:** 2026-06-23 00:25:29
-**Modelo:** v2.1 | Pesos: v3 | Indicadores: v2
+**Fecha:** 2026-06-23 00:32:29
+**Modelo:** v3.1 | Pesos: v3 | Indicadores: v2
 
 ## Resumen de Regimenes
-- **Macro:** RECOVERY (Score: 0.21, Confianza: 46%)
-- **Cond. Financieras:** ESTRECHA (Score: -0.21, Confianza: 76%)
+- **Macro:** RECOVERY (Score: 0.29, Confianza: 49%)
+- **Cond. Financieras:** ESTRECHA (Score: -0.12, Confianza: 83%)
+- **Liquidez Real (FRED):** ABUNDANTE (Confianza: 50%)
 - **Volatilidad:** STRESS (Z-Score: 1.96, Confianza: 98%)
 - **Sectores:** BROAD PARTICIPATION
 
@@ -72,19 +73,19 @@
 | 5 | DX-Y.NYB | 1.69% |
 | 6 | USDJPY=X | 1.68% |
 | 7 | LQD | 0.76% |
-| 8 | ^FVX | 0.73% |
-| 9 | HYG | 0.55% |
-| 10 | HG=F | 0.29% |
-| 11 | ^GSPC | -0.01% |
-| 12 | USDCNY=X | -0.40% |
-| 13 | ^TNX | -1.08% |
-| 14 | EURUSD=X | -1.81% |
-| 15 | ^TYX | -2.31% |
+| 8 | HYG | 0.55% |
+| 9 | HG=F | 0.28% |
+| 10 | ^GSPC | -0.01% |
+| 11 | USDCNY=X | -0.40% |
+| 12 | EURUSD=X | -1.82% |
+| 13 | GC=F | -6.87% |
+| 14 | ^SPGSCI | -13.18% |
+| 15 | CL=F | -23.21% |
 
 ## Flujo Institucional - Otros Activos (Proxy)
 | # | Activo | Flujo (z-score) |
 |---|--------|------------------|
-| 1 | GC=F | 0.29 |
+| 1 | GC=F | 0.25 |
 | 2 | EEM | -0.07 |
 | 3 | CL=F | -0.14 |
 | 4 | HG=F | -0.23 |
@@ -100,5 +101,5 @@
 *No disponibles: ningun sector en fase de acumulacion.*
 
 ---
-*Informe generado automaticamente por Macro Sectorial v2.1. No constituye recomendacion de inversion.*
+*Informe generado automaticamente por Macro Sectorial v3.1. No constituye recomendacion de inversion.*
 *El sistema implementa un conjunto consistente de reglas deterministas, con normalizacion robusta, separacion modular y metodologia documentada.*
