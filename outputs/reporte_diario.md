@@ -1,11 +1,11 @@
 # MACRO SECTORIAL - Reporte Diario
-**Fecha:** 2026-06-23 00:32:29
+**Fecha:** 2026-06-23 00:44:30
 **Modelo:** v3.1 | Pesos: v3 | Indicadores: v2
 
 ## Resumen de Regimenes
 - **Macro:** RECOVERY (Score: 0.29, Confianza: 49%)
 - **Cond. Financieras:** ESTRECHA (Score: -0.12, Confianza: 83%)
-- **Liquidez Real (FRED):** ABUNDANTE (Confianza: 50%)
+- **Liquidez Real (FRED):** ESTRECHA (Confianza: 69%)
 - **Volatilidad:** STRESS (Z-Score: 1.96, Confianza: 98%)
 - **Sectores:** BROAD PARTICIPATION
 

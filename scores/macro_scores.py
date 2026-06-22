@@ -134,7 +134,7 @@ def compute_macro_score(all_signals):
         w_sum = sum(w.values())
         return sum(df[k] * w[k] / w_sum for k in available)
 
-    critical_score = weighted_score(all_signals, ['curve', 'credit', 'volatility', 'liquidity'], CRITICAL_WEIGHTS)
+    critical_score = weighted_score(all_signals, ['curve', 'credit', 'volatility', 'liquidity', 'real_liquidity'], CRITICAL_WEIGHTS)
     important_score = weighted_score(all_signals, ['dollar', 'commodities', 'breadth'], IMPORTANT_WEIGHTS)
     contextual_score = weighted_score(all_signals, ['market_strength'], CONTEXTUAL_WEIGHTS)
 

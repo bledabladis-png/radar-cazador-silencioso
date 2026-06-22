@@ -5,12 +5,13 @@ LEVEL_WEIGHTS = {
     'contextual': 0.10,
 }
 
-# Sub-pesos dentro de cada nivel (v3.0 - sin real_liquidity)
+# Sub-pesos dentro de cada nivel (v3.1 - con liquidez real)
 CRITICAL_WEIGHTS = {
     'curve': 0.30,
     'credit': 0.30,
     'volatility': 0.25,
-    'liquidity': 0.15,
+    'liquidity': 0.10,
+    'real_liquidity': 0.05,
 }
 
 IMPORTANT_WEIGHTS = {

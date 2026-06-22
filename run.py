@@ -44,16 +44,9 @@ def main():
     print("Calculando regimen de Cond. Financieras...")
     liquidity_score, financial_regime, liq_conf = compute_liquidity_score(df_market)
     print(f"  Cond. Financieras: {financial_regime} (conf: {liq_conf:.0%})")
+
     print("Calculando liquidez real (FRED)...")
     from regimes.liquidity import compute_liquidity_score as compute_real_liquidity
-    real_liq_score, real_liq_regime, real_liq_conf = compute_real_liquidity()
-    if real_liq_score is not None:
-        print(f"  Liquidez real: {real_liq_regime} (conf: {real_liq_conf:.0%})")
-    else:
-        print("  Liquidez real: no disponible (sin datos FRED)")
-        real_liq_score = None
-        real_liq_regime = "N/A"
-        real_liq_conf = 0.0
     real_liq_score, real_liq_regime, real_liq_conf = compute_real_liquidity()
     if real_liq_score is not None:
         print(f"  Liquidez real: {real_liq_regime} (conf: {real_liq_conf:.0%})")
