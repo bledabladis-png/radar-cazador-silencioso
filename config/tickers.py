@@ -12,6 +12,15 @@ MARKET_TICKERS = {
         'XLK','XLF','XLV','XLE','XLY','XLP',
         'XLI','XLB','XLU','XLRE','XLC'
     ],
+    'factors': {
+        'value': 'VLUE',
+        'momentum': 'MTUM',
+        'quality': 'QUAL',
+    },
+    'small_caps_intl': {
+        'developed': 'SCHC',
+        'emerging': 'EWX',
+    },
     'bonds': {
         'short': 'BIL',
         'medium': 'IEF',
@@ -20,6 +29,10 @@ MARKET_TICKERS = {
     'credit': {
         'hyg': 'HYG',
         'lqd': 'LQD',
+    },
+    'emerging_bonds': {
+        'usd': 'EMB',
+        'local': 'ELD',
     },
     'volatility': {
         'vix': '^VIX',
