@@ -1,5 +1,5 @@
 # MACRO SECTORIAL - Reporte Diario
-**Fecha:** 2026-06-22 02:33:16
+**Fecha:** 2026-06-22 12:00:58
 **Modelo:** v2.1 | Pesos: v3 | Indicadores: v2
 
 ## Resumen de Regimenes
