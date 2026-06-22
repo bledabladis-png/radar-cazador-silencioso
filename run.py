@@ -83,7 +83,7 @@ def main():
         print(f"  Regimen sectorial: {sector_results['regime']}")
 
     print("Calculando rankings de precio y flujo...")
-    sector_price, sector_flow, otros_price, otros_flow = compute_price_flow_rankings(df_market)
+    price_rank, flow_rank = compute_price_flow_rankings(df_market)
 
     # Breadth ampliado
     b20, b50, b200, nh, nl = compute_breadth(df_market)
@@ -119,8 +119,9 @@ def main():
                           liquidity_score, financial_regime, liq_conf,
                           vol_score, vol_regime, vol_conf,
                           sector_results,
-                          sector_price, sector_flow, otros_price, otros_flow,
-                          leader_lines=leader_lines, breadth_values=breadth_values, real_liquidity_regime=real_liq_regime, real_liquidity_conf=real_liq_conf)
+                          price_rank, flow_rank,
+                          leader_lines=leader_lines, breadth_values=breadth_values,
+                          real_liquidity_regime=real_liq_regime, real_liquidity_conf=real_liq_conf)
     print("Reporte generado en outputs/reporte_diario.md")
 
 if __name__ == "__main__":

@@ -55,6 +55,17 @@ def compute_sector_scores(df, benchmark='^GSPC'):
             SECTOR_SCORE_WEIGHTS['breadth'] * comp_breadth
         )
 
+        # Penalización por desacuerdo entre sub-componentes
+        sub_components = [comp_rs20.iloc[-1], comp_rs50.iloc[-1], comp_rs126.iloc[-1], comp_trend.iloc[-1], comp_vol.iloc[-1]]
+        if not isinstance(comp_breadth, (int, float)):
+            comp_breadth_val = comp_breadth.iloc[-1] if not comp_breadth.empty else 0
+        else:
+            comp_breadth_val = comp_breadth
+        sub_components = [comp_rs20.iloc[-1], comp_rs50.iloc[-1], comp_rs126.iloc[-1], comp_trend.iloc[-1], comp_vol.iloc[-1], comp_breadth_val]
+        dispersion = np.std(sub_components) / (np.abs(np.mean(sub_components)) + 1e-9)
+        penalty = max(0, 1 - 0.5 * dispersion)
+        scores[sector] *= penalty
+
         try:
             wyckoff_phases[sector] = wyckoff_structure_core(df, sector)
         except Exception:
@@ -87,55 +98,37 @@ def compute_sector_scores(df, benchmark='^GSPC'):
 
 
 def compute_price_flow_rankings(df):
-    # Sectores
-    sectors = ['XLK','XLF','XLV','XLE','XLY','XLP','XLI','XLB','XLU','XLRE','XLC']
-    otros = {
-        'Indices': ['^GSPC', '^NDX', '^RUT', '^STOXX50E', 'EEM'],
-        'Bonos': ['^TNX', '^FVX', '^TYX'],
+    assets = {
+        'Sectores': ['XLK','XLF','XLV','XLE','XLY','XLP','XLI','XLB','XLU','XLRE','XLC'],
+        'Indices': ['^GSPC', '^NDX', '^RUT', '^STOXX50E', 'EEM', 'EWJ'],
+        'Bonos': ['BIL', 'IEF', 'TLT'],
         'Credito': ['HYG', 'LQD'],
-        'Materias Primas': ['^SPGSCI', 'GC=F', 'HG=F', 'CL=F', 'BZ=F'],
+        'Factores': ['VLUE', 'MTUM', 'QUAL'],
+        'Small Caps Intl': ['SCHC', 'EWX'],
+        'Bonos Emergentes': ['EMB', 'ELD'],
+        'Materias Primas': ['^SPGSCI', 'GC=F', 'HG=F', 'CL=F', 'BZ=F', 'NG=F'],
         'Divisas': ['DX-Y.NYB', 'EURUSD=X', 'USDJPY=X', 'USDCNY=X'],
     }
 
-    # Calcular para sectores
-    sector_price = {}
-    sector_flow = {}
-    for t in sectors:
-        try:
-            mom = compute_price_momentum(df, t, window=20).iloc[-1]
-            if pd.notna(mom):
-                sector_price[t] = mom
-        except Exception:
-            pass
-        try:
-            flow = compute_flow_proxy(df, t).iloc[-1]
-            if pd.notna(flow):
-                sector_flow[t] = flow
-        except Exception:
-            pass
+    price_scores = {}
+    flow_scores = {}
 
-    # Calcular para otros
-    otros_price = {}
-    otros_flow = {}
-    for cat, tickers in otros.items():
+    for category, tickers in assets.items():
         for t in tickers:
             try:
                 mom = compute_price_momentum(df, t, window=20).iloc[-1]
                 if pd.notna(mom):
-                    otros_price[t] = mom
+                    price_scores[t] = mom
             except Exception:
                 pass
             try:
                 flow = compute_flow_proxy(df, t).iloc[-1]
                 if pd.notna(flow):
-                    otros_flow[t] = flow
+                    flow_scores[t] = flow
             except Exception:
                 pass
 
-    # Rankings
-    sector_price_rank = sorted(sector_price.items(), key=lambda x: x[1], reverse=True)
-    sector_flow_rank = sorted(sector_flow.items(), key=lambda x: x[1], reverse=True)
-    otros_price_rank = sorted(otros_price.items(), key=lambda x: x[1], reverse=True)
-    otros_flow_rank = sorted(otros_flow.items(), key=lambda x: x[1], reverse=True)
+    price_ranking = sorted(price_scores.items(), key=lambda x: x[1], reverse=True)
+    flow_ranking = sorted(flow_scores.items(), key=lambda x: x[1], reverse=True)
 
-    return sector_price_rank, sector_flow_rank, otros_price_rank, otros_flow_rank
+    return price_ranking, flow_ranking

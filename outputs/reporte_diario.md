@@ -1,13 +1,13 @@
 # MACRO SECTORIAL - Reporte Diario
-**Fecha:** 2026-06-23 00:44:30
+**Fecha:** 2026-06-23 00:58:29
 **Modelo:** v3.1 | Pesos: v3 | Indicadores: v2
 
 ## Resumen de Regimenes
-- **Macro:** RECOVERY (Score: 0.29, Confianza: 49%)
-- **Cond. Financieras:** ESTRECHA (Score: -0.12, Confianza: 83%)
+- **Macro:** RECOVERY (Score: 0.22, Confianza: 46%)
+- **Cond. Financieras:** ESTRECHA (Score: -0.21, Confianza: 76%)
 - **Liquidez Real (FRED):** ESTRECHA (Confianza: 69%)
 - **Volatilidad:** STRESS (Z-Score: 1.96, Confianza: 98%)
-- **Sectores:** BROAD PARTICIPATION
+- **Sectores:** NARROW RALLY
 
 ## Breadth de Mercado (11 sectores)
 | Metrica | Valor |
@@ -21,17 +21,17 @@
 ## Rankings Sectoriales
 | # | Sector | Score | Fase Wyckoff |
 |---|--------|-------|---------------|
-| 1 | Industrials (XLI) | 0.49 | RANGE |
-| 2 | Financials (XLF) | 0.46 | RANGE |
-| 3 | Materials (XLB) | 0.26 | RANGE |
-| 4 | Utilities (XLU) | 0.23 | RANGE |
-| 5 | Healthcare (XLV) | 0.22 | RANGE |
-| 6 | Real Estate (XLRE) | 0.12 | RANGE |
-| 7 | Technology (XLK) | 0.05 | RANGE |
-| 8 | Consumer Staples (XLP) | 0.02 | RANGE |
-| 9 | Energy (XLE) | -0.10 | RANGE |
-| 10 | Communication Services (XLC) | -0.37 | RANGE |
-| 11 | Consumer Discretionary (XLY) | -0.46 | RANGE |
+| 1 | Industrials (XLI) | 0.22 | RANGE |
+| 2 | Financials (XLF) | 0.14 | RANGE |
+| 3 | Utilities (XLU) | 0.06 | RANGE |
+| 4 | Healthcare (XLV) | 0.00 | RANGE |
+| 5 | Technology (XLK) | 0.00 | RANGE |
+| 6 | Consumer Staples (XLP) | 0.00 | RANGE |
+| 7 | Energy (XLE) | -0.00 | RANGE |
+| 8 | Real Estate (XLRE) | 0.00 | RANGE |
+| 9 | Materials (XLB) | 0.00 | RANGE |
+| 10 | Communication Services (XLC) | -0.16 | RANGE |
+| 11 | Consumer Discretionary (XLY) | -0.24 | RANGE |
 
 ## Momentum de Precio - Sectores (20 dias)
 | # | Sector | Retorno 20d (%) |
@@ -74,18 +74,18 @@
 | 6 | USDJPY=X | 1.68% |
 | 7 | LQD | 0.76% |
 | 8 | HYG | 0.55% |
-| 9 | HG=F | 0.28% |
+| 9 | HG=F | 0.29% |
 | 10 | ^GSPC | -0.01% |
 | 11 | USDCNY=X | -0.40% |
-| 12 | EURUSD=X | -1.82% |
-| 13 | GC=F | -6.87% |
+| 12 | EURUSD=X | -1.81% |
+| 13 | GC=F | -6.86% |
 | 14 | ^SPGSCI | -13.18% |
-| 15 | CL=F | -23.21% |
+| 15 | CL=F | -23.25% |
 
 ## Flujo Institucional - Otros Activos (Proxy)
 | # | Activo | Flujo (z-score) |
 |---|--------|------------------|
-| 1 | GC=F | 0.25 |
+| 1 | GC=F | 0.29 |
 | 2 | EEM | -0.07 |
 | 3 | CL=F | -0.14 |
 | 4 | HG=F | -0.23 |

@@ -9,7 +9,7 @@ INDICATORS_VERSION = "2"
 
 def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score, liquidity_regime, liq_conf,
                           volatility_score, vol_regime, vol_conf, sector_results,
-                          sector_price_rank, sector_flow_rank, otros_price_rank, otros_flow_rank,
+                          price_ranking, flow_ranking,
                           leader_lines=None, breadth_values=None, real_liquidity_regime=None, real_liquidity_conf=None,
                           output_path='outputs/reporte_diario.md'):
     lines = []
@@ -43,33 +43,39 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
     for i, (ticker, name, score, wyckoff) in enumerate(sector_results['ranking'][:11], 1):
         lines.append(f"| {i} | {name} ({ticker}) | {score:.2f} | {wyckoff} |\n")
 
+    # Separar sectores del resto
+    sector_tickers = list(SECTOR_NAMES.keys())
+    sector_price = [(t, m) for t, m in price_ranking if t in sector_tickers]
+    sector_flow = [(t, f) for t, f in flow_ranking if t in sector_tickers]
+    otros_price = [(t, m) for t, m in price_ranking if t not in sector_tickers]
+    otros_flow = [(t, f) for t, f in flow_ranking if t not in sector_tickers]
+
     lines.append("\n## Momentum de Precio - Sectores (20 dias)\n")
     lines.append("| # | Sector | Retorno 20d (%) |\n")
     lines.append("|---|--------|------------------|\n")
-    for i, (ticker, mom) in enumerate(sector_price_rank, 1):
+    for i, (ticker, mom) in enumerate(sector_price, 1):
         name = SECTOR_NAMES.get(ticker, ticker)
         lines.append(f"| {i} | {name} ({ticker}) | {mom*100:.2f}% |\n")
 
     lines.append("\n## Flujo Institucional - Sectores (Proxy)\n")
     lines.append("| # | Sector | Flujo (z-score) |\n")
     lines.append("|---|--------|------------------|\n")
-    for i, (ticker, flow) in enumerate(sector_flow_rank, 1):
+    for i, (ticker, flow) in enumerate(sector_flow, 1):
         name = SECTOR_NAMES.get(ticker, ticker)
         lines.append(f"| {i} | {name} ({ticker}) | {flow:.2f} |\n")
 
     lines.append("\n## Momentum de Precio - Otros Activos (20 dias)\n")
     lines.append("| # | Activo | Retorno 20d (%) |\n")
     lines.append("|---|--------|------------------|\n")
-    for i, (ticker, mom) in enumerate(otros_price_rank[:15], 1):
+    for i, (ticker, mom) in enumerate(otros_price[:15], 1):
         lines.append(f"| {i} | {ticker} | {mom*100:.2f}% |\n")
 
     lines.append("\n## Flujo Institucional - Otros Activos (Proxy)\n")
     lines.append("| # | Activo | Flujo (z-score) |\n")
     lines.append("|---|--------|------------------|\n")
-    for i, (ticker, flow) in enumerate(otros_flow_rank[:15], 1):
+    for i, (ticker, flow) in enumerate(otros_flow[:15], 1):
         lines.append(f"| {i} | {ticker} | {flow:.2f} |\n")
 
-    # Lideres sectoriales
     if leader_lines:
         lines.append("\n## Lideres Sectoriales\n")
         lines.append("> Acciones con mejor perfil institucional dentro de sectores favorables.\n\n")
