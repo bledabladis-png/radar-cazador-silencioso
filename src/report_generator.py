@@ -67,13 +67,13 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
     lines.append("\n## Momentum de Precio - Otros Activos (20 dias)\n")
     lines.append("| # | Activo | Retorno 20d (%) |\n")
     lines.append("|---|--------|------------------|\n")
-    for i, (ticker, mom) in enumerate(otros_price[:15], 1):
+    for i, (ticker, mom) in enumerate(otros_price[:20], 1):
         lines.append(f"| {i} | {ticker} | {mom*100:.2f}% |\n")
 
     lines.append("\n## Flujo Institucional - Otros Activos (Proxy)\n")
     lines.append("| # | Activo | Flujo (z-score) |\n")
     lines.append("|---|--------|------------------|\n")
-    for i, (ticker, flow) in enumerate(otros_flow[:15], 1):
+    for i, (ticker, flow) in enumerate(otros_flow[:20], 1):
         lines.append(f"| {i} | {ticker} | {flow:.2f} |\n")
 
     if leader_lines:
