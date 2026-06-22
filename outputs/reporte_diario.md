@@ -1,9 +1,9 @@
 # MACRO SECTORIAL - Reporte Diario
-**Fecha:** 2026-06-23 01:19:49
+**Fecha:** 2026-06-22 23:12:18
 **Modelo:** v3.1 | Pesos: v3 | Indicadores: v2
 
 ## Resumen de Regimenes
-- **Macro:** RECOVERY (Score: 0.24, Confianza: 51%)
+- **Macro:** RECOVERY (Score: 0.25, Confianza: 51%)
 - **Cond. Financieras:** ESTRECHA (Score: -0.02, Confianza: 88%)
 - **Liquidez Real (FRED):** ESTRECHA (Confianza: 69%)
 - **Volatilidad:** STRESS (Z-Score: 1.95, Confianza: 97%)
@@ -66,7 +66,7 @@
 ## Momentum de Precio - Otros Activos (20 dias)
 | # | Activo | Retorno 20d (%) |
 |---|--------|------------------|
-| 1 | NG=F | 12.85% |
+| 1 | NG=F | 12.82% |
 | 2 | MTUM | 10.05% |
 | 3 | VLUE | 5.31% |
 | 4 | EWJ | 4.95% |
@@ -81,17 +81,12 @@
 | 13 | EWX | 0.80% |
 | 14 | LQD | 0.38% |
 | 15 | BIL | 0.25% |
-| 16 | HYG | 0.21% |
-| 17 | QUAL | 0.20% |
-| 18 | ELD | 0.17% |
-| 19 | IEF | 0.04% |
-| 20 | HG=F | -0.12% |
 
 ## Flujo Institucional - Otros Activos (Proxy)
 | # | Activo | Flujo (z-score) |
 |---|--------|------------------|
 | 1 | VLUE | 0.79 |
-| 2 | GC=F | 0.41 |
+| 2 | GC=F | 0.43 |
 | 3 | TLT | 0.03 |
 | 4 | NG=F | 0.00 |
 | 5 | EMB | -0.08 |
@@ -105,11 +100,6 @@
 | 13 | MTUM | -0.28 |
 | 14 | HG=F | -0.31 |
 | 15 | BZ=F | -0.35 |
-| 16 | BIL | -0.40 |
-| 17 | EEM | -0.42 |
-| 18 | QUAL | -0.44 |
-| 19 | EWJ | -0.56 |
-| 20 | ^GSPC | -0.57 |
 
 ## Lideres Sectoriales
 *No disponibles: ningun sector en fase de acumulacion.*
