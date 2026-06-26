@@ -1,4 +1,4 @@
-"""
+﻿"""
 wyckoff.py -- Analisis microestructural de fases Wyckoff (acumulacion, distribucion, etc.)
 Adaptado del Radar_Rotacion v4.0.5 para Macro_Sectorial v1.1.
 No genera senales de trading, solo informacion complementaria.
@@ -99,7 +99,7 @@ def wyckoff_score(df, ticker):
 def wyckoff_structure_core(df, ticker):
     """
     Clasifica la fase Wyckoff para la ultima barra del ticker.
-    Retorna: "MARKUP", "DISTRIBUTION", "ACCUMULATION", "RANGE", o "INSUFICIENT_DATA"
+    Retorna: "MARKUP", "DISTRIBUTION", "ACUMULACION", "RANGE", o "INSUFICIENT_DATA"
     """
     close = get_col(df, ticker, 'Close')
     if len(close) < 200:
@@ -121,7 +121,7 @@ def wyckoff_structure_core(df, ticker):
     elif trend < -0.02:
         return "DISTRIBUTION"
     elif compression < 0.3 and wyckoff_sc > 0.5:
-        return "ACCUMULATION"
+        return "ACUMULACION"
     else:
         return "RANGE"
 
@@ -140,7 +140,7 @@ def classify_wyckoff_phase(df, ticker):
     elif sos == 1:
         return "MARKUP INIT"
     elif score > 0.7:
-        return "ACCUMULATION"
+        return "ACUMULACION"
     elif score > 0.5:
         return "LATE ACCUMULATION"
     else:

@@ -31,13 +31,18 @@ def compute_stock_metrics(df_market, df_stocks, etf_ticker, stock_list):
         if pd.isna(persistence_10d):
             persistence_10d = 0
 
-        ticker_df = pd.DataFrame({
-            'Open': get_col(df_stocks, ticker, 'Open'),
-            'High': get_col(df_stocks, ticker, 'High'),
-            'Low': get_col(df_stocks, ticker, 'Low'),
-            'Close': close,
-            'Volume': volume
-        }).dropna()
+        # Construir DataFrame para Wyckoff usando get_col
+        try:
+            ticker_df = pd.DataFrame({
+                'Open': get_col(df_stocks, ticker, 'Open'),
+                'High': get_col(df_stocks, ticker, 'High'),
+                'Low': get_col(df_stocks, ticker, 'Low'),
+                'Close': close,
+                'Volume': volume
+            }).dropna()
+        except KeyError:
+            continue
+
         if len(ticker_df) >= 60:
             wyckoff_sc = wyckoff_score(ticker_df, ticker).iloc[-1]
             wyckoff_ph = classify_wyckoff_phase(ticker_df, ticker)
@@ -151,6 +156,6 @@ def generate_leader_section(df_market, df_stocks, holdings_df, fase_dict, operab
     if all_data:
         final_df = pd.concat(all_data, ignore_index=True)
         if output_csv:
-            final_df[['ticker','sector','rs','rs_mom','flow_z','wyckoff_score','wyckoff_phase','persistence_10d','stability','wls','sector_rank_pct']].to_csv(output_csv, index=False)
+            final_df[['ticker','sector','rs','rs_mom','flow_z','wyckoff_score','wyckoff_phase','persistence_10d','stability','wls','sector_rank_pct','leader_confidence']].to_csv(output_csv, index=False)
         return lines
     return None

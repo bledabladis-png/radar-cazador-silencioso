@@ -33,17 +33,25 @@ def standardize_series(series):
 
 def get_col(df, ticker, field='Close'):
     if isinstance(df.columns, pd.MultiIndex):
-        col = (field, ticker)
-        if col in df.columns:
-            series = df[col].ffill(limit=5)
-            return series
-        raise KeyError(f'Columna {col} no encontrada')
+        # Recorrer todas las columnas y buscar la que coincida
+        for col in df.columns:
+            if len(col) != 2:
+                continue
+            if str(col[0]).lower() == field.lower() and str(col[1]).lower() == ticker.lower():
+                series = df[col].ffill(limit=5)
+                return series
+        raise KeyError(f'Columna MultiIndex ({field}, {ticker}) no encontrada')
     else:
+        # Columnas planas: intentar TICKER_Field
         col = f'{ticker}_{field}'
         if col in df.columns:
             series = df[col].ffill(limit=5)
             return series
-        raise KeyError(f'Columna {col} no encontrada')
+        # Si no existe, intentar directamente el nombre del campo (para DataFrames de una sola acción)
+        if field in df.columns:
+            series = df[field].ffill(limit=5)
+            return series
+        raise KeyError(f'Columna {col} o {field} no encontrada')
 
 def clean_oil_prices(df):
     try:
