@@ -1,5 +1,5 @@
 # MACRO SECTORIAL - Reporte Diario
-**Fecha:** 2026-06-26 21:22:14
+**Fecha:** 2026-06-27 00:10:55
 **Modelo:** v3.1 | Pesos: v3 | Indicadores: v2
 
 ## Resumen de Regimenes
@@ -26,7 +26,7 @@
 | 3 | Financials (XLF) | 0.31 | RANGE |
 | 4 | Real Estate (XLRE) | 0.21 | RANGE |
 | 5 | Industrials (XLI) | 0.15 | RANGE |
-| 6 | Healthcare (XLV) | 0.13 | ACCUMULATION |
+| 6 | Healthcare (XLV) | 0.13 | ACUMULACION |
 | 7 | Materials (XLB) | 0.06 | RANGE |
 | 8 | Technology (XLK) | -0.00 | RANGE |
 | 9 | Energy (XLE) | 0.00 | RANGE |
@@ -66,9 +66,9 @@
 ## Momentum de Precio - Otros Activos (20 dias)
 | # | Activo | Retorno 20d (%) |
 |---|--------|------------------|
-| 1 | MTUM | 3.26% |
-| 2 | ^RUT | 3.11% |
-| 3 | ^STOXX50E | 2.83% |
+| 1 | ^STOXX50E | 3.59% |
+| 2 | MTUM | 3.26% |
+| 3 | ^RUT | 3.11% |
 | 4 | DX-Y.NYB | 2.48% |
 | 5 | TLT | 2.27% |
 | 6 | USDJPY=X | 1.54% |
@@ -78,8 +78,8 @@
 | 10 | LQD | 0.51% |
 | 11 | EWJ | 0.37% |
 | 12 | ELD | 0.33% |
-| 13 | USDCNY=X | 0.27% |
-| 14 | BIL | 0.26% |
+| 13 | BIL | 0.26% |
+| 14 | USDCNY=X | 0.15% |
 | 15 | HYG | -0.09% |
 | 16 | NG=F | -0.09% |
 | 17 | QUAL | -0.67% |
@@ -94,7 +94,7 @@
 | 2 | VLUE | 1.70 |
 | 3 | IEF | 0.47 |
 | 4 | TLT | 0.29 |
-| 5 | ^STOXX50E | 0.03 |
+| 5 | ^STOXX50E | 0.08 |
 | 6 | BIL | -0.01 |
 | 7 | ELD | -0.11 |
 | 8 | LQD | -0.21 |
@@ -112,7 +112,15 @@
 | 20 | ^GSPC | -1.08 |
 
 ## Lideres Sectoriales
-*No disponibles: ningun sector en fase de acumulacion.*
+> Acciones con mejor perfil institucional dentro de sectores favorables.
+
+## Sector: XLV (ACUMULACION)
+| Ticker | RS | RS Mom | Flujo (z) | WLS | Fase Wyckoff |
+|--------|----|--------|-----------|-----|---------------|
+| ABBV | 1.58 | 7.70% | 3.16 | 1.16 | MARKUP INIT |
+| JNJ | 1.59 | 4.78% | 2.48 | 0.77 | MARKUP INIT |
+| MRK | 0.80 | 1.30% | 2.47 | 0.52 | MARKUP INIT |
+
 
 ---
 *Informe generado automaticamente por Macro Sectorial v3.1. No constituye recomendacion de inversion.*
