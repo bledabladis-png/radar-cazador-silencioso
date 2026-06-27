@@ -1,12 +1,12 @@
 # MACRO SECTORIAL - Reporte Diario
-**Fecha:** 2026-06-26 22:48:29
+**Fecha:** 2026-06-27 21:07:04
 **Modelo:** v3.1 | Pesos: v3 | Indicadores: v2
 
 ## Resumen de Regimenes
-- **Macro:** RECOVERY (Score: 0.11, Confianza: 49%)
-- **Cond. Financieras:** NEUTRAL (Score: 0.22, Confianza: 79%)
+- **Macro:** RECOVERY (Score: 0.07, Confianza: 50%)
+- **Cond. Financieras:** NEUTRAL (Score: 0.16, Confianza: 78%)
 - **Liquidez Real (FRED):** ESTRECHA (Confianza: 70%)
-- **Volatilidad:** STRESS (Z-Score: 2.03, Confianza: 100%)
+- **Volatilidad:** STRESS (Z-Score: 2.02, Confianza: 100%)
 - **Sectores:** MIXED
 
 ## Breadth de Mercado (11 sectores)
@@ -21,106 +21,98 @@
 ## Rankings Sectoriales
 | # | Sector | Score | Fase Wyckoff |
 |---|--------|-------|---------------|
-| 1 | Utilities (XLU) | 0.58 | RANGE |
-| 2 | Consumer Staples (XLP) | 0.47 | RANGE |
+| 1 | Consumer Staples (XLP) | 0.65 | RANGE |
+| 2 | Utilities (XLU) | 0.62 | RANGE |
 | 3 | Financials (XLF) | 0.31 | RANGE |
-| 4 | Real Estate (XLRE) | 0.21 | RANGE |
-| 5 | Industrials (XLI) | 0.15 | RANGE |
-| 6 | Healthcare (XLV) | 0.13 | ACUMULACION |
-| 7 | Materials (XLB) | 0.06 | RANGE |
+| 4 | Real Estate (XLRE) | 0.31 | RANGE |
+| 5 | Industrials (XLI) | 0.14 | RANGE |
+| 6 | Healthcare (XLV) | 0.13 | RANGE |
+| 7 | Materials (XLB) | 0.05 | RANGE |
 | 8 | Technology (XLK) | -0.00 | RANGE |
-| 9 | Energy (XLE) | 0.00 | RANGE |
-| 10 | Communication Services (XLC) | -0.00 | RANGE |
-| 11 | Consumer Discretionary (XLY) | -0.11 | RANGE |
+| 9 | Consumer Discretionary (XLY) | -0.00 | RANGE |
+| 10 | Energy (XLE) | 0.00 | RANGE |
+| 11 | Communication Services (XLC) | -0.00 | RANGE |
 
 ## Momentum de Precio - Sectores (20 dias)
 | # | Sector | Retorno 20d (%) |
 |---|--------|------------------|
-| 1 | Healthcare (XLV) | 7.75% |
-| 2 | Industrials (XLI) | 4.92% |
-| 3 | Utilities (XLU) | 4.67% |
-| 4 | Financials (XLF) | 4.22% |
-| 5 | Real Estate (XLRE) | 3.74% |
-| 6 | Consumer Staples (XLP) | 2.88% |
-| 7 | Materials (XLB) | 1.26% |
-| 8 | Energy (XLE) | -3.66% |
-| 9 | Technology (XLK) | -5.07% |
-| 10 | Consumer Discretionary (XLY) | -5.19% |
-| 11 | Communication Services (XLC) | -7.98% |
+| 1 | Healthcare (XLV) | 8.93% |
+| 2 | Utilities (XLU) | 7.88% |
+| 3 | Real Estate (XLRE) | 5.47% |
+| 4 | Industrials (XLI) | 5.36% |
+| 5 | Financials (XLF) | 4.53% |
+| 6 | Consumer Staples (XLP) | 3.98% |
+| 7 | Materials (XLB) | 1.71% |
+| 8 | Consumer Discretionary (XLY) | -3.04% |
+| 9 | Energy (XLE) | -5.36% |
+| 10 | Technology (XLK) | -7.37% |
+| 11 | Communication Services (XLC) | -7.92% |
 
 ## Flujo Institucional - Sectores (Proxy)
 | # | Sector | Flujo (z-score) |
 |---|--------|------------------|
-| 1 | Healthcare (XLV) | 0.94 |
-| 2 | Utilities (XLU) | 0.24 |
-| 3 | Financials (XLF) | 0.01 |
-| 4 | Consumer Staples (XLP) | -0.05 |
-| 5 | Real Estate (XLRE) | -0.10 |
-| 6 | Communication Services (XLC) | -0.10 |
-| 7 | Materials (XLB) | -0.32 |
-| 8 | Energy (XLE) | -0.57 |
-| 9 | Consumer Discretionary (XLY) | -0.61 |
-| 10 | Industrials (XLI) | -0.65 |
-| 11 | Technology (XLK) | -2.29 |
+| 1 | Healthcare (XLV) | 0.63 |
+| 2 | Utilities (XLU) | 0.28 |
+| 3 | Energy (XLE) | -0.21 |
+| 4 | Financials (XLF) | -0.26 |
+| 5 | Materials (XLB) | -0.27 |
+| 6 | Consumer Staples (XLP) | -0.32 |
+| 7 | Communication Services (XLC) | -0.50 |
+| 8 | Industrials (XLI) | -0.55 |
+| 9 | Real Estate (XLRE) | -0.58 |
+| 10 | Consumer Discretionary (XLY) | -0.62 |
+| 11 | Technology (XLK) | -1.43 |
 
 ## Momentum de Precio - Otros Activos (20 dias)
 | # | Activo | Retorno 20d (%) |
 |---|--------|------------------|
-| 1 | ^STOXX50E | 3.59% |
-| 2 | MTUM | 3.26% |
-| 3 | ^RUT | 3.11% |
-| 4 | DX-Y.NYB | 2.48% |
-| 5 | TLT | 2.27% |
-| 6 | USDJPY=X | 1.54% |
-| 7 | VLUE | 1.35% |
-| 8 | IEF | 0.74% |
-| 9 | EMB | 0.54% |
-| 10 | LQD | 0.51% |
-| 11 | EWJ | 0.37% |
-| 12 | ELD | 0.33% |
-| 13 | BIL | 0.26% |
-| 14 | USDCNY=X | 0.15% |
-| 15 | HYG | -0.09% |
-| 16 | NG=F | -0.09% |
-| 17 | QUAL | -0.67% |
-| 18 | EEM | -1.55% |
-| 19 | EWX | -1.95% |
-| 20 | EURUSD=X | -2.26% |
+| 1 | ^RUT | 3.59% |
+| 2 | ^STOXX50E | 3.09% |
+| 3 | MTUM | 2.89% |
+| 4 | TLT | 2.21% |
+| 5 | DX-Y.NYB | 2.18% |
+| 6 | NG=F | 1.64% |
+| 7 | USDJPY=X | 1.46% |
+| 8 | IEF | 0.91% |
+| 9 | EMB | 0.55% |
+| 10 | LQD | 0.52% |
+| 11 | EWJ | 0.40% |
+| 12 | USDCNY=X | 0.35% |
+| 13 | BIL | 0.25% |
+| 14 | HYG | -0.01% |
+| 15 | ELD | -0.19% |
+| 16 | VLUE | -0.34% |
+| 17 | QUAL | -0.89% |
+| 18 | EURUSD=X | -2.23% |
+| 19 | EWX | -2.83% |
+| 20 | ^GSPC | -3.24% |
 
 ## Flujo Institucional - Otros Activos (Proxy)
 | # | Activo | Flujo (z-score) |
 |---|--------|------------------|
-| 1 | GC=F | 2.34 |
-| 2 | VLUE | 1.70 |
-| 3 | IEF | 0.47 |
-| 4 | TLT | 0.29 |
-| 5 | ^STOXX50E | 0.08 |
-| 6 | BIL | -0.01 |
-| 7 | ELD | -0.11 |
-| 8 | LQD | -0.21 |
-| 9 | CL=F | -0.51 |
-| 10 | EMB | -0.55 |
-| 11 | EWX | -0.58 |
-| 12 | BZ=F | -0.59 |
-| 13 | SCHC | -0.68 |
-| 14 | NG=F | -0.71 |
-| 15 | HYG | -0.80 |
-| 16 | HG=F | -0.84 |
-| 17 | QUAL | -0.94 |
-| 18 | EEM | -0.98 |
-| 19 | EWJ | -1.05 |
-| 20 | ^GSPC | -1.08 |
+| 1 | ^STOXX50E | 0.12 |
+| 2 | TLT | 0.09 |
+| 3 | GC=F | 0.08 |
+| 4 | VLUE | -0.01 |
+| 5 | ELD | -0.05 |
+| 6 | IEF | -0.09 |
+| 7 | NG=F | -0.22 |
+| 8 | HG=F | -0.25 |
+| 9 | LQD | -0.26 |
+| 10 | EWX | -0.30 |
+| 11 | CL=F | -0.39 |
+| 12 | BZ=F | -0.40 |
+| 13 | SCHC | -0.44 |
+| 14 | EMB | -0.60 |
+| 15 | BIL | -0.68 |
+| 16 | HYG | -0.72 |
+| 17 | ^GSPC | -0.75 |
+| 18 | EEM | -0.77 |
+| 19 | MTUM | -0.85 |
+| 20 | EWJ | -0.94 |
 
 ## Lideres Sectoriales
-> Acciones con mejor perfil institucional dentro de sectores favorables.
-
-## Sector: XLV (ACUMULACION)
-| Ticker | RS | RS Mom | Flujo (z) | WLS | Fase Wyckoff |
-|--------|----|--------|-----------|-----|---------------|
-| ABBV | 1.58 | 7.70% | 3.16 | 1.16 | MARKUP INIT |
-| JNJ | 1.59 | 4.78% | 2.48 | 0.77 | MARKUP INIT |
-| MRK | 0.80 | 1.30% | 2.47 | 0.52 | MARKUP INIT |
-
+*No disponibles: ningun sector en fase de acumulacion.*
 
 ---
 *Informe generado automaticamente por Macro Sectorial v3.1. No constituye recomendacion de inversion.*
