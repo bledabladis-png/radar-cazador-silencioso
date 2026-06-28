@@ -1,9 +1,9 @@
 # MACRO SECTORIAL - Reporte Diario
-**Fecha:** 2026-06-27 21:07:04
+**Fecha:** 2026-06-28 21:05:02
 **Modelo:** v3.1 | Pesos: v3 | Indicadores: v2
 
 ## Resumen de Regimenes
-- **Macro:** RECOVERY (Score: 0.07, Confianza: 50%)
+- **Macro:** RECOVERY (Score: 0.06, Confianza: 50%)
 - **Cond. Financieras:** NEUTRAL (Score: 0.16, Confianza: 78%)
 - **Liquidez Real (FRED):** ESTRECHA (Confianza: 70%)
 - **Volatilidad:** STRESS (Z-Score: 2.02, Confianza: 100%)
@@ -67,17 +67,17 @@
 | # | Activo | Retorno 20d (%) |
 |---|--------|------------------|
 | 1 | ^RUT | 3.59% |
-| 2 | ^STOXX50E | 3.09% |
-| 3 | MTUM | 2.89% |
-| 4 | TLT | 2.21% |
-| 5 | DX-Y.NYB | 2.18% |
-| 6 | NG=F | 1.64% |
-| 7 | USDJPY=X | 1.46% |
+| 2 | NG=F | 3.15% |
+| 3 | ^STOXX50E | 3.09% |
+| 4 | MTUM | 2.89% |
+| 5 | TLT | 2.21% |
+| 6 | DX-Y.NYB | 2.18% |
+| 7 | USDJPY=X | 1.47% |
 | 8 | IEF | 0.91% |
 | 9 | EMB | 0.55% |
 | 10 | LQD | 0.52% |
-| 11 | EWJ | 0.40% |
-| 12 | USDCNY=X | 0.35% |
+| 11 | USDCNY=X | 0.46% |
+| 12 | EWJ | 0.40% |
 | 13 | BIL | 0.25% |
 | 14 | HYG | -0.01% |
 | 15 | ELD | -0.19% |
@@ -90,18 +90,18 @@
 ## Flujo Institucional - Otros Activos (Proxy)
 | # | Activo | Flujo (z-score) |
 |---|--------|------------------|
-| 1 | ^STOXX50E | 0.12 |
-| 2 | TLT | 0.09 |
-| 3 | GC=F | 0.08 |
-| 4 | VLUE | -0.01 |
-| 5 | ELD | -0.05 |
-| 6 | IEF | -0.09 |
-| 7 | NG=F | -0.22 |
-| 8 | HG=F | -0.25 |
+| 1 | HG=F | 1.23 |
+| 2 | GC=F | 0.63 |
+| 3 | ^STOXX50E | 0.12 |
+| 4 | TLT | 0.09 |
+| 5 | VLUE | -0.01 |
+| 6 | ELD | -0.05 |
+| 7 | IEF | -0.09 |
+| 8 | NG=F | -0.25 |
 | 9 | LQD | -0.26 |
 | 10 | EWX | -0.30 |
-| 11 | CL=F | -0.39 |
-| 12 | BZ=F | -0.40 |
+| 11 | CL=F | -0.38 |
+| 12 | BZ=F | -0.43 |
 | 13 | SCHC | -0.44 |
 | 14 | EMB | -0.60 |
 | 15 | BIL | -0.68 |
