@@ -1,11 +1,11 @@
 # MACRO SECTORIAL - Reporte Diario
-**Fecha:** 2026-07-04 21:01:01
+**Fecha:** 2026-07-05 21:03:59
 **Modelo:** v3.1 | Pesos: v3 | Indicadores: v2
 
 ## Resumen de Regimenes
-- **Macro:** MIXED (Score: nan, Confianza: 62%)
+- **Macro:** RECOVERY (Score: 0.05, Confianza: 69%)
 - **Cond. Financieras:** NEUTRAL (Score: 0.19, Confianza: 88%)
-- **Liquidez Real (FRED):** CRISIS (Confianza: 86%)
+- **Liquidez Real (FRED):** ESTRECHA (Confianza: 87%)
 - **Volatilidad:** NORMAL (Z-Score: 0.26, Confianza: 13%)
 - **Sectores:** MIXED
 
@@ -60,7 +60,7 @@
 | 7 | Energy (XLE) | -0.23 |
 | 8 | Industrials (XLI) | -0.36 |
 | 9 | Consumer Discretionary (XLY) | -0.42 |
-| 10 | Real Estate (XLRE) | -0.53 |
+| 10 | Real Estate (XLRE) | -0.54 |
 | 11 | Technology (XLK) | -1.17 |
 
 ## Momentum de Precio - Otros Activos (20 dias)
@@ -80,11 +80,11 @@
 | 12 | LQD | 0.89% |
 | 13 | DX-Y.NYB | 0.81% |
 | 14 | HYG | 0.68% |
-| 15 | USDJPY=X | 0.63% |
+| 15 | USDJPY=X | 0.60% |
 | 16 | MTUM | 0.57% |
 | 17 | EEM | 0.44% |
 | 18 | BIL | 0.27% |
-| 19 | USDCNY=X | 0.07% |
+| 19 | USDCNY=X | 0.20% |
 | 20 | SCHC | 0.06% |
 
 ## Flujo Institucional - Otros Activos (Proxy)
