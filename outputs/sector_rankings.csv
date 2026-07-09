@@ -1,11 +1,11 @@
 ticker,name,score,wyckoff_phase
-XLF,Financials,0.3739115162503716,RANGE
-XLU,Utilities,0.3412660055605113,RANGE
-XLE,Energy,0.1045846205821152,RANGE
-XLV,Healthcare,0.04872302629701825,RANGE
+XLF,Financials,0.4120856326657832,RANGE
+XLU,Utilities,0.30887231388515174,RANGE
+XLV,Healthcare,0.011180424841249504,RANGE
 XLK,Technology,-0.0,RANGE
-XLP,Consumer Staples,0.0,RANGE
-XLY,Consumer Discretionary,-0.0,RANGE
+XLE,Energy,0.0,RANGE
+XLP,Consumer Staples,-0.0,RANGE
+XLY,Consumer Discretionary,0.0,RANGE
 XLI,Industrials,0.0,RANGE
 XLB,Materials,0.0,RANGE
 XLRE,Real Estate,0.0,RANGE
