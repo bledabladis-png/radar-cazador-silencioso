@@ -1,12 +1,12 @@
 # MACRO SECTORIAL - Reporte Diario
-**Fecha:** 2026-07-10 21:08:38
+**Fecha:** 2026-07-11 20:52:00
 **Modelo:** v3.1 | Pesos: v3 | Indicadores: v2
 
 ## Resumen de Regimenes
-- **Macro:** MIXED (Score: -0.09, Confianza: 73%)
-- **Cond. Financieras:** ESTRECHA (Score: -0.01, Confianza: 62%)
-- **Liquidez Real (FRED):** ABUNDANTE (Confianza: 79%)
-- **Volatilidad:** NORMAL (Z-Score: -0.18, Confianza: 9%)
+- **Macro:** MIXED (Score: -0.10, Confianza: 73%)
+- **Cond. Financieras:** NEUTRAL (Score: 0.01, Confianza: 62%)
+- **Liquidez Real (FRED):** ABUNDANTE (Confianza: 81%)
+- **Volatilidad:** NORMAL (Z-Score: -0.29, Confianza: 14%)
 - **Sectores:** MIXED
 
 ## Breadth de Mercado (11 sectores)
@@ -21,95 +21,95 @@
 ## Rankings Sectoriales
 | # | Sector | Score | Fase Wyckoff |
 |---|--------|-------|---------------|
-| 1 | Financials (XLF) | 0.43 | RANGE |
-| 2 | Utilities (XLU) | 0.38 | RANGE |
-| 3 | Healthcare (XLV) | 0.02 | RANGE |
-| 4 | Energy (XLE) | 0.00 | RANGE |
-| 5 | Technology (XLK) | -0.00 | RANGE |
-| 6 | Consumer Staples (XLP) | 0.00 | RANGE |
+| 1 | Utilities (XLU) | 0.44 | RANGE |
+| 2 | Financials (XLF) | 0.42 | RANGE |
+| 3 | Energy (XLE) | 0.11 | RANGE |
+| 4 | Healthcare (XLV) | 0.05 | RANGE |
+| 5 | Communication Services (XLC) | 0.00 | RANGE |
+| 6 | Technology (XLK) | -0.00 | RANGE |
 | 7 | Consumer Discretionary (XLY) | 0.00 | RANGE |
 | 8 | Industrials (XLI) | 0.00 | RANGE |
-| 9 | Materials (XLB) | 0.00 | RANGE |
-| 10 | Real Estate (XLRE) | 0.00 | RANGE |
-| 11 | Communication Services (XLC) | 0.00 | RANGE |
+| 9 | Consumer Staples (XLP) | 0.00 | RANGE |
+| 10 | Materials (XLB) | 0.00 | RANGE |
+| 11 | Real Estate (XLRE) | 0.00 | RANGE |
 
 ## Momentum de Precio - Sectores (20 dias)
 | # | Sector | Retorno 20d (%) |
 |---|--------|------------------|
-| 1 | Healthcare (XLV) | 5.03% |
-| 2 | Financials (XLF) | 4.81% |
-| 3 | Industrials (XLI) | 3.51% |
-| 4 | Utilities (XLU) | 2.63% |
-| 5 | Consumer Discretionary (XLY) | 0.75% |
-| 6 | Technology (XLK) | 0.65% |
-| 7 | Communication Services (XLC) | 0.25% |
-| 8 | Real Estate (XLRE) | -1.15% |
-| 9 | Consumer Staples (XLP) | -1.30% |
-| 10 | Materials (XLB) | -2.11% |
-| 11 | Energy (XLE) | -3.60% |
+| 1 | Healthcare (XLV) | 5.66% |
+| 2 | Financials (XLF) | 4.38% |
+| 3 | Utilities (XLU) | 2.15% |
+| 4 | Industrials (XLI) | 2.06% |
+| 5 | Energy (XLE) | -0.13% |
+| 6 | Communication Services (XLC) | -0.23% |
+| 7 | Real Estate (XLRE) | -0.33% |
+| 8 | Consumer Staples (XLP) | -0.91% |
+| 9 | Consumer Discretionary (XLY) | -0.92% |
+| 10 | Materials (XLB) | -2.70% |
+| 11 | Technology (XLK) | -3.02% |
 
 ## Flujo Institucional - Sectores (Proxy)
 | # | Sector | Flujo (z-score) |
 |---|--------|------------------|
-| 1 | Communication Services (XLC) | 0.54 |
-| 2 | Healthcare (XLV) | 0.30 |
-| 3 | Energy (XLE) | 0.12 |
-| 4 | Financials (XLF) | 0.05 |
-| 5 | Consumer Staples (XLP) | 0.00 |
-| 6 | Utilities (XLU) | -0.04 |
-| 7 | Consumer Discretionary (XLY) | -0.05 |
-| 8 | Materials (XLB) | -0.06 |
-| 9 | Real Estate (XLRE) | -0.36 |
-| 10 | Industrials (XLI) | -0.43 |
-| 11 | Technology (XLK) | -0.54 |
+| 1 | Healthcare (XLV) | 0.41 |
+| 2 | Communication Services (XLC) | 0.27 |
+| 3 | Financials (XLF) | 0.01 |
+| 4 | Energy (XLE) | 0.01 |
+| 5 | Materials (XLB) | -0.05 |
+| 6 | Consumer Discretionary (XLY) | -0.14 |
+| 7 | Consumer Staples (XLP) | -0.16 |
+| 8 | Utilities (XLU) | -0.21 |
+| 9 | Industrials (XLI) | -0.43 |
+| 10 | Real Estate (XLRE) | -0.50 |
+| 11 | Technology (XLK) | -0.90 |
 
 ## Momentum de Precio - Otros Activos (20 dias)
 | # | Activo | Retorno 20d (%) |
 |---|--------|------------------|
-| 1 | EWJ | 2.54% |
-| 2 | ^GSPC | 1.94% |
-| 3 | QUAL | 1.46% |
-| 4 | ^STOXX50E | 1.33% |
-| 5 | DX-Y.NYB | 1.22% |
-| 6 | ^RUT | 1.15% |
-| 7 | USDJPY=X | 0.96% |
-| 8 | EWX | 0.71% |
-| 9 | ^NDX | 0.64% |
-| 10 | ELD | 0.41% |
-| 11 | BIL | 0.28% |
-| 12 | HYG | 0.17% |
-| 13 | EMB | 0.03% |
-| 14 | USDCNY=X | 0.01% |
-| 15 | IEF | -0.26% |
-| 16 | MTUM | -0.70% |
-| 17 | EEM | -0.93% |
-| 18 | LQD | -1.08% |
-| 19 | TLT | -1.15% |
-| 20 | VLUE | -1.17% |
+| 1 | DX-Y.NYB | 1.34% |
+| 2 | USDJPY=X | 1.07% |
+| 3 | ^STOXX50E | 0.65% |
+| 4 | EWJ | 0.52% |
+| 5 | ^RUT | 0.43% |
+| 6 | BIL | 0.28% |
+| 7 | ^GSPC | 0.28% |
+| 8 | QUAL | 0.22% |
+| 9 | HYG | 0.05% |
+| 10 | USDCNY=X | 0.01% |
+| 11 | EMB | -0.33% |
+| 12 | IEF | -0.36% |
+| 13 | ELD | -0.42% |
+| 14 | LQD | -1.06% |
+| 15 | TLT | -1.09% |
+| 16 | EWX | -1.49% |
+| 17 | EURUSD=X | -1.58% |
+| 18 | ^NDX | -2.35% |
+| 19 | ^SPGSCI | -2.89% |
+| 20 | VLUE | -3.44% |
 
 ## Flujo Institucional - Otros Activos (Proxy)
 | # | Activo | Flujo (z-score) |
 |---|--------|------------------|
-| 1 | IEF | 1.01 |
-| 2 | SCHC | 0.49 |
-| 3 | EMB | 0.19 |
-| 4 | ^STOXX50E | 0.06 |
-| 5 | BIL | 0.05 |
-| 6 | EWX | -0.00 |
-| 7 | EEM | -0.21 |
-| 8 | VLUE | -0.25 |
-| 9 | ^GSPC | -0.27 |
-| 10 | QUAL | -0.34 |
-| 11 | CL=F | -0.37 |
-| 12 | MTUM | -0.40 |
-| 13 | EWJ | -0.43 |
-| 14 | BZ=F | -0.43 |
-| 15 | ^NDX | -0.60 |
-| 16 | TLT | -0.63 |
-| 17 | HYG | -0.65 |
-| 18 | NG=F | -0.79 |
-| 19 | LQD | -0.79 |
-| 20 | ^RUT | -1.18 |
+| 1 | SCHC | 0.32 |
+| 2 | ^STOXX50E | 0.18 |
+| 3 | ELD | 0.14 |
+| 4 | EMB | 0.12 |
+| 5 | GC=F | 0.09 |
+| 6 | VLUE | -0.04 |
+| 7 | BZ=F | -0.08 |
+| 8 | HG=F | -0.09 |
+| 9 | EWX | -0.12 |
+| 10 | CL=F | -0.13 |
+| 11 | HYG | -0.30 |
+| 12 | EEM | -0.35 |
+| 13 | TLT | -0.38 |
+| 14 | LQD | -0.40 |
+| 15 | ^GSPC | -0.40 |
+| 16 | QUAL | -0.50 |
+| 17 | EWJ | -0.56 |
+| 18 | IEF | -0.60 |
+| 19 | BIL | -0.61 |
+| 20 | NG=F | -0.62 |
 
 ## Lideres Sectoriales
 *No disponibles: ningun sector en fase de acumulacion.*
