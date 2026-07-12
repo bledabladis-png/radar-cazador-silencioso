@@ -1,9 +1,9 @@
 # MACRO SECTORIAL - Reporte Diario
-**Fecha:** 2026-07-11 20:52:00
+**Fecha:** 2026-07-12 20:53:13
 **Modelo:** v3.1 | Pesos: v3 | Indicadores: v2
 
 ## Resumen de Regimenes
-- **Macro:** MIXED (Score: -0.10, Confianza: 73%)
+- **Macro:** MIXED (Score: -0.09, Confianza: 73%)
 - **Cond. Financieras:** NEUTRAL (Score: 0.01, Confianza: 62%)
 - **Liquidez Real (FRED):** ABUNDANTE (Confianza: 81%)
 - **Volatilidad:** NORMAL (Z-Score: -0.29, Confianza: 14%)
@@ -67,7 +67,7 @@
 | # | Activo | Retorno 20d (%) |
 |---|--------|------------------|
 | 1 | DX-Y.NYB | 1.34% |
-| 2 | USDJPY=X | 1.07% |
+| 2 | USDJPY=X | 1.10% |
 | 3 | ^STOXX50E | 0.65% |
 | 4 | EWJ | 0.52% |
 | 5 | ^RUT | 0.43% |
@@ -82,24 +82,24 @@
 | 14 | LQD | -1.06% |
 | 15 | TLT | -1.09% |
 | 16 | EWX | -1.49% |
-| 17 | EURUSD=X | -1.58% |
+| 17 | EURUSD=X | -1.71% |
 | 18 | ^NDX | -2.35% |
 | 19 | ^SPGSCI | -2.89% |
-| 20 | VLUE | -3.44% |
+| 20 | HG=F | -3.09% |
 
 ## Flujo Institucional - Otros Activos (Proxy)
 | # | Activo | Flujo (z-score) |
 |---|--------|------------------|
 | 1 | SCHC | 0.32 |
-| 2 | ^STOXX50E | 0.18 |
-| 3 | ELD | 0.14 |
-| 4 | EMB | 0.12 |
-| 5 | GC=F | 0.09 |
+| 2 | HG=F | 0.20 |
+| 3 | ^STOXX50E | 0.18 |
+| 4 | ELD | 0.17 |
+| 5 | EMB | 0.12 |
 | 6 | VLUE | -0.04 |
-| 7 | BZ=F | -0.08 |
-| 8 | HG=F | -0.09 |
+| 7 | BZ=F | -0.07 |
+| 8 | CL=F | -0.10 |
 | 9 | EWX | -0.12 |
-| 10 | CL=F | -0.13 |
+| 10 | GC=F | -0.23 |
 | 11 | HYG | -0.30 |
 | 12 | EEM | -0.35 |
 | 13 | TLT | -0.38 |
@@ -107,9 +107,9 @@
 | 15 | ^GSPC | -0.40 |
 | 16 | QUAL | -0.50 |
 | 17 | EWJ | -0.56 |
-| 18 | IEF | -0.60 |
-| 19 | BIL | -0.61 |
-| 20 | NG=F | -0.62 |
+| 18 | NG=F | -0.60 |
+| 19 | IEF | -0.60 |
+| 20 | BIL | -0.61 |
 
 ## Lideres Sectoriales
 *No disponibles: ningun sector en fase de acumulacion.*
