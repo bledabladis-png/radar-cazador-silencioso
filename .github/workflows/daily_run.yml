@@ -24,8 +24,10 @@ jobs:
         run: pip install -r requirements.txt
 
       - name: Run Macro Sectorial
+        env:
+          POLYGON_API_KEY: ${{ secrets.POLYGON_API_KEY }}
         run: python run.py
-
+        
       - name: Upload artifacts (downloadable report)
         uses: actions/upload-artifact@v4
         with:
