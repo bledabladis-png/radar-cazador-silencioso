@@ -4,15 +4,34 @@ from data.providers.finra import FinraProvider
 from config.tickers import MARKET_TICKERS
 
 def _get_all_tickers():
-    """Extrae todos los tickers del universo de activos definido en config."""
     tickers = []
-    for category, assets in MARKET_TICKERS.items():
-        if isinstance(assets, dict):
-            tickers.extend(assets.values())
-        elif isinstance(assets, list):
-            tickers.extend(assets)
-    # Eliminar duplicados y tickers que empiezan por ^ (índices)
+    for group in MARKET_TICKERS.values():
+        if isinstance(group, dict):
+            tickers.extend(group.values())
+        elif isinstance(group, list):
+            tickers.extend(group)
+    try:
+        holdings = pd.read_csv('data/etf_holdings.csv')
+        if 'ticker' in holdings.columns:
+            tickers.extend(holdings['ticker'].tolist())
+    except:
+        pass
     return list(set([t for t in tickers if not t.startswith('^')]))
+
+def _get_volume_from_df(df, week_start, end_date_str):
+    """Extrae un diccionario {ticker: volumen_total} de un DataFrame con MultiIndex."""
+    volumes = {}
+    try:
+        week_data = df.loc[week_start:end_date_str]
+        for col in week_data.columns:
+            if col[0] == 'Volume':
+                ticker = col[1]
+                vol = week_data[col].sum()
+                if pd.notna(vol) and vol > 0:
+                    volumes[ticker] = vol
+    except:
+        pass
+    return volumes
 
 def compute_darkpool_signals():
     finra = FinraProvider()
@@ -20,59 +39,55 @@ def compute_darkpool_signals():
     if not week_start:
         return None
 
-    # Descargar datos de los tres mercados (T1, T2, OTCE)
+    # Datos ATS de FINRA
     ats_data = finra.get_all_tiers(week_start)
     if ats_data.empty:
         return None
-
-    # Agrupar por símbolo y sumar volumen ATS
     if 'issueSymbolIdentifier' in ats_data.columns and 'totalWeeklyShareQuantity' in ats_data.columns:
         ats_volume = ats_data.groupby('issueSymbolIdentifier')['totalWeeklyShareQuantity'].sum()
-        ats_volume = ats_volume.reset_index(name='ats_volume')
+        ats_volume = ats_volume.to_dict()
     else:
         return None
 
-    # Cargar volumen total de Yahoo Finance para la misma semana
+    end_date = pd.to_datetime(week_start) + timedelta(days=4)
+    end_date_str = end_date.strftime('%Y-%m-%d')
+
+    # Volúmenes de mercado (market_data.csv)
+    volumes = {}
     try:
         df_market = pd.read_csv('data/market_data.csv', header=[0,1], index_col=0, parse_dates=True)
-    except FileNotFoundError:
+        volumes.update(_get_volume_from_df(df_market, week_start, end_date_str))
+    except:
+        pass
+
+    # Volúmenes de acciones líderes (stock_prices.csv)
+    try:
+        df_stocks = pd.read_csv('data/stock_prices.csv', header=[0,1], index_col=0, parse_dates=True)
+        volumes.update(_get_volume_from_df(df_stocks, week_start, end_date_str))
+    except:
+        pass
+
+    if not volumes:
         return None
 
-    # La semana de FINRA empieza en week_start (lunes) y termina 4 días después (viernes)
-    end_date = pd.to_datetime(week_start) + timedelta(days=4)
-    week_data = df_market.loc[week_start:end_date.strftime('%Y-%m-%d')]
-
-    if week_data.empty:
-        return None
-
-    # Obtener tickers automaticamente desde config
-    tickers = _get_all_tickers()
+    # Calcular Dark Pool % para todos los tickers disponibles
     resultados = []
-    for t in tickers:
-        try:
-            vol_total = week_data[('Volume', t)].sum()
-            row = ats_volume.loc[ats_volume['issueSymbolIdentifier'] == t, 'ats_volume']
-            vol_ats = row.values[0] if len(row) > 0 else 0
-            if vol_total > 0:
-                dark_pool_pct = (vol_ats / vol_total) * 100
+    for t, vol_total in volumes.items():
+        vol_ats = ats_volume.get(t, 0)
+        if vol_ats > 0:
+            dark_pool_pct = (vol_ats / vol_total) * 100
+            if dark_pool_pct <= 100:
                 resultados.append({
                     'ticker': t,
                     'ats_volume': vol_ats,
                     'total_volume': vol_total,
                     'dark_pool_pct': dark_pool_pct
                 })
-        except:
-            pass
 
     if not resultados:
         return None
 
     df_res = pd.DataFrame(resultados)
-    # Filtrar valores anómalos (mayores al 100% indican desalineacion de fechas)
-    df_res = df_res[df_res['dark_pool_pct'] <= 100]
-    if df_res.empty:
-        return None
-
     media_dp = df_res['dark_pool_pct'].mean()
     max_row = df_res.loc[df_res['dark_pool_pct'].idxmax()]
 

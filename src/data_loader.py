@@ -14,6 +14,16 @@ def _ticker_list():
             tickers.extend(group.values())
         elif isinstance(group, list):
             tickers.extend(group)
+    
+    # Añadir tickers de los líderes sectoriales (etf_holdings.csv)
+    try:
+        import pandas as _pd
+        holdings = _pd.read_csv('data/etf_holdings.csv')
+        if 'ticker' in holdings.columns:
+            tickers.extend(holdings['ticker'].tolist())
+    except:
+        pass
+    
     return list(set(tickers))
 
 @retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=4, max=10))
