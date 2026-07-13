@@ -11,7 +11,7 @@ INDICATORS_VERSION = "2"
 def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score, liquidity_regime, liq_conf,
                           volatility_score, vol_regime, vol_conf, sector_results,
                           price_ranking, flow_ranking,
-                          leader_lines=None, breadth_values=None, real_liquidity_regime=None, real_liquidity_conf=None,pcr_data=None,
+                          leader_lines=None, breadth_values=None, real_liquidity_regime=None, real_liquidity_conf=None,pcr_data=None, darkpool_data=None,
                           output_path='outputs/reporte_diario.md'):
     lines = []
     lines.append("# MACRO SECTORIAL - Reporte Diario\n")
@@ -115,6 +115,16 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
         if pcr_data.get('vix_correlation') is not None:
             lines.append(f"- **Correlación con VIX (252d):** {pcr_data['vix_correlation']:.2f}\n")
         lines.append(f"\n*Fuente: FRED. Timestamp: {pcr_data.get('timestamp', 'N/A')}.*\n\n")
+
+    # --- Dark Pools (FINRA ATS) ---
+    if darkpool_data:
+        lines.append("## Flujos Institucionales (Dark Pools v1.0)\n")
+        lines.append(f"- **Dark Pool medio:** {darkpool_data.get('media_dark_pool', 0):.2f}% "
+                     f"({darkpool_data.get('n_tickers_ats', 0)}/{darkpool_data.get('n_tickers_total', 0)} tickers)\n")
+        lines.append(f"- **Mayor Dark Pool %:** {darkpool_data.get('ticker_max', 'N/A')} "
+                     f"({darkpool_data.get('max_dark_pool', 0):.2f}%)\n")
+        lines.append(f"- **Semana FINRA:** {darkpool_data.get('week', 'N/A')}\n")
+        lines.append(f"\n*Fuente: FINRA ATS Transparency Data.*\n\n")
 
     lines.append("\n---\n")
     lines.append("*Informe generado automaticamente por Macro Sectorial v3.1. No constituye recomendacion de inversion.*\n")

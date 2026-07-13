@@ -126,6 +126,19 @@ def main():
     except Exception as e:
         print(f"  Modulo PCR omitido: {e}")
 
+    print("Calculando Dark Pools (FINRA ATS)...")
+    darkpool_data = None
+    try:
+        from indicators.darkpool import compute_darkpool_signals
+        darkpool_data = compute_darkpool_signals()
+        if darkpool_data:
+            print(f"  Dark Pool medio: {darkpool_data['media_dark_pool']:.2f}% "
+                  f"({darkpool_data['n_tickers_ats']}/{darkpool_data['n_tickers_total']} tickers)")
+        else:
+            print("  Dark Pools: no disponible")
+    except Exception as e:
+        print(f"  Modulo Dark Pools omitido: {e}")
+
     print("Generando reporte...")
     generate_daily_report(macro_score, macro_regime, macro_conf,
                           liquidity_score, financial_regime, liq_conf,
@@ -134,7 +147,7 @@ def main():
                           price_rank, flow_rank,
                           leader_lines=leader_lines, breadth_values=breadth_values,
                           real_liquidity_regime=real_liq_regime, real_liquidity_conf=real_liq_conf,
-                          pcr_data=pcr_data)
+                          pcr_data=pcr_data, darkpool_data=darkpool_data)
     print("Reporte generado en outputs/reporte_diario.md")
 
 if __name__ == "__main__":

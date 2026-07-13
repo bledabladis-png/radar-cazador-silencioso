@@ -6,7 +6,7 @@ MARKET_TICKERS = {
         'russell2000': '^RUT',
         'eurostoxx50': '^STOXX50E',
         'msci_em': 'EEM',
-        'japan': 'EWJ',
+        'japan': 'EWJ', 'spy': 'SPY', 'qqq': 'QQQ', 'iwm': 'IWM',
     },
     'sectors': [
         'XLK','XLF','XLV','XLE','XLY','XLP',
@@ -52,6 +52,12 @@ MARKET_TICKERS = {
         'wti': 'CL=F',
         'brent': 'BZ=F',
         'natgas': 'NG=F',
+    },
+    'commodity_etfs': {
+        'gold_etf': 'GLD',
+        'silver_etf': 'SLV',
+        'oil_etf': 'USO',
+        'natgas_etf': 'UNG',
     },
 }
 
