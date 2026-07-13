@@ -1,4 +1,5 @@
 ﻿import pandas as pd
+import numpy as np
 import os
 from datetime import datetime
 from config.tickers import SECTOR_NAMES
@@ -10,7 +11,7 @@ INDICATORS_VERSION = "2"
 def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score, liquidity_regime, liq_conf,
                           volatility_score, vol_regime, vol_conf, sector_results,
                           price_ranking, flow_ranking,
-                          leader_lines=None, breadth_values=None, real_liquidity_regime=None, real_liquidity_conf=None,
+                          leader_lines=None, breadth_values=None, real_liquidity_regime=None, real_liquidity_conf=None,pcr_data=None,
                           output_path='outputs/reporte_diario.md'):
     lines = []
     lines.append("# MACRO SECTORIAL - Reporte Diario\n")
@@ -83,6 +84,37 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
     else:
         lines.append("\n## Lideres Sectoriales\n")
         lines.append("*No disponibles: ningun sector en fase de acumulacion.*\n")
+
+    # --- Sentimiento de Opciones (PCR) ---
+    if pcr_data:
+        lines.append("## Sentimiento de Opciones (OMS v1.1)\n")
+        lines.append(f"- **OMS STATUS:** {pcr_data.get('status', 'N/A')}\n")
+        if pcr_data.get('issues'):
+            for issue in pcr_data.get('issues', []):
+                lines.append(f"  - ⚠️ {issue}\n")
+        if 'pcr_total' in pcr_data:
+            lines.append(f"- **PCR Total:** {pcr_data.get('pcr_total', np.nan):.2f} "
+                         f"(Z-Score: {pcr_data.get('z_score', np.nan):.2f} | "
+                         f"Percentil 3Y: {pcr_data.get('percentile_3y', np.nan):.0%} | "
+                         f"Percentil 10Y: {pcr_data.get('percentile_10y', np.nan):.0%})\n")
+        if 'pcr_equity' in pcr_data or 'pcr_index' in pcr_data:
+            lines.append(f"- **PCR Acciones:** {pcr_data.get('pcr_equity', np.nan):.2f} | "
+                         f"**PCR Índices:** {pcr_data.get('pcr_index', np.nan):.2f}\n")
+        if pcr_data.get('divergence_flag') and pcr_data.get('divergence_flag') != 'No divergence':
+            lines.append(f"- **Divergence Flag:** {pcr_data['divergence_flag']}\n")
+        if 'extreme_flag' in pcr_data:
+            lines.append(f"- **Extreme Flag:** {pcr_data.get('extreme_flag', 'N/A')}\n")
+        if 'lectura_contrarian' in pcr_data:
+            lines.append(f"- **Lectura contrarian:** {pcr_data.get('lectura_contrarian', 'N/A')}\n")
+        if 'days_since' in pcr_data:
+            lines.append(f"- **Data Freshness:** Ultimo dato {pcr_data.get('last_date', 'N/A')} "
+                         f"({pcr_data.get('days_since', '?')} dias de retraso)\n")
+        if 'coverage' in pcr_data:
+            lines.append(f"- **Cobertura:** {pcr_data.get('coverage', 0):.0%} "
+                         f"({len(pcr_data.get('available_series', []))}/{len(pcr_data.get('required_series', []))} series)\n")
+        if pcr_data.get('vix_correlation') is not None:
+            lines.append(f"- **Correlación con VIX (252d):** {pcr_data['vix_correlation']:.2f}\n")
+        lines.append(f"\n*Fuente: FRED. Timestamp: {pcr_data.get('timestamp', 'N/A')}.*\n\n")
 
     lines.append("\n---\n")
     lines.append("*Informe generado automaticamente por Macro Sectorial v3.1. No constituye recomendacion de inversion.*\n")

@@ -114,6 +114,18 @@ def main():
     except Exception as e:
         print(f"  Modulo de lideres omitido: {e}")
 
+    print("Calculando sentimiento de opciones (PCR)...")
+    pcr_data = None
+    try:
+        from indicators.options import compute_pcr_signals
+        pcr_data = compute_pcr_signals()
+        if pcr_data and pcr_data.get('status') == 'OK':
+            print(f"  PCR Total: {pcr_data['pcr_total']:.2f} (Z: {pcr_data['z_score']:.2f}, Sentimiento: {pcr_data['sentiment']:.2f})")
+        elif pcr_data:
+            print(f"  OMS STATUS: {pcr_data['status']}")
+    except Exception as e:
+        print(f"  Modulo PCR omitido: {e}")
+
     print("Generando reporte...")
     generate_daily_report(macro_score, macro_regime, macro_conf,
                           liquidity_score, financial_regime, liq_conf,
@@ -121,7 +133,8 @@ def main():
                           sector_results,
                           price_rank, flow_rank,
                           leader_lines=leader_lines, breadth_values=breadth_values,
-                          real_liquidity_regime=real_liq_regime, real_liquidity_conf=real_liq_conf)
+                          real_liquidity_regime=real_liq_regime, real_liquidity_conf=real_liq_conf,
+                          pcr_data=pcr_data)
     print("Reporte generado en outputs/reporte_diario.md")
 
 if __name__ == "__main__":

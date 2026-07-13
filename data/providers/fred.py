@@ -11,6 +11,10 @@ FRED_SERIES = {
     "treasury_5y": "DGS5",
     "treasury_10y": "DGS10",
     "treasury_30y": "DGS30",
+    # Opciones
+    "put_call_total": "PCALLQ622S",
+    "put_call_equity": "PCEQVQ622S",
+    "put_call_index": "PCINDQ622S",
 }
 
 class FredProvider(MarketDataProvider):
@@ -61,6 +65,16 @@ class FredProvider(MarketDataProvider):
 
     def get_fed_data(self, index=None) -> pd.DataFrame:
         series_ids = ["fed_balance", "sofr", "reverse_repo", "fed_funds"]
+        df = pd.DataFrame()
+        for key in series_ids:
+            if key in FRED_SERIES:
+                s = self._download_series(FRED_SERIES[key], index=index)
+                if not s.empty:
+                    df[key] = s
+        return df
+
+    def get_options_data(self, index=None) -> pd.DataFrame:
+        series_ids = ["put_call_total", "put_call_equity", "put_call_index"]
         df = pd.DataFrame()
         for key in series_ids:
             if key in FRED_SERIES:
