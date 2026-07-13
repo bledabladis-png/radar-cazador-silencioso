@@ -1,10 +1,21 @@
 ﻿import pandas as pd
 from datetime import datetime, timedelta
 from data.providers.finra import FinraProvider
+from config.tickers import MARKET_TICKERS
+
+def _get_all_tickers():
+    """Extrae todos los tickers del universo de activos definido en config."""
+    tickers = []
+    for category, assets in MARKET_TICKERS.items():
+        if isinstance(assets, dict):
+            tickers.extend(assets.values())
+        elif isinstance(assets, list):
+            tickers.extend(assets)
+    # Eliminar duplicados y tickers que empiezan por ^ (índices)
+    return list(set([t for t in tickers if not t.startswith('^')]))
 
 def compute_darkpool_signals():
     finra = FinraProvider()
-    # Forzar descarga sin verificar is_available()
     week_start = finra.get_latest_week()
     if not week_start:
         return None
@@ -34,8 +45,8 @@ def compute_darkpool_signals():
     if week_data.empty:
         return None
 
-    # Tickers de interés (sin GLD, SLV, USO, UNG que no estan en Yahoo)
-    tickers = ['SPY', 'QQQ', 'IWM', 'XLF', 'XLE', 'XLK', 'XLV', 'TLT', 'HYG', 'LQD', 'EEM', 'GLD']
+    # Obtener tickers automaticamente desde config
+    tickers = _get_all_tickers()
     resultados = []
     for t in tickers:
         try:
