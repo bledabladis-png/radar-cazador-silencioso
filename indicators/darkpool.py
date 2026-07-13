@@ -35,7 +35,7 @@ def compute_darkpool_signals():
         return None
 
     # Tickers de interés (sin GLD, SLV, USO, UNG que no estan en Yahoo)
-    tickers = ['SPY', 'QQQ', 'IWM', 'XLF', 'XLE', 'XLK', 'XLV', 'TLT', 'HYG', 'LQD', 'EEM']
+    tickers = ['SPY', 'QQQ', 'IWM', 'XLF', 'XLE', 'XLK', 'XLV', 'TLT', 'HYG', 'LQD', 'EEM', 'GLD']
     resultados = []
     for t in tickers:
         try:
