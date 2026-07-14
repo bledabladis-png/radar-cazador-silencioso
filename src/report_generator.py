@@ -88,33 +88,21 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
     # --- Sentimiento de Opciones (PCR) ---
     if pcr_data:
         lines.append("## Sentimiento de Opciones (OMS v1.1)\n")
-        lines.append(f"- **OMS STATUS:** {pcr_data.get('status', 'N/A')}\n")
-        if pcr_data.get('issues'):
-            for issue in pcr_data.get('issues', []):
-                lines.append(f"  - ⚠️ {issue}\n")
-        if 'pcr_total' in pcr_data:
-            lines.append(f"- **PCR Total:** {pcr_data.get('pcr_total', np.nan):.2f} "
-                         f"(Z-Score: {pcr_data.get('z_score', np.nan):.2f} | "
-                         f"Percentil 3Y: {pcr_data.get('percentile_3y', np.nan):.0%} | "
-                         f"Percentil 10Y: {pcr_data.get('percentile_10y', np.nan):.0%})\n")
-        if 'pcr_equity' in pcr_data or 'pcr_index' in pcr_data:
-            lines.append(f"- **PCR Acciones:** {pcr_data.get('pcr_equity', np.nan):.2f} | "
-                         f"**PCR Índices:** {pcr_data.get('pcr_index', np.nan):.2f}\n")
-        if pcr_data.get('divergence_flag') and pcr_data.get('divergence_flag') != 'No divergence':
-            lines.append(f"- **Divergence Flag:** {pcr_data['divergence_flag']}\n")
-        if 'extreme_flag' in pcr_data:
-            lines.append(f"- **Extreme Flag:** {pcr_data.get('extreme_flag', 'N/A')}\n")
-        if 'lectura_contrarian' in pcr_data:
-            lines.append(f"- **Lectura contrarian:** {pcr_data.get('lectura_contrarian', 'N/A')}\n")
-        if 'days_since' in pcr_data:
-            lines.append(f"- **Data Freshness:** Ultimo dato {pcr_data.get('last_date', 'N/A')} "
-                         f"({pcr_data.get('days_since', '?')} dias de retraso)\n")
-        if 'coverage' in pcr_data:
-            lines.append(f"- **Cobertura:** {pcr_data.get('coverage', 0):.0%} "
-                         f"({len(pcr_data.get('available_series', []))}/{len(pcr_data.get('required_series', []))} series)\n")
-        if pcr_data.get('vix_correlation') is not None:
-            lines.append(f"- **Correlación con VIX (252d):** {pcr_data['vix_correlation']:.2f}\n")
-        lines.append(f"\n*Fuente: FRED. Timestamp: {pcr_data.get('timestamp', 'N/A')}.*\n\n")
+        lines.append(f"- **PCR Total:** {pcr_data.get('total_pcr', np.nan):.2f} "
+                     f"(EWMA(5): {pcr_data.get('pcr_ewm', np.nan):.2f})\n")
+        if pd.notna(pcr_data.get('z_score')):
+            lines.append(f"- **Robust Z-Score:** {pcr_data['z_score']:.2f}\n")
+            lines.append(f"- **Momentum:** {pcr_data.get('momentum', 0):.2f}\n")
+            lines.append(f"- **Percentil:** {pcr_data.get('percentile', 0):.0f}%\n")
+            lines.append(f"- **Estado:** {pcr_data.get('state', 'N/A')}\n")
+            lines.append(f"- **Score:** {pcr_data.get('score', 0):.2f}\n")
+        lines.append(f"- **PCR Índices:** {pcr_data.get('index_pcr', np.nan):.2f} | "
+                     f"**PCR Acciones:** {pcr_data.get('equity_pcr', np.nan):.2f} | "
+                     f"**PCR ETP:** {pcr_data.get('etp_pcr', np.nan):.2f}\n")
+        lines.append(f"- **PCR VIX:** {pcr_data.get('vix_pcr', np.nan):.2f} | "
+                     f"**PCR SPX:** {pcr_data.get('spx_pcr', np.nan):.2f}\n")
+        lines.append(f"- **Último dato:** {pcr_data.get('last_date', 'N/A')}\n")
+        lines.append(f"\n*Fuente: CBOE Official Data. Timestamp: {pcr_data.get('timestamp', 'N/A')}.*\n\n")
 
     # --- Dark Pools (FINRA ATS) ---
     if darkpool_data:

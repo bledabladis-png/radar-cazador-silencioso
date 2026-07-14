@@ -120,7 +120,7 @@ def main():
         from indicators.options import compute_pcr_signals
         pcr_data = compute_pcr_signals()
         if pcr_data and pcr_data.get('status') == 'OK':
-            print(f"  PCR Total: {pcr_data['pcr_total']:.2f} (Z: {pcr_data['z_score']:.2f}, Sentimiento: {pcr_data['sentiment']:.2f})")
+            print(f"  PCR Total: {pcr_data['total_pcr']:.2f} (Z: {pcr_data['z_score']:.2f}, Estado: {pcr_data['state']})")
         elif pcr_data:
             print(f"  OMS STATUS: {pcr_data['status']}")
     except Exception as e:
