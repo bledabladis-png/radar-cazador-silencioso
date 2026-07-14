@@ -4,14 +4,15 @@ import os
 from datetime import datetime
 from config.tickers import SECTOR_NAMES
 
-MODEL_VERSION = "3.1"
+MODEL_VERSION = "3.15"
 WEIGHTS_VERSION = "3"
 INDICATORS_VERSION = "2"
 
 def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score, liquidity_regime, liq_conf,
                           volatility_score, vol_regime, vol_conf, sector_results,
                           price_ranking, flow_ranking,
-                          leader_lines=None, breadth_values=None, real_liquidity_regime=None, real_liquidity_conf=None,pcr_data=None, darkpool_data=None,
+                          leader_lines=None, breadth_values=None, real_liquidity_regime=None, real_liquidity_conf=None,
+                          pcr_data=None, darkpool_data=None,
                           output_path='outputs/reporte_diario.md'):
     lines = []
     lines.append("# MACRO SECTORIAL - Reporte Diario\n")
@@ -44,7 +45,6 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
     for i, (ticker, name, score, wyckoff) in enumerate(sector_results['ranking'][:11], 1):
         lines.append(f"| {i} | {name} ({ticker}) | {score:.2f} | {wyckoff} |\n")
 
-    # Separar sectores del resto
     sector_tickers = list(SECTOR_NAMES.keys())
     sector_price = [(t, m) for t, m in price_ranking if t in sector_tickers]
     sector_flow = [(t, f) for t, f in flow_ranking if t in sector_tickers]
@@ -85,9 +85,9 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
         lines.append("\n## Lideres Sectoriales\n")
         lines.append("*No disponibles: ningun sector en fase de acumulacion.*\n")
 
-    # --- Sentimiento de Opciones (PCR) ---
+    # --- Sentimiento de Opciones (OMS v2.0) ---
     if pcr_data:
-        lines.append("## Sentimiento de Opciones (OMS v1.1)\n")
+        lines.append("## Sentimiento de Opciones (OMS v2.0)\n")
         lines.append(f"- **PCR Total:** {pcr_data.get('total_pcr', np.nan):.2f} "
                      f"(EWMA(5): {pcr_data.get('pcr_ewm', np.nan):.2f})\n")
         if pd.notna(pcr_data.get('z_score')):
@@ -95,12 +95,19 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
             lines.append(f"- **Momentum:** {pcr_data.get('momentum', 0):.2f}\n")
             lines.append(f"- **Percentil:** {pcr_data.get('percentile', 0):.0f}%\n")
             lines.append(f"- **Estado:** {pcr_data.get('state', 'N/A')}\n")
-            lines.append(f"- **Score:** {pcr_data.get('score', 0):.2f}\n")
         lines.append(f"- **PCR Índices:** {pcr_data.get('index_pcr', np.nan):.2f} | "
                      f"**PCR Acciones:** {pcr_data.get('equity_pcr', np.nan):.2f} | "
                      f"**PCR ETP:** {pcr_data.get('etp_pcr', np.nan):.2f}\n")
         lines.append(f"- **PCR VIX:** {pcr_data.get('vix_pcr', np.nan):.2f} | "
                      f"**PCR SPX:** {pcr_data.get('spx_pcr', np.nan):.2f}\n")
+        # Nuevos indicadores v2.0
+        lines.append(f"- **Institutional Hedge Ratio:** {pcr_data.get('ihr', np.nan):.2f} "
+                     f"({pcr_data.get('ihr_state', 'N/A')})\n")
+        lines.append(f"- **Volumen en Índices:** {pcr_data.get('index_volume_share', np.nan):.1%} del total\n")
+        lines.append(f"- **Put Share:** {pcr_data.get('put_share', np.nan):.1%} | "
+                     f"**Call Share:** {pcr_data.get('call_share', np.nan):.1%}\n")
+        lines.append(f"- **Volume PCR (calculado):** {pcr_data.get('volume_pcr', np.nan):.2f} | "
+                     f"**OI PCR:** {pcr_data.get('oi_pcr', np.nan):.2f}\n")
         lines.append(f"- **Último dato:** {pcr_data.get('last_date', 'N/A')}\n")
         lines.append(f"\n*Fuente: CBOE Official Data. Timestamp: {pcr_data.get('timestamp', 'N/A')}.*\n\n")
 
@@ -117,8 +124,7 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
         else:
             lines.append("- *Acumulando historial (se necesitan 104 semanas para el Z-Score)*\n")
         lines.append(f"- **Semana FINRA:** {darkpool_data.get('week', 'N/A')}\n")
-        
-        # Top 5 tickers con mayor Dark Pool %
+
         if 'datos' in darkpool_data and not darkpool_data['datos'].empty:
             top5 = darkpool_data['datos'].nlargest(5, 'dark_pool_pct')
             lines.append("\n**Top 5 por Dark Pool %:**\n")
@@ -126,7 +132,7 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
             lines.append("|--------|:-----------:|:-------:|:---------:|\n")
             for _, row in top5.iterrows():
                 lines.append(f"| {row['ticker']} | {row['dark_pool_pct']:.2f}% | {row['ats_volume']:,.0f} | {row['total_volume']:,.0f} |\n")
-        
+
         lines.append(f"\n*Fuente: FINRA ATS Transparency Data.*\n\n")
 
     with open(output_path, 'w', encoding='utf-8') as f:
