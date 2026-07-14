@@ -121,14 +121,25 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
         lines.append("## Flujos Institucionales (Dark Pools v1.0)\n")
         lines.append(f"- **Dark Pool medio:** {darkpool_data.get('media_dark_pool', 0):.2f}% "
                      f"({darkpool_data.get('n_tickers_ats', 0)}/{darkpool_data.get('n_tickers_total', 0)} tickers)\n")
-        lines.append(f"- **Mayor Dark Pool %:** {darkpool_data.get('ticker_max', 'N/A')} "
-                     f"({darkpool_data.get('max_dark_pool', 0):.2f}%)\n")
+        if pd.notna(darkpool_data.get('z_score')):
+            lines.append(f"- **Robust Z-Score:** {darkpool_data['z_score']:.2f}\n")
+            lines.append(f"- **Momentum:** {darkpool_data.get('momentum', 0):.2f}\n")
+            lines.append(f"- **Percentil:** {darkpool_data.get('percentile', 0):.0f}%\n")
+            lines.append(f"- **Estado:** {darkpool_data.get('state', 'N/A')}\n")
+        else:
+            lines.append("- *Acumulando historial (se necesitan 104 semanas para el Z-Score)*\n")
         lines.append(f"- **Semana FINRA:** {darkpool_data.get('week', 'N/A')}\n")
+        
+        # Top 5 tickers con mayor Dark Pool %
+        if 'datos' in darkpool_data and not darkpool_data['datos'].empty:
+            top5 = darkpool_data['datos'].nlargest(5, 'dark_pool_pct')
+            lines.append("\n**Top 5 por Dark Pool %:**\n")
+            lines.append("| Ticker | Dark Pool % | Vol ATS | Vol Total |\n")
+            lines.append("|--------|:-----------:|:-------:|:---------:|\n")
+            for _, row in top5.iterrows():
+                lines.append(f"| {row['ticker']} | {row['dark_pool_pct']:.2f}% | {row['ats_volume']:,.0f} | {row['total_volume']:,.0f} |\n")
+        
         lines.append(f"\n*Fuente: FINRA ATS Transparency Data.*\n\n")
-
-    lines.append("\n---\n")
-    lines.append("*Informe generado automaticamente por Macro Sectorial v3.1. No constituye recomendacion de inversion.*\n")
-    lines.append("*El sistema implementa un conjunto consistente de reglas deterministas, con normalizacion robusta, separacion modular y metodologia documentada.*\n")
 
     with open(output_path, 'w', encoding='utf-8') as f:
         f.writelines(lines)
