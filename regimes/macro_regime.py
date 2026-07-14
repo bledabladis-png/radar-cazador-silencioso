@@ -41,9 +41,7 @@ def compute_macro_regime(df_market, df_macro_manual=None, liquidity_score=None, 
         inf_pct = 0.5
 
     regime = 'MIXED'
-    if last_volatility < -2.0 or (last_volatility < -1.5 and vol_pct < 0.05):
-        regime = 'LIQUIDITY CRISIS'
-    if last_volatility < -2.0 and last < 0.1:
+    if last_volatility < -2.0:
         regime = 'LIQUIDITY CRISIS'
     elif last_volatility < -1.5 and last_credit < -0.5:
         regime = 'LIQUIDITY CRISIS'
@@ -57,7 +55,7 @@ def compute_macro_regime(df_market, df_macro_manual=None, liquidity_score=None, 
         regime = 'EXPANSION'
     elif last > 0.2 and last_inflation > 0.2:
         regime = 'LATE EXPANSION'
-    elif last > 0.2 and last_market_strength > 0.2 and last_inflation < 0 and last_liquidity > 0 and last_volatility < 0:
+    elif last > 0.2 and last_market_strength > 0.2 and last_inflation < 0 and last_volatility < 0:
         regime = 'GOLDILOCKS'
     elif last < -0.2 and last_market_strength < 0:
         regime = 'SLOWDOWN'
@@ -65,6 +63,5 @@ def compute_macro_regime(df_market, df_macro_manual=None, liquidity_score=None, 
         regime = 'RECOVERY'
     elif last > 0 and last_inflation < -0.5:
         regime = 'DEFLATION'
-
     conf = confidence.iloc[-1] if not confidence.empty else 0.5
     return macro_score, regime, conf, all_signals
