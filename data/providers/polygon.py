@@ -8,12 +8,15 @@ class PolygonProvider(MarketDataProvider):
         self.name = "Polygon.io"
         self.api_key = api_key
         if self.api_key is None:
-            from dotenv import load_dotenv
-            import os
-            load_dotenv()
-            self.api_key = os.getenv("POLYGON_API_KEY")
+            try:
+                from dotenv import load_dotenv
+                import os
+                load_dotenv()
+                self.api_key = os.getenv("POLYGON_API_KEY")
+            except ImportError:
+                self.api_key = None
 
-    def get_name(self): 
+    def get_name(self):
         return self.name
 
     def is_available(self):
@@ -36,33 +39,22 @@ class PolygonProvider(MarketDataProvider):
         raise NotImplementedError("Usar FRED para datos de la Fed")
 
     def get_options_data(self, index=None):
-        """Obtiene volúmenes de puts y calls del mercado agregado usando Polygon.io."""
         today = datetime.now().strftime('%Y-%m-%d')
         two_years_ago = (datetime.now() - timedelta(days=730)).strftime('%Y-%m-%d')
-        
-        # Intentar obtener datos de SPY como proxy del mercado general
         url = f"https://api.polygon.io/v2/aggs/ticker/SPY/range/1/day/{two_years_ago}/{today}?adjusted=true&sort=asc&limit=5000&apiKey={self.api_key}"
-        
         try:
             resp = requests.get(url, timeout=10)
             if resp.status_code != 200:
                 return pd.DataFrame()
-            
             data = resp.json()
             if 'results' not in data:
                 return pd.DataFrame()
-            
             df = pd.DataFrame(data['results'])
             df['date'] = pd.to_datetime(df['t'], unit='ms')
             df.set_index('date', inplace=True)
-            
-            # Calcular volumen como proxy (no es put/call real, es volumen total)
-            # Polygon no proporciona PCR directamente en el tier gratuito
-            # Devolvemos el volumen total como indicador de actividad
             result = pd.DataFrame(index=df.index)
-            result['volume'] = df['v']  # volumen total de SPY
-            result['close'] = df['c']   # precio de cierre
-            
+            result['volume'] = df['v']
+            result['close'] = df['c']
             return result
         except Exception as e:
             print(f"Error descargando datos de Polygon: {e}")
