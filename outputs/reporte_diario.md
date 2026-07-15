@@ -1,10 +1,10 @@
 # MACRO SECTORIAL - Reporte Diario
-**Fecha:** 2026-07-15 21:05:54
+**Fecha:** 2026-07-15 21:45:34
 **Modelo:** v3.15 | Pesos: v3 | Indicadores: v2
 
 ## Resumen de Regimenes
 - **Macro:** MIXED (Score: -0.07, Confianza: 83%)
-- **Cond. Financieras:** NEUTRAL (Score: 0.12, Confianza: 53%)
+- **Cond. Financieras:** NEUTRAL (Score: 0.13, Confianza: 53%)
 - **Liquidez Real (FRED):** NEUTRAL (Confianza: 82%)
 - **Volatilidad:** NORMAL (Z-Score: -0.16, Confianza: 8%)
 - **Sectores:** MIXED
@@ -66,15 +66,15 @@
 ## Momentum de Precio - Otros Activos (20 dias)
 | # | Activo | Retorno 20d (%) |
 |---|--------|------------------|
-| 1 | BZ=F | 7.74% |
-| 2 | CL=F | 4.52% |
+| 1 | BZ=F | 7.64% |
+| 2 | CL=F | 4.49% |
 | 3 | ^SPGSCI | 2.68% |
 | 4 | QUAL | 2.49% |
 | 5 | ^GSPC | 2.05% |
 | 6 | ^RUT | 2.00% |
-| 7 | USDJPY=X | 1.08% |
+| 7 | USDJPY=X | 1.07% |
 | 8 | HYG | 0.56% |
-| 9 | DX-Y.NYB | 0.42% |
+| 9 | DX-Y.NYB | 0.41% |
 | 10 | BIL | 0.28% |
 | 11 | ELD | 0.27% |
 | 12 | IEF | 0.07% |
@@ -84,16 +84,16 @@
 | 16 | ^NDX | -0.57% |
 | 17 | LQD | -0.75% |
 | 18 | EWJ | -1.01% |
-| 19 | EURUSD=X | -1.20% |
-| 20 | HG=F | -1.50% |
+| 19 | EURUSD=X | -1.21% |
+| 20 | HG=F | -1.52% |
 
 ## Flujo Institucional - Otros Activos (Proxy)
 | # | Activo | Flujo (z-score) |
 |---|--------|------------------|
-| 1 | GC=F | 2.14 |
+| 1 | GC=F | 2.13 |
 | 2 | IEF | 0.94 |
 | 3 | VLUE | 0.89 |
-| 4 | BZ=F | 0.75 |
+| 4 | BZ=F | 0.74 |
 | 5 | CL=F | 0.64 |
 | 6 | SCHC | 0.56 |
 | 7 | BIL | 0.36 |
@@ -103,13 +103,13 @@
 | 11 | ^STOXX50E | 0.08 |
 | 12 | LQD | 0.06 |
 | 13 | ^GSPC | -0.11 |
-| 14 | NG=F | -0.14 |
+| 14 | NG=F | -0.16 |
 | 15 | QUAL | -0.26 |
 | 16 | TLT | -0.36 |
 | 17 | EEM | -0.41 |
 | 18 | ^RUT | -0.51 |
-| 19 | EWJ | -0.75 |
-| 20 | ^NDX | -0.83 |
+| 19 | ELD | -0.68 |
+| 20 | EWJ | -0.75 |
 
 ## Lideres Sectoriales
 > Acciones con mejor perfil institucional dentro de sectores favorables.
@@ -152,7 +152,7 @@
 - **Volume PCR (calculado):** 0.93 | **OI PCR:** 0.75
 - **Último dato:** 2026-07-14
 
-*Fuente: CBOE Official Data. Timestamp: 2026-07-15 21:04:50.*
+*Fuente: CBOE Official Data. Timestamp: 2026-07-15 21:44:28.*
 
 ## Flujos Institucionales (Dark Pools v1.0)
 - **Dark Pool medio:** 17.98% (140/140 tickers)
