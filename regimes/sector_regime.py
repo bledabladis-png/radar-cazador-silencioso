@@ -94,7 +94,23 @@ def compute_sector_scores(df, benchmark='^GSPC'):
     else:
         regime = 'MIXED'
 
-    return {'scores': scores, 'ranking': ranking, 'regime': regime, 'last_scores': last_scores}
+    
+    # Sub-componentes del último día para validación
+    components = {}
+    for sector in sectors:
+        try:
+            components[sector] = {
+                'rs_mom_20': float(comp_rs20.iloc[-1]) if hasattr(comp_rs20, 'iloc') else float(comp_rs20),
+                'rs_mom_50': float(comp_rs50.iloc[-1]) if hasattr(comp_rs50, 'iloc') else float(comp_rs50),
+                'rs_mom_126': float(comp_rs126.iloc[-1]) if hasattr(comp_rs126, 'iloc') else float(comp_rs126),
+                'trend': float(comp_trend.iloc[-1]) if hasattr(comp_trend, 'iloc') else float(comp_trend),
+                'volatility_inv': float(comp_vol.iloc[-1]) if hasattr(comp_vol, 'iloc') else float(comp_vol),
+                'breadth': float(comp_breadth.iloc[-1]) if hasattr(comp_breadth, 'iloc') else float(comp_breadth)
+            }
+        except Exception:
+            components[sector] = {}
+
+    return {'scores': scores, 'ranking': ranking, 'regime': regime, 'last_scores': last_scores, 'components': components}
 
 
 def compute_price_flow_rankings(df):
