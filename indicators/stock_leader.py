@@ -1,6 +1,6 @@
 ﻿import pandas as pd
 import numpy as np
-from indicators.wyckoff import wyckoff_score, classify_wyckoff_phase
+from indicators.wyckoff import wyckoff_score, classify_wyckoff_phase, detect_spring, detect_sos
 from src.utils import robust_zscore, get_col
 
 def compute_stock_metrics(df_market, df_stocks, etf_ticker, stock_list):
@@ -31,7 +31,6 @@ def compute_stock_metrics(df_market, df_stocks, etf_ticker, stock_list):
         if pd.isna(persistence_10d):
             persistence_10d = 0
 
-        # Construir DataFrame para Wyckoff usando get_col
         try:
             ticker_df = pd.DataFrame({
                 'Open': get_col(df_stocks, ticker, 'Open'),
@@ -50,10 +49,14 @@ def compute_stock_metrics(df_market, df_stocks, etf_ticker, stock_list):
             mean_10 = wyckoff_series.rolling(10).mean().iloc[-1]
             std_10 = wyckoff_series.rolling(10).std().iloc[-1]
             stability = (mean_10 / (std_10 + 1e-9)) * np.tanh(mean_10)
+            spring = detect_spring(ticker_df, ticker).iloc[-1]
+            sos = detect_sos(ticker_df, ticker).iloc[-1]
         else:
             wyckoff_sc = np.nan
             wyckoff_ph = 'INSUFICIENTE'
             stability = 0.0
+            spring = 0
+            sos = 0
 
         results.append({
             'ticker': ticker,
@@ -64,6 +67,8 @@ def compute_stock_metrics(df_market, df_stocks, etf_ticker, stock_list):
             'wyckoff_phase': wyckoff_ph,
             'persistence_10d': persistence_10d,
             'stability': stability,
+            'spring': spring,
+            'sos': sos,
         })
 
     return pd.DataFrame(results)
@@ -105,11 +110,9 @@ def compute_wls(df_metrics, weights=None):
         w_stab = weights.get('stability', 0.10)
 
     df['wls'] = w_rs*df['rs_z'] + w_flow*df['flow_z_norm'] + w_struct*df['rws_z'] + w_stab*df['stab_z']
-    # Bonus por persistencia de flujo positivo
     df['wls'] *= (1 + 0.05 * np.minimum(df['persistence_10d'] / 10, 1.0))
     df['sector_rank_pct'] = df.groupby('sector')['wls'].rank(pct=True)
 
-    # Rank Stability (leader_confidence)
     df['leader_confidence'] = np.nan
     for sector in df['sector'].unique():
         mask = df['sector'] == sector
@@ -128,8 +131,8 @@ def generate_leader_section(df_market, df_stocks, holdings_df, fase_dict, operab
     lines = []
     all_data = []
 
-    VALID_FASES = {'ACUMULACION', 'ACUMULACION FUERTE', 'CONFIRMACION ALCISTA'}
-    VALID_OPER = {'OPORTUNIDAD CLARA', 'OPORTUNIDAD MODERADA'}
+    VALID_FASES = {'ACCUMULATION', 'MARKUP'}
+    VALID_OPER = {'OPORTUNIDAD MODERADA'}
 
     for sector in ['XLK','XLF','XLV','XLE','XLY','XLP','XLI','XLB','XLU','XLRE','XLC']:
         fase = fase_dict.get(sector, 'NEUTRAL')
@@ -147,15 +150,19 @@ def generate_leader_section(df_market, df_stocks, holdings_df, fase_dict, operab
         all_data.append(wls_df)
 
         lines.append(f'## Sector: {sector} ({fase})\n')
-        lines.append('| Ticker | RS | RS Mom | Flujo (z) | WLS | Fase Wyckoff |\n')
-        lines.append('|--------|----|--------|-----------|-----|---------------|\n')
+        lines.append('| Ticker | RS | RS Mom | Flujo (z) | WLS | Fase Wyckoff | Spring | SOS |\n')
+        lines.append('|--------|----|--------|-----------|-----|---------------|--------|-----|\n')
         for _, row in wls_df.head(3).iterrows():
-            lines.append(f"| {row['ticker']} | {row['rs']:.2f} | {row['rs_mom']:.2%} | {row['flow_z']:.2f} | {row['wls']:.2f} | {row['wyckoff_phase']} |\n")
+            spring_flag = '✓' if row.get('spring', 0) == 1 else ''
+            sos_flag = '✓' if row.get('sos', 0) == 1 else ''
+            lines.append(f"| {row['ticker']} | {row['rs']:.2f} | {row['rs_mom']:.2%} | {row['flow_z']:.2f} | {row['wls']:.2f} | {row['wyckoff_phase']} | {spring_flag} | {sos_flag} |\n")
         lines.append('\n')
 
     if all_data:
         final_df = pd.concat(all_data, ignore_index=True)
         if output_csv:
-            final_df[['ticker','sector','rs','rs_mom','flow_z','wyckoff_score','wyckoff_phase','persistence_10d','stability','wls','sector_rank_pct','leader_confidence']].to_csv(output_csv, index=False)
+            cols = ['ticker','sector','rs','rs_mom','flow_z','wyckoff_score','wyckoff_phase',
+                    'persistence_10d','stability','spring','sos','wls','sector_rank_pct','leader_confidence']
+            final_df[cols].to_csv(output_csv, index=False)
         return lines
     return None

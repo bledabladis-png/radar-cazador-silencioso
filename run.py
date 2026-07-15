@@ -102,7 +102,7 @@ def main():
         if df_stocks is not None and not df_stocks.empty:
             holdings_df = pd.read_csv('data/etf_holdings.csv')
             fases = {sector: fase for sector, _, _, fase in sector_results['ranking']}
-            oper = {sector: 'OPORTUNIDAD MODERADA' if fase in ['ACUMULACION','MARKUP'] else 'NO OPERAR'
+            oper = {sector: 'OPORTUNIDAD MODERADA' if fase in ['ACCUMULATION','MARKUP'] else 'NO OPERAR'
                     for sector, fase in fases.items()}
             from indicators.stock_leader import generate_leader_section
             leader_lines = generate_leader_section(df_market, df_stocks, holdings_df, fases, oper,
