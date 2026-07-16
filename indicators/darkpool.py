@@ -1,8 +1,10 @@
-﻿import pandas as pd
+﻿# -*- coding: utf-8 -*-
+import pandas as pd
 import numpy as np
 from datetime import datetime, timedelta
 from data.providers.finra import FinraProvider
 from config.tickers import MARKET_TICKERS
+import yfinance as yf
 
 def robust_zscore(series):
     median = series.median()
@@ -60,6 +62,100 @@ def _get_volume_from_df(df, week_start, end_date_str):
         pass
     return volumes
 
+def _backfill_history(hist, finra):
+    """Completa el historial descargando hasta 5 semanas por ejecucion."""
+    print("  Historial insuficiente. Descargando semanas historicas...")
+    
+    needed = 104 - len(hist)
+    if needed <= 0:
+        return hist
+    
+    MAX_PER_RUN = 5
+    to_download = min(needed, MAX_PER_RUN)
+    
+    latest_week = finra.get_latest_week()
+    if not latest_week:
+        print("    No se pudo determinar la semana actual.")
+        return hist
+    
+    current = pd.to_datetime(latest_week)
+    tickers = _get_all_tickers()
+    new_rows = []
+    
+    while len(new_rows) < to_download:
+        week_str = current.strftime('%Y-%m-%d')
+        
+        # Saltar si ya existe en el historial
+        if current in pd.to_datetime(hist['week']).values:
+            current -= timedelta(weeks=1)
+            continue
+        
+        try:
+            # Obtener datos ATS de FINRA
+            ats_data = finra.get_all_tiers(week_str)
+            if ats_data.empty:
+                current -= timedelta(weeks=1)
+                continue
+                
+            if 'issueSymbolIdentifier' in ats_data.columns and 'totalWeeklyShareQuantity' in ats_data.columns:
+                ats_volume = ats_data.groupby('issueSymbolIdentifier')['totalWeeklyShareQuantity'].sum()
+                ats_volume_dict = ats_volume.to_dict()
+            else:
+                current -= timedelta(weeks=1)
+                continue
+            
+            # Obtener volumenes totales desde Yahoo Finance (ticker por ticker)
+            end_date = current + timedelta(days=4)
+            end_date_str = end_date.strftime('%Y-%m-%d')
+            volumes = {}
+            
+            for t in tickers:
+                try:
+                    data = yf.download(t, start=week_str, end=end_date_str, progress=False, auto_adjust=True)
+                    if not data.empty:
+                        if isinstance(data.columns, pd.MultiIndex):
+                            vol_col = ('Volume', t)
+                        else:
+                            vol_col = 'Volume'
+                        if vol_col in data.columns:
+                            total = float(data[vol_col].sum())
+                            if total > 0:
+                                volumes[t] = total
+                except:
+                    pass
+            
+            if not volumes:
+                current -= timedelta(weeks=1)
+                continue
+            
+            # Calcular ratio
+            resultados = []
+            for t, vol_total in volumes.items():
+                vol_ats = ats_volume_dict.get(t, 0)
+                if vol_ats > 0:
+                    dark_pool_pct = (vol_ats / vol_total) * 100
+                    if dark_pool_pct <= 100:
+                        resultados.append(dark_pool_pct)
+            
+            if resultados:
+                media_dp = np.mean(resultados)
+                new_rows.append({'week': current, 'ratio': media_dp / 100})
+                print(f"      OK: {week_str} - Ratio={media_dp/100:.4f} ({len(resultados)} tickers)")
+            
+        except Exception as e:
+            pass  # Silencioso
+        
+        current -= timedelta(weeks=1)
+    
+    if new_rows:
+        new_df = pd.DataFrame(new_rows)
+        hist = pd.concat([hist, new_df], ignore_index=True)
+        hist.sort_values('week', inplace=True)
+        hist.reset_index(drop=True, inplace=True)
+        print(f"    Historial: {len(hist)} semanas (faltan {104-len(hist)})")
+    
+    return hist
+
 def compute_darkpool_signals():
     finra = FinraProvider()
     week_start = finra.get_latest_week()
@@ -115,9 +211,21 @@ def compute_darkpool_signals():
     # --- Pipeline profesional: Historial de ratio agregado ---
     try:
         hist = pd.read_csv('outputs/darkpool_history.csv', parse_dates=['week'])
-        hist = pd.concat([hist, pd.DataFrame([{'week': pd.to_datetime(week_start), 'ratio': media_dp / 100}])], ignore_index=True)
     except:
-        hist = pd.DataFrame([{'week': pd.to_datetime(week_start), 'ratio': media_dp / 100}])
+        hist = pd.DataFrame(columns=['week', 'ratio'])
+
+    # Anadir la semana actual
+    current_week_date = pd.to_datetime(week_start)
+    if current_week_date not in hist['week'].values:
+        new_row = pd.DataFrame([{'week': current_week_date, 'ratio': media_dp / 100}])
+        hist = pd.concat([hist, new_row], ignore_index=True)
+
+    # Backfill incremental (max 5 semanas por ejecucion)
+    if len(hist) < 104:
+        hist = _backfill_history(hist, finra)
+
+    hist.sort_values('week', inplace=True)
+    hist.reset_index(drop=True, inplace=True)
 
     if len(hist) >= 4:
         hist['ratio_ewm'] = hist['ratio'].ewm(span=4).mean()
