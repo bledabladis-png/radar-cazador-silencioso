@@ -12,7 +12,7 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
                           volatility_score, vol_regime, vol_conf, sector_results,
                           price_ranking, flow_ranking,
                           leader_lines=None, breadth_values=None, real_liquidity_regime=None, real_liquidity_conf=None,
-                          pcr_data=None, darkpool_data=None,
+                          pcr_data=None, darkpool_data=None, mte_result=None,
                           output_path='outputs/reporte_diario.md'):
     lines = []
     lines.append("# MACRO SECTORIAL - Reporte Diario\n")
@@ -110,6 +110,17 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
                      f"**OI PCR:** {pcr_data.get('oi_pcr', np.nan):.2f}\n")
         lines.append(f"- **Último dato:** {pcr_data.get('last_date', 'N/A')}\n")
         lines.append(f"\n*Fuente: CBOE Official Data. Timestamp: {pcr_data.get('timestamp', 'N/A')}.*\n\n")
+
+    # --- Market Transition Engine (MTE v1.0) ---
+    if mte_result:
+        lines.append("## Market Transition Engine (MTE v1.0)\n")
+        lines.append(f"- **Escenario:** {mte_result.get('scenario', 'N/A')} (Confianza: {mte_result.get('confidence', 0):.0%})\n")
+        lines.append(f"- **Market Stress Index (MSI):** {mte_result.get('msi', 0):.0f}\n")
+        lines.append(f"- **Inflation Pressure Index (IPI):** {mte_result.get('ipi', 0):.0f}\n")
+        lines.append(f"- **Sector Rotation Score:** {mte_result.get('srs', 0):.2f}\n")
+        lines.append(f"- **Safe Haven Score:** {mte_result.get('shs', 0):.2f}\n")
+        lines.append(f"- **Credit Stress Score:** {mte_result.get('cls', 0):.2f}\n")
+        lines.append(f"- **Inflation Pressure Score:** {mte_result.get('ips', 0):.2f}\n\n")
 
     # --- Dark Pools (FINRA ATS) ---
     if darkpool_data:

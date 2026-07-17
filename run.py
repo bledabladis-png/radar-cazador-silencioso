@@ -139,6 +139,22 @@ def main():
     except Exception as e:
         print(f"  Modulo Dark Pools omitido: {e}")
 
+    
+    print("Calculando Market Transition Engine...")
+    mte_result = None
+    try:
+        from indicators.mte import compute_mte
+        fc_score = liquidity_score
+        cred_signal = all_signals['credit'] if 'all_signals' in dir() and 'credit' in all_signals.columns else 0
+        vol_signal = all_signals['volatility'] if 'all_signals' in dir() and 'volatility' in all_signals.columns else 0
+        mte_result = compute_mte(df_market, fc_score, cred_signal, vol_signal, pcr_data, darkpool_data)
+        if mte_result:
+            print(f"  Escenario: {mte_result['scenario']} (MSI: {mte_result['msi']:.0f}, IPI: {mte_result['ipi']:.0f})")
+        else:
+            print("  MTE no disponible")
+    except Exception as e:
+        print(f"  Modulo MTE omitido: {e}")
+
     print("Generando reporte...")
     generate_daily_report(macro_score, macro_regime, macro_conf,
                           liquidity_score, financial_regime, liq_conf,
@@ -147,7 +163,7 @@ def main():
                           price_rank, flow_rank,
                           leader_lines=leader_lines, breadth_values=breadth_values,
                           real_liquidity_regime=real_liq_regime, real_liquidity_conf=real_liq_conf,
-                          pcr_data=pcr_data, darkpool_data=darkpool_data)
+                          pcr_data=pcr_data, darkpool_data=darkpool_data, mte_result=mte_result)
     print("Reporte generado en outputs/reporte_diario.md")
 
 if __name__ == "__main__":

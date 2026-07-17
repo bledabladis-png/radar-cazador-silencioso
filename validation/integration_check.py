@@ -16,6 +16,7 @@ REQUIRED_SECTIONS = [
     "## Flujo Institucional - Otros Activos",
     "## Lideres Sectoriales",
     "## Sentimiento de Opciones (OMS",
+    "## Market Transition Engine (MTE",
     "## Flujos Institucionales (Dark Pools",
 ]
 
