@@ -112,19 +112,20 @@ def credit_stress_score(financial_conditions, credit_signal,
 
     fc_stress = stress(-financial_conditions)
     dp_stress = stress(darkpool_z)
-    liquidity_family = np.mean([fc_stress, dp_stress])
+    liquidity_family = np.sqrt(np.mean(np.square([fc_stress, dp_stress])))
 
     credit_stress_val = stress(-credit_signal)
     credit_family = credit_stress_val
 
     vol_stress = stress(volatility_signal)
     vix_stress = stress(vix_term)
-    volatility_family = np.mean([vol_stress, vix_stress])
+    volatility_family = np.sqrt(np.mean(np.square([vol_stress, vix_stress])))
 
     pcr_stress = stress(pcr_z)
     sentiment_family = pcr_stress
 
-    return float(np.mean([liquidity_family, credit_family, volatility_family, sentiment_family]))
+    # Media cuadrática para dar más peso a los extremos
+    return float(np.sqrt(np.mean(np.square([liquidity_family, credit_family, volatility_family, sentiment_family]))))
 
 
 # ============================================================
@@ -198,6 +199,7 @@ def score_scenarios(srs, shs, cls, ips):
 
     # RECESSION
     recession = 0
+    if cls > 0.25 and srs > 0.1: recession += 1  # bonus base (umbral ajustado)
     if cls > 0.2: recession += SCENARIO_WEIGHTS["CLS"]["weight"]
     if shs > 0.2: recession += SCENARIO_WEIGHTS["SHS"]["weight"]
     if srs > 0.2: recession += SCENARIO_WEIGHTS["SRS"]["weight"]
@@ -206,7 +208,8 @@ def score_scenarios(srs, shs, cls, ips):
 
     # STAGFLATION
     stagflation = 0
-    if ips > 0.3: stagflation += SCENARIO_WEIGHTS["IPS"]["weight"]
+    if ips > 0.15 and srs > 0: stagflation += 1  # bonus base (umbral reducido)
+    if ips > 0.15: stagflation += 3  # IPS es el factor distintivo de STAGFLATION (umbral reducido)
     if srs > 0: stagflation += SCENARIO_WEIGHTS["SRS"]["weight"]
     if cls < 0.3: stagflation += SCENARIO_WEIGHTS["CLS"]["weight"]
     if ips > 0.5: stagflation += 2
@@ -214,6 +217,7 @@ def score_scenarios(srs, shs, cls, ips):
 
     # SOFT LANDING
     soft = 0
+    if srs > 0.1 and shs > 0.1: soft += 1  # bonus base
     if srs > 0.1: soft += SCENARIO_WEIGHTS["SRS"]["weight"]
     if shs > 0.1: soft += SCENARIO_WEIGHTS["SHS"]["weight"]
     if cls < 0: soft += SCENARIO_WEIGHTS["CLS"]["weight"]
@@ -228,7 +232,7 @@ def score_scenarios(srs, shs, cls, ips):
     if srs < -0.3: expansion += 1
     scores['EXPANSION'] = expansion
 
-    scores['MIXED'] = 3
+    scores['MIXED'] = 2
     return scores
 
 

@@ -58,16 +58,19 @@ for i, date in enumerate(eval_dates):
         # Aproximación real de CLS usando VIX y HYG/LQD del mercado
         try:
             vix_close = get_col(df_slice, '^VIX', 'Close')
-            vix_ret = vix_close.pct_change().rolling(20).std().iloc[-1]
-            vix_ma = vix_close.pct_change().rolling(60).std().mean()
-            fc_approx = float(np.clip(np.tanh((vix_ret / (vix_ma + 1e-9) - 1) / 2), 0, 1))
+            vix_level = vix_close.iloc[-1]
+            vix_ret_std = vix_close.pct_change().rolling(20).std().iloc[-1]
+            vix_ma_std = vix_close.pct_change().rolling(60).std().mean()
+            fc_vol = float(np.clip(np.tanh((vix_ret_std / (vix_ma_std + 1e-9) - 1) / 2), 0, 1))
+            fc_level = float(np.clip(np.tanh(vix_level / 40), 0, 1))
+            fc_approx = float(np.sqrt(np.mean(np.square([fc_vol, fc_level]))))
             
             hyg = get_col(df_slice, 'HYG', 'Close')
             lqd = get_col(df_slice, 'LQD', 'Close')
             spread = hyg / lqd
-            cred_approx = float(np.clip(np.tanh(-(spread.pct_change(20).iloc[-1]) / 2), 0, 1))
+            cred_approx = float(np.clip(np.tanh((1/spread.iloc[-1] - 1) / 2), 0, 1))  # nivel del spread
             
-            cls = float(np.mean([fc_approx, cred_approx, 0.3, 0.3]))
+            cls = float(np.sqrt(np.mean(np.square([fc_approx, cred_approx, 0.3, 0.3]))))
         except:
             cls = 0.3
         
