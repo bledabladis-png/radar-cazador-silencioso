@@ -1,11 +1,11 @@
 # MACRO SECTORIAL - Reporte Diario
-**Fecha:** 2026-07-18 21:04:13
+**Fecha:** 2026-07-19 21:07:19
 **Modelo:** v3.15 | Pesos: v3 | Indicadores: v2
 
 ## Resumen de Regimenes
-- **Macro:** MIXED (Score: -0.05, Confianza: 64%)
+- **Macro:** MIXED (Score: -0.06, Confianza: 64%)
 - **Cond. Financieras:** CRISIS (Score: -0.49, Confianza: 78%)
-- **Liquidez Real (FRED):** ABUNDANTE (Confianza: 84%)
+- **Liquidez Real (FRED):** ABUNDANTE (Confianza: 85%)
 - **Volatilidad:** NORMAL (Z-Score: -0.09, Confianza: 4%)
 - **Sectores:** MIXED
 
@@ -67,49 +67,49 @@
 | # | Activo | Retorno 20d (%) |
 |---|--------|------------------|
 | 1 | BZ=F | 13.09% |
-| 2 | CL=F | 10.25% |
+| 2 | CL=F | 9.30% |
 | 3 | ^SPGSCI | 6.09% |
 | 4 | QUAL | 0.95% |
-| 5 | USDJPY=X | 0.57% |
+| 5 | USDJPY=X | 0.63% |
 | 6 | BIL | 0.27% |
 | 7 | IEF | 0.16% |
 | 8 | HYG | 0.10% |
 | 9 | ELD | 0.09% |
 | 10 | USDCNY=X | -0.01% |
-| 11 | EURUSD=X | -0.15% |
-| 12 | ^GSPC | -0.20% |
-| 13 | DX-Y.NYB | -0.27% |
+| 11 | ^GSPC | -0.20% |
+| 12 | DX-Y.NYB | -0.27% |
+| 13 | EURUSD=X | -0.28% |
 | 14 | EMB | -0.49% |
 | 15 | LQD | -0.77% |
 | 16 | ^STOXX50E | -1.27% |
 | 17 | ^RUT | -1.40% |
-| 18 | TLT | -1.46% |
-| 19 | HG=F | -2.15% |
+| 18 | HG=F | -1.44% |
+| 19 | TLT | -1.46% |
 | 20 | SCHC | -2.77% |
 
 ## Flujo Institucional - Otros Activos (Proxy)
 | # | Activo | Flujo (z-score) |
 |---|--------|------------------|
-| 1 | CL=F | 0.48 |
-| 2 | BZ=F | 0.34 |
-| 3 | SCHC | 0.33 |
-| 4 | ^STOXX50E | 0.29 |
-| 5 | ELD | 0.09 |
-| 6 | GC=F | 0.08 |
-| 7 | LQD | -0.01 |
-| 8 | EMB | -0.02 |
-| 9 | HG=F | -0.17 |
-| 10 | EEM | -0.22 |
-| 11 | EWX | -0.23 |
-| 12 | IEF | -0.24 |
-| 13 | TLT | -0.32 |
-| 14 | EWJ | -0.33 |
-| 15 | QUAL | -0.34 |
-| 16 | HYG | -0.35 |
-| 17 | NG=F | -0.36 |
-| 18 | ^GSPC | -0.40 |
-| 19 | ^NDX | -0.43 |
-| 20 | BIL | -0.51 |
+| 1 | CL=F | 0.52 |
+| 2 | SCHC | 0.33 |
+| 3 | ^STOXX50E | 0.29 |
+| 4 | BZ=F | 0.28 |
+| 5 | ELD | 0.06 |
+| 6 | LQD | -0.01 |
+| 7 | EMB | -0.02 |
+| 8 | EEM | -0.22 |
+| 9 | EWX | -0.23 |
+| 10 | IEF | -0.24 |
+| 11 | TLT | -0.32 |
+| 12 | EWJ | -0.33 |
+| 13 | QUAL | -0.34 |
+| 14 | HYG | -0.35 |
+| 15 | ^GSPC | -0.40 |
+| 16 | NG=F | -0.42 |
+| 17 | ^NDX | -0.43 |
+| 18 | BIL | -0.51 |
+| 19 | ^RUT | -0.68 |
+| 20 | VLUE | -0.75 |
 
 ## Lideres Sectoriales
 > Acciones con mejor perfil institucional dentro de sectores favorables.
@@ -173,15 +173,15 @@
 - **Volume PCR (calculado):** 0.97 | **OI PCR:** 0.74
 - **Último dato:** 2026-07-17
 
-*Fuente: CBOE Official Data. Timestamp: 2026-07-18 20:53:34.*
+*Fuente: CBOE Official Data. Timestamp: 2026-07-19 20:55:17.*
 
 ## Market Transition Engine (MTE v1.0)
 - **Escenario:** MIXED (Confianza: 68%)
-- **Market Stress Index (MSI):** 47
+- **Market Stress Index (MSI):** 45
 - **Inflation Pressure Index (IPI):** 55
 - **Sector Rotation Score:** 0.13
 - **Safe Haven Score:** -0.07
-- **Credit Stress Score:** 0.36
+- **Credit Stress Score:** 0.32
 - **Inflation Pressure Score:** 0.11
 
 ## Flujos Institucionales (Dark Pools v1.0)
