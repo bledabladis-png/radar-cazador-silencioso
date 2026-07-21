@@ -63,7 +63,7 @@ def _get_volume_from_df(df, week_start, end_date_str):
     return volumes
 
 def _backfill_history(hist, finra):
-    """Completa el historial descargando hasta 5 semanas por ejecucion."""
+    """Completa el historial descargando hasta 5 semanas por ejecución."""
     print("  Historial insuficiente. Descargando semanas historicas...")
     
     needed = 104 - len(hist)
@@ -78,12 +78,15 @@ def _backfill_history(hist, finra):
         print("    No se pudo determinar la semana actual.")
         return hist
     
-    current = pd.to_datetime(latest_week)
+    current = pd.to_datetime(latest_week) - timedelta(weeks=1)  # empezar desde la semana anterior
     tickers = _get_all_tickers()
     new_rows = []
+    attempts = 0
+    max_attempts = to_download * 5  # margen para semanas sin datos
     
-    while len(new_rows) < to_download:
+    while len(new_rows) < to_download and attempts < max_attempts:
         week_str = current.strftime('%Y-%m-%d')
+        attempts += 1
         
         # Saltar si ya existe en el historial
         if current in pd.to_datetime(hist['week']).values:
@@ -96,7 +99,7 @@ def _backfill_history(hist, finra):
             if ats_data.empty:
                 current -= timedelta(weeks=1)
                 continue
-                
+            
             if 'issueSymbolIdentifier' in ats_data.columns and 'totalWeeklyShareQuantity' in ats_data.columns:
                 ats_volume = ats_data.groupby('issueSymbolIdentifier')['totalWeeklyShareQuantity'].sum()
                 ats_volume_dict = ats_volume.to_dict()
@@ -104,7 +107,7 @@ def _backfill_history(hist, finra):
                 current -= timedelta(weeks=1)
                 continue
             
-            # Obtener volumenes totales desde Yahoo Finance (ticker por ticker)
+            # Obtener volumenes totales desde Yahoo Finance
             end_date = current + timedelta(days=4)
             end_date_str = end_date.strftime('%Y-%m-%d')
             volumes = {}
@@ -113,10 +116,7 @@ def _backfill_history(hist, finra):
                 try:
                     data = yf.download(t, start=week_str, end=end_date_str, progress=False, auto_adjust=True)
                     if not data.empty:
-                        if isinstance(data.columns, pd.MultiIndex):
-                            vol_col = ('Volume', t)
-                        else:
-                            vol_col = 'Volume'
+                        vol_col = ('Volume', t) if isinstance(data.columns, pd.MultiIndex) else 'Volume'
                         if vol_col in data.columns:
                             total = float(data[vol_col].sum())
                             if total > 0:
@@ -141,9 +141,11 @@ def _backfill_history(hist, finra):
                 media_dp = np.mean(resultados)
                 new_rows.append({'week': current, 'ratio': media_dp / 100})
                 print(f"      OK: {week_str} - Ratio={media_dp/100:.4f} ({len(resultados)} tickers)")
+            else:
+                print(f"      Sin resultados para {week_str}")
             
         except Exception as e:
-            pass  # Silencioso
+            print(f"      Error en {week_str}: {e}")
         
         current -= timedelta(weeks=1)
     
@@ -153,6 +155,8 @@ def _backfill_history(hist, finra):
         hist.sort_values('week', inplace=True)
         hist.reset_index(drop=True, inplace=True)
         print(f"    Historial: {len(hist)} semanas (faltan {104-len(hist)})")
+    else:
+        print(f"    No se descargaron semanas. Revisar conexión a Yahoo Finance y FINRA.")
     
     return hist
 
@@ -214,16 +218,18 @@ def compute_darkpool_signals():
     except:
         hist = pd.DataFrame(columns=['week', 'ratio'])
 
-    # Anadir la semana actual
+    # Añadir la semana actual SOLO si no existe ya
     current_week_date = pd.to_datetime(week_start)
     if current_week_date not in hist['week'].values:
         new_row = pd.DataFrame([{'week': current_week_date, 'ratio': media_dp / 100}])
         hist = pd.concat([hist, new_row], ignore_index=True)
 
-    # Backfill incremental (max 5 semanas por ejecucion)
+    # Backfill incremental (max 5 semanas por ejecución)
     if len(hist) < 104:
         hist = _backfill_history(hist, finra)
 
+    # Eliminar duplicados por si acaso
+    hist = hist.drop_duplicates(subset='week', keep='last')
     hist.sort_values('week', inplace=True)
     hist.reset_index(drop=True, inplace=True)
 
