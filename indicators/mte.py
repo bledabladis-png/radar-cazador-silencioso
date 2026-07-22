@@ -108,77 +108,76 @@ def credit_stress_score(financial_conditions, credit_signal,
                         nfci_series=None, credit_oas_series=None):
     """
     CLS v1.1 - Arquitectura por familias con NFCI y Credit OAS.
-    Si no hay datos de FRED, usa el CLS sintético v1.0 como fallback.
+    Si Credit OAS no está disponible, usa HYG/LQD como proxy.
+    Si NFCI no está disponible, usa financial_conditions como proxy.
+    Bloquea CRISIS si alguna familia es NaN (retorna NaN).
     """
-    import os
+    def robust_zscore_series(series, window=104):
+        if len(series) < 20:
+            return pd.Series([0.0], index=series.index)
+        median = series.rolling(window, min_periods=20).median()
+        def mad_func(x):
+            return np.median(np.abs(x - np.median(x)))
+        mad = series.rolling(window, min_periods=20).apply(mad_func, raw=True)
+        return (series - median) / (1.4826 * mad + 1e-9)
     
-    # Verificar si existen datos de FRED
-    has_nfci = nfci_series is not None and len(nfci_series) > 0
-    has_oas = credit_oas_series is not None and len(credit_oas_series) > 0
+    def stress_transform(z):
+        return float(np.clip(np.tanh(z.iloc[-1] / 2.0), 0, 1)) if len(z) > 0 else 0.5
     
-    if has_nfci and has_oas:
-        # ---------- CLS v1.1 (con FRED) ----------
-        def robust_zscore_series(series, window=104):
-            median = series.rolling(window, min_periods=20).median()
-            def mad_func(x):
-                return np.median(np.abs(x - np.median(x)))
-            mad = series.rolling(window, min_periods=20).apply(mad_func, raw=True)
-            return (series - median) / (1.4826 * mad + 1e-9)
-        
-        def stress_transform(z):
-            return float(np.clip(np.tanh(z.iloc[-1] / 2.0), 0, 1)) if len(z) > 0 else 0.5
-        
-        # Familia 1: Liquidez / Condiciones financieras (NFCI)
+    def stress(val):
+        if val is None or not pd.notna(val):
+            return 0.5
+        return float(np.clip(np.tanh(val / 2), 0, 1))
+    
+    # Familia 1: Liquidez (NFCI si existe, si no Financial Conditions)
+    # Verificar si NFCI tiene datos VÁLIDOS para la fecha actual
+    nfci_valid = False
+    if nfci_series is not None and len(nfci_series) > 0:
+        nfci_val = nfci_series.iloc[-1] if hasattr(nfci_series, 'iloc') else nfci_series
+        if pd.notna(nfci_val) and np.isfinite(nfci_val):
+            nfci_valid = True
+    
+    if nfci_valid:
         nfci_z = robust_zscore_series(nfci_series)
         nfci_stress = stress_transform(nfci_z)
-        liquidity_family = nfci_stress
-        
-        # Familia 2: Crédito (Credit OAS + HYG/LQD)
+    else:
+        nfci_stress = stress(-financial_conditions) if financial_conditions is not None else 0.5
+    
+    # Familia 2: Crédito (Credit OAS si existe, si no HYG/LQD)
+    # Verificar si Credit OAS tiene datos VÁLIDOS para la fecha actual
+    oas_valid = False
+    if credit_oas_series is not None and len(credit_oas_series) > 0:
+        oas_val = credit_oas_series.iloc[-1] if hasattr(credit_oas_series, 'iloc') else credit_oas_series
+        if pd.notna(oas_val) and np.isfinite(oas_val):
+            oas_valid = True
+    
+    if oas_valid:
         oas_z = robust_zscore_series(credit_oas_series)
         oas_stress = stress_transform(oas_z)
-        
-        # HYG/LQD aproximado desde credit_signal
-        hyg_stress = float(np.clip(np.tanh((-credit_signal) / 2), 0, 1)) if hasattr(credit_signal, '__float__') else 0.5
-        
-        credit_family = 0.60 * oas_stress + 0.40 * hyg_stress
-        
-        # Familia 3: Volatilidad (VIX)
-        vix_stress = float(np.clip(np.tanh(volatility_signal / 2), 0, 1)) if hasattr(volatility_signal, '__float__') else 0.5
-        volatility_family = vix_stress
-        
-        # Familia 4: Complementarios (PCR + Dark Pools)
-        pcr_stress = float(np.clip(np.tanh(pcr_z / 2), 0, 1)) if pcr_z is not None and pd.notna(pcr_z) else 0.5
-        dp_stress = float(np.clip(np.tanh(darkpool_z / 2), 0, 1)) if darkpool_z is not None and pd.notna(darkpool_z) else 0.5
-        complementary_family = 0.50 * pcr_stress + 0.50 * dp_stress
-        
-        cls = (0.25 * liquidity_family +
-               0.35 * credit_family +
-               0.25 * volatility_family +
-               0.15 * complementary_family)
-        return float(np.clip(cls, 0.0, 1.0))
-    
+        hyg_stress = stress(-credit_signal) if credit_signal is not None else 0.5
+        credit_stress_val = 0.60 * oas_stress + 0.40 * hyg_stress
     else:
-        # ---------- CLS v1.0 (sintético, fallback) ----------
-        def stress(val):
-            if val is None or not pd.notna(val):
-                return 0.5
-            return float(np.clip(np.tanh(val / 2), 0, 1))
-
-        fc_stress = stress(-financial_conditions)
-        dp_stress = stress(darkpool_z)
-        liquidity_family = np.sqrt(np.mean(np.square([fc_stress, dp_stress])))
-
-        credit_stress_val = stress(-credit_signal)
-        credit_family = credit_stress_val
-
-        vol_stress = stress(volatility_signal)
-        vix_stress = stress(vix_term)
-        volatility_family = np.sqrt(np.mean(np.square([vol_stress, vix_stress])))
-
-        pcr_stress = stress(pcr_z)
-        sentiment_family = pcr_stress
-
-        return float(np.sqrt(np.mean(np.square([liquidity_family, credit_family, volatility_family, sentiment_family]))))
+        # Fallback a HYG/LQD cuando Credit OAS no está disponible
+        credit_stress_val = stress(-credit_signal) if credit_signal is not None else 0.5
+    
+    # Familia 3: Volatilidad (VIX)
+    vix_stress = stress(volatility_signal) if volatility_signal is not None else 0.5
+    
+    # Familia 4: Complementarios
+    pcr_stress = stress(pcr_z) if pcr_z is not None else 0.5
+    dp_stress = stress(darkpool_z) if darkpool_z is not None else 0.5
+    complementary_stress = 0.50 * pcr_stress + 0.50 * dp_stress
+    
+    cls = (0.25 * nfci_stress +
+           0.35 * credit_stress_val +
+           0.25 * vix_stress +
+           0.15 * complementary_stress)
+    
+    # Bloquear si algún componente es NaN
+    if np.isnan(cls):
+        return np.nan
+    
+    return float(np.clip(cls, 0.0, 1.0))
 
 
 # ============================================================
@@ -241,22 +240,26 @@ def score_scenarios(srs, shs, cls, ips):
 
     # CRISIS (prioridad máxima: bonus base por cumplir condiciones)
     crisis = 0
-    if cls > 0.5:
-        crisis += 6  # CLS > 0.5 ya indica estrés financiero extremo
-    if cls > 0.7: crisis += 3  # Bonus adicional por estrés severo
-    if shs > 0.3: crisis += SCENARIO_WEIGHTS["SHS"]["weight"]
-    if srs > 0.3: crisis += SCENARIO_WEIGHTS["SRS"]["weight"]
+    if not np.isfinite(cls):
+        crisis = -999  # CLS inválido → CRISIS bloqueado
+    else:
+        if cls > 0.5:
+            crisis += 6  # CLS > 0.5 ya indica estrés financiero extremo
+        if cls > 0.7: crisis += 3  # Bonus adicional por estrés severo
+        if shs > 0.3: crisis += SCENARIO_WEIGHTS["SHS"]["weight"]
+        if srs > 0.3: crisis += SCENARIO_WEIGHTS["SRS"]["weight"]
     if cls > 0.7: crisis += 2
     if cls > 0.85: crisis += 3
     scores['CRISIS'] = crisis
 
     # RECESSION
     recession = 0
-    if cls > 0.25 and srs > 0.1 and cls <= 0.5: recession += 1  # bonus base (no compite con CRISIS)
-    if cls > 0.2: recession += SCENARIO_WEIGHTS["CLS"]["weight"]
+    if np.isfinite(cls):
+        if cls > 0.25 and srs > 0.1 and cls <= 0.5: recession += 1  # bonus base
+        if cls > 0.2: recession += SCENARIO_WEIGHTS["CLS"]["weight"]
+        if cls > 0.4 and cls <= 0.5: recession += 1
     if shs > 0.2: recession += SCENARIO_WEIGHTS["SHS"]["weight"]
     if srs > 0.2: recession += SCENARIO_WEIGHTS["SRS"]["weight"]
-    if cls > 0.4 and cls <= 0.5: recession += 1
     scores['RECESSION'] = recession
 
     # STAGFLATION
