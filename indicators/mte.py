@@ -104,28 +104,81 @@ def safe_haven_score(df_market):
 # 3. CREDIT STRESS SCORE (CLS)
 # ============================================================
 def credit_stress_score(financial_conditions, credit_signal,
-                        volatility_signal, vix_term, darkpool_z, pcr_z):
-    def stress(val):
-        if val is None or not pd.notna(val):
-            return 0.5
-        return float(np.clip(np.tanh(val / 2), 0, 1))
+                        volatility_signal, vix_term, darkpool_z, pcr_z,
+                        nfci_series=None, credit_oas_series=None):
+    """
+    CLS v1.1 - Arquitectura por familias con NFCI y Credit OAS.
+    Si no hay datos de FRED, usa el CLS sintético v1.0 como fallback.
+    """
+    import os
+    
+    # Verificar si existen datos de FRED
+    has_nfci = nfci_series is not None and len(nfci_series) > 0
+    has_oas = credit_oas_series is not None and len(credit_oas_series) > 0
+    
+    if has_nfci and has_oas:
+        # ---------- CLS v1.1 (con FRED) ----------
+        def robust_zscore_series(series, window=104):
+            median = series.rolling(window, min_periods=20).median()
+            def mad_func(x):
+                return np.median(np.abs(x - np.median(x)))
+            mad = series.rolling(window, min_periods=20).apply(mad_func, raw=True)
+            return (series - median) / (1.4826 * mad + 1e-9)
+        
+        def stress_transform(z):
+            return float(np.clip(np.tanh(z.iloc[-1] / 2.0), 0, 1)) if len(z) > 0 else 0.5
+        
+        # Familia 1: Liquidez / Condiciones financieras (NFCI)
+        nfci_z = robust_zscore_series(nfci_series)
+        nfci_stress = stress_transform(nfci_z)
+        liquidity_family = nfci_stress
+        
+        # Familia 2: Crédito (Credit OAS + HYG/LQD)
+        oas_z = robust_zscore_series(credit_oas_series)
+        oas_stress = stress_transform(oas_z)
+        
+        # HYG/LQD aproximado desde credit_signal
+        hyg_stress = float(np.clip(np.tanh((-credit_signal) / 2), 0, 1)) if hasattr(credit_signal, '__float__') else 0.5
+        
+        credit_family = 0.60 * oas_stress + 0.40 * hyg_stress
+        
+        # Familia 3: Volatilidad (VIX)
+        vix_stress = float(np.clip(np.tanh(volatility_signal / 2), 0, 1)) if hasattr(volatility_signal, '__float__') else 0.5
+        volatility_family = vix_stress
+        
+        # Familia 4: Complementarios (PCR + Dark Pools)
+        pcr_stress = float(np.clip(np.tanh(pcr_z / 2), 0, 1)) if pcr_z is not None and pd.notna(pcr_z) else 0.5
+        dp_stress = float(np.clip(np.tanh(darkpool_z / 2), 0, 1)) if darkpool_z is not None and pd.notna(darkpool_z) else 0.5
+        complementary_family = 0.50 * pcr_stress + 0.50 * dp_stress
+        
+        cls = (0.25 * liquidity_family +
+               0.35 * credit_family +
+               0.25 * volatility_family +
+               0.15 * complementary_family)
+        return float(np.clip(cls, 0.0, 1.0))
+    
+    else:
+        # ---------- CLS v1.0 (sintético, fallback) ----------
+        def stress(val):
+            if val is None or not pd.notna(val):
+                return 0.5
+            return float(np.clip(np.tanh(val / 2), 0, 1))
 
-    fc_stress = stress(-financial_conditions)
-    dp_stress = stress(darkpool_z)
-    liquidity_family = np.sqrt(np.mean(np.square([fc_stress, dp_stress])))
+        fc_stress = stress(-financial_conditions)
+        dp_stress = stress(darkpool_z)
+        liquidity_family = np.sqrt(np.mean(np.square([fc_stress, dp_stress])))
 
-    credit_stress_val = stress(-credit_signal)
-    credit_family = credit_stress_val
+        credit_stress_val = stress(-credit_signal)
+        credit_family = credit_stress_val
 
-    vol_stress = stress(volatility_signal)
-    vix_stress = stress(vix_term)
-    volatility_family = np.sqrt(np.mean(np.square([vol_stress, vix_stress])))
+        vol_stress = stress(volatility_signal)
+        vix_stress = stress(vix_term)
+        volatility_family = np.sqrt(np.mean(np.square([vol_stress, vix_stress])))
 
-    pcr_stress = stress(pcr_z)
-    sentiment_family = pcr_stress
+        pcr_stress = stress(pcr_z)
+        sentiment_family = pcr_stress
 
-    # Media cuadrática para dar más peso a los extremos
-    return float(np.sqrt(np.mean(np.square([liquidity_family, credit_family, volatility_family, sentiment_family]))))
+        return float(np.sqrt(np.mean(np.square([liquidity_family, credit_family, volatility_family, sentiment_family]))))
 
 
 # ============================================================
@@ -188,9 +241,9 @@ def score_scenarios(srs, shs, cls, ips):
 
     # CRISIS (prioridad máxima: bonus base por cumplir condiciones)
     crisis = 0
-    if cls > 0.5 and shs > 0.3 and srs > 0.3:
-        crisis += 6  # Base por cumplir las 3 condiciones simultáneamente
-    if cls > 0.5: crisis += SCENARIO_WEIGHTS["CLS"]["weight"]
+    if cls > 0.5:
+        crisis += 6  # CLS > 0.5 ya indica estrés financiero extremo
+    if cls > 0.7: crisis += 3  # Bonus adicional por estrés severo
     if shs > 0.3: crisis += SCENARIO_WEIGHTS["SHS"]["weight"]
     if srs > 0.3: crisis += SCENARIO_WEIGHTS["SRS"]["weight"]
     if cls > 0.7: crisis += 2
@@ -199,11 +252,11 @@ def score_scenarios(srs, shs, cls, ips):
 
     # RECESSION
     recession = 0
-    if cls > 0.25 and srs > 0.1: recession += 1  # bonus base (umbral ajustado)
+    if cls > 0.25 and srs > 0.1 and cls <= 0.5: recession += 1  # bonus base (no compite con CRISIS)
     if cls > 0.2: recession += SCENARIO_WEIGHTS["CLS"]["weight"]
     if shs > 0.2: recession += SCENARIO_WEIGHTS["SHS"]["weight"]
     if srs > 0.2: recession += SCENARIO_WEIGHTS["SRS"]["weight"]
-    if cls > 0.4: recession += 1
+    if cls > 0.4 and cls <= 0.5: recession += 1
     scores['RECESSION'] = recession
 
     # STAGFLATION
