@@ -1,0 +1,8 @@
+﻿__pycache__/
+*.pyc
+.pytest_cache/
+data/market_data.csv
+data/stock_prices.csv
+outputs/backtest_v2_results.csv
+outputs/sensitivity_results.csv
+.env
