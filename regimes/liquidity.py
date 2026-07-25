@@ -64,4 +64,18 @@ def compute_liquidity_score():
     else:
         confidence = 0.0
 
-    return pd.Series(score, index=[fed_data.index[-1]]), regime, confidence
+    # Guardar score para cálculo de delta en la siguiente ejecución
+    try:
+        import json, os
+        delta_file = 'outputs/liquidity_state.json'
+        previous_score = None
+        if os.path.exists(delta_file):
+            with open(delta_file, 'r') as f:
+                prev = json.load(f)
+                previous_score = prev.get('score', None)
+        with open(delta_file, 'w') as f:
+            json.dump({'score': float(score), 'date': str(fed_data.index[-1].date())}, f)
+    except:
+        previous_score = None
+    
+    return pd.Series(score, index=[fed_data.index[-1]]), regime, confidence, previous_score

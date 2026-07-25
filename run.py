@@ -53,14 +53,25 @@ def main():
     print(f"  Cond. Financieras: {financial_regime} (conf: {liq_conf:.0%})")
 
     print("Calculando liquidez real (FRED)...")
-    real_liq_score, real_liq_regime, real_liq_conf = compute_real_liquidity()
-    if real_liq_score is not None:
-        print(f"  Liquidez real: {real_liq_regime} (conf: {real_liq_conf:.0%})")
-    else:
-        print("  Liquidez real: no disponible (sin datos FRED)")
-        real_liq_score = None
-        real_liq_regime = 'N/A'
-        real_liq_conf = 0.0
+    real_liq_prev = None
+    try:
+        result = compute_real_liquidity()
+        if result[0] is not None:
+            real_liq_score, real_liq_regime, real_liq_conf, real_liq_prev = result
+            print(f"  Liquidez real: {real_liq_regime} (conf: {real_liq_conf:.0%})")
+        else:
+            real_liq_score, real_liq_regime, real_liq_conf = None, 'N/A', 0.0
+            print("  Liquidez real: no disponible (sin datos FRED)")
+    except ValueError:
+        # Fallback si la función devuelve solo 3 valores (versión antigua)
+        real_liq_score, real_liq_regime, real_liq_conf = compute_real_liquidity()
+        if real_liq_score is not None:
+            print(f"  Liquidez real: {real_liq_regime} (conf: {real_liq_conf:.0%})")
+        else:
+            real_liq_score = None
+            real_liq_regime = 'N/A'
+            real_liq_conf = 0.0
+            print("  Liquidez real: no disponible (sin datos FRED)")
 
     print("Calculando regimen de volatilidad...")
     try:
@@ -554,7 +565,9 @@ def main():
                           cross_module_conflict=cross_module_conflict,
                           shock_sensitivities=shock_sensitivities,
                           price_flow_divergences=price_flow_divergences,
-                          dc_summary=dc_summary)
+                          dc_summary=dc_summary,
+                          real_liq_prev=real_liq_prev,
+                          all_signals=all_signals)
     print("Reporte generado en outputs/reporte_diario.md")
 
 if __name__ == "__main__":

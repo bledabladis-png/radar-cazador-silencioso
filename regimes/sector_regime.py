@@ -87,6 +87,8 @@ def compute_sector_scores(df, benchmark='^GSPC'):
         regime = 'BROAD PARTICIPATION'
     elif positive_count <= 3:
         regime = 'NARROW RALLY'
+    elif 4 <= positive_count <= 7:
+        regime = 'ROTATIONAL'
     elif cyclical_leadership and not defensive_leadership:
         regime = 'CYCLICAL LEADERSHIP'
     elif defensive_leadership and not cyclical_leadership:

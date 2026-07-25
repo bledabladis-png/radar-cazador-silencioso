@@ -25,7 +25,7 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
                           slpm_v12_data=None, tactical_scores=None, structural_scores=None,
                           sector_persistence=None, signal_agreements=None, signal_agreements_display=None,
                           cross_module_conflict=None, shock_sensitivities=None, price_flow_divergences=None,
-                          dc_summary="", output_path='outputs/reporte_diario.md'):
+                          dc_summary="", all_signals=None, real_liq_prev=None, output_path='outputs/reporte_diario.md'):
     lines = []
     lines.append("# MACRO SECTORIAL - Reporte Diario\n")
     lines.append(f"**Fecha:** {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
@@ -45,6 +45,18 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
     
     if real_liquidity_regime is not None:
         lines.append(f"- **Liquidez Real (FRED):** {real_liquidity_regime} (Signal Consistency: {real_liquidity_conf:.0%})\n")
+    if real_liq_prev is not None:
+        try:
+            delta = float(real_liq_score.iloc[-1]) - float(real_liq_prev)
+            if delta > 0.05:
+                delta_str = "MEJORA"
+            elif delta < -0.05:
+                delta_str = "EMPEORA"
+            else:
+                delta_str = "ESTABLE"
+            lines.append(f"  - *Liquidity Delta (vs ejecución anterior): {delta:+.3f} ({delta_str})*\n")
+        except:
+            pass
     
     vol_z = volatility_score.iloc[-1] if hasattr(volatility_score, 'iloc') else volatility_score
     if vol_conf < 0.05 and abs(vol_z) < 0.1:
@@ -612,7 +624,7 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
     elif macro_regime in ('EXPANSION', 'RECOVERY', 'GOLDILOCKS'):
         resumen.append(f"- **Régimen macro: {macro_regime}** — favorable para la asunción de riesgo.")
     elif macro_regime == 'MIXED':
-        resumen.append(f"- **Régimen macro: MIXED** — score dentro del rango de clasificación MIXED.")
+        resumen.append(f"- **Régimen macro: MIXED** — ROTATIONAL / MIXED — rotación sectorial activa con dispersión elevada.")
     else:
         resumen.append(f"- **Régimen macro: {macro_regime}**.")
 

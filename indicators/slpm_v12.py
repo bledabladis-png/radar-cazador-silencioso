@@ -148,7 +148,17 @@ def evaluate_slpm_v12(df_market, sector_results, leader_metrics, top_sector_flow
             'effective_breadth': effective_breadth, 'persistence': persistence
         },
         'validation_errors': errors,
-        'data_quality': result.get('data_quality', 'UNKNOWN')
+        'data_quality': result.get('data_quality', 'UNKNOWN'),
+        'narrow_leadership': (
+            flow_div_v2.get('leader_flow_div', 0) > 0.2 and
+            top_sector_flow < 0.2 and
+            len(leader_metrics) >= 3
+        ),
+        'narrow_leadership': (
+            flow_div_v2.get('leader_flow_div', 0) > 0.2 and
+            top_sector_flow < 0.2 and
+            len(leader_metrics) >= 3
+        )
     }
 
 
