@@ -346,7 +346,7 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
             eff_breadth = inputs.get('effective_breadth', inputs.get('breadth', 0))
             pers_val = inputs.get('persistence')
             pers_str = f"{pers_val:.0%}" if pers_val is not None else "N/A"
-            lines.append(f"- **Scores oficiales:** T={inputs.get('tactical', 0):+.2f} | S={inputs.get('structural', 0):+.2f} | LIS={inputs.get('lis', 0):+.2f} | Eff Breadth={eff_breadth:.2f} | Persist={pers_str}\n")
+            lines.append(f"- **Scores oficiales:** T={inputs.get('tactical', 0):+.2f} | S={inputs.get('structural', 0):+.2f} | LIS={inputs.get('lis', 0):+.2f} | Eff Breadth={eff_breadth:.2f} | Persist={pers_str} | LQ: P={inputs.get("tactical",0):+.2f} C={slpm_v12_data.get("flow_divergence_v2",{}).get("composite",0):+.3f} S={inputs.get("structural",0):+.2f} Cf={slpm_v12_data.get("leader_integrity",{}).get("lis",0):+.2f}\n")
         
         errors = slpm_v12_data.get('validation_errors', [])
         if errors:
