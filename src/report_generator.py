@@ -377,9 +377,9 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
             lines.append(f"  - *Scoring Wyckoff: MARKUP=1.0, ACCUMULATION=0.75, RANGE=0.0, DISTRIBUTION=-0.75, MARKDOWN=-1.0*\n")
             lines.append(f"- **Leader Health Composite (sin ajustar):** {comp:.0f}% ")
             lines.append(f"(0.30xRS + 0.25xMom + 0.25xFlow + 0.20xWyckoff)\n")
-            lines.append(f"- **Effective Breadth (Health {comp:.0f}% x Cobertura {coverage:.0f}%):** {effective:.0f}%\n")
+            lines.append(f"- **Effective Breadth:** {effective:.0f}% (Health Composite: {comp:.0f}%, Cobertura: {coverage:.0f}%) — Regla: si cobertura >= 50% no se aplica penalización\n")
             lines.append(f"  - N analizado: {n}/{total}\n")
-            lines.append(f"  - *Nota: La confianza ajustada reduce la senhal por baja cobertura. La calidad observada (Health Composite) es independiente de la cobertura.*\n")
+            lines.append(f"  - *Nota: Effective Breadth = Health Composite (sin ajuste cuando cobertura >= 50%). La penalización por cobertura solo se aplica cuando la cobertura es inferior al 50%. La calidad observada (Health Composite) es independiente de la cobertura.*\n")
         
         integrity = slpm_v12_data.get('leader_integrity', {})
         if integrity:

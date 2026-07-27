@@ -77,16 +77,19 @@ def compute_leader_integrity(leader_metrics):
         scores.append(individual)
     if not scores:
         return {'lis': 0.0, 'n_leaders': 0}
-    return {'lis': float(np.clip(np.mean(scores), -1, 1)), 'n_leaders': len(scores)}
+    lis_val = np.nanmean(scores) if scores else 0.0
+    if np.isnan(lis_val):
+        lis_val = 0.0
+    return {'lis': float(np.clip(lis_val, -1, 1)), 'n_leaders': len(scores)}
 
 def compute_flow_divergence_v2(leader_metrics, sector_flow_z, sector_price_flow=None):
     sector_flow_z = sector_flow_z if sector_flow_z is not None else 0.0
     leader_flows = [m.get('flow_z', np.nan) for m in leader_metrics if m and 'flow_z' in m]
     valid_leader_flows = [f for f in leader_flows if pd.notna(f)]
-    leader_flow_div = float(np.mean(valid_leader_flows) - sector_flow_z) if valid_leader_flows else 0.0
+    leader_flow_div = float(np.nanmean(valid_leader_flows) - sector_flow_z) if valid_leader_flows else 0.0
     sector_flow_vs_price_div = float(sector_flow_z - sector_price_flow) if (sector_price_flow is not None and pd.notna(sector_price_flow)) else 0.0
     leader_flow_std = np.std(valid_leader_flows) if (valid_leader_flows and len(valid_leader_flows) > 1) else 0.0
-    structural_flow_div = float(np.mean(valid_leader_flows) - leader_flow_std) if valid_leader_flows else 0.0
+    structural_flow_div = float(np.nanmean(valid_leader_flows) - leader_flow_std) if valid_leader_flows else 0.0
     composite = 0.50 * leader_flow_div + 0.25 * sector_flow_vs_price_div + 0.25 * structural_flow_div
     return {'leader_flow_div': leader_flow_div, 'sector_flow_vs_price_div': sector_flow_vs_price_div, 'structural_flow_div': structural_flow_div, 'composite': composite}
 
