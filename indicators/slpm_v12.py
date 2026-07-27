@@ -35,9 +35,9 @@ def compute_leader_breadth_v2(leader_metrics, expected_leaders=SLPM_EXPECTED_LEA
     n = len(leader_metrics)
     coverage = min(n / expected_leaders, 1.0) if expected_leaders > 0 else 0
     
-    rs_positive = sum(1 for m in leader_metrics if m and m.get('rs', 1.0) > 1.0) / n
-    momentum_positive = sum(1 for m in leader_metrics if m and m.get('rs_momentum', m.get('rs_mom_20', 0)) > 0) / n
-    flow_positive = sum(1 for m in leader_metrics if m and m.get('flow_z', 0) > 0) / n
+    rs_positive = sum(1 for m in leader_metrics if m and (m.get('rs', 1.0) or 1.0) > 1.0) / n
+    momentum_positive = sum(1 for m in leader_metrics if m and (m.get('rs_momentum', m.get('rs_mom_20', 0)) or 0) > 0) / n
+    flow_positive = sum(1 for m in leader_metrics if m and (m.get('flow_z', 0) or 0) > 0) / n
     wyckoff_favorable = sum(1 for m in leader_metrics if m and m.get('wyckoff_phase', '') in ('ACCUMULATION', 'MARKUP')) / n
     
     composite = SLPM_WEIGHTS["leader_breadth"]["rs"] * rs_positive + SLPM_WEIGHTS["leader_breadth"]["momentum"] * momentum_positive + SLPM_WEIGHTS["leader_breadth"]["flow"] * flow_positive + SLPM_WEIGHTS["leader_breadth"]["wyckoff"] * wyckoff_favorable
@@ -64,6 +64,8 @@ def compute_leader_integrity(leader_metrics):
         if not m:
             continue
         rs = m.get('rs', 1.0)
+        if rs is None:
+            rs = 1.0
         rs_norm = np.tanh((rs - 1.0) * 2)
         rs_mom = m.get('rs_momentum', m.get('rs_mom_20', 0))
         mom_norm = np.tanh(rs_mom * 5)
@@ -78,6 +80,7 @@ def compute_leader_integrity(leader_metrics):
     return {'lis': float(np.clip(np.mean(scores), -1, 1)), 'n_leaders': len(scores)}
 
 def compute_flow_divergence_v2(leader_metrics, sector_flow_z, sector_price_flow=None):
+    sector_flow_z = sector_flow_z if sector_flow_z is not None else 0.0
     leader_flows = [m.get('flow_z', np.nan) for m in leader_metrics if m and 'flow_z' in m]
     valid_leader_flows = [f for f in leader_flows if pd.notna(f)]
     leader_flow_div = float(np.mean(valid_leader_flows) - sector_flow_z) if valid_leader_flows else 0.0
@@ -97,6 +100,7 @@ def evaluate_slpm_v12(df_market, sector_results, leader_metrics, top_sector_flow
 
     breadth_v2 = compute_leader_breadth_v2(leader_metrics, expected_leaders=SLPM_EXPECTED_LEADERS)
     integrity = compute_leader_integrity(leader_metrics)
+    top_sector_flow = top_sector_flow if top_sector_flow is not None else 0.0
     flow_div_v2 = compute_flow_divergence_v2(leader_metrics, top_sector_flow, None)
 
     tactical_score = tactical_scores.get(sector_etf, 0.0) if tactical_scores else 0.0
