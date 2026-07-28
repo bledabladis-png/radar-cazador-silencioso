@@ -113,7 +113,7 @@ def compute_wls(df_metrics, weights=None):
     df['wls'] *= (1 + 0.05 * np.minimum(df['persistence_10d'] / 10, 1.0))
     df['sector_rank_pct'] = df.groupby('sector')['wls'].rank(pct=True)
 
-    df['leader_confidence'] = np.nan
+    # leader_confidence eliminado (no se usaba)
     for sector in df['sector'].unique():
         mask = df['sector'] == sector
         sector_df = df[mask]
@@ -123,7 +123,7 @@ def compute_wls(df_metrics, weights=None):
             common_idx = current_rank.index.intersection(historical_rank.index)
             if len(common_idx) > 5:
                 rho = current_rank.loc[common_idx].corr(historical_rank.loc[common_idx], method='spearman')
-                df.loc[mask, 'leader_confidence'] = (rho + 1) / 2
+                # leader_confidence eliminado
 
     return df.sort_values('wls', ascending=False)
 
@@ -152,6 +152,7 @@ def generate_leader_section(df_market, df_stocks, holdings_df, fase_dict, operab
         lines.append(f'## Sector: {sector} ({fase})\n')
         lines.append('| Ticker | RS | RS Mom | Flujo (z) | WLS | Fase Wyckoff | Spring | SOS |\n')
         lines.append('|--------|----|--------|-----------|-----|---------------|--------|-----|\n')
+        lines.append('*RS = RS Level (precio acción / precio sector). RS Mom = RS Momentum (cambio del RS en 20 días). El WLS combina ambas con pesos 35% y 25% respectivamente.*\n')
         for _, row in wls_df.head(3).iterrows():
             spring_flag = '✓' if row.get('spring', 0) == 1 else ''
             sos_flag = '✓' if row.get('sos', 0) == 1 else ''
@@ -162,7 +163,7 @@ def generate_leader_section(df_market, df_stocks, holdings_df, fase_dict, operab
         final_df = pd.concat(all_data, ignore_index=True)
         if output_csv:
             cols = ['ticker','sector','rs','rs_mom','flow_z','wyckoff_score','wyckoff_phase',
-                    'persistence_10d','stability','spring','sos','wls','sector_rank_pct','leader_confidence']
+                    'persistence_10d','stability','spring','sos','wls','sector_rank_pct']
             final_df[cols].to_csv(output_csv, index=False)
         return lines
     return None

@@ -149,7 +149,8 @@ def main():
             top_holdings = holdings_df[holdings_df['etf'] == top_etf]
             if not top_holdings.empty:
                 from indicators.stock_leader import generate_leader_section
-                fases_forced = {top_etf: 'ACCUMULATION'}
+                # Forzar generación de líderes para el sector #1 independientemente de su fase
+                fases_forced = {top_etf: 'RANGE'}  # RANGE permite generar líderes sin filtrar por fase
                 oper_forced = {top_etf: 'OPORTUNIDAD MODERADA'}
                 top_leader_lines = generate_leader_section(df_market, df_stocks, holdings_df, fases_forced, oper_forced,
                                                           output_csv=None)
