@@ -5,31 +5,35 @@ No genera senales de trading, solo informacion complementaria.
 """
 import pandas as pd
 import numpy as np
+from config.settings import (
+    WYCKOFF_RANGE_WINDOW, WYCKOFF_VOLUME_WINDOW,
+    WYCKOFF_TREND_FAST_MA, WYCKOFF_TREND_SLOW_MA, WYCKOFF_MIN_PERIODS
+)
 from src.utils import robust_zscore, get_col
 
 # ---------- COMPONENTES PRIMARIOS ----------
 
-def range_width(df, ticker, window=20):
+def range_width(df, ticker, window=WYCKOFF_RANGE_WINDOW):
     high = get_col(df, ticker, 'High')
     low = get_col(df, ticker, 'Low')
     close = get_col(df, ticker, 'Close')
     return (high.rolling(window).max() - low.rolling(window).min()) / close
 
-def relative_volume(df, ticker, window=20):
+def relative_volume(df, ticker, window=WYCKOFF_VOLUME_WINDOW):
     volume = get_col(df, ticker, 'Volume')
-    return volume / volume.rolling(window).mean()
+    return volume / (volume.rolling(window).mean() + 1e-9)
 
-def effort_vs_result(df, ticker, window=20):
+def effort_vs_result(df, ticker, window=WYCKOFF_VOLUME_WINDOW):
     close = get_col(df, ticker, 'Close')
     volume = get_col(df, ticker, 'Volume')
     price_move = close.pct_change(window).abs()
-    volume_effort = volume.rolling(window).mean() / volume.rolling(60).mean()
+    volume_effort = volume.rolling(window).mean() / (volume.rolling(60).mean() + 1e-9)
     return price_move / (volume_effort + 1e-9)
 
 def trend_component(df, ticker):
     close = get_col(df, ticker, 'Close')
-    ma50 = close.rolling(50).mean()
-    ma200 = close.rolling(200).mean()
+    ma50 = close.rolling(WYCKOFF_TREND_FAST_MA).mean()
+    ma200 = close.rolling(WYCKOFF_TREND_SLOW_MA).mean()
     return ma50 / ma200 - 1
 
 # ---------- DETECTORES DE EVENTOS ----------
@@ -55,10 +59,6 @@ def detect_sos(df, ticker):
 
 # ---------- SCORE CONTINUO ----------
 
-def tanh_normalize(series, window=60):
-    z = robust_zscore(series, window)
-    return np.tanh(z)
-
 def wyckoff_score(df, ticker):
     """Score continuo [-1, 1] basado en 4 componentes independientes."""
     trend = trend_component(df, ticker)
@@ -66,15 +66,15 @@ def wyckoff_score(df, ticker):
     rv = relative_volume(df, ticker)
     evr = effort_vs_result(df, ticker)
     rv_smooth = rv.rolling(5).mean()
-    
-    t_norm = tanh_normalize(trend)
-    c_norm = -tanh_normalize(rw)
-    v_norm = tanh_normalize(rv_smooth)
-    e_norm = tanh_normalize(evr)
-    
+
+    t_norm = np.tanh(robust_zscore(trend))
+    c_norm = -np.tanh(robust_zscore(rw))
+    v_norm = np.tanh(robust_zscore(rv_smooth))
+    e_norm = np.tanh(robust_zscore(evr))
+
     return (0.35 * t_norm + 0.25 * c_norm + 0.20 * v_norm + 0.20 * e_norm)
 
-# ---------- CLASIFICACIÓN UNIFICADA (4 ESTADOS) ----------
+# ---------- CLASIFICACION UNIFICADA (4 ESTADOS) ----------
 
 def wyckoff_structure_core(df, ticker):
     close = get_col(df, ticker, 'Close')
@@ -94,14 +94,5 @@ def wyckoff_structure_core(df, ticker):
         return "DISTRIBUTION"
 
 def classify_wyckoff_phase(df, ticker):
-    """Clasificación unificada (usa el mismo score que structure_core)."""
+    """Clasificacion unificada (wrapper para compatibilidad de API)."""
     return wyckoff_structure_core(df, ticker)
-
-# ---------- COMPATIBILIDAD HACIA ATRÁS ----------
-
-range_compression = range_width
-absorption_score = lambda df, ticker, window=20: relative_volume(df, ticker, window).clip(0, 2) / 2.0
-trend_suppression = lambda df, ticker, window=50: (
-    abs(get_col(df, ticker, 'Close').rolling(window).mean().diff()) < 
-    (get_col(df, ticker, 'Close').rolling(window).std() * 0.1)
-).astype(int)

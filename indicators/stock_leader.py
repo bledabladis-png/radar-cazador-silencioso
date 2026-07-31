@@ -48,7 +48,7 @@ def compute_stock_metrics(df_market, df_stocks, etf_ticker, stock_list):
             wyckoff_series = wyckoff_score(ticker_df, ticker)
             mean_10 = wyckoff_series.rolling(10).mean().iloc[-1]
             std_10 = wyckoff_series.rolling(10).std().iloc[-1]
-            stability = (mean_10 / (std_10 + 1e-9)) * np.tanh(mean_10)
+            stability = np.tanh(mean_10 / (std_10 + 1e-9))
             spring = detect_spring(ticker_df, ticker).iloc[-1]
             sos = detect_sos(ticker_df, ticker).iloc[-1]
         else:
@@ -167,3 +167,4 @@ def generate_leader_section(df_market, df_stocks, holdings_df, fase_dict, operab
             final_df[cols].to_csv(output_csv, index=False)
         return lines
     return None
+

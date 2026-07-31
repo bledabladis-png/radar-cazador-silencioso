@@ -68,7 +68,8 @@ def compute_sector_scores(df, benchmark='^GSPC'):
 
         try:
             wyckoff_phases[sector] = wyckoff_structure_core(df, sector)
-        except Exception:
+        except Exception as e:
+            print(f"Wyckoff error en {sector}: {e}")
             wyckoff_phases[sector] = "N/A"
 
     if scores.empty:

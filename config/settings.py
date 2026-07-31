@@ -131,3 +131,12 @@ def validate_windows():
         for w in warnings:
             print(f"  - {w}")
     return len(warnings) == 0
+
+# ============================================================
+# WYCKOFF (v4.0 audit)
+# ============================================================
+WYCKOFF_RANGE_WINDOW = 20
+WYCKOFF_VOLUME_WINDOW = 20
+WYCKOFF_TREND_FAST_MA = 50
+WYCKOFF_TREND_SLOW_MA = 200
+WYCKOFF_MIN_PERIODS = 60
