@@ -1,6 +1,6 @@
 ﻿import pandas as pd
 import numpy as np
-from indicators.wyckoff import wyckoff_score, classify_wyckoff_phase, detect_spring, detect_sos
+from indicators.wyckoff import wyckoff_score, wyckoff_confidence, classify_wyckoff_phase, detect_spring, detect_sos
 from src.utils import robust_zscore, get_col
 
 def compute_stock_metrics(df_market, df_stocks, etf_ticker, stock_list):
@@ -43,12 +43,12 @@ def compute_stock_metrics(df_market, df_stocks, etf_ticker, stock_list):
             continue
 
         if len(ticker_df) >= 60:
-            wyckoff_sc = wyckoff_score(ticker_df, ticker).iloc[-1]
+            wyckoff_series, t_n, c_n, v_n, e_n = wyckoff_score(ticker_df, ticker)
+            wyckoff_sc = wyckoff_series.iloc[-1]
             wyckoff_ph = classify_wyckoff_phase(ticker_df, ticker)
-            wyckoff_series = wyckoff_score(ticker_df, ticker)
-            mean_10 = wyckoff_series.rolling(10).mean().iloc[-1]
-            std_10 = wyckoff_series.rolling(10).std().iloc[-1]
-            stability = np.tanh(mean_10 / (std_10 + 1e-9))
+            score_median = wyckoff_series.rolling(10).median().iloc[-1]
+            score_mad = wyckoff_series.rolling(10).apply(lambda x: np.median(np.abs(x - np.median(x)))).iloc[-1]
+            stability = np.tanh(score_median / (score_mad + 1e-9))
             spring = detect_spring(ticker_df, ticker).iloc[-1]
             sos = detect_sos(ticker_df, ticker).iloc[-1]
         else:
