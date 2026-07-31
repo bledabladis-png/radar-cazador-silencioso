@@ -124,8 +124,8 @@ def main():
             oper = {sector: 'OPORTUNIDAD MODERADA' if fase in ['ACCUMULATION','MARKUP'] else 'NO OPERAR'
                     for sector, fase in fases.items()}
             from indicators.stock_leader import generate_leader_section
-            leader_lines = generate_leader_section(df_market, df_stocks, holdings_df, fases, oper,
-                                                   output_csv='outputs/analisis_lideres.csv')
+            leader_lines, leader_df = generate_leader_section(df_market, df_stocks, holdings_df, fases, oper,
+                                                   output_csv=None)
             if leader_lines:
                 print("  Lideres sectoriales generados.")
             else:
@@ -143,56 +143,20 @@ def main():
             break
 
     try:
-        if df_stocks is not None and not df_stocks.empty:
-            holdings_df = pd.read_csv('data/etf_holdings.csv')
+        if leader_df is not None and not leader_df.empty:
             top_etf = top_sector_ticker
-            top_holdings = holdings_df[holdings_df['etf'] == top_etf]
-            if not top_holdings.empty:
-                from indicators.stock_leader import generate_leader_section
-                # Forzar generación de líderes para el sector #1 independientemente de su fase
-                fases_forced = {top_etf: 'RANGE'}  # RANGE permite generar líderes sin filtrar por fase
-                oper_forced = {top_etf: 'OPORTUNIDAD MODERADA'}
-                top_leader_lines = generate_leader_section(df_market, df_stocks, holdings_df, fases_forced, oper_forced,
-                                                          output_csv=None)
-                if top_leader_lines:
-                    for line in top_leader_lines:
-                        if line.startswith('|') and '|' in line[1:]:
-                            parts = [p.strip() for p in line.split('|') if p.strip()]
-                            if len(parts) >= 6 and parts[0] not in ('Ticker', '----', '', '--------') and not parts[0].startswith('-'):
-                                rs_val = float(parts[1]) if len(parts) > 1 and parts[1] not in ('nan', '') else None
-                                rs_mom_str = parts[2] if len(parts) > 2 else '0%'
-                                rs_mom_val = float(rs_mom_str.replace('%',''))/100.0 if rs_mom_str not in ('nan', '') else None
-                                flow_val = float(parts[3]) if len(parts) > 3 and parts[3] not in ('nan', '') else None
-                                wyckoff = parts[5] if len(parts) > 5 else ''
-                                leader_metrics_for_slpm.append({
-                                    'ticker': parts[0],
-                                    'rs': rs_val,
-                                    'rs_momentum': rs_mom_val,
-                                    'flow_z': flow_val,
-                                    'wyckoff_phase': wyckoff
-                                })
-                    print(f"    Lideres forzados para SLPM ({top_etf}): {len(leader_metrics_for_slpm)} tickers")
+            sector1_df = leader_df[leader_df['sector'] == top_etf]
+            for _, row in sector1_df.head(5).iterrows():
+                leader_metrics_for_slpm.append({
+                    'ticker': row['ticker'],
+                    'rs': row['rs'] if pd.notna(row.get('rs')) else None,
+                    'rs_momentum': row['rs_mom'] if pd.notna(row.get('rs_mom')) else None,
+                    'flow_z': row['flow_z'] if pd.notna(row.get('flow_z')) else None,
+                    'wyckoff_phase': row['wyckoff_phase'] if pd.notna(row.get('wyckoff_phase')) else ''
+                })
+            print(f"    Lideres forzados para SLPM ({top_etf}): {len(leader_metrics_for_slpm)} tickers")
     except Exception as e:
         print(f"    No se pudieron forzar lideres para SLPM: {e}")
-
-    # Si no se pudo forzar, usar los lideres existentes como fallback
-    if not leader_metrics_for_slpm and leader_lines:
-        for line in leader_lines:
-            if line.startswith('|') and '|' in line[1:]:
-                parts = [p.strip() for p in line.split('|') if p.strip()]
-                if len(parts) >= 6 and parts[0] not in ('Ticker', '----', '', '--------') and not parts[0].startswith('-'):
-                    rs_val = float(parts[1]) if len(parts) > 1 and parts[1] not in ('nan', '') else None
-                    rs_mom_str = parts[2] if len(parts) > 2 else '0%'
-                    rs_mom_val = float(rs_mom_str.replace('%',''))/100.0 if rs_mom_str not in ('nan', '') else None
-                    flow_val = float(parts[3]) if len(parts) > 3 and parts[3] not in ('nan', '') else None
-                    wyckoff = parts[5] if len(parts) > 5 else ''
-                    leader_metrics_for_slpm.append({
-                        'ticker': parts[0],
-                        'rs': rs_val,
-                        'rs_momentum': rs_mom_val,
-                        'flow_z': flow_val,
-                        'wyckoff_phase': wyckoff
-                    })
 
     # --- Tactical & Structural Engines ---
     tactical_scores = {}

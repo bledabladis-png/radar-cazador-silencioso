@@ -67,9 +67,9 @@ def compute_leader_integrity(leader_metrics):
         if rs is None:
             rs = 1.0
         rs_norm = np.tanh((rs - 1.0) * 2)
-        rs_mom = m.get('rs_momentum', m.get('rs_mom_20', 0))
+        rs_mom = m.get('rs_momentum') or m.get('rs_mom_20', 0) or 0
         mom_norm = np.tanh(rs_mom * 5)
-        flow = m.get('flow_z', 0)
+        flow = m.get('flow_z') or 0
         flow_norm = np.tanh(flow / 2)
         wyckoff_map = {'MARKUP': 1.0, 'ACCUMULATION': 0.75, 'RANGE': 0.0, 'DISTRIBUTION': -0.75, 'MARKDOWN': -1.0}
         wyckoff_score = wyckoff_map.get(m.get('wyckoff_phase', ''), 0.0)

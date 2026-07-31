@@ -164,6 +164,9 @@ def generate_leader_section(df_market, df_stocks, holdings_df, fase_dict, operab
             cols = ['ticker','sector','rs','rs_mom','flow_z','wyckoff_score','wyckoff_phase',
                     'persistence_10d','stability','spring','sos','wls','sector_rank_pct']
             final_df[cols].to_csv(output_csv, index=False)
-        return lines
-    return None
+        if all_data:
+            final_df = pd.concat(all_data, ignore_index=True)
+            return lines, final_df
+        return lines, None
+    return None, None
 
