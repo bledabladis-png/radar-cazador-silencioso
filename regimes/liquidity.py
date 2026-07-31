@@ -9,6 +9,9 @@ def compute_liquidity_score():
     if fed_data is None or fed_data.empty:
         return None, None, None
 
+    # Rellenar hacia adelante para evitar que NaN en la ultima fila anule las senales
+    fed_data = fed_data.ffill()
+
     signals = {}
 
     if 'fed_balance' in fed_data.columns:
@@ -33,7 +36,7 @@ def compute_liquidity_score():
         if pd.notna(val):
             signals['fed_funds'] = val
 
-    # Eliminar posibles NaN que haya en las señales
+    # Eliminar posibles NaN que haya en las senales
     signals = {k: v for k, v in signals.items() if pd.notna(v)}
 
     if not signals:
@@ -60,15 +63,15 @@ def compute_liquidity_score():
     if len(sig_vals) > 1:
         confidence = 1 - np.std(sig_vals) / 2
     elif len(sig_vals) == 1:
-        confidence = 0.5  # una sola señal -> confianza neutra
+        confidence = 0.5  # una sola senal -> confianza neutra
     else:
         confidence = 0.0
 
-    # Guardar score para cálculo de delta en la siguiente ejecución
+    # Guardar score para calculo de delta en la siguiente ejecucion
+    previous_score = None
     try:
         import json, os
         delta_file = 'outputs/liquidity_state.json'
-        previous_score = None
         if os.path.exists(delta_file):
             with open(delta_file, 'r') as f:
                 prev = json.load(f)
@@ -76,6 +79,6 @@ def compute_liquidity_score():
         with open(delta_file, 'w') as f:
             json.dump({'score': float(score), 'date': str(fed_data.index[-1].date())}, f)
     except:
-        previous_score = None
-    
+        pass
+
     return pd.Series(score, index=[fed_data.index[-1]]), regime, confidence, previous_score

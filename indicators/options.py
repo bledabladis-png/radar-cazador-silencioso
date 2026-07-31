@@ -29,7 +29,7 @@ def compute_pcr_signals():
     if not data or 'total_pcr' not in data:
         return None
 
-    # ---------- MÉTRICAS DEL DÍA ----------
+    # ---------- METRICAS DEL DIA ----------
     ihr = institutional_hedge_ratio(data['index_pcr'], data['equity_pcr'])
     idx_vol_share = index_volume_share(data['index_volume'], data['total_volume'])
     p_share = put_share(data['total_put_volume'], data['total_volume'])
@@ -45,7 +45,6 @@ def compute_pcr_signals():
 
     today = pd.Timestamp(data['date'])
 
-    # Columnas base que guardamos
     base_cols = [
         'total_pcr', 'index_pcr', 'equity_pcr', 'etp_pcr', 'vix_pcr', 'spx_pcr',
         'total_call_volume', 'total_put_volume', 'total_volume',
@@ -65,6 +64,7 @@ def compute_pcr_signals():
 
     # ---------- Z-SCORE del PCR Total ----------
     pcr_series = hist['total_pcr'] if 'total_pcr' in hist.columns else pd.Series(dtype=float)
+    pcr_ewm = None  # definido para evitar UnboundLocalError
     if len(pcr_series) >= 20:
         pcr_ewm = pcr_series.ewm(span=5).mean()
         window = min(252, len(pcr_ewm))
@@ -84,7 +84,7 @@ def compute_pcr_signals():
     return {
         'status': 'OK',
         'total_pcr': data['total_pcr'],
-        'pcr_ewm': pcr_ewm.iloc[-1] if len(pcr_series) >= 5 else np.nan,
+        'pcr_ewm': pcr_ewm.iloc[-1] if pcr_ewm is not None else np.nan,
         'z_score': z,
         'momentum': momentum,
         'percentile': percentile,
@@ -95,7 +95,6 @@ def compute_pcr_signals():
         'etp_pcr': data['etp_pcr'],
         'spx_pcr': data['spx_pcr'],
         'vix_pcr': data['vix_pcr'],
-        # Nuevas métricas
         'ihr': ihr,
         'ihr_state': classify_ihr(ihr),
         'index_volume_share': idx_vol_share,
