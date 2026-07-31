@@ -1,6 +1,6 @@
 # MACRO SECTORIAL - Reporte Diario
-**Fecha:** 2026-07-31 21:10:17
-**Modelo:** v3.15 | Pesos: v3 | Indicadores: v2
+**Fecha:** 2026-07-31 23:20:28
+**Modelo:** v4.2 | Pesos: v3 | Indicadores: v2
 
 ## Resumen de Regimenes
 - **Macro:** MIXED (Score: -0.12, Signal Consistency: 50%)
@@ -101,7 +101,7 @@
 ## Momentum de Precio - Otros Activos (20 dias)
 | # | Activo | Retorno 20d (%) |
 |---|--------|------------------|
-| 1 | CL=F | 25.62% |
+| 1 | CL=F | 26.62% |
 | 2 | BZ=F | 25.18% |
 | 3 | ^SPGSCI | 9.47% |
 | 4 | HG=F | 5.33% |
@@ -110,31 +110,31 @@
 | 7 | BIL | 0.27% |
 | 8 | ELD | -0.29% |
 | 9 | HYG | -0.49% |
-| 10 | ^STOXX50E | -0.63% |
-| 11 | ^GSPC | -0.63% |
-| 12 | USDCNY=X | -0.65% |
-| 13 | DX-Y.NYB | -1.10% |
-| 14 | GC=F | -1.26% |
-| 15 | IEF | -1.31% |
+| 10 | ^GSPC | -0.63% |
+| 11 | USDCNY=X | -0.65% |
+| 12 | ^STOXX50E | -0.84% |
+| 13 | DX-Y.NYB | -1.04% |
+| 14 | IEF | -1.31% |
+| 15 | GC=F | -1.36% |
 
 ## Flujo Institucional - Otros Activos (Proxy)
 | # | Activo | Flujo (z-score) |
 |---|--------|------------------|
-| 1 | HG=F | 1.06 |
-| 2 | CL=F | 0.37 |
-| 3 | GC=F | 0.22 |
-| 4 | BZ=F | 0.20 |
-| 5 | EEM | 0.17 |
-| 6 | IEF | 0.17 |
-| 7 | ELD | 0.16 |
-| 8 | EWJ | 0.12 |
+| 1 | HG=F | 1.08 |
+| 2 | CL=F | 0.40 |
+| 3 | BZ=F | 0.20 |
+| 4 | EEM | 0.17 |
+| 5 | IEF | 0.17 |
+| 6 | ELD | 0.16 |
+| 7 | EWJ | 0.12 |
+| 8 | ^STOXX50E | 0.12 |
 | 9 | HYG | 0.10 |
 | 10 | SCHC | 0.10 |
 | 11 | EWX | 0.01 |
 | 12 | ^NDX | -0.06 |
 | 13 | QUAL | -0.07 |
-| 14 | ^STOXX50E | -0.10 |
-| 15 | LQD | -0.12 |
+| 14 | LQD | -0.12 |
+| 15 | EMB | -0.16 |
 ## Structural Ranking (Fortaleza de largo plazo)
 | # | Sector | Structural | Tactical | Persist | Agreement | Signal Consistency |
 |---|--------|------------|----------|---------|-----------|------------|
@@ -221,57 +221,57 @@
 | Ticker | RS | RS Mom | Flujo (z) | WLS | Fase Wyckoff | Spring | SOS |
 |--------|----|--------|-----------|-----|---------------|--------|-----|
 *RS = RS Level (precio acción / precio sector). RS Mom = RS Momentum (cambio del RS en 20 días). El WLS combina ambas con pesos 35% y 25% respectivamente.*
-| NVDA | nan | nan% | 0.29 | nan | RANGE |  |  |
-| AAPL | nan | nan% | -2.03 | nan | ACCUMULATION | ✓ |  |
-| MSFT | nan | nan% | 2.10 | nan | ACCUMULATION |  | ✓ |
+| MSFT | 2.65 | 20.35% | 2.10 | 1.77 | ACCUMULATION |  | ✓ |
+| CSCO | 0.66 | 6.20% | 0.12 | 0.27 | ACCUMULATION |  |  |
+| NVDA | 1.14 | 5.94% | 0.29 | 0.24 | RANGE |  |  |
 
 ## Sector: XLF (MARKUP)
 | Ticker | RS | RS Mom | Flujo (z) | WLS | Fase Wyckoff | Spring | SOS |
 |--------|----|--------|-----------|-----|---------------|--------|-----|
 *RS = RS Level (precio acción / precio sector). RS Mom = RS Momentum (cambio del RS en 20 días). El WLS combina ambas con pesos 35% y 25% respectivamente.*
-| JPM | nan | nan% | -0.15 | nan | ACCUMULATION |  |  |
-| BRK-B | nan | nan% | 0.51 | nan | ACCUMULATION |  |  |
-| V | nan | nan% | 0.13 | nan | ACCUMULATION |  |  |
+| MA | 10.06 | 3.88% | 0.47 | 1.45 | MARKUP |  |  |
+| BRK-B | 8.98 | -1.61% | 0.51 | 0.58 | ACCUMULATION |  |  |
+| V | 6.43 | -1.25% | 0.13 | 0.57 | ACCUMULATION |  |  |
 
 ## Sector: XLV (ACCUMULATION)
 | Ticker | RS | RS Mom | Flujo (z) | WLS | Fase Wyckoff | Spring | SOS |
 |--------|----|--------|-----------|-----|---------------|--------|-----|
 *RS = RS Level (precio acción / precio sector). RS Mom = RS Momentum (cambio del RS en 20 días). El WLS combina ambas con pesos 35% y 25% respectivamente.*
-| LLY | nan | nan% | -0.70 | nan | MARKUP |  |  |
-| JNJ | nan | nan% | -0.43 | nan | DISTRIBUTION |  |  |
-| ABBV | nan | nan% | -0.82 | nan | MARKUP |  |  |
+| ABT | 0.65 | 11.69% | 0.16 | 1.07 | RANGE |  |  |
+| TMO | 3.53 | 10.00% | 0.18 | 1.06 | ACCUMULATION |  |  |
+| AMGN | 2.37 | 3.63% | 0.16 | 0.20 | DISTRIBUTION |  |  |
 
 ## Sector: XLI (ACCUMULATION)
 | Ticker | RS | RS Mom | Flujo (z) | WLS | Fase Wyckoff | Spring | SOS |
 |--------|----|--------|-----------|-----|---------------|--------|-----|
 *RS = RS Level (precio acción / precio sector). RS Mom = RS Momentum (cambio del RS en 20 días). El WLS combina ambas con pesos 35% y 25% respectivamente.*
-| CAT | nan | nan% | -0.60 | nan | DISTRIBUTION |  |  |
-| GE | nan | nan% | -0.01 | nan | MARKUP |  |  |
-| GEV | nan | nan% | 0.13 | nan | DISTRIBUTION |  |  |
+| ETN | 2.31 | 6.34% | 1.46 | 1.52 | ACCUMULATION |  |  |
+| GE | 2.00 | -2.37% | -0.01 | 0.64 | MARKUP |  |  |
+| UBER | 0.39 | -3.39% | 0.18 | 0.42 | ACCUMULATION |  |  |
 
 ## Sector: XLB (ACCUMULATION)
 | Ticker | RS | RS Mom | Flujo (z) | WLS | Fase Wyckoff | Spring | SOS |
 |--------|----|--------|-----------|-----|---------------|--------|-----|
 *RS = RS Level (precio acción / precio sector). RS Mom = RS Momentum (cambio del RS en 20 días). El WLS combina ambas con pesos 35% y 25% respectivamente.*
-| LIN | nan | nan% | -1.61 | nan | ACCUMULATION | ✓ |  |
-| NEM | nan | nan% | 0.31 | nan | RANGE |  |  |
-| FCX | nan | nan% | 0.09 | nan | RANGE |  |  |
+| NUE | 5.10 | 18.40% | 0.04 | 1.15 | RANGE |  |  |
+| ECL | 5.51 | 1.04% | 0.17 | 0.81 | ACCUMULATION |  |  |
+| SHW | 6.76 | -0.27% | 0.09 | 0.16 | RANGE |  |  |
 
 ## Sector: XLU (ACCUMULATION)
 | Ticker | RS | RS Mom | Flujo (z) | WLS | Fase Wyckoff | Spring | SOS |
 |--------|----|--------|-----------|-----|---------------|--------|-----|
 *RS = RS Level (precio acción / precio sector). RS Mom = RS Momentum (cambio del RS en 20 días). El WLS combina ambas con pesos 35% y 25% respectivamente.*
-| NEE | nan | nan% | -0.45 | nan | RANGE |  |  |
-| SO | nan | nan% | -0.37 | nan | ACCUMULATION |  |  |
-| DUK | nan | nan% | -0.87 | nan | RANGE |  |  |
+| CEG | 5.92 | 12.50% | 0.06 | 1.81 | RANGE |  |  |
+| VST | 3.34 | 1.22% | -0.12 | 1.77 | MARKUP |  |  |
+| D | 1.56 | 2.29% | -0.42 | 1.46 | MARKUP |  |  |
 
 ## Sector: XLRE (ACCUMULATION)
 | Ticker | RS | RS Mom | Flujo (z) | WLS | Fase Wyckoff | Spring | SOS |
 |--------|----|--------|-----------|-----|---------------|--------|-----|
 *RS = RS Level (precio acción / precio sector). RS Mom = RS Momentum (cambio del RS en 20 días). El WLS combina ambas con pesos 35% y 25% respectivamente.*
-| WELL | nan | nan% | -0.80 | nan | ACCUMULATION |  |  |
-| PLD | nan | nan% | -0.23 | nan | DISTRIBUTION |  |  |
-| EQIX | nan | nan% | -0.00 | nan | DISTRIBUTION |  |  |
+| AMT | 3.85 | 3.45% | 0.44 | 0.74 | ACCUMULATION |  |  |
+| CBRE | 3.26 | 2.76% | 0.36 | 0.64 | ACCUMULATION |  |  |
+| DLR | 4.18 | 7.55% | 0.11 | 0.43 | DISTRIBUTION |  |  |
 
 ## Sentimiento de Opciones (OMS v2.0)
 - **PCR Total:** 0.91 (EWMA(5): N/D - historial insuficiente)
@@ -283,7 +283,7 @@
 - **Volume PCR (calculado):** 0.91 | **OI PCR:** 0.75
 - **Ultimo dato:** 2026-07-30 (desfase: 1 dias)
 
-*Fuente: CBOE Official Data. Timestamp: 2026-07-31 21:08:40.*
+*Fuente: CBOE Official Data. Timestamp: 2026-07-31 23:18:52.*
 
 ## Market Transition Engine (MTE v1.0)
 - **Escenario (UNCONFIRMED):** STAGFLATION (Signal Consistency: 1) - *No se considera confirmado.*
@@ -312,14 +312,14 @@
     OK Discount: 0.00
 - **Advance/Decline Net:** -8 (51 avances / 59 descensos)
 - **New Highs/Lows (mercado):** 1 maximos / 0 minimos (NH-NL: +1)
-- **A/D Line (acumulada):** 5926
+- **A/D Line (acumulada):** 5924
 
 ### Cross-Asset Ratios
 | Ratio | Valor | Delta 20d | Z-Score (60d) |
 |-------|-------|-----------|---------------|
-| Copper/Gold | 0.0016 | +6.7% | +0.45 |
+| Copper/Gold | 0.0016 | +6.8% | +0.46 |
 | TLT/IEF | 0.8849 | -2.5% | -1.83 |
-| DXY/EEM | 1.5563 | +4.3% | +0.39 |
+| DXY/EEM | 1.5572 | +4.3% | +0.40 |
 | HYG/LQD | 0.7480 | +1.8% | +1.69 |
 | KRE/SPY | 0.1018 | +1.2% | +0.52 |
 | SMH/SPY | 0.7236 | -10.0% | -0.52 |
