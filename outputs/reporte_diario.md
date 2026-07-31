@@ -1,5 +1,5 @@
 # MACRO SECTORIAL - Reporte Diario
-**Fecha:** 2026-07-31 23:20:28
+**Fecha:** 2026-07-31 23:52:54
 **Modelo:** v4.2 | Pesos: v3 | Indicadores: v2
 
 ## Resumen de Regimenes
@@ -187,7 +187,7 @@
 - **Sector Lider:** Consumer Discretionary
   - *Nota: El SLPM selecciona al lider combinando Tactical, Structural, LIS, Breadth y Persistence. No es simplemente el sector con mayor Structural Score.*
 - **Estado:** UNRESOLVED -> Transition
-  - *Cobertura de líderes insuficiente (<30%).*
+  - *Cobertura de líderes insuficiente (<30%). El sector lider (Consumer Discretionary) esta en fase RANGE, lo que impide calcular metricas de lideres.*
 - **Scores oficiales:** T=-0.04 | S=-0.06 | LIS=+0.00 | Eff Breadth=0.50 | Persist=8% | LQ: P=-0.04 C=+0.000 S=-0.06 Cf=+0.00
 
 ### Leader Breadth & Health
@@ -215,7 +215,7 @@
 
 
 ## Acciones Seleccionadas por el Modelo de Liderazgo Sectorial
-> Acciones identificadas por el modelo dentro de sectores favorables.
+> Solo se muestran sectores en fase ACCUMULATION o MARKUP. El resto se omiten por no cumplir criterios de liderazgo estructural.
 
 ## Sector: XLK (ACCUMULATION)
 | Ticker | RS | RS Mom | Flujo (z) | WLS | Fase Wyckoff | Spring | SOS |
@@ -283,7 +283,7 @@
 - **Volume PCR (calculado):** 0.91 | **OI PCR:** 0.75
 - **Ultimo dato:** 2026-07-30 (desfase: 1 dias)
 
-*Fuente: CBOE Official Data. Timestamp: 2026-07-31 23:18:52.*
+*Fuente: CBOE Official Data. Timestamp: 2026-07-31 23:51:19.*
 
 ## Market Transition Engine (MTE v1.0)
 - **Escenario (UNCONFIRMED):** STAGFLATION (Signal Consistency: 1) - *No se considera confirmado.*
@@ -312,7 +312,7 @@
     OK Discount: 0.00
 - **Advance/Decline Net:** -8 (51 avances / 59 descensos)
 - **New Highs/Lows (mercado):** 1 maximos / 0 minimos (NH-NL: +1)
-- **A/D Line (acumulada):** 5924
+- **A/D Line (acumulada):** 5925
 
 ### Cross-Asset Ratios
 | Ratio | Valor | Delta 20d | Z-Score (60d) |
