@@ -43,7 +43,7 @@ def compute_stock_metrics(df_market, df_stocks, etf_ticker, stock_list):
             continue
 
         if len(ticker_df) >= 60:
-            wyckoff_series, t_n, c_n, v_n, e_n = wyckoff_score(ticker_df, ticker)
+            wyckoff_series, struct_score, tact_score, t_n, c_n, v_n, e_n = wyckoff_score(ticker_df, ticker)
             wyckoff_sc = wyckoff_series.iloc[-1]
             wyckoff_ph = classify_wyckoff_phase(ticker_df, ticker)
             score_median = wyckoff_series.rolling(10).median().iloc[-1]
@@ -86,9 +86,8 @@ def compute_wls(df_metrics, weights=None):
     df['rs_z'] = df.groupby('sector')['rs_mom'].transform(robust_intra).clip(-3, 3)
     df['flow_z_norm'] = df.groupby('sector')['flow_z'].transform(robust_intra).clip(-3, 3)
 
-    baseline = df.groupby('sector')['wyckoff_score'].transform(lambda x: np.percentile(x, 70))
-    df['rws'] = df['wyckoff_score'] / (baseline + 1e-9)
-    df['rws_z'] = df.groupby('sector')['rws'].transform(robust_intra).clip(-3, 3)
+    # M8: robust_zscore intra-sectorial en lugar de percentil 70
+    df['rws_z'] = df.groupby('sector')['wyckoff_score'].transform(robust_intra).clip(-3, 3)
 
     df['stab_z'] = df.groupby('sector')['stability'].transform(robust_intra).clip(-3, 3)
 
