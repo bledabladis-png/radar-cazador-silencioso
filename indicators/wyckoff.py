@@ -83,7 +83,7 @@ def detect_sos(df, ticker):
 
 def wyckoff_structural_score(df, ticker):
     trend = trend_component(df, ticker)
-    compression = atr_normalized(df, ticker)
+    compression = range_width(df, ticker)
     t_norm = np.tanh(robust_zscore(trend))
     c_norm = -np.tanh(robust_zscore(compression))
     score = WYCKOFF_STRUCT_WEIGHT_TREND * t_norm + WYCKOFF_STRUCT_WEIGHT_COMPRESSION * c_norm
@@ -131,3 +131,4 @@ def wyckoff_structure_core(df, ticker):
 
 def classify_wyckoff_phase(df, ticker):
     return wyckoff_structure_core(df, ticker)
+
