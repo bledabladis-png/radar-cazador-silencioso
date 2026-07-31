@@ -1,5 +1,6 @@
 ﻿import pandas as pd
 import numpy as np
+from config.settings import FLOW_ZSCORE_WINDOW, FLOW_EWM_SPAN, FLOW_CMF_WINDOW, MOMENTUM_SHARPE_WINDOW, MOMENTUM_PRICE_WINDOW
 from src.utils import robust_zscore, get_col
 
 def compute_returns(df, tickers):
@@ -12,7 +13,7 @@ def compute_returns(df, tickers):
             pass
     return returns
 
-def momentum_score(returns, window=63):
+def momentum_score(returns, window=MOMENTUM_SHARPE_WINDOW):
     ret = returns.rolling(window).mean() * window
     vol = returns.rolling(window).std()
     return ret / (vol + 1e-9)
@@ -27,7 +28,7 @@ def compute_obv(df, ticker):
     obv = (sign * volume).cumsum()
     return obv
 
-def compute_cmf(df, ticker, window=20):
+def compute_cmf(df, ticker, window=FLOW_CMF_WINDOW):
     high = get_col(df, ticker, 'High')
     low = get_col(df, ticker, 'Low')
     close = get_col(df, ticker, 'Close')
@@ -37,14 +38,23 @@ def compute_cmf(df, ticker, window=20):
     cmf = mfv.rolling(window).sum() / volume.rolling(window).sum()
     return cmf
 
-def compute_flow_proxy(df, ticker, window=60):
+def compute_flow_proxy(df, ticker, window=FLOW_ZSCORE_WINDOW):
+    """
+    Calcula el Flow Proxy compuesto para un ticker.
+    Formula: 0.30*flow_smooth + 0.35*obv_z + 0.35*cmf_z
+    donde:
+      flow_smooth = EWMA(10) de robust_zscore(ret*dollar_vol, window=60)
+      obv_z = robust_zscore(OBV.pct_change(), window=60)
+      cmf_z = robust_zscore(CMF(20), window=60)
+    Retorna una Serie temporal con el Flow Proxy compuesto.
+    """
     close = get_col(df, ticker, 'Close')
     volume = get_col(df, ticker, 'Volume')
     dollar_vol = close * volume
     ret = close.pct_change(fill_method=None)
     flow = ret * dollar_vol
     flow_z = robust_zscore(flow, window=window)
-    flow_smooth = flow_z.ewm(span=10, min_periods=20).mean()
+    flow_smooth = flow_z.ewm(span=FLOW_EWM_SPAN, min_periods=20).mean()
     # Componentes adicionales
     obv = compute_obv(df, ticker)
     obv_z = robust_zscore(obv.pct_change(fill_method=None), window=window)
@@ -54,6 +64,7 @@ def compute_flow_proxy(df, ticker, window=60):
     combined = 0.30 * flow_smooth + 0.35 * obv_z + 0.35 * cmf_z
     return combined
 
-def compute_price_momentum(df, ticker, window=20):
+def compute_price_momentum(df, ticker, window=MOMENTUM_PRICE_WINDOW):
     close = get_col(df, ticker, 'Close')
     return close.pct_change(periods=window, fill_method=None)
+

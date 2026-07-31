@@ -10,6 +10,9 @@ from config import settings
 from config.weights import STRUCTURAL_WEIGHTS
 
 def compute_structural_score(df_market, sector_etf, leader_breadth=0.5, flow_structure=0.0, persistence=0.5, benchmark='^GSPC'):
+    """Calcula el Structural Score de largo plazo.
+    Pesos: RS multi-ventana 63/126/252d (35%), Leader Breadth (25%),
+    Flow Structure (20%), Persistence (20%). Resultado acotado a [-1, +1]."""
     try:
         close_sector = get_col(df_market, sector_etf, 'Close')
         close_bench = get_col(df_market, benchmark, 'Close')

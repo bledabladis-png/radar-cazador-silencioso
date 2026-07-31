@@ -5,6 +5,7 @@ Calcula el %% de sectores sobre EMAs y nuevos maximos/minimos de 52 semanas.
 Usa breadth_core.py para NH/NL con shift(1).
 """
 import numpy as np
+from config.settings import BREADTH_EMA_FAST, BREADTH_EMA_MEDIUM, BREADTH_EMA_SLOW
 import pandas as pd
 from src.utils import get_col
 from config.tickers import MARKET_TICKERS
@@ -32,9 +33,9 @@ def compute_breadth(df):
     validate_coverage(closes, expected, "Breadth Sectorial")
 
     # EMAs con adjust=False (estandar de analisis tecnico)
-    ema20 = closes.ewm(span=20, adjust=False, min_periods=20).mean()
-    ema50 = closes.ewm(span=50, adjust=False, min_periods=50).mean()
-    ema200 = closes.ewm(span=200, adjust=False, min_periods=200).mean()
+    ema20 = closes.ewm(span=BREADTH_EMA_FAST, adjust=False, min_periods=20).mean()
+    ema50 = closes.ewm(span=BREADTH_EMA_MEDIUM, adjust=False, min_periods=50).mean()
+    ema200 = closes.ewm(span=BREADTH_EMA_SLOW, adjust=False, min_periods=200).mean()
 
     b20 = (closes > ema20).mean(axis=1)
     b50 = (closes > ema50).mean(axis=1)
@@ -46,3 +47,4 @@ def compute_breadth(df):
     nl_pct = nl / expected
 
     return b20, b50, b200, nh_pct, nl_pct
+

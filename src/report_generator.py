@@ -17,6 +17,43 @@ def _classify_freshness(age_days, max_current=3, max_recent=7, max_stale=14):
         return 'STALE'
     return 'ARCHIVAL'
 
+def _generate_coverage_table(pcr_data, darkpool_data, sector_results):
+    lines = []
+    lines.append("### Cobertura de Datos\n")
+    lines.append("| Fuente | Cobertura | Antiguedad |\n")
+    lines.append("|--------|-----------|------------|\n")
+    sectores_total = 11
+    sectores_validos = sectores_total
+    if sector_results and 'ranking' in sector_results:
+        sectores_validos = len([s for s in sector_results['ranking'] if s[1] is not None])
+    lines.append(f"| Sectores | {sectores_validos}/{sectores_total} ({sectores_validos/sectores_total:.0%}) | - |\n")
+    n_acciones = 110
+    try:
+        import pandas as pd
+        df = pd.read_csv('outputs/analisis_lideres.csv')
+        if 'ticker' in df.columns:
+            n_acciones = len(df['ticker'].unique())
+    except:
+        pass
+    lines.append(f"| Acciones lideres | {n_acciones} tickers | - |\n")
+    if pcr_data and pcr_data.get('last_date'):
+        from datetime import datetime
+        import pandas as pd
+        pcr_age = (datetime.now() - pd.Timestamp(pcr_data['last_date'])).days
+        lines.append(f"| Opciones (CBOE) | - | {pcr_age} dias |\n")
+    else:
+        lines.append("| Opciones (CBOE) | - | Sin datos |\n")
+    if darkpool_data and darkpool_data.get('week'):
+        from datetime import datetime
+        import pandas as pd
+        dp_age = (datetime.now() - pd.Timestamp(darkpool_data['week'])).days
+        lines.append(f"| Dark Pool (FINRA) | - | {dp_age} dias |\n")
+    else:
+        lines.append("| Dark Pool (FINRA) | - | Sin datos |\n")
+    lines.append("\n")
+    return lines
+
+
 def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score, liquidity_regime, liq_conf,
                           volatility_score, vol_regime, vol_conf, sector_results,
                           sector_price_rank, sector_flow_rank, otros_price_rank, otros_flow_rank,
@@ -107,6 +144,10 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
     lines.append("| FRED (Macro) | Semanal | Variable | RECENT | Alta |\n")
     lines.append("| Yahoo Finance (Precios) | Diario | < 1 dia | CURRENT | Alta |\n")
     lines.append("\n")
+    coverage_lines = _generate_coverage_table(pcr_data, darkpool_data, sector_results)
+    for cl in coverage_lines:
+        lines.append(cl)
+
 
     # =========================================================================
     # ALERTAS DE DIVERGENCIA (CORREGIDAS - sin flujo institucional ni shock externo)

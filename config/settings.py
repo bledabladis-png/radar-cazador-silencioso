@@ -98,3 +98,36 @@ CACHE_TTL = {
     "cboe": 24,
     "finra": 168,    # 7 días
 }
+
+# ============================================================
+# M3 — CENTRALIZED TIME WINDOWS (v4.0)
+# ============================================================
+
+FLOW_ZSCORE_WINDOW = 60
+FLOW_EWM_SPAN = 10
+FLOW_CMF_WINDOW = 20
+
+MOMENTUM_SHARPE_WINDOW = 63
+MOMENTUM_PRICE_WINDOW = 20
+
+PERSISTENCE_LOOKBACK = 12
+
+BREADTH_EMA_FAST = 20
+BREADTH_EMA_MEDIUM = 50
+BREADTH_EMA_SLOW = 200
+
+WYCKOFF_MIN_PERIODS = 60
+
+def validate_windows():
+    warnings = []
+    if FLOW_ZSCORE_WINDOW <= FLOW_EWM_SPAN:
+        warnings.append("FLOW_ZSCORE_WINDOW debe ser mayor que FLOW_EWM_SPAN")
+    if PERSISTENCE_LOOKBACK > MOMENTUM_PRICE_WINDOW:
+        warnings.append("PERSISTENCE_LOOKBACK no deberia exceder MOMENTUM_PRICE_WINDOW")
+    if WYCKOFF_MIN_PERIODS < 40:
+        warnings.append("WYCKOFF_MIN_PERIODS puede ser insuficiente")
+    if warnings:
+        print("ADVERTENCIAS DE VENTANAS:")
+        for w in warnings:
+            print(f"  - {w}")
+    return len(warnings) == 0

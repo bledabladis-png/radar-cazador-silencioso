@@ -16,6 +16,9 @@ import numpy as np
 from src.utils import robust_zscore, get_col
 
 def compute_financial_conditions(df):
+    """Calcula el score de condiciones financieras agregando VIX, credito, dolar y curva.
+    Formula: 0.40*VIX_norm + 0.30*Credito_norm + 0.15*Dolar_norm + 0.15*Curva_norm.
+    Cada componente se normaliza con z-score robusto y tanh. Retorna puntuacion [-1, +1]."""
     scores = pd.DataFrame(index=df.index)
 
     # VIX (invertido: a mas VIX, mas estres)

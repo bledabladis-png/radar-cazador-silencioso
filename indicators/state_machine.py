@@ -19,6 +19,10 @@ THRESHOLDS = {
 }
 
 def classify_leadership_state(tactical_score, structural_score, lis, leader_breadth, persistence, coverage=1.0):
+    """Clasifica el estado de liderazgo del sector #1 usando la State Machine.
+    Estados: CONFIRMED, EMERGING, TACTICAL_CORRECTION, STRUCTURAL_DECAY,
+    LOST, UNRESOLVED.
+    Umbrales: T>0.20, S>0.20, LIS>0.30, Breadth>0.50, Persistence>0.50, etc."""
     t = THRESHOLDS
     
     # Regla de cobertura: si hay pocos líderes, forzar UNRESOLVED

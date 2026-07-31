@@ -5,8 +5,9 @@ Calcula la persistencia de señales en ventanas semanales.
 """
 import pandas as pd
 import numpy as np
+from config.settings import PERSISTENCE_LOOKBACK
 
-def compute_persistence(series, threshold=0.0, lookback=12):
+def compute_persistence(series, threshold=0.0, lookback=PERSISTENCE_LOOKBACK):
     """
     Calcula la prevalencia direccional: % de observaciones que superan el umbral en la ventana lookback.
     Mide frecuencia de observaciones positivas, NO continuidad temporal (persistencia en sentido estricto).
@@ -22,3 +23,4 @@ def compute_persistence(series, threshold=0.0, lookback=12):
     
     positive = (recent > threshold).sum()
     return float(positive / len(recent))
+
