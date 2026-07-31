@@ -81,7 +81,7 @@ def classify_ihr(ihr):
         return "N/A"
     if ihr >= 2.5:
         return "Cobertura institucional extrema"
-    elif ihr >= 1.8:
+    elif ihr >= 1.6:
         return "Cobertura institucional alta"
     elif ihr >= 1.2:
         return "Equilibrado"

@@ -458,7 +458,7 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
 
     if leader_lines:
         lines.append("\n## Acciones Seleccionadas por el Modelo de Liderazgo Sectorial\n")
-        lines.append("> Acciones identificadas por el modelo dentro de sectores favorables.\n\n")
+        lines.append("> Solo se muestran sectores en fase ACCUMULATION o MARKUP. El resto se omiten por no cumplir criterios de liderazgo estructural.\n\n")
         lines.extend(leader_lines)
     else:
         lines.append("\n## Acciones Seleccionadas por el Modelo de Liderazgo Sectorial\n")

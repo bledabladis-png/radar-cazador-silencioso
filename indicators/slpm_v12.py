@@ -118,6 +118,9 @@ def evaluate_slpm_v12(df_market, sector_results, leader_metrics, top_sector_flow
     result = classify_leadership_state(tactical_score, structural_score, integrity['lis'], effective_breadth, persistence, coverage=breadth_v2['coverage'])
     instant_state = result['state']
     instant_reason = result['reason']
+    if not leader_metrics:
+        sector_phase = ranking[0][3] if len(ranking[0]) > 3 else 'desconocida'
+        instant_reason += f" El sector lider ({sector_name}) esta en fase {sector_phase}, lo que impide calcular metricas de lideres."
     instant_reason_code = result.get('reason_code', 'UNKNOWN')
 
     # Aplicar histéresis temporal
