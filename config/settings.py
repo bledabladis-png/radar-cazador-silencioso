@@ -1,5 +1,5 @@
 ﻿"""
-Global configuration for Sector Rotation Radar v3.15.
+Global configuration for Sector Rotation Radar v4.2.
 
 This module centralizes shared constants: time windows,
 data quality thresholds, cache parameters, and SLPM coverage.

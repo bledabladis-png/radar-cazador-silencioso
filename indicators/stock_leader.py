@@ -17,7 +17,9 @@ def compute_stock_metrics(df_market, df_stocks, etf_ticker, stock_list):
         if len(close.dropna()) < 60:
             continue
 
-        rs = close / price_etf
+        # Alinear índices para evitar NaN por diferencias de calendario
+        common_idx = close.index.intersection(price_etf.index)
+        rs = close.loc[common_idx] / price_etf.loc[common_idx]
         rs_mom = np.log(rs).diff(20).iloc[-1]
 
         ret = close.pct_change(fill_method=None)

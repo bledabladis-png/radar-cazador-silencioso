@@ -1,6 +1,6 @@
 ﻿# -*- coding: utf-8 -*-
 """
-Macro Sectorial v3.15 -- Sistema de analisis macro y rotacion sectorial.
+Macro Sectorial v4.2 -- Sistema de analisis macro y rotacion sectorial.
 Fases 1-4 + Correccion 0.5 + P1 + P2 + Mejoras 16-20.
 """
 import pandas as pd
