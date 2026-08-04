@@ -1,20 +1,20 @@
 # MACRO SECTORIAL - Reporte Diario
-**Fecha:** 2026-08-03 21:08:02
+**Fecha:** 2026-08-04 21:18:07
 **Modelo:** v4.2 | Pesos: v3 | Indicadores: v2
 
 ## Resumen de Regimenes
-- **Macro:** MIXED (Score: -0.13, Signal Consistency: 50%)
-- **Cond. Financieras:** ABUNDANTE (Score: 0.45, Signal Consistency: 62%)
+- **Macro:** MIXED (Score: -0.09, Signal Consistency: 50%)
+- **Cond. Financieras:** ABUNDANTE (Score: 0.45, Signal Consistency: 82%)
 - **Liquidez Real (FRED):** ABUNDANTE (Signal Consistency: 89%)
-- **Volatilidad:** ELEVATED (Z-Score: 0.58, Signal Consistency: 29%)
+- **Volatilidad:** ELEVATED (Z-Score: 0.57, Signal Consistency: 29%)
 - **Sectores:** ROTATIONAL
 *Nota: Signal Consistency mide la consistencia entre senhales, no una probabilidad estadistica calibrada. Data Conf mide la frescura y cobertura de los datos.*
 
 ### Data Freshness
 | Fuente | Ultimo dato | Antiguedad | Estado | Data Conf |
 |--------|-------------|------------|--------|----------|
-| CBOE (Opciones) | 2026-07-31 | 3 dias | CURRENT | Alta |
-| FINRA (Dark Pools) | 2026-07-13 | 21 dias | STALE | Baja |
+| CBOE (Opciones) | 2026-08-03 | 1 dias | CURRENT | Alta |
+| FINRA (Dark Pools) | 2026-07-13 | 22 dias | ARCHIVAL | Baja |
 | FRED (Macro) | Semanal | Variable | RECENT | Alta |
 | Yahoo Finance (Precios) | Diario | < 1 dia | CURRENT | Alta |
 
@@ -23,8 +23,8 @@
 |--------|-----------|------------|
 | Sectores | 11/11 (100%) | - |
 | Acciones lideres | 60 tickers | - |
-| Opciones (CBOE) | - | 3 dias |
-| Dark Pool (FINRA) | - | 21 dias |
+| Opciones (CBOE) | - | 1 dias |
+| Dark Pool (FINRA) | - | 22 dias |
 
 ### Divergencias Detectadas
 - **Energy Price-Flow:** Precio fuerte sin confirmacion del Flow Proxy. El indicador no permite inferir directamente participacion institucional.
@@ -43,7 +43,7 @@
 ## Breadth de Mercado (11 sectores)
 | Metrica | Valor |
 |---------|-------|
-| % sobre EMA20 | 72.73% |
+| % sobre EMA20 | 90.91% |
 | % sobre EMA50 | 90.91% |
 | % sobre EMA200 | 90.91% |
 | New Highs sectoriales (0/11) |
@@ -53,46 +53,46 @@
 ## Momentum de Precio - Sectores (20 dias)
 | # | Sector | Retorno 20d (%) |
 |---|--------|------------------|
-| 1 | Energy (XLE) | 10.65% |
-| 2 | Financials (XLF) | 2.21% |
-| 3 | Real Estate (XLRE) | 2.01% |
-| 4 | Communication Services (XLC) | 1.03% |
-| 5 | Consumer Staples (XLP) | 0.90% |
-| 6 | Healthcare (XLV) | 0.17% |
-| 7 | Consumer Discretionary (XLY) | 0.17% |
-| 8 | Industrials (XLI) | -1.29% |
-| 9 | Materials (XLB) | -1.87% |
-| 10 | Utilities (XLU) | -2.08% |
-| 11 | Technology (XLK) | -3.01% |
+| 1 | Energy (XLE) | 7.10% |
+| 2 | Technology (XLK) | 4.31% |
+| 3 | Financials (XLF) | 3.26% |
+| 4 | Industrials (XLI) | 2.20% |
+| 5 | Materials (XLB) | 0.95% |
+| 6 | Communication Services (XLC) | 0.92% |
+| 7 | Consumer Discretionary (XLY) | 0.77% |
+| 8 | Real Estate (XLRE) | 0.62% |
+| 9 | Consumer Staples (XLP) | 0.60% |
+| 10 | Healthcare (XLV) | -1.42% |
+| 11 | Utilities (XLU) | -3.48% |
 
 ## Flujo Institucional - Sectores (Proxy)
 | # | Sector | Flujo (z-score) |
 |---|--------|------------------|
-| 1 | Consumer Discretionary (XLY) | 0.39 |
-| 2 | Industrials (XLI) | 0.38 |
-| 3 | Technology (XLK) | 0.31 |
-| 4 | Financials (XLF) | 0.26 |
-| 5 | Communication Services (XLC) | 0.22 |
-| 6 | Materials (XLB) | 0.11 |
-| 7 | Real Estate (XLRE) | 0.07 |
-| 8 | Energy (XLE) | -0.59 |
-| 9 | Consumer Staples (XLP) | -0.68 |
-| 10 | Healthcare (XLV) | -0.72 |
-| 11 | Utilities (XLU) | -1.07 |
+| 1 | Industrials (XLI) | 0.70 |
+| 2 | Communication Services (XLC) | 0.60 |
+| 3 | Technology (XLK) | 0.57 |
+| 4 | Consumer Discretionary (XLY) | 0.53 |
+| 5 | Materials (XLB) | 0.48 |
+| 6 | Financials (XLF) | 0.42 |
+| 7 | Consumer Staples (XLP) | 0.17 |
+| 8 | Real Estate (XLRE) | -0.51 |
+| 9 | Healthcare (XLV) | -0.61 |
+| 10 | Energy (XLE) | -0.72 |
+| 11 | Utilities (XLU) | -1.39 |
 ## Tactical Leaders (Momentum de corto plazo)
 | # | Sector | Tactical | Structural | Retorno 20d | Flow Proxy (z) | Comm Corr |
 |---|--------|----------|------------|-------------|----------------|------------|
-| 1 | Energy (XLE) | +0.52 | +0.06 | 10.65% | -0.59 | HIGH (+0.65) |
-| 2 | Financials (XLF) | +0.17 | +0.00 | 2.21% | +0.26 | MODERATE (-0.37) |
-| 3 | Real Estate (XLRE) | +0.17 | -0.01 | 2.01% | +0.07 | MODERATE (-0.36) |
-| 4 | Healthcare (XLV) | +0.08 | +0.02 | 0.17% | -0.72 | MODERATE (-0.34) |
-| 5 | Communication Services (XLC) | +0.06 | -0.08 | 1.03% | +0.22 | MODERATE (-0.34) |
-| 6 | Consumer Staples (XLP) | +0.05 | -0.05 | 0.90% | -0.68 | LOW (-0.25) |
-| 7 | Consumer Discretionary (XLY) | +0.01 | -0.06 | 0.17% | +0.39 | MODERATE (-0.56) |
-| 8 | Utilities (XLU) | -0.12 | -0.05 | -2.08% | -1.07 | LOW (-0.16) |
-| 9 | Industrials (XLI) | -0.13 | +0.01 | -1.29% | +0.38 | MODERATE (-0.43) |
-| 10 | Materials (XLB) | -0.19 | -0.04 | -1.87% | +0.11 | MODERATE (-0.40) |
-| 11 | Technology (XLK) | -0.21 | +0.07 | -3.01% | +0.31 | LOW (-0.19) |
+| 1 | Energy (XLE) | +0.33 | +0.04 | 7.10% | -0.72 | HIGH (+0.65) |
+| 2 | Financials (XLF) | +0.14 | -0.00 | 3.26% | +0.42 | MODERATE (-0.37) |
+| 3 | Technology (XLK) | +0.11 | +0.09 | 4.31% | +0.57 | LOW (-0.21) |
+| 4 | Industrials (XLI) | +0.02 | +0.01 | 2.20% | +0.70 | MODERATE (-0.44) |
+| 5 | Real Estate (XLRE) | -0.01 | -0.02 | 0.62% | -0.51 | MODERATE (-0.36) |
+| 6 | Consumer Discretionary (XLY) | -0.03 | -0.07 | 0.77% | +0.53 | MODERATE (-0.55) |
+| 7 | Communication Services (XLC) | -0.06 | -0.08 | 0.92% | +0.60 | MODERATE (-0.35) |
+| 8 | Consumer Staples (XLP) | -0.08 | -0.05 | 0.60% | +0.17 | LOW (-0.25) |
+| 9 | Healthcare (XLV) | -0.10 | +0.01 | -1.42% | -0.61 | MODERATE (-0.34) |
+| 10 | Materials (XLB) | -0.12 | -0.04 | 0.95% | +0.48 | MODERATE (-0.41) |
+| 11 | Utilities (XLU) | -0.27 | -0.06 | -3.48% | -1.39 | LOW (-0.15) |
 
 *Nota: Comm Corr mide la correlacion de 126 dias con ^SPGSCI. No implica causalidad.*
 
@@ -100,82 +100,82 @@
 ## Momentum de Precio - Otros Activos (20 dias)
 | # | Activo | Retorno 20d (%) |
 |---|--------|------------------|
-| 1 | CL=F | 16.79% |
-| 2 | BZ=F | 15.99% |
-| 3 | ^SPGSCI | 6.69% |
-| 4 | HG=F | 6.00% |
-| 5 | QUAL | 1.49% |
-| 6 | ^GSPC | 0.84% |
-| 7 | EURUSD=X | 0.66% |
-| 8 | ^STOXX50E | 0.45% |
-| 9 | BIL | -0.01% |
-| 10 | ELD | -0.17% |
-| 11 | SCHC | -0.33% |
-| 12 | USDCNY=X | -0.54% |
-| 13 | VLUE | -0.56% |
-| 14 | HYG | -0.70% |
-| 15 | DX-Y.NYB | -0.87% |
+| 1 | HG=F | 7.45% |
+| 2 | CL=F | 6.67% |
+| 3 | BZ=F | 6.11% |
+| 4 | ^SPGSCI | 3.33% |
+| 5 | QUAL | 3.26% |
+| 6 | VLUE | 3.19% |
+| 7 | ^GSPC | 3.10% |
+| 8 | SCHC | 3.06% |
+| 9 | ^STOXX50E | 2.64% |
+| 10 | ^NDX | 1.92% |
+| 11 | ^RUT | 1.83% |
+| 12 | EWJ | 1.65% |
+| 13 | EURUSD=X | 0.78% |
+| 14 | ELD | 0.49% |
+| 15 | EEM | 0.43% |
 
 ## Flujo Institucional - Otros Activos (Proxy)
 | # | Activo | Flujo (z-score) |
 |---|--------|------------------|
-| 1 | GC=F | 1.97 |
-| 2 | SCHC | 0.86 |
-| 3 | EWX | 0.78 |
-| 4 | EEM | 0.45 |
-| 5 | IEF | 0.36 |
-| 6 | EWJ | 0.34 |
-| 7 | EMB | 0.29 |
-| 8 | QUAL | 0.10 |
-| 9 | MTUM | 0.03 |
-| 10 | ^NDX | 0.02 |
-| 11 | ELD | 0.00 |
-| 12 | ^GSPC | -0.05 |
-| 13 | BZ=F | -0.06 |
-| 14 | CL=F | -0.06 |
-| 15 | ^STOXX50E | -0.17 |
+| 1 | GC=F | 2.11 |
+| 2 | IEF | 1.45 |
+| 3 | EWX | 1.13 |
+| 4 | HYG | 0.86 |
+| 5 | TLT | 0.81 |
+| 6 | EMB | 0.69 |
+| 7 | EEM | 0.60 |
+| 8 | SCHC | 0.50 |
+| 9 | EWJ | 0.49 |
+| 10 | QUAL | 0.43 |
+| 11 | LQD | 0.41 |
+| 12 | ELD | 0.28 |
+| 13 | MTUM | 0.18 |
+| 14 | ^NDX | 0.17 |
+| 15 | ^STOXX50E | 0.13 |
 ## Structural Ranking (Fortaleza de largo plazo)
 | # | Sector | Structural | Tactical | Persist | Agreement | Signal Consistency |
 |---|--------|------------|----------|---------|-----------|------------|
-| 1 | Technology (XLK) | +0.07 | -0.21 | 0% | 50% MIXED (Conv: +0.00) | 25% |
-| 2 | Energy (XLE) | +0.06 | +0.52 | 100% | 75% BULLISH (Conv: +0.77) | 88% |
-| 3 | Healthcare (XLV) | +0.02 | +0.08 | 83% | 50% MIXED (Conv: +0.00) | 67% |
-| 4 | Industrials (XLI) | +0.01 | -0.13 | 17% | 50% MIXED (Conv: +0.00) | 33% |
-| 5 | Financials (XLF) | +0.00 | +0.17 | 100% | 100% BULLISH (Conv: +0.36) | 100% |
-| 6 | Real Estate (XLRE) | -0.01 | +0.17 | 83% | 75% BULLISH (Conv: +0.29) | 79% |
-| 7 | Materials (XLB) | -0.04 | -0.19 | 25% | 75% BEARISH (Conv: +0.35) | 50% |
-| 8 | Utilities (XLU) | -0.05 | -0.12 | 42% | 100% BEARISH (Conv: +0.77) | 71% |
-| 9 | Consumer Staples (XLP) | -0.05 | +0.05 | 58% | 50% MIXED (Conv: +0.00) | 54% |
-| 10 | Consumer Discretionary (XLY) | -0.06 | +0.01 | 8% | 50% MIXED (Conv: +0.00) | 29% |
-| 11 | Communication Services (XLC) | -0.08 | +0.06 | 67% | 75% BULLISH (Conv: +0.28) | 71% |
+| 1 | Technology (XLK) | +0.09 | +0.11 | 8% | 100% BULLISH (Conv: +0.55) | 54% |
+| 2 | Energy (XLE) | +0.04 | +0.33 | 100% | 75% BULLISH (Conv: +0.51) | 88% |
+| 3 | Healthcare (XLV) | +0.01 | -0.10 | 75% | 75% BEARISH (Conv: +0.73) | 75% |
+| 4 | Industrials (XLI) | +0.01 | +0.02 | 17% | 75% BULLISH (Conv: +0.63) | 46% |
+| 5 | Financials (XLF) | -0.00 | +0.14 | 100% | 75% BULLISH (Conv: +0.51) | 88% |
+| 6 | Real Estate (XLRE) | -0.02 | -0.01 | 75% | 100% BEARISH (Conv: +0.46) | 88% |
+| 7 | Materials (XLB) | -0.04 | -0.12 | 25% | 75% BEARISH (Conv: +0.26) | 50% |
+| 8 | Consumer Staples (XLP) | -0.05 | -0.08 | 50% | 75% BEARISH (Conv: +0.25) | 62% |
+| 9 | Utilities (XLU) | -0.06 | -0.27 | 33% | 100% BEARISH (Conv: +0.91) | 67% |
+| 10 | Consumer Discretionary (XLY) | -0.07 | -0.03 | 8% | 75% BEARISH (Conv: +0.21) | 42% |
+| 11 | Communication Services (XLC) | -0.08 | -0.06 | 58% | 75% BEARISH (Conv: +0.24) | 67% |
 
 ## Rankings Sectoriales (Score combinado original)
 > *Nota: Este Score es el ranking historico del sistema (momentum, tendencia, volatilidad, breadth, Wyckoff). No es el Tactical ni el Structural Score.*
 
 | # | Sector | Score | Tactical | Structural | Persist | Agreement | Comm Corr | Fase Wyckoff |
 |---|--------|-------|----------|------------|---------|-----------|------------|---------------|
-| 1 | Consumer Discretionary (XLY) | 0.40 | +0.01 | -0.06 | 8% | 50% MIXED (Conv: +0.00) | MODERATE (-0.56) | RANGE |
-| 2 | Financials (XLF) | 0.36 | +0.17 | +0.00 | 100% | 100% BULLISH (Conv: +0.36) | MODERATE (-0.37) | MARKUP |
-| 3 | Energy (XLE) | 0.24 | +0.52 | +0.06 | 100% | 75% BULLISH (Conv: +0.77) | HIGH (+0.65) | DISTRIBUTION |
-| 4 | Real Estate (XLRE) | 0.02 | +0.17 | -0.01 | 83% | 75% BULLISH (Conv: +0.29) | MODERATE (-0.36) | ACCUMULATION |
-| 5 | Communication Services (XLC) | 0.00 | +0.06 | -0.08 | 67% | 75% BULLISH (Conv: +0.28) | MODERATE (-0.34) | DISTRIBUTION |
-| 6 | Healthcare (XLV) | 0.00 | +0.08 | +0.02 | 83% | 50% MIXED (Conv: +0.00) | MODERATE (-0.34) | ACCUMULATION |
-| 7 | Technology (XLK) | 0.00 | -0.21 | +0.07 | 0% | 50% MIXED (Conv: +0.00) | LOW (-0.19) | ACCUMULATION |
-| 8 | Industrials (XLI) | 0.00 | -0.13 | +0.01 | 17% | 50% MIXED (Conv: +0.00) | MODERATE (-0.43) | MARKUP |
-| 9 | Consumer Staples (XLP) | 0.00 | +0.05 | -0.05 | 58% | 50% MIXED (Conv: +0.00) | LOW (-0.25) | DISTRIBUTION |
-| 10 | Materials (XLB) | 0.00 | -0.19 | -0.04 | 25% | 75% BEARISH (Conv: +0.35) | MODERATE (-0.40) | RANGE |
-| 11 | Utilities (XLU) | -0.00 | -0.12 | -0.05 | 42% | 100% BEARISH (Conv: +0.77) | LOW (-0.16) | ACCUMULATION |
+| 1 | Consumer Discretionary (XLY) | 0.34 | -0.03 | -0.07 | 8% | 75% BEARISH (Conv: +0.21) | MODERATE (-0.55) | DISTRIBUTION |
+| 2 | Financials (XLF) | 0.28 | +0.14 | -0.00 | 100% | 75% BULLISH (Conv: +0.51) | MODERATE (-0.37) | MARKUP |
+| 3 | Communication Services (XLC) | 0.12 | -0.06 | -0.08 | 58% | 75% BEARISH (Conv: +0.24) | MODERATE (-0.35) | DISTRIBUTION |
+| 4 | Energy (XLE) | 0.10 | +0.33 | +0.04 | 100% | 75% BULLISH (Conv: +0.51) | HIGH (+0.65) | ACCUMULATION |
+| 5 | Technology (XLK) | 0.00 | +0.11 | +0.09 | 8% | 100% BULLISH (Conv: +0.55) | LOW (-0.21) | ACCUMULATION |
+| 6 | Healthcare (XLV) | 0.00 | -0.10 | +0.01 | 75% | 75% BEARISH (Conv: +0.73) | MODERATE (-0.34) | MARKUP |
+| 7 | Consumer Staples (XLP) | 0.00 | -0.08 | -0.05 | 50% | 75% BEARISH (Conv: +0.25) | LOW (-0.25) | DISTRIBUTION |
+| 8 | Industrials (XLI) | 0.00 | +0.02 | +0.01 | 17% | 75% BULLISH (Conv: +0.63) | MODERATE (-0.44) | MARKUP |
+| 9 | Materials (XLB) | 0.00 | -0.12 | -0.04 | 25% | 75% BEARISH (Conv: +0.26) | MODERATE (-0.41) | ACCUMULATION |
+| 10 | Real Estate (XLRE) | 0.00 | -0.01 | -0.02 | 75% | 100% BEARISH (Conv: +0.46) | MODERATE (-0.36) | RANGE |
+| 11 | Utilities (XLU) | -0.01 | -0.27 | -0.06 | 33% | 100% BEARISH (Conv: +0.91) | LOW (-0.15) | ACCUMULATION |
 
 ## Opportunity Map (basado en medianas Tactical/Structural, independiente del SLPM)
 
-*Umbrales del dia: Tactical mediana=+0.05, Structural mediana=-0.01*
+*Umbrales del dia: Tactical mediana=-0.03, Structural mediana=-0.02*
 
 | Cuadrante | Sectores | Signal Consistency |
 |-----------|----------|------------|
-| VERDE **Structural Strength** | Financials, Healthcare, Energy | 85% |
-| AMARILLO **Tactical Correction** | Technology, Industrials | 29% |
-| AZUL **Tactical Strength** | Real Estate, Communication Services | 75% |
-| ROJO **Structural Weakness** | Consumer Discretionary, Consumer Staples, Materials, Utilities | 51% |
+| VERDE **Structural Strength** | Technology, Financials, Energy, Industrials | 69% |
+| AMARILLO **Tactical Correction** | Healthcare | 75% |
+| AZUL **Tactical Strength** | Real Estate | 88% |
+| ROJO **Structural Weakness** | Consumer Discretionary, Consumer Staples, Materials, Utilities, Communication Services | 57% |
 | GRIS **Transition** | -- | -- |
 
 *Nota: 'Structural Strength' en Opportunity Map identifica posicion relativa en el eje Structural. No implica liderazgo confirmado por SLPM.*
@@ -186,8 +186,8 @@
 - **Sector Lider:** Consumer Discretionary
   - *Nota: El SLPM selecciona al lider combinando Tactical, Structural, LIS, Breadth y Persistence. No es simplemente el sector con mayor Structural Score.*
 - **Estado:** UNRESOLVED -> Transition
-  - *Cobertura de líderes insuficiente (<30%). El sector lider (Consumer Discretionary) esta en fase RANGE, lo que impide calcular metricas de lideres.*
-- **Scores oficiales:** T=+0.01 | S=-0.06 | LIS=+0.00 | Eff Breadth=0.50 | Persist=8% | LQ: P=+0.01 C=+0.000 S=-0.06 Cf=+0.00
+  - *Cobertura de líderes insuficiente (<30%). El sector lider (Consumer Discretionary) esta en fase DISTRIBUTION, lo que impide calcular metricas de lideres.*
+- **Scores oficiales:** T=-0.03 | S=-0.07 | LIS=+0.00 | Eff Breadth=0.50 | Persist=8% | LQ: P=-0.03 C=+0.000 S=-0.07 Cf=+0.00
 
 ### Leader Breadth & Health
 - **Leader Breadth (RS ratio > 1.0):** 0%
@@ -220,69 +220,77 @@
 | Ticker | RS | RS Mom | Flujo (z) | WLS | Fase Wyckoff | Spring | SOS |
 |--------|----|--------|-----------|-----|---------------|--------|-----|
 *RS = RS Level (precio acción / precio sector). RS Mom = RS Momentum (cambio del RS en 20 días). El WLS combina ambas con pesos 35% y 25% respectivamente.*
-| MSFT | 2.74 | 26.24% | 3.10 | 1.96 | ACCUMULATION |  | ✓ |
-| ORCL | 0.80 | 2.07% | 1.69 | 0.81 | ACCUMULATION |  |  |
-| PANW | 1.95 | 0.11% | 0.40 | 0.60 | ACCUMULATION |  |  |
+| MSFT | 2.64 | 19.48% | 2.37 | 2.06 | ACCUMULATION |  | ✓ |
+| PANW | 1.96 | 4.12% | 0.91 | 1.22 | MARKUP |  |  |
+| PLTR | 0.87 | 14.89% | 1.97 | 1.22 | ACCUMULATION |  | ✓ |
 
 ## Sector: XLF (MARKUP)
 | Ticker | RS | RS Mom | Flujo (z) | WLS | Fase Wyckoff | Spring | SOS |
 |--------|----|--------|-----------|-----|---------------|--------|-----|
 *RS = RS Level (precio acción / precio sector). RS Mom = RS Momentum (cambio del RS en 20 días). El WLS combina ambas con pesos 35% y 25% respectivamente.*
-| MA | 9.95 | 4.85% | 0.21 | 0.79 | MARKUP |  |  |
-| BRK-B | 8.94 | -0.90% | 0.46 | 0.39 | ACCUMULATION |  |  |
-| WFC | 1.53 | -1.68% | 0.10 | 0.34 | MARKUP |  |  |
+| V | 6.39 | 1.61% | 0.27 | 0.62 | MARKUP |  |  |
+| JPM | 6.18 | 2.04% | 0.26 | 0.40 | ACCUMULATION |  |  |
+| MA | 9.87 | 4.12% | 0.12 | 0.27 | ACCUMULATION |  |  |
 
-## Sector: XLV (ACCUMULATION)
+## Sector: XLV (MARKUP)
 | Ticker | RS | RS Mom | Flujo (z) | WLS | Fase Wyckoff | Spring | SOS |
 |--------|----|--------|-----------|-----|---------------|--------|-----|
 *RS = RS Level (precio acción / precio sector). RS Mom = RS Momentum (cambio del RS en 20 días). El WLS combina ambas con pesos 35% y 25% respectivamente.*
-| TMO | 3.54 | 10.18% | 0.09 | 1.12 | ACCUMULATION |  |  |
-| ABT | 0.66 | 11.88% | 0.19 | 1.03 | RANGE |  |  |
-| PFE | 0.15 | 6.94% | 0.28 | 0.42 | RANGE |  |  |
+| AMGN | 2.41 | 7.22% | 0.72 | 1.12 | ACCUMULATION |  |  |
+| PFE | 0.16 | 8.59% | 1.05 | 0.93 | RANGE | ✓ |  |
+| GILD | 0.83 | 0.62% | 1.08 | 0.67 | ACCUMULATION |  |  |
+
+## Sector: XLE (ACCUMULATION)
+| Ticker | RS | RS Mom | Flujo (z) | WLS | Fase Wyckoff | Spring | SOS |
+|--------|----|--------|-----------|-----|---------------|--------|-----|
+*RS = RS Level (precio acción / precio sector). RS Mom = RS Momentum (cambio del RS en 20 días). El WLS combina ambas con pesos 35% y 25% respectivamente.*
+| MPC | 5.34 | 9.16% | -0.25 | 1.33 | MARKUP |  |  |
+| VLO | 5.28 | 8.34% | -0.17 | 1.08 | ACCUMULATION |  |  |
+| PSX | 3.52 | 7.22% | -0.43 | 0.71 | ACCUMULATION |  |  |
 
 ## Sector: XLI (MARKUP)
 | Ticker | RS | RS Mom | Flujo (z) | WLS | Fase Wyckoff | Spring | SOS |
 |--------|----|--------|-----------|-----|---------------|--------|-----|
 *RS = RS Level (precio acción / precio sector). RS Mom = RS Momentum (cambio del RS en 20 días). El WLS combina ambas con pesos 35% y 25% respectivamente.*
-| ETN | 2.39 | 7.13% | 1.81 | 1.45 | RANGE |  | ✓ |
-| GE | 2.01 | -1.31% | 0.20 | 0.74 | MARKUP |  |  |
-| BA | 1.27 | 0.85% | 1.74 | 0.72 | RANGE |  |  |
+| ETN | 2.39 | 9.51% | 1.45 | 1.49 | RANGE |  | ✓ |
+| GE | 2.02 | 0.59% | 0.55 | 0.91 | MARKUP |  |  |
+| BA | 1.27 | 0.16% | 1.52 | 0.60 | RANGE |  |  |
+
+## Sector: XLB (ACCUMULATION)
+| Ticker | RS | RS Mom | Flujo (z) | WLS | Fase Wyckoff | Spring | SOS |
+|--------|----|--------|-----------|-----|---------------|--------|-----|
+*RS = RS Level (precio acción / precio sector). RS Mom = RS Momentum (cambio del RS en 20 días). El WLS combina ambas con pesos 35% y 25% respectivamente.*
+| NUE | 5.27 | 17.70% | 1.26 | 1.34 | ACCUMULATION |  | ✓ |
+| VMC | 5.48 | -6.01% | 0.46 | 0.93 | MARKUP |  |  |
+| ECL | 5.45 | -0.93% | 0.32 | 0.64 | ACCUMULATION |  |  |
 
 ## Sector: XLU (ACCUMULATION)
 | Ticker | RS | RS Mom | Flujo (z) | WLS | Fase Wyckoff | Spring | SOS |
 |--------|----|--------|-----------|-----|---------------|--------|-----|
 *RS = RS Level (precio acción / precio sector). RS Mom = RS Momentum (cambio del RS en 20 días). El WLS combina ambas con pesos 35% y 25% respectivamente.*
-| CEG | 6.17 | 12.82% | 0.38 | 1.81 | RANGE |  |  |
-| VST | 3.52 | 1.28% | 0.30 | 1.68 | MARKUP |  |  |
-| D | 1.55 | 1.36% | -0.42 | 0.98 | MARKUP |  |  |
-
-## Sector: XLRE (ACCUMULATION)
-| Ticker | RS | RS Mom | Flujo (z) | WLS | Fase Wyckoff | Spring | SOS |
-|--------|----|--------|-----------|-----|---------------|--------|-----|
-*RS = RS Level (precio acción / precio sector). RS Mom = RS Momentum (cambio del RS en 20 días). El WLS combina ambas con pesos 35% y 25% respectivamente.*
-| CBRE | 3.29 | 3.47% | 0.43 | 0.99 | ACCUMULATION |  |  |
-| AMT | 3.83 | 4.51% | 0.26 | 0.88 | ACCUMULATION |  |  |
-| DLR | 4.23 | 7.62% | 0.18 | 0.32 | DISTRIBUTION |  |  |
+| CEG | 6.06 | 14.42% | 0.00 | 1.47 | RANGE |  |  |
+| D | 1.57 | 2.66% | -0.28 | 1.07 | ACCUMULATION |  |  |
+| SO | 2.11 | -0.70% | -0.58 | 0.36 | ACCUMULATION | ✓ |  |
 
 ## Sentimiento de Opciones (OMS v2.0)
-- **PCR Total:** 0.91 (EWMA(5): N/D - historial insuficiente)
-- **PCR Indices:** 1.01 | **PCR Acciones:** 0.63 | **PCR ETP:** 1.05
-- **PCR VIX:** 0.35 | **PCR SPX:** 1.10
+- **PCR Total:** 0.80 (EWMA(5): N/D - historial insuficiente)
+- **PCR Indices:** 0.88 | **PCR Acciones:** 0.55 | **PCR ETP:** 1.04
+- **PCR VIX:** 0.67 | **PCR SPX:** 0.90
 - **Institutional Hedge Ratio:** 1.60 (Equilibrado, bandas: <1.2 Especulacion, 1.2-1.6 Equilibrado, >1.6 Cobertura institucional)
-- **Volumen en Indices:** 42.3% del total
-- **Put Share:** 47.7% | **Call Share:** 52.3%
-- **Volume PCR (calculado):** 0.91 | **OI PCR:** 0.75
-- **Ultimo dato:** 2026-07-31 (desfase: 3 dias)
+- **Volumen en Indices:** 45.6% del total
+- **Put Share:** 44.4% | **Call Share:** 55.6%
+- **Volume PCR (calculado):** 0.80 | **OI PCR:** 0.76
+- **Ultimo dato:** 2026-08-03 (desfase: 1 dias)
 
-*Fuente: CBOE Official Data. Timestamp: 2026-08-03 21:06:37.*
+*Fuente: CBOE Official Data. Timestamp: 2026-08-04 21:16:34.*
 
 ## Market Transition Engine (MTE v1.0)
 - **Escenario (UNCONFIRMED):** STAGFLATION (Signal Consistency: 1) - *No se considera confirmado.*
 *Nota: Signal Consistency representa la distancia a los umbrales y el consenso entre motores. No esta calibrada historicamente.*
-- **Market Stress Index (MSI):** 29
+- **Market Stress Index (MSI):** 35
 - **Inflation Pressure Index (IPI):** 79
-- **Sector Rotation Score:** -0.13
-- **Safe Haven Score:** -0.25
+- **Sector Rotation Score:** -0.05
+- **Safe Haven Score:** 0.10
 - **Credit Stress Score:** 0.07 (orientacion: positivo = mayor estres crediticio)
 - **Inflation Pressure Score:** 0.57
 
@@ -290,10 +298,10 @@
 > *Indicadores de confirmacion. No modifican el macro_score.*
 
 - **10Y-3M Spread:** +0.76%
-- **Realized Vol (21d):** 13.30%
-- **Realized Vol (60d):** 13.76%
-- **VRP Proxy (VIX - RV21):** +2.56%
-- **VRP Proxy (VIX - RV60):** +2.10%
+- **Realized Vol (21d):** 14.34%
+- **Realized Vol (60d):** 14.22%
+- **VRP Proxy (VIX - RV21):** +2.16%
+- **VRP Proxy (VIX - RV60):** +2.28%
 - **Funding & Liquidity Stress (FLS):** 69/100 (3/5 componentes en estres)
   - Desglose:
     OK SOFR: -0.52
@@ -301,27 +309,27 @@
     WARN RRP: 0.60
     WARN CP: 0.79
     OK Discount: 0.00
-- **Advance/Decline Net:** +9 (57 avances / 48 descensos)
-- **New Highs/Lows (mercado):** 3 maximos / 0 minimos (NH-NL: +3)
-- **A/D Line (acumulada):** 5973
+- **Advance/Decline Net:** +48 (76 avances / 28 descensos)
+- **New Highs/Lows (mercado):** 7 maximos / 0 minimos (NH-NL: +7)
+- **A/D Line (acumulada):** 5961
 
 ### Cross-Asset Ratios
 | Ratio | Valor | Delta 20d | Z-Score (60d) |
 |-------|-------|-----------|---------------|
-| Copper/Gold | 0.0016 | +7.1% | +0.48 |
-| TLT/IEF | 0.8855 | -2.4% | -1.76 |
-| DXY/EEM | 1.5543 | +4.1% | +0.37 |
-| HYG/LQD | 0.7474 | +1.7% | +1.61 |
-| KRE/SPY | 0.1017 | +1.1% | +0.50 |
-| SMH/SPY | 0.7199 | -10.5% | -0.54 |
-| IYT/SPY | 0.1133 | -2.6% | -0.32 |
-| XLE/SPY | 0.0776 | +9.7% | +0.12 |
-| XLU/SPY | 0.0585 | -2.9% | -0.59 |
-| XLV/SPY | 0.2141 | -0.7% | +0.26 |
-| XLP/SPY | 0.1120 | +0.1% | -0.31 |
+| Copper/Gold | 0.0016 | +7.7% | +0.54 |
+| TLT/IEF | 0.8882 | -1.5% | -1.43 |
+| DXY/EEM | 1.5135 | -1.7% | -0.02 |
+| HYG/LQD | 0.7451 | +0.8% | +1.32 |
+| KRE/SPY | 0.1009 | +0.5% | +0.31 |
+| SMH/SPY | 0.7464 | -4.0% | -0.37 |
+| IYT/SPY | 0.1139 | -2.3% | -0.21 |
+| XLE/SPY | 0.0759 | +3.8% | -0.09 |
+| XLU/SPY | 0.0572 | -6.4% | -1.07 |
+| XLV/SPY | 0.2102 | -4.4% | +0.03 |
+| XLP/SPY | 0.1107 | -2.5% | -0.66 |
 
 ## Actividad en ATS - Dark Pools (FINRA v1.0)
-**DATOS OBSOLETOS:** Ultimo dato con 21 dias de antiguedad. No se usa para clasificacion actual. Contexto historico solamente.
+**DATOS OBSOLETOS:** Ultimo dato con 22 dias de antiguedad. No se usa para clasificacion actual. Contexto historico solamente.
 
 - **% Volumen en ATS medio:** 20.60% (139/139 tickers)
 - **Z-Scores por ventana:**
