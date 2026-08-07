@@ -67,7 +67,7 @@ def _backfill_history(hist, finra):
     needed = 104 - len(hist)
     if needed <= 0:
         return hist
-    MAX_PER_RUN = 5
+    MAX_PER_RUN = 50
     to_download = min(needed, MAX_PER_RUN)
     latest_week = finra.get_latest_week()
     if not latest_week:
