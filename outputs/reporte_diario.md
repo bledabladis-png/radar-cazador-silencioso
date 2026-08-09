@@ -1,5 +1,5 @@
 # MACRO SECTORIAL - Reporte Diario
-**Fecha:** 2026-08-08 22:10:21
+**Fecha:** 2026-08-09 21:21:28
 **Modelo:** v4.2 | Pesos: v3 | Indicadores: v2
 
 ## Resumen de Regimenes
@@ -13,8 +13,8 @@
 ### Data Freshness
 | Fuente | Ultimo dato | Antiguedad | Estado | Data Conf |
 |--------|-------------|------------|--------|----------|
-| CBOE (Opciones) | 2026-08-07 | 1 dias | CURRENT | Alta |
-| FINRA (Dark Pools) | 2026-07-13 | 26 dias | ARCHIVAL | Baja |
+| CBOE (Opciones) | 2026-08-07 | 2 dias | CURRENT | Alta |
+| FINRA (Dark Pools) | 2026-07-13 | 27 dias | ARCHIVAL | Baja |
 | FRED (Macro) | Semanal | Variable | RECENT | Alta |
 | Yahoo Finance (Precios) | Diario | < 1 dia | CURRENT | Alta |
 
@@ -23,8 +23,8 @@
 |--------|-----------|------------|
 | Sectores | 11/11 (100%) | - |
 | Acciones lideres | 60 tickers | - |
-| Opciones (CBOE) | - | 1 dias |
-| Dark Pool (FINRA) | - | 26 dias |
+| Opciones (CBOE) | - | 2 dias |
+| Dark Pool (FINRA) | - | 27 dias |
 
 ### INFO Cross-Module: MIXED
 **Mensaje:** Sin direccion clara entre los modulos.
@@ -97,9 +97,9 @@
 ## Momentum de Precio - Otros Activos (20 dias)
 | # | Activo | Retorno 20d (%) |
 |---|--------|------------------|
-| 1 | GC=F | 8.60% |
+| 1 | GC=F | 10.08% |
 | 2 | SCHC | 5.96% |
-| 3 | HG=F | 5.41% |
+| 3 | HG=F | 5.74% |
 | 4 | EWJ | 4.51% |
 | 5 | ^STOXX50E | 4.03% |
 | 6 | ^GSPC | 3.22% |
@@ -117,20 +117,20 @@
 | # | Activo | Flujo (z-score) |
 |---|--------|------------------|
 | 1 | EWX | 0.77 |
-| 2 | GC=F | 0.59 |
-| 3 | HG=F | 0.49 |
-| 4 | IEF | 0.43 |
-| 5 | TLT | 0.43 |
-| 6 | CL=F | 0.37 |
-| 7 | SCHC | 0.36 |
-| 8 | HYG | 0.34 |
-| 9 | BZ=F | 0.26 |
-| 10 | EWJ | 0.25 |
-| 11 | EEM | 0.20 |
-| 12 | LQD | 0.13 |
-| 13 | ^NDX | 0.11 |
-| 14 | ELD | 0.05 |
-| 15 | NG=F | -0.06 |
+| 2 | GC=F | 0.55 |
+| 3 | IEF | 0.43 |
+| 4 | TLT | 0.43 |
+| 5 | SCHC | 0.36 |
+| 6 | CL=F | 0.35 |
+| 7 | HYG | 0.34 |
+| 8 | EWJ | 0.25 |
+| 9 | BZ=F | 0.25 |
+| 10 | EEM | 0.20 |
+| 11 | LQD | 0.13 |
+| 12 | ^NDX | 0.11 |
+| 13 | ELD | 0.05 |
+| 14 | NG=F | -0.06 |
+| 15 | VLUE | -0.08 |
 ## Structural Ranking (Fortaleza de largo plazo)
 | # | Sector | Structural | Tactical | Persist | Agreement | Signal Consistency |
 |---|--------|------------|----------|---------|-----------|------------|
@@ -261,9 +261,9 @@
 - **Volumen en Indices:** 40.1% del total
 - **Put Share:** 43.3% | **Call Share:** 56.7%
 - **Volume PCR (calculado):** 0.76 | **OI PCR:** 0.76
-- **Ultimo dato:** 2026-08-07 (desfase: 1 dias)
+- **Ultimo dato:** 2026-08-07 (desfase: 2 dias)
 
-*Fuente: CBOE Official Data. Timestamp: 2026-08-08 20:33:43.*
+*Fuente: CBOE Official Data. Timestamp: 2026-08-09 20:36:28.*
 
 ## Market Transition Engine (MTE v1.0)
 - **Escenario (UNCONFIRMED):** STAGFLATION (Signal Consistency: 1) - *No se considera confirmado.*
@@ -297,7 +297,7 @@
 ### Cross-Asset Ratios
 | Ratio | Valor | Delta 20d | Z-Score (60d) |
 |-------|-------|-----------|---------------|
-| Copper/Gold | 0.0015 | -2.9% | +0.03 |
+| Copper/Gold | 0.0015 | -3.9% | -0.04 |
 | TLT/IEF | 0.8883 | -1.3% | -1.41 |
 | DXY/EEM | 1.5174 | -3.4% | +0.00 |
 | HYG/LQD | 0.7472 | +0.6% | +1.40 |
@@ -310,13 +310,14 @@
 | XLP/SPY | 0.1101 | -2.5% | -0.77 |
 
 ## Actividad en ATS - Dark Pools (FINRA v1.0)
-**DATOS OBSOLETOS:** Ultimo dato con 26 dias de antiguedad. No se usa para clasificacion actual. Contexto historico solamente.
+**DATOS OBSOLETOS:** Ultimo dato con 27 dias de antiguedad. No se usa para clasificacion actual. Contexto historico solamente.
 
 - **% Volumen en ATS medio:** 20.60% (139/139 tickers)
 - **Z-Scores por ventana:**
   - 13w: Z=-2.77, Estado=Distribucion extrema
   - 26w: Z=-3.36, Estado=Distribucion extrema
   - 52w: Z=-3.80, Estado=Distribucion extrema
+  - 104w: Z=-2.04, Estado=Distribucion fuerte
 - **Semana FINRA:** 2026-07-13
 
 **Mayor % de volumen en ATS:**
