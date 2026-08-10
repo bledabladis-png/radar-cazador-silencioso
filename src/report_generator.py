@@ -486,7 +486,7 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
         lines.append(f"- **PCR VIX:** {pcr_data.get('vix_pcr', np.nan):.2f} | "
                      f"**PCR SPX:** {pcr_data.get('spx_pcr', np.nan):.2f}\n")
         lines.append(f"- **Institutional Hedge Ratio:** {pcr_data.get('ihr', np.nan):.2f} "
-                     f"(Equilibrado, bandas: <1.2 Especulacion, 1.2-1.6 Equilibrado, >1.6 Cobertura institucional)\n")
+                     f"({pcr_data.get("ihr_state", "N/A")}, bandas: <1.2 Especulacion, 1.2-1.6 Equilibrado, >1.6 Cobertura institucional)\n")
         lines.append(f"- **Volumen en Indices:** {pcr_data.get('index_volume_share', np.nan):.1%} del total\n")
         lines.append(f"- **Put Share:** {pcr_data.get('put_share', np.nan):.1%} | "
                      f"**Call Share:** {pcr_data.get('call_share', np.nan):.1%}\n")
