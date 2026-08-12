@@ -22,9 +22,12 @@ Las constantes son importadas por todos los modulos del sistema.
 | CACHE_VALIDATE_TRADING_DATE | True |
 | DARKPOOL_FULL_HISTORY_WEEKS | 104 |
 | DARKPOOL_MIN_HISTORY_WEEKS | 13 |
+| DARKPOOL_THRESHOLDS | { |
 | DARKPOOL_ZSCORE_WINDOWS | (13, 26, 52, 104) |
 | DOWNLOAD_BATCH_SIZE | 5 |
 | EXPECTED_SECTOR_COUNT | 11 |
+| FINANCIAL_CONDITIONS_THRESHOLDS | { |
+| FINANCIAL_CONDITIONS_WEIGHTS | {'vix': 0.40, 'credit': 0.30, 'dollar': 0.15, 'curve': 0.15} |
 | FINRA_REQUEST_TIMEOUT | 60 |
 | FLOW_CMF_WINDOW | 20 |
 | FLOW_EWM_SPAN | 10 |
@@ -32,6 +35,7 @@ Las constantes son importadas por todos los modulos del sistema.
 | FRESHNESS_CURRENT_DAYS | 7 |
 | FRESHNESS_RECENT_DAYS | 14 |
 | FRESHNESS_STALE_DAYS | 21 |
+| IHR_THRESHOLDS | { |
 | MAX_NAN_RATIO | 0.10 |
 | MAX_RETRIES | 3 |
 | MIN_SECTOR_COVERAGE | 0.80 |
@@ -45,6 +49,7 @@ Las constantes son importadas por todos los modulos del sistema.
 | PCR_CONFIDENCE_HISTORY_DAYS | 60 |
 | PCR_FULL_HISTORY_DAYS | 252 |
 | PCR_MIN_HISTORY_DAYS | 20 |
+| PCR_THRESHOLDS | { |
 | PERSISTENCE_LOOKBACK | 12 |
 | REQUEST_TIMEOUT | 30 |
 | RETRY_BACKOFF_MULTIPLIER | 2 |

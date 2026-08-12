@@ -30,4 +30,5 @@ Los datos de FINRA pueden tener un desfase de varias semanas. Si la antiguedad s
 |---|---|
 | DARKPOOL_FULL_HISTORY_WEEKS | 104 |
 | DARKPOOL_MIN_HISTORY_WEEKS | 13 |
+| DARKPOOL_THRESHOLDS | { |
 | DARKPOOL_ZSCORE_WINDOWS | (13, 26, 52, 104) |

@@ -1,11 +1,11 @@
-﻿import pandas as pd
+import pandas as pd
 import numpy as np
 import os
 from datetime import datetime
 from config.tickers import SECTOR_NAMES
 from config.index_tickers import INDEX_CONFIG
 
-MODEL_VERSION = "4.2"
+MODEL_VERSION = "4.3"
 WEIGHTS_VERSION = "3"
 INDICATORS_VERSION = "2"
 

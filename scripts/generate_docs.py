@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 # scripts/generate_docs.py - Genera documentacion automatica desde el codigo fuente (v3 - completa)
 import os
 import re
@@ -60,7 +60,7 @@ def generate_readme():
         ('09_auditorias.md', 'Scripts de Auditoria', 'validacion, Monte Carlo, ablacion, correlaciones'),
     ]
     lines = [
-        '# Radar de Rotacion Sectorial - Documentacion v4.2',
+        '# Radar de Rotacion Sectorial - Documentacion v4.3',
         f'**Generado automaticamente:** {datetime.now().strftime("%Y-%m-%d %H:%M")}',
         '',
         '## Indice',
@@ -94,9 +94,11 @@ def template(proposito, arquitectura, formulas, salidas, limitaciones=''):
 def generate_arquitectura():
     proposito = "El Radar de Rotacion Sectorial es un sistema informativo diario que analiza flujos institucionales, contexto macro, estructura de precios (Wyckoff) y estructura del mercado de opciones para producir rankings, tablas y analisis para el gestor humano."
     arquitectura = """
-- un.py: orquestador principal.
+- 
+un.py: orquestador principal.
 - config/: settings, tickers, weights.
-- egimes/: condiciones financieras, liquidez, volatilidad, macro, sector.
+- 
+egimes/: condiciones financieras, liquidez, volatilidad, macro, sector.
 - indicators/: todos los indicadores y scores.
 - src/: carga de datos, generacion de reporte, utilidades.
 - data/: providers (yahoo, cboe, finra, fred), datos macro manuales.

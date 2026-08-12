@@ -1,5 +1,5 @@
-# Radar de Rotacion Sectorial - Documentacion v4.2
-**Generado automaticamente:** 2026-08-12 18:07
+# Radar de Rotacion Sectorial - Documentacion v4.3
+**Generado automaticamente:** 2026-08-12 18:45
 
 ## Indice
 
