@@ -4,6 +4,7 @@ from .stooq import StooqProvider
 from .polygon import PolygonProvider
 import pandas as pd
 import os
+from pathlib import Path
 
 class DataRouter:
     def __init__(self):
@@ -22,10 +23,30 @@ class DataRouter:
                 try:
                     print(f"Usando {provider.get_name()} para datos de mercado...")
                     return provider.get_prices(tickers, period=period)
-                except:
-                    print(f"{provider.get_name()} fallo, intentando siguiente...")
+                except Exception as e:
+                    print(f"{provider.get_name()} fallo: {e}; intentando siguiente...")
                     continue
-        raise RuntimeError("Ningun proveedor de datos de mercado disponible.")
+        # Fallback global
+        print("Todos los proveedores fallaron. Intentando cache local global...")
+        return self._load_cache(tickers)
+
+    def _load_cache(self, tickers):
+        cache_path = Path("data/market_data_cache.csv")
+        if cache_path.exists():
+            data = pd.read_csv(cache_path, header=[0,1], index_col=0, parse_dates=True)
+            missing = [t for t in tickers if t not in data.columns.get_level_values(1)]
+            if missing:
+                print(f"  Cache no contiene {len(missing)} tickers.")
+                # Filtrar a los disponibles
+                available = [t for t in tickers if t in data.columns.get_level_values(1)]
+                if available:
+                    subset = data.loc[:, data.columns.get_level_values(1).isin(available)]
+                    print(f"  Usando {len(available)} tickers del cache.")
+                    return subset
+                raise RuntimeError("Cache no tiene tickers solicitados.")
+            print(f"  Cache local cargado: {len(data)} filas.")
+            return data
+        raise RuntimeError("Ningun proveedor disponible y no hay cache local.")
 
     def get_treasury_data(self):
         for name in ["fred", "yahoo"]:
@@ -38,7 +59,6 @@ class DataRouter:
         return None
 
     def get_fed_data(self):
-        # Primero intentar cargar desde archivos macro manuales locales
         macro_dir = 'data/macro_manual'
         if os.path.exists(macro_dir):
             try:
@@ -48,8 +68,7 @@ class DataRouter:
                     return df
             except Exception:
                 pass
-        
-        # Fallback a proveedores externos
+
         for name in ["fred", "yahoo"]:
             provider = self.providers[name]
             if provider.is_available():
@@ -80,9 +99,6 @@ class DataRouter:
             return None
 
         combined = pd.concat(dfs, axis=1)
-        # Reordenar columnas para que las de liquidez queden con nombres esperados
-        # El liquidity.py espera: fed_balance, reverse_repo, sofr, fed_funds
-        # Los archivos son: walcl.csv (balance), rrpp.csv (reverse repo), sofr.csv, discount_rate.csv (fed funds proxy)
         rename_map = {}
         for col in combined.columns:
             if col.startswith('walcl_'):
@@ -96,8 +112,6 @@ class DataRouter:
             elif col.startswith('iorb_'):
                 rename_map[col] = 'iorb'
         combined.rename(columns=rename_map, inplace=True)
-        # Eliminar columnas con prefijo no reconocido que no necesitamos para liquidez
-        # Mantener solo las que son de liquidez
         target_cols = ['fed_balance', 'reverse_repo', 'sofr', 'fed_funds', 'iorb']
         existing = [c for c in target_cols if c in combined.columns]
         if existing:
