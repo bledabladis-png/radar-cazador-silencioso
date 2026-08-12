@@ -99,7 +99,7 @@ def compute_wls_for_index(df_metrics):
     df_metrics['stab_z'] = robust_intra(df_metrics['stability']).clip(-3, 3)
 
     df_metrics['wls'] = 0.35*df_metrics['rs_z'] + 0.25*df_metrics['flow_z_norm'] + 0.25*df_metrics['rws_z'] + 0.10*df_metrics['stab_z']
-    df_metrics['wls'] *= 1 + 0.05 * np.minimum(df_metrics['persistence_10d'] / 10, 1.0)
+    df_metrics['wls'] *= 1 + 0.05 * np.minimum(df_metrics['persistence_10d'], 1.0)
 
     return df_metrics.sort_values('wls', ascending=False)
 

@@ -28,10 +28,10 @@ def compute_stock_metrics(df_market, df_stocks, etf_ticker, stock_list):
         flow_z = robust_zscore(flow_raw, window=60)
         flow_signal = flow_z.ewm(span=5).mean().iloc[-1]
 
-        flow_positive = (flow_z > 0).astype(int)
-        persistence_10d = flow_positive.rolling(10, min_periods=10).sum().iloc[-1]
+        ret_positive = (ret > 0).astype(int)
+        persistence_10d = ret_positive.rolling(10, min_periods=10).mean().iloc[-1]
         if pd.isna(persistence_10d):
-            persistence_10d = 0
+            persistence_10d = 0.5
 
         try:
             ticker_df = pd.DataFrame({
@@ -111,7 +111,7 @@ def compute_wls(df_metrics, weights=None):
         w_stab = weights.get('stability', 0.10)
 
     df['wls'] = w_rs*df['rs_z'] + w_flow*df['flow_z_norm'] + w_struct*df['rws_z'] + w_stab*df['stab_z']
-    df['wls'] *= (1 + 0.05 * np.minimum(df['persistence_10d'] / 10, 1.0))
+    df['wls'] *= (1 + 0.05 * np.minimum(df['persistence_10d'], 1.0))
     df['sector_rank_pct'] = df.groupby('sector')['wls'].rank(pct=True)
 
     # leader_confidence eliminado (no se usaba)
