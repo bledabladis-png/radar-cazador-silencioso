@@ -135,7 +135,6 @@ def validate_windows():
 # ============================================================
 # WYCKOFF (v4.0 audit)
 # ============================================================
-WYCKOFF_RANGE_WINDOW = 20
 WYCKOFF_VOLUME_WINDOW = 20
 WYCKOFF_TREND_FAST_MA = 50
 WYCKOFF_TREND_SLOW_MA = 200
@@ -150,10 +149,6 @@ WYCKOFF_THRESHOLD_DISTRIBUTION = -0.30
 WYCKOFF_ATR_WINDOW = 20
 WYCKOFF_VOLUME_ZSCORE_WINDOW = 60
 # Pesos calibrados por ablacion (importancia empirica)
-WYCKOFF_WEIGHT_TREND = 0.35
-WYCKOFF_WEIGHT_RANGE = 0.25
-WYCKOFF_WEIGHT_VOLUME = 0.20
-WYCKOFF_WEIGHT_EFFORT = 0.20
 
 # v4.2: pesos para scores estructural y tactico
 WYCKOFF_STRUCT_WEIGHT_TREND = 0.60

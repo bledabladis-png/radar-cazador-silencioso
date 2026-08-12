@@ -6,11 +6,10 @@ No genera senales de trading, solo informacion complementaria.
 import pandas as pd
 import numpy as np
 from config.settings import (
-    WYCKOFF_RANGE_WINDOW, WYCKOFF_VOLUME_WINDOW,
+    WYCKOFF_VOLUME_WINDOW,
     WYCKOFF_TREND_FAST_MA, WYCKOFF_TREND_SLOW_MA,
     WYCKOFF_THRESHOLD_MARKUP, WYCKOFF_THRESHOLD_ACCUMULATION, WYCKOFF_THRESHOLD_DISTRIBUTION,
     WYCKOFF_ATR_WINDOW, WYCKOFF_VOLUME_ZSCORE_WINDOW,
-    WYCKOFF_WEIGHT_TREND, WYCKOFF_WEIGHT_RANGE, WYCKOFF_WEIGHT_VOLUME, WYCKOFF_WEIGHT_EFFORT,
     WYCKOFF_STRUCT_WEIGHT_TREND, WYCKOFF_STRUCT_WEIGHT_COMPRESSION,
     WYCKOFF_TACT_WEIGHT_VOLUME, WYCKOFF_TACT_WEIGHT_EFFORT,
     WYCKOFF_COMBINED_STRUCT_WEIGHT, WYCKOFF_COMBINED_TACT_WEIGHT
@@ -30,12 +29,6 @@ def atr_normalized(df, ticker, window=WYCKOFF_ATR_WINDOW):
     ], axis=1).max(axis=1)
     atr = tr.rolling(window).mean()
     return atr / close
-
-def range_width(df, ticker, window=WYCKOFF_RANGE_WINDOW):
-    high = get_col(df, ticker, 'High')
-    low = get_col(df, ticker, 'Low')
-    close = get_col(df, ticker, 'Close')
-    return (high.rolling(window).max() - low.rolling(window).min()) / close
 
 def relative_volume(df, ticker, window=WYCKOFF_VOLUME_WINDOW):
     volume = get_col(df, ticker, 'Volume')
@@ -83,7 +76,7 @@ def detect_sos(df, ticker):
 
 def wyckoff_structural_score(df, ticker):
     trend = trend_component(df, ticker)
-    compression = range_width(df, ticker)
+    compression = atr_normalized(df, ticker)
     t_norm = np.tanh(robust_zscore(trend))
     c_norm = -np.tanh(robust_zscore(compression))
     score = WYCKOFF_STRUCT_WEIGHT_TREND * t_norm + WYCKOFF_STRUCT_WEIGHT_COMPRESSION * c_norm
