@@ -3,6 +3,7 @@ import numpy as np
 import os
 from datetime import datetime
 from config.tickers import SECTOR_NAMES
+from config.index_tickers import INDEX_CONFIG
 
 MODEL_VERSION = "4.2"
 WEIGHTS_VERSION = "3"
@@ -62,7 +63,7 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
                           slpm_v12_data=None, tactical_scores=None, structural_scores=None,
                           sector_persistence=None, signal_agreements=None, signal_agreements_display=None,
                           cross_module_conflict=None, shock_sensitivities=None, price_flow_divergences=None,
-                          dc_summary="", all_signals=None, real_liq_prev=None, output_path='outputs/reporte_diario.md'):
+                          dc_summary="", all_signals=None, real_liq_prev=None, index_leaders=None, output_path='outputs/reporte_diario.md'):
     lines = []
     lines.append("# MACRO SECTORIAL - Reporte Diario\n")
     lines.append(f"**Fecha:** {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
@@ -659,6 +660,24 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
     # Solo presenta estados oficiales de los módulos. No infiere causas.
     # Máximo 3 elementos, sin especulación, sin redundancias.
     # =====================================================================
+        # =====================================================================
+    # INDICES INTERNACIONALES — OPORTUNIDADES DE ACUMULACION
+    # =====================================================================
+    lines.append("\n## Indices Internacionales — Oportunidades de Acumulacion\n")
+    lines.append("*Nota: Los componentes se obtienen de ETFs proxy que replican el indice de referencia. Solo se muestran indices en fase ACCUMULATION.*\n\n")
+    if index_leaders:
+        for nombre, top5 in index_leaders.items():
+            if top5 is None or top5.empty:
+                continue
+            lines.append(f"### {nombre}\n")
+            lines.append("| # | Ticker | RS | RS Mom | Flujo (z) | WLS | Fase Wyckoff |\n")
+            lines.append("|---|--------|----|--------|-----------|-----|---------------|\n")
+            for i, (_, row) in enumerate(top5.iterrows(), 1):
+                lines.append(f"| {i} | {row['ticker']} | {row['rs']:.2f} | {row['rs_mom']:.2%} | {row['flow_z']:.2f} | {row['wls']:.2f} | {row['wyckoff_phase']} |\n")
+            lines.append("\n")
+    else:
+        lines.append("*Ningun indice en fase de acumulacion en esta ejecucion.*\n\n")
+
     lines.append("## Estado Actual — Síntesis de Señales\n\n")
 
     resumen = []

@@ -412,14 +412,18 @@ def main():
     indices_en_acumulacion = [nombre for nombre, fase in index_phases.items() if fase == 'ACCUMULATION']
     if indices_en_acumulacion:
         print(f"  Indices en acumulacion: {', '.join(indices_en_acumulacion)}")
-        try:
-            df_index_stocks = download_stock_prices()
-            index_leaders = select_index_leaders(df_market, df_index_stocks, indices_en_acumulacion, index_data)
-            for nombre, top5 in index_leaders.items():
-                print(f"    {nombre}: {len(top5)} empresas seleccionadas")
-        except Exception as e:
-            print(f"    Error al calcular lideres de indices: {e}")
-            index_leaders = {}
+        df_index_stocks = download_stock_prices()
+        index_leaders = {}
+        for nombre in indices_en_acumulacion:
+            try:
+                leaders_single = select_index_leaders(None, df_index_stocks, [nombre])
+                if nombre in leaders_single and not leaders_single[nombre].empty:
+                    index_leaders[nombre] = leaders_single[nombre]
+                    print(f"    {nombre}: {len(leaders_single[nombre])} empresas seleccionadas")
+                else:
+                    print(f"    {nombre}: sin lideres disponibles")
+            except Exception as e:
+                print(f"    {nombre}: error al calcular lideres - {e}")
     else:
         print("  Ningun indice en fase de acumulacion.")
         index_leaders = {}
@@ -553,7 +557,7 @@ def main():
                           shock_sensitivities=shock_sensitivities,
                           price_flow_divergences=price_flow_divergences,
                           dc_summary=dc_summary,
-                          real_liq_prev=real_liq_prev,
+                          real_liq_prev=real_liq_prev, index_leaders=index_leaders,
                           all_signals=all_signals)
     print("Reporte generado en outputs/reporte_diario.md")
 
