@@ -1,4 +1,4 @@
-﻿import pandas as pd
+import pandas as pd
 import numpy as np
 from indicators.wyckoff import wyckoff_score, wyckoff_confidence, classify_wyckoff_phase, detect_spring, detect_sos
 from src.utils import robust_zscore, get_col
@@ -140,7 +140,7 @@ def generate_leader_section(df_market, df_stocks, holdings_df, fase_dict, operab
         oper = operabilidad_dict.get(sector, 'NO OPERAR')
         if fase not in VALID_FASES or oper not in VALID_OPER:
             continue
-        stocks = holdings_df[holdings_df['etf'] == sector]['ticker'].tolist()
+        stocks = holdings_df[holdings_df['etf'] == sector]['ticker'].head(20).tolist()
         if not stocks:
             continue
         metrics_df = compute_stock_metrics(df_market, df_stocks, sector, stocks)
@@ -148,13 +148,13 @@ def generate_leader_section(df_market, df_stocks, holdings_df, fase_dict, operab
             continue
         metrics_df['sector'] = sector
         wls_df = compute_wls(metrics_df)
-        all_data.append(wls_df)
+        all_data.append(wls_df.head(5))
 
         lines.append(f'## Sector: {sector} ({fase})\n')
         lines.append('| Ticker | RS | RS Mom | Flujo (z) | WLS | Fase Wyckoff | Spring | SOS |\n')
         lines.append('|--------|----|--------|-----------|-----|---------------|--------|-----|\n')
         lines.append('*RS = RS Level (precio acción / precio sector). RS Mom = RS Momentum (cambio del RS en 20 días). El WLS combina ambas con pesos 35% y 25% respectivamente.*\n')
-        for _, row in wls_df.head(3).iterrows():
+        for _, row in wls_df.head(5).iterrows():
             spring_flag = '✓' if row.get('spring', 0) == 1 else ''
             sos_flag = '✓' if row.get('sos', 0) == 1 else ''
             lines.append(f"| {row['ticker']} | {row['rs']:.2f} | {row['rs_mom']:.2%} | {row['flow_z']:.2f} | {row['wls']:.2f} | {row['wyckoff_phase']} | {spring_flag} | {sos_flag} |\n")

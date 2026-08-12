@@ -1,4 +1,4 @@
-﻿import pandas as pd
+import pandas as pd
 import yfinance as yf
 from datetime import datetime, timedelta
 from tenacity import retry, stop_after_attempt, wait_exponential
@@ -10,7 +10,11 @@ CACHE_HOURS = 23
 def get_stock_list():
     try:
         df = pd.read_csv('data/etf_holdings.csv')
-        return df['ticker'].unique().tolist()
+        # Limitar a 20 tickers por sector (los primeros del CSV, asumiendo orden por peso)
+        result = []
+        for etf, group in df.groupby('etf'):
+            result.extend(group['ticker'].head(20).tolist())
+        return result
     except Exception:
         return []
 
