@@ -113,6 +113,11 @@ def main():
         '% sobre EMA200': b200.iloc[-1],
         'New Highs (%)': nh.iloc[-1],
         'New Lows (%)': nl.iloc[-1],
+        'EMA20 count': int(round(b20.iloc[-1] * 11)),
+        'EMA50 count': int(round(b50.iloc[-1] * 11)),
+        'EMA200 count': int(round(b200.iloc[-1] * 11)),
+        'New Highs count': int(round(nh.iloc[-1] * 11)),
+        'New Lows count': int(round(nl.iloc[-1] * 11)),
     }
 
     # Modulo de lideres (solo para sectores en acumulacion/markup)
