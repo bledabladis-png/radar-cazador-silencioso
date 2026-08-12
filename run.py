@@ -428,6 +428,20 @@ def main():
         print("  Ningun indice en fase de acumulacion.")
         index_leaders = {}
 
+    # Exportar CSV de lideres internacionales para revision manual
+    if index_leaders:
+        try:
+            all_leaders = []
+            for nombre, df in index_leaders.items():
+                df_copy = df.copy()
+                df_copy['indice'] = nombre
+                all_leaders.append(df_copy)
+            if all_leaders:
+                pd.concat(all_leaders, ignore_index=True).to_csv('outputs/analisis_lideres_internacionales.csv', index=False)
+                print("  CSV de lideres internacionales generado.")
+        except Exception as e:
+            print(f"  Error al generar CSV internacional: {e}")
+
     # =====================================================================
     # VALIDATION GATE
     # =====================================================================
