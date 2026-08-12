@@ -1,18 +1,29 @@
 ﻿__pycache__/
 *.pyc
 .pytest_cache/
+.env
 data/market_data.csv
 data/stock_prices.csv
-outputs/backtest_v2_results.csv
-outputs/sensitivity_results.csv
-.env
-outputs/analisis_lideres_internacionales.csv
-outputs/
 *.xls
 *.xlsx
 *.bak
 *.backup
 *.log
-validation/test_*.py
 scripts/test_*.py
-scripts/map_yahoo_tickers_europe.py
+validation/test_*.py
+
+# Outputs generados/efimeros
+outputs/report/
+outputs/audit/
+outputs/holdings/
+outputs/cache/
+outputs/*.csv
+outputs/*.md
+outputs/*.json
+outputs/*.png
+
+# Excepciones: historicos y estado se versionan
+!outputs/history/
+!outputs/history/*.csv
+!outputs/state/
+!outputs/state/*.json
