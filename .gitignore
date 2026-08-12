@@ -6,3 +6,4 @@ data/stock_prices.csv
 outputs/backtest_v2_results.csv
 outputs/sensitivity_results.csv
 .env
+outputs/analisis_lideres_internacionales.csv
