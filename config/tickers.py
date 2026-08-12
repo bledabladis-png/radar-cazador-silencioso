@@ -8,6 +8,7 @@ MARKET_TICKERS = {
         'sp500': '^GSPC', 'nasdaq100': '^NDX', 'russell2000': '^RUT',
         'eurostoxx50': '^STOXX50E', 'msci_em': 'EEM', 'japan': 'EWJ',
         'spy': 'SPY', 'qqq': 'QQQ', 'iwm': 'IWM', 'msci_world': 'URTH',
+        'dow': '^DJI', 'ibex': '^IBEX', 'dax': '^GDAXI', 'ftse': '^FTSE',
     },
     'sectors': ['XLK', 'XLF', 'XLV', 'XLE', 'XLY', 'XLP', 'XLI', 'XLB', 'XLRE', 'XLU', 'XLC'],
     'bonds': ['BIL', 'IEF', 'TLT'],
@@ -20,6 +21,7 @@ MARKET_TICKERS = {
     'emerging_bonds': ['EMB', 'ELD'],
     'commodity_etfs': ['GLD', 'SLV', 'USO', 'UNG'],
     'sector_proxies': ['KRE', 'SMH', 'IYT'],
+    'indices': ['^GSPC', '^DJI', '^NDX', '^RUT', '^STOXX50E', '^IBEX', '^GDAXI', '^FTSE'],
 }
 
 SECTOR_NAMES = {

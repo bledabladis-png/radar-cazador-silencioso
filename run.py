@@ -24,6 +24,8 @@ from indicators.persistence import compute_persistence
 from indicators.signal_agreement import compute_signal_agreement
 from indicators.price_flow_divergence import detect_price_flow_divergence
 from config.tickers import SECTOR_NAMES, validate_sector_universe
+from indicators.index_phase import compute_index_phases
+from indicators.index_leaders import select_index_leaders
 
 def main():
     validate_sector_universe()
@@ -401,6 +403,26 @@ def main():
 
     if confirmation_data:
         print(f"  Institutional Confirmation: T10Y3M={confirmation_data.get('t10y3m', 'N/A')}%")
+
+    # =====================================================================
+    # INDICES INTERNACIONALES - FASES WYCKOFF + LIDERES
+    # =====================================================================
+    print("Calculando fases Wyckoff para indices internacionales...")
+    index_phases, index_data = compute_index_phases(df_market)
+    indices_en_acumulacion = [nombre for nombre, fase in index_phases.items() if fase == 'ACCUMULATION']
+    if indices_en_acumulacion:
+        print(f"  Indices en acumulacion: {', '.join(indices_en_acumulacion)}")
+        try:
+            df_index_stocks = download_stock_prices()
+            index_leaders = select_index_leaders(df_market, df_index_stocks, indices_en_acumulacion, index_data)
+            for nombre, top5 in index_leaders.items():
+                print(f"    {nombre}: {len(top5)} empresas seleccionadas")
+        except Exception as e:
+            print(f"    Error al calcular lideres de indices: {e}")
+            index_leaders = {}
+    else:
+        print("  Ningun indice en fase de acumulacion.")
+        index_leaders = {}
 
     # =====================================================================
     # VALIDATION GATE
