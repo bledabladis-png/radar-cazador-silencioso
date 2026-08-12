@@ -89,6 +89,7 @@ for etf, url in SECTOR_ETFS.items():
 # Guardar CSV
 if all_data:
     df_final = pd.concat(all_data, ignore_index=True)
+    df_final = df_final.drop_duplicates(subset=['etf','ticker'], keep='last')
     df_final.to_csv(OUTPUT_FILE, index=False)
     print(f'\nArchivo guardado: {OUTPUT_FILE}')
     print(f'Actualizados: {len(updated)} ETFs ({", ".join(updated)})')
