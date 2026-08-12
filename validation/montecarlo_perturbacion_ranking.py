@@ -1,9 +1,9 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 import pandas as pd
 import numpy as np
 from scipy.stats import kendalltau
 
-df = pd.read_csv('outputs/sector_rankings.csv')
+df = pd.read_csv('outputs/report/sector_rankings.csv')
 original_scores = df.set_index('ticker')['score']
 original_rank = original_scores.rank(ascending=False)
 

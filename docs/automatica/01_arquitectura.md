@@ -18,4 +18,4 @@ egimes/: condiciones financieras, liquidez, volatilidad, macro, sector.
 No aplica (modulo estructural).
 
 ## Salidas
-Reporte diario en Markdown (outputs/reporte_diario.md).
+Reporte diario en Markdown (outputs/report/reporte_diario.md).

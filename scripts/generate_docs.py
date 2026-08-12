@@ -7,7 +7,7 @@ from datetime import datetime
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-DOCS_DIR = 'docs'
+DOCS_DIR = 'docs/automatica'
 SETTINGS_FILE = 'config/settings.py'
 
 def read_file(path):
@@ -105,7 +105,7 @@ egimes/: condiciones financieras, liquidez, volatilidad, macro, sector.
 - alidation/: scripts de auditoria y backtesting.
 """
     formulas = "No aplica (modulo estructural)."
-    salidas = "Reporte diario en Markdown (outputs/reporte_diario.md)."
+    salidas = "Reporte diario en Markdown (outputs/report/reporte_diario.md)."
     return template(proposito, arquitectura, formulas, salidas)
 
 def generate_config_doc():
@@ -350,7 +350,7 @@ def generate_reporte():
 - Secciones: Resumen de Regimenes, Data Freshness, Divergencias, Breadth, Momentum, Flujo, Rankings, Opportunity Map, SLPM, Lideres, Opciones, MTE, Dark Pools, Cross-Asset, Anti-Double-Counting.
 """
     formulas = "No aplica (formato de salida)."
-    salidas = "Archivo outputs/reporte_diario.md generado en cada ejecucion."
+    salidas = "Archivo outputs/report/reporte_diario.md generado en cada ejecucion."
     return template(proposito, arquitectura, formulas, salidas)
 
 def generate_auditorias():

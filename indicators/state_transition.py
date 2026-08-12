@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 """
 state_transition.py -- Histéresis temporal para SLPM v1.2
 Añade persistencia temporal a los estados sin modificar state_machine.py.
@@ -7,7 +7,7 @@ import json
 import os
 from datetime import datetime
 
-SLPM_STATE_FILE = "outputs/slpm_state.json"
+SLPM_STATE_FILE = "outputs/state/slpm_state.json"
 
 HYSTERESIS = {
     ("EMERGING", "CONFIRMED"): ("EMERGING", "EMERGING"),

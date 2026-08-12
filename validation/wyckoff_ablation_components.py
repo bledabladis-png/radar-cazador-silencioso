@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 import sys, os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)) + '/..')
 import pandas as pd
@@ -114,5 +114,5 @@ for removed in component_names:
 # Guardar resultados completos
 if all_simulations:
     df = pd.DataFrame(all_simulations)
-    df.to_csv('outputs/wyckoff_ablation_results.csv', index=False)
-    print("\nResultados guardados en outputs/wyckoff_ablation_results.csv")
+    df.to_csv('outputs/audit/wyckoff_ablation_results.csv', index=False)
+    print("\nResultados guardados en outputs/audit/wyckoff_ablation_results.csv")

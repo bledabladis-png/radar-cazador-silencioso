@@ -132,7 +132,7 @@ def main():
                     for sector, fase in fases.items()}
             from indicators.stock_leader import generate_leader_section
             leader_lines, leader_df = generate_leader_section(df_market, df_stocks, holdings_df, fases, oper,
-                                                   output_csv='outputs/analisis_lideres.csv')
+                                                   output_csv='outputs/report/analisis_lideres.csv')
             if leader_lines:
                 print("  Lideres sectoriales generados.")
             else:
@@ -442,7 +442,7 @@ def main():
                 df_copy['indice'] = nombre
                 all_leaders.append(df_copy)
             if all_leaders:
-                pd.concat(all_leaders, ignore_index=True).to_csv('outputs/analisis_lideres_internacionales.csv', index=False)
+                pd.concat(all_leaders, ignore_index=True).to_csv('outputs/report/analisis_lideres_internacionales.csv', index=False)
                 print("  CSV de lideres internacionales generado.")
         except Exception as e:
             print(f"  Error al generar CSV internacional: {e}")
@@ -578,7 +578,7 @@ def main():
                           dc_summary=dc_summary,
                           real_liq_prev=real_liq_prev, index_leaders=index_leaders,
                           all_signals=all_signals)
-    print("Reporte generado en outputs/reporte_diario.md")
+    print("Reporte generado en outputs/report/reporte_diario.md")
 
 if __name__ == "__main__":
     main()

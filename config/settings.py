@@ -65,7 +65,7 @@ PCR_FULL_HISTORY_DAYS = 252
 DARKPOOL_MIN_HISTORY_WEEKS = 13  # mínimo para mostrar señal
 DARKPOOL_ZSCORE_WINDOWS = (13, 26, 52, 104)
 DARKPOOL_FULL_HISTORY_WEEKS = 104  # Z-Score completo (2 años)
-MTE_STATE_FILE = "outputs/mte_state.json"  # archivo de estado del Market Transition Engine
+MTE_STATE_FILE = "outputs/state/mte_state.json"  # archivo de estado del Market Transition Engine
 
 # ============================================================
 # SLPM COVERAGE

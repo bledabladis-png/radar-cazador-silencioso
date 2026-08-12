@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 import sys, os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)) + '/..')
 import pandas as pd
@@ -79,7 +79,7 @@ nuevo_registro = {
 }
 
 # Cargar histórico existente o crear nuevo
-hist_path = 'outputs/forward_test_historico.csv'
+hist_path = 'outputs/history/forward_test_historico.csv'
 if os.path.exists(hist_path):
     historico = pd.read_csv(hist_path)
     # Evitar duplicados
@@ -94,7 +94,7 @@ historico.to_csv(hist_path, index=False)
 print(f"Registro añadido: {fecha.date()}")
 
 # Regenerar informe Markdown completo
-with open('outputs/forward_test_6m.md', 'w', encoding='utf-8') as f:
+with open('outputs/audit/forward_test_6m.md', 'w', encoding='utf-8') as f:
     f.write('# Forward Test - Evolución del Radar (6 meses)\n\n')
     if len(historico) > 0:
         f.write(f'Período: {historico.iloc[0]["fecha"]} → {historico.iloc[-1]["fecha"]}\n\n')

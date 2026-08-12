@@ -1,9 +1,9 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 """Backtest de umbrales del SLPM v1.2"""
 import pandas as pd
 import numpy as np
 
-hist = pd.read_csv("outputs/slpm_history.csv", parse_dates=["date"])
+hist = pd.read_csv("outputs/history/slpm_history.csv", parse_dates=["date"])
 print(f"Registros: {len(hist)}")
 
 # Distribucion de estados

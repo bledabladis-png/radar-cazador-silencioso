@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 # Fase 0 - Validacion de fuentes para modulo de indices internacionales
 import sys, os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -73,7 +73,7 @@ for nombre, datos in INDICES.items():
     })
 
 # Generar informe Markdown
-with open('outputs/validacion_indices.md', 'w', encoding='utf-8') as f:
+with open('outputs/audit/validacion_indices.md', 'w', encoding='utf-8') as f:
     f.write('# Validacion de fuentes - Modulo de Indices Internacionales\n\n')
     f.write(f'**Fecha:** {datetime.now().strftime("%Y-%m-%d %H:%M")}\n\n')
     f.write('| Indice | Ticker | ETF | OHLCV (filas) | Holdings (disp/esp) | Duplicados | Inválidos | Viable |\n')
@@ -96,5 +96,5 @@ with open('outputs/validacion_indices.md', 'w', encoding='utf-8') as f:
     if no_viables:
         f.write('\n**Acciones requeridas:** Revisar manualmente los indices no viables antes de continuar con la Fase 1.\n')
 
-print("Informe generado: outputs/validacion_indices.md")
+print("Informe generado: outputs/audit/validacion_indices.md")
 print(f"Viables: {len(viables)}, No viables: {len(no_viables)}")

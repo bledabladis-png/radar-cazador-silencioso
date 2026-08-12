@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 # validation/holdings_audit.py
 # Fase 4: Auditoria de holdings y seleccion de lideres
 import pandas as pd
@@ -6,7 +6,7 @@ import os
 import sys
 from datetime import datetime
 
-OUTPUT_MD = 'outputs/auditoria_holdings.md'
+OUTPUT_MD = 'outputs/audit/auditoria_holdings.md'
 
 def log(msg=''):
     print(msg)
@@ -55,8 +55,8 @@ for label, path in [('Sectorial (ETF holdings)', 'data/etf_holdings.csv'),
 # 2. Coherencia con CSVs de lideres
 # ------------------------------------------------------------
 for label, holdings_path, leaders_path, group_col in [
-    ('Sectorial', 'data/etf_holdings.csv', 'outputs/analisis_lideres.csv', 'sector'),
-    ('Internacional', 'data/index_holdings.csv', 'outputs/analisis_lideres_internacionales.csv', 'indice')
+    ('Sectorial', 'data/etf_holdings.csv', 'outputs/report/analisis_lideres.csv', 'sector'),
+    ('Internacional', 'data/index_holdings.csv', 'outputs/report/analisis_lideres_internacionales.csv', 'indice')
 ]:
     log(f'## Coherencia {label}')
     if not os.path.exists(holdings_path) or not os.path.exists(leaders_path):
@@ -83,8 +83,8 @@ for label, holdings_path, leaders_path, group_col in [
 # ------------------------------------------------------------
 # 3. Revisar persistencia y WLS (post-fix)
 # ------------------------------------------------------------
-for label, path in [('Sectorial', 'outputs/analisis_lideres.csv'),
-                    ('Internacional', 'outputs/analisis_lideres_internacionales.csv')]:
+for label, path in [('Sectorial', 'outputs/report/analisis_lideres.csv'),
+                    ('Internacional', 'outputs/report/analisis_lideres_internacionales.csv')]:
     log(f'## Persistencia y WLS {label}')
     if not os.path.exists(path):
         log('Archivo no disponible.')

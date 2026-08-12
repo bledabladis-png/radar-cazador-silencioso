@@ -1,4 +1,4 @@
-﻿import pandas as pd
+import pandas as pd
 import numpy as np
 from data.providers.router import DataRouter
 from src.utils import robust_zscore, tanh_normalize
@@ -71,7 +71,7 @@ def compute_liquidity_score():
     previous_score = None
     try:
         import json, os
-        delta_file = 'outputs/liquidity_state.json'
+        delta_file = 'outputs/state/liquidity_state.json'
         if os.path.exists(delta_file):
             with open(delta_file, 'r') as f:
                 prev = json.load(f)

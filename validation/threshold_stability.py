@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 # validation/threshold_stability.py
 # Fase 2: Sensibilidad de los umbrales Wyckoff (MARKUP >0.30, DISTRIBUTION <-0.30)
 import sys, os
@@ -63,7 +63,7 @@ for pert in perturbations:
     print()
 
 # Guardar resumen
-with open('outputs/threshold_stability_summary.md', 'w', encoding='utf-8') as f:
+with open('outputs/audit/threshold_stability_summary.md', 'w', encoding='utf-8') as f:
     f.write('# Sensibilidad de umbrales Wyckoff\n\n')
     for pert in perturbations:
         f.write(f'- Perturbación {pert:+.2f}: ver consola\n')

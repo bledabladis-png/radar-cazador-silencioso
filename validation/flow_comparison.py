@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 # validation/flow_comparison.py
 # Fase C v4.3: Comparar flow simplificado (tactical_engine) vs flow proxy completo (momentum.py)
 import sys, os
@@ -97,8 +97,8 @@ if results:
     print(f'IC20 simplificado: {avg["ic20_simpl"]:+.3f}, IC20 completo: {avg["ic20_full"]:+.3f}')
     print(f'IC60 simplificado: {avg["ic60_simpl"]:+.3f}, IC60 completo: {avg["ic60_full"]:+.3f}')
 
-    df_res.to_csv('outputs/flow_comparison_results.csv', index=False)
-    with open('outputs/auditoria_flow_comparison.md', 'w', encoding='utf-8') as f:
+    df_res.to_csv('outputs/audit/flow_comparison_results.csv', index=False)
+    with open('outputs/audit/auditoria_flow_comparison.md', 'w', encoding='utf-8') as f:
         f.write('# Fase C v4.3 - Comparacion de Flow simplificado vs Flow Proxy completo\n\n')
         f.write(f'**Fecha:** {pd.Timestamp.now().strftime("%Y-%m-%d %H:%M")}\n\n')
         f.write('## Resultados por sector\n\n')
@@ -110,6 +110,6 @@ if results:
         f.write(f"- Correlacion simplificado vs completo: **{avg['corr_simpl_full']:+.3f}**\n")
         f.write(f"- IC20 simplificado: {avg['ic20_simpl']:+.3f}, IC20 completo: {avg['ic20_full']:+.3f}\n")
         f.write(f"- IC60 simplificado: {avg['ic60_simpl']:+.3f}, IC60 completo: {avg['ic60_full']:+.3f}\n")
-    print('\nResultados guardados en outputs/flow_comparison_results.csv y outputs/auditoria_flow_comparison.md')
+    print('\nResultados guardados en outputs/audit/flow_comparison_results.csv y outputs/audit/auditoria_flow_comparison.md')
 else:
     print('No se obtuvieron resultados.')

@@ -1,10 +1,10 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 import sys, os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)) + '/..')
 import pandas as pd
 from indicators.state_machine import classify_leadership_state
 
-hist = pd.read_csv('outputs/slpm_history.csv')
+hist = pd.read_csv('outputs/history/slpm_history.csv')
 
 NEUTRAL_TACTICAL = 0.0
 NEUTRAL_STRUCTURAL = 0.0

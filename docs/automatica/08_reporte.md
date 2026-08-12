@@ -11,4 +11,4 @@ Genera el reporte diario en formato Markdown con todas las secciones del radar.
 No aplica (formato de salida).
 
 ## Salidas
-Archivo outputs/reporte_diario.md generado en cada ejecucion.
+Archivo outputs/report/reporte_diario.md generado en cada ejecucion.

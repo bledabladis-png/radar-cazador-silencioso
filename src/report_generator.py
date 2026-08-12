@@ -31,7 +31,7 @@ def _generate_coverage_table(pcr_data, darkpool_data, sector_results):
     n_acciones = 110
     try:
         import pandas as pd
-        df = pd.read_csv('outputs/analisis_lideres.csv')
+        df = pd.read_csv('outputs/report/analisis_lideres.csv')
         if 'ticker' in df.columns:
             n_acciones = len(df['ticker'].unique())
     except:
@@ -63,7 +63,7 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
                           slpm_v12_data=None, tactical_scores=None, structural_scores=None,
                           sector_persistence=None, signal_agreements=None, signal_agreements_display=None,
                           cross_module_conflict=None, shock_sensitivities=None, price_flow_divergences=None,
-                          dc_summary="", all_signals=None, real_liq_prev=None, index_leaders=None, output_path='outputs/reporte_diario.md'):
+                          dc_summary="", all_signals=None, real_liq_prev=None, index_leaders=None, output_path='outputs/report/reporte_diario.md'):
     lines = []
     lines.append("# MACRO SECTORIAL - Reporte Diario\n")
     lines.append(f"**Fecha:** {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
@@ -751,7 +751,7 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
     with open(output_path, 'w', encoding='utf-8') as f:
         f.writelines(lines)
 
-    hist_path = 'outputs/macro_regime.csv'
+    hist_path = 'outputs/history/macro_regime.csv'
     new_row = pd.DataFrame({
         'date': [datetime.now()],
         'macro_regime': [macro_regime],
@@ -769,7 +769,7 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
     hist.to_csv(hist_path, index=False)
 
     sector_df = pd.DataFrame(sector_results['ranking'], columns=['ticker', 'name', 'score', 'wyckoff_phase'])
-    sector_df.to_csv('outputs/sector_rankings.csv', index=False)
+    sector_df.to_csv('outputs/report/sector_rankings.csv', index=False)
 
 
 

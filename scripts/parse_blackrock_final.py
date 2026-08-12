@@ -1,4 +1,4 @@
-﻿import requests
+import requests
 import csv
 import yfinance as yf
 import time
@@ -116,7 +116,7 @@ for etf, url in urls.items():
     holdings.sort(key=lambda x: x['weight'], reverse=True)
     top10 = holdings[:10]
 
-    out = f'outputs/{etf}_final_holdings.csv'
+    out = f'outputs/holdings/{etf}_final_holdings.csv'
     with open(out, 'w', newline='', encoding='utf-8') as f:
         escritor = csv.writer(f)
         escritor.writerow(['etf','ticker','name','weight'])

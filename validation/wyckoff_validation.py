@@ -1,4 +1,4 @@
-﻿"""
+"""
 wyckoff_validation.py -- Framework profesional de validación Wyckoff v3.0
 Versión final: 4 bloques (estructural, forward, discriminación score, drift temporal).
 """
@@ -264,12 +264,12 @@ print(f"    F = {F:.2f}, p = {p_anova:.6f}")
 anova_ok = p_anova < 0.001
 print(f"  {'✓ Fases significativamente diferentes (p<0.001)' if anova_ok else '✗ No significativo'}")
 
-print("\n  3.4 Boxplot guardado en outputs/wyckoff_score_boxplot.png")
+print("\n  3.4 Boxplot guardado en outputs/audit/wyckoff_score_boxplot.png")
 plt.figure(figsize=(10, 6))
 df.boxplot(column="score", by="phase")
 plt.title("Separación del Wyckoff Score por Fase")
 plt.suptitle("")
-plt.savefig("outputs/wyckoff_score_boxplot.png", dpi=100)
+plt.savefig("outputs/audit/wyckoff_score_boxplot.png", dpi=100)
 plt.close()
 print("  ✓ Boxplot generado.")
 

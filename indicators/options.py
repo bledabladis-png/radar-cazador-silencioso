@@ -1,4 +1,4 @@
-﻿import numpy as np
+import numpy as np
 import pandas as pd
 from datetime import datetime
 from data.providers.cboe import CboeProvider
@@ -39,7 +39,7 @@ def compute_pcr_signals():
 
     # ---------- HISTORIAL ----------
     try:
-        hist = pd.read_csv('outputs/pcr_history.csv', parse_dates=['date'], index_col='date')
+        hist = pd.read_csv('outputs/history/pcr_history.csv', parse_dates=['date'], index_col='date')
     except:
         hist = pd.DataFrame()
 
@@ -60,7 +60,7 @@ def compute_pcr_signals():
         new_df = pd.DataFrame([new_row], index=[today])
         hist = pd.concat([hist, new_df])
         hist.sort_index(inplace=True)
-        hist.to_csv('outputs/pcr_history.csv', index_label='date')
+        hist.to_csv('outputs/history/pcr_history.csv', index_label='date')
 
     # ---------- Z-SCORE del PCR Total ----------
     pcr_series = hist['total_pcr'] if 'total_pcr' in hist.columns else pd.Series(dtype=float)

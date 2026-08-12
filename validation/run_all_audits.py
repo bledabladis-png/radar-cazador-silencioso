@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 # validation/run_all_audits.py
 # Fase E v4.3: Monitorizacion continua - comprobaciones rapidas
 import os
@@ -6,7 +6,7 @@ import sys
 import pandas as pd
 from datetime import datetime
 
-OUT = 'outputs/informe_monitorizacion.md'
+OUT = 'outputs/audit/informe_monitorizacion.md'
 report = []
 def log(msg=''):
     print(msg)
@@ -32,7 +32,7 @@ for path in ['data/etf_holdings.csv', 'data/index_holdings.csv']:
         log(f'❌ {path} no existe')
 
 # 2. NaN en CSV de lideres
-for path in ['outputs/analisis_lideres.csv', 'outputs/analisis_lideres_internacionales.csv']:
+for path in ['outputs/report/analisis_lideres.csv', 'outputs/report/analisis_lideres_internacionales.csv']:
     if os.path.exists(path):
         df = pd.read_csv(path)
         nan_cols = df.columns[df.isna().any()].tolist()
@@ -51,7 +51,7 @@ for path in ['outputs/analisis_lideres.csv', 'outputs/analisis_lideres_internaci
         log(f'ℹ️ {path} no disponible (puede no haberse generado hoy)')
 
 # 3. Frescura de fuentes
-for path, col in [('outputs/pcr_history.csv','date'), ('outputs/darkpool_history.csv','week')]:
+for path, col in [('outputs/history/pcr_history.csv','date'), ('outputs/history/darkpool_history.csv','week')]:
     if os.path.exists(path):
         df = pd.read_csv(path, parse_dates=[col])
         last = df[col].max()
@@ -62,7 +62,7 @@ for path, col in [('outputs/pcr_history.csv','date'), ('outputs/darkpool_history
         log(f'ℹ️ {path} no existe')
 
 # 4. Reporte diario
-path_report = 'outputs/reporte_diario.md'
+path_report = 'outputs/report/reporte_diario.md'
 if os.path.exists(path_report):
     size = os.path.getsize(path_report)
     with open(path_report, 'r', encoding='utf-8') as f:
@@ -75,7 +75,7 @@ else:
     log('❌ No se encontro reporte_diario.md')
 
 # 5. Estados clave
-for path, key in [('outputs/slpm_state.json','state'), ('outputs/mte_state.json','scenario')]:
+for path, key in [('outputs/state/slpm_state.json','state'), ('outputs/state/mte_state.json','scenario')]:
     if os.path.exists(path):
         import json
         with open(path, 'r', encoding='utf-8') as f:

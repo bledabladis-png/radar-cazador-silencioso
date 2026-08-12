@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 import pandas as pd
 import numpy as np
 from datetime import datetime, timedelta
@@ -205,7 +205,7 @@ def compute_darkpool_signals():
     media_dp = df_res['dark_pool_pct'].mean()
 
     try:
-        hist = pd.read_csv('outputs/darkpool_history.csv', parse_dates=['week'])
+        hist = pd.read_csv('outputs/history/darkpool_history.csv', parse_dates=['week'])
     except:
         hist = pd.DataFrame(columns=['week', 'ratio'])
 
@@ -238,7 +238,7 @@ def compute_darkpool_signals():
     percentile = pct_104 if pd.notna(pct_104) else (pct_52 if pd.notna(pct_52) else (pct_26 if pd.notna(pct_26) else pct_13))
     state = state_104 if state_104 != "Sin historial suficiente" else (state_52 if state_52 != "Sin historial suficiente" else (state_26 if state_26 != "Sin historial suficiente" else state_13))
 
-    hist.to_csv('outputs/darkpool_history.csv', index=False)
+    hist.to_csv('outputs/history/darkpool_history.csv', index=False)
 
     return {
         'status': 'OK',

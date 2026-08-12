@@ -1,10 +1,10 @@
-﻿"""
+"""
 integration_check.py -- Verifica que el reporte diario contiene todas las secciones obligatorias.
 Se ejecuta tras run.py para validar la integridad del sistema.
 """
 import sys, os
 
-REPORT_PATH = "outputs/reporte_diario.md"
+REPORT_PATH = "outputs/report/reporte_diario.md"
 
 REQUIRED_SECTIONS = [
     "## Resumen de Regimenes",

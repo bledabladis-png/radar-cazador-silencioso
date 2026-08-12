@@ -1,9 +1,9 @@
-﻿import pandas as pd
+import pandas as pd
 import numpy as np
 from scipy.stats import spearmanr
 
 # Cargar resultados del backtest
-df = pd.read_csv('outputs/backtest_v2_results.csv', parse_dates=['date'])
+df = pd.read_csv('outputs/audit/backtest_v2_results.csv', parse_dates=['date'])
 df = df.set_index('date').sort_index()
 
 # Obtener retornos semanales del SPY

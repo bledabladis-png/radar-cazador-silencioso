@@ -1,4 +1,4 @@
-﻿"""
+"""
 momentum_flow_validation.py -- Validación institucional de Momentum y Flujo (v3 - final).
 Incluye: outliers IQR, ADF, autocorrelación, Spearman, PCA, Effective Sample Size,
 Bootstrap, Monte Carlo, Permutation Importance sobre score compuesto,
@@ -244,7 +244,7 @@ for eliminar in cols:
 # ============================================================
 print("\n" + "=" * 70 + "\n11. COHERENCIA CON RÉGIMEN MACRO\n" + "=" * 70)
 try:
-    macro_hist = pd.read_csv('outputs/macro_regime.csv', parse_dates=['date'])
+    macro_hist = pd.read_csv('outputs/history/macro_regime.csv', parse_dates=['date'])
     if not macro_hist.empty:
         merged = df_weekly.reset_index().merge(macro_hist[['date', 'macro_regime']], on='date', how='inner')
         if len(merged) > 10:

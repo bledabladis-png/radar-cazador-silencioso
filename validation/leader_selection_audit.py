@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 # validation/leader_selection_audit.py
 # Auditoria descriptiva de la seleccion de lideres sectoriales e internacionales
 import pandas as pd
@@ -15,8 +15,8 @@ log(f"Fecha: {pd.Timestamp.now().strftime('%Y-%m-%d %H:%M')}")
 log('')
 
 files = {
-    'Sectorial': 'outputs/analisis_lideres.csv',
-    'Internacional': 'outputs/analisis_lideres_internacionales.csv'
+    'Sectorial': 'outputs/report/analisis_lideres.csv',
+    'Internacional': 'outputs/report/analisis_lideres_internacionales.csv'
 }
 
 for label, path in files.items():
@@ -75,6 +75,6 @@ for label, path in files.items():
             log('')
 
 # Guardar informe
-with open('outputs/auditoria_lideres.md', 'w', encoding='utf-8') as f:
+with open('outputs/audit/auditoria_lideres.md', 'w', encoding='utf-8') as f:
     f.write('\n'.join(output_lines))
-print('\nInforme guardado en outputs/auditoria_lideres.md')
+print('\nInforme guardado en outputs/audit/auditoria_lideres.md')

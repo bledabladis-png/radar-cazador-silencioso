@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 # validation/backtest_signals.py
 # Fase 2: Backtest de senhales (IC con retornos futuros)
 import sys, os
@@ -95,7 +95,7 @@ if results:
     print('\n=== IC PROMEDIO ENTRE SECTORES ===')
     print('IC20:', avg)
     print('IC60:', avg60)
-    df_res.to_csv('outputs/backtest_signals_results.csv', index=False)
-    print('\nResultados guardados en outputs/backtest_signals_results.csv')
+    df_res.to_csv('outputs/audit/backtest_signals_results.csv', index=False)
+    print('\nResultados guardados en outputs/audit/backtest_signals_results.csv')
 else:
     print('No se obtuvieron resultados.')

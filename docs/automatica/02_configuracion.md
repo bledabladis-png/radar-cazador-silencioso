@@ -45,7 +45,7 @@ Las constantes son importadas por todos los modulos del sistema.
 | MOMENTUM_PRICE_WINDOW | 20 |
 | MOMENTUM_SHARPE_WINDOW | 63 |
 | MOMENTUM_WINDOW | 20 |
-| MTE_STATE_FILE | "outputs/mte_state.json" |
+| MTE_STATE_FILE | "outputs/state/mte_state.json" |
 | PCR_CONFIDENCE_HISTORY_DAYS | 60 |
 | PCR_FULL_HISTORY_DAYS | 252 |
 | PCR_MIN_HISTORY_DAYS | 20 |

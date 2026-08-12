@@ -1,4 +1,4 @@
-﻿import sys, os
+import sys, os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import pandas as pd
@@ -7,7 +7,7 @@ import yfinance as yf
 from sklearn.metrics import accuracy_score
 
 # Cargar resultados del backtest
-df = pd.read_csv('outputs/backtest_v3_results.csv', parse_dates=['date'])
+df = pd.read_csv('outputs/audit/backtest_v3_results.csv', parse_dates=['date'])
 df = df.set_index('date').sort_index()
 
 # Retornos del SPY

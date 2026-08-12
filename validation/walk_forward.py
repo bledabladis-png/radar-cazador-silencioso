@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 # validation/walk_forward.py
 # Fase A v4.3: Walk-forward out-of-sample (in-sample 2018-2024 vs OOS 2025-2026)
 import sys, os
@@ -107,9 +107,9 @@ if is_results and oos_results:
         print(f'{s:12s} | {is20:+.3f} | {oos20:+.3f} | {is60:+.3f} | {oos60:+.3f}')
 
     # Guardar CSV
-    pd.concat([is_results['detail'], oos_results['detail']], keys=['IS','OOS']).to_csv('outputs/walk_forward_ics.csv')
+    pd.concat([is_results['detail'], oos_results['detail']], keys=['IS','OOS']).to_csv('outputs/audit/walk_forward_ics.csv')
     # Informe markdown
-    with open('outputs/walk_forward_results.md', 'w', encoding='utf-8') as f:
+    with open('outputs/audit/walk_forward_results.md', 'w', encoding='utf-8') as f:
         f.write('# Walk-Forward Out-of-Sample\n\n')
         f.write(f'In-sample: {IS_START} a {IS_END}\n')
         f.write(f'Out-of-sample: {OOS_START} a {OOS_END}\n\n')
@@ -121,6 +121,6 @@ if is_results and oos_results:
             is60 = is_results['avg'][f'IC60_{s}']
             oos60 = oos_results['avg'][f'IC60_{s}']
             f.write(f'| {s} | {is20:+.3f} | {oos20:+.3f} | {is60:+.3f} | {oos60:+.3f} |\n')
-    print('\nResultados guardados en outputs/walk_forward_results.md y outputs/walk_forward_ics.csv')
+    print('\nResultados guardados en outputs/audit/walk_forward_results.md y outputs/audit/walk_forward_ics.csv')
 else:
     print('No se pudieron obtener resultados para ambos periodos.')

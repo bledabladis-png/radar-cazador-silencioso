@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 import sys, os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)) + '/..')
 import pandas as pd
@@ -92,11 +92,11 @@ for fecha in fridays:
 
 # Guardar CSV
 df_reg = pd.DataFrame(registro)
-df_reg.to_csv('outputs/forward_test_6m.csv', index=False)
+df_reg.to_csv('outputs/audit/forward_test_6m.csv', index=False)
 print(f"\nRegistro guardado: {len(df_reg)} semanas")
 
 # Generar informe Markdown
-with open('outputs/forward_test_6m.md', 'w', encoding='utf-8') as f:
+with open('outputs/audit/forward_test_6m.md', 'w', encoding='utf-8') as f:
     f.write('# Forward Test - Evolucion del Radar (6 meses)\n\n')
     f.write(f'Periodo: {START_DATE.date()} -> {END_DATE.date()}\n\n')
     f.write('| Fecha | Sector Lider | Score | Fase Wyckoff | SLPM | Top 3 |\n')
@@ -106,4 +106,4 @@ with open('outputs/forward_test_6m.md', 'w', encoding='utf-8') as f:
     f.write('\n## Notas del gestor\n\n')
     f.write('*Espacio para documentar eventos de mercado observados en cada fecha.*\n')
 
-print("Informe Markdown generado: outputs/forward_test_6m.md")
+print("Informe Markdown generado: outputs/audit/forward_test_6m.md")

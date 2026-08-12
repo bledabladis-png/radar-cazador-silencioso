@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 import sys, os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)) + '/..')
 import pandas as pd
@@ -76,7 +76,7 @@ if taus:
     print(f"  Percentil 5: {np.percentile(taus, 5):.4f}")
     print(f"  Percentil 95: {np.percentile(taus, 95):.4f}")
     # Guardar resultados para análisis futuro
-    pd.DataFrame(results).to_csv('outputs/wyckoff_montecarlo_results.csv', index=False)
-    print("Resultados guardados en outputs/wyckoff_montecarlo_results.csv")
+    pd.DataFrame(results).to_csv('outputs/audit/wyckoff_montecarlo_results.csv', index=False)
+    print("Resultados guardados en outputs/audit/wyckoff_montecarlo_results.csv")
 else:
     print("No se generaron simulaciones validas.")

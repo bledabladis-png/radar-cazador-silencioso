@@ -1,11 +1,11 @@
-﻿import sys, os
+import sys, os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import pandas as pd
 import numpy as np
 from sklearn.metrics import accuracy_score
 
-df = pd.read_csv('outputs/backtest_v2_results.csv', parse_dates=['date'])
+df = pd.read_csv('outputs/audit/backtest_v2_results.csv', parse_dates=['date'])
 df = df.set_index('date').sort_index()
 
 # Unir retornos del SPY

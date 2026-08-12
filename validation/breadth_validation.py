@@ -1,4 +1,4 @@
-﻿"""
+"""
 breadth_validation.py -- Validación institucional de Breadth de Mercado (v5 - final).
 Incluye: Bootstrap, Permutation Importance y LOFO correctamente implementados
 sobre un score compuesto representativo del módulo Breadth.
@@ -297,7 +297,7 @@ print(f"  {'✓ Robusto' if mc_ok else '⚠️ Sensible al ruido'}")
 print("\n" + "="*70 + "\n10. COHERENCIA CON RÉGIMEN MACRO\n" + "="*70)
 
 try:
-    macro_hist = pd.read_csv('outputs/macro_regime.csv', parse_dates=['date'])
+    macro_hist = pd.read_csv('outputs/history/macro_regime.csv', parse_dates=['date'])
     if not macro_hist.empty:
         merged = df.merge(macro_hist[['date', 'macro_regime']], on='date', how='inner')
         if len(merged) > 10:

@@ -1,4 +1,4 @@
-﻿# update_european_holdings.py
+# update_european_holdings.py
 import subprocess
 import sys
 import pandas as pd
@@ -27,10 +27,10 @@ index_df = pd.read_csv(index_path)
 european_etfs = ['FEZ', 'DAXEX', 'ISF.L', 'LYXI']
 index_df = index_df[~index_df['etf'].isin(european_etfs)]
 
-fez = pd.read_csv('outputs/FEZ_final_holdings.csv')
-daxex = pd.read_csv('outputs/DAXEX_final_holdings.csv')
-isf = pd.read_csv('outputs/ISF.L_final_holdings.csv')
-amundi = pd.read_csv('outputs/amundi_lyxi_holdings.csv').sort_values('weight', ascending=False).head(10)
+fez = pd.read_csv('outputs/holdings/FEZ_final_holdings.csv')
+daxex = pd.read_csv('outputs/holdings/DAXEX_final_holdings.csv')
+isf = pd.read_csv('outputs/holdings/ISF.L_final_holdings.csv')
+amundi = pd.read_csv('outputs/holdings/amundi_lyxi_holdings.csv').sort_values('weight', ascending=False).head(10)
 amundi['etf'] = 'LYXI'
 
 cols = ['etf', 'ticker', 'name', 'weight']

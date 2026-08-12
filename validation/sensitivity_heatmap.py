@@ -1,9 +1,9 @@
-﻿import pandas as pd
+import pandas as pd
 import numpy as np
 
 # Cargar resultados del estudio de sensibilidad (si existe)
 try:
-    df = pd.read_csv('outputs/sensitivity_results.csv')
+    df = pd.read_csv('outputs/audit/sensitivity_results.csv')
     print("=== SENSIBILIDAD DE VENTANAS Y PESOS ===")
     print(df.to_string())
 except FileNotFoundError:

@@ -1,4 +1,4 @@
-﻿import requests
+import requests
 import pandas as pd
 from io import BytesIO
 
@@ -50,7 +50,7 @@ for i in range(header_row + 1, len(df)):
 holdings.sort(key=lambda x: x['weight'], reverse=True)
 top10 = holdings[:10]
 
-out = 'outputs/FEZ_final_holdings.csv'
+out = 'outputs/holdings/FEZ_final_holdings.csv'
 pd.DataFrame(top10).to_csv(out, index=False)
 print(f'Guardado: {out}')
 print(pd.DataFrame(top10).to_string(index=False))

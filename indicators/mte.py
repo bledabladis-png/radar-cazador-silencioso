@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 """
 mte.py -- Market Transition Engine v1.0
 Motor de inferencia macroecon�mica basado en flujos institucionales.
@@ -324,7 +324,7 @@ def validate_transition(previous, current, cls):
 # ============================================================
 # 8. PERSISTENCIA DE ESTADO (HIST�RESIS)
 # ============================================================
-STATE_FILE = 'outputs/mte_state.json'
+STATE_FILE = 'outputs/state/mte_state.json'
 
 def load_previous_scenario():
     try:

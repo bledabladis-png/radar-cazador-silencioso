@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 # Fase 0 v2 - Validacion de tickers desde CSV local
 import sys, os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -63,7 +63,7 @@ for nombre, datos in INDICES.items():
     })
 
 # Informe
-with open('outputs/validacion_indices_v2.md', 'w', encoding='utf-8') as f:
+with open('outputs/audit/validacion_indices_v2.md', 'w', encoding='utf-8') as f:
     f.write('# Validacion Fase 0 v2 - Modulo de Indices Internacionales\n\n')
     f.write(f'**Fecha:** {datetime.now().strftime("%Y-%m-%d %H:%M")}\n\n')
     f.write('| Indice | OHLCV | Tickers (disp/esp) | Descargables | Viable |\n')
@@ -72,4 +72,4 @@ with open('outputs/validacion_indices_v2.md', 'w', encoding='utf-8') as f:
         f.write(f"| {r['indice']} | {'OK' if r['ohlcv_ok'] else 'FALLO'} | {r['tickers_count']}/{INDICES[r['indice']]['expected']} | {r['descargables']} | {'SI' if r['viable'] else 'NO'} |\n")
     viables = [r for r in resultados if r['viable']]
     f.write(f'\n**Viables:** {len(viables)} de {len(resultados)}\n')
-print("Informe generado: outputs/validacion_indices_v2.md")
+print("Informe generado: outputs/audit/validacion_indices_v2.md")

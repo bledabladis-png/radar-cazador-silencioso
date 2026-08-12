@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 # validation/data_freshness_audit.py
 # Fase 3: Auditoria de frescura de datos y umbrales
 import sys, os
@@ -23,7 +23,7 @@ def classify_age(days):
 fuentes = []
 
 # 1. CBOE (Opciones)
-pcr_path = 'outputs/pcr_history.csv'
+pcr_path = 'outputs/history/pcr_history.csv'
 if os.path.exists(pcr_path):
     df = pd.read_csv(pcr_path, parse_dates=['date'])
     last = df['date'].max()
@@ -33,7 +33,7 @@ else:
     fuentes.append(('CBOE (Opciones)', pcr_path, 'NO EXISTE', None, 'DESCONOCIDO'))
 
 # 2. FINRA (Dark Pools)
-dp_path = 'outputs/darkpool_history.csv'
+dp_path = 'outputs/history/darkpool_history.csv'
 if os.path.exists(dp_path):
     df = pd.read_csv(dp_path, parse_dates=['week'])
     last = df['week'].max()
@@ -92,7 +92,7 @@ print(f'MIN_VALID_TICKERS = {MIN_VALID_TICKERS}')
 print('(La verificacion real de cobertura se ejecuta en run.py con validate_market_data() y compute_breadth())')
 
 # Guardar informe
-with open('outputs/auditoria_frescura.md', 'w', encoding='utf-8') as f:
+with open('outputs/audit/auditoria_frescura.md', 'w', encoding='utf-8') as f:
     f.write('# Auditoria Fase 3 - Frescura y Proveedores de Datos\n\n')
     f.write(f'**Fecha:** {pd.Timestamp.now().strftime("%Y-%m-%d %H:%M")}\n\n')
     f.write('## Resultados\n\n')
@@ -105,4 +105,4 @@ with open('outputs/auditoria_frescura.md', 'w', encoding='utf-8') as f:
     f.write(f'- MIN_VALID_TICKERS = {MIN_VALID_TICKERS}\n')
     f.write('\n*Esta auditoria verifica la antiguedad de los datos almacenados. La validacion completa de cobertura se realiza durante la ejecucion de run.py.*\n')
 
-print('\nInforme guardado en outputs/auditoria_frescura.md')
+print('\nInforme guardado en outputs/audit/auditoria_frescura.md')

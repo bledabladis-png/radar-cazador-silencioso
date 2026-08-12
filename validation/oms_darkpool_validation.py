@@ -1,4 +1,4 @@
-﻿"""
+"""
 oms_darkpool_validation.py -- Validación institucional de OMS v2.0 y Dark Pools v1.0.
 Aplica el mismo estándar que Breadth y Momentum/Flujo.
 """
@@ -151,16 +151,16 @@ def validate_module(name, df, col, range_check, csv_path):
 
 # OMS v2.0
 try:
-    df_pcr = pd.read_csv('outputs/pcr_history.csv', parse_dates=['date'], index_col='date')
-    p1, t1 = validate_module("OMS v2.0", df_pcr, 'total_pcr', 'positive', 'outputs/pcr_history.csv')
+    df_pcr = pd.read_csv('outputs/history/pcr_history.csv', parse_dates=['date'], index_col='date')
+    p1, t1 = validate_module("OMS v2.0", df_pcr, 'total_pcr', 'positive', 'outputs/history/pcr_history.csv')
 except Exception as e:
     print(f"\n  OMS v2.0: ERROR - {e}")
     p1, t1 = 0, 7
 
 # Dark Pools v1.0
 try:
-    df_dp = pd.read_csv('outputs/darkpool_history.csv', parse_dates=['week'], index_col='week')
-    p2, t2 = validate_module("Dark Pools v1.0", df_dp, 'ratio', 'zero_one', 'outputs/darkpool_history.csv')
+    df_dp = pd.read_csv('outputs/history/darkpool_history.csv', parse_dates=['week'], index_col='week')
+    p2, t2 = validate_module("Dark Pools v1.0", df_dp, 'ratio', 'zero_one', 'outputs/history/darkpool_history.csv')
 except Exception as e:
     print(f"\n  Dark Pools v1.0: ERROR - {e}")
     p2, t2 = 0, 7
