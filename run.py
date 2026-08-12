@@ -29,6 +29,10 @@ from indicators.index_leaders import select_index_leaders
 
 def main():
     validate_sector_universe()
+    # Crear subcarpetas de outputs necesarias para ejecución limpia
+    import os
+    for subdir in ['report', 'history', 'state', 'holdings', 'audit', 'cache']:
+        os.makedirs(f'outputs/{subdir}', exist_ok=True)
     print("Descargando datos de mercado...")
     df_market = download_market_data()
     if df_market is None or df_market.empty:

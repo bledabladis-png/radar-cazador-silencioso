@@ -761,6 +761,7 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
     if dc_summary:
         lines.append(dc_summary)
 
+    os.makedirs(os.path.dirname(output_path), exist_ok=True)
     with open(output_path, 'w', encoding='utf-8') as f:
         f.writelines(lines)
 

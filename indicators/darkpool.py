@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import pandas as pd
+import re
 import numpy as np
 from datetime import datetime, timedelta
 from data.providers.finra import FinraProvider
