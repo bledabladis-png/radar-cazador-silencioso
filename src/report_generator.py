@@ -525,10 +525,10 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
         mte_conf = mte_result.get('confidence', 0)
         mte_scenario = mte_result.get('scenario', 'N/A')
         if mte_conf < 50:
-            lines.append(f"- **Escenario (UNCONFIRMED):** {mte_scenario} (Signal Consistency: {mte_conf:.0f}) - *No se considera confirmado.*\n")
+            lines.append(f"- **Escenario (UNCONFIRMED):** {mte_scenario} (Confidence Score no calibrado: {mte_conf:.0f}) - *No se considera confirmado.*\n")
         else:
-            lines.append(f"- **Escenario:** {mte_scenario} (Signal Consistency: {mte_conf:.0f})\n")
-        lines.append("*Nota: Signal Consistency representa la distancia a los umbrales y el consenso entre motores. No esta calibrada historicamente.*\n")
+            lines.append(f"- **Escenario:** {mte_scenario} (Confidence Score no calibrado: {mte_conf:.0f})\n")
+        lines.append("*Nota: Confidence Score (no calibrado) representa la distancia a los umbrales y el consenso entre motores. No debe interpretarse como probabilidad.*\n")
         lines.append(f"- **Market Stress Index (MSI):** {mte_result.get('msi', 0):.0f}\n")
         lines.append(f"- **Inflation Pressure Index (IPI):** {mte_result.get('ipi', 0):.0f}\n")
         lines.append(f"- **Sector Rotation Score:** {mte_result.get('srs', 0):.2f}\n")
