@@ -17,7 +17,6 @@ Las constantes son importadas por todos los modulos del sistema.
 | BREADTH_EMA_FAST | 20 |
 | BREADTH_EMA_MEDIUM | 50 |
 | BREADTH_EMA_SLOW | 200 |
-| BREADTH_WINDOW | 20 |
 | CACHE_HOURS | 23 |
 | CACHE_TTL | { |
 | CACHE_VALIDATE_TRADING_DATE | True |

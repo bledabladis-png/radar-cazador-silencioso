@@ -22,4 +22,3 @@ Mide la amplitud del mercado sectorial (porcentaje de sectores sobre sus EMAs) y
 | BREADTH_EMA_FAST | 20 |
 | BREADTH_EMA_MEDIUM | 50 |
 | BREADTH_EMA_SLOW | 200 |
-| BREADTH_WINDOW | 20 |
