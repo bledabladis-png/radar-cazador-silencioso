@@ -43,16 +43,17 @@ def compute_flow_proxy(df, ticker, window=FLOW_ZSCORE_WINDOW):
     Calcula el Flow Proxy compuesto para un ticker.
     Formula: 0.30*flow_smooth + 0.35*obv_z + 0.35*cmf_z
     donde:
-      flow_smooth = EWMA(10) de robust_zscore(ret*dollar_vol, window=60)
-      obv_z = robust_zscore(OBV.pct_change(), window=60)
+      flow_smooth = EWMA(10) de robust_zscore(ret*signed_volume_pressure, window=60)
+      donde signed_volume_pressure = ret * close * volume
+      obv_z = robust_zscore(OBV.pct_change(), window=60)  # NOTA: pct_change() sobre serie acumulativa puede generar outliers. Alternativa: obv.diff()
       cmf_z = robust_zscore(CMF(20), window=60)
     Retorna una Serie temporal con el Flow Proxy compuesto.
     """
     close = get_col(df, ticker, 'Close')
     volume = get_col(df, ticker, 'Volume')
-    dollar_vol = close * volume
+    signed_volume_pressure = close * volume
     ret = close.pct_change(fill_method=None)
-    flow = ret * dollar_vol
+    flow = ret * signed_volume_pressure
     flow_z = robust_zscore(flow, window=window)
     flow_smooth = flow_z.ewm(span=FLOW_EWM_SPAN, min_periods=20).mean()
     # Componentes adicionales
