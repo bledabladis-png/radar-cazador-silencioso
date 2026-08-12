@@ -27,3 +27,4 @@ outputs/*.png
 !outputs/history/*.csv
 !outputs/state/
 !outputs/state/*.json
+*.bak_repair
