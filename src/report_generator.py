@@ -647,7 +647,7 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
             top5 = darkpool_data['datos'].nlargest(5, 'dark_pool_pct')
             for _, row in top5.iterrows():
                 lines.append(f"| {row['ticker']} | {row['dark_pool_pct']:.2f}% | {row['ats_volume']:,.0f} | {row['total_volume']:,.0f} |\n")
-            lines.append("\n*Nota: Un alto % de volumen en ATS NO implica acumulacion institucional. 'Distribucion extrema' se refiere al nivel de actividad ATS, no a distribucion Wyckoff.*\n")
+            lines.append("\n*Nota: Un alto % de volumen en ATS NO implica acumulacion institucional. Las categorias reflejan el nivel de actividad ATS relativa a su historial, no la direccion del flujo institucional.*\n")
         lines.append(f"\n*Fuente: FINRA ATS Transparency Data.*\n\n")
 
     # =========================================================================

@@ -19,19 +19,19 @@ def rolling_percentile(series):
 
 def classify_darkpool(z):
     if z >= 2.5:
-        return "Acumulacion extrema"
+        return "Actividad ATS extremadamente alta"
     elif z >= 1.5:
-        return "Acumulacion fuerte"
+        return "Actividad ATS muy alta"
     elif z >= 0.5:
-        return "Acumulacion moderada"
+        return "Actividad ATS alta"
     elif z > -0.5:
-        return "Neutral"
+        return "Actividad ATS normal"
     elif z > -1.5:
-        return "Distribucion moderada"
+        return "Actividad ATS baja"
     elif z > -2.5:
-        return "Distribucion fuerte"
+        return "Actividad ATS muy baja"
     else:
-        return "Distribucion extrema"
+        return "Actividad ATS extremadamente baja"
 
 def _get_all_tickers():
     tickers = []
