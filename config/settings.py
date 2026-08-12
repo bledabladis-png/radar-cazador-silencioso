@@ -22,7 +22,6 @@ ZSCORE_SHORT_WINDOW = 60      # ~3 meses
 ZSCORE_YEAR_WINDOW = 252      # ~1 año
 
 TREND_EMA_WINDOW = 50         # EMA rápida para tendencia
-BREADTH_WINDOW = 20           # ventana para breadth táctico
 
 # ============================================================
 # DATA CACHE & DOWNLOADS
