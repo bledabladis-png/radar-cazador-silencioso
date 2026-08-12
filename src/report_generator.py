@@ -63,7 +63,7 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
                           slpm_v12_data=None, tactical_scores=None, structural_scores=None,
                           sector_persistence=None, signal_agreements=None, signal_agreements_display=None,
                           cross_module_conflict=None, shock_sensitivities=None, price_flow_divergences=None,
-                          dc_summary="", all_signals=None, real_liq_prev=None, index_leaders=None, output_path='outputs/report/reporte_diario.md'):
+                          dc_summary="", all_signals=None, real_liq_prev=None, index_leaders=None, index_phases=None, output_path='outputs/report/reporte_diario.md'):
     lines = []
     lines.append("# MACRO SECTORIAL - Reporte Diario\n")
     lines.append(f"**Fecha:** {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
@@ -672,9 +672,22 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
     # Solo presenta estados oficiales de los módulos. No infiere causas.
     # Máximo 3 elementos, sin especulación, sin redundancias.
     # =====================================================================
-        # =====================================================================
     # INDICES INTERNACIONALES — OPORTUNIDADES DE ACUMULACION
     # =====================================================================
+    # -----------------------------------------------------------------
+    # INDICES INTERNACIONALES — FASES WYCKOFF
+    # -----------------------------------------------------------------
+    lines.append("\n## Indices Internacionales — Fases Wyckoff\n")
+    lines.append("| Indice | Ticker | Fase Wyckoff |\n")
+    lines.append("|--------|--------|--------------|\n")
+    if index_phases:
+        for nombre, fase in index_phases.items():
+            ticker = INDEX_CONFIG.get(nombre, {}).get('index_ticker', '')
+            lines.append(f"| {nombre} | {ticker} | {fase} |\n")
+    else:
+        lines.append("| No disponible | No disponible | No disponible |\n")
+    lines.append("\n")
+
     lines.append("\n## Indices Internacionales — Oportunidades de Acumulacion\n")
     lines.append("*Nota: Los componentes se obtienen de ETFs proxy que replican el indice de referencia. Solo se muestran indices en fase ACCUMULATION.*\n\n")
     if index_leaders:

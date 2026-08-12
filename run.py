@@ -576,7 +576,7 @@ def main():
                           shock_sensitivities=shock_sensitivities,
                           price_flow_divergences=price_flow_divergences,
                           dc_summary=dc_summary,
-                          real_liq_prev=real_liq_prev, index_leaders=index_leaders,
+                          real_liq_prev=real_liq_prev, index_leaders=index_leaders, index_phases=index_phases,
                           all_signals=all_signals)
     print("Reporte generado en outputs/report/reporte_diario.md")
 
