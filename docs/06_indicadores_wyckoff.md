@@ -1,13 +1,27 @@
-# Modulo Wyckoff (v4.2)
-
 ## Proposito
-Proporciona un score continuo de estructura de precios para ETFs sectoriales y acciones lideres.
+Proporciona un score continuo de estructura de precios para ETFs sectoriales y acciones lideres, basado en los principios de Wyckoff (acumulacion/distribucion).
 
 ## Arquitectura
+
 - wyckoff_structural_score(): trend + ATR (70%).
 - wyckoff_tactical_score(): volume + effort (30%).
 - wyckoff_score(): combinacion ponderada de ambos.
 - wyckoff_structure_core(): clasifica en MARKUP, ACCUMULATION, RANGE, DISTRIBUTION.
+
+
+## Formulas
+
+**Score Estructural:** 0.60*trend_norm + 0.40*compression_norm
+**Score Tactico:** 0.50*volume_norm + 0.50*effort_norm
+**Score Combinado:** 0.70*structural + 0.30*tactical
+
+
+## Salidas
+
+- Fase Wyckoff (MARKUP, ACCUMULATION, RANGE, DISTRIBUTION) en rankings sectoriales.
+- Wyckoff Leadership Score (WLS) en tablas de lideres.
+- Confianza y dispersion de componentes en metadatos.
+
 
 ## Constantes Configurables
 | Constante | Valor |

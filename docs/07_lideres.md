@@ -1,21 +1,26 @@
-# Lideres Sectoriales e Internacionales
-
 ## Proposito
 Selecciona las mejores empresas de cada sector/indice en fase favorable (ACCUMULATION o MARKUP) usando el Wyckoff Leadership Score (WLS).
 
-## WLS (Wyckoff Leadership Score)
-Combina:
-- RS (Relative Strength) normalizado: 35%
-- Flujo (Flow Proxy) normalizado: 25%
-- RWS (Relative Wyckoff Score) normalizado: 25%
-- Estabilidad: 10%
-Bonus por persistencia: +5% * min(persistence_10d/10, 1.0).
+## Arquitectura
 
-## Lideres Sectoriales
-- Archivo: indicators/stock_leader.py
-- Fuente de holdings: data/etf_holdings.csv (actualizacion trimestral automatica desde State Street).
+- stock_leader.py: compute_stock_metrics(), compute_wls(), generate_leader_section().
+- index_leaders.py: analogo para indices internacionales.
+- Fuente de holdings: data/etf_holdings.csv (sectores) y data/index_holdings.csv (indices).
+- Actualizacion trimestral automatica via GitHub Actions.
 
-## Lideres Internacionales
-- Archivo: indicators/index_leaders.py
-- Fuente de holdings: data/index_holdings.csv
-- Indices cubiertos: S&P 500, Dow Jones, Nasdaq-100, Russell 2000, Euro Stoxx 50, Ibex 35, DAX 40, FTSE 100.
+
+## Formulas
+
+- **WLS:** 0.35*rs_z + 0.25*flow_z_norm + 0.25*rws_z + 0.10*stab_z, con bonus por persistencia.
+- **RWS:** Relative Wyckoff Score (normalizacion intra-sector/indice).
+
+
+## Salidas
+
+- Tablas 'Acciones Seleccionadas por el Modelo de Liderazgo Sectorial' en el reporte.
+- Tablas 'Indices Internacionales - Oportunidades de Acumulacion' en el reporte.
+- Archivos CSV: nalisis_lideres.csv y nalisis_lideres_internacionales.csv.
+
+
+## Limitaciones Conocidas
+Solo se muestran sectores/indices en fase ACCUMULATION o MARKUP. El resto se omiten por no cumplir criterios de liderazgo estructural.

@@ -1,12 +1,18 @@
-# Fuentes de Datos
+## Proposito
+Descripcion de los proveedores de datos utilizados por el radar.
+
+## Arquitectura
 
 | Fuente | Proveedor | Archivo | Actualizacion |
 |--------|-----------|---------|---------------|
-| Precios (ETFs, acciones, indices) | Yahoo Finance | data/providers/yahoo.py | Diaria (< 1 dia) |
-| Datos macro (WALCL, SOFR, RRP) | FRED / archivos manuales | data/providers/fred.py, data/macro_manual/ | Semanal |
-| Opciones (PCR, IHR) | CBOE | data/providers/cboe.py | Diaria (1-2 dias) |
-| Dark Pools (ATS) | FINRA | data/providers/finra.py | Semanal |
+| Precios | Yahoo Finance | data/providers/yahoo.py | Diaria |
+| Opciones | CBOE | data/providers/cboe.py | Diaria |
+| Dark Pools | FINRA | data/providers/finra.py | Semanal |
+| Macro | FRED / manual | data/providers/fred.py, data/macro_manual/ | Semanal |
 
-## Cache
-- CACHE_HOURS = 23: los datos de mercado se cachean por 23 horas.
-- CACHE_TTL: por proveedor (yahoo=23h, fred=168h, cboe=24h, finra=168h).
+
+## Formulas
+No aplica.
+
+## Salidas
+DataFrames de OHLCV, datos de opciones, datos ATS y series macroeconomicas.

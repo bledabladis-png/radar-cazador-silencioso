@@ -1,5 +1,14 @@
-# Configuracion del Sistema
-**Archivo:** config/settings.py
+## Proposito
+Centraliza todas las constantes del sistema: ventanas temporales, umbrales, pesos y parametros de calidad de datos.
+
+## Arquitectura
+Archivo unico: config/settings.py.
+
+## Formulas
+No aplica.
+
+## Salidas
+Las constantes son importadas por todos los modulos del sistema.
 
 ## Constantes Globales
 

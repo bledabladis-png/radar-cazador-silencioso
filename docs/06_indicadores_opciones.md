@@ -1,28 +1,26 @@
-# Indicadores: Opciones (OMS v2.0)
-
 ## Proposito
 Calcula el PCR (Put/Call Ratio) y el IHR (Institutional Hedge Ratio) a partir de datos de CBOE.
 
-## Metricas
-- PCR Total, PCR Indices, PCR Acciones, PCR ETP, PCR VIX, PCR SPX.
-- IHR = PCR Indices / PCR Acciones.
-- Volumen en Indices (% del total).
-- Put Share / Call Share.
+## Arquitectura
 
-## Clasificacion IHR
-| Rango | Clasificacion |
-|-------|---------------|
-| < 0.8 | Especulacion extrema |
-| 0.8 - 1.2 | Especulacion alta |
-| 1.2 - 1.6 | Equilibrado |
-| 1.6 - 2.5 | Cobertura institucional alta |
-| > 2.5 | Cobertura institucional extrema |
+- compute_pcr_signals(): orquestador principal.
+- options_metrics.py: funciones de calculo (IHR, PCR, Put/Call Share, etc.).
+- classify_pcr(): clasifica el Z-Score del PCR en Panico, Miedo, Neutral, Optimismo, Euforia.
+- classify_ihr(): clasifica el IHR en Especulacion, Equilibrado, Cobertura institucional.
 
-## Clasificacion PCR (Z-Score)
-| Rango | Estado |
-|-------|--------|
-| >= 2.0 | Panico |
-| 1.0 - 2.0 | Miedo |
-| -1.0 a 1.0 | Neutral |
-| -2.0 a -1.0 | Optimismo |
-| < -2.0 | Euforia |
+
+## Formulas
+
+- **IHR:** PCR Indices / PCR Acciones.
+- **Volume PCR:** Put Volume / Call Volume.
+- **OI PCR:** Put OI / Call OI.
+
+
+## Salidas
+
+- Seccion 'Sentimiento de Opciones (OMS v2.0)' en el reporte.
+- PCR Total, PCR Indices, PCR Acciones, IHR, Volumen en Indices, Put/Call Share.
+
+
+## Limitaciones Conocidas
+El Z-Score del PCR requiere al menos 20 dias de historial. Con menos de 20 registros, no se calcula.

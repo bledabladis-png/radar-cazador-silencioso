@@ -1,5 +1,5 @@
 ﻿# -*- coding: utf-8 -*-
-# scripts/generate_docs.py - Genera documentacion automatica desde el codigo fuente (v2 - completa)
+# scripts/generate_docs.py - Genera documentacion automatica desde el codigo fuente (v3 - completa)
 import os
 import re
 import sys
@@ -73,24 +73,27 @@ def generate_readme():
     lines.append('*Esta documentacion se genera automaticamente desde el codigo fuente. No editar manualmente.*')
     return '\n'.join(lines)
 
+# ---- PLANTILLA BASE PARA CADA DOCUMENTO ----
+def template(proposito, arquitectura, formulas, salidas, limitaciones=''):
+    doc = f"""## Proposito
+{proposito}
+
+## Arquitectura
+{arquitectura}
+
+## Formulas
+{formulas}
+
+## Salidas
+{salidas}
+"""
+    if limitaciones:
+        doc += f"\n## Limitaciones Conocidas\n{limitaciones}\n"
+    return doc
+
 def generate_arquitectura():
-    return """# Arquitectura General
-
-## Premisas Fundamentales
-- **NO trading bot:** el sistema no genera ordenes, no sugiere timing, no automatiza rotacion de cartera.
-- **NO sobreingenieria:** no se usa ML, optimizacion de parametros ni complejidad gratuita. Codigo determinista y transparente.
-- **Toda decision final de inversion es humana.**
-
-## Flujo Principal
-1. Descarga de datos de mercado (Yahoo Finance, FRED, CBOE, FINRA).
-2. Validacion de datos (NaN, cobertura).
-3. Calculo de regimenes (Macro, Financial, Liquidity, Volatility, Sector).
-4. Motores tactico y estructural para cada sector.
-5. Indicadores: momentum, flujo, breadth, Wyckoff, opciones, Dark Pools, MTE.
-6. SLPM (Structural Leadership) para auditar liderazgo del sector #1.
-7. Generacion de rankings y reporte Markdown.
-
-## Estructura de Modulos
+    proposito = "El Radar de Rotacion Sectorial es un sistema informativo diario que analiza flujos institucionales, contexto macro, estructura de precios (Wyckoff) y estructura del mercado de opciones para producir rankings, tablas y analisis para el gestor humano."
+    arquitectura = """
 - un.py: orquestador principal.
 - config/: settings, tickers, weights.
 - egimes/: condiciones financieras, liquidez, volatilidad, macro, sector.
@@ -99,106 +102,106 @@ def generate_arquitectura():
 - data/: providers (yahoo, cboe, finra, fred), datos macro manuales.
 - alidation/: scripts de auditoria y backtesting.
 """
+    formulas = "No aplica (modulo estructural)."
+    salidas = "Reporte diario en Markdown (outputs/reporte_diario.md)."
+    return template(proposito, arquitectura, formulas, salidas)
 
 def generate_config_doc():
     constants = extract_constants(SETTINGS_FILE)
     rows = [[f'{k}', f'{v}'] for k, v in sorted(constants.items())]
     table = format_table(['Constante', 'Valor'], rows)
-    return f"""# Configuracion del Sistema
-**Archivo:** {SETTINGS_FILE}
-
-## Constantes Globales
-
-{table}
-"""
+    proposito = "Centraliza todas las constantes del sistema: ventanas temporales, umbrales, pesos y parametros de calidad de datos."
+    arquitectura = f"Archivo unico: {SETTINGS_FILE}."
+    formulas = "No aplica."
+    salidas = "Las constantes son importadas por todos los modulos del sistema."
+    return template(proposito, arquitectura, formulas, salidas) + f"\n## Constantes Globales\n\n{table}\n"
 
 def generate_fuentes():
-    return """# Fuentes de Datos
-
+    proposito = "Descripcion de los proveedores de datos utilizados por el radar."
+    arquitectura = """
 | Fuente | Proveedor | Archivo | Actualizacion |
 |--------|-----------|---------|---------------|
-| Precios (ETFs, acciones, indices) | Yahoo Finance | data/providers/yahoo.py | Diaria (< 1 dia) |
-| Datos macro (WALCL, SOFR, RRP) | FRED / archivos manuales | data/providers/fred.py, data/macro_manual/ | Semanal |
-| Opciones (PCR, IHR) | CBOE | data/providers/cboe.py | Diaria (1-2 dias) |
-| Dark Pools (ATS) | FINRA | data/providers/finra.py | Semanal |
-
-## Cache
-- CACHE_HOURS = 23: los datos de mercado se cachean por 23 horas.
-- CACHE_TTL: por proveedor (yahoo=23h, fred=168h, cboe=24h, finra=168h).
+| Precios | Yahoo Finance | data/providers/yahoo.py | Diaria |
+| Opciones | CBOE | data/providers/cboe.py | Diaria |
+| Dark Pools | FINRA | data/providers/finra.py | Semanal |
+| Macro | FRED / manual | data/providers/fred.py, data/macro_manual/ | Semanal |
 """
+    formulas = "No aplica."
+    salidas = "DataFrames de OHLCV, datos de opciones, datos ATS y series macroeconomicas."
+    return template(proposito, arquitectura, formulas, salidas)
 
 def generate_regimenes():
-    doc_financial = extract_docstring('regimes/financial_conditions.py', 'compute_financial_conditions') or 'Calcula el score de condiciones financieras (VIX, credito, dolar, curva).'
-    doc_macro = extract_docstring('regimes/macro_regime.py', 'compute_macro_regime') or 'Clasifica el regimen macro en 11 categorias.'
-    return f"""# Regimenes
-
-## Financial Conditions
-{chr(96)}{chr(96)}{chr(96)}
-{doc_financial}
-{chr(96)}{chr(96)}{chr(96)}
-
-## Liquidity (FRED)
-Calcula la liquidez real a partir del balance de la Fed (WALCL), SOFR, Reverse Repo y Fed Funds.
-
-## Volatility
-Basado en VIX. Z-Score robusto de la volatilidad realizada a 20 dias vs mediana de 3 anios.
-
-## Macro Regime
-{chr(96)}{chr(96)}{chr(96)}
-{doc_macro}
-{chr(96)}{chr(96)}{chr(96)}
-
-## Sector Regime
-Ranking sectorial combinando momentum, tendencia, volatilidad, breadth y Wyckoff.
+    proposito = "Modulos que evaluan el contexto macroeconomico, las condiciones financieras, la liquidez real, la volatilidad y la amplitud sectorial."
+    arquitectura = """
+- inancial_conditions.py: score basado en VIX, credito, dolar y curva (0.40/0.30/0.15/0.15).
+- liquidity.py: liquidez real a partir de WALCL, SOFR, RRP y Fed Funds.
+- olatility_regime.py: regimen de volatilidad basado en VIX.
+- macro_regime.py: clasificacion en 11 categorias macro.
+- sector_regime.py: ranking sectorial combinando momentum, tendencia, volatilidad, breadth y Wyckoff.
 """
+    formulas = """
+- **Financial Score:** 0.40*VIX_norm + 0.30*Credito_norm + 0.15*Dolar_norm + 0.15*Curva_norm.
+- **Liquidity Score:** media ponderada de senhales normalizadas (0.35*Fed Balance + 0.25*RRP + 0.20*SOFR + 0.20*Fed Funds).
+"""
+    salidas = """
+- Estados: ABUNDANTE, NEUTRAL, ESTRECHA, HIGH_STRESS, EXTREME_STRESS, CRISIS, LIQUIDITY CRISIS, RECESSION, INFLATION SHOCK, STAGFLATION, GOLDILOCKS, EXPANSION, LATE EXPANSION, RECOVERY, DEFLATION, SLOWDOWN, MIXED.
+- Regimen sectorial: BROAD PARTICIPATION, ROTATIONAL, NARROW RALLY, CYCLICAL LEADERSHIP, DEFENSIVE LEADERSHIP, MIXED.
+"""
+    return template(proposito, arquitectura, formulas, salidas)
 
 def generate_motores():
-    doc_tactical = extract_docstring('regimes/tactical_engine.py', 'compute_tactical_score') or 'Score de corto plazo (RS20, Momentum20, Flow, Breadth20, Aceleracion).'
-    doc_structural = extract_docstring('regimes/structural_engine.py', 'compute_structural_score') or 'Score de largo plazo (RS multi-ventana, Leader Breadth, Flow Structure, Persistence).'
-    return f"""# Motores Tactico y Estructural
-
-## Tactical Engine
-{chr(96)}{chr(96)}{chr(96)}
-{doc_tactical}
-{chr(96)}{chr(96)}{chr(96)}
-
-## Structural Engine
-{chr(96)}{chr(96)}{chr(96)}
-{doc_structural}
-{chr(96)}{chr(96)}{chr(96)}
+    doc_tactical = extract_docstring('regimes/tactical_engine.py', 'compute_tactical_score') or 'Score de corto plazo (RS20 30%, Momentum20 25%, Flow 20%, Breadth20 15%, Aceleracion 10%).'
+    doc_structural = extract_docstring('regimes/structural_engine.py', 'compute_structural_score') or 'Score de largo plazo (RS multi-ventana 35%, Leader Breadth 25%, Flow Structure 20%, Persistence 20%).'
+    proposito = "Calculan el Tactical Score (corto plazo) y el Structural Score (largo plazo) para cada sector."
+    arquitectura = """
+- 	actical_engine.py: compute_tactical_score().
+- structural_engine.py: compute_structural_score().
+Ambos se usan en el Opportunity Map y en el SLPM.
 """
+    formulas = f"""
+**Tactical Score:** {doc_tactical}
+**Structural Score:** {doc_structural}
+"""
+    salidas = """
+- Tactical Score: valor entre -1 y +1.
+- Structural Score: valor entre -1 y +1.
+Ambos aparecen en las tablas de rankings y en el Opportunity Map.
+"""
+    return template(proposito, arquitectura, formulas, salidas)
 
 def generate_momentum():
     doc_flow = extract_docstring('indicators/momentum.py', 'compute_flow_proxy') or 'Flow Proxy = 0.30*ret*vol + 0.35*OBV + 0.35*CMF.'
     constants = extract_constants(SETTINGS_FILE, 'FLOW_')
     rows = [[f'{k}', f'{v}'] for k, v in sorted(constants.items())]
     table = format_table(['Constante', 'Valor'], rows) if rows else ''
-    return f"""# Indicadores: Momentum y Flujo
-
-## Flow Proxy
-{chr(96)}{chr(96)}{chr(96)}
-{doc_flow}
-{chr(96)}{chr(96)}{chr(96)}
-
-## Constantes de Flujo
-{table}
+    proposito = "Calcula el Flow Proxy (senhal de flujo institucional basada en precio y volumen) y el momentum de precio."
+    arquitectura = """
+- compute_flow_proxy(): combinacion de retorno*volumen, OBV y CMF.
+- compute_price_momentum(): retorno porcentual a 20 dias.
 """
+    formulas = f"**Flow Proxy:** {doc_flow}"
+    salidas = """
+- Flow Proxy: z-score utilizado en rankings sectoriales y en el SLPM.
+- Momentum de precio: retorno a 20 dias mostrado en tablas del reporte.
+"""
+    return template(proposito, arquitectura, formulas, salidas) + f"\n## Constantes de Flujo\n{table}\n"
 
 def generate_breadth():
     doc_breadth = extract_docstring('indicators/breadth.py', 'compute_breadth') or 'Calcula % de sectores sobre EMAs y nuevos maximos/minimos.'
     constants = extract_constants(SETTINGS_FILE, 'BREADTH_')
     rows = [[f'{k}', f'{v}'] for k, v in sorted(constants.items())]
     table = format_table(['Constante', 'Valor'], rows) if rows else ''
-    return f"""# Indicadores: Breadth
-
-## Breadth de Mercado
-{chr(96)}{chr(96)}{chr(96)}
-{doc_breadth}
-{chr(96)}{chr(96)}{chr(96)}
-
-## Constantes de Breadth
-{table}
+    proposito = "Mide la amplitud del mercado sectorial (porcentaje de sectores sobre sus EMAs) y detecta divergencias."
+    arquitectura = """
+- compute_breadth(): porcentajes sobre EMA20, EMA50, EMA200.
+- readth_equity.py: avances/descensos del mercado general.
 """
+    formulas = f"**Breadth:** {doc_breadth}"
+    salidas = """
+- % sobre EMA20/50/200 mostrado en la seccion Breadth de Mercado.
+- Divergencias breadth en la seccion de Divergencias Detectadas.
+"""
+    return template(proposito, arquitectura, formulas, salidas) + f"\n## Constantes de Breadth\n{table}\n"
 
 def generate_wyckoff():
     doc_structural = extract_docstring('indicators/wyckoff.py', 'wyckoff_structural_score')
@@ -207,28 +210,24 @@ def generate_wyckoff():
     wyckoff_constants = extract_constants(SETTINGS_FILE, 'WYCKOFF_')
     rows = [[f'{k}', f'{v}'] for k, v in sorted(wyckoff_constants.items())]
     table = format_table(['Constante', 'Valor'], rows)
-    lines = [
-        '# Modulo Wyckoff (v4.2)',
-        '',
-        '## Proposito',
-        'Proporciona un score continuo de estructura de precios para ETFs sectoriales y acciones lideres.',
-        '',
-        '## Arquitectura',
-        '- wyckoff_structural_score(): trend + ATR (70%).',
-        '- wyckoff_tactical_score(): volume + effort (30%).',
-        '- wyckoff_score(): combinacion ponderada de ambos.',
-        '- wyckoff_structure_core(): clasifica en MARKUP, ACCUMULATION, RANGE, DISTRIBUTION.',
-        '',
-    ]
-    if doc_structural:
-        lines.append(f'### Score Estructural\n{chr(96)}{chr(96)}{chr(96)}\n{doc_structural}\n{chr(96)}{chr(96)}{chr(96)}\n')
-    if doc_tactical:
-        lines.append(f'### Score Tactico\n{chr(96)}{chr(96)}{chr(96)}\n{doc_tactical}\n{chr(96)}{chr(96)}{chr(96)}\n')
-    if doc_score:
-        lines.append(f'### Score Combinado\n{chr(96)}{chr(96)}{chr(96)}\n{doc_score}\n{chr(96)}{chr(96)}{chr(96)}\n')
-    lines.append('## Constantes Configurables')
-    lines.append(table)
-    return '\n'.join(lines)
+    proposito = "Proporciona un score continuo de estructura de precios para ETFs sectoriales y acciones lideres, basado en los principios de Wyckoff (acumulacion/distribucion)."
+    arquitectura = """
+- wyckoff_structural_score(): trend + ATR (70%).
+- wyckoff_tactical_score(): volume + effort (30%).
+- wyckoff_score(): combinacion ponderada de ambos.
+- wyckoff_structure_core(): clasifica en MARKUP, ACCUMULATION, RANGE, DISTRIBUTION.
+"""
+    formulas = f"""
+**Score Estructural:** {doc_structural or '0.60*trend_norm + 0.40*compression_norm'}
+**Score Tactico:** {doc_tactical or '0.50*volume_norm + 0.50*effort_norm'}
+**Score Combinado:** {doc_score or '0.70*structural + 0.30*tactical'}
+"""
+    salidas = """
+- Fase Wyckoff (MARKUP, ACCUMULATION, RANGE, DISTRIBUTION) en rankings sectoriales.
+- Wyckoff Leadership Score (WLS) en tablas de lideres.
+- Confianza y dispersion de componentes en metadatos.
+"""
+    return template(proposito, arquitectura, formulas, salidas) + f"\n## Constantes Configurables\n{table}\n"
 
 def generate_slpm():
     doc_state = extract_docstring('indicators/state_machine.py', 'classify_leadership_state')
@@ -238,166 +237,119 @@ def generate_slpm():
         thresholds[match.group(1)] = match.group(2)
     rows = [[f'{k}', f'{v}'] for k, v in sorted(thresholds.items())]
     table = format_table(['Parametro', 'Valor'], rows)
-    lines = [
-        '# Structural Leadership (SLPM v1.2)',
-        '',
-        '## Proposito',
-        'Audita la calidad del liderazgo del sector #1 del ranking.',
-        '',
-        '## Componentes',
-        '- **Leader Breadth v2:** amplitud del liderazgo (RS, momentum, flujo, Wyckoff).',
-        '- **Leader Integrity Score (LIS):** intensidad/calidad de los lideres individuales.',
-        '- **Flow Divergence 2.0:** divergencias entre flujo de lideres y sector.',
-        '- **State Machine:** clasifica el estado (CONFIRMED, EMERGING, TACTICAL_CORRECTION, STRUCTURAL_DECAY, LOST, UNRESOLVED).',
-        '',
-        '## Umbrales de la State Machine',
-        table,
-    ]
-    if doc_state:
-        lines.append(f'\n## Logica de Clasificacion\n{chr(96)}{chr(96)}{chr(96)}\n{doc_state}\n{chr(96)}{chr(96)}{chr(96)}')
-    return '\n'.join(lines)
+    proposito = "Audita la calidad del liderazgo del sector #1 del ranking. No es otro ranking: evalua si el lider es estructuralmente solido."
+    arquitectura = """
+- compute_leader_breadth_v2(): amplitud del liderazgo (RS, momentum, flujo, Wyckoff).
+- compute_leader_integrity(): LIS (intensidad/calidad de los lideres individuales).
+- compute_flow_divergence_v2(): divergencias entre flujo de lideres y sector.
+- classify_leadership_state(): State Machine con 6 estados + UNRESOLVED.
+- confirm_transition(): histeresis temporal.
+"""
+    formulas = f"**State Machine:** {doc_state or 'Jerarquia de umbrales documentada en state_machine.py.'}"
+    salidas = """
+- Estado (CONFIRMED, EMERGING, TACTICAL_CORRECTION, STRUCTURAL_DECAY, LOST, UNRESOLVED).
+- Leader Breadth, LIS, Flow Divergence 2.0, Effective Breadth.
+- LQ Dimensions (P, C, S, Cf).
+- Seccion completa en el reporte bajo 'Structural Leadership (SLPM v1.2)'.
+"""
+    return template(proposito, arquitectura, formulas, salidas) + f"\n## Umbrales de la State Machine\n{table}\n"
 
 def generate_opciones():
-    ihr_thresholds = read_file('indicators/options_metrics.py')
-    lines = [
-        '# Indicadores: Opciones (OMS v2.0)',
-        '',
-        '## Proposito',
-        'Calcula el PCR (Put/Call Ratio) y el IHR (Institutional Hedge Ratio) a partir de datos de CBOE.',
-        '',
-        '## Metricas',
-        '- PCR Total, PCR Indices, PCR Acciones, PCR ETP, PCR VIX, PCR SPX.',
-        '- IHR = PCR Indices / PCR Acciones.',
-        '- Volumen en Indices (% del total).',
-        '- Put Share / Call Share.',
-        '',
-        '## Clasificacion IHR',
-        '| Rango | Clasificacion |',
-        '|-------|---------------|',
-        '| < 0.8 | Especulacion extrema |',
-        '| 0.8 - 1.2 | Especulacion alta |',
-        '| 1.2 - 1.6 | Equilibrado |',
-        '| 1.6 - 2.5 | Cobertura institucional alta |',
-        '| > 2.5 | Cobertura institucional extrema |',
-        '',
-        '## Clasificacion PCR (Z-Score)',
-        '| Rango | Estado |',
-        '|-------|--------|',
-        '| >= 2.0 | Panico |',
-        '| 1.0 - 2.0 | Miedo |',
-        '| -1.0 a 1.0 | Neutral |',
-        '| -2.0 a -1.0 | Optimismo |',
-        '| < -2.0 | Euforia |',
-    ]
-    return '\n'.join(lines)
+    proposito = "Calcula el PCR (Put/Call Ratio) y el IHR (Institutional Hedge Ratio) a partir de datos de CBOE."
+    arquitectura = """
+- compute_pcr_signals(): orquestador principal.
+- options_metrics.py: funciones de calculo (IHR, PCR, Put/Call Share, etc.).
+- classify_pcr(): clasifica el Z-Score del PCR en Panico, Miedo, Neutral, Optimismo, Euforia.
+- classify_ihr(): clasifica el IHR en Especulacion, Equilibrado, Cobertura institucional.
+"""
+    formulas = """
+- **IHR:** PCR Indices / PCR Acciones.
+- **Volume PCR:** Put Volume / Call Volume.
+- **OI PCR:** Put OI / Call OI.
+"""
+    salidas = """
+- Seccion 'Sentimiento de Opciones (OMS v2.0)' en el reporte.
+- PCR Total, PCR Indices, PCR Acciones, IHR, Volumen en Indices, Put/Call Share.
+"""
+    limitaciones = "El Z-Score del PCR requiere al menos 20 dias de historial. Con menos de 20 registros, no se calcula."
+    return template(proposito, arquitectura, formulas, salidas, limitaciones)
 
 def generate_darkpool():
     constants = extract_constants(SETTINGS_FILE, 'DARKPOOL_')
     rows = [[f'{k}', f'{v}'] for k, v in sorted(constants.items())]
     table = format_table(['Constante', 'Valor'], rows)
-    return f"""# Indicadores: Dark Pools (FINRA v1.0)
-
-## Proposito
-Mide el porcentaje de volumen negociado en ATS (Alternative Trading Systems) respecto al volumen total, usando datos de FINRA.
-
-## Z-Scores
-Se calculan Z-Scores robustos para 4 ventanas: 13, 26, 52 y 104 semanas.
-
-## Clasificacion
-| Z-Score | Estado |
-|---------|--------|
-| >= 2.5 | Acumulacion extrema |
-| 1.5 a 2.5 | Acumulacion fuerte |
-| 0.5 a 1.5 | Acumulacion moderada |
-| -0.5 a 0.5 | Neutral |
-| -1.5 a -0.5 | Distribucion moderada |
-| -2.5 a -1.5 | Distribucion fuerte |
-| < -2.5 | Distribucion extrema |
-
-## Constantes
-{table}
+    proposito = "Mide el porcentaje de volumen negociado en ATS (Alternative Trading Systems) respecto al volumen total, usando datos de FINRA."
+    arquitectura = """
+- compute_darkpool_signals(): orquestador principal.
+- FinraProvider: descarga datos ATS semanales.
+- _compute_z_for_window(): calcula Z-Score robusto para cada ventana.
+- classify_darkpool(): clasifica en Acumulacion/Distribucion extrema, fuerte, moderada o Neutral.
 """
+    formulas = """
+- Z-Score robusto (mediana/MAD) para ventanas de 13, 26, 52 y 104 semanas.
+- % ATS medio: media del porcentaje de volumen ATS entre todos los tickers.
+"""
+    salidas = """
+- Seccion 'Actividad en ATS - Dark Pools (FINRA v1.0)' en el reporte.
+- % Volumen en ATS medio, Z-Scores por ventana, Top 5 tickers.
+- Advertencia de obsolescencia si los datos tienen >21 dias.
+"""
+    limitaciones = "Los datos de FINRA pueden tener un desfase de varias semanas. Si la antiguedad supera los 21 dias, los datos no se usan para clasificacion actual."
+    return template(proposito, arquitectura, formulas, salidas, limitaciones) + f"\n## Constantes\n{table}\n"
 
 def generate_mte():
-    doc_mte = extract_docstring('indicators/mte.py', 'compute_confidence') or 'Confianza del escenario MTE (distancia a umbrales + consenso).'
-    return f"""# Indicadores: Market Transition Engine (MTE v1.0)
-
-## Proposito
-Infiere el escenario macro que el mercado parece estar descontando, basado en 4 motores (SRS, SHS, CLS, IPS).
-
-## Motores
-- **SRS (Sector Rotation Score):** rotacion sectorial.
-- **SHS (Safe Haven Score):** demanda de activos refugio.
-- **CLS (Credit/Liquidity Stress Score):** estres en credito/liquidez.
-- **IPS (Inflation Pressure Score):** presion inflacionaria.
-
-## Indices
-- **MSI (Market Stress Index):** SRS + SHS + CLS (0-100).
-- **IPI (Inflation Pressure Index):** basado en IPS (0-100).
-
-## Escenarios
-CRISIS, RECESSION, STAGFLATION, SOFT LANDING, EXPANSION, MIXED.
-
-## Confianza
-{chr(96)}{chr(96)}{chr(96)}
-{doc_mte}
-{chr(96)}{chr(96)}{chr(96)}
+    proposito = "Infiere el escenario macro que el mercado parece estar descontando, basado en 4 motores (SRS, SHS, CLS, IPS)."
+    arquitectura = """
+- compute_srs(): Sector Rotation Score.
+- compute_shs(): Safe Haven Score.
+- compute_cls(): Credit/Liquidity Stress Score.
+- compute_ips(): Inflation Pressure Score.
+- compute_msi(): Market Stress Index (SRS + SHS + CLS).
+- compute_ipi(): Inflation Pressure Index.
+- classify_mte(): clasifica en CRISIS, RECESSION, STAGFLATION, SOFT LANDING, EXPANSION, MIXED.
+- compute_confidence(): confianza del escenario (distancia a umbrales + consenso).
 """
+    formulas = """
+- **MSI:** agregacion de SRS, SHS y CLS (0-100).
+- **IPI:** basado en IPS (0-100).
+- **Confianza:** 0.6 * distancia_umbrales + 0.4 * consenso_motores.
+"""
+    salidas = """
+- Seccion 'Market Transition Engine (MTE v1.0)' en el reporte.
+- Escenario candidato, MSI, IPI, scores de los 4 motores, Signal Consistency.
+"""
+    limitaciones = "El escenario se marca como (UNCONFIRMED) si la confianza es inferior al 50%. La confianza no esta calibrada historicamente."
+    return template(proposito, arquitectura, formulas, salidas, limitaciones)
 
 def generate_lideres():
-    return """# Lideres Sectoriales e Internacionales
-
-## Proposito
-Selecciona las mejores empresas de cada sector/indice en fase favorable (ACCUMULATION o MARKUP) usando el Wyckoff Leadership Score (WLS).
-
-## WLS (Wyckoff Leadership Score)
-Combina:
-- RS (Relative Strength) normalizado: 35%
-- Flujo (Flow Proxy) normalizado: 25%
-- RWS (Relative Wyckoff Score) normalizado: 25%
-- Estabilidad: 10%
-Bonus por persistencia: +5% * min(persistence_10d/10, 1.0).
-
-## Lideres Sectoriales
-- Archivo: indicators/stock_leader.py
-- Fuente de holdings: data/etf_holdings.csv (actualizacion trimestral automatica desde State Street).
-
-## Lideres Internacionales
-- Archivo: indicators/index_leaders.py
-- Fuente de holdings: data/index_holdings.csv
-- Indices cubiertos: S&P 500, Dow Jones, Nasdaq-100, Russell 2000, Euro Stoxx 50, Ibex 35, DAX 40, FTSE 100.
+    proposito = "Selecciona las mejores empresas de cada sector/indice en fase favorable (ACCUMULATION o MARKUP) usando el Wyckoff Leadership Score (WLS)."
+    arquitectura = """
+- stock_leader.py: compute_stock_metrics(), compute_wls(), generate_leader_section().
+- index_leaders.py: analogo para indices internacionales.
+- Fuente de holdings: data/etf_holdings.csv (sectores) y data/index_holdings.csv (indices).
+- Actualizacion trimestral automatica via GitHub Actions.
 """
+    formulas = """
+- **WLS:** 0.35*rs_z + 0.25*flow_z_norm + 0.25*rws_z + 0.10*stab_z, con bonus por persistencia.
+- **RWS:** Relative Wyckoff Score (normalizacion intra-sector/indice).
+"""
+    salidas = """
+- Tablas 'Acciones Seleccionadas por el Modelo de Liderazgo Sectorial' en el reporte.
+- Tablas 'Indices Internacionales - Oportunidades de Acumulacion' en el reporte.
+- Archivos CSV: nalisis_lideres.csv y nalisis_lideres_internacionales.csv.
+"""
+    limitaciones = "Solo se muestran sectores/indices en fase ACCUMULATION o MARKUP. El resto se omiten por no cumplir criterios de liderazgo estructural."
+    return template(proposito, arquitectura, formulas, salidas, limitaciones)
 
 def generate_reporte():
-    return """# Generacion del Reporte Diario
-
-## Archivo
-src/report_generator.py
-
-## Estructura del Reporte
-1. Cabecera (fecha, version).
-2. Resumen de Regimenes (Macro, Financial, Liquidity, Volatility, Sectores).
-3. Data Freshness y Cobertura.
-4. Divergencias Detectadas (Breadth, Price-Flow).
-5. Cross-Module Conflict Detector.
-6. Breadth de Mercado.
-7. Momentum de Precio - Sectores (20 dias).
-8. Flujo Institucional - Sectores (Proxy).
-9. Tactical Leaders (momentum de corto plazo).
-10. Momentum y Flujo - Otros Activos.
-11. Structural Ranking (fortaleza de largo plazo).
-12. Rankings Sectoriales (Score combinado original).
-13. Opportunity Map (Tactical vs Structural).
-14. Structural Leadership (SLPM v1.2).
-15. Acciones Seleccionadas (lideres sectoriales e internacionales).
-16. Sentimiento de Opciones (OMS v2.0).
-17. Market Transition Engine (MTE v1.0).
-18. Confirmation Data (Nivel 2).
-19. Cross-Asset Ratios.
-20. Dark Pools (FINRA).
-21. Estado Actual - Sintesis de Senhales.
-22. Anti-Double-Counting Audit.
+    proposito = "Genera el reporte diario en formato Markdown con todas las secciones del radar."
+    arquitectura = """
+- generate_daily_report(): funcion principal con mas de 20 parametros.
+- Secciones: Resumen de Regimenes, Data Freshness, Divergencias, Breadth, Momentum, Flujo, Rankings, Opportunity Map, SLPM, Lideres, Opciones, MTE, Dark Pools, Cross-Asset, Anti-Double-Counting.
 """
+    formulas = "No aplica (formato de salida)."
+    salidas = "Archivo outputs/reporte_diario.md generado en cada ejecucion."
+    return template(proposito, arquitectura, formulas, salidas)
 
 def generate_auditorias():
     scripts = [
@@ -413,15 +365,12 @@ def generate_auditorias():
     ]
     rows = [[f'{name}', desc] for name, desc in scripts]
     table = format_table(['Script', 'Descripcion'], rows)
-    return f"""# Scripts de Auditoria
+    proposito = "Scripts independientes que validan la estabilidad y robustez del sistema. No modifican el codigo productivo."
+    arquitectura = f"Ubicados en alidation/. Se ejecutan manualmente con py validation/<script>.py."
+    formulas = "No aplica."
+    salidas = "Resultados en consola y archivos CSV en outputs/."
+    return template(proposito, arquitectura, formulas, salidas) + f"\n{table}\n"
 
-## Proposito
-Scripts independientes que validan la estabilidad y robustez del sistema. No modifican el codigo productivo.
-
-{table}
-"""
-
-# ---- MAIN ----
 def main():
     os.makedirs(DOCS_DIR, exist_ok=True)
     generators = {

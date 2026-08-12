@@ -1,22 +1,23 @@
-# Regimenes
+## Proposito
+Modulos que evaluan el contexto macroeconomico, las condiciones financieras, la liquidez real, la volatilidad y la amplitud sectorial.
 
-## Financial Conditions
-```
-Calcula el score de condiciones financieras agregando VIX, credito, dolar y curva.
-    Formula: 0.40*VIX_norm + 0.30*Credito_norm + 0.15*Dolar_norm + 0.15*Curva_norm.
-    Cada componente se normaliza con z-score robusto y tanh. Retorna puntuacion [-1, +1].
-```
+## Arquitectura
 
-## Liquidity (FRED)
-Calcula la liquidez real a partir del balance de la Fed (WALCL), SOFR, Reverse Repo y Fed Funds.
+- inancial_conditions.py: score basado en VIX, credito, dolar y curva (0.40/0.30/0.15/0.15).
+- liquidity.py: liquidez real a partir de WALCL, SOFR, RRP y Fed Funds.
+- olatility_regime.py: regimen de volatilidad basado en VIX.
+- macro_regime.py: clasificacion en 11 categorias macro.
+- sector_regime.py: ranking sectorial combinando momentum, tendencia, volatilidad, breadth y Wyckoff.
 
-## Volatility
-Basado en VIX. Z-Score robusto de la volatilidad realizada a 20 dias vs mediana de 3 anios.
 
-## Macro Regime
-```
-Clasifica el regimen macro en 11 categorias.
-```
+## Formulas
 
-## Sector Regime
-Ranking sectorial combinando momentum, tendencia, volatilidad, breadth y Wyckoff.
+- **Financial Score:** 0.40*VIX_norm + 0.30*Credito_norm + 0.15*Dolar_norm + 0.15*Curva_norm.
+- **Liquidity Score:** media ponderada de senhales normalizadas (0.35*Fed Balance + 0.25*RRP + 0.20*SOFR + 0.20*Fed Funds).
+
+
+## Salidas
+
+- Estados: ABUNDANTE, NEUTRAL, ESTRECHA, HIGH_STRESS, EXTREME_STRESS, CRISIS, LIQUIDITY CRISIS, RECESSION, INFLATION SHOCK, STAGFLATION, GOLDILOCKS, EXPANSION, LATE EXPANSION, RECOVERY, DEFLATION, SLOWDOWN, MIXED.
+- Regimen sectorial: BROAD PARTICIPATION, ROTATIONAL, NARROW RALLY, CYCLICAL LEADERSHIP, DEFENSIVE LEADERSHIP, MIXED.
+
