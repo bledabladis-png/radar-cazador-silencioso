@@ -1,0 +1,33 @@
+﻿name: Actualizar Index Holdings (trimestral)
+
+on:
+  schedule:
+    - cron: '0 4 1 1,4,7,10 *'   # 1 enero, abril, julio, octubre a las 04:00 UTC
+  workflow_dispatch:
+
+jobs:
+  update-index-holdings:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Configurar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Instalar dependencias
+        run: pip install requests pandas openpyxl
+      - name: Ejecutar actualización
+        run: python scripts/update_index_holdings.py
+      - name: Commit y push si hay cambios
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git add data/index_holdings.csv
+          if git diff --cached --quiet; then
+            echo "No hay cambios en index holdings."
+          else
+            git commit -m "Actualizar index_holdings.csv (automático trimestral)"
+            git push
+          fi
