@@ -14,6 +14,7 @@ CORRECCIONES APLICADAS (auditoria 24/07/2026):
 import pandas as pd
 import numpy as np
 from src.utils import robust_zscore, get_col
+from config.settings import FINANCIAL_CONDITIONS_WEIGHTS, FINANCIAL_CONDITIONS_THRESHOLDS
 
 def compute_financial_conditions(df):
     """Calcula el score de condiciones financieras agregando VIX, credito, dolar y curva.
@@ -53,7 +54,7 @@ def compute_financial_conditions(df):
     except KeyError:
         pass
 
-    weights = {'vix': 0.40, 'credit': 0.30, 'dollar': 0.15, 'curve': 0.15}
+    weights = FINANCIAL_CONDITIONS_WEIGHTS
     available = [c for c in weights if c in scores.columns]
     w_sum = sum(weights[c] for c in available)
     if w_sum == 0:
@@ -63,13 +64,13 @@ def compute_financial_conditions(df):
     confidence = (1 - scores[available].std(axis=1).fillna(0) / 2).clip(0, 1)
     last = financial_score.iloc[-1] if not financial_score.empty else 0
 
-    if last > 0.3:
+    if last > FINANCIAL_CONDITIONS_THRESHOLDS['abundante']:
         regime = 'ABUNDANTE'
-    elif last > 0:
+    elif last > FINANCIAL_CONDITIONS_THRESHOLDS['neutral']:
         regime = 'NEUTRAL'
-    elif last > -0.3:
+    elif last > FINANCIAL_CONDITIONS_THRESHOLDS['estrecha']:
         regime = 'ESTRECHA'
-    elif last > -0.6:
+    elif last > FINANCIAL_CONDITIONS_THRESHOLDS['high_stress']:
         regime = 'HIGH_STRESS'
     else:
         regime = 'EXTREME_STRESS'

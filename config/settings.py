@@ -157,3 +157,39 @@ WYCKOFF_TACT_WEIGHT_EFFORT = 0.50
 WYCKOFF_COMBINED_STRUCT_WEIGHT = 0.70
 WYCKOFF_COMBINED_TACT_WEIGHT = 0.30
 
+
+
+# ============================================================
+# FASE B v4.3 - CENTRALIZACION DE PARAMETROS
+# ============================================================
+
+FINANCIAL_CONDITIONS_WEIGHTS = {'vix': 0.40, 'credit': 0.30, 'dollar': 0.15, 'curve': 0.15}
+FINANCIAL_CONDITIONS_THRESHOLDS = {
+    'abundante': 0.3,
+    'neutral': 0.0,
+    'estrecha': -0.3,
+    'high_stress': -0.6,
+}
+
+PCR_THRESHOLDS = {
+    'panico': 2.0,
+    'miedo': 1.0,
+    'neutral': -1.0,
+    'optimismo': -2.0,
+}
+
+IHR_THRESHOLDS = {
+    'cobertura_extrema': 2.5,
+    'cobertura_alta': 1.6,
+    'equilibrado': 1.2,
+    'especulacion_alta': 0.8,
+}
+
+DARKPOOL_THRESHOLDS = {
+    'extremadamente_alta': 2.5,
+    'muy_alta': 1.5,
+    'alta': 0.5,
+    'normal': -0.5,
+    'baja': -1.5,
+    'muy_baja': -2.5,
+}

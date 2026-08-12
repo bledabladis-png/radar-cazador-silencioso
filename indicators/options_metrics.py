@@ -1,4 +1,5 @@
 ﻿import numpy as np
+from config.settings import PCR_THRESHOLDS, IHR_THRESHOLDS
 
 # ---------- RATIOS INSTITUCIONALES ----------
 
@@ -65,13 +66,13 @@ def oi_change(today_oi, yesterday_oi):
 def classify_pcr(z):
     if z is None or not np.isfinite(z):
         return "Sin historial suficiente"
-    if z >= 2.0:
+    if z >= PCR_THRESHOLDS['panico']:
         return "Pánico"
-    elif z >= 1.0:
+    elif z >= PCR_THRESHOLDS['miedo']:
         return "Miedo"
-    elif z > -1.0:
+    elif z > PCR_THRESHOLDS['neutral']:
         return "Neutral"
-    elif z > -2.0:
+    elif z > PCR_THRESHOLDS['optimismo']:
         return "Optimismo"
     else:
         return "Euforia"
@@ -79,13 +80,13 @@ def classify_pcr(z):
 def classify_ihr(ihr):
     if ihr is None or np.isnan(ihr):
         return "N/A"
-    if ihr >= 2.5:
+    if ihr >= IHR_THRESHOLDS['cobertura_extrema']:
         return "Cobertura institucional extrema"
-    elif ihr >= 1.6:
+    elif ihr >= IHR_THRESHOLDS['cobertura_alta']:
         return "Cobertura institucional alta"
-    elif ihr >= 1.2:
+    elif ihr >= IHR_THRESHOLDS['equilibrado']:
         return "Equilibrado"
-    elif ihr >= 0.8:
+    elif ihr >= IHR_THRESHOLDS['especulacion_alta']:
         return "Especulación alta"
     else:
         return "Especulación extrema"

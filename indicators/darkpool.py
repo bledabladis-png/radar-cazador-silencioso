@@ -4,6 +4,7 @@ import numpy as np
 from datetime import datetime, timedelta
 from data.providers.finra import FinraProvider
 from config.tickers import MARKET_TICKERS
+from config.settings import DARKPOOL_THRESHOLDS
 import yfinance as yf
 
 def robust_zscore(series):
@@ -18,17 +19,17 @@ def rolling_percentile(series):
     return (series < last).mean() * 100
 
 def classify_darkpool(z):
-    if z >= 2.5:
+    if z >= DARKPOOL_THRESHOLDS['extremadamente_alta']:
         return "Actividad ATS extremadamente alta"
-    elif z >= 1.5:
+    elif z >= DARKPOOL_THRESHOLDS['muy_alta']:
         return "Actividad ATS muy alta"
-    elif z >= 0.5:
+    elif z >= DARKPOOL_THRESHOLDS['alta']:
         return "Actividad ATS alta"
-    elif z > -0.5:
+    elif z > DARKPOOL_THRESHOLDS['normal']:
         return "Actividad ATS normal"
-    elif z > -1.5:
+    elif z > DARKPOOL_THRESHOLDS['baja']:
         return "Actividad ATS baja"
-    elif z > -2.5:
+    elif z > DARKPOOL_THRESHOLDS['muy_baja']:
         return "Actividad ATS muy baja"
     else:
         return "Actividad ATS extremadamente baja"
