@@ -47,7 +47,19 @@ def _get_all_tickers():
             tickers.extend(holdings['ticker'].tolist())
     except:
         pass
-    return list(set([t for t in tickers if not t.startswith('^')]))
+    # Filtro adicional: solo tickers con formato razonable de acción
+    tickers = [t for t in tickers if not t.startswith('^')]
+    valid = []
+    for t in tickers:
+        if not isinstance(t, str):
+            continue
+        t = t.strip()
+        if not t:
+            continue
+        # Ticker típico: 1-6 caracteres, letras, punto o guion, no empezar por número
+        if re.fullmatch(r'[A-Z][A-Z0-9.-]{0,5}', t) and not t.startswith('-'):
+            valid.append(t)
+    return list(set(valid))
 
 def _get_volume_from_df(df, week_start, end_date_str):
     volumes = {}
@@ -68,7 +80,7 @@ def _backfill_history(hist, finra):
     needed = 104 - len(hist)
     if needed <= 0:
         return hist
-    MAX_PER_RUN = 50
+    MAX_PER_RUN = 1
     to_download = min(needed, MAX_PER_RUN)
     latest_week = finra.get_latest_week()
     if not latest_week:

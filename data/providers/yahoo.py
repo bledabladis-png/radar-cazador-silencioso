@@ -1,4 +1,4 @@
-﻿import pandas as pd
+import pandas as pd
 import yfinance as yf
 import time
 import os
@@ -8,8 +8,8 @@ from .base import MarketDataProvider
 class YahooProvider(MarketDataProvider):
     def __init__(self):
         self.name = "Yahoo Finance"
-        self.max_retries = 3
-        self.backoff_seconds = 2
+        self.max_retries = 2
+        self.backoff_seconds = 5
 
     def get_name(self) -> str:
         return self.name
