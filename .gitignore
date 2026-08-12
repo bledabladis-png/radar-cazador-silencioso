@@ -7,3 +7,12 @@ outputs/backtest_v2_results.csv
 outputs/sensitivity_results.csv
 .env
 outputs/analisis_lideres_internacionales.csv
+outputs/
+*.xls
+*.xlsx
+*.bak
+*.backup
+*.log
+validation/test_*.py
+scripts/test_*.py
+scripts/map_yahoo_tickers_europe.py
