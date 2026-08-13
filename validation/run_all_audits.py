@@ -74,7 +74,14 @@ if os.path.exists(path_report):
 else:
     log('❌ No se encontro reporte_diario.md')
 
-# 5. Estados clave
+# 5. Verificación de selección de líderes
+try:
+    import subprocess
+    subprocess.run(['py', 'validation/verify_leader_selection.py'], check=False)
+except Exception as e:
+    print(f'Error en verificación de líderes: {e}')
+
+# 6. Estados clave
 for path, key in [('outputs/state/slpm_state.json','state'), ('outputs/state/mte_state.json','scenario')]:
     if os.path.exists(path):
         import json
