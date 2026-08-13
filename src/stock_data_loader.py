@@ -7,18 +7,47 @@ import time
 
 CACHE_HOURS = 23
 
+YAHOO_TICKER_MAP = {
+    "BRK.B": "BRK-B",
+    "BF.B": "BF-B",
+}
+
+def normalize_yahoo_ticker(t):
+    """Convierte tickers problemáticos al formato que acepta Yahoo Finance."""
+    return YAHOO_TICKER_MAP.get(t, t)
+
 def get_stock_list():
+    """Obtiene lista de tickers para descargar: top 20 de cada sector y de cada índice."""
+    tickers = []
+
+    # 1) Sectores USA (data/etf_holdings.csv)
     try:
-        df = pd.read_csv('data/etf_holdings.csv')
-        # Limitar a 20 tickers por sector, ordenando por weight descendente
-        if 'weight' in df.columns:
-            df = df.sort_values(['etf', 'weight'], ascending=[True, False])
-        result = []
-        for etf, group in df.groupby('etf'):
-            result.extend(group['ticker'].head(20).tolist())
-        return result
+        df_sect = pd.read_csv('data/etf_holdings.csv')
+        if 'weight' in df_sect.columns:
+            df_sect = df_sect.sort_values(['etf', 'weight'], ascending=[True, False])
+        for etf, group in df_sect.groupby('etf'):
+            tickers.extend([normalize_yahoo_ticker(t) for t in group['ticker'].head(20).tolist()])
     except Exception:
-        return []
+        pass
+
+    # 2) Índices americanos/europeos (data/index_holdings.csv)
+    try:
+        df_idx = pd.read_csv('data/index_holdings.csv')
+        if 'weight' in df_idx.columns:
+            df_idx = df_idx.sort_values(['etf', 'weight'], ascending=[True, False])
+        for etf, group in df_idx.groupby('etf'):
+            tickers.extend([normalize_yahoo_ticker(t) for t in group['ticker'].head(20).tolist()])
+    except Exception:
+        pass
+
+    # Eliminar duplicados preservando orden
+    seen = set()
+    result = []
+    for t in tickers:
+        if t and t not in seen:
+            seen.add(t)
+            result.append(t)
+    return result
 
 @retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=4, max=10))
 def download_stock_prices():

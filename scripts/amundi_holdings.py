@@ -2,7 +2,6 @@
 
 import argparse
 import csv
-import re
 import time
 from pathlib import Path
 from typing import Any
@@ -13,8 +12,8 @@ import yfinance as yf
 # Adaptación local
 AMUNDI_URL = "https://www.amundietf.es/mapi/ProductAPI/getProductsData"
 BASE_DIR = Path(__file__).resolve().parents[1]
-OUTPUT_HOLDINGS = BASE_DIR / "outputs" / "amundi_lyxi_holdings.csv"
-OUTPUT_VALIDATION = BASE_DIR / "outputs" / "amundi_lyxi_validation.csv"
+OUTPUT_HOLDINGS = BASE_DIR / "outputs" / "holdings" / "amundi_lyxi_holdings.csv"
+OUTPUT_VALIDATION = BASE_DIR / "outputs" / "holdings" / "amundi_lyxi_validation.csv"
 
 
 # ---------------------------------------------------------
@@ -331,3 +330,4 @@ if __name__ == "__main__":
 
     rows = extract_etf(args.isin)
     write_csv(rows)
+

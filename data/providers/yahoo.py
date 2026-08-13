@@ -1,7 +1,6 @@
 import pandas as pd
 import yfinance as yf
 import time
-import os
 from pathlib import Path
 from .base import MarketDataProvider
 

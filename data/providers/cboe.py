@@ -1,4 +1,6 @@
-﻿import requests, json, re, sys
+﻿import requests
+import json
+import re
 from .base import MarketDataProvider
 
 URL = "https://www.cboe.com/markets/us/options/market-statistics/daily/"

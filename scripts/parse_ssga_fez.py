@@ -48,9 +48,9 @@ for i in range(header_row + 1, len(df)):
 
 # Ordenar por peso descendente y tomar top 10
 holdings.sort(key=lambda x: x['weight'], reverse=True)
-top10 = holdings[:10]
+top20 = holdings[:20]
 
 out = 'outputs/holdings/FEZ_final_holdings.csv'
-pd.DataFrame(top10).to_csv(out, index=False)
+pd.DataFrame(top20).to_csv(out, index=False)
 print(f'Guardado: {out}')
-print(pd.DataFrame(top10).to_string(index=False))
+print(pd.DataFrame(top20).to_string(index=False))

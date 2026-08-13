@@ -9,8 +9,6 @@ import json
 import os
 from config.settings import MTE_STATE_FILE
 from src.utils import robust_zscore, get_col
-import json
-import os
 
 # ============================================================
 # 0. FUNCIONES AUXILIARES

@@ -30,7 +30,6 @@ from indicators.index_leaders import select_index_leaders
 def main():
     validate_sector_universe()
     # Crear subcarpetas de outputs necesarias para ejecución limpia
-    import os
     for subdir in ['report', 'history', 'state', 'holdings', 'audit', 'cache']:
         os.makedirs(f'outputs/{subdir}', exist_ok=True)
     print("Descargando datos de mercado...")
@@ -568,6 +567,7 @@ def main():
                           sector_price_rank, sector_flow_rank, otros_price_rank, otros_flow_rank,
                           leader_lines=leader_lines, breadth_values=breadth_values,
                           real_liquidity_regime=real_liq_regime, real_liquidity_conf=real_liq_conf,
+                            real_liq_score=real_liq_score,
                           pcr_data=pcr_data, darkpool_data=darkpool_data, mte_result=mte_result,
                           confirmation_data=confirmation_data,
                           slpm_v12_data=slpm_v12_data,

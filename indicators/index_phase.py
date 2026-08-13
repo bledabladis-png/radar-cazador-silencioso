@@ -7,7 +7,7 @@ from data.providers.router import DataRouter
 
 def compute_index_phases(df_market):
     router = DataRouter()
-    all_index_tickers = [cfg['index_ticker'] for cfg in INDEX_CONFIG.values()]
+    [cfg['index_ticker'] for cfg in INDEX_CONFIG.values()]
     
     # Intentar obtener desde df_market primero
     missing_tickers = []

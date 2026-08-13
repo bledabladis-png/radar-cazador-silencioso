@@ -1,4 +1,4 @@
-﻿name: Daily Macro Sectorial Run
+name: Daily Macro Sectorial Run
 
 on:
   schedule:
@@ -46,6 +46,14 @@ jobs:
             outputs/state/slpm_state.json
             outputs/state/mte_state.json
             outputs/state/liquidity_state.json
+          retention-days: 7
+          if-no-files-found: ignore
+
+      - name: Upload download failures artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: download-failures
+          path: outputs/audit/download_failures.md
           retention-days: 7
           if-no-files-found: ignore
 

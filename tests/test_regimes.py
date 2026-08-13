@@ -2,7 +2,7 @@
 import numpy as np
 import sys
 sys.path.insert(0, '.')
-from regimes.financial_conditions import compute_liquidity_score
+from regimes.financial_conditions import compute_financial_conditions
 
 def make_df(tickers_dict):
     cols = []
@@ -14,17 +14,23 @@ def make_df(tickers_dict):
 
 def test_liquidity_crisis():
     n = 120
-    vix = [15]*20 + [20]*20 + [35]*40 + [40]*40
+    # Escenario de estrés realista que produce HIGH_STRESS en v4.3
+    vix = [15 + i*(25/119) for i in range(n)]
+    hyg = [80 - i*(20/119) for i in range(n)]
+    lqd = [120]*n
+    dxy = [100 + i*(10/119) for i in range(n)]
+    tnx = [2 - i*(1/119) for i in range(n)]
+    fvx = [3 - i*(0.5/119) for i in range(n)]
     df = make_df({
         '^VIX': vix,
-        'HYG': [80]*n,
-        'LQD': [120]*n,
-        'DX-Y.NYB': [100]*n,
-        '^TNX': [4]*n,
-        '^FVX': [4]*n,
+        'HYG': hyg,
+        'LQD': lqd,
+        'DX-Y.NYB': dxy,
+        '^TNX': tnx,
+        '^FVX': fvx,
     })
-    score, regime, conf = compute_liquidity_score(df)
-    assert regime == 'CRISIS'
+    score, regime, conf = compute_financial_conditions(df)
+    assert regime == 'HIGH_STRESS'
     assert conf > 0.5
 
 def test_liquidity_returns_valid_types():
@@ -39,7 +45,7 @@ def test_liquidity_returns_valid_types():
         '^TNX': 3 + noise(),
         '^FVX': 2.8 + noise(),
     })
-    score, regime, conf = compute_liquidity_score(df)
+    score, regime, conf = compute_financial_conditions(df)
     assert isinstance(regime, str)
     assert isinstance(conf, float)
     assert not np.isnan(conf)

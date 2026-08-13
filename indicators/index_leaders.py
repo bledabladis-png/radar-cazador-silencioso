@@ -25,9 +25,14 @@ def compute_stock_metrics_for_index(df_stocks, index_name, stock_list, df_index_
                 close = get_col(df_stocks, ticker, 'Close')
                 volume = get_col(df_stocks, ticker, 'Volume')
             else:
-                single_df = router.get_market_data([ticker], period='5y')
-                close = get_col(single_df, ticker, 'Close')
-                volume = get_col(single_df, ticker, 'Volume')
+                try:
+                    single_df = router.get_market_data([ticker], period='5y')
+                    if single_df is None or ticker not in single_df.columns.get_level_values(1):
+                        continue
+                    close = get_col(single_df, ticker, 'Close')
+                    volume = get_col(single_df, ticker, 'Volume')
+                except Exception:
+                    continue
         except:
             continue
 
@@ -112,7 +117,8 @@ def select_index_leaders(df_market, df_stocks, index_names, df_index_data=None):
         etf = config['etf_ticker']
         max_comp = config['max_companies']
 
-        tickers = holdings[holdings['etf'] == etf]['ticker'].tolist()[:max_comp]
+        sub = holdings[holdings['etf'] == etf].sort_values('weight', ascending=False)
+        tickers = sub['ticker'].tolist()[:max_comp]
         if not tickers:
             continue
 

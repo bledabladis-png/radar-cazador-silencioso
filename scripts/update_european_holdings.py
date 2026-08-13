@@ -30,7 +30,7 @@ index_df = index_df[~index_df['etf'].isin(european_etfs)]
 fez = pd.read_csv('outputs/holdings/FEZ_final_holdings.csv')
 daxex = pd.read_csv('outputs/holdings/DAXEX_final_holdings.csv')
 isf = pd.read_csv('outputs/holdings/ISF.L_final_holdings.csv')
-amundi = pd.read_csv('outputs/holdings/amundi_lyxi_holdings.csv').sort_values('weight', ascending=False).head(10)
+amundi = pd.read_csv('outputs/holdings/amundi_lyxi_holdings.csv').sort_values('weight', ascending=False).head(20)
 amundi['etf'] = 'LYXI'
 
 cols = ['etf', 'ticker', 'name', 'weight']

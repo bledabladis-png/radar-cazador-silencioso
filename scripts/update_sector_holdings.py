@@ -6,7 +6,6 @@ import pandas as pd
 from io import BytesIO
 import os
 import sys
-from datetime import datetime
 
 # ETFs sectoriales con sus URLs de State Street (formato US)
 SECTOR_ETFS = {

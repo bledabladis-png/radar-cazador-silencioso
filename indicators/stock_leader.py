@@ -1,6 +1,6 @@
-import pandas as pd
+﻿import pandas as pd
 import numpy as np
-from indicators.wyckoff import wyckoff_score, wyckoff_confidence, classify_wyckoff_phase, detect_spring, detect_sos
+from indicators.wyckoff import wyckoff_score, classify_wyckoff_phase, detect_spring, detect_sos
 from src.utils import robust_zscore, get_col
 
 def compute_stock_metrics(df_market, df_stocks, etf_ticker, stock_list):
@@ -17,7 +17,7 @@ def compute_stock_metrics(df_market, df_stocks, etf_ticker, stock_list):
         if len(close.dropna()) < 60:
             continue
 
-        # Alinear índices para evitar NaN por diferencias de calendario
+        # Alinear Ã­ndices para evitar NaN por diferencias de calendario
         common_idx = close.index.intersection(price_etf.index)
         rs = close.loc[common_idx] / price_etf.loc[common_idx]
         rs_mom = np.log(rs).diff(20).iloc[-1]
@@ -153,10 +153,10 @@ def generate_leader_section(df_market, df_stocks, holdings_df, fase_dict, operab
         lines.append(f'## Sector: {sector} ({fase})\n')
         lines.append('| Ticker | RS | RS Mom | Flujo (z) | WLS | Fase Wyckoff | Spring | SOS |\n')
         lines.append('|--------|----|--------|-----------|-----|---------------|--------|-----|\n')
-        lines.append('*RS = RS Level (precio acción / precio sector). RS Mom = RS Momentum (cambio del RS en 20 días). El WLS combina ambas con pesos 35% y 25% respectivamente.*\n')
+        lines.append('*RS = RS Level (precio acciÃ³n / precio sector). RS Mom = RS Momentum (cambio del RS en 20 dÃ­as). El WLS combina ambas con pesos 35% y 25% respectivamente.*\n')
         for _, row in wls_df.head(5).iterrows():
-            spring_flag = '✓' if row.get('spring', 0) == 1 else ''
-            sos_flag = '✓' if row.get('sos', 0) == 1 else ''
+            spring_flag = 'âœ“' if row.get('spring', 0) == 1 else ''
+            sos_flag = 'âœ“' if row.get('sos', 0) == 1 else ''
             lines.append(f"| {row['ticker']} | {row['rs']:.2f} | {row['rs_mom']:.2%} | {row['flow_z']:.2f} | {row['wls']:.2f} | {row['wyckoff_phase']} | {spring_flag} | {sos_flag} |\n")
         lines.append('\n')
 
@@ -171,4 +171,5 @@ def generate_leader_section(df_market, df_stocks, holdings_df, fase_dict, operab
             return lines, final_df
         return lines, None
     return None, None
+
 

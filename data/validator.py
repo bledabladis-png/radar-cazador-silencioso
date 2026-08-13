@@ -39,7 +39,7 @@ def validate_market_data(df):
 
     return valid_cols, issues
 
-def validate_macro_manual(df, required_cols=None):
+def validate_macro_manual(df):
     """Chequea que los CSVs manuales tengan columna 'date' y no estÃ©n vacÃ­os."""
     issues = []
     if df is None or df.empty:
@@ -51,3 +51,4 @@ def validate_macro_manual(df, required_cols=None):
     if len(df) < 2:
         issues.append('Very few rows')
     return len(issues) == 0, issues
+
