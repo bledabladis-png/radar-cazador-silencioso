@@ -10,7 +10,9 @@ CACHE_HOURS = 23
 def get_stock_list():
     try:
         df = pd.read_csv('data/etf_holdings.csv')
-        # Limitar a 20 tickers por sector (los primeros del CSV, asumiendo orden por peso)
+        # Limitar a 20 tickers por sector, ordenando por weight descendente
+        if 'weight' in df.columns:
+            df = df.sort_values(['etf', 'weight'], ascending=[True, False])
         result = []
         for etf, group in df.groupby('etf'):
             result.extend(group['ticker'].head(20).tolist())

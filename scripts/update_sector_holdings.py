@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 # scripts/update_sector_holdings.py
 # Actualiza data/etf_holdings.csv desde los archivos oficiales de State Street
 import requests
@@ -51,28 +51,39 @@ for etf, url in SECTOR_ETFS.items():
         
         # Buscar la fila de encabezados que contiene 'Ticker'
         ticker_col = None
+        weight_col = None
         header_row = None
         for i, row in df.iterrows():
             for j, cell in row.items():
                 if isinstance(cell, str) and cell.strip() == 'Ticker':
                     ticker_col = j
                     header_row = i
-                    break
+                if isinstance(cell, str) and 'weight' in cell.lower():
+                    weight_col = j
             if ticker_col is not None:
                 break
         
         if ticker_col is None:
             raise Exception('No se encontro columna Ticker en el Excel')
         
-        # Extraer tickers desde la fila siguiente a los encabezados
+        # Extraer tickers y pesos desde la fila siguiente a los encabezados
         tickers = []
+        weights = []
         for i in range(header_row + 1, len(df)):
             ticker = df.iloc[i, ticker_col]
             if isinstance(ticker, str) and ticker.strip():
                 tickers.append(ticker.strip().upper())
+                if weight_col is not None:
+                    w = df.iloc[i, weight_col]
+                    try:
+                        weights.append(float(str(w).replace(',', '.')))
+                    except:
+                        weights.append(0.0)
+                else:
+                    weights.append(0.0)
         
         if tickers:
-            all_data.append(pd.DataFrame({'etf': etf, 'ticker': tickers}))
+            all_data.append(pd.DataFrame({'etf': etf, 'ticker': tickers, 'weight': weights}))
             updated.append(etf)
             print(f'  {len(tickers)} tickers extraidos')
         else:
