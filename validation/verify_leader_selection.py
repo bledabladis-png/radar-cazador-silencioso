@@ -8,11 +8,18 @@ from pathlib import Path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 OUT = 'outputs/audit/verify_leader_selection.md'
+HAS_ERRORS = False
+HAS_WARNINGS = False
 
 def log(msg=''):
+    global HAS_ERRORS, HAS_WARNINGS
     print(msg)
     with open(OUT, 'a', encoding='utf-8') as f:
         f.write(msg + '\n')
+    if '❌' in msg:
+        HAS_ERRORS = True
+    elif '⚠️' in msg:
+        HAS_WARNINGS = True
 
 # Limpiar informe anterior
 if os.path.exists(OUT):

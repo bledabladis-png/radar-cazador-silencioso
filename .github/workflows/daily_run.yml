@@ -28,6 +28,9 @@ jobs:
           POLYGON_API_KEY: ${{ secrets.POLYGON_API_KEY }}
         run: python run.py
 
+      - name: Verify leader selection
+        run: python validation/verify_leader_selection.py
+
       - name: Upload artifacts (downloadable report)
         uses: actions/upload-artifact@v4
         with:
