@@ -45,3 +45,10 @@ jobs:
             outputs/state/liquidity_state.json
           retention-days: 7
           if-no-files-found: ignore
+
+      - name: Commit and push hist/state
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add outputs/history outputs/state
+          git diff --staged --quiet || (git commit -m "Daily hist/state " && git push)
