@@ -143,7 +143,8 @@ class BackupProvider:
                 '4. close': 'Close',
                 '5. volume': 'Volume'
             }, inplace=True)
-            df = df.last('5y')
+            cutoff = pd.Timestamp.now() - pd.DateOffset(years=5)
+            df = df[df.index >= cutoff]
             df.columns = pd.MultiIndex.from_product([df.columns, [ticker]])
             return df
         except Exception:
