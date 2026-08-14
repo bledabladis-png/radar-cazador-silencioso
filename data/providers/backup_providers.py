@@ -19,35 +19,45 @@ class BackupProvider:
 
     def get_prices(self, tickers: list, period: str = '5y') -> pd.DataFrame:
         if not self._can_call():
-            print("  Presupuesto de respaldo agotado.")
+            print("  [RESPALDO] Presupuesto de respaldo agotado.")
             return pd.DataFrame()
 
         frames = []
         for t in tickers:
             if not self._can_call():
                 break
+
             df = self._tiingo_daily(t)
             if df is not None:
+                print(f"  [RESPALDO] Tiingo suministró datos para {t}")
                 frames.append(df)
                 self.calls += 1
                 continue
+
             df = self._twelve_data_daily(t)
             if df is not None:
+                print(f"  [RESPALDO] Twelve Data suministró datos para {t}")
                 frames.append(df)
                 self.calls += 1
                 continue
+
             df = self._alpha_vantage_daily(t)
             if df is not None:
+                print(f"  [RESPALDO] Alpha Vantage suministró datos para {t}")
                 frames.append(df)
                 self.calls += 1
                 continue
+
             df = self._finnhub_daily(t)
             if df is not None:
+                print(f"  [RESPALDO] Finnhub suministró datos para {t}")
                 frames.append(df)
                 self.calls += 1
                 continue
+
             df = self._fmp_daily(t)
             if df is not None:
+                print(f"  [RESPALDO] FMP suministró datos para {t}")
                 frames.append(df)
                 self.calls += 1
                 continue
