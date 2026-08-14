@@ -6,6 +6,7 @@ import time
 from config.tickers import MARKET_TICKERS
 from config.settings import CACHE_HOURS
 from data.providers.router import DataRouter
+from data.providers.backup_providers import BackupProvider
 
 YAHOO_TICKER_MAP = {
     "BRK.B": "BRK-B",
@@ -53,6 +54,7 @@ def download_market_data():
 
     tickers = _ticker_list()
     router = DataRouter()
+    backup = BackupProvider()
 
     # Descarga por lotes para evitar bloqueos
     batch_size = 5
@@ -74,8 +76,18 @@ def download_market_data():
                 batch_errors.append('Datos vacíos')
         except Exception as e:
             print(f"Error en lote {batch}: {e}")
-            batches_failed.append(batch)
-            batch_errors.append(str(e))
+            try:
+                backup_data = backup.get_prices(batch, period=period)
+                if backup_data is not None and not backup_data.empty:
+                    all_data.append(backup_data)
+                    print(f"  Respaldo obtuvo datos para {batch}")
+                else:
+                    batches_failed.append(batch)
+                    batch_errors.append(str(e))
+            except Exception as be:
+                print(f"  Error en respaldo: {be}")
+                batches_failed.append(batch)
+                batch_errors.append(str(e))
         if i + batch_size < len(tickers):
             time.sleep(delay)
 

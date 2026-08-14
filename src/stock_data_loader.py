@@ -2,6 +2,7 @@ import pandas as pd
 import yfinance as yf
 from datetime import datetime, timedelta
 from tenacity import retry, stop_after_attempt, wait_exponential
+from data.providers.backup_providers import BackupProvider
 import os
 import time
 
@@ -66,6 +67,7 @@ def download_stock_prices():
             return pd.read_csv(cache_path, header=[0,1], index_col=0, parse_dates=True)
 
     tickers = get_stock_list()
+    backup = BackupProvider()
     if not tickers:
         return None
 
@@ -86,6 +88,13 @@ def download_stock_prices():
                 all_data.append(data_batch)
         except Exception as e:
             print(f"Error en lote {batch}: {e}")
+            try:
+                backup_data = backup.get_prices(batch, period='5y')
+                if backup_data is not None and not backup_data.empty:
+                    all_data.append(backup_data)
+                    print(f"  Respaldo obtuvo datos para {batch}")
+            except Exception as be:
+                print(f"  Error en respaldo: {be}")
         if i + batch_size < len(tickers):
             time.sleep(delay)
 

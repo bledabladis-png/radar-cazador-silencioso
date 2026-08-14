@@ -1,4 +1,4 @@
-name: Daily Macro Sectorial Run
+﻿name: Daily Macro Sectorial Run
 
 on:
   schedule:
@@ -26,6 +26,11 @@ jobs:
       - name: Run Macro Sectorial
         env:
           POLYGON_API_KEY: ${{ secrets.POLYGON_API_KEY }}
+          ALPHA_VANTAGE_API_KEY: ${{ secrets.ALPHA_VANTAGE_API_KEY }}
+          TWELVE_DATA_API_KEY: ${{ secrets.TWELVE_DATA_API_KEY }}
+          FINNHUB_API_KEY: ${{ secrets.FINNHUB_API_KEY }}
+          FMP_API_KEY: ${{ secrets.FMP_API_KEY }}
+          TIINGO_API_KEY: ${{ secrets.TIINGO_API_KEY }}
         run: python run.py
 
       - name: Verify leader selection
