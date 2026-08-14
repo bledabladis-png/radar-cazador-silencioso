@@ -50,6 +50,13 @@ def get_stock_list():
             result.append(t)
     return result
 
+def _get_yf_session():
+    try:
+        from curl_cffi import requests as curl_requests
+        return curl_requests.Session(impersonate="chrome")
+    except Exception:
+        return None
+
 @retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=4, max=10))
 def download_stock_prices():
     cache_path = 'data/stock_prices.csv'
@@ -70,7 +77,11 @@ def download_stock_prices():
         batch = tickers[i:i+batch_size]
         print(f"Descargando lote {i//batch_size + 1}: {batch}")
         try:
-            data_batch = yf.download(batch, period='5y', auto_adjust=True)
+            session = _get_yf_session()
+            if session:
+                data_batch = yf.download(batch, period='5y', auto_adjust=True, session=session)
+            else:
+                data_batch = yf.download(batch, period='5y', auto_adjust=True)
             if not data_batch.empty:
                 all_data.append(data_batch)
         except Exception as e:

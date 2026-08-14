@@ -1,22 +1,31 @@
-import pandas as pd
+﻿import pandas as pd
 import yfinance as yf
 import time
+import random
 from pathlib import Path
 from .base import MarketDataProvider
 
 class YahooProvider(MarketDataProvider):
     def __init__(self):
         self.name = "Yahoo Finance"
-        self.max_retries = 2
-        self.backoff_seconds = 5
+        self.max_retries = 3
+        self.base_backoff = 2
+        # Intentar usar curl_cffi para impersonar navegador
+        self.session = None
+        try:
+            from curl_cffi import requests as curl_requests
+            self.session = curl_requests.Session(impersonate="chrome")
+            print("YahooProvider: usando curl_cffi con impersonate=chrome")
+        except Exception as e:
+            print(f"YahooProvider: curl_cffi no disponible, usando requests estándar ({e})")
 
     def get_name(self) -> str:
         return self.name
 
     def is_available(self) -> bool:
         try:
-            test = yf.download("^GSPC", period="5d", progress=False)
-            return not test.empty
+            test = self._download_with_retries(["^GSPC"], period="5d")
+            return test is not None and not test.empty
         except:
             return False
 
@@ -25,13 +34,20 @@ class YahooProvider(MarketDataProvider):
         for attempt in range(1, self.max_retries + 1):
             try:
                 print(f"  Intento {attempt}/{self.max_retries} descargando {len(tickers)} tickers...")
-                data = yf.download(tickers, progress=False, **kwargs)
+                # Usar sesión si está disponible
+                if self.session:
+                    data = yf.download(tickers, progress=False, session=self.session, **kwargs)
+                else:
+                    data = yf.download(tickers, progress=False, **kwargs)
                 if data is not None and not data.empty:
                     return data
             except Exception as e:
                 last_exc = e
                 print(f"  Error en intento {attempt}: {e}")
-            time.sleep(self.backoff_seconds * attempt)
+            # Espera con backoff exponencial + jitter
+            sleep_time = self.base_backoff ** attempt + random.uniform(0, 1)
+            if attempt < self.max_retries:
+                time.sleep(sleep_time)
         raise RuntimeError(f"No se pudieron descargar datos tras {self.max_retries} intentos. Ultimo error: {last_exc}")
 
     def get_prices(self, tickers: list, start: str = None, end: str = None, period: str = "10y") -> pd.DataFrame:
