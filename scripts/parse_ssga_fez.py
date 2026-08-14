@@ -4,6 +4,29 @@ from io import BytesIO
 
 URL = 'https://www.ssga.com/us/en/intermediary/library-content/products/fund-data/etfs/us/holdings-daily-us-en-fez.xlsx'
 
+FEZ_TICKER_MAP = {
+    'ASML': 'ASML.AS',
+    'SIE': 'SIE.DE',
+    'SAN': 'SAN.MC',
+    'SU': 'SU.PA',
+    'SAP': 'SAP.DE',
+    'TTE': 'TTE.PA',
+    'ALV': 'ALV.DE',
+    'BBVA': 'BBVA.MC',
+    'SAF': 'SAF.PA',
+    'ENR': 'ENR.DE',
+    'IBE': 'IBE.MC',
+    'UCG': 'UCG.MI',
+    'AIR': 'AIR.PA',
+    'BNP': 'BNP.PA',
+    'MC': 'MC.PA',
+    'AI': 'AI.PA',
+    'ISP': 'ISP.MI',
+    'DTE': 'DTE.DE',
+    'OR': 'OR.PA',
+    'INGA': 'INGA.AS'
+}
+
 print('Descargando FEZ desde SSGA...')
 resp = requests.get(URL, allow_redirects=True, timeout=30)
 resp.raise_for_status()
@@ -41,7 +64,7 @@ for i in range(header_row + 1, len(df)):
         if weight is not None:
             holdings.append({
                 'etf': 'FEZ',
-                'ticker': ticker.strip(),
+                'ticker': FEZ_TICKER_MAP.get(ticker.strip(), ticker.strip()),
                 'name': name if isinstance(name, str) else '',
                 'weight': weight
             })

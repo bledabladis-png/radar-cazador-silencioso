@@ -10,6 +10,7 @@ CACHE_HOURS = 23
 YAHOO_TICKER_MAP = {
     "BRK.B": "BRK-B",
     "BF.B": "BF-B",
+    "MOGA": "MOG-A",
 }
 
 def normalize_yahoo_ticker(t):

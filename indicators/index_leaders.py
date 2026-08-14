@@ -2,6 +2,7 @@
 import pandas as pd
 import numpy as np
 from indicators.wyckoff import wyckoff_score, classify_wyckoff_phase, detect_spring, detect_sos
+from src.stock_data_loader import normalize_yahoo_ticker
 from src.utils import robust_zscore, get_col
 from config.index_tickers import INDEX_CONFIG
 from data.providers.router import DataRouter
@@ -118,7 +119,7 @@ def select_index_leaders(df_market, df_stocks, index_names, df_index_data=None):
         max_comp = config['max_companies']
 
         sub = holdings[holdings['etf'] == etf].sort_values('weight', ascending=False)
-        tickers = sub['ticker'].tolist()[:max_comp]
+        tickers = [normalize_yahoo_ticker(t) for t in sub['ticker'].tolist()[:max_comp]]
         if not tickers:
             continue
 
