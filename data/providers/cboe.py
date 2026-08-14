@@ -27,7 +27,7 @@ class CboeProvider(MarketDataProvider):
         if not matches:
             return None
         combined = "".join(matches)
-        combined = combined.encode().decode('unicode_escape')
+        combined = combined.encode().decode('unicode_escape', errors='replace')
         combined = combined.replace('\\"', '"')
         start = combined.find('"optionsData"')
         if start == -1:
@@ -146,3 +146,4 @@ class CboeProvider(MarketDataProvider):
         raise NotImplementedError
     def get_fed_data(self, index=None):
         raise NotImplementedError
+

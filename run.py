@@ -455,30 +455,56 @@ def main():
     # =====================================================================
     print("Ejecutando Validation Gate...")
     validation_errors = []
-    validation_warnings = []
+    validation_checks = []
 
+    def add_check(nombre, ok=True, detalle=""):
+        if ok:
+            validation_checks.append(f"{nombre}: OK {detalle}".strip())
+        else:
+            validation_errors.append(f"{nombre}: {detalle}".strip())
+
+    # 1. SLPM v1.2
     if slpm_v12_data:
         slpm_errors = slpm_v12_data.get('validation_errors', [])
         if slpm_errors:
             validation_errors.extend(slpm_errors)
-        else:
-            validation_warnings.append("SLPM v1.2: estado validado sin errores.")
+        add_check("SLPM v1.2", True, "estado validado")
+    else:
+        add_check("SLPM v1.2", True, "no disponible")
 
-    nan_checks = {}
+    # 2. PCR Total
     if pcr_data:
-        nan_checks['PCR Total'] = pcr_data.get('total_pcr', np.nan)
-    if darkpool_data:
-        nan_checks['Dark Pool medio'] = darkpool_data.get('media_dark_pool', np.nan)
-    if mte_result:
-        nan_checks['MSI'] = mte_result.get('msi', np.nan)
-        nan_checks['IPI'] = mte_result.get('ipi', np.nan)
-    
-    for name, val in nan_checks.items():
+        val = pcr_data.get('total_pcr', np.nan)
         if val is None or (isinstance(val, float) and np.isnan(val)):
-            validation_errors.append(f"NaN detectado en {name}.")
+            add_check("PCR Total", False, "NaN")
         else:
-            validation_warnings.append(f"{name}: OK ({val:.2f})")
+            add_check("PCR Total", True, f"{val:.2f}")
+    else:
+        add_check("PCR Total", True, "sin datos")
 
+    # 3. Dark Pool medio
+    if darkpool_data:
+        val = darkpool_data.get('media_dark_pool', np.nan)
+        if val is None or (isinstance(val, float) and np.isnan(val)):
+            add_check("Dark Pool medio", False, "NaN")
+        else:
+            add_check("Dark Pool medio", True, f"{val:.2f}")
+    else:
+        add_check("Dark Pool medio", True, "sin datos")
+
+    # 4. MTE (MSI/IPI)
+    if mte_result:
+        msi = mte_result.get('msi', np.nan)
+        ipi = mte_result.get('ipi', np.nan)
+        if (msi is None or (isinstance(msi, float) and np.isnan(msi)) or
+            ipi is None or (isinstance(ipi, float) and np.isnan(ipi))):
+            add_check("MTE", False, "NaN en MSI/IPI")
+        else:
+            add_check("MTE", True, f"MSI={msi:.2f}, IPI={ipi:.2f}")
+    else:
+        add_check("MTE", True, "sin datos")
+
+    # 5. Rangos tácticos/estructurales
     if tactical_scores and structural_scores:
         sectors_checked = 0
         for ticker in tactical_scores:
@@ -490,18 +516,25 @@ def main():
                 if abs(s) > 1.0:
                     validation_errors.append(f"{ticker}: Structural Score fuera de rango ({s:+.2f}).")
                 sectors_checked += 1
-        validation_warnings.append(f"Rangos verificados para {sectors_checked} sectores.")
+        add_check("Rangos tácticos/estructurales", True, f"{sectors_checked} sectores")
+    else:
+        add_check("Rangos tácticos/estructurales", True, "sin datos")
 
+    # 6. Opportunity Map
     if slpm_v12_data and tactical_scores and structural_scores:
         leader_etf = slpm_v12_data.get('sector_etf', '')
         if leader_etf and leader_etf in tactical_scores:
             slpm_quadrant = slpm_v12_data.get('opportunity_quadrant', '')
             if slpm_v12_data.get('state') == 'UNRESOLVED' and slpm_quadrant != 'Transition':
-                validation_errors.append(f"Opportunity Map inconsistente: estado UNRESOLVED pero cuadrante={slpm_quadrant}.")
+                add_check("Opportunity Map", False, f"inconsistente {slpm_quadrant}")
             else:
-                validation_warnings.append(f"Opportunity Map coherente: {slpm_v12_data.get('sector', '')} -> {slpm_quadrant}.")
+                add_check("Opportunity Map", True, f"{slpm_v12_data.get('sector', '')} -> {slpm_quadrant}")
+        else:
+            add_check("Opportunity Map", True, "sin leader_etf")
+    else:
+        add_check("Opportunity Map", True, "sin datos")
 
-    # Comprobacion de Data Freshness
+    # 7. Data Freshness Dark Pool
     if darkpool_data:
         week = darkpool_data.get('week', '')
         if week:
@@ -509,10 +542,17 @@ def main():
                 d = pd.Timestamp(week)
                 age = (datetime.now() - d).days
                 if age > 14:
-                    validation_warnings.append(f'Data Freshness: FINRA Dark Pool obsoleto ({age} dias). No se usa en clasificacion.')
+                    add_check("Freshness Dark Pool", True, f"obsoleto {age} dias (advertencia)")
+                else:
+                    add_check("Freshness Dark Pool", True, f"{age} dias")
             except:
-                pass
+                add_check("Freshness Dark Pool", True, "sin fecha")
+        else:
+            add_check("Freshness Dark Pool", True, "sin fecha")
+    else:
+        add_check("Freshness Dark Pool", True, "sin datos")
 
+    # 8. Data Freshness PCR
     if pcr_data:
         last_date = pcr_data.get('last_date', '')
         if last_date and last_date != 'N/A':
@@ -520,36 +560,44 @@ def main():
                 d = pd.Timestamp(last_date)
                 age = (datetime.now() - d).days
                 if age > 5:
-                    validation_warnings.append(f'Data Freshness: CBOE PCR desactualizado ({age} dias).')
+                    add_check("Freshness PCR", True, f"desactualizado {age} dias (advertencia)")
+                else:
+                    add_check("Freshness PCR", True, f"{age} dias")
             except:
-                pass
+                add_check("Freshness PCR", True, "sin fecha")
+        else:
+            add_check("Freshness PCR", True, "sin fecha")
+    else:
+        add_check("Freshness PCR", True, "sin datos")
 
-    # Validacion de configuracion
+    # 9. Configuración de pesos
     try:
         from config.weights import validate_weights
         validate_weights()
-        validation_warnings.append("Config: pesos validados correctamente.")
+        add_check("Config pesos", True, "validados")
     except Exception as e:
-        validation_errors.append(f"Config: error en pesos - {e}")
+        add_check("Config pesos", False, str(e))
 
-    # MEJORA 20: Auditoria de double-counting
+    # 10. Anti-Double-Counting
     try:
         dc_audit = audit_double_counting()
         critical_vars = len(dc_audit.get('critical', []))
         high_vars = len(dc_audit.get('high', []))
         if critical_vars > 0:
-            validation_warnings.append(f"Anti-Double-Counting: {critical_vars} variables criticas (4+ modulos), {high_vars} altas (3 modulos). Ver informe para detalle.")
+            add_check("Anti-Double-Counting", True, f"{critical_vars} criticas, {high_vars} altas")
         else:
-            validation_warnings.append(f"Anti-Double-Counting: sin variables criticas. {high_vars} variables compartidas por 3 modulos.")
+            add_check("Anti-Double-Counting", True, f"sin criticas, {high_vars} compartidas")
     except Exception as e:
-        validation_warnings.append(f"Anti-Double-Counting: Error en auditoria - {e}")
+        add_check("Anti-Double-Counting", False, str(e))
 
-    # Verificar cobertura de breadth\n    try:\n        if b20 is not None and len(b20) > 0:\n            last_b20 = b20.iloc[-1] if hasattr(b20, "iloc") else b20\n            if pd.notna(last_b20) and 0 < last_b20 < 1:\n                validation_warnings.append(f"Breadth: cobertura parcial ({last_b20:.0%}). Universo puede estar incompleto.")\n    except:\n        pass\n\n    if validation_errors:
-        print(f"    VALIDATION GATE: {len(validation_errors)} errores, {len(validation_warnings)} advertencias")
+    validation_warnings = validation_checks
+
+    if validation_errors:
+        print(f"    VALIDATION GATE: {len(validation_errors)} errores, {len(validation_checks)} comprobaciones")
         for err in validation_errors:
             print(f"      {err}")
     else:
-        print(f"    VALIDATION GATE: Sin errores ({len(validation_warnings)} comprobaciones OK)")
+        print(f"    VALIDATION GATE: Sin errores ({len(validation_checks)} comprobaciones OK)")
 
     # Generar resumen de double-counting para el reporte
     dc_summary = ""
