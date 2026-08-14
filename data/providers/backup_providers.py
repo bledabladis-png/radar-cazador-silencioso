@@ -1,66 +1,188 @@
 ﻿import os
-import pandas as pd
+import time
 import requests
+import pandas as pd
 from datetime import datetime, timedelta
+from pathlib import Path
+
+class RateLimiter:
+    """Controla llamadas por minuto y por día para un proveedor."""
+    def __init__(self, daily_limit=None, minute_limit=None):
+        self.daily_limit = daily_limit
+        self.minute_limit = minute_limit
+        self.calls_today = 0
+        self.last_call_time = None
+        self.last_day = datetime.now().date()
+
+    def reset_if_new_day(self):
+        today = datetime.now().date()
+        if today != self.last_day:
+            self.last_day = today
+            self.calls_today = 0
+
+    def can_call(self):
+        self.reset_if_new_day()
+        if self.daily_limit is not None and self.calls_today >= self.daily_limit:
+            return False
+        if self.minute_limit is not None and self.last_call_time is not None:
+            elapsed = (datetime.now() - self.last_call_time).total_seconds()
+            if elapsed < 60.0 / self.minute_limit:
+                return False
+        return True
+
+    def record_call(self):
+        self.calls_today += 1
+        self.last_call_time = datetime.now()
+
+class CircuitBreaker:
+    """Desactiva un proveedor temporalmente tras varios fallos consecutivos."""
+    def __init__(self, failure_threshold=5, reset_timeout=900):
+        self.failure_threshold = failure_threshold
+        self.reset_timeout = reset_timeout
+        self.failures = 0
+        self.state = 'ACTIVE'
+        self.last_failure_time = None
+
+    def allow_call(self):
+        if self.state == 'OPEN':
+            if self.last_failure_time and (datetime.now() - self.last_failure_time).total_seconds() >= self.reset_timeout:
+                self.state = 'HALF_OPEN'
+                return True
+            return False
+        return True
+
+    def record_success(self):
+        self.state = 'ACTIVE'
+        self.failures = 0
+        self.last_failure_time = None
+
+    def record_failure(self):
+        self.failures += 1
+        self.last_failure_time = datetime.now()
+        if self.failures >= self.failure_threshold:
+            self.state = 'OPEN'
 
 class BackupProvider:
-    """Respaldo multi-proveedor usando APIs gratuitas."""
+    """Respaldo multi-proveedor con rate limiting, circuit breaker y validación cruzada."""
     def __init__(self):
-        self.tiingo_key = os.environ.get('TIINGO_API_KEY')
-        self.twelve_key = os.environ.get('TWELVE_DATA_API_KEY')
-        self.alpha_key = os.environ.get('ALPHA_VANTAGE_API_KEY')
-        self.finnhub_key = os.environ.get('FINNHUB_API_KEY')
-        self.fmp_key = os.environ.get('FMP_API_KEY')
+        self.providers = {
+            'tiingo': {
+                'key': os.environ.get('TIINGO_API_KEY'),
+                'limiter': RateLimiter(daily_limit=200, minute_limit=1),
+                'breaker': CircuitBreaker(),
+            },
+            'twelve_data': {
+                'key': os.environ.get('TWELVE_DATA_API_KEY'),
+                'limiter': RateLimiter(daily_limit=800, minute_limit=8),
+                'breaker': CircuitBreaker(),
+            },
+            'alpha_vantage': {
+                'key': os.environ.get('ALPHA_VANTAGE_API_KEY'),
+                'limiter': RateLimiter(daily_limit=25, minute_limit=5),
+                'breaker': CircuitBreaker(),
+            },
+            'finnhub': {
+                'key': os.environ.get('FINNHUB_API_KEY'),
+                'limiter': RateLimiter(daily_limit=None, minute_limit=60),
+                'breaker': CircuitBreaker(),
+            },
+            'fmp': {
+                'key': os.environ.get('FMP_API_KEY'),
+                'limiter': RateLimiter(daily_limit=250, minute_limit=None),
+                'breaker': CircuitBreaker(),
+            },
+        }
         self.daily_budget = 20
         self.calls = 0
+        self.reference_cache = self._load_reference_cache()
 
-    def _can_call(self):
+    def _can_call_global(self):
         return self.calls < self.daily_budget
 
+    def _load_reference_cache(self):
+        """Carga cachés locales para validación cruzada."""
+        frames = []
+        for path in ['data/market_data_cache.csv', 'data/stock_prices.csv']:
+            if Path(path).exists():
+                try:
+                    df = pd.read_csv(path, header=[0,1], index_col=0, parse_dates=True)
+                    if not df.empty:
+                        frames.append(df)
+                except Exception:
+                    pass
+        if frames:
+            return pd.concat(frames, axis=1)
+        return pd.DataFrame()
+
+    def _validate_with_cache(self, ticker, df):
+        """Compara último cierre con caché local. Devuelve True si es aceptable."""
+        if self.reference_cache.empty:
+            return True
+        try:
+            # Extraer último cierre del ticker en caché
+            if ticker not in self.reference_cache.columns.get_level_values(1):
+                return True
+            close_cache = self.reference_cache.loc[:, ('Close', ticker)].dropna()
+            if close_cache.empty:
+                return True
+            ref_close = float(close_cache.iloc[-1])
+            # Último cierre del DataFrame recibido
+            new_close = float(df[('Close', ticker)].iloc[-1])
+            if ref_close == 0:
+                return True
+            diff = abs(new_close - ref_close) / abs(ref_close)
+            if diff > 0.05:
+                print(f"  [VALIDACIÓN] {ticker}: discrepancia >5% con caché ({ref_close:.2f} vs {new_close:.2f}). Dato rechazado.")
+                return False
+            return True
+        except Exception:
+            return True
+
     def get_prices(self, tickers: list, period: str = '5y') -> pd.DataFrame:
-        if not self._can_call():
-            print("  [RESPALDO] Presupuesto de respaldo agotado.")
+        if not self._can_call_global():
+            print("  [RESPALDO] Presupuesto global agotado.")
             return pd.DataFrame()
 
         frames = []
         for t in tickers:
-            if not self._can_call():
+            if not self._can_call_global():
                 break
 
-            df = self._tiingo_daily(t)
-            if df is not None:
-                print(f"  [RESPALDO] Tiingo suministró datos para {t}")
-                frames.append(df)
-                self.calls += 1
-                continue
+            # Intentar con cada proveedor en orden
+            for provider_name, config in self.providers.items():
+                if not config['key']:
+                    continue
+                if not config['limiter'].can_call():
+                    print(f"  [RATE] {provider_name}: límite alcanzado, saltando {t}")
+                    continue
+                if not config['breaker'].allow_call():
+                    print(f"  [CIRCUIT] {provider_name}: circuito abierto, saltando {t}")
+                    continue
 
-            df = self._twelve_data_daily(t)
-            if df is not None:
-                print(f"  [RESPALDO] Twelve Data suministró datos para {t}")
-                frames.append(df)
-                self.calls += 1
-                continue
-
-            df = self._alpha_vantage_daily(t)
-            if df is not None:
-                print(f"  [RESPALDO] Alpha Vantage suministró datos para {t}")
-                frames.append(df)
-                self.calls += 1
-                continue
-
-            df = self._finnhub_daily(t)
-            if df is not None:
-                print(f"  [RESPALDO] Finnhub suministró datos para {t}")
-                frames.append(df)
-                self.calls += 1
-                continue
-
-            df = self._fmp_daily(t)
-            if df is not None:
-                print(f"  [RESPALDO] FMP suministró datos para {t}")
-                frames.append(df)
-                self.calls += 1
-                continue
+                try:
+                    # Llamar al método correspondiente
+                    method = getattr(self, f"_{provider_name}_daily")
+                    df = method(t)
+                    if df is not None and not df.empty:
+                        # Validación cruzada
+                        if self._validate_with_cache(t, df):
+                            print(f"  [RESPALDO] {provider_name} suministró datos para {t}")
+                            frames.append(df)
+                            self.calls += 1
+                            config['limiter'].record_call()
+                            config['breaker'].record_success()
+                            break  # pasar al siguiente ticker
+                        else:
+                            # Dato rechazado, registrar fallo de validación
+                            config['breaker'].record_failure()
+                            break  # no probar más proveedores para este ticker
+                    else:
+                        # Proveedor falló
+                        config['breaker'].record_failure()
+                except Exception as e:
+                    print(f"  [ERROR] {provider_name}: {e}")
+                    config['breaker'].record_failure()
+            # Fin bucle de proveedores
 
         if frames:
             data = pd.concat(frames, axis=1)
@@ -69,14 +191,13 @@ class BackupProvider:
             return data
         return pd.DataFrame()
 
-    # --- Tiingo ---
+    # ================= MÉTODOS DE DESCARGA =================
     def _tiingo_daily(self, ticker: str) -> pd.DataFrame:
-        if not self.tiingo_key:
-            return None
+        key = self.providers['tiingo']['key']
         end = datetime.now().date()
         start = end - timedelta(days=5*365)
         url = f'https://api.tiingo.com/tiingo/daily/{ticker}/prices'
-        headers = {'Authorization': f'Token {self.tiingo_key}'}
+        headers = {'Authorization': f'Token {key}'}
         params = {'startDate': start.isoformat(), 'endDate': end.isoformat(), 'format': 'json'}
         try:
             r = requests.get(url, headers=headers, params=params, timeout=15)
@@ -95,16 +216,14 @@ class BackupProvider:
         except Exception:
             return None
 
-    # --- Twelve Data ---
     def _twelve_data_daily(self, ticker: str) -> pd.DataFrame:
-        if not self.twelve_key:
-            return None
+        key = self.providers['twelve_data']['key']
         url = 'https://api.twelvedata.com/time_series'
         params = {
             'symbol': ticker,
             'interval': '1day',
             'outputsize': '1825',
-            'apikey': self.twelve_key
+            'apikey': key
         }
         try:
             r = requests.get(url, params=params, timeout=15)
@@ -126,16 +245,14 @@ class BackupProvider:
         except Exception:
             return None
 
-    # --- Alpha Vantage ---
     def _alpha_vantage_daily(self, ticker: str) -> pd.DataFrame:
-        if not self.alpha_key:
-            return None
+        key = self.providers['alpha_vantage']['key']
         url = 'https://www.alphavantage.co/query'
         params = {
             'function': 'TIME_SERIES_DAILY',
             'symbol': ticker,
             'outputsize': 'compact',
-            'apikey': self.alpha_key
+            'apikey': key
         }
         try:
             r = requests.get(url, params=params, timeout=15)
@@ -160,10 +277,8 @@ class BackupProvider:
         except Exception:
             return None
 
-    # --- Finnhub ---
     def _finnhub_daily(self, ticker: str) -> pd.DataFrame:
-        if not self.finnhub_key:
-            return None
+        key = self.providers['finnhub']['key']
         end = int(datetime.now().timestamp())
         start = int((datetime.now() - timedelta(days=5*365)).timestamp())
         url = 'https://finnhub.io/api/v1/stock/candle'
@@ -172,7 +287,7 @@ class BackupProvider:
             'resolution': 'D',
             'from': start,
             'to': end,
-            'token': self.finnhub_key
+            'token': key
         }
         try:
             r = requests.get(url, params=params, timeout=15)
@@ -194,11 +309,9 @@ class BackupProvider:
         except Exception:
             return None
 
-    # --- Financial Modeling Prep ---
     def _fmp_daily(self, ticker: str) -> pd.DataFrame:
-        if not self.fmp_key:
-            return None
-        url = f'https://financialmodelingprep.com/api/v3/historical-price-full/{ticker}?apikey={self.fmp_key}'
+        key = self.providers['fmp']['key']
+        url = f'https://financialmodelingprep.com/api/v3/historical-price-full/{ticker}?apikey={key}'
         try:
             r = requests.get(url, timeout=15)
             if r.status_code != 200:
