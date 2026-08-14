@@ -35,7 +35,7 @@ INDEX_CONFIG = {
         'max_companies': 20
     },
     'DAX 40': {
-        'index_ticker': 'DAXEX',
+        'index_ticker': '^GDAXI',
         'etf_ticker': 'DAXEX',
         'max_companies': 20
     },
@@ -45,3 +45,4 @@ INDEX_CONFIG = {
         'max_companies': 20
     }
 }
+
