@@ -10,6 +10,7 @@ from datetime import datetime
 from src.data_loader import download_market_data
 from src.macro_manual_loader import load_macro_manual
 from src.stock_data_loader import download_stock_prices
+from data.providers.ssga_fund_data import get_etf_primary_flow_data
 from data.validator import validate_market_data
 from regimes.financial_conditions import compute_financial_conditions
 from regimes.liquidity import compute_liquidity_score as compute_real_liquidity
@@ -122,6 +123,19 @@ def main():
         'New Highs count': int(round(nh.iloc[-1] * 11)),
         'New Lows count': int(round(nl.iloc[-1] * 11)),
     }
+
+    # Flujo primario ETF (SSGA)
+    print("Calculando ETF Primary Flow (SSGA)...")
+    try:
+        etf_primary_flow_data = get_etf_primary_flow_data()
+        if etf_primary_flow_data is not None and not etf_primary_flow_data.empty:
+            print("  ETF Primary Flow calculado.")
+        else:
+            etf_primary_flow_data = None
+            print("  ETF Primary Flow sin datos.")
+    except Exception as e:
+        print(f"  ETF Primary Flow omitido: {e}")
+        etf_primary_flow_data = None
 
     # Modulo de lideres (solo para sectores en acumulacion/markup)
     leader_lines = None
@@ -614,6 +628,7 @@ def main():
                           sector_results,
                           sector_price_rank, sector_flow_rank, otros_price_rank, otros_flow_rank,
                           leader_lines=leader_lines, breadth_values=breadth_values,
+                            etf_primary_flow_data=etf_primary_flow_data,
                           real_liquidity_regime=real_liq_regime, real_liquidity_conf=real_liq_conf,
                             real_liq_score=real_liq_score,
                           pcr_data=pcr_data, darkpool_data=darkpool_data, mte_result=mte_result,
