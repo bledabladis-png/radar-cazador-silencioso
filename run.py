@@ -175,7 +175,7 @@ def main():
                     'ticker': row['ticker'],
                     'rs': row['rs'] if pd.notna(row.get('rs')) else None,
                     'rs_momentum': row['rs_mom'] if pd.notna(row.get('rs_mom')) else None,
-                    'flow_z': row['flow_z'] if pd.notna(row.get('flow_z')) else None,
+                    'flow_proxy_z': row['flow_proxy_z'] if pd.notna(row.get('flow_proxy_z')) else None,
                     'wyckoff_phase': row['wyckoff_phase'] if pd.notna(row.get('wyckoff_phase')) else ''
                 })
             print(f"    Lideres forzados para SLPM ({top_etf}): {len(leader_metrics_for_slpm)} tickers")

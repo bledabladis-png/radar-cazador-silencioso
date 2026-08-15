@@ -441,7 +441,7 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
             n_leaders = integrity.get('n_leaders', 0)
             lines.append(f"\n### Leader Integrity Score (LIS)\n")
             lines.append(f"- **LIS:** {lis:+.2f} (n={n_leaders})\n")
-            lines.append(f"- *Formula: LIS_individual = 0.30*tanh((RS-1)*2) + 0.25*tanh(RS_mom*5) + 0.25*tanh(flow_z/2) + 0.20*Wyckoff_score. LIS = media.*\n")
+            lines.append(f"- *Formula: LIS_individual = 0.30*tanh((RS-1)*2) + 0.25*tanh(RS_mom*5) + 0.25*tanh(flow_proxy_z/2) + 0.20*Wyckoff_score. LIS = media.*\n")
             lines.append(f"- *LIS mide la intensidad/calidad de la senhal de los lideres, no el % que cumple condiciones (eso es el Breadth).*\n")
         
         flow_div = slpm_v12_data.get('flow_divergence_v2', {})
@@ -709,7 +709,7 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
             lines.append("| # | Ticker | RS | RS Mom | Flujo (z) | WLS | Fase Wyckoff |\n")
             lines.append("|---|--------|----|--------|-----------|-----|---------------|\n")
             for i, (_, row) in enumerate(top5.iterrows(), 1):
-                lines.append(f"| {i} | {row['ticker']} | {row['rs']:.2f} | {row['rs_mom']:.2%} | {row['flow_z']:.2f} | {row['wls']:.2f} | {row['wyckoff_phase']} |\n")
+                lines.append(f"| {i} | {row['ticker']} | {row['rs']:.2f} | {row['rs_mom']:.2%} | {row['flow_proxy_z']:.2f} | {row['wls']:.2f} | {row['wyckoff_phase']} |\n")
             lines.append("\n")
     else:
         lines.append("*Ningun indice en fase de acumulacion en esta ejecucion.*\n\n")
@@ -795,6 +795,7 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
 
     sector_df = pd.DataFrame(sector_results['ranking'], columns=['ticker', 'name', 'score', 'wyckoff_phase'])
     sector_df.to_csv('outputs/report/sector_rankings.csv', index=False)
+
 
 
 

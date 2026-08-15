@@ -37,7 +37,7 @@ for path in ['outputs/report/analisis_lideres.csv', 'outputs/report/analisis_lid
         df = pd.read_csv(path)
         nan_cols = df.columns[df.isna().any()].tolist()
         # Se permite NaN en rs_mom y wls? Mejor detectar NaN en columnas criticas
-        critical = ['rs', 'flow_z', 'wyckoff_score', 'wls']
+        critical = ['rs', 'flow_proxy_z', 'wyckoff_score', 'wls']
         nan_critical = {c: df[c].isna().sum() for c in critical if c in df.columns}
         if any(v > 0 for v in nan_critical.values()):
             log(f'❌ {path}: NaN en columnas criticas {nan_critical}')

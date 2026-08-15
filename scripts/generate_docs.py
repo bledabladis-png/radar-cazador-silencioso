@@ -332,7 +332,7 @@ def generate_lideres():
 - Actualizacion trimestral automatica via GitHub Actions.
 """
     formulas = """
-- **WLS:** 0.35*rs_z + 0.25*flow_z_norm + 0.25*rws_z + 0.10*stab_z, con bonus por persistencia.
+- **WLS:** 0.35*rs_z + 0.25*flow_proxy_z_norm + 0.25*rws_z + 0.10*stab_z, con bonus por persistencia.
 - **RWS:** Relative Wyckoff Score (normalizacion intra-sector/indice).
 """
     salidas = """

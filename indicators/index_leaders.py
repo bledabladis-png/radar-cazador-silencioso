@@ -49,7 +49,7 @@ def compute_stock_metrics_for_index(df_stocks, index_name, stock_list, df_index_
         ret = close.pct_change(fill_method=None)
         dollar_vol = close * volume
         flow_raw = ret * dollar_vol
-        flow_z = robust_zscore(flow_raw, window=60).iloc[-1]
+        flow_proxy_z = robust_zscore(flow_raw, window=60).iloc[-1]
 
         try:
             source_df = single_df if 'single_df' in locals() else df_stocks
@@ -77,7 +77,7 @@ def compute_stock_metrics_for_index(df_stocks, index_name, stock_list, df_index_
             'ticker': ticker,
             'rs': rs.iloc[-1] if not rs.empty else np.nan,
             'rs_mom': rs_mom,
-            'flow_z': flow_z,
+            'flow_proxy_z': flow_proxy_z,
             'wyckoff_score': wyckoff_sc,
             'wyckoff_phase': wyckoff_ph,
             'persistence_10d': persistence_10d,
@@ -100,11 +100,11 @@ def compute_wls_for_index(df_metrics):
         return (s - median) / (1.4826 * mad + 1e-9)
 
     df_metrics['rs_z'] = robust_intra(df_metrics['rs']).clip(-3, 3)
-    df_metrics['flow_z_norm'] = robust_intra(df_metrics['flow_z']).clip(-3, 3)
+    df_metrics['flow_proxy_z_norm'] = robust_intra(df_metrics['flow_proxy_z']).clip(-3, 3)
     df_metrics['rws_z'] = robust_intra(df_metrics['wyckoff_score']).clip(-3, 3)
     df_metrics['stab_z'] = robust_intra(df_metrics['stability']).clip(-3, 3)
 
-    df_metrics['wls'] = 0.35*df_metrics['rs_z'] + 0.25*df_metrics['flow_z_norm'] + 0.25*df_metrics['rws_z'] + 0.10*df_metrics['stab_z']
+    df_metrics['wls'] = 0.35*df_metrics['rs_z'] + 0.25*df_metrics['flow_proxy_z_norm'] + 0.25*df_metrics['rws_z'] + 0.10*df_metrics['stab_z']
     df_metrics['wls'] *= 1 + 0.05 * np.minimum(df_metrics['persistence_10d'], 1.0)
 
     return df_metrics.sort_values('wls', ascending=False)

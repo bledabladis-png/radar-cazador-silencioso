@@ -25,8 +25,8 @@ def compute_stock_metrics(df_market, df_stocks, etf_ticker, stock_list):
         ret = close.pct_change(fill_method=None)
         dollar_vol = close * volume
         flow_raw = ret * dollar_vol
-        flow_z = robust_zscore(flow_raw, window=60)
-        flow_signal = flow_z.ewm(span=5).mean().iloc[-1]
+        flow_proxy_z = robust_zscore(flow_raw, window=60)
+        flow_signal = flow_proxy_z.ewm(span=5).mean().iloc[-1]
 
         ret_positive = (ret > 0).astype(int)
         persistence_10d = ret_positive.rolling(10, min_periods=10).mean().iloc[-1]
@@ -64,7 +64,7 @@ def compute_stock_metrics(df_market, df_stocks, etf_ticker, stock_list):
             'ticker': ticker,
             'rs': rs.iloc[-1],
             'rs_mom': rs_mom,
-            'flow_z': flow_signal,
+            'flow_proxy_z': flow_signal,
             'wyckoff_score': wyckoff_sc,
             'wyckoff_phase': wyckoff_ph,
             'persistence_10d': persistence_10d,
@@ -86,7 +86,7 @@ def compute_wls(df_metrics, weights=None):
         return (s - median) / (1.4826 * mad + 1e-9)
 
     df['rs_z'] = df.groupby('sector')['rs_mom'].transform(robust_intra).clip(-3, 3)
-    df['flow_z_norm'] = df.groupby('sector')['flow_z'].transform(robust_intra).clip(-3, 3)
+    df['flow_proxy_z_norm'] = df.groupby('sector')['flow_proxy_z'].transform(robust_intra).clip(-3, 3)
 
     # M8: robust_zscore intra-sectorial en lugar de percentil 70
     df['rws_z'] = df.groupby('sector')['wyckoff_score'].transform(robust_intra).clip(-3, 3)
@@ -97,10 +97,10 @@ def compute_wls(df_metrics, weights=None):
         mask = df['sector'] == sector
         if mask.sum() < 3:
             continue
-        rho = df.loc[mask, 'rs_mom'].corr(df.loc[mask, 'flow_z'], method='spearman')
+        rho = df.loc[mask, 'rs_mom'].corr(df.loc[mask, 'flow_proxy_z'], method='spearman')
         if pd.notna(rho) and rho > 0.7:
             factor = 1 - min(1.0, (rho - 0.7) / 0.3)
-            df.loc[mask, 'flow_z_norm'] *= factor
+            df.loc[mask, 'flow_proxy_z_norm'] *= factor
 
     if weights is None:
         w_rs, w_flow, w_struct, w_stab = 0.35, 0.30, 0.25, 0.10
@@ -110,7 +110,7 @@ def compute_wls(df_metrics, weights=None):
         w_struct = weights.get('structure', 0.25)
         w_stab = weights.get('stability', 0.10)
 
-    df['wls'] = w_rs*df['rs_z'] + w_flow*df['flow_z_norm'] + w_struct*df['rws_z'] + w_stab*df['stab_z']
+    df['wls'] = w_rs*df['rs_z'] + w_flow*df['flow_proxy_z_norm'] + w_struct*df['rws_z'] + w_stab*df['stab_z']
     df['wls'] *= (1 + 0.05 * np.minimum(df['persistence_10d'], 1.0))
     df['sector_rank_pct'] = df.groupby('sector')['wls'].rank(pct=True)
 
@@ -157,13 +157,13 @@ def generate_leader_section(df_market, df_stocks, holdings_df, fase_dict, operab
         for _, row in wls_df.head(5).iterrows():
             spring_flag = 'âœ“' if row.get('spring', 0) == 1 else ''
             sos_flag = 'âœ“' if row.get('sos', 0) == 1 else ''
-            lines.append(f"| {row['ticker']} | {row['rs']:.2f} | {row['rs_mom']:.2%} | {row['flow_z']:.2f} | {row['wls']:.2f} | {row['wyckoff_phase']} | {spring_flag} | {sos_flag} |\n")
+            lines.append(f"| {row['ticker']} | {row['rs']:.2f} | {row['rs_mom']:.2%} | {row['flow_proxy_z']:.2f} | {row['wls']:.2f} | {row['wyckoff_phase']} | {spring_flag} | {sos_flag} |\n")
         lines.append('\n')
 
     if all_data:
         final_df = pd.concat(all_data, ignore_index=True)
         if output_csv:
-            cols = ['ticker','sector','rs','rs_mom','flow_z','wyckoff_score','wyckoff_phase',
+            cols = ['ticker','sector','rs','rs_mom','flow_proxy_z','wyckoff_score','wyckoff_phase',
                     'persistence_10d','stability','spring','sos','wls','sector_rank_pct']
             final_df[cols].to_csv(output_csv, index=False)
         if all_data:

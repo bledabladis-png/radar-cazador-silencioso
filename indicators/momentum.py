@@ -54,8 +54,8 @@ def compute_flow_proxy(df, ticker, window=FLOW_ZSCORE_WINDOW):
     signed_volume_pressure = close * volume
     ret = close.pct_change(fill_method=None)
     flow = ret * signed_volume_pressure
-    flow_z = robust_zscore(flow, window=window)
-    flow_smooth = flow_z.ewm(span=FLOW_EWM_SPAN, min_periods=20).mean()
+    flow_proxy_z = robust_zscore(flow, window=window)
+    flow_smooth = flow_proxy_z.ewm(span=FLOW_EWM_SPAN, min_periods=20).mean()
     # Componentes adicionales
     obv = compute_obv(df, ticker)
     obv_z = robust_zscore(obv.pct_change(fill_method=None), window=window)

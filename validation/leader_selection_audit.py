@@ -51,7 +51,7 @@ for label, path in files.items():
         log('')
     
     # Correlaciones entre componentes (si existen)
-    comp_cols = ['rs_z', 'flow_z_norm', 'rws_z', 'stab_z']
+    comp_cols = ['rs_z', 'flow_proxy_z_norm', 'rws_z', 'stab_z']
     if all(c in df.columns for c in comp_cols):
         corr = df[comp_cols].corr(method='spearman')
         log('  Correlacion Spearman entre componentes WLS:')
@@ -59,7 +59,7 @@ for label, path in files.items():
         log('')
     else:
         # Usar variables base como proxy
-        alt_cols = ['rs', 'flow_z', 'wyckoff_score', 'stability']
+        alt_cols = ['rs', 'flow_proxy_z', 'wyckoff_score', 'stability']
         existing = [c for c in alt_cols if c in df.columns]
         if len(existing) >= 2:
             corr = df[existing].corr(method='spearman')
