@@ -1,4 +1,4 @@
-import requests
+﻿import requests
 import pandas as pd
 from io import BytesIO
 
@@ -33,28 +33,35 @@ resp.raise_for_status()
 
 df = pd.read_excel(BytesIO(resp.content), header=None)
 
-# Buscar la fila de cabecera que contiene 'Ticker'
+# Buscar fila de cabecera con Ticker e Identifier
 ticker_col = None
+identifier_col = None
 header_row = None
 for i, row in df.iterrows():
     for j, cell in row.items():
-        if isinstance(cell, str) and cell.strip() == 'Ticker':
-            ticker_col = j
-            header_row = i
-            break
+        if isinstance(cell, str):
+            cell_str = cell.strip()
+            if cell_str == 'Ticker':
+                ticker_col = j
+                header_row = i
+            elif cell_str.lower() in ('identifier', 'cusip', 'isin'):
+                identifier_col = j
     if ticker_col is not None:
         break
 
 if ticker_col is None:
     raise ValueError('No se encontró la columna Ticker')
 
-# Extraer tickers y pesos desde la fila siguiente a la cabecera
+# Extraer tickers, identifiers, name y weight
 holdings = []
 for i in range(header_row + 1, len(df)):
     ticker = df.iloc[i, ticker_col]
     if isinstance(ticker, str) and ticker.strip():
-        name = df.iloc[i, 0]  # columna Name suele ser la 0
-        # Buscar Weight
+        name = df.iloc[i, 0]
+        identifier = ''
+        if identifier_col is not None:
+            val = df.iloc[i, identifier_col]
+            identifier = str(val).strip() if val is not None else ''
         weight = None
         for j in range(len(df.columns)):
             cell = df.iloc[i, j]
@@ -65,15 +72,15 @@ for i in range(header_row + 1, len(df)):
             holdings.append({
                 'etf': 'FEZ',
                 'ticker': FEZ_TICKER_MAP.get(ticker.strip(), ticker.strip()),
+                'identifier': identifier,
                 'name': name if isinstance(name, str) else '',
                 'weight': weight
             })
 
-# Ordenar por peso descendente y tomar top 10
 holdings.sort(key=lambda x: x['weight'], reverse=True)
 top20 = holdings[:20]
 
 out = 'outputs/holdings/FEZ_final_holdings.csv'
-pd.DataFrame(top20).to_csv(out, index=False)
+pd.DataFrame(top20, columns=['etf','ticker','identifier','name','weight']).to_csv(out, index=False)
 print(f'Guardado: {out}')
 print(pd.DataFrame(top20).to_string(index=False))

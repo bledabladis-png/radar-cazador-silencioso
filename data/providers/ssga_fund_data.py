@@ -8,7 +8,7 @@ from io import BytesIO
 from datetime import datetime, timedelta
 from pathlib import Path
 
-SECTOR_TICKERS = ['XLK','XLF','XLV','XLE','XLY','XLP','XLI','XLB','XLRE','XLU','XLC']
+SECTOR_TICKERS = ['XLK','XLF','XLV','XLE','XLY','XLP','XLI','XLB','XLRE','XLU','XLC','FEZ']
 CACHE_DIR = Path('data/cache/ssga_navhist')
 HISTORY_PATH = Path('outputs/history/etf_primary_flow.csv')
 
@@ -129,3 +129,4 @@ def get_etf_primary_flow_data(force_download: bool = False) -> pd.DataFrame:
     last_df = full_df.dropna(subset=['primary_flow_pct']).groupby('ticker').tail(1)
     return last_df[['ticker','nav','shares_outstanding','total_net_assets',
                     'primary_flow_usd','primary_flow_pct','primary_flow_z']].reset_index(drop=True)
+

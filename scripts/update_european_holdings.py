@@ -1,4 +1,4 @@
-# update_european_holdings.py
+﻿# update_european_holdings.py
 import subprocess
 import sys
 import pandas as pd
@@ -33,7 +33,12 @@ isf = pd.read_csv('outputs/holdings/ISF.L_final_holdings.csv')
 amundi = pd.read_csv('outputs/holdings/amundi_lyxi_holdings.csv').sort_values('weight', ascending=False).head(20)
 amundi['etf'] = 'LYXI'
 
-cols = ['etf', 'ticker', 'name', 'weight']
+# Asegurar columna identifier en todos
+for df, default_identifier in [(fez, ''), (daxex, ''), (isf, ''), (amundi, '')]:
+    if 'identifier' not in df.columns:
+        df['identifier'] = default_identifier
+
+cols = ['etf', 'ticker', 'identifier', 'name', 'weight']
 for df in [fez, daxex, isf, amundi]:
     df = df[cols]
 
