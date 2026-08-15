@@ -63,7 +63,7 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
                           slpm_v12_data=None, tactical_scores=None, structural_scores=None,
                           sector_persistence=None, signal_agreements=None, signal_agreements_display=None,
                           cross_module_conflict=None, shock_sensitivities=None, price_flow_divergences=None,
-                          dc_summary="", all_signals=None, real_liq_score=None, real_liq_prev=None, index_leaders=None, index_phases=None, etf_primary_flow_data=None, cftc_position_flow_data=None, output_path='outputs/report/reporte_diario.md'):
+                          dc_summary="", all_signals=None, real_liq_score=None, real_liq_prev=None, index_leaders=None, index_phases=None, etf_primary_flow_data=None, cftc_position_flow_data=None, flow_synthesis=None, output_path='outputs/report/reporte_diario.md'):
     lines = []
     lines.append("# MACRO SECTORIAL - Reporte Diario\n")
     lines.append(f"**Fecha:** {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
@@ -539,6 +539,19 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
             fecha = row['date'].strftime('%Y-%m-%d') if hasattr(row['date'], 'strftime') else str(row['date'])
             lines.append(f"| {fecha} | {row['contract']} | {row['participant']} | {row['net_position']:,.0f} | {row['position_change']:+,.0f} | {row['flow_z']:+.2f} |\n")
         lines.append("\n*Fuente: CFTC Traders in Financial Futures (Futures Only). Frecuencia semanal.*\n\n")
+
+    # =========================================================================
+    # FLUJO - SINTESIS DESCRIPTIVA
+    # =========================================================================
+    if flow_synthesis:
+        lines.append("## Flujo - Sintesis Descriptiva\n")
+        lines.append("| Capa | Lectura |\n")
+        lines.append("|------|---------|\n")
+        lines.append(f"| Flow Proxy | {flow_synthesis.get('flow_proxy_sign', 0):+.2f} |\n")
+        lines.append(f"| ETF Primary Flow | {flow_synthesis.get('etf_primary_flow_sign', 0):+.2f} |\n")
+        lines.append(f"| CFTC Position Flow | {flow_synthesis.get('cftc_flow_sign', 0):+.2f} |\n")
+        lines.append(f"\n**FLOW_CONFIDENCE:** {flow_synthesis.get('confidence', 'N/A')}\n")
+        lines.append("\n*Interpretación descriptiva: concordancia de signos entre capas. No es señal predictiva.*\n\n")
 
     # =========================================================================
     # MTE v1.0

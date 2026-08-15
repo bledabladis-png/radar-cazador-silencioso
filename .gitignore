@@ -28,3 +28,7 @@ outputs/*.png
 !outputs/state/
 !outputs/state/*.json
 *.bak_repair
+
+data/nport/
+
+data/cache/

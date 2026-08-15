@@ -151,6 +151,49 @@ def main():
         print(f"  CFTC Position Flow omitido: {e}")
         cftc_position_flow_data = None
 
+    # Sintesis descriptiva de flujo (sin superindicador)
+    flow_synthesis = {}
+    try:
+        # Dirección de flow_proxy (promedio de flow_proxy_z de líderes sectoriales si existen, si no 0)
+        proxy_sign = 0.0
+        if 'leader_df' in locals() and leader_df is not None and not leader_df.empty and 'flow_proxy_z' in leader_df.columns:
+            proxy_sign = float(leader_df['flow_proxy_z'].mean())
+        flow_synthesis['flow_proxy_sign'] = proxy_sign
+
+        # Dirección de ETF Primary Flow (promedio de primary_flow_z)
+        primary_sign = 0.0
+        if etf_primary_flow_data is not None and not etf_primary_flow_data.empty:
+            primary_sign = float(etf_primary_flow_data['primary_flow_z'].mean())
+        flow_synthesis['etf_primary_flow_sign'] = primary_sign
+
+        # Dirección de CFTC Position Flow (promedio de flow_z)
+        cftc_sign = 0.0
+        if cftc_position_flow_data is not None and not cftc_position_flow_data.empty and 'flow_z' in cftc_position_flow_data.columns:
+            cftc_sign = float(cftc_position_flow_data['flow_z'].mean())
+        flow_synthesis['cftc_flow_sign'] = cftc_sign
+
+        # Conteo de coincidencia de signos
+        signs = []
+        for s in [proxy_sign, primary_sign, cftc_sign]:
+            if s > 0.1:
+                signs.append(1)
+            elif s < -0.1:
+                signs.append(-1)
+            else:
+                signs.append(0)
+        pos = sum(1 for x in signs if x > 0)
+        neg = sum(1 for x in signs if x < 0)
+        if pos == 3 or neg == 3:
+            flow_synthesis['confidence'] = 'ALTA'
+        elif pos == 2 or neg == 2:
+            flow_synthesis['confidence'] = 'MEDIA'
+        else:
+            flow_synthesis['confidence'] = 'BAJA'
+        print("  Sintesis de flujo calculada.")
+    except Exception as e:
+        print(f"  Sintesis de flujo omitida: {e}")
+        flow_synthesis = {}
+
     # Modulo de lideres (solo para sectores en acumulacion/markup)
     leader_lines = None
     df_stocks = None
@@ -644,6 +687,7 @@ def main():
                           leader_lines=leader_lines, breadth_values=breadth_values,
                             etf_primary_flow_data=etf_primary_flow_data,
                             cftc_position_flow_data=cftc_position_flow_data,
+                            flow_synthesis=flow_synthesis,
                           real_liquidity_regime=real_liq_regime, real_liquidity_conf=real_liq_conf,
                             real_liq_score=real_liq_score,
                           pcr_data=pcr_data, darkpool_data=darkpool_data, mte_result=mte_result,
