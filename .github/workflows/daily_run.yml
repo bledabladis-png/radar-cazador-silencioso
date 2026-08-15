@@ -20,6 +20,14 @@ jobs:
         with:
           python-version: '3.14'
 
+      - name: Cache data/cache
+        uses: actions/cache@v4
+        with:
+          path: data/cache
+          key: data-cache-${{ runner.os }}-${{ github.run_number }}
+          restore-keys: |
+            data-cache-${{ runner.os }}-
+
       - name: Install dependencies
         run: pip install -r requirements.txt
 

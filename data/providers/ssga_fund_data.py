@@ -30,12 +30,10 @@ def _download_single(ticker: str) -> pd.DataFrame:
     if header_row is None:
         raise ValueError(f'No se encontró cabecera Date para {ticker}')
 
-    # Construir DataFrame con las columnas correctas
     headers = [str(cell).strip() for cell in df_raw.iloc[header_row].tolist()]
     df = df_raw.iloc[header_row+1:].copy()
     df.columns = headers
 
-    # Renombrar columnas necesarias
     rename = {}
     for col in df.columns:
         col_lower = col.lower()
@@ -90,26 +88,31 @@ def get_etf_primary_flow_data(force_download: bool = False) -> pd.DataFrame:
     CACHE_DIR.mkdir(parents=True, exist_ok=True)
 
     all_frames = []
+    errors = []
     for ticker in SECTOR_TICKERS:
-        cache_file = CACHE_DIR / f'{ticker}.csv'
-        use_cache = (not force_download) and cache_file.exists()
-        if use_cache:
-            # Comprobar si el archivo es de hace menos de 24h
-            mtime = datetime.fromtimestamp(cache_file.stat().st_mtime)
-            if datetime.now() - mtime > timedelta(hours=23):
-                use_cache = False
+        try:
+            cache_file = CACHE_DIR / f'{ticker}.csv'
+            use_cache = (not force_download) and cache_file.exists()
+            if use_cache:
+                mtime = datetime.fromtimestamp(cache_file.stat().st_mtime)
+                if datetime.now() - mtime > timedelta(hours=23):
+                    use_cache = False
 
-        if use_cache:
-            print(f'  Usando caché para {ticker}')
-            df = pd.read_csv(cache_file)
-            df['Date'] = pd.to_datetime(df['Date'], errors='coerce')
-        else:
-            df = _download_single(ticker)
-            df.to_csv(cache_file, index=False)
+            if use_cache:
+                print(f'  Usando caché para {ticker}')
+                df = pd.read_csv(cache_file)
+                df['Date'] = pd.to_datetime(df['Date'], errors='coerce')
+            else:
+                df = _download_single(ticker)
+                df.to_csv(cache_file, index=False)
 
-        df = _compute_primary_flow(df)
-        df['ticker'] = ticker
-        all_frames.append(df)
+            df = _compute_primary_flow(df)
+            df['ticker'] = ticker
+            all_frames.append(df)
+        except Exception as e:
+            print(f'  Error procesando {ticker}: {e}')
+            errors.append(ticker)
+            continue
 
     if not all_frames:
         return pd.DataFrame()
@@ -117,13 +120,12 @@ def get_etf_primary_flow_data(force_download: bool = False) -> pd.DataFrame:
     full_df = pd.concat(all_frames, ignore_index=True)
     full_df = full_df.sort_values(['ticker', 'Date']).reset_index(drop=True)
 
-    # Guardar histórico completo
     HISTORY_PATH.parent.mkdir(parents=True, exist_ok=True)
     full_df.to_csv(HISTORY_PATH, index=False)
     print(f'  Histórico guardado: {HISTORY_PATH}')
+    if errors:
+        print(f'  Tickers con error: {errors}')
 
-    # Obtener último registro por ticker
     last_df = full_df.dropna(subset=['primary_flow_pct']).groupby('ticker').tail(1)
     return last_df[['ticker','nav','shares_outstanding','total_net_assets',
                     'primary_flow_usd','primary_flow_pct','primary_flow_z']].reset_index(drop=True)
-

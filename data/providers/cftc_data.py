@@ -44,6 +44,14 @@ def _download_and_cache():
     )
     r.raise_for_status()
     df = pd.read_csv(StringIO(r.text), low_memory=False)
+
+    required_cols = ['Market_and_Exchange_Names', 'Report_Date_as_YYYY_MM_DD']
+    missing = [c for c in required_cols if c not in df.columns]
+    if missing:
+        raise ValueError(f'CFTC CSV no tiene columnas requeridas: {missing}')
+    if df.empty:
+        raise ValueError('CFTC CSV vacío')
+
     df.to_csv(CACHE_PATH, index=False)
     print(f'  CFTC TFF guardado en caché: {len(df)} filas')
     return df
@@ -53,18 +61,14 @@ def _calculate_position_flow(df):
     if 'Market_and_Exchange_Names' not in df.columns:
         raise ValueError('No se encontró Market_and_Exchange_Names')
 
-    # Seleccionar contratos objetivo
     mask = df['Market_and_Exchange_Names'].isin(TARGET_CONTRACTS)
     df = df[mask].copy()
-
     if df.empty:
         return pd.DataFrame()
 
-    # Parsear fecha
     df['date'] = pd.to_datetime(df['Report_Date_as_YYYY_MM_DD'], format='%Y %b %d %I:%M:%S %p', errors='coerce')
     df = df.dropna(subset=['date'])
 
-    # Convertir columnas numéricas relevantes
     numeric_cols = [
         'Asset_Mgr_Positions_Long_All','Asset_Mgr_Positions_Short_All',
         'Lev_Money_Positions_Long_All','Lev_Money_Positions_Short_All',
@@ -115,8 +119,6 @@ def _calculate_position_flow(df):
                 'net_position': net_position.values,
                 'position_change': position_change.values,
             })
-
-            # Z-score rodante de 52 semanas
             temp['flow_z'] = (
                 (temp['position_change'] - temp['position_change'].rolling(52, min_periods=10).mean())
                 / (temp['position_change'].rolling(52, min_periods=10).std() + 1e-9)
@@ -142,11 +144,8 @@ def get_cftc_position_flow_data() -> pd.DataFrame:
         result.to_csv(HISTORY_PATH, index=False)
         print(f'  Histórico CFTC guardado: {HISTORY_PATH}')
 
-        # Último dato por contrato y participante
         last = result.sort_values('date').groupby(['contract','participant']).tail(1)
         return last.reset_index(drop=True)
     except Exception as e:
         print(f'  Error en CFTC Position Flow: {e}')
         return pd.DataFrame()
-
-
