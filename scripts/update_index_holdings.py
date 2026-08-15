@@ -35,6 +35,15 @@ BLACKROCK_IWM_URL = (
 
 OUTPUT_FILE = 'data/index_holdings.csv'
 
+def normalize_ticker(ticker):
+    """Convierte tickers problemáticos a su formato canónico Yahoo."""
+    mapping = {
+        'BRK.B': 'BRK-B',
+        'BF.B': 'BF-B',
+        'MOGA': 'MOG-A',
+    }
+    return mapping.get(ticker, ticker)
+
 def get_invesco_qqq_holdings():
     """Descarga todos los holdings de QQQ desde Invesco API (sin limitación top10)."""
     url = INVESCO_URL.format(shareclass=QQQ_CUSIP)
@@ -63,7 +72,7 @@ def get_invesco_qqq_holdings():
 
         rows.append({
             'etf': 'QQQ',
-            'ticker': ticker.strip().upper(),
+            'ticker': normalize_ticker(ticker.strip().upper()),
             'name': h.get('issuerName', ''),
             'weight': h.get('percentageOfTotalNetAssets', 0.0),
         })
@@ -116,7 +125,7 @@ def get_blackrock_iwm_holdings():
 
         rows.append({
             'etf': 'IWM',
-            'ticker': ticker.strip().upper(),
+            'ticker': normalize_ticker(ticker.strip().upper()),
             'name': name.strip() if isinstance(name, str) else '',
             'weight': weight,
         })
@@ -165,7 +174,7 @@ def get_state_street_holdings(etf, url):
     for i in range(header_row + 1, len(df_raw)):
         ticker = df_raw.iloc[i, ticker_col]
         if isinstance(ticker, str) and ticker.strip():
-            tickers.append(ticker.strip().upper())
+            tickers.append(normalize_ticker(ticker.strip().upper()))
             name = df_raw.iloc[i, name_col] if name_col is not None else ''
             if not isinstance(name, str):
                 name = ''

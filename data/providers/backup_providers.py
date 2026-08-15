@@ -4,6 +4,7 @@ import requests
 import pandas as pd
 from datetime import datetime, timedelta
 from pathlib import Path
+from src.instrument_registry import resolve_symbol
 
 class RateLimiter:
     """Controla llamadas por minuto y por día para un proveedor."""
@@ -114,6 +115,20 @@ class BackupProvider:
             return pd.concat(frames, axis=1)
         return pd.DataFrame()
 
+    def _validate_ohlcv(self, df):
+        """Validación básica de respuesta: columnas y filas suficientes."""
+        if df is None or df.empty:
+            return False
+        # Comprobar que hay al menos 10 filas
+        if len(df) < 10:
+            return False
+        # Comprobar que existen las columnas Open, High, Low, Close, Volume
+        required = {'Open','High','Low','Close','Volume'}
+        for col in required:
+            if col not in df.columns.get_level_values(0):
+                return False
+        return True
+
     def _validate_with_cache(self, ticker, df):
         """Compara último cierre con caché local. Devuelve True si es aceptable."""
         if self.reference_cache.empty:
@@ -159,21 +174,29 @@ class BackupProvider:
                     print(f"  [CIRCUIT] {provider_name}: circuito abierto, saltando {t}")
                     continue
 
+                # Obtener símbolo específico del proveedor
+                provider_symbol = resolve_symbol(t, provider_name)
+                if provider_symbol is None:
+                    print(f"  [COBERTURA] {provider_name}: no soporta {t}")
+                    continue
+
                 try:
-                    # Llamar al método correspondiente
+                    # Llamar al método correspondiente con el símbolo del proveedor
                     method = getattr(self, f"_{provider_name}_daily")
-                    df = method(t)
-                    if df is not None and not df.empty:
-                        # Validación cruzada
+                    df = method(provider_symbol)
+                    if df is not None and self._validate_ohlcv(df):
+                        # Renombrar columna ticker externo → canónico
+                        df.columns = pd.MultiIndex.from_product([df.columns.get_level_values(0), [t]])
+                        # Validación cruzada con caché
                         if self._validate_with_cache(t, df):
-                            print(f"  [RESPALDO] {provider_name} suministró datos para {t}")
+                            print(f"  [RESPALDO] {provider_name} suministró datos para {t} (símbolo {provider_symbol})")
                             frames.append(df)
                             self.calls += 1
                             config['limiter'].record_call()
                             config['breaker'].record_success()
                             break  # pasar al siguiente ticker
                         else:
-                            # Dato rechazado, registrar fallo de validación
+                            print(f"  [VALIDACIÓN] {provider_name}: dato rechazado para {t}")
                             config['breaker'].record_failure()
                             break  # no probar más proveedores para este ticker
                     else:

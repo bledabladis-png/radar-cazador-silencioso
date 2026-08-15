@@ -1,4 +1,4 @@
-import pandas as pd
+﻿import pandas as pd
 import numpy as np
 import os
 from datetime import datetime
@@ -92,7 +92,7 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
                 delta_str = "EMPEORA"
             else:
                 delta_str = "ESTABLE"
-            lines.append(f"  - *Liquidity Delta (vs ejecución anterior): {delta:+.3f} ({delta_str})*\n")
+            lines.append(f"  - *Liquidity Delta (vs ejecuciÃ³n anterior): {delta:+.3f} ({delta_str})*\n")
         except:
             pass
     
@@ -431,9 +431,9 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
             lines.append(f"  - *Scoring Wyckoff: MARKUP=1.0, ACCUMULATION=0.75, RANGE=0.0, DISTRIBUTION=-0.75, MARKDOWN=-1.0*\n")
             lines.append(f"- **Leader Health Composite (sin ajustar):** {comp:.0f}% ")
             lines.append(f"(0.30xRS + 0.25xMom + 0.25xFlow + 0.20xWyckoff)\n")
-            lines.append(f"- **Effective Breadth:** {effective:.0f}% (Health Composite: {comp:.0f}%, Cobertura: {coverage:.0f}%) — Regla: si cobertura >= 50% no se aplica penalización\n")
+            lines.append(f"- **Effective Breadth:** {effective:.0f}% (Health Composite: {comp:.0f}%, Cobertura: {coverage:.0f}%) â€” Regla: si cobertura >= 50% no se aplica penalizaciÃ³n\n")
             lines.append(f"  - N analizado: {n}/{total}\n")
-            lines.append(f"  - *Nota: Effective Breadth = Health Composite (sin ajuste cuando cobertura >= 50%). La penalización por cobertura solo se aplica cuando la cobertura es inferior al 50%. La calidad observada (Health Composite) es independiente de la cobertura.*\n")
+            lines.append(f"  - *Nota: Effective Breadth = Health Composite (sin ajuste cuando cobertura >= 50%). La penalizaciÃ³n por cobertura solo se aplica cuando la cobertura es inferior al 50%. La calidad observada (Health Composite) es independiente de la cobertura.*\n")
         
         integrity = slpm_v12_data.get('leader_integrity', {})
         if integrity:
@@ -481,7 +481,7 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
     # OMS v2.0
     # =========================================================================
     if pcr_data:
-        lines.append("## Sentimiento de Opciones (OMS v2.0)\n")
+        lines.append("## Sentimiento de Opciones\n")
         lines.append(f"- **PCR Total:** {pcr_data.get('total_pcr', np.nan):.2f} ")
         ewma_val = pcr_data.get('pcr_ewm', np.nan)
         if pd.notna(ewma_val):
@@ -668,16 +668,16 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
     lines.append("")
     
     # =====================================================================
-    # ESTADO ACTUAL — SÍNTESIS DE SEÑALES (v3.15 corregido)
-    # Solo presenta estados oficiales de los módulos. No infiere causas.
-    # Máximo 3 elementos, sin especulación, sin redundancias.
+    # ESTADO ACTUAL â€” SÃNTESIS DE SEÃ‘ALES (v3.15 corregido)
+    # Solo presenta estados oficiales de los mÃ³dulos. No infiere causas.
+    # MÃ¡ximo 3 elementos, sin especulaciÃ³n, sin redundancias.
     # =====================================================================
-    # INDICES INTERNACIONALES — OPORTUNIDADES DE ACUMULACION
+    # INDICES INTERNACIONALES â€” OPORTUNIDADES DE ACUMULACION
     # =====================================================================
     # -----------------------------------------------------------------
-    # INDICES INTERNACIONALES — FASES WYCKOFF
+    # INDICES INTERNACIONALES â€” FASES WYCKOFF
     # -----------------------------------------------------------------
-    lines.append("\n## Indices Internacionales — Fases Wyckoff\n")
+    lines.append("\n## Indices Internacionales â€” Fases Wyckoff\n")
     lines.append("| Indice | Ticker | Fase Wyckoff |\n")
     lines.append("|--------|--------|--------------|\n")
     if index_phases:
@@ -688,7 +688,7 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
         lines.append("| No disponible | No disponible | No disponible |\n")
     lines.append("\n")
 
-    lines.append("\n## Indices Internacionales — Oportunidades de Acumulacion\n")
+    lines.append("\n## Indices Internacionales â€” Oportunidades de Acumulacion\n")
     lines.append("*Nota: Los componentes se obtienen de ETFs proxy que replican el indice de referencia. Solo se muestran indices en fase ACCUMULATION.*\n\n")
     if index_leaders:
         for nombre, top5 in index_leaders.items():
@@ -703,19 +703,19 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
     else:
         lines.append("*Ningun indice en fase de acumulacion en esta ejecucion.*\n\n")
 
-    lines.append("## Estado Actual — Síntesis de Señales\n\n")
+    lines.append("## Estado Actual â€” SÃ­ntesis de SeÃ±ales\n\n")
 
     resumen = []
 
-    # 1. Régimen macro (prioridad máxima)
+    # 1. RÃ©gimen macro (prioridad mÃ¡xima)
     if macro_regime in ('RECESSION', 'LIQUIDITY CRISIS', 'STAGFLATION'):
-        resumen.append(f"- **Régimen macro: {macro_regime}** — entorno de estrés elevado.")
+        resumen.append(f"- **RÃ©gimen macro: {macro_regime}** â€” entorno de estrÃ©s elevado.")
     elif macro_regime in ('EXPANSION', 'RECOVERY', 'GOLDILOCKS'):
-        resumen.append(f"- **Régimen macro: {macro_regime}** — favorable para la asunción de riesgo.")
+        resumen.append(f"- **RÃ©gimen macro: {macro_regime}** â€” favorable para la asunciÃ³n de riesgo.")
     elif macro_regime == 'MIXED':
-        resumen.append(f"- **Régimen macro: MIXED** — ROTATIONAL / MIXED — rotación sectorial activa con dispersión elevada.")
+        resumen.append(f"- **RÃ©gimen macro: MIXED** â€” ROTATIONAL / MIXED â€” rotaciÃ³n sectorial activa con dispersiÃ³n elevada.")
     else:
-        resumen.append(f"- **Régimen macro: {macro_regime}**.")
+        resumen.append(f"- **RÃ©gimen macro: {macro_regime}**.")
 
     # 2. Liderazgo sectorial (prioridad alta)
     if slpm_v12_data:
@@ -731,22 +731,22 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
 
     # 3. Condiciones financieras o liquidez (si es relevante)
     if liquidity_regime in ('HIGH_STRESS', 'EXTREME_STRESS'):
-        resumen.append(f"- **Condiciones financieras: {liquidity_regime}** — estrés elevado en crédito y liquidez.")
+        resumen.append(f"- **Condiciones financieras: {liquidity_regime}** â€” estrÃ©s elevado en crÃ©dito y liquidez.")
     elif liquidity_regime == 'ESTRECHA':
-        resumen.append(f"- **Condiciones financieras: ESTRECHA** — señales financieras en territorio restrictivo.")
+        resumen.append(f"- **Condiciones financieras: ESTRECHA** â€” seÃ±ales financieras en territorio restrictivo.")
 
-    # Máximo 3 elementos
+    # MÃ¡ximo 3 elementos
     for item in resumen[:3]:
         lines.append(item + "\n")
     lines.append("\n")
 
-    # Divergencias relevantes (solo si no están ya en el resumen)
+    # Divergencias relevantes (solo si no estÃ¡n ya en el resumen)
     if price_flow_divergences:
         divergencias = []
         for ticker, div in price_flow_divergences.items():
             if div.get('status') == 'PRICE_STRONG_FLOW_UNCONFIRMED':
                 name = SECTOR_NAMES.get(ticker, ticker)
-                divergencias.append(f"- **{name}**: precio fuerte sin confirmación del Flow Proxy.")
+                divergencias.append(f"- **{name}**: precio fuerte sin confirmaciÃ³n del Flow Proxy.")
         if divergencias and len(resumen) < 3:
             lines.append("### Divergencias relevantes\n")
             for d in divergencias[:2]:
@@ -754,7 +754,7 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
             lines.append("\n")
 
     # Nota de cierre
-    lines.append("*Esta sección describe únicamente estados observables del sistema. No interpreta causas ni sugiere acciones.*\n\n")
+    lines.append("*Esta secciÃ³n describe Ãºnicamente estados observables del sistema. No interpreta causas ni sugiere acciones.*\n\n")
     
     lines.append(f"\n*Esta interpretacion es descriptiva y no constituye una recomendacion de inversion.*\n\n")
 
@@ -784,6 +784,7 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
 
     sector_df = pd.DataFrame(sector_results['ranking'], columns=['ticker', 'name', 'score', 'wyckoff_phase'])
     sector_df.to_csv('outputs/report/sector_rankings.csv', index=False)
+
 
 
 

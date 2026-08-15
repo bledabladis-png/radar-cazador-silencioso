@@ -2,6 +2,7 @@
 import pandas as pd
 from datetime import datetime, timedelta
 from .base import MarketDataProvider
+from src.instrument_registry import resolve_symbol
 
 class PolygonProvider(MarketDataProvider):
     def __init__(self, api_key=None):
@@ -61,28 +62,31 @@ class PolygonProvider(MarketDataProvider):
 
         frames = []
         for t in tickers:
-            # Polygon no usa símbolos con ^ para índices; para acciones/ETFs se usa tal cual
-            ticker_poly = t
+            ticker_poly = resolve_symbol(t, 'polygon')
+            if ticker_poly is None:
+                print(f"  Polygon: no soporta {t}")
+                continue
             url = f"https://api.polygon.io/v2/aggs/ticker/{ticker_poly}/range/1/day/{start_str}/{end_str}?adjusted=true&sort=asc&limit=50000&apiKey={self.api_key}"
             try:
                 resp = requests.get(url, timeout=15)
                 if resp.status_code != 200:
-                    print(f"  Polygon: {t} HTTP {resp.status_code}")
+                    print(f"  Polygon: {ticker_poly} HTTP {resp.status_code}")
                     continue
                 data = resp.json()
                 results = data.get('results')
                 if not results:
-                    print(f"  Polygon: {t} sin resultados")
+                    print(f"  Polygon: {ticker_poly} sin resultados")
                     continue
                 df = pd.DataFrame(results)
                 df['date'] = pd.to_datetime(df['t'], unit='ms')
                 df.set_index('date', inplace=True)
                 df = df[['o','h','l','c','v']]
                 df.columns = ['Open','High','Low','Close','Volume']
+                # Renombrar columna al ticker canónico
                 df.columns = pd.MultiIndex.from_product([df.columns, [t]])
                 frames.append(df)
             except Exception as e:
-                print(f"  Polygon: error descargando {t}: {e}")
+                print(f"  Polygon: error descargando {ticker_poly}: {e}")
                 continue
 
         if frames:
