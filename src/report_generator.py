@@ -63,7 +63,7 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
                           slpm_v12_data=None, tactical_scores=None, structural_scores=None,
                           sector_persistence=None, signal_agreements=None, signal_agreements_display=None,
                           cross_module_conflict=None, shock_sensitivities=None, price_flow_divergences=None,
-                          dc_summary="", all_signals=None, real_liq_score=None, real_liq_prev=None, index_leaders=None, index_phases=None, etf_primary_flow_data=None, cftc_position_flow_data=None, flow_synthesis=None, output_path='outputs/report/reporte_diario.md'):
+                          dc_summary="", all_signals=None, real_liq_score=None, real_liq_prev=None, index_leaders=None, index_phases=None, etf_primary_flow_data=None, cftc_position_flow_data=None, flow_synthesis=None, blackrock_dax_flow=None, output_path='outputs/report/reporte_diario.md'):
     lines = []
     lines.append("# MACRO SECTORIAL - Reporte Diario\n")
     lines.append(f"**Fecha:** {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
@@ -527,6 +527,21 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
         for _, row in etf_primary_flow_data.iterrows():
             lines.append(f"| {row['ticker']} | {row['nav']:.2f} | {row['shares_outstanding']:,.0f} | {row['total_net_assets']:,.0f} | {row['primary_flow_usd']:+,.0f} | {row['primary_flow_pct']:+.2f}% | {row['primary_flow_z']:+.2f} |\n")
         lines.append("\n*Fuente: State Street Global Advisors (SSGA). ETF Primary Flow = ΔShares Outstanding × NAV. Z-score sobre 120 sesiones.*\n\n")
+
+    # =========================================================================
+    # FLUJO PRIMARIO DAXEX (BlackRock)
+    # =========================================================================
+    if blackrock_dax_flow is not None and not blackrock_dax_flow.empty:
+        row = blackrock_dax_flow.iloc[-1]
+        lines.append("## Flujo Primario DAXEX (BlackRock)\n")
+        lines.append(f"- **Última fecha:** {row['date'].strftime('%Y-%m-%d') if hasattr(row['date'], 'strftime') else row['date']}\n")
+        lines.append(f"- **NAV:** {row['nav']:.4f}\n")
+        lines.append(f"- **Shares Outstanding:** {row['shares_outstanding']:,.0f}\n")
+        lines.append(f"- **Δ Shares:** {row['shares_change']:+,.0f}\n")
+        lines.append(f"- **Flujo Estimado (EUR):** {row['estimated_flow_eur']:+,.2f}\n")
+        lines.append(f"- **Flujo % AUM:** {row['flow_pct_assets']:+.6f}%\n")
+        lines.append(f"- **Flow Z-Score:** {row['flow_zscore']:+.2f}\n")
+        lines.append(f"\n*Fuente: BlackRock. ETF Primary Flow = ΔSharesOutstanding × NAV.*\n\n")
 
     # =========================================================================
     # CFTC POSITION FLOW (TFF, Semanal)
