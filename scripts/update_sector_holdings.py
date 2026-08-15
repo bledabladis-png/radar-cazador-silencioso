@@ -48,9 +48,10 @@ for etf, url in SECTOR_ETFS.items():
         # Leer Excel, los datos empiezan en fila 5 (índice 4 en 0-based)
         df = pd.read_excel(BytesIO(resp.content), header=None)
         
-        # Buscar la fila de encabezados que contiene 'Ticker'
+        # Buscar la fila de encabezados que contiene 'Ticker' y 'Identifier'
         ticker_col = None
         weight_col = None
+        identifier_col = None
         header_row = None
         for i, row in df.iterrows():
             for j, cell in row.items():
@@ -59,19 +60,27 @@ for etf, url in SECTOR_ETFS.items():
                     header_row = i
                 if isinstance(cell, str) and 'weight' in cell.lower():
                     weight_col = j
+                if isinstance(cell, str) and cell.strip().lower() in ('identifier', 'cusip'):
+                    identifier_col = j
             if ticker_col is not None:
                 break
         
         if ticker_col is None:
             raise Exception('No se encontro columna Ticker en el Excel')
         
-        # Extraer tickers y pesos desde la fila siguiente a los encabezados
+        # Extraer tickers, identifiers y pesos desde la fila siguiente a los encabezados
         tickers = []
+        identifiers = []
         weights = []
         for i in range(header_row + 1, len(df)):
             ticker = df.iloc[i, ticker_col]
             if isinstance(ticker, str) and ticker.strip():
                 tickers.append(ticker.strip().upper())
+                if identifier_col is not None:
+                    identifier = df.iloc[i, identifier_col]
+                    identifiers.append(str(identifier).strip() if identifier is not None else '')
+                else:
+                    identifiers.append('')
                 if weight_col is not None:
                     w = df.iloc[i, weight_col]
                     try:
@@ -82,7 +91,7 @@ for etf, url in SECTOR_ETFS.items():
                     weights.append(0.0)
         
         if tickers:
-            all_data.append(pd.DataFrame({'etf': etf, 'ticker': tickers, 'weight': weights}))
+            all_data.append(pd.DataFrame({'etf': etf, 'ticker': tickers, 'identifier': identifiers, 'weight': weights}))
             updated.append(etf)
             print(f'  {len(tickers)} tickers extraidos')
         else:
