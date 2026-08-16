@@ -12,6 +12,7 @@ from src.macro_manual_loader import load_macro_manual
 from src.stock_data_loader import download_stock_prices
 from data.providers.ssga_fund_data import get_etf_primary_flow_data
 from data.providers.blackrock_fund_data import get_blackrock_dax_primary_flow
+from data.providers.blackrock_isf_fund_data import get_blackrock_isf_primary_flow
 from data.providers.cftc_data import get_cftc_position_flow_data
 from data.validator import validate_market_data
 from regimes.financial_conditions import compute_financial_conditions
@@ -151,6 +152,19 @@ def main():
     except Exception as e:
         print(f"  DAXEX Primary Flow omitido: {e}")
         blackrock_dax_flow = None
+
+    # Flujo primario ISF.L (BlackRock)
+    print("Calculando ISF.L Primary Flow (BlackRock)...")
+    try:
+        blackrock_isf_flow = get_blackrock_isf_primary_flow()
+        if blackrock_isf_flow is not None and not blackrock_isf_flow.empty:
+            print("  ISF.L Primary Flow calculado.")
+        else:
+            blackrock_isf_flow = None
+            print("  ISF.L Primary Flow sin datos.")
+    except Exception as e:
+        print(f"  ISF.L Primary Flow omitido: {e}")
+        blackrock_isf_flow = None
 
     # Posicionamiento CFTC (TFF, semanal)
     print("Calculando CFTC Position Flow (TFF)...")
@@ -701,6 +715,7 @@ def main():
                           leader_lines=leader_lines, breadth_values=breadth_values,
                             etf_primary_flow_data=etf_primary_flow_data,
                             blackrock_dax_flow=blackrock_dax_flow,
+                            blackrock_isf_flow=blackrock_isf_flow,
                             cftc_position_flow_data=cftc_position_flow_data,
                             flow_synthesis=flow_synthesis,
                           real_liquidity_regime=real_liq_regime, real_liquidity_conf=real_liq_conf,
