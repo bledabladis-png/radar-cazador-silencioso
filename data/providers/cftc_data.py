@@ -149,11 +149,15 @@ def get_cftc_position_flow_data() -> pd.DataFrame:
         if result.empty:
             return result
 
-        HISTORY_PATH.parent.mkdir(parents=True, exist_ok=True)
-        result.to_csv(HISTORY_PATH, index=False)
-        print(f'  Histórico CFTC guardado: {HISTORY_PATH}')
+        # Filtrar a los últimos 365 días para mostrar solo lo reciente
+        max_date = result['date'].max()
+        recent = result[result['date'] >= max_date - pd.Timedelta(days=365)]
 
-        return result.sort_values('date', ascending=False).reset_index(drop=True)
+        HISTORY_PATH.parent.mkdir(parents=True, exist_ok=True)
+        recent.to_csv(HISTORY_PATH, index=False)
+        print(f'  Histórico CFTC guardado (últimos 365 días): {HISTORY_PATH}')
+
+        return recent.sort_values('date', ascending=False).reset_index(drop=True)
     except Exception as e:
         print(f'  Error en CFTC Position Flow: {e}')
         return pd.DataFrame()
