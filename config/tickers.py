@@ -1,6 +1,6 @@
 ﻿# -*- coding: utf-8 -*-
 """
-Universo de activos del Radar de Rotación Sectorial v3.15.
+Universo de activos del Radar de Rotación Sectorial v4.3.
 """
 
 MARKET_TICKERS = {

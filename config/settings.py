@@ -137,7 +137,6 @@ def validate_windows():
 WYCKOFF_VOLUME_WINDOW = 20
 WYCKOFF_TREND_FAST_MA = 50
 WYCKOFF_TREND_SLOW_MA = 200
-WYCKOFF_MIN_PERIODS = 60
 
 # ============================================================
 # WYCKOFF v4.1

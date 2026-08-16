@@ -36,7 +36,7 @@ from indicators.index_leaders import select_index_leaders
 
 def main():
     validate_sector_universe()
-    # Crear subcarpetas de outputs necesarias para ejecuciÃ³n limpia
+    # Crear subcarpetas de outputs necesarias para ejecución limpia
     for subdir in ['report', 'history', 'state', 'holdings', 'audit', 'cache']:
         os.makedirs(f'outputs/{subdir}', exist_ok=True)
     print("Descargando datos de mercado...")
@@ -65,26 +65,13 @@ def main():
     print(f"  Cond. Financieras: {financial_regime} (conf: {liq_conf:.0%})")
 
     print("Calculando liquidez real (FRED)...")
-    real_liq_prev = None
-    try:
-        result = compute_real_liquidity()
-        if result[0] is not None:
-            real_liq_score, real_liq_regime, real_liq_conf, real_liq_prev = result
-            print(f"  Liquidez real: {real_liq_regime} (conf: {real_liq_conf:.0%})")
-        else:
-            real_liq_score, real_liq_regime, real_liq_conf = None, 'N/A', 0.0
-            print("  Liquidez real: no disponible (sin datos FRED)")
-    except ValueError:
-        # Fallback si la funciÃ³n devuelve solo 3 valores (versiÃ³n antigua)
-        real_liq_score, real_liq_regime, real_liq_conf = compute_real_liquidity()
-        if real_liq_score is not None:
-            print(f"  Liquidez real: {real_liq_regime} (conf: {real_liq_conf:.0%})")
-        else:
-            real_liq_score = None
-            real_liq_regime = 'N/A'
-            real_liq_conf = 0.0
-            print("  Liquidez real: no disponible (sin datos FRED)")
-
+    result = compute_real_liquidity()
+    if result[0] is not None:
+        real_liq_score, real_liq_regime, real_liq_conf, real_liq_prev = result
+        print(f"  Liquidez real: {real_liq_regime} (conf: {real_liq_conf:.0%})")
+    else:
+        real_liq_score, real_liq_regime, real_liq_conf, real_liq_prev = None, 'N/A', 0.0, None
+        print("  Liquidez real: no disponible (sin datos FRED)")
     print("Calculando regimen de volatilidad...")
     try:
         vix_close = get_col(df_market, '^VIX', 'Close')
@@ -211,25 +198,25 @@ def main():
     # Sintesis descriptiva de flujo (sin superindicador)
     flow_synthesis = {}
     try:
-        # DirecciÃ³n de flow_proxy (promedio de flow_proxy_z de lÃ­deres sectoriales si existen, si no 0)
+        # Dirección de flow_proxy (promedio de flow_proxy_z de líderes sectoriales si existen, si no 0)
         proxy_sign = 0.0
         if 'leader_df' in locals() and leader_df is not None and not leader_df.empty and 'flow_proxy_z' in leader_df.columns:
             proxy_sign = float(leader_df['flow_proxy_z'].mean())
         flow_synthesis['flow_proxy_sign'] = proxy_sign
 
-        # DirecciÃ³n de ETF Primary Flow (promedio de primary_flow_z)
+        # Dirección de ETF Primary Flow (promedio de primary_flow_z)
         primary_sign = 0.0
         if etf_primary_flow_data is not None and not etf_primary_flow_data.empty:
             primary_sign = float(etf_primary_flow_data['primary_flow_z'].mean())
         flow_synthesis['etf_primary_flow_sign'] = primary_sign
 
-        # DirecciÃ³n de CFTC Position Flow (promedio de flow_z)
+        # Dirección de CFTC Position Flow (promedio de flow_z)
         cftc_sign = 0.0
         if cftc_position_flow_data is not None and not cftc_position_flow_data.empty and 'flow_z' in cftc_position_flow_data.columns:
             cftc_sign = float(cftc_position_flow_data['flow_z'].mean())
         flow_synthesis['cftc_flow_sign'] = cftc_sign
 
-        # DirecciÃ³n de Europa Primary Flow (promedio de flow_zscore de DAXEX, ISF.L, LYXI)
+        # Dirección de Europa Primary Flow (promedio de flow_zscore de DAXEX, ISF.L, LYXI)
         europe_sign = 0.0
         european_flows = []
         if blackrock_dax_flow is not None and not blackrock_dax_flow.empty and 'flow_zscore' in blackrock_dax_flow.columns:
@@ -242,7 +229,7 @@ def main():
             europe_sign = float(sum(european_flows) / len(european_flows))
         flow_synthesis['european_flow_sign'] = europe_sign
 
-        # Cargar datos N-PORT mÃ¡s recientes para el reporte
+        # Cargar datos N-PORT más recientes para el reporte
         nport_position_change_data = None
         try:
             import pandas as pd
@@ -679,7 +666,7 @@ def main():
     else:
         add_check("MTE", True, "sin datos")
 
-    # 5. Rangos tÃ¡cticos/estructurales
+    # 5. Rangos tácticos/estructurales
     if tactical_scores and structural_scores:
         sectors_checked = 0
         for ticker in tactical_scores:
@@ -691,9 +678,9 @@ def main():
                 if abs(s) > 1.0:
                     validation_errors.append(f"{ticker}: Structural Score fuera de rango ({s:+.2f}).")
                 sectors_checked += 1
-        add_check("Rangos tÃ¡cticos/estructurales", True, f"{sectors_checked} sectores")
+        add_check("Rangos tácticos/estructurales", True, f"{sectors_checked} sectores")
     else:
-        add_check("Rangos tÃ¡cticos/estructurales", True, "sin datos")
+        add_check("Rangos tácticos/estructurales", True, "sin datos")
 
     # 6. Opportunity Map
     if slpm_v12_data and tactical_scores and structural_scores:
@@ -745,7 +732,7 @@ def main():
     else:
         add_check("Freshness PCR", True, "sin datos")
 
-    # 9. ConfiguraciÃ³n de pesos
+    # 9. Configuración de pesos
     try:
         from config.weights import validate_weights
         validate_weights()

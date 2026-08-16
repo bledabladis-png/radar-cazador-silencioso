@@ -63,6 +63,8 @@ def validate_weights():
         'SECTOR_SCORE_WEIGHTS': SECTOR_SCORE_WEIGHTS,
         'SLPM_LEADER_BREADTH': SLPM_WEIGHTS['leader_breadth'],
         'SLPM_LIS': SLPM_WEIGHTS['lis'],
+        'TACTICAL_WEIGHTS': TACTICAL_WEIGHTS,
+        'STRUCTURAL_WEIGHTS': STRUCTURAL_WEIGHTS,
     }
     
     for name, weights in groups.items():
