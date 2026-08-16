@@ -1,10 +1,11 @@
 ﻿"""
-Proveedor Amundi para flujo primario y posiciones de ETFs UCITS.
-Descarga metadatos (SHARES_OUT, NAV, AUM, fechas) y composición.
-Calcula flujo primario estimado = ΔSHARES_OUT × NAV.
+Proveedor Amundi para flujo primario de LYXI.
+Descarga series históricas de SHARES_OUT, NAV y AUM desde la API oficial.
+Calcula ETF Primary Flow = ΔSharesOutstanding × NAV.
 """
 import requests
 import pandas as pd
+import numpy as np
 import json
 from pathlib import Path
 from datetime import datetime, timedelta
@@ -12,8 +13,7 @@ from datetime import datetime, timedelta
 ISIN_LYXI = 'FR0010251744'
 API_URL = 'https://www.amundietf.es/mapi/ProductAPI/getProductsData'
 CACHE_DIR = Path('data/cache/amundi')
-FUND_HISTORY_CSV = Path('outputs/history/amundi_lyxi_fund_history.csv')
-HOLDINGS_HISTORY_CSV = Path('outputs/history/amundi_lyxi_holdings_history.csv')
+HISTORY_CSV = Path('outputs/history/amundi_lyxi_primary_flow.csv')
 
 HEADERS = {
     'Accept': 'application/json',
@@ -23,23 +23,8 @@ HEADERS = {
     'User-Agent': 'Mozilla/5.0'
 }
 
-def normalize_amundi_date(value):
-    """Convierte fechas Amundi (timestamp ms o ISO) a date."""
-    if value is None:
-        return None
-    if isinstance(value, (int, float)):
-        try:
-            return datetime.fromtimestamp(value / 1000).date()
-        except (ValueError, OSError):
-            return None
-    if isinstance(value, str):
-        try:
-            return pd.to_datetime(value).date()
-        except:
-            return None
-    return None
-
-def build_request_body(isin: str) -> dict:
+def build_historical_request(isin: str, start_date: str, end_date: str) -> dict:
+    """Construye el body con las tres series históricas."""
     return {
         "context": {
             "countryCode": "ESP",
@@ -55,20 +40,29 @@ def build_request_body(isin: str) -> dict:
         "productIds": [isin],
         "characteristics": [
             "ISIN",
-            "TICKER",
             "SHARE_MARKETING_NAME",
             "SHARES_OUT",
             "NAV",
             "AUM",
-            "CURRENCY",
-            "FUND_AUM",
-            "POSITION_AS_OF_DATE",
-            "NAV_DATE_DISPLAYED",
-            "NAV_DATE_FOR_PERFORMANCE_CALCULATIONS",
-            "NNA_DATA_DATE",
-            "FUND_BREAKDOWNS_AS_OF_DATE"
+            "CURRENCY"
         ],
-        "historics": [],
+        "historics": [
+            {
+                "indicator": "sharesOut",
+                "startDate": f"{start_date}T00:00:00.000Z",
+                "endDate": f"{end_date}T23:59:59.000Z"
+            },
+            {
+                "indicator": "officialNav",
+                "startDate": f"{start_date}T00:00:00.000Z",
+                "endDate": f"{end_date}T23:59:59.000Z"
+            },
+            {
+                "indicator": "fundAumInMCcy",
+                "startDate": f"{start_date}T00:00:00.000Z",
+                "endDate": f"{end_date}T23:59:59.000Z"
+            }
+        ],
         "metrics": [],
         "breakDown": {
             "aggregationFields": ["FUND_TOP10"]
@@ -82,157 +76,141 @@ def build_request_body(isin: str) -> dict:
         }
     }
 
-def download_fund_data(isin: str, force_download: bool = False) -> dict:
-    """Descarga los datos de la API y los cachea."""
+def download_historical_data(isin: str, start_date: str, end_date: str) -> dict:
+    """Descarga datos históricos y los cachea por fecha de consulta."""
     CACHE_DIR.mkdir(parents=True, exist_ok=True)
-    cache_file = CACHE_DIR / f'{isin}.json'
-    use_cache = (not force_download) and cache_file.exists()
+    cache_file = CACHE_DIR / f'{isin}_hist_{start_date}_{end_date}.json'
+    use_cache = cache_file.exists()
     if use_cache:
         mtime = datetime.fromtimestamp(cache_file.stat().st_mtime)
         if datetime.now() - mtime > timedelta(hours=23):
             use_cache = False
 
     if use_cache:
-        print(f'  Usando caché para {isin}')
+        print(f'  Usando caché histórico para {isin}')
         with open(cache_file, 'r', encoding='utf-8') as f:
             return json.load(f)
 
-    print(f'  Descargando {isin} desde Amundi...')
-    body = build_request_body(isin)
+    print(f'  Descargando histórico {isin} desde Amundi...')
+    body = build_historical_request(isin, start_date, end_date)
     try:
-        r = requests.post(API_URL, json=body, headers=HEADERS, timeout=30)
+        r = requests.post(API_URL, json=body, headers=HEADERS, timeout=60)
         r.raise_for_status()
         data = r.json()
         products = data.get('products', [])
         if not products:
             raise ValueError('No products returned')
+        product = products[0]
         with open(cache_file, 'w', encoding='utf-8') as f:
-            json.dump(products[0], f, ensure_ascii=False, indent=2)
+            json.dump(product, f, ensure_ascii=False, indent=2)
         print(f'  Guardado en caché: {cache_file}')
-        return products[0]
+        return product
     except Exception as e:
-        print(f'  Error descargando {isin}: {e}')
+        print(f'  Error descargando histórico {isin}: {e}')
         if cache_file.exists():
             print('  Usando caché existente pese al error.')
             with open(cache_file, 'r', encoding='utf-8') as f:
                 return json.load(f)
         return {}
 
-def save_daily_snapshot(product: dict, isin: str):
-    """Guarda registros diarios de SHARES_OUT, NAV, AUM y composición."""
+def parse_historical_series(product: dict) -> pd.DataFrame:
+    """Extrae y une las tres series por fecha (timestamp ms -> date)."""
     if not product:
-        print('  No hay datos de producto, no se guarda snapshot.')
-        return
+        return pd.DataFrame()
 
-    chars = product.get('characteristics', {})
-    # Fechas efectivas normalizadas
-    shares_date = normalize_amundi_date(chars.get('POSITION_AS_OF_DATE'))
-    nav_date = normalize_amundi_date(chars.get('NAV_DATE_DISPLAYED') or chars.get('NAV_DATE_FOR_PERFORMANCE_CALCULATIONS'))
-    aum_date = normalize_amundi_date(chars.get('NNA_DATA_DATE') or chars.get('FUND_BREAKDOWNS_AS_OF_DATE'))
+    historics = product.get('historics', [])
+    series_dict = {}
 
-    shares_out = chars.get('SHARES_OUT')
-    nav = chars.get('NAV')
-    aum = chars.get('AUM')
-    fund_name = chars.get('SHARE_MARKETING_NAME', 'Amundi ETF')
-    currency = chars.get('CURRENCY', 'EUR')
+    for hist in historics:
+        indicator = hist.get('indicator')
+        data = hist.get('historicalData') or []
+        if not data:
+            continue
+        df_series = pd.DataFrame(data)
+        # La API devuelve 'date' (timestamp ms) y 'data' (valor)
+        df_series['date'] = pd.to_datetime(df_series['date'], unit='ms').dt.date
+        df_series = df_series.rename(columns={'data': indicator})
+        # Conservar solo date y el indicador
+        df_series = df_series[['date', indicator]]
+        series_dict[indicator] = df_series
 
-    calculated_aum = shares_out * nav if (shares_out is not None and nav is not None) else None
-    aum_error_pct = None
-    if calculated_aum and aum:
-        aum_error_pct = (calculated_aum - aum) / aum * 100
+    required = ['sharesOut', 'officialNav']
+    missing = [k for k in required if k not in series_dict]
+    if missing:
+        raise ValueError(f'Faltan series históricas: {missing}')
 
-    # Fecha global: priorizamos shares_date, luego nav_date, luego aum_date
-    as_of = shares_date or nav_date or aum_date
-    if as_of is None:
-        raise ValueError("Amundi no proporcionó fecha efectiva para el snapshot")
+    # Unir por fecha
+    df = series_dict['sharesOut'].merge(
+        series_dict['officialNav'],
+        on='date',
+        how='outer'
+    )
+    if 'fundAumInMCcy' in series_dict:
+        df = df.merge(series_dict['fundAumInMCcy'], on='date', how='left')
 
-    fund_row = {
-        'isin': isin,
-        'fund_name': fund_name,
-        'date': as_of,
-        'shares_outstanding': shares_out,
-        'nav': nav,
-        'aum': aum,
-        'currency': currency,
-        'nav_date': nav_date,
-        'shares_date': shares_date,
-        'aum_date': aum_date,
-        'calculated_aum': calculated_aum,
-        'aum_error_pct': aum_error_pct
-    }
+    df = df.sort_values('date').reset_index(drop=True)
+    return df
 
-    if FUND_HISTORY_CSV.exists():
-        df_fund = pd.read_csv(FUND_HISTORY_CSV)
-        df_fund = df_fund[df_fund['date'] != str(as_of)]
-        df_fund = pd.concat([df_fund, pd.DataFrame([fund_row])], ignore_index=True)
-    else:
-        df_fund = pd.DataFrame([fund_row])
-    df_fund.to_csv(FUND_HISTORY_CSV, index=False)
-    print(f'  Fund history actualizado: {FUND_HISTORY_CSV}')
-    if aum_error_pct is not None:
-        print(f'  AUM CHECK: error {aum_error_pct:.6f}%')
+def compute_primary_flow(df: pd.DataFrame) -> pd.DataFrame:
+    """Calcula flujo primario y métricas derivadas."""
+    if df.empty:
+        return df
 
-    comp = product.get('composition', {})
-    comp_data = comp.get('compositionData', [])
-    if not comp_data:
-        print('  No hay compositionData, no se guardan posiciones.')
-        return
+    df = df.copy()
+    df['shares_outstanding'] = pd.to_numeric(df['sharesOut'], errors='coerce')
+    df['nav'] = pd.to_numeric(df['officialNav'], errors='coerce')
+    df['fund_aum'] = pd.to_numeric(df['fundAumInMCcy'], errors='coerce')
+    df['class_aum'] = df['shares_outstanding'] * df['nav']  # AUM de la clase
 
-    rows = []
-    for item in comp_data:
-        c = item.get('compositionCharacteristics', item)
-        rows.append({
-            'date': c.get('date', as_of),
-            'etf_isin': isin,
-            'etf_name': fund_name,
-            'holding_isin': c.get('isin'),
-            'holding_bbg': c.get('bbg'),
-            'holding_name': c.get('name'),
-            'quantity': c.get('quantity'),
-            'weight': c.get('weight'),
-            'currency': c.get('currency'),
-            'sector': c.get('sector'),
-            'country': c.get('country'),
-            'country_of_risk': c.get('countryOfRisk'),
-        })
+    # Flujo primario
+    df['shares_change'] = df['shares_outstanding'].diff()
+    df['estimated_flow_eur'] = df['shares_change'] * df['nav']
+    df['flow_pct_assets'] = df['estimated_flow_eur'] / df['class_aum']  # decimal
 
-    if HOLDINGS_HISTORY_CSV.exists():
-        df_holdings = pd.read_csv(HOLDINGS_HISTORY_CSV)
-        df_holdings = df_holdings[df_holdings['date'] != str(as_of)]
-        df_holdings = pd.concat([df_holdings, pd.DataFrame(rows)], ignore_index=True)
-    else:
-        df_holdings = pd.DataFrame(rows)
-    df_holdings.to_csv(HOLDINGS_HISTORY_CSV, index=False)
-    print(f'  Holdings history actualizado: {HOLDINGS_HISTORY_CSV} ({len(rows)} posiciones)')
+    # Normalización robusta (media y desviación estándar, clip ±3)
+    mean = df['flow_pct_assets'].rolling(120, min_periods=20).mean()
+    std = df['flow_pct_assets'].rolling(120, min_periods=20).std()
+    df['flow_zscore'] = ((df['flow_pct_assets'] - mean) / (std + 1e-9)).clip(-3, 3)
+    df['flow_5d'] = df['estimated_flow_eur'].rolling(5).mean()
+    df['flow_20d'] = df['estimated_flow_eur'].rolling(20).mean()
 
-def get_amundi_primary_flow(isin: str, force_download: bool = False) -> pd.DataFrame:
-    """Descarga y guarda snapshot, devuelve últimos datos de flujo primario estimado."""
-    product = download_fund_data(isin, force_download=force_download)
-    save_daily_snapshot(product, isin)
+    return df
 
-    if FUND_HISTORY_CSV.exists():
-        df = pd.read_csv(FUND_HISTORY_CSV, parse_dates=['date'])
-        df = df.sort_values('date')
-        if len(df) >= 2:
-            df['shares_change'] = df['shares_outstanding'].diff()
-            df['estimated_flow_eur'] = df['shares_change'] * df['nav']
-            df['flow_pct_assets'] = df['estimated_flow_eur'] / df['aum']
-            return df.tail(1)
-        else:
-            # Histórico insuficiente: devolver última fila con flujo NaN
-            last = df.tail(1).copy()
-            last['shares_change'] = pd.NA
-            last['estimated_flow_eur'] = pd.NA
-            last['flow_pct_assets'] = pd.NA
-            return last
-    return pd.DataFrame()
-
-# Wrapper para LYXI
 def get_amundi_lyxi_primary_flow(force_download: bool = False) -> pd.DataFrame:
-    return get_amundi_primary_flow(ISIN_LYXI, force_download=force_download)
+    """Descarga histórico, calcula flujo y devuelve la última fila."""
+    # Rango amplio para intentar obtener máximo histórico
+    start_date = '2025-01-01'
+    end_date = datetime.now().strftime('%Y-%m-%d')
+
+    product = download_historical_data(ISIN_LYXI, start_date, end_date)
+    if not product:
+        return pd.DataFrame()
+
+    print('  Procesando series históricas...')
+    df = parse_historical_series(product)
+    if df.empty:
+        print('  No se obtuvieron series históricas.')
+        return pd.DataFrame()
+
+    df = compute_primary_flow(df)
+
+    # Guardar CSV completo
+    HISTORY_CSV.parent.mkdir(parents=True, exist_ok=True)
+    cols = [
+        'date', 'shares_outstanding', 'nav', 'fund_aum', 'class_aum',
+        'shares_change', 'estimated_flow_eur', 'flow_pct_assets',
+        'flow_zscore', 'flow_5d', 'flow_20d'
+    ]
+    df[cols].to_csv(HISTORY_CSV, index=False)
+    print(f'  Histórico guardado en {HISTORY_CSV}')
+    print(f'  Total filas: {len(df)}')
+
+    if not df.empty:
+        print(df.tail(5).to_string(index=False))
+
+    return df.tail(1)
 
 if __name__ == '__main__':
     df = get_amundi_lyxi_primary_flow(force_download=True)
     print('\nÚltima fila de flujo LYXI:')
     print(df)
-
