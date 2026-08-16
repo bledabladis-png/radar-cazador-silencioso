@@ -1,5 +1,5 @@
 # Radar de Rotacion Sectorial - Documentacion v4.3
-**Generado automaticamente:** 2026-08-12 22:59
+**Generado automaticamente:** 2026-08-16 03:27
 
 ## Indice
 
@@ -18,6 +18,11 @@
 - [Lideres Sectoriales e Internacionales](07_lideres.md): stock_leader.py, WLS, indices
 - [Generacion del Reporte](08_reporte.md): report_generator.py, estructura del reporte diario
 - [Scripts de Auditoria](09_auditorias.md): validacion, Monte Carlo, ablacion, correlaciones
+- [Flujo Primario ETF](10_flujo_primario_etf.md): ETF Primary Flow desde SSGA, BlackRock, Amundi
+- [CFTC Position Flow](11_cftc_position_flow.md): Posicionamiento semanal de futuros financieros
+- [SEC N-PORT Position Flow](12_sec_nport_positions.md): Flujo posicional institucional trimestral
+- [Proveedores de Respaldo](13_backup_providers.md): Rate limiting, circuit breaker, validación cruzada
+- [Registro de Instrumentos](14_instrument_registry.md): Mapeo canónico de tickers entre proveedores
 
 ---
 *Esta documentacion se genera automaticamente desde el codigo fuente. No editar manualmente.*

@@ -58,6 +58,11 @@ def generate_readme():
         ('07_lideres.md', 'Lideres Sectoriales e Internacionales', 'stock_leader.py, WLS, indices'),
         ('08_reporte.md', 'Generacion del Reporte', 'report_generator.py, estructura del reporte diario'),
         ('09_auditorias.md', 'Scripts de Auditoria', 'validacion, Monte Carlo, ablacion, correlaciones'),
+        ('10_flujo_primario_etf.md', 'Flujo Primario ETF', 'ETF Primary Flow desde SSGA, BlackRock, Amundi'),
+        ('11_cftc_position_flow.md', 'CFTC Position Flow', 'Posicionamiento semanal de futuros financieros'),
+        ('12_sec_nport_positions.md', 'SEC N-PORT Position Flow', 'Flujo posicional institucional trimestral'),
+        ('13_backup_providers.md', 'Proveedores de Respaldo', 'Rate limiting, circuit breaker, validación cruzada'),
+        ('14_instrument_registry.md', 'Registro de Instrumentos', 'Mapeo canónico de tickers entre proveedores'),
     ]
     lines = [
         '# Radar de Rotacion Sectorial - Documentacion v4.3',
@@ -373,6 +378,114 @@ def generate_auditorias():
     salidas = "Resultados en consola y archivos CSV en outputs/."
     return template(proposito, arquitectura, formulas, salidas) + f"\n{table}\n"
 
+
+def generate_etf_primary_flow():
+    proposito = "Documenta los modulos de flujo primario de ETFs (ETF Primary Flow), que estiman creaciones/redenciones de participaciones usando los cambios en Shares Outstanding multiplicados por el NAV."
+    arquitectura = """
+- data/providers/ssga_fund_data.py: ETFs SPDR USA (11 sectores) + FEZ.
+- data/providers/blackrock_fund_data.py: iShares DAXEX (DAX 40).
+- data/providers/blackrock_isf_fund_data.py: iShares ISF.L (FTSE 100).
+- data/providers/amundi_fund_data.py: Amundi LYXI (Ibex 35).
+- Todos guardan históricos en outputs/history/ y se integran en run.py.
+"""
+    formulas = """
+- **ETF Primary Flow:** ΔSharesOutstanding × NAV.
+- **Flow % Assets:** EstimatedFlow / AUM (o TotalNetAssets), en decimal.
+- **Flow Z-Score:** rolling z-score (120 días) sobre Flow % Assets.
+- **Flow 5d/20d:** medias móviles del flujo estimado.
+"""
+    salidas = """
+- outputs/history/etf_primary_flow.csv
+- outputs/history/blackrock_dax_primary_flow.csv
+- outputs/history/blackrock_isf_primary_flow.csv
+- outputs/history/amundi_lyxi_primary_flow.csv
+- Secciones en el reporte: '## Flujo Primario ETF (SPDR)', '## Flujo Primario DAXEX', '## Flujo Primario ISF.L', '## Flujo Primario LYXI'.
+"""
+    limitaciones = "El flujo primario estimado no es flujo institucional directo; solo refleja cambios en participaciones. Amundi requiere dos fechas efectivas para calcular el flujo."
+    return template(proposito, arquitectura, formulas, salidas, limitaciones)
+
+
+def generate_cftc_position_flow():
+    proposito = "Documenta el módulo de posicionamiento semanal de futuros financieros (CFTC TFF), que mide cambios en posiciones reportadas por tipo de participante."
+    arquitectura = """
+- data/providers/cftc_data.py: descarga CSV de CFTC TFF (Futures Only).
+- Selecciona contratos: E-MINI S&P 500, Nasdaq-100, Russell, DJIA, VIX, UST 10Y.
+- Calcula net position, position change y flow z-score por participante (dealer, asset_mgr, lev_money).
+"""
+    formulas = """
+- **Net Position:** Long - Short.
+- **Position Change:** NetPosition(t) - NetPosition(t-1).
+- **Flow Z-Score:** rolling 52 semanas del position change.
+"""
+    salidas = """
+- outputs/history/cftc_position_flow.csv
+- Sección en el reporte: '## Posicionamiento CFTC (TFF, Semanal)'.
+"""
+    limitaciones = "Frecuencia semanal. No representa flujo de capital al contado, sino posicionamiento en futuros."
+    return template(proposito, arquitectura, formulas, salidas, limitaciones)
+
+
+def generate_sec_nport_positions():
+    proposito = "Documenta los módulos de extracción de posiciones institucionales desde SEC N-PORT, con granularidad fondo + activo + fecha de reporte."
+    arquitectura = """
+- data/providers/sec_nport_positioning.py: extrae posiciones de N-PORT (REGISTRANT, FUND_REPORTED_HOLDING, IDENTIFIERS).
+- data/providers/sec_nport_position_change.py: calcula cambios de balance por fondo y activo.
+- data/providers/sec_nport_quarters_position_change.py: compara trimestres Q1 y Q2.
+- data/providers/sec_fund_flow.py: extrae flujos de fondos desde FUND_REPORTED_INFO.
+- data/providers/sec_nport_international_leader_flows.py: cruza N-PORT de FEZ con líderes internacionales.
+"""
+    formulas = """
+- **Position Change:** BALANCE(t) - BALANCE(t-1).
+- **Position Change %:** PositionChange / BALANCE(t-1) × 100.
+- **Net Fund Flow:** Sales + Reinvestment - Redemption.
+"""
+    salidas = """
+- outputs/history/sec_nport_positions.csv
+- outputs/history/sec_nport_position_change.csv
+- outputs/history/sec_nport_position_change_quarterly.csv
+- outputs/history/sec_fund_flow.csv
+- outputs/report/sec_nport_international_leader_flows.csv
+"""
+    limitaciones = "Los datasets N-PORT se publican trimestralmente aunque los datos son mensuales. No se integra en run.py diario."
+    return template(proposito, arquitectura, formulas, salidas, limitaciones)
+
+
+def generate_backup_providers():
+    proposito = "Describe los proveedores de respaldo multi-API y los mecanismos de resiliencia: rate limiting, circuit breaker y validación cruzada."
+    arquitectura = """
+- data/providers/backup_providers.py: Alpha Vantage, Tiingo, Twelve Data, Finnhub, FMP.
+- RateLimiter: límites diarios y por minuto por proveedor.
+- CircuitBreaker: desactiva temporalmente tras fallos consecutivos.
+- Validación cruzada contra caché local.
+- data/providers/polygon.py: proveedor Polygon.io / Massive.
+"""
+    formulas = """
+- Presupuesto global de respaldo: 20 llamadas por ejecución.
+- Límites específicos configurados en RateLimiter por proveedor.
+"""
+    salidas = """
+- DataFrames de OHLCV unificados (MultiIndex con ticker canónico).
+- Mensajes de trazabilidad: [RESPALDO], [RATE], [CIRCUIT], [VALIDACIÓN].
+"""
+    limitaciones = "Solo se activa cuando Yahoo Finance falla. No reemplaza la fuente primaria."
+    return template(proposito, arquitectura, formulas, salidas, limitaciones)
+
+
+def generate_instrument_registry():
+    proposito = "Documenta el registro central de instrumentos que mapea tickers canónicos (Yahoo) a símbolos específicos de cada proveedor."
+    arquitectura = """
+- src/instrument_registry.py: diccionario INSTRUMENTS con equivalencias por proveedor.
+- Función resolve_symbol(canonical_ticker, provider) devuelve el símbolo correcto o None.
+- Cobertura explícita para BRK-B, BF-B, ^GSPC, ^STOXX50E, ^VIX3M, MOGA y otros.
+- Los proveedores normalizan siempre al ticker canónico en sus salidas.
+"""
+    formulas = "No aplica (mapeo estático)."
+    salidas = "Tickers normalizados en todos los DataFrames de proveedores, evitando duplicados."
+    limitaciones = "Requiere actualización manual al añadir nuevos instrumentos o proveedores."
+    return template(proposito, arquitectura, formulas, salidas, limitaciones)
+
+
+
 def main():
     os.makedirs(DOCS_DIR, exist_ok=True)
     generators = {
@@ -392,6 +505,11 @@ def main():
         '07_lideres.md': generate_lideres,
         '08_reporte.md': generate_reporte,
         '09_auditorias.md': generate_auditorias,
+        '10_flujo_primario_etf.md': generate_etf_primary_flow,
+        '11_cftc_position_flow.md': generate_cftc_position_flow,
+        '12_sec_nport_positions.md': generate_sec_nport_positions,
+        '13_backup_providers.md': generate_backup_providers,
+        '14_instrument_registry.md': generate_instrument_registry,
     }
     print('Generando documentacion...')
     for filename, generator in generators.items():
