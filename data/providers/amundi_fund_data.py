@@ -216,7 +216,7 @@ def get_amundi_primary_flow(isin: str, force_download: bool = False) -> pd.DataF
         if len(df) >= 2:
             df['shares_change'] = df['shares_outstanding'].diff()
             df['estimated_flow_eur'] = df['shares_change'] * df['nav']
-            df['flow_pct_assets'] = df['estimated_flow_eur'] / df['aum'] * 100
+            df['flow_pct_assets'] = df['estimated_flow_eur'] / df['aum']
             return df.tail(1)
         else:
             # Histórico insuficiente: devolver última fila con flujo NaN
@@ -235,3 +235,4 @@ if __name__ == '__main__':
     df = get_amundi_lyxi_primary_flow(force_download=True)
     print('\nÚltima fila de flujo LYXI:')
     print(df)
+
