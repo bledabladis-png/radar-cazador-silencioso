@@ -255,6 +255,16 @@ def main():
             print(f"  N-PORT no cargado: {e}")
             nport_position_change_data = None
 
+        # Cargar flujo de participaciones QQQ NPORT-P
+        qqq_nport_flow_data = None
+        try:
+            qqq_nport_path = Path('outputs/history/qqq_nport_flow.csv')
+            if qqq_nport_path.exists():
+                qqq_nport_flow_data = pd.read_csv(qqq_nport_path)
+        except Exception as e:
+            print(f"  QQQ NPORT-P no cargado: {e}")
+            qqq_nport_flow_data = None
+
         # Cargar performance QQQ para el reporte
         qqq_performance_data = None
         try:
@@ -786,6 +796,7 @@ def main():
                             amundi_lyxi_flow=amundi_lyxi_flow,
                             nport_position_change_data=nport_position_change_data,
                             qqq_performance_data=qqq_performance_data,
+                            qqq_nport_flow_data=qqq_nport_flow_data,
                             cftc_position_flow_data=cftc_position_flow_data,
                             flow_synthesis=flow_synthesis,
                           real_liquidity_regime=real_liq_regime, real_liquidity_conf=real_liq_conf,

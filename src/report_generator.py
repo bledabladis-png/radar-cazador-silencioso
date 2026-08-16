@@ -63,7 +63,7 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
                           slpm_v12_data=None, tactical_scores=None, structural_scores=None,
                           sector_persistence=None, signal_agreements=None, signal_agreements_display=None,
                           cross_module_conflict=None, shock_sensitivities=None, price_flow_divergences=None,
-                          dc_summary="", all_signals=None, real_liq_score=None, real_liq_prev=None, index_leaders=None, index_phases=None, etf_primary_flow_data=None, cftc_position_flow_data=None, flow_synthesis=None, blackrock_dax_flow=None, blackrock_isf_flow=None, amundi_lyxi_flow=None, blackrock_iwm_flow=None, nport_position_change_data=None, qqq_performance_data=None, output_path='outputs/report/reporte_diario.md'):
+                          dc_summary="", all_signals=None, real_liq_score=None, real_liq_prev=None, index_leaders=None, index_phases=None, etf_primary_flow_data=None, cftc_position_flow_data=None, flow_synthesis=None, blackrock_dax_flow=None, blackrock_isf_flow=None, amundi_lyxi_flow=None, blackrock_iwm_flow=None, nport_position_change_data=None, qqq_performance_data=None, qqq_nport_flow_data=None, output_path='outputs/report/reporte_diario.md'):
     lines = []
     lines.append("# MACRO SECTORIAL - Reporte Diario\n")
     lines.append(f"**Fecha:** {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
@@ -635,6 +635,21 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
     else:
         lines.append("## Rendimiento QQQ (Invesco)\n")
         lines.append("*Sin datos de performance QQQ en esta ejecución.*\n\n")
+
+    # =========================================================================
+    # FLUJO DE PARTICIPACIONES QQQ (NPORT-P)
+    # =========================================================================
+    if qqq_nport_flow_data is not None and not qqq_nport_flow_data.empty:
+        lines.append("## Flujo de Participaciones QQQ (NPORT-P)\n")
+        lines.append("*Fuente: SEC NPORT-P Item B.6. Frecuencia trimestral.*\n")
+        lines.append("| Mes | Ventas (M$) | Redenciones (M$) | Flujo Neto (M$) |\n")
+        lines.append("|-----|-------------|------------------|-----------------|\n")
+        for _, row in qqq_nport_flow_data.iterrows():
+            lines.append(f"| {int(row['month'])} | {row['sales']/1e6:,.2f} | {row['redemptions']/1e6:,.2f} | {row['net_flow']/1e6:,.2f} |\n")
+        lines.append("\n")
+    else:
+        lines.append("## Flujo de Participaciones QQQ (NPORT-P)\n")
+        lines.append("*Sin datos NPORT-P de QQQ en esta ejecución.*\n\n")
 
     # =========================================================================
     # FLUJO - SINTESIS DESCRIPTIVA
