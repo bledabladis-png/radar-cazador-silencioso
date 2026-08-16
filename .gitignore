@@ -33,7 +33,6 @@ data/nport/
 
 data/cache/
 
-data/nport/
-
 data/fund_data/
-.env
+
+data/stock_prices_historical.csv

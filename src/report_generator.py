@@ -21,7 +21,7 @@ def _classify_freshness(age_days, max_current=3, max_recent=7, max_stale=14):
 def _generate_coverage_table(pcr_data, darkpool_data, sector_results):
     lines = []
     lines.append("### Cobertura de Datos\n")
-    lines.append("| Fuente | Cobertura | Antiguedad |\n")
+    lines.append("| Fuente | Cobertura | Antigüedad |\n")
     lines.append("|--------|-----------|------------|\n")
     sectores_total = 11
     sectores_validos = sectores_total
@@ -75,7 +75,7 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
     lines.append("## Resumen de Regimenes\n")
     lines.append(f"- **Macro:** {macro_regime} (Score: {macro_score.iloc[-1]:.2f}, Signal Consistency: {macro_conf:.0%})\n")
     if macro_conf < 0.30:
-        lines.append("  *Signal Consistency baja: senhales contradictorias en el entorno actual.*\n")
+        lines.append("  *Signal Consistency baja: señales contradictorias en el entorno actual.*\n")
     
     lines.append(f"- **Cond. Financieras:** {liquidity_regime} (Score: {liquidity_score.iloc[-1]:.2f}, Signal Consistency: {liq_conf:.0%})\n")
     if liquidity_regime == 'HIGH_STRESS':
@@ -92,13 +92,13 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
                 delta_str = "EMPEORA"
             else:
                 delta_str = "ESTABLE"
-            lines.append(f"  - *Liquidity Delta (vs ejecuciÃ³n anterior): {delta:+.3f} ({delta_str})*\n")
+            lines.append(f"  - *Liquidity Delta (vs ejecución anterior): {delta:+.3f} ({delta_str})*\n")
         except:
             pass
     
     vol_z = volatility_score.iloc[-1] if hasattr(volatility_score, 'iloc') else volatility_score
     if vol_conf < 0.05 and abs(vol_z) < 0.1:
-        vol_conf_str = "Senhal neutra (sin desviacion significativa)"
+        vol_conf_str = "Señal neutra (sin desviación significativa)"
     else:
         vol_conf_str = f"Signal Consistency: {vol_conf:.0%}"
     vol_z_display = "0.00" if abs(vol_z) < 0.005 else f"{vol_z:.2f}"
@@ -106,13 +106,13 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
 
     sector_regime = sector_results['regime']
     lines.append(f"- **Sectores:** {sector_regime}\n")
-    lines.append("*Nota: Signal Consistency mide la consistencia entre senhales, no una probabilidad estadistica calibrada. Data Conf mide la frescura y cobertura de los datos.*\n\n")
+    lines.append("*Nota: Signal Consistency mide la consistencia entre señales, no una probabilidad estadistica calibrada. Data Conf mide la frescura y cobertura de los datos.*\n\n")
 
     # =========================================================================
     # DATA FRESHNESS
     # =========================================================================
     lines.append("### Data Freshness\n")
-    lines.append("| Fuente | Ultimo dato | Antiguedad | Estado | Data Conf |\n")
+    lines.append("| Fuente | Ultimo dato | Antigüedad | Estado | Data Conf |\n")
     lines.append("|--------|-------------|------------|--------|----------|\n")
     now = datetime.now()
     
@@ -162,13 +162,13 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
             alerts.append(f"- **Breadth Divergence:** Breadth EMA200: {ema200:.0%}; Breadth EMA20: {ema20:.0%}. La amplitud de corto plazo es inferior a la de largo plazo.")
     
     if liquidity_regime == 'HIGH_STRESS':
-        alerts.append(f"- **Financial Stress vs Credit:** Condiciones financieras elevadas, pero el credito relativo (HYG/LQD) presenta una desviacion positiva frente a su distribucion reciente. Estres localizado. No se observa confirmacion suficiente de estres sistemico.")
+        alerts.append(f"- **Financial Stress vs Credit:** Condiciones financieras elevadas, pero el crédito relativo (HYG/LQD) presenta una desviación positiva frente a su distribucion reciente. Estres localizado. No se observa confirmación suficiente de estres sistemico.")
     
     if price_flow_divergences:
         for ticker, div in price_flow_divergences.items():
             if div.get('status') != 'ALIGNED':
                 name = SECTOR_NAMES.get(ticker, ticker)
-                alerts.append(f"- **{name} Price-Flow:** Precio fuerte sin confirmacion del Flow Proxy. El indicador no permite inferir directamente participacion institucional.")
+                alerts.append(f"- **{name} Price-Flow:** Precio fuerte sin confirmación del Flow Proxy. El indicador no permite inferir directamente participacion institucional.")
     
     if alerts:
         lines.append("### Divergencias Detectadas\n")
@@ -196,7 +196,7 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
                 bias_inf = mod_info.get('bias_inflation', 0)
                 bias_str = ''
                 if bias_fin == -1: bias_str += 'Estres Financiero '
-                if bias_inf == -1: bias_str += 'Presion Inflacionaria '
+                if bias_inf == -1: bias_str += 'Presión Inflacionaria '
                 if bias_str == '': bias_str = 'Neutral'
                 lines.append(f"- {mod_name}: {state} ({bias_str})\n")
         lines.append("\n")
@@ -256,7 +256,7 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
         comm_display = f"{comm} ({comm_val:+.2f})" if comm_val is not None and comm != 'N/A' else comm
         lines.append(f"| {i} | {name} ({ticker}) | {t_score:+.2f} | {s_score:+.2f} | {mom*100:.2f}% | {flow:+.2f} | {comm_display} |\n")
     lines.append("\n")
-    lines.append("*Nota: Comm Corr mide la correlacion de 126 dias con ^SPGSCI. No implica causalidad.*\n\n")
+    lines.append("*Nota: Comm Corr mide la correlación de 126 dias con ^SPGSCI. No implica causalidad.*\n\n")
 
     # =========================================================================
     # STRUCTURAL RANKING (sin columna Coverage)
@@ -431,9 +431,9 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
             lines.append(f"  - *Scoring Wyckoff: MARKUP=1.0, ACCUMULATION=0.75, RANGE=0.0, DISTRIBUTION=-0.75, MARKDOWN=-1.0*\n")
             lines.append(f"- **Leader Health Composite (sin ajustar):** {comp:.0f}% ")
             lines.append(f"(0.30xRS + 0.25xMom + 0.25xFlow + 0.20xWyckoff)\n")
-            lines.append(f"- **Effective Breadth:** {effective:.0f}% (Health Composite: {comp:.0f}%, Cobertura: {coverage:.0f}%) â€” Regla: si cobertura >= 50% no se aplica penalizaciÃ³n\n")
+            lines.append(f"- **Effective Breadth:** {effective:.0f}% (Health Composite: {comp:.0f}%, Cobertura: {coverage:.0f}%) — Regla: si cobertura >= 50% no se aplica penalización\n")
             lines.append(f"  - N analizado: {n}/{total}\n")
-            lines.append(f"  - *Nota: Effective Breadth = Health Composite (sin ajuste cuando cobertura >= 50%). La penalizaciÃ³n por cobertura solo se aplica cuando la cobertura es inferior al 50%. La calidad observada (Health Composite) es independiente de la cobertura.*\n")
+            lines.append(f"  - *Nota: Effective Breadth = Health Composite (sin ajuste cuando cobertura >= 50%). La penalización por cobertura solo se aplica cuando la cobertura es inferior al 50%. La calidad observada (Health Composite) es independiente de la cobertura.*\n")
         
         integrity = slpm_v12_data.get('leader_integrity', {})
         if integrity:
@@ -442,7 +442,7 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
             lines.append(f"\n### Leader Integrity Score (LIS)\n")
             lines.append(f"- **LIS:** {lis:+.2f} (n={n_leaders})\n")
             lines.append(f"- *Formula: LIS_individual = 0.30*tanh((RS-1)*2) + 0.25*tanh(RS_mom*5) + 0.25*tanh(flow_proxy_z/2) + 0.20*Wyckoff_score. LIS = media.*\n")
-            lines.append(f"- *LIS mide la intensidad/calidad de la senhal de los lideres, no el % que cumple condiciones (eso es el Breadth).*\n")
+            lines.append(f"- *LIS mide la intensidad/calidad de la señal de los lideres, no el % que cumple condiciones (eso es el Breadth).*\n")
         
         flow_div = slpm_v12_data.get('flow_divergence_v2', {})
         if flow_div:
@@ -475,7 +475,7 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
         lines.extend(leader_lines)
     else:
         lines.append("\n## Acciones Seleccionadas por el Modelo de Liderazgo Sectorial\n")
-        lines.append("*No disponibles: ningun sector en fase de acumulacion.*\n")
+        lines.append("*No disponibles: ningun sector en fase de acumulación.*\n")
 
     # =========================================================================
     # OMS v2.0
@@ -690,7 +690,7 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
     # =========================================================================
     if confirmation_data:
         lines.append("## Confirmation Data (Nivel 2)\n")
-        lines.append("> *Indicadores de confirmacion. No modifican el macro_score.*\n\n")
+        lines.append("> *Indicadores de confirmación. No modifican el macro_score.*\n\n")
         
         if confirmation_data.get('t10y3m') is not None:
             sign = '+' if confirmation_data['t10y3m'] >= 0 else ''
@@ -807,7 +807,7 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
             top5 = darkpool_data['datos'].nlargest(5, 'dark_pool_pct')
             for _, row in top5.iterrows():
                 lines.append(f"| {row['ticker']} | {row['dark_pool_pct']:.2f}% | {row['ats_volume']:,.0f} | {row['total_volume']:,.0f} |\n")
-            lines.append("\n*Nota: Un alto % de volumen en ATS NO implica acumulacion institucional. Las categorias reflejan el nivel de actividad ATS relativa a su historial, no la direccion del flujo institucional.*\n")
+            lines.append("\n*Nota: Un alto % de volumen en ATS NO implica acumulación institucional. Las categorias reflejan el nivel de actividad ATS relativa a su historial, no la direccion del flujo institucional.*\n")
         lines.append(f"\n*Fuente: FINRA ATS Transparency Data.*\n\n")
 
     # =========================================================================
@@ -816,16 +816,16 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
     lines.append("")
     
     # =====================================================================
-    # ESTADO ACTUAL â€” SÃNTESIS DE SEÃ‘ALES (v3.15 corregido)
-    # Solo presenta estados oficiales de los mÃ³dulos. No infiere causas.
-    # MÃ¡ximo 3 elementos, sin especulaciÃ³n, sin redundancias.
+    # ESTADO ACTUAL — SÍNTESIS DE SEÑALES (v3.15 corregido)
+    # Solo presenta estados oficiales de los módulos. No infiere causas.
+    # Máximo 3 elementos, sin especulación, sin redundancias.
     # =====================================================================
-    # INDICES INTERNACIONALES â€” OPORTUNIDADES DE ACUMULACION
+    # INDICES INTERNACIONALES — OPORTUNIDADES DE ACUMULACION
     # =====================================================================
     # -----------------------------------------------------------------
-    # INDICES INTERNACIONALES â€” FASES WYCKOFF
+    # INDICES INTERNACIONALES — FASES WYCKOFF
     # -----------------------------------------------------------------
-    lines.append("\n## Indices Internacionales â€” Fases Wyckoff\n")
+    lines.append("\n## Indices Internacionales — Fases Wyckoff\n")
     lines.append("| Indice | Ticker | Fase Wyckoff |\n")
     lines.append("|--------|--------|--------------|\n")
     if index_phases:
@@ -836,7 +836,7 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
         lines.append("| No disponible | No disponible | No disponible |\n")
     lines.append("\n")
 
-    lines.append("\n## Indices Internacionales â€” Oportunidades de Acumulacion\n")
+    lines.append("\n## Indices Internacionales — Oportunidades de Acumulacion\n")
     lines.append("*Nota: Los componentes se obtienen de ETFs proxy que replican el indice de referencia. Solo se muestran indices en fase ACCUMULATION.*\n\n")
     if index_leaders:
         for nombre, top5 in index_leaders.items():
@@ -849,21 +849,21 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
                 lines.append(f"| {i} | {row['ticker']} | {row['rs']:.2f} | {row['rs_mom']:.2%} | {row['flow_proxy_z']:.2f} | {row['wls']:.2f} | {row['wyckoff_phase']} |\n")
             lines.append("\n")
     else:
-        lines.append("*Ningun indice en fase de acumulacion en esta ejecucion.*\n\n")
+        lines.append("*Ningún indice en fase de acumulación en esta ejecución.*\n\n")
 
-    lines.append("## Estado Actual â€” SÃ­ntesis de SeÃ±ales\n\n")
+    lines.append("## Estado Actual — Síntesis de Señales\n\n")
 
     resumen = []
 
-    # 1. RÃ©gimen macro (prioridad mÃ¡xima)
+    # 1. Régimen macro (prioridad máxima)
     if macro_regime in ('RECESSION', 'LIQUIDITY CRISIS', 'STAGFLATION'):
-        resumen.append(f"- **RÃ©gimen macro: {macro_regime}** â€” entorno de estrÃ©s elevado.")
+        resumen.append(f"- **Régimen macro: {macro_regime}** — entorno de estrés elevado.")
     elif macro_regime in ('EXPANSION', 'RECOVERY', 'GOLDILOCKS'):
-        resumen.append(f"- **RÃ©gimen macro: {macro_regime}** â€” favorable para la asunciÃ³n de riesgo.")
+        resumen.append(f"- **Régimen macro: {macro_regime}** — favorable para la asunción de riesgo.")
     elif macro_regime == 'MIXED':
-        resumen.append(f"- **RÃ©gimen macro: MIXED** â€” ROTATIONAL / MIXED â€” rotaciÃ³n sectorial activa con dispersiÃ³n elevada.")
+        resumen.append(f"- **Régimen macro: MIXED** — ROTATIONAL / MIXED — rotación sectorial activa con dispersión elevada.")
     else:
-        resumen.append(f"- **RÃ©gimen macro: {macro_regime}**.")
+        resumen.append(f"- **Régimen macro: {macro_regime}**.")
 
     # 2. Liderazgo sectorial (prioridad alta)
     if slpm_v12_data:
@@ -879,22 +879,22 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
 
     # 3. Condiciones financieras o liquidez (si es relevante)
     if liquidity_regime in ('HIGH_STRESS', 'EXTREME_STRESS'):
-        resumen.append(f"- **Condiciones financieras: {liquidity_regime}** â€” estrÃ©s elevado en crÃ©dito y liquidez.")
+        resumen.append(f"- **Condiciones financieras: {liquidity_regime}** — estrés elevado en crédito y liquidez.")
     elif liquidity_regime == 'ESTRECHA':
-        resumen.append(f"- **Condiciones financieras: ESTRECHA** â€” seÃ±ales financieras en territorio restrictivo.")
+        resumen.append(f"- **Condiciones financieras: ESTRECHA** — señales financieras en territorio restrictivo.")
 
-    # MÃ¡ximo 3 elementos
+    # Máximo 3 elementos
     for item in resumen[:3]:
         lines.append(item + "\n")
     lines.append("\n")
 
-    # Divergencias relevantes (solo si no estÃ¡n ya en el resumen)
+    # Divergencias relevantes (solo si no están ya en el resumen)
     if price_flow_divergences:
         divergencias = []
         for ticker, div in price_flow_divergences.items():
             if div.get('status') == 'PRICE_STRONG_FLOW_UNCONFIRMED':
                 name = SECTOR_NAMES.get(ticker, ticker)
-                divergencias.append(f"- **{name}**: precio fuerte sin confirmaciÃ³n del Flow Proxy.")
+                divergencias.append(f"- **{name}**: precio fuerte sin confirmación del Flow Proxy.")
         if divergencias and len(resumen) < 3:
             lines.append("### Divergencias relevantes\n")
             for d in divergencias[:2]:
@@ -902,7 +902,7 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
             lines.append("\n")
 
     # Nota de cierre
-    lines.append("*Esta secciÃ³n describe Ãºnicamente estados observables del sistema. No interpreta causas ni sugiere acciones.*\n\n")
+    lines.append("*Esta sección describe únicamente estados observables del sistema. No interpreta causas ni sugiere acciones.*\n\n")
     
     lines.append(f"\n*Esta interpretacion es descriptiva y no constituye una recomendacion de inversion.*\n\n")
 

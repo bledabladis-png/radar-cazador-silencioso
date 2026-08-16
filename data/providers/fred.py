@@ -50,7 +50,7 @@ class FredProvider(MarketDataProvider):
             return pd.Series(dtype=float)
 
     def get_prices(self, tickers: list, start: str = None, end: str = None, period: str = "10y") -> pd.DataFrame:
-        raise NotImplementedError("FRED no proporciona precios de acciones. Usa Yahoo Finance o Stooq.")
+        raise NotImplementedError("FRED no proporciona precios de acciones. Usa Yahoo Finance.")
 
     def get_treasury_yields(self, maturities: list = None, index=None) -> pd.DataFrame:
         if maturities is None:

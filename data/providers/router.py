@@ -1,6 +1,5 @@
 ﻿from .yahoo import YahooProvider
 from .fred import FredProvider
-from .stooq import StooqProvider
 from .polygon import PolygonProvider
 import pandas as pd
 import os
@@ -11,10 +10,9 @@ class DataRouter:
         self.providers = {
             "yahoo": YahooProvider(),
             "fred": FredProvider(),
-            "stooq": StooqProvider(),
-            "polygon": PolygonProvider(),
+                    "polygon": PolygonProvider(),
         }
-        self.preferred_order = ["yahoo", "fred", "stooq", "polygon"]
+        self.preferred_order = ["yahoo", "fred", "polygon"]
 
     def get_market_data(self, tickers: list, period: str = "10y"):
         for name in self.preferred_order:
