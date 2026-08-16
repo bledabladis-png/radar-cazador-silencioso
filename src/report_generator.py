@@ -63,7 +63,7 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
                           slpm_v12_data=None, tactical_scores=None, structural_scores=None,
                           sector_persistence=None, signal_agreements=None, signal_agreements_display=None,
                           cross_module_conflict=None, shock_sensitivities=None, price_flow_divergences=None,
-                          dc_summary="", all_signals=None, real_liq_score=None, real_liq_prev=None, index_leaders=None, index_phases=None, etf_primary_flow_data=None, cftc_position_flow_data=None, flow_synthesis=None, blackrock_dax_flow=None, blackrock_isf_flow=None, amundi_lyxi_flow=None, blackrock_iwm_flow=None, output_path='outputs/report/reporte_diario.md'):
+                          dc_summary="", all_signals=None, real_liq_score=None, real_liq_prev=None, index_leaders=None, index_phases=None, etf_primary_flow_data=None, cftc_position_flow_data=None, flow_synthesis=None, blackrock_dax_flow=None, blackrock_isf_flow=None, amundi_lyxi_flow=None, blackrock_iwm_flow=None, nport_position_change_data=None, output_path='outputs/report/reporte_diario.md'):
     lines = []
     lines.append("# MACRO SECTORIAL - Reporte Diario\n")
     lines.append(f"**Fecha:** {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
@@ -604,6 +604,22 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
             fecha = row['date'].strftime('%Y-%m-%d') if hasattr(row['date'], 'strftime') else str(row['date'])
             lines.append(f"| {fecha} | {row['contract']} | {row['participant']} | {row['net_position']:,.0f} | {row['position_change']:+,.0f} | {row['flow_z']:+.2f} |\n")
         lines.append("\n*Fuente: CFTC Traders in Financial Futures (Futures Only). Frecuencia semanal.*\n\n")
+
+    # =========================================================================
+    # FLUJO POSICIONAL N-PORT (Trimestral)
+    # =========================================================================
+    if nport_position_change_data is not None and not nport_position_change_data.empty:
+        lines.append("## Flujo Posicional N-PORT (Trimestral)\n")
+        lines.append("*Datos del último trimestre disponible. Fuente: SEC N-PORT.*\n")
+        lines.append("| Fecha | Fondo | Activo | CUSIP | Balance Previo | Balance Actual | Cambio | % Cambio |\n")
+        lines.append("|-------|-------|--------|-------|----------------|----------------|--------|-----------|\n")
+        for _, row in nport_position_change_data.iterrows():
+            fecha = row['REPORT_DATE'].strftime('%Y-%m-%d') if hasattr(row['REPORT_DATE'], 'strftime') else str(row['REPORT_DATE'])
+            lines.append(f"| {fecha} | {row['REGISTRANT_NAME']} | {row['ISSUER_NAME']} | {row['ISSUER_CUSIP']} | {row['PREV_BALANCE']:,.0f} | {row['BALANCE']:,.0f} | {row['POSITION_CHANGE']:+,.0f} | {row['POSITION_CHANGE_PCT']:+.2f}% |\n")
+        lines.append("\n")
+    else:
+        lines.append("## Flujo Posicional N-PORT (Trimestral)\n")
+        lines.append("*Sin datos N-PORT disponibles en esta ejecución.*\n\n")
 
     # =========================================================================
     # FLUJO - SINTESIS DESCRIPTIVA

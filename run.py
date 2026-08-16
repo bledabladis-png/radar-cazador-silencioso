@@ -241,6 +241,19 @@ def main():
             europe_sign = float(sum(european_flows) / len(european_flows))
         flow_synthesis['european_flow_sign'] = europe_sign
 
+        # Cargar datos N-PORT más recientes para el reporte
+        nport_position_change_data = None
+        try:
+            import pandas as pd
+            nport_path = Path('outputs/history/sec_nport_position_change_quarterly.csv')
+            if nport_path.exists():
+                df_nport = pd.read_csv(nport_path, parse_dates=['REPORT_DATE'])
+                if not df_nport.empty:
+                    nport_position_change_data = df_nport.sort_values('REPORT_DATE', ascending=False).head(20)
+        except Exception as e:
+            print(f"  N-PORT no cargado: {e}")
+            nport_position_change_data = None
+
         # Conteo de coincidencia de signos
         signs = []
         for s in [proxy_sign, primary_sign, cftc_sign, europe_sign]:
@@ -759,6 +772,7 @@ def main():
                             blackrock_isf_flow=blackrock_isf_flow,
                             blackrock_iwm_flow=blackrock_iwm_flow,
                             amundi_lyxi_flow=amundi_lyxi_flow,
+                            nport_position_change_data=nport_position_change_data,
                             cftc_position_flow_data=cftc_position_flow_data,
                             flow_synthesis=flow_synthesis,
                           real_liquidity_regime=real_liq_regime, real_liquidity_conf=real_liq_conf,
