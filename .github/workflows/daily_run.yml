@@ -47,6 +47,12 @@ jobs:
       - name: Verify leader selection
         run: python validation/verify_leader_selection.py
 
+      - name: Cross provider validation
+        env:
+          POLYGON_API_KEY: ${{ secrets.POLYGON_API_KEY }}
+          ALPHA_VANTAGE_API_KEY: ${{ secrets.ALPHA_VANTAGE_API_KEY }}
+        run: python validation/cross_provider_validation.py
+
       - name: Upload artifacts (downloadable report)
         uses: actions/upload-artifact@v4
         with:
@@ -75,6 +81,7 @@ jobs:
             outputs/state/slpm_state.json
             outputs/state/mte_state.json
             outputs/state/liquidity_state.json
+            outputs/audit/cross_provider_validation.csv
           retention-days: 7
           if-no-files-found: ignore
 
@@ -102,5 +109,5 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add outputs/history outputs/state
+          git add outputs/history outputs/state outputs/audit/cross_provider_validation.csv
           git diff --staged --quiet || (git commit -m "Daily hist/state " && git push)
