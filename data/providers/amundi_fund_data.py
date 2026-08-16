@@ -179,7 +179,7 @@ def compute_primary_flow(df: pd.DataFrame) -> pd.DataFrame:
 def get_amundi_lyxi_primary_flow(force_download: bool = False) -> pd.DataFrame:
     """Descarga histórico, calcula flujo y devuelve la última fila."""
     # Rango amplio para intentar obtener máximo histórico
-    start_date = '2025-01-01'
+    start_date = '2018-01-01'
     end_date = datetime.now().strftime('%Y-%m-%d')
 
     product = download_historical_data(ISIN_LYXI, start_date, end_date)
@@ -214,3 +214,4 @@ if __name__ == '__main__':
     df = get_amundi_lyxi_primary_flow(force_download=True)
     print('\nÚltima fila de flujo LYXI:')
     print(df)
+
