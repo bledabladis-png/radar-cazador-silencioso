@@ -340,13 +340,14 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
         
         if s > struct_median and t > tact_median:
             quadrants['Structural Strength'].append((name, conf))
-        elif s > struct_median and t <= tact_median:
+        elif s > struct_median and t < tact_median:
             quadrants['Tactical Correction'].append((name, conf))
-        elif s <= struct_median and t > tact_median:
+        elif s < struct_median and t > tact_median:
             quadrants['Tactical Strength'].append((name, conf))
-        elif s <= struct_median and t <= tact_median:
+        elif s < struct_median and t < tact_median:
             quadrants['Structural Weakness'].append((name, conf))
         else:
+            # Valores exactamente en la mediana se clasifican como Transition
             quadrants['Transition'].append((name, conf))
     
     icons = {

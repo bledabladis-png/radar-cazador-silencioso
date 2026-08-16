@@ -3,9 +3,6 @@
 dependency_tracker.py -- Anti-Double-Counting Matrix v1.2
 Identifica dependencias directas e indirectas entre modulos.
 """
-import pandas as pd
-import numpy as np
-
 # Dependencias directas: variable -> modulos que la usan directamente
 DIRECT_DEPENDENCIES = {
     'VIX': ['financial_conditions.py', 'volatility_regime.py', 'mte.py'],
