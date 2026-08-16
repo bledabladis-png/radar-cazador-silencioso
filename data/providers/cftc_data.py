@@ -1,4 +1,5 @@
-﻿"""
+
+"""
 Flujo de posicionamiento institucional desde CFTC TFF.
 Calcula CFTC_POSITION_FLOW = Change_in_Net_Position por participante.
 Fuente: https://publicreporting.cftc.gov/api/v3/views/gpe5-46if/export.csv
@@ -14,13 +15,22 @@ CACHE_PATH = Path('data/cache/cftc_tff.csv')
 HISTORY_PATH = Path('outputs/history/cftc_position_flow.csv')
 
 TARGET_CONTRACTS = [
-    'E-MINI S&P 500 - CHICAGO MERCANTILE EXCHANGE',
+    'S&P 500 Consolidated - CHICAGO MERCANTILE EXCHANGE',
     'NASDAQ-100 Consolidated - CHICAGO MERCANTILE EXCHANGE',
-    'RUSSELL E-MINI - CHICAGO MERCANTILE EXCHANGE',
+    'RUSSELL 2000 MINI INDEX FUTURE - ICE FUTURES U.S.',
     'DJIA Consolidated - CHICAGO BOARD OF TRADE',
     'VIX FUTURES - CBOE FUTURES EXCHANGE',
-    'UST 10Y NOTE - CHICAGO BOARD OF TRADE',
+    '10-YEAR U.S. TREASURY NOTES - CHICAGO BOARD OF TRADE',
 ]
+
+PARTICIPANT_COLS = {
+    'asset_mgr': ('Asset_Mgr_Positions_Long_All', 'Asset_Mgr_Positions_Short_All',
+                  'Change_in_Asset_Mgr_Long_All', 'Change_in_Asset_Mgr_Short_All'),
+    'lev_money': ('Lev_Money_Positions_Long_All', 'Lev_Money_Positions_Short_All',
+                  'Change_in_Lev_Money_Long_All', 'Change_in_Lev_Money_Short_All'),
+    'dealer': ('Dealer_Positions_Long_All', 'Dealer_Positions_Short_All',
+               'Change_in_Dealer_Long_All', 'Change_in_Dealer_Short_All'),
+}
 
 def _download_and_cache():
     """Descarga CSV de CFTC y lo guarda en caché si no existe o si han pasado >23h."""
@@ -66,70 +76,69 @@ def _calculate_position_flow(df):
     if df.empty:
         return pd.DataFrame()
 
-    df['date'] = pd.to_datetime(df['Report_Date_as_YYYY_MM_DD'], format='%Y %b %d %I:%M:%S %p', errors='coerce')
+    df['date'] = pd.to_datetime(
+        df['Report_Date_as_YYYY_MM_DD'],
+        errors='coerce',
+        format='mixed'
+    )
     df = df.dropna(subset=['date'])
 
-    numeric_cols = [
-        'Asset_Mgr_Positions_Long_All','Asset_Mgr_Positions_Short_All',
-        'Lev_Money_Positions_Long_All','Lev_Money_Positions_Short_All',
-        'Dealer_Positions_Long_All','Dealer_Positions_Short_All',
-        'Change_in_Asset_Mgr_Long_All','Change_in_Asset_Mgr_Short_All',
-        'Change_in_Lev_Money_Long_All','Change_in_Lev_Money_Short_All',
-        'Change_in_Dealer_Long_All','Change_in_Dealer_Short_All',
-    ]
-    for col in numeric_cols:
+    # Convertir columnas numéricas
+    all_numeric = []
+    for cols in PARTICIPANT_COLS.values():
+        all_numeric.extend(cols)
+    for col in all_numeric:
         if col in df.columns:
+            # Limpiar comas y espacios antes de convertir a numérico
+            df[col] = (
+                df[col].astype(str)
+                .str.replace(',', '', regex=False)
+                .str.replace(' ', '', regex=False)
+            )
             df[col] = pd.to_numeric(df[col], errors='coerce')
 
-    rows = []
-    participants = ['asset_mgr', 'lev_money', 'dealer']
+    result = pd.DataFrame()
+    for participant, (long_col, short_col, chg_long, chg_short) in PARTICIPANT_COLS.items():
+        if long_col not in df.columns or short_col not in df.columns:
+            continue
 
-    for contract, group in df.groupby('Market_and_Exchange_Names'):
-        group = group.sort_values('date')
-        for participant in participants:
-            if participant == 'asset_mgr':
-                long_col = 'Asset_Mgr_Positions_Long_All'
-                short_col = 'Asset_Mgr_Positions_Short_All'
-                chg_long = 'Change_in_Asset_Mgr_Long_All'
-                chg_short = 'Change_in_Asset_Mgr_Short_All'
-            elif participant == 'lev_money':
-                long_col = 'Lev_Money_Positions_Long_All'
-                short_col = 'Lev_Money_Positions_Short_All'
-                chg_long = 'Change_in_Lev_Money_Long_All'
-                chg_short = 'Change_in_Lev_Money_Short_All'
-            else:
-                long_col = 'Dealer_Positions_Long_All'
-                short_col = 'Dealer_Positions_Short_All'
-                chg_long = 'Change_in_Dealer_Long_All'
-                chg_short = 'Change_in_Dealer_Short_All'
+        temp = pd.DataFrame({
+            'date': df['date'].values,
+            'contract': df['Market_and_Exchange_Names'].values,
+            'participant': participant,
+            'net_position': df[long_col] - df[short_col],
+        })
 
-            if long_col not in group.columns or short_col not in group.columns:
-                continue
+        if chg_long in df.columns and chg_short in df.columns:
+            pos_change = df[chg_long] - df[chg_short]
+            # Rellenar NaN con diff por si los Change_in_* no vienen completos
+            for contract, group in temp.groupby('contract'):
+                idx = group.index
+                diff = temp.loc[idx, 'net_position'].diff()
+                pos_change.loc[idx] = pos_change.loc[idx].fillna(diff)
+            temp['position_change'] = pos_change.values
+        else:
+            temp['position_change'] = temp.groupby('contract')['net_position'].diff()
 
-            net_position = group[long_col] - group[short_col]
-            if chg_long in group.columns and chg_short in group.columns:
-                position_change = group[chg_long] - group[chg_short]
-            else:
-                position_change = net_position.diff()
+        # Calcular flow_z
+        temp = temp.sort_values(['contract', 'date'])
+        rolling_mean = temp.groupby('contract')['position_change'].transform(
+            lambda x: x.rolling(52, min_periods=10).mean()
+        )
+        rolling_std = temp.groupby('contract')['position_change'].transform(
+            lambda x: x.rolling(52, min_periods=10).std()
+        )
+        temp['flow_z'] = ((temp['position_change'] - rolling_mean) / (rolling_std + 1e-9)).fillna(0.0)
 
-            temp = pd.DataFrame({
-                'date': group['date'].values,
-                'contract': contract,
-                'participant': participant,
-                'net_position': net_position.values,
-                'position_change': position_change.values,
-            })
-            temp['flow_z'] = (
-                (temp['position_change'] - temp['position_change'].rolling(52, min_periods=10).mean())
-                / (temp['position_change'].rolling(52, min_periods=10).std() + 1e-9)
-            )
-            rows.append(temp)
+        result = pd.concat([result, temp], ignore_index=True)
 
-    if not rows:
-        return pd.DataFrame()
+    if result.empty:
+        return result
 
-    result = pd.concat(rows, ignore_index=True)
-    result = result.dropna(subset=['position_change'])
+    result = result.dropna(subset=['position_change', 'net_position'])
+    # Para cada contrato/participante, conservar la fila más reciente
+    result = result.sort_values('date', ascending=False)
+    result = result.drop_duplicates(subset=['contract', 'participant'], keep='first')
     return result
 
 def get_cftc_position_flow_data() -> pd.DataFrame:
@@ -144,8 +153,7 @@ def get_cftc_position_flow_data() -> pd.DataFrame:
         result.to_csv(HISTORY_PATH, index=False)
         print(f'  Histórico CFTC guardado: {HISTORY_PATH}')
 
-        last = result.sort_values('date').groupby(['contract','participant']).tail(1)
-        return last.reset_index(drop=True)
+        return result.sort_values('date', ascending=False).reset_index(drop=True)
     except Exception as e:
         print(f'  Error en CFTC Position Flow: {e}')
         return pd.DataFrame()

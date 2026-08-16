@@ -214,9 +214,22 @@ def main():
             cftc_sign = float(cftc_position_flow_data['flow_z'].mean())
         flow_synthesis['cftc_flow_sign'] = cftc_sign
 
+        # Dirección de Europa Primary Flow (promedio de flow_zscore de DAXEX, ISF.L, LYXI)
+        europe_sign = 0.0
+        european_flows = []
+        if blackrock_dax_flow is not None and not blackrock_dax_flow.empty and 'flow_zscore' in blackrock_dax_flow.columns:
+            european_flows.append(float(blackrock_dax_flow['flow_zscore'].iloc[-1]))
+        if blackrock_isf_flow is not None and not blackrock_isf_flow.empty and 'flow_zscore' in blackrock_isf_flow.columns:
+            european_flows.append(float(blackrock_isf_flow['flow_zscore'].iloc[-1]))
+        if amundi_lyxi_flow is not None and not amundi_lyxi_flow.empty and 'flow_zscore' in amundi_lyxi_flow.columns:
+            european_flows.append(float(amundi_lyxi_flow['flow_zscore'].iloc[-1]))
+        if european_flows:
+            europe_sign = float(sum(european_flows) / len(european_flows))
+        flow_synthesis['european_flow_sign'] = europe_sign
+
         # Conteo de coincidencia de signos
         signs = []
-        for s in [proxy_sign, primary_sign, cftc_sign]:
+        for s in [proxy_sign, primary_sign, cftc_sign, europe_sign]:
             if s > 0.1:
                 signs.append(1)
             elif s < -0.1:

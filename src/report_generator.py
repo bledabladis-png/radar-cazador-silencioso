@@ -539,7 +539,7 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
         lines.append(f"- **Shares Outstanding:** {row['shares_outstanding']:,.0f}\n")
         lines.append(f"- **Δ Shares:** {row['shares_change']:+,.0f}\n")
         lines.append(f"- **Flujo Estimado (EUR):** {row['estimated_flow_eur']:+,.2f}\n")
-        lines.append(f"- **Flujo % AUM:** {row['flow_pct_assets']:+.6f}%\n")
+        lines.append(f"- **Flujo % AUM:** {row['flow_pct_assets']*100:+.6f}%\n")
         lines.append(f"- **Flow Z-Score:** {row['flow_zscore']:+.2f}\n")
         lines.append(f"\n*Fuente: BlackRock. ETF Primary Flow = ΔSharesOutstanding × NAV.*\n\n")
 
@@ -554,7 +554,7 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
         lines.append(f"- **Shares Outstanding:** {row['shares_outstanding']:,.0f}\n")
         lines.append(f"- **Δ Shares:** {row['shares_change']:+,.0f}\n")
         lines.append(f"- **Flujo Estimado (GBP):** {row['estimated_flow_eur']:+,.2f}\n")
-        lines.append(f"- **Flujo % AUM:** {row['flow_pct_assets']:+.6f}%\n")
+        lines.append(f"- **Flujo % AUM:** {row['flow_pct_assets']*100:+.6f}%\n")
         lines.append(f"- **Flow Z-Score:** {row['flow_zscore']:+.2f}\n")
         lines.append(f"\n*Fuente: BlackRock. ETF Primary Flow = ΔSharesOutstanding × NAV.*\n\n")
 
@@ -571,7 +571,8 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
         if pd.notna(row.get('shares_change')):
             lines.append(f"- **Δ Shares:** {row['shares_change']:+,.0f}\n")
             lines.append(f"- **Flujo Estimado (EUR):** {row['estimated_flow_eur']:+,.2f}\n")
-            lines.append(f"- **Flujo % AUM:** {row['flow_pct_assets']:+.6f}%\n")
+            lines.append(f"- **Flujo % AUM:** {row['flow_pct_assets']*100:+.6f}%\n")
+            lines.append(f"- **Flow Z-Score:** {row['flow_zscore']:+.2f}\n")
         else:
             lines.append(f"- **Δ Shares:** N/D (histórico insuficiente)\n")
             lines.append(f"- **Flujo Estimado:** N/D\n")
@@ -599,6 +600,7 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
         lines.append(f"| Flow Proxy | {flow_synthesis.get('flow_proxy_sign', 0):+.2f} |\n")
         lines.append(f"| ETF Primary Flow | {flow_synthesis.get('etf_primary_flow_sign', 0):+.2f} |\n")
         lines.append(f"| CFTC Position Flow | {flow_synthesis.get('cftc_flow_sign', 0):+.2f} |\n")
+        lines.append(f"| Europa Primary Flow | {flow_synthesis.get('european_flow_sign', 0):+.2f} |\n")
         lines.append(f"\n**FLOW_CONFIDENCE:** {flow_synthesis.get('confidence', 'N/A')}\n")
         lines.append("\n*Interpretación descriptiva: concordancia de signos entre capas. No es señal predictiva.*\n\n")
 
