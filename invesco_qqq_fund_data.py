@@ -1,0 +1,141 @@
+﻿# -*- coding: utf-8 -*-
+"""
+Proveedor Invesco QQQ — snapshot y NAV histórico.
+Usa curl_cffi para evitar bloqueos 406.
+No calcula flujo primario por falta de histórico de shares.
+"""
+import pandas as pd
+import json
+from pathlib import Path
+from datetime import datetime, timedelta
+import tempfile, os, sys, argparse
+
+TICKER = "QQQ"
+CUSIP = "46090E103"
+BASE_URL = "https://dng-api.invesco.com/cache/v1/accounts/en_US/shareclasses/46090E103"
+URL_NAVS = BASE_URL + "/navs?idType=cusip&productType=ETF"
+URL_PRICES = BASE_URL + "/prices?idType=cusip&variationType=priceListing&productType=ETF&productSubType=ETF"
+URL_KEY_STATS = BASE_URL + "/keyStats?idType=cusip&productType=ETF"
+
+CACHE_DIR = Path("data/cache")
+HISTORY_DIR = Path("outputs/history")
+NAV_CACHE = CACHE_DIR / "qqq_navs.json"
+PRICES_CACHE = CACHE_DIR / "qqq_prices.json"
+KEY_STATS_CACHE = CACHE_DIR / "qqq_keystats.json"
+NAV_HISTORY = HISTORY_DIR / "invesco_qqq_nav_historical.csv"
+NAV_BUSINESS = HISTORY_DIR / "invesco_qqq_nav_business_days.csv"
+SNAPSHOT = HISTORY_DIR / "invesco_qqq_snapshot.csv"
+
+HEADERS = {
+    "accept": "application/json, text/plain, */*",
+    "accept-language": "es-ES,es;q=0.9",
+    "cache-control": "no-cache",
+    "origin": "https://www.invesco.com",
+    "pragma": "no-cache",
+    "referer": "https://www.invesco.com/",
+    "user-agent": (
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+        "AppleWebKit/537.36 (KHTML, like Gecko) "
+        "Chrome/151.0.0.0 Safari/537.36"
+    ),
+}
+
+def _get_session():
+    try:
+        from curl_cffi import requests as curl_requests
+        return curl_requests.Session(impersonate="chrome")
+    except ImportError:
+        print("curl_cffi no disponible; instala con: py -m pip install curl_cffi")
+        sys.exit(1)
+
+def download_json(session, url):
+    r = session.get(url, headers=HEADERS, timeout=30)
+    r.raise_for_status()
+    return r.json()
+
+def load_or_cache(session, url, cache_file, force=False):
+    if cache_file.exists() and not force:
+        with open(cache_file, 'r', encoding='utf-8') as f:
+            return json.load(f)
+    data = download_json(session, url)
+    cache_file.parent.mkdir(parents=True, exist_ok=True)
+    with open(cache_file, 'w', encoding='utf-8') as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+    return data
+
+def extract_nav(payload):
+    line_chart = payload.get('lineChartData', [])
+    nav_series = None
+    for item in line_chart:
+        if item.get('type','').upper() == 'NAV':
+            nav_series = item
+            break
+    if not nav_series:
+        raise RuntimeError('No se encontró serie NAV')
+    rows = nav_series.get('data', [])
+    records = []
+    for row in rows:
+        date = pd.to_datetime(row.get('date'), errors='coerce')
+        nav = pd.to_numeric(row.get('value'), errors='coerce')
+        if pd.isna(date) or pd.isna(nav):
+            continue
+        records.append({'date': date.date(), 'nav': float(nav)})
+    df = pd.DataFrame(records)
+    df = df.sort_values('date').drop_duplicates('date').reset_index(drop=True)
+    return df
+
+def parse_key_stats(payload):
+    result = {}
+    for item in payload.get('keyStats', []):
+        name = item.get('name')
+        if name:
+            result[name] = {'value': item.get('value'), 'as_of_date': item.get('asOfDate')}
+    return result
+
+def main(force=False):
+    HISTORY_DIR.mkdir(parents=True, exist_ok=True)
+    CACHE_DIR.mkdir(parents=True, exist_ok=True)
+    session = _get_session()
+
+    print('Descargando NAV histórico...')
+    nav_payload = load_or_cache(session, URL_NAVS, NAV_CACHE, force)
+    nav_df = extract_nav(nav_payload)
+    nav_df.to_csv(NAV_HISTORY, index=False)
+    business = nav_df[pd.to_datetime(nav_df['date']).dt.dayofweek < 5].reset_index(drop=True)
+    business.to_csv(NAV_BUSINESS, index=False)
+
+    print('Descargando snapshot...')
+    prices_payload = load_or_cache(session, URL_PRICES, PRICES_CACHE, force)
+    key_payload = load_or_cache(session, URL_KEY_STATS, KEY_STATS_CACHE, force)
+    stats = parse_key_stats(key_payload)
+
+    snapshot = {
+        'ticker': TICKER,
+        'cusip': CUSIP,
+        'effective_date': prices_payload.get('effectiveDate'),
+        'nav': prices_payload.get('nav'),
+        'market_value': prices_payload.get('marketValue'),
+        'shares_outstanding': prices_payload.get('sharesOutstanding'),
+        'volume_30d_avg': prices_payload.get('30dayAverageTradingVolume'),
+        'volume_prev_day': prices_payload.get('previousDayTradingVolume'),
+        'open': prices_payload.get('openingPrice'),
+        'close': prices_payload.get('closingPrice'),
+        'bid_ask_midpoint': prices_payload.get('bidAskMidpoint'),
+        'premium_discount_pct': prices_payload.get('bidAskMidpointPremiumDiscountPercentage'),
+        'ytd': stats.get('ytd', {}).get('value'),
+        'sec_yield_30d': stats.get('secYield30Day', {}).get('value'),
+    }
+    pd.DataFrame([snapshot]).to_csv(SNAPSHOT, index=False)
+
+    print('Archivos QQQ generados:')
+    print(f'  {NAV_HISTORY} ({len(nav_df)} filas)')
+    print(f'  {NAV_BUSINESS} ({len(business)} filas)')
+    print(f'  {SNAPSHOT} (1 fila)')
+    print('Snapshot QQQ:')
+    print(snapshot)
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--force', action='store_true', help='Forzar descarga')
+    args = parser.parse_args()
+    main(force=args.force)

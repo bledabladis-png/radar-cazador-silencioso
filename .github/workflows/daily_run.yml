@@ -41,6 +41,9 @@ jobs:
           TIINGO_API_KEY: ${{ secrets.TIINGO_API_KEY }}
         run: python run.py
 
+      - name: Run QQQ Invesco provider
+        run: python invesco_qqq_fund_data.py --force
+
       - name: Verify leader selection
         run: python validation/verify_leader_selection.py
 
@@ -60,11 +63,15 @@ jobs:
             outputs/history/blackrock_dax_primary_flow.csv
             outputs/history/blackrock_isf_primary_flow.csv
             outputs/history/amundi_lyxi_primary_flow.csv
+            outputs/history/blackrock_iwm_historical.csv
             outputs/history/cftc_position_flow.csv
             outputs/history/sec_nport_positions.csv
             outputs/history/sec_nport_position_change_quarterly.csv
             outputs/history/sec_fund_flow.csv
             outputs/history/slpm_history.csv
+            outputs/history/invesco_qqq_nav_historical.csv
+            outputs/history/invesco_qqq_nav_business_days.csv
+            outputs/history/invesco_qqq_snapshot.csv
             outputs/state/slpm_state.json
             outputs/state/mte_state.json
             outputs/state/liquidity_state.json
