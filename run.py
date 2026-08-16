@@ -13,6 +13,7 @@ from src.stock_data_loader import download_stock_prices
 from data.providers.ssga_fund_data import get_etf_primary_flow_data
 from data.providers.blackrock_fund_data import get_blackrock_dax_primary_flow
 from data.providers.blackrock_isf_fund_data import get_blackrock_isf_primary_flow
+from data.providers.blackrock_iwm_fund_data import get_blackrock_iwm_primary_flow
 from data.providers.amundi_fund_data import get_amundi_lyxi_primary_flow
 from data.providers.cftc_data import get_cftc_position_flow_data
 from data.validator import validate_market_data
@@ -166,6 +167,19 @@ def main():
     except Exception as e:
         print(f"  ISF.L Primary Flow omitido: {e}")
         blackrock_isf_flow = None
+
+    # Flujo primario IWM (BlackRock)
+    print("Calculando IWM Primary Flow (BlackRock)...")
+    try:
+        blackrock_iwm_flow = get_blackrock_iwm_primary_flow()
+        if blackrock_iwm_flow is not None and not blackrock_iwm_flow.empty:
+            print("  IWM Primary Flow calculado.")
+        else:
+            blackrock_iwm_flow = None
+            print("  IWM Primary Flow sin datos.")
+    except Exception as e:
+        print(f"  IWM Primary Flow omitido: {e}")
+        blackrock_iwm_flow = None
 
     # Flujo primario LYXI (Amundi)
     print("Calculando LYXI Primary Flow (Amundi)...")
@@ -743,6 +757,7 @@ def main():
                             etf_primary_flow_data=etf_primary_flow_data,
                             blackrock_dax_flow=blackrock_dax_flow,
                             blackrock_isf_flow=blackrock_isf_flow,
+                            blackrock_iwm_flow=blackrock_iwm_flow,
                             amundi_lyxi_flow=amundi_lyxi_flow,
                             cftc_position_flow_data=cftc_position_flow_data,
                             flow_synthesis=flow_synthesis,
