@@ -1,4 +1,4 @@
-﻿import pandas as pd
+import pandas as pd
 import numpy as np
 from src.utils import tanh_normalize
 from datetime import datetime
@@ -35,7 +35,7 @@ def fundamental_signals(df_macro):
     # Actividad: usar cambio porcentual anual para capturar dinamica
     activity_cols = [c for c in base.columns if any(k in c.lower() for k in ['industrial_production_total','industrial_production_manufacturing','retail_sales'])]
     if activity_cols:
-        # Calcular cambio porcentual respecto a 252 dÃ­as hÃ¡biles (1 aÃ±o)
+        # Calcular cambio porcentual respecto a 252 días hábiles (1 año)
         act_change = base[activity_cols].pct_change(252).mean(axis=1)
         signals['activity'] = tanh_normalize(act_change)
     else:

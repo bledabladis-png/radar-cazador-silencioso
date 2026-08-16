@@ -1,10 +1,10 @@
-﻿import pandas as pd
+import pandas as pd
 
 def validate_market_data(df):
     """
     Verifica integridad de los datos de mercado.
     Asume que df tiene un MultiIndex con niveles ['Price', 'Ticker'].
-    Retorna (lista de tickers vÃ¡lidos, diccionario de issues).
+    Retorna (lista de tickers válidos, diccionario de issues).
     """
     issues = {}
     valid_cols = []
@@ -13,7 +13,7 @@ def validate_market_data(df):
         issues['global'] = 'El DataFrame no tiene MultiIndex en columnas'
         return valid_cols, issues
 
-    # Los niveles son Price (Close, High, etc.) y Ticker (sÃ­mbolo)
+    # Los niveles son Price (Close, High, etc.) y Ticker (símbolo)
     if 'Ticker' in df.columns.names:
         ticker_level = df.columns.names.index('Ticker')
         tickers = df.columns.levels[ticker_level].tolist()
@@ -40,7 +40,7 @@ def validate_market_data(df):
     return valid_cols, issues
 
 def validate_macro_manual(df):
-    """Chequea que los CSVs manuales tengan columna 'date' y no estÃ©n vacÃ­os."""
+    """Chequea que los CSVs manuales tengan columna 'date' y no estén vacíos."""
     issues = []
     if df is None or df.empty:
         return False, ['Empty DataFrame']
