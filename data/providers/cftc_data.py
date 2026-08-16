@@ -153,9 +153,13 @@ def get_cftc_position_flow_data() -> pd.DataFrame:
         max_date = result['date'].max()
         recent = result[result['date'] >= max_date - pd.Timedelta(days=365)]
 
+        # Filtro de frescura: descartar contratos con datos más antiguos que 30 días
+        # respecto a la fecha máxima global
+        recent = recent[recent['date'] >= recent['date'].max() - pd.Timedelta(days=30)]
+
         HISTORY_PATH.parent.mkdir(parents=True, exist_ok=True)
         recent.to_csv(HISTORY_PATH, index=False)
-        print(f'  Histórico CFTC guardado (últimos 365 días): {HISTORY_PATH}')
+        print(f'  Histórico CFTC guardado (últimos 365 días, frescura 30 días): {HISTORY_PATH}')
 
         return recent.sort_values('date', ascending=False).reset_index(drop=True)
     except Exception as e:
