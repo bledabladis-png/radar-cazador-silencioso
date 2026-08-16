@@ -36,3 +36,4 @@ data/cache/
 data/nport/
 
 data/fund_data/
+.env

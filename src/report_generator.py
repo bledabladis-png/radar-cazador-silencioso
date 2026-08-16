@@ -63,7 +63,7 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
                           slpm_v12_data=None, tactical_scores=None, structural_scores=None,
                           sector_persistence=None, signal_agreements=None, signal_agreements_display=None,
                           cross_module_conflict=None, shock_sensitivities=None, price_flow_divergences=None,
-                          dc_summary="", all_signals=None, real_liq_score=None, real_liq_prev=None, index_leaders=None, index_phases=None, etf_primary_flow_data=None, cftc_position_flow_data=None, flow_synthesis=None, blackrock_dax_flow=None, blackrock_isf_flow=None, output_path='outputs/report/reporte_diario.md'):
+                          dc_summary="", all_signals=None, real_liq_score=None, real_liq_prev=None, index_leaders=None, index_phases=None, etf_primary_flow_data=None, cftc_position_flow_data=None, flow_synthesis=None, blackrock_dax_flow=None, blackrock_isf_flow=None, amundi_lyxi_flow=None, output_path='outputs/report/reporte_diario.md'):
     lines = []
     lines.append("# MACRO SECTORIAL - Reporte Diario\n")
     lines.append(f"**Fecha:** {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
@@ -557,6 +557,25 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
         lines.append(f"- **Flujo % AUM:** {row['flow_pct_assets']:+.6f}%\n")
         lines.append(f"- **Flow Z-Score:** {row['flow_zscore']:+.2f}\n")
         lines.append(f"\n*Fuente: BlackRock. ETF Primary Flow = ΔSharesOutstanding × NAV.*\n\n")
+
+    # =========================================================================
+    # FLUJO PRIMARIO LYXI (Amundi)
+    # =========================================================================
+    if amundi_lyxi_flow is not None and not amundi_lyxi_flow.empty:
+        row = amundi_lyxi_flow.iloc[-1]
+        lines.append("## Flujo Primario LYXI (Amundi)\n")
+        lines.append(f"- **Última fecha:** {row['date'].strftime('%Y-%m-%d') if hasattr(row['date'], 'strftime') else row['date']}\n")
+        lines.append(f"- **Shares Outstanding:** {row['shares_outstanding']:,.0f}\n")
+        lines.append(f"- **NAV:** {row['nav']:.4f}\n")
+        lines.append(f"- **AUM:** {row['aum']:,.2f}\n")
+        if pd.notna(row.get('shares_change')):
+            lines.append(f"- **Δ Shares:** {row['shares_change']:+,.0f}\n")
+            lines.append(f"- **Flujo Estimado (EUR):** {row['estimated_flow_eur']:+,.2f}\n")
+            lines.append(f"- **Flujo % AUM:** {row['flow_pct_assets']:+.6f}%\n")
+        else:
+            lines.append(f"- **Δ Shares:** N/D (histórico insuficiente)\n")
+            lines.append(f"- **Flujo Estimado:** N/D\n")
+        lines.append(f"\n*Fuente: Amundi. ETF Primary Flow = ΔSharesOutstanding × NAV.*\n\n")
 
     # =========================================================================
     # CFTC POSITION FLOW (TFF, Semanal)
