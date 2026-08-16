@@ -63,7 +63,7 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
                           slpm_v12_data=None, tactical_scores=None, structural_scores=None,
                           sector_persistence=None, signal_agreements=None, signal_agreements_display=None,
                           cross_module_conflict=None, shock_sensitivities=None, price_flow_divergences=None,
-                          dc_summary="", all_signals=None, real_liq_score=None, real_liq_prev=None, index_leaders=None, index_phases=None, etf_primary_flow_data=None, cftc_position_flow_data=None, flow_synthesis=None, blackrock_dax_flow=None, blackrock_isf_flow=None, amundi_lyxi_flow=None, blackrock_iwm_flow=None, nport_position_change_data=None, output_path='outputs/report/reporte_diario.md'):
+                          dc_summary="", all_signals=None, real_liq_score=None, real_liq_prev=None, index_leaders=None, index_phases=None, etf_primary_flow_data=None, cftc_position_flow_data=None, flow_synthesis=None, blackrock_dax_flow=None, blackrock_isf_flow=None, amundi_lyxi_flow=None, blackrock_iwm_flow=None, nport_position_change_data=None, qqq_performance_data=None, output_path='outputs/report/reporte_diario.md'):
     lines = []
     lines.append("# MACRO SECTORIAL - Reporte Diario\n")
     lines.append(f"**Fecha:** {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
@@ -620,6 +620,21 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
     else:
         lines.append("## Flujo Posicional N-PORT (Trimestral)\n")
         lines.append("*Sin datos N-PORT disponibles en esta ejecución.*\n\n")
+
+    # =========================================================================
+    # RENDIMIENTO QQQ (Invesco)
+    # =========================================================================
+    if qqq_performance_data is not None and not qqq_performance_data.empty:
+        lines.append("## Rendimiento QQQ (Invesco)\n")
+        lines.append("| Medida | YTD | 1Y | 3Y | 5Y | 10Y | Desde inicio |\n")
+        lines.append("|--------|-----|----|----|----|-----|--------------|\n")
+        for _, row in qqq_performance_data.iterrows():
+            label = row.get('displayLabel', 'N/A')
+            lines.append(f"| {label} | {row['ytd']:.2f}% | {row['y1']:.2f}% | {row['y3']:.2f}% | {row['y5']:.2f}% | {row['y10']:.2f}% | {row['inception']:.2f}% |\n")
+        lines.append("\n*Fuente: Invesco DNG API. Rendimientos anualizados oficiales.*\n\n")
+    else:
+        lines.append("## Rendimiento QQQ (Invesco)\n")
+        lines.append("*Sin datos de performance QQQ en esta ejecución.*\n\n")
 
     # =========================================================================
     # FLUJO - SINTESIS DESCRIPTIVA

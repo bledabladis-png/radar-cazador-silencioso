@@ -16,9 +16,11 @@ BASE_URL = "https://dng-api.invesco.com/cache/v1/accounts/en_US/shareclasses/460
 URL_NAVS = BASE_URL + "/navs?idType=cusip&productType=ETF"
 URL_PRICES = BASE_URL + "/prices?idType=cusip&variationType=priceListing&productType=ETF&productSubType=ETF"
 URL_KEY_STATS = BASE_URL + "/keyStats?idType=cusip&productType=ETF"
+URL_PERF = BASE_URL + "/performance/standard?idType=cusip&productType=ETF&performanceSubType=annualized&performancePeriod=monthly"
 
 CACHE_DIR = Path("data/cache")
 HISTORY_DIR = Path("outputs/history")
+PERF_CSV = HISTORY_DIR / "invesco_qqq_performance.csv"
 NAV_CACHE = CACHE_DIR / "qqq_navs.json"
 PRICES_CACHE = CACHE_DIR / "qqq_prices.json"
 KEY_STATS_CACHE = CACHE_DIR / "qqq_keystats.json"
@@ -92,6 +94,18 @@ def parse_key_stats(payload):
             result[name] = {'value': item.get('value'), 'as_of_date': item.get('asOfDate')}
     return result
 
+def download_performance(session, force=False):
+    """Descarga y guarda performance anualizada oficial."""
+    cache_file = CACHE_DIR / "qqq_performance.json"
+    payload = load_or_cache(session, URL_PERF, cache_file, force)
+    entries = payload.get('annualizedPerformance', [])
+    df = pd.DataFrame(entries)
+    df['effectiveDate'] = payload.get('effectiveDate')
+    df['performancePeriod'] = 'monthly'
+    df.to_csv(PERF_CSV, index=False)
+    print(f'Performance guardada: {PERF_CSV}')
+    return df
+
 def main(force=False):
     HISTORY_DIR.mkdir(parents=True, exist_ok=True)
     CACHE_DIR.mkdir(parents=True, exist_ok=True)
@@ -126,6 +140,12 @@ def main(force=False):
         'sec_yield_30d': stats.get('secYield30Day', {}).get('value'),
     }
     pd.DataFrame([snapshot]).to_csv(SNAPSHOT, index=False)
+
+    # Descargar performance
+    try:
+        download_performance(session, force)
+    except Exception as e:
+        print(f'Performance QQQ no descargada: {e}')
 
     print('Archivos QQQ generados:')
     print(f'  {NAV_HISTORY} ({len(nav_df)} filas)')
