@@ -567,7 +567,7 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
         lines.append(f"- **Última fecha:** {row['date'].strftime('%Y-%m-%d') if hasattr(row['date'], 'strftime') else row['date']}\n")
         lines.append(f"- **Shares Outstanding:** {row['shares_outstanding']:,.0f}\n")
         lines.append(f"- **NAV:** {row['nav']:.4f}\n")
-        lines.append(f"- **AUM:** {row['aum']:,.2f}\n")
+        lines.append(f"- **AUM:** {row['class_aum']:,.2f}\n")
         if pd.notna(row.get('shares_change')):
             lines.append(f"- **Δ Shares:** {row['shares_change']:+,.0f}\n")
             lines.append(f"- **Flujo Estimado (EUR):** {row['estimated_flow_eur']:+,.2f}\n")
@@ -869,6 +869,7 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
 
     sector_df = pd.DataFrame(sector_results['ranking'], columns=['ticker', 'name', 'score', 'wyckoff_phase'])
     sector_df.to_csv('outputs/report/sector_rankings.csv', index=False)
+
 
 
 
