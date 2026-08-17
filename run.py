@@ -6,6 +6,7 @@ Fases 1-4 + Correccion 0.5 + P1 + P2 + Mejoras 16-20.
 import pandas as pd
 import numpy as np
 import os
+import sys
 from pathlib import Path
 from datetime import datetime
 from src.data_loader import download_market_data
@@ -17,6 +18,7 @@ from data.providers.blackrock_isf_fund_data import get_blackrock_isf_primary_flo
 from data.providers.blackrock_iwm_fund_data import get_blackrock_iwm_primary_flow
 from data.providers.amundi_fund_data import get_amundi_lyxi_primary_flow
 from data.providers.cftc_data import get_cftc_position_flow_data
+from data.providers.retry_utils import retry_call
 from data.providers.qqq_sec_primary_flow import get_qqq_sec_primary_flow
 from data.validator import validate_market_data
 from regimes.financial_conditions import compute_financial_conditions
@@ -121,7 +123,7 @@ def main():
     # Flujo primario ETF (SSGA)
     print("Calculando ETF Primary Flow (SSGA)...")
     try:
-        etf_primary_flow_data = get_etf_primary_flow_data()
+        etf_primary_flow_data = retry_call(get_etf_primary_flow_data)
         if etf_primary_flow_data is not None and not etf_primary_flow_data.empty:
             print("  ETF Primary Flow calculado.")
         else:
@@ -134,7 +136,7 @@ def main():
     # Flujo primario DAXEX (BlackRock)
     print("Calculando DAXEX Primary Flow (BlackRock)...")
     try:
-        blackrock_dax_flow = get_blackrock_dax_primary_flow()
+        blackrock_dax_flow = retry_call(get_blackrock_dax_primary_flow)
         if blackrock_dax_flow is not None and not blackrock_dax_flow.empty:
             print("  DAXEX Primary Flow calculado.")
         else:
@@ -147,7 +149,7 @@ def main():
     # Flujo primario ISF.L (BlackRock)
     print("Calculando ISF.L Primary Flow (BlackRock)...")
     try:
-        blackrock_isf_flow = get_blackrock_isf_primary_flow()
+        blackrock_isf_flow = retry_call(get_blackrock_isf_primary_flow)
         if blackrock_isf_flow is not None and not blackrock_isf_flow.empty:
             print("  ISF.L Primary Flow calculado.")
         else:
@@ -160,7 +162,7 @@ def main():
     # Flujo primario IWM (BlackRock)
     print("Calculando IWM Primary Flow (BlackRock)...")
     try:
-        blackrock_iwm_flow = get_blackrock_iwm_primary_flow()
+        blackrock_iwm_flow = retry_call(get_blackrock_iwm_primary_flow)
         if blackrock_iwm_flow is not None and not blackrock_iwm_flow.empty:
             print("  IWM Primary Flow calculado.")
         else:
@@ -173,7 +175,7 @@ def main():
     # Flujo primario LYXI (Amundi)
     print("Calculando LYXI Primary Flow (Amundi)...")
     try:
-        amundi_lyxi_flow = get_amundi_lyxi_primary_flow()
+        amundi_lyxi_flow = retry_call(get_amundi_lyxi_primary_flow)
         if amundi_lyxi_flow is not None and not amundi_lyxi_flow.empty:
             print("  LYXI Primary Flow calculado.")
         else:
@@ -199,7 +201,7 @@ def main():
     # Posicionamiento CFTC (TFF, semanal)
     print("Calculando CFTC Position Flow (TFF)...")
     try:
-        cftc_position_flow_data = get_cftc_position_flow_data()
+        cftc_position_flow_data = retry_call(get_cftc_position_flow_data)
         if cftc_position_flow_data is not None and not cftc_position_flow_data.empty:
             print("  CFTC Position Flow calculado.")
         else:
@@ -772,6 +774,7 @@ def main():
         print(f"    VALIDATION GATE: {len(validation_errors)} errores, {len(validation_checks)} comprobaciones")
         for err in validation_errors:
             print(f"      {err}")
+        sys.exit(1)
     else:
         print(f"    VALIDATION GATE: Sin errores ({len(validation_checks)} comprobaciones OK)")
 

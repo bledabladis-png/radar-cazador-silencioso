@@ -5,9 +5,14 @@ on:
     - cron: '0 20 * * *'
   workflow_dispatch:
 
+concurrency:
+  group: daily-run
+  cancel-in-progress: false
+
 jobs:
   run-system:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     permissions:
       contents: write
 
@@ -30,6 +35,12 @@ jobs:
 
       - name: Install dependencies
         run: pip install -r requirements.txt
+
+      - name: Validate Python syntax
+        run: python -m compileall -q .
+
+      - name: Run tests
+        run: pytest tests/ -v
 
       - name: Run Macro Sectorial
         env:
@@ -110,6 +121,9 @@ jobs:
           else
             echo "✅ Sin fallos de descarga."
           fi
+
+      - name: Validate history quality
+        run: python validation/validate_history_quality.py
 
       - name: Commit and push hist/state
         run: |
