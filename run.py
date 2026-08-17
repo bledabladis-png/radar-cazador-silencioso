@@ -17,6 +17,7 @@ from data.providers.blackrock_isf_fund_data import get_blackrock_isf_primary_flo
 from data.providers.blackrock_iwm_fund_data import get_blackrock_iwm_primary_flow
 from data.providers.amundi_fund_data import get_amundi_lyxi_primary_flow
 from data.providers.cftc_data import get_cftc_position_flow_data
+from data.providers.qqq_sec_primary_flow import get_qqq_sec_primary_flow
 from data.validator import validate_market_data
 from regimes.financial_conditions import compute_financial_conditions
 from regimes.liquidity import compute_liquidity_score as compute_real_liquidity
@@ -181,6 +182,19 @@ def main():
     except Exception as e:
         print(f"  LYXI Primary Flow omitido: {e}")
         amundi_lyxi_flow = None
+
+    # Flujo primario QQQ (SEC, semestral/anual)
+    print("Cargando QQQ SEC Primary Flow...")
+    try:
+        qqq_sec_flow = get_qqq_sec_primary_flow()
+        if qqq_sec_flow is not None and not qqq_sec_flow.empty:
+            print("  QQQ SEC Primary Flow cargado.")
+        else:
+            qqq_sec_flow = None
+            print("  QQQ SEC Primary Flow sin datos.")
+    except Exception as e:
+        print(f"  QQQ SEC Primary Flow omitido: {e}")
+        qqq_sec_flow = None
 
     # Posicionamiento CFTC (TFF, semanal)
     print("Calculando CFTC Position Flow (TFF)...")
@@ -785,6 +799,7 @@ def main():
                             qqq_performance_data=qqq_performance_data,
                             qqq_nport_flow_data=qqq_nport_flow_data,
                             cftc_position_flow_data=cftc_position_flow_data,
+                            qqq_sec_flow=qqq_sec_flow,
                             flow_synthesis=flow_synthesis,
                           real_liquidity_regime=real_liq_regime, real_liquidity_conf=real_liq_conf,
                             real_liq_score=real_liq_score,

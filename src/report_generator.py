@@ -63,7 +63,7 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
                           slpm_v12_data=None, tactical_scores=None, structural_scores=None,
                           sector_persistence=None, signal_agreements=None, signal_agreements_display=None,
                           cross_module_conflict=None, shock_sensitivities=None, price_flow_divergences=None,
-                          dc_summary="", all_signals=None, real_liq_score=None, real_liq_prev=None, index_leaders=None, index_phases=None, etf_primary_flow_data=None, cftc_position_flow_data=None, flow_synthesis=None, blackrock_dax_flow=None, blackrock_isf_flow=None, amundi_lyxi_flow=None, blackrock_iwm_flow=None, nport_position_change_data=None, qqq_performance_data=None, qqq_nport_flow_data=None, output_path='outputs/report/reporte_diario.md'):
+                          dc_summary="", all_signals=None, real_liq_score=None, real_liq_prev=None, index_leaders=None, index_phases=None, etf_primary_flow_data=None, cftc_position_flow_data=None, flow_synthesis=None, blackrock_dax_flow=None, blackrock_isf_flow=None, amundi_lyxi_flow=None, blackrock_iwm_flow=None, nport_position_change_data=None, qqq_performance_data=None, qqq_nport_flow_data=None, qqq_sec_flow=None, output_path='outputs/report/reporte_diario.md'):
     lines = []
     lines.append("# MACRO SECTORIAL - Reporte Diario\n")
     lines.append(f"**Fecha:** {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
@@ -593,6 +593,24 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
         lines.append(f"- **Flujo % AUM:** {row['primary_flow_pct']:+.6f}%\n")
         lines.append(f"- **Flow Z-Score:** {row['primary_flow_z']:+.2f}\n")
         lines.append(f"\n*Fuente: BlackRock. ETF Primary Flow = ΔSharesOutstanding × NAV.*\n\n")
+
+    # =========================================================================
+    # FLUJO PRIMARIO QQQ (SEC, Trimestral/Semestral)
+    # =========================================================================
+    if qqq_sec_flow is not None and not qqq_sec_flow.empty:
+        row = qqq_sec_flow.iloc[-1]
+        lines.append("## Flujo Primario QQQ (SEC, Trimestral/Semestral)\n")
+        period = str(row.get('period_type', 'N/A')).upper()
+        period_date = str(row.get('period_end_date', 'N/A'))
+        lines.append(f"- **Período:** {period} {period_date}\n")
+        lines.append(f"- **Fecha de presentación:** {row.get('filing_date', 'N/A')}\n")
+        lines.append(f"- **Shares sold:** {row.get('shares_sold', 0):,.0f}\n")
+        lines.append(f"- **Shares repurchased:** {row.get('shares_repurchased', 0):,.0f}\n")
+        lines.append(f"- **Net shares flow:** {row.get('net_shares_flow', 0):,.0f}\n")
+        lines.append(f"- **Proceeds from shares sold:** {row.get('proceeds_shares_sold', 0):,.2f}\n")
+        lines.append(f"- **Value of shares repurchased:** {row.get('value_shares_repurchased', 0):,.2f}\n")
+        lines.append(f"- **Primary flow USD (oficial):** {row.get('primary_flow_usd', 0):,.2f}\n")
+        lines.append("\n*Fuente: SEC EDGAR, formularios N-30B-2 / N-CSRS. Frecuencia anual/semestral. No es flujo diario.*\n\n")
 
     # =========================================================================
     # CFTC POSITION FLOW (TFF, Semanal)
