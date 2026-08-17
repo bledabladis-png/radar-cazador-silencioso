@@ -1,0 +1,2 @@
+﻿ticker,cusip,effectiveDate,sharesOutstanding,nav,marketValue,creationUnits,creationUnitsExact,source
+QQQ,46090E103,2026-08-14,678650000.0,731.010978,496100600185.25,13573.0,True,Invesco DNG API

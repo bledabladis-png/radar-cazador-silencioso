@@ -1,0 +1,35 @@
+name: Actualizar QQQ SEC Flow (semestral)
+
+on:
+  schedule:
+    - cron: '0 6 15 1,7 *'   # 15 enero y 15 julio a las 06:00 UTC
+  workflow_dispatch:
+
+jobs:
+  update-qqq-sec-flow:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configurar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.14'
+
+      - name: Instalar dependencias
+        run: pip install requests pandas beautifulsoup4 lxml
+
+      - name: Actualizar QQQ SEC Flow
+        run: python scripts/update_qqq_sec_flow.py
+
+      - name: Commit y push si hay cambios
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add outputs/history/qqq_sec_primary_flow.csv
+          if git diff --cached --quiet; then
+            echo "No hay cambios en QQQ SEC Flow."
+          else
+            git commit -m "Actualizar QQQ SEC Flow (automático semestral)"
+            git push
+          fi

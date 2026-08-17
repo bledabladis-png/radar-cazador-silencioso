@@ -44,6 +44,12 @@ jobs:
       - name: Run QQQ Invesco provider
         run: python invesco_qqq_fund_data.py --force
 
+      - name: Run QQQ shares snapshot
+        run: python scripts/invesco_qqq_shares_snapshot.py
+
+      - name: QQQ SEC vs NPORT-P cross validation
+        run: python validation/qqq_sec_nport_cross_validation.py
+
       - name: Verify leader selection
         run: python validation/verify_leader_selection.py
 
