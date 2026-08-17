@@ -595,7 +595,7 @@ def main():
     # =====================================================================
     print("Calculando fases Wyckoff para indices internacionales...")
     index_phases, index_data = compute_index_phases(df_market)
-    indices_en_acumulacion = [nombre for nombre, fase in index_phases.items() if fase == 'ACCUMULATION']
+    indices_en_acumulacion = [nombre for nombre, fase in index_phases.items() if fase in ['ACCUMULATION', 'MARKUP']]
     if indices_en_acumulacion:
         print(f"  Indices en acumulacion: {', '.join(indices_en_acumulacion)}")
         df_index_stocks = download_stock_prices()

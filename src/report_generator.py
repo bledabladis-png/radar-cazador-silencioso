@@ -865,8 +865,8 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
         lines.append("| No disponible | No disponible | No disponible |\n")
     lines.append("\n")
 
-    lines.append("\n## Indices Internacionales — Oportunidades de Acumulacion\n")
-    lines.append("*Nota: Los componentes se obtienen de ETFs proxy que replican el indice de referencia. Solo se muestran indices en fase ACCUMULATION.*\n\n")
+    lines.append("\n## Indices Internacionales — Oportunidades de Acumulación y Markup\n")
+    lines.append("*Nota: Los componentes se obtienen de ETFs proxy que replican el indice de referencia. Solo se muestran indices en fase ACCUMULATION o MARKUP.*\n\n")
     if index_leaders:
         for nombre, top5 in index_leaders.items():
             if top5 is None or top5.empty:
@@ -878,7 +878,7 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
                 lines.append(f"| {i} | {row['ticker']} | {row['rs']:.2f} | {row['rs_mom']:.2%} | {row['flow_proxy_z']:.2f} | {row['wls']:.2f} | {row['wyckoff_phase']} |\n")
             lines.append("\n")
     else:
-        lines.append("*Ningún indice en fase de acumulación en esta ejecución.*\n\n")
+        lines.append("*Ningún indice en fase de acumulación o markup en esta ejecución.*\n\n")
 
     lines.append("## Estado Actual — Síntesis de Señales\n\n")
 
