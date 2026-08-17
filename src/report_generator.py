@@ -73,7 +73,17 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
     # RESUMEN DE REGIMENES
     # =========================================================================
     lines.append("## Resumen de Regimenes\n")
-    lines.append(f"- **Macro:** {macro_regime} (Score: {macro_score.iloc[-1]:.2f}, Signal Consistency: {macro_conf:.0%})\n")
+    try:
+        score_value = float(macro_score.iloc[-1])
+    except Exception:
+        score_value = float('nan')
+
+    if pd.isna(score_value):
+        score_str = "N/D"
+    else:
+        score_str = f"{score_value:.2f}"
+
+    lines.append(f"- **Macro:** {macro_regime} (Score: {score_str}, Signal Consistency: {macro_conf:.0%})\n")
     if macro_conf < 0.30:
         lines.append("  *Signal Consistency baja: señales contradictorias en el entorno actual.*\n")
     
