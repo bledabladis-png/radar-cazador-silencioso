@@ -5,9 +5,16 @@ on:
     - cron: '0 3 1 1,4,7,10 *'   # 1 enero, 1 abril, 1 julio, 1 octubre a las 03:00 UTC
   workflow_dispatch:               # permite ejecución manual desde GitHub
 
+concurrency:
+  group: update_sector_holdings
+  cancel-in-progress: false
+
 jobs:
   update-holdings:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
         with:
@@ -20,6 +27,9 @@ jobs:
       
       - name: Instalar dependencias
         run: pip install requests pandas openpyxl
+
+      - name: Validate Python syntax
+        run: python -m compileall -q .
       
       - name: Ejecutar actualización de holdings
         run: python scripts/update_sector_holdings.py
