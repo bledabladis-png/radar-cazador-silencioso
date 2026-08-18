@@ -9,6 +9,7 @@ import json
 from pathlib import Path
 from datetime import datetime, timedelta
 import tempfile, os, sys, argparse
+import time
 
 TICKER = "QQQ"
 CUSIP = "46090E103"
@@ -42,8 +43,8 @@ HEADERS = {
     ),
 }
 
-def _download_json(url):
-    """Descarga JSON usando curl del sistema para evitar HTTP 406."""
+def _download_json(url, retries=3, backoff=2):
+    """Download JSON using system curl with retry/backoff."""
     import subprocess
     import shutil
 
@@ -61,35 +62,44 @@ def _download_json(url):
     ]
 
     curl = shutil.which("curl") or "curl"
-    command = [curl, "-sS", "--fail-with-body", url]
-    for header in headers:
-        command.extend(["-H", header])
 
-    result = subprocess.run(
-        command,
-        capture_output=True,
-        text=True,
-        encoding="utf-8",
-        errors="replace",
-        timeout=60,
-    )
+    for attempt in range(retries):
+        command = [curl, "-sS", "--fail-with-body", url]
+        for header in headers:
+            command.extend(["-H", header])
 
-    if result.returncode != 0:
-        raise RuntimeError(
-            result.stderr.strip() or result.stdout.strip() or "curl failed"
+        result = subprocess.run(
+            command,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            timeout=60,
         )
 
-    try:
-        return json.loads(result.stdout)
-    except json.JSONDecodeError as exc:
-        raise RuntimeError(f"JSON inválido: {exc}") from exc
+        if result.returncode == 0:
+            try:
+                return json.loads(result.stdout)
+            except json.JSONDecodeError as exc:
+                raise RuntimeError(f"JSON invalid: {exc}") from exc
+
+        if attempt < retries - 1:
+            time.sleep(backoff * attempt)
+
+    raise RuntimeError(
+        result.stderr.strip() or result.stdout.strip() or "curl failed"
+    )
 
 
-def load_or_cache(url, cache_file, force=False):
-    """Lee cache o descarga con curl."""
+def load_or_cache(url, cache_file, force=False, max_age_hours=23):
+    """Read cache or download with TTL."""
     if cache_file.exists() and not force:
-        with open(cache_file, 'r', encoding='utf-8') as f:
-            return json.load(f)
+        mtime = datetime.fromtimestamp(cache_file.stat().st_mtime)
+        age = datetime.now() - mtime
+        if age <= timedelta(hours=max_age_hours):
+            with open(cache_file, 'r', encoding='utf-8') as f:
+                return json.load(f)
+        print(f"Cache stale ({age}). Downloading...")
 
     data = _download_json(url)
     cache_file.parent.mkdir(parents=True, exist_ok=True)
@@ -144,6 +154,7 @@ def main(force=False):
 
     print('Descargando NAV histórico...')
     nav_payload = load_or_cache(URL_NAVS, NAV_CACHE, force)
+    time.sleep(1)
     nav_df = extract_nav(nav_payload)
     nav_df.to_csv(NAV_HISTORY, index=False)
     business = nav_df[pd.to_datetime(nav_df['date']).dt.dayofweek < 5].reset_index(drop=True)
@@ -151,7 +162,9 @@ def main(force=False):
 
     print('Descargando snapshot...')
     prices_payload = load_or_cache(URL_PRICES, PRICES_CACHE, force)
+    time.sleep(1)
     key_payload = load_or_cache(URL_KEY_STATS, KEY_STATS_CACHE, force)
+    time.sleep(1)
     stats = parse_key_stats(key_payload)
 
     snapshot = {
@@ -175,6 +188,7 @@ def main(force=False):
     # Descargar performance
     try:
         download_performance(force)
+        time.sleep(1)
     except Exception as e:
         print(f'Performance QQQ no descargada: {e}')
 
