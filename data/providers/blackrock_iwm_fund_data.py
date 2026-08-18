@@ -40,7 +40,7 @@ from __future__ import annotations
 
 import re
 import time
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Optional
 
@@ -121,8 +121,12 @@ def download_fund_file(
     CACHE_DIR.mkdir(parents=True, exist_ok=True)
 
     if RAW_CACHE_FILE.exists() and not force_download:
-        print(f"  Usando caché: {RAW_CACHE_FILE}")
-        return RAW_CACHE_FILE.read_bytes()
+        mtime = datetime.fromtimestamp(RAW_CACHE_FILE.stat().st_mtime)
+        age = datetime.now() - mtime
+        if age <= timedelta(hours=23):
+            print(f"  Usando caché: {RAW_CACHE_FILE} (antigüedad {age})")
+            return RAW_CACHE_FILE.read_bytes()
+        print(f"  Caché obsoleta ({age}). Descargando de nuevo...")
 
     url = build_fund_url()
 
