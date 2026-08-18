@@ -42,24 +42,56 @@ HEADERS = {
     ),
 }
 
-def _get_session():
+def _download_json(url):
+    """Descarga JSON usando curl del sistema para evitar HTTP 406."""
+    import subprocess
+    import shutil
+
+    headers = [
+        "Accept: application/json, text/plain, */*",
+        "Accept-Language: en-US,en;q=0.9",
+        "Cache-Control: no-cache",
+        "Origin: https://www.invesco.com",
+        "Pragma: no-cache",
+        "Referer: https://www.invesco.com/",
+        "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36",
+        f"resourcepath: {url}",
+        "appid: invesco",
+        "componenttype: ETF",
+    ]
+
+    curl = shutil.which("curl") or "curl"
+    command = [curl, "-sS", "--fail-with-body", url]
+    for header in headers:
+        command.extend(["-H", header])
+
+    result = subprocess.run(
+        command,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+        timeout=60,
+    )
+
+    if result.returncode != 0:
+        raise RuntimeError(
+            result.stderr.strip() or result.stdout.strip() or "curl failed"
+        )
+
     try:
-        from curl_cffi import requests as curl_requests
-        return curl_requests.Session(impersonate="chrome")
-    except ImportError:
-        print("curl_cffi no disponible; instala con: py -m pip install curl_cffi")
-        sys.exit(1)
+        return json.loads(result.stdout)
+    except json.JSONDecodeError as exc:
+        raise RuntimeError(f"JSON inválido: {exc}") from exc
 
-def download_json(session, url):
-    r = session.get(url, headers=HEADERS, timeout=30)
-    r.raise_for_status()
-    return r.json()
 
-def load_or_cache(session, url, cache_file, force=False):
+def load_or_cache(url, cache_file, force=False):
+    """Lee cache o descarga con curl."""
     if cache_file.exists() and not force:
         with open(cache_file, 'r', encoding='utf-8') as f:
             return json.load(f)
-    data = download_json(session, url)
+
+    data = _download_json(url)
     cache_file.parent.mkdir(parents=True, exist_ok=True)
     with open(cache_file, 'w', encoding='utf-8') as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
@@ -94,10 +126,10 @@ def parse_key_stats(payload):
             result[name] = {'value': item.get('value'), 'as_of_date': item.get('asOfDate')}
     return result
 
-def download_performance(session, force=False):
+def download_performance(force=False):
     """Descarga y guarda performance anualizada oficial."""
     cache_file = CACHE_DIR / "qqq_performance.json"
-    payload = load_or_cache(session, URL_PERF, cache_file, force)
+    payload = load_or_cache(URL_PERF, cache_file, force)
     entries = payload.get('annualizedPerformance', [])
     df = pd.DataFrame(entries)
     df['effectiveDate'] = payload.get('effectiveDate')
@@ -109,18 +141,17 @@ def download_performance(session, force=False):
 def main(force=False):
     HISTORY_DIR.mkdir(parents=True, exist_ok=True)
     CACHE_DIR.mkdir(parents=True, exist_ok=True)
-    session = _get_session()
 
     print('Descargando NAV histórico...')
-    nav_payload = load_or_cache(session, URL_NAVS, NAV_CACHE, force)
+    nav_payload = load_or_cache(URL_NAVS, NAV_CACHE, force)
     nav_df = extract_nav(nav_payload)
     nav_df.to_csv(NAV_HISTORY, index=False)
     business = nav_df[pd.to_datetime(nav_df['date']).dt.dayofweek < 5].reset_index(drop=True)
     business.to_csv(NAV_BUSINESS, index=False)
 
     print('Descargando snapshot...')
-    prices_payload = load_or_cache(session, URL_PRICES, PRICES_CACHE, force)
-    key_payload = load_or_cache(session, URL_KEY_STATS, KEY_STATS_CACHE, force)
+    prices_payload = load_or_cache(URL_PRICES, PRICES_CACHE, force)
+    key_payload = load_or_cache(URL_KEY_STATS, KEY_STATS_CACHE, force)
     stats = parse_key_stats(key_payload)
 
     snapshot = {
@@ -143,7 +174,7 @@ def main(force=False):
 
     # Descargar performance
     try:
-        download_performance(session, force)
+        download_performance(force)
     except Exception as e:
         print(f'Performance QQQ no descargada: {e}')
 
