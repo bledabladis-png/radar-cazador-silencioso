@@ -640,11 +640,11 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
     if nport_position_change_data is not None and not nport_position_change_data.empty:
         lines.append("## Flujo Posicional N-PORT (Trimestral)\n")
         lines.append("*Datos del último trimestre disponible. Fuente: SEC N-PORT.*\n")
-        lines.append("| Fecha | Fondo | Activo | CUSIP | Balance Previo | Balance Actual | Cambio | % Cambio |\n")
+        lines.append("| Fecha | Fondo | Activo | ISIN | Balance Previo | Balance Actual | Cambio | % Cambio |\n")
         lines.append("|-------|-------|--------|-------|----------------|----------------|--------|-----------|\n")
         for _, row in nport_position_change_data.iterrows():
             fecha = row['REPORT_DATE'].strftime('%Y-%m-%d') if hasattr(row['REPORT_DATE'], 'strftime') else str(row['REPORT_DATE'])
-            lines.append(f"| {fecha} | {row['REGISTRANT_NAME']} | {row['ISSUER_NAME']} | {row['ISSUER_CUSIP']} | {row['PREV_BALANCE']:,.0f} | {row['BALANCE']:,.0f} | {row['POSITION_CHANGE']:+,.0f} | {row['POSITION_CHANGE_PCT']:+.2f}% |\n")
+            lines.append(f"| {fecha} | {row['REGISTRANT_NAME']} | {row['ISSUER_NAME']} | {row['IDENTIFIER_ISIN']} | {row['PREV_BALANCE']:,.0f} | {row['BALANCE']:,.0f} | {row['POSITION_CHANGE']:+,.0f} | {row['POSITION_CHANGE_PCT']:+.2f}% |\n")
         lines.append("\n")
     else:
         lines.append("## Flujo Posicional N-PORT (Trimestral)\n")
