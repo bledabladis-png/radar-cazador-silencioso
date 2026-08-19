@@ -52,9 +52,6 @@ jobs:
           TIINGO_API_KEY: ${{ secrets.TIINGO_API_KEY }}
         run: python run.py
 
-      - name: Run QQQ Invesco provider
-        run: python invesco_qqq_fund_data.py || echo "Invesco QQQ no disponible en esta ejecución"
-
       - name: Run QQQ shares snapshot
         run: python scripts/invesco_qqq_shares_snapshot.py
 

@@ -8,7 +8,7 @@ import numpy as np
 import os
 import sys
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, timedelta
 from src.data_loader import download_market_data
 from src.macro_manual_loader import load_macro_manual
 from src.stock_data_loader import download_stock_prices
@@ -268,13 +268,17 @@ def main():
             print(f"  QQQ NPORT-P no cargado: {e}")
             qqq_nport_flow_data = None
 
-        # Cargar performance QQQ para el reporte
+        # Cargar performance QQQ para el reporte solo si es fresca
         qqq_performance_data = None
         try:
-            import pandas as pd
             perf_path = Path('outputs/history/invesco_qqq_performance.csv')
             if perf_path.exists():
-                qqq_performance_data = pd.read_csv(perf_path)
+                mtime = datetime.fromtimestamp(perf_path.stat().st_mtime)
+                age = datetime.now() - mtime
+                if age <= timedelta(days=7):
+                    qqq_performance_data = pd.read_csv(perf_path)
+                else:
+                    print(f"  QQQ performance omitida: datos con {age.days} días")
         except Exception as e:
             print(f"  QQQ performance no cargada: {e}")
             qqq_performance_data = None

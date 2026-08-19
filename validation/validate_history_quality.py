@@ -103,6 +103,37 @@ for file in REQUIRED_FILES:
             if df[col].isna().any():
                 errors.append(f"{file}: NaN en {col}")
 
+# Validación de integridad QQQ SEC
+try:
+    qqq_sec_path = PROJECT_ROOT / "outputs/history/qqq_sec_primary_flow.csv"
+    if qqq_sec_path.exists():
+        df_qqq_sec = pd.read_csv(qqq_sec_path, encoding="utf-8-sig")
+        required_qqq = [
+            "shares_sold",
+            "shares_repurchased",
+            "shares_beginning",
+            "shares_end",
+            "proceeds_shares_sold",
+            "value_shares_repurchased",
+            "primary_flow_usd",
+        ]
+        missing_qqq = [c for c in required_qqq if c not in df_qqq_sec.columns]
+        if missing_qqq:
+            errors.append(f"outputs/history/qqq_sec_primary_flow.csv: faltan columnas {missing_qqq}")
+        else:
+            df_qqq_valid = df_qqq_sec.dropna(subset=required_qqq)
+            for idx, row in df_qqq_valid.iterrows():
+                net_shares = row["shares_sold"] + row["shares_repurchased"]
+                change_shares = row["shares_end"] - row["shares_beginning"]
+                if abs(net_shares - change_shares) > 0.5:
+                    errors.append(f"outputs/history/qqq_sec_primary_flow.csv: incoherencia shares fila {idx}")
+
+                flow_usd = row["proceeds_shares_sold"] + row["value_shares_repurchased"]
+                if abs(flow_usd - row["primary_flow_usd"]) > 1.0:
+                    errors.append(f"outputs/history/qqq_sec_primary_flow.csv: incoherencia USD fila {idx}")
+except Exception as exc:
+    errors.append(f"outputs/history/qqq_sec_primary_flow.csv: error en validación integridad: {exc}")
+
 # Frescura de PCR y Dark Pool
 for file, col, max_age in [
     ("outputs/history/pcr_history.csv", "date", 7),

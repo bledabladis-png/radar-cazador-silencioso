@@ -35,11 +35,33 @@ CIK = "1067839"
 CIK_PADDED = f"{int(CIK):010}"
 HEADERS = {"User-Agent": "Macro Sectorial Radar v4.3 contact@example.com"}
 
-# N-CSRS más reciente conocido: 2026-06-01
-NCSRS_URL = "https://www.sec.gov/Archives/edgar/data/1067839/000119312526250483/8deb6f921189c0e.htm"
-NCSRS_FILING_DATE = "2026-06-01"
-NCSRS_ACCESSION = "0001193125-26-250483"
-NCSRS_DOC = "8deb6f921189c0e.htm"
+def get_latest_filing_info(form_types=("N-CSRS",)):
+    """Obtiene dinámicamente el filing más reciente para los tipos solicitados."""
+    url = f"https://data.sec.gov/submissions/CIK{CIK_PADDED}.json"
+    r = requests.get(url, headers=HEADERS, timeout=60)
+    r.raise_for_status()
+    data = r.json()
+    filings = data.get("filings", {}).get("recent", {})
+
+    forms = filings.get("form", [])
+    dates = filings.get("filingDate", [])
+    accessions = filings.get("accessionNumber", [])
+    docs = filings.get("primaryDocument", [])
+
+    best = None
+    for form, date, acc, doc in zip(forms, dates, accessions, docs):
+        if form in form_types and doc.lower().endswith((".htm", ".html")):
+            if best is None or date > best["filing_date"]:
+                best = {
+                    "form": form,
+                    "filing_date": date,
+                    "accession_number": acc,
+                    "primary_document": doc,
+                    "accession_clean": acc.replace("-", ""),
+                }
+    return best
+
+# Los N-CSRS / N-30B-2 se obtienen dinámicamente desde EDGAR.
 
 
 def run_annual_extractor() -> None:
@@ -94,8 +116,18 @@ def find_label_row(table, label):
 
 def get_ncsrs_semiannual() -> dict | None:
     """Descarga y parsea el N-CSRS más reciente."""
-    print("Descargando N-CSRS semestral...")
-    r = requests.get(NCSRS_URL, headers=HEADERS, timeout=60)
+    info = get_latest_filing_info(("N-CSRS",))
+    if not info:
+        print("No se encontró N-CSRS reciente en EDGAR.")
+        return None
+
+    url = (
+        f"https://www.sec.gov/Archives/edgar/data/{CIK}/"
+        f"{info['accession_clean']}/{info['primary_document']}"
+    )
+
+    print(f"Descargando {info['form']} {info['filing_date']} ...")
+    r = requests.get(url, headers=HEADERS, timeout=60)
     r.raise_for_status()
 
     soup = BeautifulSoup(r.text, "html.parser")
@@ -135,10 +167,10 @@ def get_ncsrs_semiannual() -> dict | None:
                 return parse_number(table.iloc[row_idx, col]) if row_idx is not None else None
 
             row = {
-                "filing_date": NCSRS_FILING_DATE,
-                "accession_number": NCSRS_ACCESSION,
-                "primary_document": NCSRS_DOC,
-                "source_url": NCSRS_URL,
+                "filing_date": info["filing_date"],
+                "accession_number": info["accession_number"],
+                "primary_document": info["primary_document"],
+                "source_url": url,
                 "period_type": "SEMIANNUAL",
                 "period_end_date": f"{year_sem}-03-31",
                 "year": year_sem,

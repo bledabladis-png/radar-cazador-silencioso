@@ -661,9 +661,6 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
             label = row.get('displayLabel', 'N/A')
             lines.append(f"| {label} | {row['ytd']:.2f}% | {row['y1']:.2f}% | {row['y3']:.2f}% | {row['y5']:.2f}% | {row['y10']:.2f}% | {row['inception']:.2f}% |\n")
         lines.append("\n*Fuente: Invesco DNG API. Rendimientos anualizados oficiales.*\n\n")
-    else:
-        lines.append("## Rendimiento QQQ (Invesco)\n")
-        lines.append("*Sin datos de performance QQQ en esta ejecución.*\n\n")
 
     # =========================================================================
     # FLUJO DE PARTICIPACIONES QQQ (NPORT-P)
