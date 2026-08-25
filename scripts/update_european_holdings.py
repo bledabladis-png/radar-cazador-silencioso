@@ -1,6 +1,7 @@
 ﻿# update_european_holdings.py
 import subprocess
 import sys
+import os
 import pandas as pd
 
 def run(cmd):
@@ -9,6 +10,9 @@ def run(cmd):
     if result.returncode != 0:
         print(f"ERROR ejecutando: {cmd}")
         sys.exit(1)
+
+# Asegurar directorios de salida
+os.makedirs("outputs/holdings", exist_ok=True)
 
 print("Actualizando holdings europeos...")
 
