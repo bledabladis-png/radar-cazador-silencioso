@@ -398,7 +398,7 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
         reason = slpm_v12_data.get('state_reason', '')
         quadrant = slpm_v12_data.get('opportunity_quadrant', 'N/A')
         lines.append(f"- **Sector Lider:** {sector}\n")
-        lines.append(f"  - *Nota: El SLPM selecciona al lider combinando Tactical, Structural, LIS, Breadth y Persistence. No es simplemente el sector con mayor Structural Score.*\n")
+        lines.append(f"  - *Nota: El SLPM selecciona al lider combinando Structural, Breadth y Persistence. Tactical y LIS son métricas diagnósticas. No es simplemente el sector con mayor Structural Score.*\n")
         lines.append(f"- **Estado:** {state_v12}")
         if quadrant:
             lines.append(f" -> {quadrant}")

@@ -11,7 +11,7 @@ DIRECT_DEPENDENCIES = {
     'SOFR': ['liquidity.py', 'fls.py'],
     'WALCL': ['liquidity.py', 'fls.py'],
     'RRP': ['liquidity.py', 'fls.py'],
-    'Tactical Score': ['opportunity_map', 'slpm_v12.py'],
+    'Tactical Score': ['opportunity_map'],  # Ya no es decisorio en slpm_v12.py
     'Structural Score': ['opportunity_map', 'slpm_v12.py'],
     'Persistence': ['structural_engine.py', 'slpm_v12.py'],
     'Leader Breadth': ['structural_engine.py', 'slpm_v12.py'],
@@ -22,7 +22,7 @@ DIRECT_DEPENDENCIES = {
 # Dependencias indirectas (documentadas para conciencia del gestor)
 INDIRECT_DEPENDENCIES = {
     'Persistence → Structural Score → SLPM': 'La persistencia alimenta el Structural Score, que a su vez alimenta el SLPM.',
-    'Tactical Score → Opportunity Map + SLPM': 'El Tactical Score se usa tanto en el Opportunity Map como en el SLPM.',
+    'Tactical Score → Opportunity Map (informativo)': 'El Tactical Score se usa en el Opportunity Map. Ya no es input decisorio del SLPM.',
     'Structural Score → Opportunity Map + SLPM': 'El Structural Score se usa tanto en el Opportunity Map como en el SLPM.',
     'LIS → SLPM (corregido)': 'LIS era una metrica de intensidad/calidad. Tras detectar redundancia perfecta con Breadth (Spearman=1.0), fue excluido de la State Machine. Ahora es solo diagnostico.',
 }
