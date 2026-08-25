@@ -22,6 +22,7 @@ COVERAGE = 1.0
 components = {
     'structural': ('structural_score', NEUTRAL_STRUCTURAL),
     'breadth': ('leader_breadth', NEUTRAL_BREADTH),
+    'persistence': ('_persistence_', NEUTRAL_PERSISTENCE),
 }
 
 # Generar BASE actual
@@ -30,6 +31,7 @@ for _, row in hist.iterrows():
     state = classify_leadership_state(
         row['structural_score'],
         row['leader_breadth'],
+        NEUTRAL_PERSISTENCE,
         coverage=COVERAGE
     )['state']
     base_states.append(state)
@@ -40,10 +42,16 @@ for comp_name, (col, neutral) in components.items():
     changed_states = []
     transitions = []
     for i, (_, row) in enumerate(hist.iterrows()):
-        s = row['structural_score'] if col != 'structural_score' else neutral
-        b = row['leader_breadth'] if col != 'leader_breadth' else neutral
+        if comp_name == 'persistence':
+            s = row['structural_score']
+            b = row['leader_breadth']
+            p = neutral
+        else:
+            s = row['structural_score'] if col != 'structural_score' else neutral
+            b = row['leader_breadth'] if col != 'leader_breadth' else neutral
+            p = NEUTRAL_PERSISTENCE
 
-        ablation_state = classify_leadership_state(s, b, coverage=COVERAGE)['state']
+        ablation_state = classify_leadership_state(s, b, p, coverage=COVERAGE)['state']
         base_state = base_states[i]
         changed = base_state != ablation_state
         changed_states.append(changed)

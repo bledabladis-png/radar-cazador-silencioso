@@ -101,7 +101,7 @@ def evaluate_slpm_v12(df_market, sector_results, leader_metrics, top_sector_flow
 
     effective_breadth = breadth_v2['effective_composite']
 
-    result = classify_leadership_state(structural_score, effective_breadth, coverage=breadth_v2['coverage'])
+    result = classify_leadership_state(structural_score, effective_breadth, persistence, coverage=breadth_v2['coverage'])
     instant_state = result['state']
     instant_reason = result['reason']
     if not leader_metrics:
@@ -115,7 +115,7 @@ def evaluate_slpm_v12(df_market, sector_results, leader_metrics, top_sector_flow
     reason_code = instant_reason_code
     quadrant = get_opportunity_quadrant(state)
 
-    errors = validate_state(state, structural_score, effective_breadth)
+    errors = validate_state(state, structural_score, effective_breadth, persistence)
     if errors:
         print(f"    WARN SLPM v1.2 STATE VALIDATION FAILED para {sector_name}:")
         for e in errors:
