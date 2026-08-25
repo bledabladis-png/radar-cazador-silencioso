@@ -13,13 +13,13 @@ def run(cmd):
 print("Actualizando holdings europeos...")
 
 # 1. FEZ desde SSGA
-run("py scripts/parse_ssga_fez.py")
+run(f"{sys.executable} scripts/parse_ssga_fez.py")
 
 # 2. DAXEX e ISF.L desde BlackRock
-run("py scripts/parse_blackrock_final.py")
+run(f"{sys.executable} scripts/parse_blackrock_final.py")
 
 # 3. LYXI desde Amundi
-run("py scripts/amundi_holdings.py FR0010251744")
+run(f"{sys.executable} scripts/amundi_holdings.py FR0010251744")
 
 # 4. Fusionar en index_holdings.csv
 index_path = 'data/index_holdings.csv'
