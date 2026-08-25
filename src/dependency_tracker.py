@@ -24,7 +24,7 @@ INDIRECT_DEPENDENCIES = {
     'Persistence → Structural Score → SLPM': 'La persistencia alimenta el Structural Score, que a su vez alimenta el SLPM.',
     'Tactical Score → Opportunity Map + SLPM': 'El Tactical Score se usa tanto en el Opportunity Map como en el SLPM.',
     'Structural Score → Opportunity Map + SLPM': 'El Structural Score se usa tanto en el Opportunity Map como en el SLPM.',
-    'WLS → LIS → SLPM': 'El Wyckoff Leadership Score (stock_leader.py) selecciona lideres usando RS/Flow intra-sector. Luego el LIS (slpm_v12.py) vuelve a transformar RS y Flow con tanh. Canal de amplificacion documentado.',
+    'LIS → SLPM (corregido)': 'LIS era una metrica de intensidad/calidad. Tras detectar redundancia perfecta con Breadth (Spearman=1.0), fue excluido de la State Machine. Ahora es solo diagnostico.',
 }
 
 def audit_double_counting():
@@ -71,6 +71,19 @@ def audit_double_counting():
     
     lines.append("\n*Esta matriz es informativa. No modifica ningun calculo.*\n")
     
+
+    # Verificación dinámica de la corrección LIS/Breadth
+    try:
+        import inspect
+        from indicators.state_machine import classify_leadership_state
+        sig = inspect.signature(classify_leadership_state)
+        if 'lis' in sig.parameters:
+            lines.append("\n**Verificación SLPM:** ⚠️ LIS aún en State Machine (doble conteo activo).\n")
+        else:
+            lines.append("\n**Verificación SLPM:** ✅ LIS excluido de la State Machine. Breadth es el factor decisorio.\n")
+    except Exception:
+        lines.append("\n**Verificación SLPM:** No disponible.\n")
+
     return {
         'critical': critical,
         'high': high,

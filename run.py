@@ -762,13 +762,21 @@ def main():
 
     # 10. Anti-Double-Counting
     try:
+        import inspect
+        from indicators.state_machine import classify_leadership_state
+        sig = inspect.signature(classify_leadership_state)
+        lis_in_state_machine = 'lis' in sig.parameters
+
         dc_audit = audit_double_counting()
         critical_vars = len(dc_audit.get('critical', []))
         high_vars = len(dc_audit.get('high', []))
-        if critical_vars > 0:
-            add_check("Anti-Double-Counting", True, f"{critical_vars} criticas, {high_vars} altas")
+
+        if lis_in_state_machine:
+            add_check("Anti-Double-Counting", False, "LIS aún en State Machine")
+        elif critical_vars > 0:
+            add_check("Anti-Double-Counting", True, f"corrección LIS activa, {critical_vars} criticas, {high_vars} altas")
         else:
-            add_check("Anti-Double-Counting", True, f"sin criticas, {high_vars} compartidas")
+            add_check("Anti-Double-Counting", True, f"corrección LIS activa, sin criticas, {high_vars} compartidas")
     except Exception as e:
         add_check("Anti-Double-Counting", False, str(e))
 
