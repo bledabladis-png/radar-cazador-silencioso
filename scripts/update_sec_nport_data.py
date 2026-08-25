@@ -22,12 +22,19 @@ def download_quarter(quarter):
     url = f"{BASE_URL}/{quarter}_nport.zip"
     print(f"Descargando {url} ...")
     r = requests.get(url, headers={"User-Agent": "Macro_Sectorial contacto@example.com"}, timeout=600)
+
+    if r.status_code == 404:
+        print("No disponible aún en EDGAR.")
+        return False
+
     r.raise_for_status()
     print(f"Descargado: {len(r.content)/(1024*1024):.2f} MB")
     z = zipfile.ZipFile(BytesIO(r.content))
     for name in NEEDED_FILES:
         print(f"  Extrayendo {name} ...")
         z.extract(name, out_dir)
+
+    return True
 
 def process_quarter(quarter):
     base = Path(f"data/nport/{quarter}")
@@ -83,7 +90,10 @@ def main():
     parser.add_argument('--quarter', required=True, help='Ej. 2026q3')
     args = parser.parse_args()
     quarter = args.quarter.lower()
-    download_quarter(quarter)
+    if not download_quarter(quarter):
+        print("Trimestre no publicado. Finalizando sin error.")
+        return
+
     process_quarter(quarter)
 
 if __name__ == '__main__':
