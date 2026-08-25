@@ -293,7 +293,7 @@ def write_csv(rows: list[dict[str, Any]]) -> None:
                 "etf": row["etf"],
                 "ticker": row["ticker"] or "",
                 "name": row["name"] or "",
-                "weight": f"{float(row['weight']):.10f}" if row["weight"] is not None else "",
+                "weight": f"{float(row['weight']) * 100:.10f}" if row["weight"] is not None else "",
             })
 
     # CSV de validación
