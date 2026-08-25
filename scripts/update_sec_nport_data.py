@@ -1,4 +1,5 @@
 ﻿import argparse
+import datetime
 import requests
 import zipfile
 from pathlib import Path
@@ -85,11 +86,32 @@ def process_quarter(quarter):
     print(f"Posiciones guardadas: outputs/history/sec_nport_positions_{quarter}.csv")
     print(f"Cambios guardados: outputs/history/sec_nport_position_change_{quarter}.csv")
 
+def get_last_closed_quarter() -> str:
+    """Calcula el último trimestre cerrado según el calendario de publicación de la SEC."""
+    today = datetime.date.today()
+    year = today.year
+    month = today.month
+
+    if month in (1, 2, 3):
+        return f"{year - 1}q4"
+    if month in (4, 5, 6):
+        return f"{year}q1"
+    if month in (7, 8, 9):
+        return f"{year}q2"
+    return f"{year}q3"
+
+
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--quarter', required=True, help='Ej. 2026q3')
+    parser.add_argument(
+        '--quarter',
+        required=False,
+        help='Ej. 2026q2. Si se omite, se calcula el último trimestre cerrado.'
+    )
     args = parser.parse_args()
-    quarter = args.quarter.lower()
+    quarter = (args.quarter or get_last_closed_quarter()).lower()
+    print(f"Trimestre objetivo: {quarter}")
+
     if not download_quarter(quarter):
         print("Trimestre no publicado. Finalizando sin error.")
         return
