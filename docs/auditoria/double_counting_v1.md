@@ -63,9 +63,19 @@ Conclusión: Persistence aporta información incremental y es necesaria para dis
 
 ### 6. VIX/Credit → Financial Conditions → MTE
 
-- Evidencia no circular: ΔAUC = +0.2236
+- Evidencia no circular inicial: ΔAUC = +0.2236
 - Decisión: mantener
-- Estado: complementario, pendiente de robustez multiperíodo
+- Estado: complementario
+
+Evidencia OOS multiperíodo no circular:
+
+| Período | AUC base | AUC base+MTE | ΔAUC |
+|---------|----------|--------------|------|
+| P1 | 0.8014 | 0.8658 | +0.0643 |
+| P2 | 0.7797 | 0.8700 | +0.0903 |
+| P3 | 0.6548 | 0.8404 | +0.1856 |
+
+Conclusión: MTE aporta información incremental y consistente en los tres períodos. No es redundante.
 
 ### 7. Flow
 
