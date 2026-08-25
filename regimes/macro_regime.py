@@ -132,7 +132,8 @@ def compute_macro_score(all_signals):
             return pd.Series(0, index=df.index)
         w = {k: weights[k] for k in available}
         w_sum = sum(w.values())
-        return sum(df[k] * w[k] / w_sum for k in available)
+        # Rellenar NaN con 0 para evitar que una señal invalide todo el score
+        return sum(df[k].fillna(0) * w[k] / w_sum for k in available)
 
     critical_score = weighted_score(all_signals, ['curve', 'credit', 'volatility', 'liquidity', 'real_liquidity'], CRITICAL_WEIGHTS)
     important_score = weighted_score(all_signals, ['dollar', 'commodities', 'breadth'], IMPORTANT_WEIGHTS)
@@ -147,7 +148,7 @@ def compute_macro_score(all_signals):
     # Mezcla con fundamentales si existen
     fundamental_sigs = [c for c in all_signals.columns if c in ['inflation', 'employment', 'activity']]
     if fundamental_sigs:
-        fund_mean = all_signals[fundamental_sigs].mean(axis=1)
+        fund_mean = all_signals[fundamental_sigs].mean(axis=1).fillna(0)
         macro_score = 0.5 * macro_score + 0.5 * fund_mean
 
     macro_score = macro_score.rolling(2, min_periods=1).mean()
