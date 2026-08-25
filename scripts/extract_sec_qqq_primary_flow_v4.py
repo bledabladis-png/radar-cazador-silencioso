@@ -33,6 +33,26 @@ CIK_PADDED = f"{int(CIK):010}"
 BASE_SUBMISSIONS = f"https://data.sec.gov/submissions/CIK{CIK_PADDED}.json"
 HEADERS = {"User-Agent": "Macro Sectorial Radar v4.3 contact@example.com"}
 
+def _get_with_retry(url, retries=3, backoff=2):
+    """GET con reintentos para 429, 500 y 503."""
+    last_exc = None
+    for attempt in range(retries):
+        try:
+            resp = requests.get(url, headers=HEADERS, timeout=60)
+            if resp.status_code in (429, 500, 503):
+                raise requests.exceptions.HTTPError(
+                    f"{resp.status_code} {resp.reason}",
+                    response=resp
+                )
+            resp.raise_for_status()
+            return resp
+        except requests.exceptions.RequestException as exc:
+            last_exc = exc
+            print(f"  Reintento {attempt+1}/{retries} para {url} ({exc})")
+            time.sleep(backoff * (attempt + 1))
+    raise last_exc
+
+
 OUTPUT = Path("data/invesco/QQQ/sec_primary_flow_history.csv")
 
 LABELS = [
@@ -200,7 +220,7 @@ def extract_records(table: pd.DataFrame, filing_date: str, accession: str, doc: 
 
 def main() -> None:
     print("Consultando índice EDGAR...")
-    r = requests.get(BASE_SUBMISSIONS, headers=HEADERS, timeout=60)
+    r = _get_with_retry(BASE_SUBMISSIONS)
     r.raise_for_status()
     data = r.json()
 
@@ -227,7 +247,7 @@ def main() -> None:
 
         try:
             print(f"Descargando {filing_date} {accession} ...", end=" ", flush=True)
-            resp = requests.get(url, headers=HEADERS, timeout=60)
+            resp = _get_with_retry(url)
             if resp.status_code != 200:
                 print(f"HTTP {resp.status_code}")
                 continue
