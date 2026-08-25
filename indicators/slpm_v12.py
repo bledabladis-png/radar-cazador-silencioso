@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 """
 slpm_v12.py -- SLPM v1.2 (con ajuste de cobertura y documentacion)
 """
@@ -11,38 +11,24 @@ from config.settings import SLPM_EXPECTED_LEADERS
 from indicators.state_machine import classify_leadership_state, get_opportunity_quadrant, validate_state
 from indicators.state_transition import confirm_transition
 
-# ======================================================================
-# ORIENTACION DE SCORES
-# ======================================================================
-# Tactical Score: positivo (+) = fortaleza tactica, negativo (-) = debilidad tactica
-# Structural Score: positivo (+) = fortaleza estructural, negativo (-) = debilidad estructural
-# LIS: positivo (+) = lideres con buena salud individual, negativo (-) = lideres deteriorados
-# Breadth: 0-1 = proporcion de lideres que cumplen condiciones
-# Persistence: 0-1 = proporcion de semanas con senhal positiva
-# Credit Stress Score: positivo (+) = MAYOR estres crediticio, negativo (-) = MENOR estres
-# NOTA DE AUDITORIA (Cap4): El SLPM combina señales de distinto horizonte temporal:
-# - Tactical Score: 5-20 días (corto plazo)
-# - Structural Score: 63-252 días (largo plazo)
-# - Persistence: 12 observaciones de RS20 diario (corto plazo)
-# - Leader Breadth / LIS: calculados sobre métricas de 20-60 días
-# Esta mezcla es intencionada: captura tanto momentum táctico como fortaleza estructural.
-
-# ======================================================================
+# LIS: métrica de diagnóstico, no señal decisoria.
+# Breadth: 0-1 = proporcion de lideres que cumplen condiciones.
+# Persistence: 0-1 = proporcion de semanas con senhal positiva.
 
 def compute_leader_breadth_v2(leader_metrics, expected_leaders=SLPM_EXPECTED_LEADERS):
     if not leader_metrics:
         return {'rs_breadth': 0.0, 'momentum_breadth': 0.0, 'flow_breadth': 0.0, 'wyckoff_breadth': 0.0, 'composite': 0.5, 'n_used': 0, 'coverage': 0.0, 'effective_composite': 0.5, 'expected_leaders': expected_leaders}
     n = len(leader_metrics)
     coverage = min(n / expected_leaders, 1.0) if expected_leaders > 0 else 0
-    
+
     rs_positive = sum(1 for m in leader_metrics if m and (m.get('rs', 1.0) or 1.0) > 1.0) / n
     momentum_positive = sum(1 for m in leader_metrics if m and (m.get('rs_momentum', m.get('rs_mom_20', 0)) or 0) > 0) / n
     flow_positive = sum(1 for m in leader_metrics if m and (m.get('flow_proxy_z', 0) or 0) > 0) / n
     wyckoff_favorable = sum(1 for m in leader_metrics if m and m.get('wyckoff_phase', '') in ('ACCUMULATION', 'MARKUP')) / n
-    
+
     composite = SLPM_WEIGHTS["leader_breadth"]["rs"] * rs_positive + SLPM_WEIGHTS["leader_breadth"]["momentum"] * momentum_positive + SLPM_WEIGHTS["leader_breadth"]["flow"] * flow_positive + SLPM_WEIGHTS["leader_breadth"]["wyckoff"] * wyckoff_favorable
     effective_composite = composite * coverage if coverage < 0.5 else composite
-    
+
     return {
         'rs_breadth': rs_positive,
         'momentum_breadth': momentum_positive,
@@ -115,7 +101,7 @@ def evaluate_slpm_v12(df_market, sector_results, leader_metrics, top_sector_flow
 
     effective_breadth = breadth_v2['effective_composite']
 
-    result = classify_leadership_state(tactical_score, structural_score, integrity['lis'], effective_breadth, persistence, coverage=breadth_v2['coverage'])
+    result = classify_leadership_state(tactical_score, structural_score, effective_breadth, persistence, coverage=breadth_v2['coverage'])
     instant_state = result['state']
     instant_reason = result['reason']
     if not leader_metrics:
@@ -123,14 +109,13 @@ def evaluate_slpm_v12(df_market, sector_results, leader_metrics, top_sector_flow
         instant_reason += f" El sector lider ({sector_name}) esta en fase {sector_phase}, lo que impide calcular metricas de lideres."
     instant_reason_code = result.get('reason_code', 'UNKNOWN')
 
-    # Aplicar histéresis temporal
     transition_data = confirm_transition(instant_state)
     state = transition_data['confirmed_state']
     reason = instant_reason
     reason_code = instant_reason_code
     quadrant = get_opportunity_quadrant(state)
 
-    errors = validate_state(state, tactical_score, structural_score, integrity['lis'], effective_breadth, persistence)
+    errors = validate_state(state, tactical_score, structural_score, effective_breadth, persistence)
     if errors:
         print(f"    WARN SLPM v1.2 STATE VALIDATION FAILED para {sector_name}:")
         for e in errors:
@@ -154,7 +139,7 @@ def evaluate_slpm_v12(df_market, sector_results, leader_metrics, top_sector_flow
         'top_sector_flow': top_sector_flow,
         'input_scores': {
             'tactical': tactical_score, 'structural': structural_score,
-            'lis': integrity['lis'], 'breadth': breadth_v2['composite'], 
+            'lis': integrity['lis'], 'breadth': breadth_v2['composite'],
             'effective_breadth': effective_breadth, 'persistence': persistence
         },
         'validation_errors': errors,
@@ -165,8 +150,3 @@ def evaluate_slpm_v12(df_market, sector_results, leader_metrics, top_sector_flow
             len(leader_metrics) >= 3
         )
     }
-
-
-
-
-
