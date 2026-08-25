@@ -45,6 +45,16 @@ Double Counting — Correcciones estructurales v1 completadas; auditoría de dep
 - Decisión: mantener
 - Estado: legítimo
 
+Evidencia OOS multiperíodo:
+
+| Período | ΔAUC | Cambio de estado |
+|---------|------|------------------|
+| P1 | +0.0407 | 18.2% |
+| P2 | +0.0544 | 16.4% |
+| P3 | +0.0080 | 20.8% |
+
+Conclusión: Persistence aporta información incremental y es necesaria para distinguir CONFIRMED de EMERGING.
+
 ### 5. RS → Structural
 
 - Evidencia: ΔAUC = +0.0527
