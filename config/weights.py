@@ -94,9 +94,8 @@ TACTICAL_WEIGHTS = {
 # ============================================================
 
 STRUCTURAL_WEIGHTS = {
-    'rs_structural': 0.35,
-    'leader_breadth': 0.25,
-    'flow_structure': 0.20,
+    'rs_structural': 0.50,
+    'flow_structure': 0.30,
     'persistence': 0.20,
 }
 

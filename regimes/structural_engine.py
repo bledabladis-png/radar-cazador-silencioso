@@ -11,8 +11,8 @@ from config.weights import STRUCTURAL_WEIGHTS
 
 def compute_structural_score(df_market, sector_etf, leader_breadth=0.5, flow_structure=0.0, persistence=0.5, benchmark='^GSPC'):
     """Calcula el Structural Score de largo plazo.
-    Pesos: RS multi-ventana 63/126/252d (35%), Leader Breadth (25%),
-    Flow Structure (20%), Persistence (20%). Resultado acotado a [-1, +1]."""
+    Pesos: RS multi-ventana 63/126/252d (50%), Flow Structure (30%),
+    Persistence (20%). Resultado acotado a [-1, +1]."""
     try:
         close_sector = get_col(df_market, sector_etf, 'Close')
         close_bench = get_col(df_market, benchmark, 'Close')
@@ -35,13 +35,11 @@ def compute_structural_score(df_market, sector_etf, leader_breadth=0.5, flow_str
     rs_structural = np.mean([v for v in rs_values if pd.notna(v)]) if rs_values else 0.0
     rs_norm = np.tanh(rs_structural * 2) if pd.notna(rs_structural) else 0.0
 
-    lb_norm = (leader_breadth - 0.5) * 2
     flow_norm = np.tanh(flow_structure)
     pers_norm = (persistence - 0.5) * 2
 
     score = (
         w['rs_structural'] * rs_norm +
-        w['leader_breadth'] * lb_norm +
         w['flow_structure'] * flow_norm +
         w['persistence'] * pers_norm
     )

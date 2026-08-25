@@ -14,7 +14,7 @@ DIRECT_DEPENDENCIES = {
     'Tactical Score': ['opportunity_map'],  # Ya no es decisorio en slpm_v12.py
     'Structural Score': ['opportunity_map', 'slpm_v12.py'],
     'Persistence': ['structural_engine.py', 'slpm_v12.py'],
-    'Leader Breadth': ['structural_engine.py', 'slpm_v12.py'],
+    'Leader Breadth': ['slpm_v12.py'],  # ya no es input del Structural Score
     'Relative Strength (RS)': ['stock_leader.py', 'slpm_v12.py', 'tactical_engine.py', 'structural_engine.py'],
     'Flow Proxy': ['stock_leader.py', 'slpm_v12.py', 'tactical_engine.py', 'structural_engine.py'],
 }
