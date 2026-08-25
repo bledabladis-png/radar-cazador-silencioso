@@ -1,0 +1,5 @@
+date,metric,value,status
+2026-08-26T00:53:40,rs_mom_vs_flow,0.0541,OK
+2026-08-26T00:53:40,rs_mom_vs_wls,0.3882,OK
+2026-08-26T00:53:40,stability_vs_wyckoff,0.7704,OK
+2026-08-26T00:53:40,structural_vs_breadth,0.7983,OK

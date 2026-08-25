@@ -122,6 +122,10 @@ jobs:
       - name: Validate history quality
         run: python validation/validate_history_quality.py
 
+      - name: Monitor double counting
+        run: python validation/monitor_double_counting.py || echo "Monitoreo double counting no disponible"
+
+
       - name: Commit and push hist/state
         run: |
           git config user.name "github-actions[bot]"
