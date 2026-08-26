@@ -7,8 +7,13 @@ Estos tests garantizan que las correcciones estructurales v1 no se reviertan.
 Se ejecutan automáticamente en CI (pytest).
 """
 
+import sys
+import os
 import inspect
 import pytest
+
+# Asegurar que la raíz del proyecto esté en sys.path
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from config.weights import STRUCTURAL_WEIGHTS
 from indicators.state_machine import classify_leadership_state, validate_state
