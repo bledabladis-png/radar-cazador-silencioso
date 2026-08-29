@@ -14,3 +14,4 @@ matplotlib==3.10.8
 python-dotenv==1.2.2
 tiingo==0.16.1
 pytest==9.1.1
+pyflakes==3.4.0

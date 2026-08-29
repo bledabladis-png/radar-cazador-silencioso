@@ -41,6 +41,11 @@ jobs:
 
       - name: Run tests
         run: pytest tests/ -v
+      - name: Run pyflakes (warnings only)
+        run: |
+          python -m pyflakes . > outputs/audit/pyflakes_report.txt 2>&1 || true
+          echo "Pyflakes report generated."
+          cat outputs/audit/pyflakes_report.txt
 
       - name: Calculate QQQ returns from Yahoo
         run: python scripts/qqq_returns_yahoo.py
@@ -61,7 +66,6 @@ jobs:
 
       - name: Run QQQ shares snapshot
         continue-on-error: true
-        run: python scripts/invesco_qqq_shares_snapshot.py
 
       - name: QQQ SEC vs NPORT-P cross validation
         run: python validation/qqq_sec_nport_cross_validation.py
@@ -104,6 +108,7 @@ jobs:
             outputs/state/mte_state.json
             outputs/state/liquidity_state.json
             outputs/audit/cross_provider_validation.csv
+            outputs/audit/pyflakes_report.txt
           retention-days: 7
           if-no-files-found: ignore
 
