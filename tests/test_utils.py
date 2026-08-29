@@ -33,7 +33,6 @@ def test_get_col_multindex():
     assert get_col(df, 'A', 'Close').tolist() == [1,2,3]
 
 def test_clean_oil_prices():
-    cols = pd.MultiIndex.from_tuples([('Close', 'CL=F'), ('Close', 'BZ=F')])
     df = pd.DataFrame({('Close', 'CL=F'): [-1.0, 50.0], ('Close', 'BZ=F'): [70.0, 75.0]}, index=[0,1])
     df_clean = clean_oil_prices(df)
     assert (df_clean[('Close', 'CL=F')] > 0).all()

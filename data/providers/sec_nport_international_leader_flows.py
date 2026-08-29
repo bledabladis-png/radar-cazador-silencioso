@@ -20,7 +20,6 @@ def main():
         ticker_col = 'ticker'
     else:
         change_fez['ticker'] = ''
-        ticker_col = 'ticker'
 
     # Seleccionar columnas finales, incluyendo ticker si está disponible
     cols = ['REPORT_DATE','REGISTRANT_NAME','SERIES_NAME','ISSUER_NAME',

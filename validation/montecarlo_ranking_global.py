@@ -8,8 +8,6 @@ from data.providers.router import DataRouter
 from config.tickers import MARKET_TICKERS
 from regimes.tactical_engine import compute_tactical_score
 from regimes.structural_engine import compute_structural_score
-from indicators.persistence import compute_persistence
-from indicators.wyckoff import wyckoff_structure_core
 
 router = DataRouter()
 sectors = MARKET_TICKERS['sectors']
@@ -23,7 +21,7 @@ for s in sectors:
     try:
         tactical_scores[s] = compute_tactical_score(data, s)
         structural_scores[s] = compute_structural_score(data, s)
-    except Exception as e:
+    except Exception:
         tactical_scores[s] = 0.0
         structural_scores[s] = 0.0
 

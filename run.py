@@ -779,7 +779,6 @@ def main():
     except Exception as e:
         add_check("Anti-Double-Counting", False, str(e))
 
-    validation_warnings = validation_checks
 
     if validation_errors:
         print(f"    VALIDATION GATE: {len(validation_errors)} errores, {len(validation_checks)} comprobaciones")

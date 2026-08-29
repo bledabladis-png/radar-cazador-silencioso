@@ -36,7 +36,7 @@ for period_name, (start, end) in periods.items():
             result = wyckoff_score(period_data, s)
             score_series = result[0] if isinstance(result, tuple) else result
             scores[s] = score_series.dropna().iloc[-1] if not score_series.dropna().empty else np.nan
-        except Exception as e:
+        except Exception:
             scores[s] = np.nan
     original = pd.Series(scores).dropna()
     if len(original) < 5:
