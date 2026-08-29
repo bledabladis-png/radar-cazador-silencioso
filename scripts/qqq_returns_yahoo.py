@@ -16,6 +16,7 @@ from pathlib import Path
 
 import pandas as pd
 import yfinance as yf
+from datetime import datetime
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(PROJECT_ROOT))
@@ -69,6 +70,7 @@ def calculate_returns(prices: pd.Series) -> dict:
         "label": "marketPrice",
         "displayLabel": "QQQ (Yahoo Finance)",
         "effectiveDate": latest_date.strftime("%Y-%m-%d"),
+        "as_of_date": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         "performancePeriod": "daily",
     }
 
@@ -76,7 +78,7 @@ def save_csv(data: dict) -> None:
     OUTPUT.parent.mkdir(parents=True, exist_ok=True)
     df = pd.DataFrame([data])
     # Reordenar para que coincida con el formato esperado
-    df = df[["ytd", "y1", "y3", "y5", "y10", "inception", "label", "displayLabel", "effectiveDate", "performancePeriod"]]
+    df = df[["ytd", "y1", "y3", "y5", "y10", "inception", "label", "displayLabel", "effectiveDate", "as_of_date", "performancePeriod"]]
     df.to_csv(OUTPUT, index=False, encoding="utf-8-sig")
 
 def main() -> None:

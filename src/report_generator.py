@@ -699,6 +699,14 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
     if qqq_nport_flow_data is not None and not qqq_nport_flow_data.empty:
         lines.append("## Flujo de Participaciones QQQ (NPORT-P)\n")
         lines.append("*Fuente: SEC NPORT-P Item B.6. Frecuencia trimestral.*\n")
+        try:
+            report_date_str = str(qqq_nport_flow_data.iloc[0].get('report_date', 'N/A'))
+            if report_date_str != 'N/A' and len(report_date_str) >= 7:
+                year_month = pd.Timestamp(report_date_str)
+                quarter = (year_month.month - 1) // 3 + 1
+                lines.append(f"*Trimestre: Q{quarter} {year_month.year}*\n")
+        except Exception:
+            pass
         lines.append("| Mes | Ventas (M$) | Redenciones (M$) | Flujo Neto (M$) |\n")
         lines.append("|-----|-------------|------------------|-----------------|\n")
         for _, row in qqq_nport_flow_data.iterrows():
@@ -829,6 +837,7 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
     # =========================================================================
     if darkpool_data:
         lines.append("## Actividad en ATS - Dark Pools (FINRA v1.0)\n")
+        lines.append("*Nota: FINRA publica datos de ATS con retraso regulatorio de 2 a 4 semanas. Los datos pueden estar desfasados por diseño.*\n")
         week = darkpool_data.get('week', 'N/A')
         if week != 'N/A':
             try:
@@ -866,7 +875,6 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
                 lines.append(f"| {row['ticker']} | {row['dark_pool_pct']:.2f}% | {row['ats_volume']:,.0f} | {row['total_volume']:,.0f} |\n")
             lines.append("\n*Nota: Un alto % de volumen en ATS NO implica acumulación institucional. Las categorias reflejan el nivel de actividad ATS relativa a su historial, no la direccion del flujo institucional.*\n")
         lines.append("\n*Fuente: FINRA ATS Transparency Data.*\n\n")
-        lines.append("*Nota: FINRA publica datos de ATS con retraso regulatorio de 2 a 4 semanas. La frescura se clasifica con umbrales amplios: CURRENT ≤30 días, RECENT ≤45 días, STALE ≤60 días, ARCHIVAL >60 días.*\n\n")
 
     # =========================================================================
     # INFERENCIA TRANSVERSAL (CORREGIDA)
