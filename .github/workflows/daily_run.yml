@@ -45,6 +45,10 @@ jobs:
       - name: Calculate QQQ returns from Yahoo
         run: python scripts/qqq_returns_yahoo.py
 
+      - name: Check index_holdings duplicates
+        run: |
+          python -c "import pandas as pd; df=pd.read_csv('data/index_holdings.csv'); dups=df.duplicated(subset=['etf','ticker']).sum(); print(f'Duplicados: {dups}'); import sys; sys.exit(1 if dups else 0)"
+
       - name: Run Macro Sectorial
         env:
           POLYGON_API_KEY: ${{ secrets.POLYGON_API_KEY }}

@@ -278,6 +278,8 @@ def main():
                     qqq_performance_data = pd.read_csv(perf_path)
                 else:
                     print(f"  QQQ returns Yahoo omitidos: datos con {age.days} días")
+            else:
+                print("  ⚠️ QQQ returns Yahoo no disponibles: no se encontró outputs/history/qqq_returns_yahoo.csv. La sección de rendimiento QQQ se omitirá.")
         except Exception as e:
             print(f"  QQQ returns Yahoo no cargados: {e}")
             qqq_performance_data = None
