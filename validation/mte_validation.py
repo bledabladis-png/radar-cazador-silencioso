@@ -8,17 +8,15 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import pandas as pd
 import numpy as np
-from scipy.stats import spearmanr, kendalltau, ks_2samp
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
 from statsmodels.tsa.stattools import adfuller
-from statsmodels.stats.outliers_influence import variance_inflation_factor
 from sklearn.feature_selection import mutual_info_regression
 from src.utils import get_col
 from indicators.mte import (
-    sector_rotation_score, safe_haven_score, credit_stress_score,
-    inflation_pressure_score, compute_msi, compute_ipi, classify_mte,
-    NORMAL_TRANSITIONS, EXCEPTION_TRANSITIONS, validate_transition,
+    sector_rotation_score, safe_haven_score,
+    inflation_pressure_score, compute_msi, compute_ipi,
+    NORMAL_TRANSITIONS, EXCEPTION_TRANSITIONS,
     score_scenarios, SCENARIO_WEIGHTS
 )
 import copy
@@ -343,11 +341,11 @@ if len(df) > 20:
     mi = mutual_info_regression(X_mi, y_mi, random_state=42)[0]
     print(f"  MI(SRS, breadth_defensivo) = {mi:.4f}")
     if mi > 0.6:
-        print(f"  ⚠️ Posible redundancia (MI > 0.6)")
+        print("  ⚠️ Posible redundancia (MI > 0.6)")
     else:
-        print(f"  ✓ Breadth defensivo aporta información complementaria")
+        print("  ✓ Breadth defensivo aporta información complementaria")
 else:
-    print(f"  Datos insuficientes")
+    print("  Datos insuficientes")
 
 # ============================================================
 # VEREDICTO

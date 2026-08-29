@@ -2,7 +2,6 @@
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import pandas as pd
-import numpy as np
 import yfinance as yf
 from src.utils import get_col
 from config.tickers import MARKET_TICKERS
@@ -45,7 +44,7 @@ for ticker in tickers:
 
 duplicates = df.index.duplicated().sum()
 print(f"Fechas duplicadas: {duplicates}")
-print(f"Tickers con problemas:")
+print("Tickers con problemas:")
 if issues:
     for i in issues:
         print(i)
@@ -53,6 +52,6 @@ else:
     print("  Ningún ticker presenta problemas significativos.")
 
 # Estadísticas globales
-print(f"\nResumen:")
+print("\nResumen:")
 print(f"  Tickers válidos: {len(tickers) - len(issues)} de {len(tickers)}")
 print(f"  Cobertura temporal: {df.index[0].date()} a {df.index[-1].date()}")

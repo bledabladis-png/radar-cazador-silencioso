@@ -9,7 +9,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import pandas as pd
 import numpy as np
-from scipy.stats import entropy, f_oneway, binomtest
+from scipy.stats import entropy, f_oneway
 from scipy.stats import ks_2samp, shapiro, levene
 from sklearn.feature_selection import mutual_info_classif
 from sklearn.metrics import calinski_harabasz_score
@@ -412,7 +412,7 @@ try:
     stress_mean = fwd_stats.loc[fwd_stats.index.isin(stress), 'mean'].mean() if any(r in fwd_stats.index for r in stress) else np.nan
     
     if pd.notna(exp_mean) and pd.notna(stress_mean):
-        print(f"\n  7.2 Orden económico:")
+        print("\n  7.2 Orden económico:")
         print(f"    Retorno medio regímenes expansivos: {exp_mean*100:.2f}%")
         print(f"    Retorno medio regímenes de estrés: {stress_mean*100:.2f}%")
         fwd_ok = exp_mean > stress_mean

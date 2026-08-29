@@ -47,7 +47,7 @@ for i, date in enumerate(eval_dates):
                 'active_tickers': result['active_tickers'],
                 'total_tickers': result['total_tickers'],
             })
-    except Exception as e:
+    except Exception:
         pass
 
 df = pd.DataFrame(rows)
@@ -206,15 +206,15 @@ n_semanas = len(df)
 checks = [
     f"✓ Cobertura: {df['active_tickers'].iloc[-1]} tickers activos",
     f"✓ Histórico: {n_semanas} semanas ({df['date'].iloc[0].date()} a {df['date'].iloc[-1].date()})",
-    f"✓ Sin NaN/Inf en indicadores principales",
-    f"✓ Bootstrap estable",
+    "✓ Sin NaN/Inf en indicadores principales",
+    "✓ Bootstrap estable",
 ]
 
 if n_semanas >= 400:
-    checks.append(f"✓ Histórico suficiente para validación (≥400 semanas)")
-    checks.append(f"✓ Fechas clave verificadas sobre datos reales")
-    checks.append(f"✓ Correlación con MTE evaluada")
-    checks.append(f"✓ A/D y NH/NL independientes de SRS/SHS/IPS")
+    checks.append("✓ Histórico suficiente para validación (≥400 semanas)")
+    checks.append("✓ Fechas clave verificadas sobre datos reales")
+    checks.append("✓ Correlación con MTE evaluada")
+    checks.append("✓ A/D y NH/NL independientes de SRS/SHS/IPS")
     checks.append("VEREDICTO: ✓✓ MÓDULO DE AMPLITUD VALIDADO (NIVEL 2)")
 elif n_semanas >= 100:
     checks.append(f"⚠️ Histórico limitado ({n_semanas} semanas). Validación preliminar.")

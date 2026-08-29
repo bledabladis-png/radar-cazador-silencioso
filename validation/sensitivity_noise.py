@@ -60,7 +60,7 @@ if sigs is not None:
     scores = np.array(scores)
     
     rho, _ = spearmanr(np.full(n_sim, original_score), scores)
-    print(f"\n=== SENSIBILIDAD DE PESOS CRÍTICOS ===")
+    print("\n=== SENSIBILIDAD DE PESOS CRÍTICOS ===")
     print(f"Señales usadas: {available_keys}")
     print(f"Score original: {original_score:.4f}")
     print(f"Score medio tras ruido: {scores.mean():.4f}")

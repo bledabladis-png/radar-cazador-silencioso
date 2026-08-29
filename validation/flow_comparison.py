@@ -106,7 +106,7 @@ if results:
         f.write('|--------|-----------------|------------|-----------|------------|-----------|---|\n')
         for _, row in df_res.iterrows():
             f.write(f"| {row['sector']} | {row['corr_simpl_full']:+.3f} | {row['ic20_simpl']:+.3f} | {row['ic20_full']:+.3f} | {row['ic60_simpl']:+.3f} | {row['ic60_full']:+.3f} | {row['n']} |\n")
-        f.write(f"\n## Promedios\n\n")
+        f.write("\n## Promedios\n\n")
         f.write(f"- Correlacion simplificado vs completo: **{avg['corr_simpl_full']:+.3f}**\n")
         f.write(f"- IC20 simplificado: {avg['ic20_simpl']:+.3f}, IC20 completo: {avg['ic20_full']:+.3f}\n")
         f.write(f"- IC60 simplificado: {avg['ic60_simpl']:+.3f}, IC60 completo: {avg['ic60_full']:+.3f}\n")

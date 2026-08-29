@@ -1,4 +1,5 @@
 ﻿import pandas as pd
+import pandas_datareader.data as web
 from .base import MarketDataProvider
 
 FRED_SERIES = {
@@ -27,13 +28,11 @@ class FredProvider(MarketDataProvider):
 
     def is_available(self) -> bool:
         try:
-            import pandas_datareader.data as web
             return True
         except:
             return False
 
     def _download_series(self, series_id: str, start="2000-01-01", index=None) -> pd.Series:
-        import pandas_datareader.data as web
         try:
             data = web.DataReader(series_id, "fred", start=start)
             s = data.iloc[:, 0].sort_index()

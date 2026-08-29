@@ -71,7 +71,7 @@ print("\nAblacion de la State Machine actual (BASE vs variante):\n")
 for r in results:
     print(f"  Sin {r['component']:12s}: {r['change_rate']:.1%} ({r['changes']}/{r['total']})")
     if r['dominant_transitions']:
-        print(f"    Transiciones dominantes:")
+        print("    Transiciones dominantes:")
         for tr, cnt in r['dominant_transitions'].items():
             print(f"      {tr[0]} -> {tr[1]}  ({cnt})")
     print()

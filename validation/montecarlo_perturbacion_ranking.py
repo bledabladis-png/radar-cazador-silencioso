@@ -19,7 +19,7 @@ for _ in range(n_sims):
         taus.append(tau)
 
 print("Monte Carlo de perturbacion del ranking global (5000 simulaciones):")
-print(f"  Ruido: N(0, 0.02)")
+print("  Ruido: N(0, 0.02)")
 print(f"  Kendall Tau medio: {np.mean(taus):.4f}")
 print(f"  Kendall Tau minimo: {np.min(taus):.4f}")
 print(f"  Percentil 5: {np.percentile(taus, 5):.4f}")

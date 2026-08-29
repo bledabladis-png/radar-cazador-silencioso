@@ -77,7 +77,7 @@ def download_market_data():
         except Exception as e:
             print(f"Error en lote {batch}: {e}")
             try:
-                backup_data = backup.get_prices(batch, period=period)
+                backup_data = backup.get_prices(batch, period="10y")
                 if backup_data is not None and not backup_data.empty:
                     all_data.append(backup_data)
                     print(f"  Respaldo obtuvo datos para {batch}")
