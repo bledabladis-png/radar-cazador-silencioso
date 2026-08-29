@@ -18,6 +18,18 @@ def _classify_freshness(age_days, max_current=3, max_recent=7, max_stale=14):
         return 'STALE'
     return 'ARCHIVAL'
 
+def _classify_finra_freshness(age_days):
+    """Clasificación de frescura para FINRA Dark Pools.
+    Retraso regulatorio: 2-4 semanas (14-30 días). Umbrales amplios."""
+    if age_days <= 30:
+        return 'CURRENT'
+    elif age_days <= 45:
+        return 'RECENT'
+    elif age_days <= 60:
+        return 'STALE'
+    return 'ARCHIVAL'
+
+
 def _generate_coverage_table(pcr_data, darkpool_data, sector_results):
     lines = []
     lines.append("### Cobertura de Datos\n")
@@ -144,7 +156,7 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
             try:
                 d = pd.Timestamp(week)
                 age = (now - d).days
-                finra_status = _classify_freshness(age, 7, 14, 21)
+                finra_status = _classify_finra_freshness(age)
                 finra_conf = 'Alta' if finra_status in ('CURRENT', 'RECENT') else 'Baja'
                 lines.append(f"| FINRA (Dark Pools) | {d.strftime('%Y-%m-%d')} | {age} dias | {finra_status} | {finra_conf} |\n")
             except:
@@ -164,7 +176,7 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
             if last_fred != 'N/A':
                 d = pd.Timestamp(last_fred)
                 age = (now - d).days
-                fred_status = _classify_freshness(age, 7, 14, 21)
+                fred_status = _classify_finra_freshness(age)
                 fred_conf = 'Alta' if fred_status in ('CURRENT', 'RECENT') else 'Baja'
                 lines.append(f"| FRED (Macro) | {d.strftime('%Y-%m-%d')} | {age} dias | {fred_status} | {fred_conf} |\n")
             else:
@@ -822,8 +834,8 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
             try:
                 d = pd.Timestamp(week)
                 age = (datetime.now() - d).days
-                freshness = _classify_freshness(age, 7, 14, 21)
-                if freshness in ('STALE', 'ARCHIVAL'):
+                freshness = _classify_finra_freshness(age)
+                if freshness == 'ARCHIVAL':
                     lines.append(f"**DATOS OBSOLETOS:** Ultimo dato con {age} dias de antiguedad. No se usa para clasificacion actual. Contexto historico solamente.\n\n")
             except:
                 pass
@@ -854,6 +866,7 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
                 lines.append(f"| {row['ticker']} | {row['dark_pool_pct']:.2f}% | {row['ats_volume']:,.0f} | {row['total_volume']:,.0f} |\n")
             lines.append("\n*Nota: Un alto % de volumen en ATS NO implica acumulación institucional. Las categorias reflejan el nivel de actividad ATS relativa a su historial, no la direccion del flujo institucional.*\n")
         lines.append("\n*Fuente: FINRA ATS Transparency Data.*\n\n")
+        lines.append("*Nota: FINRA publica datos de ATS con retraso regulatorio de 2 a 4 semanas. La frescura se clasifica con umbrales amplios: CURRENT ≤30 días, RECENT ≤45 días, STALE ≤60 días, ARCHIVAL >60 días.*\n\n")
 
     # =========================================================================
     # INFERENCIA TRANSVERSAL (CORREGIDA)
