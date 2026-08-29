@@ -39,10 +39,8 @@ Los outliers únicamente afectan a la señal estadística.
 from __future__ import annotations
 
 import re
-import time
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Optional
 
 import pandas as pd
 import requests

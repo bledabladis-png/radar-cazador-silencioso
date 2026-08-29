@@ -3,8 +3,6 @@
 persistence.py -- Persistence Engine v1.0
 Calcula la persistencia de señales en ventanas semanales.
 """
-import pandas as pd
-import numpy as np
 from config.settings import PERSISTENCE_LOOKBACK
 
 def compute_persistence(series, threshold=0.0, lookback=PERSISTENCE_LOOKBACK):

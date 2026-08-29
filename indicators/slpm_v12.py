@@ -6,7 +6,6 @@ import pandas as pd
 import numpy as np
 from config.tickers import SECTOR_NAMES
 from config.weights import SLPM_WEIGHTS
-from config import settings
 from config.settings import SLPM_EXPECTED_LEADERS
 from indicators.state_machine import classify_leadership_state, get_opportunity_quadrant, validate_state
 from indicators.state_transition import confirm_transition

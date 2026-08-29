@@ -5,7 +5,6 @@ Calcula ETF Primary Flow = ΔSharesOutstanding × NAV.
 """
 import requests
 import pandas as pd
-import numpy as np
 import json
 from pathlib import Path
 from datetime import datetime, timedelta

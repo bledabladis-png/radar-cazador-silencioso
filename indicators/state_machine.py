@@ -4,7 +4,6 @@ state_machine.py -- State Machine centralizada para SLPM v1.2
 Unica fuente de verdad para la clasificacion de liderazgo.
 LIS queda excluido de la decision: Breadth es el unico factor de lideres.
 """
-import numpy as np
 
 THRESHOLDS = {
     'structural_min_confirmed': 0.20,

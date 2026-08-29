@@ -3,7 +3,6 @@
 shock_sensitivity.py -- Shock Sensitivity v1.1
 """
 import pandas as pd
-import numpy as np
 from src.utils import get_col
 
 def compute_commodity_market_correlation(df_market, sector_etf, benchmark='^GSPC', commodity='^SPGSCI', window=126):

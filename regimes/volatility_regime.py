@@ -1,5 +1,4 @@
 ﻿import pandas as pd
-import numpy as np
 from indicators.volatility import volatility_regime
 
 def compute_volatility_regime(returns):

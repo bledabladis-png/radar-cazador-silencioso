@@ -3,8 +3,6 @@
 breadth_core.py -- Funciones comunes de amplitud (NH/NL, cobertura, avances/descensos).
 Centraliza la logica compartida entre breadth.py y breadth_equity.py.
 """
-import pandas as pd
-import numpy as np
 
 def compute_new_highs_lows(prices, window=252):
     """

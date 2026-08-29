@@ -1,6 +1,5 @@
 ﻿# -*- coding: utf-8 -*-
 # indicators/index_phase.py - Calcula fases Wyckoff para indices internacionales
-import pandas as pd
 from indicators.wyckoff import wyckoff_structure_core
 from config.index_tickers import INDEX_CONFIG
 from data.providers.router import DataRouter

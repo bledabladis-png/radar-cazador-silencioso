@@ -1,7 +1,6 @@
 ﻿import re
 from pathlib import Path
 import pandas as pd
-from datetime import datetime
 
 XML_PATH = Path("data/cache/sec/qqq/nport_2026-03-31.xml")
 OUTPUT_CSV = Path("outputs/history/qqq_nport_flow.csv")

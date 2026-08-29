@@ -1,5 +1,4 @@
 ﻿import pandas as pd
-import numpy as np
 from src.utils import get_col
 from config import settings
 

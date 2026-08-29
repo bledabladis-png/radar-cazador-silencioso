@@ -33,7 +33,7 @@ from indicators.breadth import compute_breadth
 from indicators.persistence import compute_persistence
 from indicators.signal_agreement import compute_signal_agreement
 from indicators.price_flow_divergence import detect_price_flow_divergence
-from config.tickers import SECTOR_NAMES, validate_sector_universe
+from config.tickers import validate_sector_universe
 from indicators.index_phase import compute_index_phases
 from indicators.index_leaders import select_index_leaders
 
@@ -216,8 +216,7 @@ def main():
     try:
         # Dirección de flow_proxy (promedio de flow_proxy_z de líderes sectoriales si existen, si no 0)
         proxy_sign = 0.0
-        if 'leader_df' in locals() and leader_df is not None and not leader_df.empty and 'flow_proxy_z' in leader_df.columns:
-            proxy_sign = float(leader_df['flow_proxy_z'].mean())
+        proxy_sign = 0.0
         flow_synthesis['flow_proxy_sign'] = proxy_sign
 
         # Dirección de ETF Primary Flow (promedio de primary_flow_z)

@@ -2,12 +2,12 @@
 import numpy as np
 from config.tickers import SECTOR_NAMES, CYCLICAL_SECTORS, DEFENSIVE_SECTORS, MARKET_TICKERS
 from config.weights import SECTOR_SCORE_WEIGHTS, SECTOR_DISPERSION_PENALTY
-from indicators.momentum import compute_returns, momentum_score, compute_flow_proxy, compute_price_momentum
+from indicators.momentum import compute_returns, compute_flow_proxy, compute_price_momentum
 from indicators.trend import trend_position
-from indicators.volatility import atr, beta
+from indicators.volatility import atr
 from indicators.breadth import compute_breadth
 from indicators.wyckoff import wyckoff_structure_core
-from src.utils import robust_zscore, tanh_normalize, get_col
+from src.utils import tanh_normalize, get_col
 
 def compute_sector_scores(df, benchmark='^GSPC'):
     sectors = MARKET_TICKERS['sectors']
