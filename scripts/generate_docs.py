@@ -369,6 +369,12 @@ def generate_auditorias():
         ('backtest_pesos_historicos.py', 'Backtest historico de estabilidad temporal del ranking'),
         ('slpm_ablation.py', 'Ablacion de componentes del SLPM'),
         ('forward_test_auto.py', 'Registro semanal del forward test'),
+        ('sensitivity_persistence.py', 'Sensibilidad de Persistence a umbral y lookback'),
+        ('sensitivity_coverage.py', 'Sensibilidad de Coverage en SLPM'),
+        ('regresion_base_vs_lis.py', 'Regresión BASE vs BASE+LIS'),
+        ('audit_rs_flow_channels.py', 'Auditoría de canales RS/Flow'),
+        ('redundancia_mte_fc.py', 'Redundancia MTE vs Financial Conditions'),
+        ('solapamiento_fls_liquidity.py', 'Solapamiento FLS vs Liquidity'),
     ]
     rows = [[name, desc] for name, desc in scripts]
     table = format_table(['Script', 'Descripcion'], rows)
