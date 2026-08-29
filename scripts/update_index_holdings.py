@@ -10,7 +10,6 @@ import pandas as pd
 from io import BytesIO, StringIO
 import os
 import sys
-import csv
 
 # ETFs de EE.UU. que se actualizan desde State Street (Excel)
 US_ETFS = {

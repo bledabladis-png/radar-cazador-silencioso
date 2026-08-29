@@ -2,7 +2,6 @@
 # validation/leader_selection_audit.py
 # Auditoria descriptiva de la seleccion de lideres sectoriales e internacionales
 import pandas as pd
-import numpy as np
 import os
 
 output_lines = []

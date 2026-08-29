@@ -1,5 +1,4 @@
 import pandas as pd
-import numpy as np
 
 # Cargar resultados del estudio de sensibilidad (si existe)
 try:

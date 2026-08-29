@@ -1,5 +1,4 @@
 import pandas as pd
-import numpy as np
 
 df = pd.read_csv('outputs/audit/backtest_v2_results.csv', parse_dates=['date'])
 df = df.sort_values('date')

@@ -2,7 +2,6 @@
 # validation/obv_method_comparison.py
 import sys, os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)) + '/..')
-import pandas as pd
 import numpy as np
 from indicators.momentum import compute_obv
 from data.providers.router import DataRouter

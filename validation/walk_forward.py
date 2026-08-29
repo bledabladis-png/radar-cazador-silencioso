@@ -4,8 +4,7 @@
 import sys, os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import pandas as pd
-import numpy as np
-from scipy.stats import spearmanr, kendalltau
+from scipy.stats import spearmanr
 from data.providers.router import DataRouter
 from config.tickers import MARKET_TICKERS
 from indicators.momentum import compute_flow_proxy

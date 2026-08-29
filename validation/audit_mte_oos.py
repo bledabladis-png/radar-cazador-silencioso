@@ -5,7 +5,6 @@ from pathlib import Path
 sys.path.insert(0, os.path.abspath("."))
 
 import pandas as pd
-import numpy as np
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import roc_auc_score
 

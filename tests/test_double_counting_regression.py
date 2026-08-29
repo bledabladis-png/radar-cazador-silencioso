@@ -10,7 +10,6 @@ Se ejecutan automáticamente en CI (pytest).
 import sys
 import os
 import inspect
-import pytest
 
 # Asegurar que la raíz del proyecto esté en sys.path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))

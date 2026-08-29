@@ -2,7 +2,6 @@
 # validation/run_all_audits.py
 # Fase E v4.3: Monitorizacion continua - comprobaciones rapidas
 import os
-import sys
 import pandas as pd
 from datetime import datetime
 

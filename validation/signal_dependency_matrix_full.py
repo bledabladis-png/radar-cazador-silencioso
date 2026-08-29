@@ -6,7 +6,7 @@ import pandas as pd
 import numpy as np
 from data.providers.router import DataRouter
 from config.tickers import MARKET_TICKERS
-from indicators.momentum import compute_flow_proxy, compute_price_momentum
+from indicators.momentum import compute_flow_proxy
 from indicators.wyckoff import wyckoff_score
 from regimes.tactical_engine import compute_tactical_score
 from regimes.structural_engine import compute_structural_score

@@ -3,7 +3,6 @@
 # Fase 4: Auditoria de holdings y seleccion de lideres
 import pandas as pd
 import os
-import sys
 from datetime import datetime
 
 OUTPUT_MD = 'outputs/audit/auditoria_holdings.md'

@@ -10,13 +10,12 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import pandas as pd
 import numpy as np
-from scipy.stats import spearmanr, kendalltau, ks_2samp, f_oneway
+from scipy.stats import kendalltau, ks_2samp, f_oneway
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
 from statsmodels.stats.outliers_influence import variance_inflation_factor
 from regimes.sector_regime import compute_sector_scores
 from config.weights import SECTOR_SCORE_WEIGHTS
-from src.utils import get_col
 import warnings
 warnings.filterwarnings('ignore')
 

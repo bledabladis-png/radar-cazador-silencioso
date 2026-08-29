@@ -2,7 +2,6 @@
 import sys, os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)) + '/..')
 import pandas as pd
-import numpy as np
 from datetime import datetime, timedelta
 from data.providers.router import DataRouter
 from config.tickers import MARKET_TICKERS, SECTOR_NAMES

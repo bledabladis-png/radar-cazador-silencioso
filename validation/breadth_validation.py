@@ -13,7 +13,6 @@ from sklearn.preprocessing import StandardScaler
 from statsmodels.tsa.stattools import adfuller
 from statsmodels.stats.outliers_influence import variance_inflation_factor
 from indicators.breadth import compute_breadth
-from src.utils import get_col
 import warnings
 warnings.filterwarnings('ignore')
 

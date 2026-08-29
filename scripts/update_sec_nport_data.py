@@ -5,7 +5,6 @@ import zipfile
 from pathlib import Path
 from io import BytesIO
 import pandas as pd
-import numpy as np
 
 BASE_URL = "https://www.sec.gov/files/dera/data/form-n-port-data-sets"
 NEEDED_FILES = [

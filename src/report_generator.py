@@ -152,7 +152,27 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
         else:
             lines.append("| FINRA (Dark Pools) | N/D | N/D | N/D | N/D |\n")
     
-    lines.append("| FRED (Macro) | Semanal | Variable | RECENT | Alta |\n")
+    # FRED: intentar obtener fecha real desde liquidity_state.json
+    try:
+        import json
+        from pathlib import Path as _Path
+        liq_state_path = _Path('outputs/state/liquidity_state.json')
+        if liq_state_path.exists():
+            with liq_state_path.open('r') as f:
+                liq_state = json.load(f)
+            last_fred = liq_state.get('date', 'N/A')
+            if last_fred != 'N/A':
+                d = pd.Timestamp(last_fred)
+                age = (now - d).days
+                fred_status = _classify_freshness(age, 7, 14, 21)
+                fred_conf = 'Alta' if fred_status in ('CURRENT', 'RECENT') else 'Baja'
+                lines.append(f"| FRED (Macro) | {d.strftime('%Y-%m-%d')} | {age} dias | {fred_status} | {fred_conf} |\n")
+            else:
+                lines.append("| FRED (Macro) | N/D | N/D | N/D | N/D |\n")
+        else:
+            lines.append("| FRED (Macro) | N/D | N/D | N/D | N/D |\n")
+    except Exception:
+        lines.append("| FRED (Macro) | N/D | N/D | N/D | N/D |\n")
     lines.append("| Yahoo Finance (Precios) | Diario | < 1 dia | CURRENT | Alta |\n")
     lines.append("\n")
     coverage_lines = _generate_coverage_table(pcr_data, darkpool_data, sector_results)
