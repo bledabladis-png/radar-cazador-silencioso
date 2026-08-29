@@ -651,18 +651,17 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
         lines.append("*Sin datos N-PORT disponibles en esta ejecución.*\n\n")
 
     # =========================================================================
-    # RENDIMIENTO QQQ (Invesco)
+    # =========================================================================
+    # RENDIMIENTO QQQ (Yahoo Finance)
     # =========================================================================
     if qqq_performance_data is not None and not qqq_performance_data.empty:
-        lines.append("## Rendimiento QQQ (Invesco)\n")
+        lines.append("## Rendimiento QQQ (Yahoo Finance)\n")
         lines.append("| Medida | YTD | 1Y | 3Y | 5Y | 10Y | Desde inicio |\n")
         lines.append("|--------|-----|----|----|----|-----|--------------|\n")
         for _, row in qqq_performance_data.iterrows():
-            label = row.get('displayLabel', 'N/A')
+            label = row.get('displayLabel', 'QQQ (Yahoo Finance)')
             lines.append(f"| {label} | {row['ytd']:.2f}% | {row['y1']:.2f}% | {row['y3']:.2f}% | {row['y5']:.2f}% | {row['y10']:.2f}% | {row['inception']:.2f}% |\n")
-        lines.append("\n*Fuente: Invesco DNG API. Rendimientos anualizados oficiales.*\n\n")
-
-    # =========================================================================
+        lines.append("\n*Fuente: Yahoo Finance. Rendimientos calculados desde precios ajustados.*\n\n")
     # FLUJO DE PARTICIPACIONES QQQ (NPORT-P)
     # =========================================================================
     if qqq_nport_flow_data is not None and not qqq_nport_flow_data.empty:

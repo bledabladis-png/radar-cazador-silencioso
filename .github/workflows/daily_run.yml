@@ -42,6 +42,9 @@ jobs:
       - name: Run tests
         run: pytest tests/ -v
 
+      - name: Calculate QQQ returns from Yahoo
+        run: python scripts/qqq_returns_yahoo.py
+
       - name: Run Macro Sectorial
         env:
           POLYGON_API_KEY: ${{ secrets.POLYGON_API_KEY }}
@@ -53,6 +56,7 @@ jobs:
         run: python run.py
 
       - name: Run QQQ shares snapshot
+        continue-on-error: true
         run: python scripts/invesco_qqq_shares_snapshot.py
 
       - name: QQQ SEC vs NPORT-P cross validation

@@ -268,19 +268,19 @@ def main():
             print(f"  QQQ NPORT-P no cargado: {e}")
             qqq_nport_flow_data = None
 
-        # Cargar performance QQQ para el reporte solo si es fresca
+        # Cargar rendimientos QQQ desde Yahoo Finance (si existe)
         qqq_performance_data = None
         try:
-            perf_path = Path('outputs/history/invesco_qqq_performance.csv')
+            perf_path = Path('outputs/history/qqq_returns_yahoo.csv')
             if perf_path.exists():
                 mtime = datetime.fromtimestamp(perf_path.stat().st_mtime)
                 age = datetime.now() - mtime
                 if age <= timedelta(days=7):
                     qqq_performance_data = pd.read_csv(perf_path)
                 else:
-                    print(f"  QQQ performance omitida: datos con {age.days} días")
+                    print(f"  QQQ returns Yahoo omitidos: datos con {age.days} días")
         except Exception as e:
-            print(f"  QQQ performance no cargada: {e}")
+            print(f"  QQQ returns Yahoo no cargados: {e}")
             qqq_performance_data = None
 
         # Conteo de coincidencia de signos
