@@ -12,12 +12,10 @@ def main():
     print(f'Cambios FEZ: {len(change_fez)}')
 
     # Cargar mapeo ISIN->ticker si existe
-    ticker_col = None
     if MappingCsv.exists():
         map_df = pd.read_csv(MappingCsv)
         map_df.columns = ['isin','ticker']
         change_fez = change_fez.merge(map_df, left_on='IDENTIFIER_ISIN', right_on='isin', how='left')
-        ticker_col = 'ticker'
     else:
         change_fez['ticker'] = ''
 

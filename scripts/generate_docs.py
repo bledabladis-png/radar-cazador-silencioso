@@ -370,7 +370,7 @@ def generate_auditorias():
         ('slpm_ablation.py', 'Ablacion de componentes del SLPM'),
         ('forward_test_auto.py', 'Registro semanal del forward test'),
     ]
-    rows = [[f'{name}', desc] for name, desc in scripts]
+    rows = [[name, desc] for name, desc in scripts]
     table = format_table(['Script', 'Descripcion'], rows)
     proposito = "Scripts independientes que validan la estabilidad y robustez del sistema. No modifican el codigo productivo."
     arquitectura = f"Ubicados en alidation/. Se ejecutan manualmente con py validation/<script>.py."
