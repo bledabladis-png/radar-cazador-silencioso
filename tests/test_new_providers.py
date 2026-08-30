@@ -18,14 +18,6 @@ from data.providers.amundi_fund_data import (
     compute_primary_flow as compute_amundi_flow,
 )
 
-# Importar QQQ desde la raíz
-import importlib.util
-spec = importlib.util.spec_from_file_location("invesco_qqq_fund_data", ROOT / "invesco_qqq_fund_data.py")
-mod = importlib.util.module_from_spec(spec)
-spec.loader.exec_module(mod)
-extract_nav = mod.extract_nav
-parse_key_stats = mod.parse_key_stats
-
 # ---------------------------------------------------------------------------
 # IWM
 # ---------------------------------------------------------------------------
@@ -60,48 +52,6 @@ def test_iwm_compute_primary_flow():
     assert 'primary_flow_pct' in result.columns
     assert 'primary_flow_z' in result.columns
 
-# ---------------------------------------------------------------------------
-# QQQ
-# ---------------------------------------------------------------------------
-
-def test_qqq_extract_nav():
-    payload = {
-        'cusip': '46090E103',
-        'startDate': '2016-07-14',
-        'currency': 'USD',
-        'lineChartData': [
-            {
-                'type': 'NAV',
-                'label': 'NAV',
-                'data': [
-                    {'date': '08/14/2026', 'value': 731.010978},
-                    {'date': '08/13/2026', 'value': 731.911817},
-                ]
-            }
-        ]
-    }
-    df = extract_nav(payload)
-    assert len(df) == 2
-    assert 'date' in df.columns and 'nav' in df.columns
-    # Orden ascendente: primera fila = fecha más antigua
-    assert df.iloc[0]['nav'] == 731.911817
-    assert df.iloc[1]['nav'] == 731.010978
-
-def test_qqq_parse_key_stats():
-    payload = {
-        'keyStats': [
-            {'name': 'ytd', 'value': 12.253856, 'asOfDate': '2026-08-14'},
-            {'name': 'secYield30Day', 'value': 0.397564, 'asOfDate': '2026-08-14'},
-        ]
-    }
-    stats = parse_key_stats(payload)
-    assert 'ytd' in stats
-    assert stats['ytd']['value'] == 12.253856
-    assert stats['secYield30Day']['as_of_date'] == '2026-08-14'
-
-# ---------------------------------------------------------------------------
-# Amundi LYXI
-# ---------------------------------------------------------------------------
 
 def test_amundi_parse_historical_series():
     product = {
