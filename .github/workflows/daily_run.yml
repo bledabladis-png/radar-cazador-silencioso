@@ -43,6 +43,7 @@ jobs:
         run: pytest tests/ -v
       - name: Run pyflakes (warnings only)
         run: |
+          mkdir -p outputs/audit
           python -m pyflakes . > outputs/audit/pyflakes_report.txt 2>&1 || true
           echo "Pyflakes report generated."
           cat outputs/audit/pyflakes_report.txt
