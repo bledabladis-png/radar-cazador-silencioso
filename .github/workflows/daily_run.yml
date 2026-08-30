@@ -64,9 +64,6 @@ jobs:
           TIINGO_API_KEY: ${{ secrets.TIINGO_API_KEY }}
         run: python run.py
 
-      - name: Run QQQ shares snapshot
-        continue-on-error: true
-
       - name: QQQ SEC vs NPORT-P cross validation
         run: python validation/qqq_sec_nport_cross_validation.py
 
