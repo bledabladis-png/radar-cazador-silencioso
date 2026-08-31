@@ -176,7 +176,7 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
             if last_fred != 'N/A':
                 d = pd.Timestamp(last_fred)
                 age = (now - d).days
-                fred_status = _classify_finra_freshness(age)
+                fred_status = _classify_freshness(age, 7, 14, 21)
                 fred_conf = 'Alta' if fred_status in ('CURRENT', 'RECENT') else 'Baja'
                 lines.append(f"| FRED (Macro) | {d.strftime('%Y-%m-%d')} | {age} dias | {fred_status} | {fred_conf} |\n")
             else:
@@ -217,6 +217,9 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
         for alert in alerts:
             lines.append(alert + "\n")
         lines.append("\n")
+    else:
+        lines.append("### Divergencias Detectadas\n")
+        lines.append("*Sin divergencias relevantes.*\n\n")
 
     # =========================================================================
     # CROSS-MODULE CONFLICT
@@ -737,10 +740,10 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
         lines.append("## Market Transition Engine (MTE v1.0)\n")
         mte_conf = mte_result.get('confidence', 0)
         mte_scenario = mte_result.get('scenario', 'N/A')
-        if mte_conf < 50:
-            lines.append(f"- **Escenario (UNCONFIRMED):** {mte_scenario} (Confidence Score no calibrado: {mte_conf:.0f}) - *No se considera confirmado.*\n")
+        if mte_conf < 0.5:
+            lines.append(f"- **Escenario (UNCONFIRMED):** {mte_scenario} (Confidence Score no calibrado: {mte_conf:.2f}) - *No se considera confirmado.*\n")
         else:
-            lines.append(f"- **Escenario:** {mte_scenario} (Confidence Score no calibrado: {mte_conf:.0f})\n")
+            lines.append(f"- **Escenario:** {mte_scenario} (Confidence Score no calibrado: {mte_conf:.2f})\n")
         lines.append("*Nota: Confidence Score (no calibrado) representa la distancia a los umbrales y el consenso entre motores. No debe interpretarse como probabilidad.*\n")
         lines.append(f"- **Market Stress Index (MSI):** {mte_result.get('msi', 0):.0f}\n")
         lines.append(f"- **Inflation Pressure Index (IPI):** {mte_result.get('ipi', 0):.0f}\n")
