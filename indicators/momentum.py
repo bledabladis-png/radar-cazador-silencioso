@@ -2,7 +2,6 @@
 import numpy as np
 from config.settings import FLOW_ZSCORE_WINDOW, FLOW_EWM_SPAN, FLOW_CMF_WINDOW, MOMENTUM_SHARPE_WINDOW, MOMENTUM_PRICE_WINDOW
 from src.utils import robust_zscore, get_col
-from config.weights import FLOW_PROXY_WEIGHTS
 
 def compute_returns(df, tickers):
     returns = pd.DataFrame()
@@ -66,10 +65,6 @@ def compute_flow_proxy(df, ticker, window=FLOW_ZSCORE_WINDOW):
     combined = 0.30 * flow_smooth + 0.35 * obv_z + 0.35 * cmf_z
     return combined
 
-
-compute_flow_proxy.__doc__ = f"""
-Formula: {FLOW_PROXY_WEIGHTS['flow_smooth']:.2f}*flow_smooth + {FLOW_PROXY_WEIGHTS['obv']:.2f}*obv_z + {FLOW_PROXY_WEIGHTS['cmf']:.2f}*cmf_z. flow_smooth = EWMA({FLOW_EWM_SPAN}) de robust_zscore(ret*signed_volume_pressure, window={FLOW_ZSCORE_WINDOW}). obv_z = robust_zscore(OBV.pct_change(), window={FLOW_ZSCORE_WINDOW}). cmf_z = robust_zscore(CMF({FLOW_CMF_WINDOW}), window={FLOW_ZSCORE_WINDOW}).
-"""
 def compute_price_momentum(df, ticker, window=MOMENTUM_PRICE_WINDOW):
     close = get_col(df, ticker, 'Close')
     return close.pct_change(periods=window, fill_method=None)
