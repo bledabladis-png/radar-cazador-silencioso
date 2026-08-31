@@ -912,6 +912,7 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
             if top5 is None or top5.empty:
                 continue
             lines.append(f"### {nombre}\n")
+            lines.append("*Nota: Flujo (z) es un z-score robusto sobre 60 días. Valores extremos pueden deberse a eventos corporativos o volúmenes inusuales. Para el WLS se usa una versión normalizada limitada a ±3.*\n\n")
             lines.append("| # | Ticker | RS | RS Mom | Flujo (z) | WLS | Fase Wyckoff |\n")
             lines.append("|---|--------|----|--------|-----------|-----|---------------|\n")
             for i, (_, row) in enumerate(top5.iterrows(), 1):
