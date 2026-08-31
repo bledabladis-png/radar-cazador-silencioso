@@ -213,12 +213,12 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
                 alerts.append(f"- **{name} Price-Flow:** Precio fuerte sin confirmación del Flow Proxy. El indicador no permite inferir directamente participacion institucional.")
     
     if alerts:
-        lines.append("### Divergencias Detectadas\n")
+        lines.append("### Alertas de Divergencia (Inicial)\n")
         for alert in alerts:
             lines.append(alert + "\n")
         lines.append("\n")
     else:
-        lines.append("### Divergencias Detectadas\n")
+        lines.append("### Alertas de Divergencia (Inicial)\n")
         lines.append("*Sin divergencias relevantes.*\n\n")
 
     # =========================================================================
@@ -985,7 +985,7 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
                 name = SECTOR_NAMES.get(ticker, ticker)
                 divergencias.append(f"- **{name}**: precio fuerte sin confirmación del Flow Proxy.")
     if divergencias and len(resumen) < 3:
-        lines.append("### Divergencias relevantes\n")
+        lines.append("### Divergencias Relevantes (Síntesis)\n")
         for d in divergencias[:2]:
             lines.append(d + "\n")
         lines.append("\n")
