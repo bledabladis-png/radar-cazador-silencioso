@@ -2,6 +2,7 @@
 import numpy as np
 from config.settings import FLOW_ZSCORE_WINDOW, FLOW_EWM_SPAN, FLOW_CMF_WINDOW, MOMENTUM_SHARPE_WINDOW, MOMENTUM_PRICE_WINDOW
 from src.utils import robust_zscore, get_col
+from config.weights import FLOW_PROXY_WEIGHTS
 
 def compute_returns(df, tickers):
     returns = pd.DataFrame()
