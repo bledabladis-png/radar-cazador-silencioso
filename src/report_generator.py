@@ -874,14 +874,14 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
         else:
             lines.append("- *Acumulando historial (se necesitan 104 semanas para el Z-Score)*\n")
         if week != 'N/A':
-    try:
-        d = pd.Timestamp(week)
-        age = (datetime.now() - d).days
-        lines.append(f"- **Semana FINRA:** {week} (retraso: {age} dias)\n")
-    except Exception:
-        lines.append(f"- **Semana FINRA:** {week}\n")
-else:
-    lines.append("- **Semana FINRA:** N/D\n")
+            try:
+                d = pd.Timestamp(week)
+                age = (datetime.now() - d).days
+                lines.append(f"- **Semana FINRA:** {week} (retraso: {age} dias)\n")
+            except Exception:
+                lines.append(f"- **Semana FINRA:** {week}\n")
+        else:
+            lines.append("- **Semana FINRA:** N/D\n")
 
         if 'datos' in darkpool_data and not darkpool_data['datos'].empty:
             lines.append("\n**Mayor % de volumen en ATS:**\n")
