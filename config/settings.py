@@ -103,6 +103,7 @@ CACHE_TTL = {
 # ============================================================
 
 FLOW_ZSCORE_WINDOW = 60
+ETF_PRIMARY_FLOW_ZSCORE_WINDOW = 120  # ventana para ETF Primary Flow (SSGA)
 FLOW_EWM_SPAN = 10
 FLOW_CMF_WINDOW = 20
 

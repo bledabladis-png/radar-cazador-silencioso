@@ -9,9 +9,7 @@ from src.utils import get_col
 from config.weights import TACTICAL_WEIGHTS
 
 def compute_tactical_score(df_market, sector_etf, benchmark='^GSPC'):
-    """Calcula el Tactical Score combinando 5 componentes de corto plazo.
-    Pesos: RS20(30%), Momentum20(25%), Flow(20%), Breadth20(15%), Aceleracion(10%).
-    Resultado acotado a [-1, +1]."""
+    """Calcula el Tactical Score combinando 5 componentes de corto plazo."""
     try:
         close_sector = get_col(df_market, sector_etf, 'Close')
         close_bench = get_col(df_market, benchmark, 'Close')
@@ -65,3 +63,7 @@ def compute_tactical_score(df_market, sector_etf, benchmark='^GSPC'):
     )
 
     return float(np.clip(score, -1, 1))
+
+compute_tactical_score.__doc__ = f"""
+Pesos: RS20({TACTICAL_WEIGHTS['rs20']*100:.0f}%), Momentum20({TACTICAL_WEIGHTS['momentum20']*100:.0f}%), Flow({TACTICAL_WEIGHTS['flow_recent']*100:.0f}%), Breadth20({TACTICAL_WEIGHTS['breadth20']*100:.0f}%), Aceleracion({TACTICAL_WEIGHTS['acceleration']*100:.0f}%). Resultado acotado a [-1, +1].
+"""

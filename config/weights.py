@@ -106,3 +106,9 @@ STRUCTURAL_WEIGHTS = {
 # 0.0 = sin penalización, 1.0 = máxima penalización.
 # ============================================================
 SECTOR_DISPERSION_PENALTY = 0.5
+
+FLOW_PROXY_WEIGHTS = {
+    'flow_smooth': 0.30,
+    'obv': 0.35,
+    'cmf': 0.35,
+}

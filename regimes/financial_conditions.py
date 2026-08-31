@@ -17,9 +17,7 @@ from src.utils import robust_zscore, get_col
 from config.settings import FINANCIAL_CONDITIONS_WEIGHTS, FINANCIAL_CONDITIONS_THRESHOLDS
 
 def compute_financial_conditions(df):
-    """Calcula el score de condiciones financieras agregando VIX, credito, dolar y curva.
-    Formula: 0.40*VIX_norm + 0.30*Credito_norm + 0.15*Dolar_norm + 0.15*Curva_norm.
-    Cada componente se normaliza con z-score robusto y tanh. Retorna puntuacion [-1, +1]."""
+    """Calcula el score de condiciones financieras agregando VIX, credito, dolar y curva."""
     scores = pd.DataFrame(index=df.index)
 
     # VIX (invertido: a mas VIX, mas estres)
@@ -81,3 +79,7 @@ def compute_financial_conditions(df):
 # Mantener compatibilidad con codigo existente que importa compute_liquidity_score
 def compute_liquidity_score(df):
     return compute_financial_conditions(df)
+
+compute_financial_conditions.__doc__ = f"""
+Formula: {FINANCIAL_CONDITIONS_WEIGHTS['vix']:.2f}*VIX_norm + {FINANCIAL_CONDITIONS_WEIGHTS['credit']:.2f}*Credito_norm + {FINANCIAL_CONDITIONS_WEIGHTS['dollar']:.2f}*Dolar_norm + {FINANCIAL_CONDITIONS_WEIGHTS['curve']:.2f}*Curva_norm. Cada componente se normaliza con z-score robusto y tanh. Retorna puntuacion [-1, +1].
+"""

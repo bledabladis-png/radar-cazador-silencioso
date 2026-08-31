@@ -4,6 +4,8 @@ import os
 from datetime import datetime
 from config.tickers import SECTOR_NAMES
 from config.index_tickers import INDEX_CONFIG
+from config.settings import MOMENTUM_PRICE_WINDOW, MOMENTUM_LONG_WINDOW, FLOW_ZSCORE_WINDOW, DARKPOOL_FULL_HISTORY_WEEKS, ETF_PRIMARY_FLOW_ZSCORE_WINDOW
+from config.weights import SLPM_WEIGHTS
 
 MODEL_VERSION = "4.3"
 WEIGHTS_VERSION = "3"
@@ -272,7 +274,7 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
     # =========================================================================
     # TACTICAL LEADERS
     # =========================================================================
-    lines.append("\n## Momentum de Precio - Sectores (20 dias)\n")
+    lines.append(f"\n## Momentum de Precio - Sectores ({MOMENTUM_PRICE_WINDOW} dias)\n")
     lines.append("| # | Sector | Retorno 20d (%) |\n")
     lines.append("|---|--------|------------------|\n")
     for i, (ticker, mom) in enumerate(sector_price_rank[:11], 1):
@@ -301,12 +303,12 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
         comm_display = f"{comm} ({comm_val:+.2f})" if comm_val is not None and comm != 'N/A' else comm
         lines.append(f"| {i} | {name} ({ticker}) | {t_score:+.2f} | {s_score:+.2f} | {mom*100:.2f}% | {flow:+.2f} | {comm_display} |\n")
     lines.append("\n")
-    lines.append("*Nota: Comm Corr mide la correlación de 126 dias con ^SPGSCI. No implica causalidad.*\n\n")
+    lines.append("*Nota: Comm Corr mide la correlación de {MOMENTUM_LONG_WINDOW} dias con ^SPGSCI. No implica causalidad.*\n\n")
 
     # =========================================================================
     # STRUCTURAL RANKING (sin columna Coverage)
     # =========================================================================
-    lines.append("\n## Momentum de Precio - Otros Activos (20 dias)\n")
+    lines.append(f"\n## Momentum de Precio - Otros Activos ({MOMENTUM_PRICE_WINDOW} dias)\n")
     lines.append("| # | Activo | Retorno 20d (%) |\n")
     lines.append("|---|--------|------------------|\n")
     for i, (ticker, mom) in enumerate(otros_price_rank[:15], 1):
@@ -487,7 +489,7 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
             n_leaders = integrity.get('n_leaders', 0)
             lines.append("\n### Leader Integrity Score (LIS)\n")
             lines.append(f"- **LIS:** {lis:+.2f} (n={n_leaders})\n")
-            lines.append("- *Formula: LIS_individual = 0.30*tanh((RS-1)*2) + 0.25*tanh(RS_mom*5) + 0.25*tanh(flow_proxy_z/2) + 0.20*Wyckoff_score. LIS = media.*\n")
+            lines.append(f"- *Formula: LIS_individual = {SLPM_WEIGHTS['lis']['rs']:.2f}*tanh((RS-1)*2) + {SLPM_WEIGHTS['lis']['momentum']:.2f}*tanh(RS_mom*5) + {SLPM_WEIGHTS['lis']['flow']:.2f}*tanh(flow_proxy_z/2) + {SLPM_WEIGHTS['lis']['wyckoff']:.2f}*Wyckoff_score. LIS = media.*\n")
             lines.append("- *LIS mide la intensidad/calidad de la señal de los lideres, no el % que cumple condiciones (eso es el Breadth).*\n")
         
         flow_div = slpm_v12_data.get('flow_divergence_v2', {})
@@ -572,7 +574,7 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
         lines.append("|--------|-----|---------------------|------------------|----------------|------------|--------|\n")
         for _, row in etf_primary_flow_data.iterrows():
             lines.append(f"| {row['ticker']} | {row['nav']:.2f} | {row['shares_outstanding']:,.0f} | {row['total_net_assets']:,.0f} | {row['primary_flow_usd']:+,.0f} | {row['primary_flow_pct']:+.2f}% | {row['primary_flow_z']:+.2f} |\n")
-        lines.append("\n*Fuente: State Street Global Advisors (SSGA). ETF Primary Flow = ΔShares Outstanding × NAV. Z-score sobre 120 sesiones.*\n\n")
+        lines.append("\n*Fuente: State Street Global Advisors (SSGA). ETF Primary Flow = ΔShares Outstanding × NAV. Z-score sobre {ETF_PRIMARY_FLOW_ZSCORE_WINDOW} sesiones.*\n\n")
 
     # =========================================================================
     # FLUJO PRIMARIO DAXEX (BlackRock)
@@ -872,7 +874,7 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
             lines.append(f"- **Percentil:** {darkpool_data.get('percentile', 0):.0f}%\n")
             lines.append(f"- **Estado ATS:** {darkpool_data.get('state', 'N/A')}\n")
         else:
-            lines.append("- *Acumulando historial (se necesitan 104 semanas para el Z-Score)*\n")
+            lines.append("- *Acumulando historial (se necesitan {DARKPOOL_FULL_HISTORY_WEEKS} semanas para el Z-Score)*\n")
         if week != 'N/A':
             try:
                 d = pd.Timestamp(week)
