@@ -696,6 +696,12 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
         for _, row in qqq_performance_data.iterrows():
             label = row.get('displayLabel', 'QQQ (Yahoo Finance)')
             lines.append(f"| {label} | {row['ytd']:.2f}% | {row['y1']:.2f}% | {row['y3']:.2f}% | {row['y5']:.2f}% | {row['y10']:.2f}% | {row['inception']:.2f}% |\n")
+        try:
+            as_of = qqq_performance_data.iloc[0].get("as_of_date", "")
+            if as_of:
+                lines.append(f"*Fecha de calculo (as_of_date): {as_of}*\n")
+        except Exception:
+            pass
         lines.append("\n*Fuente: Yahoo Finance. Rendimientos calculados desde precios ajustados.*\n\n")
     # FLUJO DE PARTICIPACIONES QQQ (NPORT-P)
     # =========================================================================
@@ -959,18 +965,22 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
     lines.append("\n")
 
     # Divergencias relevantes (solo si no están ya en el resumen)
+    divergencias = []
+    if breadth_values:
+        ema200 = breadth_values.get('% sobre EMA200', 0)
+        ema20 = breadth_values.get('% sobre EMA20', 0)
+        if ema200 > 0.70 and ema20 < 0.60:
+            divergencias.append(f"- **Breadth Divergence:** Breadth EMA200: {ema200:.0%}; Breadth EMA20: {ema20:.0%}. La amplitud de corto plazo es inferior a la de largo plazo.")
     if price_flow_divergences:
-        divergencias = []
         for ticker, div in price_flow_divergences.items():
             if div.get('status') == 'PRICE_STRONG_FLOW_UNCONFIRMED':
                 name = SECTOR_NAMES.get(ticker, ticker)
                 divergencias.append(f"- **{name}**: precio fuerte sin confirmación del Flow Proxy.")
-        if divergencias and len(resumen) < 3:
-            lines.append("### Divergencias relevantes\n")
-            for d in divergencias[:2]:
-                lines.append(d + "\n")
-            lines.append("\n")
-
+    if divergencias and len(resumen) < 3:
+        lines.append("### Divergencias relevantes\n")
+        for d in divergencias[:2]:
+            lines.append(d + "\n")
+        lines.append("\n")
     # Nota de cierre
     lines.append("*Esta sección describe únicamente estados observables del sistema. No interpreta causas ni sugiere acciones.*\n\n")
     
