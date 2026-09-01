@@ -85,7 +85,7 @@ for i, date in enumerate(eval_dates):
                        0.15 * 0.5)  # complementarios a 0.5
         cls_v11.append(cls_v11_val)
         
-    except Exception as e:
+    except Exception:
         cls_v10.append(np.nan)
         cls_v11.append(np.nan)
 
