@@ -4,7 +4,7 @@ import os
 from datetime import datetime
 from config.tickers import SECTOR_NAMES
 from config.index_tickers import INDEX_CONFIG
-from config.settings import MOMENTUM_PRICE_WINDOW, MOMENTUM_LONG_WINDOW, FLOW_ZSCORE_WINDOW, DARKPOOL_FULL_HISTORY_WEEKS, ETF_PRIMARY_FLOW_ZSCORE_WINDOW
+from config.settings import MOMENTUM_PRICE_WINDOW, MOMENTUM_LONG_WINDOW, ETF_PRIMARY_FLOW_ZSCORE_WINDOW
 from config.weights import SLPM_WEIGHTS
 
 MODEL_VERSION = "4.3"
