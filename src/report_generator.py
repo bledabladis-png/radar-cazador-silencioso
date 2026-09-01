@@ -303,7 +303,7 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
         comm_display = f"{comm} ({comm_val:+.2f})" if comm_val is not None and comm != 'N/A' else comm
         lines.append(f"| {i} | {name} ({ticker}) | {t_score:+.2f} | {s_score:+.2f} | {mom*100:.2f}% | {flow:+.2f} | {comm_display} |\n")
     lines.append("\n")
-    lines.append("*Nota: Comm Corr mide la correlación de {MOMENTUM_LONG_WINDOW} dias con ^SPGSCI. No implica causalidad.*\n\n")
+    lines.append(f"*Nota: Comm Corr mide la correlación de {MOMENTUM_LONG_WINDOW} dias con ^SPGSCI. No implica causalidad.*\n\n")
 
     # =========================================================================
     # STRUCTURAL RANKING (sin columna Coverage)
