@@ -16,11 +16,9 @@ from pathlib import Path
 sys.path.insert(0, os.path.abspath("."))
 
 import pandas as pd
-import numpy as np
 from scipy.stats import spearmanr
 
 from data.providers.router import DataRouter
-from config.tickers import MARKET_TICKERS
 from src.utils import get_col
 from indicators.momentum import compute_flow_proxy, compute_price_momentum
 from regimes.tactical_engine import compute_tactical_score

@@ -15,9 +15,8 @@ from pathlib import Path
 sys.path.insert(0, os.path.abspath("."))
 
 import pandas as pd
-import numpy as np
 
-from indicators.slpm_v12 import compute_leader_breadth_v2, compute_leader_integrity
+from indicators.slpm_v12 import compute_leader_breadth_v2
 from indicators.state_machine import classify_leadership_state
 from config.settings import SLPM_EXPECTED_LEADERS
 

@@ -16,9 +16,7 @@ from pathlib import Path
 sys.path.insert(0, os.path.abspath("."))
 
 import pandas as pd
-import numpy as np
 from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import roc_auc_score
 from sklearn.model_selection import cross_val_score
 
 from indicators.slpm_v12 import compute_leader_breadth_v2, compute_leader_integrity
