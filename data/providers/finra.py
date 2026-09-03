@@ -24,8 +24,8 @@ class FinraProvider(MarketDataProvider):
 
     def is_available(self) -> bool:
         try:
-            resp = self._session.post(f"{BASE_URL}/weeklyDownloadDetail", json={}, timeout=10)
-            return resp.status_code == 200
+            week = self.get_latest_week()
+            return week is not None
         except:
             return False
 
