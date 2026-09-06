@@ -77,7 +77,7 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
                           slpm_v12_data=None, tactical_scores=None, structural_scores=None,
                           sector_persistence=None, signal_agreements=None, signal_agreements_display=None,
                           cross_module_conflict=None, shock_sensitivities=None, price_flow_divergences=None,
-                          dc_summary="", all_signals=None, real_liq_score=None, real_liq_prev=None, index_leaders=None, index_phases=None, etf_primary_flow_data=None, cftc_position_flow_data=None, flow_synthesis=None, blackrock_dax_flow=None, blackrock_isf_flow=None, amundi_lyxi_flow=None, blackrock_iwm_flow=None, nport_position_change_data=None, qqq_performance_data=None, qqq_nport_flow_data=None, qqq_sec_flow=None, output_path='outputs/report/reporte_diario.md'):
+                          dc_summary="", all_signals=None, real_liq_score=None, real_liq_prev=None, index_leaders=None, index_phases=None, etf_primary_flow_data=None, cftc_position_flow_data=None, flow_synthesis=None, blackrock_dax_flow=None, blackrock_isf_flow=None, amundi_lyxi_flow=None, blackrock_iwm_flow=None, nport_position_change_data=None, qqq_performance_data=None, qqq_nport_flow_data=None, qqq_sec_flow=None, sector_breadth_data=None, output_path='outputs/report/reporte_diario.md'):
     lines = []
     lines.append("# MACRO SECTORIAL - Reporte Diario\n")
     lines.append(f"**Fecha:** {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
@@ -272,6 +272,18 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
         lines.append("\n")
 
     # =========================================================================
+    # =========================================================================
+    # SECTOR BREADTH & HEALTH
+    # =========================================================================
+    if sector_breadth_data is not None and not sector_breadth_data.empty:
+        lines.append("## Sector Breadth & Health\n")
+        lines.append("| Sector | EMA20 | EMA50 | EMA200 | RS+ | Mom+ | Acc | Markup | Dist | Markdown | NH | NL | A/D | Cobertura |\n")
+        lines.append("|--------|-------|-------|--------|-----|------|-----|--------|------|----------|----|----|-----|-----------|\n")
+        for _, row in sector_breadth_data.iterrows():
+            cobertura = (row['n_valid_ema200'] / row['n_total'] * 100) if row['n_total'] else 0
+            lines.append(f"| {row['sector']} | {row['pct_above_ema20']:.1f}% | {row['pct_above_ema50']:.1f}% | {row['pct_above_ema200']:.1f}% | {row['pct_rs_positive']:.1f}% | {row['pct_momentum_positive']:.1f}% | {row['count_accumulation']} | {row['count_markup']} | {row['count_distribution']} | {row['count_markdown']} | {row['new_highs']} | {row['new_lows']} | {row['ad_net']:+d} | {cobertura:.0f}% |\n")
+        lines.append("\n")
+
     # TACTICAL LEADERS
     # =========================================================================
     lines.append(f"\n## Momentum de Precio - Sectores ({MOMENTUM_PRICE_WINDOW} dias)\n")

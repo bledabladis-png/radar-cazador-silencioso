@@ -29,6 +29,7 @@ from regimes.sector_regime import compute_sector_scores, compute_price_flow_rank
 from src.report_generator import generate_daily_report
 from src.utils import get_col, detect_cross_module_conflict
 from src.dependency_tracker import audit_double_counting
+from indicators.sector_breadth import compute_sector_breadth
 from indicators.breadth import compute_breadth
 from indicators.persistence import compute_persistence
 from indicators.signal_agreement import compute_signal_agreement
@@ -325,6 +326,25 @@ def main():
                 print("  No hay sectores favorables para lideres.")
     except Exception as e:
         print(f"  Modulo de lideres omitido: {e}")
+
+    # --- Sector Breadth & Health v1.0 (descriptivo) ---
+    try:
+        if df_stocks is not None and not df_stocks.empty:
+            from pathlib import Path as P
+            sector_breadth_df = compute_sector_breadth(df_market, df_stocks, holdings_df)
+            sb_path = P('outputs/history/sector_breadth.csv')
+            sb_path.parent.mkdir(parents=True, exist_ok=True)
+            if not sector_breadth_df.empty:
+                if sb_path.exists():
+                    hist_sb = pd.read_csv(sb_path)
+                    sector_breadth_df = pd.concat([hist_sb, sector_breadth_df], ignore_index=True)
+                sector_breadth_df.to_csv(sb_path, index=False)
+                print("  Sector Breadth & Health calculado.")
+        else:
+            sector_breadth_df = None
+    except Exception as e:
+        print(f"  Sector Breadth & Health omitido: {e}")
+        sector_breadth_df = None
 
     # --- NUEVO: Forzar lideres del sector #1 para el SLPM ---
     leader_metrics_for_slpm = []
@@ -830,7 +850,7 @@ def main():
                           shock_sensitivities=shock_sensitivities,
                           price_flow_divergences=price_flow_divergences,
                           dc_summary=dc_summary,
-                          real_liq_prev=real_liq_prev, index_leaders=index_leaders, index_phases=index_phases,
+                          real_liq_prev=real_liq_prev, index_leaders=index_leaders, index_phases=index_phases, sector_breadth_data=sector_breadth_df,
                           all_signals=all_signals)
     print("Reporte generado en outputs/report/reporte_diario.md")
 
