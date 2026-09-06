@@ -32,6 +32,7 @@ from src.dependency_tracker import audit_double_counting
 from indicators.sector_breadth import compute_sector_breadth
 from indicators.sector_concentration import compute_sector_concentration
 from indicators.sector_flow_characteristics import compute_sector_flow_characteristics
+from indicators.rs_internal import compute_rs_internal
 from indicators.breadth import compute_breadth
 from indicators.persistence import compute_persistence
 from indicators.signal_agreement import compute_signal_agreement
@@ -346,6 +347,24 @@ def main():
                 print("  No hay sectores favorables para lideres.")
     except Exception as e:
         print(f"  Modulo de lideres omitido: {e}")
+
+    # --- RS Interno y Absoluto v1.0 (descriptivo) ---
+    try:
+        if df_stocks is not None and not df_stocks.empty:
+            rs_internal_df = compute_rs_internal(df_stocks, holdings_df, df_market, benchmark='SPY')
+            rs_path = Path('outputs/history/rs_internal.csv')
+            rs_path.parent.mkdir(parents=True, exist_ok=True)
+            if not rs_internal_df.empty:
+                if rs_path.exists():
+                    hist_rs = pd.read_csv(rs_path)
+                    rs_internal_df = pd.concat([hist_rs, rs_internal_df], ignore_index=True)
+                rs_internal_df.to_csv(rs_path, index=False)
+                print("  RS Interno y Absoluto calculado.")
+        else:
+            rs_internal_df = None
+    except Exception as e:
+        print(f"  RS Interno y Absoluto omitido: {e}")
+        rs_internal_df = None
 
     # --- Sector Concentration v1.0 (descriptivo) ---
     try:
@@ -888,7 +907,7 @@ def main():
                           shock_sensitivities=shock_sensitivities,
                           price_flow_divergences=price_flow_divergences,
                           dc_summary=dc_summary,
-                          real_liq_prev=real_liq_prev, index_leaders=index_leaders, index_phases=index_phases, sector_breadth_data=sector_breadth_df, sector_concentration_data=sector_concentration_df, sector_flow_characteristics_data=sector_flow_characteristics_df,
+                          real_liq_prev=real_liq_prev, index_leaders=index_leaders, index_phases=index_phases, sector_breadth_data=sector_breadth_df, sector_concentration_data=sector_concentration_df, sector_flow_characteristics_data=sector_flow_characteristics_df, rs_internal_data=rs_internal_df,
                           all_signals=all_signals)
     print("Reporte generado en outputs/report/reporte_diario.md")
 
