@@ -30,6 +30,8 @@ def compute_stock_metrics(df_market, df_stocks, etf_ticker, stock_list):
 
         ret_positive = (ret > 0).astype(int)
         persistence_10d = ret_positive.rolling(10, min_periods=10).mean().iloc[-1]
+        persistence_5d = ret_positive.rolling(5, min_periods=5).mean().iloc[-1]
+        persistence_20d = ret_positive.rolling(20, min_periods=20).mean().iloc[-1]
         if pd.isna(persistence_10d):
             persistence_10d = 0.5
 
@@ -67,7 +69,9 @@ def compute_stock_metrics(df_market, df_stocks, etf_ticker, stock_list):
             'flow_proxy_z': flow_signal,
             'wyckoff_score': wyckoff_sc,
             'wyckoff_phase': wyckoff_ph,
+            'persistence_5d': persistence_5d,
             'persistence_10d': persistence_10d,
+            'persistence_20d': persistence_20d,
             'stability': stability,
             'spring': spring,
             'sos': sos,
@@ -151,20 +155,20 @@ def generate_leader_section(df_market, df_stocks, holdings_df, fase_dict, operab
         all_data.append(wls_df.head(5))
 
         lines.append(f'## Sector: {sector} ({fase})\n')
-        lines.append('| Ticker | RS | RS Mom | Flujo (z) | WLS | Fase Wyckoff | Spring | SOS |\n')
+        lines.append('| Ticker | RS | RS Mom | Flujo (z) | WLS | Fase Wyckoff | Pers 5d | Pers 10d | Pers 20d | Spring | SOS |\n')
         lines.append('|--------|----|--------|-----------|-----|---------------|--------|-----|\n')
         lines.append('*RS = RS Level (precio acción / precio sector). RS Mom = RS Momentum (cambio del RS en 20 días). El WLS combina ambas con pesos 35% y 25% respectivamente.*\n')
         for _, row in wls_df.head(5).iterrows():
             spring_flag = '✓' if row.get('spring', 0) == 1 else ''
             sos_flag = '✓' if row.get('sos', 0) == 1 else ''
-            lines.append(f"| {row['ticker']} | {row['rs']:.2f} | {row['rs_mom']:.2%} | {row['flow_proxy_z']:.2f} | {row['wls']:.2f} | {row['wyckoff_phase']} | {spring_flag} | {sos_flag} |\n")
+            lines.append(f"| {row['ticker']} | {row['rs']:.2f} | {row['rs_mom']:.2%} | {row['flow_proxy_z']:.2f} | {row['wls']:.2f} | {row['wyckoff_phase']} | {row['persistence_5d']:.0%} | {row['persistence_10d']:.0%} | {row['persistence_20d']:.0%} | {spring_flag} | {sos_flag} |\n")
         lines.append('\n')
 
     if all_data:
         final_df = pd.concat(all_data, ignore_index=True)
         if output_csv:
             cols = ['ticker','sector','rs','rs_mom','flow_proxy_z','wyckoff_score','wyckoff_phase',
-                    'persistence_10d','stability','spring','sos','wls','sector_rank_pct']
+                    'persistence_5d','persistence_10d','persistence_20d','stability','spring','sos','wls','sector_rank_pct']
             final_df[cols].to_csv(output_csv, index=False)
         if all_data:
             final_df = pd.concat(all_data, ignore_index=True)
