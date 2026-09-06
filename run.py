@@ -30,6 +30,7 @@ from src.report_generator import generate_daily_report
 from src.utils import get_col, detect_cross_module_conflict
 from src.dependency_tracker import audit_double_counting
 from indicators.sector_breadth import compute_sector_breadth
+from indicators.sector_concentration import compute_sector_concentration
 from indicators.breadth import compute_breadth
 from indicators.persistence import compute_persistence
 from indicators.signal_agreement import compute_signal_agreement
@@ -326,6 +327,24 @@ def main():
                 print("  No hay sectores favorables para lideres.")
     except Exception as e:
         print(f"  Modulo de lideres omitido: {e}")
+
+    # --- Sector Concentration v1.0 (descriptivo) ---
+    try:
+        if df_stocks is not None and not df_stocks.empty and leader_df is not None and not leader_df.empty:
+            sector_concentration_df = compute_sector_concentration(df_stocks, holdings_df, leader_df)
+            sc_path = Path('outputs/history/sector_concentration.csv')
+            sc_path.parent.mkdir(parents=True, exist_ok=True)
+            if not sector_concentration_df.empty:
+                if sc_path.exists():
+                    hist_sc = pd.read_csv(sc_path)
+                    sector_concentration_df = pd.concat([hist_sc, sector_concentration_df], ignore_index=True)
+                sector_concentration_df.to_csv(sc_path, index=False)
+                print("  Sector Concentration calculado.")
+        else:
+            sector_concentration_df = None
+    except Exception as e:
+        print(f"  Sector Concentration omitido: {e}")
+        sector_concentration_df = None
 
     # --- Sector Breadth & Health v1.0 (descriptivo) ---
     try:
@@ -850,7 +869,7 @@ def main():
                           shock_sensitivities=shock_sensitivities,
                           price_flow_divergences=price_flow_divergences,
                           dc_summary=dc_summary,
-                          real_liq_prev=real_liq_prev, index_leaders=index_leaders, index_phases=index_phases, sector_breadth_data=sector_breadth_df,
+                          real_liq_prev=real_liq_prev, index_leaders=index_leaders, index_phases=index_phases, sector_breadth_data=sector_breadth_df, sector_concentration_data=sector_concentration_df,
                           all_signals=all_signals)
     print("Reporte generado en outputs/report/reporte_diario.md")
 
