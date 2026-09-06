@@ -294,6 +294,18 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
         for _, row in sector_concentration_data.iterrows():
             lines.append(f"| {row['sector']} | {row['top1_positive_return_concentration']:.1%} | {row['top3_positive_return_concentration']:.1%} | {row['top5_positive_return_concentration']:.1%} | {row['rs_median']:.4f} | {row['momentum_median']:.2%} | {row['flow_median']:.2f} | {row['wyckoff_median']:.2f} | {row['wls_median']:.2f} | {row['leader_ticker']} | {row['leader_return20']:.2%} | {row['coverage_rs']:.0f}% | {row['coverage_momentum']:.0f}% | {row['coverage_flow']:.0f}% | {row['coverage_wyckoff']:.0f}% | {row['coverage_wls']:.0f}% |\n")
         lines.append("\n")
+    # =========================================================================
+    # DISPERSIÓN INTERNA
+    # =========================================================================
+    if sector_concentration_data is not None and not sector_concentration_data.empty:
+        lines.append("## Dispersión interna\n")
+        lines.append("| Sector | RS P25 | RS Med | RS P75 | Mom P25 | Mom Med | Mom P75 |\n")
+        lines.append("|--------|--------|--------|--------|---------|---------|---------|\n")
+        for _, row in sector_concentration_data.iterrows():
+            lines.append(f"| {row['sector']} | {row['rs_p25']:.4f} | {row['rs_median']:.4f} | {row['rs_p75']:.4f} | {row['momentum_p25']:.2%} | {row['momentum_median']:.2%} | {row['momentum_p75']:.2%} |\n")
+        lines.append("\n")
+        lines.append("*Los percentiles de Flow y WLS están disponibles en outputs/history/sector_concentration.csv.*\n\n")
+
     # TACTICAL LEADERS
     # =========================================================================
     lines.append(f"\n## Momentum de Precio - Sectores ({MOMENTUM_PRICE_WINDOW} dias)\n")

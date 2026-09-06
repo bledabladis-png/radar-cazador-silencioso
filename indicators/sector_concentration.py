@@ -1,13 +1,19 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 """
 Sector Concentration v1.0 (actualizado)
 Describe la concentración del liderazgo y el contexto sectorial.
-Incluye medianas de RS, momentum, flow, Wyckoff y WLS, y coberturas.
+Incluye medianas y percentiles P25/P75 de RS, momentum, flow, Wyckoff y WLS, y coberturas.
 No alimenta motores, scores, pesos ni State Machine.
 """
 import pandas as pd
 import numpy as np
 from src.utils import get_col
+
+def safe_quantile(series, q):
+    """Devuelve el cuantil q si hay al menos 5 valores válidos, sino NaN."""
+    if len(series.dropna()) >= 5:
+        return series.quantile(q)
+    return np.nan
 
 def compute_sector_concentration(df_stocks, holdings_df, leader_df):
     rows = []
@@ -43,7 +49,7 @@ def compute_sector_concentration(df_stocks, holdings_df, leader_df):
                 'ticker': ticker,
                 'ret20': ret20,
                 'rs_mom': rs_mom,
-                'momentum20': ret20,  # retorno 20d = momentum de precio
+                'momentum20': ret20,
                 'flow_proxy_z': flow_z,
                 'wyckoff_score': wyckoff_score_val,
                 'wls': wls,
@@ -69,6 +75,15 @@ def compute_sector_concentration(df_stocks, holdings_df, leader_df):
         flow_median = df_metrics['flow_proxy_z'].median()
         wyckoff_median = df_metrics['wyckoff_score'].median()
         wls_median = df_metrics['wls'].median()
+
+        rs_p25 = safe_quantile(df_metrics['rs_mom'], 0.25)
+        rs_p75 = safe_quantile(df_metrics['rs_mom'], 0.75)
+        momentum_p25 = safe_quantile(df_metrics['momentum20'], 0.25)
+        momentum_p75 = safe_quantile(df_metrics['momentum20'], 0.75)
+        flow_p25 = safe_quantile(df_metrics['flow_proxy_z'], 0.25)
+        flow_p75 = safe_quantile(df_metrics['flow_proxy_z'], 0.75)
+        wls_p25 = safe_quantile(df_metrics['wls'], 0.25)
+        wls_p75 = safe_quantile(df_metrics['wls'], 0.75)
 
         n_total = len(tickers)
         n_valid_rs = df_metrics['rs_mom'].notna().sum()
@@ -110,6 +125,14 @@ def compute_sector_concentration(df_stocks, holdings_df, leader_df):
             'leader_vs_median_flow': leader_vs_flow,
             'leader_vs_median_wyckoff': leader_vs_wyckoff,
             'leader_vs_median_wls': leader_vs_wls,
+            'rs_p25': rs_p25,
+            'rs_p75': rs_p75,
+            'momentum_p25': momentum_p25,
+            'momentum_p75': momentum_p75,
+            'flow_p25': flow_p25,
+            'flow_p75': flow_p75,
+            'wls_p25': wls_p25,
+            'wls_p75': wls_p75,
             'n_valid_rs': n_valid_rs,
             'n_valid_momentum': n_valid_momentum,
             'n_valid_flow': n_valid_flow,
