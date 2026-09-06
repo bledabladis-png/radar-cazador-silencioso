@@ -31,6 +31,7 @@ from src.utils import get_col, detect_cross_module_conflict
 from src.dependency_tracker import audit_double_counting
 from indicators.sector_breadth import compute_sector_breadth
 from indicators.sector_concentration import compute_sector_concentration
+from indicators.sector_flow_characteristics import compute_sector_flow_characteristics
 from indicators.breadth import compute_breadth
 from indicators.persistence import compute_persistence
 from indicators.signal_agreement import compute_signal_agreement
@@ -134,6 +135,24 @@ def main():
     except Exception as e:
         print(f"  ETF Primary Flow omitido: {e}")
         etf_primary_flow_data = None
+
+    # --- Sector Flow Characteristics v1.0 (descriptivo) ---
+    try:
+        if etf_primary_flow_data is not None and not etf_primary_flow_data.empty:
+            sector_flow_characteristics_df = compute_sector_flow_characteristics('outputs/history/etf_primary_flow.csv', df_market)
+            sfc_path = Path('outputs/history/sector_flow_characteristics.csv')
+            sfc_path.parent.mkdir(parents=True, exist_ok=True)
+            if not sector_flow_characteristics_df.empty:
+                if sfc_path.exists():
+                    hist_sfc = pd.read_csv(sfc_path)
+                    sector_flow_characteristics_df = pd.concat([hist_sfc, sector_flow_characteristics_df], ignore_index=True)
+                sector_flow_characteristics_df.to_csv(sfc_path, index=False)
+                print("  Sector Flow Characteristics calculado.")
+        else:
+            sector_flow_characteristics_df = None
+    except Exception as e:
+        print(f"  Sector Flow Characteristics omitido: {e}")
+        sector_flow_characteristics_df = None
 
     # Flujo primario DAXEX (BlackRock)
     print("Calculando DAXEX Primary Flow (BlackRock)...")
@@ -869,7 +888,7 @@ def main():
                           shock_sensitivities=shock_sensitivities,
                           price_flow_divergences=price_flow_divergences,
                           dc_summary=dc_summary,
-                          real_liq_prev=real_liq_prev, index_leaders=index_leaders, index_phases=index_phases, sector_breadth_data=sector_breadth_df, sector_concentration_data=sector_concentration_df,
+                          real_liq_prev=real_liq_prev, index_leaders=index_leaders, index_phases=index_phases, sector_breadth_data=sector_breadth_df, sector_concentration_data=sector_concentration_df, sector_flow_characteristics_data=sector_flow_characteristics_df,
                           all_signals=all_signals)
     print("Reporte generado en outputs/report/reporte_diario.md")
 

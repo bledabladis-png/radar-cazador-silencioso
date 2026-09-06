@@ -77,7 +77,7 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
                           slpm_v12_data=None, tactical_scores=None, structural_scores=None,
                           sector_persistence=None, signal_agreements=None, signal_agreements_display=None,
                           cross_module_conflict=None, shock_sensitivities=None, price_flow_divergences=None,
-                          dc_summary="", all_signals=None, real_liq_score=None, real_liq_prev=None, index_leaders=None, index_phases=None, etf_primary_flow_data=None, cftc_position_flow_data=None, flow_synthesis=None, blackrock_dax_flow=None, blackrock_isf_flow=None, amundi_lyxi_flow=None, blackrock_iwm_flow=None, nport_position_change_data=None, qqq_performance_data=None, qqq_nport_flow_data=None, qqq_sec_flow=None, sector_breadth_data=None, sector_concentration_data=None, output_path='outputs/report/reporte_diario.md'):
+                          dc_summary="", all_signals=None, real_liq_score=None, real_liq_prev=None, index_leaders=None, index_phases=None, etf_primary_flow_data=None, cftc_position_flow_data=None, flow_synthesis=None, blackrock_dax_flow=None, blackrock_isf_flow=None, amundi_lyxi_flow=None, blackrock_iwm_flow=None, nport_position_change_data=None, qqq_performance_data=None, qqq_nport_flow_data=None, qqq_sec_flow=None, sector_breadth_data=None, sector_concentration_data=None, sector_flow_characteristics_data=None, output_path='outputs/report/reporte_diario.md'):
     lines = []
     lines.append("# MACRO SECTORIAL - Reporte Diario\n")
     lines.append(f"**Fecha:** {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
@@ -611,6 +611,17 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
         lines.append(f"\n*Fuente: State Street Global Advisors (SSGA). ETF Primary Flow = ΔShares Outstanding × NAV. Z-score sobre {ETF_PRIMARY_FLOW_ZSCORE_WINDOW} sesiones.*\n\n")
 
     # =========================================================================
+    # =========================================================================
+    # SECTOR FLOW CHARACTERISTICS
+    # =========================================================================
+    if sector_flow_characteristics_data is not None and not sector_flow_characteristics_data.empty:
+        lines.append("## Flujo Primario ETF — Características\n")
+        lines.append("| Sector | Flujo $ | % AUM | Z | 5d Acum | 20d Acum | Pers 5d | Pers 20d | Ret 20d | Régimen |\n")
+        lines.append("|--------|---------|-------|----|---------|----------|---------|----------|---------|---------|\n")
+        for _, row in sector_flow_characteristics_data.iterrows():
+            lines.append(f"| {row['sector']} | {row['flow_dollar']:+,.0f} | {row['flow_pct_aum']:.2f}% | {row['flow_zscore']:.2f} | {row['flow_5d_sum']:+,.0f} | {row['flow_20d_sum']:+,.0f} | {row['persistence_5d']:.0%} | {row['persistence_20d']:.0%} | {row['price_ret_20d']:.2%} | {row['price_flow_regime']} |\n")
+        lines.append("\n")
+
     # FLUJO PRIMARIO DAXEX (BlackRock)
     # =========================================================================
     if blackrock_dax_flow is not None and not blackrock_dax_flow.empty:
