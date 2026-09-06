@@ -622,6 +622,18 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
             lines.append(f"| {row['sector']} | {row['flow_dollar']:+,.0f} | {row['flow_pct_aum']:.2f}% | {row['flow_zscore']:.2f} | {row['flow_5d_sum']:+,.0f} | {row['flow_20d_sum']:+,.0f} | {row['persistence_5d']:.0%} | {row['persistence_20d']:.0%} | {row['price_ret_20d']:.2%} | {row['price_flow_regime']} |\n")
         lines.append("\n")
 
+    # =========================================================================
+    # DIVERGENCIA PRECIO-FLUJO PRIMARIO
+    # =========================================================================
+    if sector_flow_characteristics_data is not None and not sector_flow_characteristics_data.empty:
+        lines.append("## Divergencia Precio–Flujo Primario\n")
+        lines.append("| Sector | Ret 5d | Flujo 5d | Régimen 5d | Ret 20d | Flujo 20d | Régimen 20d |\n")
+        lines.append("|--------|--------|----------|------------|---------|-----------|-------------|\n")
+        for _, row in sector_flow_characteristics_data.iterrows():
+            lines.append(f"| {row['sector']} | {row['price_ret_5d']:.2%} | {row['flow_5d_sum']:+,.0f} | {row['price_flow_regime_5d']} | {row['price_ret_20d']:.2%} | {row['flow_20d_sum']:+,.0f} | {row['price_flow_regime_20d']} |\n")
+        lines.append("\n")
+        lines.append("*«Absorción potencial» describe una configuración de retorno negativo del precio acompañada de flujo primario acumulado positivo. Puede ser compatible con absorción, pero no confirma por sí sola absorción institucional ni establece causalidad.*\n\n")
+
     # FLUJO PRIMARIO DAXEX (BlackRock)
     # =========================================================================
     if blackrock_dax_flow is not None and not blackrock_dax_flow.empty:
