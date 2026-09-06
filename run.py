@@ -32,6 +32,7 @@ from src.dependency_tracker import audit_double_counting
 from indicators.sector_breadth import compute_sector_breadth
 from indicators.sector_concentration import compute_sector_concentration
 from indicators.sector_flow_characteristics import compute_sector_flow_characteristics
+from indicators.sector_rank_history import update_rank_history
 from indicators.rs_internal import compute_rs_internal
 from indicators.breadth import compute_breadth
 from indicators.persistence import compute_persistence
@@ -104,6 +105,20 @@ def main():
         for i, (t, n, s, w) in enumerate(top3, 1):
             print(f"    {i}. {n} ({t}): {s:.2f} [{w}]")
         print(f"  Regimen sectorial: {sector_results['regime']}")
+
+    # --- Rotación sectorial histórica reciente v1.0 ---
+    try:
+        from indicators.sector_rank_history import update_rank_history
+        sector_rank_history_df, sector_rank_deltas_df = update_rank_history(
+            sector_results, 'outputs/history/sector_rank_history.csv', date=pd.Timestamp.now().normalize()
+        )
+        if sector_rank_deltas_df is not None and not sector_rank_deltas_df.empty:
+            print("  Rotación sectorial histórica calculada.")
+        else:
+            sector_rank_history_df, sector_rank_deltas_df = None, None
+    except Exception as e:
+        print(f"  Rotación sectorial omitida: {e}")
+        sector_rank_history_df, sector_rank_deltas_df = None, None
 
     print("Calculando rankings de precio y flujo...")
     sector_price_rank, sector_flow_rank, otros_price_rank, otros_flow_rank = compute_price_flow_rankings(df_market)
@@ -907,7 +922,7 @@ def main():
                           shock_sensitivities=shock_sensitivities,
                           price_flow_divergences=price_flow_divergences,
                           dc_summary=dc_summary,
-                          real_liq_prev=real_liq_prev, index_leaders=index_leaders, index_phases=index_phases, sector_breadth_data=sector_breadth_df, sector_concentration_data=sector_concentration_df, sector_flow_characteristics_data=sector_flow_characteristics_df, rs_internal_data=rs_internal_df,
+                          real_liq_prev=real_liq_prev, index_leaders=index_leaders, index_phases=index_phases, sector_breadth_data=sector_breadth_df, sector_concentration_data=sector_concentration_df, sector_flow_characteristics_data=sector_flow_characteristics_df, rs_internal_data=rs_internal_df, sector_rank_deltas_data=sector_rank_deltas_df,
                           all_signals=all_signals)
     print("Reporte generado en outputs/report/reporte_diario.md")
 
