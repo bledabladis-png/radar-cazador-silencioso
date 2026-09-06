@@ -289,10 +289,10 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
     # =========================================================================
     if sector_concentration_data is not None and not sector_concentration_data.empty:
         lines.append("## Concentración del liderazgo\n")
-        lines.append("| Sector | Top1 | Top3 | Top5 | RS med | Mom med | WLS med | Líder | Ret20 Líder | Líder vs RS | Líder vs Mom | Líder vs WLS |\n")
-        lines.append("|--------|------|------|------|--------|---------|---------|-------|------------|-------------|-------------|-------------|\n")
+        lines.append("| Sector | Top1 | Top3 | Top5 | RS med | Mom med | Flow med | Wyckoff med | WLS med | Líder | Ret Líder | Cob RS | Cob Mom | Cob Flow | Cob Wyckoff | Cob WLS |\n")
+        lines.append("|--------|------|------|------|--------|---------|----------|-------------|---------|-------|----------|--------|---------|----------|-------------|---------|\n")
         for _, row in sector_concentration_data.iterrows():
-            lines.append(f"| {row['sector']} | {row['top1_positive_return_concentration']:.1%} | {row['top3_positive_return_concentration']:.1%} | {row['top5_positive_return_concentration']:.1%} | {row['rs_median']:.4f} | {row['momentum_median']:.2%} | {row['wls_median']:.2f} | {row['leader_ticker']} | {row['leader_return20']:.2%} | {row['leader_vs_median_rs']:.4f} | {row['leader_vs_median_mom']:.2%} | {row['leader_vs_median_wls']:.2f} |\n")
+            lines.append(f"| {row['sector']} | {row['top1_positive_return_concentration']:.1%} | {row['top3_positive_return_concentration']:.1%} | {row['top5_positive_return_concentration']:.1%} | {row['rs_median']:.4f} | {row['momentum_median']:.2%} | {row['flow_median']:.2f} | {row['wyckoff_median']:.2f} | {row['wls_median']:.2f} | {row['leader_ticker']} | {row['leader_return20']:.2%} | {row['coverage_rs']:.0f}% | {row['coverage_momentum']:.0f}% | {row['coverage_flow']:.0f}% | {row['coverage_wyckoff']:.0f}% | {row['coverage_wls']:.0f}% |\n")
         lines.append("\n")
     # TACTICAL LEADERS
     # =========================================================================
