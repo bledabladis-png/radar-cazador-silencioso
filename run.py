@@ -241,7 +241,7 @@ def main():
                 if sfc_path.exists():
                     hist_sfc = pd.read_csv(sfc_path)
                     sector_flow_characteristics_df = append_dedup(hist_sfc, sector_flow_characteristics_df, ["date","sector"])
-                sector_flow_characteristics_df.to_csv(sfc_path, index=False)
+                sector_flow_characteristics_df.to_csv(sfc_path, index=False, encoding='utf-8')
                 print("  Sector Flow Characteristics calculado.")
         else:
             sector_flow_characteristics_df = None
