@@ -75,6 +75,16 @@ if os.path.exists(path_ev):
 else:
     log('❌ No se encontro evidence_matrix.csv')
 
+# 3c. Integridad específica para sector_concentration.csv
+sc_path = 'outputs/history/sector_concentration.csv'
+if os.path.exists(sc_path):
+    sc = pd.read_csv(sc_path)
+    check(sc['date'].notna().all(), f'{sc_path}: date sin NaN', f'{sc_path}: {sc["date"].isna().sum()} fechas NaN')
+    check(len(sc) == 11, f'{sc_path}: 11 filas', f'{sc_path}: {len(sc)} filas')
+    check(sc['sector'].nunique() == 11, f'{sc_path}: 11 sectores', f'{sc_path}: {sc["sector"].nunique()} sectores')
+else:
+    log(f'❌ {sc_path} no existe')
+
 # 3c. Duplicados en CSVs sectoriales
 csv_files = [
     ('outputs/history/sector_concentration.csv', ['date','sector']),

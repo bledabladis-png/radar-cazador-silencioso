@@ -9,6 +9,18 @@ import pandas as pd
 import numpy as np
 from src.utils import get_col
 
+def _get_series(df, ticker, field):
+    try:
+        return get_col(df, ticker, field)
+    except (KeyError, TypeError):
+        if ticker in df.columns:
+            s = df[ticker]
+            if isinstance(s, pd.DataFrame):
+                return s[field] if field in s.columns else pd.Series(dtype=float)
+            else:
+                return s
+        return pd.Series(dtype=float)
+
 def safe_quantile(series, q):
     if len(series.dropna()) >= 5:
         return series.quantile(q)
@@ -26,9 +38,8 @@ def compute_sector_concentration(df_stocks, holdings_df, full_metrics_df):
         # Retornos 20d para concentración positiva
         ret20_list = []
         for ticker in tickers:
-            try:
-                close = get_col(df_stocks, ticker, 'Close').dropna()
-            except KeyError:
+            close = _get_series(df_stocks, ticker, 'Close').dropna()
+            if close.empty:
                 continue
             if len(close) >= 21:
                 ret20_list.append((ticker, close.pct_change(20).iloc[-1]))
