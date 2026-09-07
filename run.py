@@ -147,6 +147,32 @@ def main():
         sector_dispersion_df = None
 
 
+    # --- Correlación entre sectores v1.0 (descriptivo) ---
+    try:
+        from indicators.sector_correlation import compute_sector_correlation
+        sector_corr_matrix_df, sector_corr_summary_df = compute_sector_correlation(df_market)
+        cm_path = Path('outputs/history/sector_correlation_matrix.csv')
+        cs_path = Path('outputs/history/sector_correlation_summary.csv')
+        cm_path.parent.mkdir(parents=True, exist_ok=True)
+        if not sector_corr_matrix_df.empty:
+            if cm_path.exists():
+                hist_cm = pd.read_csv(cm_path)
+                sector_corr_matrix_df = append_dedup(hist_cm, sector_corr_matrix_df, ['date','window','sector1','sector2'])
+            sector_corr_matrix_df.to_csv(cm_path, index=False)
+        if not sector_corr_summary_df.empty:
+            if cs_path.exists():
+                hist_cs = pd.read_csv(cs_path)
+                sector_corr_summary_df = append_dedup(hist_cs, sector_corr_summary_df, ['date','window'])
+            sector_corr_summary_df.to_csv(cs_path, index=False)
+            print("  Correlación entre sectores calculada.")
+        else:
+            sector_corr_summary_df = None
+            sector_corr_matrix_df = None
+    except Exception as e:
+        print(f"  Correlación entre sectores omitida: {e}")
+        sector_corr_summary_df = None
+        sector_corr_matrix_df = None
+
     # Breadth ampliado
     b20, b50, b200, nh, nl = compute_breadth(df_market)
 
@@ -1069,6 +1095,8 @@ def main():
                           real_liq_prev=real_liq_prev, index_leaders=index_leaders, index_phases=index_phases, sector_breadth_data=sector_breadth_df, sector_concentration_data=sector_concentration_df, sector_flow_characteristics_data=sector_flow_characteristics_df, rs_internal_data=rs_internal_df, sector_rank_deltas_data=sector_rank_deltas_df, sector_regime_matrix_data=sector_regime_matrix_df, leader_representativeness_data=leader_representativeness_df, sector_wyckoff_distribution_data=sector_wyckoff_distribution_df, sector_leader_divergence_data=sector_leader_divergence_df, sector_breadth_momentum_data=sector_breadth_momentum_df,
                           evidence_matrix_data=evidence_matrix_df,
                           sector_dispersion_data=sector_dispersion_df,
+                          sector_correlation_summary_data=sector_corr_summary_df,
+                          sector_correlation_matrix_data=sector_corr_matrix_df,
 
                           all_signals=all_signals)
     print("Reporte generado en outputs/report/reporte_diario.md")

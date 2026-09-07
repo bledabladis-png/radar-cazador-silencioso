@@ -86,6 +86,8 @@ csv_files = [
     ('outputs/history/leader_representativeness.csv', ['date','sector','ticker']),
     ('outputs/history/sector_regime_matrix.csv', ['date','sector']),
     ('outputs/history/sector_dispersion.csv', ['date']),
+    ('outputs/history/sector_correlation_summary.csv', ['date','window']),
+    ('outputs/history/sector_correlation_matrix.csv', ['date','window','sector1','sector2']),
     ('outputs/history/evidence_matrix.csv', ['date','sector']),
 ]
 for f, subset in csv_files:
