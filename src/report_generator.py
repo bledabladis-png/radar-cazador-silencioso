@@ -6,6 +6,14 @@ from config.tickers import SECTOR_NAMES
 from config.index_tickers import INDEX_CONFIG
 from config.settings import MOMENTUM_PRICE_WINDOW, MOMENTUM_LONG_WINDOW, ETF_PRIMARY_FLOW_ZSCORE_WINDOW
 from config.weights import SLPM_WEIGHTS
+def _fmt_num(v, fmt="{:.2f}"):
+    if pd.isna(v):
+        return "N/D"
+    try:
+        return fmt.format(v)
+    except Exception:
+        return str(v)
+
 
 MODEL_VERSION = "4.3"
 WEIGHTS_VERSION = "3"
@@ -276,23 +284,27 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
     # SECTOR BREADTH & HEALTH
     # =========================================================================
     if sector_breadth_data is not None and not sector_breadth_data.empty:
+        latest_date = pd.to_datetime(sector_breadth_data['date']).max()
+        breadth_latest = sector_breadth_data[pd.to_datetime(sector_breadth_data['date']) == latest_date]
         lines.append("## Sector Breadth & Health\n")
         lines.append("| Sector | EMA20 | EMA50 | EMA200 | RS+ | Mom+ | Acc | Markup | Dist | Markdown | NH | NL | A/D | Cobertura |\n")
         lines.append("|--------|-------|-------|--------|-----|------|-----|--------|------|----------|----|----|-----|-----------|\n")
-        for _, row in sector_breadth_data.iterrows():
+        for _, row in breadth_latest.iterrows():
             cobertura = (row['n_valid_ema200'] / row['n_total'] * 100) if row['n_total'] else 0
-            lines.append(f"| {row['sector']} | {row['pct_above_ema20']:.1f}% | {row['pct_above_ema50']:.1f}% | {row['pct_above_ema200']:.1f}% | {row['pct_rs_positive']:.1f}% | {row['pct_momentum_positive']:.1f}% | {row['count_accumulation']} | {row['count_markup']} | {row['count_distribution']} | {row['count_markdown']} | {row['new_highs']} | {row['new_lows']} | {row['ad_net']:+d} | {cobertura:.0f}% |\n")
+            lines.append(f"| {row['sector']} | {_fmt_num(row['pct_above_ema20'], '{:.1f}%')} | {_fmt_num(row['pct_above_ema50'], '{:.1f}%')} | {_fmt_num(row['pct_above_ema200'], '{:.1f}%')} | {_fmt_num(row['pct_rs_positive'], '{:.1f}%')} | {_fmt_num(row['pct_momentum_positive'], '{:.1f}%')} | {_fmt_num(row['count_accumulation'], '{:.0f}')} | {_fmt_num(row['count_markup'], '{:.0f}')} | {_fmt_num(row['count_distribution'], '{:.0f}')} | {_fmt_num(row['count_markdown'], '{:.0f}')} | {_fmt_num(row['new_highs'], '{:.0f}')} | {_fmt_num(row['new_lows'], '{:.0f}')} | {_fmt_num(row['ad_net'], '{:+d}')} | {cobertura:.0f}% |\n")
         lines.append("\n")
 
     # =========================================================================
     # SECTOR CONCENTRATION
     # =========================================================================
     if sector_concentration_data is not None and not sector_concentration_data.empty:
+        latest_date = pd.to_datetime(sector_concentration_data['date']).max()
+        conc_latest = sector_concentration_data[pd.to_datetime(sector_concentration_data['date']) == latest_date]
         lines.append("## Concentración del liderazgo\n")
         lines.append("| Sector | Top1 | Top3 | Top5 | RS med | Mom med | Flow med | Wyckoff med | WLS med | Líder | Ret Líder | Cob RS | Cob Mom | Cob Flow | Cob Wyckoff | Cob WLS |\n")
         lines.append("|--------|------|------|------|--------|---------|----------|-------------|---------|-------|----------|--------|---------|----------|-------------|---------|\n")
-        for _, row in sector_concentration_data.iterrows():
-            lines.append(f"| {row['sector']} | {row['top1_positive_return_concentration']:.1%} | {row['top3_positive_return_concentration']:.1%} | {row['top5_positive_return_concentration']:.1%} | {row['rs_median']:.4f} | {row['momentum_median']:.2%} | {row['flow_median']:.2f} | {row['wyckoff_median']:.2f} | {row['wls_median']:.2f} | {row['leader_ticker']} | {row['leader_return20']:.2%} | {row['coverage_rs']:.0f}% | {row['coverage_momentum']:.0f}% | {row['coverage_flow']:.0f}% | {row['coverage_wyckoff']:.0f}% | {row['coverage_wls']:.0f}% |\n")
+        for _, row in conc_latest.iterrows():
+            lines.append(f"| {row['sector']} | {_fmt_num(row['top1_positive_return_concentration'], '{:.1%}')} | {_fmt_num(row['top3_positive_return_concentration'], '{:.1%}')} | {_fmt_num(row['top5_positive_return_concentration'], '{:.1%}')} | {_fmt_num(row['rs_median'], '{:.4f}')} | {_fmt_num(row['momentum_median'], '{:.2%}')} | {_fmt_num(row['flow_median'], '{:.2f}')} | {_fmt_num(row['wyckoff_median'], '{:.2f}')} | {_fmt_num(row['wls_median'], '{:.2f}')} | {row['leader_ticker']} | {_fmt_num(row['leader_return20'], '{:.2%}')} | {_fmt_num(row['coverage_rs'], '{:.0f}%')} | {_fmt_num(row['coverage_momentum'], '{:.0f}%')} | {_fmt_num(row['coverage_flow'], '{:.0f}%')} | {_fmt_num(row['coverage_wyckoff'], '{:.0f}%')} | {_fmt_num(row['coverage_wls'], '{:.0f}%')} |\n")
         lines.append("\n")
     # =========================================================================
     # DISPERSIÓN INTERNA
@@ -391,6 +403,20 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
     lines.append("\n")
 
     # =========================================================================
+    # =========================================================================
+    # PERSISTENCIA SECTORIAL
+    # =========================================================================
+    if sector_persistence:
+        lines.append("## Persistencia sectorial\n")
+        lines.append("| Sector | Persistencia |\n")
+        lines.append("|--------|-------------|\n")
+        for ticker in ['XLK','XLF','XLV','XLE','XLY','XLP','XLI','XLB','XLU','XLRE','XLC']:
+            val = sector_persistence.get(ticker)
+            val_str = f"{val:.0%}" if val is not None else "N/D"
+            lines.append(f"| {ticker} | {val_str} |\n")
+        lines.append("\n")
+        lines.append("*Persistencia calculada sobre RS20 (acción vs SPY) con lookback 12. Descriptiva, no predictiva.*\n\n")
+
     # OPPORTUNITY MAP
     # =========================================================================
     lines.append("## Opportunity Map (basado en medianas Tactical/Structural, independiente del SLPM)\n\n")
@@ -615,11 +641,15 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
     # SECTOR FLOW CHARACTERISTICS
     # =========================================================================
     if sector_flow_characteristics_data is not None and not sector_flow_characteristics_data.empty:
+        latest_date = pd.to_datetime(sector_flow_characteristics_data['date']).max()
+        flow_latest = sector_flow_characteristics_data[pd.to_datetime(sector_flow_characteristics_data['date']) == latest_date]
         lines.append("## Flujo Primario ETF — Características\n")
         lines.append("| Sector | Flujo $ | % AUM | Z | 5d Acum | 20d Acum | Pers 5d | Pers 20d | Ret 20d | Régimen |\n")
-        lines.append("|--------|---------|-------|----|---------|----------|---------|----------|---------|---------|\n")
-        for _, row in sector_flow_characteristics_data.iterrows():
-            lines.append(f"| {row['sector']} | {row['flow_dollar']:+,.0f} | {row['flow_pct_aum']:.2f}% | {row['flow_zscore']:.2f} | {row['flow_5d_sum']:+,.0f} | {row['flow_20d_sum']:+,.0f} | {row['persistence_5d']:.0%} | {row['persistence_20d']:.0%} | {row['price_ret_20d']:.2%} | {row['price_flow_regime']} |\n")
+        lines.append("|--------|---------|-------|----|---------|----------|---------|----------|---------|----------|\n")
+        for _, row in flow_latest.iterrows():
+            regime = row.get('price_flow_regime', None)
+            regime_str = regime if pd.notna(regime) else 'N/D'
+            lines.append(f"| {row['sector']} | {_fmt_num(row['flow_dollar'], '{:+,.0f}')} | {_fmt_num(row['flow_pct_aum'], '{:.2f}%')} | {_fmt_num(row['flow_zscore'], '{:.2f}')} | {_fmt_num(row['flow_5d_sum'], '{:+,.0f}')} | {_fmt_num(row['flow_20d_sum'], '{:+,.0f}')} | {_fmt_num(row['persistence_5d'], '{:.0%}')} | {_fmt_num(row['persistence_20d'], '{:.0%}')} | {_fmt_num(row['price_ret_20d'], '{:.2%}')} | {regime_str} |\n")
         lines.append("\n")
 
     # =========================================================================

@@ -27,6 +27,24 @@ INDIRECT_DEPENDENCIES = {
     'LIS → SLPM (corregido)': 'LIS era una metrica de intensidad/calidad. Tras detectar redundancia perfecta con Breadth (Spearman=1.0), fue excluido de la State Machine. Ahora es solo diagnostico.',
 }
 
+EVIDENCE_CLASSIFICATION = {
+    'Precio': 'INDEPENDIENTE',
+    'Retorno': 'INDEPENDIENTE',
+    'Volumen': 'INDEPENDIENTE',
+    'Breadth': 'INDEPENDIENTE',
+    'VIX': 'INDEPENDIENTE',
+    'Crédito': 'INDEPENDIENTE',
+    'Flujo ETF primario': 'INDEPENDIENTE',
+    'Flow Proxy': 'INDEPENDIENTE',
+    'Relative Strength (RS)': 'DERIVADA',
+    'Momentum': 'DERIVADA',
+    'Persistence': 'DERIVADA',
+    'WLS': 'DERIVADA',
+    'Tactical Score': 'DERIVADA',
+    'Structural Score': 'DERIVADA',
+    'Leader Breadth': 'DERIVADA',
+}
+
 def audit_double_counting():
     """
     Analiza la matriz de dependencias y retorna un resumen de riesgos.
@@ -84,6 +102,13 @@ def audit_double_counting():
     except Exception:
         lines.append("\n**Verificación SLPM:** No disponible.\n")
 
+
+    lines.append("\n**Clasificación de evidencia:**\n")
+    lines.append("| Variable | Tipo |\n")
+    lines.append("|----------|------|\n")
+    for var, tipo in EVIDENCE_CLASSIFICATION.items():
+        lines.append(f"| {var} | {tipo} |\n")
+    lines.append("\n*Evidencias independientes provienen directamente de observables; las derivadas combinan una o más evidencias.*\n")
     return {
         'critical': critical,
         'high': high,

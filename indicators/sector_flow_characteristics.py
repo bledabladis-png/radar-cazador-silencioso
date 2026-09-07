@@ -95,6 +95,7 @@ def compute_sector_flow_characteristics(flow_csv_path, price_df):
             'price_ret_20d': price_ret_20d,
             'price_flow_regime_5d': regime_5d,
             'price_flow_regime_20d': regime_20d,
+            'price_flow_regime': regime_20d,
         })
 
     return pd.DataFrame(rows)
