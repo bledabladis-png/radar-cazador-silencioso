@@ -77,7 +77,7 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
                           slpm_v12_data=None, tactical_scores=None, structural_scores=None,
                           sector_persistence=None, signal_agreements=None, signal_agreements_display=None,
                           cross_module_conflict=None, shock_sensitivities=None, price_flow_divergences=None,
-                          dc_summary="", all_signals=None, real_liq_score=None, real_liq_prev=None, index_leaders=None, index_phases=None, etf_primary_flow_data=None, cftc_position_flow_data=None, flow_synthesis=None, blackrock_dax_flow=None, blackrock_isf_flow=None, amundi_lyxi_flow=None, blackrock_iwm_flow=None, nport_position_change_data=None, qqq_performance_data=None, qqq_nport_flow_data=None, qqq_sec_flow=None, sector_breadth_data=None, sector_concentration_data=None, sector_flow_characteristics_data=None, rs_internal_data=None, sector_rank_deltas_data=None, sector_regime_matrix_data=None, leader_representativeness_data=None, sector_wyckoff_distribution_data=None, sector_leader_divergence_data=None, sector_breadth_momentum_data=None, evidence_matrix_data=None, sector_dispersion_data=None, sector_correlation_summary_data=None, sector_correlation_matrix_data=None, output_path='outputs/report/reporte_diario.md'):
+                          dc_summary="", all_signals=None, real_liq_score=None, real_liq_prev=None, index_leaders=None, index_phases=None, etf_primary_flow_data=None, cftc_position_flow_data=None, flow_synthesis=None, blackrock_dax_flow=None, blackrock_isf_flow=None, amundi_lyxi_flow=None, blackrock_iwm_flow=None, nport_position_change_data=None, qqq_performance_data=None, qqq_nport_flow_data=None, qqq_sec_flow=None, sector_breadth_data=None, sector_concentration_data=None, sector_flow_characteristics_data=None, rs_internal_data=None, sector_rank_deltas_data=None, sector_regime_matrix_data=None, leader_representativeness_data=None, sector_wyckoff_distribution_data=None, sector_leader_divergence_data=None, sector_breadth_momentum_data=None, evidence_matrix_data=None, sector_dispersion_data=None, sector_correlation_summary_data=None, sector_correlation_matrix_data=None, cross_asset_context_data=None, output_path='outputs/report/reporte_diario.md'):
     lines = []
     lines.append("# MACRO SECTORIAL - Reporte Diario\n")
     lines.append(f"**Fecha:** {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
@@ -682,6 +682,26 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
             lines.append(f"| {int(row['window'])}d | {row['corr_mean']:.2f} | {row['corr_median']:.2f} | {row['corr_p25']:.2f} | {row['corr_p75']:.2f} | {row['corr_min']:.2f} | {row['corr_max']:.2f} | {row['correlation_reading']} |\n")
         lines.append("\n")
         lines.append("*La correlación mide el co-movimiento entre retornos sectoriales. No es un score ni una señal.*\n\n")
+
+    # CONTEXTO CROSS-ASSET
+    if cross_asset_context_data is not None and not cross_asset_context_data.empty:
+        lines.append("## Contexto transversal de mercado\n")
+        lines.append("| Sector | Ventana | Equity | Rates | Crédito | Commodities | FX | VIX |\n")
+        lines.append("|--------|---------|--------|-------|---------|-------------|----|-----|\n")
+        # Pivotar: para cada sector y ventana, extraer mean_corr por asset_class
+        grouped = cross_asset_context_data.groupby(['sector','window','asset_class'])['mean_corr'].first().unstack()
+        for (sector, window), row in grouped.iterrows():
+            equity = row.get('equity', None)
+            rates = row.get('rates', None)
+            credit = row.get('credit', None)
+            commodities = row.get('commodities', None)
+            fx = row.get('fx', None)
+            volatility = row.get('volatility', None)
+            def _fmt(v):
+                return f"{v:.2f}" if pd.notna(v) else "N/D"
+            lines.append(f"| {sector} | {int(window)}d | {_fmt(equity)} | {_fmt(rates)} | {_fmt(credit)} | {_fmt(commodities)} | {_fmt(fx)} | {_fmt(volatility)} |\n")
+        lines.append("\n")
+        lines.append("*Contexto descriptivo basado en correlaciones sector-activo transversal. No implica confirmación ni causalidad.*\n\n")
 
     # MATRIZ DE RÉGIMEN SECTORIAL
     # =========================================================================

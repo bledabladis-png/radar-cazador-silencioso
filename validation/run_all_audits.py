@@ -87,6 +87,8 @@ csv_files = [
     ('outputs/history/sector_regime_matrix.csv', ['date','sector']),
     ('outputs/history/sector_dispersion.csv', ['date']),
     ('outputs/history/sector_correlation_summary.csv', ['date','window']),
+    ('outputs/history/cross_asset_correlation.csv', ['date','window','sector','asset']),
+    ('outputs/history/cross_asset_context.csv', ['date','window','sector','asset_class']),
     ('outputs/history/sector_correlation_matrix.csv', ['date','window','sector1','sector2']),
     ('outputs/history/evidence_matrix.csv', ['date','sector']),
 ]

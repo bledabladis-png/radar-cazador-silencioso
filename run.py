@@ -171,6 +171,32 @@ def main():
     except Exception as e:
         print(f"  Correlación entre sectores omitida: {e}")
         sector_corr_summary_df = None
+    # --- Contexto Cross-Asset v1.1 (descriptivo) ---
+    try:
+        from indicators.cross_asset_context import compute_cross_asset_context
+        cross_asset_detail_df, cross_asset_summary_df = compute_cross_asset_context(df_market)
+        ca_detail_path = Path('outputs/history/cross_asset_correlation.csv')
+        ca_summary_path = Path('outputs/history/cross_asset_context.csv')
+        ca_detail_path.parent.mkdir(parents=True, exist_ok=True)
+        if not cross_asset_detail_df.empty:
+            if ca_detail_path.exists():
+                hist_cad = pd.read_csv(ca_detail_path)
+                cross_asset_detail_df = append_dedup(hist_cad, cross_asset_detail_df, ['date','window','sector','asset'])
+            cross_asset_detail_df.to_csv(ca_detail_path, index=False)
+        if not cross_asset_summary_df.empty:
+            if ca_summary_path.exists():
+                hist_cas = pd.read_csv(ca_summary_path)
+                cross_asset_summary_df = append_dedup(hist_cas, cross_asset_summary_df, ['date','window','sector','asset_class'])
+            cross_asset_summary_df.to_csv(ca_summary_path, index=False)
+            print("  Contexto Cross-Asset calculado.")
+        else:
+            cross_asset_summary_df = None
+            cross_asset_detail_df = None
+    except Exception as e:
+        print(f"  Contexto Cross-Asset omitido: {e}")
+        cross_asset_summary_df = None
+        cross_asset_detail_df = None
+
         sector_corr_matrix_df = None
 
     # Breadth ampliado
@@ -1097,6 +1123,7 @@ def main():
                           sector_dispersion_data=sector_dispersion_df,
                           sector_correlation_summary_data=sector_corr_summary_df,
                           sector_correlation_matrix_data=sector_corr_matrix_df,
+                          cross_asset_context_data=cross_asset_summary_df,
 
                           all_signals=all_signals)
     print("Reporte generado en outputs/report/reporte_diario.md")
