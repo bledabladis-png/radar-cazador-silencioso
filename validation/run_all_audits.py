@@ -129,6 +129,25 @@ for f, subset in csv_files:
     else:
         log(f'ℹ️ {f} no existe')
 
+# 3c-ter. Validación de regímenes precio-flujo primario
+sfc_path = 'outputs/history/sector_flow_characteristics.csv'
+if os.path.exists(sfc_path):
+    sfc = pd.read_csv(sfc_path, encoding='utf-8')
+    if {'price_ret_20d','flow_20d_sum','price_flow_regime_20d'}.issubset(sfc.columns):
+        mask_valid = sfc['price_ret_20d'].notna() & sfc['flow_20d_sum'].notna()
+        bad = mask_valid & sfc['price_flow_regime_20d'].isna()
+        check(bad.sum() == 0, f'{sfc_path}: regímenes 20d presentes cuando datos válidos', f'{sfc_path}: {bad.sum()} regímenes faltantes')
+        mask_missing = sfc['price_ret_20d'].isna() | sfc['flow_20d_sum'].isna()
+        good_nd = mask_missing & (sfc['price_flow_regime_20d'] == 'N/D')
+        # No es un fallo si el régimen es N/D; comprobamos que no esté vacío
+        empty_nd = mask_missing & sfc['price_flow_regime_20d'].isna()
+        check(empty_nd.sum() == 0, f'{sfc_path}: sin regímenes NaN cuando faltan datos', f'{sfc_path}: {empty_nd.sum()} N/D ausentes')
+        log(f'ℹ️ {sfc_path}: price_flow_regime_20d válidos en {sfc["price_flow_regime_20d"].notna().sum()}/11 sectores')
+    else:
+        log(f'ℹ️ {sfc_path} no tiene columnas de régimen')
+else:
+    log(f'❌ {sfc_path} no existe')
+
 # 4. Reporte diario
 path_report = 'outputs/report/reporte_diario.md'
 if os.path.exists(path_report):
