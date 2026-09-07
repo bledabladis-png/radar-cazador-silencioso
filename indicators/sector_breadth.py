@@ -9,6 +9,18 @@ import numpy as np
 from src.utils import get_col
 from indicators.wyckoff import wyckoff_score, classify_wyckoff_phase
 
+def _get_series(df, ticker, field):
+    try:
+        return get_col(df, ticker, field)
+    except (KeyError, TypeError):
+        if ticker in df.columns:
+            s = df[ticker]
+            if isinstance(s, pd.DataFrame):
+                return s[field] if field in s.columns else pd.Series(dtype=float)
+            else:
+                return s
+        return pd.Series(dtype=float)
+
 def compute_sector_breadth(df_market, df_stocks, holdings_df, as_of_date=None):
     if as_of_date is not None:
         as_of_date = pd.Timestamp(as_of_date)
@@ -39,20 +51,16 @@ def compute_sector_breadth(df_market, df_stocks, holdings_df, as_of_date=None):
         n_valid_ad = 0
 
         # Precio del sector
-        try:
-            sector_price = get_col(df_market, sector_etf, 'Close')
-            if as_of_date is not None:
-                sector_price = sector_price.loc[:as_of_date]
-        except KeyError:
-            sector_price = None
+        sector_price = _get_series(df_market, sector_etf, 'Close')
+        if sector_price is not None and len(sector_price) > 0 and as_of_date is not None:
+            sector_price = sector_price.loc[:as_of_date]
 
         for ticker in tickers:
-            try:
-                close = get_col(df_stocks, ticker, 'Close')
-                high = get_col(df_stocks, ticker, 'High')
-                low = get_col(df_stocks, ticker, 'Low')
-                volume = get_col(df_stocks, ticker, 'Volume')
-            except KeyError:
+            close = _get_series(df_stocks, ticker, 'Close')
+            high = _get_series(df_stocks, ticker, 'High')
+            low = _get_series(df_stocks, ticker, 'Low')
+            volume = _get_series(df_stocks, ticker, 'Volume')
+            if close.empty or len(close) == 0:
                 continue
 
             close = close.dropna()
@@ -87,6 +95,7 @@ def compute_sector_breadth(df_market, df_stocks, holdings_df, as_of_date=None):
                     ema200_above.append(0)
 
             # RS positivo (definición oficial: rs_mom > 0)
+            # El universo válido de RS y Momentum es el mismo: sector_price existe y len(close) >= 21
             if sector_price is not None and len(close) >= 21:
                 n_valid_momentum += 1
                 common = close.index.intersection(sector_price.index)
@@ -97,7 +106,7 @@ def compute_sector_breadth(df_market, df_stocks, holdings_df, as_of_date=None):
                 else:
                     rs_positive.append(0)
 
-            # Momentum 20d
+            # Momentum 20d (mismo universo válido que RS)
             if len(close) >= 21:
                 mom = close.pct_change(20).iloc[-1]
                 if pd.notna(mom) and mom > 0:
@@ -130,11 +139,11 @@ def compute_sector_breadth(df_market, df_stocks, holdings_df, as_of_date=None):
             if len(close) >= 60:
                 try:
                     ticker_df = pd.DataFrame({
-                        'Open': get_col(df_stocks, ticker, 'Open'),
+                        'Open': _get_series(df_stocks, ticker, 'Open'),
                         'High': high,
                         'Low': low,
                         'Close': close,
-                        'Volume': get_col(df_stocks, ticker, 'Volume')
+                        'Volume': volume
                     }).dropna()
                     phase = classify_wyckoff_phase(ticker_df, ticker)
                     wyckoff_phases.append(phase)
@@ -143,7 +152,7 @@ def compute_sector_breadth(df_market, df_stocks, holdings_df, as_of_date=None):
 
         # Agregar sector
         row = {
-            'date': pd.Timestamp.now().normalize(),
+            'date': pd.Timestamp(as_of_date).normalize() if as_of_date is not None else pd.Timestamp.now().normalize(),
             'sector': sector_etf,
             'n_total': len(tickers),
             'n_valid_ema20': n_valid_ema20,
@@ -167,6 +176,7 @@ def compute_sector_breadth(df_market, df_stocks, holdings_df, as_of_date=None):
             'declines': declines,
             'unchanged': unchanged,
             'ad_net': advances - declines,
+            # advance_pct es NaN cuando no hay avances ni descensos; no se interpreta como neutralidad
             'advance_pct': (advances / (advances + declines) * 100) if (advances + declines) > 0 else np.nan,
         }
         rows.append(row)
