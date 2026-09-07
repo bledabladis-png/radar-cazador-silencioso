@@ -166,6 +166,22 @@ if os.path.exists(rs_path):
 else:
     log(f'❌ {rs_path} no existe')
 
+# 3c-quinquies. Validación Persistencia sectorial
+ppath = 'outputs/history/sector_persistence.csv'
+if os.path.exists(ppath):
+    pdf = pd.read_csv(ppath, encoding='utf-8')
+    check({'date','sector','persistence'}.issubset(pdf.columns), f'{ppath}: columnas correctas', f'{ppath}: faltan columnas')
+    check(pdf['date'].notna().all(), f'{ppath}: date sin NaN', f'{ppath}: {pdf["date"].isna().sum()} NaN en date')
+    dup = pdf.duplicated(subset=['date','sector']).sum()
+    check(dup == 0, f'{ppath}: sin duplicados date+sector', f'{ppath}: {dup} duplicados')
+    check(pdf['persistence'].between(0,1).all(), f'{ppath}: persistence en [0,1]', f'{ppath}: valores fuera de [0,1]')
+    latest = pd.to_datetime(pdf['date']).max()
+    latest_df = pdf[pd.to_datetime(pdf['date']) == latest]
+    check(len(latest_df) == 11, f'{ppath}: 11 sectores en última fecha', f'{ppath}: {len(latest_df)} sectores')
+    log(f'ℹ️ {ppath}: {len(pdf)} filas, {pdf["sector"].nunique()} sectores, fechas {pdf["date"].nunique()}')
+else:
+    log(f'❌ {ppath} no existe')
+
 # 4. Reporte diario
 path_report = 'outputs/report/reporte_diario.md'
 if os.path.exists(path_report):

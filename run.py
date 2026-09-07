@@ -635,6 +635,23 @@ def main():
         print(f"    Persistence omitida: {e}")
         sector_persistence = {s: None for s in ['XLK','XLF','XLV','XLE','XLY','XLP','XLI','XLB','XLU','XLRE','XLC']}
 
+    # Guardar CSV histórico de persistencia sectorial
+    try:
+        persist_rows = []
+        date_val = pd.Timestamp.now().normalize()
+        for sec, val in sector_persistence.items():
+            persist_rows.append({'date': date_val, 'sector': sec, 'persistence': val})
+        persist_df = pd.DataFrame(persist_rows)
+        p_path = Path('outputs/history/sector_persistence.csv')
+        p_path.parent.mkdir(parents=True, exist_ok=True)
+        if p_path.exists():
+            hist_p = pd.read_csv(p_path, encoding='utf-8')
+            persist_df = append_dedup(hist_p, persist_df, ['date','sector'])
+        persist_df.to_csv(p_path, index=False, encoding='utf-8')
+        print("  Sector Persistence CSV guardado.")
+    except Exception as e:
+        print(f"  Sector Persistence CSV omitido: {e}")
+
     # --- SLPM v1.1 (legacy) ---
 #     slpm_data = None
 #     try:
