@@ -72,6 +72,10 @@ def compute_pcr_signals():
         z = z_series.iloc[-1]
         momentum = z_series.ewm(span=5).mean().iloc[-1]
         percentile = (pcr_ewm.iloc[-window:] < pcr_ewm.iloc[-1]).mean() * 100
+        if len(pcr_ewm) >= 15:
+            percentile_20d = (pcr_ewm.iloc[-20:] < pcr_ewm.iloc[-1]).mean() * 100
+        else:
+            percentile_20d = np.nan
         state = classify_pcr(z)
         score = np.tanh(z / 2)
     else:
@@ -80,7 +84,8 @@ def compute_pcr_signals():
         percentile = np.nan
         state = "Sin historial suficiente"
         score = np.nan
-
+        percentile = np.nan
+        percentile_20d = np.nan
     return {
         'status': 'OK',
         'total_pcr': data['total_pcr'],
@@ -90,7 +95,8 @@ def compute_pcr_signals():
         'percentile': percentile,
         'state': state,
         'score': score,
-        'index_pcr': data['index_pcr'],
+        'percentile': percentile,
+        'percentile_20d': percentile_20d,
         'equity_pcr': data['equity_pcr'],
         'etp_pcr': data['etp_pcr'],
         'spx_pcr': data['spx_pcr'],
