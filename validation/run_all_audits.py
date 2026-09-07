@@ -85,6 +85,20 @@ if os.path.exists(sc_path):
 else:
     log(f'❌ {sc_path} no existe')
 
+# 3c-bis. Cobertura informativa de medianas
+sc_path = 'outputs/history/sector_concentration.csv'
+if os.path.exists(sc_path):
+    sc = pd.read_csv(sc_path)
+    if {'flow_median','wyckoff_median'}.issubset(sc.columns):
+        n_flow_valid = sc['flow_median'].notna().sum()
+        n_wyck_valid = sc['wyckoff_median'].notna().sum()
+        log(f'ℹ️ {sc_path}: flow_median válidos en {n_flow_valid}/11 sectores')
+        log(f'ℹ️ {sc_path}: wyckoff_median válidos en {n_wyck_valid}/11 sectores')
+    else:
+        log(f'ℹ️ {sc_path}: no contiene columnas de medianas')
+else:
+    log(f'❌ {sc_path} no existe')
+
 # 3c. Duplicados en CSVs sectoriales
 csv_files = [
     ('outputs/history/sector_concentration.csv', ['date','sector']),

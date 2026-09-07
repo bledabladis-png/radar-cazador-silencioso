@@ -21,6 +21,8 @@ def _get_series(df, ticker, field):
                 return s
         return pd.Series(dtype=float)
 
+# Los valores NaN en medianas/percentiles indican cobertura insuficiente de
+# observaciones válidas (n_valid < 5). No representan neutralidad ni señal negativa.
 def safe_quantile(series, q):
     if len(series.dropna()) >= 5:
         return series.quantile(q)
