@@ -77,7 +77,7 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
                           slpm_v12_data=None, tactical_scores=None, structural_scores=None,
                           sector_persistence=None, signal_agreements=None, signal_agreements_display=None,
                           cross_module_conflict=None, shock_sensitivities=None, price_flow_divergences=None,
-                          dc_summary="", all_signals=None, real_liq_score=None, real_liq_prev=None, index_leaders=None, index_phases=None, etf_primary_flow_data=None, cftc_position_flow_data=None, flow_synthesis=None, blackrock_dax_flow=None, blackrock_isf_flow=None, amundi_lyxi_flow=None, blackrock_iwm_flow=None, nport_position_change_data=None, qqq_performance_data=None, qqq_nport_flow_data=None, qqq_sec_flow=None, sector_breadth_data=None, sector_concentration_data=None, sector_flow_characteristics_data=None, rs_internal_data=None, sector_rank_deltas_data=None, sector_regime_matrix_data=None, leader_representativeness_data=None, sector_wyckoff_distribution_data=None, sector_leader_divergence_data=None, sector_breadth_momentum_data=None, evidence_matrix_data=None, sector_dispersion_data=None, sector_correlation_summary_data=None, sector_correlation_matrix_data=None, cross_asset_context_data=None, volatility_structure_data=None, output_path='outputs/report/reporte_diario.md'):
+                          dc_summary="", all_signals=None, real_liq_score=None, real_liq_prev=None, index_leaders=None, index_phases=None, etf_primary_flow_data=None, cftc_position_flow_data=None, flow_synthesis=None, blackrock_dax_flow=None, blackrock_isf_flow=None, amundi_lyxi_flow=None, blackrock_iwm_flow=None, nport_position_change_data=None, qqq_performance_data=None, qqq_nport_flow_data=None, qqq_sec_flow=None, sector_breadth_data=None, sector_concentration_data=None, sector_flow_characteristics_data=None, rs_internal_data=None, sector_rank_deltas_data=None, sector_regime_matrix_data=None, leader_representativeness_data=None, sector_wyckoff_distribution_data=None, sector_leader_divergence_data=None, sector_breadth_momentum_data=None, evidence_matrix_data=None, sector_dispersion_data=None, sector_correlation_summary_data=None, sector_correlation_matrix_data=None, cross_asset_context_data=None, volatility_structure_data=None, data_quality_data=None, output_path='outputs/report/reporte_diario.md'):
     lines = []
     lines.append("# MACRO SECTORIAL - Reporte Diario\n")
     lines.append(f"**Fecha:** {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
@@ -934,6 +934,22 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
             lines.append(f"| {date_str} | {row['vix_level']:.2f} | {row['vix_percentile_20d']:.2f} | {row['vix_percentile_60d']:.2f} | {row['term_structure_ratio']:.2f} | {row['pcr_zscore']:.2f} | {row['pcr_percentile_20d']:.2f} | {row['volatility_reading']} | {row['term_structure_reading']} |\n")
         lines.append("\n")
         lines.append("*Estructura descriptiva de volatilidad implícita y posicionamiento en opciones. No incluye Dark Pool.*\n\n")
+
+    # CALIDAD DE DATOS
+    if data_quality_data is not None and not data_quality_data.empty:
+        lines.append("## Calidad, frescura y cobertura de datos\n")
+        lines.append("| Fuente | Último dato | Edad (días) | Frecuencia | Frescura | Cobertura | Notas |\n")
+        lines.append("|--------|-------------|--------------|------------|----------|-----------|-------|\n")
+        for _, row in data_quality_data.iterrows():
+            last = row['last_date'] if pd.notna(row['last_date']) else 'N/D'
+            age = f"{row['age_calendar_days']:.0f}" if pd.notna(row['age_calendar_days']) else 'N/D'
+            freq = row['frequency'] if pd.notna(row['frequency']) else 'N/D'
+            fresh = row['freshness'] if pd.notna(row['freshness']) else 'N/D'
+            cov = f"{row['coverage']:.2%}" if pd.notna(row['coverage']) else 'N/D'
+            notes = row['notes'] if pd.notna(row['notes']) else ''
+            lines.append(f"| {row['source']} | {last} | {age} | {freq} | {fresh} | {cov} | {notes} |\n")
+        lines.append("\n")
+        lines.append("*No todas las variables tienen la misma actualidad. Los datos se muestran sin interpolación.*\n\n")
 
     if mte_result:
         lines.append("## Market Transition Engine (MTE v1.0)\n")

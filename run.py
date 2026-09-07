@@ -771,6 +771,24 @@ def main():
         print(f"  Volatilidad estructural omitida: {e}")
         vol_structure_df = None
 
+    # --- Calidad, frescura y cobertura de datos v1.0 (descriptivo) ---
+    try:
+        from indicators.data_quality import compute_data_quality
+        data_quality_df = compute_data_quality()
+        dq_path = Path('outputs/history/data_quality.csv')
+        dq_path.parent.mkdir(parents=True, exist_ok=True)
+        if not data_quality_df.empty:
+            if dq_path.exists():
+                hist_dq = pd.read_csv(dq_path)
+                data_quality_df = append_dedup(hist_dq, data_quality_df, ['date','source'])
+            data_quality_df.to_csv(dq_path, index=False)
+            print("  Calidad de datos calculada.")
+        else:
+            data_quality_df = None
+    except Exception as e:
+        print(f"  Calidad de datos omitida: {e}")
+        data_quality_df = None
+
     print("Calculando Market Transition Engine...")
     mte_result = None
     try:
@@ -1149,6 +1167,7 @@ def main():
                           sector_correlation_matrix_data=sector_corr_matrix_df,
                           cross_asset_context_data=cross_asset_summary_df,
                           volatility_structure_data=vol_structure_df,
+                          data_quality_data=data_quality_df,
 
                           all_signals=all_signals)
     print("Reporte generado en outputs/report/reporte_diario.md")

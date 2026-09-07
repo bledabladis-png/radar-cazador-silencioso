@@ -90,6 +90,7 @@ csv_files = [
     ('outputs/history/cross_asset_correlation.csv', ['date','window','sector','asset']),
     ('outputs/history/cross_asset_context.csv', ['date','window','sector','asset_class']),
     ('outputs/history/volatility_structure.csv', ['date']),
+    ('outputs/history/data_quality.csv', ['date','source']),
     ('outputs/history/sector_correlation_matrix.csv', ['date','window','sector1','sector2']),
     ('outputs/history/evidence_matrix.csv', ['date','sector']),
 ]
