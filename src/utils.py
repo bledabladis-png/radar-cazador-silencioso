@@ -1,6 +1,16 @@
 ﻿import numpy as np
 import pandas as pd
 
+
+def append_dedup(hist_df, new_df, subset):
+    """Concatena dos DataFrames, normaliza fecha a YYYY-MM-DD y elimina duplicados por subset."""
+    combined = pd.concat([hist_df, new_df], ignore_index=True)
+    if 'date' in combined.columns:
+        combined['date'] = pd.to_datetime(combined['date'], errors='coerce').dt.strftime('%Y-%m-%d')
+    if combined.empty:
+        return combined
+    return combined.drop_duplicates(subset=subset, keep='last')
+
 def robust_zscore(series, window=60):
     median = series.rolling(window).median()
     mad = (series - median).abs().rolling(window).median()

@@ -4,6 +4,7 @@ Macro Sectorial v4.3 -- Sistema de analisis macro y rotacion sectorial.
 Fases 1-4 + Correccion 0.5 + P1 + P2 + Mejoras 16-20.
 """
 import pandas as pd
+from src.utils import append_dedup
 import numpy as np
 import os
 import sys
@@ -166,7 +167,7 @@ def main():
             if not sector_flow_characteristics_df.empty:
                 if sfc_path.exists():
                     hist_sfc = pd.read_csv(sfc_path)
-                    sector_flow_characteristics_df = pd.concat([hist_sfc, sector_flow_characteristics_df], ignore_index=True)
+                    sector_flow_characteristics_df = append_dedup(hist_sfc, sector_flow_characteristics_df, ["date","sector"])
                 sector_flow_characteristics_df.to_csv(sfc_path, index=False)
                 print("  Sector Flow Characteristics calculado.")
         else:
@@ -379,7 +380,7 @@ def main():
             if not sector_leader_divergence_df.empty:
                 if sld_path.exists():
                     hist_sld = pd.read_csv(sld_path)
-                    sector_leader_divergence_df = pd.concat([hist_sld, sector_leader_divergence_df], ignore_index=True)
+                    sector_leader_divergence_df = append_dedup(hist_sld, sector_leader_divergence_df, ["date","sector"])
                 sector_leader_divergence_df.to_csv(sld_path, index=False)
                 print("  Divergencia sector-líderes calculada.")
         else:
@@ -397,7 +398,7 @@ def main():
             if not sector_wyckoff_distribution_df.empty:
                 if wyckoff_path.exists():
                     hist_wy = pd.read_csv(wyckoff_path)
-                    sector_wyckoff_distribution_df = pd.concat([hist_wy, sector_wyckoff_distribution_df], ignore_index=True)
+                    sector_wyckoff_distribution_df = append_dedup(hist_wy, sector_wyckoff_distribution_df, ["date","sector"])
                 sector_wyckoff_distribution_df.to_csv(wyckoff_path, index=False)
                 print("  Distribución Wyckoff sectorial calculada.")
         else:
@@ -415,7 +416,7 @@ def main():
             if not rs_internal_df.empty:
                 if rs_path.exists():
                     hist_rs = pd.read_csv(rs_path)
-                    rs_internal_df = pd.concat([hist_rs, rs_internal_df], ignore_index=True)
+                    rs_internal_df = append_dedup(hist_rs, rs_internal_df, ["date","sector"])
                 rs_internal_df.to_csv(rs_path, index=False)
                 print("  RS Interno y Absoluto calculado.")
         else:
@@ -433,7 +434,7 @@ def main():
             if not sector_concentration_df.empty:
                 if sc_path.exists():
                     hist_sc = pd.read_csv(sc_path)
-                    sector_concentration_df = pd.concat([hist_sc, sector_concentration_df], ignore_index=True)
+                    sector_concentration_df = append_dedup(hist_sc, sector_concentration_df, ["date","sector"])
                 sector_concentration_df.to_csv(sc_path, index=False)
                 print("  Sector Concentration calculado.")
         else:
@@ -453,7 +454,7 @@ def main():
             if not leader_representativeness_df.empty:
                 if lr_path.exists():
                     hist_lr = pd.read_csv(lr_path)
-                    leader_representativeness_df = pd.concat([hist_lr, leader_representativeness_df], ignore_index=True)
+                    leader_representativeness_df = append_dedup(hist_lr, leader_representativeness_df, ["date","sector","ticker"])
                 leader_representativeness_df.to_csv(lr_path, index=False)
                 print("  Representatividad del líder calculada.")
         else:
@@ -474,7 +475,7 @@ def main():
             if not sector_breadth_momentum_df.empty:
                 if sbm_path.exists():
                     hist_sbm = pd.read_csv(sbm_path)
-                    sector_breadth_momentum_df = pd.concat([hist_sbm, sector_breadth_momentum_df], ignore_index=True)
+                    sector_breadth_momentum_df = append_dedup(hist_sbm, sector_breadth_momentum_df, ["date","sector"])
                 sector_breadth_momentum_df.to_csv(sbm_path, index=False)
                 print("  Momentum de amplitud sectorial calculado.")
         else:
@@ -492,7 +493,7 @@ def main():
             if not sector_breadth_df.empty:
                 if sb_path.exists():
                     hist_sb = pd.read_csv(sb_path)
-                    sector_breadth_df = pd.concat([hist_sb, sector_breadth_df], ignore_index=True)
+                    sector_breadth_df = append_dedup(hist_sb, sector_breadth_df, ["date","sector"])
                 sector_breadth_df.to_csv(sb_path, index=False)
                 print("  Sector Breadth & Health calculado.")
         else:

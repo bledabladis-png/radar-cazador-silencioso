@@ -75,6 +75,29 @@ if os.path.exists(path_ev):
 else:
     log('❌ No se encontro evidence_matrix.csv')
 
+# 3c. Duplicados en CSVs sectoriales
+csv_files = [
+    ('outputs/history/sector_concentration.csv', ['date','sector']),
+    ('outputs/history/sector_flow_characteristics.csv', ['date','sector']),
+    ('outputs/history/sector_breadth.csv', ['date','sector']),
+    ('outputs/history/sector_breadth_momentum.csv', ['date','sector']),
+    ('outputs/history/sector_leader_divergence.csv', ['date','sector']),
+    ('outputs/history/sector_wyckoff_distribution.csv', ['date','sector']),
+    ('outputs/history/leader_representativeness.csv', ['date','sector','ticker']),
+    ('outputs/history/sector_regime_matrix.csv', ['date','sector']),
+    ('outputs/history/evidence_matrix.csv', ['date','sector']),
+]
+for f, subset in csv_files:
+    if os.path.exists(f):
+        df = pd.read_csv(f)
+        if set(subset).issubset(df.columns):
+            dup = df.duplicated(subset=subset).sum()
+            check(dup == 0, f'{f}: sin duplicados {subset}', f'{f}: {dup} duplicados')
+        else:
+            log(f'ℹ️ {f} no tiene columnas {subset}')
+    else:
+        log(f'ℹ️ {f} no existe')
+
 # 4. Reporte diario
 path_report = 'outputs/report/reporte_diario.md'
 if os.path.exists(path_report):
