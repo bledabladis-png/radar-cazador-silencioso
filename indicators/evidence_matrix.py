@@ -111,9 +111,17 @@ def compute_evidence_matrix(sector_breadth_df=None,
         wyckoff_ev = _wyckoff_sign(wy)
 
         # Calidad individual
-        price_quality = 'Alta' if not pd.isna(price_ev) else 'Baja'
-        breadth_quality = 'Alta' if not pd.isna(breadth_ev) else 'Baja'
-        primary_flow_quality = 'Alta' if not pd.isna(primary_flow_ev) else 'Baja'
+        # Calidad basada en cobertura real subyacente
+        _n_total_b = b.get('n_total', np.nan)
+        _n_ema50_b = b.get('n_valid_ema50', np.nan)
+        _breadth_cov = (_n_ema50_b / _n_total_b * 100) if pd.notna(_n_total_b) and pd.notna(_n_ema50_b) and _n_total_b > 0 else np.nan
+        _n_obs_fc = fc.get('n_obs_20d', np.nan)
+        _price_cov = (_n_obs_fc / 20 * 100) if pd.notna(_n_obs_fc) else np.nan
+        _flow_cov = (_n_obs_fc / 20 * 100) if pd.notna(_n_obs_fc) else np.nan
+
+        price_quality = _quality_from_coverage(_price_cov)
+        breadth_quality = _quality_from_coverage(_breadth_cov)
+        primary_flow_quality = _quality_from_coverage(_flow_cov)
         proxy_flow_quality = _quality_from_coverage(conc.get('coverage_flow', np.nan))
         wyckoff_quality = _quality_from_coverage(wy.get('coverage_wyckoff', np.nan))
 
