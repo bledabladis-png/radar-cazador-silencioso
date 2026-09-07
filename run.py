@@ -35,6 +35,7 @@ from indicators.sector_flow_characteristics import compute_sector_flow_character
 from indicators.sector_rank_history import update_rank_history
 from indicators.sector_regime_matrix import build_sector_regime_matrix
 from indicators.leader_representativeness import compute_leader_representativeness
+from indicators.sector_wyckoff_distribution import compute_sector_wyckoff_distribution
 from indicators.rs_internal import compute_rs_internal
 from indicators.breadth import compute_breadth
 from indicators.persistence import compute_persistence
@@ -364,6 +365,24 @@ def main():
                 print("  No hay sectores favorables para lideres.")
     except Exception as e:
         print(f"  Modulo de lideres omitido: {e}")
+
+    # --- Distribución Wyckoff sectorial v1.0 (descriptivo) ---
+    try:
+        if df_stocks is not None and not df_stocks.empty:
+            sector_wyckoff_distribution_df = compute_sector_wyckoff_distribution(df_stocks, holdings_df)
+            wyckoff_path = Path('outputs/history/sector_wyckoff_distribution.csv')
+            wyckoff_path.parent.mkdir(parents=True, exist_ok=True)
+            if not sector_wyckoff_distribution_df.empty:
+                if wyckoff_path.exists():
+                    hist_wy = pd.read_csv(wyckoff_path)
+                    sector_wyckoff_distribution_df = pd.concat([hist_wy, sector_wyckoff_distribution_df], ignore_index=True)
+                sector_wyckoff_distribution_df.to_csv(wyckoff_path, index=False)
+                print("  Distribución Wyckoff sectorial calculada.")
+        else:
+            sector_wyckoff_distribution_df = None
+    except Exception as e:
+        print(f"  Distribución Wyckoff sectorial omitida: {e}")
+        sector_wyckoff_distribution_df = None
 
     # --- RS Interno y Absoluto v1.0 (descriptivo) ---
     try:
@@ -961,7 +980,7 @@ def main():
                           shock_sensitivities=shock_sensitivities,
                           price_flow_divergences=price_flow_divergences,
                           dc_summary=dc_summary,
-                          real_liq_prev=real_liq_prev, index_leaders=index_leaders, index_phases=index_phases, sector_breadth_data=sector_breadth_df, sector_concentration_data=sector_concentration_df, sector_flow_characteristics_data=sector_flow_characteristics_df, rs_internal_data=rs_internal_df, sector_rank_deltas_data=sector_rank_deltas_df, sector_regime_matrix_data=sector_regime_matrix_df, leader_representativeness_data=leader_representativeness_df,
+                          real_liq_prev=real_liq_prev, index_leaders=index_leaders, index_phases=index_phases, sector_breadth_data=sector_breadth_df, sector_concentration_data=sector_concentration_df, sector_flow_characteristics_data=sector_flow_characteristics_df, rs_internal_data=rs_internal_df, sector_rank_deltas_data=sector_rank_deltas_df, sector_regime_matrix_data=sector_regime_matrix_df, leader_representativeness_data=leader_representativeness_df, sector_wyckoff_distribution_data=sector_wyckoff_distribution_df,
                           all_signals=all_signals)
     print("Reporte generado en outputs/report/reporte_diario.md")
 
