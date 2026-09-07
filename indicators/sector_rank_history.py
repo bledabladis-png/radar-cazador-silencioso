@@ -36,7 +36,13 @@ def update_rank_history(sector_results, history_csv_path, date=None):
     else:
         hist = pd.DataFrame(columns=['date','sector','score','rank'])
 
-    combined = pd.concat([hist, current_df], ignore_index=True)
+    # Evitar FutureWarning de concatenación con DataFrame vacío
+    if not hist.empty:
+        hist = hist.reindex(columns=current_df.columns)
+        combined = pd.concat([hist, current_df], ignore_index=True)
+    else:
+        combined = current_df.copy()
+
     combined = combined.drop_duplicates(subset=['date','sector'], keep='last')
     combined = combined.sort_values(['date','sector']).reset_index(drop=True)
     history_path.parent.mkdir(parents=True, exist_ok=True)
@@ -83,4 +89,4 @@ def update_rank_history(sector_results, history_csv_path, date=None):
             'lectura_20d': lectura(delta20),
         })
 
-    return combined, pd.DataFrame(deltas)
+    return combined, pd.DataFrame(deltas)
