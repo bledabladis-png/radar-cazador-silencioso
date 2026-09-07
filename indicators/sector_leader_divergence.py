@@ -2,6 +2,7 @@
 """
 Divergencia sector-líderes v1.0
 Detecta alineación/divergencia entre el retorno 20d del ETF sectorial y sus Top 5 líderes.
+Solo se procesan sectores con líderes elegibles (ACCUMULATION/MARKUP); los demás no se consideran negativos.
 No alimenta motores, scores, pesos ni State Machine.
 """
 import pandas as pd

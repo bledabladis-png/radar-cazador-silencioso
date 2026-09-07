@@ -454,7 +454,7 @@ def main():
                 if sld_path.exists():
                     hist_sld = pd.read_csv(sld_path)
                     sector_leader_divergence_df = append_dedup(hist_sld, sector_leader_divergence_df, ["date","sector"])
-                sector_leader_divergence_df.to_csv(sld_path, index=False)
+                sector_leader_divergence_df.to_csv(sld_path, index=False, encoding='utf-8')
                 print("  Divergencia sector-líderes calculada.")
         else:
             sector_leader_divergence_df = None

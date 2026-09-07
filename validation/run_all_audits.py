@@ -295,6 +295,25 @@ if os.path.exists(wy_path):
 else:
     log(f'❌ {wy_path} no existe')
 
+# 3c-nonies. Validación Divergencia sector-líderes
+sld_path = 'outputs/history/sector_leader_divergence.csv'
+if os.path.exists(sld_path):
+    sld = pd.read_csv(sld_path, encoding='utf-8')
+    required_sld = ['date','sector','sector_ret_20d','n_leaders_total','n_leaders_valid','n_leaders_positive','n_leaders_negative','n_leaders_beating_sector','classification']
+    check(set(required_sld).issubset(sld.columns), f'{sld_path}: columnas correctas', f'{sld_path}: faltan columnas {set(required_sld)-set(sld.columns)}')
+    check(sld['date'].notna().all(), f'{sld_path}: date sin NaN', f'{sld_path}: {sld["date"].isna().sum()} NaN en date')
+    check(sld['sector'].notna().all(), f'{sld_path}: sector sin NaN', f'{sld_path}: {sld["sector"].isna().sum()} NaN en sector')
+    allowed_sld = {'Alineación positiva','Alineación negativa','Liderazgo relativo de líderes','Divergencia negativa','Mixto','N/D'}
+    bad_sld = set(sld['classification'].unique()) - allowed_sld
+    check(len(bad_sld) == 0, f'{sld_path}: clasificaciones válidas', f'{sld_path}: clasificaciones inválidas {bad_sld}')
+    check(sld['n_leaders_valid'].between(0,5).all(), f'{sld_path}: n_valid entre 0 y 5', f'{sld_path}: n_valid fuera de rango')
+    check((sld['n_leaders_positive'] + sld['n_leaders_negative'] <= sld['n_leaders_valid']).all(), f'{sld_path}: suma positivos+negativos <= n_valid', f'{sld_path}: inconsistencia en conteos')
+    dup = sld.duplicated(subset=['date','sector']).sum()
+    check(dup == 0, f'{sld_path}: sin duplicados date+sector', f'{sld_path}: {dup} duplicados')
+    log(f'ℹ️ {sld_path}: {len(sld)} sectores con datos')
+else:
+    log(f'❌ {sld_path} no existe')
+
 # 4. Reporte diario
 path_report = 'outputs/report/reporte_diario.md'
 if os.path.exists(path_report):
