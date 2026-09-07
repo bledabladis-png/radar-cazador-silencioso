@@ -10,8 +10,16 @@ import numpy as np
 
 SECTORS = ['XLK','XLF','XLV','XLE','XLY','XLP','XLI','XLB','XLU','XLRE','XLC']
 
-def _delta(series, days):
+def _delta(series, dates, days):
     if len(series) < days + 1:
+        return np.nan
+    current_date = pd.to_datetime(dates.iloc[-1], errors='coerce')
+    past_date = pd.to_datetime(dates.iloc[-days-1], errors='coerce')
+    if pd.isna(current_date) or pd.isna(past_date):
+        return np.nan
+    diff_days = (current_date - past_date).days
+    # Permitir hasta days + 2 días naturales (fines de semana)
+    if diff_days > days + 2:
         return np.nan
     return series.iloc[-1] - series.iloc[-days-1]
 
@@ -41,21 +49,22 @@ def compute_sector_breadth_momentum(sector_breadth_csv_path):
         if sub.empty:
             continue
 
-        ema20 = sub['pct_above_ema20'].dropna()
-        ema50 = sub['pct_above_ema50'].dropna()
-        ema200 = sub['pct_above_ema200'].dropna()
+        ema20 = sub['pct_above_ema20']
+        ema50 = sub['pct_above_ema50']
+        ema200 = sub['pct_above_ema200']
+        dates = sub['date']
 
-        d1_20 = _delta(ema20, 1)
-        d5_20 = _delta(ema20, 5)
-        d20_20 = _delta(ema20, 20)
+        d1_20 = _delta(ema20, dates, 1)
+        d5_20 = _delta(ema20, dates, 5)
+        d20_20 = _delta(ema20, dates, 20)
 
-        d1_50 = _delta(ema50, 1)
-        d5_50 = _delta(ema50, 5)
-        d20_50 = _delta(ema50, 20)
+        d1_50 = _delta(ema50, dates, 1)
+        d5_50 = _delta(ema50, dates, 5)
+        d20_50 = _delta(ema50, dates, 20)
 
-        d1_200 = _delta(ema200, 1)
-        d5_200 = _delta(ema200, 5)
-        d20_200 = _delta(ema200, 20)
+        d1_200 = _delta(ema200, dates, 1)
+        d5_200 = _delta(ema200, dates, 5)
+        d20_200 = _delta(ema200, dates, 20)
 
         # Expansión 5d sobre EMA20: delta5d >= +5 pp y nivel > 60%
         if pd.notna(d5_20) and d5_20 >= 5 and pd.notna(ema20.iloc[-1]) and ema20.iloc[-1] > 60:
