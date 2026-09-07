@@ -134,7 +134,8 @@ def compute_wls(df_metrics, weights=None):
 
 def generate_leader_section(df_market, df_stocks, holdings_df, fase_dict, operabilidad_dict, output_csv=None):
     lines = []
-    all_data = []
+    leader_data = []
+    full_metrics_data = []
 
     VALID_FASES = {'ACCUMULATION', 'MARKUP'}
     VALID_OPER = {'OPORTUNIDAD MODERADA'}
@@ -142,9 +143,7 @@ def generate_leader_section(df_market, df_stocks, holdings_df, fase_dict, operab
     for sector in ['XLK','XLF','XLV','XLE','XLY','XLP','XLI','XLB','XLU','XLRE','XLC']:
         fase = fase_dict.get(sector, 'NEUTRAL')
         oper = operabilidad_dict.get(sector, 'NO OPERAR')
-        if fase not in VALID_FASES or oper not in VALID_OPER:
-            continue
-        stocks = holdings_df[holdings_df['etf'] == sector]['ticker'].head(20).tolist()
+        stocks = holdings_df[holdings_df['etf'] == sector]['ticker'].tolist()
         if not stocks:
             continue
         metrics_df = compute_stock_metrics(df_market, df_stocks, sector, stocks)
@@ -152,28 +151,38 @@ def generate_leader_section(df_market, df_stocks, holdings_df, fase_dict, operab
             continue
         metrics_df['sector'] = sector
         wls_df = compute_wls(metrics_df)
-        all_data.append(wls_df.head(5))
+        full_metrics_data.append(wls_df)
+
+        if fase not in VALID_FASES or oper not in VALID_OPER:
+            continue
+        leader_data.append(wls_df.head(5))
 
         lines.append(f'## Sector: {sector} ({fase})\n')
         lines.append('| Ticker | RS | RS Mom | Flujo (z) | WLS | Fase Wyckoff | Pers 5d | Pers 10d | Pers 20d | Spring | SOS |\n')
         lines.append('|--------|----|--------|-----------|-----|---------------|--------|-----|\n')
-        lines.append('*RS = RS Level (precio acción / precio sector). RS Mom = RS Momentum (cambio del RS en 20 días). El WLS combina ambas con pesos 35% y 25% respectivamente.*\n')
+        lines.append('*RS = RS Level (precio acciÃ³n / precio sector). RS Mom = RS Momentum (cambio del RS en 20 dÃ­as). El WLS combina ambas con pesos 35% y 25% respectivamente.*\n')
         for _, row in wls_df.head(5).iterrows():
-            spring_flag = '✓' if row.get('spring', 0) == 1 else ''
-            sos_flag = '✓' if row.get('sos', 0) == 1 else ''
+            spring_flag = 'âœ“' if row.get('spring', 0) == 1 else ''
+            sos_flag = 'âœ“' if row.get('sos', 0) == 1 else ''
             lines.append(f"| {row['ticker']} | {row['rs']:.2f} | {row['rs_mom']:.2%} | {row['flow_proxy_z']:.2f} | {row['wls']:.2f} | {row['wyckoff_phase']} | {row['persistence_5d']:.0%} | {row['persistence_10d']:.0%} | {row['persistence_20d']:.0%} | {spring_flag} | {sos_flag} |\n")
         lines.append('\n')
 
-    if all_data:
-        final_df = pd.concat(all_data, ignore_index=True)
-        if output_csv:
-            cols = ['ticker','sector','rs','rs_mom','flow_proxy_z','wyckoff_score','wyckoff_phase',
-                    'persistence_5d','persistence_10d','persistence_20d','stability','spring','sos','wls','sector_rank_pct']
-            final_df[cols].to_csv(output_csv, index=False)
-        if all_data:
-            final_df = pd.concat(all_data, ignore_index=True)
-            return lines, final_df
-        return lines, None
-    return None, None
+    if full_metrics_data:
+        full_metrics_df = pd.concat(full_metrics_data, ignore_index=True)
+    else:
+        full_metrics_df = pd.DataFrame()
 
+    if leader_data:
+        leader_df = pd.concat(leader_data, ignore_index=True)
+    else:
+        leader_df = pd.DataFrame()
+
+    if output_csv and not leader_df.empty:
+        cols = ['ticker','sector','rs','rs_mom','flow_proxy_z','wyckoff_score','wyckoff_phase',
+                'persistence_5d','persistence_10d','persistence_20d','stability','spring','sos','wls','sector_rank_pct']
+        leader_df[cols].to_csv(output_csv, index=False)
+
+    if not leader_df.empty or not full_metrics_df.empty:
+        return lines, leader_df, full_metrics_df
+    return None, None, None
 

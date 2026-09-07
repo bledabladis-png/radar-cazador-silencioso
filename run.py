@@ -359,7 +359,7 @@ def main():
             oper = {sector: 'OPORTUNIDAD MODERADA' if fase in ['ACCUMULATION','MARKUP'] else 'NO OPERAR'
                     for sector, fase in fases.items()}
             from indicators.stock_leader import generate_leader_section
-            leader_lines, leader_df = generate_leader_section(df_market, df_stocks, holdings_df, fases, oper,
+            leader_lines, leader_df, full_metrics_df = generate_leader_section(df_market, df_stocks, holdings_df, fases, oper,
                                                    output_csv='outputs/report/analisis_lideres.csv')
             if leader_lines:
                 print("  Lideres sectoriales generados.")
@@ -427,7 +427,7 @@ def main():
     # --- Sector Concentration v1.0 (descriptivo) ---
     try:
         if df_stocks is not None and not df_stocks.empty and leader_df is not None and not leader_df.empty:
-            sector_concentration_df = compute_sector_concentration(df_stocks, holdings_df, leader_df)
+            sector_concentration_df = compute_sector_concentration(df_stocks, holdings_df, full_metrics_df)
             sc_path = Path('outputs/history/sector_concentration.csv')
             sc_path.parent.mkdir(parents=True, exist_ok=True)
             if not sector_concentration_df.empty:
