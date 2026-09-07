@@ -77,7 +77,7 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
                           slpm_v12_data=None, tactical_scores=None, structural_scores=None,
                           sector_persistence=None, signal_agreements=None, signal_agreements_display=None,
                           cross_module_conflict=None, shock_sensitivities=None, price_flow_divergences=None,
-                          dc_summary="", all_signals=None, real_liq_score=None, real_liq_prev=None, index_leaders=None, index_phases=None, etf_primary_flow_data=None, cftc_position_flow_data=None, flow_synthesis=None, blackrock_dax_flow=None, blackrock_isf_flow=None, amundi_lyxi_flow=None, blackrock_iwm_flow=None, nport_position_change_data=None, qqq_performance_data=None, qqq_nport_flow_data=None, qqq_sec_flow=None, sector_breadth_data=None, sector_concentration_data=None, sector_flow_characteristics_data=None, rs_internal_data=None, sector_rank_deltas_data=None, sector_regime_matrix_data=None, output_path='outputs/report/reporte_diario.md'):
+                          dc_summary="", all_signals=None, real_liq_score=None, real_liq_prev=None, index_leaders=None, index_phases=None, etf_primary_flow_data=None, cftc_position_flow_data=None, flow_synthesis=None, blackrock_dax_flow=None, blackrock_isf_flow=None, amundi_lyxi_flow=None, blackrock_iwm_flow=None, nport_position_change_data=None, qqq_performance_data=None, qqq_nport_flow_data=None, qqq_sec_flow=None, sector_breadth_data=None, sector_concentration_data=None, sector_flow_characteristics_data=None, rs_internal_data=None, sector_rank_deltas_data=None, sector_regime_matrix_data=None, leader_representativeness_data=None, output_path='outputs/report/reporte_diario.md'):
     lines = []
     lines.append("# MACRO SECTORIAL - Reporte Diario\n")
     lines.append(f"**Fecha:** {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
@@ -670,6 +670,17 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
         lines.append("|--------|------------|-----------|-----------|--------------|-----------|---------|\n")
         for _, row in sector_regime_matrix_data.iterrows():
             lines.append(f"| {row['sector']} | {row['price_ret_20d']:.2%} | {row['pct_above_ema50']:.1f}% | {row['flow_20d_sum']:+,.0f} | {row['wyckoff_phase']} | {row['positive_conditions']:.0f} | {row['regime_reading']} |\n")
+        lines.append("\n")
+
+    # =========================================================================
+    # REPRESENTATIVIDAD DEL LÍDER
+    # =========================================================================
+    if leader_representativeness_data is not None and not leader_representativeness_data.empty:
+        lines.append("## Representatividad del líder\n")
+        lines.append("| Sector | Líder | RS ΔMed | Mom ΔMed | Flow ΔMed | WLS ΔMed | Rank pct |\n")
+        lines.append("|--------|-------|---------|----------|-----------|----------|----------|\n")
+        for _, row in leader_representativeness_data.iterrows():
+            lines.append(f"| {row['sector']} | {row['ticker']} | {row['rs_distance_to_median']:+.4f} | {row['mom_distance_to_median']:+.4f} | {row['flow_distance_to_median']:+.2f} | {row['wls_distance_to_median']:+.2f} | {row['sector_rank_pct']:.0%} |\n")
         lines.append("\n")
 
     # FLUJO PRIMARIO DAXEX (BlackRock)

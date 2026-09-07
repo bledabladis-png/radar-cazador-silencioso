@@ -34,6 +34,7 @@ from indicators.sector_concentration import compute_sector_concentration
 from indicators.sector_flow_characteristics import compute_sector_flow_characteristics
 from indicators.sector_rank_history import update_rank_history
 from indicators.sector_regime_matrix import build_sector_regime_matrix
+from indicators.leader_representativeness import compute_leader_representativeness
 from indicators.rs_internal import compute_rs_internal
 from indicators.breadth import compute_breadth
 from indicators.persistence import compute_persistence
@@ -399,6 +400,26 @@ def main():
     except Exception as e:
         print(f"  Sector Concentration omitido: {e}")
         sector_concentration_df = None
+
+    # --- Representatividad del líder v1.0 (descriptivo) ---
+    try:
+        if leader_df is not None and not leader_df.empty:
+            leader_representativeness_df = compute_leader_representativeness(
+                leader_df, 'outputs/history/sector_concentration.csv'
+            )
+            lr_path = Path('outputs/history/leader_representativeness.csv')
+            lr_path.parent.mkdir(parents=True, exist_ok=True)
+            if not leader_representativeness_df.empty:
+                if lr_path.exists():
+                    hist_lr = pd.read_csv(lr_path)
+                    leader_representativeness_df = pd.concat([hist_lr, leader_representativeness_df], ignore_index=True)
+                leader_representativeness_df.to_csv(lr_path, index=False)
+                print("  Representatividad del líder calculada.")
+        else:
+            leader_representativeness_df = None
+    except Exception as e:
+        print(f"  Representatividad del líder omitida: {e}")
+        leader_representativeness_df = None
 
     # --- Sector Breadth & Health v1.0 (descriptivo) ---
     try:
@@ -940,7 +961,7 @@ def main():
                           shock_sensitivities=shock_sensitivities,
                           price_flow_divergences=price_flow_divergences,
                           dc_summary=dc_summary,
-                          real_liq_prev=real_liq_prev, index_leaders=index_leaders, index_phases=index_phases, sector_breadth_data=sector_breadth_df, sector_concentration_data=sector_concentration_df, sector_flow_characteristics_data=sector_flow_characteristics_df, rs_internal_data=rs_internal_df, sector_rank_deltas_data=sector_rank_deltas_df, sector_regime_matrix_data=sector_regime_matrix_df,
+                          real_liq_prev=real_liq_prev, index_leaders=index_leaders, index_phases=index_phases, sector_breadth_data=sector_breadth_df, sector_concentration_data=sector_concentration_df, sector_flow_characteristics_data=sector_flow_characteristics_df, rs_internal_data=rs_internal_df, sector_rank_deltas_data=sector_rank_deltas_df, sector_regime_matrix_data=sector_regime_matrix_df, leader_representativeness_data=leader_representativeness_df,
                           all_signals=all_signals)
     print("Reporte generado en outputs/report/reporte_diario.md")
 
