@@ -33,6 +33,7 @@ from indicators.sector_breadth import compute_sector_breadth
 from indicators.sector_concentration import compute_sector_concentration
 from indicators.sector_flow_characteristics import compute_sector_flow_characteristics
 from indicators.sector_rank_history import update_rank_history
+from indicators.sector_regime_matrix import build_sector_regime_matrix
 from indicators.rs_internal import compute_rs_internal
 from indicators.breadth import compute_breadth
 from indicators.persistence import compute_persistence
@@ -890,6 +891,23 @@ def main():
     except:
         pass
 
+    # --- Matriz de Régimen Sectorial v1.0 (descriptiva) ---
+    try:
+        from indicators.sector_regime_matrix import build_sector_regime_matrix
+        sector_regime_matrix_df = build_sector_regime_matrix(
+            sector_breadth_df, sector_flow_characteristics_df, sector_results
+        )
+        if sector_regime_matrix_df is not None and not sector_regime_matrix_df.empty:
+            mp_path = Path('outputs/history/sector_regime_matrix.csv')
+            mp_path.parent.mkdir(parents=True, exist_ok=True)
+            sector_regime_matrix_df.to_csv(mp_path, index=False)
+            print("  Matriz de régimen sectorial calculada.")
+        else:
+            sector_regime_matrix_df = None
+    except Exception as e:
+        print(f"  Matriz de régimen sectorial omitida: {e}")
+        sector_regime_matrix_df = None
+
     print("Generando reporte...")
     generate_daily_report(macro_score, macro_regime, macro_conf,
                           financial_score, financial_regime, liq_conf,
@@ -922,7 +940,7 @@ def main():
                           shock_sensitivities=shock_sensitivities,
                           price_flow_divergences=price_flow_divergences,
                           dc_summary=dc_summary,
-                          real_liq_prev=real_liq_prev, index_leaders=index_leaders, index_phases=index_phases, sector_breadth_data=sector_breadth_df, sector_concentration_data=sector_concentration_df, sector_flow_characteristics_data=sector_flow_characteristics_df, rs_internal_data=rs_internal_df, sector_rank_deltas_data=sector_rank_deltas_df,
+                          real_liq_prev=real_liq_prev, index_leaders=index_leaders, index_phases=index_phases, sector_breadth_data=sector_breadth_df, sector_concentration_data=sector_concentration_df, sector_flow_characteristics_data=sector_flow_characteristics_df, rs_internal_data=rs_internal_df, sector_rank_deltas_data=sector_rank_deltas_df, sector_regime_matrix_data=sector_regime_matrix_df,
                           all_signals=all_signals)
     print("Reporte generado en outputs/report/reporte_diario.md")
 
