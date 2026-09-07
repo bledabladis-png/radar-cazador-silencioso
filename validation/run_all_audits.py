@@ -148,6 +148,24 @@ if os.path.exists(sfc_path):
 else:
     log(f'❌ {sfc_path} no existe')
 
+# 3c-quater. Validación RS Interno/Absoluto
+rs_path = 'outputs/history/rs_internal.csv'
+if os.path.exists(rs_path):
+    rdf = pd.read_csv(rs_path, encoding='utf-8')
+    required_cols = ['date','sector','ticker','price_ret_20d','sector_ret_20d','benchmark_ret_20d','rs_abs_20d','rs_internal_20d','classification']
+    check(set(required_cols).issubset(rdf.columns), f'{rs_path}: columnas requeridas presentes', f'{rs_path}: faltan columnas {set(required_cols)-set(rdf.columns)}')
+    if set(required_cols).issubset(rdf.columns):
+        dup = rdf.duplicated(subset=['date','sector','ticker']).sum()
+        check(dup == 0, f'{rs_path}: sin duplicados date+sector+ticker', f'{rs_path}: {dup} duplicados')
+        check(rdf['rs_abs_20d'].isna().sum() == 0, f'{rs_path}: sin NaN en rs_abs_20d', f'{rs_path}: {rdf["rs_abs_20d"].isna().sum()} NaN')
+        check(rdf['rs_internal_20d'].isna().sum() == 0, f'{rs_path}: sin NaN en rs_internal_20d', f'{rs_path}: {rdf["rs_internal_20d"].isna().sum()} NaN')
+        allowed = {'Liderazgo relativo doble','Fortaleza sectorial','Liderazgo interno en sector débil','Debilidad relativa doble','N/D'}
+        bad_cls = set(rdf['classification'].unique()) - allowed
+        check(len(bad_cls) == 0, f'{rs_path}: clasificaciones válidas', f'{rs_path}: clasificaciones inválidas {bad_cls}')
+        log(f'ℹ️ {rs_path}: {len(rdf)} filas, {rdf["sector"].nunique()} sectores, {rdf["ticker"].nunique()} tickers')
+else:
+    log(f'❌ {rs_path} no existe')
+
 # 4. Reporte diario
 path_report = 'outputs/report/reporte_diario.md'
 if os.path.exists(path_report):

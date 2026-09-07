@@ -490,7 +490,7 @@ def main():
                 if rs_path.exists():
                     hist_rs = pd.read_csv(rs_path)
                     rs_internal_df = append_dedup(hist_rs, rs_internal_df, ["date","sector"])
-                rs_internal_df.to_csv(rs_path, index=False)
+                rs_internal_df.to_csv(rs_path, index=False, encoding='utf-8')
                 print("  RS Interno y Absoluto calculado.")
         else:
             rs_internal_df = None
