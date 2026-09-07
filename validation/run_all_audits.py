@@ -248,6 +248,24 @@ if os.path.exists(rank_deltas_path):
 else:
     log(f'❌ {rank_deltas_path} no existe')
 
+# 3c-septies. Validación Matriz de Régimen Sectorial
+rm_path = 'outputs/history/sector_regime_matrix.csv'
+if os.path.exists(rm_path):
+    rm = pd.read_csv(rm_path, encoding='utf-8')
+    required = ['date','sector','price_ret_20d','pct_above_ema50','flow_20d_sum','wyckoff_phase','price_positive','breadth_positive','flow_positive','structure_positive','positive_conditions','data_complete','regime_reading']
+    check(set(required).issubset(rm.columns), f'{rm_path}: columnas correctas', f'{rm_path}: faltan columnas {set(required)-set(rm.columns)}')
+    check(rm['date'].notna().all(), f'{rm_path}: date sin NaN', f'{rm_path}: {rm["date"].isna().sum()} NaN en date')
+    check(rm['sector'].nunique() == 11, f'{rm_path}: 11 sectores', f'{rm_path}: {rm["sector"].nunique()} sectores')
+    check(rm.isna().sum().sum() == 0, f'{rm_path}: sin NaN', f'{rm_path}: {rm.isna().sum().sum()} NaN')
+    allowed = {'Alineación positiva','Constructivo','Mixto','Débil','Debilidad alineada','N/D'}
+    bad = set(rm['regime_reading'].unique()) - allowed
+    check(len(bad) == 0, f'{rm_path}: lecturas válidas', f'{rm_path}: lecturas inválidas {bad}')
+    dup = rm.duplicated(subset=['date','sector']).sum()
+    check(dup == 0, f'{rm_path}: sin duplicados date+sector', f'{rm_path}: {dup} duplicados')
+    log(f'ℹ️ {rm_path}: {len(rm)} filas, {rm["sector"].nunique()} sectores, fechas {rm["date"].nunique()}')
+else:
+    log(f'❌ {rm_path} no existe')
+
 # 4. Reporte diario
 path_report = 'outputs/report/reporte_diario.md'
 if os.path.exists(path_report):

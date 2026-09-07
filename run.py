@@ -1115,7 +1115,7 @@ def main():
         if sector_regime_matrix_df is not None and not sector_regime_matrix_df.empty:
             mp_path = Path('outputs/history/sector_regime_matrix.csv')
             mp_path.parent.mkdir(parents=True, exist_ok=True)
-            sector_regime_matrix_df.to_csv(mp_path, index=False)
+            sector_regime_matrix_df.to_csv(mp_path, index=False, encoding='utf-8')
             print("  Matriz de régimen sectorial calculada.")
         else:
             sector_regime_matrix_df = None
