@@ -310,10 +310,12 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
     # DISPERSIÓN INTERNA
     # =========================================================================
     if sector_concentration_data is not None and not sector_concentration_data.empty:
+        latest_date = pd.to_datetime(sector_concentration_data['date']).max()
+        disp_latest = sector_concentration_data[pd.to_datetime(sector_concentration_data['date']) == latest_date]
         lines.append("## Dispersión interna\n")
         lines.append("| Sector | RS P25 | RS Med | RS P75 | Mom P25 | Mom Med | Mom P75 |\n")
         lines.append("|--------|--------|--------|--------|---------|---------|---------|\n")
-        for _, row in sector_concentration_data.iterrows():
+        for _, row in disp_latest.iterrows():
             lines.append(f"| {row['sector']} | {row['rs_p25']:.4f} | {row['rs_median']:.4f} | {row['rs_p75']:.4f} | {row['momentum_p25']:.2%} | {row['momentum_median']:.2%} | {row['momentum_p75']:.2%} |\n")
         lines.append("\n")
         lines.append("*Los percentiles de Flow y WLS están disponibles en outputs/history/sector_concentration.csv.*\n\n")

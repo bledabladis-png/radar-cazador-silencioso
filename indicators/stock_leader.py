@@ -160,12 +160,12 @@ def generate_leader_section(df_market, df_stocks, holdings_df, fase_dict, operab
         lines.append(f'## Sector: {sector} ({fase})\n')
         lines.append('| Ticker | RS | RS Mom | Flujo (z) | WLS | Fase Wyckoff | Pers 5d | Pers 10d | Pers 20d | Spring | SOS |\n')
         lines.append('|--------|----|--------|-----------|-----|---------------|--------|-----|\n')
-        lines.append('*RS = RS Level (precio acciÃ³n / precio sector). RS Mom = RS Momentum (cambio del RS en 20 dÃ­as). El WLS combina ambas con pesos 35% y 25% respectivamente.*\n')
         for _, row in wls_df.head(5).iterrows():
-            spring_flag = 'âœ“' if row.get('spring', 0) == 1 else ''
-            sos_flag = 'âœ“' if row.get('sos', 0) == 1 else ''
+            spring_flag = '✓' if row.get('spring', 0) == 1 else ''
+            sos_flag = '✓' if row.get('sos', 0) == 1 else ''
             lines.append(f"| {row['ticker']} | {row['rs']:.2f} | {row['rs_mom']:.2%} | {row['flow_proxy_z']:.2f} | {row['wls']:.2f} | {row['wyckoff_phase']} | {row['persistence_5d']:.0%} | {row['persistence_10d']:.0%} | {row['persistence_20d']:.0%} | {spring_flag} | {sos_flag} |\n")
         lines.append('\n')
+        lines.append('*RS = RS Level (precio acción / precio sector). RS Mom = RS Momentum (cambio del RS en 20 días). El WLS combina ambas con pesos 35% y 25% respectivamente.*\n')
 
     if full_metrics_data:
         full_metrics_df = pd.concat(full_metrics_data, ignore_index=True)
