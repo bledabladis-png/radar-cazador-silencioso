@@ -37,6 +37,7 @@ from indicators.sector_regime_matrix import build_sector_regime_matrix
 from indicators.leader_representativeness import compute_leader_representativeness
 from indicators.sector_wyckoff_distribution import compute_sector_wyckoff_distribution
 from indicators.sector_leader_divergence import compute_sector_leader_divergence
+from indicators.sector_breadth_momentum import compute_sector_breadth_momentum
 from indicators.rs_internal import compute_rs_internal
 from indicators.breadth import compute_breadth
 from indicators.persistence import compute_persistence
@@ -462,6 +463,26 @@ def main():
         leader_representativeness_df = None
 
     # --- Sector Breadth & Health v1.0 (descriptivo) ---
+    # --- Momentum de amplitud sectorial v1.0 (descriptivo) ---
+    try:
+        if df_stocks is not None and not df_stocks.empty:
+            sector_breadth_momentum_df = compute_sector_breadth_momentum(
+                'outputs/history/sector_breadth.csv'
+            )
+            sbm_path = Path('outputs/history/sector_breadth_momentum.csv')
+            sbm_path.parent.mkdir(parents=True, exist_ok=True)
+            if not sector_breadth_momentum_df.empty:
+                if sbm_path.exists():
+                    hist_sbm = pd.read_csv(sbm_path)
+                    sector_breadth_momentum_df = pd.concat([hist_sbm, sector_breadth_momentum_df], ignore_index=True)
+                sector_breadth_momentum_df.to_csv(sbm_path, index=False)
+                print("  Momentum de amplitud sectorial calculado.")
+        else:
+            sector_breadth_momentum_df = None
+    except Exception as e:
+        print(f"  Momentum de amplitud sectorial omitido: {e}")
+        sector_breadth_momentum_df = None
+
     try:
         if df_stocks is not None and not df_stocks.empty:
             from pathlib import Path as P
@@ -1001,7 +1022,7 @@ def main():
                           shock_sensitivities=shock_sensitivities,
                           price_flow_divergences=price_flow_divergences,
                           dc_summary=dc_summary,
-                          real_liq_prev=real_liq_prev, index_leaders=index_leaders, index_phases=index_phases, sector_breadth_data=sector_breadth_df, sector_concentration_data=sector_concentration_df, sector_flow_characteristics_data=sector_flow_characteristics_df, rs_internal_data=rs_internal_df, sector_rank_deltas_data=sector_rank_deltas_df, sector_regime_matrix_data=sector_regime_matrix_df, leader_representativeness_data=leader_representativeness_df, sector_wyckoff_distribution_data=sector_wyckoff_distribution_df, sector_leader_divergence_data=sector_leader_divergence_df,
+                          real_liq_prev=real_liq_prev, index_leaders=index_leaders, index_phases=index_phases, sector_breadth_data=sector_breadth_df, sector_concentration_data=sector_concentration_df, sector_flow_characteristics_data=sector_flow_characteristics_df, rs_internal_data=rs_internal_df, sector_rank_deltas_data=sector_rank_deltas_df, sector_regime_matrix_data=sector_regime_matrix_df, leader_representativeness_data=leader_representativeness_df, sector_wyckoff_distribution_data=sector_wyckoff_distribution_df, sector_leader_divergence_data=sector_leader_divergence_df, sector_breadth_momentum_data=sector_breadth_momentum_df,
                           all_signals=all_signals)
     print("Reporte generado en outputs/report/reporte_diario.md")
 
