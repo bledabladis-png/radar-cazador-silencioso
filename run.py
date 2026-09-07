@@ -36,6 +36,7 @@ from indicators.sector_rank_history import update_rank_history
 from indicators.sector_regime_matrix import build_sector_regime_matrix
 from indicators.leader_representativeness import compute_leader_representativeness
 from indicators.sector_wyckoff_distribution import compute_sector_wyckoff_distribution
+from indicators.sector_leader_divergence import compute_sector_leader_divergence
 from indicators.rs_internal import compute_rs_internal
 from indicators.breadth import compute_breadth
 from indicators.persistence import compute_persistence
@@ -365,6 +366,26 @@ def main():
                 print("  No hay sectores favorables para lideres.")
     except Exception as e:
         print(f"  Modulo de lideres omitido: {e}")
+
+    # --- Divergencia sector-líderes v1.0 (descriptivo) ---
+    try:
+        if df_stocks is not None and not df_stocks.empty and leader_df is not None and not leader_df.empty:
+            sector_leader_divergence_df = compute_sector_leader_divergence(
+                df_stocks, holdings_df, leader_df, df_market
+            )
+            sld_path = Path('outputs/history/sector_leader_divergence.csv')
+            sld_path.parent.mkdir(parents=True, exist_ok=True)
+            if not sector_leader_divergence_df.empty:
+                if sld_path.exists():
+                    hist_sld = pd.read_csv(sld_path)
+                    sector_leader_divergence_df = pd.concat([hist_sld, sector_leader_divergence_df], ignore_index=True)
+                sector_leader_divergence_df.to_csv(sld_path, index=False)
+                print("  Divergencia sector-líderes calculada.")
+        else:
+            sector_leader_divergence_df = None
+    except Exception as e:
+        print(f"  Divergencia sector-líderes omitida: {e}")
+        sector_leader_divergence_df = None
 
     # --- Distribución Wyckoff sectorial v1.0 (descriptivo) ---
     try:
@@ -980,7 +1001,7 @@ def main():
                           shock_sensitivities=shock_sensitivities,
                           price_flow_divergences=price_flow_divergences,
                           dc_summary=dc_summary,
-                          real_liq_prev=real_liq_prev, index_leaders=index_leaders, index_phases=index_phases, sector_breadth_data=sector_breadth_df, sector_concentration_data=sector_concentration_df, sector_flow_characteristics_data=sector_flow_characteristics_df, rs_internal_data=rs_internal_df, sector_rank_deltas_data=sector_rank_deltas_df, sector_regime_matrix_data=sector_regime_matrix_df, leader_representativeness_data=leader_representativeness_df, sector_wyckoff_distribution_data=sector_wyckoff_distribution_df,
+                          real_liq_prev=real_liq_prev, index_leaders=index_leaders, index_phases=index_phases, sector_breadth_data=sector_breadth_df, sector_concentration_data=sector_concentration_df, sector_flow_characteristics_data=sector_flow_characteristics_df, rs_internal_data=rs_internal_df, sector_rank_deltas_data=sector_rank_deltas_df, sector_regime_matrix_data=sector_regime_matrix_df, leader_representativeness_data=leader_representativeness_df, sector_wyckoff_distribution_data=sector_wyckoff_distribution_df, sector_leader_divergence_data=sector_leader_divergence_df,
                           all_signals=all_signals)
     print("Reporte generado en outputs/report/reporte_diario.md")
 
