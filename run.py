@@ -990,6 +990,31 @@ def main():
         print(f"  Matriz de régimen sectorial omitida: {e}")
         sector_regime_matrix_df = None
 
+    # --- Matriz de Evidencia v1.0 (descriptiva) ---
+    try:
+        from indicators.evidence_matrix import compute_evidence_matrix
+        evidence_matrix_df = compute_evidence_matrix(
+            sector_breadth_df,
+            sector_concentration_df,
+            sector_flow_characteristics_df,
+            sector_wyckoff_distribution_df,
+            liquidity_regime=financial_regime,
+            real_liquidity_regime=real_liq_regime,
+            volatility_regime=vol_regime,
+            volatility_score=vol_score,
+            liquidity_score=real_liq_score if real_liq_score is not None else financial_score
+        )
+        if evidence_matrix_df is not None and not evidence_matrix_df.empty:
+            em_path = Path('outputs/history/evidence_matrix.csv')
+            em_path.parent.mkdir(parents=True, exist_ok=True)
+            evidence_matrix_df.to_csv(em_path, index=False)
+            print("  Matriz de evidencia calculada.")
+        else:
+            evidence_matrix_df = None
+    except Exception as e:
+        print(f"  Matriz de evidencia omitida: {e}")
+        evidence_matrix_df = None
+
     print("Generando reporte...")
     generate_daily_report(macro_score, macro_regime, macro_conf,
                           financial_score, financial_regime, liq_conf,
@@ -1023,6 +1048,8 @@ def main():
                           price_flow_divergences=price_flow_divergences,
                           dc_summary=dc_summary,
                           real_liq_prev=real_liq_prev, index_leaders=index_leaders, index_phases=index_phases, sector_breadth_data=sector_breadth_df, sector_concentration_data=sector_concentration_df, sector_flow_characteristics_data=sector_flow_characteristics_df, rs_internal_data=rs_internal_df, sector_rank_deltas_data=sector_rank_deltas_df, sector_regime_matrix_data=sector_regime_matrix_df, leader_representativeness_data=leader_representativeness_df, sector_wyckoff_distribution_data=sector_wyckoff_distribution_df, sector_leader_divergence_data=sector_leader_divergence_df, sector_breadth_momentum_data=sector_breadth_momentum_df,
+                          evidence_matrix_data=evidence_matrix_df,
+
                           all_signals=all_signals)
     print("Reporte generado en outputs/report/reporte_diario.md")
 

@@ -60,6 +60,21 @@ for path, col in [('outputs/history/pcr_history.csv','date'), ('outputs/history/
     else:
         log(f'ℹ️ {path} no existe')
 
+# 3b. Matriz de Evidencia
+path_ev = 'outputs/history/evidence_matrix.csv'
+if os.path.exists(path_ev):
+    ev = pd.read_csv(path_ev)
+    check(len(ev) == 11, 'Matriz de Evidencia: 11 sectores', f'Matriz de Evidencia: {len(ev)} sectores')
+    lecturas = set(ev['alignment_reading'].dropna().unique())
+    lecturas_ok = {'EVIDENCIA PREDOMINANTEMENTE FAVORABLE','EVIDENCIA PREDOMINANTEMENTE DESFAVORABLE','EVIDENCIA MIXTA','EVIDENCIA INSUFICIENTE'}
+    check(lecturas.issubset(lecturas_ok), f'Matriz de Evidencia: lecturas validas {lecturas}', f'Matriz de Evidencia: lecturas invalidas {lecturas}')
+    check('evidence_score' not in ev.columns, 'Matriz de Evidencia: sin evidence_score', 'Matriz de Evidencia: contiene evidence_score')
+    check('credit_evidence' in ev.columns and 'volatility_evidence' in ev.columns, 'Matriz de Evidencia: columnas contexto presentes', 'Matriz de Evidencia: faltan columnas contexto')
+    if 'n_sector_evidence_valid' in ev.columns:
+        check(ev['n_sector_evidence_valid'].max() <= 5, 'Matriz de Evidencia: balance maximo 5 evidencias sectoriales', f"Matriz de Evidencia: balance maximo {ev['n_sector_evidence_valid'].max()}")
+else:
+    log('❌ No se encontro evidence_matrix.csv')
+
 # 4. Reporte diario
 path_report = 'outputs/report/reporte_diario.md'
 if os.path.exists(path_report):

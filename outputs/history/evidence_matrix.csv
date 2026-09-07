@@ -1,0 +1,12 @@
+date,sector,price_evidence,breadth_evidence,primary_flow_evidence,proxy_flow_evidence,wyckoff_evidence,credit_evidence,volatility_evidence,n_sector_evidence_valid,n_sector_evidence_positive,n_sector_evidence_negative,n_sector_evidence_neutral,evidence_quality,alignment_reading,price_quality,breadth_quality,primary_flow_quality,proxy_flow_quality,wyckoff_quality,credit_quality,volatility_quality
+2026-09-07,XLB,,-1,,,1,1,1,2,1,1,0,Baja,EVIDENCIA INSUFICIENTE,Baja,Alta,Baja,Baja,Media,Alta,Alta
+2026-09-07,XLC,,1,,,1,1,1,2,2,0,0,Baja,EVIDENCIA INSUFICIENTE,Baja,Alta,Baja,Baja,Media,Alta,Alta
+2026-09-07,XLE,,1,,,1,1,1,2,2,0,0,Baja,EVIDENCIA INSUFICIENTE,Baja,Alta,Baja,Baja,Alta,Alta,Alta
+2026-09-07,XLF,,1,,,1,1,1,2,2,0,0,Baja,EVIDENCIA INSUFICIENTE,Baja,Alta,Baja,Baja,Baja,Alta,Alta
+2026-09-07,XLI,,-1,,,1,1,1,2,1,1,0,Baja,EVIDENCIA INSUFICIENTE,Baja,Alta,Baja,Baja,Baja,Alta,Alta
+2026-09-07,XLK,,1,,,1,1,1,2,2,0,0,Baja,EVIDENCIA INSUFICIENTE,Baja,Alta,Baja,Baja,Baja,Alta,Alta
+2026-09-07,XLP,,-1,,,1,1,1,2,1,1,0,Baja,EVIDENCIA INSUFICIENTE,Baja,Alta,Baja,Baja,Media,Alta,Alta
+2026-09-07,XLRE,,-1,,,1,1,1,2,1,1,0,Baja,EVIDENCIA INSUFICIENTE,Baja,Alta,Baja,Baja,Media,Alta,Alta
+2026-09-07,XLU,,-1,,,1,1,1,2,1,1,0,Baja,EVIDENCIA INSUFICIENTE,Baja,Alta,Baja,Baja,Media,Alta,Alta
+2026-09-07,XLV,,1,,,1,1,1,2,2,0,0,Baja,EVIDENCIA INSUFICIENTE,Baja,Alta,Baja,Baja,Baja,Alta,Alta
+2026-09-07,XLY,,-1,,,1,1,1,2,1,1,0,Baja,EVIDENCIA INSUFICIENTE,Baja,Alta,Baja,Baja,Baja,Alta,Alta
