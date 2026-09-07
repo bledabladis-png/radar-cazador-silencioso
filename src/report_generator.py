@@ -603,7 +603,7 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
             lines.append(f"- **Momentum:** {pcr_data.get('momentum', 0):.2f}\n")
             lines.append(f"- **Percentil:** {pcr_data.get('percentile', 0):.0f}%\n")
             lines.append(f"- **Estado:** {pcr_data.get('state', 'N/A')}\n")
-        lines.append(f"- **PCR Indices:** {pcr_data.get('index_pcr', np.nan):.2f} | "
+        lines.append(f"- **PCR Indices:** {_fmt_num(pcr_data.get('index_pcr', np.nan), '{:.2f}')} | "
                      f"**PCR Acciones:** {pcr_data.get('equity_pcr', np.nan):.2f} | "
                      f"**PCR ETP:** {pcr_data.get('etp_pcr', np.nan):.2f}\n")
         lines.append(f"- **PCR VIX:** {pcr_data.get('vix_pcr', np.nan):.2f} | "
