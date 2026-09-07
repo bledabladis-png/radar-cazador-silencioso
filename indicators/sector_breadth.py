@@ -9,7 +9,12 @@ import numpy as np
 from src.utils import get_col
 from indicators.wyckoff import wyckoff_score, classify_wyckoff_phase
 
-def compute_sector_breadth(df_market, df_stocks, holdings_df):
+def compute_sector_breadth(df_market, df_stocks, holdings_df, as_of_date=None):
+    if as_of_date is not None:
+        as_of_date = pd.Timestamp(as_of_date)
+        df_market = df_market.loc[:as_of_date]
+        df_stocks = df_stocks.loc[:as_of_date]
+
     rows = []
     for sector_etf, group in holdings_df.groupby('etf'):
         tickers = group['ticker'].tolist()
@@ -36,6 +41,8 @@ def compute_sector_breadth(df_market, df_stocks, holdings_df):
         # Precio del sector
         try:
             sector_price = get_col(df_market, sector_etf, 'Close')
+            if as_of_date is not None:
+                sector_price = sector_price.loc[:as_of_date]
         except KeyError:
             sector_price = None
 

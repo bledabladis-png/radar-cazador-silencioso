@@ -18,8 +18,9 @@ def _delta(series, dates, days):
     if pd.isna(current_date) or pd.isna(past_date):
         return np.nan
     diff_days = (current_date - past_date).days
-    # Permitir hasta days + 2 días naturales (fines de semana)
-    if diff_days > days + 2:
+    # Tolerancia de días naturales: sesiones + fines de semana + festivos
+    max_calendar_days = max(days + 2, int(days * 1.6) + 3)
+    if diff_days > max_calendar_days:
         return np.nan
     return series.iloc[-1] - series.iloc[-days-1]
 
