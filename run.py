@@ -747,6 +747,30 @@ def main():
     except Exception as e:
         print(f"  Modulo Dark Pools omitido: {e}")
 
+    # --- Volatilidad estructural v1.0 (descriptivo) ---
+    try:
+        from indicators.volatility_structure import compute_volatility_structure
+        pcr_vol = {}
+        if pcr_data:
+            pcr_vol['zscore'] = pcr_data.get('z_score', np.nan)
+            # No recalcular percentil; si no existe, se deja NaN
+            if 'percentile_20d' in pcr_data:
+                pcr_vol['percentile_20d'] = pcr_data['percentile_20d']
+        vol_structure_df = compute_volatility_structure(df_market, pcr_data=pcr_vol if pcr_vol else None)
+        vs_path = Path('outputs/history/volatility_structure.csv')
+        vs_path.parent.mkdir(parents=True, exist_ok=True)
+        if not vol_structure_df.empty:
+            if vs_path.exists():
+                hist_vs = pd.read_csv(vs_path)
+                vol_structure_df = append_dedup(hist_vs, vol_structure_df, ['date'])
+            vol_structure_df.to_csv(vs_path, index=False)
+            print("  Volatilidad estructural calculada.")
+        else:
+            vol_structure_df = None
+    except Exception as e:
+        print(f"  Volatilidad estructural omitida: {e}")
+        vol_structure_df = None
+
     print("Calculando Market Transition Engine...")
     mte_result = None
     try:
@@ -1124,6 +1148,7 @@ def main():
                           sector_correlation_summary_data=sector_corr_summary_df,
                           sector_correlation_matrix_data=sector_corr_matrix_df,
                           cross_asset_context_data=cross_asset_summary_df,
+                          volatility_structure_data=vol_structure_df,
 
                           all_signals=all_signals)
     print("Reporte generado en outputs/report/reporte_diario.md")
