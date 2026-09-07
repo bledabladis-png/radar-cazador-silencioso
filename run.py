@@ -122,7 +122,7 @@ def main():
             print("  Rotación sectorial histórica calculada.")
             srd_path = Path('outputs/history/sector_rank_deltas.csv')
             srd_path.parent.mkdir(parents=True, exist_ok=True)
-            sector_rank_deltas_df.to_csv(srd_path, index=False)
+            sector_rank_deltas_df.to_csv(srd_path, index=False, encoding='utf-8')
         else:
             sector_rank_history_df, sector_rank_deltas_df = None, None
     except Exception as e:

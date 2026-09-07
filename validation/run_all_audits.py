@@ -182,6 +182,72 @@ if os.path.exists(ppath):
 else:
     log(f'❌ {ppath} no existe')
 
+# 3c-sexies. Validación Rotación sectorial histórica
+rank_hist_path = 'outputs/history/sector_rank_history.csv'
+rank_deltas_path = 'outputs/history/sector_rank_deltas.csv'
+
+if os.path.exists(rank_hist_path):
+    rh = pd.read_csv(rank_hist_path, encoding='utf-8')
+    check({'date','sector','score','rank'}.issubset(rh.columns), f'{rank_hist_path}: columnas correctas', f'{rank_hist_path}: faltan columnas')
+    check(rh['date'].notna().all(), f'{rank_hist_path}: date sin NaN', f'{rank_hist_path}: {rh["date"].isna().sum()} NaN en date')
+    check(rh['sector'].notna().all(), f'{rank_hist_path}: sector sin NaN', f'{rank_hist_path}: {rh["sector"].isna().sum()} NaN en sector')
+    check(rh['rank'].between(1,11).all(), f'{rank_hist_path}: rank entre 1 y 11', f'{rank_hist_path}: rank fuera de rango')
+    dup = rh.duplicated(subset=['date','sector']).sum()
+    check(dup == 0, f'{rank_hist_path}: sin duplicados date+sector', f'{rank_hist_path}: {dup} duplicados')
+    latest = pd.to_datetime(rh['date']).max()
+    latest_df = rh[pd.to_datetime(rh['date']) == latest]
+    check(len(latest_df) == 11, f'{rank_hist_path}: 11 sectores en última fecha', f'{rank_hist_path}: {len(latest_df)} sectores')
+    log(f'ℹ️ {rank_hist_path}: {len(rh)} filas, {rh["sector"].nunique()} sectores, fechas {rh["date"].nunique()}')
+else:
+    log(f'❌ {rank_hist_path} no existe')
+
+if os.path.exists(rank_deltas_path):
+    rd = pd.read_csv(rank_deltas_path, encoding='utf-8')
+    expected_cols = ['sector','rank_actual','rank_change_5d','rank_change_10d','rank_change_20d','lectura_5d','lectura_10d','lectura_20d']
+    check(set(expected_cols).issubset(rd.columns), f'{rank_deltas_path}: columnas correctas', f'{rank_deltas_path}: faltan columnas {set(expected_cols)-set(rd.columns)}')
+    if set(expected_cols).issubset(rd.columns):
+        check(rd['sector'].nunique() == 11, f'{rank_deltas_path}: 11 sectores', f'{rank_deltas_path}: {rd["sector"].nunique()} sectores')
+        allowed_lecturas = {'Fuerte mejora','Estable','Fuerte deterioro','N/D'}
+        bad = set(rd['lectura_5d'].unique()) | set(rd['lectura_10d'].unique()) | set(rd['lectura_20d'].unique())
+        bad = bad - allowed_lecturas
+        check(len(bad) == 0, f'{rank_deltas_path}: lecturas válidas', f'{rank_deltas_path}: lecturas inválidas {bad}')
+        log(f'ℹ️ {rank_deltas_path}: {len(rd)} sectores')
+else:
+    log(f'❌ {rank_deltas_path} no existe')
+
+# 3c-sexies. Validación Rotación sectorial histórica
+rank_hist_path = 'outputs/history/sector_rank_history.csv'
+rank_deltas_path = 'outputs/history/sector_rank_deltas.csv'
+
+if os.path.exists(rank_hist_path):
+    rh = pd.read_csv(rank_hist_path, encoding='utf-8')
+    check({'date','sector','score','rank'}.issubset(rh.columns), f'{rank_hist_path}: columnas correctas', f'{rank_hist_path}: faltan columnas')
+    check(rh['date'].notna().all(), f'{rank_hist_path}: date sin NaN', f'{rank_hist_path}: {rh["date"].isna().sum()} NaN en date')
+    check(rh['sector'].notna().all(), f'{rank_hist_path}: sector sin NaN', f'{rank_hist_path}: {rh["sector"].isna().sum()} NaN en sector')
+    check(rh['rank'].between(1,11).all(), f'{rank_hist_path}: rank entre 1 y 11', f'{rank_hist_path}: rank fuera de rango')
+    dup = rh.duplicated(subset=['date','sector']).sum()
+    check(dup == 0, f'{rank_hist_path}: sin duplicados date+sector', f'{rank_hist_path}: {dup} duplicados')
+    latest = pd.to_datetime(rh['date']).max()
+    latest_df = rh[pd.to_datetime(rh['date']) == latest]
+    check(len(latest_df) == 11, f'{rank_hist_path}: 11 sectores en última fecha', f'{rank_hist_path}: {len(latest_df)} sectores')
+    log(f'ℹ️ {rank_hist_path}: {len(rh)} filas, {rh["sector"].nunique()} sectores, fechas {rh["date"].nunique()}')
+else:
+    log(f'❌ {rank_hist_path} no existe')
+
+if os.path.exists(rank_deltas_path):
+    rd = pd.read_csv(rank_deltas_path, encoding='utf-8')
+    expected_cols = ['sector','rank_actual','rank_change_5d','rank_change_10d','rank_change_20d','lectura_5d','lectura_10d','lectura_20d']
+    check(set(expected_cols).issubset(rd.columns), f'{rank_deltas_path}: columnas correctas', f'{rank_deltas_path}: faltan columnas {set(expected_cols)-set(rd.columns)}')
+    if set(expected_cols).issubset(rd.columns):
+        check(rd['sector'].nunique() == 11, f'{rank_deltas_path}: 11 sectores', f'{rank_deltas_path}: {rd["sector"].nunique()} sectores')
+        allowed_lecturas = {'Fuerte mejora','Estable','Fuerte deterioro','N/D'}
+        bad = set(rd['lectura_5d'].unique()) | set(rd['lectura_10d'].unique()) | set(rd['lectura_20d'].unique())
+        bad = bad - allowed_lecturas
+        check(len(bad) == 0, f'{rank_deltas_path}: lecturas válidas', f'{rank_deltas_path}: lecturas inválidas {bad}')
+        log(f'ℹ️ {rank_deltas_path}: {len(rd)} sectores')
+else:
+    log(f'❌ {rank_deltas_path} no existe')
+
 # 4. Reporte diario
 path_report = 'outputs/report/reporte_diario.md'
 if os.path.exists(path_report):

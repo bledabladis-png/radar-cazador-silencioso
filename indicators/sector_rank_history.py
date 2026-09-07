@@ -40,7 +40,7 @@ def update_rank_history(sector_results, history_csv_path, date=None):
     combined = combined.drop_duplicates(subset=['date','sector'], keep='last')
     combined = combined.sort_values(['date','sector']).reset_index(drop=True)
     history_path.parent.mkdir(parents=True, exist_ok=True)
-    combined.to_csv(history_path, index=False)
+    combined.to_csv(history_path, index=False, encoding='utf-8')
 
     latest_date = combined['date'].max()
     current_date_data = combined[combined['date'] == latest_date].set_index('sector')
