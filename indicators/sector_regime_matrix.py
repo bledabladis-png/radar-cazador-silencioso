@@ -32,9 +32,9 @@ def build_sector_regime_matrix(sector_breadth_df, sector_flow_df, sector_results
                 ticker, name, score, phase = item[0], item[1], item[2], item[3]
                 phase_map[ticker] = phase
 
-    # Unificar por sector
-    breadth = sector_breadth_df.set_index('sector')
-    flow = sector_flow_df.set_index('sector')
+    # Unificar por sector tomando la última fila si hay histórico
+    breadth = sector_breadth_df.drop_duplicates(subset='sector', keep='last').set_index('sector')
+    flow = sector_flow_df.drop_duplicates(subset='sector', keep='last').set_index('sector')
 
     rows = []
     for sector in SECTORS:

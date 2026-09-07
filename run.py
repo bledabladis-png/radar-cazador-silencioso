@@ -289,7 +289,7 @@ def main():
         # Cargar datos N-PORT más recientes para el reporte
         nport_position_change_data = None
         try:
-            import pandas as pd
+            # import pandas as pd eliminado (ya importado globalmente)
             nport_path = Path('outputs/history/sec_nport_position_change_quarterly.csv')
             if nport_path.exists():
                 df_nport = pd.read_csv(nport_path, parse_dates=['REPORT_DATE'])

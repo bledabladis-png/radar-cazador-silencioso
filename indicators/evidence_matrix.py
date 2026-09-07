@@ -63,7 +63,7 @@ def _safe_get_row(df, sector):
         if isinstance(row, pd.Series):
             return row.to_dict()
         elif isinstance(row, pd.DataFrame):
-            return row.iloc[0].to_dict() if not row.empty else {}
+            return row.iloc[-1].to_dict() if not row.empty else {}
     return {}
 
 
