@@ -266,6 +266,35 @@ if os.path.exists(rm_path):
 else:
     log(f'❌ {rm_path} no existe')
 
+# 3c-octies. Validación Distribución Wyckoff sectorial
+wy_path = 'outputs/history/sector_wyckoff_distribution.csv'
+if os.path.exists(wy_path):
+    wydf = pd.read_csv(wy_path, encoding='utf-8')
+    required_wy = ['date','sector','n_total','n_valid_wyckoff','n_insufficient_wyckoff','coverage_wyckoff',
+                   'count_accumulation','pct_accumulation','count_markup','pct_markup',
+                   'count_range','pct_range','count_distribution','pct_distribution',
+                   'count_markdown','pct_markdown']
+    check(set(required_wy).issubset(wydf.columns), f'{wy_path}: columnas correctas', f'{wy_path}: faltan columnas {set(required_wy)-set(wydf.columns)}')
+    check(wydf['date'].notna().all(), f'{wy_path}: date sin NaN', f'{wy_path}: {wydf["date"].isna().sum()} NaN en date')
+    check(wydf['sector'].nunique() == 11, f'{wy_path}: 11 sectores', f'{wy_path}: {wydf["sector"].nunique()} sectores')
+    check(wydf['coverage_wyckoff'].between(0,100).all(), f'{wy_path}: coverage entre 0 y 100', f'{wy_path}: coverage fuera de rango')
+    # Suma de porcentajes solo cuando n_valid >=5
+    mask_valid = wydf['n_valid_wyckoff'] >= 5
+    pct_cols = ['pct_accumulation','pct_markup','pct_range','pct_distribution','pct_markdown']
+    if mask_valid.any():
+        sums = wydf.loc[mask_valid, pct_cols].sum(axis=1)
+        ok_sums = (sums >= 99.5) & (sums <= 100.5)
+        check(ok_sums.all(), f'{wy_path}: suma de pct ~100%', f'{wy_path}: sumas inválidas {sums[~ok_sums].tolist()}')
+        # Para n_valid <5, los pct deben ser NaN
+        mask_invalid = ~mask_valid
+        if mask_invalid.any():
+            check(wydf.loc[mask_invalid, pct_cols].isna().all().all(), f'{wy_path}: pct NaN cuando n_valid<5', f'{wy_path}: pct presentes con n_valid<5')
+    dup = wydf.duplicated(subset=['date','sector']).sum()
+    check(dup == 0, f'{wy_path}: sin duplicados date+sector', f'{wy_path}: {dup} duplicados')
+    log(f'ℹ️ {wy_path}: {len(wydf)} filas, fechas {wydf["date"].nunique()}')
+else:
+    log(f'❌ {wy_path} no existe')
+
 # 4. Reporte diario
 path_report = 'outputs/report/reporte_diario.md'
 if os.path.exists(path_report):

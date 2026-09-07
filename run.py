@@ -472,7 +472,7 @@ def main():
                 if wyckoff_path.exists():
                     hist_wy = pd.read_csv(wyckoff_path)
                     sector_wyckoff_distribution_df = append_dedup(hist_wy, sector_wyckoff_distribution_df, ["date","sector"])
-                sector_wyckoff_distribution_df.to_csv(wyckoff_path, index=False)
+                sector_wyckoff_distribution_df.to_csv(wyckoff_path, index=False, encoding='utf-8')
                 print("  Distribución Wyckoff sectorial calculada.")
         else:
             sector_wyckoff_distribution_df = None
