@@ -1,0 +1,2 @@
+date,vix_level,vix_percentile_20d,vix_percentile_60d,term_structure_ratio,term_structure_slope,pcr_zscore,pcr_percentile_20d,volatility_reading,term_structure_reading,n_valid_vix_20d,n_valid_vix_60d,n_valid_pcr_20d
+2026-09-07,15.300000190734863,0.725,0.30833333333333335,1.3424837032332613,5.2400007247924805,-1.1638064506453054,10.0,Volatilidad por encima de la media,Contango (vol. implícita mayor horizonte superior a inmediata),20,60,20
