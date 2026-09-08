@@ -187,7 +187,7 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
             if last_fred != 'N/A':
                 d = pd.Timestamp(last_fred)
                 age = (now - d).days
-                fred_status = _classify_freshness(age, 7, 14, 21)
+                fred_status = _classify_fred_freshness(age)
                 fred_conf = 'Alta' if fred_status in ('CURRENT', 'RECENT') else 'Baja'
                 lines.append(f"| FRED (Macro) | {d.strftime('%Y-%m-%d')} | {age} dias | {fred_status} | {fred_conf} |\n")
             else:
@@ -1309,9 +1309,12 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
     sector_df.to_csv('outputs/report/sector_rankings.csv', index=False)
 
 
-
-
-
-
-
+def _classify_fred_freshness(age_days):
+    if age_days <= 30:
+        return 'CURRENT'
+    elif age_days <= 60:
+        return 'RECENT'
+    elif age_days <= 90:
+        return 'STALE'
+    return 'ARCHIVAL'
 
