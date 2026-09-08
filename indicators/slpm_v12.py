@@ -10,7 +10,7 @@ def _safe_mean(values):
 slpm_v12.py -- SLPM v1.2 (con ajuste de cobertura y documentacion)
 """
 import pandas as pd
-from src.utils import safe_mean, safe_std
+from src.utils import safe_std
 import numpy as np
 from config.tickers import SECTOR_NAMES
 from config.weights import SLPM_WEIGHTS

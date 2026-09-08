@@ -7,7 +7,7 @@ No alimenta motores, scores, pesos ni State Machine.
 import pandas as pd
 import numpy as np
 from src.utils import get_col
-from indicators.wyckoff import wyckoff_score, classify_wyckoff_phase
+from indicators.wyckoff import classify_wyckoff_phase
 
 def _get_series(df, ticker, field):
     try:

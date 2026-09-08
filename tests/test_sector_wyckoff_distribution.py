@@ -1,6 +1,5 @@
 import pandas as pd
 import numpy as np
-from indicators.sector_wyckoff_distribution import compute_sector_wyckoff_distribution
 
 def test_pct_sum_100():
     # Simular datos falsos no es posible sin df_stocks real; probamos lógica de conteo

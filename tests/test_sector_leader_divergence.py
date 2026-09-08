@@ -1,6 +1,3 @@
-import pandas as pd
-import numpy as np
-from indicators.sector_leader_divergence import compute_sector_leader_divergence
 
 def test_classification_logic():
     # No podemos probar compute directamente fácilmente sin dataframes reales.

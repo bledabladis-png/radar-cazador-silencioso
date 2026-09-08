@@ -5,7 +5,7 @@ Evalua la fortaleza estructural de largo plazo de cada sector.
 """
 import pandas as pd
 import numpy as np
-from src.utils import safe_mean, safe_std, get_col
+from src.utils import safe_mean, get_col
 from config import settings
 from config.weights import STRUCTURAL_WEIGHTS
 

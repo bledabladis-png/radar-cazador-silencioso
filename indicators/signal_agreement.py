@@ -4,7 +4,7 @@ signal_agreement.py -- Signal Agreement v1.2 (con Conviction)
 Calcula acuerdo direccional y conviccion de las senales alineadas.
 """
 import numpy as np
-from src.utils import safe_mean, safe_std
+from src.utils import safe_mean
 
 def compute_signal_conviction(signals, direction):
     """Calcula la intensidad media de las senales que apuntan en la direccion dominante."""

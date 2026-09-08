@@ -1,5 +1,5 @@
 ﻿import pandas as pd
-from src.utils import safe_mean, safe_std
+from src.utils import safe_mean
 import numpy as np
 import os
 from datetime import datetime

@@ -12,7 +12,6 @@ import pandas as pd
 
 import numpy as np
 
-from src.utils import get_col
 
 from indicators.breadth_core import compute_new_highs_lows, compute_advances_declines, validate_coverage
 
