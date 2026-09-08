@@ -46,25 +46,33 @@ def compute_sector_scores(df, benchmark='^GSPC'):
         comp_vol = vol_inv
         comp_breadth = breadth_50
 
-        scores[sector] = (
-            SECTOR_SCORE_WEIGHTS['rs_mom_20'] * comp_rs20 +
-            SECTOR_SCORE_WEIGHTS['rs_mom_50'] * comp_rs50 +
-            SECTOR_SCORE_WEIGHTS['rs_mom_126'] * comp_rs126 +
-            SECTOR_SCORE_WEIGHTS['trend'] * comp_trend +
-            SECTOR_SCORE_WEIGHTS['volatility_inv'] * comp_vol +
-            SECTOR_SCORE_WEIGHTS['breadth'] * comp_breadth
-        )
-
-        # Penalización por desacuerdo entre sub-componentes
-        sub_components = [comp_rs20.iloc[-1], comp_rs50.iloc[-1], comp_rs126.iloc[-1], comp_trend.iloc[-1], comp_vol.iloc[-1]]
-        if not isinstance(comp_breadth, (int, float)):
-            comp_breadth_val = comp_breadth.iloc[-1] if not comp_breadth.empty else 0
-        else:
-            comp_breadth_val = comp_breadth
-        sub_components = [comp_rs20.iloc[-1], comp_rs50.iloc[-1], comp_rs126.iloc[-1], comp_trend.iloc[-1], comp_vol.iloc[-1], comp_breadth_val]
-        dispersion = safe_std(sub_components) / (abs(safe_mean(sub_components)) + 1e-9)
-        penalty = max(0, 1 - SECTOR_DISPERSION_PENALTY * dispersion)
-        scores[sector] *= penalty
+        idx = comp_rs20.index
+        comp_dict = {
+            'rs_mom_20': comp_rs20,
+            'rs_mom_50': comp_rs50,
+            'rs_mom_126': comp_rs126,
+            'trend': comp_trend,
+            'volatility_inv': comp_vol,
+            'breadth': comp_breadth if isinstance(comp_breadth, pd.Series) else pd.Series(comp_breadth, index=idx),
+        }
+        comp_df = pd.DataFrame({k: (v if isinstance(v, pd.Series) else pd.Series(v, index=idx)).reindex(idx) for k, v in comp_dict.items()})
+
+        weights = pd.Series(SECTOR_SCORE_WEIGHTS)
+        mask = comp_df.notna()
+        weighted_sum = comp_df.mul(weights, axis=1).sum(axis=1)
+        valid_weight_sum = mask.mul(weights, axis=1).sum(axis=1)
+        score_series = weighted_sum / valid_weight_sum.replace(0, float('nan'))
+
+        def _dispersion(row):
+            vals = row.dropna().tolist()
+            if len(vals) < 2:
+                return 0.0
+            return safe_std(vals) / (abs(safe_mean(vals)) + 1e-9)
+
+        dispersion_series = comp_df.apply(_dispersion, axis=1)
+        penalty_series = (1 - SECTOR_DISPERSION_PENALTY * dispersion_series).clip(lower=0)
+        scores[sector] = score_series * penalty_series
+
 
         try:
             wyckoff_phases[sector] = wyckoff_structure_core(df, sector)
