@@ -1,4 +1,4 @@
-﻿name: Daily Macro Sectorial Run
+name: Daily Macro Sectorial Run
 
 on:
   schedule:
@@ -12,7 +12,7 @@ concurrency:
 jobs:
   run-system:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 60
     permissions:
       contents: write
 
@@ -121,13 +121,13 @@ jobs:
       - name: Check download failures alert
         run: |
           if [ -f outputs/audit/download_failures.md ]; then
-            echo "⚠️ ALERTA: se detectaron fallos de descarga."
+            echo "?? ALERTA: se detectaron fallos de descarga."
             echo "-------------------------------------------"
             cat outputs/audit/download_failures.md
             echo "-------------------------------------------"
             echo "::warning::Se detectaron fallos de descarga. Revisar artifact download-failures."
           else
-            echo "✅ Sin fallos de descarga."
+            echo "? Sin fallos de descarga."
           fi
 
       - name: Validate history quality
