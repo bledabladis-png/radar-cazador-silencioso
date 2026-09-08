@@ -11,3 +11,15 @@ date,source,last_date,age_calendar_days,frequency,freshness,n_total,n_valid,cove
 2026-09-07,Volatility Structure,2026-09-07,0.0,daily,CURRENT,,,,Estructura volatilidad
 2026-09-07,Cross Asset Context,2026-09-07,0.0,daily,CURRENT,11.0,11.0,1.0,Contexto cross-asset
 2026-09-07,Evidence Matrix,2026-09-07,0.0,daily,CURRENT,11.0,11.0,1.0,Matriz evidencia
+2026-09-08,Yahoo Finance,2026-09-08,0.0,daily,CURRENT,11.0,11.0,1.0,Precios y métricas sectoriales
+2026-09-08,SSGA ETF Flow,2026-09-03,5.0,daily,RECENT,12.0,12.0,1.0,Flujo primario
+2026-09-08,CBOE PCR,2026-09-04,4.0,daily,RECENT,31.0,31.0,1.0,Put/Call ratio
+2026-09-08,FINRA Dark Pool,2026-08-17,22.0,finra,CURRENT,,,,Retraso regulatorio 2-4 semanas
+2026-09-08,CFTC Position Flow,2026-09-01,7.0,cftc,CURRENT,,,,Frescura 30 días
+2026-09-08,SEC N-PORT,,,sec,N/D,,,,Trimestral
+2026-09-08,Macro FRED,2026-07-22,48.0,fred,RECENT,,,,Datos macro manuales
+2026-09-08,Sector Concentration,2026-09-07,1.0,daily,CURRENT,11.0,11.0,1.0,Concentración y dispersión
+2026-09-08,Sector Breadth Momentum,2026-09-07,1.0,daily,CURRENT,11.0,11.0,1.0,Momentum amplitud
+2026-09-08,Volatility Structure,2026-09-08,0.0,daily,CURRENT,,,,Estructura volatilidad
+2026-09-08,Cross Asset Context,2026-09-08,0.0,daily,CURRENT,11.0,11.0,1.0,Contexto cross-asset
+2026-09-08,Evidence Matrix,2026-09-07,1.0,daily,CURRENT,11.0,11.0,1.0,Matriz evidencia
