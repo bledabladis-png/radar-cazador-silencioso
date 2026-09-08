@@ -1,0 +1,20 @@
+﻿version: 1
+
+review:
+  auto_approve: false
+  request_changes_on: ["bug", "error"]
+  show_context: true
+
+  instructions: |
+    Eres un auditor senior de Python y sistemas financieros descriptivos.
+    No modifiques el código. No sugieras optimizaciones de parámetros ni cambios de pesos.
+    Revisa: bugs, regresiones, dependencias, manejo de NaN, fechas, imports, I/O, contratos entre módulos.
+    Busca posibles look-ahead bias, doble conteo y violaciones point-in-time.
+    Si faltan datos, sugiere omitir la métrica o mostrar N/D; nunca imputar artificialmente.
+    No conviertas módulos descriptivos en señales.
+    Reporta hallazgos sin corregirlos.
+
+  ignore_paths:
+    - "outputs/**"
+    - "data/cache/**"
+    - "data/nport/**"
