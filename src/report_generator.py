@@ -791,7 +791,12 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
         lines.append("## Momentum de amplitud\n")
         lines.append("| Sector | Δ1d EMA20 | Δ5d EMA20 | Δ20d EMA20 | Δ5d EMA50 | Δ5d EMA200 | Expansión | Deterioro |\n")
         lines.append("|--------|-----------|-----------|------------|-----------|------------|-----------|-----------|\n")
-        for _, row in sector_breadth_momentum_data.iterrows():
+        # Mostrar solo la última fecha para evitar duplicados históricos
+        df_mom = sector_breadth_momentum_data.copy()
+        if 'date' in df_mom.columns and df_mom['date'].notna().any():
+            latest = pd.to_datetime(df_mom['date']).max()
+            df_mom = df_mom[pd.to_datetime(df_mom['date']) == latest]
+        for _, row in df_mom.iterrows():
             lines.append(f"| {row['sector']} | {row['delta_1d_ema20']:+.1f} | {row['delta_5d_ema20']:+.1f} | {row['delta_20d_ema20']:+.1f} | {row['delta_5d_ema50']:+.1f} | {row['delta_5d_ema200']:+.1f} | {row['breadth_expansion_5d']} | {row['breadth_deterioration_5d']} |\n")
         lines.append("\n")
 
