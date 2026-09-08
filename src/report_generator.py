@@ -1002,16 +1002,21 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
     if mte_result:
         lines.append("## Market Transition Engine (MTE v1.0)\n")
         mte_conf = mte_result.get('confidence', 0)
+        mte_conf_str = f'{mte_conf_str}' if pd.notna(mte_conf) else 'N/D'
         mte_scenario = mte_result.get('scenario', 'N/A')
         if mte_conf < 0.5:
-            lines.append(f"- **Escenario (UNCONFIRMED):** {mte_scenario} (Confidence Score no calibrado: {mte_conf:.2f}) - *No se considera confirmado.*\n")
+            lines.append(f"- **Escenario (UNCONFIRMED):** {mte_scenario} (Confidence Score no calibrado: {mte_conf_str}) - *No se considera confirmado.*\n")
         else:
-            lines.append(f"- **Escenario:** {mte_scenario} (Confidence Score no calibrado: {mte_conf:.2f})\n")
+            lines.append(f"- **Escenario:** {mte_scenario} (Confidence Score no calibrado: {mte_conf_str})\n")
         lines.append("*Nota: Confidence Score (no calibrado, escala 0-1) representa la distancia a los umbrales y el consenso entre motores. No debe interpretarse como probabilidad.*\n")
         lines.append(f"- **Market Stress Index (MSI):** {mte_result.get('msi', 0):.0f}\n")
         lines.append(f"- **Inflation Pressure Index (IPI):** {mte_result.get('ipi', 0):.0f}\n")
-        lines.append(f"- **Sector Rotation Score:** {mte_result.get('srs', 0):.2f}\n")
-        lines.append(f"- **Safe Haven Score:** {mte_result.get('shs', 0):.2f}\n")
+        val_srs = mte_result.get('srs', 0)
+        val_srs_str = f'{val_srs:.2f}' if pd.notna(val_srs) else 'N/D'
+        lines.append(f"- **Sector Rotation Score:** {val_srs_str}\n")
+        val_shs = mte_result.get('shs', 0)
+        val_shs_str = f'{val_shs:.2f}' if pd.notna(val_shs) else 'N/D'
+        lines.append(f"- **Safe Haven Score:** {val_shs_str}\n")
         lines.append(f"- **Credit Stress Score:** {mte_result.get('cls', 0):.2f}")
         lines.append(" (orientacion: positivo = mayor estres crediticio)\n")
         lines.append(f"- **Inflation Pressure Score:** {mte_result.get('ips', 0):.2f}\n\n")
@@ -1027,13 +1032,21 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
             sign = '+' if confirmation_data['t10y3m'] >= 0 else ''
             lines.append(f"- **10Y-3M Spread:** {sign}{confirmation_data['t10y3m']:.2f}%\n")
         if confirmation_data.get('rv_21d') is not None:
-            lines.append(f"- **Realized Vol (21d):** {confirmation_data['rv_21d']*100:.2f}%\n")
+            rv21 = confirmation_data['rv_21d']
+            rv21_str = f'{rv21*100:.2f}%' if pd.notna(rv21) else 'N/D'
+            lines.append(f"- **Realized Vol (21d):** {rv21_str}\n")
         if confirmation_data.get('rv_60d') is not None:
-            lines.append(f"- **Realized Vol (60d):** {confirmation_data['rv_60d']*100:.2f}%\n")
+            rv60 = confirmation_data['rv_60d']
+            rv60_str = f'{rv60*100:.2f}%' if pd.notna(rv60) else 'N/D'
+            lines.append(f"- **Realized Vol (60d):** {rv60_str}\n")
         if confirmation_data.get('vrp_21d') is not None:
-            lines.append(f"- **VRP Proxy (VIX - RV21):** {confirmation_data['vrp_21d']*100:+.2f}%\n")
+            vrp21 = confirmation_data['vrp_21d']
+            vrp21_str = f'{vrp21*100:+.2f}%' if pd.notna(vrp21) else 'N/D'
+            lines.append(f"- **VRP Proxy (VIX - RV21):** {vrp21_str}\n")
         if confirmation_data.get('vrp_60d') is not None:
-            lines.append(f"- **VRP Proxy (VIX - RV60):** {confirmation_data['vrp_60d']*100:+.2f}%\n")
+            vrp60 = confirmation_data['vrp_60d']
+            vrp60_str = f'{vrp60*100:+.2f}%' if pd.notna(vrp60) else 'N/D'
+            lines.append(f"- **VRP Proxy (VIX - RV60):** {vrp60_str}\n")
 
         fls = confirmation_data.get('fls', {})
         if fls:
