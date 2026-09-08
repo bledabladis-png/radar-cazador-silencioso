@@ -12,7 +12,7 @@ from pathlib import Path
 from datetime import datetime, timedelta
 from src.data_loader import download_market_data
 from src.macro_manual_loader import load_macro_manual
-from src.stock_data_loader import download_stock_prices
+from src.stock_data_loader import download_stock_prices, get_usa_tickers
 from data.providers.ssga_fund_data import get_etf_primary_flow_data
 from data.providers.blackrock_fund_data import get_blackrock_dax_primary_flow
 from data.providers.blackrock_isf_fund_data import get_blackrock_isf_primary_flow
@@ -28,7 +28,7 @@ from regimes.volatility_regime import compute_volatility_regime
 from regimes.macro_regime import compute_macro_regime
 from regimes.sector_regime import compute_sector_scores, compute_price_flow_rankings
 from src.report_generator import generate_daily_report
-from src.utils import get_col, detect_cross_module_conflict, trim_to_last_valid_date
+from src.utils import get_col, detect_cross_module_conflict, trim_to_last_valid_date, trim_to_last_valid_date_for_tickers
 from src.dependency_tracker import audit_double_counting
 from indicators.sector_breadth import compute_sector_breadth
 from indicators.sector_concentration import compute_sector_concentration
@@ -433,7 +433,15 @@ def main():
     try:
         df_stocks = download_stock_prices()
         if df_stocks is not None and not df_stocks.empty:
-            df_stocks = trim_to_last_valid_date(df_stocks)
+            try:
+                usa_tickers = get_usa_tickers()
+                if usa_tickers:
+                    df_stocks = trim_to_last_valid_date_for_tickers(df_stocks, usa_tickers, min_coverage=0.8)
+                else:
+                    df_stocks = trim_to_last_valid_date(df_stocks)
+            except Exception as e:
+                print(f"  WARN usando trim genérico: {e}")
+                df_stocks = trim_to_last_valid_date(df_stocks)
             _close_cols = [c for c in df_stocks.columns if c[0] == 'Close']
             _n_close = len(_close_cols)
             if _n_close > 0:

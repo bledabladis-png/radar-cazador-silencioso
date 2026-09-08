@@ -81,6 +81,20 @@ def trim_to_last_valid_date(df, min_coverage=0.5):
     last_valid_date = valid_rows.index[-1]
     return df.loc[:last_valid_date]
 
+def trim_to_last_valid_date_for_tickers(df, tickers, min_coverage=0.8):
+    """Recorta a la última fecha donde los tickers indicados tengan cobertura >= min_coverage."""
+    if df is None or df.empty:
+        return df
+    close_cols = [c for c in df.columns if c[0] == 'Close' and c[1] in tickers]
+    if not close_cols:
+        return df
+    coverage = df[close_cols].notna().sum(axis=1) / len(close_cols)
+    valid_rows = coverage[coverage >= min_coverage]
+    if valid_rows.empty:
+        return df
+    last_valid_date = valid_rows.index[-1]
+    return df.loc[:last_valid_date]
+
 def safe_mean(values):
     """Media de valores no nulos; 0.0 si no hay ninguno."""
     s = pd.Series(list(values) if values is not None else [])

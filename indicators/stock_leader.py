@@ -145,23 +145,6 @@ def generate_leader_section(df_market, df_stocks, holdings_df, fase_dict,
     VALID_FASES = {'ACCUMULATION', 'MARKUP'}
     VALID_OPER = {'OPORTUNIDAD MODERADA'}
 
-    # Recorte a última fecha con cobertura >=80% (evitar festivos)
-    close_cols = []
-    for col in df_stocks.columns:
-        if isinstance(col, tuple):
-            if any('close' in str(part).lower() for part in col):
-                close_cols.append(col)
-        elif 'close' in str(col).lower():
-            close_cols.append(col)
-    if close_cols:
-        coverage = df_stocks[close_cols].notna().sum(axis=1) / len(close_cols)
-        last_good = coverage[coverage >= 0.8].last_valid_index()
-        if last_good is not None:
-            df_stocks = df_stocks.loc[:last_good]
-            print(f"  Recorte de líderes a fecha con cobertura >=80%: {last_good.date()}")
-        else:
-            print("  ERROR: no hay fecha con cobertura suficiente para líderes.")
-            return [], pd.DataFrame(), pd.DataFrame()
 
     for sector in ['XLK','XLF','XLV','XLE','XLY','XLP','XLI','XLB','XLU','XLRE','XLC']:
         fase = fase_dict.get(sector, 'NEUTRAL')

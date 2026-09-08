@@ -18,6 +18,27 @@ def normalize_yahoo_ticker(t):
     """Convierte tickers problemáticos al formato que acepta Yahoo Finance."""
     return YAHOO_TICKER_MAP.get(t, t)
 
+def get_usa_tickers():
+    """Obtiene solo tickers de sectores USA (data/etf_holdings.csv)."""
+    tickers = []
+    try:
+        import pandas as pd
+        df_sect = pd.read_csv('data/etf_holdings.csv')
+        if 'weight' in df_sect.columns:
+            df_sect = df_sect.sort_values(['etf', 'weight'], ascending=[True, False])
+        for etf, group in df_sect.groupby('etf'):
+            tickers.extend([normalize_yahoo_ticker(t) for t in group['ticker'].head(20).tolist()])
+    except Exception:
+        pass
+    # Eliminar duplicados
+    seen = set()
+    result = []
+    for t in tickers:
+        if t and t not in seen:
+            seen.add(t)
+            result.append(t)
+    return result
+
 def get_stock_list():
     """Obtiene lista de tickers para descargar: top 20 de cada sector y de cada índice."""
     tickers = []
