@@ -39,12 +39,12 @@ def compute_sector_scores(df, benchmark='^GSPC'):
         vol_inv = -tanh_normalize(atr_val)
         _, breadth_50, _, _, _ = compute_breadth(df)
 
-        comp_rs20 = tanh_normalize(mom20).fillna(0)
-        comp_rs50 = tanh_normalize(mom50).fillna(0)
-        comp_rs126 = tanh_normalize(mom126).fillna(0)
-        comp_trend = trend.fillna(0)
-        comp_vol = vol_inv.fillna(0)
-        comp_breadth = breadth_50.fillna(0) if not breadth_50.empty else 0
+        comp_rs20 = tanh_normalize(mom20)
+        comp_rs50 = tanh_normalize(mom50)
+        comp_rs126 = tanh_normalize(mom126)
+        comp_trend = trend
+        comp_vol = vol_inv
+        comp_breadth = breadth_50
 
         scores[sector] = (
             SECTOR_SCORE_WEIGHTS['rs_mom_20'] * comp_rs20 +

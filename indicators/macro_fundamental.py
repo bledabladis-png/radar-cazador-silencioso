@@ -15,7 +15,7 @@ def fundamental_signals(df_macro):
     df_macro['date'] = pd.to_datetime(df_macro['date'])
     df_macro = df_macro.set_index('date').sort_index()
     base = base.join(df_macro, how='left')
-    base = base.interpolate(method='linear', limit_direction='both').ffill().bfill()
+    base = base  # sin imputación artificial: NaN se mantienen para evitar datos sintéticos
 
     signals = pd.DataFrame(index=base.index)
 

@@ -10,7 +10,7 @@ def compute_liquidity_score():
         return None, None, None
 
     # Rellenar hacia adelante para evitar que NaN en la ultima fila anule las senales
-    fed_data = fed_data.ffill()
+    # fed_data = fed_data.ffill()  # imputación eliminada: datos reales
 
     signals = {}
 

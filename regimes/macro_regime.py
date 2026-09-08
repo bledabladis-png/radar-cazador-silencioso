@@ -72,7 +72,7 @@ def compute_macro_signals(df_market, df_macro_manual=None, liquidity_score=None,
 
     # --- Liquidez real (FRED) ---
     if real_liquidity_score is not None:
-        market_signals['real_liquidity'] = real_liquidity_score.reindex(df_market.index).ffill()
+        market_signals['real_liquidity'] = real_liquidity_score.reindex(df_market.index)
     else:
         market_signals['real_liquidity'] = pd.Series(0, index=df_market.index)
 
@@ -120,7 +120,7 @@ def compute_macro_signals(df_market, df_macro_manual=None, liquidity_score=None,
 
     all_signals = pd.DataFrame(market_signals)
     if fundamental_sigs is not None and not fundamental_sigs.empty:
-        all_signals = all_signals.join(fundamental_sigs, how='left').ffill().bfill()
+        all_signals = all_signals.join(fundamental_sigs, how='left')
 
     return all_signals
 
@@ -132,7 +132,7 @@ def compute_macro_score(all_signals):
         w = {k: weights[k] for k in available}
         w_sum = sum(w.values())
         # Rellenar NaN con 0 para evitar que una señal invalide todo el score
-        return sum(df[k].fillna(0) * w[k] / w_sum for k in available)
+        return sum(df[k] * w[k] / w_sum for k in available)
 
     critical_score = weighted_score(all_signals, ['curve', 'credit', 'volatility', 'liquidity', 'real_liquidity'], CRITICAL_WEIGHTS)
     important_score = weighted_score(all_signals, ['dollar', 'commodities', 'breadth'], IMPORTANT_WEIGHTS)
@@ -147,7 +147,7 @@ def compute_macro_score(all_signals):
     # Mezcla con fundamentales si existen
     fundamental_sigs = [c for c in all_signals.columns if c in ['inflation', 'employment', 'activity']]
     if fundamental_sigs:
-        fund_mean = all_signals[fundamental_sigs].mean(axis=1).fillna(0)
+        fund_mean = all_signals[fundamental_sigs].mean(axis=1)
         macro_score = 0.5 * macro_score + 0.5 * fund_mean
 
     macro_score = macro_score.rolling(2, min_periods=1).mean()

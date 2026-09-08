@@ -59,7 +59,7 @@ def compute_financial_conditions(df):
         return pd.Series(0, index=df.index), 'NEUTRAL', 1.0
 
     financial_score = sum(scores[c] * weights[c] / w_sum for c in available)
-    confidence = (1 - scores[available].std(axis=1).fillna(0) / 2).clip(0, 1)
+    confidence = (1 - scores[available].std(axis=1) / 2).clip(0, 1)
     last = financial_score.iloc[-1] if not financial_score.empty else 0
 
     if last > FINANCIAL_CONDITIONS_THRESHOLDS['abundante']:
