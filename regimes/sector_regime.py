@@ -7,7 +7,7 @@ from indicators.trend import trend_position
 from indicators.volatility import atr
 from indicators.breadth import compute_breadth
 from indicators.wyckoff import wyckoff_structure_core
-from src.utils import tanh_normalize, get_col
+from src.utils import safe_mean, safe_std, tanh_normalize, get_col
 
 def compute_sector_scores(df, benchmark='^GSPC'):
     sectors = MARKET_TICKERS['sectors']
@@ -62,7 +62,7 @@ def compute_sector_scores(df, benchmark='^GSPC'):
         else:
             comp_breadth_val = comp_breadth
         sub_components = [comp_rs20.iloc[-1], comp_rs50.iloc[-1], comp_rs126.iloc[-1], comp_trend.iloc[-1], comp_vol.iloc[-1], comp_breadth_val]
-        dispersion = np.std(sub_components) / (np.abs(np.mean(sub_components)) + 1e-9)
+        dispersion = safe_std(sub_components) / (abs(safe_mean(sub_components)) + 1e-9)
         penalty = max(0, 1 - SECTOR_DISPERSION_PENALTY * dispersion)
         scores[sector] *= penalty
 

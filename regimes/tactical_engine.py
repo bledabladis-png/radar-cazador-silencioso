@@ -23,16 +23,16 @@ def compute_tactical_score(df_market, sector_etf, benchmark='^GSPC'):
 
     # RS20
     rs = close_sector / close_bench
-    rs20 = rs.pct_change(20).iloc[-1] if len(rs) >= 21 else 0.0
+    rs20 = rs.pct_change(20, fill_method=None).iloc[-1] if len(rs) >= 21 else 0.0
     rs20_norm = np.tanh(rs20 * 10) if pd.notna(rs20) else 0.0
 
     # Momentum20
-    mom20 = close_sector.pct_change(20).iloc[-1] if len(close_sector) >= 21 else 0.0
+    mom20 = close_sector.pct_change(20, fill_method=None).iloc[-1] if len(close_sector) >= 21 else 0.0
     mom20_norm = np.tanh(mom20 * 5) if pd.notna(mom20) else 0.0
 
     # Flujo reciente
     if len(close_sector) >= 6 and len(volume_sector) >= 6:
-        ret_5d = close_sector.pct_change(5).iloc[-1]
+        ret_5d = close_sector.pct_change(5, fill_method=None).iloc[-1]
         vol_5d = volume_sector.iloc[-5:].mean()
         flow_recent = ret_5d * vol_5d / volume_sector.iloc[-10:].mean() if volume_sector.iloc[-10:].mean() > 0 else 0.0
         flow_norm = np.tanh(flow_recent / 2) if pd.notna(flow_recent) else 0.0
@@ -49,7 +49,7 @@ def compute_tactical_score(df_market, sector_etf, benchmark='^GSPC'):
 
     # Aceleracion
     if len(close_sector) >= 21:
-        mom20_prev = close_sector.pct_change(20).iloc[-6] if len(close_sector) >= 26 else 0.0
+        mom20_prev = close_sector.pct_change(20, fill_method=None).iloc[-6] if len(close_sector) >= 26 else 0.0
         accel = (mom20 - mom20_prev) * 5
         accel_norm = np.tanh(accel * 3) if pd.notna(accel) else 0.0
     else:

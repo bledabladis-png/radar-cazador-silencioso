@@ -1,8 +1,16 @@
 # -*- coding: utf-8 -*-
+def _safe_mean(values):
+    """Media de valores válidos; 0.0 si no hay ninguno."""
+    if not values:
+        return 0.0
+    valid = [v for v in values if pd.notna(v)]
+    return float(np.mean(valid)) if valid else 0.0
+
 """
 slpm_v12.py -- SLPM v1.2 (con ajuste de cobertura y documentacion)
 """
 import pandas as pd
+from src.utils import safe_mean, safe_std
 import numpy as np
 from config.tickers import SECTOR_NAMES
 from config.weights import SLPM_WEIGHTS
@@ -62,7 +70,7 @@ def compute_leader_integrity(leader_metrics):
         scores.append(individual)
     if not scores:
         return {'lis': 0.0, 'n_leaders': 0}
-    lis_val = np.nanmean(scores) if scores else 0.0
+    lis_val = _safe_mean(scores)
     if np.isnan(lis_val):
         lis_val = 0.0
     return {'lis': float(np.clip(lis_val, -1, 1)), 'n_leaders': len(scores)}
@@ -71,10 +79,10 @@ def compute_flow_divergence_v2(leader_metrics, sector_flow_proxy_z, sector_price
     sector_flow_proxy_z = sector_flow_proxy_z if sector_flow_proxy_z is not None else 0.0
     leader_flows = [m.get('flow_proxy_z', np.nan) for m in leader_metrics if m and 'flow_proxy_z' in m]
     valid_leader_flows = [f for f in leader_flows if pd.notna(f)]
-    leader_flow_div = float(np.nanmean(valid_leader_flows) - sector_flow_proxy_z) if valid_leader_flows else 0.0
+    leader_flow_div = float(_safe_mean(valid_leader_flows) - sector_flow_proxy_z)
     sector_flow_vs_price_div = float(sector_flow_proxy_z - sector_price_flow) if (sector_price_flow is not None and pd.notna(sector_price_flow)) else 0.0
-    leader_flow_std = np.std(valid_leader_flows) if (valid_leader_flows and len(valid_leader_flows) > 1) else 0.0
-    structural_flow_div = float(np.nanmean(valid_leader_flows) - leader_flow_std) if valid_leader_flows else 0.0
+    leader_flow_std = safe_std(valid_leader_flows) if (valid_leader_flows and len(valid_leader_flows) > 1) else 0.0
+    structural_flow_div = float(_safe_mean(valid_leader_flows) - leader_flow_std)
     composite = 0.50 * leader_flow_div + 0.25 * sector_flow_vs_price_div + 0.25 * structural_flow_div
     return {'leader_flow_div': leader_flow_div, 'sector_flow_vs_price_div': sector_flow_vs_price_div, 'structural_flow_div': structural_flow_div, 'composite': composite}
 

@@ -35,7 +35,7 @@ def fundamental_signals(df_macro):
     activity_cols = [c for c in base.columns if any(k in c.lower() for k in ['industrial_production_total','industrial_production_manufacturing','retail_sales'])]
     if activity_cols:
         # Calcular cambio porcentual respecto a 252 días hábiles (1 año)
-        act_change = base[activity_cols].pct_change(252).mean(axis=1)
+        act_change = base[activity_cols].pct_change(252, fill_method=None).mean(axis=1)
         signals['activity'] = tanh_normalize(act_change)
     else:
         # Fallback: si no hay columnas, usar Leading_Index si existe

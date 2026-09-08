@@ -14,7 +14,7 @@ from config.settings import (
     WYCKOFF_TACT_WEIGHT_VOLUME, WYCKOFF_TACT_WEIGHT_EFFORT,
     WYCKOFF_COMBINED_STRUCT_WEIGHT, WYCKOFF_COMBINED_TACT_WEIGHT
 )
-from src.utils import robust_zscore, get_col
+from src.utils import safe_mean, safe_std, robust_zscore, get_col
 
 # ---------- COMPONENTES PRIMARIOS ----------
 
@@ -41,7 +41,7 @@ def relative_volume_v41(df, ticker, window=WYCKOFF_VOLUME_ZSCORE_WINDOW):
 def effort_vs_result(df, ticker, window=WYCKOFF_VOLUME_WINDOW):
     close = get_col(df, ticker, 'Close')
     volume = get_col(df, ticker, 'Volume')
-    price_move = close.pct_change(window).abs()
+    price_move = close.pct_change(window, fill_method=None).abs()
     volume_effort = volume.rolling(window).mean() / (volume.rolling(60).mean() + 1e-9)
     return price_move / (volume_effort + 1e-9)
 
@@ -98,7 +98,7 @@ def wyckoff_score(df, ticker):
 
 def wyckoff_confidence(t_norm, c_norm, v_norm, e_norm):
     components = np.array([t_norm.iloc[-1], c_norm.iloc[-1], v_norm.iloc[-1], e_norm.iloc[-1]])
-    dispersion = float(np.std(components))
+    dispersion = safe_std(components)
     confidence = 1.0 / (1.0 + dispersion)
     return confidence, dispersion
 

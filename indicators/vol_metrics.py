@@ -15,7 +15,7 @@ def compute_vol_metrics(df_market):
         spy_close = get_col(df_market, 'SPY', 'Close')
         vix_close = get_col(df_market, '^VIX', 'Close')
         
-        returns = spy_close.pct_change()
+        returns = spy_close.pct_change(fill_method=None)
         
         # Realized Volatility (21 sesiones, corregido)
         rv_21 = returns.rolling(21).std() * np.sqrt(252)

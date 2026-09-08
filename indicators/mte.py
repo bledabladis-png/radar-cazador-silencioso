@@ -8,7 +8,7 @@ import numpy as np
 import json
 import os
 from config.settings import MTE_STATE_FILE
-from src.utils import robust_zscore, get_col
+from src.utils import safe_mean, safe_std, robust_zscore, get_col
 
 # ============================================================
 # 0. FUNCIONES AUXILIARES
@@ -46,7 +46,7 @@ def sector_rotation_score(df_market):
     rs_defensive = pd.concat([rs[s] for s in defensive if s in rs], axis=1).mean(axis=1)
 
     spread = rs_defensive - rs_cyclical
-    mom_spread = spread.pct_change(20)
+    mom_spread = spread.pct_change(20, fill_method=None)
     speed_spread = (spread - spread.shift(20)).abs()
 
     # Dispersi�n cross-sectional
@@ -56,8 +56,8 @@ def sector_rotation_score(df_market):
     # Amplitud interna: % de sectores defensivos que baten al SPY
     try:
         spy_close = get_col(df_market, '^GSPC', 'Close')
-        spy_mom = spy_close.pct_change(20)
-        defensive_mom = pd.concat([rs[s].pct_change(20) for s in defensive if s in rs], axis=1)
+        spy_mom = spy_close.pct_change(20, fill_method=None)
+        defensive_mom = pd.concat([rs[s].pct_change(20, fill_method=None) for s in defensive if s in rs], axis=1)
         defensive_beating_spy = (defensive_mom.gt(spy_mom, axis=0)).mean(axis=1)
     except:
         defensive_beating_spy = pd.Series(0.5, index=df_market.index)
@@ -88,7 +88,7 @@ def safe_haven_score(df_market):
         for t in tickers:
             try:
                 close = get_col(df_market, t, 'Close')
-                mom = close.pct_change(20)
+                mom = close.pct_change(20, fill_method=None)
                 signals.append(tanh(robust_zscore(mom, 60)))
             except KeyError:
                 pass
@@ -190,7 +190,7 @@ def inflation_pressure_score(df_market):
     for t in assets:
         try:
             close = get_col(df_market, t, 'Close')
-            mom = close.pct_change(20)
+            mom = close.pct_change(20, fill_method=None)
             signals.append(tanh(robust_zscore(mom, 60)))
         except KeyError:
             pass
@@ -199,7 +199,7 @@ def inflation_pressure_score(df_market):
         tip_close = get_col(df_market, 'TIP', 'Close')
         ief_close = get_col(df_market, 'IEF', 'Close')
         tip_ief_ratio = tip_close / ief_close
-        tip_ief_mom = tip_ief_ratio.pct_change(20)
+        tip_ief_mom = tip_ief_ratio.pct_change(20, fill_method=None)
         signals.append(tanh(robust_zscore(tip_ief_mom, 60)))
     except KeyError:
         pass
@@ -362,7 +362,7 @@ def distance_to_threshold(srs, shs, cls, ips, scenario):
         distances = [-srs - 0.1, -cls - 0.1, -shs]
     else:
         return 0.5
-    return float(np.clip(np.mean([max(0, d) for d in distances]) / 0.5, 0, 1))
+    return float(np.clip(safe_mean([max(0, d) for d in distances]) / 0.5, 0, 1))
 
 def compute_confidence(srs, shs, cls, ips, scenario):
     distance_conf = distance_to_threshold(srs, shs, cls, ips, scenario)

@@ -108,7 +108,7 @@ def compute_sector_breadth(df_market, df_stocks, holdings_df, as_of_date=None):
 
             # Momentum 20d (mismo universo válido que RS)
             if len(close) >= 21:
-                mom = close.pct_change(20).iloc[-1]
+                mom = close.pct_change(20, fill_method=None).iloc[-1]
                 if pd.notna(mom) and mom > 0:
                     mom_positive.append(1)
                 else:

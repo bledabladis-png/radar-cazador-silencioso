@@ -13,9 +13,9 @@ def compute_commodity_market_correlation(df_market, sector_etf, benchmark='^GSPC
     except KeyError:
         return {'commodity_corr': None, 'market_corr': None, 'commodity_level': 'N/A', 'market_level': 'N/A', 'commodity_corr_value': None, 'market_corr_value': None}
     
-    ret_sector = close_sector.pct_change().dropna()
-    ret_bench = close_bench.pct_change().dropna()
-    ret_comm = close_comm.pct_change().dropna()
+    ret_sector = close_sector.pct_change(fill_method=None).dropna()
+    ret_bench = close_bench.pct_change(fill_method=None).dropna()
+    ret_comm = close_comm.pct_change(fill_method=None).dropna()
     
     common = ret_sector.index.intersection(ret_bench.index).intersection(ret_comm.index)
     ret_sector = ret_sector[common]

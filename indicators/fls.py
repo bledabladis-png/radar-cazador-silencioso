@@ -1,5 +1,6 @@
 ﻿# -*- coding: utf-8 -*-
 import pandas as pd
+from src.utils import safe_mean, safe_std
 import numpy as np
 
 def manual_robust_zscore(series, window=252):
@@ -81,7 +82,7 @@ def compute_fls():
         detail['Discount'] = {'value': None, 'stressed': False}
 
     if stresses:
-        fls_value = float(np.mean(stresses))
+        fls_value = safe_mean(stresses)
         fls_normalized = float(np.clip((fls_value + 1) / 2, 0, 1))
         stressed_count = sum(1 for d in detail.values() if d.get('stressed', False))
     else:

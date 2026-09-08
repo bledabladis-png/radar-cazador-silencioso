@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import pandas as pd
+from src.utils import safe_mean, safe_std
 import re
 import numpy as np
 from datetime import datetime, timedelta
@@ -134,7 +135,7 @@ def _backfill_history(hist, finra):
                     if dark_pool_pct <= 100:
                         resultados.append(dark_pool_pct)
             if resultados:
-                media_dp = np.mean(resultados)
+                media_dp = safe_mean(resultados)
                 new_rows.append({'week': current, 'ratio': media_dp / 100})
                 print(f"      OK: {week_str} - Ratio={media_dp/100:.4f} ({len(resultados)} tickers)")
             else:

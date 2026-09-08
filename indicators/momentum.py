@@ -45,7 +45,7 @@ def compute_flow_proxy(df, ticker, window=FLOW_ZSCORE_WINDOW):
     donde:
       flow_smooth = EWMA(10) de robust_zscore(ret*signed_volume_pressure, window=60)
       donde signed_volume_pressure = ret * close * volume
-      obv_z = robust_zscore(OBV.pct_change(), window=60)  # NOTA: pct_change() sobre serie acumulativa puede generar outliers. Alternativa: obv.diff()
+      obv_z = robust_zscore(OBV.pct_change(fill_method=None), window=60)  # NOTA: pct_change() sobre serie acumulativa puede generar outliers. Alternativa: obv.diff()
       cmf_z = robust_zscore(CMF(20), window=60)
     Retorna una Serie temporal con el Flow Proxy compuesto.
     """

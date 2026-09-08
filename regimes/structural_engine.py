@@ -5,7 +5,7 @@ Evalua la fortaleza estructural de largo plazo de cada sector.
 """
 import pandas as pd
 import numpy as np
-from src.utils import get_col
+from src.utils import safe_mean, safe_std, get_col
 from config import settings
 from config.weights import STRUCTURAL_WEIGHTS
 
@@ -32,7 +32,7 @@ def compute_structural_score(df_market, sector_etf, leader_breadth=0.5, flow_str
     rs252 = rs_momentum(settings.RS_STRUCTURAL_WINDOW)
 
     rs_values = [rs63, rs126, rs252]
-    rs_structural = np.mean([v for v in rs_values if pd.notna(v)]) if rs_values else 0.0
+    rs_structural = safe_mean([v for v in rs_values if pd.notna(v)]) if rs_values else 0.0
     rs_norm = np.tanh(rs_structural * 2) if pd.notna(rs_structural) else 0.0
 
     flow_norm = np.tanh(flow_structure)

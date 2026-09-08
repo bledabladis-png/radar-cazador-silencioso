@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 from data.providers.router import DataRouter
-from src.utils import robust_zscore, tanh_normalize
+from src.utils import safe_mean, safe_std, robust_zscore, tanh_normalize
 
 def compute_liquidity_score():
     router = DataRouter()
@@ -61,7 +61,7 @@ def compute_liquidity_score():
 
     sig_vals = [signals[k] for k in available]
     if len(sig_vals) > 1:
-        confidence = 1 - np.std(sig_vals) / 2
+        confidence = 1 - safe_std(sig_vals) / 2
     elif len(sig_vals) == 1:
         confidence = 0.5  # una sola senal -> confianza neutra
     else:
