@@ -143,6 +143,33 @@ def compute_data_quality():
 
     rows = []
     for src in sources:
+        if src['source'] == 'Macro FRED':
+            try:
+                import json
+                liq_state_path = Path('outputs/state/liquidity_state.json')
+                if liq_state_path.exists():
+                    with liq_state_path.open('r') as _f:
+                        _state = json.load(_f)
+                    last_date = pd.to_datetime(_state.get('date'))
+                else:
+                    last_date = pd.NaT
+            except Exception:
+                last_date = pd.NaT
+            age = (now - last_date).days if pd.notna(last_date) else np.nan
+            freshness = classify_freshness(age, src['frequency'])
+            rows.append({
+                'date': now.strftime('%Y-%m-%d'),
+                'source': src['source'],
+                'last_date': last_date.strftime('%Y-%m-%d') if pd.notna(last_date) else np.nan,
+                'age_calendar_days': age,
+                'frequency': src['frequency'],
+                'freshness': freshness,
+                'n_total': np.nan,
+                'n_valid': np.nan,
+                'coverage': np.nan,
+                'notes': src.get('notes', ''),
+            })
+            continue
         path = Path(src['file'])
         if not path.exists():
             rows.append({

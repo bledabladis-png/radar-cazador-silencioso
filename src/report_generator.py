@@ -764,7 +764,12 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
         lines.append("## Distribución Wyckoff sectorial\n")
         lines.append("| Sector | Acc | Markup | Range | Dist | Markdown | N | Cobertura |\n")
         lines.append("|--------|-----|--------|-------|------|----------|---|-----------|\n")
-        for _, row in sector_wyckoff_distribution_data.iterrows():
+        # Mostrar solo la última fecha para evitar duplicados históricos
+        df_wy = sector_wyckoff_distribution_data.copy()
+        if 'date' in df_wy.columns and df_wy['date'].notna().any():
+            latest = pd.to_datetime(df_wy['date']).max()
+            df_wy = df_wy[pd.to_datetime(df_wy['date']) == latest]
+        for _, row in df_wy.iterrows():
             lines.append(f"| {row['sector']} | {row['pct_accumulation']:.0f}% | {row['pct_markup']:.0f}% | {row['pct_range']:.0f}% | {row['pct_distribution']:.0f}% | {row['pct_markdown']:.0f}% | {row['n_valid_wyckoff']} | {row['coverage_wyckoff']:.0f}% |\n")
         lines.append("\n")
 
@@ -973,7 +978,13 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
         lines.append("## Calidad, frescura y cobertura de datos\n")
         lines.append("| Fuente | Último dato | Edad (días) | Frecuencia | Frescura | Cobertura | Notas |\n")
         lines.append("|--------|-------------|--------------|------------|----------|-----------|-------|\n")
-        for _, row in data_quality_data.iterrows():
+        # Mostrar solo la fila más reciente por fuente para evitar duplicados históricos
+        dq = data_quality_data.copy()
+        if 'date' in dq.columns and 'source' in dq.columns:
+            dq['date'] = pd.to_datetime(dq['date'], errors='coerce')
+            latest_idx = dq.groupby('source')['date'].idxmax()
+            dq = dq.loc[latest_idx].sort_values('source')
+        for _, row in dq.iterrows():
             last = row['last_date'] if pd.notna(row['last_date']) else 'N/D'
             age = f"{row['age_calendar_days']:.0f}" if pd.notna(row['age_calendar_days']) else 'N/D'
             freq = row['frequency'] if pd.notna(row['frequency']) else 'N/D'
@@ -983,7 +994,6 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
             lines.append(f"| {row['source']} | {last} | {age} | {freq} | {fresh} | {cov} | {notes} |\n")
         lines.append("\n")
         lines.append("*No todas las variables tienen la misma actualidad. Los datos se muestran sin interpolación.*\n\n")
-
     if mte_result:
         lines.append("## Market Transition Engine (MTE v1.0)\n")
         mte_conf = mte_result.get('confidence', 0)
