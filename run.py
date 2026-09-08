@@ -28,7 +28,7 @@ from regimes.volatility_regime import compute_volatility_regime
 from regimes.macro_regime import compute_macro_regime
 from regimes.sector_regime import compute_sector_scores, compute_price_flow_rankings
 from src.report_generator import generate_daily_report
-from src.utils import get_col, detect_cross_module_conflict
+from src.utils import get_col, detect_cross_module_conflict, trim_to_last_valid_date
 from src.dependency_tracker import audit_double_counting
 from indicators.sector_breadth import compute_sector_breadth
 from indicators.sector_concentration import compute_sector_concentration
@@ -57,6 +57,11 @@ def main():
     df_market = download_market_data()
     if df_market is None or df_market.empty:
         print("Error: no se pudieron descargar datos.")
+        return
+
+    df_market = trim_to_last_valid_date(df_market)
+    if df_market is None or df_market.empty:
+        print("Error: no hay datos válidos de mercado.")
         return
 
     print("Validando datos...")
@@ -428,18 +433,48 @@ def main():
     try:
         df_stocks = download_stock_prices()
         if df_stocks is not None and not df_stocks.empty:
-            holdings_df = pd.read_csv('data/etf_holdings.csv')
-            fases = {sector: fase for sector, _, _, fase in sector_results['ranking']}
-            oper = {sector: 'OPORTUNIDAD MODERADA' if fase in ['ACCUMULATION','MARKUP'] else 'NO OPERAR'
-                    for sector, fase in fases.items()}
-            from indicators.stock_leader import generate_leader_section
-            leader_lines, leader_df, full_metrics_df = generate_leader_section(df_market, df_stocks, holdings_df, fases, oper,
-                                                   output_csv='outputs/report/analisis_lideres.csv')
-            if leader_lines:
-                print("  Lideres sectoriales generados.")
+            df_stocks = trim_to_last_valid_date(df_stocks)
+            _close_cols = [c for c in df_stocks.columns if c[0] == 'Close']
+            _n_close = len(_close_cols)
+            if _n_close > 0:
+                _last_valid = df_stocks[_close_cols].iloc[-1].notna().sum()
+                _coverage_ratio = _last_valid / _n_close
+                print(f"  DEBUG df_stocks Close columns: {_n_close}; shape={df_stocks.shape}; last_valid={_last_valid} ({_coverage_ratio:.2f})")
+                if _coverage_ratio < 0.5:
+                    print("  WARN Cobertura última fila insuficiente. Posible festivo. Se omitirán métricas dependientes de acciones.")
+                    HOLIDAY_MODE = True
+                else:
+                    HOLIDAY_MODE = False
             else:
-                print("  No hay sectores favorables para lideres.")
+                HOLIDAY_MODE = True
+            holdings_df = pd.read_csv('data/etf_holdings.csv')
+
+            if HOLIDAY_MODE:
+                # No usar df_stocks incompleto; los bloques dependientes se omiten
+                df_stocks = None
+            else:
+                # Conservar df_stocks para cálculo normal
+                pass
+            if HOLIDAY_MODE:
+                leader_lines = None
+                leader_df = None
+                full_metrics_df = None
+                print("  Lideres sectoriales omitidos (df_stocks no disponible).")
+            else:
+                fases = {sector: fase for sector, _, _, fase in sector_results['ranking']}
+                oper = {sector: 'OPORTUNIDAD MODERADA' if fase in ['ACCUMULATION','MARKUP'] else 'NO OPERAR'
+                        for sector, fase in fases.items()}
+                from indicators.stock_leader import generate_leader_section
+                leader_lines, leader_df, full_metrics_df = generate_leader_section(df_market, df_stocks, holdings_df, fases, oper,
+                                                      output_csv='outputs/report/analisis_lideres.csv')
+                if leader_lines:
+                    print("  Lideres sectoriales generados.")
+                else:
+                    print("  No hay sectores favorables para lideres.")
+
     except Exception as e:
+        import traceback
+        traceback.print_exc()
         print(f"  Modulo de lideres omitido: {e}")
 
     # --- Divergencia sector-líderes v1.0 (descriptivo) ---
@@ -507,7 +542,11 @@ def main():
             if not sector_concentration_df.empty:
                 if sc_path.exists():
                     hist_sc = pd.read_csv(sc_path)
+                    # Limpiar histórico: eliminar filas con fecha nula
+                    hist_sc = hist_sc.dropna(subset=['date'])
                     sector_concentration_df = append_dedup(hist_sc, sector_concentration_df, ["date","sector"])
+                sector_concentration_df = sector_concentration_df.dropna(subset=['date'])
+                sector_concentration_df = sector_concentration_df.drop_duplicates(subset=['date','sector'], keep='last')
                 sector_concentration_df.to_csv(sc_path, index=False)
                 print("  Sector Concentration calculado.")
         else:
@@ -625,7 +664,7 @@ def main():
                 close_sector = get_col(df_market, sector_etf, 'Close')
                 close_spy = get_col(df_market, '^GSPC', 'Close')
                 rs = close_sector / close_spy
-                rs20 = rs.pct_change(20)
+                rs20 = rs.pct_change(20, fill_method=None)
                 pers = compute_persistence(rs20, threshold=0.0, lookback=12)
                 sector_persistence[sector_etf] = pers
             except:
@@ -696,7 +735,7 @@ def main():
                 close_sector = get_col(df_market, sector_etf, 'Close')
                 close_spy = get_col(df_market, '^GSPC', 'Close')
                 rs = close_sector / close_spy
-                rs20 = rs.pct_change(20).iloc[-1]
+                rs20 = rs.pct_change(20, fill_method=None).iloc[-1]
                 signals['rs20'] = np.tanh(rs20 * 5) if pd.notna(rs20) else 0
             except:
                 signals['rs20'] = 0
@@ -897,8 +936,12 @@ def main():
         if ad_data:
             confirmation_data['ad'] = ad_data
             print(f"    A/D: Net={ad_data['ad_net']:+d}  NH/NL={ad_data['nh_nl']:+d}  Thrust={ad_data['breadth_thrust']:.2f}")
+        else:
+            confirmation_data['ad'] = None
+            print("    A/D: Sin datos suficientes (cobertura temporal baja). Se omite.")
     except Exception as e:
         print(f"    A/D: Error - {e}")
+        confirmation_data['ad'] = None
 
     if confirmation_data:
         print(f"  Institutional Confirmation: T10Y3M={confirmation_data.get('t10y3m', 'N/A')}%")

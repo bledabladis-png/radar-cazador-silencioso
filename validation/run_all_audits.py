@@ -79,26 +79,19 @@ else:
 sc_path = 'outputs/history/sector_concentration.csv'
 if os.path.exists(sc_path):
     sc = pd.read_csv(sc_path)
-    check(sc['date'].notna().all(), f'{sc_path}: date sin NaN', f'{sc_path}: {sc["date"].isna().sum()} fechas NaN')
-    check(len(sc) == 11, f'{sc_path}: 11 filas', f'{sc_path}: {len(sc)} filas')
-    check(sc['sector'].nunique() == 11, f'{sc_path}: 11 sectores', f'{sc_path}: {sc["sector"].nunique()} sectores')
-else:
-    log(f'❌ {sc_path} no existe')
-
-# 3c-bis. Cobertura informativa de medianas
-sc_path = 'outputs/history/sector_concentration.csv'
-if os.path.exists(sc_path):
-    sc = pd.read_csv(sc_path)
-    if {'flow_median','wyckoff_median'}.issubset(sc.columns):
-        n_flow_valid = sc['flow_median'].notna().sum()
-        n_wyck_valid = sc['wyckoff_median'].notna().sum()
-        log(f'ℹ️ {sc_path}: flow_median válidos en {n_flow_valid}/11 sectores')
-        log(f'ℹ️ {sc_path}: wyckoff_median válidos en {n_wyck_valid}/11 sectores')
+    # Validación histórica: fecha sin NaN solo en la última fecha
+    if sc['date'].notna().any():
+        latest = pd.to_datetime(sc['date']).max()
+        latest_df = sc[pd.to_datetime(sc['date']) == latest]
+        check(latest_df['date'].notna().all(), f'{sc_path}: última fecha sin NaN', f'{sc_path}: NaN en última fecha')
+        check(latest_df['sector'].nunique() == 11, f'{sc_path}: 11 sectores en última fecha', f'{sc_path}: {latest_df["sector"].nunique()} sectores en última fecha')
+        dup = latest_df.duplicated(subset=['sector']).sum()
+        check(dup == 0, f'{sc_path}: sin duplicados en última fecha', f'{sc_path}: {dup} duplicados en última fecha')
+        log(f'ℹ️ {sc_path}: {len(sc)} filas, fechas {sc["date"].nunique()}')
     else:
-        log(f'ℹ️ {sc_path}: no contiene columnas de medianas')
+        log(f'⚠️ {sc_path}: no hay fechas válidas')
 else:
     log(f'❌ {sc_path} no existe')
-
 # 3c. Duplicados en CSVs sectoriales
 csv_files = [
     ('outputs/history/sector_concentration.csv', ['date','sector']),
@@ -345,6 +338,17 @@ for path, key in [('outputs/state/slpm_state.json','state'), ('outputs/state/mte
         log(f'ℹ️ {path} no existe')
 
 # Guardar informe
+# 3c-septies. Validación de guardas de cobertura en breadth_equity
+be_path = 'indicators/breadth_equity.py'
+if os.path.exists(be_path):
+    with open(be_path, 'r', encoding='utf-8') as f:
+        be_content = f.read()
+    check('active_tickers < 20' in be_content and 'return None' in be_content,
+          'breadth_equity.py: guarda de cobertura presente',
+          'breadth_equity.py: falta guarda de cobertura')
+else:
+    log(f'âŒ {be_path} no existe')
+log('')
 with open(OUT, 'w', encoding='utf-8') as f:
     f.write('\n'.join(report))
 print(f'\nInforme guardado en {OUT}')

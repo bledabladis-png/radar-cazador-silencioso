@@ -48,20 +48,50 @@ def get_col(df, ticker, field='Close'):
             if len(col) != 2:
                 continue
             if str(col[0]).lower() == field.lower() and str(col[1]).lower() == ticker.lower():
-                series = df[col].ffill(limit=5)
+                series = df[col]
                 return series
         raise KeyError(f'Columna MultiIndex ({field}, {ticker}) no encontrada')
     else:
         # Columnas planas: intentar TICKER_Field
         col = f'{ticker}_{field}'
         if col in df.columns:
-            series = df[col].ffill(limit=5)
+            series = df[col]
             return series
         # Si no existe, intentar directamente el nombre del campo (para DataFrames de una sola acción)
         if field in df.columns:
-            series = df[field].ffill(limit=5)
+            series = df[field]
             return series
         raise KeyError(f'Columna {col} o {field} no encontrada')
+
+def trim_to_last_valid_date(df, min_coverage=0.5):
+    """
+    Recorta un DataFrame MultiIndex a la última fila donde al menos
+    min_coverage de las columnas 'Close' tienen dato no nulo.
+    Evita operar con filas festivas/vacías.
+    """
+    if df is None or df.empty:
+        return df
+    close_cols = [c for c in df.columns if c[0] == 'Close']
+    if not close_cols:
+        return df
+    coverage = df[close_cols].notna().sum(axis=1) / len(close_cols)
+    valid_rows = coverage[coverage >= min_coverage]
+    if valid_rows.empty:
+        return df
+    last_valid_date = valid_rows.index[-1]
+    return df.loc[:last_valid_date]
+
+def safe_mean(values):
+    """Media de valores no nulos; 0.0 si no hay ninguno."""
+    s = pd.Series(list(values) if values is not None else [])
+    s = s.dropna()
+    return float(s.mean()) if not s.empty else 0.0
+
+def safe_std(values):
+    """Desviación estándar de valores no nulos; 0.0 si no hay al menos 2."""
+    s = pd.Series(list(values) if values is not None else [])
+    s = s.dropna()
+    return float(s.std()) if len(s) > 1 else 0.0
 
 def clean_oil_prices(df):
     try:

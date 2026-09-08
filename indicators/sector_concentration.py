@@ -44,7 +44,7 @@ def compute_sector_concentration(df_stocks, holdings_df, full_metrics_df):
             if close.empty:
                 continue
             if len(close) >= 21:
-                ret20_list.append((ticker, close.pct_change(20).iloc[-1]))
+                ret20_list.append((ticker, close.pct_change(20, fill_method=None).iloc[-1]))
         ret_df = pd.DataFrame(ret20_list, columns=['ticker','ret20']).dropna()
 
         if ret_df.empty:

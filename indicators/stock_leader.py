@@ -85,8 +85,12 @@ def compute_wls(df_metrics, weights=None):
         return df
 
     def robust_intra(s):
+        if s.empty or s.isna().all():
+            return pd.Series(0.0, index=s.index)
         median = s.median()
         mad = (s - median).abs().median()
+        if pd.isna(mad) or mad == 0:
+            return pd.Series(0.0, index=s.index)
         return (s - median) / (1.4826 * mad + 1e-9)
 
     df['rs_z'] = df.groupby('sector')['rs_mom'].transform(robust_intra).clip(-3, 3)
@@ -132,13 +136,32 @@ def compute_wls(df_metrics, weights=None):
 
     return df.sort_values('wls', ascending=False)
 
-def generate_leader_section(df_market, df_stocks, holdings_df, fase_dict, operabilidad_dict, output_csv=None):
+def generate_leader_section(df_market, df_stocks, holdings_df, fase_dict,
+                               operabilidad_dict, output_csv=None):
     lines = []
     leader_data = []
     full_metrics_data = []
 
     VALID_FASES = {'ACCUMULATION', 'MARKUP'}
     VALID_OPER = {'OPORTUNIDAD MODERADA'}
+
+    # Recorte a última fecha con cobertura >=80% (evitar festivos)
+    close_cols = []
+    for col in df_stocks.columns:
+        if isinstance(col, tuple):
+            if any('close' in str(part).lower() for part in col):
+                close_cols.append(col)
+        elif 'close' in str(col).lower():
+            close_cols.append(col)
+    if close_cols:
+        coverage = df_stocks[close_cols].notna().sum(axis=1) / len(close_cols)
+        last_good = coverage[coverage >= 0.8].last_valid_index()
+        if last_good is not None:
+            df_stocks = df_stocks.loc[:last_good]
+            print(f"  Recorte de líderes a fecha con cobertura >=80%: {last_good.date()}")
+        else:
+            print("  ERROR: no hay fecha con cobertura suficiente para líderes.")
+            return [], pd.DataFrame(), pd.DataFrame()
 
     for sector in ['XLK','XLF','XLV','XLE','XLY','XLP','XLI','XLB','XLU','XLRE','XLC']:
         fase = fase_dict.get(sector, 'NEUTRAL')
@@ -151,6 +174,8 @@ def generate_leader_section(df_market, df_stocks, holdings_df, fase_dict, operab
             continue
         metrics_df['sector'] = sector
         wls_df = compute_wls(metrics_df)
+        if wls_df is None or wls_df.empty:
+            continue
         full_metrics_data.append(wls_df)
 
         if fase not in VALID_FASES or oper not in VALID_OPER:
@@ -167,6 +192,8 @@ def generate_leader_section(df_market, df_stocks, holdings_df, fase_dict, operab
         lines.append('\n')
         lines.append('*RS = RS Level (precio acción / precio sector). RS Mom = RS Momentum (cambio del RS en 20 días). El WLS combina ambas con pesos 35% y 25% respectivamente.*\n')
 
+    # Filtrar métricas None/vacías y concatenar solo si hay datos válidos
+    full_metrics_data = [m for m in full_metrics_data if m is not None and not m.empty]
     if full_metrics_data:
         full_metrics_df = pd.concat(full_metrics_data, ignore_index=True)
     else:
@@ -182,7 +209,4 @@ def generate_leader_section(df_market, df_stocks, holdings_df, fase_dict, operab
                 'persistence_5d','persistence_10d','persistence_20d','stability','spring','sos','wls','sector_rank_pct']
         leader_df[cols].to_csv(output_csv, index=False)
 
-    if not leader_df.empty or not full_metrics_df.empty:
-        return lines, leader_df, full_metrics_df
-    return None, None, None
-
+    return lines, leader_df, full_metrics_df

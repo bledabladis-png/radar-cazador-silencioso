@@ -1,4 +1,5 @@
 ﻿import pandas as pd
+from src.utils import safe_mean, safe_std
 import numpy as np
 import os
 from datetime import datetime
@@ -470,7 +471,7 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
         icon = icons.get(quadrant, '?')
         if sector_list:
             sector_names = [s[0] for s in sector_list]
-            avg_conf = np.mean([s[1] for s in sector_list])
+            avg_conf = safe_mean([s[1] for s in sector_list])
             lines.append(f"| {icon} **{quadrant}** | {', '.join(sector_names)} | {avg_conf:.0%} |\n")
         else:
             lines.append(f"| {icon} **{quadrant}** | -- | -- |\n")
