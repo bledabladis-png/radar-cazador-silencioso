@@ -1021,7 +1021,7 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
     if mte_result:
         lines.append("## Market Transition Engine (MTE v1.0)\n")
         mte_conf = mte_result.get('confidence', 0)
-        mte_conf_str = f'{mte_conf_str}' if pd.notna(mte_conf) else 'N/D'
+        mte_conf_str = f'{mte_conf:.2f}' if pd.notna(mte_conf) else 'N/D'
         mte_scenario = mte_result.get('scenario', 'N/A')
         if mte_conf < 0.5:
             lines.append(f"- **Escenario (UNCONFIRMED):** {mte_scenario} (Confidence Score no calibrado: {mte_conf_str}) - *No se considera confirmado.*\n")
