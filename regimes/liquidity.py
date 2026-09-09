@@ -12,33 +12,36 @@ def compute_liquidity_score():
     # Rellenar hacia adelante para evitar que NaN en la ultima fila anule las senales
     # fed_data = fed_data.ffill()  # imputación eliminada: datos reales
 
-    signals = {}
-
-    if 'fed_balance' in fed_data.columns:
-        z = robust_zscore(fed_data['fed_balance'], window=60)
-        signals['fed_balance'] = tanh_normalize(z).iloc[-1]
-
-    if 'reverse_repo' in fed_data.columns:
-        z = robust_zscore(fed_data['reverse_repo'], window=60)
-        val = -tanh_normalize(z).iloc[-1]
-        if pd.notna(val):
-            signals['reverse_repo'] = val
-
-    if 'sofr' in fed_data.columns:
-        z = robust_zscore(fed_data['sofr'], window=60)
-        val = -tanh_normalize(z).iloc[-1]
-        if pd.notna(val):
-            signals['sofr'] = val
-
-    if 'fed_funds' in fed_data.columns:
-        z = robust_zscore(fed_data['fed_funds'], window=60)
-        val = -tanh_normalize(z).iloc[-1]
-        if pd.notna(val):
-            signals['fed_funds'] = val
-
-    # Eliminar posibles NaN que haya en las senales
-    signals = {k: v for k, v in signals.items() if pd.notna(v)}
-
+    signals = {}
+
+    if 'fed_balance' in fed_data.columns:
+        z = robust_zscore(fed_data['fed_balance'], window=60)
+        t = tanh_normalize(z)
+        last_val = t.dropna().iloc[-1] if t.dropna().size > 0 else float('nan')
+        if pd.notna(last_val):
+            signals['fed_balance'] = last_val
+
+    if 'reverse_repo' in fed_data.columns:
+        z = robust_zscore(fed_data['reverse_repo'], window=60)
+        t = -tanh_normalize(z)
+        last_val = t.dropna().iloc[-1] if t.dropna().size > 0 else float('nan')
+        if pd.notna(last_val):
+            signals['reverse_repo'] = last_val
+
+    if 'sofr' in fed_data.columns:
+        z = robust_zscore(fed_data['sofr'], window=60)
+        t = -tanh_normalize(z)
+        last_val = t.dropna().iloc[-1] if t.dropna().size > 0 else float('nan')
+        if pd.notna(last_val):
+            signals['sofr'] = last_val
+
+    if 'fed_funds' in fed_data.columns:
+        z = robust_zscore(fed_data['fed_funds'], window=60)
+        t = -tanh_normalize(z)
+        last_val = t.dropna().iloc[-1] if t.dropna().size > 0 else float('nan')
+        if pd.notna(last_val):
+            signals['fed_funds'] = last_val
+
     if not signals:
         return None, None, None
 
@@ -77,8 +80,9 @@ def compute_liquidity_score():
                 prev = json.load(f)
                 previous_score = prev.get('score', None)
         with open(delta_file, 'w') as f:
-            json.dump({'score': float(score), 'date': str(fed_data.index[-1].date())}, f)
+            json.dump({'score': float(score), 'date': str(fed_data.dropna(how='all').index[-1].date()) if len(fed_data.dropna(how='all')) > 0 else str(fed_data.index[-1].date())}, f)
     except:
         pass
 
-    return pd.Series(score, index=[fed_data.index[-1]]), regime, confidence, previous_score
+    last_idx = fed_data.dropna(how='all').index[-1] if len(fed_data.dropna(how='all')) > 0 else fed_data.index[-1]
+    return pd.Series(score, index=[last_idx]), regime, confidence, previous_score

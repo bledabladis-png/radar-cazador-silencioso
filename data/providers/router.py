@@ -57,6 +57,19 @@ class DataRouter:
         return None
 
     def get_fed_data(self):
+        # 1) Intentar primero proveedor automático FRED
+        for name in ["fred", "yahoo"]:
+            provider = self.providers[name]
+            if provider.is_available():
+                try:
+                    data = provider.get_fed_data()
+                    if data is not None and not data.empty:
+                        print(f"Usando {provider.get_name()} para datos de liquidez.")
+                        return data
+                except Exception:
+                    continue
+
+        # 2) Fallback a CSVs manuales
         macro_dir = 'data/macro_manual'
         if os.path.exists(macro_dir):
             try:
@@ -67,15 +80,7 @@ class DataRouter:
             except Exception:
                 pass
 
-        for name in ["fred", "yahoo"]:
-            provider = self.providers[name]
-            if provider.is_available():
-                try:
-                    return provider.get_fed_data()
-                except:
-                    continue
         return None
-
     def _load_macro_manual(self, data_dir):
         dfs = []
         for fname in os.listdir(data_dir):
