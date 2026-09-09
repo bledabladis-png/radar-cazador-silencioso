@@ -531,7 +531,7 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
             flow_val = slpm_v12_data.get("flow_divergence_v2", {}).get("composite", 0) if slpm_v12_data else 0
             struct_val = inputs.get("structural", 0)
             lis_val = slpm_v12_data.get("leader_integrity", {}).get("lis", 0) if slpm_v12_data else 0
-            lines.append(f"- **Scores oficiales:** T={tact_val:+.2f} | S={struct_val:+.2f} | LIS={lis_val:+.2f} | Eff Breadth={eff_breadth:.2f} | Persist={pers_str} | LQ: P={tact_val:+.2f} C={flow_val:+.3f} S={struct_val:+.2f} Cf={lis_val:+.2f}\n")
+            lines.append(f"- **Scores oficiales:** T={tact_val:+.2f} | S={struct_val:+.2f} | LIS={lis_val:+.2f} | Eff Breadth={eff_breadth:.2f} | Persist={pers_str} | LQ: P={tact_val:+.2f} C={_fmt_num(flow_val, '{:+.3f}')} S={struct_val:+.2f} Cf={lis_val:+.2f}\n")
         
         errors = slpm_v12_data.get('validation_errors', [])
         if errors:
