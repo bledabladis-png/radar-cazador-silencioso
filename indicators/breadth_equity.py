@@ -64,32 +64,14 @@ def compute_advance_decline(df_stocks):
     if active_tickers < 20:
         return None  # Cobertura temporal insuficiente
 
-    active_tickers = int(closes.notna().sum(axis=1).iloc[-1])
-
-    if active_tickers < 20:
-
-        return None  # Cobertura insuficiente para un A/D representativo
-
-    active_tickers = int(closes.notna().sum(axis=1).iloc[-1])
-
-    if active_tickers < 20:
-
-        return None  # Cobertura insuficiente para un A/D representativo
-
-    active_tickers = int(closes.notna().sum(axis=1).iloc[-1])
-
-    if active_tickers < 20:
-
-        return None  # Cobertura insuficiente para un A/D representativo
-
-
-
     # Avances/descensos desde modulo comun
-
     advances, declines, unchanged = compute_advances_declines(closes)
 
-    ad_net = advances - declines
+    # Si no hay cambios válidos en la última fila, omitir métrica
+    if int(advances.iloc[-1]) == 0 and int(declines.iloc[-1]) == 0:
+        return None
 
+    ad_net = advances - declines
     ad_line = ad_net.cumsum()
 
 
