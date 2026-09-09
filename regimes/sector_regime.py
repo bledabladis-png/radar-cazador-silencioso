@@ -9,7 +9,7 @@ from indicators.breadth import compute_breadth
 from indicators.wyckoff import wyckoff_structure_core
 from src.utils import safe_mean, safe_std, tanh_normalize, get_col
 
-def compute_sector_scores(df, benchmark='^GSPC'):
+def compute_sector_scores(df, benchmark='^GSPC', df_stocks=None, holdings_df=None):
     sectors = MARKET_TICKERS['sectors']
     returns = compute_returns(df, sectors + [benchmark])
     if returns.empty:
@@ -37,14 +37,24 @@ def compute_sector_scores(df, benchmark='^GSPC'):
         trend = trend_position(close_sector)
         atr_val = atr(df, sector)
         vol_inv = -tanh_normalize(atr_val)
-        _, breadth_50, _, _, _ = compute_breadth(df)
+        # Amplitud interna sectorial si hay datos de stocks y holdings
+        # Amplitud sectorial interna basada en EMAs del propio sector
+        ema20_sector = close_sector.ewm(span=20, adjust=False, min_periods=20).mean()
+        ema50_sector = close_sector.ewm(span=50, adjust=False, min_periods=50).mean()
+        ema200_sector = close_sector.ewm(span=200, adjust=False, min_periods=200).mean()
+        breadth_sector = ((close_sector > ema20_sector).astype(float) +
+                          (close_sector > ema50_sector).astype(float) +
+                          (close_sector > ema200_sector).astype(float)) / 3.0
+        comp_breadth = tanh_normalize(breadth_sector)
+
+
 
         comp_rs20 = tanh_normalize(mom20)
         comp_rs50 = tanh_normalize(mom50)
         comp_rs126 = tanh_normalize(mom126)
         comp_trend = trend
         comp_vol = vol_inv
-        comp_breadth = breadth_50
+
 
         idx = comp_rs20.index
         comp_dict = {
