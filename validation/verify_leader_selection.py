@@ -35,7 +35,12 @@ log('## 1. Líderes Sectoriales (ETF USA)')
 try:
     h = pd.read_csv('data/etf_holdings.csv')
     log(f'Columnas en etf_holdings.csv: {h.columns.tolist()}')
-    l = pd.read_csv('outputs/report/analisis_lideres.csv')
+    import os
+    if not os.path.exists('outputs/report/analisis_lideres.csv'):
+        log('  ℹ️ No se generó analisis_lideres.csv (sin sectores en fase favorable)')
+        l = pd.DataFrame(columns=['sector','ticker','wls'])
+    else:
+        l = pd.read_csv('outputs/report/analisis_lideres.csv')
 
     if 'weight' not in h.columns:
         log('  ❌ No existe columna weight en etf_holdings.csv. No se puede validar por peso.')
@@ -63,7 +68,12 @@ log('## 2. Líderes Internacionales (Índices)')
 try:
     h = pd.read_csv('data/index_holdings.csv')
     log(f'Columnas en index_holdings.csv: {h.columns.tolist()}')
-    l = pd.read_csv('outputs/report/analisis_lideres_internacionales.csv')
+    import os
+    if not os.path.exists('outputs/report/analisis_lideres_internacionales.csv'):
+        log('  ℹ️ No se generó analisis_lideres_internacionales.csv (sin índices en fase favorable)')
+        l = pd.DataFrame(columns=['indice','ticker','wls'])
+    else:
+        l = pd.read_csv('outputs/report/analisis_lideres_internacionales.csv')
 
     from config.index_tickers import INDEX_CONFIG
 
@@ -106,7 +116,11 @@ log('')
 # ------------------------------------------------------------
 log('## 3. Coherencia de Top 5 en CSVs de salida')
 try:
-    l_sec = pd.read_csv('outputs/report/analisis_lideres.csv')
+    if not os.path.exists('outputs/report/analisis_lideres.csv'):
+        log('  ℹ️ No se generó analisis_lideres.csv; se omite validación de Top 5 sectorial')
+        l_sec = pd.DataFrame(columns=['sector','ticker','wls'])
+    else:
+        l_sec = pd.read_csv('outputs/report/analisis_lideres.csv')
     for sector, group in l_sec.groupby('sector'):
         if len(group) < 5:
             log(f'  ⚠️ Sector {sector}: solo {len(group)} líderes guardados (< 5)')
@@ -120,7 +134,11 @@ except Exception as e:
     log(f'  ❌ Error sectores: {e}')
 
 try:
-    l_int = pd.read_csv('outputs/report/analisis_lideres_internacionales.csv')
+    if not os.path.exists('outputs/report/analisis_lideres_internacionales.csv'):
+        log('  ℹ️ No se generó analisis_lideres_internacionales.csv; se omite validación de Top 5 índices')
+        l_int = pd.DataFrame(columns=['indice','ticker','wls'])
+    else:
+        l_int = pd.read_csv('outputs/report/analisis_lideres_internacionales.csv')
     for indice, group in l_int.groupby('indice'):
         if len(group) < 5:
             log(f'  ⚠️ Índice {indice}: solo {len(group)} líderes guardados (< 5)')
