@@ -24,13 +24,13 @@ from indicators.state_transition import confirm_transition
 
 def compute_leader_breadth_v2(leader_metrics, expected_leaders=SLPM_EXPECTED_LEADERS):
     if not leader_metrics:
-        return {'rs_breadth': 0.0, 'momentum_breadth': 0.0, 'flow_breadth': 0.0, 'wyckoff_breadth': 0.0, 'composite': 0.5, 'n_used': 0, 'coverage': 0.0, 'effective_composite': 0.5, 'expected_leaders': expected_leaders}
+        return {'rs_breadth': 0.0, 'momentum_breadth': 0.0, 'flow_breadth': 0.0, 'wyckoff_breadth': 0.0, 'composite': 0.0, 'n_used': 0, 'coverage': 0.0, 'effective_composite': 0.0, 'expected_leaders': expected_leaders}
     n = len(leader_metrics)
     coverage = min(n / expected_leaders, 1.0) if expected_leaders > 0 else 0
 
     rs_positive = sum(1 for m in leader_metrics if m and (m.get('rs', 1.0) or 1.0) > 1.0) / n
     momentum_positive = sum(1 for m in leader_metrics if m and (m.get('rs_momentum', m.get('rs_mom_20', 0)) or 0) > 0) / n
-    flow_positive = sum(1 for m in leader_metrics if m and (m.get('flow_proxy_z', 0) or 0) > 0) / n
+    flow_positive = sum(1 for m in leader_metrics if m and pd.notna(m.get('flow_proxy_z', np.nan)) and m.get('flow_proxy_z', np.nan) > 0) / n
     wyckoff_favorable = sum(1 for m in leader_metrics if m and m.get('wyckoff_phase', '') in ('ACCUMULATION', 'MARKUP')) / n
 
     composite = SLPM_WEIGHTS["leader_breadth"]["rs"] * rs_positive + SLPM_WEIGHTS["leader_breadth"]["momentum"] * momentum_positive + SLPM_WEIGHTS["leader_breadth"]["flow"] * flow_positive + SLPM_WEIGHTS["leader_breadth"]["wyckoff"] * wyckoff_favorable
@@ -62,7 +62,7 @@ def compute_leader_integrity(leader_metrics):
         rs_norm = np.tanh((rs - 1.0) * 2)
         rs_mom = m.get('rs_momentum') or m.get('rs_mom_20', 0) or 0
         mom_norm = np.tanh(rs_mom * 5)
-        flow = m.get('flow_proxy_z') or 0
+        flow = m.get('flow_proxy_z') or np.nan
         flow_norm = np.tanh(flow / 2)
         wyckoff_map = {'MARKUP': 1.0, 'ACCUMULATION': 0.75, 'RANGE': 0.0, 'DISTRIBUTION': -0.75, 'MARKDOWN': -1.0}
         wyckoff_score = wyckoff_map.get(m.get('wyckoff_phase', ''), 0.0)
@@ -76,13 +76,17 @@ def compute_leader_integrity(leader_metrics):
     return {'lis': float(np.clip(lis_val, -1, 1)), 'n_leaders': len(scores)}
 
 def compute_flow_divergence_v2(leader_metrics, sector_flow_proxy_z, sector_price_flow=None):
-    sector_flow_proxy_z = sector_flow_proxy_z if sector_flow_proxy_z is not None else 0.0
+    sector_flow_proxy_z = sector_flow_proxy_z if sector_flow_proxy_z is not None else np.nan
     leader_flows = [m.get('flow_proxy_z', np.nan) for m in leader_metrics if m and 'flow_proxy_z' in m]
     valid_leader_flows = [f for f in leader_flows if pd.notna(f)]
-    leader_flow_div = float(_safe_mean(valid_leader_flows) - sector_flow_proxy_z)
-    sector_flow_vs_price_div = float(sector_flow_proxy_z - sector_price_flow) if (sector_price_flow is not None and pd.notna(sector_price_flow)) else 0.0
-    leader_flow_std = safe_std(valid_leader_flows) if (valid_leader_flows and len(valid_leader_flows) > 1) else 0.0
-    structural_flow_div = float(_safe_mean(valid_leader_flows) - leader_flow_std)
+    if not valid_leader_flows:
+        leader_flow_div = np.nan
+        structural_flow_div = np.nan
+    else:
+        leader_flow_div = float(_safe_mean(valid_leader_flows) - sector_flow_proxy_z)
+        leader_flow_std = safe_std(valid_leader_flows) if len(valid_leader_flows) > 1 else np.nan
+        structural_flow_div = float(_safe_mean(valid_leader_flows) - leader_flow_std) if pd.notna(leader_flow_std) else np.nan
+    sector_flow_vs_price_div = float(sector_flow_proxy_z - sector_price_flow) if (sector_price_flow is not None and pd.notna(sector_price_flow)) else np.nan
     composite = 0.50 * leader_flow_div + 0.25 * sector_flow_vs_price_div + 0.25 * structural_flow_div
     return {'leader_flow_div': leader_flow_div, 'sector_flow_vs_price_div': sector_flow_vs_price_div, 'structural_flow_div': structural_flow_div, 'composite': composite}
 
@@ -96,7 +100,7 @@ def evaluate_slpm_v12(df_market, sector_results, leader_metrics, top_sector_flow
 
     breadth_v2 = compute_leader_breadth_v2(leader_metrics, expected_leaders=SLPM_EXPECTED_LEADERS)
     integrity = compute_leader_integrity(leader_metrics)
-    top_sector_flow = top_sector_flow if top_sector_flow is not None else 0.0
+    top_sector_flow = top_sector_flow if top_sector_flow is not None else np.nan
     flow_div_v2 = compute_flow_divergence_v2(leader_metrics, top_sector_flow, None)
 
     tactical_score = tactical_scores.get(sector_etf, 0.0) if tactical_scores else 0.0

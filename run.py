@@ -336,24 +336,23 @@ def main():
     flow_synthesis = {}
     try:
         # Dirección de flow_proxy (promedio de flow_proxy_z de líderes sectoriales si existen, si no 0)
-        proxy_sign = 0.0
-        proxy_sign = 0.0
+        proxy_sign = np.nan
         flow_synthesis['flow_proxy_sign'] = proxy_sign
 
         # Dirección de ETF Primary Flow (promedio de primary_flow_z)
-        primary_sign = 0.0
+        primary_sign = np.nan
         if etf_primary_flow_data is not None and not etf_primary_flow_data.empty:
             primary_sign = float(etf_primary_flow_data['primary_flow_z'].mean())
         flow_synthesis['etf_primary_flow_sign'] = primary_sign
 
         # Dirección de CFTC Position Flow (promedio de flow_z)
-        cftc_sign = 0.0
+        cftc_sign = np.nan
         if cftc_position_flow_data is not None and not cftc_position_flow_data.empty and 'flow_z' in cftc_position_flow_data.columns:
             cftc_sign = float(cftc_position_flow_data['flow_z'].mean())
         flow_synthesis['cftc_flow_sign'] = cftc_sign
 
         # Dirección de Europa Primary Flow (promedio de flow_zscore de DAXEX, ISF.L, LYXI)
-        europe_sign = 0.0
+        europe_sign = np.nan
         european_flows = []
         if blackrock_dax_flow is not None and not blackrock_dax_flow.empty and 'flow_zscore' in blackrock_dax_flow.columns:
             european_flows.append(float(blackrock_dax_flow['flow_zscore'].iloc[-1]))

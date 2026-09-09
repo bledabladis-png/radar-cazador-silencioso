@@ -22,6 +22,9 @@ def _delta(series, dates, days):
     max_calendar_days = max(days + 2, int(days * 1.6) + 3)
     if diff_days > max_calendar_days:
         return np.nan
+    if pd.isna(series.iloc[-1]) or pd.isna(series.iloc[-days-1]):
+        return np.nan
+
     return series.iloc[-1] - series.iloc[-days-1]
 
 def classify_delta(delta):
