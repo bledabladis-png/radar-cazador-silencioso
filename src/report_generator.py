@@ -110,7 +110,13 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
     if macro_conf < 0.30:
         lines.append("  *Signal Consistency baja: señales contradictorias en el entorno actual.*\n")
     
-    lines.append(f"- **Cond. Financieras:** {liquidity_regime} (Score: {liquidity_score.iloc[-1]:.2f}, Signal Consistency: {liq_conf:.0%})\n")
+    try:
+        cond_score = float(liquidity_score.iloc[-1])
+    except Exception:
+        cond_score = float('nan')
+    cond_score_str = f'{cond_score:.2f}' if pd.notna(cond_score) else 'N/D'
+    liq_conf_str = f'{liq_conf:.0%}' if pd.notna(liq_conf) else 'N/D'
+    lines.append(f"- **Cond. Financieras:** {liquidity_regime} (Score: {cond_score_str}, Signal Consistency: {liq_conf_str})\n")
     if liquidity_regime == 'HIGH_STRESS':
         lines.append("  *Nota: El modulo financiero detecta estres significativo, pero volatilidad y liquidez no confirman un deterioro transversal. No se clasifica como CRISIS sistemica.*\n")
     
@@ -248,6 +254,8 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
             lines.append("\n**Detalle por modulo:**\n")
             for mod_name, mod_info in details.items():
                 state = mod_info.get('state', 'N/A')
+                if state is None or str(state) == 'None':
+                    state = 'N/A'
                 bias_fin = mod_info.get('bias_financial', 0)
                 bias_inf = mod_info.get('bias_inflation', 0)
                 bias_str = ''
@@ -330,9 +338,13 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
         name = SECTOR_NAMES.get(ticker, ticker)
         lines.append(f"| {i} | {name} ({ticker}) | {mom*100:.2f}% |\n")
 
-    lines.append("\n## Flujo Institucional - Sectores (Proxy)\n")
-    lines.append("| # | Sector | Flujo (z-score) |\n")
-    lines.append("|---|--------|------------------|\n")
+    if sector_flow_rank:
+        lines.append("\n## Flujo Institucional - Sectores (Proxy)\n")
+        lines.append("| # | Sector | Flujo (z-score) |\n")
+        lines.append("|---|--------|------------------|\n")
+    else:
+        lines.append("\n## Flujo Institucional - Sectores (Proxy)\n")
+        lines.append("*No hay datos disponibles para Flow Proxy.*\n")
     for i, (ticker, flow) in enumerate(sector_flow_rank[:11], 1):
         name = SECTOR_NAMES.get(ticker, ticker)
         lines.append(f"| {i} | {name} ({ticker}) | {flow:.2f} |\n")
@@ -363,9 +375,13 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
     for i, (ticker, mom) in enumerate(otros_price_rank[:15], 1):
         lines.append(f"| {i} | {ticker} | {mom*100:.2f}% |\n")
 
-    lines.append("\n## Flujo Institucional - Otros Activos (Proxy)\n")
-    lines.append("| # | Activo | Flujo (z-score) |\n")
-    lines.append("|---|--------|------------------|\n")
+    if otros_flow_rank:
+        lines.append("\n## Flujo Institucional - Otros Activos (Proxy)\n")
+        lines.append("| # | Activo | Flujo (z-score) |\n")
+        lines.append("|---|--------|------------------|\n")
+    else:
+        lines.append("\n## Flujo Institucional - Otros Activos (Proxy)\n")
+        lines.append("*No hay datos disponibles para Flow Proxy.*\n")
     for i, (ticker, flow) in enumerate(otros_flow_rank[:15], 1):
         lines.append(f"| {i} | {ticker} | {flow:.2f} |\n")
 
@@ -659,6 +675,7 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
     # DIVERGENCIA PRECIO-FLUJO PRIMARIO
     # =========================================================================
     if sector_flow_characteristics_data is not None and not sector_flow_characteristics_data.empty:
+        sector_flow_characteristics_data = sector_flow_characteristics_data[pd.to_datetime(sector_flow_characteristics_data['date']) == pd.to_datetime(sector_flow_characteristics_data['date']).max()]
         lines.append("## Divergencia Precio–Flujo Primario\n")
         lines.append("| Sector | Ret 5d | Flujo 5d | Régimen 5d | Ret 20d | Flujo 20d | Régimen 20d |\n")
         lines.append("|--------|--------|----------|------------|---------|-----------|-------------|\n")
@@ -671,6 +688,7 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
     # LIDERAZGO RELATIVO INTERNO
     # =========================================================================
     if rs_internal_data is not None and not rs_internal_data.empty:
+        rs_internal_data = rs_internal_data[pd.to_datetime(rs_internal_data['date']) == pd.to_datetime(rs_internal_data['date']).max()]
         top_tickers = set()
         for sector in rs_internal_data['sector'].unique():
             top = rs_internal_data[rs_internal_data['sector'] == sector].nlargest(5, 'price_ret_20d')['ticker']
@@ -708,6 +726,7 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
 
     # CORRELACIÓN ENTRE SECTORES
     if sector_correlation_summary_data is not None and not sector_correlation_summary_data.empty:
+        sector_correlation_summary_data = sector_correlation_summary_data[pd.to_datetime(sector_correlation_summary_data['date']) == pd.to_datetime(sector_correlation_summary_data['date']).max()]
         lines.append("## Correlación entre sectores\n")
         lines.append("| Ventana | Media | Mediana | P25 | P75 | Mín | Máx | Lectura |\n")
         lines.append("|---------|-------|---------|-----|-----|-----|-----|---------|\n")
@@ -1019,7 +1038,9 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
         lines.append(f"- **Safe Haven Score:** {val_shs_str}\n")
         lines.append(f"- **Credit Stress Score:** {mte_result.get('cls', 0):.2f}")
         lines.append(" (orientacion: positivo = mayor estres crediticio)\n")
-        lines.append(f"- **Inflation Pressure Score:** {mte_result.get('ips', 0):.2f}\n\n")
+        ips_val = mte_result.get('ips', 0)
+        ips_str = f'{ips_val:.2f}' if pd.notna(ips_val) else 'N/D'
+        lines.append(f"- **Inflation Pressure Score:** {ips_str}\n\n")
 
     # =========================================================================
     # CONFIRMATION DATA
