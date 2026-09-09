@@ -11,14 +11,16 @@ OUTPUT = Path('outputs/audit/cross_provider_validation.csv')
 
 def get_yahoo_close(ticker):
     try:
+        from src.utils import get_col
         provider = YahooProvider()
         df = provider.get_prices([ticker], period='5d')
         if df is None or df.empty:
             return None
-        close_cols = [c for c in df.columns if c[0] == 'Close']
-        if not close_cols:
+        close = get_col(df, ticker, 'Close')
+        if close is None or close.empty:
             return None
-        return float(df[close_cols[0]].iloc[-1])
+        last = close.dropna().iloc[-1] if close.dropna().size > 0 else None
+        return float(last) if last is not None else None
     except Exception as e:
         print(f'  Yahoo error para {ticker}: {e}')
         return None
