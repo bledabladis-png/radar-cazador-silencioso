@@ -43,7 +43,7 @@ date,source,last_date,age_calendar_days,frequency,freshness,n_total,n_valid,cove
 2026-09-10,SEC N-PORT,,,sec,N/D,,,,Trimestral
 2026-09-10,Macro FRED,2026-09-10,0.0,fred,CURRENT,,,,Datos macro manuales
 2026-09-10,Sector Concentration,2026-09-07,3.0,daily,CURRENT,11.0,11.0,1.0,Concentración y dispersión
-2026-09-10,Sector Breadth Momentum,2026-09-09,1.0,daily,CURRENT,11.0,11.0,1.0,Momentum amplitud
+2026-09-10,Sector Breadth Momentum,2026-09-10,0.0,daily,CURRENT,11.0,11.0,1.0,Momentum amplitud
 2026-09-10,Volatility Structure,2026-09-10,0.0,daily,CURRENT,,,,Estructura volatilidad
 2026-09-10,Cross Asset Context,2026-09-10,0.0,daily,CURRENT,11.0,11.0,1.0,Contexto cross-asset
-2026-09-10,Evidence Matrix,2026-09-09,1.0,daily,CURRENT,11.0,11.0,1.0,Matriz evidencia
+2026-09-10,Evidence Matrix,2026-09-10,0.0,daily,CURRENT,11.0,11.0,1.0,Matriz evidencia

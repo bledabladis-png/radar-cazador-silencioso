@@ -357,12 +357,12 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
         name = SECTOR_NAMES.get(ticker, ticker)
         s_score = structural_scores.get(ticker, 0.0) if structural_scores else 0.0
         mom = next((m for t, m in sector_price_rank if t == ticker), 0)
-        flow = next((f for t, f in sector_flow_rank if t == ticker), 0)
+        flow = next((f for t, f in sector_flow_rank if t == ticker), None)
         shock = shock_sensitivities.get(ticker, {}) if shock_sensitivities else {}
         comm = shock.get('commodity_level', 'N/A') if shock else 'N/A'
         comm_val = shock.get('commodity_corr_value', None) if shock else None
         comm_display = f"{comm} ({comm_val:+.2f})" if comm_val is not None and comm != 'N/A' else comm
-        lines.append(f"| {i} | {name} ({ticker}) | {t_score:+.2f} | {s_score:+.2f} | {mom*100:.2f}% | {flow:+.2f} | {comm_display} |\n")
+        lines.append(f"| {i} | {name} ({ticker}) | {t_score:+.2f} | {s_score:+.2f} | {mom*100:.2f}% | {_fmt_num(flow, '{:+.2f}')} | {comm_display} |\n")
     lines.append("\n")
     lines.append(f"*Nota: Comm Corr mide la correlación de {MOMENTUM_LONG_WINDOW} dias con ^SPGSCI. No implica causalidad.*\n\n")
 

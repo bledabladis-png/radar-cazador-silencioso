@@ -337,6 +337,8 @@ def main():
     try:
         # Dirección de flow_proxy (promedio de flow_proxy_z de líderes sectoriales si existen, si no 0)
         proxy_sign = np.nan
+        if sector_flow_rank:
+            proxy_sign = float(np.mean([f for _, f in sector_flow_rank]))
         flow_synthesis['flow_proxy_sign'] = proxy_sign
 
         # Dirección de ETF Primary Flow (promedio de primary_flow_z)

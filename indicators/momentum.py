@@ -22,17 +22,17 @@ def normalize_momentum(score_series):
     return np.tanh(robust_zscore(score_series, 60))
 
 def compute_obv(df, ticker):
-    close = get_col(df, ticker, 'Close')
-    volume = get_col(df, ticker, 'Volume')
+    close = get_col(df, ticker, 'Close').ffill()
+    volume = get_col(df, ticker, 'Volume').ffill()
     sign = np.sign(close.diff())
     obv = (sign * volume).cumsum()
     return obv
 
 def compute_cmf(df, ticker, window=FLOW_CMF_WINDOW):
-    high = get_col(df, ticker, 'High')
-    low = get_col(df, ticker, 'Low')
-    close = get_col(df, ticker, 'Close')
-    volume = get_col(df, ticker, 'Volume')
+    high = get_col(df, ticker, 'High').ffill()
+    low = get_col(df, ticker, 'Low').ffill()
+    close = get_col(df, ticker, 'Close').ffill()
+    volume = get_col(df, ticker, 'Volume').ffill()
     mfm = ((close - low) - (high - close)) / (high - low + 1e-9)
     mfv = mfm * volume
     cmf = mfv.rolling(window).sum() / volume.rolling(window).sum()
@@ -49,8 +49,8 @@ def compute_flow_proxy(df, ticker, window=FLOW_ZSCORE_WINDOW):
       cmf_z = robust_zscore(CMF(20), window=60)
     Retorna una Serie temporal con el Flow Proxy compuesto.
     """
-    close = get_col(df, ticker, 'Close')
-    volume = get_col(df, ticker, 'Volume')
+    close = get_col(df, ticker, 'Close').ffill()
+    volume = get_col(df, ticker, 'Volume').ffill()
     signed_volume_pressure = close * volume
     ret = close.pct_change(fill_method=None)
     flow = ret * signed_volume_pressure

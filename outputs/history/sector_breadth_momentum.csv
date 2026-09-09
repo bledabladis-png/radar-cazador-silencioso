@@ -30,5 +30,16 @@ date,sector,delta_1d_ema20,delta_5d_ema20,delta_20d_ema20,delta_1d_ema50,delta_5
 2026-09-09,XLI,0.0,14.285714285714285,-52.38095238095238,0.0,9.523809523809522,-61.9047619047619,0.0,-4.761904761904759,-23.80952380952381,Expansión fuerte,Expansión fuerte,Deterioro moderado,False,False
 2026-09-09,XLB,0.0,-5.0,-30.0,0.0,-20.0,-30.0,0.0,0.0,-10.0,Deterioro fuerte,Deterioro fuerte,Estable,False,True
 2026-09-09,XLU,0.0,0.0,15.0,0.0,5.0,0.0,0.0,5.0,-35.0,Estable,Expansión fuerte,Expansión fuerte,False,False
-2026-09-09,XLRE,0.0,0.0,-25.0,0.0,-5.0,-45.0,0.0,-14.999999999999993,-24.999999999999993,Estable,Deterioro fuerte,Deterioro fuerte,False,False
+2026-09-09,XLRE,0.0,0.0,-25.0,0.0,-5.0,-45.0,0.0,-14.999999999999991,-25.0,Estable,Deterioro fuerte,Deterioro fuerte,False,False
 2026-09-09,XLC,0.0,-30.0,-35.0,0.0,-5.0,-15.0,0.0,0.0,-5.0,Deterioro fuerte,Deterioro fuerte,Estable,False,True
+2026-09-10,XLK,-4.761904761904773,-14.285714285714292,-19.04761904761905,4.761904761904773,19.047619047619044,9.523809523809518,-4.761904761904773,0.0,0.0,Deterioro fuerte,Expansión fuerte,Estable,False,True
+2026-09-10,XLF,-10.0,-50.0,-55.0,-10.0,-30.0,-30.0,-10.0,-10.0,-5.0,Deterioro fuerte,Deterioro fuerte,Deterioro fuerte,False,True
+2026-09-10,XLV,-20.0,-40.0,-55.0,5.0,-10.0,-25.0,-5.0,-5.0,-10.0,Deterioro fuerte,Deterioro fuerte,Deterioro fuerte,False,True
+2026-09-10,XLE,0.0,15.0,-5.0,-10.0,0.0,-5.0,-5.0,-5.0,5.0,Expansión fuerte,Estable,Deterioro fuerte,True,False
+2026-09-10,XLY,0.0,-15.0,-55.0,-10.0,-15.0,-55.0,0.0,-5.0,-25.0,Deterioro fuerte,Deterioro fuerte,Deterioro fuerte,False,True
+2026-09-10,XLP,-10.0,-20.0,-55.0,5.0,-5.0,-50.0,-4.999999999999993,-14.999999999999993,-14.999999999999993,Deterioro fuerte,Deterioro fuerte,Deterioro fuerte,False,True
+2026-09-10,XLI,-19.047619047619044,0.0,-71.42857142857143,-9.523809523809522,-9.523809523809522,-76.1904761904762,0.0,-4.761904761904759,-23.80952380952381,Estable,Deterioro fuerte,Deterioro moderado,False,False
+2026-09-10,XLB,-5.0,-10.0,-35.0,0.0,-15.0,-40.0,-4.999999999999993,-9.999999999999993,-14.999999999999993,Deterioro fuerte,Deterioro fuerte,Deterioro fuerte,False,True
+2026-09-10,XLU,-15.0,-5.0,-10.0,-5.0,0.0,-10.0,5.0,5.0,-35.0,Deterioro fuerte,Estable,Expansión fuerte,False,True
+2026-09-10,XLRE,-15.0,-5.0,-40.0,0.0,0.0,-40.0,-5.000000000000007,-10.0,-30.0,Deterioro fuerte,Estable,Deterioro fuerte,False,True
+2026-09-10,XLC,-20.0,-25.0,-60.0,-15.0,-10.000000000000007,-30.0,0.0,0.0,-5.0,Deterioro fuerte,Deterioro fuerte,Estable,False,True
