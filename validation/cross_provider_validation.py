@@ -23,6 +23,7 @@ def get_yahoo_close(ticker):
 def get_polygon_close(ticker):
     api_key = os.environ.get('POLYGON_API_KEY')
     if not api_key:
+        print('  Polygon API key no configurada')
         return None
     import requests
     url = f'https://api.polygon.io/v2/aggs/ticker/{ticker}/prev?adjusted=true&apiKey={api_key}'
@@ -34,13 +35,14 @@ def get_polygon_close(ticker):
         results = data.get('results')
         if results:
             return float(results[0]['c'])
-    except:
-        pass
+    except Exception as e:
+        print(f'  Polygon error para {ticker}: {e}')
     return None
 
 def get_alpha_vantage_close(ticker):
     api_key = os.environ.get('ALPHA_VANTAGE_API_KEY')
     if not api_key:
+        print('  Alpha Vantage API key no configurada')
         return None
     import requests
     url = 'https://www.alphavantage.co/query'
@@ -56,8 +58,8 @@ def get_alpha_vantage_close(ticker):
         price = quote.get('05. price')
         if price:
             return float(price)
-    except:
-        pass
+    except Exception as e:
+        print(f'  Alpha Vantage error para {ticker}: {e}')
     return None
 
 def main():
