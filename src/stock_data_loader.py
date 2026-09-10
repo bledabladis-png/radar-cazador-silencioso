@@ -1,12 +1,12 @@
 import pandas as pd
 import yfinance as yf
 from datetime import datetime, timedelta
+from config.settings import CACHE_HOURS
 from data.providers.euronext_provider import EuronextProvider
 from data.providers.xetra_provider import XetraProvider
 import os
 import time
 
-CACHE_HOURS = 23
 
 YAHOO_TICKER_MAP = {
     "BRK.B": "BRK-B",

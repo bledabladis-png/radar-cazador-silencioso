@@ -53,30 +53,6 @@ SLPM_WEIGHTS = {
     }
 }
 
-def validate_weights():
-    """Valida que todos los grupos de pesos sumen 1.0 y no tengan valores negativos."""
-    groups = {
-        'LEVEL_WEIGHTS': LEVEL_WEIGHTS,
-        'CRITICAL_WEIGHTS': CRITICAL_WEIGHTS,
-        'IMPORTANT_WEIGHTS': IMPORTANT_WEIGHTS,
-        'CONTEXTUAL_WEIGHTS': CONTEXTUAL_WEIGHTS,
-        'SECTOR_SCORE_WEIGHTS': SECTOR_SCORE_WEIGHTS,
-        'SLPM_LEADER_BREADTH': SLPM_WEIGHTS['leader_breadth'],
-        'SLPM_LIS': SLPM_WEIGHTS['lis'],
-        'TACTICAL_WEIGHTS': TACTICAL_WEIGHTS,
-        'STRUCTURAL_WEIGHTS': STRUCTURAL_WEIGHTS,
-    }
-    
-    for name, weights in groups.items():
-        total = sum(weights.values())
-        if abs(total - 1.0) > 1e-9:
-            raise ValueError(f'{name} suma {total:.6f}, esperado 1.0')
-        for k, v in weights.items():
-            if v < 0:
-                raise ValueError(f'{name}[{k}] es negativo: {v}')
-    
-    return True
-
 # ============================================================
 # TACTICAL ENGINE WEIGHTS
 # ============================================================
@@ -112,3 +88,28 @@ FLOW_PROXY_WEIGHTS = {
     'obv': 0.35,
     'cmf': 0.35,
 }
+
+
+def validate_weights():
+    """Valida que todos los grupos de pesos sumen 1.0 y no tengan valores negativos."""
+    groups = {
+        'LEVEL_WEIGHTS': LEVEL_WEIGHTS,
+        'CRITICAL_WEIGHTS': CRITICAL_WEIGHTS,
+        'IMPORTANT_WEIGHTS': IMPORTANT_WEIGHTS,
+        'CONTEXTUAL_WEIGHTS': CONTEXTUAL_WEIGHTS,
+        'SECTOR_SCORE_WEIGHTS': SECTOR_SCORE_WEIGHTS,
+        'SLPM_LEADER_BREADTH': SLPM_WEIGHTS['leader_breadth'],
+        'SLPM_LIS': SLPM_WEIGHTS['lis'],
+        'TACTICAL_WEIGHTS': TACTICAL_WEIGHTS,
+        'STRUCTURAL_WEIGHTS': STRUCTURAL_WEIGHTS,
+    }
+    
+    for name, weights in groups.items():
+        total = sum(weights.values())
+        if abs(total - 1.0) > 1e-9:
+            raise ValueError(f'{name} suma {total:.6f}, esperado 1.0')
+        for k, v in weights.items():
+            if v < 0:
+                raise ValueError(f'{name}[{k}] es negativo: {v}')
+    
+    return True
