@@ -105,9 +105,10 @@ def _classify_ticker(ticker, df):
     if series.dropna().empty:
         return 'FAILED'
 
-    # Si la ÚLTIMA FILA del DataFrame tiene NaN, considerar FAILED
-    # (independientemente de que haya datos previos válidos).
-    # Esto es clave para detectar tickers europeos con sesión no cerrada.
+    # Si la ULTIMA FILA del DataFrame tiene NaN, considerar FAILED.
+    # Nota: los datos han sido previamente ffill(limit=3), asi que
+    # un NaN aqui indica un hueco real >3 dias (suspension, delisting, etc.),
+    # no un simple festivo. Esto ya no descarta tickers por festivos.
     if pd.isna(series.iloc[-1]):
         return 'FAILED'
 
@@ -165,6 +166,9 @@ def download_stock_prices():
             else:
                 data_batch = yf.download(batch, period='5y', auto_adjust=True)
             if not data_batch.empty:
+                # Rellenar huecos de hasta 3 dias (festivos) con ultimo valor real.
+                # No inventa datos: replica el ultimo dia operado.
+                data_batch = data_batch.ffill(limit=3)
                 all_data.append(data_batch)
                 # Clasificar cada ticker del lote
                 for ticker in batch:
@@ -201,6 +205,9 @@ def download_stock_prices():
                 # Asegurar MultiIndex con ticker en nivel 1
                 if not isinstance(data_single.columns, pd.MultiIndex):
                     data_single.columns = pd.MultiIndex.from_product([data_single.columns, [ticker]])
+
+                # Rellenar huecos de hasta 3 dias (festivos) antes de clasificar.
+                data_single = data_single.ffill(limit=3)
 
                 # Solo añadir si el ticker tiene datos válidos reales
                 close_key = ('Close', ticker)
@@ -294,6 +301,11 @@ def download_stock_prices():
     data = pd.concat(all_data, axis=1)
     if not isinstance(data.columns, pd.MultiIndex):
         data.columns = pd.MultiIndex.from_tuples(data.columns)
+
+    # Relleno global defensivo de huecos <=3 dias. Idempotente: si ya
+    # se aplico en batch/retry, no tiene efecto adicional. Pero garantiza
+    # que un ticker con ultimo NaN (festivo) no se considere FAILED.
+    data = data.ffill(limit=3)
 
     # Deduplicar columnas (defensivo: con Europa primero ya no hay solapamiento
     # Yahoo/Euronext, pero lo dejamos como red de seguridad).
