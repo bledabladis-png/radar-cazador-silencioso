@@ -68,25 +68,6 @@ INSTRUMENTS = {
         "fmp": "^VIX3M",
         "twelve_data": "VIX3M",
     },
-    # Acciones europeas con sufijo (canónico ya es con sufijo)
-    "SIE.DE": {
-        "yahoo": "SIE.DE",
-        "polygon": "SIE.DE",
-        "tiingo": "SIE.DE",
-        "alpha_vantage": "SIE.DE",
-        "finnhub": "SIE.DE",
-        "fmp": "SIE.DE",
-        "twelve_data": "SIE.DE",
-    },
-    "SAN.MC": {
-        "yahoo": "SAN.MC",
-        "polygon": "SAN.MC",
-        "tiingo": "SAN.MC",
-        "alpha_vantage": "SAN.MC",
-        "finnhub": "SAN.MC",
-        "fmp": "SAN.MC",
-        "twelve_data": "SAN.MC",
-    },
     # === Tickers europeos (mapeo automático) ===
     "AAL.L": {
         "yahoo": "AAL.L",
