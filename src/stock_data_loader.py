@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 from config.settings import CACHE_HOURS
 from data.providers.euronext_provider import EuronextProvider
 from data.providers.xetra_provider import XetraProvider
+from data.providers.bme_provider import BMEProvider
 import os
 import time
 
@@ -135,16 +136,18 @@ def download_stock_prices():
         return None
 
     # === Europa primero ===
-    # Los tickers cubiertos por Euronext o Xetra se descargan SIEMPRE desde
-    # fuentes oficiales europeas. Yahoo NO los toca -> menos carga sobre Yahoo,
-    # mejor trazabilidad y datos mas frescos.
+    # Los tickers cubiertos por Euronext, Xetra o BME se descargan SIEMPRE
+    # desde fuentes oficiales europeas. Yahoo NO los toca -> menos carga
+    # sobre Yahoo, mejor trazabilidad y datos mas frescos.
     euronext = EuronextProvider()
     xetra = XetraProvider()
-    european_tickers = [t for t in all_tickers if euronext.supports(t) or xetra.supports(t)]
+    bme = BMEProvider()
+    european_tickers = [t for t in all_tickers
+                        if euronext.supports(t) or xetra.supports(t) or bme.supports(t)]
     european_set = set(european_tickers)
     tickers = [t for t in all_tickers if t not in european_set]
 
-    print(f"Europa primero: {len(european_tickers)} tickers europeos (Euronext+Xetra)")
+    print(f"Europa primero: {len(european_tickers)} tickers europeos (Euronext+Xetra+BME)")
     print(f"Yahoo: {len(tickers)} tickers no-europeos")
     print(f"Descargando precios para {len(tickers)} tickers via Yahoo...")
 
@@ -234,6 +237,7 @@ def download_stock_prices():
     # datos ese dia (sin fallback a Yahoo).
     eu_candidates = [t for t in european_tickers if euronext.supports(t)]
     xe_candidates = [t for t in european_tickers if xetra.supports(t)]
+    bm_candidates = [t for t in european_tickers if bme.supports(t)]
     cascade_frames = []
 
     if eu_candidates:
@@ -253,6 +257,15 @@ def download_stock_prices():
                 cascade_frames.append(xe_data)
         except Exception as e:
             print(f"  Xetra falló: {e}")
+
+    if bm_candidates:
+        print(f"Intentando BME para {len(bm_candidates)} tickers")
+        try:
+            bm_data = bme.get_prices(bm_candidates, use_cache=True)
+            if bm_data is not None and not bm_data.empty:
+                cascade_frames.append(bm_data)
+        except Exception as e:
+            print(f"  BME falló: {e}")
 
     cascade_covered_set = set()
     if cascade_frames:
