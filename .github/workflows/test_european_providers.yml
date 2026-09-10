@@ -32,8 +32,8 @@ jobs:
           pip install -r requirements.txt
           pip install pycryptodome websocket-client
 
-      - name: Run test script
-        run: python scripts/test_european_providers.py
+      - name: Run verification script
+        run: python scripts/verify_european_providers.py
         env:
           TICKER_EURONEXT: ${{ github.event.inputs.ticker_euronext }}
           TICKER_XETRA: ${{ github.event.inputs.ticker_xetra }}
