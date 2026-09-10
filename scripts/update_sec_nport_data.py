@@ -1,5 +1,6 @@
 ﻿import argparse
 import datetime
+import sys
 import requests
 import zipfile
 from pathlib import Path
@@ -100,6 +101,14 @@ def get_last_closed_quarter() -> str:
     return f"{year}q3"
 
 
+def previous_quarter(q):
+    """Devuelve el trimestre anterior a q (ej. 2026q3 -> 2026q2)."""
+    year, qnum = int(q[:4]), int(q[-1])
+    if qnum == 1:
+        return f"{year - 1}q4"
+    return f"{year}q{qnum - 1}"
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -109,13 +118,20 @@ def main():
     )
     args = parser.parse_args()
     quarter = (args.quarter or get_last_closed_quarter()).lower()
-    print(f"Trimestre objetivo: {quarter}")
+    print(f"Trimestre objetivo inicial: {quarter}")
 
-    if not download_quarter(quarter):
-        print("Trimestre no publicado. Finalizando sin error.")
-        return
+    # Cascada hacia atras: si el trimestre no esta publicado en EDGAR,
+    # se intenta el anterior. Maximo 4 intentos (cubre retrasos de la SEC).
+    for attempt in range(4):
+        if download_quarter(quarter):
+            process_quarter(quarter)
+            print(f"N-PORT actualizado correctamente: {quarter}")
+            return
+        print(f"  {quarter} no disponible en EDGAR, probando trimestre anterior...")
+        quarter = previous_quarter(quarter)
 
-    process_quarter(quarter)
+    print("ERROR: ningun trimestre disponible en los ultimos 4 intentos.")
+    sys.exit(1)
 
 if __name__ == '__main__':
     main()

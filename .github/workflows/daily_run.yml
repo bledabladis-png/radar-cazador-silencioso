@@ -40,7 +40,7 @@ jobs:
         run: python -m compileall -q .
 
       - name: Run tests
-        run: pytest tests/ -v
+        run: pytest tests/ validation/ -v
       - name: Run pyflakes (warnings only)
         run: |
           mkdir -p outputs/audit
@@ -129,13 +129,13 @@ jobs:
       - name: Check download failures alert
         run: |
           if [ -f outputs/audit/download_failures.md ]; then
-            echo "?? ALERTA: se detectaron fallos de descarga."
+            echo "[WARN] ALERTA: se detectaron fallos de descarga."
             echo "-------------------------------------------"
             cat outputs/audit/download_failures.md
             echo "-------------------------------------------"
             echo "::warning::Se detectaron fallos de descarga. Revisar artifact download-failures."
           else
-            echo "? Sin fallos de descarga."
+            echo "[OK] Sin fallos de descarga."
           fi
 
       - name: Validate history quality
