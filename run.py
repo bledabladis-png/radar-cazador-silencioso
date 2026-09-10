@@ -1241,6 +1241,12 @@ def main():
 
                           all_signals=all_signals)
     print("Reporte generado en outputs/report/reporte_diario.md")
+    # Reporte de cobertura europea (descriptivo; no rompe el run si falla)
+    try:
+        from src.european_coverage import generate_european_coverage_report
+        generate_european_coverage_report()
+    except Exception as e:
+        print(f"  Cobertura europea omitida: {e}")
 
 if __name__ == "__main__":
     main()

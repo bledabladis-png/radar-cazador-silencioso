@@ -118,6 +118,14 @@ jobs:
           retention-days: 7
           if-no-files-found: ignore
 
+      - name: Upload european coverage artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: european-coverage
+          path: outputs/audit/european_coverage.md
+          retention-days: 7
+          if-no-files-found: ignore
+
       - name: Check download failures alert
         run: |
           if [ -f outputs/audit/download_failures.md ]; then
