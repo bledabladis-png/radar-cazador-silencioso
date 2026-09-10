@@ -1,5 +1,6 @@
 """
-european_coverage.py -- Reporte de cobertura de tickers europeos.
+european_coverage.py -- Reporte de cobertura de tickers europeos
+(Euronext + Xetra + BME).
 Genera:
   - outputs/audit/european_coverage.md (informe legible)
   - outputs/history/european_coverage.csv (historico append)
@@ -10,6 +11,7 @@ import pandas as pd
 
 from data.providers.euronext_provider import EuronextProvider
 from data.providers.xetra_provider import XetraProvider
+from data.providers.bme_provider import BMEProvider
 
 OUTPUT_MD = Path('outputs/audit/european_coverage.md')
 OUTPUT_CSV = Path('outputs/history/european_coverage.csv')
@@ -22,6 +24,7 @@ def _collect():
     providers = [
         ('Euronext', EuronextProvider()),
         ('Xetra', XetraProvider()),
+        ('BME', BMEProvider()),
     ]
     today = pd.Timestamp.now().normalize()
 
