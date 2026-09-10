@@ -13,6 +13,10 @@ YAHOO_TICKER_MAP = {
     "BRK.B": "BRK-B",
     "BF.B": "BF-B",
     "MOGA": "MOG-A",
+    "MOG A": "MOG-A",
+    "GEF B": "GEF-B",
+    "CRD A": "CRD-A",
+    "BH A": "BH-A",
 }
 
 def normalize_yahoo_ticker(t):

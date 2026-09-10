@@ -40,6 +40,10 @@ def normalize_ticker(ticker):
         'BRK.B': 'BRK-B',
         'BF.B': 'BF-B',
         'MOGA': 'MOG-A',
+        'MOG A': 'MOG-A',
+        'GEF B': 'GEF-B',
+        'CRD A': 'CRD-A',
+        'BH A': 'BH-A',
     }
     return mapping.get(ticker, ticker)
 
