@@ -129,11 +129,23 @@ def download_stock_prices():
         if datetime.now() - mtime < timedelta(hours=CACHE_HOURS):
             return pd.read_csv(cache_path, header=[0,1], index_col=0, parse_dates=True)
 
-    tickers = get_stock_list()
-    if not tickers:
+    all_tickers = get_stock_list()
+    if not all_tickers:
         return None
 
-    print(f"Descargando precios para {len(tickers)} tickers...")
+    # === Europa primero ===
+    # Los tickers cubiertos por Euronext o Xetra se descargan SIEMPRE desde
+    # fuentes oficiales europeas. Yahoo NO los toca -> menos carga sobre Yahoo,
+    # mejor trazabilidad y datos mas frescos.
+    euronext = EuronextProvider()
+    xetra = XetraProvider()
+    european_tickers = [t for t in all_tickers if euronext.supports(t) or xetra.supports(t)]
+    european_set = set(european_tickers)
+    tickers = [t for t in all_tickers if t not in european_set]
+
+    print(f"Europa primero: {len(european_tickers)} tickers europeos (Euronext+Xetra)")
+    print(f"Yahoo: {len(tickers)} tickers no-europeos")
+    print(f"Descargando precios para {len(tickers)} tickers via Yahoo...")
 
     # Una única sesión para todas las descargas
     session = _get_yf_session()
@@ -208,14 +220,13 @@ def download_stock_prices():
             except Exception:
                 pass
 
-    # Cascada europea: se ejecuta SIEMPRE para los tickers cubiertos por Euronext/Xetra.
-    # Los datos de estos proveedores son más fiables y frescos que Yahoo para esos tickers,
-    # así que reemplazamos completamente sus columnas de Yahoo.
-    euronext = EuronextProvider()
-    xetra = XetraProvider()
-
-    eu_candidates = [t for t in tickers if euronext.supports(t)]
-    xe_candidates = [t for t in tickers if xetra.supports(t)]
+    # Cascada europea: descarga los europeos desde fuentes oficiales.
+    # Yahoo ya NO los ha descargado (Europa primero), asi que no hay
+    # solapamiento ni sustitucion: los europeos vienen exclusivamente
+    # de Euronext/Xetra. Si un proveedor falla, sus tickers quedan sin
+    # datos ese dia (sin fallback a Yahoo).
+    eu_candidates = [t for t in european_tickers if euronext.supports(t)]
+    xe_candidates = [t for t in european_tickers if xetra.supports(t)]
     cascade_frames = []
 
     if eu_candidates:
@@ -236,6 +247,7 @@ def download_stock_prices():
         except Exception as e:
             print(f"  Xetra falló: {e}")
 
+    cascade_covered_set = set()
     if cascade_frames:
         cascade_data = pd.concat(cascade_frames, axis=1)
         if not isinstance(cascade_data.columns, pd.MultiIndex):
@@ -243,21 +255,13 @@ def download_stock_prices():
         if cascade_data.columns.duplicated().any():
             cascade_data = cascade_data.loc[:, ~cascade_data.columns.duplicated(keep='last')]
 
-        # Quitar de all_data las columnas cuyo ticker esté en cascade_data
-        cascade_ticker_set = set(c[1] for c in cascade_data.columns)
-        new_all_data = []
-        for frame in all_data:
-            if isinstance(frame.columns, pd.MultiIndex):
-                keep_cols = [c for c in frame.columns if c[1] not in cascade_ticker_set]
-            else:
-                keep_cols = list(frame.columns)
-            if keep_cols:
-                new_all_data.append(frame[keep_cols])
-        all_data = new_all_data
+        # Con Europa primero, Yahoo ya no descargo estos tickers.
+        # Anadimos directamente sin necesidad de quitar nada de all_data.
+        cascade_covered_set = set(c[1] for c in cascade_data.columns)
         all_data.append(cascade_data)
 
-        # Actualizar clasificación
-        for ticker in cascade_ticker_set:
+        # Actualizar clasificacion
+        for ticker in cascade_covered_set:
             for cat in ['FAILED', 'PARTIAL', 'STALE']:
                 if ticker in classification[cat]:
                     classification[cat].remove(ticker)
@@ -266,11 +270,16 @@ def download_stock_prices():
             if ticker in failed_tickers:
                 failed_tickers.remove(ticker)
 
-        print(f"  Cascada cubrió {len(cascade_ticker_set)} tickers europeos")
+        print(f"  Cascada cubrio {len(cascade_covered_set)} tickers europeos")
 
-    # Reportar sin cobertura
+    # Reportar europeos SIN cobertura (sin fallback a Yahoo)
+    european_missing = [t for t in european_tickers if t not in cascade_covered_set]
+    if european_missing:
+        print(f"  SIN COBERTURA EUROPEA: {len(european_missing)} tickers -> {european_missing}")
+
+    # Reportar fallos Yahoo residuales
     if failed_tickers:
-        print(f"  Sin cobertura europea (quedan FAILED): {len(failed_tickers)} tickers")
+        print(f"  Yahoo sin cobertura: {len(failed_tickers)} tickers")
 
     # Imprimir resumen de clasificación
     print("=== Clasificación de tickers ===")
@@ -286,9 +295,8 @@ def download_stock_prices():
     if not isinstance(data.columns, pd.MultiIndex):
         data.columns = pd.MultiIndex.from_tuples(data.columns)
 
-    # Deduplicar columnas.
-    # keep='last': Euronext se añade después de Yahoo para los mismos tickers,
-    # por lo que queremos conservar la versión más reciente (Euronext con datos frescos).
+    # Deduplicar columnas (defensivo: con Europa primero ya no hay solapamiento
+    # Yahoo/Euronext, pero lo dejamos como red de seguridad).
     if data.columns.duplicated().any():
         n_dup = int(data.columns.duplicated().sum())
         print(f"  AVISO: {n_dup} columnas duplicadas detectadas, deduplicando (keep=last)")
