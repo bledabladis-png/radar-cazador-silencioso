@@ -23,7 +23,7 @@ print("=" * 70)
 print("VALIDACIÓN PROFESIONAL DE RANKINGS SECTORIALES (v4 - FINAL)")
 print("=" * 70)
 
-# ── Carga de datos ────────────────────────────────────────────
+# -- Carga de datos --------------------------------------------
 print("\nCargando datos de mercado...")
 df_market = pd.read_csv('data/market_data.csv', header=[0, 1], index_col=0, parse_dates=True)
 print(f"  Rango: {df_market.index[0].date()} a {df_market.index[-1].date()}")
@@ -73,9 +73,9 @@ print(f"  Sub-componentes recolectados: {len(df_comp)}")
 comp_cols = ['rs_mom_20', 'rs_mom_50', 'rs_mom_126', 'trend', 'volatility_inv', 'breadth']
 available = [c for c in comp_cols if c in df_comp.columns]
 
-# ══════════════════════════════════════════════════════════════
+# ==============================================================
 # 0. COBERTURA
-# ══════════════════════════════════════════════════════════════
+# ==============================================================
 print("\n" + "=" * 70 + "\n0. COBERTURA DE DATOS\n" + "=" * 70)
 if not df_comp.empty:
     for c in available:
@@ -83,9 +83,9 @@ if not df_comp.empty:
         inf_pct = np.isinf(df_comp[c]).mean() * 100 if df_comp[c].dtype in [np.float64, np.float32] else 0
         print(f"  {c:<20} NaN={nan_pct:5.2f}%  Inf={inf_pct:5.2f}%")
 
-# ══════════════════════════════════════════════════════════════
+# ==============================================================
 # 1. CONSISTENCIA + EMPATES (con tolerancia)
-# ══════════════════════════════════════════════════════════════
+# ==============================================================
 print("\n" + "=" * 70 + "\n1. CONSISTENCIA DEL RANKING\n" + "=" * 70)
 TOL = 1e-6
 errores = 0
@@ -104,22 +104,22 @@ ties_ok = empates_mean < 1
 
 print(f"  Semanas con inconsistencia: {errores}/{len(eval_dates)}")
 print(f"  Empates medios por semana: {empates_mean:.1f} (máx: {max(empates_list)})")
-print(f"  {'✓ Ranking consistente' if ranking_ok else '⚠️ Inconsistencias'}")
-print(f"  {'✓ Pocos empates' if ties_ok else '⚠️ Demasiados empates'}")
+print(f"  {'[v] Ranking consistente' if ranking_ok else '[WARN] Inconsistencias'}")
+print(f"  {'[v] Pocos empates' if ties_ok else '[WARN] Demasiados empates'}")
 
-# ══════════════════════════════════════════════════════════════
+# ==============================================================
 # 2. DISPERSIÓN
-# ══════════════════════════════════════════════════════════════
+# ==============================================================
 print("\n" + "=" * 70 + "\n2. DISPERSIÓN SEMANAL DEL SCORE\n" + "=" * 70)
 weekly_std = df_rank.groupby("date")["score"].std()
 dispersion_ok = weekly_std.mean() > 0.10
 print(f"  Media: {weekly_std.mean():.4f}  Mediana: {weekly_std.median():.4f}")
 print(f"  Mín: {weekly_std.min():.4f}  Máx: {weekly_std.max():.4f}")
-print(f"  {'✓ Excelente' if dispersion_ok else '⚠️ Comprimido'}")
+print(f"  {'[v] Excelente' if dispersion_ok else '[WARN] Comprimido'}")
 
-# ══════════════════════════════════════════════════════════════
+# ==============================================================
 # 3. TERCILES + ANOVA
-# ══════════════════════════════════════════════════════════════
+# ==============================================================
 print("\n" + "=" * 70 + "\n3. ANÁLISIS POR TERCILES\n" + "=" * 70)
 
 def assign_tercile(x):
@@ -141,12 +141,12 @@ terciles_ok = diff_top_bottom > 0.10
 groups = [df_rank[df_rank["grupo"] == g]["score"].dropna() for g in ["Bottom", "Middle", "Top"]]
 F_terc, p_terc = f_oneway(*groups)
 print(f"\n  ANOVA entre terciles: F = {F_terc:.2f}, p = {p_terc:.6f}")
-print(f"  {'✓ Terciles significativamente diferentes' if p_terc < 0.001 else '⚠️ No significativo'}")
-print(f"  Diferencia Top-Bottom: {diff_top_bottom:.4f}  {'✓' if terciles_ok else '⚠️'}")
+print(f"  {'[v] Terciles significativamente diferentes' if p_terc < 0.001 else '[WARN] No significativo'}")
+print(f"  Diferencia Top-Bottom: {diff_top_bottom:.4f}  {'[v]' if terciles_ok else '[WARN]'}")
 
-# ══════════════════════════════════════════════════════════════
+# ==============================================================
 # 4. CORRELACIONES (Pearson + Spearman) + VIF
-# ══════════════════════════════════════════════════════════════
+# ==============================================================
 print("\n" + "=" * 70 + "\n4. CORRELACIONES Y VIF\n" + "=" * 70)
 if len(available) >= 2:
     corr_pearson = df_comp[available].corr()
@@ -160,13 +160,13 @@ if len(available) >= 2:
     for i in range(len(available)):
         for j in range(i + 1, len(available)):
             if abs(corr_pearson.iloc[i, j]) > 0.80:
-                high_corr.append(f"{available[i]}↔{available[j]}")
+                high_corr.append(f"{available[i]}<->{available[j]}")
     corr_ok = len(high_corr) == 0
-    print(f"\n  {'✓ Sin correlaciones > 0.80' if corr_ok else '⚠️ Altas correlaciones: ' + str(high_corr)}")
+    print(f"\n  {'[v] Sin correlaciones > 0.80' if corr_ok else '[WARN] Altas correlaciones: ' + str(high_corr)}")
 
     mask = np.triu(np.ones(corr_pearson.shape), 1).astype(bool)
     avg_corr = corr_pearson.where(mask).stack().mean()
-    print(f"  Correlación media: {avg_corr:.3f}  {'✓ Excelente' if avg_corr < 0.20 else '✓ Buena' if avg_corr < 0.40 else '⚠️ Revisar'}")
+    print(f"  Correlación media: {avg_corr:.3f}  {'[v] Excelente' if avg_corr < 0.20 else '[v] Buena' if avg_corr < 0.40 else '[WARN] Revisar'}")
 
     # VIF
     X_vif = df_comp[available].dropna()
@@ -176,15 +176,15 @@ if len(available) >= 2:
             try:
                 vif = variance_inflation_factor(X_vif.values, i)
                 vif_max = max(vif_max, vif)
-                status = '✓' if vif < 5 else '⚠️' if vif < 10 else '✗'
+                status = '[v]' if vif < 5 else '[WARN]' if vif < 10 else '[x]'
                 print(f"    {status} {col:<20} VIF = {vif:.2f}")
             except:
                 pass
     vif_ok = vif_max < 5
 
-# ══════════════════════════════════════════════════════════════
+# ==============================================================
 # 5. PCA ESTANDARIZADO
-# ══════════════════════════════════════════════════════════════
+# ==============================================================
 print("\n" + "=" * 70 + "\n5. PCA (ESTANDARIZADO)\n" + "=" * 70)
 if len(available) >= 3:
     X_pca = StandardScaler().fit_transform(df_comp[available].dropna())
@@ -197,18 +197,18 @@ if len(available) >= 3:
 
     print("\n  Varianza explicada:")
     for i, var in enumerate(pca.explained_variance_ratio_):
-        print(f"    PC{i + 1}: {var * 100:5.1f}%  {'█' * int(var * 50)}")
+        print(f"    PC{i + 1}: {var * 100:5.1f}%  {'#' * int(var * 50)}")
 
     eff_dim = 1 / np.sum(pca.explained_variance_ratio_ ** 2)
     pca_ok = eff_dim > 2
     cond = np.linalg.cond(X_pca)
     cond_ok = cond < 100
-    print(f"\n  Dimensión efectiva: {eff_dim:.2f}/6  {'✓' if pca_ok else '⚠️'}")
-    print(f"  Número de condición: {cond:.1f}  {'✓' if cond_ok else '⚠️'}")
+    print(f"\n  Dimensión efectiva: {eff_dim:.2f}/6  {'[v]' if pca_ok else '[WARN]'}")
+    print(f"  Número de condición: {cond:.1f}  {'[v]' if cond_ok else '[WARN]'}")
 
-# ══════════════════════════════════════════════════════════════
-# 6. PERMUTATION IMPORTANCE (30 repeticiones)  ←  sustituye a MI circular
-# ══════════════════════════════════════════════════════════════
+# ==============================================================
+# 6. PERMUTATION IMPORTANCE (30 repeticiones)  <-  sustituye a MI circular
+# ==============================================================
 print("\n" + "=" * 70 + "\n6. PERMUTATION IMPORTANCE (30 repeticiones)\n" + "=" * 70)
 
 df_comp_with_score = df_comp.merge(df_rank[['date', 'ticker', 'score']], on=['date', 'ticker'], how='left')
@@ -244,15 +244,15 @@ for col in available:
         impactos.append(1 - corr)
     perm_importance[col] = (np.mean(impactos), np.std(impactos))
     impacto_medio = np.mean(impactos)
-    print(f"    {col:<20} impacto = {impacto_medio:.4f} ± {np.std(impactos):.4f}  {'⚠️ Crítico' if impacto_medio > 0.05 else '✓ Prescindible' if impacto_medio < 0.01 else '✓ Aporta'}")
+    print(f"    {col:<20} impacto = {impacto_medio:.4f} ± {np.std(impactos):.4f}  {'[WARN] Crítico' if impacto_medio > 0.05 else '[v] Prescindible' if impacto_medio < 0.01 else '[v] Aporta'}")
 
 # Nota: Se ha eliminado la Mutual Information (MI(componente, score)) por ser circular.
 # El score es una combinación lineal de los componentes; MI mide cuánto explica
 # cada componente una variable que él mismo construye, lo cual no es independiente.
 
-# ══════════════════════════════════════════════════════════════
+# ==============================================================
 # 7. COMPONENTES MUERTOS (dispersión transversal real)
-# ══════════════════════════════════════════════════════════════
+# ==============================================================
 print("\n" + "=" * 70 + "\n7. COMPONENTES MUERTOS (std transversal semanal)\n" + "=" * 70)
 component_stds = {}
 for col in available:
@@ -260,20 +260,20 @@ for col in available:
     mean_std = weekly_std_cross.mean()
     component_stds[col] = mean_std
     if mean_std > 0.05:
-        status = "✓ Activo"
+        status = "[v] Activo"
     elif mean_std > 0.02:
-        status = "✓ Bajo"
+        status = "[v] Bajo"
     elif mean_std > 0.005:
-        status = "⚠️ Casi muerto"
+        status = "[WARN] Casi muerto"
     else:
-        status = "✗ Muerto"
+        status = "[x] Muerto"
     print(f"    {status:<12} {col:<20} std = {mean_std:.4f}")
 
 components_ok = all(std >= 0.02 for std in component_stds.values())
 
-# ══════════════════════════════════════════════════════════════
+# ==============================================================
 # 8. MONTE CARLO (RUIDO MULTIVARIANTE)
-# ══════════════════════════════════════════════════════════════
+# ==============================================================
 print("\n" + "=" * 70 + "\n8. MONTE CARLO (ruido multivariante, 500 simulaciones)\n" + "=" * 70)
 
 X_mc = df_comp_with_score[available].dropna()
@@ -319,13 +319,13 @@ montecarlo_ok = corrs_mc.mean() > 0.98 if len(corrs_mc) > 0 else False
 if len(corrs_mc) > 0:
     print(f"  Correlación media: {corrs_mc.mean():.4f} ± {corrs_mc.std():.4f}")
     print(f"  IC 95%: [{np.percentile(corrs_mc, 2.5):.4f}, {np.percentile(corrs_mc, 97.5):.4f}]")
-    print(f"  {'✓ Muy robusto' if montecarlo_ok else '⚠️ Sensible'}")
+    print(f"  {'[v] Muy robusto' if montecarlo_ok else '[WARN] Sensible'}")
 else:
-    print("  ⚠️ El Monte Carlo no produjo variación. Revisar implementación.")
+    print("  [WARN] El Monte Carlo no produjo variación. Revisar implementación.")
 
-# ══════════════════════════════════════════════════════════════
+# ==============================================================
 # 9. LEAVE-ONE-FACTOR-OUT (correlación + RMSE)
-# ══════════════════════════════════════════════════════════════
+# ==============================================================
 print("\n" + "=" * 70 + "\n9. LEAVE-ONE-FACTOR-OUT\n" + "=" * 70)
 
 weights = SECTOR_SCORE_WEIGHTS
@@ -344,11 +344,11 @@ for eliminar in available:
         corr = base_score_lofo[valid_idx].corr(score_without[valid_idx])
         rmse = np.sqrt(((score_without[valid_idx] - base_score_lofo[valid_idx]) ** 2).mean())
         impacto_corr = 1 - corr
-        print(f"    Sin {eliminar:<20} corr={corr:.4f}  impacto(corr)={impacto_corr:.4f}  RMSE={rmse:.4f}  {'⚠️ Crítico' if impacto_corr > 0.05 else '✓ Aporta'}")
+        print(f"    Sin {eliminar:<20} corr={corr:.4f}  impacto(corr)={impacto_corr:.4f}  RMSE={rmse:.4f}  {'[WARN] Crítico' if impacto_corr > 0.05 else '[v] Aporta'}")
 
-# ══════════════════════════════════════════════════════════════
+# ==============================================================
 # 10. ESTABILIDAD TEMPORAL (KS + Kendall solo monitorización)
-# ══════════════════════════════════════════════════════════════
+# ==============================================================
 print("\n" + "=" * 70 + "\n10. ESTABILIDAD TEMPORAL\n" + "=" * 70)
 
 df_rank["year"] = pd.to_datetime(df_rank["date"]).dt.year
@@ -375,13 +375,13 @@ for i in range(len(years) - 1):
     common = r1.index.intersection(r2.index)
     if len(common) >= 8:
         tau, p = kendalltau(r1.loc[common], r2.loc[common])
-        print(f"    {y1} vs {y2}: τ = {tau:.3f} (p={p:.4f})")
+        print(f"    {y1} vs {y2}: tau = {tau:.3f} (p={p:.4f})")
 
 print("  (Nota: Kendall Tau bajo no es un fallo. Un radar de rotación debe detectar cambios de liderazgo.)")
 
-# ══════════════════════════════════════════════════════════════
+# ==============================================================
 # 11. AUDITORÍA DE PESOS
-# ══════════════════════════════════════════════════════════════
+# ==============================================================
 print("\n" + "=" * 70 + "\n11. AUDITORÍA DE PESOS\n" + "=" * 70)
 print("  Pesos del SECTOR_SCORE_WEIGHTS:")
 for k, v in SECTOR_SCORE_WEIGHTS.items():
@@ -393,11 +393,11 @@ for k in SECTOR_SCORE_WEIGHTS:
     if k in available and k in perm_importance:
         peso = SECTOR_SCORE_WEIGHTS[k]
         imp = perm_importance[k][0]
-        print(f"    {k:<20} peso={peso*100:4.1f}%  importancia={imp:.4f}  {'✓ Equilibrado' if abs(peso - imp) < 0.15 else '⚠️ Desequilibrado'}")
+        print(f"    {k:<20} peso={peso*100:4.1f}%  importancia={imp:.4f}  {'[v] Equilibrado' if abs(peso - imp) < 0.15 else '[WARN] Desequilibrado'}")
 
-# ══════════════════════════════════════════════════════════════
+# ==============================================================
 # VEREDICTO
-# ══════════════════════════════════════════════════════════════
+# ==============================================================
 print("\n" + "=" * 70)
 print("VEREDICTO DE VALIDACIÓN DE RANKINGS SECTORIALES")
 print("=" * 70)
@@ -418,13 +418,13 @@ checks = [
 
 passed = sum(1 for _, ok in checks if ok)
 for name, ok in checks:
-    print(f"  {'✓' if ok else '✗'} {name}")
+    print(f"  {'[v]' if ok else '[x]'} {name}")
 
 print(f"\n  Pruebas superadas: {passed}/{len(checks)}")
 if passed >= 9:
-    print("  VEREDICTO: ✓✓ RANKINGS SECTORIALES VALIDADOS")
+    print("  VEREDICTO: [v][v] RANKINGS SECTORIALES VALIDADOS")
 elif passed >= 6:
-    print("  VEREDICTO: ✓ ACEPTABLE CON OBSERVACIONES")
+    print("  VEREDICTO: [v] ACEPTABLE CON OBSERVACIONES")
 else:
-    print("  VEREDICTO: ⚠️ REVISAR RANKINGS")
+    print("  VEREDICTO: [WARN] REVISAR RANKINGS")
 print("=" * 70)

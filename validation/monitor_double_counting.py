@@ -112,7 +112,7 @@ def main() -> None:
 
     # Si hay alertas, salir con código 1 para visibilidad en CI, pero no bloquear
     if (df_out["status"] == "ALERTA").any():
-        print("⚠️ Se detectaron dependencias altas. No se modifica el sistema.")
+        print("[WARN] Se detectaron dependencias altas. No se modifica el sistema.")
         sys.exit(0)  # No bloquear
 
     sys.exit(0)

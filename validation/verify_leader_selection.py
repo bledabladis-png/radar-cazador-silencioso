@@ -15,9 +15,9 @@ def log(msg=''):
     print(msg)
     with open(OUT, 'a', encoding='utf-8') as f:
         f.write(msg + '\n')
-    if '❌' in msg:
+    if '[FAIL]' in msg:
         HAS_ERRORS = True
-    elif '⚠️' in msg:
+    elif '[WARN]' in msg:
         HAS_WARNINGS = True
 
 # Limpiar informe anterior
@@ -37,13 +37,13 @@ try:
     log(f'Columnas en etf_holdings.csv: {h.columns.tolist()}')
     import os
     if not os.path.exists('outputs/report/analisis_lideres.csv'):
-        log('  ℹ️ No se generó analisis_lideres.csv (sin sectores en fase favorable)')
+        log('  [INFO] No se generó analisis_lideres.csv (sin sectores en fase favorable)')
         l = pd.DataFrame(columns=['sector','ticker','wls'])
     else:
         l = pd.read_csv('outputs/report/analisis_lideres.csv')
 
     if 'weight' not in h.columns:
-        log('  ❌ No existe columna weight en etf_holdings.csv. No se puede validar por peso.')
+        log('  [FAIL] No existe columna weight en etf_holdings.csv. No se puede validar por peso.')
     else:
         h = h.sort_values(['etf', 'weight'], ascending=[True, False])
         top20 = h.groupby('etf').head(20)
@@ -54,11 +54,11 @@ try:
             tickers_top20 = set(top20[top20['etf'] == sector]['ticker'])
             missing = tickers_lideres - tickers_top20
             if missing:
-                log(f'  ⚠️ {sector}: {len(missing)} ticker(s) no están en top 20: {missing}')
+                log(f'  [WARN] {sector}: {len(missing)} ticker(s) no están en top 20: {missing}')
             else:
-                log(f'  ✅ {sector}: todos los líderes están en top 20')
+                log(f'  [OK] {sector}: todos los líderes están en top 20')
 except Exception as e:
-    log(f'  ❌ Error: {e}')
+    log(f'  [FAIL] Error: {e}')
 log('')
 
 # ------------------------------------------------------------
@@ -70,7 +70,7 @@ try:
     log(f'Columnas en index_holdings.csv: {h.columns.tolist()}')
     import os
     if not os.path.exists('outputs/report/analisis_lideres_internacionales.csv'):
-        log('  ℹ️ No se generó analisis_lideres_internacionales.csv (sin índices en fase favorable)')
+        log('  [INFO] No se generó analisis_lideres_internacionales.csv (sin índices en fase favorable)')
         l = pd.DataFrame(columns=['indice','ticker','wls'])
     else:
         l = pd.read_csv('outputs/report/analisis_lideres_internacionales.csv')
@@ -83,32 +83,32 @@ try:
             etf = INDEX_CONFIG[nombre_indice]['etf_ticker']
             max_comp = INDEX_CONFIG[nombre_indice]['max_companies']
         else:
-            log(f'  ⚠️ {nombre_indice}: no encontrado en INDEX_CONFIG. Se omite.')
+            log(f'  [WARN] {nombre_indice}: no encontrado en INDEX_CONFIG. Se omite.')
             continue
 
         h_idx = h[h['etf'] == etf].copy()
         if h_idx.empty:
-            log(f'  ❌ {nombre_indice} ({etf}): no hay holdings en index_holdings.csv')
+            log(f'  [FAIL] {nombre_indice} ({etf}): no hay holdings en index_holdings.csv')
             continue
 
         if 'weight' in h_idx.columns:
             h_idx = h_idx.sort_values('weight', ascending=False)
             candidate_universe = h_idx.head(max_comp)
-            log(f'  ℹ️ {nombre_indice} ({etf}): usando top {max_comp} por weight')
+            log(f'  [INFO] {nombre_indice} ({etf}): usando top {max_comp} por weight')
         else:
             candidate_universe = h_idx.head(max_comp)
-            log(f'  ⚠️ {nombre_indice} ({etf}): no hay columna weight. Usando orden de archivo (primeros {max_comp}).')
+            log(f'  [WARN] {nombre_indice} ({etf}): no hay columna weight. Usando orden de archivo (primeros {max_comp}).')
 
         tickers_lideres = set(l[l['indice'] == nombre_indice]['ticker'])
         tickers_candidatos = set(candidate_universe['ticker'])
         missing = tickers_lideres - tickers_candidatos
 
         if missing:
-            log(f'  ⚠️ {nombre_indice}: {len(missing)} ticker(s) no están en top {max_comp}: {missing}')
+            log(f'  [WARN] {nombre_indice}: {len(missing)} ticker(s) no están en top {max_comp}: {missing}')
         else:
-            log(f'  ✅ {nombre_indice}: todos los líderes están dentro de top {max_comp}')
+            log(f'  [OK] {nombre_indice}: todos los líderes están dentro de top {max_comp}')
 except Exception as e:
-    log(f'  ❌ Error: {e}')
+    log(f'  [FAIL] Error: {e}')
 log('')
 
 # ------------------------------------------------------------
@@ -117,39 +117,39 @@ log('')
 log('## 3. Coherencia de Top 5 en CSVs de salida')
 try:
     if not os.path.exists('outputs/report/analisis_lideres.csv'):
-        log('  ℹ️ No se generó analisis_lideres.csv; se omite validación de Top 5 sectorial')
+        log('  [INFO] No se generó analisis_lideres.csv; se omite validación de Top 5 sectorial')
         l_sec = pd.DataFrame(columns=['sector','ticker','wls'])
     else:
         l_sec = pd.read_csv('outputs/report/analisis_lideres.csv')
     for sector, group in l_sec.groupby('sector'):
         if len(group) < 5:
-            log(f'  ⚠️ Sector {sector}: solo {len(group)} líderes guardados (< 5)')
+            log(f'  [WARN] Sector {sector}: solo {len(group)} líderes guardados (< 5)')
             continue
         top5 = group.head(5)
         if top5['wls'].is_monotonic_decreasing:
-            log(f'  ✅ Sector {sector}: top 5 ordenado por WLS desc')
+            log(f'  [OK] Sector {sector}: top 5 ordenado por WLS desc')
         else:
-            log(f'  ❌ Sector {sector}: top 5 no está ordenado por WLS desc')
+            log(f'  [FAIL] Sector {sector}: top 5 no está ordenado por WLS desc')
 except Exception as e:
-    log(f'  ❌ Error sectores: {e}')
+    log(f'  [FAIL] Error sectores: {e}')
 
 try:
     if not os.path.exists('outputs/report/analisis_lideres_internacionales.csv'):
-        log('  ℹ️ No se generó analisis_lideres_internacionales.csv; se omite validación de Top 5 índices')
+        log('  [INFO] No se generó analisis_lideres_internacionales.csv; se omite validación de Top 5 índices')
         l_int = pd.DataFrame(columns=['indice','ticker','wls'])
     else:
         l_int = pd.read_csv('outputs/report/analisis_lideres_internacionales.csv')
     for indice, group in l_int.groupby('indice'):
         if len(group) < 5:
-            log(f'  ⚠️ Índice {indice}: solo {len(group)} líderes guardados (< 5)')
+            log(f'  [WARN] Índice {indice}: solo {len(group)} líderes guardados (< 5)')
             continue
         top5 = group.head(5)
         if top5['wls'].is_monotonic_decreasing:
-            log(f'  ✅ Índice {indice}: top 5 ordenado por WLS desc')
+            log(f'  [OK] Índice {indice}: top 5 ordenado por WLS desc')
         else:
-            log(f'  ❌ Índice {indice}: top 5 no está ordenado por WLS desc')
+            log(f'  [FAIL] Índice {indice}: top 5 no está ordenado por WLS desc')
 except Exception as e:
-    log(f'  ❌ Error índices: {e}')
+    log(f'  [FAIL] Error índices: {e}')
 
 log('')
 log('## Resumen')

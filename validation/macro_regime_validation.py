@@ -188,11 +188,11 @@ if excluded_regimes:
 print("\n" + "="*70 + "\n1. DISTRIBUCIÓN DE REGÍMENES\n" + "="*70)
 dist = df["regime"].value_counts(normalize=True).sort_index()
 for r, pct in dist.items():
-    bar = '█' * int(pct * 50)
+    bar = '#' * int(pct * 50)
     marker = ' (excluido)' if r in excluded_regimes else ''
     print(f"  {r:<20} {pct*100:5.1f}%  {bar}{marker}")
 dominante = dist.max() > 0.60
-print(f"  {'⚠️ Algún régimen domina >60%' if dominante else '✓ Ningún régimen domina >60%'}")
+print(f"  {'[WARN] Algún régimen domina >60%' if dominante else '[v] Ningún régimen domina >60%'}")
 
 # ============================================================
 # BLOQUE 2: ENTROPÍA
@@ -204,7 +204,7 @@ Hmax = np.log(n_states)
 print(f"  Estados observados: {n_states}")
 print(f"  Entropía: {H:.3f} / {Hmax:.3f} ({H/Hmax*100:.1f}% del máximo)")
 ent_ok = H/Hmax > 0.5
-print(f"  {'✓ Entropía saludable' if ent_ok else '⚠️ Entropía baja'}")
+print(f"  {'[v] Entropía saludable' if ent_ok else '[WARN] Entropía baja'}")
 
 # ============================================================
 # BLOQUE 3: HAZARD RATE + SUPERVIVENCIA
@@ -221,7 +221,7 @@ for i, w in enumerate(weeks):
     else:
         print(f"  {w:>6}    -      {surv[i]*100:5.1f}%")
 haz_ok = hz.get(1, 1.0) <= 0.50
-print(f"  {'✓ Persistencia semanal razonable' if haz_ok else '⚠️ Alta probabilidad de cambio semanal'}")
+print(f"  {'[v] Persistencia semanal razonable' if haz_ok else '[WARN] Alta probabilidad de cambio semanal'}")
 
 # ============================================================
 # BLOQUE 4: MATRIZ DE TRANSICIÓN + ENTROPÍA DE TRANSICIÓN
@@ -235,12 +235,12 @@ else:
 diag_mean = np.diag(tm.values).mean() if len(tm) > 0 else 0
 print(f"  Persistencia media en diagonal: {diag_mean*100:.1f}%")
 trans_ok = diag_mean > 0.30
-print(f"  {'✓ Buena persistencia' if trans_ok else '⚠️ Baja persistencia'}")
+print(f"  {'[v] Buena persistencia' if trans_ok else '[WARN] Baja persistencia'}")
 
 H_trans = transition_entropy(tm)
 if not np.isnan(H_trans):
     print(f"  Entropía de transición: {H_trans:.3f}")
-    print(f"  {'✓ Transiciones predecibles' if H_trans < 1.5 else '⚠️ Transiciones cercanas a aleatoriedad'}")
+    print(f"  {'[v] Transiciones predecibles' if H_trans < 1.5 else '[WARN] Transiciones cercanas a aleatoriedad'}")
 
 # ============================================================
 # BLOQUE 5: ESTABILIDAD TEMPORAL
@@ -263,7 +263,7 @@ for year in years:
     print(f"    {year}: {H_year:.3f}")
 entropia_std = np.std(entropias) if len(entropias) > 1 else 0
 drift_ok = entropia_std < 0.15
-print(f"  {'✓ Estable' if drift_ok else '⚠️ Variabilidad alta'} (std={entropia_std:.4f})")
+print(f"  {'[v] Estable' if drift_ok else '[WARN] Variabilidad alta'} (std={entropia_std:.4f})")
 
 # ============================================================
 # BLOQUE 6: DISCRIMINACIÓN DEL MACRO_SCORE
@@ -285,7 +285,7 @@ if len(valid_regimes) >= 2:
     for r, g in zip(valid_regimes, groups):
         if len(g) >= 3:
             stat, p = shapiro(g)
-            status = '✓' if p > 0.05 else '⚠️'
+            status = '[v]' if p > 0.05 else '[WARN]'
             print(f"    Shapiro-Wilk {r:<20}: W={stat:.3f}, p={p:.4f} {status}")
             if p <= 0.05:
                 normal_ok = False
@@ -294,7 +294,7 @@ if len(valid_regimes) >= 2:
     
     stat_lev, p_lev = levene(*groups)
     var_ok = p_lev > 0.05
-    print(f"    Levene: stat={stat_lev:.3f}, p={p_lev:.4f} {'✓ Varianzas homogéneas' if var_ok else '⚠️ Varianzas diferentes'}")
+    print(f"    Levene: stat={stat_lev:.3f}, p={p_lev:.4f} {'[v] Varianzas homogéneas' if var_ok else '[WARN] Varianzas diferentes'}")
     
     # ANOVA (Welch si varianzas no homogéneas)
     if var_ok:
@@ -316,7 +316,7 @@ if len(valid_regimes) >= 2:
     eta2 = ss_between / ss_total if ss_total > 0 else 0
     print(f"    η² = {eta2:.4f} ({'grande' if eta2>0.14 else 'medio' if eta2>0.06 else 'pequeño'})")
     anova_ok = p_anova < 0.001 and eta2 > 0.06
-    print(f"  {'✓ ANOVA significativo y tamaño del efecto relevante' if anova_ok else '⚠️ Revisar'}")
+    print(f"  {'[v] ANOVA significativo y tamaño del efecto relevante' if anova_ok else '[WARN] Revisar'}")
 
     # Prueba post-hoc Tukey HSD
     print("\n  6.2 Prueba post-hoc (Tukey HSD):")
@@ -336,35 +336,35 @@ if len(valid_regimes) >= 2:
         g2 = df_stats.loc[df_stats["regime"]==r2, "score"]
         d = cohens_d(g1, g2)
         if np.isnan(d):
-            print(f"    {r1:<20} → {r2:<20} d = no evaluable")
+            print(f"    {r1:<20} -> {r2:<20} d = no evaluable")
         else:
             magnitud = 'grande' if abs(d)>0.8 else 'medio' if abs(d)>0.5 else 'pequeño' if abs(d)>0.2 else 'insignificante'
-            print(f"    {r1:<20} → {r2:<20} d = {d:+.4f} ({magnitud})")
+            print(f"    {r1:<20} -> {r2:<20} d = {d:+.4f} ({magnitud})")
             if abs(d) < 0.2:
                 distancias_ok = False
-    print(f"  {'✓ Todos los pares evaluables con d > |0.2|' if distancias_ok else '⚠️ Algún par con d < |0.2|'}")
+    print(f"  {'[v] Todos los pares evaluables con d > |0.2|' if distancias_ok else '[WARN] Algún par con d < |0.2|'}")
 
     # Mutual Information
-    print("\n  6.4 Mutual Information (macro_score → régimen):")
+    print("\n  6.4 Mutual Information (macro_score -> régimen):")
     mi = mutual_info_classif(df_stats[["score"]], df_stats["regime"], random_state=42)
     print(f"    MI = {mi[0]:.4f}")
     if mi[0] > 0.50:
-        print("  ✓ Alta dependencia: el score contiene mucha información sobre el régimen")
+        print("  [v] Alta dependencia: el score contiene mucha información sobre el régimen")
     elif mi[0] > 0.25:
-        print("  ✓ Dependencia moderada")
+        print("  [v] Dependencia moderada")
     else:
-        print("  ⚠️ Baja dependencia")
+        print("  [WARN] Baja dependencia")
 
     # Calinski-Harabasz Score
     print("\n  6.5 Calinski-Harabasz Score:")
     ch = calinski_harabasz_score(df_stats[["score"]], df_stats["regime"])
     print(f"    CH = {ch:.1f}")
     if ch > 50:
-        print("  ✓ Buena separación entre regímenes")
+        print("  [v] Buena separación entre regímenes")
     elif ch > 20:
-        print("  ✓ Separación aceptable")
+        print("  [v] Separación aceptable")
     else:
-        print("  ⚠️ Baja separación")
+        print("  [WARN] Baja separación")
 
 else:
     print("  No hay suficientes regímenes con muestra suficiente para ANOVA")
@@ -416,7 +416,7 @@ try:
         print(f"    Retorno medio regímenes expansivos: {exp_mean*100:.2f}%")
         print(f"    Retorno medio regímenes de estrés: {stress_mean*100:.2f}%")
         fwd_ok = exp_mean > stress_mean
-        print(f"  {'✓ Expansivos > Estrés' if fwd_ok else '⚠️ Orden económico invertido'}")
+        print(f"  {'[v] Expansivos > Estrés' if fwd_ok else '[WARN] Orden económico invertido'}")
     else:
         fwd_ok = False
         print("  Datos insuficientes para comparar expansivos vs estrés")
@@ -438,7 +438,7 @@ for regime in sorted(runs_dict.keys()):
     if len(lengths) >= MIN_SAMPLE and np.mean(lengths) < 2.0:
         persist_ok = False
 if not persist_ok:
-    print("  ⚠️ Algún régimen evaluable < 2 semanas de persistencia media")
+    print("  [WARN] Algún régimen evaluable < 2 semanas de persistencia media")
 
 # ============================================================
 # BLOQUE 9: ESTABILIDAD ANUAL DEL MACRO_SCORE + KS TEST
@@ -451,7 +451,7 @@ print(annual_score.round(4).to_string())
 score_mean_anual = annual_score["mean"].std() if len(annual_score) > 1 else 0
 score_stable_ok = score_mean_anual < 0.15
 print(f"\n  9.1 Estabilidad de medias anuales: std={score_mean_anual:.4f}")
-print(f"  {'✓ Escala estable entre años' if score_stable_ok else '⚠️ La escala del score varía entre años'}")
+print(f"  {'[v] Escala estable entre años' if score_stable_ok else '[WARN] La escala del score varía entre años'}")
 
 # KS Test entre años consecutivos
 print("\n  9.2 KS Test entre años consecutivos (monitorización de drift):")
@@ -464,16 +464,16 @@ for i in range(len(years)-1):
         ks_stat, ks_pval = ks_2samp(s1, s2)
         if ks_pval < 0.05:
             drift_years.append(f"{y1}-{y2}")
-            print(f"    {y1} vs {y2}: KS={ks_stat:.3f}, p={ks_pval:.4f}  ⚠️ DRIFT")
+            print(f"    {y1} vs {y2}: KS={ks_stat:.3f}, p={ks_pval:.4f}  [WARN] DRIFT")
         else:
-            print(f"    {y1} vs {y2}: KS={ks_stat:.3f}, p={ks_pval:.4f}  ✓")
+            print(f"    {y1} vs {y2}: KS={ks_stat:.3f}, p={ks_pval:.4f}  [v]")
     else:
         print(f"    {y1} vs {y2}: datos insuficientes")
 if drift_years:
     print(f"\n  Drift monitorizado en períodos: {', '.join(drift_years)}")
     print("  (Posible reflejo de cambios macroeconómicos reales)")
 else:
-    print("  ✓ Sin drift significativo detectado")
+    print("  [v] Sin drift significativo detectado")
 
 # ============================================================
 # VEREDICTO CUALITATIVO
@@ -484,20 +484,20 @@ print("="*70)
 
 print(f"""
 CONSISTENCIA ESTRUCTURAL:
-  {'✓' if not dominante else '⚠️'} Distribución de estados sin dominancia (>60%)
-  {'✓' if ent_ok else '⚠️'} Entropía suficiente ({H/Hmax*100:.1f}% del máximo)
-  {'✓' if haz_ok else '⚠️'} Persistencia semanal razonable (hazard sem 1: {hz.get(1,0)*100:.1f}%)
-  {'✓' if trans_ok else '⚠️'} Matriz de transición con persistencia adecuada (diagonal: {diag_mean*100:.1f}%)
-  {'✓' if drift_ok else '⚠️'} Estabilidad temporal de la entropía (std: {entropia_std:.4f})
+  {'[v]' if not dominante else '[WARN]'} Distribución de estados sin dominancia (>60%)
+  {'[v]' if ent_ok else '[WARN]'} Entropía suficiente ({H/Hmax*100:.1f}% del máximo)
+  {'[v]' if haz_ok else '[WARN]'} Persistencia semanal razonable (hazard sem 1: {hz.get(1,0)*100:.1f}%)
+  {'[v]' if trans_ok else '[WARN]'} Matriz de transición con persistencia adecuada (diagonal: {diag_mean*100:.1f}%)
+  {'[v]' if drift_ok else '[WARN]'} Estabilidad temporal de la entropía (std: {entropia_std:.4f})
 
 CONSISTENCIA ESTADÍSTICA:
-  {'✓' if anova_ok else '⚠️'} ANOVA significativo con tamaño del efecto relevante (η²={eta2:.4f})
-  {'✓' if distancias_ok else '⚠️'} Cohen's d entre regímenes consecutivos
-  MI = {mi[0]:.4f} ({'Alta' if mi[0]>0.5 else 'Moderada' if mi[0]>0.25 else 'Baja'} dependencia score → régimen)
+  {'[v]' if anova_ok else '[WARN]'} ANOVA significativo con tamaño del efecto relevante (η²={eta2:.4f})
+  {'[v]' if distancias_ok else '[WARN]'} Cohen's d entre regímenes consecutivos
+  MI = {mi[0]:.4f} ({'Alta' if mi[0]>0.5 else 'Moderada' if mi[0]>0.25 else 'Baja'} dependencia score -> régimen)
   CH = {ch:.1f} ({'Buena' if ch>50 else 'Aceptable' if ch>20 else 'Baja'} separación entre regímenes)
 
 CONSISTENCIA ECONÓMICA:
-  {'✓' if fwd_ok else '⚠️'} Forward returns: regímenes expansivos ({exp_mean*100:.2f}%) > estrés ({stress_mean*100:.2f}%)
+  {'[v]' if fwd_ok else '[WARN]'} Forward returns: regímenes expansivos ({exp_mean*100:.2f}%) > estrés ({stress_mean*100:.2f}%)
   Bootstrap con IC 95% calculado para {len(bootstrap_results)} regímenes
 
 OBSERVACIONES:
@@ -507,11 +507,11 @@ OBSERVACIONES:
 """)
 
 if anova_ok and fwd_ok and trans_ok and ent_ok and not dominante:
-    print("VEREDICTO: ✓✓ RÉGIMEN MACRO VALIDADO")
+    print("VEREDICTO: [v][v] RÉGIMEN MACRO VALIDADO")
     print("El clasificador es estructuralmente sólido, estadísticamente discriminativo")
     print("y económicamente coherente. Las observaciones son menores y no comprometen su utilidad.")
 elif anova_ok and (fwd_ok or trans_ok):
-    print("VEREDICTO: ✓ RÉGIMEN MACRO VALIDADO (con observaciones menores)")
+    print("VEREDICTO: [v] RÉGIMEN MACRO VALIDADO (con observaciones menores)")
 else:
-    print("VEREDICTO: ⚠️ REVISAR CLASIFICADOR")
+    print("VEREDICTO: [WARN] REVISAR CLASIFICADOR")
 print("="*70)

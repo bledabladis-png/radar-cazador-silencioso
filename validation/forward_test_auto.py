@@ -96,7 +96,7 @@ print(f"Registro añadido: {fecha.date()}")
 with open('outputs/audit/forward_test_6m.md', 'w', encoding='utf-8') as f:
     f.write('# Forward Test - Evolución del Radar (6 meses)\n\n')
     if len(historico) > 0:
-        f.write(f'Período: {historico.iloc[0]["fecha"]} → {historico.iloc[-1]["fecha"]}\n\n')
+        f.write(f'Período: {historico.iloc[0]["fecha"]} -> {historico.iloc[-1]["fecha"]}\n\n')
     f.write('| Fecha | Sector Líder | Score | Fase Wyckoff | SLPM | Top 3 |\n')
     f.write('|-------|-------------|-------|--------------|------|-------|\n')
     for _, row in historico.iterrows():

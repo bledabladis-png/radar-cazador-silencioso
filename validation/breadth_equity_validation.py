@@ -73,7 +73,7 @@ if len(df) > 30:
     for col in cols_metrics:
         try:
             stat, p, *_ = adfuller(df[col].dropna())
-            status = '✓ Estacionaria' if p < 0.05 else '⚠️ No estacionaria'
+            status = '[v] Estacionaria' if p < 0.05 else '[WARN] No estacionaria'
             print(f"  {col:<20} p={p:.4f}  {status}")
         except ValueError:
             print(f"  {col:<20} serie constante")
@@ -95,7 +95,7 @@ for col in cols_metrics:
             else:
                 Neff_raw = N
             Neff = min(Neff_raw, N)  # No puede exceder N
-            status = '✓ Reactivo' if ac < 0.70 else '✓ Alta (esperable)' if ac < 0.90 else '⚠️ Muy alta'
+            status = '[v] Reactivo' if ac < 0.70 else '[v] Alta (esperable)' if ac < 0.90 else '[WARN] Muy alta'
             print(f"  {col:<20} autocorr={ac:.3f}  N={N}  N_eff={Neff:.0f}  {status}")
     else:
         print(f"  {col:<20} datos insuficientes")
@@ -112,7 +112,7 @@ for col in ['ad_net', 'nh_nl', 'breadth_thrust']:
             means.append(sample.mean())
         means = np.array(means)
         bias = means.mean() - df[col].mean()
-        print(f"  {col:<20} media={df[col].mean():.1f}  boot_mean={means.mean():.1f}  sesgo={bias:.2f}  {'✓' if abs(bias)<1 else '⚠️'}")
+        print(f"  {col:<20} media={df[col].mean():.1f}  boot_mean={means.mean():.1f}  sesgo={bias:.2f}  {'[v]' if abs(bias)<1 else '[WARN]'}")
 
 # ============================================================
 # 4. FECHAS CLAVE (CORREGIDO - busca fechas reales)
@@ -182,12 +182,12 @@ try:
                     if len(valid) > 10:
                         rho, p = spearmanr(valid[col], valid[motor])
                         if abs(rho) > 0.80:
-                            flag = ' ⚠️ Alta correlación'
+                            flag = ' [WARN] Alta correlación'
                         elif abs(rho) > 0.50:
                             flag = ' (moderada)'
                         else:
-                            flag = ' ✓ Independiente'
-                        print(f"  {col:<20} ↔ {motor:<5} ρ={rho:+.3f} (p={p:.4f}){flag}")
+                            flag = ' [v] Independiente'
+                        print(f"  {col:<20} <-> {motor:<5} ρ={rho:+.3f} (p={p:.4f}){flag}")
         else:
             print("  Datos insuficientes para correlación")
     else:
@@ -204,23 +204,23 @@ print("="*70)
 
 n_semanas = len(df)
 checks = [
-    f"✓ Cobertura: {df['active_tickers'].iloc[-1]} tickers activos",
-    f"✓ Histórico: {n_semanas} semanas ({df['date'].iloc[0].date()} a {df['date'].iloc[-1].date()})",
-    "✓ Sin NaN/Inf en indicadores principales",
-    "✓ Bootstrap estable",
+    f"[v] Cobertura: {df['active_tickers'].iloc[-1]} tickers activos",
+    f"[v] Histórico: {n_semanas} semanas ({df['date'].iloc[0].date()} a {df['date'].iloc[-1].date()})",
+    "[v] Sin NaN/Inf en indicadores principales",
+    "[v] Bootstrap estable",
 ]
 
 if n_semanas >= 400:
-    checks.append("✓ Histórico suficiente para validación (≥400 semanas)")
-    checks.append("✓ Fechas clave verificadas sobre datos reales")
-    checks.append("✓ Correlación con MTE evaluada")
-    checks.append("✓ A/D y NH/NL independientes de SRS/SHS/IPS")
-    checks.append("VEREDICTO: ✓✓ MÓDULO DE AMPLITUD VALIDADO (NIVEL 2)")
+    checks.append("[v] Histórico suficiente para validación (≥400 semanas)")
+    checks.append("[v] Fechas clave verificadas sobre datos reales")
+    checks.append("[v] Correlación con MTE evaluada")
+    checks.append("[v] A/D y NH/NL independientes de SRS/SHS/IPS")
+    checks.append("VEREDICTO: [v][v] MÓDULO DE AMPLITUD VALIDADO (NIVEL 2)")
 elif n_semanas >= 100:
-    checks.append(f"⚠️ Histórico limitado ({n_semanas} semanas). Validación preliminar.")
-    checks.append("VEREDICTO: ✓ VALIDACIÓN PRELIMINAR SUPERADA")
+    checks.append(f"[WARN] Histórico limitado ({n_semanas} semanas). Validación preliminar.")
+    checks.append("VEREDICTO: [v] VALIDACIÓN PRELIMINAR SUPERADA")
 else:
-    checks.append(f"⚠️ Histórico insuficiente ({n_semanas} semanas)")
+    checks.append(f"[WARN] Histórico insuficiente ({n_semanas} semanas)")
     checks.append("VEREDICTO: ⏳ PENDIENTE DE DATOS HISTÓRICOS")
 
 for c in checks:

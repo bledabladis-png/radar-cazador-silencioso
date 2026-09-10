@@ -39,8 +39,8 @@ def main():
             print(f"  - {s}")
         sys.exit(1)
 
-    print(f"✓ Reporte completo: {len(REQUIRED_SECTIONS)}/{len(REQUIRED_SECTIONS)} secciones presentes.")
-    print("✓ Integración validada.")
+    print(f"[v] Reporte completo: {len(REQUIRED_SECTIONS)}/{len(REQUIRED_SECTIONS)} secciones presentes.")
+    print("[v] Integración validada.")
 
 if __name__ == "__main__":
     main()

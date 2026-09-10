@@ -132,7 +132,7 @@ def extract_composition(product: dict[str, Any]) -> list[dict[str, Any]]:
 
 
 # ---------------------------------------------------------
-# BBG → YAHOO
+# BBG -> YAHOO
 # ---------------------------------------------------------
 
 def clean_bbg(bbg: str | None) -> str | None:
@@ -271,7 +271,7 @@ def extract_etf(isin: str) -> list[dict[str, Any]]:
         row["ticker"] = ticker
         row["ticker_source"] = source
         status = "OK" if ticker else "FAIL"
-        print(f"[{i:02d}/{len(holdings)}] {status:4} {row['name']} → {ticker or '???'} ({source})")
+        print(f"[{i:02d}/{len(holdings)}] {status:4} {row['name']} -> {ticker or '???'} ({source})")
         time.sleep(0.15)
 
     return holdings

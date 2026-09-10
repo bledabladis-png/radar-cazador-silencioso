@@ -1,6 +1,6 @@
 ﻿# -*- coding: utf-8 -*-
 """
-Auditoría de canales RS/Flow → Tactical/Structural/Breadth.
+Auditoría de canales RS/Flow -> Tactical/Structural/Breadth.
 
 Evalúa cómo las señales de Relative Strength (RS) y Flow Proxy
 se relacionan con los canales táctico, estructural y de breadth.

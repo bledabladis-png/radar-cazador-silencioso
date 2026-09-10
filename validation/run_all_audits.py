@@ -13,9 +13,9 @@ def log(msg=''):
 
 def check(cond, ok_msg, fail_msg):
     if cond:
-        log(f'✅ {ok_msg}')
+        log(f'[OK] {ok_msg}')
     else:
-        log(f'❌ {fail_msg}')
+        log(f'[FAIL] {fail_msg}')
 
 log('# Informe de Monitorizacion Continua')
 log(f'**Fecha:** {datetime.now().strftime("%Y-%m-%d %H:%M")}')
@@ -28,7 +28,7 @@ for path in ['data/etf_holdings.csv', 'data/index_holdings.csv']:
         dups = df.duplicated(subset=['etf','ticker']).sum()
         check(dups == 0, f'{path}: sin duplicados ({len(df)} registros)', f'{path}: {dups} duplicados')
     else:
-        log(f'❌ {path} no existe')
+        log(f'[FAIL] {path} no existe')
 
 # 2. NaN en CSV de lideres
 for path in ['outputs/report/analisis_lideres.csv', 'outputs/report/analisis_lideres_internacionales.csv']:
@@ -39,15 +39,15 @@ for path in ['outputs/report/analisis_lideres.csv', 'outputs/report/analisis_lid
         critical = ['rs', 'flow_proxy_z', 'wyckoff_score', 'wls']
         nan_critical = {c: df[c].isna().sum() for c in critical if c in df.columns}
         if any(v > 0 for v in nan_critical.values()):
-            log(f'❌ {path}: NaN en columnas criticas {nan_critical}')
+            log(f'[FAIL] {path}: NaN en columnas criticas {nan_critical}')
         else:
-            log(f'✅ {path}: sin NaN en columnas criticas')
+            log(f'[OK] {path}: sin NaN en columnas criticas')
         # Persistencia en rango 0-1
         if 'persistence_10d' in df.columns:
             p = df['persistence_10d'].dropna()
             check(p.between(0,1).all(), f'{path}: persistencia en rango 0-1', f'{path}: persistencia fuera de rango [{p.min():.2f}, {p.max():.2f}]')
     else:
-        log(f'ℹ️ {path} no disponible (puede no haberse generado hoy)')
+        log(f'[INFO] {path} no disponible (puede no haberse generado hoy)')
 
 # 3. Frescura de fuentes
 for path, col in [('outputs/history/pcr_history.csv','date'), ('outputs/history/darkpool_history.csv','week')]:
@@ -56,9 +56,9 @@ for path, col in [('outputs/history/pcr_history.csv','date'), ('outputs/history/
         last = df[col].max()
         age = (pd.Timestamp.now() - pd.Timestamp(last)).days
         estado = 'CURRENT' if age <= 7 else ('RECENT' if age <= 14 else ('STALE' if age <= 21 else 'ARCHIVAL'))
-        log(f'ℹ️ {path}: ultimo dato {last.date()} ({age} dias, {estado})')
+        log(f'[INFO] {path}: ultimo dato {last.date()} ({age} dias, {estado})')
     else:
-        log(f'ℹ️ {path} no existe')
+        log(f'[INFO] {path} no existe')
 
 # 3b. Matriz de Evidencia
 path_ev = 'outputs/history/evidence_matrix.csv'
@@ -73,7 +73,7 @@ if os.path.exists(path_ev):
     if 'n_sector_evidence_valid' in ev.columns:
         check(ev['n_sector_evidence_valid'].max() <= 5, 'Matriz de Evidencia: balance maximo 5 evidencias sectoriales', f"Matriz de Evidencia: balance maximo {ev['n_sector_evidence_valid'].max()}")
 else:
-    log('❌ No se encontro evidence_matrix.csv')
+    log('[FAIL] No se encontro evidence_matrix.csv')
 
 # 3c. Integridad específica para sector_concentration.csv
 sc_path = 'outputs/history/sector_concentration.csv'
@@ -87,11 +87,11 @@ if os.path.exists(sc_path):
         check(latest_df['sector'].nunique() == 11, f'{sc_path}: 11 sectores en última fecha', f'{sc_path}: {latest_df["sector"].nunique()} sectores en última fecha')
         dup = latest_df.duplicated(subset=['sector']).sum()
         check(dup == 0, f'{sc_path}: sin duplicados en última fecha', f'{sc_path}: {dup} duplicados en última fecha')
-        log(f'ℹ️ {sc_path}: {len(sc)} filas, fechas {sc["date"].nunique()}')
+        log(f'[INFO] {sc_path}: {len(sc)} filas, fechas {sc["date"].nunique()}')
     else:
-        log(f'⚠️ {sc_path}: no hay fechas válidas')
+        log(f'[WARN] {sc_path}: no hay fechas válidas')
 else:
-    log(f'❌ {sc_path} no existe')
+    log(f'[FAIL] {sc_path} no existe')
 # 3c. Duplicados en CSVs sectoriales
 csv_files = [
     ('outputs/history/sector_concentration.csv', ['date','sector']),
@@ -118,9 +118,9 @@ for f, subset in csv_files:
             dup = df.duplicated(subset=subset).sum()
             check(dup == 0, f'{f}: sin duplicados {subset}', f'{f}: {dup} duplicados')
         else:
-            log(f'ℹ️ {f} no tiene columnas {subset}')
+            log(f'[INFO] {f} no tiene columnas {subset}')
     else:
-        log(f'ℹ️ {f} no existe')
+        log(f'[INFO] {f} no existe')
 
 # 3c-ter. Validación de regímenes precio-flujo primario
 sfc_path = 'outputs/history/sector_flow_characteristics.csv'
@@ -135,11 +135,11 @@ if os.path.exists(sfc_path):
         # No es un fallo si el régimen es N/D; comprobamos que no esté vacío
         empty_nd = mask_missing & sfc['price_flow_regime_20d'].isna()
         check(empty_nd.sum() == 0, f'{sfc_path}: sin regímenes NaN cuando faltan datos', f'{sfc_path}: {empty_nd.sum()} N/D ausentes')
-        log(f'ℹ️ {sfc_path}: price_flow_regime_20d válidos en {sfc["price_flow_regime_20d"].notna().sum()}/11 sectores')
+        log(f'[INFO] {sfc_path}: price_flow_regime_20d válidos en {sfc["price_flow_regime_20d"].notna().sum()}/11 sectores')
     else:
-        log(f'ℹ️ {sfc_path} no tiene columnas de régimen')
+        log(f'[INFO] {sfc_path} no tiene columnas de régimen')
 else:
-    log(f'❌ {sfc_path} no existe')
+    log(f'[FAIL] {sfc_path} no existe')
 
 # 3c-quater. Validación RS Interno/Absoluto
 rs_path = 'outputs/history/rs_internal.csv'
@@ -155,9 +155,9 @@ if os.path.exists(rs_path):
         allowed = {'Liderazgo relativo doble','Fortaleza sectorial','Liderazgo interno en sector débil','Debilidad relativa doble','N/D'}
         bad_cls = set(rdf['classification'].unique()) - allowed
         check(len(bad_cls) == 0, f'{rs_path}: clasificaciones válidas', f'{rs_path}: clasificaciones inválidas {bad_cls}')
-        log(f'ℹ️ {rs_path}: {len(rdf)} filas, {rdf["sector"].nunique()} sectores, {rdf["ticker"].nunique()} tickers')
+        log(f'[INFO] {rs_path}: {len(rdf)} filas, {rdf["sector"].nunique()} sectores, {rdf["ticker"].nunique()} tickers')
 else:
-    log(f'❌ {rs_path} no existe')
+    log(f'[FAIL] {rs_path} no existe')
 
 # 3c-quinquies. Validación Persistencia sectorial
 ppath = 'outputs/history/sector_persistence.csv'
@@ -171,9 +171,9 @@ if os.path.exists(ppath):
     latest = pd.to_datetime(pdf['date']).max()
     latest_df = pdf[pd.to_datetime(pdf['date']) == latest]
     check(len(latest_df) == 11, f'{ppath}: 11 sectores en última fecha', f'{ppath}: {len(latest_df)} sectores')
-    log(f'ℹ️ {ppath}: {len(pdf)} filas, {pdf["sector"].nunique()} sectores, fechas {pdf["date"].nunique()}')
+    log(f'[INFO] {ppath}: {len(pdf)} filas, {pdf["sector"].nunique()} sectores, fechas {pdf["date"].nunique()}')
 else:
-    log(f'❌ {ppath} no existe')
+    log(f'[FAIL] {ppath} no existe')
 
 # 3c-sexies. Validación Rotación sectorial histórica
 rank_hist_path = 'outputs/history/sector_rank_history.csv'
@@ -190,9 +190,9 @@ if os.path.exists(rank_hist_path):
     latest = pd.to_datetime(rh['date']).max()
     latest_df = rh[pd.to_datetime(rh['date']) == latest]
     check(len(latest_df) == 11, f'{rank_hist_path}: 11 sectores en última fecha', f'{rank_hist_path}: {len(latest_df)} sectores')
-    log(f'ℹ️ {rank_hist_path}: {len(rh)} filas, {rh["sector"].nunique()} sectores, fechas {rh["date"].nunique()}')
+    log(f'[INFO] {rank_hist_path}: {len(rh)} filas, {rh["sector"].nunique()} sectores, fechas {rh["date"].nunique()}')
 else:
-    log(f'❌ {rank_hist_path} no existe')
+    log(f'[FAIL] {rank_hist_path} no existe')
 
 if os.path.exists(rank_deltas_path):
     rd = pd.read_csv(rank_deltas_path, encoding='utf-8')
@@ -204,9 +204,9 @@ if os.path.exists(rank_deltas_path):
         bad = set(rd['lectura_5d'].unique()) | set(rd['lectura_10d'].unique()) | set(rd['lectura_20d'].unique())
         bad = bad - allowed_lecturas
         check(len(bad) == 0, f'{rank_deltas_path}: lecturas válidas', f'{rank_deltas_path}: lecturas inválidas {bad}')
-        log(f'ℹ️ {rank_deltas_path}: {len(rd)} sectores')
+        log(f'[INFO] {rank_deltas_path}: {len(rd)} sectores')
 else:
-    log(f'❌ {rank_deltas_path} no existe')
+    log(f'[FAIL] {rank_deltas_path} no existe')
 
 # 3c-sexies. Validación Rotación sectorial histórica
 rank_hist_path = 'outputs/history/sector_rank_history.csv'
@@ -223,9 +223,9 @@ if os.path.exists(rank_hist_path):
     latest = pd.to_datetime(rh['date']).max()
     latest_df = rh[pd.to_datetime(rh['date']) == latest]
     check(len(latest_df) == 11, f'{rank_hist_path}: 11 sectores en última fecha', f'{rank_hist_path}: {len(latest_df)} sectores')
-    log(f'ℹ️ {rank_hist_path}: {len(rh)} filas, {rh["sector"].nunique()} sectores, fechas {rh["date"].nunique()}')
+    log(f'[INFO] {rank_hist_path}: {len(rh)} filas, {rh["sector"].nunique()} sectores, fechas {rh["date"].nunique()}')
 else:
-    log(f'❌ {rank_hist_path} no existe')
+    log(f'[FAIL] {rank_hist_path} no existe')
 
 if os.path.exists(rank_deltas_path):
     rd = pd.read_csv(rank_deltas_path, encoding='utf-8')
@@ -237,9 +237,9 @@ if os.path.exists(rank_deltas_path):
         bad = set(rd['lectura_5d'].unique()) | set(rd['lectura_10d'].unique()) | set(rd['lectura_20d'].unique())
         bad = bad - allowed_lecturas
         check(len(bad) == 0, f'{rank_deltas_path}: lecturas válidas', f'{rank_deltas_path}: lecturas inválidas {bad}')
-        log(f'ℹ️ {rank_deltas_path}: {len(rd)} sectores')
+        log(f'[INFO] {rank_deltas_path}: {len(rd)} sectores')
 else:
-    log(f'❌ {rank_deltas_path} no existe')
+    log(f'[FAIL] {rank_deltas_path} no existe')
 
 # 3c-septies. Validación Matriz de Régimen Sectorial
 rm_path = 'outputs/history/sector_regime_matrix.csv'
@@ -255,9 +255,9 @@ if os.path.exists(rm_path):
     check(len(bad) == 0, f'{rm_path}: lecturas válidas', f'{rm_path}: lecturas inválidas {bad}')
     dup = rm.duplicated(subset=['date','sector']).sum()
     check(dup == 0, f'{rm_path}: sin duplicados date+sector', f'{rm_path}: {dup} duplicados')
-    log(f'ℹ️ {rm_path}: {len(rm)} filas, {rm["sector"].nunique()} sectores, fechas {rm["date"].nunique()}')
+    log(f'[INFO] {rm_path}: {len(rm)} filas, {rm["sector"].nunique()} sectores, fechas {rm["date"].nunique()}')
 else:
-    log(f'❌ {rm_path} no existe')
+    log(f'[FAIL] {rm_path} no existe')
 
 # 3c-octies. Validación Distribución Wyckoff sectorial
 wy_path = 'outputs/history/sector_wyckoff_distribution.csv'
@@ -284,9 +284,9 @@ if os.path.exists(wy_path):
             check(wydf.loc[mask_invalid, pct_cols].isna().all().all(), f'{wy_path}: pct NaN cuando n_valid<5', f'{wy_path}: pct presentes con n_valid<5')
     dup = wydf.duplicated(subset=['date','sector']).sum()
     check(dup == 0, f'{wy_path}: sin duplicados date+sector', f'{wy_path}: {dup} duplicados')
-    log(f'ℹ️ {wy_path}: {len(wydf)} filas, fechas {wydf["date"].nunique()}')
+    log(f'[INFO] {wy_path}: {len(wydf)} filas, fechas {wydf["date"].nunique()}')
 else:
-    log(f'❌ {wy_path} no existe')
+    log(f'[FAIL] {wy_path} no existe')
 
 # 3c-nonies. Validación Divergencia sector-líderes
 sld_path = 'outputs/history/sector_leader_divergence.csv'
@@ -303,9 +303,9 @@ if os.path.exists(sld_path):
     check((sld['n_leaders_positive'] + sld['n_leaders_negative'] <= sld['n_leaders_valid']).all(), f'{sld_path}: suma positivos+negativos <= n_valid', f'{sld_path}: inconsistencia en conteos')
     dup = sld.duplicated(subset=['date','sector']).sum()
     check(dup == 0, f'{sld_path}: sin duplicados date+sector', f'{sld_path}: {dup} duplicados')
-    log(f'ℹ️ {sld_path}: {len(sld)} sectores con datos')
+    log(f'[INFO] {sld_path}: {len(sld)} sectores con datos')
 else:
-    log(f'❌ {sld_path} no existe')
+    log(f'[FAIL] {sld_path} no existe')
 
 # 4. Reporte diario
 path_report = 'outputs/report/reporte_diario.md'
@@ -318,7 +318,7 @@ if os.path.exists(path_report):
     check(size > 10000, f'Reporte diario generado ({size} bytes)', f'Reporte diario demasiado pequeño ({size} bytes)')
     check(not faltan, f'Todas las secciones principales presentes', f'Secciones faltantes: {faltan}')
 else:
-    log('❌ No se encontro reporte_diario.md')
+    log('[FAIL] No se encontro reporte_diario.md')
 
 # 5. Verificación de selección de líderes
 try:
@@ -333,9 +333,9 @@ for path, key in [('outputs/state/slpm_state.json','state'), ('outputs/state/mte
         import json
         with open(path, 'r', encoding='utf-8') as f:
             data = json.load(f)
-        log(f'ℹ️ {path}: {data.get(key, "N/A")}')
+        log(f'[INFO] {path}: {data.get(key, "N/A")}')
     else:
-        log(f'ℹ️ {path} no existe')
+        log(f'[INFO] {path} no existe')
 
 # Guardar informe
 # 3c-septies. Validación de guardas de cobertura en breadth_equity

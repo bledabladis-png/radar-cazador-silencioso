@@ -80,7 +80,7 @@ for col in cols:
     N = len(df[col].dropna())
     Neff = N * (1 - rho) / (1 + rho) if pd.notna(rho) and rho != -1 else N
     print(f"  {col:<15} NaN={nan_pct:5.2f}%  Inf={inf_pct:5.2f}%  En [0,1]={in_range:5.1f}%  "
-          f"N_eff={Neff:.0f}/{N}  {'✓' if in_range > 99 else '⚠️'}")
+          f"N_eff={Neff:.0f}/{N}  {'[v]' if in_range > 99 else '[WARN]'}")
 
 # ============================================================
 # 1. DISTRIBUCIÓN + OUTLIERS
@@ -99,7 +99,7 @@ print("\n" + "="*70 + "\n2. ESTACIONARIEDAD (ADF)\n" + "="*70)
 for col in cols:
     try:
         adf_stat, adf_p, _, _, _, _ = adfuller(df[col].dropna())
-        status = '✓ Estacionaria' if adf_p < 0.05 else '⚠️ No estacionaria'
+        status = '[v] Estacionaria' if adf_p < 0.05 else '[WARN] No estacionaria'
         print(f"  {col:<15} p={adf_p:.4f}  {status}")
     except Exception as e:
         print(f"  {col:<15} Error: {e}")
@@ -112,11 +112,11 @@ for col in cols:
     ac = df[col].autocorr()
     if pd.notna(ac):
         if ac > 0.90:
-            status = '⚠️ Muy alta (indicador lento)'
+            status = '[WARN] Muy alta (indicador lento)'
         elif ac > 0.70:
-            status = '✓ Alta (normal en breadth)'
+            status = '[v] Alta (normal en breadth)'
         else:
-            status = '✓ Reactivo'
+            status = '[v] Reactivo'
         print(f"  {col:<15} autocorr = {ac:.3f}  {status}")
 
 # ============================================================
@@ -130,10 +130,10 @@ high_corr = False
 for i in range(len(cols)):
     for j in range(i+1, len(cols)):
         if abs(corr.iloc[i, j]) > 0.90:
-            print(f"\n  ⚠️ {cols[i]} ↔ {cols[j]}: correlación = {corr.iloc[i, j]:.2f}")
+            print(f"\n  [WARN] {cols[i]} <-> {cols[j]}: correlación = {corr.iloc[i, j]:.2f}")
             high_corr = True
 if not high_corr:
-    print("\n  ✓ Sin correlaciones excesivas (>0.90)")
+    print("\n  [v] Sin correlaciones excesivas (>0.90)")
 
 # VIF solo para variables conceptualmente independientes
 X_vif = df[independent_cols].dropna()
@@ -144,14 +144,14 @@ if len(X_vif) > 10:
         try:
             vif = variance_inflation_factor(X_vif.values, i)
             vif_max = max(vif_max, vif)
-            status = '✓' if vif < 5 else '⚠️'
+            status = '[v]' if vif < 5 else '[WARN]'
             print(f"    {status} {col:<15} VIF = {vif:.2f}")
         except:
             pass
     if vif_max < 5:
-        print("  ✓ Sin colinealidad entre variables independientes")
+        print("  [v] Sin colinealidad entre variables independientes")
     else:
-        print("  ⚠️ Colinealidad detectada")
+        print("  [WARN] Colinealidad detectada")
 vif_ok = vif_max < 5
 
 # ============================================================
@@ -175,15 +175,15 @@ print(contrib.round(1).to_string())
 print("\n  Communality (varianza explicada por las PCs):")
 communalities = np.sum(loadings.iloc[:, :2].values**2, axis=1)
 for col, comm in zip(cols, communalities):
-    print(f"    {col:<15} {comm:.3f}  {'✓ Bien representada' if comm > 0.5 else '⚠️ Poco representada'}")
+    print(f"    {col:<15} {comm:.3f}  {'[v] Bien representada' if comm > 0.5 else '[WARN] Poco representada'}")
 
 print("\n  Varianza explicada:")
 for i, var in enumerate(pca.explained_variance_ratio_):
-    print(f"    PC{i+1}: {var*100:5.1f}%  {'█'*int(var*50)}")
+    print(f"    PC{i+1}: {var*100:5.1f}%  {'#'*int(var*50)}")
 
 eff_dim = 1 / np.sum(pca.explained_variance_ratio_**2)
 pca_ok = eff_dim > 2
-print(f"\n  Dimensión efectiva: {eff_dim:.2f}/5  {'✓' if pca_ok else '⚠️'}")
+print(f"\n  Dimensión efectiva: {eff_dim:.2f}/5  {'[v]' if pca_ok else '[WARN]'}")
 
 # ============================================================
 # 6. PERMUTATION IMPORTANCE (CORREGIDA: recalcula el score compuesto)
@@ -209,7 +209,7 @@ for col in cols:
             impactos.append(1 - corr)
     
     impacto_medio = np.mean(impactos) if impactos else 0
-    print(f"    {col:<15} impacto = {impacto_medio:.4f} ± {np.std(impactos):.4f}  ✓ Aporta (pesos equilibrados)")
+    print(f"    {col:<15} impacto = {impacto_medio:.4f} ± {np.std(impactos):.4f}  [v] Aporta (pesos equilibrados)")
     # Nota: Impactos similares por estructura de pesos iguales en el score compuesto
 
 # ============================================================
@@ -232,7 +232,7 @@ for eliminar in cols:
         corr = bs_common.corr(score_without)
         rmse = np.sqrt(((score_without - bs_common) ** 2).mean())
         print(f"    Sin {eliminar:<15} corr={corr:.4f}  RMSE={rmse:.4f}  "
-              f"{'⚠️ Crítico' if 1-corr > 0.05 else '✓ Prescindible' if 1-corr < 0.01 else '✓ Aporta'}")
+              f"{'[WARN] Crítico' if 1-corr > 0.05 else '[v] Prescindible' if 1-corr < 0.01 else '[v] Aporta'}")
 
 # ============================================================
 # 8. BOOTSTRAP (CORREGIDO: bootstrap de la media del score compuesto)
@@ -249,7 +249,7 @@ print(f"  Media del score: {breadth_score.mean():.4f}")
 print(f"  Bootstrap media: {boot_means.mean():.4f} ± {boot_means.std():.4f}")
 print(f"  IC 95%: [{np.percentile(boot_means, 2.5):.4f}, {np.percentile(boot_means, 97.5):.4f}]")
 print(f"  Sesgo: {boot_means.mean() - breadth_score.mean():.6f}")
-print(f"  {'✓ Estimación estable' if abs(boot_means.mean() - breadth_score.mean()) < 0.01 else '⚠️ Sesgo detectable'}")
+print(f"  {'[v] Estimación estable' if abs(boot_means.mean() - breadth_score.mean()) < 0.01 else '[WARN] Sesgo detectable'}")
 
 # ============================================================
 # 9. MONTE CARLO CON RUIDO ESPECÍFICO
@@ -288,7 +288,7 @@ corrs_mc = np.array(corrs_mc)
 mc_ok = corrs_mc.mean() > 0.95
 print(f"  Correlación media tras ruido: {corrs_mc.mean():.4f} ± {corrs_mc.std():.4f}")
 print(f"  IC 95%: [{np.percentile(corrs_mc, 2.5):.4f}, {np.percentile(corrs_mc, 97.5):.4f}]")
-print(f"  {'✓ Robusto' if mc_ok else '⚠️ Sensible al ruido'}")
+print(f"  {'[v] Robusto' if mc_ok else '[WARN] Sensible al ruido'}")
 
 # ============================================================
 # 10. COHERENCIA CON RÉGIMEN MACRO
@@ -314,7 +314,7 @@ try:
             print(f"\n  Breadth mediana en regímenes expansivos: {exp_val:.3f}")
             print(f"  Breadth mediana en regímenes de estrés: {stress_val:.3f}")
             coherence_ok = exp_val > stress_val
-            print(f"  {'✓ Coherente (expansivos > estrés)' if coherence_ok else '⚠️ Invertido'}")
+            print(f"  {'[v] Coherente (expansivos > estrés)' if coherence_ok else '[WARN] Invertido'}")
         else:
             print("  Datos insuficientes (N/A)")
             coherence_ok = None
@@ -349,13 +349,13 @@ else:
 
 passed = sum(1 for _, ok in checks if ok)
 for name, ok in checks:
-    print(f"  {'✓' if ok else '✗'} {name}")
+    print(f"  {'[v]' if ok else '[x]'} {name}")
 
 print(f"\n  Pruebas superadas: {passed}/{len(checks)}")
 if passed == len(checks):
-    print("  VEREDICTO: ✓✓ BREADTH VALIDADO (NIVEL INSTITUCIONAL)")
+    print("  VEREDICTO: [v][v] BREADTH VALIDADO (NIVEL INSTITUCIONAL)")
 elif passed >= len(checks) - 1:
-    print("  VEREDICTO: ✓ ACEPTABLE CON OBSERVACIONES")
+    print("  VEREDICTO: [v] ACEPTABLE CON OBSERVACIONES")
 else:
-    print("  VEREDICTO: ⚠️ REVISAR BREADTH")
+    print("  VEREDICTO: [WARN] REVISAR BREADTH")
 print("="*70)

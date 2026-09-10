@@ -108,7 +108,7 @@ for col in score_cols + index_cols:
         nan_pct = df[col].isna().mean() * 100
         inf_pct = np.isinf(df[col]).mean() * 100 if df[col].dtype in [np.float64, np.float32] else 0
         in_range = df[col].between(-1, 1).mean() * 100 if col in score_cols else df[col].between(0, 100).mean() * 100
-        print(f"  {col:<8} NaN={nan_pct:5.2f}%  Inf={inf_pct:5.2f}%  Rango={'✓' if in_range > 99 else '⚠️'}")
+        print(f"  {col:<8} NaN={nan_pct:5.2f}%  Inf={inf_pct:5.2f}%  Rango={'[v]' if in_range > 99 else '[WARN]'}")
 
 # ============================================================
 # 1. ESTACIONARIEDAD (ADF)
@@ -119,7 +119,7 @@ if len(df) > 30:
         if col in df.columns:
             try:
                 stat, p, *_ = adfuller(df[col].dropna())
-                print(f"  {col:<8} p={p:.4f}  {'✓ Estacionaria' if p < 0.05 else '⚠️ No estacionaria'}")
+                print(f"  {col:<8} p={p:.4f}  {'[v] Estacionaria' if p < 0.05 else '[WARN] No estacionaria'}")
             except ValueError:
                 print(f"  {col:<8} serie constante (sin variabilidad)")
 else:
@@ -135,7 +135,7 @@ for col in score_cols + index_cols:
         if pd.notna(ac):
             N = len(df[col].dropna())
             Neff = N * (1 - ac) / (1 + ac) if ac != -1 else N
-            status = '✓ Reactivo' if ac < 0.70 else '✓ Alta (esperable)' if ac < 0.90 else '⚠️ Muy alta'
+            status = '[v] Reactivo' if ac < 0.70 else '[v] Alta (esperable)' if ac < 0.90 else '[WARN] Muy alta'
             print(f"  {col:<8} autocorr={ac:.3f}  N_eff={Neff:.0f}/{N}  {status}")
     else:
         print(f"  {col:<8} datos insuficientes")
@@ -151,11 +151,11 @@ if len(df) > 10:
     for i in range(len(score_cols)):
         for j in range(i+1, len(score_cols)):
             if abs(corr.iloc[i, j]) > 0.80:
-                high_pairs.append(f"{score_cols[i]}↔{score_cols[j]}: {corr.iloc[i,j]:.2f}")
+                high_pairs.append(f"{score_cols[i]}<->{score_cols[j]}: {corr.iloc[i,j]:.2f}")
     if high_pairs:
-        print(f"\n  ⚠️ Correlaciones altas: {high_pairs}")
+        print(f"\n  [WARN] Correlaciones altas: {high_pairs}")
     else:
-        print("\n  ✓ Motores independientes (todas < 0.80)")
+        print("\n  [v] Motores independientes (todas < 0.80)")
 else:
     print("  Datos insuficientes")
 
@@ -169,9 +169,9 @@ if len(df) > 20:
     pca.fit(X_pca)
     print("  Varianza explicada:")
     for i, var in enumerate(pca.explained_variance_ratio_):
-        print(f"    PC{i+1}: {var*100:5.1f}%  {'█'*int(var*50)}")
+        print(f"    PC{i+1}: {var*100:5.1f}%  {'#'*int(var*50)}")
     eff_dim = 1 / np.sum(pca.explained_variance_ratio_**2)
-    print(f"\n  Dimensión efectiva: {eff_dim:.2f}/4  {'✓ Motores independientes' if eff_dim > 2.5 else '⚠️ Posible redundancia'}")
+    print(f"\n  Dimensión efectiva: {eff_dim:.2f}/4  {'[v] Motores independientes' if eff_dim > 2.5 else '[WARN] Posible redundancia'}")
 else:
     print("  Datos insuficientes para PCA")
 
@@ -189,7 +189,7 @@ for col in index_cols:
         bias = means.mean() - df[col].mean()
         print(f"  {col:<8} media={df[col].mean():.1f}  boot_mean={means.mean():.1f}  "
               f"IC95=[{np.percentile(means,2.5):.1f}, {np.percentile(means,97.5):.1f}]  "
-              f"sesgo={bias:.2f}  {'✓ Estable' if abs(bias)<1 else '⚠️ Sesgo'}")
+              f"sesgo={bias:.2f}  {'[v] Estable' if abs(bias)<1 else '[WARN] Sesgo'}")
 
 # ============================================================
 # 6. MONTE CARLO CON RUIDO
@@ -207,7 +207,7 @@ for col in index_cols:
         corrs = np.array(corrs)
         print(f"  {col:<8} corr media={corrs.mean():.4f}  "
               f"IC95=[{np.percentile(corrs,2.5):.4f}, {np.percentile(corrs,97.5):.4f}]  "
-              f"{'✓ Robusto' if corrs.mean()>0.95 else '⚠️ Sensible'}")
+              f"{'[v] Robusto' if corrs.mean()>0.95 else '[WARN] Sensible'}")
 
 # ============================================================
 # 7. COHERENCIA LÓGICA DEL CLASIFICADOR
@@ -226,8 +226,8 @@ test_cases = [
 for expected, srs, shs, cls, ips in test_cases:
     scores = score_scenarios(srs, shs, cls, ips)
     obtained = max(scores, key=scores.get)
-    status = '✓' if obtained == expected else f'✗ (esperado {expected}, obtenido {obtained})'
-    print(f"    {status} srs={srs:.1f}, shs={shs:.1f}, cls={cls:.1f}, ips={ips:.1f} → {obtained}")
+    status = '[v]' if obtained == expected else f'[x] (esperado {expected}, obtenido {obtained})'
+    print(f"    {status} srs={srs:.1f}, shs={shs:.1f}, cls={cls:.1f}, ips={ips:.1f} -> {obtained}")
 
 # ============================================================
 # 8. VALIDACIÓN DE TRANSICIONES
@@ -235,10 +235,10 @@ for expected, srs, shs, cls, ips in test_cases:
 print("\n" + "="*70 + "\n8. VALIDACIÓN DE TRANSICIONES\n" + "="*70)
 print("  Transiciones normales definidas:")
 for from_s, to_list in NORMAL_TRANSITIONS.items():
-    print(f"    {from_s:<15} → {to_list}")
+    print(f"    {from_s:<15} -> {to_list}")
 print(f"\n  Transiciones excepcionales definidas ({len(EXCEPTION_TRANSITIONS)}):")
 for (f, t), reason in EXCEPTION_TRANSITIONS.items():
-    print(f"    {f} → {t}: {reason}")
+    print(f"    {f} -> {t}: {reason}")
 
 # ============================================================
 # 9. SENSIBILIDAD DE PESOS
@@ -270,7 +270,7 @@ for variation in [0.8, 1.0, 1.2]:
 
 pct = changes / total_tests * 100 if total_tests > 0 else 0
 print(f"  Tests: {total_tests}  Cambios: {changes} ({pct:.1f}%)")
-print(f"  {'✓ Robusto' if pct < 20 else '⚠️ Sensible'}")
+print(f"  {'[v] Robusto' if pct < 20 else '[WARN] Sensible'}")
 
 # ============================================================
 # 10. LEAVE-ONE-OUT
@@ -288,7 +288,7 @@ for motor in ['SRS', 'SHS', 'CLS', 'IPS']:
         if obtained == expected:
             ok += 1
     pct_ok = ok / len(test_cases) * 100
-    print(f"  Sin {motor:<5}: {ok}/{len(test_cases)} ({pct_ok:.0f}%)  {'✓' if pct_ok >= 70 else '⚠️'}")
+    print(f"  Sin {motor:<5}: {ok}/{len(test_cases)} ({pct_ok:.0f}%)  {'[v]' if pct_ok >= 70 else '[WARN]'}")
 
 # ============================================================
 # 11. FRECUENCIA HISTÓRICA DE ESCENARIOS
@@ -300,11 +300,11 @@ for _, row in df.iterrows():
     scenarios_hist.append(max(scores, key=scores.get))
 dist_hist = pd.Series(scenarios_hist).value_counts(normalize=True).sort_index()
 for s, pct in dist_hist.items():
-    bar = '█' * int(pct * 50)
-    warn = ' ⚠️ > 10%' if (s == 'CRISIS' and pct > 0.10) else ''
+    bar = '#' * int(pct * 50)
+    warn = ' [WARN] > 10%' if (s == 'CRISIS' and pct > 0.10) else ''
     print(f"  {s:<15} {pct*100:5.1f}%  {bar}{warn}")
 crisis_pct = dist_hist.get('CRISIS', 0)
-print(f"  {'✓ CRISIS < 10%' if crisis_pct <= 0.10 else '⚠️ CRISIS > 10%'}")
+print(f"  {'[v] CRISIS < 10%' if crisis_pct <= 0.10 else '[WARN] CRISIS > 10%'}")
 
 # ============================================================
 # 12. MUTUAL INFORMATION (Breadth defensivo vs SRS)
@@ -341,9 +341,9 @@ if len(df) > 20:
     mi = mutual_info_regression(X_mi, y_mi, random_state=42)[0]
     print(f"  MI(SRS, breadth_defensivo) = {mi:.4f}")
     if mi > 0.6:
-        print("  ⚠️ Posible redundancia (MI > 0.6)")
+        print("  [WARN] Posible redundancia (MI > 0.6)")
     else:
-        print("  ✓ Breadth defensivo aporta información complementaria")
+        print("  [v] Breadth defensivo aporta información complementaria")
 else:
     print("  Datos insuficientes")
 
@@ -375,13 +375,13 @@ else:
 
 passed = sum(1 for _, ok in checks if ok)
 for name, ok in checks:
-    print(f"  {'✓' if ok else '✗'} {name}")
+    print(f"  {'[v]' if ok else '[x]'} {name}")
 
 print(f"\n  Pruebas superadas: {passed}/{len(checks)}")
 if passed == len(checks):
-    print("  VEREDICTO: ✓✓ MTE v1.0 VALIDADO (NIVEL INSTITUCIONAL)")
+    print("  VEREDICTO: [v][v] MTE v1.0 VALIDADO (NIVEL INSTITUCIONAL)")
 elif passed >= len(checks) - 2:
-    print("  VEREDICTO: ✓ ACEPTABLE CON OBSERVACIONES")
+    print("  VEREDICTO: [v] ACEPTABLE CON OBSERVACIONES")
 else:
-    print("  VEREDICTO: ⚠️ REVISAR MTE")
+    print("  VEREDICTO: [WARN] REVISAR MTE")
 print("=" * 70)

@@ -156,10 +156,10 @@ for file, col, max_age in [
         errors.append(f"{file}: error de frescura: {exc}")
 
 if errors:
-    print("❌ Fallos en control de calidad de históricos:")
+    print("[FAIL] Fallos en control de calidad de históricos:")
     for e in errors:
         print(f"  - {e}")
     sys.exit(1)
 
-print("✅ Control de calidad de históricos superado")
+print("[OK] Control de calidad de históricos superado")
 sys.exit(0)

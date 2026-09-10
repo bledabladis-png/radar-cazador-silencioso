@@ -74,7 +74,7 @@ def _decrypt_payload(payload: dict) -> str:
 
 
 # =============================================================================
-# Parser HTML → DataFrame OHLCV
+# Parser HTML -> DataFrame OHLCV
 # =============================================================================
 
 def _parse_rows(html: str):

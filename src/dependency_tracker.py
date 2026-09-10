@@ -21,10 +21,10 @@ DIRECT_DEPENDENCIES = {
 
 # Dependencias indirectas (documentadas para conciencia del gestor)
 INDIRECT_DEPENDENCIES = {
-    'Persistence → Structural Score → SLPM': 'La persistencia alimenta el Structural Score, que a su vez alimenta el SLPM.',
-    'Tactical Score → Opportunity Map (informativo)': 'El Tactical Score se usa en el Opportunity Map. Ya no es input decisorio del SLPM.',
-    'Structural Score → Opportunity Map + SLPM': 'El Structural Score se usa tanto en el Opportunity Map como en el SLPM.',
-    'LIS → SLPM (corregido)': 'LIS era una metrica de intensidad/calidad. Tras detectar redundancia perfecta con Breadth (Spearman=1.0), fue excluido de la State Machine. Ahora es solo diagnostico.',
+    'Persistence -> Structural Score -> SLPM': 'La persistencia alimenta el Structural Score, que a su vez alimenta el SLPM.',
+    'Tactical Score -> Opportunity Map (informativo)': 'El Tactical Score se usa en el Opportunity Map. Ya no es input decisorio del SLPM.',
+    'Structural Score -> Opportunity Map + SLPM': 'El Structural Score se usa tanto en el Opportunity Map como en el SLPM.',
+    'LIS -> SLPM (corregido)': 'LIS era una metrica de intensidad/calidad. Tras detectar redundancia perfecta con Breadth (Spearman=1.0), fue excluido de la State Machine. Ahora es solo diagnostico.',
 }
 
 EVIDENCE_CLASSIFICATION = {
@@ -96,9 +96,9 @@ def audit_double_counting():
         from indicators.state_machine import classify_leadership_state
         sig = inspect.signature(classify_leadership_state)
         if 'lis' in sig.parameters:
-            lines.append("\n**Verificación SLPM:** ⚠️ LIS aún en State Machine (doble conteo activo).\n")
+            lines.append("\n**Verificación SLPM:** [WARN] LIS aún en State Machine (doble conteo activo).\n")
         else:
-            lines.append("\n**Verificación SLPM:** ✅ LIS excluido de la State Machine. Breadth es el factor decisorio.\n")
+            lines.append("\n**Verificación SLPM:** [OK] LIS excluido de la State Machine. Breadth es el factor decisorio.\n")
     except Exception:
         lines.append("\n**Verificación SLPM:** No disponible.\n")
 

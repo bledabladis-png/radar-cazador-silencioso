@@ -39,9 +39,9 @@ def main():
     df.to_csv(OUTPUT, index=False)
     print(df.to_string(index=False))
     if (df['status'] == 'ERROR').any():
-        print('\n⚠️ Se detectaron errores al obtener datos de YahooProvider.')
+        print('\n[WARN] Se detectaron errores al obtener datos de YahooProvider.')
     else:
-        print('\n✅ YahooProvider funciona correctamente.')
+        print('\n[OK] YahooProvider funciona correctamente.')
 
 if __name__ == '__main__':
     main()

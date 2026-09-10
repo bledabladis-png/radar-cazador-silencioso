@@ -185,7 +185,7 @@ class BackupProvider:
                     method = getattr(self, f"_{provider_name}_daily")
                     df = method(provider_symbol)
                     if df is not None and self._validate_ohlcv(df):
-                        # Renombrar columna ticker externo → canónico
+                        # Renombrar columna ticker externo -> canónico
                         df.columns = pd.MultiIndex.from_product([df.columns.get_level_values(0), [t]])
                         # Validación cruzada con caché
                         if self._validate_with_cache(t, df):

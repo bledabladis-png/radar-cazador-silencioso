@@ -27,24 +27,24 @@ def validate_module(name, df, col, range_check, csv_path):
         print(f"  ERROR: datos no disponibles para {name}")
         return 0, 0
 
-    print(f"  Registros: {len(df)}  |  Fechas: {df.index[0].date()} → {df.index[-1].date()}")
+    print(f"  Registros: {len(df)}  |  Fechas: {df.index[0].date()} -> {df.index[-1].date()}")
 
     # ---- 0. COBERTURA + RANGO LÓGICO ----
-    print("\n  ── 0. COBERTURA Y RANGO ──")
+    print("\n  -- 0. COBERTURA Y RANGO --")
     nan_pct = df[col].isna().mean() * 100
     inf_pct = np.isinf(df[col]).mean() * 100 if df[col].dtype in [np.float64, np.float32] else 0
     coverage_ok = nan_pct < 1 and inf_pct == 0
-    print(f"    NaN={nan_pct:.2f}%  Inf={inf_pct:.2f}%  {'✓' if coverage_ok else '⚠️'}")
+    print(f"    NaN={nan_pct:.2f}%  Inf={inf_pct:.2f}%  {'[v]' if coverage_ok else '[WARN]'}")
 
     range_ok = True
     if range_check == "positive":
         range_ok = (df[col].dropna() > 0).all()
     elif range_check == "zero_one":
         range_ok = df[col].dropna().between(0, 1).all()
-    print(f"    Rango lógico: {'✓' if range_ok else '⚠️'}")
+    print(f"    Rango lógico: {'[v]' if range_ok else '[WARN]'}")
 
     # ---- 1. OUTLIERS (IQR) ----
-    print("\n  ── 1. OUTLIERS (IQR) ──")
+    print("\n  -- 1. OUTLIERS (IQR) --")
     q1 = df[col].quantile(0.25)
     q3 = df[col].quantile(0.75)
     iqr = q3 - q1
@@ -54,33 +54,33 @@ def validate_module(name, df, col, range_check, csv_path):
     pct_out = n_out / len(df) * 100
     outliers_ok = pct_out < 10
     print(f"    Q1={q1:.4f}  Q3={q3:.4f}  IQR={iqr:.4f}")
-    print(f"    Outliers: {n_out}/{len(df)} ({pct_out:.1f}%)  {'✓' if outliers_ok else '⚠️'}")
+    print(f"    Outliers: {n_out}/{len(df)} ({pct_out:.1f}%)  {'[v]' if outliers_ok else '[WARN]'}")
 
     # ---- 2. ESTACIONARIEDAD (ADF) ----
-    print("\n  ── 2. ESTACIONARIEDAD (ADF) ──")
+    print("\n  -- 2. ESTACIONARIEDAD (ADF) --")
     adf_ok = False
     if len(df) > 30:
         stat, p, *_ = adfuller(df[col].dropna())
         adf_ok = p < 0.05
-        print(f"    p={p:.4f}  {'✓ Estacionaria' if adf_ok else '⚠️ No estacionaria'}")
+        print(f"    p={p:.4f}  {'[v] Estacionaria' if adf_ok else '[WARN] No estacionaria'}")
     else:
         print(f"    Datos insuficientes ({len(df)} < 30)")
 
     # ---- 3. AUTOCORRELACIÓN + EFFECTIVE SAMPLE SIZE ----
-    print("\n  ── 3. AUTOCORRELACIÓN Y N_eff ──")
+    print("\n  -- 3. AUTOCORRELACIÓN Y N_eff --")
     ac = df[col].autocorr()
     if pd.notna(ac):
         N = len(df[col].dropna())
         Neff = N * (1 - ac) / (1 + ac) if ac != -1 else N
         ac_ok = ac < 0.95
-        print(f"    Autocorr lag1 = {ac:.3f}  {'✓' if ac_ok else '⚠️ Muy alta'}")
+        print(f"    Autocorr lag1 = {ac:.3f}  {'[v]' if ac_ok else '[WARN] Muy alta'}")
         print(f"    N = {N}  |  N_eff = {Neff:.0f}")
     else:
         ac_ok = True
         print("    No evaluable")
 
     # ---- 4. BOOTSTRAP DE LA MEDIA ----
-    print("\n  ── 4. BOOTSTRAP (500 remuestreos) ──")
+    print("\n  -- 4. BOOTSTRAP (500 remuestreos) --")
     means = []
     for _ in range(500):
         sample = df[col].sample(frac=1, replace=True)
@@ -91,10 +91,10 @@ def validate_module(name, df, col, range_check, csv_path):
     print(f"    Media original: {df[col].mean():.4f}")
     print(f"    Bootstrap mean: {means.mean():.4f} ± {means.std():.4f}")
     print(f"    IC 95%: [{np.percentile(means, 2.5):.4f}, {np.percentile(means, 97.5):.4f}]")
-    print(f"    Sesgo: {bias:.6f}  {'✓' if bootstrap_ok else '⚠️'}")
+    print(f"    Sesgo: {bias:.6f}  {'[v]' if bootstrap_ok else '[WARN]'}")
 
     # ---- 5. MONTE CARLO CON RUIDO ----
-    print("\n  ── 5. MONTE CARLO (500 simulaciones) ──")
+    print("\n  -- 5. MONTE CARLO (500 simulaciones) --")
     corrs_mc = []
     std_col = df[col].std()
     for _ in range(500):
@@ -105,10 +105,10 @@ def validate_module(name, df, col, range_check, csv_path):
     corrs_mc = np.array(corrs_mc)
     mc_ok = corrs_mc.mean() > 0.95
     print(f"    Corr media: {corrs_mc.mean():.4f}  IC95=[{np.percentile(corrs_mc,2.5):.4f}, {np.percentile(corrs_mc,97.5):.4f}]")
-    print(f"    {'✓ Robusto' if mc_ok else '⚠️ Sensible'}")
+    print(f"    {'[v] Robusto' if mc_ok else '[WARN] Sensible'}")
 
     # ---- 6. ESTABILIDAD ANUAL ----
-    print("\n  ── 6. ESTABILIDAD ANUAL ──")
+    print("\n  -- 6. ESTABILIDAD ANUAL --")
     if 'year' not in df.columns:
         df = df.copy()
         df['year'] = df.index.year
@@ -121,7 +121,7 @@ def validate_module(name, df, col, range_check, csv_path):
         print("    Solo un año de datos")
 
     # ---- VEREDICTO ----
-    print("\n  ── VEREDICTO ──")
+    print("\n  -- VEREDICTO --")
     checks = [
         ("Cobertura", coverage_ok),
         ("Rango lógico", range_ok),
@@ -134,14 +134,14 @@ def validate_module(name, df, col, range_check, csv_path):
     passed = sum(1 for _, ok in checks if ok)
     total = len(checks)
     for name, ok in checks:
-        print(f"    {'✓' if ok else '✗'} {name}")
+        print(f"    {'[v]' if ok else '[x]'} {name}")
     print(f"    Pruebas: {passed}/{total}")
     if passed == total:
-        print(f"    VEREDICTO: ✓✓ {name} VALIDADO (NIVEL INSTITUCIONAL)")
+        print(f"    VEREDICTO: [v][v] {name} VALIDADO (NIVEL INSTITUCIONAL)")
     elif passed >= total - 1:
-        print(f"    VEREDICTO: ✓ {name} ACEPTABLE CON OBSERVACIONES")
+        print(f"    VEREDICTO: [v] {name} ACEPTABLE CON OBSERVACIONES")
     else:
-        print(f"    VEREDICTO: ⚠️ {name} REVISAR")
+        print(f"    VEREDICTO: [WARN] {name} REVISAR")
     return passed, total
 
 

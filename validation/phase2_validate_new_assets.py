@@ -91,7 +91,7 @@ for t in ['VLUE','MTUM','QUAL','SCHC','EWX','EMB','ELD']:
     for signal in ['market_strength','credit','volatility','liquidity','curve','commodities','breadth']:
         if signal in corr_matrix.columns:
             r = corr_matrix.loc[t, signal]
-            alert = " ⚠️ ALTA" if abs(r) > 0.7 else ""
+            alert = " [WARN] ALTA" if abs(r) > 0.7 else ""
             print(f"  vs {signal}: r={r:.3f}{alert}")
 
 # ============================================================

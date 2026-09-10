@@ -592,7 +592,7 @@ def get_blackrock_iwm_primary_flow(
     print(
         "Histórico:",
         df["date"].min().date(),
-        "→",
+        "->",
         df["date"].max().date(),
     )
 
