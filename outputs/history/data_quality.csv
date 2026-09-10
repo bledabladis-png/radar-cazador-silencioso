@@ -37,7 +37,7 @@ date,source,last_date,age_calendar_days,frequency,freshness,n_total,n_valid,cove
 2026-09-09,Evidence Matrix,2026-09-09,0.0,daily,CURRENT,11.0,11.0,1.0,Matriz evidencia
 2026-09-10,Yahoo Finance,2026-09-10,0.0,daily,CURRENT,11.0,11.0,1.0,Precios y métricas sectoriales
 2026-09-10,SSGA ETF Flow,2026-09-08,2.0,daily,CURRENT,12.0,12.0,1.0,Flujo primario
-2026-09-10,CBOE PCR,2026-09-08,2.0,daily,CURRENT,32.0,32.0,1.0,Put/Call ratio
+2026-09-10,CBOE PCR,2026-09-09,1.0,daily,CURRENT,33.0,33.0,1.0,Put/Call ratio
 2026-09-10,FINRA Dark Pool,2026-08-17,24.0,finra,CURRENT,,,,Retraso regulatorio 2-4 semanas
 2026-09-10,CFTC Position Flow,2026-09-01,9.0,cftc,CURRENT,,,,Frescura 30 días
 2026-09-10,SEC N-PORT,,,sec,N/D,,,,Trimestral
