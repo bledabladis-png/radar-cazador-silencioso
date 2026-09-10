@@ -4,6 +4,7 @@ import pandas as pd
 from datetime import datetime, timedelta
 from pathlib import Path
 from src.instrument_registry import resolve_symbol
+from config.settings import CACHE_MARKET_PATH, CACHE_STOCKS_PATH
 
 class RateLimiter:
     """Controla llamadas por minuto y por día para un proveedor."""
@@ -102,7 +103,7 @@ class BackupProvider:
     def _load_reference_cache(self):
         """Carga cachés locales para validación cruzada."""
         frames = []
-        for path in ['data/market_data_cache.csv', 'data/stock_prices.csv']:
+        for path in [CACHE_MARKET_PATH, CACHE_STOCKS_PATH]:
             if Path(path).exists():
                 try:
                     df = pd.read_csv(path, header=[0,1], index_col=0, parse_dates=True)

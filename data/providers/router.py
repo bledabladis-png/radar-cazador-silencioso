@@ -4,6 +4,7 @@ from .polygon import PolygonProvider
 import pandas as pd
 import os
 from pathlib import Path
+from config.settings import CACHE_MARKET_PATH
 
 class DataRouter:
     def __init__(self):
@@ -29,7 +30,7 @@ class DataRouter:
         return self._load_cache(tickers)
 
     def _load_cache(self, tickers):
-        cache_path = Path("data/market_data_cache.csv")
+        cache_path = Path(CACHE_MARKET_PATH)
         if cache_path.exists():
             data = pd.read_csv(cache_path, header=[0,1], index_col=0, parse_dates=True)
             missing = [t for t in tickers if t not in data.columns.get_level_values(1)]

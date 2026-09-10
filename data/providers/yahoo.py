@@ -3,6 +3,7 @@ import yfinance as yf
 import time
 import random
 from pathlib import Path
+from config.settings import CACHE_MARKET_PATH
 from .base import MarketDataProvider
 
 class YahooProvider(MarketDataProvider):
@@ -68,7 +69,7 @@ class YahooProvider(MarketDataProvider):
             return self._load_cache()
 
     def _load_cache(self) -> pd.DataFrame:
-        cache_path = Path("data/market_data_cache.csv")
+        cache_path = Path(CACHE_MARKET_PATH)
         if cache_path.exists():
             try:
                 data = pd.read_csv(cache_path, header=[0,1], index_col=0, parse_dates=True)

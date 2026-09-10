@@ -193,3 +193,10 @@ DARKPOOL_THRESHOLDS = {
     'baja': -1.5,
     'muy_baja': -2.5,
 }
+
+# ============================================================
+# RUTAS DE CACHES LOCALES (single source of truth)
+# ============================================================
+
+CACHE_MARKET_PATH = 'data/market_data.csv'
+CACHE_STOCKS_PATH = 'data/stock_prices.csv'
