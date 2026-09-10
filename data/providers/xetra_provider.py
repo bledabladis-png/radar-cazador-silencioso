@@ -284,7 +284,18 @@ class XetraProvider:
                     print(f"  [XETRA] {t} desde cache ({len(df_cached)} filas)")
                     frames.append(self._to_multiindex(df_cached, t))
                     continue
-            pending.append(t)
+            # === Auto-recuperacion: start dinamico segun ultima fecha en cache ===
+            start_iso = WS_START
+            if use_cache:
+                df_cached = self._load_cache(t)
+                if not df_cached.empty:
+                    last_date = pd.to_datetime(df_cached["date"]).max()
+                    days_gap = (pd.Timestamp.now().normalize() - last_date).days
+                    if days_gap > 7:
+                        print(f"  [XETRA] CACHE VIEJA: {t} sin datos desde {last_date.date()} ({days_gap} dias)")
+                    start_iso = (last_date + pd.Timedelta(days=1)).strftime("%Y-%m-%dT00:00:00.000Z")
+                    print(f"  [XETRA] {t} gap={days_gap}d, start={start_iso[:10]}")
+            pending.append((t, start_iso))
 
         if not pending:
             return self._concat_frames(frames)
@@ -298,11 +309,11 @@ class XetraProvider:
             return self._concat_frames(frames)
 
         try:
-            for i, t in enumerate(pending, 1):
+            for i, (t, start_iso) in enumerate(pending, 1):
                 info = self._map[t]
                 isin = info["isin"]
                 try:
-                    rows = self._query_one(ws, f"q{i}", isin, WS_START, end_iso)
+                    rows = self._query_one(ws, f"q{i}", isin, start_iso, end_iso)
                     if not rows:
                         print(f"  [XETRA] {t} sin datos")
                         continue

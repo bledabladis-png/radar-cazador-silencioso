@@ -254,11 +254,25 @@ class EuronextProvider:
                     frames.append(self._to_multiindex(df_cached, t))
                     continue
 
+            # === Auto-recuperacion: rango desde ultima fecha en cache ===
+            effective_nb = nb_session
+            if use_cache:
+                df_cached = self._load_cache(t)
+                if not df_cached.empty:
+                    last_date = pd.to_datetime(df_cached["date"]).max()
+                    days_gap = (pd.Timestamp.now().normalize() - last_date).days
+                    if days_gap > 7:
+                        print(f"  [EURONEXT] CACHE VIEJA: {t} sin datos desde {last_date.date()} ({days_gap} dias)")
+                    # Estimar sesiones: dias naturales * 1.4 + 5 de margen
+                    needed = int(days_gap * 1.4) + 5
+                    effective_nb = max(5, min(nb_session, needed))
+                    print(f"  [EURONEXT] {t} gap={days_gap}d, recuperando {effective_nb} sesiones")
+
             info = self._map[t]
             euronext_id = info["euronext_id"]
 
             try:
-                html = self._post(euronext_id, enddate, nb_session)
+                html = self._post(euronext_id, enddate, effective_nb)
                 rows = _parse_rows(html)
                 df = _rows_to_dataframe(rows)
 
