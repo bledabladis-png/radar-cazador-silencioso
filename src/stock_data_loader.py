@@ -1,7 +1,6 @@
 import pandas as pd
 import yfinance as yf
 from datetime import datetime, timedelta
-from tenacity import retry, stop_after_attempt, wait_exponential
 from data.providers.euronext_provider import EuronextProvider
 from data.providers.xetra_provider import XetraProvider
 import os
@@ -121,7 +120,8 @@ def _classify_ticker(ticker, df):
     else:
         return 'STALE'
 
-@retry(stop=stop_after_attempt(5), wait=wait_exponential(multiplier=1, min=4, max=10))
+# Nota: sin @retry global. El bucle por lotes ya gestiona fallos:
+# los tickers fallidos se reintentan individualmente tras el bucle principal.
 def download_stock_prices():
     cache_path = 'data/stock_prices.csv'
     if os.path.exists(cache_path):

@@ -1,6 +1,5 @@
 ﻿import pandas as pd
 from datetime import datetime, timedelta
-from tenacity import retry, stop_after_attempt, wait_exponential
 import os
 import time
 from config.tickers import MARKET_TICKERS
@@ -44,7 +43,8 @@ def _ticker_list():
 
     return list(set(tickers))
 
-@retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=4, max=10))
+# Nota: sin @retry global. El bucle por lotes ya gestiona fallos
+# y BackupProvider actua como fallback por lote.
 def download_market_data():
     cache_path = 'data/market_data.csv'
     if os.path.exists(cache_path):
