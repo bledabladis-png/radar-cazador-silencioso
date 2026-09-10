@@ -4,7 +4,7 @@ from pathlib import Path
 import warnings
 warnings.filterwarnings('ignore')
 
-import sys, os
+import sys
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from data.providers.yahoo import YahooProvider
 

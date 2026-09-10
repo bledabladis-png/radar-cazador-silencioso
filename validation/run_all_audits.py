@@ -316,7 +316,7 @@ if os.path.exists(path_report):
     secciones = ['Resumen de Regimenes', 'Breadth de Mercado', 'Rankings Sectoriales', 'Opportunity Map', 'Sentimiento de Opciones', 'Market Transition Engine']
     faltan = [s for s in secciones if s not in contenido]
     check(size > 10000, f'Reporte diario generado ({size} bytes)', f'Reporte diario demasiado pequeño ({size} bytes)')
-    check(not faltan, f'Todas las secciones principales presentes', f'Secciones faltantes: {faltan}')
+    check(not faltan, 'Todas las secciones principales presentes', f'Secciones faltantes: {faltan}')
 else:
     log('[FAIL] No se encontro reporte_diario.md')
 

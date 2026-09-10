@@ -29,7 +29,7 @@ def build_sector_regime_matrix(sector_breadth_df, sector_flow_df, sector_results
     if 'ranking' in sector_results and sector_results['ranking']:
         for item in sector_results['ranking']:
             if len(item) >= 4:
-                ticker, name, score, phase = item[0], item[1], item[2], item[3]
+                ticker, _, _, phase = item[0], item[1], item[2], item[3]
                 phase_map[ticker] = phase
 
     # Unificar por sector tomando la última fila si hay histórico

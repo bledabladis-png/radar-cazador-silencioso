@@ -5,7 +5,7 @@ from config.weights import SECTOR_SCORE_WEIGHTS, SECTOR_DISPERSION_PENALTY
 from indicators.momentum import compute_returns, compute_flow_proxy, compute_price_momentum
 from indicators.trend import trend_position
 from indicators.volatility import atr
-from indicators.breadth import compute_breadth
+
 from indicators.wyckoff import wyckoff_structure_core
 from src.utils import safe_mean, safe_std, tanh_normalize, get_col
 
