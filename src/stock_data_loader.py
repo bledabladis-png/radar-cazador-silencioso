@@ -208,69 +208,69 @@ def download_stock_prices():
             except Exception:
                 pass
 
-        # Cascada europea: se ejecuta SIEMPRE para los tickers cubiertos por Euronext/Xetra.
-        # Los datos de estos proveedores son más fiables y frescos que Yahoo para esos tickers,
-        # así que reemplazamos completamente sus columnas de Yahoo.
-        euronext = EuronextProvider()
-        xetra = XetraProvider()
+    # Cascada europea: se ejecuta SIEMPRE para los tickers cubiertos por Euronext/Xetra.
+    # Los datos de estos proveedores son más fiables y frescos que Yahoo para esos tickers,
+    # así que reemplazamos completamente sus columnas de Yahoo.
+    euronext = EuronextProvider()
+    xetra = XetraProvider()
 
-        eu_candidates = [t for t in tickers if euronext.supports(t)]
-        xe_candidates = [t for t in tickers if xetra.supports(t)]
-        cascade_frames = []
+    eu_candidates = [t for t in tickers if euronext.supports(t)]
+    xe_candidates = [t for t in tickers if xetra.supports(t)]
+    cascade_frames = []
 
-        if eu_candidates:
-            print(f"Intentando Euronext para {len(eu_candidates)} tickers")
-            try:
-                eu_data = euronext.get_prices(eu_candidates, nb_session=300, use_cache=True)
-                if eu_data is not None and not eu_data.empty:
-                    cascade_frames.append(eu_data)
-            except Exception as e:
-                print(f"  Euronext falló: {e}")
+    if eu_candidates:
+        print(f"Intentando Euronext para {len(eu_candidates)} tickers")
+        try:
+            eu_data = euronext.get_prices(eu_candidates, nb_session=300, use_cache=True)
+            if eu_data is not None and not eu_data.empty:
+                cascade_frames.append(eu_data)
+        except Exception as e:
+            print(f"  Euronext falló: {e}")
 
-        if xe_candidates:
-            print(f"Intentando Xetra para {len(xe_candidates)} tickers")
-            try:
-                xe_data = xetra.get_prices(xe_candidates, use_cache=True)
-                if xe_data is not None and not xe_data.empty:
-                    cascade_frames.append(xe_data)
-            except Exception as e:
-                print(f"  Xetra falló: {e}")
+    if xe_candidates:
+        print(f"Intentando Xetra para {len(xe_candidates)} tickers")
+        try:
+            xe_data = xetra.get_prices(xe_candidates, use_cache=True)
+            if xe_data is not None and not xe_data.empty:
+                cascade_frames.append(xe_data)
+        except Exception as e:
+            print(f"  Xetra falló: {e}")
 
-        if cascade_frames:
-            cascade_data = pd.concat(cascade_frames, axis=1)
-            if not isinstance(cascade_data.columns, pd.MultiIndex):
-                cascade_data.columns = pd.MultiIndex.from_tuples(cascade_data.columns)
-            if cascade_data.columns.duplicated().any():
-                cascade_data = cascade_data.loc[:, ~cascade_data.columns.duplicated(keep='last')]
+    if cascade_frames:
+        cascade_data = pd.concat(cascade_frames, axis=1)
+        if not isinstance(cascade_data.columns, pd.MultiIndex):
+            cascade_data.columns = pd.MultiIndex.from_tuples(cascade_data.columns)
+        if cascade_data.columns.duplicated().any():
+            cascade_data = cascade_data.loc[:, ~cascade_data.columns.duplicated(keep='last')]
 
-            # Quitar de all_data las columnas cuyo ticker esté en cascade_data
-            cascade_ticker_set = set(c[1] for c in cascade_data.columns)
-            new_all_data = []
-            for frame in all_data:
-                if isinstance(frame.columns, pd.MultiIndex):
-                    keep_cols = [c for c in frame.columns if c[1] not in cascade_ticker_set]
-                else:
-                    keep_cols = list(frame.columns)
-                if keep_cols:
-                    new_all_data.append(frame[keep_cols])
-            all_data = new_all_data
-            all_data.append(cascade_data)
+        # Quitar de all_data las columnas cuyo ticker esté en cascade_data
+        cascade_ticker_set = set(c[1] for c in cascade_data.columns)
+        new_all_data = []
+        for frame in all_data:
+            if isinstance(frame.columns, pd.MultiIndex):
+                keep_cols = [c for c in frame.columns if c[1] not in cascade_ticker_set]
+            else:
+                keep_cols = list(frame.columns)
+            if keep_cols:
+                new_all_data.append(frame[keep_cols])
+        all_data = new_all_data
+        all_data.append(cascade_data)
 
-            # Actualizar clasificación
-            for ticker in cascade_ticker_set:
-                for cat in ['FAILED', 'PARTIAL', 'STALE']:
-                    if ticker in classification[cat]:
-                        classification[cat].remove(ticker)
-                if ticker not in classification['OK']:
-                    classification['OK'].append(ticker)
-                if ticker in failed_tickers:
-                    failed_tickers.remove(ticker)
+        # Actualizar clasificación
+        for ticker in cascade_ticker_set:
+            for cat in ['FAILED', 'PARTIAL', 'STALE']:
+                if ticker in classification[cat]:
+                    classification[cat].remove(ticker)
+            if ticker not in classification['OK']:
+                classification['OK'].append(ticker)
+            if ticker in failed_tickers:
+                failed_tickers.remove(ticker)
 
-            print(f"  Cascada cubrió {len(cascade_ticker_set)} tickers europeos")
+        print(f"  Cascada cubrió {len(cascade_ticker_set)} tickers europeos")
 
-        # Reportar sin cobertura
-        if failed_tickers:
-            print(f"  Sin cobertura europea (quedan FAILED): {len(failed_tickers)} tickers")
+    # Reportar sin cobertura
+    if failed_tickers:
+        print(f"  Sin cobertura europea (quedan FAILED): {len(failed_tickers)} tickers")
 
     # Imprimir resumen de clasificación
     print("=== Clasificación de tickers ===")
