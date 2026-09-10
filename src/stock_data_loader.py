@@ -2,7 +2,7 @@ import pandas as pd
 import yfinance as yf
 from datetime import datetime, timedelta
 from tenacity import retry, stop_after_attempt, wait_exponential
-from data.providers.backup_providers import BackupProvider
+from data.providers.euronext_provider import EuronextProvider
 import os
 import time
 
@@ -101,11 +101,17 @@ def _classify_ticker(ticker, df):
     if close_col is None:
         return 'FAILED'
 
-    series = df[close_col].dropna()
-    if len(series) == 0:
+    series = df[close_col]
+    if series.dropna().empty:
         return 'FAILED'
 
-    last_date = series.index[-1]
+    # Si la ÚLTIMA FILA del DataFrame tiene NaN, considerar FAILED
+    # (independientemente de que haya datos previos válidos).
+    # Esto es clave para detectar tickers europeos con sesión no cerrada.
+    if pd.isna(series.iloc[-1]):
+        return 'FAILED'
+
+    last_date = series.dropna().index[-1]
     days_since = (pd.Timestamp.now() - last_date).days
     if days_since <= 5:
         return 'OK'
@@ -123,7 +129,6 @@ def download_stock_prices():
             return pd.read_csv(cache_path, header=[0,1], index_col=0, parse_dates=True)
 
     tickers = get_stock_list()
-    backup = BackupProvider()
     if not tickers:
         return None
 
@@ -171,34 +176,62 @@ def download_stock_prices():
         print(f"Reintentando {len(failed_tickers)} tickers fallidos individualmente...")
         for ticker in failed_tickers[:]:  # copia para iterar y modificar listas
             try:
+                # Usar lista con un solo elemento para forzar MultiIndex
                 if session:
-                    data_single = yf.download(ticker, period='5y', auto_adjust=True, session=session)
+                    data_single = yf.download([ticker], period='5y', auto_adjust=True, session=session)
                 else:
-                    data_single = yf.download(ticker, period='5y', auto_adjust=True)
-                if not data_single.empty:
-                    all_data.append(data_single)
-                    status = _classify_ticker(ticker, data_single)
-                    # actualizar clasificación
-                    if status != 'FAILED':
+                    data_single = yf.download([ticker], period='5y', auto_adjust=True)
+
+                if data_single.empty:
+                    continue
+
+                # Asegurar MultiIndex con ticker en nivel 1
+                if not isinstance(data_single.columns, pd.MultiIndex):
+                    data_single.columns = pd.MultiIndex.from_product([data_single.columns, [ticker]])
+
+                # Solo añadir si el ticker tiene datos válidos reales
+                close_key = ('Close', ticker)
+                if close_key not in data_single.columns:
+                    continue
+                if not data_single[close_key].notna().any():
+                    continue
+
+                all_data.append(data_single)
+                status = _classify_ticker(ticker, data_single)
+                if status != 'FAILED':
+                    if ticker in classification['FAILED']:
                         classification['FAILED'].remove(ticker)
-                        classification[status].append(ticker)
-                        if ticker in failed_tickers:
-                            failed_tickers.remove(ticker)
+                    classification[status].append(ticker)
+                    if ticker in failed_tickers:
+                        failed_tickers.remove(ticker)
             except Exception:
                 pass
 
-        # Para los que aún fallan, usar BackupProvider
+        # Para los que aún fallan, usar EuronextProvider (solo tickers europeos cubiertos)
         if failed_tickers:
-            print(f"Intentando BackupProvider para {len(failed_tickers)} tickers...")
-            backup_data = backup.get_prices(failed_tickers, period='5y')
-            if backup_data is not None and not backup_data.empty:
-                all_data.append(backup_data)
-                for ticker in failed_tickers[:]:
-                    status = _classify_ticker(ticker, backup_data)
-                    if status != 'FAILED':
-                        classification['FAILED'].remove(ticker)
-                        classification[status].append(ticker)
-                        failed_tickers.remove(ticker)
+            euronext = EuronextProvider()
+            euronext_candidates = [t for t in failed_tickers if euronext.supports(t)]
+            if euronext_candidates:
+                print(f"Intentando Euronext para {len(euronext_candidates)} tickers: {euronext_candidates}")
+                try:
+                    euronext_data = euronext.get_prices(euronext_candidates, nb_session=500, use_cache=True)
+                    if euronext_data is not None and not euronext_data.empty:
+                        all_data.append(euronext_data)
+                        for ticker in euronext_candidates[:]:
+                            status = _classify_ticker(ticker, euronext_data)
+                            if status != 'FAILED':
+                                if ticker in classification['FAILED']:
+                                    classification['FAILED'].remove(ticker)
+                                classification[status].append(ticker)
+                                if ticker in failed_tickers:
+                                    failed_tickers.remove(ticker)
+                except Exception as e:
+                    print(f"  Euronext falló: {e}")
+
+            # Reportar los que no tienen cobertura Euronext
+            sin_cobertura = [t for t in failed_tickers if not euronext.supports(t)]
+            if sin_cobertura:
+                print(f"  Sin cobertura Euronext (quedan FAILED): {len(sin_cobertura)} tickers")
 
     # Imprimir resumen de clasificación
     print("=== Clasificación de tickers ===")
@@ -213,6 +246,14 @@ def download_stock_prices():
     data = pd.concat(all_data, axis=1)
     if not isinstance(data.columns, pd.MultiIndex):
         data.columns = pd.MultiIndex.from_tuples(data.columns)
+
+    # Deduplicar columnas.
+    # keep='last': Euronext se añade después de Yahoo para los mismos tickers,
+    # por lo que queremos conservar la versión más reciente (Euronext con datos frescos).
+    if data.columns.duplicated().any():
+        n_dup = int(data.columns.duplicated().sum())
+        print(f"  AVISO: {n_dup} columnas duplicadas detectadas, deduplicando (keep=last)")
+        data = data.loc[:, ~data.columns.duplicated(keep='last')]
 
     data.to_csv(cache_path)
     return data
