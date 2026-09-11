@@ -3,11 +3,8 @@
 Macro Sectorial v4.3 -- Sistema de analisis macro y rotacion sectorial.
 Fases 1-4 + Correccion 0.5 + P1 + P2 + Mejoras 16-20.
 """
-import pandas as pd
 import os
 import sys
-from pathlib import Path
-from datetime import datetime
 from src.report_generator import generate_daily_report
 from src.pipeline.data_load import load_all_data
 from src.pipeline.regimes import compute_all_regimes
@@ -24,6 +21,12 @@ from src.pipeline.market_data import compute_market_data
 from src.pipeline.mte_confirmation import compute_mte_confirmation
 from src.pipeline.indices_intl import compute_indices_intl
 from src.pipeline.validation_gate import run_validation_gate
+from src.pipeline.finalize import (
+    compute_final_matrices,
+    save_regime_history,
+    save_sector_rankings,
+    generate_european_coverage,
+)
 from config.tickers import validate_sector_universe
 
 def main():
@@ -160,47 +163,14 @@ def main():
         sys.exit(1)
     dc_summary = vg['dc_summary']
 
-    # --- Matriz de Régimen Sectorial v1.0 (descriptiva) ---
-    try:
-        from indicators.sector_regime_matrix import build_sector_regime_matrix
-        sector_regime_matrix_df = build_sector_regime_matrix(
-            sector_breadth_df, sector_flow_characteristics_df, sector_results
-        )
-        if sector_regime_matrix_df is not None and not sector_regime_matrix_df.empty:
-            mp_path = Path('outputs/history/sector_regime_matrix.csv')
-            mp_path.parent.mkdir(parents=True, exist_ok=True)
-            sector_regime_matrix_df.to_csv(mp_path, index=False, encoding='utf-8')
-            print("  Matriz de régimen sectorial calculada.")
-        else:
-            sector_regime_matrix_df = None
-    except Exception as e:
-        print(f"  Matriz de régimen sectorial omitida: {e}")
-        sector_regime_matrix_df = None
-
-    # --- Matriz de Evidencia v1.0 (descriptiva) ---
-    try:
-        from indicators.evidence_matrix import compute_evidence_matrix
-        evidence_matrix_df = compute_evidence_matrix(
-            sector_breadth_df,
-            sector_concentration_df,
-            sector_flow_characteristics_df,
-            sector_wyckoff_distribution_df,
-            liquidity_regime=financial_regime,
-            real_liquidity_regime=real_liq_regime,
-            volatility_regime=vol_regime,
-            volatility_score=vol_score,
-            liquidity_score=real_liq_score if real_liq_score is not None else financial_score
-        )
-        if evidence_matrix_df is not None and not evidence_matrix_df.empty:
-            em_path = Path('outputs/history/evidence_matrix.csv')
-            em_path.parent.mkdir(parents=True, exist_ok=True)
-            evidence_matrix_df.to_csv(em_path, index=False)
-            print("  Matriz de evidencia calculada.")
-        else:
-            evidence_matrix_df = None
-    except Exception as e:
-        print(f"  Matriz de evidencia omitida: {e}")
-        evidence_matrix_df = None
+    mats = compute_final_matrices(
+        sector_breadth_df, sector_concentration_df,
+        sector_flow_characteristics_df, sector_wyckoff_distribution_df,
+        sector_results, financial_regime, real_liq_regime,
+        vol_regime, vol_score, real_liq_score, financial_score,
+    )
+    sector_regime_matrix_df = mats['sector_regime_matrix_df']
+    evidence_matrix_df = mats['evidence_matrix_df']
 
     print("Generando reporte...")
     generate_daily_report(macro_score, macro_regime, macro_conf,
@@ -246,52 +216,11 @@ def main():
                           all_signals=all_signals)
     print("Reporte generado en outputs/report/reporte_diario.md")
 
-    # C1-10: side effects movidos desde report_generator.py
-    _save_regime_history(macro_score, macro_regime, macro_conf,
-                         financial_regime, vol_regime, sector_results)
-    _save_sector_rankings(sector_results)
-    # Reporte de cobertura europea (descriptivo; no rompe el run si falla)
-    try:
-        from src.european_coverage import generate_european_coverage_report
-        generate_european_coverage_report()
-    except Exception as e:
-        print(f"  Cobertura europea omitida: {e}")
-
-def _save_regime_history(macro_score, macro_regime, macro_conf,
-                         liquidity_regime, vol_regime, sector_results):
-    """Persiste la fila del regimen actual en outputs/history/macro_regime.csv.
-
-    Movido desde report_generator.py (C1-10) para separar la generacion de
-    texto de los side-effects de persistencia.
-    """
-    hist_path = "outputs/history/macro_regime.csv"
-    new_row = pd.DataFrame({
-        "date": [datetime.now()],
-        "macro_regime": [macro_regime],
-        "macro_score": [macro_score.iloc[-1]],
-        "macro_conf": [macro_conf],
-        "liquidity_regime": [liquidity_regime],
-        "volatility_regime": [vol_regime],
-        "sector_regime": [sector_results["regime"]],
-    })
-    if os.path.exists(hist_path):
-        hist = pd.read_csv(hist_path)
-        hist = pd.concat([hist, new_row], ignore_index=True)
-    else:
-        hist = new_row
-    hist.to_csv(hist_path, index=False)
-
-
-def _save_sector_rankings(sector_results):
-    """Persiste el ranking de sectores en outputs/report/sector_rankings.csv.
-
-    Movido desde report_generator.py (C1-10).
-    """
-    sector_df = pd.DataFrame(
-        sector_results["ranking"],
-        columns=["ticker", "name", "score", "wyckoff_phase"],
-    )
-    sector_df.to_csv("outputs/report/sector_rankings.csv", index=False)
+    # Side effects + cobertura europea (C1-10 + C2-12)
+    save_regime_history(macro_score, macro_regime, macro_conf,
+                        financial_regime, vol_regime, sector_results)
+    save_sector_rankings(sector_results)
+    generate_european_coverage()
 
 
 if __name__ == "__main__":
