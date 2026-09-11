@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 # scripts/generate_docs.py - Genera documentacion automatica desde el codigo fuente (v3 - completa)
+import ast
 import os
 import re
 import subprocess
@@ -25,6 +26,29 @@ def _get_doc_timestamp():
         return out or datetime.now().strftime('%Y-%m-%d %H:%M')
     except (subprocess.CalledProcessError, FileNotFoundError):
         return datetime.now().strftime('%Y-%m-%d %H:%M')
+
+
+def _load_macro_map():
+    """Lee MACRO_MANUAL_MAP de scripts/update_macro_manual.py sin importarlo.
+
+    Usa ast.literal_eval para extraer el dict sin ejecutar el modulo
+    (evita arrastrar pandas_datareader al generar docs).
+    Devuelve {} si algo falla.
+    """
+    path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'update_macro_manual.py')
+    try:
+        with open(path, 'r', encoding='utf-8-sig') as f:
+            src = f.read()
+        tree = ast.parse(src)
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Assign):
+                for tgt in node.targets:
+                    if isinstance(tgt, ast.Name) and tgt.id == 'MACRO_MANUAL_MAP':
+                        return ast.literal_eval(node.value)
+    except (OSError, SyntaxError, ValueError):
+        pass
+    return {}
+
 
 def read_file(path):
     with open(path, 'r', encoding='utf-8') as f:
@@ -147,8 +171,17 @@ def generate_fuentes():
 | Precios | Yahoo Finance | data/providers/yahoo.py | Diaria |
 | Opciones | CBOE | data/providers/cboe.py | Diaria |
 | Dark Pools | FINRA | data/providers/finra.py | Semanal |
-| Macro | FRED / manual | data/providers/fred.py, data/macro_manual/ | Semanal |
+| Macro | FRED / manual | data/providers/fred.py, data/macro_manual/ | Diaria |
 """
+    macro_map = _load_macro_map()
+    if macro_map:
+        arquitectura += "\n### Mapeo FRED -> CSVs (data/macro_manual/)\n\n"
+        arquitectura += "| CSV | Columna | Serie FRED |\n"
+        arquitectura += "|-----|---------|------------|\n"
+        for csv_name in sorted(macro_map.keys()):
+            for col_name, fred_id in macro_map[csv_name]:
+                arquitectura += f"| {csv_name} | {col_name} | {fred_id} |\n"
+        arquitectura += "\n*Generado automaticamente desde MACRO_MANUAL_MAP en scripts/update_macro_manual.py.*\n"
     formulas = "No aplica."
     salidas = "DataFrames de OHLCV, datos de opciones, datos ATS y series macroeconomicas."
     return template(proposito, arquitectura, formulas, salidas)
