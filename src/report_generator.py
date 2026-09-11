@@ -62,8 +62,8 @@ from src.report.volatility_mte import (
     render_mte,
 )
 from src.report.confirmation import render_confirmation
+from src.report.darkpool import render_darkpool
 from src.report.header import render_regimenes
-from src.report.helpers import _classify_finra_freshness
 
 MODEL_VERSION = "4.3"
 WEIGHTS_VERSION = "3"
@@ -250,8 +250,6 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
     lines.extend(render_mte(mte_result))
 
     # =========================================================================
-    # CONFIRMATION DATA
-    # =========================================================================
     # CONFIRMATION DATA (Nivel 2)
     # =========================================================================
     lines.extend(render_confirmation(confirmation_data))
@@ -259,54 +257,9 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
     # =========================================================================
     # DARK POOLS
     # =========================================================================
-    if darkpool_data:
-        lines.append("## Actividad en ATS - Dark Pools (FINRA v1.0)\n")
-        lines.append("*Nota: FINRA publica datos de ATS con retraso regulatorio de 2 a 4 semanas. Los datos pueden estar desfasados por diseño.*\n")
-        week = darkpool_data.get('week', 'N/A')
-        if week != 'N/A':
-            try:
-                d = pd.Timestamp(week)
-                age = (datetime.now() - d).days
-                freshness = _classify_finra_freshness(age)
-                if freshness == 'ARCHIVAL':
-                    lines.append(f"**DATOS OBSOLETOS:** Ultimo dato con {age} dias de antiguedad. No se usa para clasificacion actual. Contexto historico solamente.\n\n")
-            except:
-                pass
-        lines.append(f"- **% Volumen en ATS medio:** {darkpool_data.get('media_dark_pool', 0):.2f}% "
-                     f"({darkpool_data.get('n_tickers_ats', 0)}/{darkpool_data.get('n_tickers_total', 0)} tickers)\n")
-        
-        z_windows = darkpool_data.get('z_windows', {})
-        if z_windows:
-            lines.append("- **Z-Scores por ventana:**\n")
-            for w_name, w_data in z_windows.items():
-                if w_data:
-                    lines.append(f"  - {w_name}: Z={w_data['z']:.2f}, Estado={w_data['state']}\n")
-        elif pd.notna(darkpool_data.get('z_score')):
-            lines.append(f"- **Robust Z-Score:** {darkpool_data['z_score']:.2f}\n")
-            lines.append(f"- **Momentum:** {darkpool_data.get('momentum', 0):.2f}\n")
-            lines.append(f"- **Percentil:** {darkpool_data.get('percentile', 0):.0f}%\n")
-            lines.append(f"- **Estado ATS:** {darkpool_data.get('state', 'N/A')}\n")
-        else:
-            lines.append("- *Acumulando historial (se necesitan {DARKPOOL_FULL_HISTORY_WEEKS} semanas para el Z-Score)*\n")
-        if week != 'N/A':
-            try:
-                d = pd.Timestamp(week)
-                age = (datetime.now() - d).days
-                lines.append(f"- **Semana FINRA:** {week} (retraso: {age} dias)\n")
-            except Exception:
-                lines.append(f"- **Semana FINRA:** {week}\n")
-        else:
-            lines.append("- **Semana FINRA:** N/D\n")
-
-        if 'datos' in darkpool_data and not darkpool_data['datos'].empty:
-            lines.append("\n**Mayor % de volumen en ATS:**\n")
-            lines.append("| Ticker | % ATS | Vol ATS | Vol Total |\n")
-            lines.append("|--------|:-----:|:-------:|:---------:|\n")
-            top5 = darkpool_data['datos'].nlargest(5, 'dark_pool_pct')
-            for _, row in top5.iterrows():
-                lines.append(f"| {row['ticker']} | {row['dark_pool_pct']:.2f}% | {row['ats_volume']:,.0f} | {row['total_volume']:,.0f} |\n")
-            lines.append("\n*Nota: Un alto % de volumen en ATS NO implica acumulación institucional. Las categorias reflejan el nivel de actividad ATS relativa a su historial, no la direccion del flujo institucional.*\n")
-        lines.append("\n*Fuente: FINRA ATS Transparency Data.*\n\n")
+    # DARK POOLS
+    # =========================================================================
+    lines.extend(render_darkpool(darkpool_data))
 
     # =========================================================================
     # INFERENCIA TRANSVERSAL (CORREGIDA)
