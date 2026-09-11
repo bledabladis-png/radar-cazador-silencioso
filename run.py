@@ -667,7 +667,8 @@ def main():
             try:
                 tactical_scores[sector_etf] = compute_tactical_score(df_market, sector_etf)
                 structural_scores[sector_etf] = compute_structural_score(df_market, sector_etf)
-            except:
+            except Exception as e:
+                print(f"  [WARN] tactical/structural engine: {e}")
                 tactical_scores[sector_etf] = 0.0
                 structural_scores[sector_etf] = 0.0
         print(f"    Tactical/Structural engines calculados para {len(tactical_scores)} sectores.")
@@ -685,7 +686,8 @@ def main():
                 rs20 = rs.pct_change(20, fill_method=None)
                 pers = compute_persistence(rs20, threshold=0.0, lookback=12)
                 sector_persistence[sector_etf] = pers
-            except:
+            except Exception as e:
+                print(f"  [WARN] persistence: {e}")
                 sector_persistence[sector_etf] = None
         print(f"    Persistence calculada para {len(sector_persistence)} sectores.")
     except Exception as e:
@@ -755,7 +757,8 @@ def main():
                 rs = close_sector / close_spy
                 rs20 = rs.pct_change(20, fill_method=None).iloc[-1]
                 signals['rs20'] = np.tanh(rs20 * 5) if pd.notna(rs20) else 0
-            except:
+            except Exception as e:
+                print(f"  [WARN] rs20 signal: {e}")
                 signals['rs20'] = 0
             flow_val = next((f for t, f in sector_flow_rank if t == sector_etf), 0)
             signals['flow'] = flow_val
@@ -775,7 +778,8 @@ def main():
             try:
                 close_sector = get_col(df_market, sector_etf, 'Close')
                 price_ret_20d = (close_sector.iloc[-1] / close_sector.iloc[-21] - 1) if len(close_sector) >= 21 else 0.0
-            except:
+            except Exception as e:
+                print(f"  [WARN] price_ret_20d: {e}")
                 price_ret_20d = 0.0
             flow_val = next((f for t, f in sector_flow_rank if t == sector_etf), 0)
             price_flow_divergences[sector_etf] = detect_price_flow_divergence(price_ret_20d, flow_val)
@@ -915,7 +919,8 @@ def main():
         t10y3m_df = pd.read_csv('data/macro_manual/10y3m.csv', index_col=0, parse_dates=True)
         if not t10y3m_df.empty:
             confirmation_data['t10y3m'] = float(t10y3m_df['T10Y3M'].iloc[-1])
-    except:
+    except Exception as e:
+        print(f"  [WARN] t10y3m confirmation: {e}")
         confirmation_data['t10y3m'] = None
 
     # Vol Metrics
@@ -1164,8 +1169,8 @@ def main():
     try:
         dc_audit = audit_double_counting()
         dc_summary = dc_audit.get('summary', '')
-    except:
-        pass
+    except Exception as e:
+        print(f"  [WARN] audit_double_counting: {e}")
 
     # --- Matriz de Régimen Sectorial v1.0 (descriptiva) ---
     try:
