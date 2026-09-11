@@ -9,6 +9,7 @@ from datetime import datetime
 import pandas as pd
 
 from src.report.helpers import _classify_finra_freshness
+from config.settings import DARKPOOL_FULL_HISTORY_WEEKS
 
 
 def render_darkpool(darkpool_data):
@@ -45,7 +46,7 @@ def render_darkpool(darkpool_data):
             out.append(f"- **Percentil:** {darkpool_data.get('percentile', 0):.0f}%\n")
             out.append(f"- **Estado ATS:** {darkpool_data.get('state', 'N/A')}\n")
         else:
-            out.append("- *Acumulando historial (se necesitan {DARKPOOL_FULL_HISTORY_WEEKS} semanas para el Z-Score)*\n")
+            out.append(f"- *Acumulando historial (se necesitan {DARKPOOL_FULL_HISTORY_WEEKS} semanas para el Z-Score)*\n")
         if week != 'N/A':
             try:
                 d = pd.Timestamp(week)
