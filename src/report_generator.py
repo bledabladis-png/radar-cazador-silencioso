@@ -42,6 +42,14 @@ from src.report.sector_context import (
     render_divergencia_sector_lideres,
     render_momentum_amplitud,
 )
+from src.report.flows_international import (
+    render_flujo_daxex,
+    render_flujo_isf,
+    render_flujo_lyxi,
+    render_flujo_iwm,
+    render_flujo_qqq_sec,
+    render_posicionamiento_cftc,
+)
 from src.report.sentiment import render_sentimiento_opciones
 from src.report.slpm import render_slpm_v12, render_slpm_legacy
 from src.report.header import render_regimenes
@@ -205,99 +213,16 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
     lines.extend(render_divergencia_sector_lideres(sector_leader_divergence_data))
     lines.extend(render_momentum_amplitud(sector_breadth_momentum_data))
 
-    # FLUJO PRIMARIO DAXEX (BlackRock)
     # =========================================================================
-    if blackrock_dax_flow is not None and not blackrock_dax_flow.empty:
-        row = blackrock_dax_flow.iloc[-1]
-        lines.append("## Flujo Primario DAXEX (BlackRock)\n")
-        lines.append(f"- **Última fecha:** {row['date'].strftime('%Y-%m-%d') if hasattr(row['date'], 'strftime') else row['date']}\n")
-        lines.append(f"- **NAV:** {row['nav']:.4f}\n")
-        lines.append(f"- **Shares Outstanding:** {row['shares_outstanding']:,.0f}\n")
-        lines.append(f"- **Δ Shares:** {row['shares_change']:+,.0f}\n")
-        lines.append(f"- **Flujo Estimado (EUR):** {row['estimated_flow_eur']:+,.2f}\n")
-        lines.append(f"- **Flujo % AUM:** {row['flow_pct_assets']*100:+.6f}%\n")
-        lines.append(f"- **Flow Z-Score:** {row['flow_zscore']:+.2f}\n")
-        lines.append("\n*Fuente: BlackRock. ETF Primary Flow = ΔSharesOutstanding × NAV.*\n\n")
+    # FLUJOS INTERNACIONALES (DAXEX, ISF, LYXI, IWM, QQQ SEC, CFTC)
+    # =========================================================================
+    lines.extend(render_flujo_daxex(blackrock_dax_flow))
+    lines.extend(render_flujo_isf(blackrock_isf_flow))
+    lines.extend(render_flujo_lyxi(amundi_lyxi_flow))
+    lines.extend(render_flujo_iwm(blackrock_iwm_flow))
+    lines.extend(render_flujo_qqq_sec(qqq_sec_flow))
+    lines.extend(render_posicionamiento_cftc(cftc_position_flow_data))
 
-    # =========================================================================
-    # FLUJO PRIMARIO ISF.L (BlackRock)
-    # =========================================================================
-    if blackrock_isf_flow is not None and not blackrock_isf_flow.empty:
-        row = blackrock_isf_flow.iloc[-1]
-        lines.append("## Flujo Primario ISF.L (BlackRock)\n")
-        lines.append(f"- **Última fecha:** {row['date'].strftime('%Y-%m-%d') if hasattr(row['date'], 'strftime') else row['date']}\n")
-        lines.append(f"- **NAV:** {row['nav']:.4f}\n")
-        lines.append(f"- **Shares Outstanding:** {row['shares_outstanding']:,.0f}\n")
-        lines.append(f"- **Δ Shares:** {row['shares_change']:+,.0f}\n")
-        lines.append(f"- **Flujo Estimado (GBP):** {row['estimated_flow_eur']:+,.2f}\n")
-        lines.append(f"- **Flujo % AUM:** {row['flow_pct_assets']*100:+.6f}%\n")
-        lines.append(f"- **Flow Z-Score:** {row['flow_zscore']:+.2f}\n")
-        lines.append("\n*Fuente: BlackRock. ETF Primary Flow = ΔSharesOutstanding × NAV.*\n\n")
-
-    # =========================================================================
-    # FLUJO PRIMARIO LYXI (Amundi)
-    # =========================================================================
-    if amundi_lyxi_flow is not None and not amundi_lyxi_flow.empty:
-        row = amundi_lyxi_flow.iloc[-1]
-        lines.append("## Flujo Primario LYXI (Amundi)\n")
-        lines.append(f"- **Última fecha:** {row['date'].strftime('%Y-%m-%d') if hasattr(row['date'], 'strftime') else row['date']}\n")
-        lines.append(f"- **Shares Outstanding:** {row['shares_outstanding']:,.0f}\n")
-        lines.append(f"- **NAV:** {row['nav']:.4f}\n")
-        lines.append(f"- **AUM:** {row['class_aum']:,.2f}\n")
-        if pd.notna(row.get('shares_change')):
-            lines.append(f"- **Δ Shares:** {row['shares_change']:+,.0f}\n")
-            lines.append(f"- **Flujo Estimado (EUR):** {row['estimated_flow_eur']:+,.2f}\n")
-            lines.append(f"- **Flujo % AUM:** {row['flow_pct_assets']*100:+.6f}%\n")
-            lines.append(f"- **Flow Z-Score:** {row['flow_zscore']:+.2f}\n")
-        else:
-            lines.append("- **Δ Shares:** N/D (histórico insuficiente)\n")
-            lines.append("- **Flujo Estimado:** N/D\n")
-        lines.append("\n*Fuente: Amundi. ETF Primary Flow = ΔSharesOutstanding × NAV.*\n\n")
-
-    # =========================================================================
-    # FLUJO PRIMARIO IWM (BlackRock)
-    # =========================================================================
-    if blackrock_iwm_flow is not None and not blackrock_iwm_flow.empty:
-        row = blackrock_iwm_flow.iloc[-1]
-        lines.append("## Flujo Primario IWM (BlackRock)\n")
-        lines.append(f"- **Última fecha:** {row['date'].strftime('%Y-%m-%d') if hasattr(row['date'], 'strftime') else row['date']}\n")
-        lines.append(f"- **NAV:** {row['nav']:.4f}\n")
-        lines.append(f"- **Shares Outstanding:** {row['shares_outstanding']:,.0f}\n")
-        lines.append(f"- **Δ Shares:** {row['shares_change']:+,.0f}\n")
-        lines.append(f"- **Flujo Estimado (USD):** {row['primary_flow_usd']:+,.2f}\n")
-        lines.append(f"- **Flujo % AUM:** {row['primary_flow_pct']:+.6f}%\n")
-        lines.append(f"- **Flow Z-Score:** {row['primary_flow_z']:+.2f}\n")
-        lines.append("\n*Fuente: BlackRock. ETF Primary Flow = ΔSharesOutstanding × NAV.*\n\n")
-
-    # =========================================================================
-    # FLUJO PRIMARIO QQQ (SEC, Trimestral/Semestral)
-    # =========================================================================
-    if qqq_sec_flow is not None and not qqq_sec_flow.empty:
-        row = qqq_sec_flow.iloc[-1]
-        lines.append("## Flujo Primario QQQ (SEC, Trimestral/Semestral)\n")
-        period = str(row.get('period_type', 'N/A')).upper()
-        period_date = str(row.get('period_end_date', 'N/A'))
-        lines.append(f"- **Período:** {period} {period_date}\n")
-        lines.append(f"- **Fecha de presentación:** {row.get('filing_date', 'N/A')}\n")
-        lines.append(f"- **Shares sold:** {row.get('shares_sold', 0):,.0f}\n")
-        lines.append(f"- **Shares repurchased:** {row.get('shares_repurchased', 0):,.0f}\n")
-        lines.append(f"- **Net shares flow:** {row.get('net_shares_flow', 0):,.0f}\n")
-        lines.append(f"- **Proceeds from shares sold:** {row.get('proceeds_shares_sold', 0):,.2f}\n")
-        lines.append(f"- **Value of shares repurchased:** {row.get('value_shares_repurchased', 0):,.2f}\n")
-        lines.append(f"- **Primary flow USD (oficial):** {row.get('primary_flow_usd', 0):,.2f}\n")
-        lines.append("\n*Fuente: SEC EDGAR, formularios N-30B-2 / N-CSRS. Frecuencia anual/semestral. No es flujo diario.*\n\n")
-
-    # =========================================================================
-    # CFTC POSITION FLOW (TFF, Semanal)
-    # =========================================================================
-    if cftc_position_flow_data is not None and not cftc_position_flow_data.empty:
-        lines.append("## Posicionamiento CFTC (TFF, Semanal)\n")
-        lines.append("| Fecha | Contrato | Participante | Net Position | Pos Change | Flow Z |\n")
-        lines.append("|-------|----------|--------------|--------------|------------|--------|\n")
-        for _, row in cftc_position_flow_data.iterrows():
-            fecha = row['date'].strftime('%Y-%m-%d') if hasattr(row['date'], 'strftime') else str(row['date'])
-            lines.append(f"| {fecha} | {row['contract']} | {row['participant']} | {row['net_position']:,.0f} | {row['position_change']:+,.0f} | {row['flow_z']:+.2f} |\n")
-        lines.append("\n*Fuente: CFTC Traders in Financial Futures (Futures Only). Frecuencia semanal.*\n\n")
 
     # =========================================================================
     # FLUJO POSICIONAL N-PORT (Trimestral)
