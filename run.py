@@ -10,14 +10,15 @@ import os
 import sys
 from pathlib import Path
 from datetime import datetime
-from src.stock_data_loader import download_stock_prices, get_usa_tickers
+from src.stock_data_loader import download_stock_prices
 from src.report_generator import generate_daily_report
 from src.pipeline.data_load import load_all_data
 from src.pipeline.regimes import compute_all_regimes
 from src.pipeline.sectors_base import compute_sectors_base
 from src.pipeline.flows_primary import compute_flows_primary
 from src.pipeline.flows_secondary import compute_flows_secondary
-from src.utils import get_col, detect_cross_module_conflict, trim_to_last_valid_date, trim_to_last_valid_date_for_tickers
+from src.pipeline.leaders import compute_leaders
+from src.utils import get_col, detect_cross_module_conflict
 from src.dependency_tracker import audit_double_counting
 from indicators.sector_breadth import compute_sector_breadth
 from indicators.sector_concentration import compute_sector_concentration
@@ -103,63 +104,12 @@ def main():
     qqq_performance_data = fs['qqq_performance_data']
     qqq_nport_flow_data = fs['qqq_nport_flow_data']
 
-    # Modulo de lideres (solo para sectores en acumulacion/markup)
-    leader_lines = None
-    df_stocks = None
-    try:
-        df_stocks = download_stock_prices()
-        if df_stocks is not None and not df_stocks.empty:
-            try:
-                usa_tickers = get_usa_tickers()
-                if usa_tickers:
-                    df_stocks = trim_to_last_valid_date_for_tickers(df_stocks, usa_tickers, min_coverage=0.8)
-                else:
-                    df_stocks = trim_to_last_valid_date(df_stocks)
-            except Exception as e:
-                print(f"  WARN usando trim genérico: {e}")
-                df_stocks = trim_to_last_valid_date(df_stocks)
-            _close_cols = [c for c in df_stocks.columns if c[0] == 'Close']
-            _n_close = len(_close_cols)
-            if _n_close > 0:
-                _last_valid = df_stocks[_close_cols].iloc[-1].notna().sum()
-                _coverage_ratio = _last_valid / _n_close
-                print(f"  DEBUG df_stocks Close columns: {_n_close}; shape={df_stocks.shape}; last_valid={_last_valid} ({_coverage_ratio:.2f})")
-                if _coverage_ratio < 0.5:
-                    print("  WARN Cobertura última fila insuficiente. Posible festivo. Se omitirán métricas dependientes de acciones.")
-                    HOLIDAY_MODE = True
-                else:
-                    HOLIDAY_MODE = False
-            else:
-                HOLIDAY_MODE = True
-            holdings_df = pd.read_csv('data/etf_holdings.csv')
-
-            if HOLIDAY_MODE:
-                # No usar df_stocks incompleto; los bloques dependientes se omiten
-                df_stocks = None
-            else:
-                # Conservar df_stocks para cálculo normal
-                pass
-            if HOLIDAY_MODE:
-                leader_lines = None
-                leader_df = None
-                full_metrics_df = None
-                print("  Lideres sectoriales omitidos (df_stocks no disponible).")
-            else:
-                fases = {sector: fase for sector, _, _, fase in sector_results['ranking']}
-                oper = {sector: 'OPORTUNIDAD MODERADA' if fase in ['ACCUMULATION','MARKUP'] else 'NO OPERAR'
-                        for sector, fase in fases.items()}
-                from indicators.stock_leader import generate_leader_section
-                leader_lines, leader_df, full_metrics_df = generate_leader_section(df_market, df_stocks, holdings_df, fases, oper,
-                                                      output_csv='outputs/report/analisis_lideres.csv')
-                if leader_lines:
-                    print("  Lideres sectoriales generados.")
-                else:
-                    print("  No hay sectores favorables para lideres.")
-
-    except Exception as e:
-        import traceback
-        traceback.print_exc()
-        print(f"  Modulo de lideres omitido: {e}")
+    ldr = compute_leaders(df_market, sector_results)
+    df_stocks = ldr['df_stocks']
+    holdings_df = ldr['holdings_df']
+    leader_lines = ldr['leader_lines']
+    leader_df = ldr['leader_df']
+    full_metrics_df = ldr['full_metrics_df']
 
     # --- Divergencia sector-líderes v1.0 (descriptivo) ---
     try:
