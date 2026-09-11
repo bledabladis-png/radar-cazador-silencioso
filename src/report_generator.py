@@ -5,7 +5,6 @@ from datetime import datetime
 from config.tickers import SECTOR_NAMES
 from config.index_tickers import INDEX_CONFIG
 from config.settings import ETF_PRIMARY_FLOW_ZSCORE_WINDOW
-from config.weights import SLPM_WEIGHTS
 from src.report.alerts import render_alerts, render_cross_module
 from src.report.breadth import render_breadth_market
 from src.report.freshness import render_data_freshness
@@ -19,12 +18,14 @@ from src.report.leaders import (
     render_tactical_leaders,
     render_momentum_otros,
     render_structural_ranking,
+    render_acciones_seleccionadas,
 )
 from src.report.rankings import (
     render_rankings_sectoriales,
     render_persistencia,
     render_opportunity_map,
 )
+from src.report.slpm import render_slpm_v12, render_slpm_legacy
 from src.report.header import render_regimenes
 from src.report.helpers import (
     _fmt_num,
@@ -142,112 +143,20 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
     # =========================================================================
     # SLPM v1.2
     # =========================================================================
-    if slpm_v12_data:
-        breadth = slpm_v12_data.get('leader_breadth_v2', {})
-        if breadth:
-            total = breadth.get('expected_leaders', 5)
-            n = breadth.get('n_used', 0)
-            coverage = breadth.get('coverage', 0)
-            lines.append(f"*Cobertura de lideres SLPM: {n}/{total} ({coverage:.0%})*")
-            if breadth.get('coverage_warning', False):
-                lines.append(" - ADVERTENCIA: Cobertura baja, resultados con incertidumbre elevada.")
-            lines.append("\n\n")
-
-        lines.append("## Structural Leadership (SLPM v1.2)\n")
-        sector = slpm_v12_data.get('sector', 'N/A')
-        state_v12 = slpm_v12_data.get('state', 'N/A')
-        reason = slpm_v12_data.get('state_reason', '')
-        quadrant = slpm_v12_data.get('opportunity_quadrant', 'N/A')
-        lines.append(f"- **Sector Líder:** {sector}\n")
-        lines.append("  - *Nota: El SLPM selecciona al líder combinando Structural, Breadth y Persistence. Tactical y LIS son métricas diagnósticas. No es simplemente el sector con mayor Structural Score.*\n")
-        lines.append(f"- **Estado:** {state_v12}")
-        if quadrant:
-            lines.append(f" -> {quadrant}")
-        lines.append("\n")
-        if reason:
-            lines.append(f"  - *{reason}*\n")
-        
-        inputs = slpm_v12_data.get('input_scores', {})
-        if inputs:
-            eff_breadth = inputs.get('effective_breadth', inputs.get('breadth', 0))
-            pers_val = inputs.get('persistence')
-            pers_str = f"{pers_val:.0%}" if pers_val is not None else "N/A"
-            tact_val = inputs.get("tactical", 0)
-            flow_val = slpm_v12_data.get("flow_divergence_v2", {}).get("composite", 0) if slpm_v12_data else 0
-            struct_val = inputs.get("structural", 0)
-            lis_val = slpm_v12_data.get("leader_integrity", {}).get("lis", 0) if slpm_v12_data else 0
-            lines.append(f"- **Scores oficiales:** T={tact_val:+.2f} | S={struct_val:+.2f} | LIS={lis_val:+.2f} | Eff Breadth={eff_breadth:.2f} | Persist={pers_str} | LQ: P={tact_val:+.2f} C={_fmt_num(flow_val, '{:+.3f}')} S={struct_val:+.2f} Cf={lis_val:+.2f}\n")
-        
-        errors = slpm_v12_data.get('validation_errors', [])
-        if errors:
-            lines.append("\nERRORES DE VALIDACION:\n")
-            for e in errors:
-                lines.append(f"  - {e}\n")
-        
-        breadth = slpm_v12_data.get('leader_breadth_v2', {})
-        if breadth:
-            lines.append("\n### Leader Breadth & Health\n")
-            rs_b = breadth.get('rs_breadth', 0)*100
-            mom_b = breadth.get('momentum_breadth', 0)*100
-            flow_b = breadth.get('flow_breadth', 0)*100
-            wyck_b = breadth.get('wyckoff_breadth', 0)*100
-            comp = breadth.get('composite', 0)*100
-            effective = breadth.get('effective_composite', 0)*100
-            n = breadth.get('n_used', 0)
-            total = breadth.get('expected_leaders', 5)
-            coverage = breadth.get('coverage', 0)*100
-            lines.append(f"- **Leader Breadth (RS ratio > 1.0):** {rs_b:.0f}%\n")
-            lines.append(f"- **Leader Momentum Breadth:** {mom_b:.0f}%\n")
-            lines.append(f"- **Leader Flow Support:** {flow_b:.0f}%\n")
-            lines.append(f"- **Leader Wyckoff Health:** {wyck_b:.0f}%\n")
-            lines.append("  - *Scoring Wyckoff: MARKUP=1.0, ACCUMULATION=0.75, RANGE=0.0, DISTRIBUTION=-0.75, MARKDOWN=-1.0*\n")
-            lines.append(f"- **Leader Health Composite (sin ajustar):** {comp:.0f}% ")
-            lines.append(f"({SLPM_WEIGHTS['leader_breadth']['rs']:.2f}xRS + {SLPM_WEIGHTS['leader_breadth']['momentum']:.2f}xMom + {SLPM_WEIGHTS['leader_breadth']['flow']:.2f}xFlow + {SLPM_WEIGHTS['leader_breadth']['wyckoff']:.2f}xWyckoff)\n")
-            lines.append(f"- **Effective Breadth:** {effective:.0f}% (Health Composite: {comp:.0f}%, Cobertura: {coverage:.0f}%) — Regla: si cobertura >= 50% no se aplica penalización\n")
-            lines.append(f"  - N analizado: {n}/{total}\n")
-            lines.append("  - *Nota: Effective Breadth = Health Composite (sin ajuste cuando cobertura >= 50%). La penalización por cobertura solo se aplica cuando la cobertura es inferior al 50%. La calidad observada (Health Composite) es independiente de la cobertura.*\n")
-        
-        integrity = slpm_v12_data.get('leader_integrity', {})
-        if integrity:
-            lis = integrity.get('lis', 0)
-            n_leaders = integrity.get('n_leaders', 0)
-            lines.append("\n### Leader Integrity Score (LIS)\n")
-            lines.append(f"- **LIS:** {lis:+.2f} (n={n_leaders})\n")
-            lines.append(f"- *Formula: LIS_individual = {SLPM_WEIGHTS['lis']['rs']:.2f}*tanh((RS-1)*2) + {SLPM_WEIGHTS['lis']['momentum']:.2f}*tanh(RS_mom*5) + {SLPM_WEIGHTS['lis']['flow']:.2f}*tanh(flow_proxy_z/2) + {SLPM_WEIGHTS['lis']['wyckoff']:.2f}*Wyckoff_score. LIS = media.*\n")
-            lines.append("- *LIS mide la intensidad/calidad de la señal de los lideres, no el % que cumple condiciones (eso es el Breadth).*\n")
-        
-        flow_div = slpm_v12_data.get('flow_divergence_v2', {})
-        if flow_div:
-            lines.append("\n### Flow Divergence 2.0\n")
-            lines.append(f"- **Composite:** {_fmt_num(flow_div.get('composite'), '{:+.3f}')}\n")
-            lines.append(f"  - Leader vs Sector: {_fmt_num(flow_div.get('leader_flow_div'), '{:+.3f}')}\n")
-            lines.append(f"  - Sector Flow vs Price: {_fmt_num(flow_div.get('sector_flow_vs_price_div'), '{:+.3f}')}\n")
-            lines.append(f"  - Structural: {_fmt_num(flow_div.get('structural_flow_div'), '{:+.3f}')}\n")
-            lines.append("- *Nota: Flujo medido como Flow Proxy (retorno x volumen). No implica flujo institucional real.*\n")
-        lines.append("\n")
+    # =========================================================================
+    # SLPM v1.2
+    # =========================================================================
+    lines.extend(render_slpm_v12(slpm_v12_data))
 
     # =========================================================================
     # LEGACY SLPM v1.0
     # =========================================================================
-    if slpm_data:
-        lines.append("<details>\n<summary><b>Legacy SLPM v1.0 (referencia historica)</b></summary>\n\n")
-        state = slpm_data.get('state', 'N/A')
-        lines.append(f"- **Sector Líder:** {slpm_data.get('sector', 'N/A')} ({slpm_data.get('sector_etf', '')})\n")
-        lines.append(f"- **Estado:** {state}\n")
-        lines.append(f"- **Structural RS:** {slpm_data.get('struct_rs', 0):+.3f}\n")
-        lines.append(f"- **Leader Breadth:** {slpm_data.get('leader_breadth', 0)*100:.0f}%\n")
-        lines.append(f"- **Flow Divergence:** {slpm_data.get('flow_divergence', 0):+.3f}\n")
-        lines.append(f"- **Tactical Score (legacy):** {slpm_data.get('tactical_score', 0):+.3f}\n")
-        lines.append(f"- **Structural Score (legacy):** {slpm_data.get('structural_score', 0):+.3f}\n")
-        lines.append("\n</details>\n\n")
+    lines.extend(render_slpm_legacy(slpm_data))
 
-    if leader_lines:
-        lines.append("\n## Acciones Seleccionadas por el Modelo de Liderazgo Sectorial\n")
-        lines.append("> Solo se muestran sectores en fase ACCUMULATION o MARKUP. El resto se omiten por no cumplir criterios de liderazgo estructural.\n\n")
-        lines.extend(leader_lines)
-    else:
-        lines.append("\n## Acciones Seleccionadas por el Modelo de Liderazgo Sectorial\n")
-        lines.append("*No disponibles: ningun sector en fase de acumulación.*\n")
+    # =========================================================================
+    # ACCIONES SELECCIONADAS
+    # =========================================================================
+    lines.extend(render_acciones_seleccionadas(leader_lines))
 
     # =========================================================================
     # OMS v2.0

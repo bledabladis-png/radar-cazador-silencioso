@@ -110,3 +110,20 @@ def render_structural_ranking(structural_scores, tactical_scores,
         out.append(f"| {i} | {name} ({ticker}) | {s_score:+.2f} | {t_score:+.2f} | {pers_str} | {agree_display} | {struct_conf:.0%} |\n")
     out.append("\n")
     return out
+
+
+def render_acciones_seleccionadas(leader_lines):
+    """Renderiza la seccion Acciones Seleccionadas por el Modelo.
+
+    Devuelve lista de lineas markdown. Sin side effects.
+    """
+    out = []
+    if leader_lines:
+        out.append("\n## Acciones Seleccionadas por el Modelo de Liderazgo Sectorial\n")
+        out.append("> Solo se muestran sectores en fase ACCUMULATION o MARKUP. El resto se omiten por no cumplir criterios de liderazgo estructural.\n\n")
+        out.extend(leader_lines)
+    else:
+        out.append("\n## Acciones Seleccionadas por el Modelo de Liderazgo Sectorial\n")
+        out.append("*No disponibles: ningun sector en fase de acumulación.*\n")
+
+    return out
