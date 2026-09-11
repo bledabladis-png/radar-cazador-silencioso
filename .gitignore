@@ -1,4 +1,4 @@
-﻿__pycache__/
+__pycache__/
 *.pyc
 .pytest_cache/
 .env
@@ -37,3 +37,11 @@ data/fund_data/
 
 data/stock_prices_historical.csv
 data/invesco/
+
+# Scripts temporales de patch/analisis (no versionar)
+_patch_*.py
+_norm_*.py
+_d1_*.py
+_d2_*.py
+_d3_*.py
+_deepdive_*.py
