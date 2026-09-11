@@ -3,7 +3,6 @@ import os
 from datetime import datetime
 from config.tickers import SECTOR_NAMES
 from config.index_tickers import INDEX_CONFIG
-from config.settings import ETF_PRIMARY_FLOW_ZSCORE_WINDOW
 from src.report.alerts import render_alerts, render_cross_module
 from src.report.breadth import render_breadth_market
 from src.report.freshness import render_data_freshness
@@ -23,6 +22,11 @@ from src.report.rankings import (
     render_rankings_sectoriales,
     render_persistencia,
     render_opportunity_map,
+)
+from src.report.etf_flows import (
+    render_flujo_spdr,
+    render_flujo_caracteristicas,
+    render_divergencia_precio_flujo,
 )
 from src.report.sentiment import render_sentimiento_opciones
 from src.report.slpm import render_slpm_v12, render_slpm_legacy
@@ -164,44 +168,11 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
     lines.extend(render_sentimiento_opciones(pcr_data))
 
     # =========================================================================
-    # ETF PRIMARY FLOW (SPDR)
+    # ETF PRIMARY FLOW (SPDR) + CARACTERISTICAS + DIVERGENCIA
     # =========================================================================
-    if etf_primary_flow_data is not None and not etf_primary_flow_data.empty:
-        lines.append("## Flujo Primario ETF (SPDR)\n")
-        lines.append("| Ticker | NAV | Shares Outstanding | Total Net Assets | Primary Flow $ | Flow % AUM | Flow Z |\n")
-        lines.append("|--------|-----|---------------------|------------------|----------------|------------|--------|\n")
-        for _, row in etf_primary_flow_data.iterrows():
-            lines.append(f"| {row['ticker']} | {row['nav']:.2f} | {row['shares_outstanding']:,.0f} | {row['total_net_assets']:,.0f} | {row['primary_flow_usd']:+,.2f} | {row['primary_flow_pct']:+.2f}% | {row['primary_flow_z']:+.2f} |\n")
-        lines.append(f"\n*Fuente: State Street Global Advisors (SSGA). ETF Primary Flow = ΔShares Outstanding × NAV. Z-score sobre {ETF_PRIMARY_FLOW_ZSCORE_WINDOW} sesiones.*\n\n")
-
-    # =========================================================================
-    # =========================================================================
-    # SECTOR FLOW CHARACTERISTICS
-    # =========================================================================
-    if sector_flow_characteristics_data is not None and not sector_flow_characteristics_data.empty:
-        latest_date = pd.to_datetime(sector_flow_characteristics_data['date']).max()
-        flow_latest = sector_flow_characteristics_data[pd.to_datetime(sector_flow_characteristics_data['date']) == latest_date]
-        lines.append("## Flujo Primario ETF — Características\n")
-        lines.append("| Sector | Flujo $ | % AUM | Z | 5d Acum | 20d Acum | Pers 5d | Pers 20d | Ret 20d | Régimen |\n")
-        lines.append("|--------|---------|-------|----|---------|----------|---------|----------|---------|----------|\n")
-        for _, row in flow_latest.iterrows():
-            regime = row.get('price_flow_regime', None)
-            regime_str = regime if pd.notna(regime) else 'N/D'
-            lines.append(f"| {row['sector']} | {_fmt_num(row['flow_dollar'], '{:+,.2f}')} | {_fmt_num(row['flow_pct_aum'], '{:.2f}%')} | {_fmt_num(row['flow_zscore'], '{:.2f}')} | {_fmt_num(row['flow_5d_sum'], '{:+,.2f}')} | {_fmt_num(row['flow_20d_sum'], '{:+,.2f}')} | {_fmt_num(row['persistence_5d'], '{:.0%}')} | {_fmt_num(row['persistence_20d'], '{:.0%}')} | {_fmt_num(row['price_ret_20d'], '{:.2%}')} | {regime_str} |\n")
-        lines.append("\n")
-
-    # =========================================================================
-    # DIVERGENCIA PRECIO-FLUJO PRIMARIO
-    # =========================================================================
-    if sector_flow_characteristics_data is not None and not sector_flow_characteristics_data.empty:
-        sector_flow_characteristics_data = sector_flow_characteristics_data[pd.to_datetime(sector_flow_characteristics_data['date']) == pd.to_datetime(sector_flow_characteristics_data['date']).max()]
-        lines.append("## Divergencia Precio–Flujo Primario\n")
-        lines.append("| Sector | Ret 5d | Flujo 5d | Régimen 5d | Ret 20d | Flujo 20d | Régimen 20d |\n")
-        lines.append("|--------|--------|----------|------------|---------|-----------|-------------|\n")
-        for _, row in sector_flow_characteristics_data.iterrows():
-            lines.append(f"| {row['sector']} | {row['price_ret_5d']:.2%} | {row['flow_5d_sum']:+,.0f} | {row['price_flow_regime_5d']} | {row['price_ret_20d']:.2%} | {row['flow_20d_sum']:+,.0f} | {row['price_flow_regime_20d']} |\n")
-        lines.append("\n")
-        lines.append("*«Absorción potencial» describe una configuración de retorno negativo del precio acompañada de flujo primario acumulado positivo. Puede ser compatible con absorción, pero no confirma por sí sola absorción institucional ni establece causalidad.*\n\n")
+    lines.extend(render_flujo_spdr(etf_primary_flow_data))
+    lines.extend(render_flujo_caracteristicas(sector_flow_characteristics_data))
+    lines.extend(render_divergencia_precio_flujo(sector_flow_characteristics_data))
 
     # =========================================================================
     # LIDERAZGO RELATIVO INTERNO
