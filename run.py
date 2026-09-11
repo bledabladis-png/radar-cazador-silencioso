@@ -4,7 +4,6 @@ Macro Sectorial v4.3 -- Sistema de analisis macro y rotacion sectorial.
 Fases 1-4 + Correccion 0.5 + P1 + P2 + Mejoras 16-20.
 """
 import pandas as pd
-import numpy as np
 import os
 import sys
 from pathlib import Path
@@ -24,7 +23,7 @@ from src.pipeline.diagnostics import compute_diagnostics
 from src.pipeline.market_data import compute_market_data
 from src.pipeline.mte_confirmation import compute_mte_confirmation
 from src.pipeline.indices_intl import compute_indices_intl
-from src.dependency_tracker import audit_double_counting
+from src.pipeline.validation_gate import run_validation_gate
 from config.tickers import validate_sector_universe
 
 def main():
@@ -153,170 +152,13 @@ def main():
     index_phases = ii['index_phases']
     index_leaders = ii['index_leaders']
 
-    # =====================================================================
-    # VALIDATION GATE
-    # =====================================================================
-    print("Ejecutando Validation Gate...")
-    validation_errors = []
-    validation_checks = []
-
-    def add_check(nombre, ok=True, detalle=""):
-        if ok:
-            validation_checks.append(f"{nombre}: OK {detalle}".strip())
-        else:
-            validation_errors.append(f"{nombre}: {detalle}".strip())
-
-    # 1. SLPM v1.2
-    if slpm_v12_data:
-        slpm_errors = slpm_v12_data.get('validation_errors', [])
-        if slpm_errors:
-            validation_errors.extend(slpm_errors)
-        add_check("SLPM v1.2", True, "estado validado")
-    else:
-        add_check("SLPM v1.2", True, "no disponible")
-
-    # 2. PCR Total
-    if pcr_data:
-        val = pcr_data.get('total_pcr', np.nan)
-        if val is None or (isinstance(val, float) and np.isnan(val)):
-            add_check("PCR Total", False, "NaN")
-        else:
-            add_check("PCR Total", True, f"{val:.2f}")
-    else:
-        add_check("PCR Total", True, "sin datos")
-
-    # 3. Dark Pool medio
-    if darkpool_data:
-        val = darkpool_data.get('media_dark_pool', np.nan)
-        if val is None or (isinstance(val, float) and np.isnan(val)):
-            add_check("Dark Pool medio", False, "NaN")
-        else:
-            add_check("Dark Pool medio", True, f"{val:.2f}")
-    else:
-        add_check("Dark Pool medio", True, "sin datos")
-
-    # 4. MTE (MSI/IPI)
-    if mte_result:
-        msi = mte_result.get('msi', np.nan)
-        ipi = mte_result.get('ipi', np.nan)
-        if (msi is None or (isinstance(msi, float) and np.isnan(msi)) or
-            ipi is None or (isinstance(ipi, float) and np.isnan(ipi))):
-            add_check("MTE", False, "NaN en MSI/IPI")
-        else:
-            add_check("MTE", True, f"MSI={msi:.2f}, IPI={ipi:.2f}")
-    else:
-        add_check("MTE", True, "sin datos")
-
-    # 5. Rangos tácticos/estructurales
-    if tactical_scores and structural_scores:
-        sectors_checked = 0
-        for ticker in tactical_scores:
-            if ticker in structural_scores:
-                t = tactical_scores[ticker]
-                s = structural_scores[ticker]
-                if abs(t) > 1.0:
-                    validation_errors.append(f"{ticker}: Tactical Score fuera de rango ({t:+.2f}).")
-                if abs(s) > 1.0:
-                    validation_errors.append(f"{ticker}: Structural Score fuera de rango ({s:+.2f}).")
-                sectors_checked += 1
-        add_check("Rangos tácticos/estructurales", True, f"{sectors_checked} sectores")
-    else:
-        add_check("Rangos tácticos/estructurales", True, "sin datos")
-
-    # 6. Opportunity Map
-    if slpm_v12_data and tactical_scores and structural_scores:
-        leader_etf = slpm_v12_data.get('sector_etf', '')
-        if leader_etf and leader_etf in tactical_scores:
-            slpm_quadrant = slpm_v12_data.get('opportunity_quadrant', '')
-            if slpm_v12_data.get('state') == 'UNRESOLVED' and slpm_quadrant != 'Transition':
-                add_check("Opportunity Map", False, f"inconsistente {slpm_quadrant}")
-            else:
-                add_check("Opportunity Map", True, f"{slpm_v12_data.get('sector', '')} -> {slpm_quadrant}")
-        else:
-            add_check("Opportunity Map", True, "sin leader_etf")
-    else:
-        add_check("Opportunity Map", True, "sin datos")
-
-    # 7. Data Freshness Dark Pool
-    if darkpool_data:
-        week = darkpool_data.get('week', '')
-        if week:
-            try:
-                d = pd.Timestamp(week)
-                age = (datetime.now() - d).days
-                if age > 14:
-                    add_check("Freshness Dark Pool", True, f"obsoleto {age} dias (advertencia)")
-                else:
-                    add_check("Freshness Dark Pool", True, f"{age} dias")
-            except:
-                add_check("Freshness Dark Pool", True, "sin fecha")
-        else:
-            add_check("Freshness Dark Pool", True, "sin fecha")
-    else:
-        add_check("Freshness Dark Pool", True, "sin datos")
-
-    # 8. Data Freshness PCR
-    if pcr_data:
-        last_date = pcr_data.get('last_date', '')
-        if last_date and last_date != 'N/A':
-            try:
-                d = pd.Timestamp(last_date)
-                age = (datetime.now() - d).days
-                if age > 5:
-                    add_check("Freshness PCR", True, f"desactualizado {age} dias (advertencia)")
-                else:
-                    add_check("Freshness PCR", True, f"{age} dias")
-            except:
-                add_check("Freshness PCR", True, "sin fecha")
-        else:
-            add_check("Freshness PCR", True, "sin fecha")
-    else:
-        add_check("Freshness PCR", True, "sin datos")
-
-    # 9. Configuración de pesos
-    try:
-        from config.weights import validate_weights
-        validate_weights()
-        add_check("Config pesos", True, "validados")
-    except Exception as e:
-        add_check("Config pesos", False, str(e))
-
-    # 10. Anti-Double-Counting
-    try:
-        import inspect
-        from indicators.state_machine import classify_leadership_state
-        sig = inspect.signature(classify_leadership_state)
-        lis_in_state_machine = 'lis' in sig.parameters
-
-        dc_audit = audit_double_counting()
-        critical_vars = len(dc_audit.get('critical', []))
-        high_vars = len(dc_audit.get('high', []))
-
-        if lis_in_state_machine:
-            add_check("Anti-Double-Counting", False, "LIS aún en State Machine")
-        elif critical_vars > 0:
-            add_check("Anti-Double-Counting", True, f"corrección LIS activa, {critical_vars} criticas, {high_vars} altas")
-        else:
-            add_check("Anti-Double-Counting", True, f"corrección LIS activa, sin criticas, {high_vars} compartidas")
-    except Exception as e:
-        add_check("Anti-Double-Counting", False, str(e))
-
-
-    if validation_errors:
-        print(f"    VALIDATION GATE: {len(validation_errors)} errores, {len(validation_checks)} comprobaciones")
-        for err in validation_errors:
-            print(f"      {err}")
+    vg = run_validation_gate(
+        slpm_v12_data, pcr_data, darkpool_data, mte_result,
+        tactical_scores, structural_scores,
+    )
+    if not vg['passed']:
         sys.exit(1)
-    else:
-        print(f"    VALIDATION GATE: Sin errores ({len(validation_checks)} comprobaciones OK)")
-
-    # Generar resumen de double-counting para el reporte
-    dc_summary = ""
-    try:
-        dc_audit = audit_double_counting()
-        dc_summary = dc_audit.get('summary', '')
-    except Exception as e:
-        print(f"  [WARN] audit_double_counting: {e}")
+    dc_summary = vg['dc_summary']
 
     # --- Matriz de Régimen Sectorial v1.0 (descriptiva) ---
     try:
