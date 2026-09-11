@@ -92,4 +92,32 @@ Reconsiderar si:
 
 ---
 
+## 7. Fallback de los tickers .L ante fallo de Yahoo
+
+**Decision:** WONT FIX. No se implementa fallback adicional.
+
+**Justificacion:**
+
+Yahoo provider ya implementa retry con backoff exponencial
+(data/providers/yahoo.py):
+- 3 intentos por lote.
+- Backoff: base^attempt + jitter (esperas de 2s, 4s, 8s).
+- RuntimeError explicito si los 3 intentos fallan.
+
+El fallo por ticker se clasifica y reporta explicitamente
+(src/stock_data_loader.py:90): OK / PARTIAL / STALE / FAILED.
+Los FAILED se acumulan en failed_tickers y se loguean sin silencio.
+
+Coherencia con europeos: los 20 tickers .L reciben exactamente el
+mismo tratamiento que cualquier ticker Yahoo. Los 51 europeos con
+provider oficial usan Opcion A estricta (sin fallback a Yahoo si
+falla). Aplicar lo mismo a los .L es consistente.
+
+Cache stale como fallback: rechazado. Rompe la filosofia del sistema
+("Datos reales: si no hay suficiente -> N/D u omitir. No imputar.").
+Un reporte con datos viejos mezclados con frescos es peor que un
+hueco honesto.
+
+---
+
 *Documentado el 2026-09-11 por auditoria tecnica.*
