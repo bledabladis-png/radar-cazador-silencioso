@@ -28,6 +28,13 @@ from src.report.etf_flows import (
     render_flujo_caracteristicas,
     render_divergencia_precio_flujo,
 )
+from src.report.market_context import (
+    render_liderazgo_interno,
+    render_rotacion_reciente,
+    render_dispersion_sectores,
+    render_correlacion_sectores,
+    render_contexto_cross_asset,
+)
 from src.report.sentiment import render_sentimiento_opciones
 from src.report.slpm import render_slpm_v12, render_slpm_legacy
 from src.report.header import render_regimenes
@@ -175,75 +182,14 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
     lines.extend(render_divergencia_precio_flujo(sector_flow_characteristics_data))
 
     # =========================================================================
-    # LIDERAZGO RELATIVO INTERNO
+    # CONTEXTO DE MERCADO (liderazgo, rotacion, dispersion, correlacion, cross-asset)
     # =========================================================================
-    if rs_internal_data is not None and not rs_internal_data.empty:
-        rs_internal_data = rs_internal_data[pd.to_datetime(rs_internal_data['date']) == pd.to_datetime(rs_internal_data['date']).max()]
-        top_tickers = set()
-        for sector in rs_internal_data['sector'].unique():
-            top = rs_internal_data[rs_internal_data['sector'] == sector].nlargest(5, 'price_ret_20d')['ticker']
-            top_tickers.update(top)
-        report_df = rs_internal_data[rs_internal_data['ticker'].isin(top_tickers)]
-        lines.append("## Liderazgo relativo interno\n")
-        lines.append("| Sector | Ticker | vs mercado 20d | vs sector 20d | Clasificación |\n")
-        lines.append("|--------|--------|----------------|---------------|----------------|\n")
-        for _, row in report_df.iterrows():
-            lines.append(f"| {row['sector']} | {row['ticker']} | {row['rs_abs_20d']:.2%} | {row['rs_internal_20d']:.2%} | {row['classification']} |\n")
-        lines.append("\n")
+    lines.extend(render_liderazgo_interno(rs_internal_data))
+    lines.extend(render_rotacion_reciente(sector_rank_deltas_data))
+    lines.extend(render_dispersion_sectores(sector_dispersion_data))
+    lines.extend(render_correlacion_sectores(sector_correlation_summary_data))
+    lines.extend(render_contexto_cross_asset(cross_asset_context_data))
 
-    # =========================================================================
-    # ROTACIÓN SECTORIAL RECIENTE
-    # =========================================================================
-    if sector_rank_deltas_data is not None and not sector_rank_deltas_data.empty:
-        lines.append("## Rotación sectorial reciente\n")
-        lines.append("| Sector | Rank actual | Δ5d | Δ10d | Δ20d | Lectura 5d | Lectura 10d | Lectura 20d |\n")
-        lines.append("|--------|-------------|-----|------|------|------------|-------------|-------------|\n")
-        for _, row in sector_rank_deltas_data.iterrows():
-            lines.append(f"| {row['sector']} | {row['rank_actual']} | {row['rank_change_5d']:+.0f} | {row['rank_change_10d']:+.0f} | {row['rank_change_20d']:+.0f} | {row['lectura_5d']} | {row['lectura_10d']} | {row['lectura_20d']} |\n")
-        lines.append("\n")
-
-    # =========================================================================
-    # DISPERSIÓN ENTRE SECTORES
-    if sector_dispersion_data is not None and not sector_dispersion_data.empty:
-        lines.append("## Dispersión entre sectores\n")
-        lines.append("| Fecha | Rango (pp) | Desv (pp) | Media (pp) | Lectura | Heterogeneidad |\n")
-        lines.append("|-------|------------|-----------|------------|---------|----------------|\n")
-        for _, row in sector_dispersion_data.iterrows():
-            date_str = pd.Timestamp(row['date']).strftime('%Y-%m-%d') if pd.notna(row['date']) else 'N/D'
-            lines.append(f"| {date_str} | {row['range_pp']:.2f} | {row['std_pp']:.2f} | {row['mean_ret']:.2f} | {row['dispersion_reading']} | {row['heterogeneity_type']} |\n")
-        lines.append("\n")
-        lines.append("*La dispersión mide la separación entre los retornos de los 11 sectores. No es un score ni una señal.*\n\n")
-
-    # CORRELACIÓN ENTRE SECTORES
-    if sector_correlation_summary_data is not None and not sector_correlation_summary_data.empty:
-        sector_correlation_summary_data = sector_correlation_summary_data[pd.to_datetime(sector_correlation_summary_data['date']) == pd.to_datetime(sector_correlation_summary_data['date']).max()]
-        lines.append("## Correlación entre sectores\n")
-        lines.append("| Ventana | Media | Mediana | P25 | P75 | Mín | Máx | Lectura |\n")
-        lines.append("|---------|-------|---------|-----|-----|-----|-----|---------|\n")
-        for _, row in sector_correlation_summary_data.iterrows():
-            lines.append(f"| {int(row['window'])}d | {row['corr_mean']:.2f} | {row['corr_median']:.2f} | {row['corr_p25']:.2f} | {row['corr_p75']:.2f} | {row['corr_min']:.2f} | {row['corr_max']:.2f} | {row['correlation_reading']} |\n")
-        lines.append("\n")
-        lines.append("*La correlación mide el co-movimiento entre retornos sectoriales. No es un score ni una señal.*\n\n")
-
-    # CONTEXTO CROSS-ASSET
-    if cross_asset_context_data is not None and not cross_asset_context_data.empty:
-        lines.append("## Contexto transversal de mercado\n")
-        lines.append("| Sector | Ventana | Equity | Rates | Crédito | Commodities | FX | VIX |\n")
-        lines.append("|--------|---------|--------|-------|---------|-------------|----|-----|\n")
-        # Pivotar: para cada sector y ventana, extraer mean_corr por asset_class
-        grouped = cross_asset_context_data.groupby(['sector','window','asset_class'])['mean_corr'].first().unstack()
-        for (sector, window), row in grouped.iterrows():
-            equity = row.get('equity', None)
-            rates = row.get('rates', None)
-            credit = row.get('credit', None)
-            commodities = row.get('commodities', None)
-            fx = row.get('fx', None)
-            volatility = row.get('volatility', None)
-            def _fmt(v):
-                return f"{v:.2f}" if pd.notna(v) else "N/D"
-            lines.append(f"| {sector} | {int(window)}d | {_fmt(equity)} | {_fmt(rates)} | {_fmt(credit)} | {_fmt(commodities)} | {_fmt(fx)} | {_fmt(volatility)} |\n")
-        lines.append("\n")
-        lines.append("*Contexto descriptivo basado en correlaciones sector-activo transversal. No implica confirmación ni causalidad.*\n\n")
 
     # MATRIZ DE RÉGIMEN SECTORIAL
     # =========================================================================
