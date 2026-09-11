@@ -45,3 +45,7 @@ _d1_*.py
 _d2_*.py
 _d3_*.py
 _deepdive_*.py
+
+# Snapshots temporales de refactor (no versionar)
+_snapshot_*.md
+*.orig
