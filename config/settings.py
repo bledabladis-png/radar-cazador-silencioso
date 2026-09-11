@@ -200,3 +200,10 @@ DARKPOOL_THRESHOLDS = {
 
 CACHE_MARKET_PATH = 'data/market_data.csv'
 CACHE_STOCKS_PATH = 'data/stock_prices.csv'
+
+# ============================================================
+# SELECCION DE LIDERES (C18)
+# ============================================================
+
+TOP_N_CANDIDATES = 15   # pre-filtro por weight antes del WLS
+TOP_N_LEADERS = 5       # cuantos se muestran en el reporte

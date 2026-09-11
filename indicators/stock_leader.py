@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 from indicators.wyckoff import wyckoff_score, classify_wyckoff_phase, detect_spring, detect_sos
 from src.utils import robust_zscore, get_col
+from config.settings import TOP_N_CANDIDATES, TOP_N_LEADERS
 
 def compute_stock_metrics(df_market, df_stocks, etf_ticker, stock_list):
     results = []
@@ -149,7 +150,10 @@ def generate_leader_section(df_market, df_stocks, holdings_df, fase_dict,
     for sector in ['XLK','XLF','XLV','XLE','XLY','XLP','XLI','XLB','XLU','XLRE','XLC']:
         fase = fase_dict.get(sector, 'NEUTRAL')
         oper = operabilidad_dict.get(sector, 'NO OPERAR')
-        stocks = holdings_df[holdings_df['etf'] == sector]['ticker'].tolist()
+        sector_holdings = holdings_df[holdings_df['etf'] == sector].copy()
+        if 'weight' in sector_holdings.columns:
+            sector_holdings = sector_holdings.sort_values('weight', ascending=False)
+        stocks = sector_holdings.head(TOP_N_CANDIDATES)['ticker'].tolist()
         if not stocks:
             continue
         metrics_df = compute_stock_metrics(df_market, df_stocks, sector, stocks)
@@ -163,12 +167,12 @@ def generate_leader_section(df_market, df_stocks, holdings_df, fase_dict,
 
         if fase not in VALID_FASES or oper not in VALID_OPER:
             continue
-        leader_data.append(wls_df.head(5))
+        leader_data.append(wls_df.head(TOP_N_LEADERS))
 
         lines.append(f'## Sector: {sector} ({fase})\n')
         lines.append('| Ticker | RS | RS Mom | Flujo (z) | WLS | Fase Wyckoff | Pers 5d | Pers 10d | Pers 20d | Spring | SOS |\n')
         lines.append('|--------|----|--------|-----------|-----|---------------|--------|-----|\n')
-        for _, row in wls_df.head(5).iterrows():
+        for _, row in wls_df.head(TOP_N_LEADERS).iterrows():
             spring_flag = '[v]' if row.get('spring', 0) == 1 else ''
             sos_flag = '[v]' if row.get('sos', 0) == 1 else ''
             lines.append(f"| {row['ticker']} | {row['rs']:.2f} | {row['rs_mom']:.2%} | {row['flow_proxy_z']:.2f} | {row['wls']:.2f} | {row['wyckoff_phase']} | {row['persistence_5d']:.0%} | {row['persistence_10d']:.0%} | {row['persistence_20d']:.0%} | {spring_flag} | {sos_flag} |\n")
