@@ -2,6 +2,7 @@
 # scripts/generate_docs.py - Genera documentacion automatica desde el codigo fuente (v3 - completa)
 import os
 import re
+import subprocess
 import sys
 from datetime import datetime
 
@@ -9,6 +10,21 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 DOCS_DIR = 'docs/automatica'
 SETTINGS_FILE = 'config/settings.py'
+
+
+def _get_doc_timestamp():
+    """Timestamp determinista: fecha del ultimo commit git.
+    Fallback a now() si git no esta disponible (CI sin .git)."""
+    try:
+        out = subprocess.check_output(
+            ['git', 'log', '-1', '--format=%cd', '--date=format:%Y-%m-%d %H:%M'],
+            cwd=os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+            stderr=subprocess.DEVNULL,
+            text=True,
+        ).strip()
+        return out or datetime.now().strftime('%Y-%m-%d %H:%M')
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        return datetime.now().strftime('%Y-%m-%d %H:%M')
 
 def read_file(path):
     with open(path, 'r', encoding='utf-8') as f:
@@ -66,7 +82,7 @@ def generate_readme():
     ]
     lines = [
         '# Radar de Rotacion Sectorial - Documentacion v4.3',
-        f'**Generado automaticamente:** {datetime.now().strftime("%Y-%m-%d %H:%M")}',
+        f'**Generado automaticamente:** {_get_doc_timestamp()}',
         '',
         '## Indice',
         ''
