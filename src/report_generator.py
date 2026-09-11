@@ -120,7 +120,7 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
     liq_conf_str = f'{liq_conf:.0%}' if pd.notna(liq_conf) else 'N/D'
     lines.append(f"- **Cond. Financieras:** {liquidity_regime} (Score: {cond_score_str}, Signal Consistency: {liq_conf_str})\n")
     if liquidity_regime == 'HIGH_STRESS':
-        lines.append("  *Nota: El modulo financiero detecta estres significativo, pero volatilidad y liquidez no confirman un deterioro transversal. No se clasifica como CRISIS sistemica.*\n")
+        lines.append("  *Nota: El módulo financiero detecta estres significativo, pero volatilidad y liquidez no confirman un deterioro transversal. No se clasifica como CRISIS sistemica.*\n")
     
     if real_liquidity_regime is not None:
         lines.append(f"- **Liquidez Real (FRED):** {real_liquidity_regime} (Signal Consistency: {real_liquidity_conf:.0%})\n")
@@ -253,7 +253,7 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
             lines.append(f"**Bloques:** {blocks}\n")
         details = cross_module_conflict.get('details', {})
         if details:
-            lines.append("\n**Detalle por modulo:**\n")
+            lines.append("\n**Detalle por módulo:**\n")
             for mod_name, mod_info in details.items():
                 state = mod_info.get('state', 'N/A')
                 if state is None or str(state) == 'None':
@@ -519,8 +519,8 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
         state_v12 = slpm_v12_data.get('state', 'N/A')
         reason = slpm_v12_data.get('state_reason', '')
         quadrant = slpm_v12_data.get('opportunity_quadrant', 'N/A')
-        lines.append(f"- **Sector Lider:** {sector}\n")
-        lines.append("  - *Nota: El SLPM selecciona al lider combinando Structural, Breadth y Persistence. Tactical y LIS son métricas diagnósticas. No es simplemente el sector con mayor Structural Score.*\n")
+        lines.append(f"- **Sector Líder:** {sector}\n")
+        lines.append("  - *Nota: El SLPM selecciona al líder combinando Structural, Breadth y Persistence. Tactical y LIS son métricas diagnósticas. No es simplemente el sector con mayor Structural Score.*\n")
         lines.append(f"- **Estado:** {state_v12}")
         if quadrant:
             lines.append(f" -> {quadrant}")
@@ -593,7 +593,7 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
     if slpm_data:
         lines.append("<details>\n<summary><b>Legacy SLPM v1.0 (referencia historica)</b></summary>\n\n")
         state = slpm_data.get('state', 'N/A')
-        lines.append(f"- **Sector Lider:** {slpm_data.get('sector', 'N/A')} ({slpm_data.get('sector_etf', '')})\n")
+        lines.append(f"- **Sector Líder:** {slpm_data.get('sector', 'N/A')} ({slpm_data.get('sector_etf', '')})\n")
         lines.append(f"- **Estado:** {state}\n")
         lines.append(f"- **Structural RS:** {slpm_data.get('struct_rs', 0):+.3f}\n")
         lines.append(f"- **Leader Breadth:** {slpm_data.get('leader_breadth', 0)*100:.0f}%\n")
@@ -658,7 +658,7 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
         lines.append("| Ticker | NAV | Shares Outstanding | Total Net Assets | Primary Flow $ | Flow % AUM | Flow Z |\n")
         lines.append("|--------|-----|---------------------|------------------|----------------|------------|--------|\n")
         for _, row in etf_primary_flow_data.iterrows():
-            lines.append(f"| {row['ticker']} | {row['nav']:.2f} | {row['shares_outstanding']:,.0f} | {row['total_net_assets']:,.0f} | {row['primary_flow_usd']:+,.0f} | {row['primary_flow_pct']:+.2f}% | {row['primary_flow_z']:+.2f} |\n")
+            lines.append(f"| {row['ticker']} | {row['nav']:.2f} | {row['shares_outstanding']:,.0f} | {row['total_net_assets']:,.0f} | {row['primary_flow_usd']:+,.2f} | {row['primary_flow_pct']:+.2f}% | {row['primary_flow_z']:+.2f} |\n")
         lines.append(f"\n*Fuente: State Street Global Advisors (SSGA). ETF Primary Flow = ΔShares Outstanding × NAV. Z-score sobre {ETF_PRIMARY_FLOW_ZSCORE_WINDOW} sesiones.*\n\n")
 
     # =========================================================================
@@ -674,7 +674,7 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
         for _, row in flow_latest.iterrows():
             regime = row.get('price_flow_regime', None)
             regime_str = regime if pd.notna(regime) else 'N/D'
-            lines.append(f"| {row['sector']} | {_fmt_num(row['flow_dollar'], '{:+,.0f}')} | {_fmt_num(row['flow_pct_aum'], '{:.2f}%')} | {_fmt_num(row['flow_zscore'], '{:.2f}')} | {_fmt_num(row['flow_5d_sum'], '{:+,.0f}')} | {_fmt_num(row['flow_20d_sum'], '{:+,.0f}')} | {_fmt_num(row['persistence_5d'], '{:.0%}')} | {_fmt_num(row['persistence_20d'], '{:.0%}')} | {_fmt_num(row['price_ret_20d'], '{:.2%}')} | {regime_str} |\n")
+            lines.append(f"| {row['sector']} | {_fmt_num(row['flow_dollar'], '{:+,.2f}')} | {_fmt_num(row['flow_pct_aum'], '{:.2f}%')} | {_fmt_num(row['flow_zscore'], '{:.2f}')} | {_fmt_num(row['flow_5d_sum'], '{:+,.2f}')} | {_fmt_num(row['flow_20d_sum'], '{:+,.2f}')} | {_fmt_num(row['persistence_5d'], '{:.0%}')} | {_fmt_num(row['persistence_20d'], '{:.0%}')} | {_fmt_num(row['price_ret_20d'], '{:.2%}')} | {regime_str} |\n")
         lines.append("\n")
 
     # =========================================================================
@@ -949,7 +949,7 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
         try:
             as_of = qqq_performance_data.iloc[0].get("as_of_date", "")
             if as_of:
-                lines.append(f"*Fecha de calculo (as_of_date): {as_of}*\n")
+                lines.append(f"*Fecha de cálculo (as_of_date): {as_of}*\n")
         except Exception:
             pass
         lines.append("\n*Fuente: Yahoo Finance. Rendimientos calculados desde precios ajustados.*\n\n")

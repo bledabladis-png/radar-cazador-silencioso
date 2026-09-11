@@ -56,7 +56,7 @@ def compute_signal_agreement(signals):
     conviction = compute_signal_conviction(valid, direction)
 
     # Construir display con conviccion
-    display = f"{agreement:.0%} {direction} (Conv: {conviction:+.2f})"
+    display = f"{agreement:.0%} {direction} (Conv: {conviction:.2f})"
 
     return {
         'agreement': agreement,

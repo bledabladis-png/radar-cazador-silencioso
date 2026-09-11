@@ -18,11 +18,11 @@ def compute_vol_metrics(df_market):
         returns = spy_close.pct_change(fill_method=None)
         
         # Realized Volatility (21 sesiones, corregido)
-        rv_21 = returns.rolling(21).std() * np.sqrt(252)
+        rv_21 = returns.rolling(21, min_periods=10).std() * np.sqrt(252)
         result['rv_21d'] = float(rv_21.iloc[-1]) if len(rv_21) > 0 else None
         
         # Realized Volatility (60 sesiones)
-        rv_60 = returns.rolling(60).std() * np.sqrt(252)
+        rv_60 = returns.rolling(60, min_periods=30).std() * np.sqrt(252)
         result['rv_60d'] = float(rv_60.iloc[-1]) if len(rv_60) > 0 else None
         
         # VRP Proxy (VIX - RV21) - Implied-Realized Volatility Spread
