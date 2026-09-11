@@ -434,7 +434,6 @@ SECCION 15 - ESTADO ACTUAL (2026-09-12)
 - D3     - Migrar CSVs a Parquet. Bajo.
 - I6     - Reorganizar validation/ active/ + archive/. Cosmetico.
 - D1     - Reevaluar confidence_from_range. Trigger: 2026-10-11.
-- E1c-rev- README.md en docs/automatica/ no idempotente (datetime.now()).
 - I7     - WONT FIX: scripts/ sin huerfanos reales (inspeccion 2026-09-12).
 - D4     - HECHO (commit post-v6.0).
 
