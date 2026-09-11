@@ -14,6 +14,7 @@ MARKET_TICKERS = {
     'bonds': ['BIL', 'IEF', 'TLT'],
     'credit': ['HYG', 'LQD'],
     'volatility': ['^VIX', '^VIX3M', '^VXN'],
+    'rates': ['^TNX', '^FVX'],
     'currencies': ['DX-Y.NYB', 'EURUSD=X', 'USDJPY=X', 'USDCNY=X'],
     'commodities': ['^SPGSCI', 'GC=F', 'HG=F', 'CL=F', 'BZ=F', 'NG=F'],
     'factors': ['VLUE', 'MTUM', 'QUAL'],
