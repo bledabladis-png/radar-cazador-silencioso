@@ -142,7 +142,7 @@ def download_market_data():
     from src.utils import clean_oil_prices
     data = clean_oil_prices(data)
 
-    data.to_csv(cache_path)
+    # D3 Fase 2c: solo Parquet (CSV ya no se escribe)
     try:
         data.to_parquet(parquet_path)
     except Exception as e:

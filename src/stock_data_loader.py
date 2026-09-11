@@ -344,7 +344,7 @@ def download_stock_prices():
         print(f"  AVISO: {n_dup} columnas duplicadas detectadas, deduplicando (keep=last)")
         data = data.loc[:, ~data.columns.duplicated(keep='last')]
 
-    data.to_csv(cache_path)
+    # D3 Fase 2c: solo Parquet (CSV ya no se escribe)
     try:
         data.to_parquet(parquet_path)
     except Exception as e:
