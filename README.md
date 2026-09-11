@@ -1,28 +1,73 @@
-# Radar de Rotacion Sectorial - Documentacion v4.3
-**Generado automaticamente:** 2026-08-29 06:37
+# Radar de Rotación Sectorial
 
-## Indice
+Sistema determinista y descriptivo de análisis macro-sectorial.
+Sin ML predictivo. Sin señales de trading. Solo diagnóstico.
 
-- [Arquitectura General](01_arquitectura.md): Flujo principal, premisas, estructura de modulos
-- [Configuracion](02_configuracion.md): Parametros, ventanas, umbrales, pesos
-- [Fuentes de Datos](03_fuentes_datos.md): Proveedores, cache, validacion
-- [Regimenes](04_regimenes.md): Financial Conditions, Liquidity, Volatility, Macro, Sector
-- [Motores Tactico y Estructural](05_motores.md): Tactical Engine, Structural Engine
-- [Indicadores: Momentum y Flujo](06_indicadores_momentum.md): momentum.py, trend.py, flow proxy
-- [Indicadores: Breadth](06_indicadores_breadth.md): breadth.py, breadth_equity.py
-- [Indicadores: Wyckoff](06_indicadores_wyckoff.md): wyckoff.py, fases, ATR, estabilidad
-- [Indicadores: SLPM](06_indicadores_slpm.md): slpm_v12.py, state_machine.py, LIS, Breadth
-- [Indicadores: Opciones (OMS)](06_indicadores_opciones.md): options.py, PCR, IHR
-- [Indicadores: Dark Pools](06_indicadores_darkpool.md): darkpool.py, FINRA ATS, Z-Scores
-- [Indicadores: MTE](06_indicadores_mte.md): mte.py, Market Transition Engine
-- [Lideres Sectoriales e Internacionales](07_lideres.md): stock_leader.py, WLS, indices
-- [Generacion del Reporte](08_reporte.md): report_generator.py, estructura del reporte diario
-- [Scripts de Auditoria](09_auditorias.md): validacion, Monte Carlo, ablacion, correlaciones
-- [Flujo Primario ETF](10_flujo_primario_etf.md): ETF Primary Flow desde SSGA, BlackRock, Amundi
-- [CFTC Position Flow](11_cftc_position_flow.md): Posicionamiento semanal de futuros financieros
-- [SEC N-PORT Position Flow](12_sec_nport_positions.md): Flujo posicional institucional trimestral
-- [Proveedores de Respaldo](13_backup_providers.md): Rate limiting, circuit breaker, validación cruzada
-- [Registro de Instrumentos](14_instrument_registry.md): Mapeo canónico de tickers entre proveedores
+## Estado actual
+
+- **Cobertura**: 313/313 tickers (100%)
+- **Validation Gate**: 10/10
+- **Tests**: 64/64 passed
+- **Fuentes europeas**: Euronext (13) + Xetra (19) + BME (19)
+
+## Filosofía
+
+- Determinista, no predictivo.
+- Descriptivo, no prescriptivo.
+- Auditable: cada score es trazable a sus fuentes.
+- Sin datos ficticios: si no hay dato, se omite (N/D).
+- Sin mezcla de capas de flujo.
+
+## Estructura
+
+| Directorio | Contenido |
+|------------|-----------|
+| `config/` | Parámetros, tickers, pesos |
+| `indicators/` | 30+ módulos de indicadores sectoriales |
+| `regimes/` | 5 regímenes macro |
+| `data/providers/` | 28 proveedores (Yahoo, Euronext, Xetra, BME, FRED, SEC...) |
+| `src/` | Orquestador, loaders, report generator |
+| `validation/` | 61 auditorías y validaciones |
+| `tests/` | 22 archivos / 64 tests |
+| `docs/` | Documentación completa |
+| `outputs/` | Reportes, históricos, estado |
+
+## Ejecución
+
+```
+pip install -r requirements.txt
+py run.py
+```
+
+El pipeline:
+
+1. Descarga datos de mercado (Yahoo + Euronext + Xetra + BME).
+2. Calcula regímenes macro (Financial Conditions, Liquidity, Volatility, Macro).
+3. Ejecuta motores táctico y estructural por sector.
+4. Calcula 30+ indicadores (momentum, breadth, wyckoff, MTE, dark pool...).
+5. Genera reporte diario en `outputs/report/reporte_diario.md`.
+
+## Documentación
+
+- [Índice completo](docs/automatica/README.md) - Arquitectura, módulos, fórmulas
+- [Auditorías](docs/auditoria/) - Dictámenes y validaciones externas
+
+## Fuentes de datos
+
+| Fuente | Tickers | Método |
+|--------|:-------:|--------|
+| Yahoo | 262 | yfinance |
+| Euronext | 13 | API AJAX pública (AES-256-CBC) |
+| Xetra | 19 | WebSocket MDS + JWT |
+| BME | 19 | API REST pública (JSON) |
+
+## Reglas de operación
+
+- No mezclar capas de flujo (ETF_PRIMARY_FLOW, CFTC_POSITION_FLOW, SEC_POSITION_FLOW, FLOW_PROXY).
+- No construir superindicadores predictivos.
+- No imputar valores artificiales.
+- Documentar limitaciones descriptivas.
 
 ---
-*Esta documentacion se genera automaticamente desde el codigo fuente. No editar manualmente.*
+
+*Determinista. Descriptivo. Auditable.*
