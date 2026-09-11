@@ -59,8 +59,8 @@ def _generate_coverage_table(pcr_data, darkpool_data, sector_results):
         df = pd.read_csv('outputs/report/analisis_lideres.csv')
         if 'ticker' in df.columns:
             n_acciones = len(df['ticker'].unique())
-    except Exception:
-        pass
+    except Exception as e:
+        print(f"  [WARN] report_generator: analisis_lideres.csv: {e}")
     lines.append(f"| Acciones lideres | {n_acciones} tickers | - |\n")
     if pcr_data and pcr_data.get('last_date'):
         from datetime import datetime
@@ -1256,8 +1256,8 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
                 lectura = last.get('dispersion_reading') or last.get('Lectura')
                 if lectura and isinstance(lectura, str):
                     disp_txt = lectura.lower()
-        except Exception:
-            pass
+        except Exception as e:
+            print(f"  [WARN] report_generator: sector_dispersion_data: {e}")
         resumen.append(f"- **Régimen macro: MIXED** — ROTATIONAL / MIXED — rotación sectorial activa con dispersión {disp_txt}.")
     else:
         resumen.append(f"- **Régimen macro: {macro_regime}**.")

@@ -33,8 +33,8 @@ if os.path.exists(OUTPUT_FILE):
         df_existing = pd.read_csv(OUTPUT_FILE)
         for etf in df_existing['etf'].unique():
             existing[etf] = df_existing[df_existing['etf'] == etf]['ticker'].tolist()
-    except:
-        pass
+    except Exception as e:
+        print(f"  [WARN] update_sector_holdings: existing load: {e}")
 
 all_data = []
 

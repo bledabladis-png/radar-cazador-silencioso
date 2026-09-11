@@ -210,8 +210,8 @@ def main():
                 sub = df_existing[df_existing['etf'] == etf].copy()
                 existing[etf] = sub['ticker'].tolist()
                 existing_full[etf] = sub
-        except:
-            pass
+        except Exception as e:
+            print(f"  [WARN] update_index_holdings: existing load: {e}")
 
     all_data = []
     updated = []

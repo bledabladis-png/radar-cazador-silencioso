@@ -4,7 +4,6 @@ Solo funciones puras, sin mocks ni dependencias externas.
 """
 import pandas as pd
 import numpy as np
-import pytest
 
 from src.report_generator import (
     _fmt_num,
