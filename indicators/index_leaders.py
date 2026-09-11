@@ -5,6 +5,7 @@ from indicators.wyckoff import wyckoff_score, classify_wyckoff_phase, detect_spr
 from src.stock_data_loader import normalize_yahoo_ticker
 from src.utils import robust_zscore, get_col
 from config.index_tickers import INDEX_CONFIG
+from config.settings import TOP_N_CANDIDATES, TOP_N_LEADERS
 from data.providers.router import DataRouter
 
 def compute_stock_metrics_for_index(df_stocks, index_name, stock_list, df_index_data=None):
@@ -21,19 +22,16 @@ def compute_stock_metrics_for_index(df_stocks, index_name, stock_list, df_index_
 
     for ticker in stock_list:
         try:
-            # Si el ticker no está en df_stocks, descargarlo
+            # Fuente unica: df_stocks (ya pasa por cascada europea si aplica).
+            # Los top N candidatos siempre estan entre los top 20 descargados,
+            # por lo que el fallback a Yahoo (que rompia el principio de fuentes
+            # oficiales europeas) es innecesario.
             if df_stocks is not None and ticker in df_stocks.columns.get_level_values(1):
                 close = get_col(df_stocks, ticker, 'Close')
                 volume = get_col(df_stocks, ticker, 'Volume')
             else:
-                try:
-                    single_df = router.get_market_data([ticker], period='5y')
-                    if single_df is None or ticker not in single_df.columns.get_level_values(1):
-                        continue
-                    close = get_col(single_df, ticker, 'Close')
-                    volume = get_col(single_df, ticker, 'Volume')
-                except Exception:
-                    continue
+                print(f'  [INDEX-LEADERS] {ticker} no esta en df_stocks, saltando')
+                continue
         except:
             continue
 
@@ -43,8 +41,12 @@ def compute_stock_metrics_for_index(df_stocks, index_name, stock_list, df_index_
         common_idx = close.index.intersection(price_index.index)
         if len(common_idx) == 0:
             continue
-        rs = close.loc[common_idx] / price_index.loc[common_idx]
-        rs_mom = np.log(rs).diff(20).iloc[-1]
+        rs = (close.loc[common_idx] / price_index.loc[common_idx]).dropna()
+        if rs.empty:
+            print(f'  [INDEX-LEADERS] {ticker} sin datos comunes validos con el indice, saltando')
+            continue
+        rs_last = rs.iloc[-1]
+        rs_mom = np.log(rs).diff(20).iloc[-1] if len(rs) >= 21 else np.nan
 
         ret = close.pct_change(fill_method=None)
         dollar_vol = close * volume
@@ -75,7 +77,7 @@ def compute_stock_metrics_for_index(df_stocks, index_name, stock_list, df_index_
 
         results.append({
             'ticker': ticker,
-            'rs': rs.iloc[-1] if not rs.empty else np.nan,
+            'rs': rs_last,
             'rs_mom': rs_mom,
             'flow_proxy_z': flow_proxy_z,
             'wyckoff_score': wyckoff_sc,
@@ -116,10 +118,9 @@ def select_index_leaders(df_market, df_stocks, index_names, df_index_data=None):
     for nombre in index_names:
         config = INDEX_CONFIG[nombre]
         etf = config['etf_ticker']
-        max_comp = config['max_companies']
 
         sub = holdings[holdings['etf'] == etf].sort_values('weight', ascending=False)
-        tickers = [normalize_yahoo_ticker(t) for t in sub['ticker'].tolist()[:max_comp]]
+        tickers = [normalize_yahoo_ticker(t) for t in sub['ticker'].tolist()[:TOP_N_CANDIDATES]]
         if not tickers:
             continue
 
@@ -128,6 +129,6 @@ def select_index_leaders(df_market, df_stocks, index_names, df_index_data=None):
             continue
 
         wls_df = compute_wls_for_index(metrics)
-        leaders[nombre] = wls_df.head(5)
+        leaders[nombre] = wls_df.head(TOP_N_LEADERS)
 
     return leaders
