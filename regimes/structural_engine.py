@@ -16,7 +16,8 @@ def compute_structural_score(df_market, sector_etf, leader_breadth=0.5, flow_str
     try:
         close_sector = get_col(df_market, sector_etf, 'Close')
         close_bench = get_col(df_market, benchmark, 'Close')
-    except KeyError:
+    except KeyError as e:
+        print(f'  [WARN] structural_engine: columna ausente para {sector_etf}: {e}')
         return 0.0
 
     w = STRUCTURAL_WEIGHTS

@@ -16,7 +16,8 @@ def compute_tactical_score(df_market, sector_etf, benchmark='^GSPC'):
         close_sector = get_col(df_market, sector_etf, 'Close')
         close_bench = get_col(df_market, benchmark, 'Close')
         volume_sector = get_col(df_market, sector_etf, 'Volume')
-    except KeyError:
+    except KeyError as e:
+        print(f'  [WARN] tactical_engine: columna ausente para {sector_etf}: {e}')
         return 0.0
 
     w = TACTICAL_WEIGHTS

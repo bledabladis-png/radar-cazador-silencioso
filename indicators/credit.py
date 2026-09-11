@@ -33,7 +33,8 @@ def credit_risk_signal(df_market):
         hyg = get_col(df_market, 'HYG', 'Close')
         lqd = get_col(df_market, 'LQD', 'Close')
         ief = get_col(df_market, 'IEF', 'Close')
-    except KeyError:
+    except KeyError as e:
+        print(f'  [WARN] credit: columna ausente: {e}')
         return pd.Series(dtype=float)
 
     # Alinear datos y eliminar NaN
