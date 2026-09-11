@@ -7,77 +7,18 @@ from config.tickers import SECTOR_NAMES
 from config.index_tickers import INDEX_CONFIG
 from config.settings import MOMENTUM_PRICE_WINDOW, MOMENTUM_LONG_WINDOW, ETF_PRIMARY_FLOW_ZSCORE_WINDOW, MIN_SECTOR_COVERAGE
 from config.weights import SLPM_WEIGHTS
-def _fmt_num(v, fmt="{:.2f}"):
-    if pd.isna(v):
-        return "N/D"
-    try:
-        return fmt.format(v)
-    except Exception:
-        return str(v)
-
+from src.report.header import render_regimenes
+from src.report.helpers import (
+    _fmt_num,
+    _classify_freshness,
+    _classify_finra_freshness,
+    _classify_fred_freshness,
+    _generate_coverage_table,
+)
 
 MODEL_VERSION = "4.3"
 WEIGHTS_VERSION = "3"
 INDICATORS_VERSION = "2"
-
-def _classify_freshness(age_days, max_current=3, max_recent=7, max_stale=14):
-    if age_days <= max_current:
-        return 'CURRENT'
-    elif age_days <= max_recent:
-        return 'RECENT'
-    elif age_days <= max_stale:
-        return 'STALE'
-    return 'ARCHIVAL'
-
-def _classify_finra_freshness(age_days):
-    """Clasificación de frescura para FINRA Dark Pools.
-    Retraso regulatorio: 2-4 semanas (14-30 días). Umbrales amplios."""
-    if age_days <= 30:
-        return 'CURRENT'
-    elif age_days <= 45:
-        return 'RECENT'
-    elif age_days <= 60:
-        return 'STALE'
-    return 'ARCHIVAL'
-
-
-def _generate_coverage_table(pcr_data, darkpool_data, sector_results):
-    lines = []
-    lines.append("### Cobertura de Datos\n")
-    lines.append("| Fuente | Cobertura | Antigüedad |\n")
-    lines.append("|--------|-----------|------------|\n")
-    sectores_total = 11
-    sectores_validos = sectores_total
-    if sector_results and 'ranking' in sector_results:
-        sectores_validos = len([s for s in sector_results['ranking'] if s[1] is not None])
-    lines.append(f"| Sectores | {sectores_validos}/{sectores_total} ({sectores_validos/sectores_total:.0%}) | - |\n")
-    # Fix C22b: fallback 0 (no 110) cuando no hay CSV. El numero real
-    # viene del CSV que run.py regenera solo si hay sectores favorables.
-    n_acciones = 0
-    try:
-        import pandas as pd
-        df = pd.read_csv('outputs/report/analisis_lideres.csv')
-        if 'ticker' in df.columns:
-            n_acciones = len(df['ticker'].unique())
-    except Exception as e:
-        print(f"  [WARN] report_generator: analisis_lideres.csv: {e}")
-    lines.append(f"| Acciones lideres | {n_acciones} tickers | - |\n")
-    if pcr_data and pcr_data.get('last_date'):
-        from datetime import datetime
-        import pandas as pd
-        pcr_age = (datetime.now() - pd.Timestamp(pcr_data['last_date'])).days
-        lines.append(f"| Opciones (CBOE) | - | {pcr_age} dias |\n")
-    else:
-        lines.append("| Opciones (CBOE) | - | Sin datos |\n")
-    if darkpool_data and darkpool_data.get('week'):
-        from datetime import datetime
-        import pandas as pd
-        dp_age = (datetime.now() - pd.Timestamp(darkpool_data['week'])).days
-        lines.append(f"| Dark Pool (FINRA) | - | {dp_age} dias |\n")
-    else:
-        lines.append("| Dark Pool (FINRA) | - | Sin datos |\n")
-    lines.append("\n")
-    return lines
 
 
 def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score, liquidity_regime, liq_conf,
@@ -95,60 +36,17 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
     lines.append(f"**Modelo:** v{MODEL_VERSION} | Pesos: v{WEIGHTS_VERSION} | Indicadores: v{INDICATORS_VERSION}\n\n")
 
     # =========================================================================
-    # RESUMEN DE REGIMENES
+    # RESUMEN DE REGIMENES (extraido a src/report/header.py, C1-5)
     # =========================================================================
-    lines.append("## Resumen de Regimenes\n")
-    try:
-        score_value = float(macro_score.iloc[-1])
-    except Exception:
-        score_value = float('nan')
-
-    if pd.isna(score_value):
-        score_str = "N/D"
-    else:
-        score_str = f"{score_value:.2f}"
-
-    lines.append(f"- **Macro:** {macro_regime} (Score: {score_str}, Signal Consistency: {macro_conf:.0%})\n")
-    if macro_conf < 0.30:
-        lines.append("  *Signal Consistency baja: señales contradictorias en el entorno actual.*\n")
-    
-    try:
-        cond_score = float(liquidity_score.iloc[-1])
-    except Exception:
-        cond_score = float('nan')
-    cond_score_str = f'{cond_score:.2f}' if pd.notna(cond_score) else 'N/D'
-    liq_conf_str = f'{liq_conf:.0%}' if pd.notna(liq_conf) else 'N/D'
-    lines.append(f"- **Cond. Financieras:** {liquidity_regime} (Score: {cond_score_str}, Signal Consistency: {liq_conf_str})\n")
-    if liquidity_regime == 'HIGH_STRESS':
-        lines.append("  *Nota: El módulo financiero detecta estres significativo, pero volatilidad y liquidez no confirman un deterioro transversal. No se clasifica como CRISIS sistemica.*\n")
-    
-    if real_liquidity_regime is not None:
-        lines.append(f"- **Liquidez Real (FRED):** {real_liquidity_regime} (Signal Consistency: {real_liquidity_conf:.0%})\n")
-    if real_liq_prev is not None:
-        try:
-            delta = float(real_liq_score.iloc[-1]) - float(real_liq_prev)
-            if delta > 0.05:
-                delta_str = "MEJORA"
-            elif delta < -0.05:
-                delta_str = "EMPEORA"
-            else:
-                delta_str = "ESTABLE"
-            lines.append(f"  - *Liquidity Delta (vs ejecución anterior): {delta:+.3f} ({delta_str})*\n")
-        except:
-            pass
-    
-    vol_z = volatility_score.iloc[-1] if hasattr(volatility_score, 'iloc') else volatility_score
-    if vol_conf < 0.05 and abs(vol_z) < 0.1:
-        vol_conf_str = "Señal neutra (sin desviación significativa)"
-    else:
-        vol_conf_str = f"Signal Consistency: {vol_conf:.0%}"
-    vol_z_display = "0.00" if abs(vol_z) < 0.005 else f"{vol_z:.2f}"
-    lines.append(f"- **Volatilidad:** {vol_regime} (Z-Score: {vol_z_display}, {vol_conf_str})\n")
-
     sector_regime = sector_results['regime']
-    lines.append(f"- **Sectores:** {sector_regime}\n")
-    lines.append("*Nota: Signal Consistency mide la consistencia entre señales, no una probabilidad estadistica calibrada. Data Conf mide la frescura y cobertura de los datos.*\n\n")
-
+    lines.extend(render_regimenes(
+        macro_score, macro_regime, macro_conf,
+        liquidity_score, liquidity_regime, liq_conf,
+        volatility_score, vol_regime, vol_conf,
+        real_liquidity_regime, real_liquidity_conf,
+        real_liq_score, real_liq_prev,
+        sector_regime=sector_results['regime'],
+    ))
     # =========================================================================
     # DATA FRESHNESS
     # =========================================================================
@@ -1350,14 +1248,4 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
 
     sector_df = pd.DataFrame(sector_results['ranking'], columns=['ticker', 'name', 'score', 'wyckoff_phase'])
     sector_df.to_csv('outputs/report/sector_rankings.csv', index=False)
-
-
-def _classify_fred_freshness(age_days):
-    if age_days <= 30:
-        return 'CURRENT'
-    elif age_days <= 60:
-        return 'RECENT'
-    elif age_days <= 90:
-        return 'STALE'
-    return 'ARCHIVAL'
 
