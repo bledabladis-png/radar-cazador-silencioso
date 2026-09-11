@@ -20,9 +20,9 @@ from src.pipeline.flows_secondary import compute_flows_secondary
 from src.pipeline.leaders import compute_leaders
 from src.pipeline.sector_metrics import compute_sector_metrics
 from src.pipeline.breadth_metrics import compute_breadth_metrics
+from src.pipeline.engines import compute_engines
 from src.utils import get_col, detect_cross_module_conflict
 from src.dependency_tracker import audit_double_counting
-from indicators.persistence import compute_persistence
 from indicators.signal_agreement import compute_signal_agreement
 from indicators.price_flow_divergence import detect_price_flow_divergence
 from config.tickers import validate_sector_universe
@@ -117,94 +117,12 @@ def main():
     sector_breadth_momentum_df = bm['sector_breadth_momentum_df']
     sector_breadth_df = bm['sector_breadth_df']
 
-    # --- NUEVO: Forzar lideres del sector #1 para el SLPM ---
-    leader_metrics_for_slpm = []
-    top_sector_ticker = sector_results['ranking'][0][0]
-    top_sector_flow = 0.0
-    for t, f in sector_flow_rank + otros_flow_rank:
-        if t == top_sector_ticker:
-            top_sector_flow = f
-            break
-
-    try:
-        if leader_df is not None and not leader_df.empty:
-            top_etf = top_sector_ticker
-            sector1_df = leader_df[leader_df['sector'] == top_etf]
-            for _, row in sector1_df.head(5).iterrows():
-                leader_metrics_for_slpm.append({
-                    'ticker': row['ticker'],
-                    'rs': row['rs'] if pd.notna(row.get('rs')) else None,
-                    'rs_momentum': row['rs_mom'] if pd.notna(row.get('rs_mom')) else None,
-                    'flow_proxy_z': row['flow_proxy_z'] if pd.notna(row.get('flow_proxy_z')) else None,
-                    'wyckoff_phase': row['wyckoff_phase'] if pd.notna(row.get('wyckoff_phase')) else ''
-                })
-            print(f"    Lideres forzados para SLPM ({top_etf}): {len(leader_metrics_for_slpm)} tickers")
-    except Exception as e:
-        print(f"    No se pudieron forzar lideres para SLPM: {e}")
-
-    # --- Tactical & Structural Engines ---
-    tactical_scores = {}
-    structural_scores = {}
-    try:
-        from regimes.tactical_engine import compute_tactical_score
-        from regimes.structural_engine import compute_structural_score
-        for sector_etf in ['XLK','XLF','XLV','XLE','XLY','XLP','XLI','XLB','XLU','XLRE','XLC']:
-            try:
-                tactical_scores[sector_etf] = compute_tactical_score(df_market, sector_etf)
-                structural_scores[sector_etf] = compute_structural_score(df_market, sector_etf)
-            except Exception as e:
-                print(f"  [WARN] tactical/structural engine: {e}")
-                tactical_scores[sector_etf] = 0.0
-                structural_scores[sector_etf] = 0.0
-        print(f"    Tactical/Structural engines calculados para {len(tactical_scores)} sectores.")
-    except Exception as e:
-        print(f"    Tactical/Structural engines omitidos: {e}")
-
-    # --- Persistence ---
-    sector_persistence = {}
-    try:
-        for sector_etf in ['XLK','XLF','XLV','XLE','XLY','XLP','XLI','XLB','XLU','XLRE','XLC']:
-            try:
-                close_sector = get_col(df_market, sector_etf, 'Close')
-                close_spy = get_col(df_market, '^GSPC', 'Close')
-                rs = close_sector / close_spy
-                rs20 = rs.pct_change(20, fill_method=None)
-                pers = compute_persistence(rs20, threshold=0.0, lookback=12)
-                sector_persistence[sector_etf] = pers
-            except Exception as e:
-                print(f"  [WARN] persistence: {e}")
-                sector_persistence[sector_etf] = None
-        print(f"    Persistence calculada para {len(sector_persistence)} sectores.")
-    except Exception as e:
-        print(f"    Persistence omitida: {e}")
-        sector_persistence = {s: None for s in ['XLK','XLF','XLV','XLE','XLY','XLP','XLI','XLB','XLU','XLRE','XLC']}
-
-    # Guardar CSV histórico de persistencia sectorial
-    try:
-        persist_rows = []
-        date_val = pd.Timestamp.now().normalize()
-        for sec, val in sector_persistence.items():
-            persist_rows.append({'date': date_val, 'sector': sec, 'persistence': val})
-        persist_df = pd.DataFrame(persist_rows)
-        p_path = Path('outputs/history/sector_persistence.csv')
-        p_path.parent.mkdir(parents=True, exist_ok=True)
-        if p_path.exists():
-            hist_p = pd.read_csv(p_path, encoding='utf-8')
-            persist_df = append_dedup(hist_p, persist_df, ['date','sector'])
-        persist_df.to_csv(p_path, index=False, encoding='utf-8')
-        print("  Sector Persistence CSV guardado.")
-    except Exception as e:
-        print(f"  Sector Persistence CSV omitido: {e}")
-
-    # --- SLPM v1.1 (legacy) ---
-#     slpm_data = None
-#     try:
-#         from indicators.structural_leadership import evaluate_slpm
-#         slpm_data = evaluate_slpm(df_market, sector_results, leader_metrics_for_slpm, top_sector_flow)
-#         if slpm_data:
-#             print(f"    SLPM v1.1 (legacy): {slpm_data['state']} ({slpm_data['sector']})")
-#     except Exception as e:
-#         print(f"    SLPM v1.1 omitido: {e}")
+    en = compute_engines(df_market, sector_results, sector_flow_rank, otros_flow_rank, leader_df)
+    leader_metrics_for_slpm = en['leader_metrics_for_slpm']
+    top_sector_flow = en['top_sector_flow']
+    tactical_scores = en['tactical_scores']
+    structural_scores = en['structural_scores']
+    sector_persistence = en['sector_persistence']
 
     # --- SLPM v1.2 (State Machine centralizada) ---
     slpm_v12_data = None
