@@ -116,6 +116,6 @@ def compute_advance_decline(df_stocks):
 
         'total_tickers': expected,
 
-        'active_tickers': int(closes.notna().sum(axis=1).iloc[-1]),
+        'active_tickers': active_tickers,
 
     }
