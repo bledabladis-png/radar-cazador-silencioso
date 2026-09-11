@@ -129,7 +129,7 @@ def main():
     # --- Rotación sectorial histórica reciente v1.0 ---
     try:
         from indicators.sector_rank_history import update_rank_history
-        sector_rank_history_df, sector_rank_deltas_df = update_rank_history(
+        _, sector_rank_deltas_df = update_rank_history(
             sector_results, 'outputs/history/sector_rank_history.csv', date=pd.Timestamp.now().normalize()
         )
         if sector_rank_deltas_df is not None and not sector_rank_deltas_df.empty:
@@ -138,10 +138,10 @@ def main():
             srd_path.parent.mkdir(parents=True, exist_ok=True)
             sector_rank_deltas_df.to_csv(srd_path, index=False, encoding='utf-8')
         else:
-            sector_rank_history_df, sector_rank_deltas_df = None, None
+            sector_rank_deltas_df = None
     except Exception as e:
         print(f"  Rotación sectorial omitida: {e}")
-        sector_rank_history_df, sector_rank_deltas_df = None, None
+        sector_rank_deltas_df = None
 
     print("Calculando rankings de precio y flujo...")
     sector_price_rank, sector_flow_rank, otros_price_rank, otros_flow_rank = compute_price_flow_rankings(df_market)
