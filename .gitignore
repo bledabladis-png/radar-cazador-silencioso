@@ -3,7 +3,9 @@ __pycache__/
 .pytest_cache/
 .env
 data/market_data.csv
+data/market_data.parquet
 data/stock_prices.csv
+data/stock_prices.parquet
 *.xls
 *.xlsx
 *.bak
