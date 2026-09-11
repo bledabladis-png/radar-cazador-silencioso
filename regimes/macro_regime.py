@@ -79,7 +79,9 @@ def compute_macro_signals(df_market, df_macro_manual=None, liquidity_score=None,
     # --- Dólar ---
     try:
         dxy = get_col(df_market, 'DX-Y.NYB', 'Close')
-        market_signals['dollar'] = -tanh_normalize(dxy.pct_change(fill_method=None).rolling(20).mean())
+        # Fix C21c: min_periods relajado para tolerar huecos (festivos).
+        dxy_ret = dxy.pct_change(fill_method=None)
+        market_signals['dollar'] = -tanh_normalize(dxy_ret.rolling(20, min_periods=10).mean())
     except KeyError:
         pass
 
