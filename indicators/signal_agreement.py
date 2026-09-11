@@ -67,3 +67,4 @@ def compute_signal_agreement(signals):
         'negative_count': negative,
         'total': total
     }
+

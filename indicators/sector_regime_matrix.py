@@ -100,3 +100,4 @@ def build_sector_regime_matrix(sector_breadth_df, sector_flow_df, sector_results
         })
 
     return pd.DataFrame(rows)
+
