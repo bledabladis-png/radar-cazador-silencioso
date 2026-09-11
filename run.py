@@ -19,13 +19,10 @@ from data.providers.amundi_fund_data import get_amundi_lyxi_primary_flow
 from data.providers.cftc_data import get_cftc_position_flow_data
 from data.providers.retry_utils import retry_call
 from data.providers.qqq_sec_primary_flow import get_qqq_sec_primary_flow
-from regimes.financial_conditions import compute_financial_conditions
-from regimes.liquidity import compute_liquidity_score as compute_real_liquidity
-from regimes.volatility_regime import compute_volatility_regime
-from regimes.macro_regime import compute_macro_regime
 from regimes.sector_regime import compute_sector_scores, compute_price_flow_rankings
 from src.report_generator import generate_daily_report
 from src.pipeline.data_load import load_all_data
+from src.pipeline.regimes import compute_all_regimes
 from src.utils import get_col, detect_cross_module_conflict, trim_to_last_valid_date, trim_to_last_valid_date_for_tickers
 from src.dependency_tracker import audit_double_counting
 from indicators.sector_breadth import compute_sector_breadth
@@ -66,34 +63,21 @@ def main():
     df_market = data['df_market']
     df_macro_manual = data['df_macro_manual']
 
-    print("Calculando regimen de Cond. Financieras...")
-    financial_score, financial_regime, liq_conf = compute_financial_conditions(df_market)
-    print(f"  Cond. Financieras: {financial_regime} (conf: {liq_conf:.0%})")
-
-    print("Calculando liquidez real (FRED)...")
-    result = compute_real_liquidity()
-    if result[0] is not None:
-        real_liq_score, real_liq_regime, real_liq_conf, real_liq_prev = result
-        print(f"  Liquidez real: {real_liq_regime} (conf: {real_liq_conf:.0%})")
-    else:
-        real_liq_score, real_liq_regime, real_liq_conf, real_liq_prev = None, 'N/A', 0.0, None
-        print("  Liquidez real: no disponible (sin datos FRED)")
-    print("Calculando regimen de volatilidad...")
-    try:
-        vix_close = get_col(df_market, '^VIX', 'Close')
-        vix_returns = vix_close.pct_change(fill_method=None)
-    except KeyError:
-        print("  ^VIX no disponible, usando volatilidad plana.")
-        vix_returns = pd.Series(dtype=float)
-
-    vol_score, vol_regime, vol_conf = compute_volatility_regime(vix_returns)
-    print(f"  Volatilidad: {vol_regime} (conf: {vol_conf:.0%})")
-
-    print("Calculando regimen macro...")
-    macro_score, macro_regime, macro_conf, all_signals = compute_macro_regime(
-        df_market, df_macro_manual, financial_score, vol_score
-    )
-    print(f"  Macro: {macro_regime} (conf: {macro_conf:.0%})")
+    regimes = compute_all_regimes(df_market, df_macro_manual)
+    financial_score = regimes['financial_score']
+    financial_regime = regimes['financial_regime']
+    liq_conf = regimes['liq_conf']
+    real_liq_score = regimes['real_liq_score']
+    real_liq_regime = regimes['real_liq_regime']
+    real_liq_conf = regimes['real_liq_conf']
+    real_liq_prev = regimes['real_liq_prev']
+    vol_score = regimes['vol_score']
+    vol_regime = regimes['vol_regime']
+    vol_conf = regimes['vol_conf']
+    macro_score = regimes['macro_score']
+    macro_regime = regimes['macro_regime']
+    macro_conf = regimes['macro_conf']
+    all_signals = regimes['all_signals']
 
     print("Calculando rankings sectoriales...")
     sector_results = compute_sector_scores(df_market)
