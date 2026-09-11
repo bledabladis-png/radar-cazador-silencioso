@@ -54,17 +54,16 @@ def compute_stock_metrics_for_index(df_stocks, index_name, stock_list, df_index_
         flow_proxy_z = robust_zscore(flow_raw, window=60).iloc[-1]
 
         try:
-            source_df = single_df if 'single_df' in locals() else df_stocks
-            wyckoff_sc, _, _, _, _, _, _ = wyckoff_score(source_df, ticker)
+            wyckoff_sc, _, _, _, _, _, _ = wyckoff_score(df_stocks, ticker)
             wyckoff_sc = wyckoff_sc.iloc[-1] if not wyckoff_sc.empty else np.nan
         except Exception:
             wyckoff_sc = np.nan
-        wyckoff_ph = classify_wyckoff_phase(single_df if 'single_df' in locals() else df_stocks, ticker)
+        wyckoff_ph = classify_wyckoff_phase(df_stocks, ticker)
 
         ret_10 = ret.iloc[-10:]
         persistence_10d = (ret_10 > 0).mean() if len(ret_10) > 0 else 0.5
 
-        wyckoff_series = wyckoff_score(single_df if 'single_df' in locals() else df_stocks, ticker)[0]
+        wyckoff_series = wyckoff_score(df_stocks, ticker)[0]
         if len(wyckoff_series) >= 10:
             score_median = wyckoff_series.rolling(10).median().iloc[-1]
             score_mad = wyckoff_series.rolling(10).apply(lambda x: np.median(np.abs(x - np.median(x)))).iloc[-1]
@@ -72,8 +71,8 @@ def compute_stock_metrics_for_index(df_stocks, index_name, stock_list, df_index_
         else:
             stability = 0.0
 
-        spring = detect_spring(single_df if 'single_df' in locals() else df_stocks, ticker).iloc[-1]
-        sos = detect_sos(single_df if 'single_df' in locals() else df_stocks, ticker).iloc[-1]
+        spring = detect_spring(df_stocks, ticker).iloc[-1]
+        sos = detect_sos(df_stocks, ticker).iloc[-1]
 
         results.append({
             'ticker': ticker,
