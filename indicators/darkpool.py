@@ -186,15 +186,15 @@ def compute_darkpool_signals():
 
     volumes = {}
     try:
-        df_market = pd.read_csv('data/market_data.csv', header=[0,1], index_col=0, parse_dates=True)
+        df_market = pd.read_parquet('data/market_data.parquet')
         volumes.update(_get_volume_from_df(df_market, week_start, end_date_str))
-    except:
-        pass
+    except Exception as e:
+        print(f'  [WARN] darkpool: market_data.parquet no disponible: {e}')
     try:
-        df_stocks = pd.read_csv('data/stock_prices.csv', header=[0,1], index_col=0, parse_dates=True)
+        df_stocks = pd.read_parquet('data/stock_prices.parquet')
         volumes.update(_get_volume_from_df(df_stocks, week_start, end_date_str))
-    except:
-        pass
+    except Exception as e:
+        print(f'  [WARN] darkpool: stock_prices.parquet no disponible: {e}')
 
     if not volumes:
         return None
