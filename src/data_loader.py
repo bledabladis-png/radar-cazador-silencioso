@@ -52,16 +52,22 @@ def _ticker_list():
 def download_market_data():
     cache_path = 'data/market_data.csv'
     parquet_path = 'data/market_data.parquet'
+    # D3 Fase 2: elegir cache disponible (parquet o csv, el mas reciente)
+    _candidates = []
+    if os.path.exists(parquet_path):
+        _candidates.append((parquet_path, 'parquet'))
     if os.path.exists(cache_path):
-        mtime = datetime.fromtimestamp(os.path.getmtime(cache_path))
+        _candidates.append((cache_path, 'csv'))
+    if _candidates:
+        _path, _fmt = max(_candidates, key=lambda t: os.path.getmtime(t[0]))
+        mtime = datetime.fromtimestamp(os.path.getmtime(_path))
         if datetime.now() - mtime < timedelta(hours=CACHE_HOURS):
-            # D3 Fase 1: lectura dual (Parquet preferente, CSV fallback)
-            if os.path.exists(parquet_path):
+            if _fmt == 'parquet':
                 try:
-                    return pd.read_parquet(parquet_path)
+                    return pd.read_parquet(_path)
                 except Exception as e:
                     print(f'  [WARN] Error leyendo Parquet: {e}')
-            return pd.read_csv(cache_path, header=[0,1], index_col=0, parse_dates=True)
+            return pd.read_csv(_path, header=[0,1], index_col=0, parse_dates=True)
 
     tickers = _ticker_list()
     router = DataRouter()
