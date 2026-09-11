@@ -268,6 +268,15 @@ def main():
     # Guardar resultado final
     if all_data:
         df_final = pd.concat(all_data, ignore_index=True)
+        # Fix B2 (I13): dedup defensivo antes de escribir.
+        # Cada (etf, ticker) debe aparecer una sola vez.
+        # keep='last': los datos mas recientes ganan (europeos conservados
+        # con nombre/peso + cualquier actualizacion posterior).
+        n_before = len(df_final)
+        df_final = df_final.drop_duplicates(subset=['etf', 'ticker'], keep='last')
+        n_removed = n_before - len(df_final)
+        if n_removed > 0:
+            print(f'  Dedup: {n_removed} filas duplicadas eliminadas (de {n_before})')
         df_final.to_csv(OUTPUT_FILE, index=False)
         print(f'\nArchivo guardado: {OUTPUT_FILE}')
         print(f'Actualizados: {len(updated)} ETFs ({", ".join(updated)})')
