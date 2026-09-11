@@ -1,5 +1,4 @@
 ﻿import pandas as pd
-import numpy as np
 import os
 from datetime import datetime
 from config.tickers import SECTOR_NAMES
@@ -25,6 +24,7 @@ from src.report.rankings import (
     render_persistencia,
     render_opportunity_map,
 )
+from src.report.sentiment import render_sentimiento_opciones
 from src.report.slpm import render_slpm_v12, render_slpm_legacy
 from src.report.header import render_regimenes
 from src.report.helpers import (
@@ -159,44 +159,9 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
     lines.extend(render_acciones_seleccionadas(leader_lines))
 
     # =========================================================================
-    # OMS v2.0
+    # SENTIMIENTO DE OPCIONES (OMS v2.0)
     # =========================================================================
-    if pcr_data:
-        lines.append("## Sentimiento de Opciones\n")
-        lines.append(f"- **PCR Total:** {pcr_data.get('total_pcr', np.nan):.2f} ")
-        ewma_val = pcr_data.get('pcr_ewm', np.nan)
-        if pd.notna(ewma_val):
-            lines.append(f"(EWMA(5): {ewma_val:.2f})\n")
-        else:
-            lines.append("(EWMA(5): N/D - historial insuficiente)\n")
-        if pd.notna(pcr_data.get('z_score')):
-            lines.append(f"- **Robust Z-Score:** {pcr_data['z_score']:.2f}\n")
-            lines.append(f"- **Momentum:** {pcr_data.get('momentum', 0):.2f}\n")
-            lines.append(f"- **Percentil:** {pcr_data.get('percentile', 0):.0f}%\n")
-            lines.append(f"- **Estado:** {pcr_data.get('state', 'N/A')}\n")
-        lines.append(f"- **PCR Indices:** {_fmt_num(pcr_data.get('index_pcr', np.nan), '{:.2f}')} | "
-                     f"**PCR Acciones:** {pcr_data.get('equity_pcr', np.nan):.2f} | "
-                     f"**PCR ETP:** {pcr_data.get('etp_pcr', np.nan):.2f}\n")
-        lines.append(f"- **PCR VIX:** {pcr_data.get('vix_pcr', np.nan):.2f} | "
-                     f"**PCR SPX:** {pcr_data.get('spx_pcr', np.nan):.2f}\n")
-        lines.append(f"- **Institutional Hedge Ratio:** {pcr_data.get('ihr', np.nan):.2f} "
-                     f"({pcr_data.get('ihr_state', 'N/A')}, bandas: <1.2 Especulacion, 1.2-1.6 Equilibrado, >1.6 Cobertura institucional)\n")
-        lines.append(f"- **Volumen en Indices:** {pcr_data.get('index_volume_share', np.nan):.1%} del total\n")
-        lines.append(f"- **Put Share:** {pcr_data.get('put_share', np.nan):.1%} | "
-                     f"**Call Share:** {pcr_data.get('call_share', np.nan):.1%}\n")
-        lines.append(f"- **Volume PCR (calculado):** {pcr_data.get('volume_pcr', np.nan):.2f} | "
-                     f"**OI PCR:** {pcr_data.get('oi_pcr', np.nan):.2f}\n")
-        last_date = pcr_data.get('last_date', 'N/A')
-        lines.append(f"- **Ultimo dato:** {last_date}")
-        if last_date != 'N/A':
-            try:
-                data_date = pd.Timestamp(last_date)
-                age = (datetime.now() - data_date).days
-                lines.append(f" (desfase: {age} dias)")
-            except:
-                pass
-        lines.append("\n")
-        lines.append(f"\n*Fuente: CBOE Official Data. Timestamp: {pcr_data.get('timestamp', 'N/A')}.*\n\n")
+    lines.extend(render_sentimiento_opciones(pcr_data))
 
     # =========================================================================
     # ETF PRIMARY FLOW (SPDR)
