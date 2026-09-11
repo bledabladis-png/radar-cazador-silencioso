@@ -2,7 +2,7 @@
 Scripts independientes que validan la estabilidad y robustez del sistema. No modifican el codigo productivo.
 
 ## Arquitectura
-Ubicados en validation/. Se ejecutan manualmente con py validation/<script>.py.
+Ubicados en validation/archive/ (scripts historicos one-shot). Se ejecutan manualmente con py validation/archive/<script>.py. Los 15 siguientes son una muestra representativa; inventario completo en validation/archive/README.md.
 
 ## Formulas
 No aplica.

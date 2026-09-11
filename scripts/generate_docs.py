@@ -428,7 +428,7 @@ def generate_auditorias():
     rows = [[name, desc] for name, desc in scripts]
     table = format_table(['Script', 'Descripcion'], rows)
     proposito = "Scripts independientes que validan la estabilidad y robustez del sistema. No modifican el codigo productivo."
-    arquitectura = "Ubicados en validation/. Se ejecutan manualmente con py validation/<script>.py."
+    arquitectura = "Ubicados en validation/archive/ (scripts historicos one-shot). Se ejecutan manualmente con py validation/archive/<script>.py. Los 15 siguientes son una muestra representativa; inventario completo en validation/archive/README.md."
     formulas = "No aplica."
     salidas = "Resultados en consola y archivos CSV en outputs/."
     return template(proposito, arquitectura, formulas, salidas) + f"\n{table}\n"
