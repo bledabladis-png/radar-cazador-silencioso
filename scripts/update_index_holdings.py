@@ -202,11 +202,14 @@ def get_state_street_holdings(etf, url):
 def main():
     # Cargar datos existentes para fallback y conservar Europa
     existing = {}
+    existing_full = {}
     if os.path.exists(OUTPUT_FILE):
         try:
             df_existing = pd.read_csv(OUTPUT_FILE)
             for etf in df_existing['etf'].unique():
-                existing[etf] = df_existing[df_existing['etf'] == etf]['ticker'].tolist()
+                sub = df_existing[df_existing['etf'] == etf].copy()
+                existing[etf] = sub['ticker'].tolist()
+                existing_full[etf] = sub
         except:
             pass
 
@@ -253,12 +256,12 @@ def main():
             print(f'  Usando {len(existing["IWM"])} tickers anteriores')
             all_data.append(pd.DataFrame({'etf': 'IWM', 'ticker': existing['IWM']}))
 
-    # --- Conservar ETFs europeos sin cambios ---
+    # --- Conservar ETFs europeos sin cambios (con nombre y peso) ---
     european_etfs = ['FEZ', 'LYXI', 'DAXEX', 'ISF.L']
     for etf in european_etfs:
-        if etf in existing:
-            all_data.append(pd.DataFrame({'etf': etf, 'ticker': existing[etf]}))
-            print(f'{etf}: conservando {len(existing[etf])} tickers manuales')
+        if etf in existing_full:
+            all_data.append(existing_full[etf])
+            print(f'{etf}: conservando {len(existing_full[etf])} tickers con nombre y peso')
         else:
             print(f'{etf}: sin datos previos, omitiendo')
 

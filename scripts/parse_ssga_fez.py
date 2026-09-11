@@ -27,6 +27,20 @@ FEZ_TICKER_MAP = {
     'INGA': 'INGA.AS'
 }
 
+# Overrides por nombre cuando SSGA exporta tickers ambiguos
+# (ej: Sanofi y Banco Santander comparten 'SAN' en el fichero SSGA).
+FEZ_NAME_OVERRIDE = {
+    'SANOFI': 'SAN.PA',           # Sanofi -> Euronext Paris
+    'BANCO SANTANDER': 'SAN.MC',  # Santander -> BME Madrid
+}
+
+def resolve_fez_ticker(raw_ticker, name):
+    name_upper = (name or '').upper()
+    for needle, ticker in FEZ_NAME_OVERRIDE.items():
+        if needle in name_upper:
+            return ticker
+    return FEZ_TICKER_MAP.get(raw_ticker.strip(), raw_ticker.strip())
+
 print('Descargando FEZ desde SSGA...')
 resp = requests.get(URL, allow_redirects=True, timeout=30)
 resp.raise_for_status()
@@ -71,7 +85,7 @@ for i in range(header_row + 1, len(df)):
         if weight is not None:
             holdings.append({
                 'etf': 'FEZ',
-                'ticker': FEZ_TICKER_MAP.get(ticker.strip(), ticker.strip()),
+                'ticker': resolve_fez_ticker(ticker, name if isinstance(name, str) else ''),
                 'identifier': identifier,
                 'name': name if isinstance(name, str) else '',
                 'weight': weight

@@ -37,14 +37,12 @@ isf = pd.read_csv('outputs/holdings/ISF.L_final_holdings.csv')
 amundi = pd.read_csv('outputs/holdings/amundi_lyxi_holdings.csv').sort_values('weight', ascending=False).head(20)
 amundi['etf'] = 'LYXI'
 
-# Asegurar columna identifier en todos
-for df, default_identifier in [(fez, ''), (daxex, ''), (isf, ''), (amundi, '')]:
-    if 'identifier' not in df.columns:
-        df['identifier'] = default_identifier
-
-cols = ['etf', 'ticker', 'identifier', 'name', 'weight']
-for df in [fez, daxex, isf, amundi]:
-    df = df[cols]
+# Schema de index_holdings.csv (sin identifier)
+cols = ['etf', 'ticker', 'name', 'weight']
+fez = fez.reindex(columns=cols)
+daxex = daxex.reindex(columns=cols)
+isf = isf.reindex(columns=cols)
+amundi = amundi.reindex(columns=cols)
 
 nuevo_df = pd.concat([index_df, fez, daxex, isf, amundi], ignore_index=True)
 nuevo_df = nuevo_df.drop_duplicates(subset=['etf','ticker'], keep='last')
