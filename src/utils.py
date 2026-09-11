@@ -11,10 +11,27 @@ def append_dedup(hist_df, new_df, subset):
         return combined
     return combined.drop_duplicates(subset=subset, keep='last')
 
-def robust_zscore(series, window=60):
-    median = series.rolling(window).median()
-    mad = (series - median).abs().rolling(window).median()
-    z = (series - median) / (1.4826 * mad + 1e-9)
+def robust_zscore(series, window=60, min_periods=None):
+    """Z-score robusto (mediana/MAD) tolerante a huecos cortos.
+
+    Args:
+        series: pd.Series con posibles NaN (tipicamente por festivos).
+        window: ventana rolling (default 60).
+        min_periods: minimo de observaciones validas requeridas.
+                     Si None -> max(window//3, 10).
+
+    Nota (fix 2026-09-11): antes usaba min_periods=window (default pandas),
+    lo que devolvia NaN si habia UN SOLO NaN en la ventana. Como ^VIX tiene
+    ~91 NaN por festivos USA, robust_zscore devolvia solo 18/2606 filas
+    validas -> corrompia todos los scores del sistema. Se anade ffill(limit=3)
+    para replicar el ultimo dia operativo en festivos puntuales, y min_periods
+    relajado para permitir el calculo con huecos residuales."""
+    if min_periods is None:
+        min_periods = max(window // 3, 10)
+    s = series.ffill(limit=3)
+    median = s.rolling(window, min_periods=min_periods).median()
+    mad = (s - median).abs().rolling(window, min_periods=min_periods).median()
+    z = (s - median) / (1.4826 * mad + 1e-9)
     return z.clip(-5, 5)
 
 def rolling_percentile(series, window=120):
