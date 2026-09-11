@@ -5,7 +5,7 @@ Solo funciones puras, sin mocks ni dependencias externas.
 import pandas as pd
 import numpy as np
 
-from src.report_generator import (
+from src.report.helpers import (
     _fmt_num,
     _classify_freshness,
     _classify_finra_freshness,

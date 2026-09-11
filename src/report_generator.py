@@ -7,13 +7,11 @@ from config.tickers import SECTOR_NAMES
 from config.index_tickers import INDEX_CONFIG
 from config.settings import MOMENTUM_PRICE_WINDOW, MOMENTUM_LONG_WINDOW, ETF_PRIMARY_FLOW_ZSCORE_WINDOW, MIN_SECTOR_COVERAGE
 from config.weights import SLPM_WEIGHTS
+from src.report.freshness import render_data_freshness
 from src.report.header import render_regimenes
 from src.report.helpers import (
     _fmt_num,
-    _classify_freshness,
     _classify_finra_freshness,
-    _classify_fred_freshness,
-    _generate_coverage_table,
 )
 
 MODEL_VERSION = "4.3"
@@ -50,63 +48,7 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
     # =========================================================================
     # DATA FRESHNESS
     # =========================================================================
-    lines.append("### Data Freshness\n")
-    lines.append("| Fuente | Ultimo dato | Antigüedad | Estado | Data Conf |\n")
-    lines.append("|--------|-------------|------------|--------|----------|\n")
-    now = datetime.now()
-    
-    if pcr_data and pcr_data.get('last_date', 'N/A') != 'N/A':
-        try:
-            d = pd.Timestamp(pcr_data['last_date'])
-            age = (now - d).days
-            cboe_status = _classify_freshness(age, 3, 5, 10)
-            cboe_conf = 'Alta' if cboe_status in ('CURRENT', 'RECENT') else 'Baja'
-            lines.append(f"| CBOE (Opciones) | {d.strftime('%Y-%m-%d')} | {age} dias | {cboe_status} | {cboe_conf} |\n")
-        except:
-            lines.append(f"| CBOE (Opciones) | {pcr_data.get('last_date', 'N/A')} | N/D | N/D | N/D |\n")
-    else:
-        lines.append("| CBOE (Opciones) | N/D | N/D | N/D | N/D |\n")
-    
-    if darkpool_data:
-        week = darkpool_data.get('week', 'N/A')
-        if week != 'N/A':
-            try:
-                d = pd.Timestamp(week)
-                age = (now - d).days
-                finra_status = _classify_finra_freshness(age)
-                finra_conf = 'Alta' if finra_status in ('CURRENT', 'RECENT') else 'Baja'
-                lines.append(f"| FINRA (Dark Pools) | {d.strftime('%Y-%m-%d')} | {age} dias | {finra_status} | {finra_conf} |\n")
-            except:
-                lines.append(f"| FINRA (Dark Pools) | {week} | N/D | N/D | N/D |\n")
-        else:
-            lines.append("| FINRA (Dark Pools) | N/D | N/D | N/D | N/D |\n")
-    
-    # FRED: intentar obtener fecha real desde liquidity_state.json
-    try:
-        import json
-        from pathlib import Path as _Path
-        liq_state_path = _Path('outputs/state/liquidity_state.json')
-        if liq_state_path.exists():
-            with liq_state_path.open('r') as f:
-                liq_state = json.load(f)
-            last_fred = liq_state.get('date', 'N/A')
-            if last_fred != 'N/A':
-                d = pd.Timestamp(last_fred)
-                age = (now - d).days
-                fred_status = _classify_fred_freshness(age)
-                fred_conf = 'Alta' if fred_status in ('CURRENT', 'RECENT') else 'Baja'
-                lines.append(f"| FRED (Macro) | {d.strftime('%Y-%m-%d')} | {age} dias | {fred_status} | {fred_conf} |\n")
-            else:
-                lines.append("| FRED (Macro) | N/D | N/D | N/D | N/D |\n")
-        else:
-            lines.append("| FRED (Macro) | N/D | N/D | N/D | N/D |\n")
-    except Exception:
-        lines.append("| FRED (Macro) | N/D | N/D | N/D | N/D |\n")
-    lines.append("| Yahoo Finance (Precios) | Diario | < 1 dia | CURRENT | Alta |\n")
-    lines.append("\n")
-    coverage_lines = _generate_coverage_table(pcr_data, darkpool_data, sector_results)
-    for cl in coverage_lines:
-        lines.append(cl)
+    lines.extend(render_data_freshness(pcr_data, darkpool_data, sector_results))
 
 
     # =========================================================================
