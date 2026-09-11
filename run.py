@@ -22,10 +22,9 @@ from src.pipeline.sector_metrics import compute_sector_metrics
 from src.pipeline.breadth_metrics import compute_breadth_metrics
 from src.pipeline.engines import compute_engines
 from src.pipeline.slpm import compute_slpm_v12
-from src.utils import get_col, detect_cross_module_conflict
+from src.pipeline.diagnostics import compute_diagnostics
+from src.utils import detect_cross_module_conflict
 from src.dependency_tracker import audit_double_counting
-from indicators.signal_agreement import compute_signal_agreement
-from indicators.price_flow_divergence import detect_price_flow_divergence
 from config.tickers import validate_sector_universe
 from indicators.index_phase import compute_index_phases
 from indicators.index_leaders import select_index_leaders
@@ -131,65 +130,11 @@ def main():
         sector_persistence,
     )
 
-    # --- Directional Agreement con direccion ---
-    signal_agreements = {}
-    signal_agreements_display = {}
-    try:
-        for sector_etf in ['XLK','XLF','XLV','XLE','XLY','XLP','XLI','XLB','XLU','XLRE','XLC']:
-            signals = {}
-            signals['tactical'] = tactical_scores.get(sector_etf, 0)
-            signals['structural'] = structural_scores.get(sector_etf, 0)
-            try:
-                close_sector = get_col(df_market, sector_etf, 'Close')
-                close_spy = get_col(df_market, '^GSPC', 'Close')
-                rs = close_sector / close_spy
-                rs20 = rs.pct_change(20, fill_method=None).iloc[-1]
-                signals['rs20'] = np.tanh(rs20 * 5) if pd.notna(rs20) else 0
-            except Exception as e:
-                print(f"  [WARN] rs20 signal: {e}")
-                signals['rs20'] = 0
-            flow_val = next((f for t, f in sector_flow_rank if t == sector_etf), 0)
-            signals['flow'] = flow_val
-            result = compute_signal_agreement(signals)
-            signal_agreements[sector_etf] = result['agreement']
-            signal_agreements_display[sector_etf] = result['display']
-        print(f"    Directional Agreement calculado para {len(signal_agreements)} sectores.")
-    except Exception as e:
-        print(f"    Directional Agreement omitido: {e}")
-        signal_agreements = {s: 0.5 for s in ['XLK','XLF','XLV','XLE','XLY','XLP','XLI','XLB','XLU','XLRE','XLC']}
-        signal_agreements_display = {s: '50% MIXED' for s in ['XLK','XLF','XLV','XLE','XLY','XLP','XLI','XLB','XLU','XLRE','XLC']}
-
-    # --- Price-Flow Divergence ---
-    price_flow_divergences = {}
-    try:
-        for sector_etf in ['XLK','XLF','XLV','XLE','XLY','XLP','XLI','XLB','XLU','XLRE','XLC']:
-            try:
-                close_sector = get_col(df_market, sector_etf, 'Close')
-                price_ret_20d = (close_sector.iloc[-1] / close_sector.iloc[-21] - 1) if len(close_sector) >= 21 else 0.0
-            except Exception as e:
-                print(f"  [WARN] price_ret_20d: {e}")
-                price_ret_20d = 0.0
-            flow_val = next((f for t, f in sector_flow_rank if t == sector_etf), 0)
-            price_flow_divergences[sector_etf] = detect_price_flow_divergence(price_ret_20d, flow_val)
-        for sector_etf, div in price_flow_divergences.items():
-            if div['status'] != 'ALIGNED':
-                name = sector_etf
-                print(f"    Price-Flow Divergence [{name}]: {div['status']}")
-        print(f"    Price-Flow Divergence calculado para {len(price_flow_divergences)} sectores.")
-    except Exception as e:
-        print(f"    Price-Flow Divergence omitido: {e}")
-        price_flow_divergences = {s: {'status': 'ALIGNED', 'message': ''} for s in ['XLK','XLF','XLV','XLE','XLY','XLP','XLI','XLB','XLU','XLRE','XLC']}
-
-    # --- Shock Sensitivity ---
-    shock_sensitivities = {}
-    try:
-        from indicators.commodity_market_correlation import compute_commodity_market_correlation
-        for sector_etf in ['XLK','XLF','XLV','XLE','XLY','XLP','XLI','XLB','XLU','XLRE','XLC']:
-            shock_sensitivities[sector_etf] = compute_commodity_market_correlation(df_market, sector_etf)
-        print(f"    Shock Sensitivity calculada para {len(shock_sensitivities)} sectores.")
-    except Exception as e:
-        print(f"    Shock Sensitivity omitida: {e}")
-        shock_sensitivities = {s: {} for s in ['XLK','XLF','XLV','XLE','XLY','XLP','XLI','XLB','XLU','XLRE','XLC']}
+    diag = compute_diagnostics(df_market, tactical_scores, structural_scores, sector_flow_rank)
+    signal_agreements = diag['signal_agreements']
+    signal_agreements_display = diag['signal_agreements_display']
+    price_flow_divergences = diag['price_flow_divergences']
+    shock_sensitivities = diag['shock_sensitivities']
 
     print("Calculando sentimiento de opciones (PCR)...")
     pcr_data = None
