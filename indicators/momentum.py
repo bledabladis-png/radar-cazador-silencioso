@@ -13,9 +13,13 @@ def compute_returns(df, tickers):
             pass
     return returns
 
-def momentum_score(returns, window=MOMENTUM_SHARPE_WINDOW):
-    ret = returns.rolling(window).mean() * window
-    vol = returns.rolling(window).std()
+def momentum_score(returns, window=MOMENTUM_SHARPE_WINDOW, min_periods=None):
+    """Momentum tipo Sharpe con tolerancia a huecos."""
+
+    if min_periods is None:
+        min_periods = max(window // 3, 10)
+    ret = returns.rolling(window, min_periods=min_periods).mean() * window
+    vol = returns.rolling(window, min_periods=min_periods).std()
     return ret / (vol + 1e-9)
 
 def normalize_momentum(score_series):
