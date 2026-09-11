@@ -2,7 +2,7 @@
 Scripts independientes que validan la estabilidad y robustez del sistema. No modifican el codigo productivo.
 
 ## Arquitectura
-Ubicados en alidation/. Se ejecutan manualmente con py validation/<script>.py.
+Ubicados en validation/. Se ejecutan manualmente con py validation/<script>.py.
 
 ## Formulas
 No aplica.

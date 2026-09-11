@@ -18,13 +18,17 @@ Las constantes son importadas por todos los modulos del sistema.
 | BREADTH_EMA_MEDIUM | 50 |
 | BREADTH_EMA_SLOW | 200 |
 | CACHE_HOURS | 23 |
+| CACHE_MARKET_PATH | 'data/market_data.csv' |
+| CACHE_STOCKS_PATH | 'data/stock_prices.csv' |
 | CACHE_TTL | { |
 | CACHE_VALIDATE_TRADING_DATE | True |
+| CONFIDENCE_RANGE_DIVISOR | 2.0 |
 | DARKPOOL_FULL_HISTORY_WEEKS | 104 |
 | DARKPOOL_MIN_HISTORY_WEEKS | 13 |
 | DARKPOOL_THRESHOLDS | { |
 | DARKPOOL_ZSCORE_WINDOWS | (13, 26, 52, 104) |
 | DOWNLOAD_BATCH_SIZE | 5 |
+| ETF_PRIMARY_FLOW_ZSCORE_WINDOW | 120 |
 | EXPECTED_SECTOR_COUNT | 11 |
 | FINANCIAL_CONDITIONS_THRESHOLDS | { |
 | FINANCIAL_CONDITIONS_WEIGHTS | {'vix': 0.40, 'credit': 0.30, 'dollar': 0.15, 'curve': 0.15} |
@@ -38,7 +42,7 @@ Las constantes son importadas por todos los modulos del sistema.
 | IHR_THRESHOLDS | { |
 | MAX_NAN_RATIO | 0.10 |
 | MAX_RETRIES | 3 |
-| MIN_SECTOR_COVERAGE | 0.80 |
+| MIN_SECTOR_COVERAGE | 0.70 |
 | MIN_VALID_SECTORS | 8 |
 | MIN_VALID_TICKERS | 5 |
 | MOMENTUM_LONG_WINDOW | 126 |
@@ -60,6 +64,8 @@ Las constantes son importadas por todos los modulos del sistema.
 | SLPM_FULL_COVERAGE | 1.00 |
 | SLPM_MIN_COVERAGE_WARNING | 0.50 |
 | SLPM_TOTAL_SECTORS | 11 |
+| TOP_N_CANDIDATES | 15 |
+| TOP_N_LEADERS | 5 |
 | TREND_EMA_WINDOW | 50 |
 | VOLATILITY_BASELINE_WINDOW | 756 |
 | VOLATILITY_WINDOW | 20 |
