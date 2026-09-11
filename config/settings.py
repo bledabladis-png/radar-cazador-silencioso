@@ -48,7 +48,7 @@ MIN_VALID_TICKERS = 5         # mínimo global para operar
 
 EXPECTED_SECTOR_COUNT = 11
 MIN_VALID_SECTORS = 8         # al menos 8 sectores para ranking fiable
-MIN_SECTOR_COVERAGE = 0.80    # 80% de los 11 sectores
+MIN_SECTOR_COVERAGE = 0.70    # umbral minimo de cobertura por sector (se marca [BAJA] si < 70%)
 
 # ============================================================
 # PCR / OPTIONS HISTORY

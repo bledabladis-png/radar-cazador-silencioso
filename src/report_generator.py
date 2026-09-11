@@ -5,7 +5,7 @@ import os
 from datetime import datetime
 from config.tickers import SECTOR_NAMES
 from config.index_tickers import INDEX_CONFIG
-from config.settings import MOMENTUM_PRICE_WINDOW, MOMENTUM_LONG_WINDOW, ETF_PRIMARY_FLOW_ZSCORE_WINDOW
+from config.settings import MOMENTUM_PRICE_WINDOW, MOMENTUM_LONG_WINDOW, ETF_PRIMARY_FLOW_ZSCORE_WINDOW, MIN_SECTOR_COVERAGE
 from config.weights import SLPM_WEIGHTS
 def _fmt_num(v, fmt="{:.2f}"):
     if pd.isna(v):
@@ -302,8 +302,12 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
         lines.append("|--------|-------|-------|--------|-----|------|-----|--------|------|----------|----|----|-----|-----------|\n")
         for _, row in breadth_latest.iterrows():
             cobertura = (row['n_valid_ema200'] / row['n_total'] * 100) if row['n_total'] else 0
-            lines.append(f"| {row['sector']} | {_fmt_num(row['pct_above_ema20'], '{:.1f}%')} | {_fmt_num(row['pct_above_ema50'], '{:.1f}%')} | {_fmt_num(row['pct_above_ema200'], '{:.1f}%')} | {_fmt_num(row['pct_rs_positive'], '{:.1f}%')} | {_fmt_num(row['pct_momentum_positive'], '{:.1f}%')} | {_fmt_num(row['count_accumulation'], '{:.0f}')} | {_fmt_num(row['count_markup'], '{:.0f}')} | {_fmt_num(row['count_distribution'], '{:.0f}')} | {_fmt_num(row['count_markdown'], '{:.0f}')} | {_fmt_num(row['new_highs'], '{:.0f}')} | {_fmt_num(row['new_lows'], '{:.0f}')} | {_fmt_num(row['ad_net'], '{:+d}')} | {cobertura:.0f}% |\n")
+            cov_label = f"{cobertura:.0f}%"
+            if (cobertura / 100) < MIN_SECTOR_COVERAGE:
+                cov_label += " [BAJA]"
+            lines.append(f"| {row['sector']} | {_fmt_num(row['pct_above_ema20'], '{:.1f}%')} | {_fmt_num(row['pct_above_ema50'], '{:.1f}%')} | {_fmt_num(row['pct_above_ema200'], '{:.1f}%')} | {_fmt_num(row['pct_rs_positive'], '{:.1f}%')} | {_fmt_num(row['pct_momentum_positive'], '{:.1f}%')} | {_fmt_num(row['count_accumulation'], '{:.0f}')} | {_fmt_num(row['count_markup'], '{:.0f}')} | {_fmt_num(row['count_distribution'], '{:.0f}')} | {_fmt_num(row['count_markdown'], '{:.0f}')} | {_fmt_num(row['new_highs'], '{:.0f}')} | {_fmt_num(row['new_lows'], '{:.0f}')} | {_fmt_num(row['ad_net'], '{:+d}')} | {cov_label} |\n")
         lines.append("\n")
+        lines.append(f"*[BAJA] = cobertura < {MIN_SECTOR_COVERAGE:.0%} del universo del sector. Los ratios se calculan sobre la parte valida.*\n\n")
 
     # =========================================================================
     # SECTOR CONCENTRATION
