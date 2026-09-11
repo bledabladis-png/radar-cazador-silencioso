@@ -1236,7 +1236,17 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
     elif macro_regime in ('EXPANSION', 'RECOVERY', 'GOLDILOCKS'):
         resumen.append(f"- **Régimen macro: {macro_regime}** — favorable para la asunción de riesgo.")
     elif macro_regime == 'MIXED':
-        resumen.append("- **Régimen macro: MIXED** — ROTATIONAL / MIXED — rotación sectorial activa con dispersión elevada.")
+        # Leer dispersion real del ultimo dia (fix C20: texto dinamico)
+        disp_txt = 'variable'
+        try:
+            if sector_dispersion_data is not None and not sector_dispersion_data.empty:
+                last = sector_dispersion_data.iloc[-1]
+                lectura = last.get('dispersion_reading') or last.get('Lectura')
+                if lectura and isinstance(lectura, str):
+                    disp_txt = lectura.lower()
+        except Exception:
+            pass
+        resumen.append(f"- **Régimen macro: MIXED** — ROTATIONAL / MIXED — rotación sectorial activa con dispersión {disp_txt}.")
     else:
         resumen.append(f"- **Régimen macro: {macro_regime}**.")
 
