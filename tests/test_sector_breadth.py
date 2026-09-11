@@ -4,7 +4,6 @@ from indicators.sector_breadth import compute_sector_breadth
 def _make_data():
     idx = pd.date_range('2025-01-01', periods=300, freq='D')
     # DataFrame de stocks con MultiIndex (ticker, campo)
-    fields = ['Open','High','Low','Close','Volume']
     data = {}
     for t in ['AAA','BBB']:
         data[(t,'Close')] = [100 + i*0.1 for i in range(300)]

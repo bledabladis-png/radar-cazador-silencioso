@@ -32,7 +32,6 @@ def test_deltas_basicos(tmp_path):
     assert xlk['delta_20d_ema20'] == 20.0
 
 def test_fechas_no_consecutivas(tmp_path):
-    sectors = ['XLK']
     fechas = [pd.Timestamp('2026-01-01'), pd.Timestamp('2026-01-02'), pd.Timestamp('2026-01-03'),
               pd.Timestamp('2026-01-04'), pd.Timestamp('2026-01-05'), pd.Timestamp('2026-01-20')]
     data = []
