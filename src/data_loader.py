@@ -51,9 +51,16 @@ def _ticker_list():
 # y BackupProvider actua como fallback por lote.
 def download_market_data():
     cache_path = 'data/market_data.csv'
+    parquet_path = 'data/market_data.parquet'
     if os.path.exists(cache_path):
         mtime = datetime.fromtimestamp(os.path.getmtime(cache_path))
         if datetime.now() - mtime < timedelta(hours=CACHE_HOURS):
+            # D3 Fase 1: lectura dual (Parquet preferente, CSV fallback)
+            if os.path.exists(parquet_path):
+                try:
+                    return pd.read_parquet(parquet_path)
+                except Exception as e:
+                    print(f'  [WARN] Error leyendo Parquet: {e}')
             return pd.read_csv(cache_path, header=[0,1], index_col=0, parse_dates=True)
 
     tickers = _ticker_list()
@@ -130,4 +137,8 @@ def download_market_data():
     data = clean_oil_prices(data)
 
     data.to_csv(cache_path)
+    try:
+        data.to_parquet(parquet_path)
+    except Exception as e:
+        print(f'  [WARN] Error escribiendo Parquet: {e}')
     return data
