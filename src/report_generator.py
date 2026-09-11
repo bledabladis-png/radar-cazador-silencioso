@@ -5,7 +5,7 @@ import os
 from datetime import datetime
 from config.tickers import SECTOR_NAMES
 from config.index_tickers import INDEX_CONFIG
-from config.settings import MOMENTUM_PRICE_WINDOW, MOMENTUM_LONG_WINDOW, ETF_PRIMARY_FLOW_ZSCORE_WINDOW
+from config.settings import ETF_PRIMARY_FLOW_ZSCORE_WINDOW
 from config.weights import SLPM_WEIGHTS
 from src.report.alerts import render_alerts, render_cross_module
 from src.report.breadth import render_breadth_market
@@ -14,6 +14,12 @@ from src.report.sectorial import (
     render_sector_breadth,
     render_sector_concentration,
     render_sector_dispersion,
+)
+from src.report.leaders import (
+    render_momentum_sectores,
+    render_tactical_leaders,
+    render_momentum_otros,
+    render_structural_ranking,
 )
 from src.report.header import render_regimenes
 from src.report.helpers import (
@@ -89,77 +95,23 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
     # =========================================================================
     lines.extend(render_sector_dispersion(sector_concentration_data))
 
+    # =========================================================================
     # TACTICAL LEADERS
     # =========================================================================
-    lines.append(f"\n## Momentum de Precio - Sectores ({MOMENTUM_PRICE_WINDOW} dias)\n")
-    lines.append("| # | Sector | Retorno 20d (%) |\n")
-    lines.append("|---|--------|------------------|\n")
-    for i, (ticker, mom) in enumerate(sector_price_rank[:11], 1):
-        name = SECTOR_NAMES.get(ticker, ticker)
-        lines.append(f"| {i} | {name} ({ticker}) | {mom*100:.2f}% |\n")
-
-    if sector_flow_rank:
-        lines.append("\n## Flujo Institucional - Sectores (Proxy)\n")
-        lines.append("| # | Sector | Flujo (z-score) |\n")
-        lines.append("|---|--------|------------------|\n")
-    else:
-        lines.append("\n## Flujo Institucional - Sectores (Proxy)\n")
-        lines.append("*No hay datos disponibles para Flow Proxy.*\n")
-    for i, (ticker, flow) in enumerate(sector_flow_rank[:11], 1):
-        name = SECTOR_NAMES.get(ticker, ticker)
-        lines.append(f"| {i} | {name} ({ticker}) | {flow:.2f} |\n")
-
-    lines.append("## Tactical Leaders (Momentum de corto plazo)\n")
-    lines.append("| # | Sector | Tactical | Structural | Retorno 20d | Flow Proxy (z) | Comm Corr |\n")
-    lines.append("|---|--------|----------|------------|-------------|----------------|------------|\n")
-    tactical_ranking = sorted(tactical_scores.items(), key=lambda x: x[1], reverse=True) if tactical_scores else []
-    for i, (ticker, t_score) in enumerate(tactical_ranking[:11], 1):
-        name = SECTOR_NAMES.get(ticker, ticker)
-        s_score = structural_scores.get(ticker, 0.0) if structural_scores else 0.0
-        mom = next((m for t, m in sector_price_rank if t == ticker), 0)
-        flow = next((f for t, f in sector_flow_rank if t == ticker), None)
-        shock = shock_sensitivities.get(ticker, {}) if shock_sensitivities else {}
-        comm = shock.get('commodity_level', 'N/A') if shock else 'N/A'
-        comm_val = shock.get('commodity_corr_value', None) if shock else None
-        comm_display = f"{comm} ({comm_val:+.2f})" if comm_val is not None and comm != 'N/A' else comm
-        lines.append(f"| {i} | {name} ({ticker}) | {t_score:+.2f} | {s_score:+.2f} | {mom*100:.2f}% | {_fmt_num(flow, '{:+.2f}')} | {comm_display} |\n")
-    lines.append("\n")
-    lines.append(f"*Nota: Comm Corr mide la correlación de {MOMENTUM_LONG_WINDOW} dias con ^SPGSCI. No implica causalidad.*\n\n")
+    lines.extend(render_momentum_sectores(sector_price_rank, sector_flow_rank))
+    lines.extend(render_tactical_leaders(
+        tactical_scores, structural_scores,
+        sector_price_rank, sector_flow_rank, shock_sensitivities,
+    ))
 
     # =========================================================================
-    # STRUCTURAL RANKING (sin columna Coverage)
+    # MOMENTUM OTROS ACTIVOS + STRUCTURAL RANKING
     # =========================================================================
-    lines.append(f"\n## Momentum de Precio - Otros Activos ({MOMENTUM_PRICE_WINDOW} dias)\n")
-    lines.append("| # | Activo | Retorno 20d (%) |\n")
-    lines.append("|---|--------|------------------|\n")
-    for i, (ticker, mom) in enumerate(otros_price_rank[:15], 1):
-        lines.append(f"| {i} | {ticker} | {mom*100:.2f}% |\n")
-
-    if otros_flow_rank:
-        lines.append("\n## Flujo Institucional - Otros Activos (Proxy)\n")
-        lines.append("| # | Activo | Flujo (z-score) |\n")
-        lines.append("|---|--------|------------------|\n")
-    else:
-        lines.append("\n## Flujo Institucional - Otros Activos (Proxy)\n")
-        lines.append("*No hay datos disponibles para Flow Proxy.*\n")
-    for i, (ticker, flow) in enumerate(otros_flow_rank[:15], 1):
-        lines.append(f"| {i} | {ticker} | {flow:.2f} |\n")
-
-    lines.append("## Structural Ranking (Fortaleza de largo plazo)\n")
-    lines.append("| # | Sector | Structural | Tactical | Persist | Agreement | Signal Consistency |\n")
-    lines.append("|---|--------|------------|----------|---------|-----------|------------|\n")
-    structural_ranking = sorted(structural_scores.items(), key=lambda x: x[1], reverse=True) if structural_scores else []
-    for i, (ticker, s_score) in enumerate(structural_ranking[:11], 1):
-        name = SECTOR_NAMES.get(ticker, ticker)
-        t_score = tactical_scores.get(ticker, 0.0) if tactical_scores else 0.0
-        pers_raw = sector_persistence.get(ticker) if sector_persistence else None
-        pers_val = pers_raw if pers_raw is not None else 0.0
-        pers_str = f"{pers_raw:.0%}" if pers_raw is not None else "N/A"
-        agree = signal_agreements.get(ticker, 0.5) if signal_agreements else 0.5
-        agree_display = signal_agreements_display.get(ticker, f'{agree:.0%}') if signal_agreements_display else f'{agree:.0%}'
-        struct_conf = (pers_val + agree) / 2
-        lines.append(f"| {i} | {name} ({ticker}) | {s_score:+.2f} | {t_score:+.2f} | {pers_str} | {agree_display} | {struct_conf:.0%} |\n")
-    lines.append("\n")
+    lines.extend(render_momentum_otros(otros_price_rank, otros_flow_rank))
+    lines.extend(render_structural_ranking(
+        structural_scores, tactical_scores,
+        sector_persistence, signal_agreements, signal_agreements_display,
+    ))
 
     # =========================================================================
     # RANKINGS SECTORIALES
