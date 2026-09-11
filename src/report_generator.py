@@ -49,14 +49,15 @@ from src.report.flows_international import (
     render_flujo_iwm,
     render_flujo_qqq_sec,
     render_posicionamiento_cftc,
+    render_flujo_posicional_nport,
+    render_rendimiento_qqq,
+    render_qqq_nport_flow,
+    render_flujo_sintesis,
 )
 from src.report.sentiment import render_sentimiento_opciones
 from src.report.slpm import render_slpm_v12, render_slpm_legacy
 from src.report.header import render_regimenes
-from src.report.helpers import (
-    _fmt_num,
-    _classify_finra_freshness,
-)
+from src.report.helpers import _classify_finra_freshness
 
 MODEL_VERSION = "4.3"
 WEIGHTS_VERSION = "3"
@@ -227,72 +228,12 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
     # =========================================================================
     # FLUJO POSICIONAL N-PORT (Trimestral)
     # =========================================================================
-    if nport_position_change_data is not None and not nport_position_change_data.empty:
-        lines.append("## Flujo Posicional N-PORT (Trimestral)\n")
-        lines.append("*Datos del último trimestre disponible. Fuente: SEC N-PORT.*\n")
-        lines.append("| Fecha | Fondo | Activo | ISIN | Balance Previo | Balance Actual | Cambio | % Cambio |\n")
-        lines.append("|-------|-------|--------|-------|----------------|----------------|--------|-----------|\n")
-        for _, row in nport_position_change_data.iterrows():
-            fecha = row['REPORT_DATE'].strftime('%Y-%m-%d') if hasattr(row['REPORT_DATE'], 'strftime') else str(row['REPORT_DATE'])
-            lines.append(f"| {fecha} | {row['REGISTRANT_NAME']} | {row['ISSUER_NAME']} | {row['IDENTIFIER_ISIN']} | {row['PREV_BALANCE']:,.0f} | {row['BALANCE']:,.0f} | {row['POSITION_CHANGE']:+,.0f} | {row['POSITION_CHANGE_PCT']:+.2f}% |\n")
-        lines.append("\n")
-    else:
-        lines.append("## Flujo Posicional N-PORT (Trimestral)\n")
-        lines.append("*Sin datos N-PORT disponibles en esta ejecución.*\n\n")
-
+    # N-PORT + QQQ Performance + QQQ NPORT-P + Sintesis
     # =========================================================================
-    # =========================================================================
-    # RENDIMIENTO QQQ (Yahoo Finance)
-    # =========================================================================
-    if qqq_performance_data is not None and not qqq_performance_data.empty:
-        lines.append("## Rendimiento QQQ (Yahoo Finance)\n")
-        lines.append("| Medida | YTD | 1Y | 3Y | 5Y | 10Y | Desde inicio |\n")
-        lines.append("|--------|-----|----|----|----|-----|--------------|\n")
-        for _, row in qqq_performance_data.iterrows():
-            label = row.get('displayLabel', 'QQQ (Yahoo Finance)')
-            lines.append(f"| {label} | {row['ytd']:.2f}% | {row['y1']:.2f}% | {row['y3']:.2f}% | {row['y5']:.2f}% | {row['y10']:.2f}% | {row['inception']:.2f}% |\n")
-        try:
-            as_of = qqq_performance_data.iloc[0].get("as_of_date", "")
-            if as_of:
-                lines.append(f"*Fecha de cálculo (as_of_date): {as_of}*\n")
-        except Exception:
-            pass
-        lines.append("\n*Fuente: Yahoo Finance. Rendimientos calculados desde precios ajustados.*\n\n")
-    # FLUJO DE PARTICIPACIONES QQQ (NPORT-P)
-    # =========================================================================
-    if qqq_nport_flow_data is not None and not qqq_nport_flow_data.empty:
-        lines.append("## Flujo de Participaciones QQQ (NPORT-P)\n")
-        lines.append("*Fuente: SEC NPORT-P Item B.6. Frecuencia trimestral.*\n")
-        try:
-            report_date_str = str(qqq_nport_flow_data.iloc[0].get('report_date', 'N/A'))
-            if report_date_str != 'N/A' and len(report_date_str) >= 7:
-                year_month = pd.Timestamp(report_date_str)
-                quarter = (year_month.month - 1) // 3 + 1
-                lines.append(f"*Trimestre: Q{quarter} {year_month.year}*\n")
-        except Exception:
-            pass
-        lines.append("| Mes | Ventas (M$) | Redenciones (M$) | Flujo Neto (M$) |\n")
-        lines.append("|-----|-------------|------------------|-----------------|\n")
-        for _, row in qqq_nport_flow_data.iterrows():
-            lines.append(f"| {int(row['month'])} | {row['sales']/1e6:,.2f} | {row['redemptions']/1e6:,.2f} | {row['net_flow']/1e6:,.2f} |\n")
-        lines.append("\n")
-    else:
-        lines.append("## Flujo de Participaciones QQQ (NPORT-P)\n")
-        lines.append("*Sin datos NPORT-P de QQQ en esta ejecución.*\n\n")
-
-    # =========================================================================
-    # FLUJO - SINTESIS DESCRIPTIVA
-    # =========================================================================
-    if flow_synthesis:
-        lines.append("## Flujo - Sintesis Descriptiva\n")
-        lines.append("| Capa | Lectura |\n")
-        lines.append("|------|---------|\n")
-        lines.append(f"| Flow Proxy | {_fmt_num(flow_synthesis.get('flow_proxy_sign'), '{:+.2f}')} |\n")
-        lines.append(f"| ETF Primary Flow | {_fmt_num(flow_synthesis.get('etf_primary_flow_sign'), '{:+.2f}')} |\n")
-        lines.append(f"| CFTC Position Flow | {_fmt_num(flow_synthesis.get('cftc_flow_sign'), '{:+.2f}')} |\n")
-        lines.append(f"| Europa Primary Flow | {flow_synthesis.get('european_flow_sign', 0):+.2f} |\n")
-        lines.append(f"\n**FLOW_CONFIDENCE:** {flow_synthesis.get('confidence', 'N/A')}\n")
-        lines.append("\n*Interpretación descriptiva: concordancia de signos entre capas. No es señal predictiva.*\n\n")
+    lines.extend(render_flujo_posicional_nport(nport_position_change_data))
+    lines.extend(render_rendimiento_qqq(qqq_performance_data))
+    lines.extend(render_qqq_nport_flow(qqq_nport_flow_data))
+    lines.extend(render_flujo_sintesis(flow_synthesis))
 
     # =========================================================================
     # MTE v1.0
