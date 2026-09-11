@@ -51,13 +51,15 @@ def _generate_coverage_table(pcr_data, darkpool_data, sector_results):
     if sector_results and 'ranking' in sector_results:
         sectores_validos = len([s for s in sector_results['ranking'] if s[1] is not None])
     lines.append(f"| Sectores | {sectores_validos}/{sectores_total} ({sectores_validos/sectores_total:.0%}) | - |\n")
-    n_acciones = 110
+    # Fix C22b: fallback 0 (no 110) cuando no hay CSV. El numero real
+    # viene del CSV que run.py regenera solo si hay sectores favorables.
+    n_acciones = 0
     try:
         import pandas as pd
         df = pd.read_csv('outputs/report/analisis_lideres.csv')
         if 'ticker' in df.columns:
             n_acciones = len(df['ticker'].unique())
-    except:
+    except Exception:
         pass
     lines.append(f"| Acciones lideres | {n_acciones} tickers | - |\n")
     if pcr_data and pcr_data.get('last_date'):

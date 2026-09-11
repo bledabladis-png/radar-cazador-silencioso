@@ -51,6 +51,17 @@ def main():
     # Crear subcarpetas de outputs necesarias para ejecución limpia
     for subdir in ['report', 'history', 'state', 'holdings', 'audit', 'cache']:
         os.makedirs(f'outputs/{subdir}', exist_ok=True)
+    # Fix C22: limpiar CSVs de lideres previos. Si el run actual no los
+    # regenera (sin sectores favorables / sin indices en fase), los
+    # consumidores (report_generator, run_all_audits, verify_leader_selection)
+    # no deben leer datos obsoletos de runs anteriores.
+    for _csv_name in ['analisis_lideres.csv', 'analisis_lideres_internacionales.csv']:
+        _csv_path = os.path.join('outputs', 'report', _csv_name)
+        if os.path.exists(_csv_path):
+            try:
+                os.remove(_csv_path)
+            except Exception:
+                pass
     print("Descargando datos de mercado...")
     df_market = download_market_data()
     if df_market is None or df_market.empty:
