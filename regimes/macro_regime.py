@@ -126,29 +126,52 @@ def compute_macro_signals(df_market, df_macro_manual=None, liquidity_score=None,
 
 def compute_macro_score(all_signals):
     def weighted_score(df, keys, weights):
+        """Suma ponderada renormalizada por fila.
+
+        Cada fila usa solo los componentes disponibles (no-NaN) en esa
+        fecha, redistribuyendo el peso entre ellos. Evita que un solo
+        componente ausente invalide el score completo.
+        """
         available = [k for k in keys if k in df.columns]
         if not available:
             return pd.Series(0, index=df.index)
-        w = {k: weights[k] for k in available}
-        w_sum = sum(w.values())
-        # Rellenar NaN con 0 para evitar que una señal invalide todo el score
-        return sum(df[k] * w[k] / w_sum for k in available)
+        num = pd.Series(0.0, index=df.index)
+        den = pd.Series(0.0, index=df.index)
+        for k in available:
+            w = weights[k]
+            valid = df[k].notna()
+            num = num.add(df[k].fillna(0) * w, fill_value=0)
+            den = den.add(valid.astype(float) * w, fill_value=0)
+        return (num / den.replace(0, 1)).fillna(0)
 
     critical_score = weighted_score(all_signals, ['curve', 'credit', 'volatility', 'liquidity', 'real_liquidity'], CRITICAL_WEIGHTS)
     important_score = weighted_score(all_signals, ['dollar', 'commodities', 'breadth'], IMPORTANT_WEIGHTS)
     contextual_score = weighted_score(all_signals, ['market_strength'], CONTEXTUAL_WEIGHTS)
 
-    macro_score = (
-        LEVEL_WEIGHTS['critical'] * critical_score +
-        LEVEL_WEIGHTS['important'] * important_score +
-        LEVEL_WEIGHTS['contextual'] * contextual_score
-    )
+    # Combinacion de niveles con renormalizacion por fila.
+    # Si un nivel entero no tiene datos en una fecha, su peso se
+    # redistribuye entre los niveles con evidencia disponible.
+    levels = {
+        'critical': critical_score,
+        'important': important_score,
+        'contextual': contextual_score,
+    }
+    num = pd.Series(0.0, index=all_signals.index)
+    den = pd.Series(0.0, index=all_signals.index)
+    for name, s in levels.items():
+        w = LEVEL_WEIGHTS[name]
+        valid = s.notna()
+        num = num.add(s.fillna(0) * w, fill_value=0)
+        den = den.add(valid.astype(float) * w, fill_value=0)
+    macro_score = (num / den.replace(0, 1)).fillna(0)
 
-    # Mezcla con fundamentales si existen
+    # Mezcla con fundamentales: solo donde haya datos, sin propagar NaN
     fundamental_sigs = [c for c in all_signals.columns if c in ['inflation', 'employment', 'activity']]
     if fundamental_sigs:
         fund_mean = all_signals[fundamental_sigs].mean(axis=1)
-        macro_score = 0.5 * macro_score + 0.5 * fund_mean
+        has_fund = fund_mean.notna()
+        macro_score = macro_score.copy()
+        macro_score[has_fund] = 0.5 * macro_score[has_fund] + 0.5 * fund_mean[has_fund]
 
     macro_score = macro_score.rolling(2, min_periods=1).mean()
     return macro_score
