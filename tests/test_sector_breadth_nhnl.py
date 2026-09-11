@@ -1,5 +1,4 @@
 import pandas as pd
-import numpy as np
 from indicators.sector_breadth import compute_sector_breadth
 
 def _make_single_ticker(high_values):

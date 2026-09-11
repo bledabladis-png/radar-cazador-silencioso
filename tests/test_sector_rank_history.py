@@ -1,5 +1,4 @@
 import pandas as pd
-import numpy as np
 from indicators.sector_rank_history import update_rank_history
 
 def _make_results(rankings_dict):

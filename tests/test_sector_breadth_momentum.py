@@ -1,7 +1,5 @@
 import pandas as pd
-import numpy as np
 from indicators.sector_breadth_momentum import compute_sector_breadth_momentum
-import os
 
 def _crear_csv(tmp_path):
     sectors = ['XLK', 'XLF']

@@ -1,5 +1,4 @@
 import numpy as np
-import pandas as pd
 from indicators.sector_flow_characteristics import _regime
 from indicators.price_flow_divergence import detect_price_flow_divergence
 

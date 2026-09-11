@@ -1,5 +1,4 @@
 import pandas as pd
-import numpy as np
 from indicators.sector_dispersion import compute_sector_dispersion
 
 def test_compute_sector_dispersion_ok():

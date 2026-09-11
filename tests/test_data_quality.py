@@ -1,5 +1,3 @@
-import pandas as pd
-import numpy as np
 from indicators.data_quality import classify_freshness, compute_data_quality
 
 def test_freshness_daily():

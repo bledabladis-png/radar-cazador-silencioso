@@ -1,5 +1,4 @@
 import pandas as pd
-import numpy as np
 from indicators.sector_concentration import safe_quantile, compute_sector_concentration
 
 def test_safe_quantile_min_obs():

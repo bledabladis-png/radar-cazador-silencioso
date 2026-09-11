@@ -1,5 +1,4 @@
 import numpy as np
-import pandas as pd
 from indicators.rs_internal import classify_rs
 
 def test_classify_rs():
