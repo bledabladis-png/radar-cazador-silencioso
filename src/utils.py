@@ -217,3 +217,48 @@ def detect_cross_module_conflict(macro_regime, financial_regime, volatility_regi
         'blocks': ' | '.join(blocks),
         'details': {name: {'state': modules[name], 'bias_financial': biases_fin[name], 'bias_inflation': biases_inf[name]} for name in modules}
     }
+
+
+def confidence_from_range(scores_df, divisor=2.0):
+    """Confianza = 1 - (max - min) / divisor.
+
+    Mide DISAGREEMENT EXTREMO entre componentes. Politica conservadora:
+    un solo outlier puede penalizar fuerte la confianza global.
+
+    Args:
+        scores_df: pd.DataFrame (columnas=componentes) o pd.Series.
+        divisor: 2.0 por defecto (componentes normalizados a [-1, +1]).
+
+    Returns:
+        pd.Series en [0, 1] si scores_df es DataFrame.
+        float si scores_df es Series.
+
+    Reglas:
+        - NaN por fila se excluyen del calculo.
+        - <2 componentes validos -> 0.5 (evidencia insuficiente).
+        - range = max - min sobre componentes validos.
+        - conf = clip(1 - range/divisor, 0, 1).
+
+    Nota (auditoria 2026-09-11):
+        El rango es una estadistica de orden. Su distribucion PUEDE
+        depender del numero de componentes aunque la formula no incluya
+        N explicitamente. Se eligio por baja sensibilidad empirica en
+        pruebas 3 vs 4 componentes y por su interpretabilidad.
+    """
+    if isinstance(scores_df, pd.Series):
+        return _confidence_range_row(scores_df, divisor)
+
+    valid = scores_df.dropna(axis=1, how='all')
+    if valid.shape[1] < 2:
+        return pd.Series(0.5, index=scores_df.index)
+    rng = valid.max(axis=1) - valid.min(axis=1)
+    return (1.0 - rng / divisor).clip(0, 1).fillna(0.5)
+
+
+def _confidence_range_row(row, divisor=2.0):
+    """Version escalar de confidence_from_range (uso interno)."""
+    valid = row.dropna()
+    if len(valid) < 2:
+        return 0.5
+    rng = valid.max() - valid.min()
+    return max(0.0, min(1.0, 1.0 - rng / divisor))

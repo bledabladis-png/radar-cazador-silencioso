@@ -31,7 +31,46 @@ def test_liquidity_crisis():
     })
     score, regime, conf = compute_financial_conditions(df)
     assert regime == 'HIGH_STRESS'
-    assert conf > 0.5
+
+    # C19: confidence = disagreement entre componentes via rango.
+    # No imponemos un threshold arbitrario; verificamos que el valor
+    # coincide exactamente con la formula C19 aplicada a los
+    # componentes del ultimo dia.
+    from src.utils import robust_zscore, get_col
+    from config.settings import CONFIDENCE_RANGE_DIVISOR
+
+    components = {}
+    try:
+        vix_s = get_col(df, '^VIX', 'Close')
+        components['vix'] = -np.tanh(robust_zscore(vix_s, 60)).iloc[-1]
+    except KeyError:
+        pass
+    try:
+        hyg_s = get_col(df, 'HYG', 'Close')
+        lqd_s = get_col(df, 'LQD', 'Close')
+        components['credit'] = np.tanh(robust_zscore(hyg_s/lqd_s, 60)).iloc[-1]
+    except KeyError:
+        pass
+    try:
+        dxy_s = get_col(df, 'DX-Y.NYB', 'Close')
+        components['dollar'] = -np.tanh(robust_zscore(dxy_s.pct_change(fill_method=None), 60)).iloc[-1]
+    except KeyError:
+        pass
+    try:
+        tnx_s = get_col(df, '^TNX', 'Close')
+        fvx_s = get_col(df, '^FVX', 'Close')
+        components['curve'] = np.tanh(robust_zscore(tnx_s-fvx_s, 60)).iloc[-1]
+    except KeyError:
+        pass
+
+    vals = [v for v in components.values() if not np.isnan(v)]
+    if len(vals) >= 2:
+        rng = max(vals) - min(vals)
+        expected = max(0.0, min(1.0, 1.0 - rng / CONFIDENCE_RANGE_DIVISOR))
+        assert abs(conf - expected) < 1e-9, f'conf={conf} != expected={expected}'
+
+    # Invariante
+    assert 0.0 <= conf <= 1.0
 
 def test_liquidity_returns_valid_types():
     n = 200

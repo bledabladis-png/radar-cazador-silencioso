@@ -13,8 +13,8 @@ CORRECCIONES APLICADAS (auditoria 24/07/2026):
 """
 import pandas as pd
 import numpy as np
-from src.utils import robust_zscore, get_col
-from config.settings import FINANCIAL_CONDITIONS_WEIGHTS, FINANCIAL_CONDITIONS_THRESHOLDS
+from src.utils import robust_zscore, get_col, confidence_from_range
+from config.settings import FINANCIAL_CONDITIONS_WEIGHTS, FINANCIAL_CONDITIONS_THRESHOLDS, CONFIDENCE_RANGE_DIVISOR
 
 def compute_financial_conditions(df):
     """Calcula el score de condiciones financieras agregando VIX, credito, dolar y curva."""
@@ -59,7 +59,9 @@ def compute_financial_conditions(df):
         return pd.Series(0, index=df.index), 'NEUTRAL', 1.0
 
     financial_score = sum(scores[c] * weights[c] / w_sum for c in available)
-    confidence = (1 - scores[available].std(axis=1) / 2).clip(0, 1).fillna(0.5)
+    # Confidence = disagreement extremo entre componentes (C19).
+    # Metodo: 1 - (max - min) / divisor, con divisor=2.0 (politica conservadora).
+    confidence = confidence_from_range(scores[available], divisor=CONFIDENCE_RANGE_DIVISOR)
     last = financial_score.iloc[-1] if not financial_score.empty else 0
 
     if last > FINANCIAL_CONDITIONS_THRESHOLDS['abundante']:

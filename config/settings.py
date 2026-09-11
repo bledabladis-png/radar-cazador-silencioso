@@ -207,3 +207,12 @@ CACHE_STOCKS_PATH = 'data/stock_prices.csv'
 
 TOP_N_CANDIDATES = 15   # pre-filtro por weight antes del WLS
 TOP_N_LEADERS = 5       # cuantos se muestran en el reporte
+
+
+# ============================================================
+# CONFIDENCE (C19)
+# ============================================================
+# Confidence = 1 - (max - min) / CONFIDENCE_RANGE_DIVISOR
+# Divisor 2.0 = normalizacion teorica con componentes en [-1, +1].
+# Politica conservadora: disagreement extremo penaliza fuerte.
+CONFIDENCE_RANGE_DIVISOR = 2.0
