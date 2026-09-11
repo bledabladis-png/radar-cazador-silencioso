@@ -56,6 +56,11 @@ from src.report.flows_international import (
 )
 from src.report.sentiment import render_sentimiento_opciones
 from src.report.slpm import render_slpm_v12, render_slpm_legacy
+from src.report.volatility_mte import (
+    render_estructura_volatilidad,
+    render_calidad_datos,
+    render_mte,
+)
 from src.report.header import render_regimenes
 from src.report.helpers import _classify_finra_freshness
 
@@ -236,63 +241,12 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
     lines.extend(render_flujo_sintesis(flow_synthesis))
 
     # =========================================================================
-    # MTE v1.0
     # =========================================================================
-    # ESTRUCTURA DE VOLATILIDAD
-    if volatility_structure_data is not None and not volatility_structure_data.empty:
-        lines.append("## Estructura de volatilidad\n")
-        lines.append("| Fecha | VIX | Perc 20d | Perc 60d | VIX3M/VIX | PCR z | Perc PCR | Lectura volatilidad | Term structure |\n")
-        lines.append("|-------|-----|----------|----------|-----------|-------|----------|---------------------|----------------|\n")
-        for _, row in volatility_structure_data.iterrows():
-            date_str = pd.Timestamp(row['date']).strftime('%Y-%m-%d') if pd.notna(row['date']) else 'N/D'
-            lines.append(f"| {date_str} | {row['vix_level']:.2f} | {row['vix_percentile_20d']:.2f} | {row['vix_percentile_60d']:.2f} | {row['term_structure_ratio']:.2f} | {row['pcr_zscore']:.2f} | {row['pcr_percentile_20d']:.2f} | {row['volatility_reading']} | {row['term_structure_reading']} |\n")
-        lines.append("\n")
-        lines.append("*Estructura descriptiva de volatilidad implícita y posicionamiento en opciones. No incluye Dark Pool.*\n\n")
-
-    # CALIDAD DE DATOS
-    if data_quality_data is not None and not data_quality_data.empty:
-        lines.append("## Calidad, frescura y cobertura de datos\n")
-        lines.append("| Fuente | Último dato | Edad (días) | Frecuencia | Frescura | Cobertura | Notas |\n")
-        lines.append("|--------|-------------|--------------|------------|----------|-----------|-------|\n")
-        # Mostrar solo la fila más reciente por fuente para evitar duplicados históricos
-        dq = data_quality_data.copy()
-        if 'date' in dq.columns and 'source' in dq.columns:
-            dq['date'] = pd.to_datetime(dq['date'], errors='coerce')
-            latest_idx = dq.groupby('source')['date'].idxmax()
-            dq = dq.loc[latest_idx].sort_values('source')
-        for _, row in dq.iterrows():
-            last = row['last_date'] if pd.notna(row['last_date']) else 'N/D'
-            age = f"{row['age_calendar_days']:.0f}" if pd.notna(row['age_calendar_days']) else 'N/D'
-            freq = row['frequency'] if pd.notna(row['frequency']) else 'N/D'
-            fresh = row['freshness'] if pd.notna(row['freshness']) else 'N/D'
-            cov = f"{row['coverage']:.2%}" if pd.notna(row['coverage']) else 'N/D'
-            notes = row['notes'] if pd.notna(row['notes']) else ''
-            lines.append(f"| {row['source']} | {last} | {age} | {freq} | {fresh} | {cov} | {notes} |\n")
-        lines.append("\n")
-        lines.append("*No todas las variables tienen la misma actualidad. Los datos se muestran sin interpolación.*\n\n")
-    if mte_result:
-        lines.append("## Market Transition Engine (MTE v1.0)\n")
-        mte_conf = mte_result.get('confidence', 0)
-        mte_conf_str = f'{mte_conf:.2f}' if pd.notna(mte_conf) else 'N/D'
-        mte_scenario = mte_result.get('scenario', 'N/A')
-        if mte_conf < 0.5:
-            lines.append(f"- **Escenario (UNCONFIRMED):** {mte_scenario} (Confidence Score no calibrado: {mte_conf_str}) - *No se considera confirmado.*\n")
-        else:
-            lines.append(f"- **Escenario:** {mte_scenario} (Confidence Score no calibrado: {mte_conf_str})\n")
-        lines.append("*Nota: Confidence Score (no calibrado, escala 0-1) representa la distancia a los umbrales y el consenso entre motores. No debe interpretarse como probabilidad.*\n")
-        lines.append(f"- **Market Stress Index (MSI):** {mte_result.get('msi', 0):.0f}\n")
-        lines.append(f"- **Inflation Pressure Index (IPI):** {mte_result.get('ipi', 0):.0f}\n")
-        val_srs = mte_result.get('srs', 0)
-        val_srs_str = f'{val_srs:.2f}' if pd.notna(val_srs) else 'N/D'
-        lines.append(f"- **Sector Rotation Score:** {val_srs_str}\n")
-        val_shs = mte_result.get('shs', 0)
-        val_shs_str = f'{val_shs:.2f}' if pd.notna(val_shs) else 'N/D'
-        lines.append(f"- **Safe Haven Score:** {val_shs_str}\n")
-        lines.append(f"- **Credit Stress Score:** {mte_result.get('cls', 0):.2f}")
-        lines.append(" (orientacion: positivo = mayor estres crediticio)\n")
-        ips_val = mte_result.get('ips', 0)
-        ips_str = f'{ips_val:.2f}' if pd.notna(ips_val) else 'N/D'
-        lines.append(f"- **Inflation Pressure Score:** {ips_str}\n\n")
+    # VOLATILIDAD + CALIDAD + MTE
+    # =========================================================================
+    lines.extend(render_estructura_volatilidad(volatility_structure_data))
+    lines.extend(render_calidad_datos(data_quality_data))
+    lines.extend(render_mte(mte_result))
 
     # =========================================================================
     # CONFIRMATION DATA
