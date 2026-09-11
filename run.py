@@ -1257,12 +1257,54 @@ def main():
 
                           all_signals=all_signals)
     print("Reporte generado en outputs/report/reporte_diario.md")
+
+    # C1-10: side effects movidos desde report_generator.py
+    _save_regime_history(macro_score, macro_regime, macro_conf,
+                         financial_regime, vol_regime, sector_results)
+    _save_sector_rankings(sector_results)
     # Reporte de cobertura europea (descriptivo; no rompe el run si falla)
     try:
         from src.european_coverage import generate_european_coverage_report
         generate_european_coverage_report()
     except Exception as e:
         print(f"  Cobertura europea omitida: {e}")
+
+def _save_regime_history(macro_score, macro_regime, macro_conf,
+                         liquidity_regime, vol_regime, sector_results):
+    """Persiste la fila del regimen actual en outputs/history/macro_regime.csv.
+
+    Movido desde report_generator.py (C1-10) para separar la generacion de
+    texto de los side-effects de persistencia.
+    """
+    hist_path = "outputs/history/macro_regime.csv"
+    new_row = pd.DataFrame({
+        "date": [datetime.now()],
+        "macro_regime": [macro_regime],
+        "macro_score": [macro_score.iloc[-1]],
+        "macro_conf": [macro_conf],
+        "liquidity_regime": [liquidity_regime],
+        "volatility_regime": [vol_regime],
+        "sector_regime": [sector_results["regime"]],
+    })
+    if os.path.exists(hist_path):
+        hist = pd.read_csv(hist_path)
+        hist = pd.concat([hist, new_row], ignore_index=True)
+    else:
+        hist = new_row
+    hist.to_csv(hist_path, index=False)
+
+
+def _save_sector_rankings(sector_results):
+    """Persiste el ranking de sectores en outputs/report/sector_rankings.csv.
+
+    Movido desde report_generator.py (C1-10).
+    """
+    sector_df = pd.DataFrame(
+        sector_results["ranking"],
+        columns=["ticker", "name", "score", "wyckoff_phase"],
+    )
+    sector_df.to_csv("outputs/report/sector_rankings.csv", index=False)
+
 
 if __name__ == "__main__":
     main()

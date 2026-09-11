@@ -1,5 +1,4 @@
-﻿import pandas as pd
-import os
+﻿import os
 from datetime import datetime
 from src.report.alerts import render_alerts, render_cross_module
 from src.report.breadth import render_breadth_market
@@ -90,7 +89,6 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
     # =========================================================================
     # RESUMEN DE REGIMENES (extraido a src/report/header.py, C1-5)
     # =========================================================================
-    sector_regime = sector_results['regime']
     lines.extend(render_regimenes(
         macro_score, macro_regime, macro_conf,
         liquidity_score, liquidity_regime, liq_conf,
@@ -304,23 +302,5 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
     with open(output_path, 'w', encoding='utf-8') as f:
         f.writelines(lines)
 
-    hist_path = 'outputs/history/macro_regime.csv'
-    new_row = pd.DataFrame({
-        'date': [datetime.now()],
-        'macro_regime': [macro_regime],
-        'macro_score': [macro_score.iloc[-1]],
-        'macro_conf': [macro_conf],
-        'liquidity_regime': [liquidity_regime],
-        'volatility_regime': [vol_regime],
-        'sector_regime': [sector_regime],
-    })
-    if os.path.exists(hist_path):
-        hist = pd.read_csv(hist_path)
-        hist = pd.concat([hist, new_row], ignore_index=True)
-    else:
-        hist = new_row
-    hist.to_csv(hist_path, index=False)
-
-    sector_df = pd.DataFrame(sector_results['ranking'], columns=['ticker', 'name', 'score', 'wyckoff_phase'])
-    sector_df.to_csv('outputs/report/sector_rankings.csv', index=False)
+# NOTE: side effects (macro_regime.csv, sector_rankings.csv) movidos a run.py (C1-10)
 
