@@ -19,10 +19,9 @@ from src.pipeline.flows_primary import compute_flows_primary
 from src.pipeline.flows_secondary import compute_flows_secondary
 from src.pipeline.leaders import compute_leaders
 from src.pipeline.sector_metrics import compute_sector_metrics
+from src.pipeline.breadth_metrics import compute_breadth_metrics
 from src.utils import get_col, detect_cross_module_conflict
 from src.dependency_tracker import audit_double_counting
-from indicators.sector_breadth import compute_sector_breadth
-from indicators.sector_breadth_momentum import compute_sector_breadth_momentum
 from indicators.persistence import compute_persistence
 from indicators.signal_agreement import compute_signal_agreement
 from indicators.price_flow_divergence import detect_price_flow_divergence
@@ -114,44 +113,9 @@ def main():
     sector_concentration_df = sm['sector_concentration_df']
     leader_representativeness_df = sm['leader_representativeness_df']
 
-    # --- Sector Breadth & Health v1.0 (descriptivo) ---
-    # --- Momentum de amplitud sectorial v1.0 (descriptivo) ---
-    try:
-        if df_stocks is not None and not df_stocks.empty:
-            sector_breadth_momentum_df = compute_sector_breadth_momentum(
-                'outputs/history/sector_breadth.csv'
-            )
-            sbm_path = Path('outputs/history/sector_breadth_momentum.csv')
-            sbm_path.parent.mkdir(parents=True, exist_ok=True)
-            if not sector_breadth_momentum_df.empty:
-                if sbm_path.exists():
-                    hist_sbm = pd.read_csv(sbm_path)
-                    sector_breadth_momentum_df = append_dedup(hist_sbm, sector_breadth_momentum_df, ["date","sector"])
-                sector_breadth_momentum_df.to_csv(sbm_path, index=False)
-                print("  Momentum de amplitud sectorial calculado.")
-        else:
-            sector_breadth_momentum_df = None
-    except Exception as e:
-        print(f"  Momentum de amplitud sectorial omitido: {e}")
-        sector_breadth_momentum_df = None
-
-    try:
-        if df_stocks is not None and not df_stocks.empty:
-            from pathlib import Path as P
-            sector_breadth_df = compute_sector_breadth(df_market, df_stocks, holdings_df)
-            sb_path = P('outputs/history/sector_breadth.csv')
-            sb_path.parent.mkdir(parents=True, exist_ok=True)
-            if not sector_breadth_df.empty:
-                if sb_path.exists():
-                    hist_sb = pd.read_csv(sb_path)
-                    sector_breadth_df = append_dedup(hist_sb, sector_breadth_df, ["date","sector"])
-                sector_breadth_df.to_csv(sb_path, index=False)
-                print("  Sector Breadth & Health calculado.")
-        else:
-            sector_breadth_df = None
-    except Exception as e:
-        print(f"  Sector Breadth & Health omitido: {e}")
-        sector_breadth_df = None
+    bm = compute_breadth_metrics(df_stocks, df_market, holdings_df)
+    sector_breadth_momentum_df = bm['sector_breadth_momentum_df']
+    sector_breadth_df = bm['sector_breadth_df']
 
     # --- NUEVO: Forzar lideres del sector #1 para el SLPM ---
     leader_metrics_for_slpm = []
