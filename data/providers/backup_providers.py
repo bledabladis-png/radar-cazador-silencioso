@@ -109,8 +109,8 @@ class BackupProvider:
                     df = pd.read_csv(path, header=[0,1], index_col=0, parse_dates=True)
                     if not df.empty:
                         frames.append(df)
-                except Exception:
-                    pass
+                except Exception as e:
+                    print(f"  [WARN] backup: reference cache: {e}")
         if frames:
             return pd.concat(frames, axis=1)
         return pd.DataFrame()

@@ -23,8 +23,8 @@ def load_macro_manual(data_dir='data/macro_manual'):
                 prefix = os.path.splitext(fname)[0]
                 df = df.add_prefix(f'{prefix}_')
                 dfs.append(df)
-            except Exception:
-                pass
+            except Exception as e:
+                print(f"  [WARN] load_macro_manual: {fname}: {e}")
     
     if not dfs:
         return None

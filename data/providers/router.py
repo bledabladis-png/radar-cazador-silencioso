@@ -78,8 +78,8 @@ class DataRouter:
                 if df is not None and not df.empty:
                     print("Usando datos macro manuales locales para liquidez.")
                     return df
-            except Exception:
-                pass
+            except Exception as e:
+                print(f"  [WARN] router: macro_manual fallback: {e}")
 
         return None
     def _load_macro_manual(self, data_dir):
@@ -96,8 +96,8 @@ class DataRouter:
                     prefix = os.path.splitext(fname)[0]
                     df = df.add_prefix(f'{prefix}_')
                     dfs.append(df)
-                except Exception:
-                    pass
+                except Exception as e:
+                    print(f"  [WARN] router: _load_macro_manual: {e}")
 
         if not dfs:
             return None

@@ -33,8 +33,8 @@ def get_usa_tickers():
             df_sect = df_sect.sort_values(['etf', 'weight'], ascending=[True, False])
         for etf, group in df_sect.groupby('etf'):
             tickers.extend([normalize_yahoo_ticker(t) for t in group['ticker'].head(20).tolist()])
-    except Exception:
-        pass
+    except Exception as e:
+        print(f"  [WARN] get_usa_tickers: etf_holdings.csv: {e}")
     # Eliminar duplicados
     seen = set()
     result = []
@@ -55,8 +55,8 @@ def get_stock_list():
             df_sect = df_sect.sort_values(['etf', 'weight'], ascending=[True, False])
         for etf, group in df_sect.groupby('etf'):
             tickers.extend([normalize_yahoo_ticker(t) for t in group['ticker'].head(20).tolist()])
-    except Exception:
-        pass
+    except Exception as e:
+        print(f"  [WARN] get_stock_list: etf_holdings.csv: {e}")
 
     # 2) Índices americanos/europeos (data/index_holdings.csv)
     try:
@@ -65,8 +65,8 @@ def get_stock_list():
             df_idx = df_idx.sort_values(['etf', 'weight'], ascending=[True, False])
         for etf, group in df_idx.groupby('etf'):
             tickers.extend([normalize_yahoo_ticker(t) for t in group['ticker'].head(20).tolist()])
-    except Exception:
-        pass
+    except Exception as e:
+        print(f"  [WARN] get_stock_list: index_holdings.csv: {e}")
 
     # Eliminar duplicados preservando orden
     seen = set()

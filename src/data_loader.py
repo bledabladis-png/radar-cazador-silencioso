@@ -42,8 +42,8 @@ def _ticker_list():
             for t in raw_tickers:
                 if isinstance(t, str) and t not in INVALID_TICKERS:
                     tickers.append(normalize_yahoo_ticker(t))
-    except:
-        pass
+    except Exception as e:
+        print(f"  [WARN] _ticker_list: etf_holdings.csv: {e}")
 
     return list(set(tickers))
 
