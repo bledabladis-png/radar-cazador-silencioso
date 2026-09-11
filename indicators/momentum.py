@@ -4,6 +4,11 @@ from config.settings import FLOW_ZSCORE_WINDOW, FLOW_EWM_SPAN, FLOW_CMF_WINDOW, 
 from src.utils import robust_zscore, get_col
 
 def compute_returns(df, tickers):
+    # G4: sin ffill a proposito (a diferencia de compute_obv/compute_cmf/
+    # compute_flow_proxy). Rellenar Close antes de pct_change generaria
+    # retornos 0 artificiales en festivos locales (ej: BME en festivo,
+    # Xetra abierto). Preferimos NaN para que el consumidor filtre
+    # (sector_regime usa dropna/min_periods aguas abajo).
     returns = pd.DataFrame()
     for t in tickers:
         try:
