@@ -517,7 +517,10 @@ def main():
     for filename, generator in generators.items():
         content = generator()
         filepath = os.path.join(DOCS_DIR, filename)
-        with open(filepath, 'w', encoding='utf-8') as f:
+        # E1 fix: normalizar CRLF -> LF (los templates heredan
+        # los line endings del propio generate_docs.py)
+        content = content.replace('\r\n', '\n').replace('\r', '\n')
+        with open(filepath, 'w', encoding='utf-8', newline='') as f:
             f.write(content)
         print(f'  {filename}')
     print(f'\n{len(generators)} archivos generados en docs/')
