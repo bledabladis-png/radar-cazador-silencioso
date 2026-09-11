@@ -398,11 +398,13 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
     for i, (ticker, s_score) in enumerate(structural_ranking[:11], 1):
         name = SECTOR_NAMES.get(ticker, ticker)
         t_score = tactical_scores.get(ticker, 0.0) if tactical_scores else 0.0
-        pers_raw = sector_persistence.get(ticker) if sector_persistence else None; pers = pers_raw if pers_raw is not None else "N/A"
+        pers_raw = sector_persistence.get(ticker) if sector_persistence else None
+        pers_val = pers_raw if pers_raw is not None else 0.0
+        pers_str = f"{pers_raw:.0%}" if pers_raw is not None else "N/A"
         agree = signal_agreements.get(ticker, 0.5) if signal_agreements else 0.5
         agree_display = signal_agreements_display.get(ticker, f'{agree:.0%}') if signal_agreements_display else f'{agree:.0%}'
-        struct_conf = (pers + agree) / 2
-        lines.append(f"| {i} | {name} ({ticker}) | {s_score:+.2f} | {t_score:+.2f} | {pers:.0%} | {agree_display} | {struct_conf:.0%} |\n")
+        struct_conf = (pers_val + agree) / 2
+        lines.append(f"| {i} | {name} ({ticker}) | {s_score:+.2f} | {t_score:+.2f} | {pers_str} | {agree_display} | {struct_conf:.0%} |\n")
     lines.append("\n")
 
     # =========================================================================
@@ -417,14 +419,16 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
     for i, (ticker, name, score, wyckoff) in enumerate(sector_results['ranking'][:11], 1):
         t_score = tactical_scores.get(ticker, 0.0) if tactical_scores else 0.0
         s_score = structural_scores.get(ticker, 0.0) if structural_scores else 0.0
-        pers_raw = sector_persistence.get(ticker) if sector_persistence else None; pers = pers_raw if pers_raw is not None else "N/A"
+        pers_raw = sector_persistence.get(ticker) if sector_persistence else None
+        pers_val = pers_raw if pers_raw is not None else 0.0
+        pers_str = f"{pers_raw:.0%}" if pers_raw is not None else "N/A"
         agree = signal_agreements.get(ticker, 0.5) if signal_agreements else 0.5
         agree_display = signal_agreements_display.get(ticker, f'{agree:.0%}') if signal_agreements_display else f'{agree:.0%}'
         shock = shock_sensitivities.get(ticker, {}) if shock_sensitivities else {}
         comm_level = shock.get('commodity_level', 'N/A') if shock else 'N/A'
         comm_val = shock.get('commodity_corr_value', None) if shock else None
         comm_display = f"{comm_level} ({comm_val:+.2f})" if comm_val is not None and comm_level != 'N/A' else comm_level
-        lines.append(f"| {i} | {name} ({ticker}) | {score:.2f} | {t_score:+.2f} | {s_score:+.2f} | {pers:.0%} | {agree_display} | {comm_display} | {wyckoff} |\n")
+        lines.append(f"| {i} | {name} ({ticker}) | {score:.2f} | {t_score:+.2f} | {s_score:+.2f} | {pers_str} | {agree_display} | {comm_display} | {wyckoff} |\n")
     lines.append("\n")
 
     # =========================================================================
@@ -466,9 +470,11 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
         t = tactical_scores.get(ticker, 0) if tactical_scores else 0
         s = structural_scores.get(ticker, 0) if structural_scores else 0
         name = SECTOR_NAMES.get(ticker, ticker)
-        pers_raw = sector_persistence.get(ticker) if sector_persistence else None; pers = pers_raw if pers_raw is not None else "N/A"
+        pers_raw = sector_persistence.get(ticker) if sector_persistence else None
+        pers_val = pers_raw if pers_raw is not None else 0.0
+        pers_str = f"{pers_raw:.0%}" if pers_raw is not None else "N/A"
         agree = signal_agreements.get(ticker, 0.5) if signal_agreements else 0.5
-        conf = (pers + agree) / 2
+        conf = (pers_val + agree) / 2
         
         if s > struct_median and t > tact_median:
             quadrants['Structural Strength'].append((name, conf))
