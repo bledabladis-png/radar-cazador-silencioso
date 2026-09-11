@@ -244,8 +244,8 @@ def download_stock_prices():
                     classification[status].append(ticker)
                     if ticker in failed_tickers:
                         failed_tickers.remove(ticker)
-            except Exception:
-                pass
+            except Exception as e:
+                print(f'  [WARN] stock_data_loader: {ticker}: {e}')
 
     # Cascada europea: descarga los europeos desde fuentes oficiales.
     # Yahoo ya NO los ha descargado (Europa primero), asi que no hay

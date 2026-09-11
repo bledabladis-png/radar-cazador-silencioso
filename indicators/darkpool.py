@@ -47,8 +47,8 @@ def _get_all_tickers():
         holdings = pd.read_csv('data/etf_holdings.csv')
         if 'ticker' in holdings.columns:
             tickers.extend(holdings['ticker'].tolist())
-    except:
-        pass
+    except Exception as e:
+        print(f'  [WARN] darkpool: etf_holdings.csv no disponible: {e}')
     # Filtro adicional: solo tickers con formato razonable de acción
     tickers = [t for t in tickers if not t.startswith('^')]
     valid = []
@@ -73,8 +73,8 @@ def _get_volume_from_df(df, week_start, end_date_str):
                 vol = week_data[col].sum()
                 if pd.notna(vol) and vol > 0:
                     volumes[ticker] = vol
-    except:
-        pass
+    except Exception as e:
+        print(f'  [WARN] darkpool: error extrayendo volumenes: {e}')
     return volumes
 
 def _backfill_history(hist, finra):
@@ -122,8 +122,8 @@ def _backfill_history(hist, finra):
                             total = float(data[vol_col].sum())
                             if total > 0:
                                 volumes[t] = total
-                except:
-                    pass
+                except Exception as e:
+                    print(f'  [WARN] darkpool backfill {t}: {e}')
             if not volumes:
                 current -= timedelta(weeks=1)
                 continue
