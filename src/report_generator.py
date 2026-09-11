@@ -7,6 +7,8 @@ from config.tickers import SECTOR_NAMES
 from config.index_tickers import INDEX_CONFIG
 from config.settings import MOMENTUM_PRICE_WINDOW, MOMENTUM_LONG_WINDOW, ETF_PRIMARY_FLOW_ZSCORE_WINDOW, MIN_SECTOR_COVERAGE
 from config.weights import SLPM_WEIGHTS
+from src.report.alerts import render_alerts, render_cross_module
+from src.report.breadth import render_breadth_market
 from src.report.freshness import render_data_freshness
 from src.report.header import render_regimenes
 from src.report.helpers import (
@@ -52,85 +54,20 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
 
 
     # =========================================================================
-    # ALERTAS DE DIVERGENCIA (CORREGIDAS - sin flujo institucional ni shock externo)
+    # ALERTAS DE DIVERGENCIA
     # =========================================================================
-    alerts = []
-    
-    if breadth_values:
-        ema200 = breadth_values.get('% sobre EMA200', 0)
-        ema20 = breadth_values.get('% sobre EMA20', 0)
-        if ema200 > 0.70 and ema20 < 0.60:
-            alerts.append(f"- **Breadth Divergence:** Breadth EMA200: {ema200:.0%}; Breadth EMA20: {ema20:.0%}. La amplitud de corto plazo es inferior a la de largo plazo.")
-    
-    if liquidity_regime == 'HIGH_STRESS':
-        alerts.append("- **Financial Stress vs Credit:** Condiciones financieras elevadas, pero el crédito relativo (HYG/LQD) presenta una desviación positiva frente a su distribucion reciente. Estres localizado. No se observa confirmación suficiente de estres sistemico.")
-    
-    if price_flow_divergences:
-        for ticker, div in price_flow_divergences.items():
-            if div.get('status') != 'ALIGNED':
-                name = SECTOR_NAMES.get(ticker, ticker)
-                alerts.append(f"- **{name} Price-Flow:** Precio fuerte sin confirmación del Flow Proxy. El indicador no permite inferir directamente participacion institucional.")
-    
-    if alerts:
-        lines.append("### Alertas de Divergencia (Inicial)\n")
-        for alert in alerts:
-            lines.append(alert + "\n")
-        lines.append("\n")
-    else:
-        lines.append("### Alertas de Divergencia (Inicial)\n")
-        lines.append("*Sin divergencias relevantes.*\n\n")
+    lines.extend(render_alerts(breadth_values, liquidity_regime, price_flow_divergences))
 
     # =========================================================================
     # CROSS-MODULE CONFLICT
     # =========================================================================
-    if cross_module_conflict:
-        level = cross_module_conflict.get('conflict_level', 'MIXED')
-        icon = 'OK' if level == 'CONSENSUS' else 'WARN' if level in ('CONFLICT', 'DIVERGENCE') else 'INFO'
-        lines.append(f"### {icon} Cross-Module: {level}\n")
-        lines.append(f"**Mensaje:** {cross_module_conflict.get('message', '')}\n")
-        blocks = cross_module_conflict.get('blocks', '')
-        if blocks:
-            lines.append(f"**Bloques:** {blocks}\n")
-        details = cross_module_conflict.get('details', {})
-        if details:
-            lines.append("\n**Detalle por módulo:**\n")
-            for mod_name, mod_info in details.items():
-                state = mod_info.get('state', 'N/A')
-                if state is None or str(state) == 'None':
-                    state = 'N/A'
-                bias_fin = mod_info.get('bias_financial', 0)
-                bias_inf = mod_info.get('bias_inflation', 0)
-                bias_str = ''
-                if bias_fin == -1: bias_str += 'Estres Financiero '
-                if bias_inf == -1: bias_str += 'Presión Inflacionaria '
-                if bias_str == '': bias_str = 'Neutral'
-                lines.append(f"- {mod_name}: {state} ({bias_str})\n")
-        lines.append("\n")
-
-    if breadth_values:
-        lines.append("## Breadth de Mercado (11 sectores)\n")
-        lines.append("| Metrica | Valor |\n")
-        lines.append("|---------|-------|\n")
-        b20_pct = breadth_values.get('% sobre EMA20', 0)
-        b50_pct = breadth_values.get('% sobre EMA50', 0)
-        b200_pct = breadth_values.get('% sobre EMA200', 0)
-        nh_pct = breadth_values.get('New Highs (%)', 0)
-        nl_pct = breadth_values.get('New Lows (%)', 0)
-
-        b20_count = breadth_values.get('EMA20 count', int(round(b20_pct * 11)))
-        b50_count = breadth_values.get('EMA50 count', int(round(b50_pct * 11)))
-        b200_count = breadth_values.get('EMA200 count', int(round(b200_pct * 11)))
-        nh_count = breadth_values.get('New Highs count', int(round(nh_pct * 11)))
-        nl_count = breadth_values.get('New Lows count', int(round(nl_pct * 11)))
-
-        lines.append(f"| % sobre EMA20 | {b20_count}/11 ({b20_pct:.2%}) |\n")
-        lines.append(f"| % sobre EMA50 | {b50_count}/11 ({b50_pct:.2%}) |\n")
-        lines.append(f"| % sobre EMA200 | {b200_count}/11 ({b200_pct:.2%}) |\n")
-        lines.append(f"| New Highs sectoriales | {nh_count}/11 ({nh_pct:.2%}) |\n")
-        lines.append(f"| New Lows sectoriales | {nl_count}/11 ({nl_pct:.2%}) |\n")
-        lines.append("\n")
+    lines.extend(render_cross_module(cross_module_conflict))
 
     # =========================================================================
+    # BREADTH DE MERCADO (11 sectores)
+    # =========================================================================
+    lines.extend(render_breadth_market(breadth_values))
+
     # =========================================================================
     # SECTOR BREADTH & HEALTH
     # =========================================================================
