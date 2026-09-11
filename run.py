@@ -9,7 +9,6 @@ import os
 import sys
 from pathlib import Path
 from datetime import datetime
-from src.stock_data_loader import download_stock_prices
 from src.report_generator import generate_daily_report
 from src.pipeline.data_load import load_all_data
 from src.pipeline.regimes import compute_all_regimes
@@ -24,10 +23,9 @@ from src.pipeline.slpm import compute_slpm_v12
 from src.pipeline.diagnostics import compute_diagnostics
 from src.pipeline.market_data import compute_market_data
 from src.pipeline.mte_confirmation import compute_mte_confirmation
+from src.pipeline.indices_intl import compute_indices_intl
 from src.dependency_tracker import audit_double_counting
 from config.tickers import validate_sector_universe
-from indicators.index_phase import compute_index_phases
-from indicators.index_leaders import select_index_leaders
 
 def main():
     validate_sector_universe()
@@ -151,43 +149,9 @@ def main():
     cross_module_conflict = mc['cross_module_conflict']
     confirmation_data = mc['confirmation_data']
 
-    # =====================================================================
-    # INDICES INTERNACIONALES - FASES WYCKOFF + LIDERES
-    # =====================================================================
-    print("Calculando fases Wyckoff para indices internacionales...")
-    index_phases, index_data = compute_index_phases(df_market)
-    indices_en_acumulacion = [nombre for nombre, fase in index_phases.items() if fase in ['ACCUMULATION', 'MARKUP']]
-    if indices_en_acumulacion:
-        print(f"  Indices en acumulacion: {', '.join(indices_en_acumulacion)}")
-        df_index_stocks = download_stock_prices()
-        index_leaders = {}
-        for nombre in indices_en_acumulacion:
-            try:
-                leaders_single = select_index_leaders(None, df_index_stocks, [nombre])
-                if nombre in leaders_single and not leaders_single[nombre].empty:
-                    index_leaders[nombre] = leaders_single[nombre]
-                    print(f"    {nombre}: {len(leaders_single[nombre])} empresas seleccionadas")
-                else:
-                    print(f"    {nombre}: sin lideres disponibles")
-            except Exception as e:
-                print(f"    {nombre}: error al calcular lideres - {e}")
-    else:
-        print("  Ningun indice en fase de acumulacion.")
-        index_leaders = {}
-
-    # Exportar CSV de lideres internacionales para revision manual
-    if index_leaders:
-        try:
-            all_leaders = []
-            for nombre, df in index_leaders.items():
-                df_copy = df.copy()
-                df_copy['indice'] = nombre
-                all_leaders.append(df_copy)
-            if all_leaders:
-                pd.concat(all_leaders, ignore_index=True).to_csv('outputs/report/analisis_lideres_internacionales.csv', index=False)
-                print("  CSV de lideres internacionales generado.")
-        except Exception as e:
-            print(f"  Error al generar CSV internacional: {e}")
+    ii = compute_indices_intl(df_market)
+    index_phases = ii['index_phases']
+    index_leaders = ii['index_leaders']
 
     # =====================================================================
     # VALIDATION GATE
