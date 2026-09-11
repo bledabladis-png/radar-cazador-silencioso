@@ -10,8 +10,6 @@ import os
 import sys
 from pathlib import Path
 from datetime import datetime, timedelta
-from src.data_loader import download_market_data
-from src.macro_manual_loader import load_macro_manual
 from src.stock_data_loader import download_stock_prices, get_usa_tickers
 from data.providers.ssga_fund_data import get_etf_primary_flow_data
 from data.providers.blackrock_fund_data import get_blackrock_dax_primary_flow
@@ -21,13 +19,13 @@ from data.providers.amundi_fund_data import get_amundi_lyxi_primary_flow
 from data.providers.cftc_data import get_cftc_position_flow_data
 from data.providers.retry_utils import retry_call
 from data.providers.qqq_sec_primary_flow import get_qqq_sec_primary_flow
-from data.validator import validate_market_data
 from regimes.financial_conditions import compute_financial_conditions
 from regimes.liquidity import compute_liquidity_score as compute_real_liquidity
 from regimes.volatility_regime import compute_volatility_regime
 from regimes.macro_regime import compute_macro_regime
 from regimes.sector_regime import compute_sector_scores, compute_price_flow_rankings
 from src.report_generator import generate_daily_report
+from src.pipeline.data_load import load_all_data
 from src.utils import get_col, detect_cross_module_conflict, trim_to_last_valid_date, trim_to_last_valid_date_for_tickers
 from src.dependency_tracker import audit_double_counting
 from indicators.sector_breadth import compute_sector_breadth
@@ -62,31 +60,11 @@ def main():
                 os.remove(_csv_path)
             except Exception:
                 pass
-    print("Descargando datos de mercado...")
-    df_market = download_market_data()
-    if df_market is None or df_market.empty:
-        print("Error: no se pudieron descargar datos.")
+    data = load_all_data()
+    if data is None:
         return
-
-    df_market = trim_to_last_valid_date(df_market)
-    if df_market is None or df_market.empty:
-        print("Error: no hay datos válidos de mercado.")
-        return
-
-    print("Validando datos...")
-    valid, issues = validate_market_data(df_market)
-    if issues:
-        for t, msg in issues.items():
-            print(f"  {t}: {msg}")
-
-    if len(valid) < 5:
-        print("Pocos tickers validos. Abortando.")
-        return
-
-    print("Cargando datos macro manuales (si existen)...")
-    df_macro_manual = load_macro_manual()
-    if df_macro_manual is not None:
-        print(f"  Datos manuales cargados: {len(df_macro_manual)} filas.")
+    df_market = data['df_market']
+    df_macro_manual = data['df_macro_manual']
 
     print("Calculando regimen de Cond. Financieras...")
     financial_score, financial_regime, liq_conf = compute_financial_conditions(df_market)
