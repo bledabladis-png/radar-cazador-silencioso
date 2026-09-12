@@ -253,3 +253,38 @@ def test_data_quality_sin_archival():
     assert archival.empty, (
         f"fuentes ARCHIVAL en {last_date.date()}: {archival['source'].tolist()}"
     )
+
+# ============================================================
+# CAPA 2b - Frescura por provider europeo (individual)
+# ============================================================
+
+@pytest.mark.skipif(
+    not (BASE / "outputs" / "history" / "european_coverage.csv").exists(),
+    reason="european_coverage.csv no existe (CI fresco)",
+)
+@pytest.mark.parametrize("source", ["Euronext", "Xetra", "BME"])
+def test_european_provider_recent(source):
+    """Cada provider europeo debe tener >=90% de tickers con status OK."""
+    df = pd.read_csv(BASE / "outputs" / "history" / "european_coverage.csv")
+    sub = df[df["source"] == source]
+    if sub.empty:
+        pytest.skip(f"sin filas para {source} en european_coverage.csv")
+    ok = int((sub["status"] == "OK").sum())
+    ratio = ok / len(sub)
+    assert ratio >= 0.90, f"{source}: solo {ok}/{len(sub)} ({ratio:.0%}) OK"
+
+
+@pytest.mark.skipif(
+    not (BASE / "outputs" / "history" / "data_quality.csv").exists(),
+    reason="data_quality.csv no existe (CI fresco)",
+)
+def test_data_quality_europeos_si_presentes():
+    """Si data_quality.csv incluye Euronext/Xetra/BME, no deben estar ARCHIVAL."""
+    df = pd.read_csv(BASE / "outputs" / "history" / "data_quality.csv", parse_dates=["date"])
+    last_date = df["date"].max()
+    ultima = df[df["date"] == last_date]
+    for eu in ("Euronext", "Xetra", "BME"):
+        sub = ultima[ultima["source"] == eu]
+        if not sub.empty:
+            freshness = sub.iloc[0]["freshness"]
+            assert freshness != "ARCHIVAL", f"{eu} esta ARCHIVAL en {last_date.date()}"

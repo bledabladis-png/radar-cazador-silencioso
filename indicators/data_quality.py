@@ -257,4 +257,45 @@ def compute_data_quality():
                 'notes': f'Error lectura: {e}',
             })
 
+    # --- Fuentes europeas: Euronext, Xetra, BME ---
+    # Lee european_coverage.csv del run anterior (lag 1 dia).
+    # Agrega por source: fecha mas reciente, status global.
+    _eu_path = Path('outputs/history/european_coverage.csv')
+    for _eu_source in ('Euronext', 'Xetra', 'BME'):
+        _row = {
+            'date': now.strftime('%Y-%m-%d'),
+            'source': _eu_source,
+            'last_date': np.nan,
+            'age_calendar_days': np.nan,
+            'frequency': 'daily',
+            'freshness': 'N/D',
+            'n_total': np.nan,
+            'n_valid': np.nan,
+            'coverage': np.nan,
+            'notes': '',
+        }
+        try:
+            if _eu_path.exists():
+                _eu_df = pd.read_csv(_eu_path)
+                if 'date' in _eu_df.columns:
+                    _eu_last_run = pd.to_datetime(_eu_df['date'], errors='coerce').max()
+                    _eu_df = _eu_df[pd.to_datetime(_eu_df['date'], errors='coerce') == _eu_last_run]
+                _eu_df = _eu_df[_eu_df['source'] == _eu_source]
+                if not _eu_df.empty:
+                    _ok = int((_eu_df['status'] == 'OK').sum())
+                    _n_total = len(_eu_df)
+                    _last = pd.to_datetime(_eu_df['last_date'], errors='coerce').max()
+                    _age = (now - _last).days if pd.notna(_last) else np.nan
+                    _fresh = classify_freshness(_age, 'daily')
+                    _row['last_date'] = _last.strftime('%Y-%m-%d') if pd.notna(_last) else np.nan
+                    _row['age_calendar_days'] = _age
+                    _row['freshness'] = _fresh
+                    _row['n_total'] = _n_total
+                    _row['n_valid'] = _ok
+                    _row['coverage'] = _ok / _n_total if _n_total else np.nan
+                    _row['notes'] = f'{_eu_source} ({_ok}/{_n_total} OK)'
+        except Exception as _e:
+            _row['notes'] = f'Error lectura european_coverage.csv: {_e}'
+        rows.append(_row)
+
     return pd.DataFrame(rows)
