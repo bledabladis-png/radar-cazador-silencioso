@@ -51,3 +51,28 @@ def test_compute_concentration_sin_reference_date_valueerror():
     import pytest
     with pytest.raises(ValueError, match='reference_date'):
         compute_sector_concentration(df_stocks, holdings, metrics)
+
+
+def test_compute_concentration_corre_sin_lideres(tmp_path):
+    """FU-008-b (2026-09-13): el writer se ejecuta aunque leader_df este vacio."""
+    from src.pipeline.sector_metrics import _compute_concentration
+    idx = pd.date_range('2026-01-01', periods=30, freq='D')
+    df_stocks = pd.DataFrame({('A','Close'): [10 + i*0.1 for i in range(30)]}, index=idx)
+    df_stocks.columns = pd.MultiIndex.from_tuples(df_stocks.columns)
+    holdings = pd.DataFrame({'etf': ['XLK'], 'ticker': ['A']})
+    metrics = pd.DataFrame({
+        'ticker': ['A'], 'sector': ['XLK'],
+        'rs': [1.0], 'rs_mom': [0.01], 'flow_proxy_z': [0.1],
+        'wyckoff_score': [0.5], 'wls': [1.0],
+    })
+    target = tmp_path / 'sector_concentration.csv'
+    result = _compute_concentration(
+        df_stocks, holdings, pd.DataFrame(), metrics,
+        reference_date=df_stocks.index[-1],
+        sc_path=target,
+    )
+    assert result is not None and not result.empty
+    assert target.exists()
+    saved = pd.read_csv(target)
+    assert pd.notna(saved.iloc[0]['date'])
+    assert str(saved.iloc[0]['date']).startswith('2026-')

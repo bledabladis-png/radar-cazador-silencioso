@@ -81,18 +81,27 @@ def _compute_rs_internal(df_stocks, holdings_df, df_market):
     return rs_internal_df
 
 
-def _compute_concentration(df_stocks, holdings_df, leader_df, full_metrics_df, reference_date=None):
+def _compute_concentration(df_stocks, holdings_df, leader_df, full_metrics_df, reference_date=None, sc_path=None):
+    """FU-008-b (2026-09-13): el writer NO depende de leader_df.
+
+    compute_sector_concentration opera solo con df_stocks, holdings_df y full_metrics_df.
+    Antes exigia leader_df no vacio, lo que bloqueaba el writer en runs sin sectores
+    favorables (estado comun), dejando el CSV congelado con datos obsoletos.
+    """
     try:
-        if df_stocks is not None and not df_stocks.empty and leader_df is not None and not leader_df.empty:
+        if df_stocks is not None and not df_stocks.empty:
             sector_concentration_df = compute_sector_concentration(
                 df_stocks, holdings_df, full_metrics_df, reference_date=reference_date
             )
-            sc_path = Path('outputs/history/sector_concentration.csv')
+            if sc_path is None:
+                sc_path = Path('outputs/history/sector_concentration.csv')
             sc_path.parent.mkdir(parents=True, exist_ok=True)
             if not sector_concentration_df.empty:
                 if sc_path.exists():
                     hist_sc = pd.read_csv(sc_path)
                     hist_sc = hist_sc.dropna(subset=['date'])
+                    # FU-008-b: filtrar tambien strings vacios residuales (dtype=str previo)
+                    hist_sc = hist_sc[hist_sc['date'].astype(str).str.strip() != '']
                     sector_concentration_df = append_dedup(hist_sc, sector_concentration_df, ["date","sector"])
                 sector_concentration_df = sector_concentration_df.dropna(subset=['date'])
                 sector_concentration_df = sector_concentration_df.drop_duplicates(subset=['date','sector'], keep='last')
