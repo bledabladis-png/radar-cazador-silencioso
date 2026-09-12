@@ -74,7 +74,31 @@ def render_data_freshness(pcr_data, darkpool_data, sector_results):
             out.append("| FRED (Macro) | N/D | N/D | N/D | N/D |\n")
     except Exception:
         out.append("| FRED (Macro) | N/D | N/D | N/D | N/D |\n")
-    out.append("| Yahoo Finance (Precios) | Diario | < 1 dia | CURRENT | Alta |\n")
+    # Yahoo Finance: leer fecha real desde Parquet (coherencia total)
+    _yahoo_last = None
+    _yahoo_age = None
+    _yahoo_status = "N/D"
+    _yahoo_conf = "N/D"
+    try:
+        from pathlib import Path as _P
+        for _cand in ("data/market_data.parquet", "data/stock_prices.parquet"):
+            _p = _P(_cand)
+            if not _p.exists():
+                continue
+            _df_pq = pd.read_parquet(_p)
+            if _df_pq.empty:
+                continue
+            _yahoo_last = pd.Timestamp(_df_pq.index[-1])
+            _yahoo_age = (now - _yahoo_last).days
+            _yahoo_status = _classify_freshness(_yahoo_age, 3, 7, 14)
+            _yahoo_conf = "Alta" if _yahoo_status in ("CURRENT", "RECENT") else "Baja"
+            break
+    except Exception:
+        pass
+    if _yahoo_last is not None:
+        out.append(f"| Yahoo Finance (Precios) | {_yahoo_last.strftime('%Y-%m-%d')} | {_yahoo_age} dias | {_yahoo_status} | {_yahoo_conf} |\n")
+    else:
+        out.append("| Yahoo Finance (Precios) | N/D | N/D | N/D | N/D |\n")
     out.append("\n")
     coverage_lines = _generate_coverage_table(pcr_data, darkpool_data, sector_results)
     for cl in coverage_lines:
