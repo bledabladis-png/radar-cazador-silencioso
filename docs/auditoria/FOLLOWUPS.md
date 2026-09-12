@@ -58,4 +58,15 @@
 - **Clasificacion:** P2 estructural - **RESUELTO 2026-09-12**.
 - **Bloqueante:** no (ya resuelto).
 
+## FU-010 — Matriz de Evidencia cambia clasificaciones al poblar Flow Proxy
+
+- **Origen:** sesion 2026-09-13, run manual tras fix FU-008-b.
+- **Descripcion:** al corregir FU-008-b (el writer de sector_concentration se ejecuta sin depender de leader_df), el Flow Proxy dejo de ser NA en la Matriz de Evidencia. Esto rebalancea la evidencia sectorial y puede cambiar la clasificacion (MIXTA -> DESFAVORABLE, etc.).
+- **Evidencia:** run del 2026-09-12 23:28 vs 21:53. Sectores XLF, XLK, XLP, XLU, XLV cambiaron de EVIDENCIA MIXTA a EVIDENCIA PREDOMINANTEMENTE DESFAVORABLE.
+- **Impacto:** ninguno funcional. El sistema rebalancea correctamente al tener mas evidencia disponible. Pero reportes consecutivos no son comparables byte-a-byte cuando cambia la disponibilidad de una capa de evidencia.
+- **Clasificacion:** P3 documental.
+- **Accion:** ninguna. Documentado para evitar sorpresas al comparar reportes historicos.
+- **Bloqueante:** no.
+
+
 
