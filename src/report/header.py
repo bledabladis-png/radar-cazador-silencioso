@@ -61,12 +61,16 @@ def render_regimenes(macro_score, macro_regime, macro_conf,
         except:
             pass
     
-    vol_z = volatility_score.iloc[-1] if hasattr(volatility_score, 'iloc') else volatility_score
-    if vol_conf < 0.05 and abs(vol_z) < 0.1:
+    # Fix: alinear con patron de lineas 26/40 (macro_score, liquidity_score).
+    try:
+        vol_z = float(volatility_score.iloc[-1]) if hasattr(volatility_score, 'iloc') else float(volatility_score)
+    except Exception:
+        vol_z = float('nan')
+    if pd.notna(vol_z) and vol_conf < 0.05 and abs(vol_z) < 0.1:
         vol_conf_str = "Señal neutra (sin desviación significativa)"
     else:
         vol_conf_str = f"Signal Consistency: {vol_conf:.0%}"
-    vol_z_display = "0.00" if abs(vol_z) < 0.005 else f"{vol_z:.2f}"
+    vol_z_display = "N/D" if pd.isna(vol_z) else ("0.00" if abs(vol_z) < 0.005 else f"{vol_z:.2f}")
     out.append(f"- **Volatilidad:** {vol_regime} (Z-Score: {vol_z_display}, {vol_conf_str})\n")
 
     out.append(f"- **Sectores:** {sector_regime}\n")
