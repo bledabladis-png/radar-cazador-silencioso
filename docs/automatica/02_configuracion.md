@@ -18,8 +18,8 @@ Las constantes son importadas por todos los modulos del sistema.
 | BREADTH_EMA_MEDIUM | 50 |
 | BREADTH_EMA_SLOW | 200 |
 | CACHE_HOURS | 23 |
-| CACHE_MARKET_PATH | 'data/market_data.csv' |
-| CACHE_STOCKS_PATH | 'data/stock_prices.csv' |
+| CACHE_MARKET_PATH | 'data/market_data.parquet' |
+| CACHE_STOCKS_PATH | 'data/stock_prices.parquet' |
 | CACHE_TTL | { |
 | CACHE_VALIDATE_TRADING_DATE | True |
 | CONFIDENCE_RANGE_DIVISOR | 2.0 |

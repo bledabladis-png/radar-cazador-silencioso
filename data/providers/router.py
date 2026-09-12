@@ -32,7 +32,7 @@ class DataRouter:
     def _load_cache(self, tickers):
         cache_path = Path(CACHE_MARKET_PATH)
         if cache_path.exists():
-            data = pd.read_csv(cache_path, header=[0,1], index_col=0, parse_dates=True)
+            data = pd.read_parquet(cache_path)
             missing = [t for t in tickers if t not in data.columns.get_level_values(1)]
             if missing:
                 print(f"  Cache no contiene {len(missing)} tickers.")

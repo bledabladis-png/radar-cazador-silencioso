@@ -106,13 +106,17 @@ class BackupProvider:
         for path in [CACHE_MARKET_PATH, CACHE_STOCKS_PATH]:
             if Path(path).exists():
                 try:
-                    df = pd.read_csv(path, header=[0,1], index_col=0, parse_dates=True)
+                    df = pd.read_parquet(path)
                     if not df.empty:
                         frames.append(df)
                 except Exception as e:
                     print(f"  [WARN] backup: reference cache: {e}")
         if frames:
-            return pd.concat(frames, axis=1)
+            combined = pd.concat(frames, axis=1)
+            # Deduplicar columnas (market_data va primero, tiene prioridad).
+            if combined.columns.duplicated().any():
+                combined = combined.loc[:, ~combined.columns.duplicated(keep='first')]
+            return combined
         return pd.DataFrame()
 
     def _validate_ohlcv(self, df):
@@ -140,6 +144,9 @@ class BackupProvider:
             close_cache = self.reference_cache.loc[:, ('Close', ticker)].dropna()
             if close_cache.empty:
                 return True
+            # Defensivo: si quedan columnas duplicadas, tomar la primera.
+            if isinstance(close_cache, pd.DataFrame):
+                close_cache = close_cache.iloc[:, 0]
             ref_close = float(close_cache.iloc[-1])
             # Último cierre del DataFrame recibido
             new_close = float(df[('Close', ticker)].iloc[-1])

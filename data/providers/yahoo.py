@@ -72,7 +72,7 @@ class YahooProvider(MarketDataProvider):
         cache_path = Path(CACHE_MARKET_PATH)
         if cache_path.exists():
             try:
-                data = pd.read_csv(cache_path, header=[0,1], index_col=0, parse_dates=True)
+                data = pd.read_parquet(cache_path)
                 print(f"  Cache local cargado: {cache_path} ({len(data)} filas)")
                 return data
             except Exception as e:

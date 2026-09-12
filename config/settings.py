@@ -198,8 +198,8 @@ DARKPOOL_THRESHOLDS = {
 # RUTAS DE CACHES LOCALES (single source of truth)
 # ============================================================
 
-CACHE_MARKET_PATH = 'data/market_data.csv'
-CACHE_STOCKS_PATH = 'data/stock_prices.csv'
+CACHE_MARKET_PATH = 'data/market_data.parquet'
+CACHE_STOCKS_PATH = 'data/stock_prices.parquet'
 
 # ============================================================
 # SELECCION DE LIDERES (C18)
