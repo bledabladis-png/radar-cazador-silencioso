@@ -471,27 +471,27 @@ def test_last_expected_market_date_acepta_date_y_timestamp():
 
 def test_last_market_session_sabado():
     """Sabado 12/09 -> viernes 11/09."""
-    from src.report.helpers import _last_market_session
+    from src.market_calendar import _last_market_session
     d = _last_market_session(pd.Timestamp('2026-09-12 22:00'))
     assert d.date() == _dt(2026, 9, 11).date()
 
 
 def test_last_market_session_domingo():
     """Domingo 13/09 -> viernes 11/09."""
-    from src.report.helpers import _last_market_session
+    from src.market_calendar import _last_market_session
     d = _last_market_session(pd.Timestamp('2026-09-13'))
     assert d.date() == _dt(2026, 9, 11).date()
 
 
 def test_last_market_session_dia_bursatil_sin_cambio():
     """Viernes 11/09 -> 11/09 (no modifica)."""
-    from src.report.helpers import _last_market_session
+    from src.market_calendar import _last_market_session
     d = _last_market_session(pd.Timestamp('2026-09-11'))
     assert d.date() == _dt(2026, 9, 11).date()
 
 
 def test_last_market_session_festivo():
     """Labor Day 07/09 -> viernes 04/09."""
-    from src.report.helpers import _last_market_session
+    from src.market_calendar import _last_market_session
     d = _last_market_session(pd.Timestamp('2026-09-07'))
     assert d.date() == _dt(2026, 9, 4).date()

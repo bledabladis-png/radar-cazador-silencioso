@@ -8,12 +8,12 @@ from datetime import datetime
 
 import pandas as pd
 
+from src.market_calendar import _last_market_session
 from src.report.helpers import (
     _classify_freshness,
     _classify_finra_freshness,
     _classify_fred_freshness,
     _generate_coverage_table,
-    _last_market_session,
 )
 
 

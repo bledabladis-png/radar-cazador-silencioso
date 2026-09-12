@@ -47,20 +47,6 @@ def _classify_freshness(age_days, max_current=3, max_recent=7, max_stale=14):
         return 'STALE'
     return 'ARCHIVAL'
 
-def _last_market_session(d):
-    """FU-007 (2026-09-13): retrocede al ultimo dia bursatil <= d.
-
-    Acepta datetime/Timestamp/date. No aplica lag de PUBLISH_HOUR
-    (a diferencia de last_expected_market_date). Uso: readers de freshness
-    que reciben una fecha que puede caer en fin de semana.
-    """
-    from datetime import timedelta
-    from src.market_calendar import is_market_day
-    ts = pd.Timestamp(d)
-    d_only = ts.date()
-    while not is_market_day(d_only):
-        d_only = d_only - timedelta(days=1)
-    return pd.Timestamp(d_only)
 
 
 def _classify_finra_freshness(age_days):

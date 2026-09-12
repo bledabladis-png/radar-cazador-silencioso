@@ -88,3 +88,19 @@ def last_expected_market_date(now=None):
     while not is_market_day(d):
         d = d - timedelta(days=1)
     return d
+
+
+def _last_market_session(d):
+    """FU-007/FU-007-b (2026-09-13): retrocede al ultimo dia bursatil <= d.
+
+    Acepta datetime/Timestamp/date. No aplica lag de PUBLISH_HOUR
+    (a diferencia de last_expected_market_date). Uso: readers que
+    reciben una fecha que puede caer en fin de semana (FRED, Yahoo,
+    parquet, cualquier CSV con fechas).
+    """
+    import pandas as pd
+    ts = pd.Timestamp(d)
+    d_only = ts.date()
+    while not is_market_day(d_only):
+        d_only = d_only - timedelta(days=1)
+    return pd.Timestamp(d_only)

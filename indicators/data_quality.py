@@ -10,6 +10,8 @@ import numpy as np
 from datetime import datetime
 from pathlib import Path
 
+from src.market_calendar import _last_market_session
+
 def classify_freshness(age_days, frequency):
     if pd.isna(age_days):
         return 'N/D'
@@ -150,7 +152,8 @@ def compute_data_quality():
                 if liq_state_path.exists():
                     with liq_state_path.open('r') as _f:
                         _state = json.load(_f)
-                    last_date = pd.to_datetime(_state.get('date'))
+                    _ld = pd.to_datetime(_state.get('date'))
+                    last_date = _last_market_session(_ld) if pd.notna(_ld) else pd.NaT
                 else:
                     last_date = pd.NaT
             except Exception:
@@ -190,7 +193,7 @@ def compute_data_quality():
         if str(path).endswith('.parquet'):
             try:
                 df_pq = pd.read_parquet(path)
-                last_date = pd.Timestamp(df_pq.index[-1]) if len(df_pq) > 0 else pd.NaT
+                last_date = _last_market_session(pd.Timestamp(df_pq.index[-1])) if len(df_pq) > 0 else pd.NaT
                 age = (now - last_date).days if pd.notna(last_date) else np.nan
                 freshness = classify_freshness(age, src['frequency'])
                 rows.append({
@@ -226,7 +229,8 @@ def compute_data_quality():
             if date_col is None:
                 last_date = pd.NaT
             else:
-                last_date = pd.to_datetime(df[date_col], errors='coerce').max()
+                _ld = pd.to_datetime(df[date_col], errors='coerce').max()
+                last_date = _last_market_session(_ld) if pd.notna(_ld) else pd.NaT
             age = (now - last_date).days if pd.notna(last_date) else np.nan
             freshness = classify_freshness(age, src['frequency'])
 
@@ -318,7 +322,8 @@ def compute_data_quality():
                 if not _eu_df.empty:
                     _ok = int((_eu_df['status'] == 'OK').sum())
                     _n_total = len(_eu_df)
-                    _last = pd.to_datetime(_eu_df['last_date'], errors='coerce').max()
+                    _last_raw = pd.to_datetime(_eu_df['last_date'], errors='coerce').max()
+                    _last = _last_market_session(_last_raw) if pd.notna(_last_raw) else pd.NaT
                     _age = (now - _last).days if pd.notna(_last) else np.nan
                     _fresh = classify_freshness(_age, 'daily')
                     _row['last_date'] = _last.strftime('%Y-%m-%d') if pd.notna(_last) else np.nan
