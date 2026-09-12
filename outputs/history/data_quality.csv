@@ -66,7 +66,7 @@ date,source,last_date,age_calendar_days,frequency,freshness,n_total,n_valid,cove
 2026-09-12,CFTC Position Flow,2026-09-08,4.0,cftc,CURRENT,,,,Frescura 30 días
 2026-09-12,SEC N-PORT,,,sec,N/D,,,,Trimestral
 2026-09-12,Macro FRED,2026-09-12,0.0,fred,CURRENT,,,,Datos macro manuales
-2026-09-12,Sector Concentration,,,daily,N/D,11.0,0.0,0.0,Concentración y dispersión
+2026-09-12,Sector Concentration,2026-09-11,1.0,daily,CURRENT,11.0,11.0,1.0,Concentración y dispersión
 2026-09-12,Sector Breadth Momentum,2026-09-11,1.0,daily,CURRENT,11.0,11.0,1.0,Momentum amplitud
 2026-09-12,Volatility Structure,2026-09-11,1.0,daily,CURRENT,,,,Estructura volatilidad
 2026-09-12,Cross Asset Context,2026-09-11,1.0,daily,CURRENT,11.0,11.0,1.0,Contexto cross-asset
