@@ -40,3 +40,22 @@
 - **Accion:** ninguna urgente. Si reaparece un colapso similar en otro writer, investigar el origen con mas instrumentacion.
 - **Bloqueante:** no.
 
+## FU-005 — WARN analisis_lideres.csv cuando no hay sectores favorables
+
+- **Origen:** run manual 2026-09-12, log del workflow daily_run.
+- **Descripcion:** `report_generator` intenta leer `outputs/report/analisis_lideres.csv` sin comprobar existencia. Cuando no hay sectores en fase favorable, el fichero no se genera y se emite `[WARN] [Errno 2] No such file or directory`.
+- **Impacto:** cosmetico. El reporte se genera igual.
+- **Clasificacion:** P3 cosmetico.
+- **Accion:** `if path.exists()` antes de leer, o `try/except FileNotFoundError`.
+- **Bloqueante:** no.
+
+## FU-006 — save_regime_history escribia filas B2 (RESUELTO)
+
+- **Origen:** run manual 2026-09-12, commit `19b6f30` del bot Daily hist/state.
+- **Descripcion:** `save_regime_history` derivaba `obs_date` de `df_macro_manual['date'].max()`. El bot FRED publica `iorb.csv` con fecha del dia natural (incluye sabado/domingo). En fin de semana, `obs_date` caia en dia no bursatil y se escribia una fila B2 en `outputs/history/macro_regime.csv`.
+- **Evidencia:** commit `19b6f30` anadio fila `2026-09-12` (sabado). Detectado en workflow manual, no en tests locales.
+- **Fix aplicado:** segundo candado `is_market_day(obs_date)` antes de escribir. Commit del fix junto con test de regresion en `test_c4_code.py`.
+- **Clasificacion:** P2 estructural - **RESUELTO 2026-09-12**.
+- **Bloqueante:** no (ya resuelto).
+
+
