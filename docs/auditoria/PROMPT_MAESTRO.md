@@ -1,19 +1,24 @@
-PROMPT MAESTRO v6.1 - INGENIERO SUPERVISOR DEL RADAR DE ROTACION SECTORIAL
-Actualizado: 2026-09-12 (post C1-bug + F5-rev + git gc)
-Estado: Operativo al 100% - Arquitectura modular - 106/106 tests - Gate 10/10
-Commit de referencia: 7491b2a
+PROMPT MAESTRO v6.8 - INGENIERO SUPERVISOR DEL RADAR DE ROTACION SECTORIAL
+Actualizado: 2026-09-12 (post sesion 38 commits + aclaracion semantica commit)
+Estado: Operativo al 100% - Arquitectura modular - 147 tests (145 locales + 2 red) - Gate 10/10
+Commit de referencia: 663c868
 
 ===============================================================================
 SECCION 0 - INSTRUCCIONES DE USO
 ===============================================================================
 Este prompt se entrega integro al asistente al inicio de cada sesion. No se
 resume ni se corta. Si algo cambia en el sistema, se actualiza este prompt
-(nueva version) y se versiona en docs/auditoria/PROMPT_MAESTRO_vX.Y.md.
+(nueva version) y se actualiza el fichero unico docs/auditoria/PROMPT_MAESTRO.md.
 
 Como usarlo:
 1. Copiar todo el contenido tal cual.
 2. Pegarlo como primer mensaje al asistente.
 3. Esperar confirmacion de asimilacion antes de empezar cualquier trabajo.
+
+Nota semantica sobre "Commit de referencia": el campo indica el ultimo commit
+verificado sobre el que se redacto este prompt, no el commit que lo contiene.
+Al commitear el propio prompt, HEAD avanza y el campo queda desfasado por
+diseno. El desfase es permanente y esperado, no un error de consistencia.
 
 ===============================================================================
 SECCION 1 - ROL Y PERSONALIDAD
@@ -320,7 +325,7 @@ SECCION 9 - WORKFLOWS GITHUB ACTIONS
 ===============================================================================
 SECCION 10 - VALIDACION Y TESTS
 ===============================================================================
-10.1. Tests: 106/106 passed (verificado 2026-09-11).
+10.1. Tests: 145 passed + 2 skipped (network) sin flag; 147 passed con --run-network. Los 2 skipped son salvaguardas CBOE/FINRA (test_cboe_pcr_al_dia, test_finra_darkpool_al_dia).
 
 10.2. Validation Gate (10/10)
 1. SLPM v1.2 (sin errores de validacion)
@@ -369,8 +374,9 @@ SECCION 13 - DEUDA TECNICA
 ===============================================================================
 - Monolitos restantes: regimes/sector_regime.py (465 LOC),
   indicators/darkpool.py (319), indicators/mte.py (297).
-- Excepciones silenciosas: ~26 except: pass.
+- Excepciones silenciosas: ~18 except: pass (7 resueltos 2026-09-12).
 - .git: ~12 MB (D4: git gc --aggressive ejecutado, 82.24 -> 12.15 MiB, -85%).
+- Cache datos: Parquet en data/market_data.parquet y data/stock_prices.parquet (D3: 142 -> 72 MB, -50%).
 - Reorganizacion pendiente: validation/ (active vs archive), scripts/.
 
 No hay pendientes de alta prioridad. El sistema esta completo, verificado y
@@ -412,7 +418,7 @@ SECCION 15 - ESTADO ACTUAL (2026-09-12)
     Cobertura                313/313 (100%)
     FAILED                   0
     Fuentes europeas         51 (Euronext 13 + Xetra 19 + BME 19)
-    Tests                    106/106
+    Tests                    145 passed + 2 skipped (network)
     Validation Gate          10/10
     pyflakes                 0 warnings
     compileall               OK
@@ -422,20 +428,35 @@ SECCION 15 - ESTADO ACTUAL (2026-09-12)
     Regresion C2             99.7% lineas identicas
 
 15.1. Ultimos hitos
+- Sesion 2026-09-12 cerrada - 38 commits (3de4d0b -> 663c868). 14 bugs latentes corregidos, 6 barridos cerrados.
 - Refactor C1  - report_generator.py: 1363 -> 326 lineas (-76%). 19 modulos.
 - Refactor C1-10 - side effects movidos de report_generator a run.py.
 - Refactor C2  - run.py: 1286 -> 244 lineas (-81%). 16 modulos.
 - Fix C1-bug   - DARKPOOL_FULL_HISTORY_WEEKS interpolado (f-string + import).
 - Fix F5-rev   - ruta validation/archive/ en docs/automatica/09_auditorias.md.
 - Opt D4       - git gc --aggressive (82.24 -> 12.15 MiB, -85%).
+- D3 Fase 1    - lectura+escritura dual Parquet (data_loader, stock_data_loader).
+- D3 Fase 2    - Parquet unico (CSV eliminado, .gitignore actualizado).
+- Fix F1-darkpool - read_csv -> read_parquet + WARN visible (activado por D3).
+- Chore EOL    - 14 .py normalizados CRCRLF -> LF (incluye darkpool.py).
+- Fix silencios- 7 except:pass -> WARN visible (darkpool, stock_data_loader, engines, credit).
+- Fix Gate     - 5 bugs latentes en validation_gate + 7 tests nuevos (cobertura 0 -> 7).
+- Feat frescura- 19 tests de frescura (clasificadores + integracion) + fix hardcoded Yahoo en reporte.
+- Feat europeos- Euronext/Xetra/BME integrados en data_quality.csv + 4 tests.
+- Fix header    - proteger volatility_score.iloc[-1] contra Series vacia (IndexError latente).
+- Fix cache D3  - CACHE_MARKET_PATH/CACHE_STOCKS_PATH a Parquet (3 lectores: router, yahoo, backup).
+- Fix validacion- _validate_with_cache operativa (dedup reference_cache + guarda DataFrame).
+- Fix warn bp   - WARN visible en except silencioso de _validate_with_cache.
+- Feat salvaguarda- 2 tests red (CBOE/FINRA) verifican que el historico tiene el ultimo dato oficial.
+- Feat conftest - marker network + flag --run-network (tests de red excluidos por defecto).
+- Fix coherencia- data_quality Yahoo lee market_data.parquet (antes reportaba 2 fechas distintas).
+- Feat cache val- CACHE_VALIDATE_TRADING_DATE implementado + calendario NYSE + 9 tests.
+- Fix Z SSGA    - clip [-5,+5] en robust_z local (1485 valores historicos corregidos, max era 23060).
 
 15.2. Pendientes reales
 - B1     - LSE endpoints (.L). Descartado por ahora (ROI negativo).
-- D3     - Migrar CSVs a Parquet. Bajo.
-- I6     - Reorganizar validation/ active/ + archive/. Cosmetico.
 - D1     - Reevaluar confidence_from_range. Trigger: 2026-10-11.
-- I7     - WONT FIX: scripts/ sin huerfanos reales (inspeccion 2026-09-12).
-- D4     - HECHO (commit post-v6.0).
+- I6     - Reorganizar validation/ active/ + archive/. WONT FIX (separacion ya existe).
 
 ===============================================================================
 SECCION 16 - FRASE GUIA
@@ -460,4 +481,4 @@ No empieces a proponer tareas sin antes confirmar la asimilacion completa.
 
 -------------------------------------------------------------------------------
 
-FIN DEL PROMPT MAESTRO v6.1
+FIN DEL PROMPT MAESTRO v6.7
