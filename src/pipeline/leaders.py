@@ -11,7 +11,7 @@ from src.stock_data_loader import download_stock_prices, get_usa_tickers
 from src.utils import trim_to_last_valid_date, trim_to_last_valid_date_for_tickers
 
 
-def compute_leaders(df_market, sector_results):
+def compute_leaders(df_market, sector_results, reference_date=None):
     """Carga df_stocks y genera los lideres sectoriales.
 
     Returns:
@@ -28,7 +28,7 @@ def compute_leaders(df_market, sector_results):
     HOLIDAY_MODE = False
 
     try:
-        df_stocks = download_stock_prices()
+        df_stocks = download_stock_prices(reference_date=reference_date)
         if df_stocks is not None and not df_stocks.empty:
             try:
                 usa_tickers = get_usa_tickers()

@@ -7,6 +7,7 @@ No alimenta motores, scores, pesos ni State Machine.
 import pandas as pd
 import numpy as np
 from src.utils import get_col
+from src.market_calendar import is_market_day
 from indicators.wyckoff import classify_wyckoff_phase
 
 def _get_series(df, ticker, field):
@@ -22,10 +23,34 @@ def _get_series(df, ticker, field):
         return pd.Series(dtype=float)
 
 def compute_sector_breadth(df_market, df_stocks, holdings_df, as_of_date=None):
+    """Calcula Sector Breadth & Health.
+
+    B2 (2026-09-12):
+        as_of_date explicito: debe ser una sesion NYSE. Si no lo es -> ValueError.
+        as_of_date=None:
+            - si df_stocks tiene datos -> usa la ULTIMA SESION OBSERVADA (index[-1]).
+              No es "ultima sesion real"; es la fecha presente en el dataset.
+            - si df_stocks esta vacio -> ValueError (no hay base de evidencia).
+
+    En produccion, el caller (breadth_metrics) debe pasar as_of_date explicito.
+    El fallback None es solo para compat con tests y usos internos.
+    """
     if as_of_date is not None:
-        as_of_date = pd.Timestamp(as_of_date)
+        as_of_date = pd.Timestamp(as_of_date).normalize()
+        if not is_market_day(as_of_date.date()):
+            raise ValueError(
+                f"as_of_date={as_of_date.date()} no es sesion NYSE. "
+                f"B2 (2026-09-12): no se genera observacion en dia no bursatil."
+            )
         df_market = df_market.loc[:as_of_date]
         df_stocks = df_stocks.loc[:as_of_date]
+    else:
+        # Fallback de compatibilidad: ultima fecha observada en df_stocks.
+        if df_stocks is None or len(df_stocks) == 0:
+            raise ValueError(
+                "compute_sector_breadth: as_of_date=None y df_stocks vacio. "
+                "No hay base de evidencia para determinar la fecha."
+            )
 
     rows = []
     for sector_etf, group in holdings_df.groupby('etf'):
@@ -152,7 +177,8 @@ def compute_sector_breadth(df_market, df_stocks, holdings_df, as_of_date=None):
 
         # Agregar sector
         row = {
-            'date': pd.Timestamp(as_of_date).normalize() if as_of_date is not None else pd.Timestamp.now().normalize(),
+            'date': (pd.Timestamp(as_of_date).normalize() if as_of_date is not None
+                     else pd.Timestamp(df_stocks.index[-1]).normalize()),
             'sector': sector_etf,
             'n_total': len(tickers),
             'n_valid_ema20': n_valid_ema20,

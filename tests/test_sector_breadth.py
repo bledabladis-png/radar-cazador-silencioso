@@ -22,7 +22,10 @@ def _make_data():
 
 def test_as_of_date_no_lookahead():
     df_market, df_stocks, holdings = _make_data()
-    cutoff = df_market.index[200]
+    # B2 (2026-09-12): index[200] cae en domingo (no sesion). El nuevo
+    # contrato de compute_sector_breadth exige que as_of_date explicito
+    # sea sesion NYSE. Se usa index[201] = lunes 2025-07-21.
+    cutoff = df_market.index[201]
     hist = compute_sector_breadth(df_market, df_stocks, holdings, as_of_date=cutoff)
     assert hist.iloc[0]['date'] == cutoff.normalize()
     full = compute_sector_breadth(df_market, df_stocks, holdings)

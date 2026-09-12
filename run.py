@@ -5,6 +5,7 @@ Fases 1-4 + Correccion 0.5 + P1 + P2 + Mejoras 16-20.
 """
 import os
 import sys
+from datetime import datetime
 from src.report_generator import generate_daily_report
 from src.pipeline.data_load import load_all_data
 from src.pipeline.regimes import compute_all_regimes
@@ -30,6 +31,8 @@ from src.pipeline.finalize import (
 from config.tickers import validate_sector_universe
 
 def main():
+    # B2 (2026-09-12): reference_date se resuelve UNA vez al inicio del pipeline.
+    reference_date = datetime.now()
     validate_sector_universe()
     # Crear subcarpetas de outputs necesarias para ejecución limpia
     for subdir in ['report', 'history', 'state', 'holdings', 'audit', 'cache']:
@@ -99,7 +102,7 @@ def main():
     qqq_performance_data = fs['qqq_performance_data']
     qqq_nport_flow_data = fs['qqq_nport_flow_data']
 
-    ldr = compute_leaders(df_market, sector_results)
+    ldr = compute_leaders(df_market, sector_results, reference_date=reference_date)
     df_stocks = ldr['df_stocks']
     holdings_df = ldr['holdings_df']
     leader_lines = ldr['leader_lines']
@@ -113,7 +116,8 @@ def main():
     sector_concentration_df = sm['sector_concentration_df']
     leader_representativeness_df = sm['leader_representativeness_df']
 
-    bm = compute_breadth_metrics(df_stocks, df_market, holdings_df)
+    bm = compute_breadth_metrics(df_stocks, df_market, holdings_df,
+                                  reference_date=reference_date)
     sector_breadth_momentum_df = bm['sector_breadth_momentum_df']
     sector_breadth_df = bm['sector_breadth_df']
 
