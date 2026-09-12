@@ -4,7 +4,8 @@ from indicators.evidence_matrix import compute_evidence_matrix
 
 def _make_dfs(sectors, price, breadth, flow, proxy, wyckoff):
     n = len(sectors)
-    return (pd.DataFrame({'sector': sectors, 'pct_above_ema50': breadth, 'n_valid_ema50': [10]*n, 'n_total': [10]*n}),
+    # C4-code: anadida columna 'date' para que el writer pueda derivar la fecha.
+    return (pd.DataFrame({'date': ['2026-09-11']*n, 'sector': sectors, 'pct_above_ema50': breadth, 'n_valid_ema50': [10]*n, 'n_total': [10]*n}),
             pd.DataFrame({'sector': sectors, 'price_ret_20d': price, 'flow_20d_sum': flow, 'n_obs_20d': [20]*n}),
             pd.DataFrame({'sector': sectors, 'flow_median': proxy, 'coverage_flow': [80.0]*n}),
             pd.DataFrame({'sector': sectors, 'pct_accumulation': [40]*n, 'pct_markup': [30]*n, 'pct_distribution': [15]*n, 'pct_markdown': [15]*n, 'coverage_wyckoff': [80.0]*n}))

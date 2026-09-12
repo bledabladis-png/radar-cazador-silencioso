@@ -7,6 +7,8 @@ Consume retornos oficiales desde df_market.
 """
 import pandas as pd
 import numpy as np
+
+from src.utils import _observation_date_from_df
 from src.utils import get_col
 
 SECTORS = ['XLK','XLF','XLV','XLE','XLY','XLP','XLI','XLB','XLU','XLRE','XLC']
@@ -67,7 +69,7 @@ def compute_sector_correlation(df_market, windows=(20, 60), min_obs_ratio=0.75):
         n_sectors = panel_clean.shape[1]
         if n_sectors < 8:
             summary_rows.append({
-                'date': pd.Timestamp.now().normalize(),
+                'date': _observation_date_from_df(returns_df),
                 'window': window,
                 'n_sectors': n_sectors,
                 'n_valid_pairs': 0,
@@ -90,7 +92,7 @@ def compute_sector_correlation(df_market, windows=(20, 60), min_obs_ratio=0.75):
                 corr_val = corr_matrix.loc[s1, s2]
                 n_obs = panel[[s1, s2]].dropna().shape[0]
                 pairs.append({
-                    'date': pd.Timestamp.now().normalize(),
+                    'date': _observation_date_from_df(returns_df),
                     'window': window,
                     'sector1': s1,
                     'sector2': s2,
@@ -118,7 +120,7 @@ def compute_sector_correlation(df_market, windows=(20, 60), min_obs_ratio=0.75):
             max_corr = s.max()
 
         summary_rows.append({
-            'date': pd.Timestamp.now().normalize(),
+            'date': _observation_date_from_df(returns_df),
             'window': window,
             'n_sectors': n_sectors,
             'n_valid_pairs': n_valid_pairs,

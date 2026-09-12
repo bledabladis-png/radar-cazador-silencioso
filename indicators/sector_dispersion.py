@@ -8,11 +8,17 @@ Consume retornos oficiales desde run.py (sector_price_rank).
 import pandas as pd
 import numpy as np
 
-def compute_sector_dispersion(price_rank_list):
+def compute_sector_dispersion(price_rank_list, reference_date=None):
     """
     price_rank_list: lista de tuplas (ticker, ret) con retornos 20d.
     Devuelve DataFrame con una fila con métricas de dispersión.
     """
+    if reference_date is None:
+        raise ValueError(
+            "compute_sector_dispersion: 'reference_date' es obligatorio. "
+            "C4-code (2026-09-12): fecha de observacion inyectada desde el caller."
+        )
+
     if not price_rank_list:
         return pd.DataFrame()
 
@@ -23,7 +29,7 @@ def compute_sector_dispersion(price_rank_list):
 
     if n_valid < 8:
         return pd.DataFrame([{
-            'date': pd.Timestamp.now().normalize(),
+            'date': pd.Timestamp(reference_date).normalize(),
             'n_total': n_total,
             'n_valid': n_valid,
             'coverage': coverage,
@@ -58,7 +64,7 @@ def compute_sector_dispersion(price_rank_list):
         heterogeneity_type = 'Heterogeneidad contenida'
 
     return pd.DataFrame([{
-        'date': pd.Timestamp.now().normalize(),
+        'date': pd.Timestamp(reference_date).normalize(),
         'n_total': n_total,
         'n_valid': n_valid,
         'coverage': coverage,

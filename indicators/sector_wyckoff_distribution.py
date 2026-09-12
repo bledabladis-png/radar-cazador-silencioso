@@ -6,7 +6,7 @@ No alimenta motores, scores, pesos ni State Machine.
 """
 import pandas as pd
 import numpy as np
-from src.utils import get_col
+from src.utils import get_col, _observation_date_from_df
 from indicators.wyckoff import classify_wyckoff_phase
 
 SECTORS = ['XLK','XLF','XLV','XLE','XLY','XLP','XLI','XLB','XLU','XLRE','XLC']
@@ -48,7 +48,7 @@ def compute_sector_wyckoff_distribution(df_stocks, holdings_df):
         coverage = (n_valid / n_total * 100) if n_total else np.nan
 
         row = {
-            'date': pd.Timestamp.now().normalize(),
+            'date': _observation_date_from_df(df_stocks),
             'sector': sector_etf,
             'n_total': n_total,
             'n_valid_wyckoff': n_valid,

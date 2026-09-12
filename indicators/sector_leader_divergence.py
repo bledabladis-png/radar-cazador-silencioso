@@ -7,7 +7,7 @@ No alimenta motores, scores, pesos ni State Machine.
 """
 import pandas as pd
 import numpy as np
-from src.utils import get_col
+from src.utils import get_col, _observation_date_from_df
 
 SECTORS = ['XLK','XLF','XLV','XLE','XLY','XLP','XLI','XLB','XLU','XLRE','XLC']
 
@@ -77,7 +77,7 @@ def compute_sector_leader_divergence(df_stocks, holdings_df, leader_df, df_marke
                 classification = 'Mixto'
 
         rows.append({
-            'date': pd.Timestamp.now().normalize(),
+            'date': _observation_date_from_df(df_stocks),
             'sector': sector_etf,
             'sector_ret_20d': sector_ret,
             'n_leaders_total': n_total,

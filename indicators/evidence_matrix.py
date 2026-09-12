@@ -6,7 +6,8 @@ No genera score compuesto ni alimenta motores.
 import pandas as pd
 import numpy as np
 from pathlib import Path
-from datetime import datetime
+
+from src.utils import _observation_date_from_df
 
 
 def _sign_from_value(value):
@@ -166,7 +167,7 @@ def compute_evidence_matrix(sector_breadth_df=None,
             alignment = 'EVIDENCIA MIXTA'
 
         rows.append({
-            'date': datetime.now().strftime('%Y-%m-%d'),
+            'date': _observation_date_from_df(sector_breadth_df, col='date'),
             'sector': sector,
             'price_evidence': price_ev,
             'breadth_evidence': breadth_ev,

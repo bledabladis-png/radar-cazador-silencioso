@@ -6,6 +6,8 @@ No alimenta motores, scores, pesos ni State Machine.
 """
 import pandas as pd
 import numpy as np
+
+from src.utils import _observation_date_from_df
 from src.utils import get_col
 from config.tickers import MARKET_TICKERS
 
@@ -81,7 +83,7 @@ def compute_cross_asset_context(df_market, windows=(20, 60), min_obs_ratio=0.75)
                     else:
                         corr = pair[sector].corr(pair[asset])
                     detail_rows.append({
-                        'date': pd.Timestamp.now().normalize(),
+                        'date': _observation_date_from_df(returns_df),
                         'window': window,
                         'sector': sector,
                         'asset_class': family,
@@ -103,7 +105,7 @@ def compute_cross_asset_context(df_market, windows=(20, 60), min_obs_ratio=0.75)
                     mean_corr = median_corr = min_corr = max_corr = np.nan
 
                 summary_rows.append({
-                    'date': pd.Timestamp.now().normalize(),
+                    'date': _observation_date_from_df(returns_df),
                     'window': window,
                     'sector': sector,
                     'asset_class': family,

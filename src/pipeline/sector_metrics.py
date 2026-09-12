@@ -104,11 +104,12 @@ def _compute_concentration(df_stocks, holdings_df, leader_df, full_metrics_df):
     return sector_concentration_df
 
 
-def _compute_representativeness(leader_df):
+def _compute_representativeness(leader_df, reference_date=None):
     try:
         if leader_df is not None and not leader_df.empty:
             leader_representativeness_df = compute_leader_representativeness(
-                leader_df, 'outputs/history/sector_concentration.csv'
+                leader_df, 'outputs/history/sector_concentration.csv',
+                reference_date=reference_date
             )
             lr_path = Path('outputs/history/leader_representativeness.csv')
             lr_path.parent.mkdir(parents=True, exist_ok=True)
@@ -140,5 +141,6 @@ def compute_sector_metrics(df_stocks, holdings_df, leader_df, full_metrics_df, d
         'sector_wyckoff_distribution_df': _compute_wyckoff(df_stocks, holdings_df),
         'rs_internal_df': _compute_rs_internal(df_stocks, holdings_df, df_market),
         'sector_concentration_df': _compute_concentration(df_stocks, holdings_df, leader_df, full_metrics_df),
-        'leader_representativeness_df': _compute_representativeness(leader_df),
+        'leader_representativeness_df': _compute_representativeness(
+            leader_df, reference_date=df_stocks.index[-1]),
     }

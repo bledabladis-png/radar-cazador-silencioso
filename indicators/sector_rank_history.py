@@ -39,8 +39,10 @@ def update_rank_history(sector_results, history_csv_path, date=None):
 
 
     if date is None:
-
-        date = pd.Timestamp.now().normalize()
+        raise ValueError(
+            "sector_rank_history.update_rank_history: 'date' es obligatorio. "
+            "C4-code (2026-09-12): no se permite fallback silencioso."
+        )
 
 
 

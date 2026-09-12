@@ -40,7 +40,8 @@ def compute_sectors_base(df_market):
     try:
         from indicators.sector_rank_history import update_rank_history
         _, sector_rank_deltas_df = update_rank_history(
-            sector_results, 'outputs/history/sector_rank_history.csv', date=pd.Timestamp.now().normalize()
+            sector_results, 'outputs/history/sector_rank_history.csv',
+            date=df_market.index[-1]
         )
         if sector_rank_deltas_df is not None and not sector_rank_deltas_df.empty:
             print("  Rotacion sectorial historica calculada.")
@@ -60,7 +61,8 @@ def compute_sectors_base(df_market):
     sector_dispersion_df = None
     try:
         from indicators.sector_dispersion import compute_sector_dispersion
-        sector_dispersion_df = compute_sector_dispersion(sector_price_rank)
+        sector_dispersion_df = compute_sector_dispersion(
+            sector_price_rank, reference_date=df_market.index[-1])
         sd_path = Path('outputs/history/sector_dispersion.csv')
         sd_path.parent.mkdir(parents=True, exist_ok=True)
         if not sector_dispersion_df.empty:

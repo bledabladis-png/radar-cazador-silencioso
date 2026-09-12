@@ -7,6 +7,8 @@ No alimenta motores, scores, pesos ni State Machine.
 import pandas as pd
 import numpy as np
 
+from src.utils import _observation_date_from_df
+
 SECTORS = ['XLK','XLF','XLV','XLE','XLY','XLP','XLI','XLB','XLU','XLRE','XLC']
 
 def _phase_positive(phase):
@@ -49,7 +51,7 @@ def build_sector_regime_matrix(sector_breadth_df, sector_flow_df, sector_results
         # Validar que no falte ninguno
         if pd.isna(price_ret) or pd.isna(pct_above) or pd.isna(flow_sum) or phase is None:
             rows.append({
-                'date': pd.Timestamp.now().normalize(),
+                'date': _observation_date_from_df(sector_breadth_df, col='date'),
                 'sector': sector,
                 'price_ret_20d': price_ret,
                 'pct_above_ema50': pct_above,
@@ -84,7 +86,7 @@ def build_sector_regime_matrix(sector_breadth_df, sector_flow_df, sector_results
             lectura = 'Debilidad alineada'
 
         rows.append({
-            'date': pd.Timestamp.now().normalize(),
+            'date': _observation_date_from_df(sector_breadth_df, col='date'),
             'sector': sector,
             'price_ret_20d': price_ret,
             'pct_above_ema50': pct_above,

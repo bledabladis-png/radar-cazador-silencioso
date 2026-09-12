@@ -7,6 +7,8 @@ No incluye Dark Pool.
 """
 import pandas as pd
 import numpy as np
+
+from src.utils import _observation_date_from_df
 from src.utils import get_col
 
 def compute_volatility_structure(df_market, pcr_data=None, vix_ticker='^VIX', vix3m_ticker='^VIX3M'):
@@ -84,7 +86,7 @@ def compute_volatility_structure(df_market, pcr_data=None, vix_ticker='^VIX', vi
         vol_reading = 'Volatilidad reducida'
 
     return pd.DataFrame([{
-        'date': pd.Timestamp.now().normalize(),
+        'date': _observation_date_from_df(vix),
         'vix_level': vix_level,
         'vix_percentile_20d': vix_p20,
         'vix_percentile_60d': vix_p60,

@@ -7,7 +7,7 @@ No recalcula el RS oficial de stock_leader.py.
 """
 import pandas as pd
 import numpy as np
-from src.utils import get_col
+from src.utils import get_col, _observation_date_from_df
 
 def _ret_20d(close):
     if len(close) < 21:
@@ -67,7 +67,7 @@ def compute_rs_internal(df_stocks, holdings_df, df_market, benchmark='SPY'):
             classification = classify_rs(rs_abs, rs_int)
 
             rows.append({
-                'date': pd.Timestamp.now().normalize(),
+                'date': _observation_date_from_df(close),
                 'sector': sector_etf,
                 'ticker': ticker,
                 'price_ret_20d': price_ret,

@@ -9,7 +9,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from src.utils import append_dedup, get_col
+from src.utils import append_dedup, get_col, _observation_date_from_df
 from indicators.persistence import compute_persistence
 
 
@@ -87,7 +87,7 @@ def _compute_persistence_and_save(df_market):
     # Guardar CSV historico de persistencia sectorial
     try:
         persist_rows = []
-        date_val = pd.Timestamp.now().normalize()
+        date_val = _observation_date_from_df(df_market)
         for sec, val in sector_persistence.items():
             persist_rows.append({'date': date_val, 'sector': sec, 'persistence': val})
         persist_df = pd.DataFrame(persist_rows)

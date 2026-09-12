@@ -11,6 +11,65 @@ def append_dedup(hist_df, new_df, subset):
         return combined
     return combined.drop_duplicates(subset=subset, keep='last')
 
+def _observation_date_from_df(df, col=None):
+    """Extrae la ultima fecha de observacion valida de un DataFrame.
+
+    C4-code (2026-09-12): helper compartido por writers de historicos.
+    NO valida calendario. NO decide si publicar. NUNCA usa now() como
+    fallback.
+
+    Contrato:
+        df None/vacio         -> None
+        col especificada      -> KeyError si no existe; max(df[col]) tras
+                                 convertir a datetime; None si todo NaT
+        sin col               -> ultima posicion no-NaT del DatetimeIndex;
+                                 None si no hay ninguna
+        sin fecha valida      -> None
+
+    Args:
+        df: DataFrame con DatetimeIndex o columna de fecha.
+        col: nombre de la columna de fecha. Si None, usa el index.
+
+    Returns:
+        pd.Timestamp normalizado o None.
+    """
+    if df is None:
+        return None
+    try:
+        if len(df) == 0:
+            return None
+    except Exception:
+        return None
+
+    if col is not None:
+        if col not in df.columns:
+            raise KeyError(
+                f"_observation_date_from_df: columna '{col}' no encontrada."
+            )
+        s = pd.to_datetime(df[col], errors='coerce').dropna()
+        if s.empty:
+            return None
+        return pd.Timestamp(s.max()).normalize()
+
+    # Modo index: aceptar DatetimeIndex o indices no-numericos convertibles.
+    # Un RangeIndex/Int64Index se convierte silenciosamente a 1970-01-01 por
+    # pd.to_datetime; eso es una fecha inventada, no observacion. Rechazar.
+    if isinstance(df.index, pd.DatetimeIndex):
+        idx = df.index
+    else:
+        if pd.api.types.is_numeric_dtype(df.index):
+            return None
+        try:
+            idx = pd.to_datetime(df.index, errors='coerce')
+        except Exception:
+            return None
+        idx = pd.DatetimeIndex(idx)
+    idx = idx.dropna()
+    if len(idx) == 0:
+        return None
+    return pd.Timestamp(idx[-1]).normalize()
+
+
 def robust_zscore(series, window=60, min_periods=None):
     """Z-score robusto (mediana/MAD) tolerante a huecos cortos.
 

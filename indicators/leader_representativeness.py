@@ -19,7 +19,13 @@ def _latest_medians(conc_path):
     latest = df.drop_duplicates(subset='sector', keep='last').set_index('sector')
     return latest
 
-def compute_leader_representativeness(leader_df, sector_concentration_path):
+def compute_leader_representativeness(leader_df, sector_concentration_path,
+                                     reference_date=None):
+    if reference_date is None:
+        raise ValueError(
+            "compute_leader_representativeness: 'reference_date' es obligatorio. "
+            "C4-code (2026-09-12): fecha de observacion inyectada desde el caller."
+        )
     medians = _latest_medians(sector_concentration_path)
     if medians.empty or leader_df is None or leader_df.empty:
         return pd.DataFrame()
@@ -43,7 +49,7 @@ def compute_leader_representativeness(leader_df, sector_concentration_path):
         wls_dist = distance(leader.get('wls', np.nan), med.get('wls_median', np.nan))
 
         rows.append({
-            'date': pd.Timestamp.now().normalize(),
+            'date': pd.Timestamp(reference_date).normalize(),
             'sector': sector,
             'ticker': leader['ticker'],
             'rs_distance_to_median': rs_dist,

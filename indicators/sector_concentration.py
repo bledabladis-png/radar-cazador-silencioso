@@ -7,7 +7,7 @@ No alimenta motores, scores, pesos ni State Machine.
 """
 import pandas as pd
 import numpy as np
-from src.utils import get_col
+from src.utils import get_col, _observation_date_from_df
 
 def _get_series(df, ticker, field):
     try:
@@ -101,7 +101,7 @@ def compute_sector_concentration(df_stocks, holdings_df, full_metrics_df):
         leader_vs_wls = leader_wls - wls_median if pd.notna(leader_wls) and pd.notna(wls_median) else np.nan
 
         rows.append({
-            'date': pd.Timestamp.now().normalize(),
+            'date': _observation_date_from_df(df_stocks),
             'sector': sector_etf,
             'n_total': n_total,
             'n_valid_return20': len(ret_df),

@@ -9,10 +9,11 @@ Extraido de run.py (refactor C2, fase C2-12). Incluye:
 """
 
 import os
-from datetime import datetime
 from pathlib import Path
 
 import pandas as pd
+
+from src.utils import _observation_date_from_df
 
 
 def compute_final_matrices(sector_breadth_df, sector_concentration_df,
@@ -74,14 +75,19 @@ def compute_final_matrices(sector_breadth_df, sector_concentration_df,
 
 
 def save_regime_history(macro_score, macro_regime, macro_conf,
-                        liquidity_regime, vol_regime, sector_results):
+                        liquidity_regime, vol_regime, sector_results,
+                        df_macro_manual=None):
     """Persiste la fila del regimen actual en outputs/history/macro_regime.csv.
 
     Movido de report_generator.py (C1-10) y consolidado aqui (C2-12).
     """
     hist_path = "outputs/history/macro_regime.csv"
+    obs_date = _observation_date_from_df(df_macro_manual, col='date')
+    if obs_date is None:
+        print("  [WARN] save_regime_history: sin fecha macro valida. Se omite escritura.")
+        return
     new_row = pd.DataFrame({
-        "date": [datetime.now()],
+        "date": [pd.Timestamp(obs_date).strftime('%Y-%m-%d')],
         "macro_regime": [macro_regime],
         "macro_score": [macro_score.iloc[-1]],
         "macro_conf": [macro_conf],
@@ -90,8 +96,9 @@ def save_regime_history(macro_score, macro_regime, macro_conf,
         "sector_regime": [sector_results["regime"]],
     })
     if os.path.exists(hist_path):
-        hist = pd.read_csv(hist_path)
-        hist = pd.concat([hist, new_row], ignore_index=True)
+        hist = pd.read_csv(hist_path, dtype=str)
+        hist = pd.concat([hist, new_row.astype(str)], ignore_index=True)
+        hist = hist.drop_duplicates(subset=['date'], keep='last')
     else:
         hist = new_row
     hist.to_csv(hist_path, index=False)

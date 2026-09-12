@@ -223,7 +223,8 @@ def main():
 
     # Side effects + cobertura europea (C1-10 + C2-12)
     save_regime_history(macro_score, macro_regime, macro_conf,
-                        financial_regime, vol_regime, sector_results)
+                        financial_regime, vol_regime, sector_results,
+                        df_macro_manual=df_macro_manual)
     save_sector_rankings(sector_results)
     generate_european_coverage()
 
