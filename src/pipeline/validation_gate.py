@@ -43,14 +43,16 @@ def run_validation_gate(slpm_v12_data, pcr_data, darkpool_data, mte_result,
         slpm_errors = slpm_v12_data.get('validation_errors', [])
         if slpm_errors:
             validation_errors.extend(slpm_errors)
-        _add_check(validation_checks, validation_errors, "SLPM v1.2", True, "estado validado")
+            _add_check(validation_checks, validation_errors, "SLPM v1.2", False, f"{len(slpm_errors)} errores SLPM")
+        else:
+            _add_check(validation_checks, validation_errors, "SLPM v1.2", True, "estado validado")
     else:
         _add_check(validation_checks, validation_errors, "SLPM v1.2", True, "no disponible")
 
     # 2. PCR Total
     if pcr_data:
         val = pcr_data.get('total_pcr', np.nan)
-        if val is None or (isinstance(val, float) and np.isnan(val)):
+        if val is None or (isinstance(val, float) and np.isnan(val)) or pd.isna(val):
             _add_check(validation_checks, validation_errors, "PCR Total", False, "NaN")
         else:
             _add_check(validation_checks, validation_errors, "PCR Total", True, f"{val:.2f}")
@@ -60,7 +62,7 @@ def run_validation_gate(slpm_v12_data, pcr_data, darkpool_data, mte_result,
     # 3. Dark Pool medio
     if darkpool_data:
         val = darkpool_data.get('media_dark_pool', np.nan)
-        if val is None or (isinstance(val, float) and np.isnan(val)):
+        if val is None or (isinstance(val, float) and np.isnan(val)) or pd.isna(val):
             _add_check(validation_checks, validation_errors, "Dark Pool medio", False, "NaN")
         else:
             _add_check(validation_checks, validation_errors, "Dark Pool medio", True, f"{val:.2f}")
@@ -71,8 +73,8 @@ def run_validation_gate(slpm_v12_data, pcr_data, darkpool_data, mte_result,
     if mte_result:
         msi = mte_result.get('msi', np.nan)
         ipi = mte_result.get('ipi', np.nan)
-        if (msi is None or (isinstance(msi, float) and np.isnan(msi)) or
-            ipi is None or (isinstance(ipi, float) and np.isnan(ipi))):
+        if (msi is None or (isinstance(msi, float) and np.isnan(msi)) or pd.isna(msi) or
+            ipi is None or (isinstance(ipi, float) and np.isnan(ipi)) or pd.isna(ipi)):
             _add_check(validation_checks, validation_errors, "MTE", False, "NaN en MSI/IPI")
         else:
             _add_check(validation_checks, validation_errors, "MTE", True, f"MSI={msi:.2f}, IPI={ipi:.2f}")
@@ -86,12 +88,18 @@ def run_validation_gate(slpm_v12_data, pcr_data, darkpool_data, mte_result,
             if ticker in structural_scores:
                 t = tactical_scores[ticker]
                 s = structural_scores[ticker]
+                if not isinstance(t, (int, float)) or not isinstance(s, (int, float)) or pd.isna(t) or pd.isna(s):
+                    validation_errors.append(f"{ticker}: Tactical/Structural no numerico.")
+                    continue
                 if abs(t) > 1.0:
                     validation_errors.append(f"{ticker}: Tactical Score fuera de rango ({t:+.2f}).")
                 if abs(s) > 1.0:
                     validation_errors.append(f"{ticker}: Structural Score fuera de rango ({s:+.2f}).")
                 sectors_checked += 1
-        _add_check(validation_checks, validation_errors, "Rangos tacticos/estructurales", True, f"{sectors_checked} sectores")
+        if sectors_checked == 0:
+            _add_check(validation_checks, validation_errors, "Rangos tacticos/estructurales", False, "sin sectores coincidentes")
+        else:
+            _add_check(validation_checks, validation_errors, "Rangos tacticos/estructurales", True, f"{sectors_checked} sectores")
     else:
         _add_check(validation_checks, validation_errors, "Rangos tacticos/estructurales", True, "sin datos")
 
