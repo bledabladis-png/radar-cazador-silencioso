@@ -14,6 +14,7 @@ from pathlib import Path
 import pandas as pd
 
 from src.utils import _observation_date_from_df
+from src.market_calendar import is_market_day
 
 
 def compute_final_matrices(sector_breadth_df, sector_concentration_df,
@@ -85,6 +86,13 @@ def save_regime_history(macro_score, macro_regime, macro_conf,
     obs_date = _observation_date_from_df(df_macro_manual, col='date')
     if obs_date is None:
         print("  [WARN] save_regime_history: sin fecha macro valida. Se omite escritura.")
+        return
+    # B5-followup (2026-09-12): segundo candado. El bot FRED publica iorb.csv con
+    # fecha del dia natural (incluye sabado/domingo). Si obs_date no es sesion NYSE,
+    # se omite la escritura para no contaminar el historico con filas B2.
+    obs_date_only = pd.Timestamp(obs_date).date()
+    if not is_market_day(obs_date_only):
+        print(f"  [WARN] save_regime_history: obs_date {obs_date_only} no es sesion NYSE. Se omite escritura.")
         return
     new_row = pd.DataFrame({
         "date": [pd.Timestamp(obs_date).strftime('%Y-%m-%d')],

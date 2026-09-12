@@ -129,6 +129,31 @@ def test_save_regime_history_sin_df_macro_no_escribe(monkeypatch, capsys):
     assert 'save_regime_history' in captured.out or 'sin fecha macro' in captured.out
 
 
+def test_save_regime_history_skip_si_obs_date_no_bursatil(monkeypatch, capsys):
+    """B5-followup: df_macro_manual con fecha sabado/domingo -> no escribe."""
+    escrituras = []
+
+    def fake_to_csv(self, path, **kw):
+        escrituras.append((str(path), self.copy()))
+        return None
+
+    monkeypatch.setattr(pd.DataFrame, 'to_csv', fake_to_csv)
+    monkeypatch.setattr('os.path.exists', lambda p: False)
+
+    # Sabado 2026-09-12 -> no bursatil
+    df_macro = pd.DataFrame({
+        'date': ['2026-09-10', '2026-09-11', '2026-09-12'],
+        'x': [1.0, 1.1, 1.2],
+    })
+    save_regime_history(pd.Series([0.3]), 'INFLATION SHOCK', 0.5,
+                        'ESTRECHA', 'LOW', {'regime': 'NARROW RALLY'},
+                        df_macro_manual=df_macro)
+
+    assert len(escrituras) == 0
+    captured = capsys.readouterr()
+    assert 'no es sesion NYSE' in captured.out
+
+
 # ============================================================
 # sector_dispersion
 # ============================================================
