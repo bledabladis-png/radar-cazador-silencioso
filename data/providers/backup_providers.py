@@ -157,7 +157,8 @@ class BackupProvider:
                 print(f"  [VALIDACIÓN] {ticker}: discrepancia >5% con caché ({ref_close:.2f} vs {new_close:.2f}). Dato rechazado.")
                 return False
             return True
-        except Exception:
+        except Exception as e:
+            print(f"  [WARN] backup validate_with_cache {ticker}: {e}")
             return True
 
     def get_prices(self, tickers: list, period: str = '5y') -> pd.DataFrame:
