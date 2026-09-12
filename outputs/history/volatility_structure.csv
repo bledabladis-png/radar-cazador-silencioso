@@ -1,5 +1,5 @@
 date,vix_level,vix_percentile_20d,vix_percentile_60d,term_structure_ratio,term_structure_slope,pcr_zscore,pcr_percentile_20d,volatility_reading,term_structure_reading,n_valid_vix_20d,n_valid_vix_60d,n_valid_pcr_20d
 2026-09-08,15.720000267028809,0.8,0.3833333333333333,1.1698472695461524,2.669999122619629,-1.1638064506453054,10.0,Volatilidad elevada reciente,Contango (vol. implícita mayor horizonte superior a inmediata),20,60,20
 2026-09-09,15.720000267028809,0.8,0.3833333333333333,1.1698472695461526,2.6699991226196325,-1.0703254054152287,10.0,Volatilidad elevada reciente,Contango (vol. implícita mayor horizonte superior a inmediata),20,60,20
-2026-09-11,15.84000015258789,0.725,0.4333333333333333,1.174242437013545,2.760000228881836,-0.0924057774994122,55.00000000000001,Volatilidad por encima de la media,Contango (vol. implícita mayor horizonte superior a inmediata),20,60,20
 2026-09-10,17.84000015258789,1.0,0.8,1.1513453329510084,2.700000762939453,0.3730373898099264,65.0,Volatilidad elevada reciente,Contango (vol. implícita mayor horizonte superior a inmediata),20,60,20
+2026-09-11,15.84000015258789,0.725,0.43333333333333335,1.2967172170242423,4.700000762939453,0.37303738980992646,65.0,Volatilidad por encima de la media,Contango (vol. implícita mayor horizonte superior a inmediata),20,60,20
