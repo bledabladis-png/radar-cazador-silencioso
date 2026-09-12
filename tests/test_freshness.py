@@ -288,3 +288,77 @@ def test_data_quality_europeos_si_presentes():
         if not sub.empty:
             freshness = sub.iloc[0]["freshness"]
             assert freshness != "ARCHIVAL", f"{eu} esta ARCHIVAL en {last_date.date()}"
+
+# ============================================================
+# CAPA 3 - Salvaguarda contra fuentes oficiales
+# Estos tests requieren red. Si la fuente no responde, se saltan.
+# Verifican que el historico contiene el ultimo dato publicado por la fuente.
+# ============================================================
+
+
+def _fuente_cboe_ultimo_dato():
+    """Devuelve la fecha del ultimo dato publicado por CBOE, o None si no se puede."""
+    try:
+        from data.providers.cboe import CboeProvider
+        cp = CboeProvider()
+        if not cp.is_available():
+            return None
+        data = cp.get_options_data()
+        if not data:
+            return None
+        return data.get('date')
+    except Exception:
+        return None
+
+
+def _fuente_finra_ultima_semana():
+    """Devuelve la ultima semana (lunes) disponible en FINRA, o None."""
+    try:
+        from data.providers.finra import FinraProvider
+        fp = FinraProvider()
+        return fp.get_latest_week()
+    except Exception:
+        return None
+
+
+@pytest.mark.network
+def test_cboe_pcr_al_dia():
+    """El historico PCR debe contener la fecha mas reciente publicada por CBOE.
+    Si la fuente tiene un dato mas nuevo que el CSV, hay que investigar.
+    """
+    csv_path = BASE / "outputs" / "history" / "pcr_history.csv"
+    if not csv_path.exists():
+        pytest.skip("pcr_history.csv no existe")
+
+    fuente = _fuente_cboe_ultimo_dato()
+    if fuente is None:
+        pytest.skip("CBOE no responde o no devuelve datos")
+
+    df = pd.read_csv(csv_path, parse_dates=["date"])
+    ultimo_csv = pd.Timestamp(df["date"].max()).date()
+    fuente_fecha = pd.Timestamp(fuente).date()
+
+    assert fuente_fecha <= ultimo_csv, (
+        f"CBOE tiene dato mas nuevo ({fuente_fecha}) que el CSV ({ultimo_csv}). "
+        f"El pipeline deberia haberlo cogido en el proximo run."
+    )
+
+
+@pytest.mark.network
+def test_finra_darkpool_al_dia():
+    """El historico darkpool debe contener la semana mas reciente publicada por FINRA."""
+    csv_path = BASE / "outputs" / "history" / "darkpool_history.csv"
+    if not csv_path.exists():
+        pytest.skip("darkpool_history.csv no existe")
+
+    fuente = _fuente_finra_ultima_semana()
+    if fuente is None:
+        pytest.skip("FINRA no responde o no devuelve datos")
+
+    df = pd.read_csv(csv_path, parse_dates=["week"])
+    ultimo_csv = pd.Timestamp(df["week"].max()).date()
+    fuente_fecha = pd.Timestamp(fuente).date()
+
+    assert fuente_fecha <= ultimo_csv, (
+        f"FINRA tiene semana mas nueva ({fuente_fecha}) que el CSV ({ultimo_csv})."
+    )
