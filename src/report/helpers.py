@@ -16,6 +16,28 @@ def _fmt_num(v, fmt="{:.2f}"):
         return str(v)
 
 
+def _fmt_ad_net(advances, declines, ad_net, fmt="{:+d}"):
+    """Formatea A/D Net con politica B3 (2026-09-12).
+
+    Reglas:
+        advances/declines invalidos (NaN/None) -> N/D.
+        advances + declines == 0 -> N/D (sin informacion direccional).
+        advances + declines > 0 -> formatear ad_net normalmente.
+
+    Diferencia con ad_net == 0:
+        ad_net=0 con advances=declines>0 es un balance real (mercado plano).
+        ad_net=0 con advances=declines=0 es ausencia de informacion.
+    """
+    if pd.isna(advances) or pd.isna(declines):
+        return "N/D"
+    try:
+        if (advances + declines) == 0:
+            return "N/D"
+    except Exception:
+        return "N/D"
+    return _fmt_num(ad_net, fmt)
+
+
 def _classify_freshness(age_days, max_current=3, max_recent=7, max_stale=14):
     if age_days <= max_current:
         return 'CURRENT'

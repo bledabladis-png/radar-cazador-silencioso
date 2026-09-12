@@ -7,11 +7,16 @@ Extraidas de src/report_generator.py (refactor C1, fase C1-6b).
 import pandas as pd
 
 from config.settings import MIN_SECTOR_COVERAGE
-from src.report.helpers import _fmt_num
+from src.report.helpers import _fmt_num, _fmt_ad_net
 
 
-def render_sector_breadth(sector_breadth_data):
+def render_sector_breadth(sector_breadth_data, is_stale=False):
     """Renderiza la tabla Sector Breadth & Health.
+
+    C2-followup (2026-09-12): is_stale=True indica que la observacion
+    mostrada es la ultima valida del historico (mercado cerrado), no
+    una actualizacion del dia. Se anade un aviso entre el titulo y la
+    tabla. La fecha de cada fila se mantiene tal cual viene del snapshot.
 
     Devuelve lista de lineas markdown. Sin side effects.
     """
@@ -20,6 +25,9 @@ def render_sector_breadth(sector_breadth_data):
         latest_date = pd.to_datetime(sector_breadth_data['date']).max()
         breadth_latest = sector_breadth_data[pd.to_datetime(sector_breadth_data['date']) == latest_date]
         out.append("## Sector Breadth & Health\n")
+        if is_stale:
+            _latest_str = pd.Timestamp(latest_date).strftime('%Y-%m-%d')
+            out.append(f"*Sin actualizacion - mercado cerrado. Ultima observacion: {_latest_str}.*\n\n")
         out.append("| Sector | EMA20 | EMA50 | EMA200 | RS+ | Mom+ | Acc | Markup | Dist | Markdown | NH | NL | A/D | Cobertura |\n")
         out.append("|--------|-------|-------|--------|-----|------|-----|--------|------|----------|----|----|-----|-----------|\n")
         for _, row in breadth_latest.iterrows():
@@ -27,7 +35,7 @@ def render_sector_breadth(sector_breadth_data):
             cov_label = f"{cobertura:.0f}%"
             if (cobertura / 100) < MIN_SECTOR_COVERAGE:
                 cov_label += " [BAJA]"
-            out.append(f"| {row['sector']} | {_fmt_num(row['pct_above_ema20'], '{:.1f}%')} | {_fmt_num(row['pct_above_ema50'], '{:.1f}%')} | {_fmt_num(row['pct_above_ema200'], '{:.1f}%')} | {_fmt_num(row['pct_rs_positive'], '{:.1f}%')} | {_fmt_num(row['pct_momentum_positive'], '{:.1f}%')} | {_fmt_num(row['count_accumulation'], '{:.0f}')} | {_fmt_num(row['count_markup'], '{:.0f}')} | {_fmt_num(row['count_distribution'], '{:.0f}')} | {_fmt_num(row['count_markdown'], '{:.0f}')} | {_fmt_num(row['new_highs'], '{:.0f}')} | {_fmt_num(row['new_lows'], '{:.0f}')} | {_fmt_num(row['ad_net'], '{:+d}')} | {cov_label} |\n")
+            out.append(f"| {row['sector']} | {_fmt_num(row['pct_above_ema20'], '{:.1f}%')} | {_fmt_num(row['pct_above_ema50'], '{:.1f}%')} | {_fmt_num(row['pct_above_ema200'], '{:.1f}%')} | {_fmt_num(row['pct_rs_positive'], '{:.1f}%')} | {_fmt_num(row['pct_momentum_positive'], '{:.1f}%')} | {_fmt_num(row['count_accumulation'], '{:.0f}')} | {_fmt_num(row['count_markup'], '{:.0f}')} | {_fmt_num(row['count_distribution'], '{:.0f}')} | {_fmt_num(row['count_markdown'], '{:.0f}')} | {_fmt_num(row['new_highs'], '{:.0f}')} | {_fmt_num(row['new_lows'], '{:.0f}')} | {_fmt_ad_net(row['advances'], row['declines'], row['ad_net'])} | {cov_label} |\n")
         out.append("\n")
         out.append(f"*[BAJA] = cobertura < {MIN_SECTOR_COVERAGE:.0%} del universo del sector. Los ratios se calculan sobre la parte valida.*\n\n")
     return out

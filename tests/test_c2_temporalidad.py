@@ -58,11 +58,13 @@ def test_t_int_4_dia_no_bursatil_no_genera(tmp_path):
     df_market, df_stocks, holdings = _mk_market_and_stocks(end_date='2026-09-11')
     out = tmp_path / "sb.csv"
 
-    result = _compute_sector_breadth_health(
+    result, is_stale = _compute_sector_breadth_health(
         df_stocks, df_market, holdings,
         reference_date=SATURDAY, output_path=out)
 
+    # C2F: sin CSV historico, fallback devuelve (None, True).
     assert result is None
+    assert is_stale is True
     assert not out.exists(), "no debe crear CSV en dia no bursatil"
 
 
@@ -123,14 +125,16 @@ def test_t_int_11_reference_date_sesion(tmp_path):
     df_market, df_stocks, holdings = _mk_market_and_stocks(end_date='2026-09-11')
     out = tmp_path / "sb.csv"
 
-    result = _compute_sector_breadth_health(
+    result, is_stale = _compute_sector_breadth_health(
         df_stocks, df_market, holdings,
         reference_date=FRIDAY, output_path=out)
 
     assert result is not None
+    assert is_stale is False
     assert len(result) > 0
     expected = pd.Timestamp(date(2026, 9, 11))
-    assert result.iloc[0]['date'] == expected
+    # append_dedup normaliza date a string YYYY-MM-DD; parseamos antes de comparar.
+    assert pd.to_datetime(result.iloc[0]['date']) == expected
     assert out.exists()
     csv = pd.read_csv(out)
     assert pd.Timestamp(csv.iloc[0]['date']) == expected
@@ -146,11 +150,13 @@ def test_t_int_12_sabado_con_datos_hasta_viernes(tmp_path):
     df_market, df_stocks, holdings = _mk_market_and_stocks(end_date='2026-09-11')
     out = tmp_path / "sb.csv"
 
-    result = _compute_sector_breadth_health(
+    result, is_stale = _compute_sector_breadth_health(
         df_stocks, df_market, holdings,
         reference_date=SATURDAY, output_path=out)
 
+    # C2F: sin CSV historico, fallback devuelve (None, True).
     assert result is None
+    assert is_stale is True
     assert not out.exists()
 
 
@@ -167,13 +173,14 @@ def test_t_int_11b_reference_date_pre_publish(tmp_path):
     df_market, df_stocks, holdings = _mk_market_and_stocks(end_date='2026-09-11')
     out = tmp_path / "sb.csv"
 
-    result = _compute_sector_breadth_health(
+    result, is_stale = _compute_sector_breadth_health(
         df_stocks, df_market, holdings,
         reference_date=FRIDAY_PRE_PUBLISH, output_path=out)
 
     assert result is not None
+    assert is_stale is False
     expected = pd.Timestamp(date(2026, 9, 10))  # jueves, dia bursatil anterior
-    assert result.iloc[0]['date'] == expected
+    assert pd.to_datetime(result.iloc[0]['date']) == expected
 
 
 def test_csv_real_no_modificado():
