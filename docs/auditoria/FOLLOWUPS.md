@@ -25,3 +25,18 @@
 - **Descripcion:** formato de +0.00 en scores pequenos; flecha -> en algunos textos.
 - **Clasificacion:** P3 cosmetico.
 - **Bloqueante:** no.
+
+## FU-004 — Origen del colapso `macro_regime.csv` (315 -> 1) sin identificar
+
+- **Origen:** sesion 2026-09-12, verificacion E2E-pre.
+- **Descripcion:** `outputs/history/macro_regime.csv` paso de 314 filas (HEAD `829f9c6`) a 1 fila (working tree). El codigo actual de `save_regime_history` (C4-code) es coherente con el resultado final, pero no explica el colapso inicial.
+- **Evidencia:**
+  - Snapshot `outputs/audit/c4_code_verif/macro_regime_pre.csv` (06:40:45) ya mostraba 1 fila antes del run.
+  - HEAD `829f9c6` tenia 314 filas con strings de fecha distintos (`2026-06-19 16:38:26.367013`, etc.), todas B2-contaminadas.
+  - `save_regime_history` con `dtype=str` + `drop_duplicates(subset=['date'])` no habria colapsado 314 strings distintos.
+- **Impacto:** ninguno funcional. El estado actual (1 fila, `2026-09-11`, formato `YYYY-MM-DD`) es el deseado.
+- **Hipotesis:** algun paso de la bateria de verificacion C4-code (pre-06:40) escribio al path real en lugar de tmp, o hubo `git checkout` selectivo. No confirmado.
+- **Clasificacion:** P3 documental.
+- **Accion:** ninguna urgente. Si reaparece un colapso similar en otro writer, investigar el origen con mas instrumentacion.
+- **Bloqueante:** no.
+
