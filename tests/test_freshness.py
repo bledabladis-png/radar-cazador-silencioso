@@ -115,52 +115,78 @@ def test_classify_freshness_nan():
 
 
 def test_classify_ticker_failed_casos_vacios():
-    """_classify_ticker: df None/vacio, sin Close, todo NaN."""
-    assert _classify_ticker("AAPL", None) == "FAILED"
-    assert _classify_ticker("AAPL", pd.DataFrame()) == "FAILED"
-    assert _classify_ticker("AAPL", pd.DataFrame({"Open": [1, 2]})) == "FAILED"
+    """_classify_ticker: df None/vacio, sin Close, todo NaN -> (FAILED, None).
+
+    B1 (2026-09-12): la firma cambio a (status, reason). Casos basicos
+    devuelven FAILED con reason None. El expected_session se pasa como
+    precondicion pero no se usa en estos casos.
+    """
+    expected = pd.Timestamp("2026-01-02").date()
+    assert _classify_ticker("AAPL", None, expected) == ("FAILED", None)
+    assert _classify_ticker("AAPL", pd.DataFrame(), expected) == ("FAILED", None)
+    assert _classify_ticker("AAPL", pd.DataFrame({"Open": [1, 2]}), expected) == ("FAILED", None)
     empty_close = pd.DataFrame({("Close", "AAPL"): [float("nan"), float("nan")]})
-    assert _classify_ticker("AAPL", empty_close) == "FAILED"
+    assert _classify_ticker("AAPL", empty_close, expected) == ("FAILED", None)
 
 
 def test_classify_ticker_ok_reciente():
-    """_classify_ticker: dato de hoy -> OK."""
+    """_classify_ticker: dato de hoy -> (OK, None).
+
+    B1 (2026-09-12): expected_session == ultima fecha del df. Sin NaN
+    en close[-1], los chequeos B1 no disparan.
+    """
     hoy = pd.Timestamp.now().normalize()
     df = pd.DataFrame(
         {("Close", "AAPL"): [100.0, 101.0]},
         index=[hoy - pd.Timedelta(days=1), hoy],
     )
-    assert _classify_ticker("AAPL", df) == "OK"
+    expected = df.index[-1].date()
+    assert _classify_ticker("AAPL", df, expected) == ("OK", None)
 
 
 def test_classify_ticker_partial():
-    """_classify_ticker: 10 dias -> PARTIAL."""
+    """_classify_ticker: 10 dias -> (PARTIAL, None).
+
+    B1: expected_session se alinea con ultima fecha del df para no
+    disparar EXPECTED_SESSION_ABSENT.
+    """
     hoy = pd.Timestamp.now().normalize()
     df = pd.DataFrame(
         {("Close", "AAPL"): [100.0, 101.0]},
         index=[hoy - pd.Timedelta(days=11), hoy - pd.Timedelta(days=10)],
     )
-    assert _classify_ticker("AAPL", df) == "PARTIAL"
+    expected = df.index[-1].date()
+    assert _classify_ticker("AAPL", df, expected) == ("PARTIAL", None)
 
 
 def test_classify_ticker_stale():
-    """_classify_ticker: 30 dias -> STALE."""
+    """_classify_ticker: 30 dias -> (STALE, None)."""
     hoy = pd.Timestamp.now().normalize()
     df = pd.DataFrame(
         {("Close", "AAPL"): [100.0, 101.0]},
         index=[hoy - pd.Timedelta(days=31), hoy - pd.Timedelta(days=30)],
     )
-    assert _classify_ticker("AAPL", df) == "STALE"
+    expected = df.index[-1].date()
+    assert _classify_ticker("AAPL", df, expected) == ("STALE", None)
 
 
 def test_classify_ticker_ultimo_nan_failed():
-    """_classify_ticker: ultimo valor NaN -> FAILED (hueco >3d tras ffill)."""
+    """_classify_ticker: ultimo NaN en sesion esperada -> DATA_ISSUE.
+
+    B1 (2026-09-12): cambio semantico intencional. Antes este caso
+    devolvia FAILED. Ahora es DATA_ISSUE + MISSING_CLOSE_EXPECTED_SESSION
+    porque el NaN esta en la sesion esperada. Este es el caso B1 por
+    excelencia.
+    """
     hoy = pd.Timestamp.now().normalize()
     df = pd.DataFrame(
         {("Close", "AAPL"): [100.0, float("nan")]},
         index=[hoy - pd.Timedelta(days=1), hoy],
     )
-    assert _classify_ticker("AAPL", df) == "FAILED"
+    expected = df.index[-1].date()
+    assert _classify_ticker("AAPL", df, expected) == (
+        "DATA_ISSUE", "MISSING_CLOSE_EXPECTED_SESSION"
+    )
 
 
 # ============================================================

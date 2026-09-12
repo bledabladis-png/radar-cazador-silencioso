@@ -5,6 +5,7 @@ from config.settings import CACHE_HOURS, CACHE_VALIDATE_TRADING_DATE
 from data.providers.euronext_provider import EuronextProvider
 from data.providers.xetra_provider import XetraProvider
 from data.providers.bme_provider import BMEProvider
+from src.market_calendar import last_expected_market_date, is_market_day
 import os
 import time
 
@@ -84,13 +85,108 @@ def _get_yf_session():
     except Exception:
         return None
 
-def _classify_ticker(ticker, df):
-    """Clasifica un ticker según la disponibilidad y frescura de sus datos.
+def _fill_holes_respecting_sessions(df, reference_date):
+    """Rellena NaN solo en fechas que NO son sesion NYSE.
 
-    Devuelve: 'OK', 'PARTIAL', 'STALE', 'FAILED'.
+    Cualquier NaN en una fecha que SI es sesion NYSE se preserva: representa
+    un hueco real del proveedor y no debe imputarse silenciosamente.
+
+    Args:
+        df: DataFrame con columnas MultiIndex (Close/High/Low/Volume, ticker).
+        reference_date: fecha de referencia (datetime o Timestamp).
+
+    Returns:
+        (df_filled, diagnostics_dict) con:
+            n_nan_pre_fill: total NaN en columnas Close
+            n_nan_preserved: NaN preservados (eran sesion NYSE)
+            affected_tickers: tickers con NaN preservado
+    """
+    expected_session = last_expected_market_date(reference_date)
+    diag = {
+        'n_nan_pre_fill': 0,
+        'n_nan_preserved': 0,
+        'affected_tickers': [],
+        'expected_session': expected_session,
+    }
+    if df is None or df.empty:
+        return df, diag
+
+    close_cols = [c for c in df.columns if len(c) == 2 and c[0] == 'Close']
+    if not close_cols:
+        return df, diag
+
+    df = df.copy()
+    for col in close_cols:
+        ticker = col[1]
+        series = df[col]
+        nan_mask = series.isna()
+        if not nan_mask.any():
+            continue
+        nan_dates = series.index[nan_mask]
+        diag['n_nan_pre_fill'] += int(nan_mask.sum())
+
+        session_nan_dates = []
+        for d in nan_dates:
+            d_norm = pd.Timestamp(d).normalize()
+            if is_market_day(d_norm.date()):
+                diag['n_nan_preserved'] += 1
+                session_nan_dates.append(d)
+
+        if session_nan_dates:
+            diag['affected_tickers'].append(ticker)
+
+        filled = series.ffill(limit=3)
+        for d in session_nan_dates:
+            filled.loc[d] = float('nan')
+        df[col] = filled
+
+    return df, diag
+
+
+def _log_yahoo_raw_diagnostics(df_raw, reference_date, batch_label):
+    """Loguea estado crudo del batch ANTES de cualquier imputacion.
+
+    Solo observabilidad. No decide ni modifica.
+    """
+    expected_session = last_expected_market_date(reference_date)
+    if df_raw is None or df_raw.empty:
+        print(f"[YAHOO_RAW] batch={batch_label} empty=True")
+        return
+
+    raw_last = df_raw.index[-1]
+    raw_last_norm = pd.Timestamp(raw_last).normalize().date()
+    expected_present = (raw_last_norm == expected_session)
+
+    close_cols = [c for c in df_raw.columns if len(c) == 2 and c[0] == 'Close']
+    total = len(close_cols)
+    if total == 0:
+        nan_count = 0
+        affected = []
+    else:
+        last_row = df_raw[close_cols].iloc[-1]
+        nan_mask = last_row.isna()
+        nan_count = int(nan_mask.sum())
+        affected = [col[1] for col, is_nan in zip(close_cols, nan_mask) if is_nan][:20]
+
+    pct = 100.0 * nan_count / total if total > 0 else 0.0
+
+    print(f"[YAHOO_RAW] batch={batch_label}")
+    print(f"  expected_session={expected_session}")
+    print(f"  raw_last_date={raw_last_norm}")
+    print(f"  expected_session_present={expected_present}")
+    print(f"  close_nan={nan_count}/{total} ({pct:.1f}%)")
+    print("  before_ffill=True")
+    print(f"  affected_tickers={affected}")
+
+
+def _classify_ticker(ticker, df, expected_session):
+    """Clasifica un ticker segun disponibilidad y frescura.
+
+    Devuelve: (status, reason) con status en
+    {'OK', 'PARTIAL', 'STALE', 'FAILED', 'DATA_ISSUE'} y reason str o None.
     """
     if df is None or df.empty:
-        return 'FAILED'
+        return 'FAILED', None
     # Buscar columna Close para el ticker
     close_col = None
     if isinstance(df.columns, pd.MultiIndex):
@@ -104,31 +200,43 @@ def _classify_ticker(ticker, df):
         if 'Close' in df.columns:
             close_col = 'Close'
     if close_col is None:
-        return 'FAILED'
+        return 'FAILED', None
 
     series = df[close_col]
     if series.dropna().empty:
-        return 'FAILED'
+        return 'FAILED', None
 
-    # Si la ULTIMA FILA del DataFrame tiene NaN, considerar FAILED.
-    # Nota: los datos han sido previamente ffill(limit=3), asi que
-    # un NaN aqui indica un hueco real >3 dias (suspension, delisting, etc.),
-    # no un simple festivo. Esto ya no descarta tickers por festivos.
+    # B1 (2026-09-12): chequeos de integridad de sesion esperada.
+    observed_last = pd.Timestamp(series.index[-1]).normalize().date()
+    expected_norm = pd.Timestamp(expected_session).normalize().date()
+
+    if expected_norm > observed_last:
+        return 'DATA_ISSUE', 'EXPECTED_SESSION_ABSENT'
+
+    if expected_norm == observed_last and pd.isna(series.iloc[-1]):
+        return 'DATA_ISSUE', 'MISSING_CLOSE_EXPECTED_SESSION'
+
+    # Comprobacion original: NaN residual (hueco >3 dias o proveedor stale).
     if pd.isna(series.iloc[-1]):
-        return 'FAILED'
+        return 'FAILED', 'STALE_LAST_VALUE'
 
     last_date = series.dropna().index[-1]
     days_since = (pd.Timestamp.now() - last_date).days
     if days_since <= 5:
-        return 'OK'
+        return 'OK', None
     elif days_since <= 15:
-        return 'PARTIAL'
+        return 'PARTIAL', None
     else:
-        return 'STALE'
+        return 'STALE', None
 
 # Nota: sin @retry global. El bucle por lotes ya gestiona fallos:
 # los tickers fallidos se reintentan individualmente tras el bucle principal.
-def download_stock_prices():
+def download_stock_prices(reference_date=None):
+    # B1 (2026-09-12): reference_date se normaliza UNA vez al inicio.
+    if reference_date is None:
+        reference_date = datetime.now()
+    _expected_session = last_expected_market_date(reference_date)
+
     cache_path = 'data/stock_prices.csv'
     parquet_path = 'data/stock_prices.parquet'
     # D3 Fase 2: elegir cache disponible (parquet o csv, el mas reciente)
@@ -185,7 +293,8 @@ def download_stock_prices():
     # Una única sesión para todas las descargas
     session = _get_yf_session()
     all_data = []
-    classification = {'OK': [], 'PARTIAL': [], 'STALE': [], 'FAILED': []}
+    classification = {'OK': [], 'PARTIAL': [], 'STALE': [], 'FAILED': [], 'DATA_ISSUE': []}
+    classification_reasons = {}
     failed_tickers = []
 
     batch_size = 10  # lote mayor para eficiencia
@@ -200,16 +309,22 @@ def download_stock_prices():
             else:
                 data_batch = yf.download(batch, period='5y', auto_adjust=True)
             if not data_batch.empty:
-                # Rellenar huecos de hasta 3 dias (festivos) con ultimo valor real.
-                # No inventa datos: replica el ultimo dia operado.
-                data_batch = data_batch.ffill(limit=3)
+                # B1: observabilidad del estado crudo ANTES de imputar.
+                _log_yahoo_raw_diagnostics(data_batch, reference_date,
+                                           f"batch_{i//batch_size + 1}")
+                # B1: relleno condicional. NaN en sesion NYSE se preserva.
+                data_batch, _fill_diag = _fill_holes_respecting_sessions(
+                    data_batch, reference_date)
                 all_data.append(data_batch)
                 # Clasificar cada ticker del lote
                 for ticker in batch:
-                    status = _classify_ticker(ticker, data_batch)
+                    status, reason = _classify_ticker(ticker, data_batch,
+                                                     _expected_session)
                     classification[status].append(ticker)
                     if status == 'FAILED':
                         failed_tickers.append(ticker)
+                    if status == 'DATA_ISSUE' and reason:
+                        classification_reasons[ticker] = reason
             else:
                 # lote vacío: todos fallidos
                 classification['FAILED'].extend(batch)
@@ -240,8 +355,11 @@ def download_stock_prices():
                 if not isinstance(data_single.columns, pd.MultiIndex):
                     data_single.columns = pd.MultiIndex.from_product([data_single.columns, [ticker]])
 
-                # Rellenar huecos de hasta 3 dias (festivos) antes de clasificar.
-                data_single = data_single.ffill(limit=3)
+                # B1: observabilidad + relleno condicional (retry individual).
+                _log_yahoo_raw_diagnostics(data_single, reference_date,
+                                           f"retry_{ticker}")
+                data_single, _fill_diag = _fill_holes_respecting_sessions(
+                    data_single, reference_date)
 
                 # Solo añadir si el ticker tiene datos válidos reales
                 close_key = ('Close', ticker)
@@ -251,13 +369,16 @@ def download_stock_prices():
                     continue
 
                 all_data.append(data_single)
-                status = _classify_ticker(ticker, data_single)
+                status, reason = _classify_ticker(ticker, data_single,
+                                                 _expected_session)
                 if status != 'FAILED':
                     if ticker in classification['FAILED']:
                         classification['FAILED'].remove(ticker)
                     classification[status].append(ticker)
                     if ticker in failed_tickers:
                         failed_tickers.remove(ticker)
+                    if status == 'DATA_ISSUE' and reason:
+                        classification_reasons[ticker] = reason
             except Exception as e:
                 print(f'  [WARN] stock_data_loader: {ticker}: {e}')
 
@@ -338,6 +459,10 @@ def download_stock_prices():
     print(f"PARTIAL ({len(classification['PARTIAL'])}): {classification['PARTIAL']}")
     print(f"STALE ({len(classification['STALE'])}): {classification['STALE']}")
     print(f"FAILED ({len(classification['FAILED'])}): {classification['FAILED']}")
+    if classification['DATA_ISSUE']:
+        print(f"DATA_ISSUE ({len(classification['DATA_ISSUE'])}): {classification['DATA_ISSUE']}")
+        for t in classification['DATA_ISSUE'][:20]:
+            print(f"  {t}: {classification_reasons.get(t, 'unknown')}")
 
     if not all_data:
         return None
@@ -346,9 +471,10 @@ def download_stock_prices():
     if not isinstance(data.columns, pd.MultiIndex):
         data.columns = pd.MultiIndex.from_tuples(data.columns)
 
-    # Relleno global defensivo de huecos <=3 dias. Idempotente: si ya
-    # se aplico en batch/retry, no tiene efecto adicional. Pero garantiza
-    # que un ticker con ultimo NaN (festivo) no se considere FAILED.
+    # B1: sanity check final. NO aplica calendario NYSE: este merge puede
+    # contener series con otros calendarios (Euronext/Xetra/BME). La
+    # proteccion real de B1 se aplica en el pipeline Yahoo USA (batch/retry).
+    # Idempotente sobre los datos ya procesados.
     data = data.ffill(limit=3)
 
     # Deduplicar columnas (defensivo: con Europa primero ya no hay solapamiento
