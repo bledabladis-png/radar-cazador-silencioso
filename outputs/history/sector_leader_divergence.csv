@@ -1,7 +1,1 @@
 date,sector,sector_ret_20d,n_leaders_total,n_leaders_valid,n_leaders_positive,n_leaders_negative,n_leaders_beating_sector,classification
-2026-09-07,XLC,0.006830252171826867,5,5,5,0,5,Alineación positiva
-2026-09-07,XLE,0.05137037974299963,5,5,5,0,5,Alineación positiva
-2026-09-07,XLF,0.0051902982875506876,5,5,5,0,5,Alineación positiva
-2026-09-07,XLI,-0.056165820394107335,5,5,3,2,5,Liderazgo relativo de líderes
-2026-09-07,XLV,0.020474986928627592,5,5,5,0,5,Alineación positiva
-2026-09-07,XLY,-0.03631326970172488,5,5,1,4,3,Alineación negativa
