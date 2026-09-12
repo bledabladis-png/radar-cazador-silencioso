@@ -73,7 +73,9 @@ def _compute_primary_flow(df: pd.DataFrame) -> pd.DataFrame:
         mad = (series - median).abs().median()
         if mad == 0:
             return 0.0
-        return (series.iloc[-1] - median) / (1.4826 * mad + 1e-9)
+        z = (series.iloc[-1] - median) / (1.4826 * mad + 1e-9)
+        # Clip a [-5, +5] coherente con src/utils.robust_zscore.
+        return max(-5.0, min(5.0, float(z)))
 
     df['primary_flow_z'] = df['primary_flow_pct'].rolling(120).apply(robust_z, raw=False)
     return df
