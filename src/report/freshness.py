@@ -13,6 +13,7 @@ from src.report.helpers import (
     _classify_finra_freshness,
     _classify_fred_freshness,
     _generate_coverage_table,
+    _last_market_session,
 )
 
 
@@ -63,7 +64,7 @@ def render_data_freshness(pcr_data, darkpool_data, sector_results):
                 liq_state = json.load(f)
             last_fred = liq_state.get('date', 'N/A')
             if last_fred != 'N/A':
-                d = pd.Timestamp(last_fred)
+                d = _last_market_session(last_fred)  # FU-007: walk back a ultimo dia bursatil
                 age = (now - d).days
                 fred_status = _classify_fred_freshness(age)
                 fred_conf = 'Alta' if fred_status in ('CURRENT', 'RECENT') else 'Baja'
@@ -88,7 +89,7 @@ def render_data_freshness(pcr_data, darkpool_data, sector_results):
             _df_pq = pd.read_parquet(_p)
             if _df_pq.empty:
                 continue
-            _yahoo_last = pd.Timestamp(_df_pq.index[-1])
+            _yahoo_last = _last_market_session(_df_pq.index[-1])  # FU-007
             _yahoo_age = (now - _yahoo_last).days
             _yahoo_status = _classify_freshness(_yahoo_age, 3, 7, 14)
             _yahoo_conf = "Alta" if _yahoo_status in ("CURRENT", "RECENT") else "Baja"
