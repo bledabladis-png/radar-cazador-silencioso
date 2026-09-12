@@ -79,6 +79,10 @@ def _generate_coverage_table(pcr_data, darkpool_data, sector_results):
         df = pd.read_csv('outputs/report/analisis_lideres.csv')
         if 'ticker' in df.columns:
             n_acciones = len(df['ticker'].unique())
+    except FileNotFoundError:
+        # FU-005 (2026-09-13): sin sectores favorables no se genera el CSV.
+        # Es estado esperado, no un WARN.
+        pass
     except Exception as e:
         print(f"  [WARN] report_generator: analisis_lideres.csv: {e}")
     lines.append(f"| Acciones lideres | {n_acciones} tickers | - |\n")
