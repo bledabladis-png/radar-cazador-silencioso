@@ -45,10 +45,10 @@ def compute_data_quality():
     sources = [
         {
             'source': 'Yahoo Finance',
-            'file': 'outputs/history/sector_breadth.csv',
-            'date_cols': ['date'],
+            'file': 'data/market_data.parquet',
+            'date_cols': None,
             'frequency': 'daily',
-            'coverage_logic': 'sectorial',
+            'coverage_logic': None,
             'notes': 'Precios y métricas sectoriales'
         },
         {
@@ -184,6 +184,40 @@ def compute_data_quality():
                 'coverage': np.nan,
                 'notes': src.get('notes', ''),
             })
+            continue
+
+        # Rama Parquet (D3): market_data.parquet usa index como fecha.
+        if str(path).endswith('.parquet'):
+            try:
+                df_pq = pd.read_parquet(path)
+                last_date = pd.Timestamp(df_pq.index[-1]) if len(df_pq) > 0 else pd.NaT
+                age = (now - last_date).days if pd.notna(last_date) else np.nan
+                freshness = classify_freshness(age, src['frequency'])
+                rows.append({
+                    'date': now.strftime('%Y-%m-%d'),
+                    'source': src['source'],
+                    'last_date': last_date.strftime('%Y-%m-%d') if pd.notna(last_date) else np.nan,
+                    'age_calendar_days': age,
+                    'frequency': src['frequency'],
+                    'freshness': freshness,
+                    'n_total': np.nan,
+                    'n_valid': np.nan,
+                    'coverage': np.nan,
+                    'notes': src.get('notes', ''),
+                })
+            except Exception as e:
+                rows.append({
+                    'date': now.strftime('%Y-%m-%d'),
+                    'source': src['source'],
+                    'last_date': np.nan,
+                    'age_calendar_days': np.nan,
+                    'frequency': src['frequency'],
+                    'freshness': 'N/D',
+                    'n_total': np.nan,
+                    'n_valid': np.nan,
+                    'coverage': np.nan,
+                    'notes': f'Error Parquet: {e}',
+                })
             continue
 
         try:
