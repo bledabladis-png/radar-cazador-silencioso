@@ -2,7 +2,7 @@
 import numpy as np
 import sys
 sys.path.insert(0, '.')
-from src.utils import robust_zscore, tanh_normalize, sigmoid, get_col, clean_oil_prices
+from src.utils import robust_zscore, tanh_normalize, sigmoid, get_col, clean_oil_prices, append_dedup
 
 def test_robust_zscore_normal():
     s = pd.Series([1,2,3,4,5,6,7,8,9,10] * 20)
@@ -36,3 +36,34 @@ def test_clean_oil_prices():
     df = pd.DataFrame({('Close', 'CL=F'): [-1.0, 50.0], ('Close', 'BZ=F'): [70.0, 75.0]}, index=[0,1])
     df_clean = clean_oil_prices(df)
     assert (df_clean[('Close', 'CL=F')] > 0).all()
+
+
+
+def test_append_dedup_hist_vacio():
+    """FU-009: sin FutureWarning al concatenar con hist_df vacio."""
+    import warnings
+    empty = pd.DataFrame()
+    new = pd.DataFrame({'date': ['2026-09-11'], 'sector': ['XLK'], 'x': [1.0]})
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
+        result = append_dedup(empty, new, ['date', 'sector'])
+    assert not result.empty
+    assert result.iloc[0]['sector'] == 'XLK'
+
+
+def test_append_dedup_new_vacio():
+    """FU-009: new_df vacio -> devuelve hist_df tal cual."""
+    import warnings
+    hist = pd.DataFrame({'date': ['2026-09-11'], 'sector': ['XLK'], 'x': [1.0]})
+    empty = pd.DataFrame()
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
+        result = append_dedup(hist, empty, ['date', 'sector'])
+    assert not result.empty
+    assert result.iloc[0]['sector'] == 'XLK'
+
+
+def test_append_dedup_ambos_vacios():
+    """FU-009: ambos vacios -> DataFrame vacio."""
+    result = append_dedup(pd.DataFrame(), pd.DataFrame(), ['date', 'sector'])
+    assert result.empty

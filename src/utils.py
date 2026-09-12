@@ -3,8 +3,21 @@ import pandas as pd
 
 
 def append_dedup(hist_df, new_df, subset):
-    """Concatena dos DataFrames, normaliza fecha a YYYY-MM-DD y elimina duplicados por subset."""
-    combined = pd.concat([hist_df, new_df], ignore_index=True)
+    """Concatena dos DataFrames, normaliza fecha a YYYY-MM-DD y elimina duplicados por subset.
+
+    FU-009 (2026-09-13): si hist_df o new_df estan vacios, evitar pd.concat
+    (genera FutureWarning en pandas 2.x y rompera en pandas 3.0).
+    """
+    h_empty = hist_df is None or len(hist_df) == 0
+    n_empty = new_df is None or len(new_df) == 0
+    if h_empty and n_empty:
+        return pd.DataFrame()
+    if h_empty:
+        combined = new_df.copy()
+    elif n_empty:
+        combined = hist_df.copy()
+    else:
+        combined = pd.concat([hist_df, new_df], ignore_index=True)
     if 'date' in combined.columns:
         combined['date'] = pd.to_datetime(combined['date'], errors='coerce').dt.strftime('%Y-%m-%d')
     if combined.empty:
