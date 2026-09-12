@@ -43,14 +43,14 @@ date,sector,delta_1d_ema20,delta_5d_ema20,delta_20d_ema20,delta_1d_ema50,delta_5
 2026-09-10,XLU,-20.0,-10.0,-15.0,-10.0,-5.0,-15.0,-5.0,-5.0,-45.0,Deterioro fuerte,Deterioro fuerte,Deterioro fuerte,False,True
 2026-09-10,XLRE,-25.0,-15.0,-50.0,-15.0,-15.0,-55.0,-15.000000000000009,-20.0,-40.0,Deterioro fuerte,Deterioro fuerte,Deterioro fuerte,False,True
 2026-09-10,XLC,-5.0,-10.0,-45.0,-20.0,-15.000000000000009,-35.0,0.0,0.0,-5.0,Deterioro fuerte,Deterioro fuerte,Estable,False,True
-2026-09-11,XLK,0.0,-26.42857142857143,-35.95238095238095,0.0,7.619047619047613,-6.666666666666657,0.0,-0.7142857142857082,-0.7142857142857082,Deterioro fuerte,Expansión fuerte,Estable,False,True
-2026-09-11,XLF,0.0,-55.0,-50.0,0.0,-34.99999999999999,-24.999999999999993,0.0,-10.0,-5.0,Deterioro fuerte,Deterioro fuerte,Deterioro fuerte,False,True
-2026-09-11,XLV,0.0,-55.0,-65.0,0.0,-15.0,-25.0,0.0,-5.0,-5.0,Deterioro fuerte,Deterioro fuerte,Deterioro fuerte,False,True
-2026-09-11,XLE,0.0,5.0,-15.0,0.0,-10.0,-15.0,0.0,0.0,10.0,Expansión fuerte,Deterioro fuerte,Estable,True,False
-2026-09-11,XLY,0.0,-15.0,-30.0,0.0,-15.0,-40.00000000000001,0.0,0.0,-15.0,Deterioro fuerte,Deterioro fuerte,Estable,False,True
-2026-09-11,XLP,0.0,-10.0,-15.0,0.0,0.0,-5.0,0.0,-20.0,-15.0,Deterioro fuerte,Estable,Deterioro fuerte,False,True
-2026-09-11,XLI,0.0,-4.523809523809524,-80.71428571428571,0.0,-13.809523809523807,-75.71428571428571,0.0,-6.19047619047619,-25.23809523809524,Deterioro moderado,Deterioro fuerte,Deterioro fuerte,False,False
-2026-09-11,XLB,0.0,-20.0,-25.0,0.0,-15.0,-40.0,0.0,-9.999999999999993,-19.999999999999993,Deterioro fuerte,Deterioro fuerte,Deterioro fuerte,False,True
-2026-09-11,XLU,0.0,-10.0,-10.0,0.0,-5.0,-15.0,0.0,-5.0,-50.0,Deterioro fuerte,Deterioro fuerte,Deterioro fuerte,False,True
-2026-09-11,XLRE,0.0,-15.0,-30.0,0.0,-15.0,-45.0,0.0,-20.0,-30.0,Deterioro fuerte,Deterioro fuerte,Deterioro fuerte,False,True
-2026-09-11,XLC,0.0,-10.0,-35.0,0.0,-15.000000000000007,-20.0,0.0,0.0,-5.0,Deterioro fuerte,Deterioro fuerte,Estable,False,True
+2026-09-11,XLK,5.0,-21.42857142857143,-30.95238095238095,0.0,7.619047619047613,-6.666666666666657,0.0,-0.7142857142857082,-0.7142857142857082,Deterioro fuerte,Expansión fuerte,Estable,False,True
+2026-09-11,XLF,20.0,-35.0,-30.0,4.999999999999993,-30.0,-20.0,0.0,-10.0,-5.0,Deterioro fuerte,Deterioro fuerte,Deterioro fuerte,False,True
+2026-09-11,XLV,5.0,-50.0,-60.0,-4.999999999999993,-19.999999999999993,-29.999999999999993,0.0,-5.0,-5.0,Deterioro fuerte,Deterioro fuerte,Deterioro fuerte,False,True
+2026-09-11,XLE,-10.0,-5.0,-25.0,0.0,-10.0,-15.0,-10.0,-10.0,0.0,Deterioro fuerte,Deterioro fuerte,Deterioro fuerte,False,True
+2026-09-11,XLY,-5.0,-20.0,-35.0,10.0,-5.0,-30.000000000000007,-5.0,-5.0,-20.0,Deterioro fuerte,Deterioro fuerte,Deterioro fuerte,False,True
+2026-09-11,XLP,10.0,0.0,-5.0,15.0,15.0,10.0,0.0,-20.0,-15.0,Estable,Expansión fuerte,Deterioro fuerte,False,False
+2026-09-11,XLI,25.0,20.476190476190474,-55.71428571428571,15.0,1.1904761904761934,-60.71428571428571,0.0,-6.19047619047619,-25.23809523809524,Expansión fuerte,Estable,Deterioro fuerte,False,False
+2026-09-11,XLB,0.0,-20.0,-25.0,0.0,-15.0,-40.0,4.999999999999993,-5.0,-15.0,Deterioro fuerte,Deterioro fuerte,Deterioro fuerte,False,True
+2026-09-11,XLU,-5.0,-15.0,-15.0,5.0,0.0,-10.0,-5.0,-10.0,-55.0,Deterioro fuerte,Estable,Deterioro fuerte,False,True
+2026-09-11,XLRE,10.0,-5.0,-20.0,10.0,-5.0,-35.0,15.000000000000007,-4.999999999999993,-14.999999999999993,Deterioro fuerte,Deterioro fuerte,Deterioro moderado,False,True
+2026-09-11,XLC,10.0,0.0,-25.0,15.000000000000007,0.0,-4.999999999999993,0.0,0.0,-5.0,Estable,Estable,Estable,False,False
