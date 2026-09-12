@@ -362,3 +362,59 @@ def test_finra_darkpool_al_dia():
     assert fuente_fecha <= ultimo_csv, (
         f"FINRA tiene semana mas nueva ({fuente_fecha}) que el CSV ({ultimo_csv})."
     )
+
+# ============================================================
+# CAPA 4 - Calendario de mercado
+# ============================================================
+
+from datetime import datetime as _dt
+from src.market_calendar import (
+    is_market_day,
+    previous_market_day,
+    last_expected_market_date,
+)
+
+
+def test_is_market_day_sabado_domingo():
+    assert is_market_day(_dt(2026, 9, 12).date()) is False   # sabado
+    assert is_market_day(_dt(2026, 9, 13).date()) is False   # domingo
+
+
+def test_is_market_day_laborables():
+    assert is_market_day(_dt(2026, 9, 11).date()) is True    # viernes
+    assert is_market_day(_dt(2026, 9, 14).date()) is True    # lunes
+
+
+def test_is_market_day_festivos_nyse():
+    assert is_market_day(_dt(2026, 1, 1).date()) is False    # New Year
+    assert is_market_day(_dt(2026, 11, 26).date()) is False  # Thanksgiving
+    assert is_market_day(_dt(2026, 12, 25).date()) is False  # Christmas
+
+
+def test_previous_market_day_desde_lunes():
+    assert previous_market_day(_dt(2026, 9, 14).date()) == _dt(2026, 9, 11).date()
+
+
+def test_previous_market_day_desde_lunes_post_festivo():
+    # 30 nov 2026 es lunes; 27 nov viernes medio-dia (NYSE abierto) es el anterior
+    assert previous_market_day(_dt(2026, 11, 30).date()) == _dt(2026, 11, 27).date()
+
+
+def test_last_expected_sabado_madrugada():
+    # Sabado 02:00 -> antes de PUBLISH_HOUR -> viernes anterior
+    assert last_expected_market_date(_dt(2026, 9, 12, 2, 0)) == _dt(2026, 9, 11).date()
+
+
+def test_last_expected_martes_tarde():
+    # Martes 22:00 -> antes de PUBLISH_HOUR (23) -> lunes
+    assert last_expected_market_date(_dt(2026, 9, 15, 22, 0)) == _dt(2026, 9, 14).date()
+
+
+def test_last_expected_lunes_madrugada():
+    # Lunes 05:00 -> antes de PUBLISH_HOUR -> viernes anterior
+    assert last_expected_market_date(_dt(2026, 9, 14, 5, 0)) == _dt(2026, 9, 11).date()
+
+
+def test_last_expected_post_thanksgiving():
+    # Viernes 27 nov 2026 (medio dia NYSE) 10:00 -> antes de PUBLISH_HOUR -> miercoles 25 (Thanksgiving jueves)
+    assert last_expected_market_date(_dt(2026, 11, 27, 10, 0)) == _dt(2026, 11, 25).date()

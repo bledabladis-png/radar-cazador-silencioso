@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 import os
 import time
 from config.tickers import MARKET_TICKERS
-from config.settings import CACHE_HOURS
+from config.settings import CACHE_HOURS, CACHE_VALIDATE_TRADING_DATE
 from data.providers.router import DataRouter
 from data.providers.backup_providers import BackupProvider
 
@@ -62,12 +62,26 @@ def download_market_data():
         _path, _fmt = max(_candidates, key=lambda t: os.path.getmtime(t[0]))
         mtime = datetime.fromtimestamp(os.path.getmtime(_path))
         if datetime.now() - mtime < timedelta(hours=CACHE_HOURS):
+            _df = None
             if _fmt == 'parquet':
                 try:
-                    return pd.read_parquet(_path)
+                    _df = pd.read_parquet(_path)
                 except Exception as e:
                     print(f'  [WARN] Error leyendo Parquet: {e}')
-            return pd.read_csv(_path, header=[0,1], index_col=0, parse_dates=True)
+            else:
+                _df = pd.read_csv(_path, header=[0,1], index_col=0, parse_dates=True)
+            # CACHE_VALIDATE_TRADING_DATE: verificar que el cache cubre
+            # el ultimo dia de mercado esperado. Si no, forzar descarga.
+            if _df is not None and CACHE_VALIDATE_TRADING_DATE and len(_df) > 0:
+                from src.market_calendar import last_expected_market_date
+                _last_exp = last_expected_market_date()
+                _df_last = _df.index[-1].date() if hasattr(_df.index[-1], 'date') else _df.index[-1]
+                if _df_last < _last_exp:
+                    print(f'  [CACHE] datos hasta {_df_last}, esperado >= {_last_exp}. Forzando descarga.')
+                else:
+                    return _df
+            elif _df is not None:
+                return _df
 
     tickers = _ticker_list()
     router = DataRouter()
