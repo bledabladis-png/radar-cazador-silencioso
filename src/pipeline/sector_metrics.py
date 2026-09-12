@@ -81,10 +81,12 @@ def _compute_rs_internal(df_stocks, holdings_df, df_market):
     return rs_internal_df
 
 
-def _compute_concentration(df_stocks, holdings_df, leader_df, full_metrics_df):
+def _compute_concentration(df_stocks, holdings_df, leader_df, full_metrics_df, reference_date=None):
     try:
         if df_stocks is not None and not df_stocks.empty and leader_df is not None and not leader_df.empty:
-            sector_concentration_df = compute_sector_concentration(df_stocks, holdings_df, full_metrics_df)
+            sector_concentration_df = compute_sector_concentration(
+                df_stocks, holdings_df, full_metrics_df, reference_date=reference_date
+            )
             sc_path = Path('outputs/history/sector_concentration.csv')
             sc_path.parent.mkdir(parents=True, exist_ok=True)
             if not sector_concentration_df.empty:
@@ -140,7 +142,7 @@ def compute_sector_metrics(df_stocks, holdings_df, leader_df, full_metrics_df, d
         'sector_leader_divergence_df': _compute_divergencia(df_stocks, holdings_df, leader_df, df_market),
         'sector_wyckoff_distribution_df': _compute_wyckoff(df_stocks, holdings_df),
         'rs_internal_df': _compute_rs_internal(df_stocks, holdings_df, df_market),
-        'sector_concentration_df': _compute_concentration(df_stocks, holdings_df, leader_df, full_metrics_df),
+        'sector_concentration_df': _compute_concentration(df_stocks, holdings_df, leader_df, full_metrics_df, reference_date=df_stocks.index[-1]),
         'leader_representativeness_df': _compute_representativeness(
             leader_df, reference_date=df_stocks.index[-1]),
     }

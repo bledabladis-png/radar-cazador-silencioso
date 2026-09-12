@@ -7,7 +7,7 @@ No alimenta motores, scores, pesos ni State Machine.
 """
 import pandas as pd
 import numpy as np
-from src.utils import get_col, _observation_date_from_df
+from src.utils import get_col
 
 def _get_series(df, ticker, field):
     try:
@@ -28,7 +28,17 @@ def safe_quantile(series, q):
         return series.quantile(q)
     return np.nan
 
-def compute_sector_concentration(df_stocks, holdings_df, full_metrics_df):
+def compute_sector_concentration(df_stocks, holdings_df, full_metrics_df,
+                                 reference_date=None):
+    """FU-008 (2026-09-13): reference_date obligatorio, patron C4-code/sector_dispersion.
+    La fecha de observacion se inyecta desde el caller, no se deriva del indice
+    (el df_stocks en produccion puede no tener DatetimeIndex)."""
+    if reference_date is None:
+        raise ValueError(
+            "compute_sector_concentration: 'reference_date' es obligatorio. "
+            "FU-008 (2026-09-13): fecha de observacion inyectada desde el caller."
+        )
+    obs_date = pd.Timestamp(reference_date).normalize()
     rows = []
     if full_metrics_df is None or full_metrics_df.empty:
         return pd.DataFrame()
@@ -101,7 +111,7 @@ def compute_sector_concentration(df_stocks, holdings_df, full_metrics_df):
         leader_vs_wls = leader_wls - wls_median if pd.notna(leader_wls) and pd.notna(wls_median) else np.nan
 
         rows.append({
-            'date': _observation_date_from_df(df_stocks),
+            'date': obs_date,
             'sector': sector_etf,
             'n_total': n_total,
             'n_valid_return20': len(ret_df),
