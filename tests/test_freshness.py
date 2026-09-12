@@ -444,3 +444,22 @@ def test_last_expected_lunes_madrugada():
 def test_last_expected_post_thanksgiving():
     # Viernes 27 nov 2026 (medio dia NYSE) 10:00 -> antes de PUBLISH_HOUR -> miercoles 25 (Thanksgiving jueves)
     assert last_expected_market_date(_dt(2026, 11, 27, 10, 0)) == _dt(2026, 11, 25).date()
+
+
+def test_last_expected_market_date_acepta_date_y_timestamp():
+    """B5: acepta date y pd.Timestamp ademas de datetime.
+
+    - pd.Timestamp es subclase de datetime -> misma ruta que datetime.
+    - date puro -> asume hora 0, aplica lag de publicacion (conservador).
+    """
+    from datetime import date as _date
+
+    # date puro -> siempre retrocede un dia natural (hour=0 < PUBLISH_HOUR)
+    assert last_expected_market_date(_date(2026, 9, 14)) == _dt(2026, 9, 11).date()
+    assert last_expected_market_date(_date(2026, 9, 15)) == _dt(2026, 9, 14).date()
+    assert last_expected_market_date(_date(2026, 9, 12)) == _dt(2026, 9, 11).date()
+
+    # pd.Timestamp con hora >= PUBLISH_HOUR -> sesion del mismo dia
+    assert last_expected_market_date(pd.Timestamp('2026-09-14 23:30')) == _dt(2026, 9, 14).date()
+    # pd.Timestamp con hora < PUBLISH_HOUR -> retrocede
+    assert last_expected_market_date(pd.Timestamp('2026-09-15 22:00')) == _dt(2026, 9, 14).date()

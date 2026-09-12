@@ -58,14 +58,31 @@ def previous_market_day(d):
 def last_expected_market_date(now=None):
     """Ultima fecha de mercado esperada a `now`.
 
+    Acepta `datetime` (recomendado, con hora para respetar PUBLISH_HOUR)
+    o `date` (asume hora 0 -> SIEMPRE aplica el lag de publicacion).
+
+    Nota B5 (2026-09-12): para un `date` sin hora, la funcion es
+    conservadora y retrocede un dia natural antes de buscar el ultimo
+    dia de mercado. Ejemplo:
+        last_expected_market_date(date(2026, 9, 14)) == date(2026, 9, 11)
+        (lunes -> domingo -> sabado -> viernes; NO devuelve el propio lunes)
+
     Considera el lag de publicacion de Yahoo: antes de PUBLISH_HOUR,
     el cierre del dia anterior todavia no esta disponible.
     """
     if now is None:
         now = datetime.now()
-    d = now.date()
+    # B5 fix (2026-09-12): normalizar entrada datetime/date/Timestamp.
+    # datetime es subclase de date; el orden del isinstance importa.
+    if isinstance(now, datetime):
+        d = now.date()
+        hour = now.hour
+    else:
+        # datetime.date (o compatible)
+        d = now
+        hour = 0
     # Si es antes de PUBLISH_HOUR, retroceder un dia
-    if now.hour < PUBLISH_HOUR:
+    if hour < PUBLISH_HOUR:
         d = d - timedelta(days=1)
     # Retroceder hasta dia de mercado
     while not is_market_day(d):
