@@ -27,6 +27,8 @@ WS_QUERY_TIMEOUT = 25  # segundos máximos por consulta de un ticker
 # Histórico inicial: ~300 sesiones (~430 días naturales).
 # Suficiente para EMA200, RS126 y Wyckoff sin descargar años innecesarios.
 from datetime import timedelta
+
+from src.market_calendar import is_market_day
 WS_START = (datetime.now() - timedelta(days=430)).strftime("%Y-%m-%dT00:00:00.000Z")
 WS_RESOLUTION = "1D"
 
@@ -293,7 +295,18 @@ class XetraProvider:
                     days_gap = (pd.Timestamp.now().normalize() - last_date).days
                     if days_gap > 7:
                         print(f"  [XETRA] CACHE VIEJA: {t} sin datos desde {last_date.date()} ({days_gap} dias)")
-                    start_iso = (last_date + pd.Timedelta(days=1)).strftime("%Y-%m-%dT00:00:00.000Z")
+                    # FU-014 (2026-09-13): avanzar start al siguiente dia bursatil.
+                    # Sin esto, si last_date es viernes, start cae en sabado y la query
+                    # devuelve vacio cuando today tambien es no-bursatil.
+                    next_day = last_date + pd.Timedelta(days=1)
+                    while not is_market_day(next_day.date()):
+                        next_day = next_day + pd.Timedelta(days=1)
+                    today_norm = pd.Timestamp.now().normalize()
+                    if next_day > today_norm:
+                        print(f"  [XETRA] {t} sin nuevas sesiones (next={next_day.date()}, today={today_norm.date()})")
+                        frames.append(self._to_multiindex(df_cached, t))
+                        continue
+                    start_iso = next_day.strftime("%Y-%m-%dT00:00:00.000Z")
                     print(f"  [XETRA] {t} gap={days_gap}d, start={start_iso[:10]}")
             pending.append((t, start_iso))
 

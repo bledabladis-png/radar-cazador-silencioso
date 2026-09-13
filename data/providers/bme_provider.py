@@ -17,6 +17,8 @@ con el cierre previo y actua como precio de referencia de la sesion.
 """
 import time
 from datetime import datetime, timedelta
+
+from src.market_calendar import is_market_day
 from pathlib import Path
 
 import pandas as pd
@@ -210,7 +212,16 @@ class BMEProvider:
                     days_gap = (pd.Timestamp.now().normalize() - last_date).days
                     if days_gap > 7:
                         print("  [BME] CACHE VIEJA: " + t + " sin datos desde " + str(last_date.date()) + " (" + str(days_gap) + " dias)")
-                    date_from = (last_date + pd.Timedelta(days=1)).strftime("%Y%m%d")
+                    # FU-014 (2026-09-13): avanzar date_from al siguiente dia bursatil.
+                    next_day = last_date + pd.Timedelta(days=1)
+                    while not is_market_day(next_day.date()):
+                        next_day = next_day + pd.Timedelta(days=1)
+                    today_norm = pd.Timestamp.now().normalize()
+                    if next_day > today_norm:
+                        print("  [BME] " + t + " sin nuevas sesiones (next=" + str(next_day.date()) + ")")
+                        frames.append(self._to_multiindex(df_cached, t))
+                        continue
+                    date_from = next_day.strftime("%Y%m%d")
                     print("  [BME] " + t + " gap=" + str(days_gap) + "d, recuperando desde " + date_from)
 
             if date_from is None:
