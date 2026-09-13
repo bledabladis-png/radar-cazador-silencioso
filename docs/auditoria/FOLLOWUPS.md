@@ -68,5 +68,16 @@
 - **Accion:** ninguna. Documentado para evitar sorpresas al comparar reportes historicos.
 - **Bloqueante:** no.
 
+## FU-012 — A/D Line acumulada varia +/-1 entre runs sin sesion nueva (WONT FIX)
+
+- **Origen:** sesion 2026-09-13, comparacion de reportes 23:28 vs 23:57.
+- **Descripcion:** `A/D Line (acumulada)` paso de 13926 a 13925 entre dos runs consecutivos, ambos con ultima sesion 2026-09-11.
+- **Causa:** `indicators/breadth_equity.py:75` calcula `ad_line = ad_net.cumsum()` sobre todo el historico de tickers presentes. Cualquier variacion marginal en precios (re-descarga Yahoo, ajuste de cierre, ticker que cambia de estado) altera el acumulado final.
+- **Impacto:** ninguno funcional. El valor es informativo, no participa en scores ni motores.
+- **Clasificacion:** WONT FIX. Comportamiento correcto de un acumulador sobre datos variables.
+- **Alternativa descartada:** persistir `ad_line` en state para hacerlo determinista. Anade complejidad sin valor analitico.
+- **Bloqueante:** no.
+
+
 
 
