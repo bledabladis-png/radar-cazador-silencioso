@@ -70,7 +70,7 @@ def calculate_returns(prices: pd.Series) -> dict:
         "label": "marketPrice",
         "displayLabel": "QQQ (Yahoo Finance)",
         "effectiveDate": latest_date.strftime("%Y-%m-%d"),
-        "as_of_date": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "as_of_date": f"{latest_date.strftime('%Y-%m-%d')} {datetime.now().strftime('%H:%M:%S')}",
         "performancePeriod": "daily",
     }
 
