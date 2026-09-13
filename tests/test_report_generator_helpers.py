@@ -186,3 +186,31 @@ class TestGenerateCoverageTable:
         result = _generate_coverage_table(None, dp_data, None)
         text = ''.join(result)
         assert 'Dark Pool (FINRA)' in text
+
+
+
+def test_slpm_n_cero_muestra_nd():
+    """FU-013 (2026-09-13): con n=0, Leader Breadth muestra N/D, no 0%."""
+    from src.report.slpm import render_slpm_v12
+    slpm = {
+        'sector': 'XLC',
+        'state': 'UNRESOLVED',
+        'input_scores': {'tactical': 0.0, 'structural': 0.0},
+        'leader_breadth_v2': {
+            'rs_breadth': 0.0,
+            'momentum_breadth': 0.0,
+            'flow_breadth': 0.0,
+            'wyckoff_breadth': 0.0,
+            'composite': 0.0,
+            'effective_composite': 0.0,
+            'n_used': 0,
+            'expected_leaders': 5,
+            'coverage': 0.0,
+        },
+    }
+    lines = render_slpm_v12(slpm)
+    joined = '\n'.join(lines)
+    assert 'Leader Breadth (RS ratio > 1.0):** N/D' in joined
+    assert 'Leader Momentum Breadth:** N/D' in joined
+    assert 'Effective Breadth:** N/D' in joined
+    assert 'Leader Breadth (RS ratio > 1.0):** 0%' not in joined

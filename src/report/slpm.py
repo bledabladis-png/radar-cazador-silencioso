@@ -68,14 +68,28 @@ def render_slpm_v12(slpm_v12_data):
             n = breadth.get('n_used', 0)
             total = breadth.get('expected_leaders', 5)
             coverage = breadth.get('coverage', 0)*100
-            out.append(f"- **Leader Breadth (RS ratio > 1.0):** {rs_b:.0f}%\n")
-            out.append(f"- **Leader Momentum Breadth:** {mom_b:.0f}%\n")
-            out.append(f"- **Leader Flow Support:** {flow_b:.0f}%\n")
-            out.append(f"- **Leader Wyckoff Health:** {wyck_b:.0f}%\n")
+            # FU-013 (2026-09-13): con n=0 no hay lideres analizados.
+            # 0% sugiere "medido y cero"; semanticamente es ausencia -> N/D.
+            if n == 0:
+                out.append("- **Leader Breadth (RS ratio > 1.0):** N/D\n")
+                out.append("- **Leader Momentum Breadth:** N/D\n")
+                out.append("- **Leader Flow Support:** N/D\n")
+                out.append("- **Leader Wyckoff Health:** N/D\n")
+            else:
+                out.append(f"- **Leader Breadth (RS ratio > 1.0):** {rs_b:.0f}%\n")
+                out.append(f"- **Leader Momentum Breadth:** {mom_b:.0f}%\n")
+                out.append(f"- **Leader Flow Support:** {flow_b:.0f}%\n")
+                out.append(f"- **Leader Wyckoff Health:** {wyck_b:.0f}%\n")
             out.append("  - *Scoring Wyckoff: MARKUP=1.0, ACCUMULATION=0.75, RANGE=0.0, DISTRIBUTION=-0.75, MARKDOWN=-1.0*\n")
-            out.append(f"- **Leader Health Composite (sin ajustar):** {comp:.0f}% ")
+            if n == 0:
+                out.append("- **Leader Health Composite (sin ajustar):** N/D ")
+            else:
+                out.append(f"- **Leader Health Composite (sin ajustar):** {comp:.0f}% ")
             out.append(f"({SLPM_WEIGHTS['leader_breadth']['rs']:.2f}xRS + {SLPM_WEIGHTS['leader_breadth']['momentum']:.2f}xMom + {SLPM_WEIGHTS['leader_breadth']['flow']:.2f}xFlow + {SLPM_WEIGHTS['leader_breadth']['wyckoff']:.2f}xWyckoff)\n")
-            out.append(f"- **Effective Breadth:** {effective:.0f}% (Health Composite: {comp:.0f}%, Cobertura: {coverage:.0f}%) — Regla: si cobertura >= 50% no se aplica penalización\n")
+            if n == 0:
+                out.append(f"- **Effective Breadth:** N/D (Cobertura: {n}/{total})\n")
+            else:
+                out.append(f"- **Effective Breadth:** {effective:.0f}% (Health Composite: {comp:.0f}%, Cobertura: {coverage:.0f}%) — Regla: si cobertura >= 50% no se aplica penalización\n")
             out.append(f"  - N analizado: {n}/{total}\n")
             out.append("  - *Nota: Effective Breadth = Health Composite (sin ajuste cuando cobertura >= 50%). La penalización por cobertura solo se aplica cuando la cobertura es inferior al 50%. La calidad observada (Health Composite) es independiente de la cobertura.*\n")
         
