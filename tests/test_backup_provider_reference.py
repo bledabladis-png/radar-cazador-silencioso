@@ -9,7 +9,6 @@ Cubre:
 - FU-002-8: cache VALID + provider OK -> True
 - FU-002-9: manifest corrupto -> UNAVAILABLE, sin excepcion
 """
-import json
 from datetime import datetime
 from pathlib import Path
 

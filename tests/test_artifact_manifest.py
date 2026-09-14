@@ -14,7 +14,6 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
-import pytest
 
 from src.utils import write_artifact_with_manifest
 
