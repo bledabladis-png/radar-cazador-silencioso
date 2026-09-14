@@ -10,14 +10,18 @@
 - **Accion:** disenar capa de proteccion por calendario (NYSE/BME/Xetra/Euronext) antes de generalizar la arquitectura a Europa.
 - **Bloqueante:** no para C1/C2/C3. Obligatorio antes de declarar cerrada la nueva arquitectura de validacion multi-calendario.
 
-## FU-002 — Validacion circular en BackupProvider
+## FU-002 — Validacion circular en BackupProvider (RESUELTO)
 
 - **Origen:** informe v2, hallazgo B4. Dictamen auditor.
-- **Descripcion:** `_validate_with_cache` compara el nuevo dato contra los mismos parquets que luego sobreescribe. Si el cache esta contaminado, la validacion pasa.
-- **Evidencia:** T7 mostro 41/112 tickers contaminados en reference_cache.
-- **Clasificacion:** P2 Technical Debt estructural.
-- **Accion:** referencia independiente del artefacto validado.
-- **Bloqueante:** no para C1/C2/C3. Criterio de cierre: antes de declarar cerrada la nueva arquitectura de validacion.
+- **Descripcion original:** `_validate_with_cache` compara el nuevo dato contra los mismos parquets que luego sobreescribe. Si el cache esta contaminado, la validacion pasa.
+- **Reformulacion (2026-09-15):** la circularidad es **temporalmente diferida**, no activa. BackupProvider instancia el cache al inicio del pipeline (fase 1) y lee los parquets del run N-1. Si N-1 estaba corrupto, N valida contra corrupcion.
+- **Evidencia:** T7 del informe v2: 41/112 tickers contaminados en reference_cache por B1.
+- **Fix aplicado (2 commits):**
+  - `45f29c2` feat: writer genera `<parquet>.manifest.json` atomico con sha256, expected_session, pct_dup_last, quality.status y run_id. Modifica `src/utils.py` (nuevo helper `write_artifact_with_manifest`), `src/data_loader.py`, `src/stock_data_loader.py`, `src/pipeline/data_load.py`, `src/pipeline/leaders.py`, `run.py`, `config/settings.py` (`MANIFEST_DUP_THRESHOLD=0.5`).
+  - `2da234f` fix: consumer rechaza cache no verificado. `_load_reference_cache` verifica manifest (sha256 + schema_version + quality.status) y devuelve `(df, status)` con status en `{VALID, INVALID, UNAVAILABLE}`. `_validate_with_cache` cambia a `True/False/None`. Los 5 `return True` silenciosos eliminados.
+- **Tests nuevos:** 10 (`test_artifact_manifest.py` + `test_backup_provider_reference.py`). Suite pasa de 202 a 212.
+- **Clasificacion:** P2 Technical Debt estructural - **RESUELTO 2026-09-15**.
+- **Bloqueante:** no.
 
 ## FU-003 — Cosmetico: signos +0.00 y flechas ->
 
