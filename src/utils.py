@@ -334,3 +334,162 @@ def _confidence_range_row(row, divisor=2.0):
         return 0.5
     rng = valid.max() - valid.min()
     return max(0.0, min(1.0, 1.0 - rng / divisor))
+
+
+# ============================================================
+# FU-002 (2026-09-15) - Manifest de artefacto (parquet + JSON)
+# ============================================================
+
+def _try_cleanup(*paths):
+    """Borra ficheros temporales silenciosamente (uso interno FU-002)."""
+    import os as _os
+    for p in paths:
+        try:
+            if _os.path.exists(p):
+                _os.remove(p)
+        except Exception:
+            pass
+
+
+def write_artifact_with_manifest(df, parquet_path, source,
+                                  reference_date, run_id,
+                                  schema_version=1):
+    """Escribe parquet + manifest de forma atomica (FU-002, 2026-09-15).
+
+    Pasos:
+      1. Escribe parquet a <parquet>.tmp.<run_id>
+      2. Calcula sha256 del temporal
+      3. Calcula metadatos (content + quality) incl. expected_session
+      4. Escribe manifest a <parquet>.manifest.json.tmp.<run_id>
+      5. os.replace(tmp_parquet, parquet_path)
+      6. os.replace(tmp_manifest, manifest_path)
+
+    Args:
+        df: DataFrame a escribir.
+        parquet_path: path destino del parquet (y base del manifest).
+        source: 'yahoo' | 'yahoo_european_cascade' | otro identificador.
+        reference_date: datetime ya resuelto en run.py:main().
+        run_id: 'YYYYMMDD_HHMMSS' generado en run.py:main().
+        schema_version: version del contrato del manifest.
+
+    Returns:
+        dict con el manifest escrito, o {} si fallo.
+    """
+    import json
+    import os as _os
+    import hashlib
+    from datetime import datetime as _dt
+    from pathlib import Path as _Path
+    from config.settings import MANIFEST_DUP_THRESHOLD
+    from src.market_calendar import last_expected_market_date
+
+    if df is None or df.empty:
+        print(f"  [WARN] manifest: df vacio para {parquet_path}. Se omite.")
+        return {}
+
+    path = _Path(parquet_path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    manifest_path = str(path) + '.manifest.json'
+    tmp_parquet = f"{parquet_path}.tmp.{run_id}"
+    tmp_manifest = f"{manifest_path}.tmp.{run_id}"
+
+    try:
+        df.to_parquet(tmp_parquet)
+
+        h = hashlib.sha256()
+        with open(tmp_parquet, 'rb') as fh:
+            for chunk in iter(lambda: fh.read(65536), b''):
+                h.update(chunk)
+        sha256 = h.hexdigest()
+        n_bytes = _os.path.getsize(tmp_parquet)
+
+        rows = int(len(df))
+        cols = int(df.shape[1])
+        if isinstance(df.columns, pd.MultiIndex):
+            n_tickers = int(len(df.columns.get_level_values(1).unique()))
+        else:
+            n_tickers = cols
+
+        date_min = date_max = None
+        last_date = None
+        if isinstance(df.index, pd.DatetimeIndex) and len(df.index) > 0:
+            dates = df.index.dropna()
+            if len(dates) > 0:
+                date_min = dates.min().strftime('%Y-%m-%d')
+                date_max = dates.max().strftime('%Y-%m-%d')
+                last_date = dates.max().date()
+
+        pct_dup_last = 0.0
+        close_nan_last = 0
+        if isinstance(df.columns, pd.MultiIndex) and len(df) >= 2:
+            close_cols = [c for c in df.columns if c[0] == 'Close']
+            if close_cols:
+                last_row = df[close_cols].iloc[-1]
+                prev_row = df[close_cols].iloc[-2]
+                both = last_row.notna() & prev_row.notna()
+                if int(both.sum()) > 0:
+                    dup = int((last_row[both] == prev_row[both]).sum())
+                    pct_dup_last = float(dup) / float(both.sum())
+                close_nan_last = int(last_row.isna().sum())
+
+        expected_dt = last_expected_market_date(reference_date)
+        expected_session = expected_dt.strftime('%Y-%m-%d')
+        last_date_is_expected = (last_date == expected_dt) if last_date else False
+
+        if last_date is None:
+            print(f"  [WARN] manifest: {parquet_path} sin last_date. Se omite.")
+            _try_cleanup(tmp_parquet, tmp_manifest)
+            return {}
+        if last_date_is_expected and pct_dup_last > MANIFEST_DUP_THRESHOLD:
+            status = 'INVALID'
+        elif last_date_is_expected and close_nan_last > 0:
+            status = 'INVALID'
+        else:
+            status = 'VALID'
+
+        manifest = {
+            'schema_version': schema_version,
+            'artifact': {
+                'path': str(parquet_path),
+                'sha256': sha256,
+                'bytes': n_bytes,
+                'written_at': _dt.now().isoformat(),
+            },
+            'producer': {
+                'module': 'src.utils',
+                'function': 'write_artifact_with_manifest',
+                'run_id': run_id,
+                'source': source,
+            },
+            'content': {
+                'rows': rows,
+                'cols': cols,
+                'n_tickers': n_tickers,
+                'date_min': date_min,
+                'date_max': date_max,
+            },
+            'quality': {
+                'last_date': last_date.strftime('%Y-%m-%d') if last_date else None,
+                'expected_session': expected_session,
+                'last_date_is_expected_session': last_date_is_expected,
+                'pct_dup_last': round(pct_dup_last, 6),
+                'close_nan_last': close_nan_last,
+                'status': status,
+            },
+        }
+
+        with open(tmp_manifest, 'w', encoding='utf-8') as fh:
+            json.dump(manifest, fh, indent=2, ensure_ascii=False)
+
+        _os.replace(tmp_parquet, str(path))
+        _os.replace(tmp_manifest, manifest_path)
+
+        print(f"  [MANIFEST] {parquet_path}: status={status}, rows={rows}, "
+              f"tickers={n_tickers}, pct_dup={pct_dup_last:.3f}, "
+              f"last_date={date_max}, expected={expected_session}")
+        return manifest
+
+    except Exception as e:
+        print(f"  [WARN] manifest {parquet_path}: {e}")
+        _try_cleanup(tmp_parquet, tmp_manifest)
+        return {}

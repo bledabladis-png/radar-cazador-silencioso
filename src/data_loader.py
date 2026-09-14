@@ -49,7 +49,12 @@ def _ticker_list():
 
 # Nota: sin @retry global. El bucle por lotes ya gestiona fallos
 # y BackupProvider actua como fallback por lote.
-def download_market_data():
+def download_market_data(reference_date=None, run_id=None):
+    # FU-002 (2026-09-15): reference_date y run_id inyectados desde run.py:main().
+    if reference_date is None:
+        reference_date = datetime.now()
+    if run_id is None:
+        run_id = reference_date.strftime('%Y%m%d_%H%M%S')
     cache_path = 'data/market_data.csv'
     parquet_path = 'data/market_data.parquet'
     # D3 Fase 2: elegir cache disponible (parquet o csv, el mas reciente)
@@ -156,9 +161,12 @@ def download_market_data():
     from src.utils import clean_oil_prices
     data = clean_oil_prices(data)
 
-    # D3 Fase 2c: solo Parquet (CSV ya no se escribe)
-    try:
-        data.to_parquet(parquet_path)
-    except Exception as e:
-        print(f'  [WARN] Error escribiendo Parquet: {e}')
+    # FU-002 (2026-09-15): parquet + manifest atomico.
+    from src.utils import write_artifact_with_manifest
+    write_artifact_with_manifest(
+        data, parquet_path,
+        source='yahoo',
+        reference_date=reference_date,
+        run_id=run_id,
+    )
     return data

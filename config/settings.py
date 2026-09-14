@@ -201,6 +201,11 @@ DARKPOOL_THRESHOLDS = {
 CACHE_MARKET_PATH = 'data/market_data.parquet'
 CACHE_STOCKS_PATH = 'data/stock_prices.parquet'
 
+# FU-002 (2026-09-15): umbral heuristico de duplicacion para manifiestos.
+# No es ley estadistica: si >50% tickers tienen Close[-1]==Close[-2] en
+# sesion esperada, el artefacto se marca INVALID en su manifest.
+MANIFEST_DUP_THRESHOLD = 0.5
+
 # ============================================================
 # SELECCION DE LIDERES (C18)
 # ============================================================

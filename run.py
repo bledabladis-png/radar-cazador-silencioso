@@ -33,6 +33,8 @@ from config.tickers import validate_sector_universe
 def main():
     # B2 (2026-09-12): reference_date se resuelve UNA vez al inicio del pipeline.
     reference_date = datetime.now()
+    # FU-002 (2026-09-15): run_id unico para manifests de artefactos.
+    run_id = reference_date.strftime('%Y%m%d_%H%M%S')
     validate_sector_universe()
     # Crear subcarpetas de outputs necesarias para ejecución limpia
     for subdir in ['report', 'history', 'state', 'holdings', 'audit', 'cache']:
@@ -48,7 +50,7 @@ def main():
                 os.remove(_csv_path)
             except Exception:
                 pass
-    data = load_all_data()
+    data = load_all_data(reference_date=reference_date, run_id=run_id)
     if data is None:
         return
     df_market = data['df_market']
@@ -102,7 +104,7 @@ def main():
     qqq_performance_data = fs['qqq_performance_data']
     qqq_nport_flow_data = fs['qqq_nport_flow_data']
 
-    ldr = compute_leaders(df_market, sector_results, reference_date=reference_date)
+    ldr = compute_leaders(df_market, sector_results, reference_date=reference_date, run_id=run_id)
     df_stocks = ldr['df_stocks']
     holdings_df = ldr['holdings_df']
     leader_lines = ldr['leader_lines']

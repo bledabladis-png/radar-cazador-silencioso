@@ -231,10 +231,13 @@ def _classify_ticker(ticker, df, expected_session):
 
 # Nota: sin @retry global. El bucle por lotes ya gestiona fallos:
 # los tickers fallidos se reintentan individualmente tras el bucle principal.
-def download_stock_prices(reference_date=None):
+def download_stock_prices(reference_date=None, run_id=None):
     # B1 (2026-09-12): reference_date se normaliza UNA vez al inicio.
     if reference_date is None:
         reference_date = datetime.now()
+    # FU-002 (2026-09-15): run_id se normaliza tambien aqui si no viene inyectado.
+    if run_id is None:
+        run_id = reference_date.strftime('%Y%m%d_%H%M%S')
     _expected_session = last_expected_market_date(reference_date)
 
     cache_path = 'data/stock_prices.csv'
@@ -483,9 +486,12 @@ def download_stock_prices(reference_date=None):
         print(f"  AVISO: {n_dup} columnas duplicadas detectadas, deduplicando (keep=last)")
         data = data.loc[:, ~data.columns.duplicated(keep='last')]
 
-    # D3 Fase 2c: solo Parquet (CSV ya no se escribe)
-    try:
-        data.to_parquet(parquet_path)
-    except Exception as e:
-        print(f'  [WARN] Error escribiendo Parquet: {e}')
+    # FU-002 (2026-09-15): parquet + manifest atomico.
+    from src.utils import write_artifact_with_manifest
+    write_artifact_with_manifest(
+        data, parquet_path,
+        source='yahoo_european_cascade',
+        reference_date=reference_date,
+        run_id=run_id,
+    )
     return data

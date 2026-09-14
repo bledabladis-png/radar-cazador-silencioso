@@ -10,7 +10,7 @@ from src.utils import trim_to_last_valid_date
 from data.validator import validate_market_data
 
 
-def load_all_data():
+def load_all_data(reference_date=None, run_id=None):
     """Descarga mercado, valida, y carga datos macro manuales.
 
     Returns:
@@ -22,7 +22,7 @@ def load_all_data():
         Devuelve None si hay fallo critico que debe abortar main().
     """
     print("Descargando datos de mercado...")
-    df_market = download_market_data()
+    df_market = download_market_data(reference_date=reference_date, run_id=run_id)
     if df_market is None or df_market.empty:
         print("Error: no se pudieron descargar datos.")
         return None
