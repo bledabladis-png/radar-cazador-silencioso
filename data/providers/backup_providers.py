@@ -95,29 +95,105 @@ class BackupProvider:
         }
         self.daily_budget = 20
         self.calls = 0
-        self.reference_cache = self._load_reference_cache()
+        # FU-002 (2026-09-15): cache + status (VALID/INVALID/UNAVAILABLE).
+        self.reference_cache, self.reference_cache_status = self._load_reference_cache()
+        print(f"  [REF-CACHE] status={self.reference_cache_status}")
 
     def _can_call_global(self):
         return self.calls < self.daily_budget
 
     def _load_reference_cache(self):
-        """Carga cachés locales para validación cruzada."""
+        """Carga caches locales con verificacion de manifest (FU-002, 2026-09-15).
+
+        Cada parquet se verifica contra su manifest (<parquet>.manifest.json).
+        Estados por parquet:
+          VALID        -> parquet + manifest OK, quality.status == VALID
+          INVALID      -> sha256 mismatch, schema_version desconocido,
+                          o manifest quality.status == INVALID
+          UNAVAILABLE  -> parquet o manifest ausente, o error de lectura
+
+        Combinacion (conservadora):
+          - Cualquier INVALID -> INVALID global.
+          - Ambos UNAVAILABLE -> UNAVAILABLE global.
+          - Resto -> VALID (parcial).
+
+        Returns:
+            (DataFrame, status) con status en {VALID, INVALID, UNAVAILABLE}.
+        """
+        import json as _json
+        import hashlib as _hashlib
+
         frames = []
+        statuses = []
         for path in [CACHE_MARKET_PATH, CACHE_STOCKS_PATH]:
-            if Path(path).exists():
-                try:
-                    df = pd.read_parquet(path)
-                    if not df.empty:
-                        frames.append(df)
-                except Exception as e:
-                    print(f"  [WARN] backup: reference cache: {e}")
+            p = Path(path)
+            manifest_path = Path(str(p) + '.manifest.json')
+
+            if not p.exists():
+                statuses.append('UNAVAILABLE')
+                continue
+            if not manifest_path.exists():
+                print(f"  [REF-CACHE] {path}: sin manifest -> UNAVAILABLE")
+                statuses.append('UNAVAILABLE')
+                continue
+            try:
+                manifest = _json.loads(manifest_path.read_text(encoding='utf-8'))
+            except Exception as e:
+                print(f"  [REF-CACHE] {path}: manifest ilegible ({e}) -> UNAVAILABLE")
+                statuses.append('UNAVAILABLE')
+                continue
+            if manifest.get('schema_version') != 1:
+                print(f"  [REF-CACHE] {path}: schema_version desconocido -> INVALID")
+                statuses.append('INVALID')
+                continue
+            try:
+                h = _hashlib.sha256()
+                with open(p, 'rb') as fh:
+                    for chunk in iter(lambda: fh.read(65536), b''):
+                        h.update(chunk)
+                actual_sha = h.hexdigest()
+            except Exception as e:
+                print(f"  [REF-CACHE] {path}: error sha256 ({e}) -> UNAVAILABLE")
+                statuses.append('UNAVAILABLE')
+                continue
+            expected_sha = manifest.get('artifact', {}).get('sha256', '')
+            if actual_sha != expected_sha:
+                print(f"  [REF-CACHE] {path}: sha256 mismatch -> INVALID")
+                statuses.append('INVALID')
+                continue
+            quality_status = manifest.get('quality', {}).get('status', '')
+            if quality_status == 'INVALID':
+                print(f"  [REF-CACHE] {path}: manifest quality=INVALID -> INVALID")
+                statuses.append('INVALID')
+                continue
+            if quality_status != 'VALID':
+                print(f"  [REF-CACHE] {path}: quality='{quality_status}' -> UNAVAILABLE")
+                statuses.append('UNAVAILABLE')
+                continue
+            try:
+                df = pd.read_parquet(path)
+                if not df.empty:
+                    frames.append(df)
+                statuses.append('VALID')
+            except Exception as e:
+                print(f"  [REF-CACHE] {path}: error lectura ({e}) -> UNAVAILABLE")
+                statuses.append('UNAVAILABLE')
+
+        if 'INVALID' in statuses:
+            combined_status = 'INVALID'
+        elif statuses and all(s == 'UNAVAILABLE' for s in statuses):
+            combined_status = 'UNAVAILABLE'
+        else:
+            combined_status = 'VALID'
+
         if frames:
             combined = pd.concat(frames, axis=1)
-            # Deduplicar columnas (market_data va primero, tiene prioridad).
             if combined.columns.duplicated().any():
                 combined = combined.loc[:, ~combined.columns.duplicated(keep='first')]
-            return combined
-        return pd.DataFrame()
+        else:
+            combined = pd.DataFrame()
+
+        return combined, combined_status
 
     def _validate_ohlcv(self, df):
         """Validación básica de respuesta: columnas y filas suficientes."""
@@ -134,32 +210,39 @@ class BackupProvider:
         return True
 
     def _validate_with_cache(self, ticker, df):
-        """Compara último cierre con caché local. Devuelve True si es aceptable."""
+        """Compara ultimo cierre con cache (FU-002, 2026-09-15).
+
+        Returns:
+            True  -> comparacion paso contra referencia VALID.
+            False -> discrepancia >5% contra referencia VALID.
+            None  -> referencia no disponible (UNAVAILABLE) o invalidada
+                     (INVALID). El dato del proveedor se acepta pero NO
+                     se marca como validado.
+        """
+        if self.reference_cache_status in ('INVALID', 'UNAVAILABLE'):
+            return None
         if self.reference_cache.empty:
-            return True
+            return None
         try:
-            # Extraer último cierre del ticker en caché
             if ticker not in self.reference_cache.columns.get_level_values(1):
-                return True
+                return None
             close_cache = self.reference_cache.loc[:, ('Close', ticker)].dropna()
             if close_cache.empty:
-                return True
-            # Defensivo: si quedan columnas duplicadas, tomar la primera.
+                return None
             if isinstance(close_cache, pd.DataFrame):
                 close_cache = close_cache.iloc[:, 0]
             ref_close = float(close_cache.iloc[-1])
-            # Último cierre del DataFrame recibido
             new_close = float(df[('Close', ticker)].iloc[-1])
             if ref_close == 0:
-                return True
+                return None
             diff = abs(new_close - ref_close) / abs(ref_close)
             if diff > 0.05:
-                print(f"  [VALIDACIÓN] {ticker}: discrepancia >5% con caché ({ref_close:.2f} vs {new_close:.2f}). Dato rechazado.")
+                print(f"  [VALIDACION] {ticker}: discrepancia >5% con cache ({ref_close:.2f} vs {new_close:.2f}). Dato rechazado.")
                 return False
             return True
         except Exception as e:
             print(f"  [WARN] backup validate_with_cache {ticker}: {e}")
-            return True
+            return None
 
     def get_prices(self, tickers: list, period: str = '5y') -> pd.DataFrame:
         if not self._can_call_global():
@@ -195,18 +278,20 @@ class BackupProvider:
                     if df is not None and self._validate_ohlcv(df):
                         # Renombrar columna ticker externo -> canónico
                         df.columns = pd.MultiIndex.from_product([df.columns.get_level_values(0), [t]])
-                        # Validación cruzada con caché
-                        if self._validate_with_cache(t, df):
-                            print(f"  [RESPALDO] {provider_name} suministró datos para {t} (símbolo {provider_symbol})")
-                            frames.append(df)
-                            self.calls += 1
-                            config['limiter'].record_call()
-                            config['breaker'].record_success()
-                            break  # pasar al siguiente ticker
-                        else:
-                            print(f"  [VALIDACIÓN] {provider_name}: dato rechazado para {t}")
+                        # Validacion cruzada con cache (FU-002: True/False/None)
+                        result = self._validate_with_cache(t, df)
+                        if result is False:
+                            print(f"  [VALIDACION] {provider_name}: dato rechazado para {t}")
                             config['breaker'].record_failure()
-                            break  # no probar más proveedores para este ticker
+                            break  # no probar mas proveedores para este ticker
+                        # True (validado) o None (sin referencia confiable): aceptar
+                        tag = 'validado' if result is True else 'sin referencia'
+                        print(f"  [RESPALDO] {provider_name} suministro datos para {t} (simbolo {provider_symbol}, {tag})")
+                        frames.append(df)
+                        self.calls += 1
+                        config['limiter'].record_call()
+                        config['breaker'].record_success()
+                        break  # pasar al siguiente ticker
                     else:
                         # Proveedor falló
                         config['breaker'].record_failure()
