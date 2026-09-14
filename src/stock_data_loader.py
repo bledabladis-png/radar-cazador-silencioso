@@ -179,6 +179,20 @@ def _log_yahoo_raw_diagnostics(df_raw, reference_date, batch_label):
     print(f"  affected_tickers={affected}")
 
 
+def _filter_failed_from_batch(data_batch, failed_in_batch):
+    """FU-015 (2026-09-15): elimina columnas de tickers fallidos del batch.
+
+    Motivo: si un ticker falla en el batch y triunfa en el retry (L342+),
+    anadir ambos a all_data produce columnas duplicadas en el concat final.
+    Filtrar aqui evita la dedup defensiva (L484) y la mantiene como red
+    de seguridad.
+    """
+    if not failed_in_batch or not isinstance(data_batch.columns, pd.MultiIndex):
+        return data_batch
+    keep_mask = ~data_batch.columns.get_level_values(1).isin(failed_in_batch)
+    return data_batch.loc[:, keep_mask]
+
+
 def _classify_ticker(ticker, df, expected_session):
     """Clasifica un ticker segun disponibilidad y frescura.
 
@@ -317,16 +331,24 @@ def download_stock_prices(reference_date=None, run_id=None):
                 # B1: relleno condicional. NaN en sesion NYSE se preserva.
                 data_batch, _fill_diag = _fill_holes_respecting_sessions(
                     data_batch, reference_date)
-                all_data.append(data_batch)
-                # Clasificar cada ticker del lote
+                # FU-015 (2026-09-15): clasificar ANTES de all_data.append.
+                # Los tickers FAILED se reintentan individualmente en L342+;
+                # si se anaden ahora, el concat final produce columnas
+                # duplicadas que la dedup L484 debe limpiar (fragil, ruidoso).
+                failed_in_batch = []
                 for ticker in batch:
                     status, reason = _classify_ticker(ticker, data_batch,
                                                      _expected_session)
                     classification[status].append(ticker)
                     if status == 'FAILED':
                         failed_tickers.append(ticker)
+                        failed_in_batch.append(ticker)
                     if status == 'DATA_ISSUE' and reason:
                         classification_reasons[ticker] = reason
+                # FU-015: excluir columnas de tickers FAILED del batch.
+                data_batch = _filter_failed_from_batch(data_batch, failed_in_batch)
+                if not data_batch.empty:
+                    all_data.append(data_batch)
             else:
                 # lote vacío: todos fallidos
                 classification['FAILED'].extend(batch)
