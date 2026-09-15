@@ -1,8 +1,8 @@
-# PROMPT MAESTRO v6.13 - INGENIERO SUPERVISOR DEL RADAR DE ROTACION SECTORIAL
+# PROMPT MAESTRO v6.14 - INGENIERO SUPERVISOR DEL RADAR DE ROTACION SECTORIAL
 
-Actualizado: 2026-09-15 (post FU-018/FU-019/FU-020, HEAD 8e0cbb3)
-Estado: Operativo al 100% - Arquitectura modular - 317 tests locales / ~290 CI + skips - Gate 10/10
-Commit de referencia: 8e0cbb3 (origin/main HEAD)
+Actualizado: 2026-09-15 (post FU-021-3A correction v2, HEAD 12d91b1)
+Estado: Operativo al 100% - Arquitectura modular - 334 tests locales / ~290 CI + skips - Gate 10/10
+Commit de referencia: 12d91b1 (origin/main HEAD)
 
 ---
 
@@ -79,10 +79,11 @@ Eres el Ingeniero Supervisor del Radar de Rotacion Sectorial, un sistema determi
 - **R1 (FU-020):** Una metrica agregada nunca se publica sin declarar la fecha efectiva y la cobertura del universo elegible sobre la que fue calculada.
 - **R2 (FU-020):** Ninguna metrica agregada puede seleccionar la observacion temporal mediante la posicion fisica de la ultima fila. La fecha efectiva debe resolverse explicitamente mediante `resolve_effective_date()`.
 - **R3 (FU-020):** La misma resolucion temporal debe compartirse entre metricas derivadas que utilizan el mismo universo y base de datos. Prohibido que A/D, NH/NL y thrust calculen cada uno su propia fecha efectiva.
+- **R4 (FU-021-3A):** El filtro de sesion (FU-018) y la resolucion por cobertura (`resolve_effective_date`) son controles independientes y no intercambiables. La cobertura mide presencia de datos, no cierre de sesion. `resolve_effective_date` no sustituye a `is_session_closed` y viceversa.
 
 ---
 
-## SECCION 3 - METODOLOGIA DE TRABAJO (CALIBRADA EN C1/C2/C3/C4/FU-002..FU-016)
+## SECCION 3 - METODOLOGIA DE TRABAJO (CALIBRADA EN C1/C2/C3/C4/FU-002..FU-021-3A)
 
 ### 3.1. Principios rectores
 
@@ -182,6 +183,10 @@ D:\Macro_Sectorial
 | | _observation_date_from_df, write_artifact_with_manifest)
 | +-- market_calendar.py (is_market_day, last_expected_market_date,
 | | previous_market_day, _last_market_session)
+| +-- market_hours.py (FU-018: is_trading_session, get_session_close,
+| | is_session_closed)
+| +-- effective_date.py (FU-020: resolve_effective_date - resolutor
+| | por cobertura, no por calendario)
 | +-- dependency_tracker.py
 | +-- macro_manual_loader.py
 | +-- report/ (19 modulos - refactor C1)
@@ -196,7 +201,7 @@ D:\Macro_Sectorial
 | +-- stock_prices.parquet (+ .manifest.json)
 +-- scripts/ (13 activos + archive/)
 +-- validation/ (6 activos + archive/ 59)
-+-- tests/ (26 archivos, 212 tests)
++-- tests/ (334 tests)
 +-- docs/
 | +-- automatica/ (22 .md auto-generados, LF)
 | +-- auditoria/ (dictamenes + decisiones + prompt + planes + FOLLOWUPS.md)
@@ -225,6 +230,7 @@ text
 - **`indicators/*.py`: funciones puras. NO deben usar `datetime.now()`/`Timestamp.now()` como fecha de observacion.**
 - **`src/market_calendar.py` es la fuente unica de utilidades temporales.**
 - **`src/utils.py::write_artifact_with_manifest` es la fuente unica de escritura de parquet + manifest.**
+- **`src/effective_date.py::resolve_effective_date` es un resolutor por cobertura. No consulta calendario. No sustituye a `is_session_closed`. Ver R4 (Seccion 2).**
 
 ---
 
@@ -342,7 +348,7 @@ Nota: daily_run.yml commitea Daily hist/state. Aplicar git fetch + pull --rebase
 
 SECCION 10 - VALIDACION Y TESTS
 10.1. Tests
-212 passed + 2 skipped (network) en local; 199 passed + 5 skipped en CI.
+334 passed + 2 skipped (network) en local; ~290 passed + skips en CI.
 
 10.2. Validation Gate (10/10)
 SLPM v1.2 (sin errores de validacion)
@@ -518,6 +524,17 @@ Si next_day > today: SKIP query, usar cache.
 11.13. FU-012 — A/D Line acumulada (WONT FIX)
 ad_line = ad_net.cumsum() sobre todo el historico. Variaciones ±1 esperadas.
 
+11.14. FU-021-3A correction v2 — Filtro EOD en market_data (2026-09-15)
+El filtro original aceptaba filas intradia como EOD cuando la cobertura era 100% durante sesion USA abierta. `resolve_effective_date` es ciego al calendario por diseno. Fix: `src/data_loader.py::_filter_non_eod_equity` aplica el mecanismo FU-018 (sesion/EOD) SOLO al universo EQUITY_EOD (539 tickers) antes de llamar a `resolve_effective_date`.
+
+Separacion conceptual obligatoria (R4):
+- `function_lag` = `resolve_effective_date.lag_days`. Propiedad de la funcion. Puede ser 0 tras el filtro EOD y es correcto.
+- `reference_lag` = `(reference_date.date() - effective_date.date()).days`. Propiedad del caller. Senala cuanto ha retrocedido el sistema respecto al run.
+
+No toca: `resolve_effective_date`, `market_hours.py`, `instrument_registry.py`, `trim_to_last_valid_date` (A3.1 diferido), manifest FU-002 (FU-002-bis).
+
+Hallazgo colateral: `instrument_registry.get_market()` clasifica futuros, indices no-USA y FX como `US_EQUITY` (22 de 23 tickers no-equity). Deuda registry (A2.3). No bloquea EQUITY_EOD.
+
 SECCION 12 - LIMITACIONES CONOCIDAS
 20 tickers .L sin provider oficial -> Aceptado.
 
@@ -529,7 +546,7 @@ Dark Pool con retraso FINRA (2-4 sem) -> Marcado ARCHIVAL.
 
 Confidence sensible a N componentes -> Documentado (C19).
 
-FU-001 (ffill multi-calendario L352) -> Pendiente P1. Ciclo separado.
+FU-001 (ffill multi-calendario L352) -> RESUELTO 2026-09-15 (38f9ce1 + 8a76380).
 
 FU-002 (validacion circular BackupProvider) -> RESUELTO 2026-09-15 (45f29c2 + 2da234f).
 
@@ -560,6 +577,8 @@ FU-014 (Xetra/BME gap >= 2 dias) -> RESUELTO 3105689.
 FU-015 (AVISO columnas duplicadas tras retry Yahoo) -> Pendiente P2. Fix quirurgico disenado: mover all_data.append(data_batch) despues de la clasificacion y filtrar columnas de tickers fallidos.
 
 FU-016 (desfase 1 dia entre writers cuando run antes de PUBLISH_HOUR) -> Pendiente P3 documental.
+
+FU-021-3A (filtro EQUITY_EOD en market_data) -> RESUELTO correction v2 2026-09-15 (78b7583 + 747cfb1 + fded14b).
 
 SECCION 13 - DEUDA TECNICA
 Monolitos restantes:
@@ -626,15 +645,15 @@ Metrica	Valor
 Cobertura	313/313 (100%)
 FAILED	0
 Fuentes europeas	51 (Euronext 13 + Xetra 19 + BME 19)
-Tests locales	212 passed + 2 skipped
-Tests CI	199 passed + 5 skipped
+Tests locales	334 passed + 2 skipped
+Tests CI	~290 passed + skips
 Validation Gate	10/10
 pyflakes	0 warnings
 compileall	OK
 Produccion GH Actions	OK
 Arquitectura	Modular: 19 modulos src/report/ + 16 src/pipeline/
 .git size	~12.6 MB
-HEAD	9839251 (origin/main)
+HEAD	12d91b1 (origin/main)
 15.1. Hitos del ciclo 2026-09-12 → 2026-09-15
 Commits pusheados (extracto):
 
@@ -698,16 +717,54 @@ Validación circular BackupProvider (FU-002).
 
 Tests: 189 → 212 (+23).
 
-15.2. Pendientes reales
-FU-001 (ffill multi-calendario L352): P1. Ciclo separado + auditoria.
+Hitos del ciclo FU-021-3A correction v2 (2026-09-15):
 
+3376f46 — docs(FU-020): cierra en FOLLOWUPS + reglas R1/R2/R3.
+
+5a05690 — feat(FU-021-3A): filtro EQUITY_EOD en market_data (539 tickers).
+
+e4cfb87 — chore(FU-021-3A): eliminar import pytest no usado (pyflakes 0).
+
+78b7583 — fix(FU-021-3A): filtro EOD equity-only + separacion function_lag/reference_lag.
+
+747cfb1 — Merge FU-021-3A correction v2.
+
+fded14b — Merge branch 'main' (workflow commits).
+
+12d91b1 — docs(FU-021-3A): renombrar informe a .md + integrar entrada en FOLLOWUPS.md.
+
+Fixes cerrados en FU-021-3A v2:
+
+Filtro EQUITY_EOD aplicado antes de resolve_effective_date.
+
+Separacion conceptual function_lag / reference_lag.
+
+Fallback reference_date tz-aware (Europe/Madrid).
+
+Tests: 317 → 334 (+17).
+
+15.2. Pendientes reales
 FU-015 (AVISO columnas duplicadas): P2. Fix quirurgico disenado.
 
 FU-003 (cosmetico): P3.
 
 FU-016 (desfase 1 dia entre writers): P3 documental.
 
-Prompt v6.13 cuando acumule mas cambios.
+FU-002-bis (endurecer regla INVALID para last_date > expected_session): P1. Derivado de FU-021-3A.
+
+FU-021-5 (metadata temporal por clase en manifest): P2. Derivado de FU-021-3A.
+
+FU-021-3B (INDEX_EOD + RATE_YIELD): requiere verificacion empirica Close Yahoo.
+
+FU-021-3C (FUTURE_SETTLEMENT + FX_DAILY_CUT): bloqueado sin provider dedicado.
+
+A2.3 (deuda registry: get_market clasifica no-equity como US_EQUITY): P3.
+
+A3.1 (retirar trim_to_last_valid_date de data_load.py): diferido hasta sub-informe de 13 consumidores.
+
+Gap manifest stock_prices.parquet (last_date=15/09 vs pipeline/leaders=14/09): documentar.
+
+Prompt v6.15 cuando acumule mas cambios.
 
 SECCION 16 - FRASE GUIA
 "Determinista, descriptivo, auditado. Paso a paso. Documentar. Saber parar."
@@ -748,4 +805,4 @@ Pregunta final: "Que hacemos?"
 
 No empieces a proponer tareas sin antes confirmar la asimilacion completa.
 
-Fin del prompt maestro v6.12. Commit de referencia: 9839251. Fecha: 2026-09-15.
+Fin del prompt maestro v6.14. Commit de referencia: 12d91b1. Fecha: 2026-09-15.
