@@ -7,6 +7,8 @@ Extraidos de src/report_generator.py (refactor C1, fase C1-6d3b).
 
 import pandas as pd
 
+from src.report.helpers import _fmt_signed
+
 
 def render_liderazgo_interno(rs_internal_data):
     """Renderiza la tabla Liderazgo relativo interno.
@@ -41,7 +43,7 @@ def render_rotacion_reciente(sector_rank_deltas_data):
         out.append("| Sector | Rank actual | Δ5d | Δ10d | Δ20d | Lectura 5d | Lectura 10d | Lectura 20d |\n")
         out.append("|--------|-------------|-----|------|------|------------|-------------|-------------|\n")
         for _, row in sector_rank_deltas_data.iterrows():
-            out.append(f"| {row['sector']} | {row['rank_actual']} | {row['rank_change_5d']:+.0f} | {row['rank_change_10d']:+.0f} | {row['rank_change_20d']:+.0f} | {row['lectura_5d']} | {row['lectura_10d']} | {row['lectura_20d']} |\n")
+            out.append(f"| {row['sector']} | {row['rank_actual']} | {_fmt_signed(row['rank_change_5d'], '{:+.0f}', '{:.0f}')} | {_fmt_signed(row['rank_change_10d'], '{:+.0f}', '{:.0f}')} | {_fmt_signed(row['rank_change_20d'], '{:+.0f}', '{:.0f}')} | {row['lectura_5d']} | {row['lectura_10d']} | {row['lectura_20d']} |\n")
         out.append("\n")
     return out
 

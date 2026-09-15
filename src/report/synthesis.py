@@ -134,7 +134,9 @@ def render_matriz_evidencia(evidence_matrix_data):
         def _fmt_evidence(v):
             if pd.isna(v):
                 return 'NA'
-            return f"{int(v):+d}"
+            # FU-003a (2026-09-15): cero sin signo.
+            iv = int(v)
+            return f"{iv:+d}" if iv != 0 else "0"
 
         out.append("\n## Matriz de Evidencia\n\n")
         out.append("| Sector | Precio | Amplitud | Flujo 1º | Flujo Proxy | Wyckoff | Crédito* | Volat* | Calidad | Lectura |\n")
