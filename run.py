@@ -118,7 +118,7 @@ def main():
     leader_df = ldr['leader_df']
     full_metrics_df = ldr['full_metrics_df']
 
-    sm = compute_sector_metrics(df_stocks, holdings_df, leader_df, full_metrics_df, df_market)
+    sm = compute_sector_metrics(df_stocks, holdings_df, leader_df, full_metrics_df, df_market, effective_meta=df_stocks_effective_meta)
     sector_leader_divergence_df = sm['sector_leader_divergence_df']
     sector_wyckoff_distribution_df = sm['sector_wyckoff_distribution_df']
     rs_internal_df = sm['rs_internal_df']
