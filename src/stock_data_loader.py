@@ -495,11 +495,14 @@ def download_stock_prices(reference_date=None, run_id=None):
     if not isinstance(data.columns, pd.MultiIndex):
         data.columns = pd.MultiIndex.from_tuples(data.columns)
 
-    # B1: sanity check final. NO aplica calendario NYSE: este merge puede
-    # contener series con otros calendarios (Euronext/Xetra/BME). La
-    # proteccion real de B1 se aplica en el pipeline Yahoo USA (batch/retry).
-    # Idempotente sobre los datos ya procesados.
-    data = data.ffill(limit=3)
+    # FU-001 (2026-09-15): ELIMINADO ffill global.
+    # Razon: deshacia la proteccion B1 aplicada por lote Yahoo. Los NaN
+    # que B1 preservaba como "ausencia legitima de observacion" se
+    # rellenaban aqui con el valor del dia anterior, produciendo precios
+    # falsos (pct_dup_last=0.837 en run 2026-09-15 02:17).
+    # Los NaN restantes representan huecos legitimos que los consumidores
+    # deben interpretar como ausencia de dato, no como cero ni como dato
+    # valido.
 
     # Deduplicar columnas (defensivo: con Europa primero ya no hay solapamiento
     # Yahoo/Euronext, pero lo dejamos como red de seguridad).
