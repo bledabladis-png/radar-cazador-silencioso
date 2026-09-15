@@ -1,6 +1,6 @@
 ﻿# -*- coding: utf-8 -*-
 """Tests FU-018-3b: filtro EOD en Xetra + _cache_is_fresh + integracion."""
-from datetime import datetime, date
+from datetime import datetime
 from zoneinfo import ZoneInfo
 
 import pandas as pd
