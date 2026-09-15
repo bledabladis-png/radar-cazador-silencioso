@@ -17,7 +17,7 @@ from indicators.breadth_core import compute_new_highs_lows, compute_advances_dec
 
 
 
-def compute_advance_decline(df_stocks):
+def compute_advance_decline(df_stocks, effective_meta=None):
 
     tickers = [col[1] for col in df_stocks.columns if col[0] == 'Close']
 
@@ -94,7 +94,7 @@ def compute_advance_decline(df_stocks):
 
 
 
-    return {
+    result = {
 
         'advances': int(advances.iloc[-1]),
 
@@ -119,3 +119,17 @@ def compute_advance_decline(df_stocks):
         'active_tickers': active_tickers,
 
     }
+
+    # FU-020 (2026-09-15): declarar fecha efectiva y cobertura.
+    if effective_meta and effective_meta.get('status') == 'OK':
+        _eff_d = effective_meta.get('date')
+        try:
+            result['effective_date'] = pd.Timestamp(_eff_d).strftime('%Y-%m-%d') if _eff_d is not None else None
+        except Exception:
+            result['effective_date'] = None
+        result['coverage'] = float(effective_meta.get('coverage', 0.0))
+        result['n_observed'] = int(effective_meta.get('n_observed', 0))
+        result['n_eligible'] = int(effective_meta.get('n_eligible', 0))
+        result['lag_days'] = effective_meta.get('lag_days')
+
+    return result

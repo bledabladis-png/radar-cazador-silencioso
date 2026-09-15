@@ -57,7 +57,7 @@ def _compute_cross_module(macro_regime, financial_regime, vol_regime, real_liq_r
     return cross_module_conflict
 
 
-def _compute_confirmation(df_market, df_stocks):
+def _compute_confirmation(df_market, df_stocks, df_stocks_effective_meta=None):
     confirmation_data = {}
 
     # T10Y3M
@@ -101,10 +101,19 @@ def _compute_confirmation(df_market, df_stocks):
     # Advance/Decline
     try:
         from indicators.breadth_equity import compute_advance_decline
-        ad_data = compute_advance_decline(df_stocks) if df_stocks is not None else None
+        ad_data = compute_advance_decline(
+            df_stocks, effective_meta=df_stocks_effective_meta
+        ) if df_stocks is not None else None
         if ad_data:
             confirmation_data['ad'] = ad_data
             print(f"    A/D: Net={ad_data['ad_net']:+d}  NH/NL={ad_data['nh_nl']:+d}  Thrust={ad_data['breadth_thrust']:.2f}")
+            if 'effective_date' in ad_data:
+                _eff_d = ad_data.get('effective_date')
+                _cov = ad_data.get('coverage', 0.0)
+                _n_obs = ad_data.get('n_observed', 0)
+                _n_eli = ad_data.get('n_eligible', 0)
+                _lag = ad_data.get('lag_days')
+                print(f"         effective={_eff_d}  coverage={_cov:.2%} ({_n_obs}/{_n_eli})  lag={_lag}d")
         else:
             confirmation_data['ad'] = None
             print("    A/D: Sin datos suficientes (cobertura temporal baja). Se omite.")
@@ -120,7 +129,8 @@ def _compute_confirmation(df_market, df_stocks):
 
 def compute_mte_confirmation(df_market, df_stocks, financial_score, all_signals,
                               pcr_data, darkpool_data, macro_regime,
-                              financial_regime, vol_regime, real_liq_regime):
+                              financial_regime, vol_regime, real_liq_regime,
+                              df_stocks_effective_meta=None):
     """Ejecuta MTE + Cross-Module + Confirmation.
 
     Returns:
@@ -130,7 +140,9 @@ def compute_mte_confirmation(df_market, df_stocks, financial_score, all_signals,
     cross_module_conflict = _compute_cross_module(
         macro_regime, financial_regime, vol_regime, real_liq_regime, mte_result
     )
-    confirmation_data = _compute_confirmation(df_market, df_stocks)
+    confirmation_data = _compute_confirmation(
+        df_market, df_stocks, df_stocks_effective_meta=df_stocks_effective_meta
+    )
     return {
         'mte_result': mte_result,
         'cross_module_conflict': cross_module_conflict,

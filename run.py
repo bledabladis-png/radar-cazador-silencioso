@@ -112,6 +112,7 @@ def main():
 
     ldr = compute_leaders(df_market, sector_results, reference_date=reference_date, run_id=run_id)
     df_stocks = ldr['df_stocks']
+    df_stocks_effective_meta = ldr.get('df_stocks_effective_meta')
     holdings_df = ldr['holdings_df']
     leader_lines = ldr['leader_lines']
     leader_df = ldr['leader_df']
@@ -159,6 +160,7 @@ def main():
         df_market, df_stocks, financial_score, all_signals,
         pcr_data, darkpool_data, macro_regime,
         financial_regime, vol_regime, real_liq_regime,
+        df_stocks_effective_meta=df_stocks_effective_meta,
     )
     mte_result = mc['mte_result']
     cross_module_conflict = mc['cross_module_conflict']

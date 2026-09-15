@@ -67,8 +67,17 @@ def resolve_effective_date(
 
     requested_date = prices.index[-1]
 
+    # Normalizar a DataFrame con columnas planas (tickers).
+    # Si es MultiIndex (field, ticker), extraer solo Close.
+    if isinstance(prices.columns, pd.MultiIndex):
+        close_cols = [c for c in prices.columns if c[0] == 'Close']
+        close_df = prices[close_cols].copy()
+        close_df.columns = [c[1] for c in close_cols]
+    else:
+        close_df = prices
+
     # Columnas presentes del universo elegible.
-    present = [t for t in eligible if t in prices.columns]
+    present = [t for t in eligible if t in close_df.columns]
 
     if not present:
         return {
@@ -82,7 +91,7 @@ def resolve_effective_date(
         }
 
     # Cobertura por fila: observados / eligible (no / present).
-    coverage_series = prices[present].notna().sum(axis=1) / n_eligible
+    coverage_series = close_df[present].notna().sum(axis=1) / n_eligible
     valid_rows = coverage_series[coverage_series >= min_coverage]
 
     if valid_rows.empty:
@@ -97,7 +106,7 @@ def resolve_effective_date(
         }
 
     effective_date = valid_rows.index[-1]
-    n_observed = int(prices.loc[effective_date, present].notna().sum())
+    n_observed = int(close_df.loc[effective_date, present].notna().sum())
     coverage = n_observed / n_eligible
 
     try:
