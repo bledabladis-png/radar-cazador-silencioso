@@ -215,9 +215,6 @@ class TestGetContract:
         c2 = get_contract("EQUITY_EOD")
         assert c1 is not c2
 
-    def test_contrato_no_implementado_lanza_keyerror(self):
-        with pytest.raises(KeyError):
-            get_contract("VOLATILITY_INDEX")
 
     def test_contrato_inexistente_lanza_keyerror(self):
         with pytest.raises(KeyError):

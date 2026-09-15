@@ -23,6 +23,10 @@ from src.temporal_contracts.index_eod import (
     IndexEODCommodity,
     IndexEODCurrency,
 )
+from src.temporal_contracts.volatility_index import VolatilityIndex
+from src.temporal_contracts.rate_yield import RateYield
+from src.temporal_contracts.future_settlement import FutureSettlement
+from src.temporal_contracts.fx_daily_cut import FxDailyCut
 
 
 _IMPLEMENTED_CONTRACTS = {
@@ -31,23 +35,32 @@ _IMPLEMENTED_CONTRACTS = {
     "INDEX_EOD_EUROPA": IndexEODEuropa,
     "INDEX_EOD_COMMODITY": IndexEODCommodity,
     "INDEX_EOD_CURRENCY": IndexEODCurrency,
+    "VOLATILITY_INDEX": VolatilityIndex,
+    "RATE_YIELD": RateYield,
+    "FUTURE_SETTLEMENT": FutureSettlement,
+    "FX_DAILY_CUT": FxDailyCut,
 }
 
 
 def get_contract(name: str) -> TemporalContract:
     """Devuelve una nueva instancia del contrato name.
 
-    Lanza KeyError si el contrato no tiene implementacion en esta fase.
-    Fase 2.1: EQUITY_EOD + los 4 INDEX_EOD_*.
+    Fase 2.2: los 9 contratos estan implementados.
     """
     if name not in _IMPLEMENTED_CONTRACTS:
         raise KeyError(
-            "Contrato no implementado en esta fase: "
-            + name
-            + ". Implementados: "
-            + str(sorted(_IMPLEMENTED_CONTRACTS))
+            "Contrato no registrado: " + name
+            + ". Implementados: " + str(sorted(_IMPLEMENTED_CONTRACTS))
         )
     return _IMPLEMENTED_CONTRACTS[name]()
+
+
+def resolve_all_contracts(df_market, reference_date) -> dict:
+    """Resuelve los 9 contratos. Devuelve dict[str, TemporalResolution]."""
+    result = {}
+    for name in list_contracts():
+        result[name] = get_contract(name).resolve(df_market, reference_date)
+    return result
 
 
 __all__ = [
@@ -65,9 +78,14 @@ __all__ = [
     "list_contracts",
     "get_registry_entry",
     "get_contract",
+    "resolve_all_contracts",
     "EquityEOD",
     "IndexEODUSA",
     "IndexEODEuropa",
     "IndexEODCommodity",
     "IndexEODCurrency",
+    "VolatilityIndex",
+    "RateYield",
+    "FutureSettlement",
+    "FxDailyCut",
 ]
