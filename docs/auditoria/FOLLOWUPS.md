@@ -249,3 +249,22 @@
 - **Deudas derivadas abiertas:**
   - FU-021-5: definir semantica temporal por clase y activar `temporal_contract` desde los callers.
   - A2.3: corregir `get_market` para `^`/`=F`/`=X`.
+
+
+## FU-015 - Columnas duplicadas tras retry Yahoo (RESUELTO)
+
+- **Origen:** deteccion durante FU-002-bug, 2026-09-15.
+- **Descripcion:** el AVISO "N columnas duplicadas detectadas, deduplicando" aparecia en el concat final de `stock_data_loader.py`. Causa: un ticker fallido en un batch podia triunfar en el retry individual, y ambos se anadian a `all_data`. El concat producia columnas duplicadas que la dedup defensiva debia limpiar (fragil y ruidoso).
+- **Causa raiz:** `all_data.append(data_batch)` se ejecutaba ANTES del bucle de clasificacion que marcaba los tickers FAILED. Los FAILED del batch no se excluian antes del append; el retry posterior anadia las mismas columnas.
+- **Fix aplicado (`afcf095`):**
+  - Bucle de clasificacion movido ANTES de `all_data.append(data_batch)`.
+  - Nueva `_filter_failed_from_batch(data_batch, failed_in_batch)`: excluye columnas de tickers FAILED del batch antes del append.
+  - La dedup defensiva (L583-588) se mantiene como red de seguridad, no como mecanismo primario.
+- **Tests (`tests/test_fu015_dedup.py`):** 5 tests.
+  - 4 unitarios del helper (lista vacia, no-MultiIndex, remove columnas, ticker desconocido).
+  - 1 test estructural: verifica en el fuente que `failed_in_batch = []` aparece antes de `all_data.append(data_batch)`.
+- **Verificacion en produccion:** en los runs del 2026-09-15 (17:04Z, 17:51Z, 18:04Z, 18:20Z, 20:20Z) no aparece el AVISO "columnas duplicadas detectadas". La dedup defensiva no se ha activado.
+- **Clasificacion:** P2 (integridad tecnica localizada) - **RESUELTO 2026-09-15**.
+- **Notas:**
+  - `data_loader.py` no tiene el patron del bug: no hay retry individual de tickers. No requiere fix equivalente.
+  - El prompt v6.14 marcaba FU-015 como pendiente P2 por desfase documental. Cierre corregido.

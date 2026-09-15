@@ -586,7 +586,7 @@ FU-013 (SLPM 0% con n=0) -> RESUELTO 5d3bc75.
 
 FU-014 (Xetra/BME gap >= 2 dias) -> RESUELTO 3105689.
 
-FU-015 (AVISO columnas duplicadas tras retry Yahoo) -> Pendiente P2. Fix quirurgico disenado: mover all_data.append(data_batch) despues de la clasificacion y filtrar columnas de tickers fallidos.
+FU-015 (AVISO columnas duplicadas tras retry Yahoo) -> RESUELTO 2026-09-15 (afcf095).
 
 FU-016 (desfase 1 dia entre writers cuando run antes de PUBLISH_HOUR) -> Pendiente P3 documental.
 
@@ -756,8 +756,6 @@ Fallback reference_date tz-aware (Europe/Madrid).
 Tests: 317 → 334 (+17).
 
 15.2. Pendientes reales
-FU-015 (AVISO columnas duplicadas): P2. Fix quirurgico disenado.
-
 FU-003 (cosmetico): P3.
 
 FU-016 (desfase 1 dia entre writers): P3 documental.
