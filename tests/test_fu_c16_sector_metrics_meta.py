@@ -93,4 +93,4 @@ def test_c16_signature_accepts_effective_meta():
 
 def test_c16_run_py_propagates_effective_meta():
     src = Path('run.py').read_text(encoding='utf-8-sig')
-    assert 'compute_sector_metrics(df_stocks, holdings_df, leader_df, full_metrics_df, df_market, effective_meta=df_stocks_effective_meta)' in src
+    assert 'compute_sector_metrics(df_stocks, holdings_df, leader_df, full_metrics_df, df_market, effective_meta=df_stocks_effective_meta' in src

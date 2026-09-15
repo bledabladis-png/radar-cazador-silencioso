@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 """
 Macro Sectorial v4.3 -- Sistema de analisis macro y rotacion sectorial.
 Fases 1-4 + Correccion 0.5 + P1 + P2 + Mejoras 16-20.
@@ -61,8 +61,9 @@ def main():
         return
     df_market = data['df_market']
     df_macro_manual = data['df_macro_manual']
+    temporal_meta = data.get('temporal_meta', {})
 
-    regimes = compute_all_regimes(df_market, df_macro_manual)
+    regimes = compute_all_regimes(df_market, df_macro_manual, temporal_meta=temporal_meta)
     financial_score = regimes['financial_score']
     financial_regime = regimes['financial_regime']
     liq_conf = regimes['liq_conf']
@@ -78,7 +79,7 @@ def main():
     macro_conf = regimes['macro_conf']
     all_signals = regimes['all_signals']
 
-    sb = compute_sectors_base(df_market)
+    sb = compute_sectors_base(df_market, temporal_meta=temporal_meta)
     sector_results = sb['sector_results']
     sector_rank_deltas_df = sb['sector_rank_deltas_df']
     sector_price_rank = sb['sector_price_rank']
@@ -91,7 +92,7 @@ def main():
     cross_asset_summary_df = sb['cross_asset_summary_df']
     breadth_values = sb['breadth_values']
 
-    fp = compute_flows_primary(df_market)
+    fp = compute_flows_primary(df_market, temporal_meta=temporal_meta)
     etf_primary_flow_data = fp['etf_primary_flow_data']
     sector_flow_characteristics_df = fp['sector_flow_characteristics_df']
     blackrock_dax_flow = fp['blackrock_dax_flow']
@@ -104,13 +105,14 @@ def main():
     fs = compute_flows_secondary(
         sector_flow_rank, etf_primary_flow_data, cftc_position_flow_data,
         blackrock_dax_flow, blackrock_isf_flow, amundi_lyxi_flow,
+        temporal_meta=temporal_meta,
     )
     flow_synthesis = fs['flow_synthesis']
     nport_position_change_data = fs['nport_position_change_data']
     qqq_performance_data = fs['qqq_performance_data']
     qqq_nport_flow_data = fs['qqq_nport_flow_data']
 
-    ldr = compute_leaders(df_market, sector_results, reference_date=reference_date, run_id=run_id)
+    ldr = compute_leaders(df_market, sector_results, reference_date=reference_date, run_id=run_id, temporal_meta=temporal_meta)
     df_stocks = ldr['df_stocks']
     df_stocks_effective_meta = ldr.get('df_stocks_effective_meta')
     holdings_df = ldr['holdings_df']
@@ -118,7 +120,7 @@ def main():
     leader_df = ldr['leader_df']
     full_metrics_df = ldr['full_metrics_df']
 
-    sm = compute_sector_metrics(df_stocks, holdings_df, leader_df, full_metrics_df, df_market, effective_meta=df_stocks_effective_meta)
+    sm = compute_sector_metrics(df_stocks, holdings_df, leader_df, full_metrics_df, df_market, effective_meta=df_stocks_effective_meta, temporal_meta=temporal_meta)
     sector_leader_divergence_df = sm['sector_leader_divergence_df']
     sector_wyckoff_distribution_df = sm['sector_wyckoff_distribution_df']
     rs_internal_df = sm['rs_internal_df']
@@ -126,12 +128,13 @@ def main():
     leader_representativeness_df = sm['leader_representativeness_df']
 
     bm = compute_breadth_metrics(df_stocks, df_market, holdings_df,
-                                  reference_date=reference_date)
+                                  reference_date=reference_date,
+                                  temporal_meta=temporal_meta)
     sector_breadth_momentum_df = bm['sector_breadth_momentum_df']
     sector_breadth_df = bm['sector_breadth_df']
     sector_breadth_is_stale = bm.get('sector_breadth_is_stale', False)
 
-    en = compute_engines(df_market, sector_results, sector_flow_rank, otros_flow_rank, leader_df)
+    en = compute_engines(df_market, sector_results, sector_flow_rank, otros_flow_rank, leader_df, temporal_meta=temporal_meta)
     leader_metrics_for_slpm = en['leader_metrics_for_slpm']
     top_sector_flow = en['top_sector_flow']
     tactical_scores = en['tactical_scores']
@@ -141,16 +144,16 @@ def main():
     slpm_v12_data = compute_slpm_v12(
         df_market, sector_results, leader_metrics_for_slpm,
         top_sector_flow, tactical_scores, structural_scores,
-        sector_persistence,
+        sector_persistence, temporal_meta=temporal_meta,
     )
 
-    diag = compute_diagnostics(df_market, tactical_scores, structural_scores, sector_flow_rank)
+    diag = compute_diagnostics(df_market, tactical_scores, structural_scores, sector_flow_rank, temporal_meta=temporal_meta)
     signal_agreements = diag['signal_agreements']
     signal_agreements_display = diag['signal_agreements_display']
     price_flow_divergences = diag['price_flow_divergences']
     shock_sensitivities = diag['shock_sensitivities']
 
-    md = compute_market_data(df_market)
+    md = compute_market_data(df_market, temporal_meta=temporal_meta)
     pcr_data = md['pcr_data']
     darkpool_data = md['darkpool_data']
     vol_structure_df = md['vol_structure_df']
@@ -161,12 +164,13 @@ def main():
         pcr_data, darkpool_data, macro_regime,
         financial_regime, vol_regime, real_liq_regime,
         df_stocks_effective_meta=df_stocks_effective_meta,
+        temporal_meta=temporal_meta,
     )
     mte_result = mc['mte_result']
     cross_module_conflict = mc['cross_module_conflict']
     confirmation_data = mc['confirmation_data']
 
-    ii = compute_indices_intl(df_market, reference_date=reference_date, run_id=run_id)
+    ii = compute_indices_intl(df_market, reference_date=reference_date, run_id=run_id, temporal_meta=temporal_meta)
     index_phases = ii['index_phases']
     index_leaders = ii['index_leaders']
 
