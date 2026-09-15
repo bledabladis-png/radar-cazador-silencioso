@@ -1,0 +1,28 @@
+## FU-021-3A - Filtro EOD en market_data (RESUELTO correction v2)
+
+- **Origen:** deteccion durante la verificacion E2E de FU-020, run `workflow_dispatch` del 2026-09-15 17:04 UTC.
+- **Descripcion:** `market_data.parquet` publicaba una fila intradia como si fuera EOD cuando el run caia en horario de sesion USA abierta. El manifest lo detectaba (`last_date_is_expected_session=False`) pero no lo bloqueaba.
+- **Evidencia:** run 17:04Z -> `[FU-021-3A] EQUITY_EOD effective=2026-09-15 requested=2026-09-15 lag=0d coverage=100.00% (539/539)`. Manifest `last_date=2026-09-15, expected=2026-09-14, last_date_is_expected_session=False`. Contradice el diseno declarado de FU-021-2.
+- **Causa raiz:** FU-021-3A replico el control de cobertura de FU-020 (`resolve_effective_date`) pero no el control de sesion de FU-018. La cobertura mide presencia de NaN, no cierre de sesion. `resolve_effective_date` no consulta calendario.
+- **Diagnostico adicional:** `instrument_registry.get_market()` clasifica 22 de 23 tickers no-equity como `US_EQUITY`. Futuros, indices no-USA y FX incluidos. Invalida el port directo de FU-018 a market_data.
+- **Fix aplicado (correction v2, commits 78b7583 + 747cfb1 + fded14b):**
+  - `src/data_loader.py`: nueva `_filter_non_eod_equity(data, reference_date)` aplica mecanismo FU-018 SOLO al universo EQUITY_EOD (539 tickers). No-equity queda fuera (3B/3C pendientes).
+  - Fallback `reference_date` tz-aware (Europe/Madrid) coherente con FU-018-3c.
+  - Log ampliado: `function_lag` (propiedad de `resolve_effective_date`) y `reference_lag` (calculado contra `reference_date.date()`). Separacion conceptual exigida por dictamen.
+  - `resolve_effective_date` intacta. `trim_to_last_valid_date` no tocado (A3.1 diferido). Manifest FU-002 no tocado.
+- **Tests:** 5 nuevos (`test_fu021_3a_equity_eod.py`). Incluye `test_filter_non_eod_equity_100pct_intraday_still_trims` (test clave del auditor: 100% cobertura != EOD). Suite total: 334 passed + 2 skipped.
+- **Verificacion E2E (workflow_dispatch 2026-09-15 18:04 UTC sobre rama aislada + 18:20 UTC sobre main):**
+  - `[FU-021-3A] EQUITY_EOD: 539/539 equity con vela no EOD en 2026-09-15 -> eliminar ultima fila`
+  - `[FU-021-3A] EQUITY_EOD effective=2026-09-14 requested=2026-09-14 function_lag=0d reference_lag=1d coverage=99.81% (538/539)`
+  - Manifest: `last_date=2026-09-14, expected=2026-09-14, last_date_is_expected_session=True`
+  - `[FU-020] effective=2026-09-14 requested=2026-09-15 lag=1d coverage=100.00% (313/313)` (Ruta A intacta)
+  - Gate 10/10.
+- **Clasificacion:** P1 estructural - **RESUELTO 2026-09-15**.
+- **Informe y dictamen completo:** `docs/auditoria/FU-021-3A_INFORME_Y_DICTAMEN.md`.
+- **Deudas derivadas abiertas:**
+  - FU-002-bis: endurecer regla INVALID para `last_date > expected_session`.
+  - FU-021-5: metadata temporal por clase en manifest.
+  - FU-021-3B: INDEX_EOD + RATE_YIELD (verificacion empirica Close Yahoo).
+  - FU-021-3C: FUTURE_SETTLEMENT + FX_DAILY_CUT (provider dedicado).
+  - A2.3: corregir `get_market` para `^`/`=F`/`=X`.
+  - A3.1: retirar `trim_to_last_valid_date` de `data_load.py` (diferido a sub-informe de 13 consumidores).
