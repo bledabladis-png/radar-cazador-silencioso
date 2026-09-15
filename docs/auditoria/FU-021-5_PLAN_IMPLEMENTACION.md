@@ -61,6 +61,20 @@ Nomenclatura consolidada en Parte A v2 §0.4:
 - Familias (5), Contratos (9).
 - FSM: `PENDING | OK | STALE | INSUFFICIENT | BLOCKED`.
 
+### 0.5. Decisiones del dictamen del plan (2026-09-16)
+
+Ajustes obligatorios aplicados al plan v1:
+
+| # | Decisión | Sección afectada |
+|---|---|---|
+| A1 | `temporal_meta` como transporte explícito; `df.attrs` solo auxiliar | §2.5, Fase 3 |
+| A2 | Snapshot + `migration boundary` para `darkpool_history.csv` | Fase 7 |
+
+Decisiones adicionales del dictamen:
+
+- **D1:** No existe "fecha global" de `df_market`. Solo `temporal_meta` con `per_contract` + `consolidated`. La fecha de consolidación técnica no sustituye las fechas por contrato.
+- **D2:** `BLOCKED` ≠ `STALE`. `STALE` = contrato válido con lag tolerado; `BLOCKED` = contrato no auditable/activable.
+
 ---
 
 ## 1. Mapa de módulos
@@ -181,21 +195,30 @@ df_market.temporal_meta = {
 
 ### 2.5. Implementación de `temporal_meta` sobre DataFrame
 
-**Opción A:** atributo dinámico (`df.temporal_meta = {...}`).
+**Ratificado por dictamen Q-P.3 (2026-09-16).**
 
-**Opción B:** `df.attrs['temporal_meta'] = {...}` (pandas nativo).
+**Autoridad:** `temporal_meta` es un **dict explícito** transportado junto con `df_market`. No es un atributo del DataFrame. Es una estructura separada que se propaga como par de retorno o dataclass.
 
-**Opción C:** dict paralelo devuelto por el productor.
+**Espejo auxiliar (opcional):** `df.attrs['temporal_meta']` puede utilizarse como cache/conveniencia, pero **nunca como fuente de verdad**.
 
-**Recomendación:** **opción B** (atributo `attrs` de pandas). Ventajas:
+**Mecanismo autorizado:**
 
-- Persiste a través de operaciones no destructivas.
-- No colisiona con columnas.
-- Es el mecanismo canónico de pandas para metadata.
+`dict` paralelo. El productor retorna `(df_market, temporal_meta)` o un `MarketDataBundle` dataclass.
 
-**Pendiente de verificación:** confirmar que `df.attrs` sobrevive a los `.loc[...]`, `.copy()`, `pd.concat([...])` que hace el pipeline. Si no, usar opción C.
+**Razón del dictamen:**
 
----
+`df.attrs` depende de cómo pandas propague/copie atributos durante `.loc`, `.copy`, `concat`, `merge`, `groupby` y transformaciones intermedias. Aunque un test demuestre que sobrevive hoy, eso no lo convierte en un contrato fuerte.
+
+**Implementación concreta:**
+
+    @dataclass
+    class MarketDataBundle:
+        df_market: pd.DataFrame
+        temporal_meta: dict
+
+Los consumidores reciben `bundle` y acceden a `bundle.df_market` y `bundle.temporal_meta`.
+
+**Espejo auxiliar (opcional):** `bundle.df_market.attrs['temporal_meta'] = bundle.temporal_meta` puede mantenerse como conveniencia. No es autoridad.
 
 ## 3. Fases de implementación
 
@@ -291,6 +314,8 @@ Cada fase incluye: objetivo, alcance, API, tests, criterio de aceptación, commi
 - `src/data_loader.py`: invocar `resolve_all_contracts` + `consolidate`.
 - `src/utils.py`: helper `get_effective_meta`.
 - `config/settings.py`: `CURRENT_TEMPORAL_CONTRACT_VERSION`.
+- **Test empírico de persistencia:** verificar que `df.attrs['temporal_meta']` sobrevive a operaciones reales del pipeline. **Solo como referencia** (no es autoridad tras dictamen Q-P.3).
+- **Transporte explícito:** `temporal_meta` viaja como parte de un `MarketDataBundle` (dataclass) o par de retorno.
 
 **API:**
 - `resolve_all_contracts(df_market, reference_date)` → dict.
@@ -466,9 +491,21 @@ def compute_market_data(df_market, df_stocks=None) -> dict:
   - `compute_market_data` propaga `df_stocks`.
   - `run.py` pasa `df_stocks` a `compute_market_data`.
 
+**Snapshot previo a la migración (ratificado por dictamen Q-P.7):**
+
+Antes de modificar `darkpool.py`:
+
+- `SHA256` del histórico `outputs/history/darkpool_history.csv`.
+- Número de filas.
+- Última fecha.
+- Backup del CSV a `outputs/history/darkpool_history_pre_fu0215.csv`.
+- Documentar `migration boundary` = (fecha, commit hash) para distinguir filas anteriores y posteriores.
+
 **Criterio de aceptación:**
 - `darkpool.py` ya no lee parquet directo.
 - `darkpool_history.csv` se sigue generando.
+- Snapshot del histórico creado y registrado.
+- `migration boundary` documentado.
 - Los valores de `dark_pool_pct` no cambian respecto a la versión previa.
 - Suite global verde.
 - Ejecución de `py run.py` produce `darkpool_data` sin warnings.
