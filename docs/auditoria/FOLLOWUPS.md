@@ -170,3 +170,25 @@
 - **Tests:** 4 nuevos (`tests/test_fu019_xetra_retry.py`). Suite total: 300 passed + 2 skipped.
 - **Clasificacion:** P2 (bug de proveedor externo con mitigacion local) - **RESUELTO 2026-09-15**.
 - **Bloqueante:** no tras el fix. Afectaba a la cobertura 313/313 declarada como invariante.
+
+
+## FU-020 - Motores agregados sin cobertura efectiva declarada (RESUELTO Fase 1)
+
+- **Origen:** deteccion durante la verificacion E2E de FU-019, run del 2026-09-15 16:04 UTC.
+- **Descripcion:** los motores agregados (A/D, NH/NL, thrust) calculaban sobre `.iloc[-1]` del DataFrame sin exigir ni declarar la cobertura efectiva de la fecha usada. Tras FU-018, la fila superior puede tener un numero variable de tickers con dato (no siempre 313). El A/D podia medir 42 tickers en un run y 313 en otro, sin que el operador pudiera saberlo.
+- **Causa raiz:** `trim_to_last_valid_date_for_tickers(df_stocks, usa_tickers, min_coverage=0.8)` solo exigia cobertura de USA. Si USA estaban completos pero Europa no, conservaba una fila parcial. Si USA no estaban completos, recortaba a la ultima fecha con USA >= 80%, sin garantizar cobertura del universo completo. En ningun caso declaraba la cobertura efectiva.
+- **Fix aplicado (Fase 1, commits 306555f + 8e0cbb3):**
+  - `src/effective_date.py::resolve_effective_date(prices, eligible_tickers, min_coverage=0.90)` -> resuelve la fecha mas reciente con cobertura suficiente sobre el universo elegible. Devuelve `date`, `requested_date`, `lag_days`, `n_eligible`, `n_observed`, `coverage`, `status`.
+  - `config/instrument_exclusions.csv` (vacio inicialmente) para exclusiones permanentes explicitas.
+  - `leaders.py`: sustitucion de `trim_to_last_valid_date_for_tickers` por `resolve_effective_date` con universo completo y `min_coverage=0.90`.
+  - Propagacion de metadata (`df_stocks_effective_meta`) desde `compute_leaders` a `compute_mte_confirmation`.
+  - `compute_advance_decline(df_stocks, effective_meta=None)` declara `effective_date`, `coverage`, `n_observed`, `n_eligible`, `lag_days`.
+- **Verificacion E2E (workflow_dispatch 2026-09-15 16:35 UTC):**
+  - `[FU-020] effective=2026-09-14 requested=2026-09-15 lag=1d coverage=100.00% (313/313)`
+  - `A/D: Net=-8  NH/NL=+0  Thrust=0.46`
+  - `effective=2026-09-14  coverage=100.00% (313/313)  lag=1d`
+  - Gate 10/10.
+- **Tests:** 17 nuevos (`test_fu020_resolve_effective_date.py` + `test_fu020_breadth_meta.py`). Suite total: 317 passed + 2 skipped.
+- **Clasificacion:** P1 estructural - **RESUELTO Fase 1** 2026-09-15.
+- **Fase 2 (pendiente):** `compute_sector_breadth` y derivados. Puede requerir `resolve_effective_date` por sector.
+- **Fuera de alcance:** recalculo de historicos, indices/futuros/FX, evolucion adicional del manifest FU-002.

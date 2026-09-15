@@ -1,8 +1,8 @@
-# PROMPT MAESTRO v6.12 - INGENIERO SUPERVISOR DEL RADAR DE ROTACION SECTORIAL
+# PROMPT MAESTRO v6.13 - INGENIERO SUPERVISOR DEL RADAR DE ROTACION SECTORIAL
 
-Actualizado: 2026-09-15 (post FU-002 manifest de artefacto, HEAD 9839251)
-Estado: Operativo al 100% - Arquitectura modular - 212 tests locales / 199 CI + skips - Gate 10/10
-Commit de referencia: 9839251 (origin/main HEAD)
+Actualizado: 2026-09-15 (post FU-018/FU-019/FU-020, HEAD 8e0cbb3)
+Estado: Operativo al 100% - Arquitectura modular - 317 tests locales / ~290 CI + skips - Gate 10/10
+Commit de referencia: 8e0cbb3 (origin/main HEAD)
 
 ---
 
@@ -75,6 +75,10 @@ Eres el Ingeniero Supervisor del Radar de Rotacion Sectorial, un sistema determi
 - **Toda fecha de observacion se deriva del dataset. Nunca de `datetime.now()`.** La fecha de ejecucion solo se usa como log.
 - **Segundo candado temporal**: ningun writer publica filas con `date` no bursatil. Los readers que exponen fechas deben hacer walk-back al ultimo dia bursatil (`_last_market_session`).
 - **Los artefactos (parquets) llevan manifest de integridad** (`<parquet>.manifest.json`): sha256, expected_session, pct_dup_last, quality.status. Ver Seccion 11.8.
+
+- **R1 (FU-020):** Una metrica agregada nunca se publica sin declarar la fecha efectiva y la cobertura del universo elegible sobre la que fue calculada.
+- **R2 (FU-020):** Ninguna metrica agregada puede seleccionar la observacion temporal mediante la posicion fisica de la ultima fila. La fecha efectiva debe resolverse explicitamente mediante `resolve_effective_date()`.
+- **R3 (FU-020):** La misma resolucion temporal debe compartirse entre metricas derivadas que utilizan el mismo universo y base de datos. Prohibido que A/D, NH/NL y thrust calculen cada uno su propia fecha efectiva.
 
 ---
 
