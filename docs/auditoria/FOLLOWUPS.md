@@ -130,3 +130,28 @@
 - **Clasificacion:** P3 documental.
 - **Accion:** decidir en ciclo separado si se codifica (helper en `src/market_calendar.py` tipo `is_confirmed_b2(date)` con set versionado) o si se degrada a regla documental explicita en el prompt. No bloqueante.
 - **Bloqueante:** no.
+
+
+## FU-018 - El pipeline EOD mezclaba precios vivos con cierres (RESUELTO)
+
+- **Origen:** deteccion durante FU-002-bug, 2026-09-15.
+- **Descripcion:** el pipeline descargaba datos de proveedores con semantica temporal heterogenea. Yahoo y Xetra devolvian la vela del dia en curso cuando su mercado estaba abierto (precio vivo, no cierre). Euronext y BME devolvian EOD por construccion. Al concatenar, el analisis usaba una mezcla de cierres y precios intradia como si fueran la misma observacion.
+- **Evidencia:** A/D Net del 15/09 oscilo -8 -> -120 -> -131 en el mismo dia segun la hora del run, sin cambio de mercado. La causa era la mezcla de sesiones cerradas y abiertas.
+- **Diagnostico (FU-018-1):** inventario de semantica por provider (commit `e645da4`). Yahoo USA/UK y Xetra requieren filtro; Euronext y BME no.
+- **Contrato (FU-018-2):** modelo temporal minimo aprobado por auditor (commit `743242d`). 4 funciones: `get_market`, `is_trading_session`, `get_session_close`, `is_session_closed`. `reference_date` obligatoriamente tz-aware. `UNKNOWN` = no elegible, nunca fail-open.
+- **Implementacion:**
+  - `6433cdb` FU-018-3a: `src/market_hours.py`, `config/market_close_regular.csv`, `config/market_close_exceptions.csv` (vacio), `get_market` en `instrument_registry.py`. 28 tests.
+  - `935de55` + `1a8ce1b` FU-018-3b: filtro Xetra (fetch + cache-hit), `_cache_is_fresh(reference_date)`, `run.py` con `ZoneInfo("Europe/Madrid")`. 15 tests.
+  - `4cb5d7d` FU-018-3c: filtro Yahoo en lotes (USA + UK), UNKNOWN no elegible. 12 tests.
+- **Verificacion E2E (workflow_dispatch 2026-09-15 15:38 UTC):**
+  - `last_date=2026-09-14` (antes 15/09) y `last_date_is_expected_session=True`.
+  - `close_nan=0` y `status=VALID`.
+  - A/D Net vuelve a -8, coherente con el run nocturno.
+  - Logs `[FU-018]` en cada lote Yahoo y cada ticker Xetra indican la eliminacion de la vela no EOD.
+- **Tests:** 55 nuevos acumulados (28 + 15 + 12). Suite total: 296 passed + 2 skipped.
+- **Clasificacion:** P1 estructural - **RESUELTO 2026-09-15**.
+- **Bloqueante:** no tras el fix. Era bloqueante para la fiabilidad del A/D y de cualquier metrica calculada sobre la fila superior del parquet.
+- **Notas:**
+  - Fuera de scope de FU-018: indices, futuros, FX. Requieren definicion temporal propia.
+  - Fuera de scope: calendarios oficiales europeos completos. `is_trading_session` para LSE/XETRA usa lunes-viernes como PROVISIONAL; se ampliara con calendarios oficiales verificados.
+  - La lista `config/market_close_exceptions.csv` empieza vacia. Solo se anaden filas con documento oficial.
