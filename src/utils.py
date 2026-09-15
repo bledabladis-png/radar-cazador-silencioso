@@ -487,9 +487,19 @@ def write_artifact_with_manifest(df, parquet_path, source,
         _os.replace(tmp_parquet, str(path))
         _os.replace(tmp_manifest, manifest_path)
 
-        print(f"  [MANIFEST] {parquet_path}: status={status}, rows={rows}, "
-              f"tickers={n_tickers}, pct_dup={pct_dup_last:.3f}, "
-              f"last_date={date_max}, expected={expected_session}")
+        # FU-002-bug (2026-09-15): observabilidad ampliada.
+        # Detectar filas parciales (multi-calendario) sin tener que
+        # descargar el parquet. Anade close_nan, cobertura y flag de
+        # sesion esperada al log del workflow.
+        _n_close_observed = int(len(close_cols) - close_nan_last) if close_cols else 0
+        _coverage_pct = (_n_close_observed / n_tickers) if n_tickers > 0 else 0.0
+        print(f"  [MANIFEST] {parquet_path}:")
+        print(f"    status={status}")
+        print(f"    rows={rows}, tickers={n_tickers}")
+        print(f"    pct_dup={pct_dup_last:.3f}, close_nan={close_nan_last}, n_close_observed={_n_close_observed}")
+        print(f"    coverage_pct={_coverage_pct:.4f}")
+        print(f"    last_date={date_max}, expected={expected_session}")
+        print(f"    last_date_is_expected_session={last_date_is_expected}")
         return manifest
 
     except Exception as e:
