@@ -2,7 +2,6 @@
 """Tests FU-021-3A: filtro EQUITY_EOD en market_data."""
 import numpy as np
 import pandas as pd
-import pytest
 
 from src.data_loader import _is_equity_ticker, _trim_market_data_to_equity_eod
 
