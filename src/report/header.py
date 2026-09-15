@@ -6,6 +6,8 @@ Extraido de src/report_generator.py (refactor C1, fase C1-5).
 
 import pandas as pd
 
+from src.report.helpers import _fmt_signed
+
 
 def render_regimenes(macro_score, macro_regime, macro_conf,
                      liquidity_score, liquidity_regime, liq_conf,
@@ -57,7 +59,7 @@ def render_regimenes(macro_score, macro_regime, macro_conf,
                 delta_str = "EMPEORA"
             else:
                 delta_str = "ESTABLE"
-            out.append(f"  - *Liquidity Delta (vs ejecución anterior): {delta:+.3f} ({delta_str})*\n")
+            out.append(f"  - *Liquidity Delta (vs ejecución anterior): {_fmt_signed(delta, '{:+.3f}', '{:.3f}')} ({delta_str})*\n")
         except:
             pass
     

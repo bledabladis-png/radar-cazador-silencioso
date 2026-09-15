@@ -16,6 +16,24 @@ def _fmt_num(v, fmt="{:.2f}"):
         return str(v)
 
 
+def _fmt_signed(v, fmt_signed, fmt_unsigned):
+    """FU-003a (2026-09-15): cero sin signo, no-cero con signo.
+
+    Se reciben DOS formatos explicitos. NO se manipula la cadena.
+    Evita sustituciones fragiles sobre formatos que contengan '+'.
+    """
+    if pd.isna(v):
+        return "N/D"
+    try:
+        if v == 0:
+            # FU-003a: neutralizar -0.0. Python formatea -0.0 como '-0.00'
+            # aunque v == 0 sea True; hay que formatear un cero limpio.
+            return fmt_unsigned.format(0)
+        return fmt_signed.format(v)
+    except Exception:
+        return str(v)
+
+
 def _fmt_ad_net(advances, declines, ad_net, fmt="{:+d}"):
     """Formatea A/D Net con politica B3 (2026-09-12).
 

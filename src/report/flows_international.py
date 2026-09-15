@@ -7,7 +7,7 @@ Extraidos de src/report_generator.py (refactor C1, fase C1-6d4a).
 
 import pandas as pd
 
-from src.report.helpers import _fmt_num
+from src.report.helpers import _fmt_signed
 
 
 def render_flujo_daxex(blackrock_dax_flow):
@@ -20,9 +20,9 @@ def render_flujo_daxex(blackrock_dax_flow):
         out.append(f"- **NAV:** {row['nav']:.4f}\n")
         out.append(f"- **Shares Outstanding:** {row['shares_outstanding']:,.0f}\n")
         out.append(f"- **Δ Shares:** {row['shares_change']:+,.0f}\n")
-        out.append(f"- **Flujo Estimado (EUR):** {row['estimated_flow_eur']:+,.2f}\n")
-        out.append(f"- **Flujo % AUM:** {row['flow_pct_assets']*100:+.6f}%\n")
-        out.append(f"- **Flow Z-Score:** {row['flow_zscore']:+.2f}\n")
+        out.append(f"- **Flujo Estimado (EUR):** {_fmt_signed(row['estimated_flow_eur'], '{:+,.2f}', '{:,.2f}')}\n")
+        out.append(f"- **Flujo % AUM:** {_fmt_signed(row['flow_pct_assets']*100, '{:+.6f}%', '{:.6f}%')}\n")
+        out.append(f"- **Flow Z-Score:** {_fmt_signed(row['flow_zscore'], '{:+.2f}', '{:.2f}')}\n")
         out.append("\n*Fuente: BlackRock. ETF Primary Flow = ΔSharesOutstanding × NAV.*\n\n")
     return out
 
@@ -36,9 +36,9 @@ def render_flujo_isf(blackrock_isf_flow):
         out.append(f"- **NAV:** {row['nav']:.4f}\n")
         out.append(f"- **Shares Outstanding:** {row['shares_outstanding']:,.0f}\n")
         out.append(f"- **Δ Shares:** {row['shares_change']:+,.0f}\n")
-        out.append(f"- **Flujo Estimado (GBP):** {row['estimated_flow_eur']:+,.2f}\n")
-        out.append(f"- **Flujo % AUM:** {row['flow_pct_assets']*100:+.6f}%\n")
-        out.append(f"- **Flow Z-Score:** {row['flow_zscore']:+.2f}\n")
+        out.append(f"- **Flujo Estimado (GBP):** {_fmt_signed(row['estimated_flow_eur'], '{:+,.2f}', '{:,.2f}')}\n")
+        out.append(f"- **Flujo % AUM:** {_fmt_signed(row['flow_pct_assets']*100, '{:+.6f}%', '{:.6f}%')}\n")
+        out.append(f"- **Flow Z-Score:** {_fmt_signed(row['flow_zscore'], '{:+.2f}', '{:.2f}')}\n")
         out.append("\n*Fuente: BlackRock. ETF Primary Flow = ΔSharesOutstanding × NAV.*\n\n")
     return out
 
@@ -54,9 +54,9 @@ def render_flujo_lyxi(amundi_lyxi_flow):
         out.append(f"- **AUM:** {row['class_aum']:,.2f}\n")
         if pd.notna(row.get('shares_change')):
             out.append(f"- **Δ Shares:** {row['shares_change']:+,.0f}\n")
-            out.append(f"- **Flujo Estimado (EUR):** {row['estimated_flow_eur']:+,.2f}\n")
-            out.append(f"- **Flujo % AUM:** {row['flow_pct_assets']*100:+.6f}%\n")
-            out.append(f"- **Flow Z-Score:** {row['flow_zscore']:+.2f}\n")
+            out.append(f"- **Flujo Estimado (EUR):** {_fmt_signed(row['estimated_flow_eur'], '{:+,.2f}', '{:,.2f}')}\n")
+            out.append(f"- **Flujo % AUM:** {_fmt_signed(row['flow_pct_assets']*100, '{:+.6f}%', '{:.6f}%')}\n")
+            out.append(f"- **Flow Z-Score:** {_fmt_signed(row['flow_zscore'], '{:+.2f}', '{:.2f}')}\n")
         else:
             out.append("- **Δ Shares:** N/D (histórico insuficiente)\n")
             out.append("- **Flujo Estimado:** N/D\n")
@@ -73,9 +73,9 @@ def render_flujo_iwm(blackrock_iwm_flow):
         out.append(f"- **NAV:** {row['nav']:.4f}\n")
         out.append(f"- **Shares Outstanding:** {row['shares_outstanding']:,.0f}\n")
         out.append(f"- **Δ Shares:** {row['shares_change']:+,.0f}\n")
-        out.append(f"- **Flujo Estimado (USD):** {row['primary_flow_usd']:+,.2f}\n")
-        out.append(f"- **Flujo % AUM:** {row['primary_flow_pct']:+.6f}%\n")
-        out.append(f"- **Flow Z-Score:** {row['primary_flow_z']:+.2f}\n")
+        out.append(f"- **Flujo Estimado (USD):** {_fmt_signed(row['primary_flow_usd'], '{:+,.2f}', '{:,.2f}')}\n")
+        out.append(f"- **Flujo % AUM:** {_fmt_signed(row['primary_flow_pct'], '{:+.6f}%', '{:.6f}%')}\n")
+        out.append(f"- **Flow Z-Score:** {_fmt_signed(row['primary_flow_z'], '{:+.2f}', '{:.2f}')}\n")
         out.append("\n*Fuente: BlackRock. ETF Primary Flow = ΔSharesOutstanding × NAV.*\n\n")
     return out
 
@@ -194,10 +194,10 @@ def render_flujo_sintesis(flow_synthesis):
         out.append("## Flujo - Sintesis Descriptiva\n")
         out.append("| Capa | Lectura |\n")
         out.append("|------|---------|\n")
-        out.append(f"| Flow Proxy | {_fmt_num(flow_synthesis.get('flow_proxy_sign'), '{:+.2f}')} |\n")
-        out.append(f"| ETF Primary Flow | {_fmt_num(flow_synthesis.get('etf_primary_flow_sign'), '{:+.2f}')} |\n")
-        out.append(f"| CFTC Position Flow | {_fmt_num(flow_synthesis.get('cftc_flow_sign'), '{:+.2f}')} |\n")
-        out.append(f"| Europa Primary Flow | {flow_synthesis.get('european_flow_sign', 0):+.2f} |\n")
+        out.append(f"| Flow Proxy | {_fmt_signed(flow_synthesis.get('flow_proxy_sign'), '{:+.2f}', '{:.2f}')} |\n")
+        out.append(f"| ETF Primary Flow | {_fmt_signed(flow_synthesis.get('etf_primary_flow_sign'), '{:+.2f}', '{:.2f}')} |\n")
+        out.append(f"| CFTC Position Flow | {_fmt_signed(flow_synthesis.get('cftc_flow_sign'), '{:+.2f}', '{:.2f}')} |\n")
+        out.append(f"| Europa Primary Flow | {_fmt_signed(flow_synthesis.get('european_flow_sign', 0), '{:+.2f}', '{:.2f}')} |\n")
         out.append(f"\n**FLOW_CONFIDENCE:** {flow_synthesis.get('confidence', 'N/A')}\n")
         out.append("\n*Interpretación descriptiva: concordancia de signos entre capas. No es señal predictiva.*\n\n")
     return out

@@ -7,7 +7,7 @@ Extraidos de src/report_generator.py (refactor C1, fase C1-6d3a).
 import pandas as pd
 
 from config.settings import ETF_PRIMARY_FLOW_ZSCORE_WINDOW
-from src.report.helpers import _fmt_num
+from src.report.helpers import _fmt_num, _fmt_signed
 
 
 def render_flujo_spdr(etf_primary_flow_data):
@@ -21,7 +21,7 @@ def render_flujo_spdr(etf_primary_flow_data):
         out.append("| Ticker | NAV | Shares Outstanding | Total Net Assets | Primary Flow $ | Flow % AUM | Flow Z |\n")
         out.append("|--------|-----|---------------------|------------------|----------------|------------|--------|\n")
         for _, row in etf_primary_flow_data.iterrows():
-            out.append(f"| {row['ticker']} | {row['nav']:.2f} | {row['shares_outstanding']:,.0f} | {row['total_net_assets']:,.0f} | {row['primary_flow_usd']:+,.2f} | {row['primary_flow_pct']:+.2f}% | {row['primary_flow_z']:+.2f} |\n")
+            out.append(f"| {row['ticker']} | {row['nav']:.2f} | {row['shares_outstanding']:,.0f} | {row['total_net_assets']:,.0f} | {_fmt_signed(row['primary_flow_usd'], '{:+,.2f}', '{:,.2f}')} | {_fmt_signed(row['primary_flow_pct'], '{:+.2f}%', '{:.2f}%')} | {_fmt_signed(row['primary_flow_z'], '{:+.2f}', '{:.2f}')} |\n")
         out.append(f"\n*Fuente: State Street Global Advisors (SSGA). ETF Primary Flow = ΔShares Outstanding × NAV. Z-score sobre {ETF_PRIMARY_FLOW_ZSCORE_WINDOW} sesiones.*\n\n")
     return out
 
@@ -41,7 +41,7 @@ def render_flujo_caracteristicas(sector_flow_characteristics_data):
         for _, row in flow_latest.iterrows():
             regime = row.get('price_flow_regime', None)
             regime_str = regime if pd.notna(regime) else 'N/D'
-            out.append(f"| {row['sector']} | {_fmt_num(row['flow_dollar'], '{:+,.2f}')} | {_fmt_num(row['flow_pct_aum'], '{:.2f}%')} | {_fmt_num(row['flow_zscore'], '{:.2f}')} | {_fmt_num(row['flow_5d_sum'], '{:+,.2f}')} | {_fmt_num(row['flow_20d_sum'], '{:+,.2f}')} | {_fmt_num(row['persistence_5d'], '{:.0%}')} | {_fmt_num(row['persistence_20d'], '{:.0%}')} | {_fmt_num(row['price_ret_20d'], '{:.2%}')} | {regime_str} |\n")
+            out.append(f"| {row['sector']} | {_fmt_signed(row['flow_dollar'], '{:+,.2f}', '{:,.2f}')} | {_fmt_num(row['flow_pct_aum'], '{:.2f}%')} | {_fmt_num(row['flow_zscore'], '{:.2f}')} | {_fmt_signed(row['flow_5d_sum'], '{:+,.2f}', '{:,.2f}')} | {_fmt_signed(row['flow_20d_sum'], '{:+,.2f}', '{:,.2f}')} | {_fmt_num(row['persistence_5d'], '{:.0%}')} | {_fmt_num(row['persistence_20d'], '{:.0%}')} | {_fmt_num(row['price_ret_20d'], '{:.2%}')} | {regime_str} |\n")
         out.append("\n")
     return out
 
