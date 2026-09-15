@@ -547,3 +547,48 @@ def write_artifact_with_manifest(df, parquet_path, source,
         print(f"  [WARN] manifest {parquet_path}: {e}")
         _try_cleanup(tmp_parquet, tmp_manifest)
         return {}
+
+def get_effective_meta(temporal_meta, contracts):
+    """FU-021-5 (Fase 3): meta temporal combinada para contratos indicados.
+
+    Si se pasan varios contratos, devuelve el intersect efectivo:
+    min effective_date, min coverage, status combinado (peor).
+    """
+    if not temporal_meta or 'by_contract' not in temporal_meta:
+        return {}
+    by_contract = temporal_meta['by_contract']
+    entries = [by_contract[c] for c in contracts if c in by_contract]
+    if not entries:
+        return {}
+
+    def _min_date(vals):
+        ds = [v for v in vals if v is not None]
+        return min(ds) if ds else None
+
+    def _min_float(vals):
+        fs = [v for v in vals if v is not None]
+        return min(fs) if fs else None
+
+    effective = _min_date([e.get('effective_date') for e in entries])
+    expected = _min_date([e.get('expected_date') for e in entries])
+    coverage = _min_float([e.get('coverage') for e in entries])
+
+    statuses = [e.get('status') for e in entries]
+    if 'BLOCKED' in statuses:
+        combined_status = 'BLOCKED'
+    elif 'INSUFFICIENT' in statuses:
+        combined_status = 'INSUFFICIENT'
+    elif 'STALE' in statuses:
+        combined_status = 'STALE'
+    elif 'PENDING' in statuses:
+        combined_status = 'PENDING'
+    else:
+        combined_status = 'OK'
+
+    return {
+        'effective_date': effective,
+        'expected_date': expected,
+        'coverage': coverage,
+        'status': combined_status,
+        'contracts': list(contracts),
+    }

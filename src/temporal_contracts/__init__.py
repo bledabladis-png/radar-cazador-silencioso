@@ -27,6 +27,10 @@ from src.temporal_contracts.volatility_index import VolatilityIndex
 from src.temporal_contracts.rate_yield import RateYield
 from src.temporal_contracts.future_settlement import FutureSettlement
 from src.temporal_contracts.fx_daily_cut import FxDailyCut
+from src.temporal_contracts.consolidate import (
+    consolidate,
+    build_temporal_meta,
+)
 
 
 _IMPLEMENTED_CONTRACTS = {
@@ -43,10 +47,7 @@ _IMPLEMENTED_CONTRACTS = {
 
 
 def get_contract(name: str) -> TemporalContract:
-    """Devuelve una nueva instancia del contrato name.
-
-    Fase 2.2: los 9 contratos estan implementados.
-    """
+    """Devuelve una nueva instancia del contrato name."""
     if name not in _IMPLEMENTED_CONTRACTS:
         raise KeyError(
             "Contrato no registrado: " + name
@@ -79,6 +80,8 @@ __all__ = [
     "get_registry_entry",
     "get_contract",
     "resolve_all_contracts",
+    "consolidate",
+    "build_temporal_meta",
     "EquityEOD",
     "IndexEODUSA",
     "IndexEODEuropa",

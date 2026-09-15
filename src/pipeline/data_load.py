@@ -52,4 +52,5 @@ def load_all_data(reference_date=None, run_id=None):
         'df_macro_manual': df_macro_manual,
         'valid_tickers': valid,
         'issues': issues,
+        'temporal_meta': df_market.attrs.get('temporal_meta', {}),
     }

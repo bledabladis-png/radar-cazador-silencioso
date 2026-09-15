@@ -301,4 +301,20 @@ def download_market_data(reference_date=None, run_id=None):
         reference_date=reference_date,
         run_id=run_id,
     )
+
+    # FU-021-5 (Fase 3): resolver contratos y adjuntar temporal_meta.
+    # Dictamen Q-P.3: dict paralelo es autoridad; df.attrs es espejo.
+    try:
+        from src.temporal_contracts import resolve_all_contracts
+        from src.temporal_contracts.consolidate import build_temporal_meta
+        _resolutions = resolve_all_contracts(data, reference_date)
+        _meta = build_temporal_meta(_resolutions, reference_date, run_id)
+        data.attrs['temporal_meta'] = _meta
+        _summary = ' '.join(
+            f"{k}={v.status}" for k, v in _resolutions.items()
+        )
+        print(f"  [FU-021-5] 9 contratos resueltos: {_summary}")
+    except Exception as e:
+        print(f"  [FU-021-5][WARN] Fallo resolviendo contratos: {e}")
+
     return data
