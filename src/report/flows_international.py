@@ -21,7 +21,7 @@ def render_flujo_daxex(blackrock_dax_flow):
         out.append(f"- **Shares Outstanding:** {row['shares_outstanding']:,.0f}\n")
         out.append(f"- **Δ Shares:** {row['shares_change']:+,.0f}\n")
         out.append(f"- **Flujo Estimado (EUR):** {_fmt_signed(row['estimated_flow_eur'], '{:+,.2f}', '{:,.2f}')}\n")
-        out.append(f"- **Flujo % AUM:** {_fmt_signed(row['flow_pct_assets']*100, '{:+.6f}%', '{:.6f}%')}\n")
+        out.append(f"- **Flujo % AUM:** {_fmt_signed(row['flow_pct_assets']*100, '{:+.2f}%', '{:.2f}%')}\n")
         out.append(f"- **Flow Z-Score:** {_fmt_signed(row['flow_zscore'], '{:+.2f}', '{:.2f}')}\n")
         out.append("\n*Fuente: BlackRock. ETF Primary Flow = ΔSharesOutstanding × NAV.*\n\n")
     return out
@@ -37,7 +37,7 @@ def render_flujo_isf(blackrock_isf_flow):
         out.append(f"- **Shares Outstanding:** {row['shares_outstanding']:,.0f}\n")
         out.append(f"- **Δ Shares:** {row['shares_change']:+,.0f}\n")
         out.append(f"- **Flujo Estimado (GBP):** {_fmt_signed(row['estimated_flow_eur'], '{:+,.2f}', '{:,.2f}')}\n")
-        out.append(f"- **Flujo % AUM:** {_fmt_signed(row['flow_pct_assets']*100, '{:+.6f}%', '{:.6f}%')}\n")
+        out.append(f"- **Flujo % AUM:** {_fmt_signed(row['flow_pct_assets']*100, '{:+.2f}%', '{:.2f}%')}\n")
         out.append(f"- **Flow Z-Score:** {_fmt_signed(row['flow_zscore'], '{:+.2f}', '{:.2f}')}\n")
         out.append("\n*Fuente: BlackRock. ETF Primary Flow = ΔSharesOutstanding × NAV.*\n\n")
     return out
@@ -55,7 +55,7 @@ def render_flujo_lyxi(amundi_lyxi_flow):
         if pd.notna(row.get('shares_change')):
             out.append(f"- **Δ Shares:** {row['shares_change']:+,.0f}\n")
             out.append(f"- **Flujo Estimado (EUR):** {_fmt_signed(row['estimated_flow_eur'], '{:+,.2f}', '{:,.2f}')}\n")
-            out.append(f"- **Flujo % AUM:** {_fmt_signed(row['flow_pct_assets']*100, '{:+.6f}%', '{:.6f}%')}\n")
+            out.append(f"- **Flujo % AUM:** {_fmt_signed(row['flow_pct_assets']*100, '{:+.2f}%', '{:.2f}%')}\n")
             out.append(f"- **Flow Z-Score:** {_fmt_signed(row['flow_zscore'], '{:+.2f}', '{:.2f}')}\n")
         else:
             out.append("- **Δ Shares:** N/D (histórico insuficiente)\n")
@@ -74,7 +74,7 @@ def render_flujo_iwm(blackrock_iwm_flow):
         out.append(f"- **Shares Outstanding:** {row['shares_outstanding']:,.0f}\n")
         out.append(f"- **Δ Shares:** {row['shares_change']:+,.0f}\n")
         out.append(f"- **Flujo Estimado (USD):** {_fmt_signed(row['primary_flow_usd'], '{:+,.2f}', '{:,.2f}')}\n")
-        out.append(f"- **Flujo % AUM:** {_fmt_signed(row['primary_flow_pct'], '{:+.6f}%', '{:.6f}%')}\n")
+        out.append(f"- **Flujo % AUM:** {_fmt_signed(row['primary_flow_pct'], '{:+.2f}%', '{:.2f}%')}\n")
         out.append(f"- **Flow Z-Score:** {_fmt_signed(row['primary_flow_z'], '{:+.2f}', '{:.2f}')}\n")
         out.append("\n*Fuente: BlackRock. ETF Primary Flow = ΔSharesOutstanding × NAV.*\n\n")
     return out
