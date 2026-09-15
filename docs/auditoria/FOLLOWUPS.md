@@ -155,3 +155,18 @@
   - Fuera de scope de FU-018: indices, futuros, FX. Requieren definicion temporal propia.
   - Fuera de scope: calendarios oficiales europeos completos. `is_trading_session` para LSE/XETRA usa lunes-viernes como PROVISIONAL; se ampliara con calendarios oficiales verificados.
   - La lista `config/market_close_exceptions.csv` empieza vacia. Solo se anaden filas con documento oficial.
+
+
+## FU-019 - Xetra perdia 2 tickers esporadicamente (BAYN.DE, DTG.DE) (RESUELTO)
+
+- **Origen:** deteccion durante la verificacion E2E de FU-018, run `workflow_dispatch` del 2026-09-15 15:38 UTC.
+- **Descripcion:** el provider Xetra (WebSocket MDS) no respondia para algunos ISIN de forma esporadica. El `_query_one` realizaba un unico intento y, si tras `WS_QUERY_TIMEOUT=25s` no llegaba respuesta, devolvia lista vacia. El ticker quedaba sin datos y no habia fallback a cache, generando `SIN COBERTURA EUROPEA: 2 tickers`.
+- **Evidencia:** run del 15/09 15:38 -> `SIN COBERTURA EUROPEA: 2 tickers -> ['BAYN.DE', 'DTG.DE']`. Ambos tenian ISIN correcto en `config/xetra_ticker_map.csv` y cache local del run de las 02:24.
+- **Causa raiz:** WS de Xetra no determinista. Sin reintento ni fallback.
+- **Fix aplicado (`1f28bad`):**
+  - `_query_one(..., max_attempts=2)`: reintenta con `requestId` distinto por intento, filtrando respuestas huerfanas.
+  - `get_prices`: si tras los reintentos `rows` sigue vacio, usa cache local con WARN explicito. Si tampoco hay cache, conserva el comportamiento anterior (ticker sin cobertura).
+- **Verificacion E2E (run 2026-09-15 16:04 UTC):** `[XETRA] BAYN.DE OK (303 filas, 2025-07-08 -> 2026-09-15)`, `[XETRA] DTG.DE OK (...)` y `Cascada cubrio 51 tickers europeos`. Sin `SIN COBERTURA EUROPEA`.
+- **Tests:** 4 nuevos (`tests/test_fu019_xetra_retry.py`). Suite total: 300 passed + 2 skipped.
+- **Clasificacion:** P2 (bug de proveedor externo con mitigacion local) - **RESUELTO 2026-09-15**.
+- **Bloqueante:** no tras el fix. Afectaba a la cobertura 313/313 declarada como invariante.
