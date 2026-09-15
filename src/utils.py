@@ -441,9 +441,12 @@ def write_artifact_with_manifest(df, parquet_path, source,
             _try_cleanup(tmp_parquet, tmp_manifest)
             return {}
         if last_date_is_expected and pct_dup_last > MANIFEST_DUP_THRESHOLD:
+            # Corrupcion confirmada: precios duplicados por ffill u otra causa.
             status = 'INVALID'
         elif last_date_is_expected and close_nan_last > 0:
-            status = 'INVALID'
+            # FU-002-evo (2026-09-15): ausencia legitima de observacion.
+            # B1 preservo correctamente estos NaN; no son corrupcion.
+            status = 'VALID_WITH_MISSING'
         else:
             status = 'VALID'
 

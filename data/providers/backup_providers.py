@@ -107,10 +107,12 @@ class BackupProvider:
 
         Cada parquet se verifica contra su manifest (<parquet>.manifest.json).
         Estados por parquet:
-          VALID        -> parquet + manifest OK, quality.status == VALID
-          INVALID      -> sha256 mismatch, schema_version desconocido,
-                          o manifest quality.status == INVALID
-          UNAVAILABLE  -> parquet o manifest ausente, o error de lectura
+          VALID               -> parquet + manifest OK, quality.status == VALID
+          VALID_WITH_MISSING  -> calidad aceptable con huecos legitimos
+                                 (close_nan > 0 sin duplicacion). FU-002-evo.
+          INVALID             -> sha256 mismatch, schema_version desconocido,
+                                 o manifest quality.status == INVALID
+          UNAVAILABLE         -> parquet o manifest ausente, o error de lectura
 
         Combinacion (conservadora):
           - Cualquier INVALID -> INVALID global.
@@ -166,7 +168,11 @@ class BackupProvider:
                 print(f"  [REF-CACHE] {path}: manifest quality=INVALID -> INVALID")
                 statuses.append('INVALID')
                 continue
-            if quality_status != 'VALID':
+            # FU-002-evo (2026-09-15): VALID_WITH_MISSING es aceptable
+            # (huecos legitimos preservados por B1, no corrupcion).
+            if quality_status == 'VALID_WITH_MISSING':
+                print(f"  [REF-CACHE] {path}: quality=VALID_WITH_MISSING (huecos legitimos)")
+            elif quality_status != 'VALID':
                 print(f"  [REF-CACHE] {path}: quality='{quality_status}' -> UNAVAILABLE")
                 statuses.append('UNAVAILABLE')
                 continue

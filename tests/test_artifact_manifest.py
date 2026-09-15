@@ -103,6 +103,26 @@ def test_fu_002_5_manifest_write_fail(tmp_path, monkeypatch):
     assert not manifest_file.exists()
 
 
+def test_fu_002_evo_valid_with_missing(tmp_path):
+    """FU-002-evo (2026-09-15): huecos legitimos -> VALID_WITH_MISSING.
+
+    Con close_nan_last > 0 (por B1) y pct_dup_last bajo -> no es corrupcion.
+    """
+    df = _make_df(last_date='2026-09-15', n_tickers=5, add_nan_last=True)
+    parquet_path = tmp_path / 'missing.parquet'
+    ref_date = datetime(2026, 9, 15, 23, 30)
+
+    manifest = write_artifact_with_manifest(
+        df, str(parquet_path),
+        source='test', reference_date=ref_date, run_id='test_vwm',
+    )
+
+    assert manifest['quality']['status'] == 'VALID_WITH_MISSING'
+    assert manifest['quality']['close_nan_last'] > 0
+    assert manifest['quality']['pct_dup_last'] == 0.0
+    assert manifest['quality']['last_date_is_expected_session'] is True
+
+
 def test_manifest_expected_session_deterministic(tmp_path):
     """reference_date fija -> expected_session determinista entre runs."""
     df = _make_df(last_date='2026-09-15', dup_ratio=0.0)

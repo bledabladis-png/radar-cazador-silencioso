@@ -19,7 +19,7 @@ import pytest
 from src.utils import write_artifact_with_manifest
 
 
-def _make_df(last_date='2026-09-15', n_tickers=5, dup_ratio=0.0):
+def _make_df(last_date='2026-09-15', n_tickers=5, dup_ratio=0.0, add_nan_last=False):
     dates = pd.date_range(end=last_date, periods=100, freq='D')
     tickers = [f'T{i}' for i in range(n_tickers)]
     data = {}
@@ -28,6 +28,8 @@ def _make_df(last_date='2026-09-15', n_tickers=5, dup_ratio=0.0):
         close_vals = np.linspace(base, base + 10, 100).tolist()
         if i < int(n_tickers * dup_ratio):
             close_vals[-1] = close_vals[-2]
+        if add_nan_last and i == 0:
+            close_vals[-1] = np.nan
         data[('Close', t)] = close_vals
         data[('Open', t)] = [v - 1 for v in close_vals]
         data[('High', t)] = [v + 2 for v in close_vals]
@@ -56,6 +58,22 @@ def _setup_valid_reference(market_p, stocks_p, ref_date):
                                   source='test', reference_date=ref_date, run_id='r_market')
     write_artifact_with_manifest(_make_df(dup_ratio=0.0), str(stocks_p),
                                   source='test', reference_date=ref_date, run_id='r_stocks')
+
+
+def test_fu_002_evo_valid_with_missing_accepted(patched_paths):
+    """FU-002-evo (2026-09-15): cache VALID_WITH_MISSING se acepta como VALID."""
+    from data.providers.backup_providers import BackupProvider
+    market_p, stocks_p = patched_paths
+    ref_date = datetime(2026, 9, 15, 23, 30)
+    write_artifact_with_manifest(_make_df(add_nan_last=True), str(market_p),
+                                  source='test', reference_date=ref_date, run_id='r_market')
+    write_artifact_with_manifest(_make_df(dup_ratio=0.0), str(stocks_p),
+                                  source='test', reference_date=ref_date, run_id='r_stocks')
+
+    bp = BackupProvider()
+    assert bp.reference_cache_status == 'VALID', (
+        f"cache con huecos legitimos deberia ser VALID, no {bp.reference_cache_status}"
+    )
 
 
 def test_fu_002_3_manifest_missing_unavailable(patched_paths):
