@@ -234,7 +234,7 @@ df_market
 ├── contrato FUTURE_SETTLEMENT
 └── contrato FX_DAILY_CUT
 
-text
+```
 
 Cada contrato debe poder producir, como mínimo:
 
@@ -342,7 +342,7 @@ A3.1
 ↓
 🔴 NO-GO
 
-text
+```
 
 La conclusión más importante es ésta:
 
@@ -371,123 +371,3 @@ Los cambios en el diseño de FUTURE_SETTLEMENT y las decisiones sobre Q-B.7 (β)
 **HEAD de referencia:** 0eb7e4f (origin/main).
 **Fecha:** 2026-09-16.
 ---
-
-## 10. Sobre `STALE` y `BLOCKED`
-
-Recomiendo formalizar la máquina:
-
-`PENDING → (resuelto) → OK | STALE | INSUFFICIENT | BLOCKED`
-
-Con esta interpretación:
-
-- `OK` → contrato satisfecho y dentro de frescura esperada.
-- `STALE` → contrato satisfecho, pero con lag permitido.
-- `INSUFFICIENT` → cobertura insuficiente.
-- `BLOCKED` → contrato no auditable / no disponible de forma fiable.
-- `PENDING` → contrato definido pero todavía no activado.
-
-Esto es mucho mejor que usar `STALE` como una especie de "OK débil".
-
----
-
-## 11. Decisión sobre Parte A v2
-
-**Aprobada conceptualmente.**
-
-Pero la versión 2 debe corregir:
-
-- ❌ "6 clases"
-- ❌ DX-Y.NYB como commodity
-- ❌ confusión entre familia/subclase/contrato
-
-Y dejar:
-
-- ✅ STALE
-- ✅ per_pair_lag
-- ✅ per_ticker_lag
-- ✅ activation_requirement
-- ✅ FUTURE BLOCKED
-
----
-
-## 12. Prioridad del siguiente trabajo
-
-Después de este dictamen:
-
-1. Parte A v2
-2. FU-021-5 implementación contractual
-3. propagación de metadata
-4. writers
-5. MTE state
-6. darkpool
-7. activación secuencial
-8. A3.1
-
-Y paralelamente, por ser una dependencia externa:
-
-`FU-021-3C` → investigar proveedor dedicado para futures, sin activar la clase hasta resolverlo.
-
----
-
-## 13. Dictamen final Q-B.1–Q-B.8
-
-| Pregunta | Decisión |
-|---|---|
-| **Q-B.1** | 🟢 α — STALE |
-| **Q-B.2** | 🟢 α — per_pair_max_lag |
-| **Q-B.3** | 🟢 α — per_ticker_lag |
-| **Q-B.4** | 🟢 α — FUTURE = BLOCKED |
-| **Q-B.5** | 🟢 α — Parte A v2, tras corrección taxonómica |
-| **Q-B.6** | 🟢 α — activación secuencial, excluyendo FUTURE mientras BLOCKED |
-| **Q-B.7** | 🟢 β — excluir futuros del cálculo, con estado/coverage explícitos |
-| **Q-B.8** | 🔴 α — A3.1 continúa bloqueada |
-
-### Dictamen arquitectónico definitivo
-FU-021-5 Parte B
-↓
-🟢 RATIFICADA CON CORRECCIONES DOCUMENTALES
-
-FU-021-5 diseño
-↓
-🟢 AUTORIZADO
-
-FU-021-5 implementación
-↓
-🟡 siguiente fase
-
-FUTURE_SETTLEMENT
-↓
-🔴 BLOCKED
-
-A3.1
-↓
-🔴 NO-GO
-
-text
-
-La conclusión más importante es ésta:
-
-> **Ya no estamos diseñando "una fecha para `df_market`". Estamos diseñando un conjunto de contratos temporales por grupo homogéneo y una política explícita de cómo conviven dentro de un DataFrame mixto.**
-
-Esa es la arquitectura que debe gobernar los writers, los consumidores y finalmente la retirada de `trim_to_last_valid_date`.
-
----
-
-## 14. Aplicación de este dictamen
-
-Los dos ajustes obligatorios (taxonomía y corrección de "6 clases") fueron aplicados:
-
-- **`e54bab8`** — anexo VOLATILITY_INDEX + corrección Parte A (5→6 → familias+contratos).
-- **`5eda93a`** — Parte A v2 con taxonomía ratificada (`DX-Y.NYB` → `INDEX_EOD_CURRENCY`, `^SPGSCI` → `INDEX_EOD_COMMODITY`).
-
-Los cambios en el diseño de FUTURE_SETTLEMENT y las decisiones sobre Q-B.7 (β) y Q-B.8 (α) fueron reflejados en:
-
-- **Parte A v2 §2.6** — FUTURE_SETTLEMENT como BLOCKED con `activation_requirement`.
-- **Parte A v2 §6.4** — tratamiento de consumidores con FUTURE bloqueado (exclusión + metadata explícita).
-- **Plan §0.5** — decisiones adicionales D1 y D2.
-
----
-
-**Fin del dictamen de Parte B.**
-**HEAD de referencia:** 0eb7e4f (origin/main).
-**Fecha:** 2026-09-16.
