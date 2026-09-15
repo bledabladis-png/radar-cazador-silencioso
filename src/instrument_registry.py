@@ -759,3 +759,59 @@ def get_market(ticker: str) -> str:
         return "US_EQUITY"
     return "UNKNOWN"
 
+
+def get_instrument_class(ticker: str) -> str:
+    """Devuelve la clase economica del instrumento (A2.3, 2026-09-15).
+
+    Separada de get_market():
+      - get_market(ticker)          -> 'que calendario bursatil aplica'
+      - get_instrument_class(ticker) -> 'que tipo de instrumento es'
+
+    Clases (7 + UNKNOWN):
+      EQUITY            acciones + ETFs (USA, LSE, XETRA, BME, EURONEXT)
+      INDEX             indices bursatiles USA/EU, ^SPGSCI, DX-Y.NYB
+      VOLATILITY_INDEX  ^VIX, ^VIX3M, ^VXN
+      RATE_YIELD        ^TNX, ^FVX
+      FUTURE            CL=F, BZ=F, NG=F, GC=F, HG=F
+      FX                EURUSD=X, USDJPY=X, USDCNY=X
+      UNKNOWN           resto (nunca adivinar)
+
+    Subtipos (COMMODITY_INDEX, CURRENCY_INDEX, EQUITY_INDEX) se
+    resolveran en FU-021-5 si algun consumidor necesita distinguirlos.
+
+    Esta funcion NO decide contratos temporales. La cadena es:
+      ticker -> get_instrument_class -> FUTURE -> FU-021-5 -> FUTURE_SETTLEMENT
+    """
+
+    if not isinstance(ticker, str):
+        return "UNKNOWN"
+
+    # Futuros: sufijo =F
+    if ticker.endswith("=F"):
+        return "FUTURE"
+
+    # FX: sufijo =X
+    if ticker.endswith("=X"):
+        return "FX"
+
+    # Series con prefijo ^ (indices bursatiles, volatilidad, yields)
+    if ticker.startswith("^"):
+        if ticker in ("^VIX", "^VIX3M", "^VXN"):
+            return "VOLATILITY_INDEX"
+        if ticker in ("^TNX", "^FVX"):
+            return "RATE_YIELD"
+        return "INDEX"
+
+    # DX-Y.NYB: indice de divisas ICE. Hoy clasificado INDEX.
+    # Subtipo CURRENCY_INDEX se resolvera en FU-021-5 si aplica.
+    if ticker == "DX-Y.NYB":
+        return "INDEX"
+
+    # Equity: reutiliza la logica de get_market. Solo acepta
+    # los cinco mercados de renta variable reconocidos.
+    m = get_market(ticker)
+    if m in ("US_EQUITY", "LSE", "XETRA", "BME", "EURONEXT"):
+        return "EQUITY"
+
+    return "UNKNOWN"
+
