@@ -440,15 +440,31 @@ def write_artifact_with_manifest(df, parquet_path, source,
             print(f"  [WARN] manifest: {parquet_path} sin last_date. Se omite.")
             _try_cleanup(tmp_parquet, tmp_manifest)
             return {}
-        if last_date_is_expected and pct_dup_last > MANIFEST_DUP_THRESHOLD:
+        # FU-002-evo2 (2026-09-15): la decision de estado NO depende de
+        # que la ultima fila coincida con la sesion esperada. Se evalua
+        # siempre el contenido de la ultima fila (pct_dup y close_nan).
+        # Bug previo: si last_date != expected_session (p.ej. fila parcial
+        # por calendarios heterogeneos), la regla caia en el else y
+        # declaraba VALID ignorando NaN reales. Detectado en run
+        # 2026-09-15 14:20 con close_nan=33, status=VALID.
+        if pct_dup_last > MANIFEST_DUP_THRESHOLD:
             # Corrupcion confirmada: precios duplicados por ffill u otra causa.
             status = 'INVALID'
-        elif last_date_is_expected and close_nan_last > 0:
-            # FU-002-evo (2026-09-15): ausencia legitima de observacion.
-            # B1 preservo correctamente estos NaN; no son corrupcion.
+        elif close_nan_last > 0:
+            # Ausencia legitima de observacion (B1 preservo NaN).
             status = 'VALID_WITH_MISSING'
         else:
             status = 'VALID'
+
+        # FU-002-evo2: metadata de cobertura de la ultima fila.
+        n_tickers_expected_last = int(n_tickers)
+        n_tickers_with_close_last = int(n_tickers - close_nan_last)
+        n_tickers_missing_close_last = int(close_nan_last)
+        coverage_pct_last = (
+            n_tickers_with_close_last / n_tickers_expected_last
+            if n_tickers_expected_last > 0 else 0.0
+        )
+        last_row_is_partial = (close_nan_last > 0)
 
         manifest = {
             'schema_version': schema_version,
@@ -477,6 +493,12 @@ def write_artifact_with_manifest(df, parquet_path, source,
                 'last_date_is_expected_session': last_date_is_expected,
                 'pct_dup_last': round(pct_dup_last, 6),
                 'close_nan_last': close_nan_last,
+                # FU-002-evo2 (2026-09-15): metadata de cobertura ultima fila.
+                'n_tickers_expected_last': n_tickers_expected_last,
+                'n_tickers_with_close_last': n_tickers_with_close_last,
+                'n_tickers_missing_close_last': n_tickers_missing_close_last,
+                'coverage_pct_last': round(coverage_pct_last, 6),
+                'last_row_is_partial': last_row_is_partial,
                 'status': status,
             },
         }

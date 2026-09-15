@@ -123,6 +123,29 @@ def test_fu_002_evo_valid_with_missing(tmp_path):
     assert manifest['quality']['last_date_is_expected_session'] is True
 
 
+def test_fu_002_evo2_valid_with_missing_pre_publish(tmp_path):
+    """FU-002-evo2 (2026-09-15): close_nan > 0 con last_date != expected_session."""
+    df = _make_df(last_date='2026-09-15', n_tickers=5, add_nan_last=True)
+    parquet_path = tmp_path / 'prepub.parquet'
+    ref_date = datetime(2026, 9, 15, 10, 35)
+
+    manifest = write_artifact_with_manifest(
+        df, str(parquet_path),
+        source='test', reference_date=ref_date, run_id='test_evo2',
+    )
+
+    assert manifest['quality']['last_date'] == '2026-09-15'
+    assert manifest['quality']['expected_session'] == '2026-09-14'
+    assert manifest['quality']['last_date_is_expected_session'] is False
+    assert manifest['quality']['close_nan_last'] > 0
+    assert manifest['quality']['pct_dup_last'] == 0.0
+    assert manifest['quality']['status'] == 'VALID_WITH_MISSING'
+    assert manifest['quality']['last_row_is_partial'] is True
+    assert manifest['quality']['n_tickers_with_close_last'] < 5
+    assert manifest['quality']['n_tickers_missing_close_last'] > 0
+    assert manifest['quality']['coverage_pct_last'] < 1.0
+
+
 def test_manifest_expected_session_deterministic(tmp_path):
     """reference_date fija -> expected_session determinista entre runs."""
     df = _make_df(last_date='2026-09-15', dup_ratio=0.0)
