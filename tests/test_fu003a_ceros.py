@@ -38,6 +38,15 @@ def test_fmt_signed_thousands_sep():
     assert _fmt_signed(1234.56, '{:+,.2f}', '{:,.2f}') == '+1,234.56'
 
 
-def test_fmt_signed_very_small_nonzero():
-    """Valor distinto de cero pero muy pequeno -> mantiene signo."""
-    assert _fmt_signed(1e-9, '{:+.2f}', '{:.2f}') == '+0.00'
+def test_fmt_signed_very_small_displays_as_zero():
+    """FU-003a (refinado): valores que muestran '0.00' van sin signo.
+
+    Incluye ruido flotante (1e-9) y valores absolutos menores que la
+    precision de display (0.004 con 2 decimales).
+    """
+    assert _fmt_signed(1e-9, '{:+.2f}', '{:.2f}') == '0.00'
+    assert _fmt_signed(0.004, '{:+.2f}', '{:.2f}') == '0.00'
+    assert _fmt_signed(-0.004, '{:+.2f}', '{:.2f}') == '0.00'
+    # Valores que SI muestran digitos no-cero mantienen signo.
+    assert _fmt_signed(0.006, '{:+.2f}', '{:.2f}') == '+0.01'
+    assert _fmt_signed(-0.006, '{:+.2f}', '{:.2f}') == '-0.01'

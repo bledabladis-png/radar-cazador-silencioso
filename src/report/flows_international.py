@@ -107,7 +107,7 @@ def render_posicionamiento_cftc(cftc_position_flow_data):
         out.append("|-------|----------|--------------|--------------|------------|--------|\n")
         for _, row in cftc_position_flow_data.iterrows():
             fecha = row['date'].strftime('%Y-%m-%d') if hasattr(row['date'], 'strftime') else str(row['date'])
-            out.append(f"| {fecha} | {row['contract']} | {row['participant']} | {row['net_position']:,.0f} | {row['position_change']:+,.0f} | {row['flow_z']:+.2f} |\n")
+            out.append(f"| {fecha} | {row['contract']} | {row['participant']} | {row['net_position']:,.0f} | {_fmt_signed(row['position_change'], '{:+,.0f}', '{:,.0f}')} | {row['flow_z']:+.2f} |\n")
         out.append("\n*Fuente: CFTC Traders in Financial Futures (Futures Only). Frecuencia semanal.*\n\n")
     return out
 
@@ -124,7 +124,7 @@ def render_flujo_posicional_nport(nport_position_change_data):
         out.append("|-------|-------|--------|-------|----------------|----------------|--------|-----------|\n")
         for _, row in nport_position_change_data.iterrows():
             fecha = row['REPORT_DATE'].strftime('%Y-%m-%d') if hasattr(row['REPORT_DATE'], 'strftime') else str(row['REPORT_DATE'])
-            out.append(f"| {fecha} | {row['REGISTRANT_NAME']} | {row['ISSUER_NAME']} | {row['IDENTIFIER_ISIN']} | {row['PREV_BALANCE']:,.0f} | {row['BALANCE']:,.0f} | {row['POSITION_CHANGE']:+,.0f} | {row['POSITION_CHANGE_PCT']:+.2f}% |\n")
+            out.append(f"| {fecha} | {row['REGISTRANT_NAME']} | {row['ISSUER_NAME']} | {row['IDENTIFIER_ISIN']} | {row['PREV_BALANCE']:,.0f} | {row['BALANCE']:,.0f} | {_fmt_signed(row['POSITION_CHANGE'], '{:+,.0f}', '{:,.0f}')} | {_fmt_signed(row['POSITION_CHANGE_PCT'], '{:+.2f}%', '{:.2f}%')} |\n")
         out.append("\n")
     else:
         out.append("## Flujo Posicional N-PORT (Trimestral)\n")

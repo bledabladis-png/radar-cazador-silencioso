@@ -19,15 +19,22 @@ def _fmt_num(v, fmt="{:.2f}"):
 def _fmt_signed(v, fmt_signed, fmt_unsigned):
     """FU-003a (2026-09-15): cero sin signo, no-cero con signo.
 
+    Regla: si el valor, formateado con la precision del fmt unsigned,
+    resulta en todos sus digitos igual a cero, se muestra sin signo.
+    Esto neutraliza:
+      - El ruido numerico de coma flotante (1.1 - 1.1 != 0 exacto).
+      - Los valores absolutos menores que la precision de display.
+    Cuando el valor mostrado es "cero visual", un signo '+/-' delante
+    seria enganoso.
+
     Se reciben DOS formatos explicitos. NO se manipula la cadena.
-    Evita sustituciones fragiles sobre formatos que contengan '+'.
     """
     if pd.isna(v):
         return "N/D"
     try:
-        if v == 0:
-            # FU-003a: neutralizar -0.0. Python formatea -0.0 como '-0.00'
-            # aunque v == 0 sea True; hay que formatear un cero limpio.
+        formatted_unsigned = fmt_unsigned.format(abs(v))
+        digits_only = ''.join(c for c in formatted_unsigned if c.isdigit())
+        if not digits_only.strip('0'):
             return fmt_unsigned.format(0)
         return fmt_signed.format(v)
     except Exception:
