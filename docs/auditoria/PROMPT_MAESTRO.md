@@ -231,6 +231,7 @@ text
 - **`src/market_calendar.py` es la fuente unica de utilidades temporales.**
 - **`src/utils.py::write_artifact_with_manifest` es la fuente unica de escritura de parquet + manifest.**
 - **`src/effective_date.py::resolve_effective_date` es un resolutor por cobertura. No consulta calendario. No sustituye a `is_session_closed`. Ver R4 (Seccion 2).**
+- **`src/instrument_registry.py` expone dos funciones con responsabilidades disjuntas: `get_market(ticker)` (calendario bursatil) y `get_instrument_class(ticker)` (clase economica). No mezclar: `INSTRUMENT CLASS != MARKET != TEMPORAL CONTRACT`.**
 
 ---
 
@@ -588,6 +589,8 @@ FU-014 (Xetra/BME gap >= 2 dias) -> RESUELTO 3105689.
 
 FU-015 (AVISO columnas duplicadas tras retry Yahoo) -> RESUELTO 2026-09-15 (afcf095).
 
+A2.3 (get_market clasificaba no-equity como US_EQUITY) -> RESUELTO 2026-09-15 (fd12ea1). Solucion: get_instrument_class paralela.
+
 FU-016 (desfase 1 dia entre writers cuando run antes de PUBLISH_HOUR) -> Pendiente P3 documental.
 
 FU-021-3A (filtro EQUITY_EOD en market_data) -> RESUELTO correction v2 2026-09-15 (78b7583 + 747cfb1 + fded14b).
@@ -767,8 +770,6 @@ FU-021-5 (metadata temporal por clase en manifest): P2. Derivado de FU-021-3A.
 FU-021-3B (INDEX_EOD + RATE_YIELD): requiere verificacion empirica Close Yahoo.
 
 FU-021-3C (FUTURE_SETTLEMENT + FX_DAILY_CUT): bloqueado sin provider dedicado.
-
-A2.3 (deuda registry: get_market clasifica no-equity como US_EQUITY): P3.
 
 A3.1 (retirar trim_to_last_valid_date de data_load.py): diferido hasta sub-informe de 13 consumidores.
 

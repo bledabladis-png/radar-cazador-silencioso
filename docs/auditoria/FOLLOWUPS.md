@@ -268,3 +268,23 @@
 - **Notas:**
   - `data_loader.py` no tiene el patron del bug: no hay retry individual de tickers. No requiere fix equivalente.
   - El prompt v6.14 marcaba FU-015 como pendiente P2 por desfase documental. Cierre corregido.
+
+
+## A2.3 - get_market clasificaba no-equity como US_EQUITY (RESUELTO)
+
+- **Origen:** hallazgo colateral durante FU-021-3A. `get_market` clasificaba futuros, indices no-USA y FX como `US_EQUITY` (30 de 31 tickers no-equity mal clasificados).
+- **Descripcion:** `get_market(ticker)` responde "que calendario bursatil aplica", no "que tipo de instrumento es". La confusion surgio al usarla como clasificador de universo en el analisis USA+UK de FU-002-bis.
+- **Causa raiz:** `get_market` nunca tuvo la responsabilidad de clasificar economicamente. Los callers actuales la usan correctamente (solo calendario). El bug es latente: ningun caller le pasa hoy tickers no-equity.
+- **Riesgo de un fix in-place:** cambiar `get_market("CL=F")` de `US_EQUITY` a `FUTURE` romperia `is_trading_session("FUTURE", ...)` (UnknownMarketError) y los callers actuales.
+- **Fix aplicado (`fd12ea1`):**
+  - Nueva `get_instrument_class(ticker)` en `src/instrument_registry.py`. Paralela a `get_market`, no la sustituye.
+  - Devuelve: `EQUITY`, `INDEX`, `VOLATILITY_INDEX`, `RATE_YIELD`, `FUTURE`, `FX`, `UNKNOWN`.
+  - Subtipos (`COMMODITY_INDEX`, `CURRENCY_INDEX`, `EQUITY_INDEX`) diferidos a FU-021-5.
+  - `get_market` sin cambios. Callers actuales sin cambios.
+  - Principio fijado: `INSTRUMENT CLASS != MARKET != TEMPORAL CONTRACT`.
+- **Tests (`tests/test_a2_3_instrument_class.py`):** 19 tests.
+  - 15 funcionales de `get_instrument_class` (una por clase + bordes).
+  - 4 de regresion: confirman que `get_market` NO cambia su semantica, ni para equity ni para no-equity.
+- **Verificacion:** compileall OK, pyflakes 0 warnings, 362 passed + 2 skipped. Sin E2E (el camino de produccion no cambia: `get_market` sigue igual).
+- **Clasificacion:** P3 (deuda tecnica estructural latente) - **RESUELTO 2026-09-15**.
+- **Consumidor futuro:** `get_instrument_class` sera utilizada por FU-021-5 para asignar contratos temporales por clase (EQUITY_EOD, INDEX_EOD, RATE_YIELD, FUTURE_SETTLEMENT, FX_DAILY_CUT).
