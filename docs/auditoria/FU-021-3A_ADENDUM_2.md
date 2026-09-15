@@ -18,7 +18,7 @@
 
 
 
-\---
+---
 
 
 
@@ -30,15 +30,15 @@ El Ciclo 2 de auditoría (15 indicadores de Capa 2b) ha producido:
 
 
 
-\- 28 hallazgos nuevos (C21–C48).
+- 28 hallazgos nuevos (C21–C48).
 
-\- Una corrección terminológica sobre la nomenclatura de consumidores.
+- Una corrección terminológica sobre la nomenclatura de consumidores.
 
-\- Una extensión del análisis de patrones de writer (P0–P8).
+- Una extensión del análisis de patrones de writer (P0–P8).
 
-\- La confirmación de los dos estados persistentes de `mte.py`.
+- La confirmación de los dos estados persistentes de `mte.py`.
 
-\- La resolución de C16, C19 y C20.
+- La resolución de C16, C19 y C20.
 
 
 
@@ -46,17 +46,17 @@ Este adendum cierra documentalmente el Ciclo 2 con:
 
 
 
-1\. Corrección terminológica ("30 + 1 + 1 + 1").
+1. Corrección terminológica ("30 + 1 + 1 + 1").
 
-2\. Cronología del Ciclo 2.
+2. Cronología del Ciclo 2.
 
-3\. Registro de los hallazgos C21–C48 clasificados por acción.
+3. Registro de los hallazgos C21–C48 clasificados por acción.
 
-4\. Consolidación del análisis de patrones P0–P8.
+4. Consolidación del análisis de patrones P0–P8.
 
-5\. Referencia al dictamen del contrato temporal de `df_market`.
+5. Referencia al dictamen del contrato temporal de `df_market`.
 
-6\. Estado del sistema tras el dictamen.
+6. Estado del sistema tras el dictamen.
 
 
 
@@ -64,7 +64,7 @@ No reabre el informe original FU-021-3A ni el Adendum 1. Los complementa.
 
 
 
-\---
+---
 
 
 
@@ -124,13 +124,13 @@ A partir de este adendum, la nomenclatura oficial de los 33 ficheros que mencion
 
 
 
-\- "consumidor" se reserva a quien recibe `df_market` por firma.
+- "consumidor" se reserva a quien recibe `df_market` por firma.
 
-\- "consumidor de artefacto" identifica a `darkpool.py` y a cualquier módulo futuro con el mismo patrón.
+- "consumidor de artefacto" identifica a `darkpool.py` y a cualquier módulo futuro con el mismo patrón.
 
-\- "productor" identifica a `data_load.py`.
+- "productor" identifica a `data_load.py`.
 
-\- "orquestador" identifica a `run.py`.
+- "orquestador" identifica a `run.py`.
 
 
 
@@ -138,7 +138,7 @@ Esta terminología se aplica en la especificación de FU-021-5.
 
 
 
-\---
+---
 
 
 
@@ -220,7 +220,7 @@ Esta terminología se aplica en la especificación de FU-021-5.
 
 
 
-\---
+---
 
 
 
@@ -340,7 +340,7 @@ Hallazgos que deben integrarse en la especificación arquitectónica del contrat
 
 
 
-\---
+---
 
 
 
@@ -384,13 +384,13 @@ Nueve patrones identificados para decidir la fecha escrita en artefactos (CSV o 
 
 
 
-\- **P0–P8** representan **nueve autoridades temporales implícitas** en el pipeline.
+- **P0–P8** representan **nueve autoridades temporales implícitas** en el pipeline.
 
-\- **Solo P6** aplica un control de sesión bursátil (B2).
+- **Solo P6** aplica un control de sesión bursátil (B2).
 
-\- **Ningún patrón declara cobertura** del universo elegible (R1 incumplida).
+- **Ningún patrón declara cobertura** del universo elegible (R1 incumplida).
 
-\- **P8** introduce un tipo nuevo: el estado persistente entre runs. No es CSV, es JSON. Su semántica temporal afecta a la decisión del run siguiente.
+- **P8** introduce un tipo nuevo: el estado persistente entre runs. No es CSV, es JSON. Su semántica temporal afecta a la decisión del run siguiente.
 
 
 
@@ -402,15 +402,15 @@ El contrato temporal de FU-021-5 debe:
 
 
 
-1\. **Unificar P0–P7** bajo una única semántica de fecha (Q-C2.3 resuelto por dictamen: opción d).
+1. **Unificar P0–P7** bajo una única semántica de fecha (Q-C2.3 resuelto por dictamen: opción d).
 
-2\. **Extender P6** a los 20 writers históricos.
+2. **Extender P6** a los 20 writers históricos.
 
-3\. **Redefinir P8** bajo el esquema versionado (Q-C2.4 resuelto por dictamen: opción c+b).
+3. **Redefinir P8** bajo el esquema versionado (Q-C2.4 resuelto por dictamen: opción c+b).
 
 
 
-\---
+---
 
 
 
@@ -456,13 +456,13 @@ Dictamen del auditor externo — Contrato temporal de `df_market` (2026-09-15).
 
 
 
-\- **A3.1** sigue bloqueada (mejor definida: requiere los 6 criterios del §8.2).
+- **A3.1** sigue bloqueada (mejor definida: requiere los 6 criterios del §8.2).
 
-\- **FU-021-5** pasa a `GO — DISEÑO ARQUITECTÓNICO AUTORIZADO`.
+- **FU-021-5** pasa a `GO — DISEÑO ARQUITECTÓNICO AUTORIZADO`.
 
-\- **`darkpool`** deja de ser decisión pendiente; queda subordinado a FU-021-5.
+- **`darkpool`** deja de ser decisión pendiente; queda subordinado a FU-021-5.
 
-\- **Próximo documento:** especificación formal del contrato temporal de `df_market`.
+- **Próximo documento:** especificación formal del contrato temporal de `df_market`.
 
 
 
@@ -474,23 +474,23 @@ El dictamen exige que el próximo documento no sea un patch, sino la **especific
 
 
 
-1\. Cinco contratos por clase.
+1. Cinco contratos por clase.
 
-2\. Regla de consolidación de `df_market`.
+2. Regla de consolidación de `df_market`.
 
-3\. Metadata de fecha/cobertura por artefacto.
+3. Metadata de fecha/cobertura por artefacto.
 
-4\. Contrato de writers.
+4. Contrato de writers.
 
-5\. Propagación hacia los 30 consumidores.
+5. Propagación hacia los 30 consumidores.
 
-6\. Rediseño del estado MTE.
+6. Rediseño del estado MTE.
 
-7\. Migración de `darkpool`.
+7. Migración de `darkpool`.
 
 
 
-\---
+---
 
 
 
@@ -594,7 +594,7 @@ text
 
 
 
-\---
+---
 
 
 
@@ -614,21 +614,21 @@ Los identificadores C7 y C8 permanecen **vacantes** por decisión del dictamen (
 
 
 
-\- **C1–C48**: hallazgos del registro acumulado.
+- **C1–C48**: hallazgos del registro acumulado.
 
-\- **C7, C8**: vacantes por convención.
+- **C7, C8**: vacantes por convención.
 
-\- **C49+**: nuevos hallazgos.
+- **C49+**: nuevos hallazgos.
 
-\- **H-DP-1**: hallazgo estructural independiente (no numerado en la serie C).
+- **H-DP-1**: hallazgo estructural independiente (no numerado en la serie C).
 
-\- **P0–P8**: patrones de writer de fecha.
+- **P0–P8**: patrones de writer de fecha.
 
-\- **Q-C1.x, Q-C2.x**: preguntas al auditor por ciclo.
+- **Q-C1.x, Q-C2.x**: preguntas al auditor por ciclo.
 
 
 
-\---
+---
 
 
 
@@ -714,19 +714,19 @@ text
 
 
 
-\- No autoriza A3.1.
+- No autoriza A3.1.
 
-\- No autoriza migración de `darkpool` fuera de FU-021-5.
+- No autoriza migración de `darkpool` fuera de FU-021-5.
 
-\- No activa contratos por clase.
+- No activa contratos por clase.
 
-\- No modifica el informe original ni el Adendum 1.
+- No modifica el informe original ni el Adendum 1.
 
-\- No modifica la especificación de FU-021-5 (que se redactará después).
+- No modifica la especificación de FU-021-5 (que se redactará después).
 
 
 
-\---
+---
 
 
 
