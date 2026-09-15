@@ -6,6 +6,7 @@ from config.tickers import MARKET_TICKERS
 from config.settings import CACHE_HOURS, CACHE_VALIDATE_TRADING_DATE
 from data.providers.router import DataRouter
 from data.providers.backup_providers import BackupProvider
+from src.effective_date import resolve_effective_date
 
 YAHOO_TICKER_MAP = {
     "BRK.B": "BRK-B",
@@ -49,6 +50,52 @@ def _ticker_list():
 
 # Nota: sin @retry global. El bucle por lotes ya gestiona fallos
 # y BackupProvider actua como fallback por lote.
+def _is_equity_ticker(t):
+    """FU-021-3A (2026-09-15): True si el ticker es equity/ETF USA.
+
+    Excluye:
+    - indices (^): ^GSPC, ^VIX, ^TNX, ^FVX, ^FTSE, ^GDAXI, ^IBEX, ^STOXX50E, ^SPGSCI
+    - futuros (=F): CL=F, BZ=F, NG=F, GC=F, HG=F
+    - FX (=X): EURUSD=X, USDJPY=X, USDCNY=X
+    - DXY (DX-Y.NYB): indice de divisas ICE, clasificado como INDEX_EOD
+    """
+    s = str(t)
+    return (not s.startswith('^')
+            and not s.endswith('=F')
+            and not s.endswith('=X')
+            and s != 'DX-Y.NYB')
+
+
+def _trim_market_data_to_equity_eod(data):
+    """FU-021-3A: recorta data a la ultima fecha con cobertura EQUITY_EOD >= 90%.
+
+    Devuelve (data_recortado, meta) donde meta es el dict de
+    resolve_effective_date (o None si no habia equities en el DataFrame).
+
+    El universo elegible son unicamente los 539 tickers equity/ETF USA.
+    INDEX_EOD, RATE_YIELD, FUTURE_SETTLEMENT y FX_DAILY_CUT quedan FUERA
+    de este filtro (fases 3B y 3C). Cuando la fila superior se elimina,
+    tambien se eliminan las columnas no-equity de esa fila (efecto
+    colateral aceptado por auditor: no dejar filas hibridas).
+
+    No lanza excepcion. Si no hay cobertura suficiente, no recorta y
+    devuelve meta con status=INSUFFICIENT_COVERAGE.
+    """
+    _equity_tickers = [
+        c[1] for c in data.columns
+        if len(c) == 2 and c[0] == 'Close' and _is_equity_ticker(c[1])
+    ]
+    if not _equity_tickers:
+        return data, None
+    meta = resolve_effective_date(data, _equity_tickers, min_coverage=0.90)
+    if (meta['status'] == 'OK'
+            and meta['date'] is not None
+            and meta['lag_days'] is not None
+            and meta['lag_days'] > 0):
+        data = data.loc[:meta['date']]
+    return data, meta
+
+
 def download_market_data(reference_date=None, run_id=None):
     # FU-002 (2026-09-15): reference_date y run_id inyectados desde run.py:main().
     if reference_date is None:
@@ -160,6 +207,20 @@ def download_market_data(reference_date=None, run_id=None):
 
     from src.utils import clean_oil_prices
     data = clean_oil_prices(data)
+
+    # FU-021-3A (2026-09-15): filtro EQUITY_EOD.
+    # Solo aplica al universo equity/ETF (539 tickers). No toca
+    # INDEX_EOD / RATE_YIELD / FUTURE_SETTLEMENT / FX_DAILY_CUT.
+    # Ver FU-021-2 (contrato por clase).
+    data, _eff = _trim_market_data_to_equity_eod(data)
+    if _eff and _eff['status'] == 'OK' and _eff['date'] is not None:
+        print(f"  [FU-021-3A] EQUITY_EOD effective={_eff['date'].date()} "
+              f"requested={_eff['requested_date'].date()} "
+              f"lag={_eff['lag_days']}d "
+              f"coverage={_eff['coverage']:.2%} "
+              f"({_eff['n_observed']}/{_eff['n_eligible']})")
+    elif _eff:
+        print("  [FU-021-3A] EQUITY_EOD INSUFFICIENT_COVERAGE. Sin trim.")
 
     # FU-002 (2026-09-15): parquet + manifest atomico.
     from src.utils import write_artifact_with_manifest
