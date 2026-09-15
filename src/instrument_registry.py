@@ -731,3 +731,31 @@ def is_supported(canonical_ticker: str, provider: str) -> bool:
         return inst.get(provider) is not None
     # Para tickers no mapeados, asumimos soporte (puede fallar pero no lo sabremos)
     return True
+
+def get_market(ticker: str) -> str:
+    """Devuelve el mercado del ticker segun sufijo.
+
+    Sin sufijo  -> 'US_EQUITY'
+    .L          -> 'LSE'
+    .DE         -> 'XETRA'
+    .MC         -> 'BME'
+    .PA .AS .MI -> 'EURONEXT'
+    Otro        -> 'UNKNOWN' (nunca adivinar)
+
+    Nota: mapping valido para el universo de tickers soportado
+    actualmente. No es una afirmacion universal.
+    """
+    if not isinstance(ticker, str):
+        return "UNKNOWN"
+    if ticker.endswith(".L"):
+        return "LSE"
+    if ticker.endswith(".DE"):
+        return "XETRA"
+    if ticker.endswith(".MC"):
+        return "BME"
+    if any(ticker.endswith(s) for s in (".PA", ".AS", ".MI")):
+        return "EURONEXT"
+    if "." not in ticker:
+        return "US_EQUITY"
+    return "UNKNOWN"
+

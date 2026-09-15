@@ -1,0 +1,6 @@
+market,timezone,regular_close
+US_EQUITY,America/New_York,16:00
+LSE,Europe/London,16:30
+XETRA,Europe/Berlin,17:30
+BME,Europe/Madrid,17:30
+EURONEXT,Europe/Paris,17:30
