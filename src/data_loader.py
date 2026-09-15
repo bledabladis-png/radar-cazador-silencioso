@@ -1,5 +1,6 @@
 ﻿import pandas as pd
 from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo
 import os
 import time
 from config.tickers import MARKET_TICKERS
@@ -7,6 +8,8 @@ from config.settings import CACHE_HOURS, CACHE_VALIDATE_TRADING_DATE
 from data.providers.router import DataRouter
 from data.providers.backup_providers import BackupProvider
 from src.effective_date import resolve_effective_date
+from src.market_hours import is_trading_session, is_session_closed
+from src.instrument_registry import get_market
 
 YAHOO_TICKER_MAP = {
     "BRK.B": "BRK-B",
@@ -66,6 +69,65 @@ def _is_equity_ticker(t):
             and s != 'DX-Y.NYB')
 
 
+def _filter_non_eod_equity(data, reference_date):
+    """FU-021-3A correction v2 (2026-09-15): aplica el mecanismo FU-018
+    (sesion/EOD) SOLO al universo EQUITY_EOD dentro de market_data.
+
+    Politica conservadora: si ALGUN ticker equity con dato en la ultima
+    fecha tiene observacion no EOD (mercado aun abierto o mercado
+    desconocido), se elimina la ultima fila completa del DataFrame,
+    incluyendo columnas no-equity de esa fila. Evita filas hibridas.
+
+    Los tickers no-equity (INDEX_EOD, RATE_YIELD, FUTURE_SETTLEMENT,
+    FX_DAILY_CUT) NO se inspeccionan aqui: su contrato temporal queda
+    pendiente de 3B/3C segun FU-021-2.
+
+    reference_date debe ser tz-aware. run.py:main() lo garantiza.
+
+    Devuelve (data_posiblemente_recortado, info).
+    """
+    info = {'n_equity': 0, 'n_present': 0, 'non_eod': 0, 'last_date': None}
+    if data is None or data.empty or reference_date is None:
+        return data, info
+
+    equity_tickers = [
+        c[1] for c in data.columns
+        if len(c) == 2 and c[0] == 'Close' and _is_equity_ticker(c[1])
+    ]
+    info['n_equity'] = len(equity_tickers)
+    if not equity_tickers:
+        return data, info
+
+    last_date = pd.Timestamp(data.index[-1]).date()
+    info['last_date'] = last_date
+
+    present = [t for t in equity_tickers
+               if ('Close', t) in data.columns
+               and pd.notna(data[('Close', t)].iloc[-1])]
+    info['n_present'] = len(present)
+    if not present:
+        return data, info
+
+    non_eod = 0
+    for t in present:
+        market = get_market(t)
+        if market == 'UNKNOWN':
+            non_eod += 1
+            continue
+        if not is_trading_session(market, last_date):
+            continue
+        if not is_session_closed(market, last_date, reference_date):
+            non_eod += 1
+    info['non_eod'] = non_eod
+
+    if non_eod == 0:
+        return data, info
+
+    print(f"  [FU-021-3A] EQUITY_EOD: {non_eod}/{len(present)} equity con "
+          f"vela no EOD en {last_date} -> eliminar ultima fila")
+    return data.iloc[:-1], info
+
+
 def _trim_market_data_to_equity_eod(data):
     """FU-021-3A: recorta data a la ultima fecha con cobertura EQUITY_EOD >= 90%.
 
@@ -99,7 +161,7 @@ def _trim_market_data_to_equity_eod(data):
 def download_market_data(reference_date=None, run_id=None):
     # FU-002 (2026-09-15): reference_date y run_id inyectados desde run.py:main().
     if reference_date is None:
-        reference_date = datetime.now()
+        reference_date = datetime.now(ZoneInfo("Europe/Madrid"))
     if run_id is None:
         run_id = reference_date.strftime('%Y%m%d_%H%M%S')
     cache_path = 'data/market_data.csv'
@@ -208,15 +270,24 @@ def download_market_data(reference_date=None, run_id=None):
     from src.utils import clean_oil_prices
     data = clean_oil_prices(data)
 
+    # FU-021-3A correction v2 (2026-09-15): filtro sesion/EOD FU-018
+    # aplicado SOLO al universo EQUITY_EOD. Ver FU-021-2 y dictamen v2.
+    data, _eod_info = _filter_non_eod_equity(data, reference_date)
+
     # FU-021-3A (2026-09-15): filtro EQUITY_EOD.
     # Solo aplica al universo equity/ETF (539 tickers). No toca
     # INDEX_EOD / RATE_YIELD / FUTURE_SETTLEMENT / FX_DAILY_CUT.
     # Ver FU-021-2 (contrato por clase).
     data, _eff = _trim_market_data_to_equity_eod(data)
     if _eff and _eff['status'] == 'OK' and _eff['date'] is not None:
+        _ref_date = (reference_date.date()
+                     if hasattr(reference_date, 'date') else reference_date)
+        _ref_lag = (pd.Timestamp(_ref_date)
+                    - pd.Timestamp(_eff['date'].date())).days
         print(f"  [FU-021-3A] EQUITY_EOD effective={_eff['date'].date()} "
               f"requested={_eff['requested_date'].date()} "
-              f"lag={_eff['lag_days']}d "
+              f"function_lag={_eff['lag_days']}d "
+              f"reference_lag={_ref_lag}d "
               f"coverage={_eff['coverage']:.2%} "
               f"({_eff['n_observed']}/{_eff['n_eligible']})")
     elif _eff:
