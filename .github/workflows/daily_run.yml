@@ -2,14 +2,15 @@ name: Daily Macro Sectorial Run
 
 on:
   schedule:
-    # FU-001 (2026-09-15): cambio de 20:00 UTC (22:00 Madrid) a 06:00 UTC
-    # (08:00 Madrid verano / 07:00 Madrid invierno) para dar tiempo a Yahoo
-    # a publicar el Close del dia. Antes de este cambio el sistema corria
-    # 4h despues del cierre USA, cuando Yahoo aun no tenia el Close del dia
-    # (Volume si, Close no). El ffill global (FU-001) disfrazaba esa ausencia
-    # con el precio del dia anterior. Fix FU-001 elimino ese ffill; ahora
-    # necesitamos dar tiempo a Yahoo para publicar los datos reales.
-    - cron: '0 6 * * *'
+    # FU-001 (2026-09-15): cron ajustado a 04:00 UTC (06:00 Madrid verano /
+    # 05:00 Madrid invierno). Da ~8h post-cierre USA para que Yahoo publique,
+    # con 4h de margen contra retrasos de la cola de GitHub (observado hasta
+    # 8h en el run del 2026-09-15: cron 06:00 UTC, ejecucion 14:10 UTC). Ventana limpia: sin pre-market USA
+    # (empieza ~10:00 Madrid) y sin mercados europeos abiertos (abren ~09:00
+    # Madrid). Si el retraso de GitHub excede 4h, el run cae fuera de la
+    # ventana y el manifest lo refleja (close_nan alto). No contamina: los
+    # NaN quedan como NaN tras FU-001 y FU-002-evo2.
+    - cron: '0 4 * * *'
   workflow_dispatch:
 
 concurrency:
