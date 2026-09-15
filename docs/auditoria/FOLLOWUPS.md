@@ -1,6 +1,6 @@
 # Follow-ups tecnicos registrados
 
-## FU-001 — ffill multi-calendario en merge global (L352)
+## FU-001 — ffill global sobre DataFrame consolidado (RESUELTO)
 
 - **Origen:** C1, sesion 2026-09-12. Dictamen auditor.
 - **Descripcion:** `stock_data_loader.py:352` aplica `ffill(limit=3)` sobre el DataFrame consolidado (Yahoo USA + Euronext + Xetra + BME). Ese ffill puede reintroducir valores imputados en tickers fuera del calendario NYSE, pese a haber sido clasificados como DATA_ISSUE en su etapa.
@@ -9,6 +9,14 @@
 - **Clasificacion:** P2/P3 integridad tecnica localizada (auditor).
 - **Accion:** disenar capa de proteccion por calendario (NYSE/BME/Xetra/Euronext) antes de generalizar la arquitectura a Europa.
 - **Bloqueante:** no para C1/C2/C3. Obligatorio antes de declarar cerrada la nueva arquitectura de validacion multi-calendario.
+
+**Resolucion (2026-09-15):**
+- **Diagnostico confirmado:** `src/stock_data_loader.py:480` aplicaba `data.ffill(limit=3)` sobre el DataFrame consolidado, rellenando los NaN que B1 habia preservado correctamente. Esto producia `pct_dup_last=0.837` en runs pre-PUBLISH_HOUR.
+- **Fix aplicado:** commit `38f9ce1` elimina la operacion. Los NaN preservados por B1 llegan al parquet final.
+- **Cron ajustado:** commit `8a76380` mueve `daily_run.yml` de 20:00 UTC (22:00 Madrid) a 06:00 UTC (08:00 Madrid verano / 07:00 invierno), dando tiempo a Yahoo a publicar los cierres.
+- **Verificacion en produccion:** run automatico del 2026-09-15 06:00 UTC. `close_nan=0` en 24/27 lotes, `pct_dup=0.026`, manifest `status=VALID`, cobertura 313/313, Gate 10/10.
+- **Tests de regresion:** 3 en `tests/test_fu001_sin_ffill_global.py`.
+- **Estado:** **RESUELTO 2026-09-15**.
 
 ## FU-002 — Validacion circular en BackupProvider (RESUELTO)
 
