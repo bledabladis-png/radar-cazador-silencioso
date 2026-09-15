@@ -2,7 +2,14 @@ name: Daily Macro Sectorial Run
 
 on:
   schedule:
-    - cron: '0 20 * * *'
+    # FU-001 (2026-09-15): cambio de 20:00 UTC (22:00 Madrid) a 06:00 UTC
+    # (08:00 Madrid verano / 07:00 Madrid invierno) para dar tiempo a Yahoo
+    # a publicar el Close del dia. Antes de este cambio el sistema corria
+    # 4h despues del cierre USA, cuando Yahoo aun no tenia el Close del dia
+    # (Volume si, Close no). El ffill global (FU-001) disfrazaba esa ausencia
+    # con el precio del dia anterior. Fix FU-001 elimino ese ffill; ahora
+    # necesitamos dar tiempo a Yahoo para publicar los datos reales.
+    - cron: '0 6 * * *'
   workflow_dispatch:
 
 concurrency:
