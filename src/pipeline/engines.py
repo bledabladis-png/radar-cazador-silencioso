@@ -45,7 +45,7 @@ def _forzar_lideres_slpm(sector_results, sector_flow_rank, otros_flow_rank, lead
     return leader_metrics_for_slpm, top_sector_flow
 
 
-def _compute_tactical_structural(df_market):
+def _compute_tactical_structural(df_market, temporal_meta=None):
     tactical_scores = {}
     structural_scores = {}
     try:
@@ -53,8 +53,8 @@ def _compute_tactical_structural(df_market):
         from regimes.structural_engine import compute_structural_score
         for sector_etf in SECTOR_ETFS:
             try:
-                tactical_scores[sector_etf] = compute_tactical_score(df_market, sector_etf)
-                structural_scores[sector_etf] = compute_structural_score(df_market, sector_etf)
+                tactical_scores[sector_etf] = compute_tactical_score(df_market, sector_etf, temporal_meta=temporal_meta)
+                structural_scores[sector_etf] = compute_structural_score(df_market, sector_etf, temporal_meta=temporal_meta)
             except Exception as e:
                 print(f"  [WARN] tactical/structural engine: {e}")
                 tactical_scores[sector_etf] = 0.0
@@ -115,7 +115,7 @@ def compute_engines(df_market, sector_results, sector_flow_rank, otros_flow_rank
     leader_metrics_for_slpm, top_sector_flow = _forzar_lideres_slpm(
         sector_results, sector_flow_rank, otros_flow_rank, leader_df
     )
-    tactical_scores, structural_scores = _compute_tactical_structural(df_market)
+    tactical_scores, structural_scores = _compute_tactical_structural(df_market, temporal_meta=temporal_meta)
     sector_persistence = _compute_persistence_and_save(df_market)
     return {
         'leader_metrics_for_slpm': leader_metrics_for_slpm,

@@ -49,7 +49,8 @@ def compute_all_regimes(df_market, df_macro_manual, temporal_meta=None):
 
     print("Calculando regimen macro...")
     macro_score, macro_regime, macro_conf, all_signals = compute_macro_regime(
-        df_market, df_macro_manual, financial_score, vol_score
+        df_market, df_macro_manual, financial_score, vol_score,
+        temporal_meta=temporal_meta,
     )
     print(f"  Macro: {macro_regime} (conf: {macro_conf:.0%})")
 

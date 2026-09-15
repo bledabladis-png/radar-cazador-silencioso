@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 """
 structural_engine.py -- Structural Score v1.0
 Evalua la fortaleza estructural de largo plazo de cada sector.
@@ -9,7 +9,7 @@ from src.utils import safe_mean, get_col
 from config import settings
 from config.weights import STRUCTURAL_WEIGHTS
 
-def compute_structural_score(df_market, sector_etf, leader_breadth=0.5, flow_structure=0.0, persistence=0.5, benchmark='^GSPC'):
+def compute_structural_score(df_market, sector_etf, leader_breadth=0.5, flow_structure=0.0, persistence=0.5, benchmark='^GSPC', temporal_meta=None):
     """Calcula el Structural Score de largo plazo.
     Pesos: RS multi-ventana 63/126/252d (50%), Flow Structure (30%),
     Persistence (20%). Resultado acotado a [-1, +1]."""

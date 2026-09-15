@@ -1,11 +1,11 @@
-﻿import pandas as pd
+import pandas as pd
 from config.weights import LEVEL_WEIGHTS, CRITICAL_WEIGHTS, IMPORTANT_WEIGHTS, CONTEXTUAL_WEIGHTS
 from indicators.momentum import momentum_score, normalize_momentum
 from indicators.credit import credit_risk_signal
 from indicators.macro_fundamental import fundamental_signals
 from src.utils import tanh_normalize, get_col
 
-def compute_macro_signals(df_market, df_macro_manual=None, liquidity_score=None, vol_regime_score=None, real_liquidity_score=None):
+def compute_macro_signals(df_market, df_macro_manual=None, liquidity_score=None, vol_regime_score=None, real_liquidity_score=None, temporal_meta=None):
     market_signals = {}
 
     # --- Crecimiento ---
@@ -178,9 +178,9 @@ def compute_macro_score(all_signals):
     macro_score = macro_score.rolling(2, min_periods=1).mean()
     return macro_score
 
-def compute_macro_regime(df_market, df_macro_manual, liquidity_score, vol_score):
+def compute_macro_regime(df_market, df_macro_manual, liquidity_score, vol_score, temporal_meta=None):
     # Obtener señales y score desde las funciones internas
-    all_signals = compute_macro_signals(df_market, df_macro_manual, liquidity_score, vol_score)
+    all_signals = compute_macro_signals(df_market, df_macro_manual, liquidity_score, vol_score, temporal_meta=temporal_meta)
     macro_score = compute_macro_score(all_signals)
 
     last = macro_score.iloc[-1]

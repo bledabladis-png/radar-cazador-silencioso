@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 """
 tactical_engine.py -- Tactical Score v1.0
 Evalua el momentum de corto plazo de cada sector.
@@ -8,7 +8,7 @@ import numpy as np
 from src.utils import get_col
 from config.weights import TACTICAL_WEIGHTS
 
-def compute_tactical_score(df_market, sector_etf, benchmark='^GSPC'):
+def compute_tactical_score(df_market, sector_etf, benchmark='^GSPC', temporal_meta=None):
     """Calcula el Tactical Score combinando 5 componentes de corto plazo.
     Pesos: RS20(30%), Momentum20(25%), Flow(20%), Breadth20(15%), Aceleracion(10%).
     Resultado acotado a [-1, +1]."""
