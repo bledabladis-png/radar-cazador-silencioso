@@ -6,6 +6,9 @@ from data.providers.euronext_provider import EuronextProvider
 from data.providers.xetra_provider import XetraProvider
 from data.providers.bme_provider import BMEProvider
 from src.market_calendar import last_expected_market_date, is_market_day
+from src.market_hours import is_trading_session, is_session_closed
+from src.instrument_registry import get_market
+from zoneinfo import ZoneInfo
 import os
 import time
 
@@ -179,6 +182,51 @@ def _log_yahoo_raw_diagnostics(df_raw, reference_date, batch_label):
     print(f"  affected_tickers={affected}")
 
 
+def _filter_non_eod_batch(data_batch, reference_date):
+    """FU-018 (2026-09-15): elimina la ultima fila del batch si contiene
+    observaciones no EOD.
+
+    Politica a nivel de batch, conservadora: si ALGUN ticker del batch
+    tiene observacion no EOD en la ultima fecha, se elimina la ultima
+    fila del batch completo. Evita filas hibridas en el concat final.
+
+    FU-018 (contrato): UNKNOWN = no determinado = no elegible. Un ticker
+    cuyo mercado no se reconoce fuerza la eliminacion de la ultima fila,
+    nunca fail-open.
+    """
+    if data_batch.empty or reference_date is None:
+        return data_batch
+    present = set()
+    for c in data_batch.columns:
+        if len(c) == 2:
+            present.add(c[1])
+    if not present:
+        return data_batch
+    last_dt = data_batch.index[-1]
+    last_date = pd.Timestamp(last_dt).date()
+    non_eod = 0
+    unknown = 0
+    for t in present:
+        market = get_market(t)
+        if market == "UNKNOWN":
+            unknown += 1
+            continue
+        if not is_trading_session(market, last_date):
+            continue
+        if not is_session_closed(market, last_date, reference_date):
+            non_eod += 1
+    if non_eod == 0 and unknown == 0:
+        return data_batch
+    if unknown > 0:
+        print(f"  [FU-018] batch: {unknown}/{len(present)} tickers con "
+              f"market desconocido -> no elegible")
+    if non_eod > 0:
+        print(f"  [FU-018] batch: {non_eod}/{len(present)} tickers con vela "
+              f"no EOD en {last_date}")
+    print("  [FU-018] -> eliminar ultima fila del batch")
+    return data_batch.iloc[:-1]
+
+
 def _filter_failed_from_batch(data_batch, failed_in_batch):
     """FU-015 (2026-09-15): elimina columnas de tickers fallidos del batch.
 
@@ -247,8 +295,16 @@ def _classify_ticker(ticker, df, expected_session):
 # los tickers fallidos se reintentan individualmente tras el bucle principal.
 def download_stock_prices(reference_date=None, run_id=None):
     # B1 (2026-09-12): reference_date se normaliza UNA vez al inicio.
+    # FU-018-3c (2026-09-15): tz-aware en horario Madrid. Requerido por
+    # market_hours.is_session_closed. Default Madrid-aware para callers
+    # que no pasan argumento (p.ej. indices_intl.py).
     if reference_date is None:
-        reference_date = datetime.now()
+        reference_date = datetime.now(ZoneInfo("Europe/Madrid"))
+    elif reference_date.tzinfo is None:
+        raise ValueError(
+            "reference_date must be timezone-aware. "
+            "Pass datetime.now(ZoneInfo('Europe/Madrid')) or equivalent."
+        )
     # FU-002 (2026-09-15): run_id se normaliza tambien aqui si no viene inyectado.
     if run_id is None:
         run_id = reference_date.strftime('%Y%m%d_%H%M%S')
@@ -347,6 +403,9 @@ def download_stock_prices(reference_date=None, run_id=None):
                         classification_reasons[ticker] = reason
                 # FU-015: excluir columnas de tickers FAILED del batch.
                 data_batch = _filter_failed_from_batch(data_batch, failed_in_batch)
+                # FU-018: eliminar vela no EOD (mercados aun abiertos o
+                # tickers con market desconocido -> no elegible).
+                data_batch = _filter_non_eod_batch(data_batch, reference_date)
                 if not data_batch.empty:
                     all_data.append(data_batch)
             else:
@@ -391,6 +450,22 @@ def download_stock_prices(reference_date=None, run_id=None):
                     continue
                 if not data_single[close_key].notna().any():
                     continue
+
+                # FU-018: elegibilidad EOD. UNKNOWN = no elegible.
+                _market = get_market(ticker)
+                if _market == "UNKNOWN":
+                    print(f"  [FU-018] retry {ticker}: market desconocido "
+                          f"-> no elegible, no anadir")
+                    continue
+                _last_dt = data_single.index[-1]
+                _last_date = pd.Timestamp(_last_dt).date()
+                if is_trading_session(_market, _last_date) and \
+                   not is_session_closed(_market, _last_date, reference_date):
+                    print(f"  [FU-018] retry {ticker}: vela no EOD "
+                          f"en {_last_date} -> eliminar")
+                    data_single = data_single.iloc[:-1]
+                    if data_single.empty:
+                        continue
 
                 all_data.append(data_single)
                 status, reason = _classify_ticker(ticker, data_single,
