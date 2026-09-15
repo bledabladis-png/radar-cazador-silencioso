@@ -297,7 +297,7 @@ def download_stock_prices(reference_date=None, run_id=None):
     # B1 (2026-09-12): reference_date se normaliza UNA vez al inicio.
     # FU-018-3c (2026-09-15): tz-aware en horario Madrid. Requerido por
     # market_hours.is_session_closed. Default Madrid-aware para callers
-    # que no pasan argumento (p.ej. indices_intl.py).
+    # que no pasan argumento. Si no se pasa, se resuelve a now() Madrid.
     if reference_date is None:
         reference_date = datetime.now(ZoneInfo("Europe/Madrid"))
     elif reference_date.tzinfo is None:

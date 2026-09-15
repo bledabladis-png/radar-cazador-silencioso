@@ -11,7 +11,7 @@ from indicators.index_phase import compute_index_phases
 from indicators.index_leaders import select_index_leaders
 
 
-def compute_indices_intl(df_market):
+def compute_indices_intl(df_market, reference_date=None, run_id=None):
     """Calcula fases Wyckoff y lideres de indices internacionales.
 
     Returns:
@@ -23,7 +23,7 @@ def compute_indices_intl(df_market):
     indices_en_acumulacion = [nombre for nombre, fase in index_phases.items() if fase in ['ACCUMULATION', 'MARKUP']]
     if indices_en_acumulacion:
         print(f"  Indices en acumulacion: {', '.join(indices_en_acumulacion)}")
-        df_index_stocks = download_stock_prices()
+        df_index_stocks = download_stock_prices(reference_date=reference_date, run_id=run_id)
         index_leaders = {}
         for nombre in indices_en_acumulacion:
             try:

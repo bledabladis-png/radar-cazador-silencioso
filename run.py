@@ -166,7 +166,7 @@ def main():
     cross_module_conflict = mc['cross_module_conflict']
     confirmation_data = mc['confirmation_data']
 
-    ii = compute_indices_intl(df_market)
+    ii = compute_indices_intl(df_market, reference_date=reference_date, run_id=run_id)
     index_phases = ii['index_phases']
     index_leaders = ii['index_leaders']
 
