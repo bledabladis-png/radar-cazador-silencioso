@@ -115,7 +115,7 @@ text
 
 ### 2.1. Clasificación del universo
 
-El universo de `df_market` (562 instrumentos) se particiona en 5 clases homogéneas.
+El universo de `df_market` (562 instrumentos) se particiona en 6 clases homogéneas.
 
 La clasificación económica se resuelve vía `get_instrument_class(ticker)` (`src/instrument_registry.py`, introducido en A2.3, commit `fd12ea1`).
 
@@ -126,8 +126,11 @@ La clasificación económica se resuelve vía `get_instrument_class(ticker)` (`s
 | `RATE_YIELD` | Yields (Treasury, curvas) | ~2 |
 | `FUTURE_SETTLEMENT` | Futuros commodities y equity | ~5 |
 | `FX_DAILY_CUT` | Pares FX | ~3 |
+| `VOLATILITY_INDEX` | Índices de volatilidad (familia VIX) | 3 |
 
 **Nota terminológica:** `get_instrument_class != get_market`. La primera clasifica económicamente; la segunda clasifica bursátilmente. Son responsabilidades disjuntas (A2.3).
+
+**Verificación empírica (2026-09-16):** los informes FU-021-3B, FU-021-3B-bis y FU-021-3C confirman empíricamente las 6 clases. `VOLATILITY_INDEX` es clase independiente heredando de `INDEX_EOD_USA` (ver `FU-021-3B_ANEXO_VOLATILITY_INDEX.md`).
 
 ### 2.2. Contrato EQUITY_EOD
 
@@ -260,7 +263,7 @@ text
 
 ### 2.7. Interfaz común
 
-Los 5 contratos exponen una interfaz común:
+Los 6 contratos exponen una interfaz común:
 TemporalContract:
 eligible_universe : list[ticker]
 effective_date : date
