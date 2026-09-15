@@ -82,7 +82,7 @@ def _compute_shock_sensitivity(df_market):
     return shock_sensitivities
 
 
-def compute_diagnostics(df_market, tactical_scores, structural_scores, sector_flow_rank):
+def compute_diagnostics(df_market, tactical_scores, structural_scores, sector_flow_rank, temporal_meta=None):
     """Ejecuta Directional Agreement + Price-Flow + Shock Sensitivity.
 
     Returns:

@@ -142,7 +142,7 @@ def _compute_sector_breadth_health(df_stocks, df_market, holdings_df,
         return None, False
 
 
-def compute_breadth_metrics(df_stocks, df_market, holdings_df, reference_date=None):
+def compute_breadth_metrics(df_stocks, df_market, holdings_df, reference_date=None, temporal_meta=None):
     """Calcula Sector Breadth & Health + Momentum de amplitud.
 
     C2-followup: sector_breadth_is_stale indica si la observacion

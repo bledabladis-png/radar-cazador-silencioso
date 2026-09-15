@@ -90,7 +90,7 @@ def _compute_data_quality():
     return data_quality_df
 
 
-def compute_market_data(df_market):
+def compute_market_data(df_market, temporal_meta=None):
     """Ejecuta PCR + Dark Pools + Volatilidad estructural + Calidad datos.
 
     Returns:

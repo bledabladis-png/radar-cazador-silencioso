@@ -11,7 +11,7 @@ from indicators.index_phase import compute_index_phases
 from indicators.index_leaders import select_index_leaders
 
 
-def compute_indices_intl(df_market, reference_date=None, run_id=None):
+def compute_indices_intl(df_market, reference_date=None, run_id=None, temporal_meta=None):
     """Calcula fases Wyckoff y lideres de indices internacionales.
 
     Returns:

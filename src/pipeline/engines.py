@@ -104,7 +104,7 @@ def _compute_persistence_and_save(df_market):
     return sector_persistence
 
 
-def compute_engines(df_market, sector_results, sector_flow_rank, otros_flow_rank, leader_df):
+def compute_engines(df_market, sector_results, sector_flow_rank, otros_flow_rank, leader_df, temporal_meta=None):
     """Ejecuta forzar-lideres-SLPM + tactical/structural + persistence.
 
     Returns:

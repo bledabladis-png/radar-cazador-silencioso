@@ -130,7 +130,7 @@ def _compute_confirmation(df_market, df_stocks, df_stocks_effective_meta=None):
 def compute_mte_confirmation(df_market, df_stocks, financial_score, all_signals,
                               pcr_data, darkpool_data, macro_regime,
                               financial_regime, vol_regime, real_liq_regime,
-                              df_stocks_effective_meta=None):
+                              df_stocks_effective_meta=None, temporal_meta=None):
     """Ejecuta MTE + Cross-Module + Confirmation.
 
     Returns:

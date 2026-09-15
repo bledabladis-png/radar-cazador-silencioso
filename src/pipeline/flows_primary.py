@@ -21,7 +21,7 @@ from data.providers.qqq_sec_primary_flow import get_qqq_sec_primary_flow
 from indicators.sector_flow_characteristics import compute_sector_flow_characteristics
 
 
-def compute_flows_primary(df_market):
+def compute_flows_primary(df_market, temporal_meta=None):
     """Calcula los flujos primarios (SSGA, BlackRock, Amundi, QQQ SEC, CFTC).
 
     Returns:

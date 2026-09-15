@@ -11,7 +11,7 @@ from src.stock_data_loader import download_stock_prices
 from src.effective_date import resolve_effective_date
 
 
-def compute_leaders(df_market, sector_results, reference_date=None, run_id=None):
+def compute_leaders(df_market, sector_results, reference_date=None, run_id=None, temporal_meta=None):
     """Carga df_stocks y genera los lideres sectoriales.
 
     Returns:

@@ -14,7 +14,7 @@ from regimes.sector_regime import compute_sector_scores, compute_price_flow_rank
 from indicators.breadth import compute_breadth
 
 
-def compute_sectors_base(df_market):
+def compute_sectors_base(df_market, temporal_meta=None):
     """Calcula los rankings y metricas sectoriales base.
 
     Returns:

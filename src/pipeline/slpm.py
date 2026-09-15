@@ -7,7 +7,7 @@ Extraido de run.py (refactor C2, fase C2-8b).
 
 def compute_slpm_v12(df_market, sector_results, leader_metrics_for_slpm,
                      top_sector_flow, tactical_scores, structural_scores,
-                     sector_persistence):
+                     sector_persistence, temporal_meta=None):
     """Ejecuta SLPM v1.2 State Machine.
 
     Returns:

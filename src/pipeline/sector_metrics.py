@@ -138,7 +138,7 @@ def _compute_representativeness(leader_df, reference_date=None):
     return leader_representativeness_df
 
 
-def compute_sector_metrics(df_stocks, holdings_df, leader_df, full_metrics_df, df_market, effective_meta=None):
+def compute_sector_metrics(df_stocks, holdings_df, leader_df, full_metrics_df, df_market, effective_meta=None, temporal_meta=None):
     """Calcula las metricas sectoriales derivadas de df_stocks.
 
     Returns:

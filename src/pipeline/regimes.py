@@ -13,7 +13,7 @@ from regimes.macro_regime import compute_macro_regime
 from src.utils import get_col
 
 
-def compute_all_regimes(df_market, df_macro_manual):
+def compute_all_regimes(df_market, df_macro_manual, temporal_meta=None):
     """Calcula los 4 regimenes del sistema.
 
     Returns:

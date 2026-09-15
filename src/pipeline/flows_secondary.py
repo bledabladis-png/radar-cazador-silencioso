@@ -14,7 +14,7 @@ import pandas as pd
 def compute_flows_secondary(sector_flow_rank, etf_primary_flow_data,
                              cftc_position_flow_data,
                              blackrock_dax_flow, blackrock_isf_flow,
-                             amundi_lyxi_flow):
+                             amundi_lyxi_flow, temporal_meta=None):
     """Carga sintesis de flujo + N-PORT + QQQ Yahoo + QQQ NPORT-P.
 
     Returns:
