@@ -187,50 +187,63 @@ class XetraProvider:
         ws.close()
         raise RuntimeError("Xetra: no se recibió confirmación de autenticación")
 
-    def _query_one(self, ws, req_id: str, isin: str, start: str, end: str) -> list:
-        """Consulta un ticker y devuelve las filas."""
-        fmt = f"DELAYED[{isin}@ETR>STX]"
-        ws.send(json.dumps({
-            "listTimeseries": {
-                "resolution": WS_RESOLUTION,
-                "marketstateId": fmt,
-                "start": start,
-                "end": end,
-                "cleanSplits": False,
-                "cleanDividends": False,
-                "cleanDistributions": False,
-                "cleanSubscriptions": False,
-                "quality": "DELAYED"
-            },
-            "requestId": req_id
-        }))
+    def _query_one(self, ws, req_id: str, isin: str, start: str, end: str,
+                   max_attempts: int = 2) -> list:
+        """Consulta un ticker y devuelve las filas.
 
+        FU-019 (2026-09-15): el WS de Xetra puede no responder para un
+        ISIN concreto de forma esporadica (observado en BAYN.DE, DTG.DE).
+        Se realizan hasta `max_attempts` intentos. Cada intento usa un
+        requestId distinto para no confundir respuestas.
+        """
         rows = []
-        deadline = time.time() + WS_QUERY_TIMEOUT
-        while time.time() < deadline:
-            try:
-                ws.settimeout(WS_RECV_TIMEOUT)
-                raw = ws.recv()
-            except Exception:
-                # No llega nada: seguir esperando hasta deadline
-                continue
-            if not raw:
-                continue
-            try:
-                d = json.loads(raw)
-            except Exception:
-                continue
-            if d.get("requestId") != req_id:
-                continue
-            ts = d.get("dataTimeseries")
-            if ts is not None:
-                if isinstance(ts, list):
-                    rows.extend(ts)
-                else:
-                    rows.append(ts)
-                continue
-            if d.get("isComplete"):
-                return rows
+        for attempt in range(1, max_attempts + 1):
+            attempt_id = f"{req_id}_a{attempt}"
+            fmt = f"DELAYED[{isin}@ETR>STX]"
+            ws.send(json.dumps({
+                "listTimeseries": {
+                    "resolution": WS_RESOLUTION,
+                    "marketstateId": fmt,
+                    "start": start,
+                    "end": end,
+                    "cleanSplits": False,
+                    "cleanDividends": False,
+                    "cleanDistributions": False,
+                    "cleanSubscriptions": False,
+                    "quality": "DELAYED"
+                },
+                "requestId": attempt_id
+            }))
+
+            rows = []
+            deadline = time.time() + WS_QUERY_TIMEOUT
+            while time.time() < deadline:
+                try:
+                    ws.settimeout(WS_RECV_TIMEOUT)
+                    raw = ws.recv()
+                except Exception:
+                    continue
+                if not raw:
+                    continue
+                try:
+                    d = json.loads(raw)
+                except Exception:
+                    continue
+                if d.get("requestId") != attempt_id:
+                    continue
+                ts = d.get("dataTimeseries")
+                if ts is not None:
+                    if isinstance(ts, list):
+                        rows.extend(ts)
+                    else:
+                        rows.append(ts)
+                    continue
+                if d.get("isComplete"):
+                    return rows
+            if attempt < max_attempts:
+                print(f"  [XETRA] {isin}: intento {attempt}/{max_attempts} "
+                      f"sin respuesta, reintentando")
+                time.sleep(1.0)
         return rows
 
     # -------------------- Cache --------------------
@@ -395,7 +408,19 @@ class XetraProvider:
                 try:
                     rows = self._query_one(ws, f"q{i}", isin, start_iso, end_iso)
                     if not rows:
-                        print(f"  [XETRA] {t} sin datos")
+                        # FU-019: fallback a cache local si existe.
+                        df_cached_fb = self._load_cache(t)
+                        if not df_cached_fb.empty:
+                            last_cached = pd.to_datetime(
+                                df_cached_fb["date"]).max().date()
+                            print(f"  [XETRA] {t} WS sin datos tras retries -> "
+                                  f"usando cache ({len(df_cached_fb)} filas, "
+                                  f"ultima {last_cached})")
+                            df_cached_fb = self._filter_non_eod_last_row(
+                                df_cached_fb, t, reference_date)
+                            frames.append(self._to_multiindex(df_cached_fb, t))
+                            continue
+                        print(f"  [XETRA] {t} sin datos (WS timeout + sin cache)")
                         continue
                     df_new = self._rows_to_df(rows)
 
