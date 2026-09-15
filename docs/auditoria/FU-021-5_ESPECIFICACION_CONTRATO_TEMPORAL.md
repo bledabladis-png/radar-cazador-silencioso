@@ -1,40 +1,31 @@
 # FU-021-5 — Especificación del contrato temporal de `df_market`
 
-**Parte A — Arquitectura contractual**
-**Fecha:** 2026-09-15
-**HEAD de referencia:** 42c395c (origin/main)
-**Autorizado por:** Dictamen del auditor externo — Contrato temporal de `df_market` (2026-09-15)
-**Documentos base:** Adendum 1 (`694b172`), Informe Ciclo 2 (`bd18d22`), Briefing (`0c888c6`), Adendum 2 (`42c395c`)
-**Estado:** borrador Parte A. Pendiente de dictamen sobre Parte B.
+**Versión:** v2 (unificada)
+**Fecha:** 2026-09-16
+**HEAD de referencia:** 0eb7e4f (origin/main)
+**Ratificado por:** Dictamen externo FU-021-5 Parte B (2026-09-16)
+**Documentos base:** FU-021-3A + Adendums 1 y 2, Ciclo 2, FU-021-3B, FU-021-3B-bis, FU-021-3C, Parte A v1 (61aa99f), Parte B (468fc08)
+**Estado:** ratificado con correcciones. Pendiente de implementación.
 
 ---
 
-## 0. Alcance y separación Parte A / Parte B
+## 0. Alcance y delimitación
 
-### 0.1. Alcance del documento
+### 0.1. Alcance
 
-Especificar el contrato temporal de `df_market` conforme a la autorización del dictamen del contrato temporal:
+Especificar el contrato temporal de `df_market` conforme al dictamen del contrato temporal y al dictamen de Parte B:
 
-- arquitectura contractual por clase;
+- taxonomía de familias, subclases y contratos;
+- semántica operativa de cada contrato (efectiva, esperada, lag, cobertura, estado);
 - regla de consolidación de un DataFrame mixto;
 - metadata de fecha y cobertura por artefacto;
 - contrato de writers históricos;
 - propagación hacia consumidores;
 - rediseño del estado persistente de MTE;
-- migración de `darkpool`.
+- migración de `darkpool`;
+- máquina de estados (FSM) formal.
 
-### 0.2. Separación Parte A / Parte B
-
-El dictamen obliga a distinguir dos partes:
-
-| Parte | Contenido | Estado |
-|---|---|---|
-| **A** | Arquitectura, responsabilidades, invariantes, propagación, writers, MTE, darkpool | Cerrable ahora |
-| **B** | Semántica operativa de las clases no verificadas: INDEX_EOD, RATE_YIELD, FUTURE_SETTLEMENT, FX_DAILY_CUT | Bloqueada por FU-021-3B/3C |
-
-**Este documento cubre Parte A.** La Parte B se publicará cuando 3B/3C aporten la verificación empírica necesaria.
-
-### 0.3. Lo que este documento NO es
+### 0.2. Lo que este documento NO es
 
 - No es un patch.
 - No activa contratos.
@@ -42,9 +33,24 @@ El dictamen obliga a distinguir dos partes:
 - No modifica el informe original FU-021-3A ni sus adendos.
 - No toca código.
 
+### 0.3. Correcciones respecto a la v1
+
+La v1 (61aa99f, corregida en e54bab8) declaraba "5 clases" (→ 6 tras corrección). El dictamen de Parte B exige reformular la taxonomía:
+
+| Corrección | Motivo |
+|---|---|
+| "6 clases" → "familias + subclases + contratos" | La tabla operativa contiene 9 unidades, no 6 |
+| `DX-Y.NYB` → `INDEX_EOD_CURRENCY` | Es índice de divisas, no commodity |
+| `^SPGSCI` → `INDEX_EOD_COMMODITY` | Es índice commodity genuino |
+| "30-40% del pipeline usa futuros" → "5 de 562 instrumentos (~0.9%)" | Dependencia funcional ≠ peso del instrumento |
+| Añadido `STALE` como estado formal | Ratificado por Q-B.1 |
+| Añadidos `per_pair_max_lag`, `per_ticker_lag`, `activation_requirement` | Ratificados por Q-B.2, Q-B.3, Q-B.4 |
+| FUTURE_SETTLEMENT = `BLOCKED` | Ratificado por Q-B.4 |
+| Máquina de estados formal (FSM) | Ratificada por dictamen §"Sobre STALE y BLOCKED" |
+
 ### 0.4. Terminología
 
-Nomenclatura oficial (adoptada en Adendum 2):
+Nomenclatura oficial (consolidada en Adendum 2 + dictamen Parte B):
 
 | Categoría | Cuenta | Definición |
 |---|---|---|
@@ -61,23 +67,26 @@ Nomenclatura oficial (adoptada en Adendum 2):
 
 ## 1. Principios arquitectónicos
 
-### 1.1. Principios derivados del dictamen
+### 1.1. Principios ratificados
 
-1. **Contratos por clase, no un contrato agregado.** `df_market` no tiene una única "última fecha correcta". Tiene una frontera temporal por subconjunto homogéneo.
-2. **Consolidación explícita.** La operación de construir `df_market` a partir de las clases resueltas debe estar declarada, no ser implícita.
-3. **Metadata cuádruple.** Los artefactos que necesiten trazabilidad temporal distinguen `date`, `effective_date`, `expected_session`, `coverage`.
-4. **Fuente canónica única.** `df_market` en memoria es la única fuente de verdad intra-run. Ningún módulo lee parquet directo.
-5. **Responsabilidad temporal única.** La resolución temporal existe una sola vez, en el productor. Los consumidores consumen el DataFrame ya resuelto.
-6. **Estado versionado.** El estado persistente de MTE lleva contrato, versión y fecha efectiva. Se resetea por cambio material de contrato.
+1. **Contratos por subconjunto homogéneo, no un contrato agregado.** `df_market` no tiene una única "última fecha correcta".
+2. **Familias ≠ subclases ≠ contratos.** La taxonomía debe ser explícita (ver §A.1).
+3. **Consolidación explícita.** El DataFrame consolidado conoce qué `effective_date` corresponde a cada grupo.
+4. **Metadata cuádruple.** Los artefactos distinguen `date`, `effective_date`, `expected_date`, `coverage`.
+5. **Fuente canónica única.** `df_market` en memoria es la única fuente intra-run.
+6. **Responsabilidad temporal única.** La resolución temporal existe una sola vez, en el productor.
+7. **Estado versionado.** El estado persistente de MTE lleva contrato, versión y fecha efectiva.
+8. **FSM formal.** Todo contrato expone `status` según máquina de estados explícita (§A.10).
 
 ### 1.2. Principios que NO cambian
 
 - Determinismo. Sin ML, sin optimización.
 - Sin datos ficticios: `N/D` antes que imputar.
-- Respeto a R1–R4 (FU-020).
-- `resolve_effective_date` intacta (FU-020).
+- R1–R4 (FU-020) intactas.
+- `resolve_effective_date` intacta.
 - Manifest FU-002 intacto.
 - B2 (`is_market_day`) sigue siendo el único control de sesión.
+- A3.1 bloqueada hasta completar las 6 condiciones del dictamen previo.
 
 ### 1.3. Interfaz conceptual
 RAW
@@ -85,18 +94,26 @@ RAW
 ▼
 CLASSIFICATION (get_instrument_class)
 │
+├── Familias (5): EQUITY, INDEX, RATE_YIELD, FUTURE, FX
+│
+▼
+CONTRATOS (9):
 ├── EQUITY_EOD
-├── INDEX_EOD
+├── INDEX_EOD_USA
+├── INDEX_EOD_EUROPA
+├── INDEX_EOD_COMMODITY
+├── INDEX_EOD_CURRENCY
+├── VOLATILITY_INDEX
 ├── RATE_YIELD
-├── FUTURE_SETTLEMENT
+├── FUTURE_SETTLEMENT (BLOCKED)
 └── FX_DAILY_CUT
 │
 ▼
-TEMPORAL RESOLUTION PER CLASS
-│ (efectivo por clase: effective_date, expected_session, coverage, status)
+TEMPORAL RESOLUTION POR CONTRATO
+│ (effective_date, expected_date, lag_days, coverage, status)
 ▼
 CONSOLIDATION
-│ (operación declarada, invariantes explícitas)
+│ (df_market conoce qué fecha corresponde a cada contrato)
 ▼
 df_market CONSOLIDADO
 │
@@ -107,182 +124,346 @@ CONSUMIDORES (30)
 ├── MTE state
 └── report
 
-text
+```
 
 ---
 
-## 2. §A.1 — Contratos por clase
+## 2. §A.1 — Taxonomía: familias, subclases y contratos
 
-### 2.1. Clasificación del universo
+### 2.1. Definiciones
 
-El universo de `df_market` (562 instrumentos) se particiona en 6 clases homogéneas.
+**Familia.** Categoría económica amplia (equity, index, yield, future, fx). No tiene semántica temporal propia.
 
-La clasificación económica se resuelve vía `get_instrument_class(ticker)` (`src/instrument_registry.py`, introducido en A2.3, commit `fd12ea1`).
+**Subclase.** Agrupación dentro de una familia con calendario común (por ejemplo, índices USA vs índices Europa).
 
-| Clase | Universo | Cuenta aprox. |
-|---|---|---|
-| `EQUITY_EOD` | Acciones y ETFs USA | 539 |
-| `INDEX_EOD` | Índices no-USA | ~13 |
-| `RATE_YIELD` | Yields (Treasury, curvas) | ~2 |
-| `FUTURE_SETTLEMENT` | Futuros commodities y equity | ~5 |
-| `FX_DAILY_CUT` | Pares FX | ~3 |
-| `VOLATILITY_INDEX` | Índices de volatilidad (familia VIX) | 3 |
+**Contrato.** Unidad operativa del contrato temporal. Es lo que se resuelve, lo que se declara, lo que los consumidores consumen.
 
-**Nota terminológica:** `get_instrument_class != get_market`. La primera clasifica económicamente; la segunda clasifica bursátilmente. Son responsabilidades disjuntas (A2.3).
+**Regla:** cada contrato produce un resultado de resolución temporal completo:
+effective_date
+expected_date
+lag_days
+coverage
+status
 
-**Verificación empírica (2026-09-16):** los informes FU-021-3B, FU-021-3B-bis y FU-021-3C confirman empíricamente las 6 clases. `VOLATILITY_INDEX` es clase independiente heredando de `INDEX_EOD_USA` (ver `FU-021-3B_ANEXO_VOLATILITY_INDEX.md`).
+```
 
-### 2.2. Contrato EQUITY_EOD
+### 2.2. Familia EQUITY
 
-**Estado:** cerrado (FU-021-3A v2, commits `78b7583` + `747cfb1` + `fded14b`).
+**Contrato derivado:** `EQUITY_EOD`
+
+**Universo:** 539 tickers (acciones + ETFs USA).
+
+**Estado:** cerrado por FU-021-3A (commit `78b7583` + `747cfb1` + `fded14b`).
 
 **Semántica:**
 - Fecha efectiva = última sesión con cierre EOD.
-- Sesión definida por calendario NYSE.
-- Filtro de sesión (FU-018) + resolución por cobertura (FU-020) aplicados.
+- Calendario: NYSE.
+- Filtro de sesión (FU-018) + resolución por cobertura (FU-020).
+- `min_coverage = 0.90`.
 
 **Interfaz:**
-class EQUITY_EOD:
+contract EQUITY_EOD:
+family : EQUITY
 eligible_universe : list[ticker] # 539
-min_coverage : float = 0.90
+min_coverage : 0.90
 session_calendar : "NYSE"
+max_lag_days : 0
 filter_function : _filter_non_eod_equity # FU-021-3A
 resolver : resolve_effective_date # FU-020
 outputs:
 effective_date : date
-expected_session : date
-coverage : float in [0,1]
-status : OK | INSUFFICIENT_COVERAGE
+expected_date : date
+lag_days : int
+coverage : float [0,1]
+status : OK | STALE | INSUFFICIENT | BLOCKED | PENDING
 
-text
+```
 
 **Invariantes:**
-- `effective_date <= expected_session`.
-- `coverage >= min_coverage` para status `OK`.
+- `effective_date <= expected_date`.
+- `coverage >= 0.90` para status `OK` o `STALE`.
 - Ningún registro con fecha no bursátil.
 
-### 2.3. Contrato INDEX_EOD
+### 2.3. Familia INDEX
 
-**Estado:** esquema definido. Semántica pendiente de FU-021-3B.
+**Subclases:** 4 (USA, EUROPA, COMMODITY, CURRENCY).
 
-**Semántica (provisional, requiere verificación empírica):**
-- Índices no-USA: `^FTSE`, `^GDAXI`, `^FCHI`, `^STOXX50E`, etc.
-- Fecha efectiva = última sesión del mercado origen con cierre EOD.
-- Sesión definida por calendario del mercado origen (LSE, XETRA, Euronext, etc.).
+**Contratos derivados:** 4.
 
-**Interfaz:**
-class INDEX_EOD:
-eligible_universe : list[ticker]
-market_calendar : per-ticker (LSE | XETRA | EURONEXT | ...)
-outputs:
-effective_date : date
-expected_session : date
-coverage : float
-status : OK | PENDING_VERIFICATION | INSUFFICIENT
+#### 2.3.1. INDEX_EOD_USA
 
-text
+**Universo:** `^GSPC`, `^DJI`, `^NDX`, `^RUT`.
 
-**Pendiente Parte B:**
-- Verificar empíricamente que Yahoo devuelve Close EOD para índices no-USA.
-- Definir calendarios de sesión por mercado origen.
+**Nota (corrección v2):** `^SPGSCI` se ha movido a `INDEX_EOD_COMMODITY`.
 
-### 2.4. Contrato RATE_YIELD
-
-**Estado:** esquema definido. Semántica pendiente de FU-021-3B.
-
-**Semántica (provisional):**
-- Yields: `^TNX`, `^FVX`, `^TYX`, `^IRX`.
-- Fecha efectiva = última publicación del yield.
-- Puede tener calendario FRED-like (no calendario bursátil).
+**Semántica:**
+- Calendario: NYSE.
+- Cierre: 16:00 ET (20:00 UTC).
+- Publicación Yahoo: ~21:00 UTC.
+- Lag típico observado (FU-021-3B §3.1): 1 día.
 
 **Interfaz:**
-class RATE_YIELD:
-eligible_universe : list[ticker]
-publication_source : "US_TREASURY" | "FRED"
-outputs:
-effective_date : date
-expected_session : date
-coverage : float
-status : OK | PENDING_VERIFICATION | INSUFFICIENT
+contract INDEX_EOD_USA:
+family : INDEX
+eligible_universe : [^GSPC, ^DJI, ^NDX, ^RUT]
+session_calendar : "NYSE"
+max_lag_days : 1
+min_coverage : 1.0
+per_ticker_lag : {
+"^GSPC": 1,
+"^DJI": 1,
+"^NDX": 1,
+"^RUT": 1,
+}
+outputs: (effective_date, expected_date, lag_days, coverage, status)
 
-text
+```
 
-**Pendiente Parte B:**
-- Verificar semántica temporal del Close de Yahoo para yields.
-- Definir si es calendario bursátil o publicación FRED.
+**Evidencia empírica (FU-021-3B §3.1):** todos los miembros con `last_date = 2026-09-14` en parquet; Yahoo `2026-09-15`; valores Close idénticos en día común (diff ≤ 0.003); lag = 1 día uniforme.
 
-### 2.5. Contrato FUTURE_SETTLEMENT
+#### 2.3.2. INDEX_EOD_EUROPA
 
-**Estado:** esquema definido. Semántica bloqueada por FU-021-3C.
+**Universo:** `^FTSE`, `^GDAXI`, `^IBEX`, `^STOXX50E`.
 
-**Semántica (provisional):**
-- Futuros: `CL=F`, `BZ=F`, `NG=F`, `GC=F`, `HG=F`, `ES=F`, `NQ=F`.
-- Fecha efectiva = fecha de settlement del contrato.
-- Requiere provider dedicado (no Yahoo).
-
-**Interfaz:**
-class FUTURE_SETTLEMENT:
-eligible_universe : list[ticker]
-settlement_source : "CME" | "ICE" | "NYMEX" | ...
-outputs:
-effective_date : date
-expected_session : date
-coverage : float
-status : OK | BLOCKED | INSUFFICIENT
-
-text
-
-**Pendiente Parte B:**
-- Definir provider.
-- Definir semántica de settlement (¿hora, sesión, cutoff?).
-
-### 2.6. Contrato FX_DAILY_CUT
-
-**Estado:** esquema definido. Semántica bloqueada por FU-021-3C.
-
-**Semántica (provisional):**
-- FX: `EURUSD=X`, `DX-Y.NYB`, `USDJPY=X`, etc.
-- Fecha efectiva = cierre diario FX (típicamente 17:00 ET).
-- Requiere provider dedicado.
+**Semántica:**
+- Calendario: LSE (^FTSE), XETRA (^GDAXI), BME (^IBEX), Euronext (^STOXX50E).
+- Cierre: 16:30-17:30 CET (14:30-15:30 UTC).
+- Lag típico observado (FU-021-3B §3.1): 3-4 días por artefacto de cache. Estructural: 1 día.
 
 **Interfaz:**
-class FX_DAILY_CUT:
-eligible_universe : list[ticker]
-cutoff_time : "17:00 America/New_York" # provisional
-outputs:
-effective_date : date
-expected_session : date
-coverage : float
-status : OK | BLOCKED | INSUFFICIENT
+contract INDEX_EOD_EUROPA:
+family : INDEX
+eligible_universe : [^FTSE, ^GDAXI, ^IBEX, ^STOXX50E]
+session_calendar : "LSE|XETRA|BME|EURONEXT"
+max_lag_days : 5
+min_coverage : 1.0
+per_ticker_lag : {
+"^FTSE": 1,
+"^GDAXI": 2,
+"^IBEX": 2,
+"^STOXX50E": 2,
+}
+outputs: (effective_date, expected_date, lag_days, coverage, status)
 
-text
+```
 
-**Pendiente Parte B:**
-- Definir cutoff exacto.
-- Definir provider.
+**Evidencia empírica (FU-021-3B §5.2):**
 
-### 2.7. Interfaz común
+| Ticker | Parquet last | Yahoo last | Lag |
+|---|---|---|---|
+| ^FTSE | 2026-09-11 | 2026-09-15 | 4d |
+| ^GDAXI | 2026-09-11 | 2026-09-14 | 3d |
+| ^IBEX | 2026-09-11 | 2026-09-14 | 3d |
+| ^STOXX50E | 2026-09-11 | 2026-09-14 | 3d |
 
-Los 6 contratos exponen una interfaz común:
-TemporalContract:
-eligible_universe : list[ticker]
-effective_date : date
-expected_session : date
-coverage : float in [0,1]
-status : OK | INSUFFICIENT | BLOCKED | PENDING
+**Hallazgo H-3B-10:** `^FTSE` publica 1 día antes. `per_ticker_lag` registra este comportamiento esperado.
 
-text
+**Causa raíz del lag observado (FU-021-3B §6):** artefacto de la ventana de cache (`CACHE_HOURS=23`) + frecuencia del cron. No es bug.
 
-**Invariantes comunes:**
-- `effective_date <= expected_session` si `status == OK`.
-- `coverage` calculado sobre `eligible_universe` en `effective_date`.
-- Ningún ticker clasificado en dos clases simultáneas.
+#### 2.3.3. INDEX_EOD_COMMODITY
 
-**Estados terminales:**
-- `OK`: contrato resuelto y aplicable.
-- `INSUFFICIENT`: cobertura por debajo del umbral.
-- `BLOCKED`: contrato no activable (clase no implementada).
-- `PENDING`: contrato pendiente de verificación empírica.
+**Universo:** `^SPGSCI` (S&P GSCI).
+
+**Nota (corrección v2):** `DX-Y.NYB` se ha movido a `INDEX_EOD_CURRENCY`. `^SPGSCI` sale de `INDEX_EOD_USA`.
+
+**Semántica:**
+- Índice de materias primas.
+- Calendario: referencia bursátil USA para la publicación del índice.
+- Lag esperado: 1 día.
+
+**Interfaz:**
+contract INDEX_EOD_COMMODITY:
+family : INDEX
+eligible_universe : [^SPGSCI]
+session_calendar : "NYSE"
+max_lag_days : 1
+min_coverage : 1.0
+per_ticker_lag : {"^SPGSCI": 1}
+outputs: (effective_date, expected_date, lag_days, coverage, status)
+
+```
+
+#### 2.3.4. INDEX_EOD_CURRENCY
+
+**Universo:** `DX-Y.NYB` (US Dollar Index, ICE).
+
+**Nota (corrección v2):** renombrado desde `INDEX_EOD_COMMODITY` por dictamen. `DX-Y.NYB` es un índice de divisas, no un commodity.
+
+**Semántica:**
+- Calendario: ICE.
+- Cierre: 17:00 ET (21:00 UTC).
+- Lag típico: 1 día.
+
+**Interfaz:**
+contract INDEX_EOD_CURRENCY:
+family : INDEX
+eligible_universe : [DX-Y.NYB]
+session_calendar : "ICE"
+max_lag_days : 1
+min_coverage : 1.0
+per_ticker_lag : {"DX-Y.NYB": 1}
+outputs: (effective_date, expected_date, lag_days, coverage, status)
+
+```
+
+**Hallazgo H-3B-9:** diff de 0.041 en día común (frente a 0.002-0.003 de índices puros). Característica conocida del índice de divisas.
+
+### 2.4. Familia RATE_YIELD
+
+**Contrato derivado:** `RATE_YIELD`
+
+**Universo:** `^FVX`, `^TNX`.
+
+**Semántica:**
+- Fuente: US Treasury.
+- Publicación: tras cierre del mercado de bonos (~15:30 ET).
+- Lag típico: 1 día.
+
+**Interfaz:**
+contract RATE_YIELD:
+family : RATE_YIELD
+eligible_universe : [^FVX, ^TNX]
+session_calendar : "NYSE"
+max_lag_days : 1
+min_coverage : 1.0
+publication_source : "US_TREASURY"
+per_ticker_lag : {
+"^FVX": 1,
+"^TNX": 1,
+}
+outputs: (effective_date, expected_date, lag_days, coverage, status)
+
+```
+
+**Hallazgo H-3B-3:** universo limitado a 2 yields. Faltan `^IRX` y `^TYX`. No bloqueante.
+
+### 2.5. Familia VOLATILITY (subclase de INDEX)
+
+**Contrato derivado:** `VOLATILITY_INDEX`
+
+**Universo:** `^VIX`, `^VIX3M`, `^VXN`.
+
+**Semántica:**
+- Calendario: CBOE (mismo calendario bursátil USA).
+- Cierre: 16:15 ET.
+- Hereda parámetros de `INDEX_EOD_USA`.
+
+**Interfaz:**
+contract VOLATILITY_INDEX:
+family : INDEX
+subclase_de : INDEX_EOD_USA (delegación)
+eligible_universe : [^VIX, ^VIX3M, ^VXN]
+session_calendar : "NYSE"
+max_lag_days : 1
+min_coverage : 1.0
+per_ticker_lag : {
+"^VIX": 1,
+"^VIX3M": 1,
+"^VXN": 1,
+}
+outputs: (effective_date, expected_date, lag_days, coverage, status)
+
+```
+
+**Evidencia empírica (FU-021-3B-bis §3):** comportamiento idéntico a INDEX_EOD_USA; lag 1 día; valores Close idénticos en día común.
+
+**Nota especial ^VIX3M (H-3B-bis-2):** descarga individual `yfinance` devuelve 1 fila. Descarga en batch funciona. No es problema del pipeline.
+
+### 2.6. Familia FUTURE
+
+**Contrato derivado:** `FUTURE_SETTLEMENT`
+
+**Universo:** `BZ=F`, `CL=F`, `GC=F`, `HG=F`, `NG=F`.
+
+**Estado:** `BLOCKED` por dictamen Q-B.4.
+
+**Semántica:**
+- Fuente actual: Yahoo continuo.
+- **No auditable:** el ticker continuo no identifica un contrato concreto. Yahoo reescribe los históricos de forma no determinista.
+
+**Interfaz:**
+contract FUTURE_SETTLEMENT:
+family : FUTURE
+eligible_universe : [BZ=F, CL=F, GC=F, HG=F, NG=F]
+settlement_source : "CME|ICE"
+max_lag_days : N/A
+min_coverage : N/A
+status : BLOCKED
+activation_requirement:
+
+provider que exponga contrato específico
+
+settlement oficial, no close intradía
+
+identificador estable por contrato
+
+lógica de rollover declarada
+outputs: (effective_date, expected_date, lag_days, coverage, status)
+
+```
+
+**Evidencia empírica (FU-021-3C §3.1, §5.2):** los valores Close del parquet y Yahoo divergen en la misma fecha (0.56%-0.92% relativo). No es redondeo. La investigación descartó rollover retroactivo puro, ajuste por rango, `auto_adjust`, snapshot intradía. Hipótesis residual no verificable: Yahoo reescribe su histórico entre capturas.
+
+**Impacto en consumidores (corrección v2):** 5 de 562 instrumentos (~0.9%) del universo. Dependencia funcional en 5 consumidores: `flows_primary`, `mte_confirmation`, `sectors_base`, `macro_regime`, `mte`. **Peso del instrumento ≠ dependencia funcional.**
+
+### 2.7. Familia FX
+
+**Contrato derivado:** `FX_DAILY_CUT`
+
+**Universo:** `EURUSD=X`, `USDCNY=X`, `USDJPY=X`.
+
+**Semántica:**
+- Mercado: FX spot 24h.
+- Cutoff: 17:00 ET.
+- Lag heterogéneo por par.
+
+**Interfaz:**
+contract FX_DAILY_CUT:
+family : FX
+eligible_universe : [EURUSD=X, USDCNY=X, USDJPY=X]
+session_calendar : "FX_24h"
+cutoff_time : "17:00 America/New_York"
+max_lag_days : dict por par
+min_coverage : 0.5
+per_pair_max_lag : {
+"EURUSD=X": 0,
+"USDJPY=X": 0,
+"USDCNY=X": 1,
+}
+per_pair_expected_lag : {
+"EURUSD=X": 0,
+"USDJPY=X": 0,
+"USDCNY=X": 1,
+}
+outputs: (effective_date, expected_date, lag_days, coverage, status)
+
+```
+
+**Evidencia empírica (FU-021-3C §2.2, §3.2):**
+
+| Par | Parquet last | Yahoo last | Lag |
+|---|---|---|---|
+| EURUSD | 2026-09-15 | 2026-09-15 | 0d |
+| USDCNY | 2026-09-14 | 2026-09-15 | 1d |
+| USDJPY | 2026-09-15 | 2026-09-15 | 0d |
+
+**Nota del dictamen Q-B.2:** `per_pair_max_lag` no es excusa para ocultar caídas. El contrato declara `expected`, `observed`, `max_tolerated` por separado.
+
+### 2.8. Resumen de contratos
+
+| # | Contrato | Familia | Universo | Estado |
+|---|---|---|---|---|
+| 1 | `EQUITY_EOD` | EQUITY | 539 | OK (activo) |
+| 2 | `INDEX_EOD_USA` | INDEX | 4 | OK / STALE |
+| 3 | `INDEX_EOD_EUROPA` | INDEX | 4 | OK / STALE |
+| 4 | `INDEX_EOD_COMMODITY` | INDEX | 1 | OK / STALE |
+| 5 | `INDEX_EOD_CURRENCY` | INDEX | 1 | OK / STALE |
+| 6 | `VOLATILITY_INDEX` | INDEX | 3 | OK / STALE |
+| 7 | `RATE_YIELD` | RATE_YIELD | 2 | OK / STALE |
+| 8 | `FUTURE_SETTLEMENT` | FUTURE | 5 | **BLOCKED** |
+| 9 | `FX_DAILY_CUT` | FX | 3 | OK / STALE |
+
+**9 contratos.** Familias: 5. Subclases INDEX: 4.
 
 ---
 
@@ -299,170 +480,140 @@ UN único effective_date
 ↓
 Tratado como fecha económica común
 
-text
+```
 
-**Regla aprobada:**
+### 3.2. effective_date por contrato
 df_market
 ↓
-effective_date POR CLASE
+effective_date POR CONTRATO
 ↓
-Consolidación explícita de un DataFrame mixto
+Consolidación explícita
 
-text
+```
 
-### 3.2. effective_date por clase
-
-Tras la resolución temporal, cada clase tiene su propio `effective_date`:
-EQUITY_EOD → 2026-09-14
-INDEX_EOD → ? (pendiente 3B)
-RATE_YIELD → ? (pendiente 3B)
-FUTURE_SETTLEMENT → ? (bloqueado 3C)
-FX_DAILY_CUT → ? (bloqueado 3C)
-
-text
-
-**Regla:** ninguna clase hereda `effective_date` de otra.
+Ningún contrato hereda `effective_date` de otro.
 
 ### 3.3. `global_last_date` ≠ fecha económica común
 
-El DataFrame consolidado puede tener una propiedad técnica llamada `global_last_date`:
-global_last_date = max(effective_date de cada clase OK)
+El DataFrame consolidado puede exponer `global_last_date = max(effective_date de cada contrato OK)`.
 
-text
+**Invariante:** es una propiedad **técnica**, no una fecha económica común.
 
-**Invariante:** `global_last_date` es una propiedad **técnica** del DataFrame. No es una fecha económica común.
+**Prohibición:** ningún consumidor puede usar `global_last_date` como la fecha representativa del universo completo.
 
-**Prohibición:** ningún consumidor puede usar `global_last_date` como si fuera la fecha representativa del universo completo.
-
-**Consumidor correcto:** debe declarar qué clase(s) consume y sobre qué `effective_date`.
+**Obligación:** cada consumidor declara qué contrato(s) consume y sobre qué `effective_date`.
 
 ### 3.4. Operación de consolidación
-consolidate_df_market(classes_resolved: dict[class_name, TemporalContract]) -> df_market:
+consolidate_df_market(contracts_resolved: dict[contract_name, TemporalContract]) -> df_market:
 
-1. Validación
-assert all(c.eligible_universe desjunta)
-assert all(c.status in [OK, INSUFFICIENT, BLOCKED, PENDING])
+1. Validación: universos disjuntos
+assert all universos disjuntos
+assert all status in [OK, STALE, INSUFFICIENT, BLOCKED, PENDING]
 
-2. Concat por columna, respetando cada clase
-df = concat([c.data for c in classes_resolved])
+2. Concatenación por columna
+df = concat([c.data for c in contracts_resolved])
 
 3. Metadata adjunta
 df.temporal_meta = {
-'by_class': {
-cls: {
+'by_contract': {
+name: {
 'effective_date': c.effective_date,
-'expected_session': c.expected_session,
+'expected_date': c.expected_date,
+'lag_days': c.lag_days,
 'coverage': c.coverage,
 'status': c.status,
 }
-for cls, c in classes_resolved.items()
+for name, c in contracts_resolved.items()
 },
-'global_last_date': max(c.effective_date for c in classes_resolved if c.status == OK)
+'global_last_date': max(c.effective_date for c in contracts_resolved if c.status in (OK, STALE)),
+'reference_date': datetime,
+'run_id': str,
 }
-
 return df
 
-text
+```
 
-**Invariantes de consolidación:**
+**Invariantes:**
 
-1. **Unicidad:** ningún ticker en dos clases.
-2. **Completitud:** toda clase declarada o marcada `BLOCKED`/`PENDING`.
-3. **Trazabilidad:** cada fila del DataFrame consolidado conoce su clase de origen.
-4. **No imposición:** el DataFrame consolidado no obliga a todas las clases a compartir fecha.
+1. **Unicidad:** ningún ticker en dos contratos.
+2. **Completitud:** todo contrato declarado o marcado `BLOCKED`/`PENDING`.
+3. **Trazabilidad:** cada fila conoce su contrato de origen.
+4. **No imposición:** el DataFrame no obliga a todos los contratos a compartir fecha.
 
 ### 3.5. Qué ve cada consumidor
 
-Un consumidor de Capa 1 (`src/pipeline/*`) recibe:
-df_market.temporal_meta = {
-'by_class': {
-'EQUITY_EOD': {'effective_date': date, 'coverage': float, ...},
-'INDEX_EOD': {'status': 'PENDING', ...},
+El consumidor recibe `df_market.temporal_meta` con:
+{
+'by_contract': {
+'EQUITY_EOD': {...},
+'INDEX_EOD_USA': {...},
 ...
 },
-'global_last_date': date
+'global_last_date': date,
+'reference_date': datetime,
+'run_id': str
 }
 
-text
+```
 
-El consumidor declara:
-- qué clase(s) usa;
-- qué `effective_date` corresponde a esa clase;
-- qué cobertura efectiva tiene su cálculo.
-
-**Ejemplo conceptual** (consumidor que usa solo EQUITY_EOD):
-def compute_something(df_market):
-meta = df_market.temporal_meta['by_class']['EQUITY_EOD']
-effective = meta['effective_date']
-coverage = meta['coverage']
-
-cálculo ...
-return {'result': ..., 'effective_date': effective, 'coverage': coverage}
-
-text
-
+Y declara:
+- qué contrato(s) usa;
+- qué `effective_date` corresponde;
+- qué `coverage` tiene su cálculo.
 ---
-
-**Fin del chunk 1.** Las secciones §4–§9 se añaden en el chunk 2.---
 
 ## 4. §A.3 — Metadata de fecha y cobertura por artefacto
 
-### 4.1. Semántica de las 4 columnas
+### 4.1. Las 4 columnas
 
-Decisión del dictamen (Q-C2.3, opción d): distinguir al menos 4 conceptos temporales en artefactos que necesiten trazabilidad.
+Decisión del dictamen Q-C2.3 (opción d) y ratificada en Parte B:
 
 | Columna | Definición | Ejemplo |
 |---|---|---|
-| `date` | Fecha de observación representada por la fila del dataset procesado | 2026-09-14 |
-| `effective_date` | Última fecha que cumple el contrato de cobertura exigido | 2026-09-14 |
-| `expected_session` | Fecha que el contrato esperaba para el instrumento/grupo en `reference_date` | 2026-09-15 |
+| `date` | Fecha de observación representada por la fila | 2026-09-14 |
+| `effective_date` | Última fecha que cumple el contrato de cobertura | 2026-09-14 |
+| `expected_date` | Fecha que el contrato esperaba en `reference_date` | 2026-09-15 |
 | `coverage` | Cobertura del universo elegible en `effective_date` | 0.9981 |
+
+**Nota (v2):** Parte A v1 usaba `expected_session`. El dictamen de Parte B aprobó renombrar a `expected_date` para no confundir con `is_market_day` de B2.
 
 ### 4.2. Relación entre columnas
 
 **Para métrica agregada:**
+date ≈ effective_date
 
-    date ≈ effective_date
-
+```
 cuando el cálculo representa exclusivamente esa fecha.
 
-**Regla:** nunca escribir `expected_session` como si fuera automáticamente la fecha observada. `expected_session` documenta la expectativa del contrato; `effective_date` documenta lo efectivamente calculado.
+**Regla:** nunca escribir `expected_date` como si fuera automáticamente la fecha observada.
 
-### 4.3. Cuándo cada columna es obligatoria
+### 4.3. Obligatoriedad por tipo de artefacto
 
-| Tipo de artefacto | date | effective_date | expected_session | coverage |
+| Tipo | date | effective_date | expected_date | coverage |
 |---|---|---|---|---|
 | Métrica agregada (una fila por fecha) | Obligatorio | Obligatorio | Obligatorio | Obligatorio |
 | Métrica por sector (una fila por sector-fecha) | Obligatorio | Obligatorio | Opcional | Opcional |
 | Estado persistente (JSON) | No aplica | Obligatorio | Opcional | No aplica |
-| Serie temporal larga (histórico) | Obligatorio | Obligatorio | Opcional | Opcional |
+| Serie temporal larga | Obligatorio | Obligatorio | Opcional | Opcional |
 | Report markdown | No aplica | Recomendado en cabecera | Opcional | No aplica |
 
-**Nota:** "Opcional" significa que puede omitirse si el artefacto declara su contrato de clase y cobertura en metadatos externos (por ejemplo, en el manifest FU-002).
+### 4.4. Ejemplos
 
-### 4.4. Ejemplo aplicado al CSV `sector_breadth.csv`
-
-Estado actual (patrón P6, único correcto):
-
-    date,sector,pct_above_ema20,...
-    2026-09-14,XLK,...
-
-Estado objetivo tras FU-021-5:
-
-    date,effective_date,expected_session,coverage,sector,pct_above_ema20,...
-    2026-09-14,2026-09-14,2026-09-14,1.00,XLK,...
-
-### 4.5. Ejemplo aplicado al CSV `sector_concentration.csv`
-
-Estado actual (patrón P5, resuelto parcialmente por C16):
-
-    date,sector,metric,...
-    2026-09-14,XLK,...
+**`sector_breadth.csv` (contrato EQUITY_EOD):**
 
 Estado objetivo:
+date,effective_date,expected_date,coverage,sector,pct_above_ema20,...
+2026-09-14,2026-09-14,2026-09-14,1.00,XLK,...
 
-    date,effective_date,expected_session,coverage,sector,metric,...
-    2026-09-14,2026-09-14,2026-09-15,0.9981,XLK,...
+```
+
+**`sector_concentration.csv` (contrato EQUITY_EOD):**
+
+Estado objetivo:
+date,effective_date,expected_date,coverage,sector,metric,...
+2026-09-14,2026-09-14,2026-09-15,0.9981,XLK,...
+
+```
 
 ---
 
@@ -472,7 +623,7 @@ Estado objetivo:
 
 **Capa 1 (13 writers):**
 
-| Módulo | Artefacto | Patrón actual | Clase |
+| Módulo | Artefacto | Patrón actual | Contrato |
 |---|---|---|---|
 | `engines.py` | `sector_persistence.csv` | P1 | EQUITY_EOD |
 | `sectors_base.py` | `sector_rank_history.csv` | P2 | EQUITY_EOD |
@@ -485,150 +636,161 @@ Estado objetivo:
 | `flows_primary.py` | `sector_flow_characteristics.csv` | Delegado | — |
 | `breadth_metrics.py` | `sector_breadth.csv` | **P6 (correcto)** | EQUITY_EOD |
 | `breadth_metrics.py` | `sector_breadth_momentum.csv` | Delegado | EQUITY_EOD |
-| `market_data.py` | `volatility_structure.csv` | Delegado | EQUITY_EOD + VIX |
+| `market_data.py` | `volatility_structure.csv` | Delegado | EQUITY_EOD + VOLATILITY_INDEX |
 | `market_data.py` | `data_quality.csv` | Delegado | — |
 
 **Capa 2b (5 writers):**
 
-| Módulo | Artefacto | Patrón actual | Clase |
+| Módulo | Artefacto | Patrón actual | Contrato |
 |---|---|---|---|
-| `cross_asset_context.py` | `cross_asset_*.csv` | P3 | EQUITY_EOD + FX + DXY |
+| `cross_asset_context.py` | `cross_asset_*.csv` | P3 | EQUITY_EOD + INDEX_EOD_CURRENCY + FX |
 | `sector_correlation.py` | `sector_correlation_*.csv` | P3 | EQUITY_EOD |
 | `rs_internal.py` | `rs_internal.csv` | P4 | EQUITY_EOD |
-| `sector_leader_divergence.py` | `sector_leader_divergence.csv` | P5 | EQUITY_EOD + `df_stocks` |
-| `volatility_structure.py` | `volatility_structure.csv` | P7 | EQUITY_EOD + VIX |
+| `sector_leader_divergence.py` | `sector_leader_divergence.csv` | P5 | EQUITY_EOD + df_stocks |
+| `volatility_structure.py` | `volatility_structure.csv` | P7 | EQUITY_EOD + VOLATILITY_INDEX |
 
-**Casos especiales (2 writers):**
+**Casos especiales (2):**
 
 | Módulo | Artefacto | Patrón actual | Nota |
 |---|---|---|---|
 | `stock_leader.py` | `analisis_lideres.csv` | P0 (sin `date`) | Sin columna temporal |
-| `mte.py` | `mte_state.json` + `MTE_STATE_FILE` | P8 | JSON de estado, ver §A.6 |
+| `mte.py` | `mte_state.json` + `MTE_STATE_FILE` | P8 | JSON, ver §7 |
 
 ### 5.2. Regla general
 
-> **Los writers deben consumir la fecha temporal resuelta del productor; no volver a resolverla independientemente.**
+> **Los writers consumen la fecha temporal resuelta del productor; no la vuelven a resolver.**
 
-**Prohibiciones explícitas (dictamen):**
+**Prohibiciones explícitas:**
+PROHIBIDO — walk-back local
+last_market_session(df_market.index[-1])
 
-    # PROHIBIDO — walk-back local
-    last_market_session(df_market.index[-1])
+PROHIBIDO — resolver en el consumidor
+resolve_effective_date(df_market, ...)
 
-    # PROHIBIDO — resolver en el consumidor
-    resolve_effective_date(df_market, ...)
+PROHIBIDO — trim local
+trim_to_last_valid_date(df_market, ...)
 
-    # PROHIBIDO — trim local
-    trim_to_last_valid_date(df_market, ...)
+```
 
-**Obligación:** cada writer recibe `temporal_meta` (dict) desde el productor. De él extrae `effective_date`, `expected_session`, `coverage`.
+**Obligación:** cada writer recibe `temporal_meta` (dict). De él extrae `effective_date`, `expected_date`, `coverage`.
 
 ### 5.3. Patrón correcto (P6)
 
-`sector_breadth.py` implementa el contrato deseado. Es el modelo a replicar:
+`sector_breadth.py` es el modelo:
+def compute_sector_breadth(df_market, df_stocks, holdings_df, as_of_date=None):
+if as_of_date is not None:
+if not is_market_day(as_of_date.date()):
+raise ValueError(...)
+df_market = df_market.loc[:as_of_date]
+df_stocks = df_stocks.loc[:as_of_date]
 
-    def compute_sector_breadth(df_market, df_stocks, holdings_df, as_of_date=None):
-        # Validación de sesión
-        if as_of_date is not None:
-            if not is_market_day(as_of_date.date()):
-                raise ValueError(...)
-            df_market = df_market.loc[:as_of_date]
-            df_stocks = df_stocks.loc[:as_of_date]
-        # Cálculo ...
-        # Escritura
-        row['date'] = as_of_date
+Cálculo ...
+row['date'] = as_of_date
+row['effective_date'] = meta['effective_date']
+row['expected_date'] = meta['expected_date']
+row['coverage'] = meta['coverage']
 
-**Extensión requerida:** añadir `effective_date`, `expected_session`, `coverage` de `temporal_meta`.
+```
 
 ### 5.4. Reescritura por patrón
 
 | Patrón | Estrategia |
 |---|---|
-| **P0** | Añadir columna `date` + `effective_date` + `coverage` |
-| **P1** | Sustituir `_observation_date_from_df(df_market)` por `temporal_meta['by_class'][cls]['effective_date']` |
-| **P2** | Sustituir `df_market.index[-1]` por `temporal_meta['by_class'][cls]['effective_date']` |
-| **P3** | Sustituir `_observation_date_from_df(returns_df)` por `effective_date` del intersect de clases usadas |
-| **P4** | Sustituir `_observation_date_from_df(intersect)` por `effective_date` del intersect de clases usadas |
-| **P5** | Sustituir `_observation_date_from_df(df_stocks)` por `effective_date` de la clase EQUITY_EOD |
-| **P6** | Ya correcto. Añadir `effective_date`, `expected_session`, `coverage` |
-| **P7** | Sustituir `_observation_date_from_df(vix)` por `effective_date` de la clase combinada EQUITY_EOD + VIX |
-| **P8** | Ver §A.6 |
+| **P0** | Añadir columnas `date`, `effective_date`, `coverage` |
+| **P1** | Sustituir `_observation_date_from_df(df_market)` por `temporal_meta['by_contract'][c]['effective_date']` |
+| **P2** | Sustituir `df_market.index[-1]` por `effective_date` del contrato |
+| **P3** | Sustituir `_observation_date_from_df(returns_df)` por `effective_date` del intersect de contratos usados |
+| **P4** | Sustituir `_observation_date_from_df(intersect)` por `effective_date` del intersect |
+| **P5** | Sustituir `_observation_date_from_df(df_stocks)` por `effective_date` de EQUITY_EOD |
+| **P6** | Ya correcto. Añadir `effective_date`, `expected_date`, `coverage` |
+| **P7** | Sustituir `_observation_date_from_df(vix)` por `effective_date` del contrato combinado EQUITY_EOD + VOLATILITY_INDEX |
+| **P8** | Ver §7 |
 
 ---
 
 ## 6. §A.5 — Propagación hacia los 30 consumidores
 
-### 6.1. Grafo de propagación
+### 6.1. Grafo
+run.py (orquestador)
+│ reference_date, run_id
+▼
+data_load.load_all_data (productor)
+│ df_market + df_market.temporal_meta
+▼
+Capa 1 (12) ─────► Capa 2a (3) ─────► Capa 2b (15)
+│
+│ df_stocks + df_stocks_effective_meta (FU-020)
+▼
+mte_confirmation, sector_metrics (C16)
 
-    run.py (orquestador)
-       │
-       │  reference_date, run_id
-       │
-       ▼
-    data_load.load_all_data (productor)
-       │
-       │  df_market + df_market.temporal_meta
-       │
-       ▼
-    Capa 1 (12) ────────────► Capa 2a (3) ────► Capa 2b (15)
-       │
-       │  df_stocks + df_stocks_effective_meta (FU-020)
-       │
-       ▼
-    mte_confirmation, sector_metrics (ya resuelto C16)
+```
 
-### 6.2. `temporal_meta` como objeto
+### 6.2. `temporal_meta`
+temporal_meta = {
+'by_contract': {
+'EQUITY_EOD': {'effective_date': ..., 'expected_date': ..., 'lag_days': ..., 'coverage': ..., 'status': 'OK'},
+'INDEX_EOD_USA': {...},
+'INDEX_EOD_EUROPA': {...},
+'INDEX_EOD_COMMODITY': {...},
+'INDEX_EOD_CURRENCY': {...},
+'VOLATILITY_INDEX': {...},
+'RATE_YIELD': {...},
+'FUTURE_SETTLEMENT': {'status': 'BLOCKED'},
+'FX_DAILY_CUT': {...},
+},
+'global_last_date': date,
+'reference_date': datetime,
+'run_id': str,
+}
 
-`df_market.temporal_meta` es un atributo adjunto al DataFrame (implementación concreta: atributo Python, columna especial, o dict paralelo; decisión de implementación). Contiene:
-
-    temporal_meta = {
-        'by_class': {
-            'EQUITY_EOD': {
-                'effective_date': date,
-                'expected_session': date,
-                'coverage': float,
-                'status': 'OK',
-            },
-            'INDEX_EOD': {...},
-            ...
-        },
-        'global_last_date': date,
-        'reference_date': datetime,
-        'run_id': str,
-    }
+```
 
 ### 6.3. API de acceso
+def get_effective_meta(df_market, contracts: list[str]) -> dict:
+"""
+Devuelve el meta temporal para los contratos indicados.
+Si el consumidor usa varios, devuelve el intersect efectivo
+(min effective_date, min coverage, status combinado).
+"""
 
-Los consumidores acceden a través de una función helper:
+```
 
-    def get_effective_meta(df_market, classes: list[str]) -> dict:
-        """
-        Devuelve el meta temporal para las clases indicadas.
-        Si el consumidor usa varias clases, devuelve el intersect efectivo.
-        """
+**Ejemplo:**
+meta = get_effective_meta(df_market, ['EQUITY_EOD'])
+effective = meta['effective_date']
+coverage = meta['coverage']
 
-**Ejemplo** (consumidor que usa solo EQUITY_EOD):
+```
 
-    meta = get_effective_meta(df_market, ['EQUITY_EOD'])
-    effective = meta['effective_date']
-    coverage = meta['coverage']
+### 6.4. Tratamiento de FUTURE_SETTLEMENT
 
-**Ejemplo** (consumidor que usa EQUITY_EOD + VIX):
+**Ratificado por Q-B.7 (opción β).** Con FUTURE_SETTLEMENT bloqueado:
 
-    meta = get_effective_meta(df_market, ['EQUITY_EOD', 'INDEX_EOD_VIX'])
-    # Devuelve effective_date = min(effective de cada clase)
+- El componente futuro se **excluye del cálculo**.
+- El consumidor recalcula el resto de evidencia.
+- Metadata explícita en el output:
+future_status = BLOCKED
+future_coverage = 0
+future_contribution = excluded
 
-### 6.4. Compatibilidad con veredicto B
+```
 
-Los 30 consumidores auditados obtuvieron veredicto **B — COMPATIBLE CONDICIONADO**. Significa:
+**Rechazado γ (UNRELIABLE con inclusión numérica):** produce "dato no auditable + score aparentemente válido", exactamente lo que hay que evitar.
 
-- **No requieren cambio interno** si el productor entrega `df_market` ya temporalmente resuelto.
-- **No hay reescritura estructural** de la lógica de cálculo.
-- **Cambios necesarios:**
-  - Añadir `temporal_meta` a la firma (o adjuntarlo a `df_market`).
-  - Sustituir accesos a `df_market.index[-1]` por consultas a `temporal_meta`.
-  - Declarar en el output qué clase y qué `effective_date` usan.
+**Rechazado α (inclusión silenciosa):** los outputs no son auditables.
 
-**Estimación de impacto:** 30 ficheros, 1-3 líneas por fichero. Es un cambio mecánico.
+**Comportamiento si un consumidor requiere futuros obligatoriamente:** pasa a `INSUFFICIENT`, no fabrica el resultado.
+
+### 6.5. Compatibilidad con veredicto B
+
+Los 30 consumidores tienen veredicto `B` (Compatibles condicionados). Significa:
+
+- No requieren cambio interno si el productor entrega `df_market` temporalmente resuelto.
+- Cambios mecánicos:
+  - Añadir `temporal_meta` a la firma (o adjuntarlo al df).
+  - Sustituir `df_market.index[-1]` por consultas a `temporal_meta`.
+  - Declarar en el output qué contrato y qué `effective_date` usan.
+- Estimación: 30 ficheros, 1-3 líneas por fichero.
 
 ---
 
@@ -640,75 +802,68 @@ Los 30 consumidores auditados obtuvieron veredicto **B — COMPATIBLE CONDICIONA
 
 | Fichero | Path | Contenido |
 |---|---|---|
-| Estado con histéresis | `outputs/state/mte_state.json` (hardcoded, L1290) | `{scenario, pending}` |
+| Estado con histéresis | `outputs/state/mte_state.json` (hardcoded L1290) | `{scenario, pending}` |
 | Snapshot del run | `MTE_STATE_FILE` (config) | `{scenario, confidence, msi, ipi, srs, shs, cls, ips}` |
 
 **Problemas:**
-- Dos paths sin garantía de coherencia.
+- Dos paths sin coherencia garantizada.
 - Sin versión de contrato temporal.
-- Sin fecha efectiva.
+- Sin `effective_date`.
 - Un cambio en `df_market` puede producir transición no lineal.
 
-### 7.2. Esquema único y versionado
+### 7.2. Esquema único versionado
 
-**Dictamen (Q-C2.4, opción c+b):** path único + versionado + fecha + reset por cambio de contrato.
-
-**Path único propuesto:**
-
-    outputs/state/mte_state.json
+**Path único:** `outputs/state/mte_state.json`.
 
 **Esquema:**
+{
+"schema_version": 1,
+"temporal_contract_version": "FU-021-5-v2",
+"effective_date": "2026-09-14",
+"expected_date": "2026-09-15",
+"coverage": 0.9981,
+"scenario": "EXPANSION",
+"pending": null,
+"confidence": 0.72,
+"metrics": {
+"srs": 0.15, "shs": -0.05, "cls": 0.22, "ips": 0.10,
+"msi": 55.0, "ipi": 55.0
+},
+"futures_status": "BLOCKED",
+"written_at": "2026-09-15T20:00:00+02:00"
+}
 
-    {
-      "schema_version": 1,
-      "temporal_contract_version": "FU-021-5-v1",
-      "effective_date": "2026-09-14",
-      "expected_session": "2026-09-15",
-      "coverage": 0.9981,
-      "scenario": "EXPANSION",
-      "pending": null,
-      "confidence": 0.72,
-      "metrics": {
-        "srs": 0.15,
-        "shs": -0.05,
-        "cls": 0.22,
-        "ips": 0.10,
-        "msi": 55.0,
-        "ipi": 55.0
-      },
-      "written_at": "2026-09-15T20:00:00+02:00"
-    }
+```
 
 ### 7.3. Reset por cambio de contrato
 
 **Regla:**
+same temporal_contract_version → state reutilizable
+temporal_contract_version changed materially → state incompatible → reset
 
-    same temporal_contract_version → state reutilizable
-    temporal_contract_version changed materially → state incompatible → reset
+```
 
-**Implementación conceptual:**
+**Implementación:**
+def load_previous_scenario():
+try:
+with open(STATE_FILE) as f:
+data = json.load(f)
+if data.get('temporal_contract_version') != CURRENT_TEMPORAL_CONTRACT_VERSION:
+print('MTE state: contrato temporal cambió. Reset.')
+return 'MIXED', None
+return data.get('scenario', 'MIXED'), data.get('pending')
+except:
+return 'MIXED', None
 
-    def load_previous_scenario():
-        try:
-            with open(STATE_FILE) as f:
-                data = json.load(f)
-            if data.get('temporal_contract_version') != CURRENT_TEMPORAL_CONTRACT_VERSION:
-                print('MTE state: contrato temporal cambió. Reset.')
-                return 'MIXED', None
-            return data.get('scenario', 'MIXED'), data.get('pending')
-        except:
-            return 'MIXED', None
+```
 
 ### 7.4. Migración del estado existente
 
-**No hay migración de estado histórico.** El estado actual se considera no versionado y se descarta en el primer run tras la activación.
-
-**Justificación:** el estado no es un histórico de mercado, es una máquina de transición. Su valor depende del contrato bajo el que se generó. Sin contrato, no es auditable.
+**No hay migración.** El estado actual se descarta en el primer run tras activación. El estado no es un histórico de mercado; es una máquina de transición. Sin contrato, no es auditable.
 
 ### 7.5. Eliminación del path hardcoded
 
-El `STATE_FILE` hardcoded (L1290) debe eliminarse. El `MTE_STATE_FILE` (config) pasa a ser el único path. Se documenta en `config/settings.py`.
-
+`STATE_FILE` hardcoded (L1290) se elimina. `MTE_STATE_FILE` (config) es el único path. Documentar en `config/settings.py`.
 ---
 
 ## 8. §A.7 — Migración de `darkpool`
@@ -720,16 +875,16 @@ Eliminar la única excepción al principio "df_market en memoria es la fuente ca
 **Estado actual:**
 
     compute_darkpool_signals()  # sin parámetros
-        │
-        ├── pd.read_parquet('data/market_data.parquet')  ← L189
-        └── pd.read_parquet('data/stock_prices.parquet')  ← L194
+        |
+        +-- pd.read_parquet('data/market_data.parquet')  # L189
+        +-- pd.read_parquet('data/stock_prices.parquet')  # L194
 
 **Estado objetivo:**
 
     compute_darkpool_signals(df_market, df_stocks=None)
-        │
-        ├── usa df_market (en memoria)
-        └── usa df_stocks (en memoria, opcional)
+        |
+        +-- usa df_market (en memoria)
+        +-- usa df_stocks (en memoria, opcional)
 
 ### 8.2. Firma nueva
 
@@ -747,9 +902,9 @@ Eliminar la única excepción al principio "df_market en memoria es la fuente ca
 
 ### 8.3. Cambios en `market_data.py`
 
-**`compute_market_data(df_market)` actual:** no recibe `df_stocks`.
+**Actual:** `compute_market_data(df_market)` no recibe `df_stocks`.
 
-**Estado objetivo:**
+**Objetivo:**
 
     def compute_market_data(df_market, df_stocks=None):
         # ...
@@ -760,21 +915,21 @@ Eliminar la única excepción al principio "df_market en memoria es la fuente ca
 
 ### 8.4. Propagación de `df_stocks`
 
-`df_stocks` se genera en `leaders.py` (fase 6a). `market_data.py` se ejecuta en fase 9b. En el orden del pipeline, `df_stocks` ya está disponible cuando se llama a `compute_market_data`.
+`df_stocks` se genera en `leaders.py` (fase 6a). `market_data.py` se ejecuta en fase 9b. En el orden del pipeline, `df_stocks` está disponible.
 
 **Cadena:**
 
-    run.py L113 → leaders.py → df_stocks
-    run.py L153 → compute_market_data(df_market)  ← actual
-    run.py L153 → compute_market_data(df_market, df_stocks=df_stocks)  ← objetivo
+    run.py L113 -> leaders.py -> df_stocks
+    run.py L153 -> compute_market_data(df_market)  # actual
+    run.py L153 -> compute_market_data(df_market, df_stocks=df_stocks)  # objetivo
 
 ### 8.5. Compatibilidad
 
-`compute_darkpool_signals(df_market, df_stocks=None)` es retrocompatible. Si un caller no pasa `df_stocks`, funciona con solo `df_market` (aunque pierde la parte de equities).
+`compute_darkpool_signals(df_market, df_stocks=None)` es retrocompatible.
 
-**Pendiente Parte B / próxima fase:** decidir si `darkpool` requiere `df_stocks` como obligatorio o como opcional. Hoy la extracción de volúmenes se hace de ambos parquets. Si se pasa solo `df_market`, la cobertura de volúmenes cae.
+**Pendiente Parte B:** decidir si `df_stocks` es obligatorio o opcional. Hoy la extracción de volúmenes se hace de ambos parquets. Si se pasa solo `df_market`, la cobertura de volúmenes cae.
 
-**Recomendación:** `df_stocks` obligatorio (no opcional). Requiere cambio en la firma de `compute_market_data`.
+**Recomendación:** `df_stocks` obligatorio. Requiere cambio en la firma de `compute_market_data`.
 
 ---
 
@@ -782,73 +937,148 @@ Eliminar la única excepción al principio "df_market en memoria es la fuente ca
 
 ### 9.1. Tests obligatorios
 
-**Contratos por clase:**
-- Test: clasificación de los 562 tickers en las 5 clases.
-- Test: `get_instrument_class` retorna valor esperado para cada clase.
-- Test: ningún ticker en dos clases.
+**Taxonomía (nuevo en v2):**
+- Test: clasificación de los 562 tickers en familias + subclases + contratos.
+- Test: `get_instrument_class` retorna valor esperado por familia.
+- Test: ningún ticker en dos contratos.
+- Test: 9 contratos, 5 familias, 4 subclases INDEX.
 
 **Consolidación:**
-- Test: `global_last_date = max(effective_date)` de clases `OK`.
-- Test: `effective_date` por clase no se propaga a otra clase.
+- Test: `global_last_date = max(effective_date)` de contratos OK/STALE.
+- Test: `effective_date` por contrato no se propaga a otro.
 - Test: `temporal_meta` accesible desde `df_market`.
+- Test: `by_contract` contiene las 9 entradas.
+
+**FSM (nuevo en v2):**
+- Test: transiciones válidas `PENDING → OK/STALE/INSUFFICIENT/BLOCKED`.
+- Test: `STALE` requiere `0 < lag_days <= max_lag_days`.
+- Test: `INSUFFICIENT` requiere `coverage < min_coverage`.
+- Test: `BLOCKED` no transiciona sin `activation_requirement` resuelto.
 
 **Metadata cuádruple:**
-- Test: cada writer histórico tiene las 4 columnas (`date`, `effective_date`, `expected_session`, `coverage`).
+- Test: cada writer histórico tiene `date`, `effective_date`, `expected_date`, `coverage`.
 - Test: `date ≈ effective_date` para métricas agregadas.
 
 **MTE:**
 - Test: `schema_version` presente.
 - Test: `temporal_contract_version` presente.
+- Test: `futures_status=BLOCKED` cuando FUTURE_SETTLEMENT está bloqueado.
 - Test: reset si `temporal_contract_version` difiere.
 
 **Darkpool:**
 - Test: `compute_darkpool_signals(df_market)` funciona sin parquet.
 - Test: `compute_darkpool_signals(df_market, df_stocks)` cubre ambos universos.
 
+**FUTURE_SETTLEMENT bloqueado:**
+- Test: consumidores afectados producen `future_status=BLOCKED` en output.
+- Test: `mte.py` incluye `futures_status` en el estado JSON.
+- Test: `macro_regime` recalcula sin componente futuro.
+
 ### 9.2. Verificación en producción real
 
 Antes de declarar cerrada la Parte A, ejecutar `daily_run.yml` manual y verificar:
 
-- Log con `[FU-021-5]` en cada clase resuelta.
+- Log con `[FU-021-5]` en cada contrato resuelto.
 - `market_data.parquet` con manifest extendido (contratos por clase).
 - Reportes markdown con cabecera temporal.
+- Estado MTE con `futures_status=BLOCKED`.
 
 ### 9.3. Verificación de no-regresión
 
 Diff contra snapshot pre-activación:
 - Secciones `##` idénticas en orden.
 - Subsecciones `###` idénticas.
-- Líneas idénticas ≥ 90%.
+- Líneas idénticas >= 90%.
 
 ---
 
-## 10. §A.9 — Criterios de cierre de Parte A
+## 10. §A.9 — Criterios de cierre
 
-La Parte A se considerará cerrada cuando:
+La Parte A v2 se considerará cerrada cuando:
 
 1. Este documento esté aprobado por dictamen.
-2. La Parte B esté esquematizada (aunque no cerrada).
+2. La Parte B esté ratificada (ya ratificada en 2026-09-16).
 3. Exista un plan de tests concreto.
-4. Exista un plan de migración por fases (activación, MTE, darkpool, writers).
-5. No haya contradicciones con R1–R4 ni con A2.3.
+4. Exista un plan de migración por fases.
+5. No haya contradicciones con R1-R4 ni con A2.3.
 
-**La Parte A NO autoriza implementación.** Autoriza diseño y planificación.
+**La Parte A v2 NO autoriza implementación.** Autoriza diseño y planificación.
 
 ---
 
-## 11. Lo que la Parte A NO decide
+## 11. §A.10 — FSM formal de contratos
 
-- No activa contratos por clase (Parte B + 3B/3C).
+**Nuevo en v2.** Ratificado por dictamen de Parte B (§"Sobre STALE y BLOCKED").
+
+### 11.1. Diagrama
+
+    PENDING
+       |
+       | resolución
+       v
+    +-- OK
+    +-- STALE
+    +-- INSUFFICIENT
+    +-- BLOCKED
+
+### 11.2. Semántica de cada estado
+
+| Estado | Condición | Significado |
+|---|---|---|
+| `PENDING` | Contrato definido, no activado | Estado inicial |
+| `OK` | `effective_date == expected_date` y `coverage >= min_coverage` | Contrato satisfecho, dentro de frescura esperada |
+| `STALE` | `0 < lag_days <= max_lag_days` y `coverage >= min_coverage` | Contrato satisfecho con lag permitido |
+| `INSUFFICIENT` | `coverage < min_coverage` o `lag_days > max_lag_days` | Cobertura o frescura insuficientes |
+| `BLOCKED` | `activation_requirement` no resuelto | Contrato no auditable / no disponible de forma fiable |
+
+### 11.3. Transiciones
+
+    PENDING -> OK            | si resolución produce frescura perfecta
+    PENDING -> STALE         | si resolución produce frescura con lag permitido
+    PENDING -> INSUFFICIENT  | si resolución detecta cobertura insuficiente
+    PENDING -> BLOCKED       | si el contrato no puede activarse
+
+    OK        -> STALE         | si el siguiente run trae lag
+    OK        -> INSUFFICIENT  | si cobertura cae
+    STALE     -> OK            | si el siguiente run recupera frescura
+    STALE     -> INSUFFICIENT  | si lag excede max_lag_days o cobertura cae
+    INSUFFICIENT -> OK         | si cobertura se recupera
+    INSUFFICIENT -> STALE      | si cobertura se recupera con lag
+    BLOCKED   -> PENDING       | solo si activation_requirement se resuelve
+
+### 11.4. Prohibiciones
+
+- `OK` o `STALE` **no pueden** declararse si `coverage < min_coverage`.
+- `BLOCKED` **no puede** transicionar directamente a `OK`/`STALE`/`INSUFFICIENT` sin pasar por `PENDING`.
+- `STALE` **no significa** "cualquier dato antiguo es aceptable".
+
+### 11.5. Metadata obligatoria en todo estado
+
+Independientemente del estado, el contrato **siempre** expone:
+
+    effective_date  : date | None
+    expected_date   : date | None
+    lag_days        : int | None
+    coverage        : float | None
+    status          : OK | STALE | INSUFFICIENT | BLOCKED | PENDING
+
+En estado `BLOCKED`, `effective_date` y `lag_days` pueden ser `None`. El estado documenta que el contrato no puede resolverse, no que no existe.
+
+---
+
+## 12. Lo que la Parte A v2 NO decide
+
+- No activa contratos por clase.
 - No retira `trim_to_last_valid_date` (A3.1 sigue bloqueada).
 - No decide el orden de implementación.
 - No implementa nada.
-- No decide la semántica operativa de INDEX_EOD, RATE_YIELD, FUTURE_SETTLEMENT, FX_DAILY_CUT.
-- No decide el esquema JSON exacto del estado MTE (provisional).
+- No decide el provider alternativo para FUTURE_SETTLEMENT.
+- No decide el cutoff exacto de FX.
 - No decide si `df_stocks` en `compute_darkpool_signals` es obligatorio u opcional.
 
 ---
 
-**Fin de la Parte A.**
-**HEAD de referencia:** 42c395c (origin/main).
-**Fecha:** 2026-09-15.
-**Estado:** borrador para dictamen. Parte B pendiente.
+**Fin de la Parte A v2.**
+**HEAD de referencia:** 0eb7e4f (origin/main).
+**Fecha:** 2026-09-16.
+**Estado:** ratificado con correcciones. Pendiente de implementación.
