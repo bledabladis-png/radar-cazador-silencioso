@@ -1,8 +1,8 @@
 # PROMPT MAESTRO v6.14 - INGENIERO SUPERVISOR DEL RADAR DE ROTACION SECTORIAL
 
-Actualizado: 2026-09-15 (post FU-021-3A correction v2, HEAD 12d91b1)
-Estado: Operativo al 100% - Arquitectura modular - 334 tests locales / ~290 CI + skips - Gate 10/10
-Commit de referencia: 12d91b1 (origin/main HEAD)
+Actualizado: 2026-09-15 (post FU-002-bis, HEAD d068c99)
+Estado: Operativo al 100% - Arquitectura modular - 343 tests locales / ~290 CI + skips - Gate 10/10
+Commit de referencia: d068c99 (origin/main HEAD)
 
 ---
 
@@ -483,9 +483,21 @@ quality: last_date, expected_session, last_date_is_expected_session, pct_dup_las
 
 Reglas de quality.status:
 
-INVALID si last_date_is_expected_session AND (pct_dup_last > MANIFEST_DUP_THRESHOLD=0.5 OR close_nan_last > 0).
+INVALID si temporal_contract declarado Y last_date > expected_session. La violacion de contrato temporal tiene precedencia maxima, sin depender de close_nan (temporalidad y completitud son dimensiones independientes).
+
+INVALID si pct_dup_last > MANIFEST_DUP_THRESHOLD=0.5.
+
+VALID_WITH_MISSING si close_nan_last > 0 (huecos legitimos, no corrupcion).
 
 VALID en cualquier otro caso.
+
+temporal_contract: declarado por el caller del writer. Si es None, no se aplica validacion temporal (comportamiento FU-002-evo2). Cuando esta declarado, se aplica la validacion temporal definida para ese contrato. En esta version del sistema, la resolucion concreta de la fecha esperada por clase queda pendiente de FU-021-5; no debe inferirse un calendario comun para contratos heterogeneos.
+
+Estado actual (FU-002-bis, commit d068c99): ningun caller declara temporal_contract. Los dos artefactos (market_data.parquet y stock_prices.parquet) tienen universos heterogeneos y quedan exentos de validacion temporal hasta que FU-021-5 defina contratos por clase.
+
+VALID_WITH_MISSING: introducido por FU-002-evo (commit 8d908db). Aceptado por el reader como referencia valida.
+
+Bloque temporal en el manifest: siempre presente como "temporal": {"contract": null | "<CONTRATO>"}. D2.B segun dictamen: la ausencia de validacion debe ser explicita en el artefacto.
 
 Atomicidad: escritura a .tmp.<run_id> + os.replace doble.
 
@@ -501,7 +513,7 @@ None -> referencia UNAVAILABLE o INVALID, o error.
 
 Los 5 return True silenciosos eliminados. "No pude validar" ≠ "validé y pasó".
 
-Escritura unificada: src/utils.py::write_artifact_with_manifest(df, parquet_path, source, reference_date, run_id, schema_version=1).
+Escritura unificada: src/utils.py::write_artifact_with_manifest(df, parquet_path, source, reference_date, run_id, schema_version=1, *, temporal_contract=None).
 
 11.9. FU-007 / FU-007-b — Walk-back de fechas
 _last_market_session(d) en src/market_calendar.py.
@@ -764,6 +776,8 @@ A3.1 (retirar trim_to_last_valid_date de data_load.py): diferido hasta sub-infor
 
 Gap manifest stock_prices.parquet (last_date=15/09 vs pipeline/leaders=14/09): documentar.
 
+FU-002-bis (temporal_contract en writer de manifest): RESUELTO 2026-09-15 (d068c99). Mecanismo preparado; activacion diferida a FU-021-5.
+
 Prompt v6.15 cuando acumule mas cambios.
 
 SECCION 16 - FRASE GUIA
@@ -805,4 +819,4 @@ Pregunta final: "Que hacemos?"
 
 No empieces a proponer tareas sin antes confirmar la asimilacion completa.
 
-Fin del prompt maestro v6.14. Commit de referencia: 12d91b1. Fecha: 2026-09-15.
+Fin del prompt maestro v6.14. Commit de referencia: d068c99. Fecha: 2026-09-15.

@@ -221,3 +221,31 @@
   - FU-021-3C: FUTURE_SETTLEMENT + FX_DAILY_CUT (provider dedicado).
   - A2.3: corregir `get_market` para `^`/`=F`/`=X`.
   - A3.1: retirar `trim_to_last_valid_date` de `data_load.py` (diferido a sub-informe de 13 consumidores).
+
+
+## FU-002-bis - temporal_contract declarativo en writer de manifest (RESUELTO)
+
+- **Origen:** derivado del dictamen de FU-021-3A. El manifest FU-002 no bloqueaba `last_date > expected_session` (deteccion sin accion).
+- **Descripcion:** la regla `quality.status` fue reescrita por FU-002-evo2 (commit `0ed695f`) y dejo de consultar `last_date_is_expected_session`. Resultado: una fila futura (intradia tratada como EOD) podia declararse VALID o VALID_WITH_MISSING segun close_nan.
+- **Hallazgo adicional:** el analisis USA+UK revelo que `expected_session = last_expected_market_date(reference_date)` es autoridad temporal solo para universos USA puros. `market_data.parquet` (562 mixtos) y `stock_prices.parquet` (313 USA+UK) son heterogeneos y quedan exentos de validacion temporal hasta FU-021-5.
+- **Diseno aprobado (dictamen v3):**
+  - `temporal_contract` declarativo, opcional, keyword-only.
+  - Bloque `temporal: {contract: null | string}` siempre presente en el manifest.
+  - Regla temporal con precedencia maxima cuando hay contrato declarado: `last_date > expected_session` -> `INVALID`, sin depender de close_nan (temporalidad y completitud son dimensiones independientes).
+  - Writer no descubre mercados por `get_market()`. Resolucion por clase queda en FU-021-5.
+  - Reader intacto. `schema_version = 1`.
+- **Fix aplicado (`d068c99`):**
+  - `src/utils.py::write_artifact_with_manifest`: parametro keyword-only `temporal_contract=None`. Rama temporal al frente de la regla de status. Bloque `temporal` en el JSON. Log INFO cuando `None`.
+  - `tests/test_artifact_manifest.py`: renombrado `test_fu_002_evo2_valid_with_missing_pre_publish` -> `..._no_contract`. 5 tests nuevos.
+  - `tests/test_backup_provider_reference.py`: 4 tests writer<->reader.
+- **Tests:** 9 nuevos (5 writer + 4 reader). Suite total: 343 passed + 2 skipped.
+- **Verificacion E2E (workflow_dispatch 2026-09-15 20:20 UTC sobre main):**
+  - `[MANIFEST] data/market_data.parquet: temporal_contract=None (validacion temporal no aplicada)`.
+  - `[MANIFEST] data/stock_prices.parquet: temporal_contract=None (validacion temporal no aplicada)`.
+  - Reader acepta ambos manifests con bloque temporal.
+  - Gate 10/10.
+- **Clasificacion:** P1 estructural (preparacion contractual) - **RESUELTO 2026-09-15**.
+- **Estado efectivo:** el mecanismo existe pero ningun caller lo activa. `temporal_contract=None` en todos los runs. Validacion temporal queda desactivada hasta que FU-021-5 defina contratos por clase.
+- **Deudas derivadas abiertas:**
+  - FU-021-5: definir semantica temporal por clase y activar `temporal_contract` desde los callers.
+  - A2.3: corregir `get_market` para `^`/`=F`/`=X`.
