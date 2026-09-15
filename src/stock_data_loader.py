@@ -428,7 +428,8 @@ def download_stock_prices(reference_date=None, run_id=None):
     if xe_candidates:
         print(f"Intentando Xetra para {len(xe_candidates)} tickers")
         try:
-            xe_data = xetra.get_prices(xe_candidates, use_cache=True)
+            xe_data = xetra.get_prices(xe_candidates, use_cache=True,
+                                        reference_date=reference_date)
             if xe_data is not None and not xe_data.empty:
                 cascade_frames.append(xe_data)
         except Exception as e:

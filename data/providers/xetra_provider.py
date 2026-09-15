@@ -29,6 +29,8 @@ WS_QUERY_TIMEOUT = 25  # segundos máximos por consulta de un ticker
 from datetime import timedelta
 
 from src.market_calendar import is_market_day
+from src.market_hours import is_trading_session, is_session_closed
+from src.instrument_registry import get_market
 WS_START = (datetime.now() - timedelta(days=430)).strftime("%Y-%m-%dT00:00:00.000Z")
 WS_RESOLUTION = "1D"
 
@@ -250,16 +252,77 @@ class XetraProvider:
             return
         self._cache_path(ticker).write_bytes(df.to_csv(index=False).encode("utf-8"))
 
-    def _cache_is_fresh(self, ticker: str) -> bool:
+    def _cache_is_fresh(self, ticker: str, reference_date=None) -> bool:
+        """True si la cache contiene la ultima sesion EOD esperada.
+
+        FU-018 (2026-09-15): con reference_date, la decision no depende
+        de datetime.now(). Ademas, si hoy es sesion y ya cerro, la
+        cache debe contener hoy (no ayer).
+        """
         df = self._load_cache(ticker)
         if df.empty:
             return False
         last = pd.to_datetime(df["date"]).max()
-        return (pd.Timestamp.now().normalize() - last).days <= 1
+        if reference_date is None:
+            # Legacy: comportamiento previo.
+            return (pd.Timestamp.now().normalize() - last).days <= 1
+        market = get_market(ticker)
+        if market == "UNKNOWN":
+            print(f"  [WARN] FU-018: {ticker}: market desconocido. "
+                  f"Fallback legacy (no se pudo verificar FU-018).")
+        else:
+            ref_date = reference_date.date()
+            if is_trading_session(market, ref_date) and \
+               is_session_closed(market, ref_date, reference_date):
+                return last.date() >= ref_date
+        return (reference_date.date() - last.date()).days <= 1
 
     # -------------------- API pública --------------------
 
-    def get_prices(self, tickers, use_cache: bool = True) -> pd.DataFrame:
+
+    def _filter_non_eod_last_row(self, df, ticker, reference_date):
+        """FU-018: elimina la ultima fila si es una vela no EOD.
+
+        Flujo contractual (FU-018-2):
+        - df vacio o sin reference_date -> sin cambios.
+        - last_date < reference_date.date() -> sesion pasada, EOD valido.
+        - last_date > reference_date.date() -> WARN, sin cambios.
+        - last_date == reference_date.date():
+            - market desconocido -> WARN, sin eliminar (no fail-open).
+            - no es dia de negociacion -> sin cambios.
+            - sesion cerrada -> EOD valido, conservar.
+            - sesion aun abierta -> eliminar ultima fila.
+        """
+        if df.empty or reference_date is None:
+            return df
+        last_dt = pd.to_datetime(df["date"]).iloc[-1]
+        last_date = last_dt.date() if hasattr(last_dt, "date") else last_dt
+        ref_date = reference_date.date()
+
+        if last_date < ref_date:
+            return df
+        if last_date > ref_date:
+            print(f"  [WARN] FU-018: {ticker}: last_date={last_date} > "
+                  f"reference_date={ref_date}. No eliminar.")
+            return df
+
+        market = get_market(ticker)
+        if market == "UNKNOWN":
+            print(f"  [WARN] FU-018: {ticker}: market desconocido en la "
+                  f"sesion actual {last_date}. No se puede determinar "
+                  f"elegibilidad EOD.")
+            return df
+        if not is_trading_session(market, last_date):
+            return df
+        if is_session_closed(market, last_date, reference_date):
+            return df
+
+        print(f"  [FU-018] {ticker}: sesion {last_date} en {market} aun "
+              f"no cerrada -> eliminar vela actual")
+        return df.iloc[:-1].reset_index(drop=True)
+
+    def get_prices(self, tickers, use_cache: bool = True,
+                   reference_date=None) -> pd.DataFrame:
         """Descarga OHLCV para los tickers indicados.
 
         Args:
@@ -280,9 +343,13 @@ class XetraProvider:
             if not self.supports(t):
                 print(f"  [XETRA] {t} no está en el mapa")
                 continue
-            if use_cache and self._cache_is_fresh(t):
+            if use_cache and self._cache_is_fresh(t, reference_date=reference_date):
                 df_cached = self._load_cache(t)
                 if not df_cached.empty:
+                    # FU-018: filtro tambien en cache-hit. Una cache escrita
+                    # antes del fix puede contener la vela intradia actual.
+                    df_cached = self._filter_non_eod_last_row(
+                        df_cached, t, reference_date)
                     print(f"  [XETRA] {t} desde cache ({len(df_cached)} filas)")
                     frames.append(self._to_multiindex(df_cached, t))
                     continue
@@ -340,6 +407,9 @@ class XetraProvider:
                                         .sort_values("date")
                                         .reset_index(drop=True))
 
+                    # FU-018: filtro antes de guardar (fetch path).
+                    df_new = self._filter_non_eod_last_row(
+                        df_new, t, reference_date)
                     self._save_cache(t, df_new)
                     print(f"  [XETRA] {t} OK ({len(df_new)} filas, "
                           f"{df_new['date'].min().strftime('%Y-%m-%d')} -> "

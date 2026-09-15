@@ -6,6 +6,7 @@ Fases 1-4 + Correccion 0.5 + P1 + P2 + Mejoras 16-20.
 import os
 import sys
 from datetime import datetime
+from zoneinfo import ZoneInfo
 from src.report_generator import generate_daily_report
 from src.pipeline.data_load import load_all_data
 from src.pipeline.regimes import compute_all_regimes
@@ -32,7 +33,12 @@ from config.tickers import validate_sector_universe
 
 def main():
     # B2 (2026-09-12): reference_date se resuelve UNA vez al inicio del pipeline.
-    reference_date = datetime.now()
+    # FU-018-3b (2026-09-15): reference_date timezone-aware en horario
+    # Madrid. Necesario para que market_hours.is_session_closed compare
+    # con la hora de cierre de cada mercado. Se elige Europe/Madrid de
+    # forma explicita (no .astimezone(), que depende del runner) porque
+    # PUBLISH_HOUR=23 esta expresado en esa zona.
+    reference_date = datetime.now(ZoneInfo("Europe/Madrid"))
     # FU-002 (2026-09-15): run_id unico para manifests de artefactos.
     run_id = reference_date.strftime('%Y%m%d_%H%M%S')
     validate_sector_universe()
