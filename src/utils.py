@@ -353,7 +353,8 @@ def _try_cleanup(*paths):
 
 def write_artifact_with_manifest(df, parquet_path, source,
                                   reference_date, run_id,
-                                  schema_version=1):
+                                  schema_version=1, *,
+                                  temporal_contract=None):
     """Escribe parquet + manifest de forma atomica (FU-002, 2026-09-15).
 
     Pasos:
@@ -447,7 +448,18 @@ def write_artifact_with_manifest(df, parquet_path, source,
         # por calendarios heterogeneos), la regla caia en el else y
         # declaraba VALID ignorando NaN reales. Detectado en run
         # 2026-09-15 14:20 con close_nan=33, status=VALID.
-        if pct_dup_last > MANIFEST_DUP_THRESHOLD:
+        # FU-002-bis (2026-09-15): validacion temporal contractual.
+        # Si el caller declara un contrato temporal y la ultima fila
+        # es posterior a la sesion esperada, hay violacion de contrato.
+        # Precedencia maxima: no se degrada a VALID_WITH_MISSING por
+        # close_nan > 0. La resolucion concreta de expected_session
+        # por clase queda pendiente de FU-021-5. El writer no infiere
+        # el contrato por si mismo; solo aplica el que el caller declara.
+        if (temporal_contract is not None
+                and last_date is not None
+                and last_date > expected_dt):
+            status = 'INVALID'
+        elif pct_dup_last > MANIFEST_DUP_THRESHOLD:
             # Corrupcion confirmada: precios duplicados por ffill u otra causa.
             status = 'INVALID'
         elif close_nan_last > 0:
@@ -487,6 +499,9 @@ def write_artifact_with_manifest(df, parquet_path, source,
                 'date_min': date_min,
                 'date_max': date_max,
             },
+            'temporal': {
+                'contract': temporal_contract,
+            },
             'quality': {
                 'last_date': last_date.strftime('%Y-%m-%d') if last_date else None,
                 'expected_session': expected_session,
@@ -522,6 +537,10 @@ def write_artifact_with_manifest(df, parquet_path, source,
         print(f"    coverage_pct={_coverage_pct:.4f}")
         print(f"    last_date={date_max}, expected={expected_session}")
         print(f"    last_date_is_expected_session={last_date_is_expected}")
+        if temporal_contract is None:
+            print("    temporal_contract=None (validacion temporal no aplicada)")
+        else:
+            print(f"    temporal_contract={temporal_contract} (validacion temporal aplicada)")
         return manifest
 
     except Exception as e:

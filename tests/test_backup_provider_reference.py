@@ -162,3 +162,105 @@ def test_fu_002_6_discrepancy_rejected(patched_paths):
 
     result = bp._validate_with_cache('T0', df_new)
     assert result is False
+
+
+# --- FU-002-bis: writer <-> reader con temporal_contract ---
+
+
+def test_contract_none_reader_accepts(patched_paths):
+    """Sin contrato: writer produce VALID, reader acepta.
+
+    Compatibilidad transicional: contract=None mantiene la semantica
+    historica de FU-002-evo2.
+    """
+    from data.providers.backup_providers import BackupProvider
+    market_p, stocks_p = patched_paths
+    ref_date = datetime(2026, 9, 15, 23, 30)
+    write_artifact_with_manifest(
+        _make_df(dup_ratio=0.0), str(market_p),
+        source='test', reference_date=ref_date, run_id='r_m_nc',
+        temporal_contract=None,
+    )
+    write_artifact_with_manifest(
+        _make_df(dup_ratio=0.0), str(stocks_p),
+        source='test', reference_date=ref_date, run_id='r_s_nc',
+        temporal_contract=None,
+    )
+
+    bp = BackupProvider()
+    assert bp.reference_cache_status == 'VALID'
+
+
+def test_contract_equity_eod_future_date_reader_rejects(patched_paths):
+    """Con contrato EQUITY_EOD + last_date > expected -> writer INVALID,
+    reader INVALID."""
+    from data.providers.backup_providers import BackupProvider
+    market_p, stocks_p = patched_paths
+    ref_date = datetime(2026, 9, 15, 10, 35)
+    write_artifact_with_manifest(
+        _make_df(last_date='2026-09-15', dup_ratio=0.0), str(market_p),
+        source='test', reference_date=ref_date, run_id='r_m_t',
+        temporal_contract='EQUITY_EOD',
+    )
+    write_artifact_with_manifest(
+        _make_df(dup_ratio=0.0), str(stocks_p),
+        source='test', reference_date=ref_date, run_id='r_s_t',
+        temporal_contract='EQUITY_EOD',
+    )
+
+    bp = BackupProvider()
+    assert bp.reference_cache_status == 'INVALID'
+
+
+def test_contract_equity_eod_valid_reader_accepts(patched_paths):
+    """Con contrato EQUITY_EOD + last_date == expected -> writer VALID,
+    reader acepta."""
+    from data.providers.backup_providers import BackupProvider
+    market_p, stocks_p = patched_paths
+    ref_date = datetime(2026, 9, 15, 23, 30)
+    write_artifact_with_manifest(
+        _make_df(last_date='2026-09-15', dup_ratio=0.0), str(market_p),
+        source='test', reference_date=ref_date, run_id='r_m_ok',
+        temporal_contract='EQUITY_EOD',
+    )
+    write_artifact_with_manifest(
+        _make_df(dup_ratio=0.0), str(stocks_p),
+        source='test', reference_date=ref_date, run_id='r_s_ok',
+        temporal_contract='EQUITY_EOD',
+    )
+
+    bp = BackupProvider()
+    assert bp.reference_cache_status == 'VALID'
+
+
+def test_schema_v1_with_temporal_block_reader_accepts(patched_paths):
+    """Manifest schema_version=1 con bloque temporal: reader acepta.
+
+    Confirma que D2.B (bloque temporal siempre presente) no rompe la FSM
+    del reader, que sigue exigiendo schema_version == 1.
+    """
+    import json as _json
+    from data.providers.backup_providers import BackupProvider
+    market_p, stocks_p = patched_paths
+    ref_date = datetime(2026, 9, 15, 23, 30)
+    write_artifact_with_manifest(
+        _make_df(dup_ratio=0.0), str(market_p),
+        source='test', reference_date=ref_date, run_id='r_m_sch',
+        temporal_contract='EQUITY_EOD',
+    )
+    write_artifact_with_manifest(
+        _make_df(dup_ratio=0.0), str(stocks_p),
+        source='test', reference_date=ref_date, run_id='r_s_sch',
+        temporal_contract='EQUITY_EOD',
+    )
+
+    # Verificar que el manifest tiene schema_version=1 y bloque temporal
+    mp = Path(str(market_p) + '.manifest.json')
+    mdata = _json.loads(mp.read_text(encoding='utf-8'))
+    assert mdata['schema_version'] == 1
+    assert 'temporal' in mdata
+    assert mdata['temporal']['contract'] == 'EQUITY_EOD'
+
+    bp = BackupProvider()
+    assert bp.reference_cache_status == 'VALID'
+

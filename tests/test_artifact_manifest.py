@@ -123,8 +123,15 @@ def test_fu_002_evo_valid_with_missing(tmp_path):
     assert manifest['quality']['last_date_is_expected_session'] is True
 
 
-def test_fu_002_evo2_valid_with_missing_pre_publish(tmp_path):
-    """FU-002-evo2 (2026-09-15): close_nan > 0 con last_date != expected_session."""
+def test_fu_002_evo2_valid_with_missing_pre_publish_no_contract(tmp_path):
+    """FU-002-evo2, sin contrato temporal activado: close_nan > 0 con
+    last_date != expected_session -> VALID_WITH_MISSING.
+
+    Con temporal_contract=None la validacion temporal no aplica: este
+    test preserva el comportamiento historico de FU-002-evo2. Cuando
+    FU-021-5 active un contrato explicito, un last_date > expected_session
+    pasara a INVALID.
+    """
     df = _make_df(last_date='2026-09-15', n_tickers=5, add_nan_last=True)
     parquet_path = tmp_path / 'prepub.parquet'
     ref_date = datetime(2026, 9, 15, 10, 35)
@@ -158,3 +165,112 @@ def test_manifest_expected_session_deterministic(tmp_path):
 
     assert m1['quality']['expected_session'] == m2['quality']['expected_session']
     assert m1['quality']['expected_session'] == '2026-09-15'
+
+# --- FU-002-bis: temporal_contract ---
+
+
+def test_temporal_contract_none_no_temporal_validation(tmp_path):
+    """Sin contrato: comportamiento FU-002-evo2 (sin validacion temporal).
+
+    last_date > expected_session con close_nan=0 y contract=None -> VALID.
+    """
+    df = _make_df(last_date='2026-09-15', dup_ratio=0.0)
+    parquet_path = tmp_path / 'no_contract.parquet'
+    ref_date = datetime(2026, 9, 15, 10, 35)
+
+    manifest = write_artifact_with_manifest(
+        df, str(parquet_path),
+        source='test', reference_date=ref_date, run_id='test_nc',
+        temporal_contract=None,
+    )
+
+    assert manifest['quality']['last_date'] == '2026-09-15'
+    assert manifest['quality']['expected_session'] == '2026-09-14'
+    assert manifest['quality']['last_date_is_expected_session'] is False
+    assert manifest['temporal']['contract'] is None
+    # Sin contrato: no aplica regla temporal -> VALID (close_nan=0)
+    assert manifest['quality']['status'] == 'VALID'
+
+
+def test_temporal_contract_equity_eod_rejects_future_date(tmp_path):
+    """Con contrato EQUITY_EOD: last_date > expected_session -> INVALID.
+
+    close_nan=0, pct_dup=0. Sin embargo, violacion temporal -> INVALID.
+    """
+    df = _make_df(last_date='2026-09-15', dup_ratio=0.0)
+    parquet_path = tmp_path / 'contract_future.parquet'
+    ref_date = datetime(2026, 9, 15, 10, 35)
+
+    manifest = write_artifact_with_manifest(
+        df, str(parquet_path),
+        source='test', reference_date=ref_date, run_id='test_contract_f',
+        temporal_contract='EQUITY_EOD',
+    )
+
+    assert manifest['temporal']['contract'] == 'EQUITY_EOD'
+    assert manifest['quality']['last_date_is_expected_session'] is False
+    assert manifest['quality']['status'] == 'INVALID'
+
+
+def test_temporal_contract_equity_eod_rejects_future_date_with_nan(tmp_path):
+    """Con contrato: last_date > expected_session + close_nan>0 -> INVALID.
+
+    Evita que la logica tipo Opcion B (future+nan -> VALID_WITH_MISSING)
+    reaparezca accidentalmente. La temporalidad y la completitud son
+    dimensiones independientes.
+    """
+    df = _make_df(last_date='2026-09-15', n_tickers=5, add_nan_last=True)
+    parquet_path = tmp_path / 'contract_future_nan.parquet'
+    ref_date = datetime(2026, 9, 15, 10, 35)
+
+    manifest = write_artifact_with_manifest(
+        df, str(parquet_path),
+        source='test', reference_date=ref_date, run_id='test_contract_fn',
+        temporal_contract='EQUITY_EOD',
+    )
+
+    assert manifest['quality']['close_nan_last'] > 0
+    assert manifest['quality']['last_date_is_expected_session'] is False
+    assert manifest['quality']['status'] == 'INVALID'
+
+
+def test_temporal_contract_declared_recorded_in_manifest(tmp_path):
+    """El manifest registra temporal.contract == 'EQUITY_EOD'."""
+    df = _make_df(last_date='2026-09-15', dup_ratio=0.0)
+    parquet_path = tmp_path / 'contract_ok.parquet'
+    ref_date = datetime(2026, 9, 15, 23, 30)
+
+    manifest = write_artifact_with_manifest(
+        df, str(parquet_path),
+        source='test', reference_date=ref_date, run_id='test_contract_ok',
+        temporal_contract='EQUITY_EOD',
+    )
+
+    assert manifest['temporal']['contract'] == 'EQUITY_EOD'
+    assert manifest['quality']['last_date_is_expected_session'] is True
+    assert manifest['quality']['status'] == 'VALID'
+
+    manifest_file = Path(str(parquet_path) + '.manifest.json')
+    on_disk = json.loads(manifest_file.read_text(encoding='utf-8'))
+    assert on_disk['temporal']['contract'] == 'EQUITY_EOD'
+
+
+def test_temporal_contract_none_recorded_in_manifest(tmp_path):
+    """El manifest registra temporal.contract == None (siempre presente)."""
+    df = _make_df(last_date='2026-09-15', dup_ratio=0.0)
+    parquet_path = tmp_path / 'no_contract_manifest.parquet'
+    ref_date = datetime(2026, 9, 15, 23, 30)
+
+    manifest = write_artifact_with_manifest(
+        df, str(parquet_path),
+        source='test', reference_date=ref_date, run_id='test_nc_m',
+    )
+
+    assert 'temporal' in manifest
+    assert manifest['temporal']['contract'] is None
+
+    manifest_file = Path(str(parquet_path) + '.manifest.json')
+    on_disk = json.loads(manifest_file.read_text(encoding='utf-8'))
+    assert 'temporal' in on_disk
+    assert on_disk['temporal']['contract'] is None
+
