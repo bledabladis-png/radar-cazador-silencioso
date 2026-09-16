@@ -157,6 +157,11 @@ def trim_to_last_valid_date(df, min_coverage=0.5):
     Recorta un DataFrame MultiIndex a la última fila donde al menos
     min_coverage de las columnas 'Close' tienen dato no nulo.
     Evita operar con filas festivas/vacías.
+
+    DEPRECATED (FU-021-5 Fase 9, A3.1, 2026-09-16):
+    Redundante con _trim_market_data_to_equity_eod (FU-021-3A).
+    La responsabilidad temporal vive en el productor (download_market_data).
+    Se mantiene por compatibilidad con scripts externos. No usar en pipeline.
     """
     if df is None or df.empty:
         return df

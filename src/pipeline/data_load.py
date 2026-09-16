@@ -6,7 +6,6 @@ Extraido de run.py (refactor C2, fase C2-3).
 
 from src.data_loader import download_market_data
 from src.macro_manual_loader import load_macro_manual
-from src.utils import trim_to_last_valid_date
 from data.validator import validate_market_data
 
 
@@ -15,7 +14,7 @@ def load_all_data(reference_date=None, run_id=None):
 
     Returns:
         dict | None: Diccionario con keys:
-            - 'df_market': DataFrame trimmeado y validado (o None si fallo critico)
+            - 'df_market': DataFrame validado (o None si fallo critico)
             - 'df_macro_manual': DataFrame macro o None
             - 'valid_tickers': lista de tickers validos
             - 'issues': dict de issues por ticker
@@ -27,7 +26,10 @@ def load_all_data(reference_date=None, run_id=None):
         print("Error: no se pudieron descargar datos.")
         return None
 
-    df_market = trim_to_last_valid_date(df_market)
+    # FU-021-5 Fase 9 (A3.1): trim_to_last_valid_date retirado.
+    # download_market_data aplica _filter_non_eod_equity + _trim_market_data_to_equity_eod
+    # (FU-021-3A), que recortan a la ultima sesion con cobertura EQUITY_EOD >= 90%.
+    # El trim legacy era redundante (verificado empiricamente: diff filas = 0).
     if df_market is None or df_market.empty:
         print("Error: no hay datos validos de mercado.")
         return None

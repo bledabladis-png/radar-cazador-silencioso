@@ -123,21 +123,28 @@ class TestConsolidate:
 
 class TestGetEffectiveMeta:
 
-    def test_un_contrato(self, df_real):
-        resolutions = resolve_all_contracts(df_real, REF)
-        bundle = consolidate(df_real, resolutions, REF, "run_1")
-        m = get_effective_meta(bundle.temporal_meta, ["EQUITY_EOD"])
+    def test_un_contrato(self):
+        # Mock determinista: EQUITY_EOD INSUFFICIENT con effective_date conocida.
+        resolutions = {
+            "EQUITY_EOD": _res(
+                "EQUITY_EOD", D_1109, D_1409, 3, 1.0, STATUS_INSUFFICIENT),
+        }
+        meta = build_temporal_meta(resolutions, REF, "run_test")
+        m = get_effective_meta(meta, ["EQUITY_EOD"])
         assert m["status"] == "INSUFFICIENT"
         assert m["effective_date"] == D_1109
         assert m["contracts"] == ["EQUITY_EOD"]
 
-    def test_varios_contratos_peor_status(self, df_real):
-        resolutions = resolve_all_contracts(df_real, REF)
-        bundle = consolidate(df_real, resolutions, REF, "run_1")
-        m = get_effective_meta(
-            bundle.temporal_meta, ["INDEX_EOD_USA", "EQUITY_EOD"]
-        )
-        # EQUITY INSUFFICIENT domina sobre INDEX OK
+    def test_varios_contratos_peor_status(self):
+        # Mock: INDEX OK + EQUITY INSUFFICIENT -> combinado INSUFFICIENT.
+        resolutions = {
+            "INDEX_EOD_USA": _res(
+                "INDEX_EOD_USA", D_1409, D_1409, 0, 1.0, STATUS_OK),
+            "EQUITY_EOD": _res(
+                "EQUITY_EOD", D_1109, D_1409, 3, 1.0, STATUS_INSUFFICIENT),
+        }
+        meta = build_temporal_meta(resolutions, REF, "run_test")
+        m = get_effective_meta(meta, ["INDEX_EOD_USA", "EQUITY_EOD"])
         assert m["status"] == "INSUFFICIENT"
 
     def test_min_effective_date(self, df_real):
@@ -167,13 +174,17 @@ class TestGetEffectiveMeta:
         )
         assert m["status"] == "BLOCKED"
 
-    def test_stale_menor_prioridad_que_insufficient(self, df_real):
-        resolutions = resolve_all_contracts(df_real, REF)
-        bundle = consolidate(df_real, resolutions, REF, "run_1")
-        # INDEX_EOD_EUROPA=STALE, EQUITY_EOD=INSUFFICIENT
+    def test_stale_menor_prioridad_que_insufficient(self):
+        # Mock: STALE + INSUFFICIENT -> combinado INSUFFICIENT.
+        resolutions = {
+            "INDEX_EOD_EUROPA": _res(
+                "INDEX_EOD_EUROPA", D_1109, D_1409, 4, 1.0, STATUS_STALE),
+            "EQUITY_EOD": _res(
+                "EQUITY_EOD", D_1109, D_1409, 3, 1.0, STATUS_INSUFFICIENT),
+        }
+        meta = build_temporal_meta(resolutions, REF, "run_test")
         m = get_effective_meta(
-            bundle.temporal_meta, ["INDEX_EOD_EUROPA", "EQUITY_EOD"]
-        )
+            meta, ["INDEX_EOD_EUROPA", "EQUITY_EOD"])
         assert m["status"] == "INSUFFICIENT"
 
 
