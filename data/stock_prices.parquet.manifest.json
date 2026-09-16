@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "artifact": {
+    "path": "data/stock_prices.parquet",
+    "sha256": "bb298df99a3a37eb120b9bcdf0d781e0591758045f221b20a8ed19646e1161fb",
+    "bytes": 14698151,
+    "written_at": "2026-09-16T02:57:41.802145"
+  },
+  "producer": {
+    "module": "src.utils",
+    "function": "write_artifact_with_manifest",
+    "run_id": "20260916_024431",
+    "source": "yahoo_european_cascade"
+  },
+  "content": {
+    "rows": 1289,
+    "cols": 1565,
+    "n_tickers": 313,
+    "date_min": "2021-09-15",
+    "date_max": "2026-09-15"
+  },
+  "temporal": {
+    "contract": null
+  },
+  "quality": {
+    "last_date": "2026-09-15",
+    "expected_session": "2026-09-15",
+    "last_date_is_expected_session": true,
+    "pct_dup_last": 0.0,
+    "close_nan_last": 262,
+    "n_tickers_expected_last": 313,
+    "n_tickers_with_close_last": 51,
+    "n_tickers_missing_close_last": 262,
+    "coverage_pct_last": 0.162939,
+    "last_row_is_partial": true,
+    "status": "VALID_WITH_MISSING"
+  }
+}

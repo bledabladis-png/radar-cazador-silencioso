@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "artifact": {
+    "path": "data/market_data.parquet",
+    "sha256": "52ab02130ddc53606ea813e8f6bb739d1159d239294008c436c8b2761ac85897",
+    "bytes": 56941350,
+    "written_at": "2026-09-16T02:49:03.985617"
+  },
+  "producer": {
+    "module": "src.utils",
+    "function": "write_artifact_with_manifest",
+    "run_id": "20260916_024431",
+    "source": "yahoo"
+  },
+  "content": {
+    "rows": 2604,
+    "cols": 2810,
+    "n_tickers": 562,
+    "date_min": "2016-09-15",
+    "date_max": "2026-09-14"
+  },
+  "temporal": {
+    "contract": null
+  },
+  "quality": {
+    "last_date": "2026-09-14",
+    "expected_session": "2026-09-15",
+    "last_date_is_expected_session": false,
+    "pct_dup_last": 0.003565,
+    "close_nan_last": 1,
+    "n_tickers_expected_last": 562,
+    "n_tickers_with_close_last": 561,
+    "n_tickers_missing_close_last": 1,
+    "coverage_pct_last": 0.998221,
+    "last_row_is_partial": true,
+    "status": "VALID_WITH_MISSING"
+  }
+}
