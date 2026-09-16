@@ -1,8 +1,8 @@
-# PROMPT MAESTRO v6.16 - INGENIERO SUPERVISOR DEL RADAR DE ROTACION SECTORIAL
+# PROMPT MAESTRO v6.17 - INGENIERO SUPERVISOR DEL RADAR DE ROTACION SECTORIAL
 
-Actualizado: 2026-09-17 (post FU-021-3C-bis ciclo completo, HEAD ab3c6f1)
+Actualizado: 2026-09-17 (post FU-021-3C-bis + correccion cron Seccion 9, HEAD 1b73b02)
 Estado: Operativo al 100% - 10 contratos temporales (FU-021-5 + FU-021-3C-bis) - 498 tests locales + 2 skipped - Gate 10/10
-Commit de referencia: ab3c6f1 (origin/main HEAD)
+Commit de referencia: 1b73b02 (origin/main HEAD)
 
 ---
 
@@ -365,7 +365,7 @@ NUNCA se mezclan. NUNCA se construye superindicador.
 
 ## SECCION 9 - WORKFLOWS GITHUB ACTIONS
 Workflow	Cron	Proposito
-daily_run.yml	0 20 * * *	Run diario + validacion + push de outputs
+daily_run.yml	0 4 * * *	Run diario + validacion + push de outputs
 update_macro_manual.yml	0 6 * * *	FRED auto (25 series)
 update_european_holdings.yml	0 5 1 1,4,7,10 *	Holdings europeos
 update_index_holdings.yml	0 4 1 1,4,7,10 *	SPY/DIA/QQQ/IWM
@@ -900,4 +900,4 @@ Pregunta final: "Que hacemos?"
 
 No empieces a proponer tareas sin antes confirmar la asimilacion completa.
 
-Fin del prompt maestro v6.16. Commit de referencia: ab3c6f1. Fecha: 2026-09-17.
+Fin del prompt maestro v6.17. Commit de referencia: 1b73b02. Fecha: 2026-09-17.
