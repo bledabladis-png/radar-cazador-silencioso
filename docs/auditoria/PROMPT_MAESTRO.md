@@ -700,7 +700,7 @@ Reorganizacion pendiente: validation/, scripts/.
 
 Deudas ciclo FU-021-3C-bis:
 
-K-FU-021-3C-bis-01 (ALTA): `daily_run.yml` no hace `git pull --rebase` antes del `git push` del commit automatico. Ya se materializo 2026-09-16 (push rechazado). Afecta a todos los workflows con commit.
+K-FU-021-3C-bis-01 (ALTA): RESUELTO 2026-09-17 (03fcb3e). `daily_run.yml` ahora hace `git pull --rebase origin main` antes del `git push` del commit automatico.
 
 K-FU-021-3C-bis-02 (MEDIA): `SPOT_COMMODITY` en STALE sistematico por desalineacion spot/market (1 dia). Documentar o ajustar max_lag.
 
@@ -714,7 +714,9 @@ K-FU-021-3C-bis-06 (ALTA): este prompt (v6.16). RESUELTO.
 
 K-FU-021-3C-bis-07 (BAJA): informe formal FU-021-3C-bis en docs/auditoria/ pendiente de decidir.
 
-K-FU-021-3C-bis-08 (BAJA): texto hardcoded "9 contratos resueltos" en data_loader.py cuando ya son 10.
+K-FU-021-3C-bis-08 (BAJA): RESUELTO 2026-09-17 (03fcb3e). `data_loader.py` usa `len(_resolutions)` en lugar de "9 contratos".
+
+K-FU-021-3C-bis-09 (MEDIA): 6 workflows pushean sin `git pull --rebase`: `update_european_holdings.yml`, `update_index_holdings.yml`, `update_macro_manual.yml`, `update_qqq_sec_flow.yml`, `update_sector_holdings.yml`, `update_sec_nport.yml`. Mismo patron que K-01. Arreglar en ciclo dedicado con la tecnica validada.
 
 ## SECCION 14 - COMANDOS UTILES
 powershell
@@ -824,7 +826,7 @@ Tests: 469 -> 498 (+29).
 
 ### 15.2. Pendientes reales
 
-K-FU-021-3C-bis-01 (ALTA): daily_run.yml sin git pull --rebase.
+K-FU-021-3C-bis-09 (MEDIA): 6 workflows con el mismo patron sin git pull --rebase que K-01.
 
 K-FU-021-3C-bis-03 (ALTA): confirmar proximo cron sin workflow_dispatch.
 
