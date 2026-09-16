@@ -51,28 +51,36 @@ class TestRateYield:
 
 class TestFutureSettlement:
 
-    def test_metadata_blocked(self):
+    def test_metadata_activo(self):
         c = FutureSettlement()
         assert c.name == "FUTURE_SETTLEMENT"
         assert c.family == "FUTURE"
-        assert c.activation_req is not None
-        assert c.activation_req["official_settlement"] is True
+        assert c.activation_req is None
+        assert c.settlement_semantics == "close_proxy"
+        assert set(c.eligible_universe) == {"BZ=F", "CL=F"}
+        assert c.max_lag_days == 1
 
-    def test_resolve_siempre_blocked(self, df_real):
+    def test_gc_hg_ng_fuera_del_universo(self):
+        c = FutureSettlement()
+        assert "GC=F" not in c.eligible_universe
+        assert "HG=F" not in c.eligible_universe
+        assert "NG=F" not in c.eligible_universe
+
+    def test_resolve_status_valido(self, df_real):
         r = FutureSettlement().resolve(df_real, REF)
-        assert r.status == STATUS_BLOCKED
-        assert r.effective_date is None
-        assert r.expected_date is None
-        assert r.lag_days is None
-        assert r.coverage is None
+        assert r.contract_name == "FUTURE_SETTLEMENT"
+        assert r.status in VALID_STATUSES
+        assert r.status != STATUS_BLOCKED
 
     def test_resolve_sin_df_no_falla(self):
         r = FutureSettlement().resolve(None, REF)
-        assert r.status == STATUS_BLOCKED
+        assert r.contract_name == "FUTURE_SETTLEMENT"
+        assert r.status in VALID_STATUSES
 
     def test_resolve_con_df_vacio_no_falla(self):
         r = FutureSettlement().resolve(pd.DataFrame(), REF)
-        assert r.status == STATUS_BLOCKED
+        assert r.contract_name == "FUTURE_SETTLEMENT"
+        assert r.status in VALID_STATUSES
 
 
 class TestFxDailyCut:
@@ -108,9 +116,11 @@ class TestResolveAllContracts:
             assert r.status in VALID_STATUSES, f"{name}: {r.status}"
             assert r.contract_name == name
 
-    def test_future_settlement_blocked(self, df_real):
+    def test_future_settlement_ya_no_blocked(self, df_real):
         resoluciones = resolve_all_contracts(df_real, REF)
-        assert resoluciones["FUTURE_SETTLEMENT"].status == STATUS_BLOCKED
+        r = resoluciones["FUTURE_SETTLEMENT"]
+        assert r.status in VALID_STATUSES
+        assert r.status != STATUS_BLOCKED
 
 
 class TestGetContractAll10:

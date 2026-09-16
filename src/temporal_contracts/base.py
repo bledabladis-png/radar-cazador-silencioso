@@ -115,6 +115,7 @@ class TemporalContract(ABC):
     per_ticker_lag: Optional[dict] = None
     per_pair_max_lag: Optional[dict] = None
     activation_req: Optional[dict] = None
+    settlement_semantics: Optional[str] = None
 
     @abstractmethod
     def resolve(

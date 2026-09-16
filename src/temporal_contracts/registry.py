@@ -81,18 +81,13 @@ CONTRACTS_REGISTRY = {
     },
     "FUTURE_SETTLEMENT": {
         "family": "FUTURE",
-        "eligible_universe": ["BZ=F", "CL=F", "GC=F", "HG=F", "NG=F"],
+        "eligible_universe": ["BZ=F", "CL=F"],
         "session_calendar": "CME|ICE",
-        "max_lag_days": None,
-        "min_coverage": None,
-        "per_ticker_lag": None,
+        "max_lag_days": 1,
+        "min_coverage": 1.0,
+        "per_ticker_lag": {"BZ=F": 1, "CL=F": 1},
         "per_pair_max_lag": None,
-        "activation_req": {
-            "provider_specific_contract": True,
-            "official_settlement": True,
-            "stable_identifier": True,
-            "declared_rollover": True,
-        },
+        "activation_req": None,
     },
     "SPOT_COMMODITY": {
         "family": "SPOT",

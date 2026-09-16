@@ -1,4 +1,4 @@
-﻿"""
+"""
 Registro de instrumentos canónicos con símbolos por proveedor.
 El ticker canónico interno coincide con el de Yahoo Finance.
 """
@@ -780,7 +780,10 @@ def get_instrument_class(ticker: str) -> str:
     resolveran en FU-021-5 si algun consumidor necesita distinguirlos.
 
     Esta funcion NO decide contratos temporales. La cadena es:
-      ticker -> get_instrument_class -> FUTURE -> FU-021-5 -> FUTURE_SETTLEMENT
+      ticker -> get_instrument_class -> FUTURE
+        -> FU-021-5 contrato temporal:
+           BZ=F, CL=F        -> FUTURE_SETTLEMENT (close_proxy)
+           GC=F, HG=F, NG=F  -> SPOT_COMMODITY (spot_reference)
     """
 
     if not isinstance(ticker, str):

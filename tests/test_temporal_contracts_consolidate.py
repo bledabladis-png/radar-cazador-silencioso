@@ -161,12 +161,19 @@ class TestGetEffectiveMeta:
         assert get_effective_meta({}, ["EQUITY_EOD"]) == {}
         assert get_effective_meta(None, ["EQUITY_EOD"]) == {}
 
-    def test_blocked_domina(self, df_real):
-        resolutions = resolve_all_contracts(df_real, REF)
-        bundle = consolidate(df_real, resolutions, REF, "run_1")
-        m = get_effective_meta(
-            bundle.temporal_meta, ["INDEX_EOD_USA", "FUTURE_SETTLEMENT"]
-        )
+    def test_blocked_domina(self):
+        # Mock sintetico: A OK + B BLOCKED -> combinado BLOCKED.
+        # No usar contratos reales como fixture: su estado cambia con
+        # el sistema (p.ej. FUTURE_SETTLEMENT dejo de ser BLOCKED en
+        # FU-021-3C-bis).
+        resolutions = {
+            "CONTRACT_A": _res(
+                "CONTRACT_A", D_1409, D_1409, 0, 1.0, STATUS_OK),
+            "CONTRACT_B": _res(
+                "CONTRACT_B", None, None, None, None, STATUS_BLOCKED),
+        }
+        meta = build_temporal_meta(resolutions, REF, "run_test")
+        m = get_effective_meta(meta, ["CONTRACT_A", "CONTRACT_B"])
         assert m["status"] == "BLOCKED"
 
     def test_stale_menor_prioridad_que_insufficient(self):

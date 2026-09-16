@@ -68,10 +68,12 @@ class TestRegistryEntries:
         assert e["per_ticker_lag"] is not None
         assert "^FTSE" in e["per_ticker_lag"]
 
-    def test_future_settlement_tiene_activation_req(self):
+    def test_future_settlement_activo(self):
         e = get_registry_entry("FUTURE_SETTLEMENT")
-        assert e["activation_req"] is not None
-        assert e["activation_req"]["official_settlement"] is True
+        assert e["activation_req"] is None
+        assert e["max_lag_days"] == 1
+        assert e["min_coverage"] == 1.0
+        assert set(e["eligible_universe"]) == {"BZ=F", "CL=F"}
 
     def test_fx_daily_cut_tiene_per_pair_max_lag(self):
         e = get_registry_entry("FX_DAILY_CUT")
