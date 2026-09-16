@@ -34,7 +34,7 @@ def _compute_mte(df_market, financial_score, all_signals, pcr_data, darkpool_dat
                 except Exception:
                     pass
 
-        mte_result = compute_mte(df_market, fc_score, cred_signal, vol_signal, pcr_data, mte_darkpool)
+        mte_result = compute_mte(df_market, fc_score, cred_signal, vol_signal, pcr_data, mte_darkpool, temporal_meta=temporal_meta)
         if mte_result:
             print(f"  Escenario: {mte_result['scenario']} (MSI: {mte_result['msi']:.0f}, IPI: {mte_result['ipi']:.0f})")
         else:

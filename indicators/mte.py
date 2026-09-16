@@ -34,7 +34,7 @@ import os
 
 
 
-from config.settings import MTE_STATE_FILE
+from config.settings import MTE_STATE_FILE, CURRENT_TEMPORAL_CONTRACT_VERSION
 
 
 
@@ -1294,7 +1294,6 @@ def validate_transition(previous, current, cls):
 
 
 
-STATE_FILE = 'outputs/state/mte_state.json'
 
 
 
@@ -1310,7 +1309,7 @@ def load_previous_scenario():
 
 
 
-        with open(STATE_FILE, 'r') as f:
+        with open(MTE_STATE_FILE, 'r') as f:
 
 
 
@@ -1318,6 +1317,10 @@ def load_previous_scenario():
 
 
 
+            _stored_version = data.get('temporal_contract_version')
+            if _stored_version != CURRENT_TEMPORAL_CONTRACT_VERSION:
+                print(f'  MTE state: contrato cambio ({_stored_version} -> {CURRENT_TEMPORAL_CONTRACT_VERSION}). Reset.')
+                return 'MIXED', None
             return data.get('scenario', 'MIXED'), data.get('pending', None)
 
 
@@ -1338,15 +1341,20 @@ def save_scenario(scenario, pending=None):
 
 
 
-    os.makedirs('outputs', exist_ok=True)
+    os.makedirs(os.path.dirname(MTE_STATE_FILE), exist_ok=True)
 
 
 
-    with open(STATE_FILE, 'w') as f:
+    with open(MTE_STATE_FILE, 'w', encoding='utf-8') as f:
 
 
 
-        json.dump({'scenario': scenario, 'pending': pending}, f)
+        json.dump({
+            'schema_version': 1,
+            'temporal_contract_version': CURRENT_TEMPORAL_CONTRACT_VERSION,
+            'scenario': scenario,
+            'pending': pending,
+        }, f, indent=2)
 
 
 
@@ -1683,10 +1691,8 @@ def classify_mte(srs, shs, cls, ips):
 
 
 def compute_mte(df_market, financial_conditions_score, credit_signal,
-
-
-
-                volatility_signal, pcr_data=None, darkpool_data=None):
+                volatility_signal, pcr_data=None, darkpool_data=None,
+                temporal_meta=None):
 
 
 
@@ -1854,10 +1860,13 @@ def compute_mte(df_market, financial_conditions_score, credit_signal,
 
 
 
+                    'schema_version': 1,
+                    'temporal_contract_version': CURRENT_TEMPORAL_CONTRACT_VERSION,
+                    'effective_date': (temporal_meta or {}).get('by_contract', {}).get('EQUITY_EOD', {}).get('effective_date'),
+                    'expected_date': (temporal_meta or {}).get('by_contract', {}).get('EQUITY_EOD', {}).get('expected_date'),
+                    'coverage': (temporal_meta or {}).get('by_contract', {}).get('EQUITY_EOD', {}).get('coverage'),
+                    'futures_status': 'BLOCKED',
                     'scenario': scenario,
-
-
-
                     'confidence': confidence,
 
 
