@@ -6,6 +6,9 @@ from config.settings import TOP_N_CANDIDATES, TOP_N_LEADERS
 
 def compute_stock_metrics(df_market, df_stocks, etf_ticker, stock_list, temporal_meta=None):
     results = []
+    # FU-021-5 Fase 5.3a (P0): fecha contractual para columnas temporales.
+    from src.utils import get_effective_meta
+    _eff_meta = get_effective_meta(temporal_meta or {}, ['EQUITY_EOD'])
     price_etf = get_col(df_market, etf_ticker, 'Close')
 
     for ticker in stock_list:
@@ -65,6 +68,9 @@ def compute_stock_metrics(df_market, df_stocks, etf_ticker, stock_list, temporal
 
         results.append({
             'ticker': ticker,
+            'effective_date': _eff_meta.get('effective_date'),
+            'expected_date': _eff_meta.get('expected_date'),
+            'coverage': _eff_meta.get('coverage'),
             'rs': rs.iloc[-1],
             'rs_mom': rs_mom,
             'flow_proxy_z': flow_signal,
