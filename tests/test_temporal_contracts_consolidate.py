@@ -1,7 +1,6 @@
 """Tests Fase 3: consolidate + build_temporal_meta + get_effective_meta."""
 from datetime import date, datetime
 
-import pandas as pd
 import pytest
 
 from src.temporal_contracts import (
@@ -35,10 +34,6 @@ def _res(name, eff, exp, lag, cov, status):
         status=status,
     )
 
-
-@pytest.fixture
-def df_real():
-    return pd.read_parquet("data/market_data.parquet")
 
 
 class TestBuildTemporalMeta:

@@ -26,10 +26,6 @@ from src.temporal_contracts._common import (
 REF = datetime(2026, 9, 15, 22, 0)
 
 
-@pytest.fixture
-def df_real():
-    return pd.read_parquet("data/market_data.parquet")
-
 
 # --- _common helpers ---
 

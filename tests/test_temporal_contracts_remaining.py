@@ -2,7 +2,6 @@
 from datetime import datetime
 
 import pandas as pd
-import pytest
 
 from src.temporal_contracts import (
     VolatilityIndex,
@@ -19,10 +18,6 @@ from src.temporal_contracts import (
 
 REF = datetime(2026, 9, 15, 22, 0)
 
-
-@pytest.fixture
-def df_real():
-    return pd.read_parquet("data/market_data.parquet")
 
 
 class TestVolatilityIndex:
