@@ -153,7 +153,7 @@ def main():
     price_flow_divergences = diag['price_flow_divergences']
     shock_sensitivities = diag['shock_sensitivities']
 
-    md = compute_market_data(df_market, temporal_meta=temporal_meta)
+    md = compute_market_data(df_market, df_stocks=df_stocks, temporal_meta=temporal_meta)
     pcr_data = md['pcr_data']
     darkpool_data = md['darkpool_data']
     vol_structure_df = md['vol_structure_df']

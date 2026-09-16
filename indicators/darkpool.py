@@ -166,7 +166,7 @@ def _compute_z_for_window(hist, window):
     state = classify_darkpool(z)
     return z, momentum, percentile, state
 
-def compute_darkpool_signals():
+def compute_darkpool_signals(df_market=None, df_stocks=None):
     finra = FinraProvider()
     week_start = finra.get_latest_week()
     if not week_start:
@@ -185,16 +185,25 @@ def compute_darkpool_signals():
     end_date_str = end_date.strftime('%Y-%m-%d')
 
     volumes = {}
-    try:
-        df_market = pd.read_parquet('data/market_data.parquet')
-        volumes.update(_get_volume_from_df(df_market, week_start, end_date_str))
-    except Exception as e:
-        print(f'  [WARN] darkpool: market_data.parquet no disponible: {e}')
-    try:
-        df_stocks = pd.read_parquet('data/stock_prices.parquet')
-        volumes.update(_get_volume_from_df(df_stocks, week_start, end_date_str))
-    except Exception as e:
-        print(f'  [WARN] darkpool: stock_prices.parquet no disponible: {e}')
+    # FU-021-5 Fase 7 (Q-P.7): fuente canonica en memoria.
+    # Fallback a parquet solo si el caller no propaga df_market/df_stocks.
+    _df_market = df_market
+    if _df_market is None:
+        try:
+            _df_market = pd.read_parquet('data/market_data.parquet')
+        except Exception as e:
+            print(f'  [WARN] darkpool: market_data.parquet no disponible: {e}')
+    if _df_market is not None:
+        volumes.update(_get_volume_from_df(_df_market, week_start, end_date_str))
+
+    _df_stocks = df_stocks
+    if _df_stocks is None:
+        try:
+            _df_stocks = pd.read_parquet('data/stock_prices.parquet')
+        except Exception as e:
+            print(f'  [WARN] darkpool: stock_prices.parquet no disponible: {e}')
+    if _df_stocks is not None:
+        volumes.update(_get_volume_from_df(_df_stocks, week_start, end_date_str))
 
     if not volumes:
         return None

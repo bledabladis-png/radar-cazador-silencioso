@@ -28,12 +28,12 @@ def _compute_pcr():
     return pcr_data
 
 
-def _compute_darkpool():
+def _compute_darkpool(df_market=None, df_stocks=None):
     print("Calculando Dark Pools (FINRA ATS)...")
     darkpool_data = None
     try:
         from indicators.darkpool import compute_darkpool_signals
-        darkpool_data = compute_darkpool_signals()
+        darkpool_data = compute_darkpool_signals(df_market=df_market, df_stocks=df_stocks)
         if darkpool_data:
             print(f"  Dark Pool medio: {darkpool_data['media_dark_pool']:.2f}% "
                   f"({darkpool_data['n_tickers_ats']}/{darkpool_data['n_tickers_total']} tickers)")
@@ -90,7 +90,7 @@ def _compute_data_quality():
     return data_quality_df
 
 
-def compute_market_data(df_market, temporal_meta=None):
+def compute_market_data(df_market, df_stocks=None, temporal_meta=None):
     """Ejecuta PCR + Dark Pools + Volatilidad estructural + Calidad datos.
 
     Returns:
@@ -98,7 +98,7 @@ def compute_market_data(df_market, temporal_meta=None):
             pcr_data, darkpool_data, vol_structure_df, data_quality_df
     """
     pcr_data = _compute_pcr()
-    darkpool_data = _compute_darkpool()
+    darkpool_data = _compute_darkpool(df_market, df_stocks=df_stocks)
     vol_structure_df = _compute_vol_structure(df_market, pcr_data)
     data_quality_df = _compute_data_quality()
     return {
