@@ -1,36 +1,14 @@
-# -*- coding: utf-8 -*-
+"""Motor MTE: compute_mte (DT2 Fase 6).
 
-
-
+Extraccion literal de mte_legacy.py. Sin cambios funcionales.
+El paquete indicators.mte ya no contiene mte_legacy.py.
 """
-
-
-
-mte.py -- Market Transition Engine v1.0
-
-
-
-Motor de inferencia macroecon�mica basado en flujos institucionales.
-
-
-
-"""
-
-
-
-
-
-
-
-
+from __future__ import annotations
 
 import json
-
-
-
 import os
 
-
+from src.utils import robust_zscore, get_col
 
 from . import state as _mte_state
 from .scoring import (
@@ -45,73 +23,6 @@ from .scoring import (
 )
 from .decision import classify_mte
 
-
-
-from src.utils import robust_zscore, get_col
-
-
-
-
-
-
-
-# ============================================================
-
-
-
-# 0. FUNCIONES AUXILIARES
-
-
-
-# ============================================================
-
-
-
-# tanh, _get_last, scoring movidos a scoring.py (DT2 Fase 4)
-
-# ============================================================
-
-
-
-# 7. MATRIZ DE TRANSICIONES
-
-
-
-# ============================================================
-
-
-
-# NORMAL_TRANSITIONS..validate_transition movidos a decision.py (DT2 Fase 5)
-
-# 8. PERSISTENCIA DE ESTADO (HIST�RESIS)
-
-
-
-# ============================================================
-
-
-
-
-
-
-
-
-
-
-# state.py: load_previous_scenario, save_scenario extraidos (DT2 Fase 3)
-# ============================================================
-
-
-
-# 9. CONFIANZA
-
-
-
-# ============================================================
-
-
-
-# consensus_score..classify_mte movidos a decision.py (DT2 Fase 5)
 
 def compute_mte(df_market, financial_conditions_score, credit_signal,
                 volatility_signal, pcr_data=None, darkpool_data=None,
@@ -383,14 +294,3 @@ def compute_mte(df_market, financial_conditions_score, credit_signal,
 
 
         return None
-
-
-
-
-
-
-
-
-
-
-

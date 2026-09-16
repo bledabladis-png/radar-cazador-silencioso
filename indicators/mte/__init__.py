@@ -4,7 +4,7 @@ API publica re-exportada desde submodulos:
 - state: persistencia
 - scoring: componentes + agregados
 - decision: maquina de estados + confianza
-- mte_legacy: engine (compute_mte)
+- engine: compute_mte
 """
 from __future__ import annotations
 
@@ -38,7 +38,7 @@ from .decision import (
     classify_mte,
 )
 
-from .mte_legacy import compute_mte
+from .engine import compute_mte
 
 
 __all__ = [
