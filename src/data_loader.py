@@ -298,6 +298,11 @@ def download_market_data(reference_date=None, run_id=None):
     from src.commodities_merge import merge_commodities_into_market
     data = merge_commodities_into_market(data)
 
+    # FU-021-3D: enriquecer ^VIX3M desde CBOE (Yahoo no sirve su
+    # historico). Solo merge en fechas comunes. No fetch aqui.
+    from src.cboe_merge import merge_cboe_into_market
+    data = merge_cboe_into_market(data)
+
     # FU-002 (2026-09-15): parquet + manifest atomico.
     from src.utils import write_artifact_with_manifest
     write_artifact_with_manifest(
