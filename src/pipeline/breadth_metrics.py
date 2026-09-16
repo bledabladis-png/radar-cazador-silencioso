@@ -78,7 +78,8 @@ def _load_latest_valid_breadth_snapshot(csv_path):
 
 
 def _compute_sector_breadth_health(df_stocks, df_market, holdings_df,
-                                    reference_date=None, output_path=None):
+                                    reference_date=None, output_path=None,
+                                    temporal_meta=None):
     """Calcula y persiste Sector Breadth & Health.
 
     B2 (2026-09-12): la observacion solo se genera si reference_date es
@@ -127,7 +128,8 @@ def _compute_sector_breadth_health(df_stocks, df_market, holdings_df,
             return fallback, True
 
         sector_breadth_df = compute_sector_breadth(
-            df_market, df_stocks, holdings_df, as_of_date=expected_session)
+            df_market, df_stocks, holdings_df, as_of_date=expected_session,
+            temporal_meta=temporal_meta)
 
         sb_path.parent.mkdir(parents=True, exist_ok=True)
         if not sector_breadth_df.empty:
@@ -155,7 +157,8 @@ def compute_breadth_metrics(df_stocks, df_market, holdings_df, reference_date=No
             sector_breadth_is_stale (bool)
     """
     sb_df, sb_is_stale = _compute_sector_breadth_health(
-        df_stocks, df_market, holdings_df, reference_date=reference_date)
+        df_stocks, df_market, holdings_df, reference_date=reference_date,
+        temporal_meta=temporal_meta)
     return {
         'sector_breadth_momentum_df': _compute_momentum_amplitud(df_stocks),
         'sector_breadth_df': sb_df,

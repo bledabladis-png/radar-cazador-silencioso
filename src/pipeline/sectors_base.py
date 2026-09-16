@@ -82,7 +82,7 @@ def compute_sectors_base(df_market, temporal_meta=None):
     sector_corr_matrix_df = None
     try:
         from indicators.sector_correlation import compute_sector_correlation
-        sector_corr_matrix_df, sector_corr_summary_df = compute_sector_correlation(df_market)
+        sector_corr_matrix_df, sector_corr_summary_df = compute_sector_correlation(df_market, temporal_meta=temporal_meta)
         cm_path = Path('outputs/history/sector_correlation_matrix.csv')
         cs_path = Path('outputs/history/sector_correlation_summary.csv')
         cm_path.parent.mkdir(parents=True, exist_ok=True)
@@ -109,7 +109,7 @@ def compute_sectors_base(df_market, temporal_meta=None):
     cross_asset_detail_df = None
     try:
         from indicators.cross_asset_context import compute_cross_asset_context
-        cross_asset_detail_df, cross_asset_summary_df = compute_cross_asset_context(df_market)
+        cross_asset_detail_df, cross_asset_summary_df = compute_cross_asset_context(df_market, temporal_meta=temporal_meta)
         ca_detail_path = Path('outputs/history/cross_asset_correlation.csv')
         ca_summary_path = Path('outputs/history/cross_asset_context.csv')
         ca_detail_path.parent.mkdir(parents=True, exist_ok=True)

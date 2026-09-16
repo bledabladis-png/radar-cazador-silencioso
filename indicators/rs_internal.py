@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 """
 RS Interno y Absoluto v1.0
 Descompone la fortaleza relativa de cada accion frente al mercado y frente a su sector.
@@ -26,7 +26,7 @@ def classify_rs(abs_val, int_val):
     else:
         return 'Debilidad relativa doble'
 
-def compute_rs_internal(df_stocks, holdings_df, df_market, benchmark='SPY'):
+def compute_rs_internal(df_stocks, holdings_df, df_market, benchmark='SPY', temporal_meta=None):
     rows = []
     bench_ticker = benchmark
     try:

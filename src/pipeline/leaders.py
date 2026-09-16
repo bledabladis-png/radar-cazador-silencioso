@@ -84,7 +84,8 @@ def compute_leaders(df_market, sector_results, reference_date=None, run_id=None,
                 from indicators.stock_leader import generate_leader_section
                 leader_lines, leader_df, full_metrics_df = generate_leader_section(
                     df_market, df_stocks, holdings_df, fases, oper,
-                    output_csv='outputs/report/analisis_lideres.csv'
+                    output_csv='outputs/report/analisis_lideres.csv',
+                    temporal_meta=temporal_meta,
                 )
                 if leader_lines:
                     print("  Lideres sectoriales generados.")

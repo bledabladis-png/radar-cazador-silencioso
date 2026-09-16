@@ -11,7 +11,7 @@ from datetime import datetime
 from src.utils import detect_cross_module_conflict
 
 
-def _compute_mte(df_market, financial_score, all_signals, pcr_data, darkpool_data):
+def _compute_mte(df_market, financial_score, all_signals, pcr_data, darkpool_data, temporal_meta=None):
     print("Calculando Market Transition Engine...")
     mte_result = None
     try:
@@ -57,7 +57,7 @@ def _compute_cross_module(macro_regime, financial_regime, vol_regime, real_liq_r
     return cross_module_conflict
 
 
-def _compute_confirmation(df_market, df_stocks, df_stocks_effective_meta=None):
+def _compute_confirmation(df_market, df_stocks, df_stocks_effective_meta=None, temporal_meta=None):
     confirmation_data = {}
 
     # T10Y3M
@@ -72,7 +72,7 @@ def _compute_confirmation(df_market, df_stocks, df_stocks_effective_meta=None):
     # Vol Metrics
     try:
         from indicators.vol_metrics import compute_vol_metrics
-        vol_data = compute_vol_metrics(df_market)
+        vol_data = compute_vol_metrics(df_market, temporal_meta=temporal_meta)
         confirmation_data.update(vol_data)
     except Exception as e:
         print(f"    Vol Metrics: Error - {e}")
@@ -80,7 +80,7 @@ def _compute_confirmation(df_market, df_stocks, df_stocks_effective_meta=None):
     # Cross-Asset Ratios con tendencia
     try:
         from indicators.cross_asset import compute_cross_asset_ratios
-        ratios = compute_cross_asset_ratios(df_market)
+        ratios = compute_cross_asset_ratios(df_market, temporal_meta=temporal_meta)
         confirmation_data['ratios'] = ratios
     except Exception as e:
         print(f"    Cross-Asset Ratios: Error - {e}")
@@ -136,12 +136,13 @@ def compute_mte_confirmation(df_market, df_stocks, financial_score, all_signals,
     Returns:
         dict con keys: mte_result, cross_module_conflict, confirmation_data
     """
-    mte_result = _compute_mte(df_market, financial_score, all_signals, pcr_data, darkpool_data)
+    mte_result = _compute_mte(df_market, financial_score, all_signals, pcr_data, darkpool_data, temporal_meta=temporal_meta)
     cross_module_conflict = _compute_cross_module(
         macro_regime, financial_regime, vol_regime, real_liq_regime, mte_result
     )
     confirmation_data = _compute_confirmation(
-        df_market, df_stocks, df_stocks_effective_meta=df_stocks_effective_meta
+        df_market, df_stocks, df_stocks_effective_meta=df_stocks_effective_meta,
+        temporal_meta=temporal_meta,
     )
     return {
         'mte_result': mte_result,

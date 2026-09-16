@@ -20,15 +20,15 @@ def test_c19_propagates_reference_date_and_run_id():
     """Comportamiento: compute_indices_intl pasa reference_date y run_id."""
     captured = {}
 
-    def fake_download(reference_date=None, run_id=None):
+    def fake_download(reference_date=None, run_id=None, **kwargs):
         captured['reference_date'] = reference_date
         captured['run_id'] = run_id
         return None
 
-    def fake_phases(df):
+    def fake_phases(df, **kwargs):
         return ({'^FTSE': 'ACCUMULATION'}, None)
 
-    def fake_leaders(a, b, c):
+    def fake_leaders(a, b, c, **kwargs):
         return {}
 
     with patch.object(ii_mod, 'download_stock_prices', fake_download), \

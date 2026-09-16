@@ -11,7 +11,7 @@ import numpy as np
 from src.utils import _observation_date_from_df
 from src.utils import get_col
 
-def compute_volatility_structure(df_market, pcr_data=None, vix_ticker='^VIX', vix3m_ticker='^VIX3M'):
+def compute_volatility_structure(df_market, pcr_data=None, vix_ticker='^VIX', vix3m_ticker='^VIX3M', temporal_meta=None):
     """
     Calcula métricas de volatilidad estructural.
     pcr_data: dict con 'zscore' y 'percentile_20d' o None.

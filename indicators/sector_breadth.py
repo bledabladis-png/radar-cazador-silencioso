@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 """
 Sector Breadth & Health v1.0
 Describe la distribucion interna de la fortaleza por sector.
@@ -22,7 +22,7 @@ def _get_series(df, ticker, field):
                 return s
         return pd.Series(dtype=float)
 
-def compute_sector_breadth(df_market, df_stocks, holdings_df, as_of_date=None):
+def compute_sector_breadth(df_market, df_stocks, holdings_df, as_of_date=None, temporal_meta=None):
     """Calcula Sector Breadth & Health.
 
     B2 (2026-09-12):

@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 """
 indicators/credit.py -- Credit Risk Appetite Signal (v3.15 corregido)
 Mide el apetito relativo por riesgo crediticio mediante dos componentes:
@@ -19,7 +19,7 @@ import pandas as pd
 import numpy as np
 from src.utils import get_col, robust_zscore
 
-def credit_risk_signal(df_market):
+def credit_risk_signal(df_market, temporal_meta=None):
     """
     Calcula la senhal de apetito por riesgo crediticio.
     
@@ -64,9 +64,9 @@ def credit_risk_signal(df_market):
 
 
 # Mantener compatibilidad con codigo existente que importa credit_spread_signal
-def credit_spread_signal(df_market):
+def credit_spread_signal(df_market, temporal_meta=None):
     """
     DEPRECATED: Usar credit_risk_signal() en su lugar.
     Mantenido por compatibilidad con modulos existentes.
     """
-    return credit_risk_signal(df_market)
+    return credit_risk_signal(df_market, temporal_meta=temporal_meta)

@@ -69,12 +69,12 @@ def _compute_price_flow_divergence(df_market, sector_flow_rank):
     return price_flow_divergences
 
 
-def _compute_shock_sensitivity(df_market):
+def _compute_shock_sensitivity(df_market, temporal_meta=None):
     shock_sensitivities = {}
     try:
         from indicators.commodity_market_correlation import compute_commodity_market_correlation
         for sector_etf in SECTOR_ETFS:
-            shock_sensitivities[sector_etf] = compute_commodity_market_correlation(df_market, sector_etf)
+            shock_sensitivities[sector_etf] = compute_commodity_market_correlation(df_market, sector_etf, temporal_meta=temporal_meta)
         print(f"    Shock Sensitivity calculada para {len(shock_sensitivities)} sectores.")
     except Exception as e:
         print(f"    Shock Sensitivity omitida: {e}")
@@ -94,7 +94,7 @@ def compute_diagnostics(df_market, tactical_scores, structural_scores, sector_fl
         df_market, tactical_scores, structural_scores, sector_flow_rank
     )
     price_flow_divergences = _compute_price_flow_divergence(df_market, sector_flow_rank)
-    shock_sensitivities = _compute_shock_sensitivity(df_market)
+    shock_sensitivities = _compute_shock_sensitivity(df_market, temporal_meta=temporal_meta)
     return {
         'signal_agreements': signal_agreements,
         'signal_agreements_display': signal_agreements_display,

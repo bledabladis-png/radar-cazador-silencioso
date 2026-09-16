@@ -19,7 +19,7 @@ def compute_indices_intl(df_market, reference_date=None, run_id=None, temporal_m
             index_phases, index_data, index_leaders
     """
     print("Calculando fases Wyckoff para indices internacionales...")
-    index_phases, index_data = compute_index_phases(df_market)
+    index_phases, index_data = compute_index_phases(df_market, temporal_meta=temporal_meta)
     indices_en_acumulacion = [nombre for nombre, fase in index_phases.items() if fase in ['ACCUMULATION', 'MARKUP']]
     if indices_en_acumulacion:
         print(f"  Indices en acumulacion: {', '.join(indices_en_acumulacion)}")
@@ -27,7 +27,7 @@ def compute_indices_intl(df_market, reference_date=None, run_id=None, temporal_m
         index_leaders = {}
         for nombre in indices_en_acumulacion:
             try:
-                leaders_single = select_index_leaders(None, df_index_stocks, [nombre])
+                leaders_single = select_index_leaders(None, df_index_stocks, [nombre], temporal_meta=temporal_meta)
                 if nombre in leaders_single and not leaders_single[nombre].empty:
                     index_leaders[nombre] = leaders_single[nombre]
                     print(f"    {nombre}: {len(leaders_single[nombre])} empresas seleccionadas")

@@ -42,7 +42,7 @@ def _get_returns_series(df, ticker):
                 return pd.Series(dtype=float)
         return close.pct_change(fill_method=None)
 
-def compute_cross_asset_context(df_market, windows=(20, 60), min_obs_ratio=0.75):
+def compute_cross_asset_context(df_market, windows=(20, 60), min_obs_ratio=0.75, temporal_meta=None):
     """
     Calcula correlaciones sector-activo transversal por familia.
     Devuelve (detalle_df, resumen_df).

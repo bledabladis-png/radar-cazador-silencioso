@@ -20,7 +20,8 @@ def compute_slpm_v12(df_market, sector_results, leader_metrics_for_slpm,
             df_market, sector_results, leader_metrics_for_slpm, top_sector_flow,
             tactical_scores=tactical_scores,
             structural_scores=structural_scores,
-            sector_persistence=sector_persistence
+            sector_persistence=sector_persistence,
+            temporal_meta=temporal_meta,
         )
         if slpm_v12_data:
             state = slpm_v12_data.get('state', '?')

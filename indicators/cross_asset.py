@@ -1,9 +1,9 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 import pandas as pd
 import numpy as np
 from src.utils import get_col, robust_zscore
 
-def compute_cross_asset_ratios(df_market):
+def compute_cross_asset_ratios(df_market, temporal_meta=None):
     """
     Calcula los 12 ratios cross-asset institucionales.
     Retorna un diccionario con el ultimo valor, delta 20d (log-retorno) y z-score de cada ratio.

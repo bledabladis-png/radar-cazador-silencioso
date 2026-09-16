@@ -19,11 +19,12 @@ from indicators.sector_concentration import compute_sector_concentration
 from indicators.leader_representativeness import compute_leader_representativeness
 
 
-def _compute_divergencia(df_stocks, holdings_df, leader_df, df_market):
+def _compute_divergencia(df_stocks, holdings_df, leader_df, df_market, temporal_meta=None):
     try:
         if df_stocks is not None and not df_stocks.empty and leader_df is not None and not leader_df.empty:
             sector_leader_divergence_df = compute_sector_leader_divergence(
-                df_stocks, holdings_df, leader_df, df_market
+                df_stocks, holdings_df, leader_df, df_market,
+                temporal_meta=temporal_meta,
             )
             sld_path = Path('outputs/history/sector_leader_divergence.csv')
             sld_path.parent.mkdir(parents=True, exist_ok=True)
@@ -61,10 +62,10 @@ def _compute_wyckoff(df_stocks, holdings_df):
     return sector_wyckoff_distribution_df
 
 
-def _compute_rs_internal(df_stocks, holdings_df, df_market):
+def _compute_rs_internal(df_stocks, holdings_df, df_market, temporal_meta=None):
     try:
         if df_stocks is not None and not df_stocks.empty:
-            rs_internal_df = compute_rs_internal(df_stocks, holdings_df, df_market, benchmark='SPY')
+            rs_internal_df = compute_rs_internal(df_stocks, holdings_df, df_market, benchmark='SPY', temporal_meta=temporal_meta)
             rs_path = Path('outputs/history/rs_internal.csv')
             rs_path.parent.mkdir(parents=True, exist_ok=True)
             if not rs_internal_df.empty:
@@ -153,9 +154,9 @@ def compute_sector_metrics(df_stocks, holdings_df, leader_df, full_metrics_df, d
     if _ref_date is None and df_stocks is not None and not df_stocks.empty:
         _ref_date = df_stocks.index[-1]
     return {
-        'sector_leader_divergence_df': _compute_divergencia(df_stocks, holdings_df, leader_df, df_market),
+        'sector_leader_divergence_df': _compute_divergencia(df_stocks, holdings_df, leader_df, df_market, temporal_meta=temporal_meta),
         'sector_wyckoff_distribution_df': _compute_wyckoff(df_stocks, holdings_df),
-        'rs_internal_df': _compute_rs_internal(df_stocks, holdings_df, df_market),
+        'rs_internal_df': _compute_rs_internal(df_stocks, holdings_df, df_market, temporal_meta=temporal_meta),
         'sector_concentration_df': _compute_concentration(df_stocks, holdings_df, leader_df, full_metrics_df, reference_date=_ref_date),
         'leader_representativeness_df': _compute_representativeness(
             leader_df, reference_date=_ref_date),

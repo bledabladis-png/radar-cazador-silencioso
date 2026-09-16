@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 """
 Divergencia sector-líderes v1.0
 Detecta alineación/divergencia entre el retorno 20d del ETF sectorial y sus Top 5 líderes.
@@ -16,7 +16,7 @@ def _ret_20d(close):
         return np.nan
     return close.iloc[-1] / close.iloc[-21] - 1
 
-def compute_sector_leader_divergence(df_stocks, holdings_df, leader_df, df_market):
+def compute_sector_leader_divergence(df_stocks, holdings_df, leader_df, df_market, temporal_meta=None):
     if leader_df is None or leader_df.empty:
         return pd.DataFrame()
 

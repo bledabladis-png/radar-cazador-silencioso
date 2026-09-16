@@ -1,8 +1,8 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 import numpy as np
 from src.utils import get_col
 
-def compute_vol_metrics(df_market):
+def compute_vol_metrics(df_market, temporal_meta=None):
     """
     Calcula métricas de volatilidad realizada y VRP Proxy (Implied-Realized Volatility Spread).
     Nota: VRP es una proxy que compara VIX (implícita 30d SPX) con RV (realizada SPY).

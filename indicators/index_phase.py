@@ -1,10 +1,10 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 # indicators/index_phase.py - Calcula fases Wyckoff para indices internacionales
 from indicators.wyckoff import wyckoff_structure_core
 from config.index_tickers import INDEX_CONFIG
 from data.providers.router import DataRouter
 
-def compute_index_phases(df_market):
+def compute_index_phases(df_market, temporal_meta=None):
     router = DataRouter()
     [cfg['index_ticker'] for cfg in INDEX_CONFIG.values()]
     

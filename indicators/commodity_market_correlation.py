@@ -1,11 +1,11 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 """
 shock_sensitivity.py -- Shock Sensitivity v1.1
 """
 import pandas as pd
 from src.utils import get_col
 
-def compute_commodity_market_correlation(df_market, sector_etf, benchmark='^GSPC', commodity='^SPGSCI', window=126):
+def compute_commodity_market_correlation(df_market, sector_etf, benchmark='^GSPC', commodity='^SPGSCI', window=126, temporal_meta=None):
     try:
         close_sector = get_col(df_market, sector_etf, 'Close')
         close_bench = get_col(df_market, benchmark, 'Close')

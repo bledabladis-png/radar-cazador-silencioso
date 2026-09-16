@@ -91,7 +91,8 @@ def compute_flow_divergence_v2(leader_metrics, sector_flow_proxy_z, sector_price
     return {'leader_flow_div': leader_flow_div, 'sector_flow_vs_price_div': sector_flow_vs_price_div, 'structural_flow_div': structural_flow_div, 'composite': composite}
 
 def evaluate_slpm_v12(df_market, sector_results, leader_metrics, top_sector_flow,
-                       tactical_scores=None, structural_scores=None, sector_persistence=None):
+                       tactical_scores=None, structural_scores=None, sector_persistence=None,
+                       temporal_meta=None):
     ranking = sector_results.get('ranking', [])
     if not ranking:
         return {'sector': '', 'sector_etf': '', 'state': 'UNRESOLVED', 'opportunity_quadrant': 'Transition'}

@@ -1,4 +1,4 @@
-﻿# indicators/index_leaders.py - Selecciona las 5 mejores empresas por WLS
+# indicators/index_leaders.py - Selecciona las 5 mejores empresas por WLS
 import pandas as pd
 import numpy as np
 from indicators.wyckoff import wyckoff_score, classify_wyckoff_phase, detect_spring, detect_sos
@@ -110,7 +110,7 @@ def compute_wls_for_index(df_metrics):
 
     return df_metrics.sort_values('wls', ascending=False)
 
-def select_index_leaders(df_market, df_stocks, index_names, df_index_data=None):
+def select_index_leaders(df_market, df_stocks, index_names, df_index_data=None, temporal_meta=None):
     holdings = pd.read_csv('data/index_holdings.csv')
     leaders = {}
 

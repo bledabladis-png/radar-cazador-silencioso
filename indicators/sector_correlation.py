@@ -27,7 +27,7 @@ def _classify_corr(mean_corr):
     else:
         return 'Diferenciación elevada'
 
-def compute_sector_correlation(df_market, windows=(20, 60), min_obs_ratio=0.75):
+def compute_sector_correlation(df_market, windows=(20, 60), min_obs_ratio=0.75, temporal_meta=None):
     """
     Calcula matrices de correlación de Pearson para retornos diarios de sectores.
     Devuelve (matrix_df, summary_df).

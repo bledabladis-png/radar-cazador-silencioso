@@ -4,7 +4,7 @@ from indicators.wyckoff import wyckoff_score, classify_wyckoff_phase, detect_spr
 from src.utils import robust_zscore, get_col
 from config.settings import TOP_N_CANDIDATES, TOP_N_LEADERS
 
-def compute_stock_metrics(df_market, df_stocks, etf_ticker, stock_list):
+def compute_stock_metrics(df_market, df_stocks, etf_ticker, stock_list, temporal_meta=None):
     results = []
     price_etf = get_col(df_market, etf_ticker, 'Close')
 
@@ -138,7 +138,7 @@ def compute_wls(df_metrics, weights=None):
     return df.sort_values('wls', ascending=False)
 
 def generate_leader_section(df_market, df_stocks, holdings_df, fase_dict,
-                               operabilidad_dict, output_csv=None):
+                               operabilidad_dict, output_csv=None, temporal_meta=None):
     lines = []
     leader_data = []
     full_metrics_data = []
@@ -156,7 +156,7 @@ def generate_leader_section(df_market, df_stocks, holdings_df, fase_dict,
         stocks = sector_holdings.head(TOP_N_CANDIDATES)['ticker'].tolist()
         if not stocks:
             continue
-        metrics_df = compute_stock_metrics(df_market, df_stocks, sector, stocks)
+        metrics_df = compute_stock_metrics(df_market, df_stocks, sector, stocks, temporal_meta=temporal_meta)
         if metrics_df.empty:
             continue
         metrics_df['sector'] = sector
