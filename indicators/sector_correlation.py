@@ -8,7 +8,7 @@ Consume retornos oficiales desde df_market.
 import pandas as pd
 import numpy as np
 
-from src.utils import _observation_date_from_df
+from src.utils import _observation_date_from_df, writer_observation_date, get_effective_meta
 from src.utils import get_col
 
 SECTORS = ['XLK','XLF','XLV','XLE','XLY','XLP','XLI','XLB','XLU','XLRE','XLC']
@@ -53,6 +53,11 @@ def compute_sector_correlation(df_market, windows=(20, 60), min_obs_ratio=0.75, 
 
     prices_df = pd.DataFrame(closes).sort_index()
     returns_df = prices_df.pct_change(fill_method=None).dropna(how='all')
+    # FU-021-5 Fase 5.2 (P3): fecha de observacion contractual.
+    _obs_date = writer_observation_date(
+        temporal_meta, ['EQUITY_EOD'],
+        lambda: _observation_date_from_df(returns_df))
+    _eff_meta = get_effective_meta(temporal_meta or {}, ['EQUITY_EOD'])
 
     matrix_rows = []
     summary_rows = []
@@ -69,7 +74,10 @@ def compute_sector_correlation(df_market, windows=(20, 60), min_obs_ratio=0.75, 
         n_sectors = panel_clean.shape[1]
         if n_sectors < 8:
             summary_rows.append({
-                'date': _observation_date_from_df(returns_df),
+                'date': _obs_date,
+                'effective_date': _eff_meta.get('effective_date'),
+                'expected_date': _eff_meta.get('expected_date'),
+                'coverage': _eff_meta.get('coverage'),
                 'window': window,
                 'n_sectors': n_sectors,
                 'n_valid_pairs': 0,
@@ -92,7 +100,10 @@ def compute_sector_correlation(df_market, windows=(20, 60), min_obs_ratio=0.75, 
                 corr_val = corr_matrix.loc[s1, s2]
                 n_obs = panel[[s1, s2]].dropna().shape[0]
                 pairs.append({
-                    'date': _observation_date_from_df(returns_df),
+                    'date': _obs_date,
+                    'effective_date': _eff_meta.get('effective_date'),
+                    'expected_date': _eff_meta.get('expected_date'),
+                    'coverage': _eff_meta.get('coverage'),
                     'window': window,
                     'sector1': s1,
                     'sector2': s2,
@@ -120,7 +131,10 @@ def compute_sector_correlation(df_market, windows=(20, 60), min_obs_ratio=0.75, 
             max_corr = s.max()
 
         summary_rows.append({
-            'date': _observation_date_from_df(returns_df),
+            'date': _obs_date,
+            'effective_date': _eff_meta.get('effective_date'),
+            'expected_date': _eff_meta.get('expected_date'),
+            'coverage': _eff_meta.get('coverage'),
             'window': window,
             'n_sectors': n_sectors,
             'n_valid_pairs': n_valid_pairs,

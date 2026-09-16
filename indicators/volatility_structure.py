@@ -8,7 +8,7 @@ No incluye Dark Pool.
 import pandas as pd
 import numpy as np
 
-from src.utils import _observation_date_from_df
+from src.utils import _observation_date_from_df, writer_observation_date, get_effective_meta
 from src.utils import get_col
 
 def compute_volatility_structure(df_market, pcr_data=None, vix_ticker='^VIX', vix3m_ticker='^VIX3M', temporal_meta=None):
@@ -63,6 +63,13 @@ def compute_volatility_structure(df_market, pcr_data=None, vix_ticker='^VIX', vi
         term_slope = np.nan
         term_reading = 'N/D'
 
+    # FU-021-5 Fase 5.2 (P7): fecha de observacion contractual.
+    _obs_date = writer_observation_date(
+        temporal_meta, ['EQUITY_EOD', 'VOLATILITY_INDEX'],
+        lambda: _observation_date_from_df(vix))
+    _eff_meta = get_effective_meta(
+        temporal_meta or {}, ['EQUITY_EOD', 'VOLATILITY_INDEX'])
+
     # PCR oficial
     if pcr_data is not None:
         pcr_z = pcr_data.get('zscore', np.nan)
@@ -86,7 +93,10 @@ def compute_volatility_structure(df_market, pcr_data=None, vix_ticker='^VIX', vi
         vol_reading = 'Volatilidad reducida'
 
     return pd.DataFrame([{
-        'date': _observation_date_from_df(vix),
+        'date': _obs_date,
+        'effective_date': _eff_meta.get('effective_date'),
+        'expected_date': _eff_meta.get('expected_date'),
+        'coverage': _eff_meta.get('coverage'),
         'vix_level': vix_level,
         'vix_percentile_20d': vix_p20,
         'vix_percentile_60d': vix_p60,

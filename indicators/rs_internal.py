@@ -7,7 +7,7 @@ No recalcula el RS oficial de stock_leader.py.
 """
 import pandas as pd
 import numpy as np
-from src.utils import get_col, _observation_date_from_df
+from src.utils import get_col, _observation_date_from_df, writer_observation_date, get_effective_meta
 
 def _ret_20d(close):
     if len(close) < 21:
@@ -28,6 +28,8 @@ def classify_rs(abs_val, int_val):
 
 def compute_rs_internal(df_stocks, holdings_df, df_market, benchmark='SPY', temporal_meta=None):
     rows = []
+    # FU-021-5 Fase 5.2 (P4): fecha de observacion contractual.
+    _eff_meta = get_effective_meta(temporal_meta or {}, ['EQUITY_EOD'])
     bench_ticker = benchmark
     try:
         get_col(df_market, bench_ticker, 'Close')
@@ -67,7 +69,12 @@ def compute_rs_internal(df_stocks, holdings_df, df_market, benchmark='SPY', temp
             classification = classify_rs(rs_abs, rs_int)
 
             rows.append({
-                'date': _observation_date_from_df(close),
+                'date': writer_observation_date(
+                    temporal_meta, ['EQUITY_EOD'],
+                    lambda: _observation_date_from_df(close)),
+                'effective_date': _eff_meta.get('effective_date'),
+                'expected_date': _eff_meta.get('expected_date'),
+                'coverage': _eff_meta.get('coverage'),
                 'sector': sector_etf,
                 'ticker': ticker,
                 'price_ret_20d': price_ret,

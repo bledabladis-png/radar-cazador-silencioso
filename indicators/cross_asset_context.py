@@ -7,7 +7,7 @@ No alimenta motores, scores, pesos ni State Machine.
 import pandas as pd
 import numpy as np
 
-from src.utils import _observation_date_from_df
+from src.utils import _observation_date_from_df, writer_observation_date, get_effective_meta
 from src.utils import get_col
 from config.tickers import MARKET_TICKERS
 
@@ -61,6 +61,11 @@ def compute_cross_asset_context(df_market, windows=(20, 60), min_obs_ratio=0.75,
         return pd.DataFrame(), pd.DataFrame()
 
     returns_df = pd.DataFrame(returns_dict).sort_index().dropna(how='all')
+    # FU-021-5 Fase 5.2 (P3): fecha de observacion contractual.
+    _obs_date = writer_observation_date(
+        temporal_meta, ['EQUITY_EOD'],
+        lambda: _observation_date_from_df(returns_df))
+    _eff_meta = get_effective_meta(temporal_meta or {}, ['EQUITY_EOD'])
     detail_rows = []
     summary_rows = []
 
@@ -83,7 +88,10 @@ def compute_cross_asset_context(df_market, windows=(20, 60), min_obs_ratio=0.75,
                     else:
                         corr = pair[sector].corr(pair[asset])
                     detail_rows.append({
-                        'date': _observation_date_from_df(returns_df),
+                        'date': _obs_date,
+                        'effective_date': _eff_meta.get('effective_date'),
+                        'expected_date': _eff_meta.get('expected_date'),
+                        'coverage': _eff_meta.get('coverage'),
                         'window': window,
                         'sector': sector,
                         'asset_class': family,
@@ -105,7 +113,10 @@ def compute_cross_asset_context(df_market, windows=(20, 60), min_obs_ratio=0.75,
                     mean_corr = median_corr = min_corr = max_corr = np.nan
 
                 summary_rows.append({
-                    'date': _observation_date_from_df(returns_df),
+                    'date': _obs_date,
+                    'effective_date': _eff_meta.get('effective_date'),
+                    'expected_date': _eff_meta.get('expected_date'),
+                    'coverage': _eff_meta.get('coverage'),
                     'window': window,
                     'sector': sector,
                     'asset_class': family,

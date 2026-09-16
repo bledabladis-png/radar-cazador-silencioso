@@ -7,7 +7,7 @@ No alimenta motores, scores, pesos ni State Machine.
 """
 import pandas as pd
 import numpy as np
-from src.utils import get_col, _observation_date_from_df
+from src.utils import get_col, _observation_date_from_df, writer_observation_date, get_effective_meta
 
 SECTORS = ['XLK','XLF','XLV','XLE','XLY','XLP','XLI','XLB','XLU','XLRE','XLC']
 
@@ -21,6 +21,11 @@ def compute_sector_leader_divergence(df_stocks, holdings_df, leader_df, df_marke
         return pd.DataFrame()
 
     rows = []
+    # FU-021-5 Fase 5.2 (P5): fecha de observacion contractual.
+    _obs_date = writer_observation_date(
+        temporal_meta, ['EQUITY_EOD'],
+        lambda: _observation_date_from_df(df_stocks))
+    _eff_meta = get_effective_meta(temporal_meta or {}, ['EQUITY_EOD'])
     for sector_etf, group in holdings_df.groupby('etf'):
         if sector_etf not in SECTORS:
             continue
@@ -77,7 +82,10 @@ def compute_sector_leader_divergence(df_stocks, holdings_df, leader_df, df_marke
                 classification = 'Mixto'
 
         rows.append({
-            'date': _observation_date_from_df(df_stocks),
+            'date': _obs_date,
+            'effective_date': _eff_meta.get('effective_date'),
+            'expected_date': _eff_meta.get('expected_date'),
+            'coverage': _eff_meta.get('coverage'),
             'sector': sector_etf,
             'sector_ret_20d': sector_ret,
             'n_leaders_total': n_total,
