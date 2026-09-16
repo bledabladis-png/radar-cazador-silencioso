@@ -38,5 +38,6 @@ jobs:
             echo "No hay cambios."
           else
             git commit -m "Actualizar holdings europeos (FEZ, DAXEX, ISF.L, LYXI)"
+            git pull --rebase origin main
             git push
           fi

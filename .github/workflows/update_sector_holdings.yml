@@ -42,5 +42,6 @@ jobs:
             echo "No hay cambios en los holdings."
           else
             git commit -m "Actualizar etf_holdings.csv (automático trimestral)"
+            git pull --rebase origin main
             git push
           fi

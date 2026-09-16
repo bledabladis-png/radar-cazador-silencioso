@@ -38,5 +38,6 @@ jobs:
             echo "No hay cambios en index holdings."
           else
             git commit -m "Actualizar index_holdings.csv (automático trimestral)"
+            git pull --rebase origin main
             git push
           fi

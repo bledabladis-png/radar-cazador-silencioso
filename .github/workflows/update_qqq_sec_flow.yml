@@ -42,5 +42,6 @@ jobs:
             echo "No hay cambios en QQQ SEC Flow."
           else
             git commit -m "Actualizar QQQ SEC Flow (automático semestral)"
+            git pull --rebase origin main
             git push
           fi

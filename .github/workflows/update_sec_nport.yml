@@ -42,5 +42,6 @@ jobs:
             echo "No hay cambios."
           else
             git commit -m "Actualizar N-PORT ${{ env.quarter }}"
+            git pull --rebase origin main
             git push
           fi
