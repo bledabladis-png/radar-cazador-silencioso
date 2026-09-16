@@ -1,4 +1,4 @@
-import numpy as np
+﻿import numpy as np
 import pandas as pd
 
 
@@ -427,6 +427,10 @@ def write_artifact_with_manifest(df, parquet_path, source,
 
         pct_dup_last = 0.0
         close_nan_last = 0
+        # FU-021-3C-bis bug: close_cols se usa mas abajo (en print de
+        # observabilidad) fuera del bloque condicional. Inicializar
+        # aqui evita UnboundLocalError cuando df tiene <2 filas.
+        close_cols = []
         if isinstance(df.columns, pd.MultiIndex) and len(df) >= 2:
             close_cols = [c for c in df.columns if c[0] == 'Close']
             if close_cols:

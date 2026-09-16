@@ -274,3 +274,56 @@ def test_temporal_contract_none_recorded_in_manifest(tmp_path):
     assert 'temporal' in on_disk
     assert on_disk['temporal']['contract'] is None
 
+# --- FU-021-3C-bis: bugfix close_cols con DataFrame de 1 fila ---
+
+
+def test_manifest_single_row_returns_dict(tmp_path):
+    """FU-021-3C-bis: df con 1 fila -> manifest se escribe y se retorna.
+
+    Bug previo: close_cols se definia dentro de un bloque condicional
+    (len(df) >= 2) pero se usaba fuera (en el print de observabilidad).
+    Con df de 1 fila, UnboundLocalError silencioso: el manifest se
+    escribia en disco correctamente, pero la funcion retornaba {}.
+    Afectaba a writers con df corto (commodities_*.parquet).
+
+    Verifica: returns dict no vacio, status VALID, sha256 presente,
+    fichero en disco correcto.
+    """
+    df = _make_df_single_row(last_date='2026-09-15', n_tickers=2)
+    parquet_path = tmp_path / 'single.parquet'
+    ref_date = datetime(2026, 9, 15, 23, 30)
+
+    manifest = write_artifact_with_manifest(
+        df, str(parquet_path),
+        source='test_single',
+        reference_date=ref_date,
+        run_id='test_single_row',
+    )
+
+    # Este assert es el bugfix: con el bug, manifest == {}.
+    assert manifest != {}, "manifest retorno {} con df de 1 fila (bug close_cols)"
+    assert manifest['schema_version'] == 1
+    assert manifest['quality']['status'] == 'VALID'
+    assert manifest['content']['rows'] == 1
+    assert manifest['content']['n_tickers'] == 2
+    assert manifest['quality']['last_date'] == '2026-09-15'
+    assert manifest['quality']['close_nan_last'] == 0
+    assert manifest['artifact']['sha256']
+
+    manifest_file = Path(str(parquet_path) + '.manifest.json')
+    assert manifest_file.exists(), "manifest no escrito en disco"
+
+
+def _make_df_single_row(last_date='2026-09-15', n_tickers=2):
+    """DataFrame MultiIndex con 1 sola fila. Reproduce el caso commodities."""
+    dates = pd.to_datetime([last_date])
+    tickers = [f'T{i}' for i in range(n_tickers)]
+    data = {}
+    for i, t in enumerate(tickers):
+        base = 100 + i
+        data[('Close', t)] = [base]
+        data[('Open', t)] = [base - 1]
+        data[('High', t)] = [base + 2]
+        data[('Low', t)] = [base - 2]
+        data[('Volume', t)] = [1_000_000]
+    return pd.DataFrame(data, index=dates)
