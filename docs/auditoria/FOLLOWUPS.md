@@ -399,3 +399,22 @@
   - K-04 (MEDIA): `test_temporal_contracts_remaining.py` y `test_temporal_contracts_consolidate.py` con REF hardcodeado.
   - K-05 (BAJA): transfer doc original desactualizado.
   - K-07 (BAJA): informe formal FU-021-3C-bis en `docs/auditoria/` no redactado.
+
+## FU-021-3D - CBOE para ^VIX3M (RESUELTO)
+
+- **Origen:** E5 (anomalia ^VIX3M en Yahoo). Yahoo dejo de servir historico de indices de term structure. Solo devuelve cotizacion actual. VOLATILITY_INDEX cae a INSUFFICIENT en cada run.
+- **Informe previo:** `docs/auditoria/E5_INFORME_VIX3M.md` (diagnostico, opciones, decision B).
+- **Dictamen auditor:** opcion B aprobada. CboeIndexProvider paralelo (no tocar CboeProvider existente). R6 aprobada. ^VIX9D fuera de alcance. NO-GO hasta prueba de aceptacion.
+- **Prueba de aceptacion:** CBOE HTTP 200, CSV DATE,OPEN,HIGH,LOW,CLOSE, 4273 filas (2009-09-18 -> 2026-09-15), 0 NaN, 0 duplicados, reproducible byte-exacto. Inyeccion en df_market: VOLATILITY_INDEX INSUFFICIENT -> OK/STALE con coverage 1.0.
+- **Componentes:**
+  - `data/providers/cboe_index.py::CboeIndexProvider` (153 LOC, sin auth).
+  - `src/cboe_merge.py::merge_cboe_into_market` (85 LOC, idempotente, solo fechas comunes).
+  - `scripts/update_cboe.py` (65 LOC, skip si al dia, best-effort).
+  - `data/cboe_vix3m.parquet` + manifest FU-002.
+  - Step Update CBOE en `daily_run.yml`.
+  - R6 en PROMPT_MAESTRO v6.18.
+- **Commits:** ca223c0, 3c25262, 904947f, eb071db, a608605, a560708.
+- **Tests:** `test_provider_cboe_index.py` (17), `test_cboe_merge.py` (11). Total +28.
+- **Verificacion:** compileall OK, pyflakes limpio. Gate 10/10 en runs reales pendiente del proximo cron.
+- **Clasificacion:** ciclo de integracion de provider. RESUELTO 2026-09-17.
+- **Deudas generadas:** ninguna nueva. BOM de `cboe.py` y limpieza ya gestionados como K-ID separado.
