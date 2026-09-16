@@ -356,3 +356,25 @@
 - **Clasificacion:** ciclo de refactor arquitectonico. RESUELTO 2026-09-16.
 - **Deudas residuales del ciclo:** K7 (Plan §2.4 vs §2.5), K-FU-021-5-01..06.
 - **Sucesor:** FU-021-3C-bis resuelve el unico BLOCKED pendiente (FUTURE_SETTLEMENT). Ver entrada siguiente.
+
+
+## FU-021-3C-bis - Commodities via OilPriceAPI + SPOT_COMMODITY (RESUELTO)
+
+- **Origen:** FU-021-3C cerro con FUTURE_SETTLEMENT y FX_DAILY_CUT en BLOCKED. Yahoo agotado, CME/ICE bloqueados por IP. FUTURE_SETTLEMENT era el unico contrato BLOCKED del sistema.
+- **Objetivo:** desbloquear FUTURE_SETTLEMENT con un provider dedicado. Cierra FU-021-3C por via alterna.
+- **Solucion:** OilPriceAPI como provider oficial de commodities. Dos contratos diferenciados por semantica.
+- **Contratos temporales (10 en total, 9 -> 10):**
+  - `FUTURE_SETTLEMENT` (reducido a BZ=F, CL=F). `settlement_semantics=close_proxy`. `close` de OilPriceAPI como proxy del settlement oficial ICE/NYMEX (<0.5% diff).
+  - `SPOT_COMMODITY` (nuevo, GC=F, HG=F, NG=F). `settlement_semantics=spot_reference`. Spot, no futuros.
+- **Regla nueva:** R5. Los tickers de commodities se alimentan exclusivamente via OilPriceAPI. Prohibido mezclar con Yahoo.
+- **Provider:** `data/providers/futures.py::FuturesProvider` (~250 LOC). Endpoints `/v1/futures/ice-brent`, `/v1/futures/ice-wti`, `/v1/prices/latest`. API key env `OIL_PRICE_API` con fallback local. Reintentos: 1 en timeout, 0 en 401/429. Presupuesto: 3 req/dia (90/mes sobre 200 plan free).
+- **Merge:** `src/commodities_merge.py::merge_commodities_into_market` (~100 LOC). Solo merge en fechas comunes (no anade filas, respeta FU-021-3A).
+- **Workflow:** step 'Update commodities' en `daily_run.yml`, antes de 'Run Macro Sectorial'. `scripts/update_futures.py` con skip si parquets al dia (no quema requests).
+- **Artefactos nuevos:** `data/commodities_futures.parquet` y `data/commodities_spot.parquet`, con manifest FU-002.
+- **Bug latente corregido (FU-002):** `write_artifact_with_manifest` con df de 1 fila lanzaba `UnboundLocalError` en `close_cols`. Fix: inicializar `close_cols=[]` antes del bloque condicional. Pre-existente.
+- **Tests:** `test_provider_futures.py` (17: parsing, merge, API key, reintentos), `test_commodities_merge.py` (10: merge idempotente, degradacion). `test_artifact_manifest.py` +1 (df 1 fila, bug close_cols). Total: 469 -> 498 (+29).
+- **Commits del ciclo (13):** `303db48..1b73b02` + fix docs `bf9c6fe`, `03fcb3e`, `1b73b02`, `24b3bf6`, `e446fe4`.
+- **Verificacion:** Gate 10/10. 47/47 secciones `##` identicas pre/post. BZ=F, CL=F integrados correctamente. `FUTURE_SETTLEMENT=STALE` (era BLOCKED). `SPOT_COMMODITY=STALE` (nuevo).
+- **Nota metodologica** en reporte: seccion 'Momentum de Precio - Otros Activos' indica semantica de los 5 tickers.
+- **Clasificacion:** ciclo de integracion de provider. RESUELTO 2026-09-16.
+- **Deudas nuevas (K-FU-021-3C-bis-01..09):** K-01 (git pull --rebase, resuelto `03fcb3e`), K-02 (SPOT_COMMODITY STALE sistematico), K-03 (CI real, pendiente), K-04 (tests fragiles residuales), K-05 (transfer doc), K-06 (prompt v6.16, resuelto `bf9c6fe`), K-07 (informe formal), K-08 (contador dinamico, resuelto `03fcb3e`), K-09 (6 workflows pull --rebase, resuelto `e446fe4`).
