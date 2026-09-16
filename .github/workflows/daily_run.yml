@@ -68,6 +68,9 @@ jobs:
           OIL_PRICE_API: ${{ secrets.OIL_PRICE_API }}
         run: python scripts/update_futures.py || echo "Commodities fetch failed, continuing"
 
+      - name: Update CBOE (VIX3M, best-effort)
+        run: python scripts/update_cboe.py || echo "CBOE fetch failed, continuing"
+
       - name: Run Macro Sectorial
         env:
           POLYGON_API_KEY: ${{ secrets.POLYGON_API_KEY }}
@@ -166,7 +169,9 @@ jobs:
             data/commodities_futures.parquet \
             data/commodities_futures.parquet.manifest.json \
             data/commodities_spot.parquet \
-            data/commodities_spot.parquet.manifest.json 
+            data/commodities_spot.parquet.manifest.json \
+            data/cboe_vix3m.parquet \
+            data/cboe_vix3m.parquet.manifest.json 
           if ! git diff --staged --quiet; then
             git commit -m "Daily hist/state "
             git pull --rebase origin main
