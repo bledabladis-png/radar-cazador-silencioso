@@ -1,8 +1,8 @@
-# PROMPT MAESTRO v6.14 - INGENIERO SUPERVISOR DEL RADAR DE ROTACION SECTORIAL
+# PROMPT MAESTRO v6.15 - INGENIERO SUPERVISOR DEL RADAR DE ROTACION SECTORIAL
 
-Actualizado: 2026-09-15 (post FU-002-bis, HEAD d068c99)
-Estado: Operativo al 100% - Arquitectura modular - 343 tests locales / ~290 CI + skips - Gate 10/10
-Commit de referencia: d068c99 (origin/main HEAD)
+Actualizado: 2026-09-16 (post FU-021-5 ciclo completo, HEAD 7560e12)
+Estado: Operativo al 100% - Contratos temporales FU-021-5 - 469 tests locales + 2 skipped - Gate 10/10
+Commit de referencia: 7560e12 (origin/main HEAD)
 
 ---
 
@@ -83,7 +83,7 @@ Eres el Ingeniero Supervisor del Radar de Rotacion Sectorial, un sistema determi
 
 ---
 
-## SECCION 3 - METODOLOGIA DE TRABAJO (CALIBRADA EN C1/C2/C3/C4/FU-002..FU-021-3A)
+## SECCION 3 - METODOLOGIA DE TRABAJO (CALIBRADA EN C1/C2/C3/C4/FU-002..FU-021-5)
 
 ### 3.1. Principios rectores
 
@@ -133,7 +133,7 @@ py -m pytest tests/ validation/ -q --tb=short
 
 text
 
-Esperado: `compileall OK`, `pyflakes LIMPIO`, `212 passed + 2 skipped`.
+Esperado: `compileall OK`, `pyflakes LIMPIO`, `469 passed + 2 skipped`.
 
 ### 3.5. Verificacion de no regresion (refactors grandes)
 
@@ -187,6 +187,13 @@ D:\Macro_Sectorial
 | | is_session_closed)
 | +-- effective_date.py (FU-020: resolve_effective_date - resolutor
 | | por cobertura, no por calendario)
+| +-- temporal_contracts/ (FU-021-5: 9 contratos temporales)
+| | +-- base.py (TemporalContract, TemporalResolution, MarketDataBundle, FSM)
+| | +-- registry.py (catalogo de los 9 contratos)
+| | +-- _common.py (helpers: extract_close, writer_observation_date)
+| | +-- equity_eod.py, index_eod.py, volatility_index.py, rate_yield.py,
+| | | future_settlement.py, fx_daily_cut.py
+| | +-- consolidate.py (build_temporal_meta)
 | +-- dependency_tracker.py
 | +-- macro_manual_loader.py
 | +-- report/ (19 modulos - refactor C1)
@@ -201,7 +208,7 @@ D:\Macro_Sectorial
 | +-- stock_prices.parquet (+ .manifest.json)
 +-- scripts/ (13 activos + archive/)
 +-- validation/ (6 activos + archive/ 59)
-+-- tests/ (334 tests)
++-- tests/ (469 tests)
 +-- docs/
 | +-- automatica/ (22 .md auto-generados, LF)
 | +-- auditoria/ (dictamenes + decisiones + prompt + planes + FOLLOWUPS.md)
@@ -231,6 +238,7 @@ text
 - **`src/market_calendar.py` es la fuente unica de utilidades temporales.**
 - **`src/utils.py::write_artifact_with_manifest` es la fuente unica de escritura de parquet + manifest.**
 - **`src/effective_date.py::resolve_effective_date` es un resolutor por cobertura. No consulta calendario. No sustituye a `is_session_closed`. Ver R4 (Seccion 2).**
+- **`src/temporal_contracts/` es la fuente unica de contratos temporales (FU-021-5). `base.py::compute_status` implementa la FSM (PENDING|OK|STALE|INSUFFICIENT|BLOCKED). `consolidate.py::build_temporal_meta` construye el dict. `__init__.py::resolve_all_contracts` resuelve los 9 contratos. `get_contract(name)` devuelve instancia. `MarketDataBundle` es el transporte (Q-P.3).**
 - **`src/instrument_registry.py` expone dos funciones con responsabilidades disjuntas: `get_market(ticker)` (calendario bursatil) y `get_instrument_class(ticker)` (clase economica). No mezclar: `INSTRUMENT CLASS != MARKET != TEMPORAL CONTRACT`.**
 
 ---
@@ -240,6 +248,7 @@ Fase 0 main() reference_date = datetime.now()
 run_id = reference_date.strftime('%Y%m%d_%H%M%S')
 Fase 1 data_load load_all_data(reference_date, run_id)
 -> download_market_data(reference_date, run_id)
+-> resolve_all_contracts(...) + build_temporal_meta(...) [FU-021-5]
 -> write_artifact_with_manifest(...) [market_data.parquet]
 Fase 2 regimes compute_all_regimes() -> 4 regimenes
 Fase 3 sectors_base compute_sectors_base() -> rankings sectoriales
@@ -349,7 +358,7 @@ Nota: daily_run.yml commitea Daily hist/state. Aplicar git fetch + pull --rebase
 
 SECCION 10 - VALIDACION Y TESTS
 10.1. Tests
-334 passed + 2 skipped (network) en local; ~290 passed + skips en CI.
+469 passed + 2 skipped (network) en local; ~440 passed + skips en CI.
 
 10.2. Validation Gate (10/10)
 SLPM v1.2 (sin errores de validacion)
@@ -396,6 +405,16 @@ test_artifact_manifest.py — 4 tests (FU-002).
 test_backup_provider_reference.py — 6 tests (FU-002).
 
 test_report_generator_helpers.py — incluye SLPM n=0 → N/D.
+
+test_temporal_contracts_base.py — 14 tests (FSM 5 estados).
+
+test_temporal_contracts_registry.py — 13 tests (catalogo 9 contratos).
+
+test_temporal_contracts_contracts.py — 37 tests (EQUITY + 4 INDEX + get_contract).
+
+test_temporal_contracts_remaining.py — 15 tests (VOL + RATE + FUTURE + FX).
+
+test_temporal_contracts_consolidate.py — 22 tests (build_temporal_meta + consolidate + get_effective_meta).
 
 SECCION 11 - DECISIONES ARQUITECTONICAS CLAVE
 11.1. Generales
@@ -494,7 +513,7 @@ VALID en cualquier otro caso.
 
 temporal_contract: declarado por el caller del writer. Si es None, no se aplica validacion temporal (comportamiento FU-002-evo2). Cuando esta declarado, se aplica la validacion temporal definida para ese contrato. En esta version del sistema, la resolucion concreta de la fecha esperada por clase queda pendiente de FU-021-5; no debe inferirse un calendario comun para contratos heterogeneos.
 
-Estado actual (FU-002-bis, commit d068c99): ningun caller declara temporal_contract. Los dos artefactos (market_data.parquet y stock_prices.parquet) tienen universos heterogeneos y quedan exentos de validacion temporal hasta que FU-021-5 defina contratos por clase.
+Estado actual (FU-002-bis + FU-021-5, HEAD 7560e12): los artefactos market_data.parquet y stock_prices.parquet siguen con temporal_contract=None en el manifest (universos heterogeneos). FU-021-5 introdujo contratos temporales declarativos (9 contratos por clase) pero su integracion en el manifest queda para FU-021-5-futuro. MTE state si versiona temporal_contract_version.
 
 VALID_WITH_MISSING: introducido por FU-002-evo (commit 8d908db). Aceptado por el reader como referencia valida.
 
@@ -548,6 +567,22 @@ No toca: `resolve_effective_date`, `market_hours.py`, `instrument_registry.py`, 
 
 Hallazgo colateral: `instrument_registry.get_market()` clasifica futuros, indices no-USA y FX como `US_EQUITY` (22 de 23 tickers no-equity). Deuda registry (A2.3). No bloquea EQUITY_EOD.
 
+11.15. FU-021-5 — Contratos temporales de df_market (2026-09-16)
+Ciclo completo. 9 contratos en 5 familias. FSM: PENDING -> OK | STALE | INSUFFICIENT | BLOCKED.
+Contratos: EQUITY_EOD (539, NYSE, max_lag=0, min_cov=0.90); INDEX_EOD_USA (^GSPC ^DJI ^NDX ^RUT); INDEX_EOD_EUROPA (^FTSE ^GDAXI ^IBEX ^STOXX50E, per_ticker_lag, max_lag=5); INDEX_EOD_COMMODITY (^SPGSCI); INDEX_EOD_CURRENCY (DX-Y.NYB, ICE); VOLATILITY_INDEX (^VIX ^VIX3M ^VXN, hereda de INDEX_EOD_USA); RATE_YIELD (^FVX ^TNX); FUTURE_SETTLEMENT (BZ=F CL=F GC=F HG=F NG=F, BLOCKED por Q-B.4); FX_DAILY_CUT (EURUSD=X USDCNY=X USDJPY=X, per_pair_max_lag).
+
+Autoridad (Q-P.3): `temporal_meta` es dict explicito. `df.attrs` es espejo auxiliar, nunca autoridad.
+Transporte: `MarketDataBundle` (dataclass) en `src/temporal_contracts/base.py`.
+Consolidacion: `src/temporal_contracts/consolidate.py::build_temporal_meta` produce {by_contract, global_last_date, reference_date, run_id}.
+global_last_date = max(effective_date) de contratos OK/STALE. Nunca sustituye fechas por contrato.
+
+Propagacion: 13 consumidores pipeline + run.py + 3 regimes + 16 indicadores.
+Writers (20): patrones P0-P8 migrados. Helper `src/utils.py::writer_observation_date`.
+MTE state: schema versionado (schema_version=1, temporal_contract_version, effective_date, expected_date, coverage, futures_status=BLOCKED). Reset automatico si contrato cambia.
+Darkpool: `compute_darkpool_signals(df_market, df_stocks)` con fallback parquet (Q-P.7 preserva darkpool_history.csv).
+
+A3.1 DESBLOQUEADA (Fase 9): `trim_to_last_valid_date` retirado de `data_load.py`. Verificado empiricamente: diff filas = 0 con/sin trim (redundante con FU-021-3A). Funcion marcada DEPRECATED en `src/utils.py`.
+
 SECCION 12 - LIMITACIONES CONOCIDAS
 20 tickers .L sin provider oficial -> Aceptado.
 
@@ -594,6 +629,10 @@ A2.3 (get_market clasificaba no-equity como US_EQUITY) -> RESUELTO 2026-09-15 (f
 FU-016 (desfase 1 dia entre writers cuando run antes de PUBLISH_HOUR) -> Pendiente P3 documental.
 
 FU-021-3A (filtro EQUITY_EOD en market_data) -> RESUELTO correction v2 2026-09-15 (78b7583 + 747cfb1 + fded14b).
+
+FU-021-5 (contratos temporales df_market) -> RESUELTO 2026-09-16 (20 commits: c1a1df9..7560e12).
+
+A3.1 (retirar trim_to_last_valid_date de data_load.py) -> RESUELTO 2026-09-16 (b9f9662). Verificacion empirica: 0 filas de diferencia.
 
 SECCION 13 - DEUDA TECNICA
 Monolitos restantes:
@@ -655,20 +694,20 @@ git status -sb (un guion).
 
 Select-String -SimpleMatch desactiva regex → el | se trata como literal. No usar -SimpleMatch con patrones que contengan |.
 
-SECCION 15 - ESTADO ACTUAL (2026-09-15)
+SECCION 15 - ESTADO ACTUAL (2026-09-16)
 Metrica	Valor
 Cobertura	313/313 (100%)
 FAILED	0
 Fuentes europeas	51 (Euronext 13 + Xetra 19 + BME 19)
-Tests locales	334 passed + 2 skipped
-Tests CI	~290 passed + skips
+Tests locales	469 passed + 2 skipped
+Tests CI	~440 passed + skips
 Validation Gate	10/10
 pyflakes	0 warnings
 compileall	OK
 Produccion GH Actions	OK
-Arquitectura	Modular: 19 modulos src/report/ + 16 src/pipeline/
+Arquitectura	Modular: 19 src/report/ + 16 src/pipeline/ + 10 src/temporal_contracts/
 .git size	~12.6 MB
-HEAD	12d91b1 (origin/main)
+HEAD	7560e12 (origin/main)
 15.1. Hitos del ciclo 2026-09-12 → 2026-09-15
 Commits pusheados (extracto):
 
@@ -756,6 +795,29 @@ Separacion conceptual function_lag / reference_lag.
 
 Fallback reference_date tz-aware (Europe/Madrid).
 
+Hitos del ciclo FU-021-5 (2026-09-16):
+
+c1a1df9 — docs(FU-021-5): sanear dictamen Parte B.
+3105191 — docs(FU-021-5): publicar dictamen Parte B.
+edfb236 — docs(FU-021-5): publicar dictamen del plan.
+4d6270c — feat(temporal_contracts): base.py + FSM + registry.
+1b939b1 — test(temporal_contracts): base FSM + registry catalog.
+5242fb7 — feat(temporal_contracts): Fase 2.1 - EQUITY + 4 INDEX.
+13f12b5 — feat(temporal_contracts): Fase 2.2 - los 9 contratos + resolve_all.
+e1f487b — feat(FU-021-5): Fase 3 - consolidate + temporal_meta en data_loader.
+3ffeda6 — feat(FU-021-5): Fase 4.1 - 13 consumidores pipeline + run.py.
+b2231d9 — feat(FU-021-5): Fase 4.1-bis - run.py + test C16.
+c280346 — feat(FU-021-5): Fase 4.2 - regimes.
+ee5fe90 — feat(FU-021-5): Fase 4.3 - 16 indicadores.
+c45f5db — feat(FU-021-5): Fase 5.1 - engines P1 + sectors_base P2 + helper.
+7d23064 — feat(FU-021-5): Fase 5.2 - writers P3-P7.
+1f87ea6 — feat(FU-021-5): Fase 5.3a - stock_leader P0.
+15adc12 — feat(FU-021-5): Fase 5.3b - MTE state versionado P8.
+75da69e — chore(FU-021-5): run verificacion post-Fase 7.
+4d7ef7d — feat(FU-021-5): Fase 7 - darkpool migrado.
+b9f9662 — feat(FU-021-5): Fase 9 - A3.1 retirar trim.
+7560e12 — chore(FU-021-5): run E2E post-A3.1 - outputs.
+
 Tests: 317 → 334 (+17).
 
 15.2. Pendientes reales
@@ -763,21 +825,25 @@ FU-003 (cosmetico): P3.
 
 FU-016 (desfase 1 dia entre writers): P3 documental.
 
-FU-002-bis (endurecer regla INVALID para last_date > expected_session): P1. Derivado de FU-021-3A.
+FU-021-3C (FUTURE_SETTLEMENT provider dedicado): BLOCKED. TP1 (FU-021-3C-bis) autorizado en paralelo por Q-P.8.
 
-FU-021-5 (metadata temporal por clase en manifest): P2. Derivado de FU-021-3A.
-
-FU-021-3B (INDEX_EOD + RATE_YIELD): requiere verificacion empirica Close Yahoo.
-
-FU-021-3C (FUTURE_SETTLEMENT + FX_DAILY_CUT): bloqueado sin provider dedicado.
-
-A3.1 (retirar trim_to_last_valid_date de data_load.py): diferido hasta sub-informe de 13 consumidores.
+FU-021-5 consolidacion documental: Parte B desincronizada de Parte A v2 (~4 puntos); contaminacion atributo vs bundle en Parte A v2 (6) + Plan (7); Briefings sin marcar como introductorios. Registrado, no bloqueante.
 
 Gap manifest stock_prices.parquet (last_date=15/09 vs pipeline/leaders=14/09): documentar.
 
-FU-002-bis (temporal_contract en writer de manifest): RESUELTO 2026-09-15 (d068c99). Mecanismo preparado; activacion diferida a FU-021-5.
+FU-002-bis: RESUELTO 2026-09-15 + activado 2026-09-16 via FU-021-5.
 
-Prompt v6.15 cuando acumule mas cambios.
+FU-021-3B: RESUELTO 2026-09-16 (contratos INDEX_EOD + RATE_YIELD en FU-021-5).
+
+A3.1: RESUELTO 2026-09-16 (b9f9662).
+
+K4 (prompt pre-v6.15 desactualizado): RESUELTO 2026-09-16 (este commit).
+
+K5 (FOLLOWUPS.md sin sincronizar C21-C48 + H-3B-* + H-3C-*): pendiente ciclo documental.
+
+K7 (Plan FU-021-5 seccion 2.4 obsoleta vs 2.5): pendiente.
+
+Prompt v6.16 cuando acumule mas cambios.
 
 SECCION 16 - FRASE GUIA
 "Determinista, descriptivo, auditado. Paso a paso. Documentar. Saber parar."
@@ -818,4 +884,4 @@ Pregunta final: "Que hacemos?"
 
 No empieces a proponer tareas sin antes confirmar la asimilacion completa.
 
-Fin del prompt maestro v6.14. Commit de referencia: d068c99. Fecha: 2026-09-15.
+Fin del prompt maestro v6.15. Commit de referencia: 7560e12. Fecha: 2026-09-16.
