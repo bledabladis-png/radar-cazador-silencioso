@@ -171,7 +171,9 @@ jobs:
             data/commodities_spot.parquet \
             data/commodities_spot.parquet.manifest.json \
             data/cboe_vix3m.parquet \
-            data/cboe_vix3m.parquet.manifest.json 
+            data/cboe_vix3m.parquet.manifest.json \
+            data/market_data.parquet.manifest.json \
+            data/stock_prices.parquet.manifest.json
           if ! git diff --staged --quiet; then
             git commit -m "Daily hist/state "
             git pull --rebase origin main
