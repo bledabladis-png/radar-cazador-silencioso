@@ -94,9 +94,9 @@ class TestFxDailyCut:
 
 class TestResolveAllContracts:
 
-    def test_devuelve_nueve_resoluciones(self, df_real):
+    def test_devuelve_diez_resoluciones(self, df_real):
         resoluciones = resolve_all_contracts(df_real, REF)
-        assert len(resoluciones) == 9
+        assert len(resoluciones) == 10
 
     def test_claves_iguales_a_list_contracts(self, df_real):
         resoluciones = resolve_all_contracts(df_real, REF)
@@ -113,14 +113,14 @@ class TestResolveAllContracts:
         assert resoluciones["FUTURE_SETTLEMENT"].status == STATUS_BLOCKED
 
 
-class TestGetContractAll9:
+class TestGetContractAll10:
 
-    def test_los_nueve_implementados(self):
+    def test_los_diez_implementados(self):
         names = [
             "EQUITY_EOD", "INDEX_EOD_USA", "INDEX_EOD_EUROPA",
             "INDEX_EOD_COMMODITY", "INDEX_EOD_CURRENCY",
             "VOLATILITY_INDEX", "RATE_YIELD",
-            "FUTURE_SETTLEMENT", "FX_DAILY_CUT",
+            "FUTURE_SETTLEMENT", "SPOT_COMMODITY", "FX_DAILY_CUT",
         ]
         for name in names:
             c = get_contract(name)

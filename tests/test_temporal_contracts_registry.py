@@ -17,6 +17,7 @@ EXPECTED_CONTRACTS = [
     "VOLATILITY_INDEX",
     "RATE_YIELD",
     "FUTURE_SETTLEMENT",
+    "SPOT_COMMODITY",
     "FX_DAILY_CUT",
 ]
 
@@ -29,14 +30,15 @@ EXPECTED_FAMILIES = {
     "VOLATILITY_INDEX": "INDEX",
     "RATE_YIELD": "RATE_YIELD",
     "FUTURE_SETTLEMENT": "FUTURE",
+    "SPOT_COMMODITY": "SPOT",
     "FX_DAILY_CUT": "FX",
 }
 
 
 class TestRegistryShape:
 
-    def test_nueve_contratos(self):
-        assert len(CONTRACTS_REGISTRY) == 9
+    def test_diez_contratos(self):
+        assert len(CONTRACTS_REGISTRY) == 10
 
     def test_nombres_exactos(self):
         assert list(CONTRACTS_REGISTRY.keys()) == EXPECTED_CONTRACTS
@@ -48,9 +50,9 @@ class TestRegistryShape:
         for name, expected_family in EXPECTED_FAMILIES.items():
             assert CONTRACTS_REGISTRY[name]["family"] == expected_family
 
-    def test_cinco_familias_distintas(self):
+    def test_seis_familias_distintas(self):
         families = {v["family"] for v in CONTRACTS_REGISTRY.values()}
-        assert families == {"EQUITY", "INDEX", "RATE_YIELD", "FUTURE", "FX"}
+        assert families == {"EQUITY", "INDEX", "RATE_YIELD", "FUTURE", "FX", "SPOT"}
 
 
 class TestRegistryEntries:

@@ -97,10 +97,10 @@ class TestConsolidate:
         bundle = consolidate(df_real, resolutions, REF, "run_1")
         assert bundle.df_market is df_real
 
-    def test_meta_tiene_9_contratos(self, df_real):
+    def test_meta_tiene_10_contratos(self, df_real):
         resolutions = resolve_all_contracts(df_real, REF)
         bundle = consolidate(df_real, resolutions, REF, "run_1")
-        assert len(bundle.temporal_meta["by_contract"]) == 9
+        assert len(bundle.temporal_meta["by_contract"]) == 10
 
     def test_no_modifica_df_original(self, df_real):
         shape_before = df_real.shape

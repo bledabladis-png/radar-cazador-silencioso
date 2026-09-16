@@ -94,6 +94,16 @@ CONTRACTS_REGISTRY = {
             "declared_rollover": True,
         },
     },
+    "SPOT_COMMODITY": {
+        "family": "SPOT",
+        "eligible_universe": ["GC=F", "HG=F", "NG=F"],
+        "session_calendar": "COMEX|NYMEX",
+        "max_lag_days": 1,
+        "min_coverage": 1.0,
+        "per_ticker_lag": {"GC=F": 1, "HG=F": 1, "NG=F": 1},
+        "per_pair_max_lag": None,
+        "activation_req": None,
+    },
     "FX_DAILY_CUT": {
         "family": "FX",
         "eligible_universe": ["EURUSD=X", "USDCNY=X", "USDJPY=X"],
