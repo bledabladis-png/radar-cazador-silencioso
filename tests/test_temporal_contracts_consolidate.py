@@ -1,6 +1,7 @@
 ﻿"""Tests Fase 3: consolidate + build_temporal_meta + get_effective_meta."""
 from datetime import date, datetime
 
+import pandas as pd
 import pytest
 
 from src.temporal_contracts import (
@@ -22,6 +23,17 @@ REF = datetime(2026, 9, 15, 22, 0)
 D_1509 = date(2026, 9, 15)
 D_1409 = date(2026, 9, 14)
 D_1109 = date(2026, 9, 11)
+
+
+def _ref_from_df(df):
+    """REF derivada del parquet: ultima fecha + 1 dia a las 22:00.
+
+    Evita fragilidad ante el avance del parquet local tras un run E2E
+    (mismo patron que test_temporal_contracts_contracts.py, e49beda).
+    En CI df_real hace skip y REF global sigue usandose con mocks.
+    """
+    ref = pd.Timestamp(df.index.max()) + pd.Timedelta(days=1)
+    return ref.replace(hour=22, minute=0, second=0).to_pydatetime()
 
 
 def _res(name, eff, exp, lag, cov, status):
@@ -88,31 +100,31 @@ class TestBuildTemporalMeta:
 class TestConsolidate:
 
     def test_devuelve_bundle(self, df_real):
-        resolutions = resolve_all_contracts(df_real, REF)
-        bundle = consolidate(df_real, resolutions, REF, "run_1")
+        resolutions = resolve_all_contracts(df_real, _ref_from_df(df_real))
+        bundle = consolidate(df_real, resolutions, _ref_from_df(df_real), "run_1")
         assert isinstance(bundle, MarketDataBundle)
 
     def test_df_es_el_mismo_objeto(self, df_real):
-        resolutions = resolve_all_contracts(df_real, REF)
-        bundle = consolidate(df_real, resolutions, REF, "run_1")
+        resolutions = resolve_all_contracts(df_real, _ref_from_df(df_real))
+        bundle = consolidate(df_real, resolutions, _ref_from_df(df_real), "run_1")
         assert bundle.df_market is df_real
 
     def test_meta_tiene_10_contratos(self, df_real):
-        resolutions = resolve_all_contracts(df_real, REF)
-        bundle = consolidate(df_real, resolutions, REF, "run_1")
+        resolutions = resolve_all_contracts(df_real, _ref_from_df(df_real))
+        bundle = consolidate(df_real, resolutions, _ref_from_df(df_real), "run_1")
         assert len(bundle.temporal_meta["by_contract"]) == 10
 
     def test_no_modifica_df_original(self, df_real):
         shape_before = df_real.shape
         cols_before = list(df_real.columns)
-        resolutions = resolve_all_contracts(df_real, REF)
-        consolidate(df_real, resolutions, REF, "run_1")
+        resolutions = resolve_all_contracts(df_real, _ref_from_df(df_real))
+        consolidate(df_real, resolutions, _ref_from_df(df_real), "run_1")
         assert df_real.shape == shape_before
         assert list(df_real.columns) == cols_before
 
     def test_global_last_date_presente(self, df_real):
-        resolutions = resolve_all_contracts(df_real, REF)
-        bundle = consolidate(df_real, resolutions, REF, "run_1")
+        resolutions = resolve_all_contracts(df_real, _ref_from_df(df_real))
+        bundle = consolidate(df_real, resolutions, _ref_from_df(df_real), "run_1")
         assert bundle.temporal_meta["global_last_date"] is not None
 
 
@@ -143,8 +155,8 @@ class TestGetEffectiveMeta:
         assert m["status"] == "INSUFFICIENT"
 
     def test_min_effective_date(self, df_real):
-        resolutions = resolve_all_contracts(df_real, REF)
-        bundle = consolidate(df_real, resolutions, REF, "run_1")
+        resolutions = resolve_all_contracts(df_real, _ref_from_df(df_real))
+        bundle = consolidate(df_real, resolutions, _ref_from_df(df_real), "run_1")
         m = get_effective_meta(
             bundle.temporal_meta, ["INDEX_EOD_USA", "INDEX_EOD_CURRENCY"]
         )
@@ -154,8 +166,8 @@ class TestGetEffectiveMeta:
         assert m["effective_date"] == expected
 
     def test_contrato_inexistente_ignorado(self, df_real):
-        resolutions = resolve_all_contracts(df_real, REF)
-        bundle = consolidate(df_real, resolutions, REF, "run_1")
+        resolutions = resolve_all_contracts(df_real, _ref_from_df(df_real))
+        bundle = consolidate(df_real, resolutions, _ref_from_df(df_real), "run_1")
         m = get_effective_meta(bundle.temporal_meta, ["NO_EXISTE"])
         assert m == {}
 

@@ -19,6 +19,17 @@ from src.temporal_contracts import (
 REF = datetime(2026, 9, 15, 22, 0)
 
 
+def _ref_from_df(df):
+    """REF derivada del parquet: ultima fecha + 1 dia a las 22:00.
+
+    Evita fragilidad ante el avance del parquet local tras un run E2E
+    (mismo patron que test_temporal_contracts_contracts.py, e49beda).
+    En CI df_real hace skip y REF global sigue usandose con mocks.
+    """
+    ref = pd.Timestamp(df.index.max()) + pd.Timedelta(days=1)
+    return ref.replace(hour=22, minute=0, second=0).to_pydatetime()
+
+
 
 class TestVolatilityIndex:
 
@@ -30,7 +41,7 @@ class TestVolatilityIndex:
         assert set(c.eligible_universe) == {"^VIX", "^VIX3M", "^VXN"}
 
     def test_resolve(self, df_real):
-        r = VolatilityIndex().resolve(df_real, REF)
+        r = VolatilityIndex().resolve(df_real, _ref_from_df(df_real))
         assert r.contract_name == "VOLATILITY_INDEX"
         assert r.status in VALID_STATUSES
 
@@ -44,7 +55,7 @@ class TestRateYield:
         assert set(c.eligible_universe) == {"^FVX", "^TNX"}
 
     def test_resolve(self, df_real):
-        r = RateYield().resolve(df_real, REF)
+        r = RateYield().resolve(df_real, _ref_from_df(df_real))
         assert r.contract_name == "RATE_YIELD"
         assert r.status in VALID_STATUSES
 
@@ -67,7 +78,7 @@ class TestFutureSettlement:
         assert "NG=F" not in c.eligible_universe
 
     def test_resolve_status_valido(self, df_real):
-        r = FutureSettlement().resolve(df_real, REF)
+        r = FutureSettlement().resolve(df_real, _ref_from_df(df_real))
         assert r.contract_name == "FUTURE_SETTLEMENT"
         assert r.status in VALID_STATUSES
         assert r.status != STATUS_BLOCKED
@@ -95,7 +106,7 @@ class TestFxDailyCut:
         assert c.per_pair_max_lag["USDCNY=X"] == 1
 
     def test_resolve(self, df_real):
-        r = FxDailyCut().resolve(df_real, REF)
+        r = FxDailyCut().resolve(df_real, _ref_from_df(df_real))
         assert r.contract_name == "FX_DAILY_CUT"
         assert r.status in VALID_STATUSES
 
@@ -103,21 +114,21 @@ class TestFxDailyCut:
 class TestResolveAllContracts:
 
     def test_devuelve_diez_resoluciones(self, df_real):
-        resoluciones = resolve_all_contracts(df_real, REF)
+        resoluciones = resolve_all_contracts(df_real, _ref_from_df(df_real))
         assert len(resoluciones) == 10
 
     def test_claves_iguales_a_list_contracts(self, df_real):
-        resoluciones = resolve_all_contracts(df_real, REF)
+        resoluciones = resolve_all_contracts(df_real, _ref_from_df(df_real))
         assert set(resoluciones.keys()) == set(list_contracts())
 
     def test_cada_resolucion_tiene_status_valido(self, df_real):
-        resoluciones = resolve_all_contracts(df_real, REF)
+        resoluciones = resolve_all_contracts(df_real, _ref_from_df(df_real))
         for name, r in resoluciones.items():
             assert r.status in VALID_STATUSES, f"{name}: {r.status}"
             assert r.contract_name == name
 
     def test_future_settlement_ya_no_blocked(self, df_real):
-        resoluciones = resolve_all_contracts(df_real, REF)
+        resoluciones = resolve_all_contracts(df_real, _ref_from_df(df_real))
         r = resoluciones["FUTURE_SETTLEMENT"]
         assert r.status in VALID_STATUSES
         assert r.status != STATUS_BLOCKED
