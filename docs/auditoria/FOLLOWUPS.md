@@ -378,3 +378,24 @@
 - **Nota metodologica** en reporte: seccion 'Momentum de Precio - Otros Activos' indica semantica de los 5 tickers.
 - **Clasificacion:** ciclo de integracion de provider. RESUELTO 2026-09-16.
 - **Deudas nuevas (K-FU-021-3C-bis-01..09):** K-01 (git pull --rebase, resuelto `03fcb3e`), K-02 (SPOT_COMMODITY STALE sistematico), K-03 (CI real, pendiente), K-04 (tests fragiles residuales), K-05 (transfer doc), K-06 (prompt v6.16, resuelto `bf9c6fe`), K-07 (informe formal), K-08 (contador dinamico, resuelto `03fcb3e`), K-09 (6 workflows pull --rebase, resuelto `e446fe4`).
+
+
+## K-01 / K-06 / K-08 / K-09 - Fixes CI post FU-021-3C-bis (RESUELTOS)
+
+- **Origen:** el ciclo FU-021-3C-bis expuso cuatro deudas operativas. K-01 (push rechazado por falta de rebase), K-06 (prompt desactualizado), K-08 (contador hardcodeado), K-09 (6 workflows con mismo patron que K-01).
+- **Contexto:** el 2026-09-16 un push de `daily_run.yml` fue rechazado en produccion. Mitigado a mano. Origen: ausencia de `git pull --rebase origin main` antes del push del commit automatico.
+- **Fixes aplicados:**
+  - **K-01** (`03fcb3e`): `daily_run.yml` anade `git pull --rebase origin main` entre `git commit` y `git push`.
+  - **K-06** (`bf9c6fe`): `PROMPT_MAESTRO.md` actualizado a v6.16 con ciclo FU-021-3C-bis completo.
+  - **K-08** (`03fcb3e`): `data_loader.py` usa `len(_resolutions)` en lugar de '9 contratos' hardcodeado.
+  - **K-09** (`e446fe4`): mismo fix que K-01 aplicado a `update_european_holdings.yml`, `update_index_holdings.yml`, `update_macro_manual.yml`, `update_qqq_sec_flow.yml`, `update_sector_holdings.yml`, `update_sec_nport.yml`.
+- **Fix adicional de mantenimiento del prompt** (`24b3bf6`): Seccion 9 decia `0 20 * * *` para `daily_run.yml`; el YAML real es `0 4 * * *`. Corregido. Bump v6.16 -> v6.17.
+- **Tests:** ninguno especifico (cambios de CI + docs). Verificacion: compileall OK, pyflakes 0 warnings, suite completa 498+2.
+- **Verificacion en produccion:** pendiente de confirmar el proximo cron sin workflow_dispatch (K-03).
+- **Clasificacion:** P1 (integridad CI). RESUELTOS 2026-09-17.
+- **Deudas residuales del ciclo FU-021-3C-bis (abiertas):**
+  - K-02 (MEDIA): SPOT_COMMODITY en STALE sistematico por desalineacion spot/market (1 dia natural).
+  - K-03 (ALTA): confirmar cron real sin workflow_dispatch.
+  - K-04 (MEDIA): `test_temporal_contracts_remaining.py` y `test_temporal_contracts_consolidate.py` con REF hardcodeado.
+  - K-05 (BAJA): transfer doc original desactualizado.
+  - K-07 (BAJA): informe formal FU-021-3C-bis en `docs/auditoria/` no redactado.
