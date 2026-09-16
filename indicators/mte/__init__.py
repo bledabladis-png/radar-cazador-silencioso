@@ -1,18 +1,56 @@
-"""Paquete MTE (DT2 Fase 2).
+"""Paquete MTE (DT2 Fase 3).
 
-Re-exporta el modulo original (ahora en mte_legacy.py) preservando
-exactamente la API publica. El alias sys.modules garantiza que
-'import indicators.mte' devuelve el modulo legacy, manteniendo
-identidad para monkeypatch (MTE_STATE_FILE, CURRENT_TEMPORAL_CONTRACT_VERSION).
+Re-exporta la API publica desde submodulos:
+- mte_legacy: compute_mte + scoring + decision + state-machine (fases 3-6 los extraeran)
+- state: load_previous_scenario, save_scenario
 
-Fases 3-6 (extraccion progresiva) sustituiran mte_legacy.py por
-submodulos especificos: state.py, scoring.py, decision.py, engine.py.
+Todos los simbolos que antes se importaban desde indicators.mte siguen
+resolviendose desde aqui.
 """
 from __future__ import annotations
 
-import sys
+# Re-export de state (submodulo real)
+from .state import (
+    load_previous_scenario,
+    save_scenario,
+    MTE_STATE_FILE,
+    CURRENT_TEMPORAL_CONTRACT_VERSION,
+)
 
-from . import mte_legacy
+# Re-export de mte_legacy (API publica completa)
+from .mte_legacy import (
+    compute_mte,
+    compute_msi,
+    compute_ipi,
+    validate_transition,
+    sector_rotation_score,
+    safe_haven_score,
+    inflation_pressure_score,
+    credit_stress_score,
+    classify_mte,
+    score_scenarios,
+    consensus_score,
+    distance_to_threshold,
+    compute_confidence,
+)
 
-# Alias: 'indicators.mte' ES 'indicators.mte.mte_legacy'.
-sys.modules[__name__] = mte_legacy
+
+__all__ = [
+    "compute_mte",
+    "compute_msi",
+    "compute_ipi",
+    "validate_transition",
+    "sector_rotation_score",
+    "safe_haven_score",
+    "inflation_pressure_score",
+    "credit_stress_score",
+    "classify_mte",
+    "score_scenarios",
+    "consensus_score",
+    "distance_to_threshold",
+    "compute_confidence",
+    "load_previous_scenario",
+    "save_scenario",
+    "MTE_STATE_FILE",
+    "CURRENT_TEMPORAL_CONTRACT_VERSION",
+]

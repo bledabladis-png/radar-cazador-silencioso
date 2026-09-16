@@ -104,9 +104,8 @@ class TestComputeMteAgainstGolden:
         tmp_state = tmp_path / "mte_state.json"
         tmp_state.write_text(prev_state_str, encoding="utf-8")
 
-        import indicators.mte as mte_module
         monkeypatch.setattr(
-            mte_module, "MTE_STATE_FILE", str(tmp_state)
+            "indicators.mte.state.MTE_STATE_FILE", str(tmp_state)
         )
 
         from src.pipeline.mte_confirmation import _compute_mte

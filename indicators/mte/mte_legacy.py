@@ -34,7 +34,8 @@ import os
 
 
 
-from config.settings import MTE_STATE_FILE, CURRENT_TEMPORAL_CONTRACT_VERSION
+from . import state as _mte_state
+from .state import load_previous_scenario, save_scenario
 
 
 
@@ -1301,71 +1302,7 @@ def validate_transition(previous, current, cls):
 
 
 
-def load_previous_scenario():
-
-
-
-    try:
-
-
-
-        with open(MTE_STATE_FILE, 'r') as f:
-
-
-
-            data = json.load(f)
-
-
-
-            _stored_version = data.get('temporal_contract_version')
-            if _stored_version != CURRENT_TEMPORAL_CONTRACT_VERSION:
-                print(f'  MTE state: contrato cambio ({_stored_version} -> {CURRENT_TEMPORAL_CONTRACT_VERSION}). Reset.')
-                return 'MIXED', None
-            return data.get('scenario', 'MIXED'), data.get('pending', None)
-
-
-
-    except:
-
-
-
-        return 'MIXED', None
-
-
-
-
-
-
-
-def save_scenario(scenario, pending=None):
-
-
-
-    os.makedirs(os.path.dirname(MTE_STATE_FILE), exist_ok=True)
-
-
-
-    with open(MTE_STATE_FILE, 'w', encoding='utf-8') as f:
-
-
-
-        json.dump({
-            'schema_version': 1,
-            'temporal_contract_version': CURRENT_TEMPORAL_CONTRACT_VERSION,
-            'scenario': scenario,
-            'pending': pending,
-        }, f, indent=2)
-
-
-
-
-
-
-
-
-
-
-
+# state.py: load_previous_scenario, save_scenario extraidos (DT2 Fase 3)
 # ============================================================
 
 
@@ -1848,11 +1785,11 @@ def compute_mte(df_market, financial_conditions_score, credit_signal,
 
 
 
-            os.makedirs(os.path.dirname(MTE_STATE_FILE), exist_ok=True)
+            os.makedirs(os.path.dirname(_mte_state.MTE_STATE_FILE), exist_ok=True)
 
 
 
-            with open(MTE_STATE_FILE, 'w', encoding='utf-8') as f:
+            with open(_mte_state.MTE_STATE_FILE, 'w', encoding='utf-8') as f:
 
 
 
@@ -1861,7 +1798,7 @@ def compute_mte(df_market, financial_conditions_score, credit_signal,
 
 
                     'schema_version': 1,
-                    'temporal_contract_version': CURRENT_TEMPORAL_CONTRACT_VERSION,
+                    'temporal_contract_version': _mte_state.CURRENT_TEMPORAL_CONTRACT_VERSION,
                     'effective_date': (temporal_meta or {}).get('by_contract', {}).get('EQUITY_EOD', {}).get('effective_date'),
                     'expected_date': (temporal_meta or {}).get('by_contract', {}).get('EQUITY_EOD', {}).get('expected_date'),
                     'coverage': (temporal_meta or {}).get('by_contract', {}).get('EQUITY_EOD', {}).get('coverage'),

@@ -23,7 +23,7 @@ class TestLoadPreviousScenario:
             "scenario": "EXPANSION",
             "pending": "SOFT LANDING",
         }), encoding="utf-8")
-        monkeypatch.setattr(mte_module, "MTE_STATE_FILE", str(state))
+        monkeypatch.setattr("indicators.mte.state.MTE_STATE_FILE", str(state))
 
         scenario, pending = mte_module.load_previous_scenario()
         assert scenario == "EXPANSION"
@@ -32,7 +32,7 @@ class TestLoadPreviousScenario:
     def test_fichero_inexistente(self, tmp_path, monkeypatch):
         import indicators.mte as mte_module
         state = tmp_path / "no_existe.json"
-        monkeypatch.setattr(mte_module, "MTE_STATE_FILE", str(state))
+        monkeypatch.setattr("indicators.mte.state.MTE_STATE_FILE", str(state))
 
         scenario, pending = mte_module.load_previous_scenario()
         assert scenario == "MIXED"
@@ -47,7 +47,7 @@ class TestLoadPreviousScenario:
             "scenario": "EXPANSION",
             "pending": "SOFT LANDING",
         }), encoding="utf-8")
-        monkeypatch.setattr(mte_module, "MTE_STATE_FILE", str(state))
+        monkeypatch.setattr("indicators.mte.state.MTE_STATE_FILE", str(state))
 
         scenario, pending = mte_module.load_previous_scenario()
         assert scenario == "MIXED"
@@ -57,7 +57,7 @@ class TestLoadPreviousScenario:
         import indicators.mte as mte_module
         state = tmp_path / "mte_state.json"
         state.write_text("no soy json", encoding="utf-8")
-        monkeypatch.setattr(mte_module, "MTE_STATE_FILE", str(state))
+        monkeypatch.setattr("indicators.mte.state.MTE_STATE_FILE", str(state))
 
         scenario, pending = mte_module.load_previous_scenario()
         assert scenario == "MIXED"
@@ -69,7 +69,7 @@ class TestSaveScenario:
     def test_escribe_schema_correcto(self, tmp_path, monkeypatch):
         import indicators.mte as mte_module
         state = tmp_path / "mte_state.json"
-        monkeypatch.setattr(mte_module, "MTE_STATE_FILE", str(state))
+        monkeypatch.setattr("indicators.mte.state.MTE_STATE_FILE", str(state))
 
         mte_module.save_scenario("EXPANSION")
 
@@ -82,7 +82,7 @@ class TestSaveScenario:
     def test_escribe_pending(self, tmp_path, monkeypatch):
         import indicators.mte as mte_module
         state = tmp_path / "mte_state.json"
-        monkeypatch.setattr(mte_module, "MTE_STATE_FILE", str(state))
+        monkeypatch.setattr("indicators.mte.state.MTE_STATE_FILE", str(state))
 
         mte_module.save_scenario("EXPANSION", "SOFT LANDING")
 
@@ -93,7 +93,7 @@ class TestSaveScenario:
     def test_crea_directorio_si_no_existe(self, tmp_path, monkeypatch):
         import indicators.mte as mte_module
         nested = tmp_path / "a" / "b" / "mte_state.json"
-        monkeypatch.setattr(mte_module, "MTE_STATE_FILE", str(nested))
+        monkeypatch.setattr("indicators.mte.state.MTE_STATE_FILE", str(nested))
 
         mte_module.save_scenario("EXPANSION")
 
