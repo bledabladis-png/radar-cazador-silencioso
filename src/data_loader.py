@@ -1,4 +1,4 @@
-import pandas as pd
+﻿import pandas as pd
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 import os
@@ -318,7 +318,7 @@ def download_market_data(reference_date=None, run_id=None):
         _summary = ' '.join(
             f"{k}={v.status}" for k, v in _resolutions.items()
         )
-        print(f"  [FU-021-5] 9 contratos resueltos: {_summary}")
+        print(f"  [FU-021-5] {len(_resolutions)} contratos resueltos: {_summary}")
     except Exception as e:
         print(f"  [FU-021-5][WARN] Fallo resolviendo contratos: {e}")
 
