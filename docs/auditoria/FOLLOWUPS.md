@@ -288,3 +288,40 @@
 - **Verificacion:** compileall OK, pyflakes 0 warnings, 362 passed + 2 skipped. Sin E2E (el camino de produccion no cambia: `get_market` sigue igual).
 - **Clasificacion:** P3 (deuda tecnica estructural latente) - **RESUELTO 2026-09-15**.
 - **Consumidor futuro:** `get_instrument_class` sera utilizada por FU-021-5 para asignar contratos temporales por clase (EQUITY_EOD, INDEX_EOD, RATE_YIELD, FUTURE_SETTLEMENT, FX_DAILY_CUT).
+
+
+## FU-021-3B - Verificacion empirica INDEX_EOD y RATE_YIELD (INFORME CERRADO)
+
+- **Origen:** investigacion empirica previa a Parte B de FU-021-5. Autorizado por dictamen del contrato temporal (Q-C2.6, camino alpha).
+- **Informe principal:** `docs/auditoria/FU-021-3B_INFORME_INDEX_EOD_RATE_YIELD.md` (`b645de4`, HEAD ref `61aa99f`).
+- **Anexo:** `docs/auditoria/FU-021-3B_ANEXO_VOLATILITY_INDEX.md` (`794f0e9`). Cierra la laguna de VOLATILITY_INDEX.
+- **Fecha:** 2026-09-15 (informe) / 2026-09-16 (anexo).
+- **Alcance:** 10 indices + 2 yields + 3 indices de volatilidad del universo `df_market`.
+- **Objetivo:** medir empiricamente la semantica temporal de las clases no verificadas en Parte A (INDEX_EOD, RATE_YIELD), necesaria para redactar Parte B.
+- **Hallazgos clave:**
+  - Causa raiz del lag europeo medida (INDEX_EOD_EUROPA con `per_ticker_lag`, `max_lag=5`).
+  - VOLATILITY_INDEX confirmada como clase independiente que hereda de INDEX_EOD_USA (subclase, no asumible desde INDEX_EOD_USA).
+  - Universo no-equity: 6 clases confirmadas (Parte A documentaba 5).
+- **Clasificacion:** informe empirico cerrado. Alimenta Parte B y Plan de FU-021-5.
+- **Notas:** el descubrimiento '5 vs 6 clases' origino la deuda documental K-FU-021-5-01.
+- **Hallazgo colateral:** E5 (anomalia yfinance en `^VIX3M`, individual vs batch) detectado durante el anexo.
+
+
+## FU-021-3C - Verificacion empirica FUTURE_SETTLEMENT y FX_DAILY_CUT (INFORME CERRADO)
+
+- **Origen:** contraparte de FU-021-3B para las dos clases restantes bloqueadas por provider.
+- **Informe:** `docs/auditoria/FU-021-3C_INFORME_FUTURE_FX.md` (`794f0e9`, HEAD ref `b645de4`).
+- **Fecha:** 2026-09-16.
+- **Alcance:** 5 futuros de commodities (BZ=F, CL=F, GC=F, HG=F, NG=F) + 3 pares FX (EURUSD=X, USDCNY=X, USDJPY=X) del universo `df_market`.
+- **Objetivo:** confirmar empiricamente si la clasificacion de Parte A ('bloqueadas por provider dedicado') se sostiene.
+- **Hallazgos clave:**
+  - H-3C-7: historicos de futuros via Yahoo no reproducibles (contratos explicitos reescriben historicos).
+  - CME/ICE bloqueados por IP tras uso intensivo.
+  - FX_DAILY_CUT: cutoff exacto provisional (17:00 ET).
+  - Ambas clases confirmadas como BLOCKED por provider en el momento del informe.
+- **Cierre sin causa raiz exacta:** H-3C-7 no tiene causa raiz reproducible. Investigacion detenida por ROI negativo, documentada en el propio informe.
+- **Desbloqueo posterior:**
+  - FUTURE_SETTLEMENT: `78f18a8` (FU-021-3C-bis, OilPriceAPI close_proxy).
+  - FX_DAILY_CUT: contrato activo en FU-021-5 con `per_pair_max_lag`.
+- **Clasificacion:** informe empirico cerrado. Alimenta Parte B de FU-021-5.
+- **Notas:** desbloqueo llega por via alterna (OilPriceAPI). Ver entrada FU-021-3C-bis.
