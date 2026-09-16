@@ -325,3 +325,34 @@
   - FX_DAILY_CUT: contrato activo en FU-021-5 con `per_pair_max_lag`.
 - **Clasificacion:** informe empirico cerrado. Alimenta Parte B de FU-021-5.
 - **Notas:** desbloqueo llega por via alterna (OilPriceAPI). Ver entrada FU-021-3C-bis.
+
+
+## FU-021-5 - Contratos temporales explicitos sobre df_market (RESUELTO)
+
+- **Origen:** el pipeline usaba fechas implicitas (ultima fila, max index). R1-R3 (FU-020) exigian declarar fecha efectiva y cobertura por metrica. Sin contrato temporal explicito, la trazabilidad era fragil.
+- **Objetivo:** definir contratos temporales declarativos por clase de instrumento, con FSM y autoridad explicita, propagados a todo consumidor.
+- **Alcance:** 9 contratos en 5 familias (EQUITY, INDEX, VOLATILITY_INDEX, RATE_YIELD, FUTURE_SETTLEMENT, FX_DAILY_CUT). 20 commits (`c1a1df9..7560e12`).
+- **Tag:** `fu-021-5-completo` en `7560e12`.
+- **Arquitectura nueva:** `src/temporal_contracts/` (10 modulos): `base.py` (FSM PENDING|OK|STALE|INSUFFICIENT|BLOCKED), `registry.py` (catalogo), `consolidate.py` (build_temporal_meta), + 7 contratos.
+- **Contratos implementados:**
+  - EQUITY_EOD (539 tickers, NYSE, max_lag=0, min_cov=0.90).
+  - INDEX_EOD_USA (^GSPC ^DJI ^NDX ^RUT).
+  - INDEX_EOD_EUROPA (^FTSE ^GDAXI ^IBEX ^STOXX50E, per_ticker_lag, max_lag=5).
+  - INDEX_EOD_COMMODITY (^SPGSCI).
+  - INDEX_EOD_CURRENCY (DX-Y.NYB, ICE).
+  - VOLATILITY_INDEX (^VIX ^VIX3M ^VXN, hereda de INDEX_EOD_USA).
+  - RATE_YIELD (^FVX ^TNX).
+  - FUTURE_SETTLEMENT (BZ=F CL=F GC=F HG=F NG=F). BLOCKED al cierre del ciclo (Q-B.4).
+  - FX_DAILY_CUT (EURUSD=X USDCNY=X USDJPY=X, per_pair_max_lag).
+- **Autoridad (Q-P.3):** `temporal_meta` es dict explicito. `df.attrs` es espejo auxiliar, nunca autoridad.
+- **Transporte:** `MarketDataBundle` (dataclass).
+- **Propagacion:** 13 consumidores pipeline + run.py + 3 regimes + 16 indicadores.
+- **Writers migrados:** 20 (patrones P0-P8). Helper `src/utils.py::writer_observation_date`.
+- **MTE state:** schema versionado (schema_version=1, temporal_contract_version, effective_date, expected_date, coverage, futures_status=BLOCKED). Reset automatico si contrato cambia.
+- **Darkpool:** `compute_darkpool_signals(df_market, df_stocks)` con fallback parquet (Q-P.7).
+- **A3.1 desbloqueada:** `trim_to_last_valid_date` retirado de `data_load.py`. Verificacion empirica: diff filas = 0 con/sin trim (redundante con FU-021-3A). Funcion marcada DEPRECATED en `src/utils.py`.
+- **Tests:** `test_temporal_contracts_base.py` (14, FSM 5 estados), `test_temporal_contracts_registry.py` (13), `test_temporal_contracts_contracts.py` (37), `test_temporal_contracts_remaining.py` (15), `test_temporal_contracts_consolidate.py` (22). Total: ~101 tests.
+- **Verificacion:** compileall OK, pyflakes 0 warnings, 469 passed + 2 skipped al cierre. Gate 10/10.
+- **Clasificacion:** ciclo de refactor arquitectonico. RESUELTO 2026-09-16.
+- **Deudas residuales del ciclo:** K7 (Plan §2.4 vs §2.5), K-FU-021-5-01..06.
+- **Sucesor:** FU-021-3C-bis resuelve el unico BLOCKED pendiente (FUTURE_SETTLEMENT). Ver entrada siguiente.
