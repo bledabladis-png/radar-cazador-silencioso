@@ -418,3 +418,19 @@
 - **Verificacion:** compileall OK, pyflakes limpio. Gate 10/10 en runs reales pendiente del proximo cron.
 - **Clasificacion:** ciclo de integracion de provider. RESUELTO 2026-09-17.
 - **Deudas generadas:** ninguna nueva. BOM de `cboe.py` y limpieza ya gestionados como K-ID separado.
+
+## FU-021-3D-cierre - Cierre documental del ciclo (RESUELTO)
+
+- **Origen:** cierre del ciclo FU-021-3D tras run CI `38092ed`.
+- **Correccion a entrada historica:** la entrada `FU-021-3D` afirmaba "deudas generadas: ninguna nueva". Era prematuro: se redacto antes del run CI que revelo el estado real.
+- **Informe E5 persistido:** `docs/auditoria/E5_INFORME_VIX3M.md`. La entrada historica referenciaba este fichero antes de que existiera. Ya reparado.
+- **Verificacion real:** run CI `38092ed` (workflow_dispatch, 2026-09-17). Resultado: Gate 10/10, VOLATILITY_INDEX=OK, 10/10 contratos temporales en OK/STALE.
+- **Deudas generadas por el ciclo (cierre real):**
+  - K-FU-021-3D-01 (manifests en git add): RESUELTO `5caceda`.
+  - K-FU-021-3D-02 (git add -u + diagnostico): RESUELTO `7035a1e`.
+  - K-FU-021-3D-03 (BAJA): FutureWarning commodities_merge.py:75 (dtype incompatible, Pandas 3.0).
+  - K-FU-021-3D-04 (BAJA): FutureWarning momentum.py .ffill (downcasting object dtype, Pandas 3.0).
+  - K-FU-021-3D-05 (BAJA): `docs/auditoria/auditoria_arquitectura.md` se regenera en cada run. Entra por `git add -u`. Documentar.
+- **K-FU-021-3C-bis-03:** RESUELTO. Confirmado con workflow_dispatch en CI real.
+- **Clasificacion:** cierre documental. RESUELTO 2026-09-17.
+- **Nota:** la entrada historica `FU-021-3D` se preserva sin reescribir. Este bloque refleja el estado final verificado.
