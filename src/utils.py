@@ -1,4 +1,4 @@
-﻿import numpy as np
+import numpy as np
 import pandas as pd
 
 
@@ -592,3 +592,15 @@ def get_effective_meta(temporal_meta, contracts):
         'status': combined_status,
         'contracts': list(contracts),
     }
+
+def writer_observation_date(temporal_meta, contracts, fallback):
+    """FU-021-5 Fase 5: fecha de observacion para writers historicos.
+
+    Si temporal_meta es valido, devuelve la effective_date combinada
+    de los contratos indicados. Si no, ejecuta fallback().
+    """
+    if temporal_meta:
+        _m = get_effective_meta(temporal_meta, contracts)
+        if _m and _m.get('effective_date') is not None:
+            return pd.Timestamp(_m['effective_date'])
+    return fallback()

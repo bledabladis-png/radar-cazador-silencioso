@@ -9,7 +9,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from src.utils import append_dedup
+from src.utils import append_dedup, writer_observation_date
 from regimes.sector_regime import compute_sector_scores, compute_price_flow_rankings
 from indicators.breadth import compute_breadth
 
@@ -27,6 +27,10 @@ def compute_sectors_base(df_market, temporal_meta=None):
             breadth_values
     """
     print("Calculando rankings sectoriales...")
+    # FU-021-5 Fase 5.1 (P2): fecha de observacion resuelta por contrato.
+    _obs_date = writer_observation_date(
+        temporal_meta, ['EQUITY_EOD'],
+        lambda: df_market.index[-1])
     sector_results = compute_sector_scores(df_market)
     if sector_results:
         top3 = sector_results['ranking'][:3]
@@ -41,7 +45,7 @@ def compute_sectors_base(df_market, temporal_meta=None):
         from indicators.sector_rank_history import update_rank_history
         _, sector_rank_deltas_df = update_rank_history(
             sector_results, 'outputs/history/sector_rank_history.csv',
-            date=df_market.index[-1]
+            date=_obs_date
         )
         if sector_rank_deltas_df is not None and not sector_rank_deltas_df.empty:
             print("  Rotacion sectorial historica calculada.")
@@ -62,7 +66,7 @@ def compute_sectors_base(df_market, temporal_meta=None):
     try:
         from indicators.sector_dispersion import compute_sector_dispersion
         sector_dispersion_df = compute_sector_dispersion(
-            sector_price_rank, reference_date=df_market.index[-1])
+            sector_price_rank, reference_date=_obs_date)
         sd_path = Path('outputs/history/sector_dispersion.csv')
         sd_path.parent.mkdir(parents=True, exist_ok=True)
         if not sector_dispersion_df.empty:

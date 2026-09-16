@@ -9,7 +9,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from src.utils import append_dedup, get_col, _observation_date_from_df
+from src.utils import append_dedup, get_col, _observation_date_from_df, writer_observation_date, get_effective_meta
 from indicators.persistence import compute_persistence
 
 
@@ -65,7 +65,7 @@ def _compute_tactical_structural(df_market, temporal_meta=None):
     return tactical_scores, structural_scores
 
 
-def _compute_persistence_and_save(df_market):
+def _compute_persistence_and_save(df_market, temporal_meta=None):
     sector_persistence = {}
     try:
         for sector_etf in SECTOR_ETFS:
@@ -87,9 +87,19 @@ def _compute_persistence_and_save(df_market):
     # Guardar CSV historico de persistencia sectorial
     try:
         persist_rows = []
-        date_val = _observation_date_from_df(df_market)
+        date_val = writer_observation_date(
+            temporal_meta, ['EQUITY_EOD'],
+            lambda: _observation_date_from_df(df_market))
+        _eff_meta = get_effective_meta(temporal_meta or {}, ['EQUITY_EOD'])
         for sec, val in sector_persistence.items():
-            persist_rows.append({'date': date_val, 'sector': sec, 'persistence': val})
+            persist_rows.append({
+                'date': date_val,
+                'effective_date': _eff_meta.get('effective_date'),
+                'expected_date': _eff_meta.get('expected_date'),
+                'coverage': _eff_meta.get('coverage'),
+                'sector': sec,
+                'persistence': val,
+            })
         persist_df = pd.DataFrame(persist_rows)
         p_path = Path('outputs/history/sector_persistence.csv')
         p_path.parent.mkdir(parents=True, exist_ok=True)
@@ -116,7 +126,7 @@ def compute_engines(df_market, sector_results, sector_flow_rank, otros_flow_rank
         sector_results, sector_flow_rank, otros_flow_rank, leader_df
     )
     tactical_scores, structural_scores = _compute_tactical_structural(df_market, temporal_meta=temporal_meta)
-    sector_persistence = _compute_persistence_and_save(df_market)
+    sector_persistence = _compute_persistence_and_save(df_market, temporal_meta=temporal_meta)
     return {
         'leader_metrics_for_slpm': leader_metrics_for_slpm,
         'top_sector_flow': top_sector_flow,
