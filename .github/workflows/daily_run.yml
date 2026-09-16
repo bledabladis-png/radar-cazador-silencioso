@@ -165,8 +165,10 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add outputs/history outputs/state \
-            data/commodities_futures.parquet \
+          echo "=== status BEFORE git add ==="
+          git status --porcelain
+          git add -u
+          git add data/commodities_futures.parquet \
             data/commodities_futures.parquet.manifest.json \
             data/commodities_spot.parquet \
             data/commodities_spot.parquet.manifest.json \
@@ -174,6 +176,8 @@ jobs:
             data/cboe_vix3m.parquet.manifest.json \
             data/market_data.parquet.manifest.json \
             data/stock_prices.parquet.manifest.json
+          echo "=== status AFTER git add ==="
+          git status --porcelain
           if ! git diff --staged --quiet; then
             git commit -m "Daily hist/state "
             git pull --rebase origin main
