@@ -10,32 +10,32 @@
     },
     "previous_state": {
       "path": "tests/fixtures/mte_previous_state.json",
-      "sha256": "65452e6bd91208bf546bc31cddc2e9c6f1dfa45f1350cb17fd48dfb7412fe513",
+      "sha256": "1db32eb4067cd9ebbae3ab52c430c6a7f8b1fc0f0d0ff1e2afeb01f71819e187",
       "size": 438
     },
     "financial_score": {
       "path": "tests/fixtures/mte_financial_score.csv",
-      "sha256": "bdf7121ef03f06719104fdb650d0d62b2af000779915260e1e5e1bf47cd5fffb",
+      "sha256": "694d189771dea08b46b6e2acba1b259c2d274bed65f8408e349e59cc3617554e",
       "size": 85225
     },
     "all_signals": {
       "path": "tests/fixtures/mte_all_signals.csv",
-      "sha256": "c9fbac211457e31543c133b8cdd044908fdb56b368b076fdd6b3d8652d55d477",
+      "sha256": "e335923ad357c8ff3ed58a5ba7b8926799e72ef0b9b66f5d2a80bdfaea15b07d",
       "size": 568253
     },
     "pcr_data": {
       "path": "tests/fixtures/mte_pcr_data.json",
-      "sha256": "dd136d6305751773c795d40828b4591c38f60d7584e20ea13244c11e9430483c",
+      "sha256": "020592ab81a7ad5ee2f90beefa31c3d3dd2c04e82a262a120606e4ca05a64517",
       "size": 680
     },
     "darkpool_data": {
       "path": "tests/fixtures/mte_darkpool_data.json",
-      "sha256": "190e89e1b9f9f3070bb02ac80dbfe42ba39902145641b6e15bb32af52a57bc54",
+      "sha256": "87d8a206451fab43c34b7426323910aa3d58a2dab282b96311f42b11171cec61",
       "size": 1389
     },
     "temporal_meta": {
       "path": "tests/fixtures/mte_temporal_meta.json",
-      "sha256": "bdefe9e9d8a5536b5acfc461485ac0da5e66c2f9fb2df175dfe2fd589a93229e",
+      "sha256": "717d61b6b04dc08089f712771621367008551e04308b3f5961739cc12b0422d2",
       "size": 1959
     }
   },
