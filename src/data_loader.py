@@ -1,4 +1,4 @@
-﻿import pandas as pd
+import pandas as pd
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 import os
@@ -292,6 +292,11 @@ def download_market_data(reference_date=None, run_id=None):
               f"({_eff['n_observed']}/{_eff['n_eligible']})")
     elif _eff:
         print("  [FU-021-3A] EQUITY_EOD INSUFFICIENT_COVERAGE. Sin trim.")
+
+    # FU-021-3C-bis: enriquecer con commodities (OilPriceAPI) si estan
+    # disponibles. Solo merge en fechas comunes. No fetch aqui.
+    from src.commodities_merge import merge_commodities_into_market
+    data = merge_commodities_into_market(data)
 
     # FU-002 (2026-09-15): parquet + manifest atomico.
     from src.utils import write_artifact_with_manifest
