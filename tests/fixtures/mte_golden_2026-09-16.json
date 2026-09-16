@@ -1,0 +1,69 @@
+{
+  "reference_date": "2026-09-17T02:20:00+02:00",
+  "run_id": "20260917_022000",
+  "expected_commit": "38092ed",
+  "fixtures": {
+    "input_df": {
+      "path": "tests/fixtures/mte_input_df.parquet",
+      "sha256": "3c9bec84c6669c61e097541ab7d47e28b7f8e6cf8132187d089eac02c4afd2a4",
+      "size": 2046313
+    },
+    "previous_state": {
+      "path": "tests/fixtures/mte_previous_state.json",
+      "sha256": "65452e6bd91208bf546bc31cddc2e9c6f1dfa45f1350cb17fd48dfb7412fe513",
+      "size": 438
+    },
+    "financial_score": {
+      "path": "tests/fixtures/mte_financial_score.csv",
+      "sha256": "bdf7121ef03f06719104fdb650d0d62b2af000779915260e1e5e1bf47cd5fffb",
+      "size": 85225
+    },
+    "all_signals": {
+      "path": "tests/fixtures/mte_all_signals.csv",
+      "sha256": "c9fbac211457e31543c133b8cdd044908fdb56b368b076fdd6b3d8652d55d477",
+      "size": 568253
+    },
+    "pcr_data": {
+      "path": "tests/fixtures/mte_pcr_data.json",
+      "sha256": "dd136d6305751773c795d40828b4591c38f60d7584e20ea13244c11e9430483c",
+      "size": 680
+    },
+    "darkpool_data": {
+      "path": "tests/fixtures/mte_darkpool_data.json",
+      "sha256": "190e89e1b9f9f3070bb02ac80dbfe42ba39902145641b6e15bb32af52a57bc54",
+      "size": 1389
+    },
+    "temporal_meta": {
+      "path": "tests/fixtures/mte_temporal_meta.json",
+      "sha256": "bdefe9e9d8a5536b5acfc461485ac0da5e66c2f9fb2df175dfe2fd589a93229e",
+      "size": 1959
+    }
+  },
+  "tolerances": {
+    "exact_str_fields": [
+      "scenario"
+    ],
+    "min_rtol_fields": {
+      "srs": 1e-09,
+      "ipi": 1e-09,
+      "ips": 1e-09
+    },
+    "fred_rtol_fields": {
+      "confidence": 0.001,
+      "msi": 0.001,
+      "cls": 0.001,
+      "shs": 0.001
+    },
+    "note": "rtol=1e-3 documentado como tolerancia derivada de la variacion observada de FRED entre runs. NO es tolerancia general del motor MTE."
+  },
+  "expected_output": {
+    "scenario": "MIXED",
+    "confidence": 0.6505953724652309,
+    "msi": 33.81689074201192,
+    "ipi": 62.23399368821223,
+    "srs": 0.2299456026036154,
+    "shs": -0.6528589462845729,
+    "cls": 0.1393918719570505,
+    "ips": 0.24467987376424463
+  }
+}

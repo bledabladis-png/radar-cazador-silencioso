@@ -1,0 +1,77 @@
+{
+  "by_contract": {
+    "EQUITY_EOD": {
+      "effective_date": "2026-09-16",
+      "expected_date": "2026-09-16",
+      "lag_days": 0,
+      "coverage": 0.9981447124304267,
+      "status": "OK"
+    },
+    "INDEX_EOD_USA": {
+      "effective_date": "2026-09-16",
+      "expected_date": "2026-09-16",
+      "lag_days": 0,
+      "coverage": 1.0,
+      "status": "OK"
+    },
+    "INDEX_EOD_EUROPA": {
+      "effective_date": "2026-09-16",
+      "expected_date": "2026-09-17",
+      "lag_days": 1,
+      "coverage": 1.0,
+      "status": "STALE"
+    },
+    "INDEX_EOD_COMMODITY": {
+      "effective_date": "2026-09-16",
+      "expected_date": "2026-09-16",
+      "lag_days": 0,
+      "coverage": 1.0,
+      "status": "OK"
+    },
+    "INDEX_EOD_CURRENCY": {
+      "effective_date": "2026-09-16",
+      "expected_date": "2026-09-16",
+      "lag_days": 0,
+      "coverage": 1.0,
+      "status": "OK"
+    },
+    "VOLATILITY_INDEX": {
+      "effective_date": "2026-09-16",
+      "expected_date": "2026-09-16",
+      "lag_days": 0,
+      "coverage": 1.0,
+      "status": "OK"
+    },
+    "RATE_YIELD": {
+      "effective_date": "2026-09-16",
+      "expected_date": "2026-09-16",
+      "lag_days": 0,
+      "coverage": 1.0,
+      "status": "OK"
+    },
+    "FUTURE_SETTLEMENT": {
+      "effective_date": "2026-09-16",
+      "expected_date": "2026-09-17",
+      "lag_days": 1,
+      "coverage": 1.0,
+      "status": "STALE"
+    },
+    "SPOT_COMMODITY": {
+      "effective_date": "2026-09-16",
+      "expected_date": "2026-09-17",
+      "lag_days": 1,
+      "coverage": 1.0,
+      "status": "STALE"
+    },
+    "FX_DAILY_CUT": {
+      "effective_date": "2026-09-16",
+      "expected_date": "2026-09-17",
+      "lag_days": 1,
+      "coverage": 1.0,
+      "status": "STALE"
+    }
+  },
+  "global_last_date": "2026-09-16",
+  "reference_date": "2026-09-17T02:20:00+02:00",
+  "run_id": "20260917_022000"
+}

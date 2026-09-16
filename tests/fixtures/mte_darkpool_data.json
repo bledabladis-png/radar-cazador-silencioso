@@ -1,0 +1,31 @@
+{
+  "status": "OK",
+  "week": "2026-08-24",
+  "fecha": "2026-09-17",
+  "media_dark_pool": 24.277714952649426,
+  "z_score": -0.15062663647812252,
+  "momentum": -0.15062663647812252,
+  "percentile": 44.230769230769226,
+  "state": "Actividad ATS normal",
+  "n_tickers_ats": 536,
+  "n_tickers_total": 536,
+  "datos": "    ticker  ats_volume  total_volume  dark_pool_pct\n0       CF   2639351.0     9847400.0      26.802516\n1      HAL  11696654.0    62651800.0      18.669302\n2      MDT   8501962.0    33093400.0      25.690808\n3      MGM   1832142.0     9232800.0      19.843839\n4      MMM   3058308.0    11809700.0      25.896577\n..     ...         ...           ...            ...\n531   TMUS   3533830.0    17600700.0      20.077781\n532    WMT  20318673.0   140295600.0      14.482759\n533    COR   1468465.0     4420100.0      33.222438\n534   CPRT   8693440.0    38368600.0      22.657694\n535   SPCX  39677301.0   285023900.0      13.920693\n\n[536 rows x 4 columns]",
+  "z_windows": {
+    "13w": {
+      "z": 0.4579621098794851,
+      "state": "Actividad ATS normal"
+    },
+    "26w": {
+      "z": -0.009600925273408013,
+      "state": "Actividad ATS normal"
+    },
+    "52w": {
+      "z": -0.5003511590657757,
+      "state": "Actividad ATS baja"
+    },
+    "104w": {
+      "z": -0.15062663647812252,
+      "state": "Actividad ATS normal"
+    }
+  }
+}
