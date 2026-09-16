@@ -1,15 +1,13 @@
-"""Paquete MTE (DT2 Fase 3).
+"""Paquete MTE (DT2 Fase 5).
 
-Re-exporta la API publica desde submodulos:
-- mte_legacy: compute_mte + scoring + decision + state-machine (fases 3-6 los extraeran)
-- state: load_previous_scenario, save_scenario
-
-Todos los simbolos que antes se importaban desde indicators.mte siguen
-resolviendose desde aqui.
+API publica re-exportada desde submodulos:
+- state: persistencia
+- scoring: componentes + agregados
+- decision: maquina de estados + confianza
+- mte_legacy: engine (compute_mte)
 """
 from __future__ import annotations
 
-# Re-export de state (submodulo real)
 from .state import (
     load_previous_scenario,
     save_scenario,
@@ -17,22 +15,30 @@ from .state import (
     CURRENT_TEMPORAL_CONTRACT_VERSION,
 )
 
-# Re-export de mte_legacy (API publica completa)
-from .mte_legacy import (
-    compute_mte,
-    compute_msi,
-    compute_ipi,
-    validate_transition,
+from .scoring import (
+    tanh,
+    _get_last,
     sector_rotation_score,
     safe_haven_score,
-    inflation_pressure_score,
     credit_stress_score,
-    classify_mte,
+    inflation_pressure_score,
+    compute_msi,
+    compute_ipi,
     score_scenarios,
+    SCENARIO_WEIGHTS,
+)
+
+from .decision import (
+    NORMAL_TRANSITIONS,
+    EXCEPTION_TRANSITIONS,
+    validate_transition,
     consensus_score,
     distance_to_threshold,
     compute_confidence,
+    classify_mte,
 )
+
+from .mte_legacy import compute_mte
 
 
 __all__ = [
@@ -53,4 +59,9 @@ __all__ = [
     "save_scenario",
     "MTE_STATE_FILE",
     "CURRENT_TEMPORAL_CONTRACT_VERSION",
+    "NORMAL_TRANSITIONS",
+    "EXCEPTION_TRANSITIONS",
+    "tanh",
+    "_get_last",
+    "SCENARIO_WEIGHTS",
 ]
