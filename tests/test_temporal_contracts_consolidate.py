@@ -1,4 +1,4 @@
-"""Tests Fase 3: consolidate + build_temporal_meta + get_effective_meta."""
+﻿"""Tests Fase 3: consolidate + build_temporal_meta + get_effective_meta."""
 from datetime import date, datetime
 
 import pytest
@@ -148,8 +148,10 @@ class TestGetEffectiveMeta:
         m = get_effective_meta(
             bundle.temporal_meta, ["INDEX_EOD_USA", "INDEX_EOD_CURRENCY"]
         )
-        # ambos 14/09 en el parquet actual
-        assert m["effective_date"] == D_1409
+        # Fecha derivada del parquet (no fija): evita fragilidad ante
+        # el avance del parquet tras un run E2E (FU-021-3C-bis).
+        expected = df_real.index.max().date()
+        assert m["effective_date"] == expected
 
     def test_contrato_inexistente_ignorado(self, df_real):
         resolutions = resolve_all_contracts(df_real, REF)

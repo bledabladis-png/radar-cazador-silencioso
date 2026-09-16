@@ -1,4 +1,4 @@
-"""Tests de los contratos implementados en Fase 2.1."""
+﻿"""Tests de los contratos implementados en Fase 2.1."""
 from datetime import date, datetime
 
 import pandas as pd
@@ -24,6 +24,17 @@ from src.temporal_contracts._common import (
 
 
 REF = datetime(2026, 9, 15, 22, 0)
+
+
+def _ref_from_df(df):
+    """REF derivada del parquet: ultima fecha + 1 dia a las 22:00.
+
+    Evita que los tests sean fragiles ante el avance del parquet
+    local tras un run E2E (FU-021-3C-bis). En CI df_real hace skip
+    y REF global sigue usandose en tests con mocks.
+    """
+    ref = pd.Timestamp(df.index.max()) + pd.Timedelta(days=1)
+    return ref.replace(hour=22, minute=0, second=0).to_pydatetime()
 
 
 
@@ -121,7 +132,7 @@ class TestEquityEOD:
         assert r.lag_days == (r.expected_date - r.effective_date).days
 
     def test_effective_no_supera_expected(self, df_real):
-        r = EquityEOD().resolve(df_real, REF)
+        r = EquityEOD().resolve(df_real, _ref_from_df(df_real))
         assert r.effective_date <= r.expected_date
 
 
@@ -137,7 +148,7 @@ class TestIndexEODUSA:
         assert len(c.eligible_universe) == 4
 
     def test_resolve_ok_o_stale(self, df_real):
-        r = IndexEODUSA().resolve(df_real, REF)
+        r = IndexEODUSA().resolve(df_real, _ref_from_df(df_real))
         assert r.contract_name == "INDEX_EOD_USA"
         assert r.status in ("OK", "STALE", "INSUFFICIENT")
         assert r.coverage == 1.0
