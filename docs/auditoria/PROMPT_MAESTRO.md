@@ -671,7 +671,7 @@ FU-001 (ffill multi-calendario L352) -> RESUELTO 2026-09-15 (38f9ce1 + 8a76380).
 
 FU-002 (validacion circular BackupProvider) -> RESUELTO 2026-09-15 (45f29c2 + 2da234f).
 
-FU-003 (cosmetico +0.00, flechas ->) -> Pendiente P3.
+FU-003 (cosmetico +0.00, flechas ->) -> OBSOLETO 2026-09-17 (Gate 0: 0 matches en reporte vivo; FU-003b cubre n=0; flechas -> son semanticas).
 
 FU-004 (origen colapso macro_regime) -> Documentado P3.
 
@@ -909,7 +909,7 @@ K-DT3-YF-DIRECTO (WONT FIX / EXCEPCION ACEPTADA) / K-DT3-SIDE-EFFECT (WONT FIX /
 
 K-FS-CI-PARITY-01 (CERRADO 2026-09-17, NO BUG): hipotesis de paridad CI-local refutada. `FUTURE_SETTLEMENT=INSUFFICIENT` es estado contractual valido (cobertura parcial del proveedor).
 
-FU-003 (BAJA): cosmetico residual.
+Sin residuales BAJA activos. U+FFFD aislado por decision del auditor (ciclo dedicado pendiente).
 
 Detalle completo en la seccion 13 y en FOLLOWUPS.md.
 

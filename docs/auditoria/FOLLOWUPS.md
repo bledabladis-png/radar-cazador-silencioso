@@ -31,12 +31,17 @@
 - **Clasificacion:** P2 Technical Debt estructural - **RESUELTO 2026-09-15**.
 - **Bloqueante:** no.
 
-## FU-003 — Cosmetico: signos +0.00 y flechas ->
+## FU-003 — Cosmetico: signos +0.00 y flechas -> (OBSOLETO 2026-09-17)
 
 - **Origen:** prompt maestro v6.8 seccion 15.2.
 - **Descripcion:** formato de +0.00 en scores pequenos; flecha -> en algunos textos.
 - **Clasificacion:** P3 cosmetico.
 - **Bloqueante:** no.
+
+**Resolucion (2026-09-17):**
+- **Gate 0 (parte +0.00):** `outputs/report/reporte_diario.md` (reporte vivo) tiene **0 matches** de `+0.00`. Los 43 matches en `outputs/audit/*` son snapshots historicos no versionados. FU-003b (`slpm.py:50`) ya corrigio los casos donde `+0.00` era enganoso (n=0 -> N/D). El resto de `{:+.2f}` es convencion intencional (signo explicito).
+- **Gate 0 (parte flechas ->):** 5 matches en reporte vivo, todos semanticos (`UNRESOLVED -> Transition` FSM, `Persistence -> Structural Score -> SLPM`, etc.). Sustituir por `->` unicode (`→`) romperia grep/ASCII sin beneficio funcional. `slpm.py:37` (` -> {quadrant}`) no aparece en el reporte vivo (quadrant probablemente vacio).
+- **Estado:** **OBSOLETO 2026-09-17**. FU-003b ya resolvio lo relevante; el resto es convencion/diseño.
 
 ## FU-004 — Origen del colapso `macro_regime.csv` (315 -> 1) sin identificar
 
