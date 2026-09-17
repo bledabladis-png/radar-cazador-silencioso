@@ -680,3 +680,17 @@
 - **Reabrir si:** (a) >40 scripts activos en cualquiera de las dos carpetas; (b) nueva necesidad de subcategorizacion por dominio; (c) solicitud de auditoria externa por compliance.
 - **Estado:** **CERRADO 2026-09-17**.
 
+## U+FFFD - Encoding residual en codigo productivo (RESUELTO 2026-09-17)
+
+- **Origen:** prompt maestro v6.27 seccion 13. Aislado por decision del auditor.
+- **Gate 0 (2026-09-17):**
+  - 26 U+FFFD + 1 CP1252 em-dash en 4 ficheros productivos: indicators/mte/scoring.py (20), indicators/mte/decision.py (5), indicators/mte/engine.py (1), config/settings.py (1).
+  - 23 ocurrencias adicionales en data/cache/qqq_model_embedded.json (gitignored, fuera de alcance).
+  - Sin BOM, todo LF puro.
+- **Verificacion historica (A):** barrido de los 8 commits que tocaron indicators/mte.py. El commit mas antiguo del repo (533d580, v3.15, 25/07/2026) ya tenia los 28 U+FFFD. No existe version sana en el historial. Verificacion agotada.
+- **Fix (B):** reconstruccion por contexto linguistico (palabras 100% inferibles: ultimo, Dispersion, esta, VALIDOS, Credito, algun, INDICES, PUNTUACION, condicion, rotacion, inflacion, recesion, estanflacion, maxima, invalido, estres, subito, transicion, Histeresis, FUNCION, indices). Em-dash CP1252 -> U+2014 (coherente con L10/L80/L102 de settings.py).
+- **Precision del auditor:** sin impacto esperado sobre la semantica ejecutable (comentarios/docstrings/reasons). No usar "cero riesgo" absoluto.
+- **Commit:** d5b1c25 - fix(encoding): 27 ocurrencias corregidas.
+- **Tests:** 615 passed + 2 skipped, 0 warnings.
+- **Estado:** **RESUELTO 2026-09-17**.
+

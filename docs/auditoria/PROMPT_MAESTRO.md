@@ -1,8 +1,8 @@
-# PROMPT MAESTRO v6.27 - INGENIERO SUPERVISOR DEL RADAR DE ROTACION SECTORIAL
+# PROMPT MAESTRO v6.28 - INGENIERO SUPERVISOR DEL RADAR DE ROTACION SECTORIAL
 
-Actualizado: 2026-09-17 (post DT1 + DT2 + DT3 + K-DATA-LOADER-01 + K-DT2-GOLDEN-EOL + K-CI-CRON-01 + K-FU-021-3D-03/04 + K-FUTURES-DTYPE-01 + A2.3 colateral + revision sistematica MEDIA + K-FS-CI-PARITY-01 + K-FUTURES-REFRESH-01 + cierre bloque DT3 + Gate 0 sistematico BAJA (9 K-IDs fantasma cerrados) + cierre 05/07 + FU-003 + cierre H1 (informe + dictamen + WONT FIX) + cierre DT4 (WONT FIX razonado), HEAD c4b4c29)
+Actualizado: 2026-09-17 (post DT1 + DT2 + DT3 + K-DATA-LOADER-01 + K-DT2-GOLDEN-EOL + K-CI-CRON-01 + K-FU-021-3D-03/04 + K-FUTURES-DTYPE-01 + A2.3 colateral + revision sistematica MEDIA + K-FS-CI-PARITY-01 + K-FUTURES-REFRESH-01 + cierre bloque DT3 + Gate 0 sistematico BAJA (9 K-IDs fantasma cerrados) + cierre 05/07 + FU-003 + cierre H1 (informe + dictamen + WONT FIX) + cierre DT4 (WONT FIX razonado) + cierre U+FFFD (27 ocurrencias corregidas) + reorg docs/auditoria/ (14 raiz + archive/), HEAD d5b1c25)
 Estado: Operativo al 100% - 10 contratos temporales (FU-021-5 + FU-021-3C-bis) - 615 tests locales + 2 skipped - 0 warnings - Gate 10/10 - Deuda ALTA/MEDIA/BAJA activa: 0
-Commit de referencia: c4b4c29 (origin/main HEAD)
+Commit de referencia: d5b1c25 (origin/main HEAD)
 
 ---
 
@@ -772,7 +772,7 @@ K-FU-021-3C-bis-04 (OBSOLETO / RESUELTO DE HECHO 2026-09-17): REF sobrevive solo
 
 K-FU-021-3C-bis-05 (OBSOLETO 2026-09-17): transfer doc original nunca commiteado. Gate 0: 0 ficheros *TRANSFER*/*transfer* en repo.
 
-K-FU-021-3C-bis-06 (ALTA): RESUELTO. Este prompt es v6.27.
+K-FU-021-3C-bis-06 (ALTA): RESUELTO. Este prompt es v6.28.
 
 K-FU-021-3C-bis-07 (WONT FIX razonado 2026-09-17): ciclo documentado en prompt seccion 11.16 + 15.1 (commits + verificacion). Informe standalone no aporta valor diferencial. Reabrir si auditoria externa lo requiere o si H1 escala a decision arquitectonica.
 
@@ -788,7 +788,7 @@ K-DT3-SIDE-EFFECT (WONT FIX / MONITORED): ver seccion 12.
 
 K-DT3-RUNTIMEWARN (RESUELTO 2026-09-17, `2656a5e`): early return en `robust_zscore`.
 
-Deuda BAJA activa: 0. U+FFFD (26 ocurrencias de encoding residual) aislado por decision del auditor; requiere ciclo dedicado. H1 (mutabilidad del dataset historico) CERRADO 2026-09-17 como WONT FIX / politica aceptada. Dictamen en docs/auditoria/H1_DICTAMEN_AUDITOR.md.
+Deuda BAJA activa: 0. U+FFFD RESUELTO 2026-09-17 (27 ocurrencias corregidas: 26 U+FFFD + 1 CP1252 em-dash). Git historico agotado; reconstruccion por contexto linguistico. H1 (mutabilidad del dataset historico) CERRADO 2026-09-17 como WONT FIX / politica aceptada.
 
 ## SECCION 14 - COMANDOS UTILES
 powershell
@@ -917,7 +917,7 @@ K-DT3-YF-DIRECTO (WONT FIX / EXCEPCION ACEPTADA) / K-DT3-SIDE-EFFECT (WONT FIX /
 
 K-FS-CI-PARITY-01 (CERRADO 2026-09-17, NO BUG): hipotesis de paridad CI-local refutada. `FUTURE_SETTLEMENT=INSUFFICIENT` es estado contractual valido (cobertura parcial del proveedor).
 
-Sin residuales BAJA activos. U+FFFD aislado por decision del auditor (ciclo dedicado pendiente).
+Sin residuales BAJA activos.
 
 Detalle completo en la seccion 13 y en FOLLOWUPS.md.
 
@@ -1161,4 +1161,4 @@ Pregunta final: "Que hacemos?"
 
 No empieces a proponer tareas sin antes confirmar la asimilacion completa.
 
-Fin del prompt maestro v6.27. Commit de referencia: c4b4c29. Fecha: 2026-09-17.
+Fin del prompt maestro v6.28. Commit de referencia: d5b1c25. Fecha: 2026-09-17.
