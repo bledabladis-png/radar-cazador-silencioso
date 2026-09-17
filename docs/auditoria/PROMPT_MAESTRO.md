@@ -1,8 +1,8 @@
-# PROMPT MAESTRO v6.20 - INGENIERO SUPERVISOR DEL RADAR DE ROTACION SECTORIAL
+# PROMPT MAESTRO v6.21 - INGENIERO SUPERVISOR DEL RADAR DE ROTACION SECTORIAL
 
-Actualizado: 2026-09-17 (post DT1 + DT3 + K-DATA-LOADER-01 + K-DT2-GOLDEN-EOL + K-CI-CRON-01, HEAD 6daac8f)
-Estado: Operativo al 100% - 10 contratos temporales (FU-021-5 + FU-021-3C-bis) - 601 tests locales + 2 skipped - Gate 10/10
-Commit de referencia: 6daac8f (origin/main HEAD)
+Actualizado: 2026-09-17 (post DT1 + DT3 + K-DATA-LOADER-01 + K-DT2-GOLDEN-EOL + K-CI-CRON-01 + K-FU-021-3D-03 + K-FUTURES-DTYPE-01, HEAD 128de85)
+Estado: Operativo al 100% - 10 contratos temporales (FU-021-5 + FU-021-3C-bis) - 604 tests locales + 2 skipped - Gate 10/10
+Commit de referencia: 128de85 (origin/main HEAD)
 
 ---
 
@@ -386,7 +386,7 @@ Nota: daily_run.yml commitea Daily hist/state. Aplicar git fetch + pull --rebase
 
 ## SECCION 10 - VALIDACION Y TESTS
 10.1. Tests
-601 passed + 2 skipped (network) en local; CI similar con parquet gitignored.
+604 passed + 2 skipped (network) en local; CI similar con parquet gitignored.
 
 10.2. Validation Gate (10/10)
 SLPM v1.2 (sin errores de validacion)
@@ -719,6 +719,14 @@ K-DT2-GOLDEN-EOL (hash mismatch golden MTE) -> CERRADO 2026-09-17 (`ee34305`). R
 
 K-CI-CRON-01 (contratos STALE en run fuera de cron) -> CERRADO 2026-09-17 (pasivo, cron `0 4 * * *` verificado).
 
+K-FU-021-3D-03 (MEDIA) -> RESUELTO 2026-09-17 (`eec6b9c`). Cast defensivo a float64 en `commodities_merge.py::merge_commodities_into_market`. 1 test nuevo + 604 global. CI exit 0.
+
+K-FUTURES-DTYPE-01 (MEDIA) -> RESUELTO 2026-09-17 (`128de85`). Normalizacion FIELDS a numerico en `data/providers/futures.py::_rows_to_wide`. 2 tests nuevos + 604 global. CI exit 0. Parquet historico no reescrito.
+
+K-FU-021-3D-04 (MEDIA) -> WONT FIX / MONITORED 2026-09-17. `momentum.py .ffill` sin fuente object en produccion. Reabre si provider introduce object o Pandas 3.x cambia.
+
+K-FS-CI-PARITY-01 (MEDIA) -> NUEVO 2026-09-17. `FUTURE_SETTLEMENT=INSUFFICIENT` observado en CI y no reproducido localmente; requiere investigacion de paridad de datos/estado/cache; no bloquea Gate.
+
 K-DT3-YF-DIRECTO (BAJA): `_backfill_history` usa `yf.download` directo. Cuestion arquitectonica. Fuera de alcance DT3.
 
 K-DT3-SIDE-EFFECT (BAJA): escritura directa `darkpool_history.csv` sin `append_dedup` ni manifest FU-002.
@@ -756,13 +764,13 @@ K-FU-021-3C-bis-04 (MEDIA): `test_temporal_contracts_remaining.py` y `consolidat
 
 K-FU-021-3C-bis-05 (BAJA): transfer doc original desactualizado.
 
-K-FU-021-3C-bis-06 (ALTA): RESUELTO. Este prompt es v6.20.
+K-FU-021-3C-bis-06 (ALTA): RESUELTO. Este prompt es v6.21.
 
 K-FU-021-3C-bis-07 (BAJA): informe formal FU-021-3C-bis en docs/auditoria/ pendiente de decidir.
 
 K-FU-021-3C-bis-08 (BAJA): RESUELTO 2026-09-17 (03fcb3e). `data_loader.py` usa `len(_resolutions)` en lugar de "9 contratos".
 
-K-FU-021-3C-bis-09 (MEDIA): 6 workflows pushean sin `git pull --rebase`: `update_european_holdings.yml`, `update_index_holdings.yml`, `update_macro_manual.yml`, `update_qqq_sec_flow.yml`, `update_sector_holdings.yml`, `update_sec_nport.yml`. Mismo patron que K-01. Arreglar en ciclo dedicado con la tecnica validada.
+K-FU-021-3C-bis-09 (OBSOLETO / RESUELTO DE HECHO 2026-09-17): Refutado por inspeccion directa. Los 6 workflows ya tienen `git pull --rebase origin main` antes de `git push`. No patch. No abrir K-ID sustituto para variaciones cosmeticas.
 
 Deudas ciclo DT3 (post 2026-09-17):
 
@@ -826,7 +834,7 @@ Select-String -SimpleMatch desactiva regex → el | se trata como literal. No us
 | Fuentes europeas | 51 (Euronext 13 + Xetra 19 + BME 19) |
 | Fuente commodities | OilPriceAPI (BZ=F, CL=F, GC=F, HG=F, NG=F) |
 | Fuente term structure | CBOE (^VIX3M) |
-| Tests locales | 601 passed + 2 skipped |
+| Tests locales | 604 passed + 2 skipped |
 | Tests CI | ~570 collected con skips (parquet gitignored) |
 | Validation Gate | 10/10 |
 | pyflakes | 0 warnings |
@@ -835,7 +843,7 @@ Select-String -SimpleMatch desactiva regex → el | se trata como literal. No us
 | Arquitectura | Modular: 19 src/report/ + 16 src/pipeline/ + 10 src/temporal_contracts/ + 5 indicators/mte/ + 4 indicators/darkpool/ |
 | Contratos temporales | 10 (FU-021-5 = 9, FU-021-3C-bis = +1 SPOT_COMMODITY) |
 | .git size | ~13 MB |
-| HEAD | 6daac8f (origin/main) |
+| HEAD | 128de85 (origin/main) |
 
 ### 15.1. Hitos del ciclo FU-021-3C-bis (2026-09-16)
 
@@ -885,17 +893,19 @@ A2.3 colateral (MEDIA): 22/23 tickers no-equity clasificados como US_EQUITY por 
 
 K-FU-021-3C-bis-02 (MEDIA): `SPOT_COMMODITY` en STALE sistematico por desalineacion spot/market (1 dia). Documentar o ajustar `max_lag`.
 
-K-FU-021-3D-03/04 (MEDIA): FutureWarnings de Pandas 3.0 en `commodities_merge.py:75` y `momentum.py .ffill`.
+K-FU-021-3D-03 (MEDIA) -> RESUELTO 2026-09-17 (`eec6b9c`). K-FU-021-3D-04 (MEDIA) -> WONT FIX / MONITORED 2026-09-17 (sin fuente object en produccion).
 
 K-FU-021-3C-bis-04 (MEDIA): `test_temporal_contracts_remaining.py` y `consolidate.py` con REF hardcodeado.
 
-K-FU-021-3C-bis-09 (MEDIA): 6 workflows pushean sin `git pull --rebase`.
+K-FU-021-3C-bis-09 (OBSOLETO / RESUELTO DE HECHO 2026-09-17): refutado por inspeccion directa.
 
 K7 + K-FU-021-5-01/02/03 (MEDIA): barrido documental FU-021-5.
 
 DT4 (BAJA): reorg de `validation/` y `scripts/`.
 
 K-DT3-YF-DIRECTO / K-DT3-SIDE-EFFECT / K-DT3-RUNTIMEWARN (BAJA): deudas residuales DT3.
+
+K-FS-CI-PARITY-01 (MEDIA): `FUTURE_SETTLEMENT=INSUFFICIENT` observado en CI y no reproducido localmente; requiere investigacion de paridad de datos/estado/cache; no bloquea Gate.
 
 E1-E4, FU-003, FU-016, K-FU-021-3C-bis-05/07 (BAJA): empiricas y cosmeticos residuales.
 
@@ -1004,6 +1014,34 @@ Verificacion con cron real `0 4 * * *` (`35204004152`): `EQUITY_EOD=OK function_
 
 Todo commit pusheado ha sido verificado con `workflow_dispatch daily_run.yml` exit 0. Cron `0 4 * * *` verificado sano. Gate 10/10 en todos los runs.
 
+### 15.12. Ciclo K-FU-021-3D-03 (2026-09-17) - RESUELTO
+
+Causa raiz: `commodities_spot.parquet` trae Open/High/Low/Volume como object (None emitido por FuturesProvider). El merge asigna object->float64 en `df_market` -> FutureWarning en pandas 2.3.3, fallo potencial en Pandas 3.x.
+
+Fix (`eec6b9c`): cast defensivo a float64 en `src/commodities_merge.py::merge_commodities_into_market` antes de asignar (`pd.to_numeric(errors='coerce')`). Dato no interpretable -> NaN (nunca imputar).
+
+Tests nuevos: 1 (`TestMergeObjectDtype::test_object_dtype_none_no_futurewarning`). Verificacion: 11/11 provider + 604 global + CI exit 0.
+
+### 15.13. Ciclo K-FUTURES-DTYPE-01 (2026-09-17) - RESUELTO
+
+Causa raiz (Capa 2): `data/providers/futures.py::_rows_to_wide` infiere object para columnas con todos los valores None (Open/High/Low/Volume de spot). El artefacto se persiste asi.
+
+Fix (`128de85`): normalizar `FIELDS` a numerico tras `sort_index()`, iterando por columna porque `wide` tiene MultiIndex (field, ticker). `pd.to_numeric(errors='coerce')`.
+
+Intento previo (revertido): `wide[FIELDS].apply(...)` fallo con `ValueError: Columns must be same length as key` porque `wide[FIELDS]` con lista plana no selecciona 5 columnas del MultiIndex. Leccion: verificar semantica exacta del objeto Pandas (MultiIndex, shape, dtype) antes de autorizar el patch.
+
+Tests nuevos: 2 (`test_dtypes_float64_con_nones`, `test_roundtrip_y_merge_sin_futurewarning`). Verificacion: 19/19 provider + 604 global + CI exit 0.
+
+Parquet historico `data/commodities_spot.parquet` NO reescrito (conservacion historica).
+
+### 15.14. Ciclo K-FU-021-3C-bis-09 (2026-09-17) - OBSOLETO
+
+El prompt v6.20 listaba este K-ID como MEDIA: "6 workflows pushean sin `git pull --rebase`". La inspeccion directa (Gate 0) refuto la afirmacion: los 6 workflows ya tienen `git pull --rebase origin main` antes de `git push` (lineas 41, 41, 43, 45, 45, 45 respectivamente).
+
+Dictamen del auditor: cerrar como OBSOLETO / RESUELTO DE HECHO. No patch. No abrir K-ID sustituto para variaciones cosmeticas (identidad `github-actions` vs `github-actions[bot]`, `--staged` vs `--cached`).
+
+K-ID nuevo detectado en este mismo run: `K-FS-CI-PARITY-01` (MEDIA) — ver Seccion 12/13.
+
 ## SECCION 16 - FRASE GUIA
 "Determinista, descriptivo, auditado. Paso a paso. Documentar. Saber parar."
 
@@ -1034,6 +1072,8 @@ Todo commit pusheado ha sido verificado con `workflow_dispatch daily_run.yml` ex
 
 "Un here-string no es un archivo: si tiene mas de 20 lineas o 5 $, va a _patch_XXX.py."
 
+"Antes de autorizar un patch sobre Pandas, verificar la semantica exacta del objeto (MultiIndex, shape, dtype), no solo la intencion del codigo."
+
 ## SECCION 17 - CONFIRMACION
 Cuando recibas este prompt, responde:
 
@@ -1045,4 +1085,4 @@ Pregunta final: "Que hacemos?"
 
 No empieces a proponer tareas sin antes confirmar la asimilacion completa.
 
-Fin del prompt maestro v6.20. Commit de referencia: 6daac8f. Fecha: 2026-09-17.
+Fin del prompt maestro v6.21. Commit de referencia: 128de85. Fecha: 2026-09-17.
