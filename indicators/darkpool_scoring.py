@@ -10,6 +10,11 @@ from config.settings import DARKPOOL_THRESHOLDS
 
 
 def robust_zscore(series):
+    # K-DT3-RUNTIMEWARN: serie vacia -> Series vacia sin warnings de numpy
+    # (antes: series.median() y np.median() sobre vacio emitidos como
+    # RuntimeWarning "Mean of empty slice" + "invalid value in divide").
+    if len(series) == 0:
+        return pd.Series([], dtype=float)
     median = series.median()
     mad = np.median(np.abs(series - median))
     if mad == 0:

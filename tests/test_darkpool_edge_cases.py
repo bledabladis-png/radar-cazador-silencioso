@@ -34,8 +34,13 @@ def test_robust_zscore_outlier_positivo():
 
 
 def test_robust_zscore_serie_vacia():
+    # K-DT3-RUNTIMEWARN: ademas de len(out)==0, exigimos que no se emita
+    # RuntimeWarning de numpy sobre la serie vacia.
+    import warnings
     s = pd.Series([], dtype=float)
-    out = robust_zscore(s)
+    with warnings.catch_warnings():
+        warnings.simplefilter("error", RuntimeWarning)
+        out = robust_zscore(s)
     assert len(out) == 0
 
 
