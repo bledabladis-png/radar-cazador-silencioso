@@ -1,8 +1,8 @@
-# PROMPT MAESTRO v6.23 - INGENIERO SUPERVISOR DEL RADAR DE ROTACION SECTORIAL
+# PROMPT MAESTRO v6.24 - INGENIERO SUPERVISOR DEL RADAR DE ROTACION SECTORIAL
 
-Actualizado: 2026-09-17 (post DT1 + DT3 + K-DATA-LOADER-01 + K-DT2-GOLDEN-EOL + K-CI-CRON-01 + K-FU-021-3D-03 + K-FUTURES-DTYPE-01 + A2.3 colateral + revision sistematica MEDIA + K-FS-CI-PARITY-01 + K-FUTURES-REFRESH-01, HEAD 61e27ee)
+Actualizado: 2026-09-17 (post DT1 + DT3 + K-DATA-LOADER-01 + K-DT2-GOLDEN-EOL + K-CI-CRON-01 + K-FU-021-3D-03 + K-FUTURES-DTYPE-01 + A2.3 colateral + revision sistematica MEDIA + K-FS-CI-PARITY-01 + K-FUTURES-REFRESH-01 + cierre bloque DT3, HEAD 2656a5e)
 Estado: Operativo al 100% - 10 contratos temporales (FU-021-5 + FU-021-3C-bis) - 615 tests locales + 2 skipped - Gate 10/10
-Commit de referencia: 61e27ee (origin/main HEAD)
+Commit de referencia: 2656a5e (origin/main HEAD)
 
 ---
 
@@ -729,11 +729,11 @@ K-FS-CI-PARITY-01 (MEDIA) -> CERRADO 2026-09-17 (NO BUG). Hipotesis inicial ("pa
 
 K-FUTURES-REFRESH-01 (MEDIA) -> RESUELTO 2026-09-17 (`61e27ee`). Skip logic de `update_futures.py` ahora verifica `last_date == expected` AND `cobertura == 1.0` (antes solo fecha). Fetch selectivo por ticker faltante (`only_futures`). `skip_spot` evita `_fetch_spot` cuando cobertura spot OK. 9 tests nuevos.
 
-K-DT3-YF-DIRECTO (BAJA): `_backfill_history` usa `yf.download` directo. Cuestion arquitectonica. Fuera de alcance DT3.
+K-DT3-YF-DIRECTO (WONT FIX / EXCEPCION ACEPTADA 2026-09-17): `_backfill_history` usa `yf.download(start/end)` directo. El router no soporta rango arbitrario y no hay 2do consumidor. Excepcion arquitectonica documentada. Reabrir solo si: (a) aparece 2do consumidor con misma necesidad, (b) problema de coste/rate-limit, (c) cambia contrato del router.
 
-K-DT3-SIDE-EFFECT (BAJA): escritura directa `darkpool_history.csv` sin `append_dedup` ni manifest FU-002.
+K-DT3-SIDE-EFFECT (WONT FIX / MONITORED 2026-09-17): `darkpool.py` ya tiene doble dedup por `week` (L98 + L105). FU-002 NO aplica a `outputs/history/*.csv`. Inconsistencia de estilo sin defecto funcional. No migrar a `append_dedup`.
 
-K-DT3-RUNTIMEWARN (BAJA): `robust_zscore` sobre serie vacia emite `RuntimeWarning` de numpy.
+K-DT3-RUNTIMEWARN (RESUELTO 2026-09-17, `2656a5e`): early return `pd.Series([], dtype=float)` en `robust_zscore` si `len(series) == 0`. Test reforzado con `-W error::RuntimeWarning`.
 
 OilPriceAPI retention_period=30_days -> Solo 30 dias de historico remoto. Acumulacion local en commodities_*.parquet es obligatoria (append_dedup por fecha). Aceptado.
 
@@ -766,7 +766,7 @@ K-FU-021-3C-bis-04 (OBSOLETO / RESUELTO DE HECHO 2026-09-17): REF sobrevive solo
 
 K-FU-021-3C-bis-05 (BAJA): transfer doc original desactualizado.
 
-K-FU-021-3C-bis-06 (ALTA): RESUELTO. Este prompt es v6.23.
+K-FU-021-3C-bis-06 (ALTA): RESUELTO. Este prompt es v6.24.
 
 K-FU-021-3C-bis-07 (BAJA): informe formal FU-021-3C-bis en docs/auditoria/ pendiente de decidir.
 
@@ -774,13 +774,13 @@ K-FU-021-3C-bis-08 (BAJA): RESUELTO 2026-09-17 (03fcb3e). `data_loader.py` usa `
 
 K-FU-021-3C-bis-09 (OBSOLETO / RESUELTO DE HECHO 2026-09-17): Refutado por inspeccion directa. Los 6 workflows ya tienen `git pull --rebase origin main` antes de `git push`. No patch. No abrir K-ID sustituto para variaciones cosmeticas.
 
-Deudas ciclo DT3 (post 2026-09-17):
+Ciclo DT3 (post 2026-09-17) - cerrado:
 
-K-DT3-YF-DIRECTO (BAJA): `_backfill_history` usa `yf.download` directo, fuera del router de providers.
+K-DT3-YF-DIRECTO (WONT FIX / EXCEPCION ACEPTADA): ver seccion 12.
 
-K-DT3-SIDE-EFFECT (BAJA): escritura directa de `outputs/history/darkpool_history.csv` sin `append_dedup` ni manifest FU-002.
+K-DT3-SIDE-EFFECT (WONT FIX / MONITORED): ver seccion 12.
 
-K-DT3-RUNTIMEWARN (BAJA): `robust_zscore` sobre serie vacia emite `RuntimeWarning` de numpy.
+K-DT3-RUNTIMEWARN (RESUELTO 2026-09-17, `2656a5e`): early return en `robust_zscore`.
 
 ## SECCION 14 - COMANDOS UTILES
 powershell
@@ -845,7 +845,7 @@ Select-String -SimpleMatch desactiva regex → el | se trata como literal. No us
 | Arquitectura | Modular: 19 src/report/ + 16 src/pipeline/ + 10 src/temporal_contracts/ + 5 indicators/mte/ + 4 indicators/darkpool/ |
 | Contratos temporales | 10 (FU-021-5 = 9, FU-021-3C-bis = +1 SPOT_COMMODITY) |
 | .git size | ~13 MB |
-| HEAD | 61e27ee (origin/main) |
+| HEAD | 2656a5e (origin/main) |
 
 ### 15.1. Hitos del ciclo FU-021-3C-bis (2026-09-16)
 
@@ -905,7 +905,7 @@ K7 + K-FU-021-5-01/02/03 (OBSOLETO 2026-09-17): docs ya reflejan Q-P.3 (698eac3)
 
 DT4 (BAJA): reorg de `validation/` y `scripts/`.
 
-K-DT3-YF-DIRECTO / K-DT3-SIDE-EFFECT / K-DT3-RUNTIMEWARN (BAJA): deudas residuales DT3.
+K-DT3-YF-DIRECTO (WONT FIX / EXCEPCION ACEPTADA) / K-DT3-SIDE-EFFECT (WONT FIX / MONITORED) / K-DT3-RUNTIMEWARN (RESUELTO 2026-09-17, `2656a5e`): bloque DT3 cerrado.
 
 K-FS-CI-PARITY-01 (CERRADO 2026-09-17, NO BUG): hipotesis de paridad CI-local refutada. `FUTURE_SETTLEMENT=INSUFFICIENT` es estado contractual valido (cobertura parcial del proveedor).
 
@@ -1067,6 +1067,16 @@ Leccion operativa: la lista MEDIA requiere re-verificacion periodica. Un K-ID ce
 
 **Hallazgo de seguimiento — mutabilidad historica del proveedor:** OilPriceAPI **revisa** valores historicos. `CL=F 2026-09-16`: `100.40` (parquet commiteado) -> `97.21` (hoy). Es comportamiento legitimo de fuente autoritativa, no bug. Relevante para auditorias futuras de reproducibilidad de `FUTURE_SETTLEMENT` y manifests FU-002. Sin K-ID por ahora; registrar.
 
+### 15.17. Cierre bloque DT3 (2026-09-17)
+
+Cierre de los 3 K-IDs residuales del ciclo DT3:
+
+- **K-DT3-RUNTIMEWARN -> RESUELTO (`2656a5e`):** `robust_zscore` con early return `pd.Series([], dtype=float)` si serie vacia. Warning numpy eliminado. Test reforzado con `-W error::RuntimeWarning`.
+- **K-DT3-SIDE-EFFECT -> WONT FIX / MONITORED:** Gate 0 demostro doble dedup por `week` (L98 + L105 en `darkpool.py`). FU-002 NO aplica a `outputs/history/*.csv` (convencion: parquet de pipeline). Sin defecto funcional. No migrar a `append_dedup`.
+- **K-DT3-YF-DIRECTO -> WONT FIX / EXCEPCION ACEPTADA:** `_backfill_history` usa `yf.download(start/end)` directo. Router no soporta rango arbitrario. Excepcion acotada, documentada. Reabrir solo si aparece 2do consumidor, problema de coste, o cambia contrato del router.
+
+Suite final: 615 passed + 2 skipped, 0 warnings.
+
 ## SECCION 16 - FRASE GUIA
 "Determinista, descriptivo, auditado. Paso a paso. Documentar. Saber parar."
 
@@ -1110,4 +1120,4 @@ Pregunta final: "Que hacemos?"
 
 No empieces a proponer tareas sin antes confirmar la asimilacion completa.
 
-Fin del prompt maestro v6.23. Commit de referencia: 61e27ee. Fecha: 2026-09-17.
+Fin del prompt maestro v6.24. Commit de referencia: 2656a5e. Fecha: 2026-09-17.
