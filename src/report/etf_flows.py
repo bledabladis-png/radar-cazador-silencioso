@@ -22,7 +22,12 @@ def render_flujo_spdr(etf_primary_flow_data):
         out.append("|--------|-----|---------------------|------------------|----------------|------------|--------|\n")
         for _, row in etf_primary_flow_data.iterrows():
             out.append(f"| {row['ticker']} | {row['nav']:.2f} | {row['shares_outstanding']:,.0f} | {row['total_net_assets']:,.0f} | {_fmt_signed(row['primary_flow_usd'], '{:+,.2f}', '{:,.2f}')} | {_fmt_signed(row['primary_flow_pct'], '{:+.2f}%', '{:.2f}%')} | {_fmt_signed(row['primary_flow_z'], '{:+.2f}', '{:.2f}')} |\n")
-        out.append(f"\n*Fuente: State Street Global Advisors (SSGA). ETF Primary Flow = ΔShares Outstanding × NAV. Z-score sobre {ETF_PRIMARY_FLOW_ZSCORE_WINDOW} sesiones.*\n\n")
+        # O1 (2026-09-18): declarar la fecha efectiva del dataset.
+        try:
+            _ultima_fecha = str(etf_primary_flow_data["Date"].max())[:10]
+        except Exception:
+            _ultima_fecha = "N/D"
+        out.append(f"\n*Fuente: State Street Global Advisors (SSGA). ETF Primary Flow = ΔShares Outstanding × NAV. Z-score sobre {ETF_PRIMARY_FLOW_ZSCORE_WINDOW} sesiones. Ultima fecha: {_ultima_fecha}.*\n\n")
     return out
 
 

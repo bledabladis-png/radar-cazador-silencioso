@@ -22,6 +22,12 @@ def render_momentum_sectores(sector_price_rank, sector_flow_rank):
         name = SECTOR_NAMES.get(ticker, ticker)
         out.append(f"| {i} | {name} ({ticker}) | {mom*100:.2f}% |\n")
 
+    # I1 (2026-09-18): aclarar metrica para evitar confusion con otras
+    # secciones que usan "Retorno 20d" para el retorno del ETF sectorial.
+    out.append("\n*Nota: Retorno 20d mide la mediana de los retornos 20d "
+               "de los componentes del sector. Distinta del retorno del ETF "
+               "sectorial mostrado en 'Flujo Primario ETF - Caracteristicas'.*\n")
+
     if sector_flow_rank:
         out.append("\n## Flujo Institucional - Sectores (Proxy)\n")
         out.append("| # | Sector | Flujo (z-score) |\n")
@@ -57,7 +63,9 @@ def render_tactical_leaders(tactical_scores, structural_scores,
         comm_val = shock.get('commodity_corr_value', None) if shock else None
         comm_display = f"{comm} ({comm_val:+.2f})" if comm_val is not None and comm != 'N/A' else comm
         out.append(f"| {i} | {name} ({ticker}) | {t_score:+.2f} | {s_score:+.2f} | {mom*100:.2f}% | {_fmt_num(flow, '{:+.2f}')} | {comm_display} |\n")
-    out.append("\n")
+    # I1 (2026-09-18): misma metrica que "Momentum de Precio - Sectores".
+    out.append("\n*Nota: Retorno 20d usa la misma metrica que 'Momentum de "
+               "Precio - Sectores' (mediana de los componentes del sector).*\n\n")
     out.append(f"*Nota: Comm Corr mide la correlación de {MOMENTUM_LONG_WINDOW} dias con ^SPGSCI. No implica causalidad.*\n\n")
     return out
 
