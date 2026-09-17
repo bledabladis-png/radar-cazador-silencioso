@@ -1,0 +1,98 @@
+{
+  "reference_date": "2026-09-17",
+  "generator": "tests/fixtures/_gen_sector_regime_golden.py",
+  "seed": 42,
+  "n_days": 300,
+  "synthetic_df": "RandomState(seed), fechas 2024-01-01 freq=B",
+  "contract": {
+    "ranking": [
+      [
+        "XLU",
+        "Utilities",
+        0.2400145875173137,
+        "MARKUP"
+      ],
+      [
+        "XLV",
+        "Healthcare",
+        0.10286898016826608,
+        "ACCUMULATION"
+      ],
+      [
+        "XLK",
+        "Technology",
+        0.0,
+        "MARKUP"
+      ],
+      [
+        "XLF",
+        "Financials",
+        0.0,
+        "MARKUP"
+      ],
+      [
+        "XLY",
+        "Consumer Discretionary",
+        0.0,
+        "MARKUP"
+      ],
+      [
+        "XLI",
+        "Industrials",
+        -0.0,
+        "DISTRIBUTION"
+      ],
+      [
+        "XLP",
+        "Consumer Staples",
+        0.0,
+        "RANGE"
+      ],
+      [
+        "XLRE",
+        "Real Estate",
+        0.0,
+        "DISTRIBUTION"
+      ],
+      [
+        "XLB",
+        "Materials",
+        0.0,
+        "MARKUP"
+      ],
+      [
+        "XLE",
+        "Energy",
+        -0.40296298112448814,
+        "ACCUMULATION"
+      ],
+      [
+        "XLC",
+        "Communication Services",
+        -0.5485442587408791,
+        "RANGE"
+      ]
+    ],
+    "regime": "NARROW RALLY",
+    "top3": [
+      "XLU",
+      "XLV",
+      "XLK"
+    ]
+  },
+  "diagnostic": {
+    "last_scores": {
+      "XLU": 0.2400145875173137,
+      "XLV": 0.10286898016826608,
+      "XLK": 0.0,
+      "XLF": 0.0,
+      "XLY": 0.0,
+      "XLI": -0.0,
+      "XLP": 0.0,
+      "XLRE": 0.0,
+      "XLB": 0.0,
+      "XLE": -0.40296298112448814,
+      "XLC": -0.5485442587408791
+    }
+  }
+}
