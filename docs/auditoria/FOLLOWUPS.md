@@ -485,3 +485,46 @@
   - Opcion B: el cache contiene raw/intermediate -> debe pasar por post-processing nuevamente.
   - Dictamen previo obligatorio antes del patch.
 - **Clasificacion:** ciclo de investigacion + fix en `src/data_loader.py`. ABIERTA 2026-09-17.
+
+## K-DATA-LOADER-01-cierre - Cierre del ciclo (RESUELTO)
+
+- **Origen:** cierre de la investigacion abierta durante DT2.
+- **Dictamen:** opcion B aprobada. El cache es raw/intermediate; debe pasar por post-processing en cada lectura. Idempotencia de `clean_oil_prices`, `_filter_non_eod_equity`, `_trim_market_data_to_equity_eod` y `merge_*` verificada antes de escribir patch.
+- **Fix aplicado:** extraccion de `_postprocess_market_data(data, reference_date, run_id, *, write_manifest)` en `src/data_loader.py`. Cache-hit lo invoca con `write_manifest=False` (no reescribe parquet, si actualiza `temporal_meta`). Cache-miss con `write_manifest=True`.
+- **Commits:** `9d77099`.
+- **Tests:** `tests/test_data_loader_cache_postprocess.py` (4 nuevos). Total 551 -> 555 passed + 2 skipped.
+- **Verificacion local (E2E):** cache-hit (CACHE_HOURS=23, parquet fresco) ejecuta post-procesado. Log contiene `[FU-021-3A] EQUITY_EOD effective=2026-09-16 ... coverage=99.81% (538/539)` + `[FU-021-5] 10 contratos resueltos: ...` sin `[CACHE] ... Forzando descarga`. `outputs/state/mte_state.json` con `effective_date='2026-09-16'`, `coverage=0.998`.
+- **Verificacion CI (run 35167520594):** exit 0. Path cache-miss sigue funcionando. Gate 10/10.
+- **Nota tecnica:** los tests nuevos usan `importlib.import_module` porque `src/temporal_contracts/__init__.py` sombrea el nombre del submodulo `consolidate` con un atributo funcion. Documentar patron.
+- **Clasificacion:** ciclo de fix en `src/data_loader.py` + tests. RESUELTO 2026-09-17.
+- **Deudas generadas:** ninguna nueva. Hallazgo colateral abierto como `K-CI-CRON-01`.
+
+## K-DT2-GOLDEN-EOL - Hash mismatch del golden MTE local vs CI (RESUELTO)
+
+- **Origen:** run CI `35166754806` sobre `9d77099`. Falla `tests/test_mte_engine.py::TestGoldenIntegrity::test_golden_hashes_valid` con `hash mismatch mte_financial_score.csv: b374d4b5a3fa6213 vs 694d189771dea08b`.
+- **Contexto:** el run CI previo (`35157099407`, sobre `7035a1e`) tenia `528 collected`, pre-DT2. DT2 introdujo el test sin cobertura efectiva en CI.
+- **Causa raiz:** working tree local tenia doble CRLF (`\r\r\n`) en los fixtures. El blob committed tenia `\r\n`. El golden se calculo sobre el working tree via `_sha256_normalized` (que colapsa `\r\n -> \n`), lo cual sobre `\r\r\n` da el hash del blob CRLF (`694d1897`), no el hash LF (`b374d4b5`). Local: `\r\r\n` -> `\r\n` -> hash `694d1897` OK. CI: `\r\n` -> `\n` -> hash `b374d4b5` != `694d1897` FAIL.
+- **Diagnostico:** `len(working) - len(blob) = 2606` = exactamente el numero de secuencias `\r\r\n`. Confirmado con contadores byte-exactos sobre working tree, blob committed y variantes.
+- **Fix aplicado:**
+  - Renormalizar `tests/fixtures/*.csv` y `*.json` a LF puro (elimina `\r\r\n` -> `\n` y `\r\n` -> `\n`). Parquet intacto (binario).
+  - Regenerar `sha256` y `size` del golden desde el working tree LF actual.
+  - `git add --renormalize tests/fixtures/` para absorber blobs committed a LF.
+- **Commits:** `ee34305`.
+- **Ficheros afectados:** `mte_financial_score.csv`, `mte_all_signals.csv`, `mte_golden_2026-09-16.json` (3 ficheros; los otros 4 ya estaban en LF).
+- **Tests:** `tests/test_mte_engine.py` (3 tests, todos verdes). Suite completa: 555 passed + 2 skipped.
+- **Verificacion CI (run 35167520594):** `test_golden_hashes_valid PASSED`, `test_compute_mte_matches_golden PASSED`, `VALIDATION GATE: Sin errores (10 comprobaciones OK)`. Exit 0.
+- **Leccion:** los hashes de fixtures en golden deben calcularse sobre el **blob committed** o sobre el working tree **LF normalizado**, nunca sobre el working tree con CRLF/mixto. Considerar migrar `_sha256_normalized` a leer siempre el blob via `git cat-file`.
+- **Clasificacion:** ciclo de fix en fixtures + golden. RESUELTO 2026-09-17.
+- **Deudas generadas:** ninguna nueva.
+
+## K-CI-CRON-01 - Contratos STALE/INSUFFICIENT en run fuera de cron (ABIERTA, en observacion)
+
+- **Origen:** run CI `35167520594` (workflow_dispatch, 2026-09-17 00:40 UTC) sobre `ee34305`.
+- **Observacion:** los 10 contratos temporales resolvieron como `INSUFFICIENT`/`STALE`. Log: `[FU-021-3A] EQUITY_EOD effective=2026-09-15 requested=2026-09-17 function_lag=2d reference_lag=2d coverage=100.00% (539/539)` + `[FU-021-5] 10 contratos resueltos: EQUITY_EOD=INSUFFICIENT INDEX_EOD_USA=STALE ... FUTURE_SETTLEMENT=INSUFFICIENT SPOT_COMMODITY=INSUFFICIENT FX_DAILY_CUT=INSUFFICIENT`.
+- **Diagnostico preliminar:** `EQUITY_EOD` con `max_lag=0` -> `INSUFFICIENT` por diseno cuando `function_lag > 0`. El run se disparo a las 00:40 UTC (antes del cron habitual 04:00 UTC). A esa hora, los proveedores no habian propagado el cierre del 16/09. La FSM reporta fielmente la antiguedad real.
+- **Verificacion pendiente:** observar el proximo cron `0 4 * * *` (2026-09-17 04:00 UTC) sin intervencion.
+  - Si el cron resuelve contratos como `OK`/`STALE` con lags <= max_lag -> CIERRE PASIVO. La FSM funciona. Run fuera de ventana no es bug.
+  - Si el cron resuelve `INSUFFICIENT` -> ABRIR como bug formal: algo impide que `EQUITY_EOD` cierre con `max_lag=0` en runs normales.
+- **Prioridad:** MEDIA (no bloquea Gate; el sistema opera con 10/10 comprobaciones OK).
+- **Alcance:** observacion. Sin cambios de codigo hasta tener evidencia del cron.
+- **Clasificacion:** hallazgo colateral post-K-DATA-LOADER-01. ABIERTA 2026-09-17, en observacion.
