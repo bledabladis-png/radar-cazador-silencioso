@@ -14,6 +14,7 @@ from data.providers.futures import (
     _rows_to_wide,
     _to_float,
 )
+from src.commodities_merge import merge_commodities_into_market
 
 
 # --- Fixtures JSON simulados -------------------------------------
@@ -95,6 +96,69 @@ class TestRowsToWide:
              "Close": 1.0, "Volume": 1.0},
         ]
         assert _rows_to_wide(rows).empty
+
+    def test_dtypes_float64_con_nones(self):
+        # K-FUTURES-DTYPE-01: rows con None en Open/High/Low/Volume (caso
+        # spot real) deben salir como float64 tras _rows_to_wide, no object.
+        rows = [
+            {"date": "2026-09-15", "ticker": "GC=F",
+             "Open": None, "High": None, "Low": None,
+             "Close": 4341.77, "Volume": None},
+        ]
+        df = _rows_to_wide(rows)
+        for field in ("Open", "High", "Low", "Close", "Volume"):
+            assert (field, "GC=F") in df.columns, f"falta {field}"
+            assert df[(field, "GC=F")].dtype == "float64", (
+                f"{field} dtype={df[(field, 'GC=F')].dtype}, esperado float64"
+            )
+        # Valores None -> NaN
+        assert pd.isna(df.loc["2026-09-15", ("Open", "GC=F")])
+        assert pd.isna(df.loc["2026-09-15", ("Volume", "GC=F")])
+        assert df.loc["2026-09-15", ("Close", "GC=F")] == pytest.approx(4341.77)
+
+    def test_roundtrip_y_merge_sin_futurewarning(self, tmp_path):
+        # K-FUTURES-DTYPE-01: prueba de la cadena real
+        # _rows_to_wide -> to_parquet -> read_parquet -> merge.
+        # Sin el cast en _rows_to_wide, el merge emite FutureWarning
+        # (pandas 2.x) o falla (pandas 3.x).
+        import warnings
+
+        rows = [
+            {"date": "2026-09-15", "ticker": "GC=F",
+             "Open": None, "High": None, "Low": None,
+             "Close": 4341.77, "Volume": None},
+        ]
+        wide = _rows_to_wide(rows)
+
+        # Sanity: antes del cast no habria sido float64; ahora si.
+        assert wide[("Open", "GC=F")].dtype == "float64"
+
+        p = tmp_path / "spot.parquet"
+        wide.to_parquet(p)
+
+        # Releer el parquet: debe seguir float64 (caso real commodities_spot).
+        check = pd.read_parquet(p)
+        assert check[("Open", "GC=F")].dtype == "float64", (
+            f"round-trip degrada a {check[('Open', 'GC=F')].dtype}"
+        )
+
+        # df_market con misma columna ya en float64 (target del merge)
+        idx = pd.to_datetime(["2026-09-15"])
+        cols = pd.MultiIndex.from_tuples(
+            [("Open", "GC=F"), ("Close", "GC=F")], names=["field", "ticker"],
+        )
+        df_market = pd.DataFrame(0.0, index=idx, columns=cols, dtype=float)
+
+        with warnings.catch_warnings():
+            warnings.simplefilter("error", FutureWarning)
+            out = merge_commodities_into_market(
+                df_market, futures_path=None, spot_path=str(p),
+            )
+
+        assert out[("Open", "GC=F")].dtype == "float64"
+        assert pd.isna(out.loc["2026-09-15", ("Open", "GC=F")])
+        assert out.loc["2026-09-15", ("Close", "GC=F")] == pytest.approx(4341.77)
+
 
 
 class TestToFloat:

@@ -279,6 +279,18 @@ def _rows_to_wide(rows: list) -> pd.DataFrame:
     )
     wide.index.name = None
     wide = wide.sort_index()
+
+    # K-FUTURES-DTYPE-01: normalizar FIELDS a numerico. El contrato FIELDS
+    # declara que esas 5 magnitudes son numericas. Se recorre por columna
+    # porque wide tiene MultiIndex (field, ticker) y wide[FIELDS] con lista
+    # plana no aplica el contrato correctamente. Sin esto, columnas con
+    # todos los valores None (Open/High/Low/Volume de spot) se infieren
+    # como object y rompen el merge (FutureWarning pandas 2.x, fallo 3.x).
+    # errors='coerce': valor no interpretable -> NaN (nunca imputar).
+    for _col in wide.columns:
+        if isinstance(_col, tuple) and _col[0] in FIELDS:
+            wide[_col] = pd.to_numeric(wide[_col], errors='coerce')
+
     return wide
 
 
