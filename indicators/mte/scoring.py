@@ -27,7 +27,7 @@ def _get_last(x):
 
 
 
-    """Extrae el �ltimo valor de una Series o float."""
+    """Extrae el último valor de una Series o float."""
 
 
 
@@ -154,7 +154,7 @@ def sector_rotation_score(df_market):
 
 
 
-    # Dispersi�n cross-sectional
+    # Dispersión cross-sectional
 
 
 
@@ -394,11 +394,11 @@ def credit_stress_score(financial_conditions, credit_signal,
 
 
 
-    Si Credit OAS no est� disponible, usa HYG/LQD como proxy.
+    Si Credit OAS no está disponible, usa HYG/LQD como proxy.
 
 
 
-    Si NFCI no est� disponible, usa financial_conditions como proxy.
+    Si NFCI no está disponible, usa financial_conditions como proxy.
 
 
 
@@ -482,7 +482,7 @@ def credit_stress_score(financial_conditions, credit_signal,
 
 
 
-    # Verificar si NFCI tiene datos V�LIDOS para la fecha actual
+    # Verificar si NFCI tiene datos VÁLIDOS para la fecha actual
 
 
 
@@ -534,11 +534,11 @@ def credit_stress_score(financial_conditions, credit_signal,
 
 
 
-    # Familia 2: Cr�dito (Credit OAS si existe, si no HYG/LQD)
+    # Familia 2: Crédito (Credit OAS si existe, si no HYG/LQD)
 
 
 
-    # Verificar si Credit OAS tiene datos V�LIDOS para la fecha actual
+    # Verificar si Credit OAS tiene datos VÁLIDOS para la fecha actual
 
 
 
@@ -590,7 +590,7 @@ def credit_stress_score(financial_conditions, credit_signal,
 
 
 
-        # Fallback a HYG/LQD cuando Credit OAS no est� disponible
+        # Fallback a HYG/LQD cuando Credit OAS no está disponible
 
 
 
@@ -654,7 +654,7 @@ def credit_stress_score(financial_conditions, credit_signal,
 
 
 
-    # Bloquear si alg�n componente es NaN
+    # Bloquear si algún componente es NaN
 
 
 
@@ -810,7 +810,7 @@ def inflation_pressure_score(df_market):
 
 
 
-# 5. �NDICES AGREGADOS
+# 5. ÍNDICES AGREGADOS
 
 
 
@@ -866,7 +866,7 @@ def compute_ipi(ips):
 
 
 
-# 6. SISTEMA DE PUNTUACI�N DE ESCENARIOS
+# 6. SISTEMA DE PUNTUACIÓN DE ESCENARIOS
 
 
 
@@ -878,7 +878,7 @@ SCENARIO_WEIGHTS = {
 
 
 
-    "CLS": {"weight": 3, "reason": "El deterioro financiero es condici�n necesaria en una crisis."},
+    "CLS": {"weight": 3, "reason": "El deterioro financiero es condición necesaria en una crisis."},
 
 
 
@@ -886,11 +886,11 @@ SCENARIO_WEIGHTS = {
 
 
 
-    "SRS": {"weight": 2, "reason": "La rotaci�n sectorial suele preceder al deterioro macro."},
+    "SRS": {"weight": 2, "reason": "La rotación sectorial suele preceder al deterioro macro."},
 
 
 
-    "IPS": {"weight": 2, "reason": "La inflaci�n diferencia recesi�n de estanflaci�n."}
+    "IPS": {"weight": 2, "reason": "La inflación diferencia recesión de estanflación."}
 
 
 
@@ -914,7 +914,7 @@ def score_scenarios(srs, shs, cls, ips):
 
 
 
-    # CRISIS (prioridad m�xima: bonus base por cumplir condiciones)
+    # CRISIS (prioridad máxima: bonus base por cumplir condiciones)
 
 
 
@@ -926,7 +926,7 @@ def score_scenarios(srs, shs, cls, ips):
 
 
 
-        crisis = -999  # CLS inv�lido ? CRISIS bloqueado
+        crisis = -999  # CLS inválido ? CRISIS bloqueado
 
 
 
@@ -938,11 +938,11 @@ def score_scenarios(srs, shs, cls, ips):
 
 
 
-            crisis += 6  # CLS > 0.5 ya indica estr�s financiero extremo
+            crisis += 6  # CLS > 0.5 ya indica estrés financiero extremo
 
 
 
-        if cls > 0.7: crisis += 3  # Bonus adicional por estr�s severo
+        if cls > 0.7: crisis += 3  # Bonus adicional por estrés severo
 
 
 

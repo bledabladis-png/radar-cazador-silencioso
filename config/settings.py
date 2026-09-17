@@ -223,7 +223,7 @@ TOP_N_LEADERS = 5       # cuantos se muestran en el reporte
 CONFIDENCE_RANGE_DIVISOR = 2.0
 
 # ============================================================
-# FU-021-5 â€” CONTRATO TEMPORAL
+# FU-021-5 — CONTRATO TEMPORAL
 # ============================================================
 
 CURRENT_TEMPORAL_CONTRACT_VERSION = "FU-021-5-v2"

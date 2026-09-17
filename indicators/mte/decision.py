@@ -52,7 +52,7 @@ EXCEPTION_TRANSITIONS = {
 
 
 
-    ('EXPANSION', 'RECESSION'): "Salto abrupto por estr�s extremo",
+    ('EXPANSION', 'RECESSION'): "Salto abrupto por estrés extremo",
 
 
 
@@ -60,7 +60,7 @@ EXCEPTION_TRANSITIONS = {
 
 
 
-    ('SOFT LANDING', 'CRISIS'): "Deterioro s�bito de condiciones financieras",
+    ('SOFT LANDING', 'CRISIS'): "Deterioro súbito de condiciones financieras",
 
 
 
@@ -283,7 +283,7 @@ def classify_mte(srs, shs, cls, ips):
 
 
 
-    # Validar transici�n
+    # Validar transición
 
 
 
@@ -303,7 +303,7 @@ def classify_mte(srs, shs, cls, ips):
 
 
 
-    # Hist�resis adaptativa
+    # Histéresis adaptativa
 
 
 
@@ -411,7 +411,7 @@ def classify_mte(srs, shs, cls, ips):
 
 
 
-# 11. FUNCI�N PRINCIPAL (ORQUESTADOR)
+# 11. FUNCIÓN PRINCIPAL (ORQUESTADOR)
 
 
 
