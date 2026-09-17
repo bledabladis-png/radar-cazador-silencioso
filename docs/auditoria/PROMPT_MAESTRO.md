@@ -1,8 +1,8 @@
-# PROMPT MAESTRO v6.22 - INGENIERO SUPERVISOR DEL RADAR DE ROTACION SECTORIAL
+# PROMPT MAESTRO v6.23 - INGENIERO SUPERVISOR DEL RADAR DE ROTACION SECTORIAL
 
-Actualizado: 2026-09-17 (post DT1 + DT3 + K-DATA-LOADER-01 + K-DT2-GOLDEN-EOL + K-CI-CRON-01 + K-FU-021-3D-03 + K-FUTURES-DTYPE-01 + A2.3 colateral + revision sistematica MEDIA, HEAD 02ca9f0)
-Estado: Operativo al 100% - 10 contratos temporales (FU-021-5 + FU-021-3C-bis) - 604 tests locales + 2 skipped - Gate 10/10
-Commit de referencia: 02ca9f0 (origin/main HEAD)
+Actualizado: 2026-09-17 (post DT1 + DT3 + K-DATA-LOADER-01 + K-DT2-GOLDEN-EOL + K-CI-CRON-01 + K-FU-021-3D-03 + K-FUTURES-DTYPE-01 + A2.3 colateral + revision sistematica MEDIA + K-FS-CI-PARITY-01 + K-FUTURES-REFRESH-01, HEAD 61e27ee)
+Estado: Operativo al 100% - 10 contratos temporales (FU-021-5 + FU-021-3C-bis) - 615 tests locales + 2 skipped - Gate 10/10
+Commit de referencia: 61e27ee (origin/main HEAD)
 
 ---
 
@@ -386,7 +386,7 @@ Nota: daily_run.yml commitea Daily hist/state. Aplicar git fetch + pull --rebase
 
 ## SECCION 10 - VALIDACION Y TESTS
 10.1. Tests
-604 passed + 2 skipped (network) en local; CI similar con parquet gitignored.
+615 passed + 2 skipped (network) en local; CI similar con parquet gitignored.
 
 10.2. Validation Gate (10/10)
 SLPM v1.2 (sin errores de validacion)
@@ -725,7 +725,9 @@ K-FUTURES-DTYPE-01 (MEDIA) -> RESUELTO 2026-09-17 (`128de85`). Normalizacion FIE
 
 K-FU-021-3D-04 (MEDIA) -> WONT FIX / MONITORED 2026-09-17. `momentum.py .ffill` sin fuente object en produccion. Reabre si provider introduce object o Pandas 3.x cambia.
 
-K-FS-CI-PARITY-01 (MEDIA) -> NUEVO 2026-09-17. `FUTURE_SETTLEMENT=INSUFFICIENT` observado en CI y no reproducido localmente; requiere investigacion de paridad de datos/estado/cache; no bloquea Gate.
+K-FS-CI-PARITY-01 (MEDIA) -> CERRADO 2026-09-17 (NO BUG). Hipotesis inicial ("paridad CI-local rota") refutada por Gate 0. Causa real: `commodities_futures.parquet` con fila parcial (coverage=0.5) por OilPriceAPI devolviendo close=NaN para un ticker. `FUTURE_SETTLEMENT=INSUFFICIENT` es estado contractual valido (cobertura < min_coverage). Test de regresion anadido (`65ba34f`).
+
+K-FUTURES-REFRESH-01 (MEDIA) -> RESUELTO 2026-09-17 (`61e27ee`). Skip logic de `update_futures.py` ahora verifica `last_date == expected` AND `cobertura == 1.0` (antes solo fecha). Fetch selectivo por ticker faltante (`only_futures`). `skip_spot` evita `_fetch_spot` cuando cobertura spot OK. 9 tests nuevos.
 
 K-DT3-YF-DIRECTO (BAJA): `_backfill_history` usa `yf.download` directo. Cuestion arquitectonica. Fuera de alcance DT3.
 
@@ -764,7 +766,7 @@ K-FU-021-3C-bis-04 (OBSOLETO / RESUELTO DE HECHO 2026-09-17): REF sobrevive solo
 
 K-FU-021-3C-bis-05 (BAJA): transfer doc original desactualizado.
 
-K-FU-021-3C-bis-06 (ALTA): RESUELTO. Este prompt es v6.22.
+K-FU-021-3C-bis-06 (ALTA): RESUELTO. Este prompt es v6.23.
 
 K-FU-021-3C-bis-07 (BAJA): informe formal FU-021-3C-bis en docs/auditoria/ pendiente de decidir.
 
@@ -834,7 +836,7 @@ Select-String -SimpleMatch desactiva regex → el | se trata como literal. No us
 | Fuentes europeas | 51 (Euronext 13 + Xetra 19 + BME 19) |
 | Fuente commodities | OilPriceAPI (BZ=F, CL=F, GC=F, HG=F, NG=F) |
 | Fuente term structure | CBOE (^VIX3M) |
-| Tests locales | 604 passed + 2 skipped |
+| Tests locales | 615 passed + 2 skipped |
 | Tests CI | ~570 collected con skips (parquet gitignored) |
 | Validation Gate | 10/10 |
 | pyflakes | 0 warnings |
@@ -843,7 +845,7 @@ Select-String -SimpleMatch desactiva regex → el | se trata como literal. No us
 | Arquitectura | Modular: 19 src/report/ + 16 src/pipeline/ + 10 src/temporal_contracts/ + 5 indicators/mte/ + 4 indicators/darkpool/ |
 | Contratos temporales | 10 (FU-021-5 = 9, FU-021-3C-bis = +1 SPOT_COMMODITY) |
 | .git size | ~13 MB |
-| HEAD | 02ca9f0 (origin/main) |
+| HEAD | 61e27ee (origin/main) |
 
 ### 15.1. Hitos del ciclo FU-021-3C-bis (2026-09-16)
 
@@ -905,7 +907,7 @@ DT4 (BAJA): reorg de `validation/` y `scripts/`.
 
 K-DT3-YF-DIRECTO / K-DT3-SIDE-EFFECT / K-DT3-RUNTIMEWARN (BAJA): deudas residuales DT3.
 
-K-FS-CI-PARITY-01 (MEDIA): `FUTURE_SETTLEMENT=INSUFFICIENT` observado en CI y no reproducido localmente; requiere investigacion de paridad de datos/estado/cache; no bloquea Gate.
+K-FS-CI-PARITY-01 (CERRADO 2026-09-17, NO BUG): hipotesis de paridad CI-local refutada. `FUTURE_SETTLEMENT=INSUFFICIENT` es estado contractual valido (cobertura parcial del proveedor).
 
 E1-E4, FU-003, FU-016, K-FU-021-3C-bis-05/07 (BAJA): empiricas y cosmeticos residuales.
 
@@ -1053,9 +1055,17 @@ Resultado: 4 de 4 MEDIA restantes eran obsoletos / mal diagnosticados.
 - K-FU-021-3C-bis-02: `SPOT_COMMODITY` STALE es la respuesta correcta de la FSM (lag=1 <= max_lag=1). Identico a FUTURE_SETTLEMENT.
 - K7 + K-FU-021-5-01/02/03: docs ya reflejan Q-P.3 (698eac3). "df.attrs es espejo auxiliar, nunca autoridad".
 
-Unico MEDIA tecnico pendiente tras la revision: K-FS-CI-PARITY-01 (INSUFFICIENT en CI no reproducido local, mismo `reference_date`).
+MEDIA tecnico pendiente tras la revision: K-FS-CI-PARITY-01. Cerrado posteriormente como NO BUG (ver 15.16).
 
 Leccion operativa: la lista MEDIA requiere re-verificacion periodica. Un K-ID cerrado por un ciclo posterior puede quedar como fantasma en el prompt si no se retira explicitamente. Antes de invertir un ciclo MEDIA, Gate 0 con evidencia directa.
+
+### 15.16. Ciclos K-FS-CI-PARITY-01 + K-FUTURES-REFRESH-01 (2026-09-17)
+
+**K-FS-CI-PARITY-01 (NO BUG):** `FUTURE_SETTLEMENT=INSUFFICIENT` en CI vs `STALE` en local. Gate 0 refuto la hipotesis de paridad rota: el `market_data.parquet` local era anterior al ciclo FU-021-3C-bis. Causa real: `commodities_futures.parquet` con fila parcial (BZ=F con Close=NaN el 09-16, CL=F con NaN el 09-15). La FSM funciono correctamente: cobertura 0.5 < min_coverage 1.0. Test de regresion (`65ba34f`): `test_cobertura_parcial_devuelve_insufficient` + `test_cobertura_completa_no_es_insufficient`.
+
+**K-FUTURES-REFRESH-01 (RESUELTO, `61e27ee`):** Gate 0 contra OilPriceAPI real confirmo que un re-fetch recupera el dato faltante (Caso A). Solucion: `scripts/update_futures.py::_inspect_parquet(path, expected, required)` reemplaza `_already_up_to_date`. Skip solo si `last_date == expected` AND `cobertura == 1.0`. Fetch selectivo: `only_futures` filtra tickers de futuros; `skip_spot=True` evita `_fetch_spot` cuando cobertura spot OK. 9 tests nuevos (`tests/test_update_futures_skip.py`).
+
+**Hallazgo de seguimiento — mutabilidad historica del proveedor:** OilPriceAPI **revisa** valores historicos. `CL=F 2026-09-16`: `100.40` (parquet commiteado) -> `97.21` (hoy). Es comportamiento legitimo de fuente autoritativa, no bug. Relevante para auditorias futuras de reproducibilidad de `FUTURE_SETTLEMENT` y manifests FU-002. Sin K-ID por ahora; registrar.
 
 ## SECCION 16 - FRASE GUIA
 "Determinista, descriptivo, auditado. Paso a paso. Documentar. Saber parar."
@@ -1100,4 +1110,4 @@ Pregunta final: "Que hacemos?"
 
 No empieces a proponer tareas sin antes confirmar la asimilacion completa.
 
-Fin del prompt maestro v6.22. Commit de referencia: 02ca9f0. Fecha: 2026-09-17.
+Fin del prompt maestro v6.23. Commit de referencia: 61e27ee. Fecha: 2026-09-17.
