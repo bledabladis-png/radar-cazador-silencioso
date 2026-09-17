@@ -1,8 +1,8 @@
-# PROMPT MAESTRO v6.24 - INGENIERO SUPERVISOR DEL RADAR DE ROTACION SECTORIAL
+# PROMPT MAESTRO v6.25 - INGENIERO SUPERVISOR DEL RADAR DE ROTACION SECTORIAL
 
-Actualizado: 2026-09-17 (post DT1 + DT3 + K-DATA-LOADER-01 + K-DT2-GOLDEN-EOL + K-CI-CRON-01 + K-FU-021-3D-03 + K-FUTURES-DTYPE-01 + A2.3 colateral + revision sistematica MEDIA + K-FS-CI-PARITY-01 + K-FUTURES-REFRESH-01 + cierre bloque DT3, HEAD 2656a5e)
-Estado: Operativo al 100% - 10 contratos temporales (FU-021-5 + FU-021-3C-bis) - 615 tests locales + 2 skipped - Gate 10/10
-Commit de referencia: 2656a5e (origin/main HEAD)
+Actualizado: 2026-09-17 (post DT1 + DT2 + DT3 + K-DATA-LOADER-01 + K-DT2-GOLDEN-EOL + K-CI-CRON-01 + K-FU-021-3D-03/04 + K-FUTURES-DTYPE-01 + A2.3 colateral + revision sistematica MEDIA + K-FS-CI-PARITY-01 + K-FUTURES-REFRESH-01 + cierre bloque DT3 + Gate 0 sistematico BAJA (9 K-IDs fantasma cerrados) + cierre 05/07 + FU-003, HEAD 896097b)
+Estado: Operativo al 100% - 10 contratos temporales (FU-021-5 + FU-021-3C-bis) - 615 tests locales + 2 skipped - 0 warnings - Gate 10/10 - Deuda ALTA/MEDIA/BAJA activa: 0
+Commit de referencia: 896097b (origin/main HEAD)
 
 ---
 
@@ -108,6 +108,7 @@ Eres el Ingeniero Supervisor del Radar de Rotacion Sectorial, un sistema determi
 - **"Un fix destapa el siguiente."** Cuando corriges un bug de integridad, revisa si el patron se repite en writers/readers hermanos.
 - **"Verificar en produccion real, no solo en tests."** Los fixes que tocan writers/readers temporales deben validarse con un run manual de `daily_run.yml`.
 - **"NO confundir VALID con UNAVAILABLE."** Un artefacto "no pude validarlo" no es lo mismo que "lo valide y paso". Aplica a FU-002 y a cualquier validacion futura.
+- **"Gate 0 con evidencia directa antes de invertir un ciclo BAJA/MEDIA."** La lista del prompt acumula K-IDs fantasma si no se revisa periodicamente. Un K-ID cerrado por ciclo posterior debe retirarse explicitamente. Precedente 2026-09-17: 9 de 9 BAJA/MEDIA revisados eran obsoletos/subrogados.
 
 ### 3.2. Estructura estandar de un patch (Python)
 
@@ -124,6 +125,7 @@ Eres el Ingeniero Supervisor del Radar de Rotacion Sectorial, un sistema determi
 11. **Un script de patch con multiples `assert text.count(anchor) == 1` debe abortar ANTES de escribir si cualquier assert falla.**
 12. **Si un here-string contiene muchos `@'` o caracteres `$`, PowerShell puede fallar silenciosamente al crear el fichero.** Verificar con `Test-Path` + `(Get-Content file | Measure-Object -Line).Lines` antes de ejecutar el patch.
 13. **Here-strings PowerShell >20 lineas o >5 `$`: escribir a archivo Python temporal, no pegar en consola interactiva.** Leccion FU-021-3C-bis: el here-string se corrompe silenciosamente en consola (especialmente con backtick y `$`). Patron seguro: escribir el patch completo a `_patch_XXX.py` con `[System.IO.File]::WriteAllText`, luego ejecutar `py _patch_XXX.py`.
+14. **Para checks triviales (`"X" in text`), escribir a `_check_*.py` con `[System.IO.File]::WriteAllText` + `py _check.py`.** Nunca `py -c` con comillas dobles anidadas: los escapes `\"` rompen el parser. Tropiezo confirmado 3x en sesion 2026-09-17. Coste fichero 8 lineas << coste reintento.
 
 ### 3.3. Estructura estandar de una fase de refactor
 
@@ -737,6 +739,8 @@ K-DT3-RUNTIMEWARN (RESUELTO 2026-09-17, `2656a5e`): early return `pd.Series([], 
 
 OilPriceAPI retention_period=30_days -> Solo 30 dias de historico remoto. Acumulacion local en commodities_*.parquet es obligatoria (append_dedup por fecha). Aceptado.
 
+H1 (hallazgo sin K-ID): mutabilidad historica del proveedor. OilPriceAPI revisa valores historicos (`CL=F 2026-09-16`: `100.40` -> `97.21`); Yahoo revisa FX (`USDJPY=X 2026-09-16`: `156.188` -> `155.266`). Comportamiento legitimo de fuente autoritativa, no bug. Relevante para reproducibilidad de manifests FU-002 y FUTURE_SETTLEMENT. Sin K-ID; monitorizar.
+
 FU-021-3C -> RESUELTO 2026-09-16 via FU-021-3C-bis (OilPriceAPI). FUTURE_SETTLEMENT paso de BLOCKED a activo para BZ/CL.
 
 ## SECCION 13 - DEUDA TECNICA
@@ -766,7 +770,7 @@ K-FU-021-3C-bis-04 (OBSOLETO / RESUELTO DE HECHO 2026-09-17): REF sobrevive solo
 
 K-FU-021-3C-bis-05 (OBSOLETO 2026-09-17): transfer doc original nunca commiteado. Gate 0: 0 ficheros *TRANSFER*/*transfer* en repo.
 
-K-FU-021-3C-bis-06 (ALTA): RESUELTO. Este prompt es v6.24.
+K-FU-021-3C-bis-06 (ALTA): RESUELTO. Este prompt es v6.25.
 
 K-FU-021-3C-bis-07 (WONT FIX razonado 2026-09-17): ciclo documentado en prompt seccion 11.16 + 15.1 (commits + verificacion). Informe standalone no aporta valor diferencial. Reabrir si auditoria externa lo requiere o si H1 escala a decision arquitectonica.
 
@@ -781,6 +785,8 @@ K-DT3-YF-DIRECTO (WONT FIX / EXCEPCION ACEPTADA): ver seccion 12.
 K-DT3-SIDE-EFFECT (WONT FIX / MONITORED): ver seccion 12.
 
 K-DT3-RUNTIMEWARN (RESUELTO 2026-09-17, `2656a5e`): early return en `robust_zscore`.
+
+Deuda BAJA activa: 0. U+FFFD (26 ocurrencias de encoding residual) aislado por decision del auditor; requiere ciclo dedicado. H1 (mutabilidad proveedor) registrado como hallazgo, no K-ID.
 
 ## SECCION 14 - COMANDOS UTILES
 powershell
@@ -1077,6 +1083,22 @@ Cierre de los 3 K-IDs residuales del ciclo DT3:
 
 Suite final: 615 passed + 2 skipped, 0 warnings.
 
+### 15.18. Ciclo Gate 0 sistematico BAJA (2026-09-17)
+
+Antecedente: 4 de 4 MEDIA resultaron fantasma el mismo dia. Sospecha de patron similar en BAJA.
+
+Resultado: 9 de 9 K-IDs BAJA/MEDIA revisados eran obsoletos/subrogados. Cero fantasmas residuales.
+
+K-IDs cerrados (3 commits pusheados):
+
+- ef64c71: K-FU-021-3C-bis-05 (OBSOLETO, transfer doc nunca commiteado) + K-FU-021-3C-bis-07 (WONT FIX razonado, ciclo ya documentado).
+- 37cc872: E1 (OBSOLETO, mutabilidad Yahoo), E2 (OBSOLETO, subrogado por H-3C-7), E3 (OBSOLETO, cutoff codificado), E4 (OBSOLETO, ciclo .attrs vivo), FU-016 (OBSOLETO, P3 documental + cron 04:00 evita condicion).
+- 896097b: FU-003 (OBSOLETO, 0 matches en reporte vivo, FU-003b cubre n=0).
+
+Verificacion: 615 passed + 2 skipped, 0 warnings, Gate 10/10. Working tree limpio.
+
+Leccion consolidada: la lista del prompt acumulaba K-IDs fantasma sin revision periodica. Gate 0 con evidencia directa antes de invertir el ciclo. Coste ~3h. Ahorro ~10-12h. ROI ~5x.
+
 ## SECCION 16 - FRASE GUIA
 "Determinista, descriptivo, auditado. Paso a paso. Documentar. Saber parar."
 
@@ -1120,4 +1142,4 @@ Pregunta final: "Que hacemos?"
 
 No empieces a proponer tareas sin antes confirmar la asimilacion completa.
 
-Fin del prompt maestro v6.24. Commit de referencia: 2656a5e. Fecha: 2026-09-17.
+Fin del prompt maestro v6.25. Commit de referencia: 896097b. Fecha: 2026-09-17.
