@@ -158,6 +158,64 @@ def _trim_market_data_to_equity_eod(data):
     return data, meta
 
 
+def _postprocess_market_data(data, reference_date, run_id, *, write_manifest):
+    """K-DATA-LOADER-01 (2026-09-17): post-procesado comun a cache-hit y cache-miss.
+
+    Con write_manifest=True se reescribe el parquet y su manifest (cache-miss).
+    Con write_manifest=False solo se aplican merges y se recalcula temporal_meta
+    sobre el df devuelto (cache-hit). El parquet en disco no se toca.
+    """
+    from src.utils import clean_oil_prices
+    data = clean_oil_prices(data)
+
+    data, _eod_info = _filter_non_eod_equity(data, reference_date)
+
+    data, _eff = _trim_market_data_to_equity_eod(data)
+    if _eff and _eff['status'] == 'OK' and _eff['date'] is not None:
+        _ref_date = (reference_date.date()
+                     if hasattr(reference_date, 'date') else reference_date)
+        _ref_lag = (pd.Timestamp(_ref_date)
+                    - pd.Timestamp(_eff['date'].date())).days
+        print(f"  [FU-021-3A] EQUITY_EOD effective={_eff['date'].date()} "
+              f"requested={_eff['requested_date'].date()} "
+              f"function_lag={_eff['lag_days']}d "
+              f"reference_lag={_ref_lag}d "
+              f"coverage={_eff['coverage']:.2%} "
+              f"({_eff['n_observed']}/{_eff['n_eligible']})")
+    elif _eff:
+        print("  [FU-021-3A] EQUITY_EOD INSUFFICIENT_COVERAGE. Sin trim.")
+
+    from src.commodities_merge import merge_commodities_into_market
+    data = merge_commodities_into_market(data)
+
+    from src.cboe_merge import merge_cboe_into_market
+    data = merge_cboe_into_market(data)
+
+    if write_manifest:
+        from src.utils import write_artifact_with_manifest
+        write_artifact_with_manifest(
+            data, 'data/market_data.parquet',
+            source='yahoo',
+            reference_date=reference_date,
+            run_id=run_id,
+        )
+
+    try:
+        from src.temporal_contracts import resolve_all_contracts
+        from src.temporal_contracts.consolidate import build_temporal_meta
+        _resolutions = resolve_all_contracts(data, reference_date)
+        _meta = build_temporal_meta(_resolutions, reference_date, run_id)
+        data.attrs['temporal_meta'] = _meta
+        _summary = ' '.join(
+            f"{k}={v.status}" for k, v in _resolutions.items()
+        )
+        print(f"  [FU-021-5] {len(_resolutions)} contratos resueltos: {_summary}")
+    except Exception as e:
+        print(f"  [FU-021-5][WARN] Fallo resolviendo contratos: {e}")
+
+    return data
+
+
 def download_market_data(reference_date=None, run_id=None):
     # FU-002 (2026-09-15): reference_date y run_id inyectados desde run.py:main().
     if reference_date is None:
@@ -193,9 +251,9 @@ def download_market_data(reference_date=None, run_id=None):
                 if _df_last < _last_exp:
                     print(f'  [CACHE] datos hasta {_df_last}, esperado >= {_last_exp}. Forzando descarga.')
                 else:
-                    return _df
+                    return _postprocess_market_data(_df, reference_date, run_id, write_manifest=False)
             elif _df is not None:
-                return _df
+                return _postprocess_market_data(_df, reference_date, run_id, write_manifest=False)
 
     tickers = _ticker_list()
     router = DataRouter()
@@ -267,64 +325,6 @@ def download_market_data(reference_date=None, run_id=None):
     if not isinstance(data.columns, pd.MultiIndex):
         data.columns = pd.MultiIndex.from_tuples(data.columns)
 
-    from src.utils import clean_oil_prices
-    data = clean_oil_prices(data)
-
-    # FU-021-3A correction v2 (2026-09-15): filtro sesion/EOD FU-018
-    # aplicado SOLO al universo EQUITY_EOD. Ver FU-021-2 y dictamen v2.
-    data, _eod_info = _filter_non_eod_equity(data, reference_date)
-
-    # FU-021-3A (2026-09-15): filtro EQUITY_EOD.
-    # Solo aplica al universo equity/ETF (539 tickers). No toca
-    # INDEX_EOD / RATE_YIELD / FUTURE_SETTLEMENT / FX_DAILY_CUT.
-    # Ver FU-021-2 (contrato por clase).
-    data, _eff = _trim_market_data_to_equity_eod(data)
-    if _eff and _eff['status'] == 'OK' and _eff['date'] is not None:
-        _ref_date = (reference_date.date()
-                     if hasattr(reference_date, 'date') else reference_date)
-        _ref_lag = (pd.Timestamp(_ref_date)
-                    - pd.Timestamp(_eff['date'].date())).days
-        print(f"  [FU-021-3A] EQUITY_EOD effective={_eff['date'].date()} "
-              f"requested={_eff['requested_date'].date()} "
-              f"function_lag={_eff['lag_days']}d "
-              f"reference_lag={_ref_lag}d "
-              f"coverage={_eff['coverage']:.2%} "
-              f"({_eff['n_observed']}/{_eff['n_eligible']})")
-    elif _eff:
-        print("  [FU-021-3A] EQUITY_EOD INSUFFICIENT_COVERAGE. Sin trim.")
-
-    # FU-021-3C-bis: enriquecer con commodities (OilPriceAPI) si estan
-    # disponibles. Solo merge en fechas comunes. No fetch aqui.
-    from src.commodities_merge import merge_commodities_into_market
-    data = merge_commodities_into_market(data)
-
-    # FU-021-3D: enriquecer ^VIX3M desde CBOE (Yahoo no sirve su
-    # historico). Solo merge en fechas comunes. No fetch aqui.
-    from src.cboe_merge import merge_cboe_into_market
-    data = merge_cboe_into_market(data)
-
-    # FU-002 (2026-09-15): parquet + manifest atomico.
-    from src.utils import write_artifact_with_manifest
-    write_artifact_with_manifest(
-        data, parquet_path,
-        source='yahoo',
-        reference_date=reference_date,
-        run_id=run_id,
-    )
-
-    # FU-021-5 (Fase 3): resolver contratos y adjuntar temporal_meta.
-    # Dictamen Q-P.3: dict paralelo es autoridad; df.attrs es espejo.
-    try:
-        from src.temporal_contracts import resolve_all_contracts
-        from src.temporal_contracts.consolidate import build_temporal_meta
-        _resolutions = resolve_all_contracts(data, reference_date)
-        _meta = build_temporal_meta(_resolutions, reference_date, run_id)
-        data.attrs['temporal_meta'] = _meta
-        _summary = ' '.join(
-            f"{k}={v.status}" for k, v in _resolutions.items()
-        )
-        print(f"  [FU-021-5] {len(_resolutions)} contratos resueltos: {_summary}")
-    except Exception as e:
-        print(f"  [FU-021-5][WARN] Fallo resolviendo contratos: {e}")
+    data = _postprocess_market_data(data, reference_date, run_id, write_manifest=True)
 
     return data
