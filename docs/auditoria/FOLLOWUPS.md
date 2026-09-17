@@ -1,4 +1,4 @@
-# Follow-ups tecnicos registrados
+﻿# Follow-ups tecnicos registrados
 
 ## FU-001 — ffill global sobre DataFrame consolidado (RESUELTO)
 
@@ -663,5 +663,20 @@
 - **Politica adoptada:** el dataset operativo es mutable por diseno; los outputs publicados se versionan; las revisiones de datos no constituyen por si mismas un error.
 - **No toca codigo de produccion.** No se abre ciclo de implementacion.
 - **Reabrir si:** (a) requisito regulatorio/compliance; (b) reconstruccion exacta de inputs exigida; (c) auditoria externa necesita verificar dataset completo de fecha pasada; (d) necesidad de distinguir automaticamente revision de proveedor vs regeneracion de pipeline.
+- **Estado:** **CERRADO 2026-09-17**.
+
+## DT4 - Reorganizacion de validation/ y scripts/ (CERRADO 2026-09-17 - WONT FIX razonado)
+
+- **Origen:** prompt maestro v6.26 seccion 13.
+- **Descripcion:** reorganizar las carpetas validation/ y scripts/ por subcategorias.
+- **Gate 0 (2026-09-17):**
+  - validation/: 8 ficheros activos en raiz + archive/ con 120 entradas historicas.
+  - scripts/: 16 ficheros activos en raiz + archive/ con 8 entradas historicas.
+  - Referencias en CI: 6 en daily_run.yml para validation/, 9 en workflows para scripts/.
+  - Referencias en tests: 1 (tests/test_update_futures_skip.py:14 -> from scripts.update_futures import _inspect_parquet).
+  - Referencias en codigo productivo (src/, run.py): 0.
+- **Diagnostico:** estructura actual funcional y ordenada. archive/ ya separa historico. 24 ficheros activos totales son manejables sin subcategorias. Beneficio funcional de reorganizar: cero. Coste: 2h + riesgo de romper CI por ruta olvidada.
+- **Decision:** WONT FIX razonado. Coste > beneficio.
+- **Reabrir si:** (a) >40 scripts activos en cualquiera de las dos carpetas; (b) nueva necesidad de subcategorizacion por dominio; (c) solicitud de auditoria externa por compliance.
 - **Estado:** **CERRADO 2026-09-17**.
 
