@@ -134,8 +134,8 @@ date,source,last_date,age_calendar_days,frequency,freshness,n_total,n_valid,cove
 2026-09-16,Euronext,2026-09-16,0.0,daily,CURRENT,13.0,13.0,1.0,Euronext (13/13 OK)
 2026-09-16,Xetra,2026-09-16,0.0,daily,CURRENT,19.0,19.0,1.0,Xetra (19/19 OK)
 2026-09-16,BME,2026-09-15,1.0,daily,CURRENT,19.0,19.0,1.0,BME (19/19 OK)
-2026-09-17,Yahoo Finance,2026-09-15,2.0,daily,CURRENT,,,,Precios y métricas sectoriales
-2026-09-17,SSGA ETF Flow,2026-09-15,2.0,daily,CURRENT,12.0,12.0,1.0,Flujo primario
+2026-09-17,Yahoo Finance,2026-09-16,1.0,daily,CURRENT,,,,Precios y métricas sectoriales
+2026-09-17,SSGA ETF Flow,2026-09-16,1.0,daily,CURRENT,12.0,12.0,1.0,Flujo primario
 2026-09-17,CBOE PCR,2026-09-16,1.0,daily,CURRENT,38.0,38.0,1.0,Put/Call ratio
 2026-09-17,FINRA Dark Pool,2026-08-24,24.0,finra,CURRENT,,,,Retraso regulatorio 2-4 semanas
 2026-09-17,CFTC Position Flow,2026-09-08,9.0,cftc,CURRENT,,,,Frescura 30 días

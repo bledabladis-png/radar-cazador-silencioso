@@ -1,12 +1,12 @@
 date,sector,price_ret_20d,pct_above_ema50,flow_20d_sum,wyckoff_phase,price_positive,breadth_positive,flow_positive,structure_positive,positive_conditions,data_complete,regime_reading
-2026-09-16,XLK,-0.03457335843753595,40.0,-680166108.1,RANGE,False,False,False,False,0,True,Debilidad alineada
-2026-09-16,XLF,-0.01267807109620267,35.0,-1697084266.5500002,RANGE,False,False,False,False,0,True,Debilidad alineada
-2026-09-16,XLV,0.0036516049039674314,65.0,-297095641.25000006,RANGE,True,True,False,False,2,True,Mixto
-2026-09-16,XLE,0.053531453756824554,55.00000000000001,-233387760.94999984,RANGE,True,True,False,False,2,True,Mixto
-2026-09-16,XLY,-0.050278396116334334,0.0,-1000661841.4999999,RANGE,False,False,False,False,0,True,Debilidad alineada
-2026-09-16,XLP,-0.011218669636496426,45.0,-139286518.15,RANGE,False,False,False,False,0,True,Debilidad alineada
-2026-09-16,XLI,-0.09376342064168808,10.0,-1075302614.45,RANGE,False,False,False,False,0,True,Debilidad alineada
-2026-09-16,XLB,-0.028905093562676676,20.0,-201808409.65,RANGE,False,False,False,False,0,True,Debilidad alineada
-2026-09-16,XLU,-0.0647351876549559,5.0,192747554.6,RANGE,False,False,True,False,1,True,Débil
-2026-09-16,XLRE,-0.0392594705408037,10.0,-314246256.45,RANGE,False,False,False,False,0,True,Debilidad alineada
-2026-09-16,XLC,0.028965882451834846,50.0,-213245674.59999996,RANGE,True,False,False,False,1,True,Débil
+2026-09-16,XLK,-0.00910463573894238,40.0,-698964473.1,RANGE,False,False,False,False,0,True,Debilidad alineada
+2026-09-16,XLF,-0.0330221272886122,35.0,-938565741.5999999,RANGE,False,False,False,False,0,True,Debilidad alineada
+2026-09-16,XLV,-0.011547702258971504,65.0,-295365880.85,RANGE,False,True,False,False,1,True,Débil
+2026-09-16,XLE,0.005496207167773104,55.00000000000001,-264825236.79999992,RANGE,True,True,False,False,2,True,Mixto
+2026-09-16,XLY,-0.05311103706393416,0.0,-400996274.8499999,RANGE,False,False,False,False,0,True,Debilidad alineada
+2026-09-16,XLP,-0.026291188967742407,45.0,-260694215.35000002,RANGE,False,False,False,False,0,True,Debilidad alineada
+2026-09-16,XLI,-0.08095004639895254,10.0,-1002392074.3999999,RANGE,False,False,False,False,0,True,Debilidad alineada
+2026-09-16,XLB,-0.027423681004663636,20.0,-143253672.35,RANGE,False,False,False,False,0,True,Debilidad alineada
+2026-09-16,XLU,-0.06133577316815453,5.0,157678079.05,RANGE,False,False,True,False,1,True,Débil
+2026-09-16,XLRE,-0.04077973675256019,10.0,-213323407.95,RANGE,False,False,False,False,0,True,Debilidad alineada
+2026-09-16,XLC,0.022809527213037084,50.0,-291452147.7,RANGE,True,False,False,False,1,True,Débil
