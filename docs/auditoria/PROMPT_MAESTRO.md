@@ -1,8 +1,8 @@
-# PROMPT MAESTRO v6.28 - INGENIERO SUPERVISOR DEL RADAR DE ROTACION SECTORIAL
+# PROMPT MAESTRO v6.29 - INGENIERO SUPERVISOR DEL RADAR DE ROTACION SECTORIAL
 
-Actualizado: 2026-09-17 (post DT1 + DT2 + DT3 + K-DATA-LOADER-01 + K-DT2-GOLDEN-EOL + K-CI-CRON-01 + K-FU-021-3D-03/04 + K-FUTURES-DTYPE-01 + A2.3 colateral + revision sistematica MEDIA + K-FS-CI-PARITY-01 + K-FUTURES-REFRESH-01 + cierre bloque DT3 + Gate 0 sistematico BAJA (9 K-IDs fantasma cerrados) + cierre 05/07 + FU-003 + cierre H1 (informe + dictamen + WONT FIX) + cierre DT4 (WONT FIX razonado) + cierre U+FFFD (27 ocurrencias corregidas) + reorg docs/auditoria/ (14 raiz + archive/), HEAD d5b1c25)
+Actualizado: 2026-09-17 (post DT1 + DT2 + DT3 + K-DATA-LOADER-01 + K-DT2-GOLDEN-EOL + K-CI-CRON-01 + K-FU-021-3D-03/04 + K-FUTURES-DTYPE-01 + A2.3 colateral + revision sistematica MEDIA + K-FS-CI-PARITY-01 + K-FUTURES-REFRESH-01 + cierre bloque DT3 + Gate 0 sistematico BAJA (9 K-IDs fantasma cerrados) + cierre 05/07 + FU-003 + cierre H1 (informe + dictamen + WONT FIX) + cierre DT4 (WONT FIX razonado) + cierre U+FFFD (27 ocurrencias corregidas) + reorg docs/auditoria/ (14 raiz + archive/) + K-HUERFANO deteccion (KHC / lote parcial), HEAD 3ccae42)
 Estado: Operativo al 100% - 10 contratos temporales (FU-021-5 + FU-021-3C-bis) - 615 tests locales + 2 skipped - 0 warnings - Gate 10/10 - Deuda ALTA/MEDIA/BAJA activa: 0
-Commit de referencia: d5b1c25 (origin/main HEAD)
+Commit de referencia: 3ccae42 (origin/main HEAD)
 
 ---
 
@@ -745,6 +745,8 @@ H1 (CERRADO 2026-09-17, WONT FIX / POLITICA ACEPTADA): mutabilidad del dataset h
 
 FU-021-3C -> RESUELTO 2026-09-16 via FU-021-3C-bis (OilPriceAPI). FUTURE_SETTLEMENT paso de BLOCKED a activo para BZ/CL.
 
+KHC / lote parcial (2026-09-17) -> DETECCION ANIADIDA. En un run manual realizado el 17/09/2026 a las 11:15 ET, 1 de 562 tickers (`KHC`) no presento la observacion de la sesion esperada, aunque el resto del lote si fue aceptado. El cron productivo se ejecuta a las 00:00 ET. No se ha demostrado que el fenomeno sea exclusivo de ejecuciones manuales ni que no pueda aparecer en produccion. Deteccion `[K-HUERFANO]` anadida en `download_market_data`. Retry NO implementado. Monitorizacion activa. Distinto de `FUTURE_SETTLEMENT=INSUFFICIENT` (contrato temporal). Reabrir ciclo si: mismo ticker repetidamente, multiples tickers, produccion 04:00 UTC, o cobertura materialmente inferior.
+
 ## SECCION 13 - DEUDA TECNICA
 Monolitos restantes:
 
@@ -772,7 +774,7 @@ K-FU-021-3C-bis-04 (OBSOLETO / RESUELTO DE HECHO 2026-09-17): REF sobrevive solo
 
 K-FU-021-3C-bis-05 (OBSOLETO 2026-09-17): transfer doc original nunca commiteado. Gate 0: 0 ficheros *TRANSFER*/*transfer* en repo.
 
-K-FU-021-3C-bis-06 (ALTA): RESUELTO. Este prompt es v6.28.
+K-FU-021-3C-bis-06 (ALTA): RESUELTO. Este prompt es v6.29.
 
 K-FU-021-3C-bis-07 (WONT FIX razonado 2026-09-17): ciclo documentado en prompt seccion 11.16 + 15.1 (commits + verificacion). Informe standalone no aporta valor diferencial. Reabrir si auditoria externa lo requiere o si H1 escala a decision arquitectonica.
 
@@ -1118,6 +1120,21 @@ Dictamen del auditor: **CERRADO - WONT FIX / POLITICA ACEPTADA**. Opciones A (sn
 
 No toca codigo de produccion. Condiciones de reapertura documentadas: requisito regulatorio, reconstruccion exacta de inputs, auditoria externa de dataset completo, o necesidad de distinguir revision de proveedor vs regeneracion pipeline.
 
+### 15.20. Ciclo K-HUERFANO - Deteccion de lote parcial (2026-09-17)
+
+Origen: durante verificacion de fechas por fuente (Gate 0), se detecto que 1 ticker (`KHC`) del run manual del 17/09 11:15 ET no tenia Close valido en `expected_session=2026-09-16`, mientras Yahoo fresco si lo devolvia (Volume=13.87M). El resto de los 561 tickers si tenian la observacion.
+
+Causa raiz: `download_market_data` acepta un lote como OK si `data_batch is not None and not data_batch.empty`. No verifica cobertura por ticker individual. Un lote con 4/5 tickers completos pasa sin retry, dejando 1 ticker sin la sesion esperada.
+
+Fix (`3ccae42`, auditado por dictamen B+C):
+- Helper `_check_khuerfano(data_batch, batch, expected_session)`.
+- Resolucion de `_expected_session` via `last_expected_market_date(reference_date)`.
+- Print `[K-HUERFANO]` tras `all_data.append(data_batch)`.
+- Sin retry (NO-GO hasta acumular evidencia de recurrencia).
+- +6 tests (`tests/test_khuerfano.py`).
+
+Documentacion: §12 incluye formulacion exacta del auditor. No crear K-ID nuevo. Reabrir ciclo A/D si reaparece: mismo ticker repetidamente, multiples tickers, produccion 04:00 UTC, o cobertura materialmente inferior.
+
 ## SECCION 16 - FRASE GUIA
 "Determinista, descriptivo, auditado. Paso a paso. Documentar. Saber parar."
 
@@ -1161,4 +1178,4 @@ Pregunta final: "Que hacemos?"
 
 No empieces a proponer tareas sin antes confirmar la asimilacion completa.
 
-Fin del prompt maestro v6.28. Commit de referencia: d5b1c25. Fecha: 2026-09-17.
+Fin del prompt maestro v6.29. Commit de referencia: 3ccae42. Fecha: 2026-09-17.

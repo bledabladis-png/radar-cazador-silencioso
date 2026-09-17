@@ -694,3 +694,15 @@
 - **Tests:** 615 passed + 2 skipped, 0 warnings.
 - **Estado:** **RESUELTO 2026-09-17**.
 
+## K-HUERFANO - Deteccion de lote parcial en download_market_data (RESUELTO 2026-09-17)
+
+- **Origen:** verificacion de fechas por fuente (Gate 0, 2026-09-17).
+- **Descripcion:** `download_market_data` acepta un lote como OK si `data_batch is not None and not data_batch.empty`. No verifica cobertura por ticker individual. Un lote con 4/5 tickers completos pasa sin retry.
+- **Caso medido:** run manual 17/09/2026 11:15 ET. 1 de 562 tickers (`KHC`) sin Close en `expected_session=2026-09-16`, aunque el resto del lote si fue aceptado. Yahoo fresco si devolvia la vela (Volume=13.87M).
+- **Fix (`3ccae42`):** helper `_check_khuerfano` + resolucion `_expected_session` + print `[K-HUERFANO]` tras `all_data.append`. Sin retry. +6 tests.
+- **Dictamen auditor:** B (warning) GO + C (documentacion) GO. A (retry parcial) NO-GO ahora. D (fix completo + retry) NO-GO ahora. E (cerrar sin accion) NO-GO.
+- **No crear K-ID nuevo.** Monitorizacion activa.
+- **Reabrir ciclo A/D si:** (a) mismo ticker repetidamente; (b) multiples tickers; (c) produccion 04:00 UTC; (d) cobertura materialmente inferior.
+- **Distinto de:** `FUTURE_SETTLEMENT=INSUFFICIENT` (estado contractual valido del temporal). Aqui es cobertura del loader.
+- **Estado:** **RESUELTO 2026-09-17** (deteccion anadida, retry no implementado, monitorizacion activa).
+
