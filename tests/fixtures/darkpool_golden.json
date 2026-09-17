@@ -1,0 +1,39 @@
+{
+  "reference_date": "2026-09-17",
+  "generator": "tests/fixtures/_gen_darkpool_golden.py",
+  "setup": "tests/fixtures/_darkpool_setup.py",
+  "seed": 42,
+  "latest_week": "2026-08-24",
+  "contract": {
+    "media_dark_pool": 30.0,
+    "n_tickers_ats": 5,
+    "n_tickers_total": 5,
+    "z_score": -1.0044317902771254,
+    "week": "2026-08-24",
+    "status": "OK"
+  },
+  "characterization": {
+    "state": "Actividad ATS baja",
+    "momentum": -1.0044317902771254,
+    "percentile": 6.730769230769231,
+    "fecha_pre_fase1": "2026-09-17",
+    "z_windows": {
+      "13w": {
+        "z": -0.9590033645530278,
+        "state": "Actividad ATS baja"
+      },
+      "26w": {
+        "z": -1.1581082832922844,
+        "state": "Actividad ATS baja"
+      },
+      "52w": {
+        "z": -0.9097122140789599,
+        "state": "Actividad ATS baja"
+      },
+      "104w": {
+        "z": -1.0044317902771254,
+        "state": "Actividad ATS baja"
+      }
+    }
+  }
+}

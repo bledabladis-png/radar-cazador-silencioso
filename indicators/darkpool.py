@@ -2,39 +2,25 @@
 import pandas as pd
 from src.utils import safe_mean
 import re
-import numpy as np
-from datetime import datetime, timedelta
+from datetime import timedelta
 from data.providers.finra import FinraProvider
+from indicators.darkpool_scoring import (  # noqa: F401 (re-export)
+    robust_zscore,
+    rolling_percentile,
+    classify_darkpool,
+    _compute_z_for_window,
+)
+
+__all__ = [
+    'compute_darkpool_signals',
+    # Re-exports internos (preservan la API historica del modulo).
+    'robust_zscore',
+    'rolling_percentile',
+    'classify_darkpool',
+    '_compute_z_for_window',
+]
 from config.tickers import MARKET_TICKERS
-from config.settings import DARKPOOL_THRESHOLDS
 import yfinance as yf
-
-def robust_zscore(series):
-    median = series.median()
-    mad = np.median(np.abs(series - median))
-    if mad == 0:
-        return np.zeros(len(series))
-    return (series - median) / (1.4826 * mad)
-
-def rolling_percentile(series):
-    last = series.iloc[-1]
-    return (series < last).mean() * 100
-
-def classify_darkpool(z):
-    if z >= DARKPOOL_THRESHOLDS['extremadamente_alta']:
-        return "Actividad ATS extremadamente alta"
-    elif z >= DARKPOOL_THRESHOLDS['muy_alta']:
-        return "Actividad ATS muy alta"
-    elif z >= DARKPOOL_THRESHOLDS['alta']:
-        return "Actividad ATS alta"
-    elif z > DARKPOOL_THRESHOLDS['normal']:
-        return "Actividad ATS normal"
-    elif z > DARKPOOL_THRESHOLDS['baja']:
-        return "Actividad ATS baja"
-    elif z > DARKPOOL_THRESHOLDS['muy_baja']:
-        return "Actividad ATS muy baja"
-    else:
-        return "Actividad ATS extremadamente baja"
 
 def _get_all_tickers():
     tickers = []
@@ -153,19 +139,6 @@ def _backfill_history(hist, finra):
         print(f"    No se descargaron nuevas semanas. El historial contiene {len(hist)} semanas.")
     return hist
 
-def _compute_z_for_window(hist, window):
-    """Calcula Z-Score robusto para una ventana especifica."""
-    if len(hist) < window:
-        return np.nan, np.nan, np.nan, "Sin historial suficiente"
-    sub = hist.iloc[-window:].copy()
-    sub['ratio_ewm'] = sub['ratio'].ewm(span=min(4, window//2)).mean()
-    z_series = sub['ratio_ewm'].rolling(window).apply(lambda x: robust_zscore(pd.Series(x)).iloc[-1], raw=False)
-    z = z_series.iloc[-1]
-    percentile = rolling_percentile(sub['ratio_ewm'])
-    momentum = z_series.ewm(span=min(4, window//2)).mean().iloc[-1]
-    state = classify_darkpool(z)
-    return z, momentum, percentile, state
-
 def compute_darkpool_signals(df_market=None, df_stocks=None):
     finra = FinraProvider()
     week_start = finra.get_latest_week()
@@ -229,7 +202,7 @@ def compute_darkpool_signals(df_market=None, df_stocks=None):
 
     try:
         hist = pd.read_csv('outputs/history/darkpool_history.csv', parse_dates=['week'])
-    except:
+    except (FileNotFoundError, pd.errors.EmptyDataError):
         hist = pd.DataFrame(columns=['week', 'ratio'])
 
     current_week_date = pd.to_datetime(week_start)
@@ -266,7 +239,7 @@ def compute_darkpool_signals(df_market=None, df_stocks=None):
     return {
         'status': 'OK',
         'week': week_start,
-        'fecha': datetime.now().strftime('%Y-%m-%d'),
+        'fecha': week_start,
         'media_dark_pool': media_dp,
         'z_score': z,
         'momentum': momentum,
@@ -282,5 +255,4 @@ def compute_darkpool_signals(df_market=None, df_stocks=None):
             '104w': {'z': z_104, 'state': state_104} if pd.notna(z_104) else None,
         }
     }
-
 
