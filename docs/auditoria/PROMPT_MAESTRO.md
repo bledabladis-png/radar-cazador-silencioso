@@ -699,7 +699,7 @@ FU-015 (AVISO columnas duplicadas tras retry Yahoo) -> RESUELTO 2026-09-15 (afcf
 
 A2.3 (get_market clasificaba no-equity como US_EQUITY) -> RESUELTO 2026-09-15 (fd12ea1). Solucion: get_instrument_class paralela.
 
-FU-016 (desfase 1 dia entre writers cuando run antes de PUBLISH_HOUR) -> Pendiente P3 documental.
+FU-016 (desfase 1d entre writers pre-PUBLISH_HOUR) -> OBSOLETO 2026-09-17 (Gate 0: Accion=ninguna + cron 04:00 UTC evita condicion).
 
 FU-021-3A (filtro EQUITY_EOD en market_data) -> RESUELTO correction v2 2026-09-15 (78b7583 + 747cfb1 + fded14b).
 
@@ -909,7 +909,7 @@ K-DT3-YF-DIRECTO (WONT FIX / EXCEPCION ACEPTADA) / K-DT3-SIDE-EFFECT (WONT FIX /
 
 K-FS-CI-PARITY-01 (CERRADO 2026-09-17, NO BUG): hipotesis de paridad CI-local refutada. `FUTURE_SETTLEMENT=INSUFFICIENT` es estado contractual valido (cobertura parcial del proveedor).
 
-E1-E4, FU-003, FU-016 (BAJA): empiricas y cosmeticos residuales.
+FU-003 (BAJA): cosmetico residual.
 
 Detalle completo en la seccion 13 y en FOLLOWUPS.md.
 

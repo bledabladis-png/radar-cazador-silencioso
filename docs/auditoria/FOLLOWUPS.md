@@ -110,7 +110,7 @@
 - **Clasificacion:** P2 estructural — **RESUELTO 2026-09-15**.
 - **Bloqueante:** no.
 
-## FU-016 — Desfase 1 dia entre writers cuando run < PUBLISH_HOUR (documental)
+## FU-016 — Desfase 1 dia entre writers cuando run < PUBLISH_HOUR (OBSOLETO 2026-09-17)
 
 - **Origen:** informe de implementaciones pendientes, 2026-09-15.
 - **Descripcion:** cuando un run se ejecuta antes de PUBLISH_HOUR=23 (hora Madrid), `last_expected_market_date()` retrocede al ultimo dia con cierre publicado. Los writers derivan su fecha de fuentes distintas: `macro_regime` de `df_macro_manual['date'].max()` (FRED, publicado antes de las 23); `sector_breadth` de `df_stocks.index[-1]` (Yahoo, sesion con cierre ya publicado). Resultado: las dos tablas quedan desfasadas entre si.
@@ -119,6 +119,11 @@
 - **Clasificacion:** P3 documental.
 - **Accion:** ninguna. Documentado para evitar falsos positivos en futuras auditorias de integridad.
 - **Bloqueante:** no.
+
+**Resolucion (2026-09-17):**
+- **Gate 0:** `PUBLISH_HOUR=23` vive en `src/market_calendar.py:38`. El cron real de `daily_run.yml` es `0 4 * * *` (04:00 UTC = 06:00 Madrid verano / 05:00 invierno), muy despues de las 23h. La condicion "run < PUBLISH_HOUR" ya no se da en produccion.
+- **Clasificacion original:** P3 documental con `Accion: ninguna`. No era deuda activa, era registro para evitar falsos positivos.
+- **Estado:** **OBSOLETO 2026-09-17**. No hay fix que aplicar.
 
 ## FU-017 — El doble candado B2 no esta codificado (documental)
 
@@ -605,3 +610,40 @@
 - **Decision:** WONT FIX razonado. El ciclo esta documentado en `PROMPT_MAESTRO.md` seccion 11.16 + 15.1 (commits + verificaciones + presupuesto API). Un informe estilo `E5_INFORME_VIX3M.md` (~1h) no aporta informacion diferencial.
 - **Reabrir si:** (a) auditoria externa lo requiere, (b) H1 (mutabilidad OilPriceAPI) escala a decision arquitectonica y necesita vehiculo documental.
 - **Estado:** **WONT FIX 2026-09-17**.
+
+## E1 - USDJPY=X diff 0.35% vs Yahoo (OBSOLETO)
+
+- **Origen:** prompt maestro v6.24 seccion 13, heredado sin definicion documental.
+- **Gate 0 (2026-09-17):** busqueda recursiva en todo el repo (excluyendo .git/archive/tests/outputs) de `\bE1\b` vinculado a USDJPY: 0 hits. Sin definicion operativa.
+- **Verificacion empirica:** `market_data.parquet` (MultiIndex `(Price, Ticker)`) contiene `USDJPY=X`. Comparativa vs yfinance fresco:
+  - 2026-09-10 a 2026-09-15: diff = 0.000% (identicos).
+  - 2026-09-16: parquet=156.1880, yahoo=155.2660, diff=+0.594%.
+- **Causa:** mutabilidad del proveedor Yahoo. Mismo patron que H1 (OilPriceAPI reviso CL=F 09-16). No es bug de pipeline.
+- **Estado:** **OBSOLETO 2026-09-17**. Registrado como mutabilidad de proveedor, no como deuda.
+
+## E2 - Causa raiz H-3C-7 (futuros Yahoo no reproducibles) (OBSOLETO)
+
+- **Origen:** prompt maestro v6.24 seccion 13. Etiqueta agregada del hallazgo H-3C-7.
+- **Gate 0 (2026-09-17):** H-3C-7 cerrado por ROI negativo. `FOLLOWUPS.md` L322: "Cierre sin causa raiz exacta: H-3C-7 no tiene causa raiz reproducible. Investigacion detenida por ROI negativo". `FU-021-3C_INFORME_FUTURE_FX.md` L21 + L323 confirman el cierre.
+- **Causa subrogada:** futuros de commodities migrados a OilPriceAPI (FU-021-3C-bis). La rama Yahoo futuros ya no es fuente del sistema.
+- **Estado:** **OBSOLETO 2026-09-17** (subrogado por cierre de H-3C-7).
+
+## E3 - Cutoff exacto FX (17:00 ET provisional) (OBSOLETO)
+
+- **Origen:** prompt maestro v6.24 seccion 13.
+- **Gate 0 (2026-09-17):** el cutoff FX esta codificado y NO marcado como provisional:
+  - `src/temporal_contracts/fx_daily_cut.py:3`: `Cutoff 17:00 ET. Lag heterogeneo por par.`
+  - `src/temporal_contracts/registry.py:109`: `per_pair_max_lag={"EURUSD=X":0, "USDJPY=X":0, "USDCNY=X":1}`.
+  - `src/temporal_contracts/_common.py:75`: `Fecha esperada FX: reference_date (cutoff 17:00 ET).`
+- **Comparacion:** LSE/Xetra SI llevan marca "PROVISIONAL" en `market_hours.py` para calendarios; FX no la lleva. Cutoff 17:00 ET es definitivo por diseno.
+- **Estado:** **OBSOLETO 2026-09-17**. No hay cutoff "provisional" que revisar.
+
+## E4 - Persistencia df.attrs tras Q-P.3 (OBSOLETO)
+
+- **Origen:** prompt maestro v6.24 seccion 13.
+- **Gate 0 (2026-09-17):** el ciclo `.attrs` esta vivo y es coherente con Q-P.3:
+  - Escritor: `src/data_loader.py:208` -> `data.attrs['temporal_meta'] = _meta`.
+  - Lector: `src/pipeline/data_load.py:57` -> `df_market.attrs.get('temporal_meta', {})`.
+  - Dictamen Q-P.3: `temporal_meta` (dict paralelo) es autoridad; `.attrs` es espejo auxiliar.
+- **Verificacion empirica:** parquet no persiste `.attrs` entre procesos (verificado con `pd.read_parquet`). El ciclo es intra-run, correcto por diseno.
+- **Estado:** **OBSOLETO 2026-09-17**. No hay problema de persistencia; el comportamiento observado es el correcto.
