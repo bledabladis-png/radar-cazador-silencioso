@@ -216,6 +216,23 @@ def _postprocess_market_data(data, reference_date, run_id, *, write_manifest):
     return data
 
 
+def _check_khuerfano(data_batch, batch, expected_session):
+    """K-HUERFANO (2026-09-17): tickers del lote con Close NaN en expected_session.
+    Solo observabilidad. No modifica datos ni reintenta descargas.
+    Ver dictamen auditor caso KHC."""
+    if expected_session is None or data_batch is None or data_batch.empty:
+        return []
+    _exp_ts = pd.Timestamp(expected_session)
+    out = []
+    for _t in batch:
+        if ("Close", _t) not in data_batch.columns:
+            continue
+        _s = data_batch[("Close", _t)]
+        if _exp_ts in _s.index and pd.isna(_s.loc[_exp_ts]):
+            out.append(_t)
+    return out
+
+
 def download_market_data(reference_date=None, run_id=None):
     # FU-002 (2026-09-15): reference_date y run_id inyectados desde run.py:main().
     if reference_date is None:
@@ -266,6 +283,15 @@ def download_market_data(reference_date=None, run_id=None):
     batches_failed = []   # lotes completos que fallaron
     batch_errors = []     # mensajes de error asociados a cada lote fallido
 
+    # K-HUERFANO (2026-09-17): expected_session para deteccion de lote parcial.
+    # Sin retry. Solo observabilidad. Ver dictamen auditor caso KHC.
+    try:
+        from src.market_calendar import last_expected_market_date
+        _expected_session = last_expected_market_date(reference_date)
+    except Exception as _e:
+        _expected_session = None
+        print(f'  [K-HUERFANO][WARN] No se pudo resolver expected_session: {_e}')
+
     for i in range(0, len(tickers), batch_size):
         batch = tickers[i:i+batch_size]
         print(f"Descargando lote {i//batch_size + 1}: {batch}")
@@ -273,6 +299,9 @@ def download_market_data(reference_date=None, run_id=None):
             data_batch = router.get_market_data(batch, period="10y")
             if data_batch is not None and not data_batch.empty:
                 all_data.append(data_batch)
+                # K-HUERFANO: verificar cobertura por ticker en expected_session.
+                for _t in _check_khuerfano(data_batch, batch, _expected_session):
+                    print(f"  [K-HUERFANO] {_t}: sin Close en expected_session={_expected_session}")
             else:
                 # Si el lote devuelve vacío, registrar tickers
                 batches_failed.append(batch)
