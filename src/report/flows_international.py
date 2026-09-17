@@ -145,10 +145,18 @@ def render_rendimiento_qqq(qqq_performance_data):
         for _, row in qqq_performance_data.iterrows():
             label = row.get('displayLabel', 'QQQ (Yahoo Finance)')
             out.append(f"| {label} | {row['ytd']:.2f}% | {row['y1']:.2f}% | {row['y3']:.2f}% | {row['y5']:.2f}% | {row['y10']:.2f}% | {row['inception']:.2f}% |\n")
+        # I3 (2026-09-18): declarar la fecha efectiva del dataset
+        # (effectiveDate), no el timestamp del run (as_of_date).
+        # Fallback a as_of_date truncado si effectiveDate falta.
         try:
-            as_of = qqq_performance_data.iloc[0].get("as_of_date", "")
-            if as_of:
-                out.append(f"*Fecha de cálculo (as_of_date): {as_of}*\n")
+            _row = qqq_performance_data.iloc[0]
+            _eff = _row.get("effectiveDate", "")
+            _aso = _row.get("as_of_date", "")
+            if _eff:
+                out.append(f"*Fecha del dato (effectiveDate): {_eff}*\n")
+            elif _aso:
+                _aso_short = str(_aso).split(" ")[0]
+                out.append(f"*Fecha del dato (as_of_date): {_aso_short}*\n")
         except Exception:
             pass
         out.append("\n*Fuente: Yahoo Finance. Rendimientos calculados desde precios ajustados.*\n\n")
