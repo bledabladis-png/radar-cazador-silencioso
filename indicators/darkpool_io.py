@@ -24,7 +24,7 @@ def _get_all_tickers():
     except Exception as e:
         print(f'  [WARN] darkpool: etf_holdings.csv no disponible: {e}')
     # Filtro adicional: solo tickers con formato razonable de acción
-    tickers = [t for t in tickers if not t.startswith('^')]
+    tickers = [t for t in tickers if isinstance(t, str) and not t.startswith('^')]
     valid = []
     for t in tickers:
         if not isinstance(t, str):
