@@ -2,29 +2,29 @@
   "schema_version": 1,
   "artifact": {
     "path": "data/commodities_futures.parquet",
-    "sha256": "0b909d6e049046aaba2653ca3178b420badfd1d2d94ea8d8f322debd5a43d525",
-    "bytes": 8263,
-    "written_at": "2026-09-16T22:20:25.791302"
+    "sha256": "2c60f4a848cfc4453306c65bda2f92bda0fd96f73d4537c55d681ad36bbddfdd",
+    "bytes": 8312,
+    "written_at": "2026-09-17T22:16:40.370757"
   },
   "producer": {
     "module": "src.utils",
     "function": "write_artifact_with_manifest",
-    "run_id": "20260917_002023",
+    "run_id": "20260918_001639",
     "source": "oilpriceapi_futures"
   },
   "content": {
-    "rows": 2,
+    "rows": 3,
     "cols": 10,
     "n_tickers": 2,
     "date_min": "2026-09-15",
-    "date_max": "2026-09-16"
+    "date_max": "2026-09-17"
   },
   "temporal": {
     "contract": null
   },
   "quality": {
-    "last_date": "2026-09-16",
-    "expected_session": "2026-09-16",
+    "last_date": "2026-09-17",
+    "expected_session": "2026-09-17",
     "last_date_is_expected_session": true,
     "pct_dup_last": 0.0,
     "close_nan_last": 1,
