@@ -528,3 +528,23 @@
 - **Prioridad:** MEDIA (no bloquea Gate; el sistema opera con 10/10 comprobaciones OK).
 - **Alcance:** observacion. Sin cambios de codigo hasta tener evidencia del cron.
 - **Clasificacion:** hallazgo colateral post-K-DATA-LOADER-01. ABIERTA 2026-09-17, en observacion.
+
+## DT1 - Refactor regimes/sector_regime.py (CERRADO)
+
+- **Origen:** deuda tecnica ALTA. Fichero de 827 LOC.
+- **Dictamen auditor (revisado):** C-GO con ajustes. El diagnostico previo ("refactor arquitectonico") se descarto tras Gate 0: 827 lineas brutas = 156 lineas de codigo real, 663 vacias, 8 comentarios. La "deuda ALTA por LOC" era un artefacto de medicion.
+- **Hallazgo real (bug latente):** en `compute_sector_scores`, el bloque `components` (lineas 443-518) construia el dict FUERA del bucle principal, copiando los valores de `comp_rs20`, `comp_rs50`, etc. del ULTIMO sector iterado (XLC) a los 11 sectores. Reproducido con datos sinteticos: los 11 `components[sector]` eran identicos.
+- **Evidencia de bug:** `tests/fixtures/_diag_components.py` (desechado) confirmo `*** BUG CONFIRMADO: todos los components son identicos ***`.
+- **Cero consumidores:** grep en todo el repo. `fls.py` y `mte_confirmation.py` usan `fls_data['components']` (contador int de componentes FLS, contexto distinto). Nadie lee `sector_results['components']`.
+- **Decision:** extirpar, no reparar (evita mantener codigo sin consumidor).
+- **Fases ejecutadas:**
+  - Fase 0: golden de caracterizacion (`tests/fixtures/sector_regime_golden.json`) + 5 tests. Congelan `ranking`, `regime`, `top3` como contrato, `last_scores` como diagnostico. Generador reproducible: `tests/fixtures/_gen_sector_regime_golden.py`.
+  - Fase 1: eliminado bloque `components` + quitado del return. Tests verdes.
+  - Fase 2: colapso de whitespace (827 -> 272 lineas). AST identico antes/despues (verificado con `ast.dump(include_attributes=False)`). BOM y LF preservados.
+  - Fase 3: 11 tests edge cases (`tests/test_sector_regime_edge_cases.py`).
+- **Commits:** `a1406f4`.
+- **Verificacion local:** 571 passed + 2 skipped. pyflakes limpio. compileall OK. E2E `py run.py`: Gate 10/10, `NARROW RALLY`, 10 contratos resueltos.
+- **Verificacion CI (run 35170230926):** exit 0. Los 16 tests DT1 verde en CI.
+- **No toca:** scoring, `ranking`, `regime`, `last_scores`, `top3`, `compute_price_flow_rankings`, contratos temporales, reporte.
+- **Clasificacion:** ciclo de fix + limpieza + cobertura. CERRADO 2026-09-17.
+- **Deudas generadas:** ninguna nueva.
