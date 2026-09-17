@@ -13,6 +13,7 @@ from src.temporal_contracts import (
     list_contracts,
     VALID_STATUSES,
     STATUS_BLOCKED,
+    STATUS_INSUFFICIENT,
 )
 
 
@@ -92,6 +93,42 @@ class TestFutureSettlement:
         r = FutureSettlement().resolve(pd.DataFrame(), REF)
         assert r.contract_name == "FUTURE_SETTLEMENT"
         assert r.status in VALID_STATUSES
+
+    def test_cobertura_parcial_devuelve_insufficient(self):
+        # K-FS-CI-PARITY-01: si un ticker del universo no tiene Close en la
+        # fecha esperada, el contrato debe reportar INSUFFICIENT. Es un
+        # estado contractual valido, no un falso positivo.
+        idx = pd.to_datetime(["2026-09-15"])
+        cols = pd.MultiIndex.from_tuples(
+            [("Close", "BZ=F"), ("Close", "CL=F")],
+            names=["field", "ticker"],
+        )
+        df = pd.DataFrame(index=idx, columns=cols, dtype=float)
+        df.loc["2026-09-15", ("Close", "BZ=F")] = 108.32
+        # CL=F permanece NaN -> cobertura 0.5 < min_coverage 1.0
+
+        r = FutureSettlement().resolve(df, REF)
+        assert r.status == STATUS_INSUFFICIENT
+        assert r.effective_date is None
+        assert r.coverage == 0.0
+        assert r.lag_days is None
+
+    def test_cobertura_completa_no_es_insufficient(self):
+        # Contraste: con ambos tickers presentes, el contrato no debe
+        # reportar INSUFFICIENT.
+        idx = pd.to_datetime(["2026-09-15"])
+        cols = pd.MultiIndex.from_tuples(
+            [("Close", "BZ=F"), ("Close", "CL=F")],
+            names=["field", "ticker"],
+        )
+        df = pd.DataFrame(index=idx, columns=cols, dtype=float)
+        df.loc["2026-09-15", ("Close", "BZ=F")] = 108.32
+        df.loc["2026-09-15", ("Close", "CL=F")] = 99.0
+
+        r = FutureSettlement().resolve(df, REF)
+        assert r.status in VALID_STATUSES
+        assert r.status != STATUS_BLOCKED
+        assert r.status != STATUS_INSUFFICIENT
 
 
 class TestFxDailyCut:
