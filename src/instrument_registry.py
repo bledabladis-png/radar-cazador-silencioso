@@ -744,6 +744,15 @@ def get_market(ticker: str) -> str:
 
     Nota: mapping valido para el universo de tickers soportado
     actualmente. No es una afirmacion universal.
+
+    A2.3 (2026-09-15, cerrado 2026-09-17): esta funcion responde
+    'que calendario bursatil aplica', NO 'que clase economica es el
+    instrumento'. Para clase economica usar get_instrument_class (A2.3).
+    El fallback US_EQUITY para tickers sin punto (p.ej. BZ=F, ^GSPC,
+    EURUSD=X) es un limite conocido y documentado. Verificado 2026-09-17:
+    cero consumidores afectados; los 5 callers (data_loader, stock_data_loader,
+    xetra_provider) operan sobre universo ya filtrado a equity o sobre
+    tickers con sufijo europeo.
     """
     if not isinstance(ticker, str):
         return "UNKNOWN"
