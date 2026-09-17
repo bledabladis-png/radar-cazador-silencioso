@@ -186,13 +186,31 @@ class FuturesProvider(MarketDataProvider):
             })
         return rows
 
-    def fetch_commodities(self):
+    def fetch_commodities(self, only_futures=None, skip_spot=False):
         """Devuelve (df_futures, df_spot) en formato wide EOD.
 
         Index: DatetimeIndex. Columns: MultiIndex (field, ticker).
+
+        only_futures:
+          None       -> fetch todos los futuros (comportamiento legacy).
+          [t1, t2]   -> fetch solo esos tickers (K-FUTURES-REFRESH-01).
+          []         -> no fetch futuros.
+
+        skip_spot:
+          True       -> NO ejecutar _fetch_spot (cobertura spot ya verificada).
+                        K-FUTURES-REFRESH-01. No es un bypass generico:
+                        solo se activa cuando el caller ha comprobado que la
+                        cobertura spot requerida esta completa.
+          False      -> fetch spot normal (comportamiento legacy).
         """
+
         fut_rows = []
-        for ticker in FUTURES_MAP:
+        futures_to_fetch = (list(FUTURES_MAP.keys())
+                            if only_futures is None else list(only_futures))
+        for ticker in futures_to_fetch:
+            if ticker not in FUTURES_MAP:
+                print("  [WARN] futures: ticker desconocido " + str(ticker))
+                continue
             try:
                 row = self._fetch_futures_front_month(ticker)
                 if row is not None:
@@ -200,26 +218,33 @@ class FuturesProvider(MarketDataProvider):
             except Exception as e:
                 print("  [WARN] futures " + ticker + ": " + str(e))
 
-        try:
-            spot_rows = self._fetch_spot()
-        except Exception as e:
-            print("  [WARN] spot: " + str(e))
+        if skip_spot:
             spot_rows = []
+        else:
+            try:
+                spot_rows = self._fetch_spot()
+            except Exception as e:
+                print("  [WARN] spot: " + str(e))
+                spot_rows = []
 
         return _rows_to_wide(fut_rows), _rows_to_wide(spot_rows)
 
     # --- Write ---------------------------------------------------
 
     def fetch_and_write(self, reference_date, run_id,
-                        futures_path: str, spot_path: str) -> dict:
+                        futures_path: str, spot_path: str,
+                        only_futures=None, skip_spot=False) -> dict:
         """Fetch + append + write parquet + manifest.
 
         Devuelve dict con keys 'futures' y 'spot' (cada uno el manifest
         dict, o {} si fallo).
+
+        only_futures, skip_spot: ver fetch_commodities (K-FUTURES-REFRESH-01).
         """
         from src.utils import write_artifact_with_manifest
 
-        df_fut, df_spot = self.fetch_commodities()
+        df_fut, df_spot = self.fetch_commodities(
+            only_futures=only_futures, skip_spot=skip_spot)
         result = {"futures": {}, "spot": {}}
 
         if not df_fut.empty:
