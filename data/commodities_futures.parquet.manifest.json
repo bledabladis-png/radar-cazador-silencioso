@@ -4,12 +4,12 @@
     "path": "data/commodities_futures.parquet",
     "sha256": "2c60f4a848cfc4453306c65bda2f92bda0fd96f73d4537c55d681ad36bbddfdd",
     "bytes": 8312,
-    "written_at": "2026-09-17T22:16:40.370757"
+    "written_at": "2026-09-17T22:53:43.529386"
   },
   "producer": {
     "module": "src.utils",
     "function": "write_artifact_with_manifest",
-    "run_id": "20260918_001639",
+    "run_id": "20260918_005343",
     "source": "oilpriceapi_futures"
   },
   "content": {
