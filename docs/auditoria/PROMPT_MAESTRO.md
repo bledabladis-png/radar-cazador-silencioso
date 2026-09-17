@@ -1,8 +1,8 @@
-# PROMPT MAESTRO v6.25 - INGENIERO SUPERVISOR DEL RADAR DE ROTACION SECTORIAL
+# PROMPT MAESTRO v6.26 - INGENIERO SUPERVISOR DEL RADAR DE ROTACION SECTORIAL
 
-Actualizado: 2026-09-17 (post DT1 + DT2 + DT3 + K-DATA-LOADER-01 + K-DT2-GOLDEN-EOL + K-CI-CRON-01 + K-FU-021-3D-03/04 + K-FUTURES-DTYPE-01 + A2.3 colateral + revision sistematica MEDIA + K-FS-CI-PARITY-01 + K-FUTURES-REFRESH-01 + cierre bloque DT3 + Gate 0 sistematico BAJA (9 K-IDs fantasma cerrados) + cierre 05/07 + FU-003, HEAD 896097b)
+Actualizado: 2026-09-17 (post DT1 + DT2 + DT3 + K-DATA-LOADER-01 + K-DT2-GOLDEN-EOL + K-CI-CRON-01 + K-FU-021-3D-03/04 + K-FUTURES-DTYPE-01 + A2.3 colateral + revision sistematica MEDIA + K-FS-CI-PARITY-01 + K-FUTURES-REFRESH-01 + cierre bloque DT3 + Gate 0 sistematico BAJA (9 K-IDs fantasma cerrados) + cierre 05/07 + FU-003 + cierre H1 (informe + dictamen + WONT FIX), HEAD a42d21d)
 Estado: Operativo al 100% - 10 contratos temporales (FU-021-5 + FU-021-3C-bis) - 615 tests locales + 2 skipped - 0 warnings - Gate 10/10 - Deuda ALTA/MEDIA/BAJA activa: 0
-Commit de referencia: 896097b (origin/main HEAD)
+Commit de referencia: a42d21d (origin/main HEAD)
 
 ---
 
@@ -125,7 +125,9 @@ Eres el Ingeniero Supervisor del Radar de Rotacion Sectorial, un sistema determi
 11. **Un script de patch con multiples `assert text.count(anchor) == 1` debe abortar ANTES de escribir si cualquier assert falla.**
 12. **Si un here-string contiene muchos `@'` o caracteres `$`, PowerShell puede fallar silenciosamente al crear el fichero.** Verificar con `Test-Path` + `(Get-Content file | Measure-Object -Line).Lines` antes de ejecutar el patch.
 13. **Here-strings PowerShell >20 lineas o >5 `$`: escribir a archivo Python temporal, no pegar en consola interactiva.** Leccion FU-021-3C-bis: el here-string se corrompe silenciosamente en consola (especialmente con backtick y `$`). Patron seguro: escribir el patch completo a `_patch_XXX.py` con `[System.IO.File]::WriteAllText`, luego ejecutar `py _patch_XXX.py`.
-14. **Para checks triviales (`"X" in text`), escribir a `_check_*.py` con `[System.IO.File]::WriteAllText` + `py _check.py`.** Nunca `py -c` con comillas dobles anidadas: los escapes `\"` rompen el parser. Tropiezo confirmado 3x en sesion 2026-09-17. Coste fichero 8 lineas << coste reintento.
+14. **Para checks triviales (`"X" in text`), escribir a `_check_*.py` con `[System.IO.File]::WriteAllText` + `py _check.py`.** Nunca `py -c` con comillas dobles anidadas: los escapes `\"` rompen el parser. Tropiezo confirmado 3x en sesion 2026-09-17.  Coste fichero 8 lineas << coste reintento.
+15. **Backticks en here-string PowerShell se corrompen silenciosamente.** Al escribir contenido con triple-backtick (fences Markdown) en un here-string, PowerShell los interpreta como escape. Resultado: el fence desaparece y el bloque queda roto. Solucion: escribir a script Python con placeholder `` y aplicar `replace("``", chr(96))` antes de escribir. Tropiezo confirmado 4x en sesion 2026-09-17 (H1 briefing).
+16. **Contenido largo (>20 lineas) se escribe en chunks de maximo 25 lineas.** Usar `[System.IO.File]::WriteAllText` para el primer chunk y `[System.IO.File]::AppendAllText` para los siguientes. Un here-string de 90+ lineas puede colgar la consola (Ctrl+C requerido). Tropiezo confirmado 1x en sesion 2026-09-17 (H1 briefing, 95 lineas).
 
 ### 3.3. Estructura estandar de una fase de refactor
 
@@ -739,7 +741,7 @@ K-DT3-RUNTIMEWARN (RESUELTO 2026-09-17, `2656a5e`): early return `pd.Series([], 
 
 OilPriceAPI retention_period=30_days -> Solo 30 dias de historico remoto. Acumulacion local en commodities_*.parquet es obligatoria (append_dedup por fecha). Aceptado.
 
-H1 (hallazgo sin K-ID): mutabilidad historica del proveedor. OilPriceAPI revisa valores historicos (`CL=F 2026-09-16`: `100.40` -> `97.21`); Yahoo revisa FX (`USDJPY=X 2026-09-16`: `156.188` -> `155.266`). Comportamiento legitimo de fuente autoritativa, no bug. Relevante para reproducibilidad de manifests FU-002 y FUTURE_SETTLEMENT. Sin K-ID; monitorizar.
+H1 (CERRADO 2026-09-17, WONT FIX / POLITICA ACEPTADA): mutabilidad del dataset historico (proveedor + pipeline + append_dedup). Dictamen C+D futuro. Informe: docs/auditoria/H1_INFORME_MUTABILIDAD_HISTORICA.md. Dictamen: docs/auditoria/H1_DICTAMEN_AUDITOR.md. Reabrir solo si: requisito regulatorio/compliance, reconstruccion exacta de inputs exigida, auditoria externa necesita verificar dataset completo de fecha pasada, o necesidad de distinguir automaticamente revision de proveedor vs regeneracion pipeline.
 
 FU-021-3C -> RESUELTO 2026-09-16 via FU-021-3C-bis (OilPriceAPI). FUTURE_SETTLEMENT paso de BLOCKED a activo para BZ/CL.
 
@@ -770,7 +772,7 @@ K-FU-021-3C-bis-04 (OBSOLETO / RESUELTO DE HECHO 2026-09-17): REF sobrevive solo
 
 K-FU-021-3C-bis-05 (OBSOLETO 2026-09-17): transfer doc original nunca commiteado. Gate 0: 0 ficheros *TRANSFER*/*transfer* en repo.
 
-K-FU-021-3C-bis-06 (ALTA): RESUELTO. Este prompt es v6.25.
+K-FU-021-3C-bis-06 (ALTA): RESUELTO. Este prompt es v6.26.
 
 K-FU-021-3C-bis-07 (WONT FIX razonado 2026-09-17): ciclo documentado en prompt seccion 11.16 + 15.1 (commits + verificacion). Informe standalone no aporta valor diferencial. Reabrir si auditoria externa lo requiere o si H1 escala a decision arquitectonica.
 
@@ -786,7 +788,7 @@ K-DT3-SIDE-EFFECT (WONT FIX / MONITORED): ver seccion 12.
 
 K-DT3-RUNTIMEWARN (RESUELTO 2026-09-17, `2656a5e`): early return en `robust_zscore`.
 
-Deuda BAJA activa: 0. U+FFFD (26 ocurrencias de encoding residual) aislado por decision del auditor; requiere ciclo dedicado. H1 (mutabilidad proveedor) registrado como hallazgo, no K-ID.
+Deuda BAJA activa: 0. U+FFFD (26 ocurrencias de encoding residual) aislado por decision del auditor; requiere ciclo dedicado. H1 (mutabilidad del dataset historico) CERRADO 2026-09-17 como WONT FIX / politica aceptada. Dictamen en docs/auditoria/H1_DICTAMEN_AUDITOR.md.
 
 ## SECCION 14 - COMANDOS UTILES
 powershell
@@ -1099,6 +1101,23 @@ Verificacion: 615 passed + 2 skipped, 0 warnings, Gate 10/10. Working tree limpi
 
 Leccion consolidada: la lista del prompt acumulaba K-IDs fantasma sin revision periodica. Gate 0 con evidencia directa antes de invertir el ciclo. Coste ~3h. Ahorro ~10-12h. ROI ~5x.
 
+### 15.19. Ciclo H1 - Mutabilidad del dataset historico (2026-09-17) - CERRADO WONT FIX
+
+Origen: hallazgo detectado durante K-FS-CI-PARITY-01. Inicialmente catalogado como mutabilidad de proveedor (OilPriceAPI reviso CL=F 09-16). Gate 0 posterior confirmo 3 mecanismos independientes:
+
+- H1-a: proveedor externo revisa valores (OilPriceAPI, Yahoo).
+- H1-b: pipeline regenera historicos por cambio de logica (commit `35af4ba`, 1485 valores reescritos).
+- H1-c: `append_dedup(keep='last')` sustituye observaciones sin registrar la revision.
+
+Commits (3):
+- `1d5c6c2` - docs(auditoria): informe H1 mutabilidad historica (295 lineas).
+- `a42d21d` - docs(auditoria): dictamen auditor + cierre H1.
+- (incluye) matiz de formulacion del auditor sobre perdida de informacion.
+
+Dictamen del auditor: **CERRADO - WONT FIX / POLITICA ACEPTADA**. Opciones A (snapshot) y B (congelacion) NO-GO hasta requisito adicional. C (mutabilidad documentada) + D (deteccion cross-run futura) como direccion arquitectonica.
+
+No toca codigo de produccion. Condiciones de reapertura documentadas: requisito regulatorio, reconstruccion exacta de inputs, auditoria externa de dataset completo, o necesidad de distinguir revision de proveedor vs regeneracion pipeline.
+
 ## SECCION 16 - FRASE GUIA
 "Determinista, descriptivo, auditado. Paso a paso. Documentar. Saber parar."
 
@@ -1142,4 +1161,4 @@ Pregunta final: "Que hacemos?"
 
 No empieces a proponer tareas sin antes confirmar la asimilacion completa.
 
-Fin del prompt maestro v6.25. Commit de referencia: 896097b. Fecha: 2026-09-17.
+Fin del prompt maestro v6.26. Commit de referencia: a42d21d. Fecha: 2026-09-17.
