@@ -1,8 +1,8 @@
-# PROMPT MAESTRO v6.18 - INGENIERO SUPERVISOR DEL RADAR DE ROTACION SECTORIAL
+# PROMPT MAESTRO v6.19 - INGENIERO SUPERVISOR DEL RADAR DE ROTACION SECTORIAL
 
-Actualizado: 2026-09-17 (post FU-021-3D CBOE ^VIX3M, HEAD a560708)
-Estado: Operativo al 100% - 10 contratos temporales (FU-021-5 + FU-021-3C-bis) - 498 tests locales + 2 skipped - Gate 10/10
-Commit de referencia: a560708 (origin/main HEAD)
+Actualizado: 2026-09-17 (post DT2 refactor MTE, HEAD 80a6899)
+Estado: Operativo al 100% - 10 contratos temporales (FU-021-5 + FU-021-3C-bis) - 551 tests locales + 2 skipped - Gate 10/10
+Commit de referencia: 80a6899 (origin/main HEAD)
 
 ---
 
@@ -184,6 +184,7 @@ D:\Macro_Sectorial
 +-- config/ (settings, tickers, weights, index_tickers)
 +-- regimes/ (8 modulos)
 +-- indicators/ (30+ modulos)
+|  +-- mte/ (paquete: __init__ + engine + state + scoring + decision) [DT2 2026-09-17]
 +-- src/
 | +-- stock_data_loader.py (cascada europea, B1 fix, FU-014 walk-back)
 | +-- data_loader.py
@@ -255,6 +256,8 @@ text
 - **`src/effective_date.py::resolve_effective_date` es un resolutor por cobertura. No consulta calendario. No sustituye a `is_session_closed`. Ver R4 (Seccion 2).**
 - **`src/temporal_contracts/` es la fuente unica de contratos temporales (FU-021-5 + FU-021-3C-bis). `base.py::compute_status` implementa la FSM (PENDING|OK|STALE|INSUFFICIENT|BLOCKED). `consolidate.py::build_temporal_meta` construye el dict. `__init__.py::resolve_all_contracts` resuelve los 10 contratos. `get_contract(name)` devuelve instancia. `MarketDataBundle` es el transporte (Q-P.3). Los contratos de commodities declaran `settlement_semantics` (close_proxy | spot_reference).**
 - **`src/instrument_registry.py` expone dos funciones con responsabilidades disjuntas: `get_market(ticker)` (calendario bursatil) y `get_instrument_class(ticker)` (clase economica). No mezclar: `INSTRUMENT CLASS != MARKET != TEMPORAL CONTRACT`.**
+
+- **`indicators/mte/` es paquete con 5 submodulos (DT2): `engine.py::compute_mte` (entry point), `state.py::load_previous_scenario/save_scenario` (persistencia `mte_state.json`), `scoring.py` (SRS, SHS, CSS, IPS, MSI, IPI, `score_scenarios` + helpers `tanh`, `_get_last`), `decision.py` (`validate_transition`, `consensus_score`, `distance_to_threshold`, `compute_confidence`, `classify_mte`, `NORMAL_TRANSITIONS`, `EXCEPTION_TRANSITIONS`). API publica preservada: `from indicators.mte import compute_mte`.**
 
 ---
 
@@ -380,7 +383,7 @@ Nota: daily_run.yml commitea Daily hist/state. Aplicar git fetch + pull --rebase
 
 ## SECCION 10 - VALIDACION Y TESTS
 10.1. Tests
-498 passed + 2 skipped (network) en local; ~494 passed + skips en CI.
+551 passed + 2 skipped (network) en local; CI similar con parquet gitignored.
 
 10.2. Validation Gate (10/10)
 SLPM v1.2 (sin errores de validacion)
@@ -443,6 +446,14 @@ test_provider_futures.py — 17 tests (OilPriceAPI: parsing, merge, API key, rei
 test_commodities_merge.py — 10 tests (merge idempotente, degradacion). [FU-021-3C-bis]
 
 test_artifact_manifest.py — +1 test (df 1 fila, bug close_cols). [FU-021-3C-bis]
+
+bloque MTE (DT2, 25 tests):
+
+test_mte_engine.py - 3 tests (integridad de fixtures, estructura del golden, compute_mte contra golden con tolerancias beta).
+
+test_mte_state.py - 11 tests (load_previous_scenario, save_scenario, validate_transition).
+
+test_mte_scoring.py - 11 tests (compute_msi, compute_ipi, sector_rotation_score, safe_haven_score, inflation_pressure_score, credit_stress_score).
 
 ## SECCION 11 - DECISIONES ARQUITECTONICAS CLAVE
 11.1. Generales
@@ -692,9 +703,9 @@ Monolitos restantes:
 
 regimes/sector_regime.py: 827 LOC
 
-indicators/mte.py: 1964 LOC
-
 indicators/darkpool.py: 277 LOC
+
+Resuelto: indicators/mte.py (1964 LOC) -> indicators/mte/ paquete (DT2, 2026-09-17).
 
 .git size: ~12.6 MB tras gc --aggressive.
 
@@ -775,16 +786,16 @@ Select-String -SimpleMatch desactiva regex → el | se trata como literal. No us
 | FAILED | 0 |
 | Fuentes europeas | 51 (Euronext 13 + Xetra 19 + BME 19) |
 | Fuente commodities | OilPriceAPI (BZ=F, CL=F, GC=F, HG=F, NG=F) |
-| Tests locales | 498 passed + 2 skipped |
-| Tests CI | ~494 passed + skips (por confirmar proximo cron) |
+| Tests locales | 551 passed + 2 skipped |
+| Tests CI | ~528 collected con skips (parquet gitignored) |
 | Validation Gate | 10/10 |
 | pyflakes | 0 warnings |
 | compileall | OK |
 | Produccion GH Actions | OK (run 2026-09-16 con 10 contratos resueltos) |
-| Arquitectura | Modular: 19 src/report/ + 16 src/pipeline/ + 10 src/temporal_contracts/ |
+| Arquitectura | Modular: 19 src/report/ + 16 src/pipeline/ + 10 src/temporal_contracts/ + 5 indicators/mte/ |
 | Contratos temporales | 10 (FU-021-5 = 9, FU-021-3C-bis = +1 SPOT_COMMODITY) |
 | .git size | ~13 MB |
-| HEAD | ab3c6f1 (origin/main) |
+| HEAD | 80a6899 (origin/main) |
 
 ### 15.1. Hitos del ciclo FU-021-3C-bis (2026-09-16)
 
@@ -879,6 +890,39 @@ R6 aprobada: term structure de volatilidad via CBOE exclusivamente. Alcance ^VIX
 Resultado: VOLATILITY_INDEX pasa de INSUFFICIENT a OK/STALE con coverage=1.0. Tests nuevos: 28 (17 provider + 11 merge).
 
 
+### 15.5. Ciclo DT2 - Refactor MTE (2026-09-17)
+
+Objetivo: dividir indicators/mte.py (1963 LOC, 21 funciones) en paquete modular sin cambiar comportamiento.
+
+Fases (7 commits):
+- 6433bc1 - Fase 0: golden reference + 7 fixtures.
+- 9eeaaa8 - Fase 1a: test_mte_engine.py (3 tests).
+- 9473897 - Fase 1b: test_mte_state.py (11 tests).
+- 3407909 - Fase 1c: test_mte_scoring.py (11 tests).
+- c717e56 - Fase 2: modulo -> paquete (alias sys.modules).
+- 2b7363a - Fase 3: state.py + paquete real.
+- 43d52a3 - Fase 4: scoring.py.
+- f427e80 - Fase 5: decision.py.
+- 571f165 - Fase 6: engine.py, mte_legacy.py eliminado.
+
+Arquitectura final: indicators/mte/ con __init__.py + engine.py + state.py + scoring.py + decision.py.
+
+Golden reference: tests/fixtures/mte_golden_2026-09-16.json + 7 fixtures con hashes SHA-256 LF-normalized. Tolerancias beta: exact para scenario, 1e-9 para srs/ipi/ips, 1e-3 para cls/shs/msi/confidence (derivada de variacion FRED).
+
+U+FFFD: 28 -> 26. Los 2 desaparecidos pertenecian a codigo eliminado (docstring del modulo legacy + header de seccion huerfano). No fueron corregidos. K-ID de encoding sigue separado.
+
+Verificacion: 25 tests MTE + 551 suite global verde. Gate 10/10 en E2E. Golden sin cambios semanticos. Import limpio desde proceso independiente.
+
+### 15.6. Hallazgo colateral - K-DATA-LOADER-01 (2026-09-17)
+
+Durante E2E de DT2 se detecto que src/data_loader.py::download_market_data tiene un return _df en el cache path que omite: merges de commodities/CBOE, write_artifact_with_manifest, y bloque [FU-021-5] que setea temporal_meta.
+
+Impacto: runs locales con cache warm -> mte_state.json con effective_date=None, coverage=None. CI (cache cold) sin impacto.
+
+Origen: commits e1f487b (FU-021-5 Fase 3) y a608605 (FU-021-3D Fase 6). Anteriores a DT2. No es regresion.
+
+Registrado en FOLLOWUPS como K-DATA-LOADER-01. Fix en ciclo separado con dictamen propio (decision arquitectonica pendiente: cache = artefacto contractual completo vs raw/intermediate).
+
 ## SECCION 16 - FRASE GUIA
 "Determinista, descriptivo, auditado. Paso a paso. Documentar. Saber parar."
 
@@ -920,4 +964,4 @@ Pregunta final: "Que hacemos?"
 
 No empieces a proponer tareas sin antes confirmar la asimilacion completa.
 
-Fin del prompt maestro v6.18. Commit de referencia: a560708. Fecha: 2026-09-17.
+Fin del prompt maestro v6.19. Commit de referencia: 80a6899. Fecha: 2026-09-17.
