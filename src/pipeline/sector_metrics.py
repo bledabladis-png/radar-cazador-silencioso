@@ -71,7 +71,7 @@ def _compute_rs_internal(df_stocks, holdings_df, df_market, temporal_meta=None):
             if not rs_internal_df.empty:
                 if rs_path.exists():
                     hist_rs = pd.read_csv(rs_path)
-                    rs_internal_df = append_dedup(hist_rs, rs_internal_df, ["date","sector"])
+                    rs_internal_df = append_dedup(hist_rs, rs_internal_df, ["date","sector","ticker"])
                 rs_internal_df.to_csv(rs_path, index=False, encoding='utf-8')
                 print("  RS Interno y Absoluto calculado.")
         else:
