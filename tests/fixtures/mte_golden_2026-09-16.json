@@ -11,32 +11,32 @@
     "previous_state": {
       "path": "tests/fixtures/mte_previous_state.json",
       "sha256": "1db32eb4067cd9ebbae3ab52c430c6a7f8b1fc0f0d0ff1e2afeb01f71819e187",
-      "size": 438
+      "size": 423
     },
     "financial_score": {
       "path": "tests/fixtures/mte_financial_score.csv",
-      "sha256": "694d189771dea08b46b6e2acba1b259c2d274bed65f8408e349e59cc3617554e",
-      "size": 85225
+      "sha256": "b374d4b5a3fa62135d242ac8a15e00a476aadbfa3a1e4f6c91ae71cbc4b2ea08",
+      "size": 80013
     },
     "all_signals": {
       "path": "tests/fixtures/mte_all_signals.csv",
-      "sha256": "e335923ad357c8ff3ed58a5ba7b8926799e72ef0b9b66f5d2a80bdfaea15b07d",
-      "size": 568253
+      "sha256": "5ff3f98dc427e82c42c161bece43f58623c3c207c4a9e045495cb02e3973e6b1",
+      "size": 563041
     },
     "pcr_data": {
       "path": "tests/fixtures/mte_pcr_data.json",
       "sha256": "020592ab81a7ad5ee2f90beefa31c3d3dd2c04e82a262a120606e4ca05a64517",
-      "size": 680
+      "size": 657
     },
     "darkpool_data": {
       "path": "tests/fixtures/mte_darkpool_data.json",
       "sha256": "87d8a206451fab43c34b7426323910aa3d58a2dab282b96311f42b11171cec61",
-      "size": 1389
+      "size": 1359
     },
     "temporal_meta": {
       "path": "tests/fixtures/mte_temporal_meta.json",
       "sha256": "717d61b6b04dc08089f712771621367008551e04308b3f5961739cc12b0422d2",
-      "size": 1959
+      "size": 1883
     }
   },
   "tolerances": {
