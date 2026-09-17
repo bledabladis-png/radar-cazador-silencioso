@@ -1,8 +1,8 @@
-# PROMPT MAESTRO v6.19 - INGENIERO SUPERVISOR DEL RADAR DE ROTACION SECTORIAL
+# PROMPT MAESTRO v6.20 - INGENIERO SUPERVISOR DEL RADAR DE ROTACION SECTORIAL
 
-Actualizado: 2026-09-17 (post DT2 refactor MTE, HEAD 80a6899)
-Estado: Operativo al 100% - 10 contratos temporales (FU-021-5 + FU-021-3C-bis) - 551 tests locales + 2 skipped - Gate 10/10
-Commit de referencia: 80a6899 (origin/main HEAD)
+Actualizado: 2026-09-17 (post DT1 + DT3 + K-DATA-LOADER-01 + K-DT2-GOLDEN-EOL + K-CI-CRON-01, HEAD 6daac8f)
+Estado: Operativo al 100% - 10 contratos temporales (FU-021-5 + FU-021-3C-bis) - 601 tests locales + 2 skipped - Gate 10/10
+Commit de referencia: 6daac8f (origin/main HEAD)
 
 ---
 
@@ -259,6 +259,9 @@ text
 
 - **`indicators/mte/` es paquete con 5 submodulos (DT2): `engine.py::compute_mte` (entry point), `state.py::load_previous_scenario/save_scenario` (persistencia `mte_state.json`), `scoring.py` (SRS, SHS, CSS, IPS, MSI, IPI, `score_scenarios` + helpers `tanh`, `_get_last`), `decision.py` (`validate_transition`, `consensus_score`, `distance_to_threshold`, `compute_confidence`, `classify_mte`, `NORMAL_TRANSITIONS`, `EXCEPTION_TRANSITIONS`). API publica preservada: `from indicators.mte import compute_mte`.**
 
+
+- **`indicators/darkpool/` es paquete con 4 modulos (DT3): `darkpool.py` (orquestador + API publica + re-exports + `__all__`), `darkpool_scoring.py` (robust_zscore, rolling_percentile, classify_darkpool, _compute_z_for_window), `darkpool_io.py` (_get_all_tickers, _get_volume_from_df), `darkpool_history.py` (_backfill_history). API publica preservada: `from indicators.darkpool import compute_darkpool_signals`. Re-exports con noqa: F401 para preservar la API interna historica.**
+
 ---
 
 ## SECCION 5 - FLUJO DIARIO (run.py)
@@ -383,7 +386,7 @@ Nota: daily_run.yml commitea Daily hist/state. Aplicar git fetch + pull --rebase
 
 ## SECCION 10 - VALIDACION Y TESTS
 10.1. Tests
-551 passed + 2 skipped (network) en local; CI similar con parquet gitignored.
+601 passed + 2 skipped (network) en local; CI similar con parquet gitignored.
 
 10.2. Validation Gate (10/10)
 SLPM v1.2 (sin errores de validacion)
@@ -454,6 +457,18 @@ test_mte_engine.py - 3 tests (integridad de fixtures, estructura del golden, com
 test_mte_state.py - 11 tests (load_previous_scenario, save_scenario, validate_transition).
 
 test_mte_scoring.py - 11 tests (compute_msi, compute_ipi, sector_rotation_score, safe_haven_score, inflation_pressure_score, credit_stress_score).
+
+bloque DT1 (16 tests):
+
+test_sector_regime_characterization.py - 5 tests (contrato observable de compute_sector_scores: ranking, regime, top3; last_scores como diagnostico).
+
+test_sector_regime_edge_cases.py - 11 tests (df vacio, sin benchmark, sin sectores, sector faltante, ranking ordenado, top3 prefijo de ranking, orden descendente, price/flow).
+
+bloque DT3 (30 tests):
+
+test_darkpool_characterization.py - 12 tests (contrato de compute_darkpool_signals: media_dark_pool, n_tickers_ats/total, z_score, week, status; diagnostico: state, momentum, percentile, z_windows, fecha).
+
+test_darkpool_edge_cases.py - 18 tests (robust_zscore mad=0/outlier/vacio, rolling_percentile, classify_darkpool extremos, _get_all_tickers formato invalido, _get_volume_from_df, _compute_z_for_window, identidad de re-exports).
 
 ## SECCION 11 - DECISIONES ARQUITECTONICAS CLAVE
 11.1. Generales
@@ -692,7 +707,23 @@ FU-021-5 (contratos temporales df_market) -> RESUELTO 2026-09-16 (20 commits: c1
 
 A3.1 (retirar trim_to_last_valid_date de data_load.py) -> RESUELTO 2026-09-16 (b9f9662). Verificacion empirica: 0 filas de diferencia.
 
-E5 (`^VIX3M` anomalia yfinance individual vs batch) -> Activo 2026-09-17. Causa VOLATILITY_INDEX=INSUFFICIENT en runs reales. No bloquea Gate 10/10.
+E5 (`^VIX3M` anomalia yfinance) -> RESUELTO 2026-09-17 via FU-021-3D (provider CBOE).
+
+DT1 (`regimes/sector_regime.py` 827 LOC brutas) -> CERRADO 2026-09-17 (`a1406f4`). 156 LOC reales (80% whitespace). Bug `components` eliminado, 827 -> 272 lineas, 16 tests nuevos.
+
+DT3 (`indicators/darkpool.py` 286 LOC) -> CERRADO 2026-09-17 (`0ccc603` + `06f3b27` + `5aca394` + `5ec1e21`). Modularizado en 4 ficheros. Fix normativo `fecha=week_start` + fix robustez `_get_all_tickers`. 30 tests nuevos.
+
+K-DATA-LOADER-01 (cache-hit bypass post-procesado) -> CERRADO 2026-09-17 (`9d77099`). Extraido `_postprocess_market_data` con `write_manifest=False` en cache-hit.
+
+K-DT2-GOLDEN-EOL (hash mismatch golden MTE) -> CERRADO 2026-09-17 (`ee34305`). Renormalizacion LF + regeneracion de hashes golden.
+
+K-CI-CRON-01 (contratos STALE en run fuera de cron) -> CERRADO 2026-09-17 (pasivo, cron `0 4 * * *` verificado).
+
+K-DT3-YF-DIRECTO (BAJA): `_backfill_history` usa `yf.download` directo. Cuestion arquitectonica. Fuera de alcance DT3.
+
+K-DT3-SIDE-EFFECT (BAJA): escritura directa `darkpool_history.csv` sin `append_dedup` ni manifest FU-002.
+
+K-DT3-RUNTIMEWARN (BAJA): `robust_zscore` sobre serie vacia emite `RuntimeWarning` de numpy.
 
 OilPriceAPI retention_period=30_days -> Solo 30 dias de historico remoto. Acumulacion local en commodities_*.parquet es obligatoria (append_dedup por fecha). Aceptado.
 
@@ -701,11 +732,11 @@ FU-021-3C -> RESUELTO 2026-09-16 via FU-021-3C-bis (OilPriceAPI). FUTURE_SETTLEM
 ## SECCION 13 - DEUDA TECNICA
 Monolitos restantes:
 
-regimes/sector_regime.py: 827 LOC
+Ninguno de los tres principales. Todos resueltos:
 
-indicators/darkpool.py: 277 LOC
-
-Resuelto: indicators/mte.py (1964 LOC) -> indicators/mte/ paquete (DT2, 2026-09-17).
+- indicators/mte.py (1964 LOC) -> indicators/mte/ paquete (DT2, 2026-09-17).
+- regimes/sector_regime.py (827 LOC brutas, 156 reales) -> 272 lineas (DT1, 2026-09-17).
+- indicators/darkpool.py (286 LOC) -> 4 modulos (DT3, 2026-09-17).
 
 .git size: ~12.6 MB tras gc --aggressive.
 
@@ -719,19 +750,27 @@ K-FU-021-3C-bis-01 (ALTA): RESUELTO 2026-09-17 (03fcb3e). `daily_run.yml` ahora 
 
 K-FU-021-3C-bis-02 (MEDIA): `SPOT_COMMODITY` en STALE sistematico por desalineacion spot/market (1 dia). Documentar o ajustar max_lag.
 
-K-FU-021-3C-bis-03 (ALTA): cobertura CI real pendiente de confirmar el proximo cron sin workflow_dispatch.
+K-FU-021-3C-bis-03 (ALTA): RESUELTO 2026-09-17. Cron `0 4 * * *` verificado (`35204004152`, EQUITY_EOD=OK).
 
 K-FU-021-3C-bis-04 (MEDIA): `test_temporal_contracts_remaining.py` y `consolidate.py` con REF hardcodeado. Misma bomba que los 3 tests corregidos hoy.
 
 K-FU-021-3C-bis-05 (BAJA): transfer doc original desactualizado.
 
-K-FU-021-3C-bis-06 (ALTA): este prompt (v6.16). RESUELTO.
+K-FU-021-3C-bis-06 (ALTA): RESUELTO. Este prompt es v6.20.
 
 K-FU-021-3C-bis-07 (BAJA): informe formal FU-021-3C-bis en docs/auditoria/ pendiente de decidir.
 
 K-FU-021-3C-bis-08 (BAJA): RESUELTO 2026-09-17 (03fcb3e). `data_loader.py` usa `len(_resolutions)` en lugar de "9 contratos".
 
 K-FU-021-3C-bis-09 (MEDIA): 6 workflows pushean sin `git pull --rebase`: `update_european_holdings.yml`, `update_index_holdings.yml`, `update_macro_manual.yml`, `update_qqq_sec_flow.yml`, `update_sector_holdings.yml`, `update_sec_nport.yml`. Mismo patron que K-01. Arreglar en ciclo dedicado con la tecnica validada.
+
+Deudas ciclo DT3 (post 2026-09-17):
+
+K-DT3-YF-DIRECTO (BAJA): `_backfill_history` usa `yf.download` directo, fuera del router de providers.
+
+K-DT3-SIDE-EFFECT (BAJA): escritura directa de `outputs/history/darkpool_history.csv` sin `append_dedup` ni manifest FU-002.
+
+K-DT3-RUNTIMEWARN (BAJA): `robust_zscore` sobre serie vacia emite `RuntimeWarning` de numpy.
 
 ## SECCION 14 - COMANDOS UTILES
 powershell
@@ -786,16 +825,17 @@ Select-String -SimpleMatch desactiva regex → el | se trata como literal. No us
 | FAILED | 0 |
 | Fuentes europeas | 51 (Euronext 13 + Xetra 19 + BME 19) |
 | Fuente commodities | OilPriceAPI (BZ=F, CL=F, GC=F, HG=F, NG=F) |
-| Tests locales | 551 passed + 2 skipped |
-| Tests CI | ~528 collected con skips (parquet gitignored) |
+| Fuente term structure | CBOE (^VIX3M) |
+| Tests locales | 601 passed + 2 skipped |
+| Tests CI | ~570 collected con skips (parquet gitignored) |
 | Validation Gate | 10/10 |
 | pyflakes | 0 warnings |
 | compileall | OK |
-| Produccion GH Actions | OK (run 2026-09-16 con 10 contratos resueltos) |
-| Arquitectura | Modular: 19 src/report/ + 16 src/pipeline/ + 10 src/temporal_contracts/ + 5 indicators/mte/ |
+| Produccion GH Actions | OK (cron `0 4 * * *` verificado 2026-09-17) |
+| Arquitectura | Modular: 19 src/report/ + 16 src/pipeline/ + 10 src/temporal_contracts/ + 5 indicators/mte/ + 4 indicators/darkpool/ |
 | Contratos temporales | 10 (FU-021-5 = 9, FU-021-3C-bis = +1 SPOT_COMMODITY) |
 | .git size | ~13 MB |
-| HEAD | 80a6899 (origin/main) |
+| HEAD | 6daac8f (origin/main) |
 
 ### 15.1. Hitos del ciclo FU-021-3C-bis (2026-09-16)
 
@@ -841,29 +881,23 @@ Tests: 469 -> 498 (+29).
 
 ### 15.2. Pendientes reales
 
-K-FU-021-3C-bis-09 (MEDIA): 6 workflows con el mismo patron sin git pull --rebase que K-01.
+A2.3 colateral (MEDIA): 22/23 tickers no-equity clasificados como US_EQUITY por `get_market()`. `get_instrument_class()` ya existe. Migrar callers en ciclo dedicado.
 
-K-FU-021-3C-bis-03 (ALTA): confirmar proximo cron sin workflow_dispatch.
+K-FU-021-3C-bis-02 (MEDIA): `SPOT_COMMODITY` en STALE sistematico por desalineacion spot/market (1 dia). Documentar o ajustar `max_lag`.
 
-K-FU-021-3C-bis-06 (ALTA): este prompt v6.16. RESUELTO.
+K-FU-021-3D-03/04 (MEDIA): FutureWarnings de Pandas 3.0 en `commodities_merge.py:75` y `momentum.py .ffill`.
 
-DT2 (ALTA): refactor indicators/mte.py (1964 LOC).
+K-FU-021-3C-bis-04 (MEDIA): `test_temporal_contracts_remaining.py` y `consolidate.py` con REF hardcodeado.
 
-K5 (ALTA): FOLLOWUPS.md sin sincronizar (4 ciclos acumulados).
+K-FU-021-3C-bis-09 (MEDIA): 6 workflows pushean sin `git pull --rebase`.
 
-E5 (MEDIA): ^VIX3M anomalia yfinance.
+K7 + K-FU-021-5-01/02/03 (MEDIA): barrido documental FU-021-5.
 
-K-FU-021-3C-bis-02/04 (MEDIA): documentacion y tests fragiles residuales.
+DT4 (BAJA): reorg de `validation/` y `scripts/`.
 
-DT1 (MEDIA): refactor regimes/sector_regime.py (827 LOC).
+K-DT3-YF-DIRECTO / K-DT3-SIDE-EFFECT / K-DT3-RUNTIMEWARN (BAJA): deudas residuales DT3.
 
-K7, K-FU-021-5-01..06 (MEDIA): barrido documental FU-021-5.
-
-K-FU-021-3C-bis-05/07/08 (BAJA): documentacion + cosmetico.
-
-FU-003, FU-016 (P3): cosmetico + desfase writers.
-
-E1-E4 (BAJA): empiricas residuales.
+E1-E4, FU-003, FU-016, K-FU-021-3C-bis-05/07 (BAJA): empiricas y cosmeticos residuales.
 
 Detalle completo en la seccion 13 y en FOLLOWUPS.md.
 
@@ -913,15 +947,62 @@ U+FFFD: 28 -> 26. Los 2 desaparecidos pertenecian a codigo eliminado (docstring 
 
 Verificacion: 25 tests MTE + 551 suite global verde. Gate 10/10 en E2E. Golden sin cambios semanticos. Import limpio desde proceso independiente.
 
-### 15.6. Hallazgo colateral - K-DATA-LOADER-01 (2026-09-17)
+### 15.6. Ciclo K-DATA-LOADER-01 (2026-09-17) - RESUELTO
 
-Durante E2E de DT2 se detecto que src/data_loader.py::download_market_data tiene un return _df en el cache path que omite: merges de commodities/CBOE, write_artifact_with_manifest, y bloque [FU-021-5] que setea temporal_meta.
+Causa raiz: `src/data_loader.py::download_market_data` retornaba `_df` crudo en el cache-hit path, saltando post-procesado (clean_oil_prices, _filter_non_eod_equity, merges commodities/CBOE), `write_artifact_with_manifest` y bloque `[FU-021-5]` que setea `temporal_meta`.
 
-Impacto: runs locales con cache warm -> mte_state.json con effective_date=None, coverage=None. CI (cache cold) sin impacto.
+Consecuencia: en runs locales con cache warm, `mte_state.json` con `effective_date=None`, `coverage=None`. CI sin impacto (cache cold).
 
-Origen: commits e1f487b (FU-021-5 Fase 3) y a608605 (FU-021-3D Fase 6). Anteriores a DT2. No es regresion.
+Fix (`9d77099`): extraccion de `_postprocess_market_data(data, reference_date, run_id, *, write_manifest)`. Cache-hit invoca con `write_manifest=False` (no reescribe parquet, si actualiza `temporal_meta`). Cache-miss con `write_manifest=True`. Idempotencia de `clean_oil_prices`, `_filter_non_eod_equity`, `_trim_market_data_to_equity_eod` y `merge_*` verificada antes de escribir patch.
 
-Registrado en FOLLOWUPS como K-DATA-LOADER-01. Fix en ciclo separado con dictamen propio (decision arquitectonica pendiente: cache = artefacto contractual completo vs raw/intermediate).
+Tests nuevos: 4 (`tests/test_data_loader_cache_postprocess.py`).
+
+Verificacion: E2E local (cache-hit ejercitado), `mte_state.json` con `effective_date=2026-09-16`, `coverage=0.998`. CI exit 0.
+
+### 15.7. Ciclo K-DT2-GOLDEN-EOL (2026-09-17) - RESUELTO
+
+Causa raiz: `tests/fixtures/*.csv` con doble CRLF (`\r\r\n`) en working tree. Golden se calculo via `_sha256_normalized` que colapsa `\r\n -> \n`, lo cual sobre `\r\r\n` daba el hash del blob CRLF, no el hash LF. Local: `\r\r\n` -> `\r\n` -> hash OK. CI: `\r\n` -> `\n` -> hash mismatch.
+
+Diagnostico: `len(working) - len(blob) = 2606` = nº exacto de secuencias `\r\r\n`.
+
+Fix (`ee34305`): renormalizar fixtures a LF puro + regenerar `sha256` y `size` del golden + `git add --renormalize`.
+
+Verificacion: `test_mte_engine.py` 3/3 verde en local y CI.
+
+### 15.8. Ciclo DT1 - Refactor regimes/sector_regime.py (2026-09-17) - CERRADO
+
+Diagnostico revisado tras Gate 0: 827 lineas brutas = 156 de codigo real, 663 vacias, 8 comentarios. La "deuda ALTA por LOC" era un artefacto de medicion.
+
+Bug latente confirmado: `components` se construia FUERA del bucle principal, copiando los valores del ULTIMO sector (XLC) a los 11. Cero consumidores en produccion.
+
+Fix (`a1406f4`): eliminar bloque `components` (extirpar, no reparar). Colapso de whitespace (827 -> 272). Golden de caracterizacion + 5 tests. 11 tests edge cases.
+
+Verificacion: 571 passed + 2 skipped (en el momento del commit). CI exit 0.
+
+### 15.9. Ciclo DT3 - Refactor indicators/darkpool.py (2026-09-17) - CERRADO
+
+Fases (5 commits: `0ccc603`, `06f3b27`, `5aca394`, `5ec1e21`):
+
+- Fase 0: golden de caracterizacion + 12 tests.
+- Fase 1: fix normativo `fecha=week_start` (era `datetime.now()`) + bare except sustituido por `(FileNotFoundError, pd.errors.EmptyDataError)`.
+- Fase 2: extraer `darkpool_scoring.py` (4 funciones puras).
+- Fase 3: extraer `darkpool_io.py` (2 funciones).
+- Fase 4: extraer `darkpool_history.py` (`_backfill_history`).
+- Fase 5: 18 tests edge cases. Fix robustez `_get_all_tickers` (isinstance str antes de startswith).
+
+Arquitectura final: `indicators/darkpool.py` (147 LOC, orquestador + re-exports) + `darkpool_scoring.py` + `darkpool_io.py` + `darkpool_history.py`.
+
+Verificacion: 601 passed + 2 skipped. CI exit 0.
+
+### 15.10. Ciclo K-CI-CRON-01 (2026-09-17) - CERRADO pasivamente
+
+Observacion: runs manuales a 00:40-01:57 UTC reportaban `EQUITY_EOD=INSUFFICIENT function_lag=2d`. Diagnostico preliminar: FSM correcta, proveedores no habian propagado cierre del dia anterior.
+
+Verificacion con cron real `0 4 * * *` (`35204004152`): `EQUITY_EOD=OK function_lag=1d`. La FSM funciona. Falsa alarma.
+
+### 15.11. Verificacion continua
+
+Todo commit pusheado ha sido verificado con `workflow_dispatch daily_run.yml` exit 0. Cron `0 4 * * *` verificado sano. Gate 10/10 en todos los runs.
 
 ## SECCION 16 - FRASE GUIA
 "Determinista, descriptivo, auditado. Paso a paso. Documentar. Saber parar."
@@ -964,4 +1045,4 @@ Pregunta final: "Que hacemos?"
 
 No empieces a proponer tareas sin antes confirmar la asimilacion completa.
 
-Fin del prompt maestro v6.19. Commit de referencia: 80a6899. Fecha: 2026-09-17.
+Fin del prompt maestro v6.20. Commit de referencia: 6daac8f. Fecha: 2026-09-17.
