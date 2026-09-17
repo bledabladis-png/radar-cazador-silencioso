@@ -1,8 +1,8 @@
-# PROMPT MAESTRO v6.21 - INGENIERO SUPERVISOR DEL RADAR DE ROTACION SECTORIAL
+# PROMPT MAESTRO v6.22 - INGENIERO SUPERVISOR DEL RADAR DE ROTACION SECTORIAL
 
-Actualizado: 2026-09-17 (post DT1 + DT3 + K-DATA-LOADER-01 + K-DT2-GOLDEN-EOL + K-CI-CRON-01 + K-FU-021-3D-03 + K-FUTURES-DTYPE-01, HEAD 128de85)
+Actualizado: 2026-09-17 (post DT1 + DT3 + K-DATA-LOADER-01 + K-DT2-GOLDEN-EOL + K-CI-CRON-01 + K-FU-021-3D-03 + K-FUTURES-DTYPE-01 + A2.3 colateral + revision sistematica MEDIA, HEAD 02ca9f0)
 Estado: Operativo al 100% - 10 contratos temporales (FU-021-5 + FU-021-3C-bis) - 604 tests locales + 2 skipped - Gate 10/10
-Commit de referencia: 128de85 (origin/main HEAD)
+Commit de referencia: 02ca9f0 (origin/main HEAD)
 
 ---
 
@@ -756,15 +756,15 @@ Deudas ciclo FU-021-3C-bis:
 
 K-FU-021-3C-bis-01 (ALTA): RESUELTO 2026-09-17 (03fcb3e). `daily_run.yml` ahora hace `git pull --rebase origin main` antes del `git push` del commit automatico.
 
-K-FU-021-3C-bis-02 (MEDIA): `SPOT_COMMODITY` en STALE sistematico por desalineacion spot/market (1 dia). Documentar o ajustar max_lag.
+K-FU-021-3C-bis-02 (OBSOLETO / RESUELTO DE HECHO 2026-09-17): `SPOT_COMMODITY` STALE con lag=1 <= max_lag=1 es la respuesta correcta de la FSM, identica a FUTURE_SETTLEMENT. No es bug.
 
 K-FU-021-3C-bis-03 (ALTA): RESUELTO 2026-09-17. Cron `0 4 * * *` verificado (`35204004152`, EQUITY_EOD=OK).
 
-K-FU-021-3C-bis-04 (MEDIA): `test_temporal_contracts_remaining.py` y `consolidate.py` con REF hardcodeado. Misma bomba que los 3 tests corregidos hoy.
+K-FU-021-3C-bis-04 (OBSOLETO / RESUELTO DE HECHO 2026-09-17): REF sobrevive solo en tests con mocks (df None/vacio), por decision deliberada de K-04 (`18601ee`). Tests con df_real ya usan `_ref_from_df`. Verificado: 22/22 consolidate passing.
 
 K-FU-021-3C-bis-05 (BAJA): transfer doc original desactualizado.
 
-K-FU-021-3C-bis-06 (ALTA): RESUELTO. Este prompt es v6.21.
+K-FU-021-3C-bis-06 (ALTA): RESUELTO. Este prompt es v6.22.
 
 K-FU-021-3C-bis-07 (BAJA): informe formal FU-021-3C-bis en docs/auditoria/ pendiente de decidir.
 
@@ -843,7 +843,7 @@ Select-String -SimpleMatch desactiva regex → el | se trata como literal. No us
 | Arquitectura | Modular: 19 src/report/ + 16 src/pipeline/ + 10 src/temporal_contracts/ + 5 indicators/mte/ + 4 indicators/darkpool/ |
 | Contratos temporales | 10 (FU-021-5 = 9, FU-021-3C-bis = +1 SPOT_COMMODITY) |
 | .git size | ~13 MB |
-| HEAD | 128de85 (origin/main) |
+| HEAD | 02ca9f0 (origin/main) |
 
 ### 15.1. Hitos del ciclo FU-021-3C-bis (2026-09-16)
 
@@ -889,17 +889,17 @@ Tests: 469 -> 498 (+29).
 
 ### 15.2. Pendientes reales
 
-A2.3 colateral (MEDIA): 22/23 tickers no-equity clasificados como US_EQUITY por `get_market()`. `get_instrument_class()` ya existe. Migrar callers en ciclo dedicado.
+A2.3 colateral (CERRADO 2026-09-17, `02ca9f0`): docstring de `get_market` extendido con nota A2.3. Verificado: cero consumidores afectados; los 5 callers operan sobre universo ya filtrado a equity o sobre tickers con sufijo europeo.
 
-K-FU-021-3C-bis-02 (MEDIA): `SPOT_COMMODITY` en STALE sistematico por desalineacion spot/market (1 dia). Documentar o ajustar `max_lag`.
+K-FU-021-3C-bis-02 (OBSOLETO 2026-09-17): FSM correcta (lag=1 <= max_lag=1). No es bug.
 
 K-FU-021-3D-03 (MEDIA) -> RESUELTO 2026-09-17 (`eec6b9c`). K-FU-021-3D-04 (MEDIA) -> WONT FIX / MONITORED 2026-09-17 (sin fuente object en produccion).
 
-K-FU-021-3C-bis-04 (MEDIA): `test_temporal_contracts_remaining.py` y `consolidate.py` con REF hardcodeado.
+K-FU-021-3C-bis-04 (OBSOLETO 2026-09-17): REF solo en mocks por diseno (K-04). Tests con df_real usan `_ref_from_df`.
 
 K-FU-021-3C-bis-09 (OBSOLETO / RESUELTO DE HECHO 2026-09-17): refutado por inspeccion directa.
 
-K7 + K-FU-021-5-01/02/03 (MEDIA): barrido documental FU-021-5.
+K7 + K-FU-021-5-01/02/03 (OBSOLETO 2026-09-17): docs ya reflejan Q-P.3 (698eac3). Verificado por grep: "df.attrs es espejo auxiliar, nunca autoridad" en los 3 docs del ciclo FU-021-5.
 
 DT4 (BAJA): reorg de `validation/` y `scripts/`.
 
@@ -1042,6 +1042,21 @@ Dictamen del auditor: cerrar como OBSOLETO / RESUELTO DE HECHO. No patch. No abr
 
 K-ID nuevo detectado en este mismo run: `K-FS-CI-PARITY-01` (MEDIA) — ver Seccion 12/13.
 
+### 15.15. Revision sistematica MEDIA (2026-09-17) - 4 K-IDs cerrados por obsolescencia
+
+Motivacion: 2 K-IDs consecutivos (K-FU-021-3C-bis-09, K-FU-021-3C-bis-04) resultaron obsoletos al ser verificados por Gate 0. Se decidio revisar sistematicamente los 4 MEDIA restantes antes de seguir invirtiendo ciclos.
+
+Resultado: 4 de 4 MEDIA restantes eran obsoletos / mal diagnosticados.
+
+- K-FU-021-3C-bis-04: REF sobrevive solo en mocks (K-04, `18601ee`).
+- K-FU-021-3C-bis-09: 6 workflows ya tienen rebase (K-01, `03fcb3e`). Cerrado antes.
+- K-FU-021-3C-bis-02: `SPOT_COMMODITY` STALE es la respuesta correcta de la FSM (lag=1 <= max_lag=1). Identico a FUTURE_SETTLEMENT.
+- K7 + K-FU-021-5-01/02/03: docs ya reflejan Q-P.3 (698eac3). "df.attrs es espejo auxiliar, nunca autoridad".
+
+Unico MEDIA tecnico pendiente tras la revision: K-FS-CI-PARITY-01 (INSUFFICIENT en CI no reproducido local, mismo `reference_date`).
+
+Leccion operativa: la lista MEDIA requiere re-verificacion periodica. Un K-ID cerrado por un ciclo posterior puede quedar como fantasma en el prompt si no se retira explicitamente. Antes de invertir un ciclo MEDIA, Gate 0 con evidencia directa.
+
 ## SECCION 16 - FRASE GUIA
 "Determinista, descriptivo, auditado. Paso a paso. Documentar. Saber parar."
 
@@ -1085,4 +1100,4 @@ Pregunta final: "Que hacemos?"
 
 No empieces a proponer tareas sin antes confirmar la asimilacion completa.
 
-Fin del prompt maestro v6.21. Commit de referencia: 128de85. Fecha: 2026-09-17.
+Fin del prompt maestro v6.22. Commit de referencia: 02ca9f0. Fecha: 2026-09-17.
