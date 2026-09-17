@@ -652,3 +652,16 @@
   - Dictamen Q-P.3: `temporal_meta` (dict paralelo) es autoridad; `.attrs` es espejo auxiliar.
 - **Verificacion empirica:** parquet no persiste `.attrs` entre procesos (verificado con `pd.read_parquet`). El ciclo es intra-run, correcto por diseno.
 - **Estado:** **OBSOLETO 2026-09-17**. No hay problema de persistencia; el comportamiento observado es el correcto.
+
+## H1 - Mutabilidad del dataset historico (CERRADO 2026-09-17 - WONT FIX / POLITICA ACEPTADA)
+
+- **Origen:** hallazgo detectado durante K-FS-CI-PARITY-01 (2026-09-17). Sin K-ID previo.
+- **Descripcion:** el dataset historico puede variar entre runs por tres mecanismos independientes: (a) proveedor externo revisa valores (OilPriceAPI, Yahoo); (b) pipeline regenera historicos por cambio de logica; (c) `append_dedup(keep='last')` sustituye observaciones sin registrar la revision.
+- **Informe:** `docs/auditoria/H1_INFORME_MUTABILIDAD_HISTORICA.md` (commit `1d5c6c2`, 295 lineas).
+- **Dictamen:** `docs/auditoria/H1_DICTAMEN_AUDITOR.md` (2026-09-17).
+- **Decision del auditor:** C + D como direccion arquitectonica. A (snapshot) y B (congelacion) NO-GO hasta que exista requisito adicional.
+- **Politica adoptada:** el dataset operativo es mutable por diseno; los outputs publicados se versionan; las revisiones de datos no constituyen por si mismas un error.
+- **No toca codigo de produccion.** No se abre ciclo de implementacion.
+- **Reabrir si:** (a) requisito regulatorio/compliance; (b) reconstruccion exacta de inputs exigida; (c) auditoria externa necesita verificar dataset completo de fecha pasada; (d) necesidad de distinguir automaticamente revision de proveedor vs regeneracion de pipeline.
+- **Estado:** **CERRADO 2026-09-17**.
+

@@ -5,7 +5,7 @@
 **HEAD de referencia:** 04b8e34 (origin/main)
 **Alcance:** dataset historico versionado (`data/*.parquet`, `data/*.manifest.json`, `outputs/history/*.csv`)
 **Autorizado por:** sesion 2026-09-17 (post Gate 0 sistematico BAJA)
-**Estado:** investigacion cerrada. Requiere decision arquitectonica del auditor.
+**Estado:** investigacion cerrada. Dictamen del auditor recibido 2026-09-17: WONT FIX / POLITICA ACEPTADA (C + D como direccion futura).
 **Autor:** Ingeniero Supervisor
 
 ---
@@ -170,7 +170,7 @@ Ambas pueden discrepar por revisiones, correcciones o regeneraciones. No hay mec
 - No viola R1-R6 (contratos temporales ortogonales).
 - No viola FU-002 (el contrato declara hash en momento de escritura, y eso hace).
 - No afecta a la operativa diaria del reporte.
-- No produce perdida de informacion en el momento del run.
+- La mutabilidad observada no implica perdida de informacion dentro de la ejecucion que genera el artefacto; si puede impedir reconstruir versiones anteriores del input si estas no fueron conservadas.
 - No implica que el dataset este corrupto.
 
 H1 es una caracteristica arquitectonica del dataset historico, no un defecto de implementacion.
