@@ -71,6 +71,12 @@ def merge_commodities_into_market(
         for col in comm.columns:
             field, ticker = col
             values = comm.loc[common_idx, col]
+            # K-FU-021-3D-03: cast defensivo a float64 antes de asignar.
+            # commodities_spot.parquet puede traer columnas object
+            # (Open/High/Low/Volume emitidos como None por FuturesProvider).
+            # Pandas 2.x advierte al asignar object->float64; Pandas 3.x falla.
+            # Dato no interpretable -> NaN (nunca imputar).
+            values = pd.to_numeric(values, errors='coerce').astype('float64')
             if (field, ticker) in df_market.columns:
                 df_market.loc[common_idx, (field, ticker)] = values.values
             else:

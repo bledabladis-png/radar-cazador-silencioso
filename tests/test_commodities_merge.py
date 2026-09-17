@@ -165,3 +165,52 @@ class TestMergeFuturosYSpot:
         v2 = out2.loc["2026-09-14", ("Close", "BZ=F")]
 
         assert v1 == v2 == pytest.approx(108.32)
+
+
+class TestMergeObjectDtype:
+    """K-FU-021-3D-03: parquet origen con columnas object no debe emitir
+    FutureWarning al mergear en df_market float64 (prep Pandas 3.0).
+
+    Reproduce el caso real: commodities_spot.parquet trae Open/High/Low/Volume
+    como object (None emitido por FuturesProvider), y el merge asigna sobre
+    columnas float64 de df_market.
+    """
+
+    def test_object_dtype_none_no_futurewarning(self, tmp_path):
+        import warnings
+
+        # df_market con (Open, GC=F) float64
+        df = _mk_market(["2026-09-14"], {"GC=F": [0.0]})
+        df[("Open", "GC=F")] = 0.0
+        assert df[("Open", "GC=F")].dtype == "float64"
+
+        # Parquet origen con (Open, GC=F) object, valor None.
+        # Verificado en probe: DataFrame object -> to_parquet -> read_parquet
+        # conserva object cuando el valor es None.
+        idx = pd.to_datetime(["2026-09-14"])
+        comm = pd.DataFrame(index=idx)
+        comm[("Open", "GC=F")] = pd.Series([None], index=idx, dtype=object)
+        comm.columns = pd.MultiIndex.from_tuples(
+            [("Open", "GC=F")], names=["field", "ticker"],
+        )
+        p = tmp_path / "spot.parquet"
+        comm.to_parquet(p)
+
+        # Sanity: el parquet debe leerse como object (reproduce caso real)
+        check = pd.read_parquet(p)
+        assert check[("Open", "GC=F")].dtype == object, (
+            f"setup invalido: leido como {check[('Open','GC=F')].dtype}"
+        )
+
+        # Merge sin FutureWarning (elevado a error)
+        with warnings.catch_warnings():
+            warnings.simplefilter("error", FutureWarning)
+            out = merge_commodities_into_market(
+                df, futures_path=None, spot_path=str(p),
+            )
+
+        # Resultado: NaN (None -> NaN), columna float64
+        assert pd.isna(out.loc["2026-09-14", ("Open", "GC=F")])
+        assert out[("Open", "GC=F")].dtype == "float64"
+        # No se ha modificado la columna Close de df_market
+        assert out.loc["2026-09-14", ("Close", "GC=F")] == 0.0
