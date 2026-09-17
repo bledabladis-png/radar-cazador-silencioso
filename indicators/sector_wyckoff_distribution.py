@@ -7,7 +7,7 @@ No alimenta motores, scores, pesos ni State Machine.
 import pandas as pd
 import numpy as np
 from src.utils import get_col, _observation_date_from_df
-from indicators.wyckoff import classify_wyckoff_phase
+from indicators.wyckoff import build_ticker_df, classify_wyckoff_phase
 
 SECTORS = ['XLK','XLF','XLV','XLE','XLY','XLP','XLI','XLB','XLU','XLRE','XLC']
 VALID_PHASES = ['ACCUMULATION','MARKUP','RANGE','DISTRIBUTION','MARKDOWN']
@@ -33,7 +33,8 @@ def compute_sector_wyckoff_distribution(df_stocks, holdings_df):
                 continue
 
             try:
-                phase = classify_wyckoff_phase(df_stocks, ticker)
+                ticker_df = build_ticker_df(df_stocks, ticker)
+                phase = classify_wyckoff_phase(ticker_df, ticker)
             except Exception:
                 n_insufficient += 1
                 continue
