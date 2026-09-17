@@ -548,3 +548,44 @@
 - **No toca:** scoring, `ranking`, `regime`, `last_scores`, `top3`, `compute_price_flow_rankings`, contratos temporales, reporte.
 - **Clasificacion:** ciclo de fix + limpieza + cobertura. CERRADO 2026-09-17.
 - **Deudas generadas:** ninguna nueva.
+
+## K-CI-CRON-01 - Contratos STALE/INSUFFICIENT en run fuera de cron (CERRADO)
+
+- **Cierre pasivo verificado.** Evidencia del cron real `0 4 * * *`.
+- **Run:** `35204004152` (event=`schedule`, 2026-09-17 09:14 UTC, headSha=`9b44845`). Conclusion: success.
+- **Log verificado:**
+  - `[FU-021-3A] EQUITY_EOD effective=2026-09-16 requested=2026-09-17 function_lag=1d reference_lag=1d coverage=100.00% (539/539)`.
+  - `[FU-021-5] 10 contratos resueltos: EQUITY_EOD=OK INDEX_EOD_USA=OK INDEX_EOD_EUROPA=STALE INDEX_EOD_COMMODITY=OK INDEX_EOD_CURRENCY=OK VOLATILITY_INDEX=OK RATE_YIELD=OK FUTURE_SETTLEMENT=INSUFFICIENT SPOT_COMMODITY=STALE FX_DAILY_CUT=STALE`.
+  - `VALIDATION GATE: Sin errores (10 comprobaciones OK)`.
+- **Conclusion:** la FSM opera correctamente. `EQUITY_EOD.max_lag=0` con `function_lag=1d` -> OK. Los runs manuales de la madrugada (00:40-01:57 UTC) veian `function_lag=2d` porque los proveedores aun no habian propagado el cierre del dia anterior. Comportamiento correcto por diseno.
+- **Residuales esperados:** `INDEX_EOD_EUROPA=STALE` (calendario no-NYSE), `FUTURE_SETTLEMENT=INSUFFICIENT`, `SPOT_COMMODITY=STALE`, `FX_DAILY_CUT=STALE` (providers externos con lag). No son bug.
+- **Clasificacion:** falsa alarma por run fuera de ventana. CERRADO 2026-09-17.
+
+## DT3 - Refactor indicators/darkpool.py (CERRADO)
+
+- **Origen:** deuda tecnica BAJA. Fichero de 286 LOC, 252 codigo real, 8 funciones.
+- **Dictamen auditor:** B-GO (modulos hermanos, no paquete). `datetime.now()` y bare except dentro de Fase 1.
+- **Bug normativo corregido (Fase 1):** `'fecha': datetime.now().strftime('%Y-%m-%d')` violaba regla del prompt ("fecha de observacion se deriva del dataset"). Reemplazado por `'fecha': week_start` (fecha publicacion FINRA). Import `datetime` eliminado.
+- **Bare except corregido:** `except:` en `pd.read_csv(hist)` sustituido por `except (FileNotFoundError, pd.errors.EmptyDataError)`.
+- **Bug latente corregido (Fase 5a):** `_get_all_tickers` asumia `str` en filtro `not t.startswith('^')`, rompia con NaN de celdas vacias en `etf_holdings.csv`. `isinstance(t, str)` ahora precede al filtro.
+- **Fases ejecutadas:**
+  - Fase 0: golden de caracterizacion (`tests/fixtures/darkpool_golden.json`) + 12 tests. Congela contrato observable (media_dark_pool, n_tickers_ats/total, z_score, week, status) + diagnostico (state, momentum, percentile, z_windows). Setup reproducible con FINRA mockeada (`_darkpool_setup.py`). Generador: `_gen_darkpool_golden.py`.
+  - Fase 1: fix fecha + bare except. `test_fecha_actual_es_now` -> `test_fecha_es_week_start`.
+  - Fase 2: extraer `robust_zscore`, `rolling_percentile`, `classify_darkpool`, `_compute_z_for_window` a `indicators/darkpool_scoring.py`. Re-export + `__all__` en `darkpool.py`.
+  - Fase 3: extraer `_get_all_tickers`, `_get_volume_from_df` a `indicators/darkpool_io.py`. Re-export + `__all__`.
+  - Fase 4: extraer `_backfill_history` a `indicators/darkpool_history.py`. Re-export + `__all__`. Imports `yfinance` y `safe_mean` eliminados del orquestador.
+  - Fase 5: 18 tests edge cases (`tests/test_darkpool_edge_cases.py`). Cubre robust_zscore (mad=0, outlier, vacio), rolling_percentile, classify_darkpool extremos, _get_all_tickers formato invalido, _get_volume_from_df, _compute_z_for_window, verificacion de identidad de re-exports.
+- **Arquitectura final:**
+  - `indicators/darkpool.py` (147 LOC): orquestador + API publica + re-exports.
+  - `indicators/darkpool_scoring.py`: 4 funciones puras (z-score, percentil, classify, ventana).
+  - `indicators/darkpool_io.py`: 2 funciones (tickers, volumenes).
+  - `indicators/darkpool_history.py`: backfill FINRA+Yahoo.
+- **Commits:** `0ccc603` (F0+F1+F2), `06f3b27` (F3), `5aca394` (F4), `5ec1e21` (F5 + fix robustez).
+- **Verificacion local:** 601 passed + 2 skipped. pyflakes limpio. compileall OK.
+- **Verificacion CI:** runs `35171844806`, `35172738442`, `35173591293`, `35231715178`. Todos exit 0.
+- **No toca:** schema `outputs/history/darkpool_history.csv`, `indicators/mte/` (consume `z_score`), `src/pipeline/market_data.py` (consume dict), algoritmo de scoring.
+- **Deudas generadas (separadas):**
+  - `K-DT3-YF-DIRECTO`: `_backfill_history` usa `yf.download` directo, fuera del router de providers. Cuestion arquitectonica de procedencia de datos, no de refactor.
+  - `K-DT3-SIDE-EFFECT`: escritura directa de `outputs/history/darkpool_history.csv` sin `append_dedup` ni manifest FU-002.
+  - `K-DT3-RUNTIMEWARN`: `robust_zscore` sobre serie vacia emite `RuntimeWarning` de numpy. Deuda menor.
+- **Clasificacion:** ciclo de refactor modular + 2 fixes (1 normativo, 1 robustez). CERRADO 2026-09-17.
