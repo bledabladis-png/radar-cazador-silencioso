@@ -589,3 +589,19 @@
   - `K-DT3-SIDE-EFFECT`: escritura directa de `outputs/history/darkpool_history.csv` sin `append_dedup` ni manifest FU-002.
   - `K-DT3-RUNTIMEWARN`: `robust_zscore` sobre serie vacia emite `RuntimeWarning` de numpy. Deuda menor.
 - **Clasificacion:** ciclo de refactor modular + 2 fixes (1 normativo, 1 robustez). CERRADO 2026-09-17.
+
+## FU-021-3C-bis-05 - Transfer doc original (OBSOLETO)
+
+- **Origen:** prompt maestro v6.24 seccion 13.
+- **Descripcion:** transfer doc original de FU-021-3C-bis marcado como desactualizado.
+- **Gate 0 (2026-09-17):** busqueda recursiva `*TRANSFER*` / `*transfer*` en el repo (excluyendo `.git/`) retorna 0 ficheros. El transfer doc nunca fue commiteado; fue un artefacto de chat de la sesion 2026-09-16.
+- **Estado:** **OBSOLETO 2026-09-17**. No hay fichero que actualizar.
+
+## FU-021-3C-bis-07 - Informe formal FU-021-3C-bis (WONT FIX razonado)
+
+- **Origen:** prompt maestro v6.24 seccion 13.
+- **Descripcion:** informe formal del ciclo FU-021-3C-bis en `docs/auditoria/`.
+- **Gate 0 (2026-09-17):** `FU-021-3C_INFORME_FUTURE_FX.md` (16/09/2026) documenta la fase previa BLOCKED; no cubre la resolucion. No existe informe standalone posterior.
+- **Decision:** WONT FIX razonado. El ciclo esta documentado en `PROMPT_MAESTRO.md` seccion 11.16 + 15.1 (commits + verificaciones + presupuesto API). Un informe estilo `E5_INFORME_VIX3M.md` (~1h) no aporta informacion diferencial.
+- **Reabrir si:** (a) auditoria externa lo requiere, (b) H1 (mutabilidad OilPriceAPI) escala a decision arquitectonica y necesita vehiculo documental.
+- **Estado:** **WONT FIX 2026-09-17**.

@@ -764,11 +764,11 @@ K-FU-021-3C-bis-03 (ALTA): RESUELTO 2026-09-17. Cron `0 4 * * *` verificado (`35
 
 K-FU-021-3C-bis-04 (OBSOLETO / RESUELTO DE HECHO 2026-09-17): REF sobrevive solo en tests con mocks (df None/vacio), por decision deliberada de K-04 (`18601ee`). Tests con df_real ya usan `_ref_from_df`. Verificado: 22/22 consolidate passing.
 
-K-FU-021-3C-bis-05 (BAJA): transfer doc original desactualizado.
+K-FU-021-3C-bis-05 (OBSOLETO 2026-09-17): transfer doc original nunca commiteado. Gate 0: 0 ficheros *TRANSFER*/*transfer* en repo.
 
 K-FU-021-3C-bis-06 (ALTA): RESUELTO. Este prompt es v6.24.
 
-K-FU-021-3C-bis-07 (BAJA): informe formal FU-021-3C-bis en docs/auditoria/ pendiente de decidir.
+K-FU-021-3C-bis-07 (WONT FIX razonado 2026-09-17): ciclo documentado en prompt seccion 11.16 + 15.1 (commits + verificacion). Informe standalone no aporta valor diferencial. Reabrir si auditoria externa lo requiere o si H1 escala a decision arquitectonica.
 
 K-FU-021-3C-bis-08 (BAJA): RESUELTO 2026-09-17 (03fcb3e). `data_loader.py` usa `len(_resolutions)` en lugar de "9 contratos".
 
@@ -909,7 +909,7 @@ K-DT3-YF-DIRECTO (WONT FIX / EXCEPCION ACEPTADA) / K-DT3-SIDE-EFFECT (WONT FIX /
 
 K-FS-CI-PARITY-01 (CERRADO 2026-09-17, NO BUG): hipotesis de paridad CI-local refutada. `FUTURE_SETTLEMENT=INSUFFICIENT` es estado contractual valido (cobertura parcial del proveedor).
 
-E1-E4, FU-003, FU-016, K-FU-021-3C-bis-05/07 (BAJA): empiricas y cosmeticos residuales.
+E1-E4, FU-003, FU-016 (BAJA): empiricas y cosmeticos residuales.
 
 Detalle completo en la seccion 13 y en FOLLOWUPS.md.
 
