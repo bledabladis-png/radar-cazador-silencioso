@@ -434,3 +434,54 @@
 - **K-FU-021-3C-bis-03:** RESUELTO. Confirmado con workflow_dispatch en CI real.
 - **Clasificacion:** cierre documental. RESUELTO 2026-09-17.
 - **Nota:** la entrada historica `FU-021-3D` se preserva sin reescribir. Este bloque refleja el estado final verificado.
+
+## DT2 - Refactor MTE (CERRADO)
+
+- **Origen:** deuda tecnica ALTA. `indicators/mte.py` (1963 LOC, 21 funciones).
+- **Dictamen auditor:** B (refactor por fases) + encoding FUERA + golden HOY.
+- **Fases ejecutadas:**
+  - Fase 0 (`6433bc1`): golden reference reproducible. 7 fixtures + 1 golden JSON. Tolerancias beta: exact para `scenario`, 1e-9 para srs/ipi/ips, 1e-3 para cls/shs/msi/confidence (derivada de variacion FRED, documentada).
+  - Fase 1 (`9eeaaa8`, `9473897`, `3407909`): 25 tests nuevos MTE (engine, state, scoring).
+  - Fase 2 (`c717e56`): modulo -> paquete con alias sys.modules.
+  - Fase 3 (`2b7363a`): state.py extraido. Paquete real (sin alias).
+  - Fase 4 (`43d52a3`): scoring.py extraido (7 funciones + helpers tanh/_get_last + SCENARIO_WEIGHTS).
+  - Fase 5 (`f427e80`): decision.py extraido (5 funciones + NORMAL_TRANSITIONS + EXCEPTION_TRANSITIONS).
+  - Fase 6 (`571f165`): engine.py extraido, `mte_legacy.py` eliminado.
+- **Arquitectura final:** `indicators/mte/` con `__init__.py`, `engine.py`, `state.py`, `scoring.py`, `decision.py`.
+- **Verificacion:** 25 tests MTE + 551 suite global verde. compileall OK, pyflakes limpio. Gate 10/10 en E2E local. Golden sin cambios semanticos. Import limpio desde proceso independiente.
+- **U+FFFD:** 28 -> 26. Los 2 desaparecidos pertenecian a codigo eliminado durante la extraccion (docstring del modulo legacy + header de seccion huerfano). No fueron corregidos. K-ID de encoding sigue separado.
+- **Hallazgo colateral preexistente (NO regresion DT2):** cache-hit path de `src/data_loader.py::download_market_data` omite post-processing (merges), manifest y propagacion de `temporal_meta`. Ajeno al alcance de DT2 (`data_loader.py` no se toco).
+- **Clasificacion:** ciclo de refactor arquitectonico. CERRADO 2026-09-17.
+- **Deuda generada:** `K-DATA-LOADER-01` (abierta por dictamen del auditor).
+- **Notas:**
+  - El refactor no altero la salida del motor. Golden test lo verifica con datos congelados.
+  - El paquete `indicators.mte` mantiene API publica: `from indicators.mte import compute_mte` sigue funcionando (via `from .engine import compute_mte`).
+
+## K-DATA-LOADER-01 - Cache-hit path bypasses post-processing (ABIERTA)
+
+- **Origen:** hallazgo colateral durante E2E de DT2 (2026-09-17).
+- **Descripcion:** `src/data_loader.py::download_market_data` tiene un `return _df` en el cache path (dentro del bloque `if datetime.now() - mtime < timedelta(hours=CACHE_HOURS)`) que salta sin ejecutar:
+  - `merge_commodities_into_market(data)` (FU-021-3C-bis).
+  - `merge_cboe_into_market(data)` (FU-021-3D).
+  - `write_artifact_with_manifest(data, ...)` (FU-002).
+  - Bloque `[FU-021-5]` que setea `data.attrs["temporal_meta"]`.
+- **Consecuencia observable:**
+  - **CI (cache cold):** descarga real -> todos los bloques corren -> `temporal_meta` poblado -> `mte_state.json` con `effective_date="2026-09-16"`, `coverage=1.0`.
+  - **Local (cache warm):** return temprano -> df.attrs vacio -> `compute_mte` escribe `effective_date=None`, `coverage=None`.
+- **Evidencia empirica:**
+  - Log CI `38092ed`: contiene `[commodities_merge]`, `[cboe_merge]`, `[MANIFEST]`, `[FU-021-5]`. State con `effective_date=2026-09-16`, `coverage=1.0`.
+  - Log local E2E DT2: NO contiene ninguno de esos bloques. State con `effective_date=None`, `coverage=None`.
+  - Diagnostico directo: `download_market_data` retorna df con `attrs={}` tras cache hit.
+- **Impacto:**
+  - Produccion (CI): sin impacto (cache cold siempre).
+  - Local con cache warm: `temporal_meta` no se propaga; `mte_state.json` incompleto en `effective_date`/`coverage`. El resto del pipeline opera normalmente (Gate 10/10).
+- **Origen (historia):** commits `e1f487b` (FU-021-5 Fase 3) y `a608605` (FU-021-3D Fase 6). Anteriores a DT2. No es regresion.
+- **Prioridad:** MEDIA (no bloquea Gate; afecta trazabilidad temporal en runs locales).
+- **Alcance inicial:**
+  - **P0 confirmado:** `download_market_data` cache path.
+  - **P1 investigacion:** `download_stock_prices` cache path. Evidencia parcial: `[FU-020] effective=2026-09-15 lag=1d` local vs `effective=2026-09-16 lag=0d` CI. No confirmado.
+- **Decision arquitectonica pendiente:**
+  - Opcion A: el cache contiene artefacto contractual completo -> `return _df` es correcto, pero el parquet debe persistir `temporal_meta` en el manifest.
+  - Opcion B: el cache contiene raw/intermediate -> debe pasar por post-processing nuevamente.
+  - Dictamen previo obligatorio antes del patch.
+- **Clasificacion:** ciclo de investigacion + fix en `src/data_loader.py`. ABIERTA 2026-09-17.
