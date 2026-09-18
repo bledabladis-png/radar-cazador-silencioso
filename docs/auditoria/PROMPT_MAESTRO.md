@@ -1,8 +1,8 @@
-# PROMPT MAESTRO v6.29 - INGENIERO SUPERVISOR DEL RADAR DE ROTACION SECTORIAL
+# PROMPT MAESTRO v6.30 - INGENIERO SUPERVISOR DEL RADAR DE ROTACION SECTORIAL
 
-Actualizado: 2026-09-17 (post DT1 + DT2 + DT3 + K-DATA-LOADER-01 + K-DT2-GOLDEN-EOL + K-CI-CRON-01 + K-FU-021-3D-03/04 + K-FUTURES-DTYPE-01 + A2.3 colateral + revision sistematica MEDIA + K-FS-CI-PARITY-01 + K-FUTURES-REFRESH-01 + cierre bloque DT3 + Gate 0 sistematico BAJA (9 K-IDs fantasma cerrados) + cierre 05/07 + FU-003 + cierre H1 (informe + dictamen + WONT FIX) + cierre DT4 (WONT FIX razonado) + cierre U+FFFD (27 ocurrencias corregidas) + reorg docs/auditoria/ (14 raiz + archive/) + K-HUERFANO deteccion (KHC / lote parcial), HEAD 3ccae42)
-Estado: Operativo al 100% - 10 contratos temporales (FU-021-5 + FU-021-3C-bis) - 615 tests locales + 2 skipped - 0 warnings - Gate 10/10 - Deuda ALTA/MEDIA/BAJA activa: 0
-Commit de referencia: 3ccae42 (origin/main HEAD)
+Actualizado: 2026-09-18 (post ciclo de auditoria del reporte 2026-09-17: O2 + K-RS-INTERNAL-COMMIT-01 + I2 + I3 + I1 + O1 + K-INDEX-RANGE-01 + PCR-Indices + K-RENDER-LEADER-TABLE-01 + K-RUN-OUT-OF-WINDOW-01 (revertido). SLPM desbloqueado como consecuencia de K-INDEX-RANGE-01. HEAD 29f393a)
+Estado: Operativo al 100% - 10 contratos temporales (FU-021-5 + FU-021-3C-bis) - 645 tests locales + 2 skipped - 0 warnings - Gate 10/10 - Deuda ALTA/MEDIA/BAJA activa: 0
+Commit de referencia: 29f393a (origin/main HEAD)
 
 ---
 
@@ -660,6 +660,58 @@ Bug latente corregido (FU-002): `write_artifact_with_manifest` con df de 1 fila 
 
 Nota metodologica en reporte: seccion "Momentum de Precio - Otros Activos" indica semantica de los 5 tickers.
 
+### 11.17. K-INDEX-RANGE-01 — build_ticker_df en index_phase y sector_regime (2026-09-18)
+
+**Bug:** `wyckoff_structure_core` degenera al fallback silencioso `RANGE`
+(`indicators/wyckoff.py:337-340`) cuando recibe un df con NaN internos. Afectaba a:
+
+- `indicators/index_phase.py:19` — 4/8 indices (`^DJI`, `^IBEX`, `^GDAXI`, `^FTSE`).
+- `indicators/index_phase.py:33` — mismo patron en el fallback (router directo).
+- `regimes/sector_regime.py:114` — 7/11 ETFs (`XLF`, `XLV`, `XLE`, `XLY`, `XLI`, `XLRE`, `XLC`).
+
+**Confirmado empiricamente** (Gate 0 v22+v23): patron A (`df` directo) vs patron B
+(`build_ticker_df`) produce fases distintas para 4/8 indices y 7/11 ETFs.
+
+**Impacto funcional:**
+
+- Tabla *Indices Internacionales — Fases Wyckoff* mostraba 8/8 RANGE.
+- Tabla *Indices Internacionales — Oportunidades de Acumulacion y Markup* siempre vacia.
+- **SLPM bloqueado en `n=0`** (LIS=0, Eff Breadth=0). El fallback RANGE impedía que
+  XLC entrara en ACCUMULATION, y sin ACCUMULATION el SLPM no encontraba lideres.
+  Con el fix: LIS=+0.20, Eff Breadth=0.53, 20 tickers en *Acciones Seleccionadas*.
+- Etiqueta `Fase Wyckoff` en *Rankings Sectoriales* corregida (no altera score).
+
+**Fix:** `build_ticker_df(df, ticker)` antes de clasificar en los 3 puntos afectados.
+
+**Commit:** `562dc41`. Tests: `tests/test_index_phase_range.py` (4).
+
+### 11.18. PCR Indices N/D — index_pcr ausente del return dict (2026-09-18)
+
+**Bug:** `indicators/options.py::compute_pcr_signals()` construia internamente
+`data["index_pcr"]` (usado en L65 para `institutional_hedge_ratio` y guardado en el
+CSV historico via `base_cols` L97), pero NO lo incluia en el dict de retorno.
+`src/report/sentiment.py:34` leia `pcr_data.get("index_pcr")` y caia al default
+`np.nan`, mostrando `PCR Indices: N/D` en el reporte.
+
+**Fix:** 1 linea en el return dict de `indicators/options.py`.
+
+**Commit:** `849f981`. Tests: `tests/test_pcr_indices.py` (2).
+
+### 11.19. K-RENDER-LEADER-TABLE-01 — separator Markdown desalineado (2026-09-18)
+
+**Bug:** el separator Markdown de las tablas de lideres sectoriales
+(`indicators/stock_leader.py:180`) tenia 8 columnas mientras el header (L179)
+tenia 11. En GFM, un separator mas corto que el header hace que las columnas
+sobrantes (`Pers 20d`, `Spring`, `SOS`) se ignoren al renderizar.
+
+**Detectado en el reporte del 2026-09-18** tras desbloquear el SLPM (11.17):
+las 4 tablas `## Sector: X (FASE)` con 5 lideres cada una mostraban Spring y
+SOS cortados.
+
+**Fix:** separator con 11 grupos (1 linea).
+
+**Commit:** `44cd544` (rebase final `29f393a`). Tests: `tests/test_leader_table_markdown.py` (1).
+
 ## SECCION 12 - LIMITACIONES CONOCIDAS
 20 tickers .L sin provider oficial -> Aceptado.
 
@@ -746,6 +798,28 @@ H1 (CERRADO 2026-09-17, WONT FIX / POLITICA ACEPTADA): mutabilidad del dataset h
 FU-021-3C -> RESUELTO 2026-09-16 via FU-021-3C-bis (OilPriceAPI). FUTURE_SETTLEMENT paso de BLOCKED a activo para BZ/CL.
 
 KHC / lote parcial (2026-09-17) -> DETECCION ANIADIDA. En un run manual realizado el 17/09/2026 a las 11:15 ET, 1 de 562 tickers (`KHC`) no presento la observacion de la sesion esperada, aunque el resto del lote si fue aceptado. El cron productivo se ejecuta a las 00:00 ET. No se ha demostrado que el fenomeno sea exclusivo de ejecuciones manuales ni que no pueda aparecer en produccion. Deteccion `[K-HUERFANO]` anadida en `download_market_data`. Retry NO implementado. Monitorizacion activa. Distinto de `FUTURE_SETTLEMENT=INSUFFICIENT` (contrato temporal). Reabrir ciclo si: mismo ticker repetidamente, multiples tickers, produccion 04:00 UTC, o cobertura materialmente inferior.
+
+K-RUN-OUT-OF-WINDOW-01 (2026-09-18) -> OBSOLETO DE HECHO / MONITORED. Un run manual
+a las 00:00 UTC del 18/09 produjo `coverage_pct=0.16` en `stock_prices.parquet`
+(262/313 MISSING_CLOSE). El pipeline se comporto correctamente: FU-020 retrocedio
+`effective_date` a `2026-09-16`. Pero el step `Commit and push hist/state` no tiene
+guarda para `coverage_pct < umbral` y commiteo los outputs contaminados. Se revirtio
+con commit `fc8faed`. El cron productivo (`0 4 * * *`) esta fuera de la ventana de
+riesgo. No reabrir salvo que el cron real produzca `coverage_pct < 0.9`. Fix
+candidato (BAJA): anadir guarda en el step Commit del workflow.
+
+VIX3M/VIX nan 2026-09-14 (2026-09-18) -> WONT FIX (data artifact). El reporte del CI
+muestra `nan` en el ratio VIX3M/VIX del 14/09, pero `data/cboe_vix3m.parquet` tiene
+`19.28` sin NaN. El `nan` proviene de una escritura historica incompleta del CSV
+`outputs/history/volatility_structure.csv` y se propaga por `append_dedup` dia a dia.
+No reproducible en local. Sin fix.
+
+O1 SPDR `Ultima fecha: N/D` (2026-09-18) -> WONT FIX / MONITORED. El render
+`src/report/etf_flows.py::render_flujo_spdr` anade `Ultima fecha` leyendo
+`df["Date"].max()`. El df que llega desde `flows_primary` no incluye la columna
+`Date`. Fallback `N/D` funciona. La fecha efectiva real esta visible en la seccion
+`Calidad, frescura y cobertura de datos` (`SSGA ETF Flow: YYYY-MM-DD`). Reabrir si
+otra seccion necesita la fecha exacta.
 
 ## SECCION 13 - DEUDA TECNICA
 Monolitos restantes:
@@ -846,8 +920,8 @@ Select-String -SimpleMatch desactiva regex → el | se trata como literal. No us
 | Fuentes europeas | 51 (Euronext 13 + Xetra 19 + BME 19) |
 | Fuente commodities | OilPriceAPI (BZ=F, CL=F, GC=F, HG=F, NG=F) |
 | Fuente term structure | CBOE (^VIX3M) |
-| Tests locales | 615 passed + 2 skipped |
-| Tests CI | ~570 collected con skips (parquet gitignored) |
+| Tests locales | 645 passed + 2 skipped |
+| Tests CI | ~610 collected con skips (parquet gitignored) |
 | Validation Gate | 10/10 |
 | pyflakes | 0 warnings |
 | compileall | OK |
@@ -855,7 +929,7 @@ Select-String -SimpleMatch desactiva regex → el | se trata como literal. No us
 | Arquitectura | Modular: 19 src/report/ + 16 src/pipeline/ + 10 src/temporal_contracts/ + 5 indicators/mte/ + 4 indicators/darkpool/ |
 | Contratos temporales | 10 (FU-021-5 = 9, FU-021-3C-bis = +1 SPOT_COMMODITY) |
 | .git size | ~13 MB |
-| HEAD | 2656a5e (origin/main) |
+| HEAD | 29f393a (origin/main) |
 
 ### 15.1. Hitos del ciclo FU-021-3C-bis (2026-09-16)
 
@@ -1135,6 +1209,79 @@ Fix (`3ccae42`, auditado por dictamen B+C):
 
 Documentacion: §12 incluye formulacion exacta del auditor. No crear K-ID nuevo. Reabrir ciclo A/D si reaparece: mismo ticker repetidamente, multiples tickers, produccion 04:00 UTC, o cobertura materialmente inferior.
 
+### 15.21. Ciclo de auditoria del reporte 2026-09-17 (2026-09-18)
+
+**Origen:** peticion explicita del usuario de auditar el reporte del run del 2026-09-17
+buscando errores, inconsistencias y omisiones. Se diseno un sistema por fases
+(Gate 0 -> Diagnostico -> Dictamen -> Decision -> Implementacion -> Verificacion ->
+Cierre) aplicado a 7 hallazgos iniciales, ampliado despues a 4 mas.
+
+**Total: 9 fixes aplicados + 3 NO BUG + 2 WONT FIX + 1 incidente revertido.**
+
+#### Ciclos cerrados
+
+| ID | Categoria | Fix | Commit |
+|---|---|---|---|
+| O2 | BUG ALTA (dedup) | `append_dedup` subset incluye ticker | `9ff8daf` |
+| K-RS-INTERNAL-COMMIT-01 | BUG MEDIA (workflow) | `git add outputs/history` | `5fbe16e` |
+| I2 | BUG ALTA (clasificador) | `build_ticker_df` en 3 callers | `a6f4666` |
+| I3 | DISENO/presentacion | `effectiveDate` en vez de `as_of_date` | `1d7bacd` |
+| I1 + O1 | DISENO/notas | Notas aclaratorias + fecha efectiva | `b74790c` |
+| K-INDEX-RANGE-01 | BUG ALTA (mismo patron I2) | `build_ticker_df` en 3 callers | `562dc41` |
+| PCR-Indices | BUG MEDIA (return dict) | `index_pcr` en el dict de retorno | `849f981` |
+| K-RENDER-LEADER-TABLE-01 | BUG BAJA (cosmetico) | separator Markdown a 11 cols | `44cd544` |
+
+#### NO BUG (verificados con evidencia directa)
+
+- **I4** — Evidence Matrix con lag=1 en `data_quality.csv` del run 16/09. No
+  reproducible en el run del 17/09 (`last_date=2026-09-17, age=0.0`). El lag del
+  16/09 era correcto: `evidence_matrix.py:170` hereda la fecha de
+  `sector_breadth_df` y si ese dia tiene lag, evidence_matrix hereda el lag.
+- **O3** — FEZ con `primary_flow=0.00`. `shares_outstanding` invariante en
+  `outputs/history/etf_primary_flow.csv`. Comportamiento correcto.
+- **`sector_regime.py:114`** — inicialmente clasificado como NO BUG con test
+  unico (XLK). Reabierto en Gate 0 v23: 7/11 ETFs afectados. Reclasificado como
+  BUG y absorbido por K-INDEX-RANGE-01.
+
+#### WONT FIX / MONITORED
+
+- `K-RUN-OUT-OF-WINDOW-01` — incidente 2026-09-18, revertido. Ver §12.
+- `VIX3M/VIX nan 2026-09-14` — data artifact. Ver §12.
+- `O1 SPDR Ultima fecha N/D` — fallback funcional. Ver §12.
+
+#### Hitos del ciclo
+
+1. **SLPM desbloqueado.** K-INDEX-RANGE-01 no solo arreglo las fases Wyckoff:
+   desbloqueo el SLPM entero. Sin XLC en ACCUMULATION, el SLPM nunca encontraba
+   lideres. Ahora: LIS=+0.20, Eff Breadth=0.53, 20 tickers en *Acciones Seleccionadas*,
+   tabla *Representatividad del lider* poblada.
+2. **Doble patron A/B confirmado.** El bug "wyckoff_structure_core degenera a
+   RANGE con NaN internos" se manifesto en 3 sitios (I2 en sector_wyckoff_distribution
+   + index_leaders, K-INDEX-RANGE-01 en index_phase + sector_regime). Leccion: un
+   fix destapa el siguiente, aplicado 2x.
+3. **Confirmacion empirica sistematica.** Gate 0 v22+v23 midio A vs B en 8 indices
+   + 11 ETFs. Sin esa medicion, `sector_regime.py:114` se habria cerrado como NO BUG
+   por el caso unico de XLK (que casualmente no reproduce).
+4. **Incidente K-RUN-OUT-OF-WINDOW-01 contenido.** Run manual a 00:00 UTC produjo
+   262/313 tickers sin Close. El pipeline gestiono correctamente (FU-020 retrocedio
+   `effective_date`). El workflow no tenia guarda y commiteo outputs contaminados.
+   Revertido con `fc8faed`. Sin impacto en produccion (cron a 04:00 UTC).
+5. **Rebase en push revela acoplamiento con CI.** `44cd544` se convirtio en
+   `29f393a` tras rebase contra `37c1029 Daily hist/state`. Comportamiento normal.
+
+#### Lecciones metodologicas consolidadas
+
+- **Gate 0 con evidencia directa antes de invertir un ciclo.** Nuevo caso 2026-09-18:
+  `sector_regime.py:114` NO BUG por XLK unico se reabrio con 11 ETFs. La muestra
+  unica enmascara el bug.
+- **Un solo caller afectado NO implica NO BUG.** Aplicar la regla "un fix destapa el
+  siguiente" en cada fix, no solo cuando el sintoma se repite a simple vista.
+- **El pipeline puede tener exito parcial sin fallar el Gate.** K-RUN-OUT-OF-WINDOW-01:
+  Gate 10/10 con `coverage_pct=0.16`. El Gate valida NaN en columnas especificas, no
+  cobertura global. Considerar futura mejora del Gate.
+- **Revert rapido de contaminacion.** El revert quirurgico (`git revert <sha>`) es
+  preferible a `git reset` cuando ya esta pusheado. Conserva trazabilidad.
+
 ## SECCION 16 - FRASE GUIA
 "Determinista, descriptivo, auditado. Paso a paso. Documentar. Saber parar."
 
@@ -1178,4 +1325,4 @@ Pregunta final: "Que hacemos?"
 
 No empieces a proponer tareas sin antes confirmar la asimilacion completa.
 
-Fin del prompt maestro v6.29. Commit de referencia: 3ccae42. Fecha: 2026-09-17.
+Fin del prompt maestro v6.30. Commit de referencia: 29f393a. Fecha: 2026-09-18.

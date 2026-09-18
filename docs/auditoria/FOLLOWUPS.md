@@ -1,4 +1,4 @@
-﻿# Follow-ups tecnicos registrados
+# Follow-ups tecnicos registrados
 
 ## FU-001 — ffill global sobre DataFrame consolidado (RESUELTO)
 
@@ -705,4 +705,94 @@
 - **Reabrir ciclo A/D si:** (a) mismo ticker repetidamente; (b) multiples tickers; (c) produccion 04:00 UTC; (d) cobertura materialmente inferior.
 - **Distinto de:** `FUTURE_SETTLEMENT=INSUFFICIENT` (estado contractual valido del temporal). Aqui es cobertura del loader.
 - **Estado:** **RESUELTO 2026-09-17** (deteccion anadida, retry no implementado, monitorizacion activa).
+
+## Ciclo de auditoria del reporte 2026-09-17 (2026-09-18)
+
+Referencia: prompt maestro v6.30, secciones 11.17 a 11.19 y 15.21. Nueve fixes aplicados + 3 NO BUG + 3 WONT FIX/MONITORED. Detalle completo en el prompt; este listado es indice resumido.
+
+### O2 - append_dedup colapsaba tickers en rs_internal (RESUELTO 2026-09-18)
+
+- **Commit:** `9ff8daf`.
+- **Causa:** subset `["date","sector"]` colapsaba ~500 tickers a 11 filas/dia.
+- **Fix:** subset `["date","sector","ticker"]`.
+- **Historico:** `outputs/history/rs_internal.csv` (88 filas) borrado y regenerado desde cero.
+- **Tests:** 3 (`tests/test_rs_internal_dedup.py`).
+
+### K-RS-INTERNAL-COMMIT-01 - `git add -u` no captura untracked (RESUELTO 2026-09-18)
+
+- **Commit:** `5fbe16e`.
+- **Causa:** step `Commit and push hist/state` usaba `git add -u` + lista explicita de `data/*`. Tras borrar el CSV en `9ff8daf`, el CSV regenerado por el pipeline quedaba untracked y nunca se commiteaba.
+- **Fix:** `git add outputs/history outputs/state` + safety net que falla el workflow si queda untracked en esas carpetas.
+- **Tests:** los del ciclo (verificado en CI).
+
+### I2 - wyckoff_structure_core degenera a RANGE con NaN (RESUELTO 2026-09-18)
+
+- **Commit:** `a6f4666`.
+- **Callers afectados:** `indicators/sector_wyckoff_distribution.py:36`, `indicators/index_leaders.py:57-75`.
+- **Fix:** helper `build_ticker_df(df, ticker)` + sustitucion en ambos callers.
+- **Tests:** 5 (`tests/test_build_ticker_df_i2.py`).
+
+### I3 - as_of_date vs effectiveDate en Rendimiento QQQ (RESUELTO 2026-09-18)
+
+- **Commit:** `1d7bacd`.
+- **Causa:** `flows_international.py:149` mostraba `as_of_date` (timestamp del run, con hora).
+- **Fix:** priorizar `effectiveDate` (fecha del dataset). Fallback a `as_of_date` truncado.
+- **Tests:** 4 (`tests/test_i3_effective_date_render.py`).
+
+### I1 + O1 - Notas aclaratorias + fecha efectiva SSGA (RESUELTO 2026-09-18)
+
+- **Commit:** `b74790c`.
+- **I1:** dos tablas usan `Retorno 20d` con significados distintos. Nota en `render_momentum_sectores` y `render_tactical_leaders`.
+- **O1:** nota fuente SSGA anade `Ultima fecha: YYYY-MM-DD`. Fallback `N/D` funcional (df de SSGA no lleva `Date`). WONT FIX / MONITORED en §12 del prompt v6.30.
+- **Tests:** 5 (`tests/test_i1_o1_notas.py`).
+
+### I4 - Evidence Matrix lag=1 (NO BUG)
+
+- **Verificado:** no reproducible en el run del 17/09.
+- **Causa historica del lag 16/09:** `evidence_matrix.py:170` hereda fecha de `sector_breadth_df`. Comportamiento correcto.
+
+### O3 - FEZ primary_flow=0.00 (NO BUG)
+
+- **Verificado:** `shares_outstanding` invariante en `etf_primary_flow.csv`. Comportamiento correcto.
+
+### K-INDEX-RANGE-01 - Mismo patron I2 en index_phase y sector_regime (RESUELTO 2026-09-18)
+
+- **Commit:** `562dc41`.
+- **Callers afectados:** `indicators/index_phase.py:19,33` (4/8 indices), `regimes/sector_regime.py:114` (7/11 ETFs).
+- **Fix:** `build_ticker_df` en los 3 callers.
+- **Efecto colateral:** **SLPM desbloqueado**. LIS=+0.20, Eff Breadth=0.53, 20 tickers en *Acciones Seleccionadas*.
+- **Tests:** 4 (`tests/test_index_phase_range.py`).
+
+### PCR Indices N/D - index_pcr ausente del return dict (RESUELTO 2026-09-18)
+
+- **Commit:** `849f981`.
+- **Causa:** `compute_pcr_signals()` usaba `data["index_pcr"]` internamente pero no lo incluia en el return.
+- **Fix:** 1 linea.
+- **Tests:** 2 (`tests/test_pcr_indices.py`).
+
+### K-RENDER-LEADER-TABLE-01 - Separator Markdown desalineado (RESUELTO 2026-09-18)
+
+- **Commit:** `44cd544` (rebase final `29f393a`).
+- **Causa:** separator 8 cols vs header 11 cols en `indicators/stock_leader.py:180`.
+- **Fix:** separator con 11 grupos.
+- **Tests:** 1 (`tests/test_leader_table_markdown.py`).
+
+### K-RUN-OUT-OF-WINDOW-01 - Run manual fuera de ventana EOD (MONITORED 2026-09-18)
+
+- **Incidente:** run manual 18/09 00:00 UTC. `coverage_pct=0.16` (262/313 MISSING_CLOSE).
+- **Comportamiento pipeline:** correcto (FU-020 retrocedio `effective_date` a `2026-09-16`).
+- **Fallo:** step `Commit and push hist/state` no tiene guarda para `coverage_pct < umbral`.
+- **Accion:** commit `fc8faed` (revert) + push.
+- **Reabrir si:** el cron real produce `coverage_pct < 0.9`. Fix candidato (BAJA): guarda en el workflow.
+
+### VIX3M/VIX nan 2026-09-14 (WONT FIX 2026-09-18)
+
+- **Verificado:** `cboe_vix3m.parquet` tiene `19.28` sin NaN. El `nan` es un artefacto historico del CSV `volatility_structure.csv`, propagado por `append_dedup`. No reproducible en local.
+- **Accion:** sin fix.
+
+### O1 SPDR `Ultima fecha: N/D` (MONITORED 2026-09-18)
+
+- **Verificado:** el df que llega desde `flows_primary` no lleva columna `Date`. Fallback `N/D` funcional.
+- **Accion:** sin fix. La fecha real esta en `Calidad, frescura y cobertura de datos`.
+
 
