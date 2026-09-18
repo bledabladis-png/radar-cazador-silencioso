@@ -187,6 +187,7 @@ def compute_pcr_signals():
 
         'percentile': percentile,
         'percentile_20d': percentile_20d,
+        'index_pcr': data['index_pcr'],
         'equity_pcr': data['equity_pcr'],
 
         'etp_pcr': data['etp_pcr'],
