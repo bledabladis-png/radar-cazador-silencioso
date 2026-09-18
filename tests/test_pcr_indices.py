@@ -8,9 +8,8 @@ al default np.nan -> N/D en el reporte.
 """
 import sys
 from pathlib import Path
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 
-import pandas as pd
 import pytest
 
 ROOT = Path(__file__).resolve().parent.parent
