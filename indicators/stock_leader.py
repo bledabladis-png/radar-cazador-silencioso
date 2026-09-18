@@ -177,7 +177,7 @@ def generate_leader_section(df_market, df_stocks, holdings_df, fase_dict,
 
         lines.append(f'## Sector: {sector} ({fase})\n')
         lines.append('| Ticker | RS | RS Mom | Flujo (z) | WLS | Fase Wyckoff | Pers 5d | Pers 10d | Pers 20d | Spring | SOS |\n')
-        lines.append('|--------|----|--------|-----------|-----|---------------|--------|-----|\n')
+        lines.append('|--------|----|--------|-----------|-----|---------------|--------|--------|---------|--------|-----|\n')
         for _, row in wls_df.head(TOP_N_LEADERS).iterrows():
             spring_flag = '[v]' if row.get('spring', 0) == 1 else ''
             sos_flag = '[v]' if row.get('sos', 0) == 1 else ''
