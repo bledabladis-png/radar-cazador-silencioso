@@ -161,6 +161,9 @@ jobs:
         run: python validation/monitor_double_counting.py || echo "Monitoreo double counting no disponible"
 
 
+      - name: Guard coverage
+        run: python scripts/guard_coverage.py --threshold 0.95
+
       - name: Commit and push hist/state
         run: |
           git config user.name "github-actions[bot]"
