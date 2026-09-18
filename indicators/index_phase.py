@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # indicators/index_phase.py - Calcula fases Wyckoff para indices internacionales
-from indicators.wyckoff import wyckoff_structure_core
+from indicators.wyckoff import wyckoff_structure_core, build_ticker_df
 from config.index_tickers import INDEX_CONFIG
 from data.providers.router import DataRouter
 
@@ -16,7 +16,8 @@ def compute_index_phases(df_market, temporal_meta=None):
     for nombre, config in INDEX_CONFIG.items():
         ticker = config['index_ticker']
         try:
-            fase = wyckoff_structure_core(df_market, ticker)
+            ticker_df = build_ticker_df(df_market, ticker)
+            fase = wyckoff_structure_core(ticker_df, ticker)
             phases[nombre] = fase
         except:
             missing_tickers.append(ticker)
@@ -30,7 +31,8 @@ def compute_index_phases(df_market, temporal_meta=None):
                 ticker = config['index_ticker']
                 if ticker in missing_tickers:
                     try:
-                        fase = wyckoff_structure_core(index_data, ticker)
+                        ticker_df = build_ticker_df(index_data, ticker)
+                        fase = wyckoff_structure_core(ticker_df, ticker)
                         phases[nombre] = fase
                     except Exception as e:
                         print(f"  Indice {nombre} ({ticker}): error al calcular fase - {e}")

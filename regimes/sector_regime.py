@@ -10,7 +10,7 @@ from indicators.trend import trend_position
 
 from indicators.volatility import atr
 
-from indicators.wyckoff import wyckoff_structure_core
+from indicators.wyckoff import wyckoff_structure_core, build_ticker_df
 
 from src.utils import safe_mean, safe_std, tanh_normalize, get_col
 
@@ -111,7 +111,8 @@ def compute_sector_scores(df, benchmark='^GSPC', df_stocks=None, holdings_df=Non
 
         try:
 
-            wyckoff_phases[sector] = wyckoff_structure_core(df, sector)
+            ticker_df = build_ticker_df(df, sector)
+            wyckoff_phases[sector] = wyckoff_structure_core(ticker_df, sector)
 
         except Exception as e:
 
