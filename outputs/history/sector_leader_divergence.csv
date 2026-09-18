@@ -1,1 +1,5 @@
-date,sector,sector_ret_20d,n_leaders_total,n_leaders_valid,n_leaders_positive,n_leaders_negative,n_leaders_beating_sector,classification
+date,effective_date,expected_date,coverage,sector,sector_ret_20d,n_leaders_total,n_leaders_valid,n_leaders_positive,n_leaders_negative,n_leaders_beating_sector,classification
+2026-09-17,2026-09-17,2026-09-17,1.0,XLC,0.009252594162060257,5,5,2,3,1,Divergencia negativa
+2026-09-17,2026-09-17,2026-09-17,1.0,XLE,0.014155418369920847,5,5,5,0,5,Alineación positiva
+2026-09-17,2026-09-17,2026-09-17,1.0,XLF,-0.027835742638540162,5,5,2,3,4,Alineación negativa
+2026-09-17,2026-09-17,2026-09-17,1.0,XLV,-0.03910516509336459,5,5,3,2,5,Liderazgo relativo de líderes

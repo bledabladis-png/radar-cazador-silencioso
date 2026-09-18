@@ -2,14 +2,14 @@
   "schema_version": 1,
   "artifact": {
     "path": "data/commodities_futures.parquet",
-    "sha256": "c9b76a2cffa14c522645e10ce9d579291bc9a7dc3d47ee89d224ff372ec08eb0",
-    "bytes": 7872,
-    "written_at": "2026-09-18T08:49:20.403133"
+    "sha256": "f7b99b489c6c38091bfde57f61208d0730536409172ab80cf68bb1b61165123a",
+    "bytes": 8312,
+    "written_at": "2026-09-18T14:37:20.133197"
   },
   "producer": {
     "module": "src.utils",
     "function": "write_artifact_with_manifest",
-    "run_id": "20260918_104919",
+    "run_id": "20260918_163719",
     "source": "oilpriceapi_futures"
   },
   "content": {

@@ -112,3 +112,7 @@ date,metric,value,status
 2026-09-17T23:27:57,structural_vs_breadth,0.7983,OK
 2026-09-17T23:48:34,structural_vs_breadth,0.7983,OK
 2026-09-18T08:59:05,structural_vs_breadth,0.7983,OK
+2026-09-18T14:46:32,rs_mom_vs_flow,0.5068,OK
+2026-09-18T14:46:32,rs_mom_vs_wls,0.7368,OK
+2026-09-18T14:46:32,stability_vs_wyckoff,0.566,OK
+2026-09-18T14:46:32,structural_vs_breadth,0.7983,OK
