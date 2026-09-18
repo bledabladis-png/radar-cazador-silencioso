@@ -1,8 +1,8 @@
-# PROMPT MAESTRO v6.30 - INGENIERO SUPERVISOR DEL RADAR DE ROTACION SECTORIAL
+# PROMPT MAESTRO v6.31 - INGENIERO SUPERVISOR DEL RADAR DE ROTACION SECTORIAL
 
-Actualizado: 2026-09-18 (post ciclo de auditoria del reporte 2026-09-17: O2 + K-RS-INTERNAL-COMMIT-01 + I2 + I3 + I1 + O1 + K-INDEX-RANGE-01 + PCR-Indices + K-RENDER-LEADER-TABLE-01 + K-RUN-OUT-OF-WINDOW-01 (revertido). SLPM desbloqueado como consecuencia de K-INDEX-RANGE-01. HEAD 29f393a)
-Estado: Operativo al 100% - 10 contratos temporales (FU-021-5 + FU-021-3C-bis) - 645 tests locales + 2 skipped - 0 warnings - Gate 10/10 - Deuda ALTA/MEDIA/BAJA activa: 0
-Commit de referencia: 29f393a (origin/main HEAD)
+Actualizado: 2026-09-18 (post ciclo H.2: guard_coverage + revert 10e0608 + fix pyflakes. HEAD f3114b4)
+Estado: Operativo al 100% - 10 contratos temporales (FU-021-5 + FU-021-3C-bis) - 655 tests locales + 2 skipped - 0 warnings - Gate 10/10 - Deuda ALTA/MEDIA/BAJA activa: 0
+Commit de referencia: f3114b4 (origin/main HEAD)
 
 ---
 
@@ -799,14 +799,25 @@ FU-021-3C -> RESUELTO 2026-09-16 via FU-021-3C-bis (OilPriceAPI). FUTURE_SETTLEM
 
 KHC / lote parcial (2026-09-17) -> DETECCION ANIADIDA. En un run manual realizado el 17/09/2026 a las 11:15 ET, 1 de 562 tickers (`KHC`) no presento la observacion de la sesion esperada, aunque el resto del lote si fue aceptado. El cron productivo se ejecuta a las 00:00 ET. No se ha demostrado que el fenomeno sea exclusivo de ejecuciones manuales ni que no pueda aparecer en produccion. Deteccion `[K-HUERFANO]` anadida en `download_market_data`. Retry NO implementado. Monitorizacion activa. Distinto de `FUTURE_SETTLEMENT=INSUFFICIENT` (contrato temporal). Reabrir ciclo si: mismo ticker repetidamente, multiples tickers, produccion 04:00 UTC, o cobertura materialmente inferior.
 
-K-RUN-OUT-OF-WINDOW-01 (2026-09-18) -> OBSOLETO DE HECHO / MONITORED. Un run manual
-a las 00:00 UTC del 18/09 produjo `coverage_pct=0.16` en `stock_prices.parquet`
-(262/313 MISSING_CLOSE). El pipeline se comporto correctamente: FU-020 retrocedio
-`effective_date` a `2026-09-16`. Pero el step `Commit and push hist/state` no tiene
-guarda para `coverage_pct < umbral` y commiteo los outputs contaminados. Se revirtio
-con commit `fc8faed`. El cron productivo (`0 4 * * *`) esta fuera de la ventana de
-riesgo. No reabrir salvo que el cron real produzca `coverage_pct < 0.9`. Fix
-candidato (BAJA): anadir guarda en el step Commit del workflow.
+K-RUN-OUT-OF-WINDOW-01 (2026-09-18) -> RESUELTO via guard_coverage (f3114b4). Reproducido
+2x: fc8faed (run 00:00 UTC 18/09) y 10e0608 (run manual 17:02 UTC 18/09, revertido
+en dd1b7b1). Confirmado que workflow_dispatch commitea a origin/main, refutando la premisa
+inicial de 'solo cron commitea'. Fix: scripts/guard_coverage.py bloquea el step Commit
+si coverage_pct_last < 0.95 o status==INVALID o last_date > expected_session, sobre
+universo explicito (stock_prices + market_data). Verificado en CI real: run 35376243662
+bloqueo commit con dos [FAIL] en stock_prices y [OK] en market_data; origin/main intacto
+en f3114b4. Cron 04:00 UTC no afectado (sesion cerrada, coverage 1.0).
+
+K-STOCK-PRICES-EOD-01 (2026-09-18) -> MONITORED / BAJA. Origen: hallazgo del ciclo H.2.
+stock_prices.parquet persiste fila intradia en runs fuera de cron porque el merge
+europeo (Euronext/Xetra) anade velas EOD legitimas de mercados que ya cerraron mientras
+USA/UK/BME siguen NaN. coverage_pct_last puede caer a 0.13. Impacto contenido por
+guard_coverage (bloquea commit). No es bug de descarga: FU-018 ya retrocede Yahoo a EOD.
+Es bug de contrato FU-002: manifest trata last_date como global cuando el parquet es
+universo heterogeneo. Fix propuesto (diferido): filtro por mercado en stock_prices +
+coverage por mercado en manifest. Toca FU-002 y FU-018, requiere dictamen auditor.
+Reabrir si: runs manuales se vuelven frecuentes, cron cambia de hora, o auditoria
+externa lo exige.
 
 VIX3M/VIX nan 2026-09-14 (2026-09-18) -> WONT FIX (data artifact). El reporte del CI
 muestra `nan` en el ratio VIX3M/VIX del 14/09, pero `data/cboe_vix3m.parquet` tiene
@@ -848,7 +859,13 @@ K-FU-021-3C-bis-04 (OBSOLETO / RESUELTO DE HECHO 2026-09-17): REF sobrevive solo
 
 K-FU-021-3C-bis-05 (OBSOLETO 2026-09-17): transfer doc original nunca commiteado. Gate 0: 0 ficheros *TRANSFER*/*transfer* en repo.
 
-K-FU-021-3C-bis-06 (ALTA): RESUELTO. Este prompt es v6.29.
+K-FU-021-3C-bis-06 (ALTA): RESUELTO. Este prompt es v6.31.
+
+Ciclo H.2 (post 2026-09-18) - cerrado:
+
+K-RUN-OUT-OF-WINDOW-01 (BAJA): RESUELTO 2026-09-18 (`f3114b4`). Guard coverage en workflow. Ver Seccion 12 y 15.22.
+
+K-STOCK-PRICES-EOD-01 (BAJA): MONITORED. Ver Seccion 12.
 
 K-FU-021-3C-bis-07 (WONT FIX razonado 2026-09-17): ciclo documentado en prompt seccion 11.16 + 15.1 (commits + verificacion). Informe standalone no aporta valor diferencial. Reabrir si auditoria externa lo requiere o si H1 escala a decision arquitectonica.
 
@@ -1276,11 +1293,45 @@ Cierre) aplicado a 7 hallazgos iniciales, ampliado despues a 4 mas.
   unica enmascara el bug.
 - **Un solo caller afectado NO implica NO BUG.** Aplicar la regla "un fix destapa el
   siguiente" en cada fix, no solo cuando el sintoma se repite a simple vista.
-- **El pipeline puede tener exito parcial sin fallar el Gate.** K-RUN-OUT-OF-WINDOW-01:
-  Gate 10/10 con `coverage_pct=0.16`. El Gate valida NaN en columnas especificas, no
-  cobertura global. Considerar futura mejora del Gate.
+- **El pipeline puede tener exito parcial sin fallar el Gate.** Caso K-RUN-OUT-OF-WINDOW-01
+  (resuelto via guard_coverage, ver 15.22): Gate 10/10 con `coverage_pct=0.16`. El Gate
+  valida NaN en columnas especificas, no cobertura global. La guarda de coverage cierra
+  el hueco antes del commit, no dentro del Gate.
 - **Revert rapido de contaminacion.** El revert quirurgico (`git revert <sha>`) es
   preferible a `git reset` cuando ya esta pusheado. Conserva trazabilidad.
+
+### 15.22. Ciclo H.2 - guard_coverage (2026-09-18)
+
+Origen: run manual 35371884701 (17:02 UTC, USA en sesion) commiteo 10e0608 con
+stock_prices.parquet coverage_pct_last=0.1342 y last_date=2026-09-18 > expected=2026-09-17.
+
+Causa raiz: workflow_dispatch commitea a origin/main (no solo cron). stock_prices.parquet
+persiste fila intradia porque el merge europeo anade velas EOD legitimas de Euronext/Xetra
+mientras USA/UK/BME siguen NaN.
+
+Commits (3):
+
+- dd1b7b1: Revert "Daily hist/state" (revert quirurgico del commit 10e0608).
+- 7da0d93: fix(tests): pyflakes limpio en test_pcr_indices.py (MagicMock + pandas).
+- f3114b4: feat(workflow): scripts/guard_coverage.py + tests + step en daily_run.yml.
+
+Guard (scripts/guard_coverage.py): 3 condiciones independientes por manifest
+(coverage_pct_last >= threshold, status != INVALID, last_date <= expected_session).
+Universo explicito GUARDED_MANIFESTS = (stock_prices, market_data). Threshold default 0.95.
+Commodities fuera (coverage 0.5 legitimo, ver K-FS-CI-PARITY-01).
+
+Tests: 10 nuevos en tests/test_guard_coverage.py (incluye bordes 0.9499/0.9500,
+STALE legitimo, JSON invalido, universo explicito).
+
+Verificacion en produccion real: run 35376243662 (workflow_dispatch, 17:45 UTC) bloqueo
+commit con dos [FAIL] en stock_prices (coverage 0.1342 y last_date futuro) y [OK] en
+market_data. origin/main intacto en f3114b4. Workflow en rojo esperado; se auto-limpia
+con el cron 04:00 UTC (sesion cerrada, coverage 1.0).
+
+Leccion: la primera reproduccion de K-RUN-OUT-OF-WINDOW-01 (run 00:00 UTC) parecia
+circunscrita a esa ventana horaria. El segundo caso (17:02 UTC) demostro que el vector
+es cualquier run fuera de cron, no solo madrugada. Gate 0 con evidencia directa antes
+de cerrar como WONT FIX.
 
 ## SECCION 16 - FRASE GUIA
 "Determinista, descriptivo, auditado. Paso a paso. Documentar. Saber parar."
@@ -1314,6 +1365,8 @@ Cierre) aplicado a 7 hallazgos iniciales, ampliado despues a 4 mas.
 
 "Antes de autorizar un patch sobre Pandas, verificar la semantica exacta del objeto (MultiIndex, shape, dtype), no solo la intencion del codigo."
 
+"Antes de anadir una capa de descarga, verificar si ya existe (FU-018 ya retrocede Yahoo a EOD)."
+
 ## SECCION 17 - CONFIRMACION
 Cuando recibas este prompt, responde:
 
@@ -1325,4 +1378,4 @@ Pregunta final: "Que hacemos?"
 
 No empieces a proponer tareas sin antes confirmar la asimilacion completa.
 
-Fin del prompt maestro v6.30. Commit de referencia: 29f393a. Fecha: 2026-09-18.
+Fin del prompt maestro v6.31. Commit de referencia: f3114b4. Fecha: 2026-09-18.
