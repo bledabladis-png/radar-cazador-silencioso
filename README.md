@@ -7,7 +7,7 @@ Sin ML predictivo. Sin señales de trading. Solo diagnóstico.
 
 - **Cobertura**: 313/313 tickers (100%)
 - **Validation Gate**: 10/10
-- **Tests**: 64/64 passed
+- **Tests**: 820 passed + 2 skipped
 - **Fuentes europeas**: Euronext (13) + Xetra (19) + BME (19)
 
 ## Filosofía
@@ -27,8 +27,9 @@ Sin ML predictivo. Sin señales de trading. Solo diagnóstico.
 | `regimes/` | 5 regímenes macro |
 | `data/providers/` | 28 proveedores (Yahoo, Euronext, Xetra, BME, FRED, SEC...) |
 | `src/` | Orquestador, loaders, report generator |
+| `src/institutional_accumulation/` | Modulo IAE (SEC 13F) - Fase A cerrada (FA-1 + FA-2) |
 | `validation/` | 61 auditorías y validaciones |
-| `tests/` | 22 archivos / 64 tests |
+| `tests/` | 86 archivos / 820 tests |
 | `docs/` | Documentación completa |
 | `outputs/` | Reportes, históricos, estado |
 
@@ -41,7 +42,7 @@ py run.py
 
 El pipeline:
 
-1. Descarga datos de mercado (Yahoo + Euronext + Xetra + BME).
+1. Descarga datos de mercado (Yahoo + Euronext + Xetra + BME + OilPriceAPI + CBOE).
 2. Calcula regímenes macro (Financial Conditions, Liquidity, Volatility, Macro).
 3. Ejecuta motores táctico y estructural por sector.
 4. Calcula 30+ indicadores (momentum, breadth, wyckoff, MTE, dark pool...).
@@ -50,6 +51,7 @@ El pipeline:
 ## Documentación
 
 - [Índice completo](docs/automatica/README.md) - Arquitectura, módulos, fórmulas
+- [IAE (SEC 13F)](docs/auditoria/INSTITUTIONAL_ACCUMULATION_GATE_FA2_INFORME.md) - Fase A cerrada (FA-1 + FA-2)
 - [Auditorías](docs/auditoria/) - Dictámenes y validaciones externas
 
 ## Fuentes de datos
