@@ -816,3 +816,36 @@ Referencia: prompt maestro v6.30, secciones 11.17 a 11.19 y 15.21. Nueve fixes a
 - **Fuera de FA-1 (FA-2):** Q2 (framework 3 niveles), filtro `PERIODOFREPORT`, CUSIP->ticker, DFND, amendments. NIPC permanece BLOQUEADO hasta Gate FA-2.
 - **Estado:** **RESUELTO 2026-09-19**.
 - **Reabrir ciclo:** apertura de FA-2 con Gate FA-2 al cierre.
+
+
+## IAE FA-2 - SEC 13F core cerrada (RESUELTO 2026-09-19)
+
+- **Origen:** continuacion de FA-1 dentro de la Fase A del modulo IAE.
+- **Alcance FA-2:** filtro temporal + CUSIP resolver + reporting relationships + amendments.
+- **Commits del ciclo (local, sin push al cierre del informe):**
+  - `1679639` + `98b7956` + `1971cf5`: FA-2.1 filtro temporal (13 tests).
+  - `4560ae3`: FA-2.2 CUSIP resolver (17 tests).
+  - `1e42aaa` + `f7882f5` + `c0ba083`: FA-2.3 reporting relationships (FK `OTHERMANAGER2.SEQUENCENUMBER`, 33 tests).
+  - `ae43985`: FA-2.4 canonical snapshot composicional (30 tests).
+  - `5162cb7` a `9543de5`: informes, dictamenes, especificacion, addendum.
+- **Pipeline verificado end-to-end (Q1 2026):**
+  - 10,776 filings filtrados; 3,321,967 filas INFOTABLE.
+  - Snapshot canonico: 8,762 accessions aplicados; 3,239,273 source lines canonicas.
+  - Estrategias (10,648 grupos): SINGLE_HR 8,618; SINGLE_NOTICE 1,906;
+    HR_PLUS_RESTATEMENT 100; HR_PLUS_NEW_HOLDINGS 19; HR_CHAIN_RESTATEMENT 2;
+    HR_COMPOSITE 2; NOTICE_AMENDED 1.
+  - Edges 3,509,475; resolved 1,351,172; resolution_rate 0.9883.
+  - `duplicate_canonical_edges = 0`; `invalid_source_line_edges = 0`.
+  - Anomalias registradas: 2 (NT_AUGMENTED, HR_WITH_AMENDMENT_FLAGS).
+- **Dictamenes emitidos:**
+  - `INSTITUTIONAL_ACCUMULATION_FA23_DICTAMEN.md` (hallazgo FK, caracterizacion C).
+  - `INSTITUTIONAL_ACCUMULATION_FA23_DICTAMEN_CIERRE.md` (cierre FA-2.3).
+  - `INSTITUTIONAL_ACCUMULATION_FA24_DICTAMEN_GATE0.md` (amendments).
+  - `INSTITUTIONAL_ACCUMULATION_GATE_FA2_DICTAMEN.md` (PASS, push autorizado).
+- **Estado:** FA-2 CERRADA / PASS 2026-09-19. Push autorizado del ciclo (20 commits).
+- **Deuda posterior (fuera de FA-2):**
+  - Curacion manual del crosswalk CUSIP -> ticker (tabla vacia en FA-2).
+  - NIPC: desbloqueado respecto de FA-2; pendiente su propio Gate.
+  - Observaciones no bloqueantes de FA-2.3: 922 CIK-like, patron pico 25 edges.
+- **Reabrir ciclo:** NIPC, Breadth, New/Exit, clasificacion (post Gate FA-2);
+  curacion CUSIP como ciclo paralelo.

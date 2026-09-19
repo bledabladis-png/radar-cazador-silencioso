@@ -1,8 +1,8 @@
-# PROMPT MAESTRO v6.34 - INGENIERO SUPERVISOR DEL RADAR DE ROTACION SECTORIAL
+# PROMPT MAESTRO v6.35 - INGENIERO SUPERVISOR DEL RADAR DE ROTACION SECTORIAL
 
-Actualizado: 2026-09-19 (post IAE FA-1: ingestion + schema + lineage SEC 13F cerrado y pusheado. NIPC bloqueado hasta Gate FA-2. HEAD 626b39d)
-Estado: Operativo al 100% - 10 contratos temporales (FU-021-5 + FU-021-3C-bis) - 727 tests locales + 2 skipped - 0 warnings - Gate 10/10 - Deuda ALTA/MEDIA/BAJA activa: 0
-Commit de referencia: 626b39d (origin/main HEAD)
+Actualizado: 2026-09-19 (post IAE FA-1 + FA-2: SEC 13F core cerrado y pusheado. NIPC desbloqueado respecto de FA-2. HEAD 9543de5)
+Estado: Operativo al 100% - 10 contratos temporales (FU-021-5 + FU-021-3C-bis) - 820 tests locales + 2 skipped - 0 warnings - Gate 10/10 - Deuda ALTA/MEDIA/BAJA activa: 0
+Commit de referencia: 9543de5 (origin/main HEAD al redactar; el propio commit v6.35 sera HEAD tras push)
 
 ---
 
@@ -149,7 +149,7 @@ py -m pytest tests/ validation/ -q --tb=short
 
 text
 
-Esperado: `compileall OK`, `pyflakes LIMPIO`, `727 passed + 2 skipped`.
+Esperado: `compileall OK`, `pyflakes LIMPIO`, `820 passed + 2 skipped`.
 
 ### 3.5. Verificacion de no regresion (refactors grandes)
 
@@ -262,7 +262,7 @@ text
 - **`src/effective_date.py::resolve_effective_date` es un resolutor por cobertura. No consulta calendario. No sustituye a `is_session_closed`. Ver R4 (Seccion 2).**
 - **`src/temporal_contracts/` es la fuente unica de contratos temporales (FU-021-5 + FU-021-3C-bis). `base.py::compute_status` implementa la FSM (PENDING|OK|STALE|INSUFFICIENT|BLOCKED). `consolidate.py::build_temporal_meta` construye el dict. `__init__.py::resolve_all_contracts` resuelve los 10 contratos. `get_contract(name)` devuelve instancia. `MarketDataBundle` es el transporte (Q-P.3). Los contratos de commodities declaran `settlement_semantics` (close_proxy | spot_reference).**
 - **`src/instrument_registry.py` expone dos funciones con responsabilidades disjuntas: `get_market(ticker)` (calendario bursatil) y `get_instrument_class(ticker)` (clase economica). No mezclar: `INSTRUMENT CLASS != MARKET != TEMPORAL CONTRACT`.**
-- **`src/institutional_accumulation/sec_13f/` es el modulo IAE (Fase A). Ingestion pasiva: downloader + schema + parser + storage + manifest + ingest. NO incluye resolucion de identidad, CUSIP->ticker, DeltaShares, NIPC ni clasificacion. NIPC bloqueado hasta Gate FA-2. Regla local-first especifica IAE activa.**
+- **`src/institutional_accumulation/sec_13f/` es el modulo IAE (Fase A cerrada). Ingestion pasiva + identity: schema, downloader, parser, storage, manifest, ingest + `identity/` (`temporal_filter` FA-2.1, `cusip_resolver` FA-2.2, `relationships` FA-2.3, `amendments` FA-2.4). NO incluye NIPC, breadth ni clasificacion. NIPC desbloqueado respecto de FA-2; pendiente su propio Gate. Regla local-first especifica IAE activa.**
 
 - **`indicators/mte/` es paquete con 5 submodulos (DT2): `engine.py::compute_mte` (entry point), `state.py::load_previous_scenario/save_scenario` (persistencia `mte_state.json`), `scoring.py` (SRS, SHS, CSS, IPS, MSI, IPI, `score_scenarios` + helpers `tanh`, `_get_last`), `decision.py` (`validate_transition`, `consensus_score`, `distance_to_threshold`, `compute_confidence`, `classify_mte`, `NORMAL_TRANSITIONS`, `EXCEPTION_TRANSITIONS`). API publica preservada: `from indicators.mte import compute_mte`.**
 
@@ -749,6 +749,37 @@ Manifest v1 con 3 niveles verificable. 3 flags validation a True.
 - Informe Gate FA-1: `docs/auditoria/INSTITUTIONAL_ACCUMULATION_GATE_FA1_INFORME.md`.
 - Addendum contrato v1.1 (D1-D5): `docs/auditoria/INSTITUTIONAL_ACCUMULATION_CONTRATO_ADDENDUM.md`.
 
+### 11.21. IAE FA-2 - SEC 13F core cerrado y pusheado (2026-09-19)
+
+**Ciclo:** Gate FA-2 PASS. Commit `85ccf7d` informe + `9543de5` dictamen.
+
+**Pipeline FA-2 completo (4 modulos):**
+- FA-2.1 `temporal_filter.py`: filtro por `SUBMISSION.PERIODOFREPORT`.
+- FA-2.2 `cusip_resolver.py`: CUSIP -> ticker con vigencia temporal (multi-fila).
+  Contrato verificado por tests. Crosswalk sin curar (deuda posterior).
+- FA-2.3 `relationships.py`: Column 7 -> `OTHERMANAGER2.SEQUENCENUMBER`.
+  6 estados de token + 5 anomalias catalogadas. Multi-edge sin division economica.
+- FA-2.4 `amendments.py`: canonical snapshot composicional.
+  RESTATEMENT -> REPLACE, NEW HOLDINGS -> ADD. Lineage auditable.
+
+**Metricas probe integrado (Q1 2026):**
+- Filtro: 10,776 filings, 3,321,967 filas INFOTABLE.
+- Snapshot: 8,762 accessions aplicados, 3,239,273 source lines canonicas.
+- Estrategias (10,648 grupos): SINGLE_HR 8,618; SINGLE_NOTICE 1,906;
+  HR_PLUS_RESTATEMENT 100; HR_PLUS_NEW_HOLDINGS 19;
+  HR_CHAIN_RESTATEMENT 2; HR_COMPOSITE 2; NOTICE_AMENDED 1.
+- Edges: 3,509,475 totales; 1,351,172 resueltos; resolution_rate 0.9883;
+  duplicate_canonical_edges 0; invalid_source_line_edges 0.
+- Anomalias: 2 (NT_AUGMENTED, HR_WITH_AMENDMENT_FLAGS).
+
+**Deuda posterior (fuera de FA-2):**
+- Curacion manual crosswalk CUSIP -> ticker (tabla vacia en FA-2).
+- NIPC: desbloqueado de FA-2; pendiente su propio Gate.
+
+**Documentos FA-2:**
+- Gate FA-2 informe: `docs/auditoria/INSTITUTIONAL_ACCUMULATION_GATE_FA2_INFORME.md`.
+- Gate FA-2 dictamen: `docs/auditoria/INSTITUTIONAL_ACCUMULATION_GATE_FA2_DICTAMEN.md`.
+
 ## SECCION 12 - LIMITACIONES CONOCIDAS
 20 tickers .L sin provider oficial -> Aceptado.
 
@@ -856,15 +887,18 @@ coverage por mercado en manifest. Toca FU-002 y FU-018, requiere dictamen audito
 Reabrir si: runs manuales se vuelven frecuentes, cron cambia de hora, o auditoria
 externa lo exige.
 
-K-INSTITUTIONAL-ACCUMULATION-01 (2026-09-19) -> FA-1 CERRADO. NIPC bloqueado hasta Gate FA-2.
+K-INSTITUTIONAL-ACCUMULATION-01 (2026-09-19) -> FA-1 CERRADO + PUSHED. FA-2 CERRADO / PASS. NIPC desbloqueado respecto de FA-2.
 Origen: propuesta del usuario + ciclo de dictamenes del auditor externo.
-Documentos completos (6):
+Documentos completos (9):
   - PROPUESTA: docs/auditoria/INSTITUTIONAL_ACCUMULATION_PROPUESTA.md
   - CONTRATO v1.1: docs/auditoria/INSTITUTIONAL_ACCUMULATION_CONTRATO.md
   - INFORME Gate 0: docs/auditoria/INSTITUTIONAL_ACCUMULATION_GATE0_INFORME.md
   - DICTAMEN Gate 0: docs/auditoria/INSTITUTIONAL_ACCUMULATION_DICTAMEN_GATE0.md
   - ADDENDUM contrato v1.1 (D1-D5): docs/auditoria/INSTITUTIONAL_ACCUMULATION_CONTRATO_ADDENDUM.md
   - INFORME Gate FA-1: docs/auditoria/INSTITUTIONAL_ACCUMULATION_GATE_FA1_INFORME.md
+  - DICTAMEN FA-2.3 hallazgo: docs/auditoria/INSTITUTIONAL_ACCUMULATION_FA23_DICTAMEN.md
+  - DICTAMEN FA-2.3 cierre: docs/auditoria/INSTITUTIONAL_ACCUMULATION_FA23_DICTAMEN_CIERRE.md
+  - INFORME + DICTAMEN Gate FA-2: docs/auditoria/INSTITUTIONAL_ACCUMULATION_GATE_FA2_INFORME.md + GATE_FA2_DICTAMEN.md
 
 Estado tras Gate 0 empirico (13F Q1 2026, 10,776 filings, 3.3M holdings):
   Q2 (relacion de managers): REFORMULADO. Framework 3 niveles (identidad
@@ -897,10 +931,16 @@ funcionalidad + beneficio. Ver CONTRATO seccion 8 y PROPUESTA seccion 16.
 Cierre FA-1 (2026-09-19, HEAD 626b39d): 7 commits pusheados (FA-1.1 a FA-1.4
 + fixes tecnicos + addendum + informe). Probe real contra 3.3M filas:
 7/7 row counts coinciden con Gate 0. Manifest v1 con 3 niveles hash
-(source ZIP + TSV + Parquet). 72 tests IAE. NIPC sigue BLOQUEADO.
+(source ZIP + TSV + Parquet). 72 tests IAE.
 
-Reabrir ciclo: FA-2 (CUSIP + reporting relationships + amendments) con
-Gate FA-2 al cierre.
+Cierre FA-2 (2026-09-19, HEAD 9543de5): Gate FA-2 PASS. 20 commits del ciclo
+(FA-2.1 a FA-2.4 + fixes + dictamenes + informes). Probe integrado:
+3,239,273 source lines canonicas. duplicate_canonical_edges = 0.
+resolution_rate = 0.9883. NIPC desbloqueado respecto de FA-2.
+Deuda posterior: curacion manual del crosswalk CUSIP -> ticker.
+
+Reabrir ciclo: NIPC (con su propio Gate), Breadth, New/Exit, clasificacion
+(post Gate FA-2). Curacion CUSIP como ciclo paralelo.
 
 VIX3M/VIX nan 2026-09-14 (2026-09-18) -> WONT FIX (data artifact). El reporte del CI
 muestra `nan` en el ratio VIX3M/VIX del 14/09, pero `data/cboe_vix3m.parquet` tiene
@@ -942,7 +982,7 @@ K-FU-021-3C-bis-04 (OBSOLETO / RESUELTO DE HECHO 2026-09-17): REF sobrevive solo
 
 K-FU-021-3C-bis-05 (OBSOLETO 2026-09-17): transfer doc original nunca commiteado. Gate 0: 0 ficheros *TRANSFER*/*transfer* en repo.
 
-K-FU-021-3C-bis-06 (ALTA): RESUELTO. Este prompt es v6.34.
+K-FU-021-3C-bis-06 (ALTA): RESUELTO. Este prompt es v6.35.
 
 Ciclo H.2 (post 2026-09-18) - cerrado:
 
@@ -1020,7 +1060,7 @@ Select-String -SimpleMatch desactiva regex → el | se trata como literal. No us
 | Fuentes europeas | 51 (Euronext 13 + Xetra 19 + BME 19) |
 | Fuente commodities | OilPriceAPI (BZ=F, CL=F, GC=F, HG=F, NG=F) |
 | Fuente term structure | CBOE (^VIX3M) |
-| Tests locales | 727 passed + 2 skipped |
+| Tests locales | 820 passed + 2 skipped |
 | Tests CI | ~610 collected con skips (parquet gitignored) |
 | Validation Gate | 10/10 |
 | pyflakes | 0 warnings |
@@ -1028,9 +1068,9 @@ Select-String -SimpleMatch desactiva regex → el | se trata como literal. No us
 | Produccion GH Actions | OK (cron `0 4 * * *` verificado 2026-09-17) |
 | Arquitectura | Modular: 19 src/report/ + 16 src/pipeline/ + 10 src/temporal_contracts/ + 7 src/institutional_accumulation/sec_13f/ + 5 indicators/mte/ + 4 indicators/darkpool/ |
 | Contratos temporales | 10 (FU-021-5 = 9, FU-021-3C-bis = +1 SPOT_COMMODITY) |
-| Modulo IAE (SEC 13F) | FA-1 cerrado y pusheado (2026-09-19). NIPC bloqueado hasta Gate FA-2 |
+| Modulo IAE (SEC 13F) | FA-1 CERRADO+PUSHED. FA-2 CERRADO/PASS (2026-09-19). NIPC desbloqueado respecto de FA-2 |
 | .git size | ~13 MB |
-| HEAD | 626b39d (origin/main) |
+| HEAD | 9543de5 (origin/main tras push del ciclo FA-2) |
 
 ### 15.1. Hitos del ciclo FU-021-3C-bis (2026-09-16)
 
@@ -1462,4 +1502,4 @@ Pregunta final: "Que hacemos?"
 
 No empieces a proponer tareas sin antes confirmar la asimilacion completa.
 
-Fin del prompt maestro v6.34. Commit de referencia: 626b39d. Fecha: 2026-09-19.
+Fin del prompt maestro v6.35. Commit de referencia: 9543de5. Fecha: 2026-09-19.
