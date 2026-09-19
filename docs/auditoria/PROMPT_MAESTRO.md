@@ -1,8 +1,8 @@
-# PROMPT MAESTRO v6.41 - INGENIERO SUPERVISOR DEL RADAR DE ROTACION SECTORIAL
+# PROMPT MAESTRO v6.42 - INGENIERO SUPERVISOR DEL RADAR DE ROTACION SECTORIAL
 
-Actualizado: 2026-09-19 (post IAE NIPC C1+C4-revisadas + filer continuity CERRADO + dictamen TOP 50 + Q-CUR cerrado + coverage baseline Fase A cerrada + micro-gate Coverage Contract Normalization + F2.2-v2 v1.2 redactada + F2.3 NO GO + micro-probe OpenFIGI identidad radar + RADAR_TARGET_CATALOG materializado + piloto TARGET_UNIVERSE_Q1 + F2.3-bis PASS CONDICIONADO + H1 CERRADO + autorizacion TOP 2000 + informe TOP 2000 + fix EOL evidence historicos. 74 commits locales por pushear. HEAD 06c49ad)
-Estado: Operativo al 100% - 10 contratos temporales (FU-021-5 + FU-021-3C-bis) - 935 tests locales + 2 skipped - 0 warnings - Gate 10/10 - Deuda ALTA/MEDIA/BAJA activa: 0
-Commit de referencia: 06c49ad (origin/main HEAD al redactar; el propio commit v6.41 sera HEAD tras push)
+Actualizado: 2026-09-20 (post revision estructural IAE completa - 95 hallazgos - + dictamen formal + 6 fixes mecanicos aplicados (P51/P32/P14-BIS/P31/P18-P26/P70 guarda) + materializacion dictamen revision estructural + contrato semantico v1 P38/P60/P61 redactado + policy v1.3 propuesta + informe post-fixes al auditor + reconciliacion final de hashes. 97 commits locales por pushear. HEAD 3c59d41)
+Estado: Operativo al 100% - 10 contratos temporales (FU-021-5 + FU-021-3C-bis) - 946 tests locales + 2 skipped - 0 warnings - Gate 10/10 - Deuda ALTA/MEDIA/BAJA activa: 0 - F2.4 PENDIENTE EXTERNO
+Commit de referencia: 3c59d41 (origin/main HEAD al redactar; el propio commit v6.42 sera HEAD tras push)
 
 ---
 
@@ -1490,7 +1490,7 @@ Select-String -SimpleMatch desactiva regex → el | se trata como literal. No us
 | Fuentes europeas | 51 (Euronext 13 + Xetra 19 + BME 19) |
 | Fuente commodities | OilPriceAPI (BZ=F, CL=F, GC=F, HG=F, NG=F) |
 | Fuente term structure | CBOE (^VIX3M) |
-| Tests locales | 935 passed + 2 skipped |
+| Tests locales | 946 passed + 2 skipped |
 | Tests CI | ~610 collected con skips (parquet gitignored) |
 | Validation Gate | 10/10 |
 | pyflakes | 0 warnings |
@@ -1498,11 +1498,11 @@ Select-String -SimpleMatch desactiva regex → el | se trata como literal. No us
 | Produccion GH Actions | OK (cron `0 4 * * *` verificado 2026-09-17) |
 | Arquitectura | Modular: 19 src/report/ + 16 src/pipeline/ + 10 src/temporal_contracts/ + 7 src/institutional_accumulation/sec_13f/ + 5 sec_13f/identity (temporal_filter, cusip_resolver, relationships, amendments, sec13f_list, security_identity) + 2 aggregation/ (delta_shares, nipc) + 3 identity/ nuevos (openfigi_client, radar_target_catalog, target_universe) + 5 indicators/mte/ + 4 indicators/darkpool/ |
 | Contratos temporales | 10 (FU-021-5 = 9, FU-021-3C-bis = +1 SPOT_COMMODITY) |
-| Modulo IAE (SEC 13F) | FA-1+FA-2 cerrados. NIPC implementado (spec v1.4). Filer continuity CERRADO. Q-CUR cerrado (3 COM). Coverage baseline Fase A cerrada. F2.3-bis PASS CONDICIONADO: H1 CERRADO arquitectonicamente, TOP 2000 ejecutado, informe entregado. Gate-NIPC.2 BLOQUEADO por THRESHOLD_1/2 UNDEFINED. F2.4 NO AUTORIZADA. Full OpenFIGI NO AUTORIZADO. |
+| Modulo IAE (SEC 13F) | FA-1+FA-2 cerrados. NIPC implementado (spec v1.4). Filer continuity CERRADO. Q-CUR cerrado (3 COM). Coverage baseline Fase A cerrada. F2.3-bis PASS CONDICIONADO. Revision estructural completa (95 hallazgos). 6 fixes mecanicos aplicados (P51/P32/P14-BIS/P31/P18-P26/P70 guarda). Contrato semantico v1 redactado (P38/P60/P61, estado PROPUESTO). Policy v1.3 propuesta. Dictamen revision estructural materializado. Informe post-fixes al auditor entregado. F2.4 PENDIENTE EXTERNO. Gate-NIPC.2 BLOQUEADO. Gate-NIPC.3 NO AUTORIZADO. OpenFIGI masivo NO AUTORIZADO. |
 | RADAR_TARGET_CATALOG | MATERIALIZADO 2026-09-19 (242 filas, 240 OK, 2 MISS: BRK-B, MOG-A). Hash 11eabce8... Construido desde OpenFIGI TICKER/US -> shareClassFIGI, independiente del crosswalk interno. TARGET_UNIVERSE resolver operativo (8 tests). |
 | Coverage baseline NIPC | Fase A cerrada. TOP 2000 (Q1 2026, CURRENT_RETROSPECTIVE): target_true=210 (10.50% count, 32.8079% weight); corregido 212/33.3428%. target_false=1567 (78.35%, 55.68%). no_id=220 (11.0%, 8.86%). error=3 (0.15%, 2.65%). Delta +0.5349 pp por 2 canales adicionales. THRESHOLD_1/2 UNDEFINED |
 | .git size | ~13 MB |
-| HEAD | 06c49ad (74 commits locales ahead de origin/main) |
+| HEAD | 3c59d41 (97 commits locales ahead de origin/main) |
 
 ### 15.1. Hitos del ciclo FU-021-3C-bis (2026-09-16)
 
@@ -2094,6 +2094,81 @@ THRESHOLD_1/2 UNDEFINED. F2.4 NO AUTORIZADA. Full OpenFIGI NO AUTORIZADO.
 **Ahead al cierre:** 74 commits locales.
 
 ---
+### 15.32. Ciclo post-F2.3-bis: revision estructural IAE + 6 fixes + F2.4 (2026-09-20)
+
+**Origen:** peticion del usuario de revision completa del modulo IAE.
+
+**Secuencia ejecutada:**
+
+1. Revision estructural completa: 22 ficheros `.py`, 17 tests, 53 documentos.
+   95 hallazgos clasificados (3 ALTA, 20 MEDIA, 23 BAJA, ~49 INFORMATIVO).
+   2 hipotesis cerradas como NO BUG durante la revision (P14, P29).
+
+2. Dictamen del auditor sobre la revision (materializado en
+   `docs/auditoria/NIPC_DICTAMEN_REVISION_ESTRUCTURAL_2026-09-20.md`,
+   hash `3d004540...`):
+   - P38, P60, P61: NO GO / requieren contrato semantico.
+   - P70: GO CONDICIONADO (cerrar invariante primero).
+   - P51, P32, P14-BIS, P31, P18/P26: GO FIX.
+   - P19, P20, P21, P24, P39, P75/P33: deuda diferida / documental.
+
+3. P70 cerrado con probe empirico sobre Q4 2025 + Q1 2026:
+   - 195 grupos `HR_PLUS_RESTATEMENT` auditados, 0 con `len > 2`.
+   - Argumento estructural: invariante `len == 2` garantizada por
+     `_classify_strategy_from_types`, no por el dataset.
+   - Dictamen P70 (documento propio): GO CONDICIONADO.
+   - Evidencia en `docs/auditoria/evidence/nipc_p70_probe/`.
+
+4. Contrato semantico v1 redactado (`NIPC_CONTRATOS_SEMANTICOS_v1.md`):
+   - P60 (identity_type obligatorio, sin nuevos kinds).
+   - P61 (operational_mapping_status separado de
+     security_resolution_status).
+   - P38 (denominador pairwise = `TARGET_Q4 INTERSECT TARGET_Q1`).
+   - Estado: PROPUESTO / SOMETIDO A F2.4.
+
+5. Policy coverage v1.3 propuesta (`NIPC_COVERAGE_POLICY_V13_PROPUESTA.md`):
+   sustituye funcionalmente a v1.2. Preserva v1.0, v1.1, v1.2 intactas.
+
+6. Los 6 fixes mecanicos aplicados (todos en local, sin push):
+
+   | Fix | Commit | Archivo |
+   |---|---|---|
+   | P51 | `0f1e5a4` | `sec13f_list.py` (linea corta = anomalia, no ACTIVE) |
+   | P32 | `714457e` | `delta_shares.py` (contador de descartes) |
+   | P14-BIS | `eb687c4` | `delta_shares.py` (fillna condicionado a `_merge`) |
+   | P31 | `e31d82e` | `nipc.py` (`nipc_total_available` + docstring) |
+   | P18/P26 | `54478c3` | `manifest.py` (project_root por env var) |
+   | P70 guarda | `1575d17` | `amendments.py` (assert `len == 2`) |
+
+   Regresion acumulada: 0. Tests: 941 -> 946 passed.
+
+7. Documentos de entrega al auditor:
+   - `NIPC_INFORME_ENTREGA_F24.md` (referencia para D1-D4, hash `0763f16b...`).
+   - `NIPC_INFORME_ESTADO_POST_FIXES_F24.md` (complementario, Q1-Q10, hash `49c397b7...`).
+
+8. Reconciliacion final de hashes en la cadena documental (commit
+   `3c59d41`). Cero residuos.
+
+**Estado al cierre:** 97 commits locales ahead de `origin/main`. HEAD
+`3c59d41`. 946 passed + 2 skipped. Working tree limpio. F2.4 PENDIENTE
+EXTERNO.
+
+**Bloqueos vigentes:** THRESHOLD_1/2 UNDEFINED. Gate-NIPC.2 BLOQUEADO.
+Gate-NIPC.3 NO AUTORIZADO. OpenFIGI masivo NO AUTORIZADO. Policy v1.3
+aplicacion NO AUTORIZADA. Contratos P38/P60/P61 PROPUESTOS.
+
+**Documentos preservados intactos:** `NIPC_COVERAGE_POLICY.md` v1.0
+(hash `57f2d01f...`), v1.1, v1.2.
+
+**Siguiente paso (pendiente externo):** dictamen F2.4 del auditor. Si
+es GO, autoriza el paso 4 (tests especificos para P38/P60/P61).
+
+**Leccion operativa documentada:** `-replace` de PowerShell con
+argumento numerico se interpreta como `-replace "N", ""`. Corrompio un
+informe entero. Regla nueva: sustituciones condicionales (con conteo,
+posicion o regex complejo) se ejecutan en Python puro con
+`.replace(..., 1)`.
+
 ## SECCION 16 - FRASE GUIA
 "Determinista, descriptivo, auditado. Paso a paso. Documentar. Saber parar."
 
@@ -2139,4 +2214,4 @@ Pregunta final: "Que hacemos?"
 
 No empieces a proponer tareas sin antes confirmar la asimilacion completa.
 
-Fin del prompt maestro v6.41. Commit de referencia: 06c49ad. Fecha: 2026-09-19.
+Fin del prompt maestro v6.42. Commit de referencia: 3c59d41. Fecha: 2026-09-20.
