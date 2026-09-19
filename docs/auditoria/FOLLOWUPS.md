@@ -1332,3 +1332,23 @@ Referencia: prompt maestro v6.30, secciones 11.17 a 11.19 y 15.21. Nueve fixes a
   - `docs/auditoria/INSTITUTIONAL_ACCUMULATION_NIPC_GATE0_COVERAGE_BASELINE_DICTAMEN.md`
 - **Commits:** eda67ef, d4a926e, 4659ce1.
 - **Sin push.** 55 commits locales ahead.
+
+## IAE NIPC - F2.2-v2 propuesta v1.2 (2026-09-19)
+
+- **Origen:** dictamen F2.2 NO GO CON CAMBIOS OBLIGATORIOS + F2.1-bis (Camino B).
+- **Documento:** `docs/auditoria/NIPC_COVERAGE_POLICY_V12_PROPUESTA.md` (commit 0518b96).
+- **Estado:** BORRADOR. NO vigente. NO sustituye a la policy v1.0.
+- **Alcance:**
+  - Aplica los 8 cambios obligatorios del dictamen F2.2.
+  - Camino B declarado: `RADAR_TARGET_REGISTRY = NOT AVAILABLE`.
+  - coverage = NOT_MEASURABLE mientras no exista registry.
+  - NIPC status = INSUFFICIENT por ausencia de denominador, no por valores bajos.
+- **No toca:** motor (`nipc.py`, `delta_shares.py`, `security_identity.py`), C2, thresholds, OpenFIGI, baseline evidencia, spec v1.4, policy v1.0.
+- **Cadena F2:**
+  - F2.1 PASS (eda67ef).
+  - F2.1-bis PASS (4659ce1).
+  - F2.2 NO GO CON CAMBIOS (d4a926e).
+  - F2.2-v2 borrador redactado (0518b96).
+- **Estado de gates:** F2.3 PENDIENTE EXTERNO. F2.4 NO AUTORIZADA. THRESHOLD_1/2 UNDEFINED. OpenFIGI NO AUTORIZADO. Gate-NIPC.2 BLOQUEADO. Gate-NIPC.3 NO AUTORIZADO.
+- **Policy v1.0 intacta:** hash 57f2d01f...
+- **Sin push.** 58 commits locales ahead.
