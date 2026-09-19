@@ -142,63 +142,77 @@ Los thresholds se evaluan sobre esta interseccion. El universo
 tecnico (13F SH + null) se usa para diagnostico del motor, no para
 fijar umbrales.
 
-## 10.bis. Filer continuity como dimension independiente
+## 10.bis. Filer continuity como control de integridad
 
-Dictamen habilitante: INSTITUTIONAL_ACCUMULATION_NIPC_GATE0_PROBE_
-DICTAMEN.md (2026-09-19, Q-PROBE-3). Especificacion: seccion 3.15.
+Dictamen habilitante: INSTITUTIONAL_ACCUMULATION_NIPC_GATE0_TOP50_DICTAMEN.md
+(2026-09-19, Q-T50-1 a Q-T50-5). Especificacion: seccion 3.15 (v1.4).
 
 ### Principio
 
-Coverage y continuidad de filer son DIMENSIONES INDEPENDIENTES.
-No deben combinarse en un unico factor de descuento.
+Filer continuity es CONTROL DE INTEGRIDAD / DIAGNOSTICO, NO threshold
+cuantitativo. La cifra observada (top 50: 4/54 = 7.4%) NO se convierte
+en threshold.
 
-    coverage suficiente
-        +
-    filer continuity suficiente
-        =
-    condiciones necesarias para interpretar NIPC
+### Metricas de diagnostico (a reportar siempre)
 
-### Metricas obligatorias de filer continuity
+  filer_discontinuity_count
+  filer_discontinuity_pct
+  filer_discontinuity_gross_shares
+  filer_discontinuity_concentration
 
-Toda ejecucion de NIPC debe reportar, ademas de las 6 metricas de
-coverage pairwise de la seccion 2:
-
-    filer_continuity_securities_pct
-    filer_continuity_weighted_pct
-    filer_discontinuity_bruto
-    filer_discontinuity_neto
-    filer_discontinuity_concentration
-
-Ver definiciones exactas en especificacion seccion 3.15.
+Estas metricas se reportan como OBSERVACION. No autorizan ni bloquean
+READY por si solas. Se usan para detectar reorganizaciones anormales
+que podrian distorsionar el NIPC observable.
 
 ### Thresholds
 
-    THRESHOLD_3 (filer_continuity_securities_pct) = UNDEFINED
-    THRESHOLD_4 (filer_continuity_weighted_pct)   = UNDEFINED
+  THRESHOLD_3 = UNDEFINED (NO aplicable; filer continuity no es threshold)
+  THRESHOLD_4 = UNDEFINED (NO aplicable)
 
-Se fijan conjuntamente con THRESHOLD_1 y THRESHOLD_2, DESPUES de
-mini-probe Q-PROBE-5. NO antes.
+Eliminados los THRESHOLD_3/THRESHOLD_4 que la version anterior (v1.3)
+contemplaba. Ahora solo existen:
 
-### Regla de publicacion ampliada
+  THRESHOLD_1 (paired_security_coverage)
+  THRESHOLD_2 (paired_weighted_share_coverage)
 
-    READY requiere simultaneamente:
+Ambos UNDEFINED hasta dictamen especifico.
 
-      (1) paired_security_coverage        >= THRESHOLD_1
-      (2) paired_weighted_share_coverage  >= THRESHOLD_2
-      (3) filer_continuity_securities_pct >= THRESHOLD_3
-      (4) filer_continuity_weighted_pct   >= THRESHOLD_4
+### Regla de publicacion
 
-Un solo control por encima no autoriza READY. Cuatro controles
-simultaneos.
+  READY requiere:
+
+    (1) paired_security_coverage        >= THRESHOLD_1
+    (2) paired_weighted_share_coverage  >= THRESHOLD_2
+    (3) filer_discontinuity_pct <= valor de control (a definir con thresholds)
+
+No se fija el valor del control (3) en esta version. Se propone como
+alerta: si filer_discontinuity_pct supera el N% (a definir), se marca
+la observacion en el reporte pero no se bloquea READY automaticamente.
+
+### Dimensiones separadas (Q-T50-2)
+
+  filer_status           por presencia documental del filing
+                         (CONTINUOUS_FILER | FILER_DISCONTINUITY | UNRESOLVED)
+  position_mass_status   por SSHPRNAMT (HAS_SHARES | ZERO_SHARES | NO_CANONICAL_HOLDINGS)
+  nt_to_hr_relation_observed (bool)
+  nt_to_hr_relation_targets (list)
 
 ### Estado actual (Q4 2025 -> Q1 2026)
 
-    filer_continuity_* = pendiente mini-probe Q-PROBE-5.
+  top 20: 3/24 discontinuidades (12.5%), todas Vanguard.
+  top 50: 4/54 discontinuidades (7.4%), todas Vanguard.
 
-    Hallazgo Vanguard: nipc_sole ~ -41.16B, nipc_dfnd ~ +41.28B,
-    neto ~ +52M. Cancelacion por reorganizacion de filer.
+  Interpretacion: concentracion en una estructura corporativa concreta
+  durante este periodo. NO extrapolable al universo 13F.
 
-    STATUS: INSUFFICIENT (por cobertura + filer continuity UNDEFINED).
+  STATUS global: INSUFFICIENT (por coverage < thresholds UNDEFINED).
+
+### Prohibiciones
+
+  - NO convertir filer_discontinuity_pct en threshold de publicacion.
+  - NO inferir economic_owner por parent/child.
+  - NO reconciliar NT <-> HR productivamente.
+  - NO usar filer_status por SSHPRNAMT > 0.
 
 ---
 
