@@ -159,7 +159,8 @@ def compute_coverage_pairwise(units_current, units_previous):
         "coverage_previous": 0.0,
         "coverage_current": 0.0,
         "paired_security_coverage": 0.0,
-        "paired_weighted_share_coverage": 0.0,
+        "paired_weighted_share_coverage": None,
+        "coverage_status": "UNAVAILABLE",
         "unmapped_weight_previous": 0.0,
         "unmapped_weight_current": 0.0,
     }
@@ -197,10 +198,12 @@ def compute_coverage_pairwise(units_current, units_previous):
     coverage_previous = _cov(mapped_p, sec_p)
 
     # --- paired ---
-    union_sec = sec_c | sec_p
+    # P38: TARGET_PAIRWISE = TARGET_Q4 INTERSECT TARGET_Q1.
+    # El denominador es la interseccion de TARGET, no la union de observadas.
+    target_pairwise = sec_c & sec_p
     both_mapped_sec = mapped_c & mapped_p
     paired_sec_cov = (
-        len(both_mapped_sec) / len(union_sec) if union_sec else 0.0
+        len(both_mapped_sec) / len(target_pairwise) if target_pairwise else 0.0
     )
 
     # --- ponderado por SSHPRNAMT ---
@@ -223,13 +226,21 @@ def compute_coverage_pairwise(units_current, units_previous):
             .apply(lambda s: float(pd.to_numeric(s, errors="coerce").max()))
             .to_dict()
         )
-        denom = sum(by_sec.get(k, 0.0) for k in union_sec)
+        # P38: denominador ponderado = suma de w(s) sobre TARGET_PAIRWISE.
+        denom = sum(by_sec.get(k, 0.0) for k in target_pairwise)
         numer = sum(by_sec.get(k, 0.0) for k in both_mapped_sec)
-        paired_weighted = (numer / denom) if denom > 0 else 0.0
+        if denom > 0:
+            paired_weighted = numer / denom
+            coverage_status = "VALID"
+        else:
+            # Q5: no medible. No se codifica como 0.0.
+            paired_weighted = None
+            coverage_status = "UNAVAILABLE"
         unmapped_prev = 1.0 - coverage_previous
         unmapped_curr = 1.0 - coverage_current
     else:
-        paired_weighted = 0.0
+        paired_weighted = None
+        coverage_status = "UNAVAILABLE"
         unmapped_prev = 1.0
         unmapped_curr = 1.0
 
@@ -238,6 +249,7 @@ def compute_coverage_pairwise(units_current, units_previous):
         "coverage_current": coverage_current,
         "paired_security_coverage": paired_sec_cov,
         "paired_weighted_share_coverage": paired_weighted,
+        "coverage_status": coverage_status,
         "unmapped_weight_previous": unmapped_prev,
         "unmapped_weight_current": unmapped_curr,
     }

@@ -140,6 +140,7 @@ def test_coverage_pairwise_ambos_mapeados():
 
 
 def test_coverage_pairwise_parcial():
+    """P38: denominador = interseccion de TARGET, no union de observadas."""
     u_c = _units([
         {"observed_security_key": "cusip:A"},
         {"observed_security_key": "cusip:B",
@@ -152,8 +153,8 @@ def test_coverage_pairwise_parcial():
     c = npc.compute_coverage_pairwise(u_c, u_p)
     assert c["coverage_current"] == 0.5
     assert c["coverage_previous"] == 1.0
-    # union = {A, B}, both_mapped = {A} -> 0.5
-    assert c["paired_security_coverage"] == 0.5
+    # P38: TARGET_PAIRWISE = {A} (interseccion), both_mapped = {A} -> 1.0
+    assert c["paired_security_coverage"] == 1.0
 
 
 def test_coverage_pairwise_ambos_vacios():
@@ -321,3 +322,40 @@ def test_end_to_end_units_delta_nipc():
     assert result["n_both"] == 2
     assert result["paired_security_coverage"] == 1.0
     assert result["status"] == npc.STATUS_INSUFFICIENT  # sin thresholds
+
+# ---- P38 + Q5 ----
+
+def test_p38_denominador_interseccion_no_union():
+    """P38: dos securities solo en Q4 / solo en Q1 no entran al denominador."""
+    u_c = _units([{"observed_security_key": "cusip:A"}])
+    u_p = _units([{"observed_security_key": "cusip:B"}])
+    c = npc.compute_coverage_pairwise(u_c, u_p)
+    # TARGET_PAIRWISE = {} -> 0.0, UNAVAILABLE
+    assert c["paired_security_coverage"] == 0.0
+    assert c["paired_weighted_share_coverage"] is None
+    assert c["coverage_status"] == "UNAVAILABLE"
+
+
+def test_p38_denominador_ambos_presentes():
+    """P38: cuando A esta en ambos, A es TARGET_PAIRWISE."""
+    u_c = _units([
+        {"observed_security_key": "cusip:A", "sshprnamt_total": 100.0},
+        {"observed_security_key": "cusip:B", "sshprnamt_total": 200.0},
+    ])
+    u_p = _units([
+        {"observed_security_key": "cusip:A", "sshprnamt_total": 80.0},
+    ])
+    c = npc.compute_coverage_pairwise(u_c, u_p)
+    # TARGET_PAIRWISE = {A}, both_mapped = {A} -> paired_security_coverage = 1.0
+    assert c["paired_security_coverage"] == 1.0
+    # w(A) = max(100, 80) = 100; numer=100, denom=100 -> 1.0
+    assert c["paired_weighted_share_coverage"] == 1.0
+    assert c["coverage_status"] == "VALID"
+
+
+def test_q5_coverage_status_unavailable_cuando_vacio():
+    """Q5: cobertura no medible -> None + UNAVAILABLE, no 0.0."""
+    c = npc.compute_coverage_pairwise(pd.DataFrame(), pd.DataFrame())
+    assert c["paired_weighted_share_coverage"] is None
+    assert c["coverage_status"] == "UNAVAILABLE"
+
