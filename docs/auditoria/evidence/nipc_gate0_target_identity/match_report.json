@@ -1,0 +1,298 @@
+{
+  "radar_total": 242,
+  "radar_with_figi": 240,
+  "radar_with_share_class_figi": 240,
+  "cusip_prev_total": 113,
+  "cusip_prev_with_scf": 112,
+  "matches_by_share_class_figi": 48,
+  "matches": [
+    {
+      "cusip": "00206R102",
+      "share_class_figi": "BBG001S5VWH2",
+      "radar_ticker": "T",
+      "cusip_ticker_from_openfigi": "T"
+    },
+    {
+      "cusip": "002824100",
+      "share_class_figi": "BBG001S5N9M6",
+      "radar_ticker": "ABT",
+      "cusip_ticker_from_openfigi": "ABT"
+    },
+    {
+      "cusip": "00287Y109",
+      "share_class_figi": "BBG0025Y4RZ3",
+      "radar_ticker": "ABBV",
+      "cusip_ticker_from_openfigi": "ABBV"
+    },
+    {
+      "cusip": "02079K107",
+      "share_class_figi": "BBG009S3NB21",
+      "radar_ticker": "GOOG",
+      "cusip_ticker_from_openfigi": "GOOG"
+    },
+    {
+      "cusip": "02079K305",
+      "share_class_figi": "BBG009S39JY5",
+      "radar_ticker": "GOOGL",
+      "cusip_ticker_from_openfigi": "GOOGL"
+    },
+    {
+      "cusip": "023135106",
+      "share_class_figi": "BBG001S5PQL7",
+      "radar_ticker": "AMZN",
+      "cusip_ticker_from_openfigi": "AMZN"
+    },
+    {
+      "cusip": "037833100",
+      "share_class_figi": "BBG001S5N8V8",
+      "radar_ticker": "AAPL",
+      "cusip_ticker_from_openfigi": "AAPL"
+    },
+    {
+      "cusip": "060505104",
+      "share_class_figi": "BBG001S5P0Y0",
+      "radar_ticker": "BAC",
+      "cusip_ticker_from_openfigi": "BAC"
+    },
+    {
+      "cusip": "110122108",
+      "share_class_figi": "BBG001S8N8J6",
+      "radar_ticker": "BMY",
+      "cusip_ticker_from_openfigi": "BMY"
+    },
+    {
+      "cusip": "11135F101",
+      "share_class_figi": "BBG00KHY5SY8",
+      "radar_ticker": "AVGO",
+      "cusip_ticker_from_openfigi": "AVGO"
+    },
+    {
+      "cusip": "126408103",
+      "share_class_figi": "BBG001S5Q7Q3",
+      "radar_ticker": "CSX",
+      "cusip_ticker_from_openfigi": "CSX"
+    },
+    {
+      "cusip": "166764100",
+      "share_class_figi": "BBG001S67ZC5",
+      "radar_ticker": "CVX",
+      "cusip_ticker_from_openfigi": "CVX"
+    },
+    {
+      "cusip": "169656105",
+      "share_class_figi": "BBG001SP50B3",
+      "radar_ticker": "CMG",
+      "cusip_ticker_from_openfigi": "CMG"
+    },
+    {
+      "cusip": "17275R102",
+      "share_class_figi": "BBG001S6HC62",
+      "radar_ticker": "CSCO",
+      "cusip_ticker_from_openfigi": "CSCO"
+    },
+    {
+      "cusip": "172967424",
+      "share_class_figi": "BBG001S72ZG4",
+      "radar_ticker": "C",
+      "cusip_ticker_from_openfigi": "C"
+    },
+    {
+      "cusip": "191216100",
+      "share_class_figi": "BBG001S5SMQ8",
+      "radar_ticker": "KO",
+      "cusip_ticker_from_openfigi": "KO"
+    },
+    {
+      "cusip": "20030N101",
+      "share_class_figi": "BBG001S5PXL2",
+      "radar_ticker": "CMCSA",
+      "cusip_ticker_from_openfigi": "CMCSA"
+    },
+    {
+      "cusip": "254687106",
+      "share_class_figi": "BBG001S5QHF3",
+      "radar_ticker": "DIS",
+      "cusip_ticker_from_openfigi": "DIS"
+    },
+    {
+      "cusip": "30303M102",
+      "share_class_figi": "BBG001SQCQC5",
+      "radar_ticker": "META",
+      "cusip_ticker_from_openfigi": "META"
+    },
+    {
+      "cusip": "345370860",
+      "share_class_figi": "BBG001S5TZ33",
+      "radar_ticker": "F",
+      "cusip_ticker_from_openfigi": "F"
+    },
+    {
+      "cusip": "35671D857",
+      "share_class_figi": "BBG001S5R3F3",
+      "radar_ticker": "FCX",
+      "cusip_ticker_from_openfigi": "FCX"
+    },
+    {
+      "cusip": "458140100",
+      "share_class_figi": "BBG001S5SF65",
+      "radar_ticker": "INTC",
+      "cusip_ticker_from_openfigi": "INTC"
+    },
+    {
+      "cusip": "46625H100",
+      "share_class_figi": "BBG001S8CRC3",
+      "radar_ticker": "JPM",
+      "cusip_ticker_from_openfigi": "JPM"
+    },
+    {
+      "cusip": "478160104",
+      "share_class_figi": "BBG001S5SHQ9",
+      "radar_ticker": "JNJ",
+      "cusip_ticker_from_openfigi": "JNJ"
+    },
+    {
+      "cusip": "49177J102",
+      "share_class_figi": "BBG01C79X614",
+      "radar_ticker": "KVUE",
+      "cusip_ticker_from_openfigi": "KVUE"
+    },
+    {
+      "cusip": "49271V100",
+      "share_class_figi": "BBG001ST5W34",
+      "radar_ticker": "KDP",
+      "cusip_ticker_from_openfigi": "KDP"
+    },
+    {
+      "cusip": "49456B101",
+      "share_class_figi": "BBG001TG2YZ5",
+      "radar_ticker": "KMI",
+      "cusip_ticker_from_openfigi": "KMI"
+    },
+    {
+      "cusip": "58933Y105",
+      "share_class_figi": "BBG001S5TC52",
+      "radar_ticker": "MRK",
+      "cusip_ticker_from_openfigi": "MRK"
+    },
+    {
+      "cusip": "594918104",
+      "share_class_figi": "BBG001S5TD05",
+      "radar_ticker": "MSFT",
+      "cusip_ticker_from_openfigi": "MSFT"
+    },
+    {
+      "cusip": "617446448",
+      "share_class_figi": "BBG001S9V5Z3",
+      "radar_ticker": "MS",
+      "cusip_ticker_from_openfigi": "MS"
+    },
+    {
+      "cusip": "64110L106",
+      "share_class_figi": "BBG001SF6L46",
+      "radar_ticker": "NFLX",
+      "cusip_ticker_from_openfigi": "NFLX"
+    },
+    {
+      "cusip": "65339F101",
+      "share_class_figi": "BBG001S5RB29",
+      "radar_ticker": "NEE",
+      "cusip_ticker_from_openfigi": "NEE"
+    },
+    {
+      "cusip": "67066G104",
+      "share_class_figi": "BBG001S5TZJ6",
+      "radar_ticker": "NVDA",
+      "cusip_ticker_from_openfigi": "NVDA"
+    },
+    {
+      "cusip": "68389X105",
+      "share_class_figi": "BBG001S5SJG6",
+      "radar_ticker": "ORCL",
+      "cusip_ticker_from_openfigi": "ORCL"
+    },
+    {
+      "cusip": "69331C108",
+      "share_class_figi": "BBG001S5V206",
+      "radar_ticker": "PCG",
+      "cusip_ticker_from_openfigi": "PCG"
+    },
+    {
+      "cusip": "69608A108",
+      "share_class_figi": "BBG001T53796",
+      "radar_ticker": "PLTR",
+      "cusip_ticker_from_openfigi": "PLTR"
+    },
+    {
+      "cusip": "717081103",
+      "share_class_figi": "BBG001S5V466",
+      "radar_ticker": "PFE",
+      "cusip_ticker_from_openfigi": "PFE"
+    },
+    {
+      "cusip": "718172109",
+      "share_class_figi": "BBG001STP9N1",
+      "radar_ticker": "PM",
+      "cusip_ticker_from_openfigi": "PM"
+    },
+    {
+      "cusip": "742718109",
+      "share_class_figi": "BBG001S5V4L9",
+      "radar_ticker": "PG",
+      "cusip_ticker_from_openfigi": "PG"
+    },
+    {
+      "cusip": "806857108",
+      "share_class_figi": "BBG001S5W4C8",
+      "radar_ticker": "SLB",
+      "cusip_ticker_from_openfigi": "SLB"
+    },
+    {
+      "cusip": "808513105",
+      "share_class_figi": "BBG001S5VXD4",
+      "radar_ticker": "SCHW",
+      "cusip_ticker_from_openfigi": "SCHW"
+    },
+    {
+      "cusip": "88160R101",
+      "share_class_figi": "BBG001SQKGD7",
+      "radar_ticker": "TSLA",
+      "cusip_ticker_from_openfigi": "TSLA"
+    },
+    {
+      "cusip": "90353T100",
+      "share_class_figi": "BBG002B04MW4",
+      "radar_ticker": "UBER",
+      "cusip_ticker_from_openfigi": "UBER"
+    },
+    {
+      "cusip": "92343V104",
+      "share_class_figi": "BBG001S67QY1",
+      "radar_ticker": "VZ",
+      "cusip_ticker_from_openfigi": "VZ"
+    },
+    {
+      "cusip": "92826C839",
+      "share_class_figi": "BBG001SRCFY3",
+      "radar_ticker": "V",
+      "cusip_ticker_from_openfigi": "V"
+    },
+    {
+      "cusip": "931142103",
+      "share_class_figi": "BBG001S5XH92",
+      "radar_ticker": "WMT",
+      "cusip_ticker_from_openfigi": "WMT"
+    },
+    {
+      "cusip": "934423104",
+      "share_class_figi": "BBG011386VG3",
+      "radar_ticker": "WBD",
+      "cusip_ticker_from_openfigi": "WBD"
+    },
+    {
+      "cusip": "949746101",
+      "share_class_figi": "BBG001S5XF23",
+      "radar_ticker": "WFC",
+      "cusip_ticker_from_openfigi": "WFC"
+    }
+  ]
+}
