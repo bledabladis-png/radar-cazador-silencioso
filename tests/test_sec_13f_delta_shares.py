@@ -349,6 +349,56 @@ def test_reported_position_unit_columns_presentes():
         assert c in units.columns, c
 
 
+def test_filter_canonical_stats_presentes():
+    """P32: _filter_canonical devuelve (df, stats) con 5 claves."""
+    info = _mk_infotable([
+        {"CUSIP": "037833100", "SSHPRNAMTTYPE": "SH", "PUTCALL": None,
+         "SSHPRNAMT": 100.0, "INVESTMENTDISCRETION": "SOLE"},
+    ])
+    df, stats = ds._filter_canonical(info)
+    assert len(df) == 1
+    for k in ("n_rows_input", "n_after_sh_putcall_null",
+              "n_dropped_not_sh_or_putcall",
+              "n_dropped_invalid_sshprnamt", "n_rows_output"):
+        assert k in stats, f"falta clave {k}"
+    assert stats["n_rows_input"] == 1
+    assert stats["n_rows_output"] == 1
+    assert stats["n_dropped_invalid_sshprnamt"] == 0
+
+
+def test_filter_canonical_cuenta_invalid_sshprnamt():
+    """P32: SSHPRNAMT no parseable se cuenta en n_dropped_invalid_sshprnamt."""
+    info = _mk_infotable([
+        {"CUSIP": "037833100", "SSHPRNAMTTYPE": "SH", "PUTCALL": None,
+         "SSHPRNAMT": 100.0, "INVESTMENTDISCRETION": "SOLE"},
+        {"CUSIP": "594918104", "SSHPRNAMTTYPE": "SH", "PUTCALL": None,
+         "SSHPRNAMT": "abc", "INVESTMENTDISCRETION": "SOLE"},  # invalido
+        {"CUSIP": "023135106", "SSHPRNAMTTYPE": "SH", "PUTCALL": None,
+         "SSHPRNAMT": "XYZ", "INVESTMENTDISCRETION": "SOLE"},  # invalido
+    ])
+    df, stats = ds._filter_canonical(info)
+    assert stats["n_rows_input"] == 3
+    assert stats["n_dropped_invalid_sshprnamt"] == 2
+    assert stats["n_rows_output"] == 1
+
+
+def test_compute_reported_position_units_return_stats():
+    """P32: kwarg return_stats=True devuelve (DataFrame, stats)."""
+    info = _mk_infotable([
+        {"CUSIP": "037833100", "SSHPRNAMTTYPE": "SH", "PUTCALL": None,
+         "SSHPRNAMT": 100.0, "INVESTMENTDISCRETION": "SOLE"},
+    ])
+    sub = _mk_submission([("A1", "FM1")])
+    out = ds.compute_reported_position_units(
+        info, sub, report_period="2026-03-31", return_stats=True,
+    )
+    assert isinstance(out, tuple) and len(out) == 2
+    units, stats = out
+    assert len(units) == 1
+    assert stats["n_rows_output"] == 1
+    assert "n_dropped_invalid_sshprnamt" in stats
+
+
 def test_delta_shares_columns_presentes():
     info = _mk_infotable([
         {"ACCESSION_NUMBER": "A1", "INFOTABLE_SK": 1, "CUSIP": "C1",

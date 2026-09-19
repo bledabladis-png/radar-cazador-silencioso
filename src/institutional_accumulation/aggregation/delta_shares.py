@@ -68,9 +68,18 @@ DELTA_COLUMNS = (
 
 
 def _filter_canonical(infotable_df):
-    """Aplica filtro SH + PUTCALL NULL y devuelve copia con columnas minimas.
+    """Aplica filtro SH + PUTCALL NULL y devuelve (df, stats).
 
     NO filtra por discretion (eso se hace despues en la agregacion).
+
+    P32: devuelve una tupla (DataFrame, dict) en vez de solo DataFrame.
+    El dict cuantifica los descartes para trazabilidad (drop != silence).
+    Claves del dict:
+      n_rows_input                   filas del input
+      n_after_sh_putcall_null        filas tras filtro SH + PUTCALL NULL
+      n_dropped_not_sh_or_putcall    descartadas por SH/PUTCALL
+      n_dropped_invalid_sshprnamt    descartadas por SSHPRNAMT no parseable
+      n_rows_output                  filas finales
     """
     required = ("ACCESSION_NUMBER", "INFOTABLE_SK", "CUSIP",
                 "SSHPRNAMTTYPE", "PUTCALL", "SSHPRNAMT",
@@ -78,14 +87,28 @@ def _filter_canonical(infotable_df):
     for c in required:
         if c not in infotable_df.columns:
             raise KeyError("INFOTABLE sin columna " + c)
+
+    n_input = int(len(infotable_df))
     df = infotable_df.copy()
     mask_sh = df["SSHPRNAMTTYPE"].astype(str).str.strip() == "SH"
     mask_null = df["PUTCALL"].isna()
     df = df[mask_sh & mask_null].copy()
+    n_after_sh_putcall = int(len(df))
+
     # SSHPRNAMT a float64 nullable
     df["SSHPRNAMT_f"] = pd.to_numeric(df["SSHPRNAMT"], errors="coerce")
+    n_before_dropna = int(len(df))
     df = df.dropna(subset=["SSHPRNAMT_f"])
-    return df
+    n_dropped_invalid = n_before_dropna - int(len(df))
+
+    stats = {
+        "n_rows_input": n_input,
+        "n_after_sh_putcall_null": n_after_sh_putcall,
+        "n_dropped_not_sh_or_putcall": n_input - n_after_sh_putcall,
+        "n_dropped_invalid_sshprnamt": n_dropped_invalid,
+        "n_rows_output": int(len(df)),
+    }
+    return df, stats
 
 
 def _attach_filing_manager(df, submission_df):
@@ -153,6 +176,7 @@ def compute_reported_position_units(
     *,
     report_period,
     identity_results=None,
+    return_stats=False,
 ):
     """Agrega SSHPRNAMT por reported_position_unit.
 
@@ -169,8 +193,10 @@ def compute_reported_position_units(
     coverpage_df: NO usado en este ciclo (firma estable para extension).
     report_period: string "YYYY-MM-DD".
     identity_results: dict {cusip: ...} de security_identity.resolve_batch_identities.
+    return_stats: si True, devuelve tupla (DataFrame, stats_dict) con los
+                  contadores de descartes de _filter_canonical.
     """
-    df = _filter_canonical(infotable_df)
+    df, filter_stats = _filter_canonical(infotable_df)
     df = _attach_filing_manager(df, submission_df)
     df = _attach_identity(df, identity_results)
 
@@ -197,7 +223,10 @@ def compute_reported_position_units(
     )
     agg["report_period"] = str(report_period)
     agg = agg[list(UNITS_COLUMNS)]
-    return agg.reset_index(drop=True)
+    agg = agg.reset_index(drop=True)
+    if return_stats:
+        return agg, filter_stats
+    return agg
 
 
 def _split_canonical(units_df):
