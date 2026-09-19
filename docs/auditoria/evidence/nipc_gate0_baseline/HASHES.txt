@@ -1,0 +1,9 @@
+2d84712458e1a393483d26810a971803faa98953e4381663bbb5d9b679f09002  README.md
+b2ede861bc4a49fc27932d09cd8aaac533e31dd71eed17beff182fc8dc8ca337  probe_coverage_baseline.py
+d5a69ad4588af02c218388cbfd111cc150781ded687f025bb31a19ef8845f1e0  baseline_output.txt
+
+generated_at: 2026-09-19
+probe_period_q4: 2025-12-31
+probe_period_q1: 2026-03-31
+probe_exit_code: 0
+eol_policy: LF (git .gitattributes: *.txt text eol=lf)
