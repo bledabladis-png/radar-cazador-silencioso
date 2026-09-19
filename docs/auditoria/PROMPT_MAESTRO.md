@@ -1,8 +1,8 @@
-# PROMPT MAESTRO v6.40 - INGENIERO SUPERVISOR DEL RADAR DE ROTACION SECTORIAL
+# PROMPT MAESTRO v6.41 - INGENIERO SUPERVISOR DEL RADAR DE ROTACION SECTORIAL
 
-Actualizado: 2026-09-19 (post IAE NIPC C1+C4-revisadas + filer continuity CERRADO + dictamen TOP 50 + Q-CUR cerrado + coverage baseline Fase A cerrada + micro-gate Coverage Contract Normalization + F2.2-v2 v1.2 redactada + F2.3 NO GO + micro-probe OpenFIGI identidad radar + RADAR_TARGET_CATALOG materializado + piloto TARGET_UNIVERSE_Q1. 68 commits locales por pushear. HEAD dfdc0b0)
-Estado: Operativo al 100% - 10 contratos temporales (FU-021-5 + FU-021-3C-bis) - 911 tests locales + 2 skipped - 0 warnings - Gate 10/10 - Deuda ALTA/MEDIA/BAJA activa: 0
-Commit de referencia: dfdc0b0 (origin/main HEAD al redactar; el propio commit v6.40 sera HEAD tras push)
+Actualizado: 2026-09-19 (post IAE NIPC C1+C4-revisadas + filer continuity CERRADO + dictamen TOP 50 + Q-CUR cerrado + coverage baseline Fase A cerrada + micro-gate Coverage Contract Normalization + F2.2-v2 v1.2 redactada + F2.3 NO GO + micro-probe OpenFIGI identidad radar + RADAR_TARGET_CATALOG materializado + piloto TARGET_UNIVERSE_Q1 + F2.3-bis PASS CONDICIONADO + H1 CERRADO + autorizacion TOP 2000 + informe TOP 2000 + fix EOL evidence historicos. 74 commits locales por pushear. HEAD 06c49ad)
+Estado: Operativo al 100% - 10 contratos temporales (FU-021-5 + FU-021-3C-bis) - 935 tests locales + 2 skipped - 0 warnings - Gate 10/10 - Deuda ALTA/MEDIA/BAJA activa: 0
+Commit de referencia: 06c49ad (origin/main HEAD al redactar; el propio commit v6.41 sera HEAD tras push)
 
 ---
 
@@ -1125,6 +1125,85 @@ Gate-NIPC.2 BLOQUEADO. Gate-NIPC.3 NO AUTORIZADO.
 
 ---
 
+### 11.30. IAE F2.3-bis + TOP 2000 - validacion cuantitativa ponderada (2026-09-19)
+
+**Origen:** dictamen F2.3-bis (PASS CONDICIONADO) + autorizacion TOP 2000.
+H1 arquitectonico CERRADO. Full OpenFIGI NO AUTORIZADO. F2.4 NO AUTORIZADA.
+
+**Convencion temporal aprobada:**
+
+    RADAR_SNAPSHOT_DATE = 2026-09-19
+    13F_OBSERVATION_PERIOD = 2026-03-31
+    RADAR_MEMBERSHIP_MODE = CURRENT_RETROSPECTIVE
+
+Radar actual aplicado retrospectivamente al 13F Q1 2026. NO modela historical membership.
+
+**Piloto top 2000 (2000 CUSIPs por SSHPRNAMT):**
+
+RAW (shareClassFIGI + exchCode=US estricto):
+
+    target_true    210 (10.50% count, 32.8079% weight)
+    target_false  1567 (78.35% count, 55.6839% weight)
+    no_id          220 (11.00% count,  8.8561% weight)
+    error            3 ( 0.15% count,  2.6521% weight)
+
+CORREGIDO (2 canales de recuperacion: cusip_ticker_exceptions + ticker match):
+
+    target_true    212 (10.60% count, 33.3428% weight)
+    target_false  1567 (78.35% count, 55.6839% weight)
+    no_id          218 (10.90% count,  8.3211% weight)
+    error            3 ( 0.15% count,  2.6521% weight)
+
+Delta pct_target_weight = +0.5349 pp.
+
+**Comparacion top 500 vs top 2000:**
+
+    Categoria       top500    top2000   ratio/delta
+    target count    28.40%    10.50%    2.70x caida
+    target weight   46.76%    32.81%    -13.95 pp
+    target_false_w  41.52%    55.68%    +14.16 pp
+
+Confirma hipotesis del auditor: top 500 sobrerrepresenta large caps del radar.
+
+**Hallazgos materiales:**
+
+H1. shareClassFIGI cambia tras reorganizacion corporativa (caso XOM):
+    - Catalogo radar: BBG023CY9NL0 (EXXONMOBIL HOLDINGS CORP).
+    - OpenFIGI CUSIP 30231G102: BBG001S69V32 (EXXON MOBIL CORP).
+    Matiza premisa "FIGI inmune a corporate actions" del dictamen F2.3-bis.
+
+H2. HON no esta en el radar 242. NO_ID legitimo. Su reverse split
+    post-Q1 (2026-06-29) lo excluyo del radar actual.
+
+H3. 221 NO_ID genuinos concentrados en prefijos no-USA (G/H/N/F/Y/D).
+
+H4. exchCode=US causa ~0.53 pp de peso en falsos NO_ID recuperables.
+
+**Deudas declaradas (4):**
+
+D1. multiple_openfigi_hits=0 hardcoded. Cliente no expone hits crudos.
+D2. target_universe.py NO consulta cusip_ticker_exceptions.csv (Q-CUR).
+D3. Cliente no valida formato CUSIP antes de enviar (3 ERROR por formato).
+D4. BRK-B / MOG-A sin resolver (catalogo, 2 MISS). Pendiente evidencia.
+
+**Evidencia:** docs/auditoria/evidence/nipc_gate0_target_identity_top2000/
+(README + 8 ficheros + HASHES.txt).
+
+**Documentos:**
+- Dictamen F2.3-bis: docs/auditoria/INSTITUTIONAL_ACCUMULATION_OPENFIGI_DICTAMEN_F23BIS.md
+- Autorizacion: docs/auditoria/INSTITUTIONAL_ACCUMULATION_TOP2000_AUTORIZACION.md
+- Informe: docs/auditoria/INSTITUTIONAL_ACCUMULATION_OPENFIGI_TOP2000_INFORME.md
+
+**Commits:** 3ef4d2d (dictamen + autorizacion + informe + evidence), 9c67ac6 (fix EOL evidence historicos), 06c49ad (chore .gitattributes).
+
+**EOL hygiene (2026-09-19):** 5 ficheros de evidence historicos
+(cusips.txt, result.json, sample.json, pilot_13f_top500.csv,
+pilot_cusips_sample.csv) tenian CRLF en working tree pero LF en index
+por .gitattributes. HASHES.txt registrados se calcularon contra bytes
+CRLF, invalidables en clone limpio. Corregido en 9c67ac6 (mismo patron
+que baseline_output.txt).
+
+---
 ## SECCION 12 - LIMITACIONES CONOCIDAS
 20 tickers .L sin provider oficial -> Aceptado.
 
@@ -1411,19 +1490,19 @@ Select-String -SimpleMatch desactiva regex → el | se trata como literal. No us
 | Fuentes europeas | 51 (Euronext 13 + Xetra 19 + BME 19) |
 | Fuente commodities | OilPriceAPI (BZ=F, CL=F, GC=F, HG=F, NG=F) |
 | Fuente term structure | CBOE (^VIX3M) |
-| Tests locales | 911 passed + 2 skipped |
+| Tests locales | 935 passed + 2 skipped |
 | Tests CI | ~610 collected con skips (parquet gitignored) |
 | Validation Gate | 10/10 |
 | pyflakes | 0 warnings |
 | compileall | OK |
 | Produccion GH Actions | OK (cron `0 4 * * *` verificado 2026-09-17) |
-| Arquitectura | Modular: 19 src/report/ + 16 src/pipeline/ + 10 src/temporal_contracts/ + 7 src/institutional_accumulation/sec_13f/ + 2 sec_13f/identity nuevos (sec13f_list, security_identity) + 2 aggregation/ (delta_shares, nipc) + 5 indicators/mte/ + 4 indicators/darkpool/ |
+| Arquitectura | Modular: 19 src/report/ + 16 src/pipeline/ + 10 src/temporal_contracts/ + 7 src/institutional_accumulation/sec_13f/ + 5 sec_13f/identity (temporal_filter, cusip_resolver, relationships, amendments, sec13f_list, security_identity) + 2 aggregation/ (delta_shares, nipc) + 3 identity/ nuevos (openfigi_client, radar_target_catalog, target_universe) + 5 indicators/mte/ + 4 indicators/darkpool/ |
 | Contratos temporales | 10 (FU-021-5 = 9, FU-021-3C-bis = +1 SPOT_COMMODITY) |
-| Modulo IAE (SEC 13F) | FA-1+FA-2 cerrados. NIPC implementado (spec v1.4). Filer continuity CERRADO. Q-CUR cerrado (3 COM). Coverage baseline Fase A cerrada. Micro-gate Coverage Contract Normalization abierto (F2.1 PASS, F2.1-bis PASS, F2.2 NO GO). Gate-NIPC.2 BLOQUEADO por thresholds |
-| RADAR_TARGET_REGISTRY | NOT AVAILABLE (2026-09-19). Ninguna fuente de identidad en disco cumple (CUSIP + radar USA + independencia del crosswalk evaluado). Camino B declarado. |
-| Coverage baseline NIPC | Fase A cerrada 2026-09-19. OP_EQUITY: paired_security_cov=0.9909, paired_weighted_cov=0.9864. THRESHOLD_1/2 UNDEFINED |
+| Modulo IAE (SEC 13F) | FA-1+FA-2 cerrados. NIPC implementado (spec v1.4). Filer continuity CERRADO. Q-CUR cerrado (3 COM). Coverage baseline Fase A cerrada. F2.3-bis PASS CONDICIONADO: H1 CERRADO arquitectonicamente, TOP 2000 ejecutado, informe entregado. Gate-NIPC.2 BLOQUEADO por THRESHOLD_1/2 UNDEFINED. F2.4 NO AUTORIZADA. Full OpenFIGI NO AUTORIZADO. |
+| RADAR_TARGET_CATALOG | MATERIALIZADO 2026-09-19 (242 filas, 240 OK, 2 MISS: BRK-B, MOG-A). Hash 11eabce8... Construido desde OpenFIGI TICKER/US -> shareClassFIGI, independiente del crosswalk interno. TARGET_UNIVERSE resolver operativo (8 tests). |
+| Coverage baseline NIPC | Fase A cerrada. TOP 2000 (Q1 2026, CURRENT_RETROSPECTIVE): target_true=210 (10.50% count, 32.8079% weight); corregido 212/33.3428%. target_false=1567 (78.35%, 55.68%). no_id=220 (11.0%, 8.86%). error=3 (0.15%, 2.65%). Delta +0.5349 pp por 2 canales adicionales. THRESHOLD_1/2 UNDEFINED |
 | .git size | ~13 MB |
-| HEAD | 4659ce1 (55 commits locales ahead de origin/main) |
+| HEAD | 06c49ad (74 commits locales ahead de origin/main) |
 
 ### 15.1. Hitos del ciclo FU-021-3C-bis (2026-09-16)
 
@@ -1991,6 +2070,30 @@ Gate-NIPC.2 BLOQUEADO. Gate-NIPC.3 NO AUTORIZADO.
 
 ---
 
+### 15.31. Ciclo IAE F2.3-bis + TOP 2000 (2026-09-19)
+
+**Ciclo completo:** dictamen F2.3-bis + autorizacion + piloto + informe.
+
+**Estado:** H1 CERRADO arquitectonicamente. Gate-NIPC.2 BLOQUEADO por
+THRESHOLD_1/2 UNDEFINED. F2.4 NO AUTORIZADA. Full OpenFIGI NO AUTORIZADO.
+
+**Entregables (5 commits):**
+
+    3ef4d2d  docs(iae): F2.3-bis - dictamen + autorizacion + informe TOP 2000 + evidence
+    9c67ac6  chore(iae): normalizar EOL en evidence historicos + recalcular HASHES
+    06c49ad  chore: normalizar EOL segun .gitattributes (git add --renormalize .)
+
+**Hallazgos para auditor:**
+- count vs weight divergen: 28.4% -> 10.5% (count) y 46.76% -> 32.81% (weight).
+- XOM: shareClassFIGI cambia tras reorganizacion corporativa.
+- HON: no esta en el radar 242.
+- 4 deudas declaradas (D1-D4).
+
+**Esperando dictamen F2.4** con input del informe TOP 2000.
+
+**Ahead al cierre:** 74 commits locales.
+
+---
 ## SECCION 16 - FRASE GUIA
 "Determinista, descriptivo, auditado. Paso a paso. Documentar. Saber parar."
 
@@ -2036,4 +2139,4 @@ Pregunta final: "Que hacemos?"
 
 No empieces a proponer tareas sin antes confirmar la asimilacion completa.
 
-Fin del prompt maestro v6.40. Commit de referencia: dfdc0b0. Fecha: 2026-09-19.
+Fin del prompt maestro v6.41. Commit de referencia: 06c49ad. Fecha: 2026-09-19.
