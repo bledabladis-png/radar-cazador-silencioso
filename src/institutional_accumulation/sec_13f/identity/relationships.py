@@ -235,6 +235,17 @@ def explode_othermanager_edges(infotable_df, om2_df, *, return_metrics=False):
 
     edges = pd.DataFrame(rows, columns=list(EDGE_COLUMNS))
 
+    # Dedup a nivel de edge relacional (dictamen: unique canonical edges = 0).
+    # Si Column 7 repite un sequence number dentro de la misma linea, la 13F
+    # no declara dos relaciones distintas: es el mismo manager referenciado
+    # dos veces en el raw. Preservamos el raw completo y un unico edge.
+    # Los NO_REFERENCE (seq=None) no se deduplican entre filas distintas
+    # porque cada fila es una source_line distinta.
+    edges = edges.drop_duplicates(
+        subset=["ACCESSION_NUMBER", "INFOTABLE_SK", "manager_sequence"],
+        keep="first",
+    ).reset_index(drop=True)
+
     if return_metrics:
         return edges, compute_edge_metrics(edges, infotable_df)
     return edges
