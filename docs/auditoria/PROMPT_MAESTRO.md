@@ -1,8 +1,8 @@
-# PROMPT MAESTRO v6.39 - INGENIERO SUPERVISOR DEL RADAR DE ROTACION SECTORIAL
+# PROMPT MAESTRO v6.40 - INGENIERO SUPERVISOR DEL RADAR DE ROTACION SECTORIAL
 
-Actualizado: 2026-09-19 (post IAE NIPC C1+C4-revisadas + filer continuity CERRADO + dictamen TOP 50 + Q-CUR cerrado + coverage baseline Fase A cerrada + micro-gate Coverage Contract Normalization + F2.2-v2 propuesta v1.2 redactada. 59 commits locales por pushear. HEAD 0518b96)
+Actualizado: 2026-09-19 (post IAE NIPC C1+C4-revisadas + filer continuity CERRADO + dictamen TOP 50 + Q-CUR cerrado + coverage baseline Fase A cerrada + micro-gate Coverage Contract Normalization + F2.2-v2 v1.2 redactada + F2.3 NO GO + micro-probe OpenFIGI identidad radar + RADAR_TARGET_CATALOG materializado + piloto TARGET_UNIVERSE_Q1. 68 commits locales por pushear. HEAD dfdc0b0)
 Estado: Operativo al 100% - 10 contratos temporales (FU-021-5 + FU-021-3C-bis) - 911 tests locales + 2 skipped - 0 warnings - Gate 10/10 - Deuda ALTA/MEDIA/BAJA activa: 0
-Commit de referencia: 0518b96 (origin/main HEAD al redactar; el propio commit v6.39 sera HEAD tras push)
+Commit de referencia: dfdc0b0 (origin/main HEAD al redactar; el propio commit v6.40 sera HEAD tras push)
 
 ---
 
@@ -1046,6 +1046,83 @@ Estado: BORRADOR. No vigente. No sustituye a la policy v1.0.
 **Estado:** F2.3 PENDIENTE EXTERNO. F2.4 NO AUTORIZADA.
 Gate-NIPC.2 BLOQUEADO. Gate-NIPC.3 NO AUTORIZADO.
 
+### 11.29. IAE OpenFIGI + RADAR_TARGET_CATALOG + TARGET_UNIVERSE (2026-09-19)
+
+**Origen:** dictamen F2.3 (NO GO v1.2) y entrega F2.3 -> F2.4
+(inspeccion N-PORT). Auditor: GO CONDICIONADO con Q1=GO auxiliar,
+Q2=GO OpenFIGI como capa de resolucion CUSIP_13F -> FIGI/ticker,
+Q3=NO FIJAR thresholds, Q4=GO fix N-PORT, Q5=CERRADO.
+
+**Piezas implementadas (7 commits):**
+
+1. `scripts/update_sec_nport_data.py` (a130bf1): fix pivot
+   ISIN/TICKER por HOLDING_ID + filtro por SERIES_ID verificado.
+   IDENTIFIER_TICKER: 0 -> 1104. CUSIP+ticker pairs: 0 -> 1063.
+   SERIES_IDs verificados contra FUND_REPORTED_INFO.tsv (11:
+   QQQ, IVV, IJH, IJR, IWM, ITOT, VOO, VTI, VO, VB, VXF).
+
+2. `src/institutional_accumulation/identity/openfigi_client.py`
+   (3fccc93): cliente OpenFIGI /v3/mapping. ID_CUSIP, TICKER,
+   ID_ISIN, ID_EXCH_SYMBOL. Batching 5/100 segun API key.
+   Reintentos solo 429/500/503. extract_stable_identity()
+   prioriza exchCode=US. 8 tests.
+
+3. Micro-probe identidad radar (7501825). Evidencia en
+   `docs/auditoria/evidence/nipc_gate0_target_identity/`.
+   242 tickers radar -> OpenFIGI. 240/242 con FIGI +
+   shareClassFIGI (99.17%). 2 MISS: BRK-B, MOG-A (nomenclatura
+   Yahoo vs OpenFIGI BRK/B, MOG/A).
+
+4. `src/institutional_accumulation/identity/radar_target_catalog.py`
+   (a530ee3): builder desde result_radar.json. Columnas:
+   radar_ticker, figi, share_class_figi, composite_figi,
+   ticker_from_openfigi, name, security_type, market_sector,
+   exch_code, source, source_date, status. 8 tests.
+
+5. `data/mappings/radar_target_catalog.csv` (ae6129b): 242 filas
+   materializadas. 240 OK + 2 MISS. Hash sha256
+   11eabce8f8aaed1be6aa3c3557b5e392ad305757230333f84f37285c401b62b7.
+
+6. `src/institutional_accumulation/identity/target_universe.py`
+   (f81fc17): resolver CUSIP_13F -> target_membership via
+   OpenFIGI + cruce por shareClassFIGI con el catalogo.
+   8 tests.
+
+7. Piloto TARGET_UNIVERSE_Q1 (32baf9d). Top 500 CUSIPs por
+   SSHPRNAMT del 13F 2026Q1 (SH + PUTCALL NULL). Resultado:
+   142/500 target (28.4%), 309 NOT_IN_RADAR, 47 NO_ID, 2 ERROR.
+   Top target: NVDA, AAPL, AMZN, MSFT, BAC, T, GOOGL, PFE, AVGO,
+   NFLX, INTC, GOOG, KO, CMCSA, CSCO.
+
+**Resolucion del bloqueo arquitectonico:**
+
+El auditor autorizo OpenFIGI como capa de resolucion, no como
+autoridad unica del catalogo. El flujo validado:
+
+    radar 242 -> OpenFIGI TICKER/US -> shareClassFIGI
+                                     (catalogo independiente)
+    CUSIP 13F -> OpenFIGI ID_CUSIP -> shareClassFIGI
+                                     (target membership)
+
+El cruce por shareClassFIGI es estable porque FIGI no cambia
+por corporate actions (documentado por OpenFIGI). El catalogo
+es INPUT del resolver, no output. No hay circularidad.
+
+**Hallazgo empirico en el probe previo (152 CUSIPs):**
+
+- 113/152 hits OpenFIGI (74%). 39 errores (29 no identifier,
+  10 invalid format).
+- 113/113 con ticker no vacio. 112/113 con shareClassFIGI.
+- 48/112 emparejan con radar por shareClassFIGI (42.9%).
+
+**No toca:** motor NIPC, C2, policy v1.0, spec v1.4,
+baseline evidencia, thresholds.
+
+**Estado:** F2.3 PENDIENTE EXTERNO tras esta entrega.
+F2.4 NO AUTORIZADA. THRESHOLD_1/2 UNDEFINED.
+OpenFIGI masivo (24.838 CUSIPs) NO AUTORIZADO.
+Gate-NIPC.2 BLOQUEADO. Gate-NIPC.3 NO AUTORIZADO.
+
 ---
 
 ## SECCION 12 - LIMITACIONES CONOCIDAS
@@ -1882,6 +1959,36 @@ Estado: F2.3 PENDIENTE EXTERNO. F2.4 NO AUTORIZADA.
 THRESHOLD_1/2 UNDEFINED. OpenFIGI NO AUTORIZADO.
 Gate-NIPC.2 BLOQUEADO. Gate-NIPC.3 NO AUTORIZADO.
 
+### 15.30. Ciclo IAE OpenFIGI + TARGET_UNIVERSE (2026-09-19)
+
+Origen: dictamen F2.3 (NO GO v1.2) + entrega F2.3 -> F2.4
+(inspeccion N-PORT). Auditor: GO CONDICIONADO con Q1=GO
+N-PORT auxiliar, Q2=GO OpenFIGI CUSIP_13F -> FIGI/ticker,
+Q3=NO FIJAR, Q4=GO fix N-PORT, Q5=CERRADO.
+
+Secuencia de 7 commits funcionales (no documentales):
+1. a130bf1 fix pivot N-PORT (0 -> 1063 pares CUSIP+ticker).
+2. 3fccc93 cliente OpenFIGI + extract_stable_identity + 8 tests.
+3. 7501825 micro-probe identidad radar (240/242 con FIGI).
+4. a530ee3 RADAR_TARGET_CATALOG builder + 8 tests.
+5. ae6129b data/mappings/radar_target_catalog.csv (242 filas).
+6. f81fc17 TARGET_UNIVERSE resolver + 8 tests.
+7. 32baf9d piloto top500 CUSIPs 13F -> 142/500 target (28.4%).
+
+Estado arquitectonico: el bloqueo H1 del auditor (OpenFIGI no
+puede ser autoridad unica del catalogo) queda resuelto por
+diseno. El catalogo radar se construye desde OpenFIGI TICKER/US
+-> shareClassFIGI, y el target membership se resuelve desde
+CUSIP_13F -> OpenFIGI ID_CUSIP -> shareClassFIGI. El cruce por
+shareClassFIGI es la identidad estable. No hay circularidad.
+
+Verificacion: 935 passed + 2 skipped; pyflakes limpio; compileall OK.
+Policy v1.0 intacta (hash 57f2d01f...). Sin push.
+
+Estado: F2.3 PENDIENTE EXTERNO. F2.4 NO AUTORIZADA.
+THRESHOLD_1/2 UNDEFINED. OpenFIGI masivo NO AUTORIZADO.
+Gate-NIPC.2 BLOQUEADO. Gate-NIPC.3 NO AUTORIZADO.
+
 ---
 
 ## SECCION 16 - FRASE GUIA
@@ -1929,4 +2036,4 @@ Pregunta final: "Que hacemos?"
 
 No empieces a proponer tareas sin antes confirmar la asimilacion completa.
 
-Fin del prompt maestro v6.39. Commit de referencia: 0518b96. Fecha: 2026-09-19.
+Fin del prompt maestro v6.40. Commit de referencia: dfdc0b0. Fecha: 2026-09-19.
