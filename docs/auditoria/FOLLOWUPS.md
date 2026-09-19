@@ -1140,3 +1140,28 @@ Referencia: prompt maestro v6.30, secciones 11.17 a 11.19 y 15.21. Nueve fixes a
   - Valores pendientes de dictamen especifico del auditor ANTES de Gate-NIPC.2.
 - **Estado:** precondiciones documentales del auditor cerradas. Gate-NIPC.2 autorizado tras coverage policy numerica (no bloqueante para empezar `aggregation/` + `identity/sec13f_list.py`).
 - **Proximo paso autorizado:** implementacion de modulos de sistema (sec13f_list, security_identity, cusip_equivalence, delta_shares, nipc) + tests + probe Q4->Q1.
+
+
+## IAE NIPC - Probe end-to-end Q4 2025 -> Q1 2026 (2026-09-19)
+
+- **Origen:** probe del motor NIPC completo (S1-S5) sobre datasets reales, previo a Gate-NIPC.3.
+- **Informe:** docs/auditoria/INSTITUTIONAL_ACCUMULATION_NIPC_GATE0_PROBE_INFORME.md
+- **Evidence:** docs/auditoria/evidence/nipc_gate0_probe/ (probe_nipc_e2e.py + HASHES.txt + README.md)
+- **Resultado:** motor funciona segun contrato. Hallazgo estructural no cubierto por el contrato.
+- **Metricas del motor:**
+  - identity: pct_canonical = 0.0206 (Q4) / 0.0204 (Q1). Coincide con Gate 0 Mapping.
+  - elegibilidad SEC: pct_eligible = 0.4846 (Q4) / 0.5264 (Q1).
+  - NIPC observable: +23.6M (scope ALL) / +52.6M (scope ELIGIBLE).
+  - coverage pairwise: paired_security_coverage = 0.0181 (ALL) / 0.0368 (ELIGIBLE).
+  - status: INSUFFICIENT (thresholds UNDEFINED).
+- **Hallazgo estructural (caso Vanguard):**
+  - Q4 2025: VANGUARD GROUP INC (CIK 0000102909) presenta 13F-HR con holdings.
+  - Q1 2026: el mismo CIK presenta 13F-NT (notice). Los holdings migran a VANGUARD CAPITAL MANAGEMENT LLC (CIK 0002100119) + VANGUARD PORTFOLIO MANAGEMENT LLC (CIK 0002100121).
+  - Los CUSIPs (NVDA, AAPL, AMZN, etc.) son identicos entre periodos. Cambia el filer, no la security.
+  - El match key C2 produce EXIT del viejo + NEW de los nuevos.
+  - nipc_sole = -41.16B y nipc_dfnd = +41.28B se cancelan (neto +52M sobre ~82B brutos).
+  - NO es bug: el motor implementa exactamente C2 (spec 4.7).
+- **Implicacion:** el gap estructural dominante NO es la cobertura de CUSIPs, es la continuidad de filer entre trimestres. NIPC seguiria INSUFFICIENT con crosswalk 100% si el sesgo de reorganizacion no se controla.
+- **Recomendacion del ingeniero:** NO tocar codigo. Documentar como limitacion conocida. Ejecutar mini-probe (top 20 filers) antes de fijar politica.
+- **Preguntas al auditor:** Q-PROBE-1 a Q-PROBE-5 (seccion 6 del informe).
+- **Estado:** 31 commits locales ahead. Sin push (local-first IAE). Esperando dictamen del auditor.
