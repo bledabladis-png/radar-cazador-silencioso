@@ -1110,3 +1110,33 @@ Referencia: prompt maestro v6.30, secciones 11.17 a 11.19 y 15.21. Nueve fixes a
 - **Razon del condicionamiento (cita literal del dictamen):** sin `canonical_security` estable y sin politica de matching interperiodo explicita, un pipeline perfectamente programado podria producir un NIPC matematicamente correcto pero semanticamente falso ante un cambio de CUSIP o una mapping gap entre Q4 y Q1.
 - **Proximo paso autorizado:** revision v1.1 de la especificacion con los 5 cambios. Despues, Gate-NIPC.2 podra recibir GO.
 - **Estado:** Gate-NIPC.1 PASS condicionado 2026-09-19. Pendiente v1.1 y dictamen favorable.
+
+
+## IAE NIPC - Gate-NIPC.1 v1.1 dictamen + spec v1.2 + coverage policy (2026-09-19)
+
+- **Origen:** dictamen del auditor sobre la especificacion NIPC v1.1 (PASS CONDICIONADO con 2 correcciones C1-revisada + C4-revisada).
+- **Documentos del ciclo:**
+  - Dictamen v1.1: docs/auditoria/INSTITUTIONAL_ACCUMULATION_NIPC_ESPECIFICACION_V11_DICTAMEN.md
+  - Spec v1.1 preservada: docs/auditoria/INSTITUTIONAL_ACCUMULATION_NIPC_ESPECIFICACION_v1.1.md
+  - Spec v1.2 activa: docs/auditoria/INSTITUTIONAL_ACCUMULATION_NIPC_ESPECIFICACION.md
+  - Coverage policy: docs/auditoria/NIPC_COVERAGE_POLICY.md
+- **Resultado:** GATE-NIPC.1 v1.1 = PASS CONDICIONADO. C1 + C4 aplicadas en v1.2. Coverage policy creada con thresholds UNDEFINED.
+- **C1-revisada (Q-ESP-V11-1):**
+  - `ticker:<ticker>` PROHIBIDO como canonical_security.
+  - Introducidas 2 capas de estado: `security_resolution_status` (5: CANONICAL | OBSERVED_ONLY | UNRESOLVED | AMBIGUOUS | CONFLICT) y `canonical_security_kind` (4: CANONICAL_FIGI | CANONICAL_EQUIVALENCE | OBSERVED_CUSIP_ONLY | UNRESOLVED).
+  - `observed_security_key = cusip:<CUSIP>` (tecnico por periodo).
+  - `canonical_security = NULL` salvo status == CANONICAL.
+  - `data/mappings/cusip_equivalence.csv` (nueva) con esquema: CUSIP_A, canonical_security, valid_from, valid_to, source, reason, verified_by, source_document.
+- **C4-revisada (Q-ESP-V11-4):**
+  - Separacion obligatoria: identity temporal validity != metadata temporal validity.
+  - `shareClassFIGI` / `figi` es estable frente a corporate actions.
+  - `TEMPORAL_UNVERIFIED` aplica SOLO a metadata (ticker), no a identidad FIGI.
+  - Cita literal congelada: "La fecha de consulta OpenFIGI no invalida por si sola una identidad FIGI estable; si impide asumir automaticamente que los atributos temporales de la respuesta actual eran validos en el report_period."
+- **Coverage policy (Q-ESP-V11-9):**
+  - Documento NIPC_COVERAGE_POLICY.md creado.
+  - THRESHOLD_1 = UNDEFINED, THRESHOLD_2 = UNDEFINED.
+  - Criterios de fijacion: universo operativo, sesgo large-cap, descomposicion de no-mapeados, alcanzabilidad, pairwise mas exigente que single-period.
+  - Prohibido fijar por analogia con 90.91% o 29.995%.
+  - Valores pendientes de dictamen especifico del auditor ANTES de Gate-NIPC.2.
+- **Estado:** precondiciones documentales del auditor cerradas. Gate-NIPC.2 autorizado tras coverage policy numerica (no bloqueante para empezar `aggregation/` + `identity/sec13f_list.py`).
+- **Proximo paso autorizado:** implementacion de modulos de sistema (sec13f_list, security_identity, cusip_equivalence, delta_shares, nipc) + tests + probe Q4->Q1.
