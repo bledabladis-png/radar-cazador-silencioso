@@ -7,6 +7,12 @@ Cadena auditable: SEC ZIP -> extraccion -> TSV -> normalizacion -> Parquet.
 
 NO incluye: NIPC, canonical manager, amendments semanticos, CUSIP->issuer,
 clasificacion institucional, agregaciones. Esos pasan por Gates posteriores.
+
+Project root (P18/P26):
+  DEFAULT_PROJECT_ROOT se resuelve por orden:
+    1. Variable de entorno IAE_PROJECT_ROOT (si esta definida).
+    2. Derivacion del paquete: parents[3] de este fichero = raiz del repo.
+  NO se usa path absoluto hardcoded. El default es portatil.
 """
 import hashlib
 import json
@@ -18,7 +24,15 @@ from .parser import PARSER_VERSION
 from .schema import SCHEMA_VERSION
 
 CHUNK_SIZE = 1024 * 1024
-DEFAULT_PROJECT_ROOT = Path(r"D:\Macro_Sectorial")
+
+# P18/P26: project_root por env var, con fallback derivado del paquete.
+# No path absoluto hardcoded: rompe portabilidad en CI / clones.
+# Jerarquia: sec_13f/manifest.py -> sec_13f -> institutional_accumulation
+#            -> src -> raiz del repo. parents[3] del fichero resuelto.
+DEFAULT_PROJECT_ROOT = Path(
+    os.environ.get("IAE_PROJECT_ROOT")
+    or Path(__file__).resolve().parents[3]
+)
 
 
 def _sha256_file(path):

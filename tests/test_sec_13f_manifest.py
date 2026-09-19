@@ -171,6 +171,29 @@ def test_read_manifest_roundtrip(tmp_path):
     assert loaded == m
 
 
+def test_default_project_root_apunta_a_raiz_repo():
+    """P18/P26: el default no es literal; apunta a la raiz del repo."""
+    from src.institutional_accumulation.sec_13f import manifest as m
+
+    root = m.DEFAULT_PROJECT_ROOT
+    expected_subpath = root / 'src' / 'institutional_accumulation'
+    assert expected_subpath.exists(), (
+        f'DEFAULT_PROJECT_ROOT ({root}) no contiene src/institutional_accumulation'
+    )
+
+
+def test_default_project_root_no_es_literal_hardcoded():
+    """P18/P26: el codigo fuente no contiene path absoluto hardcoded."""
+    import inspect
+    from src.institutional_accumulation.sec_13f import manifest as m
+
+    src = inspect.getsource(m)
+    # Prohibido D:\Macro_Sectorial o cualquier r'D:\' literal
+    assert 'D:\\\\Macro_Sectorial' not in src
+    assert 'r"D:' not in src
+    assert "r'D:" not in src
+
+
 def test_read_manifest_no_existe(tmp_path):
     with pytest.raises(FileNotFoundError, match="Manifest no existe"):
         manifest.read_manifest(tmp_path / "no_existe.json")
