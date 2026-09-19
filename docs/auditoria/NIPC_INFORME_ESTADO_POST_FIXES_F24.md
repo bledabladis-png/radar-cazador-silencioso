@@ -3,7 +3,7 @@
 **Objeto:** comunicacion al auditor del estado del sistema tras aplicar los 6 fixes mecanicos autorizados.
 **HEAD al redactar:** d462f72.
 **Destinatario:** auditor externo.
-**Documento complementario:** NIPC_INFORME_ENTREGA_F24.md (hash a5cf2386..., inmutable).
+**Documento complementario:** NIPC_INFORME_ENTREGA_F24.md (hash 0763f16b..., inmutable).
 **Estado:** BORRADOR pendiente de envio.
 **Autor:** Ingeniero Supervisor.
 **Fecha:** 2026-09-20.
@@ -20,7 +20,7 @@ para P70):
 
 **Nota sobre F2.4:** F2.4 sigue PENDIENTE. Este informe no cierra F2.4 ni
 presupone su resultado. Se emite como comunicacion complementaria al
-informe de entrega F2.4 (hash a5cf2386...), informando del estado del
+informe de entrega F2.4 (hash 0763f16b...), informando del estado del
 sistema tras aplicar los fixes autorizados por el dictamen de revision
 estructural.
 
@@ -73,7 +73,7 @@ o para clarificar detalles del contrato antes de su implementacion.
 | NIPC_COVERAGE_POLICY.md (v1.0) | 57f2d01f... |
 | NIPC_CONTRATOS_SEMANTICOS_v1.md | c02d202f... |
 | NIPC_P70_DICTAMEN.md | e8d4e4e8... |
-| NIPC_INFORME_ENTREGA_F24.md | a5cf2386... |
+| NIPC_INFORME_ENTREGA_F24.md | 0763f16b... |
 | NIPC_DICTAMEN_REVISION_ESTRUCTURAL_2026-09-20.md | 3d004540... |
 | INSTITUTIONAL_ACCUMULATION_REVISION_ESTRUCTURAL_2026-09-20.md | 318f02e8... |
 
@@ -211,14 +211,14 @@ que rompa la invariante; el test verifica que la guarda dispara.
 - **Gate-NIPC.3.** NO AUTORIZADO.
 - **OpenFIGI masivo.** NO AUTORIZADO.
 - **Policy v1.3 aplicacion.** NO AUTORIZADA.
-- **Informe F2.4 original.** Inmutable (hash a5cf2386...). Sigue siendo el
+- **Informe F2.4 original.** Inmutable (hash 0763f16b...). Sigue siendo el
   documento de referencia para las decisiones D1-D4.
 
 ---
 
 ## 4. Cadena documental vigente
 
-    NIPC_INFORME_ENTREGA_F24.md (a5cf2386...)         [decision F2.4]
+    NIPC_INFORME_ENTREGA_F24.md (0763f16b...)         [decision F2.4]
        |
        +-- cita -> NIPC_CONTRATOS_SEMANTICOS_v1.md (c02d202f...)
        |              |
@@ -229,7 +229,7 @@ que rompa la invariante; el test verifica que la guarda dispara.
        |                                          +-- produce -> result.json (809c51af...)
        |                                          +-- produce -> summary.txt (9e8c42d6...)
        |
-       +-- cita -> NIPC_COVERAGE_POLICY_V13_PROPUESTA.md (e8b61617...)
+       +-- cita -> NIPC_COVERAGE_POLICY_V13_PROPUESTA.md (933fcb2e...)
        |
        +-- cita -> INSTITUTIONAL_ACCUMULATION_REVISION_ESTRUCTURAL_2026-09-20.md (318f02e8...)
 
@@ -270,7 +270,7 @@ implementacion en un run real?
 
 **Q3. Documento de referencia para F2.4.**
 
-?El informe F2.4 original (a5cf2386...) sigue siendo el documento de
+?El informe F2.4 original (0763f16b...) sigue siendo el documento de
 referencia, o este informe post-fixes lo sustituye como input principal para
 el dictamen?
 
@@ -402,4 +402,4 @@ preguntas opcionales de la seccion 5.3 son de proceso, no de semantica.
 
 Fin del informe de estado post-fixes.
 Version 1.0 (2026-09-20). HEAD 1575d17.
-Complementa NIPC_INFORME_ENTREGA_F24.md (a5cf2386...).
+Complementa NIPC_INFORME_ENTREGA_F24.md (0763f16b...).
