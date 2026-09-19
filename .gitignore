@@ -51,3 +51,7 @@ _deepdive_*.py
 # Snapshots temporales de refactor (no versionar)
 _snapshot_*.md
 *.orig
+
+# Scripts temporales de auditoria/patch (prefijo _ en raiz)
+/_*.py
+/_*.md
