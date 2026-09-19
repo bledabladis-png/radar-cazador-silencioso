@@ -944,3 +944,36 @@ Referencia: prompt maestro v6.30, secciones 11.17 a 11.19 y 15.21. Nueve fixes a
 - **Regla arquitectonica congelada:** TITLEOFCLASS -> NO allowlist equity -> security identity -> security_type (EQUITY/NON_EQUITY) -> ticker mapping -> radar intersection.
 - **Proximo paso autorizado:** Gate-NIPC.1 - Especificacion SIN codigo. Debe definir 12 conceptos: security_identity, section13f_eligibility, security_type, ticker_mapping, source_precedence, temporal_validity, one_to_one/ambiguous, mapping_coverage, weighted_share_coverage, unmapped_weight, operational_universe, status. Y comparar fuentes externas antes de elegir.
 - **Estado:** Gate 0 Mapping PASS 2026-09-19. Pendiente Gate-NIPC.1.
+
+
+## IAE NIPC - Gate 0 FIGI (PASS 2026-09-19)
+
+- **Origen:** continuacion del Gate 0 Mapping (PASS). El auditor pidio evaluar FIGI como puente CUSIP -> security identity antes de decidir la fuente externa.
+- **Informe previo:** docs/auditoria/INSTITUTIONAL_ACCUMULATION_NIPC_GATE0_MAPPING_DICTAMEN.md.
+- **Dictamen Gate 0 FIGI:** docs/auditoria/INSTITUTIONAL_ACCUMULATION_NIPC_GATE0_FIGI_DICTAMEN.md.
+- **Resultado:** GATE 0 FIGI = PASS. FIGI DESCARTADO como pivote primario. GO para Gate 0 OpenFIGI (muestra estratificada). Codigo productivo NO autorizado.
+- **Cobertura FIGI (Q1 2026):**
+  - Filas canonicas con FIGI valido: 382,953 / 3,188,083 = 12.01%.
+  - CUSIPs con al menos 1 FIGI: 9,449 / 24,838 = 38.04%.
+  - Cobertura ponderada por SHARES: 10.98% (~89% sin FIGI).
+  - Crosswalk 522 CUSIPs con FIGI: 501 (95.98%), pero solo 10.48% del SSHPRNAMT.
+- **Formato observado:** 100% len=12; 99.58% prefijo BBG. 1,267 FIGIs (0.42%) con prefijo no-BBG (US0/US2/CA/IE...) son CUSIPs/ISINs mal etiquetados.
+- **Ambiguedad estructural:**
+  - CUSIP -> 1 FIGI: 3,167. CUSIP -> >1 FIGI: 6,282 (66%).
+  - FIGI -> 1 CUSIP: 20,998. FIGI -> >1 CUSIP: 335 (1.57%).
+  - Caso anomalo severo: BBG000B9XRY4 asignado a Apple + Dell + Stryker + Lamb Weston.
+  - FIGI -> >1 NAMEOFISSUER: 4,921 (23.1%).
+- **Consistencia intra vs cross-filing:**
+  - Intra-filing (ACCESSION, CUSIP): 99.911% con 1 FIGI.
+  - Cross-filing: alta ambiguedad. No es ruido aleatorio; es disparidad de versiones/proveedores entre filers.
+- **Sin cobertura sobre NIPST:** los CUSIPs 329882225 y 329882250 (CONVERTIBLE BOND) no tienen FIGI. FIGI no resuelve el hallazgo TITLEOFCLASS.
+- **Resolucion del dictamen:**
+  - Q-FIGI-1: SI. FIGI descartado como pivote primario. Conservar como auxiliar/diagnostico (FIGI_RAW, FIGI_FORMAT_STATUS, FIGI_ANOMALY).
+  - Q-FIGI-2: GO para Gate 0 OpenFIGI.
+  - Q-FIGI-3: conservar 1,267 FIGIs no-BBG como anomalia clasificada. NO resolver heuristicamente.
+  - Q-FIGI-4: verificacion Q4 2025 opcional, no bloqueante.
+  - Q-FIGI-5: probe OpenFIGI con muestra ESTRATIFICADA (5 estratos: A=radar USA mapped, B=22 radar unmapped, C=top SHARES 13F, D=mid/low SHARES, E=clases problematicas BRK-B/MOG-A/ADR/CL). ~200-300 CUSIPs. NO solo top-100 ETF.
+- **Regla arquitectonica OpenFIGI (congelada):** aunque OpenFIGI consiga 99% coverage, no sera autoridad automatica. La capa debe conservar source, mapping_method, mapping_timestamp, mapping_version, input_identifier, resolved_security, confidence/status. Conflictos -> CONFLICT explicito, no "OpenFIGI gana".
+- **Clasificacion de respuestas OpenFIGI a registrar:** EXACT | NOT_FOUND | MULTIPLE_CANDIDATES | CONFLICT | NON_EQUITY | ERROR | RATE_LIMIT.
+- **Proximo paso autorizado:** Gate 0 OpenFIGI con muestra estratificada. Sin codigo productivo hasta completar Gate 0 SEC 13(f) + Gate-NIPC.1.
+- **Estado:** Gate 0 FIGI PASS 2026-09-19. Pendiente Gate 0 OpenFIGI.
