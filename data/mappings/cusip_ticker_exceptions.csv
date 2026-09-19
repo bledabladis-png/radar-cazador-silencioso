@@ -1,1 +1,4 @@
 CUSIP,ticker,valid_from,valid_to,source,reason,title_of_class,verified_by
+26614N102,DD,2026-03-31,2026-03-31,SEC-EDGAR,CUSIP observado para DuPont de Nemours en el periodo 13F Q1 2026,COM,manual
+438516106,HON,2026-03-31,2026-03-31,SEC-EDGAR,CUSIP observado para Honeywell International en el periodo 13F Q1 2026; sustituido posteriormente tras reverse split efectivo 2026-06-29,COM,manual
+30231G102,XOM,2026-03-31,2026-03-31,SEC-EDGAR,CUSIP observado para Exxon Mobil en el periodo 13F Q1 2026,COM,manual
