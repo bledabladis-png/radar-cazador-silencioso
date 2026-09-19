@@ -1285,3 +1285,28 @@ Referencia: prompt maestro v6.30, secciones 11.17 a 11.19 y 15.21. Nueve fixes a
   - GHISALLO probe (Q-T50-4).
   - Propuesta THRESHOLD_1/2 tras evidencia de coverage.
 - **Estado:** 44 commits locales ahead. Sin push. Bloqueo vuelve a coverage/thresholds.
+
+
+## IAE NIPC - Coverage baseline Fase A (2026-09-19)
+
+- **Origen:** Q-T50-5 del dictamen TOP 50 (coverage baseline + OpenFIGI).
+- **Alcance ejecutado:** coverage baseline (OpenFIGI queda fuera de esta fase).
+- **Informe:** docs/auditoria/INSTITUTIONAL_ACCUMULATION_NIPC_GATE0_COVERAGE_BASELINE_INFORME.md
+- **Evidencia:** docs/auditoria/evidence/nipc_gate0_baseline/ (README + probe + output + HASHES).
+- **Resultado:** las 6 metricas pairwise calculadas sobre 4 universos anidados.
+- **Metricas OPERATIONAL_EQUITY (Q4 2025 -> Q1 2026):**
+  - paired_security_coverage = 0.9909
+  - paired_weighted_share_coverage = 0.9864
+  - NIPC observable = -109,460,838
+  - STATUS = INSUFFICIENT (thresholds UNDEFINED)
+- **Hallazgos:**
+  - H1: TECHNICAL_RADAR == OPERATIONAL_EQUITY (get_instrument_class no-op sobre crosswalk actual).
+  - H2: coverage_* = 1.0 en OPERATIONAL_EQUITY por construccion (tautologico).
+  - H3: NIPC cambia signo entre RAW (+23.65M) y OP_EQUITY (-109.46M).
+- **Fallout ELIGIBLE_SEC -> TECHNICAL_RADAR (Q1 2026):**
+  - IN_RADAR: 20.47% units / 28.75% peso.
+  - CANONICAL_TICKER_OUTSIDE_RADAR: 13.40% units / 10.67% peso.
+  - OBSERVED_ONLY_NO_CANONICAL: 66.13% units / 60.58% peso (gap OpenFIGI-addressable).
+- **Incidente resuelto:** CRLF->LF en `baseline_output.txt`, hash regenerado, `git commit --amend`.
+- **Estado:** Fase A cerrada. Gate-NIPC.2 SIGUE BLOQUEADO por thresholds. Sin push.
+- **Siguiente fase autorizada:** propuesta THRESHOLD_1/THRESHOLD_2 con evidencia, o ejecucion OpenFIGI over unresolved-only (a dictamen del auditor).

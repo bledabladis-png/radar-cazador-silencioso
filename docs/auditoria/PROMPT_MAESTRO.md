@@ -1,8 +1,8 @@
-# PROMPT MAESTRO v6.36 - INGENIERO SUPERVISOR DEL RADAR DE ROTACION SECTORIAL
+# PROMPT MAESTRO v6.37 - INGENIERO SUPERVISOR DEL RADAR DE ROTACION SECTORIAL
 
-Actualizado: 2026-09-19 (post IAE NIPC C1+C4-revisadas + filer continuity CERRADO + dictamen TOP 50. 45 commits locales por pushear. HEAD 9d4a81e)
+Actualizado: 2026-09-19 (post IAE NIPC C1+C4-revisadas + filer continuity CERRADO + dictamen TOP 50 + Q-CUR cerrado + coverage baseline Fase A cerrada. 49 commits locales por pushear. HEAD e9fd830)
 Estado: Operativo al 100% - 10 contratos temporales (FU-021-5 + FU-021-3C-bis) - 911 tests locales + 2 skipped - 0 warnings - Gate 10/10 - Deuda ALTA/MEDIA/BAJA activa: 0
-Commit de referencia: 9d4a81e (origin/main HEAD al redactar; el propio commit v6.36 sera HEAD tras push)
+Commit de referencia: e9fd830 (origin/main HEAD al redactar; el propio commit v6.37 sera HEAD tras push)
 
 ---
 
@@ -838,6 +838,87 @@ Manifest v1 con 3 niveles verificable. 3 flags validation a True.
 
 ---
 
+### 11.25. IAE Q-CUR - Curacion CUSIP -> ticker Q1 2026 (2026-09-19)
+
+**Ciclo:** Gate 0 + dictamen Q-CUR-1 / Q-CUR-2. Alcance minimo aprobado: 3 filas COM.
+
+**Tabla operativa:** `data/mappings/cusip_ticker_exceptions.csv`.
+
+CUSIPs poblados (equity Q1 2026):
+
+  - `26614N102` -> DD
+  - `438516106` -> HON (sustituido tras reverse split 2026-06-29)
+  - `30231G102` -> XOM
+
+**Excluidos:**
+
+  - CALL/PUT (`26614N902`, `26614N952`, `438516906`, `438516956`, `30231G902`, `30231G952`): derivados, modelo separado no implementado en este ciclo.
+  - HONA / FDXF: FUTURE_CORPORATE_ACTION / POST_Q1_ENTITY (spin-off posterior a PERIODOFREPORT=2026-03-31).
+
+**Regla congelada:** no poblar `valid_from=fecha_spin_off` sin observacion 13F que lo requiera.
+
+**Distincion obligatoria:**
+
+  - `cusip_ticker_exceptions.csv` = tabla operativa (poblada, 3 filas).
+  - `cusip_equivalence.csv` = tabla de equivalencias (C1-revisada, vacia por diseno).
+
+**Commits en origin/main:** e4a6576, e8d7e53, 9d4a81e.
+
+---
+
+### 11.26. IAE NIPC coverage baseline Fase A (2026-09-19)
+
+**Ciclo:** Q-T50-5 (post dictamen TOP 50). Sin OpenFIGI, sin thresholds, sin modificacion del motor.
+
+**Metodologia congelada antes del run:** `README.md` del directorio de evidencia (`docs/auditoria/evidence/nipc_gate0_baseline/`).
+
+**4 universos anidados (nomenclatura corregida por el auditor):**
+
+    RAW_13F_SH_NULL      SH + PUTCALL NULL
+       v
+    ELIGIBLE_SEC         + SEC Official List {ACTIVE, ADDED}
+       v
+    TECHNICAL_RADAR      + ticker in radar_equities  (cierre del tecnico)
+       v
+    OPERATIONAL_EQUITY   + get_instrument_class(ticker) == EQUITY
+
+**Metricas pairwise Q4 2025 -> Q1 2026:**
+| metrica | RAW_13F | ELIGIBLE_SEC | TECH_RADAR | OP_EQUITY |
+|---|---:|---:|---:|---:|
+| coverage_previous | 0.0206 | 0.0424 | 1.0000 | 1.0000 |
+| coverage_current | 0.0204 | 0.0386 | 1.0000 | 1.0000 |
+| paired_security_coverage | 0.0181 | 0.0368 | 0.9909 | 0.9909 |
+| paired_weighted_share_coverage | 0.2271 | 0.2772 | 0.9864 | 0.9864 |
+| NIPC total (observable) | +23,651,586 | +52,570,648 | -109,460,838 | -109,460,838 |
+| STATUS | INSUFFICIENT | INSUFFICIENT | INSUFFICIENT | INSUFFICIENT |
+
+**Hallazgos:**
+
+  H1. `TECHNICAL_RADAR == OPERATIONAL_EQUITY` en units (identidad exacta Q4=474,395 / Q1=490,732). El filtro `get_instrument_class == EQUITY` es no-op sobre el crosswalk actual. El cuarto nivel es verificacion, no filtro efectivo.
+
+  H2. En el universo operativo `coverage_previous == coverage_current == 1.0` por construccion (el pre-filtro a `ticker in radar` ya exige CANONICAL). Los thresholds solo pueden descansar sobre las 2 metricas pairwise.
+
+  H3. NIPC cambia signo entre RAW (+23.65M) y OP_EQUITY (-109.46M). Propiedad del universo operativo (20% de las filas, 100% del radar).
+
+**Fallout ELIGIBLE_SEC -> TECHNICAL_RADAR (Q1 2026):**
+
+| categoria | %units | %peso |
+|---|---:|---:|
+| IN_RADAR | 20.47% | 28.75% |
+| CANONICAL_TICKER_OUTSIDE_RADAR | 13.40% | 10.67% |
+| FIGI_CANONICAL_NO_TICKER | 0.00% | 0.00% |
+| OBSERVED_ONLY_NO_CANONICAL | 66.13% | 60.58% |
+| UNRESOLVED / AMBIGUOUS / CONFLICT | 0.00% | 0.00% |
+| OTHER | 0.00% | 0.00% |
+**Incidente resuelto:** `baseline_output.txt` se genero con CRLF via `Start-Process -RedirectStandardOutput`. `.gitattributes` (`*.txt eol=lf`) normalizaria a LF en el siguiente clone, invalidando el hash registrado. Correccion: normalizar a LF + recalcular hash + actualizar `HASHES.txt` + actualizar informe + `git commit --amend`. Verificado: los 3 hashes de disco coinciden con los registrados.
+
+**Documentos:**
+
+  - Informe: `docs/auditoria/INSTITUTIONAL_ACCUMULATION_NIPC_GATE0_COVERAGE_BASELINE_INFORME.md`.
+  - Evidencia: `docs/auditoria/evidence/nipc_gate0_baseline/` (README + probe + output + HASHES).
+
+**Regla:** este ciclo NO fija thresholds. Gate-NIPC.2 SIGUE BLOQUEADO. THRESHOLD_1/2 UNDEFINED. Sin OpenFIGI. Sin push.
+
 ## SECCION 12 - LIMITACIONES CONOCIDAS
 20 tickers .L sin provider oficial -> Aceptado.
 
@@ -1132,9 +1213,10 @@ Select-String -SimpleMatch desactiva regex → el | se trata como literal. No us
 | Produccion GH Actions | OK (cron `0 4 * * *` verificado 2026-09-17) |
 | Arquitectura | Modular: 19 src/report/ + 16 src/pipeline/ + 10 src/temporal_contracts/ + 7 src/institutional_accumulation/sec_13f/ + 2 sec_13f/identity nuevos (sec13f_list, security_identity) + 2 aggregation/ (delta_shares, nipc) + 5 indicators/mte/ + 4 indicators/darkpool/ |
 | Contratos temporales | 10 (FU-021-5 = 9, FU-021-3C-bis = +1 SPOT_COMMODITY) |
-| Modulo IAE (SEC 13F) | FA-1+FA-2 cerrados. NIPC implementado (spec v1.4). Filer continuity CERRADO. Gate-NIPC.2 BLOQUEADO por thresholds |
+| Modulo IAE (SEC 13F) | FA-1+FA-2 cerrados. NIPC implementado (spec v1.4). Filer continuity CERRADO. Q-CUR cerrado (3 COM). Coverage baseline Fase A cerrada. Gate-NIPC.2 BLOQUEADO por thresholds |
+| Coverage baseline NIPC | Fase A cerrada 2026-09-19. OP_EQUITY: paired_security_cov=0.9909, paired_weighted_cov=0.9864. THRESHOLD_1/2 UNDEFINED |
 | .git size | ~13 MB |
-| HEAD | 9543de5 (origin/main tras push del ciclo FA-2) |
+| HEAD | e9fd830 (49 commits locales ahead de origin/main) |
 
 ### 15.1. Hitos del ciclo FU-021-3C-bis (2026-09-16)
 
@@ -1564,6 +1646,43 @@ de cerrar como WONT FIX.
 
 ---
 
+### 15.26. Ciclo IAE Q-CUR - Curacion CUSIP Q1 2026 (2026-09-19)
+
+Origen: dictamen FA-2.2 y Gate 0 sobre crosswalk CUSIP->ticker vacio.
+
+Resultado: 3 filas COM pobladas en `data/mappings/cusip_ticker_exceptions.csv` (DD, HON, XOM). Excluidos CALL/PUT (derivados) y HONA/FDXF (entidades post-Q1, posteriores a PERIODOFREPORT=2026-03-31).
+
+Dictamen: Q-CUR-1 (excluir CALL/PUT) + Q-CUR-2 (excluir HONA/FDXF). Alcance minimo aprobado por el auditor.
+
+Informe: docs/auditoria/INSTITUTIONAL_ACCUMULATION_CUSIP_CURATION_INFORME.md
+
+Commits: e4a6576, e8d7e53, 9d4a81e.
+
+---
+
+### 15.27. Ciclo IAE NIPC coverage baseline Fase A (2026-09-19)
+
+Origen: Q-T50-5 del dictamen TOP 50. Siguiente fase autorizada tras cierre de filer continuity.
+
+Objetivo: medir las 6 metricas pairwise obligatorias sobre los 4 universos anidados, sin OpenFIGI, sin thresholds, sin tocar motor.
+
+Artefactos generados:
+
+  docs/auditoria/INSTITUTIONAL_ACCUMULATION_NIPC_GATE0_COVERAGE_BASELINE_INFORME.md
+  docs/auditoria/evidence/nipc_gate0_baseline/
+    README.md                     (metodologia congelada antes del run)
+    probe_coverage_baseline.py    (probe deterministico, sin datetime.now())
+    baseline_output.txt           (salida cruda, exit 0, 7982 bytes, LF)
+    HASHES.txt                    (SHA-256 de los 3 ficheros)
+
+Incidente resuelto: `baseline_output.txt` se genero con CRLF via `Start-Process -RedirectStandardOutput`. `.gitattributes` (*.txt eol=lf) normalizaria a LF en el siguiente clone, invalidando el hash registrado. Correccion: normalizar a LF + recalcular hash + actualizar `HASHES.txt` + actualizar informe + `git commit --amend`. Verificado: los 3 hashes de disco coinciden con los registrados.
+
+Verificacion mecanica: 4 checks PASS (sumas %units y %peso, IN_RADAR==TECHNICAL_RADAR, OTHER=0). 14 marcadores de seccion unicos.
+
+Estado: Gate-NIPC.2 SIGUE BLOQUEADO por coverage/thresholds. THRESHOLD_1/2 UNDEFINED. Sin OpenFIGI. Sin push.
+
+Commit local: e9fd830.
+
 ## SECCION 16 - FRASE GUIA
 "Determinista, descriptivo, auditado. Paso a paso. Documentar. Saber parar."
 
@@ -1609,4 +1728,4 @@ Pregunta final: "Que hacemos?"
 
 No empieces a proponer tareas sin antes confirmar la asimilacion completa.
 
-Fin del prompt maestro v6.36. Commit de referencia: 9d4a81e. Fecha: 2026-09-19.
+Fin del prompt maestro v6.37. Commit de referencia: e9fd830. Fecha: 2026-09-19.
