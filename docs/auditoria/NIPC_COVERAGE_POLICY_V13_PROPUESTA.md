@@ -52,11 +52,13 @@ cualquier parafrasis aqui recogida.
 
 Regla de conflicto:
 
-    NIPC_CONTRATOS_SEMANTICOS_v1.md     >  esta policy
-    NIPC_COVERAGE_POLICY.md (v1.0)      >  esta policy (mientras v1.0 siga vigente)
+    Mientras NIPC_CONTRATOS_SEMANTICOS_v1.md y esta policy v1.3 sean
+    borradores, NIPC_COVERAGE_POLICY.md v1.0 permanece como referencia
+    normativa vigente.
 
-Cuando v1.3 sea aprobada y aplicada, sustituira a v1.0 como referente
-normativo. Hasta entonces, v1.0 sigue vigente.
+    Una vez aprobado formalmente el contrato y aplicada la policy v1.3,
+    el contrato habilitante prevalece sobre cualquier parafrasis de esta
+    policy.
 ---
 
 ## 2. Definiciones base
@@ -326,7 +328,7 @@ Resumen de cambios materiales v1.2 -> v1.3:
 
     NIPC_COVERAGE_POLICY.md (v1.0):              57f2d01feb68d8916dfa4fa0451224c2ee3dda7e4631a7863e671257b3e91f06
     radar_target_catalog.csv:                    11eabce8f8aaed1be6aa3c3557b5e392ad305757230333f84f37285c401b62b7
-    NIPC_CONTRATOS_SEMANTICOS_v1.md:             2d5084b93af5c8e29d3cd2471c36e4ef3d52413ebe2733493ede2a4227cb6875
+    NIPC_CONTRATOS_SEMANTICOS_v1.md:             c02d202f6be7daea04484b07c5da73f6f60938015191575e52ef40cb79345bce
     NIPC_P70_DICTAMEN.md:                        e8d4e4e825fe6136b23573705b800108247eb07c9a46e2f62c2c06980f179092
 
 ### 10.3. Estado de bloqueos
