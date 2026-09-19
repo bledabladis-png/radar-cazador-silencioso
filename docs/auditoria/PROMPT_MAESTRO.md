@@ -1,6 +1,6 @@
-# PROMPT MAESTRO v6.32 - INGENIERO SUPERVISOR DEL RADAR DE ROTACION SECTORIAL
+# PROMPT MAESTRO v6.33 - INGENIERO SUPERVISOR DEL RADAR DE ROTACION SECTORIAL
 
-Actualizado: 2026-09-19 (post ciclo H.2 + registro K-INSTITUTIONAL-ACCUMULATION-01 MONITORED/BAJA. HEAD f3114b4)
+Actualizado: 2026-09-19 (post dictamen auditor Gate 0 IAE: GO condicionado Fase A, NIPC bloqueado hasta Gate FA-2. HEAD f3114b4)
 Estado: Operativo al 100% - 10 contratos temporales (FU-021-5 + FU-021-3C-bis) - 655 tests locales + 2 skipped - 0 warnings - Gate 10/10 - Deuda ALTA/MEDIA/BAJA activa: 0
 Commit de referencia: f3114b4 (origin/main HEAD)
 
@@ -821,22 +821,41 @@ Reabrir si: runs manuales se vuelven frecuentes, cron cambia de hora, o auditori
 externa lo exige.
 
 K-INSTITUTIONAL-ACCUMULATION-01 (2026-09-19) -> MONITORED / BAJA.
-Origen: propuesta del usuario + dictamen vinculante del auditor externo.
-Modulo de evidencia institucional basado en 13F + N-PORT + ETF Primary
-Flow, con CFTC y FINRA como contexto (no confirmacion). Documento
-completo: docs/auditoria/INSTITUTIONAL_ACCUMULATION_PROPUESTA.md.
-NO-GO para implementacion hasta cerrar precondiciones bloqueantes:
-  (1) deduplicacion de reporting relationships 13F (unidad = relacion,
-      no CIK);
-  (2) mapping CUSIP->ticker >=95% + control de peso no mapeado;
-  (3) contrato de datos cerrado (observation_date != publication_date);
-  (4) comparability gate 13F<->N-PORT definido;
-  (5) almacenamiento aprobado con accession_number como lineage.
-Siguiente unidad autorizada: Opcion C (contrato + Gate 0 sobre 100
-filings 13F reales). Reabrir si: contrato cerrado + Gate 0 valida
-viabilidad, o evidencia de uso del modulo por el usuario.
-Regla local-first especifica: NO push a main hasta validar
-funcionalidad + beneficio. Ver PROPUESTA seccion 16.
+Origen: propuesta del usuario + ciclo de dictamenes del auditor externo.
+Documentos completos:
+  - PROPUESTA: docs/auditoria/INSTITUTIONAL_ACCUMULATION_PROPUESTA.md
+  - CONTRATO v1.1: docs/auditoria/INSTITUTIONAL_ACCUMULATION_CONTRATO.md
+  - INFORME Gate 0: docs/auditoria/INSTITUTIONAL_ACCUMULATION_GATE0_INFORME.md
+  - DICTAMEN Gate 0: docs/auditoria/INSTITUTIONAL_ACCUMULATION_DICTAMEN_GATE0.md
+
+Estado tras Gate 0 empirico (13F Q1 2026, 10,776 filings, 3.3M holdings):
+  Q2 (relacion de managers): REFORMULADO. Framework 3 niveles (identidad
+    fisica de fila / identidad de security / relacion institucional).
+    NIPC BLOQUEADO hasta Gate FA-2.
+  Q3 (CUSIP->ticker): GO. 99.60% cobertura (501/503 holdings individuales).
+  Q4 (SH + putCall=null): GO. 95.97% de filas canonicas.
+  Q5 (universo): GO provisional 503 (539 EQUITY - 36 ETFs).
+  Q7 (publication_date): GO, filing_date real.
+  Q8 (enmiendas): GO, latest 13F-HR/A canonica (127 reales, no 441).
+  DFND: INCLUIR con discretion_type preservado.
+  Almacenamiento: excepcion FU-002 aprobada (data/sec_13f/ gitignored +
+    data/manifests/sec_13f_*.json tracked con accession lineage).
+  UNMAPPED: nuevo estado tecnico (no confundir con NO_EVIDENCE).
+
+Fase A autorizada = GO condicionado, dividida en dos Gates:
+  FA-1: ingestion + schema + lineage -> Gate FA-1.
+  FA-2: CUSIP + reporting relationships + amendments -> Gate FA-2.
+  Solo tras FA-2: NIPC, Breadth, New/Exit, clasificacion.
+
+Precondiciones bloqueantes restantes:
+  - Q2 (resolver de relaciones), bloqueante para NIPC.
+  - Q9 (comparability 13F<->N-PORT), no bloqueante FA-1/FA-2.
+  - 5 CUSIPs desactualizados (DD, HON, XOM, FDXF, HONA) con tabla de
+    excepciones con vigencia temporal (valid_from/valid_to/source/reason).
+
+Regla local-first especifica: NO push a main de codigo hasta validar
+funcionalidad + beneficio. Ver CONTRATO seccion 8 y PROPUESTA seccion 16.
+Reabrir ciclo si: Gate FA-1 o FA-2 superado, o evidencia de uso del modulo.
 
 VIX3M/VIX nan 2026-09-14 (2026-09-18) -> WONT FIX (data artifact). El reporte del CI
 muestra `nan` en el ratio VIX3M/VIX del 14/09, pero `data/cboe_vix3m.parquet` tiene
@@ -1397,4 +1416,4 @@ Pregunta final: "Que hacemos?"
 
 No empieces a proponer tareas sin antes confirmar la asimilacion completa.
 
-Fin del prompt maestro v6.32. Commit de referencia: f3114b4. Fecha: 2026-09-19.
+Fin del prompt maestro v6.33. Commit de referencia: f3114b4. Fecha: 2026-09-19.
