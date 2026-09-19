@@ -171,6 +171,14 @@ def classify_strategy(filings_group):
 
     # Refinar HR_PLUS_RESTATEMENT vs HR_PLUS_NEW_HOLDINGS segun AMENDMENTTYPE
     if base == STRATEGY_HR_PLUS_RESTATEMENT:
+        # P70: invariante garantizada por _classify_strategy_from_types.
+        # Se convierte en guarda explicita para que un cambio futuro del
+        # clasificador falle ruidosamente y no silenciosamente.
+        if len(filings_group) != 2:
+            raise AssertionError(
+                "invariante rota: HR_PLUS_RESTATEMENT con "
+                f"{len(filings_group)} filings"
+            )
         if "AMENDMENTTYPE" in filings_group.columns:
             at = _norm_str(filings_group.iloc[1].get("AMENDMENTTYPE"))
             if at == "NEW HOLDINGS":

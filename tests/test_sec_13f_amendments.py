@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """Tests de sec_13f.identity.amendments (FA-2.4). Sin red."""
 import pandas as pd
+import pytest
 
 from src.institutional_accumulation.sec_13f.identity import amendments as am
 
@@ -144,6 +145,34 @@ def test_strategy_hr_plus_restatement():
     ])
     ordered = am.order_filings(sub, cov)
     assert am.classify_strategy(ordered) == am.STRATEGY_HR_PLUS_RESTATEMENT
+
+
+def test_classify_strategy_guarda_invariante_hr_plus_restatement(monkeypatch):
+    """P70: si base==HR_PLUS_RESTATEMENT con len!=2, abortar.
+
+    Simula un futuro cambio del clasificador monkeypatcheando
+    _classify_strategy_from_types. La guarda debe disparar AssertionError.
+    """
+    sub = _mk_sub([
+        ("A1", "1", "2026-03-31", "2026-05-15", "13F-HR"),
+        ("A2", "1", "2026-03-31", "2026-05-19", "13F-HR/A"),
+        ("A3", "1", "2026-03-31", "2026-05-20", "13F-HR/A"),
+    ])
+    cov = _mk_cov([
+        ("A1", None, None, None),
+        ("A2", 1, "RESTATEMENT", "Y"),
+        ("A3", 2, "RESTATEMENT", "Y"),
+    ])
+    ordered = am.order_filings(sub, cov)
+
+    monkeypatch.setattr(
+        am,
+        "_classify_strategy_from_types",
+        lambda types: am.STRATEGY_HR_PLUS_RESTATEMENT,
+    )
+
+    with pytest.raises(AssertionError, match="invariante rota"):
+        am.classify_strategy(ordered)
 
 
 def test_strategy_hr_plus_new_holdings():
