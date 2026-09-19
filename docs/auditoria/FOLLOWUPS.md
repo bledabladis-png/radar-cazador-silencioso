@@ -906,3 +906,41 @@ Referencia: prompt maestro v6.30, secciones 11.17 a 11.19 y 15.21. Nueve fixes a
 - **Secuencia completa:** Gate-NIPC.0 (PASS) -> Gate-NIPC.1 (spec) -> Gate-NIPC.2 (implementacion) -> Gate-NIPC.3 (validacion E2E Q4 2025 -> Q1 2026) -> Gate-NIPC.4 (cierre).
 - **Regla local-first IAE activa:** no push a main hasta Gate-NIPC.3 PASS.
 - **Estado:** Gate-NIPC.0 PASS condicionado 2026-09-19. Pendiente Gate-NIPC.1.
+
+
+## IAE NIPC - Gate 0 Mapping (PASS 2026-09-19)
+
+- **Origen:** continuacion de Gate-NIPC.0 (PASS condicionado). El auditor pidio medir la capa de mapping antes de la especificacion.
+- **Informe previo:** docs/auditoria/INSTITUTIONAL_ACCUMULATION_NIPC_GATE0_INFORME.md.
+- **Dictamen Gate-NIPC.0:** docs/auditoria/INSTITUTIONAL_ACCUMULATION_NIPC_GATE0_DICTAMEN.md.
+- **Dictamen Gate 0 Mapping:** docs/auditoria/INSTITUTIONAL_ACCUMULATION_NIPC_GATE0_MAPPING_DICTAMEN.md.
+- **Resultado:** GATE 0 MAPPING = PASS. GO para Gate-NIPC.1 (especificacion, SIN codigo). Codigo NIPC NO autorizado todavia.
+- **Fuentes internas inventariadas (data/mappings/, data/etf_holdings.csv, data/index_holdings.csv, data/amundi_yahoo_mapping.csv):**
+  - cusip_ticker_exceptions.csv: 3 filas curadas (DD, HON, XOM).
+  - etf_holdings.csv: 526 filas, 519 CUSIPs unicos. Crosswalk real CUSIP->ticker derivado de holdings ETF sectoriales.
+  - isin_ticker_map.csv: 49 filas ISIN (no aplica USA).
+  - index_holdings.csv: 2669 filas sin CUSIP (descartado).
+  - amundi_yahoo_mapping.csv: ISIN Europa (no aplica USA).
+  - **NO EXISTE crosswalk masivo CUSIP -> ticker del universo radar.**
+- **Crosswalk efectivo:** 522 CUSIPs unicos, 0 ambiguedades (ONE_TO_ONE puro).
+- **Las 4 metricas del auditor sobre Q1 2026:**
+  - A) Cobertura por securities: 502/24,838 = 2.021%.
+  - B) Cobertura universo radar USA: 220/242 = 90.91% (dato observado, NO umbral contractual).
+  - C) Cobertura ponderada por SHARES (mapped): 39.18% (41.01% sin filas no-equity).
+  - C') Cobertura ponderada SHARES en universo radar: 28.66% (29.995% sin filas no-equity). **INSUFFICIENT.**
+  - D) Cobertura ponderada por VALUE (mapped): 68.49%. Solo contraste, no cambia estado.
+- **Hallazgo TITLEOFCLASS:**
+  - 32,812 filas canonicas (1.03%) con TITLEOFCLASS no-equity; 35.18B SSHPRNAMT (4.45% del total).
+  - Casos extremos: CUSIP 329882225 (NIPST CONVERTIBLE BOND) = 10.59B shares; CUSIP 329882250 (NIPST PUT CONVERTIBLE BOND) = 6.99B shares.
+  - Ruido puro (CUSIPs 100% no-equity): 1,045 CUSIPs, 3.065% shares. En crosswalk: 0. En radar: 0.
+  - Contaminacion parcial en crosswalk: 10 CUSIPs (BAC, BX, JNJ, KMB, LMT, MS, NFLX, PWR, UBER, WFC), 1 fila no-equity cada uno, impacto despreciable.
+- **Resolucion del dictamen sobre hallazgos:**
+  - Q-NIPC-8: allowlist TITLEOFCLASS RECHAZADA. GO condicionado a clasificacion de security (`security_type = EQUITY/NON_EQUITY`). `TITLEOFCLASS` pasa a validacion/anomalia (TITLE_CLASS_CONFLICT), no autoridad primaria.
+  - Umbral 90% NO aprobado como contractual (valor observado, no umbral).
+  - NIPC = INSUFFICIENT hasta que Gate-NIPC.1 defina y se implemente una capa de mapping suficiente.
+  - `section13f_eligible` != `security_type=EQUITY` != `ticker_mapped` != `radar_member`. Cuatro dimensiones separadas.
+  - 22 tickers radar sin mapping (BRK-B, MOG-A, ...): clasificados como UNMAPPED_RADAR_SECURITY. BRK-B y MOG-A son problemas de clase/security identity, no faltantes simples.
+  - Fuente externa: NO elegir todavia (OpenFIGI ni equivalente). Gate-NIPC.1 debe comparar alternativas con criterios formales.
+- **Regla arquitectonica congelada:** TITLEOFCLASS -> NO allowlist equity -> security identity -> security_type (EQUITY/NON_EQUITY) -> ticker mapping -> radar intersection.
+- **Proximo paso autorizado:** Gate-NIPC.1 - Especificacion SIN codigo. Debe definir 12 conceptos: security_identity, section13f_eligibility, security_type, ticker_mapping, source_precedence, temporal_validity, one_to_one/ambiguous, mapping_coverage, weighted_share_coverage, unmapped_weight, operational_universe, status. Y comparar fuentes externas antes de elegir.
+- **Estado:** Gate 0 Mapping PASS 2026-09-19. Pendiente Gate-NIPC.1.
