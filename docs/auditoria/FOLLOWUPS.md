@@ -879,3 +879,30 @@ Referencia: prompt maestro v6.30, secciones 11.17 a 11.19 y 15.21. Nueve fixes a
   - Poblar HONA / FDXF cuando aparezcan en un 13F posterior con evidencia primaria.
   - Modelo separado para mapping de derivados CALL/PUT -> subyacente (no implementado).
 - **Reabrir ciclo:** ampliacion temporal del crosswalk; NIPC (desbloqueado respecto de FA-2, pendiente propio Gate).
+
+
+## IAE NIPC - Gate 0 (PASS condicionado 2026-09-19)
+
+- **Origen:** deuda posterior de Gate FA-2 (P-GATE.5: NIPC desbloqueado respecto de FA-2).
+- **Informe previo:** docs/auditoria/INSTITUTIONAL_ACCUMULATION_NIPC_GATE0_INFORME.md.
+- **Dictamen:** docs/auditoria/INSTITUTIONAL_ACCUMULATION_NIPC_GATE0_DICTAMEN.md.
+- **Resultado:** GATE-NIPC.0 = PASS condicionado. GO para Gate-NIPC.1 (especificacion, SIN codigo). Implementacion NO autorizada. Push NO.
+- **Baseline:** Q4 2025 ingestado en este ciclo (D:/13f_probe/processed/2025Q4/, ZIP SHA-256 ff340fc5...). Q1 2026 pre-existente.
+- **Volumetria (filtro SH + null):**
+  - Q4 2025: 10,676 filings | 3,124,594 filas canonicas | 24,200 CUSIPs.
+  - Q1 2026: 10,776 filings | 3,188,083 filas canonicas | 24,838 CUSIPs.
+  - Interseccion CUSIP: 21,356 (88.2% de Q4).
+- **Resolucion de las 7 preguntas:**
+  - Q-NIPC-1 (Q4 baseline): GO.
+  - Q-NIPC-2 (unidad): GO condicionado. Entidad nueva `reported_position_unit = (report_period, filing_manager_cik, canonical_security, discretion_type)`. `SSHPRNAMT` entra UNA VEZ por source line. Prohibido N x SSHPRNAMT. `canonical_reporting_relationship_key` = dimension de provenance/evidencia, no unidad de suma.
+  - Q-NIPC-3 (discretion): SOLE + DFND + OTR. Conservar separacion: NIPC_total/SOLE/DFND/OTR. DFND no es posicion invalida.
+  - Q-NIPC-4 (universo): operativo = radar_equities ^ 13F_eligible ^ mapped. Universo tecnico separado para diagnostico. 13F completo NO como output operativo. 3 CUSIPs NO como output operativo.
+  - Q-NIPC-5 (coverage): estado actual INSUFFICIENT (3/24,838 = 0.012%). Fuente externa pendiente de especificacion en Gate-NIPC.1.
+  - Q-NIPC-6 (scope): minimo (DeltaShares + NIPC + coverage + status). Sin Breadth/NewExit/clasificacion.
+  - Q-NIPC-7 (arquitectura): src/institutional_accumulation/aggregation/ con delta_shares.py + nipc.py. Sin breadth.py ni new_exit.py todavia.
+- **Regla canonica DeltaShares:** SSHPRNAMTTYPE == "SH" AND PUTCALL IS NULL. PRN fuera.
+- **Precision estructural:** NIPC = variacion trimestral de acciones largas reportadas en 13F. NO es "institutional trading flow". Shorts no se netean.
+- **Proximo paso autorizado:** Gate-NIPC.1 (especificacion SIN codigo). Punto critico a resolver primero: capa masiva CUSIP -> security/ticker del universo radar (con 3 excepciones el NIPC productivo es INSUFFICIENT).
+- **Secuencia completa:** Gate-NIPC.0 (PASS) -> Gate-NIPC.1 (spec) -> Gate-NIPC.2 (implementacion) -> Gate-NIPC.3 (validacion E2E Q4 2025 -> Q1 2026) -> Gate-NIPC.4 (cierre).
+- **Regla local-first IAE activa:** no push a main hasta Gate-NIPC.3 PASS.
+- **Estado:** Gate-NIPC.0 PASS condicionado 2026-09-19. Pendiente Gate-NIPC.1.
