@@ -14,20 +14,13 @@ from pathlib import Path
 
 import pandas as pd
 
-from .schema import EXPECTED_COLUMNS, EXPECTED_FILES, validate_columns
+from .schema import DATE_COLUMNS, EXPECTED_COLUMNS, EXPECTED_FILES, validate_columns
 
 PARSER_VERSION = "1.0"
 
 STR_DTYPE = "string"
 INT_DTYPE = "Int64"
 FLOAT_DTYPE = "Float64"
-
-# Columnas de fecha por TSV (formato DD-MMM-YYYY).
-DATE_COLUMNS = {
-    "SUBMISSION": ("FILING_DATE", "PERIODOFREPORT"),
-    "COVERPAGE": ("DATEDENIEDEXPIRED", "DATEREPORTED"),
-    "SIGNATURE": ("SIGNATUREDATE",),
-}
 
 # Columnas enteras nullable.
 INT_COLUMNS = {
@@ -141,7 +134,7 @@ def parse_13f(extracted_dir, *, validate=True):
 
     result = {}
     for filename in EXPECTED_FILES:
-        tsv_name = filename.replace(".tsv", "")
+        tsv_name = filename.removesuffix(".tsv")
         tsv_path = extracted_dir / filename
         if not tsv_path.exists():
             raise FileNotFoundError("TSV faltante: " + str(tsv_path))

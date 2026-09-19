@@ -91,9 +91,10 @@ def download_13f_zip(period, dest_dir, user_agent=DEFAULT_USER_AGENT, force=Fals
     force:    si True, ignora cache existente y redescarga.
     Devuelve: Path al ZIP descargado.
 
-    Cache: si el fichero existe y su tamano coincide con Content-Length,
-    se reutiliza (sanity check, no identidad). El SHA-256 se calcula
-    siempre como lineage local.
+    Cache: si el fichero existe y force=False, se reutiliza. No hay
+    verificacion de tamano en cache-hit. La integridad del ZIP se
+    verifica en extract_13f_zip mediante CRC (zipfile.testzip).
+    El SHA-256 se calcula siempre como lineage local.
     """
     _validate_user_agent(user_agent)
     dest_dir = Path(dest_dir)
@@ -166,10 +167,10 @@ def extract_13f_zip(zip_path, dest_dir, force=False):
         for name in EXPECTED_FILES:
             target = dest_dir / name
             if target.exists() and not force:
-                result[name.replace(".tsv", "")] = target
+                result[name.removesuffix(".tsv")] = target
                 continue
             with zf.open(name) as src, open(target, "wb") as dst:
                 dst.write(src.read())
-            result[name.replace(".tsv", "")] = target
+            result[name.removesuffix(".tsv")] = target
 
     return result

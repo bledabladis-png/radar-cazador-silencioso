@@ -4,8 +4,6 @@ import zipfile
 from pathlib import Path
 from unittest.mock import patch
 
-import pytest
-
 from src.institutional_accumulation.sec_13f import ingest
 from src.institutional_accumulation.sec_13f.schema import (
     EXPECTED_COLUMNS,
@@ -65,7 +63,7 @@ def test_ingest_end_to_end_estructura(tmp_path):
 def test_ingest_crea_7_parquets(tmp_path):
     with patch("src.institutional_accumulation.sec_13f.ingest.download_13f_zip",
                side_effect=_fake_download):
-        result = ingest.ingest_13f(
+        ingest.ingest_13f(
             "2026Q1", "01mar2026-31may2026",
             base_dir=tmp_path, project_root=tmp_path,
         )

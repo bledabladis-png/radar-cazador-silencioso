@@ -81,7 +81,7 @@ def load_parquets(quarter, base_dir=DEFAULT_BASE_DIR):
 
     result = {}
     for filename in EXPECTED_FILES:
-        name = filename.replace(".tsv", "")
+        name = filename.removesuffix(".tsv")
         parquet_path = out_dir / (name + ".parquet")
         if not parquet_path.exists():
             raise FileNotFoundError("Parquet faltante: " + str(parquet_path))
