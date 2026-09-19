@@ -1086,3 +1086,27 @@ Referencia: prompt maestro v6.30, secciones 11.17 a 11.19 y 15.21. Nueve fixes a
 - **Arquitectura multicapa para Gate-NIPC.1:** internal verified -> OpenFIGI fallback -> UNRESOLVED, con CONFLICT explicito. + capa section13f_eligible (SEC) + capa security_type explicita.
 - **Proximo paso autorizado:** Gate-NIPC.1 - especificacion SIN codigo. 12 dimensiones a definir + comparativa fuentes + snapshot/manifest + coverage thresholds.
 - **Estado:** Gate 0 SEC 13(f) PASS / CLOSED 2026-09-19. Pendiente Gate-NIPC.1.
+
+
+## IAE NIPC - Gate-NIPC.1 dictamen (PASS condicionado 2026-09-19)
+
+- **Origen:** dictamen del auditor sobre la especificacion NIPC v1.0.
+- **Especificacion v1.0:** docs/auditoria/INSTITUTIONAL_ACCUMULATION_NIPC_ESPECIFICACION.md (commit e6f550a, 37,013 bytes).
+- **Dictamen Gate-NIPC.1:** docs/auditoria/INSTITUTIONAL_ACCUMULATION_NIPC_ESPECIFICACION_DICTAMEN.md (commit 4a7d4d0).
+- **Resultado:** GATE-NIPC.1 = PASS CONDICIONADO. Arquitectura aprobada. Gate-NIPC.2 NO autorizado todavia. Revision v1.1 requerida.
+- **5 correcciones obligatorias a la v1.1:**
+  1. `canonical_security` explicito: identidad estable de la security, separada del `observed_security_identifier` (CUSIP del 13F). Capa obligatoria (report_period, observed_CUSIP) -> canonical_security para que cambios de CUSIP entre periodos no se traten como Exit+New.
+  2. Match key interperiodo fijada en contrato: `(filing_manager_cik, canonical_security, discretion_type)` SIN `report_period`. `compute_delta_shares()` no debe aceptar `match_keys=None`. Salida con `match_status` en BOTH/NEW/EXIT/UNRESOLVED_IDENTITY.
+  3. Coverage pairwise: anadir `coverage_previous`, `coverage_current`, `paired_security_coverage`, `paired_weighted_share_coverage`, `unmapped_weight_previous`, `unmapped_weight_current`.
+  4. `TEMPORAL_UNVERIFIED`: politica ya en el contrato (no diferir a Gate-NIPC.2). Una resolucion OpenFIGI actual NO equivale automaticamente a mapping historico. Si no se puede demostrar valida para el report_period -> status TEMPORAL_UNVERIFIED -> fuera del operational_universe.
+  5. `security_type` con `security_type_source` + `security_type_status`: RESOLVED_EQUITY / RESOLVED_NON_EQUITY / UNRESOLVED / CONFLICT. Determinante para casos SH + PUTCALL NULL + CONVERTIBLE BOND.
+- **Correcciones adicionales aprobadas:**
+  - `section13f_eligible` expresada como 5 estados (NOT_IN_LIST | DELETED | ADDED | ACTIVE | CONFLICT), no booleano puro. Booleano derivable.
+  - Tests: ampliar de 14 a 18 familias minimas. Anadir: test_cusip_change_same_canonical_security, test_multi_edge_does_not_duplicate_delta, test_unresolved_mapping_blocks_pair_match, test_new_and_exit_zero_baseline_current.
+  - Parser SEC 13(f) ubicado en `src/institutional_accumulation/sec_13f/identity/sec13f_list.py`. Responsabilidad: parse fixed-width 80 y devolver section13f_eligible + status + option_indicator + raw_line. NO resuelve ticker ni identidad.
+- **NO aprobado:**
+  - Threshold >=90%: sigue rechazado como umbral contractual (valor observado). Thresholds = UNDEFINED hasta fijacion previa a Gate-NIPC.2.
+  - Implementar codigo antes de aplicar las 5 correcciones.
+- **Razon del condicionamiento (cita literal del dictamen):** sin `canonical_security` estable y sin politica de matching interperiodo explicita, un pipeline perfectamente programado podria producir un NIPC matematicamente correcto pero semanticamente falso ante un cambio de CUSIP o una mapping gap entre Q4 y Q1.
+- **Proximo paso autorizado:** revision v1.1 de la especificacion con los 5 cambios. Despues, Gate-NIPC.2 podra recibir GO.
+- **Estado:** Gate-NIPC.1 PASS condicionado 2026-09-19. Pendiente v1.1 y dictamen favorable.
