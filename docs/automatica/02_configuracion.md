@@ -23,6 +23,7 @@ Las constantes son importadas por todos los modulos del sistema.
 | CACHE_TTL | { |
 | CACHE_VALIDATE_TRADING_DATE | True |
 | CONFIDENCE_RANGE_DIVISOR | 2.0 |
+| CURRENT_TEMPORAL_CONTRACT_VERSION | "FU-021-5-v2" |
 | DARKPOOL_FULL_HISTORY_WEEKS | 104 |
 | DARKPOOL_MIN_HISTORY_WEEKS | 13 |
 | DARKPOOL_THRESHOLDS | { |
@@ -40,6 +41,7 @@ Las constantes son importadas por todos los modulos del sistema.
 | FRESHNESS_RECENT_DAYS | 14 |
 | FRESHNESS_STALE_DAYS | 21 |
 | IHR_THRESHOLDS | { |
+| MANIFEST_DUP_THRESHOLD | 0.5 |
 | MAX_NAN_RATIO | 0.10 |
 | MAX_RETRIES | 3 |
 | MIN_SECTOR_COVERAGE | 0.70 |

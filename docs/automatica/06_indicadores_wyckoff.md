@@ -11,9 +11,57 @@ Proporciona un score continuo de estructura de precios para ETFs sectoriales y a
 
 ## Formulas
 
-**Score Estructural:** 0.60*trend_norm + 0.40*compression_norm
-**Score Tactico:** 0.50*volume_norm + 0.50*effort_norm
-**Score Combinado:** 0.70*structural + 0.30*tactical
+**Score Estructural:** Construye DataFrame OHLCV limpio para un ticker.
+
+    I2 (2026-09-18): wyckoff_structure_core degenera al fallback
+    silencioso RANGE cuando recibe un df con NaN internos. La
+    construccion de ticker_df con dropna() es el patron correcto,
+    ya aplicado en sector_breadth.py y stock_leader.py.
+
+    Args:
+        df: DataFrame multi-ticker (MultiIndex field,ticker) o
+            columnas planas si el ticker esta solo.
+        ticker: ticker a extraer.
+
+    Returns:
+        DataFrame con columnas Open/High/Low/Close/Volume sin NaN.
+
+    Raises:
+        KeyError: si el ticker no existe en df.
+**Score Tactico:** Construye DataFrame OHLCV limpio para un ticker.
+
+    I2 (2026-09-18): wyckoff_structure_core degenera al fallback
+    silencioso RANGE cuando recibe un df con NaN internos. La
+    construccion de ticker_df con dropna() es el patron correcto,
+    ya aplicado en sector_breadth.py y stock_leader.py.
+
+    Args:
+        df: DataFrame multi-ticker (MultiIndex field,ticker) o
+            columnas planas si el ticker esta solo.
+        ticker: ticker a extraer.
+
+    Returns:
+        DataFrame con columnas Open/High/Low/Close/Volume sin NaN.
+
+    Raises:
+        KeyError: si el ticker no existe en df.
+**Score Combinado:** Construye DataFrame OHLCV limpio para un ticker.
+
+    I2 (2026-09-18): wyckoff_structure_core degenera al fallback
+    silencioso RANGE cuando recibe un df con NaN internos. La
+    construccion de ticker_df con dropna() es el patron correcto,
+    ya aplicado en sector_breadth.py y stock_leader.py.
+
+    Args:
+        df: DataFrame multi-ticker (MultiIndex field,ticker) o
+            columnas planas si el ticker esta solo.
+        ticker: ticker a extraer.
+
+    Returns:
+        DataFrame con columnas Open/High/Low/Close/Volume sin NaN.
+
+    Raises:
+        KeyError: si el ticker no existe en df.
 
 
 ## Salidas
