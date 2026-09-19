@@ -95,12 +95,27 @@ def parse_line(line):
 
     Ignora la posicion 80 (Misc/Unused, prohibido interpretar).
     Lineas vacias (solo whitespace) devuelven None.
+    Lineas < POS_STATUS[1] (70 chars): devueltas como anomalia con
+    status=None. NO se rellenan con espacios, porque el padding
+    implicaria clasificarlas erroneamente como ACTIVE.
     """
     if line is None:
         return None
     line = line.rstrip("\n\r")
     if not line.strip():
         return None
+    if len(line) < POS_STATUS[1]:
+        # P51: linea demasiado corta para tener status. Preservar como
+        # anomalia (status=None) para NO convertirla en ACTIVE via padding.
+        return {
+            "cusip": line[POS_CUSIP[0]:POS_CUSIP[1]].strip(),
+            "option_indicator": None,
+            "issuer_name": None,
+            "issuer_description": None,
+            "status_raw": None,
+            "status": None,
+            "raw_line": line,
+        }
     if len(line) < LINE_WIDTH:
         line = line.ljust(LINE_WIDTH)
 

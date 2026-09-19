@@ -96,11 +96,33 @@ def test_parse_line_ignora_pos_80():
 
 
 def test_parse_line_padding_si_short():
-    """Si la linea es mas corta de 80, se rellena; no crashea."""
-    short = "037833100" + " " + "APPLE INC".ljust(30)  # <80
+    """P51: linea corta (< 70): no crashea, se preserva como anomalia."""
+    short = "037833100" + " " + "APPLE INC".ljust(30)  # 40 chars
     p = sl.parse_line(short)
     assert p is not None
     assert p["cusip"] == "037833100"
+    assert p["status"] is None
+
+
+def test_parse_line_demasiado_corta_status_none():
+    """P51: linea < 70 chars -> status=None (anomalia), no ACTIVE."""
+    line_50 = "A" * 50
+    p = sl.parse_line(line_50)
+    assert p is not None
+    assert p["status"] is None
+    assert p["status_raw"] is None
+    assert p["raw_line"] == line_50
+
+
+def test_parse_line_exactamente_70_chars_parsable():
+    """P51: linea de exactamente 70 chars se parsea con normalidad."""
+    line = ("037833100" + " " + "APPLE INC".ljust(30)
+            + "COM".ljust(27) + "   ")
+    assert len(line) == 70
+    p = sl.parse_line(line)
+    assert p is not None
+    assert p["cusip"] == "037833100"
+    assert p["status"] == sl.STATUS_ACTIVE
 
 
 # ---- parse_official_list_text ----
