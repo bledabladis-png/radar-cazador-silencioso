@@ -317,7 +317,51 @@ resueltos por shareClassFIGI.
 
 ## 6. Peticion formal de F2.4
 
-Se solicita al auditor externo:
+### 6.0. Instrucciones de lectura y decisiones solicitadas
+
+#### 6.0.1. Material objeto de revision
+
+Para el dictamen F2.4 se solicita revisar, en este orden:
+
+1. `NIPC_CONTRATOS_SEMANTICOS_v1.md` - contrato semantico habilitante.
+2. `NIPC_COVERAGE_POLICY_V13_PROPUESTA.md` - propuesta normativa derivada.
+3. `NIPC_P70_DICTAMEN.md` - cierre documentado de P70.
+4. `docs/auditoria/evidence/nipc_p70_probe/` - evidencia reproducible del probe P70.
+5. `INSTITUTIONAL_ACCUMULATION_REVISION_ESTRUCTURAL_2026-09-20.md` - informe interno que origino los cuatro bloqueos.
+
+Los cinco elementos estan materializados y preservados en el commit `a9bb1fb`. Los documentos historicos referenciados en esta entrega permanecen intactos.
+
+#### 6.0.2. Decisiones solicitadas al auditor
+
+El dictamen F2.4 debe resolver cuatro puntos:
+
+**D1 - Contrato semantico v1.**
+Confirmar la adopcion contractual de P60, P61 y P38, incluyendo:
+
+- T1: P60 no modifica `canonical_security_kind`.
+- T2: `operational_mapping_status` es independiente de `security_resolution_status`.
+- T3: el orden contractual de aplicacion es P60 -> P61 -> P38.
+
+**D2 - Policy v1.3.**
+Confirmar si `NIPC_COVERAGE_POLICY_V13_PROPUESTA.md` puede constituir la nueva base normativa, sustituyendo funcionalmente a v1.2 cuando sea aplicada, manteniendo v1.0 vigente hasta ese momento.
+
+Esta decision implica aceptar la definicion de `paired_weighted_share_coverage` con denominador `TARGET_Q4 INTERSECT TARGET_Q1` y, por tanto, considerar el baseline y el TOP 2000 historicos como no aptos para fijar thresholds bajo v1.3 hasta su recalculo.
+
+**D3 - P70.**
+Confirmar el cierre de P70 como `GO CONDICIONADO`, con la guarda explicita propuesta y sin modificacion de la logica de negocio.
+
+**D4 - Continuacion tecnica.**
+Autorizar exclusivamente el paso 4 de la secuencia posterior a F2.4: creacion de tests especificos para P38, P60, P61 y P70. Esta autorizacion no incluye todavia la aplicacion de fixes, el recalculo de coverage, la ampliacion masiva de OpenFIGI ni la fijacion de thresholds.
+
+#### 6.0.3. Forma esperada del dictamen
+
+El auditor puede emitir una de las siguientes resoluciones:
+
+- **F2.4 GO** - los cuatro puntos quedan aprobados y se autoriza el paso 4.
+- **F2.4 GO CONDICIONADO** - uno o varios puntos quedan aprobados sujetos a condiciones explicitas; la autorizacion del paso 4 queda limitada por dichas condiciones.
+- **F2.4 NO GO** - uno o varios puntos no quedan aprobados y el paquete debe volver a revision antes de continuar.
+
+En ningun caso esta solicitud pretende fijar `THRESHOLD_1` o `THRESHOLD_2`, aprobar cambios de codigo productivo, autorizar OpenFIGI masivo, aplicar la policy v1.3 ni modificar los artefactos historicos preservados.
 
 ### 6.1. Dictaminar sobre los contratos semanticos v1
 
