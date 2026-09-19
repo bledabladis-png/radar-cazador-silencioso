@@ -1217,3 +1217,31 @@ Referencia: prompt maestro v6.30, secciones 11.17 a 11.19 y 15.21. Nueve fixes a
 - **Leccion metodologica congelada:** todo agregado de SSHPRNAMT debe calcularse sobre el canonical_snapshot producido por apply_amendments. PROHIBIDO sumar SSHPRNAMT desde INFOTABLE.parquet filtrado por periodo cuando existan amendments RESTATEMENT.
 - **Siguiente accion autorizada:** TOP 50 filer continuity probe (misma metodologia que top 20).
 - **Estado:** 38 commits locales ahead. Sin push. Pendiente top 50 probe + dictamen posterior.
+
+
+## IAE NIPC - TOP 50 filer continuity probe Q-MINI-5 (2026-09-19)
+
+- **Origen:** dictamen mini-probe Q-MINI-5, GO TOP 50.
+- **Informe:** docs/auditoria/INSTITUTIONAL_ACCUMULATION_NIPC_GATE0_TOP50_INFORME.md
+- **Evidence:** docs/auditoria/evidence/nipc_gate0_probe/probe_filer_continuity_top50.py + top50_output.txt
+- **Resultado:** Vanguard es el unico grupo con discontinuidad en top 50. No hay casos nuevos.
+- **Clasificacion 54 CIKs (union top 50 Q4+Q1):**
+  - CONTINUOUS_FILER: 50 (92.6%).
+  - FILER_DISCONTINUITY: 4 (7.4%) - todos Vanguard.
+  - UNRESOLVED: 0.
+- **Los 4 FILER_DISCONTINUITY (todos Vanguard):**
+  - 0000102909 VANGUARD GROUP INC (padre): Q4 HR -> Q1 ausente.
+  - 0000933478 VANGUARD FIDUCIARY TRUST CO: Q4 ausente -> Q1 HR (era NT Q4).
+  - 0002100119 VANGUARD CAPITAL MGMT LLC: Q4 ausente -> Q1 HR.
+  - 0002100121 VANGUARD PORTFOLIO MGMT LLC: Q4 ausente -> Q1 HR.
+- **NT_TO_HR observados: 2.**
+  - Padre Vanguard NT Q1 (2026-05-08) -> 10 targets en OTHERMANAGER.
+  - Fiduciary Trust NT Q4 -> target padre.
+- **Comparativa pct_discontinuity:**
+  - top 20: 3/24 = 12.5%.
+  - top 50: 4/54 = 7.4%.
+  - La bajada es artefacto de denominador, no tendencia. Vanguard es la unica fuente.
+- **Metodologia confirmada:** agregados SSHPRNAMT sobre canonical_snapshot (regla congelada del addendum anterior).
+- **Pendiente GHISALLO (Q-MINI-3):** +765% (2.39B -> 20.69B). Continua presente en ambos periodos. No es discontinuidad. Probe especifico pendiente.
+- **Recomendaciones al auditor:** Q-T50-1 a Q-T50-5 (seccion 9 del informe).
+- **Estado:** 40 commits locales ahead. Sin push. Pendiente dictamen top 50.
