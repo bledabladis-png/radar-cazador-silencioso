@@ -142,6 +142,66 @@ Los thresholds se evaluan sobre esta interseccion. El universo
 tecnico (13F SH + null) se usa para diagnostico del motor, no para
 fijar umbrales.
 
+## 10.bis. Filer continuity como dimension independiente
+
+Dictamen habilitante: INSTITUTIONAL_ACCUMULATION_NIPC_GATE0_PROBE_
+DICTAMEN.md (2026-09-19, Q-PROBE-3). Especificacion: seccion 3.15.
+
+### Principio
+
+Coverage y continuidad de filer son DIMENSIONES INDEPENDIENTES.
+No deben combinarse en un unico factor de descuento.
+
+    coverage suficiente
+        +
+    filer continuity suficiente
+        =
+    condiciones necesarias para interpretar NIPC
+
+### Metricas obligatorias de filer continuity
+
+Toda ejecucion de NIPC debe reportar, ademas de las 6 metricas de
+coverage pairwise de la seccion 2:
+
+    filer_continuity_securities_pct
+    filer_continuity_weighted_pct
+    filer_discontinuity_bruto
+    filer_discontinuity_neto
+    filer_discontinuity_concentration
+
+Ver definiciones exactas en especificacion seccion 3.15.
+
+### Thresholds
+
+    THRESHOLD_3 (filer_continuity_securities_pct) = UNDEFINED
+    THRESHOLD_4 (filer_continuity_weighted_pct)   = UNDEFINED
+
+Se fijan conjuntamente con THRESHOLD_1 y THRESHOLD_2, DESPUES de
+mini-probe Q-PROBE-5. NO antes.
+
+### Regla de publicacion ampliada
+
+    READY requiere simultaneamente:
+
+      (1) paired_security_coverage        >= THRESHOLD_1
+      (2) paired_weighted_share_coverage  >= THRESHOLD_2
+      (3) filer_continuity_securities_pct >= THRESHOLD_3
+      (4) filer_continuity_weighted_pct   >= THRESHOLD_4
+
+Un solo control por encima no autoriza READY. Cuatro controles
+simultaneos.
+
+### Estado actual (Q4 2025 -> Q1 2026)
+
+    filer_continuity_* = pendiente mini-probe Q-PROBE-5.
+
+    Hallazgo Vanguard: nipc_sole ~ -41.16B, nipc_dfnd ~ +41.28B,
+    neto ~ +52M. Cancelacion por reorganizacion de filer.
+
+    STATUS: INSUFFICIENT (por cobertura + filer continuity UNDEFINED).
+
+---
+
 ## 11. Referencias
 
   - Dictamen Gate-NIPC.1 v1.1: INSTITUTIONAL_ACCUMULATION_NIPC_ESPECIFICACION_V11_DICTAMEN.md
