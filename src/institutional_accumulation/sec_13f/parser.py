@@ -16,6 +16,8 @@ import pandas as pd
 
 from .schema import EXPECTED_COLUMNS, EXPECTED_FILES, validate_columns
 
+PARSER_VERSION = "1.0"
+
 STR_DTYPE = "string"
 INT_DTYPE = "Int64"
 FLOAT_DTYPE = "Float64"
