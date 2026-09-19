@@ -55,3 +55,9 @@ _snapshot_*.md
 # Scripts temporales de auditoria/patch (prefijo _ en raiz)
 /_*.py
 /_*.md
+
+# IAE - Institutional Accumulation Evidence (K-INSTITUTIONAL-ACCUMULATION-01)
+# Raw 13F/N-PORT fuera de Git. Solo manifests tracked.
+data/sec_13f/raw/
+data/sec_13f/processed/
+!data/sec_13f/manifests/
