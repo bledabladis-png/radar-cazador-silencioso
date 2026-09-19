@@ -239,6 +239,28 @@ def test_compute_nipc_and_coverage_devuelve_todas_las_claves():
 
 # ---- determinismo ----
 
+def test_nipc_total_available_true_con_datos():
+    """P31: nipc_total_available=True cuando hay al menos un delta observable."""
+    d = _delta([{"match_status": ds.STATUS_BOTH, "delta_shares": 10.0}])
+    r = npc.compute_nipc(d)
+    assert r["nipc_total_available"] is True
+    assert r["n_delta_observable"] == 1
+
+
+def test_nipc_total_available_false_sin_datos():
+    """P31: nipc_total_available=False cuando no hay observables."""
+    r_empty = npc.compute_nipc(pd.DataFrame())
+    assert r_empty["nipc_total_available"] is False
+    assert r_empty["nipc_total"] == 0.0
+
+    d_unres = _delta([
+        {"match_status": ds.STATUS_UNRESOLVED_IDENTITY, "delta_shares": None}
+    ])
+    r_unres = npc.compute_nipc(d_unres)
+    assert r_unres["nipc_total_available"] is False
+    assert r_unres["nipc_total"] == 0.0
+
+
 def test_sin_datetime_now():
     import ast
     import inspect

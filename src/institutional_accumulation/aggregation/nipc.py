@@ -56,7 +56,12 @@ DISCRETION_TYPES = ("SOLE", "DFND", "OTR")
 
 
 def _sum_delta(delta_df, mask=None):
-    """Suma delta_shares ignorando NaN. None si no hay filas validas."""
+    """Suma delta_shares ignorando NaN.
+
+    P31: devuelve siempre float (nunca None). Si no hay filas validas,
+    devuelve 0.0. La informacion de disponibilidad se expone en
+    compute_nipc a traves del campo nipc_total_available.
+    """
     if delta_df is None or delta_df.empty:
         return 0.0
     df = delta_df if mask is None else delta_df[mask]
@@ -78,13 +83,18 @@ def compute_nipc(delta_df, *, discretion_breakdown=True):
     delta_df: salida de compute_delta_shares.
     Devuelve dict con:
       nipc_total
+      nipc_total_available   bool: True si n_delta_observable > 0
       nipc_sole, nipc_dfnd, nipc_otr  (si discretion_breakdown)
       n_both, n_new, n_exit, n_unresolved_identity
       n_delta_observable   (BOTH + NEW + EXIT)
+
+    P31: nipc_total sigue siendo 0.0 cuando no hay datos (compatibilidad),
+    pero nipc_total_available=False distingue "no hay datos" de "neto = 0".
     """
     if delta_df is None or delta_df.empty:
         result = {
             "nipc_total": 0.0,
+            "nipc_total_available": False,
             "n_both": 0,
             "n_new": 0,
             "n_exit": 0,
@@ -99,15 +109,17 @@ def compute_nipc(delta_df, *, discretion_breakdown=True):
     observable_mask = delta_df["match_status"].isin(
         [STATUS_BOTH, STATUS_NEW, STATUS_EXIT]
     )
+    n_delta_observable = int(observable_mask.sum())
     result = {
         "nipc_total": _sum_delta(delta_df, observable_mask),
+        "nipc_total_available": bool(n_delta_observable > 0),
         "n_both": _count_status(delta_df, STATUS_BOTH),
         "n_new": _count_status(delta_df, STATUS_NEW),
         "n_exit": _count_status(delta_df, STATUS_EXIT),
         "n_unresolved_identity": _count_status(
             delta_df, STATUS_UNRESOLVED_IDENTITY
         ),
-        "n_delta_observable": int(observable_mask.sum()),
+        "n_delta_observable": n_delta_observable,
     }
 
     if discretion_breakdown:
