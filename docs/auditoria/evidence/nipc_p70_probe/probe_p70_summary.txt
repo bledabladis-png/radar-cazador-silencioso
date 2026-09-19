@@ -1,0 +1,24 @@
+=== 2026Q1 (period=2026-03-31) ===
+n_groups_total:                            10648
+n_groups_hr_plus_restatement:              100
+n_groups_hr_chain_restatement:             2
+n_groups_hr_composite:                     2
+n_groups_hr_plus_new_holdings:             19
+n_groups_len_gt_2:                         0
+n_groups_second_vs_last_diff:              0
+n_groups_second_eq_last_with_intermediate: 0
+max_group_len:                             3
+n_examples_saved:                          0
+
+=== 2025Q4 (period=2025-12-31) ===
+n_groups_total:                            10524
+n_groups_hr_plus_restatement:              95
+n_groups_hr_chain_restatement:             2
+n_groups_hr_composite:                     2
+n_groups_hr_plus_new_holdings:             9
+n_groups_len_gt_2:                         0
+n_groups_second_vs_last_diff:              0
+n_groups_second_eq_last_with_intermediate: 0
+max_group_len:                             4
+n_examples_saved:                          0
+
