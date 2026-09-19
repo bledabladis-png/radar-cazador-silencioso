@@ -977,3 +977,38 @@ Referencia: prompt maestro v6.30, secciones 11.17 a 11.19 y 15.21. Nueve fixes a
 - **Clasificacion de respuestas OpenFIGI a registrar:** EXACT | NOT_FOUND | MULTIPLE_CANDIDATES | CONFLICT | NON_EQUITY | ERROR | RATE_LIMIT.
 - **Proximo paso autorizado:** Gate 0 OpenFIGI con muestra estratificada. Sin codigo productivo hasta completar Gate 0 SEC 13(f) + Gate-NIPC.1.
 - **Estado:** Gate 0 FIGI PASS 2026-09-19. Pendiente Gate 0 OpenFIGI.
+
+
+## IAE NIPC - Gate 0 OpenFIGI (PASS como fuente candidata 2026-09-19)
+
+- **Origen:** continuacion del Gate 0 FIGI (PASS, FIGI descartado como pivote). El auditor pidio evaluar OpenFIGI con muestra estratificada.
+- **Informe previo:** docs/auditoria/INSTITUTIONAL_ACCUMULATION_NIPC_GATE0_FIGI_DICTAMEN.md.
+- **Dictamen Gate 0 OpenFIGI:** docs/auditoria/INSTITUTIONAL_ACCUMULATION_NIPC_GATE0_OPENFIGI_DICTAMEN.md.
+- **Resultado:** GATE 0 OPENFIGI = PASS como fuente CANDIDATA (no fuente unica). GO para Gate 0 SEC 13(f). Codigo NIPC NO autorizado.
+- **Metodologia:** muestra estratificada de 152 CUSIPs unicos (estratos A/B/C/D/E). Endpoint /v3/mapping con idType=ID_CUSIP, exchCode=US. Batches de 5, sleep 2.5s. Tiempo: 89.5s.
+- **Resultados globales:**
+  - 113/152 con respuesta (74.3% observado sobre muestra).
+  - 39/152 sin respuesta (29 "No identifier found", 10 "Invalid idValue format").
+  - Dentro de hits: 112 EXACT_1, 1 MULTIPLE_CANDIDATES.
+- **Por estrato (sobre muestra, no estimacion poblacional):**
+  - A (radar mapped, ground truth): 46/48 = 95.8%. 0 mismatches vs ticker interno. Exactitud validada.
+  - C (top SSHPRNAMT unmapped): 39/48 = 81.2%. Resuelve ETFs (VEA, GOVT, IVV...), ADRs (VALE, ABEV, ITUB, NOK), canadienses (CNQ, BN, BAM, ENB, SU, TD, MFC, SHOP, CVE, B), MLP (ET), y small caps USA (AUR, RKT, PLUG).
+  - D (mid/low caps, percentiles 40-60): 24/50 = 48.0%. Gap critico de cobertura.
+  - E (problematicos conocidos): 4/6. NIPST CONVERTIBLE BOND rechazados (Invalid idValue format). BRK-A/BRK-B y GOOG/GOOGL resueltos pero con tickers tipo BRK/A, BRK/B (barra, no guion) -> requiere normalizacion.
+- **Hallazgo importante:** CUSIP 30231G102 (XOM, Exxon Mobil) NO encontrado por OpenFIGI ("No identifier found"). Gap de fuente en large cap USA con CUSIP correcto.
+- **Arquitectura aprobada (precedencia):**
+    1. Internal verified mapping.
+    2. OpenFIGI fallback.
+    3. UNRESOLVED.
+  Conflicto explicito -> CONFLICT (no sobrescribir).
+- **Reglas del contrato OpenFIGI (congeladas):**
+  - Trazabilidad: input_identifier, id_type, resolved_figi, resolved_security, ticker, security_type, market_sector, exch_code, share_class_figi, mapping_source, mapping_timestamp_utc, mapping_endpoint, mapping_result_status. + hash/manifest del lote.
+  - Temporalidad: OpenFIGI actual != verdad historica Q1. Pendiente validacion.
+  - MULTIPLE_CANDIDATES -> AMBIGUOUS (no auto-resolver).
+  - Los 29 NOT_FOUND -> UNRESOLVED (no heuristicas). XOM internal prevalece (SOURCE_GAP_OPENFIGI).
+  - API key: GO para escalado. NO commitear. Env var/secret local. Rate limit con key: 25/6s, 100 jobs/req. Escalar 24,838 CUSIPs: ~60s con key vs ~3h19min sin key.
+- **22 tickers radar sin CUSIP:** permanecen UNMAPPED_RADAR_SECURITY. Reverse lookup ticker -> CUSIP permitido solo como generacion de candidatos, no mapping canonico.
+- **Distincion congelada:** OpenFIGI.FIGI (resultado de servicio externo) != 13F.FIGI (dato declarado por filer). No son el mismo problema.
+- **9 criterios del dictamen:** CUSIP support/us equities/rate limits/failure modes CONFIRMADOS; temporal validity PENDIENTE; reproducibility POSIBLE (requiere snapshot); licensing a revisar (FIGI dominio publico, restricciones sobre identificadores propietarios).
+- **Proximo paso autorizado:** Gate 0 SEC 13(f) con Official List Q4 2025 + Q1 2026 (listas trimestrales historicas SEC).
+- **Estado:** Gate 0 OpenFIGI PASS como fuente candidata 2026-09-19. Pendiente Gate 0 SEC 13(f).
