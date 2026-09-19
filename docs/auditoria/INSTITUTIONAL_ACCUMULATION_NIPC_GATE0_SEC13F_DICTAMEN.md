@@ -207,7 +207,7 @@ las agrupa bajo el CUSIP base con Option Indicator = `*`.
   resolucion.
 - NO asumir que Q1 tiene "el doble de CUSIPs" que Q4: son 22,659 unicos
   vs 12,282 unicos; el resto son eventos A/D + opciones listadas.
-- NO tratar `section13f_eligible` como sinónimo de `security_type=EQUITY`.
+- NO tratar `section13f_eligible` como sinonimo de `security_type=EQUITY`.
   Son dimensiones independientes (Q-NIPC-8).
 - NO mezclar esta correccion con `Gate-NIPC.1`. Gate-NIPC.1 sigue
   pendiente.
