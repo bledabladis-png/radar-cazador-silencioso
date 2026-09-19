@@ -399,6 +399,45 @@ def test_compute_reported_position_units_return_stats():
     assert "n_dropped_invalid_sshprnamt" in stats
 
 
+def test_delta_shares_both_con_nan_aborta(monkeypatch):
+    """P14-BIS: fila BOTH con NaN -> ValueError, no imputar 0 silencioso."""
+    import pandas as pd
+    from src.institutional_accumulation.aggregation import delta_shares as ds_mod
+
+    cur_agg_fake = pd.DataFrame({
+        "filing_manager_cik": ["FM1"],
+        "canonical_security": ["equity:AAPL"],
+        "discretion_type": ["SOLE"],
+        "sshprnamt_current": [float("nan")],
+    })
+    prev_agg_fake = pd.DataFrame({
+        "filing_manager_cik": ["FM1"],
+        "canonical_security": ["equity:AAPL"],
+        "discretion_type": ["SOLE"],
+        "sshprnamt_previous": [100.0],
+    })
+
+    def fake_agg(units_df, col):
+        return cur_agg_fake if col == "sshprnamt_current" else prev_agg_fake
+
+    monkeypatch.setattr(ds_mod, "_agg_by_match_key", fake_agg)
+
+    units = pd.DataFrame({
+        "filing_manager_cik": ["FM1"],
+        "observed_security_key": ["cusip:X"],
+        "security_resolution_status": ["CANONICAL"],
+        "canonical_security_kind": ["CANONICAL_EQUIVALENCE"],
+        "canonical_security": ["equity:AAPL"],
+        "discretion_type": ["SOLE"],
+        "sshprnamt_total": [100.0],
+        "report_period": ["2026-03-31"],
+        "n_source_lines": [1],
+    })
+
+    with pytest.raises(ValueError, match="corrupcion"):
+        ds_mod.compute_delta_shares(units, units.copy())
+
+
 def test_delta_shares_columns_presentes():
     info = _mk_infotable([
         {"ACCESSION_NUMBER": "A1", "INFOTABLE_SK": 1, "CUSIP": "C1",

@@ -278,16 +278,35 @@ def compute_delta_shares(units_current, units_previous):
         cur_agg, prev_agg,
         on=list(MATCH_KEY), how="outer", indicator=True,
     )
-    merged["sshprnamt_current"] = (
-        pd.to_numeric(merged["sshprnamt_current"], errors="coerce")
-        .fillna(0.0)
-        .astype("Float64")
+    # P14-BIS: el fillna(0.0) global se sustituye por asignacion
+    # condicionada al origen del JOIN. La ausencia de fila en un lado
+    # es semanticamente equivalente a cantidad 0 (NEW -> previous=0;
+    # EXIT -> current=0), pero un NaN en una fila BOTH es corrupcion
+    # de datos y debe abortar ruidosamente, no imputarse silenciosamente.
+    merged["sshprnamt_current"] = pd.to_numeric(
+        merged["sshprnamt_current"], errors="coerce"
+    ).astype("Float64")
+    merged["sshprnamt_previous"] = pd.to_numeric(
+        merged["sshprnamt_previous"], errors="coerce"
+    ).astype("Float64")
+
+    mask_both = merged["_merge"] == "both"
+    mask_left = merged["_merge"] == "left_only"
+    mask_right = merged["_merge"] == "right_only"
+
+    bad_both = mask_both & (
+        merged["sshprnamt_current"].isna()
+        | merged["sshprnamt_previous"].isna()
     )
-    merged["sshprnamt_previous"] = (
-        pd.to_numeric(merged["sshprnamt_previous"], errors="coerce")
-        .fillna(0.0)
-        .astype("Float64")
-    )
+    if bad_both.any():
+        raise ValueError(
+            "corrupcion: " + str(int(bad_both.sum()))
+            + " filas BOTH con NaN en sshprnamt"
+        )
+
+    merged.loc[mask_left, "sshprnamt_previous"] = 0.0
+    merged.loc[mask_right, "sshprnamt_current"] = 0.0
+
     merged["delta_shares"] = (
         merged["sshprnamt_current"] - merged["sshprnamt_previous"]
     ).astype("Float64")
