@@ -1,0 +1,13 @@
+f5434e32af36e2aef9a54886a35e64e71301fd4222141b9ab6f3729b38c8c475  match_report.json
+303d5065b9b7285a0a0b7c6aa7d1c4f1ad2f21a13c539f0416461ae730860b78  pilot_13f_summary.json
+df4209113c5354d1e9de22f8431423fbcc4416fe0d6dcd4054137ec015dbc764  pilot_13f_top500.csv
+1f1ffdeb5b9778d6741b638877ae480079c07c8327a2dd95de931dfb207c9196  pilot_cusips_sample.csv
+90cba7fc826cf1aacb7a2d296a36692efe06996ecc53edacba91a06cd0e451c7  result_radar.json
+c73a2c4362b231cf7eec0fb5cdd034afa71af9d5eae08510ec209383841fe513  run_pilot_13f.py
+0c80f84e387055f5219af90fd3bc85b0d0463afaa720ef0c2bcc2be947c5495e  run_radar_openfigi.py
+
+generated_at: 2026-09-19
+probe_endpoint: https://api.openfigi.com/v3/mapping
+probe_period: 2026Q1 (PERIODOFREPORT=2026-03-31)
+sample: top 500 CUSIPs por SSHPRNAMT (SH + PUTCALL NULL)
+eol_policy: LF (git .gitattributes)
