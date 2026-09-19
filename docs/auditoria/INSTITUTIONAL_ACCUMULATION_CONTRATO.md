@@ -8,6 +8,8 @@ Informe Gate 0: docs/auditoria/INSTITUTIONAL_ACCUMULATION_GATE0_INFORME.md
 Estado: GO condicionado Fase A. NIPC BLOQUEADO hasta Gate FA-2.
 Naturaleza: no normativo. Si hay conflicto, gana el Prompt Maestro.
 
+**Nota de estado (2026-09-19):** el ciclo IAE Fase A ha cerrado. FA-1 (ingestion + schema + lineage) y FA-2 (filtro temporal + CUSIP resolver + reporting relationships + amendments) estan CERRADOS / PASS y pusheados. NIPC desbloqueado respecto de FA-2; pendiente su propio Gate. Este documento se preserva sin modificacion (regla: contratos IAE inmutables dentro de una version). Ver docs/auditoria/INSTITUTIONAL_ACCUMULATION_GATE_FA2_DICTAMEN.md.
+
 ---
 
 ## 1. Proposito

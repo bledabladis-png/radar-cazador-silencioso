@@ -6,6 +6,8 @@ Autor: Ingeniero Supervisor + dictamen auditor externo (vinculante)
 Estado: DOCUMENTO DE DISENO. NO IMPLEMENTADO. K-INSTITUTIONAL-ACCUMULATION-01 = MONITORED/BAJA.
 Naturaleza: no normativo. Si hay conflicto con el Prompt Maestro, gana el Prompt.
 
+**Nota de estado (2026-09-19):** el ciclo IAE Fase A ha cerrado. FA-1 (ingestion + schema + lineage) y FA-2 (filtro temporal + CUSIP resolver + reporting relationships + amendments) estan CERRADOS / PASS y pusheados. NIPC desbloqueado respecto de FA-2; pendiente su propio Gate. Este documento se preserva sin modificacion (regla: contratos IAE inmutables dentro de una version). Ver docs/auditoria/INSTITUTIONAL_ACCUMULATION_GATE_FA2_DICTAMEN.md.
+
 ---
 
 ## 1. Proposito
