@@ -3,6 +3,8 @@
 **Objeto:** contrato habilitante de identidad, validez temporal y cobertura pairwise para el modulo NIPC.
 **HEAD al redactar:** 77d4785.
 **Estado:** BORRADOR. No aplicable a NIPC_COVERAGE_POLICY.md v1.0 ni v1.2 hasta dictamen F2.4.
+
+**Precedencia transitoria:** mientras este contrato y NIPC_COVERAGE_POLICY_V13_PROPUESTA.md sean borradores, NIPC_COVERAGE_POLICY.md v1.0 permanece como referencia normativa vigente. Una vez aprobado formalmente este contrato y aplicada la policy v1.3, el contrato habilitante prevalece sobre cualquier parafrasis de la policy.
 **Origen:** dictamen formal del auditor (2026-09-20), que clasifico P38/P60/P61 como NO GO con contrato requerido.
 **Relacion:** cierra la seccion 2, 3 y 4 del dictamen. P70 cerrado por NIPC_P70_DICTAMEN.md.
 **Autor:** Ingeniero Supervisor (revision interna).
@@ -123,7 +125,7 @@ la fuente (`evidence["identity_type"]`).
 
 ### 1.8. Estado
 
-**P60 = CERRADO CONTRACTUALMENTE.**
+**P60 = PROPUESTO / SOMETIDO A F2.4.**
 
 - No nuevos kinds.
 - No inferencia.
@@ -209,7 +211,7 @@ Nuevo modulo `src/institutional_accumulation/temporal_validity.py`:
 
 ### 2.8. Estado
 
-**P61 = CERRADO CONTRACTUALMENTE.**
+**P61 = PROPUESTO / SOMETIDO A F2.4.**
 
 - Identidad y temporalidad separadas.
 - Nuevo campo fuera de `security_resolution_status`.
@@ -266,11 +268,15 @@ La implementacion vigente (`nipc.py::compute_coverage_pairwise`) usa:
 
 El contrato exige:
 
-    denom = sum(by_sec.get(k, 0.0) for k in (sec_c INTERSECT sec_p))
+    TARGET_PAIRWISE = TARGET_Q4 INTERSECT TARGET_Q1
 
-Es decir: el denominador es la interseccion de target, no la union de
-observadas. Esto cambia el valor de `paired_weighted_share_coverage` y,
-por tanto, de THRESHOLD_2.
+    denom = sum( w(s) for s in TARGET_PAIRWISE )
+
+Es decir: el denominador es la interseccion de TARGET, no la union de
+observadas. La formula se expresa exclusivamente en terminos del universo
+contractual; no se traduce a nombres de implementacion (`sec_c`, `sec_p`,
+`union_sec`) en este documento. Esto cambia el valor de
+`paired_weighted_share_coverage` y, por tanto, de THRESHOLD_2.
 
 ### 3.5. Baseline historico
 
@@ -288,8 +294,7 @@ contractual no cambia.
 
 ### 3.6. Estado
 
-**P38 = EN REDACION.** Pendiente de congelar la definicion completa de
-`TARGET_P` en la seccion 4.
+**P38 = PROPUESTO / SOMETIDO A F2.4.**
 ---
 
 ## 4. TARGET / RESOLVED / PAIRED
@@ -341,8 +346,16 @@ diseno.
           incluir en TARGET_P
 
 El resultado se documenta con provenance: `cusip`, `share_class_figi`,
-`radar_ticker`, `source_date`. No confundir con `target_universe.py`
-operativo — ese es un resolver, TARGET_P es un universo contractual.
+`radar_ticker`, `source_date`.
+
+**Estado de materializacion:** esta seccion define TARGET_P a nivel
+conceptual. La materializacion completa sobre el universo 13F requiere una
+operacion de resolucion batch contra OpenFIGI no autorizada en este
+contrato. OpenFIGI masivo (24.838 CUSIPs) sigue marcado como NO AUTORIZADO
+hasta dictamen especifico. Los pilotos ejecutados (top 500, top 2000) son
+evidencia metodologica, no materializacion completa del universo.
+
+No confundir con `target_universe.py` operativo — ese es un resolver, TARGET_P es un universo contractual.
 
 ### 4.4. RESOLVED_P
 
@@ -512,7 +525,9 @@ Autorizada por el dictamen formal del auditor (seccion 19):
               v
     9. Gate-NIPC.2
 
-Estado actual: paso 1 completado tras aprobacion de este documento.
+Estado actual: paso 1 completado con la entrega de este documento.
+Pendiente de dictamen F2.4. Los pasos 2-9 no se inician hasta que F2.4
+sea GO.
 
 ---
 
@@ -541,9 +556,9 @@ Estado actual: paso 1 completado tras aprobacion de este documento.
 
 ### 10.3. Estado de bloqueos
 
-    P38   EN REDACION (secciones 3, 4)     -> CERRADO al aprobar este documento
-    P60   CERRADO CONTRACTUALMENTE (seccion 1)
-    P61   CERRADO CONTRACTUALMENTE (seccion 2)
+    P38   PROPUESTO / SOMETIDO A F2.4
+    P60   PROPUESTO / SOMETIDO A F2.4
+    P61   PROPUESTO / SOMETIDO A F2.4
     P70   CERRADO (NIPC_P70_DICTAMEN.md)
 
     THRESHOLD_1                          UNDEFINED
