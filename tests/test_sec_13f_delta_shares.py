@@ -1,0 +1,363 @@
+# -*- coding: utf-8 -*-
+"""Tests de aggregation.delta_shares (dictamen NIPC v1.1 familias 12.1-12.6).
+
+Sin red. Deterministas. Sin datetime.now().
+"""
+import pandas as pd
+import pytest
+
+from src.institutional_accumulation.aggregation import delta_shares as ds
+
+
+# ---- helpers ----
+
+def _mk_infotable(rows):
+    """rows: list of dicts con al menos ACCESSION_NUMBER, INFOTABLE_SK,
+    CUSIP, SSHPRNAMTTYPE, PUTCALL, SSHPRNAMT, INVESTMENTDISCRETION."""
+    cols = [
+        "ACCESSION_NUMBER", "INFOTABLE_SK", "CUSIP", "SSHPRNAMTTYPE",
+        "PUTCALL", "SSHPRNAMT", "INVESTMENTDISCRETION",
+    ]
+    default = {
+        "SSHPRNAMTTYPE": "SH",
+        "PUTCALL": None,
+        "SSHPRNAMT": 100.0,
+        "INVESTMENTDISCRETION": "SOLE",
+    }
+    full = []
+    for r in rows:
+        full.append({**default, **r})
+    return pd.DataFrame(full, columns=cols)
+
+
+def _mk_submission(rows):
+    """rows: list of (ACCESSION_NUMBER, CIK)."""
+    return pd.DataFrame(rows, columns=["ACCESSION_NUMBER", "CIK"])
+
+
+def _identity_entry(cusip, canonical="equity:AAPL", status="CANONICAL",
+                    kind="CANONICAL_EQUIVALENCE"):
+    return {
+        "observed_security_key": "cusip:" + cusip,
+        "security_resolution_status": status,
+        "canonical_security_kind": kind,
+        "canonical_security": canonical,
+    }
+
+
+# ---- constantes ----
+
+def test_match_key_y_estados_definidos():
+    assert ds.MATCH_KEY == ("filing_manager_cik", "canonical_security", "discretion_type")
+    assert ds.STATUS_BOTH == "BOTH"
+    assert ds.STATUS_NEW == "NEW"
+    assert ds.STATUS_EXIT == "EXIT"
+    assert ds.STATUS_UNRESOLVED_IDENTITY == "UNRESOLVED_IDENTITY"
+    assert "report_period" not in ds.MATCH_KEY
+
+
+def test_discretions_validas():
+    assert set(ds.VALID_DISCRETIONS) == {"SOLE", "DFND", "OTR"}
+
+
+# ---- familia 12.1: reported_position_unit ----
+
+def test_multi_manager_no_multiplica_shares():
+    """OTHERMANAGER con varios valores -> SSHPRNAMT entra UNA SOLA VEZ.
+
+    El dictamen exige que la agregacion sea por source line, NO por edges
+    OTHERMANAGER. Este test comprueba que con 1 source line y SSHPRNAMT=X,
+    el total por unit es X, no N*X.
+    """
+    info = _mk_infotable([
+        {"ACCESSION_NUMBER": "A1", "INFOTABLE_SK": 1, "CUSIP": "037833100",
+         "SSHPRNAMT": 1000.0, "INVESTMENTDISCRETION": "SOLE"},
+    ])
+    sub = _mk_submission([("A1", "FM1")])
+    units = ds.compute_reported_position_units(
+        info, sub, report_period="2026-03-31",
+    )
+    assert len(units) == 1
+    assert float(units.iloc[0]["sshprnamt_total"]) == 1000.0
+    assert int(units.iloc[0]["n_source_lines"]) == 1
+
+
+def test_discretion_separada():
+    """SOLE + DFND en mismo filing -> 2 units."""
+    info = _mk_infotable([
+        {"ACCESSION_NUMBER": "A1", "INFOTABLE_SK": 1, "CUSIP": "037833100",
+         "SSHPRNAMT": 1000.0, "INVESTMENTDISCRETION": "SOLE"},
+        {"ACCESSION_NUMBER": "A1", "INFOTABLE_SK": 2, "CUSIP": "037833100",
+         "SSHPRNAMT": 500.0, "INVESTMENTDISCRETION": "DFND"},
+    ])
+    sub = _mk_submission([("A1", "FM1")])
+    units = ds.compute_reported_position_units(
+        info, sub, report_period="2026-03-31",
+    )
+    assert len(units) == 2
+    by_disc = units.set_index("discretion_type")["sshprnamt_total"].to_dict()
+    assert float(by_disc["SOLE"]) == 1000.0
+    assert float(by_disc["DFND"]) == 500.0
+
+
+def test_reported_position_unit_key_estable_entre_periodos():
+    """Misma (filing_manager, canonical_security, discretion) entre Q4/Q1."""
+    info_q4 = _mk_infotable([
+        {"ACCESSION_NUMBER": "A1", "INFOTABLE_SK": 1, "CUSIP": "037833100",
+         "SSHPRNAMT": 100.0, "INVESTMENTDISCRETION": "SOLE"},
+    ])
+    info_q1 = _mk_infotable([
+        {"ACCESSION_NUMBER": "B1", "INFOTABLE_SK": 1, "CUSIP": "037833100",
+         "SSHPRNAMT": 150.0, "INVESTMENTDISCRETION": "SOLE"},
+    ])
+    sub_q4 = _mk_submission([("A1", "FM1")])
+    sub_q1 = _mk_submission([("B1", "FM1")])
+    idr = {"037833100": _identity_entry("037833100")}
+    u_q4 = ds.compute_reported_position_units(
+        info_q4, sub_q4, report_period="2025-12-31", identity_results=idr)
+    u_q1 = ds.compute_reported_position_units(
+        info_q1, sub_q1, report_period="2026-03-31", identity_results=idr)
+    delta = ds.compute_delta_shares(u_q1, u_q4)
+    assert len(delta) == 1
+    assert delta.iloc[0]["match_status"] == ds.STATUS_BOTH
+    assert float(delta.iloc[0]["delta_shares"]) == 50.0
+
+
+# ---- familia 12.2: filtros canonicos ----
+
+def test_filtro_sh_null_excluye_prn_y_putcall():
+    info = _mk_infotable([
+        {"ACCESSION_NUMBER": "A1", "INFOTABLE_SK": 1, "CUSIP": "C1",
+         "SSHPRNAMT": 100.0, "SSHPRNAMTTYPE": "PRN"},  # excluido
+        {"ACCESSION_NUMBER": "A1", "INFOTABLE_SK": 2, "CUSIP": "C1",
+         "SSHPRNAMT": 200.0, "PUTCALL": "Call"},      # excluido
+        {"ACCESSION_NUMBER": "A1", "INFOTABLE_SK": 3, "CUSIP": "C1",
+         "SSHPRNAMT": 300.0, "PUTCALL": "Put"},       # excluido
+        {"ACCESSION_NUMBER": "A1", "INFOTABLE_SK": 4, "CUSIP": "C1",
+         "SSHPRNAMT": 400.0},                          # valido
+    ])
+    sub = _mk_submission([("A1", "FM1")])
+    units = ds.compute_reported_position_units(
+        info, sub, report_period="2026-03-31")
+    assert len(units) == 1
+    assert float(units.iloc[0]["sshprnamt_total"]) == 400.0
+    assert int(units.iloc[0]["n_source_lines"]) == 1
+
+
+def test_discretion_no_excluye_dfnd():
+    info = _mk_infotable([
+        {"ACCESSION_NUMBER": "A1", "INFOTABLE_SK": 1, "CUSIP": "C1",
+         "SSHPRNAMT": 100.0, "INVESTMENTDISCRETION": "DFND"},
+    ])
+    sub = _mk_submission([("A1", "FM1")])
+    units = ds.compute_reported_position_units(
+        info, sub, report_period="2026-03-31")
+    assert len(units) == 1
+    assert units.iloc[0]["discretion_type"] == "DFND"
+
+
+def test_discretion_invalida_se_excluye():
+    info = _mk_infotable([
+        {"ACCESSION_NUMBER": "A1", "INFOTABLE_SK": 1, "CUSIP": "C1",
+         "SSHPRNAMT": 100.0, "INVESTMENTDISCRETION": "BOGUS"},
+    ])
+    sub = _mk_submission([("A1", "FM1")])
+    units = ds.compute_reported_position_units(
+        info, sub, report_period="2026-03-31")
+    assert len(units) == 0
+
+
+# ---- familia 12.5: determinismo ----
+
+def test_sin_datetime_now():
+    """Verifica por AST que no se llama a now()/today().
+
+    NO busca en docstrings (que si mencionan el termino por contrato).
+    Solo detecta llamadas reales en el codigo ejecutable.
+    """
+    import ast
+    import inspect
+    src = inspect.getsource(ds)
+    tree = ast.parse(src)
+    forbidden = []
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Attribute) and node.attr in ("now", "today"):
+            forbidden.append(node.attr)
+    assert forbidden == [], f"Llamadas prohibidas detectadas: {forbidden}"
+
+
+def test_reproducible_mismo_input_mismo_output():
+    info = _mk_infotable([
+        {"ACCESSION_NUMBER": "A1", "INFOTABLE_SK": 1, "CUSIP": "C1",
+         "SSHPRNAMT": 100.0},
+    ])
+    sub = _mk_submission([("A1", "FM1")])
+    r1 = ds.compute_reported_position_units(
+        info, sub, report_period="2026-03-31")
+    r2 = ds.compute_reported_position_units(
+        info, sub, report_period="2026-03-31")
+    pd.testing.assert_frame_equal(r1, r2)
+
+
+# ---- familia 12.6: Q-ESP-6 ----
+
+def test_cusip_change_same_canonical_security():
+    """Q4 CUSIP_A y Q1 CUSIP_B -> mismo canonical_security -> BOTH, delta real.
+
+    Sin esta capa, seria NEW(A) + EXIT(B) falso.
+    """
+    info_q4 = _mk_infotable([
+        {"ACCESSION_NUMBER": "A1", "INFOTABLE_SK": 1, "CUSIP": "CUSIP_A",
+         "SSHPRNAMT": 100.0, "INVESTMENTDISCRETION": "SOLE"},
+    ])
+    info_q1 = _mk_infotable([
+        {"ACCESSION_NUMBER": "B1", "INFOTABLE_SK": 1, "CUSIP": "CUSIP_B",
+         "SSHPRNAMT": 120.0, "INVESTMENTDISCRETION": "SOLE"},
+    ])
+    sub_q4 = _mk_submission([("A1", "FM1")])
+    sub_q1 = _mk_submission([("B1", "FM1")])
+    idr = {
+        "CUSIP_A": _identity_entry("CUSIP_A", canonical="equity:X"),
+        "CUSIP_B": _identity_entry("CUSIP_B", canonical="equity:X"),
+    }
+    u_q4 = ds.compute_reported_position_units(
+        info_q4, sub_q4, report_period="2025-12-31", identity_results=idr)
+    u_q1 = ds.compute_reported_position_units(
+        info_q1, sub_q1, report_period="2026-03-31", identity_results=idr)
+    delta = ds.compute_delta_shares(u_q1, u_q4)
+    assert len(delta) == 1
+    assert delta.iloc[0]["match_status"] == ds.STATUS_BOTH
+    assert float(delta.iloc[0]["delta_shares"]) == 20.0
+
+
+def test_multi_edge_does_not_duplicate_delta():
+    """Varias source lines del mismo canonical -> 1 unit, delta unico."""
+    info = _mk_infotable([
+        {"ACCESSION_NUMBER": "A1", "INFOTABLE_SK": 1, "CUSIP": "C1",
+         "SSHPRNAMT": 100.0},
+        {"ACCESSION_NUMBER": "A1", "INFOTABLE_SK": 2, "CUSIP": "C1",
+         "SSHPRNAMT": 50.0},
+    ])
+    sub = _mk_submission([("A1", "FM1")])
+    idr = {"C1": _identity_entry("C1")}
+    units = ds.compute_reported_position_units(
+        info, sub, report_period="2026-03-31", identity_results=idr)
+    assert len(units) == 1
+    assert float(units.iloc[0]["sshprnamt_total"]) == 150.0
+    assert int(units.iloc[0]["n_source_lines"]) == 2
+
+
+def test_unresolved_mapping_blocks_pair_match():
+    """Security mapeada en Q1 pero no en Q4 -> UNRESOLVED_IDENTITY, no NEW."""
+    info_q4 = _mk_infotable([
+        {"ACCESSION_NUMBER": "A1", "INFOTABLE_SK": 1, "CUSIP": "C_RES",
+         "SSHPRNAMT": 100.0},
+    ])
+    info_q1 = _mk_infotable([
+        {"ACCESSION_NUMBER": "B1", "INFOTABLE_SK": 1, "CUSIP": "C_UNRES",
+         "SSHPRNAMT": 120.0},
+    ])
+    sub_q4 = _mk_submission([("A1", "FM1")])
+    sub_q1 = _mk_submission([("B1", "FM1")])
+    idr = {
+        "C_RES": _identity_entry("C_RES", canonical="equity:X"),
+        "C_UNRES": {
+            "observed_security_key": "cusip:C_UNRES",
+            "security_resolution_status": "OBSERVED_ONLY",
+            "canonical_security_kind": "OBSERVED_CUSIP_ONLY",
+            "canonical_security": None,
+        },
+    }
+    u_q4 = ds.compute_reported_position_units(
+        info_q4, sub_q4, report_period="2025-12-31", identity_results=idr)
+    u_q1 = ds.compute_reported_position_units(
+        info_q1, sub_q1, report_period="2026-03-31", identity_results=idr)
+    delta = ds.compute_delta_shares(u_q1, u_q4)
+    # u_q4 (C_RES) queda como EXIT, u_q1 (C_UNRES) queda como UNRESOLVED_IDENTITY
+    statuses = set(delta["match_status"])
+    assert ds.STATUS_UNRESOLVED_IDENTITY in statuses
+    # No debe haber NEW falso para C_UNRES
+    unres_row = delta[delta["match_status"] == ds.STATUS_UNRESOLVED_IDENTITY]
+    assert len(unres_row) == 1
+    assert pd.isna(unres_row.iloc[0]["delta_shares"])
+
+
+def test_new_and_exit_zero_baseline_current():
+    """NEW -> previous=0. EXIT -> current=0. Nunca imputar."""
+    info_q4 = _mk_infotable([
+        {"ACCESSION_NUMBER": "A1", "INFOTABLE_SK": 1, "CUSIP": "C_EXIT",
+         "SSHPRNAMT": 100.0},
+    ])
+    info_q1 = _mk_infotable([
+        {"ACCESSION_NUMBER": "B1", "INFOTABLE_SK": 1, "CUSIP": "C_NEW",
+         "SSHPRNAMT": 120.0},
+    ])
+    sub_q4 = _mk_submission([("A1", "FM1")])
+    sub_q1 = _mk_submission([("B1", "FM1")])
+    idr = {
+        "C_EXIT": _identity_entry("C_EXIT", canonical="equity:EXIT"),
+        "C_NEW": _identity_entry("C_NEW", canonical="equity:NEW"),
+    }
+    u_q4 = ds.compute_reported_position_units(
+        info_q4, sub_q4, report_period="2025-12-31", identity_results=idr)
+    u_q1 = ds.compute_reported_position_units(
+        info_q1, sub_q1, report_period="2026-03-31", identity_results=idr)
+    delta = ds.compute_delta_shares(u_q1, u_q4)
+    by_status = delta.set_index("match_status")
+    assert ds.STATUS_NEW in by_status.index
+    assert ds.STATUS_EXIT in by_status.index
+    new_row = by_status.loc[ds.STATUS_NEW]
+    exit_row = by_status.loc[ds.STATUS_EXIT]
+    assert float(new_row["sshprnamt_previous"]) == 0.0
+    assert float(new_row["sshprnamt_current"]) == 120.0
+    assert float(exit_row["sshprnamt_current"]) == 0.0
+    assert float(exit_row["sshprnamt_previous"]) == 100.0
+
+
+# ---- integridad adicional ----
+
+def test_sin_columnas_requeridas_lanza():
+    info = pd.DataFrame({"X": [1]})
+    sub = _mk_submission([("A1", "FM1")])
+    with pytest.raises(KeyError):
+        ds.compute_reported_position_units(
+            info, sub, report_period="2026-03-31")
+
+
+def test_no_muta_inputs():
+    info = _mk_infotable([
+        {"ACCESSION_NUMBER": "A1", "INFOTABLE_SK": 1, "CUSIP": "C1",
+         "SSHPRNAMT": 100.0},
+    ])
+    sub = _mk_submission([("A1", "FM1")])
+    info_orig = info.copy()
+    sub_orig = sub.copy()
+    ds.compute_reported_position_units(info, sub, report_period="2026-03-31")
+    pd.testing.assert_frame_equal(info, info_orig)
+    pd.testing.assert_frame_equal(sub, sub_orig)
+
+
+def test_reported_position_unit_columns_presentes():
+    info = _mk_infotable([
+        {"ACCESSION_NUMBER": "A1", "INFOTABLE_SK": 1, "CUSIP": "C1",
+         "SSHPRNAMT": 100.0},
+    ])
+    sub = _mk_submission([("A1", "FM1")])
+    units = ds.compute_reported_position_units(
+        info, sub, report_period="2026-03-31")
+    for c in ds.UNITS_COLUMNS:
+        assert c in units.columns, c
+
+
+def test_delta_shares_columns_presentes():
+    info = _mk_infotable([
+        {"ACCESSION_NUMBER": "A1", "INFOTABLE_SK": 1, "CUSIP": "C1",
+         "SSHPRNAMT": 100.0},
+    ])
+    sub = _mk_submission([("A1", "FM1")])
+    idr = {"C1": _identity_entry("C1")}
+    u = ds.compute_reported_position_units(
+        info, sub, report_period="2026-03-31", identity_results=idr)
+    delta = ds.compute_delta_shares(u, pd.DataFrame(columns=list(ds.UNITS_COLUMNS)))
+    for c in ds.DELTA_COLUMNS:
+        assert c in delta.columns, c
