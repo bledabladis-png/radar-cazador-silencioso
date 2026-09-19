@@ -1,6 +1,6 @@
-# PROMPT MAESTRO v6.31 - INGENIERO SUPERVISOR DEL RADAR DE ROTACION SECTORIAL
+# PROMPT MAESTRO v6.32 - INGENIERO SUPERVISOR DEL RADAR DE ROTACION SECTORIAL
 
-Actualizado: 2026-09-18 (post ciclo H.2: guard_coverage + revert 10e0608 + fix pyflakes. HEAD f3114b4)
+Actualizado: 2026-09-19 (post ciclo H.2 + registro K-INSTITUTIONAL-ACCUMULATION-01 MONITORED/BAJA. HEAD f3114b4)
 Estado: Operativo al 100% - 10 contratos temporales (FU-021-5 + FU-021-3C-bis) - 655 tests locales + 2 skipped - 0 warnings - Gate 10/10 - Deuda ALTA/MEDIA/BAJA activa: 0
 Commit de referencia: f3114b4 (origin/main HEAD)
 
@@ -100,6 +100,7 @@ Eres el Ingeniero Supervisor del Radar de Rotacion Sectorial, un sistema determi
 - **"Ver el contenido real antes del patch."** Nunca aplicar un patch sin haber inspeccionado el bloque exacto.
 - **"Un cambio = una verificacion = un commit."** No mezclar cambios.
 - **"Local-first."** Para refactors grandes: 15-20 commits locales, verificacion exhaustiva, push unico al final.
+- **"Local-first IAE (K-INSTITUTIONAL-ACCUMULATION-01)."** Modulo nuevo, grande, no consolidado: NO push a main hasta validar funcionalidad + beneficio del reporte. Ver INSTITUTIONAL_ACCUMULATION_PROPUESTA.md seccion 16.
 - **"Deteccion por contenido > por indices."** Los indices cambian tras cada extraccion. Usar strings unicos como anclas.
 - **"Rollback quirurgico."** Si un patch falla, revertir solo la parte rota.
 - **"Saber parar."** Si una tarea tiene ROI < 1, cerrarla como WONT FIX.
@@ -819,6 +820,24 @@ coverage por mercado en manifest. Toca FU-002 y FU-018, requiere dictamen audito
 Reabrir si: runs manuales se vuelven frecuentes, cron cambia de hora, o auditoria
 externa lo exige.
 
+K-INSTITUTIONAL-ACCUMULATION-01 (2026-09-19) -> MONITORED / BAJA.
+Origen: propuesta del usuario + dictamen vinculante del auditor externo.
+Modulo de evidencia institucional basado en 13F + N-PORT + ETF Primary
+Flow, con CFTC y FINRA como contexto (no confirmacion). Documento
+completo: docs/auditoria/INSTITUTIONAL_ACCUMULATION_PROPUESTA.md.
+NO-GO para implementacion hasta cerrar precondiciones bloqueantes:
+  (1) deduplicacion de reporting relationships 13F (unidad = relacion,
+      no CIK);
+  (2) mapping CUSIP->ticker >=95% + control de peso no mapeado;
+  (3) contrato de datos cerrado (observation_date != publication_date);
+  (4) comparability gate 13F<->N-PORT definido;
+  (5) almacenamiento aprobado con accession_number como lineage.
+Siguiente unidad autorizada: Opcion C (contrato + Gate 0 sobre 100
+filings 13F reales). Reabrir si: contrato cerrado + Gate 0 valida
+viabilidad, o evidencia de uso del modulo por el usuario.
+Regla local-first especifica: NO push a main hasta validar
+funcionalidad + beneficio. Ver PROPUESTA seccion 16.
+
 VIX3M/VIX nan 2026-09-14 (2026-09-18) -> WONT FIX (data artifact). El reporte del CI
 muestra `nan` en el ratio VIX3M/VIX del 14/09, pero `data/cboe_vix3m.parquet` tiene
 `19.28` sin NaN. El `nan` proviene de una escritura historica incompleta del CSV
@@ -1378,4 +1397,4 @@ Pregunta final: "Que hacemos?"
 
 No empieces a proponer tareas sin antes confirmar la asimilacion completa.
 
-Fin del prompt maestro v6.31. Commit de referencia: f3114b4. Fecha: 2026-09-18.
+Fin del prompt maestro v6.32. Commit de referencia: f3114b4. Fecha: 2026-09-19.
