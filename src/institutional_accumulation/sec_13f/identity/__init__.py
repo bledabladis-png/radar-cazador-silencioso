@@ -4,6 +4,7 @@ FA-2.1: temporal_filter.py (filtro canonico por PERIODOFREPORT).
 FA-2.2: cusip_resolver.py (CUSIP -> ticker con vigencia temporal).
 FA-2.3: relationships.py (Column 7 -> OTHERMANAGER2.SEQUENCENUMBER).
 FA-2.4: amendments.py (canonical snapshot composicional).
+NIPC:  sec13f_list.py (SEC Official List 13(f) parser fixed-width 80).
 
 Fuera de FA-2.4: NIPC, breadth, clasificacion, cross-validation N-PORT
 (post Gate FA-2).
@@ -73,9 +74,32 @@ from .relationships import (
     explode_othermanager_edges,
 )
 from .temporal_filter import CANONICAL_PERIOD_FIELD, FULL_PERIOD, filter_by_period
+from .sec13f_list import (
+    ALL_STATUSES as SEC13F_LIST_STATUSES,
+    COLUMNS as SEC13F_LIST_COLUMNS,
+    ELIGIBLE_STATES as SEC13F_LIST_ELIGIBLE_STATES,
+    LINE_WIDTH as SEC13F_LIST_LINE_WIDTH,
+    STATUS_ACTIVE as SEC13F_LIST_STATUS_ACTIVE,
+    STATUS_ADDED as SEC13F_LIST_STATUS_ADDED,
+    STATUS_CONFLICT as SEC13F_LIST_STATUS_CONFLICT,
+    STATUS_DELETED as SEC13F_LIST_STATUS_DELETED,
+    STATUS_NOT_IN_LIST as SEC13F_LIST_STATUS_NOT_IN_LIST,
+    compute_eligibility_coverage,
+    load_official_list,
+    parse_line,
+    parse_official_list_text,
+    resolve_eligibility,
+)
 
 __all__ = [
     "filter_by_period", "CANONICAL_PERIOD_FIELD", "FULL_PERIOD",
+    "load_official_list", "parse_official_list_text", "parse_line",
+    "resolve_eligibility", "compute_eligibility_coverage",
+    "SEC13F_LIST_STATUSES", "SEC13F_LIST_COLUMNS",
+    "SEC13F_LIST_ELIGIBLE_STATES", "SEC13F_LIST_LINE_WIDTH",
+    "SEC13F_LIST_STATUS_ACTIVE", "SEC13F_LIST_STATUS_ADDED",
+    "SEC13F_LIST_STATUS_CONFLICT", "SEC13F_LIST_STATUS_DELETED",
+    "SEC13F_LIST_STATUS_NOT_IN_LIST",
     "load_exceptions", "resolve_cusip", "resolve_batch",
     "REQUIRED_COLUMNS", "FORBIDDEN_SOURCES", "VALID_VERIFIED_BY",
     "DEFAULT_EXCEPTIONS_PATH",
