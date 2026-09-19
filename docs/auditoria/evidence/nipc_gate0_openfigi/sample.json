@@ -1,0 +1,1033 @@
+{
+  "generated_at": "2026-09-19",
+  "period": "2026Q1",
+  "estratos_counts": {
+    "A_radar_mapped": 50,
+    "B_radar_unmapped_tickers": 22,
+    "C_top_unmapped": 50,
+    "D_mid_low": 50,
+    "E_problematicos": 6
+  },
+  "muestra": {
+    "A_radar_mapped": [
+      {
+        "CUSIP_str": "67066G104",
+        "ticker": "NVDA",
+        "name": "NVIDIA CORPORATION",
+        "title": "COM",
+        "sshprnamt": 17745140123.0
+      },
+      {
+        "CUSIP_str": "037833100",
+        "ticker": "AAPL",
+        "name": "APPLE INC",
+        "title": "COM",
+        "sshprnamt": 10353226300.0
+      },
+      {
+        "CUSIP_str": "023135106",
+        "ticker": "AMZN",
+        "name": "AMAZON COM INC",
+        "title": "COM",
+        "sshprnamt": 7569733681.0
+      },
+      {
+        "CUSIP_str": "594918104",
+        "ticker": "MSFT",
+        "name": "MICROSOFT CORP",
+        "title": "COM",
+        "sshprnamt": 5837211974.0
+      },
+      {
+        "CUSIP_str": "060505104",
+        "ticker": "BAC",
+        "name": "BANK AMERICA CORP",
+        "title": "COM",
+        "sshprnamt": 5750126442.0
+      },
+      {
+        "CUSIP_str": "00206R102",
+        "ticker": "T",
+        "name": "AT&T INC",
+        "title": "COM",
+        "sshprnamt": 5050802322.0
+      },
+      {
+        "CUSIP_str": "02079K305",
+        "ticker": "GOOGL",
+        "name": "ALPHABET INC",
+        "title": "CAP STK CL A",
+        "sshprnamt": 4890343917.0
+      },
+      {
+        "CUSIP_str": "717081103",
+        "ticker": "PFE",
+        "name": "PFIZER INC",
+        "title": "COM",
+        "sshprnamt": 4122232032.0
+      },
+      {
+        "CUSIP_str": "11135F101",
+        "ticker": "AVGO",
+        "name": "BROADCOM INC",
+        "title": "COM",
+        "sshprnamt": 3912893141.0
+      },
+      {
+        "CUSIP_str": "64110L106",
+        "ticker": "NFLX",
+        "name": "NETFLIX INC.",
+        "title": "COM",
+        "sshprnamt": 3610135345.0
+      },
+      {
+        "CUSIP_str": "458140100",
+        "ticker": "INTC",
+        "name": "INTEL CORP",
+        "title": "COM",
+        "sshprnamt": 3537025210.0
+      },
+      {
+        "CUSIP_str": "02079K107",
+        "ticker": "GOOG",
+        "name": "ALPHABET INC",
+        "title": "CAP STK CL C",
+        "sshprnamt": 3496381248.0
+      },
+      {
+        "CUSIP_str": "191216100",
+        "ticker": "KO",
+        "name": "COCA COLA CO",
+        "title": "COM",
+        "sshprnamt": 3422901277.0
+      },
+      {
+        "CUSIP_str": "20030N101",
+        "ticker": "CMCSA",
+        "name": "COMCAST CORP NEW",
+        "title": "CL A",
+        "sshprnamt": 3326019245.0
+      },
+      {
+        "CUSIP_str": "17275R102",
+        "ticker": "CSCO",
+        "name": "CISCO SYS INC",
+        "title": "COM",
+        "sshprnamt": 3267195768.0
+      },
+      {
+        "CUSIP_str": "931142103",
+        "ticker": "WMT",
+        "name": "WALMART INC",
+        "title": "COM",
+        "sshprnamt": 3084856034.0
+      },
+      {
+        "CUSIP_str": "92343V104",
+        "ticker": "VZ",
+        "name": "VERIZON COMMUNICATIONS INC",
+        "title": "COM",
+        "sshprnamt": 3048260249.0
+      },
+      {
+        "CUSIP_str": "30231G102",
+        "ticker": "XOM",
+        "name": "EXXON MOBIL CORP",
+        "title": "COM",
+        "sshprnamt": 3020467349.0
+      },
+      {
+        "CUSIP_str": "345370860",
+        "ticker": "F",
+        "name": "FORD MTR CO",
+        "title": "COM",
+        "sshprnamt": 2762675031.0
+      },
+      {
+        "CUSIP_str": "949746101",
+        "ticker": "WFC",
+        "name": "WELLS FARGO & CO",
+        "title": "COM",
+        "sshprnamt": 2517330262.0
+      },
+      {
+        "CUSIP_str": "69331C108",
+        "ticker": "PCG",
+        "name": "PG&E CORP",
+        "title": "COM",
+        "sshprnamt": 2273969530.0
+      },
+      {
+        "CUSIP_str": "46625H100",
+        "ticker": "JPM",
+        "name": "JPMORGAN CHASE & CO",
+        "title": "COM",
+        "sshprnamt": 2117403269.0
+      },
+      {
+        "CUSIP_str": "58933Y105",
+        "ticker": "MRK",
+        "name": "MERCK & CO INC",
+        "title": "COM",
+        "sshprnamt": 2093123197.0
+      },
+      {
+        "CUSIP_str": "478160104",
+        "ticker": "JNJ",
+        "name": "JOHNSON & JOHNSON",
+        "title": "COM",
+        "sshprnamt": 1941106610.0
+      },
+      {
+        "CUSIP_str": "934423104",
+        "ticker": "WBD",
+        "name": "WARNER BROS DISCOVERY INC",
+        "title": "COM SER A",
+        "sshprnamt": 1920514579.0
+      },
+      {
+        "CUSIP_str": "49177J102",
+        "ticker": "KVUE",
+        "name": "KENVUE INC",
+        "title": "COM",
+        "sshprnamt": 1875242811.0
+      },
+      {
+        "CUSIP_str": "65339F101",
+        "ticker": "NEE",
+        "name": "NEXTERA ENERGY INC",
+        "title": "COM",
+        "sshprnamt": 1857894274.0
+      },
+      {
+        "CUSIP_str": "90353T100",
+        "ticker": "UBER",
+        "name": "UBER TECHNOLOGIES INC",
+        "title": "COM",
+        "sshprnamt": 1797745050.0
+      },
+      {
+        "CUSIP_str": "30303M102",
+        "ticker": "META",
+        "name": "META PLATFORMS INC",
+        "title": "CL A",
+        "sshprnamt": 1793018281.0
+      },
+      {
+        "CUSIP_str": "742718109",
+        "ticker": "PG",
+        "name": "PROCTER & GAMBLE CO",
+        "title": "COM",
+        "sshprnamt": 1753716103.0
+      },
+      {
+        "CUSIP_str": "88160R101",
+        "ticker": "TSLA",
+        "name": "TESLA INC",
+        "title": "COM",
+        "sshprnamt": 1750643318.0
+      },
+      {
+        "CUSIP_str": "110122108",
+        "ticker": "BMY",
+        "name": "BRISTOL-MYERS SQUIBB CO",
+        "title": "COM",
+        "sshprnamt": 1743736871.0
+      },
+      {
+        "CUSIP_str": "49456B101",
+        "ticker": "KMI",
+        "name": "KINDER MORGAN INC DEL",
+        "title": "COM",
+        "sshprnamt": 1618887149.0
+      },
+      {
+        "CUSIP_str": "92826C839",
+        "ticker": "V",
+        "name": "VISA INC",
+        "title": "COM CL A",
+        "sshprnamt": 1577944134.0
+      },
+      {
+        "CUSIP_str": "166764100",
+        "ticker": "CVX",
+        "name": "CHEVRON CORPORATION",
+        "title": "COM",
+        "sshprnamt": 1568453232.0
+      },
+      {
+        "CUSIP_str": "126408103",
+        "ticker": "CSX",
+        "name": "CSX CORP",
+        "title": "COM",
+        "sshprnamt": 1545016116.0
+      },
+      {
+        "CUSIP_str": "808513105",
+        "ticker": "SCHW",
+        "name": "SCHWAB CHARLES CORP",
+        "title": "COM",
+        "sshprnamt": 1524869402.0
+      },
+      {
+        "CUSIP_str": "002824100",
+        "ticker": "ABT",
+        "name": "ABBOTT LABORATORIES",
+        "title": "COM",
+        "sshprnamt": 1500360634.0
+      },
+      {
+        "CUSIP_str": "69608A108",
+        "ticker": "PLTR",
+        "name": "PALANTIR TECHNOLOGIES INC",
+        "title": "CL A",
+        "sshprnamt": 1455379108.0
+      },
+      {
+        "CUSIP_str": "806857108",
+        "ticker": "SLB",
+        "name": "SLB LIMITED",
+        "title": "COM STK",
+        "sshprnamt": 1442592874.0
+      },
+      {
+        "CUSIP_str": "172967424",
+        "ticker": "C",
+        "name": "CITIGROUP INC",
+        "title": "COM NEW",
+        "sshprnamt": 1439677634.0
+      },
+      {
+        "CUSIP_str": "254687106",
+        "ticker": "DIS",
+        "name": "DISNEY WALT CO",
+        "title": "COM",
+        "sshprnamt": 1426297802.0
+      },
+      {
+        "CUSIP_str": "00287Y109",
+        "ticker": "ABBV",
+        "name": "ABBVIE INC",
+        "title": "COM",
+        "sshprnamt": 1419577188.0
+      },
+      {
+        "CUSIP_str": "617446448",
+        "ticker": "MS",
+        "name": "MORGAN STANLEY",
+        "title": "COM NEW",
+        "sshprnamt": 1408649099.0
+      },
+      {
+        "CUSIP_str": "718172109",
+        "ticker": "PM",
+        "name": "PHILIP MORRIS INTL INC",
+        "title": "COM",
+        "sshprnamt": 1407724291.0
+      },
+      {
+        "CUSIP_str": "49271V100",
+        "ticker": "KDP",
+        "name": "KEURIG DR PEPPER INC",
+        "title": "COM",
+        "sshprnamt": 1368343028.0
+      },
+      {
+        "CUSIP_str": "68389X105",
+        "ticker": "ORCL",
+        "name": "ORACLE CORP",
+        "title": "COM",
+        "sshprnamt": 1340934312.0
+      },
+      {
+        "CUSIP_str": "35671D857",
+        "ticker": "FCX",
+        "name": "FREEPORT MCMORAN INC",
+        "title": "CL B",
+        "sshprnamt": 1339692238.0
+      },
+      {
+        "CUSIP_str": "169656105",
+        "ticker": "CMG",
+        "name": "CHIPOTLE MEXICAN GRILL INC",
+        "title": "COM",
+        "sshprnamt": 1234365637.0
+      },
+      {
+        "CUSIP_str": "G5960L103",
+        "ticker": "MDT",
+        "name": "MEDTRONIC PLC",
+        "title": "SHS",
+        "sshprnamt": 1189362063.0
+      }
+    ],
+    "B_radar_unmapped_tickers": [
+      "BRK-B",
+      "BTSG",
+      "CTRE",
+      "CYTK",
+      "EAT",
+      "FCFS",
+      "FROG",
+      "GKOS",
+      "HUT",
+      "IDCC",
+      "JXN",
+      "KRYS",
+      "MOG-A",
+      "ONB",
+      "PRAX",
+      "PTGX",
+      "RHP",
+      "SM",
+      "SPCX",
+      "TWST",
+      "UMBF",
+      "VSAT"
+    ],
+    "C_top_unmapped": [
+      {
+        "CUSIP_str": "329882225",
+        "name": "NIPST        02/14/29 CVT",
+        "title": "CONVERTIBLE BOND",
+        "sshprnamt": 10590000000.0
+      },
+      {
+        "CUSIP_str": "329882250",
+        "name": "NIPST        02/14/31 CVT PUT",
+        "title": "CONVERTIBLE BOND",
+        "sshprnamt": 6990000000.0
+      },
+      {
+        "CUSIP_str": "G4124C109",
+        "name": "GRAB HOLDINGS LIMITED",
+        "title": "CLASS A ORD",
+        "sshprnamt": 3063759189.0
+      },
+      {
+        "CUSIP_str": "G6683N103",
+        "name": "NU HLDGS LTD",
+        "title": "ORD SHS CL A",
+        "sshprnamt": 2883182145.0
+      },
+      {
+        "CUSIP_str": "921943858",
+        "name": "VANGUARD TAX-MANAGED FDS",
+        "title": "VAN FTSE DEV MKT",
+        "sshprnamt": 2398850735.0
+      },
+      {
+        "CUSIP_str": "46429B267",
+        "name": "ISHARES TR",
+        "title": "US TREAS BD ETF",
+        "sshprnamt": 1774924406.0
+      },
+      {
+        "CUSIP_str": "051774107",
+        "name": "AURORA INNOVATION INC",
+        "title": "CLASS A COM",
+        "sshprnamt": 1713051127.0
+      },
+      {
+        "CUSIP_str": "46434G103",
+        "name": "ISHARES INC",
+        "title": "CORE MSCI EMKT",
+        "sshprnamt": 1693008716.0
+      },
+      {
+        "CUSIP_str": "46432F842",
+        "name": "ISHARES TR",
+        "title": "CORE MSCI EAFE",
+        "sshprnamt": 1641959347.0
+      },
+      {
+        "CUSIP_str": "136385101",
+        "name": "CANADIAN NAT RES LTD MED TER",
+        "title": "COM",
+        "sshprnamt": 1635734668.0
+      },
+      {
+        "CUSIP_str": "11271J107",
+        "name": "BROOKFIELD CORP",
+        "title": "CL A LTD VT SH",
+        "sshprnamt": 1550099821.0
+      },
+      {
+        "CUSIP_str": "113004105",
+        "name": "BROOKFIELD ASSET MANAGMT LTD",
+        "title": "CL A LMT VTG SHS",
+        "sshprnamt": 1493443830.0
+      },
+      {
+        "CUSIP_str": "922042858",
+        "name": "VANGUARD INTL EQUITY INDEX F",
+        "title": "FTSE EMR MKT ETF",
+        "sshprnamt": 1462663633.0
+      },
+      {
+        "CUSIP_str": "808524805",
+        "name": "SCHWAB STRATEGIC TR",
+        "title": "INTL EQTY ETF",
+        "sshprnamt": 1430376689.0
+      },
+      {
+        "CUSIP_str": "22266T109",
+        "name": "COUPANG INC",
+        "title": "CL A",
+        "sshprnamt": 1395363711.0
+      },
+      {
+        "CUSIP_str": "02319V103",
+        "name": "AMBEV SA",
+        "title": "SPONSORED ADR",
+        "sshprnamt": 1392623331.0
+      },
+      {
+        "CUSIP_str": "059460303",
+        "name": "BANCO BRADESCO S A",
+        "title": "SP ADR PFD NEW",
+        "sshprnamt": 1296033235.0
+      },
+      {
+        "CUSIP_str": "464287507",
+        "name": "ISHARES TR",
+        "title": "CORE S&P MCP ETF",
+        "sshprnamt": 1265540843.0
+      },
+      {
+        "CUSIP_str": "465562106",
+        "name": "ITAU UNIBANCO HLDG S A",
+        "title": "SPON ADR REP PFD",
+        "sshprnamt": 1264470044.0
+      },
+      {
+        "CUSIP_str": "H42097107",
+        "name": "UBS GROUP AG",
+        "title": "SHS",
+        "sshprnamt": 1255715560.0
+      },
+      {
+        "CUSIP_str": "464287226",
+        "name": "ISHARES TR",
+        "title": "CORE US AGGBD ET",
+        "sshprnamt": 1220965770.0
+      },
+      {
+        "CUSIP_str": "921937835",
+        "name": "VANGUARD BD INDEX FDS",
+        "title": "TOTAL BND MRKT",
+        "sshprnamt": 1176969012.0
+      },
+      {
+        "CUSIP_str": "78464A854",
+        "name": "SPDR SERIES TRUST",
+        "title": "STATE STREET SPD",
+        "sshprnamt": 1118995462.0
+      },
+      {
+        "CUSIP_str": "06849F108",
+        "name": "BARRICK MNG CORP",
+        "title": "COM SHS",
+        "sshprnamt": 1111190006.0
+      },
+      {
+        "CUSIP_str": "808524201",
+        "name": "SCHWAB STRATEGIC TR",
+        "title": "US LRG CAP ETF",
+        "sshprnamt": 1108629894.0
+      },
+      {
+        "CUSIP_str": "29250N105",
+        "name": "ENBRIDGE INC",
+        "title": "COM",
+        "sshprnamt": 1104773473.0
+      },
+      {
+        "CUSIP_str": "654902204",
+        "name": "NOKIA CORP",
+        "title": "SPONSORED ADR",
+        "sshprnamt": 1093548789.0
+      },
+      {
+        "CUSIP_str": "N82405106",
+        "name": "STELLANTIS N.V",
+        "title": "SHS",
+        "sshprnamt": 1078722364.0
+      },
+      {
+        "CUSIP_str": "464287234",
+        "name": "ISHARES TR",
+        "title": "MSCI EMG MKT ETF",
+        "sshprnamt": 1068837602.0
+      },
+      {
+        "CUSIP_str": "29273V100",
+        "name": "ENERGY TRANSFER L P",
+        "title": "COM UT LTD PTN",
+        "sshprnamt": 1065871896.0
+      },
+      {
+        "CUSIP_str": "F92124100",
+        "name": "TOTALENERGIES SE",
+        "title": "ACT",
+        "sshprnamt": 1045143224.0
+      },
+      {
+        "CUSIP_str": "15135U109",
+        "name": "CENOVUS ENERGY INC",
+        "title": "COM",
+        "sshprnamt": 1002963036.0
+      },
+      {
+        "CUSIP_str": "H8817H100",
+        "name": "TRANSOCEAN LTD",
+        "title": "REGISTERED SHS",
+        "sshprnamt": 944435397.0
+      },
+      {
+        "CUSIP_str": "143658300",
+        "name": "CARNIVAL CORP",
+        "title": "COMMON STOCK",
+        "sshprnamt": 939050460.0
+      },
+      {
+        "CUSIP_str": "808524300",
+        "name": "SCHWAB STRATEGIC TR",
+        "title": "US LCAP GR ETF",
+        "sshprnamt": 915934221.0
+      },
+      {
+        "CUSIP_str": "92203J407",
+        "name": "VANGUARD CHARLOTTE FDS",
+        "title": "TOTAL INT BD ETF",
+        "sshprnamt": 887701708.0
+      },
+      {
+        "CUSIP_str": "91912E105",
+        "name": "VALE S A",
+        "title": "SPONSORED ADS",
+        "sshprnamt": 887422472.0
+      },
+      {
+        "CUSIP_str": "N20944109",
+        "name": "CNH INDL N V",
+        "title": "SHS",
+        "sshprnamt": 887231875.0
+      },
+      {
+        "CUSIP_str": "77311W101",
+        "name": "ROCKET COS INC",
+        "title": "COM CL A",
+        "sshprnamt": 874390487.0
+      },
+      {
+        "CUSIP_str": "867224107",
+        "name": "SUNCOR ENERGY INC NEW",
+        "title": "COM",
+        "sshprnamt": 872802184.0
+      },
+      {
+        "CUSIP_str": "464287200",
+        "name": "ISHARES TR",
+        "title": "CORE S&P500 ETF",
+        "sshprnamt": 852380949.0
+      },
+      {
+        "CUSIP_str": "891160509",
+        "name": "TORONTO DOMINION BK ONT",
+        "title": "COM NEW",
+        "sshprnamt": 851605999.0
+      },
+      {
+        "CUSIP_str": "82509L107",
+        "name": "SHOPIFY INC",
+        "title": "CL A SUB VTG SHS",
+        "sshprnamt": 843048174.0
+      },
+      {
+        "CUSIP_str": "25434V708",
+        "name": "DIMENSIONAL ETF TRUST",
+        "title": "US CORE EQUITY 2",
+        "sshprnamt": 834912551.0
+      },
+      {
+        "CUSIP_str": "808524797",
+        "name": "SCHWAB STRATEGIC TR",
+        "title": "US DIVIDEND EQ",
+        "sshprnamt": 823396459.0
+      },
+      {
+        "CUSIP_str": "72919P202",
+        "name": "PLUG PWR INC",
+        "title": "COM NEW",
+        "sshprnamt": 817560282.0
+      },
+      {
+        "CUSIP_str": "G0593M107",
+        "name": "ASTRAZENECA PLC",
+        "title": "ORD",
+        "sshprnamt": 805014159.0
+      },
+      {
+        "CUSIP_str": "56501R106",
+        "name": "MANULIFE FINL CORP",
+        "title": "COM",
+        "sshprnamt": 804497212.0
+      },
+      {
+        "CUSIP_str": "192108504",
+        "name": "COEUR MNG INC",
+        "title": "COM NEW",
+        "sshprnamt": 801302248.0
+      },
+      {
+        "CUSIP_str": "11777Q209",
+        "name": "B2GOLD CORP",
+        "title": "COM",
+        "sshprnamt": 794599175.0
+      }
+    ],
+    "D_mid_low": [
+      {
+        "CUSIP_str": "09174Y106",
+        "name": "BITWISE CHAINLINK ETF",
+        "title": "BENEFICIAL INT",
+        "sshprnamt": 61917.0
+      },
+      {
+        "CUSIP_str": "86280R126",
+        "name": "STRATEGY SHS",
+        "title": "EVENTIDE LARGE C",
+        "sshprnamt": 155724.0
+      },
+      {
+        "CUSIP_str": "ZM7431376",
+        "name": "INTERNATIONAL BUSINESS MACHINES CORP",
+        "title": "Common",
+        "sshprnamt": 500000.0
+      },
+      {
+        "CUSIP_str": "92346j108",
+        "name": "VERICEL CORPORATION",
+        "title": "COM",
+        "sshprnamt": 375057.0
+      },
+      {
+        "CUSIP_str": "88636X708",
+        "name": "TIDAL TRUST II",
+        "title": "YIELDMAX ULTRA O",
+        "sshprnamt": 590466.0
+      },
+      {
+        "CUSIP_str": "46138E545",
+        "name": "INVESCO EXCH TRADED FD TR II",
+        "title": "MSCI GBL TIMBR",
+        "sshprnamt": 390357.0
+      },
+      {
+        "CUSIP_str": "931CVR013",
+        "name": "WALGREENS BOOTS ALLIANCE",
+        "title": "COM",
+        "sshprnamt": 482569.0
+      },
+      {
+        "CUSIP_str": "54338V101",
+        "name": "LONZA GROUP AG UNSPON ADR",
+        "title": "COM",
+        "sshprnamt": 145235.0
+      },
+      {
+        "CUSIP_str": "00B02PY11",
+        "name": "NetScout Systems Inc",
+        "title": "Common Stock - Domestic",
+        "sshprnamt": 435376.0
+      },
+      {
+        "CUSIP_str": "91282CPE5",
+        "name": "UNITED STATES TREAS NTS 3.500 10/31/27 B/E DTD 10/31/25",
+        "title": "NOT",
+        "sshprnamt": 483000.0
+      },
+      {
+        "CUSIP_str": "25460E216",
+        "name": "DIREXION SHARES ETF TRUST",
+        "title": "DAILY FINANCIAL",
+        "sshprnamt": 543633.0
+      },
+      {
+        "CUSIP_str": "05343P109",
+        "name": "AVALON HLDGS CORP",
+        "title": "CL A",
+        "sshprnamt": 317569.0
+      },
+      {
+        "CUSIP_str": "34354p105",
+        "name": "FLOWSERVE CORP",
+        "title": "COM",
+        "sshprnamt": 182991.0
+      },
+      {
+        "CUSIP_str": "00775Y355",
+        "name": "ADVISORS INNER CIRCLE FD III",
+        "title": "RAYLIANT SMDAM",
+        "sshprnamt": 87142.0
+      },
+      {
+        "CUSIP_str": "09073M904",
+        "name": "BIO-TECHNE CORP",
+        "title": "CALL",
+        "sshprnamt": 426800.0
+      },
+      {
+        "CUSIP_str": "25460G161",
+        "name": "DIREXION SHARES ETF TRUST",
+        "title": "DAILY NYSE FANG",
+        "sshprnamt": 77498.0
+      },
+      {
+        "CUSIP_str": "46432f339",
+        "name": "ISHARES EDGE MSCI US QUALITY F",
+        "title": "COM",
+        "sshprnamt": 274337.0
+      },
+      {
+        "CUSIP_str": "247131303",
+        "name": "DELPHI FINANCIAL GROUP - CALLABLE",
+        "title": "Pref",
+        "sshprnamt": 328790.0
+      },
+      {
+        "CUSIP_str": "461308827",
+        "name": "AMERICAN FUNDS INVMT CO OF AMER F2",
+        "title": "Mutual Fund",
+        "sshprnamt": 104365.0
+      },
+      {
+        "CUSIP_str": "45784N692",
+        "name": "INNOVATOR ETFS TRUST",
+        "title": "UNCAPPED BITCOIN",
+        "sshprnamt": 519948.0
+      },
+      {
+        "CUSIP_str": "269451100",
+        "name": "EAGLE CAP GROWTH FD INC",
+        "title": "COM",
+        "sshprnamt": 93369.0
+      },
+      {
+        "CUSIP_str": "44842D101",
+        "name": "HUTCHISON PORT HLDGS",
+        "title": "COMMON",
+        "sshprnamt": 81759.0
+      },
+      {
+        "CUSIP_str": "006702623",
+        "name": "EMCOR Group Inc",
+        "title": "Common Stock - Domestic",
+        "sshprnamt": 69366.0
+      },
+      {
+        "CUSIP_str": "46641Q449",
+        "name": "J P MORGAN EXCHANGE TRADED F",
+        "title": "BETABUILDERS USD",
+        "sshprnamt": 569181.0
+      },
+      {
+        "CUSIP_str": "42225T957",
+        "name": "HEALTH CATALYST INC",
+        "title": "PUT",
+        "sshprnamt": 554800.0
+      },
+      {
+        "CUSIP_str": "53656G357",
+        "name": "LISTED FDS TR",
+        "title": "YIELDS FOR YOU I",
+        "sshprnamt": 80942.0
+      },
+      {
+        "CUSIP_str": "SBLD13F28",
+        "name": "CREDO TECHNOLOGY GROUP HOLDING LTD",
+        "title": "EQUITY",
+        "sshprnamt": 112032.0
+      },
+      {
+        "CUSIP_str": "640655114",
+        "name": "NEOVOLTA INC",
+        "title": "*W EXP 04/01/202",
+        "sshprnamt": 269442.0
+      },
+      {
+        "CUSIP_str": "877409102",
+        "name": "TAYLOR WIMPEY ADRORD SHS",
+        "title": "COM",
+        "sshprnamt": 174075.0
+      },
+      {
+        "CUSIP_str": "88636V751",
+        "name": "TIDAL TRUST II",
+        "title": "YIELDMAX MSTR PE",
+        "sshprnamt": 77759.0
+      },
+      {
+        "CUSIP_str": "316092253",
+        "name": "FIDELITY COVINGTON TRUST",
+        "title": "CLEAN ENERGY ETF",
+        "sshprnamt": 128721.0
+      },
+      {
+        "CUSIP_str": "912797RF6",
+        "name": "UNITED STATES TREAS BILLS 0.000 07/09/26 B/E DTD 07/10/25",
+        "title": "US Treasury",
+        "sshprnamt": 150000.0
+      },
+      {
+        "CUSIP_str": "81752T437",
+        "name": "SERIES PORTFOLIOS TR",
+        "title": "INFRASTRUCTURE C",
+        "sshprnamt": 111594.0
+      },
+      {
+        "CUSIP_str": "49326MAA3",
+        "name": "KEYCORP CAPITAL I DTD 06/25/1998 4.66239per 07/01/2028",
+        "title": "Preferred",
+        "sshprnamt": 100000.0
+      },
+      {
+        "CUSIP_str": "M5R635116",
+        "name": "INNOVIZ TECHNOLOGIES LTD",
+        "title": "*W EXP 04/05/202",
+        "sshprnamt": 119591.0
+      },
+      {
+        "CUSIP_str": "46654Q690",
+        "name": "J P MORGAN EXCHANGE TRADED F",
+        "title": "ACTIVE DEVELOPIN",
+        "sshprnamt": 303804.0
+      },
+      {
+        "CUSIP_str": "37960A388",
+        "name": "GLOBAL X FDS",
+        "title": "LONG-TERM TREAS",
+        "sshprnamt": 110400.0
+      },
+      {
+        "CUSIP_str": "G2703G103",
+        "name": "DELIXY HLDGS LTD",
+        "title": "CL A ORD SHS",
+        "sshprnamt": 116467.0
+      },
+      {
+        "CUSIP_str": "G7945M107",
+        "name": "SEAGATE TECHNOLOGIES",
+        "title": "COM",
+        "sshprnamt": 588077.0
+      },
+      {
+        "CUSIP_str": "54811BZH7",
+        "name": "LOWER COLO RIV A",
+        "title": "BMU",
+        "sshprnamt": 200000.0
+      },
+      {
+        "CUSIP_str": "G57Y3D109",
+        "name": "LZ TECHNOLOGY HLDGS LTD",
+        "title": "SHS CL B",
+        "sshprnamt": 176801.0
+      },
+      {
+        "CUSIP_str": "33740U430",
+        "name": "FIRST TR EXCHNG TRADED FD VI",
+        "title": "FT VEST US EQ UN",
+        "sshprnamt": 98107.0
+      },
+      {
+        "CUSIP_str": "02072L672",
+        "name": "EA SERIES TRUST",
+        "title": "STRIVE US SEMICO",
+        "sshprnamt": 338208.0
+      },
+      {
+        "CUSIP_str": "006190228",
+        "name": "Appfolio Inc",
+        "title": "Common Stock - Domestic",
+        "sshprnamt": 644031.0
+      },
+      {
+        "CUSIP_str": "74348A608",
+        "name": "PROSHARES TR",
+        "title": "SHT 7-10 YR TR",
+        "sshprnamt": 172520.0
+      },
+      {
+        "CUSIP_str": "92778VME5",
+        "name": "VIRGINIA COLLEGE BL",
+        "title": "FIX",
+        "sshprnamt": 120000.0
+      },
+      {
+        "CUSIP_str": "549498952",
+        "name": "LUCID GROUP INC",
+        "title": "PUT",
+        "sshprnamt": 256800.0
+      },
+      {
+        "CUSIP_str": "442871112",
+        "name": "Hovnanian",
+        "title": "PREF STK",
+        "sshprnamt": 105000.0
+      },
+      {
+        "CUSIP_str": "912828YX2",
+        "name": "US TREASUR NT 1.75 12/26UST NOTE    DUE 12/31/26",
+        "title": "NOT",
+        "sshprnamt": 100000.0
+      },
+      {
+        "CUSIP_str": "881624909",
+        "name": "TEVA PHARMACEUTICAL INDS LTD",
+        "title": "CALL",
+        "sshprnamt": 211500.0
+      }
+    ],
+    "E_problematicos": [
+      {
+        "CUSIP_str": "02079K107",
+        "name": "ALPHABET INC",
+        "title": "CAP STK CL C",
+        "sshprnamt": 3496381248.0
+      },
+      {
+        "CUSIP_str": "02079K305",
+        "name": "ALPHABET INC",
+        "title": "CAP STK CL A",
+        "sshprnamt": 4890343917.0
+      },
+      {
+        "CUSIP_str": "084670108",
+        "name": "BERKSHIRE HATHAWAY INC DEL",
+        "title": "CL A",
+        "sshprnamt": 543424.0
+      },
+      {
+        "CUSIP_str": "084670702",
+        "name": "BERKSHIRE HATHAWAY INC DEL",
+        "title": "CL B NEW",
+        "sshprnamt": 1028685570.0
+      },
+      {
+        "CUSIP_str": "329882225",
+        "name": "NIPST        02/14/29 CVT",
+        "title": "CONVERTIBLE BOND",
+        "sshprnamt": 10590000000.0
+      },
+      {
+        "CUSIP_str": "329882250",
+        "name": "NIPST        02/14/31 CVT PUT",
+        "title": "CONVERTIBLE BOND",
+        "sshprnamt": 6990000000.0
+      }
+    ]
+  },
+  "radar_usa_total": 242,
+  "radar_usa_mapped": 220
+}

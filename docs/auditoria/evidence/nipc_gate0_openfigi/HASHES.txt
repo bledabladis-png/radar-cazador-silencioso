@@ -1,0 +1,10 @@
+1ca813db55dd81fe5a35bb83cf977ca1213122a9bd504607e60704ffe546ef3e  sample.json
+4f89e4af0f91e553af032bd7337874fbdd649c5fff93254f38b7d67e2adb6e24  cusips.txt
+665726b05dea8a93b48a78b7068abde4e3b80941ff0d25f141d4346f992b8086  result.json
+9909dcf859b1828fe6b0851b8e4f89524f8f9392e3e00339cf1f911c3d858e1f  build_sample.py
+15cdb1b47ef82c22548726ae397146ebbe35d4a6c7fc0cd470a01a0e27f3017d  run_openfigi.py
+5cf9fe17b173e575eb246a37271f99ce73287d9ba0acecdd07df8ef8b151fbb4  README.md
+
+generated_at: 2026-09-19
+probe_endpoint: https://api.openfigi.com/v3/mapping
+probe_period: 2026Q1
