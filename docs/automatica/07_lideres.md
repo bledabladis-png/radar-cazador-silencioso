@@ -19,7 +19,7 @@ Selecciona las mejores empresas de cada sector/indice en fase favorable (ACCUMUL
 
 - Tablas 'Acciones Seleccionadas por el Modelo de Liderazgo Sectorial' en el reporte.
 - Tablas 'Indices Internacionales - Oportunidades de Acumulacion' en el reporte.
-- Archivos CSV: nalisis_lideres.csv y nalisis_lideres_internacionales.csv.
+- Archivos CSV: analisis_lideres.csv y analisis_lideres_internacionales.csv.
 
 
 ## Limitaciones Conocidas

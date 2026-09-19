@@ -11,7 +11,7 @@ egimes/: condiciones financieras, liquidez, volatilidad, macro, sector.
 - indicators/: todos los indicadores y scores.
 - src/: carga de datos, generacion de reporte, utilidades.
 - data/: providers (yahoo, cboe, finra, fred), datos macro manuales.
-- alidation/: scripts de auditoria y backtesting.
+- validation/: scripts de auditoria y backtesting.
 
 
 ## Formulas

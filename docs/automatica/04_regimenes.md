@@ -3,9 +3,9 @@ Modulos que evaluan el contexto macroeconomico, las condiciones financieras, la 
 
 ## Arquitectura
 
-- inancial_conditions.py: score basado en VIX, credito, dolar y curva (0.40/0.30/0.15/0.15).
+- financial_conditions.py: score basado en VIX, credito, dolar y curva (0.40/0.30/0.15/0.15).
 - liquidity.py: liquidez real a partir de WALCL, SOFR, RRP y Fed Funds.
-- olatility_regime.py: regimen de volatilidad basado en VIX.
+- volatility_regime.py: regimen de volatilidad basado en VIX.
 - macro_regime.py: clasificacion en 11 categorias macro.
 - sector_regime.py: ranking sectorial combinando momentum, tendencia, volatilidad, breadth y Wyckoff.
 

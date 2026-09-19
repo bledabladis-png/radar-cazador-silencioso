@@ -4,7 +4,7 @@ Mide la amplitud del mercado sectorial (porcentaje de sectores sobre sus EMAs) y
 ## Arquitectura
 
 - compute_breadth(): porcentajes sobre EMA20, EMA50, EMA200.
-- readth_equity.py: avances/descensos del mercado general.
+- breadth_equity.py: avances/descensos del mercado general.
 
 
 ## Formulas
