@@ -1012,3 +1012,42 @@ Referencia: prompt maestro v6.30, secciones 11.17 a 11.19 y 15.21. Nueve fixes a
 - **9 criterios del dictamen:** CUSIP support/us equities/rate limits/failure modes CONFIRMADOS; temporal validity PENDIENTE; reproducibility POSIBLE (requiere snapshot); licensing a revisar (FIGI dominio publico, restricciones sobre identificadores propietarios).
 - **Proximo paso autorizado:** Gate 0 SEC 13(f) con Official List Q4 2025 + Q1 2026 (listas trimestrales historicas SEC).
 - **Estado:** Gate 0 OpenFIGI PASS como fuente candidata 2026-09-19. Pendiente Gate 0 SEC 13(f).
+
+
+## IAE NIPC - Gate 0 SEC 13(f) format clarification (2026-09-19)
+
+- **Origen:** continuacion del Gate 0 OpenFIGI (PASS como fuente candidata). Descarga de Official Lists SEC 13(f) Q4 2025 + Q1 2026 para medir elegibilidad normativa.
+- **Informe previo:** docs/auditoria/INSTITUTIONAL_ACCUMULATION_NIPC_GATE0_OPENFIGI_DICTAMEN.md.
+- **Dictamen SEC 13(f) format clarification:** docs/auditoria/INSTITUTIONAL_ACCUMULATION_NIPC_GATE0_SEC13F_DICTAMEN.md.
+- **Resultado:** GO condicionado. Correcciones de formato aplicadas. Gate 0 SEC 13(f) continua. Codigo NIPC NO autorizado.
+- **Ficheros descargados:**
+  - https://www.sec.gov/files/investment/13flist2025q4.txt -> D:/13f_probe/official_list_13f/13flist_2025Q4.txt (994,842 bytes, 12,282 lineas).
+  - https://www.sec.gov/files/investment/13flist2026q1.txt -> D:/13f_probe/official_list_13f/13flist_2026Q1.txt (1,995,921 bytes, 24,641 lineas).
+  - Ficheros .xls/.xlsx dan 404; .txt es el formato vigente desde Q4 2025.
+- **Correcciones de formato (auditor):**
+  - Option Indicator esta en posicion 10 (`*` o espacio), NO sobre el CUSIP.
+  - Status esta en posiciones 68-70: pos 68 = flag `*` SEC (cambio formato); pos 69 = `A` (alta) / `D` (baja); pos 70 = reservado.
+  - Ultimo caracter (pos 80) NO es Status. Campo no identificado; NO interpretar.
+  - Los duplicados Q1 (994 CUSIPs con 2 lineas) son eventos A/D legitimos, no errores.
+- **Layout canonico confirmado (80 chars, LF):**
+  - Pos 1-9: CUSIP.
+  - Pos 10: Option Indicator (`*` o espacio).
+  - Pos 11-40: Issuer Name.
+  - Pos 41-67: Issuer Description.
+  - Pos 68: Format Change Flag (`*` o espacio).
+  - Pos 69: Add/Del Indicator (`A`, `D` o espacio).
+  - Pos 70: reservado.
+  - Pos 71-79: no documentado.
+  - Pos 80: campo distinto no identificado.
+- **Cifras corregidas:**
+  - Q4 2025: 12,282 lineas, 12,282 CUSIPs unicos, 0 duplicados. Option Indicator: 6,300 espacio + 5,982 asterisco. Status: 1,232 flag `*`, 787 `A`, 445 `D`.
+  - Q1 2026: 24,641 lineas, 22,659 CUSIPs unicos, 994 CUSIPs con par A/D (1,982 lineas duplicadas). Option Indicator: 18,627 espacio + 6,014 asterisco. Status: 1,819 flag `*`, 1,022 `A`, 797 `D`.
+- **Decisiones del auditor:**
+  - NO interpretar pos 80 hasta que SEC documente.
+  - NO fusionar Option Indicator (pos 10) con Status (pos 68).
+  - NO colapsar duplicados A/D de Q1 sin politica de resolucion.
+  - NO asumir que Q1 tiene "el doble de CUSIPs" que Q4 (son 22,659 vs 12,282 unicos; el resto son eventos A/D + opciones como filas separadas).
+  - NO tratar section13f_eligible como sinonimo de security_type=EQUITY.
+  - Politica propuesta para resolucion A/D: por orden en el fichero (ultimo estado gana). Pendiente decision final en Gate-NIPC.1.
+- **Proximo paso autorizado:** continuar Gate 0 SEC 13(f): parsear con layout canonico, cruzar con CUSIPs del 13F (SH + null), medir % cobertura + % ponderado por SSHPRNAMT + control de opciones. Sin codigo productivo.
+- **Estado:** Gate 0 SEC 13(f) en progreso 2026-09-19 (formato caracterizado, pendiente analisis de cruce).
