@@ -1245,3 +1245,43 @@ Referencia: prompt maestro v6.30, secciones 11.17 a 11.19 y 15.21. Nueve fixes a
 - **Pendiente GHISALLO (Q-MINI-3):** +765% (2.39B -> 20.69B). Continua presente en ambos periodos. No es discontinuidad. Probe especifico pendiente.
 - **Recomendaciones al auditor:** Q-T50-1 a Q-T50-5 (seccion 9 del informe).
 - **Estado:** 40 commits locales ahead. Sin push. Pendiente dictamen top 50.
+
+
+## IAE NIPC - Dictamen TOP 50 + spec v1.4 (2026-09-19)
+
+- **Origen:** dictamen del auditor sobre TOP 50 filer continuity y addendum cuantitativo.
+- **Dictamen:** docs/auditoria/INSTITUTIONAL_ACCUMULATION_NIPC_GATE0_TOP50_DICTAMEN.md
+- **Resultado:** FILER CONTINUITY CERRADO como caracterizacion del periodo. Bloqueo de Gate-NIPC.2 vuelve a coverage/thresholds.
+- **Decisiones del auditor:**
+  - Q-T50-1 CERRADO: no ampliar a top 100/universo. 4 discontinuidades en top 50, todas Vanguard.
+  - Q-T50-2 CERRADO: `filer_status` por presencia documental del filing, NO por `SSHPRNAMT > 0`. Nueva dimension `position_mass_status` (HAS_SHARES | ZERO_SHARES | NO_CANONICAL_HOLDINGS).
+  - Q-T50-3 CERRADO: NT->HR queda como evidencia documental. NO reconciliacion economica. C2 sin cambios.
+  - Q-T50-4 GO DIAGNOSTICO: GHISALLO probe especifico autorizado, no bloqueante.
+  - Q-T50-5 GO: siguiente fase = coverage baseline + OpenFIGI.
+- **Addendum cuantitativo:** PASS. Regla `canonical_snapshot` congelada.
+- **Spec v1.4:**
+  - Version 1.4 (commit ff4157e).
+  - Seccion 3.15 reescrita: filer continuity = control de integridad, NO threshold.
+  - Seccion 3.15 incluye `position_mass_status` (Q-T50-2).
+  - Seccion 14.2 actualizada: Gate-NIPC.2 pendiente de coverage/thresholds.
+- **Coverage policy ampliada:**
+  - Seccion 10.bis reformulada: filer continuity = control de integridad.
+  - Eliminados THRESHOLD_3 y THRESHOLD_4 como umbrales.
+  - Solo THRESHOLD_1 y THRESHOLD_2, ambos UNDEFINED.
+- **Estado de gates:**
+  - Q-PROBE-5 TOP 20: PASS.
+  - Q-T50 TOP 50: PASS.
+  - Vanguard concentration: CONFIRMADA.
+  - NT -> OTHERMANAGER -> HR: CONFIRMADO documentalmente.
+  - Addendum cuantitativo: PASS.
+  - Regla canonical_snapshot: CONGELADA.
+  - C2: VIGENTE.
+  - Reconciliacion economica NT-HR: NO AUTORIZADA.
+  - THRESHOLD_1/2: UNDEFINED.
+  - Gate-NIPC.2: BLOQUEADO por coverage.
+  - Gate-NIPC.3: NO AUTORIZADO.
+- **Siguiente fase autorizada:**
+  - Coverage baseline + OpenFIGI over unresolved-only.
+  - GHISALLO probe (Q-T50-4).
+  - Propuesta THRESHOLD_1/2 tras evidencia de coverage.
+- **Estado:** 44 commits locales ahead. Sin push. Bloqueo vuelve a coverage/thresholds.
