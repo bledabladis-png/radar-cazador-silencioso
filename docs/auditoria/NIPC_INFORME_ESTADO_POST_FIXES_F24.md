@@ -1,7 +1,7 @@
 # NIPC_INFORME_ESTADO_POST_FIXES_F24
 
 **Objeto:** comunicacion al auditor del estado del sistema tras aplicar los 6 fixes mecanicos autorizados.
-**HEAD al redactar:** 1575d17.
+**HEAD al redactar:** d462f72.
 **Destinatario:** auditor externo.
 **Documento complementario:** NIPC_INFORME_ENTREGA_F24.md (hash a5cf2386..., inmutable).
 **Estado:** BORRADOR pendiente de envio.
@@ -12,9 +12,17 @@
 
 ## 0. Resumen ejecutivo
 
-Desde el cierre del informe F2.4 (HEAD 81727f0, 82 commits ahead, 941 tests
-locales) se han aplicado los 6 fixes mecanicos previamente autorizados por el
-dictamen formal del auditor (secciones 6, 7, 8, 9, 10 del dictamen):
+Desde la emision del dictamen sobre la revision estructural (2026-09-20,
+materializado en NIPC_DICTAMEN_REVISION_ESTRUCTURAL_2026-09-20.md, hash
+3d004540...) se han aplicado los 6 fixes mecanicos autorizados por ese
+dictamen (GO FIX para P51, P32, P14-BIS, P31, P18/P26; GO CONDICIONADO
+para P70):
+
+**Nota sobre F2.4:** F2.4 sigue PENDIENTE. Este informe no cierra F2.4 ni
+presupone su resultado. Se emite como comunicacion complementaria al
+informe de entrega F2.4 (hash a5cf2386...), informando del estado del
+sistema tras aplicar los fixes autorizados por el dictamen de revision
+estructural.
 
     P51      linea corta preservada como anomalia
     P32      contador de descartes silenciosos
@@ -31,8 +39,8 @@ sin cambios respecto del estado en que se redacto el informe F2.4.
 
 1. Las 4 decisiones solicitadas (D1-D4) **no cambian**. El informe F2.4 sigue
    siendo el documento de referencia para la solicitud.
-2. El estado del sistema cambio en metricas: 89 commits ahead (era 82),
-   946 tests (era 941), 6 ficheros de codigo productivo modificados.
+2. El estado del sistema cambio en metricas: 95 commits ahead (era 82),
+   946 tests locales (era 941), 6 ficheros de codigo productivo modificados.
 3. La guarda de P70, propuesta en el dictamen P70 como "fix a aplicar en
    fase 5", **ya esta aplicada**. Esto refuerza D3 (cierre de P70) sin
    modificar la decision solicitada.
@@ -66,6 +74,7 @@ o para clarificar detalles del contrato antes de su implementacion.
 | NIPC_CONTRATOS_SEMANTICOS_v1.md | c02d202f... |
 | NIPC_P70_DICTAMEN.md | e8d4e4e8... |
 | NIPC_INFORME_ENTREGA_F24.md | a5cf2386... |
+| NIPC_DICTAMEN_REVISION_ESTRUCTURAL_2026-09-20.md | 3d004540... |
 | INSTITUTIONAL_ACCUMULATION_REVISION_ESTRUCTURAL_2026-09-20.md | 318f02e8... |
 
 ### 1.3. Bloqueos vigentes (sin cambios)
@@ -80,6 +89,14 @@ o para clarificar detalles del contrato antes de su implementacion.
 ---
 
 ## 2. Los 6 fixes mecanicos aplicados
+
+Los 6 fixes fueron autorizados por el dictamen del 2026-09-20 sobre la
+revision estructural (NIPC_DICTAMEN_REVISION_ESTRUCTURAL_2026-09-20.md,
+hash 3d004540...). Ese dictamen asigno:
+
+    GO FIX          P51, P32, P14-BIS, P31, P18/P26
+    GO CONDICIONADO P70
+
 
 Todos ellos corresponden a bloqueos con estado **GO FIX** en el dictamen
 formal del auditor (2026-09-20) o **GO CONDICIONADO** en el dictamen P70.
@@ -268,12 +285,12 @@ actual (que aun no implementa los contratos). ?El auditor quiere:
       que se apliquen los fixes, o
   (c) ambos por separado (tests "before" y "after")?
 
-**Q5. Ubicacion del modulo `temporal_validity.py` (P61).**
+**Q5. (Retirada como decision F2.4; trasladada a fase de implementacion).**
 
-El contrato v1 seccion 8.2 propone crear
-`src/institutional_accumulation/temporal_validity.py`. ?Confirma el auditor
-esa ubicacion, o prefiere un modulo bajo `aggregation/` (junto a
-`delta_shares.py` y `nipc.py`) por coherencia con el flujo NIPC?
+La ubicacion del modulo `temporal_validity.py` (contrato v1 seccion 8.2)
+es una decision de implementacion, no de contrato. No forma parte de F2.4.
+Se resolvera durante el paso 4 (tests especificos) o el paso 5 (fixes) de
+la secuencia autorizada.
 
 **Q6. Tratamiento del baseline historico en P38.**
 
@@ -283,16 +300,19 @@ de "no apto" a los documentos del baseline existentes
 (NIPC_GATE0_COVERAGE_BASELINE_INFORME.md, OPENFIGI_TOP2000_INFORME.md), o
 basta con la mencion en v1.3 y el contrato v1?
 
-**Q7. Detalle del mapping `identity_type` por fuente (P60).**
+**Q7. Materializacion de la declaracion explicita de `identity_type` (P60).**
 
-El contrato v1 seccion 1.6 lista las fuentes que declaran `identity_type`
-(`cusip_equivalence.csv`, `cusip_ticker_exceptions.csv`, `etf_holdings.csv`,
-OpenFIGI). ?Prefiere el auditor:
+El contrato v1 seccion 1.6 exige que cada fuente **declare** el tipo de
+identidad que aporta. La implementacion puede materializarse como:
 
   (a) un campo nuevo en cada CSV (`identity_type` por fila),
-  (b) un mapping fijo en codigo (fuente -> tipo),
-  (c) una tabla separada `data/mappings/identity_sources.csv`, o
-  (d) otra opcion?
+  (b) una tabla separada `data/mappings/identity_sources.csv`, o
+  (c) otra opcion equivalente.
+
+Nota: un mapping fijo en codigo (`etf_holdings.csv -> TICKER`) NO es
+equivalente a una declaracion por la fuente. El programa no debe asignar
+el tipo; la fuente debe declararlo. Esta opcion queda excluida por
+contradiccion con el principio NO INFERIR IDENTIDAD de P60.
 
 **Q8. Extension de la guarda P70 a `HR_CHAIN_RESTATEMENT`.**
 
@@ -317,6 +337,52 @@ hasta cierre de Gate-NIPC.3). ?Confirma el auditor que la regla sigue
 aplicando, o autoriza un push parcial (por ejemplo, solo los 6 fixes
 mecanicos, sin los documentos del ciclo F2.4) para preservar el trabajo
 contra perdida local?
+
+---
+
+## 5.bis. Notas de trazabilidad
+
+### 5.bis.1. Discrepancia de hash del informe de revision estructural
+
+La primera version del informe de revision estructural commiteada en
+f107b27 tenia un doble problema de formato: (a) los caracteres especiales
+de Markdown estaban escapados con backslash (`\#`, `\*\*`, `\_`); (b) las
+lineas estaban en CRLF en lugar de LF. El fichero fue corregido en 9a0f66f
+(fix escapes+EOL). Como consecuencia, el hash cambio:
+
+    hash pre-fix  (f107b27):  d5385b1f0d9babee885fd08e9573051c67e318fd0734792d85e640be1a89a591
+    hash post-fix (9a0f66f):  318f02e82ef179e28f9938c32491e1a827942bdb2dd53d5aa0d4aad8032b137a
+
+El hash vigente en HEAD es 318f02e8.... La referencia a d5385b1f... en
+documentos previos al 9a0f66f es historica.
+
+### 5.bis.2. Etiqueta "max_group_len" en el probe P70
+
+El probe P70 (probe_p70_summary.txt) etiqueta max_group_len como "global,
+todos los grupos". Tecnicamente el probe solo actualiza max_len en 4 de
+las 8 ramas de estrategia (HR_PLUS_RESTATEMENT, HR_CHAIN_RESTATEMENT,
+HR_COMPOSITE, HR_PLUS_NEW_HOLDINGS). Las ramas SINGLE_HR, SINGLE_NOTICE,
+NOTICE_AMENDED, REVIEW_REQUIRED no contribuyen a max_len. La etiqueta
+"global" es por tanto imprecisa. No afecta a la conclusion del probe
+(que se apoya en el argumento estructural), pero se documenta para evitar
+lecturas erroneas.
+
+### 5.bis.3. Test P70: implementado distinto del propuesto
+
+El dictamen P70 (seccion 6) proponia como test verificar que un grupo con
+len > 2 y primer filing 13F-HR clasifica como HR_CHAIN_RESTATEMENT, no
+como HR_PLUS_RESTATEMENT.
+
+El test finalmente implementado (commit 1575d17) es distinto: monkeypatcha
+_classify_strategy_from_types para forzar que devuelva HR_PLUS_RESTATEMENT
+y verifica que la guarda dispara AssertionError. Los dos tests son validos
+pero verifican cosas distintas:
+
+    test propuesto  -> verifica la rama real del clasificador
+    test aplicado   -> verifica la guarda contractual introducida por P70
+
+Ambos podrian coexistir. El implementado refuerza directamente la guarda,
+que era el objetivo del fix.
 
 ---
 
