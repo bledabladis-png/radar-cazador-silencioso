@@ -10,17 +10,23 @@ Autor: Ingeniero Supervisor saliente.
 Receptor: Asistente entrante (DeepSeek, otro chat).
 Fecha: 2026-09-19.
 
+**Nota semantica sobre HEAD/ahead:** los valores de la tabla de la
+Seccion A reflejan el estado al redactar esta actualizacion. Un commit
+posterior (incluido el propio amend que introduce este texto) rehashea
+el HEAD y avanza `ahead`. Verificar siempre con `git log --oneline -5`
+y `git status -sb`. El desfase es por diseno, no un error.
+
 =============================================================================
 SECCION A - Estado exacto al cierre
 =============================================================================
 
 | Metrica              | Valor                                         |
 |----------------------|-----------------------------------------------|
-| HEAD local           | a903ab1                                       |
+| HEAD local           | d44bba0 (al redactar esta actualizacion)      |
 | origin/main          | 9d4a81e                                       |
-| Ahead                | 45                                            |
+| Ahead                | 46 (al redactar esta actualizacion)           |
 | Working tree         | limpio (sin modificados ni untracked)         |
-| Prompt vigente       | v6.35 (a actualizar a v6.36 en este cierre)   |
+| Prompt vigente       | v6.36                                         |
 | Tests locales        | 911 passed + 2 skipped                        |
 | pyflakes             | 0 warnings                                    |
 | compileall           | OK                                            |
@@ -37,6 +43,7 @@ Los 45 commits locales viajan juntos al cierre del proximo micro-gate.
 
 Ultimos 15 commits (mas recientes primero):
 
+  d44bba0  docs(iae): prompt maestro v6.36 + transfer doc post TOP 50
   a903ab1  docs(iae): FOLLOWUPS - dictamen TOP 50 + spec v1.4
   ff4157e  docs(iae): NIPC spec v1.4 + coverage policy - filer continuity CERRADO
   8b9b4b1  docs(iae): rename NIPC especificacion v1.3 (preparar v1.4)
@@ -51,7 +58,6 @@ Ultimos 15 commits (mas recientes primero):
   9fb8fc2  docs(iae): rename NIPC especificacion v1.2 (preparar v1.3)
   0d4a425  docs(iae): preserve NIPC probe auditor dictamen (GO mini-probe filer continuity)
   3acfc1c  docs(iae): FOLLOWUPS - probe NIPC end-to-end + hallazgo Vanguard
-  90fdec9  docs(iae): informe probe NIPC end-to-end + evidence + hallazgo Vanguard
 
 =============================================================================
 SECCION B - Ciclo IAE NIPC (estado detallado)
@@ -382,8 +388,8 @@ py -m pyflakes . 2>&1
 py -m pytest tests/ validation/ -q --tb=short
 
 Esperado:
-  - HEAD = a903ab1
-  - ahead 45
+  - HEAD = d44bba0 (o el hash resultante del amend que introduce esta correccion)
+  - ahead 46 (o 47 tras el amend)
   - working tree limpio
   - 911 passed + 2 skipped
   - pyflakes silencio
