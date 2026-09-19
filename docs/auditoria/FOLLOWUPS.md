@@ -1165,3 +1165,27 @@ Referencia: prompt maestro v6.30, secciones 11.17 a 11.19 y 15.21. Nueve fixes a
 - **Recomendacion del ingeniero:** NO tocar codigo. Documentar como limitacion conocida. Ejecutar mini-probe (top 20 filers) antes de fijar politica.
 - **Preguntas al auditor:** Q-PROBE-1 a Q-PROBE-5 (seccion 6 del informe).
 - **Estado:** 31 commits locales ahead. Sin push (local-first IAE). Esperando dictamen del auditor.
+
+
+## IAE NIPC - Mini-probe filer continuity Q-PROBE-5 (2026-09-19)
+
+- **Origen:** dictamen probe end-to-end (Q-PROBE-5, GO mini-probe top 20).
+- **Informe:** docs/auditoria/INSTITUTIONAL_ACCUMULATION_NIPC_GATE0_MINIPROBE_INFORME.md
+- **Evidence:** docs/auditoria/evidence/nipc_gate0_probe/probe_filer_continuity.py
+- **Resultado:** Vanguard es caso aislado en el top 20. Evidencia NT -> OTHERMANAGER -> HR confirmada.
+- **Clasificacion 24 CIKs (union top 20 Q4+Q1):**
+  - CONTINUOUS_FILER: 21 (87.5%).
+  - FILER_DISCONTINUITY: 3 (12.5%) - los 3 son Vanguard (padre + 2 filiales).
+  - NT_TO_HR_RELATION_OBSERVED: 0 (los 3 DISCONTINUITY tienen NT visible).
+  - HR_TO_HR_WITHOUT_RELATION: 0.
+  - UNRESOLVED: 0.
+- **Evidencia NT (caso Vanguard, Q1 2026):**
+  - ACC=0000102909-26-002707 CIK=0000102909 13F-NT.
+  - OTHERMANAGER declara 10 managers, incluyendo los 2 CIKs grandes de Q1:
+    * 0002100119 VANGUARD CAPITAL MANAGEMENT LLC (Q1 shares=70.24B).
+    * 0002100121 VANGUARD PORTFOLIO MANAGEMENT LLC (Q1 shares=21.03B).
+  - 6 de las 10 filiales ya eran 13F-NT en Q4 (delegando al padre); en Q1 presentan HR directo.
+  - Modelo Q4: padre HR + 6 filiales NT. Modelo Q1: padre NT + 10 filiales HR.
+- **Hallazgo colateral:** GHISALLO CAPITAL (CIK 0001825214) pasa de 2.39B a 20.69B (+765%). Presente en ambos periodos. NO es discontinuidad de filer. Documentado como observacion.
+- **Recomendaciones al auditor:** Q-MINI-1 a Q-MINI-5 (seccion 7 del informe).
+- **Estado:** 36 commits locales ahead. Sin push. Pendiente dictamen.
