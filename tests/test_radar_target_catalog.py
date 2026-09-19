@@ -5,14 +5,12 @@ import json
 from pathlib import Path
 
 import pandas as pd
-import pytest
 
 from src.institutional_accumulation.identity.radar_target_catalog import (
     COLUMNS,
     SOURCE_NAME,
     build_from_probe_result,
     coverage_summary,
-    load_radar_tickers,
     write_catalog,
 )
 
