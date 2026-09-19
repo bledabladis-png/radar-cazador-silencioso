@@ -63,10 +63,59 @@ Salida:  10,776 filings Q1 2026, 985 fuera del periodo.
   - pyflakes 0, compileall OK.
   - Suite global 740 passed + 2 skipped (727 + 13).
 
-## 6. P4 heredado
+## 6. P4 resuelto - Reconciliacion de universos
 
-Dictamen: P4 (519 vs 501) pasa a requisito de FA-2.2. No bloquea FA-2.1.
-Se aborda como primera tarea de FA-2.2 (reconciliacion de universos).
+Probe ejecutado sobre data/etf_holdings.csv + data/market_data.parquet.
+
+### 6.1. Anatomia etf_holdings
+
+| Categoria | Filas | Identifiers | Tickers |
+|---|---|---|---|
+| Equity real valido | 506 | 506 | 503 |
+| Cash line (999USDZ92) | 8 | 1 | 1 (`-`) |
+| CVR (436CVR021) | 1 | 1 | 1 (2602335D) |
+| Residuales ADI* | 11 | 11 | 11 (IXAU6..XASU6) |
+| TOTAL | 526 | 519 | 516 |
+
+### 6.2. Cierre aritmetico
+
+  Tickers residuales (no equity): 13.
+  Tickers equity validos: 516 - 13 = 503.
+
+  503 coincide EXACTAMENTE con el universo IAE del dictamen Q5
+  (539 EQUITY - 36 ETFs = 503).
+
+### 6.3. Naturaleza de los 13 residuales
+
+  - `-` (identifier 999USDZ92): cash line USD. 8 ETFs la declaran.
+    No es equity. Excluir del universo CUSIP.
+
+  - `2602335D` (identifier 436CVR021): Contingent Value Right.
+    Prefijo CVR en el identifier. No es equity. Excluir.
+
+  - 11 tickers formato IX?U6/X??U6 con identifier ADI*: identificadores
+    internos SSGA (no CUSIPs, 9 chars pero prefijo ADI). Pesos
+    residuales (-0.0099 a +0.032). Derivados internos del ETF.
+    Excluir del universo CUSIP.
+
+### 6.4. Los 38 EQUITY sin CUSIP local
+
+  36 ETFs (11 sectoriales + 25 globales/macro) + BF-B + BRK-B.
+  Los 2 ultimos son normalizables a BF-B / BRK-B (formato ticker).
+  Los 36 ETFs son exactamente los excluidos por Q5 del dictamen.
+
+### 6.5. Diferencia residual 506 vs 503
+
+  519 identifiers - 13 residuales = 506.
+  506 - 503 = 3 identifiers que mapean al mismo ticker (posible
+  duplicado SSGA + corporate actions). Reconciliacion fina en FA-2.2.
+
+### 6.6. Conclusion P4
+
+  P4 CERRADO empiricamente. El universo IAE = 503 tickers equity
+  individuales coincide con el dictamen Q5. Los casos residuales
+  (13 tickers no-equity + 3 identifiers por reconciliar) quedan
+  identificados y se resuelven en el CUSIP resolver (FA-2.2).
 
 ## 7. Notas
 
