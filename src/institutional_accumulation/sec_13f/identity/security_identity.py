@@ -100,13 +100,28 @@ def observed_security_key(cusip):
     return f"cusip:{s}"
 
 
-def _normalize_canonical(value):
-    """Normaliza el valor de canonical_security.
+def _normalize_canonical(value, identity_type):
+    """Normaliza canonical_security segun P60.
+
+    El tipo de identidad es OBLIGATORIO y lo declara la fuente.
+    Prohibido inferir el tipo desde el valor desnudo.
+
+    identity_type == "TICKER" -> "equity:<ticker>"
+    identity_type == "FIGI"   -> "figi:<FIGI>"
+    identity_type == "CUSIP"  -> None (no produce canonical)
+    identity_type == "ISIN"   -> None (fuera de alcance v1)
 
     None / NaN / cadena vacia -> None.
-    Si ya empieza por 'equity:' o 'figi:', se respeta.
-    Si no, se prefija con 'equity:'.
+    identity_type None o invalido -> ValueError.
     """
+    VALID = ("TICKER", "FIGI", "CUSIP", "ISIN")
+    if identity_type is None:
+        raise ValueError("identity_type es obligatorio (P60)")
+    if identity_type not in VALID:
+        raise ValueError(
+            "identity_type invalido: " + repr(identity_type) +
+            ". Validos: " + str(VALID)
+        )
     if value is None:
         return None
     try:
@@ -118,9 +133,16 @@ def _normalize_canonical(value):
     s = str(value).strip()
     if not s or s.lower() in ("nan", "none"):
         return None
+    # Un prefijo explicito en el valor (equity:/figi:) es declaracion
+    # de la propia fuente; se respeta por encima de identity_type.
     if s.startswith("equity:") or s.startswith("figi:"):
         return s
-    return f"equity:{s}"
+    if identity_type in ("CUSIP", "ISIN"):
+        return None
+    if identity_type == "FIGI":
+        return "figi:" + s
+    # TICKER
+    return "equity:" + s
 
 
 # --- Carga de tablas ---
@@ -335,7 +357,7 @@ def resolve_security_identity(
     if len(eq_canon) == 1:
         result["security_resolution_status"] = STATUS_CANONICAL
         result["canonical_security_kind"] = KIND_CANONICAL_EQUIVALENCE
-        result["canonical_security"] = _normalize_canonical(eq_canon[0])
+        result["canonical_security"] = _normalize_canonical(eq_canon[0], "TICKER")
         result["evidence"] = {"source": "equivalence"}
         return result
 
@@ -352,7 +374,7 @@ def resolve_security_identity(
     if len(cw_tickers) == 1:
         result["security_resolution_status"] = STATUS_CANONICAL
         result["canonical_security_kind"] = KIND_CANONICAL_EQUIVALENCE
-        result["canonical_security"] = _normalize_canonical(cw_tickers[0])
+        result["canonical_security"] = _normalize_canonical(cw_tickers[0], "TICKER")
         result["evidence"] = {
             "source": "crosswalk_internal",
             "ticker": cw_tickers[0],

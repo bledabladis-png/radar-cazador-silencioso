@@ -62,11 +62,11 @@ def test_observed_security_key_formato():
 
 
 def test_normalize_canonical():
-    assert si._normalize_canonical("AAPL") == "equity:AAPL"
-    assert si._normalize_canonical("equity:AAPL") == "equity:AAPL"
-    assert si._normalize_canonical("figi:BBG000B9XRY4") == "figi:BBG000B9XRY4"
-    assert si._normalize_canonical("") is None
-    assert si._normalize_canonical(None) is None
+    assert si._normalize_canonical("AAPL", "TICKER") == "equity:AAPL"
+    assert si._normalize_canonical("equity:AAPL", "TICKER") == "equity:AAPL"
+    assert si._normalize_canonical("figi:BBG000B9XRY4", "TICKER") == "figi:BBG000B9XRY4"
+    assert si._normalize_canonical("", "TICKER") is None
+    assert si._normalize_canonical(None, "TICKER") is None
 
 
 # ---- load_cusip_equivalence ----
@@ -318,3 +318,34 @@ def test_compute_identity_coverage_vacio():
     m = si.compute_identity_coverage([], "2026-03-31")
     assert m["n_total"] == 0
     assert m["pct_canonical"] == 0.0
+
+
+# ---- P60: identity_type obligatorio ----
+
+def test_p60_normalize_canonical_ticker():
+    assert si._normalize_canonical("MSFT", "TICKER") == "equity:MSFT"
+
+
+def test_p60_normalize_canonical_figi():
+    assert si._normalize_canonical("BBG001S69V32", "FIGI") == "figi:BBG001S69V32"
+
+
+def test_p60_normalize_canonical_cusip_no_produce():
+    assert si._normalize_canonical("037833100", "CUSIP") is None
+
+
+def test_p60_normalize_canonical_isin_no_produce():
+    assert si._normalize_canonical("US0378331005", "ISIN") is None
+
+
+def test_p60_identity_type_obligatorio():
+    import pytest
+    with pytest.raises(ValueError, match="obligatorio"):
+        si._normalize_canonical("MSFT", None)
+
+
+def test_p60_identity_type_invalido():
+    import pytest
+    with pytest.raises(ValueError, match="invalido"):
+        si._normalize_canonical("MSFT", "TICKER_US")
+
