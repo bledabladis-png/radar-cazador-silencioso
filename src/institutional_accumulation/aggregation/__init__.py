@@ -5,7 +5,7 @@ ESPECIFICACION.md (v1.2) seccion 11.1.
 
 Modulos:
   - delta_shares.py    compute_reported_position_units + compute_delta_shares
-  - nipc.py            compute_nipc + compute_coverage_pairwise (siguiente)
+  - nipc.py            compute_nipc + compute_coverage_pairwise + status
 
 Contrato de pureza (spec 11.3):
   - NO leen ficheros (reciben DataFrames).
@@ -35,8 +35,22 @@ from .delta_shares import (
     compute_delta_shares,
     compute_reported_position_units,
 )
+from .nipc import (
+    ALL_NIPC_STATUSES,
+    DISCRETION_TYPES,
+    STATUS_AMBIGUOUS,
+    STATUS_CONFLICT,
+    STATUS_INSUFFICIENT,
+    STATUS_READY,
+    STATUS_TEMPORAL_UNVERIFIED,
+    STATUS_UNRESOLVED,
+    compute_coverage_pairwise,
+    compute_nipc,
+    compute_nipc_and_coverage,
+)
 
 __all__ = [
+    # delta_shares
     "compute_reported_position_units",
     "compute_delta_shares",
     "MATCH_KEY",
@@ -48,4 +62,16 @@ __all__ = [
     "ALL_MATCH_STATUSES",
     "UNITS_COLUMNS",
     "DELTA_COLUMNS",
+    # nipc
+    "compute_nipc",
+    "compute_coverage_pairwise",
+    "compute_nipc_and_coverage",
+    "DISCRETION_TYPES",
+    "STATUS_READY",
+    "STATUS_INSUFFICIENT",
+    "STATUS_CONFLICT",
+    "STATUS_AMBIGUOUS",
+    "STATUS_UNRESOLVED",
+    "STATUS_TEMPORAL_UNVERIFIED",
+    "ALL_NIPC_STATUSES",
 ]
