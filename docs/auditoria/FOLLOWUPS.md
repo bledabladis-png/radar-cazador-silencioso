@@ -796,3 +796,23 @@ Referencia: prompt maestro v6.30, secciones 11.17 a 11.19 y 15.21. Nueve fixes a
 - **Accion:** sin fix. La fecha real esta en `Calidad, frescura y cobertura de datos`.
 
 
+## IAE FA-1 - Ingestion SEC 13F cerrada y pusheada (RESUELTO 2026-09-19)
+
+- **Origen:** Fase A del modulo IAE. Autorizada por dictamen Gate 0 (2026-09-19) como GO condicionado dividido en FA-1 + FA-2.
+- **Alcance FA-1:** ingestion + schema + lineage del dataset SEC 13F.
+- **Artefactos:**
+  - `src/institutional_accumulation/sec_13f/` (7 ficheros: schema, downloader, parser, storage, manifest, ingest + `__init__`).
+  - 72 tests IAE (downloader 15, schema 13, parser 15, storage 10, manifest 11, ingest 8).
+- **Commits pusheados (7, HEAD 626b39d):**
+  - `0017011` FA-1.1 downloader + schema.
+  - `0568992` FA-1.2 parser.
+  - `ee8809f` FA-1.3 storage + manifest.
+  - `0c587f3` FA-1.4 ingest orquestador.
+  - `52d098b` fixes tecnicos (pyflakes + docstring + DATE_COLUMNS + removesuffix).
+  - `387e993` addendum al contrato v1.1 (D1-D5).
+  - `626b39d` informe Gate FA-1.
+- **Probe real (FA-1.5):** `ingest_13f` contra 3,822,885 filas del ZIP Q1 2026 (SHA-256 `05f4da8f526cd471...`). 7/7 row counts coinciden con Gate 0. Manifest v1 con 3 niveles hash (ZIP + TSV + Parquet). 3 flags `validation` a `True`.
+- **Desviaciones documentadas (addendum D1-D5):** 7 parquets en `processed/{quarter}/`, manifest en `data/sec_13f/manifests/`, cadena de 3 niveles hash, nombres de campo, size-check diferido a CRC.
+- **Fuera de FA-1 (FA-2):** Q2 (framework 3 niveles), filtro `PERIODOFREPORT`, CUSIP->ticker, DFND, amendments. NIPC permanece BLOQUEADO hasta Gate FA-2.
+- **Estado:** **RESUELTO 2026-09-19**.
+- **Reabrir ciclo:** apertura de FA-2 con Gate FA-2 al cierre.
