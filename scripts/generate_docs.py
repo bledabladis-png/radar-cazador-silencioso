@@ -67,8 +67,14 @@ def extract_constants(filepath, prefix=None):
     return constants
 
 def extract_docstring(filepath, function_name):
+    """Extrae el docstring inmediato de una funcion.
+
+    Bug previo: regex no-greedy con DOTALL cruzaba a docstrings de
+    funciones posteriores cuando la funcion objetivo no tenia docstring.
+    Fix: exigir que tras ':' vengan solo whitespace y luego tres comillas.
+    """
     content = read_file(filepath)
-    pattern = rf'def {function_name}\(.*?\):\s*\n\s*"""(.*?)"""'
+    pattern = rf'def {function_name}\([^)]*\)[^\n]*:\s*"""(.*?)"""'
     match = re.search(pattern, content, re.DOTALL)
     if match:
         return match.group(1).strip()
@@ -147,7 +153,7 @@ egimes/: condiciones financieras, liquidez, volatilidad, macro, sector.
 - indicators/: todos los indicadores y scores.
 - src/: carga de datos, generacion de reporte, utilidades.
 - data/: providers (yahoo, cboe, finra, fred), datos macro manuales.
-- alidation/: scripts de auditoria y backtesting.
+- validation/: scripts de auditoria y backtesting.
 """
     formulas = "No aplica (modulo estructural)."
     salidas = "Reporte diario en Markdown (outputs/report/reporte_diario.md)."
@@ -189,9 +195,9 @@ def generate_fuentes():
 def generate_regimenes():
     proposito = "Modulos que evaluan el contexto macroeconomico, las condiciones financieras, la liquidez real, la volatilidad y la amplitud sectorial."
     arquitectura = """
-- inancial_conditions.py: score basado en VIX, credito, dolar y curva (0.40/0.30/0.15/0.15).
+- financial_conditions.py: score basado en VIX, credito, dolar y curva (0.40/0.30/0.15/0.15).
 - liquidity.py: liquidez real a partir de WALCL, SOFR, RRP y Fed Funds.
-- olatility_regime.py: regimen de volatilidad basado en VIX.
+- volatility_regime.py: regimen de volatilidad basado en VIX.
 - macro_regime.py: clasificacion en 11 categorias macro.
 - sector_regime.py: ranking sectorial combinando momentum, tendencia, volatilidad, breadth y Wyckoff.
 """
@@ -250,7 +256,7 @@ def generate_breadth():
     proposito = "Mide la amplitud del mercado sectorial (porcentaje de sectores sobre sus EMAs) y detecta divergencias."
     arquitectura = """
 - compute_breadth(): porcentajes sobre EMA20, EMA50, EMA200.
-- readth_equity.py: avances/descensos del mercado general.
+- breadth_equity.py: avances/descensos del mercado general.
 """
     formulas = f"**Breadth:** {doc_breadth}"
     salidas = """
@@ -392,7 +398,7 @@ def generate_lideres():
     salidas = """
 - Tablas 'Acciones Seleccionadas por el Modelo de Liderazgo Sectorial' en el reporte.
 - Tablas 'Indices Internacionales - Oportunidades de Acumulacion' en el reporte.
-- Archivos CSV: nalisis_lideres.csv y nalisis_lideres_internacionales.csv.
+- Archivos CSV: analisis_lideres.csv y analisis_lideres_internacionales.csv.
 """
     limitaciones = "Solo se muestran sectores/indices en fase ACCUMULATION o MARKUP. El resto se omiten por no cumplir criterios de liderazgo estructural."
     return template(proposito, arquitectura, formulas, salidas, limitaciones)
