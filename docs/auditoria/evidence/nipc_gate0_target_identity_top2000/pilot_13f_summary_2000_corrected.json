@@ -1,0 +1,75 @@
+{
+  "n_total": 2000,
+  "total_shares": 668099098447.0,
+  "raw": {
+    "target_true": {
+      "label": "target_true",
+      "count": 210,
+      "shares": 219189415704.0,
+      "pct_count": 10.5,
+      "pct_weight": 32.8079
+    },
+    "target_false": {
+      "label": "target_false",
+      "count": 1567,
+      "shares": 372023632279.0,
+      "pct_count": 78.35,
+      "pct_weight": 55.6839
+    },
+    "no_id": {
+      "label": "no_id",
+      "count": 220,
+      "shares": 59167263147.0,
+      "pct_count": 11.0,
+      "pct_weight": 8.8561
+    },
+    "error": {
+      "label": "error",
+      "count": 3,
+      "shares": 17718787317.0,
+      "pct_count": 0.15,
+      "pct_weight": 2.6521
+    }
+  },
+  "corrected": {
+    "target_true": {
+      "label": "target_true",
+      "count": 212,
+      "shares": 222763244901.0,
+      "pct_count": 10.6,
+      "pct_weight": 33.3428
+    },
+    "target_false": {
+      "label": "target_false",
+      "count": 1567,
+      "shares": 372023632279.0,
+      "pct_count": 78.35,
+      "pct_weight": 55.6839
+    },
+    "no_id": {
+      "label": "no_id",
+      "count": 218,
+      "shares": 55593433950.0,
+      "pct_count": 10.9,
+      "pct_weight": 8.3211
+    },
+    "error": {
+      "label": "error",
+      "count": 3,
+      "shares": 17718787317.0,
+      "pct_count": 0.15,
+      "pct_weight": 2.6521
+    }
+  },
+  "recovery_channels": {
+    "exceptions_qcur": [
+      "30231G102"
+    ],
+    "ticker_match_ignoring_exch": [
+      "682680103"
+    ]
+  },
+  "period": "2026-03-31",
+  "radar_snapshot_date": "2026-09-19",
+  "radar_membership_mode": "CURRENT_RETROSPECTIVE"
+}
