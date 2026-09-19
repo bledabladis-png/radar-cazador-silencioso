@@ -5,6 +5,7 @@ FA-2.2: cusip_resolver.py (CUSIP -> ticker con vigencia temporal).
 FA-2.3: relationships.py (Column 7 -> OTHERMANAGER2.SEQUENCENUMBER).
 FA-2.4: amendments.py (canonical snapshot composicional).
 NIPC:  sec13f_list.py (SEC Official List 13(f) parser fixed-width 80).
+NIPC:  security_identity.py (C1-revisada: canonical_security).
 
 Fuera de FA-2.4: NIPC, breadth, clasificacion, cross-validation N-PORT
 (post Gate FA-2).
@@ -90,6 +91,27 @@ from .sec13f_list import (
     parse_official_list_text,
     resolve_eligibility,
 )
+from .security_identity import (
+    ALL_KINDS as SI_ALL_KINDS,
+    ALL_STATUSES as SI_ALL_STATUSES,
+    DEFAULT_EQUIVALENCE_PATH,
+    EQUIVALENCE_COLUMNS,
+    KIND_CANONICAL_EQUIVALENCE as SI_KIND_CANONICAL_EQUIVALENCE,
+    KIND_CANONICAL_FIGI as SI_KIND_CANONICAL_FIGI,
+    KIND_OBSERVED_CUSIP_ONLY as SI_KIND_OBSERVED_CUSIP_ONLY,
+    KIND_UNRESOLVED as SI_KIND_UNRESOLVED,
+    STATUS_AMBIGUOUS as SI_STATUS_AMBIGUOUS,
+    STATUS_CANONICAL as SI_STATUS_CANONICAL,
+    STATUS_CONFLICT as SI_STATUS_CONFLICT,
+    STATUS_OBSERVED_ONLY as SI_STATUS_OBSERVED_ONLY,
+    STATUS_UNRESOLVED as SI_STATUS_UNRESOLVED,
+    compute_identity_coverage,
+    load_crosswalk_internal,
+    load_cusip_equivalence,
+    observed_security_key,
+    resolve_batch_identities,
+    resolve_security_identity,
+)
 
 __all__ = [
     "filter_by_period", "CANONICAL_PERIOD_FIELD", "FULL_PERIOD",
@@ -100,6 +122,15 @@ __all__ = [
     "SEC13F_LIST_STATUS_ACTIVE", "SEC13F_LIST_STATUS_ADDED",
     "SEC13F_LIST_STATUS_CONFLICT", "SEC13F_LIST_STATUS_DELETED",
     "SEC13F_LIST_STATUS_NOT_IN_LIST",
+    "resolve_security_identity", "resolve_batch_identities",
+    "compute_identity_coverage", "observed_security_key",
+    "load_cusip_equivalence", "load_crosswalk_internal",
+    "EQUIVALENCE_COLUMNS", "DEFAULT_EQUIVALENCE_PATH",
+    "SI_ALL_STATUSES", "SI_ALL_KINDS",
+    "SI_STATUS_CANONICAL", "SI_STATUS_OBSERVED_ONLY", "SI_STATUS_UNRESOLVED",
+    "SI_STATUS_AMBIGUOUS", "SI_STATUS_CONFLICT",
+    "SI_KIND_CANONICAL_FIGI", "SI_KIND_CANONICAL_EQUIVALENCE",
+    "SI_KIND_OBSERVED_CUSIP_ONLY", "SI_KIND_UNRESOLVED",
     "load_exceptions", "resolve_cusip", "resolve_batch",
     "REQUIRED_COLUMNS", "FORBIDDEN_SOURCES", "VALID_VERIFIED_BY",
     "DEFAULT_EXCEPTIONS_PATH",
