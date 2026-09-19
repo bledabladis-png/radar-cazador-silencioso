@@ -1310,3 +1310,25 @@ Referencia: prompt maestro v6.30, secciones 11.17 a 11.19 y 15.21. Nueve fixes a
 - **Incidente resuelto:** CRLF->LF en `baseline_output.txt`, hash regenerado, `git commit --amend`.
 - **Estado:** Fase A cerrada. Gate-NIPC.2 SIGUE BLOQUEADO por thresholds. Sin push.
 - **Siguiente fase autorizada:** propuesta THRESHOLD_1/THRESHOLD_2 con evidencia, o ejecucion OpenFIGI over unresolved-only (a dictamen del auditor).
+
+
+## IAE NIPC - Micro-gate Coverage Contract Normalization (2026-09-19)
+
+- **Origen:** dictamen del auditor sobre coverage baseline (Issue ABIERTO: circularidad `operational_universe`).
+- **Cadena de fases:** F2.1 -> F2.1-bis -> F2.2 -> F2.3 -> F2.4.
+- **Estado:**
+  - F2.1 PASS (eda67ef). Inventario 3 conceptos: TARGET/RESOLVED/PAIRED no existen explicitamente en v1.0.
+  - F2.1-bis PASS (4659ce1). Ninguna fuente de identidad en disco cumple (CUSIP + radar USA + independencia). Camino B declarado: `TARGET_CUSIP_REGISTRY = NOT AVAILABLE`.
+  - F2.2 NO GO CON CAMBIOS OBLIGATORIOS (d4a926e + dictamen). Propuesta v1.1 resolvia algebraicamente pero no ontologicamente. 8 cambios obligatorios para v1.2.
+  - F2.3 pendiente.
+  - F2.4 NO AUTORIZADA.
+- **Hallazgo colateral:** `mapping_coverage 90.91% (220/242)` de la policy v1.0 L115 sale exactamente de `etf_holdings.csv`, parte del crosswalk evaluado. Confirmacion numerica de la circularidad.
+- **Reordenacion propuesta del pipeline (a dictamen):** baseline -> RADAR_TARGET_REGISTRY (via OpenFIGI) -> policy v1.2 -> medicion -> thresholds.
+- **Estado de gates:** THRESHOLD_1/2 UNDEFINED. OpenFIGI NO AUTORIZADO. Gate-NIPC.2 BLOQUEADO. Gate-NIPC.3 NO AUTORIZADO. Policy v1.0 intacta (hash 57f2d01f...).
+- **Documentos:**
+  - `docs/auditoria/INSTITUTIONAL_ACCUMULATION_NIPC_GATE0_COVERAGE_CONTRACT_INVENTARIO.md`
+  - `docs/auditoria/INSTITUTIONAL_ACCUMULATION_NIPC_F21BIS_FUENTES_IDENTIDAD.md`
+  - `docs/auditoria/NIPC_COVERAGE_POLICY_V11_PROPUESTA.md` (NO GO)
+  - `docs/auditoria/INSTITUTIONAL_ACCUMULATION_NIPC_GATE0_COVERAGE_BASELINE_DICTAMEN.md`
+- **Commits:** eda67ef, d4a926e, 4659ce1.
+- **Sin push.** 55 commits locales ahead.

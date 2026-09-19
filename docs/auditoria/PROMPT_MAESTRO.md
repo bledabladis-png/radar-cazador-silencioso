@@ -1,8 +1,8 @@
-# PROMPT MAESTRO v6.37 - INGENIERO SUPERVISOR DEL RADAR DE ROTACION SECTORIAL
+# PROMPT MAESTRO v6.38 - INGENIERO SUPERVISOR DEL RADAR DE ROTACION SECTORIAL
 
-Actualizado: 2026-09-19 (post IAE NIPC C1+C4-revisadas + filer continuity CERRADO + dictamen TOP 50 + Q-CUR cerrado + coverage baseline Fase A cerrada. 49 commits locales por pushear. HEAD e9fd830)
+Actualizado: 2026-09-19 (post IAE NIPC C1+C4-revisadas + filer continuity CERRADO + dictamen TOP 50 + Q-CUR cerrado + coverage baseline Fase A cerrada + micro-gate Coverage Contract Normalization abierto. 55 commits locales por pushear. HEAD 4659ce1)
 Estado: Operativo al 100% - 10 contratos temporales (FU-021-5 + FU-021-3C-bis) - 911 tests locales + 2 skipped - 0 warnings - Gate 10/10 - Deuda ALTA/MEDIA/BAJA activa: 0
-Commit de referencia: e9fd830 (origin/main HEAD al redactar; el propio commit v6.37 sera HEAD tras push)
+Commit de referencia: 4659ce1 (origin/main HEAD al redactar; el propio commit v6.38 sera HEAD tras push)
 
 ---
 
@@ -919,6 +919,106 @@ CUSIPs poblados (equity Q1 2026):
 
 **Regla:** este ciclo NO fija thresholds. Gate-NIPC.2 SIGUE BLOQUEADO. THRESHOLD_1/2 UNDEFINED. Sin OpenFIGI. Sin push.
 
+### 11.27. Micro-gate Coverage Contract Normalization (2026-09-19)
+
+**Origen:** dictamen del auditor sobre coverage baseline (commit 02b077c, Issue ABIERTO: circularidad `operational_universe`).
+
+**Hallazgo:** `NIPC_COVERAGE_POLICY.md` v1.0 define `operational_universe` incorporando `ticker_mapped`, y despues lo usa para medir coverage. Resultado: `coverage = mapped / total` se vuelve 1.0000 por construccion sobre ese universo. Medido en baseline (commit e9fd830): TECHNICAL_RADAR y OPERATIONAL_EQUITY ambos con coverage = 1.0000.
+
+**Cadena de fases autorizada por el auditor:**
+
+  - F2.1   Gate 0 documental: inventario de los 3 conceptos en la policy v1.0.
+  - F2.1-bis  Fuentes de identidad: verificar existencia de RADAR_TARGET_REGISTRY independiente del crosswalk evaluado.
+  - F2.2   Propuesta v1.1 (borrador).
+  - F2.3   Dictamen del auditor sobre la propuesta.
+  - F2.4   Aplicacion de v1.1 sobre `NIPC_COVERAGE_POLICY.md` (solo si F2.3 aprueba).
+
+**F2.1 PASS (commit eda67ef) - inventario 3 conceptos:**
+
+  Inventario linea-por-linea de TARGET / RESOLVED / PAIRED en `NIPC_COVERAGE_POLICY.md` v1.0 (hash 57f2d01f...).
+
+  - TARGET: 0 ocurrencias literales. Existe `operational_universe` que ya incluye `ticker_mapped`.
+  - RESOLVED: 0 ocurrencias literales. Existe `mapped / total` sin definir ninguno de los dos terminos.
+  - PAIRED: 13 ocurrencias. Existe con 2 metricas pero sin universo base ni criterio de emparejamiento explicito.
+
+**F2.1-bis PASS (commit 4659ce1) - Camino B declarado:**
+
+  Ninguna fuente en disco cumple simultaneamente:
+    (a) clave CUSIP/FIGI comparable con 13F,
+    (b) ticker del radar USA,
+    (c) independiente del crosswalk evaluado.
+
+  Fuentes verificadas:
+
+    - `data/mappings/isin_ticker_map.csv`: 49 tickers, 0 sin sufijo EU.
+    - `data/etf_holdings.csv`: 220/242 tickers USA, pero ES el crosswalk evaluado.
+    - `data/amundi_yahoo_mapping.csv`: 0 tickers USA.
+    - `data/index_holdings.csv`: sin columna CUSIP/identifier.
+    - `data/mappings/cusip_equivalence.csv`: 0 filas por diseno.
+    - `data/mappings/cusip_ticker_exceptions.csv`: 3 filas, parte del crosswalk.
+
+  Hallazgo colateral: el 90.91% (220/242) que la policy v1.0 L115 cita como
+  `mapping_coverage (radar USA)` sale exactamente de `etf_holdings.csv`.
+  Es decir, la policy cita como "cobertura" el ratio del propio insumo del
+  resolver. Confirmacion numerica de la circularidad.
+
+  Declaracion formal: `TARGET_CUSIP_REGISTRY = NOT AVAILABLE (2026-09-19)`.
+
+**F2.2 NO GO CON CAMBIOS OBLIGATORIOS (commit d4a926e + dictamen):**
+
+  La propuesta v1.1 separaba TARGET / RESOLVED / PAIRED conceptualmente bien,
+  pero definia:
+
+    TARGET_UNIVERSE = radar_equities ^ section13f_eligible ^ EQUITY
+
+  con claves incompatibles:
+    - `radar_equities`: {ticker} (columnas de `stock_prices.parquet`)
+    - `section13f_eligible`: {CUSIP} (SEC Official List)
+    - `EQUITY`: {ticker} via `get_instrument_class`
+
+  Intersectar estas claves requiere ejecutar el resolver que se pretende
+  medir. Reproduce la circularidad en forma ontologica (H-TARGET-1 + H-TARGET-2).
+
+**8 cambios obligatorios para v1.2 (dictamen F2.2):**
+
+  1. RADAR_TARGET_REGISTRY con identidad estable independiente del resolver evaluado.
+  2. TARGET_UNIVERSE sobre clave comun a CUSIP/13F.
+  3. RESOLVED_UNIVERSE con enums v1.3: CANONICAL_FIGI / CANONICAL_EQUIVALENCE.
+  4. PAIRED_UNIVERSE: `canonical_security` comun, sin "or observed_security_key".
+  5. PAIRED_WEIGHTED_SHARE_COVERAGE: convencion Q4/Q1 inequivoca.
+  6. Resolver contradiccion filer continuity (seccion 10.bis).
+  7. Corregir referencia "Prompt Maestro v6.35" en policy L225.
+  8. Trazabilidad explicita del cambio semantico v1.0 -> v1.1 -> v1.2.
+
+**Reordenacion propuesta del pipeline (a dictamen del auditor):**
+
+  v1.0 (descartado):    baseline -> OpenFIGI -> thresholds
+
+  v1.1 (F2.2, NO GO):   baseline -> policy v1.1 -> OpenFIGI -> thresholds
+
+  v1.2 (propuesta):     baseline
+                        -> RADAR_TARGET_REGISTRY (via OpenFIGI como fuente)
+                        -> policy v1.2
+                        -> medicion sobre TARGET independiente
+                        -> thresholds
+
+  Es decir, OpenFIGI pasa de ser mejora posterior de coverage a ser fuente
+  primaria para construir el target registry, antes de fijar thresholds.
+
+**Documentos generados:**
+
+  - `docs/auditoria/INSTITUTIONAL_ACCUMULATION_NIPC_GATE0_COVERAGE_CONTRACT_INVENTARIO.md`
+  - `docs/auditoria/INSTITUTIONAL_ACCUMULATION_NIPC_F21BIS_FUENTES_IDENTIDAD.md`
+  - `docs/auditoria/NIPC_COVERAGE_POLICY_V11_PROPUESTA.md` (NO GO)
+  - `docs/auditoria/INSTITUTIONAL_ACCUMULATION_NIPC_GATE0_COVERAGE_BASELINE_DICTAMEN.md`
+
+**Commits:** eda67ef (F2.1), d4a926e (F2.2), 4659ce1 (F2.1-bis).
+
+**Estado Gate-NIPC.2:** SIGUE BLOQUEADO. THRESHOLD_1/2 UNDEFINED.
+OpenFIGI NO AUTORIZADO todavia. `NIPC_COVERAGE_POLICY.md` v1.0 intacta (hash 57f2d01f...).
+
+---
+
 ## SECCION 12 - LIMITACIONES CONOCIDAS
 20 tickers .L sin provider oficial -> Aceptado.
 
@@ -1213,10 +1313,11 @@ Select-String -SimpleMatch desactiva regex → el | se trata como literal. No us
 | Produccion GH Actions | OK (cron `0 4 * * *` verificado 2026-09-17) |
 | Arquitectura | Modular: 19 src/report/ + 16 src/pipeline/ + 10 src/temporal_contracts/ + 7 src/institutional_accumulation/sec_13f/ + 2 sec_13f/identity nuevos (sec13f_list, security_identity) + 2 aggregation/ (delta_shares, nipc) + 5 indicators/mte/ + 4 indicators/darkpool/ |
 | Contratos temporales | 10 (FU-021-5 = 9, FU-021-3C-bis = +1 SPOT_COMMODITY) |
-| Modulo IAE (SEC 13F) | FA-1+FA-2 cerrados. NIPC implementado (spec v1.4). Filer continuity CERRADO. Q-CUR cerrado (3 COM). Coverage baseline Fase A cerrada. Gate-NIPC.2 BLOQUEADO por thresholds |
+| Modulo IAE (SEC 13F) | FA-1+FA-2 cerrados. NIPC implementado (spec v1.4). Filer continuity CERRADO. Q-CUR cerrado (3 COM). Coverage baseline Fase A cerrada. Micro-gate Coverage Contract Normalization abierto (F2.1 PASS, F2.1-bis PASS, F2.2 NO GO). Gate-NIPC.2 BLOQUEADO por thresholds |
+| RADAR_TARGET_REGISTRY | NOT AVAILABLE (2026-09-19). Ninguna fuente de identidad en disco cumple (CUSIP + radar USA + independencia del crosswalk evaluado). Camino B declarado. |
 | Coverage baseline NIPC | Fase A cerrada 2026-09-19. OP_EQUITY: paired_security_cov=0.9909, paired_weighted_cov=0.9864. THRESHOLD_1/2 UNDEFINED |
 | .git size | ~13 MB |
-| HEAD | e9fd830 (49 commits locales ahead de origin/main) |
+| HEAD | 4659ce1 (55 commits locales ahead de origin/main) |
 
 ### 15.1. Hitos del ciclo FU-021-3C-bis (2026-09-16)
 
@@ -1683,6 +1784,52 @@ Estado: Gate-NIPC.2 SIGUE BLOQUEADO por coverage/thresholds. THRESHOLD_1/2 UNDEF
 
 Commit local: e9fd830.
 
+### 15.28. Ciclo micro-gate Coverage Contract Normalization (2026-09-19)
+
+Origen: dictamen del auditor sobre coverage baseline (Issue ABIERTO: circularidad `operational_universe`).
+
+Ciclo abierto en 4 fases: F2.1 (inventario) -> F2.1-bis (fuentes de identidad) -> F2.2 (propuesta v1.1) -> F2.3 (dictamen) -> F2.4 (aplicacion).
+
+Resultados:
+
+  F2.1 PASS (commit eda67ef). Inventario linea-por-linea de los 3 conceptos en `NIPC_COVERAGE_POLICY.md` v1.0:
+    - TARGET: 0 ocurrencias literales.
+    - RESOLVED: 0 ocurrencias literales.
+    - PAIRED: 13 ocurrencias con definicion vaga (sin universo base ni criterio de emparejamiento).
+
+  F2.1-bis PASS (commit 4659ce1). Inventario de fuentes de identidad:
+    - `isin_ticker_map.csv`: 0 tickers USA.
+    - `etf_holdings.csv`: 220/242 USA, pero parte del crosswalk evaluado.
+    - `amundi_yahoo_mapping.csv`: 0 tickers USA.
+    - `index_holdings.csv`: sin columna CUSIP/identifier.
+    - Ninguna fuente cumple (CUSIP + radar USA + independencia).
+    - Declaracion: `TARGET_CUSIP_REGISTRY = NOT AVAILABLE`.
+
+  F2.2 NO GO CON CAMBIOS OBLIGATORIOS (commit d4a926e + dictamen). La propuesta v1.1 separaba TARGET/RESOLVED/PAIRED conceptualmente bien, pero definia TARGET con claves incompatibles (ticker ^ CUSIP ^ ticker-por-class). Intersectar requiere ejecutar el resolver que se pretende medir. 8 cambios obligatorios para v1.2.
+
+  F2.3 pendiente. F2.4 NO AUTORIZADA.
+
+Hallazgo colateral: el 90.91% (220/242) que `NIPC_COVERAGE_POLICY.md` v1.0 L115 cita como `mapping_coverage` sale exactamente de `etf_holdings.csv`, parte del crosswalk evaluado. La policy cita como cobertura el ratio del propio insumo del resolver.
+
+Reordenacion propuesta del pipeline (a dictamen del auditor):
+
+  baseline
+    -> RADAR_TARGET_REGISTRY (via OpenFIGI como fuente)
+    -> policy v1.2
+    -> medicion sobre TARGET independiente
+    -> thresholds
+
+Thresholds THRESHOLD_1/2 siguen UNDEFINED. Gate-NIPC.2 BLOQUEADO.
+`NIPC_COVERAGE_POLICY.md` v1.0 intacta (hash 57f2d01f...).
+
+Cadena de commits:
+
+  eda67ef  Gate 0 documental contrato cobertura - inventario 3 conceptos
+  d4a926e  F2.2 propuesta v1.1 - circularidad + TARGET/RESOLVED/PAIRED
+  4659ce1  F2.1-bis fuentes identidad - Camino B RADAR_TARGET_REGISTRY NOT AVAILABLE
+
+---
+
 ## SECCION 16 - FRASE GUIA
 "Determinista, descriptivo, auditado. Paso a paso. Documentar. Saber parar."
 
@@ -1728,4 +1875,4 @@ Pregunta final: "Que hacemos?"
 
 No empieces a proponer tareas sin antes confirmar la asimilacion completa.
 
-Fin del prompt maestro v6.37. Commit de referencia: e9fd830. Fecha: 2026-09-19.
+Fin del prompt maestro v6.38. Commit de referencia: 4659ce1. Fecha: 2026-09-19.
