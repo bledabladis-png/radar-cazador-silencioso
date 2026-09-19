@@ -849,3 +849,33 @@ Referencia: prompt maestro v6.30, secciones 11.17 a 11.19 y 15.21. Nueve fixes a
   - Observaciones no bloqueantes de FA-2.3: 922 CIK-like, patron pico 25 edges.
 - **Reabrir ciclo:** NIPC, Breadth, New/Exit, clasificacion (post Gate FA-2);
   curacion CUSIP como ciclo paralelo.
+
+
+## IAE CUSIP curation - Q1 2026 (RESUELTO 2026-09-19)
+
+- **Origen:** deuda posterior declarada por Gate FA-2 (INSTITUTIONAL_ACCUMULATION_GATE_FA2_DICTAMEN.md, P-GATE.2).
+- **Alcance:** poblar data/mappings/cusip_ticker_exceptions.csv para el universo 13F Q1 2026 (PERIODOFREPORT=2026-03-31).
+- **Gate 0 empirico:**
+  - Probe Q1 2026 (D:\13f_probe\processed\2026Q1\INFOTABLE.parquet, 3,822,885 filas).
+  - etf_holdings.csv (526 filas; columnas etf/ticker/identifier/weight).
+  - Los 5 casos (DD, HON, XOM, FDXF, HONA) se dividen en 2 grupos: discrepancia temporal / corporate-action (DD, HON, XOM) y entidades post-Q1 (HONA, FDXF).
+  - Correccion al informe Gate 0: la afirmacion "CUSIP local desactualizado vs CUSIP 13F vigente" no se sostiene para XOM (30233Q108 no observado en 13F Q1 2026; no se presume variante historica de 30231G102 sin evidencia adicional).
+- **Dictamenes aplicados (Q-CUR-1 / Q-CUR-2):**
+  - CALL/PUT (26614N902, 26614N952, 438516906, 438516956, 30231G902, 30231G952) excluidos del crosswalk de equity. Derivados preservados en el 13F; mapping subyacente en modelo separado (no implementado en este ciclo).
+  - HONA / FDXF excluidos del CSV Q1 2026 (posteriores a PERIODOFREPORT). Documentar como FUTURE_CORPORATE_ACTION / POST_Q1_ENTITY.
+- **Alcance minimo ejecutado: 3 filas COM.**
+  - 26614N102 -> DD.
+  - 438516106 -> HON (reverse split 2:1 efectivo 2026-06-29 documentado en reason; no se introduce la frontera en el rango).
+  - 30231G102 -> XOM.
+  - valid_from=valid_to=2026-03-31 (no se inventan fechas historicas no auditadas).
+  - source=SEC-EDGAR, verified_by=manual, title_of_class=COM.
+- **Commits del ciclo:**
+  - e4a6576 informe INSTITUTIONAL_ACCUMULATION_CUSIP_CURATION_INFORME.md.
+  - e8d7e53 feat populate CSV (3 COM).
+- **Mini-gate verificado:** resolve_cusip devuelve DD/HON/XOM para 2026-03-31. 820 passed + 2 skipped. pyflakes limpio tras limpieza de _probe_*.py (13 ficheros untracked de ciclos anteriores).
+- **Estado:** RESUELTO 2026-09-19.
+- **Deuda posterior:**
+  - Ampliar valid_from/valid_to cuando exista evidencia historica suficiente.
+  - Poblar HONA / FDXF cuando aparezcan en un 13F posterior con evidencia primaria.
+  - Modelo separado para mapping de derivados CALL/PUT -> subyacente (no implementado).
+- **Reabrir ciclo:** ampliacion temporal del crosswalk; NIPC (desbloqueado respecto de FA-2, pendiente propio Gate).
