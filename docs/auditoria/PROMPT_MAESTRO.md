@@ -1,8 +1,8 @@
-# PROMPT MAESTRO v6.38 - INGENIERO SUPERVISOR DEL RADAR DE ROTACION SECTORIAL
+# PROMPT MAESTRO v6.39 - INGENIERO SUPERVISOR DEL RADAR DE ROTACION SECTORIAL
 
-Actualizado: 2026-09-19 (post IAE NIPC C1+C4-revisadas + filer continuity CERRADO + dictamen TOP 50 + Q-CUR cerrado + coverage baseline Fase A cerrada + micro-gate Coverage Contract Normalization abierto. 55 commits locales por pushear. HEAD 4659ce1)
+Actualizado: 2026-09-19 (post IAE NIPC C1+C4-revisadas + filer continuity CERRADO + dictamen TOP 50 + Q-CUR cerrado + coverage baseline Fase A cerrada + micro-gate Coverage Contract Normalization + F2.2-v2 propuesta v1.2 redactada. 59 commits locales por pushear. HEAD 0518b96)
 Estado: Operativo al 100% - 10 contratos temporales (FU-021-5 + FU-021-3C-bis) - 911 tests locales + 2 skipped - 0 warnings - Gate 10/10 - Deuda ALTA/MEDIA/BAJA activa: 0
-Commit de referencia: 4659ce1 (origin/main HEAD al redactar; el propio commit v6.38 sera HEAD tras push)
+Commit de referencia: 0518b96 (origin/main HEAD al redactar; el propio commit v6.39 sera HEAD tras push)
 
 ---
 
@@ -1017,6 +1017,35 @@ CUSIPs poblados (equity Q1 2026):
 **Estado Gate-NIPC.2:** SIGUE BLOQUEADO. THRESHOLD_1/2 UNDEFINED.
 OpenFIGI NO AUTORIZADO todavia. `NIPC_COVERAGE_POLICY.md` v1.0 intacta (hash 57f2d01f...).
 
+### 11.28. IAE NIPC F2.2-v2 - Propuesta v1.2 redactada (2026-09-19)
+
+**Origen:** dictamen F2.2 NO GO CON CAMBIOS OBLIGATORIOS. Aplica los 8 cambios
+obligatorios del dictamen mas el Camino B declarado por F2.1-bis.
+
+**Documento:** docs/auditoria/NIPC_COVERAGE_POLICY_V12_PROPUESTA.md (commit 0518b96).
+Estado: BORRADOR. No vigente. No sustituye a la policy v1.0.
+
+**Contenido clave:**
+- RADAR_TARGET_REGISTRY = NOT AVAILABLE (Camino B, 2026-09-19).
+- TARGET_UNIVERSE = semantico, no materializable hoy sin registry.
+- RESOLVED_UNIVERSE con enums v1.3 (CANONICAL_FIGI | CANONICAL_EQUIVALENCE).
+- PAIRED_UNIVERSE por canonical_security comun (sin observed_security_key).
+- PAIRED_WEIGHTED_SHARE_COVERAGE con convencion Q4/Q1 = max() por security.
+- coverage = NOT_MEASURABLE (por ausencia de denominador, no por valores bajos).
+- filer continuity reafirmado como control de integridad, no threshold.
+- Correccion de referencia Prompt Maestro v6.35 -> ruta canonica sin version.
+
+**Cadena F2:**
+- F2.1 PASS (eda67ef).
+- F2.1-bis PASS (4659ce1).
+- F2.2 NO GO CON CAMBIOS (d4a926e).
+- F2.2-v2 borrador redactado (0518b96).
+
+**No toca:** motor NIPC, C2, thresholds, OpenFIGI, baseline evidencia, spec v1.4, policy v1.0.
+
+**Estado:** F2.3 PENDIENTE EXTERNO. F2.4 NO AUTORIZADA.
+Gate-NIPC.2 BLOQUEADO. Gate-NIPC.3 NO AUTORIZADO.
+
 ---
 
 ## SECCION 12 - LIMITACIONES CONOCIDAS
@@ -1828,6 +1857,31 @@ Cadena de commits:
   d4a926e  F2.2 propuesta v1.1 - circularidad + TARGET/RESOLVED/PAIRED
   4659ce1  F2.1-bis fuentes identidad - Camino B RADAR_TARGET_REGISTRY NOT AVAILABLE
 
+### 15.29. Ciclo IAE F2.2-v2 - Propuesta v1.2 (2026-09-19)
+
+Origen: dictamen F2.2 NO GO CON CAMBIOS OBLIGATORIOS (texto de sesion,
+preservado en TRANSFER_SESION_2026-09-19_POST_F22.md, commit d2e03a1).
+
+Entregable: docs/auditoria/NIPC_COVERAGE_POLICY_V12_PROPUESTA.md
+(commit 0518b96, 361 lineas, LF puro, sin BOM).
+
+Aplica los 8 cambios obligatorios del dictamen F2.2:
+1. RADAR_TARGET_REGISTRY con identidad estable (NOT AVAILABLE, Camino B).
+2. TARGET_UNIVERSE sobre clave comun a CUSIP/13F.
+3. RESOLVED_UNIVERSE con enums v1.3 (FIGI / EQUIVALENCE).
+4. PAIRED_UNIVERSE por canonical_security comun.
+5. PAIRED_WEIGHTED_SHARE_COVERAGE con convencion Q4/Q1 inequivoca (max).
+6. Contradiccion filer continuity resuelta: no es condicion de READY.
+7. Referencia "Prompt Maestro v6.35" -> ruta canonica sin version.
+8. Trazabilidad v1.0 -> v1.1 -> v1.2 explicita en seccion 0.
+
+Verificacion: 911 passed + 2 skipped; pyflakes limpio; compileall OK.
+Policy v1.0 intacta (hash 57f2d01f...). Sin push.
+
+Estado: F2.3 PENDIENTE EXTERNO. F2.4 NO AUTORIZADA.
+THRESHOLD_1/2 UNDEFINED. OpenFIGI NO AUTORIZADO.
+Gate-NIPC.2 BLOQUEADO. Gate-NIPC.3 NO AUTORIZADO.
+
 ---
 
 ## SECCION 16 - FRASE GUIA
@@ -1875,4 +1929,4 @@ Pregunta final: "Que hacemos?"
 
 No empieces a proponer tareas sin antes confirmar la asimilacion completa.
 
-Fin del prompt maestro v6.38. Commit de referencia: 4659ce1. Fecha: 2026-09-19.
+Fin del prompt maestro v6.39. Commit de referencia: 0518b96. Fecha: 2026-09-19.
