@@ -1,8 +1,8 @@
-# PROMPT MAESTRO v6.35 - INGENIERO SUPERVISOR DEL RADAR DE ROTACION SECTORIAL
+# PROMPT MAESTRO v6.36 - INGENIERO SUPERVISOR DEL RADAR DE ROTACION SECTORIAL
 
-Actualizado: 2026-09-19 (post IAE FA-1 + FA-2: SEC 13F core cerrado y pusheado. NIPC desbloqueado respecto de FA-2. HEAD 9543de5)
-Estado: Operativo al 100% - 10 contratos temporales (FU-021-5 + FU-021-3C-bis) - 820 tests locales + 2 skipped - 0 warnings - Gate 10/10 - Deuda ALTA/MEDIA/BAJA activa: 0
-Commit de referencia: 9543de5 (origin/main HEAD al redactar; el propio commit v6.35 sera HEAD tras push)
+Actualizado: 2026-09-19 (post IAE NIPC C1+C4-revisadas + filer continuity CERRADO + dictamen TOP 50. 45 commits locales por pushear. HEAD 9d4a81e)
+Estado: Operativo al 100% - 10 contratos temporales (FU-021-5 + FU-021-3C-bis) - 911 tests locales + 2 skipped - 0 warnings - Gate 10/10 - Deuda ALTA/MEDIA/BAJA activa: 0
+Commit de referencia: 9d4a81e (origin/main HEAD al redactar; el propio commit v6.36 sera HEAD tras push)
 
 ---
 
@@ -217,7 +217,11 @@ D:\Macro_Sectorial
 | +-- macro_manual_loader.py
 | +-- report/ (19 modulos - refactor C1)
 | +-- pipeline/ (16 modulos - refactor C2)
-| +-- institutional_accumulation/ (IAE: sec_13f/ con schema, downloader, parser, storage, manifest, ingest)
+| +-- institutional_accumulation/ (IAE)
+|  +-- sec_13f/ (schema, downloader, parser, storage, manifest, ingest)
+|  |  +-- identity/ (temporal_filter, cusip_resolver, relationships, amendments,
+|  |                 sec13f_list, security_identity)
+|  +-- aggregation/ (delta_shares, nipc)
 +-- data/
 | +-- providers/ (29 providers; +futures.py OilPriceAPI FU-021-3C-bis)
 | +-- macro_manual/ (12 CSVs FRED)
@@ -270,6 +274,10 @@ text
 - **`indicators/darkpool/` es paquete con 4 modulos (DT3): `darkpool.py` (orquestador + API publica + re-exports + `__all__`), `darkpool_scoring.py` (robust_zscore, rolling_percentile, classify_darkpool, _compute_z_for_window), `darkpool_io.py` (_get_all_tickers, _get_volume_from_df), `darkpool_history.py` (_backfill_history). API publica preservada: `from indicators.darkpool import compute_darkpool_signals`. Re-exports con noqa: F401 para preservar la API interna historica.**
 
 ---
+
+- **`src/institutional_accumulation/aggregation/` es paquete puro** (NIPC, spec v1.4 seccion 11): `delta_shares.py` (reported_position_unit + delta_shares, match key sin report_period) y `nipc.py` (compute_nipc + coverage pairwise + status). Contrato de pureza: NO leer/escribir ficheros, NO datetime.now(), deterministas.
+- **`src/institutional_accumulation/sec_13f/identity/security_identity.py`** resuelve `observed_CUSIP -> canonical_security` (C1-revisada). Dos capas: `security_resolution_status` (5) + `canonical_security_kind` (4). `ticker:<ticker>` PROHIBIDO como canonical_security. Prohibida inferencia sin entrada explicita en `data/mappings/cusip_equivalence.csv`.
+- **`src/institutional_accumulation/sec_13f/identity/sec13f_list.py`** parser SEC Official List 13(f) fixed-width 80. `section13f_eligible` con 5 estados (NOT_IN_LIST | DELETED | ADDED | ACTIVE | CONFLICT). NO interpreta pos 80.
 
 ## SECCION 5 - FLUJO DIARIO (run.py)
 Fase 0 main() reference_date = datetime.now()
@@ -780,6 +788,56 @@ Manifest v1 con 3 niveles verificable. 3 flags validation a True.
 - Gate FA-2 informe: `docs/auditoria/INSTITUTIONAL_ACCUMULATION_GATE_FA2_INFORME.md`.
 - Gate FA-2 dictamen: `docs/auditoria/INSTITUTIONAL_ACCUMULATION_GATE_FA2_DICTAMEN.md`.
 
+### 11.22. IAE NIPC C1 + C4-revisadas (2026-09-19)
+
+**Ciclo:** dictamen Gate-NIPC.1 v1.1 PASS CONDICIONADO + dictamen probe end-to-end.
+
+**C1-revisada:** `canonical_security` NO es ticker. Dos capas de estado:
+  - `security_resolution_status` (5): CANONICAL | OBSERVED_ONLY | UNRESOLVED | AMBIGUOUS | CONFLICT.
+  - `canonical_security_kind` (4): CANONICAL_FIGI | CANONICAL_EQUIVALENCE | OBSERVED_CUSIP_ONLY | UNRESOLVED.
+  `observed_security_key = cusip:<CUSIP>`. `canonical_security = NULL` salvo `status == CANONICAL`.
+  Tabla `data/mappings/cusip_equivalence.csv` (esquema: CUSIP_A, canonical_security, valid_from, valid_to, source, reason, verified_by, source_document). 0 filas por diseno.
+
+**C4-revisada:** identity temporal validity != metadata temporal validity.
+  - `shareClassFIGI` estable frente a corporate actions.
+  - `TEMPORAL_UNVERIFIED` aplica SOLO a metadata (ticker), no a identidad FIGI.
+
+**Spec NIPC v1.4 activa:** `docs/auditoria/INSTITUTIONAL_ACCUMULATION_NIPC_ESPECIFICACION.md`. Versiones v1.0-v1.3 preservadas como `_v1.X.md`.
+
+### 11.23. IAE filer continuity CERRADO como caracterizacion (2026-09-19)
+
+**Dictamen TOP 50 PASS.** Ciclo de caracterizacion CERRADO.
+
+**Hallazgo Vanguard Q4 2025 -> Q1 2026:**
+  - Padre VANGUARD GROUP INC (CIK 0000102909): 13F-HR -> 13F-NT.
+  - Q1: 2 filiales nuevas con HR (VANGUARD CAPITAL MGMT 35.329B, VANGUARD PORTFOLIO MGMT 21.030B) + FIDUCIARY TRUST (4.124B).
+  - Modelo Q4: padre HR + filiales NT. Modelo Q1: padre NT + filiales HR.
+  - Match key C2 produce EXIT padre + NEW filiales. No es bug: implementa C2 fielmente.
+  - Efecto: nipc_sole ~ -41.16B, nipc_dfnd ~ +41.28B, cancelacion.
+
+**Mini-probes CERRADOS:**
+  - TOP 20: 3/24 FILER_DISCONTINUITY (12.5%), todas Vanguard.
+  - TOP 50: 4/54 FILER_DISCONTINUITY (7.4%), todas Vanguard.
+  - 0 nuevos patrones fuera de Vanguard.
+
+**Decisiones del auditor:**
+  - Filer continuity = CONTROL DE INTEGRIDAD / DIAGNOSTICO, NO threshold.
+  - `filer_status` por presencia documental (NO por SSHPRNAMT > 0). Nueva dimension `position_mass_status` (HAS_SHARES | ZERO_SHARES | NO_CANONICAL_HOLDINGS).
+  - NT -> OTHERMANAGER -> HR = EVIDENCIA DOCUMENTAL. NO inferencia economica.
+  - Reconciliacion NT-HR NO AUTORIZADA.
+
+### 11.24. Regla canonical_snapshot CONGELADA (2026-09-19)
+
+**Regla metodologica obligatoria:**
+
+  Todo agregado de SSHPRNAMT debe calcularse sobre el `canonical_snapshot` producido por `apply_amendments`. PROHIBIDO sumar SSHPRNAMT desde `INFOTABLE.parquet` filtrado por periodo cuando existan amendments RESTATEMENT.
+
+**Motivo:** bug detectado en informe mini-probe. Sumar raw duplica el HR original cuando existe RESTATEMENT posterior (ratio 1.988 en CIK 0002100119). El motor NIPC siempre opero sobre canonical_snapshot; solo el informe fue incorrecto.
+
+**Excepcion:** analisis de filings individuales (lineage, deteccion de supersedings). Ahi si se recorre raw, pero nunca se presenta como agregado.
+
+---
+
 ## SECCION 12 - LIMITACIONES CONOCIDAS
 20 tickers .L sin provider oficial -> Aceptado.
 
@@ -887,7 +945,7 @@ coverage por mercado en manifest. Toca FU-002 y FU-018, requiere dictamen audito
 Reabrir si: runs manuales se vuelven frecuentes, cron cambia de hora, o auditoria
 externa lo exige.
 
-K-INSTITUTIONAL-ACCUMULATION-01 (2026-09-19) -> FA-1 CERRADO + PUSHED. FA-2 CERRADO / PASS. NIPC desbloqueado respecto de FA-2.
+K-INSTITUTIONAL-ACCUMULATION-01 (2026-09-19) -> FA-1 CERRADO + PUSHED. FA-2 CERRADO / PASS. NIPC implementado (spec v1.4, 5 modulos + 91 tests). Filer continuity CERRADO. Gate-NIPC.2 BLOQUEADO por thresholds UNDEFINED. 45 commits locales por pushear.
 Origen: propuesta del usuario + ciclo de dictamenes del auditor externo.
 Documentos completos (9):
   - PROPUESTA: docs/auditoria/INSTITUTIONAL_ACCUMULATION_PROPUESTA.md
@@ -954,6 +1012,12 @@ O1 SPDR `Ultima fecha: N/D` (2026-09-18) -> WONT FIX / MONITORED. El render
 `Date`. Fallback `N/D` funciona. La fecha efectiva real esta visible en la seccion
 `Calidad, frescura y cobertura de datos` (`SSGA ETF Flow: YYYY-MM-DD`). Reabrir si
 otra seccion necesita la fecha exacta.
+
+Cobertura NIPC (2026-09-19) -> CERRADA COMO INSUFFICIENT. Crosswalk interno (3 curados + 526 ETFs) resuelve ~2% del universo 13F. Siguiente fase autorizada: coverage baseline + OpenFIGI over unresolved-only. Gate-NIPC.2 BLOQUEADO por thresholds UNDEFINED.
+
+Filer continuity (2026-09-19) -> CERRADA COMO CARACTERIZACION. Concentracion en Vanguard (4 discontinuidades en top 50). NO es threshold. Reconciliacion NT-HR NO AUTORIZADA. Regla canonical_snapshot CONGELADA.
+
+GHISALLO CIK 0001825214 (+765% Q4->Q1) -> PROBE DIAGNOSTICO AUTORIZADO, no bloqueante. Pendiente.
 
 ## SECCION 13 - DEUDA TECNICA
 Monolitos restantes:
@@ -1060,15 +1124,15 @@ Select-String -SimpleMatch desactiva regex → el | se trata como literal. No us
 | Fuentes europeas | 51 (Euronext 13 + Xetra 19 + BME 19) |
 | Fuente commodities | OilPriceAPI (BZ=F, CL=F, GC=F, HG=F, NG=F) |
 | Fuente term structure | CBOE (^VIX3M) |
-| Tests locales | 820 passed + 2 skipped |
+| Tests locales | 911 passed + 2 skipped |
 | Tests CI | ~610 collected con skips (parquet gitignored) |
 | Validation Gate | 10/10 |
 | pyflakes | 0 warnings |
 | compileall | OK |
 | Produccion GH Actions | OK (cron `0 4 * * *` verificado 2026-09-17) |
-| Arquitectura | Modular: 19 src/report/ + 16 src/pipeline/ + 10 src/temporal_contracts/ + 7 src/institutional_accumulation/sec_13f/ + 5 indicators/mte/ + 4 indicators/darkpool/ |
+| Arquitectura | Modular: 19 src/report/ + 16 src/pipeline/ + 10 src/temporal_contracts/ + 7 src/institutional_accumulation/sec_13f/ + 2 sec_13f/identity nuevos (sec13f_list, security_identity) + 2 aggregation/ (delta_shares, nipc) + 5 indicators/mte/ + 4 indicators/darkpool/ |
 | Contratos temporales | 10 (FU-021-5 = 9, FU-021-3C-bis = +1 SPOT_COMMODITY) |
-| Modulo IAE (SEC 13F) | FA-1 CERRADO+PUSHED. FA-2 CERRADO/PASS (2026-09-19). NIPC desbloqueado respecto de FA-2 |
+| Modulo IAE (SEC 13F) | FA-1+FA-2 cerrados. NIPC implementado (spec v1.4). Filer continuity CERRADO. Gate-NIPC.2 BLOQUEADO por thresholds |
 | .git size | ~13 MB |
 | HEAD | 9543de5 (origin/main tras push del ciclo FA-2) |
 
@@ -1457,6 +1521,49 @@ circunscrita a esa ventana horaria. El segundo caso (17:02 UTC) demostro que el 
 es cualquier run fuera de cron, no solo madrugada. Gate 0 con evidencia directa antes
 de cerrar como WONT FIX.
 
+### 15.23. Ciclo IAE NIPC (2026-09-19) - implementacion + dictamenes
+
+**Modulos implementados (5):**
+  - `identity/sec13f_list.py` + 24 tests (S1).
+  - `identity/security_identity.py` + 30 tests (S2).
+  - `aggregation/delta_shares.py` + 18 tests (S4).
+  - `aggregation/nipc.py` + 19 tests (S5).
+  - `data/mappings/cusip_equivalence.csv` (S3) + `aggregation/__init__.py`.
+
+**Specs:**
+  - Spec NIPC v1.4 activa (C1+C4-revisadas + filer continuity).
+  - Coverage policy `NIPC_COVERAGE_POLICY.md` (THRESHOLD_1/2 UNDEFINED).
+  - Versiones v1.0-v1.3 preservadas.
+
+**Dictamenes del auditor (4):**
+  - v1.1 (canonical_security + temporalidad).
+  - probe end-to-end (GO mini-probe filer continuity).
+  - mini-probe TOP 20 (GO condicionado + hallazgo cuantitativo).
+  - TOP 50 (filer continuity CERRADO) + addendum cuantitativo PASS.
+
+### 15.24. Ciclo IAE filer continuity (2026-09-19) - CERRADO
+
+**Mini-probes ejecutados:**
+  - TOP 20: 3/24 FILER_DISCONTINUITY (12.5%), todas Vanguard.
+  - TOP 50: 4/54 FILER_DISCONTINUITY (7.4%), todas Vanguard.
+  - 0 nuevos patrones fuera de Vanguard.
+
+**Evidencia NT -> HR:**
+  - Padre Vanguard NT Q1 con 10 OTHERMANAGER targets.
+  - Fiduciary Trust NT Q4 -> target padre.
+
+**CERRADO como caracterizacion del periodo.** NO es threshold.
+
+### 15.25. Correccion cuantitativa Vanguard (addendum 2026-09-19)
+
+**Bug detectado por auditor:** informe mini-probe sumaba SSHPRNAMT raw (70.236B) en vez de canonical (35.329B). Ratio 1.988. El HR original (001306) fue SUPERSEDED por RESTATEMENT posterior (001311).
+
+**Cifras corregidas:** filiales Q1 = 56.360B (antes 91.267B NO UTILIZABLE).
+
+**Regla congelada:** agregados SSHPRNAMT desde canonical_snapshot.
+
+---
+
 ## SECCION 16 - FRASE GUIA
 "Determinista, descriptivo, auditado. Paso a paso. Documentar. Saber parar."
 
@@ -1502,4 +1609,4 @@ Pregunta final: "Que hacemos?"
 
 No empieces a proponer tareas sin antes confirmar la asimilacion completa.
 
-Fin del prompt maestro v6.35. Commit de referencia: 9543de5. Fecha: 2026-09-19.
+Fin del prompt maestro v6.36. Commit de referencia: 9d4a81e. Fecha: 2026-09-19.
