@@ -1051,3 +1051,38 @@ Referencia: prompt maestro v6.30, secciones 11.17 a 11.19 y 15.21. Nueve fixes a
   - Politica propuesta para resolucion A/D: por orden en el fichero (ultimo estado gana). Pendiente decision final en Gate-NIPC.1.
 - **Proximo paso autorizado:** continuar Gate 0 SEC 13(f): parsear con layout canonico, cruzar con CUSIPs del 13F (SH + null), medir % cobertura + % ponderado por SSHPRNAMT + control de opciones. Sin codigo productivo.
 - **Estado:** Gate 0 SEC 13(f) en progreso 2026-09-19 (formato caracterizado, pendiente analisis de cruce).
+
+
+## IAE NIPC - Gate 0 SEC 13(f) CLOSED / PASS (2026-09-19)
+
+- **Origen:** cierre del ciclo SEC 13(f) tras mini-probe correctivo Q4 2025.
+- **Dictamenes del ciclo SEC 13(f):**
+  - docs/auditoria/INSTITUTIONAL_ACCUMULATION_NIPC_GATE0_SEC13F_DICTAMEN.md (formato).
+  - docs/auditoria/INSTITUTIONAL_ACCUMULATION_NIPC_GATE0_SEC13F_MINIPROBE_DICTAMEN.md (cierre PASS).
+- **Resultado:** GATE 0 SEC 13(f) = PASS / CLOSED. GO para Gate-NIPC.1 (especificacion, sin codigo).
+- **Hallazgo principal:** el TXT Q4 2025 publicado por SEC es un subconjunto empirico del PDF Q4 2025. Los 12,282 CUSIPs del TXT son subset exacto del PDF (0 txt-only). Los 10,064 CUSIPs pdf-only son CALL/PUT (5,030+5,024 en Q1 como referencia).
+- **Terminologia adoptada:** NO usar "formato reducido" (no es etiqueta SEC). Decir: "TXT Q4 2025 publicado por SEC es, empiricamente, un subconjunto de los registros del PDF Q4 2025".
+- **Correccion al informe original:** NO afirmar "Q4 usa flag *, Q1 añade CALL/PUT". Correcto: "La Official List Q4 ya usaba modelo underlying + * + CALL/PUT; el TXT Q4 publicado es subconjunto que omite filas CALL/PUT; Q1 dispone de TXT completo".
+- **Layout canonico (ratificado por SEC):**
+  - Pos 01-09: CUSIP.
+  - Pos 10: Option Indicator (`*` o espacio).
+  - Pos 11-40: Issuer Name.
+  - Pos 41-67: Issuer Description.
+  - Pos 68-70: STATUS (3 chars: `*A*` additions, `*D*` deletions, blank no change).
+  - Pos 71-79: Blank.
+  - Pos 80: Misc / Unused. NO INTERPRETAR.
+- **Semantica Option Indicator `*`:** "la security tiene listed option". NO significa "esta fila es una opcion".
+- **Semantica STATUS:** blank -> eligible; ADDED -> eligible; DELETED -> not eligible. CUSIP con estados incompatibles -> CONFLICT / REVIEW_REQUIRED (no "last row wins").
+- **Aprobacion Opcion A:** usar TXT Q4 (subconjunto) + TXT Q1 (completo) para `section13f_eligible`. PDF Q4 conservado como evidencia auxiliar, no input operativo NIPC.
+- **PDF Q4:** conservado en D:/13f_probe/official_list_13f/13flist_2025Q4.pdf como evidencia.
+- **Cobertura ponderada SEC 13(f) (Q4-Q1 2025-2026):** 96.7-98.7% (SSHPRNAMT fuera lista 1.282% Q4, 3.259% Q1). Los no-listados son no-equity (CONVERTIBLE BOND, MMF, cash, PFD, extranjero).
+- **Los 3 CUSIPs curados (DD, HON, XOM):** active en ambas listas. Coherente con crosswalk curado.
+- **Deuda documentada (no implementada):** FUTURE_FORMAT_VARIANT - si un trimestre futuro no publica TXT suficiente, se abrira diseno especifico de PDF parser. NO implementar ahora.
+- **Dimensiones congeladas para Gate-NIPC.1:**
+  - section13f_eligible = CUSIP en Official List del trimestre, con resolucion por STATUS.
+  - security_type = clasificacion independiente (no derivada de la lista).
+  - option_status = derivado de 13F PUTCALL / instrument identity.
+  - option_indicator_star = metadata: underlying has listed option. NO participa en clasificacion equity/option NIPC.
+- **Arquitectura multicapa para Gate-NIPC.1:** internal verified -> OpenFIGI fallback -> UNRESOLVED, con CONFLICT explicito. + capa section13f_eligible (SEC) + capa security_type explicita.
+- **Proximo paso autorizado:** Gate-NIPC.1 - especificacion SIN codigo. 12 dimensiones a definir + comparativa fuentes + snapshot/manifest + coverage thresholds.
+- **Estado:** Gate 0 SEC 13(f) PASS / CLOSED 2026-09-19. Pendiente Gate-NIPC.1.
