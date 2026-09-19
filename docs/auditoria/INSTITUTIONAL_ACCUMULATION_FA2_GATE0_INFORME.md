@@ -6,7 +6,7 @@ Addendum: docs/auditoria/INSTITUTIONAL_ACCUMULATION_CONTRATO_ADDENDUM.md
 Dictamen previo: docs/auditoria/INSTITUTIONAL_ACCUMULATION_DICTAMEN_GATE0.md
 Informe Gate FA-1: docs/auditoria/INSTITUTIONAL_ACCUMULATION_GATE_FA1_INFORME.md
 Prompt de referencia: v6.34
-Estado: inventario empirico + propuesta de diseno. Pendiente dictamen auditor.
+Estado: inventario empirico + propuesta de diseno. Rev 2 (post dictamen auditor 2026-09-19, ver seccion 10).
 Naturaleza: no normativo. Si hay conflicto, gana el Prompt Maestro.
 
 ---
@@ -248,6 +248,42 @@ Estado del repo al cierre de FA-2.0:
   Sin cambios al CONTRATO v1.1, al pipeline ni a config/.
 
 Este informe es documento puro. No hay cambios de codigo asociados.
+
+---
+
+## 10. Rev 2 - Correcciones del dictamen auditor (2026-09-19)
+
+El dictamen externo (INSTITUTIONAL_ACCUMULATION_FA2_GATE0_DICTAMEN.md)
+aprueba este informe con GO CONDICIONADO y las siguientes correcciones:
+
+1. Renombrado semantico de la clave canonica de manager:
+   - economic_owner_cik -> canonical_reporting_relationship_key.
+   - Nombres PROHIBIDOS en codigo y documentacion hasta FA-2.4:
+     economic_owner_cik, owner_cik, beneficial_owner_cik.
+   - La clave representa una relacion de reporting/discretion,
+     NO propiedad economica.
+
+2. Orden arquitectonico FA-2.3 / FA-2.4 / FA-2.3.bis:
+   - FA-2.3 atribucion PROVISIONAL.
+   - FA-2.4 canonical snapshot del trimestre.
+   - FA-2.3.bis atribucion DEFINITIVA (requisito, no condicional).
+   FA-2.3 no puede declarar definitiva la atribucion hasta que FA-2.4
+   haya determinado el snapshot canonico.
+
+3. Q-A: campo contractual canonico = SUBMISSION.PERIODOFREPORT.
+   REPORTCALENDARORQUARTER es control de coherencia, no sustituto.
+
+4. Q-C controles anadidos: vigencia no solapada, source verificable,
+   no inferencia silenciosa, title_of_class no decorativo.
+
+5. Q-D control anadido: valid_from <= valid_to (cuando valid_to != NULL).
+
+6. P4 (519 vs 501) pasa a requisito de FA-2.2. No bloquea FA-2.1.
+
+7. Nota de cifras:
+   - Dataset completo INFOTABLE: 3,822,885 filas.
+   - Dataset filtrado Q1 2026:    3,321,967 filas.
+   - Diferencia: 500,918 filas (filings fuera del periodo canonico).
 
 ---
 
