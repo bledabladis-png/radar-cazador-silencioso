@@ -1189,3 +1189,31 @@ Referencia: prompt maestro v6.30, secciones 11.17 a 11.19 y 15.21. Nueve fixes a
 - **Hallazgo colateral:** GHISALLO CAPITAL (CIK 0001825214) pasa de 2.39B a 20.69B (+765%). Presente en ambos periodos. NO es discontinuidad de filer. Documentado como observacion.
 - **Recomendaciones al auditor:** Q-MINI-1 a Q-MINI-5 (seccion 7 del informe).
 - **Estado:** 36 commits locales ahead. Sin push. Pendiente dictamen.
+
+
+## IAE NIPC - Dictamen mini-probe + correccion cuantitativa Vanguard (2026-09-19)
+
+- **Origen:** dictamen del auditor sobre el mini-probe filer continuity Q-PROBE-5.
+- **Documentos:**
+  - Dictamen mini-probe: docs/auditoria/INSTITUTIONAL_ACCUMULATION_NIPC_GATE0_MINIPROBE_DICTAMEN.md
+  - Addendum correccion: docs/auditoria/INSTITUTIONAL_ACCUMULATION_NIPC_GATE0_MINIPROBE_ADDENDUM.md
+  - Evidence reconciliacion: docs/auditoria/evidence/nipc_gate0_probe/probe_reconcile_vanguard.py
+- **Resultado:** GO CONDICIONADO. Hallazgo estructural NT -> HR confirmado. Reconciliacion economica NO autorizada. Gate-NIPC.2 y .3 bloqueados.
+- **Decisiones del auditor:**
+  - Q-MINI-1 GO/CERRADO: Vanguard = limitacion conocida, concentrada en top 20, sin generalizacion al universo.
+  - Q-MINI-2 GO/CERRADO: no precedencia destructiva. Separar `filer_status` (CONTINUOUS_FILER | FILER_DISCONTINUITY | UNRESOLVED) de `nt_to_hr_relation_observed` (bool) + `nt_to_hr_relation_targets` (list).
+  - Q-MINI-3 GO DIAGNOSTICO: GHISALLO (+765%) requiere probe especifico antes de interpretar como fenomeno economico.
+  - Q-MINI-4 CERRADO: relacion NT -> HR demostrada documentalmente; reconciliacion economica sin autorizacion.
+  - Q-MINI-5 GO TOP 50: ampliar muestra a top 50 filers. NO saltar a universo completo.
+- **Hallazgo cuantitativo obligatorio:** inconsistencia 35.329B vs 70.236B de CIK 0002100119 (Vanguard Capital).
+  - Causa: el informe original sumo SSHPRNAMT desde INFOTABLE.parquet filtrado por periodo (raw), no desde canonical_snapshot.
+  - HR original (001306, 34.906B) fue SUPERSEDED por RESTATEMENT posterior (001311, AN=1).
+  - Raw (3 acc): 70.236B. Canonical (2 applied): 35.329B. Ratio 1.988.
+  - CIK 0002100121 no afectado (ratio 1.0).
+- **Cifras corregidas:**
+  - Agregado filiales Q1 2026: 56,359,660,206 (antes: 91,267,483,611).
+  - Padre Q4 vs filiales Q1: -6.08B (-9.74%). Antes implicaba +29B. Contraccion real.
+- **NIPC observable:** NO afectado. El motor siempre opero sobre canonical_snapshot. Cifras confirmadas: +23.65M (ALL) / +52.57M (ELIGIBLE).
+- **Leccion metodologica congelada:** todo agregado de SSHPRNAMT debe calcularse sobre el canonical_snapshot producido por apply_amendments. PROHIBIDO sumar SSHPRNAMT desde INFOTABLE.parquet filtrado por periodo cuando existan amendments RESTATEMENT.
+- **Siguiente accion autorizada:** TOP 50 filer continuity probe (misma metodologia que top 20).
+- **Estado:** 38 commits locales ahead. Sin push. Pendiente top 50 probe + dictamen posterior.
