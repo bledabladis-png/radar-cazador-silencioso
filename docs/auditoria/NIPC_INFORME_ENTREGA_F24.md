@@ -231,7 +231,7 @@ resueltos por shareClassFIGI.
 | pyflakes | 0 warnings |
 | compileall | OK |
 | Policy v1.0 hash | 57f2d01f... (intacta) |
-| Contrato v1 hash | 2d5084b9... |
+| Contrato v1 hash | c02d202f... |
 | P70 dictamen hash | e8d4e4e8... |
 | RADAR_TARGET_CATALOG | 242 filas, 240 OK, sha256 11eabce8... |
 
@@ -301,7 +301,7 @@ resueltos por shareClassFIGI.
 
 ### 5.4. Cadena de trazabilidad
 
-    NIPC_CONTRATOS_SEMANTICOS_v1.md (2d5084b9...)
+    NIPC_CONTRATOS_SEMANTICOS_v1.md (c02d202f...)
         |
         +-- cita hash -> NIPC_P70_DICTAMEN.md (e8d4e4e8...)
         |                    |

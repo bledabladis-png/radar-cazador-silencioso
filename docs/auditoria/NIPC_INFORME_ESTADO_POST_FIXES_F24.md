@@ -63,7 +63,7 @@ o para clarificar detalles del contrato antes de su implementacion.
 | Documento | Hash SHA-256 |
 |---|---|
 | NIPC_COVERAGE_POLICY.md (v1.0) | 57f2d01f... |
-| NIPC_CONTRATOS_SEMANTICOS_v1.md | 2d5084b9... |
+| NIPC_CONTRATOS_SEMANTICOS_v1.md | c02d202f... |
 | NIPC_P70_DICTAMEN.md | e8d4e4e8... |
 | NIPC_INFORME_ENTREGA_F24.md | a5cf2386... |
 | INSTITUTIONAL_ACCUMULATION_REVISION_ESTRUCTURAL_2026-09-20.md | 318f02e8... |
@@ -203,7 +203,7 @@ que rompa la invariante; el test verifica que la guarda dispara.
 
     NIPC_INFORME_ENTREGA_F24.md (a5cf2386...)         [decision F2.4]
        |
-       +-- cita -> NIPC_CONTRATOS_SEMANTICOS_v1.md (2d5084b9...)
+       +-- cita -> NIPC_CONTRATOS_SEMANTICOS_v1.md (c02d202f...)
        |              |
        |              +-- cita -> NIPC_P70_DICTAMEN.md (e8d4e4e8...)
        |                            |
