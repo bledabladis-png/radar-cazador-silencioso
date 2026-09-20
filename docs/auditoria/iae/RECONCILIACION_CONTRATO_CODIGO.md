@@ -3,7 +3,7 @@
 **Objeto:** expediente de reconciliacion entre el contrato semantico
 vigente (NIPC_CONTRATOS_SEMANTICOS_v1.md) y el codigo implementado.
 
-**SUBMISSION HEAD:** `2eb4dcd` (HEAD al entregar este expediente).
+**SUBMISSION HEAD:** `3ad57b1` (HEAD al entregar este expediente).
 **AUDITED SNAPSHOT:** `4fe2b62` (commit sobre el que se realizo el analisis).
 **POST-SNAPSHOT INTERMEDIATE:** `d3c9a87`, `79291ea`, `9c2ff66`, `04f3222`
 (cambios documentales posteriores al snapshot, no afectan al analisis).
@@ -158,9 +158,12 @@ o fuera del enum.
 
 **Consecuencias:**
 
-- Un caller que espera excepcion para CUSIP obtiene None.
-- Una fila del CSV sin columna `identity_type` produce canonical como
-  TICKER, violando la prohibicion de inferir tipo.
+- CUSIP/ISIN producen NULL de forma contractual. La divergencia NO
+  reside en ese comportamiento.
+- La divergencia reside exclusivamente en la inferencia silenciosa de
+  TICKER cuando la fuente no declara `identity_type`. Una fila del CSV
+  sin columna `identity_type` produce canonical con tipo TICKER
+  asumido, violando la prohibicion de inferir tipo.
 
 ---
 
@@ -279,8 +282,58 @@ validacion contractual explicita.
 
 ## 9. Asunto explicito para F2.4 (agregacion shareClassFIGI)
 
-El auditor debe decidir la regla contractual cuando multiples CUSIPs
-comparten `shareClassFIGI` en un mismo periodo. Escenarios:
+El auditor debe decidir 2 cosas sobre la agregacion cuando multiples
+CUSIPs comparten `shareClassFIGI` en un mismo periodo:
+
+### 9.1. Decision arquitectonica: donde vive la agregacion
+
+Escenario:
+
+    CUSIP_A -> FIGI_X
+    CUSIP_B -> FIGI_X
+
+    Q4: CUSIP_A=100, CUSIP_B=50
+    Q1: CUSIP_A=80,  CUSIP_B=60
+
+Dos arquitecturas posibles:
+
+**Opcion 1**: `compute_contractual_coverage()` recibe observaciones
+crudas y hace internamente:
+
+    CUSIP -> shareClassFIGI
+    -> groupby(shareClassFIGI)
+    -> sum(sshprnamt)
+    -> max(Q4_total, Q1_total)
+
+**Opcion 2** (propuesta): funcion previa separada
+
+    aggregate_positions_by_shareclass_figi(observations, period)
+        -> dict {shareClassFIGI: weight_total}
+
+y `compute_contractual_coverage()` recibe pesos YA agregados:
+
+    compute_contractual_coverage(
+        target_q4, target_q1,
+        resolved_q4, resolved_q1,
+        weights_q4,  # ya agregados por shareClassFIGI
+        weights_q1,
+    )
+
+**Ventajas de Opcion 2**:
+- Separa responsabilidades (agregacion != calculo de metrica).
+- Cada paso es testeable aisladamente.
+- `compute_contractual_coverage` es puramente funcional: recibe
+  universos y pesos, devuelve las 6 metricas.
+- El test de agregacion se escribe contra la funcion de agregacion,
+  no contra el orquestador.
+
+**Decision requerida**: F2.4 debe confirmar Opcion 1 o Opcion 2. El
+resto del expediente asume Opcion 2 como direccion.
+
+### 9.2. Decision de estado: cuando una observacion tiene estado
+     distinto de VERIFIED
+
+Escenarios:
 
     CUSIP_A -> FIGI_X -> VERIFIED
     CUSIP_B -> FIGI_X -> TEMPORAL_UNVERIFIED
@@ -291,21 +344,25 @@ comparten `shareClassFIGI` en un mismo periodo. Escenarios:
 Regla de agregacion propuesta (a dictamen):
 
     1. Resolver cada observacion a shareClassFIGI.
-    2. Agrupar observaciones del periodo por shareClassFIGI.
-    3. Sumar sshprnamt_total por grupo.
-    4. Solo despues aplicar max(Q4_total, Q1_total) por shareClassFIGI.
+    2. Filtrar por estado (¿solo VERIFIED? ¿VERIFIED+TEMPORAL?).
+    3. Agrupar observaciones del periodo por shareClassFIGI.
+    4. Sumar sshprnamt_total por grupo.
+    5. Aplicar max(Q4_total, Q1_total) por shareClassFIGI.
 
-La decision pendiente es si una observacion con estado distinto de
-VERIFIED contribuye al peso agregado del shareClassFIGI o no.
+La decision pendiente es el paso 2: si una observacion con estado
+distinto de VERIFIED contribuye al peso agregado del shareClassFIGI
+o no.
 
-Cuatro dimensiones a separar explicitamente:
+### 9.3. Cuatro dimensiones a separar explicitamente
 
     TARGET membership      (pertenece al universo contractual)
     RESOLVED status        (identidad resuelta)
     PAIRED status          (operacionalmente emparejado)
     weight contribution    (peso agregado para la metrica ponderada)
 
-No deben quedar implicitamente acopladas.
+No deben quedar implicitamente acopladas. F2.4 debe decidir si el peso
+de una security se incluye segun su estado operacional, su estado de
+identidad, o ambos.
 
 ---
 

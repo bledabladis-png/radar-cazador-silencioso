@@ -30,8 +30,15 @@ from src.institutional_accumulation.aggregation import nipc
 # --- Tests que HOY pasan (comportamiento observable) ---
 
 
-def test_p38_denominador_cero_unavailable():
-    """Contrato P38 seccion 3.3: denominador cero -> UNAVAILABLE."""
+def test_p38_legacy_denominador_cero_unavailable():
+    """Comportamiento legacy/proxy: denominador cero -> UNAVAILABLE.
+
+    Este test verifica el comportamiento de la API LEGACY
+    (compute_coverage_pairwise), no de la API contractual P38
+    (compute_contractual_coverage, a implementar en A.6).
+    Se mantiene como regresion. La evidencia contractual vendra del
+    test contra compute_contractual_coverage.
+    """
     empty = pd.DataFrame()
     result = nipc.compute_coverage_pairwise(empty, empty)
     assert result["paired_weighted_share_coverage"] is None

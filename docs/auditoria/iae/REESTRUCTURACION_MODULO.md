@@ -18,7 +18,7 @@ Tres divergencias detectadas (ver RECONCILIACION_CONTRATO_CODIGO.md):
 
     D1  P61 no conectado al resolver (GRAVE)
     D2  P38 no construye TARGET real (GRAVE)
-    D3  P60 no lanza para CUSIP/ISIN (MENOR)
+    D3  P60 infiere TICKER cuando falta identity_type declarado (MENOR)
 
 La reestructuracion resuelve las tres en una sola operacion coherente.
 
@@ -74,6 +74,11 @@ La reestructuracion resuelve las tres en una sola operacion coherente.
 ### 4.1. Nuevo: `aggregation/coverage.py`
 
 Orquestador contractual. Encapsula la cadena TARGET -> RESOLVED -> PAIRED.
+
+`compute_contractual_coverage()` recibe pesos YA AGREGADOS por
+`shareClassFIGI` (Opcion 2, ver RECONCILIACION seccion 9.1). La
+operacion de agregacion vive en `aggregate_positions_by_shareclass_figi()`
+que puede ubicarse en el mismo modulo o en un helper separado.
 
 Interfaz:
 
@@ -170,14 +175,17 @@ P61 - Conectar `temporal_validity`:
   `cusip_ticker_exceptions` (con vigencia) vs `etf_holdings` (sin
   vigencia). Propagado en `evidence`.
 
-P60 - Raise contractual:
+P60 - No inferencia de identity_type:
 
-- `_normalize_canonical(value, identity_type)` lanza `ValueError`
-  para `identity_type in ("CUSIP", "ISIN")` si se intenta producir
-  canonical (ya no devuelve None silenciosamente).
-- `_find_active_equivalence` NO asume default TICKER. Si la columna
-  `identity_type` falta, retorna lista vacia + log, o se rechaza la
-  fila completa.
+- `_normalize_canonical(value, identity_type)` mantiene la semantica
+  contractual vigente:
+      CUSIP -> None
+      ISIN  -> None
+  No introduce `ValueError` para CUSIP/ISIN.
+- `_find_active_equivalence` no puede asumir `TICKER` cuando falta
+  `identity_type` declarado por la fuente. Si la columna falta, la
+  fila se rechaza con log explicito. El comportamiento observable
+  exacto (rechazo, lista vacia, UNRESOLVED) queda a dictamen F2.4.
 
 ### 4.5. Movimiento: `temporal_validity.py`
 
@@ -248,7 +256,7 @@ requiere autorizacion adicional.
 
 ## 7. Orden de implementacion sugerido
 
-    Paso 1  D3 (raise P60)                        - sin deps
+    Paso 1  D3 (eliminar default TICKER)          - sin deps
     Paso 2  D1 (conectar P61 + sub-fuentes)       - sin deps
     Paso 3  Mover temporal_validity.py            - sin deps
     Paso 4  coverage.py + firma nueva nipc.py     - sin deps

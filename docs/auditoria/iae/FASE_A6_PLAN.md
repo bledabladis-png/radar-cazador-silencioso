@@ -44,7 +44,7 @@ del auditor.
 
 ### A.6.1 - Dictamen F2.4 (EXTERNO)
 
-**Submission HEAD:** `2eb4dcd`.
+**Submission HEAD:** `3ad57b1`.
 
 **Entrada:**
 - iae/RECONCILIACION_CONTRATO_CODIGO.md
@@ -58,12 +58,34 @@ del auditor.
 - tests/test_p38_contract.py
 
 **Salida:**
-- Dictamen F2.4 formal, con decisiones por D1/D2/D3.
+- Dictamen F2.4 formal.
+
+**Decisiones requeridas de F2.4:**
+
+    D1      P61   Conectar resolve_source_status, o retirar
+                  temporal_validity.py.
+    D2      P38   Construir TARGET real, o mantener proxy
+                  observacional NO CONTRACTUAL.
+    D3      P60   Rechazar filas sin identity_type declarado,
+                  o mantener default TICKER documentado.
+    Q12     Pair  Pairing por shareClassFIGI (Modelo A) o por
+                  canonical_security (Modelo B).
+    AGREG.        Regla de agregacion de multiples CUSIPs por
+                  shareClassFIGI (ver RECONCILIACION seccion 9).
+                  Incluye: (a) donde vive la agregacion (Opcion 1
+                  vs Opcion 2), (b) si estado distinto de VERIFIED
+                  contribuye al peso agregado.
+    OpenFIGI      Autorizado / no autorizado para materializacion
+                  completa del TARGET.
+    Policy v1.3   Aprobada / mantener v1.0 vigente.
 
 **Criterios de aceptacion:**
-- Decision explicita por divergencia (A o B).
-- Postura sobre OpenFIGI masivo (autorizado / no).
-- Postura sobre policy v1.3 (aprobar / mantener v1.0).
+- Decision explicita por D1, D2, D3.
+- Decision explicita sobre Q12.
+- Decision explicita sobre AGREG. (opcion arquitectonica + regla
+  de estado).
+- Postura sobre OpenFIGI masivo.
+- Postura sobre policy v1.3.
 
 **Estado:** PENDIENTE EXTERNO.
 
@@ -120,9 +142,16 @@ NO se escribe hasta que F2.4 lo confirme.
 `operational_mapping_status == VERIFIED` en ambos periodos. NO se exige
 igualdad literal de `canonical_security` entre periodos.
 
-**Regla de agregacion:** los pesos se agregan por shareClassFIGI antes
-de aplicar max(Q4, Q1). Multiples CUSIPs que comparten shareClassFIGI
-contribuyen a un unico peso w(X). El test debe cubrir este caso.
+**Regla de agregacion (a dictamen F2.4, RECONCILIACION seccion 9):**
+
+    Opcion 1  coverage.py hace la agregacion internamente.
+    Opcion 2  aggregate_positions_by_shareclass_figi() separada,
+              coverage.py recibe pesos ya agregados.
+
+El plan asume Opcion 2 como direccion. Si F2.4 confirma Opcion 1, el
+test se escribe contra compute_contractual_coverage(). Si confirma
+Opcion 2, se escriben 2 tests: uno para la funcion de agregacion, uno
+para compute_contractual_coverage() con pesos agregados.
 
 Escenario:
 
