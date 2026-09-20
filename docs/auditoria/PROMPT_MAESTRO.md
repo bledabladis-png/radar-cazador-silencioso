@@ -1,8 +1,8 @@
-# PROMPT MAESTRO v6.44 - INGENIERO SUPERVISOR DEL RADAR DE ROTACION SECTORIAL
+# PROMPT MAESTRO v6.45 - INGENIERO SUPERVISOR DEL RADAR DE ROTACION SECTORIAL
 
-Actualizado: 2026-09-20 (post limpieza documental y consolidacion. docs/auditoria reducido de 81 a 27 .md en raiz + 6 probes. Nueva estructura: iae/, radar/, auditorias/, evidence/, archive/. Nueva regla: 1 concepto = 1 fichero vivo. Informes y dictamenes IAE consolidados en iae/INFORME.md + iae/DICTAMENES.md. 979 tests. HEAD al redactar: d3c9a87)
+Actualizado: 2026-09-20 (post dictamen externo sobre expediente F2.4, tests contractuales P60/P61/P38, deuda radar registrada. docs/auditoria en iae/ (12) + radar/ (9) + auditorias/ (4) + raiz (3). 988 passed + 6 xfailed + 2 skipped. 0 pyflakes. HEAD 04f3222. 114 commits ahead. Sin push (local-first IAE). F2.4 PENDIENTE EXTERNO. 3 divergencias contrato<->codigo identificadas con evidencia ejecutable)
 Estado: Operativo al 100% - 10 contratos temporales (FU-021-5 + FU-021-3C-bis) - 979 tests locales + 2 skipped - 0 warnings - Gate 10/10 - Deuda ALTA/MEDIA/BAJA activa: 0 - F2.4 PENDIENTE EXTERNO - P60/P61/P38 IMPLEMENTADOS
-Commit de referencia: d3c9a87 (origin/main HEAD al redactar; el propio commit v6.44 sera HEAD tras push)
+Commit de referencia: 04f3222 (origin/main HEAD al redactar; el propio commit v6.45 sera HEAD tras push)
 
 ---
 
@@ -188,6 +188,16 @@ Si un fichero no se usa, no da contexto y no se lee, se borra.
 **Prohibido:** ficheros con sufijo `_v1.md`, `_v1.1.md`, `_V12_PROPUESTA.md`,
 `_FASE_FA23_DICTAMEN_C.md`. Los dictamenes y informes historicos se
 consolidan en un unico fichero por tema con indice y resumen.
+
+**Documentos contractuales para F2.4 (2026-09-20):**
+
+    iae/RECONCILIACION_CONTRATO_CODIGO.md    expediente 3 divergencias
+    iae/REESTRUCTURACION_MODULO.md           plan arquitectonico
+    iae/FASE_A6_PLAN.md                      plan de ejecucion A.6
+    tests/test_p60_contract.py               4 tests (3 pass + 1 xfail)
+    tests/test_p61_contract.py               5 tests (3 pass + 2 xfail)
+    tests/test_p38_contract.py               5 tests (2 pass + 3 xfail)
+    radar/DEUDA.md                           deuda activa del radar
 
 **Estructura vigente de `docs/auditoria/`:**
 
@@ -1532,7 +1542,7 @@ Select-String -SimpleMatch desactiva regex → el | se trata como literal. No us
 | Fuentes europeas | 51 (Euronext 13 + Xetra 19 + BME 19) |
 | Fuente commodities | OilPriceAPI (BZ=F, CL=F, GC=F, HG=F, NG=F) |
 | Fuente term structure | CBOE (^VIX3M) |
-| Tests locales | 979 passed + 2 skipped |
+| Tests locales | 988 passed + 6 xfailed + 2 skipped |
 | Tests CI | ~610 collected con skips (parquet gitignored) |
 | Validation Gate | 10/10 |
 | pyflakes | 0 warnings |
@@ -1540,11 +1550,11 @@ Select-String -SimpleMatch desactiva regex → el | se trata como literal. No us
 | Produccion GH Actions | OK (cron `0 4 * * *` verificado 2026-09-17) |
 | Arquitectura | Modular: 19 src/report/ + 16 src/pipeline/ + 10 src/temporal_contracts/ + 7 src/institutional_accumulation/sec_13f/ + 5 sec_13f/identity (temporal_filter, cusip_resolver, relationships, amendments, sec13f_list, security_identity) + 2 aggregation/ (delta_shares, nipc) + 3 identity/ nuevos (openfigi_client, radar_target_catalog, target_universe) + 5 indicators/mte/ + 4 indicators/darkpool/ |
 | Contratos temporales | 10 (FU-021-5 = 9, FU-021-3C-bis = +1 SPOT_COMMODITY) |
-| Modulo IAE (SEC 13F) | FA-1+FA-2 cerrados. NIPC implementado (spec v1.4). Filer continuity CERRADO. Q-CUR cerrado (3 COM). Coverage baseline Fase A cerrada. F2.3-bis PASS CONDICIONADO. Revision estructural completa (95 hallazgos). 6 fixes mecanicos aplicados (P51/P32/P14-BIS/P31/P18-P26/P70 guarda). Contrato semantico v1 redactado (P38/P60/P61, estado PROPUESTO). Policy v1.3 propuesta. Dictamen revision estructural materializado. Informe post-fixes al auditor entregado. F2.4 PENDIENTE EXTERNO. Gate-NIPC.2 BLOQUEADO. Gate-NIPC.3 NO AUTORIZADO. OpenFIGI masivo NO AUTORIZADO. |
+| Modulo IAE (SEC 13F) | FA-1+FA-2 cerrados. NIPC implementado. F2.4 PENDIENTE EXTERNO. 3 divergencias contrato<->codigo con evidencia ejecutable (6 tests xfail). Deuda radar registrada (LSE provider, guard, cron). Gate-NIPC.2 BLOQUEADO. |
 | RADAR_TARGET_CATALOG | MATERIALIZADO 2026-09-19 (242 filas, 240 OK, 2 MISS: BRK-B, MOG-A). Hash 11eabce8... Construido desde OpenFIGI TICKER/US -> shareClassFIGI, independiente del crosswalk interno. TARGET_UNIVERSE resolver operativo (8 tests). |
 | Coverage baseline NIPC | Fase A cerrada. TOP 2000 (Q1 2026, CURRENT_RETROSPECTIVE): target_true=210 (10.50% count, 32.8079% weight); corregido 212/33.3428%. target_false=1567 (78.35%, 55.68%). no_id=220 (11.0%, 8.86%). error=3 (0.15%, 2.65%). Delta +0.5349 pp por 2 canales adicionales. THRESHOLD_1/2 UNDEFINED |
 | .git size | ~13 MB |
-| HEAD | 83e60c3 (104 commits locales ahead de origin/main) |
+| HEAD | 04f3222 (114 commits locales ahead de origin/main) |
 
 ### 15.1. Hitos del ciclo FU-021-3C-bis (2026-09-16)
 

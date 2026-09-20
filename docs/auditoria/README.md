@@ -21,6 +21,11 @@ versiones previas se archivan con fecha o se borran si su contenido
 esta embebido en la version vigente (git conserva el historico).
 
 No se admiten ficheros `_v1.md`, `_V12_PROPUESTA.md`, `_DICTAMEN_C.md`.
+
+**Excepcion documentada:** contratos cuyo sha256 ya esta en la cadena
+autoritativa (NIPC_CONTRATOS_SEMANTICOS_v1.md, NIPC_COVERAGE_POLICY.md
+v1.0) NO se modifican in-place. Se emite version nueva con seccion
+"Deriva de vN" y se preserva la anterior.
 Los dictamenes y informes historicos se consolidan en un unico fichero
 por tema, con indice y resumen.
 
@@ -55,6 +60,12 @@ Orden recomendado para entender el sistema actual:
     RECONCILIACION_CONTRATO_CODIGO.md     divergencias contrato<->codigo
     REESTRUCTURACION_MODULO.md            plan arquitectonico
     FASE_A6_PLAN.md                       plan de ejecucion A.6
+
+### tests/ (contractuales para F2.4)
+
+    test_p60_contract.py     4 tests (3 pass + 1 xfail)
+    test_p61_contract.py     5 tests (3 pass + 2 xfail)
+    test_p38_contract.py     5 tests (2 pass + 3 xfail)
 
 ### radar/
 

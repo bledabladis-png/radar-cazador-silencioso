@@ -223,3 +223,36 @@
 
 
 Fin del registro de dictamenes.
+
+
+---
+
+## Dictamen externo - Revision expediente F2.4 (2026-09-20)
+
+**Tipo:** revision externa sobre los 3 documentos del expediente F2.4
+(RECONCILIACION, REESTRUCTURACION, FASE_A6_PLAN).
+
+**Resultado:** Aprobado con correcciones obligatorias.
+
+**13 puntos revisados, 5 obligatorios:**
+
+    1. A.6.3 reformular (shareClassFIGI vs canonical_security).
+    2. Nomenclatura unificada D1/D2/D3 -> P60/P61/P38.
+    3. A.6.5 no in-place -> v2 nuevo.
+    4. A.6.4 criterio debil (demostrar semantica, no cambio de cifra).
+    5. HEAD 4fe2b62 marcado como snapshot historico.
+
+**Adicionales aplicadas:**
+
+    - P60 D3 reformulado (CUSIP/ISIN -> NULL, no ValueError).
+    - A.6.6 separado de Gate-NIPC.2 (solo inputs).
+    - F2.4 / F2.4-CLOSE como hitos distintos.
+    - Tabla de dependencias separa orquestacion / materializacion P38.
+    - Test pesos agregados antes de max(Q4,Q1).
+
+**Aplicacion:** commit d0a52f5.
+
+**Estado:** dictamen ABIERTO para F2.4 (el auditor debe emitir F2.4
+formal con las decisiones Q12/A o Q12/B).
+
+---

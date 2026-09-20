@@ -5,6 +5,11 @@
 
 **Regla:** este fichero se actualiza in-place. Las versiones previas se archivan con fecha.
 
+**Actualizacion 2026-09-20:** entrada en FASE A.5 (NIPC + contratos).
+3 divergencias contrato<->codigo identificadas (D1 P61, D2 P38, D3 P60)
+con evidencia ejecutable (6 tests xfail). Expediente F2.4 listo.
+F2.4 PENDIENTE EXTERNO.
+
 ---
 
 ## Indice

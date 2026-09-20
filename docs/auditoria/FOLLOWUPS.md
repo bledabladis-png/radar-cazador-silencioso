@@ -1464,3 +1464,80 @@ los 20 `.L` y cerrar el problema de raiz.
 - Sin cambios de codigo en este ciclo.
 
 ---
+
+
+---
+
+## Ciclo 2026-09-20 (ter) - Tests contractuales + dictamen externo aplicado
+
+**HEAD al cierre:** 04f3222.
+**Ahead origin/main:** 114.
+
+### Entregables
+
+1. **Dictamen del auditor externo** sobre el expediente F2.4 recibido.
+   Aplicados los 13 puntos + 5 correcciones obligatorias:
+
+       - A.6.3 reformulado (Q12/A: shareClassFIGI como clave de pairing,
+         esperado alternativo Q12/B documentado).
+       - Nomenclatura unificada D1/D2/D3 -> P60/P61/P38.
+       - A.6.5 cambiado: crear v2, NO modificar in-place.
+       - A.6.4 suavizado: exigir demostracion de semantica, no cambio
+         de cifra.
+       - HEAD 4fe2b62 marcado como snapshot historico.
+       - P60 D3 reformulado (CUSIP/ISIN -> NULL, no ValueError).
+       - A.6.6 separado de Gate-NIPC.2 (solo inputs).
+       - F2.4 / F2.4-CLOSE como hitos distintos.
+       - Tabla de dependencias separa P38 orquestacion (autonomo) de
+         P38 materializacion (OpenFIGI).
+       - Test "pesos agregados antes de max(Q4,Q1)" anadido.
+
+2. **15 tests contractuales** creados:
+
+       tests/test_p60_contract.py   4 (3 pass + 1 xfail)
+       tests/test_p61_contract.py   5 (3 pass + 2 xfail)
+       tests/test_p38_contract.py   5 (2 pass + 3 xfail)
+
+   Los 6 xfail documentan ejecutablemente las 3 divergencias:
+
+       D1 P61 (2 tests): resolver no invoca resolve_source_status +
+                         cusip_ticker_exceptions sale UNVERIFIED.
+       D2 P38 (3 tests): nipc no importa radar_target_catalog +
+                         firma no acepta target_q4/q1 +
+                         pesos no agregados por security.
+       D3 P60 (1 test):  CSV sin columna identity_type asume TICKER.
+
+   Cuando F2.4 autorice los fixes, se retiran los marcadores xfail
+   y los tests deben pasar.
+
+3. **Deuda radar registrada** (radar/DEUDA.md):
+
+       D-RADAR-01  20 tickers LSE sin provider dedicado (MEDIA)
+       D-RADAR-02  Cron `0 4 * * *` los fines de semana (BAJA)
+       D-RADAR-03  Guard coverage: no distingue core de LSE (MEDIA)
+
+### Verificacion
+
+    compileall:  OK
+    pyflakes:    0 warnings
+    suite:       988 passed + 6 xfailed + 2 skipped
+
+### Estado
+
+- Working tree limpio.
+- Local-first IAE activo. Sin push.
+- F2.4 PENDIENTE EXTERNO.
+- Gate-NIPC.2 BLOQUEADO.
+
+### Proximo paso
+
+Enviar el paquete al auditor externo:
+
+    iae/RECONCILIACION_CONTRATO_CODIGO.md
+    iae/REESTRUCTURACION_MODULO.md
+    iae/FASE_A6_PLAN.md
+    tests/test_p60_contract.py
+    tests/test_p61_contract.py
+    tests/test_p38_contract.py
+
+---
