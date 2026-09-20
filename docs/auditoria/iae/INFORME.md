@@ -1,14 +1,16 @@
 # IAE - INFORME CONSOLIDADO
 
 **Generado:** 2026-09-20
-**Consolida:** 17 informes del ciclo IAE
+**Consolida:** 18 informes del ciclo IAE
 
 **Regla:** este fichero se actualiza in-place. Las versiones previas se archivan con fecha.
 
-**Actualizacion 2026-09-20:** entrada en FASE A.5 (NIPC + contratos).
-3 divergencias contrato<->codigo identificadas (D1 P61, D2 P38, D3 P60)
-con evidencia ejecutable (6 tests xfail). Expediente F2.4 listo.
-F2.4 PENDIENTE EXTERNO.
+**Actualizacion 2026-09-20 v2:** F2.4 EMITIDO por auditor externo.
+GO CONDICIONADO arquitectura + 3 bloqueantes estructurales.
+D1 GO, D2 GO CONDICIONADO, D3 GO. Q12 Modelo A. AGREG. Opcion 2.
+OpenFIGI GO CONDICIONADO (snapshot+hash). Policy v1.3 NO.
+THRESHOLD_2 BLOQUEADO. Certificacion "acumulacion" BLOQUEADA.
+Referencia: DICTAMENES.md seccion 24 + INFORME.md seccion 18.
 
 ---
 
@@ -31,6 +33,7 @@ F2.4 PENDIENTE EXTERNO.
 15. [INFORME DE ENTREGA AL AUDITOR - SOLICITUD DE F2.4](#informe-de-entrega-al-auditor---solicitud-de-f24)
 16. [NIPC_INFORME_ESTADO_POST_FIXES_F24](#nipc_informe_estado_post_fixes_f24)
 17. [INFORME TECNICO - SISTEMA IAE (INSTITUTIONAL ACCUMULATION EVIDENCE)](#informe-tecnico---sistema-iae-(institutional-accum)
+18. [INFORME F2.4 - Dictamen formal y bloqueantes](#informe-f24---dictamen-formal-y-bloqueantes)
 
 ---
 
@@ -257,3 +260,52 @@ Piloto ejecutado sobre top 2000 CUSIPs del 13F 2026Q1, con metrica
 
 
 Fin del informe consolidado.
+
+## 18. INFORME F2.4 - Dictamen formal y bloqueantes
+
+**Objeto:** registrar el dictamen F2.4 emitido por el auditor externo sobre la submission v6 (3 divergencias contrato<->codigo + Q12 + AGREG + OpenFIGI + Policy v1.3).
+**Fecha:** 2026-09-20.
+**Resultado global:** GO CONDICIONADO arquitectura. Certificacion "acumulacion" BLOQUEADA.
+**Referencia completa:** `docs/auditoria/iae/DICTAMENES.md` seccion 24.
+**Evidencia ejecutable:** tests/test_p60_contract.py, test_p61_contract.py, test_p38_contract.py (5 xfail strict).
+
+### Decisiones sobre las 3 divergencias
+
+| Div | Contrato | Dictamen        | Detalle |
+|-----|----------|-----------------|---------|
+| D1  | P61      | GO              | Conectar resolve_source_status. Evidence conserva source + valid_from + valid_to + provenance_id + resolution_timestamp. |
+| D2  | P38      | GO CONDICIONADO | Opcion A (TARGET real) + rediseno: TARGET no puede depender del exito del mapping. |
+| D3  | P60      | GO              | Eliminar default TICKER. Si falta columna: schema_error / identity_type_missing. |
+### Decisiones arquitectonicas
+
+- Q12 = Modelo A (shareClassFIGI). Clausula: unidad economica = share class.
+- AGREG. = Opcion 2 (aggregate_positions_by_shareclass_figi separada de compute_contractual_coverage).
+- Solo VERIFIED aporta al peso contractual. unverified_weight conservado aparte. Nunca unverified = 0.
+- OpenFIGI: snapshot + hash. No dependencia live.
+- Policy v1.3: NO aprobada. v1.0 sigue normativa.
+
+### 3 bloqueantes estructurales
+
+1. TARGET independiente del exito del mapping. Separar CATALOGO (externo, versionado) de TARGET_OBSERVED.
+2. Semantica point-in-time. catalog_version + valid_from/to, o target_catalog_as_of(period_end). OpenFIGI no expone effective_date.
+3. 13F != flujo en tiempo real. Etiqueta: "cambio trimestral observado de posiciones institucionales reportables via 13F".
+### Reglas adicionales (10)
+
+period_end != filing_date != knowledge_date; unmapped_count int separado de unmapped_weight; compute_nipc sin degradacion silenciosa a proxy (evidence_class CONTRACTUAL|PROXY); PositionRecord tipado en coverage.py; NO_MATCH != not_target; "no aparece" != "vendio" (6 estados: ZERO_REPORTED | MISSING | BELOW_REPORTING_THRESHOLD | CONFIDENTIAL | UNRESOLVED | SOLD); corporate actions distinguidos de economic accumulation; manager duplication con unidad definida (manager / manager-group / filing / position / security); tests obligatorios P38 (10 casos); 4 niveles de validacion (F2.4 certifica nivel 1 y parcialmente 2).
+
+### Estado
+
+    THRESHOLD_1                UNDEFINED
+    THRESHOLD_2                BLOQUEADO
+    Gate-NIPC.2                BLOQUEADO
+    Gate-NIPC.3                NO AUTORIZADO
+    OpenFIGI masivo            NO AUTORIZADO (GO condicional arquitectonico)
+    Policy v1.3 aplicacion     NO AUTORIZADA
+    Push a origin/main         NO
+    Certificacion "acumulacion" BLOQUEADA
+
+### Siguiente
+
+Gate 0 de los 3 bloqueantes (inventario de codigo, sin tocar codigo). Actualizar FASE_A6_PLAN.md + REESTRUCTURACION_MODULO.md + NIPC_CONTRATOS_SEMANTICOS_v1.md.
+
+---
