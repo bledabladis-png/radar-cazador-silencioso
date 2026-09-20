@@ -303,29 +303,30 @@ Q12, AGREG., Policy v1.3).
 
 ---
 
-### A.6.5 - Emitir NIPC_CONTRATOS_SEMANTICOS_v2 (si aplica)
+### A.6.5 - Editar NIPC_CONTRATOS_SEMANTICOS_v1.md in-place (si aplica)
 
-Solo si A.6.1 autoriza cambios de contrato. Si no, el contrato v1
-permanece intacto.
+**Reformulado por F2.4 (2026-09-20):** aplica la regla general "1 concepto
+= 1 fichero vivo". El contrato NO se versiona con sufijo. Se edita in-place.
 
-**Regla de versionado:** el contrato v1 esta integrado en la cadena
-hash del sistema (sha256 registrado en varios documentos). NO se
-modifica in-place. Se emite un artefacto v2 nuevo.
+**Estado:** EJECUTADO 2026-09-20 en el mismo commit que este plan.
 
-    NIPC_CONTRATOS_SEMANTICOS_v1.md    INTACTO (hash preservado)
-    NIPC_CONTRATOS_SEMANTICOS_v2.md    NUEVO
-      - incluye seccion "Deriva de v1"
-      - cita hash de v1
-      - documenta cambios materiales
+Cambios aplicados:
 
-Nota: esta es una excepcion documentada a la regla general "1 concepto
-= 1 fichero vivo". Aplica a contratos cuyo hash ya esta en cadena
-autoritativa. El auditor puede autorizar otro esquema si lo considera.
+    - Cabecera: Estado BORRADOR -> VIGENTE (F2.4 EMITIDO).
+    - Seccion 0: decisiones del F2.4 + contratos nuevos + reglas adicionales.
+    - Seccion 3.6: P38 PROPUESTO -> GO CONDICIONADO.
+    - Anexo 10.3: bloqueos actualizados.
+    - Secciones 11-14: P62 + P63 + P64 + P65.
+    - Linea final: pendiente A.6.0.
+
+**Consecuencia sobre el hash:** el sha256 del fichero al momento de
+someter F2.4 (3CEF80D0...) queda como referencia historica. No es un
+invariante. El estado vigente del documento prevalece sobre el hash.
 
 **Criterio de aceptacion:**
-- v2 escrito sin modificar v1.
-- v1 conserva su hash original.
-- v2 referencia explicitamente a v1.
+- Fichero editado in-place, sin sufijo _v2.
+- Contenido coherente con DICTAMENES.md #24.
+- Historial preservado por git.
 
 ---
 

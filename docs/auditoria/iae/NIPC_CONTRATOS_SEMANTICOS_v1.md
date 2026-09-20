@@ -2,7 +2,7 @@
 
 **Objeto:** contrato habilitante de identidad, validez temporal y cobertura pairwise para el modulo NIPC.
 **HEAD al redactar:** 77d4785.
-**Estado:** BORRADOR. No aplicable a NIPC_COVERAGE_POLICY.md v1.0 ni v1.2 hasta dictamen F2.4.
+**Estado:** VIGENTE (2026-09-20). F2.4 EMITIDO (GO CONDICIONADO). Ver DICTAMENES.md #24.
 
 **Precedencia transitoria:** mientras este contrato y NIPC_COVERAGE_POLICY_V13_PROPUESTA.md sean borradores, NIPC_COVERAGE_POLICY.md v1.0 permanece como referencia normativa vigente. Una vez aprobado formalmente este contrato y aplicada la policy v1.3, el contrato habilitante prevalece sobre cualquier parafrasis de la policy.
 **Origen:** dictamen formal del auditor (2026-09-20), que clasifico P38/P60/P61 como NO GO con contrato requerido.
@@ -40,6 +40,32 @@ pondera en la cobertura**.
 **Estado tras este documento:** P60 y P61 CERRADOS contractualmente. P38 EN REDACCION.
 
 **No se autoriza ningun cambio de codigo ni de policy todavia.**
+
+---
+
+**Actualizacion 2026-09-20 (F2.4):** decisiones confirmadas por el auditor externo.
+
+    D1 P61       GO              Conectar resolve_source_status + evidence extendida.
+    D2 P38       GO CONDICIONADO  TARGET real + rediseno independencia del mapping.
+    D3 P60       GO              Fail-closed, sin default TICKER.
+    Q12          Modelo A        shareClassFIGI (unidad = share class).
+    AGREG.       Opcion 2        Funcion separada + solo VERIFIED al peso contractual.
+    OpenFIGI     GO CONDICIONADO Snapshot + hash, no dependencia live.
+    Policy v1.3  NO              v1.0 sigue normativa.
+
+**Contratos nuevos formalizados por este dictamen:**
+
+    P62  Point-in-time (ver seccion 11).
+    P63  Missing != Sold (ver seccion 12).
+    P64  Corporate Actions (ver seccion 13).
+    P65  Manager Duplication (ver seccion 14).
+
+**Reglas adicionales adoptadas:**
+
+    - unmapped_count int separado de unmapped_weight float.
+    - compute_nipc sin degradacion silenciosa (evidence_class CONTRACTUAL|PROXY).
+    - PositionRecord tipado en coverage.py.
+    - Solo VERIFIED al peso contractual; unverified_weight conservado aparte.
 ---
 
 ## 1. Identity Contract (P60)
@@ -294,7 +320,8 @@ contractual no cambia.
 
 ### 3.6. Estado
 
-**P38 = PROPUESTO / SOMETIDO A F2.4.**
+**P38 = GO CONDICIONADO (F2.4, 2026-09-20).** Denominador TARGET_PAIRWISE
+confirmado. Implementacion con evidencia contractual en A.6.2 + A.6.2-bis.
 ---
 
 ## 4. TARGET / RESOLVED / PAIRED
@@ -556,21 +583,177 @@ sea GO.
 
 ### 10.3. Estado de bloqueos
 
-    P38   PROPUESTO / SOMETIDO A F2.4
-    P60   PROPUESTO / SOMETIDO A F2.4
-    P61   PROPUESTO / SOMETIDO A F2.4
+    P38   GO CONDICIONADO (F2.4, 2026-09-20)
+    P60   GO (F2.4, 2026-09-20)
+    P61   GO (F2.4, 2026-09-20)
+    P62   FORMALIZADO (F2.4, 2026-09-20)
+    P63   FORMALIZADO (F2.4, 2026-09-20)
+    P64   FORMALIZADO (F2.4, 2026-09-20)
+    P65   FORMALIZADO (F2.4, 2026-09-20)
     P70   CERRADO (NIPC_P70_DICTAMEN.md)
 
     THRESHOLD_1                          UNDEFINED
-    THRESHOLD_2                          UNDEFINED
-    Policy v1.0                          INTACTA
-    Policy v1.2                          NO APLICADA
+    THRESHOLD_2                          BLOQUEADO
+    Policy v1.0                          INTACTA (normativa vigente)
+    Policy v1.3                          NO APROBADA
     Codigo productivo                    SIN CAMBIOS
     OpenFIGI masivo                      NO AUTORIZADO
     Gate-NIPC.2                          BLOQUEADO
     Gate-NIPC.3                          NO AUTORIZADO
-    F2.4                                 NO AUTORIZADA
+    F2.4                                 EMITIDO 2026-09-20 (GO CONDICIONADO)
+    Certificacion "acumulacion"          BLOQUEADA
 
 ---
 
-Fin del documento. Version 1.0 (2026-09-20). HEAD 77d4785.
+## 11. Point-in-time Contract (P62)
+
+**Origen:** bloqueante 2 del dictamen F2.4 (2026-09-20).
+
+### 11.1. Principio rector
+
+Toda entidad (catalogo, mapping, universos) que se aplique a un periodo
+historico debe declarar explicitamente su validez temporal. Aplicar la
+version de hoy retroactivamente introduce survivorship bias y look-ahead bias.
+
+### 11.2. Tres timestamps obligatorios
+
+Conservar separados:
+
+    period_end        cierre del trimestre (13F: 31-mar, 30-jun...)
+    filing_date       fecha del filing (SUBMISSION filing_date)
+    knowledge_date    fecha en que el sistema conocio el dato (ingesta)
+
+No son equivalentes. Un agregado con period_end=Q1 2026 pudo conocerse
+semanas despues.
+
+### 11.3. Catalogo versionado
+
+`radar_target_catalog.csv` debe llevar:
+
+    catalog_version
+    catalog_valid_from
+    catalog_valid_to    (NULL si vigente)
+
+Alternativa admitida: target_catalog_as_of(period_end).
+
+### 11.4. OpenFIGI no expone effective_date
+
+Verificado. No asumir que una consulta actual constituye identificacion
+historica. Snapshot + hash por consulta (ver seccion 13).
+
+### 11.5. Estado
+
+**P62 = FORMALIZADO.** Implementacion en A.6.7.
+
+---
+
+## 12. Missing != Sold Contract (P63)
+
+**Origen:** dictamen F2.4 seccion 11.
+
+### 12.1. Principio rector
+
+"Una security no aparece" NO implica "fue vendida". La ausencia puede
+deberse a: posicion bajo minimis, tratamiento confidencial, ausencia de
+filing, o fallo de resolucion.
+
+### 12.2. Seis estados obligatorios
+
+    ZERO_REPORTED               filing existe, SHPRNAMT=0
+    MISSING                     filing no incluye la security
+    BELOW_REPORTING_THRESHOLD   bajo umbral minimis SEC
+    CONFIDENTIAL                tratada como confidencial por la SEC
+    UNRESOLVED                  identidad no resuelta
+    SOLD                        evidencia directa de venta
+
+En 13F, Q4=100 -> Q1=ausencia se etiqueta MISSING salvo evidencia adicional.
+
+### 12.3. NO_MATCH (mapping) != NOT_TARGET (cobertura)
+
+    NO_MATCH      OpenFIGI no resolvio el identificador.
+    NOT_TARGET    la security no pertenece al universo contractual.
+
+Prohibido transformar NO_MATCH en NOT_TARGET sin politica explicita.
+
+### 12.4. Estado
+
+**P63 = FORMALIZADO.** Distincion obligatoria en delta_shares.py.
+
+---
+
+## 13. Corporate Actions Contract (P64)
+
+**Origen:** dictamen F2.4 seccion 12.
+
+### 13.1. Principio rector
+
+Un cambio de shares entre Q4 y Q1 puede ser economico (compra/venta) o
+mecanico (corporate action). El sistema debe distinguirlos.
+
+### 13.2. Eventos que rompen continuidad
+
+    split
+    reverse split
+    spin-off
+    merger
+    share-class conversion
+    CUSIP change (por reorganizacion corporativa)
+
+### 13.3. Regla
+
+`delta_shares.py` devuelve por observacion:
+
+    delta_shares_economic      atribuible a compra/venta
+    delta_shares_mechanical    atribuible a corporate action
+    delta_shares_total         = economic + mechanical
+
+Cuando la atribucion no es posible, delta_shares_total es el valor;
+economic y mechanical quedan NULL con flag.
+
+### 13.4. Fuentes de deteccion
+
+Actuales: relationships.py + amendments.py.
+Futuras: calendario de corporate actions (fuera de alcance v1).
+
+### 13.5. Estado
+
+**P64 = FORMALIZADO.**
+
+---
+
+## 14. Manager Duplication Contract (P65)
+
+**Origen:** dictamen F2.4 seccion 13.
+
+### 14.1. Principio rector
+
+Form 13F admite estructura multi-manager. Una misma posicion economica
+puede ser reportada por varios filings (other included manager, combination
+report). Agregar sin resolver la estructura duplica peso.
+
+### 14.2. Unidad obligatoria
+
+Definir explicitamente la unidad de agregacion:
+
+    manager            entidad legal (CIK)
+    manager-group      grupo bajo una combinacion
+    filing             accession individual
+    position           una fila INFOTABLE
+    security           CUSIP o canonical_security
+
+La unidad por defecto del NIPC es `security`. Cuando el universo admite
+multiples filings para la misma posicion economica, se aplica deduplicacion.
+
+### 14.3. Regla
+
+Prohibido agregar el universo 13F por CUSIP sin resolver previamente la
+estructura del filing.
+
+### 14.4. Estado
+
+**P65 = FORMALIZADO.**
+
+
+---
+
+Fin del documento. F2.4 emitido 2026-09-20. Pendiente A.6.0 (Gate 0 bloqueantes).
