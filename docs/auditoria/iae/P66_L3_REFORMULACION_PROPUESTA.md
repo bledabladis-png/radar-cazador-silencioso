@@ -1,9 +1,9 @@
-# IAE - P66 L3 Reformulacion propuesta (v7-bis)
+# IAE - P66 L3 Reformulacion propuesta (v7-ter)
 
-**Estado:** v7-bis ronda final. Aplicadas las correcciones de los
-dictamenes #37 y #38 (flujo unico R3, §3.4 como nota, trazabilidad,
-nota de evidencia historica) + §0.5 Clausula de cierre contractual.
-Pendiente de dictamen GO sobre esta version.
+**Estado:** v7-ter ronda final. Aplicadas las correcciones del
+dictamen #39 (PASO 0 precondicion de completitud + §0.5 v7-bis) +
+§0.5 Clausula de cierre contractual. Pendiente de dictamen GO
+sobre esta version.
 
 **Trazabilidad de dictamenes:**
 
@@ -17,7 +17,8 @@ Pendiente de dictamen GO sobre esta version.
     #35  corregido
     #36  corregido
     #37  corregido
-    #38  §3.4 como nota + 2 correcciones editoriales (v7-bis ronda final)
+    #38  corregido
+    #39  PASO 0 (completitud) + correccion §0.5 (v7-ter ronda final)
 
 **Consolidacion:** este documento reemplaza las versiones v1/v2/v3.
 Todas las correcciones anteriores estan integradas. No se conservan
@@ -114,7 +115,8 @@ inferencia. Solo CIK directo o FormNum con resolucion univoca.
 | v5 | Consolidacion. Correcciones #35 aplicadas. |
 | v6 | Correcciones #36 aplicadas. |
 | v7 | Correcciones #37 aplicadas + §0.5 Clausula de cierre. |
-| **v7-bis** | **Ronda final. §3.4 como nota (dictamen #38) + trazabilidad + rotulacion evidencia historica.** |
+| v7-bis | Correcciones #38 aplicadas (§3.4 como nota + trazabilidad + rotulacion evidencia). |
+| **v7-ter** | **Ronda final. PASO 0 (completitud del scope) + §0.5 v7-bis. Candidata a GO contractual.** |
 
 ### 0.5. Clausula de cierre contractual
 
@@ -148,7 +150,7 @@ El mero hecho de que una observacion sea posterior al GO no
 determina por si mismo su materialidad. La clasificacion debera
 justificarse por su impacto sobre el contrato.
 
-**Condicion de cierre:** el GO contractual de v7 autoriza el
+**Condicion de cierre:** el GO contractual de v7-bis autoriza el
 traslado del texto aprobado a NIPC_CONTRATOS_SEMANTICOS_v1.md.
 Cualquier observacion posterior tendra que demostrar impacto
 material conforme a esta seccion para reabrir P66.
@@ -331,6 +333,43 @@ determinable:
 **Este es el unico algoritmo contractual de determinacion de R3.**
 No existen reglas solapadas entre secciones. Los pasos se ejecutan
 en orden estricto.
+
+**PASO 0. Verificacion de integridad y completitud del scope R4.**
+
+Antes de poder afirmar cualquier resultado de R3 debe estar
+demostrada:
+
+    - Ingestion completa y verificada del scope CIK + PERIODOFREPORT.
+    - Disponibilidad integra de los registros necesarios para
+      clasificar BASE / AMENDMENT.
+    - Ausencia de registros R4 con SUBMISSIONTYPE / REPORTTYPE
+      ausentes, invalidos o no clasificables.
+
+Reglas:
+
+    Si la completitud del scope NO puede demostrarse:
+        -> R3 = N/D.
+
+    Si existe un registro potencialmente R4 cuya clasificacion
+    no puede determinarse inequivocamente:
+        -> R3 = N/D.
+
+    Solo despues de esta verificacion se procede con los pasos
+    siguientes.
+
+**Semantica de `R3 = FALSE`:** significa "se ha demostrado que no
+existe ningun filing R4 en el scope definido", NO simplemente
+"no aparece ninguno en el dataset disponible".
+
+La distincion es material:
+
+    scope completo + 0 R4           -> R3 = FALSE
+    scope no demostrable + 0 R4     -> R3 = N/D
+
+Evidencia relacionada: Gate 0.8 detecto 137-144 FormNum en
+OTHERMANAGER(R4) que no aparecian en COVERPAGE. La ingestion puede
+ser incompleta; el contrato no debe convertir "0 observados" en
+"0 existen".
 
 **PASO 1. Identificar todos los filings R4 del CIK + PERIODOFREPORT.**
 
@@ -874,6 +913,6 @@ del #38 (bloqueo material §3.4 + 2 editoriales) estan aplicadas.
 
 ---
 
-Fin de la propuesta v7-bis. Consolidacion final de los dictamenes
+Fin de la propuesta v7-ter. Consolidacion final de los dictamenes
 #28 a #34. Pendiente de dictamen contractual definitivo sobre el
 texto exacto antes de tocar NIPC_CONTRATOS_SEMANTICOS_v1.md.

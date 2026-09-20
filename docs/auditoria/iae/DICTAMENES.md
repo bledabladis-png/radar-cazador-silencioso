@@ -1735,3 +1735,74 @@ vigente es la de v7-bis. HASHES preservados.
 
 Enviar v7-bis al auditor. Segun su propia declaracion, GO
 CONTRACTUAL FINAL sin nueva cuestion arquitectonica.
+
+
+---
+
+## 39. P66 - Dictamen auditor externo v13 (2026-09-21)
+
+**Tipo:** dictamen del auditor externo sobre P66_L3_REFORMULACION_PROPUESTA.md
+v7-bis.
+
+**Resultado:** NO-GO contractual. 1 bloqueo material + 1 correccion
+editorial.
+
+### Bloqueo material
+
+**Falta precondicion de integridad/completitud para R3=FALSE.**
+
+Sin PASO 0, "BASE=0 + AMENDMENT=0 -> R3=FALSE" puede convertir
+"0 observados en dataset incompleto" en "0 existen".
+
+Correccion aplicada: PASO 0 en §3.2.
+
+    Si la completitud del scope NO puede demostrarse:
+        -> R3 = N/D.
+
+    Si existe registro potencialmente R4 cuya clasificacion no
+    es inequivoca:
+        -> R3 = N/D.
+
+    Solo despues:
+        0 bases + 0 amendments -> R3 = FALSE.
+
+Semantica explicita: R3=FALSE = "se ha demostrado que no existe
+ningun filing R4 en el scope", no "no aparece en el dataset".
+
+Distincion material:
+
+    scope completo + 0 R4           -> R3 = FALSE
+    scope no demostrable + 0 R4     -> R3 = N/D
+
+Evidencia relacionada: Gate 0.8 detecto 137-144 FormNum en
+OTHERMANAGER(R4) no presentes en COVERPAGE. La ingestion puede
+ser incompleta; el contrato no debe confundir "0 observados" con
+"0 existen".
+
+### Correccion editorial
+
+§0.5 "el GO contractual de v7" -> "v7-bis". Aplicado a v7-ter.
+
+### Declaracion del auditor
+
+    "Despues de incorporar ese PASO 0 y corregir la referencia
+     v7 -> v7-bis, considero que si procede el GO CONTRACTUAL FINAL.
+
+     No debe existir ningun escenario en el contrato en el que
+     '0 registros observados' sea suficiente para concluir R3=FALSE
+     sin haber demostrado previamente que la busqueda/ingestion del
+     universo R4 fue completa."
+
+### Estado
+
+    1 bloqueo #39              APLICADO EN V7-TER
+    1 editorial #39            APLICADO EN V7-TER
+    Propuesta v7-ter           CANDIDATA A GO CONTRACTUAL
+    Contrato 14.3              NO MODIFICAR AUN
+    reporting_dedup.py         NO TOCAR
+    DROP_DUP                   NO ACTIVAR
+
+### Siguiente paso
+
+Enviar v7-ter al auditor. Segun su declaracion, GO CONTRACTUAL
+FINAL.
