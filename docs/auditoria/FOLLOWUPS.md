@@ -2431,3 +2431,24 @@ P65 v3 (ver iae/DICTAMENES.md #26). GO CONDICIONADO con 3 correcciones.
 - **Pendiente:** dictamen contractual definitivo del auditor.
 - **NO se ha hecho:** sin XML, sin reporting_dedup.py, sin DROP_DUP,
   sin tocar contrato 14.3.
+
+
+## P66 - Dictamen #35 y propuesta v5 consolidada (2026-09-21)
+
+- **Origen:** dictamen #35 tras propuesta v4.
+- **Resultado:** NO-GO contractual. Evidencia PASS.
+- **5 bloqueos aplicados en v5:**
+  - 1: BASE_R4 global + >1 base R4 -> N/D.
+  - 2: Validacion completa de la cadena de amendments.
+  - 3: Estado INCONSISTENT -> CONFLICT. Identidad resuelta coherente.
+  - 4: Prefijo FormNum {28, 028} estricto.
+  - 5: NEW HOLDINGS consistente = igualdad exacta de conjunto.
+- **1 ajuste menor:**
+  - 6: Terminologia "canonicalizacion IAE" en §4.1.
+- **Condicion de cierre del auditor:** v5 con estas 6 correcciones
+  sin heuristicas nuevas = GO CONTRACTUAL.
+- **Propuesta v5:** 699 lineas, 22,642 bytes. Pass interno OK.
+- **Evidencia:** `iae/DICTAMENES.md` #35.
+- **Pendiente:** enviar v5 al auditor.
+- **NO se ha hecho:** sin XML, sin reporting_dedup.py, sin DROP_DUP,
+  sin tocar contrato 14.3.

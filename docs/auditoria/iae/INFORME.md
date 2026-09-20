@@ -872,6 +872,42 @@ Gate 0.10 ejecutado: evidencia en
 
 Evidencia: `iae/DICTAMENES.md` #34.
 
+
+
+### Dictamen P66 #35 + propuesta v5 consolidada (2026-09-21)
+
+Resultado: NO-GO contractual. Evidencia PASS. 5 bloqueos materiales
++ 1 ajuste menor, todos aplicados en v5.
+
+**5 bloqueos #35 aplicados:**
+- 1: BASE_R4 global (todas las bases NOTICE+COMBINATION antes de
+  construir cadena, no por familia aislada). >1 base R4 -> R3=N/D.
+- 2: Cadena de amendments validada completa: AMENDMENTNO entero
+  1..99, sin huecos, tipos reconocibles.
+- 3: Identidad resuelta coherente con CIK/FormNum. Nuevo estado
+  INCONSISTENT -> CONFLICT.
+- 4: Prefijo FormNum restringido a {28, 028}. Prohibido padding
+  generico.
+- 5: NEW HOLDINGS "consistente" definido operacionalmente como
+  igualdad exacta de conjunto OTHERMANAGER_state.
+
+**1 ajuste menor aplicado:**
+- 6: Terminologia §4.1 "canonicalizacion IAE" (no formato SEC
+  obligatorio).
+
+**Condicion de cierre del auditor:** "Cuando estas seis correcciones
+esten incorporadas en la v5, mi criterio seria GO CONTRACTUAL,
+sin necesidad de tocar todavia reporting_dedup.py ni activar
+DROP_DUP, siempre que la v5 no introduzca nuevas reglas
+heuristicas."
+
+Propuesta v5 (699 lineas, 22,642 bytes). Pass interno ejecutado.
+
+Evidencia: `iae/DICTAMENES.md` #35.
+
+Siguiente paso: enviar v5 al auditor con expectativa de GO
+contractual.
+
 ### Estado
 
     Fuente             APROBADA (OTHERMANAGER)
