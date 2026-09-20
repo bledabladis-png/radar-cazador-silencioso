@@ -1352,3 +1352,70 @@ Referencia: prompt maestro v6.30, secciones 11.17 a 11.19 y 15.21. Nueve fixes a
 - **Estado de gates:** F2.3 PENDIENTE EXTERNO. F2.4 NO AUTORIZADA. THRESHOLD_1/2 UNDEFINED. OpenFIGI NO AUTORIZADO. Gate-NIPC.2 BLOQUEADO. Gate-NIPC.3 NO AUTORIZADO.
 - **Policy v1.0 intacta:** hash 57f2d01f...
 - **Sin push.** 58 commits locales ahead.
+
+
+---
+
+## Ciclo 2026-09-20 - Limpieza documental + regla 1 concepto = 1 fichero
+
+**HEAD al cierre:** 4fe2b62.
+**Ahead origin/main:** 108 commits.
+**Tests:** 979 passed + 2 skipped.
+
+### Contexto
+
+Tras la auditoria estructural (14 bloques) y el diagnostico de
+divergencias contrato <-> codigo, se detecto que `docs/auditoria/`
+habia acumulado 81 .md sin estructura, con 5 versiones de la spec NIPC,
+4 versiones de la policy de cobertura, 23 dictamenes sueltos y 17
+informes sin consolidar. La trazabilidad se habia convertido en ruido.
+
+### Acciones
+
+1. Limpieza fisica de `docs/auditoria/`:
+   - 81 .md -> 27 .md organizados en iae/ (9), radar/ (8),
+     auditorias/ (4), raiz (3: PROMPT, FOLLOWUPS, README) + evidence/.
+   - Consolidacion de 17 informes IAE en `iae/INFORME.md`.
+   - Consolidacion de 23 dictamenes IAE en `iae/DICTAMENES.md`.
+   - Borrado de versiones previas (spec v1.0-v1.3, policy V11/V12).
+   - Borrado de transfers de sesion (6).
+   - Borrado de huerfanos (4).
+   - Borrado de `archive/` completo (56 .md redundantes).
+   - Borrado de `validation/archive/` (60), `scripts/archive/` (4),
+     `docs/plan/` (2).
+   - Borrado de `__pycache__` (28 dirs) + `.pyc` (504).
+
+2. Regla nueva (PROMPT_MAESTRO v6.44 seccion 3.7):
+   - 1 concepto = 1 fichero vivo.
+   - Al evolucionar, se edita in-place.
+   - Las versiones previas se borran si su contenido esta embebido
+     en la version vigente.
+   - Prohibido ficheros con sufijos `_v1.md`, `_V12_PROPUESTA.md`,
+     `_DICTAMEN_C.md`.
+   - Basura = borrar. Sin apelar a git.
+
+3. Nuevo `docs/auditoria/README.md`: navegacion + convenciones + rutas
+   por rol.
+
+4. Nuevo `docs/auditoria/iae/RECONCILIACION_CONTRATO_CODIGO.md`:
+   expediente de las 3 divergencias contrato <-> codigo (D1 P61 no
+   conectado, D2 P38 con proxy, D3 P60 sin raise). Input para F2.4.
+
+### Commits
+
+    4fe2b62  chore(docs): limpieza total documental + regla 1 concepto = 1 fichero
+
+### Estado
+
+- Working tree limpio.
+- Validacion verde (compileall + pyflakes + pytest).
+- Bloqueos vigentes sin cambios: F2.4 pendiente, THRESHOLD_1/2
+  UNDEFINED, Gate-NIPC.2 BLOQUEADO, OpenFIGI masivo NO AUTORIZADO.
+
+### Proximo paso
+
+F2.4 debe dictaminar sobre las 3 divergencias del expediente. La
+reconciliacion de codigo queda bloqueada hasta entonces.
+
+---
+
