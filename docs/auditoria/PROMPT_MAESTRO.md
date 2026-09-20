@@ -1,8 +1,8 @@
-# PROMPT MAESTRO v6.45 - INGENIERO SUPERVISOR DEL RADAR DE ROTACION SECTORIAL
+# PROMPT MAESTRO v6.46 - INGENIERO SUPERVISOR DEL RADAR DE ROTACION SECTORIAL
 
-Actualizado: 2026-09-20 (post dictamen externo sobre expediente F2.4, tests contractuales P60/P61/P38, deuda radar registrada. docs/auditoria en iae/ (12) + radar/ (9) + auditorias/ (4) + raiz (3). 988 passed + 5 xfailed + 2 skipped. 0 pyflakes. HEAD 04f3222. 114 commits ahead. Sin push (local-first IAE). F2.4 PENDIENTE EXTERNO. 3 divergencias contrato<->codigo identificadas con evidencia ejecutable)
+Actualizado: 2026-09-20 (F2.4 GO emitido por auditor externo. Expediente F2.4 aprobado tras 6 rondas de correcciones. A.6 desbloqueada. Pendiente aplicar decisiones D1/D2/D3/Q12/AGREG/OpenFIGI/Policy del dictamen. HEAD 23311b2. 129 commits ahead. Sin push. 989 passed + 5 xfailed + 2 skipped.)
 Estado: Operativo al 100% - 10 contratos temporales (FU-021-5 + FU-021-3C-bis) - 979 tests locales + 2 skipped - 0 warnings - Gate 10/10 - Deuda ALTA/MEDIA/BAJA activa: 0 - F2.4 PENDIENTE EXTERNO - P60/P61/P38 IMPLEMENTADOS
-Commit de referencia: 04f3222 (origin/main HEAD al redactar; el propio commit v6.45 sera HEAD tras push)
+Commit de referencia: 23311b2 (origin/main HEAD al redactar; el propio commit v6.46 sera HEAD tras push)
 
 ---
 
@@ -1542,7 +1542,7 @@ Select-String -SimpleMatch desactiva regex → el | se trata como literal. No us
 | Fuentes europeas | 51 (Euronext 13 + Xetra 19 + BME 19) |
 | Fuente commodities | OilPriceAPI (BZ=F, CL=F, GC=F, HG=F, NG=F) |
 | Fuente term structure | CBOE (^VIX3M) |
-| Tests locales | 988 passed + 5 xfailed + 2 skipped |
+| Tests locales | 989 passed + 5 xfailed + 2 skipped |
 | Tests CI | ~610 collected con skips (parquet gitignored) |
 | Validation Gate | 10/10 |
 | pyflakes | 0 warnings |
@@ -1554,7 +1554,7 @@ Select-String -SimpleMatch desactiva regex → el | se trata como literal. No us
 | RADAR_TARGET_CATALOG | MATERIALIZADO 2026-09-19 (242 filas, 240 OK, 2 MISS: BRK-B, MOG-A). Hash 11eabce8... Construido desde OpenFIGI TICKER/US -> shareClassFIGI, independiente del crosswalk interno. TARGET_UNIVERSE resolver operativo (8 tests). |
 | Coverage baseline NIPC | Fase A cerrada. TOP 2000 (Q1 2026, CURRENT_RETROSPECTIVE): target_true=210 (10.50% count, 32.8079% weight); corregido 212/33.3428%. target_false=1567 (78.35%, 55.68%). no_id=220 (11.0%, 8.86%). error=3 (0.15%, 2.65%). Delta +0.5349 pp por 2 canales adicionales. THRESHOLD_1/2 UNDEFINED |
 | .git size | ~13 MB |
-| HEAD | 04f3222 (114 commits locales ahead de origin/main) |
+| HEAD | 23311b2 (114 commits locales ahead de origin/main) |
 
 ### 15.1. Hitos del ciclo FU-021-3C-bis (2026-09-16)
 

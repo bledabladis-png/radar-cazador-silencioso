@@ -1798,3 +1798,49 @@ trataria como paquete F2.4 listo para auditor externo." Aplicadas las
 Paquete F2.4 v6 listo para enviar. Sin mas iteraciones previstas.
 
 ---
+
+
+---
+
+## HITO: F2.4 GO (2026-09-20)
+
+**HEAD:** 23311b2.
+**Ahead origin/main:** 129.
+
+El auditor externo ha emitido **GO sobre el expediente F2.4** tras la
+aplicacion de las 4 correcciones finales (commit `8e4d957`).
+
+### Significado
+
+- Expediente F2.4 aprobado.
+- Fase A.6 desbloqueada.
+- Decisiones D1/D2/D3/Q12/AGREG/OpenFIGI/Policy v1.3 deben ser
+  aplicadas segun el dictamen formal del auditor.
+
+### Pendiente antes de A.6
+
+Confirmar con el auditor el contenido exacto de las 7 decisiones:
+
+    D1 (P61)   ¿Conectar resolve_source_status o retirar
+               temporal_validity.py?
+
+    D2 (P38)   ¿TARGET real (requiere OpenFIGI) o proxy
+               observacional NO CONTRACTUAL?
+
+    D3 (P60)   ¿Rechazar filas sin identity_type o mantener
+               default TICKER?
+
+    Q12        ¿Pairing por shareClassFIGI (A) o por
+               canonical_security (B)?
+
+    AGREG.     ¿Opcion 1 (agregacion en coverage.py) o
+               Opcion 2 (funcion separada)?
+
+    OpenFIGI   ¿Autorizado para materializacion completa TARGET?
+
+    Policy v1.3  ¿Aprobada o mantener v1.0?
+
+Sin estas respuestas, A.6 no puede ejecutarse: el plan tiene ramas
+condicionales para cada una.
+
+---
