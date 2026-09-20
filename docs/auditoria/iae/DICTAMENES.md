@@ -34,6 +34,7 @@
 | 21 | `INSTITUTIONAL_ACCUMULATION_NIPC_GATE0_TOP50_DICTAMEN.md` | Decision: **SI, CIERRE DEL CICLO** |
 | 22 | `INSTITUTIONAL_ACCUMULATION_OPENFIGI_DICTAMEN_F23BIS.md` | **Estado global:** GO CONDICIONADO |
 | 23 | `NIPC_P70_DICTAMEN.md` | **Estado:** GO CONDICIONADO (caso B del arbol de decision del dictamen del audit |
+| 24 | `F24_DICTAMEN.md` (integrado en este consolidado) | **GO CONDICIONADO arquitectura** + 3 bloqueantes. D1 GO, D2 GO CONDICIONADO, D3 GO, Q12 Modelo A, AGREG. Opcion 2, OpenFIGI GO CONDICIONADO, Policy v1.3 NO. THRESHOLD_2 BLOQUEADO. |
 
 ---
 
@@ -254,5 +255,74 @@ Fin del registro de dictamenes.
 
 **Estado:** dictamen ABIERTO para F2.4 (el auditor debe emitir F2.4
 formal con las decisiones Q12/A o Q12/B).
+
+---
+
+## 24. F2.4 - Dictamen formal (2026-09-20)
+
+**Tipo:** dictamen del auditor externo sobre la submission v6 (HEAD 8e4d957 / 3ad57b1).
+**Objeto:** D1 P61 / D2 P38 / D3 P60 + Q12 + AGREG. + OpenFIGI + Policy v1.3.
+
+**Resultado global:**
+
+    F2.4 ARQUITECTURA              GO CONDICIONADO
+    D1 P61                         GO
+    D2 P38                         GO CONDICIONADO (redisenar independencia del mapping)
+    D3 P60                         GO
+    Q12                            GO - shareClassFIGI (Modelo A)
+    AGREG.                         GO - Opcion 2 (funcion separada)
+    Estado de agregacion           Solo VERIFIED al peso contractual; unverified aparte
+    OPENFIGI                       GO CONDICIONADO (snapshot+hash, no dependencia live)
+    POLICY v1.3                    NO (texto no auditable en este expediente)
+    THRESHOLD_2                    BLOQUEADO
+    CERTIFICACION "ACUMULACION"    BLOQUEADA
+
+### Decisiones sobre las 3 divergencias
+
+| Div | Contrato | Dictamen        | Detalle |
+|-----|----------|-----------------|---------|
+| D1  | P61      | GO              | Opcion A. Conectar resolve_source_status. Evidence debe conservar source + valid_from + valid_to + provenance_id + resolution_timestamp. |
+| D2  | P38      | GO CONDICIONADO | Opcion A (TARGET real) + rediseno: TARGET no puede depender del exito del mapping (sesgo de seleccion). |
+| D3  | P60      | GO              | Opcion A (fail-closed). Si falta columna identity_type: registrar schema_error/identity_type_missing. |
+
+### Decisiones arquitectonicas
+
+- Q12 = Modelo A (shareClassFIGI). Clausula explicita: "unidad economica = share class" (no issuer).
+- AGREG. = Opcion 2. aggregate_positions_by_shareclass_figi() separada de compute_contractual_coverage().
+- Estado de agregacion: solo VERIFIED aporta al peso contractual. unverified_weight se conserva aparte. Nunca unverified = 0.
+- OpenFIGI: snapshot + hash, NO dependencia live. Cada mapping conserva: input_identifier, id_type, shareClassFIGI, FIGI, mapping_status, query_timestamp, response_hash, source.
+- Policy v1.3: NO aprobada (texto completo no incluido). v1.0 sigue normativa.
+
+### 3 bloqueantes estructurales (nuevos)
+
+1. TARGET independiente del exito del mapping. El denominador no puede depender de la calidad del proceso que se mide. Separar CATALOGO (externo, versionado) de TARGET_OBSERVED.
+
+2. Semantica point-in-time. Catalogo y mappings necesitan catalog_version / catalog_valid_from / catalog_valid_to, o target_catalog_as_of(period_end). OpenFIGI no expone effective_date: no asumir consulta actual = identificacion historica.
+
+3. 13F != flujo en tiempo real. Posiciones al cierre de trimestre + publicacion hasta 45 dias. Sin cortos, con minimis, con confidencialidad. Etiqueta correcta: "cambio trimestral observado de posiciones institucionales reportables via 13F".
+### 10 reglas adicionales exigidas
+
+1. period_end != filing_date != knowledge_date. Los tres se conservan.
+2. unmapped_count int, separado de unmapped_weight float.
+3. compute_nipc(target_q4=None) no degrada silenciosamente a proxy. Error duro o API dual. Minimo: evidence_class = CONTRACTUAL | PROXY.
+4. coverage.py: PositionRecord tipado (period, observed_security_key, shareClassFIGI, canonical_security, resolution_status, operational_mapping_status, weight, provenance) en lugar de listas paralelas.
+5. NO_MATCH != not_target. No transformar ausencia de mapping en ausencia de posicion.
+6. "No aparece" != "vendio". Estados: ZERO_REPORTED | MISSING | BELOW_REPORTING_THRESHOLD | CONFIDENTIAL | UNRESOLVED | SOLD. Por test.
+7. Corporate actions (split, reverse, spin-off, merger, conversion, CUSIP change). delta_shares debe distinguir economic accumulation de mechanical change.
+8. Manager duplication: 13F admite other included manager + combination reports. Unidad: manager / manager-group / filing / position / security.
+9. Tests obligatorios tras P38: TARGET_Q4 ^ TARGET_Q1; CUSIP distinto + FIGI igual -> PAIRED; FIGI distinto -> NOT_PAIRED; max(150,140)=150; VERIFIED + TEMPORAL; CONFLICT; NO_MATCH; target vacio; peso cero; ambiguous OpenFIGI. Fundamental: missing mapping != not target.
+10. 4 niveles de validacion: (1) correccion semantica, (2) integridad de datos SEC->parser->identity->target->NIPC, (3) validez economica, (4) poder predictivo. F2.4 certifica (1) y parcialmente (2).
+### Estado
+
+    THRESHOLD_1                UNDEFINED
+    THRESHOLD_2                BLOQUEADO
+    Gate-NIPC.2                BLOQUEADO
+    Gate-NIPC.3                NO AUTORIZADO
+    OpenFIGI masivo            NO AUTORIZADO (GO condicional arquitectonico)
+    Policy v1.3 aplicacion     NO AUTORIZADA
+    Push a origin/main         NO
+    Certificacion "acumulacion" BLOQUEADA
+
+**Siguiente:** actualizar FASE_A6_PLAN.md + REESTRUCTURACION_MODULO.md + NIPC_CONTRATOS_SEMANTICOS_v1.md. Gate 0 de los 3 bloqueantes antes de tocar codigo.
 
 ---
