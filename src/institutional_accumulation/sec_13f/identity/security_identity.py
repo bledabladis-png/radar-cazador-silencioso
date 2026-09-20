@@ -88,8 +88,8 @@ EQUIVALENCE_COLUMNS = (
     "identity_type",
 )
 
-# identity_type es opcional (Q8); si falta, se asume TICKER por
-# retrocompatibilidad con el CSV actual (0 filas).
+# identity_type: obligatorio por P60 / F2.4 (fail-closed).
+# Si la columna falta en el CSV -> ValueError (ver load_cusip_equivalence).
 EQUIVALENCE_REQUIRED = (
     "CUSIP_A",
     "canonical_security",
