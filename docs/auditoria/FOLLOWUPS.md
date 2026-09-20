@@ -1765,3 +1765,36 @@ Expediente F2.4 en su version final (v5). Listo para enviar.
 F2.4 GO CONDICIONADO a este paquete.
 
 ---
+
+
+---
+
+## Ciclo 2026-09-20 (octavus) - F2.4 v6 paquete final
+
+**HEAD al cierre:** 8e4d957.
+**Ahead origin/main:** 128.
+
+### Correcciones aplicadas (4 puntos)
+
+  1. RECONCILIACION D3: titulo reformulado a "infiere TICKER cuando
+     falta identity_type declarado".
+  2. RECONCILIACION §6: eliminada la frase "Ninguno existe hoy".
+     Reemplazada por explicacion real de la tabla.
+  3. FASE_A6_PLAN A.6.4:
+     - titulo ampliado a "condicional a las decisiones F2.4".
+     - precondicion ampliada (D1/D2/D3/Q12/AGREG/Policy).
+     - rama D2=B: NO renombrar historicos. Generar v2 separada.
+  4. REESTRUCTURACION: diagrama nipc.py mas preciso.
+
+### Nota sobre las iteraciones
+
+6 rondas de revision con el auditor externo. En la ultima, el propio
+auditor afirmo: "Despues de esas cuatro correcciones, la entrega si la
+trataria como paquete F2.4 listo para auditor externo." Aplicadas las
+4, este v6 es el paquete final. Enviar y esperar dictamen.
+
+### Estado
+
+Paquete F2.4 v6 listo para enviar. Sin mas iteraciones previstas.
+
+---
