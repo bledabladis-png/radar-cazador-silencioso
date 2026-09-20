@@ -35,6 +35,16 @@ Los 8 commits de implementacion (2026-09-20):
 declarados incluyen otros previos de la sesion.)
 
 =============================================================================
+SECCION A.BIS - Documento tecnico para auditoria externa
+=============================================================================
+
+  docs/auditoria/NIPC_INFORME_TECNICO_AUDITORIA_EXTERNA.md
+
+  Contenido: resumen ejecutivo, arquitectura, contratos P60/P61/P38,
+  metricas, commits, tests, bloqueos, documentos, hueco TARGET, preguntas
+  al auditor (D1-D4 + Q1-Q13), lo que NO se ha hecho.
+
+=============================================================================
 SECCION B - Que funciona end-to-end
 =============================================================================
 
