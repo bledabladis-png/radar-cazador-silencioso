@@ -131,10 +131,18 @@ def compute_nipc(delta_df, *, discretion_breakdown=True):
 
 
 def _mapped_mask(units_df):
-    """True donde security_resolution_status == CANONICAL."""
+    """True donde CANONICAL AND operational_mapping_status == VERIFIED.
+
+    P61: solo entran al conjunto operacional las securities con identidad
+    resuelta Y validez historica verificada.
+    """
     if units_df is None or units_df.empty:
         return pd.Series(dtype=bool)
-    return units_df["security_resolution_status"] == "CANONICAL"
+    status_ok = units_df["security_resolution_status"] == "CANONICAL"
+    if "operational_mapping_status" not in units_df.columns:
+        return status_ok
+    op_ok = units_df["operational_mapping_status"] == "VERIFIED"
+    return status_ok & op_ok
 
 
 def compute_coverage_pairwise(units_current, units_previous):

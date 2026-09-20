@@ -50,6 +50,7 @@ UNITS_COLUMNS = (
     "security_resolution_status",
     "canonical_security_kind",
     "canonical_security",
+    "operational_mapping_status",
     "discretion_type",
     "sshprnamt_total",
     "n_source_lines",
@@ -144,6 +145,7 @@ def _attach_identity(df, identity_results):
         out["security_resolution_status"] = "OBSERVED_ONLY"
         out["canonical_security_kind"] = "OBSERVED_CUSIP_ONLY"
         out["canonical_security"] = None
+        out["operational_mapping_status"] = "UNRESOLVED"
         return out
 
     def _get(c, field):
@@ -165,6 +167,10 @@ def _attach_identity(df, identity_results):
     )
     out["canonical_security"] = cusips.apply(
         lambda c: _get(c, "canonical_security")
+    )
+    out["operational_mapping_status"] = cusips.apply(
+        lambda c: identity_results.get(c, {}).get(
+            "operational_mapping_status", "UNRESOLVED")
     )
     return out
 
@@ -210,6 +216,7 @@ def compute_reported_position_units(
         "security_resolution_status",
         "canonical_security_kind",
         "canonical_security",
+        "operational_mapping_status",
         "discretion_type",
     ]
 

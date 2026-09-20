@@ -36,12 +36,13 @@ def _mk_submission(rows):
 
 
 def _identity_entry(cusip, canonical="equity:AAPL", status="CANONICAL",
-                    kind="CANONICAL_EQUIVALENCE"):
+                    kind="CANONICAL_EQUIVALENCE", op_status="VERIFIED"):
     return {
         "observed_security_key": "cusip:" + cusip,
         "security_resolution_status": status,
         "canonical_security_kind": kind,
         "canonical_security": canonical,
+        "operational_mapping_status": op_status,
     }
 
 

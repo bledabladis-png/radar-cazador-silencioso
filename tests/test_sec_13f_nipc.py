@@ -20,6 +20,7 @@ def _units(rows):
         "security_resolution_status": "CANONICAL",
         "canonical_security_kind": "CANONICAL_EQUIVALENCE",
         "canonical_security": "equity:C1",
+        "operational_mapping_status": "VERIFIED",
         "discretion_type": "SOLE",
         "sshprnamt_total": 100.0,
         "n_source_lines": 1,
@@ -301,11 +302,13 @@ def test_end_to_end_units_delta_nipc():
         "C1": {"observed_security_key": "cusip:C1",
                "security_resolution_status": "CANONICAL",
                "canonical_security_kind": "CANONICAL_EQUIVALENCE",
-               "canonical_security": "equity:C1"},
+               "canonical_security": "equity:C1",
+               "operational_mapping_status": "VERIFIED"},
         "C2": {"observed_security_key": "cusip:C2",
                "security_resolution_status": "CANONICAL",
                "canonical_security_kind": "CANONICAL_EQUIVALENCE",
-               "canonical_security": "equity:C2"},
+               "canonical_security": "equity:C2",
+               "operational_mapping_status": "VERIFIED"},
     }
     u_q4 = ds.compute_reported_position_units(
         info_q4, sub_q4, report_period="2025-12-31", identity_results=idr)
@@ -358,4 +361,33 @@ def test_q5_coverage_status_unavailable_cuando_vacio():
     c = npc.compute_coverage_pairwise(pd.DataFrame(), pd.DataFrame())
     assert c["paired_weighted_share_coverage"] is None
     assert c["coverage_status"] == "UNAVAILABLE"
+
+# ---- P61 + P38 integracion ----
+
+def test_p61_temporal_unverified_excluido_del_conjunto_operacional():
+    """P61: TEMPORAL_UNVERIFIED no entra a RESOLVED ni a cobertura."""
+    u_c = _units([
+        {"observed_security_key": "cusip:A", "sshprnamt_total": 100.0,
+         "operational_mapping_status": "TEMPORAL_UNVERIFIED"},
+        {"observed_security_key": "cusip:B", "sshprnamt_total": 200.0,
+         "operational_mapping_status": "VERIFIED"},
+    ])
+    u_p = _units([
+        {"observed_security_key": "cusip:A",
+         "operational_mapping_status": "TEMPORAL_UNVERIFIED"},
+        {"observed_security_key": "cusip:B"},
+    ])
+    c = npc.compute_coverage_pairwise(u_c, u_p)
+    # TARGET_PAIRWISE = {A, B}
+    # RESOLVED operacional = {B} (A excluido por TEMPORAL_UNVERIFIED)
+    assert c["paired_security_coverage"] == 0.5
+
+
+def test_p61_verified_entra_al_conjunto_operacional():
+    u_c = _units([{"observed_security_key": "cusip:A"}])
+    u_p = _units([{"observed_security_key": "cusip:A"}])
+    c = npc.compute_coverage_pairwise(u_c, u_p)
+    assert c["coverage_current"] == 1.0
+    assert c["coverage_previous"] == 1.0
+    assert c["paired_security_coverage"] == 1.0
 
