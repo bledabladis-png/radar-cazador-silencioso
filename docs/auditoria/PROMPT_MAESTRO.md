@@ -1255,7 +1255,64 @@ por .gitattributes. HASHES.txt registrados se calcularon contra bytes
 CRLF, invalidables en clone limpio. Corregido en 9c67ac6 (mismo patron
 que baseline_output.txt).
 
+### 11.31. P66 - Reformulacion contrato 14.3 L3 (GO CONTRACTUAL 2026-09-21)
+
+**Origen:** ciclo P65 v2 (DROP_DUP efectivo). Gate 0 extendido
+revelo que la evidencia cruzada para L3 no estaba en
+`OTHERMANAGER2` ni `ADDITIONALINFORMATION`. Investigacion posterior
+confirmo que la fuente estructurada existe en `OTHERMANAGER` del
+Data Set SEC.
+
+**Ruta completa del ciclo:**
+
+1. Informe inicial P66 (hipotesis XML crudo, luego refutada).
+2. 10 gates empiricos (Gates 0.1 a 0.10).
+3. 12 dictamenes externos (#28 a #39).
+4. GO CONTRACTUAL por declaracion condicional cumplida (#39).
+5. Traslado a `NIPC_CONTRATOS_SEMANTICOS_v1.md` §14.3.
+
+**Hallazgos clave:**
+
+- `OTHERMANAGER` (no `OTHERMANAGER2`) es la tabla que documenta
+  la relacion "other managers reporting for this manager".
+- Cubre 100% de NT filings y de COMBINATION base en el universo
+  analizado.
+- `OTHERMANAGER2` es "included in this report" (otra relacion).
+- Universo R4 = NOTICE (NT + NT/A) + COMBINATION (HR + HR/A).
+- Mapping FormNum -> CIK via COVERPAGE + SUBMISSION: 1:1 estricta.
+- Normalizacion FormNum: prefijo {28, 028} -> 028; sufijo padding
+  flexible sin truncar.
+- Caso Gate 0.9: 1 caso de >1 filing base heterogeneo (CIK
+  0002016827 Q4 2025) -> R3 = N/D conservador.
+- Gate 0.8 detecto 137-144 FormNum huerfanos en OTHERMANAGER(R4),
+  evidencia de posible ingestion incompleta -> PASO 0.
+
+**Resultado contractual (§14.3 reformulada):**
+
+- §14.3.1 R3 tri-state (TRUE/FALSE/N/D) + PASO 0 completitud.
+- §14.3.2 Cadena de amendments determinista.
+- §14.3.3 NEW HOLDINGS determinabilidad estricta.
+- §14.3.4 R4 candidate_A formalizado + CONFLICT scoped a A.
+- §14.3.5 Mapping FormNum -> CIK.
+- §14.3.6 Canonicalizacion IAE de FormNum.
+- §14.3.7 Clausula de cierre contractual.
+
+**Commits clave:** `3a233b4` (traslado §14.3), `6e698ca` (GO + cierre).
+
+**Estado:** CERRADO. §14.3 trasladada. `reporting_dedup.py` NO
+tocado (segun indicacion del auditor). `DROP_DUP` NO activado
+(segun indicacion del auditor).
+
+**Siguiente ciclo autorizado:** tests contractuales sobre el nuevo
+§14.3, implementacion en `reporting_dedup.py`, probe e2e,
+auditoria de salida, activacion `DROP_DUP` (requiere nuevo dictamen).
+
+**Evidencia:** `iae/evidence/p66_gate0{3,4_reissue,5,6,7,8,9,10}/`.
+**Propuesta congelada:** `iae/P66_L3_REFORMULACION_PROPUESTA.md` (v7-ter).
+**Dictamenes:** `iae/DICTAMENES.md` #28 a #40.
+
 ---
+
 ## SECCION 12 - LIMITACIONES CONOCIDAS
 20 tickers .L sin provider oficial -> Aceptado.
 
@@ -2280,6 +2337,59 @@ BLOQUEADO. Gate-NIPC.3 NO AUTORIZADO. OpenFIGI masivo NO AUTORIZADO.
 Policy v1.3 aplicacion NO AUTORIZADA. F2.4 PENDIENTE EXTERNO.
 
 **Ahead al cierre:** 104 commits locales.
+
+### 15.34. Ciclo P66 - Reformulacion contrato 14.3 L3 (2026-09-21) - CERRADO
+
+**Objetivo:** reformular el contrato 14.3 para materializar el
+requisito 4 de L3 desde el Data Set SEC sin XML crudo.
+
+**Origen:** P65 v2 (DROP_DUP efectivo) se cerro WONT FIX porque
+la evidencia cruzada no estaba en el Data Set tabular segun el
+analisis inicial. Investigacion posterior confirmo que SI estaba,
+en la tabla `OTHERMANAGER`.
+
+**Duracion:** multiples iteraciones (~10 gates + 12 dictamenes).
+
+**Gates ejecutados:**
+
+- 0.1  Cobertura OTHERMANAGER por tipo de filing.
+- 0.2  Caso Vanguard.
+- 0.3  Granularidad de identidad.
+- 0.4  Mapping FormNum -> CIK via COVERPAGE.
+- 0.4-reissue  Filtro PERIODOFREPORT.
+- 0.5  Amendment probe (cross-period + restatement).
+- 0.6  Combination probe (universo R4).
+- 0.7  NEW HOLDINGS probe.
+- 0.8  Cobertura identidad universo R4 completo.
+- 0.9  Multiples filings base.
+- 0.10 FormNum representation.
+
+**Dictamenes:** #28 a #40.
+
+**GO contractual:** declaracion condicional del auditor en #39.
+
+**Resultado:** §14.3 reformulada con 7 subsecciones. Estructura
+§14.1 a §14.14 preservada.
+
+**Ficheros clave:**
+
+    iae/P66_L3_REFORMULACION_PROPUESTA.md         (v7-ter, propuesta)
+    iae/DICTAMENES.md                             (#28 a #40)
+    iae/INFORME.md                                (evidencia consolidada)
+    iae/evidence/p66_gate*/                       (evidencia empirica)
+    NIPC_CONTRATOS_SEMANTICOS_v1.md §14.3         (contrato reformulado)
+
+**Prohibiciones vigentes:**
+
+- NO tocar `reporting_dedup.py` sin nuevo dictamen.
+- NO activar `DROP_DUP` sin nuevo dictamen.
+- NO modificar §14.3 fuera del cauce previsto por §14.3.7.
+
+**Siguiente ciclo autorizado:** tests §14.3 -> implementacion
+`reporting_dedup` -> probe e2e -> auditoria de salida -> activacion
+`DROP_DUP`.
+
+---
 
 ## SECCION 16 - FRASE GUIA
 "Determinista, descriptivo, auditado. Paso a paso. Documentar. Saber parar."
