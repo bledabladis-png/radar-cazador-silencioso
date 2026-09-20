@@ -1529,3 +1529,71 @@ Las 6 correcciones aplicadas en propuesta v5.
 
 Reenviar v5 al auditor. Segun su propia declaracion, si la v5 no
 introduce heuristicas nuevas: GO CONTRACTUAL.
+
+
+---
+
+## 36. P66 - Dictamen auditor externo v10 (2026-09-21)
+
+**Tipo:** dictamen del auditor externo sobre P66_L3_REFORMULACION_PROPUESTA.md
+v5.
+
+**Resultado:** NO-GO contractual. Evidencia y arquitectura PASS.
+3 cierres materiales + 2 ajustes menores.
+
+### Condicion de cierre
+
+El auditor declara explicitamente:
+
+    "Una v6 que incorpore literalmente esos tres cierres materiales,
+     sin introducir nuevas heuristicas, estara en condiciones de
+     recibir: GO CONTRACTUAL FINAL."
+
+### 3 cierres materiales
+
+**1. BASE/AMENDMENT por SUBMISSIONTYPE + REPORTTYPE, no por
+ISAMENDMENT.**
+
+    BASE:
+        SUBMISSIONTYPE in {13F-NT, 13F-HR}
+        AND REPORTTYPE in universo R4
+
+    AMENDMENT:
+        SUBMISSIONTYPE in {13F-NT/A, 13F-HR/A}
+        AND REPORTTYPE in universo R4
+
+Si SUBMISSIONTYPE/ISAMENDMENT se contradicen: R3 = N/D.
+
+**2. Familia cerrada en la cadena de amendments.**
+
+    base NOTICE       -> solo amendments NOTICE
+    base COMBINATION  -> solo amendments COMBINATION
+
+Cruce de familia -> N/D.
+
+**3. NEW HOLDINGS consistente solo si ambos estados completamente
+determinables.**
+
+    Si alguna fila del filing tiene N/D o CONFLICT:
+        OTHERMANAGER_state NO determinable -> NEW HOLDINGS = N/D.
+
+Solo si ambos estados son determinables se compara igualdad de
+conjunto.
+
+### 2 ajustes menores
+
+- 4: "secuencia sin huecos" etiquetar como regla IAE (no SEC).
+- 5: corregir "Fin de la propuesta v4" -> v5/v6.
+
+### Estado
+
+    5 correcciones #36    APLICADAS EN V6
+    Propuesta v6          CANDIDATA FINAL
+    Contrato 14.3         NO MODIFICAR AUN
+    reporting_dedup.py    NO TOCAR
+    DROP_DUP              NO ACTIVAR
+
+### Siguiente paso
+
+Enviar v6 al auditor. Si no introduce heuristicas nuevas:
+GO CONTRACTUAL FINAL. Si introduce nuevos bloqueos: congelar v6.

@@ -1,7 +1,9 @@
-# IAE - P66 L3 Reformulacion propuesta (v5)
+# IAE - P66 L3 Reformulacion propuesta (v6)
 
-**Estado:** v5 consolidada. Pendiente de dictamen contractual definitivo
-sobre el texto exacto antes de tocar NIPC_CONTRATOS_SEMANTICOS_v1.md.
+**Estado:** v6 candidata final. Aplicadas las 5 correcciones del
+dictamen #36 sin introducir heuristicas nuevas. Pendiente de
+dictamen contractual final sobre el texto exacto antes de tocar
+NIPC_CONTRATOS_SEMANTICOS_v1.md.
 
 **Trazabilidad de dictamenes:**
 
@@ -12,7 +14,8 @@ sobre el texto exacto antes de tocar NIPC_CONTRATOS_SEMANTICOS_v1.md.
     #32  corregido
     #33  corregido
     #34  corregido
-    #35  5 bloqueos + 1 ajuste menor aplicados en este documento v5
+    #35  corregido
+    #36  3 cierres materiales + 2 ajustes aplicados en este documento v6
 
 **Consolidacion:** este documento reemplaza las versiones v1/v2/v3.
 Todas las correcciones anteriores estan integradas. No se conservan
@@ -106,7 +109,8 @@ inferencia. Solo CIK directo o FormNum con resolucion univoca.
 | v2 | Correcciones #28 aplicadas (fail-closed, nomenclatura). |
 | v3 | Correcciones #29 a #33 aplicadas (R4 completo, mapping, tri-state). |
 | v4 | Consolidacion. Correcciones #34 aplicadas + reescritura canonica. |
-| **v5** | **Consolidacion final. Correcciones #35 aplicadas. Candidata a GO contractual.** |
+| v5 | Consolidacion. Correcciones #35 aplicadas. |
+| **v6** | **Candidata final. Correcciones #36 aplicadas (BASE/AMENDMENT por tipo, familia cerrada, NEW HOLDINGS determinable). Sin heuristicas nuevas.** |
 
 ---
 
@@ -243,17 +247,42 @@ estados deben preservarse para auditoria. Son condiciones de
 
 ### 3.1. Clasificacion base vs amendment
 
+**Criterio contractual (dictamen #36, bloqueo 1):** la clasificacion
+se basa en `SUBMISSIONTYPE` + `REPORTTYPE`, NO en `ISAMENDMENT`.
+
     BASE:
-        ISAMENDMENT != Y
+        SUBMISSIONTYPE in {13F-NT, 13F-HR}
+        AND REPORTTYPE in universo R4 correspondiente
 
     AMENDMENT:
-        ISAMENDMENT == Y
+        SUBMISSIONTYPE in {13F-NT/A, 13F-HR/A}
+        AND REPORTTYPE in universo R4 correspondiente
 
-**Nunca usar AMENDMENTNO = null como prueba de que un filing es base.**
-La SEC distingue explicitamente el hecho de que un filing es
-amendment; el numero solo identifica el orden entre amendments.
+Definiciones del universo R4:
 
-Si `ISAMENDMENT == Y` y `AMENDMENTNO` no es determinable:
+    NOTICE family:
+        SUBMISSIONTYPE = 13F-NT / 13F-NT/A
+        AND REPORTTYPE = 13F NOTICE
+
+    COMBINATION family:
+        SUBMISSIONTYPE = 13F-HR / 13F-HR/A
+        AND REPORTTYPE = 13F COMBINATION REPORT
+
+**Regla de coherencia:** si `SUBMISSIONTYPE` / `ISAMENDMENT` se
+contradicen o no permiten clasificar inequivocamente el filing:
+R3 = N/D.
+
+Consecuencia: `ISAMENDMENT = <NA>` en un `13F-NT` (caso Gate 0.9)
+se clasifica correctamente como BASE por el `SUBMISSIONTYPE`, sin
+depender del campo nullable.
+
+**Nunca usar `AMENDMENTNO = null` ni `ISAMENDMENT != Y` como prueba
+contractual de que un filing es base.** La SEC distingue el
+amendment por el tipo de filing (`13F-NT/A`, `13F-HR/A`) y exige
+numero y tipo de amendment en esos filings.
+
+Si `SUBMISSIONTYPE == 13F-NT/A` (o `13F-HR/A`) y `AMENDMENTNO` no es
+determinable:
     N/D.
 
 ### 3.2. Construccion de la cadena efectiva
@@ -285,11 +314,40 @@ ser atrapado en este paso.
 
 ### 3.2-bis. Validacion de la cadena de amendments
 
-**Una vez identificada la base unica, validar la cadena completa
-(dictamen #35, bloqueo 2):**
+**Cierre por familia documental (dictamen #36, bloqueo 2):**
+
+Los amendments que entran en la cadena de una base deben pertenecer
+a la MISMA familia documental:
+
+    base NOTICE       -> solo amendments NOTICE
+    base COMBINATION  -> solo amendments COMBINATION
+
+Definiciones:
+
+    NOTICE family:
+        13F-NT (base)
+        13F-NT/A con REPORTTYPE = 13F NOTICE (amendment)
+
+    COMBINATION family:
+        13F-HR con REPORTTYPE = 13F COMBINATION REPORT (base)
+        13F-HR/A con REPORTTYPE = 13F COMBINATION REPORT (amendment)
+
+**Reglas:**
+
+- Un `13F-HR/A` COMBINATION no puede entrar en la cadena de una
+  base `13F-NT`.
+- Si existe un amendment R4 de OTRA familia para el mismo
+  CIK + PERIODOFREPORT: R3 = N/D. Existe pluralidad documental
+  que el contrato no resuelve.
+
+El caso Gate 0.9 (CIK 0002016827 con NT + HR COMBINATION mismo
+periodo) debe ser atrapado aqui ademas de en §3.2.
+
+**Validacion completa de la cadena:**
 
     AMENDMENT valido:
-        ISAMENDMENT == Y
+        SUBMISSIONTYPE in {13F-NT/A, 13F-HR/A}
+        AND REPORTTYPE in universo R4 correspondiente
         AND AMENDMENTNO entero en 1..99
         AND AMENDMENTTYPE in {RESTATEMENT, NEW_HOLDINGS}
 
@@ -297,7 +355,12 @@ ser atrapado en este paso.
 
         - Numeros unicos.
         - Secuencia sin huecos desde 1 hasta N.
+          (Regla conservadora contractual IAE. La SEC exige
+          numeracion 1..99 y orden, pero no que la secuencia
+          este fisicamente completa. Se conserva la regla
+          por prudencia fail-closed.)
         - Tipos reconocibles.
+        - Misma familia documental que la base.
 
     Si cualquiera falla:
         -> R3 = N/D.
@@ -307,6 +370,7 @@ Casos que deben producir N/D:
     - Duplicados: base + amendment 1 + amendment 1.
     - Amendment sin numero determinable.
     - Amendment con tipo desconocido.
+    - Amendment de familia distinta a la base.
 
 ### 3.3. Semantica de amendments
 
@@ -320,8 +384,10 @@ Casos que deben producir N/D:
         con el estado efectivo previo. Evidencia: Gate 0.7,
         3/3 casos identicos.
 
-        Definicion operacional de "consistente" (dictamen #35,
-        bloqueo 5):
+        Definicion operacional de "consistente" (dictamen #35
+        bloqueo 5 + dictamen #36 bloqueo 3):
+
+        Preliminar: determinar si ambos estados son construibles.
 
             OTHERMANAGER_state(filing) =
                 conjunto de identidades de managers obtenido tras:
@@ -329,10 +395,25 @@ Casos que deben producir N/D:
                     - resolver FormNum
                     - canonicalizar FormNum (seccion 4.2)
 
+        **Regla de determinabilidad (bloqueo 3):**
+
+            Si alguna fila del filing tiene:
+                N/D
+                o CONFLICT
+                    -> OTHERMANAGER_state NO es determinable.
+                    -> NEW HOLDINGS = N/D.
+
+        Es decir: la comparacion de conjuntos solo es posible si
+        AMBOS estados (previo y amendment) son completamente
+        determinables. Cualquier N/D o CONFLICT en cualquiera de
+        los dos impide esa comparacion.
+
+        Solamente despues, cuando ambos son determinables:
+
             NEW HOLDINGS es consistente sii
-                OTHERMANAGER_state(amendment)
+                conjunto normalizado(amendment)
                 ==
-                OTHERMANAGER_state(estado efectivo previo)
+                conjunto normalizado(estado efectivo previo)
 
         La comparacion es de igualdad exacta de conjunto. Ignora
         orden de filas y diferencias puramente representacionales
@@ -694,6 +775,6 @@ evidencia complementaria (Gate 0.10) esta incorporada.
 
 ---
 
-Fin de la propuesta v4. Consolidacion final de los dictamenes
+Fin de la propuesta v6. Consolidacion final de los dictamenes
 #28 a #34. Pendiente de dictamen contractual definitivo sobre el
 texto exacto antes de tocar NIPC_CONTRATOS_SEMANTICOS_v1.md.
