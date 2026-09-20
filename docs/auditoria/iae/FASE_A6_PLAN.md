@@ -45,7 +45,7 @@ del auditor.
 
 ## 2. Sub-fases
 
-### A.6.1 - Dictamen F2.4 (EXTERNO)
+### A.6.1 - Dictamen F2.4 sobre divergencias y decisiones arquitectonicas (EXTERNO)
 
 **Submission HEAD:** `3ad57b1`.
 
@@ -96,7 +96,12 @@ del auditor.
 
 ### A.6.2 - Fixes quirurgicos (post F2.4 = GO)
 
-3 commits minimos, uno por divergencia.
+3 commits minimos (uno por divergencia D1/D2/D3). Segun lo que
+determine F2.4, pueden requerirse commits adicionales para materializar
+Q12 (pairing) y AGREG. (agregacion shareClassFIGI). Si F2.4 adopta
+Opcion 2 para AGREG., se anade un commit para
+`aggregate_positions_by_shareclass_figi()`. Si adopta Opcion 1, la
+logica vive dentro de `compute_contractual_coverage()`.
 
 **Commit A.6.2-P60** - P60 sin default TICKER
 - Archivo: `sec_13f/identity/security_identity.py`.
@@ -179,30 +184,32 @@ Commit: `tests/test_p38_contract.py` extendido (una vez decidido Q12).
 
 ---
 
-### A.6.4 - Recalculo baseline + TOP 2000
+### A.6.4 - Recalculo baseline + TOP 2000 (condicional a D2)
 
-**Precondicion:** A.6.2 y A.6.3 cerrados.
+**Precondicion:** A.6.2 y A.6.3 cerrados + dictamen F2.4 con D2 resuelto.
 
-**Accion:**
-- Reejecutar `probe_coverage_baseline.py` con firma nueva.
-- Reejecutar `run_pilot_13f_top2000.py`.
-- NO sobrescribir los ficheros historicos (`evidence/`).
-- Escribir nuevos con sufijo `_v2`.
+**Rama condicional segun D2:**
 
-**Entregable:**
-- `evidence/nipc_gate0_baseline_v2/`
-- `evidence/nipc_gate0_target_identity_top2000_v2/`
+    D2 = A (TARGET real):
+        - Reejecutar probe_coverage_baseline.py con firma nueva.
+        - Reejecutar run_pilot_13f_top2000.py.
+        - Escribir nuevos con sufijo _v2.
+        - Entregable:
+              evidence/nipc_gate0_baseline_v2/
+              evidence/nipc_gate0_target_identity_top2000_v2/
+        - Criterio: se demuestra por evidencia entrada/salida que el
+          denominador es TARGET_PAIRWISE. NO se exige que X != Y.
 
-**Criterio de aceptacion:**
-- Ambas ejecuciones terminan exit 0.
-- Se demuestra mediante evidencia de entrada/salida que el denominador
-  utilizado es `TARGET_PAIRWISE` (no `observed_security_key`).
-- Se documenta:
-      valor historico (v1.0) = X
-      valor v2               = Y
-      delta                  = Z
-  NO se exige que X != Y. Si X == Y, tambien es valido: el calculo se
-  hizo con la semantica nueva y el resultado coincide.
+    D2 = B (proxy observacional NO CONTRACTUAL):
+        - NO recalcular como evidencia contractual.
+        - Conservar evidencia proxy separada y etiquetada como
+          NO APTA para THRESHOLD_2.
+        - NO exigir TARGET_PAIRWISE contractual.
+        - Los ficheros proxy existentes se renombran con sufijo
+          _proxy_no_contractual/ para trazabilidad.
+        - Criterio: el reporte publica explicitamente que la evidencia
+          es proxy y no contractual; THRESHOLD_2 permanece UNDEFINED
+          por ausencia de evidencia contractual.
 
 ---
 

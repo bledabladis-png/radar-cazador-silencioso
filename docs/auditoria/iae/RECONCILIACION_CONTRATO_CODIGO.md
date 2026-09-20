@@ -214,7 +214,8 @@ Para cada divergencia, dos opciones validas:
 
 ## 5. Plan A.6 - Reconciliacion (post F2.4)
 
-Una vez F2.4 emita dictamen sobre D1/D2/D3:
+Una vez F2.4 emita dictamen sobre D1/D2/D3 y las decisiones
+arquitectonicas asociadas (Q12, AGREG., OpenFIGI, Policy v1.3):
 
     A.6.1   Dictamen F2.4 sobre las 3 divergencias
     A.6.2   Fixes quirurgicos segun decision (1 commit por divergencia)

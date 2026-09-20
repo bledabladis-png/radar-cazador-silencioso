@@ -44,10 +44,17 @@ def test_p60_identity_type_none_raises():
         si._normalize_canonical("AAPL", None)
 
 
+def test_p60_identity_type_invalido_raises():
+    """Contrato P60 seccion 1.5: identity_type invalido -> ValueError."""
+    with pytest.raises(ValueError):
+        si._normalize_canonical("AAPL", "INVALID")
+
+
 # --- Tests que documentan DIVERGENCIA (xfail hasta F2.4) ---
 
 
 @pytest.mark.xfail(
+    strict=True,
     reason=(
         "Divergencia P60: _find_active_equivalence asume default TICKER "
         "si falta la columna identity_type. Contrato seccion 1.6 exige "

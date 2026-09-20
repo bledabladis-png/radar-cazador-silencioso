@@ -54,6 +54,7 @@ def test_p61_aggregate_status_6_reglas():
 
 
 @pytest.mark.xfail(
+    strict=True,
     reason=(
         "Divergencia P61: cusip_ticker_exceptions con vigencia sale "
         "TEMPORAL_UNVERIFIED via crosswalk_internal, cuando el contrato "

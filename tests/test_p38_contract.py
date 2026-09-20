@@ -74,6 +74,7 @@ def test_p38_legacy_usa_observed_key():
 
 
 @pytest.mark.xfail(
+    strict=True,
     reason=(
         "Divergencia P38: compute_contractual_coverage no existe como "
         "API normativa. La arquitectura exige que TARGET se reciba como "
@@ -94,6 +95,7 @@ def test_p38_existe_compute_contractual_coverage():
 
 
 @pytest.mark.xfail(
+    strict=True,
     reason=(
         "Divergencia P38: compute_contractual_coverage no recibe "
         "target_q4/target_q1 como parametros externos. Contrato 8.3."
@@ -116,6 +118,7 @@ def test_p38_contractual_recibe_target_externo():
 
 
 @pytest.mark.xfail(
+    strict=True,
     reason=(
         "Divergencia P38: la agregacion de pesos por shareClassFIGI "
         "antes de max(Q4,Q1) no esta implementada. Contrato 3.3."
