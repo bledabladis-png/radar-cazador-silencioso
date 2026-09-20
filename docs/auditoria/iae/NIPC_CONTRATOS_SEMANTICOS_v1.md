@@ -888,13 +888,289 @@ iae/P64_P65_EXPEDIENTE.md seccion 2.
 ### 14.3. L3 - evidencia cruzada entre filings
 
     L3(A, B, S, period) == True sii:
-      1. existe filing de A con linea L sobre security S
-      2. Column 7(L) referencia a B (reference_status = RESOLVED)
-      3. existe filing de B en el mismo periodo
-      4. B declara explicitamente que A reporta por B
-         (NT o Combination con A en "Other Managers Reporting for this Manager")
-      5. no existe evidencia contradictoria ni evidencia de reporting
-         partition/overlap no resuelto
+      R1(A, S, period) == True
+      AND R2(A, B, period) == True
+      AND R3(B, period) == TRUE
+      AND R4(A, B) == MATCH
+      AND R5(A, B, S, period) == True
+
+Los estados N/D y CONFLICT de R3 y R4 se preservan. Nunca se
+convierten internamente en False. Impiden L3 == True.
+
+---
+
+#### 14.3.1. R3(B, period) - determinacion del filing efectivo
+
+Flujo unico en cuatro pasos secuenciales. No existen reglas
+solapadas.
+
+PASO 0. Verificacion de integridad y completitud del scope R4.
+
+    Antes de poder afirmar cualquier resultado de R3 debe estar
+    demostrada la completitud del scope CIK + PERIODOFREPORT:
+
+        - ingestion completa y verificada;
+        - disponibilidad integra de los registros necesarios para
+          clasificar BASE / AMENDMENT;
+        - ausencia de registros R4 con SUBMISSIONTYPE / REPORTTYPE
+          ausentes, invalidos o no clasificables.
+
+    Si la completitud del scope NO puede demostrarse:
+        R3 = N/D.
+
+    Si existe un registro potencialmente R4 cuya clasificacion no
+    puede determinarse inequivocamente:
+        R3 = N/D.
+
+    Solo despues se procede con los pasos siguientes.
+
+    Semantica de R3 = FALSE: significa "se ha demostrado que no
+    existe ningun filing R4 en el scope definido", NO simplemente
+    "no aparece ninguno en el dataset disponible".
+
+        scope completo + 0 R4           -> R3 = FALSE
+        scope no demostrable + 0 R4     -> R3 = N/D
+
+PASO 1. Identificar todos los filings R4 del CIK + PERIODOFREPORT.
+
+    R4_filings(B, period) = filings de B con:
+        mismo CIK
+        AND mismo PERIODOFREPORT
+        AND (NOTICE family o COMBINATION family)
+
+    NOTICE family:
+        SUBMISSIONTYPE in {13F-NT, 13F-NT/A}
+        AND REPORTTYPE = 13F NOTICE
+
+    COMBINATION family:
+        SUBMISSIONTYPE in {13F-HR, 13F-HR/A}
+        AND REPORTTYPE = 13F COMBINATION REPORT
+
+PASO 2. Clasificar cada filing por rol.
+
+    BASE:
+        SUBMISSIONTYPE in {13F-NT, 13F-HR}
+
+    AMENDMENT:
+        SUBMISSIONTYPE in {13F-NT/A, 13F-HR/A}
+
+    ISAMENDMENT es SOLO control de coherencia, no criterio de
+    seleccion. Si contradice SUBMISSIONTYPE: R3 = N/D.
+
+PASO 3. Detectar pluralidad de familias documentales.
+
+    Si entre BASE + AMENDMENT hay representacion de MAS DE UNA
+    familia (NOTICE y COMBINATION simultaneamente):
+        R3 = N/D.
+
+    Deteccion GLOBAL sobre el conjunto R4 completo del
+    CIK + PERIODOFREPORT. No se evalua por familia aislada.
+
+PASO 4. Conteo y validacion.
+
+    BASE = 0 AND AMENDMENT = 0      -> R3 = FALSE
+    BASE = 0 AND AMENDMENT >= 1     -> R3 = N/D
+    BASE = 1                        -> validar cadena (§14.3.2)
+    BASE > 1                        -> R3 = N/D
+
+    Prohibido como criterio de resolucion:
+        - primero encontrado
+        - ultimo encontrado
+        - MAX(ACCESSION_NUMBER)
+        - MAX(FILING_DATE)
+
+    CONFLICT no puede producirse en R3 por pluralidad documental.
+    CONFLICT pertenece exclusivamente a la evaluacion de identidad
+    de A dentro de R4 (§14.3.4).
+
+---
+
+#### 14.3.2. Validacion de la cadena de amendments
+
+Aplica solo cuando §14.3.1 PASO 3 confirma familia unica y PASO 4
+confirma BASE = 1.
+
+    AMENDMENT valido:
+        SUBMISSIONTYPE in {13F-NT/A, 13F-HR/A}
+        AND REPORTTYPE consistente con la familia de la base
+        AND AMENDMENTNO entero en 1..99
+        AND AMENDMENTTYPE in {RESTATEMENT, NEW_HOLDINGS}
+
+    Si existen amendments aplicables a la base:
+
+        - numeros unicos;
+        - secuencia sin huecos desde 1 hasta N;
+          (Regla conservadora contractual IAE. La SEC exige
+          numeracion 1..99 y orden, pero no que la secuencia
+          este fisicamente completa. Se conserva la regla por
+          prudencia fail-closed.)
+        - tipos reconocibles.
+
+    Si cualquiera falla: R3 = N/D.
+
+Casos que producen N/D:
+    - huecos: base + amendment 1 + amendment 3 (falta el 2);
+    - duplicados: base + amendment 1 + amendment 1;
+    - amendment sin numero determinable;
+    - amendment con tipo desconocido.
+
+---
+
+#### 14.3.3. Semantica de amendments
+
+    RESTATEMENT:
+        Sustituye la evidencia OTHERMANAGER anterior.
+
+    NEW HOLDINGS:
+        Conserva la evidencia cuando es consistente con el estado
+        efectivo previo.
+
+        La comparacion solo se realiza si AMBOS estados (previo y
+        amendment) son completamente determinables. Cualquier N/D
+        o CONFLICT en cualquier fila de cualquiera de los dos
+        estados impide la comparacion -> N/D.
+
+        Cuando ambos son determinables, "consistente" significa
+        igualdad exacta de conjunto de identidades de managers
+        obtenidas tras:
+            - resolver CIK;
+            - resolver FormNum;
+            - canonicalizar FormNum (§14.3.6).
+
+        Cambio de conjunto -> N/D. NO asumir union.
+        NO asumir sustitucion.
+
+---
+
+#### 14.3.4. R4(A, B) - estados y candidate_A
+
+Definiciones:
+
+    MATCH
+        Existe al menos una fila OTHERMANAGER que identifica
+        inequivocamente a A mediante CIK o Form13FFileNumber.
+
+    NO_MATCH
+        El filing efectivo es determinable, la ingestion es integra,
+        TODAS las filas OTHERMANAGER tienen identidad resuelta
+        inequivocamente, y A no aparece.
+
+    N/D
+        El filing efectivo no es determinable, o existe al menos
+        una fila OTHERMANAGER cuya identidad no puede resolverse
+        inequivocamente y no existe evidencia positiva inequivoca
+        de A.
+
+    CONFLICT
+        La evidencia candidata a identificar A contiene
+        identificadores contradictorios o una resolucion no univoca.
+
+Reglas duras:
+
+    N/D != NO_MATCH.
+    CONFLICT != NO_MATCH.
+    CONFLICT PREVALECE sobre MATCH.
+    N/D y CONFLICT son fail-closed respecto de DROP_DUP.
+
+candidate_A(r):
+
+    candidate_A(r) :=
+        CIK(r) == CIK_A
+        OR
+        CIK_A ∈ resolved_ciks(FormNum(r))
+
+    donde resolved_ciks(FormNum) es el conjunto de CIKs a los que
+    resuelve el FormNum normalizado (§14.3.6) dentro del scope
+    temporal.
+
+CONFLICT > MATCH aplica a CUALQUIER fila con candidate_A(r) == True:
+
+    - CIK(r) y FormNum(r) apuntan a CIK distintos; o
+    - FormNum(r) resuelve a >1 CIK dentro del scope temporal; o
+    - FormNum(r) contradice el CIK(r) explicitamente declarado.
+
+Regla de no-seleccion selectiva: la implementacion NO puede elegir
+la fila consistente e ignorar la contradictoria respecto de A. Si
+existe contradiccion entre dos filas con candidate_A == True, el
+resultado es CONFLICT, no MATCH.
+
+Un conflicto perteneciente exclusivamente a otro manager (no
+candidate_A) NO invalida por si mismo un MATCH de A.
+
+Orden de evaluacion:
+
+    1. ¿Filing efectivo determinable?
+       NO -> N/D
+    2. ¿CONFLICT en alguna fila con candidate_A(r) == True?
+       SI -> CONFLICT
+    3. ¿Existe fila que identifica inequivocamente a A?
+       SI -> MATCH
+    4. ¿Todas las filas OTHERMANAGER tienen identidad resuelta?
+       NO -> N/D
+    5. NO_MATCH
+
+OTTOMANAGER ausente o vacio (filing efectivo R4, ingestion integra)
+-> N/D. Nunca NO_MATCH.
+
+---
+
+#### 14.3.5. Mapping FormNum -> CIK
+
+    FormNum + period:
+        -> 0 CIK    = UNRESOLVED
+        -> 1 CIK    = IDENTITY_RESOLVED
+        -> >1 CIK   = CONFLICT
+
+Construccion:
+
+    COVERPAGE
+        JOIN SUBMISSION ON ACCESSION_NUMBER
+        Filtro: FORM13FFILENUMBER no-null AND CIK no-null
+        Filtro: PERIODOFREPORT == period
+        Agrupacion: FormNum normalizado -> CIK
+
+Cardinalidad observada: 1:1 estricta (0 casos N:1). No se exige
+la direccion inversa CIK -> FormNum.
+
+---
+
+#### 14.3.6. Canonicalizacion de Form13FFileNumber
+
+Regla IAE basada en correspondencia observada con COVERPAGE. NO
+es una afirmacion de formato SEC universal.
+
+    entrada: <prefijo>-<sufijo>
+
+    prefijo:
+        in {"28", "028"}   -> canonicalizar a "028"
+        cualquier otro     -> UNRESOLVED
+
+    sufijo:
+        strip_leading_zeros
+        si len > 5         -> UNRESOLVED (no truncar)
+        sino               -> padding a 5 digitos
+
+---
+
+#### 14.3.7. Clausula de cierre contractual
+
+El GO contractual sobre este texto autoriza su traslado y mantiene
+su vigencia sin nueva iteracion ordinaria. Cualquier observacion
+posterior debera clasificarse expresamente como:
+
+    A) BLOQUEO MATERIAL
+       Cuando la correccion pueda cambiar el resultado contractual,
+       modificar una condicion necesaria de L3/R3/R4/R5, alterar
+       el criterio de evidencia, introducir una nueva semantica o
+       dejar una ambiguedad que permita resultados distintos entre
+       implementaciones conformes al contrato.
+       -> requiere nueva version y nuevo dictamen.
+
+    B) RECOMENDACION DIFERIBLE
+       Cuando la observacion sea exclusivamente editorial,
+       documental, de legibilidad o de implementacion y no pueda
+       cambiar el resultado contractual definido por este texto.
+       -> no bloquea el GO.
 
 ### 14.4. R1 - Intra-period dedup (7 requisitos)
 
