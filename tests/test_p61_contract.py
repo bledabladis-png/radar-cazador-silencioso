@@ -9,8 +9,6 @@ marcador y el test debe pasar.
 
 NO tocan codigo productivo.
 """
-import pytest
-
 from src.institutional_accumulation import temporal_validity as tv
 from src.institutional_accumulation.sec_13f.identity import (
     security_identity as si,
@@ -50,22 +48,14 @@ def test_p61_aggregate_status_6_reglas():
     assert tv.aggregate_status([("X", T), ("Y", T)]) == C
 
 
-# --- Tests que documentan DIVERGENCIA (xfail hasta F2.4) ---
+# --- Test contractual P61 end-to-end (fix aplicado tras F2.4) ---
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason=(
-        "Divergencia P61: cusip_ticker_exceptions con vigencia sale "
-        "TEMPORAL_UNVERIFIED via crosswalk_internal, cuando el contrato "
-        "exige VERIFIED si cubre el periodo."
-    )
-)
 def test_p61_cusip_ticker_exceptions_verificado_end_to_end():
     """Contrato P61 seccion 2.6: exceptions con vigencia -> VERIFIED.
 
-    Estado actual: cae en crosswalk_internal -> TEMPORAL_UNVERIFIED.
-    Cuando F2.4 autorice el fix, retirar el @pytest.mark.xfail.
+    Fix D1 aplicado (F2.4 2026-09-20): resolve_security_identity
+    invoca resolve_source_status via operational_source + vigencia.
     """
     import pandas as pd
 

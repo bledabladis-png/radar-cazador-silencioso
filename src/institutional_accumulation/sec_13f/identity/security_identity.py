@@ -39,6 +39,11 @@ from pathlib import Path
 
 import pandas as pd
 
+from src.institutional_accumulation.temporal_validity import (
+    aggregate_status as _aggregate_op_status,
+    resolve_source_status as _resolve_op_source_status,
+)
+
 # --- Estados (C1-revisada) ---
 
 STATUS_CANONICAL = "CANONICAL"
@@ -293,11 +298,14 @@ def load_crosswalk_internal(
 # --- Resolucion ---
 
 def _find_active_equivalence(cusip, report_period, eq_df):
-    """Devuelve lista de (canonical_security, identity_type) activos.
+    """Devuelve lista de (canonical, identity_type, valid_from, valid_to, source).
 
     P60 / F2.4: identity_type DEBE venir declarado por la fuente.
     Si falta la columna o el valor de la fila, la fila se rechaza
     (fail-closed) y se emite RuntimeWarning. NO se asume TICKER.
+
+    P61 / F2.4: propaga valid_from + valid_to + fuente operacional
+    para que el wrapper pueda invocar resolve_source_status.
     """
     if eq_df is None or eq_df.empty:
         return []
@@ -345,7 +353,10 @@ def _find_active_equivalence(cusip, report_period, eq_df):
                 stacklevel=2,
             )
             continue
-        out.append((canon, itype))
+        # P61: propagar vigencia + fuente operacional.
+        vf = row.get("valid_from")
+        vt = row.get("valid_to")
+        out.append((canon, itype, vf, vt, "cusip_equivalence"))
     # dedup preservando orden
     seen = set()
     unique = []
@@ -357,7 +368,12 @@ def _find_active_equivalence(cusip, report_period, eq_df):
 
 
 def _find_active_crosswalk(cusip, report_period, cw_df):
-    """Devuelve lista de tickers activos para (cusip, period)."""
+    """Devuelve lista de (ticker, source, valid_from, valid_to) activos.
+
+    P61 / F2.4: propaga la sub-fuente real de cada fila
+    (cusip_ticker_exceptions o etf_holdings) para que el wrapper
+    pueda invocar resolve_source_status con la fuente correcta.
+    """
     if cw_df is None or cw_df.empty:
         return []
     sub = cw_df[cw_df["CUSIP"].astype(str).str.strip() == str(cusip).strip()]
@@ -371,10 +387,27 @@ def _find_active_crosswalk(cusip, report_period, cw_df):
         (sub["valid_from"].isna() | (sub["valid_from"] <= period))
         & (sub["valid_to"].isna() | (sub["valid_to"] >= period))
     ]
-    return (
-        active["ticker"].dropna().astype(str).str.strip()
-        .unique().tolist()
-    )
+    has_src = "source" in active.columns
+    out = []
+    for _, row in active.iterrows():
+        tk = row.get("ticker")
+        if tk is None or (isinstance(tk, float) and tk != tk):
+            continue
+        tk_s = str(tk).strip()
+        if not tk_s:
+            continue
+        src = str(row["source"]).strip() if has_src else ""
+        vf = row.get("valid_from")
+        vt = row.get("valid_to")
+        out.append((tk_s, src, vf, vt))
+    # dedup preservando orden
+    seen = set()
+    unique = []
+    for tup in out:
+        if tup not in seen:
+            seen.add(tup)
+            unique.append(tup)
+    return unique
 
 
 def _resolve_identity_inner(
@@ -420,14 +453,20 @@ def _resolve_identity_inner(
         result["evidence"] = {"source": "equivalence", "candidates": eq_canon}
         return result
     if len(eq_canon) == 1:
-        val, itype = eq_canon[0]
+        val, itype, vf, vt, op_src = eq_canon[0]
         result["security_resolution_status"] = STATUS_CANONICAL
         if itype == "FIGI":
             result["canonical_security_kind"] = KIND_CANONICAL_FIGI
         else:
             result["canonical_security_kind"] = KIND_CANONICAL_EQUIVALENCE
         result["canonical_security"] = _normalize_canonical(val, itype)
-        result["evidence"] = {"source": "equivalence", "identity_type": itype}
+        result["evidence"] = {
+            "source": "equivalence",
+            "operational_source": op_src,
+            "identity_type": itype,
+            "valid_from": vf,
+            "valid_to": vt,
+        }
         return result
 
     # 2. crosswalk_internal
@@ -441,12 +480,16 @@ def _resolve_identity_inner(
         }
         return result
     if len(cw_tickers) == 1:
+        tk, sub_src, vf, vt = cw_tickers[0]
         result["security_resolution_status"] = STATUS_CANONICAL
         result["canonical_security_kind"] = KIND_CANONICAL_EQUIVALENCE
-        result["canonical_security"] = _normalize_canonical(cw_tickers[0], "TICKER")
+        result["canonical_security"] = _normalize_canonical(tk, "TICKER")
         result["evidence"] = {
             "source": "crosswalk_internal",
-            "ticker": cw_tickers[0],
+            "operational_source": sub_src,
+            "ticker": tk,
+            "valid_from": vf,
+            "valid_to": vt,
         }
         return result
 
@@ -460,7 +503,10 @@ def _resolve_identity_inner(
             result["security_resolution_status"] = STATUS_CANONICAL
             result["canonical_security_kind"] = KIND_CANONICAL_FIGI
             result["canonical_security"] = "figi:" + str(figi)
-            result["evidence"] = {"source": "openfigi"}
+            result["evidence"] = {
+                "source": "openfigi",
+                "operational_source": "openfigi",
+            }
             return result
 
     # 4. observed only
@@ -469,17 +515,10 @@ def _resolve_identity_inner(
     return result
 
 
-# P61: mapa de fuente -> estado operacional por defecto.
-# El resolver interno ya filtra por vigencia temporal (solo devuelve
-# filas activas para el periodo). Si una fuente con vigencia declarada
-# devolvio un valor, es que cubre el periodo -> VERIFIED.
-# La parte de etf_holdings dentro de crosswalk_internal no distingue
-# sub-fuente; se marca conservadoramente TEMPORAL_UNVERIFIED.
-_SOURCE_TO_OP_STATUS = {
-    "equivalence": "VERIFIED",
-    "crosswalk_internal": "TEMPORAL_UNVERIFIED",
-    "openfigi": "TEMPORAL_UNVERIFIED",
-}
+# P61 / D1 (F2.4 2026-09-20): eliminado _SOURCE_TO_OP_STATUS.
+# El estado operacional se resuelve via resolve_source_status
+# (temporal_validity) usando operational_source + vigencia
+# propagada por el resolver interno en `evidence`.
 
 
 def resolve_security_identity(
@@ -508,9 +547,25 @@ def resolve_security_identity(
         crosswalk_internal_df=crosswalk_internal_df,
         figi_lookup=figi_lookup,
     )
-    source = result.get("evidence", {}).get("source")
-    op_status = _SOURCE_TO_OP_STATUS.get(source, "UNRESOLVED")
-    result["operational_mapping_status"] = op_status
+    ev = result.get("evidence", {}) or {}
+    op_src = ev.get("operational_source")
+    if not op_src:
+        result["operational_mapping_status"] = "UNRESOLVED"
+        return result
+    try:
+        st = _resolve_op_source_status(
+            op_src,
+            ev.get("valid_from"),
+            ev.get("valid_to"),
+            report_period,
+        )
+    except (ValueError, TypeError):
+        result["operational_mapping_status"] = "UNRESOLVED"
+        return result
+    val = ev.get("ticker") or ev.get("canonical_security") or "?"
+    result["operational_mapping_status"] = _aggregate_op_status(
+        [(val, st)]
+    )
     return result
 
 

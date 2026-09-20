@@ -224,7 +224,7 @@ def test_resolve_crosswalk_sin_vigencia_activo():
 
 def test_resolve_crosswalk_conflicto_varios_tickers():
     cw = _mk_crosswalk([
-        ("A1", "AAPL", None, None, "exceptions"),
+        ("A1", "AAPL", None, None, "cusip_ticker_exceptions"),
         ("A1", "MSFT", None, None, "etf_holdings"),
     ])
     r = si.resolve_security_identity(
@@ -232,7 +232,12 @@ def test_resolve_crosswalk_conflicto_varios_tickers():
     )
     assert r["security_resolution_status"] == si.STATUS_CONFLICT
     assert r["canonical_security"] is None
-    assert set(r["evidence"]["candidates"]) == {"AAPL", "MSFT"}
+    # P61 / D1: candidates = [(ticker, source, valid_from, valid_to), ...]
+    candidates = {(c[0], c[1]) for c in r["evidence"]["candidates"]}
+    assert candidates == {
+        ("AAPL", "cusip_ticker_exceptions"),
+        ("MSFT", "etf_holdings"),
+    }
 
 
 def test_resolve_precedencia_equivalence_sobre_crosswalk():
@@ -365,8 +370,9 @@ def test_p61_equivalence_da_verified():
 
 
 def test_p61_crosswalk_da_temporal_unverified():
+    """P61 / F2.4: etf_holdings (sin vigencia) -> TEMPORAL_UNVERIFIED."""
     cw = _mk_crosswalk([
-        ("A1", "AAPL", "2024-01-01", "2026-12-31", "exceptions"),
+        ("A1", "AAPL", None, None, "etf_holdings"),
     ])
     r = si.resolve_security_identity(
         "A1", "2026-03-31", crosswalk_internal_df=cw,
