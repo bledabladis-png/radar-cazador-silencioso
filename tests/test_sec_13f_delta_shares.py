@@ -451,3 +451,175 @@ def test_delta_shares_columns_presentes():
     delta = ds.compute_delta_shares(u, pd.DataFrame(columns=list(ds.UNITS_COLUMNS)))
     for c in ds.DELTA_COLUMNS:
         assert c in delta.columns, c
+
+# ---- P63 / F2.4 (2026-09-20): Missing != Sold ----
+
+
+def _mk_am_submission(rows):
+    """rows: list of (ACCESSION_NUMBER, CIK, PERIODOFREPORT, FILING_DATE, SUBMISSIONTYPE)."""
+    return pd.DataFrame(
+        rows,
+        columns=["ACCESSION_NUMBER", "CIK", "PERIODOFREPORT",
+                 "FILING_DATE", "SUBMISSIONTYPE"],
+    )
+
+
+def _mk_am_coverpage(rows):
+    """rows: list of (ACCESSION_NUMBER, AMENDMENTNO, AMENDMENTTYPE, ISAMENDMENT)."""
+    return pd.DataFrame(
+        rows,
+        columns=["ACCESSION_NUMBER", "AMENDMENTNO", "AMENDMENTTYPE", "ISAMENDMENT"],
+    )
+
+
+def test_p63_amendment_evita_exit_falso():
+    """P63 / F2.4 Regla 6: amendments resueltos ANTES de delta.
+
+    Escenario:
+        Q4:        AAPL presente (100)
+        Q1 orig:   AAPL ausente (solo MSFT)
+        Q1/A:      NEW HOLDINGS -> AAPL anadido (80)
+        Q1 efect:  AAPL presente
+
+    Resultado contractual: AAPL en delta debe ser BOTH, NO EXIT.
+
+    Si el sistema usara el filing original (sin el amendment) en lugar
+    del snapshot efectivo, produciria EXIT padre -> venta falsa.
+    """
+    from src.institutional_accumulation.sec_13f.identity.amendments import (
+        apply_amendments,
+    )
+
+    # Q4 (2025-12-31): base filing X1 con AAPL.
+    q4_dfs = {
+        "SUBMISSION": _mk_am_submission([
+            ("X1", "9999", "2025-12-31", "2026-02-14", "13F-HR"),
+        ]),
+        "COVERPAGE": _mk_am_coverpage([
+            ("X1", None, None, None),
+        ]),
+        "INFOTABLE": _mk_infotable([
+            {"ACCESSION_NUMBER": "X1", "INFOTABLE_SK": "1",
+             "CUSIP": "037833100", "SSHPRNAMT": 100.0},
+        ]),
+    }
+
+    # Q1 (2026-03-31): base A1 sin AAPL + amendment A2 con NEW HOLDINGS.
+    q1_dfs = {
+        "SUBMISSION": _mk_am_submission([
+            ("A1", "9999", "2026-03-31", "2026-05-14", "13F-HR"),
+            ("A2", "9999", "2026-03-31", "2026-05-20", "13F-HR/A"),
+        ]),
+        "COVERPAGE": _mk_am_coverpage([
+            ("A1", None, None, None),
+            ("A2", 1, "NEW HOLDINGS", "Y"),
+        ]),
+        "INFOTABLE": _mk_infotable([
+            {"ACCESSION_NUMBER": "A1", "INFOTABLE_SK": "1",
+             "CUSIP": "594918104", "SSHPRNAMT": 50.0},
+            {"ACCESSION_NUMBER": "A2", "INFOTABLE_SK": "1",
+             "CUSIP": "037833100", "SSHPRNAMT": 80.0},
+        ]),
+    }
+
+    snap_q4 = apply_amendments(q4_dfs, period="2025-12-31")["canonical_snapshot"]
+    snap_q1 = apply_amendments(q1_dfs, period="2026-03-31")["canonical_snapshot"]
+
+    # Verificar que el snapshot efectivo Q1 incluye el amendment A2.
+    assert "A2" in snap_q1["SUBMISSION"]["ACCESSION_NUMBER"].tolist(), (
+        "el snapshot efectivo Q1 debe incluir el amendment A2"
+    )
+    assert "037833100" in snap_q1["INFOTABLE"]["CUSIP"].tolist(), (
+        "el snapshot efectivo Q1 debe incluir AAPL via amendment"
+    )
+
+    # Identidad: ambos CUSIPs resueltos.
+    identity = {
+        "037833100": _identity_entry("037833100", canonical="equity:AAPL"),
+        "594918104": _identity_entry("594918104", canonical="equity:MSFT"),
+    }
+
+    units_q4 = ds.compute_reported_position_units(
+        snap_q4["INFOTABLE"], snap_q4["SUBMISSION"],
+        snap_q4.get("COVERPAGE"),
+        report_period="2025-12-31", identity_results=identity,
+    )
+    units_q1 = ds.compute_reported_position_units(
+        snap_q1["INFOTABLE"], snap_q1["SUBMISSION"],
+        snap_q1.get("COVERPAGE"),
+        report_period="2026-03-31", identity_results=identity,
+    )
+
+    delta = ds.compute_delta_shares(units_q1, units_q4)
+
+    aapl = delta[delta["canonical_security"] == "equity:AAPL"]
+    assert len(aapl) == 1, f"esperado 1 fila AAPL, obtenido {len(aapl)}"
+    assert aapl.iloc[0]["match_status"] == ds.STATUS_BOTH, (
+        "P63 Regla 6: AAPL debe ser BOTH (el amendment la anade al "
+        "snapshot efectivo). Obtenido: " + str(aapl.iloc[0]["match_status"])
+    )
+    assert aapl.iloc[0]["delta_shares"] == -20.0, (
+        "delta esperado = 80 - 100 = -20"
+    )
+
+
+def test_p63_othermanager_produce_exit_mas_new():
+    """P63 / F2.4 Regla 7: 13F admite Other Manager / Combination Report.
+
+    Comportamiento actual documentado:
+        Q4: filing_manager_cik=parent, AAPL=100
+        Q1: filing_manager_cik=child,  AAPL=100
+
+    Sin resolver relaciones OTHERMANAGER2, el reconciliador produce:
+        EXIT en parent (sshprnamt_current=0)
+        NEW  en child  (sshprnamt_previous=0)
+
+    Esto NO es un bug: el sistema implementa la reconciliacion C2 fielmente.
+    La resolucion de relaciones (distinguir reasignacion intra-grupo de
+    venta+compra) queda como capacidad diferida v1 (filer continuity =
+    caracterizacion, no threshold).
+
+    F2.4 Regla 7 lo declara explicitamente en el contrato.
+    """
+    # Q4: parent reporta AAPL.
+    u_q4 = ds.compute_reported_position_units(
+        _mk_infotable([
+            {"ACCESSION_NUMBER": "P1", "INFOTABLE_SK": "1",
+             "CUSIP": "037833100", "SSHPRNAMT": 100.0},
+        ]),
+        _mk_submission([("P1", "1111")]),
+        None,
+        report_period="2025-12-31",
+        identity_results={
+            "037833100": _identity_entry("037833100", canonical="equity:AAPL"),
+        },
+    )
+
+    # Q1: child reporta AAPL (mismo canonical, distinto filing_manager_cik).
+    u_q1 = ds.compute_reported_position_units(
+        _mk_infotable([
+            {"ACCESSION_NUMBER": "C1", "INFOTABLE_SK": "1",
+             "CUSIP": "037833100", "SSHPRNAMT": 100.0},
+        ]),
+        _mk_submission([("C1", "2222")]),
+        None,
+        report_period="2026-03-31",
+        identity_results={
+            "037833100": _identity_entry("037833100", canonical="equity:AAPL"),
+        },
+    )
+
+    delta = ds.compute_delta_shares(u_q1, u_q4)
+    assert len(delta) == 2, f"esperado 2 filas (EXIT + NEW), obtenido {len(delta)}"
+
+    statuses = set(delta["match_status"].tolist())
+    assert statuses == {ds.STATUS_EXIT, ds.STATUS_NEW}, (
+        "comportamiento actual: EXIT en parent + NEW en child. Obtenido: "
+        + str(statuses)
+    )
+
+    # Verificar que NO se ha fabricado SOLD.
+    assert "SOLD" not in ds.ALL_MATCH_STATUSES, (
+        "P63: 13F aislado no puede inferir SOLD. SOLD no debe existir como "
+        "estado de delta_shares."
+    )
