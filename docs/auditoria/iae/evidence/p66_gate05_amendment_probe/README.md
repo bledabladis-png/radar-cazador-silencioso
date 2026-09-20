@@ -1,3 +1,26 @@
+> **Reclasificacion (dictamen #28, 2026-09-21):**
+>
+> Este Gate se divide en dos partes:
+>
+> - **Gate 0.5A - Contaminacion cross-period: PASS.**
+>   Demostrado: los directorios SEC son cross-periodo. Filtrar por
+>   `PERIODOFREPORT` es obligatorio.
+>
+> - **Gate 0.5B - Semantica completa de amendments: PENDING.**
+>   No demostrado aun: comportamiento de `OTHERMANAGER` en
+>   `NEW HOLDINGS` cuando el amendment declara contenido distinto
+>   del base. La regla "union" del v2-bis era prematura.
+>
+> Ademas, el universo del probe debe incluir `13F COMBINATION REPORT`
+> (13F-HR con REPORTTYPE = 13F COMBINATION REPORT), no solo NT.
+> Gate 0.6 cubrira esta extension.
+>
+> El caso CIK 0002056909 (RESTATEMENT que sustituye OTHERMANAGER)
+> permanece valido como evidencia de que RESTATEMENT sustituye.
+> Lo pendiente es NEW HOLDINGS.
+
+---
+
 # IAE - P66 Gate 0.5 Amendment probe NT
 
 **Objeto:** medicion del comportamiento de amendments en NT filings,

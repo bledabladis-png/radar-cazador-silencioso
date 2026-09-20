@@ -2181,3 +2181,25 @@ P65 v3 (ver iae/DICTAMENES.md #26). GO CONDICIONADO con 3 correcciones.
   Gate 0.5 + propuesta v2-bis). Esperar dictamen contractual final.
 - **NO se ha hecho:** sin XML, sin reporting_dedup.py, sin DROP_DUP,
   sin tocar contrato 14.3.
+
+
+## P66 - Dictamen v2-bis #28 y bloqueos pendientes (2026-09-21)
+
+- **Origen:** dictamen del auditor externo sobre P66 v2-bis.
+- **Resultado:** NO-GO contractual. GO tecnico condicionado a 6 bloqueos.
+- **Aprobado:**
+  - Fuente OTHERMANAGER como evidencia R4.
+  - Separacion OTHERMANAGER / OTHERMANAGER2.
+  - Arquitectura probatoria completa.
+- **6 bloqueos:**
+  1. Combination (13F-HR con REPORTTYPE = 13F COMBINATION REPORT).
+  2. NEW HOLDINGS sobre OTHERMANAGER no probado.
+  3. Gate 0.4 sin filtro PERIODOFREPORT.
+  4. Mapping unidireccional FormNum -> CIK.
+  5. Normalizacion no trunca (028-2813114 -> N/D).
+  6. Nomenclatura MATCH -> IDENTITY_RESOLVED.
+- **Reclasificacion:** Gate 0.5A PASS / Gate 0.5B PENDING.
+- **Pendiente:** Gate 0.6 (Combination probe) + Gate 0.7 (NEW HOLDINGS)
+  + Gate 0.4-reissue + propuesta v3.
+- **NO se ha hecho:** sin XML, sin reporting_dedup.py, sin DROP_DUP,
+  sin tocar contrato 14.3.

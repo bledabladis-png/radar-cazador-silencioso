@@ -1,3 +1,17 @@
+> **Nota de nomenclatura (correccion del auditor #28, 2026-09-21):**
+>
+> En esta evidencia, "MATCH" debe leerse como "IDENTITY_RESOLVED".
+> Los porcentajes 96.01% / 96.18% son **cobertura de resolucion de
+> identidad de las filas OTHERMANAGER**, no "cobertura L3" ni
+> "match rate". L3 requiere ademas R1 + R2 + R3 + R5 y la comparacion
+> `CIK_resuelto == CIK_A`.
+>
+> El analisis de este Gate es previo a la correccion #3 del dictamen
+> #28 (falta filtro explicito por PERIODOFREPORT). Ver Gate 0.4-reissue
+> en el siguiente ciclo.
+
+---
+
 # IAE - P66 Gate 0.4 Mapping Form13FFileNumber -> CIK
 
 **Objeto:** demostracion de que la tabla canonica FormNum -> CIK es

@@ -554,3 +554,132 @@ Fuente oficial SEC. La tabla OTHERMANAGER esta documentada como
 Aplicar las 8 correcciones a P66_L3_REFORMULACION_PROPUESTA.md.
 Emitir v2. Reenviar al auditor para dictamen final sobre el texto
 contractual exacto antes de tocar NIPC_CONTRATOS_SEMANTICOS_v1.md.
+
+
+---
+
+## 28. P66 v2-bis - Dictamen auditor externo (2026-09-21)
+
+**Tipo:** dictamen del auditor externo sobre P66_L3_REFORMULACION_PROPUESTA.md v2-bis
+(con Gate 0.4 + Gate 0.5 integrados).
+
+**Objeto:** aprobacion contractual del nuevo requisito 4 de L3.
+
+**Resultado global:** NO-GO contractual definitivo.
+**Resultado tecnico:** GO condicionado para cierre de bloqueos acotados.
+
+### Que queda aprobado
+
+    OTHERMANAGER como evidencia R4                GO
+    Separacion OTHERMANAGER / OTHERMANAGER2       GO
+    CIK como identificador prioritario            GO
+    FormNum como fallback                         GO condicionado
+    Mapping FormNum -> CIK                        GO cond. scope temporal
+    28- -> 028-                                   GO cond. validacion estricta
+    N/D / NO_MATCH / CONFLICT                     GO
+    R3 independiente                              GO
+
+### 6 bloqueos que impiden el GO contractual
+
+1. **COMBINATION excluido.** El algoritmo de filing efectivo se restringe
+   a `SUBMISSIONTYPE in {13F-NT, 13F-NT/A}`. La SEC documenta que
+   `13F COMBINATION REPORT` (con `SUBMISSIONTYPE = 13F-HR / 13F-HR/A`
+   y `REPORTTYPE = 13F COMBINATION REPORT`) TAMBIEN incluye
+   "List of Other Managers Reporting for this Manager". El universo
+   debe ampliarse a:
+   - 13F-NT / 13F-NT/A con REPORTTYPE = 13F NOTICE, O
+   - 13F-HR / 13F-HR/A con REPORTTYPE = 13F COMBINATION REPORT.
+   La REPORTTYPE es decisiva porque SUBMISSIONTYPE por si solo no
+   distingue el significado de la portada.
+
+2. **NEW HOLDINGS sobre OTHERMANAGER no probado.** La regla
+   "union con el snapshot actual" (v2-bis seccion 5.2) es prematura.
+   La regla SEC de "supplement" se refiere a holdings entries, no
+   esta demostrado que aplique a la relacion OTHERMANAGER para L3.
+   Requiere probe especifico. Provisional: "comportamiento de
+   OTHERMANAGER pendiente de probe; no se asume union ni sustitucion
+   para la evidencia R4".
+
+3. **Gate 0.4 sin filtro por PERIODOFREPORT declarado.** El propio
+   Gate 0.5 demostro que los directorios son cross-periodo. El
+   lookup `FormNum -> CIK` debe filtrar por PERIODOFREPORT antes
+   de construir la tabla canonica. Gate 0.4 no puede considerarse
+   PASS hasta confirmar el filtro.
+
+4. **Mapping FormNum -> CIK es unidireccional.** No convertir la
+   invariante 1:1 en ambos sentidos en obligacion contractual. La
+   unica direccion contractual necesaria es:
+       FormNum -> 0 CIK (unresolved)
+       FormNum -> 1 CIK (resolved)
+       FormNum -> >1 CIK (conflict)
+   siempre dentro del scope temporal del periodo.
+
+5. **Normalizacion 28- -> 028- no debe truncar.** El caso `028-2813114`
+   (7 digitos) debe quedar como anomalia no resuelta. Regla:
+   - `28-` + exactamente 5 digitos -> `028-` + esos 5 digitos.
+   - `028-` + exactamente 5 digitos -> sin cambio.
+   - Cualquier otra longitud/formato -> UNRESOLVED / N/D.
+   Nunca truncar.
+
+6. **Nomenclatura.**
+   - En Gate 0.4, "MATCH por CIK" -> "IDENTITY_RESOLVED por CIK".
+   - En Gate 0.4, "MATCH por FormNum" -> "IDENTITY_RESOLVED por FormNum".
+   - Los porcentajes 96% son "cobertura de resolucion de identidad
+     de las filas OTHERMANAGER", no "cobertura L3" ni "match rate".
+   - "NT filings totales" debe decir "NT iniciales" cuando esa sea
+     la poblacion (los amendments van aparte).
+
+### Reclasificacion de Gates
+
+    Gate 0.5A - contaminacion cross-period         PASS
+    Gate 0.5B - semantica completa amendments      PENDING
+
+### Q1/Q2/Q3 residuales
+
+    Q1 Amendments: resolver antes del GO contractual. Incluye Combination.
+    Q2 Tabla canonica: SI como artefacto, con campos:
+       period, normalized_form13f_filenumber, cik,
+       source_accessions, resolution_status.
+       Construida por PERIODOFREPORT, no por directorio fisico.
+    Q3 Estados: SI, con definicion normativa
+       MATCH / NO_MATCH / N/D / CONFLICT.
+
+### Texto contractual que el auditor considera aprobable tras los ajustes
+
+    R4: B declara explicitamente que A reporta por B mediante una fila
+        de OTHERMANAGER perteneciente al filing efectivo de B,
+        identificando inequivocamente a A:
+        a) mediante CIK, o
+        b) cuando CIK no este disponible, mediante Form 13F File Number
+           cuya resolucion a CIK sea inequivoca dentro del mismo
+           PERIODOFREPORT.
+        La evidencia es valida cuando el filing B es:
+        - 13F NOTICE, o
+        - 13F COMBINATION REPORT.
+        La ausencia de resolucion inequivoca produce N/D o CONFLICT
+        segun corresponda; no se permite matching por nombre.
+
+    R3: existe filing efectivo de B para el mismo PERIODOFREPORT,
+        seleccionado entre los submissions aplicables al tipo de
+        reporte y a su cadena de amendments.
+
+### Estado
+
+    Fuente OTHERMANAGER              APROBADA
+    Arquitectura probatoria          APROBADA
+    Contrato 14.3                    NO MODIFICAR TODAVIA
+    reporting_dedup.py               NO TOCAR
+    DROP_DUP                         NO ACTIVAR
+    Gate 0.6 Combination probe       PENDIENTE
+    Gate 0.7 NEW HOLDINGS probe      PENDIENTE
+    Gate 0.4-reissue con filtro      PENDIENTE
+    Propuesta v3                     PENDIENTE
+
+### Siguiente paso
+
+Ejecutar Gate 0.6 (Combination probe), Gate 0.7 (NEW HOLDINGS probe),
+re-ejecutar Gate 0.4 con filtro PERIODOFREPORT declarado. Aplicar
+nomenclatura y bloqueo de truncamiento. Reformular propuesta v3.
+
+Referencia completa: iae/P66_L3_REFORMULACION_PROPUESTA.md
+(corregida en v3 tras cierre de bloqueos).

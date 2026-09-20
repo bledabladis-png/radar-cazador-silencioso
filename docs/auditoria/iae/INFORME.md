@@ -482,6 +482,39 @@ Evidencia: `iae/evidence/p66_gate05_amendment_probe/`.
 
 Bloqueo B del dictamen P66 v2: RESUELTO.
 
+
+
+### Dictamen P66 v2-bis recibido (2026-09-21)
+
+Resultado: NO-GO contractual definitivo.
+Resultado tecnico: GO condicionado para cierre de 6 bloqueos.
+
+Fuente OTHERMANAGER aprobada. Arquitectura probatoria aprobada.
+Sin embargo, el contrato no esta listo para modificar 14.3.
+
+6 bloqueos:
+
+1. Combination excluido. El universo del filing efectivo debe incluir
+   13F-HR con REPORTTYPE = 13F COMBINATION REPORT, no solo NT/NT-A.
+2. NEW HOLDINGS sobre OTHERMANAGER no probado. La regla union es
+   prematura. Requiere probe especifico (Gate 0.7).
+3. Gate 0.4 sin filtro por PERIODOFREPORT declarado. Debe re-ejecutarse
+   con filtro explicito (Gate 0.4-reissue).
+4. Mapping FormNum -> CIK unidireccional. No invariante 1:1 bidireccional.
+5. Normalizacion 28- -> 028- no debe truncar. Caso 028-2813114 (7 digitos)
+   queda N/D.
+6. Nomenclatura: MATCH -> IDENTITY_RESOLVED en Gate 0.4. Los porcentajes
+   96% son cobertura de resolucion de identidad, no cobertura L3.
+
+Reclasificacion:
+  Gate 0.5A (contaminacion cross-period)          PASS
+  Gate 0.5B (semantica completa amendments)       PENDING
+
+Estado: contrato 14.3 SIN CAMBIOS. reporting_dedup.py SIN CAMBIOS.
+DROP_DUP NO ACTIVADO.
+
+Referencia: DICTAMENES.md #28.
+
 ### Estado
 
     Fuente             APROBADA (OTHERMANAGER)
