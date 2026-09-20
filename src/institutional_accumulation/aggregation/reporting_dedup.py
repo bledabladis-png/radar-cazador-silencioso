@@ -34,6 +34,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Optional
 
+import pandas as pd
+
 
 # --- Transiciones de reporting (post-delta) ---
 
@@ -170,7 +172,135 @@ def classify_evidence_level(
     return EVIDENCE_LEVEL_L1
 
 
-# --- Interfaces de orquestacion (stubs de Commit 1) ---
+# --- Helpers internos ---
+
+def _empty_audit():
+    return pd.DataFrame(columns=list(DEDUP_AUDIT_COLUMNS))
+
+
+def _build_l3_index(cross_filing_evidence):
+    """Index {(representante_cik, representado_cik): evidencia_dict}."""
+    if cross_filing_evidence is None or cross_filing_evidence.empty:
+        return {}
+    idx = {}
+    for _, row in cross_filing_evidence.iterrows():
+        rep = str(row.get("representante_cik", "")).strip()
+        rdo = str(row.get("representado_cik", "")).strip()
+        if not rep or not rdo:
+            continue
+        idx[(rep, rdo)] = {
+            "accession_representante": row.get("accession_representante"),
+            "accession_representado": row.get("accession_representado"),
+            "reference_seq": row.get("reference_seq"),
+            "security_key": row.get("security_key"),
+        }
+    return idx
+
+
+def _make_audit_row(
+    unit, period, dedup_decision, dedup_reason, evidence_level,
+    evidence_source, acc_rep, acc_repres, ref_seq,
+):
+    """Construye una fila de dedup_audit."""
+    return {
+        "source_line_id": (
+            str(unit.get("observed_security_key", "")) + "@"
+            + str(unit.get("filing_manager_cik", ""))
+        ),
+        "period": period,
+        "filing_manager_cik": unit.get("filing_manager_cik"),
+        "reporting_for_manager_cik": unit.get("filing_manager_cik"),
+        "canonical_security": unit.get("canonical_security"),
+        "dedup_decision": dedup_decision,
+        "dedup_reason": dedup_reason,
+        "evidence_level": evidence_level,
+        "evidence_source": evidence_source,
+        "evidence_accession_representante": acc_rep,
+        "evidence_accession_representado": acc_repres,
+        "evidence_reference_seq": ref_seq,
+    }
+
+
+def _apply_intra_period_dedup(units, l3_index, *, period):
+    """Aplica R1 (7 requisitos) a un periodo.
+
+    Devuelve (effective_units, audit_df).
+    Sin L3 -> KEEP silencioso (sin audit).
+    Con L3 (una sola direccion) -> DROP_DUP del representado.
+    Ambiguedad reciproca -> KEEP + REPORTING_CONFLICT.
+    """
+    if units is None or units.empty:
+        return units, _empty_audit()
+
+    u = units.copy().reset_index(drop=True)
+    u["_rid"] = range(len(u))
+    u["_decision"] = DEDUP_DECISION_KEEP
+    u["_reason"] = None
+
+    audit_rows = []
+
+    group_cols = ["canonical_security", "discretion_type"]
+    for _, grp in u.groupby(group_cols, dropna=False):
+        if len(grp) < 2:
+            continue
+        rows = grp.to_dict("records")
+        for i, r1 in enumerate(rows):
+            for r2 in rows[i + 1:]:
+                fm1 = str(r1.get("filing_manager_cik", "")).strip()
+                fm2 = str(r2.get("filing_manager_cik", "")).strip()
+                if not fm1 or not fm2 or fm1 == fm2:
+                    continue
+
+                e12 = l3_index.get((fm1, fm2))
+                e21 = l3_index.get((fm2, fm1))
+
+                if e12 and e21:
+                    # Ambiguedad: ambos lados reclaman representacion.
+                    audit_rows.append(_make_audit_row(
+                        r1, period, DEDUP_DECISION_KEEP,
+                        DEDUP_REASON_REPORTING_CONFLICT,
+                        EVIDENCE_LEVEL_L3, EVIDENCE_SOURCE_BOTH,
+                        e12["accession_representante"],
+                        e12["accession_representado"],
+                        e12["reference_seq"],
+                    ))
+                    continue
+
+                if e12:
+                    # fm1 representa a fm2 -> DROP r2.
+                    u.loc[r2["_rid"], "_decision"] = DEDUP_DECISION_DROP
+                    u.loc[r2["_rid"], "_reason"] = DEDUP_REASON_INTRA_PERIOD_DUP
+                    audit_rows.append(_make_audit_row(
+                        r2, period, DEDUP_DECISION_DROP,
+                        DEDUP_REASON_INTRA_PERIOD_DUP,
+                        EVIDENCE_LEVEL_L3, EVIDENCE_SOURCE_BOTH,
+                        e12["accession_representante"],
+                        e12["accession_representado"],
+                        e12["reference_seq"],
+                    ))
+                    continue
+
+                if e21:
+                    u.loc[r1["_rid"], "_decision"] = DEDUP_DECISION_DROP
+                    u.loc[r1["_rid"], "_reason"] = DEDUP_REASON_INTRA_PERIOD_DUP
+                    audit_rows.append(_make_audit_row(
+                        r1, period, DEDUP_DECISION_DROP,
+                        DEDUP_REASON_INTRA_PERIOD_DUP,
+                        EVIDENCE_LEVEL_L3, EVIDENCE_SOURCE_BOTH,
+                        e21["accession_representante"],
+                        e21["accession_representado"],
+                        e21["reference_seq"],
+                    ))
+
+    effective = u[u["_decision"] == DEDUP_DECISION_KEEP].drop(
+        columns=["_rid", "_decision", "_reason"]
+    ).reset_index(drop=True)
+
+    audit = pd.DataFrame(audit_rows, columns=list(DEDUP_AUDIT_COLUMNS)) if audit_rows else _empty_audit()
+    return effective, audit
+
+
+# --- Interfaces de orquestacion ---
 
 def build_effective_reporting_snapshot(
     units_q4,
@@ -188,10 +318,26 @@ def build_effective_reporting_snapshot(
 
     Aplica dedup intra-periodo segun R1 (7 requisitos). Sin L3 -> KEEP.
     NO modifica delta_shares ni MATCH_KEY.
+
+    - units_q4 / units_q1: salida de compute_reported_position_units.
+    - relationships_q4 / relationships_q1: salida de build_canonical_relationship.
+      NO usados directamente en Commit 2 (reservados para auditoria de
+      contradicciones en Commit 4).
+    - cross_filing_evidence: DataFrame con evidencia cruzada L3.
+      Columnas: representante_cik, representado_cik, accession_representante,
+      accession_representado, reference_seq, security_key.
     """
-    raise NotImplementedError(
-        "Commit 2 (pre-delta). Ver iae/P64_P65_EXPEDIENTE.md seccion 2.17."
-    )
+    l3_index = _build_l3_index(cross_filing_evidence)
+
+    eff_q4, audit_q4 = _apply_intra_period_dedup(units_q4, l3_index, period=period_q4)
+    eff_q1, audit_q1 = _apply_intra_period_dedup(units_q1, l3_index, period=period_q1)
+
+    if audit_q4.empty and audit_q1.empty:
+        audit = _empty_audit()
+    else:
+        audit = pd.concat([audit_q4, audit_q1], ignore_index=True)
+
+    return eff_q4, eff_q1, audit
 
 
 def classify_reporting_transition(

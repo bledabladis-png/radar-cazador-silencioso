@@ -136,20 +136,190 @@ def test_classify_none_si_no_resolved():
 # ---- stubs de orquestacion ----
 
 
-def test_build_effective_reporting_snapshot_stub():
-    """Commit 1: la funcion existe pero NO implementada."""
-    with pytest.raises(NotImplementedError):
-        rd.build_effective_reporting_snapshot(
-            units_q4=None, units_q1=None,
-            relationships_q4=None, relationships_q1=None,
-            cross_filing_evidence=None,
-            period_q4="2025-12-31", period_q1="2026-03-31",
-        )
-
-
 def test_classify_reporting_transition_stub():
-    """Commit 1: la funcion existe pero NO implementada."""
+    """Commit 3 pendiente: la funcion existe pero NO implementada."""
     with pytest.raises(NotImplementedError):
         rd.classify_reporting_transition(
             delta_df=None, effective_q4=None, effective_q1=None,
         )
+
+
+# ---- build_effective_reporting_snapshot (Commit 2: R1) ----
+
+
+def _mk_units(rows):
+    """DataFrame minimo compatible con UNITS_COLUMNS para tests."""
+    import pandas as pd
+    defaults = {
+        "report_period": "2026-03-31",
+        "security_resolution_status": "CANONICAL",
+        "canonical_security_kind": "CANONICAL_EQUIVALENCE",
+        "operational_mapping_status": "VERIFIED",
+        "sshprnamt_total": 100.0,
+        "n_source_lines": 1,
+    }
+    full = []
+    for r in rows:
+        full.append({**defaults, **r})
+    return pd.DataFrame(full)
+
+
+def _mk_evidence(rows):
+    """DataFrame de cross_filing_evidence."""
+    import pandas as pd
+    cols = ["representante_cik", "representado_cik",
+            "accession_representante", "accession_representado",
+            "reference_seq", "security_key"]
+    return pd.DataFrame(rows, columns=cols)
+
+
+def _mk_empty_units():
+    import pandas as pd
+    return pd.DataFrame(columns=[
+        "report_period", "filing_manager_cik", "observed_security_key",
+        "security_resolution_status", "canonical_security_kind",
+        "canonical_security", "operational_mapping_status",
+        "discretion_type", "sshprnamt_total", "n_source_lines",
+    ])
+
+
+def test_p65_sin_l3_keep_silencioso():
+    """Sin evidencia cruzada L3, dos units mismo security -> KEEP ambos."""
+    units = _mk_units([
+        {"filing_manager_cik": "A", "observed_security_key": "cusip:AAPL",
+         "canonical_security": "equity:AAPL", "discretion_type": "SOLE"},
+        {"filing_manager_cik": "B", "observed_security_key": "cusip:AAPL",
+         "canonical_security": "equity:AAPL", "discretion_type": "SOLE"},
+    ])
+    eff_q4, eff_q1, audit = rd.build_effective_reporting_snapshot(
+        units, _mk_empty_units(),
+        relationships_q4=None, relationships_q1=None,
+        cross_filing_evidence=None,
+        period_q4="2025-12-31", period_q1="2026-03-31",
+    )
+    assert len(eff_q4) == 2
+    assert len(eff_q1) == 0
+    assert len(audit) == 0
+
+
+def test_p65_l3_una_direccion_drop_representado():
+    """A representa a B sobre AAPL -> DROP B, KEEP A."""
+    units = _mk_units([
+        {"filing_manager_cik": "A", "observed_security_key": "cusip:AAPL",
+         "canonical_security": "equity:AAPL", "discretion_type": "SOLE"},
+        {"filing_manager_cik": "B", "observed_security_key": "cusip:AAPL",
+         "canonical_security": "equity:AAPL", "discretion_type": "SOLE"},
+    ])
+    evidence = _mk_evidence([
+        ("A", "B", "ACC_A", "ACC_B", 7, "equity:AAPL"),
+    ])
+    eff_q4, eff_q1, audit = rd.build_effective_reporting_snapshot(
+        units, _mk_empty_units(),
+        relationships_q4=None, relationships_q1=None,
+        cross_filing_evidence=evidence,
+        period_q4="2025-12-31", period_q1="2026-03-31",
+    )
+    assert len(eff_q4) == 1
+    assert eff_q4.iloc[0]["filing_manager_cik"] == "A"
+    assert len(audit) == 1
+    assert audit.iloc[0]["dedup_decision"] == rd.DEDUP_DECISION_DROP
+    assert audit.iloc[0]["dedup_reason"] == rd.DEDUP_REASON_INTRA_PERIOD_DUP
+    assert audit.iloc[0]["evidence_level"] == rd.EVIDENCE_LEVEL_L3
+    assert audit.iloc[0]["filing_manager_cik"] == "B"
+
+
+def test_p65_l3_reciproco_reporting_conflict():
+    """A->B y B->A -> ambiguedad -> KEEP ambos + REPORTING_CONFLICT."""
+    units = _mk_units([
+        {"filing_manager_cik": "A", "observed_security_key": "cusip:AAPL",
+         "canonical_security": "equity:AAPL", "discretion_type": "SOLE"},
+        {"filing_manager_cik": "B", "observed_security_key": "cusip:AAPL",
+         "canonical_security": "equity:AAPL", "discretion_type": "SOLE"},
+    ])
+    evidence = _mk_evidence([
+        ("A", "B", "ACC_A", "ACC_B", 7, "equity:AAPL"),
+        ("B", "A", "ACC_B", "ACC_A", 3, "equity:AAPL"),
+    ])
+    eff_q4, eff_q1, audit = rd.build_effective_reporting_snapshot(
+        units, _mk_empty_units(),
+        relationships_q4=None, relationships_q1=None,
+        cross_filing_evidence=evidence,
+        period_q4="2025-12-31", period_q1="2026-03-31",
+    )
+    assert len(eff_q4) == 2  # ambos KEEP
+    assert len(audit) == 1
+    assert audit.iloc[0]["dedup_decision"] == rd.DEDUP_DECISION_KEEP
+    assert audit.iloc[0]["dedup_reason"] == rd.DEDUP_REASON_REPORTING_CONFLICT
+
+
+def test_p65_distinta_discretion_no_interactua():
+    """SOLE vs DFND -> distintos grupos, sin dedup."""
+    units = _mk_units([
+        {"filing_manager_cik": "A", "observed_security_key": "cusip:AAPL",
+         "canonical_security": "equity:AAPL", "discretion_type": "SOLE"},
+        {"filing_manager_cik": "B", "observed_security_key": "cusip:AAPL",
+         "canonical_security": "equity:AAPL", "discretion_type": "DFND"},
+    ])
+    evidence = _mk_evidence([
+        ("A", "B", "ACC_A", "ACC_B", 7, "equity:AAPL"),
+    ])
+    eff_q4, eff_q1, audit = rd.build_effective_reporting_snapshot(
+        units, _mk_empty_units(),
+        relationships_q4=None, relationships_q1=None,
+        cross_filing_evidence=evidence,
+        period_q4="2025-12-31", period_q1="2026-03-31",
+    )
+    assert len(eff_q4) == 2  # sin interaccion
+
+
+def test_p65_misma_manager_no_dedup():
+    """Mismo filing_manager_cik -> sin dedup."""
+    units = _mk_units([
+        {"filing_manager_cik": "A", "observed_security_key": "cusip:AAPL",
+         "canonical_security": "equity:AAPL", "discretion_type": "SOLE"},
+        {"filing_manager_cik": "A", "observed_security_key": "cusip:AAPL2",
+         "canonical_security": "equity:AAPL", "discretion_type": "SOLE"},
+    ])
+    evidence = _mk_evidence([
+        ("A", "B", "ACC_A", "ACC_B", 7, "equity:AAPL"),
+    ])
+    eff_q4, eff_q1, audit = rd.build_effective_reporting_snapshot(
+        units, _mk_empty_units(),
+        relationships_q4=None, relationships_q1=None,
+        cross_filing_evidence=evidence,
+        period_q4="2025-12-31", period_q1="2026-03-31",
+    )
+    assert len(eff_q4) == 2
+
+
+def test_p65_dedup_audit_columnas():
+    """El audit trail tiene exactamente las columnas obligatorias."""
+    units = _mk_units([
+        {"filing_manager_cik": "A", "observed_security_key": "cusip:AAPL",
+         "canonical_security": "equity:AAPL", "discretion_type": "SOLE"},
+        {"filing_manager_cik": "B", "observed_security_key": "cusip:AAPL",
+         "canonical_security": "equity:AAPL", "discretion_type": "SOLE"},
+    ])
+    evidence = _mk_evidence([
+        ("A", "B", "ACC_A", "ACC_B", 7, "equity:AAPL"),
+    ])
+    _, _, audit = rd.build_effective_reporting_snapshot(
+        units, _mk_empty_units(),
+        relationships_q4=None, relationships_q1=None,
+        cross_filing_evidence=evidence,
+        period_q4="2025-12-31", period_q1="2026-03-31",
+    )
+    assert set(audit.columns) == set(rd.DEDUP_AUDIT_COLUMNS)
+
+
+def test_p65_units_vacio_no_revienta():
+    """Con units vacios, devuelve vacios sin error."""
+    eff_q4, eff_q1, audit = rd.build_effective_reporting_snapshot(
+        _mk_empty_units(), _mk_empty_units(),
+        relationships_q4=None, relationships_q1=None,
+        cross_filing_evidence=None,
+        period_q4="2025-12-31", period_q1="2026-03-31",
+    )
+    assert eff_q4.empty
+    assert eff_q1.empty
+    assert audit.empty
