@@ -15,8 +15,9 @@ Distincion de autorizaciones:
     autorizacion A.6              -> desbloqueo post-F2.4
 
 **Generado:** 2026-09-20.
-**Precondicion bloqueante:** dictamen F2.4 (GO o GO CONDICIONADO).
-**Estado:** NO EJECUTABLE hasta F2.4.
+**Precondicion bloqueante:** F2.4 EMITIDO (GO CONDICIONADO).
+**Estado:** EJECUTABLE excepto A.6.2-bis (rediseno TARGET, requiere
+autorizacion OpenFIGI). A.6.0 precede a A.6.2. Ver DICTAMENES.md #24.
 **Referencia:** iae/RECONCILIACION_CONTRATO_CODIGO.md + iae/REESTRUCTURACION_MODULO.md.
 
 ---
@@ -44,6 +45,42 @@ del auditor.
 ---
 
 ## 2. Sub-fases
+
+### A.6.0 - Gate 0 de los 3 bloqueantes estructurales (PREVIO)
+
+**Origen:** dictamen F2.4 introdujo 3 bloqueantes estructurales (ver
+DICTAMENES.md #24 + INFORME.md #18). Antes de tocar codigo productivo,
+inventario empirico sin modificaciones.
+
+**Objetivo:** mapear cuanto de los 3 bloqueantes esta ya cubierto y
+cuanto requiere rediseno.
+
+**Bloqueantes a auditar:**
+
+    1. TARGET independiente del exito del mapping.
+       - Donde vive la construccion de TARGET hoy.
+       - Si depende de security_identity / cusip_resolver.
+       - Separacion CATALOGO vs TARGET_OBSERVED.
+
+    2. Semantica point-in-time.
+       - Campos temporales en radar_target_catalog.csv.
+       - Campos temporales en los mappings OpenFIGI.
+       - Existencia de target_catalog_as_of().
+
+    3. 13F != flujo en tiempo real.
+       - Estados de "no aparece" en delta_shares.py.
+       - Distincion corporate action vs economic accumulation.
+       - Tratamiento de manager duplication.
+
+**Entregable:** informe de inventario (sin cambios de codigo) en
+iae/INFORME.md con la evidencia directa.
+
+**Criterio de aceptacion:** inventario completo con referencias
+archivo:linea. Sin tocar codigo.
+
+**Estado:** PENDIENTE. Precede a A.6.2.
+
+---
 
 ### A.6.1 - Dictamen F2.4 sobre divergencias y decisiones arquitectonicas (EXTERNO)
 
@@ -90,11 +127,29 @@ del auditor.
 - Postura sobre OpenFIGI masivo.
 - Postura sobre policy v1.3.
 
-**Estado:** PENDIENTE EXTERNO.
+**Decisiones recibidas (2026-09-20):**
+
+    D1 P61        GO - conectar resolve_source_status + evidence extendida
+    D2 P38        GO CONDICIONADO - TARGET real + rediseno independencia mapping
+    D3 P60        GO - fail-closed, sin default TICKER
+    Q12           Modelo A - shareClassFIGI (unidad = share class)
+    AGREG.        Opcion 2 - funcion separada + solo VERIFIED al peso contractual
+    OpenFIGI      GO CONDICIONADO - snapshot + hash, no dependencia live
+    Policy v1.3   NO - v1.0 sigue normativa
+    THRESHOLD_2   BLOQUEADO
+    Certificacion BLOQUEADA
+
+**Estado:** CERRADO 2026-09-20. Referencia: DICTAMENES.md #24 + INFORME.md #18.
 
 ---
 
 ### A.6.2 - Fixes quirurgicos (post F2.4 = GO)
+
+**Nota (F2.4 2026-09-20):** D1 (P60) y D3 (P61) siguen siendo fixes
+quirurgicos. D2 (P38) se divide en dos partes:
+
+    - A.6.2-P38        firma nueva nipc + coverage.py (quirurgico).
+    - A.6.2-bis        rediseno TARGET (arquitectonico). Ver mas abajo.
 
 3 commits minimos (uno por divergencia D1/D2/D3). Segun lo que
 determine F2.4, pueden requerirse commits adicionales para materializar
@@ -131,6 +186,33 @@ logica vive dentro de `compute_contractual_coverage()`.
 - Pyflakes limpio.
 - Tests contractuales nuevos pasan.
 - Tests existentes no-regresionan.
+
+---
+
+### A.6.2-bis - Rediseno arquitectonico de TARGET (post F2.4)
+
+**Origen:** bloqueante 1 del F2.4. El TARGET no puede depender del
+exito del mapping. La definicion actual
+`TARGET = observaciones 13F INTERSECT RADAR_TARGET_CATALOG`
+introduce sesgo de seleccion: el denominador depende del propio
+proceso que se mide.
+
+**Cambios:**
+
+- `identity/target_builder.py`:
+    - Recibe CATALOGO como entidad externa y versionada.
+    - NO importa `security_identity` ni `cusip_resolver`.
+    - Prohibido derivar TARGET de observaciones mapeadas.
+    - Flujo: CATALOGO -> TARGET FIGIs -> mapping -> coverage.
+
+- Introducir `catalog_version` + `catalog_valid_from` + `catalog_valid_to`
+  o `target_catalog_as_of(period_end)` (bloqueante 2, P62).
+
+- Consumidor: `aggregation/coverage.py` recibe el TARGET ya construido.
+
+**Precondicion:** OpenFIGI masivo autorizado. Depende de A.6.0.
+
+**Estado:** PENDIENTE. Requiere autorizacion especifica.
 
 ---
 
@@ -274,41 +356,95 @@ autoritativa. El auditor puede autorizar otro esquema si lo considera.
 
 ---
 
+### A.6.7 - Contratos adicionales P62-P65 (derivados del F2.4)
+
+**Origen:** el dictamen F2.4 exige formalizar semanticas que estaban
+implicitas. Se integran en NIPC_CONTRATOS_SEMANTICOS_v1.md in-place
+(fichero vivo, no se crea v2).
+
+**Contratos nuevos:**
+
+    P62  Semantica point-in-time
+         - period_end != filing_date != knowledge_date (los 3 conservados).
+         - catalog_version + valid_from/valid_to.
+         - target_catalog_as_of(period_end).
+         - OpenFIGI no expone effective_date: consulta actual != historica.
+
+    P63  Missing != sold
+         - 6 estados: ZERO_REPORTED | MISSING | BELOW_REPORTING_THRESHOLD |
+           CONFIDENTIAL | UNRESOLVED | SOLD.
+         - "No aparece en Q1" no es "vendio".
+         - Ausencia de mapping != ausencia de posicion (NO_MATCH != not_target).
+
+    P64  Corporate actions
+         - Split, reverse split, spin-off, merger, conversion, CUSIP change.
+         - delta_shares distingue economic accumulation de mechanical change.
+
+    P65  Manager duplication
+         - 13F admite other included manager + combination reports.
+         - Unidad: manager / manager-group / filing / position / security.
+         - Prohibido agregar universo por CUSIP sin resolver estructura filing.
+
+**Adicionales integradas en P60/P61/P38 (seccion 3.3 + 3.4):**
+
+    - unmapped_count int separado de unmapped_weight float.
+    - compute_nipc sin degradacion silenciosa a proxy (evidence_class).
+    - PositionRecord tipado en coverage.py.
+    - Solo VERIFIED aporta al peso contractual; unverified aparte.
+
+**Estado:** PENDIENTE. No ejecutable hasta A.6.0.
+
+---
+
 ## 3. Orden de dependencia
 
-    A.6.1 (F2.4)
+    A.6.0 (Gate 0 bloqueantes)  <- PENDIENTE
         |
         v
-    A.6.2 (3 commits quirurgicos) --+-- A.6.3 (test shareClassFIGI)
-        |                            |
-        v                            v
-    A.6.4 (recalculo evidencia)
+    A.6.1 (F2.4)  <- CERRADO 2026-09-20
         |
         v
-    A.6.5 (actualizar contrato si aplica)
+    A.6.2 (fixes P60 + P61 + P38)
+        |
+        +--- A.6.2-bis (rediseno TARGET)  [requiere OpenFIGI + A.6.0]
+        |
+        +--- A.6.3 (test Q12 shareClassFIGI)
+        |          |
+        |          v
+        |      A.6.4 (recalculo evidencia)
+        |          |
+        |          v
+        |      A.6.5 (contrato, si aplica)
+        |          |
+        |          v
+        |      A.6.7 (contratos P62-P65)
         |
         v
-    A.6.6 (F2.4 definitivo)
+    A.6.6 (F2.4-CLOSE)
 
 Los pasos A.6.2-P60, A.6.2-P61, A.6.2-P38 pueden ejecutarse en
-paralelo si se hace un backup por cada uno.
+paralelo si se hace un backup por cada uno. A.6.2-bis requiere
+autorizacion OpenFIGI y depende de A.6.0.
 
 ---
 
 ## 4. Bloqueos y precondiciones
 
-    | Bloqueo                       | Afecta a    | Desbloquea con      |
-    |-------------------------------|-------------|---------------------|
-    | F2.4 pendiente                | Todo A.6    | Dictamen externo    |
-    | OpenFIGI masivo NO AUTORIZADO | A.6.2-P38-materialize    | Autorizacion F2.4   |
-    | THRESHOLD_1/2 UNDEFINED       | A.6.6 final | A.6.4 + auditor     |
-    | Gate-NIPC.2 BLOQUEADO         | A.7         | A.6.6               |
+    | Bloqueo                       | Afecta a    | Desbloquea con           |
+    |-------------------------------|-------------|--------------------------|
+    | F2.4                          | -           | EMITIDO 2026-09-20       |
+    | A.6.0 Gate 0 bloqueantes      | A.6.2-bis   | Este ciclo               |
+    | OpenFIGI masivo NO AUTORIZADO | A.6.2-bis   | Autorizacion especifica  |
+    | THRESHOLD_1/2 UNDEFINED       | A.6.6 final | A.6.4 + auditor          |
+    | Gate-NIPC.2 BLOQUEADO         | A.7         | A.6.6                    |
 
-Los fixes D1/D3 y el fix de cobertura (firma nueva nipc) NO dependen
-de OpenFIGI. Solo el D2 completo (TARGET real) lo requiere.
+Los fixes D1/D3 (P60/P61) y el fix de cobertura (firma nueva nipc)
+NO dependen de OpenFIGI. Solo D2 completo (TARGET real, rediseno)
+requiere OpenFIGI + rediseno arquitectonico (A.6.0 + A.6.2-bis).
 
-**Opcion estrategica:** implementar D1+D3+coverage en A.6.2 y dejar D2
-para A.6.3 o A.6.4 si F2.4 no autoriza OpenFIGI todavia.
+**Opcion estrategica:** implementar D1+D3+coverage en A.6.2 y dejar
+A.6.2-bis (rediseno TARGET) para despues de A.6.0 y de autorizacion
+OpenFIGI.
 
 ---
 
