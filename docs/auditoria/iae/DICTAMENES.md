@@ -1067,3 +1067,156 @@ una regla de seguridad del contrato IAE.
 Aplicar las 3 correcciones al texto contractual. Reenviar al
 auditor para dictamen contractual final. Si GO, proceder a
 modificar 14.3 e implementar.
+
+
+---
+
+## 32. P66 - Dictamen auditor externo v6 (2026-09-21)
+
+**Tipo:** dictamen del auditor externo sobre P66_L3_REFORMULACION_PROPUESTA.md
+v3 (con dictamen #31 aplicado).
+
+**Objeto:** cierre final del texto contractual.
+
+**Resultado:** GO CONDICIONADO FINAL. Evidencia PASS.
+Contrato 14.3 todavia NO autorizado hasta aplicar 2 correcciones.
+
+### Aprobado (cierre definitivo)
+
+    Evidencia SEC                                  PASS
+    OTHERMANAGER -> R4                             PASS
+    OTHERMANAGER2 -> R2                            PASS
+    NOTICE                                         PASS
+    COMBINATION                                    PASS
+    FormNum -> CIK                                 PASS
+    Gates 0.4 / 0.5 / 0.6 / 0.7 / 0.8 / 0.9        PASS
+    CONFLICT > MATCH (scope A)                     PASS
+    N/D vs NO_MATCH                                PASS
+    XML / nueva dependencia                        NO necesario
+    Nuevo Gate de cobertura                        NO necesario
+
+### 2 bloqueos finales
+
+**Bloqueo A - §7 debe generalizar a universo R4.**
+
+§7 actual:
+
+    NT efectivo, ingestion integra verificada:
+        -> NO_MATCH
+
+    NT efectivo, ingestion NO verificada:
+        -> N/D
+
+Es inconsistente con §2 y §5 desde dictamen #28: el universo R4 ya
+no es solo NT, es NOTICE + COMBINATION.
+
+Reformulacion aprobada:
+
+    Filing efectivo R4 (NOTICE o COMBINATION)
+        + ingestion integra verificada
+        + todas las filas OTHERMANAGER resueltas
+        + A no aparece
+            -> NO_MATCH
+
+    Filing efectivo R4
+        + existe al menos una fila OTHERMANAGER no resoluble
+            -> N/D
+
+Aplicable a 13F NOTICE, 13F COMBINATION REPORT y sus amendments
+cuando formen parte del estado efectivo.
+
+**Bloqueo B - R3 con tri-state.**
+
+R3 actual: "existe filing efectivo" - ambiguo cuando el algoritmo
+puede concluir "NO DETERMINABLE cual es el filing efectivo".
+
+Reformulacion aprobada (dictamen #32 seccion 8):
+
+    R3(B, period) =
+        TRUE  cuando el conjunto documental efectivo de B es
+              determinable inequivocamente y pertenece al
+              universo R4;
+
+        FALSE cuando no existe ningun filing R4 de B para el
+              periodo;
+
+        N/D   cuando existen submissions R4 pero no puede
+              determinarse inequivocamente el conjunto
+              documental efectivo.
+
+Caso Gate 0.9 (CIK 0002016827 con NT + COMBINATION) produce
+formalmente R3 = N/D.
+
+### Terminologia (dictamen #32 seccion 7)
+
+No presentar el documento como "todos los bloqueos aplicados y
+listo". La trazabilidad debe ser:
+
+    #28 -> corregido
+    #29 -> corregido
+    #30 -> corregido
+    #31 -> corregido
+    #32 -> 2 correcciones nuevas (este dictamen)
+
+### Texto contractual final de R3 (dictamen #32 seccion 8)
+
+    3. existe un conjunto documental efectivo de B para el mismo
+       PERIODOFREPORT que A y perteneciente al universo R4:
+
+       - 13F-NT / 13F-NT/A con REPORTTYPE = 13F NOTICE; o
+       - 13F-HR / 13F-HR/A con REPORTTYPE = 13F COMBINATION REPORT.
+
+       R3 = TRUE cuando dicho conjunto documental efectivo es
+       determinable inequivocamente.
+
+       R3 = FALSE cuando no existe ningun filing perteneciente
+       al universo R4 para B y PERIODOFREPORT.
+
+       R3 = N/D cuando existen submissions aplicables pero el
+       conjunto documental efectivo no puede determinarse
+       inequivocamente.
+
+### Texto contractual final de estados R4 (dictamen #32 seccion 9)
+
+    MATCH
+        Existe una fila OTHERMANAGER que identifica inequivocamente
+        a A.
+
+    NO_MATCH
+        El conjunto documental efectivo es determinable, la
+        ingestion es integra, todas las filas OTHERMANAGER tienen
+        identidad resuelta inequivocamente y A no aparece.
+
+    N/D
+        El conjunto documental efectivo no es determinable, o
+        existe al menos una fila OTHERMANAGER cuya identidad no
+        puede resolverse inequivocamente y no existe evidencia
+        positiva inequivoca de A.
+
+    CONFLICT
+        La evidencia candidata a identificar A contiene
+        identificadores contradictorios o una resolucion no
+        univoca.
+
+### Estado
+
+    Evidencia tecnica                    CERRADA
+    GO CONDICIONADO FINAL                emitido
+    2 correcciones finales               PENDIENTES DE APLICAR
+    Contrato 14.3                        NO MODIFICAR AUN
+    reporting_dedup.py                   NO TOCAR
+    DROP_DUP                             NO ACTIVAR
+
+### Secuencia tras aplicar las 2 correcciones
+
+    14.3 actualizado
+          ↓
+    tests contractuales
+          ↓
+    implementacion reporting_dedup
+          ↓
+    probe e2e
+          ↓
+    auditoria de salida
+          ↓
+    DROP_DUP efectivo

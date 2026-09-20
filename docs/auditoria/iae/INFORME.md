@@ -788,6 +788,32 @@ Evidencia: `iae/DICTAMENES.md` #31.
 Siguiente paso: reenviar paquete completo al auditor para
 dictamen contractual final.
 
+
+
+### Dictamen P66 #32 recibido (2026-09-21)
+
+Resultado: GO CONDICIONADO FINAL. Evidencia PASS. Sin nuevos gates.
+
+2 correcciones aplicadas:
+
+- **A**: §7 generalizado de NT a universo R4 (NOTICE + COMBINATION).
+  Antes decia solo NT; ahora cubre completo. Consistente con §2 y §5.
+- **B**: R3 con tri-state TRUE/FALSE/N/D. TRUE si el conjunto
+  documental efectivo es determinable inequivocamente; FALSE si no
+  existe filing R4; N/D si existen submissions pero el conjunto no
+  puede determinarse.
+
+Trazabilidad de la cabecera actualizada:
+- #28 corregido
+- #29 corregido
+- #30 corregido
+- #31 corregido
+- #32 GO CONDICIONADO FINAL con 2 correcciones aplicadas
+
+Evidencia: `iae/DICTAMENES.md` #32.
+
+Siguiente paso: dictamen contractual final del auditor sobre 14.3.
+
 ### Estado
 
     Fuente             APROBADA (OTHERMANAGER)

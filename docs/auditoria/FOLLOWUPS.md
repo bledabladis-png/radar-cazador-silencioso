@@ -2377,3 +2377,18 @@ P65 v3 (ver iae/DICTAMENES.md #26). GO CONDICIONADO con 3 correcciones.
   Paquete completo listo para dictamen contractual final.
 - **NO se ha hecho:** sin XML, sin reporting_dedup.py, sin DROP_DUP,
   sin tocar contrato 14.3.
+
+
+## P66 - Dictamen #32 GO CONDICIONADO FINAL (2026-09-21)
+
+- **Origen:** dictamen del auditor externo tras dictamen #31.
+- **Resultado:** GO CONDICIONADO FINAL. Evidencia PASS. Sin nuevos
+  gates ni dependencias.
+- **2 correcciones aplicadas:**
+  - A: §7 generalizado a universo R4 (NOTICE + COMBINATION).
+  - B: R3 con tri-state TRUE / FALSE / N/D.
+- **Trazabilidad:** cabecera actualizada con secuencia #28-#32.
+- **Evidencia:** `iae/DICTAMENES.md` #32.
+- **Pendiente:** dictamen contractual final sobre 14.3.
+- **NO se ha hecho:** sin XML, sin reporting_dedup.py, sin DROP_DUP,
+  sin tocar contrato 14.3.

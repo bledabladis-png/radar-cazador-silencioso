@@ -5,7 +5,15 @@ corregida tras dictamen #27 (P66 GO CONDICIONADO).
 
 **Estado:** PROPUESTA v3. Pendiente de dictamen contractual final
 sobre el texto exacto antes de tocar NIPC_CONTRATOS_SEMANTICOS_v1.md.
-Los 12 bloqueos de los dictamenes #28 a #31 estan aplicados.
+
+**Trazabilidad de dictamenes:**
+
+    #28  corregido
+    #29  corregido
+    #30  corregido
+    #31  corregido
+    #32  GO CONDICIONADO FINAL - 2 correcciones aplicadas en este commit
+         (§7 generalizacion a R4 + R3 tri-state)
 
 **Origen:** Gate 0.1 + Gate 0.2 (2026-09-20) tras NO-GO de P66.
 Correcciones aplicadas segun dictamen externo #27.
@@ -305,13 +313,25 @@ incluye el filtro obligatorio.
 
 R3 NO se absorbe en R4. Se mantiene como control independiente.
 
-**Texto reformulado (dictamen #31, bloqueo 1):**
+**Texto reformulado (dictamen #31 bloqueo 1 + dictamen #32 bloqueo B):**
 
-    R3 = existe filing o conjunto documental valido de B para el
-         mismo PERIODOFREPORT, perteneciente al universo R4:
+    R3(B, period) evalua en tres estados:
 
-         - 13F-NT / 13F-NT/A + REPORTTYPE = 13F NOTICE; o
-         - 13F-HR / 13F-HR/A + REPORTTYPE = 13F COMBINATION REPORT.
+        TRUE
+            El conjunto documental efectivo de B es determinable
+            inequivocamente y pertenece al universo R4:
+              - 13F-NT / 13F-NT/A con REPORTTYPE = 13F NOTICE; o
+              - 13F-HR / 13F-HR/A con REPORTTYPE = 13F COMBINATION REPORT.
+
+        FALSE
+            No existe ningun filing perteneciente al universo R4
+            para B y PERIODOFREPORT.
+
+        N/D
+            Existen submissions aplicables al universo R4, pero
+            el conjunto documental efectivo no puede determinarse
+            inequivocamente (caso tipico: >1 filing base
+            heterogeneo, Gate 0.9 CIK 0002016827).
 
 La distincion SUBMISSIONTYPE + REPORTTYPE es obligatoria. `13F-HR`
 incluye dos report types con mismo SUBMISSIONTYPE (HOLDINGS REPORT
@@ -341,19 +361,29 @@ que B sea el filing efectivo del periodo.
 
 ---
 
-## 7. NT sin A en OTHERMANAGER (correccion #6)
+## 7. Sin A en OTHERMANAGER (correccion #6, generalizada #32)
 
-    NT efectivo, ingestion integra verificada:
-        -> NO_MATCH
+**Generalizacion (dictamen #32, bloqueo A):** aplica al universo
+completo R4, no solo a NT. El universo R4 es NOTICE + COMBINATION.
 
-    NT efectivo, ingestion NO verificada (fallo de descarga,
-       parseo, o lineage):
-        -> N/D
+    Filing efectivo R4 (13F NOTICE o 13F COMBINATION REPORT)
+        + ingestion integra verificada
+        + TODAS las filas OTHERMANAGER tienen identidad resuelta
+        + A no aparece
+            -> NO_MATCH
+
+    Filing efectivo R4
+        + existe al menos una fila OTHERMANAGER no resoluble
+            -> N/D
 
     Nunca N/D -> NO_MATCH.
 
-Aplica tambien a NT con 0 filas de OTHERMANAGER (si existieran):
-NO_MATCH, no N/D.
+Aplica a 13F NOTICE, 13F COMBINATION REPORT y sus amendments
+cuando formen parte del estado efectivo.
+
+Evidencia empirica (Gate 0.8): en COMBINATION_BASE hay 227 filas
+N/D Q4 y 252 Q1 (mayoria concentradas en filer 0001580642-). Esos
+filings no pueden producir NO_MATCH para A; producen N/D.
 
 ---
 
