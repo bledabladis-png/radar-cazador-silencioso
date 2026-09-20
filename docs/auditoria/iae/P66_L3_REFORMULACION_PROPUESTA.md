@@ -3,16 +3,17 @@
 **Objeto:** propuesta de reformulacion del contrato 14.3 requisito 4,
 corregida tras dictamen #27 (P66 GO CONDICIONADO).
 
-**Estado:** PROPUESTA v2. Pendiente de dictamen final sobre el texto
-contractual exacto antes de tocar NIPC_CONTRATOS_SEMANTICOS_v1.md.
+**Estado:** PROPUESTA v3. Pendiente de dictamen contractual final
+sobre el texto exacto antes de tocar NIPC_CONTRATOS_SEMANTICOS_v1.md.
+Los 12 bloqueos de los dictamenes #28 a #31 estan aplicados.
 
 **Origen:** Gate 0.1 + Gate 0.2 (2026-09-20) tras NO-GO de P66.
 Correcciones aplicadas segun dictamen externo #27.
 
 **HEAD al redactar:** 551ea52 (o posterior).
-**Dictamen mas reciente:** #28 (P66 v2-bis NO-GO contractual, 2026-09-21).
-Estado actual: 6 bloqueos del dictamen #28, 5 resueltos; #4 en
-invariante del mapping (seccion 10).
+**Dictamen mas reciente:** #31 (P66 v5, NO-GO contractual, evidencia
+PASS, 2026-09-21). Los 12 bloqueos acumulados de los dictamenes #28
+a #31 estan aplicados al texto contractual.
 
 **Historial:** v1 en commit 6b610b3. v2 incorpora las 8 correcciones
 obligatorias del dictamen #27.
