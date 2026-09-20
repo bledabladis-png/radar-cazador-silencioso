@@ -1419,3 +1419,48 @@ reconciliacion de codigo queda bloqueada hasta entonces.
 
 ---
 
+
+---
+
+## Ciclo 2026-09-20 (bis) - Diagnostico del run scheduled fallido
+
+**HEAD:** c38e127.
+**Run fallido:** 35432363006 (sabado 19/09, 08:34 UTC, scheduled).
+
+### Diagnostico
+
+El run scheduled del sabado fallo con:
+
+    [FAIL] data/stock_prices.parquet.manifest.json:
+           coverage_pct_last=0.936102 < 0.95
+    [OK]   data/market_data.parquet.manifest.json
+    Guard coverage: 1 fallo(s). Abortando.
+
+Causa: los 20 tickers `.L` (London Stock Exchange) del universo
+`stock_prices.parquet` no tenian Close. Yahoo no los sirvio a
+las 09:34 London del sabado. Coverage = (313-20)/313 = 0.9361.
+Guard bloqueo. `origin/main` intacto en `9d4a81e`.
+
+**No es bug.** Es comportamiento esperado del guard. Es una
+limitacion conocida (§12 del prompt): los 20 tickers `.L` no
+tienen provider dedicado.
+
+### Deuda registrada
+
+Creado `radar/DEUDA.md` con 3 entradas:
+
+    D-RADAR-01  20 tickers LSE sin provider dedicado (MEDIA)
+    D-RADAR-02  Cron `0 4 * * *` los fines de semana (BAJA)
+    D-RADAR-03  Guard coverage: no distingue core de LSE (MEDIA)
+
+Decision del usuario (2026-09-20): buscar fuente dedicada para
+los 20 `.L` y cerrar el problema de raiz.
+
+### Estado
+
+- main intacto.
+- Guard funcionando.
+- Deuda registrada.
+- Sin cambios de codigo en este ciclo.
+
+---

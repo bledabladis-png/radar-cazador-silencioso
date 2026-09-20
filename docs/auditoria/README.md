@@ -58,6 +58,7 @@ Orden recomendado para entender el sistema actual:
 
 ### radar/
 
+    DEUDA.md                              deuda activa del radar (vivo)
     FU-021-5_ESPECIFICACION_CONTRATO_TEMPORAL.md
     FU-021-5_ESPECIFICACION_CONTRATO_TEMPORAL_PARTE_B.md
     FU-021-5_PLAN_IMPLEMENTACION.md
