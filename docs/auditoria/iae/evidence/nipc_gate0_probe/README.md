@@ -16,14 +16,14 @@ Informe: docs/auditoria/INSTITUTIONAL_ACCUMULATION_NIPC_GATE0_PROBE_INFORME.md
 
 ## Reproducibilidad
 
-    py docs/auditoria/evidence/nipc_gate0_probe/probe_nipc_e2e.py
-    py docs/auditoria/evidence/nipc_gate0_probe/probe_filer_continuity.py
-    py docs/auditoria/evidence/nipc_gate0_probe/probe_filer_continuity_top50.py
-    py docs/auditoria/evidence/nipc_gate0_probe/probe_reconcile_vanguard.py
+    py docs/auditoria/iae/evidence/nipc_gate0_probe/probe_nipc_e2e.py
+    py docs/auditoria/iae/evidence/nipc_gate0_probe/probe_filer_continuity.py
+    py docs/auditoria/iae/evidence/nipc_gate0_probe/probe_filer_continuity_top50.py
+    py docs/auditoria/iae/evidence/nipc_gate0_probe/probe_reconcile_vanguard.py
 
 Capturar salida del probe top 50 (regenera top50_output.txt):
 
-    py docs/auditoria/evidence/nipc_gate0_probe/probe_filer_continuity_top50.py > top50_output.txt
+    py docs/auditoria/iae/evidence/nipc_gate0_probe/probe_filer_continuity_top50.py > top50_output.txt
 
 Requiere acceso a:
   - D:/13f_probe/processed/2025Q4/ (7 parquets)

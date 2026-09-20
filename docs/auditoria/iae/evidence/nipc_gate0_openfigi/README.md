@@ -7,7 +7,7 @@ Preservacion de la evidencia empirica del probe OpenFIGI ejecutado el
 
 - Ciclo: IAE NIPC / Gate 0 OpenFIGI.
 - Dictamen asociado: `docs/auditoria/INSTITUTIONAL_ACCUMULATION_NIPC_GATE0_OPENFIGI_DICTAMEN.md`.
-- Commit preservacion: ver `git log --oneline docs/auditoria/evidence/nipc_gate0_openfigi/`.
+- Commit preservacion: ver `git log --oneline docs/auditoria/iae/evidence/nipc_gate0_openfigi/`.
 - Entrada FOLLOWUPS: "IAE NIPC - Gate 0 OpenFIGI".
 
 ## Contenido
@@ -41,7 +41,7 @@ Preservacion de la evidencia empirica del probe OpenFIGI ejecutado el
 
 ## Reproducibilidad
 
-    cd docs/auditoria/evidence/nipc_gate0_openfigi
+    cd docs/auditoria/iae/evidence/nipc_gate0_openfigi
     py build_sample.py
     py run_openfigi.py
 

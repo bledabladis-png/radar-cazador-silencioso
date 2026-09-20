@@ -922,7 +922,7 @@ CUSIPs poblados (equity Q1 2026):
 
 **Ciclo:** Q-T50-5 (post dictamen TOP 50). Sin OpenFIGI, sin thresholds, sin modificacion del motor.
 
-**Metodologia congelada antes del run:** `README.md` del directorio de evidencia (`docs/auditoria/evidence/nipc_gate0_baseline/`).
+**Metodologia congelada antes del run:** `README.md` del directorio de evidencia (`docs/auditoria/iae/evidence/nipc_gate0_baseline/`).
 
 **4 universos anidados (nomenclatura corregida por el auditor):**
 
@@ -967,7 +967,7 @@ CUSIPs poblados (equity Q1 2026):
 **Documentos:**
 
   - Informe: `docs/auditoria/INSTITUTIONAL_ACCUMULATION_NIPC_GATE0_COVERAGE_BASELINE_INFORME.md`.
-  - Evidencia: `docs/auditoria/evidence/nipc_gate0_baseline/` (README + probe + output + HASHES).
+  - Evidencia: `docs/auditoria/iae/evidence/nipc_gate0_baseline/` (README + probe + output + HASHES).
 
 **Regla:** este ciclo NO fija thresholds. Gate-NIPC.2 SIGUE BLOQUEADO. THRESHOLD_1/2 UNDEFINED. Sin OpenFIGI. Sin push.
 
@@ -1120,7 +1120,7 @@ Q3=NO FIJAR thresholds, Q4=GO fix N-PORT, Q5=CERRADO.
    prioriza exchCode=US. 8 tests.
 
 3. Micro-probe identidad radar (7501825). Evidencia en
-   `docs/auditoria/evidence/nipc_gate0_target_identity/`.
+   `docs/auditoria/iae/evidence/nipc_gate0_target_identity/`.
    242 tickers radar -> OpenFIGI. 240/242 con FIGI +
    shareClassFIGI (99.17%). 2 MISS: BRK-B, MOG-A (nomenclatura
    Yahoo vs OpenFIGI BRK/B, MOG/A).
@@ -1238,7 +1238,7 @@ D2. target_universe.py NO consulta cusip_ticker_exceptions.csv (Q-CUR).
 D3. Cliente no valida formato CUSIP antes de enviar (3 ERROR por formato).
 D4. BRK-B / MOG-A sin resolver (catalogo, 2 MISS). Pendiente evidencia.
 
-**Evidencia:** docs/auditoria/evidence/nipc_gate0_target_identity_top2000/
+**Evidencia:** docs/auditoria/iae/evidence/nipc_gate0_target_identity_top2000/
 (README + 8 ficheros + HASHES.txt).
 
 **Documentos:**
@@ -2007,7 +2007,7 @@ Objetivo: medir las 6 metricas pairwise obligatorias sobre los 4 universos anida
 Artefactos generados:
 
   docs/auditoria/INSTITUTIONAL_ACCUMULATION_NIPC_GATE0_COVERAGE_BASELINE_INFORME.md
-  docs/auditoria/evidence/nipc_gate0_baseline/
+  docs/auditoria/iae/evidence/nipc_gate0_baseline/
     README.md                     (metodologia congelada antes del run)
     probe_coverage_baseline.py    (probe deterministico, sin datetime.now())
     baseline_output.txt           (salida cruda, exit 0, 7982 bytes, LF)
@@ -2169,7 +2169,7 @@ THRESHOLD_1/2 UNDEFINED. F2.4 NO AUTORIZADA. Full OpenFIGI NO AUTORIZADO.
    - Argumento estructural: invariante `len == 2` garantizada por
      `_classify_strategy_from_types`, no por el dataset.
    - Dictamen P70 (documento propio): GO CONDICIONADO.
-   - Evidencia en `docs/auditoria/evidence/nipc_p70_probe/`.
+   - Evidencia en `docs/auditoria/iae/evidence/nipc_p70_probe/`.
 
 4. Contrato semantico v1 redactado (`NIPC_CONTRATOS_SEMANTICOS_v1.md`):
    - P60 (identity_type obligatorio, sin nuevos kinds).

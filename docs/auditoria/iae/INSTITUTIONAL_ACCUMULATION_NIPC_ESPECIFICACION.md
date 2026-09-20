@@ -1499,7 +1499,7 @@ Formato: JSON + HASHES.txt en directorio de evidencia del ciclo.
 
 Estructura actual (referencia):
 
-    docs/auditoria/evidence/nipc_gate0_openfigi/
+    docs/auditoria/iae/evidence/nipc_gate0_openfigi/
         README.md
         build_sample.py
         run_openfigi.py
@@ -1938,7 +1938,7 @@ del ciclo NIPC).
 
 ### 16.2. Evidencia empirica
 
-  docs/auditoria/evidence/nipc_gate0_openfigi/
+  docs/auditoria/iae/evidence/nipc_gate0_openfigi/
   D:/13f_probe/processed/2025Q4/
   D:/13f_probe/processed/2026Q1/
   D:/13f_probe/official_list_13f/13flist_2025Q4.txt

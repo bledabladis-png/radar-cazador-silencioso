@@ -58,7 +58,7 @@ Requisitos:
 
 Comando (documentado; primera ejecucion desde la nueva ruta pendiente):
 
-    py docs/auditoria/evidence/nipc_p70_probe/_probe_p70.py
+    py docs/auditoria/iae/evidence/nipc_p70_probe/_probe_p70.py
 
 Estado de verificacion: NO EJECUTADO desde la nueva ruta al 2026-09-20.
 La ruta se documenta para reproducibilidad futura. La primera ejecucion
@@ -68,8 +68,8 @@ desde este directorio confirmara que la reproduccion funciona tal cual.
 
 El script escribe su salida en:
 
-    docs/auditoria/evidence/nipc_p70_probe/probe_p70_result.json
-    docs/auditoria/evidence/nipc_p70_probe/probe_p70_summary.txt
+    docs/auditoria/iae/evidence/nipc_p70_probe/probe_p70_result.json
+    docs/auditoria/iae/evidence/nipc_p70_probe/probe_p70_summary.txt
 
 Sobrescribe los ficheros existentes en cada ejecucion. Los hashes
 registrados en la seccion anterior corresponden al resultado de la

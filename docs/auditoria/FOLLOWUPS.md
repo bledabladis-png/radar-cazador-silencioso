@@ -1146,7 +1146,7 @@ Referencia: prompt maestro v6.30, secciones 11.17 a 11.19 y 15.21. Nueve fixes a
 
 - **Origen:** probe del motor NIPC completo (S1-S5) sobre datasets reales, previo a Gate-NIPC.3.
 - **Informe:** docs/auditoria/INSTITUTIONAL_ACCUMULATION_NIPC_GATE0_PROBE_INFORME.md
-- **Evidence:** docs/auditoria/evidence/nipc_gate0_probe/ (probe_nipc_e2e.py + HASHES.txt + README.md)
+- **Evidence:** docs/auditoria/iae/evidence/nipc_gate0_probe/ (probe_nipc_e2e.py + HASHES.txt + README.md)
 - **Resultado:** motor funciona segun contrato. Hallazgo estructural no cubierto por el contrato.
 - **Metricas del motor:**
   - identity: pct_canonical = 0.0206 (Q4) / 0.0204 (Q1). Coincide con Gate 0 Mapping.
@@ -1171,7 +1171,7 @@ Referencia: prompt maestro v6.30, secciones 11.17 a 11.19 y 15.21. Nueve fixes a
 
 - **Origen:** dictamen probe end-to-end (Q-PROBE-5, GO mini-probe top 20).
 - **Informe:** docs/auditoria/INSTITUTIONAL_ACCUMULATION_NIPC_GATE0_MINIPROBE_INFORME.md
-- **Evidence:** docs/auditoria/evidence/nipc_gate0_probe/probe_filer_continuity.py
+- **Evidence:** docs/auditoria/iae/evidence/nipc_gate0_probe/probe_filer_continuity.py
 - **Resultado:** Vanguard es caso aislado en el top 20. Evidencia NT -> OTHERMANAGER -> HR confirmada.
 - **Clasificacion 24 CIKs (union top 20 Q4+Q1):**
   - CONTINUOUS_FILER: 21 (87.5%).
@@ -1197,7 +1197,7 @@ Referencia: prompt maestro v6.30, secciones 11.17 a 11.19 y 15.21. Nueve fixes a
 - **Documentos:**
   - Dictamen mini-probe: docs/auditoria/INSTITUTIONAL_ACCUMULATION_NIPC_GATE0_MINIPROBE_DICTAMEN.md
   - Addendum correccion: docs/auditoria/INSTITUTIONAL_ACCUMULATION_NIPC_GATE0_MINIPROBE_ADDENDUM.md
-  - Evidence reconciliacion: docs/auditoria/evidence/nipc_gate0_probe/probe_reconcile_vanguard.py
+  - Evidence reconciliacion: docs/auditoria/iae/evidence/nipc_gate0_probe/probe_reconcile_vanguard.py
 - **Resultado:** GO CONDICIONADO. Hallazgo estructural NT -> HR confirmado. Reconciliacion economica NO autorizada. Gate-NIPC.2 y .3 bloqueados.
 - **Decisiones del auditor:**
   - Q-MINI-1 GO/CERRADO: Vanguard = limitacion conocida, concentrada en top 20, sin generalizacion al universo.
@@ -1223,7 +1223,7 @@ Referencia: prompt maestro v6.30, secciones 11.17 a 11.19 y 15.21. Nueve fixes a
 
 - **Origen:** dictamen mini-probe Q-MINI-5, GO TOP 50.
 - **Informe:** docs/auditoria/INSTITUTIONAL_ACCUMULATION_NIPC_GATE0_TOP50_INFORME.md
-- **Evidence:** docs/auditoria/evidence/nipc_gate0_probe/probe_filer_continuity_top50.py + top50_output.txt
+- **Evidence:** docs/auditoria/iae/evidence/nipc_gate0_probe/probe_filer_continuity_top50.py + top50_output.txt
 - **Resultado:** Vanguard es el unico grupo con discontinuidad en top 50. No hay casos nuevos.
 - **Clasificacion 54 CIKs (union top 50 Q4+Q1):**
   - CONTINUOUS_FILER: 50 (92.6%).
@@ -1292,7 +1292,7 @@ Referencia: prompt maestro v6.30, secciones 11.17 a 11.19 y 15.21. Nueve fixes a
 - **Origen:** Q-T50-5 del dictamen TOP 50 (coverage baseline + OpenFIGI).
 - **Alcance ejecutado:** coverage baseline (OpenFIGI queda fuera de esta fase).
 - **Informe:** docs/auditoria/INSTITUTIONAL_ACCUMULATION_NIPC_GATE0_COVERAGE_BASELINE_INFORME.md
-- **Evidencia:** docs/auditoria/evidence/nipc_gate0_baseline/ (README + probe + output + HASHES).
+- **Evidencia:** docs/auditoria/iae/evidence/nipc_gate0_baseline/ (README + probe + output + HASHES).
 - **Resultado:** las 6 metricas pairwise calculadas sobre 4 universos anidados.
 - **Metricas OPERATIONAL_EQUITY (Q4 2025 -> Q1 2026):**
   - paired_security_coverage = 0.9909

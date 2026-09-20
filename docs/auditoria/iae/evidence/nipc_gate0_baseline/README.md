@@ -95,7 +95,7 @@ para dejar trazabilidad del snapshot utilizado.
   - Fechas literales: "2025-12-31", "2026-03-31".
   - Sin random. Sin estado externo.
   - Reproducible:
-    py docs/auditoria/evidence/nipc_gate0_baseline/probe_coverage_baseline.py
+    py docs/auditoria/iae/evidence/nipc_gate0_baseline/probe_coverage_baseline.py
 
 ## Orden metodologico
 

@@ -9,9 +9,9 @@ Documento de navegacion. Ultima actualizacion: 2026-09-20.
       FOLLOWUPS.md          Cronologia de decisiones (activo)
       README.md             Este documento
       iae/                  Modulo Institutional Accumulation Evidence
+        evidence/           Probes y evidencia empirica (6 subdirs)
       radar/                Contratos temporales + informes del radar
       auditorias/           Auditorias estructurales y revisiones
-      evidence/             Probes y evidencia empirica
       archive/              Archivado futuro (vacio)
 
 ## Regla de versionado
@@ -86,7 +86,7 @@ Orden recomendado para entender el sistema actual:
     NIPC_DICTAMEN_REVISION_ESTRUCTURAL_2026-09-20.md
     INSTITUTIONAL_ACCUMULATION_TOP2000_AUTORIZACION.md
 
-### evidence/
+### iae/evidence/
 
     nipc_gate0_baseline/                  probe coverage baseline
     nipc_gate0_openfigi/                  probe OpenFIGI

@@ -134,7 +134,7 @@ Estado: Gate FA-2 superado localmente. Pendiente dictamen final.
 **Fecha:** 2026-09-19
 **Fase:** coverage baseline (Q-T50-5, post dictamen TOP 50)
 **Dictamen habilitante:** INSTITUTIONAL_ACCUMULATION_NIPC_GATE0_TOP50_DICTAMEN.md
-**Evidencia:** docs/auditoria/evidence/nipc_gate0_baseline/
+**Evidencia:** docs/auditoria/iae/evidence/nipc_gate0_baseline/
 
 ---
 

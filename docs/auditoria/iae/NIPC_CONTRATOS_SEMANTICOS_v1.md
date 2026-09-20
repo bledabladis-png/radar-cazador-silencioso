@@ -544,7 +544,7 @@ sea GO.
 | INSTITUTIONAL_ACCUMULATION_OPENFIGI_TOP2000_INFORME.md | TOP 2000 |
 | INSTITUTIONAL_ACCUMULATION_NIPC_GATE0_COVERAGE_BASELINE_DICTAMEN.md | Dictamen baseline |
 | INSTITUTIONAL_ACCUMULATION_NIPC_F21BIS_FUENTES_IDENTIDAD.md | F2.1-bis |
-| docs/auditoria/evidence/nipc_p70_probe/ | Evidencia P70 |
+| docs/auditoria/iae/evidence/nipc_p70_probe/ | Evidencia P70 |
 
 ### 10.2. Hashes
 
