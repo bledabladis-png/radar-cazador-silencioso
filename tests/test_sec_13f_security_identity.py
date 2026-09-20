@@ -349,3 +349,37 @@ def test_p60_identity_type_invalido():
     with pytest.raises(ValueError, match="invalido"):
         si._normalize_canonical("MSFT", "TICKER_US")
 
+# ---- P61: operational_mapping_status en el resolver ----
+
+def test_p61_equivalence_da_verified():
+    eq = _mk_equivalence([
+        ("A1", "MSFT", "2024-01-01", "2026-12-31", "SEC", "r", "manual"),
+    ])
+    r = si.resolve_security_identity("A1", "2026-03-31", equivalence_df=eq)
+    assert r["operational_mapping_status"] == "VERIFIED"
+
+
+def test_p61_crosswalk_da_temporal_unverified():
+    cw = _mk_crosswalk([
+        ("A1", "AAPL", "2024-01-01", "2026-12-31", "exceptions"),
+    ])
+    r = si.resolve_security_identity(
+        "A1", "2026-03-31", crosswalk_internal_df=cw,
+    )
+    assert r["operational_mapping_status"] == "TEMPORAL_UNVERIFIED"
+
+
+def test_p61_sin_resolucion_da_unresolved():
+    r = si.resolve_security_identity("A1", "2026-03-31")
+    assert r["operational_mapping_status"] == "UNRESOLVED"
+
+
+def test_p61_figi_lookup_da_temporal_unverified():
+    def fake_figi(cusip, period):
+        return "BBG001S69V32"
+    r = si.resolve_security_identity(
+        "A1", "2026-03-31", figi_lookup=fake_figi,
+    )
+    assert r["operational_mapping_status"] == "TEMPORAL_UNVERIFIED"
+    assert r["canonical_security"] == "figi:BBG001S69V32"
+

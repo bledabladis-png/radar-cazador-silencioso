@@ -312,7 +312,7 @@ def _find_active_crosswalk(cusip, report_period, cw_df):
     )
 
 
-def resolve_security_identity(
+def _resolve_identity_inner(
     cusip,
     report_period,
     *,
@@ -320,7 +320,7 @@ def resolve_security_identity(
     crosswalk_internal_df=None,
     figi_lookup=None,
 ):
-    """Resuelve la identidad canonica de un CUSIP para un report_period.
+    """Resuelve la identidad canonica (parte interna, sin P61).
 
     Devuelve dict con:
       observed_security_key
@@ -397,6 +397,51 @@ def resolve_security_identity(
     # 4. observed only
     result["security_resolution_status"] = STATUS_OBSERVED_ONLY
     result["canonical_security_kind"] = KIND_OBSERVED_CUSIP_ONLY
+    return result
+
+
+# P61: mapa de fuente -> estado operacional por defecto.
+# El resolver interno ya filtra por vigencia temporal (solo devuelve
+# filas activas para el periodo). Si una fuente con vigencia declarada
+# devolvio un valor, es que cubre el periodo -> VERIFIED.
+# La parte de etf_holdings dentro de crosswalk_internal no distingue
+# sub-fuente; se marca conservadoramente TEMPORAL_UNVERIFIED.
+_SOURCE_TO_OP_STATUS = {
+    "equivalence": "VERIFIED",
+    "crosswalk_internal": "TEMPORAL_UNVERIFIED",
+    "openfigi": "TEMPORAL_UNVERIFIED",
+}
+
+
+def resolve_security_identity(
+    cusip,
+    report_period,
+    *,
+    equivalence_df=None,
+    crosswalk_internal_df=None,
+    figi_lookup=None,
+):
+    """Resuelve identidad canonica + operational_mapping_status (P61).
+
+    Devuelve dict con:
+      observed_security_key
+      security_resolution_status  (5 estados)
+      canonical_security_kind     (4 estados)
+      canonical_security          (str o None)
+      operational_mapping_status  (P61: VERIFIED | TEMPORAL_UNVERIFIED |
+                                   UNRESOLVED | CONFLICT)
+      evidence                    (dict)
+    """
+    result = _resolve_identity_inner(
+        cusip,
+        report_period,
+        equivalence_df=equivalence_df,
+        crosswalk_internal_df=crosswalk_internal_df,
+        figi_lookup=figi_lookup,
+    )
+    source = result.get("evidence", {}).get("source")
+    op_status = _SOURCE_TO_OP_STATUS.get(source, "UNRESOLVED")
+    result["operational_mapping_status"] = op_status
     return result
 
 
