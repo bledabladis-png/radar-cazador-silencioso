@@ -32,7 +32,8 @@ La reestructuracion resuelve las tres en una sola operacion coherente.
       aggregation/
         __init__.py
         delta_shares.py               <- intocable (C2)
-        nipc.py                       <- calcula TARGET internamente (proxy)
+        nipc.py                       <- cobertura pairwise sobre observed_security_key
+                                          (proxy observacional; NO construye TARGET contractual)
       identity/
         __init__.py
         openfigi_client.py            <- cliente OpenFIGI

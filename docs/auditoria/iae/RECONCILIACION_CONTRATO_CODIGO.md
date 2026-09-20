@@ -118,7 +118,7 @@ cumplimiento contractual.
   (e9fd830) y TOP 2000 (32baf9d) son historicos, no aptos para
   THRESHOLD_2 bajo la definicion contractual.
 
-### D3 - P60 no lanza para CUSIP/ISIN (MENOR)
+### D3 - P60 infiere TICKER cuando falta identity_type declarado (MENOR)
 
 **Contrato P60 seccion 1.3 (formulacion vigente):**
 
@@ -236,7 +236,10 @@ arquitectonicas asociadas (Q12, AGREG., OpenFIGI, Policy v1.3):
 
 ## 6. Tests contractuales minimos requeridos
 
-Independiente de las decisiones, faltan estos tests. Ninguno existe hoy.
+La siguiente tabla resume la cobertura de tests contractuales
+asociados a cada contrato. Los casos marcados "ya pasa" ya estan
+implementados en este paquete. Los casos pendientes/xfail documentan
+divergencias o capacidades aun no materializadas.
 
     | Contrato | Test                                                     |
     |----------|----------------------------------------------------------|

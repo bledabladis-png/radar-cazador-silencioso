@@ -184,9 +184,11 @@ Commit: `tests/test_p38_contract.py` extendido (una vez decidido Q12).
 
 ---
 
-### A.6.4 - Recalculo baseline + TOP 2000 (condicional a D2)
+### A.6.4 - Recalculo de evidencia (condicional a las decisiones F2.4)
 
-**Precondicion:** A.6.2 y A.6.3 cerrados + dictamen F2.4 con D2 resuelto.
+**Precondicion:** A.6.2 y A.6.3 cerrados + decisiones F2.4 que
+afecten a la semantica de la evidencia materializadas (D1, D2, D3,
+Q12, AGREG., Policy v1.3).
 
 **Rama condicional segun D2:**
 
@@ -201,15 +203,21 @@ Commit: `tests/test_p38_contract.py` extendido (una vez decidido Q12).
           denominador es TARGET_PAIRWISE. NO se exige que X != Y.
 
     D2 = B (proxy observacional NO CONTRACTUAL):
+        - NO modificar ni renombrar evidencia historica existente.
+        - Conservar los artefactos existentes en su ubicacion original.
         - NO recalcular como evidencia contractual.
-        - Conservar evidencia proxy separada y etiquetada como
-          NO APTA para THRESHOLD_2.
         - NO exigir TARGET_PAIRWISE contractual.
-        - Los ficheros proxy existentes se renombran con sufijo
-          _proxy_no_contractual/ para trazabilidad.
+        - Generar, cuando proceda, nuevos artefactos bajo:
+              evidence/..._proxy_no_contractual_v2/
+          etiquetados explicitamente como NO CONTRACTUALES.
         - Criterio: el reporte publica explicitamente que la evidencia
           es proxy y no contractual; THRESHOLD_2 permanece UNDEFINED
           por ausencia de evidencia contractual.
+
+    Distincion preservada:
+        historico    (intacto)
+        nuevo        (v2 contractual o v2 proxy segun D2)
+        proxy        (etiquetado NO CONTRACTUAL cuando aplique)
 
 ---
 
