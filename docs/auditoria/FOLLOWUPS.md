@@ -1677,3 +1677,39 @@ PENDIENTE regenerar `_entrega_F24.md` con la version actualizada y
 enviar al auditor.
 
 ---
+
+
+---
+
+## Ciclo 2026-09-20 (sextus) - Dictamen externo v4 sobre expediente F2.4
+
+**HEAD al cierre:** fc8de6c.
+**Ahead origin/main:** 124.
+
+### Correcciones aplicadas (5 puntos)
+
+  1. HEAD residual `2eb4dcd` -> `3ad57b1` en RECONCILIACION (linea
+     del dictamen F2.4 como objeto documental).
+  2. REESTRUCTURACION §5.1: eliminada semantica "CUSIP/ISIN -> ValueError".
+     Reformulado: CUSIP -> None, ISIN -> None, identity_type
+     ausente/invalido -> ValueError.
+  3. REESTRUCTURACION §5.2: anadido "Mantener/cubrir CUSIP/ISIN -> None".
+  4. RECONCILIACION §6 tabla tests: `compute_coverage_pairwise` ->
+     `compute_contractual_coverage` + "por security" -> "por shareClassFIGI".
+  5. FASE_A6_PLAN: A.6.3 titulo neutro (no presupone Modelo A);
+     criterio "xfail = 0" condicional a las decisiones F2.4. Anadido
+     concepto "xfail residual aceptado" para capacidades declaradas
+     NO CONTRACTUALES o DIFERIDAS.
+
+### Verificacion de residuos
+
+    RECONCILIACION: 2eb4dcd=0, CUSIP-raise=0, cov_pairwise-recibe-target=0
+    REESTRUCTURACION: idem
+    FASE_A6_PLAN: idem
+
+### Estado del paquete
+
+Expediente F2.4 en su version v4. Listo para regenerar entrega
+consolidada y enviar al auditor.
+
+---
