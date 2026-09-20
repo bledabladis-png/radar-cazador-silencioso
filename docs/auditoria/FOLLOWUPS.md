@@ -1628,3 +1628,52 @@ Los 5 xfail documentan ejecutablemente las 3 divergencias:
     tests/test_p38_contract.py
 
 ---
+
+
+---
+
+## Ciclo 2026-09-20 (quinquies) - Dictamen externo v3 sobre expediente F2.4
+
+**HEAD al cierre:** 33bd3f9.
+**Ahead origin/main:** 122.
+
+### Correcciones aplicadas (6 puntos)
+
+  1. HEAD en documentos: `2eb4dcd` -> `3ad57b1` (SUBMISSION HEAD).
+  2. Eliminada la semantica "P60 raise CUSIP/ISIN" en
+     REESTRUCTURACION seccion 1, 4.4 y 7.
+  3. D3 reformulada: "default TICKER implicito" (no ValueError).
+  4. A.6.1 ampliado con las 7 decisiones requeridas de F2.4:
+        D1 (P61), D2 (P38), D3 (P60), Q12 (pairing),
+        AGREG. (agregacion shareClassFIGI),
+        OpenFIGI, Policy v1.3.
+  5. Resuelta la arquitectura de agregacion P38:
+        Opcion 2 (propuesta): funcion separada
+        aggregate_positions_by_shareclass_figi() produce pesos
+        agregados, compute_contractual_coverage() los recibe.
+        Decision final a F2.4.
+  6. Separada evidencia legacy/proxy de evidencia contractual:
+        test_p38_legacy_denominador_cero_unavailable
+        (regresion de compute_coverage_pairwise, no de la API
+        contractual).
+
+### Estado del paquete
+
+    iae/RECONCILIACION_CONTRATO_CODIGO.md   actualizado
+    iae/REESTRUCTURACION_MODULO.md          actualizado
+    iae/FASE_A6_PLAN.md                     actualizado
+    tests/test_p60_contract.py              4 tests (3 pass + 1 xfail)
+    tests/test_p61_contract.py              4 tests (3 pass + 1 xfail)
+    tests/test_p38_contract.py              5 tests (2 pass + 3 xfail)
+
+### Verificacion
+
+    pyflakes:  0 warnings
+    suite:     988 passed + 5 xfailed + 2 skipped
+
+### Estado
+
+PENDIENTE regenerar `_entrega_F24.md` con la version actualizada y
+enviar al auditor.
+
+---
