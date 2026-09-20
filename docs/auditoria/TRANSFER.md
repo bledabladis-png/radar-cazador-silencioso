@@ -1,6 +1,6 @@
-# TRANSFER DE SESION - 2026-09-20
+# TRANSFER DE SESION - 2026-09-21
 
-Documento complementario al PROMPT_MAESTRO v6.48 (docs/auditoria/PROMPT_MAESTRO.md).
+Documento complementario al PROMPT_MAESTRO v6.49 (docs/auditoria/PROMPT_MAESTRO.md).
 No normativo. Si hay conflicto, gana el prompt.
 
 **Como usarlo:**
@@ -16,129 +16,161 @@ Eres el Ingeniero Supervisor del Radar de Rotacion Sectorial. Sistema
 determinista, descriptivo, auditable, sin ML predictivo. Entorno Windows,
 PowerShell, Python via py. Repo: D:\Macro_Sectorial.
 
-Reglas de personalidad y metodo: ver PROMPT_MAESTRO v6.48 secciones 1 y 3.
+Reglas de personalidad y metodo: ver PROMPT_MAESTRO v6.49 secciones 1 y 3.
 
 ---
 
-## 2. Estado actual verificado (2026-09-20 v3)
+## 2. Estado actual verificado (2026-09-21)
 
 | Metrica | Valor |
 |---|---|
-| HEAD local | 62314ac |
+| HEAD local | 6e698ca |
 | origin/main | 9d4a81e |
-| Ahead | 149 commits locales |
-| Behind | 3 |
+| Ahead | 184 commits locales |
+| Behind | 3 (bot CI) |
 | Working tree | limpio |
 | Push | NO (local-first IAE activo) |
-| Prompt vigente | v6.48 |
+| Prompt vigente | v6.49 |
 | Tests locales | 1039 passed + 2 skipped + 0 xfailed |
 | pyflakes | 0 warnings |
 | compileall | OK |
 | Gate validacion | 10/10 |
 | Cobertura radar | 313/313 |
+| Contratos temporales | 10 |
 
-Los 141 commits locales NO se han pusheado. Regla local-first IAE: el
+Los 184 commits locales NO se han pusheado. Regla local-first IAE: el
 modulo IAE no se pushea hasta Gate-NIPC.3. origin/main esta en 9d4a81e,
 sano, con el sistema pre-IAE.
 
 ---
 
-## 3. Ciclo F2.4 (CERRADO con dictamenes hasta #26)
+## 3. Ciclo P66 (CERRADO 2026-09-21 con GO CONTRACTUAL)
 
-El ciclo F2.4 se ha ejecutado en sesion larga. Resumen:
+El ciclo P66 reformulo el contrato 14.3 de L3 para materializar el
+requisito 4 desde el Data Set SEC sin XML crudo.
 
-### 3.1. Fase documental (5 commits)
+### 3.1. Origen y descubrimiento
 
-- 0ea5586  DICTAMENES.md #24 (dictamen F2.4 formal)
-- 150d24d  INFORME.md #18 + cabecera v2
-- 2197f1f  FASE_A6_PLAN.md actualizado (3 bloqueantes + sub-fases)
-- 26978ef  REESTRUCTURACION_MODULO.md (rediseno TARGET)
-- 6bc8675  NIPC_CONTRATOS_SEMANTICOS_v1.md (P62-P65) + A.6.5 in-place
+P65 v2 (DROP_DUP efectivo) se cerro WONT FIX porque la evidencia
+cruzada no estaba en `OTHERMANAGER2` ni en `ADDITIONALINFORMATION`.
+Investigacion posterior: la fuente estructurada existe en
+`OTHERMANAGER` del Data Set (relacion "other managers reporting for
+this manager").
 
-### 3.2. Fase implementacion (6 commits)
+### 3.2. Gates ejecutados (11 total)
 
-- 5d60d48  fix(iae): P60 fail-closed - sin default TICKER (D3 F2.4)
-- 1773cc9  fix(iae): P61 conectar resolve_source_status (D1 F2.4)
-- a48717a  feat(iae): P38 coverage contractual + PositionRecord + API dual
-- a841cd6  test(iae): P63 contractual - amendment + OTHERMANAGER
-- 05f0a84  docs(iae): P63 GO CONDICIONADO - 8 reglas + arquitectura + #25
-- 2f8140a  fix(iae): P64 gross observed delta
+    0.1   Cobertura OTHERMANAGER por tipo
+    0.2   Caso Vanguard
+    0.3   Granularidad de identidad
+    0.4   Mapping FormNum -> CIK via COVERPAGE
+    0.4-reissue  Filtro PERIODOFREPORT
+    0.5   Amendment probe (cross-period + restatement)
+    0.6   Combination probe (universo R4)
+    0.7   NEW HOLDINGS probe
+    0.8   Cobertura identidad R4 completo
+    0.9   Multiples filings base
+    0.10  FormNum representation
 
-### 3.3. Fase consolidacion (1 commit)
+### 3.3. Dictamenes externos (#28 a #40)
 
-- 47594a4  docs(iae): expediente P64+P65 consolidado + contrato 13-14 + #26
+    #28  Arquitectura base, 6 bloqueos.
+    #29  Gate 0.8 exigido.
+    #30  CONFLICT > MATCH, NO_MATCH completitud, base unico.
+    #31  R3 con REPORTTYPE, CONFLICT scoped a A, amendment sin base.
+    #32  GO condicionado final, 2 correcciones.
+    #33  CONFLICT scope ampliado, alcance filing efectivo B.
+    #34  FormNum normalizacion flexible, candidate_A, L3 booleano.
+    #35  BASE_R4 global, cadena completa, INCONSISTENT, prefijo {28,028}.
+    #36  BASE/AMENDMENT por SUBMISSIONTYPE, familia cerrada, NEW HOLDINGS.
+    #37  Flujo unico R3, BASE sin ISAMENDMENT, familia global.
+    #38  §3.4 como nota.
+    #39  PASO 0 completitud scope. Declara GO por condicion cumplida.
+    #40  GO CONTRACTUAL registrado. Cierre del ciclo.
 
-### 3.4. Pendientes del ciclo
+### 3.4. Resultado contractual
 
-- P65 implementacion: 4 commits (pre-delta + post-delta + integracion).
-- P62 point-in-time: requiere OpenFIGI masivo.
-- Bloqueante 1 (TARGET independiente del mapping): requiere OpenFIGI masivo.
+`NIPC_CONTRATOS_SEMANTICOS_v1.md` §14.3 reformulada con 7 subsecciones:
+
+    §14.3.1  R3 tri-state (TRUE/FALSE/N/D) + PASO 0 completitud
+    §14.3.2  Cadena de amendments determinista
+    §14.3.3  NEW HOLDINGS determinabilidad estricta
+    §14.3.4  R4 candidate_A formalizado + CONFLICT scoped a A
+    §14.3.5  Mapping FormNum -> CIK
+    §14.3.6  Canonicalizacion IAE de FormNum
+    §14.3.7  Clausula de cierre contractual
+
+Estructura §14.1 a §14.14 preservada.
+
+**Commit del traslado:** 3a233b4.
+
+### 3.5. Ficheros clave del ciclo
+
+    iae/P66_L3_REFORMULACION_PROPUESTA.md           (v7-ter, propuesta congelada)
+    iae/DICTAMENES.md                               (#28 a #40)
+    iae/INFORME.md                                  (evidencia consolidada)
+    iae/evidence/p66_gate04_reissue_period/         (mapping)
+    iae/evidence/p66_gate06_combination_probe/      (universo R4)
+    iae/evidence/p66_gate07_newholdings_probe/      (NEW HOLDINGS)
+    iae/evidence/p66_gate08_full_r4_coverage/       (cobertura R4)
+    iae/evidence/p66_gate09_multiple_base/          (>1 filing base)
+    iae/evidence/p66_gate10_formnum_representation/ (FormNum)
+    NIPC_CONTRATOS_SEMANTICOS_v1.md §14.3           (contrato reformulado)
 
 ---
 
-### 3.5. Ciclo P65 v1 - implementacion (6 commits)
-
-- 2ff1751  feat(iae): P65 Commit 1 - modelos + constantes + L1/L2/L3 (14 tests)
-- 420d1d0  feat(iae): P65 Commit 2 - build_effective_reporting_snapshot pre-delta (R1)
-- 7f683e8  feat(iae): P65 Commit 3 - classify_reporting_transition post-delta (HANDOFF)
-- 8c2fcf0  fix(iae): P65 Commit 2-fix - DROP_DUP diferido v2, OVERLAP_UNRESOLVED
-- 3c2140e  fix(iae): cusip_equivalence.csv cabecera identity_type (P60 fail-closed)
-- 62314ac  feat(iae): P65 Commit 4 - probe e2e + evidencia fail-closed + fast-path
-
-### 3.6. Pendientes del ciclo
-
-- P65 v2: DROP_DUP con evidencia cuantitativa externa (capacidad diferida).
-- P62 point-in-time: requiere OpenFIGI masivo.
-- Bloqueante 1 (TARGET independiente del mapping): requiere OpenFIGI masivo.
-
-## 4. Dictamenes clave del ciclo (resumen)
+## 4. Dictamenes clave del ciclo P66
 
 | # | Fecha | Tema | Resultado |
 |---|---|---|---|
-| 24 | 2026-09-20 | F2.4 formal | GO CONDICIONADO arquitectura |
-| 25 | 2026-09-20 | P63 Missing != Sold | GO CONDICIONADO |
-| 26 | 2026-09-20 | P65 v3 Manager Duplication | GO CONDICIONADO (3 correcciones) |
+| 28 | 2026-09-21 | Propuesta v2-bis | NO-GO, 6 bloqueos |
+| 32 | 2026-09-21 | v3 con #31 | GO CONDICIONADO FINAL |
+| 34 | 2026-09-21 | v3 con #33 | 4 bloqueos + 2 recomendadas |
+| 36 | 2026-09-21 | v5 | 3 cierres materiales |
+| 38 | 2026-09-21 | v7 | 1 bloqueo (§3.4) |
+| 39 | 2026-09-21 | v7-bis | 1 bloqueo (PASO 0). Declara GO condicional |
+| 40 | 2026-09-21 | Cierre | GO CONTRACTUAL por condicion cumplida |
 
-Dictamenes previos sobre P60/P61/P38/P64 integrados en sus commits.
+Detalle completo en `iae/DICTAMENES.md`.
 
 ---
 
-## 5. Reglas nuevas del ciclo
+## 5. Reglas nuevas del ciclo P66
 
-### 5.1. Frontera semantica P65
+### 5.1. Semantica contractual L3 (§14.3)
 
-REPORTING RELATIONSHIP != REPORTING NETWORK != DEDUP AUTHORIZATION != ECONOMIC OWNERSHIP
+- R3 ∈ {TRUE, FALSE, N/D}. **Nunca convertir N/D a FALSE.**
+- R4 ∈ {MATCH, NO_MATCH, N/D, CONFLICT}. **CONFLICT > MATCH.**
+- L3 = R1 ∧ R2 ∧ (R3=TRUE) ∧ (R4=MATCH) ∧ R5.
+- **N/D y CONFLICT se preservan como estados** para auditoria.
 
-- economic_owner_cik PROHIBIDO.
-- Un HR normal puede contener holdings de otros managers incluidos.
-- Managers bajo control comun pueden presentar 13F-HR separados.
-- 13F-NT no tiene Information Table. Aporta L1; L3 solo por evidencia cruzada.
+### 5.2. Frontera semantica
 
-### 5.2. P64 gross observed delta
+- `OTHERMANAGER` = "other managers reporting for this manager" (R4).
+- `OTHERMANAGER2` = "included in this report" (R2).
+- Universo R4 = NOTICE + COMBINATION (via `REPORTTYPE`).
 
-delta_shares = GROSS_OBSERVED_DELTA (no economic).
-P64_EVENTS_DEFERRED = (split, reverse_split, spin_off, merger, share_class_conversion).
-CUSIP change -> identidad, no evento.
+### 5.3. Filtro por PERIODOFREPORT (no por directorio)
 
-### 5.3. P63 Missing != Sold
+Los directorios del Data Set SEC son cross-periodo. Filtrar siempre
+por `PERIODOFREPORT`.
 
-MISSING = ausencia sin causa demostrable. NO toda ausencia.
-REPORTING_CONFLICT != REPORTING_OVERLAP_UNRESOLVED (P65).
+### 5.4. PASO 0 (completitud del scope)
+
+Antes de afirmar R3=FALSE debe demostrarse la completitud del scope.
+Si no se puede demostrar: R3 = N/D.
 
 ---
 
 ## 6. Bloqueos vigentes
 
-- F2.4 (dictamen): EMITIDO.
 - THRESHOLD_1 / THRESHOLD_2: UNDEFINED.
 - Gate-NIPC.2: BLOQUEADO.
 - Gate-NIPC.3: NO AUTORIZADO.
 - OpenFIGI masivo (24.838 CUSIPs): NO AUTORIZADO.
 - Policy v1.3 aplicacion: NO AUTORIZADA.
 - Push a origin/main: NO (local-first IAE).
-
-**OpenFIGI masivo es el unico input externo bloqueante para los
-bloqueantes 1-2 (TARGET indep. + PIT).**
+- `reporting_dedup.py`: NO TOCAR sin nuevo dictamen.
+- `DROP_DUP`: NO ACTIVAR sin nuevo dictamen.
 
 ---
 
@@ -150,40 +182,44 @@ bloqueantes 1-2 (TARGET indep. + PIT).**
 |---|---|
 | FA-1 + FA-2 | CERRADO / PUSHED |
 | F2.4 documental | CERRADO |
-| P60/P61/P38/P63/P64 | CERRADO |
-| P65 implementacion | PENDIENTE (4 commits) |
-| P62 point-in-time | PENDIENTE (requiere OpenFIGI) |
-| Bloqueantes 1-2 | PENDIENTE (requiere OpenFIGI masivo) |
-| Fases B-E | NO INICIADO |
+| P60/P61/P38/P63/P64/P65 v1 | CERRADOS |
+| **P66 (§14.3)** | **GO CONTRACTUAL / trasladado** |
+| Tests §14.3 | PENDIENTE (siguiente ciclo) |
+| Implementacion `reporting_dedup` | PENDIENTE (siguiente ciclo) |
+| DROP_DUP efectivo | PENDIENTE (requiere nuevo dictamen) |
+| F2.4 bloqueante 1 (TARGET indep.) | PENDIENTE (OpenFIGI masivo) |
+| P62 point-in-time | PENDIENTE (OpenFIGI masivo) |
 
-### 7.2. Deuda radar (radar/DEUDA.md)
+### 7.2. Deuda radar (`radar/DEUDA.md`)
 
 - D-RADAR-01  20 tickers LSE sin provider dedicado  MEDIA
 - D-RADAR-02  Cron 0 4 * * * fines de semana  BAJA
-- D-RADAR-03  Guard no distingue core de LSE  MEDIA
+- D-RADAR-03  Guard coverage no distingue core de LSE  MEDIA
 
 ---
 
 ## 8. Como retomar
 
-### Si vas a implementar P65 (4 commits)
+### Si vas a empezar el siguiente ciclo autorizado por el GO de P66
 
-1. Leer iae/P64_P65_EXPEDIENTE.md seccion 2 completa.
-2. Leer iae/NIPC_CONTRATOS_SEMANTICOS_v1.md seccion 14.
-3. Aplicar los 4 commits del plan 2.17:
-   - Commit 1: contrato + modelos + tests unitarios L1/L2/L3
-   - Commit 2: reporting_dedup pre-delta
-   - Commit 3: transition classification
-   - Commit 4: integracion e2e + evidencia
+1. Leer `iae/NIPC_CONTRATOS_SEMANTICOS_v1.md` §14.3 reformulada.
+2. Leer `iae/DICTAMENES.md` #38, #39, #40 para contexto.
+3. Secuencia autorizada:
+   - Tests contractuales sobre §14.3.
+   - Implementacion en `reporting_dedup.py`.
+   - Probe e2e.
+   - Auditoria de salida.
+   - Activacion `DROP_DUP` (requiere nuevo dictamen).
 
-### Si vas a esperar OpenFIGI
+### Si vas a atacar la deuda radar
 
-Cerrar sesion. Working tree limpio. Todo lo materializable sin OpenFIGI
-esta hecho.
+Leer `radar/DEUDA.md`. Prioridad: D-RADAR-01 (provider LSE) o
+D-RADAR-03.
 
-### Si vas a atacar deuda radar
+### Si vas a esperar OpenFIGI masivo
 
-Leer radar/DEUDA.md. Prioridad: D-RADAR-01 (provider LSE) o D-RADAR-03.
+Cerrar sesion. Working tree limpio. Todo lo materializable sin
+OpenFIGI esta hecho.
 
 ---
 
@@ -198,10 +234,10 @@ Leer radar/DEUDA.md. Prioridad: D-RADAR-01 (provider LSE) o D-RADAR-03.
     py -m pytest tests/ validation/ -q --tb=short
 
 Esperado:
-- HEAD = 47594a4 o posterior
-- ahead 141 o mas
+- HEAD = 6e698ca o posterior
+- ahead 184 o mas
 - working tree limpio
-- 1008 passed + 2 skipped + 0 xfailed
+- 1039 passed + 2 skipped + 0 xfailed
 - pyflakes silencio
 
 ---
@@ -209,14 +245,17 @@ Esperado:
 ## 10. Lo que NO hacer
 
 - NO push a origin/main. Local-first IAE activo.
-- NO modificar NIPC_CONTRATOS_SEMANTICOS_v1.md sin dictamen.
-- NO modificar NIPC_COVERAGE_POLICY.md v1.0 (hash 57f2d01f...).
+- NO modificar `NIPC_CONTRATOS_SEMANTICOS_v1.md` §14.3 fuera del
+  cauce de §14.3.7.
+- NO modificar `NIPC_COVERAGE_POLICY.md` v1.0 (hash 57f2d01f...).
 - NO ejecutar OpenFIGI masivo sin dictamen especifico.
 - NO fijar THRESHOLD_1 / THRESHOLD_2 sin propuesta sobre evidencia v2.
 - NO reconciliar NT <-> HR.
 - NO sumar SSHPRNAMT desde INFOTABLE.parquet crudo.
-- NO usar -replace de PowerShell con argumento numerico.
-- NO usar backticks triples en here-string PowerShell (usar placeholder).
+- NO tocar `reporting_dedup.py` sin nuevo dictamen.
+- NO activar `DROP_DUP` sin nuevo dictamen.
+- NO usar `-replace` de PowerShell con argumento numerico.
+- NO usar backticks triples en here-string PowerShell.
 - NO cerrar sesion por fatiga (el usuario decide).
 
 ---
@@ -226,12 +265,14 @@ Esperado:
     "Confirmado, contexto asimilado."
 
     Estado del sistema que reconozco:
-      - HEAD 47594a4, ahead 141
-      - 1008 passed + 2 skipped + 0 xfailed
-      - F2.4 EMITIDO, dictamenes hasta #26
-      - P60/P61/P38/P63/P64 CERRADOS
-      - P65 v3 GO CONDICIONADO (3 correcciones de cierre)
-      - 4 commits pendientes para P65
+      - HEAD 6e698ca, ahead 184
+      - 1039 passed + 2 skipped + 0 xfailed
+      - P66 CERRADO (GO CONTRACTUAL, §14.3 reformulada)
+      - Dictamenes hasta #40
+      - P60/P61/P38/P63/P64/P65 CERRADOS
+      - Ciclo P66 traslado a §14.3 commit 3a233b4
+      - Ciclo siguiente autorizado: tests §14.3 -> reporting_dedup
+        -> probe e2e -> auditoria -> DROP_DUP (nuevo dictamen)
       - Deuda radar registrada (D-RADAR-01/02/03)
 
     Pregunta final: "Que hacemos?"
@@ -241,4 +282,4 @@ No empieces a proponer tareas sin antes confirmar asimilacion.
 ---
 
 FIN DEL TRANSFER
-Version 3.0 (2026-09-20). HEAD 62314ac.
+Version 4.0 (2026-09-21). HEAD 6e698ca.

@@ -1,8 +1,8 @@
-# PROMPT MAESTRO v6.48 - INGENIERO SUPERVISOR DEL RADAR DE ROTACION SECTORIAL
+# PROMPT MAESTRO v6.49 - INGENIERO SUPERVISOR DEL RADAR DE ROTACION SECTORIAL
 
-Actualizado: 2026-09-20 v3 (F2.4 EMITIDO. P60/P61/P38/P63/P64 CERRADOS. P65 v1 IMPLEMENTADO (4 commits) + evidencia empirica fail-closed. Dictamenes hasta #26. HEAD 62314ac. 149 commits ahead. Sin push. 1039 passed + 2 skipped + 0 xfailed.)
-Estado: Operativo al 100% - 10 contratos temporales (FU-021-5 + FU-021-3C-bis) - 1039 tests locales + 2 skipped - 0 warnings - Gate 10/10 - Deuda ALTA/MEDIA/BAJA activa: 0 - F2.4 EMITIDO - P60/P61/P38/P63/P64/P65 CERRADOS
-Commit de referencia: 62314ac (origin/main HEAD al redactar; el propio commit v6.48 sera HEAD tras push)
+Actualizado: 2026-09-21 (P66 CERRADO - GO CONTRACTUAL. §14.3 reformulada con 7 subsecciones. P60/P61/P38/P63/P64/P65 CERRADOS. Dictamenes hasta #40. HEAD 6e698ca. 184 commits ahead. Sin push. 1039 passed + 2 skipped + 0 xfailed.)
+Estado: Operativo al 100% - 10 contratos temporales (FU-021-5 + FU-021-3C-bis) - 1039 tests locales + 2 skipped - 0 warnings - Gate 10/10 - Deuda ALTA/MEDIA/BAJA activa: 0 - F2.4 EMITIDO - P60/P61/P38/P63/P64/P65 CERRADOS - P66 L3 GO CONTRACTUAL (§14.3 reformulada)
+Commit de referencia: 6e698ca (origin/main HEAD al redactar; el propio commit v6.49 sera HEAD tras push)
 
 ---
 
@@ -1533,7 +1533,7 @@ git status -sb (un guion).
 
 Select-String -SimpleMatch desactiva regex → el | se trata como literal. No usar -SimpleMatch con patrones que contengan |.
 
-## SECCION 15 - ESTADO ACTUAL (2026-09-20 v3)
+## SECCION 15 - ESTADO ACTUAL (2026-09-21 v4)
 
 | Metrica | Valor |
 |---|---|
