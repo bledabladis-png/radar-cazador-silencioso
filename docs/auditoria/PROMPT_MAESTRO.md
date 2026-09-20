@@ -1,8 +1,8 @@
-# PROMPT MAESTRO v6.42 - INGENIERO SUPERVISOR DEL RADAR DE ROTACION SECTORIAL
+# PROMPT MAESTRO v6.43 - INGENIERO SUPERVISOR DEL RADAR DE ROTACION SECTORIAL
 
-Actualizado: 2026-09-20 (post revision estructural IAE completa - 95 hallazgos - + dictamen formal + 6 fixes mecanicos aplicados (P51/P32/P14-BIS/P31/P18-P26/P70 guarda) + materializacion dictamen revision estructural + contrato semantico v1 P38/P60/P61 redactado + policy v1.3 propuesta + informe post-fixes al auditor + reconciliacion final de hashes. 97 commits locales por pushear. HEAD 3c59d41)
-Estado: Operativo al 100% - 10 contratos temporales (FU-021-5 + FU-021-3C-bis) - 946 tests locales + 2 skipped - 0 warnings - Gate 10/10 - Deuda ALTA/MEDIA/BAJA activa: 0 - F2.4 PENDIENTE EXTERNO
-Commit de referencia: 3c59d41 (origin/main HEAD al redactar; el propio commit v6.42 sera HEAD tras push)
+Actualizado: 2026-09-20 (post implementacion de los 3 contratos semanticos P60/P61/P38 en codigo. P60 identity_type obligatorio, P61 modulo temporal_validity + integracion resolver + end-to-end, P38 denominador TARGET_PAIRWISE + coverage_status, Q6 unmapped_count_*, Q8 identity_type en CSV. 8 commits nuevos, 979 tests. 104 commits locales por pushear. HEAD 83e60c3)
+Estado: Operativo al 100% - 10 contratos temporales (FU-021-5 + FU-021-3C-bis) - 979 tests locales + 2 skipped - 0 warnings - Gate 10/10 - Deuda ALTA/MEDIA/BAJA activa: 0 - F2.4 PENDIENTE EXTERNO - P60/P61/P38 IMPLEMENTADOS
+Commit de referencia: 83e60c3 (origin/main HEAD al redactar; el propio commit v6.43 sera HEAD tras push)
 
 ---
 
@@ -1490,7 +1490,7 @@ Select-String -SimpleMatch desactiva regex → el | se trata como literal. No us
 | Fuentes europeas | 51 (Euronext 13 + Xetra 19 + BME 19) |
 | Fuente commodities | OilPriceAPI (BZ=F, CL=F, GC=F, HG=F, NG=F) |
 | Fuente term structure | CBOE (^VIX3M) |
-| Tests locales | 946 passed + 2 skipped |
+| Tests locales | 979 passed + 2 skipped |
 | Tests CI | ~610 collected con skips (parquet gitignored) |
 | Validation Gate | 10/10 |
 | pyflakes | 0 warnings |
@@ -1502,7 +1502,7 @@ Select-String -SimpleMatch desactiva regex → el | se trata como literal. No us
 | RADAR_TARGET_CATALOG | MATERIALIZADO 2026-09-19 (242 filas, 240 OK, 2 MISS: BRK-B, MOG-A). Hash 11eabce8... Construido desde OpenFIGI TICKER/US -> shareClassFIGI, independiente del crosswalk interno. TARGET_UNIVERSE resolver operativo (8 tests). |
 | Coverage baseline NIPC | Fase A cerrada. TOP 2000 (Q1 2026, CURRENT_RETROSPECTIVE): target_true=210 (10.50% count, 32.8079% weight); corregido 212/33.3428%. target_false=1567 (78.35%, 55.68%). no_id=220 (11.0%, 8.86%). error=3 (0.15%, 2.65%). Delta +0.5349 pp por 2 canales adicionales. THRESHOLD_1/2 UNDEFINED |
 | .git size | ~13 MB |
-| HEAD | 3c59d41 (97 commits locales ahead de origin/main) |
+| HEAD | 83e60c3 (104 commits locales ahead de origin/main) |
 
 ### 15.1. Hitos del ciclo FU-021-3C-bis (2026-09-16)
 
@@ -2169,6 +2169,66 @@ informe entero. Regla nueva: sustituciones condicionales (con conteo,
 posicion o regex complejo) se ejecutan en Python puro con
 `.replace(..., 1)`.
 
+### 15.33. Implementacion de los contratos semanticos P60/P61/P38 (2026-09-20)
+
+**Origen:** tras el cierre de los fixes mecanicos y la redaccion del
+contrato semantico v1, se autorizo la implementacion directa en codigo
+de los 3 contratos (sin esperar F2.4, en rama local, sin push).
+
+**8 commits:**
+
+    030f239  P60: identity_type obligatorio en _normalize_canonical
+    6198d60  P61: modulo temporal_validity
+    fc12402  P38: denominador TARGET_PAIRWISE + Q5 coverage_status
+    2a13a6f  P61: operational_mapping_status integrado en resolver
+    0f3ef8d  P61: end-to-end hasta _mapped_mask
+    83e60c3  Q6: unmapped_count_* + Q8: identity_type en CSV
+
+**P60 (implementado):**
+- `_normalize_canonical(value, identity_type)`. Firma endurecida.
+- identity_type obligatorio. Ausente o invalido -> ValueError.
+- TICKER -> equity:<t> (CANONICAL_EQUIVALENCE).
+- FIGI -> figi:<F> (CANONICAL_FIGI).
+- CUSIP -> None (OBSERVED_CUSIP_ONLY).
+- ISIN -> None (UNRESOLVED).
+- Prefijo explicito en el valor gana sobre identity_type.
+
+**P61 (implementado):**
+- Nuevo modulo `src/institutional_accumulation/temporal_validity.py`.
+- `resolve_source_status(source, valid_from, valid_to, period)`.
+- `aggregate_status(entries)` con regla Q7 completa.
+- Enum: VERIFIED | TEMPORAL_UNVERIFIED | UNRESOLVED | CONFLICT.
+- `resolve_security_identity` envuelve `_resolve_identity_inner` y
+  anade `operational_mapping_status` al return.
+- `_mapped_mask` en `nipc.py` requiere CANONICAL + VERIFIED.
+- `operational_mapping_status` propagado en `UNITS_COLUMNS`.
+
+**P38 (implementado):**
+- Denominador pairwise = `TARGET_Q4 INTERSECT TARGET_Q1` (interseccion,
+  no union).
+- `paired_weighted_share_coverage: float | None`.
+- `coverage_status: VALID | UNAVAILABLE` (Q5).
+- Peso `w(s) = max(Q4, Q1)`.
+
+**Q6 + Q8 (implementados):**
+- `unmapped_weight_*` renombrado a `unmapped_count_*`.
+- `identity_type` columna opcional en `cusip_equivalence.csv`. Default
+  TICKER si falta. `_find_active_equivalence` devuelve tuplas
+  (canonical, identity_type).
+
+**Tests:** 946 -> 979 passed + 2 skipped. Regresion acumulada: 0.
+
+**Hueco pendiente:** TARGET real. El denominador P38 usa actualmente
+`observed_security_key` como proxy. La proyeccion real
+`CUSIP -> shareClassFIGI -> RADAR_TARGET_CATALOG` requiere OpenFIGI
+masivo (NO AUTORIZADO hasta F2.4).
+
+**Bloqueos vigentes:** sin cambios. THRESHOLD_1/2 UNDEFINED. Gate-NIPC.2
+BLOQUEADO. Gate-NIPC.3 NO AUTORIZADO. OpenFIGI masivo NO AUTORIZADO.
+Policy v1.3 aplicacion NO AUTORIZADA. F2.4 PENDIENTE EXTERNO.
+
+**Ahead al cierre:** 104 commits locales.
+
 ## SECCION 16 - FRASE GUIA
 "Determinista, descriptivo, auditado. Paso a paso. Documentar. Saber parar."
 
@@ -2214,4 +2274,4 @@ Pregunta final: "Que hacemos?"
 
 No empieces a proponer tareas sin antes confirmar la asimilacion completa.
 
-Fin del prompt maestro v6.42. Commit de referencia: 3c59d41. Fecha: 2026-09-20.
+Fin del prompt maestro v6.43. Commit de referencia: 83e60c3. Fecha: 2026-09-20.
