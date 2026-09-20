@@ -449,6 +449,39 @@ AMENDMENTNO + AMENDMENTTYPE.
 Sin el, la semantica de R3 no puede formalizarse contractualmente y
 el dictamen contractual final no puede emitirse.
 
+
+
+### Gate 0.5 ejecutado (2026-09-21)
+
+Origen: dictamen P66 v2, Bloqueo B.
+
+Hallazgo principal: los directorios del Data Set SEC estan
+organizados por FECHA DE PRESENTACION, no por periodo objetivo.
+Contienen filings con multiples PERIODOFREPORT (48 en Q4 2025,
+77 en Q1 2026).
+
+Regla obligatoria: filtrar filings por PERIODOFREPORT, no por
+directorio fisico.
+
+R3 formalizada:
+
+    R3(B, period) := existe filing efectivo de B
+                     para ese PERIODOFREPORT
+
+    Filing efectivo:
+    - Base: punto de partida.
+    - RESTATEMENT: sustituye el snapshot (incluye OTHERMANAGER).
+    - NEW HOLDINGS: union con el snapshot actual.
+    - R4 se evalua sobre el filing efectivo, no sobre el base.
+
+Caso material: CIK 0002056909. El RESTATEMENT sustituye el
+OTHERMANAGER (de Prospector Partners a Gator Capital Management).
+Un analisis sobre el base produciria un falso positivo en R4.
+
+Evidencia: `iae/evidence/p66_gate05_amendment_probe/`.
+
+Bloqueo B del dictamen P66 v2: RESUELTO.
+
 ### Estado
 
     Fuente             APROBADA (OTHERMANAGER)

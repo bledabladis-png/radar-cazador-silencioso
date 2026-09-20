@@ -114,34 +114,73 @@ reales aparecen casos con uno u otro.
 
 ---
 
-## 5. Tratamiento de amendments (correccion #3)
+## 5. Tratamiento de amendments (correccion #3, Gate 0.5 PASS)
 
-Prohibido:
+### 5.1. Hallazgo critico: directorios cross-periodo
 
-    MAX(ACCESSION_NUMBER)
-    MAX(FILING_DATE)
-    ultima fila del dataframe
+Los directorios del Data Set SEC (`2025Q4/`, `2026Q1/`) contienen
+filings con multiples `PERIODOFREPORT`. NO son homogeneos.
 
-Requerido:
+Evidencia Gate 0.5:
+- Directorio 2025Q4: 48 periodos distintos (desde 2013-12-31).
+- Directorio 2026Q1: 77 periodos distintos (desde 2008-03-31).
+- NT contaminantes en cada directorio: 108 / 138.
 
-    La seleccion del "filing efectivo de B" debe realizarse
-    sobre los campos:
-        CIK
-        PERIODOFREPORT
-        SUBMISSIONTYPE   (13F-HR | 13F-NT | .../A)
-        ISAMENDMENT
-        AMENDMENTNO
-        AMENDMENTTYPE
+**Regla obligatoria:** filtrar filings por `PERIODOFREPORT` igual
+al periodo de analisis. Prohibido filtrar por directorio fisico.
 
-La semantica aplicada debe ser la de la spec SEC:
-- Amendment RESTATEMENT: sustituye el filing base.
-- Amendment NEW HOLDINGS: suplementa el filing base.
-- Multiples amendments coexisten; el efectivo se resuelve por
-  la cadena documental, no por fecha.
+### 5.2. Algoritmo de filing efectivo
 
-Esta formalizacion es OBLIGATORIA antes del GO contractual definitivo.
-Sin ella, R3 puede resolver al filing equivocado en presencia de
-amendments.
+    R3(B, period) := existe filing efectivo de B
+                     para ese PERIODOFREPORT
+
+    "Filing efectivo":
+      1. Filtrar filings de CIK=B con PERIODOFREPORT=period
+         y SUBMISSIONTYPE in {13F-NT, 13F-NT/A}.
+
+      2. Ordenar filings por AMENDMENTNO ascendente
+         (base AMENDMENTNO=null tratado como orden 0).
+
+      3. Aplicar semantica SEC:
+         - Base:          punto de partida.
+         - RESTATEMENT:   sustituye el snapshot efectivo
+                          (incluye OTHERMANAGER).
+         - NEW HOLDINGS:  union con el snapshot actual.
+         - Resultado:     snapshot efectivo.
+
+      4. R4 se evalua sobre el snapshot efectivo, NO sobre el base.
+
+    Salvaguardas:
+      - Si no existe filing en el periodo: R3 = False.
+      - Trazabilidad: registrar cadena de amendments aplicados.
+
+### 5.3. Caso RESTATEMENT que cambia OTHERMANAGER
+
+Evidencia directa (Gate 0.5): CIK `0002056909`.
+- Base: OTHERMANAGER declara CIK `<NA>` / FormNum `028-04685`
+  (Prospector Partners).
+- RESTATEMENT: OTHERMANAGER declara CIK `0001570284` /
+  FormNum `028-16376` (Gator Capital Management).
+
+**El RESTATEMENT sustituye el contenido de OTHERMANAGER.** Un
+analisis de R4 sobre el base produciria un falso positivo.
+
+### 5.4. Estadistica del universo
+
+Filtrando por PERIODOFREPORT correcto:
+
+| Periodo | NT base | NT/A RESTATEMENT | NT/A NEW HOLDINGS |
+|---------|--------:|-----------------:|------------------:|
+| 2025-12-31 | 1,900 | 37 | 1 |
+| 2026-03-31 | 1,907 | 0 | 1 |
+
+Casos con OTHERMANAGER distinto entre base y amend: 1 (CIK 0002056909).
+
+### 5.5. Consecuencia
+
+La formalizacion anterior (v2 seccion 5) era incompleta: definia
+la semantica SEC sin filtrar por PERIODOFREPORT. La version v2-bis
+incluye el filtro obligatorio.
 
 ---
 

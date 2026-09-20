@@ -2154,3 +2154,30 @@ P65 v3 (ver iae/DICTAMENES.md #26). GO CONDICIONADO con 3 correcciones.
   NT/A ADDS NEW HOLDINGS.
 - **NO se ha hecho:** sin XML, sin reporting_dedup.py, sin DROP_DUP,
   sin tocar contrato 14.3.
+
+
+## P66 - Gate 0.5 amendment probe (2026-09-21)
+
+- **Origen:** dictamen P66 v2, Bloqueo B.
+- **Hallazgo principal:** los directorios del Data Set SEC estan
+  organizados por fecha de presentacion, no por periodo objetivo.
+  Contienen filings con multiples PERIODOFREPORT (48 en Q4 2025,
+  77 en Q1 2026). Filtrar por directorio es incorrecto.
+- **R3 formalizada:**
+  - Filtrar filings por PERIODOFREPORT igual al periodo de analisis.
+  - Ordenar amendments por AMENDMENTNO.
+  - Semantica SEC: RESTATEMENT sustituye; NEW HOLDINGS complementa.
+  - R4 se evalua sobre el filing efectivo.
+- **Caso material:** CIK 0002056909. RESTATEMENT sustituye el
+  OTHERMANAGER declarado (Prospector -> Gator Capital). Analizar
+  sobre el base produce falso positivo.
+- **Estadistica:**
+  - Q4 2025 real: 1,900 base + 38 amend (37 RESTATEMENT, 1 NEW HOLDINGS).
+  - Q1 2026 real: 1,907 base + 1 amend (NEW HOLDINGS).
+- **Conclusion:** BLOQUEO B RESUELTO. R3 formalizada con semantica
+  SEC completa.
+- **Evidencia:** `iae/evidence/p66_gate05_amendment_probe/`.
+- **Pendiente:** elevar al auditor el paquete completo (Gate 0.4 +
+  Gate 0.5 + propuesta v2-bis). Esperar dictamen contractual final.
+- **NO se ha hecho:** sin XML, sin reporting_dedup.py, sin DROP_DUP,
+  sin tocar contrato 14.3.
