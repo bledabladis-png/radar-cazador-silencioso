@@ -1,0 +1,8 @@
+# SHA-256 de la evidencia P66 Gate 0.4-reissue
+
+README.md                       9336f76c314135d09c5d60cdb2189652bd6458da66b584958f14c813057a8b6d
+gate04_reissue_output.txt       c626cd11beb2d2761d6c641b26a16c825d5d8c402ae0b8ed4b6ea3d8c5418f69
+
+Registro: 2026-09-21.
+Algoritmo: SHA-256.
+Entorno: D:\Macro_Sectorial.

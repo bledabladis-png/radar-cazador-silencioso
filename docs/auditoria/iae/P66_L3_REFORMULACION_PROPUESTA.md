@@ -308,27 +308,43 @@ se construye vía `COVERPAGE` + `SUBMISSION`, no vía `OTHERMANAGER`.
 **Normalizacion:** `28-XXXXX -> 028-XXXXX` y `028-XXXXX -> 028-XXXXX`.
 El prefijo se normaliza a 3 digitos y el sufijo a 5.
 
-**Cobertura del mapping (Gate 0.4):**
+**Cobertura del mapping (Gate 0.4-reissue, filtro PERIODOFREPORT):**
 
 | Trimestre | FormNum unicos | Resueltos | No resueltos | Cobertura |
 |-----------|---------------:|----------:|-------------:|----------:|
-| 2025Q4    | 914            | 894       | 20           | 97.81%    |
-| 2026Q1    | 908            | 892       | 16           | 98.24%    |
+| 2025Q4    | 906            | 888       | 18           | 98.01%    |
+| 2026Q1    | 901            | 887       | 14           | 98.45%    |
 
-**Cardinalidad:** 1:1 perfecta en ambas direcciones (0 casos N:1).
+**Cardinalidad:** 1:1 en direccion FormNum -> CIK (0 casos N:1).
+No se exige 1:1 en direccion inversa (correccion #4 del dictamen #28).
 
-**Impacto en filas (Gate 0.4b):**
+**Impacto en filas (Gate 0.4-reissue):**
 
 | Categoria | Q4 filas | Q4 % | Q1 filas | Q1 % |
 |-----------|---------:|-----:|---------:|-----:|
-| A. MATCH por CIK directo | 1,955 | 69.72% | 1,948 | 68.91% |
-| B. MATCH por FormNum fallback | 737 | 26.28% | 771 | 27.27% |
-| C. N/D FormNum no resuelto | 15 | 0.53% | 5 | 0.18% |
-| D. N/D ni CIK ni FormNum | 97 | 3.46% | 103 | 3.64% |
-| **Cobertura efectiva MATCH** | **96.01%** | | **96.18%** | |
-| **N/D total** | **3.99%** | | **3.82%** | |
+| A. IDENTITY_RESOLVED por CIK | 1,889 | 69.09% | 1,820 | 67.83% |
+| B. IDENTITY_RESOLVED por FormNum | 706 | 25.82% | 738 | 27.51% |
+| C. N/D FormNum no resuelto | 10 | 0.37% | 2 | 0.07% |
+| D. N/D ni CIK ni FormNum | 129 | 4.72% | 123 | 4.58% |
+| **Cobertura de resolucion de identidad** | **94.92%** | | **95.34%** | |
+| **N/D total** | **5.08%** | | **4.66%** | |
 
-**Bloqueo A del dictamen P66 v2: RESUELTO.**
+**Nota sobre el delta:** el Gate 0.4 original (sin filtro de periodo)
+reportaba 96.01% / 96.18%. El reissue corrige la contaminacion
+cross-periodo: delta −1.09 pp (Q4) y −0.84 pp (Q1).
+
+**Los porcentajes son cobertura de resolucion de identidad de las
+filas OTHERMANAGER. NO son cobertura L3 ni "match rate".** L3
+requiere ademas R1 + R2 + R3 + R5 y la comparacion CIK_resuelto == CIK_A.
+
+**Bloqueo #3 del dictamen #28: RESUELTO.**
+
+**Bloqueo #5 (sin truncar) aplicado:** normalizacion estricta
+`28-XXXXX` -> `028-XXXXX` con 5 digitos exactos. El caso
+`028-2813114` (7 digitos) queda como N/D automaticamente.
+
+**Bloqueo #6 (nomenclatura) aplicado:** IDENTITY_RESOLVED reemplaza
+MATCH en toda esta seccion.
 
 **Anomalia detectada:** el FormNum `028-2813114` (7 digitos) aparece
 en N/D por FormNum no resuelto. Volumen despreciable (4+2=6 filas).

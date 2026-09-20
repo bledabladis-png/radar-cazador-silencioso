@@ -2241,3 +2241,21 @@ P65 v3 (ver iae/DICTAMENES.md #26). GO CONDICIONADO con 3 correcciones.
 - **Evidencia:** `iae/evidence/p66_gate07_newholdings_probe/`.
 - **Pendiente:** bloqueo #3 (Gate 0.4-reissue), #4 (mapping
   unidireccional), #5 (sin truncar), #6 (nomenclatura).
+
+
+## P66 - Gate 0.4-reissue con filtro PERIODOFREPORT (2026-09-21)
+
+- **Origen:** dictamen #28, bloqueo #3.
+- **Correcciones aplicadas:**
+  - Filtro PERIODOFREPORT antes del JOIN COVERPAGE + SUBMISSION.
+  - Normalizacion estricta (5 digitos exactos, sin truncar).
+  - Nomenclatura MATCH -> IDENTITY_RESOLVED.
+- **Resultados:**
+  - Q4: cobertura 94.92% (era 96.01% sin filtro). Delta -1.09 pp.
+  - Q1: cobertura 95.34% (era 96.18% sin filtro). Delta -0.84 pp.
+- **Cardinalidad:** FormNum -> CIK 1:1 estricta (0 casos N:1).
+- **Conclusion:** delta ~1 pp cuantifica la contaminacion cross-periodo
+  del Gate 0.4 original. Regla corregida, cobertura >94%.
+- **Bloqueos resueltos:** #3, #5, #6.
+- **Evidencia:** `iae/evidence/p66_gate04_reissue_period/`.
+- **Pendiente:** bloqueo #4 (mapping unidireccional) en propuesta v3.

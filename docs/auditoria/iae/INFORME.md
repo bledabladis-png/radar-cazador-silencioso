@@ -581,6 +581,35 @@ a validacion del auditor.
 Bloqueos pendientes: #3 (Gate 0.4-reissue), #4 (mapping unidireccional),
 #5 (sin truncar), #6 (nomenclatura).
 
+
+
+### Gate 0.4-reissue ejecutado (2026-09-21)
+
+Origen: dictamen #28, bloqueo #3 (Gate 0.4 sin filtro PERIODOFREPORT).
+
+Re-ejecucion del mapping con filtro por PERIODOFREPORT y
+normalizacion estricta (sin truncar). Nomenclatura corregida
+(MATCH -> IDENTITY_RESOLVED).
+
+| Metric | Q4 original | Q4 reissue | Q1 original | Q1 reissue |
+|--------|------------:|-----------:|------------:|-----------:|
+| Total filas OTHERMANAGER(NT) | 2,804 | 2,734 | 2,827 | 2,683 |
+| Cobertura de identidad | 96.01% | **94.92%** | 96.18% | **95.34%** |
+| Delta | | −1.09 pp | | −0.84 pp |
+
+El delta cuantifica la contaminacion cross-periodo del Gate 0.4
+original. La regla corregida es correcta; la cobertura cae ~1 pp
+pero se mantiene >94%.
+
+Bloqueos resueltos por este Gate:
+- #3 Gate 0.4-reissue con filtro: RESUELTO.
+- #5 Normalizacion sin truncar: APLICADO.
+- #6 Nomenclatura IDENTITY_RESOLVED: APLICADO.
+
+Evidencia: `iae/evidence/p66_gate04_reissue_period/`.
+
+Bloqueo #4 (mapping unidireccional): PENDIENTE en propuesta v3.
+
 ### Estado
 
     Fuente             APROBADA (OTHERMANAGER)
