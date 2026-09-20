@@ -35,6 +35,11 @@ from .delta_shares import (
     compute_delta_shares,
     compute_reported_position_units,
 )
+from .coverage import (
+    PositionRecord,
+    aggregate_positions_by_shareclass_figi,
+    compute_contractual_coverage,
+)
 from .nipc import (
     ALL_NIPC_STATUSES,
     DISCRETION_TYPES,
@@ -47,6 +52,7 @@ from .nipc import (
     compute_coverage_pairwise,
     compute_nipc,
     compute_nipc_and_coverage,
+    compute_nipc_contractual,
 )
 
 __all__ = [
@@ -62,8 +68,13 @@ __all__ = [
     "ALL_MATCH_STATUSES",
     "UNITS_COLUMNS",
     "DELTA_COLUMNS",
+    # coverage
+    "PositionRecord",
+    "aggregate_positions_by_shareclass_figi",
+    "compute_contractual_coverage",
     # nipc
     "compute_nipc",
+    "compute_nipc_contractual",
     "compute_coverage_pairwise",
     "compute_nipc_and_coverage",
     "DISCRETION_TYPES",

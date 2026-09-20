@@ -100,6 +100,7 @@ def compute_nipc(delta_df, *, discretion_breakdown=True):
             "n_exit": 0,
             "n_unresolved_identity": 0,
             "n_delta_observable": 0,
+            "evidence_class": "PROXY",
         }
         if discretion_breakdown:
             for d in DISCRETION_TYPES:
@@ -120,6 +121,7 @@ def compute_nipc(delta_df, *, discretion_breakdown=True):
             delta_df, STATUS_UNRESOLVED_IDENTITY
         ),
         "n_delta_observable": n_delta_observable,
+        "evidence_class": "PROXY",
     }
 
     if discretion_breakdown:
@@ -336,4 +338,58 @@ def compute_nipc_and_coverage(
     out = dict(nipc)
     out.update(coverage)
     out["status"] = status
+    out["evidence_class"] = "PROXY"
+    return out
+
+# --- P38 / F2.4 (2026-09-20): API contractual ---
+
+def compute_nipc_contractual(
+    delta_df,
+    *,
+    target_q4,
+    target_q1,
+    records_q4,
+    records_q1,
+    threshold_1=None,
+    threshold_2=None,
+):
+    """Ruta contractual P38 (F2.4).
+
+    Diferencia con compute_nipc_and_coverage (legacy):
+      - TARGET se recibe como parametro externo (no se construye).
+      - Coverage se calcula via compute_contractual_coverage.
+      - evidence_class = CONTRACTUAL.
+
+    Si target_q4 is None o target_q1 is None: error duro (F2.4
+    regla #3, prohibida la degradacion silenciosa a proxy).
+    """
+    if target_q4 is None or target_q1 is None:
+        raise ValueError(
+            "compute_nipc_contractual requiere target_q4 y target_q1. "
+            "Para la ruta proxy, usar compute_nipc_and_coverage."
+        )
+    from .coverage import compute_contractual_coverage
+
+    nipc = compute_nipc(delta_df, discretion_breakdown=True)
+    coverage = compute_contractual_coverage(
+        target_q4, target_q1, records_q4, records_q1
+    )
+
+    n_total = (
+        nipc["n_both"] + nipc["n_new"] + nipc["n_exit"]
+        + nipc["n_unresolved_identity"]
+    )
+    status = _derive_status(
+        coverage,
+        threshold_1=threshold_1,
+        threshold_2=threshold_2,
+        n_conflict=0,
+        n_ambiguous=0,
+        n_total=n_total,
+    )
+
+    out = dict(nipc)
+    out.update(coverage)
+    out["status"] = status
+    out["evidence_class"] = "CONTRACTUAL"
     return out
