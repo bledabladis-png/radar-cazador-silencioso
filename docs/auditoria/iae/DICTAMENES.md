@@ -1665,3 +1665,73 @@ ordinaria.
 
 Enviar v7 al auditor. Segun su propia declaracion, el siguiente
 dictamen puede ser GO CONTRACTUAL FINAL.
+
+
+---
+
+## 38. P66 - Dictamen auditor externo v12 (2026-09-21)
+
+**Tipo:** dictamen del auditor externo sobre P66_L3_REFORMULACION_PROPUESTA.md
+v7.
+
+**Resultado:** NO-GO contractual. 1 bloqueo material + 2 correcciones
+editoriales + 1 observacion no bloqueante.
+
+### Bloqueo material
+
+**§3.4 contradice §3.2.**
+
+§3.2 (flujo unico R3) define:
+    BASE > 1 -> R3 = N/D.
+
+§3.4 todavia decia:
+    >1 filing base -> R3 = N/D o CONFLICT segun naturaleza de
+    la duplicidad.
+
+Contradiccion directa. CONFLICT pertenece al plano de identidad
+de A en R4, no al plano de determinacion documental.
+
+Correccion aplicada: §3.4 convertida en nota explicativa historica/
+evidencial. Regla absoluta:
+    BASE > 1 -> R3 = N/D.
+CONFLICT NO puede producirse en R3.
+
+### 2 correcciones editoriales
+
+1. §9 trazabilidad desactualizada (decia "4 bloqueos del #34",
+   ahora refleja #28 a #38).
+2. "Fin de la propuesta v6" -> v7-bis.
+
+### 1 observacion no bloqueante
+
+Los README.md de Gates historicos conservan reglas superadas
+(ej. Gate 0.4-reissue: 5 digitos estrictos; Gate 0.9: ISAMENDMENT
+!= Y). NO se modifican retroactivamente (evidencia historica).
+
+Solucion: §9.2 nota de rotulacion. La semantica contractual
+vigente es la de v7-bis. HASHES preservados.
+
+### Declaracion del auditor
+
+    "Con esa correccion, considero que v7 puede recibir GO
+     CONTRACTUAL FINAL: la evidencia esta cerrada, R3 esta
+     practicamente completamente determinista y no queda una
+     nueva cuestion arquitectonica.
+
+     Secuencia: corregir §3.4 -> corregir metadatos -> revision
+     final -> GO contractual -> trasladar a 14.3."
+
+### Estado
+
+    1 bloqueo #38              APLICADO EN V7-BIS
+    2 correcciones #38         APLICADAS EN V7-BIS
+    1 observacion #38          APLICADA EN §9.2
+    Propuesta v7-bis           RONDA FINAL
+    Contrato 14.3              NO MODIFICAR AUN
+    reporting_dedup.py         NO TOCAR
+    DROP_DUP                   NO ACTIVAR
+
+### Siguiente paso
+
+Enviar v7-bis al auditor. Segun su propia declaracion, GO
+CONTRACTUAL FINAL sin nueva cuestion arquitectonica.

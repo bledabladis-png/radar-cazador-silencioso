@@ -1,9 +1,9 @@
-# IAE - P66 L3 Reformulacion propuesta (v7)
+# IAE - P66 L3 Reformulacion propuesta (v7-bis)
 
-**Estado:** v7 ronda final. Aplicadas las correcciones del dictamen
-#37 (flujo unico R3, eliminacion de contradiccion BASE_R4, inspeccion
-global de familia) + §0.5 Clausula de cierre contractual. Pendiente
-de dictamen GO sobre esta version.
+**Estado:** v7-bis ronda final. Aplicadas las correcciones de los
+dictamenes #37 y #38 (flujo unico R3, §3.4 como nota, trazabilidad,
+nota de evidencia historica) + §0.5 Clausula de cierre contractual.
+Pendiente de dictamen GO sobre esta version.
 
 **Trazabilidad de dictamenes:**
 
@@ -16,7 +16,8 @@ de dictamen GO sobre esta version.
     #34  corregido
     #35  corregido
     #36  corregido
-    #37  3 correcciones aplicadas + §0.5 Clausula de cierre (v7 ronda final)
+    #37  corregido
+    #38  §3.4 como nota + 2 correcciones editoriales (v7-bis ronda final)
 
 **Consolidacion:** este documento reemplaza las versiones v1/v2/v3.
 Todas las correcciones anteriores estan integradas. No se conservan
@@ -112,7 +113,8 @@ inferencia. Solo CIK directo o FormNum con resolucion univoca.
 | v4 | Consolidacion. Correcciones #34 aplicadas + reescritura canonica. |
 | v5 | Consolidacion. Correcciones #35 aplicadas. |
 | v6 | Correcciones #36 aplicadas. |
-| **v7** | **Ronda final. Correcciones #37 aplicadas + §0.5 Clausula de cierre contractual.** |
+| v7 | Correcciones #37 aplicadas + §0.5 Clausula de cierre. |
+| **v7-bis** | **Ronda final. §3.4 como nota (dictamen #38) + trazabilidad + rotulacion evidencia historica.** |
 
 ### 0.5. Clausula de cierre contractual
 
@@ -468,14 +470,23 @@ Casos que deben producir N/D:
         Cambio de conjunto -> N/D.
         NO asumir union. NO asumir sustitucion.
 
-### 3.4. Multiples bases heterogeneas
+### 3.4. Multiples bases heterogeneas (nota explicativa)
 
-**Regla contractual IAE (no atribuida a la SEC):** cuando existen
->1 filings base independientes para mismo CIK + PERIODOFREPORT:
+**Nota historica/evidencial. No constituye regla decisional
+independiente.** La determinacion de R3 se realiza exclusivamente
+por el flujo unico de §3.2.
 
-    -> R3 = N/D o CONFLICT segun naturaleza de la duplicidad.
+**Regla absoluta (de §3.2 PASO 4):**
 
-PROHIBIDO:
+    BASE > 1 para mismo CIK + PERIODOFREPORT
+        -> R3 = N/D.
+
+**CONFLICT no puede producirse en R3 por pluralidad documental.**
+CONFLICT pertenece exclusivamente a la evaluacion de identidad de
+A dentro de R4 (§2.3). Mezclar ambos conceptos introduce
+interpretacion subjetiva y se prohibe.
+
+PROHIBIDO como criterio de resolucion:
     - primero encontrado
     - ultimo encontrado
     - MAX(ACCESSION_NUMBER)
@@ -483,7 +494,8 @@ PROHIBIDO:
 
 Evidencia empirica: Gate 0.9 identifico 1 caso en 4,596 grupos
 (CIK 0002016827, Q4 2025: NT + HR COMBINATION mismo periodo, mismo
-OTHERMANAGER declarado). Se clasifica como N/D.
+OTHERMANAGER declarado). La decision R3 = N/D se produce en §3.2
+PASO 3 (pluralidad de familias), no en §3.4.
 
 ### 3.5. Directorios cross-periodo
 
@@ -787,10 +799,51 @@ Regla de canonicalizacion en §4.2.
 
 ---
 
-## 9. Preguntas residuales al auditor
+## 9. Estado de trazabilidad y notas residuales
 
-Ninguna. Los 4 bloqueos del dictamen #34 estan aplicados y la
-evidencia complementaria (Gate 0.10) esta incorporada.
+### 9.1. Trazabilidad de dictamenes
+
+Estado actual del documento v7-bis:
+
+    #28  corregido
+    #29  corregido
+    #30  corregido
+    #31  corregido
+    #32  corregido
+    #33  corregido
+    #34  corregido
+    #35  corregido
+    #36  corregido
+    #37  corregido
+    #38  §3.4 reformulada como nota + 2 correcciones editoriales
+         + nota de rotulacion de evidencia historica
+
+### 9.2. Nota sobre evidencia historica de Gates
+
+Los README.md de los directorios `iae/evidence/p66_gate0*/` conservan
+la metodologia tal como se ejecuto cada Gate en su momento. Algunos
+incluyen reglas que han sido posteriormente superadas por el contrato:
+
+- `p66_gate04_reissue_period/`: normalizacion estricta de 5 digitos.
+- `p66_gate09_multiple_base/`: uso de `ISAMENDMENT != Y` como
+  identificador de base.
+
+**Estos READMEs NO se modifican retroactivamente.** Son evidencia
+historica de como se ejecuto cada Gate. Su contenido refleja la
+metodologia vigente en ese momento, no la semantica contractual
+actual.
+
+La semantica contractual vigente es la de este documento (v7-bis).
+En caso de conflicto, prevalece siempre este documento.
+
+Los HASHES.txt de cada directorio de evidencia permanecen validos
+porque los READMEs no se han modificado.
+
+### 9.3. Preguntas residuales al auditor
+
+Ninguna. Los 4 bloqueos del dictamen #34 estan aplicados, las
+correcciones de #35, #36, #37 estan integradas, y las correcciones
+del #38 (bloqueo material §3.4 + 2 editoriales) estan aplicadas.
 
 ---
 
@@ -821,6 +874,6 @@ evidencia complementaria (Gate 0.10) esta incorporada.
 
 ---
 
-Fin de la propuesta v6. Consolidacion final de los dictamenes
+Fin de la propuesta v7-bis. Consolidacion final de los dictamenes
 #28 a #34. Pendiente de dictamen contractual definitivo sobre el
 texto exacto antes de tocar NIPC_CONTRATOS_SEMANTICOS_v1.md.
