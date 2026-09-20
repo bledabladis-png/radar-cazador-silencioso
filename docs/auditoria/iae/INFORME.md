@@ -760,6 +760,34 @@ Evidencia: `iae/evidence/p66_gate09_multiple_base/`.
 
 Bloqueo C del dictamen #30: RESUELTO.
 
+
+
+### Dictamen P66 #31 recibido (2026-09-21)
+
+Resultado: NO-GO contractual.
+Resultado evidencia: PASS.
+
+3 bloqueos normativos finales:
+
+- **1** R3 debe incluir REPORTTYPE (13F-HR distingue HOLDINGS vs
+  COMBINATION por REPORTTYPE, no por SUBMISSIONTYPE).
+- **2** CONFLICT debe estar scoped a la fila candidata de A. Un
+  conflicto en otra fila OTHERMANAGER no invalida el MATCH de A.
+- **3** 0 bases + 0 amendments -> R3=False; 0 bases + amendment
+  sin base reconstruible -> R3=N/D.
+
+Correcciones aplicadas a la propuesta:
+- §2 nota terminologica "regla contractual IAE".
+- §4 CONFLICT scoped a la evidencia candidata de A.
+- §5.2 regla 4 dividida en Caso A (False) / Caso B (N/D).
+- §6 R3 con SUBMISSIONTYPE + REPORTTYPE.
+- §11 diagrama actualizado con scope de CONFLICT.
+
+Evidencia: `iae/DICTAMENES.md` #31.
+
+Siguiente paso: reenviar paquete completo al auditor para
+dictamen contractual final.
+
 ### Estado
 
     Fuente             APROBADA (OTHERMANAGER)

@@ -2359,3 +2359,21 @@ P65 v3 (ver iae/DICTAMENES.md #26). GO CONDICIONADO con 3 correcciones.
   dictamen contractual definitivo.
 - **NO se ha hecho:** sin XML, sin reporting_dedup.py, sin DROP_DUP,
   sin tocar contrato 14.3.
+
+
+## P66 - Dictamen #31 y cierre de evidencia (2026-09-21)
+
+- **Origen:** dictamen del auditor externo tras Gates 0.4-0.9.
+- **Resultado:** NO-GO contractual. PASS en evidencia tecnica.
+- **3 bloqueos normativos finales:**
+  - 1: R3 con SUBMISSIONTYPE + REPORTTYPE.
+  - 2: CONFLICT scoped a la evidencia candidata de A.
+  - 3: 0 bases + amendments -> N/D, no False.
+- **Terminologia:** "filing efectivo" reconocido como regla
+  contractual IAE, no atribuida a la SEC.
+- **Aplicado:** los 3 bloqueos al texto contractual + nota
+  terminologica + diagrama actualizado.
+- **Estado:** evidencia tecnica CERRADA (PASS por los 6 gates).
+  Paquete completo listo para dictamen contractual final.
+- **NO se ha hecho:** sin XML, sin reporting_dedup.py, sin DROP_DUP,
+  sin tocar contrato 14.3.

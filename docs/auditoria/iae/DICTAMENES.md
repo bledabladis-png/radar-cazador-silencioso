@@ -939,3 +939,131 @@ CONFLICT tiene precedencia sobre MATCH.
 Aplicar los 3 bloqueos al texto contractual. Ejecutar Gate 0.9
 (verificar existencia real de >1 filing base independiente) para
 respaldar el bloqueo C. Reenviar al auditor para dictamen definitivo.
+
+
+---
+
+## 31. P66 - Dictamen auditor externo v5 (2026-09-21)
+
+**Tipo:** dictamen del auditor externo sobre P66_L3_REFORMULACION_PROPUESTA.md
+v3 con Gates 0.4-0.9 integrados.
+
+**Objeto:** cierre final del texto contractual R3 + R4.
+
+**Resultado:** NO-GO contractual definitivo.
+**Resultado evidencia:** PASS. Tres ajustes normativos finales.
+
+### Aprobado (cierre de evidencia)
+
+    Gate 0.4-reissue    PASS
+    Gate 0.5            PASS (cross-period + restatement)
+    Gate 0.6            PASS
+    Gate 0.7            PASS (regla fail-closed)
+    Gate 0.8            PASS
+    Gate 0.9            PASS como diagnostico de caso limite
+
+### 3 bloqueos normativos
+
+**Bloqueo 1 - R3 debe incluir REPORTTYPE.**
+
+R3 actual dice:
+    R3 = existe filing efectivo de B
+         con el mismo PERIODOFREPORT que A
+         y SUBMISSIONTYPE valido.
+
+Incorrecto: `13F-HR` incluye dos report types con mismo
+SUBMISSIONTYPE pero solo uno valido para R4 (COMBINATION, no
+HOLDINGS).
+
+Correccion:
+    R3 = existe al menos un filing o conjunto documental valido de B
+         para el mismo PERIODOFREPORT, perteneciente al universo R4:
+
+         - 13F-NT / 13F-NT/A + REPORTTYPE = 13F NOTICE; o
+         - 13F-HR / 13F-HR/A + REPORTTYPE = 13F COMBINATION REPORT.
+
+**Bloqueo 2 - CONFLICT debe estar scoped a A.**
+
+CONFLICT > MATCH es correcto, pero SOLO cuando el conflicto
+afecta a la evidencia candidata de A. Un conflicto de identidad
+en OTRA fila OTHERMANAGER del mismo filing (por ejemplo, un
+manager C con CIK/FormNum contradictorio) NO invalida un MATCH
+de A.
+
+Correccion:
+    CONFLICT
+    Existe conflicto cuando la identidad de la fila OTHERMANAGER
+    que se utiliza para determinar la relacion con A no puede
+    resolverse de forma consistente:
+    - CIK y Form13FFileNumber de esa fila apuntan a CIK distintos; o
+    - el Form13FFileNumber utilizado como fallback resuelve a >1 CIK
+      dentro del scope temporal aplicable.
+    Un conflicto de identidad perteneciente exclusivamente a otro
+    manager de la lista no invalida por si mismo un MATCH de A.
+
+**Bloqueo 3 - Amendment sin base reconstruible -> N/D.**
+
+Actual: 0 bases -> R3 = False. Demasiado fuerte.
+
+Distinguir:
+
+    Caso A - sin filing base y sin amendments:
+        0 bases + 0 amendments + busqueda integra
+            -> R3 = False (ausencia documental demostrada).
+
+    Caso B - amendments sin base reconstruible:
+        0 bases + existe amendment aplicable
+            -> R3 = N/D (ausencia de antecedente necesario).
+
+### Terminologia
+
+El termino "filing efectivo" queda explicitamente reconocido como
+REGLA CONTRACTUAL IAE, no como una regla atribuida a la SEC.
+La SEC define la semantica de amendments RESTATEMENT / NEW HOLDINGS,
+pero el tratamiento de "multiple bases heterogeneas -> N/D" es
+una regla de seguridad del contrato IAE.
+
+### Texto contractual casi congelable (dictamen #31 seccion 9)
+
+    4. B declara explicitamente que A reporta por B mediante una
+       fila de OTHERMANAGER perteneciente al filing o conjunto
+       documental efectivo de B, identificando inequivocamente a A:
+
+       a) mediante CIK; o
+
+       b) cuando CIK no este disponible, mediante Form 13F File
+          Number cuya resolucion a CIK sea inequivoca dentro del
+          mismo PERIODOFREPORT.
+
+       No se permite matching por nombre.
+
+       La evidencia R4 es aplicable cuando el report type de B es:
+
+       - 13F NOTICE; o
+       - 13F COMBINATION REPORT.
+
+       En presencia de amendments, la evidencia OTHERMANAGER se
+       determina mediante la cadena documental contractual del
+       periodo.
+
+       - RESTATEMENT: sustituye la evidencia OTHERMANAGER anterior.
+       - NEW HOLDINGS: conserva la evidencia cuando es consistente
+         con el estado previo.
+       - NEW HOLDINGS con cambio no resoluble: N/D o CONFLICT.
+
+       Un conflicto de identidad solo afecta al R4 de A cuando
+       afecta a la evidencia utilizada para identificar a A.
+
+### Estado
+
+    Evidencia tecnica                 CERRADA (PASS)
+    3 correcciones normativas         PENDIENTES
+    Contrato 14.3                     NO MODIFICAR AUN
+    reporting_dedup.py                NO TOCAR
+    DROP_DUP                          NO ACTIVAR
+
+### Siguiente paso
+
+Aplicar las 3 correcciones al texto contractual. Reenviar al
+auditor para dictamen contractual final. Si GO, proceder a
+modificar 14.3 e implementar.

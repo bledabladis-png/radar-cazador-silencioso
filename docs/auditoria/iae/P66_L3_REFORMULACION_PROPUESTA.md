@@ -43,7 +43,14 @@ correcciones son de precision contractual, no de arquitectura.
 
 ---
 
-## 2. Propuesta reformulada (texto base + correcciones #28)
+## 2. Propuesta reformulada (texto base + correcciones #28-#31)
+
+**Nota terminologica (dictamen #31):** el termino "filing efectivo"
+utilizado a lo largo de esta propuesta se refiere a la **regla
+contractual IAE**, no a una regla general atribuida a la SEC. La SEC
+define la semantica de amendments (RESTATEMENT, NEW HOLDINGS); el
+tratamiento de "multiple bases heterogeneas -> N/D" es una regla
+conservadora del contrato IAE.
 
     L3(A, B, S, period) == True sii:
       1. existe filing efectivo de A con linea L sobre security S;
@@ -142,9 +149,31 @@ universo COMBINATION_BASE (evidencia Gate 0.8: 227 filas N/D Q4,
 
 **Aplicacion:** IDENTITY_RESOLVED + (CIK_resuelto == CIK_A) -> MATCH.
 
-**Orden de evaluacion OBLIGATORIO:** evaluar CONFLICT ANTES que
-MATCH. Un caso con `CIK = A` y `FormNum -> C (≠A)` produce
-CONFLICT, no MATCH, aunque la comparacion directa de CIK coincida.
+**Alcance del CONFLICT (dictamen #31, bloqueo 2):**
+
+CONFLICT > MATCH aplica UNICAMENTE a la evidencia candidata a
+identificar a A. Un conflicto de identidad en OTRA fila
+OTHERMANAGER del mismo filing NO invalida por si mismo un MATCH
+de A.
+
+    CONFLICT
+    Existe conflicto cuando la identidad de la fila OTHERMANAGER
+    que se utiliza para determinar la relacion con A no puede
+    resolverse de forma consistente:
+
+    - CIK y Form13FFileNumber de ESA FILA apuntan a CIK distintos; o
+    - el Form13FFileNumber utilizado como fallback resuelve a >1 CIK
+      dentro del scope temporal aplicable.
+
+    Un conflicto de identidad perteneciente exclusivamente a otro
+    manager de la lista no invalida por si mismo un MATCH de A.
+
+**Orden de evaluacion OBLIGATORIO:**
+
+    1. Evaluar CONFLICT sobre la fila candidata de A.
+       Si conflicto -> CONFLICT.
+    2. Si no hay conflicto, evaluar MATCH.
+    3. Si no hay MATCH, evaluar completitud (N/D vs NO_MATCH).
 
 **NO se exige la presencia simultanea de ambos campos.** Ambos
 son nullable en OTHERMANAGER.
@@ -197,10 +226,21 @@ al periodo de analisis. Prohibido filtrar por directorio fisico.
          - NEW HOLDINGS con cambio de OTHERMANAGER: N/D o CONFLICT.
                          NO asumir union ni sustitucion sin evidencia.
 
-      4. Seleccion del filing base (dictamen #30, bloqueo C):
+      4. Seleccion del filing base (dictamen #30 + #31,
+         bloqueos C + 3):
 
-         0 bases independientes (AMENDMENTNO nulo)
-             -> R3 = False.
+         Caso A - sin filing base y sin amendments aplicables:
+             0 bases (AMENDMENTNO nulo)
+             + 0 amendments del mismo CIK + PERIODOFREPORT
+             + busqueda integra del scope
+                 -> R3 = False (ausencia documental demostrada).
+
+         Caso B - amendments sin base reconstruible:
+             0 bases
+             + existe amendment aplicable (NT/A o HR/A con mismo
+               CIK + PERIODOFREPORT)
+             + cadena base no reconstruible
+                 -> R3 = N/D (ausencia de antecedente necesario).
 
          1 base
              -> continuar con la cadena de amendments.
@@ -209,6 +249,8 @@ al periodo de analisis. Prohibido filtrar por directorio fisico.
              -> N/D o CONFLICT segun la naturaleza de la duplicidad.
              PROHIBIDO: primero encontrado, ultimo encontrado,
              MAX(ACCESSION), MAX(FILING_DATE).
+             NOTA: esta regla es REGLA CONSERVADORA IAE, no una
+             regla atribuida a la SEC.
 
          Evidencia empirica (Gate 0.9, 2026-09-21):
 
@@ -260,11 +302,37 @@ incluye el filtro obligatorio.
 
 ## 6. Requisito 3 explicito (correccion #2)
 
-R3 NO se absorbe en R4. Se mantiene como control independiente:
+R3 NO se absorbe en R4. Se mantiene como control independiente.
 
-    R3 = existe filing efectivo de B
-         con el mismo PERIODOFREPORT que A
-         y SUBMISSIONTYPE valido.
+**Texto reformulado (dictamen #31, bloqueo 1):**
+
+    R3 = existe filing o conjunto documental valido de B para el
+         mismo PERIODOFREPORT, perteneciente al universo R4:
+
+         - 13F-NT / 13F-NT/A + REPORTTYPE = 13F NOTICE; o
+         - 13F-HR / 13F-HR/A + REPORTTYPE = 13F COMBINATION REPORT.
+
+La distincion SUBMISSIONTYPE + REPORTTYPE es obligatoria. `13F-HR`
+incluye dos report types con mismo SUBMISSIONTYPE (HOLDINGS REPORT
+y COMBINATION REPORT); solo el segundo es valido para R4.
+
+**Amendment sin base reconstruible (dictamen #31, bloqueo 3):**
+
+    Caso A - sin filing base y sin amendments aplicables:
+        0 bases (AMENDMENTNO nulo)
+        + 0 amendments del mismo CIK + PERIODOFREPORT
+        + busqueda integra del scope
+            -> R3 = False (ausencia documental demostrada).
+
+    Caso B - amendments sin base reconstruible:
+        0 bases
+        + existe amendment aplicable (NT/A o HR/A del mismo
+          CIK + PERIODOFREPORT)
+        + cadena base no reconstruible
+            -> R3 = N/D (ausencia de antecedente necesario).
+
+    Esta distincion es obligatoria. La ausencia de un filing base
+    NO puede afirmarse si existen amendments que lo referencian.
 
 R4 presupone R3. R4 no puede sustituirlo: la existencia de una fila
 en OTHERMANAGER[ACCESSION=B] presupone B, pero no valida por si sola
@@ -522,32 +590,37 @@ util para R4 es FormNum -> CIK, no la direccion inversa.
 
 ## 11. Diagrama de decision R4 (dictamen #30, seccion 11)
 
-Evaluacion en orden estricto:
+Evaluacion en orden estricto (dictamen #31, seccion 8):
 
-                        ¿filing efectivo determinable?
-                        │
-                        NO ───────────────> N/D
-                        │
-                        YES
-                        ↓
-                 ¿existe fila que
-                  identifica a A?
-                        │
-                  YES ──┴──> MATCH
-                        │
-                        NO
-                        ↓
-            ¿todas las filas OTHERMANAGER
-              tienen identidad resuelta?
-                        │
-                  NO ──┴──> N/D
-                        │
-                        YES
-                        ↓
-                     NO_MATCH
+    1. ¿Filing efectivo determinable?
+       NO ───────────────> N/D
+       SI
+       ↓
 
-**Paso previo obligatorio:** cualquier contradiccion CIK <-> FormNum
--> CONFLICT. CONFLICT tiene precedencia sobre MATCH.
+    2. ¿CONFLICT en la evidencia candidata de A?
+       (CIK y FormNum de esa fila apuntan a CIK distintos,
+        o FormNum resuelve a >1 CIK)
+       SI ───────────────> CONFLICT
+       NO
+       ↓
+
+    3. ¿Existe fila que identifica inequivocamente a A?
+       SI ───────────────> MATCH
+       NO
+       ↓
+
+    4. ¿Todas las filas OTHERMANAGER del filing efectivo
+       tienen identidad resuelta?
+       NO ───────────────> N/D
+       SI
+       ↓
+
+    5. NO_MATCH
+
+**Regla clave (dictamen #31, bloqueo 2):** CONFLICT > MATCH
+aplica UNICAMENTE cuando el conflicto afecta a la evidencia
+candidata a A. Un conflicto en otra fila OTHERMANAGER del mismo
+filing NO invalida el MATCH de A.
 
 ---
 
