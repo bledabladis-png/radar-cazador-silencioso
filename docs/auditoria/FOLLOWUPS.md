@@ -2132,3 +2132,25 @@ P65 v3 (ver iae/DICTAMENES.md #26). GO CONDICIONADO con 3 correcciones.
   exacto de 14.3. Solo despues: tocar `NIPC_CONTRATOS_SEMANTICOS_v1.md`.
 - **NO se ha hecho:** sin XML, sin reporting_dedup.py, sin DROP_DUP,
   sin tocar contrato.
+
+
+## P66 - Gate 0.4 mapping FormNum -> CIK (2026-09-20)
+
+- **Origen:** dictamen P66 v2, Bloqueo A.
+- **Metodologia:** tabla canonica FormNum -> CIK vía COVERPAGE +
+  SUBMISSION, join por ACCESSION_NUMBER.
+- **Resultados:**
+  - Cobertura del mapping: 97.81% Q4 / 98.24% Q1.
+  - Cardinalidad 1:1 perfecta en ambas direcciones.
+  - Normalizacion `28-` -> `028-` validada empiricamente.
+  - Cobertura efectiva MATCH: 96.01% Q4 / 96.18% Q1.
+  - N/D total (fail-closed): 3.99% Q4 / 3.82% Q1.
+- **Conclusion:** BLOQUEO A RESUELTO. La tabla canonica es construible.
+- **Hallazgo colateral:** FormNum `028-2813114` (7 digitos) anomalo.
+  Volumen despreciable (6 filas). Documentado en evidencia.
+- **Evidencia:** `iae/evidence/p66_gate04_mapping/`.
+- **Pendiente:** BLOQUEO B (amendment probe). Requiere medir
+  comportamiento de OTHERMANAGER en NT base vs NT/A RESTATEMENT vs
+  NT/A ADDS NEW HOLDINGS.
+- **NO se ha hecho:** sin XML, sin reporting_dedup.py, sin DROP_DUP,
+  sin tocar contrato 14.3.

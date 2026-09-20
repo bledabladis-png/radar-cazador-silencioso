@@ -235,23 +235,62 @@ izquierda). **Todas las filas afectadas tienen CIK=`<NA>`.**
 Normalizacion trivial propuesta: `28-XXXXX -> 028-XXXXX` con
 zero-padding a 3 digitos.
 
-### 9.5. Tabla canonica Form13FFileNumber -> CIK
+### 9.5. Tabla canonica Form13FFileNumber -> CIK (Gate 0.4 PASS)
 
-Evidencia del Gate 0.3 demuestra que la cardinalidad 1:1 se cumple
-sin excepciones. La tabla canonica es construible del propio
-Data Set:
+**Fuente corregida (dictamen P66 v2, Bloqueo A):** la tabla canonica
+se construye vía `COVERPAGE` + `SUBMISSION`, no vía `OTHERMANAGER`.
 
-    Form13FFileNumber -> CIK
+    COVERPAGE  (ACCESSION_NUMBER, FORM13FFILENUMBER, ...)
+        JOIN
+    SUBMISSION (ACCESSION_NUMBER, CIK)
+        ON ACCESSION_NUMBER
+    Agrupacion: FORM13FFILENUMBER (normalizado) -> CIK
 
-    Fuente: interseccion de OTHERMANAGER.CIK no-null
-            AND OTHERMANAGER.FORM13FFILENUMBER no-null.
-    Cardinalidad: 1:1.
-    Versionado: por trimestre.
-    Persistencia: artefacto de IAE (mapping canonico).
+**Normalizacion:** `28-XXXXX -> 028-XXXXX` y `028-XXXXX -> 028-XXXXX`.
+El prefijo se normaliza a 3 digitos y el sufijo a 5.
 
-Sin esta tabla, el 26.82-27.45% de filas "solo FormNum" quedaria en
-N/D artificialmente, sesgando el universo hacia large caps con CIK
-declarado.
+**Cobertura del mapping (Gate 0.4):**
+
+| Trimestre | FormNum unicos | Resueltos | No resueltos | Cobertura |
+|-----------|---------------:|----------:|-------------:|----------:|
+| 2025Q4    | 914            | 894       | 20           | 97.81%    |
+| 2026Q1    | 908            | 892       | 16           | 98.24%    |
+
+**Cardinalidad:** 1:1 perfecta en ambas direcciones (0 casos N:1).
+
+**Impacto en filas (Gate 0.4b):**
+
+| Categoria | Q4 filas | Q4 % | Q1 filas | Q1 % |
+|-----------|---------:|-----:|---------:|-----:|
+| A. MATCH por CIK directo | 1,955 | 69.72% | 1,948 | 68.91% |
+| B. MATCH por FormNum fallback | 737 | 26.28% | 771 | 27.27% |
+| C. N/D FormNum no resuelto | 15 | 0.53% | 5 | 0.18% |
+| D. N/D ni CIK ni FormNum | 97 | 3.46% | 103 | 3.64% |
+| **Cobertura efectiva MATCH** | **96.01%** | | **96.18%** | |
+| **N/D total** | **3.99%** | | **3.82%** | |
+
+**Bloqueo A del dictamen P66 v2: RESUELTO.**
+
+**Anomalia detectada:** el FormNum `028-2813114` (7 digitos) aparece
+en N/D por FormNum no resuelto. Volumen despreciable (4+2=6 filas).
+Documentado como hallazgo colateral en
+`iae/evidence/p66_gate04_mapping/README.md` seccion 2.5.
+
+### 9.6. Bloqueo B pendiente
+
+El dictamen P66 v2 mantiene un segundo bloqueo: formalizar como se
+determina el "filing efectivo de B" cuando existen NT/A y multiples
+amendments.
+
+Requiere un `amendment probe` especifico que mida el comportamiento
+de `OTHERMANAGER` en:
+
+    NT
+    NT/A RESTATEMENT
+    NT/A ADDS NEW HOLDINGS ENTRIES
+
+Pendiente de ejecucion. Sin el, la semantica de R3 (filing efectivo)
+no puede formalizarse contractualmente.
 
 ### 9.3. Caso Vanguard confirmado (Gate 0.2)
 

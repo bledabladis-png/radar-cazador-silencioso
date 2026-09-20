@@ -1,0 +1,69 @@
+======================================================================
+=== 2025Q4 ===
+======================================================================
+
+[1] FormNum unicos en OTHERMANAGER (NT): 914
+[2] COVERPAGE + SUBMISSION con FormNum y CIK: 11,372
+
+[3] Lookup de FormNum de OTHERMANAGER en COVERPAGE+SUBMISSION:
+    resueltos:   894 / 914  (97.81%)
+    no resueltos: 20  (2.19%)
+
+[4] Cardinalidad FormNum -> CIK:
+    FormNum con 1 CIK:  894
+    FormNum con >1 CIK: 0
+
+[5] Cardinalidad CIK -> FormNum (desde COVERPAGE):
+    CIK con 1 FormNum:  10,535
+    CIK con >1 FormNum: 0
+
+[6] Detalle de no resueltos (primeros 10):
+    028-00096 (original: '028-00096', filas: 3)
+    028-03140 (original: '028-03140', filas: 13)
+    028-04032 (original: '028-04032', filas: 1)
+    028-06075 (original: '028-06075', filas: 1)
+    028-10245 (original: '028-10245', filas: 2)
+    028-10955 (original: '028-10955', filas: 1)
+    028-12019 (original: '028-12019', filas: 2)
+    028-12259 (original: '028-12259', filas: 1)
+    028-12454 (original: '028-12454', filas: 1)
+    028-12524 (original: '028-12524', filas: 1)
+
+======================================================================
+=== 2026Q1 ===
+======================================================================
+
+[1] FormNum unicos en OTHERMANAGER (NT): 908
+[2] COVERPAGE + SUBMISSION con FormNum y CIK: 11,761
+
+[3] Lookup de FormNum de OTHERMANAGER en COVERPAGE+SUBMISSION:
+    resueltos:   892 / 908  (98.24%)
+    no resueltos: 16  (1.76%)
+
+[4] Cardinalidad FormNum -> CIK:
+    FormNum con 1 CIK:  892
+    FormNum con >1 CIK: 0
+
+[5] Cardinalidad CIK -> FormNum (desde COVERPAGE):
+    CIK con 1 FormNum:  10,672
+    CIK con >1 FormNum: 0
+
+[6] Detalle de no resueltos (primeros 10):
+    028-00096 (original: '028-00096', filas: 2)
+    028-04032 (original: '028-04032', filas: 1)
+    028-04685 (original: '028-04685', filas: 1)
+    028-06075 (original: '028-06075', filas: 1)
+    028-10245 (original: '028-10245', filas: 1)
+    028-12019 (original: '028-12019', filas: 2)
+    028-12259 (original: '028-12259', filas: 1)
+    028-12454 (original: '028-12454', filas: 1)
+    028-12524 (original: '028-12524', filas: 1)
+    028-14014 (original: '028-14014', filas: 1)
+
+
+======================================================================
+RESUMEN GLOBAL
+======================================================================
+quarter  formnum_unique  resolved  unresolved  fnum_multi_cik  cik_multi_fnum  cobertura_pct
+ 2025Q4             914       894          20               0               0      97.811816
+ 2026Q1             908       892          16               0               0      98.237885

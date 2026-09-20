@@ -418,6 +418,37 @@ a ~96.5% (CIK + FormNum normalizado).
 
 Evidencia: `iae/evidence/p66_gate03_granularidad/`.
 
+
+
+### Gate 0.4 ejecutado (2026-09-20)
+
+Origen: dictamen P66 v2, Bloqueo A. El Gate 0.3 midio consistencia
+interna de OTHERMANAGER; no demostro cobertura del mapping contra
+el universo de filings.
+
+Gate 0.4 construye la tabla canonica FormNum -> CIK vía COVERPAGE +
+SUBMISSION (join por ACCESSION_NUMBER). Resultados:
+
+- Cobertura del mapping: 97.81% Q4 / 98.24% Q1.
+- Cardinalidad 1:1 perfecta en ambas direcciones.
+- Normalizacion `28-` -> `028-` validada (sin ambiguedad).
+- Cobertura efectiva MATCH en filas OTHERMANAGER (NT): 96.01% Q4 /
+  96.18% Q1.
+- N/D total (fail-closed): 3.99% Q4 / 3.82% Q1.
+- Bloqueo A del dictamen P66 v2: RESUELTO.
+
+Evidencia: `iae/evidence/p66_gate04_mapping/`.
+
+### Bloqueo B pendiente (amendment probe)
+
+Formalizar como se determina el filing efectivo de B cuando existen
+NT/A y multiples amendments. Requiere medicion especifica sobre los
+campos CIK + PERIODOFREPORT + SUBMISSIONTYPE + ISAMENDMENT +
+AMENDMENTNO + AMENDMENTTYPE.
+
+Sin el, la semantica de R3 no puede formalizarse contractualmente y
+el dictamen contractual final no puede emitirse.
+
 ### Estado
 
     Fuente             APROBADA (OTHERMANAGER)

@@ -1,0 +1,51 @@
+======================================================================
+=== 2025Q4 ===
+======================================================================
+
+[FILAS OTHERMANAGER en NT: 2,804]
+  A. MATCH por CIK directo:                 1,955  (69.72%)
+  B. MATCH por FormNum (fallback, CIK vacio): 737  (26.28%)
+  C. N/D - FormNum no resuelto en COVERPAGE:  15  (0.53%)
+  D. N/D - ni CIK ni FormNum:                 97  (3.46%)
+
+  COBERTURA EFECTIVA MATCH: 96.01%
+  N/D TOTAL:                3.99%
+
+  Detalle N/D (FormNum no resuelto):
+    filas: 15
+    FormNum unicos implicados: 5
+    accessions afectados: 15
+      028-03140: 8 filas
+      028-2813114: 4 filas
+      028-10955: 1 filas
+      028-64460: 1 filas
+      028-10245: 1 filas
+
+======================================================================
+=== 2026Q1 ===
+======================================================================
+
+[FILAS OTHERMANAGER en NT: 2,827]
+  A. MATCH por CIK directo:                 1,948  (68.91%)
+  B. MATCH por FormNum (fallback, CIK vacio): 771  (27.27%)
+  C. N/D - FormNum no resuelto en COVERPAGE:  5  (0.18%)
+  D. N/D - ni CIK ni FormNum:                 103  (3.64%)
+
+  COBERTURA EFECTIVA MATCH: 96.18%
+  N/D TOTAL:                3.82%
+
+  Detalle N/D (FormNum no resuelto):
+    filas: 5
+    FormNum unicos implicados: 4
+    accessions afectados: 5
+      028-2813114: 2 filas
+      028-64460: 1 filas
+      028-14014: 1 filas
+      028-04685: 1 filas
+
+======================================================================
+RESUMEN GLOBAL
+======================================================================
+quarter  total_filas  match_cik  match_formnum  nd_formnum_unresolved  nd_both_null  cobertura_efectiva_pct
+ 2025Q4         2804       1955            737                     15            97               96.005706
+ 2026Q1         2827       1948            771                      5           103               96.179696
