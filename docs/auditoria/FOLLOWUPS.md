@@ -1844,3 +1844,120 @@ Sin estas respuestas, A.6 no puede ejecutarse: el plan tiene ramas
 condicionales para cada una.
 
 ---
+
+
+## CICLO F2.4 - P60/P61/P38/P63/P64/P65 (2026-09-20)
+
+Ciclo completo de reconciliacion contrato <-> codigo tras dictamen F2.4.
+
+### Contexto
+
+F2.4 (dictamen F2.4 formal, ver `iae/DICTAMENES.md` #24) emitio GO
+CONDICIONADO sobre la arquitectura IAE + 3 bloqueantes estructurales +
+10 reglas adicionales. El ciclo aplica las decisiones D1/D2/D3/Q12/AGREG./
+OpenFIGI/Policy hasta donde es posible sin OpenFIGI masivo.
+
+### Fase documental (5 commits)
+
+    0ea5586  DICTAMENES.md #24 (dictamen F2.4 formal)
+    150d24d  INFORME.md #18 + cabecera v2
+    2197f1f  FASE_A6_PLAN.md (3 bloqueantes + sub-fases A.6.0 y A.6.2-bis)
+    26978ef  REESTRUCTURACION_MODULO.md (rediseno TARGET + PositionRecord)
+    6bc8675  NIPC_CONTRATOS_SEMANTICOS_v1.md (P62-P65) + A.6.5 in-place
+
+### Fase implementacion (6 commits)
+
+    5d60d48  fix(iae): P60 fail-closed - sin default TICKER (D3 F2.4)
+             - _find_active_equivalence rechaza filas sin identity_type
+             - load_cusip_equivalence lanza ValueError si falta columna
+             - 9 tests heredados actualizados con identity_type explicito
+             - test_q8_identity_type_default_ticker -> test_p60_csv_sin_identity_type_error
+
+    1773cc9  fix(iae): P61 conectar resolve_source_status (D1 F2.4)
+             - crosswalk_internal separado en cusip_ticker_exceptions vs etf_holdings
+             - evidence incluye operational_source + valid_from + valid_to
+             - _SOURCE_TO_OP_STATUS eliminado; resolve_source_status invocado
+             - 42 tests security_identity + 4 P61 contractuales OK
+
+    a48717a  feat(iae): P38 coverage contractual (D2 quirurgico F2.4)
+             - NUEVO aggregation/coverage.py: PositionRecord + aggregate_positions_by_shareclass_figi + compute_contractual_coverage
+             - compute_nipc expone evidence_class PROXY; compute_nipc_contractual ruta CONTRACTUAL
+             - 13 tests P38 (TARGET externo, max(150,140)=150, solo VERIFIED contribuye)
+             - NO toca MATCH_KEY ni C2
+
+    a841cd6  test(iae): P63 contractual
+             - test_p63_amendment_evita_exit_falso (R6: amendments pre-delta)
+             - test_p63_othermanager_produce_exit_mas_new (R7 documentado)
+             - R8: "SOLD" no en ALL_MATCH_STATUSES
+
+    05f0a84  docs(iae): P63 GO CONDICIONADO (8 reglas + arquitectura + #25)
+             - NIPC_CONTRATOS_SEMANTICOS_v1.md seccion 12 reescrita
+             - MISSING = ausencia sin causa demostrable
+             - REPORTING_CONFLICT != REPORTING_OVERLAP_UNRESOLVED
+             - DICTAMENES.md #25
+
+    2f8140a  fix(iae): P64 gross observed delta (F2.4 GO CONDICIONADO)
+             - DELTA_SEMANTICS_GROSS_OBSERVED = True
+             - P64_EVENTS_DEFERRED = (split, reverse_split, spin_off, merger, share_class_conversion)
+             - 4 tests P64 (semantica, columnas, split no economico, CUSIP identidad)
+             - Audit consumidores: solo nipc.py::_sum_delta, lee como magnitud
+
+### Fase consolidacion P64 + P65 (1 commit)
+
+    47594a4  docs(iae): expediente P64+P65 consolidado + contrato 13-14 + #26
+             - NUEVO iae/P64_P65_EXPEDIENTE.md (447 lineas)
+             - NIPC_CONTRATOS_SEMANTICOS_v1.md secciones 13 (P64) y 14 (P65) reescritas
+             - DICTAMENES.md #26 (P65 v3 GO CONDICIONADO)
+
+### Dictamenes del ciclo (registro consolidado en DICTAMENES.md)
+
+| # | Tema | Resultado |
+|---|---|---|
+| 24 | F2.4 formal | GO CONDICIONADO arquitectura + 3 bloqueantes + 10 reglas |
+| 25 | P63 Missing != Sold | GO CONDICIONADO (8 reglas, arquitectura multi-dimensional) |
+| 26 | P65 v3 Manager Duplication | GO CONDICIONADO (3 correcciones de cierre) |
+
+### Reglas semanticas consolidadas
+
+    REPORTING RELATIONSHIP  !=  REPORTING NETWORK  !=  DEDUP AUTHORIZATION  !=  ECONOMIC OWNERSHIP
+
+    P64: delta_shares = GROSS_OBSERVED_DELTA (no economic)
+    P63: MISSING = ausencia sin causa demostrable (no toda ausencia)
+    P65: solo dedup con evidencia cruzada entre filings (L3)
+
+### Estado al cierre del ciclo
+
+    Tests locales        1008 passed + 2 skipped + 0 xfailed
+    pyflakes             0 warnings
+    compileall           OK
+    Gate validacion      10/10
+    HEAD                 47594a4
+    Ahead                141 commits locales
+    Push                 NO (local-first IAE activo)
+
+### Pendientes del ciclo
+
+    P65 implementacion       4 commits (plan 2.17 del expediente)
+    P62 point-in-time        Requiere OpenFIGI masivo
+    Bloqueante 1 (TARGET)    Requiere OpenFIGI masivo
+    Bloqueante 2 (PIT)       Requiere OpenFIGI masivo
+
+### Bloqueos vigentes
+
+    THRESHOLD_1 / THRESHOLD_2      UNDEFINED
+    Gate-NIPC.2                    BLOQUEADO
+    Gate-NIPC.3                    NO AUTORIZADO
+    OpenFIGI masivo                NO AUTORIZADO
+    Policy v1.3 aplicacion         NO AUTORIZADA
+    Push a origin/main             NO
+
+### Referencias
+
+    iae/P64_P65_EXPEDIENTE.md                 ciclo P64+P65 completo
+    iae/NIPC_CONTRATOS_SEMANTICOS_v1.md       contrato secciones 12-14
+    iae/DICTAMENES.md                          entradas #24 #25 #26
+    iae/INFORME.md                             entrada #18
+    iae/FASE_A6_PLAN.md                        plan A.6 actualizado
+    iae/REESTRUCTURACION_MODULO.md             rediseno arquitectonico
+
+---

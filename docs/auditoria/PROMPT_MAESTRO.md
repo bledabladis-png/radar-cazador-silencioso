@@ -1,8 +1,8 @@
-# PROMPT MAESTRO v6.46 - INGENIERO SUPERVISOR DEL RADAR DE ROTACION SECTORIAL
+# PROMPT MAESTRO v6.47 - INGENIERO SUPERVISOR DEL RADAR DE ROTACION SECTORIAL
 
-Actualizado: 2026-09-20 (F2.4 GO emitido por auditor externo. Expediente F2.4 aprobado tras 6 rondas de correcciones. A.6 desbloqueada. Pendiente aplicar decisiones D1/D2/D3/Q12/AGREG/OpenFIGI/Policy del dictamen. HEAD 23311b2. 129 commits ahead. Sin push. 989 passed + 5 xfailed + 2 skipped.)
-Estado: Operativo al 100% - 10 contratos temporales (FU-021-5 + FU-021-3C-bis) - 979 tests locales + 2 skipped - 0 warnings - Gate 10/10 - Deuda ALTA/MEDIA/BAJA activa: 0 - F2.4 PENDIENTE EXTERNO - P60/P61/P38 IMPLEMENTADOS
-Commit de referencia: 23311b2 (origin/main HEAD al redactar; el propio commit v6.46 sera HEAD tras push)
+Actualizado: 2026-09-20 v2 (F2.4 EMITIDO. P60/P61/P38/P63/P64 CERRADOS con tests contractuales. P65 v3 GO CONDICIONADO (3 correcciones de cierre). Dictamenes hasta #26. HEAD 47594a4. 141 commits ahead. Sin push. 1008 passed + 2 skipped + 0 xfailed.)
+Estado: Operativo al 100% - 10 contratos temporales (FU-021-5 + FU-021-3C-bis) - 1008 tests locales + 2 skipped - 0 warnings - Gate 10/10 - Deuda ALTA/MEDIA/BAJA activa: 0 - F2.4 EMITIDO - P60/P61/P38/P63/P64 CERRADOS - P65 v3 GO CONDICIONADO
+Commit de referencia: 47594a4 (origin/main HEAD al redactar; el propio commit v6.47 sera HEAD tras push)
 
 ---
 
@@ -1533,7 +1533,7 @@ git status -sb (un guion).
 
 Select-String -SimpleMatch desactiva regex → el | se trata como literal. No usar -SimpleMatch con patrones que contengan |.
 
-## SECCION 15 - ESTADO ACTUAL (2026-09-19)
+## SECCION 15 - ESTADO ACTUAL (2026-09-20)
 
 | Metrica | Valor |
 |---|---|
@@ -1542,7 +1542,7 @@ Select-String -SimpleMatch desactiva regex → el | se trata como literal. No us
 | Fuentes europeas | 51 (Euronext 13 + Xetra 19 + BME 19) |
 | Fuente commodities | OilPriceAPI (BZ=F, CL=F, GC=F, HG=F, NG=F) |
 | Fuente term structure | CBOE (^VIX3M) |
-| Tests locales | 989 passed + 5 xfailed + 2 skipped |
+| Tests locales | 1008 passed + 2 skipped + 0 xfailed |
 | Tests CI | ~610 collected con skips (parquet gitignored) |
 | Validation Gate | 10/10 |
 | pyflakes | 0 warnings |
@@ -1550,11 +1550,11 @@ Select-String -SimpleMatch desactiva regex → el | se trata como literal. No us
 | Produccion GH Actions | OK (cron `0 4 * * *` verificado 2026-09-17) |
 | Arquitectura | Modular: 19 src/report/ + 16 src/pipeline/ + 10 src/temporal_contracts/ + 7 src/institutional_accumulation/sec_13f/ + 5 sec_13f/identity (temporal_filter, cusip_resolver, relationships, amendments, sec13f_list, security_identity) + 2 aggregation/ (delta_shares, nipc) + 3 identity/ nuevos (openfigi_client, radar_target_catalog, target_universe) + 5 indicators/mte/ + 4 indicators/darkpool/ |
 | Contratos temporales | 10 (FU-021-5 = 9, FU-021-3C-bis = +1 SPOT_COMMODITY) |
-| Modulo IAE (SEC 13F) | FA-1+FA-2 cerrados. NIPC implementado. F2.4 PENDIENTE EXTERNO. 3 divergencias contrato<->codigo con evidencia ejecutable (6 tests xfail). Deuda radar registrada (LSE provider, guard, cron). Gate-NIPC.2 BLOQUEADO. |
+| Modulo IAE (SEC 13F) | FA-1+FA-2 cerrados. NIPC implementado. P60/P61/P38/P63/P64 CERRADOS (F2.4 aplicado). P65 v3 GO CONDICIONADO (3 correcciones de cierre). 0 xfail residual. Dictamenes hasta #26. Gate-NIPC.2 BLOQUEADO por THRESHOLD. Bloqueantes 1-2 (TARGET indep. + PIT) requieren OpenFIGI. |
 | RADAR_TARGET_CATALOG | MATERIALIZADO 2026-09-19 (242 filas, 240 OK, 2 MISS: BRK-B, MOG-A). Hash 11eabce8... Construido desde OpenFIGI TICKER/US -> shareClassFIGI, independiente del crosswalk interno. TARGET_UNIVERSE resolver operativo (8 tests). |
 | Coverage baseline NIPC | Fase A cerrada. TOP 2000 (Q1 2026, CURRENT_RETROSPECTIVE): target_true=210 (10.50% count, 32.8079% weight); corregido 212/33.3428%. target_false=1567 (78.35%, 55.68%). no_id=220 (11.0%, 8.86%). error=3 (0.15%, 2.65%). Delta +0.5349 pp por 2 canales adicionales. THRESHOLD_1/2 UNDEFINED |
 | .git size | ~13 MB |
-| HEAD | 23311b2 (114 commits locales ahead de origin/main) |
+| HEAD | 47594a4 (141 commits locales ahead de origin/main) |
 
 ### 15.1. Hitos del ciclo FU-021-3C-bis (2026-09-16)
 
@@ -2326,4 +2326,4 @@ Pregunta final: "Que hacemos?"
 
 No empieces a proponer tareas sin antes confirmar la asimilacion completa.
 
-Fin del prompt maestro v6.43. Commit de referencia: 83e60c3. Fecha: 2026-09-20.
+Fin del prompt maestro v6.47. Commit de referencia: 47594a4. Fecha: 2026-09-20.
