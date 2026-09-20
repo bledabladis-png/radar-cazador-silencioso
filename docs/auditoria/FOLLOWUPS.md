@@ -2452,3 +2452,23 @@ P65 v3 (ver iae/DICTAMENES.md #26). GO CONDICIONADO con 3 correcciones.
 - **Pendiente:** enviar v5 al auditor.
 - **NO se ha hecho:** sin XML, sin reporting_dedup.py, sin DROP_DUP,
   sin tocar contrato 14.3.
+
+
+## P66 - Dictamen #36 y propuesta v6 candidata final (2026-09-21)
+
+- **Origen:** dictamen #36 tras propuesta v5.
+- **Resultado:** NO-GO contractual. Evidencia PASS.
+- **3 cierres materiales aplicados:**
+  - 1: BASE/AMENDMENT por SUBMISSIONTYPE+REPORTTYPE.
+  - 2: Familia cerrada en cadena de amendments.
+  - 3: NEW HOLDINGS determinabilidad estricta.
+- **2 ajustes aplicados:**
+  - 4: "secuencia sin huecos" etiquetada como regla IAE.
+  - 5: correccion "Fin de la propuesta" a v6.
+- **Condicion de cierre del auditor:** v6 sin heuristicas nuevas =
+  GO CONTRACTUAL FINAL.
+- **Propuesta v6:** candidata final.
+- **Evidencia:** `iae/DICTAMENES.md` #36.
+- **Pendiente:** enviar v6 al auditor.
+- **NO se ha hecho:** sin XML, sin reporting_dedup.py, sin DROP_DUP,
+  sin tocar contrato 14.3.

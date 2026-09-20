@@ -908,6 +908,38 @@ Evidencia: `iae/DICTAMENES.md` #35.
 Siguiente paso: enviar v5 al auditor con expectativa de GO
 contractual.
 
+
+
+### Dictamen P66 #36 + propuesta v6 candidata final (2026-09-21)
+
+Resultado: NO-GO contractual. Evidencia PASS. 3 cierres materiales
++ 2 ajustes menores, todos aplicados en v6.
+
+**3 cierres materiales aplicados:**
+- 1: BASE/AMENDMENT por SUBMISSIONTYPE+REPORTTYPE, no por
+  ISAMENDMENT (permite ISAMENDMENT=<NA> en bases correctamente).
+- 2: Familia cerrada: base NOTICE solo admite amendments NOTICE;
+  base COMBINATION solo admite amendments COMBINATION. Cruce de
+  familia -> N/D.
+- 3: NEW HOLDINGS consistente solo si ambos estados son
+  completamente determinables. Cualquier N/D o CONFLICT en una
+  fila impide la comparacion -> N/D.
+
+**2 ajustes aplicados:**
+- 4: "Secuencia sin huecos" etiquetada como regla conservadora IAE
+  (no SEC).
+- 5: "Fin de la propuesta v4" -> v6.
+
+**Condicion de cierre del auditor:** "Una v6 que incorpore
+literalmente esos tres cierres materiales, sin introducir nuevas
+heuristicas, estara en condiciones de recibir GO CONTRACTUAL FINAL."
+
+Propuesta v6 escrita sin heuristicas nuevas. Pass interno ejecutado.
+
+Evidencia: `iae/DICTAMENES.md` #36.
+
+Siguiente paso: enviar v6 al auditor.
+
 ### Estado
 
     Fuente             APROBADA (OTHERMANAGER)
