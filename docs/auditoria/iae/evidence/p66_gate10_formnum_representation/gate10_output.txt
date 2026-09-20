@@ -1,0 +1,53 @@
+=== 2025Q4 (Gate 0.10 FormNum representation) ===
+
+[1] COVERPAGE.FORM13FFILENUMBER (periodo completo):
+    non-null: 10,676 / 10,676
+    no parseables: 0
+    Prefijos: 28 (100%)
+    Longitud del sufijo:
+       5 digitos: 10,676 (100.00%)
+
+[2] Ejemplos:
+    L=5: ['028-26716', '028-26715', '028-23202']
+
+[3] OTHERMANAGER.FORM13FFILENUMBER (universo R4):
+    non-null: 4,077 / 4,640
+    Longitud del sufijo:
+       3 digitos: 3 (0.07%)
+       4 digitos: 25 (0.61%)
+       5 digitos: 4,044 (99.19%)
+       6 digitos: 1 (0.02%)
+       7 digitos: 4 (0.10%)
+    Ejemplos:
+       L=3: ['028-694']
+       L=4: ['28-4545']
+       L=5: ['028-22660']
+       L=6: ['028-064460']
+       L=7: ['028-2813114']
+
+[4] Cruce:
+    FormNum unicos OTHERMANAGER: 1,497
+    FormNum unicos COVERPAGE: 10,524
+    Interseccion literal: 1,360
+    Solo en OTHERMANAGER: 137
+
+=== 2026Q1 (Gate 0.10 FormNum representation) ===
+
+[1] COVERPAGE:
+    non-null: 10,776 / 10,776
+    Longitud del sufijo: 5 digitos (100.00%)
+
+[3] OTHERMANAGER (universo R4):
+    non-null: 3,954 / 4,546
+    Longitud del sufijo:
+       3 digitos: 4 (0.10%)
+       4 digitos: 29 (0.73%)
+       5 digitos: 3,918 (99.09%)
+       6 digitos: 1 (0.03%)
+       7 digitos: 2 (0.05%)
+
+[4] Cruce:
+    FormNum unicos OTHERMANAGER: 1,495
+    FormNum unicos COVERPAGE: 10,648
+    Interseccion literal: 1,351
+    Solo en OTHERMANAGER: 144

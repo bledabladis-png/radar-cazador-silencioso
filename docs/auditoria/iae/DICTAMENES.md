@@ -1326,3 +1326,91 @@ Y despues de aplicar #33:
 
 Aplicar los 2 bloqueos. Reenviar al auditor. Si confirma, GO
 CONTRACTUAL DEFINITIVO -> modificar 14.3 -> tests -> implementacion.
+
+
+---
+
+## 34. P66 - Dictamen auditor externo v8 (2026-09-21)
+
+**Tipo:** dictamen del auditor externo sobre P66_L3_REFORMULACION_PROPUESTA.md
+v3 con dictamen #33 aplicado.
+
+**Resultado:** NO-GO contractual. Evidencia Gates 0.4-0.9 PASS.
+
+**4 bloqueos + 2 correcciones recomendadas.**
+
+### Bloqueos
+
+**1. Normalizacion Form13FFileNumber.**
+
+Regla "5 digitos exactos" rechaza identidades SEC validas.
+Filings reales con 028-6538, 028-2013, 028-398, 028-5788.
+Requiere Gate 0.10 (representation probe) + regla con padding
+flexible.
+
+**2. Determinismo cadena amendments.**
+
+`AMENDMENTNO = null como base` no es valido. Debe usar
+`ISAMENDMENT != Y`. Si ISAMENDMENT == Y y AMENDMENTNO no
+determinable -> N/D.
+
+**3. CONFLICT formalizado con candidate_A.**
+
+Formalizar matematicamente cuando una fila es candidata a A:
+
+    candidate_A(r) :=
+        CIK(r) == CIK_A
+        OR CIK_A in resolved_ciks(FormNum(r))
+
+**4. L3 con R3/R4 tri-state.**
+
+Definir booleano explicito de L3:
+
+    L3 = R1 AND R2 AND (R3 == TRUE) AND (R4 == MATCH) AND R5
+
+N/D y CONFLICT nunca se convierten a False.
+
+### Recomendadas
+
+**R1. OTHERMANAGER vacio -> N/D.**
+
+**R2. Correcciones editoriales** (v2/v3/v2-bis inconsistentes).
+
+### Evidencia nueva
+
+Gate 0.10 FormNum representation probe ejecutado:
+- COVERPAGE: 100% sufijo 5 digitos.
+- OTHERMANAGER: 99.09% sufijo 5 digitos; resto variable
+  (3, 4, 6, 7).
+- Regla corregida: padding flexible.
+
+### Aplicacion
+
+Los 4 bloqueos + 2 recomendadas aplicados en propuesta v4
+consolidada. Todas las correcciones anteriores integradas.
+
+### Cambio de proceso
+
+Para romper el ciclo de refinamiento incremental (#28 -> #34),
+se ha hecho reescritura completa como v4 consolidada:
+- Terminologia formalizada (§0.3).
+- Alcance explicitado (§0.2).
+- candidate_A definido matematicamente.
+- Combinacion booleana L3 explicita.
+- Determinismo de amendments.
+- Normalizacion FormNum flexible.
+- Ausencia de nomenclatura obsoleta (v2/v3/v2-bis eliminadas).
+
+### Estado
+
+    Evidencia tecnica                 CERRADA (Gates 0.1-0.10)
+    4 bloqueos #34                    APLICADOS
+    2 recomendadas #34                APLICADAS
+    Propuesta v4                      CONSOLIDADA
+    Contrato 14.3                     NO MODIFICAR AUN
+    reporting_dedup.py                NO TOCAR
+    DROP_DUP                          NO ACTIVAR
+
+### Siguiente paso
+
+Enviar v4 al auditor para dictamen contractual definitivo.

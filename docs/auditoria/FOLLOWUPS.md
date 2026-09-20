@@ -2409,3 +2409,25 @@ P65 v3 (ver iae/DICTAMENES.md #26). GO CONDICIONADO con 3 correcciones.
 - **Pendiente:** dictamen contractual definitivo sobre 14.3.
 - **NO se ha hecho:** sin XML, sin reporting_dedup.py, sin DROP_DUP,
   sin tocar contrato 14.3.
+
+
+## P66 - Dictamen #34 y propuesta v4 consolidada (2026-09-21)
+
+- **Origen:** dictamen #34 tras propuesta v3 con #33 aplicado.
+- **Resultado:** NO-GO contractual. Evidencia PASS.
+- **4 bloqueos aplicados:**
+  - 1: FormNum normalizacion flexible (padding variable).
+  - 2: Amendments con ISAMENDMENT != Y como criterio de base.
+  - 3: candidate_A formalizado.
+  - 4: L3 combinacion booleana explicita.
+- **2 recomendadas aplicadas:**
+  - OTHERMANAGER vacio -> N/D.
+  - Correcciones editoriales (eliminadas v2/v3/v2-bis).
+- **Cambio de proceso:** reescritura completa como v4 consolidada
+  para romper el ciclo de refinamiento incremental.
+- **Gate 0.10 ejecutado:** FormNum representation probe.
+- **Evidencia:** `iae/DICTAMENES.md` #34 +
+  `iae/evidence/p66_gate10_formnum_representation/`.
+- **Pendiente:** dictamen contractual definitivo del auditor.
+- **NO se ha hecho:** sin XML, sin reporting_dedup.py, sin DROP_DUP,
+  sin tocar contrato 14.3.

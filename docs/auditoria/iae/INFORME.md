@@ -838,6 +838,40 @@ Evidencia: `iae/DICTAMENES.md` #33.
 
 Siguiente paso: dictamen contractual definitivo -> modificar 14.3.
 
+
+
+### Dictamen P66 #34 + propuesta v4 consolidada (2026-09-21)
+
+Resultado: NO-GO contractual. Evidencia PASS.
+
+4 bloqueos + 2 recomendadas:
+- 1: FormNum normalizacion con padding flexible (Gate 0.10).
+- 2: Determinismo amendments via ISAMENDMENT != Y.
+- 3: candidate_A formalizado matematicamente.
+- 4: L3 con combinacion booleana explicita.
+- R1: OTHERMANAGER vacio -> N/D.
+- R2: Correcciones editoriales v2/v3/v2-bis.
+
+**Cambio de proceso:** para romper el ciclo de refinamiento
+incremental (#28 -> #34), se ha hecho reescritura completa como
+propuesta v4 consolidada. Todos los bloqueos anteriores integrados.
+Pass interno ejecutado sin residuos.
+
+Propuesta v4 (617 lineas):
+- §0.3 Terminologia formalizada.
+- §0.2 Alcance explicitado (B/R3/R4 vs A/R1/R2).
+- §2.1 R3 tri-state; §2.2 R4 estados; §2.3 candidate_A;
+  §2.5 L3 booleano.
+- §3 amendments determinista.
+- §4 FormNum canonicalizacion flexible.
+- §5 NO_MATCH con completitud; OTHERMANAGER vacio -> N/D.
+- §8 evidencia de los 10 Gates.
+
+Gate 0.10 ejecutado: evidencia en
+`iae/evidence/p66_gate10_formnum_representation/`.
+
+Evidencia: `iae/DICTAMENES.md` #34.
+
 ### Estado
 
     Fuente             APROBADA (OTHERMANAGER)

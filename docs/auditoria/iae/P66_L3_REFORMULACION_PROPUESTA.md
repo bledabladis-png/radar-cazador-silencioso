@@ -1,9 +1,6 @@
-# IAE - P66 L3 Reformulacion propuesta (v2)
+# IAE - P66 L3 Reformulacion propuesta (v4)
 
-**Objeto:** propuesta de reformulacion del contrato 14.3 requisito 4,
-corregida tras dictamen #27 (P66 GO CONDICIONADO).
-
-**Estado:** PROPUESTA v3. Pendiente de dictamen contractual final
+**Estado:** v4 consolidada. Pendiente de dictamen contractual definitivo
 sobre el texto exacto antes de tocar NIPC_CONTRATOS_SEMANTICOS_v1.md.
 
 **Trazabilidad de dictamenes:**
@@ -12,31 +9,81 @@ sobre el texto exacto antes de tocar NIPC_CONTRATOS_SEMANTICOS_v1.md.
     #29  corregido
     #30  corregido
     #31  corregido
-    #32  corregido (§7 generalizacion a R4 + R3 tri-state)
-    #33  corregido en este commit (CONFLICT scope ampliado + nota
-         de alcance "filing efectivo" limitado a B/R3/R4)
+    #32  corregido
+    #33  corregido
+    #34  4 bloqueos + 2 recomendadas aplicados en este documento v4
 
-**Origen:** Gate 0.1 + Gate 0.2 (2026-09-20) tras NO-GO de P66.
-Correcciones aplicadas segun dictamen externo #27.
+**Consolidacion:** este documento reemplaza las versiones v1/v2/v3.
+Todas las correcciones anteriores estan integradas. No se conservan
+referencias a versiones previas dentro del texto.
 
-**HEAD al redactar:** 551ea52 (o posterior).
-**Dictamen mas reciente:** #31 (P66 v5, NO-GO contractual, evidencia
-PASS, 2026-09-21). Los 12 bloqueos acumulados de los dictamenes #28
-a #31 estan aplicados al texto contractual.
-
-**Historial:** v1 en commit 6b610b3. v2 incorpora las 8 correcciones
-obligatorias del dictamen #27.
+**HEAD al redactar:** fc0d223 (o posterior).
 
 ---
 
-## 0. Contexto
+## 0. Contexto y alcance
 
-El informe P66 inicial (XML crudo 13F-NT) fue NO-GO. Dos Gates
-demostraron que la evidencia esta en la tabla OTHERMANAGER del Data
-Set SEC, sin XML.
+### 0.1. Objetivo
 
-El dictamen #27 emitio GO CONDICIONADO sobre la propuesta v1. Las
-correcciones son de precision contractual, no de arquitectura.
+Reformular el contrato 14.3 de L3 para permitir la materializacion
+del requisito 4 desde el Data Set SEC sin depender de XML crudo ni
+de parser paralelo.
+
+La evidencia de los Gates 0.1 a 0.10 demuestra que la tabla
+`OTHERMANAGER` contiene la relacion "other managers reporting for
+this manager" en el universo de filings aplicable a R4.
+
+### 0.2. Alcance
+
+El concepto de "filing efectivo" (o "conjunto documental efectivo")
+definido en esta propuesta se aplica **EXCLUSIVAMENTE** a la
+determinacion del filing o conjunto documental de **B** necesaria
+para R3/R4.
+
+**La seleccion del filing de A requerida por R1/R2 permanece regida
+por las reglas contractuales preexistentes, salvo modificacion
+expresa posterior del contrato.**
+
+P66 NO redefine la seleccion del filing de A. NO modifica R1 ni R2.
+Cuando §2 menciona "existe filing efectivo de A", se refiere a la
+aplicacion de las reglas R1/R2 preexistentes, no a una nueva
+definicion introducida por P66.
+
+### 0.3. Terminologia
+
+**filing efectivo / conjunto documental efectivo:** resultado de
+aplicar el algoritmo de §3 a los filings de B (NOTICE o COMBINATION)
+para un mismo `PERIODOFREPORT`. Determinable cuando la cadena base +
+amendments es unica.
+
+**candidate_A(r):** predicado sobre una fila `r` de OTHERMANAGER.
+Una fila es candidata a A cuando:
+
+    candidate_A(r) :=
+        CIK(r) == CIK_A
+        OR
+        CIK_A ∈ resolved_ciks(FormNum(r))
+
+donde `resolved_ciks(FormNum)` es el conjunto de CIKs a los que
+resuelve el FormNum normalizado segun §4 dentro del scope temporal.
+
+**identidad resuelta:** una fila `r` de OTHERMANAGER tiene identidad
+resuelta cuando cumple alguna de:
+
+    - CIK(r) poblado; o
+    - FormNum(r) normalizable y resuelve a exactamente 1 CIK.
+
+**inequivocamente:** sin matching por nombre, sin heuristica, sin
+inferencia. Solo CIK directo o FormNum con resolucion univoca.
+
+### 0.4. Historial de versiones
+
+| Version | Contenido |
+|---------|-----------|
+| v1 | commit 6b610b3. Propuesta inicial + primeras correcciones. |
+| v2 | Correcciones #28 aplicadas (fail-closed, nomenclatura). |
+| v3 | Correcciones #29 a #33 aplicadas (R4 completo, mapping, tri-state). |
+| **v4** | **Consolidacion final. Correcciones #34 aplicadas + reescritura canonica.** |
 
 ---
 
@@ -53,291 +100,9 @@ correcciones son de precision contractual, no de arquitectura.
 
 ---
 
-## 2. Propuesta reformulada (texto base + correcciones #28-#31)
+## 2. Propuesta reformulada
 
-**Nota terminologica (dictamen #31):** el termino "filing efectivo"
-utilizado a lo largo de esta propuesta se refiere a la **regla
-contractual IAE**, no a una regla general atribuida a la SEC. La SEC
-define la semantica de amendments (RESTATEMENT, NEW HOLDINGS); el
-tratamiento de "multiple bases heterogeneas -> N/D" es una regla
-conservadora del contrato IAE.
-
-    L3(A, B, S, period) == True sii:
-      1. existe filing efectivo de A con linea L sobre security S;
-      2. Column 7(L) referencia a B mediante la resolucion
-         estructurada de Other Included Managers (OTHERMANAGER2);
-      3. existe filing efectivo de B para el mismo PERIODOFREPORT;
-      4. B declara explicitamente que A reporta por B mediante una
-         fila de OTHERMANAGER perteneciente al filing efectivo de B,
-         identificando inequivocamente a A:
-
-         a) mediante CIK; o
-
-         b) cuando CIK no este disponible, mediante Form 13F File
-            Number cuya resolucion a CIK sea inequivoca dentro del
-            mismo PERIODOFREPORT.
-
-         No se permite matching por nombre.
-
-         La evidencia R4 es aplicable cuando B presenta:
-
-         - 13F NOTICE; o
-         - 13F COMBINATION REPORT.
-
-         En presencia de amendments, la evidencia OTHERMANAGER se
-         determina mediante la cadena documental efectiva del
-         periodo. Un RESTATEMENT sustituye la evidencia anterior.
-         Un NEW HOLDINGS solo conserva la evidencia R4 cuando su
-         OTHERMANAGER es consistente con el estado efectivo previo;
-         cualquier cambio no resoluble produce N/D o CONFLICT.
-      5. no existe evidencia contradictoria ni evidencia de
-         reporting partition/overlap no resuelto.
-
-**Nota terminologica (correccion #1 del dictamen):** no se habla de
-"evidencia estructurada cruzada entre filings". La evidencia es "estructurada cruzada
-entre el filing de A y el filing de B". La SEC no exige simetria
-reciproca.
-
----
-
-## 3. Estados formales
-
-**Definiciones (reformuladas segun dictamen #30, seccion 10):**
-
-    MATCH
-        Existe al menos una fila OTHERMANAGER que identifica
-        inequivocamente a A mediante CIK o Form13FFileNumber.
-
-    NO_MATCH
-        El filing efectivo B fue inspeccionado con ingestion
-        integra, TODAS sus filas OTHERMANAGER tienen identidad
-        resuelta inequivocamente Y ninguna identifica a A.
-
-    N/D
-        No existe MATCH y al menos una parte relevante de la
-        evidencia OTHERMANAGER no puede resolverse inequivocamente,
-        o el filing efectivo / cadena documental no puede
-        determinarse.
-
-    CONFLICT
-        Existe contradiccion de identidad entre CIK y FormNum, o
-        una resolucion del identificador produce mas de un CIK
-        dentro del scope temporal aplicable.
-
-**Reglas duras:**
-
-    N/D != NO_MATCH           (bloqueo B del dictamen #30)
-    CONFLICT != NO_MATCH      (dictamen #28)
-    CONFLICT PREVALECE sobre MATCH  (bloqueo A del dictamen #30)
-    N/D y CONFLICT son fail-closed respecto de DROP_DUP.
-
-**Distincion critica (bloqueo B):** que la ingestion sea integra
-NO implica que NO_MATCH sea determinable. Si existe CUALQUIER fila
-OTHERMANAGER del filing efectivo con identidad N/D, la conclusion
-negativa debe ser N/D, no NO_MATCH. Esto aplica especialmente al
-universo COMBINATION_BASE (evidencia Gate 0.8: 227 filas N/D Q4,
-252 Q1).
-
----
-
-## 4. Tratamiento de identidad (dictamen #30, bloqueo A)
-
-**Prioridad contractual CONFLICT > MATCH:**
-
-    1. Ambos identificadores presentes:
-       - Si CIK y FormNum apuntan a entidades distintas -> CONFLICT.
-       - Si ambos apuntan a la misma entidad -> IDENTITY_RESOLVED.
-
-    2. CIK presente, FormNum ausente o no resoluble:
-       - CIK == CIK_A -> IDENTITY_RESOLVED (MATCH).
-
-    3. CIK ausente, FormNum inequivoco a un CIK:
-       - FormNum resuelve a CIK_A -> IDENTITY_RESOLVED (MATCH).
-
-    4. Ninguna identificacion inequivoca:
-       -> N/D.
-
-**Aplicacion:** IDENTITY_RESOLVED + (CIK_resuelto == CIK_A) -> MATCH.
-
-**Alcance del CONFLICT (dictamen #31 bloqueo 2 + #33 bloqueo 1):**
-
-CONFLICT > MATCH aplica a **CUALQUIER fila OTHERMANAGER que
-identifique o pretenda identificar a A**, no solo a la fila que
-la implementacion eventualmente seleccione.
-
-    CONFLICT
-    Existe conflicto cuando CUALQUIER fila OTHERMANAGER que
-    identifique o pretenda identificar a A:
-
-    - contiene CIK y FormNum incompatibles; o
-    - tiene un FormNum que resuelve a mas de un CIK; o
-    - contiene una identificacion por FormNum que contradice el
-      CIK explicitamente declarado para esa misma fila.
-
-    Si ninguna fila relevante para A presenta conflicto y al menos
-    una fila identifica inequivocamente a A -> MATCH.
-
-    Un conflicto de identidad perteneciente exclusivamente a otro
-    manager de la lista NO invalida por si mismo un MATCH de A.
-
-**Regla de no-seleccion selectiva (dictamen #33):** la implementacion
-NO puede elegir la fila consistente e ignorar la contradictoria
-respecto de A. Si existe contradiccion entre dos filas que ambas
-refieren a A, el resultado es CONFLICT, no MATCH.
-
-**Orden de evaluacion OBLIGATORIO:**
-
-    1. Evaluar CONFLICT sobre la fila candidata de A.
-       Si conflicto -> CONFLICT.
-    2. Si no hay conflicto, evaluar MATCH.
-    3. Si no hay MATCH, evaluar completitud (N/D vs NO_MATCH).
-
-**NO se exige la presencia simultanea de ambos campos.** Ambos
-son nullable en OTHERMANAGER.
-
----
-
-## 5. Tratamiento de amendments (correccion #3, Gates 0.5-0.7)
-
-### 5.0. Alcance de la definicion "filing efectivo" (dictamen #33)
-
-El concepto de "filing efectivo" (o "conjunto documental efectivo")
-definido en esta propuesta se aplica **EXCLUSIVAMENTE** a la
-determinacion del filing o conjunto documental de B necesaria
-para R3/R4.
-
-**La seleccion del filing de A requerida por R1/R2 permanece regida
-por las reglas contractuales preexistentes, salvo modificacion
-expresa posterior del contrato.**
-
-P66 NO redefine la seleccion del filing de A. NO modifica R1 ni R2.
-Cuando esta propuesta menciona "existe filing efectivo de A" en §2,
-se refiere a la aplicacion de las reglas R1/R2 preexistentes, no a
-una nueva definicion introducida por P66.
-
-### 5.1. Hallazgo critico: directorios cross-periodo
-
-Los directorios del Data Set SEC (`2025Q4/`, `2026Q1/`) contienen
-filings con multiples `PERIODOFREPORT`. NO son homogeneos.
-
-Evidencia Gate 0.5:
-- Directorio 2025Q4: 48 periodos distintos (desde 2013-12-31).
-- Directorio 2026Q1: 77 periodos distintos (desde 2008-03-31).
-- NT contaminantes en cada directorio: 108 / 138.
-
-**Regla obligatoria:** filtrar filings por `PERIODOFREPORT` igual
-al periodo de analisis. Prohibido filtrar por directorio fisico.
-
-### 5.2. Algoritmo de filing efectivo
-
-    R3(B, period) := existe filing efectivo de B
-                     para ese PERIODOFREPORT
-
-    "Filing efectivo":
-      1. Filtrar filings de CIK=B con PERIODOFREPORT=period
-         y (SUBMISSIONTYPE in {13F-NT, 13F-NT/A}
-             con REPORTTYPE = 13F NOTICE
-             O
-             SUBMISSIONTYPE in {13F-HR, 13F-HR/A}
-             con REPORTTYPE = 13F COMBINATION REPORT).
-
-      2. Ordenar filings por AMENDMENTNO ascendente
-         (base AMENDMENTNO=null tratado como orden 0).
-
-      3. Aplicar semantica SEC (texto afinado por dictamen #29):
-
-         Para R4, la evidencia OTHERMANAGER se considera valida
-         unicamente cuando su estado en la cadena de amendments sea
-         inequivoco:
-
-         - RESTATEMENT: sustituye la evidencia OTHERMANAGER anterior.
-                        Evidencia directa: Gate 0.5, caso CIK 0002056909.
-         - NEW HOLDINGS: se acepta sin transformacion cuando la
-                         relacion OTHERMANAGER coincide con el estado
-                         efectivo anterior. Evidencia: Gate 0.7,
-                         3/3 casos identicos.
-         - NEW HOLDINGS con cambio de OTHERMANAGER: N/D o CONFLICT.
-                         NO asumir union ni sustitucion sin evidencia.
-
-      4. Seleccion del filing base (dictamen #30 + #31,
-         bloqueos C + 3):
-
-         Caso A - sin filing base y sin amendments aplicables:
-             0 bases (AMENDMENTNO nulo)
-             + 0 amendments del mismo CIK + PERIODOFREPORT
-             + busqueda integra del scope
-                 -> R3 = False (ausencia documental demostrada).
-
-         Caso B - amendments sin base reconstruible:
-             0 bases
-             + existe amendment aplicable (NT/A o HR/A con mismo
-               CIK + PERIODOFREPORT)
-             + cadena base no reconstruible
-                 -> R3 = N/D (ausencia de antecedente necesario).
-
-         1 base
-             -> continuar con la cadena de amendments.
-
-         >1 bases independientes para mismo CIK + PERIODOFREPORT
-             -> N/D o CONFLICT segun la naturaleza de la duplicidad.
-             PROHIBIDO: primero encontrado, ultimo encontrado,
-             MAX(ACCESSION), MAX(FILING_DATE).
-             NOTA: esta regla es REGLA CONSERVADORA IAE, no una
-             regla atribuida a la SEC.
-
-         Evidencia empirica (Gate 0.9, 2026-09-21):
-
-         - 4,596 grupos (CIK, PERIOD) analizados en Q4+Q1.
-         - 1 caso con >1 filing base: CIK 0002016827 (Q4).
-         - Patron MIXED (13F-NT presentado 2026-01-02 +
-           13F-HR COMBINATION presentado 2026-02-20), mismo
-           PERIODOFREPORT, mismo OTHERMANAGER.
-         - 0 casos de duplicidad estricta (MULTIPLE_NOTICE o
-           MULTIPLE_COMBINATION).
-         - El caso se clasifica como N/D fail-closed.
-         - Detalle: `iae/evidence/p66_gate09_multiple_base/`.
-
-      4. R4 se evalua sobre el snapshot efectivo, NO sobre el base.
-
-    Salvaguardas:
-      - Si no existe filing en el periodo: R3 = False.
-      - Trazabilidad: registrar cadena de amendments aplicados.
-
-### 5.3. Caso RESTATEMENT que cambia OTHERMANAGER
-
-Evidencia directa (Gate 0.5): CIK `0002056909`.
-- Base: OTHERMANAGER declara CIK `<NA>` / FormNum `028-04685`
-  (Prospector Partners).
-- RESTATEMENT: OTHERMANAGER declara CIK `0001570284` /
-  FormNum `028-16376` (Gator Capital Management).
-
-**El RESTATEMENT sustituye el contenido de OTHERMANAGER.** Un
-analisis de R4 sobre el base produciria un falso positivo.
-
-### 5.4. Estadistica del universo
-
-Filtrando por PERIODOFREPORT correcto:
-
-| Periodo | NT base | NT/A RESTATEMENT | NT/A NEW HOLDINGS |
-|---------|--------:|-----------------:|------------------:|
-| 2025-12-31 | 1,900 | 37 | 1 |
-| 2026-03-31 | 1,907 | 0 | 1 |
-
-Casos con OTHERMANAGER distinto entre base y amend: 1 (CIK 0002056909).
-
-### 5.5. Consecuencia
-
-La formalizacion anterior (v2 seccion 5) era incompleta: definia
-la semantica SEC sin filtrar por PERIODOFREPORT. La version v2-bis
-incluye el filtro obligatorio.
-
----
-
-## 6. Requisito 3 explicito (correccion #2)
-
-R3 NO se absorbe en R4. Se mantiene como control independiente.
-
-**Texto reformulado (dictamen #31 bloqueo 1 + dictamen #32 bloqueo B):**
+### 2.1. R3 (tri-state)
 
     R3(B, period) evalua en tres estados:
 
@@ -361,59 +126,303 @@ La distincion SUBMISSIONTYPE + REPORTTYPE es obligatoria. `13F-HR`
 incluye dos report types con mismo SUBMISSIONTYPE (HOLDINGS REPORT
 y COMBINATION REPORT); solo el segundo es valido para R4.
 
-**Amendment sin base reconstruible (dictamen #31, bloqueo 3):**
+### 2.2. R4 (estados)
 
-    Caso A - sin filing base y sin amendments aplicables:
-        0 bases (AMENDMENTNO nulo)
-        + 0 amendments del mismo CIK + PERIODOFREPORT
-        + busqueda integra del scope
-            -> R3 = False (ausencia documental demostrada).
+    MATCH
+        Existe una fila OTHERMANAGER que identifica inequivocamente
+        a A mediante CIK o Form13FFileNumber.
 
-    Caso B - amendments sin base reconstruible:
-        0 bases
-        + existe amendment aplicable (NT/A o HR/A del mismo
-          CIK + PERIODOFREPORT)
-        + cadena base no reconstruible
-            -> R3 = N/D (ausencia de antecedente necesario).
+    NO_MATCH
+        El conjunto documental efectivo es determinable, la ingestion
+        es integra, todas las filas OTHERMANAGER tienen identidad
+        resuelta inequivocamente y A no aparece.
 
-    Esta distincion es obligatoria. La ausencia de un filing base
-    NO puede afirmarse si existen amendments que lo referencian.
+    N/D
+        El conjunto documental efectivo no es determinable, o existe
+        al menos una fila OTHERMANAGER cuya identidad no puede
+        resolverse inequivocamente y no existe evidencia positiva
+        inequivoca de A.
 
-R4 presupone R3. R4 no puede sustituirlo: la existencia de una fila
-en OTHERMANAGER[ACCESSION=B] presupone B, pero no valida por si sola
-que B sea el filing efectivo del periodo.
+    CONFLICT
+        La evidencia candidata a identificar A contiene
+        identificadores contradictorios o una resolucion no univoca.
+
+### 2.3. Alcance del CONFLICT (candidate_A)
+
+CONFLICT > MATCH aplica a **CUALQUIER fila OTHERMANAGER que
+identifique o pretenda identificar a A** (candidate_A(r) == True),
+no solo a la fila que la implementacion eventualmente seleccione.
+
+    CONFLICT cuando existe al menos una fila r con
+    candidate_A(r) == True tal que:
+
+    - CIK(r) y FormNum(r) apuntan a CIK distintos; o
+    - FormNum(r) resuelve a >1 CIK dentro del scope temporal; o
+    - FormNum(r) contradice el CIK(r) explicitamente declarado
+      para esa misma fila.
+
+    Si ninguna fila con candidate_A(r) == True presenta conflicto
+    y al menos una fila identifica inequivocamente a A -> MATCH.
+
+**Regla de no-seleccion selectiva:** la implementacion NO puede
+elegir la fila consistente e ignorar la contradictoria respecto
+de A. Si existe contradiccion entre dos filas con candidate_A
+== True, el resultado es CONFLICT, no MATCH.
+
+Dos filas que ambas identifican coherentemente a A NO constituyen
+conflicto.
+
+### 2.4. Orden de evaluacion
+
+    1. ¿Conjunto documental efectivo determinable?
+       NO -> N/D
+       SI
+       ↓
+    2. ¿CONFLICT en alguna fila con candidate_A(r) == True?
+       SI -> CONFLICT
+       NO
+       ↓
+    3. ¿Existe fila que identifica inequivocamente a A?
+       SI -> MATCH
+       NO
+       ↓
+    4. ¿Todas las filas OTHERMANAGER tienen identidad resuelta?
+       NO -> N/D
+       SI
+       ↓
+    5. NO_MATCH
+
+### 2.5. Combinacion booleana L3
+
+    L3(A, B, S, period) = True
+    sii:
+        R1 == True
+        AND R2 == True
+        AND R3(B, period) == TRUE
+        AND R4(A, B) == MATCH
+        AND R5 == True
+
+**Reglas de preservacion de estado:**
+
+    R3 = FALSE       -> L3 no puede ser True
+    R3 = N/D         -> L3 no puede ser True
+    R4 = NO_MATCH    -> L3 no puede ser True
+    R4 = N/D         -> L3 no puede ser True
+    R4 = CONFLICT    -> L3 no puede ser True
+
+**N/D y CONFLICT NO se convierten internamente en False.** Sus
+estados deben preservarse para auditoria. Son condiciones de
+"no puedo afirmar L3", no de "L3 es falso".
 
 ---
 
-## 7. Sin A en OTHERMANAGER (correccion #6, generalizada #32)
+## 3. Tratamiento de amendments (cadena determinista)
 
-**Generalizacion (dictamen #32, bloqueo A):** aplica al universo
-completo R4, no solo a NT. El universo R4 es NOTICE + COMBINATION.
+### 3.1. Clasificacion base vs amendment
+
+    BASE:
+        ISAMENDMENT != Y
+
+    AMENDMENT:
+        ISAMENDMENT == Y
+
+**Nunca usar AMENDMENTNO = null como prueba de que un filing es base.**
+La SEC distingue explicitamente el hecho de que un filing es
+amendment; el numero solo identifica el orden entre amendments.
+
+Si `ISAMENDMENT == Y` y `AMENDMENTNO` no es determinable:
+    N/D.
+
+### 3.2. Construccion de la cadena efectiva
+
+    Para filings de B con mismo CIK + PERIODOFREPORT + familia
+    documental (NOTICE o COMBINATION):
+
+    1. Filtrar filings por PERIODOFREPORT igual al periodo de
+       analisis. Prohibido filtrar por directorio fisico.
+
+    2. Clasificar por ISAMENDMENT.
+
+    3. Contar bases:
+         0 bases + 0 amendments
+             -> R3 = FALSE (ausencia documental demostrada).
+         0 bases + >=1 amendment aplicable
+             -> R3 = N/D (ausencia de antecedente necesario;
+                cadena no reconstruible).
+         1 base
+             -> continuar.
+         >1 bases heterogeneas
+             -> R3 = N/D o CONFLICT segun naturaleza de duplicidad.
+
+    4. Aplicar amendments en orden AMENDMENTNO ascendente.
+
+    5. Si no puede ordenarse inequivocamente (dos amendments
+       indistinguibles en el mismo CIK + periodo + familia):
+       N/D.
+
+### 3.3. Semantica de amendments
+
+    RESTATEMENT:
+        Sustituye la evidencia OTHERMANAGER anterior.
+        Evidencia directa: Gate 0.5, caso CIK 0002056909
+        (base Prospector Partners -> restatement Gator Capital).
+
+    NEW HOLDINGS:
+        Conserva la evidencia OTHERMANAGER cuando es consistente
+        con el estado efectivo previo.
+        Evidencia: Gate 0.7, 3/3 casos identicos.
+        Fail-closed: si un NEW HOLDINGS presenta OTHERMANAGER
+        distinto del estado previo -> N/D o CONFLICT.
+        NO asumir union. NO asumir sustitucion.
+
+### 3.4. Multiples bases heterogeneas
+
+**Regla contractual IAE (no atribuida a la SEC):** cuando existen
+>1 filings base independientes para mismo CIK + PERIODOFREPORT:
+
+    -> R3 = N/D o CONFLICT segun naturaleza de la duplicidad.
+
+PROHIBIDO:
+    - primero encontrado
+    - ultimo encontrado
+    - MAX(ACCESSION_NUMBER)
+    - MAX(FILING_DATE)
+
+Evidencia empirica: Gate 0.9 identifico 1 caso en 4,596 grupos
+(CIK 0002016827, Q4 2025: NT + HR COMBINATION mismo periodo, mismo
+OTHERMANAGER declarado). Se clasifica como N/D.
+
+### 3.5. Directorios cross-periodo
+
+Los directorios del Data Set SEC (`2025Q4/`, `2026Q1/`) estan
+organizados por fecha de presentacion, no por periodo objetivo.
+Contienen filings con multiples PERIODOFREPORT.
+
+**Regla obligatoria:** filtrar filings por PERIODOFREPORT igual al
+periodo de analisis. Prohibido filtrar por directorio fisico.
+
+Evidencia: Gate 0.5A (48 periodos en 2025Q4, 77 en 2026Q1).
+
+
+---
+
+## 4. Normalizacion de Form13FFileNumber
+
+### 4.1. Representacion externa
+
+Los filers pueden escribir el Form 13F File Number con padding
+variable. Evidencia empirica (Gate 0.10):
+
+    COVERPAGE (estructurado SEC):
+        100% con prefijo de 3 digitos y sufijo de 5 digitos.
+
+    OTHERMANAGER (declarado por filer):
+        99.09% con sufijo de 5 digitos.
+        0.61-0.73% con sufijo de 4 digitos (ej. 28-4545).
+        0.07-0.10% con sufijo de 3 digitos (ej. 028-694).
+        0.03% con sufijo de 6 digitos (ej. 028-064460).
+        0.05-0.10% con sufijo de 7 digitos (ej. 028-2813114).
+
+### 4.2. Regla de canonicalizacion
+
+    entrada: <prefijo>-<sufijo>  (ambos con digitos)
+
+    prefijo_canonico = padding(prefijo, 3)   # 28 -> 028
+    sufijo_sin_padding = strip_leading_zeros(sufijo)
+
+    si len(sufijo_sin_padding) > 5:
+        -> UNRESOLVED (no canonicalizable)
+
+    sufijo_canonico = padding(sufijo_sin_padding, 5)
+    formnum_canonico = f"{prefijo_canonico}-{sufijo_canonico}"
+
+Aplicado a los casos reales:
+
+    028-694       -> 028-00694
+    28-4545       -> 028-04545
+    028-064460    -> 028-64460
+    028-2813114   -> UNRESOLVED (7 digitos tras strip, > 5)
+    028-26716     -> 028-26716 (sin cambio)
+
+### 4.3. Mapping FormNum -> CIK
+
+    FormNum + period
+        -> 0 CIK    = UNRESOLVED
+        -> 1 CIK    = IDENTITY_RESOLVED
+        -> >1 CIK   = CONFLICT
+
+Construccion:
+
+    COVERPAGE
+        JOIN SUBMISSION ON ACCESSION_NUMBER
+        Filtro: FORM13FFILENUMBER no-null AND CIK no-null
+        Filtro: PERIODOFREPORT == period
+        Agrupacion: FormNum normalizado -> CIK
+
+Cardinalidad observada (Gate 0.4-reissue):
+- FormNum -> CIK: 1:1 estricta, 0 casos N:1.
+- No se exige la direccion inversa CIK -> FormNum.
+
+El contrato exige la propiedad del mapping. La ubicacion fisica
+(tabla, parquet, modulo) pertenece a la capa de implementacion.
+
+### 4.4. Anomalias
+
+Un FormNum que no cumple el formato `<digitos>-<digitos>` se
+clasifica como UNRESOLVED.
+
+Un FormNum cuyo sufijo tiene >5 digitos tras strip de leading
+zeros se clasifica como UNRESOLVED. NO truncar. NO heuristica.
+
+---
+
+## 5. Ausencia de A en OTHERMANAGER
+
+### 5.1. NO_MATCH
 
     Filing efectivo R4 (13F NOTICE o 13F COMBINATION REPORT)
         + ingestion integra verificada
         + TODAS las filas OTHERMANAGER tienen identidad resuelta
-        + A no aparece
+        + A no aparece entre las filas resueltas
             -> NO_MATCH
 
+NO_MATCH requiere completitud probatoria: no basta con que la
+ingestion sea integra. Es necesario que no queden filas con
+identidad no resuelta.
+
+### 5.2. N/D
+
     Filing efectivo R4
-        + existe al menos una fila OTHERMANAGER no resoluble
+        + existe al menos una fila OTHERMANAGER con identidad
+          no resuelta
+        + no existe MATCH positivo para A
             -> N/D
 
-    Nunca N/D -> NO_MATCH.
+**Nunca N/D -> NO_MATCH.** La ausencia de evidencia positiva de A
+en presencia de filas no resueltas no permite concluir ausencia
+demostrada.
 
-Aplica a 13F NOTICE, 13F COMBINATION REPORT y sus amendments
-cuando formen parte del estado efectivo.
+Evidencia: Gate 0.8 demuestra que en COMBINATION_BASE hay 227 filas
+N/D Q4 y 252 Q1 (mayoria concentradas en filer 0001580642-).
+Esos filings no pueden producir NO_MATCH para A; producen N/D.
 
-Evidencia empirica (Gate 0.8): en COMBINATION_BASE hay 227 filas
-N/D Q4 y 252 Q1 (mayoria concentradas en filer 0001580642-). Esos
-filings no pueden producir NO_MATCH para A; producen N/D.
+### 5.3. OTHERMANAGER vacio
+
+    Filing efectivo R4
+        + ingestion integra verificada
+        + OTHERMANAGER ausente o 0 filas
+            -> N/D
+
+Un filing clasificado como R4 con la lista de managers vacia no
+permite afirmar NO_MATCH. La ausencia de la lista en un filing
+que deberia tenerla es una laguna semantica, no evidencia negativa.
+
+Salvo que una regla documental superior establezca expresamente
+que el conjunto vacio es valido para ese caso.
 
 ---
 
-## 8. DROP_DUP (correccion #7)
-
-DROP_DUP NO se autoriza por R4 aislado.
+## 6. DROP_DUP
 
     DROP_DUP
         =  L3 completo (R1 + R2 + R3 + R4 + R5)
@@ -421,304 +430,188 @@ DROP_DUP NO se autoriza por R4 aislado.
         AND  sin overlap_unresolved
         AND  sin reporte contradictorio
 
+DROP_DUP es fail-closed: cualquier N/D, CONFLICT o NO_MATCH en
+L3 impide la activacion.
+
 Mantiene la filosofia fail-closed del contrato 14.
 
 ---
 
-## 9. Evidencia empirica (correccion #8: granularidad)
+## 7. Diagrama de decision R4
 
-Gate 0.1 midio cobertura al 100% de NT sobre OTHERMANAGER. El
-dictamen exige conservar granularidad completa:
+Evaluacion en orden estricto (dictamen #30 seccion 11 + #33):
 
-### 9.1. Cobertura por tipo (Gate 0.1)
+                        ¿conjunto documental efectivo determinable?
+                        │
+                        NO ───────────────> N/D
+                        │
+                        YES
+                        ↓
+                 ¿CONFLICT en alguna fila
+                  con candidate_A(r) == True?
+                        │
+                  SI ───┴──> CONFLICT
+                        │
+                        NO
+                        ↓
+                 ¿existe fila que
+                  identifica inequivocamente a A?
+                        │
+                  SI ───┴──> MATCH
+                        │
+                        NO
+                        ↓
+            ¿todas las filas OTHERMANAGER
+              tienen identidad resuelta?
+                        │
+                  NO ───┴──> N/D
+                        │
+                        YES
+                        ↓
+                     NO_MATCH
 
-| Trimestre | Tipo | Filings | Con filas OTHERMANAGER | Cobertura |
-|-----------|------|--------:|-----------------------:|----------:|
-| 2025Q4    | NT   | 2,008   | 2,008                  | 100.0%    |
-| 2025Q4    | HR   | 9,364   | 419                    | 4.5%      |
-| 2026Q1    | NT   | 2,045   | 2,045                  | 100.0%    |
-| 2026Q1    | HR   | 9,716   | 441                    | 4.5%      |
+Previo: si OTHERMANAGER ausente/vacio -> N/D.
 
-### 9.2. Granularidad de identidad (Gate 0.3, EJECUTADO)
-
-Medicion ejecutada 2026-09-20. Evidencia en
-`iae/evidence/p66_gate03_granularidad/`.
-
-| Categoria | Q4 filas | Q4 % | Q1 filas | Q1 % |
-|-----------|---------:|-----:|---------:|-----:|
-| con CIK poblado      | 1,955 | 69.72% | 1,948 | 68.91% |
-| con FormNum poblado  | 2,567 | 91.55% | 2,596 | 91.83% |
-| con ambos poblados   | 1,815 | 64.73% | 1,820 | 64.38% |
-| solo CIK             |   140 |  4.99% |   128 |  4.53% |
-| solo FormNum         |   752 | 26.82% |   776 | 27.45% |
-| ninguno              |    97 |  3.46% |   103 |  3.64% |
-
-Consistencia CIK <-> FormNum (sobre filas con ambos):
-
-| Trimestre | CIK con 1 FormNum | CIK con >1 | FormNum con 1 CIK | FormNum con >1 |
-|-----------|------------------:|-----------:|------------------:|---------------:|
-| 2025Q4    | 716 / 716         | 0          | 716 / 716         | 0              |
-| 2026Q1    | 696 / 696         | 0          | 696 / 696         | 0              |
-
-**Cardinalidad (correccion #4 del dictamen #28):** la invariante
-contractual es unidireccional:
-
-    FormNum -> 0 CIK    = UNRESOLVED
-    FormNum -> 1 CIK    = IDENTITY_RESOLVED
-    FormNum -> >1 CIK   = CONFLICT
-
-Siempre dentro del scope temporal del periodo. NO se exige la
-invariante inversa (CIK -> 1 FormNum). Un CIK podria, por
-circunstancias historicas o administrativas, aparecer asociado a
-mas de un FormNum a lo largo del universo temporal.
-
-### 9.2-bis. Hallazgo de normalizacion FormNum
-
-Del 91.55-91.83% con FormNum poblado, el 93.42-93.34% usa prefijo
-`028-`. El resto (6.58-6.66%) usa prefijo `28-` (sin cero a la
-izquierda). **Todas las filas afectadas tienen CIK=`<NA>`.**
-
-Normalizacion trivial propuesta: `28-XXXXX -> 028-XXXXX` con
-zero-padding a 3 digitos.
-
-### 9.3. Caso Vanguard confirmado (Gate 0.2)
-
-Q4 2025: multiples NT de filiales declaran al parent con FormNum 028-06408.
-Q1 2026: parent 13F-NT (ACC=0000102909-26-002707) declara 10 managers,
-incluyendo las filiales CIK 0002100119 y 0002100121.
-
-Evidencia estructurada cruzada documental directa en OTHERMANAGER.
-
-### 9.4. Column 7 no apunta a OTHERMANAGER
-
-INFOTABLE.OTHERMANAGER (Column 7) matchea OTHERMANAGER2.SEQUENCENUMBER
-(90% aprox), no OTHERMANAGER_SK. Requisito 2 y requisito 4 usan
-tablas distintas. El dictamen confirma la separacion R2/R4 como
-correcta.
 
 ---
 
-### 9.5. Tabla canonica Form13FFileNumber -> CIK (Gate 0.4-reissue)
+## 8. Evidencia empirica (Gates 0.1-0.10)
 
-**Fuente corregida (dictamen P66 v2, Bloqueo A):** la tabla canonica
-se construye vía `COVERPAGE` + `SUBMISSION`, no vía `OTHERMANAGER`.
+### 8.1. Universo R4 (Gate 0.6)
 
-    COVERPAGE  (ACCESSION_NUMBER, FORM13FFILENUMBER, ...)
-        JOIN
-    SUBMISSION (ACCESSION_NUMBER, CIK)
-        ON ACCESSION_NUMBER
-    Agrupacion: FORM13FFILENUMBER (normalizado) -> CIK
+    Q4 2025:
+        NOTICE (13F-NT / 13F-NT/A):        1,938
+        COMBINATION (13F-HR / 13F-HR/A):     396
+        TOTAL R4:                          2,334
+    Q1 2026:
+        NOTICE:                            1,908
+        COMBINATION:                         411
+        TOTAL R4:                          2,319
 
-**Normalizacion:** `28-XXXXX -> 028-XXXXX` y `028-XXXXX -> 028-XXXXX`.
-El prefijo se normaliza a 3 digitos y el sufijo a 5.
+Cobertura OTHERMANAGER en universo R4: 100.00%.
 
-**Cobertura del mapping (Gate 0.4-reissue, filtro PERIODOFREPORT):**
+### 8.2. Mapping FormNum -> CIK (Gate 0.4-reissue)
 
-| Trimestre | FormNum unicos | Resueltos | No resueltos | Cobertura |
-|-----------|---------------:|----------:|-------------:|----------:|
-| 2025Q4    | 906            | 888       | 18           | 98.01%    |
-| 2026Q1    | 901            | 887       | 14           | 98.45%    |
+    Q4 2025:
+        FormNum unicos:    906
+        Resueltos:         888 (98.01%)
+        FormNum con >1 CIK:  0
+    Q1 2026:
+        FormNum unicos:    901
+        Resueltos:         887 (98.45%)
+        FormNum con >1 CIK:  0
 
-**Cardinalidad:** 1:1 en direccion FormNum -> CIK (0 casos N:1).
-No se exige 1:1 en direccion inversa (correccion #4 del dictamen #28).
+### 8.3. Granularidad de identidad (Gate 0.3 + 0.4)
 
-**Impacto en filas (Gate 0.4-reissue):**
+    Q4 2025 (2,734 filas OTHERMANAGER NT):
+        IDENTITY_RESOLVED por CIK:      1,889 (69.09%)
+        IDENTITY_RESOLVED por FormNum:    706 (25.82%)
+        N/D FormNum no resuelto:           10 (0.37%)
+        N/D ni CIK ni FormNum:            129 (4.72%)
+        Cobertura:                       94.92%
+    Q1 2026 (2,683 filas):
+        IDENTITY_RESOLVED por CIK:      1,820 (67.83%)
+        IDENTITY_RESOLVED por FormNum:    738 (27.51%)
+        N/D FormNum no resuelto:            2 (0.07%)
+        N/D ni CIK ni FormNum:            123 (4.58%)
+        Cobertura:                       95.34%
 
-| Categoria | Q4 filas | Q4 % | Q1 filas | Q1 % |
-|-----------|---------:|-----:|---------:|-----:|
-| A. IDENTITY_RESOLVED por CIK | 1,889 | 69.09% | 1,820 | 67.83% |
-| B. IDENTITY_RESOLVED por FormNum | 706 | 25.82% | 738 | 27.51% |
-| C. N/D FormNum no resuelto | 10 | 0.37% | 2 | 0.07% |
-| D. N/D ni CIK ni FormNum | 129 | 4.72% | 123 | 4.58% |
-| **Cobertura de resolucion de identidad** | **94.92%** | | **95.34%** | |
-| **N/D total** | **5.08%** | | **4.66%** | |
+### 8.4. Cobertura identidad universo R4 (Gate 0.8)
 
-**Nota sobre el delta:** el Gate 0.4 original (sin filtro de periodo)
-reportaba 96.01% / 96.18%. El reissue corrige la contaminacion
-cross-periodo: delta −1.09 pp (Q4) y −0.84 pp (Q1).
+Agregada por clase (base + amendments):
 
-**Los porcentajes son cobertura de resolucion de identidad de las
-filas OTHERMANAGER. NO son cobertura L3 ni "match rate".** L3
-requiere ademas R1 + R2 + R3 + R5 y la comparacion CIK_resuelto == CIK_A.
+    Q4 2025 (4,640 filas):
+        NOTICE_BASE:            2,696 (94.84%)
+        NOTICE_RESTATEMENT:        37 (100%)
+        NOTICE_NEW_HOLDINGS:        1 (100%)
+        COMBINATION_BASE:       1,799 (86.33%)
+        COMBINATION_RESTATEMENT:  105 (100%)
+        COMBINATION_NEW_HOLDINGS:   2 (100%)
+        TOTAL R4:               4,640 (91.70%)
+    Q1 2026 (4,546 filas):
+        TOTAL R4:               4,546 (91.31%)
 
-**Bloqueo #3 del dictamen #28: RESUELTO.**
+**Nota de precision (dictamen #34 seccion 5):** estos porcentajes
+son "cobertura agregada de resolucion de identidad sobre filas
+OTHERMANAGER del universo R4 observado". NO son cobertura del
+snapshot efectivo despues de aplicar la cadena documental. NO son
+cobertura L3 ni match rate.
 
-**Bloqueo #5 (sin truncar) aplicado:** normalizacion estricta
-`28-XXXXX` -> `028-XXXXX` con 5 digitos exactos. El caso
-`028-2813114` (7 digitos) queda como N/D automaticamente.
+Drill-down: el N/D de COMBINATION_BASE esta concentrado (82-85%)
+en 2 filings del filer 0001580642-. Composicion: NAME 100%,
+CRDNUMBER 85-88%, SECFILENUMBER 64-69%, CIK 0%, FORM13FFILENUMBER
+~0%. Caso N/D fail-closed ya cubierto.
 
-**Bloqueo #6 (nomenclatura) aplicado:** IDENTITY_RESOLVED reemplaza
-MATCH en toda esta seccion.
+### 8.5. Amendments NEW HOLDINGS (Gate 0.7)
 
-**Anomalia detectada:** el FormNum `028-2813114` (7 digitos) aparece
-en N/D por FormNum no resuelto. Volumen despreciable (4+2=6 filas).
-Documentado como hallazgo colateral en
-`iae/evidence/p66_gate04_mapping/README.md` seccion 2.5.
+    Q4 2025: 2 casos -> 2 identicos.
+    Q1 2026: 1 caso  -> 1 identico.
 
-### 9.7. Cobertura de identidad universo R4 completo (Gate 0.8)
+Muestra pequena. Regla fail-closed no depende de afirmacion
+estadistica universal.
 
-**Origen:** dictamen #29. Gate 0.4-reissue midio solo
-`OTHERMANAGER(NT)`. El universo contractual de R4 es mas amplio:
-NOTICE + COMBINATION + amendments.
+### 8.6. Amendments RESTATEMENT (Gate 0.5)
 
-**Cobertura por clase:**
+Caso CIK 0002056909 (Q4 2025):
+- Base: OTHERMANAGER declara CIK <NA> / FormNum 028-04685
+  (Prospector Partners).
+- RESTATEMENT: OTHERMANAGER declara CIK 0001570284 / FormNum
+  028-16376 (Gator Capital Management).
 
-| Clase | Q4 Filings | Q4 Filas | Q4 Cobertura | Q1 Filings | Q1 Filas | Q1 Cobertura |
-|-------|----------:|---------:|------------:|----------:|---------:|------------:|
-| NOTICE_BASE | 1,900 | 2,696 | 94.84% | 1,907 | 2,682 | 95.34% |
-| NOTICE_RESTATEMENT | 37 | 37 | 100% | 0 | 0 | — |
-| NOTICE_NEW_HOLDINGS | 1 | 1 | 100% | 1 | 1 | 100% |
-| COMBINATION_BASE | 388 | 1,799 | 86.33% | 402 | 1,841 | 85.33% |
-| COMBINATION_RESTATEMENT | 7 | 105 | 100% | 9 | 22 | 100% |
-| COMBINATION_NEW_HOLDINGS | 1 | 2 | 100% | 0 | 0 | — |
-| **TOTAL R4** | **2,334** | **4,640** | **91.70%** | **2,319** | **4,546** | **91.31%** |
+El RESTATEMENT sustituye la evidencia OTHERMANAGER anterior.
 
-**Delta vs NOTICE-solo:** −3.21 pp (Q4), −4.03 pp (Q1).
+### 8.7. Multiples filings base (Gate 0.9)
 
-**Drill-down del N/D en COMBINATION_BASE:**
+1 caso en 4,596 grupos (CIK 0002016827, Q4 2025). Patron MIXED:
+13F-NT (2026-01-02) + 13F-HR COMBINATION (2026-02-20). Mismo
+PERIODOFREPORT, mismo OTHERMANAGER declarado.
 
-- 82-85% del N/D_null se concentra en 2 filings del mismo filer
-  (`0001580642-`).
-- Composicion de las filas N/D_null: NAME 100%, CRDNUMBER 85-88%,
-  SECFILENUMBER 64-69%, CIK 0%, FORM13FFILENUMBER ~0%.
-- Patron: filer declara sub-managers sin CIK ni FormNum.
-- Es exactamente el caso N/D que el contrato prohibe resolver por
-  nombre.
+Resultado: R3 = N/D por regla conservadora IAE.
 
-**Conclusion:** Gate 0.8 PASS. El delta de −3/−4 pp no introduce
-nueva clase de ambiguedad. Es el mismo N/D fail-closed, concentrado
-en un filer concreto.
+### 8.8. FormNum representation (Gate 0.10)
 
-**Cobertura de identidad efectiva del universo contractual R4:**
-**91.70% / 91.31%**.
+    COVERPAGE: 100% sufijo de 5 digitos.
+    OTHERMANAGER: 99.09% sufijo de 5 digitos; resto variable
+                  (3, 4, 6, 7 digitos).
 
-Nota: los porcentajes son cobertura de resolucion de identidad de
-las filas OTHERMANAGER del universo R4. NO son cobertura L3 ni
-"match rate".
-
-## 10. Invariante del mapping (bloqueo #4)
-
-### 10.1. Direccion contractual
-
-La unica direccion contractual obligatoria es:
-
-    FormNum -> CIK
-
-NO se establece como invariante la direccion inversa:
-
-    CIK -> FormNum
-
-Un CIK podria aparecer asociado a mas de un FormNum a lo largo del
-universo temporal. El sistema no debe explotar si esto ocurre: la
-resolucion es siempre por FormNum como clave.
-
-### 10.2. Construccion del mapping
-
-    period
-    normalized_form13f_filenumber    (clave)
-    cik                              (valor)
-    source_accessions                (lineage)
-    resolution_status                (UNRESOLVED | IDENTITY_RESOLVED | CONFLICT)
-
-Construido por `PERIODOFREPORT`, no por directorio fisico.
-
-### 10.3. Uso
-
-    Dado un FormNum F (normalizado) en una fila OTHERMANAGER:
-
-      - Si F no resuelve en el mapping del periodo: N/D.
-      - Si F resuelve a 1 CIK: IDENTITY_RESOLVED (comparar con CIK_A
-        para decidir R4).
-      - Si F resuelve a >1 CIK: CONFLICT.
-
-    La direccion inversa (dado CIK, buscar FormNum) no se usa
-    para R4.
-
-### 10.4. Bloqueos resueltos por este apartado
-
-    #4 Mapping unidireccional: RESUELTO.
-
-Dictamen #29 (2026-09-21): APROBADO explicitamente. La invariante
-util para R4 es FormNum -> CIK, no la direccion inversa.
+Regla de canonicalizacion en §4.2.
 
 ---
 
-## 11. Diagrama de decision R4 (dictamen #30, seccion 11)
+## 9. Preguntas residuales al auditor
 
-Evaluacion en orden estricto (dictamen #31, seccion 8):
-
-    1. ¿Filing efectivo determinable?
-       NO ───────────────> N/D
-       SI
-       ↓
-
-    2. ¿CONFLICT en la evidencia candidata de A?
-       (CIK y FormNum de esa fila apuntan a CIK distintos,
-        o FormNum resuelve a >1 CIK)
-       SI ───────────────> CONFLICT
-       NO
-       ↓
-
-    3. ¿Existe fila que identifica inequivocamente a A?
-       SI ───────────────> MATCH
-       NO
-       ↓
-
-    4. ¿Todas las filas OTHERMANAGER del filing efectivo
-       tienen identidad resuelta?
-       NO ───────────────> N/D
-       SI
-       ↓
-
-    5. NO_MATCH
-
-**Regla clave (dictamen #31, bloqueo 2):** CONFLICT > MATCH
-aplica UNICAMENTE cuando el conflicto afecta a la evidencia
-candidata a A. Un conflicto en otra fila OTHERMANAGER del mismo
-filing NO invalida el MATCH de A.
+Ninguna. Los 4 bloqueos del dictamen #34 estan aplicados y la
+evidencia complementaria (Gate 0.10) esta incorporada.
 
 ---
 
-## 12. Preguntas residuales al auditor
+## 10. Lo que NO se ha hecho
 
-Una vez aplicadas las 8 correcciones, solo quedan por definir:
-
-    Q1. La formalizacion exacta de amendments (seccion 5) debe
-        implementarse antes del GO contractual o puede diferirse
-        a la implementacion en reporting_dedup.py?
-
-    Q2. La tabla canonica Form13FFileNumber -> CIK existe en el
-        sistema o debe construirse? Donde debe vivir?
-
-    Q3. El enum MATCH/NO_MATCH/N/D/CONFLICT debe anadirse al
-        contrato 14.3 como definicion formal, o se mantiene como
-        especificacion operativa?
+- No se ha descargado ningun XML de EDGAR.
+- No se ha creado `xml_parser/` ni dependencia externa.
+- No se ha modificado `reporting_dedup.py`.
+- No se ha modificado `NIPC_CONTRATOS_SEMANTICOS_v1.md`.
+- No se ha activado `DROP_DUP`.
 
 ---
 
-## 13. Lo que NO se ha hecho
+## 11. Referencias
 
-- NO se ha descargado ningun XML de EDGAR.
-- NO se ha creado xml_parser/.
-- NO se ha modificado reporting_dedup.py.
-- NO se ha reformulado 14.3 efectivamente.
-- NO se ha activado DROP_DUP.
-- NO se ha tocado NIPC_CONTRATOS_SEMANTICOS_v1.md.
-
----
-
-## 14. Referencias
-
-    | Documento                                      | Rol                |
-    |------------------------------------------------|--------------------|
-    | iae/DICTAMENES.md #27                          | Dictamen P66       |
-    | iae/NIPC_CONTRATOS_SEMANTICOS_v1.md seccion 14 | Contrato L3        |
-    | iae/P64_P65_EXPEDIENTE.md                      | Ciclo P65          |
-    | iae/P66_INFORME_HALLAZGO.md                    | Informe NO-GO      |
-    | iae/DICTAMENES.md #26                          | Dictamen P65 v3    |
-    | SEC Form 13F Data Sets (documentacion)         | Fuente oficial     |
+    | Documento                                        | Rol                |
+    |--------------------------------------------------|--------------------|
+    | iae/DICTAMENES.md #28-#34                        | Dictamenes P66     |
+    | iae/NIPC_CONTRATOS_SEMANTICOS_v1.md seccion 14   | Contrato L3        |
+    | iae/P64_P65_EXPEDIENTE.md                        | Ciclo P65          |
+    | iae/evidence/p66_gate04_reissue_period/          | Mapping FormNum    |
+    | iae/evidence/p66_gate06_combination_probe/       | Universo R4        |
+    | iae/evidence/p66_gate07_newholdings_probe/       | NEW HOLDINGS       |
+    | iae/evidence/p66_gate08_full_r4_coverage/        | Cobertura R4       |
+    | iae/evidence/p66_gate09_multiple_base/           | Multiples bases    |
+    | iae/evidence/p66_gate10_formnum_representation/  | FormNum longitudes |
+    | SEC Form 13F (documentacion oficial)             | Fuente normativa   |
 
 ---
 
-Fin de la propuesta v2. Pendiente dictamen final del auditor sobre
-el texto contractual exacto antes de tocar NIPC_CONTRATOS_SEMANTICOS_v1.md.
+Fin de la propuesta v4. Consolidacion final de los dictamenes
+#28 a #34. Pendiente de dictamen contractual definitivo sobre el
+texto exacto antes de tocar NIPC_CONTRATOS_SEMANTICOS_v1.md.
