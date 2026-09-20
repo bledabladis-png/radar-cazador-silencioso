@@ -102,7 +102,7 @@ Documentado con las definiciones literales del contrato P38 seccion
 3.2 y 3.3. No contiene logica de construccion de los sets: recibe
 los 4 universos como parametros.
 
-### 4.2. Nuevo: `identity/target_builder.py`
+### 4.2. Nuevo: `identity/target_builder.py` (P38 - materializacion)
 
 Constructor de universo TARGET. Consume:
 
@@ -128,7 +128,7 @@ Interfaz:
 Prohibido el uso de `security_identity` o `cusip_resolver` para
 construir TARGET (H1 F2.1-bis - circularidad).
 
-### 4.3. Reforma: `aggregation/nipc.py`
+### 4.3. Reforma: `aggregation/nipc.py` (P38 - orquestacion)
 
 Firma nueva:
 
@@ -147,9 +147,9 @@ Firma nueva:
 
 `compute_delta_shares` y `match_key` no se tocan.
 
-### 4.4. Reforma: `sec_13f/identity/security_identity.py`
+### 4.4. Reforma: `sec_13f/identity/security_identity.py` (P61 + P60)
 
-D1 - Conectar `temporal_validity`:
+P61 - Conectar `temporal_validity`:
 
 - `evidence` incluye `source` + `valid_from` + `valid_to` de la fuente.
 - `resolve_security_identity` invoca `resolve_source_status(...)`.
@@ -159,7 +159,7 @@ D1 - Conectar `temporal_validity`:
   `cusip_ticker_exceptions` (con vigencia) vs `etf_holdings` (sin
   vigencia). Propagado en `evidence`.
 
-D3 - Raise contractual:
+P60 - Raise contractual:
 
 - `_normalize_canonical(value, identity_type)` lanza `ValueError`
   para `identity_type in ("CUSIP", "ISIN")` si se intenta producir

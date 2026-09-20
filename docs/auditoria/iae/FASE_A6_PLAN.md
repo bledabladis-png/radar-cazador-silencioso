@@ -2,6 +2,18 @@
 
 **Objeto:** plan detallado de la fase A.6 (reconciliacion contrato<->codigo).
 
+**Nota de proceso (obligatoria):** el codigo actual contiene una
+implementacion anticipada autorizada internamente (PROMPT_MAESTRO
+v6.43 seccion 15.33). A.6 NO presupone que dicha implementacion sea
+contractualmente valida. Su objetivo es reconciliarla con el dictamen
+F2.4 y corregir las divergencias que el auditor confirme.
+
+Distincion de autorizaciones:
+
+    autorizacion del supervisor   -> implementacion anticipada (hecha)
+    dictamen F2.4                 -> aprobacion contractual
+    autorizacion A.6              -> desbloqueo post-F2.4
+
 **Generado:** 2026-09-20.
 **Precondicion bloqueante:** dictamen F2.4 (GO o GO CONDICIONADO).
 **Estado:** NO EJECUTABLE hasta F2.4.
@@ -52,13 +64,13 @@ Resultado esperado de A.6:
 
 3 commits minimos, uno por divergencia.
 
-**Commit A.6.2-D3** - P60 raise para CUSIP/ISIN
+**Commit A.6.2-P60** - P60 raise para CUSIP/ISIN
 - Archivo: `sec_13f/identity/security_identity.py`.
 - Cambio: `_normalize_canonical` lanza `ValueError` para CUSIP/ISIN.
 - Cambio: `_find_active_equivalence` no asume default TICKER.
 - Test: `tests/test_p60_contract.py` (nuevo).
 
-**Commit A.6.2-D1** - P61 conectado al resolver
+**Commit A.6.2-P61** - P61 conectado al resolver
 - Archivo: `sec_13f/identity/security_identity.py`.
 - Cambio: `evidence` incluye `valid_from`/`valid_to`.
 - Cambio: `resolve_security_identity` invoca `resolve_source_status`.
@@ -66,7 +78,7 @@ Resultado esperado de A.6:
   vs `etf_holdings`.
 - Test: `tests/test_p61_contract.py` (nuevo).
 
-**Commit A.6.2-coverage** - Firma nueva nipc
+**Commit A.6.2-P38** - Firma nueva nipc
 - Archivo: `aggregation/nipc.py` + `aggregation/coverage.py` (nuevo).
 - Cambio: `compute_nipc` recibe `target_q4`/`target_q1` opcionales.
 - Cambio: delegacion a `compute_contractual_coverage`.
@@ -81,28 +93,42 @@ Resultado esperado de A.6:
 
 ---
 
-### A.6.3 - Test de contrato P38 (shareClassFIGI compartido)
+### A.6.3 - Test de contrato P38 (shareClassFIGI como clave de pairing)
 
-**Objetivo:** verificar que PAIRED empareja por `canonical_security`
-comun cuando el `shareClassFIGI` coincide, aunque los CUSIPs observados
-sean distintos.
+**Precondicion bloqueante:** decision del auditor sobre Q12. Los dos
+modelos posibles son:
+
+    Modelo A  shareClassFIGI = clave contractual de pairing
+    Modelo B  canonical_security = clave contractual de pairing
+
+El presente plan asume Modelo A (Q12/A) como direccion, pero el test
+NO se escribe hasta que F2.4 lo confirme.
+
+**Objetivo (bajo Modelo A):** verificar que PAIRED empareja por
+`shareClassFIGI` contractual comun entre Q4 y Q1, con
+`operational_mapping_status == VERIFIED` en ambos periodos. NO se exige
+igualdad literal de `canonical_security` entre periodos.
 
 Escenario:
 
     Q4: CUSIP_A -> shareClassFIGI_X -> equity:TICKER
     Q1: CUSIP_B -> shareClassFIGI_X -> figi:BBG...
 
-Esperado:
+Esperado bajo Modelo A:
 
     TARGET_PAIRWISE = {X}
-    PAIRED          = {X}
+    PAIRED          = {X}   aunque canonical_security(Q4) != canonical_security(Q1)
 
-Commit: `tests/test_p38_contract.py` extendido.
+Esperado bajo Modelo B (si F2.4 confirma Q12/B):
+
+    TARGET_PAIRWISE = {X}
+    PAIRED          = {}    porque canonical_security(Q4) != canonical_security(Q1)
+
+Commit: `tests/test_p38_contract.py` extendido (una vez decidido Q12).
 
 **Criterio de aceptacion:**
-- Test pasa.
-- El comportamiento es el esperado aunque `canonical_security(Q4) !=
-  canonical_security(Q1)`.
+- Test pasa segun el modelo confirmado por F2.4.
+- Se documenta explicitamente en el test bajo que modelo se valida.
 
 ---
 
@@ -122,40 +148,67 @@ Commit: `tests/test_p38_contract.py` extendido.
 
 **Criterio de aceptacion:**
 - Ambas ejecuciones terminan exit 0.
-- Los valores `paired_weighted_share_coverage` cambian respecto a la
-  version historica.
-- El resto de metricas se mantiene o cambia con justificacion.
+- Se demuestra mediante evidencia de entrada/salida que el denominador
+  utilizado es `TARGET_PAIRWISE` (no `observed_security_key`).
+- Se documenta:
+      valor historico (v1.0) = X
+      valor v2               = Y
+      delta                  = Z
+  NO se exige que X != Y. Si X == Y, tambien es valido: el calculo se
+  hizo con la semantica nueva y el resultado coincide.
 
 ---
 
-### A.6.5 - Actualizar NIPC_CONTRATOS_SEMANTICOS_v1 -> v2 (si aplica)
+### A.6.5 - Emitir NIPC_CONTRATOS_SEMANTICOS_v2 (si aplica)
 
 Solo si A.6.1 autoriza cambios de contrato. Si no, el contrato v1
 permanece intacto.
 
+**Regla de versionado:** el contrato v1 esta integrado en la cadena
+hash del sistema (sha256 registrado en varios documentos). NO se
+modifica in-place. Se emite un artefacto v2 nuevo.
+
+    NIPC_CONTRATOS_SEMANTICOS_v1.md    INTACTO (hash preservado)
+    NIPC_CONTRATOS_SEMANTICOS_v2.md    NUEVO
+      - incluye seccion "Deriva de v1"
+      - cita hash de v1
+      - documenta cambios materiales
+
+Nota: esta es una excepcion documentada a la regla general "1 concepto
+= 1 fichero vivo". Aplica a contratos cuyo hash ya esta en cadena
+autoritativa. El auditor puede autorizar otro esquema si lo considera.
+
 **Criterio de aceptacion:**
-- Contrato actualizado in-place (regla 1 concepto = 1 fichero).
-- Seccion "Cambios respecto a v1" anadida.
-- Git conserva la version previa.
+- v2 escrito sin modificar v1.
+- v1 conserva su hash original.
+- v2 referencia explicitamente a v1.
 
 ---
 
-### A.6.6 - Emitir F2.4 definitivo
+### A.6.6 - Emitir F2.4-CLOSE (dictamen de cierre)
+
+**Nota de nomenclatura:** existen dos hitos distintos:
+
+    F2.4        dictamen inicial de contratos (A.6.1)
+    F2.4-CLOSE  dictamen de cierre tras implementacion + evidencia
 
 **Entrada:**
 - Codigo alineado con contrato (A.6.2).
 - Tests contractuales (A.6.3).
 - Nueva evidencia (A.6.4).
-- Contrato actualizado si aplica (A.6.5).
+- Contrato v2 emitido si aplica (A.6.5).
 
 **Salida:**
-- Dictamen F2.4 definitivo.
+- Dictamen F2.4-CLOSE.
 - Propagacion a FOLLOWUPS.md y PROMPT_MAESTRO.
 
 **Criterio de aceptacion:**
-- Gate-NIPC.2 desbloqueado.
+- Inputs disponibles para Gate-NIPC.2.
 - Baseline v2 + TOP 2000 v2 disponibles.
-- Fase A.7 (Breadth, New/Exit, clasificacion) autorizable.
+- NO se declara "Gate-NIPC.2 desbloqueado". El desbloqueo requiere
+  ademas: (a) propuesta de thresholds sobre evidencia v2, (b) dictamen
+  especifico del auditor con valores numericos. A.6.6 solo entrega los
+  inputs.
 
 ---
 
@@ -175,7 +228,7 @@ permanece intacto.
         v
     A.6.6 (F2.4 definitivo)
 
-Los pasos A.6.2-D3, A.6.2-D1, A.6.2-coverage pueden ejecutarse en
+Los pasos A.6.2-P60, A.6.2-P61, A.6.2-P38 pueden ejecutarse en
 paralelo si se hace un backup por cada uno.
 
 ---
@@ -185,7 +238,7 @@ paralelo si se hace un backup por cada uno.
     | Bloqueo                       | Afecta a    | Desbloquea con      |
     |-------------------------------|-------------|---------------------|
     | F2.4 pendiente                | Todo A.6    | Dictamen externo    |
-    | OpenFIGI masivo NO AUTORIZADO | A.6.2-D2    | Autorizacion F2.4   |
+    | OpenFIGI masivo NO AUTORIZADO | A.6.2-P38-materialize    | Autorizacion F2.4   |
     | THRESHOLD_1/2 UNDEFINED       | A.6.6 final | A.6.4 + auditor     |
     | Gate-NIPC.2 BLOQUEADO         | A.7         | A.6.6               |
 
@@ -226,9 +279,9 @@ para A.6.3 o A.6.4 si F2.4 no autoriza OpenFIGI todavia.
 
 ## 7. Estimacion de esfuerzo (post F2.4=GO)
 
-    A.6.2-D3          1 commit, 1 test nuevo              ~30 min
-    A.6.2-D1          1 commit, 1 test nuevo              ~60 min
-    A.6.2-coverage    1 commit, 1 test nuevo + move       ~90 min
+    A.6.2-P60          1 commit, 1 test nuevo              ~30 min
+    A.6.2-P61          1 commit, 1 test nuevo              ~60 min
+    A.6.2-P38    1 commit, 1 test nuevo + move       ~90 min
     A.6.3             extension de test P38               ~30 min
     A.6.4             reejecucion baseline + TOP 2000     ~60 min
     A.6.5             actualizar contrato si aplica       ~30 min

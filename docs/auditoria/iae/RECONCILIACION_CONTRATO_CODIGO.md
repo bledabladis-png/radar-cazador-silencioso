@@ -1,8 +1,12 @@
 # IAE - Reconciliacion contrato <-> codigo
 
 **Objeto:** expediente de reconciliacion entre el contrato semantico
-vigente (NIPC_CONTRATOS_SEMANTICOS_v1.md) y el codigo implementado
-(HEAD 4fe2b62).
+vigente (NIPC_CONTRATOS_SEMANTICOS_v1.md) y el codigo implementado.
+
+**Snapshot auditado:** commit `4fe2b62` (HEAD al realizar la reconciliacion).
+Estado posterior: `d3c9a87`, `79291ea` (post-limpieza documental).
+Este expediente es un snapshot historico; el estado actual del sistema
+puede incluir cambios documentales posteriores que no afectan al analisis.
 
 **Generado:** 2026-09-20.
 **Input para:** dictamen F2.4 del auditor externo.
@@ -113,10 +117,18 @@ cumplimiento contractual.
 
 ### D3 - P60 no lanza para CUSIP/ISIN (MENOR)
 
-**Contrato P60 seccion 1.5:**
+**Contrato P60 seccion 1.3 (formulacion vigente):**
 
-    Raises ValueError si identity_type es CUSIP/ISIN y se intenta
-    producir canonical.
+    TICKER -> equity:<ticker>     (CANONICAL_EQUIVALENCE)
+    FIGI   -> figi:<FIGI>         (CANONICAL_FIGI)
+    CUSIP  -> NULL                (OBSERVED_CUSIP_ONLY)
+    ISIN   -> NULL                (UNRESOLVED)
+    identity_type ausente o invalido -> ValueError
+
+Nota: la distincion es importante. El contrato NO exige ValueError
+para CUSIP/ISIN: CUSIP/ISIN son entradas validas que producen NULL
+como canonical. El ValueError se reserva para identity_type ausente
+o fuera del enum.
 
 **Implementacion:**
 
@@ -125,7 +137,14 @@ cumplimiento contractual.
       if identity_type in ("CUSIP", "ISIN"):
           return None
 
-  Devuelve None silenciosamente, no lanza.
+  Correcto para CUSIP/ISIN.
+
+- `security_identity.py` L312 (`_find_active_equivalence`):
+
+      itype = str(row["identity_type"]).strip() if has_type else "TICKER"
+
+  Asume default TICKER si falta la columna. El contrato exige que el
+  tipo venga declarado por la fuente, no asumido.
 
 - `_find_active_equivalence` L312:
 
@@ -169,13 +188,20 @@ Para cada divergencia, dos opciones validas:
      valido hasta que OpenFIGI masivo se autorice. Renombrar el
      comentario de `nipc.py` para no confundir.
 
-**D3 (P60):**
+**P60 (D3):**
 
-  A. Hacer que `_normalize_canonical` lance `ValueError` para
-     CUSIP/ISIN. Eliminar default TICKER en `_find_active_equivalence`.
+  A. Eliminar default TICKER en `_find_active_equivalence`. Si la
+     columna `identity_type` falta en `cusip_equivalence.csv`, la fila
+     se rechaza con log explicito (no se asume TICKER).
 
-  B. Modificar el contrato: no lanza, devuelve None. Documentar el
-     default TICKER como politica explicita.
+  B. Mantener el default TICKER documentado como politica explicita
+     de retrocompatibilidad. NO recomendado: contradice la regla
+     "identidad declarada por la fuente".
+
+  Nota: `_normalize_canonical` YA cumple el contrato para CUSIP/ISIN
+  (devuelve NULL, no lanza). El punto de divergencia real es el
+  default TICKER silencioso en `_find_active_equivalence`, no el
+  raise.
 
 ---
 
@@ -217,6 +243,7 @@ Independiente de las decisiones, faltan estos tests. Ninguno existe hoy.
     | P38      | mismo shareClassFIGI, CUSIP distinto -> PAIRED           |
     | P38      | denominador cero -> UNAVAILABLE (ya existe)              |
     | P38      | TARGET_Q4 INTERSECT TARGET_Q1, no union                  |
+    | P38      | pesos agregados por security ANTES de max(Q4,Q1)         |
 
 Los tests actuales validan la implementacion proxy. Hay que anadir
 validacion contractual explicita.
