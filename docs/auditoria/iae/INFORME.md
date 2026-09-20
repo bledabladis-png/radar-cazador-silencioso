@@ -669,6 +669,36 @@ Evidencia: `iae/DICTAMENES.md` #29.
 
 Siguiente paso: Gate 0.8.
 
+
+
+### Gate 0.8 ejecutado (2026-09-21)
+
+Origen: dictamen #29. Cobertura de identidad sobre universo R4 completo
+(NOTICE + COMBINATION + amendments).
+
+| Clase | Q4 Filas | Q4 Cobertura | Q1 Filas | Q1 Cobertura |
+|-------|---------:|------------:|---------:|------------:|
+| NOTICE_BASE | 2,696 | 94.84% | 2,682 | 95.34% |
+| NOTICE_AMEND (RESTATEMENT + NEW HOLDINGS) | 38 | 100% | 1 | 100% |
+| COMBINATION_BASE | 1,799 | 86.33% | 1,841 | 85.33% |
+| COMBINATION_AMEND (RESTATEMENT + NEW HOLDINGS) | 107 | 100% | 22 | 100% |
+| **TOTAL R4** | **4,640** | **91.70%** | **4,546** | **91.31%** |
+
+Delta vs NOTICE-solo: -3.21 pp Q4, -4.03 pp Q1.
+
+Drill-down: 82-85% del N/D_null en COMBINATION_BASE se concentra
+en 2 filings del mismo filer (0001580642-). Composicion:
+NAME 100%, CRDNUMBER 85-88%, SECFILENUMBER 64-69%, CIK 0%,
+FORM13FFILENUMBER ~0%. Es el caso N/D que el contrato ya cubre
+con fail-closed.
+
+Conclusion: Gate 0.8 PASS. Sin nueva clase de ambiguedad.
+Cobertura R4 efectiva: 91.70% / 91.31%.
+
+Evidencia: `iae/evidence/p66_gate08_full_r4_coverage/`.
+
+Bloqueo material del dictamen #29: RESUELTO.
+
 ### Estado
 
     Fuente             APROBADA (OTHERMANAGER)

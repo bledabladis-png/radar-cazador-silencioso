@@ -390,6 +390,47 @@ en N/D por FormNum no resuelto. Volumen despreciable (4+2=6 filas).
 Documentado como hallazgo colateral en
 `iae/evidence/p66_gate04_mapping/README.md` seccion 2.5.
 
+### 9.7. Cobertura de identidad universo R4 completo (Gate 0.8)
+
+**Origen:** dictamen #29. Gate 0.4-reissue midio solo
+`OTHERMANAGER(NT)`. El universo contractual de R4 es mas amplio:
+NOTICE + COMBINATION + amendments.
+
+**Cobertura por clase:**
+
+| Clase | Q4 Filings | Q4 Filas | Q4 Cobertura | Q1 Filings | Q1 Filas | Q1 Cobertura |
+|-------|----------:|---------:|------------:|----------:|---------:|------------:|
+| NOTICE_BASE | 1,900 | 2,696 | 94.84% | 1,907 | 2,682 | 95.34% |
+| NOTICE_RESTATEMENT | 37 | 37 | 100% | 0 | 0 | — |
+| NOTICE_NEW_HOLDINGS | 1 | 1 | 100% | 1 | 1 | 100% |
+| COMBINATION_BASE | 388 | 1,799 | 86.33% | 402 | 1,841 | 85.33% |
+| COMBINATION_RESTATEMENT | 7 | 105 | 100% | 9 | 22 | 100% |
+| COMBINATION_NEW_HOLDINGS | 1 | 2 | 100% | 0 | 0 | — |
+| **TOTAL R4** | **2,334** | **4,640** | **91.70%** | **2,319** | **4,546** | **91.31%** |
+
+**Delta vs NOTICE-solo:** −3.21 pp (Q4), −4.03 pp (Q1).
+
+**Drill-down del N/D en COMBINATION_BASE:**
+
+- 82-85% del N/D_null se concentra en 2 filings del mismo filer
+  (`0001580642-`).
+- Composicion de las filas N/D_null: NAME 100%, CRDNUMBER 85-88%,
+  SECFILENUMBER 64-69%, CIK 0%, FORM13FFILENUMBER ~0%.
+- Patron: filer declara sub-managers sin CIK ni FormNum.
+- Es exactamente el caso N/D que el contrato prohibe resolver por
+  nombre.
+
+**Conclusion:** Gate 0.8 PASS. El delta de −3/−4 pp no introduce
+nueva clase de ambiguedad. Es el mismo N/D fail-closed, concentrado
+en un filer concreto.
+
+**Cobertura de identidad efectiva del universo contractual R4:**
+**91.70% / 91.31%**.
+
+Nota: los porcentajes son cobertura de resolucion de identidad de
+las filas OTHERMANAGER del universo R4. NO son cobertura L3 ni
+"match rate".
+
 ## 10. Invariante del mapping (bloqueo #4)
 
 ### 10.1. Direccion contractual

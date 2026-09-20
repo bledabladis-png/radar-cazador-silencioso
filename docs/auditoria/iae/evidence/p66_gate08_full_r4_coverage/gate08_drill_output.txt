@@ -1,0 +1,65 @@
+=== 2025Q4 drill-down COMBINATION_BASE ND_null ===
+
+COMBINATION_BASE filings: 388
+Filas ND_null: 227
+Filings afectados: 31
+
+Distribucion de ND_null por filing:
+  Max filas en 1 filing: 100
+  Mediana: 1
+  Top 5 filings:
+    0001580642-26-001034: 100 filas
+    0001580642-26-000991: 76 filas
+    0001193125-26-044450: 12 filas
+    0002012383-26-000920: 3 filas
+    0001420506-26-000066: 3 filas
+  Top 5 filing concentran: 194 / 227 = 85.5%
+
+Nombre del manager (top 5):
+    AE Wealth Management: 4
+    AQR CAPITAL MANAGEMENT, LLC: 1
+    VISE: 1
+    Franklin Templeton Private Portfolio Group, LLC: 1
+    Longaeva Partners L.P.: 1
+
+Filas ND_null con NAME no-null: 227 / 227
+
+Columnas non-null por fila ND_null:
+  CIK                 :    0 / 227
+  FORM13FFILENUMBER   :    1 / 227
+  CRDNUMBER           :  200 / 227
+  SECFILENUMBER       :  157 / 227
+  NAME                :  227 / 227
+
+=== 2026Q1 drill-down COMBINATION_BASE ND_null ===
+
+COMBINATION_BASE filings: 402
+Filas ND_null: 252
+Filings afectados: 32
+
+Distribucion de ND_null por filing:
+  Max filas en 1 filing: 99
+  Mediana: 2
+  Top 5 filings:
+    0001580642-26-003152: 99 filas
+    0001580642-26-003153: 81 filas
+    0001193125-26-206517: 12 filas
+    0001593387-26-000004: 11 filas
+    0001104659-26-061163: 5 filas
+  Top 5 filing concentran: 208 / 252 = 82.5%
+
+Nombre del manager (top 5):
+    AE Wealth Management: 4
+    BROOKSTONE: 1
+    HANCOCK WHITNEY INVESTMENT SERVICES INC.: 1
+    Longaeva Partners L.P.: 1
+    Franklin Templeton Private Portfolio Group, LLC: 1
+
+Filas ND_null con NAME no-null: 252 / 252
+
+Columnas non-null por fila ND_null:
+  CIK                 :    0 / 252
+  FORM13FFILENUMBER   :    6 / 252
+  CRDNUMBER           :  214 / 252
+  SECFILENUMBER       :  161 / 252
+  NAME                :  252 / 252

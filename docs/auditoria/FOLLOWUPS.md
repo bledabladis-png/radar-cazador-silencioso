@@ -2302,3 +2302,20 @@ P65 v3 (ver iae/DICTAMENES.md #26). GO CONDICIONADO con 3 correcciones.
 - **Pendiente:** Gate 0.8.
 - **NO se ha hecho:** sin XML, sin reporting_dedup.py, sin DROP_DUP,
   sin tocar contrato 14.3.
+
+
+## P66 - Gate 0.8 cobertura identidad universo R4 (2026-09-21)
+
+- **Origen:** dictamen #29, bloqueo material.
+- **Resultado:** cobertura R4 completa 91.70% (Q4) / 91.31% (Q1).
+- **Delta vs NOTICE-solo:** -3.21 pp (Q4), -4.03 pp (Q1).
+- **Drill-down:** 82-85% del N/D_null en COMBINATION_BASE se concentra
+  en 2 filings del mismo filer (0001580642-). Sub-managers declarados
+  sin CIK ni FormNum (NAME 100%, CRDNUMBER 85-88%, SECFILENUMBER
+  64-69%).
+- **Conclusion:** Gate 0.8 PASS. Mismo N/D fail-closed ya definido.
+  Sin nueva clase de ambiguedad.
+- **Evidencia:** `iae/evidence/p66_gate08_full_r4_coverage/`.
+- **Estado:** paquete v3 completo. Listo para dictamen contractual final.
+- **NO se ha hecho:** sin XML, sin reporting_dedup.py, sin DROP_DUP,
+  sin tocar contrato 14.3.
