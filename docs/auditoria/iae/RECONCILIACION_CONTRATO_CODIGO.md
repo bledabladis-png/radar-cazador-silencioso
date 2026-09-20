@@ -9,7 +9,7 @@ vigente (NIPC_CONTRATOS_SEMANTICOS_v1.md) y el codigo implementado.
 (cambios documentales posteriores al snapshot, no afectan al analisis).
 
 El dictamen F2.4 debe tomar como objeto documental la entrega identificada
-por HEAD `2eb4dcd`; los demas hashes son snapshots historicos de trazabilidad.
+por HEAD `3ad57b1`; los demas hashes son snapshots historicos de trazabilidad.
 
 **Generado:** 2026-09-20.
 **Input para:** dictamen F2.4 del auditor externo.
@@ -247,11 +247,11 @@ Independiente de las decisiones, faltan estos tests. Ninguno existe hoy.
     | P61      | cusip_ticker_exceptions con vigencia -> VERIFIED         |
     | P61      | etf_holdings sin vigencia -> TEMPORAL_UNVERIFIED         |
     | P61      | aggregate_status sobre 6 combinaciones Q7                |
-    | P38      | compute_coverage_pairwise recibe target_q4/target_q1     |
+    | P38      | compute_contractual_coverage recibe target_q4/target_q1  |
     | P38      | mismo shareClassFIGI, CUSIP distinto -> PAIRED           |
     | P38      | denominador cero -> UNAVAILABLE (ya existe)              |
     | P38      | TARGET_Q4 INTERSECT TARGET_Q1, no union                  |
-    | P38      | pesos agregados por security ANTES de max(Q4,Q1)         |
+    | P38      | pesos agregados por shareClassFIGI ANTES de max(Q4,Q1)   |
 
 Los tests actuales validan la implementacion proxy. Hay que anadir
 validacion contractual explicita.

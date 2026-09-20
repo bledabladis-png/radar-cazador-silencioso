@@ -29,7 +29,10 @@ empirica (baseline + TOP 2000) bajo la semantica contractual correcta.
 Resultado esperado de A.6:
 
 - Codigo alineado con contrato P38/P60/P61.
-- Tests contractuales sin xfail (todos pasan).
+- Tests contractuales: sin xfail para los requisitos que F2.4
+  adopte como contractuales. Los xfail correspondientes a capacidades
+  declaradas NO CONTRACTUALES o DIFERIDAS por F2.4 pueden permanecer
+  como residual aceptado.
 - Baseline + TOP 2000 recalculados bajo semantica contractual.
 - F2.4-CLOSE emitido con evidencia actualizada.
 - Inputs para Gate-NIPC.2 disponibles.
@@ -126,7 +129,7 @@ del auditor.
 
 ---
 
-### A.6.3 - Test de contrato P38 (shareClassFIGI como clave de pairing)
+### A.6.3 - Test contractual P38 de pairing segun decision Q12
 
 **Precondicion bloqueante:** decision del auditor sobre Q12. Los dos
 modelos posibles son:
@@ -310,11 +313,15 @@ para A.6.3 o A.6.4 si F2.4 no autoriza OpenFIGI todavia.
 
     | Criterio                                       | Umbral          |
     |------------------------------------------------|-----------------|
-    | Codigo alineado con contrato P38/P60/P61       | 100%            |
+    | Codigo alineado con contrato P38/P60/P61       | 100% de los     |
+    |                                                | req. adoptados  |
+    |                                                | por F2.4        |
     | Tests baseline antes de A.6                    | N (medir inicio)|
     | Tests nuevos contractuales                     | M               |
     | Tests divergencia xfail (antes del fix)        | K               |
-    | Tests xfail pendientes tras A.6                | 0               |
+    | Tests xfail tras A.6 (req. contractuales)      | 0               |
+    | Tests xfail residuales aceptados               | documentados    |
+    | (capacidades NO CONTRACTUALES o DIFERIDAS)     |                 |
     | Pyflakes                                       | 0 warnings      |
     | compileall                                     | OK              |
     | Baseline v2 + TOP 2000 v2                      | escritos        |
@@ -323,8 +330,17 @@ para A.6.3 o A.6.4 si F2.4 no autoriza OpenFIGI todavia.
     | Gate-NIPC.2 desbloqueado                       | NO (fuera A.6)  |
 
 Nota: "tests presentes" != "tests contractualmente satisfactorios". Un
-xfail no es un test verde. El criterio duro es "xfail pendientes tras
-A.6 == 0". Si algun xfail no puede retirarse, requiere dictamen.
+xfail no es un test verde.
+
+El criterio "0 xfail" aplica SOLO a los requisitos que F2.4 adopte como
+contractuales. Los xfail correspondientes a capacidades declaradas NO
+CONTRACTUALES o DIFERIDAS por F2.4 pueden permanecer, registrados como
+residual aceptado. En ese caso:
+
+    - El test sigue marcado xfail.
+    - El documento de estado cita explicitamente la decision F2.4 que
+      lo declara fuera de contrato.
+    - No se modifica el codigo solo para conseguir "0 xfail" artificial.
 
 ---
 

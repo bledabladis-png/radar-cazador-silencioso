@@ -205,9 +205,10 @@ Actualizar imports en:
 ### 5.1. Tests nuevos requeridos
 
     tests/test_p60_contract.py
-      - identity_type CUSIP/ISIN -> ValueError
-      - identity_type=None -> ValueError
-      - CSV sin columna identity_type -> rechazo
+      - identity_type CUSIP -> None
+      - identity_type ISIN -> None
+      - identity_type=None/invalido -> ValueError
+      - CSV sin columna identity_type -> no inferir TICKER
       - Prefijo explicito (equity:/figi:) gana
 
     tests/test_p61_contract.py
@@ -231,7 +232,8 @@ Actualizar imports en:
 
     tests/test_sec_13f_security_identity.py
       - Retirar default TICKER
-      - Anadir casos ValueError
+      - Mantener/cubrir CUSIP/ISIN -> None
+      - Anadir casos identity_type ausente/invalido -> ValueError
 
     tests/test_sec_13f_nipc.py
       - Firma nueva (recibe target_q4/target_q1)
