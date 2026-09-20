@@ -2,37 +2,37 @@
   "schema_version": 1,
   "artifact": {
     "path": "data/commodities_futures.parquet",
-    "sha256": "f7b99b489c6c38091bfde57f61208d0730536409172ab80cf68bb1b61165123a",
-    "bytes": 8312,
-    "written_at": "2026-09-18T14:37:20.133197"
+    "sha256": "45652e95bf81a487e0c8e2f688a24168799a768fc436a726ccb8c14362a79e56",
+    "bytes": 8404,
+    "written_at": "2026-09-20T09:07:03.700621"
   },
   "producer": {
     "module": "src.utils",
     "function": "write_artifact_with_manifest",
-    "run_id": "20260918_163719",
+    "run_id": "20260920_110702",
     "source": "oilpriceapi_futures"
   },
   "content": {
-    "rows": 3,
+    "rows": 4,
     "cols": 10,
     "n_tickers": 2,
     "date_min": "2026-09-15",
-    "date_max": "2026-09-17"
+    "date_max": "2026-09-18"
   },
   "temporal": {
     "contract": null
   },
   "quality": {
-    "last_date": "2026-09-17",
-    "expected_session": "2026-09-17",
+    "last_date": "2026-09-18",
+    "expected_session": "2026-09-18",
     "last_date_is_expected_session": true,
     "pct_dup_last": 0.0,
-    "close_nan_last": 1,
+    "close_nan_last": 0,
     "n_tickers_expected_last": 2,
-    "n_tickers_with_close_last": 1,
-    "n_tickers_missing_close_last": 1,
-    "coverage_pct_last": 0.5,
-    "last_row_is_partial": true,
-    "status": "VALID_WITH_MISSING"
+    "n_tickers_with_close_last": 2,
+    "n_tickers_missing_close_last": 0,
+    "coverage_pct_last": 1.0,
+    "last_row_is_partial": false,
+    "status": "VALID"
   }
 }

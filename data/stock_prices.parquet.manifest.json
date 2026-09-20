@@ -2,29 +2,29 @@
   "schema_version": 1,
   "artifact": {
     "path": "data/stock_prices.parquet",
-    "sha256": "0c42c90db8e8c263834a25ecce6cdc6ee9918206c5ee5d4cc26312c9cd78d649",
-    "bytes": 14706516,
-    "written_at": "2026-09-18T14:44:57.034219"
+    "sha256": "06c57b1f562814949cd7a98673daa5bf388f0ec2566ac7592bc88b7c8c3a0fe8",
+    "bytes": 14716865,
+    "written_at": "2026-09-20T09:14:15.415175"
   },
   "producer": {
     "module": "src.utils",
     "function": "write_artifact_with_manifest",
-    "run_id": "20260918_163721",
+    "run_id": "20260920_110705",
     "source": "yahoo_european_cascade"
   },
   "content": {
-    "rows": 1288,
+    "rows": 1289,
     "cols": 1565,
     "n_tickers": 313,
     "date_min": "2021-09-20",
-    "date_max": "2026-09-17"
+    "date_max": "2026-09-18"
   },
   "temporal": {
     "contract": null
   },
   "quality": {
-    "last_date": "2026-09-17",
-    "expected_session": "2026-09-17",
+    "last_date": "2026-09-18",
+    "expected_session": "2026-09-18",
     "last_date_is_expected_session": true,
     "pct_dup_last": 0.00639,
     "close_nan_last": 0,
