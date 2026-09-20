@@ -1,3 +1,23 @@
+> **NO-GO — CERRADO 2026-09-20**
+>
+> Este informe fue redactado sobre una premisa incorrecta: que la
+> relacion "other managers reporting for this manager" solo estaba
+> disponible en el XML crudo del filing 13F-NT.
+>
+> Gate 0.1 demostro que `OTHERMANAGER` (no `OTHERMANAGER2`) del Data
+> Set SEC contiene esa relacion al 100% de cobertura sobre NT filings.
+> Gate 0.2 confirmo el caso Vanguard directamente en esa tabla.
+>
+> El ciclo P66 (XML crudo + parser propio + 4.000 descargas) queda
+> CANCELADO. La reformulacion de L3 (contrato 14.3) se hara desde
+> `OTHERMANAGER` sin XML.
+>
+> Se preserva este informe como registro del error metodologico.
+>
+> Ver: `iae/FOLLOWUPS.md` (entrada P66) y `iae/INFORME.md` (cierre).
+
+---
+
 # IAE - P66 Informe de hallazgo: fuente externa para L3
 
 **Objeto:** elevar al auditor externo el hallazgo de una fuente oficial SEC
