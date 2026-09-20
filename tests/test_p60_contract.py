@@ -78,11 +78,11 @@ def test_p60_csv_sin_identity_type_no_asume_ticker():
         }
     ])
     result = si._find_active_equivalence("037833100", "2026-03-31", eq_df)
-    # Prohibicion contractual: no debe haber canonical con prefijo
-    # derivado de un tipo asumido (equity: / figi:) sin fuente.
-    if result:
-        for canon, itype in result:
-            assert not canon.startswith("equity:"), (
-                "Canonical con prefijo equity: sin identity_type declarado "
-                "(default TICKER silencioso): {0}".format(result)
-            )
+    # Prohibicion contractual: no debe aparecer itype="TICKER" cuando la
+    # fuente no lo declaro. El contrato seccion 1.6 exige que el tipo
+    # venga declarado por la fuente, no asumido por el consumidor.
+    for canon, itype in result:
+        assert itype != "TICKER", (
+            "itype=TICKER asumido silenciosamente sin fuente declarada: "
+            "{0}".format(result)
+        )

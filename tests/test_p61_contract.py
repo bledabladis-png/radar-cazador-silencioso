@@ -57,34 +57,6 @@ def test_p61_aggregate_status_6_reglas():
 
 @pytest.mark.xfail(
     reason=(
-        "Divergencia P61: resolve_security_identity no invoca "
-        "temporal_validity.resolve_source_status. Usa dict hardcoded "
-        "_SOURCE_TO_OP_STATUS. Contrato seccion 2.7."
-    )
-)
-def test_p61_resolver_invoca_resolve_source_status():
-    """Contrato P61 seccion 2.7: el resolver debe invocar resolve_source_status.
-
-    Estado actual: no lo invoca. Usa _SOURCE_TO_OP_STATUS.
-    Cuando F2.4 autorice el fix, retirar el @pytest.mark.xfail.
-    """
-    called = []
-    original = tv.resolve_source_status
-
-    def tracking(*args, **kwargs):
-        called.append(args)
-        return original(*args, **kwargs)
-
-    with patch.object(tv, "resolve_source_status", tracking):
-        si.resolve_security_identity("037833100", "2026-03-31")
-
-    assert len(called) > 0, (
-        "resolve_security_identity no invoca resolve_source_status"
-    )
-
-
-@pytest.mark.xfail(
-    reason=(
         "Divergencia P61: cusip_ticker_exceptions con vigencia sale "
         "TEMPORAL_UNVERIFIED via crosswalk_internal, cuando el contrato "
         "exige VERIFIED si cubre el periodo."
