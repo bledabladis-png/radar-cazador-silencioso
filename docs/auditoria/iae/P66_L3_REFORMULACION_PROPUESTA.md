@@ -85,52 +85,69 @@ reciproca.
 
 ## 3. Estados formales
 
-    MATCH     evidencia positiva inequivoca:
-              - CIK coincide exactamente, o
-              - Form13FFileNumber resuelve inequivocamente a A, o
-              - ambos coinciden.
+**Definiciones (reformuladas segun dictamen #30, seccion 10):**
 
-    NO_MATCH  filing efectivo B inspeccionado, ingestion integra
-              verificada, A no aparece en OTHERMANAGER.
+    MATCH
+        Existe al menos una fila OTHERMANAGER que identifica
+        inequivocamente a A mediante CIK o Form13FFileNumber.
 
-    N/D       no se puede determinar:
-              - filing efectivo B no inspeccionable (ausente,
-                corrupto, periodo distinto).
-              - fallo de ingestion/extraccion/lineage.
-              - identificadores ambiguos sin tabla de resolucion.
+    NO_MATCH
+        El filing efectivo B fue inspeccionado con ingestion
+        integra, TODAS sus filas OTHERMANAGER tienen identidad
+        resuelta inequivocamente Y ninguna identifica a A.
 
-    CONFLICT  identificadores contradictorios:
-              - CIK presente y Form13FFileNumber presente, ambos
-                poblados, apuntan a entidades distintas.
+    N/D
+        No existe MATCH y al menos una parte relevante de la
+        evidencia OTHERMANAGER no puede resolverse inequivocamente,
+        o el filing efectivo / cadena documental no puede
+        determinarse.
+
+    CONFLICT
+        Existe contradiccion de identidad entre CIK y FormNum, o
+        una resolucion del identificador produce mas de un CIK
+        dentro del scope temporal aplicable.
 
 **Reglas duras:**
 
-    N/D != NO_MATCH       (correccion #6)
-    CONFLICT != NO_MATCH  (correccion #5)
+    N/D != NO_MATCH           (bloqueo B del dictamen #30)
+    CONFLICT != NO_MATCH      (dictamen #28)
+    CONFLICT PREVALECE sobre MATCH  (bloqueo A del dictamen #30)
     N/D y CONFLICT son fail-closed respecto de DROP_DUP.
+
+**Distincion critica (bloqueo B):** que la ingestion sea integra
+NO implica que NO_MATCH sea determinable. Si existe CUALQUIER fila
+OTHERMANAGER del filing efectivo con identidad N/D, la conclusion
+negativa debe ser N/D, no NO_MATCH. Esto aplica especialmente al
+universo COMBINATION_BASE (evidencia Gate 0.8: 227 filas N/D Q4,
+252 Q1).
 
 ---
 
-## 4. Tratamiento de identidad (correccion #4)
+## 4. Tratamiento de identidad (dictamen #30, bloqueo A)
 
-Prioridad:
+**Prioridad contractual CONFLICT > MATCH:**
 
-    1. CIK_A == OTHERMANAGER.CIK           -> MATCH
-       aunque FORM13FFILENUMBER este vacio.
+    1. Ambos identificadores presentes:
+       - Si CIK y FormNum apuntan a entidades distintas -> CONFLICT.
+       - Si ambos apuntan a la misma entidad -> IDENTITY_RESOLVED.
 
-    2. FORM13FFILENUMBER resuelve a CIK_A
-       via tabla canonica inequivoca         -> MATCH
-       solo si CIK esta vacio.
+    2. CIK presente, FormNum ausente o no resoluble:
+       - CIK == CIK_A -> IDENTITY_RESOLVED (MATCH).
 
-    3. Ambos presentes y coherentes         -> MATCH.
+    3. CIK ausente, FormNum inequivoco a un CIK:
+       - FormNum resuelve a CIK_A -> IDENTITY_RESOLVED (MATCH).
 
-    4. Ambos presentes y contradictorios    -> CONFLICT.
+    4. Ninguna identificacion inequivoca:
+       -> N/D.
 
-    5. Ninguno permite identificar A        -> N/D.
+**Aplicacion:** IDENTITY_RESOLVED + (CIK_resuelto == CIK_A) -> MATCH.
 
-**NO se exige la presencia simultanea de ambos campos.** El dictamen
-explicita que ambos son nullable en OTHERMANAGER y en los filings
-reales aparecen casos con uno u otro.
+**Orden de evaluacion OBLIGATORIO:** evaluar CONFLICT ANTES que
+MATCH. Un caso con `CIK = A` y `FormNum -> C (≠A)` produce
+CONFLICT, no MATCH, aunque la comparacion directa de CIK coincida.
+
+**NO se exige la presencia simultanea de ambos campos.** Ambos
+son nullable en OTHERMANAGER.
 
 ---
 
@@ -179,6 +196,19 @@ al periodo de analisis. Prohibido filtrar por directorio fisico.
                          3/3 casos identicos.
          - NEW HOLDINGS con cambio de OTHERMANAGER: N/D o CONFLICT.
                          NO asumir union ni sustitucion sin evidencia.
+
+      4. Seleccion del filing base (dictamen #30, bloqueo C):
+
+         0 bases independientes (AMENDMENTNO nulo)
+             -> R3 = False.
+
+         1 base
+             -> continuar con la cadena de amendments.
+
+         >1 bases independientes para mismo CIK + PERIODOFREPORT
+             -> N/D o CONFLICT segun la naturaleza de la duplicidad.
+             PROHIBIDO: primero encontrado, ultimo encontrado,
+             MAX(ACCESSION), MAX(FILING_DATE).
 
       4. R4 se evalua sobre el snapshot efectivo, NO sobre el base.
 
@@ -478,7 +508,38 @@ util para R4 es FormNum -> CIK, no la direccion inversa.
 
 ---
 
-## 11. Preguntas residuales al auditor
+## 11. Diagrama de decision R4 (dictamen #30, seccion 11)
+
+Evaluacion en orden estricto:
+
+                        ¿filing efectivo determinable?
+                        │
+                        NO ───────────────> N/D
+                        │
+                        YES
+                        ↓
+                 ¿existe fila que
+                  identifica a A?
+                        │
+                  YES ──┴──> MATCH
+                        │
+                        NO
+                        ↓
+            ¿todas las filas OTHERMANAGER
+              tienen identidad resuelta?
+                        │
+                  NO ──┴──> N/D
+                        │
+                        YES
+                        ↓
+                     NO_MATCH
+
+**Paso previo obligatorio:** cualquier contradiccion CIK <-> FormNum
+-> CONFLICT. CONFLICT tiene precedencia sobre MATCH.
+
+---
+
+## 12. Preguntas residuales al auditor
 
 Una vez aplicadas las 8 correcciones, solo quedan por definir:
 
@@ -495,7 +556,7 @@ Una vez aplicadas las 8 correcciones, solo quedan por definir:
 
 ---
 
-## 12. Lo que NO se ha hecho
+## 13. Lo que NO se ha hecho
 
 - NO se ha descargado ningun XML de EDGAR.
 - NO se ha creado xml_parser/.
@@ -506,7 +567,7 @@ Una vez aplicadas las 8 correcciones, solo quedan por definir:
 
 ---
 
-## 13. Referencias
+## 14. Referencias
 
     | Documento                                      | Rol                |
     |------------------------------------------------|--------------------|

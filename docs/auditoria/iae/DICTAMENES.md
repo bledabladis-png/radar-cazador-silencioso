@@ -794,3 +794,148 @@ de coverage of the execution domain, no de calidad del mapping.
 Ejecutar Gate 0.8. Si no descubre una nueva clase de ambiguedad y
 mantiene el tratamiento fail-closed, el siguiente dictamen puede
 ser GO contractual para modificar 14.3.
+
+
+---
+
+## 30. P66 - Dictamen auditor externo v4 (2026-09-21)
+
+**Tipo:** dictamen del auditor externo sobre P66_L3_REFORMULACION_PROPUESTA.md
+v3 (con Gate 0.8 integrado).
+
+**Objeto:** cierre del texto contractual de R4.
+
+**Resultado:** NO-GO contractual definitivo.
+**Resultado tecnico:** GO condicionado a 3 correcciones de especificacion.
+
+### Aprobado
+
+    Fuente OTHERMANAGER como evidencia R4                GO
+    NOTICE                                                GO
+    COMBINATION                                           GO
+    R2 -> OTHERMANAGER2                                   GO
+    R4 -> OTHERMANAGER                                    GO
+    Scope PERIODOFREPORT                                  GO
+    RESTATEMENT                                           GO
+    NEW HOLDINGS (regla conservadora)                     GO
+    Mapping FormNum -> CIK                                GO
+    Normalizacion sin truncamiento                        GO
+    Gate 0.8 (cobertura dominio R4)                       PASS
+    XML / parser                                          NO necesario
+
+### 3 bloqueos de especificacion
+
+**Bloqueo A - CONFLICT debe tener precedencia sobre MATCH.**
+
+La §4 actual permite ambiguedad. Caso:
+
+    CIK = A
+    FormNum = F
+    F -> CIK = C
+    A != C
+
+La regla 1 (CIK coincide -> MATCH) y la regla 4 (contradiccion -> CONFLICT)
+pueden ambas aplicarse. El contrato debe establecer precedencia explicita:
+
+    1. Ambos identificadores presentes:
+       si CIK y FormNum apuntan a entidades distintas -> CONFLICT
+    2. CIK presente y consistente:                  -> IDENTITY_RESOLVED
+    3. CIK ausente + FormNum inequivoco:            -> IDENTITY_RESOLVED
+    4. Ninguna identificacion inequivoca:           -> N/D
+
+Y despues: IDENTITY_RESOLVED + CIK == CIK_A -> R4 MATCH.
+
+**Bloqueo B - NO_MATCH requiere resolucion completa.**
+
+La definicion actual:
+
+    NO_MATCH = filing B inspeccionado
+             + ingestion integra
+             + A no aparece en OTHERMANAGER
+
+es insuficiente cuando el filing contiene filas OTHERMANAGER con
+identidad N/D. Gate 0.8 demuestra que existen (227 Q4 / 252 Q1 en
+COMBINATION_BASE).
+
+Nuevas definiciones:
+
+    MATCH
+        Existe al menos una fila OTHERMANAGER que identifica
+        inequivocamente a A mediante CIK o Form13FFileNumber.
+
+    NO_MATCH
+        El filing efectivo B fue inspeccionado con ingestion
+        integra, TODAS sus filas OTHERMANAGER tienen identidad
+        resuelta inequivocamente Y ninguna identifica a A.
+
+    N/D
+        No existe MATCH y al menos una parte relevante de la
+        evidencia OTHERMANAGER no puede resolverse inequivocamente,
+        o el filing efectivo / cadena documental no puede
+        determinarse.
+
+    CONFLICT
+        Existe contradiccion de identidad entre CIK y FormNum, o
+        una resolucion del identificador produce mas de un CIK
+        dentro del scope temporal aplicable.
+
+Regla fundamental: N/D != NO_MATCH.
+
+**Bloqueo C - proteger seleccion del filing base.**
+
+Si existen >1 filings base independientes (AMENDMENTNO nulo) para
+mismo CIK + PERIODOFREPORT, NO elegir por:
+
+    primero encontrado
+    ultimo encontrado
+    MAX(ACCESSION)
+    MAX(FILING_DATE)
+
+Regla contractual:
+
+    0 bases            -> R3 = False
+    1 base             -> continuar
+    >1 bases           -> N/D o CONFLICT segun naturaleza de duplicidad
+
+Solo despues se construye la cadena de amendments de esa base.
+
+### Diagrama de decision R4 (del dictamen #30 seccion 11)
+
+                        ¿filing efectivo determinable?
+                        │
+                        NO ───────────────> N/D
+                        │
+                        YES
+                        ↓
+                 ¿existe fila que
+                  identifica a A?
+                        │
+                  YES ──┴──> MATCH
+                        │
+                        NO
+                        ↓
+            ¿todas las filas OTHERMANAGER
+              tienen identidad resuelta?
+                        │
+                  NO ──┴──> N/D
+                        │
+                        YES
+                        ↓
+                     NO_MATCH
+
+Previo: cualquier contradiccion CIK <-> FormNum -> CONFLICT.
+CONFLICT tiene precedencia sobre MATCH.
+
+### Estado
+
+    Arquitectura                              APROBADA
+    Texto contractual exacto                  3 correcciones pendientes
+    Contrato 14.3                             NO MODIFICAR TODAVIA
+    reporting_dedup.py                        NO TOCAR
+    DROP_DUP                                  NO ACTIVAR
+
+### Siguiente paso
+
+Aplicar los 3 bloqueos al texto contractual. Ejecutar Gate 0.9
+(verificar existencia real de >1 filing base independiente) para
+respaldar el bloqueo C. Reenviar al auditor para dictamen definitivo.

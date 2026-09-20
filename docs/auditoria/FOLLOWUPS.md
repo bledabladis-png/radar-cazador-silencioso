@@ -2319,3 +2319,23 @@ P65 v3 (ver iae/DICTAMENES.md #26). GO CONDICIONADO con 3 correcciones.
 - **Estado:** paquete v3 completo. Listo para dictamen contractual final.
 - **NO se ha hecho:** sin XML, sin reporting_dedup.py, sin DROP_DUP,
   sin tocar contrato 14.3.
+
+
+## P66 - Dictamen #30 y cierre de especificacion (2026-09-21)
+
+- **Origen:** dictamen del auditor externo sobre v3 con Gate 0.8.
+- **Resultado:** NO-GO contractual. GO condicionado a 3 correcciones.
+- **3 bloqueos aplicados:**
+  - A: CONFLICT prevalece sobre MATCH.
+  - B: NO_MATCH requiere resolucion completa de TODAS las filas
+    OTHERMANAGER. Si existe N/D -> N/D.
+  - C: >1 filing base -> N/D o CONFLICT, no orden arbitrario.
+- **Correcciones textuales aplicadas:**
+  - §3: definiciones reformuladas.
+  - §4: precedencia explicita.
+  - §5.2: regla de filing base unico.
+  - §11: diagrama de decision.
+- **Gate 0.8:** PASS confirmado por el auditor.
+- **Pendiente:** Gate 0.9 (verificar existencia de >1 base real).
+- **NO se ha hecho:** sin XML, sin reporting_dedup.py, sin DROP_DUP,
+  sin tocar contrato 14.3.

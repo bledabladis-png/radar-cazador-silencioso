@@ -699,6 +699,34 @@ Evidencia: `iae/evidence/p66_gate08_full_r4_coverage/`.
 
 Bloqueo material del dictamen #29: RESUELTO.
 
+
+
+### Dictamen P66 #30 recibido (2026-09-21)
+
+Resultado: NO-GO contractual definitivo.
+Resultado tecnico: GO condicionado a 3 correcciones de especificacion.
+
+3 bloqueos:
+
+- **A** CONFLICT debe tener precedencia sobre MATCH. Ambos
+  identificadores presentes con contradiccion -> CONFLICT, no MATCH.
+- **B** NO_MATCH requiere resolucion completa de TODAS las filas
+  OTHERMANAGER. Si existe alguna fila N/D -> N/D, no NO_MATCH.
+- **C** >1 filing base independiente para mismo CIK+PERIODOFREPORT
+  no puede resolverse por orden arbitrario -> N/D o CONFLICT.
+
+Los 3 bloqueos aplicados al texto contractual:
+- §3 redefinido con las 4 definiciones del dictamen #30.
+- §4 reformulado con precedencia CONFLICT > MATCH.
+- §5.2 ampliado con regla de >1 filing base.
+- §11 nuevo con diagrama de decision.
+
+Gate 0.8: PASS confirmado por el auditor.
+
+Evidencia: `iae/DICTAMENES.md` #30.
+
+Siguiente paso: Gate 0.9 (verificar existencia real de >1 filing base).
+
 ### Estado
 
     Fuente             APROBADA (OTHERMANAGER)
