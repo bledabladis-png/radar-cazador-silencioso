@@ -649,24 +649,51 @@ historica. Snapshot + hash por consulta (ver seccion 13).
 
 ## 12. Missing != Sold Contract (P63)
 
-**Origen:** dictamen F2.4 seccion 11.
+**Origen:** dictamen F2.4 seccion 11 + dictamen P63 formal (2026-09-20,
+ver DICTAMENES.md #25).
 
 ### 12.1. Principio rector
 
-"Una security no aparece" NO implica "fue vendida". La ausencia puede
-deberse a: posicion bajo minimis, tratamiento confidencial, ausencia de
-filing, o fallo de resolucion.
+"Una security no aparece en el filing publico" NO implica "fue vendida".
+La ausencia observada puede deberse a causas distintas (minimis,
+confidencialidad, otro manager, omision). El canal 13F aislado NO
+permite identificar la causa. Por eso hay que separar **hecho observado**
+de **causa inferida/conocida**.
 
-### 12.2. Seis estados obligatorios
+### 12.2. Distincion observacion vs causa (revisada por F2.4)
 
-    ZERO_REPORTED               filing existe, SHPRNAMT=0
-    MISSING                     filing no incluye la security
-    BELOW_REPORTING_THRESHOLD   bajo umbral minimis SEC
-    CONFIDENTIAL                tratada como confidencial por la SEC
-    UNRESOLVED                  identidad no resuelta
-    SOLD                        evidencia directa de venta
+La ausencia observada es un HECHO DOCUMENTAL. La causa es una
+CLASIFICACION. La dimension contractual se estructura asi:
 
-En 13F, Q4=100 -> Q1=ausencia se etiqueta MISSING salvo evidencia adicional.
+    reporting_status (observado)
+      PRESENT              la security aparece en el snapshot efectivo.
+      ZERO_REPORTED        fila INFOTABLE con SSHPRNAMT=0 (no demostrado
+                           como convencion universal; capacidad propuesta,
+                           requiere fixture real SEC).
+      NOT_PRESENT          la security no aparece en el snapshot efectivo.
+
+    absence_reason (inferida/conocida, si NOT_PRESENT)
+      MISSING              ausencia sin causa demostrable. Estado por
+                           defecto. NO equivale a "vendio".
+      BELOW_REPORTING_THRESHOLD   requiere evidencia. NO se infiere
+                           solo por ausencia.
+      CONFIDENTIAL         detectable a nivel filing via 13F-CTR / metadata
+                           de tratamiento confidencial. Atribucion
+                           security-level requiere evidencia suficiente.
+      OTHER_MANAGER        el filing puede no incluir todas las posiciones
+                           (Combination Report / 13F-NT). Requiere resolver
+                           relaciones OTHERMANAGER antes de clasificar.
+      UNKNOWN              sin informacion adicional.
+
+    identity_status (ortogonal)
+      RESOLVED | UNRESOLVED
+
+    sale_evidence (independiente)
+      NONE                 por defecto. 13F delta NO crea SOLD.
+      DIRECT               requiere fuente externa que lo demuestre.
+
+El estado `SOLD` NO existe como miembro directo del enum. Solo puede
+alcanzarse via `sale_evidence = DIRECT` con fuente adicional.
 
 ### 12.3. NO_MATCH (mapping) != NOT_TARGET (cobertura)
 
@@ -675,9 +702,99 @@ En 13F, Q4=100 -> Q1=ausencia se etiqueta MISSING salvo evidencia adicional.
 
 Prohibido transformar NO_MATCH en NOT_TARGET sin politica explicita.
 
-### 12.4. Estado
+### 12.4. Ocho reglas del dictamen P63 formal
 
-**P63 = FORMALIZADO.** Distincion obligatoria en delta_shares.py.
+    R1  EXIT does not imply SOLD.
+    R2  Absence from a public 13F Information Table does not by itself
+        identify the cause of absence.
+    R3  MISSING means unreported/absent with no stronger supported
+        absence classification.
+    R4  BELOW_REPORTING_THRESHOLD requires supporting evidence;
+        it is not inferred merely from absence.
+    R5  CONFIDENTIAL may be detected at filing level through 13F
+        confidential-treatment metadata, but security-level attribution
+        requires sufficient evidence.
+    R6  13F amendments/restatements must be resolved before
+        quarter-to-quarter delta computation.
+    R7  13F-NT / Combination / Other Manager relationships must be
+        resolved before interpreting absence at manager level.
+    R8  SOLD requires direct external evidence.
+        13F delta alone never creates SOLD.
+
+### 12.5. Arquitectura recomendada por el dictamen
+
+    SEC FILINGS
+        |
+        +--- base filing
+        +--- amendments
+        |
+        v
+    EFFECTIVE SNAPSHOT
+        |
+        +--- identity
+        +--- reporting
+        +--- metadata
+        |
+        v
+    ABSENCE CLASSIFIER (capa posterior)
+        |
+        +--- UNKNOWN / MISSING
+        +--- CONFIDENTIAL (con evidencia)
+        +--- OTHER_MANAGER (con evidencia)
+        |
+        v
+    SALE EVIDENCE
+        NONE / DIRECT
+
+`delta_shares.py` NO es un clasificador economico de ventas. Su funcion
+es reconciliar MATCH_KEY entre periodos y producir delta. La clasificacion
+de la causa vive en una capa posterior que conoce filing metadata,
+amendments, 13F-CTR, other managers e identidad.
+
+### 12.6. Evidencia empirica
+
+Test contractual en `tests/test_sec_13f_delta_shares.py`:
+
+    test_p63_amendment_evita_exit_falso
+      Demuestra R6: Q4 con AAPL + Q1 base sin AAPL + Q1/A con NEW
+      HOLDINGS -> snapshot efectivo incluye el amendment -> delta
+      produce BOTH, NO EXIT. Si el sistema usara el filing original,
+      produciria una venta falsa.
+
+    test_p63_othermanager_produce_exit_mas_new
+      Documenta R7: filing_manager_cik parent en Q4 + child en Q1
+      produce EXIT parent + NEW child. NO es bug: implementa C2
+      fielmente. La resolucion de relaciones queda como capacidad
+      diferida v1 (filer continuity = caracterizacion, no threshold).
+
+    test_p63_no_hay_estado_sold_fabricado (assert inline)
+      Documenta R8: "SOLD" no existe en ALL_MATCH_STATUSES.
+
+### 12.7. Matices del dictamen sobre la version previa
+
+Dos afirmaciones de la version anterior del contrato requieren matiz:
+
+    (a) "MISSING = filing no incluye la security". La version revisada
+        define MISSING como "ausencia sin causa demostrable", NO como
+        "toda ausencia". La equivalencia fuerte EXIT -> MISSING se
+        rechaza.
+
+    (b) "CONFIDENTIAL es completamente invisible en EDGAR". Desde
+        2023-02-28, las solicitudes 13F-CTR son electronicas. El
+        filing publico puede indicar que hubo posiciones omitidas.
+        Deteccion filing-level: posible. Atribucion security-level:
+        requiere evidencia.
+
+### 12.8. Estado
+
+**P63 = GO CONDICIONADO (F2.4 formal, 2026-09-20).**
+
+    Implementado: docstring + 2 tests contractuales.
+    Diferido v1: clasificacion automatica de absence_reason desde
+                 metadata de filing (13F-CTR, OTHERMANAGER).
+    Fuera de alcance v1: BELOW_REPORTING_THRESHOLD a nivel security
+                 (requiere universo completo del manager).
+    No aplicable a delta_shares.py: clasificacion economica de ventas.
 
 ---
 

@@ -35,6 +35,7 @@
 | 22 | `INSTITUTIONAL_ACCUMULATION_OPENFIGI_DICTAMEN_F23BIS.md` | **Estado global:** GO CONDICIONADO |
 | 23 | `NIPC_P70_DICTAMEN.md` | **Estado:** GO CONDICIONADO (caso B del arbol de decision del dictamen del audit |
 | 24 | `F24_DICTAMEN.md` (integrado en este consolidado) | **GO CONDICIONADO arquitectura** + 3 bloqueantes. D1 GO, D2 GO CONDICIONADO, D3 GO, Q12 Modelo A, AGREG. Opcion 2, OpenFIGI GO CONDICIONADO, Policy v1.3 NO. THRESHOLD_2 BLOQUEADO. |
+| 25 | `P63_DICTAMEN.md` (integrado en este consolidado) | **GO CONDICIONADO**. `EXIT != SOLD` aprobado. `MISSING = ausencia sin causa demostrable` (no toda ausencia). Amendments pre-delta OBLIGATORIO. Arquitectura multi-dimensional. |
 
 ---
 
@@ -324,5 +325,66 @@ formal con las decisiones Q12/A o Q12/B).
     Certificacion "acumulacion" BLOQUEADA
 
 **Siguiente:** actualizar FASE_A6_PLAN.md + REESTRUCTURACION_MODULO.md + NIPC_CONTRATOS_SEMANTICOS_v1.md. Gate 0 de los 3 bloqueantes antes de tocar codigo.
+
+---
+
+
+## 25. P63 - Dictamen formal (2026-09-20)
+
+**Tipo:** dictamen del auditor externo sobre el informe tecnico P63
+(Missing != Sold) y su propuesta de implementacion.
+
+**Resultado global:** GO CONDICIONADO.
+
+### Decisiones
+
+    EXIT != SOLD                                          GO
+    Opcion A original (constante EXIT -> MISSING)         NO-GO
+    Opcion A revisada (documentar + tests + separar)      GO CONDICIONADO
+    Opcion B (exit_reason columna)                        NO por ahora
+    Opcion C (renombrar STATUS_EXIT)                      NO-GO
+    Implementacion en delta_shares.py                     sin cambios API
+
+### Hallazgos materiales
+
+1. MISSING != "toda ausencia". La equivalencia fuerte EXIT -> MISSING
+   se rechaza. Separar hecho observado (NOT_PRESENT) de causa inferida
+   (MISSING / BELOW_REPORTING_THRESHOLD / CONFIDENTIAL / OTHER_MANAGER).
+
+2. Arquitectura multi-dimensional recomendada:
+   identity_status + reporting_status + absence_reason + sale_evidence.
+
+3. Amendments/restatements deben resolverse ANTES de delta. R6.
+
+4. 13F-NT / Combination / Other Manager deben resolverse antes de
+   interpretar ausencia a nivel manager. R7. Capacidad diferida v1.
+
+5. CONFIDENTIAL es filing-level detectable via 13F-CTR desde 2023-02-28,
+   pero security-level attribution requiere evidencia. R5.
+
+6. BELOW_REPORTING_THRESHOLD NO es identificable por fila con 13F
+   publico aislado. R4.
+
+7. ZERO_REPORTED requiere fixture SEC real para demostrarse como
+   convencion universal. Capacidad propuesta, no hecho probado.
+
+8. SOLD requiere evidencia externa directa. R8.
+
+### 8 reglas integradas en el contrato
+
+Seccion 12.4 de NIPC_CONTRATOS_SEMANTICOS_v1.md (in-place).
+
+### Evidencia empirica
+
+    tests/test_sec_13f_delta_shares.py
+      test_p63_amendment_evita_exit_falso              R6 PASS
+      test_p63_othermanager_produce_exit_mas_new       R7 documentado
+      assert inline: "SOLD" not in ALL_MATCH_STATUSES  R8 PASS
+
+### Estado
+
+    P63 implementado (docstring + tests). NO toca API de delta_shares.py.
+    Clasificacion automatica de absence_reason: DIFERIDA v1.
+    Fuera de alcance v1: BELOW_REPORTING_THRESHOLD security-level.
 
 ---
