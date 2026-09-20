@@ -15,8 +15,6 @@ NO tocan codigo productivo.
 '''
 from pathlib import Path
 
-import pytest
-
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 CONTRATO = REPO_ROOT / 'docs' / 'auditoria' / 'iae' / 'NIPC_CONTRATOS_SEMANTICOS_v1.md'
@@ -127,37 +125,60 @@ def test_p66_p65_forbidden_terms_no_economic_owner():
 XFAIL = '14.3 implementation pending (GO #40 step 2)'
 
 
-@pytest.mark.xfail(reason=XFAIL, strict=False)
 def test_p66_r3_true_un_base_notice():
     '''14.3.1: 1 base NOTICE + scope verificado -> R3 = TRUE.'''
-    raise AssertionError('P66 14.3.1 no implementado: R3=TRUE esperado')
+    from src.institutional_accumulation.aggregation import reporting_dedup as rd
+    filings = [{
+        "PERIODOFREPORT": "2026-03-31",
+        "SUBMISSIONTYPE": "13F-NT",
+        "REPORTTYPE": "13F NOTICE",
+        "AMENDMENTNO": None, "AMENDMENTTYPE": None,
+    }]
+    assert rd.resolve_r3(filings, period="2026-03-31",
+                         scope_completeness_verified=True) == "TRUE"
 
 
-@pytest.mark.xfail(reason=XFAIL, strict=False)
 def test_p66_r3_false_scope_completo_sin_filings():
     '''14.3.1 PASO 0+4: scope completo verificado + 0 filings -> R3 = FALSE.'''
-    raise AssertionError('P66 14.3.1 no implementado: R3=FALSE esperado')
+    from src.institutional_accumulation.aggregation import reporting_dedup as rd
+    assert rd.resolve_r3([], period="2026-03-31",
+                         scope_completeness_verified=True) == "FALSE"
 
 
-@pytest.mark.xfail(reason=XFAIL, strict=False)
 def test_p66_r3_nd_scope_no_demostrable():
     '''14.3.1 PASO 0: scope no demostrable -> R3 = N/D.
 
     Regla: "no aparece" != "no existe".
     '''
-    raise AssertionError('P66 14.3.1 PASO 0 no implementado: N/D esperado')
+    from src.institutional_accumulation.aggregation import reporting_dedup as rd
+    assert rd.resolve_r3([], period="2026-03-31",
+                         scope_completeness_verified=False) == "N/D"
 
 
-@pytest.mark.xfail(reason=XFAIL, strict=False)
 def test_p66_r3_nd_familias_mixtas():
     '''14.3.1 PASO 3: NT + HR COMBINATION -> R3 = N/D (Gate 0.9).'''
-    raise AssertionError('P66 14.3.1 PASO 3 no implementado: N/D esperado')
+    from src.institutional_accumulation.aggregation import reporting_dedup as rd
+    filings = [
+        {"PERIODOFREPORT": "2026-03-31", "SUBMISSIONTYPE": "13F-NT",
+         "REPORTTYPE": "13F NOTICE", "AMENDMENTNO": None, "AMENDMENTTYPE": None},
+        {"PERIODOFREPORT": "2026-03-31", "SUBMISSIONTYPE": "13F-HR",
+         "REPORTTYPE": "13F COMBINATION REPORT", "AMENDMENTNO": None, "AMENDMENTTYPE": None},
+    ]
+    assert rd.resolve_r3(filings, period="2026-03-31",
+                         scope_completeness_verified=True) == "N/D"
 
 
-@pytest.mark.xfail(reason=XFAIL, strict=False)
 def test_p66_r3_nd_multiples_bases():
     '''14.3.1 PASO 4: >1 BASE -> R3 = N/D (no primero/ultimo/MAX).'''
-    raise AssertionError('P66 14.3.1 PASO 4 no implementado: N/D esperado')
+    from src.institutional_accumulation.aggregation import reporting_dedup as rd
+    filings = [
+        {"PERIODOFREPORT": "2026-03-31", "SUBMISSIONTYPE": "13F-NT",
+         "REPORTTYPE": "13F NOTICE", "AMENDMENTNO": None, "AMENDMENTTYPE": None},
+        {"PERIODOFREPORT": "2026-03-31", "SUBMISSIONTYPE": "13F-NT",
+         "REPORTTYPE": "13F NOTICE", "AMENDMENTNO": None, "AMENDMENTTYPE": None},
+    ]
+    assert rd.resolve_r3(filings, period="2026-03-31",
+                         scope_completeness_verified=True) == "N/D"
 
 
 def test_p66_amendment_chain_hueco():
@@ -221,26 +242,55 @@ def test_p66_mapping_formnum_cik_conflict():
     assert cik is None
 
 
-@pytest.mark.xfail(reason=XFAIL, strict=False)
 def test_p66_r4_conflict_prevalece_sobre_match():
     '''14.3.4: fila con CIK=A + FormNum->C -> CONFLICT (no MATCH).
 
     La implementacion NO puede elegir la fila consistente e ignorar
     la contradictoria respecto de A.
     '''
-    raise AssertionError('P66 14.3.4 no implementado: CONFLICT esperado')
+    import pandas as pd
+    from src.institutional_accumulation.aggregation import reporting_dedup as rd
+    cover = pd.DataFrame([
+        {"FORM13FFILENUMBER": "028-11111", "CIK": "A",
+         "PERIODOFREPORT": "2026-03-31"},
+        {"FORM13FFILENUMBER": "028-22222", "CIK": "C",
+         "PERIODOFREPORT": "2026-03-31"},
+    ])
+    m = rd.build_formnum_cik_mapping(cover, "2026-03-31")
+    rows = [
+        {"CIK": "A", "FORM13FFILENUMBER": "028-11111"},
+        {"CIK": "A", "FORM13FFILENUMBER": "028-22222"},
+    ]
+    assert rd.resolve_r4("A", rows, m) == "CONFLICT"
 
 
-@pytest.mark.xfail(reason=XFAIL, strict=False)
 def test_p66_r4_conflict_otro_manager_no_contamina():
     '''14.3.4: conflicto de manager C no invalida MATCH de A.'''
-    raise AssertionError('P66 14.3.4 no implementado: MATCH de A esperado')
+    import pandas as pd
+    from src.institutional_accumulation.aggregation import reporting_dedup as rd
+    cover = pd.DataFrame([
+        {"FORM13FFILENUMBER": "028-11111", "CIK": "A",
+         "PERIODOFREPORT": "2026-03-31"},
+        {"FORM13FFILENUMBER": "028-33333", "CIK": "D",
+         "PERIODOFREPORT": "2026-03-31"},
+    ])
+    m = rd.build_formnum_cik_mapping(cover, "2026-03-31")
+    rows = [
+        {"CIK": "A", "FORM13FFILENUMBER": "028-11111"},
+        # Fila C INCONSISTENT: CIK=C y FormNum->D.
+        {"CIK": "C", "FORM13FFILENUMBER": "028-33333"},
+    ]
+    assert rd.resolve_r4("A", rows, m) == "MATCH"
 
 
-@pytest.mark.xfail(reason=XFAIL, strict=False)
 def test_p66_r4_nd_identidad_no_resuelta():
     '''14.3.4: fila con identidad no resuelta -> N/D (no NO_MATCH).'''
-    raise AssertionError('P66 14.3.4 no implementado: N/D esperado')
+    from src.institutional_accumulation.aggregation import reporting_dedup as rd
+    rows = [
+        # Sin CIK, FormNum que no resuelve.
+        {"CIK": None, "FORM13FFILENUMBER": None},
+    ]
+    assert rd.resolve_r4("A", rows, {}) == "N/D"
 
 
 def test_p66_formnum_padding_flexible():

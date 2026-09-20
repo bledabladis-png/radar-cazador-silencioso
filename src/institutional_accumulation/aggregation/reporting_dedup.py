@@ -697,3 +697,184 @@ def validate_amendment_chain(amendments):
     if sorted(nums) != list(range(1, len(nums) + 1)):
         return "N/D"
     return "OK"
+
+
+# --- 14.3.1 R3(B, period) tri-state ---
+
+def resolve_r3(filings, *, period, scope_completeness_verified):
+    """14.3.1. Determina R3(B, period) tri-state.
+
+    filings: iterable de dicts con claves:
+        PERIODOFREPORT, SUBMISSIONTYPE, REPORTTYPE,
+        AMENDMENTNO, AMENDMENTTYPE
+
+    scope_completeness_verified: bool. Corresponde al PASO 0.
+        False -> R3 = N/D inmediatamente.
+        True  -> procede a PASO 1-4.
+
+    Devuelve "TRUE" / "FALSE" / "N/D".
+    """
+    # PASO 0: completitud del scope.
+    if not scope_completeness_verified:
+        return R3_ND
+
+    # PASO 1: filtrar filings R4 del periodo.
+    r4_filings = []
+    for f in (filings or []):
+        p = str(f.get("PERIODOFREPORT") or "").strip()
+        if p != str(period).strip():
+            continue
+        fam = classify_filing_family(
+            f.get("SUBMISSIONTYPE"), f.get("REPORTTYPE"),
+        )
+        if fam is None:
+            continue
+        r4_filings.append((fam, f))
+
+    if not r4_filings:
+        return R3_FALSE
+
+    # PASO 2: clasificar por rol.
+    bases = []
+    amendments = []
+    families = set()
+    for fam, f in r4_filings:
+        families.add(fam)
+        rol = classify_filing_role(f.get("SUBMISSIONTYPE"))
+        if rol == FILING_ROLE_BASE:
+            bases.append((fam, f))
+        elif rol == FILING_ROLE_AMENDMENT:
+            amendments.append((fam, f))
+        else:
+            return R3_ND
+
+    # PASO 3: pluralidad de familias documentales.
+    if len(families) > 1:
+        return R3_ND
+
+    # PASO 4: conteo y validacion.
+    if len(bases) == 0 and len(amendments) == 0:
+        return R3_FALSE
+    if len(bases) == 0 and len(amendments) >= 1:
+        return R3_ND
+    if len(bases) > 1:
+        return R3_ND
+
+    # BASE == 1: validar cadena de amendments.
+    chain = [
+        {"AMENDMENTNO": a.get("AMENDMENTNO"),
+         "AMENDMENTTYPE": a.get("AMENDMENTTYPE")}
+        for _, a in amendments
+    ]
+    if validate_amendment_chain(chain) != "OK":
+        return R3_ND
+    return R3_TRUE
+
+
+# --- 14.3.4 R4(A, B) estados y candidate_A ---
+
+def _row_identity_state(cik_r, fn_status, fn_cik, fn_ciks, a_cik):
+    """Estado interno de una fila OTHERMANAGER respecto de A.
+
+    Devuelve tupla (is_candidate, identity_ok, has_conflict):
+        is_candidate: candidate_A(r)
+        identity_ok:  IDENTITY_RESOLVED segun 0.3
+        has_conflict: CONFLICT local (INCONSISTENT o FormNum->>1CIK sobre A)
+    """
+    is_candidate = (cik_r == a_cik) or (a_cik in fn_ciks)
+    inconsistent = (
+        bool(cik_r)
+        and fn_status == FORMNUM_STATUS_IDENTITY_RESOLVED
+        and fn_cik != cik_r
+    )
+    conflict_fn = (
+        fn_status == FORMNUM_STATUS_CONFLICT and a_cik in fn_ciks
+    )
+    identity_ok = (
+        (bool(cik_r) and (fn_status is None or fn_cik == cik_r))
+        or (not cik_r and fn_status == FORMNUM_STATUS_IDENTITY_RESOLVED)
+    )
+    return is_candidate, identity_ok, (inconsistent or conflict_fn)
+
+
+def resolve_r4(a_cik, othermanager_rows, formnum_mapping):
+    """14.3.4. Determina R4(A, B).
+
+    a_cik: CIK del manager A.
+    othermanager_rows: iterable de dicts con claves CIK, FORM13FFILENUMBER
+        (ACCESSION_NUMBER opcional). Es el contenido de OTHERMANAGER del
+        filing efectivo de B.
+    formnum_mapping: dict producido por build_formnum_cik_mapping.
+
+    Devuelve "MATCH" / "NO_MATCH" / "N/D" / "CONFLICT".
+
+    Precondicion: el filing efectivo B ya ha sido determinado por R3.
+    Si R3 != TRUE, el caller no debe invocar esta funcion.
+    """
+    a_cik_s = str(a_cik or "").strip()
+    if not othermanager_rows:
+        return R4_ND  # OTHERMANAGER ausente/vacio -> N/D
+
+    has_match = False
+    has_nd = False
+    has_conflict = False
+
+    for r in othermanager_rows:
+        cik_r = str(r.get("CIK") or "").strip()
+        fn_raw = r.get("FORM13FFILENUMBER")
+        fn_status = None
+        fn_cik = None
+        fn_ciks = []
+
+        if fn_raw is not None and str(fn_raw).strip():
+            canon = canonicalize_form13f_filenumber(fn_raw)
+            if canon is not None:
+                entry = (formnum_mapping or {}).get(canon)
+                if entry is not None:
+                    fn_status = entry["status"]
+                    fn_cik = entry.get("cik")
+                    fn_ciks = entry.get("ciks") or []
+
+        is_cand, identity_ok, local_conflict = _row_identity_state(
+            cik_r, fn_status, fn_cik, fn_ciks, a_cik_s,
+        )
+
+        if is_cand:
+            if local_conflict:
+                has_conflict = True
+            elif identity_ok:
+                has_match = True
+            else:
+                has_nd = True
+        else:
+            # Fila no-candidate: solo puede aportar N/D si su identidad no
+            # esta resuelta. Un conflicto en fila no-candidate NO contamina.
+            if not identity_ok and not local_conflict:
+                has_nd = True
+
+    if has_conflict:
+        return R4_CONFLICT
+    if has_match:
+        return R4_MATCH
+    if has_nd:
+        return R4_ND
+    return R4_NO_MATCH
+
+
+# --- 14.3 L3 booleano explicito ---
+
+def evaluate_l3(r1, r2, r3, r4, r5):
+    """14.3. L3(A, B, S, period) = R1 AND R2 AND (R3==TRUE)
+    AND (R4==MATCH) AND R5.
+
+    R3 y R4 llegan como estados string. N/D y CONFLICT NUNCA se
+    convierten internamente en False; se preservan como estado.
+    Si R3 != TRUE o R4 != MATCH, el resultado es False.
+    """
+    return (
+        bool(r1)
+        and bool(r2)
+        and r3 == R3_TRUE
+        and r4 == R4_MATCH
+        and bool(r5)
+    )
