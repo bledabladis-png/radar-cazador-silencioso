@@ -1713,3 +1713,55 @@ Expediente F2.4 en su version v4. Listo para regenerar entrega
 consolidada y enviar al auditor.
 
 ---
+
+
+---
+
+## Ciclo 2026-09-20 (septimus) - F2.4 GO condicionado - correcciones finales
+
+**HEAD al cierre:** c5abbbc.
+**Ahead origin/main:** 126.
+
+### Contexto
+
+El auditor externo ha dado GO condicionado a 5 correcciones finales.
+Todas aplicadas en este ciclo.
+
+### Correcciones aplicadas
+
+  1. RECONCILIACION §5: la dependencia de A.6 se amplia de "D1/D2/D3"
+     a "D1/D2/D3 + Q12, AGREG., OpenFIGI, Policy v1.3".
+  2. FASE_A6_PLAN A.6.1: titulo ampliado a "divergencias y decisiones
+     arquitectonicas asociadas".
+  3. FASE_A6_PLAN A.6.2: nota explicita sobre commits adicionales
+     segun Q12/AGREG. (no son exactamente 3 commits fijos).
+  4. FASE_A6_PLAN A.6.4: rama condicional D2=A (TARGET real -> recalcular
+     evidencia v2) vs D2=B (proxy -> conservar separado, no apto
+     THRESHOLD_2, no exigir TARGET_PAIRWISE contractual).
+  5. Tests: `@pytest.mark.xfail(strict=True, ...)` en los 5 xfail. Si
+     una divergencia desaparece accidentalmente antes de retirar el
+     marcador, XPASS falla la suite -> fuerza sincronizacion
+     codigo/test/documentacion.
+  6. Test P60: nuevo `test_p60_identity_type_invalido_raises` cubre
+     `identity_type="INVALID"` -> ValueError.
+
+### Tests contractuales (final)
+
+    tests/test_p60_contract.py    5 tests (4 pass + 1 xfail strict)
+    tests/test_p61_contract.py    4 tests (3 pass + 1 xfail strict)
+    tests/test_p38_contract.py    5 tests (2 pass + 3 xfail strict)
+
+    Total: 15 tests, 10 pass, 5 xfail strict.
+
+### Verificacion
+
+    compileall:  OK
+    pyflakes:    0 warnings
+    suite:       989 passed + 5 xfailed + 2 skipped
+
+### Estado
+
+Expediente F2.4 en su version final (v5). Listo para enviar.
+F2.4 GO CONDICIONADO a este paquete.
+
+---
