@@ -160,15 +160,65 @@ def test_p66_r3_nd_multiples_bases():
     raise AssertionError('P66 14.3.1 PASO 4 no implementado: N/D esperado')
 
 
-@pytest.mark.xfail(reason=XFAIL, strict=False)
 def test_p66_amendment_chain_hueco():
     '''14.3.2: cadena 1, 3 (falta 2) -> R3 = N/D.'''
-    raise AssertionError('P66 14.3.2 no implementado: N/D por hueco')
+    from src.institutional_accumulation.aggregation import reporting_dedup as rd
+    chain = [
+        {"AMENDMENTNO": 1, "AMENDMENTTYPE": "RESTATEMENT"},
+        {"AMENDMENTNO": 3, "AMENDMENTTYPE": "NEW_HOLDINGS"},
+    ]
+    assert rd.validate_amendment_chain(chain) == "N/D"
 
-@pytest.mark.xfail(reason=XFAIL, strict=False)
 def test_p66_amendment_chain_duplicado():
     '''14.3.2: cadena 1, 1 (duplicado) -> R3 = N/D.'''
-    raise AssertionError('P66 14.3.2 no implementado: N/D por duplicado')
+    from src.institutional_accumulation.aggregation import reporting_dedup as rd
+    chain = [
+        {"AMENDMENTNO": 1, "AMENDMENTTYPE": "RESTATEMENT"},
+        {"AMENDMENTNO": 1, "AMENDMENTTYPE": "NEW_HOLDINGS"},
+    ]
+    assert rd.validate_amendment_chain(chain) == "N/D"
+
+
+def test_p66_amendment_chain_valida():
+    '''14.3.2: cadena 1, 2 valida -> OK.'''
+    from src.institutional_accumulation.aggregation import reporting_dedup as rd
+    chain = [
+        {"AMENDMENTNO": 1, "AMENDMENTTYPE": "RESTATEMENT"},
+        {"AMENDMENTNO": 2, "AMENDMENTTYPE": "NEW_HOLDINGS"},
+    ]
+    assert rd.validate_amendment_chain(chain) == "OK"
+
+
+def test_p66_mapping_formnum_cik_1_a_1():
+    '''14.3.5: FormNum -> 1 CIK -> IDENTITY_RESOLVED.'''
+    import pandas as pd
+    from src.institutional_accumulation.aggregation import reporting_dedup as rd
+    df = pd.DataFrame([
+        {"FORM13FFILENUMBER": "028-12345", "CIK": "0000000001",
+         "PERIODOFREPORT": "2026-03-31", "ACCESSION_NUMBER": "acc-1"},
+        {"FORM13FFILENUMBER": "28-12345",  "CIK": "0000000001",
+         "PERIODOFREPORT": "2026-03-31", "ACCESSION_NUMBER": "acc-2"},
+    ])
+    m = rd.build_formnum_cik_mapping(df, "2026-03-31")
+    status, cik = rd.resolve_formnum_to_cik("028-12345", m)
+    assert status == "IDENTITY_RESOLVED"
+    assert cik == "0000000001"
+
+
+def test_p66_mapping_formnum_cik_conflict():
+    '''14.3.5: FormNum -> >1 CIK -> CONFLICT.'''
+    import pandas as pd
+    from src.institutional_accumulation.aggregation import reporting_dedup as rd
+    df = pd.DataFrame([
+        {"FORM13FFILENUMBER": "028-12345", "CIK": "0000000001",
+         "PERIODOFREPORT": "2026-03-31", "ACCESSION_NUMBER": "acc-1"},
+        {"FORM13FFILENUMBER": "028-12345", "CIK": "0000000002",
+         "PERIODOFREPORT": "2026-03-31", "ACCESSION_NUMBER": "acc-2"},
+    ])
+    m = rd.build_formnum_cik_mapping(df, "2026-03-31")
+    status, cik = rd.resolve_formnum_to_cik("028-12345", m)
+    assert status == "CONFLICT"
+    assert cik is None
 
 
 @pytest.mark.xfail(reason=XFAIL, strict=False)

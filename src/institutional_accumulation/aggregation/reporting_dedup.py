@@ -545,3 +545,155 @@ def canonicalize_form13f_filenumber(value):
         FORMNUM_PREFIX_CANONICAL,
         sufijo_sin_zeros.zfill(FORMNUM_SUFFIX_WIDTH),
     )
+
+
+# --- 14.3.1 PASO 1: familia documental ---
+
+FILING_FAMILY_NOTICE = "NOTICE"
+FILING_FAMILY_COMBINATION = "COMBINATION"
+ALL_FILING_FAMILIES = (FILING_FAMILY_NOTICE, FILING_FAMILY_COMBINATION)
+
+FILING_ROLE_BASE = "BASE"
+FILING_ROLE_AMENDMENT = "AMENDMENT"
+ALL_FILING_ROLES = (FILING_ROLE_BASE, FILING_ROLE_AMENDMENT)
+
+
+def classify_filing_family(submissiontype, reporttype):
+    """14.3.1 PASO 1. Familia documental (NOTICE / COMBINATION).
+
+    NOTICE:       SUBMISSIONTYPE in {13F-NT, 13F-NT/A} AND REPORTTYPE = 13F NOTICE
+    COMBINATION:  SUBMISSIONTYPE in {13F-HR, 13F-HR/A} AND REPORTTYPE = 13F COMBINATION REPORT
+
+    Devuelve "NOTICE" / "COMBINATION" / None.
+    """
+    st = (str(submissiontype or "")).strip().upper()
+    rt = (str(reporttype or "")).strip().upper()
+    if st in ("13F-NT", "13F-NT/A") and rt == "13F NOTICE":
+        return FILING_FAMILY_NOTICE
+    if st in ("13F-HR", "13F-HR/A") and rt == "13F COMBINATION REPORT":
+        return FILING_FAMILY_COMBINATION
+    return None
+
+
+def classify_filing_role(submissiontype):
+    """14.3.1 PASO 2. Rol BASE / AMENDMENT por SUBMISSIONTYPE.
+
+    ISAMENDMENT es SOLO control de coherencia; no se usa aqui.
+    """
+    st = (str(submissiontype or "")).strip().upper()
+    if st in ("13F-NT", "13F-HR"):
+        return FILING_ROLE_BASE
+    if st in ("13F-NT/A", "13F-HR/A"):
+        return FILING_ROLE_AMENDMENT
+    return None
+
+
+# --- 14.3.5 Mapping FormNum -> CIK ---
+
+def build_formnum_cik_mapping(coverpage_df, period):
+    """14.3.5. Construye mapping FormNum normalizado -> CIK.
+
+    Devuelve dict:
+        {formnum_canonico: {
+            "status": "IDENTITY_RESOLVED" | "CONFLICT",
+            "cik": str | None,
+            "ciks": list[str],
+            "source_accessions": list[str],
+        }}
+    """
+    out = {}
+    if coverpage_df is None or coverpage_df.empty:
+        return out
+    df = coverpage_df.copy()
+    for col in ("FORM13FFILENUMBER", "CIK", "PERIODOFREPORT"):
+        if col not in df.columns:
+            return out
+    df = df[df["PERIODOFREPORT"].astype(str).str.strip() == str(period).strip()]
+    df = df[df["FORM13FFILENUMBER"].notna() & df["CIK"].notna()]
+    groups = {}
+    for _, row in df.iterrows():
+        canon = canonicalize_form13f_filenumber(row.get("FORM13FFILENUMBER"))
+        if canon is None:
+            continue
+        cik = str(row.get("CIK")).strip()
+        if not cik:
+            continue
+        acc = row.get("ACCESSION_NUMBER")
+        groups.setdefault(canon, {"ciks": set(), "accessions": set()})
+        groups[canon]["ciks"].add(cik)
+        if acc is not None:
+            groups[canon]["accessions"].add(str(acc))
+    for canon, g in groups.items():
+        ciks = sorted(g["ciks"])
+        if len(ciks) == 1:
+            out[canon] = {
+                "status": FORMNUM_STATUS_IDENTITY_RESOLVED,
+                "cik": ciks[0],
+                "ciks": ciks,
+                "source_accessions": sorted(g["accessions"]),
+            }
+        else:
+            out[canon] = {
+                "status": FORMNUM_STATUS_CONFLICT,
+                "cik": None,
+                "ciks": ciks,
+                "source_accessions": sorted(g["accessions"]),
+            }
+    return out
+
+
+def resolve_formnum_to_cik(formnum, mapping):
+    """14.3.5. Resuelve un FormNum a su CIK contractual.
+
+    Devuelve (status, cik):
+        ("IDENTITY_RESOLVED", cik)
+        ("UNRESOLVED", None)   FormNum no canonicalizable o ausente
+        ("CONFLICT", None)     resuelve a >1 CIK
+    """
+    canon = canonicalize_form13f_filenumber(formnum)
+    if canon is None:
+        return (FORMNUM_STATUS_UNRESOLVED, None)
+    entry = (mapping or {}).get(canon)
+    if entry is None:
+        return (FORMNUM_STATUS_UNRESOLVED, None)
+    if entry["status"] == FORMNUM_STATUS_CONFLICT:
+        return (FORMNUM_STATUS_CONFLICT, None)
+    return (entry["status"], entry.get("cik"))
+
+
+# --- 14.3.2 Validacion de cadena de amendments ---
+
+def validate_amendment_chain(amendments):
+    """14.3.2. Valida la cadena de amendments de una base.
+
+    Reglas (fail-closed):
+        - AMENDMENTNO entero 1..99
+        - AMENDMENTTYPE in {RESTATEMENT, NEW_HOLDINGS}
+        - numeros unicos
+        - secuencia sin huecos desde 1 hasta N
+
+    Devuelve "OK" si la cadena es valida (incluida vacia) o "N/D".
+    """
+    if amendments is None:
+        return "OK"
+    items = list(amendments)
+    if not items:
+        return "OK"
+    nums = []
+    for a in items:
+        raw = a.get("AMENDMENTNO")
+        try:
+            n = int(raw)
+        except (TypeError, ValueError):
+            return "N/D"
+        if n < 1 or n > 99:
+            return "N/D"
+        atype = str(a.get("AMENDMENTTYPE") or "").strip().upper()
+        if atype not in ALL_AMENDMENT_TYPES:
+            return "N/D"
+        nums.append(n)
+    if len(nums) != len(set(nums)):
+        return "N/D"
+    if sorted(nums) != list(range(1, len(nums) + 1)):
+        return "N/D"
+    return "OK"
