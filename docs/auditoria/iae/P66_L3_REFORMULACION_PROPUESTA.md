@@ -210,6 +210,18 @@ al periodo de analisis. Prohibido filtrar por directorio fisico.
              PROHIBIDO: primero encontrado, ultimo encontrado,
              MAX(ACCESSION), MAX(FILING_DATE).
 
+         Evidencia empirica (Gate 0.9, 2026-09-21):
+
+         - 4,596 grupos (CIK, PERIOD) analizados en Q4+Q1.
+         - 1 caso con >1 filing base: CIK 0002016827 (Q4).
+         - Patron MIXED (13F-NT presentado 2026-01-02 +
+           13F-HR COMBINATION presentado 2026-02-20), mismo
+           PERIODOFREPORT, mismo OTHERMANAGER.
+         - 0 casos de duplicidad estricta (MULTIPLE_NOTICE o
+           MULTIPLE_COMBINATION).
+         - El caso se clasifica como N/D fail-closed.
+         - Detalle: `iae/evidence/p66_gate09_multiple_base/`.
+
       4. R4 se evalua sobre el snapshot efectivo, NO sobre el base.
 
     Salvaguardas:

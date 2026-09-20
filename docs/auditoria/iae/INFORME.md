@@ -727,6 +727,39 @@ Evidencia: `iae/DICTAMENES.md` #30.
 
 Siguiente paso: Gate 0.9 (verificar existencia real de >1 filing base).
 
+
+
+### Gate 0.9 ejecutado (2026-09-21)
+
+Origen: bloqueo C del dictamen #30.
+
+Verificacion empirica de >1 filing base independiente por
+(CIK, PERIODOFREPORT).
+
+| Metrica | Q4 2025 | Q1 2026 |
+|---------|--------:|--------:|
+| Grupos (CIK, PERIOD) | 2,287 | 2,309 |
+| Con 1 filing base | 2,286 | 2,309 |
+| Con >1 filing base | 1 | 0 |
+| MULTIPLE_NOTICE | 0 | 0 |
+| MULTIPLE_COMBINATION | 0 | 0 |
+| MIXED (NT + HR) | 1 | 0 |
+
+Caso unico: CIK 0002016827 (Q4). Patron MIXED: 13F-NT presentado
+2026-01-02 (0 holdings, delegacion total a Vident Advisory) +
+13F-HR COMBINATION presentado 2026-02-20 (78 holdings, misma
+relacion OTHERMANAGER). Mismo PERIODOFREPORT.
+
+Interpretacion: evolucion documental del filer. El contrato lo
+clasifica correctamente como N/D fail-closed.
+
+Conclusion: la regla del bloqueo C esta empiricamente justificada.
+Sin cambios contractuales necesarios.
+
+Evidencia: `iae/evidence/p66_gate09_multiple_base/`.
+
+Bloqueo C del dictamen #30: RESUELTO.
+
 ### Estado
 
     Fuente             APROBADA (OTHERMANAGER)

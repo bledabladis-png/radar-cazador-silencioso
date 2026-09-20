@@ -2339,3 +2339,23 @@ P65 v3 (ver iae/DICTAMENES.md #26). GO CONDICIONADO con 3 correcciones.
 - **Pendiente:** Gate 0.9 (verificar existencia de >1 base real).
 - **NO se ha hecho:** sin XML, sin reporting_dedup.py, sin DROP_DUP,
   sin tocar contrato 14.3.
+
+
+## P66 - Gate 0.9 verificacion de >1 filing base (2026-09-21)
+
+- **Origen:** bloqueo C del dictamen #30.
+- **Resultado:** 1 caso en 4,596 grupos (0.02%).
+  - Q4 2025: CIK 0002016827 con 13F-NT (2026-01-02) + 13F-HR
+    COMBINATION (2026-02-20). Patron MIXED.
+  - Q1 2026: 0 casos.
+  - 0 casos de duplicidad estricta (MULTIPLE_NOTICE /
+    MULTIPLE_COMBINATION).
+- **Interpretacion:** evolucion documental. Mismo OTHERMANAGER
+  (Vident Advisory) en ambos filings. El contrato lo clasifica
+  como N/D fail-closed.
+- **Conclusion:** la regla del bloqueo C esta justificada.
+- **Evidencia:** `iae/evidence/p66_gate09_multiple_base/`.
+- **Pendiente:** reenviar paquete completo al auditor para
+  dictamen contractual definitivo.
+- **NO se ha hecho:** sin XML, sin reporting_dedup.py, sin DROP_DUP,
+  sin tocar contrato 14.3.
