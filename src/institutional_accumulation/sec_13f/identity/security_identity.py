@@ -79,9 +79,20 @@ EQUIVALENCE_COLUMNS = (
     "reason",
     "verified_by",
     "source_document",
+    "identity_type",
 )
 
-EQUIVALENCE_REQUIRED = EQUIVALENCE_COLUMNS[:7]
+# identity_type es opcional (Q8); si falta, se asume TICKER por
+# retrocompatibilidad con el CSV actual (0 filas).
+EQUIVALENCE_REQUIRED = (
+    "CUSIP_A",
+    "canonical_security",
+    "valid_from",
+    "valid_to",
+    "source",
+    "reason",
+    "verified_by",
+)
 CROSSWALK_COLUMNS = ("CUSIP", "ticker", "valid_from", "valid_to", "source")
 
 DEFAULT_EQUIVALENCE_PATH = Path("data/mappings/cusip_equivalence.csv")
@@ -170,6 +181,9 @@ def load_cusip_equivalence(path=DEFAULT_EQUIVALENCE_PATH):
         raise ValueError("Columnas faltantes en cusip_equivalence: " + str(missing))
     if "source_document" not in df.columns:
         df["source_document"] = None
+    if "identity_type" not in df.columns:
+        # Q8: columna opcional. Si falta, default TICKER.
+        df["identity_type"] = "TICKER"
 
     df["valid_from"] = pd.to_datetime(df["valid_from"], errors="coerce")
     df["valid_to"] = pd.to_datetime(df["valid_to"], errors="coerce")
@@ -271,7 +285,11 @@ def load_crosswalk_internal(
 # --- Resolucion ---
 
 def _find_active_equivalence(cusip, report_period, eq_df):
-    """Devuelve lista de canonical_security activos para (cusip, period)."""
+    """Devuelve lista de (canonical_security, identity_type) activos.
+
+    Q8: identity_type viene declarado por la fila del CSV. Default TICKER
+    si la columna no existe (retrocompatibilidad).
+    """
     if eq_df is None or eq_df.empty:
         return []
     sub = eq_df[eq_df["CUSIP_A"].astype(str).str.strip() == str(cusip).strip()]
@@ -284,11 +302,23 @@ def _find_active_equivalence(cusip, report_period, eq_df):
     active = sub[
         (sub["valid_from"] <= period)
         & (sub["valid_to"].isna() | (sub["valid_to"] >= period))
-    ]
-    return (
-        active["canonical_security"].dropna().astype(str).str.strip()
-        .unique().tolist()
-    )
+    ].dropna(subset=["canonical_security"])
+    if active.empty:
+        return []
+    has_type = "identity_type" in active.columns
+    out = []
+    for _, row in active.iterrows():
+        canon = str(row["canonical_security"]).strip()
+        itype = str(row["identity_type"]).strip() if has_type else "TICKER"
+        out.append((canon, itype))
+    # dedup preservando orden
+    seen = set()
+    unique = []
+    for pair in out:
+        if pair not in seen:
+            seen.add(pair)
+            unique.append(pair)
+    return unique
 
 
 def _find_active_crosswalk(cusip, report_period, cw_df):
@@ -355,10 +385,14 @@ def _resolve_identity_inner(
         result["evidence"] = {"source": "equivalence", "candidates": eq_canon}
         return result
     if len(eq_canon) == 1:
+        val, itype = eq_canon[0]
         result["security_resolution_status"] = STATUS_CANONICAL
-        result["canonical_security_kind"] = KIND_CANONICAL_EQUIVALENCE
-        result["canonical_security"] = _normalize_canonical(eq_canon[0], "TICKER")
-        result["evidence"] = {"source": "equivalence"}
+        if itype == "FIGI":
+            result["canonical_security_kind"] = KIND_CANONICAL_FIGI
+        else:
+            result["canonical_security_kind"] = KIND_CANONICAL_EQUIVALENCE
+        result["canonical_security"] = _normalize_canonical(val, itype)
+        result["evidence"] = {"source": "equivalence", "identity_type": itype}
         return result
 
     # 2. crosswalk_internal

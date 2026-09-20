@@ -169,8 +169,8 @@ def compute_coverage_pairwise(units_current, units_previous):
         "paired_security_coverage": 0.0,
         "paired_weighted_share_coverage": None,
         "coverage_status": "UNAVAILABLE",
-        "unmapped_weight_previous": 0.0,
-        "unmapped_weight_current": 0.0,
+        "unmapped_count_previous": 0.0,
+        "unmapped_count_current": 0.0,
     }
     if units_current is None or units_current.empty:
         if units_previous is None or units_previous.empty:
@@ -258,8 +258,8 @@ def compute_coverage_pairwise(units_current, units_previous):
         "paired_security_coverage": paired_sec_cov,
         "paired_weighted_share_coverage": paired_weighted,
         "coverage_status": coverage_status,
-        "unmapped_weight_previous": unmapped_prev,
-        "unmapped_weight_current": unmapped_curr,
+        "unmapped_count_previous": unmapped_prev,
+        "unmapped_count_current": unmapped_curr,
     }
 
 

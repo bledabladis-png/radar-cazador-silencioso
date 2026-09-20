@@ -136,8 +136,8 @@ def test_coverage_pairwise_ambos_mapeados():
     assert c["coverage_previous"] == 1.0
     assert c["paired_security_coverage"] == 1.0
     assert c["paired_weighted_share_coverage"] == 1.0
-    assert c["unmapped_weight_current"] == 0.0
-    assert c["unmapped_weight_previous"] == 0.0
+    assert c["unmapped_count_current"] == 0.0
+    assert c["unmapped_count_previous"] == 0.0
 
 
 def test_coverage_pairwise_parcial():
@@ -233,7 +233,8 @@ def test_compute_nipc_and_coverage_devuelve_todas_las_claves():
         "n_delta_observable",
         "coverage_previous", "coverage_current",
         "paired_security_coverage", "paired_weighted_share_coverage",
-        "unmapped_weight_previous", "unmapped_weight_current",
+        "coverage_status",
+        "unmapped_count_previous", "unmapped_count_current",
         "status",
     }
     assert expected.issubset(set(r.keys()))
@@ -390,4 +391,13 @@ def test_p61_verified_entra_al_conjunto_operacional():
     assert c["coverage_current"] == 1.0
     assert c["coverage_previous"] == 1.0
     assert c["paired_security_coverage"] == 1.0
+
+# ---- Q6 + Q8 ----
+
+def test_q6_unmapped_count_nombres():
+    c = npc.compute_coverage_pairwise(pd.DataFrame(), pd.DataFrame())
+    assert "unmapped_count_previous" in c
+    assert "unmapped_count_current" in c
+    assert "unmapped_weight_previous" not in c
+    assert "unmapped_weight_current" not in c
 

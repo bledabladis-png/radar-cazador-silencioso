@@ -383,3 +383,36 @@ def test_p61_figi_lookup_da_temporal_unverified():
     assert r["operational_mapping_status"] == "TEMPORAL_UNVERIFIED"
     assert r["canonical_security"] == "figi:BBG001S69V32"
 
+# ---- Q8: identity_type en cusip_equivalence.csv ----
+
+def test_q8_identity_type_default_ticker(tmp_path):
+    """Sin columna identity_type, default TICKER."""
+    import pandas as pd
+    p = tmp_path / "eq.csv"
+    pd.DataFrame([
+        {"CUSIP_A": "A1", "canonical_security": "MSFT",
+         "valid_from": "2024-01-01", "valid_to": "2026-12-31",
+         "source": "SEC", "reason": "r", "verified_by": "manual",
+         "source_document": None},
+    ]).to_csv(p, index=False)
+    df = si.load_cusip_equivalence(p)
+    assert "identity_type" in df.columns
+    assert df.iloc[0]["identity_type"] == "TICKER"
+
+
+def test_q8_identity_type_figi(tmp_path):
+    """Con identity_type=FIGI, kind y canonical correctos."""
+    import pandas as pd
+    p = tmp_path / "eq.csv"
+    pd.DataFrame([
+        {"CUSIP_A": "A1", "canonical_security": "BBG001S69V32",
+         "valid_from": "2024-01-01", "valid_to": "2026-12-31",
+         "source": "SEC", "reason": "r", "verified_by": "manual",
+         "source_document": None, "identity_type": "FIGI"},
+    ]).to_csv(p, index=False)
+    eq = si.load_cusip_equivalence(p)
+    r = si.resolve_security_identity("A1", "2026-03-31", equivalence_df=eq)
+    assert r["security_resolution_status"] == si.STATUS_CANONICAL
+    assert r["canonical_security"] == "figi:BBG001S69V32"
+    assert r["canonical_security_kind"] == si.KIND_CANONICAL_FIGI
+
