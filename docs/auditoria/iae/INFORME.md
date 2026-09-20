@@ -968,6 +968,39 @@ Evidencia: `iae/DICTAMENES.md` #37.
 
 Siguiente paso: enviar v7 al auditor. Ronda final.
 
+
+
+### Dictamen P66 #38 + propuesta v7-bis ronda final (2026-09-21)
+
+Resultado: NO-GO contractual. 1 bloqueo material + 2 correcciones
+editoriales + 1 observacion no bloqueante.
+
+**Bloqueo material aplicado:**
+- §3.4 contradicia §3.2 (permitia "N/D o CONFLICT" cuando §3.2
+  ya cerro solo N/D). Convertida en nota explicativa. Regla
+  absoluta: BASE > 1 -> R3 = N/D. CONFLICT no puede producirse
+  en R3.
+
+**2 correcciones editoriales aplicadas:**
+- §9 trazabilidad actualizada (#28 a #38).
+- "Fin de la propuesta v6" -> v7-bis.
+
+**1 observacion no bloqueante aplicada:**
+- §9.2 nueva: nota de rotulacion de evidencia historica. Los
+  READMEs de Gates no se modifican retroactivamente (HASHES
+  preservados). La semantica contractual vigente es v7-bis.
+
+**Declaracion del auditor:** "Con esa correccion, considero que
+v7 puede recibir GO CONTRACTUAL FINAL: la evidencia esta cerrada,
+R3 esta practicamente completamente determinista y no queda una
+nueva cuestion arquitectonica."
+
+Propuesta v7-bis escrita. Pass interno ejecutado.
+
+Evidencia: `iae/DICTAMENES.md` #38.
+
+Siguiente paso: enviar v7-bis al auditor. Ronda final.
+
 ### Estado
 
     Fuente             APROBADA (OTHERMANAGER)
