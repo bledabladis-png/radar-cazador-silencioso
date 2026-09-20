@@ -1032,6 +1032,39 @@ Evidencia: `iae/DICTAMENES.md` #39.
 
 Siguiente paso: enviar v7-ter al auditor. Ronda final.
 
+
+
+### GO CONTRACTUAL P66 - Cierre del ciclo (2026-09-21)
+
+Dictamen #39 declaro la condicion de GO:
+
+    "Despues de incorporar ese PASO 0 y corregir la referencia
+     v7 -> v7-bis, considero que si procede el GO CONTRACTUAL
+     FINAL."
+
+Ambas condiciones cumplidas en v7-ter. GO emitido por declaracion
+condicional cumplida.
+
+**Traslado realizado:**
+- §14.3 de NIPC_CONTRATOS_SEMANTICOS_v1.md reformulada con el texto
+  contractual de v7-ter.
+- 283 lineas insertadas, 7 eliminadas.
+- Estructura §14.1 a §14.14 preservada.
+- §14.3.1 a §14.3.7: flujo unico R3 + PASO 0 completitud + cadena
+  amendments + semantica + candidate_A + mapping FormNum + clausula
+  de cierre.
+
+**Commit del traslado:** 3a233b4.
+
+**Ciclo P66 cerrado.**
+
+Estados:
+    §14.3 trasladada                  COMPLETADO
+    reporting_dedup.py                NO TOCADO (segun auditor)
+    DROP_DUP                          NO ACTIVADO (segun auditor)
+    Tests contractuales               PENDIENTE (siguiente ciclo)
+    Implementacion reporting_dedup    PENDIENTE (siguiente ciclo)
+
 ### Estado
 
     Fuente             APROBADA (OTHERMANAGER)

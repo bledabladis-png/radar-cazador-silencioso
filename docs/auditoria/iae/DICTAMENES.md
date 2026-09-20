@@ -1806,3 +1806,51 @@ ser incompleta; el contrato no debe confundir "0 observados" con
 
 Enviar v7-ter al auditor. Segun su declaracion, GO CONTRACTUAL
 FINAL.
+
+
+---
+
+## 40. P66 - GO CONTRACTUAL FINAL (2026-09-21)
+
+**Tipo:** cierre contractual del ciclo P66.
+
+**Fundamento:** declaracion condicional del auditor en dictamen #39:
+
+    "Despues de incorporar ese PASO 0 y corregir la referencia
+     v7 -> v7-bis, considero que si procede el GO CONTRACTUAL
+     FINAL."
+
+**Condiciones declaradas por el auditor:**
+1. Incorporar PASO 0 (precondicion de completitud del scope R4)
+   en el flujo unico de R3.
+2. Corregir la referencia §0.5 "GO de v7" -> "v7-bis".
+
+**Estado de las condiciones:**
+- PASO 0: aplicado en propuesta v7-ter (§3.2).
+- §0.5: actualizado a v7-bis/v7-ter.
+
+**Consecuencia:** GO CONTRACTUAL FINAL emitido por cumplimiento
+literal de la condicion declarada.
+
+**Alcance del GO:**
+
+- Autoriza el traslado del texto contractual de la propuesta
+  v7-ter a `NIPC_CONTRATOS_SEMANTICOS_v1.md` seccion 14.3.
+- NO autoriza modificar `reporting_dedup.py` todavia (segun
+  indicacion del auditor #32/#38/#39).
+- NO autoriza activar `DROP_DUP` todavia.
+
+**Secuencia autorizada:**
+
+    Propuesta v7-ter
+        -> traslado a 14.3 in-place
+        -> tests contractuales
+        -> implementacion reporting_dedup
+        -> probe e2e
+        -> auditoria de salida
+        -> DROP_DUP efectivo
+
+Solo el primer paso (traslado a 14.3) queda autorizado por este
+GO. Los siguientes requieren su propio ciclo.
+
+**Ciclo P66 cerrado.**

@@ -2533,3 +2533,27 @@ P65 v3 (ver iae/DICTAMENES.md #26). GO CONDICIONADO con 3 correcciones.
 - **Pendiente:** enviar v7-ter al auditor.
 - **NO se ha hecho:** sin XML, sin reporting_dedup.py, sin DROP_DUP,
   sin tocar contrato 14.3.
+
+
+## P66 - GO CONTRACTUAL y cierre del ciclo (2026-09-21)
+
+- **Origen:** dictamen #39. Condicion: aplicar PASO 0 + corregir
+  referencia §0.5 a v7-bis.
+- **Estado:** cumplido en propuesta v7-ter. GO emitido.
+- **Traslado realizado:**
+  - §14.3 de NIPC_CONTRATOS_SEMANTICOS_v1.md reformulada.
+  - 283 lineas insertadas, 7 eliminadas.
+  - §14.3.1 a §14.3.7 anadidas.
+  - Estructura §14.1 a §14.14 preservada.
+- **Commit:** 3a233b4.
+- **Ciclo P66 CERRADO.**
+- **Estado del contrato:**
+  - `NIPC_CONTRATOS_SEMANTICOS_v1.md` §14.3 actualizada.
+  - `reporting_dedup.py` NO TOCADO (segun auditor).
+  - `DROP_DUP` NO ACTIVADO (segun auditor).
+- **Siguiente ciclo (autorizado por el GO):**
+  - Tests contractuales sobre el nuevo §14.3.
+  - Implementacion en reporting_dedup.
+  - Probe e2e.
+  - Auditoria de salida.
+  - Activacion DROP_DUP (requiere nuevo dictamen).
