@@ -2221,3 +2221,23 @@ P65 v3 (ver iae/DICTAMENES.md #26). GO CONDICIONADO con 3 correcciones.
 - **Pendiente:** bloqueo #2 (NEW HOLDINGS probe / Gate 0.7),
   bloqueo #3 (Gate 0.4-reissue), bloqueo #4 (mapping unidireccional),
   bloqueo #5 (sin truncar 028-2813114), bloqueo #6 (nomenclatura).
+
+
+## P66 - Gate 0.7 NEW HOLDINGS probe (2026-09-21)
+
+- **Origen:** dictamen #28, bloqueo #2 (regla union prematura).
+- **Resultado:** 3/3 NEW HOLDINGS en universo R4 con OTHERMANAGER
+  identico al base. Cero cambios.
+- **Regla contractual (fail-closed):**
+  - Base: punto de partida.
+  - RESTATEMENT: sustituye OTHERMANAGER (Gate 0.5, caso 0002056909).
+  - NEW HOLDINGS: tratar como identidad. Caso divergente -> N/D o
+    CONFLICT. NO asumir union ni sustitucion.
+- **Muestra:** 3 casos sobre 4,653 filings. Insuficiente para
+  confianza estadistica. Alternativa ofrecida al auditor: extender
+  a 4-6 trimestres.
+- **Conclusion:** BLOQUEO #2 RESUELTO provisionalmente con regla
+  fail-closed.
+- **Evidencia:** `iae/evidence/p66_gate07_newholdings_probe/`.
+- **Pendiente:** bloqueo #3 (Gate 0.4-reissue), #4 (mapping
+  unidireccional), #5 (sin truncar), #6 (nomenclatura).

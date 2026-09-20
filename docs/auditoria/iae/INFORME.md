@@ -548,6 +548,39 @@ Bloqueos pendientes: #2 (NEW HOLDINGS probe), #3 (Gate 0.4-reissue
 con filtro), #4 (mapping unidireccional), #5 (sin truncar), #6
 (nomenclatura).
 
+
+
+### Gate 0.7 NEW HOLDINGS probe ejecutado (2026-09-21)
+
+Origen: dictamen #28, bloqueo #2 (regla union prematura).
+
+Medicion sobre el universo R4 (NOTICE + COMBINATION):
+
+| Periodo | NEW HOLDINGS | Identicos | Union | Sustitucion | Otros |
+|---------|-------------:|----------:|------:|------------:|------:|
+| 2025-12-31 | 2 | 2 | 0 | 0 | 0 |
+| 2026-03-31 | 1 | 1 | 0 | 0 | 0 |
+
+3/3 casos identicos. Cero cambios en OTHERMANAGER.
+
+Regla contractual propuesta (fail-closed):
+- Base: punto de partida.
+- RESTATEMENT: sustituye OTHERMANAGER (evidencia Gate 0.5).
+- NEW HOLDINGS: tratar como identidad. Si aparece caso con
+  OTHERMANAGER distinto -> N/D o CONFLICT. NO union.
+
+Muestra insuficiente (3 casos sobre 4,653 filings) para afirmar
+con alta confianza. Alternativa ofrecida al auditor: extender el
+probe a 4-6 trimestres historicos antes del GO contractual.
+
+Evidencia: `iae/evidence/p66_gate07_newholdings_probe/`.
+
+Bloqueo #2: RESUELTO provisionalmente con regla fail-closed. Sujeto
+a validacion del auditor.
+
+Bloqueos pendientes: #3 (Gate 0.4-reissue), #4 (mapping unidireccional),
+#5 (sin truncar), #6 (nomenclatura).
+
 ### Estado
 
     Fuente             APROBADA (OTHERMANAGER)

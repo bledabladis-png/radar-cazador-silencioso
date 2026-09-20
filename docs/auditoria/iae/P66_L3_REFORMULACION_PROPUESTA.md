@@ -159,8 +159,13 @@ al periodo de analisis. Prohibido filtrar por directorio fisico.
       3. Aplicar semantica SEC:
          - Base:          punto de partida.
          - RESTATEMENT:   sustituye el snapshot efectivo
-                          (incluye OTHERMANAGER).
-         - NEW HOLDINGS:  union con el snapshot actual.
+                          (incluye OTHERMANAGER). Evidencia
+                          directa: Gate 0.5, caso CIK 0002056909.
+         - NEW HOLDINGS:  tratar como identidad sobre OTHERMANAGER.
+                          Evidencia: Gate 0.7, 3/3 casos identicos.
+                          Fail-closed: si un NEW HOLDINGS presenta
+                          OTHERMANAGER distinto del base, el estado
+                          es N/D o CONFLICT. NO asumir union.
          - Resultado:     snapshot efectivo.
 
       4. R4 se evalua sobre el snapshot efectivo, NO sobre el base.
