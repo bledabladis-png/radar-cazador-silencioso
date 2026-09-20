@@ -50,11 +50,11 @@ Reglas de personalidad y metodo: ver PROMPT\_MAESTRO v6.45 seccion 1 y 3.
 
 &#x20;   |-----------------------|------------------------------------------|
 
-&#x20;   | HEAD local            | 9c2ff66                                  |
+&#x20;   | HEAD local            | 3ad57b1                                  |
 
 &#x20;   | origin/main           | 9d4a81e                                  |
 
-&#x20;   | Ahead                 | 115 commits locales                      |
+&#x20;   | Ahead                 | 120 commits locales                      |
 
 &#x20;   | Working tree          | limpio                                   |
 
@@ -62,7 +62,7 @@ Reglas de personalidad y metodo: ver PROMPT\_MAESTRO v6.45 seccion 1 y 3.
 
 &#x20;   | Prompt vigente        | v6.45                                    |
 
-&#x20;   | Tests locales         | 988 passed + 6 xfailed + 2 skipped       |
+&#x20;   | Tests locales         | 988 passed + 5 xfailed + 2 skipped       |
 
 &#x20;   | pyflakes              | 0 warnings                               |
 
@@ -366,13 +366,13 @@ pipeline.\*\* Documentado en `radar/DEUDA.md` D-RADAR-01.
 
 &#x20;   tests/test\_p60\_contract.py     4 tests (3 pass + 1 xfail)
 
-&#x20;   tests/test\_p61\_contract.py     5 tests (3 pass + 2 xfail)
+&#x20;   tests/test\_p61\_contract.py     4 tests (3 pass + 1 xfail)
 
 &#x20;   tests/test\_p38\_contract.py     5 tests (2 pass + 3 xfail)
 
 
 
-Total: 15 tests, 9 pass, 6 xfail. NO tocan codigo productivo. Son
+Total: 14 tests, 9 pass, 5 xfail. NO tocan codigo productivo. Son
 
 evidencia ejecutable para el auditor.
 
@@ -458,13 +458,13 @@ en `regimes/` e `indicators/`.
 
 Esperado:
 
-&#x20;   - HEAD = 9c2ff66 o posterior
+&#x20;   - HEAD = 3ad57b1 o posterior
 
-&#x20;   - ahead 115 o mas
+&#x20;   - ahead 120 o mas
 
 &#x20;   - working tree limpio
 
-&#x20;   - 988 passed + 6 xfailed + 2 skipped
+&#x20;   - 988 passed + 5 xfailed + 2 skipped
 
 &#x20;   - pyflakes silencio
 
@@ -516,9 +516,9 @@ Cuando recibas este transfer, responde:
 
 &#x20;   Estado del sistema que reconozco:
 
-&#x20;     - HEAD 9c2ff66, ahead 115
+&#x20;     - HEAD 9c2ff66, ahead 120
 
-&#x20;     - 988 passed + 6 xfailed + 2 skipped
+&#x20;     - 988 passed + 5 xfailed + 2 skipped
 
 &#x20;     - F2.4 PENDIENTE EXTERNO
 

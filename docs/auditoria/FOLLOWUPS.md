@@ -1541,3 +1541,90 @@ Enviar el paquete al auditor externo:
     tests/test_p38_contract.py
 
 ---
+
+
+---
+
+## Ciclo 2026-09-20 (cuater) - Dictamen externo v2 sobre expediente F2.4
+
+**HEAD al cierre:** 3ad57b1.
+**Ahead origin/main:** 120.
+
+### Contexto
+
+Segunda revision del auditor externo sobre el paquete F2.4. Senalo 4
+correcciones obligatorias + 8 adicionales (13 puntos en total).
+
+### Correcciones aplicadas
+
+**Obligatorias (4):**
+
+  1. Eliminar toda referencia a `ValueError` para CUSIP/ISIN en
+     REESTRUCTURACION y A.6.2.
+     - El contrato vigente mantiene CUSIP/ISIN -> NULL.
+     - La divergencia real es el default TICKER silencioso.
+
+  2. Eliminar el test P38 que exigia que `nipc.py` importase
+     `radar_target_catalog`.
+     - La arquitectura exige que TARGET se reciba como parametro
+       externo (construido por `target_builder.py`).
+
+  3. Reformular tests P38 para probar TARGET externo + shareClassFIGI,
+     no detalles de imports internos.
+     - API normativa unica: `compute_contractual_coverage(...)`.
+     - `compute_coverage_pairwise` = legacy/proxy (deprecada).
+
+  4. Eliminar la afirmacion de que A.6 desbloquea Gate-NIPC.2.
+     - A.6 solo entrega inputs. El desbloqueo requiere propuesta de
+       thresholds + dictamen especifico.
+
+**Adicionales aplicadas:**
+
+  - HEAD normalizado (SUBMISSION / AUDITED / POST-SNAPSHOT).
+  - D2 opcion B reformulada: proxy observacional (NO CONTRACTUAL).
+  - Seccion 9 en RECONCILIACION sobre agregacion shareClassFIGI.
+  - Criterios globales: "N + M + K" en vez de "979 + 11".
+  - Test P60 reformulado (verifica no-TICKER-asumido, no `[]`).
+  - Test P61 acoplado a implementacion eliminado.
+  - A.6.2-P60 sin `ValueError`.
+  - Nota de arquitectura: `nipc.py` NO importa catalogo.
+
+### Tests contractuales (version final)
+
+    tests/test_p60_contract.py    4 tests (3 pass + 1 xfail)
+    tests/test_p61_contract.py    4 tests (3 pass + 1 xfail)
+    tests/test_p38_contract.py    5 tests (2 pass + 3 xfail)
+
+    Total: 14 tests, 9 pass, 5 xfail.
+
+Los 5 xfail documentan ejecutablemente las 3 divergencias:
+
+    P60 (1): default TICKER silencioso sin identity_type declarado.
+    P61 (1): cusip_ticker_exceptions con vigencia -> no VERIFIED.
+    P38 (3): compute_contractual_coverage inexistente +
+             firma sin target_q4/q1 +
+             sin agregacion por shareClassFIGI.
+
+### Verificacion
+
+    compileall:  OK
+    pyflakes:    0 warnings
+    suite:       988 passed + 5 xfailed + 2 skipped
+
+### Estado
+
+- Working tree limpio.
+- Local-first IAE activo. Sin push.
+- F2.4 PENDIENTE EXTERNO (aplicadas ya las correcciones que el
+  auditor sugirio antes de emitir dictamen).
+
+### Paquete listo
+
+    iae/RECONCILIACION_CONTRATO_CODIGO.md
+    iae/REESTRUCTURACION_MODULO.md
+    iae/FASE_A6_PLAN.md
+    tests/test_p60_contract.py
+    tests/test_p61_contract.py
+    tests/test_p38_contract.py
+
+---
