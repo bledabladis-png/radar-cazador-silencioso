@@ -1,9 +1,9 @@
-# IAE - P66 L3 Reformulacion propuesta (v6)
+# IAE - P66 L3 Reformulacion propuesta (v7)
 
-**Estado:** v6 candidata final. Aplicadas las 5 correcciones del
-dictamen #36 sin introducir heuristicas nuevas. Pendiente de
-dictamen contractual final sobre el texto exacto antes de tocar
-NIPC_CONTRATOS_SEMANTICOS_v1.md.
+**Estado:** v7 ronda final. Aplicadas las correcciones del dictamen
+#37 (flujo unico R3, eliminacion de contradiccion BASE_R4, inspeccion
+global de familia) + §0.5 Clausula de cierre contractual. Pendiente
+de dictamen GO sobre esta version.
 
 **Trazabilidad de dictamenes:**
 
@@ -15,7 +15,8 @@ NIPC_CONTRATOS_SEMANTICOS_v1.md.
     #33  corregido
     #34  corregido
     #35  corregido
-    #36  3 cierres materiales + 2 ajustes aplicados en este documento v6
+    #36  corregido
+    #37  3 correcciones aplicadas + §0.5 Clausula de cierre (v7 ronda final)
 
 **Consolidacion:** este documento reemplaza las versiones v1/v2/v3.
 Todas las correcciones anteriores estan integradas. No se conservan
@@ -110,7 +111,45 @@ inferencia. Solo CIK directo o FormNum con resolucion univoca.
 | v3 | Correcciones #29 a #33 aplicadas (R4 completo, mapping, tri-state). |
 | v4 | Consolidacion. Correcciones #34 aplicadas + reescritura canonica. |
 | v5 | Consolidacion. Correcciones #35 aplicadas. |
-| **v6** | **Candidata final. Correcciones #36 aplicadas (BASE/AMENDMENT por tipo, familia cerrada, NEW HOLDINGS determinable). Sin heuristicas nuevas.** |
+| v6 | Correcciones #36 aplicadas. |
+| **v7** | **Ronda final. Correcciones #37 aplicadas + §0.5 Clausula de cierre contractual.** |
+
+### 0.5. Clausula de cierre contractual
+
+Este documento constituye el texto contractual candidato definitivo
+de P66.
+
+Una vez emitido dictamen GO sobre esta version, el contrato se
+trasladara a NIPC_CONTRATOS_SEMANTICOS_v1.md sin nueva iteracion
+ordinaria.
+
+Cualquier observacion posterior debera clasificarse expresamente
+como:
+
+    A) BLOQUEO MATERIAL
+       Cuando la correccion pueda cambiar el resultado contractual,
+       modificar una condicion necesaria de L3/R3/R4/R5, alterar el
+       criterio de evidencia, introducir una nueva semantica o dejar
+       una ambiguedad que permita resultados distintos entre
+       implementaciones conformes al contrato.
+
+       -> requiere nueva version y nuevo dictamen.
+
+    B) RECOMENDACION DIFERIBLE
+       Cuando la observacion sea exclusivamente editorial,
+       documental, de legibilidad o de implementacion y no pueda
+       cambiar el resultado contractual definido por este documento.
+
+       -> no bloquea el GO.
+
+El mero hecho de que una observacion sea posterior al GO no
+determina por si mismo su materialidad. La clasificacion debera
+justificarse por su impacto sobre el contrato.
+
+**Condicion de cierre:** el GO contractual de v7 autoriza el
+traslado del texto aprobado a NIPC_CONTRATOS_SEMANTICOS_v1.md.
+Cualquier observacion posterior tendra que demostrar impacto
+material conforme a esta seccion para reabrir P66.
 
 ---
 
@@ -285,69 +324,78 @@ Si `SUBMISSIONTYPE == 13F-NT/A` (o `13F-HR/A`) y `AMENDMENTNO` no es
 determinable:
     N/D.
 
-### 3.2. Construccion de la cadena efectiva
+### 3.2. Flujo unico de determinacion de R3
 
-**Paso previo obligatorio: contar bases sobre TODO el universo R4
-(dictamen #35, bloqueo 1).** No se evalua por familia aislada.
+**Este es el unico algoritmo contractual de determinacion de R3.**
+No existen reglas solapadas entre secciones. Los pasos se ejecutan
+en orden estricto.
 
-    BASE_R4(B, period) = todas las bases de B con:
+**PASO 1. Identificar todos los filings R4 del CIK + PERIODOFREPORT.**
+
+    R4_filings(B, period) = filings de B con:
         mismo CIK
         AND mismo PERIODOFREPORT
-        AND perteneciente al universo R4 (NOTICE o COMBINATION)
-        AND ISAMENDMENT != Y
-
-Prohibido filtrar por familia documental antes de contar. El caso
-Gate 0.9 (CIK 0002016827: NT + HR COMBINATION mismo periodo) debe
-ser atrapado en este paso.
-
-    0 bases totales R4
-        -> R3 = FALSE (ausencia documental demostrada).
-
-    1 base total R4
-        -> construir cadena de esa base (familia determinada por
-           esa base). Continuar.
-
-    >1 bases totales R4
-        -> R3 = N/D (deterministico, sin CONFLICT).
-        CONFLICT pertenece al plano de identidad de A en R4, no
-        al plano de determinacion documental.
-
-### 3.2-bis. Validacion de la cadena de amendments
-
-**Cierre por familia documental (dictamen #36, bloqueo 2):**
-
-Los amendments que entran en la cadena de una base deben pertenecer
-a la MISMA familia documental:
-
-    base NOTICE       -> solo amendments NOTICE
-    base COMBINATION  -> solo amendments COMBINATION
-
-Definiciones:
+        AND (NOTICE family o COMBINATION family)
 
     NOTICE family:
-        13F-NT (base)
-        13F-NT/A con REPORTTYPE = 13F NOTICE (amendment)
+        SUBMISSIONTYPE in {13F-NT, 13F-NT/A}
+        AND REPORTTYPE = 13F NOTICE
 
     COMBINATION family:
-        13F-HR con REPORTTYPE = 13F COMBINATION REPORT (base)
-        13F-HR/A con REPORTTYPE = 13F COMBINATION REPORT (amendment)
+        SUBMISSIONTYPE in {13F-HR, 13F-HR/A}
+        AND REPORTTYPE = 13F COMBINATION REPORT
 
-**Reglas:**
+**PASO 2. Clasificar cada filing por familia y por rol.**
 
-- Un `13F-HR/A` COMBINATION no puede entrar en la cadena de una
-  base `13F-NT`.
-- Si existe un amendment R4 de OTRA familia para el mismo
-  CIK + PERIODOFREPORT: R3 = N/D. Existe pluralidad documental
-  que el contrato no resuelve.
+    BASE:
+        SUBMISSIONTYPE in {13F-NT, 13F-HR}
 
-El caso Gate 0.9 (CIK 0002016827 con NT + HR COMBINATION mismo
-periodo) debe ser atrapado aqui ademas de en §3.2.
+    AMENDMENT:
+        SUBMISSIONTYPE in {13F-NT/A, 13F-HR/A}
 
-**Validacion completa de la cadena:**
+`ISAMENDMENT` es SOLO control de coherencia, no criterio de
+seleccion. Si `ISAMENDMENT` contradice `SUBMISSIONTYPE`, R3 = N/D.
+
+**PASO 3. Detectar pluralidad de familias documentales.**
+
+    Si entre BASE + AMENDMENT hay representacion de MAS DE UNA
+    familia documental (NOTICE y COMBINATION simultaneamente):
+        R3 = N/D.
+
+    Esta deteccion es GLOBAL, sobre el conjunto R4 completo del
+    CIK + PERIODOFREPORT. No se evalua por familia aislada.
+    El caso Gate 0.9 (CIK 0002016827: NT + HR COMBINATION mismo
+    periodo) se captura aqui.
+
+**PASO 4. Contar bases y amendments dentro de la familia unica.**
+
+    BASE = 0 AND AMENDMENT = 0
+        -> R3 = FALSE (ausencia documental demostrada).
+
+    BASE = 0 AND AMENDMENT >= 1
+        -> R3 = N/D.
+        Un amendment no constituye evidencia de ausencia del
+        filing antecedente. No se puede afirmar FALSE sin base.
+
+    BASE = 1
+        -> continuar con la validacion de cadena (§3.2-bis).
+
+    BASE > 1
+        -> R3 = N/D.
+        Prohibido: primero encontrado, ultimo encontrado,
+        MAX(ACCESSION), MAX(FILING_DATE).
+
+### 3.2-bis. Validacion de la cadena (familia unica ya establecida)
+
+Esta subseccion aplica SOLO despues de §3.2 PASO 3 (familia unica
+confirmada) y §3.2 PASO 4 (BASE = 1). No introduce reglas solapadas
+con §3.2.
+
+**Validacion de cada amendment aplicable a la base:**
 
     AMENDMENT valido:
         SUBMISSIONTYPE in {13F-NT/A, 13F-HR/A}
-        AND REPORTTYPE in universo R4 correspondiente
+        AND REPORTTYPE consistente con la familia de la base
         AND AMENDMENTNO entero en 1..99
         AND AMENDMENTTYPE in {RESTATEMENT, NEW_HOLDINGS}
 
@@ -357,10 +405,9 @@ periodo) debe ser atrapado aqui ademas de en §3.2.
         - Secuencia sin huecos desde 1 hasta N.
           (Regla conservadora contractual IAE. La SEC exige
           numeracion 1..99 y orden, pero no que la secuencia
-          este fisicamente completa. Se conserva la regla
-          por prudencia fail-closed.)
+          este fisicamente completa. Se conserva la regla por
+          prudencia fail-closed.)
         - Tipos reconocibles.
-        - Misma familia documental que la base.
 
     Si cualquiera falla:
         -> R3 = N/D.
@@ -370,7 +417,6 @@ Casos que deben producir N/D:
     - Duplicados: base + amendment 1 + amendment 1.
     - Amendment sin numero determinable.
     - Amendment con tipo desconocido.
-    - Amendment de familia distinta a la base.
 
 ### 3.3. Semantica de amendments
 

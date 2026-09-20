@@ -1597,3 +1597,71 @@ conjunto.
 
 Enviar v6 al auditor. Si no introduce heuristicas nuevas:
 GO CONTRACTUAL FINAL. Si introduce nuevos bloqueos: congelar v6.
+
+
+---
+
+## 37. P66 - Dictamen auditor externo v11 (2026-09-21)
+
+**Tipo:** dictamen del auditor externo sobre P66_L3_REFORMULACION_PROPUESTA.md
+v6.
+
+**Resultado:** NO-GO contractual. Evidencia PASS.
+
+**3 correcciones aplicadas + §0.5 Clausula de cierre.**
+
+### Bloqueo critico
+
+**Regresion en §3.2 (0 bases).**
+
+La v6 decia "0 bases -> R3=FALSE" sin contemplar 0 bases + >=1
+amendment. §3.2-bis mantenia "0 base + amendment -> N/D". Contradiccion
+interna.
+
+Correccion: flujo unico de R3 en §3.2:
+
+    BASE = 0 AND AMENDMENT = 0 -> FALSE
+    BASE = 0 AND AMENDMENT > 0 -> N/D
+    BASE = 1                  -> continuar
+    BASE > 1                  -> N/D
+
+### Bloqueo material
+
+**Doble algoritmo solapado entre §3.2 y §3.2-bis.**
+
+Un implementador podia preguntar cual prevalece. Corregido con un
+unico algoritmo en §3.2 (4 pasos secuenciales) y §3.2-bis como
+validacion de cadena (familia ya establecida).
+
+### Bloqueo material
+
+**Inspeccion global de familia debe ser previa.**
+
+La deteccion de cruce de familia debe ocurrir antes de aceptar que
+existe una cadena unica. Integrado en §3.2 PASO 3.
+
+### Ademas
+
+- Eliminado `AND ISAMENDMENT != Y` de BASE_R4 (contradecia §3.1).
+- ISAMENDMENT queda como control de coherencia, no selector.
+
+### §0.5 Clausula de cierre contractual
+
+Anadida al documento. Define BLOQUEO MATERIAL vs RECOMENDACION
+DIFERIBLE. Condicion de cierre: GO contractual de v7 autoriza
+traslado a NIPC_CONTRATOS_SEMANTICOS_v1.md sin nueva iteracion
+ordinaria.
+
+### Estado
+
+    3 correcciones #37     APLICADAS EN V7
+    §0.5 Clausula de cierre ANadida
+    Propuesta v7           RONDA FINAL
+    Contrato 14.3          NO MODIFICAR AUN
+    reporting_dedup.py     NO TOCAR
+    DROP_DUP               NO ACTIVAR
+
+### Siguiente paso
+
+Enviar v7 al auditor. Segun su propia declaracion, el siguiente
+dictamen puede ser GO CONTRACTUAL FINAL.
