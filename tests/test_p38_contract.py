@@ -44,7 +44,7 @@ def test_p38_target_pairwise_hoy_sobre_observed_key():
             "sshprnamt_total": 80,
         }
     ])
-    _ = nipc.compute_coverage_pairwise(curr, prev)
+    result = nipc.compute_coverage_pairwise(curr, prev)
     # Con A en ambos, cobertura pairwise = 1.0
     assert result["paired_security_coverage"] == 1.0
 
@@ -137,7 +137,7 @@ def test_p38_pesos_agregados_por_security_antes_de_max():
     # Contrato: ambos CUSIPs corresponden al mismo canonical_security X.
     # El computo debe agregar antes de max. La funcion actual no tiene
     # forma de saber que A y B son el mismo X (no recibe canonical).
-    result = nipc.compute_coverage_pairwise(curr, prev)
+    _ = nipc.compute_coverage_pairwise(curr, prev)
     # Marcador: si la funcion ya agregara por canonical, el resultado
     # ponderado seria 150 (numerador = 150, denom = 150 -> 1.0).
     # Hoy no lo hace. Cuando se implemente TARGET real, este test debe pasar.
