@@ -9,7 +9,10 @@ contractual exacto antes de tocar NIPC_CONTRATOS_SEMANTICOS_v1.md.
 **Origen:** Gate 0.1 + Gate 0.2 (2026-09-20) tras NO-GO de P66.
 Correcciones aplicadas segun dictamen externo #27.
 
-**HEAD al redactar:** 3255f77 (o posterior).
+**HEAD al redactar:** 551ea52 (o posterior).
+**Dictamen mas reciente:** #28 (P66 v2-bis NO-GO contractual, 2026-09-21).
+Estado actual: 6 bloqueos del dictamen #28, 5 resueltos; #4 en
+invariante del mapping (seccion 10).
 
 **Historial:** v1 en commit 6b610b3. v2 incorpora las 8 correcciones
 obligatorias del dictamen #27.
@@ -40,7 +43,7 @@ correcciones son de precision contractual, no de arquitectura.
 
 ---
 
-## 2. Propuesta reformulada (texto exacto del auditor #27)
+## 2. Propuesta reformulada (texto base + correcciones #28)
 
     L3(A, B, S, period) == True sii:
       1. existe filing efectivo de A con linea L sobre security S;
@@ -68,7 +71,7 @@ correcciones son de precision contractual, no de arquitectura.
          reporting partition/overlap no resuelto.
 
 **Nota terminologica (correccion #1 del dictamen):** no se habla de
-"evidencia bidireccional". La evidencia es "estructurada cruzada
+"evidencia estructurada cruzada entre filings". La evidencia es "estructurada cruzada
 entre el filing de A y el filing de B". La SEC no exige simetria
 reciproca.
 
@@ -125,7 +128,7 @@ reales aparecen casos con uno u otro.
 
 ---
 
-## 5. Tratamiento de amendments (correccion #3, Gate 0.5 PASS)
+## 5. Tratamiento de amendments (correccion #3, Gates 0.5-0.7)
 
 ### 5.1. Hallazgo critico: directorios cross-periodo
 
@@ -283,7 +286,17 @@ Consistencia CIK <-> FormNum (sobre filas con ambos):
 | 2025Q4    | 716 / 716         | 0          | 716 / 716         | 0              |
 | 2026Q1    | 696 / 696         | 0          | 696 / 696         | 0              |
 
-**Cardinalidad 1:1 perfecta.**
+**Cardinalidad (correccion #4 del dictamen #28):** la invariante
+contractual es unidireccional:
+
+    FormNum -> 0 CIK    = UNRESOLVED
+    FormNum -> 1 CIK    = IDENTITY_RESOLVED
+    FormNum -> >1 CIK   = CONFLICT
+
+Siempre dentro del scope temporal del periodo. NO se exige la
+invariante inversa (CIK -> 1 FormNum). Un CIK podria, por
+circunstancias historicas o administrativas, aparecer asociado a
+mas de un FormNum a lo largo del universo temporal.
 
 ### 9.2-bis. Hallazgo de normalizacion FormNum
 
@@ -294,7 +307,24 @@ izquierda). **Todas las filas afectadas tienen CIK=`<NA>`.**
 Normalizacion trivial propuesta: `28-XXXXX -> 028-XXXXX` con
 zero-padding a 3 digitos.
 
-### 9.5. Tabla canonica Form13FFileNumber -> CIK (Gate 0.4 PASS)
+### 9.3. Caso Vanguard confirmado (Gate 0.2)
+
+Q4 2025: multiples NT de filiales declaran al parent con FormNum 028-06408.
+Q1 2026: parent 13F-NT (ACC=0000102909-26-002707) declara 10 managers,
+incluyendo las filiales CIK 0002100119 y 0002100121.
+
+Evidencia estructurada cruzada documental directa en OTHERMANAGER.
+
+### 9.4. Column 7 no apunta a OTHERMANAGER
+
+INFOTABLE.OTHERMANAGER (Column 7) matchea OTHERMANAGER2.SEQUENCENUMBER
+(90% aprox), no OTHERMANAGER_SK. Requisito 2 y requisito 4 usan
+tablas distintas. El dictamen confirma la separacion R2/R4 como
+correcta.
+
+---
+
+### 9.5. Tabla canonica Form13FFileNumber -> CIK (Gate 0.4-reissue)
 
 **Fuente corregida (dictamen P66 v2, Bloqueo A):** la tabla canonica
 se construye vía `COVERPAGE` + `SUBMISSION`, no vía `OTHERMANAGER`.
@@ -351,40 +381,51 @@ en N/D por FormNum no resuelto. Volumen despreciable (4+2=6 filas).
 Documentado como hallazgo colateral en
 `iae/evidence/p66_gate04_mapping/README.md` seccion 2.5.
 
-### 9.6. Bloqueo B pendiente
+## 10. Invariante del mapping (bloqueo #4)
 
-El dictamen P66 v2 mantiene un segundo bloqueo: formalizar como se
-determina el "filing efectivo de B" cuando existen NT/A y multiples
-amendments.
+### 10.1. Direccion contractual
 
-Requiere un `amendment probe` especifico que mida el comportamiento
-de `OTHERMANAGER` en:
+La unica direccion contractual obligatoria es:
 
-    NT
-    NT/A RESTATEMENT
-    NT/A ADDS NEW HOLDINGS ENTRIES
+    FormNum -> CIK
 
-Pendiente de ejecucion. Sin el, la semantica de R3 (filing efectivo)
-no puede formalizarse contractualmente.
+NO se establece como invariante la direccion inversa:
 
-### 9.3. Caso Vanguard confirmado (Gate 0.2)
+    CIK -> FormNum
 
-Q4 2025: multiples NT de filiales declaran al parent con FormNum 028-06408.
-Q1 2026: parent 13F-NT (ACC=0000102909-26-002707) declara 10 managers,
-incluyendo las filiales CIK 0002100119 y 0002100121.
+Un CIK podria aparecer asociado a mas de un FormNum a lo largo del
+universo temporal. El sistema no debe explotar si esto ocurre: la
+resolucion es siempre por FormNum como clave.
 
-Bidireccionalidad documental directa en OTHERMANAGER.
+### 10.2. Construccion del mapping
 
-### 9.4. Column 7 no apunta a OTHERMANAGER
+    period
+    normalized_form13f_filenumber    (clave)
+    cik                              (valor)
+    source_accessions                (lineage)
+    resolution_status                (UNRESOLVED | IDENTITY_RESOLVED | CONFLICT)
 
-INFOTABLE.OTHERMANAGER (Column 7) matchea OTHERMANAGER2.SEQUENCENUMBER
-(90% aprox), no OTHERMANAGER_SK. Requisito 2 y requisito 4 usan
-tablas distintas. El dictamen confirma la separacion R2/R4 como
-correcta.
+Construido por `PERIODOFREPORT`, no por directorio fisico.
+
+### 10.3. Uso
+
+    Dado un FormNum F (normalizado) en una fila OTHERMANAGER:
+
+      - Si F no resuelve en el mapping del periodo: N/D.
+      - Si F resuelve a 1 CIK: IDENTITY_RESOLVED (comparar con CIK_A
+        para decidir R4).
+      - Si F resuelve a >1 CIK: CONFLICT.
+
+    La direccion inversa (dado CIK, buscar FormNum) no se usa
+    para R4.
+
+### 10.4. Bloqueos resueltos por este apartado
+
+    #4 Mapping unidireccional: RESUELTO.
 
 ---
 
-## 10. Preguntas residuales al auditor
+## 11. Preguntas residuales al auditor
 
 Una vez aplicadas las 8 correcciones, solo quedan por definir:
 
@@ -401,7 +442,7 @@ Una vez aplicadas las 8 correcciones, solo quedan por definir:
 
 ---
 
-## 11. Lo que NO se ha hecho
+## 12. Lo que NO se ha hecho
 
 - NO se ha descargado ningun XML de EDGAR.
 - NO se ha creado xml_parser/.
@@ -412,7 +453,7 @@ Una vez aplicadas las 8 correcciones, solo quedan por definir:
 
 ---
 
-## 12. Referencias
+## 13. Referencias
 
     | Documento                                      | Rol                |
     |------------------------------------------------|--------------------|

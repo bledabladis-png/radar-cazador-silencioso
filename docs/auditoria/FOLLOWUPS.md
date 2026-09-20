@@ -2259,3 +2259,26 @@ P65 v3 (ver iae/DICTAMENES.md #26). GO CONDICIONADO con 3 correcciones.
 - **Bloqueos resueltos:** #3, #5, #6.
 - **Evidencia:** `iae/evidence/p66_gate04_reissue_period/`.
 - **Pendiente:** bloqueo #4 (mapping unidireccional) en propuesta v3.
+
+
+## P66 - Propuesta v3 final (2026-09-21)
+
+- **Origen:** cierre del bloqueo #4 del dictamen #28.
+- **Correcciones aplicadas:**
+  - Terminologia: "evidencia estructurada cruzada entre filings"
+    (no "bidireccional").
+  - Invariante del mapping: FormNum -> CIK unidireccional.
+  - 0 CIK = UNRESOLVED; 1 CIK = IDENTITY_RESOLVED; >1 CIK = CONFLICT.
+  - Nomenclatura: MATCH -> IDENTITY_RESOLVED.
+  - Nueva seccion 10 "Invariante del mapping".
+- **Los 6 bloqueos del dictamen #28 quedan resueltos:**
+  - #1 Combination: RESUELTO (Gate 0.6).
+  - #2 NEW HOLDINGS: RESUELTO (Gate 0.7, regla fail-closed).
+  - #3 Gate 0.4-reissue: RESUELTO.
+  - #4 Mapping unidireccional: RESUELTO (seccion 10).
+  - #5 Sin truncar: APLICADO.
+  - #6 Nomenclatura: APLICADO.
+- **Pendiente externo:** reenviar propuesta v3 + evidencia al auditor
+  para dictamen contractual final.
+- **NO se ha hecho:** sin XML, sin reporting_dedup.py, sin DROP_DUP,
+  sin tocar contrato 14.3.

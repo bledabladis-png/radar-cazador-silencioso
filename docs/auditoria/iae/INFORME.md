@@ -610,6 +610,37 @@ Evidencia: `iae/evidence/p66_gate04_reissue_period/`.
 
 Bloqueo #4 (mapping unidireccional): PENDIENTE en propuesta v3.
 
+
+
+### Propuesta v3 final - bloqueo #4 resuelto (2026-09-21)
+
+Correcciones aplicadas a P66_L3_REFORMULACION_PROPUESTA.md:
+
+1. Terminologia: "evidencia bidireccional" -> "evidencia estructurada
+   cruzada entre filings" (correccion #1 del dictamen #28).
+2. Cardinalidad reformulada: invariante unidireccional FormNum -> CIK.
+   Estados: 0 CIK (UNRESOLVED), 1 CIK (IDENTITY_RESOLVED),
+   >1 CIK (CONFLICT). No se exige direccion inversa.
+3. Nomenclatura: MATCH -> IDENTITY_RESOLVED en todo el documento.
+4. Nueva seccion 10 "Invariante del mapping (bloqueo #4)" con:
+   - Direccion contractual (FormNum -> CIK).
+   - Construccion (period, normalized_form13f_filenumber, cik,
+     source_accessions, resolution_status).
+   - Uso (0/1/>1 CIK).
+5. Reordenacion de secciones 9.3 / 9.4 / 9.5.
+6. Cabeceras actualizadas (auditor #28, Gates 0.5-0.7).
+
+Los 6 bloqueos del dictamen #28 quedan resueltos:
+
+    #1 Combination                         RESUELTO (Gate 0.6)
+    #2 NEW HOLDINGS                        RESUELTO (Gate 0.7, fail-closed)
+    #3 Gate 0.4-reissue filtro period      RESUELTO (Gate 0.4-reissue)
+    #4 Mapping unidireccional              RESUELTO (seccion 10)
+    #5 Normalizacion sin truncar           APLICADO
+    #6 Nomenclatura IDENTITY_RESOLVED      APLICADO
+
+Propuesta v3 lista para reenviar al auditor.
+
 ### Estado
 
     Fuente             APROBADA (OTHERMANAGER)
