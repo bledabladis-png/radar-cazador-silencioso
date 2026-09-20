@@ -1,0 +1,205 @@
+'''Tests contractuales P66 (§14.3 reformulada).
+
+Trazabilidad: ciclo P66, GO CONTRACTUAL #40 (commit 6e698ca).
+Traslado contractual: commit 3a233b4.
+
+Capa A (PASS): literales contractuales presentes en el .md.
+Capa B (PASS): traslado no rompe P65 (no regresion).
+Capa C (XFAIL strict=False): casos semanticos pendientes de
+implementacion. Razon del xfail: '14.3.X implementation pending
+(GO #40 step 2)'. Cuando el ciclo de implementacion exponga el
+codigo contractual: quitar el decorador xfail y sustituir el
+raise AssertionError por la llamada + assert real.
+
+NO tocan codigo productivo.
+'''
+from pathlib import Path
+
+import pytest
+
+
+REPO_ROOT = Path(__file__).resolve().parent.parent
+CONTRATO = REPO_ROOT / 'docs' / 'auditoria' / 'iae' / 'NIPC_CONTRATOS_SEMANTICOS_v1.md'
+
+
+def _contrato_texto():
+    return CONTRATO.read_text(encoding='utf-8-sig')
+
+
+# ==================== Capa A: integridad documental ====================
+
+
+def test_p66_contrato_existe():
+    assert CONTRATO.exists(), 'NIPC_CONTRATOS_SEMANTICOS_v1.md no encontrado'
+
+
+def test_p66_siete_subsecciones_14_3():
+    texto = _contrato_texto()
+    for i in range(1, 8):
+        assert '#### 14.3.{0}.'.format(i) in texto
+
+
+def test_p66_paso0_presente():
+    texto = _contrato_texto()
+    assert 'PASO 0' in texto
+    assert 'completitud del scope' in texto
+
+
+def test_p66_candidate_a_definida():
+    texto = _contrato_texto()
+    assert 'candidate_A' in texto
+    assert 'resolved_ciks' in texto
+
+def test_p66_r3_tri_state_literal():
+    texto = _contrato_texto()
+    # Literales reales del contrato 14.3.1 + 14.3 (booleano L3).
+    for estado in ('R3 = FALSE', 'R3 = N/D', 'R3(B, period) == TRUE'):
+        assert estado in texto
+
+
+def test_p66_r4_estados_y_precedencia():
+    texto = _contrato_texto()
+    for estado in ('MATCH', 'NO_MATCH', 'N/D', 'CONFLICT'):
+        assert estado in texto
+    assert 'CONFLICT PREVALECE sobre MATCH' in texto
+    assert 'N/D != NO_MATCH' in texto
+
+
+def test_p66_familias_notice_combination():
+    texto = _contrato_texto()
+    assert '13F NOTICE' in texto
+    assert '13F COMBINATION REPORT' in texto
+    assert 'NOTICE family' in texto
+    assert 'COMBINATION family' in texto
+
+
+def test_p66_formnum_prefijo_y_padding():
+    texto = _contrato_texto()
+    assert '028' in texto
+    assert 'padding a 5' in texto
+
+
+def test_p66_l3_booleano_explicito():
+    texto = _contrato_texto()
+    assert 'L3' in texto
+    for r in ('R1', 'R2', 'R3', 'R4', 'R5'):
+        assert r in texto
+
+
+def test_p66_clausula_cierre_14_3_7():
+    texto = _contrato_texto()
+    assert 'BLOQUEO MATERIAL' in texto
+    assert 'RECOMENDACION DIFERIBLE' in texto
+
+# ==================== Capa B: no regresion P65 ====================
+
+
+def test_p66_p65_transiciones_intactas():
+    from src.institutional_accumulation.aggregation import reporting_dedup as rd
+    assert rd.TRANSITION_NULL == 'NULL'
+    assert rd.TRANSITION_HANDOFF == 'HANDOFF'
+    assert rd.TRANSITION_DUPLICATE_REMOVED == 'DUPLICATE_REMOVED'
+    assert rd.TRANSITION_DUPLICATION_UNRESOLVED == 'DUPLICATION_UNRESOLVED'
+    assert len(rd.ALL_TRANSITIONS) == 4
+
+
+def test_p66_p65_dedup_reasons_intactos():
+    from src.institutional_accumulation.aggregation import reporting_dedup as rd
+    assert rd.DEDUP_REASON_INTRA_PERIOD_DUP == 'INTRA_PERIOD_DUP'
+    assert rd.DEDUP_REASON_POSITION_HANDOFF == 'POSITION_SCOPED_HANDOFF'
+    assert rd.DEDUP_REASON_REPORTING_CONFLICT == 'REPORTING_CONFLICT'
+    assert rd.DEDUP_REASON_OVERLAP_UNRESOLVED == 'REPORTING_OVERLAP_UNRESOLVED'
+
+
+def test_p66_p65_forbidden_terms_no_economic_owner():
+    from src.institutional_accumulation.sec_13f.identity import relationships as rel
+    assert hasattr(rel, 'FORBIDDEN_TERMS')
+    joined = ' '.join(str(t) for t in rel.FORBIDDEN_TERMS)
+    assert 'economic_owner' in joined
+
+# ==================== Capa C: semantica pendiente (§14.3) ====================
+# Los tests de esta capa documentan el comportamiento contractual P66
+# PENDIENTE de implementacion. El decorador xfail documenta el estado;
+# cuando el ciclo de implementacion (GO #40 step 2) exponga el codigo
+# contractual, se elimina el decorador y se sustituye el raise por la
+# llamada + assert real. El test debe pasar.
+
+XFAIL = '14.3 implementation pending (GO #40 step 2)'
+
+
+@pytest.mark.xfail(reason=XFAIL, strict=False)
+def test_p66_r3_true_un_base_notice():
+    '''14.3.1: 1 base NOTICE + scope verificado -> R3 = TRUE.'''
+    raise AssertionError('P66 14.3.1 no implementado: R3=TRUE esperado')
+
+
+@pytest.mark.xfail(reason=XFAIL, strict=False)
+def test_p66_r3_false_scope_completo_sin_filings():
+    '''14.3.1 PASO 0+4: scope completo verificado + 0 filings -> R3 = FALSE.'''
+    raise AssertionError('P66 14.3.1 no implementado: R3=FALSE esperado')
+
+
+@pytest.mark.xfail(reason=XFAIL, strict=False)
+def test_p66_r3_nd_scope_no_demostrable():
+    '''14.3.1 PASO 0: scope no demostrable -> R3 = N/D.
+
+    Regla: "no aparece" != "no existe".
+    '''
+    raise AssertionError('P66 14.3.1 PASO 0 no implementado: N/D esperado')
+
+
+@pytest.mark.xfail(reason=XFAIL, strict=False)
+def test_p66_r3_nd_familias_mixtas():
+    '''14.3.1 PASO 3: NT + HR COMBINATION -> R3 = N/D (Gate 0.9).'''
+    raise AssertionError('P66 14.3.1 PASO 3 no implementado: N/D esperado')
+
+
+@pytest.mark.xfail(reason=XFAIL, strict=False)
+def test_p66_r3_nd_multiples_bases():
+    '''14.3.1 PASO 4: >1 BASE -> R3 = N/D (no primero/ultimo/MAX).'''
+    raise AssertionError('P66 14.3.1 PASO 4 no implementado: N/D esperado')
+
+
+@pytest.mark.xfail(reason=XFAIL, strict=False)
+def test_p66_amendment_chain_hueco():
+    '''14.3.2: cadena 1, 3 (falta 2) -> R3 = N/D.'''
+    raise AssertionError('P66 14.3.2 no implementado: N/D por hueco')
+
+@pytest.mark.xfail(reason=XFAIL, strict=False)
+def test_p66_amendment_chain_duplicado():
+    '''14.3.2: cadena 1, 1 (duplicado) -> R3 = N/D.'''
+    raise AssertionError('P66 14.3.2 no implementado: N/D por duplicado')
+
+
+@pytest.mark.xfail(reason=XFAIL, strict=False)
+def test_p66_r4_conflict_prevalece_sobre_match():
+    '''14.3.4: fila con CIK=A + FormNum->C -> CONFLICT (no MATCH).
+
+    La implementacion NO puede elegir la fila consistente e ignorar
+    la contradictoria respecto de A.
+    '''
+    raise AssertionError('P66 14.3.4 no implementado: CONFLICT esperado')
+
+
+@pytest.mark.xfail(reason=XFAIL, strict=False)
+def test_p66_r4_conflict_otro_manager_no_contamina():
+    '''14.3.4: conflicto de manager C no invalida MATCH de A.'''
+    raise AssertionError('P66 14.3.4 no implementado: MATCH de A esperado')
+
+
+@pytest.mark.xfail(reason=XFAIL, strict=False)
+def test_p66_r4_nd_identidad_no_resuelta():
+    '''14.3.4: fila con identidad no resuelta -> N/D (no NO_MATCH).'''
+    raise AssertionError('P66 14.3.4 no implementado: N/D esperado')
+
+
+@pytest.mark.xfail(reason=XFAIL, strict=False)
+def test_p66_formnum_padding_flexible():
+    '''14.3.6: 028-694 -> 028-00694; 28-4545 -> 028-04545.'''
+    raise AssertionError('P66 14.3.6 no implementado: padding esperado')
+
+
+@pytest.mark.xfail(reason=XFAIL, strict=False)
+def test_p66_formnum_prefijo_invalido():
+    '''14.3.6: prefijo != {28, 028} -> UNRESOLVED.'''
+    raise AssertionError('P66 14.3.6 no implementado: UNRESOLVED esperado')
