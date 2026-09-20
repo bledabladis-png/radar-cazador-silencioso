@@ -9,8 +9,6 @@ marcador y el test debe pasar.
 
 NO tocan codigo productivo.
 """
-from unittest.mock import patch
-
 import pytest
 
 from src.institutional_accumulation import temporal_validity as tv
