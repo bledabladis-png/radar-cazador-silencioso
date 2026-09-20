@@ -87,6 +87,7 @@ Interfaz:
         weights_q4: dict,
         weights_q1: dict,
     ) -> dict:
+        # Esta es la FUNCION CONTRACTUAL P38 (una unica API normativa).
         """
         Devuelve:
           coverage_previous: float
@@ -142,12 +143,22 @@ Firma nueva:
 - Si `target_q4`/`target_q1` son `None`, el calculo de coverage
   devuelve `coverage_status: "UNAVAILABLE"` (comportamiento explicito).
 - Si estan presentes, delega a `coverage.compute_contractual_coverage`.
+
+Relacion entre las tres funciones (api normativa):
+
+    compute_contractual_coverage   FUNCION CONTRACTUAL P38 (nueva)
+    compute_nipc                   orquestador (nueva firma)
+    compute_coverage_pairwise      legacy / proxy (deprecada tras A.6)
+
+`nipc.py` NO importa `radar_target_catalog` ni `target_universe`. El
+TARGET se construye en `identity/target_builder.py` y se pasa como
+parametro. Esa es la arquitectura contractual.
 - El comentario de la linea 209 deja de decir "TARGET_PAIRWISE"
   cuando opera sobre `observed_security_key`.
 
 `compute_delta_shares` y `match_key` no se tocan.
 
-### 4.4. Reforma: `sec_13f/identity/security_identity.py` (P61 + P60)
+### 4.4. Reforma: `sec_13f/identity/security_identity.py` (P61 conexion + P60 sin default TICKER)
 
 P61 - Conectar `temporal_validity`:
 

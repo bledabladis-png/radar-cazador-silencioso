@@ -3,10 +3,13 @@
 **Objeto:** expediente de reconciliacion entre el contrato semantico
 vigente (NIPC_CONTRATOS_SEMANTICOS_v1.md) y el codigo implementado.
 
-**Snapshot auditado:** commit `4fe2b62` (HEAD al realizar la reconciliacion).
-Estado posterior: `d3c9a87`, `79291ea` (post-limpieza documental).
-Este expediente es un snapshot historico; el estado actual del sistema
-puede incluir cambios documentales posteriores que no afectan al analisis.
+**SUBMISSION HEAD:** `2eb4dcd` (HEAD al entregar este expediente).
+**AUDITED SNAPSHOT:** `4fe2b62` (commit sobre el que se realizo el analisis).
+**POST-SNAPSHOT INTERMEDIATE:** `d3c9a87`, `79291ea`, `9c2ff66`, `04f3222`
+(cambios documentales posteriores al snapshot, no afectan al analisis).
+
+El dictamen F2.4 debe tomar como objeto documental la entrega identificada
+por HEAD `2eb4dcd`; los demas hashes son snapshots historicos de trazabilidad.
 
 **Generado:** 2026-09-20.
 **Input para:** dictamen F2.4 del auditor externo.
@@ -184,8 +187,9 @@ Para cada divergencia, dos opciones validas:
      - `nipc.py` recibe `target_q4` y `target_q1` como parametros.
      - Requiere OpenFIGI masivo (24.838 CUSIPs) NO AUTORIZADO hoy.
 
-  B. Declarar el proxy `observed_security_key` como TARGET temporal
-     valido hasta que OpenFIGI masivo se autorice. Renombrar el
+  B. Mantener `observed_security_key` como PROXY OBSERVACIONAL temporal,
+     claramente etiquetado como NO CONTRACTUAL y no apto para evidencia
+     de THRESHOLD_2 hasta disponer de TARGET real. Renombrar el
      comentario de `nipc.py` para no confundir.
 
 **P60 (D3):**
@@ -232,8 +236,9 @@ Independiente de las decisiones, faltan estos tests. Ninguno existe hoy.
 
     | Contrato | Test                                                     |
     |----------|----------------------------------------------------------|
-    | P60      | identity_type CUSIP/ISIN -> ValueError (si D3=A)         |
-    | P60      | identity_type=None -> ValueError                         |
+    | P60      | CUSIP -> NULL (ya pasa)                                  |
+    | P60      | ISIN  -> NULL (ya pasa)                                  |
+    | P60      | identity_type=None -> ValueError (ya pasa)               |
     | P60      | CSV sin columna identity_type -> NO asumir TICKER        |
     | P61      | resolve_security_identity invoca resolve_source_status   |
     | P61      | cusip_ticker_exceptions con vigencia -> VERIFIED         |
@@ -269,6 +274,38 @@ validacion contractual explicita.
     | iae/NIPC_COVERAGE_POLICY_V13_PROPUESTA.md      | Policy propuesta |
     | iae/INFORME.md                                 | Evidencia IAE    |
     | iae/DICTAMENES.md                              | Registro         |
+
+---
+
+## 9. Asunto explicito para F2.4 (agregacion shareClassFIGI)
+
+El auditor debe decidir la regla contractual cuando multiples CUSIPs
+comparten `shareClassFIGI` en un mismo periodo. Escenarios:
+
+    CUSIP_A -> FIGI_X -> VERIFIED
+    CUSIP_B -> FIGI_X -> TEMPORAL_UNVERIFIED
+
+    CUSIP_A -> FIGI_X -> CANONICAL
+    CUSIP_B -> FIGI_X -> CONFLICT
+
+Regla de agregacion propuesta (a dictamen):
+
+    1. Resolver cada observacion a shareClassFIGI.
+    2. Agrupar observaciones del periodo por shareClassFIGI.
+    3. Sumar sshprnamt_total por grupo.
+    4. Solo despues aplicar max(Q4_total, Q1_total) por shareClassFIGI.
+
+La decision pendiente es si una observacion con estado distinto de
+VERIFIED contribuye al peso agregado del shareClassFIGI o no.
+
+Cuatro dimensiones a separar explicitamente:
+
+    TARGET membership      (pertenece al universo contractual)
+    RESOLVED status        (identidad resuelta)
+    PAIRED status          (operacionalmente emparejado)
+    weight contribution    (peso agregado para la metrica ponderada)
+
+No deben quedar implicitamente acopladas.
 
 ---
 

@@ -29,16 +29,22 @@ empirica (baseline + TOP 2000) bajo la semantica contractual correcta.
 Resultado esperado de A.6:
 
 - Codigo alineado con contrato P38/P60/P61.
-- Tests contractuales nuevos.
-- Baseline + TOP 2000 recalculados.
-- F2.4 definitivo con evidencia actualizada.
-- Gate-NIPC.2 desbloqueado.
+- Tests contractuales sin xfail (todos pasan).
+- Baseline + TOP 2000 recalculados bajo semantica contractual.
+- F2.4-CLOSE emitido con evidencia actualizada.
+- Inputs para Gate-NIPC.2 disponibles.
+
+Nota: A.6 NO desbloquea Gate-NIPC.2 por si sola. El desbloqueo requiere
+ademas propuesta de thresholds sobre evidencia v2 y dictamen especifico
+del auditor.
 
 ---
 
 ## 2. Sub-fases
 
 ### A.6.1 - Dictamen F2.4 (EXTERNO)
+
+**Submission HEAD:** `2eb4dcd`.
 
 **Entrada:**
 - iae/RECONCILIACION_CONTRATO_CODIGO.md
@@ -47,6 +53,9 @@ Resultado esperado de A.6:
 - iae/NIPC_COVERAGE_POLICY_V13_PROPUESTA.md
 - iae/INFORME.md
 - iae/DICTAMENES.md
+- tests/test_p60_contract.py
+- tests/test_p61_contract.py
+- tests/test_p38_contract.py
 
 **Salida:**
 - Dictamen F2.4 formal, con decisiones por D1/D2/D3.
@@ -64,11 +73,13 @@ Resultado esperado de A.6:
 
 3 commits minimos, uno por divergencia.
 
-**Commit A.6.2-P60** - P60 raise para CUSIP/ISIN
+**Commit A.6.2-P60** - P60 sin default TICKER
 - Archivo: `sec_13f/identity/security_identity.py`.
-- Cambio: `_normalize_canonical` lanza `ValueError` para CUSIP/ISIN.
-- Cambio: `_find_active_equivalence` no asume default TICKER.
-- Test: `tests/test_p60_contract.py` (nuevo).
+- Cambio: `_find_active_equivalence` no asume default TICKER si falta
+  la columna `identity_type` en `cusip_equivalence.csv`.
+- NO se introduce `ValueError` para CUSIP/ISIN: el contrato vigente
+  mantiene CUSIP/ISIN -> NULL.
+- Test: `tests/test_p60_contract.py` (ya existe, retirar xfail).
 
 **Commit A.6.2-P61** - P61 conectado al resolver
 - Archivo: `sec_13f/identity/security_identity.py`.
@@ -108,6 +119,10 @@ NO se escribe hasta que F2.4 lo confirme.
 `shareClassFIGI` contractual comun entre Q4 y Q1, con
 `operational_mapping_status == VERIFIED` en ambos periodos. NO se exige
 igualdad literal de `canonical_security` entre periodos.
+
+**Regla de agregacion:** los pesos se agregan por shareClassFIGI antes
+de aplicar max(Q4, Q1). Multiples CUSIPs que comparten shareClassFIGI
+contribuyen a un unico peso w(X). El test debe cubrir este caso.
 
 Escenario:
 
@@ -267,13 +282,20 @@ para A.6.3 o A.6.4 si F2.4 no autoriza OpenFIGI todavia.
     | Criterio                                       | Umbral          |
     |------------------------------------------------|-----------------|
     | Codigo alineado con contrato P38/P60/P61       | 100%            |
-    | Tests contractuales nuevos                     | >= 11           |
-    | Tests globales                                 | >= 979 + 11     |
+    | Tests baseline antes de A.6                    | N (medir inicio)|
+    | Tests nuevos contractuales                     | M               |
+    | Tests divergencia xfail (antes del fix)        | K               |
+    | Tests xfail pendientes tras A.6                | 0               |
     | Pyflakes                                       | 0 warnings      |
     | compileall                                     | OK              |
     | Baseline v2 + TOP 2000 v2                      | escritos        |
-    | F2.4 definitivo emitido                        | si              |
-    | Gate-NIPC.2 desbloqueado                       | si              |
+    | F2.4-CLOSE emitido                             | si              |
+    | Inputs Gate-NIPC.2 disponibles                 | si              |
+    | Gate-NIPC.2 desbloqueado                       | NO (fuera A.6)  |
+
+Nota: "tests presentes" != "tests contractualmente satisfactorios". Un
+xfail no es un test verde. El criterio duro es "xfail pendientes tras
+A.6 == 0". Si algun xfail no puede retirarse, requiere dictamen.
 
 ---
 

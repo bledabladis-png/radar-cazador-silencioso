@@ -3,9 +3,19 @@
 Documentan el estado del codigo frente al contrato
 NIPC_CONTRATOS_SEMANTICOS_v1.md secciones 3 y 4.
 
-Los tests marcados como @pytest.mark.xfail documentan una divergencia
+Los tests marcados con @pytest.mark.xfail documentan una divergencia
 conocida. Cuando F2.4 autorice el fix correspondiente, se retira el
 marcador y el test debe pasar.
+
+API normativa P38 (a dictamen F2.4):
+
+    compute_contractual_coverage(...)   FUNCION CONTRACTUAL
+    compute_nipc(...)                   orquestador
+    compute_coverage_pairwise(...)      legacy / proxy (deprecada)
+
+`nipc.py` NO importa `radar_target_catalog` ni `target_universe`. El
+TARGET se construye externamente (identity/target_builder.py) y se pasa
+como parametro. Esa es la arquitectura contractual.
 
 NO tocan codigo productivo.
 """
@@ -20,14 +30,19 @@ from src.institutional_accumulation.aggregation import nipc
 # --- Tests que HOY pasan (comportamiento observable) ---
 
 
-def test_p38_target_pairwise_hoy_sobre_observed_key():
-    """Estado actual: el denominador opera sobre observed_security_key.
+def test_p38_denominador_cero_unavailable():
+    """Contrato P38 seccion 3.3: denominador cero -> UNAVAILABLE."""
+    empty = pd.DataFrame()
+    result = nipc.compute_coverage_pairwise(empty, empty)
+    assert result["paired_weighted_share_coverage"] is None
+    assert result["coverage_status"] == "UNAVAILABLE"
 
-    Este test documenta el proxy actual. Cuando se implemente TARGET
-    real, este test se sustituye por el contractual (ver xfail abajo).
-    """
-    import pandas as pd
 
+def test_p38_legacy_usa_observed_key():
+    """Documenta el comportamiento actual: la funcion legacy opera
+    sobre observed_security_key (proxy). Cuando se implemente TARGET
+    real (A.6.2-P38-materialize), este test se sustituye por el
+    contractual."""
     curr = pd.DataFrame([
         {
             "observed_security_key": "cusip:A",
@@ -45,16 +60,7 @@ def test_p38_target_pairwise_hoy_sobre_observed_key():
         }
     ])
     result = nipc.compute_coverage_pairwise(curr, prev)
-    # Con A en ambos, cobertura pairwise = 1.0
     assert result["paired_security_coverage"] == 1.0
-
-
-def test_p38_denominador_cero_unavailable():
-    """Contrato P38 seccion 3.3: denominador cero -> UNAVAILABLE."""
-    empty = pd.DataFrame()
-    result = nipc.compute_coverage_pairwise(empty, empty)
-    assert result["paired_weighted_share_coverage"] is None
-    assert result["coverage_status"] == "UNAVAILABLE"
 
 
 # --- Tests que documentan DIVERGENCIA (xfail hasta F2.4) ---
@@ -62,37 +68,40 @@ def test_p38_denominador_cero_unavailable():
 
 @pytest.mark.xfail(
     reason=(
-        "Divergencia P38: nipc.py no importa radar_target_catalog ni "
-        "target_universe. El denominador no construye TARGET real. "
-        "Contrato seccion 4.3."
+        "Divergencia P38: compute_contractual_coverage no existe como "
+        "API normativa. La arquitectura exige que TARGET se reciba como "
+        "parametro externo (construido por target_builder). Contrato "
+        "seccion 3.2 y 4.3."
     )
 )
-def test_p38_importa_radar_target_catalog():
-    """Contrato P38 seccion 4.3: TARGET se construye desde RADAR_TARGET_CATALOG.
+def test_p38_existe_compute_contractual_coverage():
+    """Contrato P38: la funcion contractual debe existir.
 
-    Estado actual: nipc.py no importa esos modulos.
-    Cuando F2.4 autorice el fix, retirar el @pytest.mark.xfail.
+    Estado actual: no existe. Cuando A.6.2-P38 la implemente, este
+    test pasa.
     """
-    src = inspect.getsource(nipc)
-    assert "radar_target_catalog" in src or "target_universe" in src, (
-        "nipc.py no referencia radar_target_catalog ni target_universe"
+    from src.institutional_accumulation.aggregation import coverage
+    assert hasattr(coverage, "compute_contractual_coverage"), (
+        "Falta aggregation/coverage.py::compute_contractual_coverage"
     )
 
 
 @pytest.mark.xfail(
     reason=(
-        "Divergencia P38: compute_coverage_pairwise no acepta "
-        "target_q4/target_q1 como parametros. Contrato seccion 8.3 "
-        "del documento habilitante."
+        "Divergencia P38: compute_contractual_coverage no recibe "
+        "target_q4/target_q1 como parametros externos. Contrato 8.3."
     )
 )
-def test_p38_firma_acepta_target_q4_q1():
-    """Contrato P38: la funcion debe recibir target_q4/target_q1.
+def test_p38_contractual_recibe_target_externo():
+    """Contrato P38: TARGET se recibe, no se construye internamente.
 
-    Estado actual: firma = (units_current, units_previous).
-    Cuando F2.4 autorice el fix, retirar el @pytest.mark.xfail.
+    Estado actual: la funcion no existe. Cuando exista, su firma debe
+    incluir target_q4/target_q1 como parametros.
     """
-    sig = inspect.signature(nipc.compute_coverage_pairwise)
+    from src.institutional_accumulation.aggregation import coverage
+    if not hasattr(coverage, "compute_contractual_coverage"):
+        pytest.fail("compute_contractual_coverage no existe todavia")
+    sig = inspect.signature(coverage.compute_contractual_coverage)
     params = set(sig.parameters.keys())
     assert "target_q4" in params and "target_q1" in params, (
         "Firma actual: {0}".format(params)
@@ -101,44 +110,30 @@ def test_p38_firma_acepta_target_q4_q1():
 
 @pytest.mark.xfail(
     reason=(
-        "Divergencia P38: los pesos no se agregan por security antes "
-        "de max(Q4,Q1). Contrato seccion 3.3 (w(s) = max(Q4_total, "
-        "Q1_total) una vez por security)."
+        "Divergencia P38: la agregacion de pesos por shareClassFIGI "
+        "antes de max(Q4,Q1) no esta implementada. Contrato 3.3."
     )
 )
-def test_p38_pesos_agregados_por_security_antes_de_max():
-    """Contrato P38: w(X) = max(Q4_total(X), Q1_total(X)).
+def test_p38_agrega_pesos_por_shareclass_figi():
+    """Contrato P38 seccion 3.3: w(X) = max(Q4_total(X), Q1_total(X)).
 
-    Escenario: dos CUSIPs del mismo X.
-        Q4: CUSIP_A=100, CUSIP_B=50
-        Q1: CUSIP_A=80,  CUSIP_B=60
-    Si se agrega ANTES de max: w(X) = max(150, 140) = 150.
-    Si se hace max por CUSIP:    max(100,80) + max(50,60) = 100+60 = 160.
+    Escenario (bajo Modelo A - shareClassFIGI):
+        Q4: CUSIP_A=100, CUSIP_B=50  (ambos FIGI_X)
+        Q1: CUSIP_A=80,  CUSIP_B=60  (ambos FIGI_X)
 
-    Estado actual: no aplica agregacion por security (opera por CUSIP).
-    Cuando F2.4 autorice el fix, retirar el @pytest.mark.xfail.
+    Agregacion correcta: w(FIGI_X) = max(150, 140) = 150.
+    Agregacion incorrecta: max(100,80) + max(50,60) = 160.
+
+    La regla contractual exige agregar antes de max.
     """
-    import pandas as pd
+    from src.institutional_accumulation.aggregation import coverage
+    if not hasattr(coverage, "compute_contractual_coverage"):
+        pytest.fail("compute_contractual_coverage no existe todavia")
 
-    # Escenario simplificado: dos filas del mismo X pero observed_key distinto.
-    # Bajo TARGET real, ambos deben agregarse por canonical_security antes del max.
-    curr = pd.DataFrame([
-        {"observed_security_key": "cusip:A", "security_resolution_status": "CANONICAL",
-         "operational_mapping_status": "VERIFIED", "sshprnamt_total": 100},
-        {"observed_security_key": "cusip:B", "security_resolution_status": "CANONICAL",
-         "operational_mapping_status": "VERIFIED", "sshprnamt_total": 50},
-    ])
-    prev = pd.DataFrame([
-        {"observed_security_key": "cusip:A", "security_resolution_status": "CANONICAL",
-         "operational_mapping_status": "VERIFIED", "sshprnamt_total": 80},
-        {"observed_security_key": "cusip:B", "security_resolution_status": "CANONICAL",
-         "operational_mapping_status": "VERIFIED", "sshprnamt_total": 60},
-    ])
-    # Contrato: ambos CUSIPs corresponden al mismo canonical_security X.
-    # El computo debe agregar antes de max. La funcion actual no tiene
-    # forma de saber que A y B son el mismo X (no recibe canonical).
-    _ = nipc.compute_coverage_pairwise(curr, prev)
-    # Marcador: si la funcion ya agregara por canonical, el resultado
-    # ponderado seria 150 (numerador = 150, denom = 150 -> 1.0).
-    # Hoy no lo hace. Cuando se implemente TARGET real, este test debe pasar.
-    assert False, "Test contractual: pendiente de implementacion P38 real"
+    # Este test se activara cuando exista la funcion contractual.
+    # Requiere: (a) TARGET_Q4/TARGET_Q1 como sets de shareClassFIGI,
+    # (b) weights_q4/weights_q1 agregados por shareClassFIGI.
+    pytest.fail(
+        "Test contractual pendiente: requiere compute_contractual_coverage "
+        "+ agregacion por shareClassFIGI implementada"
+    )

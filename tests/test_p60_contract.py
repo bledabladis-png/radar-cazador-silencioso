@@ -51,14 +51,22 @@ def test_p60_identity_type_none_raises():
     reason=(
         "Divergencia P60: _find_active_equivalence asume default TICKER "
         "si falta la columna identity_type. Contrato seccion 1.6 exige "
-        "que el tipo venga declarado por la fuente, no asumido."
+        "que el tipo venga declarado por la fuente, no asumido. "
+        "El comportamiento observable exacto (rechazo, lista vacia, "
+        "UNRESOLVED, error explicito) queda a dictamen F2.4."
     )
 )
-def test_p60_csv_sin_identity_type_rechaza():
-    """Contrato P60 seccion 1.6: si falta identity_type, la fila se rechaza.
+def test_p60_csv_sin_identity_type_no_asume_ticker():
+    """Contrato P60 seccion 1.6: no asumir tipo de identidad.
 
-    Estado actual: se asume TICKER silenciosamente.
-    Cuando F2.4 autorice el fix, retirar el @pytest.mark.xfail.
+    El contrato exige que el tipo venga declarado por la fuente. No
+    prescribe un comportamiento observable exacto (rechazo, lista
+    vacia, UNRESOLVED, etc.): eso lo decide F2.4.
+
+    Lo que SI prohibe el contrato es asumir TICKER silenciosamente.
+
+    Estado actual: se asume TICKER. El test falla (xfail) porque
+    obtenemos tuplas con prefijo "equity:" sin fuente declarada.
     """
     eq_df = pd.DataFrame([
         {
@@ -70,6 +78,11 @@ def test_p60_csv_sin_identity_type_rechaza():
         }
     ])
     result = si._find_active_equivalence("037833100", "2026-03-31", eq_df)
-    assert result == [], (
-        "Esperado rechazo explicito, obtenido: {0}".format(result)
-    )
+    # Prohibicion contractual: no debe haber canonical con prefijo
+    # derivado de un tipo asumido (equity: / figi:) sin fuente.
+    if result:
+        for canon, itype in result:
+            assert not canon.startswith("equity:"), (
+                "Canonical con prefijo equity: sin identity_type declarado "
+                "(default TICKER silencioso): {0}".format(result)
+            )
