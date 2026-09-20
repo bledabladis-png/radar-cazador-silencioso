@@ -52,6 +52,9 @@ Orden recomendado para entender el sistema actual:
     NIPC_COVERAGE_POLICY_V13_PROPUESTA.md policy propuesta
     INFORME.md                            consolidado de 17 informes
     DICTAMENES.md                         registro de 23 dictamenes
+    RECONCILIACION_CONTRATO_CODIGO.md     divergencias contrato<->codigo
+    REESTRUCTURACION_MODULO.md            plan arquitectonico
+    FASE_A6_PLAN.md                       plan de ejecucion A.6
 
 ### radar/
 
