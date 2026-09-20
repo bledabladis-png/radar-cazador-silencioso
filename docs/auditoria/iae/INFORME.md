@@ -641,6 +641,34 @@ Los 6 bloqueos del dictamen #28 quedan resueltos:
 
 Propuesta v3 lista para reenviar al auditor.
 
+
+
+### Dictamen P66 #29 recibido (2026-09-21)
+
+Resultado: GO CONDICIONADO. Un bloqueo material nuevo + correcciones
+textuales.
+
+Aprobado: arquitectura probatoria de R4 completa. R2/R4 separacion
+confirmada por la SEC. Combination, cross-period, mapping
+unidireccional, normalizacion sin truncar, identidad CIK/FormNum,
+RESTATEMENT, NEW HOLDINGS (regla fail-closed), estados N/D/CONFLICT:
+todos RESUELTOS.
+
+Bloqueo material nuevo: **Gate 0.8**. La prueba de cobertura del Gate
+0.4-reissue se hizo sobre `OTHERMANAGER(NT)`. El universo contractual
+de R4 que ahora esta definido es mas amplio: NOTICE (NT + NT/A) +
+COMBINATION (HR + HR/A). El auditor exige medir cobertura de identidad
+sobre el universo completo, separado por tipo y por clase de amendment.
+
+Correcciones textuales aplicadas:
+- §2 R4: adoptado texto exacto del §11 del dictamen #29.
+- §5.2: afinada la formulacion de la cadena de amendments.
+- §10.4: reflejada la aprobacion explicita del bloqueo #4.
+
+Evidencia: `iae/DICTAMENES.md` #29.
+
+Siguiente paso: Gate 0.8.
+
 ### Estado
 
     Fuente             APROBADA (OTHERMANAGER)

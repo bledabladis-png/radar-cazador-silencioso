@@ -683,3 +683,114 @@ nomenclatura y bloqueo de truncamiento. Reformular propuesta v3.
 
 Referencia completa: iae/P66_L3_REFORMULACION_PROPUESTA.md
 (corregida en v3 tras cierre de bloqueos).
+
+
+---
+
+## 29. P66 - Dictamen auditor externo v3 (2026-09-21)
+
+**Tipo:** dictamen del auditor externo sobre P66_L3_REFORMULACION_PROPUESTA.md
+v3 (con 6 bloqueos del dictamen #28 resueltos).
+
+**Objeto:** aprobacion de R4 con Combination, amendments, mapping
+unidireccional.
+
+**Resultado:** GO CONDICIONADO. Un bloqueo material nuevo + 2
+correcciones textuales.
+
+### Aprobado
+
+    OTHERMANAGER como evidencia R4                 RESUELTO
+    OTHERMANAGER2 para R2                          RESUELTO
+    Combination incluido (Gate 0.6)                RESUELTO
+    Cross-period filtering (Gate 0.5A)             RESUELTO
+    Mapping FormNum -> CIK unidireccional          RESUELTO
+    Normalizacion sin truncar                      RESUELTO
+    Identidad CIK / FormNum                        RESUELTO
+    Restatement (sustituye)                        RESUELTO
+    NEW HOLDINGS (regla fail-closed)               RESUELTO
+    Estados N/D / CONFLICT                         RESUELTO
+
+### Bloqueo material nuevo
+
+**Gate 0.8**: el Gate 0.4-reissue midio resolucion de identidad
+sobre `OTHERMANAGER(NT)`. Pero el universo contractual de R4 que
+ahora esta definido es:
+
+    NOTICE (NT + NT/A)
+    + COMBINATION (HR + HR/A)
+
+El auditor exige medir la cobertura de identidad sobre el universo
+completo de filings que R4 podra consumir, separado por:
+
+    NOTICE vs COMBINATION
+    BASE vs RESTATEMENT vs NEW HOLDINGS
+
+Produciendo:
+
+    total filas
+    IDENTITY_RESOLVED por CIK
+    IDENTITY_RESOLVED por FormNum
+    N/D
+    CONFLICT
+
+Razon: la prueba actual verifica el mapping, no que cada fila que
+R4 vaya a consumir pueda resolverse contra ese mapping. Requisito
+de coverage of the execution domain, no de calidad del mapping.
+
+### Correcciones textuales
+
+1. §5.2: sustituir "Resultado: snapshot efectivo" por un texto que
+   no afirme una teoria general de snapshot. El auditor propone:
+
+       Para R4, la evidencia OTHERMANAGER se considera valida
+       unicamente cuando su estado en la cadena de amendments
+       sea inequivoco:
+       - RESTATEMENT: sustituye la evidencia OTHERMANAGER anterior.
+       - NEW HOLDINGS: se acepta sin transformacion cuando la
+         relacion OTHERMANAGER coincide con el estado efectivo
+         anterior.
+       - NEW HOLDINGS con cambio de OTHERMANAGER: N/D o CONFLICT.
+
+2. §2 R4: adoptar el texto exacto del §11 del dictamen #29.
+
+### Texto R4 que el auditor congelaria
+
+    4. B declara explicitamente que A reporta por B mediante una
+       fila de OTHERMANAGER perteneciente al filing efectivo de B,
+       identificando inequivocamente a A:
+
+       a) mediante CIK; o
+
+       b) cuando CIK no este disponible, mediante Form 13F File
+          Number cuya resolucion a CIK sea inequivoca dentro del
+          mismo PERIODOFREPORT.
+
+       No se permite matching por nombre.
+
+       La evidencia R4 es aplicable cuando B presenta:
+
+       - 13F NOTICE; o
+       - 13F COMBINATION REPORT.
+
+       En presencia de amendments, la evidencia OTHERMANAGER se
+       determina mediante la cadena documental efectiva del
+       periodo. Un RESTATEMENT sustituye la evidencia anterior.
+       Un NEW HOLDINGS solo conserva la evidencia R4 cuando su
+       OTHERMANAGER es consistente con el estado efectivo previo;
+       cualquier cambio no resoluble produce N/D o CONFLICT.
+
+### Estado
+
+    R4 arquitectura                           APROBADA
+    Texto contractual exacto                   PENDIENTE §11
+    Gate 0.8                                  PENDIENTE
+    Contrato 14.3                             NO MODIFICAR
+    reporting_dedup.py                        NO TOCAR
+    DROP_DUP                                  NO ACTIVAR
+
+### Siguiente paso
+
+Ejecutar Gate 0.8. Si no descubre una nueva clase de ambiguedad y
+mantiene el tratamiento fail-closed, el siguiente dictamen puede
+ser GO contractual para modificar 14.3.

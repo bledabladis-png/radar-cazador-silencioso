@@ -2282,3 +2282,23 @@ P65 v3 (ver iae/DICTAMENES.md #26). GO CONDICIONADO con 3 correcciones.
   para dictamen contractual final.
 - **NO se ha hecho:** sin XML, sin reporting_dedup.py, sin DROP_DUP,
   sin tocar contrato 14.3.
+
+
+## P66 - Dictamen #29 y bloqueo Gate 0.8 (2026-09-21)
+
+- **Origen:** dictamen del auditor externo sobre propuesta v3.
+- **Resultado:** GO CONDICIONADO.
+- **Aprobado:** R4 con Combination, amendments fail-closed,
+  mapping unidireccional, normalizacion sin truncar.
+- **Bloqueo material nuevo:** Gate 0.8.
+  - Gate 0.4-reissue midio identidad sobre `OTHERMANAGER(NT)`.
+  - El universo R4 vigente es NOTICE + COMBINATION + amendments.
+  - Auditor exige medir cobertura de identidad sobre el universo
+    completo, separado por tipo y clase de amendment.
+- **Correcciones textuales aplicadas:**
+  - §2 R4: adoptado texto exacto del dictamen #29 §11.
+  - §5.2: formulacion afinada de la cadena de amendments.
+  - §10.4: reflejada aprobacion del bloqueo #4.
+- **Pendiente:** Gate 0.8.
+- **NO se ha hecho:** sin XML, sin reporting_dedup.py, sin DROP_DUP,
+  sin tocar contrato 14.3.

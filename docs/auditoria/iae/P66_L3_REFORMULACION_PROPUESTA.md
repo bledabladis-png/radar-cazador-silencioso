@@ -50,23 +50,29 @@ correcciones son de precision contractual, no de arquitectura.
       2. Column 7(L) referencia a B mediante la resolucion
          estructurada de Other Included Managers (OTHERMANAGER2);
       3. existe filing efectivo de B para el mismo PERIODOFREPORT;
-      4. B declara explicitamente que A reporta por B, mediante
-         una fila de OTHERMANAGER asociada al ACCESSION_NUMBER
-         del filing efectivo de B, identificando inequivocamente
-         a A:
-         a) mediante CIK, o
+      4. B declara explicitamente que A reporta por B mediante una
+         fila de OTHERMANAGER perteneciente al filing efectivo de B,
+         identificando inequivocamente a A:
+
+         a) mediante CIK; o
+
          b) cuando CIK no este disponible, mediante Form 13F File
             Number cuya resolucion a CIK sea inequivoca dentro del
             mismo PERIODOFREPORT.
 
-         La evidencia es valida cuando el filing B es:
-         - 13F NOTICE (SUBMISSIONTYPE in {13F-NT, 13F-NT/A}
-                       y REPORTTYPE = 13F NOTICE), o
-         - 13F COMBINATION REPORT (SUBMISSIONTYPE in {13F-HR, 13F-HR/A}
-                       y REPORTTYPE = 13F COMBINATION REPORT).
+         No se permite matching por nombre.
 
-         La ausencia de resolucion inequivoca produce N/D o CONFLICT
-         segun corresponda. No se permite matching por nombre.
+         La evidencia R4 es aplicable cuando B presenta:
+
+         - 13F NOTICE; o
+         - 13F COMBINATION REPORT.
+
+         En presencia de amendments, la evidencia OTHERMANAGER se
+         determina mediante la cadena documental efectiva del
+         periodo. Un RESTATEMENT sustituye la evidencia anterior.
+         Un NEW HOLDINGS solo conserva la evidencia R4 cuando su
+         OTHERMANAGER es consistente con el estado efectivo previo;
+         cualquier cambio no resoluble produce N/D o CONFLICT.
       5. no existe evidencia contradictoria ni evidencia de
          reporting partition/overlap no resuelto.
 
@@ -159,17 +165,20 @@ al periodo de analisis. Prohibido filtrar por directorio fisico.
       2. Ordenar filings por AMENDMENTNO ascendente
          (base AMENDMENTNO=null tratado como orden 0).
 
-      3. Aplicar semantica SEC:
-         - Base:          punto de partida.
-         - RESTATEMENT:   sustituye el snapshot efectivo
-                          (incluye OTHERMANAGER). Evidencia
-                          directa: Gate 0.5, caso CIK 0002056909.
-         - NEW HOLDINGS:  tratar como identidad sobre OTHERMANAGER.
-                          Evidencia: Gate 0.7, 3/3 casos identicos.
-                          Fail-closed: si un NEW HOLDINGS presenta
-                          OTHERMANAGER distinto del base, el estado
-                          es N/D o CONFLICT. NO asumir union.
-         - Resultado:     snapshot efectivo.
+      3. Aplicar semantica SEC (texto afinado por dictamen #29):
+
+         Para R4, la evidencia OTHERMANAGER se considera valida
+         unicamente cuando su estado en la cadena de amendments sea
+         inequivoco:
+
+         - RESTATEMENT: sustituye la evidencia OTHERMANAGER anterior.
+                        Evidencia directa: Gate 0.5, caso CIK 0002056909.
+         - NEW HOLDINGS: se acepta sin transformacion cuando la
+                         relacion OTHERMANAGER coincide con el estado
+                         efectivo anterior. Evidencia: Gate 0.7,
+                         3/3 casos identicos.
+         - NEW HOLDINGS con cambio de OTHERMANAGER: N/D o CONFLICT.
+                         NO asumir union ni sustitucion sin evidencia.
 
       4. R4 se evalua sobre el snapshot efectivo, NO sobre el base.
 
@@ -422,6 +431,9 @@ Construido por `PERIODOFREPORT`, no por directorio fisico.
 ### 10.4. Bloqueos resueltos por este apartado
 
     #4 Mapping unidireccional: RESUELTO.
+
+Dictamen #29 (2026-09-21): APROBADO explicitamente. La invariante
+util para R4 es FormNum -> CIK, no la direccion inversa.
 
 ---
 
