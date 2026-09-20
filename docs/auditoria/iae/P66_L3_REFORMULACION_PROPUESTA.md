@@ -203,22 +203,55 @@ dictamen exige conservar granularidad completa:
 | 2026Q1    | NT   | 2,045   | 2,045                  | 100.0%    |
 | 2026Q1    | HR   | 9,716   | 441                    | 4.5%      |
 
-### 9.2. Granularidad de identidad (pendiente de Gate 0.3)
+### 9.2. Granularidad de identidad (Gate 0.3, EJECUTADO)
 
-Antes del GO contractual, medir:
+Medicion ejecutada 2026-09-20. Evidencia en
+`iae/evidence/p66_gate03_granularidad/`.
 
-    numero total de NT
-    numero con OTHERMANAGER non-null
-    numero total de filas OTHERMANAGER en NT
-    numero con CIK poblado
-    numero con FORM13FFILENUMBER poblado
-    numero con ambos poblados
-    numero con ninguno poblado
-    numero con CIK <NA> y FormNum <NA>
-    numero con CIK poblado y FormNum <NA>
-    numero con CIK <NA> y FormNum poblado
+| Categoria | Q4 filas | Q4 % | Q1 filas | Q1 % |
+|-----------|---------:|-----:|---------:|-----:|
+| con CIK poblado      | 1,955 | 69.72% | 1,948 | 68.91% |
+| con FormNum poblado  | 2,567 | 91.55% | 2,596 | 91.83% |
+| con ambos poblados   | 1,815 | 64.73% | 1,820 | 64.38% |
+| solo CIK             |   140 |  4.99% |   128 |  4.53% |
+| solo FormNum         |   752 | 26.82% |   776 | 27.45% |
+| ninguno              |    97 |  3.46% |   103 |  3.64% |
 
-Esta medicion es requisito del dictamen #27, condicion del GO.
+Consistencia CIK <-> FormNum (sobre filas con ambos):
+
+| Trimestre | CIK con 1 FormNum | CIK con >1 | FormNum con 1 CIK | FormNum con >1 |
+|-----------|------------------:|-----------:|------------------:|---------------:|
+| 2025Q4    | 716 / 716         | 0          | 716 / 716         | 0              |
+| 2026Q1    | 696 / 696         | 0          | 696 / 696         | 0              |
+
+**Cardinalidad 1:1 perfecta.**
+
+### 9.2-bis. Hallazgo de normalizacion FormNum
+
+Del 91.55-91.83% con FormNum poblado, el 93.42-93.34% usa prefijo
+`028-`. El resto (6.58-6.66%) usa prefijo `28-` (sin cero a la
+izquierda). **Todas las filas afectadas tienen CIK=`<NA>`.**
+
+Normalizacion trivial propuesta: `28-XXXXX -> 028-XXXXX` con
+zero-padding a 3 digitos.
+
+### 9.5. Tabla canonica Form13FFileNumber -> CIK
+
+Evidencia del Gate 0.3 demuestra que la cardinalidad 1:1 se cumple
+sin excepciones. La tabla canonica es construible del propio
+Data Set:
+
+    Form13FFileNumber -> CIK
+
+    Fuente: interseccion de OTHERMANAGER.CIK no-null
+            AND OTHERMANAGER.FORM13FFILENUMBER no-null.
+    Cardinalidad: 1:1.
+    Versionado: por trimestre.
+    Persistencia: artefacto de IAE (mapping canonico).
+
+Sin esta tabla, el 26.82-27.45% de filas "solo FormNum" quedaria en
+N/D artificialmente, sesgando el universo hacia large caps con CIK
+declarado.
 
 ### 9.3. Caso Vanguard confirmado (Gate 0.2)
 

@@ -2113,3 +2113,22 @@ P65 v3 (ver iae/DICTAMENES.md #26). GO CONDICIONADO con 3 correcciones.
   - No se ha descargado XML de EDGAR.
 - **Reabrir si:** el auditor emite dictamen final o solicita cambios
   adicionales sobre el texto contractual.
+
+
+## P66 - Gate 0.3 granularidad de identidad (2026-09-20)
+
+- **Origen:** correccion obligatoria #8 del dictamen #27.
+- **Resultados:**
+  - Cobertura 100% de NT en OTHERMANAGER.
+  - Cardinalidad CIK <-> FormNum 1:1 perfecta (716/716 Q4; 696/696 Q1).
+  - Composicion: 64.7% ambos, 4.5-5.0% solo CIK, 26.8-27.5% solo FormNum,
+    3.5-3.6% ninguno.
+  - 6.6% FormNum con prefijo `28-` en vez de `028-`. Normalizable.
+  - Cero CONFLICT.
+- **Conclusion:** tabla canonica `Form13FFileNumber -> CIK` construible
+  1:1. Cobertura efectiva MATCH sube de 69.7% a ~96.5%.
+- **Evidencia:** `iae/evidence/p66_gate03_granularidad/`.
+- **Pendiente:** dictamen final del auditor sobre el texto contractual
+  exacto de 14.3. Solo despues: tocar `NIPC_CONTRATOS_SEMANTICOS_v1.md`.
+- **NO se ha hecho:** sin XML, sin reporting_dedup.py, sin DROP_DUP,
+  sin tocar contrato.

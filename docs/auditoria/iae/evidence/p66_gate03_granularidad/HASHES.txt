@@ -1,0 +1,8 @@
+# SHA-256 de la evidencia P66 Gate 0.3
+
+README.md                    6fc5cd6fffe1c5eeae80515ff40da387270f2c2ebe0b62696bfc7054f22edfc0
+granularidad_output.txt      601a6329fb8a8637d608a35fdaf76cbe1e11f7353e95c611822e2033a36f0910
+
+Registro: 2026-09-20.
+Algoritmo: SHA-256.
+Entorno: D:\Macro_Sectorial.

@@ -1,0 +1,67 @@
+======================================================================
+=== 2025Q4 ===
+======================================================================
+
+[1] NT filings totales: 2,008
+    accesiones unicos: 2,008
+
+[2] Filas OTHERMANAGER en NT: 2,804
+    accesiones con al menos 1 fila: 2,008
+    accesiones sin filas: 0
+
+[3] Granularidad de identidad (sobre 2,804 filas):
+    con CIK poblado:                1,955  ( 69.72%)
+    con FormNum poblado:            2,567  ( 91.55%)
+    con ambos poblados:             1,815  ( 64.73%)
+    solo CIK (FormNum vacio):         140  (  4.99%)
+    solo FormNum (CIK vacio):         752  ( 26.82%)
+    ninguno poblado:                   97  (  3.46%)
+
+[4] Estructura FORM13FFILENUMBER poblado:
+    total:       2,567
+    prefijo '028-': 2,398  (93.42%)
+    muestra:     ['028-22660', '028-10385', '028-00180']
+
+[5] Consistencia CIK -> FormNum (sobre filas con ambos):
+    CIK unicos con ambos:      716
+    CIK con 1 FormNum unico:   716
+    CIK con >1 FormNum:        0
+
+[6] Consistencia FormNum -> CIK (sobre filas con ambos):
+    FormNum unicos con ambos:  716
+    FormNum con 1 CIK unico:   716
+    FormNum con >1 CIK:        0
+
+======================================================================
+=== 2026Q1 ===
+======================================================================
+
+[1] NT filings totales: 2,045
+    accesiones unicos: 2,045
+
+[2] Filas OTHERMANAGER en NT: 2,827
+    accesiones con al menos 1 fila: 2,045
+    accesiones sin filas: 0
+
+[3] Granularidad de identidad (sobre 2,827 filas):
+    con CIK poblado:                1,948  ( 68.91%)
+    con FormNum poblado:            2,596  ( 91.83%)
+    con ambos poblados:             1,820  ( 64.38%)
+    solo CIK (FormNum vacio):         128  (  4.53%)
+    solo FormNum (CIK vacio):         776  ( 27.45%)
+    ninguno poblado:                  103  (  3.64%)
+
+[4] Estructura FORM13FFILENUMBER poblado:
+    total:       2,596
+    prefijo '028-': 2,423  (93.34%)
+    muestra:     ['028-17729', '028-19670', '028-10578']
+
+[5] Consistencia CIK -> FormNum (sobre filas con ambos):
+    CIK unicos con ambos:      696
+    CIK con 1 FormNum unico:   696
+    CIK con >1 FormNum:        0
+
+[6] Consistencia FormNum -> CIK (sobre filas con ambos):
+    FormNum unicos con ambos:  696
+    FormNum con 1 CIK unico:   696
+    FormNum con >1 CIK:        0

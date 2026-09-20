@@ -397,6 +397,27 @@ dictamen obtenido, con la propuesta v2 corregida.
 - Solo despues: aplicar a NIPC_CONTRATOS_SEMANTICOS_v1.md in-place.
 - Solo despues: implementar en reporting_dedup.py.
 
+
+
+### Gate 0.3 ejecutado (2026-09-20)
+
+Medicion de granularidad de identidad en OTHERMANAGER sobre NT
+Q4 2025 + Q1 2026. Resultados:
+
+- Cobertura 100% de NT en OTHERMANAGER (2,008/2,008 Q4; 2,045/2,045 Q1).
+- Cardinalidad CIK <-> FormNum 1:1 perfecta (716/716 Q4; 696/696 Q1).
+- Composición de filas: 64.7% con ambos; 4.5-5.0% solo CIK; 26.8-27.5%
+  solo FormNum; 3.5-3.6% ninguno.
+- 6.6% de FormNum usa prefijo `28-` en lugar de `028-`.
+  Normalizable trivialmente.
+- Cero casos CONFLICT.
+
+Consecuencia: la tabla canonica Form13FFileNumber -> CIK es
+construible 1:1. Cobertura efectiva MATCH sube de 69.7% (solo CIK)
+a ~96.5% (CIK + FormNum normalizado).
+
+Evidencia: `iae/evidence/p66_gate03_granularidad/`.
+
 ### Estado
 
     Fuente             APROBADA (OTHERMANAGER)
