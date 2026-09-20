@@ -233,38 +233,62 @@ def _apply_intra_period_dedup(units, l3_index, *, period):
     ("sin overlap no resuelto") NO es demostrable con 13F aislado.
 
     Reglas v1:
-      - L3 recíproco (A->B y B->A) -> REPORTING_CONFLICT + KEEP.
+      - L3 reciproco (A->B y B->A) -> REPORTING_CONFLICT + KEEP.
       - L3 unidireccional + coexistencia -> REPORTING_OVERLAP_UNRESOLVED + KEEP.
       - Sin L3 -> KEEP silencioso (sin audit).
 
     DROP_DUP queda como capacidad diferida v2 (requiere evidencia
     cuantitativa externa que desambigue porcion propia vs delegada).
+
+    Optimizacion: si l3_index esta vacio, no hay trabajo que hacer
+    (ni conflictos ni overlap). Se devuelve sin iterar (fail-fast).
+    Ademas, se agrupan solo las (canonical, discretion) que aparecen
+    en alguna arista L3 y se agrupan solo por managers, no por pares
+    de filas.
     """
     if units is None or units.empty:
+        return units, _empty_audit()
+
+    # Fast path: sin evidencia cruzada no hay nada que decidir.
+    if not l3_index:
+        return units, _empty_audit()
+
+    # Precomputar el conjunto de managers implicados en alguna arista L3.
+    managers_in_l3 = set()
+    for (a, b) in l3_index.keys():
+        managers_in_l3.add(a)
+        managers_in_l3.add(b)
+
+    # Reducir a filas candidatas (manager implicado en L3).
+    cand_mask = units["filing_manager_cik"].astype(str).str.strip().isin(managers_in_l3)
+    cand = units[cand_mask]
+    if cand.empty:
         return units, _empty_audit()
 
     u = units.copy().reset_index(drop=True)
     u["_rid"] = range(len(u))
 
     audit_rows = []
-
     group_cols = ["canonical_security", "discretion_type"]
-    for _, grp in u.groupby(group_cols, dropna=False):
+
+    for _, grp in u[cand_mask].groupby(group_cols, dropna=False):
         if len(grp) < 2:
             continue
-        rows = grp.to_dict("records")
-        for i, r1 in enumerate(rows):
-            for r2 in rows[i + 1:]:
-                fm1 = str(r1.get("filing_manager_cik", "")).strip()
-                fm2 = str(r2.get("filing_manager_cik", "")).strip()
-                if not fm1 or not fm2 or fm1 == fm2:
-                    continue
-
+        # Reduce a managers unicos presentes en el grupo.
+        m_set = grp["filing_manager_cik"].astype(str).str.strip().unique().tolist()
+        m_set = [m for m in m_set if m and m in managers_in_l3]
+        if len(m_set) < 2:
+            continue
+        # Recorrer pares de managers, no pares de filas.
+        m_set_sorted = sorted(m_set)
+        for i, fm1 in enumerate(m_set_sorted):
+            for fm2 in m_set_sorted[i + 1:]:
                 e12 = l3_index.get((fm1, fm2))
                 e21 = l3_index.get((fm2, fm1))
-
+                if not e12 and not e21:
+                    continue
+                r1 = grp[grp["filing_manager_cik"].astype(str).str.strip() == fm1].iloc[0]
                 if e12 and e21:
-                    # Ambiguedad reciproca -> REPORTING_CONFLICT
                     audit_rows.append(_make_audit_row(
                         r1, period, DEDUP_DECISION_KEEP,
                         DEDUP_REASON_REPORTING_CONFLICT,
@@ -274,23 +298,17 @@ def _apply_intra_period_dedup(units, l3_index, *, period):
                         e12["reference_seq"],
                     ))
                     continue
-
-                if e12 or e21:
-                    # L3 unidireccional + coexistencia -> OVERLAP_UNRESOLVED
-                    ev = e12 if e12 else e21
-                    audit_rows.append(_make_audit_row(
-                        r1, period, DEDUP_DECISION_KEEP,
-                        DEDUP_REASON_OVERLAP_UNRESOLVED,
-                        EVIDENCE_LEVEL_L3, EVIDENCE_SOURCE_BOTH,
-                        ev["accession_representante"],
-                        ev["accession_representado"],
-                        ev["reference_seq"],
-                    ))
-                    continue
-                # Sin L3 -> KEEP silencioso
+                ev = e12 if e12 else e21
+                audit_rows.append(_make_audit_row(
+                    r1, period, DEDUP_DECISION_KEEP,
+                    DEDUP_REASON_OVERLAP_UNRESOLVED,
+                    EVIDENCE_LEVEL_L3, EVIDENCE_SOURCE_BOTH,
+                    ev["accession_representante"],
+                    ev["accession_representado"],
+                    ev["reference_seq"],
+                ))
 
     effective = u.drop(columns=["_rid"]).reset_index(drop=True)
-
     audit = pd.DataFrame(audit_rows, columns=list(DEDUP_AUDIT_COLUMNS)) if audit_rows else _empty_audit()
     return effective, audit
 

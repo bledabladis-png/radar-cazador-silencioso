@@ -444,4 +444,73 @@ cambio de resultado.
 
 ---
 
+## 2.18. Evidencia empirica (probe P65 e2e, 2026-09-20)
+
+**Probe:** `docs/auditoria/iae/evidence/nipc_p65_probe/probe_p65_e2e_reduced.py`
+**Ejecutado:** 200 CIKs (primeros por ACCESSION_NUMBER ascendente), Q4 2025 -> Q1 2026.
+**Salida cruda:** `output.txt` (LF puro, 100 lineas).
+**Hashes:** `HASHES.txt`.
+
+### Pipeline validado
+
+    filter_by_period
+      -> apply_amendments (canonical_snapshot)
+      -> resolve_batch_identities
+      -> compute_reported_position_units
+      -> build_effective_reporting_snapshot (dedup pre-delta)
+      -> compute_delta_shares
+      -> classify_reporting_transition (post-delta)
+
+### Resultado
+
+    Q4 2025: SUBMISSION 200 -> snapshot 125, INFOTABLE 325.546, units 151.222
+    Q1 2026: SUBMISSION 200 -> snapshot 106, INFOTABLE 276.312, units 126.853
+
+    DEDUP PRE-DELTA:
+      effective_q4 = 151.222  (KEEP integral)
+      effective_q1 = 126.853  (KEEP integral)
+      dedup_audit rows = 0
+
+    DELTA SHARES:
+      delta rows = 252.341
+      match_status = {UNRESOLVED_IDENTITY: 216.722,
+                      BOTH: 25.734, EXIT: 7.625, NEW: 2.260}
+
+    REPORTING TRANSITION (POST-DELTA):
+      reporting_transition = {NULL: 252.341}  (100% NULL)
+
+### Veredicto
+
+El pipeline P65 v1 se comporta **fail-closed** sin evidencia cruzada L3:
+
+- `dedup_decision = KEEP` en todas las unidades.
+- `reporting_transition = NULL` en todas las filas delta.
+- `dedup_audit` vacio (no hay decisiones que auditar).
+- `match_status` intacto (C2 preservado): BOTH/EXIT/NEW/UNRESOLVED_IDENTITY.
+
+Exactamente el comportamiento contractual exigido por el dictamen P65 v3.
+
+### Hallazgo colateral
+
+El probe destapo un dato de produccion desalineado con el contrato P60:
+`data/mappings/cusip_equivalence.csv` no tenia la columna `identity_type`.
+Fix en commit 3c2140e (cabecera actualizada, 0 filas de datos afectadas).
+
+Evidencia de que la fase e2e real detecta desalineaciones que los tests
+unitarios no ven (los tests construyen fixtures con la columna correcta).
+
+### Limitaciones declaradas
+
+1. `cross_filing_evidence` = vacio. La dedup real requiere evidencia L3
+   cruzada entre filings. El campo "Other Managers Reporting for this
+   Manager" esta en `ADDITIONALINFORMATION` (texto libre); parsear texto
+   libre esta prohibido por las reglas del sistema.
+2. `DROP_DUP` no se emite en v1 con 13F puro. La coexistencia de dos
+   filings sobre la misma security es OVERLAP por definicion. Requiere
+   evidencia cuantitativa externa (capacidad diferida v2).
+3. Probe reducido a 200 CIKs. El completo (~10 min) es viable pero no
+   necesario para la validacion contractual.
+
+---
+
 Fin del expediente P64 + P65. Version 1.0 (2026-09-20).
