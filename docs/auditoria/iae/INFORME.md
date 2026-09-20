@@ -1,7 +1,7 @@
 # IAE - INFORME CONSOLIDADO
 
 **Generado:** 2026-09-20
-**Consolida:** 18 informes del ciclo IAE
+**Consolida:** 19 informes del ciclo IAE
 
 **Regla:** este fichero se actualiza in-place. Las versiones previas se archivan con fecha.
 
@@ -34,6 +34,7 @@ Referencia: DICTAMENES.md seccion 24 + INFORME.md seccion 18.
 16. [NIPC_INFORME_ESTADO_POST_FIXES_F24](#nipc_informe_estado_post_fixes_f24)
 17. [INFORME TECNICO - SISTEMA IAE (INSTITUTIONAL ACCUMULATION EVIDENCE)](#informe-tecnico---sistema-iae-(institutional-accum)
 18. [INFORME F2.4 - Dictamen formal y bloqueantes](#informe-f24---dictamen-formal-y-bloqueantes)
+19. [INFORME P65 v1 - Manager Duplication (ciclo completo)](#informe-p65-v1---manager-duplication-ciclo-completo)
 
 ---
 
@@ -258,6 +259,85 @@ Piloto ejecutado sobre top 2000 CUSIPs del 13F 2026Q1, con metrica
 
 ---
 
+
+## 19. INFORME P65 v1 - Manager Duplication (ciclo completo)
+
+**Objeto:** registrar el ciclo completo P65 (diseno + implementacion + evidencia).
+**Fecha:** 2026-09-20.
+**Resultado:** P65 v1 CERRADO. GO CONDICIONADO del dictamen v3 implementado integro.
+**Referencia completa:** `iae/P64_P65_EXPEDIENTE.md` seccion 2 + `iae/DICTAMENES.md` #26.
+
+### Que se ha implementado
+
+Modulo nuevo `src/institutional_accumulation/aggregation/reporting_dedup.py`:
+
+- **Modelos:** `ReportingEvidence` dataclass (sin economic_owner_cik).
+- **Constantes:** 4 transiciones + 4 dedup_reasons + 2 decisiones + 3 niveles + 3 sources.
+- **Audit trail:** 12 columnas obligatorias (DEDUP_AUDIT_COLUMNS).
+- **Classify L1/L2/L3:** `classify_evidence_level`.
+- **Pre-delta:** `build_effective_reporting_snapshot` (R1 con 7 requisitos).
+- **Post-delta:** `classify_reporting_transition` (HANDOFF + ambiguedad fail-closed).
+
+**NO toca:** MATCH_KEY, C2, delta_shares.py, nipc.py, coverage.py, relationships.py.
+
+### Evidencia empirica (probe reducido, 200 CIKs)
+
+Pipeline validado end-to-end en datos reales SEC 13F Q4 2025 -> Q1 2026:
+
+    filter -> amendments -> identity -> units -> dedup pre-delta -> delta -> transition
+
+Resultado:
+
+    dedup_audit rows = 0            (sin L3 -> no auditar)
+    effective_q4 = 151.222          (KEEP integral)
+    effective_q1 = 126.853          (KEEP integral)
+    delta rows   = 252.341
+    match_status = {UNRESOLVED_IDENTITY: 216.722, BOTH: 25.734,
+                    EXIT: 7.625, NEW: 2.260}
+    reporting_transition = {NULL: 252.341}   (cero HANDOFF)
+
+**Confirmacion contractual:** sin evidencia cruzada L3, el pipeline P65 v1
+se comporta fail-closed: no deduplica, no emite HANDOFF, no fabrica
+OVERLAP/CONFLICT. Exactamente lo que exige el dictamen v3.
+
+### Hallazgo colateral
+
+El probe e2e destapo que `data/mappings/cusip_equivalence.csv` no tenia la
+columna `identity_type` que P60 exige. Fix en commit 3c2140e (0 filas de
+datos afectadas, el fichero estaba vacio por diseno). Evidencia de que la
+fase e2e real detecta desalineaciones que los tests unitarios no ven.
+
+### Capacidad diferida (no es deuda, es alcance declarado)
+
+- **DROP_DUP efectivo:** requiere evidencia cuantitativa externa. La
+  coexistencia de dos filings sobre la misma security es OVERLAP por
+  definicion. `DROP_DUP` no se emite en v1.
+- **L3 cruzado real:** requiere el campo "Other Managers Reporting for
+  this Manager", que esta en `ADDITIONALINFORMATION` (texto libre).
+  Parsear texto libre esta prohibido por las reglas del sistema.
+
+### Commits del ciclo (6 + 1 colateral)
+
+    2ff1751  Commit 1 - modelos + L1/L2/L3
+    420d1d0  Commit 2 - pre-delta R1
+    7f683e8  Commit 3 - post-delta HANDOFF
+    8c2fcf0  Commit 2-fix - DROP_DUP diferido + OVERLAP_UNRESOLVED
+    3c2140e  fix colateral - cusip_equivalence.csv
+    62314ac  Commit 4 - probe + evidencia
+
+### Tests
+
+- 26 tests especificos P65 (`tests/test_sec_13f_reporting_dedup.py`).
+- 1039 passed + 2 skipped + 0 xfailed global.
+- 0 warnings.
+
+### Siguiente
+
+- P65 v2 (DROP_DUP efectivo): requiere fuente externa cuantitativa.
+- P62 point-in-time: OpenFIGI masivo.
+- Bloqueante 1 (TARGET indep.): OpenFIGI masivo.
+
+---
 
 Fin del informe consolidado.
 

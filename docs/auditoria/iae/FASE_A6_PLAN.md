@@ -145,6 +145,13 @@ archivo:linea. Sin tocar codigo.
 
 ### A.6.2 - Fixes quirurgicos (post F2.4 = GO)
 
+**Estado:** CERRADO 2026-09-20. Los 3 commits aplicados + tests + fix
+colateral. Ver iae/P64_P65_EXPEDIENTE.md y iae/DICTAMENES.md #24.
+
+    A.6.2-P60   5d60d48  fail-closed sin default TICKER
+    A.6.2-P61   1773cc9  resolve_source_status conectado
+    A.6.2-P38   a48717a  coverage.py + PositionRecord + API dual
+
 **Nota (F2.4 2026-09-20):** D1 (P60) y D3 (P61) siguen siendo fixes
 quirurgicos. D2 (P38) se divide en dos partes:
 
@@ -182,10 +189,10 @@ logica vive dentro de `compute_contractual_coverage()`.
 - Test: `tests/test_p38_contract.py` (nuevo).
 
 **Criterios de aceptacion:**
-- Los 3 commits compilan.
-- Pyflakes limpio.
-- Tests contractuales nuevos pasan.
-- Tests existentes no-regresionan.
+- Los 3 commits compilan. [CUMPLIDO]
+- Pyflakes limpio. [CUMPLIDO]
+- Tests contractuales nuevos pasan. [CUMPLIDO]
+- Tests existentes no-regresionan. [CUMPLIDO]
 
 ---
 
@@ -393,7 +400,15 @@ implicitas. Se integran en NIPC_CONTRATOS_SEMANTICOS_v1.md in-place
     - PositionRecord tipado en coverage.py.
     - Solo VERIFIED aporta al peso contractual; unverified aparte.
 
-**Estado:** PENDIENTE. No ejecutable hasta A.6.0.
+**Estado (2026-09-20):**
+
+    P62  point-in-time     PENDIENTE (requiere OpenFIGI masivo)
+    P63  Missing != Sold   CERRADO (a841cd6 + 05f0a84)
+    P64  Corporate Actions CERRADO (2f8140a)
+    P65  Manager Duplic.   CERRADO v1 (2ff1751..62314ac + evidencia)
+
+P65 v1: implementado sin DROP_DUP efectivo (capacidad diferida v2).
+Evidencia empirica fail-closed en evidence/nipc_p65_probe/.
 
 ---
 

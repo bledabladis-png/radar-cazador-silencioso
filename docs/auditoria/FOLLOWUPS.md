@@ -1961,3 +1961,97 @@ OpenFIGI/Policy hasta donde es posible sin OpenFIGI masivo.
     iae/REESTRUCTURACION_MODULO.md             rediseno arquitectonico
 
 ---
+
+
+## CICLO P65 v1 - Manager Duplication (2026-09-20)
+
+Implementacion de la capa de deduplicacion de reporting segun dictamen
+P65 v3 (ver iae/DICTAMENES.md #26). GO CONDICIONADO con 3 correcciones.
+
+### Correcciones de cierre aplicadas
+
+1. REPORTING_CONFLICT solo si contradiccion documental explicita.
+2. Anadido REPORTING_OVERLAP_UNRESOLVED.
+3. DROP_DUP diferido a v2: sin evidencia cuantitativa externa, toda
+   coexistencia de dos filings sobre la misma security es OVERLAP por
+   definicion y se trata como KEEP. Fail-closed.
+
+### Fase implementacion (4 commits)
+
+    2ff1751  feat(iae): P65 Commit 1 - modelos + constantes + L1/L2/L3
+             - reporting_dedup.py: TRANSITION_*, DEDUP_REASON_*,
+               DEDUP_DECISION_*, EVIDENCE_LEVEL_*, DEDUP_AUDIT_COLUMNS
+             - ReportingEvidence dataclass (sin economic_owner_cik)
+             - classify_evidence_level(L1/L2/L3/None)
+             - 14 tests estructurales
+
+    420d1d0  feat(iae): P65 Commit 2 - build_effective_reporting_snapshot
+             - PRE-delta: R1 con 7 requisitos (contrato 14.4)
+             - Fast-path si l3_index vacio (sin iterar 2.4M filas)
+             - 6 tests funcionales R1
+
+    7f683e8  feat(iae): P65 Commit 3 - classify_reporting_transition
+             - POST-delta: HANDOFF con reporting_for estable + A!=B
+             - Ambiguedad (dos representantes) -> NULL fail-closed
+             - 7 tests funcionales HANDOFF
+
+    8c2fcf0  fix(iae): P65 Commit 2-fix - DROP_DUP diferido v2
+             - _apply_intra_period_dedup NO emite DROP con 13F puro
+             - Coexistencia L3 unidireccional -> OVERLAP_UNRESOLVED + KEEP
+             - 5 tests del matrix (4, 5, 12, 13, 15)
+
+### Fix colateral destapado por el probe
+
+    3c2140e  fix(iae): cusip_equivalence.csv cabecera identity_type
+             - El CSV en produccion no tenia la columna que P60 exige
+             - 0 filas de datos afectadas (fichero vacio por diseno)
+             - Comentario Q8 obsoleto en security_identity.py limpiado
+
+### Evidencia empirica (probe e2e)
+
+    62314ac  feat(iae): P65 Commit 4 - probe + evidencia fail-closed
+             - Probe reducido (200 CIKs, Q4 2025 -> Q1 2026): ~30s
+             - Probe completo (~3.3M filas): ~10 min (referencia)
+             - Resultado:
+                 dedup_audit rows = 0
+                 reporting_transition = {NULL: 252.341}
+                 match_status: BOTH 25.734, EXIT 7.625, NEW 2.260,
+                               UNRESOLVED_IDENTITY 216.722
+             - Evidencia: evidence/nipc_p65_probe/ (README + HASHES + output)
+
+### Reglas consolidadas
+
+    REPORTING RELATIONSHIP != REPORTING NETWORK != DEDUP AUTHORIZATION != ECONOMIC OWNERSHIP
+
+    Solo L3 autoriza DROP. Sin L3 -> KEEP.
+    Coexistencia -> OVERLAP_UNRESOLVED (v1).
+    HANDOFF requiere reporting_for_manager_cik estable + A != B.
+
+### Estado al cierre
+
+    Tests locales        1039 passed + 2 skipped + 0 xfailed
+    pyflakes             0 warnings
+    compileall           OK
+    Gate validacion      10/10
+    HEAD                 62314ac (o posterior)
+    Ahead                149 commits locales
+    Push                 NO (local-first IAE activo)
+
+### Pendientes (capacidad diferida)
+
+    DROP_DUP efectivo        v2: evidencia cuantitativa externa
+    L3 cruzado real          fuente del campo "Other Managers Reporting"
+    Probe completo           ~10 min, opcional
+    P62 point-in-time        OpenFIGI masivo
+    Bloqueante 1 (TARGET)    OpenFIGI masivo
+    Fases B-E                N-PORT cross-validation, etc.
+
+### Referencias
+
+    iae/P64_P65_EXPEDIENTE.md                       ciclo P64+P65 completo
+    iae/NIPC_CONTRATOS_SEMANTICOS_v1.md             seccion 14 (P65)
+    iae/DICTAMENES.md                                entrada #26
+    iae/evidence/nipc_p65_probe/                     evidencia empirica
+    src/institutional_accumulation/aggregation/reporting_dedup.py
+
+---
