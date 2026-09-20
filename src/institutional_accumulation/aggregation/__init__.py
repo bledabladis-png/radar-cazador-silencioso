@@ -54,6 +54,11 @@ from .nipc import (
     compute_nipc_and_coverage,
     compute_nipc_contractual,
 )
+from .reporting_dedup import (
+    ReportingEvidence,
+    build_effective_reporting_snapshot,
+    classify_reporting_transition,
+)
 
 __all__ = [
     # delta_shares
@@ -77,6 +82,10 @@ __all__ = [
     "compute_nipc_contractual",
     "compute_coverage_pairwise",
     "compute_nipc_and_coverage",
+    # reporting_dedup (P65)
+    "ReportingEvidence",
+    "build_effective_reporting_snapshot",
+    "classify_reporting_transition",
     "DISCRETION_TYPES",
     "STATUS_READY",
     "STATUS_INSUFFICIENT",
