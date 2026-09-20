@@ -2472,3 +2472,23 @@ P65 v3 (ver iae/DICTAMENES.md #26). GO CONDICIONADO con 3 correcciones.
 - **Pendiente:** enviar v6 al auditor.
 - **NO se ha hecho:** sin XML, sin reporting_dedup.py, sin DROP_DUP,
   sin tocar contrato 14.3.
+
+
+## P66 - Dictamen #37 y propuesta v7 ronda final (2026-09-21)
+
+- **Origen:** dictamen #37 tras propuesta v6.
+- **Resultado:** NO-GO contractual. Evidencia PASS.
+- **3 correcciones aplicadas:**
+  - 1: Flujo unico de R3 (§3.2, 4 pasos). BASE=0 + AMENDMENT>0 -> N/D.
+  - 2: BASE_R4 sin `AND ISAMENDMENT != Y`. ISAMENDMENT como control
+    de coherencia, no selector.
+  - 3: Inspeccion global de familia en §3.2 PASO 3.
+- **§0.5 Clausula de cierre:**
+  - BLOQUEO MATERIAL: nueva version + dictamen.
+  - RECOMENDACION DIFERIBLE: no bloquea.
+  - GO de v7 autoriza traslado a 14.3.
+- **Propuesta v7:** ronda final.
+- **Evidencia:** `iae/DICTAMENES.md` #37.
+- **Pendiente:** enviar v7 al auditor (ronda final).
+- **NO se ha hecho:** sin XML, sin reporting_dedup.py, sin DROP_DUP,
+  sin tocar contrato 14.3.

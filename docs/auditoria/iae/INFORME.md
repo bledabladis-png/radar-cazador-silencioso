@@ -940,6 +940,34 @@ Evidencia: `iae/DICTAMENES.md` #36.
 
 Siguiente paso: enviar v6 al auditor.
 
+
+
+### Dictamen P66 #37 + propuesta v7 ronda final (2026-09-21)
+
+Resultado: NO-GO contractual. Evidencia PASS. 3 correcciones aplicadas
++ §0.5 Clausula de cierre contractual.
+
+**3 correcciones aplicadas:**
+- 1: Flujo unico de R3 en §3.2. 4 pasos secuenciales. Caso
+  BASE=0 + AMENDMENT>0 -> N/D (antes decia FALSE, regresion
+  introducida en v6).
+- 2: Eliminado `AND ISAMENDMENT != Y` de BASE_R4. Ya contradicia
+  §3.1. ISAMENDMENT queda como control de coherencia.
+- 3: Inspeccion global de familia en §3.2 PASO 3 antes de aceptar
+  cadena unica.
+
+**§0.5 Clausula de cierre contractual:**
+- Define BLOQUEO MATERIAL (nueva version + dictamen) vs
+  RECOMENDACION DIFERIBLE (no bloquea).
+- Condicion: GO de v7 autoriza traslado a
+  NIPC_CONTRATOS_SEMANTICOS_v1.md sin nueva iteracion ordinaria.
+
+Propuesta v7 escrita. Pass interno ejecutado.
+
+Evidencia: `iae/DICTAMENES.md` #37.
+
+Siguiente paso: enviar v7 al auditor. Ronda final.
+
 ### Estado
 
     Fuente             APROBADA (OTHERMANAGER)
