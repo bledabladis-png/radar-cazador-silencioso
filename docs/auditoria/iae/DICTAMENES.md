@@ -1414,3 +1414,118 @@ se ha hecho reescritura completa como v4 consolidada:
 ### Siguiente paso
 
 Enviar v4 al auditor para dictamen contractual definitivo.
+
+
+---
+
+## 35. P66 - Dictamen auditor externo v9 (2026-09-21)
+
+**Tipo:** dictamen del auditor externo sobre P66_L3_REFORMULACION_PROPUESTA.md
+v4 consolidada.
+
+**Resultado:** NO-GO contractual. Evidencia Gates 0.4-0.10 PASS.
+5 bloqueos materiales + 1 ajuste menor.
+
+### Condicion de cierre
+
+El auditor declara explicitamente:
+
+    "Cuando estas seis correcciones esten incorporadas en la v5,
+     mi criterio seria: GO CONTRACTUAL, sin necesidad de tocar
+     todavia reporting_dedup.py ni activar DROP_DUP, siempre que
+     la v5 no introduzca nuevas reglas heuristicas."
+
+### 5 bloqueos materiales
+
+**1. >1 base debe evaluarse sobre TODO R4, no por familia aislada.**
+
+La v4 define la cadena por "mismo CIK + PERIODOFREPORT + familia
+documental". Pero Gate 0.9 demostro el caso CIK 0002016827 con
+NT + HR COMBINATION en dos familias. La implementacion podria
+construir dos cadenas paralelas sin detectar la ambiguedad.
+
+Correccion: BASE_R4(B, period) = todas las bases de NOTICE o
+COMBINATION. 0 bases -> R3=FALSE. 1 base -> cadena. >1 base -> R3=N/D.
+
+Ademas: >1 base R4 -> R3 = N/D (sin CONFLICT). CONFLICT pertenece
+al plano de identidad de A en R4.
+
+**2. Cadena de amendments debe validarse completa.**
+
+Aplicar amendments "en orden AMENDMENTNO ascendente" no garantiza
+que la cadena este completa. Casos: huecos (1, 3 sin 2), duplicados
+(1, 1), tipos desconocidos.
+
+Correccion: AMENDMENT valido = ISAMENDMENT=Y + AMENDMENTNO entero
+1..99 + AMENDMENTTYPE en {RESTATEMENT, NEW_HOLDINGS}. Si existen
+amendments: numeros unicos, secuencia sin huecos desde 1 hasta N,
+tipos reconocibles. Si falla -> R3=N/D.
+
+**3. identidad resuelta tiene contradiccion interna.**
+
+La v4 define: "CIK poblado; o FormNum resuelve a 1 CIK". Pero
+§2.3 dice correctamente que CIK=A + FormNum->C produce CONFLICT.
+Bajo §0.3 literal, esa fila seria simultaneamente IDENTITY_RESOLVED
+y CONFLICT.
+
+Correccion: introducir INCONSISTENT.
+
+    IDENTITY_RESOLVED:
+        CIK poblado valido
+        AND (si FormNum es resoluble, resuelve al mismo CIK)
+      OR
+        CIK ausente AND FormNum resuelve a exactamente 1 CIK
+
+    INCONSISTENT:
+        CIK y FormNum resuelven a CIK distintos
+
+INCONSISTENT conduce a CONFLICT.
+
+**4. Prefijo FormNum: solo {28, 028}.**
+
+La regla `padding(prefijo, 3)` acepta 2-12345, 02-12345, 002-12345.
+Gate 0.10 solo observo prefijos 28 y 028.
+
+Correccion: prefijo in {"28", "028"} -> canonicalizar a "028".
+Cualquier otro prefijo -> UNRESOLVED. No usar padding generico.
+
+**5. "NEW HOLDINGS consistente" no definido operacionalmente.**
+
+Definir matematicamente:
+
+    OTHERMANAGER_state(filing) =
+        conjunto de identidades de managers tras resolver CIK,
+        resolver FormNum, canonicalizar FormNum
+
+    NEW HOLDINGS es consistente sii
+        el conjunto de identidades OTHERMANAGER es exactamente
+        igual al estado efectivo anterior.
+
+Cambio de conjunto -> N/D. NO union, NO sustitucion.
+
+### 1 ajuste menor
+
+**6. Terminologia en §4.1.**
+
+Sustituir "formato SEC obligatorio de cinco digitos" por
+"canonicalizacion IAE basada en correspondencia observada con
+COVERPAGE".
+
+### Aplicacion
+
+Las 6 correcciones aplicadas en propuesta v5.
+
+### Estado
+
+    Evidencia tecnica                CERRADA (Gates 0.1-0.10)
+    5 bloqueos #35                   APLICADOS EN V5
+    1 ajuste menor                   APLICADO EN V5
+    Propuesta v5                     EN PREPARACION
+    Contrato 14.3                    NO MODIFICAR AUN (esperando GO contractual)
+    reporting_dedup.py               NO TOCAR
+    DROP_DUP                         NO ACTIVAR
+
+### Siguiente paso
+
+Reenviar v5 al auditor. Segun su propia declaracion, si la v5 no
+introduce heuristicas nuevas: GO CONTRACTUAL.

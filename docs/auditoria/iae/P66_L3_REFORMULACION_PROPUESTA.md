@@ -1,6 +1,6 @@
-# IAE - P66 L3 Reformulacion propuesta (v4)
+# IAE - P66 L3 Reformulacion propuesta (v5)
 
-**Estado:** v4 consolidada. Pendiente de dictamen contractual definitivo
+**Estado:** v5 consolidada. Pendiente de dictamen contractual definitivo
 sobre el texto exacto antes de tocar NIPC_CONTRATOS_SEMANTICOS_v1.md.
 
 **Trazabilidad de dictamenes:**
@@ -11,7 +11,8 @@ sobre el texto exacto antes de tocar NIPC_CONTRATOS_SEMANTICOS_v1.md.
     #31  corregido
     #32  corregido
     #33  corregido
-    #34  4 bloqueos + 2 recomendadas aplicados en este documento v4
+    #34  corregido
+    #35  5 bloqueos + 1 ajuste menor aplicados en este documento v5
 
 **Consolidacion:** este documento reemplaza las versiones v1/v2/v3.
 Todas las correcciones anteriores estan integradas. No se conservan
@@ -68,10 +69,31 @@ donde `resolved_ciks(FormNum)` es el conjunto de CIKs a los que
 resuelve el FormNum normalizado segun §4 dentro del scope temporal.
 
 **identidad resuelta:** una fila `r` de OTHERMANAGER tiene identidad
-resuelta cuando cumple alguna de:
+resuelta cuando cumple:
 
-    - CIK(r) poblado; o
-    - FormNum(r) normalizable y resuelve a exactamente 1 CIK.
+    IDENTITY_RESOLVED:
+        CIK(r) poblado valido
+        AND
+        (si FormNum(r) es normalizable y resoluble,
+         resuelve al mismo CIK)
+      OR
+        CIK(r) ausente
+        AND
+        FormNum(r) resuelve a exactamente 1 CIK
+
+**INCONSISTENT:** una fila `r` de OTHERMANAGER es INCONSISTENT cuando:
+
+    CIK(r) presente
+    AND
+    FormNum(r) presente, normalizable, y resuelve a un CIK distinto
+
+INCONSISTENT conduce a CONFLICT en el resultado de R4.
+
+**Jerarquia:** CONFLICT > IDENTITY_RESOLVED > N/D segun corresponda.
+
+Esta definicion corrige la contradiccion interna de la v4 (una fila
+con CIK=A y FormNum->C habria sido simultaneamente IDENTITY_RESOLVED
+y CONFLICT bajo la definicion anterior).
 
 **inequivocamente:** sin matching por nombre, sin heuristica, sin
 inferencia. Solo CIK directo o FormNum con resolucion univoca.
@@ -83,7 +105,8 @@ inferencia. Solo CIK directo o FormNum con resolucion univoca.
 | v1 | commit 6b610b3. Propuesta inicial + primeras correcciones. |
 | v2 | Correcciones #28 aplicadas (fail-closed, nomenclatura). |
 | v3 | Correcciones #29 a #33 aplicadas (R4 completo, mapping, tri-state). |
-| **v4** | **Consolidacion final. Correcciones #34 aplicadas + reescritura canonica.** |
+| v4 | Consolidacion. Correcciones #34 aplicadas + reescritura canonica. |
+| **v5** | **Consolidacion final. Correcciones #35 aplicadas. Candidata a GO contractual.** |
 
 ---
 
@@ -235,30 +258,55 @@ Si `ISAMENDMENT == Y` y `AMENDMENTNO` no es determinable:
 
 ### 3.2. Construccion de la cadena efectiva
 
-    Para filings de B con mismo CIK + PERIODOFREPORT + familia
-    documental (NOTICE o COMBINATION):
+**Paso previo obligatorio: contar bases sobre TODO el universo R4
+(dictamen #35, bloqueo 1).** No se evalua por familia aislada.
 
-    1. Filtrar filings por PERIODOFREPORT igual al periodo de
-       analisis. Prohibido filtrar por directorio fisico.
+    BASE_R4(B, period) = todas las bases de B con:
+        mismo CIK
+        AND mismo PERIODOFREPORT
+        AND perteneciente al universo R4 (NOTICE o COMBINATION)
+        AND ISAMENDMENT != Y
 
-    2. Clasificar por ISAMENDMENT.
+Prohibido filtrar por familia documental antes de contar. El caso
+Gate 0.9 (CIK 0002016827: NT + HR COMBINATION mismo periodo) debe
+ser atrapado en este paso.
 
-    3. Contar bases:
-         0 bases + 0 amendments
-             -> R3 = FALSE (ausencia documental demostrada).
-         0 bases + >=1 amendment aplicable
-             -> R3 = N/D (ausencia de antecedente necesario;
-                cadena no reconstruible).
-         1 base
-             -> continuar.
-         >1 bases heterogeneas
-             -> R3 = N/D o CONFLICT segun naturaleza de duplicidad.
+    0 bases totales R4
+        -> R3 = FALSE (ausencia documental demostrada).
 
-    4. Aplicar amendments en orden AMENDMENTNO ascendente.
+    1 base total R4
+        -> construir cadena de esa base (familia determinada por
+           esa base). Continuar.
 
-    5. Si no puede ordenarse inequivocamente (dos amendments
-       indistinguibles en el mismo CIK + periodo + familia):
-       N/D.
+    >1 bases totales R4
+        -> R3 = N/D (deterministico, sin CONFLICT).
+        CONFLICT pertenece al plano de identidad de A en R4, no
+        al plano de determinacion documental.
+
+### 3.2-bis. Validacion de la cadena de amendments
+
+**Una vez identificada la base unica, validar la cadena completa
+(dictamen #35, bloqueo 2):**
+
+    AMENDMENT valido:
+        ISAMENDMENT == Y
+        AND AMENDMENTNO entero en 1..99
+        AND AMENDMENTTYPE in {RESTATEMENT, NEW_HOLDINGS}
+
+    Si existen amendments aplicables a la base:
+
+        - Numeros unicos.
+        - Secuencia sin huecos desde 1 hasta N.
+        - Tipos reconocibles.
+
+    Si cualquiera falla:
+        -> R3 = N/D.
+
+Casos que deben producir N/D:
+    - Huecos: base + amendment 1 + amendment 3 (falta el 2).
+    - Duplicados: base + amendment 1 + amendment 1.
+    - Amendment sin numero determinable.
+    - Amendment con tipo desconocido.
 
 ### 3.3. Semantica de amendments
 
@@ -269,10 +317,28 @@ Si `ISAMENDMENT == Y` y `AMENDMENTNO` no es determinable:
 
     NEW HOLDINGS:
         Conserva la evidencia OTHERMANAGER cuando es consistente
-        con el estado efectivo previo.
-        Evidencia: Gate 0.7, 3/3 casos identicos.
-        Fail-closed: si un NEW HOLDINGS presenta OTHERMANAGER
-        distinto del estado previo -> N/D o CONFLICT.
+        con el estado efectivo previo. Evidencia: Gate 0.7,
+        3/3 casos identicos.
+
+        Definicion operacional de "consistente" (dictamen #35,
+        bloqueo 5):
+
+            OTHERMANAGER_state(filing) =
+                conjunto de identidades de managers obtenido tras:
+                    - resolver CIK
+                    - resolver FormNum
+                    - canonicalizar FormNum (seccion 4.2)
+
+            NEW HOLDINGS es consistente sii
+                OTHERMANAGER_state(amendment)
+                ==
+                OTHERMANAGER_state(estado efectivo previo)
+
+        La comparacion es de igualdad exacta de conjunto. Ignora
+        orden de filas y diferencias puramente representacionales
+        (padding, espacios).
+
+        Cambio de conjunto -> N/D.
         NO asumir union. NO asumir sustitucion.
 
 ### 3.4. Multiples bases heterogeneas
@@ -311,7 +377,12 @@ Evidencia: Gate 0.5A (48 periodos en 2025Q4, 77 en 2026Q1).
 ### 4.1. Representacion externa
 
 Los filers pueden escribir el Form 13F File Number con padding
-variable. Evidencia empirica (Gate 0.10):
+variable. La regla de canonicalizacion que sigue es una
+**canonicalizacion IAE basada en correspondencia observada con
+COVERPAGE**, no una afirmacion sobre un formato SEC obligatorio
+de cinco digitos.
+
+Evidencia empirica (Gate 0.10):
 
     COVERPAGE (estructurado SEC):
         100% con prefijo de 3 digitos y sufijo de 5 digitos.
@@ -327,13 +398,24 @@ variable. Evidencia empirica (Gate 0.10):
 
     entrada: <prefijo>-<sufijo>  (ambos con digitos)
 
-    prefijo_canonico = padding(prefijo, 3)   # 28 -> 028
-    sufijo_sin_padding = strip_leading_zeros(sufijo)
+    Regla de prefijo (dictamen #35, bloqueo 4):
 
-    si len(sufijo_sin_padding) > 5:
-        -> UNRESOLVED (no canonicalizable)
+        prefijo in {"28", "028"}   -> prefijo_canonico = "028"
+        cualquier otro prefijo      -> UNRESOLVED
 
-    sufijo_canonico = padding(sufijo_sin_padding, 5)
+        NO usar padding() generico. La evidencia Gate 0.10 solo
+        observo prefijos "28" y "028". Otros prefijos (2, 02, 002)
+        no estan demostrados y deben rechazarse.
+
+    Regla de sufijo:
+
+        sufijo_sin_padding = strip_leading_zeros(sufijo)
+
+        si len(sufijo_sin_padding) > 5:
+            -> UNRESOLVED (no canonicalizable)
+
+        sufijo_canonico = padding(sufijo_sin_padding, 5)
+
     formnum_canonico = f"{prefijo_canonico}-{sufijo_canonico}"
 
 Aplicado a los casos reales:
