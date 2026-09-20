@@ -8,6 +8,7 @@ Documento de navegacion. Ultima actualizacion: 2026-09-20.
       PROMPT_MAESTRO.md     Norma vigente del sistema
       FOLLOWUPS.md          Cronologia de decisiones (activo)
       README.md             Este documento
+      TRANSFER.md           snapshot de la sesion activa (vivo)
       iae/                  Modulo Institutional Accumulation Evidence
         evidence/           Probes y evidencia empirica (6 subdirs)
       radar/                Contratos temporales + informes del radar
