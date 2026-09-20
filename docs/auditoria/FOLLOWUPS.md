@@ -2085,3 +2085,31 @@ P65 v3 (ver iae/DICTAMENES.md #26). GO CONDICIONADO con 3 correcciones.
   Requisito 2 y requisito 4 de L3 usan dos tablas distintas.
 - **Reabrir si:** el auditor rechaza la reformulacion, o si el contrato
   14.3 requiere unificacion bajo una unica fuente.
+
+
+## P66 - Dictamen externo #27 y propuesta v2 (2026-09-20)
+
+- **Origen:** seguimiento del ciclo P66 (L3 reformulacion).
+- **Dictamen #27:** GO CONDICIONADO. Fuente OTHERMANAGER aprobada.
+  8 correcciones obligatorias antes del GO contractual definitivo.
+- **Propuesta v2 redactada:** `iae/P66_L3_REFORMULACION_PROPUESTA.md`
+  con las 8 correcciones aplicadas.
+- **Correcciones clave:**
+  - Terminologia: "evidencia estructurada cruzada entre filings".
+  - Amendments: formalizar con CIK + PERIODOFREPORT + SUBMISSIONTYPE
+    + ISAMENDMENT + AMENDMENTNO + AMENDMENTTYPE.
+  - Identidad: CIK primario; FormNum fallback resoluble; CONFLICT
+    si ambos contradicen.
+  - Anadir CONFLICT al enum de estados.
+  - DROP_DUP: solo con L3 completo (R1..R5) + R5 limpio.
+- **Pendiente antes del GO contractual:**
+  - Gate 0.3: granularidad de identidad (CIK/FormNum/ambos/ninguno)
+    sobre NT Q4 2025 + Q1 2026.
+  - Dictamen final sobre el texto exacto de 14.3.
+- **NO se ha hecho:**
+  - No se ha tocado NIPC_CONTRATOS_SEMANTICOS_v1.md.
+  - No se ha tocado reporting_dedup.py.
+  - No se ha activado DROP_DUP.
+  - No se ha descargado XML de EDGAR.
+- **Reabrir si:** el auditor emite dictamen final o solicita cambios
+  adicionales sobre el texto contractual.

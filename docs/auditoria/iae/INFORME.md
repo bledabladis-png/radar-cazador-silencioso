@@ -339,6 +339,75 @@ fase e2e real detecta desalineaciones que los tests unitarios no ven.
 
 ---
 
+
+
+## 20. INFORME P66 L3 - Dictamen externo y propuesta v2 (2026-09-20)
+
+**Objeto:** registrar la elevacion de P66 L3 al auditor externo y el
+dictamen obtenido, con la propuesta v2 corregida.
+
+**Referencia completa:** iae/DICTAMENES.md #27 + iae/P66_L3_REFORMULACION_PROPUESTA.md v2.
+
+### Secuencia
+
+1. P65 v2 (DROP_DUP efectivo) cerrado como WONT FIX razonado por
+   Gate 0 extendido. Evidencia cruzada para L3 no encontrada en
+   OTHERMANAGER2 ni ADDITIONALINFORMATION.
+
+2. Informe inicial P66 (`P66_INFORME_HALLAZGO.md`, commit 2edb462)
+   propuso XML crudo del 13F-NT como fuente.
+
+3. Revision externa detecto 3 errores metodologicos:
+   - Confusion OTHERMANAGER vs OTHERMANAGER2.
+   - Caso Yorktown con filer invertido.
+   - "XML firmado digitalmente" sobreafirmado.
+
+4. Gate 0.1: OTHERMANAGER cubre 100% de NT filings (2,008/2,008 Q4;
+   2,045/2,045 Q1). OTHERMANAGER2 cubre 0% NT.
+
+5. Gate 0.2: caso Vanguard Q4 2025 -> Q1 2026 documentado
+   bidireccionalmente en OTHERMANAGER sin XML.
+
+6. P66 NO-GO como ciclo XML. Reemplazado por
+   `P66_L3_REFORMULACION_PROPUESTA.md` (v1, commit 6b610b3).
+
+7. Dictamen externo #27: GO CONDICIONADO. Fuente OTHERMANAGER
+   aprobada. 8 correcciones obligatorias antes del GO contractual.
+
+8. Propuesta v2 redactada con las 8 correcciones aplicadas.
+
+### Correcciones aplicadas en v2
+
+    #1  Terminologia: "evidencia estructurada cruzada entre
+        filing A y filing B" (no "bidireccional").
+    #2  Mantener R3 explicito (no absorcion en R4).
+    #3  Formalizar amendments (prohibir MAX(ACCESSION)/MAX(FILING_DATE)).
+    #4  Identidad: CIK primario; FormNum fallback; CONFLICT si ambos
+        contradicen; no exigir ambos poblados.
+    #5  Anadir CONFLICT al enum de estados.
+    #6  NT sin A: NO_MATCH si ingestion integra; N/D si fallo;
+        nunca N/D -> NO_MATCH.
+    #7  DROP_DUP solo con L3 completo (R1+R2+R3+R4+R5) + R5.
+    #8  Gate 0.1: conservar granularidad (pendiente Gate 0.3).
+
+### Pendientes tras v2
+
+- Gate 0.3: medir granularidad de identidad en NT (CIK/FormNum/ambos/ninguno).
+- Dictamen final sobre el texto contractual exacto.
+- Solo despues: aplicar a NIPC_CONTRATOS_SEMANTICOS_v1.md in-place.
+- Solo despues: implementar en reporting_dedup.py.
+
+### Estado
+
+    Fuente             APROBADA (OTHERMANAGER)
+    Propuesta v2       REDACTA, pendiente dictamen final
+    Contrato 14.3      SIN CAMBIOS
+    reporting_dedup.py SIN CAMBIOS
+    DROP_DUP           NO ACTIVADO
+    XML/parser         NO NECESARIO
+    Descarga EDGAR     NO NECESARIA
+
+
 Fin del informe consolidado.
 
 ## 18. INFORME F2.4 - Dictamen formal y bloqueantes

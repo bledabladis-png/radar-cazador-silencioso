@@ -456,3 +456,101 @@ de tocar codigo.
 15 tests (13 base + 2 nuevos). Ver iae/P64_P65_EXPEDIENTE.md seccion 2.15.
 
 ---
+
+
+---
+
+## 27. P66 - L3 Reformulacion requisito 4 (2026-09-20)
+
+**Tipo:** dictamen del auditor externo sobre P66_L3_REFORMULACION_PROPUESTA.md.
+**Objeto:** aprobacion de OTHERMANAGER como fuente estructurada de L3
+requisito 4 + correcciones obligatorias antes del GO contractual.
+
+**Resultado global:** GO CONDICIONADO.
+
+### Fuente aprobada
+
+    OTHERMANAGER[ACCESSION_NUMBER=B.ACCESSION, CIK=A.CIK]
+        -> B declara que A reporta por B
+
+Fuente oficial SEC. La tabla OTHERMANAGER esta documentada como
+"list of other managers reporting for this manager". OTHERMANAGER2
+("included in this report") queda RECHAZADO para R4.
+
+### Correcciones obligatorias antes del GO contractual
+
+1. Terminologia: sustituir "evidencia bidireccional" por
+   "evidencia estructurada cruzada entre el filing de A y el
+   filing de B". La SEC no exige simetria reciproca.
+
+2. Requisito 3: mantener explicito. No absorberlo en R4.
+   R3 = filing efectivo de B + mismo PERIODOFREPORT + tipo valido.
+
+3. Amendments: formalizar seleccion del filing efectivo de B.
+   Prohibido MAX(ACCESSION) o MAX(FILING_DATE). Usar
+   CIK + PERIODOFREPORT + SUBMISSIONTYPE + ISAMENDMENT +
+   AMENDMENTNO + AMENDMENTTYPE.
+
+4. Identidad CIK / Form13FFileNumber:
+   - CIK primario. Coincide -> MATCH aunque FormNum este vacio.
+   - FormNum fallback resoluble inequivocamente a A -> MATCH.
+   - Ambos presentes y coherentes -> MATCH.
+   - Ambos presentes y contradictorios -> CONFLICT.
+   - Ninguno permite identificar A -> N/D.
+
+5. Anadir CONFLICT al enum de estados. Fail-closed junto con N/D.
+
+6. NT efectivo sin fila OTHERMANAGER con A:
+   - NO_MATCH si ingestion integra verificada.
+   - N/D si fallo de ingestion/extraccion/lineage.
+   - N/D != NO_MATCH. Fail-closed.
+
+7. DROP_DUP: NO autorizado por R4 aislado. Requiere L3 completo
+   (R1+R2+R3+R4+R5) y evidencia consistente. Mantiene filosofia
+   fail-closed.
+
+8. Gate 0.1: conservar granularidad. No basta 100% agregado.
+   Documentar: total NT, con OTHERMANAGER, filas totales,
+   con CIK, con FormNum, con ambos, con ninguno.
+
+### Texto propuesto por el auditor para 14.3
+
+    L3(A, B, S, period) == True sii:
+      1. existe filing efectivo de A con linea L sobre security S;
+      2. Column 7(L) referencia a B mediante la resolucion
+         estructurada de Other Included Managers (OTHERMANAGER2);
+      3. existe filing efectivo de B para el mismo PERIODOFREPORT;
+      4. B declara explicitamente que A reporta por B, mediante
+         una fila de OTHERMANAGER asociada al ACCESSION_NUMBER
+         del filing efectivo de B, identificando inequivocamente
+         a A mediante CIK o, cuando el CIK no este disponible,
+         mediante Form 13F File Number resoluble inequivocamente
+         a A;
+      5. no existe evidencia contradictoria ni evidencia de
+         reporting partition/overlap no resuelto.
+
+### Estado
+
+    Fuente OTHERMANAGER          APROBADA
+    Uso para R4                 APROBADO
+    Uso de OTHERMANAGER2 para R4 RECHAZADO
+    Separacion R2/R4            APROBADA
+    Mantener R3 explicito       SI
+    CIK como identificador primario SI
+    Form13FFileNumber fallback  SI
+    Exigir ambos campos poblados NO
+    CONFLICT como estado        DEBE ANADIRSE
+    N/D -> NO_MATCH             PROHIBIDO
+    Amendments                  DEBE FORMALIZARSE
+    DROP_DUP por R4 aislado     NO
+    XML/parser                  NO NECESARIO
+    Descarga EDGAR              NO NECESARIA
+    Modificar codigo ahora      NO
+    Modificar contrato ahora    NO
+    Elevar propuesta corregida  SI - GO CONDICIONADO
+
+### Siguiente paso
+
+Aplicar las 8 correcciones a P66_L3_REFORMULACION_PROPUESTA.md.
+Emitir v2. Reenviar al auditor para dictamen final sobre el texto
+contractual exacto antes de tocar NIPC_CONTRATOS_SEMANTICOS_v1.md.
