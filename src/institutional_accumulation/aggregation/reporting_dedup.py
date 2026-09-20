@@ -225,17 +225,26 @@ def _apply_intra_period_dedup(units, l3_index, *, period):
     """Aplica R1 (7 requisitos) a un periodo.
 
     Devuelve (effective_units, audit_df).
-    Sin L3 -> KEEP silencioso (sin audit).
-    Con L3 (una sola direccion) -> DROP_DUP del representado.
-    Ambiguedad reciproca -> KEEP + REPORTING_CONFLICT.
+
+    v1: NO emite DROP_DUP con evidencia 13F pura. La coexistencia de dos
+    filings distintos (A reporting B, B reporting B) sobre la misma
+    security es OVERLAP por definicion: no podemos saber si la porcion
+    de A incluye o excluye la de B. El requisito 7 del contrato v3
+    ("sin overlap no resuelto") NO es demostrable con 13F aislado.
+
+    Reglas v1:
+      - L3 recíproco (A->B y B->A) -> REPORTING_CONFLICT + KEEP.
+      - L3 unidireccional + coexistencia -> REPORTING_OVERLAP_UNRESOLVED + KEEP.
+      - Sin L3 -> KEEP silencioso (sin audit).
+
+    DROP_DUP queda como capacidad diferida v2 (requiere evidencia
+    cuantitativa externa que desambigue porcion propia vs delegada).
     """
     if units is None or units.empty:
         return units, _empty_audit()
 
     u = units.copy().reset_index(drop=True)
     u["_rid"] = range(len(u))
-    u["_decision"] = DEDUP_DECISION_KEEP
-    u["_reason"] = None
 
     audit_rows = []
 
@@ -255,7 +264,7 @@ def _apply_intra_period_dedup(units, l3_index, *, period):
                 e21 = l3_index.get((fm2, fm1))
 
                 if e12 and e21:
-                    # Ambiguedad: ambos lados reclaman representacion.
+                    # Ambiguedad reciproca -> REPORTING_CONFLICT
                     audit_rows.append(_make_audit_row(
                         r1, period, DEDUP_DECISION_KEEP,
                         DEDUP_REASON_REPORTING_CONFLICT,
@@ -266,35 +275,21 @@ def _apply_intra_period_dedup(units, l3_index, *, period):
                     ))
                     continue
 
-                if e12:
-                    # fm1 representa a fm2 -> DROP r2.
-                    u.loc[r2["_rid"], "_decision"] = DEDUP_DECISION_DROP
-                    u.loc[r2["_rid"], "_reason"] = DEDUP_REASON_INTRA_PERIOD_DUP
+                if e12 or e21:
+                    # L3 unidireccional + coexistencia -> OVERLAP_UNRESOLVED
+                    ev = e12 if e12 else e21
                     audit_rows.append(_make_audit_row(
-                        r2, period, DEDUP_DECISION_DROP,
-                        DEDUP_REASON_INTRA_PERIOD_DUP,
+                        r1, period, DEDUP_DECISION_KEEP,
+                        DEDUP_REASON_OVERLAP_UNRESOLVED,
                         EVIDENCE_LEVEL_L3, EVIDENCE_SOURCE_BOTH,
-                        e12["accession_representante"],
-                        e12["accession_representado"],
-                        e12["reference_seq"],
+                        ev["accession_representante"],
+                        ev["accession_representado"],
+                        ev["reference_seq"],
                     ))
                     continue
+                # Sin L3 -> KEEP silencioso
 
-                if e21:
-                    u.loc[r1["_rid"], "_decision"] = DEDUP_DECISION_DROP
-                    u.loc[r1["_rid"], "_reason"] = DEDUP_REASON_INTRA_PERIOD_DUP
-                    audit_rows.append(_make_audit_row(
-                        r1, period, DEDUP_DECISION_DROP,
-                        DEDUP_REASON_INTRA_PERIOD_DUP,
-                        EVIDENCE_LEVEL_L3, EVIDENCE_SOURCE_BOTH,
-                        e21["accession_representante"],
-                        e21["accession_representado"],
-                        e21["reference_seq"],
-                    ))
-
-    effective = u[u["_decision"] == DEDUP_DECISION_KEEP].drop(
-        columns=["_rid", "_decision", "_reason"]
-    ).reset_index(drop=True)
+    effective = u.drop(columns=["_rid"]).reset_index(drop=True)
 
     audit = pd.DataFrame(audit_rows, columns=list(DEDUP_AUDIT_COLUMNS)) if audit_rows else _empty_audit()
     return effective, audit

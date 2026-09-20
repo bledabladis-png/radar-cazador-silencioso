@@ -192,8 +192,12 @@ def test_p65_sin_l3_keep_silencioso():
     assert len(audit) == 0
 
 
-def test_p65_l3_una_direccion_drop_representado():
-    """A representa a B sobre AAPL -> DROP B, KEEP A."""
+def test_p65_l3_unidireccional_es_overlap_unresolved():
+    """P65 v3: L3 unidireccional + coexistencia -> OVERLAP_UNRESOLVED + KEEP.
+
+    v1 NO emite DROP_DUP con 13F puro: no podemos saber si la porcion
+    de A incluye o excluye la de B. Fail-closed.
+    """
     units = _mk_units([
         {"filing_manager_cik": "A", "observed_security_key": "cusip:AAPL",
          "canonical_security": "equity:AAPL", "discretion_type": "SOLE"},
@@ -209,13 +213,12 @@ def test_p65_l3_una_direccion_drop_representado():
         cross_filing_evidence=evidence,
         period_q4="2025-12-31", period_q1="2026-03-31",
     )
-    assert len(eff_q4) == 1
-    assert eff_q4.iloc[0]["filing_manager_cik"] == "A"
+    # Ambos KEEP (no DROP).
+    assert len(eff_q4) == 2
     assert len(audit) == 1
-    assert audit.iloc[0]["dedup_decision"] == rd.DEDUP_DECISION_DROP
-    assert audit.iloc[0]["dedup_reason"] == rd.DEDUP_REASON_INTRA_PERIOD_DUP
+    assert audit.iloc[0]["dedup_decision"] == rd.DEDUP_DECISION_KEEP
+    assert audit.iloc[0]["dedup_reason"] == rd.DEDUP_REASON_OVERLAP_UNRESOLVED
     assert audit.iloc[0]["evidence_level"] == rd.EVIDENCE_LEVEL_L3
-    assert audit.iloc[0]["filing_manager_cik"] == "B"
 
 
 def test_p65_l3_reciproco_reporting_conflict():
@@ -451,3 +454,114 @@ def test_p65_handoff_ambiguedad_null():
     ])
     out = rd.classify_reporting_transition(delta, q4, q1)
     assert out.iloc[0]["reporting_transition"] == rd.TRANSITION_NULL
+
+# ---- Tests del matrix del contrato (2, 4, 5, 12, 13, 15) ----
+
+
+def test_p65_matrix_4_same_network_separate_hr_keep():
+    """Test 4: HR separados bajo mismo control comun -> KEEP.
+
+    Managers bajo control comun pueden presentar 13F-HR separados.
+    NO hay dedup automatico sin evidencia cruzada L3.
+    """
+    units = _mk_units([
+        {"filing_manager_cik": "H1", "observed_security_key": "cusip:AAPL",
+         "canonical_security": "equity:AAPL", "discretion_type": "SOLE"},
+        {"filing_manager_cik": "H2", "observed_security_key": "cusip:AAPL",
+         "canonical_security": "equity:AAPL", "discretion_type": "SOLE"},
+    ])
+    # Sin cross_filing_evidence: aunque "control comun" existe,
+    # no hay evidencia documental L3.
+    eff_q4, _, audit = rd.build_effective_reporting_snapshot(
+        units, _mk_empty_units(),
+        relationships_q4=None, relationships_q1=None,
+        cross_filing_evidence=None,
+        period_q4="2025-12-31", period_q1="2026-03-31",
+    )
+    assert len(eff_q4) == 2
+    assert len(audit) == 0
+
+
+def test_p65_matrix_5_resolved_sin_scope_keep():
+    """Test 5: RESOLVED sin scope de security (sin evidencia L3) -> KEEP."""
+    units = _mk_units([
+        {"filing_manager_cik": "A", "observed_security_key": "cusip:AAPL",
+         "canonical_security": "equity:AAPL", "discretion_type": "SOLE"},
+        {"filing_manager_cik": "B", "observed_security_key": "cusip:AAPL",
+         "canonical_security": "equity:AAPL", "discretion_type": "SOLE"},
+    ])
+    # Solamente L1/L2 (sin accession_representado).
+    evidence = _mk_evidence([
+        ("A", "B", "ACC_A", None, 7, "equity:AAPL"),
+    ])
+    eff_q4, _, _ = rd.build_effective_reporting_snapshot(
+        units, _mk_empty_units(),
+        relationships_q4=None, relationships_q1=None,
+        cross_filing_evidence=evidence,
+        period_q4="2025-12-31", period_q1="2026-03-31",
+    )
+    # Sin L3 no hay accion.
+    assert len(eff_q4) == 2
+
+
+def test_p65_matrix_12_exit_new_network_only_null():
+    """Test 12: EXIT+NEW con network pero sin reporting_for -> NULL."""
+    delta = _mk_delta([
+        {"filing_manager_cik": "A", "canonical_security": "equity:AAPL",
+         "match_status": "EXIT", "delta_shares": -100.0},
+        {"filing_manager_cik": "B", "canonical_security": "equity:AAPL",
+         "match_status": "NEW", "delta_shares": 100.0},
+    ])
+    import pandas as pd
+    q4 = pd.DataFrame(columns=["filing_manager_cik", "canonical_security",
+                                "discretion_type", "reporting_for_manager_cik"])
+    q1 = q4.copy()
+    out = rd.classify_reporting_transition(delta, q4, q1)
+    assert (out["reporting_transition"] == rd.TRANSITION_NULL).all()
+
+
+def test_p65_matrix_13_l3_sin_overlap_resuelto_no_drop():
+    """Test 13: Column 7 -> B + B HR mismo security + overlap -> KEEP."""
+    units = _mk_units([
+        {"filing_manager_cik": "A", "observed_security_key": "cusip:AAPL",
+         "canonical_security": "equity:AAPL", "discretion_type": "SOLE"},
+        {"filing_manager_cik": "B", "observed_security_key": "cusip:AAPL",
+         "canonical_security": "equity:AAPL", "discretion_type": "SOLE"},
+    ])
+    evidence = _mk_evidence([
+        ("A", "B", "ACC_A", "ACC_B", 7, "equity:AAPL"),
+    ])
+    eff_q4, _, audit = rd.build_effective_reporting_snapshot(
+        units, _mk_empty_units(),
+        relationships_q4=None, relationships_q1=None,
+        cross_filing_evidence=evidence,
+        period_q4="2025-12-31", period_q1="2026-03-31",
+    )
+    # Coexistencia = overlap no resuelto -> KEEP ambos.
+    assert len(eff_q4) == 2
+    assert audit.iloc[0]["dedup_reason"] == rd.DEDUP_REASON_OVERLAP_UNRESOLVED
+
+
+def test_p65_matrix_15_partition_not_deduped():
+    """Test 15: partition no resuelta -> KEEP (no DROP)."""
+    # B Combination con X = 100 propio, A reports for B con X = 50.
+    # Sin evidencia de si los 50 son parte de los 100 o porcion adicional.
+    units = _mk_units([
+        {"filing_manager_cik": "A", "observed_security_key": "cusip:X",
+         "canonical_security": "equity:X", "discretion_type": "SOLE",
+         "sshprnamt_total": 50.0},
+        {"filing_manager_cik": "B", "observed_security_key": "cusip:X",
+         "canonical_security": "equity:X", "discretion_type": "SOLE",
+         "sshprnamt_total": 100.0},
+    ])
+    evidence = _mk_evidence([
+        ("A", "B", "ACC_A", "ACC_B", 7, "equity:X"),
+    ])
+    eff_q4, _, audit = rd.build_effective_reporting_snapshot(
+        units, _mk_empty_units(),
+        relationships_q4=None, relationships_q1=None,
+        cross_filing_evidence=evidence,
+        period_q4="2025-12-31", period_q1="2026-03-31",
+    )
+    assert len(eff_q4) == 2  # KEEP ambos, no colapsar
+    assert audit.iloc[0]["dedup_decision"] == rd.DEDUP_DECISION_KEEP
