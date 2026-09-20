@@ -50,9 +50,20 @@ correcciones son de precision contractual, no de arquitectura.
       4. B declara explicitamente que A reporta por B, mediante
          una fila de OTHERMANAGER asociada al ACCESSION_NUMBER
          del filing efectivo de B, identificando inequivocamente
-         a A mediante CIK o, cuando el CIK no este disponible,
-         mediante Form 13F File Number resoluble inequivocamente
-         a A;
+         a A:
+         a) mediante CIK, o
+         b) cuando CIK no este disponible, mediante Form 13F File
+            Number cuya resolucion a CIK sea inequivoca dentro del
+            mismo PERIODOFREPORT.
+
+         La evidencia es valida cuando el filing B es:
+         - 13F NOTICE (SUBMISSIONTYPE in {13F-NT, 13F-NT/A}
+                       y REPORTTYPE = 13F NOTICE), o
+         - 13F COMBINATION REPORT (SUBMISSIONTYPE in {13F-HR, 13F-HR/A}
+                       y REPORTTYPE = 13F COMBINATION REPORT).
+
+         La ausencia de resolucion inequivoca produce N/D o CONFLICT
+         segun corresponda. No se permite matching por nombre.
       5. no existe evidencia contradictoria ni evidencia de
          reporting partition/overlap no resuelto.
 
@@ -136,7 +147,11 @@ al periodo de analisis. Prohibido filtrar por directorio fisico.
 
     "Filing efectivo":
       1. Filtrar filings de CIK=B con PERIODOFREPORT=period
-         y SUBMISSIONTYPE in {13F-NT, 13F-NT/A}.
+         y (SUBMISSIONTYPE in {13F-NT, 13F-NT/A}
+             con REPORTTYPE = 13F NOTICE
+             O
+             SUBMISSIONTYPE in {13F-HR, 13F-HR/A}
+             con REPORTTYPE = 13F COMBINATION REPORT).
 
       2. Ordenar filings por AMENDMENTNO ascendente
          (base AMENDMENTNO=null tratado como orden 0).

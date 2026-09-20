@@ -515,6 +515,39 @@ DROP_DUP NO ACTIVADO.
 
 Referencia: DICTAMENES.md #28.
 
+
+
+### Gate 0.6 Combination probe ejecutado (2026-09-21)
+
+Origen: dictamen #28, bloqueo #1.
+
+Medicion del universo R4 segun REPORTTYPE:
+
+| SUBMISSIONTYPE | REPORTTYPE | Q4 filings | Q4 con OM | Q1 filings | Q1 con OM |
+|----------------|-----------|-----------:|----------:|-----------:|----------:|
+| 13F-HR | HOLDINGS | 8,237 | 0 | 8,339 | 0 |
+| 13F-NT | NOTICE | 1,900 | 1,900 | 1,907 | 1,907 |
+| 13F-HR | COMBINATION | 388 | 388 | 402 | 402 |
+| 13F-HR/A | HOLDINGS | 105 | 0 | 118 | 0 |
+| 13F-NT/A | NOTICE | 38 | 38 | 1 | 1 |
+| 13F-HR/A | COMBINATION | 8 | 8 | 9 | 9 |
+
+Universo R4 corregido:
+- Q4 2025: 2,334 (1,938 NOTICE + 396 COMBINATION). Delta vs v2-bis +396.
+- Q1 2026: 2,319 (1,908 NOTICE + 411 COMBINATION). Delta vs v2-bis +411.
+
+Cobertura OM en universo R4: 100.00%.
+Sin casos anomalos.
+
+Conclusion: BLOQUEO #1 RESUELTO. El texto contractual de R4 se
+actualiza para incluir 13F COMBINATION REPORT segun REPORTTYPE.
+
+Evidencia: `iae/evidence/p66_gate06_combination_probe/`.
+
+Bloqueos pendientes: #2 (NEW HOLDINGS probe), #3 (Gate 0.4-reissue
+con filtro), #4 (mapping unidireccional), #5 (sin truncar), #6
+(nomenclatura).
+
 ### Estado
 
     Fuente             APROBADA (OTHERMANAGER)

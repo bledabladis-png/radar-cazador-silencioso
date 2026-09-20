@@ -2203,3 +2203,21 @@ P65 v3 (ver iae/DICTAMENES.md #26). GO CONDICIONADO con 3 correcciones.
   + Gate 0.4-reissue + propuesta v3.
 - **NO se ha hecho:** sin XML, sin reporting_dedup.py, sin DROP_DUP,
   sin tocar contrato 14.3.
+
+
+## P66 - Gate 0.6 Combination probe (2026-09-21)
+
+- **Origen:** dictamen #28, bloqueo #1 (Combination excluido).
+- **Resultado:** REPORTTYPE distingue limpiamente.
+  - 13F HOLDINGS REPORT (13F-HR): 0% OM.
+  - 13F COMBINATION REPORT (13F-HR, REPORTTYPE=13F COMBINATION): 100% OM.
+  - 13F NOTICE (13F-NT): 100% OM.
+- **Universo R4 corregido:**
+  - Q4 2025: 2,334 (1,938 NOTICE + 396 COMBINATION). Delta +396 (+17.0%).
+  - Q1 2026: 2,319 (1,908 NOTICE + 411 COMBINATION). Delta +411 (+21.5%).
+- **Cobertura OM: 100.00%.** Sin casos anomalos.
+- **Conclusion:** BLOQUEO #1 RESUELTO.
+- **Evidencia:** `iae/evidence/p66_gate06_combination_probe/`.
+- **Pendiente:** bloqueo #2 (NEW HOLDINGS probe / Gate 0.7),
+  bloqueo #3 (Gate 0.4-reissue), bloqueo #4 (mapping unidireccional),
+  bloqueo #5 (sin truncar 028-2813114), bloqueo #6 (nomenclatura).
