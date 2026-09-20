@@ -459,3 +459,89 @@ def classify_reporting_transition(
         out.at[i, "dedup_reason"] = DEDUP_REASON_POSITION_HANDOFF
 
     return out
+
+
+# ============================================================================
+# P66 - determinacion del filing efectivo y evidencia R4 (§14.3 reformulada)
+# ----------------------------------------------------------------------------
+# Ciclo P66 (GO CONTRACTUAL #40). Implementa la seccion 14.3 del contrato
+# NIPC_CONTRATOS_SEMANTICOS_v1.md.
+#
+# ALCANCE:
+#   14.3.6 canonicalizacion Form13FFileNumber
+#   14.3.5 mapping FormNum -> CIK
+#   14.3.1 R3(B, period) tri-state (PASO 0 + PASO 1-4)
+#   14.3.2 validacion de cadena de amendments
+#   14.3.3 semantica RESTATEMENT / NEW HOLDINGS
+#   14.3.4 R4 candidate_A + CONFLICT > MATCH + N/D != NO_MATCH
+#   L3 booleano explicito (R1 AND R2 AND R3==TRUE AND R4==MATCH AND R5)
+#
+# NO TOCA:
+#   - Logica P65 existente (classify_evidence_level, _apply_intra_period_dedup,
+#     build_effective_reporting_snapshot, classify_reporting_transition).
+#   - DROP_DUP. Sigue diferido v2. R4 por si solo no autoriza DROP_DUP.
+# ============================================================================
+
+
+# --- Estados contractuales 14.3 ---
+
+R3_TRUE = "TRUE"
+R3_FALSE = "FALSE"
+R3_ND = "N/D"
+
+R4_MATCH = "MATCH"
+R4_NO_MATCH = "NO_MATCH"
+R4_ND = "N/D"
+R4_CONFLICT = "CONFLICT"
+
+FORMNUM_STATUS_IDENTITY_RESOLVED = "IDENTITY_RESOLVED"
+FORMNUM_STATUS_UNRESOLVED = "UNRESOLVED"
+FORMNUM_STATUS_CONFLICT = "CONFLICT"
+
+AMENDMENT_TYPE_RESTATEMENT = "RESTATEMENT"
+AMENDMENT_TYPE_NEW_HOLDINGS = "NEW_HOLDINGS"
+ALL_AMENDMENT_TYPES = (AMENDMENT_TYPE_RESTATEMENT, AMENDMENT_TYPE_NEW_HOLDINGS)
+
+
+# --- 14.3.6 Canonicalizacion Form13FFileNumber ---
+
+FORMNUM_PREFIX_CANONICAL = "028"
+FORMNUM_VALID_PREFIXES = frozenset(("28", "028"))
+FORMNUM_SUFFIX_WIDTH = 5
+
+
+def canonicalize_form13f_filenumber(value):
+    """14.3.6. Canonicaliza un Form 13F File Number.
+
+    Regla IAE (correspondencia observada con COVERPAGE, no formato SEC
+    universal):
+      <prefijo>-<sufijo>
+      prefijo in {"28", "028"}  -> "028"
+      cualquier otro prefijo    -> None (UNRESOLVED)
+      sufijo: strip leading zeros;
+              si len(sufijo_sin_zeros) > 5 -> None (no truncar)
+              sino -> padding a 5 digitos
+
+    Devuelve str canonico o None si UNRESOLVED.
+    """
+    if value is None:
+        return None
+    s = str(value).strip()
+    if not s or "-" not in s:
+        return None
+    parts = s.split("-")
+    if len(parts) != 2:
+        return None
+    prefijo = parts[0].strip()
+    sufijo = parts[1].strip()
+    if prefijo not in FORMNUM_VALID_PREFIXES:
+        return None
+    if not prefijo.isdigit() or not sufijo.isdigit():
+        return None
+    sufijo_sin_zeros = sufijo.lstrip("0") or "0"
+    if len(sufijo_sin_zeros) > FORMNUM_SUFFIX_WIDTH:
+        return None
+    return "{0}-{1}".format(
+        FORMNUM_PREFIX_CANONICAL,
+        sufijo_sin_zeros.zfill(FORMNUM_SUFFIX_WIDTH),
+    )

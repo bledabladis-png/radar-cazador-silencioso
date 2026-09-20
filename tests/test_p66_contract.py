@@ -193,13 +193,35 @@ def test_p66_r4_nd_identidad_no_resuelta():
     raise AssertionError('P66 14.3.4 no implementado: N/D esperado')
 
 
-@pytest.mark.xfail(reason=XFAIL, strict=False)
 def test_p66_formnum_padding_flexible():
     '''14.3.6: 028-694 -> 028-00694; 28-4545 -> 028-04545.'''
-    raise AssertionError('P66 14.3.6 no implementado: padding esperado')
+    from src.institutional_accumulation.aggregation import reporting_dedup as rd
+    assert rd.canonicalize_form13f_filenumber("028-694") == "028-00694"
+    assert rd.canonicalize_form13f_filenumber("28-4545") == "028-04545"
 
 
-@pytest.mark.xfail(reason=XFAIL, strict=False)
 def test_p66_formnum_prefijo_invalido():
-    '''14.3.6: prefijo != {28, 028} -> UNRESOLVED.'''
-    raise AssertionError('P66 14.3.6 no implementado: UNRESOLVED esperado')
+    '''14.3.6: prefijo != {28, 028} -> UNRESOLVED (None).'''
+    from src.institutional_accumulation.aggregation import reporting_dedup as rd
+    assert rd.canonicalize_form13f_filenumber("123-45") is None
+    assert rd.canonicalize_form13f_filenumber("02-12345") is None
+
+
+def test_p66_formnum_sufijo_6_digitos():
+    '''14.3.6: 028-064460 -> sufijo 64460 -> 028-64460.'''
+    from src.institutional_accumulation.aggregation import reporting_dedup as rd
+    assert rd.canonicalize_form13f_filenumber("028-064460") == "028-64460"
+
+
+def test_p66_formnum_sufijo_7_digitos_unresolved():
+    '''14.3.6: 028-2813114 -> UNRESOLVED (no truncar).'''
+    from src.institutional_accumulation.aggregation import reporting_dedup as rd
+    assert rd.canonicalize_form13f_filenumber("028-2813114") is None
+
+
+def test_p66_formnum_none_o_vacio():
+    '''14.3.6: None / vacio / sin "-" -> UNRESOLVED.'''
+    from src.institutional_accumulation.aggregation import reporting_dedup as rd
+    assert rd.canonicalize_form13f_filenumber(None) is None
+    assert rd.canonicalize_form13f_filenumber("") is None
+    assert rd.canonicalize_form13f_filenumber("028694") is None
