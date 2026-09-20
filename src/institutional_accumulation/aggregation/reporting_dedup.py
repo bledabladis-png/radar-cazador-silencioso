@@ -340,6 +340,66 @@ def build_effective_reporting_snapshot(
     return eff_q4, eff_q1, audit
 
 
+def _build_units_index(units, canonical, discretion):
+    """Index {(canonical, discretion): [(filing_manager, reporting_for), ...]}.
+
+    Solo considera filas con reporting_for_manager_cik no None ni vacio.
+    """
+    if units is None or units.empty:
+        return {}
+    if "reporting_for_manager_cik" not in units.columns:
+        return {}
+    idx = {}
+    for _, row in units.iterrows():
+        can = row.get(canonical)
+        dis = row.get(discretion)
+        fm = row.get("filing_manager_cik")
+        rf = row.get("reporting_for_manager_cik")
+        if can is None or dis is None or fm is None or rf is None:
+            continue
+        fm_s = str(fm).strip()
+        rf_s = str(rf).strip()
+        if not fm_s or not rf_s:
+            continue
+        key = (str(can), str(dis))
+        idx.setdefault(key, []).append((fm_s, rf_s))
+    return idx
+
+
+def _find_handoff_pairs(idx_q4, idx_q1, key):
+    """Devuelve lista de managers con handoff demostrado.
+
+    HANDOFF:
+      Q4: (filing=A, reporting=B)
+      Q1: (filing=B, reporting=B)
+      con A != B.
+
+    Sin ambiguedad: exactamente 1 par (A, B) valido. Si Q4 tiene dos
+    representantes distintos (A y D) reclamando representar a B, hay
+    ambiguedad y se devuelve [] (fail-closed).
+    """
+    q4 = idx_q4.get(key, [])
+    q1 = idx_q1.get(key, [])
+    if not q4 or not q1:
+        return []
+
+    valid_pairs = set()
+    for fm_a, rf_b in q4:
+        for fm_b, rf_b2 in q1:
+            if rf_b != rf_b2:
+                continue
+            if fm_b != rf_b2:
+                continue
+            if fm_a == fm_b:
+                continue
+            # Q4: A reporta para B. Q1: B reporta para si mismo.
+            valid_pairs.add((fm_a, fm_b, rf_b))
+
+    if len(valid_pairs) == 1:
+        return [list(valid_pairs)[0][2]]
+    return []
+
+
 def classify_reporting_transition(
     delta_df,
     effective_q4,
@@ -349,7 +409,40 @@ def classify_reporting_transition(
 
     Anade columnas reporting_transition + dedup_reason.
     NO modifica match_status ni delta_shares.
+
+    Regla HANDOFF (P65 v3 contrato seccion 14.5):
+      Q4: filing_manager=A, reporting_for_manager=B
+      Q1: filing_manager=B, reporting_for_manager=B
+      mismo canonical_security, mismo discretion_type.
+      A != B.
+
+    Sin ambiguedad: solo si hay exactamente 1 B que cumple.
+    Si falta reporting_for_manager_cik -> NULL (fail-closed).
     """
-    raise NotImplementedError(
-        "Commit 3 (post-delta). Ver iae/P64_P65_EXPEDIENTE.md seccion 2.17."
-    )
+    if delta_df is None:
+        return pd.DataFrame()
+    out = delta_df.copy()
+    out["reporting_transition"] = TRANSITION_NULL
+    out["dedup_reason"] = None
+    if out.empty:
+        return out
+
+    idx_q4 = _build_units_index(effective_q4, "canonical_security", "discretion_type")
+    idx_q1 = _build_units_index(effective_q1, "canonical_security", "discretion_type")
+
+    for i, row in out.iterrows():
+        ms = row.get("match_status")
+        if ms not in ("EXIT", "NEW"):
+            continue
+        can = row.get("canonical_security")
+        dis = row.get("discretion_type")
+        if can is None or dis is None:
+            continue
+        key = (str(can), str(dis))
+        handoffs = _find_handoff_pairs(idx_q4, idx_q1, key)
+        if not handoffs:
+            continue
+        out.at[i, "reporting_transition"] = TRANSITION_HANDOFF
+        out.at[i, "dedup_reason"] = DEDUP_REASON_POSITION_HANDOFF
+
+    return out

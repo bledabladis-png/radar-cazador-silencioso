@@ -6,8 +6,6 @@ los Commits 2 y 3.
 
 Sin red. Deterministas. Sin datetime.now().
 """
-import pytest
-
 from src.institutional_accumulation.aggregation import reporting_dedup as rd
 from src.institutional_accumulation.sec_13f.identity import relationships as rel
 
@@ -134,14 +132,6 @@ def test_classify_none_si_no_resolved():
 
 
 # ---- stubs de orquestacion ----
-
-
-def test_classify_reporting_transition_stub():
-    """Commit 3 pendiente: la funcion existe pero NO implementada."""
-    with pytest.raises(NotImplementedError):
-        rd.classify_reporting_transition(
-            delta_df=None, effective_q4=None, effective_q1=None,
-        )
 
 
 # ---- build_effective_reporting_snapshot (Commit 2: R1) ----
@@ -323,3 +313,141 @@ def test_p65_units_vacio_no_revienta():
     assert eff_q4.empty
     assert eff_q1.empty
     assert audit.empty
+
+# ---- classify_reporting_transition (Commit 3: HANDOFF) ----
+
+
+def _mk_delta(rows):
+    """DataFrame minimo compatible con DELTA_COLUMNS."""
+    import pandas as pd
+    defaults = {
+        "filing_manager_cik": None,
+        "canonical_security": None,
+        "observed_security_key": None,
+        "discretion_type": "SOLE",
+        "sshprnamt_current": 0.0,
+        "sshprnamt_previous": 0.0,
+        "delta_shares": 0.0,
+        "match_status": "BOTH",
+    }
+    full = []
+    for r in rows:
+        full.append({**defaults, **r})
+    return pd.DataFrame(full)
+
+
+def _mk_units_rf(rows):
+    """units con reporting_for_manager_cik explicito."""
+    import pandas as pd
+    cols = ["filing_manager_cik", "canonical_security", "discretion_type",
+            "reporting_for_manager_cik"]
+    return pd.DataFrame(rows, columns=cols)
+
+
+def test_p65_handoff_positivo():
+    """Q4 (A filing, B reporting) + Q1 (B filing, B reporting) -> HANDOFF."""
+    delta = _mk_delta([
+        {"filing_manager_cik": "A", "canonical_security": "equity:AAPL",
+         "match_status": "EXIT", "delta_shares": -100.0},
+        {"filing_manager_cik": "B", "canonical_security": "equity:AAPL",
+         "match_status": "NEW", "delta_shares": 100.0},
+    ])
+    q4 = _mk_units_rf([
+        ("A", "equity:AAPL", "SOLE", "B"),
+    ])
+    q1 = _mk_units_rf([
+        ("B", "equity:AAPL", "SOLE", "B"),
+    ])
+    out = rd.classify_reporting_transition(delta, q4, q1)
+    assert out.iloc[0]["reporting_transition"] == rd.TRANSITION_HANDOFF
+    assert out.iloc[1]["reporting_transition"] == rd.TRANSITION_HANDOFF
+    assert out.iloc[0]["dedup_reason"] == rd.DEDUP_REASON_POSITION_HANDOFF
+
+
+def test_p65_sin_reporting_for_es_null():
+    """Sin reporting_for_manager_cik -> NULL."""
+    delta = _mk_delta([
+        {"filing_manager_cik": "A", "canonical_security": "equity:AAPL",
+         "match_status": "EXIT", "delta_shares": -100.0},
+        {"filing_manager_cik": "B", "canonical_security": "equity:AAPL",
+         "match_status": "NEW", "delta_shares": 100.0},
+    ])
+    import pandas as pd
+    q4 = pd.DataFrame(columns=["filing_manager_cik", "canonical_security",
+                                "discretion_type", "reporting_for_manager_cik"])
+    q1 = q4.copy()
+    out = rd.classify_reporting_transition(delta, q4, q1)
+    assert (out["reporting_transition"] == rd.TRANSITION_NULL).all()
+
+
+def test_p65_reporting_for_cambia_null():
+    """Q4 reporting=B, Q1 reporting=C -> NULL."""
+    delta = _mk_delta([
+        {"filing_manager_cik": "A", "canonical_security": "equity:AAPL",
+         "match_status": "EXIT"},
+        {"filing_manager_cik": "C", "canonical_security": "equity:AAPL",
+         "match_status": "NEW"},
+    ])
+    q4 = _mk_units_rf([("A", "equity:AAPL", "SOLE", "B")])
+    q1 = _mk_units_rf([("C", "equity:AAPL", "SOLE", "C")])
+    out = rd.classify_reporting_transition(delta, q4, q1)
+    assert (out["reporting_transition"] == rd.TRANSITION_NULL).all()
+
+
+def test_p65_both_no_se_toca():
+    """BOTH no debe marcarse HANDOFF."""
+    delta = _mk_delta([
+        {"filing_manager_cik": "A", "canonical_security": "equity:AAPL",
+         "match_status": "BOTH", "delta_shares": 10.0},
+    ])
+    q4 = _mk_units_rf([("A", "equity:AAPL", "SOLE", "B")])
+    q1 = _mk_units_rf([("B", "equity:AAPL", "SOLE", "B")])
+    out = rd.classify_reporting_transition(delta, q4, q1)
+    assert out.iloc[0]["reporting_transition"] == rd.TRANSITION_NULL
+
+
+def test_p65_handoff_no_cambia_match_status_ni_delta():
+    """El HANDOFF no toca match_status ni delta_shares."""
+    delta = _mk_delta([
+        {"filing_manager_cik": "A", "canonical_security": "equity:AAPL",
+         "match_status": "EXIT", "delta_shares": -100.0},
+        {"filing_manager_cik": "B", "canonical_security": "equity:AAPL",
+         "match_status": "NEW", "delta_shares": 100.0},
+    ])
+    q4 = _mk_units_rf([("A", "equity:AAPL", "SOLE", "B")])
+    q1 = _mk_units_rf([("B", "equity:AAPL", "SOLE", "B")])
+    out = rd.classify_reporting_transition(delta, q4, q1)
+    assert out.iloc[0]["match_status"] == "EXIT"
+    assert out.iloc[1]["match_status"] == "NEW"
+    assert out.iloc[0]["delta_shares"] == -100.0
+    assert out.iloc[1]["delta_shares"] == 100.0
+
+
+def test_p65_delta_vacio_no_revienta():
+    """delta vacio -> devuelve con columnas nuevas."""
+    import pandas as pd
+    empty = pd.DataFrame()
+    out = rd.classify_reporting_transition(empty, pd.DataFrame(), pd.DataFrame())
+    assert "reporting_transition" in out.columns
+    assert "dedup_reason" in out.columns
+
+
+def test_p65_handoff_ambiguedad_null():
+    """Q4 con dos managers (A->B y D->B) + Q1 con B->B -> ambiguedad -> NULL.
+
+    Dos representantes distintos (A y D) reclaman haber reportado para el
+    mismo manager B en Q4. Sin evidencia para desambiguar, fail-closed.
+    """
+    delta = _mk_delta([
+        {"filing_manager_cik": "A", "canonical_security": "equity:AAPL",
+         "match_status": "EXIT"},
+    ])
+    q4 = _mk_units_rf([
+        ("A", "equity:AAPL", "SOLE", "B"),
+        ("D", "equity:AAPL", "SOLE", "B"),
+    ])
+    q1 = _mk_units_rf([
+        ("B", "equity:AAPL", "SOLE", "B"),
+    ])
+    out = rd.classify_reporting_transition(delta, q4, q1)
+    assert out.iloc[0]["reporting_transition"] == rd.TRANSITION_NULL
