@@ -50,19 +50,9 @@ def test_p60_identity_type_invalido_raises():
         si._normalize_canonical("AAPL", "INVALID")
 
 
-# --- Tests que documentan DIVERGENCIA (xfail hasta F2.4) ---
+# --- Tests de contrato P60 (fix aplicado tras F2.4) ---
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason=(
-        "Divergencia P60: _find_active_equivalence asume default TICKER "
-        "si falta la columna identity_type. Contrato seccion 1.6 exige "
-        "que el tipo venga declarado por la fuente, no asumido. "
-        "El comportamiento observable exacto (rechazo, lista vacia, "
-        "UNRESOLVED, error explicito) queda a dictamen F2.4."
-    )
-)
 def test_p60_csv_sin_identity_type_no_asume_ticker():
     """Contrato P60 seccion 1.6: no asumir tipo de identidad.
 
@@ -84,12 +74,10 @@ def test_p60_csv_sin_identity_type_no_asume_ticker():
             # Sin columna identity_type
         }
     ])
-    result = si._find_active_equivalence("037833100", "2026-03-31", eq_df)
-    # Prohibicion contractual: no debe aparecer itype="TICKER" cuando la
-    # fuente no lo declaro. El contrato seccion 1.6 exige que el tipo
-    # venga declarado por la fuente, no asumido por el consumidor.
-    for canon, itype in result:
-        assert itype != "TICKER", (
-            "itype=TICKER asumido silenciosamente sin fuente declarada: "
-            "{0}".format(result)
-        )
+    # P60 / F2.4: sin columna identity_type, fail-closed + warning.
+    with pytest.warns(RuntimeWarning):
+        result = si._find_active_equivalence("037833100", "2026-03-31", eq_df)
+    assert result == [], (
+        "Contrato P60: sin identity_type declarado NO se asume TICKER, "
+        "se rechazan las filas. Obtenido: {0}".format(result)
+    )

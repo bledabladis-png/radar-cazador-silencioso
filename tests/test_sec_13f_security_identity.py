@@ -8,13 +8,18 @@ from src.institutional_accumulation.sec_13f.identity import security_identity as
 
 # ---- helpers ----
 
-def _mk_equivalence(rows):
-    """rows: list of (CUSIP_A, canonical, valid_from, valid_to, source, reason, verified_by)."""
+def _mk_equivalence(rows, identity_type="TICKER"):
+    """rows: list of (CUSIP_A, canonical, valid_from, valid_to, source, reason, verified_by).
+
+    P60 / F2.4: identity_type es obligatorio. Default TICKER para
+    retrocompatibilidad de los tests que no lo especifican.
+    """
     df = pd.DataFrame(rows, columns=[
         "CUSIP_A", "canonical_security", "valid_from", "valid_to",
         "source", "reason", "verified_by",
     ])
     df["source_document"] = None
+    df["identity_type"] = identity_type
     df["valid_from"] = pd.to_datetime(df["valid_from"])
     df["valid_to"] = pd.to_datetime(df["valid_to"], errors="coerce")
     return df
@@ -87,8 +92,8 @@ def test_load_cusip_equivalence_columnas_faltantes(tmp_path):
 def test_load_cusip_equivalence_valid_from_mayor(tmp_path):
     p = tmp_path / "eq.csv"
     p.write_text(
-        "CUSIP_A,canonical_security,valid_from,valid_to,source,reason,verified_by,source_document\n"
-        "X,Y,2026-12-31,2026-01-01,SEC,r,manual,\n", encoding="utf-8")
+        "CUSIP_A,canonical_security,valid_from,valid_to,source,reason,verified_by,source_document,identity_type\n"
+        "X,Y,2026-12-31,2026-01-01,SEC,r,manual,,TICKER\n", encoding="utf-8")
     with pytest.raises(ValueError, match="valid_from > valid_to"):
         si.load_cusip_equivalence(p)
 
@@ -96,8 +101,8 @@ def test_load_cusip_equivalence_valid_from_mayor(tmp_path):
 def test_load_cusip_equivalence_verified_by_invalido(tmp_path):
     p = tmp_path / "eq.csv"
     p.write_text(
-        "CUSIP_A,canonical_security,valid_from,valid_to,source,reason,verified_by,source_document\n"
-        "X,Y,2026-01-01,,SEC,r,inventado,\n", encoding="utf-8")
+        "CUSIP_A,canonical_security,valid_from,valid_to,source,reason,verified_by,source_document,identity_type\n"
+        "X,Y,2026-01-01,,SEC,r,inventado,,TICKER\n", encoding="utf-8")
     with pytest.raises(ValueError, match="verified_by invalido"):
         si.load_cusip_equivalence(p)
 
@@ -105,8 +110,8 @@ def test_load_cusip_equivalence_verified_by_invalido(tmp_path):
 def test_load_cusip_equivalence_source_prohibido(tmp_path):
     p = tmp_path / "eq.csv"
     p.write_text(
-        "CUSIP_A,canonical_security,valid_from,valid_to,source,reason,verified_by,source_document\n"
-        "X,Y,2026-01-01,,manual,r,manual,\n", encoding="utf-8")
+        "CUSIP_A,canonical_security,valid_from,valid_to,source,reason,verified_by,source_document,identity_type\n"
+        "X,Y,2026-01-01,,manual,r,manual,,TICKER\n", encoding="utf-8")
     with pytest.raises(ValueError, match="source no verificable"):
         si.load_cusip_equivalence(p)
 
@@ -114,9 +119,9 @@ def test_load_cusip_equivalence_source_prohibido(tmp_path):
 def test_load_cusip_equivalence_solape(tmp_path):
     p = tmp_path / "eq.csv"
     p.write_text(
-        "CUSIP_A,canonical_security,valid_from,valid_to,source,reason,verified_by,source_document\n"
-        "X,Y,2024-01-01,2025-12-31,SEC,r,manual,\n"
-        "X,Z,2025-06-01,2026-12-31,SEC,r,manual,\n", encoding="utf-8")
+        "CUSIP_A,canonical_security,valid_from,valid_to,source,reason,verified_by,source_document,identity_type\n"
+        "X,Y,2024-01-01,2025-12-31,SEC,r,manual,,TICKER\n"
+        "X,Z,2025-06-01,2026-12-31,SEC,r,manual,,TICKER\n", encoding="utf-8")
     with pytest.raises(ValueError, match="Solape"):
         si.load_cusip_equivalence(p)
 
@@ -124,8 +129,8 @@ def test_load_cusip_equivalence_solape(tmp_path):
 def test_load_cusip_equivalence_ok(tmp_path):
     p = tmp_path / "eq.csv"
     p.write_text(
-        "CUSIP_A,canonical_security,valid_from,valid_to,source,reason,verified_by,source_document\n"
-        "X,equity:ABC,2024-01-01,2026-12-31,SEC,r,manual,\n", encoding="utf-8")
+        "CUSIP_A,canonical_security,valid_from,valid_to,source,reason,verified_by,source_document,identity_type\n"
+        "X,equity:ABC,2024-01-01,2026-12-31,SEC,r,manual,,TICKER\n", encoding="utf-8")
     df = si.load_cusip_equivalence(p)
     assert len(df) == 1
     assert df.iloc[0]["CUSIP_A"] == "X"
@@ -385,8 +390,8 @@ def test_p61_figi_lookup_da_temporal_unverified():
 
 # ---- Q8: identity_type en cusip_equivalence.csv ----
 
-def test_q8_identity_type_default_ticker(tmp_path):
-    """Sin columna identity_type, default TICKER."""
+def test_p60_csv_sin_identity_type_error(tmp_path):
+    """P60 / F2.4: sin columna identity_type, la fuente es invalida."""
     import pandas as pd
     p = tmp_path / "eq.csv"
     pd.DataFrame([
@@ -395,9 +400,8 @@ def test_q8_identity_type_default_ticker(tmp_path):
          "source": "SEC", "reason": "r", "verified_by": "manual",
          "source_document": None},
     ]).to_csv(p, index=False)
-    df = si.load_cusip_equivalence(p)
-    assert "identity_type" in df.columns
-    assert df.iloc[0]["identity_type"] == "TICKER"
+    with pytest.raises(ValueError, match="sin columna identity_type"):
+        si.load_cusip_equivalence(p)
 
 
 def test_q8_identity_type_figi(tmp_path):

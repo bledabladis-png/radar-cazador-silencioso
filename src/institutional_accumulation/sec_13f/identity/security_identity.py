@@ -34,6 +34,7 @@ de firma.
 """
 from __future__ import annotations
 
+import warnings
 from pathlib import Path
 
 import pandas as pd
@@ -166,6 +167,8 @@ def load_cusip_equivalence(path=DEFAULT_EQUIVALENCE_PATH):
 
     Validaciones obligatorias:
       - Columnas requeridas presentes.
+      - identity_type presente (P60 / F2.4: la fuente debe declarar
+        el tipo. Sin columna -> schema_error).
       - valid_from <= valid_to cuando valid_to no es NULL.
       - verified_by en VALID_VERIFIED_BY.
       - source no en FORBIDDEN_SOURCES.
@@ -182,8 +185,13 @@ def load_cusip_equivalence(path=DEFAULT_EQUIVALENCE_PATH):
     if "source_document" not in df.columns:
         df["source_document"] = None
     if "identity_type" not in df.columns:
-        # Q8: columna opcional. Si falta, default TICKER.
-        df["identity_type"] = "TICKER"
+        # P60 / D3 (F2.4 2026-09-20): la fuente DEBE declarar el tipo.
+        # Fuente invalida != security no encontrada. Fail-closed.
+        raise ValueError(
+            "cusip_equivalence.csv sin columna identity_type: "
+            "P60 exige que el tipo venga declarado por la fuente. "
+            "Anadir la columna con valores TICKER/FIGI/CUSIP/ISIN."
+        )
 
     df["valid_from"] = pd.to_datetime(df["valid_from"], errors="coerce")
     df["valid_to"] = pd.to_datetime(df["valid_to"], errors="coerce")
@@ -287,8 +295,9 @@ def load_crosswalk_internal(
 def _find_active_equivalence(cusip, report_period, eq_df):
     """Devuelve lista de (canonical_security, identity_type) activos.
 
-    Q8: identity_type viene declarado por la fila del CSV. Default TICKER
-    si la columna no existe (retrocompatibilidad).
+    P60 / F2.4: identity_type DEBE venir declarado por la fuente.
+    Si falta la columna o el valor de la fila, la fila se rechaza
+    (fail-closed) y se emite RuntimeWarning. NO se asume TICKER.
     """
     if eq_df is None or eq_df.empty:
         return []
@@ -305,11 +314,37 @@ def _find_active_equivalence(cusip, report_period, eq_df):
     ].dropna(subset=["canonical_security"])
     if active.empty:
         return []
-    has_type = "identity_type" in active.columns
+    # P60 / D3 (F2.4 2026-09-20): el contrato exige que el tipo de
+    # identidad venga DECLARADO por la fuente. No se asume TICKER.
+    # Si la columna `identity_type` no existe en el CSV, las filas se
+    # rechazan y se emite un aviso de schema. Fail-closed.
+    if "identity_type" not in active.columns:
+        warnings.warn(
+            "cusip_equivalence.csv sin columna identity_type: "
+            + str(len(active)) + " fila(s) rechazada(s) por P60 "
+            "fail-closed. Anadir la columna con valores "
+            "TICKER/FIGI/CUSIP/ISIN.",
+            RuntimeWarning,
+            stacklevel=2,
+        )
+        return []
     out = []
     for _, row in active.iterrows():
         canon = str(row["canonical_security"]).strip()
-        itype = str(row["identity_type"]).strip() if has_type else "TICKER"
+        raw_itype = row["identity_type"]
+        if raw_itype is None or (isinstance(raw_itype, float) and raw_itype != raw_itype):
+            itype = ""
+        else:
+            itype = str(raw_itype).strip()
+        if not itype:
+            warnings.warn(
+                "cusip_equivalence.csv: fila con identity_type vacio "
+                "para CUSIP_A=" + str(row.get("CUSIP_A", "?")) + ". "
+                "Rechazada por P60.",
+                RuntimeWarning,
+                stacklevel=2,
+            )
+            continue
         out.append((canon, itype))
     # dedup preservando orden
     seen = set()
