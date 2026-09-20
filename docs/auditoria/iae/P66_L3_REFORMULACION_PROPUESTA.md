@@ -12,8 +12,9 @@ sobre el texto exacto antes de tocar NIPC_CONTRATOS_SEMANTICOS_v1.md.
     #29  corregido
     #30  corregido
     #31  corregido
-    #32  GO CONDICIONADO FINAL - 2 correcciones aplicadas en este commit
-         (§7 generalizacion a R4 + R3 tri-state)
+    #32  corregido (§7 generalizacion a R4 + R3 tri-state)
+    #33  corregido en este commit (CONFLICT scope ampliado + nota
+         de alcance "filing efectivo" limitado a B/R3/R4)
 
 **Origen:** Gate 0.1 + Gate 0.2 (2026-09-20) tras NO-GO de P66.
 Correcciones aplicadas segun dictamen externo #27.
@@ -158,24 +159,31 @@ universo COMBINATION_BASE (evidencia Gate 0.8: 227 filas N/D Q4,
 
 **Aplicacion:** IDENTITY_RESOLVED + (CIK_resuelto == CIK_A) -> MATCH.
 
-**Alcance del CONFLICT (dictamen #31, bloqueo 2):**
+**Alcance del CONFLICT (dictamen #31 bloqueo 2 + #33 bloqueo 1):**
 
-CONFLICT > MATCH aplica UNICAMENTE a la evidencia candidata a
-identificar a A. Un conflicto de identidad en OTRA fila
-OTHERMANAGER del mismo filing NO invalida por si mismo un MATCH
-de A.
+CONFLICT > MATCH aplica a **CUALQUIER fila OTHERMANAGER que
+identifique o pretenda identificar a A**, no solo a la fila que
+la implementacion eventualmente seleccione.
 
     CONFLICT
-    Existe conflicto cuando la identidad de la fila OTHERMANAGER
-    que se utiliza para determinar la relacion con A no puede
-    resolverse de forma consistente:
+    Existe conflicto cuando CUALQUIER fila OTHERMANAGER que
+    identifique o pretenda identificar a A:
 
-    - CIK y Form13FFileNumber de ESA FILA apuntan a CIK distintos; o
-    - el Form13FFileNumber utilizado como fallback resuelve a >1 CIK
-      dentro del scope temporal aplicable.
+    - contiene CIK y FormNum incompatibles; o
+    - tiene un FormNum que resuelve a mas de un CIK; o
+    - contiene una identificacion por FormNum que contradice el
+      CIK explicitamente declarado para esa misma fila.
+
+    Si ninguna fila relevante para A presenta conflicto y al menos
+    una fila identifica inequivocamente a A -> MATCH.
 
     Un conflicto de identidad perteneciente exclusivamente a otro
-    manager de la lista no invalida por si mismo un MATCH de A.
+    manager de la lista NO invalida por si mismo un MATCH de A.
+
+**Regla de no-seleccion selectiva (dictamen #33):** la implementacion
+NO puede elegir la fila consistente e ignorar la contradictoria
+respecto de A. Si existe contradiccion entre dos filas que ambas
+refieren a A, el resultado es CONFLICT, no MATCH.
 
 **Orden de evaluacion OBLIGATORIO:**
 
@@ -190,6 +198,22 @@ son nullable en OTHERMANAGER.
 ---
 
 ## 5. Tratamiento de amendments (correccion #3, Gates 0.5-0.7)
+
+### 5.0. Alcance de la definicion "filing efectivo" (dictamen #33)
+
+El concepto de "filing efectivo" (o "conjunto documental efectivo")
+definido en esta propuesta se aplica **EXCLUSIVAMENTE** a la
+determinacion del filing o conjunto documental de B necesaria
+para R3/R4.
+
+**La seleccion del filing de A requerida por R1/R2 permanece regida
+por las reglas contractuales preexistentes, salvo modificacion
+expresa posterior del contrato.**
+
+P66 NO redefine la seleccion del filing de A. NO modifica R1 ni R2.
+Cuando esta propuesta menciona "existe filing efectivo de A" en §2,
+se refiere a la aplicacion de las reglas R1/R2 preexistentes, no a
+una nueva definicion introducida por P66.
 
 ### 5.1. Hallazgo critico: directorios cross-periodo
 

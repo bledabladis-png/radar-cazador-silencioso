@@ -1220,3 +1220,109 @@ listo". La trazabilidad debe ser:
     auditoria de salida
           ↓
     DROP_DUP efectivo
+
+
+---
+
+## 33. P66 - Dictamen auditor externo v7 (2026-09-21)
+
+**Tipo:** dictamen del auditor externo sobre P66_L3_REFORMULACION_PROPUESTA.md
+v3 con dictamen #32 aplicado.
+
+**Objeto:** cierre de las 2 ultimas precisiones contractuales.
+
+**Resultado:** GO CONDICIONADO FINAL. Evidencia PASS.
+Tras las 2 correcciones, el auditor emitira GO CONTRACTUAL DEFINITIVO.
+
+### Aprobado (cierre de evidencia definitivo)
+
+    Gates 0.4-reissue, 0.5, 0.6, 0.7, 0.8, 0.9   PASS
+    XML / descarga EDGAR / parser nuevo          NO necesario
+    edgartools / nuevo pipeline                  NO necesario
+    Fuente OTHERMANAGER                          APROBADA
+    Mapping FormNum -> CIK                       APROBADO
+    Restatement                                  APROBADO
+    New Holdings (fail-closed)                   APROBADO
+    Multiple bases (N/D conservador)             APROBADO
+    N/D vs NO_MATCH                              APROBADO
+    CONFLICT > MATCH                             APROBADO con precision
+
+### 2 bloqueos finales
+
+**Bloqueo 1 - CONFLICT debe cubrir CUALQUIER fila relevante para A.**
+
+La v3 dice "la fila OTHERMANAGER que se utiliza para determinar la
+relacion con A". Esto permite que la implementacion elija una fila
+que da MATCH e ignore otra fila contradictoria respecto de A.
+
+Ejemplo prohibido:
+
+    Fila 1: CIK=A, FormNum=F1, F1->A  (consistente)
+    Fila 2: CIK=A, FormNum=F2, F2->C  (contradictoria)
+    -> NO permitir MATCH ignorando Fila 2.
+
+Regla contractual aprobada:
+
+    CONFLICT afecta a R4(A,B) cuando CUALQUIER fila OTHERMANAGER
+    que identifique o pretenda identificar a A:
+
+    - contiene CIK y FormNum incompatibles; o
+    - tiene un FormNum que resuelve a mas de un CIK; o
+    - contiene una identificacion por FormNum que contradice el
+      CIK explicitamente declarado para esa misma fila.
+
+    Si ninguna fila relevante para A presenta conflicto y al menos
+    una fila identifica inequivocamente a A -> MATCH.
+
+Un conflicto perteneciente exclusivamente a otro manager sigue
+sin afectar a R4(A,B).
+
+**Bloqueo 2 - Alcance de "filing efectivo" limitado a B/R3/R4.**
+
+En §2 aparece "existe filing efectivo de A". Pero todo el mecanismo
+de §5 define "filing efectivo de B". No hay definicion equivalente
+para el filing efectivo de A.
+
+Riesgo: una implementacion podria interpretar que P66 redefine la
+seleccion del filing de A, alterando R1/R2 sin autorizacion.
+
+Correccion aprobada: anadir nota de alcance explicita:
+
+    El concepto de "filing efectivo" definido en esta propuesta
+    se aplica EXCLUSIVAMENTE a la determinacion del filing o
+    conjunto documental de B necesaria para R3/R4.
+
+    La seleccion del filing de A requerida por R1/R2 permanece
+    regida por las reglas contractuales preexistentes, salvo
+    modificacion expresa posterior del contrato.
+
+### Ajuste de trazabilidad (dictamen #33 seccion 10)
+
+La cabecera debe actualizarse a:
+
+    Los bloqueos de los dictamenes #28 a #32 estan aplicados.
+    Pendientes unicamente las dos precisiones contractuales del
+    dictamen #33.
+
+Y despues de aplicar #33:
+
+    #28  corregido
+    #29  corregido
+    #30  corregido
+    #31  corregido
+    #32  corregido
+    #33  corregido (este commit)
+
+### Estado
+
+    Evidencia tecnica                  CERRADA (definitivo)
+    GO CONDICIONADO FINAL              emitido
+    2 correcciones finales             PENDIENTES DE APLICAR
+    Contrato 14.3                      NO MODIFICAR AUN
+    reporting_dedup.py                 NO TOCAR
+    DROP_DUP                           NO ACTIVAR
+
+### Siguiente paso
+
+Aplicar los 2 bloqueos. Reenviar al auditor. Si confirma, GO
+CONTRACTUAL DEFINITIVO -> modificar 14.3 -> tests -> implementacion.

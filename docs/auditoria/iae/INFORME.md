@@ -814,6 +814,30 @@ Evidencia: `iae/DICTAMENES.md` #32.
 
 Siguiente paso: dictamen contractual final del auditor sobre 14.3.
 
+
+
+### Dictamen P66 #33 recibido (2026-09-21)
+
+Resultado: GO CONDICIONADO FINAL. Evidencia PASS definitivo.
+El auditor emitira GO CONTRACTUAL DEFINITIVO tras aplicar 2
+correcciones finales.
+
+2 correcciones aplicadas:
+
+- **1**: CONFLICT debe cubrir CUALQUIER fila OTHERMANAGER relevante
+  para A, no solo la seleccionada. Prohibicion de seleccion
+  selectiva: si existe contradiccion entre dos filas que refieren
+  a A -> CONFLICT.
+- **2**: Nota de alcance: "filing efectivo" definido por P66 se
+  aplica exclusivamente a B/R3/R4. NO redefine la seleccion del
+  filing de A en R1/R2.
+
+Trazabilidad de la cabecera actualizada a #28-#33.
+
+Evidencia: `iae/DICTAMENES.md` #33.
+
+Siguiente paso: dictamen contractual definitivo -> modificar 14.3.
+
 ### Estado
 
     Fuente             APROBADA (OTHERMANAGER)

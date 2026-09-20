@@ -2392,3 +2392,20 @@ P65 v3 (ver iae/DICTAMENES.md #26). GO CONDICIONADO con 3 correcciones.
 - **Pendiente:** dictamen contractual final sobre 14.3.
 - **NO se ha hecho:** sin XML, sin reporting_dedup.py, sin DROP_DUP,
   sin tocar contrato 14.3.
+
+
+## P66 - Dictamen #33 GO CONDICIONADO FINAL (2026-09-21)
+
+- **Origen:** dictamen del auditor externo tras dictamen #32.
+- **Resultado:** GO CONDICIONADO FINAL. Evidencia PASS definitivo.
+- **2 correcciones aplicadas:**
+  - 1: CONFLICT cubre CUALQUIER fila relevante para A.
+    Prohibicion de seleccion selectiva (fila consistente + fila
+    contradictoria -> CONFLICT).
+  - 2: Nota de alcance: "filing efectivo" solo aplica a B/R3/R4.
+    NO redefine R1/R2.
+- **Trazabilidad:** cabecera actualizada a #28-#33.
+- **Evidencia:** `iae/DICTAMENES.md` #33.
+- **Pendiente:** dictamen contractual definitivo sobre 14.3.
+- **NO se ha hecho:** sin XML, sin reporting_dedup.py, sin DROP_DUP,
+  sin tocar contrato 14.3.
