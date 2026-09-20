@@ -2055,3 +2055,33 @@ P65 v3 (ver iae/DICTAMENES.md #26). GO CONDICIONADO con 3 correcciones.
     src/institutional_accumulation/aggregation/reporting_dedup.py
 
 ---
+
+
+## P66 - L3 reformulacion via OTHERMANAGER (2026-09-20)
+
+- **Origen:** ciclo P65 v2 (DROP_DUP efectivo). Gate 0 extendido revelo
+  que la evidencia cruzada para L3 no se encontraba en OTHERMANAGER2 ni
+  en ADDITIONALINFORMATION.
+- **Informe inicial:** `iae/P66_INFORME_HALLAZGO.md` (commit 2edb462).
+  Hipotesis: la relacion vive en XML crudo del 13F-NT.
+- **Revision externa:** identifico 3 errores metodologicos:
+  1. Confusion OTHERMANAGER (reporting for this manager) vs
+     OTHERMANAGER2 (included in this report). Son relaciones distintas.
+  2. Caso Yorktown con filer invertido.
+  3. "XML firmado digitalmente" sobreafirmado.
+- **Gate 0.1 (commit 6b610b3):** OTHERMANAGER cubre 100% de NT filings
+  (2,008/2,008 Q4; 2,045/2,045 Q1). OTHERMANAGER2 cubre 0% NT.
+- **Gate 0.2 (commit 6b610b3):** caso Vanguard Q4 2025 -> Q1 2026
+  documentado bidireccionalmente en OTHERMANAGER sin XML.
+- **Conclusion:** P66 como ciclo de XML crudo + parser propio + 4,000
+  descargas queda CANCELADO. La evidencia ya esta en el parquet.
+- **Reemplazo:** `iae/P66_L3_REFORMULACION_PROPUESTA.md`.
+  Propone reformular el requisito 4 de 14.3 anclado a
+  `OTHERMANAGER[ACCESSION=B, CIK=A]`. Pendiente dictamen del auditor.
+- **Estado:** PROPUESTA. No modifica contrato. No activa DROP_DUP.
+  No toca reporting_dedup.py.
+- **Hallazgo colateral:** Column 7 de INFOTABLE matchea
+  OTHERMANAGER2.SEQUENCENUMBER (90% aprox), no OTHERMANAGER_SK.
+  Requisito 2 y requisito 4 de L3 usan dos tablas distintas.
+- **Reabrir si:** el auditor rechaza la reformulacion, o si el contrato
+  14.3 requiere unificacion bajo una unica fuente.
