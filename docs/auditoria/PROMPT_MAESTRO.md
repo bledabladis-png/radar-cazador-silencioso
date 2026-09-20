@@ -1,8 +1,8 @@
-# PROMPT MAESTRO v6.43 - INGENIERO SUPERVISOR DEL RADAR DE ROTACION SECTORIAL
+# PROMPT MAESTRO v6.44 - INGENIERO SUPERVISOR DEL RADAR DE ROTACION SECTORIAL
 
-Actualizado: 2026-09-20 (post implementacion de los 3 contratos semanticos P60/P61/P38 en codigo. P60 identity_type obligatorio, P61 modulo temporal_validity + integracion resolver + end-to-end, P38 denominador TARGET_PAIRWISE + coverage_status, Q6 unmapped_count_*, Q8 identity_type en CSV. 8 commits nuevos, 979 tests. 104 commits locales por pushear. HEAD 83e60c3)
+Actualizado: 2026-09-20 (post limpieza documental y consolidacion. docs/auditoria reducido de 81 a 27 .md en raiz + 6 probes. Nueva estructura: iae/, radar/, auditorias/, evidence/, archive/. Nueva regla: 1 concepto = 1 fichero vivo. Informes y dictamenes IAE consolidados en iae/INFORME.md + iae/DICTAMENES.md. 979 tests. HEAD al redactar: d3c9a87)
 Estado: Operativo al 100% - 10 contratos temporales (FU-021-5 + FU-021-3C-bis) - 979 tests locales + 2 skipped - 0 warnings - Gate 10/10 - Deuda ALTA/MEDIA/BAJA activa: 0 - F2.4 PENDIENTE EXTERNO - P60/P61/P38 IMPLEMENTADOS
-Commit de referencia: 83e60c3 (origin/main HEAD al redactar; el propio commit v6.43 sera HEAD tras push)
+Commit de referencia: d3c9a87 (origin/main HEAD al redactar; el propio commit v6.44 sera HEAD tras push)
 
 ---
 
@@ -176,6 +176,48 @@ Cuando se toquen writers, readers temporales o el reporte:
 4. Descargar el artifact `daily-report.zip` y verificar coherencia visual.
 
 ---
+
+### 3.7. Versionado documental (2026-09-20)
+
+**Regla:** 1 concepto = 1 fichero vivo. Al evolucionar, se edita in-place.
+Las versiones previas se archivan con fecha o SE BORRAN si su
+contenido esta embebido en la version vigente. Basura = borrar. Sin apelar
+a git. Git no es una papelera, no es excusa para conservar ficheros.
+Si un fichero no se usa, no da contexto y no se lee, se borra.
+
+**Prohibido:** ficheros con sufijo `_v1.md`, `_v1.1.md`, `_V12_PROPUESTA.md`,
+`_FASE_FA23_DICTAMEN_C.md`. Los dictamenes y informes historicos se
+consolidan en un unico fichero por tema con indice y resumen.
+
+**Estructura vigente de `docs/auditoria/`:**
+
+    PROMPT_MAESTRO.md    norma
+    FOLLOWUPS.md         cronologia
+    README.md            navegacion
+    iae/                 modulo IAE (9 .md)
+    radar/               contratos temporales (8 .md)
+    auditorias/          auditorias estructurales (4 .md)
+    evidence/            probes empiricos (6 subdirs)
+    archive/             archivado futuro (vacio)
+
+
+**Basura = borrar.** No se archiva por prudencia. No se conserva por si
+acaso. No se apela a git. Si un fichero no se usa, no da contexto y no
+se lee, se borra. Los snapshot de sesion no se conservan: se borran al
+cerrar la sesion. Los informes consolidados sustituyen a sus originales:
+los originales se borran. Los dictamenes se consolidan en un registro:
+los originales se borran. La cadena autoritativa vive en el registro
+consolidado, no en 23 ficheros sueltos.
+
+**Regla de lectura:** cualquier referencia en este prompt a
+`docs/auditoria/X.md` debe leerse como `docs/auditoria/<categoria>/X.md`
+segun la tabla anterior. Los informes y dictamenes del ciclo IAE estan
+consolidados en `iae/INFORME.md` y `iae/DICTAMENES.md` (indices con
+resumen por entrada; los originales estan en git).
+
+**Sin excepciones.** Un nuevo fichero con sufijo de version se rechaza
+en revision. Un cambio a un fichero vivo no bump-ea su nombre: bump-ea
+su contenido y actualiza el campo "Version:" interno si lo tiene.
 
 ## SECCION 4 - ARQUITECTURA ACTUAL
 
