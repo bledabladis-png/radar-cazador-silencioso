@@ -800,75 +800,217 @@ Dos afirmaciones de la version anterior del contrato requieren matiz:
 
 ## 13. Corporate Actions Contract (P64)
 
-**Origen:** dictamen F2.4 seccion 12.
+**Origen:** dictamen F2.4 seccion 12 + dictamen P64 formal (2026-09-20).
+**Estado:** CERRADO 2026-09-20. Commit 2f8140a.
 
-### 13.1. Principio rector
+### 13.1. Definicion contractual vigente
 
-Un cambio de shares entre Q4 y Q1 puede ser economico (compra/venta) o
-mecanico (corporate action). El sistema debe distinguirlos.
+    delta_shares  =  GROSS_OBSERVED_DELTA
 
-### 13.2. Eventos que rompen continuidad
+NO es delta_economic. 13F aislado NO permite distinguir compra/venta
+de split/spin-off/merger. La separacion economic/mechanical queda como
+capacidad diferida v1.
+
+### 13.2. Eventos fuera de alcance v1
 
     split
-    reverse split
-    spin-off
+    reverse_split
+    spin_off
     merger
-    share-class conversion
-    CUSIP change (por reorganizacion corporativa)
+    share_class_conversion
 
-### 13.3. Regla
+Declarados en constante P64_EVENTS_DEFERRED (delta_shares.py).
 
-`delta_shares.py` devuelve por observacion:
+### 13.3. CUSIP change: identidad, no evento
 
-    delta_shares_economic      atribuible a compra/venta
-    delta_shares_mechanical    atribuible a corporate action
-    delta_shares_total         = economic + mechanical
+CUSIP_A -> canonical_X y CUSIP_B -> canonical_X produce BOTH.
+Esto demuestra continuidad de identidad; NO demuestra deteccion del
+evento societario concreto que provoco el cambio.
 
-Cuando la atribucion no es posible, delta_shares_total es el valor;
-economic y mechanical quedan NULL con flag.
+    IDENTITY CONTINUITY  !=  CORPORATE ACTION DETECTION
 
-### 13.4. Fuentes de deteccion
+### 13.4. Codigo
 
-Actuales: relationships.py + amendments.py.
-Futuras: calendario de corporate actions (fuera de alcance v1).
+delta_shares.py:
+- DELTA_SEMANTICS_GROSS_OBSERVED = True
+- P64_EVENTS_DEFERRED = (split, reverse_split, spin_off, merger, share_class_conversion)
+- Docstring: GROSS OBSERVED DELTA
+- SIN columnas delta_shares_economic / delta_shares_mechanical
 
-### 13.5. Estado
+### 13.5. Tests contractuales
 
-**P64 = FORMALIZADO.**
+tests/test_sec_13f_delta_shares.py:
+- test_p64_semantica_gross_observed_delta
+- test_p64_delta_no_lleva_columnas_economic_mechanical
+- test_p64_split_no_se_etiqueta_como_economico
+- test_p64_cusip_change_es_identidad_no_corporate_action
+
+### 13.6. Audit de consumidores
+
+Audit realizado 2026-09-20: solo nipc.py::_sum_delta consume
+delta_shares; lee como magnitud, no como compra/venta. Probes solo
+imprimen. Cero consumidores que interpreten delta como economic.
+
+### 13.7. Fuente externa requerida para v2
+
+La materializacion de economic/mechanical requiere fuente externa
+de eventos societarios (CRSP, Compustat, OpenFIGI events, equivalente).
+NO heuristica. NO deteccion por ratios limpios.
 
 ---
 
 ## 14. Manager Duplication Contract (P65)
 
-**Origen:** dictamen F2.4 seccion 13.
+**Origen:** dictamen F2.4 seccion 13 + dictamenes P65 v1/v2/v3 (2026-09-20).
+**Estado:** GO CONDICIONADO v3. 3 correcciones de cierre pendientes. Ver
+iae/P64_P65_EXPEDIENTE.md seccion 2.
 
-### 14.1. Principio rector
+### 14.1. Regla transversal
 
-Form 13F admite estructura multi-manager. Una misma posicion economica
-puede ser reportada por varios filings (other included manager, combination
-report). Agregar sin resolver la estructura duplica peso.
+    REPORTING RELATIONSHIP  !=  REPORTING NETWORK  !=  DEDUP AUTHORIZATION  !=  ECONOMIC OWNERSHIP
 
-### 14.2. Unidad obligatoria
+- Una relacion OTHERMANAGER resuelta prueba una relacion de reporting.
+- NO prueba por si sola que dos observaciones sean duplicadas.
+- NO prueba por si sola que un EXIT + NEW sea un handoff.
+- economic_owner_cik PROHIBIDO. En relationships.py::FORBIDDEN_TERMS.
+- Un HR normal puede contener holdings de otros managers incluidos.
+- Managers bajo control comun pueden presentar 13F-HR separados.
+- 13F-NT no tiene Information Table. Aporta L1; L3 solo por evidencia cruzada.
 
-Definir explicitamente la unidad de agregacion:
+### 14.2. Los 3 niveles de evidencia
 
-    manager            entidad legal (CIK)
-    manager-group      grupo bajo una combinacion
-    filing             accession individual
-    position           una fila INFOTABLE
-    security           CUSIP o canonical_security
+| Nivel | Nombre | Significado | Autoriza |
+|---|---|---|---|
+| L1 | REPORTING_EDGE | Relacion documental (Column 7 + OM2 resuelto) | Nada |
+| L2 | POSITION_SCOPED_EDGE | Relacion vinculada a security concreta | Nada |
+| L3 | DEDUP_AUTHORIZATION | Evidencia cruzada permite afirmar duplicidad | DROP_DUP |
 
-La unidad por defecto del NIPC es `security`. Cuando el universo admite
-multiples filings para la misma posicion economica, se aplica deduplicacion.
+### 14.3. L3 - evidencia cruzada entre filings
 
-### 14.3. Regla
+    L3(A, B, S, period) == True sii:
+      1. existe filing de A con linea L sobre security S
+      2. Column 7(L) referencia a B (reference_status = RESOLVED)
+      3. existe filing de B en el mismo periodo
+      4. B declara explicitamente que A reporta por B
+         (NT o Combination con A en "Other Managers Reporting for this Manager")
+      5. no existe evidencia contradictoria ni evidencia de reporting
+         partition/overlap no resuelto
 
-Prohibido agregar el universo 13F por CUSIP sin resolver previamente la
-estructura del filing.
+### 14.4. R1 - Intra-period dedup (7 requisitos)
 
-### 14.4. Estado
+    Para dos observaciones S1 (M1) y S2 (M2) del mismo periodo:
+      1. S1.canonical_security == S2.canonical_security
+      2. S1.discretion_type    == S2.discretion_type
+      3. S1.filing_manager_cik != S2.filing_manager_cik
+      4. Existe relacion documental explicita M1 -> M2 (Column 7 de S1)
+      5. La relacion esta vinculada a la security S concreta
+      6. Existe evidencia cruzada L3: M2 declara que M1 reporta por M2
+      7. NO existe evidencia contradictoria ni overlap no resuelto
 
-**P65 = FORMALIZADO.**
+    Si las 7 se cumplen:
+      dedup_decision = DROP_DUP
+      dedup_reason = INTRA_PERIOD_DUP
+      se conserva S1 (documented reporting representative)
+      dedup_audit registra la eliminacion.
+
+    Si falla cualquier requisito:
+      dedup_decision = KEEP
+      dedup_reason = NULL | DUPLICATION_UNRESOLVED |
+                     REPORTING_OVERLAP_UNRESOLVED | REPORTING_CONFLICT
+
+### 14.5. R2 - Reporting handoff inter-periodo
+
+    Q4 unit A:  filing_manager = A, reporting_for_manager = B, security = S
+    Q1 unit A': filing_manager = B, reporting_for_manager = B, security = S
+
+    AND:
+      - A y A' producen EXIT + NEW en delta_shares (C2 intacto)
+      - reporting_for_manager_cik ESTABLE (B == B)
+      - continuidad documental explicita de la misma relacion de reporting
+
+      -> reporting_transition = HANDOFF
+      -> dedup_reason = POSITION_SCOPED_HANDOFF
+      -> match_status = EXIT + NEW (sin cambios)
+      -> delta_shares (sin cambios)
+
+    NO se anade STATUS_REPORTING_HANDOFF a delta_shares.py.
+
+### 14.6. R3, R4, R5
+
+    R3  Sin RESOLVED o sin included_manager_cik -> KEEP.
+    R4  Amendments antes de relaciones. 2 tests obligatorios
+        (RESTATEMENT + NEW HOLDINGS).
+    R5  13F-NT: holdings=0, relacion preservada. NT aporta L1,
+        no L3 por si solo.
+
+### 14.7. Casos especiales
+
+    REPORTING_OVERLAP_UNRESOLVED:
+      A reports for B on X  +  B also reports X, sin evidencia de si
+      portion A + portion B son complementarias o duplicadas.
+      -> dedup_decision = KEEP
+      -> dedup_reason = REPORTING_OVERLAP_UNRESOLVED
+
+    REPORTING_CONFLICT (definicion estricta):
+      B declara explicitamente una condicion incompatible con
+      "A reports for B on X" (contradiccion documental explicita).
+      NO por mera coincidencia de security.
+      -> dedup_decision = KEEP
+      -> dedup_reason = REPORTING_CONFLICT
+
+### 14.8. reporting_for_manager_cik
+
+    filing_manager_cik         quien presento el filing
+    reporting_for_manager_cik  para que manager se reporta esta observacion
+    economic_owner_cik         NO EXISTE. Prohibido.
+
+    reporting_for_manager_cik NO se usa para dedup. Se usa solo en R2.
+
+### 14.9. dedup_audit - trazabilidad obligatoria
+
+Toda fila eliminada (DROP_DUP) debe quedar registrada con:
+
+    source_line_id, period, filing_manager_cik, reporting_for_manager_cik,
+    canonical_security, dedup_decision, dedup_reason, evidence_level,
+    evidence_source, evidence_accession_representante,
+    evidence_accession_representado, evidence_reference_seq
+
+### 14.10. reporting_network_id
+
+Solo diagnostico. NO participa en DROP_DUP ni HANDOFF.
+
+### 14.11. Arquitectura aprobada
+
+    SEC FILINGS -> AMENDMENTS -> EFFECTIVE SNAPSHOT
+        -> REPORTING RELATIONSHIP RESOLUTION (L1/L2/L3)
+        -> INTRA-PERIOD DEDUP (PRE-delta)
+        -> effective_Q4/effective_Q1 -> delta_shares (C2 INTACTO)
+        -> REPORTING TRANSITION ENRICHMENT (POST-delta)
+        -> NIPC / coverage
+
+    No toca: MATCH_KEY, C2, delta_shares.py, nipc.py, coverage.py,
+    relationships.py.
+
+### 14.12. Implementacion en 4 commits
+
+    Commit 1   contrato + modelos + tests unitarios L1/L2/L3
+    Commit 2   reporting_dedup pre-delta
+    Commit 3   transition classification
+    Commit 4   integracion e2e + evidencia
+
+Justificacion metodologica: permite identificar que modificacion
+introduce cualquier cambio de resultado.
+
+### 14.13. Fuera de alcance v1
+
+- Economic owner (prohibido inferir).
+- Persistencia de reporting_network_id entre periodos.
+- Deduplicacion cross-periodo automatica (solo HANDOFF con evidencia).
+- Regla de precedencia para REPORTING_CONFLICT (diferida).
+
+### 14.14. Tests obligatorios
+
+15 tests en iae/P64_P65_EXPEDIENTE.md seccion 2.15.
 
 
 ---

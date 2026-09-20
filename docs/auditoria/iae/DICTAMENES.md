@@ -36,6 +36,7 @@
 | 23 | `NIPC_P70_DICTAMEN.md` | **Estado:** GO CONDICIONADO (caso B del arbol de decision del dictamen del audit |
 | 24 | `F24_DICTAMEN.md` (integrado en este consolidado) | **GO CONDICIONADO arquitectura** + 3 bloqueantes. D1 GO, D2 GO CONDICIONADO, D3 GO, Q12 Modelo A, AGREG. Opcion 2, OpenFIGI GO CONDICIONADO, Policy v1.3 NO. THRESHOLD_2 BLOQUEADO. |
 | 25 | `P63_DICTAMEN.md` (integrado en este consolidado) | **GO CONDICIONADO**. `EXIT != SOLD` aprobado. `MISSING = ausencia sin causa demostrable` (no toda ausencia). Amendments pre-delta OBLIGATORIO. Arquitectura multi-dimensional. |
+| 26 | `P65_DICTAMEN.md` (integrado en este consolidado) | **GO CONDICIONADO v3**. L1/L2/L3 + R1-R5 aprobados. 3 correcciones de cierre: `REPORTING_CONFLICT` estricto, `REPORTING_OVERLAP_UNRESOLVED` nuevo, L3+R1 refinadas. MATCH_KEY/C2/delta_shares.py INTACTOS. Implementacion en 4 commits. |
 
 ---
 
@@ -386,5 +387,72 @@ Seccion 12.4 de NIPC_CONTRATOS_SEMANTICOS_v1.md (in-place).
     P63 implementado (docstring + tests). NO toca API de delta_shares.py.
     Clasificacion automatica de absence_reason: DIFERIDA v1.
     Fuera de alcance v1: BELOW_REPORTING_THRESHOLD security-level.
+
+---
+
+
+## 26. P65 - Dictamen formal v3 (2026-09-20)
+
+**Tipo:** dictamen del auditor externo sobre el informe tecnico P65 v3
+(Manager Duplication).
+
+**Resultado global:** GO CONDICIONADO. Con 3 correcciones de cierre antes
+de tocar codigo.
+
+### Aprobado
+
+    H1-H4                                GO
+    L1/L2/L3                             GO (con refinamiento L3)
+    Evidencia cruzada entre filings      GO
+    reporting_for_manager_cik            GO
+    Dedup pre-delta                      GO
+    R1                                   GO con correccion
+    R2                                   GO con continuidad documental
+    reporting_transition separado        GO
+    dedup_audit                          GO (obligatorio)
+    13F-NT                               L1; L3 por evidencia cruzada
+    MATCH_KEY / C2 / delta_shares.py     INTACTOS
+    economic owner                       PROHIBIDO
+
+### 3 correcciones de cierre
+
+1. REPORTING_CONFLICT solo si contradiccion documental explicita.
+   NO por mera coincidencia de security.
+
+2. Anadir REPORTING_OVERLAP_UNRESOLVED:
+   A reports B on X + B reports X, sin evidencia de si son
+   complementarias o duplicadas -> KEEP.
+
+3. L3/R1 refinadas: DROP_DUP solo si L3(A,B,S) AND NOT overlap_unresolved.
+
+### Hallazgos estructurales
+
+- L3 por evidencia cruzada entre filings (no filing-role).
+- 13F-NT no puede aportar position-scoped line (no tiene Information Table).
+- reporting_for_manager_cik como campo no-economico.
+- reporting_network_id solo diagnostico, no autoriza dedup.
+- 13F-HR separado mismo security NO implica conflicto automaticamente.
+- Managers bajo control comun pueden presentar 13F-HR separados.
+
+### Implementacion
+
+4 commits (no 1):
+
+    Commit 1   contrato + modelos + tests unitarios L1/L2/L3
+    Commit 2   reporting_dedup pre-delta
+    Commit 3   transition classification
+    Commit 4   integracion e2e + evidencia
+
+### Regla transversal
+
+    REPORTING RELATIONSHIP != REPORTING NETWORK != DEDUP AUTHORIZATION != ECONOMIC OWNERSHIP
+
+    El sistema solo deduplica cuando puede demostrar documentalmente que
+    una observacion concreta esta siendo reportada por otro manager en
+    nombre del manager representado.
+
+### Tests obligatorios
+
+15 tests (13 base + 2 nuevos). Ver iae/P64_P65_EXPEDIENTE.md seccion 2.15.
 
 ---
