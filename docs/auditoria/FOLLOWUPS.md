@@ -2513,3 +2513,23 @@ P65 v3 (ver iae/DICTAMENES.md #26). GO CONDICIONADO con 3 correcciones.
 - **Pendiente:** enviar v7-bis al auditor.
 - **NO se ha hecho:** sin XML, sin reporting_dedup.py, sin DROP_DUP,
   sin tocar contrato 14.3.
+
+
+## P66 - Dictamen #39 y propuesta v7-ter ronda final (2026-09-21)
+
+- **Origen:** dictamen #39 tras propuesta v7-bis.
+- **Resultado:** NO-GO contractual. 1 bloqueo material + 1 editorial.
+- **1 bloqueo material aplicado:**
+  - PASO 0 en §3.2: precondicion de integridad y completitud del
+    scope R4. Sin completitud demostrable -> R3=N/D. Solo con scope
+    completo -> 0 bases + 0 amendments -> R3=FALSE.
+  - Evidencia: Gate 0.8 (137-144 FormNum huerfanos).
+- **1 correccion editorial aplicada:**
+  - §0.5 "GO de v7" -> "v7-bis" (actualizado a v7-ter).
+- **Declaracion del auditor:** con PASO 0 y referencia corregida,
+  procede GO CONTRACTUAL FINAL.
+- **Propuesta v7-ter:** ronda final.
+- **Evidencia:** `iae/DICTAMENES.md` #39.
+- **Pendiente:** enviar v7-ter al auditor.
+- **NO se ha hecho:** sin XML, sin reporting_dedup.py, sin DROP_DUP,
+  sin tocar contrato 14.3.

@@ -1001,6 +1001,37 @@ Evidencia: `iae/DICTAMENES.md` #38.
 
 Siguiente paso: enviar v7-bis al auditor. Ronda final.
 
+
+
+### Dictamen P66 #39 + propuesta v7-ter ronda final (2026-09-21)
+
+Resultado: NO-GO contractual. 1 bloqueo material + 1 correccion
+editorial, ambos aplicados en v7-ter.
+
+**Bloqueo material aplicado:**
+- Falta precondicion de integridad/completitud del scope R4 antes
+  de poder emitir R3=FALSE. Sin ella, "0 observados en dataset
+  incompleto" podria convertirse en "0 existen".
+- Correccion: PASO 0 en §3.2.
+  - Si completitud del scope NO demostrable: R3=N/D.
+  - Si registro R4 con clasificacion no inequivoca: R3=N/D.
+  - Solo despues: 0 bases + 0 amendments -> R3=FALSE.
+- Evidencia: Gate 0.8 detecto 137-144 FormNum en OTHERMANAGER(R4)
+  no presentes en COVERPAGE. La ingestion puede ser incompleta.
+
+**Correccion editorial aplicada:**
+- §0.5 "GO de v7" -> "v7-bis" (ahora v7-ter).
+
+**Declaracion del auditor:** "Despues de incorporar ese PASO 0 y
+corregir la referencia v7 -> v7-bis, considero que si procede el
+GO CONTRACTUAL FINAL."
+
+Propuesta v7-ter escrita. Pass interno ejecutado.
+
+Evidencia: `iae/DICTAMENES.md` #39.
+
+Siguiente paso: enviar v7-ter al auditor. Ronda final.
+
 ### Estado
 
     Fuente             APROBADA (OTHERMANAGER)
