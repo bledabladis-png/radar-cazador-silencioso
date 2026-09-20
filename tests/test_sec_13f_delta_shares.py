@@ -623,3 +623,121 @@ def test_p63_othermanager_produce_exit_mas_new():
         "P63: 13F aislado no puede inferir SOLD. SOLD no debe existir como "
         "estado de delta_shares."
     )
+
+# ---- P64 / F2.4 (2026-09-20): gross observed delta ----
+
+
+def test_p64_semantica_gross_observed_delta():
+    """P64 / F2.4: delta_shares es GROSS OBSERVED DELTA.
+
+    No es delta economico. La constante lo declara explicitamente.
+    """
+    assert ds.DELTA_SEMANTICS_GROSS_OBSERVED is True
+    assert "split" in ds.P64_EVENTS_DEFERRED
+    assert "reverse_split" in ds.P64_EVENTS_DEFERRED
+    assert "spin_off" in ds.P64_EVENTS_DEFERRED
+    assert "merger" in ds.P64_EVENTS_DEFERRED
+    assert "share_class_conversion" in ds.P64_EVENTS_DEFERRED
+
+
+def test_p64_delta_no_lleva_columnas_economic_mechanical():
+    """P64 / F2.4: DELTA_COLUMNS no expone economic ni mechanical.
+
+    El sistema calcula un unico delta bruto. La separacion
+    economic/mechanical queda como capacidad diferida v1.
+    """
+    assert "delta_shares_economic" not in ds.DELTA_COLUMNS
+    assert "delta_shares_mechanical" not in ds.DELTA_COLUMNS
+    assert "delta_shares" in ds.DELTA_COLUMNS
+
+
+def test_p64_split_no_se_etiqueta_como_economico():
+    """P64 / F2.4: escenario split 1:2 -> delta=+100 sin etiqueta economica.
+
+    Q4 = 100 acciones
+    Q1 = 200 acciones (mismo CUSIP)
+    delta_shares = +100
+
+    El sistema NO puede distinguir si ese +100 es:
+      - compra de 100 acciones (economico)
+      - split 1:2 (mecanico)
+      - mezcla
+
+    Por tanto:
+      - delta_shares debe ser exactamente 100.
+      - NO debe existir ninguna columna que lo etiquete como
+        "economic" o "mechanical".
+      - match_status debe ser BOTH (continuidad observada).
+    """
+    info_q4 = _mk_infotable([
+        {"ACCESSION_NUMBER": "A1", "INFOTABLE_SK": 1, "CUSIP": "037833100",
+         "SSHPRNAMT": 100.0},
+    ])
+    info_q1 = _mk_infotable([
+        {"ACCESSION_NUMBER": "B1", "INFOTABLE_SK": 1, "CUSIP": "037833100",
+         "SSHPRNAMT": 200.0},
+    ])
+    sub_q4 = _mk_submission([("A1", "FM1")])
+    sub_q1 = _mk_submission([("B1", "FM1")])
+    idr = {"037833100": _identity_entry("037833100", canonical="equity:AAPL")}
+
+    u_q4 = ds.compute_reported_position_units(
+        info_q4, sub_q4, report_period="2025-12-31", identity_results=idr,
+    )
+    u_q1 = ds.compute_reported_position_units(
+        info_q1, sub_q1, report_period="2026-03-31", identity_results=idr,
+    )
+    delta = ds.compute_delta_shares(u_q1, u_q4)
+
+    assert len(delta) == 1
+    row = delta.iloc[0]
+    assert row["match_status"] == ds.STATUS_BOTH
+    # El delta es bruto, +100.
+    assert float(row["delta_shares"]) == 100.0
+    # NO existe etiqueta economica.
+    assert "delta_shares_economic" not in delta.columns
+    assert "delta_shares_mechanical" not in delta.columns
+    assert set(delta.columns) == set(ds.DELTA_COLUMNS)
+
+
+def test_p64_cusip_change_es_identidad_no_corporate_action():
+    """P64 / F2.4: CUSIP change -> continuidad de IDENTIDAD, no deteccion
+    de evento societario.
+
+    Cuando CUSIP_A (Q4) y CUSIP_B (Q1) resuelven al mismo canonical,
+    el reconciliador produce BOTH. Esto demuestra continuidad de
+    identidad; NO demuestra que el sistema haya identificado el evento
+    societario concreto que provoco el cambio de CUSIP.
+
+    Las dos capas son distintas:
+        IDENTITY CONTINUITY  !=  CORPORATE ACTION DETECTION
+    """
+    info_q4 = _mk_infotable([
+        {"ACCESSION_NUMBER": "A1", "INFOTABLE_SK": 1, "CUSIP": "CUSIP_OLD",
+         "SSHPRNAMT": 100.0},
+    ])
+    info_q1 = _mk_infotable([
+        {"ACCESSION_NUMBER": "B1", "INFOTABLE_SK": 1, "CUSIP": "CUSIP_NEW",
+         "SSHPRNAMT": 120.0},
+    ])
+    sub_q4 = _mk_submission([("A1", "FM1")])
+    sub_q1 = _mk_submission([("B1", "FM1")])
+    idr = {
+        "CUSIP_OLD": _identity_entry("CUSIP_OLD", canonical="equity:X"),
+        "CUSIP_NEW": _identity_entry("CUSIP_NEW", canonical="equity:X"),
+    }
+    u_q4 = ds.compute_reported_position_units(
+        info_q4, sub_q4, report_period="2025-12-31", identity_results=idr,
+    )
+    u_q1 = ds.compute_reported_position_units(
+        info_q1, sub_q1, report_period="2026-03-31", identity_results=idr,
+    )
+    delta = ds.compute_delta_shares(u_q1, u_q4)
+    assert len(delta) == 1
+    row = delta.iloc[0]
+    assert row["match_status"] == ds.STATUS_BOTH
+    assert float(row["delta_shares"]) == 20.0
+    # El sistema NO emite evento societario: no existe columna que lo
+    # declare, ni constante P64_EVENTS_DETECTED.
+    assert "corporate_action" not in delta.columns
+    assert not hasattr(ds, "P64_EVENTS_DETECTED")

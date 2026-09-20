@@ -21,6 +21,13 @@ Reglas duras:
   - match_status in {BOTH, NEW, EXIT, UNRESOLVED_IDENTITY}.
   - NEW asume previous=0; EXIT asume current=0.
   - UNRESOLVED_IDENTITY no fabrica delta.
+
+P64 / F2.4 (2026-09-20): delta_shares = GROSS OBSERVED DELTA.
+NO es delta economico. La separacion economic/mechanical requiere
+fuente externa de corporate actions (capacidad diferida v1). 13F
+aislado NO permite distinguir compra/venta de split/spin-off/merger.
+CUSIP change: absorbido por continuidad de identidad (canonical_security),
+NO por deteccion de evento societario.
 """
 from __future__ import annotations
 
@@ -42,6 +49,18 @@ ALL_MATCH_STATUSES = (
 )
 
 CANONICAL = "CANONICAL"
+
+# P64 / F2.4 (2026-09-20): semantica de delta_shares.
+# delta_shares = GROSS_OBSERVED_DELTA (no economic, no mechanical).
+# Los eventos societarios se declaran capacidad diferida v1.
+DELTA_SEMANTICS_GROSS_OBSERVED = True
+P64_EVENTS_DEFERRED = (
+    "split",
+    "reverse_split",
+    "spin_off",
+    "merger",
+    "share_class_conversion",
+)
 
 UNITS_COLUMNS = (
     "report_period",
