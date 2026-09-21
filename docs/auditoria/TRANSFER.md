@@ -66,7 +66,15 @@ Plan autorizado, en orden estricto:
 
     Commit 3  catalog_p38_adapter.py
               Quitar operational_mapping_status="VERIFIED" hardcoded
-              (L164). PROPAGAR del state. Sin field -> UNRESOLVED.
+              (L164) y weight=1.0 hardcoded (L165). PROPAGAR del state:
+                operational_mapping_status = state[k].operational_mapping_status
+                weight = float(state[k].sshprnamt) if not None else 0.0
+              (cierra H-10.1 + H-07 en el mismo bloque _records).
+              Adicionalmente: reescribir tests/test_h731_adapter_p38_compat.py
+              (xfail A-12 -> positivo con 3 direcciones a/b/c; compat_a/b/c/d
+              actualizados a propagacion; nuevo test weight). Motivo: regla
+              3.1 PROMPT_MAESTRO (un commit = un veredicto verde) prima
+              sobre el plan original que diferia el xfail a Commit 5.
 
     Commit 4  coverage.py
               coverage_previous/current con denominador TARGET_Q4/TARGET_Q1.
@@ -74,7 +82,7 @@ Plan autorizado, en orden estricto:
 
     Commit 5  probe + tests
               probe_integration_b1_p61_p38.py: Q4 y Q1 REALES, sin mock.
-              Tests nuevos: derivacion VERIFIED, max(Q4,Q1), agregacion FIGI.
+              Tests nuevos: max(Q4,Q1), agregacion FIGI.
 
 **Reglas por commit:** suite completa + pyflakes + compileall antes del
 siguiente. Si algo falla, parar y avisar.

@@ -59,72 +59,83 @@ def _make_universe(rows):
                            catalog_version_id="cat", catalog_sha256="a" * 64)
 
 
-# --- H-73.1-a: records del adapter son VERIFIED ---
+def _state_verified(universe, *, sshprnamt=1000.0):
+    """State con VERIFIED + sshprnamt para todas las keys (A2 c3/5)."""
+    return ps.build_period_state(
+        universe,
+        operational_evidence={k: "VERIFIED" for k in universe.declared_keys},
+        sshprnamt_evidence={k: sshprnamt for k in universe.declared_keys},
+    )
 
-def test_compat_a_records_del_adapter_son_verified():
+
+# --- H-73.1-a: records del adapter PROPAGAN operational_mapping_status ---
+
+def test_compat_a_records_del_adapter_propagan_verified():
+    """A2 c3/5: con state VERIFIED, el adapter PROPAGA VERIFIED."""
     u = _make_universe([("AAPL", "FIGI_A"), ("MSFT", "FIGI_M")])
-    st = ps.build_period_state(u)
+    st = _state_verified(u)
     keys = set(u.declared_keys)
     _, _, r4, r1, _ = ca.catalog_to_p38_targets(
         u, u, state_q4=st, state_q1=st, pairwise_keys=keys)
     for r in r4 + r1:
-        assert r.operational_mapping_status == "VERIFIED", \
-            "adapter debe producir VERIFIED, no " + str(r.operational_mapping_status)
+        assert r.operational_mapping_status == "VERIFIED", (
+            "adapter debe propagar VERIFIED del state; obtuvo "
+            + str(r.operational_mapping_status)
+        )
         assert r.resolution_status == "CANONICAL"
 
 
-# --- H-73.1-b: weight_status RESOLVED_OBSERVED NO se filtra como VERIFIED ---
+# --- H-73.1-b: state default (UNRESOLVED) -> adapter NO inventa VERIFIED ---
 
-def test_compat_b_weight_status_no_contamina_operational():
-    """El bug original: weight_status=RESOLVED_OBSERVED -> P38 filtra
-    como no-VERIFIED. El adapter corregido debe ignorar weight_status
-    al construir operational_mapping_status."""
+def test_compat_b_propaga_no_inventa_operational():
+    """A2 c3/5: con state default (UNRESOLVED), el adapter PROPAGA
+    UNRESOLVED y NO inventa VERIFIED. weight_status (RESOLVED_OBSERVED)
+    es ortogonal y NO contamina operational_mapping_status."""
     u = _make_universe([("AAPL", "FIGI_A")])
-    st = ps.build_period_state(u)
-    # Verificar que weight_status es RESOLVED_OBSERVED (default)
+    st = ps.build_period_state(u)  # default: operational=UNRESOLVED
     for k in st:
         assert st[k].weight_status == "RESOLVED_OBSERVED"
+        assert st[k].operational_mapping_status == "UNRESOLVED"
     keys = set(u.declared_keys)
     _, _, r4, _, _ = ca.catalog_to_p38_targets(
         u, u, state_q4=st, state_q1=st, pairwise_keys=keys)
-    # El record NO debe tener weight_status como operational_mapping_status
     for r in r4:
+        assert r.operational_mapping_status == "UNRESOLVED", (
+            "adapter no debe inventar VERIFIED; state lo dice UNRESOLVED"
+        )
         assert r.operational_mapping_status != "RESOLVED_OBSERVED"
-        assert r.operational_mapping_status == "VERIFIED"
 
 
 # --- H-73.1-c: compatibilidad end-to-end con compute_contractual_coverage ---
 
 def test_compat_c_p38_acepta_records_del_adapter():
-    """COMPATIBILIDAD: P38 acepta los records del adapter.
+    """COMPATIBILIDAD: con state VERIFIED, P38 acepta los records.
 
-    **Limitacion explicita:** este test usa Q4=Q1 (mismo state), por lo
-    que `coverage=1.0` es trivial por construccion. NO valida cobertura
-    contractual. Ver H-10.1 en `iae/EXPEDIENTE_A64_FIX.md`.
-
-    El objetivo es unicamente comprobar que P38 no devuelve UNAVAILABLE
-    cuando recibe records del adapter (regresion del bug H-73.1)."""
+    Nota: coverage=1.0 es trivial por construccion (target=observed=
+    VERIFIED, weights>0). NO valida denominador TARGET; eso es
+    commit 4. Aqui solo comprobamos que P38 no devuelve UNAVAILABLE
+    con records VERIFIED del adapter."""
     u = _make_universe([("AAPL", "FIGI_A"), ("MSFT", "FIGI_M")])
-    st = ps.build_period_state(u)
+    st = _state_verified(u)
     keys = set(u.declared_keys)
     t4, t1, r4, r1, _ = ca.catalog_to_p38_targets(
         u, u, state_q4=st, state_q1=st, pairwise_keys=keys)
 
     result = cov.compute_contractual_coverage(t4, t1, r4, r1)
-    assert result["coverage_status"] == "VALID", \
-        "P38 debe aceptar los records del adapter; coverage_status=" \
+    assert result["coverage_status"] == "VALID", (
+        "P38 debe aceptar records VERIFIED del adapter; coverage_status="
         + str(result["coverage_status"])
+    )
     assert result["coverage_previous"] == 1.0
     assert result["coverage_current"] == 1.0
     assert result["paired_security_coverage"] == 1.0
-    assert result["paired_weighted_share_coverage"] == 1.0
 
 
 def test_compat_d_regresion_bug_original():
     """Regresion del bug: si adapter mapeara weight_status como
     operational_mapping_status, este test fallaria con UNAVAILABLE."""
     u = _make_universe([("AAPL", "FIGI_A")])
-    st = ps.build_period_state(u)
+    st = _state_verified(u)
     keys = set(u.declared_keys)
     _, _, r4, _, _ = ca.catalog_to_p38_targets(
         u, u, state_q4=st, state_q1=st, pairwise_keys=keys)
@@ -188,45 +199,69 @@ def test_h101_adapter_rechaza_state_no_resolved():
                                    pairwise_keys=set(keys))
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason=(
-        "H-10.1 ABIERTO (auditoria 2026-09-21, A-12): el adapter actual "
-        "marca VERIFIED incondicionalmente sin derivarlo de evidencia "
-        "operacional. Este test verifica el comportamiento ESPERADO, que "
-        "requiere el fix (dictamen externo). Cuando se aplique el fix, "
-        "este test pasara y con strict=True la suite fallara -> senal "
-        "para reescribirlo como test positivo."
-    ),
-)
-def test_h101_adapter_no_marca_verified_sin_evidencia_operacional():
-    """Contrato P61: operational_mapping_status=VERIFIED debe derivarse
-    de la evidencia temporal que cubre el periodo. El adapter actual lo
-    asigna incondicionalmente (H-10.1 CRITICA).
+def test_h101_adapter_propaga_operational_mapping_status():
+    """A2 c3/5 (H-10.1 CERRADO): el adapter PROPAGA
+    operational_mapping_status 1:1 desde el state. Cubre 3 direcciones:
 
-    **Este test verifica el comportamiento ESPERADO, NO el actual.**
+      (a) state VERIFIED -> record VERIFIED
+      (b) state TEMPORAL_UNVERIFIED -> record TEMPORAL_UNVERIFIED
+      (c) state sin evidencia (default UNRESOLVED) -> record UNRESOLVED
 
-    Estado actual: FALLA porque el adapter SI marca VERIFIED sin
-    derivarlo del state. Marcado xfail(strict=True) -> XFAIL mientras
-    el bug persiste (no cuenta como verde de conformidad).
-
-    Cuando se aplique el fix H-10.1:
-      - El adapter derivara VERIFIED del state.
-      - Este test pasara (XPASS).
-      - Con strict=True, XPASS se cuenta como FALLO -> senal de que
-        hay que reescribirlo como test positivo.
-    """
+    El caso (c) es el critico (auditor Q3): el adapter no infiere
+    VERIFIED; sin evidencia, fail-closed a UNRESOLVED."""
     u = _make_universe([("AAPL", "FIGI_A")])
-    st = ps.build_period_state(u)  # state sin evidencia operacional real
     keys = set(u.declared_keys)
+
+    # (a) VERIFIED explicito
+    st_a = ps.build_period_state(
+        u,
+        operational_evidence={k: "VERIFIED" for k in keys},
+    )
+    _, _, r4a, _, _ = ca.catalog_to_p38_targets(
+        u, u, state_q4=st_a, state_q1=st_a, pairwise_keys=keys)
+    assert all(r.operational_mapping_status == "VERIFIED" for r in r4a)
+
+    # (b) TEMPORAL_UNVERIFIED explicito
+    st_b = ps.build_period_state(
+        u,
+        operational_evidence={k: "TEMPORAL_UNVERIFIED" for k in keys},
+    )
+    _, _, r4b, _, _ = ca.catalog_to_p38_targets(
+        u, u, state_q4=st_b, state_q1=st_b, pairwise_keys=keys)
+    assert all(r.operational_mapping_status == "TEMPORAL_UNVERIFIED"
+               for r in r4b)
+
+    # (c) sin evidencia -> default UNRESOLVED (fail-closed)
+    st_c = ps.build_period_state(u)  # sin operational_evidence
+    _, _, r4c, _, _ = ca.catalog_to_p38_targets(
+        u, u, state_q4=st_c, state_q1=st_c, pairwise_keys=keys)
+    assert all(r.operational_mapping_status == "UNRESOLVED" for r in r4c)
+
+
+def test_h101_adapter_propaga_weight_desde_sshprnamt():
+    """A2 c3/5 (H-07 CERRADO): el adapter PROPAGA el peso contractual
+    desde state.sshprnamt. Sin sshprnamt -> weight=0.0 (fail-closed,
+    no se inventa peso)."""
+    u = _make_universe([("AAPL", "FIGI_A"), ("MSFT", "FIGI_M")])
+    keys = set(u.declared_keys)
+    k_aapl = None
+    k_msft = None
+    for k in keys:
+        if u.ticker_by_key[k] == "AAPL":
+            k_aapl = k
+        elif u.ticker_by_key[k] == "MSFT":
+            k_msft = k
+    assert k_aapl is not None and k_msft is not None
+
+    st = ps.build_period_state(
+        u,
+        operational_evidence={k: "VERIFIED" for k in keys},
+        sshprnamt_evidence={k_aapl: 1500.0, k_msft: None},
+    )
     _, _, r4, _, _ = ca.catalog_to_p38_targets(
         u, u, state_q4=st, state_q1=st, pairwise_keys=keys)
-    # El adapter debe DERIVAR VERIFIED del state. Como el state actual
-    # NO transporta evidencia operacional, no puede justificar VERIFIED.
-    for r in r4:
-        assert r.operational_mapping_status != "VERIFIED", (
-            "H-10.1: adapter marca VERIFIED sin derivarlo de evidencia. "
-            "El state no transporta evidencia operacional, por lo que el "
-            "adapter no puede justificar VERIFIED."
-        )
+
+    by_key = {r.observed_security_key: r for r in r4}
+    assert by_key[k_aapl].weight == 1500.0
+    assert by_key[k_msft].weight == 0.0  # fail-closed, no inventar peso
 

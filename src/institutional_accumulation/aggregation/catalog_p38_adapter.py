@@ -143,9 +143,12 @@ def _records(universe, state, *, period) -> List[PositionRecord]:
 
       La cadena §5.5 (§5.1 -> §5.3 -> §5.4 -> §5.5) garantiza por
       construccion que toda K que llega al adapter tiene
-      operational_mapping_status == VERIFIED (security_resolution_status
-      == CANONICAL AND operational_mapping_status == VERIFIED).
-      Por tanto se declara VERIFIED aqui.
+      A2 c3/5 (fix H-10.1, 2026-09-21): el estado operacional se
+      PROPAGA 1:1 desde period_state.operational_mapping_status.
+      El adapter NO fabrica VERIFIED. Si el state no lo justifica,
+      el record queda en UNRESOLVED (fail-closed). El consumidor
+      (coverage.py) filtra por == VERIFIED; un record UNRESOLVED
+      no contribuye al peso contractual.
     """
     out = []
     for k in sorted(universe.declared_keys):
@@ -161,7 +164,7 @@ def _records(universe, state, *, period) -> List[PositionRecord]:
             share_class_figi=s.figi,
             canonical_security=None,
             resolution_status="CANONICAL",
-            operational_mapping_status="VERIFIED",
-            weight=1.0,
+            operational_mapping_status=s.operational_mapping_status,
+            weight=(float(s.sshprnamt) if s.sshprnamt is not None else 0.0),
         ))
     return out
