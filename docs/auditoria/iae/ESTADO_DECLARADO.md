@@ -98,6 +98,11 @@ documentos describen su tema; NO declaran el estado del sistema.
   catalogo radar (sin share_class_figi). No resoluble via crosswalk
   (ambos ya estan en `cusip_ticker_exceptions.csv`). Requiere OpenFIGI.
 - Gate-NIPC.2 BLOQUEADO por THRESHOLD_1/2 UNDEFINED
+- Sub-deuda documental (2026-09-22): `NIPC_CONTRATOS_SEMANTICOS_v1.md`
+  L332 cita '18 FIGI -> 18 records VERIFIED' en la trazabilidad A.6.4,
+  pero tras la curacion ONB/PTGX el valor real es 20. NO se ha tocado
+  el contrato (prohibicion vigente: NO modificar contratos normativos
+  sin dictamen). Requiere dictamen para actualizar in-place.
 - A.6.6 NO-GO (#76). Saneamiento post-dictamen CERRADO.
 - Cobertura de tests: 9 funciones publicas IAE sin test directo
   cubiertas por `tests/test_iae_gap_coverage.py` (commit `12e1e3f`).
