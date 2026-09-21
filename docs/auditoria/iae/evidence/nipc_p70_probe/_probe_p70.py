@@ -35,7 +35,7 @@ PERIODS = [
     ("2026Q1", "2026-03-31"),
     ("2025Q4", "2025-12-31"),
 ]
-OUT_DIR = Path("docs/auditoria/evidence/nipc_p70_probe")
+OUT_DIR = Path("docs/auditoria/iae/evidence/nipc_p70_probe")
 OUT_DIR.mkdir(parents=True, exist_ok=True)
 def _norm_atype(v):
     if v is None or (isinstance(v, float) and pd.isna(v)):
