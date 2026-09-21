@@ -1,4 +1,4 @@
-# TRANSFER DE SESION - 2026-09-22 v9.3
+# TRANSFER DE SESION - 2026-09-22 v9.4
 
 Documento de onboarding. **NO es fuente de estado.**
 Estado vivo: `iae/ESTADO_SISTEMA.md` (hechos) + `iae/ESTADO_DECLARADO.md` (fases).
@@ -16,8 +16,8 @@ Reglas de personalidad y metodo: `PROMPT_MAESTRO.md` secciones 1 y 3.
 
 ## 2. Estado real al cierre de esta sesion
 
-    HEAD          ba59d39 (verificar con git al arrancar)
-    Ahead         295 commits locales
+    HEAD          6126c0d (verificar con git al arrancar)
+    Ahead         299 commits locales
     Working tree  LIMPIO (verificar)
     Tests         test_h731: 11 passed (incluye H-08);
                   suite global: 1312 passed + 2 skipped + 3 failed
@@ -67,6 +67,14 @@ completo), B-04 (pairwise real), push.
 
 Consulta A.6.7 ENVIADA al auditor (commit `ba59d39`,
 `A67_CONSULTA.md`). Pendiente respuesta para desbloquear B-02/B-03/B-04.
+
+Trabajo post-consulta (sin dictamen):
+- Curacion crosswalk ONB (680033107) + PTGX (74366E102) cerrada
+  (commit `7357e1d`). Sub-deuda nueva: BRK-B + MOG-A con status=MISS
+  (requiere OpenFIGI masivo).
+- Smoke NIPC contractual anadido al probe (commit `6126c0d`):
+  compute_nipc_contractual computa sin error con delta vacio.
+- Regresion cruzada P65 verificada tras A2: sin impacto.
 
 ## 4. TRABAJO PENDIENTE: fix A2 (H-05/H-06/H-07/H-10.1)
 
@@ -170,7 +178,7 @@ Esperado:
     "Confirmado, contexto asimilado."
 
     Estado que reconozco:
-      - HEAD ba59d39, ahead 295
+      - HEAD 6126c0d, ahead 299
       - Auditor #76: A2 = GO; A.6.6 = NO-GO
       - H-05/H-06/H-07/H-10.1/H-08/B-01/B-05/B-06/B-07 cerrados
       - Consulta A.6.7 enviada: B-02/B-03/B-04 pendientes de dictamen
@@ -181,4 +189,4 @@ Esperado:
 
 ---
 
-FIN DEL TRANSFER v9.3. Fecha: 2026-09-22. Consulta A.6.7 enviada.
+FIN DEL TRANSFER v9.4. Fecha: 2026-09-22. Consulta A.6.7 enviada + curacion ONB/PTGX + smoke NIPC.

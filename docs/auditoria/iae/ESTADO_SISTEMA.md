@@ -2,7 +2,7 @@
 
 Hechos verificables del sistema. Generado por script.
 
-**Generado en:** 2026-09-21 22:10:26 UTC
+**Generado en:** 2026-09-21 22:57:11 UTC
 **Snapshot tomado sobre:** commit HEAD de la fecha indicada, al momento de generar
 **NO editar a mano.** Regenerar con:
 
@@ -16,16 +16,16 @@ proyecto describen su tema; NO declaran el estado del sistema.
 
 ## 1. Git
 
-- **HEAD:** `ba59d39`
-- **HEAD completo:** `ba59d39e5ce8a0d58415ff394ee08afe5d9da4fb`
-- **Fecha commit HEAD:** 2026-09-22 00:09:55 +0200
-- **Ahead:** 295
+- **HEAD:** `6126c0d`
+- **HEAD completo:** `6126c0d453ec7c101f6f1400a2dc5fdb77911fff`
+- **Fecha commit HEAD:** 2026-09-22 00:44:18 +0200
+- **Ahead:** 299
 - **Behind:** 0
 - **origin/main:** `5f1d9ab`
 
 ## 2. Tests (pytest real)
 
-- **Resumen:** 3 failed, 1312 passed, 2 skipped in 27.48s
+- **Resumen:** 3 failed, 1312 passed, 2 skipped in 27.81s
 - **Exit code:** 1
 
 **Tests fallidos (nombre completo):**
@@ -86,9 +86,9 @@ proyecto describen su tema; NO declaran el estado del sistema.
   - bytes: 29849
   - lineas: 243
 - `data/mappings/cusip_ticker_exceptions.csv`
-  - sha256: `6f545880204c0a06f9d69f15b3d818d3fa7f189024c82cb266d533b0394e48b3`
-  - bytes: 2841
-  - lineas: 23
+  - sha256: `073c68e26774b1bfbc55429d5d31453b28e25be1c4346b84bee9b2ab0f196001`
+  - bytes: 3096
+  - lineas: 25
 - `data/mappings/cusip_equivalence.csv`
   - sha256: `21a88790aad50e8b44fbfdaa87c394ef3a782319adaf4208b9cb244dac39b322`
   - bytes: 103
