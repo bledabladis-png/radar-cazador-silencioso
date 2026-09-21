@@ -1,0 +1,39 @@
+{
+  "periods": {
+    "2025Q4": {
+      "folder": "2025Q4",
+      "period_iso": "2025-12-31",
+      "oper_rows": 0
+    },
+    "2026Q1": {
+      "folder": "2026Q1",
+      "period_iso": "2026-03-31",
+      "oper_rows": 28371
+    }
+  },
+  "universe_keys": 242,
+  "shared_q1": 20,
+  "shared_q4": 0,
+  "result_periods": {
+    "2026Q1": {
+      "keys": 20,
+      "target_figi": 18,
+      "records": 20,
+      "fail_closed": false
+    },
+    "2025Q4": {
+      "keys": 0,
+      "p38": null,
+      "fail_closed": true
+    }
+  },
+  "p38_q1": {
+    "coverage_previous": 1.0,
+    "coverage_current": 1.0,
+    "paired_security_coverage": 1.0,
+    "paired_weighted_share_coverage": 1.0,
+    "coverage_status": "VALID",
+    "unmapped_count_previous": 0,
+    "unmapped_count_current": 0
+  }
+}

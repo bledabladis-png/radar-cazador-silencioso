@@ -1,0 +1,37 @@
+=== A.6.4 - Integracion B1 + P61 + P38 (dictamen #73) ===
+
+=== 1. Operational universes por periodo (P61) ===
+  2025Q4: 0 filas oper, 0 tickers equity
+  2026Q1: 28371 filas oper, 22 tickers equity
+
+=== 2. TargetUniverse (B1) ===
+  declared_keys: 242
+
+=== 3. Cruce §5.5 <-> snapshot ===
+  tickers §5.5 Q1:     22
+  tickers §5.5 Q4:     0
+  tickers snapshot:    242
+  shared Q1:           20
+  shared Q4:           0
+
+=== 4. Ejecucion cadena B1 + P38 ===
+
+--- 2026Q1 ---
+  keys en subconjunto: 20
+  FIGIs unicos: 18
+
+--- 2025Q4 ---
+  keys en subconjunto: 0
+  sin subconjunto: fail-closed
+
+=== 5. compute_contractual_coverage (Q1 real) ===
+  coverage_previous                   1.0
+  coverage_current                    1.0
+  paired_security_coverage            1.0
+  paired_weighted_share_coverage      1.0
+  coverage_status                     VALID
+  unmapped_count_previous             0
+  unmapped_count_current              0
+
+=== 6. Q4 fail-closed ===
+  Q4 sin subconjunto -> fail-closed correcto
