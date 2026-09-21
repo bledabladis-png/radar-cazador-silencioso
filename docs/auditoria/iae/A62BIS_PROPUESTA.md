@@ -1,51 +1,53 @@
-# IAE - A.6.2-bis Propuesta de rediseno arquitectonico TARGET (v6)
+# IAE - A.6.2-bis Propuesta de rediseno arquitectonico TARGET (v7)
 
-**Version:** v6. Aplicados los 3 bloqueos materiales del dictamen #48:
-(1) separacion weight_value / weight_status; (2) adaptador explicito
-P38 sin cambio de interfaz contractual; (3) fail-closed PIT si
-catalog_key conserva pero share_class_figi cambia cross-snapshot.
-+ validator global de unicidad separado de build_target.
+**Version:** v7. Aplicados los 3 bloqueos materiales del dictamen #49:
+(1) NOT_PRESENT sin semantica autorizada -> fail-closed; (2)
+TARGET_PAIRWISE formal sobre catalog_key + estados por periodo; (3)
+colision multiples catalog_key -> mismo FIGI -> estado explicito.
++ precision editorial B2 (snapshots que cubren period_end).
 
 **Versiones previas:** v1 (f383932, NO-GO #44), v2 (9aa0727, GO COND
 #45), v3 (fa03a97, NO-GO #46), v4 (30ed3df, NO-GO #47), v5 (6c5e33c,
-NO-GO #48).
+NO-GO #48), v6 (641ef38, NO-GO #49).
 
 **Objeto:** propuesta de diseno para materializar los 3 bloqueantes
 estructurales F2.4 (B1 + B2 + B3).
 
 **Fecha:** 2026-09-21.
-**HEAD al redactar:** 6c5e33c.
+**HEAD al redactar:** 641ef38.
 **Naturaleza:** propuesta. NO normativa. Sometida a dictamen.
 
 ---
 
 ## 0. Resumen ejecutivo
 
-v6 aplica los 3 bloqueos materiales + correccion adicional del #48:
+v7 cierra los 3 bloqueos del #49 + precision editorial:
 
-**Bloqueo 1 (A2 - weight_status):** se separa `weight_value` /
-`weight_status`. Fail-closed sobre `status` (no sobre valor 0).
-Estados: `RESOLVED_OBSERVED` | `ZERO_REPORTED` | `NOT_PRESENT` |
-`UNRESOLVED` | `CONFLICT`. Solo `UNRESOLVED` y `CONFLICT` producen
-`UNAVAILABLE`.
+**Cierre 1 (NOT_PRESENT fail-closed):** `NOT_PRESENT` -> `UNAVAILABLE`.
+No se convierte a `0.0`. Solo `ZERO_REPORTED` (observacion documental
+de cero) y `RESOLVED_OBSERVED` (con value explicito) contribuyen
+numericamente. Alineado con P63 (ausencia != cero).
 
-**Bloqueo 2 (A2/P38 - adaptador):** capa adaptadora
-`catalog_to_p38_targets(...)` traduce `catalog_key -> share_class_figi
--> PositionRecord`. La API contractual `compute_contractual_coverage`
-mantiene su firma original (`share_class_figi`). NO se cambia
-silenciosamente el dominio.
+**Cierre 2 (TARGET_PAIRWISE formal):** definicion matematica explicita:
 
-**Bloqueo 3 (A1/PIT - cross-snapshot FIGI change):** si el mismo
-`catalog_key` conserva pero su `share_class_figi` cambia entre
-snapshots sin evidencia de continuidad -> `CONFLICT_FIGI_CHANGE` ->
-`UNAVAILABLE`.
+    TARGET_Q4       = {catalog_key vigente en snapshot Q4}
+    TARGET_Q1       = {catalog_key vigente en snapshot Q1}
+    TARGET_PAIRWISE = TARGET_Q4 INTERSECT TARGET_Q1
 
-**Correccion adicional:** validator global de unicidad de
-`catalog_key` (entre snapshots) separado de `build_target()`. La
-funcion pura solo valida unicidad dentro del snapshot.
+Estados por periodo (no un unico `weight_status` por entrada):
 
-**B3 - N/D explicito:** representacion explicita via
-`provenance["knowledge_date_status"] = "N/D"`.
+    state_q4[K] = (identity_status, weight_status, weight_value)
+    state_q1[K] = (identity_status, weight_status, weight_value)
+
+Feasibility = f(state_q4[K], state_q1[K]) para cada K.
+
+**Cierre 3 (colision catalog_key -> FIGI):** `catalog_validator.check_economic_collision(...)`
+detecta 2+ `catalog_key` -> mismo `share_class_figi`. Resultado:
+`CATALOG_ECONOMIC_COLLISION` -> `UNAVAILABLE`. Nunca `set()` decide.
+
+**Precision editorial B2:** "0 snapshots QUE CUBREN period_end ->
+UNAVAILABLE". Un snapshot existente que no cubre el period_end no
+convierte la consulta en valida.
 
 **Fuera de alcance:** OpenFIGI masivo, recalculo de evidencia final,
 modificacion de contratos, `DROP_DUP`, certificacion "acumulacion",
@@ -57,352 +59,372 @@ Policy v1.3, Gate-NIPC.2/3.
 
 | Bloqueante | Piezas existentes | Piezas ausentes |
 |---|---|---|
-| B1 | `coverage.py::compute_contractual_coverage`, `PositionRecord`, `aggregate_positions_by_shareclass_figi`, `target_universe.py::resolve_cusips` | `target_builder.py`, `catalog_key` estable, adaptador P38, validator global |
+| B1 | `coverage.py::compute_contractual_coverage`, `PositionRecord`, `aggregate_positions_by_shareclass_figi`, `target_universe.py::resolve_cusips` | `target_builder.py`, `catalog_key`, adaptador P38, validators |
 | B2 | `source_date` (no contractual) | versionado + `target_catalog_as_of` |
 | B3 | Doctrina P63/P64/P65 | `knowledge_date` por posicion, `absence.py` |
 
 **Gate 0 catalogo (2026-09-21):** 242 filas, `radar_ticker` unico,
-`share_class_figi` 240 unicos, 2 MISS.
+`share_class_figi` 240 unicos (0 colisiones), 2 MISS.
 
-**Migracion inicial v6:** las 242 filas reciben
-`catalog_key = "radar_20260919_<NNNN>"`. `radar_ticker` pasa a
-atributo versionado.
+**Migracion inicial:** las 242 filas reciben
+`catalog_key = "radar_20260919_<NNNN>"`. `radar_ticker` versionado.
 ---
 
-## 2. B1 - A1: catalog_key estable + unicidad
+## 2. B1 - TARGET_PAIRWISE formal (bloqueo B resuelto)
 
-### 2.1. Identidad
+### 2.1. Definiciones matematicas
 
-    catalog_key := "radar_<YYYYMMDD_alta>_<NNNN>"
+**Conjunto contractual declarado por periodo:**
 
-Inmutable. Asignado una sola vez en el alta. NO depende del ticker.
+    TARGET_Q4 := { catalog_key : activo en snapshot vigente para Q4 }
+    TARGET_Q1 := { catalog_key : activo en snapshot vigente para Q1 }
 
-**Nota de auditoria (#48 seccion 8):** el prefijo NO es garantia
-criptografica. La garantia de unicidad viene del registro
-administrativo global (impedir reutilizacion). Se documenta asi.
+**Conjunto pairwise contractual:**
 
-### 2.2. `radar_ticker` como atributo versionado
+    TARGET_PAIRWISE := TARGET_Q4 INTERSECT TARGET_Q1
 
-- Columna del catalogo. Puede cambiar entre snapshots.
-- El `catalog_key` no cambia por cambio de ticker.
-- Invariante `radar_ticker NOT NULL` + `UNICO` por snapshot.
+**Regla:** la interseccion se calcula sobre `catalog_key`. NO sobre
+`share_class_figi`. Se determina ANTES de cualquier conversion
+administrativa -> economica.
 
-Test A1: cambio FB -> META conserva `catalog_key`.
+**Reglas explicitas para casos borde:**
 
-### 2.3. Unicidad: separacion de responsabilidades
+    K en TARGET_Q4 y en TARGET_Q1      -> K in TARGET_PAIRWISE
+    K en TARGET_Q4, no en TARGET_Q1    -> K fuera de TARGET_PAIRWISE
+    K en TARGET_Q1, no en TARGET_Q4    -> K fuera de TARGET_PAIRWISE
+    K en ninguno                       -> K irrelevante
 
-**`build_target()` (funcion pura, recibe 1 snapshot):**
+**Multiples snapshots validos que cubren un period_end:**
 
-    valida unicidad DENTRO del snapshot:
-      - catalog_key NOT NULL
-      - catalog_key UNICO por snapshot
-      - radar_ticker NOT NULL por snapshot
-      - radar_ticker UNICO por snapshot
-    Violacion -> raise SnapshotInvariantViolated
+    Si >1 snapshots validos cubren el period_end -> CatalogAmbiguous
+    (no se elige). Bloquea la construccion de TARGET_Q*.
 
-**`catalog_validator.validate_global_uniqueness(catalog_root)`:**
-(fuera de build_target)
+**Sin snapshot valido que cubra el period_end:**
 
-    valida unicidad GLOBAL entre snapshots:
-      - Lee catalog_manifest.json
-      - Carga todos los snapshots
-      - Verifica que ningun catalog_key se reutiliza
-      - Verifica que ningun catalog_key cambia de "alta" (YYYYMMDD)
-    Violacion -> raise CatalogKeyReused
+    0 snapshots que cubren -> CatalogNotAvailable.
+    TARGET_Q* no construible. Metrica -> UNAVAILABLE.
 
-**Razon:** `build_target` no puede ver el universo historico completo
-(solo ve 1 snapshot). La unicidad global requiere acceso al manifest
-y a todos los snapshots.
+### 2.2. Estados por periodo (no un unico weight_status)
 
-### 2.4. Validacion de continuidad cross-snapshot
+**Correccion material:** el `weight_status` de una entrada pairwise NO
+es unico. Depende del periodo.
 
-`catalog_validator.check_continuity(catalog_root, period_q4, period_q1)`:
+**Estructura por entrada K en TARGET_PAIRWISE:**
 
-    Para cada catalog_key presente en ambos snapshots:
-      figi_q4 = figi_by_key_q4[K]
-      figi_q1 = figi_by_key_q1[K]
+    state_q4[K] = {
+        identity_status:  RESOLVED | UNRESOLVED | CONFLICT | CONFLICT_FIGI_CHANGE
+        weight_status:    RESOLVED_OBSERVED | ZERO_REPORTED | NOT_PRESENT
+        weight_value:     float | None
+    }
 
-      si figi_q4 is None y figi_q1 is None -> OK (unresolved en ambos)
-      si figi_q4 is None y figi_q1 is not None -> OK (mejora de mapping)
-      si figi_q4 is not None y figi_q1 is None -> OK (regresion de mapping, no continuidad)
-      si figi_q4 == figi_q1 -> OK (misma unidad economica)
-      si figi_q4 != figi_q1 -> CONFLICT_FIGI_CHANGE
-                              (sin evidencia de continuidad economica)
+    state_q1[K] = { idem }
 
-**Regla PIT (bloqueo 3 resuelto):** `CONFLICT_FIGI_CHANGE` -> la
-entrada afectada se marca `UNRESOLVED` -> metrica `UNAVAILABLE`.
+**Feasibility de la metrica pairwise:**
 
-NO se convierte automaticamente cambio de FIGI en continuidad
-economica. Se requiere evidencia adicional (fuera de A.6.2-bis:
-corporate actions, P64). Sin evidencia: fail-closed.
+    feasible(K) = feasible_state(state_q4[K]) AND feasible_state(state_q1[K])
 
-### 2.5. Tests A1
+    feasible_state(s) :=
+        s.identity_status == "RESOLVED"
+        AND s.weight_status in {"RESOLVED_OBSERVED", "ZERO_REPORTED"}
 
-- Cambio de ticker entre snapshots conserva `catalog_key`.
-- `build_target`: unicidad dentro del snapshot.
-- `build_target`: `radar_ticker` duplicado -> raise.
-- `validate_global_uniqueness`: `catalog_key` duplicado entre snapshots -> raise.
-- `check_continuity`: mismo FIGI -> OK.
-- `check_continuity`: FIGI distinto -> `CONFLICT_FIGI_CHANGE`.
-- `check_continuity`: uno None, otro no -> OK (mejora/regresion de mapping, no continuidad cambiada).
+    Si cualquier K tiene feasible(K) == False:
+        paired_weighted_share_coverage -> UNAVAILABLE
+    SINO:
+        calcular con w(K) = max(state_q4[K].weight_value,
+                                  state_q1[K].weight_value)
+        (una vez por security, segun P38 §3.3)
+
+**Caso Q4=RESOLVED + Q1=UNRESOLVED:** feasible(K) == False -> UNAVAILABLE.
+Reconstruible sin ambiguedad porque los estados viven por periodo.
+
+### 2.3. `TargetUniverse` v7
+
+    @dataclass(frozen=True)
+    class TargetUniverse:
+        period_end: str
+        catalog_version_id: str
+        catalog_sha256: str
+        declared_keys: frozenset[str]          # catalog_key del snapshot
+        ticker_by_key: dict[str, str]          # key -> radar_ticker actual
+        figi_by_key: dict[str, str | None]     # key -> share_class_figi o None
+        unresolved_keys: frozenset[str]        # sin FIGI
+
+### 2.4. `target_builder.build_target()` (sin cambios semanticos)
+
+    def build_target(snapshot_df, *, period_end,
+                     catalog_version_id, catalog_sha256) -> TargetUniverse:
+        """Valida invariantes DENTRO del snapshot.
+          - catalog_key NOT NULL
+          - catalog_key UNICO en el snapshot
+          - radar_ticker NOT NULL
+          - radar_ticker UNICO en el snapshot
+        NO valida unicidad global (eso es catalog_validator).
+        """
+
+Violacion -> `raise SnapshotInvariantViolated`.
+
+### 2.5. Tests B1 §2
+
+- `TARGET_PAIRWISE = TARGET_Q4 ∩ TARGET_Q1` sobre catalog_key.
+- K solo en Q4 -> fuera de pairwise.
+- K solo en Q1 -> fuera de pairwise.
+- 0 snapshots que cubren -> CatalogNotAvailable.
+- >1 snapshots que cubren -> CatalogAmbiguous.
+- `feasible(K)` con Q4=RESOLVED + Q1=UNRESOLVED -> False -> UNAVAILABLE.
+- `feasible(K)` con Q4=RESOLVED_OBSERVED + Q1=ZERO_REPORTED -> True.
 ---
 
-## 3. B1 - A2: weight_status + adaptador P38
+## 3. B1 - A2: weight_status + adaptador + colision
 
-### 3.1. Separacion weight_value / weight_status (bloqueo 1 resuelto)
+### 3.1. NOT_PRESENT -> fail-closed (bloqueo A resuelto)
 
-**Por entrada de `TARGET_PAIRWISE`, dos campos:**
+**Regla contractual:**
 
-    weight_value:  float | None
-    weight_status: enum
+    NOT_PRESENT -> UNAVAILABLE (no 0.0)
 
-**Enum `weight_status`:**
+**Justificacion:** P63 distingue hecho observado de causa de ausencia.
+`ZERO_REPORTED` es un cero documentado (SSHPRNAMT = 0 en el filing).
+`NOT_PRESENT` es ausencia de observacion: no existe cero contractual,
+existe ausencia. No se puede convertir ausencia en cero sin autorizacion
+P38 explicita, que no existe hoy.
 
-    RESOLVED_OBSERVED   identidad OK + SSHPRNAMT disponible (incl. 0)
-    ZERO_REPORTED       identidad OK + SSHPRNAMT = 0 explicito
-                        (en la practica es un subcaso de RESOLVED_OBSERVED)
-    NOT_PRESENT         identidad OK + sin observacion en el periodo
-    UNRESOLVED          identidad no resuelta (mapping fallido)
-    CONFLICT            contradiccion de identidad (candidate_A, etc.)
+**Consecuencia:** si `state_q4[K].weight_status == "NOT_PRESENT"` o
+`state_q1[K].weight_status == "NOT_PRESENT"` -> `feasible(K) == False`
+-> metrica `UNAVAILABLE`.
 
-**Nota de notacion:** `ZERO_REPORTED` y `RESOLVED_OBSERVED` con
-`value == 0.0` son equivalentes para el calculo. Se conservan como
-distintos por trazabilidad de provenance (contrato P63).
+**Nota de alcance:** si el auditor autoriza (via dictamen o via
+contrato P38) que `NOT_PRESENT -> 0.0` con una semantica concreta, se
+puede revisar. En esta version: fail-closed.
 
-**Regla fail-closed (resuelve bloqueo 1):**
+### 3.2. `weight_status` (por periodo)
 
-    paired_weighted_share_coverage:
-      Si ALGUNA entrada de TARGET_PAIRWISE tiene
-        weight_status in {UNRESOLVED, CONFLICT}
-          -> UNAVAILABLE
-      SINO:
-        calcular con w(s) segun:
-          RESOLVED_OBSERVED / ZERO_REPORTED -> value (incl. 0)
-          NOT_PRESENT                       -> 0.0
-            (max(Q4_value, 0.0) = Q4_value si Q4 presente;
-             si ambos NOT_PRESENT -> 0.0)
+    Enum:
+      RESOLVED_OBSERVED   identidad OK + value explicito (incl. 0.0)
+      ZERO_REPORTED       identidad OK + value == 0.0 documentado
+      NOT_PRESENT         identidad OK + sin observacion en el periodo
 
-**Diferencia con v5:** v5 usaba `w(s) == 0` como detector de fallo.
-v6 usa `weight_status` explicito. **`UNRESOLVED` NO se convierte en
-`ZERO_REPORTED`.**
+**Regla fail-closed:**
 
-### 3.2. Adaptador explicito P38 (bloqueo 2 resuelto)
+    UNRESOLVED / CONFLICT / CONFLICT_FIGI_CHANGE en identity_status
+      -> UNAVAILABLE
+    NOT_PRESENT en weight_status
+      -> UNAVAILABLE
+    RESOLVED_OBSERVED / ZERO_REPORTED
+      -> calculable (value contribuye, incl. 0.0)
 
-**Regla:** `compute_contractual_coverage` mantiene su firma original
-basada en `share_class_figi`. El TARGET administrativo (`catalog_key`)
-se traduce en una **capa adaptadora explicita**.
+**Diferencia con v6:** v6 trataba `NOT_PRESENT -> 0.0`. v7 no lo hace.
 
-    catalog_key -> share_class_figi -> PositionRecord -> coverage
+### 3.3. Adaptador P38
 
-**Modulo nuevo:** `aggregation/catalog_p38_adapter.py`.
+**Modulo:** `aggregation/catalog_p38_adapter.py`.
 
     def catalog_to_p38_targets(
         universe_q4: TargetUniverse,
         universe_q1: TargetUniverse,
         *,
-        periods=("Q4", "Q1"),
+        state_q4: dict[str, PeriodState],
+        state_q1: dict[str, PeriodState],
     ) -> tuple[
         set[str],                # target_q4_figi
         set[str],                # target_q1_figi
         list[PositionRecord],    # records_q4
         list[PositionRecord],    # records_q1
-        CoverageFeasibility,     # flag de viabilidad
+        CoverageFeasibility,
     ]:
         """Traduce TARGET administrativo a TARGET economico P38.
 
-        Salida:
-          target_q4_figi / target_q1_figi: sets de share_class_figi.
-          records_q4 / records_q1: PositionRecord por entrada resoluble.
-          CoverageFeasibility: enum
-            FEASIBLE     -> compute_contractual_coverage invocable
-            UNAVAILABLE  -> fallo de identidad (UNRESOLVED/CONFLICT)
-                            o CONFLICT_FIGI_CHANGE
+        Precondiciones (verificadas antes de invocar):
+          - check_economic_collision: no hay 2+ catalog_key -> mismo FIGI.
+          - check_continuity: no hay CONFLICT_FIGI_CHANGE cross-snapshot.
+          - Todos los K in TARGET_PAIRWISE tienen feasible(K) == True.
         """
 
-**Regla:**
+**Reglas:**
 
-- Si TODAS las entradas de `TARGET_PAIRWISE` tienen
-  `weight_status in {RESOLVED_OBSERVED, ZERO_REPORTED, NOT_PRESENT}`:
+- Si TODAS las entradas de `TARGET_PAIRWISE` tienen `feasible(K) == True`:
   -> `CoverageFeasibility.FEASIBLE`. Se invoca
-  `compute_contractual_coverage(target_q4_figi, target_q1_figi, records_q4, records_q1)`.
+  `compute_contractual_coverage(target_q4_figi, target_q1_figi, ...)`.
 
-- Si ALGUNA tiene `weight_status in {UNRESOLVED, CONFLICT}`:
+- Si ALGUNA tiene `feasible(K) == False`:
   -> `CoverageFeasibility.UNAVAILABLE`. **NO se invoca
-  `compute_contractual_coverage`.** El caller devuelve `UNAVAILABLE`.
+  `compute_contractual_coverage`.**
 
-**Semantica preservada:**
+**Firma P38 intacta.**
 
-- `compute_contractual_coverage` NO recibe `catalog_key`.
-- Su firma, su docstring, sus tests P38 quedan intactos.
-- La traduccion ocurre aguas arriba, en la capa adaptadora.
-- Los tests P38 existentes siguen pasando.
+### 3.4. Colision `catalog_key -> FIGI` (bloqueo C resuelto)
 
-### 3.3. Arquitectura final v6
+**Regla:** multiples `catalog_key` mapeando al mismo `share_class_figi`
+no pueden colapsar silenciosamente via `set()`.
+
+**Validator:** `catalog_validator.check_economic_collision(universe)`.
+
+    def check_economic_collision(universe: TargetUniverse) -> dict[str, list[str]]:
+        """Devuelve {share_class_figi: [catalog_key1, catalog_key2, ...]}
+        para cada FIGI con >1 catalog_key.
+        """
+
+**Si colisiones no vacias:**
+
+    CATALOG_ECONOMIC_COLLISION -> UNAVAILABLE
+
+**Razon:** el contrato P38 fija `share_class_figi` como unidad
+economica. Dos `catalog_key` con mismo FIGI implican o bien duplicidad
+administrativa, o bien agregacion economica que A.6.2-bis NO puede
+decidir sin modificacion contractual. Fail-closed.
+
+**Subordinacion a P38:** si el auditor decide en dictamen que la
+colision debe agregarse (ej. la unidad economica agrega ambas
+entradas), se modificara la politica. A.6.2-bis no la inventa.
+
+**Implementacion:** el adaptador comprueba colisiones ANTES de
+construir los sets.
+
+**Tests C:**
+
+- 2 catalog_key -> mismo FIGI -> `CATALOG_ECONOMIC_COLLISION` -> UNAVAILABLE.
+- 2 catalog_key -> FIGIs distintos -> OK.
+- 1 catalog_key -> FIGI None + 1 catalog_key -> FIGI X -> OK (no hay colision).
+- Colision + metrica -> UNAVAILABLE, no reduccion silenciosa.
+
+### 3.5. `coverage.py` (sin cambios)
+
+`compute_contractual_coverage` mantiene su firma original basada en
+`share_class_figi`. NO recibe `catalog_key`. La traduccion ocurre en
+el adaptador. Tests P38 existentes pasan sin cambios.
+
+### 3.6. Arquitectura final v7
 
     period_end
         v
-    target_catalog_as_of(period_end, catalog_root)   [B2]
+    target_catalog_as_of(period_end)           [B2]
         v
     snapshot + manifest
         v
-    target_builder.build_target(snapshot, ...)       [B1]
+    target_builder.build_target(snapshot)      [B1]
         v
-    TargetUniverse (administrativo: catalog_key)
+    TargetUniverse x 2 (Q4, Q1)
         v
-    catalog_p38_adapter.catalog_to_p38_targets(...)  [B1]
+    state_q4, state_q1 (por catalog_key)       [B1]
         v
-    (target_q4_figi, target_q1_figi, records_q4, records_q1, feasibility)
+    TARGET_PAIRWISE = Q4_keys INTERSECT Q1_keys
         v
-    SI feasibility == FEASIBLE:
-      coverage.compute_contractual_coverage(...)     [P38 intacto]
-    SINO:
-      return UNAVAILABLE
+    feasible(K) para cada K
+        v
+    si TODAS feasible:
+      check_economic_collision -> OK
+        v
+      catalog_to_p38_targets
+        v
+      compute_contractual_coverage(target_figi, records)  [P38 intacto]
+        v
+      VALID
+    si NO:
+      UNAVAILABLE (nunca se llama a compute_contractual_coverage)
 
-### 3.4. Tests A2 (6 casos del #48 seccion 9)
+### 3.7. Tests A2 (6 casos del #48 + #49)
 
 **1. Identidad OK + peso positivo:**
+Q4 RESOLVED_OBSERVED value=1000, Q1 idem -> feasible -> VALID.
 
-    Target: {A} con FIGI_A.
-    A: RESOLVED_OBSERVED, value=1000.
-    -> feasibility FEASIBLE, cobertura calculada.
+**2. Identidad OK + peso 0 explicito:**
+Q4 ZERO_REPORTED value=0, Q1 idem -> feasible -> contribuye 0.
 
-**2. Identidad OK + peso 0:**
-
-    A: RESOLVED_OBSERVED con value=0 (o ZERO_REPORTED).
-    -> feasibility FEASIBLE, contribuye con 0.
-
-**3. Identidad unresolved + peso no disponible:**
-
-    A: UNRESOLVED, value=None.
-    -> feasibility UNAVAILABLE, no se llama compute_contractual_coverage.
+**3. Identidad unresolved:**
+Q4 UNRESOLVED -> feasible(K)=False -> UNAVAILABLE.
 
 **4. Identity conflict:**
+Q4 CONFLICT -> UNAVAILABLE.
 
-    A: CONFLICT.
-    -> feasibility UNAVAILABLE.
+**5. Q4 OK + Q1 UNRESOLVED:**
+state_q1[K].identity_status=UNRESOLVED -> feasible(K)=False -> UNAVAILABLE.
 
-**5. Identity OK en Q4 + unresolved en Q1:**
+**6. Q4 RESOLVED + Q1 RESOLVED con FIGI distinto:**
+check_continuity detecta CONFLICT_FIGI_CHANGE -> UNAVAILABLE.
 
-    A(Q4): RESOLVED_OBSERVED.
-    A(Q1): UNRESOLVED.
-    -> feasibility UNAVAILABLE (fallo de identidad en algun periodo).
+**7. (nuevo #49) NOT_PRESENT:**
+Q4 NOT_PRESENT -> feasible(K)=False -> UNAVAILABLE.
 
-**6. Identity OK en ambos + distinta share_class_figi:**
-
-    A(Q4): RESOLVED_OBSERVED, FIGI_X.
-    A(Q1): RESOLVED_OBSERVED, FIGI_Y.
-    -> CONFLICT_FIGI_CHANGE en check_continuity.
-    -> feasibility UNAVAILABLE.
-
-**Precision sobre caso 6:** es el bloqueo 3 del #48. Sin evidencia
-adicional de continuidad economica (corporate actions, P64), el
-fail-closed es la respuesta correcta.
-
-### 3.5. Tests B1 adicionales
-
-- `compute_contractual_coverage` NO recibe `catalog_key` (verificado por firma).
-- Tests P38 existentes pasan sin cambios.
-- `catalog_to_p38_targets` con `FEASIBLE` produce sets de FIGI.
-- `catalog_to_p38_targets` con `UNAVAILABLE` NO invoca la funcion contractual.
+**8. (nuevo #49) Colision:**
+K1->FIGI_X y K2->FIGI_X -> CATALOG_ECONOMIC_COLLISION -> UNAVAILABLE.
 ---
 
-## 4. B2 - Point-in-time (aprobado #48, sin cambios)
+## 4. B2 - Point-in-time (con precision editorial #49)
 
-### 4.1. Estructura de disco
+### 4.1. Estructura de disco (sin cambios)
 
     data/mappings/catalog_snapshots/
         snapshot_<version_id>.csv
         snapshot_<version_id>.sha256
     data/mappings/catalog_manifest.json
 
-`version_id = <YYYYMMDD>_<NN>`. No autorreferencial.
-
 ### 4.2. Inmutabilidad
 
-- `.csv` y `.sha256`: inmutables in-place.
-- `catalog_manifest.json`: mutable (indice).
+`.csv` y `.sha256` inmutables in-place. `catalog_manifest.json` mutable.
 
 ### 4.3. Intervalos semiabiertos
 
 `[valid_from, valid_to)`. `null` = vigente.
 
-    0 snapshots -> CatalogNotAvailable
-    1 snapshot  -> OK
-    >1 solapan  -> CatalogAmbiguous
+### 4.4. `target_catalog_as_of` (correccion editorial #49)
 
-### 4.4. Backdating prohibido
+**Reformulacion obligatoria:**
+
+    0 snapshots QUE CUBREN period_end -> raise CatalogNotAvailable
+    1 snapshot valido QUE CUBRE        -> devuelve (df, vid, sha256)
+    >1 snapshots validos QUE CUBREN    -> raise CatalogAmbiguous
+
+**Precision:** un snapshot existente que NO cubre el `period_end`
+solicitado no convierte la consulta en valida. La consulta pregunta
+"que catalogo era valido para period_end"; la respuesta no puede ser
+"un catalogo cuyo rango no incluye period_end".
+
+### 4.5. Backdating prohibido
 
 `valid_from = 2026-09-19` para snapshot inicial. Q4 2025 / Q1 2026 ->
 `CatalogNotAvailable`.
 
-### 4.5. Test de integridad
+### 4.6. Test de integridad
 
 sha256 recalculado == publicado (.sha256) + coherencia manifest.
-Mismatch -> FAIL-CLOSED. Corrupcion simulada detectada.
 
-### 4.6. Tests B2
+### 4.7. Tests B2
 
-- 0/1/>1 snapshots -> fail-closed/OK/ambiguous.
-- `as_of("2025-12-31")` -> `CatalogNotAvailable`.
+- 0 snapshots que cubren -> CatalogNotAvailable.
+- 1 snapshot que cubre -> OK.
+- >1 snapshots que cubren -> CatalogAmbiguous.
+- Snapshot existente pero que NO cubre -> CatalogNotAvailable.
+- as_of("2025-12-31") sin snapshot -> CatalogNotAvailable.
 - Integridad: sha256.
-- Corrupcion: byte alterado -> detectada.
-- Intervalos sin solapamiento.
+- Corrupcion: byte alterado -> fail-closed.
 
 ---
 
-## 5. B3 - Semantica temporal + N/D explicito
+## 5. B3 - Semantica temporal (sin cambios respecto v6)
 
 ### 5.1. Tres timestamps
 
-    period_end       cierre del trimestre
-    filing_date      fecha del filing del filing_manager
-    knowledge_date   fecha de publicacion de la observacion efectiva
-
-Contrato: `knowledge_date == filing_date`.
+    period_end / filing_date / knowledge_date
+    Contrato: knowledge_date == filing_date para observaciones ASSIGNED.
 
 ### 5.2. RESTATEMENT
 
-Estado sustituido -> fecha del restatement. Coherente con P64.
+Estado sustituido -> fecha del restatement.
 
 ### 5.3. NEW HOLDINGS no ambiguo
 
-    original  X (2026-01-30)
-    amendment Y (2026-02-15)
-      X -> knowledge_date 2026-01-30
-      Y -> knowledge_date 2026-02-15
+Heredada -> fecha original. Nueva -> fecha amendment.
 
 ### 5.4. NEW HOLDINGS ambiguous
 
-    original  X (2026-01-30)
-    amendment X (2026-02-15) - sin evidencia adicional
+`knowledge_date = None` + `provenance.knowledge_date_status = "N/D"`.
 
-    knowledge_date = None + knowledge_date_status = "N/D" (ver 5.5)
+### 5.5. `knowledge_date_status`
 
-No heuristica.
+    ASSIGNED  fecha asignada (RESTATEMENT o NEW HOLDINGS inequivoca)
+    N/D       atribucion no determinable (fail-closed)
+    LEGACY    registro pre-B3 sin 3 timestamps
 
-### 5.5. N/D explicito (precision #48 seccion 7)
-
-**Representacion obligatoria:** `knowledge_date = None` +
-`provenance["knowledge_date_status"] = "N/D"`.
-
-**Regla:** `N/D` NO se representa con:
-- `0` numerico
-- cadena vacia
-- `NaT` sin provenance
-- fecha ausente por error tecnico
-
-Un registro con `knowledge_date_status = "N/D"` es contractual
-(se conoce la causa). Un registro sin `knowledge_date_status` es
-legacy o tecnico.
-
-Enum:
-
-    knowledge_date_status:
-      ASSIGNED  fecha asignada (RESTATEMENT o NEW HOLDINGS inequivoca)
-      N/D       atribucion no determinable (fail-closed)
-      LEGACY    registro pre-B3 sin 3 timestamps
-
-### 5.6. `PositionRecord` extendido
+### 5.6. `PositionRecord`
 
     @dataclass(frozen=True)
     class PositionRecord:
@@ -418,33 +440,11 @@ Enum:
         filing_date: Optional[str] = None
         knowledge_date: Optional[str] = None
 
-**Invariantes:**
-
-- `period` <-> `period_end` coherentes.
-- `knowledge_date == filing_date` si ambos presentes.
-- `provenance.effective_filing_accession` presente en contractual B3.
-- `provenance.knowledge_date_status` presente en contractual B3.
-
-    def is_contractual_b3(rec) -> bool:
-        return (
-            rec.period is not None
-            and rec.period_end is not None
-            and "knowledge_date_status" in rec.provenance
-            and rec.provenance["knowledge_date_status"] in ("ASSIGNED", "N/D")
-            and (
-                rec.provenance["knowledge_date_status"] == "N/D"
-                or (
-                    rec.filing_date is not None
-                    and rec.knowledge_date == rec.filing_date
-                    and "effective_filing_accession" in rec.provenance
-                    and not rec.provenance.get("ambiguity_flag", False)
-                )
-            )
-        )
+    def is_contractual_b3(rec) -> bool: ... (sin cambios v6)
 
 ### 5.7. `absence.py` stub
 
-Enums + `NotImplementedError`. `P63 absence classifier = DEFERRED`.
+Enums + NotImplementedError. `P63 absence classifier = DEFERRED`.
 
 ### 5.8. Regla dura preservada
 
@@ -452,23 +452,15 @@ Enums + `NotImplementedError`. `P63 absence classifier = DEFERRED`.
 
 ### 5.9. Tests B3
 
-- 3 timestamps -> OK.
-- Sin timestamps -> legacy.
-- `period <-> period_end`.
-- `knowledge_date == filing_date` cuando `ASSIGNED`.
-- RESTATEMENT -> ASSIGNED con fecha restatement.
-- NEW HOLDINGS no ambiguo -> ASSIGNED por posicion.
-- NEW HOLDINGS ambiguous -> N/D explicito.
-- `is_contractual_b3` acepta ASSIGNED y N/D, rechaza LEGACY o ausencia de status.
-- `absence.py::classify_absence` -> NotImplementedError.
-- `delta_shares` no produce SOLD (test P63).
+Sin cambios respecto a v6.
 ---
 
 ## 6. Orden de commits (sin cambios)
 
-    1. B2  Modelo de versionado + target_catalog_as_of + catalog_validator
+    1. B2  versionado + target_catalog_as_of + catalog_validator
     2. B1  target_builder + TargetUniverse + catalog_key
-    3. B1  catalog_p38_adapter + integracion coverage (gate 0 consumidores)
+    3. B1  TARGET_PAIRWISE + estados por periodo + adaptador P38
+           (gate 0 consumidores primero)
     4. B3  Timestamps + PositionRecord + provenance + absence.py
     5. Integracion end-to-end + verificacion global
 
@@ -480,15 +472,15 @@ Razon: B1 depende de B2. B3 depende de B1.
 
 | Bloque | Fichero | Cobertura |
 |---|---|---|
-| B1 | `tests/test_target_builder.py` (nuevo) | catalog_key estable, ticker versionado, declared_keys, unicidad snapshot |
-| B1 | `tests/test_catalog_validator.py` (nuevo) | unicidad global, continuidad cross-snapshot (FIGI change -> CONFLICT) |
-| B1 | `tests/test_catalog_p38_adapter.py` (nuevo) | weight_status, 6 casos A2, feasibility |
-| B1 | `tests/test_sec_13f_nipc.py` (extender) | wrapper con/sin TARGET |
-| B2 | `tests/test_target_catalog_as_of.py` (nuevo) | snapshots, fail-closed, integridad |
-| B3 | `tests/test_position_record.py` (nuevo) | RESTATEMENT, NEW HOLDINGS, ambiguous -> N/D explicito |
-| B3 | `tests/test_absence.py` (nuevo) | enums + NotImplementedError |
+| B1 | `tests/test_target_builder.py` | catalog_key estable, ticker versionado, unicidad snapshot |
+| B1 | `tests/test_catalog_validator.py` | unicidad global, continuidad cross-snapshot, colision economica |
+| B1 | `tests/test_target_pairwise.py` (nuevo) | TARGET_PAIRWISE formal, estados por periodo, feasible(K) |
+| B1 | `tests/test_catalog_p38_adapter.py` | 8 casos A2, feasibility, no invocacion si UNAVAILABLE |
+| B2 | `tests/test_target_catalog_as_of.py` | snapshots, "que cubren", fail-closed |
+| B3 | `tests/test_position_record.py` | RESTATEMENT, NEW HOLDINGS, ambiguous |
+| B3 | `tests/test_absence.py` | enums + NotImplementedError |
 
-**Cero regresion P38/P65/P66 esperada.** Tests P38 existentes intactos.
+**Cero regresion P38/P65/P66.**
 
 ---
 
@@ -496,85 +488,94 @@ Razon: B1 depende de B2. B3 depende de B1.
 
 ### B1
 
-**A1 - catalog_key + unicidad:**
-- Inmutable, no derivado del ticker (test FB -> META).
-- Unicidad dentro del snapshot (build_target).
-- Unicidad global entre snapshots (catalog_validator).
-- Continuidad cross-snapshot: FIGI cambiado -> `CONFLICT_FIGI_CHANGE` -> UNAVAILABLE.
+**A1 - catalog_key:**
+- Inmutable, no derivado del ticker.
+- Unicidad intra-snapshot (build_target).
+- Unicidad global (catalog_validator).
 
-**A2 - weight_status + adaptador:**
-- Separacion weight_value / weight_status.
-- UNRESOLVED y CONFLICT -> UNAVAILABLE.
-- RESOLVED_OBSERVED / ZERO_REPORTED / NOT_PRESENT -> calculables.
-- Adaptador P38 explicito: `catalog_key -> share_class_figi -> PositionRecord`.
-- `compute_contractual_coverage` firma intacta.
-- 6 casos A2 cubiertos.
+**TARGET_PAIRWISE formal:**
+- Definido sobre catalog_key.
+- Estados por periodo (`state_q4[K]`, `state_q1[K]`).
+- `feasible(K)` por periodo.
+- Determinado ANTES del mapping.
 
-**General:**
-- Unidad economica P38 (`share_class_figi`) intacta.
-- Tests P38 existentes sin cambios.
+**NOT_PRESENT:**
+- Fail-closed (no se convierte a 0.0).
+- Test explicito: NOT_PRESENT -> UNAVAILABLE.
+
+**Colision:**
+- `check_economic_collision` detecta 2+ catalog_key -> mismo FIGI.
+- `CATALOG_ECONOMIC_COLLISION` -> UNAVAILABLE.
+- Nunca colapso silencioso via set().
+
+**Adaptador P38:**
+- Firma P38 intacta (share_class_figi, PositionRecord).
+- `compute_contractual_coverage` no recibe catalog_key.
+- No se invoca si `feasible(K) == False` para algun K.
+
+**8 casos A2 cubiertos** (incluye NOT_PRESENT + colision).
 
 ### B2
 
-- 0/1/>1 snapshots -> fail-closed/OK/ambiguous.
-- Hash invalido -> fail-closed.
+- 0/1/>1 snapshots **que cubren** period_end -> UNAVAILABLE/OK/AMBIGUOUS.
+- Hash invalido -> FAIL-CLOSED.
 - No backdating.
 - Integridad verificable.
 - Corrupcion detectada.
 
 ### B3
 
-- `period_end != filing_date` cuando difieran.
 - `knowledge_date == filing_date` con status ASSIGNED.
-- RESTATEMENT -> fecha del restatement.
-- NEW HOLDINGS no ambiguo -> fechas por posicion.
-- NEW HOLDINGS ambiguo -> `knowledge_date = None` + `status = N/D`.
-- `N/D` no confundible con 0 / vacio / error tecnico.
-- `is_contractual_b3` acepta ASSIGNED y N/D, rechaza LEGACY sin status.
+- RESTATEMENT / NEW HOLDINGS / ambiguous -> N/D explicito.
+- `is_contractual_b3` acepta ASSIGNED y N/D.
 
 ### Global
 
-- P38 tests PASS (existentes).
+- P38 tests PASS (existentes intactos).
 - P65 tests PASS (31).
 - P66 tests PASS (31).
-- A.6.2-bis tests PASS (nuevos).
+- A.6.2-bis tests PASS.
 - `compileall` OK + `pyflakes` LIMPIO.
-- Sin regresion nueva.
 
 Solo entonces: **A.6.2-bis CLOSED -> A.6.3 AUTHORIZED.**
 ---
 
-## 9. Preguntas al auditor (v6)
+## 9. Preguntas al auditor (v7)
 
-1. **A1 - catalog_key.** `radar_<YYYYMMDD_alta>_<NNNN>` + registro
-   administrativo global. ¿Se aprueba?
+1. **NOT_PRESENT -> fail-closed.** Se ha elegido no convertir
+   NOT_PRESENT a 0.0. Toda entrada con NOT_PRESENT en algun periodo ->
+   UNAVAILABLE. ¿Se aprueba? ¿O el auditor prefiere autorizar via
+   contrato P38 una semantica explicita para NOT_PRESENT?
 
-2. **A1 - Separacion build_target / catalog_validator.**
-   `build_target`: unicidad por snapshot. `catalog_validator`:
-   unicidad global entre snapshots. ¿Se aprueba?
+2. **TARGET_PAIRWISE formal.** Definido sobre catalog_key
+   (`TARGET_Q4 ∩ TARGET_Q1`). Independiente del mapping. ¿Se aprueba?
 
-3. **A1 - Continuidad cross-snapshot.** Mismo catalog_key + distinto
-   FIGI -> `CONFLICT_FIGI_CHANGE` -> UNAVAILABLE. ¿Se aprueba?
+3. **Estados por periodo.** `state_q4[K]` + `state_q1[K]` con
+   `identity_status` + `weight_status` + `weight_value`. Feasibility =
+   f(ambos). ¿Se aprueba?
 
-4. **A2 - weight_status.** Enum RESOLVED_OBSERVED | ZERO_REPORTED |
-   NOT_PRESENT | UNRESOLVED | CONFLICT. Fail-closed sobre status.
-   ¿Se aprueba?
+4. **`feasible(K)`.** True solo si Q4 y Q1 tienen
+   `identity_status=RESOLVED` y `weight_status in {RESOLVED_OBSERVED,
+   ZERO_REPORTED}`. ¿Se aprueba?
 
-5. **A2 - Caso identity OK + weight 0.** Se trata como
-   RESOLVED_OBSERVED (contribuye con 0). ¿Se aprueba? ¿O se prefiere
-   ZERO_REPORTED como estado separado con tratamiento distinto?
+5. **Colision catalog_key -> FIGI.** `check_economic_collision`
+   detecta 2+ `catalog_key` -> mismo FIGI. Resultado:
+   `CATALOG_ECONOMIC_COLLISION` -> UNAVAILABLE. ¿Se aprueba?
 
-6. **A2 - Caso NOT_PRESENT.** Identidad OK + sin observacion en el
-   periodo. w(s) = 0.0 en el periodo sin observacion. ¿Se aprueba?
+6. **Subordinacion P38.** La politica de colision queda fail-closed.
+   Si el auditor prefiere agregacion economica (que la unidad P38 se
+   agregue sobre multiples catalog_key), se modificara en dictamen.
+   ¿Se aprueba fail-closed por defecto?
 
-7. **A2 - Adaptador.** Capa `catalog_p38_adapter.catalog_to_p38_targets`.
-   `compute_contractual_coverage` firma intacta. ¿Se aprueba?
+7. **Adaptador.** `catalog_to_p38_targets` no invoca
+   `compute_contractual_coverage` si `feasible(K) == False` o si hay
+   colision. Firma P38 intacta. ¿Se aprueba?
 
-8. **B3 - N/D explicito.** `knowledge_date = None` +
-   `provenance.knowledge_date_status = "N/D"`. ¿Se aprueba?
+8. **B2 precision.** "0 snapshots QUE CUBREN period_end -> UNAVAILABLE".
+   Snapshot existente que no cubre no es valido. ¿Se aprueba?
 
-9. **B3 - `is_contractual_b3`.** Acepta ASSIGNED y N/D; rechaza
-   LEGACY sin status. ¿Se aprueba?
+9. **8 casos A2.** Los 6 casos de #48 + NOT_PRESENT + colision.
+   ¿Se aprueba el conjunto?
 
 10. **Cierre.** Los 3 bloques de la seccion 8 + global.
 
@@ -586,10 +587,8 @@ Solo entonces: **A.6.2-bis CLOSED -> A.6.3 AUTHORIZED.**
 - Modelo economico P38 (`share_class_figi` como unidad, Q12 Modelo A).
 - Modulos: `delta_shares.py`, `security_identity.py`, `relationships.py`,
   `amendments.py`, `temporal_validity.py`.
-- `coverage.py`: firma y semantica INTACTAS. Se invoca desde el
-  adaptador.
-- `radar_target_catalog.csv` actual: snapshot inicial + migracion
-  administrativa.
+- `coverage.py`: firma y semantica INTACTAS.
+- `radar_target_catalog.csv` actual: snapshot inicial + migracion.
 - OpenFIGI masivo: NO.
 - `DROP_DUP`: NO.
 - Push a `origin/main`: NO.
@@ -599,23 +598,23 @@ Solo entonces: **A.6.2-bis CLOSED -> A.6.3 AUTHORIZED.**
 
 ## 11. Trazabilidad
 
-    Dictamen #43                 A.6.0 CERRADO + A.6.2-bis AUTORIZADO
-    Dictamen #44                 v1 NO-GO; 4 correcciones
-    Dictamen #45                 v2 GO COND; F1/F2/F3 + amendments
-    Dictamen #46                 v3 NO-GO; A (B1) + B (B3)
-    Dictamen #47                 v4 NO-GO; A1 catalog_key + A2 denominador
-                                 + NEW HOLDINGS ambiguous
-    Dictamen #48                 v5 NO-GO; weight_status + adaptador P38
-                                 + PIT cross-snapshot + validator global
-    Gate 0 catalogo              v6 seccion 1 (242 filas, unicidad)
-    F2.4 (dictamen #24)          3 bloqueantes estructurales
-    P38 (contrato seccion 3)     unidad = share_class_figi
-    P60 (contrato seccion 1)     identity_type obligatorio
-    P63 (contrato seccion 12)    absence semantics
-    P64 (contrato seccion 13)    RESTATEMENT / NEW HOLDINGS
-    P65 (contrato seccion 14)    L3 booleano
+    Dictamen #43      A.6.0 CERRADO + A.6.2-bis AUTORIZADO
+    Dictamen #44      v1 NO-GO; 4 correcciones
+    Dictamen #45      v2 GO COND; F1/F2/F3 + amendments
+    Dictamen #46      v3 NO-GO; A (B1) + B (B3)
+    Dictamen #47      v4 NO-GO; A1 catalog_key + A2 denominador
+                      + NEW HOLDINGS ambiguous
+    Dictamen #48      v5 NO-GO; weight_status + adaptador + PIT + validator
+    Dictamen #49      v6 NO-GO; NOT_PRESENT + TARGET_PAIRWISE + colision
+    Gate 0 catalogo   v7 seccion 1 (242 filas, unicidad)
+    F2.4 #24          3 bloqueantes estructurales
+    P38 seccion 3     unidad = share_class_figi
+    P60 seccion 1     identity_type obligatorio
+    P63 seccion 12    absence semantics (ausencia != cero)
+    P64 seccion 13    RESTATEMENT / NEW HOLDINGS
+    P65 seccion 14    L3 booleano
 
 ---
 
-Fin de la propuesta v6. Sometida a verificacion documental.
-HEAD 6c5e33c.
+Fin de la propuesta v7. Sometida a verificacion documental.
+HEAD 641ef38.

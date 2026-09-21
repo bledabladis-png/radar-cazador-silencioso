@@ -60,6 +60,7 @@
 | 46 | Ver entrada §46 de este fichero | A.6.2-bis v3 NO-GO. Bloqueos A (B1) + B (B3). |
 | 47 | Ver entrada §47 de este fichero | A.6.2-bis v4 NO-GO. A1 catalog_key + A2 denominador. |
 | 48 | Ver entrada §48 de este fichero | A.6.2-bis v5 NO-GO. weight_status + adaptador P38 + PIT cross-snapshot. |
+| 49 | Ver entrada §49 de este fichero | A.6.2-bis v6 NO-GO. NOT_PRESENT + TARGET_PAIRWISE formal + colision catalog_key -> FIGI. |
 
 ---
 
@@ -1125,6 +1126,138 @@ Tests:
 **Conclusion: v6 que cierre weight_status + adaptador P38 + PIT
 cross-snapshot + validator global de unicidad -> apta para GO DE
 IMPLEMENTACION.**
+
+---
+
+## 49. A.6.2-bis - Dictamen de verificacion documental v6 (2026-09-21)
+
+**Tipo:** dictamen del auditor externo sobre A62BIS_PROPUESTA.md v6.
+**Dictamen anterior:** #48 (v5 NO-GO).
+
+**Resultado:** NO-GO DE IMPLEMENTACION. ARQUITECTURA APROBADA
+CONDICIONALMENTE.
+
+### Lo que la v6 cierra correctamente
+
+- weight_value / weight_status separados.
+- Adaptador explicito hacia P38 sin cambiar firma.
+- PIT cross-snapshot FIGI change -> CONFLICT_FIGI_CHANGE -> UNAVAILABLE.
+- Validator global separado de build_target.
+- A1 catalog_key aprobado.
+- B2 aprobado.
+- B3 aprobado condicionalmente.
+
+### Bloqueo material A - NOT_PRESENT -> 0.0 no autorizado
+
+v6 establece `NOT_PRESENT -> 0.0` y lo introduce en el calculo.
+
+Problema:
+  NO existe observacion != SSHPRNAMT observado explicitamente 0
+
+P63 exige conservar la diferencia hecho observado / causa de ausencia.
+`ZERO_REPORTED` representa un cero explicito documentado.
+`NOT_PRESENT` significa ausencia de observacion, no cero economico.
+
+Regla exigida (v7): escoger uno de estos dos extremos, compatible
+con P38/P63:
+  NOT_PRESENT -> 0.0  solo si el contrato P38 ya lo autoriza.
+  NOT_PRESENT -> no valor contractual (fail-closed).
+
+No introducir la conversion como decision nueva de implementacion.
+
+### Bloqueo material B - TARGET_PAIRWISE sin definicion formal
+
+La v6 usa universe_q4/universe_q1 y habla de TARGET_PAIRWISE pero no
+fija una definicion matematica completa.
+
+La independencia del mapping exige que TARGET_PAIRWISE se determine
+ANTES de convertir catalog_key -> share_class_figi.
+
+Definiciones exigidas (v7):
+  TARGET_Q4        = conjunto contractual declarado vigente Q4
+  TARGET_Q1        = conjunto contractual declarado vigente Q1
+  TARGET_PAIRWISE  = funcion contractual de ambos
+  Reglas para altas/bajas/claves presentes en ambos/ausentes/intervalos
+    de validez/sin snapshot/multiples snapshots.
+
+Estados de identidad/peso POR PERIODO:
+  state_q4[K] = (identity_status, weight_status, weight_value)
+  state_q1[K] = (identity_status, weight_status, weight_value)
+  feasibility = f(state_q4[K], state_q1[K])
+
+El caso Q4=RESOLVED + Q1=UNRESOLVED no puede expresarse con un unico
+weight_status para la entrada pairwise.
+
+Prohibido: set(figi_q4) & set(figi_q1). Reproduce el sesgo F2.4.
+
+### Bloqueo material C - colision multiples catalog_key -> mismo FIGI
+
+El adaptador devuelve set[str] de FIGIs. Si K1->FIGI_X y K2->FIGI_X,
+el set colapsa silenciosamente. Cardinalidad administrativa = 2,
+representacion economica = 1.
+
+Regla exigida (v7): el catalogo/adaptador debe comprobar
+explicitamente multiples catalog_key -> misma share_class_figi.
+
+  colision catalog_key -> mismo FIGI
+    -> estado explicito
+    -> nunca reduccion silenciosa del TARGET
+
+La regla concreta debe subordinarse al contrato P38 existente. No
+inventar agregacion economica nueva en A.6.2-bis.
+
+### Precision editorial B2
+
+Reformular: "0 snapshots QUE CUBREN period_end -> UNAVAILABLE".
+Un snapshot existente que no cubre el period_end no convierte la
+consulta en valida.
+
+### Puntos cerrados del #48
+
+  A1 catalog_key                   APROBADO
+  Unicidad intra-snapshot          APROBADO
+  Unicidad global                  APROBADO
+  PIT cross-snapshot FIGI          APROBADO COND. implementacion
+  A2 weight_status                 APROBADO COND. (sujeto a bloqueo A)
+  Adaptador P38                    APROBADO COND. (sujeto a B y C)
+  B2 point-in-time                 APROBADO
+  B3 knowledge_date                APROBADO COND.
+  absence.py                       APROBADO / DEFERRED
+
+### Criterio de la v7 (#49 seccion 12)
+
+B1:
+  TARGET_PAIRWISE definido sobre catalog_key, independiente del mapping.
+  Estado Q4 y estado Q1 representados por separado.
+  mapping failure NO modifica TARGET.
+  NOT_PRESENT -> semantica contractual demostrada.
+  catalog_key multiples -> mismo FIGI -> nunca colapso silencioso.
+
+P38:
+  catalog_key -> share_class_figi -> adapter -> compute_contractual_coverage()
+  manteniendo interfaz contractual intacta.
+
+B2:
+  period_end -> exactamente 1 snapshot valido que lo cubra.
+  0 -> UNAVAILABLE. >1 -> AMBIGUOUS. hash invalido -> FAIL-CLOSED.
+
+B3: RESTATEMENT + NEW HOLDINGS + ambiguous con provenance.
+
+### Estado operativo
+
+    A.6.0                  CLOSED
+    A.6.2-bis v6           NO-GO IMPLEMENTATION
+    ARQUITECTURA           APPROVED CONDITIONAL
+    B1                     BLOCKED - 3 cierres (NOT_PRESENT, PAIRWISE, colision)
+    B2                     APPROVED
+    B3                     APPROVED CONDITIONAL
+    A.6.3                  BLOCKED
+    A.6.4                  BLOCKED
+    F2.4-CLOSE             BLOCKED
+    DROP_DUP               NOT AUTHORIZED
+
+**Conclusion: v7 que cierre NOT_PRESENT + TARGET_PAIRWISE formal +
+colision catalog_key -> FIGI -> apta para GO DE IMPLEMENTACION.**
 
 ---
 
