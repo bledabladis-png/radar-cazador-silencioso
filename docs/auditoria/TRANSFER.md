@@ -1,4 +1,4 @@
-# TRANSFER DE SESION - 2026-09-21 v9.1
+# TRANSFER DE SESION - 2026-09-21 v9.2
 
 Documento de onboarding. **NO es fuente de estado.**
 Estado vivo: `iae/ESTADO_SISTEMA.md` (hechos) + `iae/ESTADO_DECLARADO.md` (fases).
@@ -16,13 +16,13 @@ Reglas de personalidad y metodo: `PROMPT_MAESTRO.md` secciones 1 y 3.
 
 ## 2. Estado real al cierre de esta sesion
 
-    HEAD          473ce06 (verificar con git al arrancar)
-    Ahead         290 commits locales
+    HEAD          (verificar con git al arrancar tras este commit)
+    Ahead         ~293 commits locales
     Working tree  LIMPIO (verificar)
-    Tests         test_h731: 10 passed, 0 xfailed (xfail A-12 resuelto);
-                  suite global: 1309 passed + 2 skipped + 3 failed
+    Tests         test_h731: 11 passed (incluye H-08);
+                  suite global: ~1311 passed + 2 skipped + 3 failed
                   (los 3 failed son test_freshness.py, preexistentes, no-regresion)
-    Push          NO (local-first IAE)
+    Push          NO (local-first IAE, dictamen #76)
 
 ## 3. Contexto: auditoria externa reciente
 
@@ -60,8 +60,10 @@ Evidencia empirica sobre 13F Q4 2025 / Q1 2026 reales
     paired_weighted_share_coverage = None
     coverage_status                = UNAVAILABLE
 
-Hallazgos cerrados: H-05, H-06, H-07, H-10.1.
-Hallazgos pendientes: H-08 (MEDIA, requiere autorizacion del auditor).
+Dictamen #76 (2026-09-21): A2 = GO; A.6.6 = NO-GO.
+Hallazgos cerrados: H-05, H-06, H-07, H-10.1, H-08, B-01, B-05, B-06, B-07.
+Bloqueos residuales (NO AUTORIZADOS): B-02 (P62/PIT), B-03 (TARGET
+completo), B-04 (pairwise real), push.
 
 ## 4. TRABAJO PENDIENTE: fix A2 (H-05/H-06/H-07/H-10.1)
 
@@ -153,11 +155,11 @@ siguiente. Si algo falla, parar y avisar.
     py -m pyflakes . ; py -m compileall . -q
 
 Esperado:
-  - HEAD 473ce06 o posterior
-  - ahead 290 o mas
+  - HEAD post-saneamiento (ver commit actual)
+  - ahead 293 o mas
   - working tree limpio
-  - 1309 passed + 2 skipped + 3 failed (test_freshness, preexistentes)
-  - test_h731: 10 passed, 0 xfailed
+  - 1311 passed + 2 skipped + 3 failed (test_freshness, preexistentes)
+  - test_h731: 11 passed, 0 xfailed
   - pyflakes silencio, compileall OK
 
 ## 10. Confirmacion esperada
@@ -165,15 +167,15 @@ Esperado:
     "Confirmado, contexto asimilado."
 
     Estado que reconozco:
-      - HEAD 473ce06, ahead 290
-      - Auditor: NO-GO A.6.6 + GO fix A2 (fix EJECUTADO 5/5)
-      - H-05/H-06/H-07/H-10.1 cerrados; H-08 pendiente de dictamen
-      - P38 GO CONDICIONADO; A.6.6 pendiente (esperando auditoria externa)
+      - HEAD post-saneamiento, ahead ~293
+      - Auditor #76: A2 = GO; A.6.6 = NO-GO
+      - H-05/H-06/H-07/H-10.1/H-08/B-01/B-05/B-06/B-07 cerrados
+      - Bloqueos residuales: B-02 (P62/PIT), B-03 (TARGET), B-04 (pairwise)
       - Prohibido tocar nipc/delta_shares/security_identity/temporal_validity
-      - Push: NO
+      - Prohibido push; prohibido B-02/B-03/B-04 sin nuevo dictamen
 
     Pregunta: "Que hacemos?"
 
 ---
 
-FIN DEL TRANSFER v9.1. HEAD 473ce06. Fecha: 2026-09-21.
+FIN DEL TRANSFER v9.2. Fecha: 2026-09-21. Dictamen #76 aplicado.

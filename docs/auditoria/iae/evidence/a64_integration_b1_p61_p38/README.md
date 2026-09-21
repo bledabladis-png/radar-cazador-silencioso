@@ -22,7 +22,11 @@ el state; coverage.py aplica Q5 literal (Q4 vacio -> UNAVAILABLE).
 4. `coverage.py` usa denominador TARGET (no observed) y aplica Q5
    literal (fix A2 c4).
 5. Q4 vacio produce `coverage_previous=None` (no 1.0). Q1 produce
-   `coverage_current=1.0` calculado sobre TARGET_Q1 real.
+   `coverage_current=1.0` calculado sobre el TARGET_Q1 MATERIALIZADO en
+   esta ejecucion (18 FIGIs). **NO es certificacion historica plena de
+   cobertura contractual Q1**: P62/PIT sigue pendiente (el snapshot
+   tiene valid_from=2026-09-21, posterior al period_end Q1=2026-03-31)
+   y el universo B2-PIT completo (242 keys) no esta materializado.
 
 **Este probe NO demuestra (limitaciones vigentes):**
 

@@ -2,7 +2,7 @@
 
 **Objeto:** contrato habilitante de identidad, validez temporal y cobertura pairwise para el modulo NIPC.
 **Estado del sistema:** ver `ESTADO_SISTEMA.md` (hechos) + `ESTADO_DECLARADO.md` (declaraciones).
-**Estado:** VIGENTE (2026-09-21). F2.4 EMITIDO (GO CONDICIONADO). A.6.0-A.6.4 cerrados (dictamenes #43-#75). H-73.1 corregido. Q12 Modelo A confirmado por test. Ver DICTAMENES.md #24, #72, #75.
+**Estado:** VIGENTE (2026-09-21). F2.4 EMITIDO (GO CONDICIONADO). A.6.0-A.6.4 cerrados. Fix A2 EJECUTADO + NO-GO A.6.6 (#76). H-73.1 corregido. Q12 Modelo A confirmado. Ver DICTAMENES.md #24, #72, #75, #76.
 
 **Precedencia:** la policy vigente es `NIPC_COVERAGE_POLICY.md` v1.0. Este contrato es VIGENTE (F2.4 emitido 2026-09-20). Las propuestas V11/V12/V13 fueron descartadas (ver `HISTORICO_IAE.md`).
 **Origen:** dictamen formal del auditor (2026-09-20), que clasifico P38/P60/P61 como NO GO con contrato requerido.
@@ -340,12 +340,11 @@ confirmado. Implementacion con evidencia contractual en A.6.2 + A.6.2-bis.
 - H-73.1 corregido: adapter mapea `weight_status` a
   `operational_mapping_status`. Regresion en
   `tests/test_h731_adapter_p38_compat.py` (5 tests).
-- H-10.1 ABIERTO (auditoria 2026-09-21): adapter marca
-  `operational_mapping_status="VERIFIED"` incondicionalmente; `coverage.py`
-  divide por observed (no TARGET); `PositionRecord.weight=1.0` hardcoded.
-  Resultado **estructuralmente 1.0** con datos reales. Fix requiere
-  dictamen externo (toca `coverage.py`, `catalog_p38_adapter.py`,
-  `period_state.py`). Expediente: `iae/EXPEDIENTE_A64_FIX.md`.
+- H-10.1 CERRADO (A2 c3, #76): adapter PROPAGA `operational_mapping_status`
+  desde `period_state`; sin evidencia -> UNRESOLVED (fail-closed).
+  `coverage.py` usa denominador TARGET (A2 c4). `PositionRecord.weight`
+  propagado desde `state.sshprnamt` (H-07 cerrado, A2 c3).
+  Evidencia: `iae/A66_BUNDLE.md` + `EXPEDIENTE_A64_FIX.md`.
 ---
 
 ## 4. TARGET / RESOLVED / PAIRED

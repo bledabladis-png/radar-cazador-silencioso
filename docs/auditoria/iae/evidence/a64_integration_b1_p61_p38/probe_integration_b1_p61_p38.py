@@ -219,15 +219,21 @@ def main():
         sh_by_figi = tb.extract_sshprnamt_by_figi(
             d["snap"]["INFOTABLE"], figi_by_cusip,
         )
+        # B-06 fix (auditor #76): SSHPRNAMT total del FIGI se asigna a UNA
+        # key representativa (la primera en orden lexicografico). Las
+        # demas keys del mismo FIGI quedan en None (weight=0.0 en record).
+        # Asi aggregate_positions_by_shareclass_figi suma el total del
+        # FIGI exactamente UNA vez, no N veces (donde N = keys por FIGI).
         sh_by_key = {}
         for f, v in sh_by_figi.items():
-            for k in figi_to_keys.get(f, []):
-                sh_by_key[k] = v
+            ks = sorted(figi_to_keys.get(f, []))
+            if ks:
+                sh_by_key[ks[0]] = v
         d["sshprnamt_by_figi"] = sh_by_figi
         d["sshprnamt_by_key"] = sh_by_key
         print("  SSHPRNAMT " + label + ": "
               + str(len(sh_by_figi)) + " FIGIs, "
-              + str(len(sh_by_key)) + " keys")
+              + str(len(sh_by_key)) + " keys representativas")
 
     # --- 3. Cruce ---
     print()

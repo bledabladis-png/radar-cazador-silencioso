@@ -3935,3 +3935,22 @@ GO. Los siguientes requieren su propio ciclo.
 **Resultado:** A.6.4 CERRADA DEFINITIVAMENTE (post-H-73.1). A.6.5 AUTORIZADA. A.6.6 pendiente.
 **Nota posterior:** A.6.4 reclasificada como SMOKE TEST (ver EXPEDIENTE_A64_FIX.md).
 
+
+## 76. A.6.6 - NO-GO + A2 aceptado (2026-09-21)
+
+**Tipo:** dictamen del auditor externo.
+**HEAD declarado al solicitar:** `deb9782`.
+**Resultado:**
+
+- A2 = **GO** como correccion. H-05/H-06/H-07/H-10.1 aceptados como
+  cerrados tecnicamente.
+- A.6.6 / F2.4-CLOSE = **NO-GO**. Motivos residuales: B-01 (saneamiento
+  documental), B-02 (P62/PIT), B-03 (TARGET completo), B-04 (pairwise
+  real), B-06 (doble conteo SSHPRNAMT), B-07 (freshness).
+- H-08: **GO** a cierre como test (caso ortogonal).
+- Push: **NO AUTORIZADO**.
+- A.6.4: reclasificacion parcial aceptada (evidencia contractual parcial,
+  no smoke test puro, no cobertura pairwise completa).
+
+**Siguiente ciclo autorizado:** saneamiento B-01/B-05/B-06/B-07 + H-08.
+**Bloqueos que requieren nuevo dictamen:** B-02, B-03, B-04, push.

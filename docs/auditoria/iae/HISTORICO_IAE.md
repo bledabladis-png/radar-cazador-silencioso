@@ -1481,3 +1481,30 @@ en la tabla `OTHERMANAGER`.
 `DROP_DUP`.
 
 ---
+
+## Ciclo A2 - Fix H-05/H-06/H-07/H-10.1 (2026-09-21)
+
+**Dictamenes:** #76 (A.6.6 = NO-GO, A2 = GO).
+
+**Commits:**
+
+    2f98926  period_state.py: sshprnamt + operational_mapping_status
+    8f8ef87  target_builder.py + probe: SSHPRNAMT del canonical_snapshot
+    da5fbcb  catalog_p38_adapter.py: propaga operational + weight (H-10.1+H-07)
+    f7f7b20  coverage.py: denominador TARGET + Q5 fail-closed
+    157211e  probe sin mock Q4=Q1 + Q5 literal + cardinalidades
+    473ce06  chore: regenerar ESTADO_SISTEMA.md
+    deb9782  docs: TRANSFER v9.1
+    957053f  docs: A66_BUNDLE para dictamen #76
+    (actual)  saneamiento B-01/B-05/B-06/B-07 + H-08
+
+**Evidencia empirica** (13F Q4 2025 / Q1 2026 reales):
+
+    coverage_previous              = None    (Q4 vacio)
+    coverage_current               = 1.0     (18/18 sobre TARGET_Q1 materializado)
+    paired_security_coverage       = None    (TARGET_PAIRWISE=0)
+    paired_weighted_share_coverage = None
+
+**Hallazgos cerrados:** H-05, H-06, H-07, H-10.1, H-08, B-01, B-05, B-06, B-07.
+**Bloqueos residuales (NO-GO A.6.6):** B-02 (P62/PIT), B-03 (TARGET completo),
+B-04 (pairwise real).

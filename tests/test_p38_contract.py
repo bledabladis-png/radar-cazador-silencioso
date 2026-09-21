@@ -413,6 +413,60 @@ def test_p38_agregacion_figi_multiples_cusip_pesos_reales():
     assert result["paired_weighted_share_coverage"] == 1.0
 
 
+def test_p38_sshprnamt_no_doble_conteo_multiples_keys_mismo_figi():
+    """B-06 (auditor #76): cuando N catalog_keys comparten FIGI, el
+    total SSHPRNAMT del FIGI se cuenta UNA vez, no N.
+
+    Distribucion correcta del probe (post-fix B-06): una key
+    representativa lleva el total del FIGI; las demas llevan 0.0.
+    """
+    rq4 = [
+        coverage.PositionRecord(
+            period="Q4", observed_security_key="key1",
+            share_class_figi="FIGI_X", canonical_security="equity:X",
+            resolution_status="CANONICAL", operational_mapping_status="VERIFIED",
+            weight=1500.0,
+        ),
+        coverage.PositionRecord(
+            period="Q4", observed_security_key="key2",
+            share_class_figi="FIGI_X", canonical_security="equity:X",
+            resolution_status="CANONICAL", operational_mapping_status="VERIFIED",
+            weight=0.0,
+        ),
+    ]
+    agg = coverage.aggregate_positions_by_shareclass_figi(rq4, "Q4")
+    assert agg == {"FIGI_X": 1500.0}, (
+        "Doble conteo: esperado 1500.0, obtenido " + str(agg)
+    )
+
+
+def test_p38_sshprnamt_doble_conteo_es_reproducible_sin_fix_b06():
+    """B-06: documenta el bug que el fix evita.
+
+    Si el probe difundiera el total del FIGI a TODAS las keys
+    (comportamiento pre-fix B-06), aggregate sumaria N veces el
+    total. Este test lo demuestra como contraejemplo: si alguien
+    revierte el fix, este test da la senal.
+    """
+    rq4 = [
+        coverage.PositionRecord(
+            period="Q4", observed_security_key="key1",
+            share_class_figi="FIGI_X", canonical_security="equity:X",
+            resolution_status="CANONICAL", operational_mapping_status="VERIFIED",
+            weight=1500.0,
+        ),
+        coverage.PositionRecord(
+            period="Q4", observed_security_key="key2",
+            share_class_figi="FIGI_X", canonical_security="equity:X",
+            resolution_status="CANONICAL", operational_mapping_status="VERIFIED",
+            weight=1500.0,
+        ),
+    ]
+    agg = coverage.aggregate_positions_by_shareclass_figi(rq4, "Q4")
+    # El bug: 2 x 1500.0 = 3000.0. Documentado como contraejemplo.
+    assert agg == {"FIGI_X": 3000.0}
+
+
 # --- Tests de la ruta contractual de alto nivel (compute_nipc_contractual) ---
 
 

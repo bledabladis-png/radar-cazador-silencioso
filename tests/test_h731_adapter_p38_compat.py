@@ -171,6 +171,45 @@ def test_compat_e_state_no_resolved_excluido():
         ca.catalog_to_p38_targets(u, u, state_q4=st, state_q1=st,
                                    pairwise_keys=set(keys))
 
+# --- H-08: ortogonalidad weight_status vs operational_mapping_status ---
+
+
+def test_h08_adapter_no_confunde_weight_status_con_operational():
+    """H-08 (GO #76): ortogonalidad P61.
+
+    Caso: identity=RESOLVED + weight_status=NOT_PRESENT.
+    El adapter debe producir operational_mapping_status =
+    state.operational_mapping_status, NO weight_status. Los dos campos
+    son ortogonales (P61 seccion 2.1).
+
+    Nota: se invoca `_records` directamente porque
+    `catalog_to_p38_targets` rechaza NOT_PRESENT en la fase de
+    feasibility del pairwise (`_is_feasible`). El caso ortogonal
+    que el auditor pide verificar ocurre en el adapter, no en la
+    precondicion del flujo.
+    """
+    from src.institutional_accumulation.aggregation.catalog_p38_adapter import _records
+    u = _make_universe([("AAPL", "FIGI_A")])
+    keys = list(u.declared_keys)
+    st = ps.build_period_state(
+        u,
+        weight_evidence={keys[0]: ps.WEIGHT_NOT_PRESENT},
+        operational_evidence={keys[0]: "VERIFIED"},
+        sshprnamt_evidence={keys[0]: 1500.0},
+    )
+    assert st[keys[0]].weight_status == "NOT_PRESENT"
+    assert st[keys[0]].operational_mapping_status == "VERIFIED"
+    recs = _records(u, st, period="Q1")
+    for r in recs:
+        assert r.operational_mapping_status == "VERIFIED", (
+            "weight_status=NOT_PRESENT no debe filtrarse al operational; "
+            + str(r.operational_mapping_status)
+        )
+        assert r.operational_mapping_status != "NOT_PRESENT"
+        assert r.resolution_status == "CANONICAL"
+        assert r.weight == 1500.0
+
+
 # --- H-10.1: propiedades correctas del adapter (verificables sin fix) ---
 
 def test_h101_adapter_rechaza_pairwise_vacio():

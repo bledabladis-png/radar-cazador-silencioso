@@ -30,10 +30,11 @@ documentos describen su tema; NO declaran el estado del sistema.
 | A.6.2-bis-B3 | IMPLEMENTADO SPEC-SIDE | - |
 | A.6.3 (test Q12 Modelo A) | CERRADO | #72 |
 | A.6.4-v2 (P38 aislado sobre TOP 2000) | CERRADO | #73 |
-| A.6.4 (integracion B1+P61+P38; SMOKE TEST, no cobertura real) | CERRADO como smoke test | #75 + auditoria 2026-09-21 |
+| A.6.4 (integracion B1+P61+P38; pre-fix A2) | RECLASIFICADO post-A2: evidencia contractual parcial (rama Q1 + fail-closed); NO pairwise completo | #75 + #76 |
 | A.6.5 (actualizar contratos in-place) | CERRADA | dccf70d + 911e95b + 0f0583d + a21b0db |
-| A.6.4-fix-A2 (H-05/H-06/H-07/H-10.1) | CERRADO | 2f98926..(c5) 2026-09-21 |
-| A.6.6 (F2.4-CLOSE) | PENDIENTE - requiere dictamen externo | - |
+| A.6.4-fix-A2 (H-05/H-06/H-07/H-10.1) | CERRADO (A2 = GO, #76) | 2f98926..157211e 2026-09-21 |
+| A.6.6-saneamiento (post #76) | CERRADO (este commit) | B-01/B-05/B-06/B-07 + H-08 |
+| A.6.6 (F2.4-CLOSE) | NO-GO (#76). Bloqueantes: B-02 (P62/PIT), B-03 (TARGET), B-04 (pairwise). | #76 |
 
 ## 2. Hallazgos cerrados
 
@@ -77,12 +78,13 @@ documentos describen su tema; NO declaran el estado del sistema.
 - Snapshots historicos Q4 2025 / Q1 2026 requieren OpenFIGI masivo
 - Curacion crosswalk residual: ONB, SPCX, PTGX sin match 13F Q1 2026
 - Gate-NIPC.2 BLOQUEADO por THRESHOLD_1/2 UNDEFINED
-- A.6.6 PENDIENTE (F2.4-CLOSE)
+- A.6.6 NO-GO (#76). Saneamiento post-dictamen CERRADO (este commit).
 
 ## 6. Proxima accion autorizada
 
-A.6.6 - emitir dictamen F2.4-CLOSE. Requiere dictamen externo.
-Sin autorizacion externa, no procede.
+Saneamiento post-#76 CERRADO (commit actual). Bloqueos residuales NO
+autorizados: B-02 (P62/PIT), B-03 (TARGET completo), B-04 (pairwise
+real). Requieren dictamen especifico antes de tocarse. Push: NO.
 
 ## 7. Saneamiento documental (sub-deuda en curso)
 
@@ -118,11 +120,29 @@ sin dictamen).
 - H-11 (ALTA): hashes de provenance (cerrado antes del fix A2).
 - H-12 (MEDIA): hash de catalogo etiquetado (cerrado antes del fix A2).
 
-**Consecuencia:** A.6.4 queda reclasificado como **smoke test de integracion
-del adapter** (ver `evidence/a64_integration_b1_p61_p38/README.md`), NO como
-evidencia cuantitativa de cobertura contractual.
+**Consecuencia (actualizada post #76):** A.6.4 se reclasifica como
+**evidencia contractual parcial**: valida rama Q1 (18/18 sobre TARGET_Q1
+materializado) y rama fail-closed (Q4 vacio -> coverage_previous=None),
+pero NO valida pairwise real (TARGET_PAIRWISE=0). Ver
+`evidence/a64_integration_b1_p61_p38/README.md` y `A66_BUNDLE.md`.
 
-**Proximo paso:** expediente para dictamen externo sobre H-05/H-06/H-10.1.
-Sin dictamen, no se toca codigo productivo. H-08 se puede cerrar con test si
-el dictamen lo autoriza.
+**Pendientes de dictamen:** B-02 (P62/PIT), B-03 (TARGET completo,
+requiere OpenFIGI masivo), B-04 (pairwise real). Ver seccion 9.
 
+
+## 9. Hallazgos del dictamen #76 (2026-09-21)
+
+Dictamen A.6.6: **NO-GO**. A2 = GO (H-05/H-06/H-07/H-10.1 aceptados).
+
+| ID | Sev | Descripcion | Estado |
+|---|---|---|---|
+| B-01 | CRITICO | Saneamiento documental post-A2 | CERRADO (este commit) |
+| B-02 | CRITICO | P62/PIT: snapshot valid_from=2026-09-21 para Q1 2026 (look-ahead) | NO AUTORIZADO |
+| B-03 | CRITICO | TARGET contractual completo sin materializar (OpenFIGI masivo) | NO AUTORIZADO |
+| B-04 | CRITICO | Pairwise real no ejercitado (TARGET_PAIRWISE=0) | NO AUTORIZADO |
+| B-05 | ALTA | Precision: coverage_current=1.0 = 'sobre TARGET materializado' | CERRADO (este commit) |
+| B-06 | ALTA | Riesgo doble conteo SSHPRNAMT por FIGI | CERRADO (este commit) |
+| B-07 | MEDIA | 3 test_freshness failed sin exclusion formal | CERRADO (este commit, docstring) |
+| H-08 | MEDIA | Test ortogonal identity=RESOLVED + weight=NOT_PRESENT | CERRADO (este commit) |
+
+Push: NO AUTORIZADO (#76).
