@@ -1,0 +1,19 @@
+{
+  "periods": {
+    "2025Q4": {
+      "rows": 0,
+      "tickers": 0
+    },
+    "2026Q1": {
+      "rows": 28371,
+      "tickers": 22
+    }
+  },
+  "universe_declared_keys": 242,
+  "universe_with_figi": 240,
+  "target_q4_real": 0,
+  "target_q1_real": 20,
+  "target_pairwise_real": 0,
+  "adapter_accepts_q4_empty": false,
+  "note": "adapter_rejects_empty_pairwise"
+}

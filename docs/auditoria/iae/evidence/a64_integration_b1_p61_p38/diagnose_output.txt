@@ -1,0 +1,49 @@
+============================================================================
+Diagnostico H-10.1 - Bug estructural cobertura P38 (A.6.4)
+============================================================================
+
+=== 1. Operational universes por periodo (P61 seccion 5.5) ===
+  2025Q4: 0 filas oper, 0 tickers equity
+  2026Q1: 28371 filas oper, 22 tickers equity
+
+=== 2. TargetUniverse B2-PIT (universo completo, snapshot) ===
+  declared_keys:      242
+  con FIGI:           240
+
+=== 3. Cardinalidades reales (SIN mock) ===
+  TARGET_Q4 (reales):       0 keys
+  TARGET_Q1 (reales):       20 keys
+  TARGET_PAIRWISE:          0 keys
+  TARGET_Q1 universo:       242 keys (B2-PIT completo)
+  RESOLVED_Q4 (con FIGI):   0 keys
+  RESOLVED_Q1 (con FIGI):   20 keys
+  PAIRED (Q4 int Q1):       0 keys
+
+=== 4. Intento de invocar el adapter con Q4 real (vacio) ===
+  Q4 real: 0 keys
+  Q1 real: 20 keys
+
+  AdapterError capturado: TARGET_PAIRWISE vacio
+
+  >>> El adapter RECHAZA Q4 vacio (pairwise vacio).
+  >>> Es IMPOSIBLE computar la cobertura Q4/Q1 real con el
+      adapter actual. El probe original recurre a Q4=Q1 (mock)
+      precisamente para saltar esta precondicion.
+
+=== 5. Comparacion ===
+
+  Probe original (Q4=Q1 mock):        coverage = 1.0 (trivial)
+  Probe con Q4 real (vacio):           AdapterError
+  Cobertura Q1 real sobre universo:    18 / 242 = 0.0744
+
+  Consecuencia: el unico numero publicable con los datos actuales
+  es la cobertura del subconjunto Q1 sobre el universo B2-PIT,
+  que NO es la metrica contractual P38 (esa exige Q4 y Q1 reales).
+
+=== 6. Conclusion ===
+
+  El coverage=1.0 de A.6.4 es artefacto del mock Q4=Q1, no evidencia
+  de cobertura contractual. El fix requiere tocar codigo productivo
+  (adapter + coverage.py + propagacion de SSHPRNAMT). Dictamen externo.
+
+OK -> diagnose_result.json
