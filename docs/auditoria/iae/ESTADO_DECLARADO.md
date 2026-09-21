@@ -5,7 +5,7 @@ Declaraciones subjetivas del proyecto IAE. Los hechos verificables
 por script. Este fichero se edita cuando cambia el estado de una fase,
 no cuando cambia el codigo.
 
-**Actualizado:** 2026-09-21
+**Actualizado:** 2026-09-22
 **Responsable de actualizar:** Ingeniero Supervisor.
 **Origen de verdad:** este fichero + `ESTADO_SISTEMA.md`. Los demas
 documentos describen su tema; NO declaran el estado del sistema.
