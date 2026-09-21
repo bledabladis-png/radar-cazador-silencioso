@@ -15,7 +15,7 @@ Estado: ESPECIFICACION. Filer continuity CERRADO como caracterizacion
         vuelve a coverage/thresholds (UNDEFINED).
 Naturaleza: no normativo. Si hay conflicto con el Prompt Maestro, gana
             el Prompt Maestro.
-Referencia: prompt v6.35, HEAD local cb1724e.
+Referencia: ver `PROMPT_MAESTRO.md` (metodologia) + `ESTADO_SISTEMA.md` + `ESTADO_DECLARADO.md` (estado actual).
 
 ---
 
@@ -1953,7 +1953,7 @@ del ciclo NIPC).
   A.6.4-v2  CERRADO. P38 aislado sobre TOP 2000. Dictamen #73.
   A.6.4     CERRADO. Integracion B1+P61+P38 end-to-end. Dictamen #75.
             H-73.1 (adapter B1<->P38) corregido + regresion.
-  A.6.5     AUTORIZADA. Pendiente de ejecucion.
+  A.6.5     CERRADA. Ver ESTADO_DECLARADO.md.
   A.6.6     PENDIENTE. F2.4-CLOSE.
 
   Gap spec->codigo §5.1-§5.5: CERRADO (#61-#67).
