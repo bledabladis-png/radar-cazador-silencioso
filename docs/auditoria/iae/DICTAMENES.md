@@ -1,7 +1,8 @@
 # IAE - REGISTRO DE DICTAMENES
 
 **Generado:** 2026-09-20
-**Consolida:** 23 dictamenes del ciclo IAE y radar
+**Actualizado:** 2026-09-21 (hasta dictamen #47)
+**Consolida:** dictamenes del ciclo IAE y radar
 
 **Regla:** este fichero es un INDICE. Los dictamenes originales NO se modifican.
 
@@ -37,6 +38,27 @@
 | 24 | `F24_DICTAMEN.md` (integrado en este consolidado) | **GO CONDICIONADO arquitectura** + 3 bloqueantes. D1 GO, D2 GO CONDICIONADO, D3 GO, Q12 Modelo A, AGREG. Opcion 2, OpenFIGI GO CONDICIONADO, Policy v1.3 NO. THRESHOLD_2 BLOQUEADO. |
 | 25 | `P63_DICTAMEN.md` (integrado en este consolidado) | **GO CONDICIONADO**. `EXIT != SOLD` aprobado. `MISSING = ausencia sin causa demostrable` (no toda ausencia). Amendments pre-delta OBLIGATORIO. Arquitectura multi-dimensional. |
 | 26 | `P65_DICTAMEN.md` (integrado en este consolidado) | **GO CONDICIONADO v3**. L1/L2/L3 + R1-R5 aprobados. 3 correcciones de cierre: `REPORTING_CONFLICT` estricto, `REPORTING_OVERLAP_UNRESOLVED` nuevo, L3+R1 refinadas. MATCH_KEY/C2/delta_shares.py INTACTOS. Implementacion en 4 commits. |
+| 27 | Integrado en este consolidado | P66 L3 reformulacion requisito 4. GO CONDICIONADO. OTHERMANAGER como fuente R4. |
+| 28 | Integrado en este consolidado | P66 v2-bis. NO-GO, 6 bloqueos. |
+| 29 | Integrado en este consolidado | P66 Gate 0.8 exigido. Correccion de alcance. |
+| 30 | Integrado en este consolidado | P66 CONFLICT > MATCH, base unico. |
+| 31 | Integrado en este consolidado | P66 R3 con REPORTTYPE, CONFLICT scoped. |
+| 32 | Integrado en este consolidado | P66 GO CONDICIONADO FINAL. |
+| 33 | Integrado en este consolidado | P66 CONFLICT ampliado, alcance filing A. |
+| 34 | Integrado en este consolidado | P66 FormNum flexible, candidate_A, L3 booleano. |
+| 35 | Integrado en este consolidado | P66 BASE_R4 global, cadena completa. |
+| 36 | Integrado en este consolidado | P66 BASE/AMENDMENT por SUBMISSIONTYPE. |
+| 37 | Integrado en este consolidado | P66 flujo unico R3, familia global. |
+| 38 | Integrado en este consolidado | P66 §3.4 como nota, trazabilidad. |
+| 39 | Integrado en este consolidado | P66 PASO 0 completitud scope. |
+| 40 | Integrado en este consolidado | P66 GO CONTRACTUAL FINAL. |
+| 41 | Ver entrada §41 de este fichero | P66 auditoria de salida. GO CONDICIONADO. |
+| 42 | Ver entrada §42 de este fichero | P66 cierre formal. Pasos 1-5 CERRADOS. DROP_DUP NO AUTORIZADO. |
+| 43 | Ver entrada §43 de este fichero | A.6.0 CERRADO. A.6.2-bis AUTORIZADO (GO COND). |
+| 44 | Ver entrada §44 de este fichero | A.6.2-bis v1 NO-GO. 4 correcciones materiales. |
+| 45 | Ver entrada §45 de este fichero | A.6.2-bis v2 GO COND. F1/F2/F3 + amendments. |
+| 46 | Ver entrada §46 de este fichero | A.6.2-bis v3 NO-GO. Bloqueos A (B1) + B (B3). |
+| 47 | Ver entrada §47 de este fichero | A.6.2-bis v4 NO-GO. A1 catalog_key + A2 denominador. |
 
 ---
 
@@ -820,6 +842,137 @@ Global:
 
 **Conclusion: v4 que cierre A (B1) + B (B3) sin heuristicas ni
 modificacion contractual -> apta para GO DE IMPLEMENTACION.**
+
+---
+
+## 47. A.6.2-bis - Dictamen de verificacion documental v4 (2026-09-21)
+
+**Tipo:** dictamen del auditor externo sobre A62BIS_PROPUESTA.md v4.
+**HEAD auditado:** fa03a97.
+**Dictamen anterior:** #46 (v3 NO-GO).
+
+**Resultado:** NO-GO DE IMPLEMENTACION. Arquitectura GO CONDICIONAL.
+
+### Lo que la v4 corrige correctamente
+
+- Separacion catalogo / unidad economica / TARGET.
+- Separacion cardinalidad / metrica ponderada.
+- Hash externo + snapshots verificables.
+- Prohibicion de backdating.
+- knowledge_date por observacion.
+- RESTATEMENT / NEW HOLDINGS distinguidos.
+- provenance por filing efectivo.
+- Invariantes PositionRecord.
+- Orden B2 -> B1 -> B3.
+
+### Bloqueo A1 - catalog_key no estable
+
+`catalog_key = "radar:" + radar_ticker` no es identidad estable si el
+ticker cambia. La misma unidad economica puede pasar de `radar:ABC`
+a `radar:XYZ` y el catalog_key cambia.
+
+El dictamen #46 exigio: la misma unidad economica no cambia de
+identidad por un cambio de ticker.
+
+Correccion exigida (v5): catalog_key independiente de:
+  - radar_ticker
+  - source_date
+  - share_class_figi
+  - resultado de OpenFIGI
+
+El ticker pasa a ser un ATRIBUTO versionado, no identidad.
+
+### Bloqueo A2 - denominador ponderado dependiente del mapping
+
+TARGET_PAIRWISE se construye por share_class_figi, y los FIGIs salen
+de `figi_by_key` excluyendo `unresolved_keys`.
+
+Consecuencia:
+  mapping OK  -> FIGI presente -> entra en TARGET_PAIRWISE -> suma al denom
+  mapping FAIL -> sin FIGI     -> fuera de TARGET_PAIRWISE  -> denom menor
+
+El sesgo persiste: la cobertura cambia no porque cambie el universo
+contractual, sino porque mejora el mapping. Esto contradice el
+bloqueante 1 de F2.4.
+
+Correccion exigida (v5): escoger explicitamente entre:
+  Camino A: TARGET_PAIRWISE desde fuente economica independiente y
+            versionada, cuyo contenido no dependa del mapping.
+  Camino B: fail-closed. Si una entrada contractual no puede adquirir
+            su identidad economica, el indicador queda
+            UNAVAILABLE / N/D bajo regla previamente definida.
+
+PROHIBIDO: mapping failure -> remove target -> recalcular denominador
+menor. Eso es el sesgo que F2.4 exigio eliminar.
+
+### B2 - APROBADO
+
+Arquitectura validada en v4. Sin objeciones materiales adicionales.
+
+### B3 - APROBADO EN CONCEPTO + test reforzado
+
+knowledge_date = filing_date por observacion.
+RESTATEMENT: fecha del restatement.
+NEW HOLDINGS: heredada -> original; nueva -> amendment.
+
+Test reforzado exigido: NEW HOLDINGS ambiguous.
+Caso: original `security X` + NEW HOLDINGS `security X` sin evidencia
+de si es nueva entry / correccion / duplicado.
+-> knowledge_date = N/D (sin heuristica).
+
+### PositionRecord - APROBADO CONDICIONADO
+
+La provenance debe permitir reconstruir por que esa fecha pertenece
+a esa observacion.
+
+### absence.py - APROBADO
+
+P63 absence classifier = DEFERRED.
+
+### Observacion documental (§13 dictamen)
+
+`DICTAMENES.md` declara "Generado 2026-09-20 / Consolida 23 dictamenes"
+y la tabla indice inicial termina en #26. Los dictamenes #41-#47
+aparecen fuera del indice.
+
+NO BLOQUEANTE DE ARQUITECTURA, pero debe corregirse antes del cierre
+documental del ciclo A.6.
+
+### Criterio de cierre revisado (#47 seccion 11)
+
+B1:
+  catalog_key estable
+    -> TARGET declarado
+    -> TARGET economico P38
+    -> TARGET observado
+  mapping OK vs mapping FAIL -> MISMO universo contractual.
+  ticker change -> catalog_key unchanged.
+
+B2: 0/1/>1 snapshots + hash + no backdating.
+
+B3: RESTATEMENT + NEW HOLDINGS + NEW HOLDINGS ambiguous -> N/D
+    + filing posterior != knowledge anterior + provenance verificable.
+
+Global: P65 PASS + P66 PASS + A.6.2-bis PASS + compileall + pyflakes
++ sin regresion nueva.
+
+### Estado operativo
+
+    A.6.0                  CLOSED
+    A.6.2-bis v4           NO-GO IMPLEMENTATION
+    ARQUITECTURA           GO CONDITIONAL
+    B1 A1 catalog_key      BLOCKED
+    B1 A2 denominator      BLOCKED
+    B2 point-in-time       APPROVED
+    B3 knowledge_date      APPROVED CONDITIONAL
+    B3 NEW HOLDINGS test   REINFORCE
+    A.6.3                  BLOCKED
+    A.6.4                  BLOCKED
+    F2.4-CLOSE             BLOCKED
+    DROP_DUP               NOT AUTHORIZED
+
+**Conclusion: v5 que cierre A1 + A2 + test NEW HOLDINGS ambiguous
+-> apta para GO DE IMPLEMENTACION.**
 
 ---
 

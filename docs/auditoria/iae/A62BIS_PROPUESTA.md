@@ -1,44 +1,42 @@
-# IAE - A.6.2-bis Propuesta de rediseno arquitectonico TARGET (v4)
+# IAE - A.6.2-bis Propuesta de rediseno arquitectonico TARGET (v5)
 
-**Version:** v4. Aplicados los 2 bloqueos materiales del dictamen #46:
-A (B1 unidad contractual del TARGET) + B (B3 knowledge_date por
-observacion, no por snapshot).
+**Version:** v5. Aplicados los 2 bloqueos materiales del dictamen #47
+(A1 catalog_key estable + A2 denominador independiente del mapping) +
+test reforzado NEW HOLDINGS ambiguous.
 
 **Versiones previas:** v1 (f383932, NO-GO #44), v2 (9aa0727, GO COND
-#45), v3 (fa03a97, NO-GO #46). Backups locales como .vN.bak hasta
-verificacion.
+#45), v3 (fa03a97, NO-GO #46), v4 (30ed3df, NO-GO #47).
 
 **Objeto:** propuesta de diseno para materializar los 3 bloqueantes
 estructurales F2.4 (B1 + B2 + B3).
 
 **Fecha:** 2026-09-21.
-**HEAD al redactar:** fa03a97.
+**HEAD al redactar:** 30ed3df.
 **Naturaleza:** propuesta. NO normativa. Sometida a dictamen.
 
 ---
 
 ## 0. Resumen ejecutivo
 
-v4 aplica los 2 bloqueos materiales del dictamen #46:
+v5 cierra los 2 bloqueos materiales del dictamen #47 + test reforzado:
 
-**A (B1, unidad contractual del TARGET):** se introduce `catalog_key`
-(identidad administrativa del catalogo) separado de `share_class_figi`
-(unidad economica P38). Se separan cardinalidad de universo
-(`len(catalog_key)`) y denominador ponderado de
-`paired_weighted_share_coverage` (suma de pesos sobre
-`TARGET_PAIRWISE`, segun P38 §3.3). La unidad economica del contrato
-P38 (`share_class_figi`, Modelo A / Q12) NO se modifica.
+**A1 (catalog_key estable):** `catalog_key` es un identificador inmutable
+asignado en el alta, NO derivado del ticker. Formato:
+`<YYYYMMDD_alta>_<NNNN>` (secuencial administrativo). El `radar_ticker`
+pasa a ser un ATRIBUTO versionado del catalogo. Migracion inicial
+asigna keys a las 242 filas actuales.
 
-**B (B3, knowledge_date con NEW HOLDINGS):** `knowledge_date` es
-propiedad de la observacion efectiva / posicion, no del snapshot
-consolidado. RESTATEMENT sustituye; NEW HOLDINGS suplementa. Posiciones
-heredadas conservan su fecha original; nuevas entradas reciben la
-fecha del amendment. Si no puede reconstruirse la atribucion
-documental -> `knowledge_date = N/D`.
+**A2 (denominador independiente del mapping):** eleccion del
+**Camino B (fail-closed)** del dictamen #47 seccion 4.
+`TARGET_PAIRWISE` es el universo contractual del catalogo
+(independiente del mapping). El peso `w(s)` viene del 13F y requiere
+mapping. Si **cualquier** entrada de `TARGET_PAIRWISE` tiene `w(s) = 0`
+(mapping fallido, sin SSHPRNAMT), la metrica pasa a `UNAVAILABLE`.
+PROHIBIDO recalcular con denominador reducido.
 
-**Bloqueo previo resuelto (F3 #45):** criterio corregido:
-`knowledge_date == filing_date` por contrato;
-`period_end != filing_date` cuando difieran.
+**Test reforzado NEW HOLDINGS ambiguous:** original `security X` +
+NEW HOLDINGS `security X` sin evidencia de si es nueva/correccion/
+duplicado -> `knowledge_date = N/D`. Sin heuristica.
 
 **Fuera de alcance:** OpenFIGI masivo, recalculo de evidencia final,
 modificacion de contratos, `DROP_DUP`, certificacion "acumulacion",
@@ -50,55 +48,128 @@ Policy v1.3, Gate-NIPC.2/3.
 
 | Bloqueante | Piezas existentes | Piezas ausentes |
 |---|---|---|
-| B1 | `coverage.py::compute_contractual_coverage`, `PositionRecord`, `aggregate_positions_by_shareclass_figi`, `target_universe.py::resolve_cusips` | `target_builder.py`, `catalog_key`, integracion `nipc.py` |
+| B1 | `coverage.py::compute_contractual_coverage`, `PositionRecord`, `aggregate_positions_by_shareclass_figi`, `target_universe.py::resolve_cusips` | `target_builder.py`, `catalog_key` estable, integracion `nipc.py` |
 | B2 | `source_date` (no contractual) | versionado + `target_catalog_as_of` |
 | B3 | Doctrina P63/P64/P65 | `knowledge_date` por posicion, `absence.py` |
 
-**Gate 0 sobre `radar_target_catalog.csv` (2026-09-21, empírico):**
+**Gate 0 sobre `radar_target_catalog.csv` (2026-09-21):**
 
-- 242 filas totales.
-- `radar_ticker`: 0 nulos, 0 vacios, 242 unicos, 0 duplicados.
-- `share_class_figi`: 2 nulos (BRK-B, MOG-A), 240 unicos (no nulos), 0 duplicados.
-- `figi`: 240 unicos (no nulos).
+- 242 filas. `radar_ticker` 242 unicos, 0 nulos.
+- `share_class_figi`: 240 no nulos unicos, 0 duplicados, 2 MISS (BRK-B, MOG-A).
 - Status: 240 OK + 2 MISS.
 
-Propiedades demostradas para el catalogo actual:
-
-    radar_ticker         NOT NULL, UNICO en el snapshot
-    share_class_figi     unico cuando presente (240/240)
-    figi                 unico cuando presente (240/240)
+**Migracion inicial v5:** las 242 filas actuales reciben
+`catalog_key = "radar_20260919_<NNNN>"` (asignacion administrativa
+secuencial). El atributo `radar_ticker` se conserva como columna
+mutable.
 ---
 
-## 2. B1 - TARGET independiente del mapping (bloqueo A resuelto)
+## 2. B1 - TARGET independiente del mapping (A1+A2 resueltos)
 
-**Correccion A aplicada:** reconciliacion con P38.
+### 2.1. A1 - `catalog_key` estable (no derivado del ticker)
 
-### 2.1. Cuatro conceptos separados
+**Identidad del catalogo:** inmutable, asignada en el alta, sin
+dependencia del ticker, `source_date`, `share_class_figi` ni OpenFIGI.
 
-    catalog_key                identidad administrativa del catalogo
+    catalog_key := "radar_<YYYYMMDD_alta>_<NNNN>"
+
+Ejemplos (migracion inicial del catalogo actual):
+
+    radar_20260919_0001   (AAPL)
+    radar_20260919_0002   (ABBV)
+    ...
+    radar_20260919_0242   (ultima entrada)
+
+**Propiedades:**
+
+- Asignado una sola vez cuando la entrada entra al radar.
+- Inmutable: no cambia aunque cambie el `radar_ticker`.
+- Secuencial dentro del dia de alta; dos altas el mismo dia -> `_0001`, `_0002`.
+- El prefijo `radar_` identifica la fuente del catalogo.
+
+**Columna `radar_ticker`:** pasa a ser **atributo versionado**.
+- Puede cambiar entre snapshots (ej. FB -> META).
+- El `catalog_key` no cambia.
+- El invariante `radar_ticker NOT NULL` se verifica por snapshot.
+- El invariante `radar_ticker UNICO` se verifica por snapshot.
+
+**El invariante `catalog_key UNICO` se verifica globalmente** (a lo
+largo de snapshots), no solo por snapshot.
+
+**Test explicito A1:**
+
+    Ticker cambio FB -> META:
+      snapshot_2026_09_19.csv:  radar_20240101_0050 | FB  | <figi_fb>
+      snapshot_2027_01_15.csv:  radar_20240101_0050 | META| <figi_meta>
+
+    assert catalog_key identico en ambos snapshots.
+    assert radar_ticker cambia (informacion de provenance).
+
+### 2.2. A2 - Denominador independiente del mapping (Camino B)
+
+**Eleccion: Camino B (fail-closed) del dictamen #47 seccion 4.**
+
+**Regla contractual:**
+
+    TARGET_PAIRWISE := entradas del catalogo cuyo periodo de vigencia
+                        cubre Q4 y Q1
+                        (independiente del mapping CUSIP_13F -> FIGI)
+
+    w(s) := max( SSHPRNAMT_Q4(s), SSHPRNAMT_Q1(s) )
+            si ambos disponibles.
+            max(SSHPRNAMT disponible, NaN) si solo uno.
+            0 si ninguno (mapping fallido en ambos periodos).
+
+    paired_weighted_share_coverage:
+        SI TODAS las entradas de TARGET_PAIRWISE tienen w(s) > 0:
+            numer / denom con denom = sum(w(s) para s in TARGET_PAIRWISE)
+        SINO:
+            UNAVAILABLE
+
+**Invariante:**
+
+    mapping OK  -> todas las entradas tienen w(s) > 0 -> metrica VALID
+    mapping FAIL parcial -> alguna entrada con w(s) = 0 -> UNAVAILABLE
+    mapping FAIL total   -> UNAVAILABLE
+
+**PROHIBIDO:** recalcular el denominador con menos entradas cuando el
+mapping falla. Eso es el sesgo de seleccion que F2.4 exigio eliminar.
+
+**Razon:** la metrica mide la calidad de la identidad sobre el
+universo contractual completo. Si el universo no puede evaluarse
+completo (falta peso), no se mide; se declara `UNAVAILABLE`. Fail-closed.
+
+**Test explicito A2:**
+
+    Catalogo: {A, B, C} con FIGIs.
+    Mapping:
+      A -> FIGI_A  +  SSHPRNAMT_A
+      B -> FIGI_B  +  SSHPRNAMT_B
+      C -> FAIL    +  sin SSHPRNAMT
+
+    assert TARGET_PAIRWISE == {A, B, C}  # cardinalidad intacta
+    assert w(C) == 0
+    assert paired_weighted_share_coverage == "UNAVAILABLE"
+
+    # Contra-caso: mapping OK para A, B, C
+    assert paired_weighted_share_coverage != "UNAVAILABLE"
+    assert cardinalidad TARGET_PAIRWISE == 3 en ambos casos
+
+### 2.3. Cuatro conceptos separados
+
+    catalog_key                identidad administrativa inmutable
+    radar_ticker               atributo versionado (puede cambiar)
     share_class_figi           unidad economica P38 (Modelo A / Q12)
-    TARGET declarado           conjunto de catalog_key del snapshot
-    TARGET_PAIRWISE (P38)      interseccion de share_class_figi Q4 & Q1
+    TARGET_PAIRWISE            universo contractual del catalogo
+    TARGET_OBSERVED            subset con SSHPRNAMT obtenido via mapping
 
 **Regla dura:**
 
-    catalog_key != share_class_figi
-    cardinalidad TARGET != denominador ponderado del indicador
+    cardinalidad TARGET_PAIRWISE != denominador ponderado
+    fallo de mapping NO modifica cardinalidad TARGET_PAIRWISE
+    fallo de mapping produce UNAVAILABLE (no denom reducido)
 
-### 2.2. `catalog_key`
-
-    catalog_key := "radar:" + radar_ticker
-
-- Prefijo `radar:` evita colision con otras fuentes.
-- Estable entre snapshots: `radar:AAPL` siempre se refiere a la
-  entrada del radar para AAPL, independientemente del FIGI resuelto.
-- `radar_ticker` cumple NOT NULL + UNICO (evidencia Gate 0 sobre el
-  snapshot actual: 242/242).
-- El invariante NOT NULL + UNICO es **verificado en cada build**.
-  Si un snapshot futuro violara el invariante -> error (no colapso
-  silencioso de set()).
-
-### 2.3. Unidad economica P38
+### 2.4. Unidad economica P38 (sin cambios)
 
 Se mantiene la decision Q12 = Modelo A:
 
@@ -106,22 +177,6 @@ Se mantiene la decision Q12 = Modelo A:
 
 `coverage.py::compute_contractual_coverage` opera por `share_class_figi`.
 NO se modifica la semantica del contrato P38.
-
-### 2.4. Separacion cardinalidad vs denominador
-
-    Cardinalidad del TARGET declarado
-      = |{ catalog_key }|          -> 242 en el catalogo actual
-
-    Denominador de paired_weighted_share_coverage (P38 seccion 3.3)
-      = sum( w(s) for s in TARGET_PAIRWISE )
-      con:
-        TARGET_PAIRWISE  = TARGET_Q4 INTERSECT TARGET_Q1
-                           por share_class_figi
-        w(s)             = max(SSHPRNAMT_Q4(s), SSHPRNAMT_Q1(s))
-                           una vez por security
-
-Son magnitudes distintas. `len(declared)` NO es el denominador del
-indicador ponderado.
 
 ### 2.5. Arquitectura
 
@@ -138,18 +193,17 @@ indicador ponderado.
         period_end: str
         catalog_version_id: str
         catalog_sha256: str
-        declared_keys: frozenset[str]       # catalog_key (242)
-        figi_by_key: dict[str, str | None]  # catalog_key -> figi
-        unresolved_keys: frozenset[str]     # catalog_key sin figi
+        declared_keys: frozenset[str]         # catalog_key
+        ticker_by_key: dict[str, str]         # key -> radar_ticker actual
+        figi_by_key: dict[str, str | None]    # key -> figi o None
+        unresolved_keys: frozenset[str]       # subset sin figi
 
-**Invariante estructural:**
+**Invariantes:**
 
-    TARGET declarado (declared_keys) NO depende del mapping.
-    TARGET declarado NO depende del 13F observado.
-    TARGET declarado NO depende de OpenFIGI.
-
-Un fallo de mapping produce ausencia en el pairing ponderado, nunca
-en `declared_keys`.
+    declared_keys NO depende del mapping.
+    declared_keys NO depende del 13F observado.
+    declared_keys NO depende de OpenFIGI.
+    cardinalidad declared_keys == |snapshot|.
 
 ### 2.6. `identity/target_builder.py`
 
@@ -158,80 +212,76 @@ en `declared_keys`.
         period_end: str
         catalog_version_id: str
         catalog_sha256: str
-        declared_keys: frozenset[str]       # 242 para el catalogo actual
-        figi_by_key: dict[str, str | None]  # key -> figi o None
-        unresolved_keys: frozenset[str]     # subset sin figi
+        declared_keys: frozenset[str]
+        ticker_by_key: dict[str, str]
+        figi_by_key: dict[str, str | None]
+        unresolved_keys: frozenset[str]
 
     def build_target(snapshot_df, *, period_end,
                      catalog_version_id, catalog_sha256) -> TargetUniverse:
         """Materializa el TargetUniverse a partir del snapshot.
 
         Validaciones obligatorias (fail-closed):
-          - radar_ticker NOT NULL en todas las filas.
-          - radar_ticker UNICO: len(set) == len(df).
-          - ningun catalog_key colisiona.
+          - catalog_key NOT NULL en todas las filas.
+          - catalog_key UNICO global (entre snapshots).
+          - catalog_key UNICO por snapshot.
+          - radar_ticker NOT NULL por snapshot.
+          - radar_ticker UNICO por snapshot.
 
         Funcion pura. NO consulta catalogo ni sistema de ficheros.
         """
 
-**Si el snapshot violara NOT NULL o UNICO:**
-`raise CatalogKeyInvariantViolated`.
+**Violacion -> `raise CatalogKeyInvariantViolated`.**
 
-### 2.7. Relacion `catalog_key` <-> `share_class_figi`
+### 2.7. `coverage.py` - ajuste minimo
 
-    | TARGET declarado  |            242 (catalog_key)
-    | TARGET resoluble  |            240 (share_class_figi)
-    | TARGET_UNRESOLVED |              2 (BRK-B, MOG-A)
-    | TARGET_PAIRWISE   |  variable (interseccion Q4 ∩ Q1 por figi)
+`compute_contractual_coverage` recibe:
+- `target_q4` / `target_q1`: sets de `catalog_key` (universo contractual).
+- `weights_q4` / `weights_q1`: dicts `{catalog_key -> sshprnamt}`,
+  derivados del 13F via mapping.
 
-`TARGET_UNRESOLVED` no entra al pairing ponderado (no tiene unidad
-economica). Pero si esta en la cardinalidad declarada del catalogo.
+**Cambio minimo en la formula P38:** el denominador se calcula sobre
+`TARGET_PAIRWISE` (catalog_key). Si alguna entrada de `TARGET_PAIRWISE`
+no tiene peso en ningun periodo, `coverage_status = "UNAVAILABLE"`.
 
-### 2.8. `coverage.py` - ajuste minimo autorizado
+El numerador `PAIRED` sigue requiriendo `share_class_figi` comun
+(unidad economica), pero **el universo del denominador no se reduce
+por mapping fallido**.
 
-`compute_contractual_coverage` se ajusta para:
-- Recibir `target_q4` / `target_q1` como sets de `share_class_figi`.
-- El caller construye esos sets desde `TargetUniverse` filtrando
-  `unresolved_keys` (sin FIGI, no aportan unidad economica).
+**NO se modifica la semantica de P38 §3.3** (formula del cociente); se
+modifica el dominio sobre el que se evalua la validez (fail-closed
+si falta peso).
 
-**NO se modifica la formula contractual.** El denominador ponderado
-sigue siendo `sum(w(s))` sobre `TARGET_PAIRWISE` (interseccion de
-FIGIs).
+### 2.8. `target_universe.resolve_cusips` (sin cambios)
 
-### 2.9. `target_universe.resolve_cusips` (sin cambios)
+Sigue siendo el resolver inverso. El `scf_index` se construye sobre
+`figi_by_key`.
 
-Sigue siendo el resolver inverso (CUSIP observado -> membership). El
-`scf_index` se construye sobre `figi_by_key`.
+### 2.9. `compute_coverage_pairwise` (wrapper)
 
-### 2.10. `compute_coverage_pairwise` (wrapper)
+**Gate 0 obligatorio previo al refactor.**
 
-**Gate 0 obligatorio previo al refactor:**
-
-    grep -rn "compute_coverage_pairwise" tests/ src/ scripts/
-
-Contrato de retorno declarado:
+Contrato de retorno:
 
     dict con las 7 claves de compute_contractual_coverage.
     Numericos: float | None.
     coverage_status: "VALID" | "UNAVAILABLE".
-    Sin TARGET -> "UNAVAILABLE", sin proxy silencioso.
+    Sin TARGET -> "UNAVAILABLE".
 
-### 2.11. Tests B1
+### 2.10. Tests B1 (resumen)
 
-- `declared_keys = {radar:ticker}` con 242 filas -> 242 keys.
-- `unresolved_keys = {radar:BRK-B, radar:MOG-A}` -> 2 keys.
-- `figi_by_key` con 240 valores no-None + 2 None.
-- Invariante NOT NULL / UNICO: snapshot sintetico con ticker duplicado -> raise.
-- `mapping OK` vs `mapping fallido` -> mismo `declared_keys` (test explicito).
-- `TARGET_PAIRWISE` (por figi) != cardinalidad declarada (test explicito).
-- `compute_coverage_pairwise` sin TARGET -> dict con `coverage_status == "UNAVAILABLE"`.
+- A1: ticker cambio -> catalog_key identico.
+- A1: `catalog_key NOT NULL`, `catalog_key UNICO` (snapshot + global).
+- A2: `mapping OK` vs `mapping FAIL` -> cardinalidad TARGET_PAIRWISE identica.
+- A2: mapping FAIL parcial -> `UNAVAILABLE` (no denom reducido).
+- A2: mapping OK total -> metrica VALID, cardinalidad == |catalogo|.
+- `declared_keys == |snapshot|`.
+- `compute_coverage_pairwise` sin TARGET -> dict tipado UNAVAILABLE.
 ---
 
-## 3. B2 - Point-in-time (aprobado #46, precisiones aplicadas)
+## 3. B2 - Point-in-time (aprobado #47, sin cambios)
 
-Arquitectura aprobada por #46. Precisiones no bloqueantes incorporadas.
-
-### 3.1. Estructura de disco (sin cambios respecto v3)
+### 3.1. Estructura de disco
 
     data/mappings/catalog_snapshots/
         snapshot_<version_id>.csv
@@ -242,12 +292,10 @@ Arquitectura aprobada por #46. Precisiones no bloqueantes incorporadas.
 
 ### 3.2. Inmutabilidad real
 
-- `snapshot_*.csv` publicado: inmutable in-place.
-- `snapshot_*.sha256` publicado: inmutable in-place.
+- `.csv` y `.sha256`: inmutables in-place.
 - `catalog_manifest.json`: mutable (indice).
 
 **Regla:** ninguna evidencia historica publicada se modifica in-place.
-Correcciones -> snapshot nuevo.
 
 ### 3.3. Intervalos semiabiertos
 
@@ -255,43 +303,34 @@ Correcciones -> snapshot nuevo.
 
 `target_catalog_as_of(period_end, *, catalog_root)`:
 
-    0 snapshots -> raise CatalogNotAvailable
-    1 snapshot  -> devuelve (DataFrame, version_id, sha256)
-    >1 solapan  -> raise CatalogAmbiguous
+    0 -> raise CatalogNotAvailable
+    1 -> devuelve (df, version_id, sha256)
+    >1 -> raise CatalogAmbiguous
 
 ### 3.4. Backdating prohibido
 
 `valid_from = 2026-09-19` para el snapshot inicial. Q4 2025 / Q1 2026
--> `CatalogNotAvailable`. No se fabrica retrospectivamente.
+-> `CatalogNotAvailable`.
 
-### 3.5. Test de inmutabilidad (aprobado #46)
+### 3.5. Test de integridad
 
-    contenido publicado -> sha256 publicado -> sha256 recalculado -> comparar
+    sha256 recalculado == sha256 publicado (.sha256)
+    + coherencia con catalog_manifest.json
     mismatch -> FAIL-CLOSED
 
-Test adicional: corrupcion simulada (byte alterado -> detectada).
+Corrupcion simulada: byte alterado -> deteccion.
 
-### 3.6. Precision #46 - conservar revision del manifest en provenance
+### 3.6. Tests B2
 
-Recomendacion no bloqueante aplicada: la provenance incluye el commit
-de git del repositorio (o hash del propio `catalog_manifest.json`)
-para reproducibilidad completa de consultas historicas.
-
-### 3.7. Tests B2
-
-- 0 snapshots -> `CatalogNotAvailable`.
-- 1 snapshot -> OK.
-- >1 solapados -> `CatalogAmbiguous`.
-- `as_of("2025-12-31")` -> `CatalogNotAvailable` (backdating prohibido).
+- 0/1/>1 snapshots -> fail-closed/OK/ambiguous.
+- `as_of("2025-12-31")` -> `CatalogNotAvailable`.
 - Integridad: sha256 recalculado == publicado.
-- Corrupcion: byte alterado -> deteccion + fail-closed.
+- Corrupcion: byte alterado -> fail-closed.
 - Intervalos `[from, to)` sin solapamiento.
+
 ---
 
-## 4. B3 - Semantica temporal (bloqueo B resuelto)
-
-**Correccion B aplicada:** `knowledge_date` es propiedad de la
-observacion efectiva / posicion, no del snapshot consolidado.
+## 4. B3 - Semantica temporal (test NEW HOLDINGS reforzado)
 
 ### 4.1. Tres timestamps
 
@@ -299,58 +338,73 @@ observacion efectiva / posicion, no del snapshot consolidado.
     filing_date      fecha del filing del filing_manager
     knowledge_date   fecha de publicacion de la observacion efectiva
 
-Contrato: `knowledge_date == filing_date` de la observacion concreta.
+Contrato: `knowledge_date == filing_date`.
 
 ### 4.2. RESTATEMENT
 
-    filing original    2026-01-30
-    amendment RESTATEMENT 2026-02-15 (sustituye)
+Estado sustituido -> fecha del restatement. Coherente con P64
+(`RESTATEMENT -> REPLACE`).
 
-Estado efectivo: el filing del amendment sustituye al original.
-`knowledge_date = 2026-02-15` para todas las posiciones del snapshot
-efectivo. Coherente con P64 (`RESTATEMENT -> REPLACE`).
+### 4.3. NEW HOLDINGS - caso no ambiguo
 
-### 4.3. NEW HOLDINGS
+    original    2026-01-30   Holdings A (security X)
+    amendment   2026-02-15   NEW HOLDINGS: security Y
 
-    filing original    2026-01-30   Holdings A
-    amendment NEW HOLDINGS 2026-02-15   Holdings B (suplementa)
+Estado efectivo: X + Y.
+  X (heredada) -> knowledge_date = 2026-01-30.
+  Y (nueva)    -> knowledge_date = 2026-02-15.
 
-Estado efectivo consolidado: A + B.
+### 4.4. NEW HOLDINGS - caso ambiguous (test reforzado #47 seccion 7)
 
-**Regla corregida:**
+    original    2026-01-30   Holdings A (security X)
+    amendment   2026-02-15   NEW HOLDINGS: security X
 
-    A (heredada del original)   -> knowledge_date = 2026-01-30
-    B (nueva del amendment)     -> knowledge_date = 2026-02-15
+Sin evidencia adicional, X del amendment puede ser:
+  - nueva entry (reaparicion),
+  - correccion de la entry original,
+  - duplicidad documental.
 
-**NO** se asigna uniformemente la fecha del amendment a A y B.
-Eso introduciria look-ahead para A.
+**Regla dura:** si la atribucion documental no es inequivoca ->
+`knowledge_date = N/D` para la entry afectada.
 
-### 4.4. Regla general
+NO heuristica. NO asignar la fecha del amendment por defecto.
+
+**Test explicito:**
+
+    def test_new_holdings_ambiguous_knowledge_date_nd():
+        # original + amendment con la misma security
+        # sin metadata adicional (lineage) que desambigue
+        recs = compute_effective_snapshot(...)
+        affected = [r for r in recs if r.observado_security_key == "X"]
+        # Ninguna con knowledge_date asignable
+        assert all(r.knowledge_date is None for r in affected)
+
+### 4.5. Regla general
 
     knowledge_date = filing_date del filing que REALMENTE aporta el
                      estado observado al snapshot efectivo, por
                      posicion.
 
-    RESTATEMENT: el estado sustituido lleva la fecha del restatement.
+    RESTATEMENT: el estado sustituido lleva fecha del restatement.
     NEW HOLDINGS:
-        posiciones heredadas: fecha del filing original.
-        posiciones nuevas:    fecha del amendment.
-    Sin reconstruccion documental posible: knowledge_date = N/D.
+        Posiciones heredadas inequivocas: fecha del filing original.
+        Posiciones nuevas inequivocas:    fecha del amendment.
+        Atribucion ambigua:               N/D.
+    Sin reconstruccion documental:        N/D.
 
-Coherente con P64 (`NEW HOLDINGS -> ADD`).
+### 4.6. Provenance por posicion
 
-### 4.5. Provenance por posicion
-
-La `PositionRecord` incluye en provenance:
+`PositionRecord.provenance` incluye:
 
     effective_filing_accession   accession del filing que aporta la linea
     effective_filing_date        FILING_DATE de ese filing
     effective_amendment_type     RESTATEMENT | NEW_HOLDINGS | None
+    ambiguity_flag               bool (True si atribucion ambigua)
 
 `knowledge_date` se deriva de `effective_filing_date`. Nunca se
 disocia del origen documental.
 
-### 4.6. `PositionRecord` extendido
+### 4.7. `PositionRecord` extendido
 
     @dataclass(frozen=True)
     class PositionRecord:
@@ -362,25 +416,17 @@ disocia del origen documental.
         operational_mapping_status: str
         weight: float
         provenance: dict = field(default_factory=dict)
-        # v4:
         period_end: Optional[str] = None
         filing_date: Optional[str] = None
         knowledge_date: Optional[str] = None
 
-**Invariantes verificables:**
+**Invariantes:**
 
-- Si `period` y `period_end` presentes: `period_end` = ultimo dia
-  del trimestre referenciado por `period`.
-- Si `filing_date` y `knowledge_date` presentes:
-  `knowledge_date == filing_date`.
-- `provenance["effective_filing_accession"]` identifica el filing que
-  aporta la linea.
+- `period` <-> `period_end` coherentes.
+- `knowledge_date == filing_date` si ambos presentes.
+- `provenance.effective_filing_accession` presente en contractual B3.
 
 **Distincion legacy vs contractual:**
-
-- Legacy: los 3 timestamps `None`. Retrocompat.
-- Contractual B3: 3 timestamps + `effective_filing_accession` en
-  provenance + invariantes.
 
     def is_contractual_b3(rec) -> bool:
         return (
@@ -390,41 +436,40 @@ disocia del origen documental.
             and rec.knowledge_date is not None
             and rec.knowledge_date == rec.filing_date
             and "effective_filing_accession" in rec.provenance
+            and not rec.provenance.get("ambiguity_flag", False)
         )
 
-### 4.7. `absence.py` (stub diferido, aprobado #45/#46)
+### 4.8. `absence.py` stub
 
 Enums + `NotImplementedError`. `P63 absence classifier = DEFERRED`.
 
-### 4.8. Regla dura preservada
+### 4.9. Regla dura preservada
 
 `delta_shares` NO crea `SOLD`. `P64_EVENTS_DEFERRED` se mantiene.
 
-### 4.9. Tests B3
+### 4.10. Tests B3
 
 - `PositionRecord` con 3 timestamps -> OK.
-- `PositionRecord` sin timestamps -> legacy.
+- Sin timestamps -> legacy.
 - Invariante `period <-> period_end`.
-- `knowledge_date == filing_date` por construccion.
-- **RESTATEMENT:** 1 filing original + 1 restatement -> todas las
-  posiciones efectivas llevan fecha del restatement.
-- **NEW HOLDINGS:** original A (enero) + amendment B (febrero) ->
-  A lleva enero, B lleva febrero (test explicito).
-- Sin reconstruccion -> `knowledge_date = N/D`.
-- `is_contractual_b3` retorna True solo con 3 timestamps + provenance.
+- `knowledge_date == filing_date`.
+- RESTATEMENT: fecha del restatement.
+- NEW HOLDINGS no ambiguo: heredada -> original; nueva -> amendment.
+- **NEW HOLDINGS ambiguous -> `knowledge_date = N/D`** (test reforzado).
+- `is_contractual_b3` rechaza registros con `ambiguity_flag=True`.
 - `absence.py::classify_absence` -> `NotImplementedError`.
-- `delta_shares` no produce SOLD (test P63 existente).
+- `delta_shares` no produce SOLD (test P63).
 ---
 
-## 5. Orden de commits (aprobado #45/#46)
+## 5. Orden de commits (sin cambios)
 
     1. B2  Modelo de versionado + target_catalog_as_of
     2. B1  target_builder + TargetUniverse + catalog_key
     3. B1  Integracion coverage (gate 0 consumidores primero)
-    4. B3  Timestamps + PositionRecord extendido + provenance + absence.py
+    4. B3  Timestamps + PositionRecord + provenance + absence.py
     5. Integracion end-to-end + verificacion global
 
-Razon: B1 depende de B2 para validez temporal. B3 depende de B1.
+Razon: B1 depende de B2. B3 depende de B1.
 
 ---
 
@@ -432,106 +477,109 @@ Razon: B1 depende de B2 para validez temporal. B3 depende de B1.
 
 | Bloque | Fichero | Cobertura |
 |---|---|---|
-| B1 | `tests/test_target_builder.py` (nuevo) | catalog_key, declared/resolved/unresolved, invariante NOT NULL/UNICO, independencia del mapping, TARGET_PAIRWISE != cardinalidad |
-| B1 | `tests/test_sec_13f_nipc.py` (extender) | wrapper con/sin TARGET, contrato tipado |
-| B2 | `tests/test_target_catalog_as_of.py` (nuevo) | snapshots, fail-closed, ambiguedad, integridad (hash), corrupcion simulada |
-| B3 | `tests/test_position_record.py` (nuevo) | 3 timestamps, invariantes, `is_contractual_b3`, RESTATEMENT vs NEW HOLDINGS |
+| B1 | `tests/test_target_builder.py` (nuevo) | catalog_key estable, ticker versionado, declared_keys, cardinalidad intacta bajo mapping fail |
+| B1 | `tests/test_sec_13f_nipc.py` (extender) | wrapper con/sin TARGET, UNAVAILABLE bajo mapping fail |
+| B2 | `tests/test_target_catalog_as_of.py` (nuevo) | snapshots, fail-closed, integridad, corrupcion |
+| B3 | `tests/test_position_record.py` (nuevo) | RESTATEMENT, NEW HOLDINGS no ambiguo, NEW HOLDINGS ambiguo -> N/D |
 | B3 | `tests/test_absence.py` (nuevo) | enums + NotImplementedError |
 
-**Cero regresion P65/P66 esperada.** 31 + 31 tests existentes intactos.
+**Cero regresion P65/P66 esperada.**
 
 ---
 
-## 7. Criterio de cierre A.6.2-bis (revisado #46 seccion 9)
+## 7. Criterio de cierre A.6.2-bis
 
 ### B1
 
-- `catalog_key = "radar:<radar_ticker>"` unico y NOT NULL (test).
-- Invariante verificado en cada build: si duplicado -> raise.
-- Cardinalidad declarada (`len(declared_keys)`) independiente del mapping.
+**A1 - catalog_key:**
+- Inmutable y no derivado del ticker (test: cambio de ticker -> key identico).
+- `catalog_key NOT NULL` + `UNICO` por snapshot + `UNICO` global.
+- Violacion -> `raise CatalogKeyInvariantViolated`.
+
+**A2 - denominador:**
+- `TARGET_PAIRWISE` cardinalidad == |catalogo contractual|.
+- `mapping OK` vs `mapping FAIL` -> **misma cardinalidad** TARGET_PAIRWISE.
+- mapping FAIL -> `paired_weighted_share_coverage = UNAVAILABLE`.
+- NUNCA recalcular con denominador reducido.
+
+**General:**
 - Unidad economica P38 (`share_class_figi`) intacta.
-- Separacion cardinalidad / denominador ponderado (test explicito).
-- `mapping OK` vs `mapping fallido` -> mismo `declared_keys`.
+- `compute_coverage_pairwise` sin TARGET -> dict tipado UNAVAILABLE.
 
 ### B2
 
-- `target_catalog_as_of(periodo)`:
-  - 0 snapshots -> `CatalogNotAvailable`.
-  - 1 snapshot -> OK.
-  - >1 solapados -> `CatalogAmbiguous`.
-  - hash invalido -> fail-closed.
-- Backdating prohibido.
-- Test integridad: sha256 recalculado == publicado.
-- Test corrupcion: byte alterado -> deteccion fail-closed.
-- Intervalos `[valid_from, valid_to)` sin solapamiento.
+- 0/1/>1 snapshots -> fail-closed/OK/ambiguous.
+- Hash invalido -> fail-closed.
+- No backdating.
+- Integridad verificable (sha256 publicado vs recalculado).
+- Corrupcion detectada.
 
 ### B3
 
 - `period_end != filing_date` cuando difieran.
-- `knowledge_date == filing_date` por contrato.
-- `knowledge_date >= filing_date` (invariante dura).
-- **RESTATEMENT:** estado sustituido lleva fecha del restatement.
-- **NEW HOLDINGS:** posiciones heredadas -> fecha original;
-  nuevas -> fecha del amendment. `N/D` si no reconstruible.
-- `provenance` incluye `effective_filing_accession`.
+- `knowledge_date == filing_date`.
+- RESTATEMENT -> fecha del restatement.
+- NEW HOLDINGS no ambiguo -> fechas por posicion.
+- **NEW HOLDINGS ambiguo -> `knowledge_date = N/D`** (test reforzado).
+- `provenance.effective_filing_accession` presente.
+- `is_contractual_b3` rechaza `ambiguity_flag=True`.
 
 ### Global
 
-- P65 tests PASS (31 actuales).
-- P66 tests PASS (31 actuales).
-- Nuevos tests A.6.2-bis PASS.
-- `compileall` OK.
-- `pyflakes` LIMPIO.
-- Suite sin regresion nueva.
+- P65 PASS + P66 PASS + A.6.2-bis PASS.
+- `compileall` OK + `pyflakes` LIMPIO.
+- Sin regresion nueva.
 
 Solo entonces: **A.6.2-bis CLOSED -> A.6.3 AUTHORIZED.**
 ---
 
-## 8. Preguntas al auditor (v4)
+## 8. Preguntas al auditor (v5)
 
-1. **A - `catalog_key`.** Se propone `catalog_key = "radar:<radar_ticker>"`.
-   Gate 0 demuestra 242/242 unicos, 0 nulos en el catalogo actual.
-   ¿Se aprueba? ¿Prefijo distinto?
+1. **A1 - Formato `catalog_key`.** Se propone
+   `radar_<YYYYMMDD_alta>_<NNNN>` (secuencial). ¿Se aprueba? ¿ULID?
+   ¿Hash de la primera observacion?
 
-2. **A - Invariante NOT NULL/UNICO.** Se valida en cada build; violacion
-   -> `raise CatalogKeyInvariantViolated`. ¿Se aprueba?
+2. **A1 - Migracion inicial.** Las 242 filas actuales reciben
+   `radar_20260919_<NNNN>` (secuencial administrativo). ¿Se aprueba?
 
-3. **A - `coverage.py` ajuste minimo.** El caller construye
-   `target_q4/q1` como sets de `share_class_figi` filtrando
-   `unresolved_keys`. La formula P38 se mantiene intacta. ¿Se aprueba?
+3. **A1 - `radar_ticker` como atributo versionado.** Puede cambiar
+   entre snapshots sin alterar `catalog_key`. ¿Se aprueba?
 
-4. **A - `TargetUniverse`.** `declared_keys` (catalog_key) +
-   `figi_by_key` (dict) + `unresolved_keys`. ¿Se aprueba este contrato?
+4. **A2 - Camino B (fail-closed).** Se ha elegido Camino B: si alguna
+   entrada de `TARGET_PAIRWISE` tiene `w(s) = 0`, la metrica pasa a
+   `UNAVAILABLE`. NO se recalcula con denominador reducido. ¿Se aprueba?
 
-5. **A - Cardinalidad vs denominador.** `len(declared_keys)` es
-   cardinalidad; `paired_weighted_share_coverage` denominador ponderado
-   sobre `TARGET_PAIRWISE` (por figi). ¿Se aprueba la separacion?
-
-6. **B - RESTATEMENT.** Estado sustituido lleva fecha del restatement.
+5. **A2 - Universo de `TARGET_PAIRWISE`.** Definido por el catalogo
+   (independiente del mapping). Cardinalidad = |catalogo contractual|.
    ¿Se aprueba?
 
-7. **B - NEW HOLDINGS.** Heredadas -> fecha original; nuevas ->
-   fecha amendment. `N/D` si no reconstruible. ¿Se aprueba?
+6. **A2 - Ajuste `coverage.py`.** Formula P38 §3.3 intacta. Se anade
+   regla de validez: si falta peso en `TARGET_PAIRWISE` -> `UNAVAILABLE`.
+   ¿Se aprueba?
 
-8. **B - `provenance.effective_filing_accession`.** Obligatorio para
-   `is_contractual_b3`. ¿Se aprueba?
+7. **B2 - Layout snapshots + manifest.** Sin cambios respecto v4
+   (aprobado #46/#47). ¿Se mantiene?
 
-9. **B - `is_contractual_b3`.** Requiere 3 timestamps + provenance +
-   invariantes. ¿Se aprueba?
+8. **B3 - RESTATEMENT.** Fecha del filing que sustituye. ¿Se mantiene
+   (aprobado #47)?
 
-10. **Cierre.** Los criterios de la seccion 7 + global.
+9. **B3 - NEW HOLDINGS ambiguous.** `knowledge_date = N/D` (test
+   reforzado #47 seccion 7). ¿Se aprueba?
+
+10. **Criterio de cierre.** Los 3 bloques de la seccion 7 + global.
 
 ---
 
 ## 9. Lo que NO se toca en A.6.2-bis
 
 - Contratos: `NIPC_CONTRATOS_SEMANTICOS_v1.md`, `NIPC_COVERAGE_POLICY.md` v1.0.
-- Modelo economico P38: `share_class_figi` como unidad (Q12 Modelo A).
+- Modelo economico P38 (`share_class_figi` como unidad, Q12 Modelo A).
 - Modulos: `delta_shares.py`, `security_identity.py`, `relationships.py`,
   `amendments.py`, `temporal_validity.py`.
-- `coverage.py`: se ajusta minimamente (punto 3 preguntas); la formula
-  de `paired_weighted_share_coverage` NO cambia.
-- `radar_target_catalog.csv` actual: snapshot inicial.
+- `coverage.py`: ajuste minimo (regla de validez fail-closed); formula
+  P38 §3.3 intacta.
+- `radar_target_catalog.csv` actual: snapshot inicial + migracion
+  administrativa de `catalog_key`.
 - OpenFIGI masivo: NO.
 - `DROP_DUP`: NO.
 - Push a `origin/main`: NO.
@@ -544,15 +592,17 @@ Solo entonces: **A.6.2-bis CLOSED -> A.6.3 AUTHORIZED.**
     Dictamen #43                 A.6.0 CERRADO + A.6.2-bis AUTORIZADO
     Dictamen #44                 v1 NO-GO; 4 correcciones
     Dictamen #45                 v2 GO COND; F1/F2/F3 + amendments
-    Dictamen #46                 v3 NO-GO; bloqueos A + B
-    A.6.0 inventario             INFORME.md seccion 21
-    Gate 0 catalogo              este documento seccion 1 (242 filas, unicidad)
+    Dictamen #46                 v3 NO-GO; bloqueos A (B1) + B (B3)
+    Dictamen #47                 v4 NO-GO; A1 catalog_key + A2 denominador
+                                 + test NEW HOLDINGS ambiguous
+                                 + correccion DICTAMENES.md §13
+    Gate 0 catalogo              v5 seccion 1 (242 filas, unicidad)
     F2.4 (dictamen #24)          3 bloqueantes estructurales
     P38 (contrato seccion 3)     unidad = share_class_figi
-    P64 (contrato seccion 13)    RESTATEMENT -> REPLACE; NEW HOLDINGS -> ADD
+    P64 (contrato seccion 13)    RESTATEMENT / NEW HOLDINGS
     P65 (contrato seccion 14)    L3 booleano
 
 ---
 
-Fin de la propuesta v4. Sometida a verificacion documental.
-HEAD fa03a97.
+Fin de la propuesta v5. Sometida a verificacion documental.
+HEAD 30ed3df.
