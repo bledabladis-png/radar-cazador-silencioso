@@ -3,7 +3,9 @@
 **Generado:** 2026-09-20
 **Consolida:** 19 informes del ciclo IAE
 
-**Regla:** este fichero se actualiza in-place. Las versiones previas se archivan con fecha.
+**Regla:** este fichero se actualiza in-place. Los informes originales
+fueron consolidados aqui y borrados en `4fe2b62` (regla 1 concepto = 1
+fichero vivo, prompt seccion 3.3).
 
 **Actualizacion 2026-09-20 v2:** F2.4 EMITIDO por auditor externo.
 GO CONDICIONADO arquitectura + 3 bloqueantes estructurales.
@@ -42,8 +44,6 @@ Referencia: DICTAMENES.md seccion 24 + INFORME.md seccion 18.
 
 ## 1. INFORME DE CURACION CUSIP -> TICKER
 
-**Fichero original:** `archive/iae/informes_originales/INSTITUTIONAL_ACCUMULATION_CUSIP_CURATION_INFORME.md`
-
 **Modulo:** IAE (Institutional Accumulation Evidence) - SEC 13F
 **Referencia:** prompt v6.35, HEAD 10a5cc2
 **Fecha:** 2026-09-19
@@ -54,8 +54,6 @@ Gate 0 ejecutado sobre el estado real del crosswalk CUSIP -> ticker. Hallazgos:
 ---
 
 ## 2. INFORME FA-2.1 - Filtro temporal canonico por PERIODOFREPORT
-
-**Fichero original:** `archive/iae/informes_originales/INSTITUTIONAL_ACCUMULATION_FA21_INFORME.md`
 
 Version: 1.0 (2026-09-19)
 Dictamen habilitante: INSTITUTIONAL_ACCUMULATION_FA2_GATE0_DICTAMEN.md
@@ -68,8 +66,6 @@ Filtro canonico de los 7 TSVs al periodo del trimestre segun
 
 ## 3. INFORME FA-2.4 - Amendments + Canonical Snapshot
 
-**Fichero original:** `archive/iae/informes_originales/INSTITUTIONAL_ACCUMULATION_FA24_INFORME.md`
-
 Version: 1.0 (2026-09-19)
 Dictamen habilitante: INSTITUTIONAL_ACCUMULATION_FA24_DICTAMEN_GATE0.md
 Especificacion: INSTITUTIONAL_ACCUMULATION_FA24_ESPECIFICACION.md
@@ -80,8 +76,6 @@ Resolver snapshot canonico del trimestre por (CIK, PERIOD) aplicando
 ---
 
 ## 4. INFORME GATE 0 FA-2 - IAE SEC 13F
-
-**Fichero original:** `archive/iae/informes_originales/INSTITUTIONAL_ACCUMULATION_FA2_GATE0_INFORME.md`
 
 Version: 1.0 (2026-09-19)
 Contrato: docs/auditoria/INSTITUTIONAL_ACCUMULATION_CONTRATO.md (v1.1)
@@ -94,8 +88,6 @@ Prompt de referencia: v6.34
 
 ## 5. INFORME GATE 0 - Institutional Accumulation Evidence (IAE)
 
-**Fichero original:** `archive/iae/informes_originales/INSTITUTIONAL_ACCUMULATION_GATE0_INFORME.md`
-
 Version: 1.0 (2026-09-19)
 Prompt de referencia: v6.32 (HEAD 7dea18c)
 Contrato previo: docs/auditoria/INSTITUTIONAL_ACCUMULATION_CONTRATO.md
@@ -106,8 +98,6 @@ Estado: ciclo C cerrado. Pendiente dictamen auditor sobre reformulaciones Q2 y Q
 ---
 
 ## 6. INFORME GATE FA-1 - IAE SEC 13F
-
-**Fichero original:** `archive/iae/informes_originales/INSTITUTIONAL_ACCUMULATION_GATE_FA1_INFORME.md`
 
 Version: 1.0 (2026-09-19)
 Contrato: docs/auditoria/INSTITUTIONAL_ACCUMULATION_CONTRATO.md (v1.1)
@@ -120,8 +110,6 @@ Naturaleza: no normativo. Si hay conflicto, gana el Prompt Maestro.
 
 ## 7. INFORME GATE FA-2 - IAE SEC 13F
 
-**Fichero original:** `archive/iae/informes_originales/INSTITUTIONAL_ACCUMULATION_GATE_FA2_INFORME.md`
-
 Version: 1.0 (2026-09-19)
 Dictamenes habilitantes:
   FA-2.0: INSTITUTIONAL_ACCUMULATION_FA2_GATE0_DICTAMEN.md
@@ -132,8 +120,6 @@ Estado: Gate FA-2 superado localmente. Pendiente dictamen final.
 ---
 
 ## 8. INFORME - Coverage baseline NIPC (Gate 0 baseline)
-
-**Fichero original:** `archive/iae/informes_originales/INSTITUTIONAL_ACCUMULATION_NIPC_GATE0_COVERAGE_BASELINE_INFORME.md`
 
 **Modulo:** IAE (Institutional Accumulation Evidence) - SEC 13F / NIPC
 **Referencia:** prompt maestro v6.36
@@ -146,8 +132,6 @@ Estado: Gate FA-2 superado localmente. Pendiente dictamen final.
 
 ## 9. INFORME GATE 0 - NIPC (Net Institutional Position Change)
 
-**Fichero original:** `archive/iae/informes_originales/INSTITUTIONAL_ACCUMULATION_NIPC_GATE0_INFORME.md`
-
 **Modulo:** IAE (Institutional Accumulation Evidence) - SEC 13F
 **Referencia:** prompt v6.35, HEAD 9d4a81e
 **Fecha:** 2026-09-19
@@ -158,8 +142,6 @@ Gate 0 empirico completado para NIPC. Estado:
 ---
 
 ## 10. INFORME MINI-PROBE FILER CONTINUITY (Q-PROBE-5) - Q4 2025 -> Q1 2026
-
-**Fichero original:** `archive/iae/informes_originales/INSTITUTIONAL_ACCUMULATION_NIPC_GATE0_MINIPROBE_INFORME.md`
 
 Version: 1.0 (2026-09-19)
 HEAD revisado: d75e84c
@@ -172,8 +154,6 @@ Naturaleza: no normativo. Si hay conflicto con el Prompt Maestro, gana el
 
 ## 11. INFORME PROBE END-TO-END NIPC - Q4 2025 -> Q1 2026
 
-**Fichero original:** `archive/iae/informes_originales/INSTITUTIONAL_ACCUMULATION_NIPC_GATE0_PROBE_INFORME.md`
-
 Version: 1.0 (2026-09-19)
 HEAD revisado: b75c262
 Estado: probe completado. Hallazgo estructural no cubierto por el contrato.
@@ -184,8 +164,6 @@ Naturaleza: no normativo. Si hay conflicto con el Prompt Maestro, gana el
 ---
 
 ## 12. INFORME TOP 50 FILER CONTINUITY - Q-MINI-5
-
-**Fichero original:** `archive/iae/informes_originales/INSTITUTIONAL_ACCUMULATION_NIPC_GATE0_TOP50_INFORME.md`
 
 Version: 1.0 (2026-09-19)
 HEAD revisado: 37d2879
@@ -198,8 +176,6 @@ Naturaleza: no normativo. Si hay conflicto con el Prompt Maestro, gana el
 
 ## 13. IAE NIPC - Informe OpenFIGI + RADAR_TARGET_CATALOG + TARGET_UNIVERSE
 
-**Fichero original:** `archive/iae/informes_originales/INSTITUTIONAL_ACCUMULATION_OPENFIGI_CATALOG_TARGET_UNIVERSE_INFORME.md`
-
 Ciclo: F2.3-bis -> entrega de evidencia empirica al auditor.
 Fecha: 2026-09-19.
 Estado: BORRADOR para dictamen externo. No push.
@@ -210,8 +186,6 @@ Autoridad: dictamen F2.3 NO GO con cambios obligatorios +
 ---
 
 ## 14. IAE NIPC - Informe piloto TOP 2000 + hallazgos de calidad de identidad
-
-**Fichero original:** `archive/iae/informes_originales/INSTITUTIONAL_ACCUMULATION_OPENFIGI_TOP2000_INFORME.md`
 
 Ciclo: F2.3-bis -> validacion cuantitativa ponderada.
 Fecha: 2026-09-19.
@@ -224,8 +198,6 @@ Piloto ejecutado sobre top 2000 CUSIPs del 13F 2026Q1, con metrica
 
 ## 15. INFORME DE ENTREGA AL AUDITOR - SOLICITUD DE F2.4
 
-**Fichero original:** `archive/iae/informes_originales/NIPC_INFORME_ENTREGA_F24.md`
-
 **Objeto:** entrega de la cadena documental y tecnica del ciclo post-F2.3-bis + solicitud de dictamen F2.4.
 **HEAD al redactar:** a9bb1fb.
 **Estado:** BORRADOR pendiente de envio.
@@ -237,8 +209,6 @@ Piloto ejecutado sobre top 2000 CUSIPs del 13F 2026Q1, con metrica
 
 ## 16. NIPC_INFORME_ESTADO_POST_FIXES_F24
 
-**Fichero original:** `archive/iae/informes_originales/NIPC_INFORME_ESTADO_POST_FIXES_F24.md`
-
 **Objeto:** comunicacion al auditor del estado del sistema tras aplicar los 6 fixes mecanicos autorizados.
 **HEAD al redactar:** d462f72.
 **Destinatario:** auditor externo.
@@ -249,8 +219,6 @@ Piloto ejecutado sobre top 2000 CUSIPs del 13F 2026Q1, con metrica
 ---
 
 ## 17. INFORME TECNICO - SISTEMA IAE (INSTITUTIONAL ACCUMULATION EVIDENCE)
-
-**Fichero original:** `archive/iae/informes_originales/NIPC_INFORME_TECNICO_AUDITORIA_EXTERNA.md`
 
 **Objeto:** informe tecnico completo del sistema IAE para auditoria externa.
 **HEAD al redactar:** 9c32c9b (o posterior, ver commit del propio informe).
