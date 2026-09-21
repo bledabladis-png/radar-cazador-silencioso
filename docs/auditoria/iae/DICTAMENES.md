@@ -574,6 +574,126 @@ Cierre: A.6.2-bis CLOSED -> A.6.3 AUTHORIZED.
 
 ---
 
+## 45. A.6.2-bis - Dictamen de verificacion documental v2 (2026-09-21)
+
+**Tipo:** dictamen del auditor externo sobre A62BIS_PROPUESTA.md v2.
+**HEAD auditado:** 1e83d70.
+**Dictamen anterior:** #44 (v1 NO-GO, 4 correcciones materiales).
+
+**Resultado:** GO CONDICIONADO. v2 supera las 4 correcciones del #44.
+NO-GO a implementacion hasta corregir 3 puntos materiales nuevos + 1
+precision.
+
+### Lo que la v2 corrige correctamente
+
+- Elimina la autorreferencia del hash.
+- Separa snapshots inmutables del manifiesto de intervalos.
+- Prohibe backdating del catalogo.
+- Sustituye `knowledge_date = max(FILING_DATE)` por semantica por
+  observacion.
+- Incorpora separacion PIT -> build_target + orden B2 -> B1 -> B3.
+
+### 3 puntos materiales pendientes
+
+**F1 - B1 semantica del denominador contractual MATERIAL**
+
+`TargetUniverse.resolved` (FIGIs) + `unresolved` (tickers) no es
+operacion homogenea: FIGI y ticker son identificadores distintos.
+Debe fijarse la unidad contractual del denominador.
+
+Correccion exigida: la v3 debe fijar explicitamente una de dos
+opciones:
+  Opcion 1: identidad primaria de TARGET independiente del FIGI.
+  Opcion 2: denominador sobre cardinalidad declarada del catalogo;
+            resolved = subconjunto para operaciones que requieren FIGI.
+
+Invariante: fallo de mapping NO modifica TARGET declarado ni el
+denominador contractual.
+
+**F2 - B2 test de inmutabilidad insuficiente MATERIAL DE PRUEBA**
+
+El test "dos runs consecutivos" no demuestra inmutabilidad de
+publicacion. Solo demuestra que la ejecucion concreta no lo modifico.
+
+Correccion exigida: prueba de integridad equivalente a:
+  contenido publicado -> sha256 publicado -> sha256 recalculado -> MATCH
++ validacion snapshot != objeto mutable de trabajo
++ cualquier modificacion posterior del contenido -> detectable y fail-closed.
+
+**F3 - B3 contradiccion logica en criterio de cierre BLOQUEANTE**
+
+v2 exige simultaneamente `knowledge_date == filing_date` (§4) y
+`filing_date != knowledge_date` (§7). Incompatible.
+
+Correccion obligatoria:
+  period_end != filing_date       cuando difieren temporalmente
+  knowledge_date == filing_date   por contrato
+  knowledge_date NUNCA anterior al filing que origina la observacion
+
+**Precision adicional - amendments**
+
+Debe definirse que significa "filing que origino la observacion" cuando
+hay cadena de amendments. La `PositionRecord` del snapshot efectivo
+debe llevar fecha coherente con el filing que REALMENTE aporta el
+estado observado al snapshot (no necesariamente el primer filing).
+
+Evita que P62/P64/P65 y B3 asignen fechas distintas al mismo estado
+efectivo.
+
+### Precisiones adicionales sobre PositionRecord
+
+- Invariante `period == period_end` cuando ambos existan (verificable).
+- Distinguir "legacy record" (3 timestamps None) de "contractual
+  PositionRecord". Una ruta contractual B3 no puede considerarse valida
+  solo porque los timestamps son None.
+
+### Aprobaciones de v2 mantenidas
+
+    target_catalog_as_of -> build_target(snapshot)      APROBADO
+    snapshots + manifest + hash desacoplado             APROBADO + F2
+    intervalos [from, to)                                APROBADO
+    no backdating                                       APROBADO
+    knowledge_date = filing_date (concepto)             APROBADO (F3)
+    absence.py stub                                     APROBADO
+    orden B2 -> B1 -> B3                                APROBADO
+
+### Criterio de cierre revisado (#45 seccion 11)
+
+B1: TARGET declarado != TARGET resoluble != TARGET observado.
+    Denominador contractual inequivoco.
+    `mapping OK` vs `mapping fallido` -> mismo TARGET declarado.
+
+B2: as_of(period) fail-closed con 0/1/>1 snapshots + hash invalido.
+    Snapshot historico publicado -> contenido verificable por hash
+    -> modificacion detectable. Sin backdating.
+
+B3: knowledge_date == filing_date (opcion A).
+    Ningun registro aparece como conocido antes del filing que lo
+    hace publico. Amendments incluidos.
+
+Global: P65 PASS + P66 PASS + A.6.2-bis PASS + compileall + pyflakes
++ sin regresion nueva.
+
+Cierre: A.6.2-bis CLOSED -> A.6.3 AUTHORIZED.
+
+### Estado operativo
+
+    A.6.0                  CLOSED
+    A.6.2-bis v2           NO-GO IMPLEMENTATION
+    A.6.2-bis architecture VALIDATED
+    B1                     GO CONDITIONAL (F1)
+    B2                     GO CONDITIONAL (F2)
+    B3                     NO-GO UNTIL CORRECCION (F3)
+    A.6.3                  BLOCKED
+    A.6.4                  BLOCKED
+    F2.4-CLOSE             BLOCKED
+    DROP_DUP               NOT AUTHORIZED
+
+**Conclusion: v2 cerca de implementable; corregir F1/F2/F3 + amendments
++ invariantes PositionRecord en v3.**
+
+---
+
 Fin del registro de dictamenes.
 
 

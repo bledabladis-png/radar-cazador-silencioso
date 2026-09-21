@@ -1,50 +1,47 @@
-# IAE - A.6.2-bis Propuesta de rediseno arquitectonico TARGET (v2)
+# IAE - A.6.2-bis Propuesta de rediseno arquitectonico TARGET (v3)
 
-**Version:** v2. Aplicadas las 4 correcciones materiales + precisiones
-del dictamen #44 (2026-09-21). Sometida a nueva verificacion documental.
+**Version:** v3. Aplicadas las 3 correcciones materiales + la precision
+sobre amendments + las precisiones sobre PositionRecord del dictamen
+#45 (2026-09-21).
 
-**Version previa:** v1 (commit f383932, dictamen #44). El backup esta
-en `A62BIS_PROPUESTA.md.v1.bak` solo para trazabilidad local; se
-elimina tras la verificacion.
+**Versiones previas:** v1 (commit f383932, NO-GO #44) y v2 (commit
+9aa0727, GO CONDICIONAL #45). Backups locales como .v1.bak / .v2.bak
+hasta verificacion; se eliminan despues.
 
 **Objeto:** propuesta de diseno para materializar los 3 bloqueantes
-estructurales F2.4 (B1 TARGET independiente + B2 point-in-time + B3
-13F != flujo en tiempo real), autorizada por dictamen #43.
+estructurales F2.4 (B1 + B2 + B3).
 
 **Fecha:** 2026-09-21.
-
-**HEAD al redactar:** 1e83d70.
-
+**HEAD al redactar:** 9aa0727.
 **Naturaleza:** propuesta. NO normativa. Sometida a dictamen.
 
 ---
 
 ## 0. Resumen ejecutivo
 
-v2 aplica las 4 correcciones materiales del dictamen #44:
+v3 aplica las 3 correcciones materiales del dictamen #45 + precisiones:
 
-1. **F2 (autorreferencia hash):** el `version_id` NO se deriva del
-   contenido que lo contiene. Manifiesto externo lleva sha256 completo.
-2. **F3 (inmutabilidad real):** ningun snapshot publicado se modifica
-   in-place. Los intervalos los determina un `catalog_manifest.json`
-   externo, no el `.meta.json` historico.
-3. **F4 (backdating prohibido):** el catalogo actual NO se asigna
-   retroactivamente a periodos historicos. Sin snapshot historico ->
-   `UNAVAILABLE`. Q4 2025 / Q1 2026 quedan sin snapshot.
-4. **F5 (knowledge_date):** no se equipara a `max(FILING_DATE)`.
-   Se elige explicitamente la semantica contractual (opcion A: fecha
-   de publicacion del filing que origino la observacion).
+1. **F1 (B1, semantica del denominador):** eleccion explicita de la
+   Opcion 2. El denominador contractual se calcula sobre la
+   cardinalidad declarada del catalogo. `resolved` es el subconjunto
+   apto para operaciones que requieren FIGI. Separacion estricta:
+   TARGET declarado != TARGET resoluble != TARGET observado.
 
-Ademas, precisiones del dictamen:
+2. **F2 (B2, test de inmutabilidad):** prueba de integridad por
+   hash historico. Deteccion fail-closed de modificacion posterior.
+   Validacion de que snapshot publicado != objeto mutable de trabajo.
 
-- B1: `build_target` no acoplado a `period_end` + `catalog_version`.
-  La resolucion PIT precede a la construccion TARGET.
-- B1: `TARGET_UNRESOLVED` como estado explicito. No descartar filas
-  del catalogo sin `share_class_figi`.
-- `compute_coverage_pairwise`: inventario de consumidores antes de
-  refactor.
-- Orden de commits: B2 primero, luego B1, luego B3.
-- Criterio de cierre fijado (seccion 7).
+3. **F3 (B3, contradiccion):** criterio de cierre corregido:
+   `knowledge_date == filing_date` por contrato;
+   `period_end != filing_date` cuando difieren;
+   `knowledge_date` nunca anterior al filing origen.
+
+4. **Precision amendments:** `knowledge_date` = filing_date del
+   filing que realmente aporta el estado observado al snapshot
+   efectivo (no el primer filing historico de la cadena).
+
+5. **PositionRecord:** invariante `period == period_end` verificable.
+   Distincion entre legacy record (3 timestamps None) y contractual.
 
 **Fuera de alcance:** OpenFIGI masivo, recalculo de evidencia final,
 modificacion de contratos, `DROP_DUP`, certificacion "acumulacion",
@@ -57,25 +54,51 @@ Policy v1.3, Gate-NIPC.2/3.
 | Bloqueante | Piezas existentes | Piezas ausentes |
 |---|---|---|
 | B1 | `coverage.py::compute_contractual_coverage`, `PositionRecord`, `aggregate_positions_by_shareclass_figi`, `target_universe.py::resolve_cusips` | `target_builder.py`, integracion `nipc.py` |
-| B2 | `source_date` (no contractual) | versionado de snapshots + `target_catalog_as_of` |
+| B2 | `source_date` (no contractual) | versionado + `target_catalog_as_of` |
 | B3 | Doctrina P63/P64/P65 | `knowledge_date` con semantica explicita, `absence.py` |
 
 Hecho estructural: `coverage.py` ya define la API contractual P38 con
 TARGET externo. `nipc.py::compute_coverage_pairwise` mantiene una
 implementacion paralela con `observed_security_key` (CUSIPs) como
-proxy. La v2 unifica semanticamente sin fusionar fisicamente los
+proxy. La v3 unifica semanticamente sin fusionar fisicamente los
 modulos.
 ---
 
-## 2. B1 - TARGET independiente del exito del mapping
+## 2. B1 - TARGET independiente del exito del mapping (F1 resuelta)
 
-**Cautelas v2:**
-- Separar resolucion PIT de construccion TARGET (dictamen #44 seccion 1.1).
-- Filas sin `share_class_figi` -> `TARGET_UNRESOLVED`, no descartar.
-- No acoplar `build_target` a `catalog_version`: el snapshot lo resuelve
-  primero `target_catalog_as_of`.
+**Correccion F1 aplicada:** eleccion explicita de la Opcion 2 del
+dictamen #45.
 
-### 2.1. Arquitectura
+### 2.1. Tres universos separados
+
+    TARGET declarado     = {entradas del catalogo (identidad estable)}
+    TARGET resoluble     = {share_class_figi presentes}    subset declarado
+    TARGET observado     = {share_class_figi con 13F observado}
+
+**Invariante estructural:**
+
+    TARGET declarado NO depende del mapping.
+    TARGET declarado NO depende del 13F observado.
+    TARGET declarado NO depende de OpenFIGI.
+
+Un fallo de mapping produce ausencia en `TARGET observado`, nunca en
+`TARGET declarado`.
+
+### 2.2. Semantica del denominador contractual
+
+**Eleccion: Opcion 2.**
+
+    Denominador contractual = |TARGET declarado|
+
+No depende de `share_class_figi`. Depende de la cardinalidad declarada
+del catalogo. `resolved` es el subconjunto de `declarado` apto para
+operaciones que requieren FIGI.
+
+Razon: la magnitud declarada del catalogo es el universo contractual
+definido por el radar. El exito o fallo del mapping no debe alterar
+esa magnitud.
+
+### 2.3. Arquitectura
 
     period_end
         v
@@ -83,211 +106,273 @@ modulos.
         v
     snapshot resuelto (inmutable)
         v
-    target_builder.build_target(snapshot, period_end)  [B1]
+    target_builder.build_target(snapshot, *, period_end,
+                                 catalog_version_id, catalog_sha256)
         v
-    TARGET_P = {share_class_figi: ...} + {UNRESOLVED: ...}
-        v
-    coverage.compute_contractual_coverage(TARGET_P, RESOLVED_P)
+    TargetUniverse:
+        declared   frozenset[catalog_key]      # identidad de catalogo
+        resolved   frozenset[share_class_figi] # subset con FIGI
+        unresolved frozenset[catalog_key]      # subset sin FIGI
 
-**Invariante B1:** `TARGET_P` se construye exclusivamente desde el
-snapshot del catalogo. NO depende de:
-- El resultado del mapping CUSIP_13F -> share_class_figi.
-- La presencia/ausencia de un CUSIP concreto en el filing 13F.
-- El exito de OpenFIGI sobre el filing concreto.
+**Identidad de catalogo:** el campo `radar_ticker` es la identidad
+primaria declarada (presente en todas las filas del catalogo por
+construccion). No se mezcla con `share_class_figi`.
 
-### 2.2. `identity/target_builder.py`
+**Denominador contractual** (para `compute_contractual_coverage`):
+`len(universe.declared)`.
+
+### 2.4. `identity/target_builder.py`
 
     @dataclass(frozen=True)
     class TargetUniverse:
         period_end: str
         catalog_version_id: str
         catalog_sha256: str
+        declared: frozenset[str]        # radar_ticker (identidad declarada)
         resolved: frozenset[str]        # share_class_figi
-        unresolved: frozenset[str]      # radar_ticker sin FIGI (TARGET_UNRESOLVED)
+        unresolved: frozenset[str]      # radar_ticker sin FIGI
 
-    def build_target(snapshot_df, *, period_end, catalog_version_id, catalog_sha256):
-        """Materializa el TARGET para el periodo a partir del snapshot.
+    def build_target(snapshot_df, *, period_end,
+                     catalog_version_id, catalog_sha256) -> TargetUniverse:
+        """Materializa el TargetUniverse a partir del snapshot.
 
-        El snapshot ya viene resuelto por target_catalog_as_of.
-        Este modulo NO consulta catalogo ni sistema de ficheros.
+        El snapshot viene resuelto por target_catalog_as_of.
+        Funcion pura. NO consulta catalogo ni sistema de ficheros.
         """
 
-**Estados:**
+**Estados por fila del catalogo:**
 
-    OK           -> figi + share_class_figi presentes -> suma a .resolved
-    PARTIAL      -> figi sin share_class_figi          -> suma a .unresolved (TARGET_UNRESOLVED)
-    MISS         -> sin hit en OpenFIGI                -> suma a .unresolved (TARGET_UNRESOLVED)
+    OK        -> figi + share_class_figi presentes -> declared + resolved
+    PARTIAL   -> figi sin share_class_figi          -> declared + unresolved
+    MISS      -> sin hit en OpenFIGI                -> declared + unresolved
 
-**Nota:** `TARGET_UNRESOLVED` mantiene el universo contractual en su
-magnitud declarada. Un consumidor que necesite el subconjunto
-efectivamente resoluble usa `target.resolved`. Un consumidor que
-necesite la magnitud declarada usa `target.resolved | target.unresolved`.
+**Identidad declarada:** `radar_ticker` (siempre presente).
+`declared = {row.radar_ticker for row in snapshot}`.
 
-### 2.3. `target_universe.resolve_cusips` (sin cambios)
+### 2.5. Contrato con `compute_contractual_coverage`
 
-Sigue siendo el resolver inverso (CUSIP observado -> membership). No
-se toca. El diccionario `scf_index` del catalogo se construye sobre
-`resolved` (FIGIs presentes).
+La funcion contractual de `coverage.py` recibe:
+- `target_q4` / `target_q1`: `set` de identidades de catalogo
+  (`radar_ticker`) -> cardinalidad declarada.
+- `records_q4` / `records_q1`: `PositionRecord` con `share_class_figi`
+  (subconjunto resoluble + observado).
 
-### 2.4. `compute_coverage_pairwise` (wrapper de compatibilidad)
+**Nota tecnica:** `coverage.py::compute_contractual_coverage` actual
+opera por `share_class_figi`. Para soportar la Opcion 2 requiere un
+ajuste minimo: el denominador se calcula sobre `target_q4 & target_q1`
+como identidades declaradas; el numerador `paired` requiere que ambos
+lados tengan `share_class_figi` comun. Este ajuste se implementara en
+el commit 3 de B1 (integracion) previa revision.
 
-**Gate 0 obligatorio previo al refactor:** inventariar todos los
-consumidores y fijar el contrato de retorno tipado. La v2 declara el
-contrato objetivo:
+**Alternativa si se prefiere no tocar `coverage.py`:** introducir un
+`catalog_key -> share_class_figi` mapping declarado y computar el
+denominador sobre el rango del mapping (con `None` mapeado a
+`TARGET_UNRESOLVED`). Esta opcion es funcionalmente equivalente; se
+propone la primera por simplicidad.
 
-    def compute_coverage_pairwise(units_current, units_previous, *,
-                                   target_q4=None, target_q1=None,
-                                   records_q4=None, records_q1=None):
-        """
-        Wrapper de compatibilidad P38.
-        Si target_q4/target_q1/records_* se aportan -> delega a
-        coverage.compute_contractual_coverage.
-        Si NO -> devuelve dict con coverage_status = "UNAVAILABLE" y
-        campos numericos a None. NO devuelve proxy silencioso.
-        Tipo de retorno: dict (mismo shape que compute_contractual_coverage).
-        """
+### 2.6. `target_universe.resolve_cusips` (sin cambios)
 
-**Contrato de retorno:** dict con las mismas claves que
-`compute_contractual_coverage` (los 7 campos). Los numericos son
-`float | None`; `coverage_status` es `"VALID" | "UNAVAILABLE"`.
+Sigue siendo el resolver inverso (CUSIP observado -> membership).
+No se toca.
 
-**Accion previa (commit 1 de B1):** `grep -rn "compute_coverage_pairwise"
-tests/ src/ scripts/` para inventariar. Si algun consumidor asume float
-no-nulo, se anota y se decide en dictamen.
+### 2.7. `compute_coverage_pairwise` (wrapper)
 
-### 2.5. Tests B1
+**Gate 0 obligatorio previo al refactor** (dictamen #45 mantiene):
 
-- `build_target` con snapshot 3 filas OK -> `resolved == 3 FIGIs`, `unresolved == 0`.
-- `build_target` con snapshot 2 OK + 1 MISS -> `resolved == 2`, `unresolved == 1`.
-- `build_target(mapping OK) == build_target(mapping fallido)`: mismo snapshot, distinto observed -> mismo TARGET_P.
-- `build_target` NO consulta catalogo (puro sobre snapshot).
-- `compute_coverage_pairwise` con TARGET -> llama a `compute_contractual_coverage`.
-- `compute_coverage_pairwise` sin TARGET -> dict con `coverage_status == "UNAVAILABLE"`, sin `float` implicitos.
+    grep -rn "compute_coverage_pairwise" tests/ src/ scripts/
 
+Contrato de retorno declarado:
+
+    dict con las mismas 7 claves que compute_contractual_coverage.
+    Numericos: float | None.
+    coverage_status: "VALID" | "UNAVAILABLE".
+    Sin TARGET aportado -> "UNAVAILABLE", sin proxy silencioso.
+
+### 2.8. Tests B1
+
+- `declared = {radar_ticker}` para snapshot de N filas.
+- `resolved ⊆ declared` (por construccion).
+- `unresolved = declared - resolved` en cardinalidad.
+- `mapping OK` vs `mapping fallido` -> mismo `declared`.
+- Denominador contractual = `len(declared)` en ambos casos.
+- `compute_coverage_pairwise` con TARGET -> delegacion; sin TARGET -> dict tipado.
 ---
 
-## 3. B2 - Point-in-time (modelo corregido)
+## 3. B2 - Point-in-time (F2 resuelta)
 
-**Correcciones aplicadas:** F2 (autorreferencia hash) + F3 (inmutabilidad)
-+ F4 (backdating prohibido) + intervalos semiabiertos.
+**Correccion F2 aplicada:** test de inmutabilidad reforzado.
+Deteccion fail-closed de modificacion posterior. Hash historico
+verificable.
 
-### 3.1. Estructura de disco
+### 3.1. Estructura de disco (sin cambios respecto v2)
 
     data/mappings/catalog_snapshots/
-        snapshot_<version_id>.csv         # contenido del catalogo
-        snapshot_<version_id>.sha256      # hash completo, fichero aparte
-    data/mappings/catalog_manifest.json   # indice mutable, es el "current" historico
+        snapshot_<version_id>.csv
+        snapshot_<version_id>.sha256       # hash completo, separado
+    data/mappings/catalog_manifest.json    # indice mutable
 
-**Reglas:**
+**version_id** = `<YYYYMMDD>_<NN>` (secuencia diaria). No depende del
+contenido del CSV.
 
-- El `.csv` NO contiene su propio hash.
-- El `.sha256` (fichero separado) contiene el SHA-256 completo del `.csv`.
-- `version_id`: identificador unico, derivado de la fecha de creacion del
-  snapshot + secuencia (e.g., `20260919_01`). Puede ser cualquier cadena
-  unica; NO tiene que ser el hash (evita autorreferencia).
-- El `catalog_manifest.json` es el unico objeto que declara intervalos:
+**catalog_manifest.json** (unico objeto mutable):
 
-      {
-        "schema_version": 1,
-        "snapshots": [
-          {"version_id": "20260919_01",
-           "valid_from": "2026-09-19",
-           "valid_to": null,
-           "sha256": "<hash completo>",
-           "csv_path": "catalog_snapshots/snapshot_20260919_01.csv"}
-        ]
-      }
+    {
+      "schema_version": 1,
+      "snapshots": [
+        {
+          "version_id": "20260919_01",
+          "valid_from": "2026-09-19",
+          "valid_to": null,
+          "sha256": "<hash completo>",
+          "csv_path": "catalog_snapshots/snapshot_20260919_01.csv"
+        }
+      ]
+    }
 
 ### 3.2. Inmutabilidad real
 
-- Un `snapshot_*.csv` publicado NO se modifica nunca.
-- Un `snapshot_*.sha256` publicado NO se modifica nunca.
-- El `catalog_manifest.json` SI puede cambiar (es un indice).
-- El manifiesto conserva su propia historia en git. Ademas, cada cambio
-  al manifiesto se puede acompanar de un `catalog_manifest.<timestamp>.json`
-  archivado si se necesita trazabilidad explicita.
+- `snapshot_*.csv` publicado: no se modifica nunca in-place.
+- `snapshot_*.sha256` publicado: no se modifica nunca in-place.
+- `catalog_manifest.json`: mutable, es indice. Su historia vive en git.
 
-**Regla contractual:** ninguna evidencia historica publicada se modifica
-in-place. Cualquier correccion se publica como snapshot nuevo.
+**Regla contractual:** ninguna evidencia historica publicada se
+modifica in-place. Correcciones = snapshot nuevo.
 
 ### 3.3. Intervalos semiabiertos
 
-`valid_from` inclusivo, `valid_to` exclusivo: `[valid_from, valid_to)`.
-Ejemplo sin solapamiento:
+`[valid_from, valid_to)`. `valid_to = null` = vigente.
 
-    V1 [2026-01-01, 2026-09-19)
-    V2 [2026-09-19, NULL)      # NULL = vigente
-
-`target_catalog_as_of(period_end)`:
+`target_catalog_as_of(period_end, *, catalog_root)`:
 
     0 snapshots cubren period_end -> raise CatalogNotAvailable
-    1 snapshot cubre period_end  -> devuelve el DataFrame
-    >1 snapshots cubren          -> raise CatalogAmbiguous
+    1 snapshot cubre period_end   -> devuelve (DataFrame, version_id, sha256)
+    >1 snapshots cubren           -> raise CatalogAmbiguous
 
-### 3.4. Backdating prohibido (F4)
+### 3.4. Backdating prohibido (F4 de #44, mantenido)
 
-**No se permite** asignar `valid_from` pasado al catalogo actual.
-Consecuencia: **Q4 2025 y Q1 2026 no tienen snapshot**.
+`valid_from = 2026-09-19` para el snapshot inicial. Q4 2025 / Q1 2026
+-> `CatalogNotAvailable`. No se fabrica retrospectivamente.
 
-    target_catalog_as_of("2025-12-31") -> raise CatalogNotAvailable
-    target_catalog_as_of("2026-03-31") -> raise CatalogNotAvailable
-    target_catalog_as_of("2026-09-19") -> OK (snapshot 20260919_01)
+**Implicacion A.6.4:** recalculo Q4/Q1 -> `UNAVAILABLE`. Decision
+consciente. Si el auditor requiere evidencia historica, debe aportarse
+externa (probe OpenFIGI historico, dataset externo, auditoria previa).
 
-**Implicacion para A.6.4:** el recalculo de evidencia Q4/Q1 quedara
-como `historical target = UNAVAILABLE / N/D`. La v2 declara esta
-consecuencia como decision consciente.
+### 3.5. Test de inmutabilidad reforzado (F2 resuelta)
 
-**Alternativa (a dictamen):** si el auditor requiere un snapshot historico
-para Q4 2025 / Q1 2026, debe existir evidencia externa (probe OpenFIGI
-historico, auditoria previa, otro dataset). No se fabrica retrospectivamente.
+**Test de integridad contractual (obligatorio):**
 
-### 3.5. Tests B2
+    def test_snapshot_integrity_fail_closed():
+        # 1. Cargar snapshot publicado.
+        snap_path = catalog_snapshots / f"snapshot_{vid}.csv"
+        sha_path  = catalog_snapshots / f"snapshot_{vid}.sha256"
 
-- `target_catalog_as_of` con 0 snapshots -> raise.
-- `target_catalog_as_of` con 1 snapshot que cubre -> DataFrame.
-- `target_catalog_as_of` con 2 snapshots solapados -> raise CatalogAmbiguous.
-- `target_catalog_as_of("2025-12-31")` sin snapshot -> raise (backdating prohibido).
-- SHA-256 del `.csv` NO coincide con el declarado -> raise.
-- Intervalos `[from, to)` no solapan entre snapshots consecutivos.
-- Inmutabilidad: dos "runs" consecutivos de un test de integridad
-  verifican que el `.csv` no cambia entre invocaciones.
+        # 2. Leer el hash publicado (fichero separado).
+        published_sha = sha_path.read_text().strip()
+
+        # 3. Recalcular sobre el .csv en disco.
+        recalculated = hashlib.sha256(snap_path.read_bytes()).hexdigest()
+
+        # 4. Fail-closed si discrepan.
+        assert recalculated == published_sha, (
+            "SNAPSHOT MODIFICADO O CORRUPTO: "
+            "hash recalculado != hash publicado"
+        )
+
+        # 5. Validar contra el manifiesto.
+        manifest = json.loads(manifest_path.read_text())
+        entry = next(s for s in manifest["snapshots"] if s["version_id"] == vid)
+        assert entry["sha256"] == published_sha, (
+            "MANIFIESTO DESINCRONIZADO con snapshot_*.sha256"
+        )
+
+**Cualquier modificacion posterior del contenido -> detectable y
+fail-closed.** El test no demuestra solo "no se ha modificado en esta
+ejecucion"; demuestra integridad verificable contra evidencia
+publicada.
+
+**Corrupcion simulada (test adicional):**
+
+    def test_snapshot_corruption_detected():
+        # Copia temporal con 1 byte alterado.
+        # Verifica que recalcular el hash no coincide con el publicado.
+        # Verifica que compute_as_of lanza (o aborta) antes de usar el
+        # snapshot corrupto.
+
+**Validacion de separacion objeto publicado != objeto de trabajo:**
+
+    - Los tests leen del directorio `catalog_snapshots/`.
+    - `target_catalog_as_of` NO escribe ficheros.
+    - Ninguna funcion de B2 abre un snapshot con modo escritura.
+
+### 3.6. Tests B2
+
+- 0 snapshots -> `CatalogNotAvailable`.
+- 1 snapshot -> exito, devuelve (df, vid, sha256).
+- >1 solapados -> `CatalogAmbiguous`.
+- `as_of("2025-12-31")` sin snapshot -> `CatalogNotAvailable` (no backdating).
+- Integridad: sha256 recalculado == publicado (fail-closed).
+- Corrupcion: sha256 divergente -> fail-closed.
+- Intervalos `[from, to)` sin solapamiento.
+- Inmutabilidad entre "runs": 2 invocaciones del test de integridad.
 ---
 
-## 4. B3 - 13F != flujo en tiempo real
+## 4. B3 - Semantica temporal (F3 resuelta + amendments)
 
-**Correccion aplicada:** F5 - `knowledge_date` NO se equipara a
-`max(FILING_DATE)`. Semantica explicita elegida.
+**Correcciones aplicadas:**
+
+- F3: contradiccion del criterio de cierre corregida.
+- Precision: semantica de `knowledge_date` con cadena de amendments.
 
 ### 4.1. Tres timestamps, tres semanticas
 
-    period_end       cierre del trimestre (13F: 31-mar, 30-jun, ...)
-    filing_date      fecha del filing (SUBMISSION.FILING_DATE)
-    knowledge_date   fecha en que el hecho fue publico (ver 4.2)
+    period_end      cierre del trimestre (13F: 31-mar, 30-jun, ...)
+    filing_date     fecha del filing (SUBMISSION.FILING_DATE)
+    knowledge_date  fecha en que la observacion fue publica
 
-### 4.2. Semantica elegida para `knowledge_date`
+### 4.2. Semantica de `knowledge_date` (corregida)
 
-**Opcion A (propuesta):** `filing_date` del filing que origino la
-observacion concreta.
+**Contrato:**
 
-Razon: es la unica semantica point-in-time estricta que no introduce
-look-ahead dentro del periodo. Cada `PositionRecord` lleva la fecha en
-que su filing fue presentado. Un analisis a "fecha de febrero" ve solo
-los filings publicados hasta febrero.
+    knowledge_date == filing_date   para la observacion concreta.
 
-**Descartadas:**
+Es decir: `knowledge_date` NO es un campo independiente que pueda
+diferir de `filing_date` por decision del caller. Es la misma fecha.
 
-- B (fecha de ingesta por pipeline): requiere un log externo de ingesta
-  que hoy no existe. Es determinista pero depende de estado externo al
-  dataset. No es point-in-time en sentido de disponibilidad publica.
-- C (max del periodo): introduce look-ahead (posicion de enero marcada
-  como conocida en abril).
+**Regla dura:**
 
-**Campo derivado opcional:** `period_consolidation_date = max(FILING_DATE)`
-sobre el periodo, como metadato del snapshot consolidado, separado de
-`knowledge_date`. Se puede anadir si un consumidor lo necesita. No es
-el contrato de `knowledge_date`.
+    knowledge_date NUNCA puede ser anterior al filing que origina la
+    observacion.
 
-### 4.3. Ampliacion de `PositionRecord`
+Si existe una cadena de amendments, `knowledge_date` es la fecha del
+filing que **realmente aporta el estado observado** al snapshot
+efectivo (ver 4.3).
+
+### 4.3. Amendments (precision adicional)
+
+Cuando la cadena documental tiene RESTATEMENT o NEW HOLDINGS:
+
+- El filing efectivo puede ser el amendment (no el filing original).
+- La `PositionRecord` que entra al snapshot efectivo lleva
+  `filing_date` = `FILING_DATE` del filing que realmente aporta el
+  estado observado al snapshot.
+- `knowledge_date` = misma fecha.
+
+Ejemplo:
+
+    filing original   2026-01-30   RESTATEMENT
+    amendment 1       2026-02-15   RESTATEMENT (reemplaza al anterior)
+    amendment 2       2026-03-10   NEW HOLDINGS
+
+Si el snapshot efectivo se construye desde amendment 2 -> `filing_date
+= 2026-03-10`, `knowledge_date = 2026-03-10`.
+
+Razon: es el filing que efectivamente aporta el estado observado. No
+se usa el primer filing historico como referencia.
+
+Coherencia con P64: `compute_effective_snapshot` produce el snapshot
+efectivo; la `PositionRecord` se construye desde sus lineas.
+
+### 4.4. `PositionRecord` extendido
 
     @dataclass(frozen=True)
     class PositionRecord:
@@ -299,103 +384,107 @@ el contrato de `knowledge_date`.
         operational_mapping_status: str
         weight: float
         provenance: dict = field(default_factory=dict)
-        # Nuevos campos v2:
+        # Nuevos:
         period_end: Optional[str] = None
         filing_date: Optional[str] = None
         knowledge_date: Optional[str] = None
 
-Retrocompatible: los 3 campos son opcionales por defecto. `period` se
-mantiene.
+**Invariantes verificables (F de #45 seccion 7):**
 
-### 4.4. `absence.py` (stub diferido)
+- Si `period` y `period_end` estan ambos presentes:
+  `period` es la representacion trimestral de `period_end`
+  (`period_end` = ultimo dia del trimestre referenciado por `period`).
+  `2025Q4` <-> `2025-12-31`; `2026Q1` <-> `2026-03-31`.
+- Si `filing_date` y `knowledge_date` estan ambos presentes:
+  `knowledge_date == filing_date`.
+- Si `knowledge_date` presente y `filing_date` no: no aplica (registro
+  no es contractual B3).
 
-Se declara el modulo con enums + NotImplementedError:
+**Distincion legacy vs contractual:**
 
-    MISSING
-    BELOW_REPORTING_THRESHOLD
-    CONFIDENTIAL
-    OTHER_MANAGER
-    UNKNOWN
-    ZERO_REPORTED
-    NOT_PRESENT
+- **Legacy record:** los 3 timestamps son `None`. Proveniente de codigo
+  pre-B3. Válido para retrocompatibilidad.
+- **Contractual B3 record:** los 3 timestamps presentes y coherentes
+  con las invariantes. Válido para rutas B3.
 
-Docstring con reglas P63 (R1-R8). `classify_absence(...)` lanza
-`NotImplementedError`. Ninguna ruta productiva lo invoca.
+Una ruta contractual B3 NO puede aceptar un registro con los 3
+timestamps a `None`: debe fallar antes.
 
-### 4.5. Regla dura preservada
+**Helper:**
+
+    def is_contractual_b3(rec) -> bool:
+        return (
+            rec.period is not None
+            and rec.period_end is not None
+            and rec.filing_date is not None
+            and rec.knowledge_date is not None
+            and rec.knowledge_date == rec.filing_date
+        )
+
+### 4.5. `absence.py` (stub diferido, aprobado por #45 seccion 8)
+
+Modulo con enums `MISSING | BELOW_REPORTING_THRESHOLD | CONFIDENTIAL |
+OTHER_MANAGER | UNKNOWN | ZERO_REPORTED | NOT_PRESENT`. Docstring con
+reglas P63 R1-R8. `classify_absence(...)` -> `NotImplementedError`.
+Ninguna ruta productiva lo invoca.
+
+Estado: `P63 absence classifier = DEFERRED`.
+
+### 4.6. Regla dura preservada
 
 `delta_shares` NO crea `SOLD`. `P64_EVENTS_DEFERRED` se mantiene.
-Distincion corporate action vs economic accumulation sigue diferida
-a fuente externa.
 
-### 4.6. Tests B3
+### 4.7. Tests B3
 
 - `PositionRecord` con 3 timestamps -> OK.
-- `PositionRecord` sin timestamps -> OK (retrocompat).
-- `knowledge_date == filing_date` de la observacion concreta
-  (por construccion).
-- Test explicito: dos observaciones del mismo periodo con filing_date
-  distinta -> knowledge_date distinta.
-- `absence.py::classify_absence` -> NotImplementedError.
+- `PositionRecord` sin timestamps -> OK legacy.
+- `knowledge_date == filing_date` para la observacion (por construccion).
+- Invariante `period <-> period_end`: `2025Q4 <-> 2025-12-31`.
+- Invariante violada -> fail.
+- `is_contractual_b3` -> True solo si 3 timestamps + coherencia.
+- Amendment RESTATEMENT: `filing_date` = fecha del amendment que
+  aporta el estado efectivo (no la del original).
+- `absence.py::classify_absence` -> `NotImplementedError`.
 - `delta_shares` no produce SOLD (test existente P63).
 
 ---
 
-## 5. Orden de commits (revisado por dictamen #44 seccion 10)
+## 5. Orden de commits (sin cambios respecto v2)
 
-    1. B2  Modelo de identidad/versionado
-           - Estructura catalog_snapshots/ + catalog_manifest.json
-           - target_catalog_as_of (fail-closed, semiabierto)
-           - tests B2
-
+    1. B2  Modelo de versionado + target_catalog_as_of
     2. B1  target_builder + TargetUniverse
-           - build_target (puro sobre snapshot)
-           - tests B1 target_builder
-
-    3. B1  Integracion coverage
-           - Gate 0: inventario consumidores compute_coverage_pairwise
-           - Refactor wrapper con contrato de retorno dict
-           - tests B1 integracion
-
-    4. B3  Timestamps
-           - PositionRecord extendido (opcional)
-           - knowledge_date = filing_date de la observacion
-           - absence.py stub
-           - tests B3
-
+    3. B1  Integracion coverage (gate 0 consumidores primero)
+    4. B3  Timestamps + PositionRecord extendido + absence.py stub
     5. Integracion end-to-end + verificacion global
-           - P65 PASS + P66 PASS + nuevos PASS
-           - compileall + pyflakes
-           - Sin regresion nueva
 
-**Razon del orden:** B1 depende de B2 para que TARGET sea temporalmente
-valido. B2 primero evita construir TARGET contra un modelo de catalogo
-que aun no tiene versionado.
+Razon: B1 depende de B2 para validez temporal. B3 depende de B1
+(necesita PositionRecord con FIGIs resueltos).
 ---
 
 ## 6. Tests requeridos (resumen)
 
 | Bloque | Fichero | Cobertura |
 |---|---|---|
-| B1 | `tests/test_target_builder.py` (nuevo) | build_target puro, resolved/unresolved, independencia del mapping |
+| B1 | `tests/test_target_builder.py` (nuevo) | TargetUniverse, declared/resolved/unresolved, independencia del mapping, denominador sobre declared |
 | B1 | `tests/test_sec_13f_nipc.py` (extender) | wrapper con/sin TARGET, contrato tipado |
-| B2 | `tests/test_target_catalog_as_of.py` (nuevo) | snapshots, fail-closed, ambiguedad, inmutabilidad, semiabierto |
-| B3 | `tests/test_position_record.py` (nuevo) | 3 timestamps, retrocompat, knowledge_date == filing_date |
+| B2 | `tests/test_target_catalog_as_of.py` (nuevo) | snapshots, fail-closed, ambiguedad, integridad reforzada (F2) |
+| B3 | `tests/test_position_record.py` (nuevo) | 3 timestamps, invariantes, `is_contractual_b3`, legacy vs contractual |
 | B3 | `tests/test_absence.py` (nuevo) | enums declarados + NotImplementedError |
 
 **Cero regresion P65/P66 esperada.** 31 + 31 tests existentes intactos.
 
 ---
 
-## 7. Criterio de cierre A.6.2-bis (fijado por dictamen #44 seccion 11)
+## 7. Criterio de cierre A.6.2-bis (corregido F3)
 
 ### B1
 
-- `build_target(mapping OK) == build_target(mapping fallido)` para mismo
-  snapshot (test explicito).
-- `TARGET_P != f(CUSIP observado)` (test explicito).
-- `compute_coverage_pairwise` sin TARGET -> comportamiento tipado
-  documentado (`dict` con `coverage_status == "UNAVAILABLE"`).
+- Tres universos separados: declarado != resoluble != observado.
+- Denominador contractual = `len(TARGET declarado)`.
+- `mapping OK` vs `mapping fallido` -> **mismo `declared`** (test explicito).
+- `TARGET declarado != f(CUSIP observado)` (test explicito).
+- `compute_coverage_pairwise` sin TARGET -> contrato tipado
+  (`dict` con `coverage_status == "UNAVAILABLE"`).
 
 ### B2
 
@@ -404,15 +493,27 @@ que aun no tiene versionado.
   - 1 snapshot -> exito.
   - >1 solapados -> `CatalogAmbiguous`.
   - hash invalido -> fail-closed.
-- Ningun snapshot historico inventado.
-- Snapshot publicado es inmutable (test de integridad entre runs).
-- Intervalos `[valid_from, valid_to)` sin solapamiento.
+- Backdating prohibido: `as_of("2025-12-31")` -> `CatalogNotAvailable`.
+- **Test de integridad reforzado (F2):**
+  - `sha256` recalculado == `sha256` publicado (`.sha256` fichero aparte).
+  - Manifiesto coherente con `sha256` publicado.
+  - Corrupcion simulada (byte alterado) -> deteccion y fail-closed.
 
 ### B3
 
-- `period_end != filing_date != knowledge_date` cuando semánticamente
-  difieran (test explicito).
-- Ninguna ruta interpreta filing posterior como conocimiento anterior.
+**Correccion F3 aplicada:**
+
+    period_end != filing_date       cuando difieren temporalmente
+    knowledge_date == filing_date   por contrato (opcion A)
+    knowledge_date >= filing_date   invariante dura
+    knowledge_date NUNCA anterior al filing que origina la observacion
+
+- Test explicito: `knowledge_date == filing_date` para la observacion.
+- Test explicito: `period_end != filing_date` cuando aplica.
+- Test explicito: ninguna ruta interpreta filing posterior como
+  conocimiento anterior.
+- Amendments: `knowledge_date` = fecha del filing efectivo (RESTATEMENT
+  aporta el estado), no del filing original.
 
 ### Global
 
@@ -423,42 +524,45 @@ que aun no tiene versionado.
 - `pyflakes` LIMPIO.
 - Suite sin regresion nueva.
 
-Solo entonces: **A.6.2-bis CLOSED -> A.6.3 AUTHORIZED**.
+Solo entonces: **A.6.2-bis CLOSED -> A.6.3 AUTHORIZED.**
 ---
 
-## 8. Preguntas al auditor (v2)
+## 8. Preguntas al auditor (v3)
 
-1. **B1 - Firma de `build_target`.** Confirmar la separacion
-   `target_catalog_as_of` -> `build_target(snapshot, ...)`.
+1. **F1 - Opcion elegida.** Se ha elegido la Opcion 2 del dictamen
+   #45: denominador = cardinalidad declarada del catalogo; `resolved`
+   es subconjunto. ¿Se aprueba?
 
-2. **B1 - `TargetUniverse`.** Se propone `resolved` + `unresolved`
-   (TARGET_UNRESOLVED). ¿Se aprueba este contrato explicito para
-   filas sin FIGI?
+2. **F1 - Identidad declarada.** Se propone `radar_ticker` como
+   identidad primaria declarada. ¿Se aprueba? Alternativa: `composite_figi`
+   o combinacion `radar_ticker + source_date`.
 
-3. **B1 - Contrato de retorno de `compute_coverage_pairwise`.**
-   `dict` con `coverage_status = "VALID" | "UNAVAILABLE"` y numericos
-   `float | None`. ¿Se aprueba? Nota: hay una accion previa (gate 0
-   de consumidores) antes de refactorizar.
+3. **F1 - `coverage.py`.** Para soportar Opcion 2 se requiere ajuste
+   minimo en `compute_contractual_coverage` (denominador sobre
+   identidades declaradas; `paired` requiere FIGI comun). ¿Se aprueba
+   este ajuste o se prefiere mantener `coverage.py` intacto y
+   envolverlo con una capa `catalog_key -> figi`?
 
-4. **B2 - Estructura.** `catalog_snapshots/` + `catalog_manifest.json`.
-   `version_id` desacoplado del hash. SHA-256 completo en fichero aparte.
+4. **F2 - Test de inmutabilidad.** Se propone test de integridad por
+   hash historico + corrupcion simulada + validacion objeto publicado
+   != objeto de trabajo. ¿Se aprueba el diseno?
+
+5. **F3 - Criterio B3 corregido.** `knowledge_date == filing_date`
+   por contrato; `period_end != filing_date` cuando difieran;
+   `knowledge_date >= filing_date`. ¿Se aprueba?
+
+6. **Amendments.** `knowledge_date` = fecha del filing efectivo
+   (RESTATEMENT aporta el estado) -> no la del original. ¿Se aprueba?
+
+7. **PositionRecord - invariantes.** `period <-> period_end` con
+   verificacion; distincion legacy vs contractual via `is_contractual_b3`.
    ¿Se aprueba?
 
-5. **B2 - Intervalos.** Semiabierto `[valid_from, valid_to)`. Sin
-   solapamiento. ¿Se aprueba?
+8. **`absence.py` stub.** Enums + NotImplementedError. ¿Se mantiene
+   aprobado (v2 ya lo estaba)?
 
-6. **B2 - Backdating.** Prohibido. Q4 2025 / Q1 2026 quedaran sin
-   snapshot -> `UNAVAILABLE` en A.6.4. ¿Se acepta esta consecuencia
-   o se requiere evidencia adicional?
-
-7. **B3 - Semantica `knowledge_date`.** Opcion A: fecha del filing que
-   origino la observacion. ¿Se aprueba? `period_consolidation_date`
-   (max) queda como campo derivado opcional.
-
-8. **B3 - `absence.py` stub.** Enums + NotImplementedError. Ninguna
-   ruta productiva lo invoca. ¿Se aprueba?
-
-9. **Orden de commits.** B2 -> B1 -> B3 -> integracion. ¿Se aprueba?
+9. **Orden de commits.** B2 -> B1 -> B3 -> integracion. ¿Se mantiene
+   aprobado (v2 ya lo estaba)?
 
 10. **Criterio de cierre.** Los 3 bloques de la seccion 7 + global.
 
@@ -468,11 +572,12 @@ Solo entonces: **A.6.2-bis CLOSED -> A.6.3 AUTHORIZED**.
 
 - Contratos: `NIPC_CONTRATOS_SEMANTICOS_v1.md`, `NIPC_COVERAGE_POLICY.md` v1.0.
 - Modulos: `delta_shares.py`, `security_identity.py`, `relationships.py`,
-  `amendments.py`, `temporal_validity.py`, `coverage.py` (se invoca, no
-  se modifica).
+  `amendments.py`, `temporal_validity.py`.
+- `coverage.py`: se ajusta minimamente si se aprueba pregunta 3; si no,
+  se envuelve sin modificar.
 - `radar_target_catalog.csv` actual: se conserva como snapshot inicial.
-- OpenFIGI masivo: NO ejecutado.
-- `DROP_DUP`: NO activado.
+- OpenFIGI masivo: NO.
+- `DROP_DUP`: NO.
 - Push a `origin/main`: NO.
 - Certificacion "acumulacion": NO.
 
@@ -481,13 +586,14 @@ Solo entonces: **A.6.2-bis CLOSED -> A.6.3 AUTHORIZED**.
 ## 10. Trazabilidad
 
     Dictamen #43                 A.6.0 CERRADO + A.6.2-bis AUTORIZADO
-    Dictamen #44                 v1 NO-GO; 4 correcciones materiales
+    Dictamen #44                 v1 NO-GO; 4 correcciones
+    Dictamen #45                 v2 GO CONDICIONAL; F1/F2/F3 + amendments
     A.6.0 inventario             INFORME.md seccion 21
     F2.4 (dictamen #24)          3 bloqueantes estructurales
     RECONCILIACION D1/D2/D3      divergencias contrato <-> codigo
-    Contratos P38/P62/P63         secciones 3, 11, 12
+    Contratos P38/P62/P63/P64    secciones 3, 11, 12, 13
 
 ---
 
-Fin de la propuesta v2. Sometida a nueva verificacion documental.
-HEAD 1e83d70.
+Fin de la propuesta v3. Sometida a verificacion documental.
+HEAD 9aa0727.
