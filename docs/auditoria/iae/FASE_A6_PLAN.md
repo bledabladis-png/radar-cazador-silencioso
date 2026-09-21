@@ -352,6 +352,27 @@ Commit: `tests/test_p38_contract.py` extendido (una vez decidido Q12).
 
 ### A.6.4 - Recalculo de evidencia (condicional a las decisiones F2.4)
 
+**ESTADO: CERRADO DEFINITIVAMENTE (2026-09-21, dictamen #75).**
+
+Subfase ejecutada en dos partes:
+
+  A.6.4-v2 (dictamen #73): P38 contractual aislado sobre TOP 2000.
+    Evidencia: `evidence/nipc_gate0_top2000_v2/`.
+    Resultado: VALID 1.0/1.0/1.0/1.0 sobre 210 CUSIPs del piloto.
+
+  A.6.4 (dictamen #75): integracion B1 + P61 + P38 end-to-end.
+    Evidencia: `evidence/a64_integration_b1_p61_p38/`.
+    Resultado Q1: 20 keys cruce -> 18 con FIGI -> 18 records
+    VERIFIED via adapter -> P38 VALID.
+    Resultado Q4: 0 keys -> fail-closed (no se fabrica TARGET).
+
+Hallazgo H-73.1 (adapter B1<->P38) corregido + regresion:
+    `tests/test_h731_adapter_p38_compat.py` (5 tests).
+
+Baseline full permanece BLOQUEADO (OpenFIGI masivo NO AUTORIZADO).
+
+**Siguiente: A.6.5.**
+
 **Precondicion:** A.6.2 y A.6.3 cerrados + decisiones F2.4 que
 afecten a la semantica de la evidencia materializadas (D1, D2, D3,
 Q12, AGREG., Policy v1.3).
