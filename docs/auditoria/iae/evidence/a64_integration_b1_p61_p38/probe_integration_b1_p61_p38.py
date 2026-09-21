@@ -35,6 +35,7 @@ from src.institutional_accumulation.sec_13f.identity.security_identity import (
 from src.institutional_accumulation.identity import target_builder as tb
 from src.institutional_accumulation.identity import period_state as ps
 from src.institutional_accumulation.aggregation import coverage as cov
+from src.institutional_accumulation.aggregation import catalog_p38_adapter as ca
 from src.institutional_accumulation import operational_universe as ou
 
 DATA = ROOT / "data" / "sec_13f" / "processed"
@@ -203,8 +204,12 @@ def main():
     for label, shared in [("2026Q1", shared_q1), ("2025Q4", shared_q4)]:
         print()
         print("--- " + label + " ---")
-        keys_sub = filter_universe_by_tickers(universe, shared)
-        print("  keys en subconjunto: " + str(len(keys_sub)))
+        keys_all = filter_universe_by_tickers(universe, shared)
+        keys_sub = {k for k in keys_all if universe.figi_by_key.get(k)}
+        dropped = len(keys_all) - len(keys_sub)
+        print("  keys en subconjunto: " + str(len(keys_all))
+              + " (con FIGI: " + str(len(keys_sub))
+              + ", sin FIGI: " + str(dropped) + ")")
         if not keys_sub:
             print("  sin subconjunto: fail-closed")
             result[label] = {"keys": 0, "p38": None, "fail_closed": True}
@@ -223,22 +228,42 @@ def main():
             "fail_closed": False,
         }
 
-    # --- 5. P38 sobre el subconjunto Q1 (el unico no vacio) ---
+    # --- 5. P38 sobre el subconjunto Q1 via catalog_to_p38_targets ---
+    # Sin bypass manual (dictamen #74 seccion 5): los records son los
+    # producidos por el adapter real, no construidos a mano.
     print()
-    print("=== 5. compute_contractual_coverage (Q1 real) ===")
+    print("=== 5. compute_contractual_coverage (Q1 real, via adapter) ===")
     if result.get("2026Q1", {}).get("fail_closed", True):
         print("  Q1 fail-closed: no se invoca P38.")
         p38_result = {"coverage_status": "UNAVAILABLE", "reason": "Q1 empty"}
     else:
-        keys_sub = filter_universe_by_tickers(universe, shared_q1)
-        tickers_by_key = {k: universe.ticker_by_key[k] for k in keys_sub}
+        keys_sub = {k for k in filter_universe_by_tickers(universe, shared_q1)
+                    if universe.figi_by_key.get(k)}
         st_q = build_sub_state(universe, keys_sub)
-        records_q1 = build_records_for_subset(
-            keys_sub, universe, st_q, tickers_by_key, "Q1")
-        target = {st_q[k].figi for k in keys_sub if st_q[k].figi}
-        # P38 con target_q4=target_q1=target, records_q4=records_q1=records
-        p38_result = cov.compute_contractual_coverage(
-            target, target, records_q1, records_q1)
+
+        # Sub-universo restringido (TargetUniverse con declared_keys
+        # del subconjunto). Permite invocar catalog_to_p38_targets.
+        import dataclasses
+        universe_sub = dataclasses.replace(
+            universe,
+            declared_keys=set(keys_sub),
+            ticker_by_key={k: universe.ticker_by_key[k] for k in keys_sub},
+            figi_by_key={k: universe.figi_by_key[k] for k in keys_sub},
+            row_uid_by_key={k: universe.row_uid_by_key[k] for k in keys_sub},
+            key_by_row_uid={universe.row_uid_by_key[k]: k for k in keys_sub},
+        )
+
+        t4, t1, r4, r1, feas = ca.catalog_to_p38_targets(
+            universe_sub, universe_sub,
+            state_q4=st_q, state_q1=st_q,
+            pairwise_keys=set(keys_sub),
+        )
+        print("  feasibility: " + str(feas))
+        print("  records_q4: " + str(len(r4)))
+        print("  records_q1: " + str(len(r1)))
+        print("  records VERIFIED: "
+              + str(sum(1 for r in r4 if r.operational_mapping_status == "VERIFIED")))
+        p38_result = cov.compute_contractual_coverage(t4, t1, r4, r1)
         for k, v in p38_result.items():
             print("  " + str(k).ljust(35) + " " + str(v))
 

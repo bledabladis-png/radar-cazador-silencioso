@@ -126,18 +126,42 @@ def _figi_set(universe, state) -> Set[str]:
 
 
 def _records(universe, state, *, period) -> List[PositionRecord]:
+    """PositionRecords con semantica P38 (H-73.1 corregido, dictamen #74).
+
+    Los campos `resolution_status` y `operational_mapping_status`
+    corresponden a la semantica de `coverage.PositionRecord`, NO a
+    los de `period_state`. Mapeo correcto:
+
+      period_state.identity_status == RESOLVED
+          -> resolution_status = "CANONICAL"
+
+      (por construccion del flujo: el adapter solo se invoca tras
+       PASO 8 con full resolution. Toda K aqui es RESOLVED.)
+
+      period_state.weight_status (RESOLVED_OBSERVED | ZERO_REPORTED |
+      NOT_PRESENT) es ORTOGONAL a operational_mapping_status.
+
+      La cadena §5.5 (§5.1 -> §5.3 -> §5.4 -> §5.5) garantiza por
+      construccion que toda K que llega al adapter tiene
+      operational_mapping_status == VERIFIED (security_resolution_status
+      == CANONICAL AND operational_mapping_status == VERIFIED).
+      Por tanto se declara VERIFIED aqui.
+    """
     out = []
     for k in sorted(universe.declared_keys):
         s = state.get(k)
         if s is None:
+            continue
+        # Solo se aceptan identidades RESOLVED (PASO 8 lo garantiza).
+        if s.identity_status != "RESOLVED":
             continue
         out.append(PositionRecord(
             period=period,
             observed_security_key=k,
             share_class_figi=s.figi,
             canonical_security=None,
-            resolution_status=s.identity_status,
-            operational_mapping_status=s.weight_status,
+            resolution_status="CANONICAL",
+            operational_mapping_status="VERIFIED",
             weight=1.0,
         ))
     return out

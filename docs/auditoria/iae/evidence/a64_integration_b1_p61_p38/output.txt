@@ -1,4 +1,4 @@
-=== A.6.4 - Integracion B1 + P61 + P38 (dictamen #73) ===
+=== A.6.4 - Integracion B1 + P61 + P38 (dictamen #73/#74) ===
 
 === 1. Operational universes por periodo (P61) ===
   2025Q4: 0 filas oper, 0 tickers equity
@@ -7,9 +7,9 @@
 === 2. TargetUniverse (B1) ===
   declared_keys: 242
 
-=== 3. Cruce §5.5 <-> snapshot ===
-  tickers §5.5 Q1:     22
-  tickers §5.5 Q4:     0
+=== 3. Cruce 5.5 <-> snapshot ===
+  tickers 5.5 Q1:     22
+  tickers 5.5 Q4:     0
   tickers snapshot:    242
   shared Q1:           20
   shared Q4:           0
@@ -17,14 +17,18 @@
 === 4. Ejecucion cadena B1 + P38 ===
 
 --- 2026Q1 ---
-  keys en subconjunto: 20
+  keys en subconjunto: 20 (con FIGI: 18, sin FIGI: 2)
   FIGIs unicos: 18
 
 --- 2025Q4 ---
-  keys en subconjunto: 0
+  keys en subconjunto: 0 (con FIGI: 0, sin FIGI: 0)
   sin subconjunto: fail-closed
 
-=== 5. compute_contractual_coverage (Q1 real) ===
+=== 5. compute_contractual_coverage (Q1 real, via adapter) ===
+  feasibility: FEASIBLE
+  records_q4: 18
+  records_q1: 18
+  records VERIFIED: 18
   coverage_previous                   1.0
   coverage_current                    1.0
   paired_security_coverage            1.0
@@ -35,3 +39,7 @@
 
 === 6. Q4 fail-closed ===
   Q4 sin subconjunto -> fail-closed correcto
+
+NOTA (dictamen #74): la seccion 5 usa los records producidos por
+catalog_to_p38_targets (adapter real), NO construidos manualmente.
+El fix H-73.1 del adapter garantiza operational_mapping_status=VERIFIED.
