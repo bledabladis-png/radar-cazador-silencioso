@@ -618,7 +618,7 @@ variante LF (normativa por .gitattributes). Contenido identico.
     A.6.3   CERRADO (dictamen #72)
     A.6.4-v2 CERRADO (dictamen #73)
     A.6.4   CERRADO (dictamen #75)
-    A.6.5   EN CURSO
+    A.6.5   CERRADA (dccf70d + 911e95b)
     A.6.6   PENDIENTE
 
     THRESHOLD_1                          UNDEFINED
