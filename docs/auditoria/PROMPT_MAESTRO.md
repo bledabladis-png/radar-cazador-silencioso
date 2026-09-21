@@ -189,57 +189,56 @@ Cuando se toquen writers, readers temporales o el reporte:
 
 ---
 
-### 3.7. Versionado documental (2026-09-20)
+### 3.7. Versionado documental
 
-**Regla:** 1 concepto = 1 fichero vivo. Al evolucionar, se edita in-place.
-Las versiones previas se archivan con fecha o SE BORRAN si su
-contenido esta embebido en la version vigente. Basura = borrar. Sin apelar
-a git. Git no es una papelera, no es excusa para conservar ficheros.
-Si un fichero no se usa, no da contexto y no se lee, se borra.
+**Regla base:** 1 concepto = 1 fichero vivo. Al evolucionar, se edita in-place.
+Sin sufijos de version. Sin apelar a git como papelera: git no es excusa para
+conservar ficheros.
 
 **Prohibido:** ficheros con sufijo `_v1.md`, `_v1.1.md`, `_V12_PROPUESTA.md`,
-`_FASE_FA23_DICTAMEN_C.md`. Los dictamenes y informes historicos se
-consolidan en un unico fichero por tema con indice y resumen.
+`_FASE_FA23_DICTAMEN_C.md`. Un nuevo fichero con sufijo de version se rechaza
+en revision.
 
-**Documentos contractuales para F2.4 (2026-09-20):**
+**Excepcion documentada (H-10, 2026-09-21):** `iae/NIPC_CONTRATOS_SEMANTICOS_v1.md`
+conserva el sufijo `_v1` por herencia historica. Es el nombre bajo el que fue
+ratificado (dictamen F2.4) y bajo el que se referencia en otros documentos.
+Renombrarlo rompe la cadena de referencia sin aportar valor. La excepcion NO
+aplica a nuevos ficheros.
 
-    iae/RECONCILIACION_CONTRATO_CODIGO.md    expediente 3 divergencias
-    iae/REESTRUCTURACION_MODULO.md           plan arquitectonico
-    iae/FASE_A6_PLAN.md                      plan de ejecucion A.6
-    tests/test_p60_contract.py               4 tests (3 pass + 1 xfail)
-    tests/test_p61_contract.py               5 tests (3 pass + 2 xfail)
-    tests/test_p38_contract.py               5 tests (2 pass + 3 xfail)
-    radar/DEUDA.md                           deuda activa del radar
+**Consolidacion:** los dictamenes e informes historicos se consolidan en un
+unico fichero por tema, con indice y resumen. La cadena autoritativa vive en
+el registro consolidado.
 
-**Estructura vigente de `docs/auditoria/`:**
+**Registros consolidados vigentes:**
 
-    PROMPT_MAESTRO.md    norma
-    FOLLOWUPS.md         cronologia
+    iae/DICTAMENES.md          indice de dictamenes con resumen por entrada
+    iae/INFORME.md             informes consolidados del ciclo IAE
+    iae/HISTORICO_IAE.md       ciclos, fixes y cierres del prompt (v7)
+    iae/ESTADO_DECLARADO.md    fases IAE, deuda activa, prohibiciones
+    iae/ESTADO_SISTEMA.md      hechos autogenerados (HEAD, tests, integridad)
+
+**Estructura de `docs/auditoria/`:**
+
+    PROMPT_MAESTRO.md    norma vigente (rol, metodologia, arquitectura)
+    TRANSFER.md          guia de onboarding (no es fuente de estado)
+    FOLLOWUPS.md         cronologia de ciclos
     README.md            navegacion
-    iae/                 modulo IAE (9 .md)
-    radar/               contratos temporales (8 .md)
-    auditorias/          auditorias estructurales (4 .md)
-    evidence/            probes empiricos (6 subdirs)
-    archive/             archivado futuro (vacio)
-
-
-**Basura = borrar.** No se archiva por prudencia. No se conserva por si
-acaso. No se apela a git. Si un fichero no se usa, no da contexto y no
-se lee, se borra. Los snapshot de sesion no se conservan: se borran al
-cerrar la sesion. Los informes consolidados sustituyen a sus originales:
-los originales se borran. Los dictamenes se consolidan en un registro:
-los originales se borran. La cadena autoritativa vive en el registro
-consolidado, no en 23 ficheros sueltos.
+    iae/                 modulo IAE (contratos, registros, estado, evidencia)
+    radar/               contratos temporales del radar
+    auditorias/          auditorias estructurales
 
 **Regla de lectura:** cualquier referencia en este prompt a
 `docs/auditoria/X.md` debe leerse como `docs/auditoria/<categoria>/X.md`
-segun la tabla anterior. Los informes y dictamenes del ciclo IAE estan
-consolidados en `iae/INFORME.md` y `iae/DICTAMENES.md` (indices con
-resumen por entrada; los originales estan en git).
+segun la tabla anterior.
 
-**Sin excepciones.** Un nuevo fichero con sufijo de version se rechaza
-en revision. Un cambio a un fichero vivo no bump-ea su nombre: bump-ea
-su contenido y actualiza el campo "Version:" interno si lo tiene.
+**Basura = borrar.** No se archiva por prudencia. No se conserva por si acaso.
+Si un fichero no se usa, no da contexto y no se lee, se borra. Los snapshots de
+sesion no se conservan. Los informes consolidados sustituyen a sus originales.
+Los dictamenes se consolidan en un registro: los originales se borran.
+
+**Sin excepciones a la regla base** (salvo la excepcion documentada arriba).
+Un cambio a un fichero vivo no bump-ea su nombre: bump-ea su contenido y
+actualiza el campo "Version:" interno si lo tiene.
 
 ## SECCION 4 - ARQUITECTURA ACTUAL
 
