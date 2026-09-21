@@ -1,4 +1,11 @@
-"""A.6.4 - Integracion B1 + P61 + P38 (dictamen #73).
+"""A.6.4 + smoke NIPC contractual (dictamenes #73, #76).
+
+Seccion 1-6: cadena B1 + P61 + P38 (A.6.4).
+Seccion 7: smoke test de compute_nipc_contractual con datos reales.
+  NOTA: los thresholds THRESHOLD_1/THRESHOLD_2 estan UNDEFINED
+  (dictamen #76). El smoke NO interpreta el resultado; solo verifica
+  que la funcion computa sin error sobre el universo contractual
+  materializado. No activa el modulo NIPC productivamente.
 
 Demuestra la cadena end-to-end sobre el subconjunto que atraviesa
 realmente las tres capas:
@@ -394,6 +401,30 @@ def main():
     else:
         print("  Q4 tiene subconjunto -> revisar")
 
+    # --- 7. compute_nipc_contractual (smoke, thresholds UNDEFINED) ---
+    print()
+    print("=== 7. compute_nipc_contractual (smoke) ===")
+    print("    Thresholds THRESHOLD_1/2 UNDEFINED (dictamen #76).")
+    print("    Smoke test del contrato. Resultado NO interpretado.")
+    from src.institutional_accumulation.aggregation import nipc
+    import pandas as _pd
+    delta_empty = _pd.DataFrame()
+    nipc_smoke = None
+    try:
+        nipc_result = nipc.compute_nipc_contractual(
+            delta_empty,
+            target_q4=t4, target_q1=t1,
+            records_q4=r4, records_q1=r1,
+        )
+        nipc_smoke = {"status": "OK",
+                      "result": {k: str(v) for k, v in nipc_result.items()}}
+        for k, v in nipc_result.items():
+            print("  " + str(k).ljust(35) + " " + str(v))
+    except Exception as _exc:
+        nipc_smoke = {"status": "ERROR",
+                      "error": type(_exc).__name__ + ": " + str(_exc)}
+        print("  ERROR: " + nipc_smoke["error"])
+
     out = {
         "periods": {k: dict(
             {kk: vv for kk, vv in v.items()
@@ -409,6 +440,7 @@ def main():
         "cardinalities": cardinalities,
         "p38_pairwise": dict(p38_result),
         "p38_q1": dict(p38_result),
+        "nipc_smoke": nipc_smoke,
     }
     (HERE / "result.json").write_text(
         json.dumps(out, indent=2, default=str),

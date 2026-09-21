@@ -58,5 +58,29 @@
     "coverage_status": "UNAVAILABLE",
     "unmapped_count_previous": 0,
     "unmapped_count_current": 0
+  },
+  "nipc_smoke": {
+    "status": "OK",
+    "result": {
+      "nipc_total": "0.0",
+      "nipc_total_available": "False",
+      "n_both": "0",
+      "n_new": "0",
+      "n_exit": "0",
+      "n_unresolved_identity": "0",
+      "n_delta_observable": "0",
+      "evidence_class": "CONTRACTUAL",
+      "nipc_sole": "0.0",
+      "nipc_dfnd": "0.0",
+      "nipc_otr": "0.0",
+      "coverage_previous": "None",
+      "coverage_current": "1.0",
+      "paired_security_coverage": "None",
+      "paired_weighted_share_coverage": "None",
+      "coverage_status": "UNAVAILABLE",
+      "unmapped_count_previous": "0",
+      "unmapped_count_current": "0",
+      "status": "UNRESOLVED"
+    }
   }
 }
