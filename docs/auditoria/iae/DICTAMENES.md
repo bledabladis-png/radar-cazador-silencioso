@@ -62,6 +62,7 @@
 | 48 | Ver entrada §48 de este fichero | A.6.2-bis v5 NO-GO. weight_status + adaptador P38 + PIT cross-snapshot. |
 | 49 | Ver entrada §49 de este fichero | A.6.2-bis v6 NO-GO. NOT_PRESENT + TARGET_PAIRWISE formal + colision catalog_key -> FIGI. |
 | 50 | Ver entrada §50 de este fichero | A.6.2-bis v7 NO-GO. check_continuity en flujo + dominio collision + TARGET_PAIRWISE vacio. |
+| 51 | Ver entrada §51 de este fichero | A.6.2-bis v8 NO-GO. Asignacion catalog_key + preservacion dominio P38. |
 
 ---
 
@@ -1385,6 +1386,119 @@ La v7 tiene commit propio (2f1f323). Corregir cabecera en v8.
 
 **Conclusion: v8 que cierre flujo PIT obligatorio + dominio collision
 Q4/Q1 + TARGET_PAIRWISE vacio -> GO DE IMPLEMENTACION.**
+
+---
+
+## 51. A.6.2-bis - Dictamen de verificacion documental v8 (2026-09-21)
+
+**Tipo:** dictamen del auditor externo sobre A62BIS_PROPUESTA.md v8.
+**Dictamen anterior:** #50 (v7 NO-GO).
+
+**Resultado:** NO-GO DE IMPLEMENTACION. ARQUITECTURA APROBADA
+CONDICIONALMENTE.
+
+### Lo que la v8 cierra correctamente
+
+- check_continuity en flujo normativo obligatorio (PASO 5).
+- check_economic_collision sobre Q4 + Q1 (dominio explicito).
+- TARGET_PAIRWISE = empty_set -> UNAVAILABLE explicito.
+- Incidencia documental HEAD corregida.
+
+### Bloqueo material A - semantica de "unicidad global"
+
+v8 conserva la formulacion "ningun catalog_key se reutiliza" como
+semantica de unicidad global. Es incompatible con una identidad
+estable: K1 DEBE poder aparecer en multiples snapshots.
+
+Debe separarse:
+  IDENTITY ASSIGNMENT UNIQUENESS
+    K1 fue asignado una sola vez a una entidad administrativa.
+  SNAPSHOT MEMBERSHIP
+    K1 puede aparecer en N snapshots durante su vigencia.
+
+El validator NO debe fallar porque K1 aparece en snapshot_1,
+snapshot_2, snapshot_3. Eso es persistencia correcta.
+
+Debe detectar:
+  K1 fecha_alta original = 20260919
+  K1 re-declarado con fecha_alta = 20261015 -> CatalogKeyReassigned
+  K1 retirado y reasignado a otra entidad -> CatalogKeyRetiredReactivated
+
+Correccion exigida (v9): formular como
+`catalog_key_assignment_unique` + validator que comprueba:
+  - 1 alta por key
+  - fecha_alta inmutable
+  - sin reasignacion post-retiro
+  - membership en N snapshots es valida
+
+### Bloqueo material B - adapter y dominio P38
+
+v8 afirma firma P38 intacta. No es suficiente.
+
+Problema: si el adaptador computa TARGET_PAIRWISE = Q4 INTERSECT Q1
+y pasa SOLO esas claves a P38, entonces la diferencia simetrica
+TARGET_Q4 ^ TARGET_Q1 desaparece antes de llegar a P38.
+
+F2.4 #24 exige expresamente test de TARGET_Q4 ^ TARGET_Q1.
+El contrato P38 necesita distinguir securities presentes en un
+periodo y no en el otro.
+
+Correccion exigida (v9): el adaptador pasa targets COMPLETOS:
+  target_q4_figi = { figi(K) : K in TARGET_Q4, figi(K) != None }
+  target_q1_figi = { figi(K) : K in TARGET_Q1, figi(K) != None }
+
+TARGET_PAIRWISE se usa SOLO para feasibility (fail-closed check).
+NO filtra los sets pasados a P38.
+P38 internamente computa TARGET_PAIRWISE y preserva la diferencia.
+
+Debe documentarse explicitamente:
+  Que representa target_q4_figi / target_q1_figi.
+  Si contienen todo TARGET_Q4/Q1 o solo pairwise.
+  Como se satisface TARGET_Q4 ^ TARGET_Q1.
+
+### Estado consolidado (#51 seccion 11)
+
+  catalog_key estable               APPROVED
+  Persistencia cross-snapshot       APPROVED
+  Unicidad intra-snapshot           APPROVED
+  Semantica unicidad global/asig.   BLOCKED
+  TARGET_PAIRWISE                   APPROVED
+  Estados Q4/Q1                     APPROVED
+  NOT_PRESENT                       APPROVED / FAIL-CLOSED
+  check_continuity                  CERRADO
+  Collision Q4/Q1                   CERRADO
+  TARGET_PAIRWISE = empty           CERRADO
+  Adaptador P38                     BLOCKED
+  Preservacion dominio P38          BLOCKED
+  P38 API/firma                     INTACTA
+  B2                                APPROVED
+  B3                                APPROVED COND.
+
+### Criterio v9 (#51 seccion 12)
+
+1. catalog_key: distinguir identidad unica de asignacion respecto
+   de aparicion repetida en snapshots.
+2. P38: demostrar que el adaptador conserva exactamente la semantica
+   de TARGET_Q4 / TARGET_Q1 exigida por coverage.py y por F2.4.
+
+NO rediseñar: weight_status, NOT_PRESENT, TARGET_PAIRWISE,
+check_continuity, collision, B2, B3.
+
+### Estado operativo
+
+    A.6.0                  CLOSED
+    A.6.2-bis v8           NO-GO IMPLEMENTATION
+    ARQUITECTURA           APPROVED CONDITIONAL
+    B1                     BLOCKED - 2 cierres (asignacion + dominio P38)
+    B2                     APPROVED
+    B3                     APPROVED CONDITIONAL
+    A.6.3                  BLOCKED
+    A.6.4                  BLOCKED
+    F2.4-CLOSE             BLOCKED
+    DROP_DUP               NOT AUTHORIZED
+
+**Conclusion: v9 que cierre asignacion catalog_key +
+preservacion dominio P38 -> apta para GO DE IMPLEMENTACION.**
 
 ---
 

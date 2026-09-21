@@ -1,16 +1,16 @@
-# IAE - A.6.2-bis Propuesta de rediseno arquitectonico TARGET (v8)
+# IAE - A.6.2-bis Propuesta de rediseno arquitectonico TARGET (v9)
 
-**Version:** v8. Aplicados los 3 bloqueos operacionales del dictamen
-#50: (A) flujo PIT obligatorio con check_continuity; (B) dominio
-explicito de check_economic_collision (Q4 + Q1); (C) TARGET_PAIRWISE
-vacio con semantica explicita (no `all([])`).
+**Version:** v9. Aplicados los 2 bloqueos materiales del dictamen #51:
+(A) asignacion de catalog_key (distinguir identidad unica de
+membership); (B) preservacion del dominio semantico completo de P38
+por el adaptador (targets completos, no filtrados por pairwise).
 
-**HEAD base:** 2f1f323 (commit de la v7). Este documento (v8) se
-commitea por separado; su commit real consta en el historial.
+**HEAD base:** 3315259 (commit de la v8).
 
 **Versiones previas:** v1 (f383932, NO-GO #44), v2 (9aa0727, GO COND
 #45), v3 (fa03a97, NO-GO #46), v4 (30ed3df, NO-GO #47), v5 (6c5e33c,
-NO-GO #48), v6 (641ef38, NO-GO #49), v7 (2f1f323, NO-GO #50).
+NO-GO #48), v6 (641ef38, NO-GO #49), v7 (2f1f323, NO-GO #50), v8
+(3315259, NO-GO #51).
 
 **Objeto:** propuesta de diseno para materializar los 3 bloqueantes
 estructurales F2.4 (B1 + B2 + B3).
@@ -22,22 +22,26 @@ estructurales F2.4 (B1 + B2 + B3).
 
 ## 0. Resumen ejecutivo
 
-v8 cierra los 3 bloqueos operacionales del #50 + incidencia documental:
+v9 cierra los 2 bloqueos del #51:
 
-**Bloqueo A (flujo PIT obligatorio):** el flujo normativo incorpora
-`check_continuity(Q4, Q1)` como paso obligatorio entre estados por
-periodo y feasibility. `CONFLICT_FIGI_CHANGE -> UNAVAILABLE`. No
-depende de precondiciones declarativas.
+**Cierre A (asignacion de catalog_key):** se sustituye "unicidad
+global" por `catalog_key_assignment_unique`. La misma `catalog_key`
+PUEDE aparecer en N snapshots durante su vigencia. El validator
+comprueba: 1 alta por key, `fecha_alta` inmutable, sin reasignacion
+post-retiro. Errores: `CatalogKeyReassigned`,
+`CatalogKeyRetiredReactivated`.
 
-**Bloqueo B (dominio de colision):** `check_economic_collision` se
-ejecuta sobre Q4 y Q1 por separado. Cualquier colision en cualquier
-periodo -> `CATALOG_ECONOMIC_COLLISION -> UNAVAILABLE`.
+**Cierre B (dominio P38):** el adaptador pasa targets economicos
+COMPLETOS de Q4 y Q1 a `compute_contractual_coverage`:
+  target_q4_figi = { figi(K) : K in TARGET_Q4, figi(K) != None }
+  target_q1_figi = { figi(K) : K in TARGET_Q1, figi(K) != None }
+`TARGET_PAIRWISE` se usa SOLO para feasibility (fail-closed check).
+NO filtra los sets. P38 internamente computa TARGET_PAIRWISE y
+preserva TARGET_Q4 ^ TARGET_Q1.
 
-**Bloqueo C (TARGET_PAIRWISE vacio):** `TARGET_PAIRWISE == empty_set`
--> `UNAVAILABLE` explicito. NO se depende de `all([]) == True`.
-
-**Incidencia documental:** la cabecera v8 declara HEAD base 2f1f323
-(v7 real), no 641ef38 (v6).
+**Sin cambios:** weight_status, NOT_PRESENT, TARGET_PAIRWISE formal,
+flujo normativo 9 pasos, check_continuity, check_economic_collision,
+empty pairwise, B2, B3. Aprobados en dictamenes #50/#51.
 
 **Fuera de alcance:** OpenFIGI masivo, recalculo de evidencia final,
 modificacion de contratos, `DROP_DUP`, certificacion "acumulacion",
@@ -49,207 +53,180 @@ Policy v1.3, Gate-NIPC.2/3.
 
 | Bloqueante | Piezas existentes | Piezas ausentes |
 |---|---|---|
-| B1 | `coverage.py::compute_contractual_coverage`, `PositionRecord`, `aggregate_positions_by_shareclass_figi`, `target_universe.py::resolve_cusips` | `target_builder.py`, `catalog_key`, adaptador P38, validators, flujo normativo |
-| B2 | `source_date` (no contractual) | versionado + `target_catalog_as_of` |
-| B3 | Doctrina P63/P64/P65 | `knowledge_date` por posicion, `absence.py` |
+| B1 | coverage.py (P38), PositionRecord, target_universe.resolve_cusips | target_builder.py, catalog_key, adaptador P38, validators |
+| B2 | source_date (no contractual) | versionado + target_catalog_as_of |
+| B3 | Doctrina P63/P64/P65 | knowledge_date por posicion, absence.py |
 
-**Gate 0 catalogo (2026-09-21):** 242 filas, `radar_ticker` unico,
-`share_class_figi` 240 unicos (0 colisiones), 2 MISS.
+Gate 0 catalogo (2026-09-21): 242 filas, radar_ticker unico,
+share_class_figi 240 unicos (0 colisiones), 2 MISS.
 
-**Migracion inicial:** las 242 filas reciben
-`catalog_key = "radar_20260919_<NNNN>"`. `radar_ticker` versionado.
+Migracion inicial: 242 filas reciben `catalog_key =
+"radar_20260919_<NNNN>"`. `radar_ticker` versionado.
+
 ---
 
-## 2. B1 - Flujo normativo obligatorio (bloqueo A resuelto)
+## 2. Bloqueo A - Asignacion de catalog_key (resuelto)
 
-### 2.1. Flujo contractual completo
+### 2.1. Dos conceptos separados
 
-**El siguiente flujo es normativo.** Cada paso es obligatorio y
-secuencial. No puede omitirse ni declararse como "precondicion
-externa".
+    IDENTITY ASSIGNMENT UNIQUENESS
+      Una catalog_key se asigna UNA SOLA VEZ en su ciclo de vida
+      a una entidad administrativa concreta. La fecha de alta no
+      cambia.
 
-    PASO 1. target_catalog_as_of(period_end) para Q4 y Q1
-            -> CatalogNotAvailable | CatalogAmbiguous | (df_q4, df_q1)
+    SNAPSHOT MEMBERSHIP
+      La misma catalog_key PUEDE aparecer en N snapshots durante
+      su vigencia. Esto es persistencia correcta, NO reutilizacion.
 
-    PASO 2. target_builder.build_target(df_q4) -> universe_q4
-            target_builder.build_target(df_q1) -> universe_q1
+**El validator NO falla porque K1 aparezca en snapshot_1,
+snapshot_2, snapshot_3.**
 
-    PASO 3. TARGET_PAIRWISE := universe_q4.declared_keys
-                               INTERSECT universe_q1.declared_keys
-            Si TARGET_PAIRWISE == empty_set
-              -> UNAVAILABLE (bloqueo C)
-              -> STOP
+### 2.2. `catalog_key_assignment_unique` (formulacion normativa)
 
-    PASO 4. Construir state_q4[K] y state_q1[K] para cada K in
-            TARGET_PAIRWISE
+    Una asignacion de catalog_key es unica globalmente.
+    La misma catalog_key puede aparecer en multiples snapshots
+    durante su vigencia.
 
-    PASO 5. check_continuity(universe_q4, universe_q1, TARGET_PAIRWISE)
-            Si algun K tiene CONFLICT_FIGI_CHANGE
-              -> UNAVAILABLE
-              -> STOP
+**Estructura de la asignacion** (registro administrativo):
 
-    PASO 6. check_economic_collision(universe_q4) -> collision_q4
-            check_economic_collision(universe_q1) -> collision_q1
-            Si collision_q4 no vacio OR collision_q1 no vacio
-              -> CATALOG_ECONOMIC_COLLISION
-              -> UNAVAILABLE
-              -> STOP
+    data/mappings/catalog_assignments.csv
+    columnas:
+        catalog_key           "radar_<YYYYMMDD>_<NNNN>"
+        fecha_alta            fecha de primera asignacion (inmutable)
+        source                "radar_initial_20260919" | ...
+        estado                ACTIVE | RETIRED
+        fecha_retiro          NULL | fecha (si RETIRED)
 
-    PASO 7. feasibility(K) para cada K in TARGET_PAIRWISE
-            Si algun K tiene feasible(K) == False
-              -> UNAVAILABLE
-              -> STOP
+**Regla:** cada `catalog_key` tiene EXACTAMENTE 1 fila en
+`catalog_assignments.csv`. La `fecha_alta` es inmutable.
 
+### 2.3. `catalog_validator.validate_assignment(assignments_df)`
+
+    def validate_assignment(assignments_df) -> dict[str, str]:
+        """Devuelve {catalog_key: error_code} para conflictos.
+
+        Errores:
+          - catalog_key duplicado en assignments
+            -> CATALOG_KEY_REASSIGNED
+          - catalog_key re-aparece con fecha_alta distinta a la original
+            -> CATALOG_KEY_REASSIGNED
+          - catalog_key marcado RETIRED y reasignado a otra entidad
+            -> CATALOG_KEY_RETIRED_REACTIVATED
+        """
+
+**Validaciones cruzadas con snapshots:**
+
+    Para cada K en assignments:
+      K puede aparecer en 0..N snapshots (membresia).
+      K en snapshot NO actualiza fecha_alta.
+      K presente en snapshot con fecha posterior al retiro
+        -> CATALOG_KEY_RETIRED_REACTIVATED.
+
+### 2.4. Tests A (bloqueo A)
+
+**Caso A1 - persistencia correcta:**
+
+    snapshot Q4: K1 -> ticker ABC
+    snapshot Q1: K1 -> ticker XYZ
+    assignments: K1 fecha_alta=20260919
+    -> OK (persistencia correcta, NO CatalogKeyReused)
+
+**Caso A2 - reasignacion (bloqueo):**
+
+    assignments:
+      K1 fecha_alta=20260919
+      K1 fecha_alta=20261015  (misma key, distinta fecha)
+    -> CATALOG_KEY_REASSIGNED
+
+**Caso A3 - retired reactivated:**
+
+    assignments:
+      K1 fecha_alta=20260919, estado=RETIRED, fecha_retiro=20261001
+    snapshot Q1 (2026-03-31): K1 presente
+    -> OK (aun vigente en Q1)
+
+    snapshot 2027: K1 presente, con fecha_alta=20261015
+    -> CATALOG_KEY_RETIRED_REACTIVATED
+
+**Caso A4 - membership multiple OK:**
+
+    K1 en snapshot Q4, Q1, Q2, Q3
+    assignments: 1 fila, fecha_alta=20260919
+    -> OK (membresia multiple valida)
+---
+
+## 3. Bloqueo B - Preservacion del dominio P38 (resuelto)
+
+### 3.1. Regla normativa
+
+**El adaptador pasa a P38 los targets economicos COMPLETOS de Q4 y Q1,
+NO filtrados por pairwise.**
+
+    target_q4_figi := { figi(K) : K in TARGET_Q4, figi(K) != None }
+    target_q1_figi := { figi(K) : K in TARGET_Q1, figi(K) != None }
+
+**`TARGET_PAIRWISE` se usa SOLO para feasibility (fail-closed check).**
+NO filtra los sets pasados a P38.
+
+### 3.2. Por que
+
+`compute_contractual_coverage` (contrato P38) necesita recibir:
+
+    target_q4_figi  -> conjunto economico Q4
+    target_q1_figi  -> conjunto economico Q1
+
+Y P38 internamente computa:
+
+    TARGET_PAIRWISE = target_q4_figi INTERSECT target_q1_figi
+    TARGET_Q4 ^ TARGET_Q1 = simetria (via las operaciones internas)
+
+**Si el adaptador solo pasa claves pairwise a P38**, la diferencia
+simetrica `TARGET_Q4 ^ TARGET_Q1` desaparece antes de llegar a P38,
+rompiendo la semantica contractual de P38 y el requisito F2.4 #24.
+
+### 3.3. Verificacion de equivalencia semantica
+
+**Precision obligatoria:** el adaptador debe demostrar la equivalencia:
+
+    inputs originales P38  ==  inputs producidos por el adaptador
+
+    Equivalencia semantica:
+      Los sets target_q4_figi / target_q1_figi producidos por el
+      adaptador representan exactamente lo mismo que los sets
+      target_q4 / target_q1 definidos por P38 antes de A.6.2-bis:
+      "el universo economico completo (share_class_figi) declarado
+       por el catalogo para cada periodo".
+
+**Documentacion obligatoria** (en docstring del adaptador):
+
+    target_q4_figi  -> TODO TARGET_Q4 (no solo pairwise).
+    target_q1_figi  -> TODO TARGET_Q1 (no solo pairwise).
+    TARGET_PAIRWISE -> usado para feasibility, no para filtrar sets.
+
+### 3.4. Flujo normativo revisado (sobre el de #50)
+
+    PASO 1. target_catalog_as_of(Q4), target_catalog_as_of(Q1)
+    PASO 2. target_builder.build_target x2
+    PASO 3. TARGET_PAIRWISE := Q4_keys INTERSECT Q1_keys
+            Si vacio -> UNAVAILABLE (STOP)
+    PASO 4. state_q4[K], state_q1[K] para K in TARGET_PAIRWISE
+    PASO 5. check_continuity (STOP si conflicto)
+    PASO 6. check_economic_collision(Q4) + (Q1) (STOP si colision)
+    PASO 7. feasible(K) para K in TARGET_PAIRWISE
+            Si alguno False -> UNAVAILABLE (STOP)
     PASO 8. catalog_to_p38_targets(...)
-            -> target_q4_figi, target_q1_figi, records_q4, records_q1
+            -> target_q4_figi = { figi(K) : K in TARGET_Q4, figi != None }
+            -> target_q1_figi = { figi(K) : K in TARGET_Q1, figi != None }
+            -> records_q4, records_q1 (por K en TARGET_Q4 / TARGET_Q1)
             -> FEASIBLE
-
     PASO 9. compute_contractual_coverage(target_q4_figi, target_q1_figi,
                                           records_q4, records_q1)
             -> VALID
 
-**Invariante:** `compute_contractual_coverage` SOLO se invoca si los
-pasos 1-8 han sido superados sin STOP. Nunca se invoca con estado
-inconsistente.
+**Diferencia con v8:** PASO 8 produce sets **completos** (TARGET_Q4 y
+TARGET_Q1), no sets filtrados por TARGET_PAIRWISE.
 
-### 2.2. `TARGET_PAIRWISE` formal (sin cambios respecto v7)
-
-    TARGET_Q4 := { catalog_key : activo en snapshot vigente para Q4 }
-    TARGET_Q1 := { catalog_key : activo en snapshot vigente para Q1 }
-    TARGET_PAIRWISE := TARGET_Q4 INTERSECT TARGET_Q1
-
-Interseccion sobre `catalog_key`. Determinada ANTES del mapping.
-
-**Reglas borde:**
-
-    K en Q4 y en Q1         -> K in TARGET_PAIRWISE
-    K solo en Q4            -> fuera de pairwise
-    K solo en Q1            -> fuera de pairwise
-    TARGET_PAIRWISE vacio   -> UNAVAILABLE (bloqueo C)
-
-### 2.3. `TARGET_PAIRWISE = ∅` - semantica explicita (bloqueo C resuelto)
-
-**Regla contractual:**
-
-    TARGET_PAIRWISE == empty_set -> UNAVAILABLE
-
-**Razon:** la metrica pairwise sin universo contractual no tiene
-significado. `paired_weighted_share_coverage` es un cociente sobre el
-universo pairwise; si el universo es vacio, la metrica es
-indeterminada. NO puede delegarse a `all([]) == True` ni a un
-comportamiento accidental del lenguaje.
-
-**Implementacion normativa:**
-
-    if not TARGET_PAIRWISE:
-        return CoverageFeasibility.UNAVAILABLE  # sin invocar P38
-    if any(not feasible(K) for K in TARGET_PAIRWISE):
-        return CoverageFeasibility.UNAVAILABLE
-    # ... continuar con FEASIBLE
-
-**Subordinacion a P38:** si el contrato P38 tuviera semantica explicita
-para target vacio (`coverage = 0.0 | 1.0 | UNAVAILABLE`), se aplicaria
-esa. Hoy el contrato P38 no la tiene. Fail-closed.
-
-### 2.4. Estados por periodo (sin cambios v7)
-
-    state_q4[K] = {
-        identity_status:  RESOLVED | UNRESOLVED | CONFLICT | CONFLICT_FIGI_CHANGE
-        weight_status:    RESOLVED_OBSERVED | ZERO_REPORTED | NOT_PRESENT
-        weight_value:     float | None
-    }
-    state_q1[K] = { idem }
-
-    feasible_state(s) :=
-        s.identity_status == "RESOLVED"
-        AND s.weight_status in {"RESOLVED_OBSERVED", "ZERO_REPORTED"}
-
-    feasible(K) := feasible_state(state_q4[K]) AND feasible_state(state_q1[K])
-
-### 2.5. `TargetUniverse` (sin cambios v7)
-
-    @dataclass(frozen=True)
-    class TargetUniverse:
-        period_end: str
-        catalog_version_id: str
-        catalog_sha256: str
-        declared_keys: frozenset[str]
-        ticker_by_key: dict[str, str]
-        figi_by_key: dict[str, str | None]
-        unresolved_keys: frozenset[str]
-
-### 2.6. Tests B1 (§2)
-
-- Flujo completo con todos los pasos: FEASIBLE + P38 invocado.
-- TARGET_PAIRWISE vacio -> PASO 3 STOP -> UNAVAILABLE, P38 NO invocado.
-- check_continuity detecta CONFLICT -> PASO 5 STOP -> UNAVAILABLE.
-- check_economic_collision Q4 no vacio -> PASO 6 STOP -> UNAVAILABLE.
-- check_economic_collision Q1 no vacio -> PASO 6 STOP -> UNAVAILABLE.
-- feasible(K)=False -> PASO 7 STOP -> UNAVAILABLE.
-- Orden de invocacion verificado (con mocks/traza).
----
-
-## 3. B1 - Validators y adaptador
-
-### 3.1. `check_continuity` (bloqueo A, incorporado al flujo)
-
-**Firma:**
-
-    def check_continuity(
-        universe_q4: TargetUniverse,
-        universe_q1: TargetUniverse,
-        pairwise_keys: frozenset[str],
-    ) -> dict[str, str]:
-        """Devuelve {catalog_key: conflict_code} para claves con conflicto.
-
-        Reglas por K in pairwise_keys:
-          figi_q4 = universe_q4.figi_by_key.get(K)
-          figi_q1 = universe_q1.figi_by_key.get(K)
-
-          None + None         -> OK
-          None + figi         -> OK (mejora de mapping)
-          figi + None         -> OK (regresion de mapping, no continuidad)
-          figi_q4 == figi_q1  -> OK
-          figi_q4 != figi_q1  -> CONFLICT_FIGI_CHANGE
-        """
-
-**Ejecucion obligatoria:** PASO 5 del flujo §2.1. No es opcional ni
-delegable.
-
-**Resultado:**
-
-    Si dict vacio -> continuar.
-    Si dict no vacio -> UNAVAILABLE (STOP).
-
-### 3.2. `check_economic_collision` (bloqueo B, dominio explicito)
-
-**Firma:**
-
-    def check_economic_collision(
-        universe: TargetUniverse,
-    ) -> dict[str, list[str]]:
-        """Devuelve {share_class_figi: [catalog_key, ...]} para cada
-        FIGI con >1 catalog_key dentro del snapshot del universe.
-        """
-
-**Dominio de ejecucion (bloqueo B resuelto):**
-
-    collision_q4 = check_economic_collision(universe_q4)
-    collision_q1 = check_economic_collision(universe_q1)
-
-    Si collision_q4 no vacio OR collision_q1 no vacio
-      -> CATALOG_ECONOMIC_COLLISION -> UNAVAILABLE
-
-**Razon:** una duplicidad administrativa puede aparecer solo en un
-snapshot. Comprobar solo Q4 o solo Q1 no es suficiente. Ambos.
-
-**Subordinacion a P38:** si el auditor decide que la colision debe
-agregarse economicamente (unidad = share_class_figi agrega N entradas),
-se modificara en dictamen. v8: fail-closed.
-
-### 3.3. Adaptador P38 (flujo obligatorio)
-
-**Modulo:** `aggregation/catalog_p38_adapter.py`.
+### 3.5. Adaptador actualizado
 
     def catalog_to_p38_targets(
         universe_q4, universe_q1,
@@ -258,207 +235,172 @@ se modificara en dictamen. v8: fail-closed.
                list[PositionRecord], CoverageFeasibility]:
         """Traduce TARGET administrativo a TARGET economico P38.
 
-        Precondiciones verificadas EN EL FLUJO NORMATIVO (§2.1):
-          - TARGET_PAIRWISE no vacio (PASO 3)
-          - check_continuity OK (PASO 5)
-          - check_economic_collision OK (PASO 6)
-          - Todas las K tienen feasible(K) == True (PASO 7)
+        Precondiciones del flujo normativo (§3.4, PASOS 3-7):
+          - TARGET_PAIRWISE no vacio
+          - check_continuity OK
+          - check_economic_collision OK
+          - Todas las K in TARGET_PAIRWISE tienen feasible(K) == True
 
-        El adaptador NO repite esas verificaciones: el flujo las
-        garantiza. El adaptador asume invariantes y NO las comprueba
-        (fail-fast con assert si se quiere defensa en profundidad).
+        Salida:
+          target_q4_figi: figi(K) para K in TARGET_Q4, figi != None.
+          target_q1_figi: figi(K) para K in TARGET_Q1, figi != None.
+          records_q4:    PositionRecord por K in TARGET_Q4.
+          records_q1:    PositionRecord por K in TARGET_Q1.
+          CoverageFeasibility.FEASIBLE.
+
+        IMPORTANTE:
+          Los sets NO se filtran por TARGET_PAIRWISE. Solo
+          feasibility (precondicion) usa pairwise_keys.
+          Esto preserva la semantica P38 de TARGET_Q4 ^ TARGET_Q1.
         """
 
-**Regla:** el adaptador solo se invoca desde el flujo que ha superado
-los pasos 1-7. Si un consumidor externo lo invoca directamente sin
-respetar el flujo, la responsabilidad es del consumidor. El flujo
-normativo (§2.1) es el contrato.
+### 3.6. Tests B (bloqueo B)
 
-### 3.4. `coverage.py` (intacto)
+**Caso B1 - TARGET_Q4 ^ TARGET_Q1 preservado:**
 
-`compute_contractual_coverage` mantiene su firma original basada en
-`share_class_figi`. No recibe `catalog_key`. Solo se invoca desde el
-adaptador tras PASO 8.
+    TARGET_Q4 = {K_A, K_B}
+    TARGET_Q1 = {K_A, K_C}
+    TARGET_PAIRWISE = {K_A}
+    figi: K_A->FIGI_A, K_B->FIGI_B, K_C->FIGI_C
 
-### 3.5. Tests §3
+    -> target_q4_figi = {FIGI_A, FIGI_B}
+    -> target_q1_figi = {FIGI_A, FIGI_C}
+    -> P38 recibe ambos conjuntos completos.
+    -> P38 puede reconstruir diferencia simetrica {FIGI_B, FIGI_C}.
 
-- `check_continuity`: 5 casos (None+None, None+figi, figi+None,
-  iguales, distintos).
-- `check_economic_collision` sobre Q4: detecta colision.
-- `check_economic_collision` sobre Q1: detecta colision.
-- Colision solo en Q4 -> UNAVAILABLE.
-- Colision solo en Q1 -> UNAVAILABLE.
-- Adaptador invocado solo si flujo pasa: verificable con mocks.
----
+**Caso B2 - No hay filtrado por pairwise:**
 
-## 4. B1 - weight_status (sin cambios v7)
+    Si el adaptador filtrara por pairwise, target_q4_figi seria
+    {FIGI_A} (solo pairwise). El test verifica explicitamente que
+    NO es asi.
 
-### 4.1. Enum por periodo
+**Caso B3 - Symmetric difference visible:**
 
-    RESOLVED_OBSERVED   identidad OK + value explicito (incl. 0.0)
-    ZERO_REPORTED       identidad OK + value == 0.0 documentado
-    NOT_PRESENT         identidad OK + sin observacion en el periodo
+    assert FIGI_B in target_q4_figi
+    assert FIGI_B not in target_q1_figi
+    assert FIGI_C in target_q1_figi
+    assert FIGI_C not in target_q4_figi
 
-### 4.2. Regla fail-closed
+### 3.7. Arquitectura final v9 (con el ajuste)
 
-    identity_status in {UNRESOLVED, CONFLICT, CONFLICT_FIGI_CHANGE}
-      -> UNAVAILABLE
-    weight_status == NOT_PRESENT
-      -> UNAVAILABLE
-    weight_status in {RESOLVED_OBSERVED, ZERO_REPORTED}
-      -> calculable (value contribuye, incl. 0.0)
-
-**No se reintroduce** `NOT_PRESENT -> 0.0` (cerrado en #49).
-
-### 4.3. Tests weight_status
-
-- RESOLVED_OBSERVED con value=1000 -> contribuye 1000.
-- ZERO_REPORTED con value=0 -> contribuye 0.
-- NOT_PRESENT -> UNAVAILABLE.
-- UNRESOLVED -> UNAVAILABLE.
-- CONFLICT -> UNAVAILABLE.
-
----
-
-## 5. B2 - Point-in-time (aprobado #49, sin cambios)
-
-### 5.1. Estructura
-
-    data/mappings/catalog_snapshots/
-        snapshot_<version_id>.csv
-        snapshot_<version_id>.sha256
-    data/mappings/catalog_manifest.json
-
-### 5.2. Inmutabilidad
-
-`.csv` y `.sha256` inmutables. Manifest mutable.
-
-### 5.3. Intervalos semiabiertos
-
-`[valid_from, valid_to)`. `null` = vigente.
-
-### 5.4. `target_catalog_as_of` (con "que cubren")
-
-    0 snapshots QUE CUBREN period_end -> CatalogNotAvailable
-    1 snapshot valido QUE CUBRE        -> (df, vid, sha256)
-    >1 snapshots validos QUE CUBREN    -> CatalogAmbiguous
-
-### 5.5. Backdating prohibido
-
-`valid_from = 2026-09-19`. Q4 2025 / Q1 2026 -> CatalogNotAvailable.
-
-### 5.6. Tests B2
-
-- 0 snapshots que cubren -> CatalogNotAvailable.
-- 1 snapshot que cubre -> OK.
-- >1 snapshots que cubren -> CatalogAmbiguous.
-- Snapshot existe pero no cubre -> CatalogNotAvailable.
-- Hash invalido -> FAIL-CLOSED.
-- Corrupcion -> detectada.
+    period_end
+        v
+    target_catalog_as_of(period_end)
+        v
+    snapshot + manifest
+        v
+    target_builder.build_target(snapshot)
+        v
+    TargetUniverse x 2 (Q4, Q1)
+        v
+    TARGET_PAIRWISE := universe_q4.declared_keys INTERSECT universe_q1.declared_keys
+        v
+    state_q4[K], state_q1[K] para K in TARGET_PAIRWISE
+        v
+    check_continuity (STOP si CONFLICT_FIGI_CHANGE)
+        v
+    check_economic_collision(Q4) + (Q1) (STOP si colision)
+        v
+    feasible(K) para K in TARGET_PAIRWISE (STOP si alguno False)
+        v
+    target_q4_figi = { figi(K) : K in TARGET_Q4, figi != None }
+    target_q1_figi = { figi(K) : K in TARGET_Q1, figi != None }
+    records_q4 / records_q1 (full Q4 / Q1)
+        v
+    compute_contractual_coverage(target_q4_figi, target_q1_figi,
+                                  records_q4, records_q1)
+        v
+    VALID
 
 ---
 
-## 6. B3 - knowledge_date (aprobado #49, sin cambios)
+## 4. Sin cambios respecto a v8
 
-### 6.1. Tres timestamps
+Las siguientes piezas fueron aprobadas en #50/#51 y NO se modifican:
 
-`period_end` / `filing_date` / `knowledge_date`.
-
-### 6.2. RESTATEMENT
-
-Estado sustituido -> fecha del restatement.
-
-### 6.3. NEW HOLDINGS
-
-Heredada -> original. Nueva -> amendment. Ambiguo -> N/D.
-
-### 6.4. `knowledge_date_status`
-
-    ASSIGNED | N/D | LEGACY
-
-### 6.5. `PositionRecord`
-
-Sin cambios respecto v7.
-
-### 6.6. `absence.py` stub
-
-Enums + NotImplementedError. `P63 absence classifier = DEFERRED`.
-
-### 6.7. Regla dura preservada
-
-`delta_shares` NO crea `SOLD`. `P64_EVENTS_DEFERRED`.
-
-### 6.8. Tests B3
-
-Sin cambios respecto v7.
+- flujo normativo 9 pasos (§3.4 la version v9 solo cambia PASO 8).
+- check_continuity (PASO 5).
+- check_economic_collision Q4+Q1 (PASO 6).
+- TARGET_PAIRWISE formal (PASO 3) + empty_set -> UNAVAILABLE.
+- estados por periodo (state_q4/state_q1).
+- weight_status + NOT_PRESENT fail-closed.
+- adaptador P38 (firma P38 intacta).
+- coverage.py: sin cambio contractual.
+- B2 (snapshots, manifest, intervalos, no backdating, "que cubren").
+- B3 (knowledge_date, RESTATEMENT, NEW HOLDINGS, N/D).
+- absence.py stub.
 ---
 
-## 7. Orden de commits (sin cambios)
+## 5. Orden de commits
 
     1. B2  versionado + target_catalog_as_of + catalog_validator
+           (incluye validate_assignment)
     2. B1  target_builder + TargetUniverse + catalog_key
-    3. B1  Flujo normativo + TARGET_PAIRWISE + estados por periodo
-           + check_continuity + check_economic_collision + adaptador
-           (gate 0 consumidores primero)
+           (incluye migracion catalog_assignments.csv)
+    3. B1  flujo normativo + TARGET_PAIRWISE + estados por periodo
+           + check_continuity + check_economic_collision
+           + adaptador P38 (targets completos)
     4. B3  Timestamps + PositionRecord + provenance + absence.py
     5. Integracion end-to-end + verificacion global
 
 ---
 
-## 8. Tests requeridos (resumen)
+## 6. Tests requeridos (resumen)
 
 | Bloque | Fichero | Cobertura |
 |---|---|---|
+| B1 | `tests/test_catalog_validator.py` | validate_assignment (A1-A4) + continuidad + colision Q4/Q1 |
 | B1 | `tests/test_target_builder.py` | catalog_key estable, ticker versionado |
-| B1 | `tests/test_catalog_validator.py` | unicidad global + continuidad + colision Q4/Q1 |
-| B1 | `tests/test_target_pairwise.py` | TARGET_PAIRWISE formal + empty set + estados Q4/Q1 |
-| B1 | `tests/test_p66_pipeline.py` (nuevo) | flujo normativo 9 pasos + STOPs + no invocacion de P38 |
-| B1 | `tests/test_catalog_p38_adapter.py` | 8 casos A2 + TARGET_PAIRWISE vacio + colision Q4/Q1 |
+| B1 | `tests/test_target_pairwise.py` | TARGET_PAIRWISE formal + empty set + estados |
+| B1 | `tests/test_p66_pipeline.py` | flujo 9 pasos + STOPs + dominio P38 |
+| B1 | `tests/test_catalog_p38_adapter.py` | 9 casos A2 + B1-B3 (symmetric difference preservada) |
 | B2 | `tests/test_target_catalog_as_of.py` | snapshots "que cubren", fail-closed |
 | B3 | `tests/test_position_record.py` | RESTATEMENT, NEW HOLDINGS, ambiguous |
 | B3 | `tests/test_absence.py` | enums + NotImplementedError |
 
-**Casos obligatorios adicionales #50 seccion 14:**
+**Casos obligatorios adicionales #51:**
 
-    empty target
-    Q4/Q1 symmetric difference
-    FIGI change (Q4 -> Q1)
-    Q4 collision
-    Q1 collision
-    UNRESOLVED
-    CONFLICT
-    NOT_PRESENT
-    ZERO_REPORTED
+    persistencia catalog_key (A1)
+    reasignacion (A2)
+    retired reactivated (A3)
+    membership multiple OK (A4)
+    symmetric difference preservada (B1-B3)
 
 ---
 
-## 9. Criterio de cierre A.6.2-bis
+## 7. Criterio de cierre A.6.2-bis
 
-### B1
+### B1 - Bloqueo A (asignacion)
 
-**A1 - catalog_key:** inmutable + unicidad intra + unicidad global.
+- `catalog_key_assignment_unique` formalizado.
+- `validate_assignment` comprueba: 1 alta, fecha_alta inmutable,
+  sin reasignacion, retired sin reactivar.
+- Membership multiple es valida (NO es reutilizacion).
+- Errores: `CatalogKeyReassigned`, `CatalogKeyRetiredReactivated`.
+- Tests A1-A4.
 
-**Flujo normativo:** 9 pasos ejecutados obligatoriamente. STOPs en
-PASO 3 (pairwise vacio), PASO 5 (continuity), PASO 6 (collision),
-PASO 7 (feasibility). P38 solo invocado desde PASO 9.
+### B1 - Bloqueo B (dominio P38)
 
-**TARGET_PAIRWISE:** definido sobre catalog_key. Empty set ->
-UNAVAILABLE explicito. Nunca `all([])`.
+- `target_q4_figi = { figi(K) : K in TARGET_Q4, figi != None }`
+- `target_q1_figi = { figi(K) : K in TARGET_Q1, figi != None }`
+- `TARGET_PAIRWISE` solo para feasibility.
+- P38 recibe targets completos.
+- `TARGET_Q4 ^ TARGET_Q1` preservado (test explicito B1-B3).
+- Firma P38 intacta.
 
-**Dominio collision:** Q4 + Q1, ambos. Cualquier colision -> UNAVAILABLE.
+### B1 - Resto (aprobado #50/#51)
 
-**NOT_PRESENT:** fail-closed.
-
-**Adaptador P38:** invocado solo si flujo pasa. Firma P38 intacta.
-
-**9 casos A2 + empty target + FIGI change + colisiones Q4/Q1.**
+- Flujo 9 pasos con check_continuity en PASO 5.
+- Dominio collision Q4 + Q1.
+- TARGET_PAIRWISE empty -> UNAVAILABLE.
+- weight_status + NOT_PRESENT fail-closed.
+- Adaptador invocado solo si flujo pasa.
 
 ### B2
 
 - 0/1/>1 snapshots **que cubren** period_end.
 - Hash invalido -> FAIL-CLOSED.
 - No backdating.
-- Corrupcion detectada.
 
 ### B3
 
@@ -471,68 +413,68 @@ UNAVAILABLE explicito. Nunca `all([])`.
 - P65 tests PASS (31).
 - P66 tests PASS (31).
 - A.6.2-bis tests PASS.
-- `compileall` OK + `pyflakes` LIMPIO.
+- compileall OK + pyflakes LIMPIO.
 
 Solo entonces: **A.6.2-bis CLOSED -> A.6.3 AUTHORIZED.**
 
 ---
 
-## 10. Preguntas al auditor (v8)
+## 8. Preguntas al auditor (v9)
 
-1. **Flujo normativo 9 pasos.** Se propone flujo literal §2.1 con
-   PASO 5 (continuity), PASO 6 (collision Q4+Q1), PASO 3 (pairwise
-   vacio). ¿Se aprueba?
+1. **Bloqueo A - Formulacion.** `catalog_key_assignment_unique` +
+   membership multiple valida. ¿Se aprueba?
 
-2. **TARGET_PAIRWISE = ∅.** UNAVAILABLE explicito. Subordinado a P38
-   si este tiene semantica aprobada. ¿Se aprueba fail-closed?
+2. **Bloqueo A - Registro.** `catalog_assignments.csv` con
+   `catalog_key` + `fecha_alta` + `source` + `estado` + `fecha_retiro`.
+   ¿Se aprueba?
 
-3. **Dominio collision.** Q4 y Q1 independientemente. ¿Se aprueba?
-   ¿O solo TARGET_PAIRWISE?
+3. **Bloqueo A - Errores.** `CatalogKeyReassigned` +
+   `CatalogKeyRetiredReactivated`. ¿Se aprueba el conjunto?
 
-4. **check_continuity en flujo.** PASO 5 obligatorio. ¿Se aprueba la
-   posicion en el flujo (antes de collision, despues de estados)?
+4. **Bloqueo B - Adaptador.** `target_q4_figi` = TODO TARGET_Q4 (no
+   solo pairwise). `TARGET_PAIRWISE` solo para feasibility. ¿Se aprueba?
 
-5. **Adaptador y flujo.** El adaptador NO repite verificaciones: el
-   flujo las garantiza. ¿Se aprueba este contrato de
-   responsabilidades?
+5. **Bloqueo B - Verificacion.** `TARGET_Q4 ^ TARGET_Q1` preservado
+   hasta P38 (test explicito B1-B3). ¿Se aprueba?
 
-6. **Tests §8.** 9 casos basicos + 5 adicionales. ¿Se aprueba el
-   conjunto?
+6. **Resto.** weight_status, NOT_PRESENT, TARGET_PAIRWISE formal,
+   check_continuity, collision Q4/Q1, empty pairwise, B2, B3: aprobados
+   en #50/#51. ¿Sin cambios?
 
-7. **HEAD fix.** v8 declara HEAD base 2f1f323 (v7). ¿Se aprueba?
-
-8. **Cierre.** Los 3 bloques de §9 + global.
+7. **Cierre.** Los 2 bloques de §7 + resto + global.
 
 ---
 
-## 11. Lo que NO se toca en A.6.2-bis
+## 9. Lo que NO se toca en A.6.2-bis
 
 - Contratos: `NIPC_CONTRATOS_SEMANTICOS_v1.md`, `NIPC_COVERAGE_POLICY.md` v1.0.
-- Modelo economico P38 (`share_class_figi` como unidad, Q12 Modelo A).
-- Modulos: `delta_shares.py`, `security_identity.py`, `relationships.py`,
-  `amendments.py`, `temporal_validity.py`.
-- `coverage.py`: firma y semantica INTACTAS.
-- `radar_target_catalog.csv`: snapshot inicial + migracion.
+- Modelo economico P38 (share_class_figi, Q12 Modelo A).
+- Modulos: delta_shares.py, security_identity.py, relationships.py,
+  amendments.py, temporal_validity.py.
+- coverage.py: firma y semantica INTACTAS.
+- radar_target_catalog.csv actual: snapshot inicial + migracion.
 - OpenFIGI masivo: NO.
-- `DROP_DUP`: NO.
+- DROP_DUP: NO.
 - Push: NO.
 - Certificacion "acumulacion": NO.
 
 ---
 
-## 12. Trazabilidad
+## 10. Trazabilidad
 
     Dictamen #43      A.6.0 CERRADO + A.6.2-bis AUTORIZADO
-    Dictamen #44      v1 NO-GO; 4 correcciones
+    Dictamen #44      v1 NO-GO
     Dictamen #45      v2 GO COND
-    Dictamen #46      v3 NO-GO; A + B
-    Dictamen #47      v4 NO-GO; A1 catalog_key + A2 denominador
-    Dictamen #48      v5 NO-GO; weight_status + adaptador + PIT + validator
-    Dictamen #49      v6 NO-GO; NOT_PRESENT + TARGET_PAIRWISE + colision
-    Dictamen #50      v7 NO-GO; flujo PIT + dominio collision + empty pairwise
-    Gate 0 catalogo   v8 seccion 1
+    Dictamen #46      v3 NO-GO
+    Dictamen #47      v4 NO-GO
+    Dictamen #48      v5 NO-GO
+    Dictamen #49      v6 NO-GO
+    Dictamen #50      v7 NO-GO
+    Dictamen #51      v8 NO-GO (asignacion + dominio P38)
+    Gate 0 catalogo   v9 seccion 1
     F2.4 #24          3 bloqueantes estructurales
     P38 seccion 3     unidad = share_class_figi
+    P38 F2.4 #24      test TARGET_Q4 ^ TARGET_Q1
     P60 seccion 1     identity_type obligatorio
     P63 seccion 12    absence semantics
     P64 seccion 13    RESTATEMENT / NEW HOLDINGS
@@ -540,5 +482,5 @@ Solo entonces: **A.6.2-bis CLOSED -> A.6.3 AUTHORIZED.**
 
 ---
 
-Fin de la propuesta v8. Sometida a verificacion documental.
-HEAD base 2f1f323 (v7).
+Fin de la propuesta v9. Sometida a verificacion documental.
+HEAD base 3315259 (v8).
