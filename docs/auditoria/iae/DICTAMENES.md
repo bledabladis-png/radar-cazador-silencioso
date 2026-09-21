@@ -427,6 +427,153 @@ modificacion de contratos, activacion DROP_DUP, certificacion
 
 ---
 
+## 44. A.6.2-bis - Dictamen de auditoria sobre propuesta v1 (2026-09-21)
+
+**Tipo:** dictamen del auditor externo sobre A62BIS_PROPUESTA.md v1.
+**HEAD auditado:** 1e83d70.
+**Dictamen de referencia:** #43.
+
+**Resultado:** GO CONDICIONADO. NO AUTORIZAR IMPLEMENTACION DE LA v1.
+
+### Arquitectura de fondo: APROBADA
+
+    B1 TARGET independiente
+        -> B2 point-in-time
+        -> B3 semantica temporal
+
+### 4 correcciones materiales antes de tocar codigo
+
+**F2 - autorreferencia hash (B2) BLOQUEANTE**
+
+La v1 proponia `catalog_v_<sha256_prefix>.csv` con la columna
+`catalog_version = sha256_prefix del snapshot` DENTRO del propio CSV.
+Es autorreferencial: el contenido determina el hash y el hash esta en
+el contenido. No hay resolucion estable.
+
+Correccion exigida:
+- El identificador de version NO puede derivarse del contenido que lo
+  contiene.
+- `sha256` completo conservado en manifiesto externo.
+- El prefijo de 12 chars puede ser nombre abreviado, no identidad
+  criptografica principal.
+
+**F3 - inmutabilidad real (B2) BLOQUEANTE**
+
+La v1 decia "snapshot inmutable" pero luego mutaba el `.meta.json` del
+anterior al publicar uno nuevo (valid_to). El objeto historico
+CSV+meta SI cambia post-publicacion.
+
+Correccion exigida:
+- Ninguna evidencia historica publicada se modifica in-place.
+- Intervalos temporales determinados por manifiesto externo
+  (`catalog_manifest.json`), no por mutacion del meta historico.
+- Regla contractual: `snapshot = objeto inmutable; manifest = indice/versionado`.
+
+**F4 - backdating prohibido (B2) BLOQUEANTE PARA A.6.4**
+
+La v1 fijaba `valid_from = 2026-09-19` para el snapshot actual.
+Consecuencia: Q4 2025 / Q1 2026 quedan sin snapshot historico.
+
+Regla del auditor:
+- NO se permite backdating (asignar valid_from pasado al catalogo actual).
+- Si no existe snapshot historico, `target_catalog_as_of(period_end)`
+  devuelve `UNAVAILABLE` / N/D.
+- A.6.4 debera aceptar `historical target = UNAVAILABLE` o esperar
+  a disponer de evidencia.
+- El catalogo actual NO se puede usar retroactivamente.
+
+**F5 - knowledge_date (B3) NO APROBADO**
+
+La v1 proponia `knowledge_date = max(FILING_DATE)`.
+NO aprobado: determinismo != point-in-time correcto. Puede introducir
+look-ahead dentro del periodo (posicion de enero marcada como conocida
+el 25 de abril).
+
+Deben distinguirse 3 semanticas posibles:
+  A. fecha de publicacion del filing que origino la observacion.
+  B. fecha en que el registro fue ingerido por el pipeline.
+  C. fecha maxima del snapshot documental consolidado.
+
+Debe elegirse explicitamente cual es la contractual. NO equiparar
+`max(FILING_DATE)` con "fecha en que el dato entro en la cadena local".
+
+### Precisiones adicionales
+
+**B1 - separacion PIT vs build_target**
+
+`target_builder.build_target` no debe acoplarse a `period_end` +
+`catalog_version`. La seleccion point-in-time se resuelve PRIMERO:
+
+    period_end -> target_catalog_as_of(...) -> snapshot resuelto
+               -> build_target(snapshot, ...)
+
+**B1 - TARGET_UNRESOLVED**
+
+Filas del catalogo sin `share_class_figi` NO se descartan silenciosamente.
+Debe existir `TARGET_UNRESOLVED` como estado explicito. Distinguir
+`TARGET_P declarado` != `TARGET_P efectivamente resoluble`.
+
+**compute_coverage_pairwise**
+
+Antes de refactorizar, inventariar consumidores + fijar contrato de
+retorno tipado. "UNAVAILABLE" sin tipo definido puede romper consumidores.
+
+**Orden de commits revisado (dictamen seccion 10)**
+
+    1. B2 modelo de identidad/versionado
+    2. B1 target_builder
+    3. B1 integracion coverage
+    4. B3 timestamps
+    5. integracion/tests
+
+Razon: B1 depende de B2 para que TARGET sea temporalmente valido.
+
+### Criterio de cierre A.6.2-bis (dictamen seccion 11)
+
+**B1:** `TARGET_P(mapping OK) == TARGET_P(mapping fallido)` para mismo
+catalogo + `TARGET_P != f(CUSIP observado)` + `compute_coverage_pairwise`
+sin TARGET -> comportamiento contractual tipado.
+
+**B2:** `target_catalog_as_of(periodo)` con 0/1/multiple snapshots
+fail-closed + hash invalido fail-closed + sin inventar snapshots
+historicos + snapshots inmutables + intervalos sin solapamiento
+(semiabierto `[valid_from, valid_to)`).
+
+**B3:** `period_end != filing_date != knowledge_date` cuando difieran +
+ninguna ruta interpreta filing posterior como conocimiento anterior.
+
+**Global:** P65 PASS + P66 PASS + nuevos tests PASS + compileall +
+pyflakes + sin regresion nueva.
+
+Cierre: A.6.2-bis CLOSED -> A.6.3 AUTHORIZED.
+
+### Resolucion de las 7 preguntas de la v1
+
+    1. build_target           GO conceptual, NO-GO a la firma
+    2. compute_coverage_pairwise  GO cond. inventario consumidores
+    3. snapshots layout       GO cond. corregir hash + inmutabilidad
+    4. correcciones snapshot  SI, nunca modificar evidencia historica
+    5. knowledge_date         NO aprobado (fijar semantica)
+    6. enums + NotImplemented GO cond., claramente diferido
+    7. cierre A.6.2-bis       Fijado seccion 11 del dictamen
+
+### Estado operativo
+
+    A.6.0              CLOSED
+    A.6.2-bis          DESIGN GO CONDITIONAL
+    B1                 GO CONDITIONAL
+    B2                 NO-GO UNTIL CORRECTED
+    B3                 NO-GO UNTIL SEMANTICS FIXED
+    A.6.3              BLOCKED
+    A.6.4              BLOCKED
+    F2.4-CLOSE         BLOCKED
+    DROP_DUP           NOT AUTHORIZED
+    OpenFIGI masivo    NOT AUTHORIZED
+
+**Conclusion: arquitectura valida, propuesta v1 no apta para codigo.**
+
+---
+
 Fin del registro de dictamenes.
 
 
