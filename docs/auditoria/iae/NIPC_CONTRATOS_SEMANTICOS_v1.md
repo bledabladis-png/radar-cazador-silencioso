@@ -1,14 +1,14 @@
 # NIPC_CONTRATOS_SEMANTICOS_v1
 
 **Objeto:** contrato habilitante de identidad, validez temporal y cobertura pairwise para el modulo NIPC.
-**HEAD al redactar:** 77d4785.
-**Estado:** VIGENTE (2026-09-20). F2.4 EMITIDO (GO CONDICIONADO). Ver DICTAMENES.md #24.
+**HEAD al redactar:** 0eed0cc.
+**Estado:** VIGENTE (2026-09-21). F2.4 EMITIDO (GO CONDICIONADO). A.6.0-A.6.4 cerrados (dictamenes #43-#75). H-73.1 corregido. Q12 Modelo A confirmado por test. Ver DICTAMENES.md #24, #72, #75.
 
 **Precedencia transitoria:** mientras este contrato y NIPC_COVERAGE_POLICY_V13_PROPUESTA.md sean borradores, NIPC_COVERAGE_POLICY.md v1.0 permanece como referencia normativa vigente. Una vez aprobado formalmente este contrato y aplicada la policy v1.3, el contrato habilitante prevalece sobre cualquier parafrasis de la policy.
 **Origen:** dictamen formal del auditor (2026-09-20), que clasifico P38/P60/P61 como NO GO con contrato requerido.
 **Relacion:** cierra la seccion 2, 3 y 4 del dictamen. P70 cerrado por NIPC_P70_DICTAMEN.md.
 **Autor:** Ingeniero Supervisor (revision interna).
-**Fecha:** 2026-09-20.
+**Fecha:** 2026-09-21.
 
 ---
 
@@ -37,9 +37,12 @@ pondera en la cobertura**.
 | T2/P61 | Temporalidad separada de identidad. Nuevo campo `operational_mapping_status`. `security_resolution_status` no se amplia. |
 | T3 | Orden documental: P60 → P61 → P38. |
 
-**Estado tras este documento:** P60 y P61 CERRADOS contractualmente. P38 EN REDACCION.
+**Estado tras este documento:** P60 GO. P61 GO. P38 GO CONDICIONADO.
+Cierres aplicados: A.6.0-A.6.4 cerrados (dictamenes #43-#75). Q12 Modelo A
+confirmado por test (dictamen #72). H-73.1 corregido en adapter B1<->P38
+(dictamen #75). R-69.2 vigente.
 
-**No se autoriza ningun cambio de codigo ni de policy todavia.**
+**Implementacion de codigo y fixes quirurgicos autorizados por F2.4.**
 
 ---
 
@@ -151,7 +154,7 @@ la fuente (`evidence["identity_type"]`).
 
 ### 1.8. Estado
 
-**P60 = PROPUESTO / SOMETIDO A F2.4.**
+**P60 = GO (F2.4, 2026-09-20) / IMPLEMENTADO / CERRADO (A.6.2).**
 
 - No nuevos kinds.
 - No inferencia.
@@ -237,7 +240,7 @@ Nuevo modulo `src/institutional_accumulation/temporal_validity.py`:
 
 ### 2.8. Estado
 
-**P61 = PROPUESTO / SOMETIDO A F2.4.**
+**P61 = GO (F2.4, 2026-09-20) / IMPLEMENTADO / CERRADO (A.6.2).**
 
 - Identidad y temporalidad separadas.
 - Nuevo campo fuera de `security_resolution_status`.
@@ -322,6 +325,15 @@ contractual no cambia.
 
 **P38 = GO CONDICIONADO (F2.4, 2026-09-20).** Denominador TARGET_PAIRWISE
 confirmado. Implementacion con evidencia contractual en A.6.2 + A.6.2-bis.
+
+- Q12 Modelo A confirmado por test (dictamen #72).
+- A.6.4-v2 (dictamen #73): P38 aislado sobre TOP 2000 -> VALID 1.0/1.0/1.0/1.0.
+- A.6.4 (dictamen #75): integracion end-to-end B1+P61+P38 -> VALID.
+  Q1: 20 keys -> 18 FIGI -> 18 VERIFIED via adapter.
+  Q4: 0 keys -> fail-closed (no se fabrica TARGET).
+- H-73.1 corregido: adapter mapea `weight_status` a
+  `operational_mapping_status`. Regresion en
+  `tests/test_h731_adapter_p38_compat.py` (5 tests).
 ---
 
 ## 4. TARGET / RESOLVED / PAIRED
@@ -552,9 +564,10 @@ Autorizada por el dictamen formal del auditor (seccion 19):
               v
     9. Gate-NIPC.2
 
-Estado actual: paso 1 completado con la entrega de este documento.
-Pendiente de dictamen F2.4. Los pasos 2-9 no se inician hasta que F2.4
-sea GO.
+Estado actual: F2.4 GO (2026-09-20). Pasos 1-5 ejecutados:
+contrato vigente, tests especificos (P60/P61/P38) y fixes quirurgicos
+aplicados. Paso 6 parcial (A.6.4-v2 sobre TOP 2000). Pasos 7-9
+bloqueados: OpenFIGI masivo NO AUTORIZADO, thresholds UNDEFINED.
 
 ---
 
@@ -576,21 +589,37 @@ sea GO.
 ### 10.2. Hashes
 
     NIPC_COVERAGE_POLICY.md v1.0: 57f2d01feb68d8916dfa4fa0451224c2ee3dda7e4631a7863e671257b3e91f06
-    radar_target_catalog.csv:     11eabce8f8aaed1be6aa3c3557b5e392ad305757230333f84f37285c401b62b7
+    radar_target_catalog.csv:     e5d8f9c86b07c4d3981b2fd3c3a804f75d3559fa33fbb7731bfc76308a60b292
     probe_p70_result.json:        809c51af47ae154c6c01bba1cf3983a6c0143fd3b0711958fa8b9e6e18bae96f
     probe_p70_summary.txt:        9e8c42d6a742d773be7e531782a7d8514a5c00aa64efc5080d81a718d6384fe5
-    NIPC_P70_DICTAMEN.md:         e8d4e4e825fe6136b23573705b800108247eb07c9a46e2f62c2c06980f179092
+    NIPC_P70_DICTAMEN.md:         e8d4e4e825fe6136b23573705b800108247eb07c9a46e2f62c2c06980f179092 (historico; consolidado en DICTAMENES.md seccion 23)
+
+Nota EOL (2026-09-21): radar_target_catalog.csv registra hash sobre
+variante CRLF (pre-.gitattributes). El hash vigente corresponde a la
+variante LF (normativa por .gitattributes). Contenido identico.
 
 ### 10.3. Estado de bloqueos
 
-    P38   GO CONDICIONADO (F2.4, 2026-09-20)
-    P60   GO (F2.4, 2026-09-20)
-    P61   GO (F2.4, 2026-09-20)
+    P38   GO CONDICIONADO / A.6.4 CERRADO (dictamen #75)
+    P60   GO / IMPLEMENTADO (A.6.2)
+    P61   GO / IMPLEMENTADO (A.6.2)
     P62   FORMALIZADO (F2.4, 2026-09-20)
     P63   FORMALIZADO (F2.4, 2026-09-20)
     P64   FORMALIZADO (F2.4, 2026-09-20)
     P65   FORMALIZADO (F2.4, 2026-09-20)
-    P70   CERRADO (NIPC_P70_DICTAMEN.md)
+    P70   CERRADO (NIPC_P70_DICTAMEN.md, consolidado en DICTAMENES.md seccion 23)
+
+    A.6.0   CERRADO (dictamen #43)
+    A.6.1   CERRADO (F2.4, 2026-09-20)
+    A.6.2   CERRADO
+    A.6.2-bis-B2-PIT  CERRADO (dictamen #53)
+    A.6.2-bis-B1      CERRADO (dictamen #68)
+    A.6.2-bis-B3      IMPLEMENTADO SPEC-SIDE
+    A.6.3   CERRADO (dictamen #72)
+    A.6.4-v2 CERRADO (dictamen #73)
+    A.6.4   CERRADO (dictamen #75)
+    A.6.5   EN CURSO
+    A.6.6   PENDIENTE
 
     THRESHOLD_1                          UNDEFINED
     THRESHOLD_2                          BLOQUEADO
@@ -1291,4 +1320,5 @@ introduce cualquier cambio de resultado.
 
 ---
 
-Fin del documento. F2.4 emitido 2026-09-20. Pendiente A.6.0 (Gate 0 bloqueantes).
+Fin del documento. F2.4 emitido 2026-09-20. A.6.0-A.6.4 cerrados (dictamenes
+#43-#75). A.6.5 en curso. Pendiente A.6.6 (F2.4-CLOSE).
