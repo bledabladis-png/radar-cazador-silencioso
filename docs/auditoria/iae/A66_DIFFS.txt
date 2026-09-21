@@ -1,3 +1,2345 @@
+commit a8a2adb341cbb131ac59b31fdd2e008f4f5b9208
+Author: bledabladis <bledabladis@gmail.com>
+Date: Tue Sep 22 01:16:41 2026 +0200
+
+    docs(iae): regenerar HASHES.txt de 3 nipc_gate0_* (stale tras 922c0d8)
+
+
+diff --git a/docs/auditoria/iae/evidence/nipc_gate0_baseline/HASHES.txt b/docs/auditoria/iae/evidence/nipc_gate0_baseline/HASHES.txt
+index 32c9c62..56175c0 100644
+--- a/docs/auditoria/iae/evidence/nipc_gate0_baseline/HASHES.txt
++++ b/docs/auditoria/iae/evidence/nipc_gate0_baseline/HASHES.txt
+@@ -1,4 +1,4 @@
+-2d84712458e1a393483d26810a971803faa98953e4381663bbb5d9b679f09002  README.md
++f30e9856a4580f1327b306cb2b35b2e46f0addb845223dbf1a49761340304aa5  README.md
+ b2ede861bc4a49fc27932d09cd8aaac533e31dd71eed17beff182fc8dc8ca337  probe_coverage_baseline.py
+ d5a69ad4588af02c218388cbfd111cc150781ded687f025bb31a19ef8845f1e0  baseline_output.txt
+ 
+diff --git a/docs/auditoria/iae/evidence/nipc_gate0_openfigi/HASHES.txt b/docs/auditoria/iae/evidence/nipc_gate0_openfigi/HASHES.txt
+index 5201533..24b9022 100644
+--- a/docs/auditoria/iae/evidence/nipc_gate0_openfigi/HASHES.txt
++++ b/docs/auditoria/iae/evidence/nipc_gate0_openfigi/HASHES.txt
+@@ -3,7 +3,7 @@ d3ec1e7602441a55fd68af477974d0cb93b5dcd86b6847e734adcb05f9be43a9  cusips.txt
+ a1000a9178e9a899cf3c90c1463b59e44c40d5c7475e3efc193def6b9c4d3b7a  result.json
+ 9909dcf859b1828fe6b0851b8e4f89524f8f9392e3e00339cf1f911c3d858e1f  build_sample.py
+ 15cdb1b47ef82c22548726ae397146ebbe35d4a6c7fc0cd470a01a0e27f3017d  run_openfigi.py
+-5cf9fe17b173e575eb246a37271f99ce73287d9ba0acecdd07df8ef8b151fbb4  README.md
++0fb0fea6ee6b4ed8fb72229793c5315ef8812de08981e52363766f124f45d302  README.md
+ 
+ generated_at: 2026-09-19
+ probe_endpoint: https://api.openfigi.com/v3/mapping
+diff --git a/docs/auditoria/iae/evidence/nipc_gate0_probe/HASHES.txt b/docs/auditoria/iae/evidence/nipc_gate0_probe/HASHES.txt
+index 9bb08b5..a8887dc 100644
+--- a/docs/auditoria/iae/evidence/nipc_gate0_probe/HASHES.txt
++++ b/docs/auditoria/iae/evidence/nipc_gate0_probe/HASHES.txt
+@@ -2,7 +2,7 @@
+ b36625985951723f2fd4908075bb36b1b5c293a34d5fd0befc97fa01f0a3ddce  probe_filer_continuity_top50.py
+ 92b782fe2297244ccbb9a59a74fd67159a3a6274cb95820ed7ddddb7fa859ef7  probe_nipc_e2e.py
+ 49f0a2281d8678422cb3d297ecba040fc172c90633f7effe552a13bfff6ecc84  probe_reconcile_vanguard.py
+-74d0a711b5d6252d12375fb8570c5715cc3e1f0e871d41e0659ec9a4719a7825  README.md
++c74b36c67eb7bd26094dde6fde97f5fb299330077e001abd856cc81c8555395c  README.md
+ 903b08620c98f1a6c7535a98b13a65177fc6ac904fc55067ca9a51703c4d5709  top50_output.txt
+ 
+ generated_at: 2026-09-19
+commit 6bfded2b3c71f0568c52a130203a6dc5e459dc0f
+Author: bledabladis <bledabladis@gmail.com>
+Date: Tue Sep 22 01:14:08 2026 +0200
+
+    chore(iae): mantenimiento final - ESTADO_SISTEMA + A66_DIFFS ampliado + TRANSFER v9.5
+
+
+diff --git a/docs/auditoria/TRANSFER.md b/docs/auditoria/TRANSFER.md
+index 628c49e..060bd4b 100644
+--- a/docs/auditoria/TRANSFER.md
++++ b/docs/auditoria/TRANSFER.md
+@@ -1,4 +1,4 @@
+-# TRANSFER DE SESION - 2026-09-22 v9.4
++# TRANSFER DE SESION - 2026-09-22 v9.5
+ 
+ Documento de onboarding. **NO es fuente de estado.**
+ Estado vivo: `iae/ESTADO_SISTEMA.md` (hechos) + `iae/ESTADO_DECLARADO.md` (fases).
+@@ -16,8 +16,8 @@ Reglas de personalidad y metodo: `PROMPT_MAESTRO.md` secciones 1 y 3.
+ 
+ ## 2. Estado real al cierre de esta sesion
+ 
+-    HEAD          6126c0d (verificar con git al arrancar)
+-    Ahead         299 commits locales
++    HEAD          b9a2107 (verificar con git al arrancar)
++    Ahead         311 commits locales
+     Working tree  LIMPIO (verificar)
+     Tests         test_h731: 11 passed (incluye H-08);
+                   suite global: 1312 passed + 2 skipped + 3 failed
+@@ -72,9 +72,14 @@ Trabajo post-consulta (sin dictamen):
+ - Curacion crosswalk ONB (680033107) + PTGX (74366E102) cerrada
+   (commit `7357e1d`). Sub-deuda nueva: BRK-B + MOG-A con status=MISS
+   (requiere OpenFIGI masivo).
+-- Smoke NIPC contractual anadido al probe (commit `6126c0d`):
+-  compute_nipc_contractual computa sin error con delta vacio.
++- Smoke NIPC contractual anadido al probe (commit `6126c0d`).
+ - Regresion cruzada P65 verificada tras A2: sin impacto.
++- Cobertura semantica IAE 110/110 (commits `12e1e3f`, `de6b737`).
++- B-06 end-to-end sin doble conteo (commit `33881df`).
++- Saneamiento: 3 failed de test_freshness aclarados como ambientales.
++- Sync 18->20 post-curacion ONB/PTGX en docs vivos (`8bf6812`).
++- Sub-deuda registrada: contrato NIPC L332 cita 18 (desactualizado,
++  requiere dictamen para actualizar in-place).
+ 
+ ## 4. TRABAJO PENDIENTE: fix A2 (H-05/H-06/H-07/H-10.1)
+ 
+@@ -178,7 +183,7 @@ Esperado:
+     "Confirmado, contexto asimilado."
+ 
+     Estado que reconozco:
+-      - HEAD 6126c0d, ahead 299
++      - HEAD b9a2107, ahead 311
+       - Auditor #76: A2 = GO; A.6.6 = NO-GO
+       - H-05/H-06/H-07/H-10.1/H-08/B-01/B-05/B-06/B-07 cerrados
+       - Consulta A.6.7 enviada: B-02/B-03/B-04 pendientes de dictamen
+@@ -189,4 +194,4 @@ Esperado:
+ 
+ ---
+ 
+-FIN DEL TRANSFER v9.4. Fecha: 2026-09-22. Consulta A.6.7 enviada + curacion ONB/PTGX + smoke NIPC.
++FIN DEL TRANSFER v9.5. Fecha: 2026-09-22. Consulta A.6.7 enviada + ciclo de saneamiento completo (311 commits locales).
+diff --git a/docs/auditoria/iae/A66_DIFFS.txt b/docs/auditoria/iae/A66_DIFFS.txt
+index c5d0964..93f11b1 100644
+--- a/docs/auditoria/iae/A66_DIFFS.txt
++++ b/docs/auditoria/iae/A66_DIFFS.txt
+@@ -1,3 +1,2199 @@
++commit b9a2107139a4b2555bb96d7a8b6f8c05c33cdfcd
++Author: bledabladis <bledabladis@gmail.com>
++Date: Tue Sep 22 01:13:13 2026 +0200
++
++    docs(iae): registrar sub-deuda contrato NIPC (18 vs 20 post-curacion)
++
++
++diff --git a/docs/auditoria/iae/ESTADO_DECLARADO.md b/docs/auditoria/iae/ESTADO_DECLARADO.md
++index 9d54f03..5d14a54 100644
++--- a/docs/auditoria/iae/ESTADO_DECLARADO.md
+++++ b/docs/auditoria/iae/ESTADO_DECLARADO.md
++@@ -98,6 +98,11 @@ documentos describen su tema; NO declaran el estado del sistema.
++   catalogo radar (sin share_class_figi). No resoluble via crosswalk
++   (ambos ya estan en `cusip_ticker_exceptions.csv`). Requiere OpenFIGI.
++ - Gate-NIPC.2 BLOQUEADO por THRESHOLD_1/2 UNDEFINED
+++- Sub-deuda documental (2026-09-22): `NIPC_CONTRATOS_SEMANTICOS_v1.md`
+++  L332 cita '18 FIGI -> 18 records VERIFIED' en la trazabilidad A.6.4,
+++  pero tras la curacion ONB/PTGX el valor real es 20. NO se ha tocado
+++  el contrato (prohibicion vigente: NO modificar contratos normativos
+++  sin dictamen). Requiere dictamen para actualizar in-place.
++ - A.6.6 NO-GO (#76). Saneamiento post-dictamen CERRADO.
++ - Cobertura de tests: 9 funciones publicas IAE sin test directo
++   cubiertas por `tests/test_iae_gap_coverage.py` (commit `12e1e3f`).
++commit 8bf68123db7999f7efb76fae66b0970f22ba2194
++Author: bledabladis <bledabladis@gmail.com>
++Date: Tue Sep 22 01:12:57 2026 +0200
++
++    docs(iae): sincronizar 18 -> 20 tras curacion ONB/PTGX (docs vivos)
++
++
++diff --git a/docs/auditoria/TRANSFER.md b/docs/auditoria/TRANSFER.md
++index 6ceacc4..628c49e 100644
++--- a/docs/auditoria/TRANSFER.md
+++++ b/docs/auditoria/TRANSFER.md
++@@ -55,7 +55,7 @@ Evidencia empirica sobre 13F Q4 2025 / Q1 2026 reales
++ (probe_integration_b1_p61_p38.py, result.json):
++ 
++     coverage_previous              = None    (Q4 vacio, Q5 literal)
++-    coverage_current               = 1.0     (18/18 VERIFIED sobre TARGET_Q1)
+++    coverage_current               = 1.0     (20/20 VERIFIED sobre TARGET_Q1)
++     paired_security_coverage       = None    (TARGET_PAIRWISE = 0)
++     paired_weighted_share_coverage = None
++     coverage_status                = UNAVAILABLE
++diff --git a/docs/auditoria/iae/ESTADO_DECLARADO.md b/docs/auditoria/iae/ESTADO_DECLARADO.md
++index 3f6a23b..9d54f03 100644
++--- a/docs/auditoria/iae/ESTADO_DECLARADO.md
+++++ b/docs/auditoria/iae/ESTADO_DECLARADO.md
++@@ -160,7 +160,7 @@ sin dictamen).
++ - H-12 (MEDIA): hash de catalogo etiquetado (cerrado antes del fix A2).
++ 
++ **Consecuencia (actualizada post #76):** A.6.4 se reclasifica como
++-**evidencia contractual parcial**: valida rama Q1 (18/18 sobre TARGET_Q1
+++**evidencia contractual parcial**: valida rama Q1 (20/20 sobre TARGET_Q1
++ materializado) y rama fail-closed (Q4 vacio -> coverage_previous=None),
++ pero NO valida pairwise real (TARGET_PAIRWISE=0). Ver
++ `evidence/a64_integration_b1_p61_p38/README.md` y `A66_BUNDLE.md`.
++diff --git a/docs/auditoria/iae/evidence/a64_integration_b1_p61_p38/HASHES.txt b/docs/auditoria/iae/evidence/a64_integration_b1_p61_p38/HASHES.txt
++index aa6d59f..22ccdae 100644
++--- a/docs/auditoria/iae/evidence/a64_integration_b1_p61_p38/HASHES.txt
+++++ b/docs/auditoria/iae/evidence/a64_integration_b1_p61_p38/HASHES.txt
++@@ -7,7 +7,7 @@
++ 
++ c237cd84c444e6ea802427bd1354ae98f2d2e34885ab7171dd4379f9b23afbc3  probe_integration_b1_p61_p38.py
++ a2784bd33938cfd5a6b4d64409f35366020e8fc60432c5ff914614c00f1ebba2  result.json
++-07e3a977bd77d8cd267ea0ede6587aec8dea6e617fa35ffb0e1c46d75d29912b  README.md
+++fc257a2c18ac093fe033b949e8784690adab9d0204fe91a15e76490b7ad4e2b5  README.md
++ 
++ ## Inputs 13F - Q4 2025 (data/sec_13f/processed/2025Q4/)
++ 
++diff --git a/docs/auditoria/iae/evidence/a64_integration_b1_p61_p38/README.md b/docs/auditoria/iae/evidence/a64_integration_b1_p61_p38/README.md
++index 275e507..bad7936 100644
++--- a/docs/auditoria/iae/evidence/a64_integration_b1_p61_p38/README.md
+++++ b/docs/auditoria/iae/evidence/a64_integration_b1_p61_p38/README.md
++@@ -23,7 +23,8 @@ el state; coverage.py aplica Q5 literal (Q4 vacio -> UNAVAILABLE).
++    literal (fix A2 c4).
++ 5. Q4 vacio produce `coverage_previous=None` (no 1.0). Q1 produce
++    `coverage_current=1.0` calculado sobre el TARGET_Q1 MATERIALIZADO en
++-   esta ejecucion (18 FIGIs). **NO es certificacion historica plena de
+++   esta ejecucion (20 FIGIs, tras curacion ONB/PTGX del 2026-09-22).
+++   **NO es certificacion historica plena de
++    cobertura contractual Q1**: P62/PIT sigue pendiente (el snapshot
++    tiene valid_from=2026-09-21, posterior al period_end Q1=2026-03-31)
++    y el universo B2-PIT completo (242 keys) no esta materializado.
++@@ -34,13 +35,14 @@ el state; coverage.py aplica Q5 literal (Q4 vacio -> UNAVAILABLE).
++   B2-PIT vigente tiene `valid_from=2026-09-21` y no cubre Q4 2025 / Q1
++   2026 por PIT. La cadena se ejecuta con build_target directo.
++ - Materializacion completa del universo 13F. El subconjunto con FIGI
++-  comun Q4<->Q1 es 18 keys. El universo B2-PIT completo es 242 keys.
+++  comun Q4<->Q1 es 20 keys tras curacion ONB/PTGX. El universo B2-PIT
+++  completo es 242 keys.
++ - Thresholds NIPC. Siguen UNDEFINED.
++ 
++ ## Resultado empirico (result.json)
++ 
++     coverage_previous              = None    (Q4 vacio, Q5 literal)
++-    coverage_current               = 1.0     (18/18 VERIFIED sobre TARGET_Q1)
+++    coverage_current               = 1.0     (20/20 VERIFIED sobre TARGET_Q1)
++     paired_security_coverage       = None    (TARGET_PAIRWISE = 0)
++     paired_weighted_share_coverage = None
++     coverage_status                = UNAVAILABLE
++@@ -51,7 +53,7 @@ Cardinalidades (H-06):
++     target_q1_figi          = 18
++     target_pairwise_figi    = 0
++     records_q4_verified     = 0
++-    records_q1_verified     = 18
+++    records_q1_verified     = 20
++     paired_figi             = 0
++ 
++ Contraste pre/post fix A2 (mismo dataset, mismo subconjunto):
++commit 33881df647f967c680b4bd70743f5bc9f0fcf4ad
++Author: bledabladis <bledabladis@gmail.com>
++Date: Tue Sep 22 01:10:08 2026 +0200
++
++    test(iae): B-06 end-to-end - cadena de pesos sin doble conteo (auditor #76)
++
++
++diff --git a/tests/test_b06_e2e_aggregation.py b/tests/test_b06_e2e_aggregation.py
++new file mode 100644
++index 0000000..86c6861
++--- /dev/null
+++++ b/tests/test_b06_e2e_aggregation.py
++@@ -0,0 +1,186 @@
+++"""B-06 (auditor #76) - prueba end-to-end de la cadena de pesos.
+++
+++El auditor #76 pidio literalmente:
+++  "Debe existir una prueba explicita equivalente a:
+++   CUSIP_A=100, CUSIP_B=50, mismo FIGI -> agregado=150 ->
+++   max(Q4,Q1) aplicado despues, y debe quedar demostrado que cada
+++   peso entra una unica vez."
+++
+++Este test recorre la cadena completa:
+++  INFOTABLE (CUSIP+SSHPRNAMT)
+++  -> target_builder.extract_sshprnamt_by_figi     (agrega por FIGI)
+++  -> distribucion a key representativa (logica del probe A.6.4)
+++  -> catalog_p38_adapter._records                 (peso al record)
+++  -> coverage.aggregate_positions_by_shareclass_figi
+++  -> coverage.compute_contractual_coverage        (max(Q4,Q1))
+++
+++Demuestra que con N catalog_keys compartiendo el mismo FIGI, el peso
+++contractual entra UNA vez, no N. Si la distribucion a key
+++representativa no existiera (bug B-06 pre-fix), aggregate sumaria N
+++veces el total del FIGI.
+++"""
+++from __future__ import annotations
+++
+++import pandas as pd
+++
+++from src.institutional_accumulation.aggregation import catalog_p38_adapter as ca
+++from src.institutional_accumulation.aggregation import coverage as cov
+++from src.institutional_accumulation.identity import catalog_key as ck
+++from src.institutional_accumulation.identity import period_state as ps
+++from src.institutional_accumulation.identity import target_builder as tb
+++
+++
+++def _make_universe(rows):
+++    snap = pd.DataFrame(
+++        [{"radar_ticker": t, "share_class_figi": f, "name": t}
+++         for t, f in rows],
+++        columns=["radar_ticker", "share_class_figi", "name"],
+++    )
+++    uids = [ck.compute_snapshot_row_uid(snap.iloc[i], list(snap.columns))
+++            for i in range(len(rows))]
+++    keys = ["radar_20260922_" + str(i + 1).zfill(4) for i in range(len(rows))]
+++    mem = pd.DataFrame([
+++        {"version_id": "v1", "catalog_key": k, "snapshot_row_uid": u,
+++         "predecessor_row_uid": "", "justification": "test"}
+++        for k, u in zip(keys, uids)
+++    ], columns=list(ck.MEMBERSHIP_COLUMNS))
+++    asg = pd.DataFrame([
+++        {"catalog_key": k, "assigned_entity_id": "radar_entity_0001",
+++         "valid_from": "2026-09-22", "valid_to": "", "source": "test",
+++         "reason": "test"}
+++        for k in keys
+++    ], columns=list(ck.ASSIGNMENT_COLUMNS))
+++    return tb.build_target(snap, mem, asg, version_id="v1",
+++                           period_end="2026-03-31",
+++                           catalog_version_id="cat", catalog_sha256="a" * 64)
+++
+++
+++def _distribute_to_representative_keys(sh_by_figi, figi_to_keys):
+++    """Replica la logica del probe A.6.4 post-B-06.
+++
+++    El total del FIGI se asigna a UNA key (la primera en orden
+++    lexicografico); las demas quedan sin peso. Asi aggregate suma el
+++    total UNA vez, no N.
+++    """
+++    sh_by_key = {}
+++    for f, v in sh_by_figi.items():
+++        ks = sorted(figi_to_keys.get(f, []))
+++        if ks:
+++            sh_by_key[ks[0]] = v
+++    return sh_by_key
+++
+++
+++def test_b06_e2e_dos_cusips_mismo_figi_agrega_una_sola_vez():
+++    """Auditor #76: CUSIP_A=100 + CUSIP_B=50 mismo FIGI -> 150 (una vez).
+++
+++    Recorre la cadena completa. Verifica en cada paso que el total del
+++    FIGI aparece exactamente una vez.
+++    """
+++    # 1. INFOTABLE con 2 CUSIPs del mismo FIGI
+++    infotable = pd.DataFrame([
+++        {"CUSIP": "CUSIP_A", "SSHPRNAMT": 100},
+++        {"CUSIP": "CUSIP_B", "SSHPRNAMT": 50},
+++    ])
+++    figi_by_cusip = {"CUSIP_A": "FIGI_X", "CUSIP_B": "FIGI_X"}
+++
+++    # 2. extract_sshprnamt_by_figi: suma 100 + 50 = 150
+++    sh_by_figi = tb.extract_sshprnamt_by_figi(infotable, figi_by_cusip)
+++    assert sh_by_figi == {"FIGI_X": 150.0}
+++
+++    # 3. Universe con 2 catalog_keys que comparten FIGI_X
+++    # (dos tickers distintos -> dos keys distintas, un solo FIGI)
+++    u = _make_universe([("TICK_A", "FIGI_X"), ("TICK_B", "FIGI_X")])
+++    keys = sorted(u.declared_keys)
+++    assert len(keys) == 2
+++
+++    # 4. Distribucion a key representativa: una key lleva 150, la otra 0
+++    figi_to_keys = {"FIGI_X": keys}
+++    sh_by_key = _distribute_to_representative_keys(sh_by_figi, figi_to_keys)
+++    assert sh_by_key == {keys[0]: 150.0}
+++    assert keys[1] not in sh_by_key
+++
+++    # 5. period_state con el sshprnamt_evidence
+++    st = ps.build_period_state(
+++        u,
+++        operational_evidence={k: "VERIFIED" for k in keys},
+++        sshprnamt_evidence=sh_by_key,
+++    )
+++    assert st[keys[0]].sshprnamt == 150.0
+++    assert st[keys[1]].sshprnamt is None
+++
+++    # 6. Adapter: 2 records, uno con peso 150, otro con peso 0
+++    recs = ca._records(u, st, period="Q1")
+++    assert len(recs) == 2
+++    weights = {r.observed_security_key: r.weight for r in recs}
+++    assert weights[keys[0]] == 150.0
+++    assert weights[keys[1]] == 0.0
+++
+++    # 7. aggregate por FIGI: suma total = 150, NO 150+150=300
+++    agg = cov.aggregate_positions_by_shareclass_figi(recs, "Q1")
+++    assert agg == {"FIGI_X": 150.0}
+++
+++    # 8. compute_contractual_coverage: max(Q4,Q1) aplicado despues
+++    #    Solo Q1 tiene datos; Q4 vacio -> coverage_previous=None
+++    result = cov.compute_contractual_coverage(
+++        target_q4=set(), target_q1={"FIGI_X"},
+++        records_q4=[], records_q1=recs,
+++    )
+++    assert result["coverage_current"] == 1.0
+++    assert result["coverage_previous"] is None
+++    assert result["paired_weighted_share_coverage"] is None
+++
+++
+++def test_b06_contraejemplo_sin_distribucion_doble_conteo():
+++    """Contraejemplo: si TODAS las keys llevan el total del FIGI,
+++    aggregate suma N veces. Documenta el bug B-06 pre-fix.
+++    """
+++    u = _make_universe([("TICK_A", "FIGI_X"), ("TICK_B", "FIGI_X")])
+++    keys = sorted(u.declared_keys)
+++
+++    # Anti-patron: broadcast del total a TODAS las keys (pre-fix B-06)
+++    sh_by_key_bug = {k: 150.0 for k in keys}
+++    st = ps.build_period_state(
+++        u,
+++        operational_evidence={k: "VERIFIED" for k in keys},
+++        sshprnamt_evidence=sh_by_key_bug,
+++    )
+++    recs = ca._records(u, st, period="Q1")
+++    agg = cov.aggregate_positions_by_shareclass_figi(recs, "Q1")
+++    # 2 keys x 150 = 300. Bug confirmado como contraejemplo.
+++    assert agg == {"FIGI_X": 300.0}
+++
+++
+++def test_b06_max_q4_q1_sobre_peso_agregado_una_vez():
+++    """max(Q4,Q1) se aplica sobre el agregado por FIGI, no por key.
+++
+++    Q4: FIGI_X = 200 (key1=200, key2=0)  -> agg=200
+++    Q1: FIGI_X = 150 (key1=150, key2=0)  -> agg=150
+++    max = 200. paired_weighted = 200/200 = 1.0
+++    """
+++    u = _make_universe([("TICK_A", "FIGI_X"), ("TICK_B", "FIGI_X")])
+++    keys = sorted(u.declared_keys)
+++
+++    st4 = ps.build_period_state(
+++        u,
+++        operational_evidence={k: "VERIFIED" for k in keys},
+++        sshprnamt_evidence={keys[0]: 200.0},
+++    )
+++    st1 = ps.build_period_state(
+++        u,
+++        operational_evidence={k: "VERIFIED" for k in keys},
+++        sshprnamt_evidence={keys[0]: 150.0},
+++    )
+++    r4 = ca._records(u, st4, period="Q4")
+++    r1 = ca._records(u, st1, period="Q1")
+++
+++    # Agregado por FIGI = 200 (Q4) y 150 (Q1)
+++    assert cov.aggregate_positions_by_shareclass_figi(r4, "Q4") == {"FIGI_X": 200.0}
+++    assert cov.aggregate_positions_by_shareclass_figi(r1, "Q1") == {"FIGI_X": 150.0}
+++
+++    # max(Q4,Q1) = 200, numer = 200, denom = 200 -> 1.0
+++    result = cov.compute_contractual_coverage(
+++        target_q4={"FIGI_X"}, target_q1={"FIGI_X"},
+++        records_q4=r4, records_q1=r1,
+++    )
+++    assert result["paired_security_coverage"] == 1.0
+++    assert result["paired_weighted_share_coverage"] == 1.0
++commit 57ecfed4e490de983b0ca1bb1896723b8170470b
++Author: bledabladis <bledabladis@gmail.com>
++Date: Tue Sep 22 01:08:40 2026 +0200
++
++    docs(iae): referenciar p66_e2e_probe desde ESTADO_DECLARADO (orphan de evidencia)
++
++
++diff --git a/docs/auditoria/iae/ESTADO_DECLARADO.md b/docs/auditoria/iae/ESTADO_DECLARADO.md
++index fb003af..3f6a23b 100644
++--- a/docs/auditoria/iae/ESTADO_DECLARADO.md
+++++ b/docs/auditoria/iae/ESTADO_DECLARADO.md
++@@ -58,6 +58,7 @@ documentos describen su tema; NO declaran el estado del sistema.
++ | `INSTITUTIONAL_ACCUMULATION_NIPC_ESPECIFICACION.md` v1.4 | Referencia, no normativa |
++ | `A66_BUNDLE.md` | Entregable al auditor (dictamen #76). Refleja estado post-A2. |
++ | `A67_CONSULTA.md` | Consulta abierta al auditor sobre B-02/B-03/B-04. |
+++| `evidence/p66_e2e_probe/` | Evidencia P66 e2e (10.676 filings Q4, 0 R4 no clasificables). Complementa a `p66_gate*`. |
++ 
++ ## 4. Prohibiciones vigentes
++ 
++commit 9a2f3bcacabfa99dff2c39df9f6515f88c38b582
++Author: bledabladis <bledabladis@gmail.com>
++Date: Tue Sep 22 01:07:15 2026 +0200
++
++    docs(iae): aclarar 3 failed preexistentes de test_freshness (ambientales, no regresion IAE)
++
++
++diff --git a/docs/auditoria/iae/ESTADO_DECLARADO.md b/docs/auditoria/iae/ESTADO_DECLARADO.md
++index 3cec3dc..fb003af 100644
++--- a/docs/auditoria/iae/ESTADO_DECLARADO.md
+++++ b/docs/auditoria/iae/ESTADO_DECLARADO.md
++@@ -101,6 +101,15 @@ documentos describen su tema; NO declaran el estado del sistema.
++ - Cobertura de tests: 9 funciones publicas IAE sin test directo
++   cubiertas por `tests/test_iae_gap_coverage.py` (commit `12e1e3f`).
++   Cobertura directa actual: 110/110 funciones publicas mencionadas.
+++- **3 failed preexistentes (`test_freshness.py`) - aclaracion 2026-09-22:**
+++  no son regresion IAE. Los 3 tests leen `data/market_data.parquet` y
+++  `data/stock_prices.parquet` con `pytest.mark.skipif(not exists)`.
+++  En **CI** (clone fresco sin parquets) se **saltan** -> suite global
+++  verde. En **local** con parquets presentes y stale (last_date muy
+++  anterior a la fecha de ejecucion), fallan por antiguedad.
+++  Ambos parquets tienen manifest con status VALID/VALID_WITH_MISSING
+++  y last_date == expected_session; el problema es solo la distancia
+++  temporal hasta 'hoy'. No hay causa en codigo IAE.
++ 
++ ## 6. Proxima accion autorizada
++ 
++commit 692cf07eb66e60ed5d44d1f8f60f6af0609d7e1d
++Author: bledabladis <bledabladis@gmail.com>
++Date: Tue Sep 22 01:06:43 2026 +0200
++
++    test(iae): caracterizacion iae_pipeline.report (orquestador sin tests)
++
++
++diff --git a/tests/test_iae_pipeline_report.py b/tests/test_iae_pipeline_report.py
++new file mode 100644
++index 0000000..0e5b6a0
++--- /dev/null
+++++ b/tests/test_iae_pipeline_report.py
++@@ -0,0 +1,119 @@
+++"""Tests de caracterizacion para iae_pipeline.report.
+++
+++Solo la funcion `report` es testeable sin fixtures externos
+++(load_canonical y build_identities requieren parquets 13F).
+++Se verifica el comportamiento del reporte por etapa sin tocar
+++el script ni sus dependencias.
+++
+++Nota: importar scripts.iae_pipeline inyecta sys.path.insert ROOT
+++en sys.modules. Es el unico efecto colateral; no altera el state
+++global de tests (mismo ROOT que ya usa el proyecto).
+++"""
+++from __future__ import annotations
+++
+++import sys
+++from pathlib import Path
+++
+++import pandas as pd
+++
+++ROOT = Path(r"D:\Macro_Sectorial")
+++if str(ROOT) not in sys.path:
+++    sys.path.insert(0, str(ROOT))
+++
+++import importlib.util
+++
+++
+++def _load_pipeline_module():
+++    """Carga scripts/iae_pipeline.py como modulo (no paquete)."""
+++    spec = importlib.util.spec_from_file_location(
+++        "iae_pipeline", ROOT / "scripts" / "iae_pipeline.py")
+++    mod = importlib.util.module_from_spec(spec)
+++    spec.loader.exec_module(mod)
+++    return mod
+++
+++
+++pipe = _load_pipeline_module()
+++
+++
+++def _empty_snap():
+++    return {
+++        "INFOTABLE": pd.DataFrame({
+++            "CUSIP": [],
+++            "SSHPRNAMTTYPE": [],
+++            "PUTCALL": [],
+++            "TITLEOFCLASS": [],
+++        })
+++    }
+++
+++
+++def _one_row_snap():
+++    return {
+++        "INFOTABLE": pd.DataFrame({
+++            "CUSIP": ["123456789"],
+++            "SSHPRNAMTTYPE": ["SH"],
+++            "PUTCALL": [None],
+++            "TITLEOFCLASS": ["COM"],
+++        })
+++    }
+++
+++
+++def test_report_snapshot_vacio(capsys):
+++    """Caso borde: snapshot sin filas. No debe romper."""
+++    snap = _empty_snap()
+++    pipe.report("2026-03-31", "2026Q1", snap, {}, pd.DataFrame())
+++    out = capsys.readouterr().out
+++    assert "IAE PIPELINE - 2026Q1" in out
+++    assert "2026-03-31" in out
+++    assert "filas INFOTABLE:      0" in out
+++    assert "Etapa 1" in out
+++    assert "Etapa 2" in out
+++    assert "Etapa 3" in out
+++
+++
+++def test_report_con_datos_muestra_pct_operational(capsys):
+++    snap = _one_row_snap()
+++    ids = {"123456789": {"security_resolution_status": "CANONICAL"}}
+++    oper = pd.DataFrame({"TITLEOFCLASS": ["COM"]})
+++    pipe.report("2026-03-31", "2026Q1", snap, ids, oper)
+++    out = capsys.readouterr().out
+++    assert "filas INFOTABLE:      1" in out
+++    assert "CUSIPs unicos:        1" in out
+++    assert "filas:                1" in out
+++    assert "CANONICAL" in out
+++    assert "pct operational:      100.0%" in out
+++    assert "Top 10 TITLEOFCLASS" in out
+++
+++
+++def test_report_u51_vacio_no_muestra_pct(capsys):
+++    """Si u51 vacio (ningun SH + PUTCALL NULL), no imprime pct."""
+++    snap = {
+++        "INFOTABLE": pd.DataFrame({
+++            "CUSIP": ["123"],
+++            "SSHPRNAMTTYPE": ["PRN"],  # no SH
+++            "PUTCALL": [None],
+++            "TITLEOFCLASS": ["COM"],
+++        })
+++    }
+++    pipe.report("2026-03-31", "2026Q1", snap, {}, pd.DataFrame())
+++    out = capsys.readouterr().out
+++    assert "pct operational" not in out
+++    assert "Top 10 TITLEOFCLASS" not in out
+++
+++
+++def test_report_identities_status_ordenados_descendente(capsys):
+++    """Etapa 2 ordena por frecuencia descendente."""
+++    snap = _empty_snap()
+++    ids = {
+++        "A": {"security_resolution_status": "CANONICAL"},
+++        "B": {"security_resolution_status": "CANONICAL"},
+++        "C": {"security_resolution_status": "OBSERVED_ONLY"},
+++        "D": {"security_resolution_status": "UNRESOLVED"},
+++    }
+++    pipe.report("2026-03-31", "2026Q1", snap, ids, pd.DataFrame())
+++    out = capsys.readouterr().out
+++    # CANONICAL (2) debe aparecer antes que OBSERVED_ONLY (1) y UNRESOLVED (1)
+++    i_canon = out.index("CANONICAL")
+++    i_obs = out.index("OBSERVED_ONLY")
+++    i_unres = out.index("UNRESOLVED")
+++    assert i_canon < i_obs
+++    assert i_canon < i_unres
++commit de6b7370e2a33e03137304c63a427c1701306ebf
++Author: bledabladis <bledabladis@gmail.com>
++Date: Tue Sep 22 01:05:56 2026 +0200
++
++    test(iae): cobertura semantica 110/110 - compute_edge_metrics + classify_title_of_class
++
++
++diff --git a/tests/test_iae_gap_semantic.py b/tests/test_iae_gap_semantic.py
++new file mode 100644
++index 0000000..c5d6b57
++--- /dev/null
+++++ b/tests/test_iae_gap_semantic.py
++@@ -0,0 +1,155 @@
+++"""Tests de caracterizacion para 2 funciones publicas sin cobertura semantica.
+++
+++Detectadas el 2026-09-22 por script de cobertura semantica (funciones
+++publicas sin invocacion en ningun test):
+++  - relationships.compute_edge_metrics
+++  - security_type.classify_title_of_class
+++"""
+++from __future__ import annotations
+++
+++import pandas as pd
+++import pytest
+++
+++from src.institutional_accumulation.sec_13f.identity import relationships as rel
+++from src.institutional_accumulation import security_type as st
+++
+++
+++# ============================================================
+++# compute_edge_metrics (relationships.py)
+++# ============================================================
+++
+++
+++def _edges_df(statuses):
+++    return pd.DataFrame({
+++        "ACCESSION_NUMBER": ["ACC" + str(i) for i in range(len(statuses))],
+++        "INFOTABLE_SK": [str(i) for i in range(len(statuses))],
+++        "reference_status": statuses,
+++    })
+++
+++
+++def test_compute_edge_metrics_vacio():
+++    df = pd.DataFrame({
+++        "ACCESSION_NUMBER": [],
+++        "INFOTABLE_SK": [],
+++        "reference_status": [],
+++    })
+++    m = rel.compute_edge_metrics(df)
+++    assert m["edge_count_total"] == 0
+++    assert m["resolution_rate"] == 0.0
+++    assert m["resolved_edges"] == 0
+++    assert m["unmapped_missing_om2"] == 0
+++    assert "source_line_count" not in m  # sin infotable no se calcula
+++
+++
+++def test_compute_edge_metrics_cuenta_por_status():
+++    statuses = [
+++        rel.STATUS_RESOLVED,
+++        rel.STATUS_RESOLVED,
+++        rel.STATUS_RESOLVED,
+++        rel.STATUS_UNMAPPED_MISSING_OM2,
+++        rel.STATUS_INVALID_NONNUMERIC,
+++        rel.STATUS_INVALID_ZERO,
+++        rel.STATUS_INVALID_OUT_OF_DOMAIN,
+++        rel.STATUS_NO_REFERENCE,
+++    ]
+++    m = rel.compute_edge_metrics(_edges_df(statuses))
+++    assert m["edge_count_total"] == 8
+++    assert m["resolved_edges"] == 3
+++    assert m["unmapped_missing_om2"] == 1
+++    assert m["invalid_reference_non_numeric"] == 1
+++    assert m["invalid_reference_zero"] == 1
+++    assert m["invalid_out_of_domain"] == 1
+++    assert m["no_reference"] == 1
+++    # denominator = resolved + unmapped = 4; resolution_rate = 3/4
+++    assert m["resolution_rate"] == 0.75
+++
+++
+++def test_compute_edge_metrics_denominador_cero():
+++    statuses = [rel.STATUS_INVALID_ZERO, rel.STATUS_NO_REFERENCE]
+++    m = rel.compute_edge_metrics(_edges_df(statuses))
+++    assert m["resolution_rate"] == 0.0
+++
+++
+++def test_compute_edge_metrics_con_infotable_calcula_source_lines():
+++    edges = pd.DataFrame({
+++        "ACCESSION_NUMBER": ["ACC1", "ACC1", "ACC2"],
+++        "INFOTABLE_SK": ["1", "2", "3"],
+++        "reference_status": [rel.STATUS_RESOLVED] * 3,
+++    })
+++    info = pd.DataFrame({
+++        "ACCESSION_NUMBER": ["ACC1", "ACC1", "ACC2"],
+++        "INFOTABLE_SK": ["1", "2", "3"],
+++    })
+++    m = rel.compute_edge_metrics(edges, info)
+++    assert m["source_line_count"] == 3
+++    assert m["unique_source_line_id"] == 3
+++    assert m["invalid_source_line_edges"] == 0
+++
+++
+++def test_compute_edge_metrics_source_line_invalida():
+++    edges = pd.DataFrame({
+++        "ACCESSION_NUMBER": ["ACC1", "ACC9"],
+++        "INFOTABLE_SK": ["1", "999"],
+++        "reference_status": [rel.STATUS_RESOLVED] * 2,
+++    })
+++    info = pd.DataFrame({
+++        "ACCESSION_NUMBER": ["ACC1"],
+++        "INFOTABLE_SK": ["1"],
+++    })
+++    m = rel.compute_edge_metrics(edges, info)
+++    assert m["invalid_source_line_edges"] == 1
+++
+++
+++# ============================================================
+++# classify_title_of_class (security_type.py)
+++# ============================================================
+++
+++
+++@pytest.mark.parametrize("title,esperado", [
+++    # NON_EQUITY token
+++    ("PREFERRED STOCK", (st.SECURITY_TYPE_NON_EQUITY, st.STATUS_RESOLVED_NON_EQUITY)),
+++    ("W EXP", (st.SECURITY_TYPE_NON_EQUITY, st.STATUS_RESOLVED_NON_EQUITY)),
+++    # NON_EQUITY phrase (CONVERTIBLE BOND)
+++    ("CONVERTIBLE BOND", (st.SECURITY_TYPE_NON_EQUITY, st.STATUS_RESOLVED_NON_EQUITY)),
+++    # Fondos
+++    ("CLOSED END FUND", (st.SECURITY_TYPE_NON_EQUITY, st.STATUS_RESOLVED_NON_EQUITY)),
+++    ("MUTUAL FUNDS", (st.SECURITY_TYPE_NON_EQUITY, st.STATUS_RESOLVED_NON_EQUITY)),
+++    ("MONEY MARKET", (st.SECURITY_TYPE_NON_EQUITY, st.STATUS_RESOLVED_NON_EQUITY)),
+++    # EQUITY anchor
+++    ("COM", (st.SECURITY_TYPE_EQUITY, st.STATUS_RESOLVED_EQUITY)),
+++    ("COMMON", (st.SECURITY_TYPE_EQUITY, st.STATUS_RESOLVED_EQUITY)),
+++    ("ORD", (st.SECURITY_TYPE_EQUITY, st.STATUS_RESOLVED_EQUITY)),
+++    ("SHS", (st.SECURITY_TYPE_EQUITY, st.STATUS_RESOLVED_EQUITY)),
+++    # EQUITY phrase
+++    ("COMMON STOCK", (st.SECURITY_TYPE_EQUITY, st.STATUS_RESOLVED_EQUITY)),
+++    ("CL A", (st.SECURITY_TYPE_EQUITY, st.STATUS_RESOLVED_EQUITY)),
+++    ("SPON ADS", (st.SECURITY_TYPE_EQUITY, st.STATUS_RESOLVED_EQUITY)),
+++    # EQUITY exact
+++    ("EQUITY", (st.SECURITY_TYPE_EQUITY, st.STATUS_RESOLVED_EQUITY)),
+++    ("STOCK", (st.SECURITY_TYPE_EQUITY, st.STATUS_RESOLVED_EQUITY)),
+++    # Fallback
+++    ("XYZ", (st.SECURITY_TYPE_UNKNOWN, st.STATUS_UNRESOLVED)),
+++    ("", (st.SECURITY_TYPE_UNKNOWN, st.STATUS_UNRESOLVED)),
+++    (None, (st.SECURITY_TYPE_UNKNOWN, st.STATUS_UNRESOLVED)),
+++])
+++def test_classify_title_of_class_caracterizacion(title, esperado):
+++    """Spec 3.3 + dictamen #61 Nivel B. Precedencia: NON_EQUITY > fondo
+++    excluido > EQUITY anchor > UNRESOLVED.
+++    """
+++    assert st.classify_title_of_class(title) == esperado
+++
+++
+++def test_classify_title_of_class_precedencia_non_equity_sobre_equity():
+++    """NON_EQUITY tiene precedencia sobre EQUITY anchor."""
+++    # 'COMMON' es anchor EQUITY, pero 'PREFERRED STOCK' contiene token NON_EQUITY.
+++    r = st.classify_title_of_class("PREFERRED STOCK COMMON")
+++    assert r == (st.SECURITY_TYPE_NON_EQUITY, st.STATUS_RESOLVED_NON_EQUITY)
+++
+++
+++def test_classify_title_of_class_no_detecta_conflict():
+++    """Docstring: esta funcion NO detecta CONFLICT. Solo resolve_security_type."""
+++    # CONFLICT solo aparece via resolver con evidencia externa.
+++    # Aqui verificamos que una entrada ambigua cae en UNRESOLVED, no CONFLICT.
+++    r = st.classify_title_of_class("XYZ")
+++    assert r[1] != st.STATUS_CONFLICT
+++    assert r[1] == st.STATUS_UNRESOLVED
++commit 364ad5235371d46c98fc1ce12d939fb5310ee79f
++Author: bledabladis <bledabladis@gmail.com>
++Date: Tue Sep 22 01:04:16 2026 +0200
++
++    docs(iae): cierre documental - DICTAMENES #76 + ESTADO_DECLARADO contratos y deudas
++
++
++diff --git a/docs/auditoria/iae/DICTAMENES.md b/docs/auditoria/iae/DICTAMENES.md
++index 5487c71..e82afd0 100644
++--- a/docs/auditoria/iae/DICTAMENES.md
+++++ b/docs/auditoria/iae/DICTAMENES.md
++@@ -1,7 +1,7 @@
++ # IAE - REGISTRO DE DICTAMENES
++ 
++ **Generado:** 2026-09-20
++-**Actualizado:** 2026-09-21. Indice cronologico: #1-#75. Detalle expandido: #1-#75. Sin saltos de autoridad (consolidado tras auditoria externa 2026-09-21).
+++**Actualizado:** 2026-09-22. Indice cronologico: #1-#76. Detalle expandido: #1-#76. Sin saltos de autoridad (consolidado tras auditoria externa 2026-09-21).
++ **Consolida:** dictamenes del ciclo IAE y radar
++ 
++ **Regla:** este fichero es la cadena autoritativa. Los dictamenes originales
++diff --git a/docs/auditoria/iae/ESTADO_DECLARADO.md b/docs/auditoria/iae/ESTADO_DECLARADO.md
++index 2996cce..3cec3dc 100644
++--- a/docs/auditoria/iae/ESTADO_DECLARADO.md
+++++ b/docs/auditoria/iae/ESTADO_DECLARADO.md
++@@ -56,6 +56,8 @@ documentos describen su tema; NO declaran el estado del sistema.
++ | `NIPC_CONTRATOS_SEMANTICOS_v1.md` | VIGENTE. P60/P61 GO, P38 GO CONDICIONADO |
++ | `NIPC_COVERAGE_POLICY.md` v1.0 | VIGENTE (normativa) |
++ | `INSTITUTIONAL_ACCUMULATION_NIPC_ESPECIFICACION.md` v1.4 | Referencia, no normativa |
+++| `A66_BUNDLE.md` | Entregable al auditor (dictamen #76). Refleja estado post-A2. |
+++| `A67_CONSULTA.md` | Consulta abierta al auditor sobre B-02/B-03/B-04. |
++ 
++ ## 4. Prohibiciones vigentes
++ 
++@@ -71,7 +73,10 @@ documentos describen su tema; NO declaran el estado del sistema.
++ ## 5. Deuda activa (no bloqueante)
++ 
++ - Integracion de modulos IAE al pipeline productivo (`daily_run.yml` NO los invoca)
++-- `compute_nipc_contractual` SIN CALLERS PRODUCTIVOS (verificado: solo tests)
+++- `compute_nipc_contractual` SIN CALLERS PRODUCTIVOS. Caller de smoke
+++  anadido al probe A.6.4 (commit `6126c0d`, seccion 7): computa sin
+++  error con delta vacio. No activa el modulo productivamente
+++  (thresholds UNDEFINED, dictamen #76).
++ - `build_effective_reporting_snapshot` SIN CALLERS PRODUCTIVOS (verificado: solo tests)
++ - `DROP_DUP` NO ACTIVADO (capacidad diferida v2)
++ - Marcadores seccion 5.4 VERIFICADOS (2026-09-22): no son deuda.
++@@ -92,7 +97,10 @@ documentos describen su tema; NO declaran el estado del sistema.
++   catalogo radar (sin share_class_figi). No resoluble via crosswalk
++   (ambos ya estan en `cusip_ticker_exceptions.csv`). Requiere OpenFIGI.
++ - Gate-NIPC.2 BLOQUEADO por THRESHOLD_1/2 UNDEFINED
++-- A.6.6 NO-GO (#76). Saneamiento post-dictamen CERRADO (este commit).
+++- A.6.6 NO-GO (#76). Saneamiento post-dictamen CERRADO.
+++- Cobertura de tests: 9 funciones publicas IAE sin test directo
+++  cubiertas por `tests/test_iae_gap_coverage.py` (commit `12e1e3f`).
+++  Cobertura directa actual: 110/110 funciones publicas mencionadas.
++ 
++ ## 6. Proxima accion autorizada
++ 
++commit 12e1e3fae268c5b1191557989903ea66d57ec1c6
++Author: bledabladis <bledabladis@gmail.com>
++Date: Tue Sep 22 01:03:11 2026 +0200
++
++    test(iae): cobertura de 9 funciones publicas sin test directo (extract_sshprnamt_by_figi CRITICA)
++
++
++diff --git a/tests/test_iae_gap_coverage.py b/tests/test_iae_gap_coverage.py
++new file mode 100644
++index 0000000..52fa43f
++--- /dev/null
+++++ b/tests/test_iae_gap_coverage.py
++@@ -0,0 +1,228 @@
+++"""Tests de caracterizacion para funciones publicas IAE sin cobertura directa.
+++
+++Cubre el gap detectado el 2026-09-22 (9 funciones publicas sin mencion
+++en tests). Prioridad alta: extract_sshprnamt_by_figi (A2 c2, alimenta
+++el peso contractual P38).
+++"""
+++from __future__ import annotations
+++
+++import pandas as pd
+++import pytest
+++
+++from src.institutional_accumulation.identity import catalog_key as ck
+++from src.institutional_accumulation.identity import radar_target_catalog as rtc
+++from src.institutional_accumulation.identity import target_builder as tb
+++from src.institutional_accumulation.identity import target_universe as tu
+++
+++
+++# ============================================================
+++# extract_sshprnamt_by_figi (target_builder.py) - CRITICA
+++# ============================================================
+++
+++
+++def test_extract_sshprnamt_by_figi_df_vacio():
+++    assert tb.extract_sshprnamt_by_figi(None, {}) == {}
+++    assert tb.extract_sshprnamt_by_figi(pd.DataFrame(), {}) == {}
+++
+++
+++def test_extract_sshprnamt_by_figi_df_sin_columnas():
+++    df = pd.DataFrame([{"X": 1}])
+++    assert tb.extract_sshprnamt_by_figi(df, {"1": "FIGI"}) == {}
+++
+++
+++def test_extract_sshprnamt_by_figi_caso_feliz():
+++    df = pd.DataFrame([
+++        {"CUSIP": "0001", "SSHPRNAMT": "100"},
+++        {"CUSIP": "0002", "SSHPRNAMT": "200"},
+++    ])
+++    figi = {"0001": "FIGI_A", "0002": "FIGI_B"}
+++    assert tb.extract_sshprnamt_by_figi(df, figi) == {
+++        "FIGI_A": 100.0, "FIGI_B": 200.0,
+++    }
+++
+++
+++def test_extract_sshprnamt_by_figi_agrega_por_figi():
+++    df = pd.DataFrame([
+++        {"CUSIP": "0001", "SSHPRNAMT": "100"},
+++        {"CUSIP": "0002", "SSHPRNAMT": "200"},
+++    ])
+++    figi = {"0001": "FIGI_X", "0002": "FIGI_X"}
+++    assert tb.extract_sshprnamt_by_figi(df, figi) == {"FIGI_X": 300.0}
+++
+++
+++def test_extract_sshprnamt_by_figi_cusip_no_mapeado_se_ignora():
+++    df = pd.DataFrame([{"CUSIP": "0001", "SSHPRNAMT": "100"}])
+++    assert tb.extract_sshprnamt_by_figi(df, {}) == {}
+++
+++
+++def test_extract_sshprnamt_by_figi_valores_invalidos_descartados():
+++    df = pd.DataFrame([
+++        {"CUSIP": "0001", "SSHPRNAMT": None},
+++        {"CUSIP": "0002", "SSHPRNAMT": "abc"},
+++        {"CUSIP": "0003", "SSHPRNAMT": "-5"},
+++        {"CUSIP": "0004", "SSHPRNAMT": "50"},
+++    ])
+++    figi = {c: "FIGI_" + c for c in ["0001", "0002", "0003", "0004"]}
+++    assert tb.extract_sshprnamt_by_figi(df, figi) == {"FIGI_0004": 50.0}
+++
+++
+++def test_extract_sshprnamt_by_figi_cusip_vacio_se_ignora():
+++    df = pd.DataFrame([
+++        {"CUSIP": "", "SSHPRNAMT": "100"},
+++        {"CUSIP": None, "SSHPRNAMT": "200"},
+++    ])
+++    assert tb.extract_sshprnamt_by_figi(df, {"": "FIGI_X"}) == {}
+++
+++
+++# ============================================================
+++# catalog_key - validadores
+++# ============================================================
+++
+++
+++@pytest.mark.parametrize("value,esperado", [
+++    ("radar_20260921_0001", True),
+++    ("radar_20260921_0000", True),
+++    ("radar_20260921_9999", True),
+++    ("radar_2026092_0001", False),
+++    ("radar_20260921_00001", False),
+++    ("radar_20260921_1", False),
+++    ("RADAR_20260921_0001", False),
+++    ("radar-20260921-0001", False),
+++    ("radar_20260921_000a", False),
+++    ("", False),
+++    (None, False),
+++    (123, False),
+++])
+++def test_is_valid_catalog_key(value, esperado):
+++    assert ck.is_valid_catalog_key(value) is esperado
+++
+++
+++@pytest.mark.parametrize("value,esperado", [
+++    ("radar_entity_0001", True),
+++    ("radar_entity_9999", True),
+++    ("radar_entity_00001", False),
+++    ("radar_entity_1", False),
+++    ("radar_entity_abcd", False),
+++    ("RADAR_ENTITY_0001", False),
+++    ("", False),
+++    (None, False),
+++])
+++def test_is_valid_entity_id(value, esperado):
+++    assert ck.is_valid_entity_id(value) is esperado
+++
+++
+++def test_is_valid_sha256():
+++    ok = "a" * 64
+++    assert ck.is_valid_sha256(ok) is True
+++    assert ck.is_valid_sha256("0" * 64) is True
+++    assert ck.is_valid_sha256("A" * 64) is False  # mayusculas
+++    assert ck.is_valid_sha256("a" * 63) is False
+++    assert ck.is_valid_sha256("a" * 65) is False
+++    assert ck.is_valid_sha256("g" * 64) is False
+++    assert ck.is_valid_sha256("") is False
+++    assert ck.is_valid_sha256(None) is False
+++
+++
+++def test_canonical_serialization_ordenado_y_length_prefixed():
+++    row = {"b": "x", "a": "y"}
+++    s = ck.canonical_serialization(row, ["b", "a"])
+++    # Orden alfabetico: a antes que b.
+++    # Formato real: <len_name>:<name><len_val>:<val>|
+++    assert s == "1:a1:y|1:b1:x|"
+++
+++
+++def test_canonical_serialization_columna_ausente_produce_vacio():
+++    row = {"a": "x"}
+++    s = ck.canonical_serialization(row, ["a", "b"])
+++    # Columna b ausente -> valor canonico = "" -> len 0
+++    assert s == "1:a1:x|1:b0:|"
+++
+++
+++def test_canonical_serialization_utf8_bytes_length():
+++    row = {"a": "caf\u00e9"}  # 4 chars, 5 bytes UTF-8
+++    s = ck.canonical_serialization(row, ["a"])
+++    assert s == "1:a5:caf\u00e9|"
+++
+++
+++# ============================================================
+++# catalog_key - loaders (tmp_path)
+++# ============================================================
+++
+++
+++def test_load_membership_ok(tmp_path):
+++    p = tmp_path / "m.csv"
+++    p.write_text(
+++        ",".join(ck.MEMBERSHIP_COLUMNS) + "\n"
+++        "v1,radar_20260921_0001,uid1,,test\n",
+++        encoding="utf-8",
+++    )
+++    df = ck.load_membership(p)
+++    assert len(df) == 1
+++
+++
+++def test_load_membership_falta_columna_raises(tmp_path):
+++    p = tmp_path / "m.csv"
+++    p.write_text("solo,columnas\na,b\n", encoding="utf-8")
+++    with pytest.raises(ValueError, match="catalog_membership.csv"):
+++        ck.load_membership(p)
+++
+++
+++def test_load_attempted_ok(tmp_path):
+++    p = tmp_path / "a.csv"
+++    p.write_text(
+++        ",".join(ck.ATTEMPTED_COLUMNS) + "\n",
+++        encoding="utf-8",
+++    )
+++    df = ck.load_attempted(p)
+++    assert list(df.columns) == list(ck.ATTEMPTED_COLUMNS)
+++
+++
+++def test_load_attempted_falta_columna_raises(tmp_path):
+++    p = tmp_path / "a.csv"
+++    p.write_text("x\n1\n", encoding="utf-8")
+++    with pytest.raises(ValueError, match="catalog_reassignments_attempted.csv"):
+++        ck.load_attempted(p)
+++
+++
+++# ============================================================
+++# radar_target_catalog - load_radar_tickers
+++# ============================================================
+++
+++
+++def test_load_radar_tickers_filtra_sufijos_no_usa(tmp_path):
+++    cols = pd.MultiIndex.from_tuples([
+++        ("Close", "AAPL"),
+++        ("Close", "SPY"),
+++        ("Close", "^VIX"),
+++        ("Close", "EURUSD=X"),
+++        ("Close", "AIR.PA"),
+++        ("Close", "SAP.DE"),
+++    ])
+++    df = pd.DataFrame([[1.0] * len(cols)], columns=cols)
+++    p = tmp_path / "sp.parquet"
+++    df.to_parquet(p)
+++    tickers = rtc.load_radar_tickers(p)
+++    assert tickers == ["AAPL", "SPY"]
+++
+++
+++# ============================================================
+++# target_universe - load_catalog
+++# ============================================================
+++
+++
+++def test_load_catalog_ok(tmp_path):
+++    p = tmp_path / "c.csv"
+++    p.write_text(
+++        "radar_ticker,share_class_figi\nAAPL,BBG000B9XRY4\n",
+++        encoding="utf-8",
+++    )
+++    df = tu.load_catalog(p)
+++    assert len(df) == 1
+++    assert "radar_ticker" in df.columns
+++
+++
+++def test_load_catalog_falta_columnas_raises(tmp_path):
+++    p = tmp_path / "c.csv"
+++    p.write_text("otra\n1\n", encoding="utf-8")
+++    with pytest.raises(KeyError):
+++        tu.load_catalog(p)
++commit 65048d9edf8f90d577f4ff36f7985a5759f23e81
++Author: bledabladis <bledabladis@gmail.com>
++Date: Tue Sep 22 01:00:43 2026 +0200
++
++    test(iae): tests de caracterizacion - classify_filing_family/role + evaluate_l3 (sin cobertura directa)
++
++
++diff --git a/tests/test_sec_13f_reporting_dedup.py b/tests/test_sec_13f_reporting_dedup.py
++index 4297ab2..c6da367 100644
++--- a/tests/test_sec_13f_reporting_dedup.py
+++++ b/tests/test_sec_13f_reporting_dedup.py
++@@ -565,3 +565,83 @@ def test_p65_matrix_15_partition_not_deduped():
++     )
++     assert len(eff_q4) == 2  # KEEP ambos, no colapsar
++     assert audit.iloc[0]["dedup_decision"] == rd.DEDUP_DECISION_KEEP
+++
+++
+++# ============================================================
+++# Tests de caracterizacion - funciones sin tests directos (2026-09-22)
+++# ============================================================
+++
+++
+++import pytest
+++
+++
+++@pytest.mark.parametrize(
+++    "submissiontype,reporttype,esperado",
+++    [
+++        ("13F-NT",   "13F NOTICE",              rd.FILING_FAMILY_NOTICE),
+++        ("13F-NT/A", "13F NOTICE",              rd.FILING_FAMILY_NOTICE),
+++        ("13F-HR",   "13F COMBINATION REPORT",  rd.FILING_FAMILY_COMBINATION),
+++        ("13F-HR/A", "13F COMBINATION REPORT",  rd.FILING_FAMILY_COMBINATION),
+++        ("13f-nt",   "13f notice",              rd.FILING_FAMILY_NOTICE),
+++        ("  13F-HR  ", "  13F COMBINATION REPORT  ",
+++         rd.FILING_FAMILY_COMBINATION),
+++        ("13F-HR",   "13F NOTICE",              None),
+++        ("13F-NT",   "13F COMBINATION REPORT",  None),
+++        ("13F-NT",   None,                      None),
+++        (None,       "13F NOTICE",              None),
+++        ("",         "",                        None),
+++        ("10-K",     "13F NOTICE",              None),
+++    ],
+++)
+++def test_classify_filing_family_caracterizacion(submissiontype, reporttype, esperado):
+++    """14.3.1 PASO 1 - familia documental (NOTICE / COMBINATION / None)."""
+++    assert rd.classify_filing_family(submissiontype, reporttype) == esperado
+++
+++
+++@pytest.mark.parametrize(
+++    "submissiontype,esperado",
+++    [
+++        ("13F-NT",   rd.FILING_ROLE_BASE),
+++        ("13F-HR",   rd.FILING_ROLE_BASE),
+++        ("13F-NT/A", rd.FILING_ROLE_AMENDMENT),
+++        ("13F-HR/A", rd.FILING_ROLE_AMENDMENT),
+++        ("13f-hr",   rd.FILING_ROLE_BASE),
+++        ("  13F-HR/A  ", rd.FILING_ROLE_AMENDMENT),
+++        ("13F-HR-A", None),
+++        ("10-K",     None),
+++        (None,       None),
+++        ("",         None),
+++    ],
+++)
+++def test_classify_filing_role_caracterizacion(submissiontype, esperado):
+++    """14.3.1 PASO 2 - rol BASE / AMENDMENT / None."""
+++    assert rd.classify_filing_role(submissiontype) == esperado
+++
+++
+++def test_evaluate_l3_true_cuando_todas_las_condiciones_se_cumplen():
+++    """14.3 - L3 True cuando R1 AND R2 AND (R3==TRUE) AND (R4==MATCH) AND R5."""
+++    assert rd.evaluate_l3(
+++        True, True, rd.R3_TRUE, rd.R4_MATCH, True,
+++    ) is True
+++
+++
+++@pytest.mark.parametrize(
+++    "r1,r2,r3,r4,r5",
+++    [
+++        (False, True,  rd.R3_TRUE, rd.R4_MATCH,  True),   # R1 falla
+++        (True,  False, rd.R3_TRUE, rd.R4_MATCH,  True),   # R2 falla
+++        (True,  True,  'N/D',      rd.R4_MATCH,  True),   # R3 N/D
+++        (True,  True,  'CONFLICT', rd.R4_MATCH,  True),   # R3 CONFLICT
+++        (True,  True,  'FALSE',    rd.R4_MATCH,  True),   # R3 FALSE
+++        (True,  True,  rd.R3_TRUE, 'N/D',        True),   # R4 N/D
+++        (True,  True,  rd.R3_TRUE, 'CONFLICT',   True),   # R4 CONFLICT
+++        (True,  True,  rd.R3_TRUE, 'NO_MATCH',   True),   # R4 NO_MATCH
+++        (True,  True,  rd.R3_TRUE, rd.R4_MATCH,  False),  # R5 falla
+++        (False, False, rd.R3_TRUE, rd.R4_MATCH,  False),  # todo falla
+++    ],
+++)
+++def test_evaluate_l3_false_y_no_colapso_estados(r1, r2, r3, r4, r5):
+++    """14.3 - L3 False cuando cualquier R falla. N/D y CONFLICT no se
+++    colapsan a True (contrato: fall-closed respecto de DROP_DUP).
+++    """
+++    assert rd.evaluate_l3(r1, r2, r3, r4, r5) is False
++commit 490ef9f629fa470357cf13ec0ebc08e82d0e2dee
++Author: bledabladis <bledabladis@gmail.com>
++Date: Tue Sep 22 00:59:13 2026 +0200
++
++    docs(iae): cerrar marcadores §5.4 verificados (sin deuda, alineado con #61-#63)
++
++
++diff --git a/docs/auditoria/iae/ESTADO_DECLARADO.md b/docs/auditoria/iae/ESTADO_DECLARADO.md
++index 0ec5ef1..2996cce 100644
++--- a/docs/auditoria/iae/ESTADO_DECLARADO.md
+++++ b/docs/auditoria/iae/ESTADO_DECLARADO.md
++@@ -74,7 +74,13 @@ documentos describen su tema; NO declaran el estado del sistema.
++ - `compute_nipc_contractual` SIN CALLERS PRODUCTIVOS (verificado: solo tests)
++ - `build_effective_reporting_snapshot` SIN CALLERS PRODUCTIVOS (verificado: solo tests)
++ - `DROP_DUP` NO ACTIVADO (capacidad diferida v2)
++-- Marcadores residuales seccion 5.4 (SPONSORED ADR/ADS, ADR, SH BEN INT, FUND, ACT)
+++- Marcadores seccion 5.4 VERIFICADOS (2026-09-22): no son deuda.
+++  `security_type.py` esta alineado con dictamenes #61-#63:
+++  ADR/SPONSORED ADR/SPONSORED ADS excluidos por diseno (L162-164);
+++  SPON ADS es frase EQUITY autorizada, no marcador residual;
+++  FUND_EXCLUDED_PHRASES es lista de exclusion legitima;
+++  SH BEN INT y ACT no existen como marcadores en el modulo.
+++  Sin cambios de codigo.
++ - Snapshots historicos Q4 2025 / Q1 2026 requieren OpenFIGI masivo
++ - Curacion crosswalk residual CERRADA (2026-09-22): ONB (CUSIP 680033107)
++   y PTGX (CUSIP 74366E102) anadidos a `cusip_ticker_exceptions.csv` tras
++commit 4a39e801145ca78e258856175bfbf695993ab4cf
++Author: bledabladis <bledabladis@gmail.com>
++Date: Tue Sep 22 00:58:15 2026 +0200
++
++    chore(iae): mantenimiento post-curacion - ESTADO_SISTEMA + TRANSFER v9.4
++
++
++diff --git a/docs/auditoria/TRANSFER.md b/docs/auditoria/TRANSFER.md
++index 29809a2..6ceacc4 100644
++--- a/docs/auditoria/TRANSFER.md
+++++ b/docs/auditoria/TRANSFER.md
++@@ -1,4 +1,4 @@
++-# TRANSFER DE SESION - 2026-09-22 v9.3
+++# TRANSFER DE SESION - 2026-09-22 v9.4
++ 
++ Documento de onboarding. **NO es fuente de estado.**
++ Estado vivo: `iae/ESTADO_SISTEMA.md` (hechos) + `iae/ESTADO_DECLARADO.md` (fases).
++@@ -16,8 +16,8 @@ Reglas de personalidad y metodo: `PROMPT_MAESTRO.md` secciones 1 y 3.
++ 
++ ## 2. Estado real al cierre de esta sesion
++ 
++-    HEAD          ba59d39 (verificar con git al arrancar)
++-    Ahead         295 commits locales
+++    HEAD          6126c0d (verificar con git al arrancar)
+++    Ahead         299 commits locales
++     Working tree  LIMPIO (verificar)
++     Tests         test_h731: 11 passed (incluye H-08);
++                   suite global: 1312 passed + 2 skipped + 3 failed
++@@ -68,6 +68,14 @@ completo), B-04 (pairwise real), push.
++ Consulta A.6.7 ENVIADA al auditor (commit `ba59d39`,
++ `A67_CONSULTA.md`). Pendiente respuesta para desbloquear B-02/B-03/B-04.
++ 
+++Trabajo post-consulta (sin dictamen):
+++- Curacion crosswalk ONB (680033107) + PTGX (74366E102) cerrada
+++  (commit `7357e1d`). Sub-deuda nueva: BRK-B + MOG-A con status=MISS
+++  (requiere OpenFIGI masivo).
+++- Smoke NIPC contractual anadido al probe (commit `6126c0d`):
+++  compute_nipc_contractual computa sin error con delta vacio.
+++- Regresion cruzada P65 verificada tras A2: sin impacto.
+++
++ ## 4. TRABAJO PENDIENTE: fix A2 (H-05/H-06/H-07/H-10.1)
++ 
++ **Estado: COMPLETADO, 5 de 5 commits hechos (2026-09-21).**
++@@ -170,7 +178,7 @@ Esperado:
++     "Confirmado, contexto asimilado."
++ 
++     Estado que reconozco:
++-      - HEAD ba59d39, ahead 295
+++      - HEAD 6126c0d, ahead 299
++       - Auditor #76: A2 = GO; A.6.6 = NO-GO
++       - H-05/H-06/H-07/H-10.1/H-08/B-01/B-05/B-06/B-07 cerrados
++       - Consulta A.6.7 enviada: B-02/B-03/B-04 pendientes de dictamen
++@@ -181,4 +189,4 @@ Esperado:
++ 
++ ---
++ 
++-FIN DEL TRANSFER v9.3. Fecha: 2026-09-22. Consulta A.6.7 enviada.
+++FIN DEL TRANSFER v9.4. Fecha: 2026-09-22. Consulta A.6.7 enviada + curacion ONB/PTGX + smoke NIPC.
++diff --git a/docs/auditoria/iae/ESTADO_SISTEMA.md b/docs/auditoria/iae/ESTADO_SISTEMA.md
++index b80eb01..24d95d4 100644
++--- a/docs/auditoria/iae/ESTADO_SISTEMA.md
+++++ b/docs/auditoria/iae/ESTADO_SISTEMA.md
++@@ -2,7 +2,7 @@
++ 
++ Hechos verificables del sistema. Generado por script.
++ 
++-**Generado en:** 2026-09-21 22:10:26 UTC
+++**Generado en:** 2026-09-21 22:57:11 UTC
++ **Snapshot tomado sobre:** commit HEAD de la fecha indicada, al momento de generar
++ **NO editar a mano.** Regenerar con:
++ 
++@@ -16,16 +16,16 @@ proyecto describen su tema; NO declaran el estado del sistema.
++ 
++ ## 1. Git
++ 
++-- **HEAD:** `ba59d39`
++-- **HEAD completo:** `ba59d39e5ce8a0d58415ff394ee08afe5d9da4fb`
++-- **Fecha commit HEAD:** 2026-09-22 00:09:55 +0200
++-- **Ahead:** 295
+++- **HEAD:** `6126c0d`
+++- **HEAD completo:** `6126c0d453ec7c101f6f1400a2dc5fdb77911fff`
+++- **Fecha commit HEAD:** 2026-09-22 00:44:18 +0200
+++- **Ahead:** 299
++ - **Behind:** 0
++ - **origin/main:** `5f1d9ab`
++ 
++ ## 2. Tests (pytest real)
++ 
++-- **Resumen:** 3 failed, 1312 passed, 2 skipped in 27.48s
+++- **Resumen:** 3 failed, 1312 passed, 2 skipped in 27.81s
++ - **Exit code:** 1
++ 
++ **Tests fallidos (nombre completo):**
++@@ -86,9 +86,9 @@ proyecto describen su tema; NO declaran el estado del sistema.
++   - bytes: 29849
++   - lineas: 243
++ - `data/mappings/cusip_ticker_exceptions.csv`
++-  - sha256: `6f545880204c0a06f9d69f15b3d818d3fa7f189024c82cb266d533b0394e48b3`
++-  - bytes: 2841
++-  - lineas: 23
+++  - sha256: `073c68e26774b1bfbc55429d5d31453b28e25be1c4346b84bee9b2ab0f196001`
+++  - bytes: 3096
+++  - lineas: 25
++ - `data/mappings/cusip_equivalence.csv`
++   - sha256: `21a88790aad50e8b44fbfdaa87c394ef3a782319adaf4208b9cb244dac39b322`
++   - bytes: 103
++commit 6126c0d453ec7c101f6f1400a2dc5fdb77911fff
++Author: bledabladis <bledabladis@gmail.com>
++Date: Tue Sep 22 00:44:18 2026 +0200
++
++    test(iae): smoke compute_nipc_contractual end-to-end (caller no-productivo)
++
++
++diff --git a/docs/auditoria/iae/A66_DIFFS.txt b/docs/auditoria/iae/A66_DIFFS.txt
++index 36b6409..c5d0964 100644
++--- a/docs/auditoria/iae/A66_DIFFS.txt
+++++ b/docs/auditoria/iae/A66_DIFFS.txt
++@@ -1,3 +1,899 @@
+++commit 7357e1da8c9aa641d8ddca59e883a638871ee655
+++Author: bledabladis <bledabladis@gmail.com>
+++Date: Tue Sep 22 00:33:57 2026 +0200
+++
+++    data(iae): curacion crosswalk ONB + PTGX (Q1 2026) + sub-deuda MISS BRK-B/MOG-A
+++
+++
+++diff --git a/data/mappings/cusip_ticker_exceptions.csv b/data/mappings/cusip_ticker_exceptions.csv
+++index 335c3a6..ba3020f 100644
+++--- a/data/mappings/cusip_ticker_exceptions.csv
++++++ b/data/mappings/cusip_ticker_exceptions.csv
+++@@ -21,3 +21,5 @@ M6191J100,FROG,2026-03-31,2026-03-31,SEC-EDGAR,CUSIP observado para JFrog Ltd en
+++ 90184D100,TWST,2026-03-31,2026-03-31,SEC-EDGAR,CUSIP observado para Twist Bioscience en el periodo 13F Q1 2026,COM,manual
+++ 902788108,UMBF,2026-03-31,2026-03-31,SEC-EDGAR,CUSIP observado para UMB Financial en el periodo 13F Q1 2026,COM,manual
+++ 92552V100,VSAT,2026-03-31,2026-03-31,SEC-EDGAR,CUSIP observado para Viasat en el periodo 13F Q1 2026,COM,manual
++++680033107,ONB,2026-03-31,2026-03-31,SEC-EDGAR,CUSIP observado para Old National Bancorp en el periodo 13F Q1 2026,COM,manual
++++74366E102,PTGX,2026-03-31,2026-03-31,SEC-EDGAR,CUSIP observado para Protagonist Therapeutics en el periodo 13F Q1 2026,COM,manual
+++diff --git a/docs/auditoria/iae/ESTADO_DECLARADO.md b/docs/auditoria/iae/ESTADO_DECLARADO.md
+++index 26966cb..0ec5ef1 100644
+++--- a/docs/auditoria/iae/ESTADO_DECLARADO.md
++++++ b/docs/auditoria/iae/ESTADO_DECLARADO.md
+++@@ -76,7 +76,15 @@ documentos describen su tema; NO declaran el estado del sistema.
+++ - `DROP_DUP` NO ACTIVADO (capacidad diferida v2)
+++ - Marcadores residuales seccion 5.4 (SPONSORED ADR/ADS, ADR, SH BEN INT, FUND, ACT)
+++ - Snapshots historicos Q4 2025 / Q1 2026 requieren OpenFIGI masivo
+++-- Curacion crosswalk residual: ONB, SPCX, PTGX sin match 13F Q1 2026
++++- Curacion crosswalk residual CERRADA (2026-09-22): ONB (CUSIP 680033107)
++++  y PTGX (CUSIP 74366E102) anadidos a `cusip_ticker_exceptions.csv` tras
++++  verificacion en INFOTABLE Q1 (98 y 617 hits). SPCX NO procede:
++++  SpaceX es empresa privada; los hits del patron son el ETF ARK Space
++++  Exploration (CUSIP 00214Q807). La entrada de SPCX en el catalogo
++++  radar queda marcada como observacion pendiente de dictamen.
++++- Nueva sub-deuda detectada: BRK-B y MOG-A con `status=MISS` en el
++++  catalogo radar (sin share_class_figi). No resoluble via crosswalk
++++  (ambos ya estan en `cusip_ticker_exceptions.csv`). Requiere OpenFIGI.
+++ - Gate-NIPC.2 BLOQUEADO por THRESHOLD_1/2 UNDEFINED
+++ - A.6.6 NO-GO (#76). Saneamiento post-dictamen CERRADO (este commit).
+++ 
+++diff --git a/docs/auditoria/iae/evidence/a64_integration_b1_p61_p38/HASHES.txt b/docs/auditoria/iae/evidence/a64_integration_b1_p61_p38/HASHES.txt
+++index c369c45..6321cee 100644
+++--- a/docs/auditoria/iae/evidence/a64_integration_b1_p61_p38/HASHES.txt
++++++ b/docs/auditoria/iae/evidence/a64_integration_b1_p61_p38/HASHES.txt
+++@@ -6,7 +6,7 @@
+++ ## Outputs del probe (script + resultados + documentacion)
+++ 
+++ bedea4633bb7d8dab469f3c28433c9582bd74ec0fa0a7c282df6274870dd1b35  probe_integration_b1_p61_p38.py
+++-f00197ed3083155fa77318c7fc51805903411f12d3491750a522e596403b9703  result.json
++++f378e9d550da734fafab2808135b0e91976dacf8f2262d7c3289f2540e499a47  result.json
+++ 07e3a977bd77d8cd267ea0ede6587aec8dea6e617fa35ffb0e1c46d75d29912b  README.md
+++ 
+++ ## Inputs 13F - Q4 2025 (data/sec_13f/processed/2025Q4/)
+++@@ -33,7 +33,7 @@ e575ba86a39f29b18068386bd57adf2b69085d747122ad4d642b385bd52229ed  SUMMARYPAGE.pa
+++ 
+++ e5d8f9c86b07c4d3981b2fd3c3a804f75d3559fa33fbb7731bfc76308a60b292  catalog_snapshots/snapshot_20260921_01.csv
+++ e5d8f9c86b07c4d3981b2fd3c3a804f75d3559fa33fbb7731bfc76308a60b292  radar_target_catalog.csv
+++-6f545880204c0a06f9d69f15b3d818d3fa7f189024c82cb266d533b0394e48b3  cusip_ticker_exceptions.csv
++++073c68e26774b1bfbc55429d5d31453b28e25be1c4346b84bee9b2ab0f196001  cusip_ticker_exceptions.csv
+++ 21a88790aad50e8b44fbfdaa87c394ef3a782319adaf4208b9cb244dac39b322  cusip_equivalence.csv
+++ 2fa5eee5983a40b0ff1a1779e404fca3ac02583e23322a426a23ef1c1d29a679  catalog_manifest.json
+++ ad59cc913ad579797070206ca3552160faccab69d2ee53f56de4999108e54888  catalog_membership.csv
+++diff --git a/docs/auditoria/iae/evidence/a64_integration_b1_p61_p38/result.json b/docs/auditoria/iae/evidence/a64_integration_b1_p61_p38/result.json
+++index 5d8aa66..c43bda0 100644
+++--- a/docs/auditoria/iae/evidence/a64_integration_b1_p61_p38/result.json
++++++ b/docs/auditoria/iae/evidence/a64_integration_b1_p61_p38/result.json
+++@@ -10,19 +10,19 @@
+++     "2026Q1": {
+++       "folder": "2026Q1",
+++       "period_iso": "2026-03-31",
+++-      "oper_rows": 28371,
+++-      "n_sshprnamt_by_figi": 18,
+++-      "n_sshprnamt_by_key": 18
++++      "oper_rows": 29549,
++++      "n_sshprnamt_by_figi": 20,
++++      "n_sshprnamt_by_key": 20
+++     }
+++   },
+++   "universe_keys": 242,
+++-  "shared_q1": 20,
++++  "shared_q1": 22,
+++   "shared_q4": 0,
+++   "result_periods": {
+++     "2026Q1": {
+++-      "keys": 18,
+++-      "target_figi": 18,
+++-      "records": 18,
++++      "keys": 20,
++++      "target_figi": 20,
++++      "records": 20,
+++       "fail_closed": false
+++     },
+++     "2025Q4": {
+++@@ -33,12 +33,12 @@
+++   },
+++   "cardinalities": {
+++     "target_q4_figi": 0,
+++-    "target_q1_figi": 18,
++++    "target_q1_figi": 20,
+++     "target_pairwise_figi": 0,
+++     "records_q4": 0,
+++-    "records_q1": 18,
++++    "records_q1": 20,
+++     "records_q4_verified": 0,
+++-    "records_q1_verified": 18,
++++    "records_q1_verified": 20,
+++     "paired_figi": 0
+++   },
+++   "p38_pairwise": {
+++commit 09cffcb8f357bee33d98341e1b3a932be0a4683a
+++Author: bledabladis <bledabladis@gmail.com>
+++Date: Tue Sep 22 00:21:09 2026 +0200
+++
+++    docs(iae): saneamiento §7 - FOLLOWUPS + PROMPT (0 fantasmas reales) + orphans legitimados
+++
+++
+++diff --git a/docs/auditoria/FOLLOWUPS.md b/docs/auditoria/FOLLOWUPS.md
+++index 38d986a..15ee273 100644
+++--- a/docs/auditoria/FOLLOWUPS.md
++++++ b/docs/auditoria/FOLLOWUPS.md
+++@@ -1,5 +1,13 @@
+++ # Follow-ups tecnicos registrados
+++ 
++++**Nota (2026-09-22):** las referencias a ficheros `*.md` que aparecen
++++en entradas historicas de este documento apuntan a originales
++++consolidados en `iae/DICTAMENES.md` o `iae/INFORME.md` y borrados tras
++++consolidacion (regla §3.7 PROMPT_MAESTRO: los dictamenes e informes
++++se consolidan; los originales se borran). La cadena autoritativa es
++++`iae/DICTAMENES.md`. Verificacion 2026-09-22: 12 referencias de este
++++tipo en el documento.
++++
+++ ## FU-001 — ffill global sobre DataFrame consolidado (RESUELTO)
+++ 
+++ - **Origen:** C1, sesion 2026-09-12. Dictamen auditor.
+++diff --git a/docs/auditoria/iae/ESTADO_DECLARADO.md b/docs/auditoria/iae/ESTADO_DECLARADO.md
+++index e55cc85..26966cb 100644
+++--- a/docs/auditoria/iae/ESTADO_DECLARADO.md
++++++ b/docs/auditoria/iae/ESTADO_DECLARADO.md
+++@@ -95,10 +95,17 @@ Cerrados:
+++ - `INFORME.md` (17 fantasmas, commit `8e04d22`)
+++ - Contradiccion A.6.5 en contrato NIPC (commits `0f0583d` + `a21b0db`)
+++ 
+++-Pendientes (no bloqueantes para A.6.6):
+++-- `FOLLOWUPS.md` (~20 fantasmas)
+++-- `PROMPT_MAESTRO.md` (8 fantasmas materiales; se limpian al escribir v6.56)
+++-- Casos especificos de categoria C (~8)
++++Cerrado en este commit (2026-09-22):
++++- `FOLLOWUPS.md`: 12 referencias a ficheros consolidados, cubiertas
++++  con nota de consolidacion (§3.7). Los 5 hits restantes son
++++  placeholders pedagogicos del §3.7 o un path vivo no versionado
++++  (`outputs/report/reporte_diario.md`).
++++- `PROMPT_MAESTRO.md`: 0 fantasmas reales (verificado por script sobre
++++  disco, 2026-09-22). Los 5 hits detectados son placeholders
++++  pedagogicos del propio §3.7. La afirmacion previa '8 fantasmas
++++  materiales' queda refutada.
++++- `iae/*.md`: 5 orphans verificados como expedientes legitimos del
++++  ciclo A.6.x. No se borran.
+++ 
+++ ## 8. Hallazgos del auditor pendientes (2026-09-21)
+++ 
+++commit 60d236c7848f65951515eb81ba43798a86ddeb1a
+++Author: bledabladis <bledabladis@gmail.com>
+++Date: Tue Sep 22 00:11:02 2026 +0200
+++
+++    chore(iae): mantenimiento post-consulta - ESTADO_SISTEMA + TRANSFER v9.3 + A66_DIFFS ampliado
+++
+++
+++diff --git a/docs/auditoria/TRANSFER.md b/docs/auditoria/TRANSFER.md
+++index 2bf62b6..29809a2 100644
+++--- a/docs/auditoria/TRANSFER.md
++++++ b/docs/auditoria/TRANSFER.md
+++@@ -1,4 +1,4 @@
+++-# TRANSFER DE SESION - 2026-09-21 v9.2
++++# TRANSFER DE SESION - 2026-09-22 v9.3
+++ 
+++ Documento de onboarding. **NO es fuente de estado.**
+++ Estado vivo: `iae/ESTADO_SISTEMA.md` (hechos) + `iae/ESTADO_DECLARADO.md` (fases).
+++@@ -16,11 +16,11 @@ Reglas de personalidad y metodo: `PROMPT_MAESTRO.md` secciones 1 y 3.
+++ 
+++ ## 2. Estado real al cierre de esta sesion
+++ 
+++-    HEAD          (verificar con git al arrancar tras este commit)
+++-    Ahead         ~293 commits locales
++++    HEAD          ba59d39 (verificar con git al arrancar)
++++    Ahead         295 commits locales
+++     Working tree  LIMPIO (verificar)
+++     Tests         test_h731: 11 passed (incluye H-08);
+++-                  suite global: ~1311 passed + 2 skipped + 3 failed
++++                  suite global: 1312 passed + 2 skipped + 3 failed
+++                   (los 3 failed son test_freshness.py, preexistentes, no-regresion)
+++     Push          NO (local-first IAE, dictamen #76)
+++ 
+++@@ -65,6 +65,9 @@ Hallazgos cerrados: H-05, H-06, H-07, H-10.1, H-08, B-01, B-05, B-06, B-07.
+++ Bloqueos residuales (NO AUTORIZADOS): B-02 (P62/PIT), B-03 (TARGET
+++ completo), B-04 (pairwise real), push.
+++ 
++++Consulta A.6.7 ENVIADA al auditor (commit `ba59d39`,
++++`A67_CONSULTA.md`). Pendiente respuesta para desbloquear B-02/B-03/B-04.
++++
+++ ## 4. TRABAJO PENDIENTE: fix A2 (H-05/H-06/H-07/H-10.1)
+++ 
+++ **Estado: COMPLETADO, 5 de 5 commits hechos (2026-09-21).**
+++@@ -155,10 +158,10 @@ siguiente. Si algo falla, parar y avisar.
+++     py -m pyflakes . ; py -m compileall . -q
+++ 
+++ Esperado:
+++-  - HEAD post-saneamiento (ver commit actual)
+++-  - ahead 293 o mas
++++  - HEAD ba59d39 o posterior
++++  - ahead 295 o mas
+++   - working tree limpio
+++-  - 1311 passed + 2 skipped + 3 failed (test_freshness, preexistentes)
++++  - 1312 passed + 2 skipped + 3 failed (test_freshness, preexistentes)
+++   - test_h731: 11 passed, 0 xfailed
+++   - pyflakes silencio, compileall OK
+++ 
+++@@ -167,10 +170,10 @@ Esperado:
+++     "Confirmado, contexto asimilado."
+++ 
+++     Estado que reconozco:
+++-      - HEAD post-saneamiento, ahead ~293
++++      - HEAD ba59d39, ahead 295
+++       - Auditor #76: A2 = GO; A.6.6 = NO-GO
+++       - H-05/H-06/H-07/H-10.1/H-08/B-01/B-05/B-06/B-07 cerrados
+++-      - Bloqueos residuales: B-02 (P62/PIT), B-03 (TARGET), B-04 (pairwise)
++++      - Consulta A.6.7 enviada: B-02/B-03/B-04 pendientes de dictamen
+++       - Prohibido tocar nipc/delta_shares/security_identity/temporal_validity
+++       - Prohibido push; prohibido B-02/B-03/B-04 sin nuevo dictamen
+++ 
+++@@ -178,4 +181,4 @@ Esperado:
+++ 
+++ ---
+++ 
+++-FIN DEL TRANSFER v9.2. Fecha: 2026-09-21. Dictamen #76 aplicado.
++++FIN DEL TRANSFER v9.3. Fecha: 2026-09-22. Consulta A.6.7 enviada.
+++diff --git a/docs/auditoria/iae/A66_DIFFS.txt b/docs/auditoria/iae/A66_DIFFS.txt
+++index 857bdd6..36b6409 100644
+++--- a/docs/auditoria/iae/A66_DIFFS.txt
++++++ b/docs/auditoria/iae/A66_DIFFS.txt
+++@@ -1,3 +1,217 @@
++++commit ba59d39e5ce8a0d58415ff394ee08afe5d9da4fb
++++Author: bledabladis <bledabladis@gmail.com>
++++Date: Tue Sep 22 00:09:55 2026 +0200
++++
++++    docs(iae): A67_CONSULTA - desbloqueo B-02/B-03/B-04 al auditor
++++
++++
++++diff --git a/docs/auditoria/iae/A67_CONSULTA.md b/docs/auditoria/iae/A67_CONSULTA.md
++++new file mode 100644
++++index 0000000..78dba27
++++--- /dev/null
+++++++ b/docs/auditoria/iae/A67_CONSULTA.md
++++@@ -0,0 +1,175 @@
+++++# A.6.7 - Consulta al auditor: desbloqueo de B-02 / B-03 / B-04
+++++
+++++**Solicitante:** Ingeniero Supervisor del Radar de Rotacion Sectorial.
+++++**Destinatario:** auditor externo del proyecto IAE.
+++++**Fecha:** 2026-09-22.
+++++**Origen:** dictamen #76 (A.6.6 = NO-GO). Saneamiento B-01/B-05/B-06/B-07
+++++y cierre H-08 EJECUTADOS y cerrados. Los unicos bloqueos residuales para
+++++avanzar son B-02, B-03 y B-04. Esta consulta los desarrolla uno a uno con
+++++propuesta tecnica y peticion concreta.
+++++
+++++---
+++++
+++++## 1. Contexto
+++++
+++++Tras el dictamen #76 el supervisor ejecuto, dentro de lo autorizado:
+++++
+++++- Cierre tecnico de H-05/H-06/H-07/H-10.1 (ciclo A2, 5 commits).
+++++- Saneamiento documental B-01 + precision B-05 + fix B-06 + documentacion
+++++  de B-07 + cierre H-08 como test (commit `6d2f17f`).
+++++- Anexo de diffs `A66_DIFFS.txt` (auditable linea a linea sin push).
+++++
+++++El repositorio esta limpio, la suite pasa a `1312 passed + 2 skipped +
+++++3 failed` (los 3 failed son `test_freshness`, preexistentes). No hay
+++++trabajo tecnico pendiente sin dictamen nuevo.
+++++
+++++Los tres bloqueos residuales son estructurales, no bugs: requieren una
+++++decision del auditor antes de tocar nada. A continuacion se desarrollan.
+++++
+++++## 2. B-02 - P62/PIT (look-ahead temporal del snapshot)
+++++
+++++### 2.1. Descripcion del bloqueo
+++++
+++++El resultado empirico `coverage_current = 1.0` se calcula aplicando el
+++++snapshot B2-PIT `snapshot_20260921_01.csv` (valid_from = 2026-09-21) al
+++++periodo Q1 2026 (period_end = 2026-03-31). El contrato P62 prohibe
+++++aplicar retroactivamente la version de hoy a un periodo historico.
+++++
+++++### 2.2. Propuesta tecnica
+++++
+++++Ciclo A.6.7-P62 con los siguientes pasos:
+++++
+++++  1. Auditoria de snapshots disponibles en `data/mappings/catalog_snapshots/`.
+++++     Inventario de fechas valid_from/valid_to por snapshot.
+++++  2. Determinar si existe (o puede construirse) un snapshot valido para
+++++     Q1 2026 (valid_from <= 2026-03-31 < valid_to).
+++++  3. Si existe: re-ejecutar el probe con ese snapshot. Si no existe:
+++++     evaluar si el catalogo actual puede retro-fecharse con fuente
+++++     documental (radar_target_catalog.csv tiene source_date).
+++++  4. Exponer `target_catalog_as_of(period_end)` en `catalog_pit.py`
+++++     (capacidad ya disenada, no invocada).
+++++  5. Re-ejecutar el probe con invocacion PIT completa.
+++++
+++++Impacto estimado: 1-2 commits, sin tocar contrato ni policy. Solo
+++++infraestructura PIT + probe.
+++++
+++++### 2.3. Preguntas al auditor
+++++
+++++  1. ¿Se autoriza el ciclo A.6.7-P62 con el alcance descrito?
+++++  2. Si NO existe snapshot valido para Q1 2026: ¿se acepta retro-fechar
+++++     el catalogo con `source_date` como evidencia documental, o se exige
+++++     un snapshot historico adicional?
+++++  3. ¿El probe post-P62 debe publicar el resultado PIT como metrica
+++++     contractual definitiva, o se mantiene como evidencia parcial hasta
+++++     cerrar B-03/B-04?
+++++
+++++## 3. B-03 - TARGET completo (OpenFIGI masivo)
+++++
+++++### 3.1. Descripcion del bloqueo
+++++
+++++`TARGET_Q1 = 18 FIGIs` sobre un universo B2-PIT de 242 keys. El TARGET
+++++contractual completo requiere resolver los ~24.838 CUSIPs del universo
+++++13F contra OpenFIGI, operacion no autorizada. Mientras no se resuelva,
+++++el `coverage_current = 1.0` es correcto sobre el subconjunto materializado
+++++pero no certifica el universo contractual completo.
+++++
+++++### 3.2. Dos opciones tecnicas
+++++
+++++**Opcion A - OpenFIGI masivo autorizado.**
+++++  - Resolver los 24.838 CUSIPs contra la API OpenFIGI en batches.
+++++  - Requiere API key (no hay hoy) + rate limiting + snapshot con hash.
+++++  - El contrato P62 exige que la resolucion OpenFIGI se acompañe de
+++++    snapshot + hash (seccion 11.4).
+++++  - Riesgo: coste operativo, dependencia externa, rate limits.
+++++
+++++**Opcion B - Acotar el universo contractual y justificarlo.**
+++++  - Definir el universo contractual como un subconjunto explicito
+++++    (p.ej. TOP 2000 por AUM, o universo con crosswalk interno curado).
+++++  - Documentar el criterio de acotacion en `NIPC_COVERAGE_POLICY.md`.
+++++  - El `coverage_current` resultante se etiqueta como 'sobre universo
+++++    acotado (criterio X)'.
+++++  - No requiere OpenFIGI masivo. Elimina el bloqueo estructural.
+++++
+++++### 3.3. Preguntas al auditor
+++++
+++++  1. ¿Se autoriza OpenFIGI masivo (Opcion A)? Si si: ¿con que API key y
+++++     con que limites de rate? ¿Se exige snapshot+hash antes del primer
+++++     batch o se acepta snapshot al cierre del ciclo?
+++++  2. Si NO se autoriza OpenFIGI masivo: ¿se acepta la Opcion B (acotar
+++++     universo con criterio documentado)? Si si: ¿que criterio de
+++++     acotacion acepta el auditor como contractual?
+++++  3. ¿La eleccion A o B afecta al estado de THRESHOLD_1/THRESHOLD_2
+++++     (hoy UNDEFINED/BLOQUEADO) o son dimensiones independientes?
+++++
+++++## 4. B-04 - Pairwise real (TARGET_PAIRWISE > 0)
+++++
+++++### 4.1. Descripcion del bloqueo
+++++
+++++El resultado empirico tiene `TARGET_PAIRWISE = 0` porque Q4 2025 esta
+++++vacio en el subconjunto materializado. La rama fail-closed esta validada
+++++(`coverage_previous = None`, `paired_* = None`), pero la rama pairwise
+++++real (calculo `paired_security_coverage` y `paired_weighted_share_coverage`
+++++sobre un conjunto no vacio) NO ha sido ejercitada end-to-end sobre datos
+++++reales.
+++++
+++++### 4.2. Opciones de dataset
+++++
+++++**Opcion 1 - Snapshot Q4 2025 valido (depende de B-02).**
+++++  - Requiere primero resolver B-02 (snapshot PIT).
+++++  - Con snapshot Q4 valido, `TARGET_Q4` podria ser > 0.
+++++  - Si Q4 tiene al menos un FIGI comun con Q1 -> pairwise real.
+++++
+++++**Opcion 2 - Dataset sintetico controlado.**
+++++  - Construir un dataset minimo (2-5 FIGIs con overlap Q4<->Q1) a mano.
+++++  - Documentar como fixture, no como evidencia empirica del universo real.
+++++  - El auditor ya autorizo tests unitarios que cubren esto. La pregunta
+++++    es si acepta un probe con fixture sintetico como cierre de B-04, o
+++++    exige datos reales.
+++++
+++++**Opcion 3 - Diferir B-04 hasta que exista overlap real.**
+++++  - Declarar P38 empiricamente validado solo en rama Q1 + fail-closed.
+++++  - Mantener `P38 = GO CONDICIONADO` sin cambio.
+++++  - No bloquea A.6.6 si el auditor acepta la limitacion declarada.
+++++
+++++### 4.3. Preguntas al auditor
+++++
+++++  1. ¿Cual de las 3 opciones acepta el auditor como via de cierre B-04?
+++++  2. Si Opcion 2: ¿que tamano minimo de dataset sintetico se considera
+++++     suficiente? ¿Se exige provenance documental del fixture?
+++++  3. Si Opcion 3: ¿se puede emitir A.6.6 con P38 GO CONDICIONADO sin
+++++     pairwise empirico, siempre que la limitacion quede declarada?
+++++
+++++## 5. Orden propuesto de resolucion
+++++
+++++Si el auditor autoriza los tres ciclos:
+++++
+++++  1. B-02 (P62/PIT): prerequisito de B-04 en Opcion 1.
+++++  2. B-03 (TARGET): define el universo contractual de todos los calculos.
+++++  3. B-04 (pairwise): cierra la rama empirica pendiente.
+++++  4. Re-ejecutar probe con todo aplicado.
+++++  5. Bundle A.6.7 con diffs (`A66_DIFFS.txt` regenerado).
+++++  6. Nueva solicitud A.6.6.
+++++
+++++Si el auditor acepta Opcion 3 en B-04 (diferir):
+++++
+++++  1. B-02 (P62/PIT).
+++++  2. B-03 (TARGET).
+++++  3. Bundle con limitacion pairwise declarada.
+++++  4. Solicitud A.6.6 con P38 GO CONDICIONADO.
+++++
+++++## 6. Peticion
+++++
+++++Se solicita:
+++++
+++++- Dictamen sobre B-02 (autorizacion ciclo A.6.7-P62 + criterio de
+++++  snapshot historico).
+++++- Dictamen sobre B-03 (OpenFIGI masivo o acotacion documentada).
+++++- Dictamen sobre B-04 (opcion de cierre de la rama pairwise).
+++++- Indicacion del orden de ejecucion preferido.
+++++
+++++Con estos tres autorizados/decididos, el supervisor podra ejecutar los
+++++ciclos tecnicos y preparar el bundle A.6.7.
+++++
+++++---
+++++
+++++Fin de la consulta A.6.7. HEAD `dae492c`. 2026-09-22.
++++commit dae492cd990849438ee8fa0003f0037d17c44ed8
++++Author: bledabladis <bledabladis@gmail.com>
++++Date: Tue Sep 22 00:08:16 2026 +0200
++++
++++    chore(iae): A66_DIFFS en texto UTF-8 + HASHES post-fix B-06
++++
++++
++++diff --git a/docs/auditoria/iae/A66_DIFFS.txt b/docs/auditoria/iae/A66_DIFFS.txt
++++index 6c8b9d8..857bdd6 100644
++++Binary files a/docs/auditoria/iae/A66_DIFFS.txt and b/docs/auditoria/iae/A66_DIFFS.txt differ
++++diff --git a/docs/auditoria/iae/evidence/a64_integration_b1_p61_p38/HASHES.txt b/docs/auditoria/iae/evidence/a64_integration_b1_p61_p38/HASHES.txt
++++index 6d94731..c369c45 100644
++++--- a/docs/auditoria/iae/evidence/a64_integration_b1_p61_p38/HASHES.txt
+++++++ b/docs/auditoria/iae/evidence/a64_integration_b1_p61_p38/HASHES.txt
++++@@ -5,9 +5,9 @@
++++ 
++++ ## Outputs del probe (script + resultados + documentacion)
++++ 
++++-508bd16d28944a0dd5616c162099d8805a7846b27eaa49fce518d5b1b97d02df  probe_integration_b1_p61_p38.py
+++++bedea4633bb7d8dab469f3c28433c9582bd74ec0fa0a7c282df6274870dd1b35  probe_integration_b1_p61_p38.py
++++ f00197ed3083155fa77318c7fc51805903411f12d3491750a522e596403b9703  result.json
++++-3ef9cfc6cd20c8cbf4e055f4aff532cdf6993076f8e3947484052bcccab67e5f  README.md
+++++07e3a977bd77d8cd267ea0ede6587aec8dea6e617fa35ffb0e1c46d75d29912b  README.md
++++ 
++++ ## Inputs 13F - Q4 2025 (data/sec_13f/processed/2025Q4/)
++++ 
+++ commit 6d2f17fff26442078320861436b656c077018199
+++ Author: bledabladis <bledabladis@gmail.com>
+++ Date: Mon Sep 21 23:59:39 2026 +0200
+++@@ -2266,3 +2480,405 @@ index 1454f9a..6a0195f 100644
+++          )
+++      return out
+++  
++++commit 64e814b8c9a0e085ea2f6bf262c52d4517a732e2
++++Author: bledabladis <bledabladis@gmail.com>
++++Date: Mon Sep 21 22:54:11 2026 +0200
++++
++++    chore(iae): regenerar ESTADO_SISTEMA.md tras rebase sobre origin/main
++++
++++
++++diff --git a/docs/auditoria/iae/ESTADO_SISTEMA.md b/docs/auditoria/iae/ESTADO_SISTEMA.md
++++index 161f185..ca82c4f 100644
++++--- a/docs/auditoria/iae/ESTADO_SISTEMA.md
+++++++ b/docs/auditoria/iae/ESTADO_SISTEMA.md
++++@@ -2,7 +2,7 @@
++++ 
++++ Hechos verificables del sistema. Generado por script.
++++ 
++++-**Generado en:** 2026-09-21 20:40:22 UTC
+++++**Generado en:** 2026-09-21 20:52:57 UTC
++++ **Snapshot tomado sobre:** commit HEAD de la fecha indicada, al momento de generar
++++ **NO editar a mano.** Regenerar con:
++++ 
++++@@ -16,16 +16,16 @@ proyecto describen su tema; NO declaran el estado del sistema.
++++ 
++++ ## 1. Git
++++ 
++++-- **HEAD:** `c429c48`
++++-- **HEAD completo:** `c429c48cf2cf8cbe2a896aacb3a90a15d9da4682`
++++-- **Fecha commit HEAD:** 2026-09-21 22:38:18 +0200
++++-- **Ahead:** 279
++++-- **Behind:** 3
++++-- **origin/main:** `e49f6b3`
+++++- **HEAD:** `a1eaa79`
+++++- **HEAD completo:** `a1eaa795b8b6bf06ef6d451b266f43128323858f`
+++++- **Fecha commit HEAD:** 2026-09-21 22:47:36 +0200
+++++- **Ahead:** 283
+++++- **Behind:** 0
+++++- **origin/main:** `5f1d9ab`
++++ 
++++ ## 2. Tests (pytest real)
++++ 
++++-- **Resumen:** 3 failed, 1303 passed, 2 skipped, 1 xpassed in 27.39s
+++++- **Resumen:** 3 failed, 1303 passed, 2 skipped, 1 xfailed in 27.98s
++++ - **Exit code:** 1
++++ 
++++ **Tests fallidos (nombre completo):**
++++commit a1eaa795b8b6bf06ef6d451b266f43128323858f
++++Author: bledabladis <bledabladis@gmail.com>
++++Date: Mon Sep 21 22:47:36 2026 +0200
++++
++++    docs(iae): TRANSFER v9 - estado real + plan A2 autorizado por auditor
++++
++++
++++diff --git a/docs/auditoria/TRANSFER.md b/docs/auditoria/TRANSFER.md
++++index 0061bc3..811d294 100644
++++--- a/docs/auditoria/TRANSFER.md
+++++++ b/docs/auditoria/TRANSFER.md
++++@@ -1,236 +1,157 @@
++++-# TRANSFER DE SESION - 2026-09-21 v8
+++++# TRANSFER DE SESION - 2026-09-21 v9
++++ 
++++-Documento complementario al PROMPT_MAESTRO v6.55 (docs/auditoria/PROMPT_MAESTRO.md).
++++-No normativo. Si hay conflicto, gana el prompt.
++++-
++++-**Aviso (2026-09-21):** este documento es una guia de onboarding, no una
++++-fuente de estado. El estado real vive en `iae/ESTADO_SISTEMA.md` (hechos) y
++++-`iae/ESTADO_DECLARADO.md` (declaraciones). Las cifras abajo son snapshot
++++-historico del momento de redaccion.
+++++Documento de onboarding. **NO es fuente de estado.**
+++++Estado vivo: `iae/ESTADO_SISTEMA.md` (hechos) + `iae/ESTADO_DECLARADO.md` (fases).
++++ 
++++ **Como usarlo:**
++++-1. Pegar este documento como primer mensaje.
++++-2. Si tienes acceso al repo, adjuntar tambien PROMPT_MAESTRO.md.
++++-3. Esperar confirmacion de asimilacion antes de empezar.
+++++1. Pegar este documento + `PROMPT_MAESTRO.md`.
+++++2. Esperar confirmacion de asimilacion antes de tocar nada.
++++ 
++++ ---
++++ 
++++ ## 1. Rol
++++ 
++++-Eres el Ingeniero Supervisor del Radar de Rotacion Sectorial. Sistema
++++-determinista, descriptivo, auditable, sin ML predictivo. Entorno
++++-Windows, PowerShell, Python via py. Repo: D:\Macro_Sectorial.
++++-
++++-Reglas de personalidad y metodo: ver PROMPT_MAESTRO v6.55 secciones 1 y 3.
++++-
++++----
++++-
++++-## 2. Objetivo real del proyecto
+++++Eres el Ingeniero Supervisor del Radar de Rotacion Sectorial (IAE).
+++++Reglas de personalidad y metodo: `PROMPT_MAESTRO.md` secciones 1 y 3.
++++ 
++++-**El objetivo es IMPLEMENTAR el modulo IAE (Institutional Accumulation
++++-Evidence) - analisis de posiciones institucionales via SEC 13F.**
+++++## 2. Estado real al cierre de esta sesion
++++ 
++++-NO es redactar documentos de diseño. NO es iterar propuestas ->
++++-dictamenes -> propuestas.
+++++    HEAD          5877e9c (verificar con git al arrancar)
+++++    Ahead         282 commits locales
+++++    Working tree  LIMPIO (verificar)
+++++    Tests         7 passed + 1 xfailed en test_h731;
+++++                  suite global: 1301 passed + 2 skipped + 3 failed
+++++                  (los 3 failed son test_freshness.py, preexistentes, no-regresion)
+++++    Push          NO (local-first IAE)
++++ 
++++-**Regla nueva (aplicada con exito en B3, B1, A.6.4):** cuando el
++++-diseño de una subfase haya cerrado >=3 rondas de dictamen con patron
++++-"cierro N, aparecen N nuevos", PARAR. Congelar diseño en la version
++++-vigente e IMPLEMENTAR. Las dudas se resuelven escribiendo tests, no
++++-documentos.
+++++## 3. Contexto: auditoria externa reciente
++++ 
++++----
+++++El auditor externo ha emitido, el 2026-09-21:
++++ 
++++-## 3. Estado actual verificado (2026-09-21)
++++-
++++-| Metrica | Valor |
++++-|---|---|
++++-| HEAD local (snapshot, ver ESTADO_SISTEMA.md) | da70f9e |
++++-| origin/main | 9d4a81e |
++++-| Ahead | 246 commits locales |
++++-| Behind | 3 (bot CI) |
++++-| Working tree | limpio |
++++-| Push | NO (local-first IAE activo) |
++++-| Prompt vigente | v6.55 |
++++-| Tests locales | 1301 passed + 2 skipped + 3 failed preexistentes |
++++-| pyflakes / compileall | LIMPIO / OK |
++++-| Gate validacion | 10/10 |
++++-| Cobertura radar | 313/313 |
++++-| Contratos temporales | 10 |
++++-
++++-**Los 3 failed de test_freshness.py son preexistentes** (parquets
++++-locales desactualizados). No son regresion.
+++++  **Dictamen bundle v3 (minimo):** NO-GO para A.6.6 / F2.4-CLOSE.
+++++    Motivo: P38 no validado cuantitativamente, H-10.1 abierto,
+++++    A.6.4 reclasificado como smoke test, THRESHOLD_2 bloqueado.
++++ 
++++----
+++++  **Dictamen consulta H-10.1:** GO para fix A2.
+++++    Autoriza ciclo de correccion completo con propagacion SSHPRNAMT real.
++++ 
++++-## 4. Estado del modulo IAE
++++-
++++-| Bloque | Estado |
++++-|---|---|
++++-| FA-1 + FA-2 (ingestion + identity) | CERRADO / PUSHED |
++++-| B2-PIT | CERRADO (#53) |
++++-| B1 | CERRADO (#68, 4 commits + 100 tests) |
++++-| B3 (semantica temporal 13F) | IMPLEMENTADO SPEC-SIDE (sin integracion) |
++++-| Gap spec->codigo §5.1-§5.5 | CERRADO (#61-#67) |
++++-| H-69.1 (source id) | CERRADO (#70) |
++++-| H-69.2 (precedencia temporal) | CERRADO (#72) |
++++-| H-73.1 (adapter B1<->P38) | CERRADO (#75) |
++++-| GHISALLO (+765%) | CERRADO (#60) |
++++-| A.6.3 (test P38 Q12) | CERRADO (#72) |
++++-| A.6.4-v2 (P38 aislado) | CERRADO (#73) |
++++-| A.6.4 (integracion B1+P61+P38) | CERRADO (#75) |
++++-| Orquestador `iae_pipeline.py` | IMPLEMENTADO + RATIFICADO |
++++-| A.6.5 | CERRADA (2026-09-21, commits dccf70d + 911e95b) |
++++-| A.6.6 (F2.4-CLOSE) | PENDIENTE |
++++-| Baseline full | BLOQUEADO por OpenFIGI masivo |
++++-| Gate-NIPC.2 | NOT READY (thresholds UNDEFINED) |
++++-
++++-### 4.1. Modulos IAE clave
++++-
++++-    src/institutional_accumulation/
++++-      sec_13f/              ingestion + schema + parser + identity
++++-      identity/             security_identity, catalog_key,
++++-                            target_builder, period_state,
++++-                            radar_target_catalog, target_universe,
++++-                            openfigi_client
++++-      aggregation/          delta_shares, nipc, coverage,
++++-                            catalog_validator, catalog_p38_adapter,
++++-                            reporting_dedup
++++-      temporal_validity.py  P61 operational_mapping_status
++++-      security_type.py      §3.3 + §5.4 Nivel A+B
++++-      operational_universe.py §5.5
++++-      timestamps.py         B3 derive + enrich
++++-      absence.py            P63 stub
++++-      catalog_pit.py        B2-PIT
++++-
++++-    scripts/iae_pipeline.py         Orquestador productivo (ratificado)
++++-    scripts/build_catalog_csvs.py   Generador CSV catalogo B1
+++++**5 respuestas del auditor (fijas, no renegociables):**
++++ 
++++----
+++++    Q1  Alcance del fix: A2 (no A1). Incluye SSHPRNAMT real.
+++++    Q2  coverage_previous/current = RESOLVED / TARGET (no observed).
+++++    Q3  operational_mapping_status debe derivarse del estado operacional.
+++++        El adapter PROPAGA, no fabrica VERIFIED.
+++++    Q4  SSHPRNAMT del canonical_snapshot post-amendments, agregado por
+++++        shareClassFIGI, luego max(Q4,Q1).
+++++    Q5  Q4 vacio:
+++++          coverage_previous              = UNAVAILABLE (TARGET_Q4=0)
+++++          coverage_current               = calculable sobre TARGET_Q1
+++++          paired_security_coverage       = UNAVAILABLE (TARGET_PAIRWISE=0)
+++++          paired_weighted_share_coverage = UNAVAILABLE
++++ 
++++-## 5. Deuda activa (no bloqueante)
++++-
++++-- Integracion de modulos IAE al pipeline productivo principal: los
++++-  modulos estan implementados y ejecutables via `scripts/iae_pipeline.py`,
++++-  pero el pipeline diario (`daily_run.yml`) NO los invoca.
++++-- `compute_nipc_contractual` SIN CALLERS PRODUCTIVOS.
++++-- Marcadores residuales §5.4 (SPONSORED ADR/ADS, ADR, SH BEN INT,
++++-  FUND, ACT).
++++-- Snapshots historicos Q4 2025 / Q1 2026 requieren OpenFIGI masivo
++++-  (NO AUTORIZADO).
++++-- Curacion crosswalk residual: ONB, SPCX, PTGX sin match 13F Q1 2026.
++++-- `reporting_dedup.py` (P66) sin invocacion productiva.
++++-- Gate-NIPC.2 BLOQUEADO por THRESHOLD_1/2 UNDEFINED.
++++-- A.6.6 pendiente (F2.4-CLOSE). A.6.5 CERRADA.
+++++## 4. TRABAJO PENDIENTE: fix A2 (H-05/H-06/H-07/H-10.1)
++++ 
++++----
+++++**Estado: empezando, 0 de 5 commits hechos.**
++++ 
++++-## 6. Reglas criticas
+++++Plan autorizado, en orden estricto:
++++ 
++++-### 6.1. Local-first IAE
+++++    Commit 1  period_state.py
+++++              Anadir a PeriodState: sshprnamt (float|None) y
+++++              operational_mapping_status (str, default UNRESOLVED).
+++++              NO romper build_period_state.
++++ 
++++-NO push a main de codigo hasta validar funcionalidad + beneficio.
+++++    Commit 2  target_builder.py + probe
+++++              Extraer SSHPRNAMT efectivo del canonical snapshot por key.
+++++              Transportarlo hasta el state.
++++ 
++++-### 6.2. Prohibiciones vigentes
+++++    Commit 3  catalog_p38_adapter.py
+++++              Quitar operational_mapping_status="VERIFIED" hardcoded
+++++              (L164). PROPAGAR del state. Sin field -> UNRESOLVED.
++++ 
++++-    NO activar compute_nipc_contractual
++++-    NO ejecutar OpenFIGI masivo
++++-    NO activar DROP_DUP
++++-    NO modificar contratos normativos sin autorizacion
++++-    NO reescribir snapshots publicados
++++-    NO modificar coverage.py, nipc.py, delta_shares.py
++++-    NO modificar security_identity.py ni temporal_validity.py
++++-    NO push
+++++    Commit 4  coverage.py
+++++              coverage_previous/current con denominador TARGET_Q4/TARGET_Q1.
+++++              UNAVAILABLE si TARGET del periodo = 0.
++++ 
++++-### 6.3. Precedente metodologico
+++++    Commit 5  probe + tests
+++++              probe_integration_b1_p61_p38.py: Q4 y Q1 REALES, sin mock.
+++++              Tests nuevos: derivacion VERIFIED, max(Q4,Q1), agregacion FIGI.
++++ 
++++-B1 estaba 3 NO-GO con 4 versiones. Se congelo v4 y se implemento en 4
++++-commits + dictamen #68 GO. 100 tests, cero regresiones.
+++++**Reglas por commit:** suite completa + pyflakes + compileall antes del
+++++siguiente. Si algo falla, parar y avisar.
++++ 
++++-A.6.4 acumulo 2 partes (v2 + integracion) con H-73.1 como hallazgo
++++-material. Corregido + regresion + revalidacion. Cerrado por #75.
+++++## 5. Ficheros que el fix TOCA (autorizados)
++++ 
++++-Regla: si el patron "cierro N, aparecen N nuevos" se repite 3 veces,
++++-PARAR e IMPLEMENTAR.
+++++    src/institutional_accumulation/identity/period_state.py
+++++    src/institutional_accumulation/identity/target_builder.py
+++++    src/institutional_accumulation/aggregation/catalog_p38_adapter.py
+++++    src/institutional_accumulation/aggregation/coverage.py
+++++    docs/auditoria/iae/evidence/a64_integration_b1_p61_p38/probe_integration_b1_p61_p38.py
+++++    tests/test_p38_contract.py
+++++    tests/test_h731_adapter_p38_compat.py
++++ 
++++----
+++++## 6. Ficheros PROHIBIDOS (no tocar sin dictamen)
++++ 
++++-## 7. Ficheros clave
+++++    src/institutional_accumulation/aggregation/nipc.py
+++++    src/institutional_accumulation/aggregation/delta_shares.py
+++++    src/institutional_accumulation/sec_13f/identity/security_identity.py
+++++    src/institutional_accumulation/temporal_validity.py
+++++    src/institutional_accumulation/sec_13f/identity/relationships.py
+++++    MATCH_KEY, C2
+++++    Contratos normativos
+++++    NIPC_COVERAGE_POLICY.md
++++ 
++++-### 7.1. Contratos y specs
+++++## 7. Correcciones documentales aplicadas hoy (A-01/A-04/A-12)
++++ 
++++-    docs/auditoria/PROMPT_MAESTRO.md
++++-    docs/auditoria/iae/INSTITUTIONAL_ACCUMULATION_NIPC_ESPECIFICACION.md
++++-    docs/auditoria/iae/NIPC_CONTRATOS_SEMANTICOS_v1.md
++++-    docs/auditoria/iae/NIPC_COVERAGE_POLICY.md
+++++    A-01  ESTADO_SISTEMA.md lista los 3 tests fallidos por nombre.
+++++    A-04  Separadas metricas diagnosticas (18/242 = 0.0744) de las
+++++          contractuales (RESOLVED/TARGET) en EXPEDIENTE_A64_FIX.md.
+++++    A-12  test_h101_adapter_no_marca_verified_sin_evidencia_operacional
+++++          marcado xfail(strict=True). Documenta el DEFECTO como
+++++          expectativa futura, no como conformidad actual.
++++ 
++++-### 7.2. Diseños por subfase
+++++## 8. Documentos clave (vivos)
++++ 
++++-    docs/auditoria/iae/A60_EXPEDIENTE_AUDITOR.md
++++-    docs/auditoria/iae/A62BIS_B1_SUBFASE.md           v4 (CERRADO #68)
++++-    docs/auditoria/iae/A62BIS_B2_PIT_SUBFASE.md       CERRADO #53
++++-    docs/auditoria/iae/A62BIS_PROPUESTA.md            v9 base
++++-    docs/auditoria/iae/FASE_A6_PLAN.md                estado A.6.x
+++++    docs/auditoria/PROMPT_MAESTRO.md         v7 - normativa general
+++++    docs/auditoria/iae/ESTADO_DECLARADO.md   fases, prohibiciones, hallazgos
+++++    docs/auditoria/iae/ESTADO_SISTEMA.md     hechos (autogenerado)
+++++    docs/auditoria/iae/EXPEDIENTE_A64_FIX.md el expediente del fix
+++++    docs/auditoria/iae/NIPC_CONTRATOS_SEMANTICOS_v1.md   contrato P38
+++++    docs/auditoria/iae/DICTAMENES.md         indice #1-#75
+++++    docs/auditoria/iae/HISTORICO_IAE.md      registro de ciclos
+++++    docs/auditoria/iae/evidence/a64_integration_b1_p61_p38/README.md
+++++                                             evidencia A.6.4 (smoke test)
++++ 
++++-### 7.3. Dictamenes y cronologia
++++-
++++-    docs/auditoria/iae/DICTAMENES.md                  #1 a #75
++++-    docs/auditoria/iae/INFORME.md
++++-    docs/auditoria/FOLLOWUPS.md
++++-
++++-### 7.4. Evidencia empirica
++++-
++++-    docs/auditoria/iae/evidence/
++++-      nipc_gate0_baseline/           coverage baseline
++++-      nipc_gate0_target_identity_top2000/   piloto TOP 2000
++++-      nipc_gate0_top2000_v2/         A.6.4-v2 (P38 aislado)
++++-      a64_integration_b1_p61_p38/    A.6.4 (integracion completa)
++++-      b2_pit_cierre/, p66_*, nipc_p65_probe/, nipc_p70_probe/
++++-
++++----
++++-
++++-## 8. Comandos de arranque
+++++## 9. Comandos de arranque
++++ 
++++     Set-Location D:\Macro_Sectorial
++++-    git log --oneline -10
+++++    git log --oneline -5
++++     git status -sb
++++-    git rev-list --count origin/main..HEAD
++++-    py -m compileall . -q
++++-    py -m pyflakes . 2>&1
+++++    py scripts\generate_estado_sistema.py     # regenera ESTADO_SISTEMA.md
++++     py -m pytest tests/ validation/ -q --tb=line
+++++    py -m pyflakes . ; py -m compileall . -q
++++ 
++++ Esperado:
++++-- HEAD da70f9e o posterior
++++-- ahead 246 o mas
++++-- working tree limpio
++++-- 1301 passed + 2 skipped + 3 failed (freshness preexistentes)
++++-- pyflakes silencio
++++-- compileall OK
++++-
++++----
+++++  - HEAD 5877e9c o posterior
+++++  - ahead 282 o mas
+++++  - working tree limpio
+++++  - 1301 passed + 2 skipped + 3 failed (test_freshness, preexistentes)
+++++  - test_h731: 7 passed + 1 xfailed
+++++  - pyflakes silencio, compileall OK
++++ 
++++-## 9. Confirmacion esperada
+++++## 10. Confirmacion esperada
++++ 
++++     "Confirmado, contexto asimilado."
++++ 
++++-    Estado del sistema que reconozco:
++++-      - Snapshot historico: HEAD da70f9e, ahead 246. Estado actual: ver ESTADO_SISTEMA.md.
++++-      - 1301 passed + 2 skipped + 3 failed preexistentes
++++-      - Prompt v6.55
++++-      - B1 CERRADO (#68). B2-PIT CERRADO (#53).
++++-      - Gap §5.1-§5.5 CERRADO (#61-#67).
++++-      - H-69.1/H-69.2/H-73.1 CERRADOS (#70/#72/#75).
++++-      - A.6.3, A.6.4-v2, A.6.4 CERRADOS.
++++-      - A.6.5 CERRADA. A.6.6 PENDIENTE.
++++-      - Baseline full BLOQUEADO por OpenFIGI.
++++-      - Gate-NIPC.2 NOT READY.
++++-      - Objetivo real: IMPLEMENTAR IAE
++++-
++++-    Pregunta final: "Que hacemos?"
+++++    Estado que reconozco:
+++++      - HEAD 5877e9c, ahead 282
+++++      - Auditor: NO-GO A.6.6 + GO fix A2
+++++      - Fix A2: 0/5 commits, empezando por period_state.py
+++++      - H-10.1 abierto; P38 GO CONDICIONADO; A.6.6 NO-GO
+++++      - Prohibido tocar nipc/delta_shares/security_identity/temporal_validity
+++++      - Push: NO
++++ 
++++-No empieces a proponer tareas sin antes confirmar asimilacion.
+++++    Pregunta: "Que hacemos?"
++++ 
++++ ---
++++ 
++++-FIN DEL TRANSFER
++++-Version 8.0 (2026-09-21). HEAD da70f9e.
++++\ No newline at end of file
+++++FIN DEL TRANSFER v9. HEAD 5877e9c. Fecha: 2026-09-21.
+++diff --git a/docs/auditoria/iae/ESTADO_SISTEMA.md b/docs/auditoria/iae/ESTADO_SISTEMA.md
+++index efd384a..b80eb01 100644
+++--- a/docs/auditoria/iae/ESTADO_SISTEMA.md
++++++ b/docs/auditoria/iae/ESTADO_SISTEMA.md
+++@@ -2,7 +2,7 @@
+++ 
+++ Hechos verificables del sistema. Generado por script.
+++ 
+++-**Generado en:** 2026-09-21 21:45:27 UTC
++++**Generado en:** 2026-09-21 22:10:26 UTC
+++ **Snapshot tomado sobre:** commit HEAD de la fecha indicada, al momento de generar
+++ **NO editar a mano.** Regenerar con:
+++ 
+++@@ -16,16 +16,16 @@ proyecto describen su tema; NO declaran el estado del sistema.
+++ 
+++ ## 1. Git
+++ 
+++-- **HEAD:** `157211e`
+++-- **HEAD completo:** `157211e0c2f91399f1f29d7f2834b13bd00cffdb`
+++-- **Fecha commit HEAD:** 2026-09-21 23:45:10 +0200
+++-- **Ahead:** 289
++++- **HEAD:** `ba59d39`
++++- **HEAD completo:** `ba59d39e5ce8a0d58415ff394ee08afe5d9da4fb`
++++- **Fecha commit HEAD:** 2026-09-22 00:09:55 +0200
++++- **Ahead:** 295
+++ - **Behind:** 0
+++ - **origin/main:** `5f1d9ab`
+++ 
+++ ## 2. Tests (pytest real)
+++ 
+++-- **Resumen:** 3 failed, 1309 passed, 2 skipped in 27.34s
++++- **Resumen:** 3 failed, 1312 passed, 2 skipped in 27.48s
+++ - **Exit code:** 1
+++ 
+++ **Tests fallidos (nombre completo):**
++ commit ba59d39e5ce8a0d58415ff394ee08afe5d9da4fb
++ Author: bledabladis <bledabladis@gmail.com>
++ Date: Tue Sep 22 00:09:55 2026 +0200
++diff --git a/docs/auditoria/iae/evidence/a64_integration_b1_p61_p38/HASHES.txt b/docs/auditoria/iae/evidence/a64_integration_b1_p61_p38/HASHES.txt
++index 6321cee..aa6d59f 100644
++--- a/docs/auditoria/iae/evidence/a64_integration_b1_p61_p38/HASHES.txt
+++++ b/docs/auditoria/iae/evidence/a64_integration_b1_p61_p38/HASHES.txt
++@@ -5,8 +5,8 @@
++ 
++ ## Outputs del probe (script + resultados + documentacion)
++ 
++-bedea4633bb7d8dab469f3c28433c9582bd74ec0fa0a7c282df6274870dd1b35  probe_integration_b1_p61_p38.py
++-f378e9d550da734fafab2808135b0e91976dacf8f2262d7c3289f2540e499a47  result.json
+++c237cd84c444e6ea802427bd1354ae98f2d2e34885ab7171dd4379f9b23afbc3  probe_integration_b1_p61_p38.py
+++a2784bd33938cfd5a6b4d64409f35366020e8fc60432c5ff914614c00f1ebba2  result.json
++ 07e3a977bd77d8cd267ea0ede6587aec8dea6e617fa35ffb0e1c46d75d29912b  README.md
++ 
++ ## Inputs 13F - Q4 2025 (data/sec_13f/processed/2025Q4/)
++diff --git a/docs/auditoria/iae/evidence/a64_integration_b1_p61_p38/probe_integration_b1_p61_p38.py b/docs/auditoria/iae/evidence/a64_integration_b1_p61_p38/probe_integration_b1_p61_p38.py
++index b99db6c..7d031ef 100644
++--- a/docs/auditoria/iae/evidence/a64_integration_b1_p61_p38/probe_integration_b1_p61_p38.py
+++++ b/docs/auditoria/iae/evidence/a64_integration_b1_p61_p38/probe_integration_b1_p61_p38.py
++@@ -1,4 +1,11 @@
++-"""A.6.4 - Integracion B1 + P61 + P38 (dictamen #73).
+++"""A.6.4 + smoke NIPC contractual (dictamenes #73, #76).
+++
+++Seccion 1-6: cadena B1 + P61 + P38 (A.6.4).
+++Seccion 7: smoke test de compute_nipc_contractual con datos reales.
+++  NOTA: los thresholds THRESHOLD_1/THRESHOLD_2 estan UNDEFINED
+++  (dictamen #76). El smoke NO interpreta el resultado; solo verifica
+++  que la funcion computa sin error sobre el universo contractual
+++  materializado. No activa el modulo NIPC productivamente.
++ 
++ Demuestra la cadena end-to-end sobre el subconjunto que atraviesa
++ realmente las tres capas:
++@@ -394,6 +401,30 @@ def main():
++     else:
++         print("  Q4 tiene subconjunto -> revisar")
++ 
+++    # --- 7. compute_nipc_contractual (smoke, thresholds UNDEFINED) ---
+++    print()
+++    print("=== 7. compute_nipc_contractual (smoke) ===")
+++    print("    Thresholds THRESHOLD_1/2 UNDEFINED (dictamen #76).")
+++    print("    Smoke test del contrato. Resultado NO interpretado.")
+++    from src.institutional_accumulation.aggregation import nipc
+++    import pandas as _pd
+++    delta_empty = _pd.DataFrame()
+++    nipc_smoke = None
+++    try:
+++        nipc_result = nipc.compute_nipc_contractual(
+++            delta_empty,
+++            target_q4=t4, target_q1=t1,
+++            records_q4=r4, records_q1=r1,
+++        )
+++        nipc_smoke = {"status": "OK",
+++                      "result": {k: str(v) for k, v in nipc_result.items()}}
+++        for k, v in nipc_result.items():
+++            print("  " + str(k).ljust(35) + " " + str(v))
+++    except Exception as _exc:
+++        nipc_smoke = {"status": "ERROR",
+++                      "error": type(_exc).__name__ + ": " + str(_exc)}
+++        print("  ERROR: " + nipc_smoke["error"])
+++
++     out = {
++         "periods": {k: dict(
++             {kk: vv for kk, vv in v.items()
++@@ -409,6 +440,7 @@ def main():
++         "cardinalities": cardinalities,
++         "p38_pairwise": dict(p38_result),
++         "p38_q1": dict(p38_result),
+++        "nipc_smoke": nipc_smoke,
++     }
++     (HERE / "result.json").write_text(
++         json.dumps(out, indent=2, default=str),
++diff --git a/docs/auditoria/iae/evidence/a64_integration_b1_p61_p38/result.json b/docs/auditoria/iae/evidence/a64_integration_b1_p61_p38/result.json
++index c43bda0..cc2a782 100644
++--- a/docs/auditoria/iae/evidence/a64_integration_b1_p61_p38/result.json
+++++ b/docs/auditoria/iae/evidence/a64_integration_b1_p61_p38/result.json
++@@ -58,5 +58,29 @@
++     "coverage_status": "UNAVAILABLE",
++     "unmapped_count_previous": 0,
++     "unmapped_count_current": 0
+++  },
+++  "nipc_smoke": {
+++    "status": "OK",
+++    "result": {
+++      "nipc_total": "0.0",
+++      "nipc_total_available": "False",
+++      "n_both": "0",
+++      "n_new": "0",
+++      "n_exit": "0",
+++      "n_unresolved_identity": "0",
+++      "n_delta_observable": "0",
+++      "evidence_class": "CONTRACTUAL",
+++      "nipc_sole": "0.0",
+++      "nipc_dfnd": "0.0",
+++      "nipc_otr": "0.0",
+++      "coverage_previous": "None",
+++      "coverage_current": "1.0",
+++      "paired_security_coverage": "None",
+++      "paired_weighted_share_coverage": "None",
+++      "coverage_status": "UNAVAILABLE",
+++      "unmapped_count_previous": "0",
+++      "unmapped_count_current": "0",
+++      "status": "UNRESOLVED"
+++    }
++   }
++ }
++\ No newline at end of file
+ commit 7357e1da8c9aa641d8ddca59e883a638871ee655
+ Author: bledabladis <bledabladis@gmail.com>
+ Date: Tue Sep 22 00:33:57 2026 +0200
+diff --git a/docs/auditoria/iae/ESTADO_SISTEMA.md b/docs/auditoria/iae/ESTADO_SISTEMA.md
+index 24d95d4..709114e 100644
+--- a/docs/auditoria/iae/ESTADO_SISTEMA.md
++++ b/docs/auditoria/iae/ESTADO_SISTEMA.md
+@@ -2,7 +2,7 @@
+ 
+ Hechos verificables del sistema. Generado por script.
+ 
+-**Generado en:** 2026-09-21 22:57:11 UTC
++**Generado en:** 2026-09-21 23:13:33 UTC
+ **Snapshot tomado sobre:** commit HEAD de la fecha indicada, al momento de generar
+ **NO editar a mano.** Regenerar con:
+ 
+@@ -16,16 +16,16 @@ proyecto describen su tema; NO declaran el estado del sistema.
+ 
+ ## 1. Git
+ 
+-- **HEAD:** `6126c0d`
+-- **HEAD completo:** `6126c0d453ec7c101f6f1400a2dc5fdb77911fff`
+-- **Fecha commit HEAD:** 2026-09-22 00:44:18 +0200
+-- **Ahead:** 299
++- **HEAD:** `b9a2107`
++- **HEAD completo:** `b9a2107139a4b2555bb96d7a8b6f8c05c33cdfcd`
++- **Fecha commit HEAD:** 2026-09-22 01:13:13 +0200
++- **Ahead:** 311
+ - **Behind:** 0
+ - **origin/main:** `5f1d9ab`
+ 
+ ## 2. Tests (pytest real)
+ 
+-- **Resumen:** 3 failed, 1312 passed, 2 skipped in 27.81s
++- **Resumen:** 3 failed, 1415 passed, 2 skipped in 28.61s
+ - **Exit code:** 1
+ 
+ **Tests fallidos (nombre completo):**
 commit b9a2107139a4b2555bb96d7a8b6f8c05c33cdfcd
 Author: bledabladis <bledabladis@gmail.com>
 Date: Tue Sep 22 01:13:13 2026 +0200
