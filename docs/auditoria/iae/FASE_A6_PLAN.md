@@ -294,6 +294,14 @@ en #49-#52. Implementacion NO AUTORIZADA (requiere su propio ciclo).
 
 ### A.6.3 - Test contractual P38 de pairing segun decision Q12
 
+**ESTADO: CERRADO (2026-09-21, dictamen #72).** Q12 = Modelo A
+(shareClassFIGI). El test esta implementado en
+`tests/test_p38_contract.py::test_p38_cusip_distinto_figi_igual_paired`
+(L186), que cubre el escenario A.6.3 exacto (CUSIP distinto, FIGI
+comun, canonical_security distinto -> PAIRED). Test companion:
+`test_p38_figi_distinto_not_paired`. Ambos PASS desde 2026-09-20.
+No requiere codigo nuevo.
+
 **Precondicion bloqueante:** decision del auditor sobre Q12. Los dos
 modelos posibles son:
 

@@ -1,5 +1,10 @@
 """Tests contractuales P38 (F2.4 aplicado 2026-09-20).
 
+Cubre tambien A.6.3 (dictamen #72): test contractual de pairing
+segun Q12 Modelo A. Ver `test_p38_cusip_distinto_figi_igual_paired`
+(L186): CUSIP distinto con shareClassFIGI comun -> PAIRED aunque
+canonical_security difiera entre Q4 y Q1.
+
 Contrato NIPC_CONTRATOS_SEMANTICOS_v1.md secciones 3 y 4.
 
 API normativa P38:

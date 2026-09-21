@@ -1,10 +1,10 @@
-# PROMPT MAESTRO v6.53 - INGENIERO SUPERVISOR DEL RADAR DE ROTACION SECTORIAL
+# PROMPT MAESTRO v6.54 - INGENIERO SUPERVISOR DEL RADAR DE ROTACION SECTORIAL
 
-Actualizado: 2026-09-21 v6.53 (B1 CERRADO (#68). Gap spec->codigo §5.1-§5.5 CERRADO. B3 IMPLEMENTADO. GHISALLO CERRADO. Curacion crosswalk 22 filas. Dictamenes hasta #68. HEAD 0921f46. 237 commits ahead. Sin push. 1289 passed + 2 skipped + 3 failed preexistentes.)
+Actualizado: 2026-09-21 v6.54 (B1 CERRADO (#68). H-69.1 y H-69.2 CERRADOS (#70/#72). A.6.3 CUBIERTO. Gap spec->codigo §5.1-§5.5 CERRADO. B3 IMPLEMENTADO. Dictamenes hasta #72. HEAD 84d6b1c. 241 commits ahead. Sin push. 1296 passed + 2 skipped + 3 failed preexistentes.)
 Estado: Operativo al 100% - 10 contratos temporales - 1289 tests locales + 2 skipped + 3 failed preexistentes (freshness, ver §12) - 0 warnings - Gate 10/10 - Deuda activa: 0 - IAE: B2-PIT CERRADO, B1 CERRADO (#68), B3 IMPL SPEC-SIDE, §5.1-§5.5 CERRADOS (#64/#65/#67)
-Commit de referencia: 0921f46 (origin/main HEAD al redactar; el propio commit v6.53 sera HEAD tras commit)
+Commit de referencia: 84d6b1c (origin/main HEAD al redactar; el propio commit v6.54 sera HEAD tras commit)
 
-**ALERTA METODOLOGICA (2026-09-21 v6.53):** B1 se ha cerrado (#68) tras implementar v4 en 4 commits (dictamenes #54/#55/#56 congelados por regla §11.32). El gap §5.1-§5.5 cerrado (#61-#67). B1-B2-PIT-B3 cerrados. A.6.3 BLOQUEADO hasta dictamen especifico. **El objetivo del modulo IAE es IMPLEMENTARLO, no redactar documentos.** Ver §11.32.
+**ALERTA METODOLOGICA (2026-09-21 v6.54):** B1 CERRADO (#68). H-69.1 y H-69.2 CERRADOS (#70/#72). Orquestador productivo `scripts/iae_pipeline.py` ejecuta la cadena §5.1-§5.5. A.6.3 CUBIERTO por test existente. A.6.4 pendiente. **El objetivo del modulo IAE es IMPLEMENTARLO, no redactar documentos.** Ver §11.32.
 
 ---
 
@@ -1682,7 +1682,7 @@ Select-String -SimpleMatch desactiva regex → el | se trata como literal. No us
 | Fuentes europeas | 51 (Euronext 13 + Xetra 19 + BME 19) |
 | Fuente commodities | OilPriceAPI (BZ=F, CL=F, GC=F, HG=F, NG=F) |
 | Fuente term structure | CBOE (^VIX3M) |
-| Tests locales | 1289 passed + 2 skipped + 3 failed preexistentes (freshness) |
+| Tests locales | 1296 passed + 2 skipped + 3 failed preexistentes (freshness) |
 | Tests CI | ~610 collected con skips (parquet gitignored) |
 | Validation Gate | 10/10 |
 | pyflakes | 0 warnings |
