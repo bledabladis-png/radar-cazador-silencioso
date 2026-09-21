@@ -112,6 +112,11 @@ documentos describen su tema; NO declaran el estado del sistema.
 - Cobertura de tests: 9 funciones publicas IAE sin test directo
   cubiertas por `tests/test_iae_gap_coverage.py` (commit `12e1e3f`).
   Cobertura directa actual: 110/110 funciones publicas mencionadas.
+- **Determinismo verificado (2026-09-22):** ejecucion repetida del probe
+  A.6.4 (result.json) y del probe P70 (result.json + summary) produce
+  hashes SHA-256 identicos bit a bit. Sin `datetime.now()`, sin
+  dicts no ordenados. Propiedad verificada empiricamente, no solo
+  declarada en docstring.
 - **3 failed preexistentes (`test_freshness.py`) - aclaracion 2026-09-22:**
   no son regresion IAE. Los 3 tests leen `data/market_data.parquet` y
   `data/stock_prices.parquet` con `pytest.mark.skipif(not exists)`.
