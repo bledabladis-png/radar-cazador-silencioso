@@ -74,7 +74,13 @@ documentos describen su tema; NO declaran el estado del sistema.
 - `compute_nipc_contractual` SIN CALLERS PRODUCTIVOS (verificado: solo tests)
 - `build_effective_reporting_snapshot` SIN CALLERS PRODUCTIVOS (verificado: solo tests)
 - `DROP_DUP` NO ACTIVADO (capacidad diferida v2)
-- Marcadores residuales seccion 5.4 (SPONSORED ADR/ADS, ADR, SH BEN INT, FUND, ACT)
+- Marcadores seccion 5.4 VERIFICADOS (2026-09-22): no son deuda.
+  `security_type.py` esta alineado con dictamenes #61-#63:
+  ADR/SPONSORED ADR/SPONSORED ADS excluidos por diseno (L162-164);
+  SPON ADS es frase EQUITY autorizada, no marcador residual;
+  FUND_EXCLUDED_PHRASES es lista de exclusion legitima;
+  SH BEN INT y ACT no existen como marcadores en el modulo.
+  Sin cambios de codigo.
 - Snapshots historicos Q4 2025 / Q1 2026 requieren OpenFIGI masivo
 - Curacion crosswalk residual CERRADA (2026-09-22): ONB (CUSIP 680033107)
   y PTGX (CUSIP 74366E102) anadidos a `cusip_ticker_exceptions.csv` tras
