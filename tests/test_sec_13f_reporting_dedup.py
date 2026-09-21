@@ -565,3 +565,83 @@ def test_p65_matrix_15_partition_not_deduped():
     )
     assert len(eff_q4) == 2  # KEEP ambos, no colapsar
     assert audit.iloc[0]["dedup_decision"] == rd.DEDUP_DECISION_KEEP
+
+
+# ============================================================
+# Tests de caracterizacion - funciones sin tests directos (2026-09-22)
+# ============================================================
+
+
+import pytest
+
+
+@pytest.mark.parametrize(
+    "submissiontype,reporttype,esperado",
+    [
+        ("13F-NT",   "13F NOTICE",              rd.FILING_FAMILY_NOTICE),
+        ("13F-NT/A", "13F NOTICE",              rd.FILING_FAMILY_NOTICE),
+        ("13F-HR",   "13F COMBINATION REPORT",  rd.FILING_FAMILY_COMBINATION),
+        ("13F-HR/A", "13F COMBINATION REPORT",  rd.FILING_FAMILY_COMBINATION),
+        ("13f-nt",   "13f notice",              rd.FILING_FAMILY_NOTICE),
+        ("  13F-HR  ", "  13F COMBINATION REPORT  ",
+         rd.FILING_FAMILY_COMBINATION),
+        ("13F-HR",   "13F NOTICE",              None),
+        ("13F-NT",   "13F COMBINATION REPORT",  None),
+        ("13F-NT",   None,                      None),
+        (None,       "13F NOTICE",              None),
+        ("",         "",                        None),
+        ("10-K",     "13F NOTICE",              None),
+    ],
+)
+def test_classify_filing_family_caracterizacion(submissiontype, reporttype, esperado):
+    """14.3.1 PASO 1 - familia documental (NOTICE / COMBINATION / None)."""
+    assert rd.classify_filing_family(submissiontype, reporttype) == esperado
+
+
+@pytest.mark.parametrize(
+    "submissiontype,esperado",
+    [
+        ("13F-NT",   rd.FILING_ROLE_BASE),
+        ("13F-HR",   rd.FILING_ROLE_BASE),
+        ("13F-NT/A", rd.FILING_ROLE_AMENDMENT),
+        ("13F-HR/A", rd.FILING_ROLE_AMENDMENT),
+        ("13f-hr",   rd.FILING_ROLE_BASE),
+        ("  13F-HR/A  ", rd.FILING_ROLE_AMENDMENT),
+        ("13F-HR-A", None),
+        ("10-K",     None),
+        (None,       None),
+        ("",         None),
+    ],
+)
+def test_classify_filing_role_caracterizacion(submissiontype, esperado):
+    """14.3.1 PASO 2 - rol BASE / AMENDMENT / None."""
+    assert rd.classify_filing_role(submissiontype) == esperado
+
+
+def test_evaluate_l3_true_cuando_todas_las_condiciones_se_cumplen():
+    """14.3 - L3 True cuando R1 AND R2 AND (R3==TRUE) AND (R4==MATCH) AND R5."""
+    assert rd.evaluate_l3(
+        True, True, rd.R3_TRUE, rd.R4_MATCH, True,
+    ) is True
+
+
+@pytest.mark.parametrize(
+    "r1,r2,r3,r4,r5",
+    [
+        (False, True,  rd.R3_TRUE, rd.R4_MATCH,  True),   # R1 falla
+        (True,  False, rd.R3_TRUE, rd.R4_MATCH,  True),   # R2 falla
+        (True,  True,  'N/D',      rd.R4_MATCH,  True),   # R3 N/D
+        (True,  True,  'CONFLICT', rd.R4_MATCH,  True),   # R3 CONFLICT
+        (True,  True,  'FALSE',    rd.R4_MATCH,  True),   # R3 FALSE
+        (True,  True,  rd.R3_TRUE, 'N/D',        True),   # R4 N/D
+        (True,  True,  rd.R3_TRUE, 'CONFLICT',   True),   # R4 CONFLICT
+        (True,  True,  rd.R3_TRUE, 'NO_MATCH',   True),   # R4 NO_MATCH
+        (True,  True,  rd.R3_TRUE, rd.R4_MATCH,  False),  # R5 falla
+        (False, False, rd.R3_TRUE, rd.R4_MATCH,  False),  # todo falla
+    ],
+)
+def test_evaluate_l3_false_y_no_colapso_estados(r1, r2, r3, r4, r5):
+    """14.3 - L3 False cuando cualquier R falla. N/D y CONFLICT no se
+    colapsan a True (contrato: fall-closed respecto de DROP_DUP).
+    """
+    assert rd.evaluate_l3(r1, r2, r3, r4, r5) is False
