@@ -2,3 +2,22 @@ CUSIP,ticker,valid_from,valid_to,source,reason,title_of_class,verified_by
 26614N102,DD,2026-03-31,2026-03-31,SEC-EDGAR,CUSIP observado para DuPont de Nemours en el periodo 13F Q1 2026,COM,manual
 438516106,HON,2026-03-31,2026-03-31,SEC-EDGAR,CUSIP observado para Honeywell International en el periodo 13F Q1 2026; sustituido posteriormente tras reverse split efectivo 2026-06-29,COM,manual
 30231G102,XOM,2026-03-31,2026-03-31,SEC-EDGAR,CUSIP observado para Exxon Mobil en el periodo 13F Q1 2026,COM,manual
+084670702,BRK-B,2026-03-31,2026-03-31,SEC-EDGAR,CUSIP observado para Berkshire Hathaway Cl B en el periodo 13F Q1 2026,CL B NEW,manual
+10950A106,BTSG,2026-03-31,2026-03-31,SEC-EDGAR,CUSIP observado para BrightSpring Health Services en el periodo 13F Q1 2026,COM,manual
+14174T107,CTRE,2026-03-31,2026-03-31,SEC-EDGAR,CUSIP observado para CareTrust REIT en el periodo 13F Q1 2026,COM,manual
+23282W605,CYTK,2026-03-31,2026-03-31,SEC-EDGAR,CUSIP observado para Cytokinetics en el periodo 13F Q1 2026,COM NEW,manual
+109641100,EAT,2026-03-31,2026-03-31,SEC-EDGAR,CUSIP observado para Brinker International en el periodo 13F Q1 2026,COM,manual
+33768G107,FCFS,2026-03-31,2026-03-31,SEC-EDGAR,CUSIP observado para FirstCash Holdings en el periodo 13F Q1 2026,COM,manual
+M6191J100,FROG,2026-03-31,2026-03-31,SEC-EDGAR,CUSIP observado para JFrog Ltd en el periodo 13F Q1 2026,ORD SHS,manual
+377322102,GKOS,2026-03-31,2026-03-31,SEC-EDGAR,CUSIP observado para Glaukos Corp en el periodo 13F Q1 2026,COM,manual
+44812J104,HUT,2026-03-31,2026-03-31,SEC-EDGAR,CUSIP observado para Hut 8 Corp en el periodo 13F Q1 2026,COM,manual
+45867G101,IDCC,2026-03-31,2026-03-31,SEC-EDGAR,CUSIP observado para InterDigital en el periodo 13F Q1 2026,COM,manual
+46817M107,JXN,2026-03-31,2026-03-31,SEC-EDGAR,CUSIP observado para Jackson Financial en el periodo 13F Q1 2026,COM CL A,manual
+501147102,KRYS,2026-03-31,2026-03-31,SEC-EDGAR,CUSIP observado para Krystal Biotech en el periodo 13F Q1 2026,COM,manual
+615394202,MOG-A,2026-03-31,2026-03-31,SEC-EDGAR,CUSIP observado para Moog Inc Cl A en el periodo 13F Q1 2026,CL A,manual
+74006W207,PRAX,2026-03-31,2026-03-31,SEC-EDGAR,CUSIP observado para Praxis Precision Medicines en el periodo 13F Q1 2026,COM NEW,manual
+78377T107,RHP,2026-03-31,2026-03-31,SEC-EDGAR,CUSIP observado para Ryman Hospitality Properties en el periodo 13F Q1 2026,REIT,manual
+78454L100,SM,2026-03-31,2026-03-31,SEC-EDGAR,CUSIP observado para SM Energy en el periodo 13F Q1 2026,COM,manual
+90184D100,TWST,2026-03-31,2026-03-31,SEC-EDGAR,CUSIP observado para Twist Bioscience en el periodo 13F Q1 2026,COM,manual
+902788108,UMBF,2026-03-31,2026-03-31,SEC-EDGAR,CUSIP observado para UMB Financial en el periodo 13F Q1 2026,COM,manual
+92552V100,VSAT,2026-03-31,2026-03-31,SEC-EDGAR,CUSIP observado para Viasat en el periodo 13F Q1 2026,COM,manual
