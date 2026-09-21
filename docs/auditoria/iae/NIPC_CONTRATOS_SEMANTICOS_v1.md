@@ -1,7 +1,7 @@
 # NIPC_CONTRATOS_SEMANTICOS_v1
 
 **Objeto:** contrato habilitante de identidad, validez temporal y cobertura pairwise para el modulo NIPC.
-**HEAD al redactar:** 0eed0cc.
+**Estado del sistema:** ver `ESTADO_SISTEMA.md` (hechos) + `ESTADO_DECLARADO.md` (declaraciones).
 **Estado:** VIGENTE (2026-09-21). F2.4 EMITIDO (GO CONDICIONADO). A.6.0-A.6.4 cerrados (dictamenes #43-#75). H-73.1 corregido. Q12 Modelo A confirmado por test. Ver DICTAMENES.md #24, #72, #75.
 
 **Precedencia transitoria:** mientras este contrato y NIPC_COVERAGE_POLICY_V13_PROPUESTA.md sean borradores, NIPC_COVERAGE_POLICY.md v1.0 permanece como referencia normativa vigente. Una vez aprobado formalmente este contrato y aplicada la policy v1.3, el contrato habilitante prevalece sobre cualquier parafrasis de la policy.
