@@ -364,7 +364,6 @@ y despues de cada paso. Test de no-regresion por cada cambio.
     |-------------------------------------------------|----------------|
     | iae/RECONCILIACION_CONTRATO_CODIGO.md           | Divergencias   |
     | iae/NIPC_CONTRATOS_SEMANTICOS_v1.md             | Contrato       |
-    | iae/NIPC_COVERAGE_POLICY_V13_PROPUESTA.md       | Policy         |
     | iae/NIPC_ESPECIFICACION.md                      | Spec NIPC v1.4 |
 
 ---

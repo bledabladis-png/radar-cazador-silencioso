@@ -92,7 +92,6 @@ Cerrados:
 Pendientes (no bloqueantes para A.6.6):
 - `FOLLOWUPS.md` (~20 fantasmas)
 - `PROMPT_MAESTRO.md` (8 fantasmas materiales; se limpian al escribir v6.56)
-- `NIPC_COVERAGE_POLICY_V13_PROPUESTA.md` (2 fantasmas + 1 hash stale)
 - Casos especificos de categoria C (~8)
 
 ## 8. Hallazgos del auditor pendientes (2026-09-21)

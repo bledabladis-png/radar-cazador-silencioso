@@ -278,7 +278,6 @@ validacion contractual explicita.
     |------------------------------------------------|------------------|
     | iae/NIPC_CONTRATOS_SEMANTICOS_v1.md            | Contrato         |
     | iae/NIPC_COVERAGE_POLICY.md                    | Policy vigente   |
-    | iae/NIPC_COVERAGE_POLICY_V13_PROPUESTA.md      | Policy propuesta |
     | iae/INFORME.md                                 | Evidencia IAE    |
     | iae/DICTAMENES.md                              | Registro         |
 

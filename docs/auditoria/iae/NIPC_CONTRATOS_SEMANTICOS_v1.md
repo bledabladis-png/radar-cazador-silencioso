@@ -4,7 +4,7 @@
 **Estado del sistema:** ver `ESTADO_SISTEMA.md` (hechos) + `ESTADO_DECLARADO.md` (declaraciones).
 **Estado:** VIGENTE (2026-09-21). F2.4 EMITIDO (GO CONDICIONADO). A.6.0-A.6.4 cerrados (dictamenes #43-#75). H-73.1 corregido. Q12 Modelo A confirmado por test. Ver DICTAMENES.md #24, #72, #75.
 
-**Precedencia transitoria:** mientras este contrato y NIPC_COVERAGE_POLICY_V13_PROPUESTA.md sean borradores, NIPC_COVERAGE_POLICY.md v1.0 permanece como referencia normativa vigente. Una vez aprobado formalmente este contrato y aplicada la policy v1.3, el contrato habilitante prevalece sobre cualquier parafrasis de la policy.
+**Precedencia:** la policy vigente es `NIPC_COVERAGE_POLICY.md` v1.0. Este contrato es VIGENTE (F2.4 emitido 2026-09-20). Las propuestas V11/V12/V13 fueron descartadas (ver `HISTORICO_IAE.md`).
 **Origen:** dictamen formal del auditor (2026-09-20), que clasifico P38/P60/P61 como NO GO con contrato requerido.
 **Relacion:** cierra la seccion 2, 3 y 4 del dictamen. P70 cerrado por NIPC_P70_DICTAMEN.md.
 **Autor:** Ingeniero Supervisor (revision interna).

@@ -55,7 +55,6 @@ Orden recomendado para entender el sistema actual:
     NIPC_ESPECIFICACION.md                spec NIPC v1.4 (vive)
     NIPC_CONTRATOS_SEMANTICOS_v1.md       contrato P38/P60/P61
     NIPC_COVERAGE_POLICY.md               policy v1.0 vigente
-    NIPC_COVERAGE_POLICY_V13_PROPUESTA.md policy propuesta
     INFORME.md                            consolidado de 17 informes
     DICTAMENES.md                         registro de 23 dictamenes
     RECONCILIACION_CONTRATO_CODIGO.md     divergencias contrato<->codigo
@@ -103,8 +102,7 @@ AUDITOR EXTERNO:
     1. auditorias/NIPC_INFORME_TECNICO_AUDITORIA_EXTERNA.md
     2. iae/NIPC_CONTRATOS_SEMANTICOS_v1.md
     3. iae/NIPC_COVERAGE_POLICY.md
-    4. iae/NIPC_COVERAGE_POLICY_V13_PROPUESTA.md
-    5. auditorias/AUDITORIA_ESTRUCTURAL_2026-09-20.md
+    4. auditorias/AUDITORIA_ESTRUCTURAL_2026-09-20.md
 
 SUPERVISOR (retomar proyecto):
 

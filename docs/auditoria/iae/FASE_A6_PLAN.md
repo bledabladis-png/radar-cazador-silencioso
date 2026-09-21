@@ -93,7 +93,6 @@ INFORME.md seccion 21 + A60_EXPEDIENTE_AUDITOR.md. Commit 22a92ae.
 - iae/RECONCILIACION_CONTRATO_CODIGO.md
 - iae/REESTRUCTURACION_MODULO.md
 - iae/NIPC_CONTRATOS_SEMANTICOS_v1.md
-- iae/NIPC_COVERAGE_POLICY_V13_PROPUESTA.md
 - iae/INFORME.md
 - iae/DICTAMENES.md
 - tests/test_p60_contract.py
@@ -661,7 +660,6 @@ residual aceptado. En ese caso:
     | iae/RECONCILIACION_CONTRATO_CODIGO.md        | Divergencias       |
     | iae/REESTRUCTURACION_MODULO.md               | Plan arquitectonico|
     | iae/NIPC_CONTRATOS_SEMANTICOS_v1.md          | Contrato           |
-    | iae/NIPC_COVERAGE_POLICY_V13_PROPUESTA.md    | Policy propuesta   |
 
 ---
 
