@@ -1321,4 +1321,4 @@ introduce cualquier cambio de resultado.
 ---
 
 Fin del documento. F2.4 emitido 2026-09-20. A.6.0-A.6.4 cerrados (dictamenes
-#43-#75). A.6.5 en curso. Pendiente A.6.6 (F2.4-CLOSE).
+#43-#75). A.6.5 CERRADA. Pendiente A.6.6 (F2.4-CLOSE).
