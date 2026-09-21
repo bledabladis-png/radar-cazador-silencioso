@@ -1,4 +1,4 @@
-"""Paquete aggregation - NIPC (Net Institutional Position Change).
+"""Paquete aggregation - NIPC + catalogo P38 + B1 adapters.
 
 Dictamen habilitante: docs/auditoria/INSTITUTIONAL_ACCUMULATION_NIPC_
 ESPECIFICACION.md (v1.2) seccion 11.1.

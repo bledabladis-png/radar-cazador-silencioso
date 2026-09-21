@@ -8,6 +8,28 @@ Naturaleza: no normativo. Si hay conflicto con el Prompt Maestro, gana el Prompt
 
 **Nota de estado (2026-09-19):** el ciclo IAE Fase A ha cerrado. FA-1 (ingestion + schema + lineage) y FA-2 (filtro temporal + CUSIP resolver + reporting relationships + amendments) estan CERRADOS / PASS y pusheados. NIPC desbloqueado respecto de FA-2; pendiente su propio Gate. Este documento se preserva sin modificacion (regla: contratos IAE inmutables dentro de una version). Ver docs/auditoria/INSTITUTIONAL_ACCUMULATION_GATE_FA2_DICTAMEN.md.
 
+**NOTA DE CIERRE AMPLIADA (2026-09-21, prompt v6.53):** este
+documento es diseno fundacional, no estado. Estado real al 2026-09-21:
+
+    B2-PIT           CERRADO (#53)
+    B1               CERRADO (#68, 4 commits + 100 tests)
+    B3               IMPLEMENTADO SPEC-SIDE
+    §5.1-§5.5        CERRADO (#61-#67)
+    GHISALLO         CERRADO (#60)
+    A.6.3            BLOQUEADO
+    Gate-NIPC.2      NOT READY
+
+Modulos IAE implementados: sec_13f/ (ingestion), identity/
+(security_identity, catalog_key, target_builder, period_state),
+aggregation/ (delta_shares, nipc, coverage, catalog_validator,
+catalog_p38_adapter, reporting_dedup), security_type.py,
+operational_universe.py, timestamps.py, absence.py.
+
+K-INSTITUTIONAL-ACCUMULATION-01 sigue ACTIVO como paraguas de
+deuda residual (integracion productiva, snapshots historicos,
+marcadores §5.4 residuales).
+
+
 ---
 
 ## 1. Proposito

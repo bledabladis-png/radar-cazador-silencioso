@@ -1,4 +1,4 @@
-# PROMPT MAESTRO v6.50 - INGENIERO SUPERVISOR DEL RADAR DE ROTACION SECTORIAL
+# PROMPT MAESTRO v6.53 - INGENIERO SUPERVISOR DEL RADAR DE ROTACION SECTORIAL
 
 Actualizado: 2026-09-21 v6.53 (B1 CERRADO (#68). Gap spec->codigo §5.1-§5.5 CERRADO. B3 IMPLEMENTADO. GHISALLO CERRADO. Curacion crosswalk 22 filas. Dictamenes hasta #68. HEAD 0921f46. 237 commits ahead. Sin push. 1289 passed + 2 skipped + 3 failed preexistentes.)
 Estado: Operativo al 100% - 10 contratos temporales - 1289 tests locales + 2 skipped + 3 failed preexistentes (freshness, ver §12) - 0 warnings - Gate 10/10 - Deuda activa: 0 - IAE: B2-PIT CERRADO, B1 CERRADO (#68), B3 IMPL SPEC-SIDE, §5.1-§5.5 CERRADOS (#64/#65/#67)
@@ -455,7 +455,7 @@ Nota: daily_run.yml commitea Daily hist/state. Aplicar git fetch + pull --rebase
 
 ## SECCION 10 - VALIDACION Y TESTS
 10.1. Tests
-1083 passed + 2 skipped + 3 failed preexistentes (test_freshness, ver §12) en local; CI similar con parquet gitignored.
+1289 passed + 2 skipped + 3 failed preexistentes (test_freshness, ver §12) en local; CI similar con parquet gitignored.
 
 10.2. Validation Gate (10/10)
 SLPM v1.2 (sin errores de validacion)

@@ -10,6 +10,13 @@ A.6.2-bis, tras 9 iteraciones de propuesta -> dictamen sin cierre.
 **HEAD al redactar:** fbfde7f.
 **Naturaleza:** consulta estrategica. NO modifica contrato ni codigo.
 
+**NOTA DE CIERRE (2026-09-21, prompt v6.53):** esta consulta fue
+resuelta por el dictamen #52 (Opcion 1: partir A.6.2-bis en
+subfases autonomamente cerrables). Estado actual: B2-PIT CERRADO
+(#53), B1 CERRADO (#68), B3 IMPLEMENTADO SPEC-SIDE, gap spec->codigo
+§5.1-§5.5 CERRADO (#61-#67). El documento se conserva como evidencia
+historica del ciclo que origino la particion.
+
 ---
 
 ## 0. Resumen ejecutivo
