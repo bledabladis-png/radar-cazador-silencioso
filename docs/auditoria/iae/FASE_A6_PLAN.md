@@ -207,26 +207,75 @@ exito del mapping. La definicion actual
 introduce sesgo de seleccion: el denominador depende del propio
 proceso que se mide.
 
-**Cambios:**
+**Subfases (dictamen estrategico #52):** A.6.2-bis se descompone en
+3 subfases autonomamente cerrables. Tras 9 iteraciones de propuesta
+(v1-v9) y 8 dictamenes NO-GO (#44-#51), el auditor autorizo (dictamen
+#52, Opcion 1) tratar B2-PIT como subfase aislada.
 
-- `identity/target_builder.py`:
-    - Recibe CATALOGO como entidad externa y versionada.
-    - NO importa `security_identity` ni `cusip_resolver`.
-    - Prohibido derivar TARGET de observaciones mapeadas.
-    - Flujo: CATALOGO -> TARGET FIGIs -> mapping -> coverage.
+### A.6.2-bis-B2-PIT - Infraestructura temporal del catalogo
 
-- Introducir `catalog_version` + `catalog_valid_from` + `catalog_valid_to`
-  o `target_catalog_as_of(period_end)` (bloqueante 2, P62).
+**Objeto:** resolver "que catalogo era valido en una fecha".
 
-- Consumidor: `aggregation/coverage.py` recibe el TARGET ya construido.
+**Alcance:** snapshots + manifest + sha256 + `target_catalog_as_of`.
+NO incluye `catalog_key`, adaptador P38, TARGET_PAIRWISE, colisiones,
+validadores de asignacion (todo eso va en B1).
 
-**Precondicion:** OpenFIGI masivo autorizado. Depende de A.6.0.
+**Estado:** CERRADO 2026-09-21.
+- Commit: `5eee203` (feat(b2-pit): infraestructura temporal del catalogo).
+- Modulo: `src/institutional_accumulation/catalog_pit.py`.
+- Tests: `tests/test_catalog_pit.py` (16 tests, PASS).
+- Evidencia: `iae/evidence/b2_pit_cierre/`.
+- Documento de subfase: `iae/A62BIS_B2_PIT_SUBFASE.md`.
 
-**Estado:** AUTORIZADO - GO CONDICIONADO 2026-09-21 (dictamen #43).
-Alcance: materializar B1 (TARGET independiente) + B2 (point-in-time) +
-B3 (semantica temporal 13F). NO incluye OpenFIGI masivo, recalculo de
-evidence final, modificacion de contratos, activacion DROP_DUP,
-certificacion acumulacion, Policy v1.3, Gate-NIPC.2/3.
+### A.6.2-bis-B1 - TARGET independiente del mapping (BLOQUEADO)
+
+**Objeto:** resolver "que TARGET contractual representa el catalogo y
+como se traduce al dominio economico P38".
+
+**Alcance:** catalog_key (identidad administrativa) + adaptador P38 +
+TARGET_PAIRWISE formal + flujo normativo 9 pasos + validadores
+(continuity, collision, assignment).
+
+**Estado:** OPEN - dictamen #51 bloquea 2 puntos:
+- A1: semantica de asignacion de catalog_key
+  (`catalog_key_assignment_unique`).
+- A2: preservacion exacta del dominio P38 por el adaptador
+  (`TARGET_Q4 ^ TARGET_Q1`).
+
+**Implementacion:** NO AUTORIZADA. Pendiente de nueva propuesta
+(que sera v10+ de B1 o documento dedicado).
+
+### A.6.2-bis-B3 - Semantica temporal 13F (APROBADO CONDICIONAL)
+
+**Objeto:** resolver "cuando era conocida cada observacion 13F".
+
+**Alcance:** 3 timestamps (`period_end`, `filing_date`,
+`knowledge_date`), RESTATEMENT / NEW HOLDINGS, N/D explicito,
+`absence.py` stub.
+
+**Estado:** APPROVED CONDITIONAL (desde dictamen #48). Sin regresion
+en #49-#52. Implementacion NO AUTORIZADA (requiere su propio ciclo).
+
+### Estado consolidado A.6.2-bis
+
+    A.6.2-bis-B2-PIT    CERRADO 2026-09-21
+    A.6.2-bis-B1        OPEN - bloqueado por #51
+    A.6.2-bis-B3        APPROVED CONDITIONAL
+
+    A.6.2-bis completo  NO CERRADO.
+
+**Precondicion historica:** OpenFIGI masivo autorizado (para B1).
+**Dependencia:** A.6.0 (CERRADO).
+
+**NO autorizado por el cierre de B2-PIT:**
+
+    A.6.3                BLOCKED (requiere B1)
+    A.6.4                BLOCKED (requiere A.6.3)
+    F2.4-CLOSE           BLOCKED
+    OpenFIGI masivo      NO
+    DROP_DUP             NO
+    Policy v1.3          NO
+    Gate-NIPC.2/3        NO
 
 ---
 

@@ -1290,3 +1290,117 @@ Falta `target_builder.py` + integracion. El nombre `target_pairwise` en `nipc.py
 ---
 
 Fin de la seccion 21 (A.6.0).
+
+---
+
+## 22. INFORME B2-PIT - Infraestructura temporal del catalogo (2026-09-21)
+
+**Fecha:** 2026-09-21.
+**Origen:** dictamen estrategico #52 (Opcion 1 aprobada). A.6.2-bis
+se descompone en 3 subfases: B2-PIT (cerrada), B1 (bloqueada), B3
+(aprobada condicionalmente).
+**HEAD al cerrar:** 5eee203.
+**Evidencia:** `iae/evidence/b2_pit_cierre/`.
+**Documento de subfase:** `iae/A62BIS_B2_PIT_SUBFASE.md`.
+
+### Objeto
+
+Materializar la infraestructura temporal del catalogo: "que catalogo
+era valido en una fecha t".
+
+### Alcance (acotado por #52 seccion 5)
+
+    snapshot materializado + manifest + version_id + sha256
+    valid_from / valid_to (semiabiertos)
+    target_catalog_as_of(period_end)
+    integridad + corrupcion + ambiguedad
+    no backdating
+
+**NO incluye** (pertenece a B1 o B3):
+
+    catalog_key
+    catalog_key_assignment_unique
+    resolucion economica FIGI
+    continuidad catalog_key -> FIGI
+    TARGET_PAIRWISE
+    adaptador P38
+    collision catalog_key -> FIGI
+    catalog_validator de asignacion
+
+### Implementacion
+
+**Modulo nuevo:** `src/institutional_accumulation/catalog_pit.py`.
+
+    target_catalog_as_of(period_end, *, catalog_root) -> (df, version_id, sha256)
+    load_manifest(catalog_root) -> dict
+    verify_snapshot_integrity(version_id, *, catalog_root) -> bool
+    list_snapshots(*, catalog_root) -> list[dict]
+
+Excepciones: `CatalogNotAvailable`, `CatalogAmbiguous`,
+`SnapshotIntegrityError`, `ManifestError`.
+
+**Contrato de pureza:** determinista, sin `datetime.now()`, sin
+escritura de ficheros. Los snapshots se publican en fase
+administrativa externa.
+
+**Artefactos materializados:**
+
+    data/mappings/catalog_snapshots/
+        snapshot_20260921_01.csv      (242 filas)
+        snapshot_20260921_01.sha256   (sha256 externo, separado del CSV)
+    data/mappings/catalog_manifest.json
+
+**Versionado:** `version_id = <YYYYMMDD>_<NN>` (no autorreferencial).
+**Intervalos:** `[valid_from, valid_to)`. `null` = vigente.
+**Backdating:** prohibido. Q4 2025 / Q1 2026 -> `CatalogNotAvailable`.
+
+### Tests
+
+`tests/test_catalog_pit.py` (16 tests, PASS):
+
+    - as_of con 0/1/>1 snapshots que cubren
+    - snapshot existente que NO cubre
+    - backdating prohibido (Q4 2025 + Q1 2026)
+    - sha256 recalculado vs publicado
+    - corrupcion simulada
+    - manifest schema + inexistente
+    - intervalos semiabiertos sin solapamiento
+    - coherencia manifest <-> snapshot sha
+    - inmutabilidad del CSV entre runs
+    - list_snapshots
+
+### Resultado
+
+    pytest tests/test_catalog_pit.py     16 passed
+    pyflakes                              LIMPIO
+    compileall                            OK
+    Suite completa                        1083 passed + 2 skipped
+                                          + 3 failed preexistentes
+                                          (test_freshness, ya documentados)
+
+Cero regresion nueva. Los 3 failed son los mismos ya demostrados
+preexistentes en `iae/evidence/p66_baseline_pre/`.
+
+### Estado del ciclo A.6.2-bis
+
+    A.6.2-bis-B2-PIT    CERRADO (este informe)
+    A.6.2-bis-B1        OPEN - bloqueado por #51 (asignacion + dominio P38)
+    A.6.2-bis-B3        APPROVED CONDITIONAL
+    A.6.2-bis completo  NO CERRADO
+
+    A.6.3                BLOCKED (requiere B1)
+    A.6.4                BLOCKED (requiere A.6.3)
+    F2.4-CLOSE           BLOCKED
+
+### Refs
+
+    Dictamen #52          Opcion 1 aprobada
+    A62BIS_B2_PIT_SUBFASE.md   documento de subfase
+    A62BIS_PROPUESTA.md   v9
+    FASE_A6_PLAN.md       seccion A.6.2-bis actualizada
+    NIPC_CONTRATOS_SEMANTICOS_v1.md secciones 3 y 11
+    F2.4 #24              bloqueante 2 (point-in-time)
+
+---
+
+Fin del informe B2-PIT.
