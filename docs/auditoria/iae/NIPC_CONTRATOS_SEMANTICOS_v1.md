@@ -562,7 +562,7 @@ Autorizada por el dictamen formal del auditor (seccion 19):
     1. Dictamen P38/P60/P61/P70      <- este documento + NIPC_P70_DICTAMEN.md
               |
               v
-    2. Modificar propuesta policy v1.2
+    2. (descartado) Propuesta policy v1.2 - la v1.0 permanece vigente
               |
               v
     3. Aprobar contrato
