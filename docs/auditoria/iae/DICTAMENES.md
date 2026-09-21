@@ -63,6 +63,7 @@
 | 49 | Ver entrada §49 de este fichero | A.6.2-bis v6 NO-GO. NOT_PRESENT + TARGET_PAIRWISE formal + colision catalog_key -> FIGI. |
 | 50 | Ver entrada §50 de este fichero | A.6.2-bis v7 NO-GO. check_continuity en flujo + dominio collision + TARGET_PAIRWISE vacio. |
 | 51 | Ver entrada §51 de este fichero | A.6.2-bis v8 NO-GO. Asignacion catalog_key + preservacion dominio P38. |
+| 52 | Ver entrada §52 de este fichero | Dictamen estrategico: Opcion 1 aprobada. B2-PIT autorizado a implementar. B1/B3 en diseno. |
 
 ---
 
@@ -1499,6 +1500,145 @@ check_continuity, collision, B2, B3.
 
 **Conclusion: v9 que cierre asignacion catalog_key +
 preservacion dominio P38 -> apta para GO DE IMPLEMENTACION.**
+
+---
+
+## 52. A.6.2-bis - Dictamen estrategico (2026-09-21)
+
+**Tipo:** dictamen estrategico del auditor externo sobre el ciclo
+A.6.2-bis tras 9 iteraciones (v1-v9) y 8 NO-GO (#44-#51).
+
+**Resultado:** OPCION 1 APROBADA con desacoplamiento estricto.
+
+### Decision
+
+    A.6.2-bis-B2-PIT   arquitectura APPROVED
+                       implementacion AUTHORIZED
+                       cierre operativo PENDING TESTS
+
+    A.6.2-bis-B1       diseno OPEN
+                       implementacion NOT AUTHORIZED
+
+    A.6.2-bis-B3       diseno OPEN / APPROVED CONDITIONAL
+                       implementacion NOT AUTHORIZED
+
+    A.6.2-bis completo NO CERRADO.
+
+### Motivo
+
+Frontera arquitectonica limpia:
+  B2 = que catalogo era valido en una fecha (infraestructura PIT).
+  B1 = que TARGET contractual representa ese catalogo.
+  B3 = temporalidad de la observacion 13F.
+
+B2 aprobado 6 rondas sin regresion (#46-#51). B1 sigue generando
+cierres materiales.
+
+### Opcion 2 (cierre por agotamiento): NO APROBADA
+
+Razon sustantiva: los bloqueos de #44-#51 no son cosmeticos. Han
+afectado invariantes reales (TARGET vs mapping, unidad P38, ausencia,
+PIT, continuidad, colisiones, pairwise, determinismo temporal).
+Aplicar clausula de agotamiento seria incompatible con fail-closed.
+
+### Opcion 3 (seguir acoplado): NO APROBADA
+
+Mezcla variables heterogeneas. Amplifica espacio de interaccion.
+Aumenta dificultad de determinar que parte esta cerrada.
+
+### Alcance B2-PIT (incluye)
+
+    snapshot materializado
+    manifest
+    version_id
+    sha256
+    valid_from
+    valid_to
+    target_catalog_as_of(period_end)
+    integridad
+    corrupcion
+    ambiguedad
+    no backdating
+
+### Alcance B2-PIT (NO incluye - pertenece a B1)
+
+    catalog_key_assignment_unique
+    resolucion economica FIGI
+    continuidad catalog_key -> FIGI
+    TARGET_PAIRWISE
+    adaptador P38
+    collision catalog_key -> FIGI
+    catalog_validator de asignacion
+
+### Correcciones obligatorias sobre v8/v9
+
+1. `catalog_validator` que comprueba `catalog_key_assignment_unique`
+   NO se incluye en B2-PIT. Va en B1 (bloqueado por #51).
+   B2-PIT tiene su propio validator de integridad temporal del
+   catalogo (hash, intervalos, manifiesto).
+2. Las 242 filas actuales NO reciben `catalog_key` definitivo como
+   parte de B2. La asignacion de identidad administrativa es B1.
+   B2 materializa el snapshot inicial como catalogo "sin key" o con
+   un placeholder explicito no contractual.
+3. B2-PIT cerrado NO autoriza A.6.3 ni A.6.4. Siguen BLOCKED.
+
+### Requisitos de cierre B2-PIT (#52 seccion 13)
+
+    0 snapshots que cubren period_end -> CatalogNotAvailable
+    1 snapshot que cubre               -> valido
+    >1 snapshots que cubren            -> CatalogAmbiguous
+    hash invalido                      -> FAIL-CLOSED
+    corrupcion                         -> FAIL-CLOSED
+    snapshot historico                 -> no mutable in-place
+    backdating                         -> prohibido
+    target_catalog_as_of(t)            -> selecciona solo snapshots cuyo
+                                          intervalo cubre t.
+
+No se acepta snapshot actual para reconstruir Q4-2025/Q1-2026.
+
+### Prohibiciones (mantienen)
+
+    P38                             no modificar
+    coverage.py                     no modificar
+    OpenFIGI masivo                 NO
+    DROP_DUP                        NO
+    recalculo evidencia final       NO
+    certificacion "acumulacion"     NO
+    Gate-NIPC.2 / Gate-NIPC.3       NO
+    push origin/main                NO
+    Convertir problemas B1 en recomendaciones diferibles: NO.
+
+### Estado operativo
+
+    A.6.0                       CLOSED
+
+    A.6.2-bis-B2-PIT
+        arquitectura            APPROVED
+        implementacion          AUTHORIZED
+        cierre operativo        PENDING TESTS
+
+    A.6.2-bis-B1
+        diseno                  OPEN
+        implementacion          NOT AUTHORIZED
+
+    A.6.2-bis-B3
+        diseno                  OPEN / APPROVED CONDITIONAL
+        implementacion          NOT AUTHORIZED
+
+    A.6.3                       BLOCKED
+    A.6.4                       BLOCKED
+    F2.4-CLOSE                  BLOCKED
+
+    DROP_DUP                    NOT AUTHORIZED
+    OpenFIGI masivo             NOT AUTHORIZED
+
+**Conclusion: B2-PIT puede avanzar a implementacion aislada. B1 y B3
+permanecen en diseno. A.6.2-bis completo NO CERRADO.**
+
+### Siguiente paso
+
+Tratar B2-PIT como subfase implementable independiente. NO producir
+v10 de todo A.6.2-bis. Preparar documento dedicado de B2-PIT.
 
 ---
 
