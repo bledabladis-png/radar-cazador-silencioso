@@ -1,19 +1,21 @@
-# IAE - A.6.2-bis-B1 Subfase (v3)
+# IAE - A.6.2-bis-B1 Subfase (v4)
 
-**Version:** v3. Aplicados los 5 bloqueantes del dictamen #55:
-(B1-NEW-1) snapshot_row_uid estable por contenido; (B1-NEW-2)
-catalog_key inmutable; (B1-NEW-3) membership temporal; (B1-NEW-4)
-full resolution por identity_status; (B1-NEW-5) assigned_entity_id
-declarado como identificador administrativo artificial.
+**Version:** v4. Aplicados los 4 bloqueantes del dictamen #56:
+(B1-NEW-6) cobertura temporal completa (no interseccion);
+(B1-NEW-7) row_uid vs identidad longitudinal + predecessor_row_uid;
+(B1-NEW-8) estados para TARGET_Q4 UNION TARGET_Q1;
+(B1-NEW-9) contrato de entrada B1 explicito.
++ SHA-256 completo + serializacion length-prefixed.
 
-**Versiones previas:** v1 (003c5c2, NO-GO #54), v2 (95598ac, NO-GO #55).
+**Versiones previas:** v1 (003c5c2, NO-GO #54), v2 (95598ac, NO-GO #55),
+v3 (43373fd, NO-GO #56).
 
-**Referencias:** dictamenes #51, #52, #53, #54, #55.
-**B2-PIT:** CLOSED (#53). B1 no lo reabre.
+**Referencias:** dictamenes #51 a #56.
+**B2-PIT:** CLOSED (#53).
 
 **Fecha:** 2026-09-21.
-**HEAD al redactar:** 95598ac.
-**Naturaleza:** propuesta de subfase v3. NO normativa.
+**HEAD al redactar:** 43373fd.
+**Naturaleza:** propuesta de subfase v4. NO normativa.
 
 ---
 
@@ -22,19 +24,21 @@ declarado como identificador administrativo artificial.
 B1 responde a "¿que TARGET contractual representa el catalogo y como
 se traduce al dominio economico P38?".
 
-**5 correcciones materiales de #55:**
+**4 correcciones materiales de #56:**
 
-1. **B1-NEW-1:** identificador de fila NO posicional. Nuevo
-   `snapshot_row_uid` derivado del contenido canonico de la fila.
-2. **B1-NEW-2:** `catalog_key` inmutable. No hay historial multi-fila
-   por key. Cambio de entidad -> nueva key. Intento de reasignacion
-   -> evento de auditoria + `CATALOG_KEY_REASSIGNED`.
-3. **B1-NEW-3:** `validate_membership` cruza vigencia temporal de la
-   asignacion con `[valid_from, valid_to)` del snapshot.
-4. **B1-NEW-4:** full resolution = `identity_status == RESOLVED` Y
-   exactamente 1 `share_class_figi`. NO `figi != None`.
-5. **B1-NEW-5:** `assigned_entity_id` declarado como identificador
-   administrativo interno artificial, sin significado economico.
+1. **B1-NEW-6:** cobertura temporal de membership completa, no
+   interseccion. Snapshot con `valid_to=NULL` no puede contener
+   assignment con `valid_to` definido.
+2. **B1-NEW-7:** `snapshot_row_uid` = row-instance id.
+   `catalog_key` + `assigned_entity_id` = identidad longitudinal.
+   `predecessor_row_uid` en membership para cadenas verificables.
+3. **B1-NEW-8:** PASO 4 construye estados para
+   `TARGET_Q4 ∪ TARGET_Q1` (no solo pairwise).
+4. **B1-NEW-9:** `B1_REQUIRED_COLUMNS = {radar_ticker, share_class_figi}`
+   con fail-closed si falta alguna.
+
+**Aplicado adicional:** SHA-256 completo (64 hex chars) en row_uid +
+serializacion length-prefixed (evita ambiguedad con `\x1f`).
 
 **Fuera de alcance:** P38 (no se modifica), OpenFIGI masivo,
 DROP_DUP, certificacion.
@@ -51,18 +55,16 @@ DROP_DUP, certificacion.
     [valid_from, valid_to)
     target_catalog_as_of(period_end)
 
-B1 consume B2-PIT. NO lo modifica. NO reescribe snapshots.
-
 ### 1.2. B1 construye
 
-    catalog_assignments.csv      (key <-> entidad, 1:1 inmutable)
-    catalog_reassignments_attempted.csv   (auditoria de intentos)
-    catalog_membership.csv       (version_id <-> key <-> row_uid)
-    catalog_key.py               (formato + validators)
-    target_builder.py            (puro, snapshot + membership)
-    period_state.py              (state_q4, state_q1)
-    catalog_p38_adapter.py       (full targets)
-    catalog_validator.py         (continuity, collision, full_resolution)
+    catalog_assignments.csv                    (key <-> entidad, 1:1 inmutable)
+    catalog_reassignments_attempted.csv        (auditoria de intentos)
+    catalog_membership.csv                     (con predecessor_row_uid)
+    catalog_key.py                             (formato + validators)
+    target_builder.py                          (puro, snapshot + membership)
+    period_state.py                            (state_q4, state_q1)
+    catalog_p38_adapter.py                     (full targets)
+    catalog_validator.py                       (continuity, collision, full_res)
 
 ### 1.3. Prohibiciones
 
@@ -72,9 +74,10 @@ B1 consume B2-PIT. NO lo modifica. NO reescribe snapshots.
     NO modificar contratos normativos.
     NO reacoplar a B2-PIT.
     NO reescribir snapshots publicados.
+
 ---
 
-## 2. A1 - catalog_key inmutable + entidad trazable
+## 2. A1 - catalog_key inmutable (sin cambios v3)
 
 ### 2.1. Semantica normativa
 
@@ -82,389 +85,343 @@ B1 consume B2-PIT. NO lo modifica. NO reescribe snapshots.
     K -> assigned_entity_id es 1:1 para toda la vida de K.
     K NO se reasigna jamas.
 
-**Cambio de entidad -> nueva key.**
-
+Cambio de entidad -> nueva key:
     K_old -> A
     K_new -> B
 
-NO:
-    K -> A
-    K -> B   (prohibido)
-
-### 2.2. Formato de catalog_key
+### 2.2. Formato
 
     catalog_key := "radar_<YYYYMMDD_alta>_<NNNN>"
 
-- NO es el hash del snapshot.
-- NO depende del ticker.
-- NO depende del orden alfabetico (solo se uso para la migracion inicial).
+### 2.3. `catalog_assignments.csv`
 
-### 2.3. `catalog_assignments.csv` (una fila por key, inmutable)
+    catalog_key | assigned_entity_id | valid_from | valid_to | source | reason
 
-    catalog_key           "radar_<YYYYMMDD>_<NNNN>"
-    assigned_entity_id    identificador administrativo interno
-                          (ver 2.4). 1:1 con catalog_key.
-    valid_from            fecha de alta (inmutable)
-    valid_to              fecha de retiro (NULL = vigente)
-    source                "radar_initial_20260919" | ...
-    reason                texto libre (notas de asignacion)
+EXACTAMENTE 1 fila por key.
 
-**Regla:** EXACTAMENTE 1 fila por `catalog_key`. No hay historial
-multi-fila por key. Un cambio de entidad implica una key nueva.
+### 2.4. `assigned_entity_id` (B1-NEW-5 v3)
 
-### 2.4. Semantica de `assigned_entity_id` (B1-NEW-5)
+Identificador administrativo interno artificial, sin significado
+economico. `"radar_entity_<NNNN>"`.
 
-**Declaracion explicita:**
+### 2.5. `catalog_reassignments_attempted.csv`
 
-    assigned_entity_id = "radar_entity_<NNNN>"
+Registro de intentos bloqueados. NO altera assignments.
 
-    Es un IDENTIFICADOR ADMINISTRATIVO INTERNO ARTIFICIAL.
-    NO tiene significado economico.
-    Su semantica es: "una entidad administrativa del radar,
-    distinta de cualquier otra".
+### 2.6. Validator + tests A1
 
-    Correspondencia estable 1:1 con la fila del snapshot fuente
-    (via snapshot_row_uid, ver seccion 3).
-
-**NO se interpreta como:** FIGI, CUSIP, ticker, LEI, ni cualquier
-identificador economico externo.
-
-**Migracion inicial:** 242 filas, una por key, con
-`assigned_entity_id = "radar_entity_<NNNN>"` (mismo sufijo que
-la key). `valid_from = 2026-09-19`. `valid_to = NULL`.
-
-### 2.5. Registro de intentos de reasignacion
-
-    data/mappings/catalog_reassignments_attempted.csv
-    columnas:
-        catalog_key           key original
-        attempted_entity_id   entidad intentada (distinta)
-        attempted_at          fecha del intento
-        source                origen del intento
-        reason                motivo documentado del intento
-
-Registro de auditoria. NO altera `catalog_assignments.csv`.
-Cada fila es un intento bloqueado. Se conserva para trazabilidad.
-
-### 2.6. Validator
-
-    def validate_assignment(assignments_df, attempted_df=None) -> dict:
-        """Devuelve {catalog_key: error_code} para conflictos.
-
-        Errores:
-          CATALOG_KEY_REASSIGNED
-            catalog_key aparece con assigned_entity_id distinto
-            al original en assignments_df, o en attempted_df
-            con attempted_entity_id != original.
-
-          CATALOG_KEY_RETIRED_REACTIVATED
-            key con valid_to caducado aparece con valid_from
-            posterior (reactivacion).
-        """
-
-### 2.7. Tests A1
-
-    A1-a  misma key + misma entidad + multiples snapshots -> OK
-    A1-b  misma key con entidad distinta en assignments -> CATALOG_KEY_REASSIGNED
-    A1-c  intento de reasignacion en attempted_df -> CATALOG_KEY_REASSIGNED
-    A1-d  retired sin reactivar -> OK
-    A1-e  retired y reactivado -> CATALOG_KEY_RETIRED_REACTIVATED
-    A1-f  catalog_key NOT NULL + UNICO por snapshot (membership)
-    A1-g  catalog_key UNICO global (una unica alta inicial)
-    A1-h  K1 -> entidad A, intento K1 -> entidad B -> FAIL
-    A1-i  misma K + misma entidad en historico -> OK
-
+Sin cambios respecto v3 (§2.6/2.7). 9 tests A1-a..i.
 ---
 
-## 3. A1-membership - Relacion snapshot <-> catalog_key (B1-NEW-1)
+## 3. A1-membership v4 (B1-NEW-6 + B1-NEW-7)
 
-### 3.1. Problema
+### 3.1. Identificadores separados
 
-El indice `snapshot_row_id = 0..N-1` es posicional por definicion.
-NO cumple "independiente del orden fisico del CSV".
+    snapshot_row_uid       row-instance identifier (contenido de la fila)
+    catalog_key            identidad longitudinal administrativa
+    assigned_entity_id     entidad administrativa (1:1 con catalog_key)
 
-### 3.2. Solucion: `snapshot_row_uid` estable por contenido
+**snapshot_row_uid** cambia si cambia el contenido de la fila.
+**catalog_key** NO cambia entre snapshots.
 
-    snapshot_row_uid := sha256_corto(fila_canonica)
+Relacion:
+    catalog_key  -> 0..N snapshot_row_uid a lo largo del tiempo.
+    cada (version_id, snapshot_row_uid) -> exactamente 1 catalog_key.
 
-donde `fila_canonica` es una representacion canonica e inmutable
-de la fila:
+### 3.2. `snapshot_row_uid` (B1-NEW-7)
 
-    - columnas en orden alfabetico
-    - valores normalizados (strip + UTF-8 + null como string vacio)
-    - concatenadas con separador \x1f
-    - sha256 completo, truncado a 16 hex chars
+    snapshot_row_uid := sha256_hex(fila_canonica)
+
+**SHA-256 completo (64 hex chars).** No truncado.
+
+`fila_canonica` con serializacion length-prefixed:
+
+    Para cada columna en orden alfabetico:
+      "<len>:<nombre_columna>|<len>:<valor_normalizado>|"
+
+donde `len` = longitud en bytes UTF-8. Evita ambiguedad si un valor
+contiene el separador.
 
 **Propiedades:**
-
 - Independiente de la posicion fisica.
 - Independiente del orden de las columnas.
-- Detecta duplicados (2 filas con mismo contenido -> mismo uid
-  -> error).
-- Reordenar el CSV no cambia los uids.
+- Detecta duplicados exactos (2 filas con mismo contenido -> mismo uid).
+- Cambia si cambia cualquier campo (row-instance, no identity).
 
-### 3.3. `catalog_membership.csv`
+### 3.3. `catalog_membership.csv` v4
 
     version_id            "20260921_01"
     catalog_key           "radar_20260919_<NNNN>"
-    snapshot_row_uid      sha256_corto hex (16 chars)
+    snapshot_row_uid      sha256 completo (64 hex chars)
+    predecessor_row_uid   sha256 completo | NULL
+    justification         texto (motivo del cambio de row_uid)
 
-**Publicado aparte.** NO modifica el snapshot. El snapshot permanece
-inmutable.
+**`predecessor_row_uid`:**
 
-**Invariantes:**
+- NULL si es la primera aparicion de K en cualquier snapshot.
+- Si K ya aparecio en snapshots anteriores con otro row_uid, el
+  predecessor_row_uid debe apuntar al row_uid del snapshot
+  inmediatamente anterior para el mismo K.
+- Cadena explicita y verificable.
 
-- Para cada `version_id`: el conjunto de `snapshot_row_uid` cubre
-  exactamente el conjunto de uids calculados sobre el snapshot.
-- Cada `snapshot_row_uid` mapea a exactamente 1 `catalog_key`.
-- Cada `catalog_key` aparece como maximo 1 vez por `version_id`.
+**Ejemplo:**
 
-### 3.4. Validacion temporal (B1-NEW-3)
+    V1 (20260921_01):
+      K1 -> row_uid_A, predecessor_row_uid = NULL
 
-`validate_membership(membership_df, assignments_df, manifest)`:
+    V2 (20261101_01):
+      K1 -> row_uid_B, predecessor_row_uid = row_uid_A,
+          justification = "name updated in 13F filing"
 
-    Para cada (version_id, catalog_key):
-      - version_id existe en manifest B2-PIT.
-      - catalog_key declarada en assignments.
-      - Existe interseccion no vacia entre:
-          [assignment.valid_from, assignment.valid_to)
-          [snapshot.valid_from, snapshot.valid_to)
-        Si no hay interseccion -> error CATALOG_KEY_NOT_VALID_FOR_SNAPSHOT.
+    V2 no puede declarar K1 -> row_uid_Z sin predecessor. Si lo hace,
+    el validator lo rechaza.
+
+### 3.4. Validacion temporal (B1-NEW-6)
+
+**Sustituye la interseccion por cobertura completa:**
+
+Para cada (version_id, catalog_key) en membership:
+
+    assignment.valid_from <= snapshot.valid_from
+    AND
+    (
+      assignment.valid_to IS NULL
+      OR (
+        snapshot.valid_to IS NOT NULL
+        AND snapshot.valid_to <= assignment.valid_to
+      )
+    )
+
+**Si falla -> `CATALOG_KEY_NOT_VALID_FOR_SNAPSHOT_INTERVAL`.**
+
+**Consecuencia:** snapshot con `valid_to=NULL` no puede contener
+assignment con `valid_to` definido (el snapshot duraria mas que
+la asignacion).
 
 **Ejemplo prohibido:**
 
-    K1 assignment:  [2026-09-19, 2026-10-01)
-    snapshot V3:    [2026-11-01, null)
-    membership V3 -> K1
-    -> CATALOG_KEY_NOT_VALID_FOR_SNAPSHOT
+    assignment K1: [2026-09-19, 2026-10-01)
+    snapshot V1:   [2026-09-21, NULL)
 
-**Regla:** una key RETIRED no puede pertenecer a un snapshot posterior
-a su `valid_to`.
+    v3: interseccion no vacia -> OK
+    v4: snapshot.valid_to IS NULL y assignment.valid_to != NULL
+        -> CATALOG_KEY_NOT_VALID_FOR_SNAPSHOT_INTERVAL
 
-### 3.5. `target_builder.build_target(...)`
+### 3.5. Validator `validate_membership`
+
+    def validate_membership(membership_df, assignments_df, manifest) -> dict:
+        """Errores por (version_id, catalog_key):
+          MISSING_VERSION_IN_MANIFEST
+          MISSING_CATALOG_KEY_IN_ASSIGNMENTS
+          DUPLICATE_CATALOG_KEY_IN_SNAPSHOT
+          ROW_UID_NOT_IN_SNAPSHOT
+          PREDECESSOR_ROW_UID_BROKEN_CHAIN
+          CATALOG_KEY_NOT_VALID_FOR_SNAPSHOT_INTERVAL
+        """
+
+Valida:
+- version_id existe en manifest B2-PIT.
+- catalog_key existe en assignments.
+- snapshot_row_uid existe en el snapshot (calculado sobre el CSV).
+- predecessor_row_uid (si != NULL) existe en algun snapshot anterior
+  con el mismo catalog_key.
+- Cobertura temporal completa (B1-NEW-6).
+
+### 3.6. `target_builder.build_target(...)` v4
 
     def build_target(snapshot_df, membership_df, assignments_df, *,
                      version_id, period_end,
                      catalog_version_id, catalog_sha256) -> TargetUniverse:
-        """Materializa el TargetUniverse a partir del snapshot B2-PIT
-        + membership B1 + assignments B1.
-
-        Para cada fila del snapshot:
-          - row_uid = sha256_corto(fila_canonica)
-          - catalog_key = membership_df[row_uid].catalog_key
-          - ticker = fila.radar_ticker
-          - figi = fila.share_class_figi
-
-        Vinculacion por snapshot_row_uid. NO por posicion.
-        NO por ticker.
+        """Materializa el TargetUniverse.
 
         Validaciones:
-          - catalog_key NOT NULL por fila.
-          - catalog_key UNICO por snapshot.
-          - membership cubre TODOS los row_uid del snapshot.
-          - catalog_key vigente para el snapshot (validacion temporal).
+          1. Columnas requeridas presentes (B1-NEW-9, ver §8).
+          2. Para cada fila del snapshot:
+             - row_uid = sha256_hex(fila_canonica)
+             - catalog_key = membership[row_uid].catalog_key
+          3. membership cubre TODOS los row_uid del snapshot.
+          4. catalog_key vigente para el snapshot (cobertura completa).
         """
 
-### 3.6. Tests membership
+### 3.7. Tests membership v4
 
-    M-a  snapshot V1 + K1 -> declared_keys={K1}
-    M-b  snapshot V2 + K1 (persistencia) -> declared_keys={K1}
-    M-c  snapshot V2 + K1 + K2 -> declared_keys={K1, K2}
-    M-d  membership con hueco -> FALLA
-    M-e  membership con duplicado de catalog_key -> FALLA
-    M-f  membership referencia version_id inexistente -> FALLA
-    M-g  reordenacion fisica del CSV no rompe K <-> fila (B1-NEW-1)
-    M-h  K1 fuera de vigencia del snapshot -> CATALOG_KEY_NOT_VALID_FOR_SNAPSHOT
-    M-i  K1 retired en snapshot posterior -> FALLA
-    M-j  filas con contenido identico -> mismo uid -> error duplicado
+    M-a..M-f   (sin cambios v3)
+    M-g        reordenacion fisica no rompe K <-> fila
+    M-h        K fuera de vigencia -> NOT_VALID_FOR_SNAPSHOT_INTERVAL
+    M-i        K retired en snapshot posterior -> FALLA
+    M-j        filas identicas -> mismo uid -> error duplicado
+    M-k (NEW)  predecessor_row_uid roto -> PREDECESSOR_ROW_UID_BROKEN_CHAIN
+    M-l (NEW)  predecessor NULL solo en primera aparicion; no en persistencia
+    M-m (NEW)  same K con row_uid cambiado + predecessor valido -> OK
+    M-n (NEW)  same K con row_uid cambiado + sin predecessor -> FALLA
+    M-o (NEW)  snapshot valid_to=NULL con assignment valid_to cerrado -> FALLA
+    M-p (NEW)  ambos valid_to=NULL -> OK
 ---
 
-## 4. A2 - Dominio P38 (B1-NEW-4: full resolution por identity_status)
+## 4. A2 - Dominio P38 (full resolution por identity_status)
 
 ### 4.1. Regla normativa
 
-**Antes de invocar P38, verificacion de resolucion completa:**
+Para todo K in `TARGET_Q4 ∪ TARGET_Q1`:
 
-    Para todo K in (TARGET_Q4 UNION TARGET_Q1):
-      si identity_status(K) != RESOLVED
-        O existe != 1 share_class_figi(K)
-          -> UNAVAILABLE
-          -> NO invocar compute_contractual_coverage
+    identity_status(K) == RESOLVED
+    AND exactamente 1 share_class_figi(K)
 
-Estados que bloquean:
+Si no -> `UNAVAILABLE` antes de invocar P38.
 
-    UNRESOLVED
-    CONFLICT
-    AMBIGUOUS
+**Estados que bloquean:**
+
+    UNRESOLVED / CONFLICT / AMBIGUOUS
     (NOT_PRESENT en identity_status)
 
 `figi != None` NO es suficiente. Un estado CONFLICT puede conservar
-candidatos FIGI sin constituir identidad economica resuelta.
-
-**Solo si TODOS los K cumplen RESOLVED + 1 FIGI:**
-
-    target_q4_figi := { unico_figi(K) : K in TARGET_Q4 }
-    target_q1_figi := { unico_figi(K) : K in TARGET_Q1 }
-
-Sin filtro. Todos los K de Q4 y Q1 aparecen.
+candidatos FIGI sin constituir identidad resuelta.
 
 ### 4.2. Adaptador
 
-    def catalog_to_p38_targets(
-        universe_q4, universe_q1, *,
-        state_q4, state_q1, pairwise_keys,
-    ) -> tuple[set[str], set[str], list[PositionRecord],
-               list[PositionRecord], CoverageFeasibility]:
-        """Traduce TARGET administrativo a TARGET economico P38.
-
-        Precondiciones del flujo normativo (PASOS 1-9):
-          - TARGET_PAIRWISE no vacio
-          - check_continuity OK
-          - check_economic_collision Q4+Q1 OK
-          - feasible(K) para K in TARGET_PAIRWISE
-          - FULL RESOLUTION de TARGET_Q4 UNION TARGET_Q1:
-            identity_status == RESOLVED
-            Y exactamente 1 share_class_figi por K
-
-        Salida:
-          target_q4_figi: unico_figi(K) para TODO K in TARGET_Q4.
-          target_q1_figi: unico_figi(K) para TODO K in TARGET_Q1.
-          records_q4, records_q1.
-          CoverageFeasibility.FEASIBLE.
-        """
+Sin cambios respecto v3 §4.2 (full targets, sin filtro).
 
 ### 4.3. Tests A2
 
-    A2-a  K in TARGET_Q4 RESOLVED -> su figi en target_q4_figi
-    A2-b  K in TARGET_Q4 UNRESOLVED -> UNAVAILABLE antes de P38
-    A2-c  K in TARGET_Q4 CONFLICT con candidato FIGI -> UNAVAILABLE
-    A2-d  K solo Q4 -> contribuye a target_q4_figi
-    A2-e  K solo Q1 -> contribuye a target_q1_figi
-    A2-f  TARGET_Q4 ^ TARGET_Q1 visible
-    A2-g  Sin filtro: todos los K resueltos aparecen en el set
+    A2-a..g    (sin cambios v3)
 
 ---
 
-## 5. B3 - Imposibilidad de reduccion silenciosa del denominador
+## 5. B3 - Denominador
 
-**Regla consolidada con A2:**
+Regla consolidada: si cualquier K in `TARGET_Q4 ∪ TARGET_Q1` no esta
+RESOLVED -> UNAVAILABLE. Si cualquier K in `TARGET_PAIRWISE` no es
+feasible -> UNAVAILABLE.
 
-    Si cualquier K in (TARGET_Q4 UNION TARGET_Q1) no esta RESOLVED
-      -> UNAVAILABLE
-    Si cualquier K in TARGET_PAIRWISE no es feasible
-      -> UNAVAILABLE
+### 5.1. Tests B3
 
-**NO se recalcula el denominador con menos entradas.**
-
-### 5.1. Tests B3 (nuevos por #55)
-
-    B3-a  entrada K solo en Q4 con FIGI no resoluble -> UNAVAILABLE
-    B3-b  entrada K en Q4 CONFLICT con candidato FIGI -> UNAVAILABLE
-    B3-c  entrada K en Q4 UNRESOLVED con FIGI residual -> UNAVAILABLE
-    B3-d  todos RESOLVED -> continua
+    B3-a..d    (sin cambios v3)
 
 ---
 
-## 6. B4 - Fail-closed ante identidades asimetricas
+## 6. B4 - Fail-closed asimetrico
 
-**Regla:** `feasible_state(s)` verdadero solo si:
-    s.identity_status == "RESOLVED"
-    AND s.weight_status in {"RESOLVED_OBSERVED", "ZERO_REPORTED"}
-
-**Casos:**
-
-    Q4 RESOLVED + Q1 UNRESOLVED -> UNAVAILABLE
-    Q4 RESOLVED + Q1 CONFLICT -> UNAVAILABLE
-    NOT_PRESENT -> UNAVAILABLE
-    ZERO_REPORTED -> contribuye 0.0
-    FIGI change Q4->Q1 -> CONFLICT_FIGI_CHANGE -> UNAVAILABLE
+Sin cambios respecto v3 §6. `feasible_state` +
+`identity_status == RESOLVED` + `weight_status in {RESOLVED_OBSERVED,
+ZERO_REPORTED}`.
 
 ### 6.1. Tests B4
 
-    B4-a  Q4 RESOLVED + Q1 UNRESOLVED -> UNAVAILABLE
-    B4-b  Q4 RESOLVED + Q1 CONFLICT -> UNAVAILABLE
-    B4-c  NOT_PRESENT -> UNAVAILABLE
-    B4-d  ZERO_REPORTED -> contribuye 0.0
-    B4-e  FIGI change -> CONFLICT_FIGI_CHANGE -> UNAVAILABLE
+    B4-a..e    (sin cambios v3)
 
 ---
 
-## 7. B5 - Preservacion de colisiones catalog_key -> FIGI
+## 7. B5 - Colisiones catalog_key -> FIGI
 
-**Regla:** si 2+ `catalog_key` mapean al mismo `share_class_figi` en
-cualquier periodo -> `CATALOG_ECONOMIC_COLLISION` -> `UNAVAILABLE`.
-
-**Validator:**
-
-    def check_economic_collision(universe) -> dict[str, list[str]]:
-        """Devuelve {share_class_figi: [catalog_key, ...]} para cada
-        FIGI con >1 catalog_key.
-        """
-
-**Dominio:** Q4 + Q1. Cualquier colision -> UNAVAILABLE.
+Sin cambios respecto v3 §7. `check_economic_collision(Q4) + (Q1)`.
+Cualquier colision -> `CATALOG_ECONOMIC_COLLISION` -> `UNAVAILABLE`.
 
 ### 7.1. Tests B5
 
-    B5-a  2 catalog_key -> mismo FIGI -> UNAVAILABLE
-    B5-b  distintos FIGIs -> OK
-    B5-c  colision solo en Q4 -> UNAVAILABLE
-    B5-d  colision solo en Q1 -> UNAVAILABLE
-    B5-e  no hay colapso silencioso via set()
+    B5-a..e    (sin cambios v3)
+
 ---
 
-## 8. Flujo normativo 10 pasos (v3)
+## 8. B1-NEW-9 - Contrato de entrada B1 <-> B2-PIT
 
-    PASO 0. validate_membership (temporal + cobertura row_uid)   [v3 NUEVO]
+### 8.1. Columnas requeridas
+
+    B1_REQUIRED_COLUMNS = frozenset({
+        "radar_ticker",
+        "share_class_figi",
+    })
+
+`build_target` verifica su presencia en el DataFrame del snapshot.
+
+**Si falta alguna -> `B1_SCHEMA_ERROR` -> `UNAVAILABLE`.**
+**Sin fallback silencioso.** NO se rellena con None.
+
+### 8.2. Razon
+
+B2-PIT trata el CSV como opaco. B1 necesita columnas concretas para
+construir `ticker_by_key` y `figi_by_key`. El contrato debe declararlo
+explicitamente para que una futura version de B2-PIT (o de cualquier
+producer de snapshots) no rompa B1 silenciosamente.
+
+### 8.3. Columnas opcionales
+
+B1 puede tolerar columnas adicionales (name, source_date, etc.). NO
+las usa para identidad.
+
+### 8.4. Tests
+
+    S-a  snapshot con ambas columnas -> OK
+    S-b  snapshot sin radar_ticker -> B1_SCHEMA_ERROR
+    S-c  snapshot sin share_class_figi -> B1_SCHEMA_ERROR
+    S-d  snapshot sin ambas -> B1_SCHEMA_ERROR
+    S-e  snapshot con columnas extra -> OK (ignoradas)
+---
+
+## 9. Flujo normativo 10 pasos (v4)
+
+    PASO 0. validate_membership (cobertura temporal + linkage)
             STOP si incoherencia.
     PASO 1. target_catalog_as_of(Q4), target_catalog_as_of(Q1)   [B2-PIT]
     PASO 2. build_target(snapshot, membership, assignments) x2
-            -> universe_q4, universe_q1 (vinculacion por row_uid)
+            (verifica B1_REQUIRED_COLUMNS, sha256 row_uid,
+             membership, vigencia)
     PASO 3. TARGET_PAIRWISE := Q4.declared_keys INTERSECT Q1.declared_keys
             Si vacio -> UNAVAILABLE (STOP)
-    PASO 4. state_q4[K], state_q1[K] para K in TARGET_PAIRWISE
+    PASO 4. estados para TARGET_Q4 UNION TARGET_Q1              [v4 AMPLIADO]
+            state_q4[K] para K in TARGET_Q4
+            state_q1[K] para K in TARGET_Q1
     PASO 5. check_continuity (STOP si CONFLICT_FIGI_CHANGE)
+            Dominio: TARGET_Q4 UNION TARGET_Q1
     PASO 6. check_economic_collision(Q4) + (Q1) (STOP si colision)
-    PASO 7. feasible(K) para K in TARGET_PAIRWISE
+            Dominio: cada universo completo
+    PASO 7. feasible(K) para K in TARGET_PAIRWISE               [INTERSECTION]
             STOP si alguno False
-    PASO 8. FULL RESOLUTION de TARGET_Q4 UNION TARGET_Q1         [v2]
-            Para todo K in (Q4 UNION Q1):
-              identity_status == RESOLVED
-              Y exactamente 1 share_class_figi
+    PASO 8. FULL RESOLUTION de TARGET_Q4 UNION TARGET_Q1
+            identity_status == RESOLVED
+            AND exactamente 1 share_class_figi
             STOP si alguno no cumple.
     PASO 9. catalog_to_p38_targets(...)
-            -> target_q4_figi (full, sin filtro)
-            -> target_q1_figi (full, sin filtro)
+            -> target_q4_figi (full Q4, sin filtro)
+            -> target_q1_figi (full Q1, sin filtro)
             -> records_q4, records_q1
             -> FEASIBLE
-    PASO 10. compute_contractual_coverage(target_q4_figi, target_q1_figi,
-                                           records_q4, records_q1)  [P38]
+    PASO 10. compute_contractual_coverage(...)                  [P38]
             -> VALID
 
 **Invariante:** P38 solo se invoca si PASOS 0-9 superados sin STOP.
 
-**PASO 0 nuevo:** valida membership temporal ANTES de construir
-TargetUniverse. Evita que una key fuera de vigencia entre al
-universo contractual.
+**Separacion clave:**
+
+    ESTADOS          = UNION (TARGET_Q4 ∪ TARGET_Q1)
+    FEASIBILITY      = INTERSECTION (TARGET_PAIRWISE)
+    TARGETS P38      = UNION (full Q4 y full Q1)
+    COLLISION CHECK  = cada universo completo (Q4 y Q1)
+    CONTINUITY       = UNION
 
 ---
 
-## 9. Plan de implementacion (v3)
+## 10. Plan de implementacion (v4)
 
-### Commit B1.1 - identidad + membership + validacion temporal
+### Commit B1.1 - identidad + membership + contrato entrada
 
     src/institutional_accumulation/identity/catalog_key.py         (nuevo)
       - formato catalog_key
-      - sha256_corto (row_uid)
+      - sha256_full (64 hex chars)
+      - serializacion length-prefixed
       - load_assignments / validate_assignment
-      - load_membership / validate_membership (temporal)
+      - load_membership / validate_membership (cobertura temporal)
+      - B1_REQUIRED_COLUMNS + check_schema
     data/mappings/catalog_assignments.csv
       - 242 filas (1 por key, valid_from=2026-09-19)
     data/mappings/catalog_membership.csv
       - 242 filas para version_id=20260921_01
+      - predecessor_row_uid (NULL en migracion inicial)
     tests/test_catalog_key.py                                     (nuevo)
-      - A1-a .. A1-i
+      - A1-a..i
     tests/test_catalog_membership.py                              (nuevo)
-      - M-a .. M-j
+      - M-a..p
+    tests/test_b1_schema.py                                       (nuevo)
+      - S-a..e
 
 ### Commit B1.2 - TargetUniverse + estados por periodo
 
@@ -472,19 +429,18 @@ universo contractual.
       - build_target(snapshot, membership, assignments, ...)
       - vinculacion por snapshot_row_uid
     src/institutional_accumulation/identity/period_state.py        (nuevo)
-      - state_q4[K], state_q1[K]
+      - state_q4[K], state_q1[K] para K in Q4 ∪ Q1
       - identity_status enum
       - weight_status enum
     tests/test_target_builder.py                                   (nuevo)
     tests/test_period_state.py                                     (nuevo)
 
-### Commit B1.3 - flujo + adaptador P38
+### Commit B1.3 - flujo 10 pasos + adaptador P38
 
     src/institutional_accumulation/aggregation/catalog_p38_adapter.py  (nuevo)
-      - catalog_to_p38_targets (full targets)
     src/institutional_accumulation/aggregation/catalog_validator.py    (nuevo)
-      - check_continuity
-      - check_economic_collision
+      - check_continuity (UNION)
+      - check_economic_collision (Q4 + Q1)
       - check_full_resolution (identity_status == RESOLVED)
     tests/test_catalog_p38_adapter.py                              (nuevo)
       - A2-a..g, B3-a..d, B5-a..e
@@ -497,7 +453,7 @@ temporal_validity.py, reporting_dedup.py, catalog_pit.py.
 
 ---
 
-## 10. Criterio de cierre B1 (v3)
+## 11. Criterio de cierre B1 (v4)
 
 ### A1
 
@@ -505,13 +461,15 @@ temporal_validity.py, reporting_dedup.py, catalog_pit.py.
 
 ### Membership
 
-    M-a .. M-j      PASS
-    (incluye M-g reordenacion CSV, M-h vigencia, M-i retired)
+    M-a .. M-p      PASS (incluye M-k/m/n/o/p nuevos)
+
+### Schema B1
+
+    S-a .. S-e      PASS
 
 ### A2
 
-    A2-a .. A2-g    PASS
-    Full resolution = identity_status RESOLVED + 1 FIGI
+    A2-a .. A2-g    PASS (full resolution por identity_status)
 
 ### B3
 
@@ -527,8 +485,9 @@ temporal_validity.py, reporting_dedup.py, catalog_pit.py.
 
 ### Flujo
 
-    10 pasos + STOPs + PASO 0 membership + no invocacion P38 sin
-    PASO 8 PASS
+    10 pasos + STOPs + PASO 0 membership cobertura completa
+    + PASO 4 estados para UNION
+    + no invocacion P38 sin PASO 8 PASS
 
 ### Global
 
@@ -540,65 +499,57 @@ temporal_validity.py, reporting_dedup.py, catalog_pit.py.
 ### Advertencia de alcance (dictamen #55 seccion 16)
 
     B1 CLOSED != TARGET historico Q4/Q1 disponible en produccion.
-    Tests pueden usar fixtures historicos explicitamente identificados.
+    Tests con fixtures historicos explicitamente identificados.
     NO fabricar snapshots historicos presentados como evidencia real.
 
-Cierre: **B1 CLOSED -> nuevo dictamen especifico para A.6.3**
-(no automatico, segun #54 seccion 16 pregunta 9).
+Cierre: **B1 CLOSED -> nuevo dictamen especifico para A.6.3**.
 ---
 
-## 11. Preguntas al auditor (v3)
+## 12. Preguntas al auditor (v4)
 
-1. **B1-NEW-1 - snapshot_row_uid.** SHA-256 corto (16 hex chars)
-   sobre representacion canonica de la fila. ¿Se aprueba? ¿Otro
-   formato de uid?
+1. **B1-NEW-6 - Cobertura temporal.** Se sustituye interseccion por
+   cobertura completa (assignment cubre todo el intervalo del
+   snapshot). Snapshot con valid_to=NULL rechaza assignments con
+   valid_to definido. ¿Se aprueba?
 
-2. **B1-NEW-2 - catalog_key inmutable.** K -> assigned_entity_id
-   1:1 para toda la vida. Cambio -> nueva key. Intento de
-   reasignacion -> evento en `catalog_reassignments_attempted.csv`.
+2. **B1-NEW-7 - predecessor_row_uid.** Cadenas explicitas en
+   membership. Primera aparicion -> NULL. Cambio de contenido ->
+   predecessor obligatorio + justification. ¿Se aprueba?
+
+3. **B1-NEW-7 - SHA-256 completo.** 64 hex chars (no 16). Y
+   serializacion length-prefixed. ¿Se aprueba?
+
+4. **B1-NEW-8 - Estados para UNION.** PASO 4 construye
+   state_q4/state_q1 para TARGET_Q4 ∪ TARGET_Q1. Feasibility
+   (PASO 7) sigue siendo pairwise. ¿Se aprueba?
+
+5. **B1-NEW-9 - B1_REQUIRED_COLUMNS.** {radar_ticker,
+   share_class_figi}. Fail-closed si falta. ¿Se aprueba?
+
+6. **Flujo v4.** 10 pasos con PASO 4 ampliado a UNION. ¿Se aprueba?
+
+7. **Plan de commits.** B1.1 (identidad + membership + schema),
+   B1.2 (TargetUniverse + estados UNION), B1.3 (flujo + adaptador).
    ¿Se aprueba?
 
-3. **B1-NEW-3 - membership temporal.** Validacion de interseccion
-   [assignment.valid_from, assignment.valid_to) con
-   [snapshot.valid_from, snapshot.valid_to). Sin interseccion ->
-   `CATALOG_KEY_NOT_VALID_FOR_SNAPSHOT`. ¿Se aprueba?
+8. **Criterio de cierre.** §11 + advertencia de alcance. ¿Se aprueba?
 
-4. **B1-NEW-4 - full resolution.** `identity_status == RESOLVED`
-   Y exactamente 1 `share_class_figi`. NO `figi != None`. Estados
-   UNRESOLVED/CONFLICT/AMBIGUOUS/NOT_PRESENT bloquean. ¿Se aprueba?
+9. **Observacion SHA.** Aplicada: SHA-256 completo + length-prefixed.
+   ¿Se aprueba la correccion?
 
-5. **B1-NEW-5 - assigned_entity_id.** Declarado como identificador
-   administrativo interno artificial. Correspondencia 1:1 con
-   snapshot_row_uid. Sin significado economico. ¿Se aprueba?
-
-6. **Flujo PASO 0.** Nueva validacion `validate_membership` antes
-   de `build_target`. ¿Se aprueba?
-
-7. **Plan 3 commits.** B1.1 (identidad + membership + validacion
-   temporal), B1.2 (TargetUniverse + estados), B1.3 (flujo +
-   adaptador). ¿Se aprueba?
-
-8. **Criterio de cierre.** §10 + advertencia de alcance. ¿Se aprueba?
-
-9. **Observacion de alcance.** B1 CLOSED != disponibilidad de
-   TARGET historico Q4/Q1. Tests con fixtures historicos
-   identificados; sin fabricar. ¿Se aprueba la advertencia?
-
-10. **Cierre B1 -> A.6.3.** Tras cierre B1, ¿A.6.3 requiere nuevo
-    dictamen? (#54 seccion 16 pregunta 9 indico que no es
-    automatico.)
+10. **Cierre B1 -> A.6.3.** Nuevo dictamen requerido. ¿Se aprueba?
 
 ---
 
-## 12. Lo que NO se toca en B1
+## 13. Lo que NO se toca en B1
 
 - `coverage.py` (P38) - firma y semantica INTACTAS.
 - `nipc.py`, `delta_shares.py`.
 - `security_identity.py`, `amendments.py`, `relationships.py`.
 - `temporal_validity.py`.
 - `reporting_dedup.py`.
-- `catalog_pit.py` (B2-PIT ya cerrado por #53).
-- Snapshots publicados por B2-PIT (inmutables).
+- `catalog_pit.py` (B2-PIT).
+- Snapshots publicados por B2-PIT.
 - Contratos: `NIPC_CONTRATOS_SEMANTICOS_v1.md`, `NIPC_COVERAGE_POLICY.md` v1.0.
 - OpenFIGI masivo: NO.
 - `DROP_DUP`: NO.
@@ -607,25 +558,20 @@ Cierre: **B1 CLOSED -> nuevo dictamen especifico para A.6.3**
 
 ---
 
-## 13. Trazabilidad
+## 14. Trazabilidad
 
     Dictamen #51     2 bloqueos A1 + A2
-    Dictamen #52     Opcion 1: B2-PIT separado, B1 continua en diseno
+    Dictamen #52     Opcion 1: B2-PIT separado
     Dictamen #53     B2-PIT CERRADO. Siguiente ciclo: B1
-    Dictamen #54     3 bloqueantes estructurales B1:
-                     - full TARGET (no filtro None)
-                     - assignment identity + historial
-                     - membership snapshot <-> key
-    Dictamen #55     5 bloqueantes B1 v2:
-                     - B1-NEW-1 snapshot_row_uid estable
-                     - B1-NEW-2 catalog_key inmutable
-                     - B1-NEW-3 membership temporal
-                     - B1-NEW-4 full resolution por identity_status
-                     - B1-NEW-5 assigned_entity_id trazable
-    A62BIS_PROPUESTA.md v9 §2-§3     base
-    A62BIS_B2_PIT_SUBFASE.md         patron de subfase aislada
-    FASE_A6_PLAN.md                  seccion A.6.2-bis-B1
+    Dictamen #54     3 bloqueantes B1 (full TARGET, assignment, membership)
+    Dictamen #55     5 bloqueantes B1 v2 (row_uid, key inmutable,
+                     membership temporal, identity_status, entity_id)
+    Dictamen #56     4 bloqueantes B1 v3 (cobertura temporal, row_uid
+                     vs longitudinal, estados UNION, contrato entrada)
+    A62BIS_PROPUESTA.md v9 §2-§3
+    A62BIS_B2_PIT_SUBFASE.md
+    FASE_A6_PLAN.md
 
 ---
 
-Fin de la propuesta B1 v3. Sometida a dictamen. HEAD 95598ac.
+Fin de la propuesta B1 v4. Sometida a dictamen. HEAD 43373fd.

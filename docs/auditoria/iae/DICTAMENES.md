@@ -67,6 +67,7 @@
 | 53 | Ver entrada §53 de este fichero | B2-PIT CERRADO formalmente. Siguiente ciclo recomendado: B1. |
 | 54 | Ver entrada §54 de este fichero | A.6.2-bis-B1 NO-GO. Full TARGET + assignment history + membership snapshot<->key. |
 | 55 | Ver entrada §55 de este fichero | A.6.2-bis-B1 v2 NO-GO. snapshot_row_uid estable + catalog_key inmutable + membership temporal + full resolution por identity_status. |
+| 56 | Ver entrada §56 de este fichero | A.6.2-bis-B1 v3 NO-GO. Cobertura temporal + row_uid vs identidad + estados UNION + contrato entrada B1. |
 
 ---
 
@@ -2063,6 +2064,148 @@ presentarlos como evidencia real.
 
 NO-GO. Siguiente documento: A62BIS_B1_SUBFASE v3, limitado a cerrar
 los 5 puntos. NO volver a v10 global. NO reabrir B2-PIT.
+
+---
+
+## 56. A.6.2-bis-B1 - Dictamen verificacion propuesta v3 (2026-09-21)
+
+**Tipo:** dictamen del auditor externo sobre A62BIS_B1_SUBFASE.md v3.
+**HEAD auditado:** 95598ac.
+**Referencia:** dictamenes #51 a #55.
+**B2-PIT:** CLOSED (#53).
+
+**Resultado:** NO-GO. B1 v3 no autorizada. 4 bloqueantes nuevos.
+
+### Aprobado de v3
+
+    Identidad administrativa inmutable          CORREGIDO
+    Separacion assignment/membership            CORREGIDO
+    snapshot_row_uid (conceptual)               CORREGIDO PARCIAL
+    Validacion temporal (interseccion)          CORREGIDO PARCIAL
+    Full-resolution por identity_status         CORREGIDO CONCEPTUAL
+
+### B1-NEW-6 - Membership temporal por interseccion BLOQUEANTE
+
+La v3 valida interseccion no vacia entre:
+  [assignment.valid_from, assignment.valid_to)
+  [snapshot.valid_from, snapshot.valid_to)
+
+Insuficiente. Contraejemplo:
+  assignment K1: [2026-09-19, 2026-10-01)
+  snapshot V1:   [2026-09-21, null)
+  Interseccion no vacia -> OK (v3)
+  Pero K1 caduca 2026-10-01 mientras V1 sigue vigente.
+
+target_catalog_as_of(2026-10-15) devolveria snapshot con key retirada.
+Viola point-in-time.
+
+Correccion exigida (v4): cobertura completa.
+  assignment.valid_from <= snapshot.valid_from
+  AND (
+    assignment.valid_to IS NULL
+    OR (
+      snapshot.valid_to IS NOT NULL
+      AND snapshot.valid_to <= assignment.valid_to
+    )
+  )
+Error: CATALOG_KEY_NOT_VALID_FOR_SNAPSHOT_INTERVAL.
+
+Consecuencia: snapshot con valid_to=NULL no puede contener assignment
+con valid_to definido. Fail-closed.
+
+### B1-NEW-7 - row_uid no es identidad longitudinal BLOQUEANTE
+
+snapshot_row_uid = SHA256(fila_canonica) es row-instance id, NO
+identidad estable. Cambia si cambia el contenido.
+
+  V1: K1 -> row_uid_A (name="Empresa X")
+  V2: K1 -> row_uid_B (name="Empresa X Inc.")
+  row_uid_A != row_uid_B. Correcto: la entidad evoluciono.
+
+Riesgo: remapeo silencioso.
+  V2 -> K1 -> row_uid_Z  sin cambio en assignments.
+  Validator lo aceptaria si K1 existe, row_uid_Z existe, K1 vigente,
+  sin duplicados.
+
+Correccion exigida (v4): formalizar
+  snapshot_row_uid = row-instance identifier.
+  catalog_key + assigned_entity_id = longitudinal identity.
+Y anadir en membership:
+  predecessor_row_uid  (nullable, cadena explicita)
+
+Cada entry (version_id, catalog_key) declara predecessor_row_uid
+apuntando al row_uid del snapshot anterior para el mismo K.
+Primera aparicion -> NULL.
+
+Validator verifica cadena: predecessor_row_uid debe existir en algun
+snapshot anterior para el mismo K. Sin cadenas rotas -> OK.
+
+### B1-NEW-8 - PASO 8 exige estados no construidos BLOQUEANTE
+
+PASO 4 v3 construye state_q4[K]/state_q1[K] para K in TARGET_PAIRWISE.
+PASO 8 v3 exige identity_status(K) para K in TARGET_Q4 UNION TARGET_Q1.
+
+Para K2 solo en Q4 (fuera de pairwise): state_q4[K2] no se construye
+en PASO 4. Pero PASO 8 lo exige. Incompatibilidad operacional.
+
+Correccion exigida (v4): PASO 4 construye estados para
+  TARGET_Q4 UNION TARGET_Q1
+Feasibility (PASO 7) sigue aplicandose solo a TARGET_PAIRWISE.
+Full resolution (PASO 8) aplica a TARGET_Q4 UNION TARGET_Q1.
+
+Separacion:
+  ESTADOS          = UNION
+  FEASIBILITY      = INTERSECTION
+  TARGETS P38      = UNION
+  COLLISION CHECK  = cada universo completo
+
+### B1-NEW-9 - Contrato entrada B1 <-> B2-PIT BLOQUEANTE
+
+B2-PIT dejo el CSV como opaco. B1 build_target asume columnas
+radar_ticker y share_class_figi sin contrato explicito.
+
+Correccion exigida (v4):
+  B1_REQUIRED_COLUMNS = {"radar_ticker", "share_class_figi"}
+  Si falta alguna -> B1_SCHEMA_ERROR -> UNAVAILABLE.
+  Sin fallback silencioso.
+
+### Observacion tecnica no bloqueante
+
+SHA-256 truncado a 16 hex (64 bits) es insuficiente para clave
+contractual de linkage. Recomendado: SHA-256 completo (64 hex).
+Separador  puede ser ambiguo si un valor lo contiene. Usar
+serializacion length-prefixed o JSON canonico.
+
+Aplicado en v4.
+
+### Flujo v4 correcto
+
+    PASO 0  validar membership + vigencia + linkage
+    PASO 1  target_catalog_as_of(Q4/Q1)
+    PASO 2  build_target
+    PASO 3  TARGET_PAIRWISE = Q4 INTERSECT Q1
+    PASO 4  estados para TARGET_Q4 UNION TARGET_Q1     [v4 ampliado]
+    PASO 5  continuity
+    PASO 6  collision Q4 + Q1
+    PASO 7  feasibility para TARGET_PAIRWISE
+    PASO 8  full resolution para UNION
+    PASO 9  adaptador P38
+    PASO 10 P38
+
+### Estado consolidado
+
+    B2-PIT                CLOSED (#53)
+    B1-A1                 APPROVED CONDITIONAL
+    B1-membership         BLOCKED
+    B1-A2                 APPROVED CONDITIONAL
+    B1-B3                 APPROVED CONDITIONAL
+    B1-B4                 APPROVED CONDITIONAL
+    B1-B5                 APPROVED CONDITIONAL
+    B1 implementacion     NO-GO
+    A.6.3 / A.6.4         BLOCKED
+    F2.4-CLOSE            BLOCKED
+
+**Conclusion: v4 cierra B1-NEW-6/7/8/9 -> GO DE IMPLEMENTACION.**
 
 ---
 
