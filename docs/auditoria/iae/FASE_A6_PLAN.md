@@ -371,15 +371,21 @@ Hallazgo H-73.1 (adapter B1<->P38) corregido + regresion:
 
 Baseline full permanece BLOQUEADO (OpenFIGI masivo NO AUTORIZADO).
 
-**Siguiente: A.6.5.**
+**Siguiente: A.6.6.**
 
-### A.6.5 - Actualizacion de contratos (AUTORIZADA)
+### A.6.5 - Actualizacion de contratos (CERRADA)
 
-**Estado (2026-09-21, dictamen #75):** AUTORIZADA. Pendiente de
-ejecucion. Alcance previsto: actualizar `NIPC_CONTRATOS_SEMANTICOS_v1.md`
-si procede, segun el resultado de A.6.4. No debe modificar contratos
-normativos fuera del alcance previsto ni usar H-73.1 como excusa para
-cambios adicionales.
+**Estado (2026-09-21, dictamen #75 + cierre):** CERRADA. Dos pasadas
+sobre `NIPC_CONTRATOS_SEMANTICOS_v1.md` in-place:
+
+  - Pasada 1 (2026-09-20, commit `6bc8675`): post-F2.4. Formaliza
+    contrato vigente y P62-P65.
+  - Pasada 2 (2026-09-21, commit `dccf70d`): post-A.6.4. Refleja
+    cierres A.6.0-A.6.4, H-73.1, Q12 Modelo A y R-69.2. Ajusta hashes
+    `10.2` y estado de bloqueos `10.3`.
+
+Alcance respetado: no se modificaron contratos normativos fuera del
+alcance previsto. H-73.1 no se uso como excusa para cambios adicionales.
 
 ### A.6.6 - F2.4-CLOSE
 
@@ -426,9 +432,9 @@ Q12, AGREG., Policy v1.3).
 **Reformulado por F2.4 (2026-09-20):** aplica la regla general "1 concepto
 = 1 fichero vivo". El contrato NO se versiona con sufijo. Se edita in-place.
 
-**Estado:** EJECUTADO 2026-09-20 en el mismo commit que este plan.
+**Estado:** EJECUTADO en dos pasadas.
 
-Cambios aplicados:
+Pasada 1 (2026-09-20, commit `6bc8675`):
 
     - Cabecera: Estado BORRADOR -> VIGENTE (F2.4 EMITIDO).
     - Seccion 0: decisiones del F2.4 + contratos nuevos + reglas adicionales.
@@ -436,6 +442,17 @@ Cambios aplicados:
     - Anexo 10.3: bloqueos actualizados.
     - Secciones 11-14: P62 + P63 + P64 + P65.
     - Linea final: pendiente A.6.0.
+
+Pasada 2 (2026-09-21, commit `dccf70d`):
+
+    - Cabecera: HEAD + fecha + cierres A.6.0-A.6.4, H-73.1, Q12.
+    - Seccion 0: estado tras documento -> P60 GO / P61 GO / P38 GO CONDICIONADO.
+    - Seccion 1.8 (P60) y 2.8 (P61): PROPUESTO -> GO / IMPLEMENTADO / CERRADO.
+    - Seccion 3.6 (P38): evidencia A.6.4 + H-73.1 + Q12.
+    - Seccion 9: estado actual de la secuencia.
+    - Seccion 10.2: hash CSV actualizado (EOL) + hash P70 historico + nota EOL.
+    - Seccion 10.3: bloqueos + 11 filas A.6.x.
+    - Cierre: A.6.0-A.6.4 cerrados, A.6.6 pendiente.
 
 **Consecuencia sobre el hash:** el sha256 del fichero al momento de
 someter F2.4 (3CEF80D0...) queda como referencia historica. No es un
@@ -648,4 +665,5 @@ residual aceptado. En ese caso:
 
 ---
 
-Fin del plan A.6. Bloqueado hasta F2.4.
+Fin del plan A.6. F2.4 emitido 2026-09-20. A.6.0-A.6.5 cerrados.
+Pendiente A.6.6 (F2.4-CLOSE).
