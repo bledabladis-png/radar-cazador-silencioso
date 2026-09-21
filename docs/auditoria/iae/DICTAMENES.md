@@ -66,6 +66,7 @@
 | 52 | Ver entrada §52 de este fichero | Dictamen estrategico: Opcion 1 aprobada. B2-PIT autorizado a implementar. B1/B3 en diseno. |
 | 53 | Ver entrada §53 de este fichero | B2-PIT CERRADO formalmente. Siguiente ciclo recomendado: B1. |
 | 54 | Ver entrada §54 de este fichero | A.6.2-bis-B1 NO-GO. Full TARGET + assignment history + membership snapshot<->key. |
+| 55 | Ver entrada §55 de este fichero | A.6.2-bis-B1 v2 NO-GO. snapshot_row_uid estable + catalog_key inmutable + membership temporal + full resolution por identity_status. |
 
 ---
 
@@ -1925,6 +1926,143 @@ Los 3 puntos pendientes son estructurales:
 
 NO volver a v10 global. Emitir revision B1 especifica que cierre
 estos 3 puntos.
+
+---
+
+## 55. A.6.2-bis-B1 - Dictamen verificacion propuesta v2 (2026-09-21)
+
+**Tipo:** dictamen del auditor externo sobre A62BIS_B1_SUBFASE.md v2.
+**HEAD auditado:** 003c5c2.
+**Referencia:** dictamenes #51, #52, #53, #54.
+**B2-PIT:** CLOSED (#53).
+
+**Resultado:** NO-GO. B1 v2 no autorizada para implementacion.
+5 bloqueantes nuevos (4 materiales + 1 datos).
+
+### Aprobado conceptualmente de v2
+
+    Full resolution antes de P38 (conceptual)      APROBADO
+    Identidad/historial de asignaciones             APROBADO
+    Relacion externa snapshot <-> catalog_key       APROBADO
+    A2, B4, B5 arquitectura                         APROBADO CONDICIONAL
+    Flujo 10 pasos                                  APROBADO CONDICIONAL
+
+### B1-NEW-1 - snapshot_row_id posicional BLOQUEANTE
+
+La v2 usa snapshot_row_id = 0..N-1 y afirma que NO depende del
+orden. Contradiccion: 0..N-1 es posicional por definicion.
+
+Test M-g "membership NO depende del orden de filas" no puede
+cumplirse con indice posicional.
+
+Correccion exigida (v3): identificador estable derivado del contenido.
+Propuesta: snapshot_row_uid calculado sobre representacion canonica
+e inmutable de la fila, con deteccion de duplicados.
+
+NO se autoriza depender de posicion de fila.
+
+### B1-NEW-2 - catalog_key reutilizable BLOQUEANTE
+
+La v2 permite:
+  misma catalog_key -> entidad A
+  misma catalog_key -> entidad B (via historial)
+
+Esto destruye la estabilidad que B1 necesita para continuidad y P38.
+
+Correccion exigida (v3): catalog_key NUNCA se reasigna.
+  K -> A para toda la vida de K.
+  Cambio de entidad -> K_old y K_new distintas.
+  Intento de reasignacion -> CATALOG_KEY_REASSIGNED (evento de
+  auditoria independiente).
+
+### B1-NEW-3 - Membership sin validacion temporal BLOQUEANTE
+
+validate_membership v2 comprueba:
+  version_id existe
+  snapshot_row_id cubre 0..N-1
+  catalog_key existe en assignments
+Falta:
+  ¿La asignacion estaba vigente cuando el snapshot era valido?
+
+B2-PIT ya aporta valid_from/valid_to. B1 debe usarlo.
+
+Correccion exigida (v3): para cada (version_id, catalog_key)
+debe existir exactamente una asignacion valida para el intervalo
+del snapshot. Key RETIRED no puede pertenecer a snapshot posterior
+a su valid_to.
+
+### B1-NEW-4 - Full resolution limitado a figi != None BLOQUEANTE
+
+La v2 define "si figi(K) is None -> UNAVAILABLE".
+Insuficiente: figi != None no implica RESOLVED.
+
+Correccion exigida (v3): la condicion es sobre identity_status.
+  Para todo K in (TARGET_Q4 UNION TARGET_Q1):
+    identity_status == RESOLVED
+    Y exactamente 1 share_class_figi
+  En otro estado (UNRESOLVED / CONFLICT / AMBIGUOUS) -> UNAVAILABLE.
+
+### B1-NEW-5 - assigned_entity_id sin fuente BLOQUEANTE DE DATOS
+
+La v2 propone assigned_entity_id = "radar_entity_<NNNN>" para 242
+filas. No demuestra que sea entidad trazable.
+
+Correccion exigida (v3): escoger entre:
+  A) assigned_entity_id procede de fuente administrativa documentada.
+  B) declarar expresamente que radar_entity_<NNNN> es identificador
+     administrativo interno ARTIFICIAL, sin significado economico,
+     con correspondencia estable 1:1 con la fila fuente.
+
+### Flujo
+
+El flujo 10 pasos se mantiene pero debe incorporar:
+  A. feasibility pairwise (ya existe)
+  B. full resolution completa (PASO 8, ya existe en v2)
+  C. membership temporalmente valida (NUEVO v3, antes de build_target)
+
+### Tests adicionales obligatorios
+
+    M-h  reordenacion fisica del CSV no rompe K <-> fila
+    M-i  membership de key fuera de vigencia -> FAIL
+    M-j  membership de key retirada -> FAIL
+    A1-h K1 -> entidad A y luego intento K1 -> entidad B -> FAIL
+    A1-i misma K + misma entidad en historico -> OK
+    FR-a CONFLICT con candidato FIGI -> UNAVAILABLE
+    FR-b UNRESOLVED con FIGI residual -> UNAVAILABLE
+    FR-c NOT_PRESENT -> UNAVAILABLE
+    FR-d todos RESOLVED -> continua
+    MIG-a assigned_entity_id tiene fuente/trazabilidad definida
+
+### Observacion sobre datos historicos
+
+El snapshot B2-PIT vigente tiene valid_from=2026-09-21, valid_to=NULL.
+Q4 2025 / Q1 2026 -> CatalogNotAvailable.
+
+El cierre de B1 (si llega) NO implica que el TARGET historico Q4/Q1
+este disponible en produccion. Tests pueden usar fixtures historicos
+explicitamente identificados; NO fabricar snapshots historicos y
+presentarlos como evidencia real.
+
+### Estado consolidado
+
+    B2-PIT                CLOSED (#53)
+    A1                    OPEN / BLOCKED
+    Membership            OPEN / BLOCKED
+    A2                    APPROVED CONDITIONAL
+    B3                    APPROVED CONDITIONAL
+    B4                    APPROVED CONDITIONAL
+    B5                    APPROVED CONDITIONAL
+    Flujo 10 pasos        APPROVED CONDITIONAL
+    B1 implementacion     NO AUTORIZADA
+    P38                   INTACTO
+    A.6.3                 BLOCKED
+    A.6.4                 BLOCKED
+    F2.4-CLOSE            BLOCKED
+
+### Decisión final
+
+NO-GO. Siguiente documento: A62BIS_B1_SUBFASE v3, limitado a cerrar
+los 5 puntos. NO volver a v10 global. NO reabrir B2-PIT.
 
 ---
 
