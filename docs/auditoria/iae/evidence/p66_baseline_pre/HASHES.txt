@@ -1,0 +1,6 @@
+# SHA-256 de los ficheros del directorio p66_baseline_pre
+
+| fichero | bytes | sha256 |
+|---|---:|---|
+| baseline_output.txt | 2164 | `8c9a9cab48006146e90a66c82a4cba3091df15346cc3c90d7ef0c206844c8219` |
+| README.md | 2899 | `947e3b6e21b25344f285a32a89ab26cfe2777cedb4e775cb937d007218937301` |

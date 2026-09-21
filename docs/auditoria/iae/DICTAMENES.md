@@ -225,6 +225,59 @@
 ---
 
 
+## 41. P66 - Dictamen de auditoria de salida (2026-09-21)
+
+**Tipo:** dictamen del auditor externo sobre P66_EXPEDIENTE_AUDITORIA_SALIDA.md.
+**HEAD auditado:** a00ee48.
+**GO contractual de origen:** #40 (6e698ca).
+
+**Resultado:** GO CONDICIONADO. NO cierre definitivo del ciclo P66.
+
+### Cierre de pasos
+
+    Paso 1 (traslado 14.3)               CERRADO
+    Paso 2 (tests contractuales)         CERRADO
+    Paso 3 (implementacion)              CERRADO TECNICAMENTE (sujeto a A/B)
+    Paso 4 (probe e2e)                   CERRADO
+    Paso 5 (auditoria de salida)         ABIERTO, sin cierre definitivo
+    DROP_DUP                             BLOQUEADO / NO AUTORIZADO
+
+### Divergencia A/B sobre 14.3.1 PASO 1-4
+
+**Dictamen: LECTURA A (literal, conservadora).**
+
+- La implementacion actual se conserva.
+- Los 4 grupos (2 Q4 + 2 Q1) permanecen R3 = N/D.
+- NO se autoriza modificar `resolve_r3` hacia lectura B.
+- La decision debe quedar formalmente fijada en la trazabilidad del ciclo.
+
+### Reserva de auditoria (suite global)
+
+Los 3 fallos de `tests/test_freshness.py` deben considerarse demostrados
+como preexistentes SOLO si existe evidencia de baseline pre-P66 con los
+mismos fallos. No basta afirmarlo.
+
+**Resuelto:** evidencia en `iae/evidence/p66_baseline_pre/`.
+Baseline ejecutado sobre worktree detached en `64b0637` con los parquets
+actuales -> 3 failed identicos. Confirmado preexistente.
+
+### Prohibiciones confirmadas
+
+- No activar DROP_DUP.
+- No tocar modulos fuera del alcance.
+- No efectuar cambios contractuales por inferencia.
+- No convertir N/D en NO_MATCH.
+- No extender semantica fuera del contrato.
+- No push ni certificaciones posteriores no autorizadas.
+
+### Estado operativo
+
+    P66            GO CONDICIONADO / AUDITORIA DE SALIDA ABIERTA
+    DROP_DUP       NO GO
+    reporting_dedup.py  NO MODIFICABLE por este dictamen
+
+---
+
 Fin del registro de dictamenes.
 
 

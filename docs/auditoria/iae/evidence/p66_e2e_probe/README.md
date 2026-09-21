@@ -158,3 +158,26 @@ PASO 1-4 + dictamen material.
 ---
 
 Fin del README. Probe ejecutado 2026-09-21.
+
+---
+
+## 8. Post-dictamen #41 (2026-09-21)
+
+**Resolucion del auditor:** LECTURA A adoptada.
+
+La divergencia material elevada en la seccion 5 queda resuelta a favor de
+la lectura literal (A). La implementacion actual de `resolve_r3` se conserva
+sin cambios. Los 4 grupos afectados permanecen `R3 = N/D`.
+
+Ver `iae/DICTAMENES.md` #41.
+
+### Reserva de auditoria (suite global) - resuelta
+
+El dictamen exigio evidencia directa de baseline pre-P66 para los 3 fallos
+de `test_freshness.py`. Resuelto con evidencia en
+`iae/evidence/p66_baseline_pre/`: worktree detached en `64b0637` con los
+parquets actuales reproduce los 3 fallos identicos.
+
+---
+
+Fin del apendice post-dictamen.
