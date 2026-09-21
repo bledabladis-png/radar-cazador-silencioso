@@ -1,4 +1,4 @@
-# TRANSFER DE SESION - 2026-09-21 v9
+# TRANSFER DE SESION - 2026-09-21 v9.1
 
 Documento de onboarding. **NO es fuente de estado.**
 Estado vivo: `iae/ESTADO_SISTEMA.md` (hechos) + `iae/ESTADO_DECLARADO.md` (fases).
@@ -16,11 +16,11 @@ Reglas de personalidad y metodo: `PROMPT_MAESTRO.md` secciones 1 y 3.
 
 ## 2. Estado real al cierre de esta sesion
 
-    HEAD          5877e9c (verificar con git al arrancar)
-    Ahead         282 commits locales
+    HEAD          473ce06 (verificar con git al arrancar)
+    Ahead         290 commits locales
     Working tree  LIMPIO (verificar)
-    Tests         7 passed + 1 xfailed en test_h731;
-                  suite global: 1301 passed + 2 skipped + 3 failed
+    Tests         test_h731: 10 passed, 0 xfailed (xfail A-12 resuelto);
+                  suite global: 1309 passed + 2 skipped + 3 failed
                   (los 3 failed son test_freshness.py, preexistentes, no-regresion)
     Push          NO (local-first IAE)
 
@@ -48,6 +48,20 @@ El auditor externo ha emitido, el 2026-09-21:
           coverage_current               = calculable sobre TARGET_Q1
           paired_security_coverage       = UNAVAILABLE (TARGET_PAIRWISE=0)
           paired_weighted_share_coverage = UNAVAILABLE
+
+**Fix A2 EJECUTADO (2026-09-21, commits 2f98926..473ce06).**
+
+Evidencia empirica sobre 13F Q4 2025 / Q1 2026 reales
+(probe_integration_b1_p61_p38.py, result.json):
+
+    coverage_previous              = None    (Q4 vacio, Q5 literal)
+    coverage_current               = 1.0     (18/18 VERIFIED sobre TARGET_Q1)
+    paired_security_coverage       = None    (TARGET_PAIRWISE = 0)
+    paired_weighted_share_coverage = None
+    coverage_status                = UNAVAILABLE
+
+Hallazgos cerrados: H-05, H-06, H-07, H-10.1.
+Hallazgos pendientes: H-08 (MEDIA, requiere autorizacion del auditor).
 
 ## 4. TRABAJO PENDIENTE: fix A2 (H-05/H-06/H-07/H-10.1)
 
@@ -139,11 +153,11 @@ siguiente. Si algo falla, parar y avisar.
     py -m pyflakes . ; py -m compileall . -q
 
 Esperado:
-  - HEAD 5877e9c o posterior
-  - ahead 282 o mas
+  - HEAD 473ce06 o posterior
+  - ahead 290 o mas
   - working tree limpio
-  - 1301 passed + 2 skipped + 3 failed (test_freshness, preexistentes)
-  - test_h731: 7 passed + 1 xfailed
+  - 1309 passed + 2 skipped + 3 failed (test_freshness, preexistentes)
+  - test_h731: 10 passed, 0 xfailed
   - pyflakes silencio, compileall OK
 
 ## 10. Confirmacion esperada
@@ -151,10 +165,10 @@ Esperado:
     "Confirmado, contexto asimilado."
 
     Estado que reconozco:
-      - HEAD 5877e9c, ahead 282
-      - Auditor: NO-GO A.6.6 + GO fix A2
-      - Fix A2: 0/5 commits, empezando por period_state.py
-      - H-10.1 abierto; P38 GO CONDICIONADO; A.6.6 NO-GO
+      - HEAD 473ce06, ahead 290
+      - Auditor: NO-GO A.6.6 + GO fix A2 (fix EJECUTADO 5/5)
+      - H-05/H-06/H-07/H-10.1 cerrados; H-08 pendiente de dictamen
+      - P38 GO CONDICIONADO; A.6.6 pendiente (esperando auditoria externa)
       - Prohibido tocar nipc/delta_shares/security_identity/temporal_validity
       - Push: NO
 
@@ -162,4 +176,4 @@ Esperado:
 
 ---
 
-FIN DEL TRANSFER v9. HEAD 5877e9c. Fecha: 2026-09-21.
+FIN DEL TRANSFER v9.1. HEAD 473ce06. Fecha: 2026-09-21.
