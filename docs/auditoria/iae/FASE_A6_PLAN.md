@@ -245,8 +245,18 @@ TARGET_PAIRWISE formal + flujo normativo 9 pasos + validadores
 - A2: preservacion exacta del dominio P38 por el adaptador
   (`TARGET_Q4 ^ TARGET_Q1`).
 
-**Implementacion:** NO AUTORIZADA. Pendiente de nueva propuesta
-(que sera v10+ de B1 o documento dedicado).
+**Implementacion:** NO AUTORIZADA. Propuesta de subfase dedicada
+en `iae/A62BIS_B1_SUBFASE.md` (patron B2-PIT). 5 bloqueantes
+consolidados (2 heredados de #51 + 3 adicionales del #53 seccion 11).
+
+**Estado de la propuesta B1:** pendiente de dictamen. La subfase
+B1 ataca:
+
+    A1  semantica de asignacion de catalog_key
+    A2  preservacion del dominio P38 (full targets)
+    B3  no reduccion silenciosa del denominador
+    B4  fail-closed ante identidades asimetricas
+    B5  preservacion de colisiones catalog_key -> FIGI
 
 ### A.6.2-bis-B3 - Semantica temporal 13F (APROBADO CONDICIONAL)
 
