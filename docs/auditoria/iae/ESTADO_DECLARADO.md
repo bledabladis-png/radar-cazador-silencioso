@@ -58,6 +58,7 @@ documentos describen su tema; NO declaran el estado del sistema.
 | `INSTITUTIONAL_ACCUMULATION_NIPC_ESPECIFICACION.md` v1.4 | Referencia, no normativa |
 | `A66_BUNDLE.md` | Entregable al auditor (dictamen #76). Refleja estado post-A2. |
 | `A67_CONSULTA.md` | Consulta abierta al auditor sobre B-02/B-03/B-04. |
+| `evidence/p66_e2e_probe/` | Evidencia P66 e2e (10.676 filings Q4, 0 R4 no clasificables). Complementa a `p66_gate*`. |
 
 ## 4. Prohibiciones vigentes
 
