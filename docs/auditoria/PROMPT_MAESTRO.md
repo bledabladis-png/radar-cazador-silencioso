@@ -1,8 +1,10 @@
-# PROMPT MAESTRO v6.49 - INGENIERO SUPERVISOR DEL RADAR DE ROTACION SECTORIAL
+# PROMPT MAESTRO v6.50 - INGENIERO SUPERVISOR DEL RADAR DE ROTACION SECTORIAL
 
-Actualizado: 2026-09-21 (P66 CERRADO - GO CONTRACTUAL. §14.3 reformulada con 7 subsecciones. P60/P61/P38/P63/P64/P65 CERRADOS. Dictamenes hasta #40. HEAD 6e698ca. 184 commits ahead. Sin push. 1039 passed + 2 skipped + 0 xfailed.)
-Estado: Operativo al 100% - 10 contratos temporales (FU-021-5 + FU-021-3C-bis) - 1039 tests locales + 2 skipped - 0 warnings - Gate 10/10 - Deuda ALTA/MEDIA/BAJA activa: 0 - F2.4 EMITIDO - P60/P61/P38/P63/P64/P65 CERRADOS - P66 L3 GO CONTRACTUAL (§14.3 reformulada)
-Commit de referencia: 6e698ca (origin/main HEAD al redactar; el propio commit v6.49 sera HEAD tras push)
+Actualizado: 2026-09-21 (P66 CERRADO completo. A.6.0 CERRADO. A.6.2-bis partido: B2-PIT CLOSED, B1 OPEN/BLOQUEADO, B3 APPROVED COND. Dictamenes hasta #56. HEAD fd082a0. 218 commits ahead. Sin push. 1083 passed + 2 skipped + 3 failed preexistentes.)
+Estado: Operativo al 100% - 10 contratos temporales - 1083 tests locales + 2 skipped + 3 failed preexistentes (freshness, ver §12) - 0 warnings - Gate 10/10 - Deuda activa: 0 - IAE: B2-PIT CERRADO, B1 OPEN/BLOQUEADO, B3 APPROVED COND
+Commit de referencia: fd082a0 (origin/main HEAD al redactar; el propio commit v6.50 sera HEAD tras commit)
+
+**ALERTA METODOLOGICA (2026-09-21):** el ciclo A.6.2-bis acumula 14 dictamenes (#44-#56) con 4 versiones de B1 (v1-v4) sin que se haya escrito una sola linea de codigo B1. **El objetivo del modulo IAE es IMPLEMENTARLO, no redactar documentos.** Ver §11.32.
 
 ---
 
@@ -453,7 +455,7 @@ Nota: daily_run.yml commitea Daily hist/state. Aplicar git fetch + pull --rebase
 
 ## SECCION 10 - VALIDACION Y TESTS
 10.1. Tests
-615 passed + 2 skipped (network) en local; CI similar con parquet gitignored.
+1083 passed + 2 skipped + 3 failed preexistentes (test_freshness, ver §12) en local; CI similar con parquet gitignored.
 
 10.2. Validation Gate (10/10)
 SLPM v1.2 (sin errores de validacion)
@@ -1313,6 +1315,82 @@ auditoria de salida, activacion `DROP_DUP` (requiere nuevo dictamen).
 
 ---
 
+### 11.32. IAE post-P66 - Estado consolidado y objetivo real (2026-09-21)
+
+**Origen:** ciclo P66 (CERRADO) + A.6.0 (CERRADO) + A.6.2-bis
+(partido en subfases por dictamen #52).
+
+**Estado por bloque del modulo IAE (SEC 13F -> NIPC):**
+
+    FA-1 + FA-2 (ingestion + identity)              CERRADO / PUSHED
+    NIPC (5 modulos + 91 tests)                     IMPLEMENTADO (usa proxy)
+    P60/P61/P38/P63/P64/P65                         CERRADOS documentalmente
+    P66 (§14.3 reformulada + reporting_dedup)       CERRADO (codigo implementado)
+
+    A.6.0 Gate 0 de los 3 bloqueantes               CERRADO
+    A.6.2-bis-B2-PIT (infraestructura temporal)     CERRADO (dictamen #53)
+    A.6.2-bis-B1 (TARGET + adaptador P38)           OPEN / BLOQUEADO (#56)
+    A.6.2-bis-B3 (semantica temporal 13F)           APPROVED COND / NO IMPL
+
+**Lo que FALTA por implementar (inventario real, no documental):**
+
+1. **B1** — 5 modulos a crear (cero lineas de codigo):
+   `catalog_key.py`, `target_builder.py`, `period_state.py`,
+   `catalog_p38_adapter.py`, `catalog_validator.py`.
+
+2. **B3** — timestamps en `PositionRecord`, `absence.py` real.
+
+3. **Integracion** de piezas existentes no invocadas desde el pipeline:
+   - `coverage.py::compute_contractual_coverage` (nadie lo invoca)
+   - `reporting_dedup.py` (no invocado por `build_effective_reporting_snapshot`)
+   - `temporal_validity.py` (no invocado por `security_identity.py`, div. D1)
+   - `catalog_pit.py` (nadie lo consume aun; B1 sera el consumidor)
+
+4. **Datos**: `catalog_assignments.csv`, `catalog_membership.csv`,
+   snapshots historicos Q4 2025 / Q1 2026 (requieren OpenFIGI masivo).
+
+5. **Thresholds / gates**: `THRESHOLD_1/2` UNDEFINED, Gate-NIPC.2
+   BLOQUEADO, Gate-NIPC.3 NO AUTORIZADO, `DROP_DUP` NO AUTORIZADO.
+
+**Diagnostico metodologico (importante para el siguiente asistente):**
+
+El ciclo A.6.2-bis (dictamenes #44-#56) ha entrado en un bucle
+divergente: cada propuesta de B1 cierra los bloqueos explicitos del
+dictamen anterior y descubre 3-4 nuevos. Total: 14 dictamenes, 4
+versiones (v1-v4), cero codigo B1.
+
+**Regla nueva (aplicar a partir de ahora):**
+
+    Cuando el diseño de una subfase haya cerrado >=3 rondas de
+    dictamen y el patron sea "cierro N, aparecen N nuevos", PARAR.
+    Congelar el diseno en la version vigente e IMPLEMENTAR.
+    Las dudas se resuelven escribiendo tests, no documentos.
+
+**Decision pendiente del usuario (2026-09-21):**
+
+    Opcion A: congelar B1 v4 e implementar (3 commits definidos).
+    Opcion B: aparcar B1 y avanzar otras partes del IAE
+              (B3, integraciones, o probe GHISALLO).
+
+**Inventario de lo que NO esta bloqueado por B1 (para Opcion B):**
+
+    - B3 semantica temporal (parcialmente independiente).
+    - Integracion de `temporal_validity` en `security_identity` (div. D1).
+    - Integracion de `reporting_dedup` en el pipeline NIPC.
+    - Probe GHISALLO CIK 0001825214.
+    - Curacion adicional del crosswalk CUSIP->ticker.
+
+**Ficheros clave del ciclo A.6.2-bis:**
+
+    iae/A62BIS_B1_SUBFASE.md          v4 (diseno B1, sin codigo)
+    iae/A62BIS_B2_PIT_SUBFASE.md      cerrado
+    iae/A62BIS_PROPUESTA.md           v9 (base historica)
+    iae/DICTAMENES.md                 #44-#56
+    iae/FASE_A6_PLAN.md               plan maestro A.6
+    src/institutional_accumulation/catalog_pit.py    UNICO modulo implementado
+
+---
+
 ## SECCION 12 - LIMITACIONES CONOCIDAS
 20 tickers .L sin provider oficial -> Aceptado.
 
@@ -1590,7 +1668,7 @@ git status -sb (un guion).
 
 Select-String -SimpleMatch desactiva regex → el | se trata como literal. No usar -SimpleMatch con patrones que contengan |.
 
-## SECCION 15 - ESTADO ACTUAL (2026-09-21 v4)
+## SECCION 15 - ESTADO ACTUAL (2026-09-21 v5)
 
 | Metrica | Valor |
 |---|---|
@@ -1599,7 +1677,7 @@ Select-String -SimpleMatch desactiva regex → el | se trata como literal. No us
 | Fuentes europeas | 51 (Euronext 13 + Xetra 19 + BME 19) |
 | Fuente commodities | OilPriceAPI (BZ=F, CL=F, GC=F, HG=F, NG=F) |
 | Fuente term structure | CBOE (^VIX3M) |
-| Tests locales | 1039 passed + 2 skipped + 0 xfailed |
+| Tests locales | 1083 passed + 2 skipped + 3 failed preexistentes (freshness) |
 | Tests CI | ~610 collected con skips (parquet gitignored) |
 | Validation Gate | 10/10 |
 | pyflakes | 0 warnings |
@@ -1607,11 +1685,11 @@ Select-String -SimpleMatch desactiva regex → el | se trata como literal. No us
 | Produccion GH Actions | OK (cron `0 4 * * *` verificado 2026-09-17) |
 | Arquitectura | Modular: 19 src/report/ + 16 src/pipeline/ + 10 src/temporal_contracts/ + 7 src/institutional_accumulation/sec_13f/ + 5 sec_13f/identity (temporal_filter, cusip_resolver, relationships, amendments, sec13f_list, security_identity) + 2 aggregation/ (delta_shares, nipc) + 3 identity/ nuevos (openfigi_client, radar_target_catalog, target_universe) + 5 indicators/mte/ + 4 indicators/darkpool/ |
 | Contratos temporales | 10 (FU-021-5 = 9, FU-021-3C-bis = +1 SPOT_COMMODITY) |
-| Modulo IAE (SEC 13F) | FA-1+FA-2 cerrados. NIPC implementado. P60/P61/P38/P63/P64/P65 CERRADOS (F2.4 aplicado). P65 v1: dedup pre-delta + transition post-delta + probe e2e fail-closed. DROP_DUP diferido v2. 0 xfail residual. Dictamenes hasta #26. Gate-NIPC.2 BLOQUEADO por THRESHOLD. Bloqueantes 1-2 (TARGET indep. + PIT) requieren OpenFIGI. |
+| Modulo IAE (SEC 13F) | FA-1+FA-2 cerrados. NIPC implementado (usa proxy observacional). P60/P61/P38/P63/P64/P65 CERRADOS. P66 CERRADO (§14.3 + reporting_dedup). A.6.0 CERRADO. A.6.2-bis: B2-PIT CERRADO + B1 OPEN/BLOQUEADO + B3 APPROVED COND. Dictamenes hasta #56. Gate-NIPC.2 BLOQUEADO por THRESHOLD. Deuda real: implementar B1 (5 modulos), B3, integraciones y obtener snapshots historicos. |
 | RADAR_TARGET_CATALOG | MATERIALIZADO 2026-09-19 (242 filas, 240 OK, 2 MISS: BRK-B, MOG-A). Hash 11eabce8... Construido desde OpenFIGI TICKER/US -> shareClassFIGI, independiente del crosswalk interno. TARGET_UNIVERSE resolver operativo (8 tests). |
 | Coverage baseline NIPC | Fase A cerrada. TOP 2000 (Q1 2026, CURRENT_RETROSPECTIVE): target_true=210 (10.50% count, 32.8079% weight); corregido 212/33.3428%. target_false=1567 (78.35%, 55.68%). no_id=220 (11.0%, 8.86%). error=3 (0.15%, 2.65%). Delta +0.5349 pp por 2 canales adicionales. THRESHOLD_1/2 UNDEFINED |
 | .git size | ~13 MB |
-| HEAD | 62314ac (149 commits locales ahead de origin/main) |
+| HEAD | fd082a0 (218 commits locales ahead de origin/main) |
 
 ### 15.1. Hitos del ciclo FU-021-3C-bis (2026-09-16)
 
@@ -2430,10 +2508,15 @@ Cuando recibas este prompt, responde:
 
 "Confirmado, contexto asimilado."
 
-Estado del sistema que reconoces (cobertura, tests, Gate, versiones, HEAD).
+Estado del sistema que reconoces (cobertura, tests, Gate, versiones, HEAD, estado IAE).
 
 Pregunta final: "Que hacemos?"
 
 No empieces a proponer tareas sin antes confirmar la asimilacion completa.
 
-Fin del prompt maestro v6.48. Commit de referencia: 62314ac. Fecha: 2026-09-20.
+**Regla critica heredada de v6.50:** si vas a trabajar en IAE, recuerda
+que el objetivo es IMPLEMENTARLO. No inicies un nuevo ciclo de
+propuestas->dictamenes sobre A.6.2-bis sin antes consultar con el
+usuario. Ver §11.32.
+
+Fin del prompt maestro v6.50. Commit de referencia: fd082a0. Fecha: 2026-09-21.
