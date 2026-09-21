@@ -327,13 +327,25 @@ contractual no cambia.
 confirmado. Implementacion con evidencia contractual en A.6.2 + A.6.2-bis.
 
 - Q12 Modelo A confirmado por test (dictamen #72).
-- A.6.4-v2 (dictamen #73): P38 aislado sobre TOP 2000 -> VALID 1.0/1.0/1.0/1.0.
-- A.6.4 (dictamen #75): integracion end-to-end B1+P61+P38 -> VALID.
-  Q1: 20 keys -> 18 FIGI -> 18 VERIFIED via adapter.
-  Q4: 0 keys -> fail-closed (no se fabrica TARGET).
+- A.6.4-v2 (dictamen #73): P38 aislado sobre TOP 2000 -> **smoke test**.
+- A.6.4 (dictamen #75): integracion tecnica B1+P61+P38 -> **smoke test**.
+  Q1: 20 keys -> 18 FIGI -> 18 records VERIFIED (adapter). Q4: mock (ver
+  H-10.1). **No certifica cobertura contractual.**
+
+  Reclasificado tras auditoria externa 2026-09-21 (README A.6.4 +
+  EXPEDIENTE_A64_FIX.md). Evidencia directa: `TARGET_Q4=0`,
+  `TARGET_PAIRWISE=0`, adapter rechaza Q4 vacio con
+  `AdapterError: TARGET_PAIRWISE vacio`. El `coverage=1.0` era artefacto
+  de pasar Q4=Q1 (mock). Cobertura real Q1/universo B2-PIT: 18/242 = 7.44%.
 - H-73.1 corregido: adapter mapea `weight_status` a
   `operational_mapping_status`. Regresion en
   `tests/test_h731_adapter_p38_compat.py` (5 tests).
+- H-10.1 ABIERTO (auditoria 2026-09-21): adapter marca
+  `operational_mapping_status="VERIFIED"` incondicionalmente; `coverage.py`
+  divide por observed (no TARGET); `PositionRecord.weight=1.0` hardcoded.
+  Resultado **estructuralmente 1.0** con datos reales. Fix requiere
+  dictamen externo (toca `coverage.py`, `catalog_p38_adapter.py`,
+  `period_state.py`). Expediente: `iae/EXPEDIENTE_A64_FIX.md`.
 ---
 
 ## 4. TARGET / RESOLVED / PAIRED
@@ -411,9 +423,16 @@ puede estar CANONICAL sin entrar en RESOLVED_P.
     PAIRED:
       securities en RESOLVED_Q4 INTERSECT RESOLVED_Q1
       con operational_mapping_status == VERIFIED en ambos periodos
+      emparejadas por `shareClassFIGI` comun (Q12 Modelo A)
 
-La identidad canonica debe ser comun: `canonical_security(Q4) == canonical_security(Q1)`.
-No basta con coincidencia de CUSIP observado.
+**Clave de pairing (Q12 Modelo A, dictamen #72):**
+`share_class_figi(Q4) == share_class_figi(Q1)`.
+
+NO se exige igualdad de `canonical_security` entre periodos. Bajo
+Modelo A la unidad contractual es la share class (FIGI), no la
+representacion canonica (`equity:X` vs `figi:BBG...`). Dos keys con el
+mismo `shareClassFIGI` y `canonical_security` distinto SON paired. Ver
+`tests/test_p38_contract.py::test_p38_cusip_distinto_figi_igual_paired`.
 ### 4.6. No-colapso de TARGET y RESOLVED
 
 Reglas duras:
@@ -589,7 +608,8 @@ bloqueados: OpenFIGI masivo NO AUTORIZADO, thresholds UNDEFINED.
 ### 10.2. Hashes
 
     NIPC_COVERAGE_POLICY.md v1.0: 57f2d01feb68d8916dfa4fa0451224c2ee3dda7e4631a7863e671257b3e91f06
-    radar_target_catalog.csv:     e5d8f9c86b07c4d3981b2fd3c3a804f75d3559fa33fbb7731bfc76308a60b292
+    radar_target_catalog.csv:     e5d8f9c86b07c4d3981b2fd3c3a804f75d3559fa33fbb7731bfc76308a60b292 (VIGENTE, LF)
+                                  (historico CRLF: 11eabce8f8aaed1be6aa3c3557b5e392ad305757230333f84f37285c401b62b7)
     probe_p70_result.json:        809c51af47ae154c6c01bba1cf3983a6c0143fd3b0711958fa8b9e6e18bae96f
     probe_p70_summary.txt:        9e8c42d6a742d773be7e531782a7d8514a5c00aa64efc5080d81a718d6384fe5
     NIPC_P70_DICTAMEN.md:         e8d4e4e825fe6136b23573705b800108247eb07c9a46e2f62c2c06980f179092 (historico; consolidado en DICTAMENES.md seccion 23)
