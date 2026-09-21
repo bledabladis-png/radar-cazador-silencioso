@@ -1898,13 +1898,25 @@ del ciclo NIPC).
     de la spec.
     Tratamiento normativo: la seccion 5.4 define su exclusion del
     operational_universe.
-    Estado de implementacion: la seccion 5.4 no esta materializada en el
-    codigo productivo revisado (Gate 4 / sub-deuda de
-    K-INSTITUTIONAL-ACCUMULATION-01).
+    Estado de implementacion: RESUELTO 2026-09-21. La cadena
+    §5.1 -> §5.3 -> §5.4 -> §5.5 esta implementada y cerrada
+    (dictamenes #61-#67):
+      - security_type.py: clasificador Nivel A+B con tokenizacion.
+      - operational_universe.py: build_operational_universe.
+      - Contrato ticker_mapped = CANONICAL AND VERIFIED (#65).
+      - PIT obligatorio (identity_period_iso, #66 H-66.1 / #67).
+    Medicion post-§5.3 (Q1 2026, filas): 69,37% RESOLVED_EQUITY,
+    9,04% RESOLVED_NON_EQUITY, 21,59% UNRESOLVED, 0% CONFLICT.
+    Handoff §5.4 -> §5.5: PASS (identidad exacta entre
+    operational_universe y RESOLVED_EQUITY).
     GHISALLO (2026-09-21): los CUSIP 329882225 y 329882250 forman parte
     de esta poblacion documental fuera de Official List para Q4 2025 y
     Q1 2026. Estar fuera de Official List no implica error de filing ni
     no-reportabilidad (dictamenes #57-#60).
+    Residual no bloqueante: SPONSORED ADR/ADS, ADR, SH BEN INT,
+    FUND, ACT, ETFs producto especifico pendientes de evidencia PIT.
+    Marcadores residuales registrados bajo sub-deuda de
+    K-INSTITUTIONAL-ACCUMULATION-01.
   - Deuda: tabla data/mappings/cusip_equivalence.csv (nueva, para
     corporate actions).
     Estado: PENDIENTE creacion.
