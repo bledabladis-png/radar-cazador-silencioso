@@ -23,7 +23,8 @@ el state; coverage.py aplica Q5 literal (Q4 vacio -> UNAVAILABLE).
    literal (fix A2 c4).
 5. Q4 vacio produce `coverage_previous=None` (no 1.0). Q1 produce
    `coverage_current=1.0` calculado sobre el TARGET_Q1 MATERIALIZADO en
-   esta ejecucion (18 FIGIs). **NO es certificacion historica plena de
+   esta ejecucion (20 FIGIs, tras curacion ONB/PTGX del 2026-09-22).
+   **NO es certificacion historica plena de
    cobertura contractual Q1**: P62/PIT sigue pendiente (el snapshot
    tiene valid_from=2026-09-21, posterior al period_end Q1=2026-03-31)
    y el universo B2-PIT completo (242 keys) no esta materializado.
@@ -34,13 +35,14 @@ el state; coverage.py aplica Q5 literal (Q4 vacio -> UNAVAILABLE).
   B2-PIT vigente tiene `valid_from=2026-09-21` y no cubre Q4 2025 / Q1
   2026 por PIT. La cadena se ejecuta con build_target directo.
 - Materializacion completa del universo 13F. El subconjunto con FIGI
-  comun Q4<->Q1 es 18 keys. El universo B2-PIT completo es 242 keys.
+  comun Q4<->Q1 es 20 keys tras curacion ONB/PTGX. El universo B2-PIT
+  completo es 242 keys.
 - Thresholds NIPC. Siguen UNDEFINED.
 
 ## Resultado empirico (result.json)
 
     coverage_previous              = None    (Q4 vacio, Q5 literal)
-    coverage_current               = 1.0     (18/18 VERIFIED sobre TARGET_Q1)
+    coverage_current               = 1.0     (20/20 VERIFIED sobre TARGET_Q1)
     paired_security_coverage       = None    (TARGET_PAIRWISE = 0)
     paired_weighted_share_coverage = None
     coverage_status                = UNAVAILABLE
@@ -51,7 +53,7 @@ Cardinalidades (H-06):
     target_q1_figi          = 18
     target_pairwise_figi    = 0
     records_q4_verified     = 0
-    records_q1_verified     = 18
+    records_q1_verified     = 20
     paired_figi             = 0
 
 Contraste pre/post fix A2 (mismo dataset, mismo subconjunto):

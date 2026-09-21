@@ -160,7 +160,7 @@ sin dictamen).
 - H-12 (MEDIA): hash de catalogo etiquetado (cerrado antes del fix A2).
 
 **Consecuencia (actualizada post #76):** A.6.4 se reclasifica como
-**evidencia contractual parcial**: valida rama Q1 (18/18 sobre TARGET_Q1
+**evidencia contractual parcial**: valida rama Q1 (20/20 sobre TARGET_Q1
 materializado) y rama fail-closed (Q4 vacio -> coverage_previous=None),
 pero NO valida pairwise real (TARGET_PAIRWISE=0). Ver
 `evidence/a64_integration_b1_p61_p38/README.md` y `A66_BUNDLE.md`.

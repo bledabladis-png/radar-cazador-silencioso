@@ -55,7 +55,7 @@ Evidencia empirica sobre 13F Q4 2025 / Q1 2026 reales
 (probe_integration_b1_p61_p38.py, result.json):
 
     coverage_previous              = None    (Q4 vacio, Q5 literal)
-    coverage_current               = 1.0     (18/18 VERIFIED sobre TARGET_Q1)
+    coverage_current               = 1.0     (20/20 VERIFIED sobre TARGET_Q1)
     paired_security_coverage       = None    (TARGET_PAIRWISE = 0)
     paired_weighted_share_coverage = None
     coverage_status                = UNAVAILABLE
