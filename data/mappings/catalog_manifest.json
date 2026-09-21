@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "snapshots": [
+    {
+      "version_id": "20260921_01",
+      "valid_from": "2026-09-21",
+      "valid_to": null,
+      "sha256": "e5d8f9c86b07c4d3981b2fd3c3a804f75d3559fa33fbb7731bfc76308a60b292",
+      "csv_path": "catalog_snapshots/snapshot_20260921_01.csv",
+      "rows": 242,
+      "producer": "radar_target_catalog.build_from_probe_result"
+    }
+  ]
+}
