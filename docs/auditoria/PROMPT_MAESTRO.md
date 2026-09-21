@@ -1322,7 +1322,7 @@ auditoria de salida, activacion `DROP_DUP` (requiere nuevo dictamen).
 
 ---
 
-### 11.32. IAE post-P66 - Estado consolidado y objetivo real (2026-09-21)
+### 11.32. IAE post-P66 - Estado HISTORICO (snapshot 2026-09-21; ver ESTADO_DECLARADO.md para el estado vigente)
 
 **Origen:** ciclo P66 (CERRADO) + A.6.0 (CERRADO) + A.6.2-bis
 (partido en subfases por dictamen #52).
@@ -2531,4 +2531,4 @@ que el objetivo es IMPLEMENTARLO. No inicies un nuevo ciclo de
 propuestas->dictamenes sobre A.6.2-bis sin antes consultar con el
 usuario. Ver §11.32.
 
-Fin del prompt maestro v6.50. Commit de referencia: fd082a0. Fecha: 2026-09-21.
+Fin del prompt maestro v6.55.

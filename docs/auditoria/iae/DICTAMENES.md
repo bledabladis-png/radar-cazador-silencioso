@@ -1,7 +1,7 @@
 # IAE - REGISTRO DE DICTAMENES
 
 **Generado:** 2026-09-20
-**Actualizado:** 2026-09-21 (hasta dictamen #56)
+**Actualizado:** 2026-09-21. Detalle expandido: dictamenes #1-#40. Indice cronologico: #1-#56. Dictamenes posteriores (#57-#75) estan en el indice del prompt / ESTADO_DECLARADO.md hasta su consolidacion en este registro.
 **Consolida:** dictamenes del ciclo IAE y radar
 
 **Regla:** este fichero es la cadena autoritativa. Los dictamenes originales
