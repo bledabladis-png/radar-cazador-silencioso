@@ -1,4 +1,4 @@
-# TRANSFER DE SESION - 2026-09-21 v9.2
+# TRANSFER DE SESION - 2026-09-22 v9.3
 
 Documento de onboarding. **NO es fuente de estado.**
 Estado vivo: `iae/ESTADO_SISTEMA.md` (hechos) + `iae/ESTADO_DECLARADO.md` (fases).
@@ -16,11 +16,11 @@ Reglas de personalidad y metodo: `PROMPT_MAESTRO.md` secciones 1 y 3.
 
 ## 2. Estado real al cierre de esta sesion
 
-    HEAD          (verificar con git al arrancar tras este commit)
-    Ahead         ~293 commits locales
+    HEAD          ba59d39 (verificar con git al arrancar)
+    Ahead         295 commits locales
     Working tree  LIMPIO (verificar)
     Tests         test_h731: 11 passed (incluye H-08);
-                  suite global: ~1311 passed + 2 skipped + 3 failed
+                  suite global: 1312 passed + 2 skipped + 3 failed
                   (los 3 failed son test_freshness.py, preexistentes, no-regresion)
     Push          NO (local-first IAE, dictamen #76)
 
@@ -64,6 +64,9 @@ Dictamen #76 (2026-09-21): A2 = GO; A.6.6 = NO-GO.
 Hallazgos cerrados: H-05, H-06, H-07, H-10.1, H-08, B-01, B-05, B-06, B-07.
 Bloqueos residuales (NO AUTORIZADOS): B-02 (P62/PIT), B-03 (TARGET
 completo), B-04 (pairwise real), push.
+
+Consulta A.6.7 ENVIADA al auditor (commit `ba59d39`,
+`A67_CONSULTA.md`). Pendiente respuesta para desbloquear B-02/B-03/B-04.
 
 ## 4. TRABAJO PENDIENTE: fix A2 (H-05/H-06/H-07/H-10.1)
 
@@ -155,10 +158,10 @@ siguiente. Si algo falla, parar y avisar.
     py -m pyflakes . ; py -m compileall . -q
 
 Esperado:
-  - HEAD post-saneamiento (ver commit actual)
-  - ahead 293 o mas
+  - HEAD ba59d39 o posterior
+  - ahead 295 o mas
   - working tree limpio
-  - 1311 passed + 2 skipped + 3 failed (test_freshness, preexistentes)
+  - 1312 passed + 2 skipped + 3 failed (test_freshness, preexistentes)
   - test_h731: 11 passed, 0 xfailed
   - pyflakes silencio, compileall OK
 
@@ -167,10 +170,10 @@ Esperado:
     "Confirmado, contexto asimilado."
 
     Estado que reconozco:
-      - HEAD post-saneamiento, ahead ~293
+      - HEAD ba59d39, ahead 295
       - Auditor #76: A2 = GO; A.6.6 = NO-GO
       - H-05/H-06/H-07/H-10.1/H-08/B-01/B-05/B-06/B-07 cerrados
-      - Bloqueos residuales: B-02 (P62/PIT), B-03 (TARGET), B-04 (pairwise)
+      - Consulta A.6.7 enviada: B-02/B-03/B-04 pendientes de dictamen
       - Prohibido tocar nipc/delta_shares/security_identity/temporal_validity
       - Prohibido push; prohibido B-02/B-03/B-04 sin nuevo dictamen
 
@@ -178,4 +181,4 @@ Esperado:
 
 ---
 
-FIN DEL TRANSFER v9.2. Fecha: 2026-09-21. Dictamen #76 aplicado.
+FIN DEL TRANSFER v9.3. Fecha: 2026-09-22. Consulta A.6.7 enviada.
