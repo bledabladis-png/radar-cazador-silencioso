@@ -273,7 +273,7 @@ def load_crosswalk_internal(
                 "ticker": str(r["ticker"]).strip(),
                 "valid_from": r.get("valid_from"),
                 "valid_to": r.get("valid_to"),
-                "source": "exceptions",
+                "source": "cusip_ticker_exceptions",
             })
 
     p2 = Path(etf_holdings_path)
