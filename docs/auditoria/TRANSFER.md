@@ -1,4 +1,4 @@
-# TRANSFER DE SESION - 2026-09-22 v9.4
+# TRANSFER DE SESION - 2026-09-22 v9.5
 
 Documento de onboarding. **NO es fuente de estado.**
 Estado vivo: `iae/ESTADO_SISTEMA.md` (hechos) + `iae/ESTADO_DECLARADO.md` (fases).
@@ -16,8 +16,8 @@ Reglas de personalidad y metodo: `PROMPT_MAESTRO.md` secciones 1 y 3.
 
 ## 2. Estado real al cierre de esta sesion
 
-    HEAD          6126c0d (verificar con git al arrancar)
-    Ahead         299 commits locales
+    HEAD          b9a2107 (verificar con git al arrancar)
+    Ahead         311 commits locales
     Working tree  LIMPIO (verificar)
     Tests         test_h731: 11 passed (incluye H-08);
                   suite global: 1312 passed + 2 skipped + 3 failed
@@ -72,9 +72,14 @@ Trabajo post-consulta (sin dictamen):
 - Curacion crosswalk ONB (680033107) + PTGX (74366E102) cerrada
   (commit `7357e1d`). Sub-deuda nueva: BRK-B + MOG-A con status=MISS
   (requiere OpenFIGI masivo).
-- Smoke NIPC contractual anadido al probe (commit `6126c0d`):
-  compute_nipc_contractual computa sin error con delta vacio.
+- Smoke NIPC contractual anadido al probe (commit `6126c0d`).
 - Regresion cruzada P65 verificada tras A2: sin impacto.
+- Cobertura semantica IAE 110/110 (commits `12e1e3f`, `de6b737`).
+- B-06 end-to-end sin doble conteo (commit `33881df`).
+- Saneamiento: 3 failed de test_freshness aclarados como ambientales.
+- Sync 18->20 post-curacion ONB/PTGX en docs vivos (`8bf6812`).
+- Sub-deuda registrada: contrato NIPC L332 cita 18 (desactualizado,
+  requiere dictamen para actualizar in-place).
 
 ## 4. TRABAJO PENDIENTE: fix A2 (H-05/H-06/H-07/H-10.1)
 
@@ -178,7 +183,7 @@ Esperado:
     "Confirmado, contexto asimilado."
 
     Estado que reconozco:
-      - HEAD 6126c0d, ahead 299
+      - HEAD b9a2107, ahead 311
       - Auditor #76: A2 = GO; A.6.6 = NO-GO
       - H-05/H-06/H-07/H-10.1/H-08/B-01/B-05/B-06/B-07 cerrados
       - Consulta A.6.7 enviada: B-02/B-03/B-04 pendientes de dictamen
@@ -189,4 +194,4 @@ Esperado:
 
 ---
 
-FIN DEL TRANSFER v9.4. Fecha: 2026-09-22. Consulta A.6.7 enviada + curacion ONB/PTGX + smoke NIPC.
+FIN DEL TRANSFER v9.5. Fecha: 2026-09-22. Consulta A.6.7 enviada + ciclo de saneamiento completo (311 commits locales).
