@@ -1,10 +1,10 @@
 # PROMPT MAESTRO v6.50 - INGENIERO SUPERVISOR DEL RADAR DE ROTACION SECTORIAL
 
-Actualizado: 2026-09-21 (P66 CERRADO completo. A.6.0 CERRADO. A.6.2-bis partido: B2-PIT CLOSED, B1 OPEN/BLOQUEADO, B3 APPROVED COND. Dictamenes hasta #56. HEAD fd082a0. 218 commits ahead. Sin push. 1083 passed + 2 skipped + 3 failed preexistentes.)
-Estado: Operativo al 100% - 10 contratos temporales - 1083 tests locales + 2 skipped + 3 failed preexistentes (freshness, ver §12) - 0 warnings - Gate 10/10 - Deuda activa: 0 - IAE: B2-PIT CERRADO, B1 OPEN/BLOQUEADO, B3 APPROVED COND
-Commit de referencia: fd082a0 (origin/main HEAD al redactar; el propio commit v6.50 sera HEAD tras commit)
+Actualizado: 2026-09-21 v6.51 (GHISALLO CERRADO. B3 IMPLEMENTADO spec-side. Curacion crosswalk ampliada 3->22 filas. P66 CERRADO. A.6.0 CERRADO. A.6.2-bis: B2-PIT CLOSED, B1 OPEN/BLOQUEADO, B3 IMPL SPEC-SIDE. Dictamenes hasta #60. HEAD f13363d. 225 commits ahead. Sin push. 1115 passed + 2 skipped + 3 failed preexistentes.)
+Estado: Operativo al 100% - 10 contratos temporales - 1115 tests locales + 2 skipped + 3 failed preexistentes (freshness, ver §12) - 0 warnings - Gate 10/10 - Deuda activa: 0 - IAE: B2-PIT CERRADO, B1 OPEN/BLOQUEADO, B3 IMPL SPEC-SIDE (sin integracion)
+Commit de referencia: f13363d (origin/main HEAD al redactar; el propio commit v6.51 sera HEAD tras commit)
 
-**ALERTA METODOLOGICA (2026-09-21):** el ciclo A.6.2-bis acumula 14 dictamenes (#44-#56) con 4 versiones de B1 (v1-v4) sin que se haya escrito una sola linea de codigo B1. **El objetivo del modulo IAE es IMPLEMENTARLO, no redactar documentos.** Ver §11.32.
+**ALERTA METODOLOGICA (2026-09-21 v6.51):** B3 (semantica temporal 13F) se ha implementado spec-side en 4 commits tras aplicar la regla nueva (implementar, no redactar). B1 sigue OPEN/BLOQUEADO sin codigo. **El objetivo del modulo IAE es IMPLEMENTARLO, no redactar documentos.** Ver §11.32.
 
 ---
 
@@ -1330,7 +1330,7 @@ auditoria de salida, activacion `DROP_DUP` (requiere nuevo dictamen).
     A.6.0 Gate 0 de los 3 bloqueantes               CERRADO
     A.6.2-bis-B2-PIT (infraestructura temporal)     CERRADO (dictamen #53)
     A.6.2-bis-B1 (TARGET + adaptador P38)           OPEN / BLOQUEADO (#56)
-    A.6.2-bis-B3 (semantica temporal 13F)           APPROVED COND / NO IMPL
+    A.6.2-bis-B3 (semantica temporal 13F)           IMPLEMENTADO SPEC-SIDE
 
 **Lo que FALTA por implementar (inventario real, no documental):**
 
@@ -1338,7 +1338,6 @@ auditoria de salida, activacion `DROP_DUP` (requiere nuevo dictamen).
    `catalog_key.py`, `target_builder.py`, `period_state.py`,
    `catalog_p38_adapter.py`, `catalog_validator.py`.
 
-2. **B3** — timestamps en `PositionRecord`, `absence.py` real.
 
 3. **Integracion** de piezas existentes no invocadas desde el pipeline:
    - `coverage.py::compute_contractual_coverage` (nadie lo invoca)
@@ -1366,6 +1365,10 @@ versiones (v1-v4), cero codigo B1.
     Congelar el diseno en la version vigente e IMPLEMENTAR.
     Las dudas se resuelven escribiendo tests, no documentos.
 
+    Aplicado con exito en B3 (2026-09-21 v6.51): 4 commits,
+    sin abrir dictamenes adicionales. Ver dictamenes #57-#60
+    (los tres ultimos corresponden a GHISALLO, no a B3).
+
 **Decision pendiente del usuario (2026-09-21):**
 
     Opcion A: congelar B1 v4 e implementar (3 commits definidos).
@@ -1374,10 +1377,12 @@ versiones (v1-v4), cero codigo B1.
 
 **Inventario de lo que NO esta bloqueado por B1 (para Opcion B):**
 
-    - B3 semantica temporal (parcialmente independiente).
-    - Integracion de `temporal_validity` en `security_identity` (div. D1).
+    - Integracion de B3 en pipeline (timestamps + provenance).
+      NO AUTORIZADA: ciclo propio. Ver dictamenes #57-#60.
     - Integracion de `reporting_dedup` en el pipeline NIPC.
-    - Curacion adicional del crosswalk CUSIP->ticker.
+      NO AUTORIZADA: P66 prohibe activar DROP_DUP sin dictamen.
+    - Curacion adicional del crosswalk CUSIP->ticker (residual:
+      ONB, SPCX, PTGX sin match en 13F Q1 2026).
 
 **Ficheros clave del ciclo A.6.2-bis:**
 
@@ -1676,7 +1681,7 @@ Select-String -SimpleMatch desactiva regex → el | se trata como literal. No us
 | Fuentes europeas | 51 (Euronext 13 + Xetra 19 + BME 19) |
 | Fuente commodities | OilPriceAPI (BZ=F, CL=F, GC=F, HG=F, NG=F) |
 | Fuente term structure | CBOE (^VIX3M) |
-| Tests locales | 1083 passed + 2 skipped + 3 failed preexistentes (freshness) |
+| Tests locales | 1115 passed + 2 skipped + 3 failed preexistentes (freshness) |
 | Tests CI | ~610 collected con skips (parquet gitignored) |
 | Validation Gate | 10/10 |
 | pyflakes | 0 warnings |
@@ -1684,7 +1689,7 @@ Select-String -SimpleMatch desactiva regex → el | se trata como literal. No us
 | Produccion GH Actions | OK (cron `0 4 * * *` verificado 2026-09-17) |
 | Arquitectura | Modular: 19 src/report/ + 16 src/pipeline/ + 10 src/temporal_contracts/ + 7 src/institutional_accumulation/sec_13f/ + 5 sec_13f/identity (temporal_filter, cusip_resolver, relationships, amendments, sec13f_list, security_identity) + 2 aggregation/ (delta_shares, nipc) + 3 identity/ nuevos (openfigi_client, radar_target_catalog, target_universe) + 5 indicators/mte/ + 4 indicators/darkpool/ |
 | Contratos temporales | 10 (FU-021-5 = 9, FU-021-3C-bis = +1 SPOT_COMMODITY) |
-| Modulo IAE (SEC 13F) | FA-1+FA-2 cerrados. NIPC implementado (usa proxy observacional). P60/P61/P38/P63/P64/P65 CERRADOS. P66 CERRADO (§14.3 + reporting_dedup). A.6.0 CERRADO. A.6.2-bis: B2-PIT CERRADO + B1 OPEN/BLOQUEADO + B3 APPROVED COND. Dictamenes hasta #56. Gate-NIPC.2 BLOQUEADO por THRESHOLD. Deuda real: implementar B1 (5 modulos), B3, integraciones y obtener snapshots historicos. |
+| Modulo IAE (SEC 13F) | FA-1+FA-2 cerrados. NIPC implementado (usa proxy observacional). P60/P61/P38/P63/P64/P65 CERRADOS. P66 CERRADO (§14.3 + reporting_dedup). A.6.0 CERRADO. GHISALLO CERRADO (2026-09-21, caracterizado como artefacto del probe). A.6.2-bis: B2-PIT CERRADO + B1 OPEN/BLOQUEADO + B3 IMPLEMENTADO SPEC-SIDE (absence.py + timestamps.py + PositionRecord extendido + provenance helpers, 4 commits, sin integracion en pipeline). Curacion crosswalk ampliada (3->22 filas Q1 2026). Dictamenes hasta #60. Gate-NIPC.2 BLOQUEADO por THRESHOLD. Deuda real: implementar B1 (5 modulos), integrar B3 al pipeline, integraciones y obtener snapshots historicos. |
 | RADAR_TARGET_CATALOG | MATERIALIZADO 2026-09-19 (242 filas, 240 OK, 2 MISS: BRK-B, MOG-A). Hash 11eabce8... Construido desde OpenFIGI TICKER/US -> shareClassFIGI, independiente del crosswalk interno. TARGET_UNIVERSE resolver operativo (8 tests). |
 | Coverage baseline NIPC | Fase A cerrada. TOP 2000 (Q1 2026, CURRENT_RETROSPECTIVE): target_true=210 (10.50% count, 32.8079% weight); corregido 212/33.3428%. target_false=1567 (78.35%, 55.68%). no_id=220 (11.0%, 8.86%). error=3 (0.15%, 2.65%). Delta +0.5349 pp por 2 canales adicionales. THRESHOLD_1/2 UNDEFINED |
 | .git size | ~13 MB |
