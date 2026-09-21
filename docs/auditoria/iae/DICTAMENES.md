@@ -65,6 +65,7 @@
 | 51 | Ver entrada §51 de este fichero | A.6.2-bis v8 NO-GO. Asignacion catalog_key + preservacion dominio P38. |
 | 52 | Ver entrada §52 de este fichero | Dictamen estrategico: Opcion 1 aprobada. B2-PIT autorizado a implementar. B1/B3 en diseno. |
 | 53 | Ver entrada §53 de este fichero | B2-PIT CERRADO formalmente. Siguiente ciclo recomendado: B1. |
+| 54 | Ver entrada §54 de este fichero | A.6.2-bis-B1 NO-GO. Full TARGET + assignment history + membership snapshot<->key. |
 
 ---
 
@@ -1768,6 +1769,162 @@ repositorio.
 
 **Conclusion: B2-PIT CLOSED sin reabrir bloqueantes de B1. Siguiente
 objeto: B1.**
+
+---
+
+## 54. A.6.2-bis-B1 - Dictamen verificacion propuesta v1 (2026-09-21)
+
+**Tipo:** dictamen del auditor externo sobre A62BIS_B1_SUBFASE.md v1.
+**HEAD auditado:** 21c30e1.
+**Referencia:** dictamenes #51, #52, #53.
+
+**Resultado:** NO-GO - DISENO NO CERRADO. 3 bloqueantes estructurales.
+
+### Aprobado conceptualmente
+
+    Separacion B1 respecto de B2-PIT                 APPROVED
+    No modificar P38                                 APPROVED
+    No filtrar P38 por TARGET_PAIRWISE               APPROVED
+    share_class_figi como unidad economica           APPROVED
+    TARGET_PAIRWISE como condicion de feasibility    APPROVED
+    NOT_PRESENT != 0.0                               APPROVED
+    ZERO_REPORTED -> 0.0                             APPROVED
+    Cambio FIGI Q4->Q1 -> conflicto                  APPROVED
+    Colision catalog_key -> share_class_figi         APPROVED
+    Fail-closed                                      APPROVED
+
+### B1-BLK-1 - Reduccion silenciosa del dominio P38
+
+La definicion v1:
+  target_q4_figi := { figi(K) : K in TARGET_Q4, figi(K) != None }
+
+Es incompatible con B3 del propio documento. Al excluir None, una
+entrada del TARGET desaparece del universo economico antes de P38.
+Permite el comportamiento prohibido:
+  FIGI no resoluble -> entrada eliminada -> denominador menor -> metrica
+  aparentemente valida
+
+Correccion exigida (v2): ANTES de invocar P38 debe verificarse:
+  si cualquier K in (TARGET_Q4 UNION TARGET_Q1) no tiene FIGI resoluble
+    -> UNAVAILABLE
+  Solo entonces:
+    target_q4_figi = { figi(K) : K in TARGET_Q4 }   (sin filtro)
+    target_q1_figi = { figi(K) : K in TARGET_Q1 }   (sin filtro)
+
+`figi != None` NO puede ser filtro.
+
+### B1-BLK-2 - catalog_assignments.csv insuficiente
+
+La tabla v1 (catalog_key, fecha_alta, source, estado, fecha_retiro) NO
+identifica la entidad administrativa vinculada. Y "exactamente 1 fila
+por key" hace imposible representar K1->A luego K1->B.
+
+El validator no puede distinguir:
+  misma key + misma identidad + multiples snapshots  (OK)
+de:
+  misma key + identidad administrativa diferente     (REASSIGNED)
+
+Correccion exigida (v2): representacion inmutable del vinculo de
+identidad + historial. La solucion debe permitir demostrar
+catalog_key K -> identidad administrativa X y detectar reasignacion.
+
+Propuesta v2: tabla multi-fila con historial:
+  catalog_assignments.csv:
+    catalog_key, assigned_entity_id, valid_from, valid_to,
+    source, reason
+  Validator: dos filas para misma key con distinto assigned_entity_id
+  -> CATALOG_KEY_REASSIGNED.
+
+### B1-BLK-3 - Falta relacion formal snapshot <-> catalog_key
+
+B2-PIT cerro sin catalog_key. Los snapshots tienen 242 filas sin
+identidad administrativa. B1 declara build_target(snapshot) ->
+TargetUniverse pero NO define como se determina que catalog_key
+corresponde a cada fila.
+
+No se puede resolver implicitamente por ticker (catalog_key no depende
+de ticker) ni por posicion fisica de fila.
+
+Correccion exigida (v2): registro formal de membership por snapshot
+o equivalente normativo, sin reescribir snapshots de B2-PIT (que son
+inmutables).
+
+Propuesta v2: catalogo de membership:
+  data/mappings/catalog_membership.csv:
+    version_id, catalog_key, snapshot_row_id
+  Se publica aparte. NO modifica snapshots publicados.
+
+### Ampliacion del flujo
+
+El flujo v1 (9 pasos) debe ampliarse con resolucion completa del
+dominio antes de P38. Secuencia v2:
+
+    1. as_of Q4/Q1
+    2. build_target
+    3. pairwise no vacio
+    4. estados pairwise
+    5. continuity
+    6. collision full universe
+    7. feasibility contractual (pairwise)
+    8. resolucion completa del dominio Q4 UNION Q1 (v2 NUEVO)
+    9. adaptacion P38
+    10. compute_contractual_coverage
+
+Ambas condiciones deben preceder a P38:
+  pairwise feasibility + full-target resolvability.
+
+### Migracion inicial 242 keys
+
+CONDICIONALMENTE APROBABLE. La numeracion puede mantenerse como
+mecanismo de generacion de IDs, siempre que:
+  1. su asignacion unica quede preservada;
+  2. el orden alfabetico sea evidencia de generacion, no identidad;
+  3. el vinculo key <-> entidad quede materializado;
+  4. el vinculo no dependa posteriormente del ticker.
+
+### Plan de 3 commits
+
+ESTRUCTURA APROBADA CONDICIONALMENTE. Debe incorporar:
+  - B1.1: identidad + historial + membership
+  - B1.2: TargetUniverse + relacion snapshot<->key
+  - B1.3: flujo ampliado + adaptador con full-resolution check
+
+### Criterio de cierre
+
+Debe anadir tests especificos:
+  A1: misma key + misma entidad + multiples snapshots -> OK
+      misma key + entidad distinta -> FAIL
+  A2/B3: unresolved en TARGET_PAIRWISE -> UNAVAILABLE
+         unresolved fuera de pairwise pero dentro de Q4/Q1 -> UNAVAILABLE (nuevo)
+  Membership: snapshot V1 + K1 -> inequivoco
+              snapshot V2 + K1 -> persistencia
+              snapshot V2 + K2 -> nueva membership
+              sin depender del orden de filas
+  B5: tests ya definidos, conceptualmente OK.
+
+### Estado consolidado
+
+    B2-PIT                CLOSED (#53)
+    B1 arquitectura       APPROVED CONDITIONAL
+    A1                    OPEN - BLOCKED
+    A2                    OPEN - BLOCKED
+    B3                    OPEN - BLOCKED por A2
+    B4                    APPROVED CONDITIONAL
+    B5                    APPROVED CONDITIONAL
+    Flujo 9 pasos         APPROVED CONDITIONAL (ampliar a 10)
+    Implementacion B1.x   NO AUTORIZADA
+
+### Decisión final
+
+NO-GO - A.6.2-bis-B1 NO IMPLEMENTABLE TODAVIA.
+
+Los 3 puntos pendientes son estructurales:
+  1. Full TARGET -> no eliminacion por FIGI=None.
+  2. Assignment -> identidad e historial demostrables.
+  3. Snapshot -> membership K inequivoco.
+
+NO volver a v10 global. Emitir revision B1 especifica que cierre
+estos 3 puntos.
 
 ---
 
