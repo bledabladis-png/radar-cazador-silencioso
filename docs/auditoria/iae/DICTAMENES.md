@@ -59,6 +59,7 @@
 | 45 | Ver entrada §45 de este fichero | A.6.2-bis v2 GO COND. F1/F2/F3 + amendments. |
 | 46 | Ver entrada §46 de este fichero | A.6.2-bis v3 NO-GO. Bloqueos A (B1) + B (B3). |
 | 47 | Ver entrada §47 de este fichero | A.6.2-bis v4 NO-GO. A1 catalog_key + A2 denominador. |
+| 48 | Ver entrada §48 de este fichero | A.6.2-bis v5 NO-GO. weight_status + adaptador P38 + PIT cross-snapshot. |
 
 ---
 
@@ -973,6 +974,157 @@ Global: P65 PASS + P66 PASS + A.6.2-bis PASS + compileall + pyflakes
 
 **Conclusion: v5 que cierre A1 + A2 + test NEW HOLDINGS ambiguous
 -> apta para GO DE IMPLEMENTACION.**
+
+---
+
+## 48. A.6.2-bis - Dictamen de verificacion documental v5 (2026-09-21)
+
+**Tipo:** dictamen del auditor externo sobre A62BIS_PROPUESTA.md v5.
+**HEAD auditado:** 30ed3df.
+**Dictamen anterior:** #47 (v4 NO-GO).
+
+**Resultado:** NO-GO DE IMPLEMENTACION. Arquitectura GO CONDICIONAL.
+
+### Lo que la v5 corrige correctamente
+
+- catalog_key independiente del ticker.
+- Identidad administrativa separada de unidad economica P38.
+- No reduce TARGET ante mapping fallido.
+- Camino B fail-closed adoptado.
+- NEW HOLDINGS ambiguous -> N/D.
+- B2 estable.
+- B3 coherente con RESTATEMENT / NEW HOLDINGS.
+
+### Bloqueo 1 - A2 w(s)=0 sobrecarga estados
+
+w(s)=0 no identifica por si sola la causa. Deben separarse:
+  UNRESOLVED           - identidad no resuelta
+  ZERO_REPORTED        - identidad OK + SSHPRNAMT = 0
+  NOT_PRESENT          - identidad OK + sin observacion en el periodo
+
+Ejemplo:
+  Target C, mapping OK, posicion = 0
+  != Target C, mapping inexistente, sin SSHPRNAMT
+
+La v5 convierte ambos en w(C) = 0. Elimina informacion que P60/P63/F2.4
+exigen conservar.
+
+Correccion exigida (v6): separar:
+  weight_value    (float | None)
+  weight_status   (RESOLVED_OBSERVED | ZERO_REPORTED | NOT_PRESENT | UNRESOLVED | CONFLICT)
+
+Fail-closed sobre status (no sobre valor 0):
+  Si algun status in {UNRESOLVED, CONFLICT} -> UNAVAILABLE.
+  Si todos status in {RESOLVED_OBSERVED, ZERO_REPORTED, NOT_PRESENT}
+    -> calcular con sus valores.
+
+### Bloqueo 2 - A2/P38 cambio silencioso de interfaz
+
+La v5 propone `target_q4/q1 = sets de catalog_key` en
+`compute_contractual_coverage`. Pero la API contractual P38 se define
+sobre `share_class_figi`.
+
+No es "ajuste minimo": es cambio semantico de interfaz. Puede romper
+tests P38, consumidores, semantica contractual, trazabilidad.
+
+Correccion exigida (v6): mantener separadas:
+  TARGET CONTRACTUAL ADMINISTRATIVO (catalog_key)
+    -> resolucion / disponibilidad
+    -> TARGET ECONOMICO P38 (share_class_figi)
+    -> compute_contractual_coverage (firma intacta)
+
+Capa adaptadora explicita `catalog_to_p38_targets(...)`.
+`compute_contractual_coverage` NO recibe catalog_key directamente.
+
+### Bloqueo 3 - A1/PIT catalog_key estable != unidad economica estable
+
+Si el mismo catalog_key cambia de share_class_figi entre snapshots:
+  snapshot Q4: catalog_key=K1, share_class_figi=FIGI_A
+  snapshot Q1: catalog_key=K1, share_class_figi=FIGI_B
+
+La estabilidad de K1 NO demuestra FIGI_A == FIGI_B economicamente.
+
+Regla exigida:
+  same catalog_key + same share_class_figi
+    -> pairing economico determinable
+  same catalog_key + different share_class_figi
+    -> requiere evidencia adicional
+    -> sin evidencia: fail-closed (UNAVAILABLE / N/D)
+
+NO convertir automaticamente cambio de FIGI en continuidad economica.
+
+### Correccion adicional - unicidad global de catalog_key
+
+`build_target(snapshot_df)` recibe UN solo snapshot. Solo puede verificar
+UNICIDAD DENTRO DEL SNAPSHOT. NO puede verificar unicidad global entre
+snapshots (no tiene acceso a otros snapshots ni al manifest).
+
+Correccion exigida (v6): separar:
+  build_target()             -> unicidad dentro del snapshot
+  catalog_validator global   -> unicidad entre snapshots (via manifest)
+
+### B2 - APROBADO sin nuevos bloqueos
+
+### B3 - APROBADO CONDICIONALMENTE
+
+Precision operacional: N/D debe tener representacion explicita (no
+confundir con 0, cadena vacia, o fecha ausente por error tecnico).
+
+### TargetUniverse
+
+Estructura aprobada conceptualmente. Prefijo `radar_<YYYYMMDD>_<NNNN>`
+no es garantia criptografica; la garantia viene del registro
+administrativo global que impide reutilizacion.
+
+### Test A2 - ampliado (6 casos)
+
+  1. identidad OK + peso positivo
+  2. identidad OK + peso 0 (ZERO_REPORTED)
+  3. identidad unresolved + peso no disponible
+  4. identity conflict
+  5. identity OK en Q4 + unresolved en Q1
+  6. identity OK en ambos + distinta share_class_figi
+
+### Criterio de la v6 (#48 seccion 11)
+
+A1:
+  catalog_key estable + unico dentro del snapshot + unico global
+  via validator externo.
+
+A2:
+  Separar weight_value / weight_status / mapping_status.
+  UNRESOLVED no se convierte en ZERO.
+  Fail-closed sobre status, no sobre valor.
+
+P38:
+  share_class_figi = unidad economica (intacto).
+  Capa adaptadora explicita; API contractual sin cambio silencioso.
+
+PIT:
+  catalog_key + distinto FIGI cross-snapshot -> fail-closed.
+
+Tests:
+  6 casos A2.
+
+### Estado operativo
+
+    A.6.0                  CLOSED
+    A.6.2-bis v5           NO-GO IMPLEMENTATION
+    ARQUITECTURA           APPROVED CONDITIONAL
+    B1 TARGET              BLOCKED
+    B1 catalog_key         APPROVED CONCEPTUALLY
+    B1 cross-PIT identity  BLOCKED
+    B1 denominator         BLOCKED
+    B2 point-in-time       APPROVED
+    B3 knowledge_date      APPROVED CONDITIONAL
+    A.6.3                  BLOCKED
+    A.6.4                  BLOCKED
+    F2.4-CLOSE             BLOCKED
+    DROP_DUP               NOT AUTHORIZED
+
+**Conclusion: v6 que cierre weight_status + adaptador P38 + PIT
+cross-snapshot + validator global de unicidad -> apta para GO DE
+IMPLEMENTACION.**
 
 ---
 
