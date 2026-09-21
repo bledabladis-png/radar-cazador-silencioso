@@ -58,6 +58,8 @@ documentos describen su tema; NO declaran el estado del sistema.
 | `INSTITUTIONAL_ACCUMULATION_NIPC_ESPECIFICACION.md` v1.4 | Referencia, no normativa |
 | `A66_BUNDLE.md` | Entregable al auditor (dictamen #76). Refleja estado post-A2. |
 | `A67_CONSULTA.md` | Consulta abierta al auditor sobre B-02/B-03/B-04. |
+| `B02_EXPEDIENTE.md` | Correccion material #76: P62 implementado, bloqueo=snapshot historico. |
+| `B034_EXPEDIENTE.md` | Correccion material #76: universo=242, Q4 tiene datos. |
 | `evidence/p66_e2e_probe/` | Evidencia P66 e2e (10.676 filings Q4, 0 R4 no clasificables). Complementa a `p66_gate*`. |
 
 ## 4. Prohibiciones vigentes
@@ -87,7 +89,10 @@ documentos describen su tema; NO declaran el estado del sistema.
   FUND_EXCLUDED_PHRASES es lista de exclusion legitima;
   SH BEN INT y ACT no existen como marcadores en el modulo.
   Sin cambios de codigo.
-- Snapshots historicos Q4 2025 / Q1 2026 requieren OpenFIGI masivo
+- Snapshots historicos Q4 2025 / Q1 2026: **correccion 2026-09-22**.
+  Universo contractual real = 242 keys (no 35.649 CUSIPs 13F, que son
+  OUT_OF_TARGET). Hueco real: 2 MISS (BRK-B, MOG-A) -> 2 re-queries
+  OpenFIGI, NO masivo. Ver `B034_EXPEDIENTE.md`.
 - Curacion crosswalk residual CERRADA (2026-09-22): ONB (CUSIP 680033107)
   y PTGX (CUSIP 74366E102) anadidos a `cusip_ticker_exceptions.csv` tras
   verificacion en INFOTABLE Q1 (98 y 617 hits). SPCX NO procede:

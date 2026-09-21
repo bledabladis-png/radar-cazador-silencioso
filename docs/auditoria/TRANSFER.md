@@ -1,4 +1,4 @@
-# TRANSFER DE SESION - 2026-09-22 v9.5
+# TRANSFER DE SESION - 2026-09-22 v9.6
 
 Documento de onboarding. **NO es fuente de estado.**
 Estado vivo: `iae/ESTADO_SISTEMA.md` (hechos) + `iae/ESTADO_DECLARADO.md` (fases).
@@ -16,8 +16,8 @@ Reglas de personalidad y metodo: `PROMPT_MAESTRO.md` secciones 1 y 3.
 
 ## 2. Estado real al cierre de esta sesion
 
-    HEAD          b9a2107 (verificar con git al arrancar)
-    Ahead         311 commits locales
+    HEAD          2dd74a2 (verificar con git al arrancar)
+    Ahead         316 commits locales
     Working tree  LIMPIO (verificar)
     Tests         test_h731: 11 passed (incluye H-08);
                   suite global: 1312 passed + 2 skipped + 3 failed
@@ -80,6 +80,9 @@ Trabajo post-consulta (sin dictamen):
 - Sync 18->20 post-curacion ONB/PTGX en docs vivos (`8bf6812`).
 - Sub-deuda registrada: contrato NIPC L332 cita 18 (desactualizado,
   requiere dictamen para actualizar in-place).
+- 3 expedientes tecnicos anadidos (correccion material #76):
+  B02_EXPEDIENTE (P62 implementado), B034_EXPEDIENTE (universo=242,
+  Q4 tiene datos). A67_CONSULTA ampliada con seccion 7.
 
 ## 4. TRABAJO PENDIENTE: fix A2 (H-05/H-06/H-07/H-10.1)
 
@@ -183,7 +186,7 @@ Esperado:
     "Confirmado, contexto asimilado."
 
     Estado que reconozco:
-      - HEAD b9a2107, ahead 311
+      - HEAD 2dd74a2, ahead 316
       - Auditor #76: A2 = GO; A.6.6 = NO-GO
       - H-05/H-06/H-07/H-10.1/H-08/B-01/B-05/B-06/B-07 cerrados
       - Consulta A.6.7 enviada: B-02/B-03/B-04 pendientes de dictamen
@@ -194,4 +197,4 @@ Esperado:
 
 ---
 
-FIN DEL TRANSFER v9.5. Fecha: 2026-09-22. Consulta A.6.7 enviada + ciclo de saneamiento completo (311 commits locales).
+FIN DEL TRANSFER v9.6. Fecha: 2026-09-22. Paquete completo para auditor: A2 + saneamiento + A67_CONSULTA + 3 expedientes.

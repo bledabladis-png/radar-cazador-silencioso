@@ -170,6 +170,24 @@ Se solicita:
 Con estos tres autorizados/decididos, el supervisor podra ejecutar los
 ciclos tecnicos y preparar el bundle A.6.7.
 
+## 7. Expedientes tecnicos adjuntos (2026-09-22)
+
+Verificacion directa sobre codigo y datos en HEAD actual corrige el
+diagnostico de #76 en los tres sub-frentes. Documentos complementarios:
+
+| Expediente | Contenido | Correccion material |
+|---|---|---|
+| `B02_EXPEDIENTE.md` | P62/PIT | P62 SI implementado (catalog_pit.py, 16 tests). Bloqueo real: ausencia de snapshot historico. |
+| `B034_EXPEDIENTE.md` | B-03 + B-04 | B-03: universo contractual = 242 keys (no 35.649). Hueco real = 2 MISS (BRK-B, MOG-A). B-04: Q4 SI tiene datos; cuello = vigencia temporal de fuentes. |
+
+Conclusiones operativas:
+
+- No es necesaria OpenFIGI masiva (35.127 CUSIPs son OUT_OF_TARGET).
+- 2 re-queries OpenFIGI sobre BRK-B/MOG-A cierran el hueco real.
+- 20-30 exceptions Q4 desbloquean la rama pairwise empirica.
+- P62 no requiere implementacion; requiere decision sobre snapshot
+  historico (declarar limitacion o construir retroactivo).
+
 ---
 
 Fin de la consulta A.6.7. HEAD `dae492c`. 2026-09-22.
