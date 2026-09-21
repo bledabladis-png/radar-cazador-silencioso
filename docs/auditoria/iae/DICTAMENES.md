@@ -278,6 +278,71 @@ actuales -> 3 failed identicos. Confirmado preexistente.
 
 ---
 
+## 42. P66 - Dictamen de cierre formal (2026-09-21)
+
+**Tipo:** dictamen del auditor externo sobre el dossier consolidado P66.
+**HEAD auditado:** 12abb5f.
+**GO de origen:** #40 (6e698ca).
+**Referencia:** #41 (auditoria de salida).
+
+**Resultado:** GO - Cierre del paso 5 y cierre del ciclo P66.
+
+### Denominacion final recomendada
+
+    P66 CERRADO - PASOS 1-5 COMPLETADOS.
+    DROP_DUP (PASO 6) FUERA DE ALCANCE Y NO AUTORIZADO.
+
+No se recomienda "cerrado en su totalidad": podria interpretarse
+como que DROP_DUP ha sido activado o que la fase operativa esta
+concluida.
+
+### Condiciones del #41 resueltas
+
+1. **Decision A/B:** CUMPLIDA. Lectura A adoptada. Los 4 grupos
+   permanecen R3=N/D. No procede nueva iteracion contractual.
+2. **Freshness:** CUMPLIDA como condicion de no regresion P66.
+   Precision de auditoria: demostrado como "fallos no atribuibles
+   a P66 / reproducibles en baseline pre-P66". No equivale a
+   "captura historica completa del entorno pre-P66".
+
+### Estado por paso
+
+    Paso 1 (traslado contractual)    CERRADO
+    Paso 2 (tests contractuales)     CERRADO
+    Paso 3 (implementacion)          CERRADO TECNICAMENTE
+    Paso 4 (probe e2e)               CERRADO
+    Paso 5 (auditoria de salida)     CERRADO
+    Paso 6 (DROP_DUP)                NO AUTORIZADO
+
+### Precisiones del dictamen
+
+- La divergencia A/B queda como "RESUELTA CONTRACTUALMENTE - LECTURA A".
+  No es incidencia pendiente. No hay autorizacion para implementar B.
+- Las 10 funciones nuevas NO estan integradas en
+  build_effective_reporting_snapshot ni en classify_reporting_transition.
+  Esto es consistente con el alcance: materializacion semantica del
+  contrato != activacion operacional de la deduplicacion.
+- Los 3 fallos de freshness: no constituyen blocker de salida P66,
+  pero no debe afirmarse que la suite global esta completamente verde.
+- Limites intactos: MATCH_KEY, C2, delta_shares.py, nipc.py,
+  coverage.py, relationships.py, NIPC_COVERAGE_POLICY.md, DROP_DUP,
+  pyproject.toml, requirements.txt. Sin push.
+
+### Estado final del repositorio
+
+    P66 STATUS:                  CLOSED
+    CONTRACT 14.3:               IMPLEMENTED / VERIFIED
+    INTERPRETATION:              A - ADOPTED
+    STEPS 1-5:                   CLOSED
+    DROP_DUP:                    NOT AUTHORIZED
+    OPERATIONAL DEDUPLICATION:   NOT ACTIVATED
+    ACCUMULATION CERTIFICATION:  BLOCKED
+    PUSH origin/main:            NO
+
+**Conclusion: GO para cierre de P66. NO GO para DROP_DUP.**
+
+---
+
 Fin del registro de dictamenes.
 
 

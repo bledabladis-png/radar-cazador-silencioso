@@ -15,6 +15,11 @@ de salida, informe de cierre del paso 5 y evidencia empirica.
 conflicto, gana `NIPC_CONTRATOS_SEMANTICOS_v1.md` o el dictamen
 correspondiente.
 
+**Estado del ciclo al cerrar este dossier:** P66 CERRADO (pasos 1-5),
+segun dictamen #42 (2026-09-21). `DROP_DUP` (paso 6) FUERA DE ALCANCE
+Y NO AUTORIZADO. Lectura A adoptada. Sin nuevas iteraciones
+contractuales.
+
 ---
 
 ## 0. Resumen ejecutivo
