@@ -1,7 +1,7 @@
 # IAE - REGISTRO DE DICTAMENES
 
 **Generado:** 2026-09-20
-**Actualizado:** 2026-09-21. Detalle expandido: dictamenes #1-#40. Indice cronologico: #1-#56. Dictamenes posteriores (#57-#75) estan en el indice del prompt / ESTADO_DECLARADO.md hasta su consolidacion en este registro.
+**Actualizado:** 2026-09-21. Indice cronologico: #1-#75. Detalle expandido: #1-#75. Sin saltos de autoridad (consolidado tras auditoria externa 2026-09-21).
 **Consolida:** dictamenes del ciclo IAE y radar
 
 **Regla:** este fichero es la cadena autoritativa. Los dictamenes originales
@@ -70,6 +70,25 @@ fichero vivo, prompt seccion 3.3).
 | 54 | Ver entrada §54 de este fichero | A.6.2-bis-B1 NO-GO. Full TARGET + assignment history + membership snapshot<->key. |
 | 55 | Ver entrada §55 de este fichero | A.6.2-bis-B1 v2 NO-GO. snapshot_row_uid estable + catalog_key inmutable + membership temporal + full resolution por identity_status. |
 | 56 | Ver entrada §56 de este fichero | A.6.2-bis-B1 v3 NO-GO. Cobertura temporal + row_uid vs identidad + estados UNION + contrato entrada B1. |
+| 57 | Ver entrada º57 de este fichero | GHISALLO - apertura de ciclo (CIK 0001825214, +765%). |
+| 58 | Ver entrada º58 de este fichero | GHISALLO - caracterizacion intermedia. |
+| 59 | Ver entrada º59 de este fichero | GHISALLO - CUSIPs fuera de Official List. |
+| 60 | Ver entrada º60 de este fichero | GHISALLO - CERRADO como caracterizacion. Artefacto del probe. |
+| 61 | Ver entrada º61 de este fichero | Nivel B security_type con tokenizacion. Politica conservadora. |
+| 62 | Ver entrada º62 de este fichero | Marcadores EQUITY P1 aprobados (SHS, COMM, CMN, STK, CL A/B). |
+| 63 | Ver entrada º63 de este fichero | EQUITY/STOCK exactos + handoff seccion 5.4 -> 5.5. |
+| 64 | Ver entrada º64 de este fichero | Gap seccion 5.1-5.5 continuacion (consolidado con #63 y #65). |
+| 65 | Ver entrada º65 de este fichero | Seccion 5.5 operational_universe. Contrato ticker_mapped. |
+| 66 | Ver entrada º66 de este fichero | Seccion 5.5 PIT obligatorio (H-66.1). |
+| 67 | Ver entrada º67 de este fichero | Cierre gap spec->codigo seccion 5.1-5.5. |
+| 68 | Ver entrada º68 de este fichero | B1 CERRADO. GO. 4 commits + 100 tests. |
+| 69 | Ver entrada º69 de este fichero | H-69.1 hallazgo (consolidado con #70). |
+| 70 | Ver entrada º70 de este fichero | H-69.1 CERRADO: source id cusip_ticker_exceptions. |
+| 71 | Ver entrada º71 de este fichero | H-69.2 CERRADO: R-69.2 precedencia por evidencia temporal. |
+| 72 | Ver entrada º72 de este fichero | A.6.3 CERRADO: test Q12 Modelo A (shareClassFIGI). |
+| 73 | Ver entrada º73 de este fichero | A.6.4 autorizado: integracion B1+P61+P38. |
+| 74 | Ver entrada º74 de este fichero | H-73.1 confirmado + fix opcion A autorizado (adapter). |
+| 75 | Ver entrada º75 de este fichero | Cierre A.6.4 (post-H-73.1) + A.6.5 AUTORIZADA. |
 
 ---
 
@@ -3794,3 +3813,125 @@ Solo el primer paso (traslado a 14.3) queda autorizado por este
 GO. Los siguientes requieren su propio ciclo.
 
 **Ciclo P66 cerrado.**
+
+---
+
+## 57. GHISALLO - Apertura de ciclo (2026-09-21)
+
+**Tipo:** dictamen del ciclo GHISALLO.
+**Origen:** probe filer continuity TOP 50 detecta +765% en CIK 0001825214 Q4 2025 -> Q1 2026.
+**Resultado:** apertura de ciclo de caracterizacion. Sin cambios de codigo.
+
+## 58. GHISALLO - Caracterizacion intermedia (2026-09-21)
+
+**Tipo:** dictamen del ciclo GHISALLO.
+**Resultado:** caracterizacion en curso. Detalle consolidado en #60.
+
+## 59. GHISALLO - CUSIPs fuera de Official List (2026-09-21)
+
+**Tipo:** dictamen del ciclo GHISALLO.
+**Resultado:** CUSIP 329882225 y 329882250 fuera de Official List SEC Q4 2025 y Q1 2026. Estar fuera de Official List NO implica error de filing.
+
+## 60. GHISALLO - Cierre formal (2026-09-21)
+
+**Tipo:** dictamen de cierre del ciclo.
+**Resultado:** CERRADO como caracterizacion. NO es anomalia economica.
+**Hallazgo:** el +765% de sum(SSHPRNAMT) es artefacto del probe probe_filer_continuity_top50.py.
+**VALUE reportado Q4->Q1:** +62% (variacion del valor reportado, no delta economico).
+
+## 61. Gap seccion 5.1-5.5 - Nivel B security_type (2026-09-21)
+
+**Tipo:** dictamen del auditor externo.
+**Commit implementacion:** b8f8568.
+**Resultado:** GO. Politica conservadora aprobada.
+**Tests:** 40.
+
+## 62. Gap seccion 5.1-5.5 - Marcadores EQUITY P1 (2026-09-21)
+
+**Tipo:** dictamen del auditor externo.
+**Commit implementacion:** 9bddb84.
+**Resultado:** Aprobacion parcial. Anclas EQUITY: SHS, COMM, CMN, STK, COMM STK, CL A, CL B, SHS CL A, SPON ADS.
+**NO aprobadas:** ADR, SPONSORED ADR, SPONSORED ADS.
+
+## 63. Gap seccion 5.1-5.5 - EQUITY/STOCK + handoff (2026-09-21)
+
+**Tipo:** dictamen del auditor externo.
+**Commit implementacion:** 6cd6e53.
+**Resultado:** GO. Marcadores EQUITY exactos (EQUITY, STOCK); variantes compuestas -> UNRESOLVED.
+**Handoff 5.4->5.5:** is_operational_candidate(type, status) -> True SOLO si (EQUITY, RESOLVED_EQUITY).
+**Tests:** 15 nuevos.
+
+## 64. Gap seccion 5.1-5.5 - Continuacion (2026-09-21)
+
+**Tipo:** dictamen del auditor externo.
+**Nota:** consolidado con #63 y #65. Sin commit especifico referenciado.
+
+## 65. Gap seccion 5.1-5.5 - operational_universe (2026-09-21)
+
+**Tipo:** dictamen del auditor externo.
+**Commit implementacion:** b3f665f.
+**Resultado:** GO. Cadena 5.1 -> 5.3 -> 5.4 -> 5.5 estrictamente restrictiva.
+**Contrato ticker_mapped:** TRUE iff security_resolution_status == CANONICAL AND operational_mapping_status == VERIFIED.
+**Tests:** 18.
+
+## 66. Gap seccion 5.1-5.5 - PIT obligatorio (2026-09-21)
+
+**Tipo:** dictamen del auditor externo. Hallazgo H-66.1.
+**Commit implementacion:** 8da3ee1.
+**Resultado:** GO. identity_period_iso pasa de opcional a obligatorio.
+
+## 67. Gap seccion 5.1-5.5 - Cierre (2026-09-21)
+
+**Tipo:** dictamen de cierre del gap spec->codigo.
+**Resultado:** CERRADO. Cadena 5.1-5.5 completa e implementada.
+**Commits:** #61-#67.
+
+## 68. B1 - Cierre formal (2026-09-21)
+
+**Tipo:** dictamen del auditor externo (GO / B1 CLOSED).
+**Commit documental:** 9f0d841. Commits tecnicos: 27f5c55, 888512e, 0f95682, 0921f46.
+**Resultado:** B1 CERRADO. 4 commits + 100 tests.
+
+## 69. H-69.1 - Hallazgo (2026-09-21)
+
+**Tipo:** hallazgo del auditor. Consolidado con #70.
+
+## 70. H-69.1 - Cierre (2026-09-21)
+
+**Tipo:** dictamen del auditor externo.
+**Commit implementacion:** 3da6a0a.
+**Resultado:** CERRADO. Bug: string abreviado "exceptions" corregido a "cusip_ticker_exceptions".
+
+## 71. H-69.2 - Cierre (2026-09-21)
+
+**Tipo:** dictamen del auditor externo.
+**Commit implementacion:** 84d6b1c.
+**Resultado:** CERRADO. Regla R-69.2 (precedencia por evidencia temporal).
+
+## 72. A.6.3 - Cierre (2026-09-21)
+
+**Tipo:** dictamen del auditor externo.
+**Commit documental:** ff45ead.
+**Resultado:** CERRADO. Q12 = Modelo A (shareClassFIGI).
+
+## 73. A.6.4 - Integracion autorizada (2026-09-21)
+
+**Tipo:** dictamen del auditor externo.
+**Commit evidencia:** 2ee75e6.
+**Resultado:** autoriza la ejecucion de la cadena end-to-end B1+P61+P38.
+**Nota 2026-09-21 posterior:** reclasificado como SMOKE TEST tras auditoria externa.
+
+## 74. H-73.1 - Confirmacion + fix autorizado (2026-09-21)
+
+**Tipo:** dictamen del auditor externo.
+**Commit implementacion:** d5ccf45.
+**Resultado:** H-73.1 CONFIRMADO. Fix opcion A autorizado.
+**Tests:** 5 (test_h731_adapter_p38_compat.py).
+
+## 75. Cierre A.6.4 + A.6.5 autorizada (2026-09-21)
+
+**Tipo:** dictamen del auditor externo.
+**Commit documental:** da70f9e.
+**Resultado:** A.6.4 CERRADA DEFINITIVAMENTE (post-H-73.1). A.6.5 AUTORIZADA. A.6.6 pendiente.
+**Nota posterior:** A.6.4 reclasificada como SMOKE TEST (ver EXPEDIENTE_A64_FIX.md).
+
