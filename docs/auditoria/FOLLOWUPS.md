@@ -2601,3 +2601,39 @@ read-only. Sin commits de codigo. Sin push.
 - Correccion de codigo: NO AUTORIZADA.
 
 **Estado:** 218+ commits locales ahead. Sin push.
+
+## IAE B1 - Cierre formal y reconciliacion O-68.1 (2026-09-21)
+
+**Ciclo:** B1 (A62BIS_B1_SUBFASE.md v4) implementado en 4 commits
+tras congelacion por regla §11.32. Dictamen #68 GO / B1 CLOSED.
+
+**Commits:**
+- `27f5c55` B1.0 - generador CSV + assignments + membership (20 tests)
+- `888512e` B1.1 - catalog_key.py (30 tests: A1 + M + S)
+- `0f95682` B1.2 - target_builder + period_state (28 tests)
+- `0921f46` B1.3 - catalog_validator + catalog_p38_adapter (22 tests)
+
+**Total B1: 100 tests, 5 modulos nuevos, 2 CSV, 1 script.**
+
+**Reconciliacion O-68.1 (dictamen #68):**
+El informe inicial declaraba "100 tests B1" con un desglose que sumaba
+98. El desglose correcto es:
+
+    test_build_catalog_csvs.py     20
+    test_catalog_key.py             9
+    test_catalog_membership.py     14
+    test_b1_schema.py               7
+    test_target_builder.py          8
+    test_period_state.py           20
+    test_catalog_p38_adapter.py    16
+    test_p66_pipeline.py            6
+    --------------------------------
+    TOTAL                         100
+
+El incremento de suite fue +100 (1189 -> 1289), no +80. El informe
+inicial uso 1209 como baseline (post-B1.0) en lugar de 1189 (pre-B1.0).
+
+**Alcance:** B1 CLOSED != TARGET historico Q4/Q1 en produccion.
+A.6.3 BLOQUEADO (requiere dictamen especifico adicional).
+
+**Referencia:** dictamen #68.
