@@ -3,6 +3,11 @@
 Documento complementario al PROMPT_MAESTRO v6.55 (docs/auditoria/PROMPT_MAESTRO.md).
 No normativo. Si hay conflicto, gana el prompt.
 
+**Aviso (2026-09-21):** este documento es una guia de onboarding, no una
+fuente de estado. El estado real vive en `iae/ESTADO_SISTEMA.md` (hechos) y
+`iae/ESTADO_DECLARADO.md` (declaraciones). Las cifras abajo son snapshot
+historico del momento de redaccion.
+
 **Como usarlo:**
 1. Pegar este documento como primer mensaje.
 2. Si tienes acceso al repo, adjuntar tambien PROMPT_MAESTRO.md.
@@ -40,7 +45,7 @@ documentos.
 
 | Metrica | Valor |
 |---|---|
-| HEAD local | da70f9e |
+| HEAD local (snapshot, ver ESTADO_SISTEMA.md) | da70f9e |
 | origin/main | 9d4a81e |
 | Ahead | 246 commits locales |
 | Behind | 3 (bot CI) |
@@ -75,7 +80,7 @@ locales desactualizados). No son regresion.
 | A.6.4-v2 (P38 aislado) | CERRADO (#73) |
 | A.6.4 (integracion B1+P61+P38) | CERRADO (#75) |
 | Orquestador `iae_pipeline.py` | IMPLEMENTADO + RATIFICADO |
-| A.6.5 | AUTORIZADA, pendiente |
+| A.6.5 | CERRADA (2026-09-21, commits dccf70d + 911e95b) |
 | A.6.6 (F2.4-CLOSE) | PENDIENTE |
 | Baseline full | BLOQUEADO por OpenFIGI masivo |
 | Gate-NIPC.2 | NOT READY (thresholds UNDEFINED) |
@@ -116,7 +121,7 @@ locales desactualizados). No son regresion.
 - Curacion crosswalk residual: ONB, SPCX, PTGX sin match 13F Q1 2026.
 - `reporting_dedup.py` (P66) sin invocacion productiva.
 - Gate-NIPC.2 BLOQUEADO por THRESHOLD_1/2 UNDEFINED.
-- A.6.5 y A.6.6 pendientes.
+- A.6.6 pendiente (F2.4-CLOSE). A.6.5 CERRADA.
 
 ---
 
@@ -209,14 +214,14 @@ Esperado:
     "Confirmado, contexto asimilado."
 
     Estado del sistema que reconozco:
-      - HEAD da70f9e, ahead 246
+      - Snapshot historico: HEAD da70f9e, ahead 246. Estado actual: ver ESTADO_SISTEMA.md.
       - 1301 passed + 2 skipped + 3 failed preexistentes
       - Prompt v6.55
       - B1 CERRADO (#68). B2-PIT CERRADO (#53).
       - Gap §5.1-§5.5 CERRADO (#61-#67).
       - H-69.1/H-69.2/H-73.1 CERRADOS (#70/#72/#75).
       - A.6.3, A.6.4-v2, A.6.4 CERRADOS.
-      - A.6.5 AUTORIZADA. A.6.6 PENDIENTE.
+      - A.6.5 CERRADA. A.6.6 PENDIENTE.
       - Baseline full BLOQUEADO por OpenFIGI.
       - Gate-NIPC.2 NOT READY.
       - Objetivo real: IMPLEMENTAR IAE
