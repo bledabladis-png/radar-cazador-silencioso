@@ -343,6 +343,90 @@ concluida.
 
 ---
 
+## 43. A.6.0 / F2.4 - Dictamen de auditoria (2026-09-21)
+
+**Tipo:** dictamen del auditor externo sobre A60_EXPEDIENTE_AUDITOR.md.
+**HEAD auditado:** 22a92ae.
+**Dictamen de referencia:** F2.4 (DICTAMENES.md #24).
+
+**Resultado:** GO A.6.0 / GO CONDICIONADO A.6.2-bis / NO-GO F2.4-CLOSE.
+
+### A.6.0 - Validacion
+
+**CERRADO.** Cumple criterio de aceptacion FASE_A6_PLAN.md
+(referencias archivo:linea, sin cambios de codigo, sin OpenFIGI,
+sin modificar contratos).
+
+### Correccion metodologica aplicada
+
+Retirada la cifra "60%" de B1 (sin metrica reproducible).
+Estado oficial: **B1 - PARCIAL**.
+
+### Estado de los 3 bloqueantes
+
+    B1 TARGET independiente        ABIERTO / MATERIAL
+    B2 point-in-time               ABIERTO / MATERIAL
+    B3 13F != flujo en tiempo real ABIERTO / MATERIAL
+
+### Resolucion de las 6 preguntas
+
+    1. Validacion A.6.0            SI - CERRADO
+    2. Unificar APIs               SI semanticamente; no fisicamente.
+    3. target_builder.py           SI - AUTORIZADO
+    4. Versionado + as_of()        SI - AUTORIZADO (source_date insuficiente)
+    5. knowledge_date              SI - AUTORIZADO con semantica explicita
+    6. A.6.2-bis                   SI - GO CONDICIONADO
+
+### Autorizacion A.6.2-bis
+
+Alcance autorizado: materializar B1 + B2 + B3.
+
+NO incluido: OpenFIGI masivo, recalculo de evidencia final,
+modificacion de contratos, activacion DROP_DUP, certificacion
+"acumulacion", Policy v1.3, Gate-NIPC.2, Gate-NIPC.3.
+
+### Dependencias
+
+    A.6.0          CLOSED
+    A.6.2-bis      AUTHORIZED - CONDITIONAL GO
+    A.6.3          BLOCKED until B1/B2/B3 materialization
+    A.6.4          BLOCKED until A.6.3
+    A.6.6 F2.4-CLOSE  NOT YET AUTHORIZED
+
+### Cautelas especificas del dictamen
+
+- B1: no fusionar indiscriminadamente las 2 APIs. Una unica semantica
+  contractual + una unica fuente de TARGET. El fallo del mapping debe
+  poder producir ausencia/incertidumbre de identidad SIN alterar el
+  universo TARGET.
+- B2: anadir columnas no basta. Debe existir politica de snapshots
+  historicos inmutables o equivalente (hash/versionado verificable).
+  Comportamiento fail-closed si no existe version que cubra period_end.
+- B3: knowledge_date debe representar la fecha en que la informacion
+  estaba disponible segun el contrato aplicable, no "fecha actual del
+  proceso". Los estados (absence_reason, ZERO_REPORTED, NOT_PRESENT,
+  corporate action vs economic) deben permanecer explicitamente
+  separados hasta que cada semantica este implementada y probada.
+
+### Estado operativo
+
+    A.6.0                    CLOSED
+    B1 TARGET                OPEN - MATERIAL
+    B2 POINT-IN-TIME         OPEN - MATERIAL
+    B3 13F != REAL-TIME      OPEN - MATERIAL
+    A.6.2-bis                AUTHORIZED - CONDITIONAL GO
+    A.6.3                    BLOCKED
+    A.6.4                    BLOCKED
+    A.6.6 F2.4-CLOSE         NOT YET AUTHORIZED
+    OpenFIGI masivo          NO
+    DROP_DUP                 NO
+    Push origin/main         NO
+    Certificacion            NO
+
+**Conclusion: GO A.6.0 / GO CONDICIONADO A.6.2-bis / NO-GO F2.4-CLOSE.**
+
+---
+
 Fin del registro de dictamenes.
 
 

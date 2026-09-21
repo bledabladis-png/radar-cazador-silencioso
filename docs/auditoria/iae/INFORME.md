@@ -1246,7 +1246,7 @@ Falta `target_builder.py` + integracion. El nombre `target_pairwise` en `nipc.py
 
 | Bloqueante | Piezas existentes | Piezas ausentes | Estado global |
 |---|---|---|---|
-| B1 TARGET independiente | `coverage.py::compute_contractual_coverage`, `PositionRecord`, `aggregate_positions_by_shareclass_figi`, `target_universe.py::resolve_cusips`, `radar_target_catalog.csv` | `target_builder.py`, integracion en `nipc.py::compute_coverage_pairwise`, refactor de nombres | PARCIAL: 60% existe, 40% falta |
+| B1 TARGET independiente | `coverage.py::compute_contractual_coverage`, `PositionRecord`, `aggregate_positions_by_shareclass_figi`, `target_universe.py::resolve_cusips`, `radar_target_catalog.csv` | `target_builder.py`, integracion en `nipc.py::compute_coverage_pairwise`, refactor de nombres | PARCIAL |
 | B2 point-in-time | `source_date` (no contractual), `valid_from`/`valid_to` en tablas con vigencia | `catalog_version`, `catalog_valid_from`, `catalog_valid_to`, `target_catalog_as_of`, snapshot+hash OpenFIGI | AUSENTE: solo `source_date` no contractual |
 | B3 13F != real-time | Doctrina P63/P64/P65 (docstrings), `FILING_DATE`+`PERIODOFREPORT` en bruto | `knowledge_date`, `period_end`+`filing_date` en `PositionRecord`, clasificador `absence_reason`, estados `ZERO_REPORTED`/`NOT_PRESENT` | DOCUMENTAL: doctrina si, materializacion no |
 

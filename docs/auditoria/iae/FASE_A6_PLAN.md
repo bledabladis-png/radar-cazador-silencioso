@@ -16,8 +16,10 @@ Distincion de autorizaciones:
 
 **Generado:** 2026-09-20.
 **Precondicion bloqueante:** F2.4 EMITIDO (GO CONDICIONADO).
-**Estado:** EJECUTABLE excepto A.6.2-bis (rediseno TARGET, requiere
-autorizacion OpenFIGI). A.6.0 precede a A.6.2. Ver DICTAMENES.md #24.
+**Estado:** A.6.0 CERRADO (dictamen #43). A.6.1 y A.6.2 CERRADOS.
+A.6.2-bis AUTORIZADO con GO CONDICIONADO (dictamen #43). A.6.3
+BLOQUEADO hasta materializacion B1/B2/B3. A.6.4 BLOQUEADO hasta A.6.3.
+A.6.6 F2.4-CLOSE NO AUTORIZADO. Ver DICTAMENES.md #24 + #43.
 **Referencia:** iae/RECONCILIACION_CONTRATO_CODIGO.md + iae/REESTRUCTURACION_MODULO.md.
 
 ---
@@ -78,7 +80,8 @@ iae/INFORME.md con la evidencia directa.
 **Criterio de aceptacion:** inventario completo con referencias
 archivo:linea. Sin tocar codigo.
 
-**Estado:** PENDIENTE. Precede a A.6.2.
+**Estado:** CERRADO 2026-09-21 (dictamen #43). Inventario en
+INFORME.md seccion 21 + A60_EXPEDIENTE_AUDITOR.md. Commit 22a92ae.
 
 ---
 
@@ -219,7 +222,11 @@ proceso que se mide.
 
 **Precondicion:** OpenFIGI masivo autorizado. Depende de A.6.0.
 
-**Estado:** PENDIENTE. Requiere autorizacion especifica.
+**Estado:** AUTORIZADO - GO CONDICIONADO 2026-09-21 (dictamen #43).
+Alcance: materializar B1 (TARGET independiente) + B2 (point-in-time) +
+B3 (semantica temporal 13F). NO incluye OpenFIGI masivo, recalculo de
+evidence final, modificacion de contratos, activacion DROP_DUP,
+certificacion acumulacion, Policy v1.3, Gate-NIPC.2/3.
 
 ---
 
@@ -414,7 +421,7 @@ Evidencia empirica fail-closed en evidence/nipc_p65_probe/.
 
 ## 3. Orden de dependencia
 
-    A.6.0 (Gate 0 bloqueantes)  <- PENDIENTE
+    A.6.0 (Gate 0 bloqueantes)  <- CERRADO (dictamen #43)
         |
         v
     A.6.1 (F2.4)  <- CERRADO 2026-09-20
@@ -449,8 +456,8 @@ autorizacion OpenFIGI y depende de A.6.0.
     | Bloqueo                       | Afecta a    | Desbloquea con           |
     |-------------------------------|-------------|--------------------------|
     | F2.4                          | -           | EMITIDO 2026-09-20       |
-    | A.6.0 Gate 0 bloqueantes      | A.6.2-bis   | Este ciclo               |
-    | OpenFIGI masivo NO AUTORIZADO | A.6.2-bis   | Autorizacion especifica  |
+    | A.6.0 Gate 0 bloqueantes      | A.6.2-bis   | CERRADO (dictamen #43)   |
+    | OpenFIGI masivo NO AUTORIZADO | A.6.4       | Autorizacion especifica  |
     | THRESHOLD_1/2 UNDEFINED       | A.6.6 final | A.6.4 + auditor          |
     | Gate-NIPC.2 BLOQUEADO         | A.7         | A.6.6                    |
 

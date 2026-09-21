@@ -23,7 +23,7 @@ Resultado del inventario:
 
 | Bloqueante | Estado global |
 |---|---|
-| B1 - TARGET independiente del mapping | PARCIAL (60% existe) |
+| B1 - TARGET independiente del mapping | PARCIAL |
 | B2 - Point-in-time | AUSENTE |
 | B3 - 13F != flujo en tiempo real | DOCUMENTAL (doctrina si, materializacion no) |
 
@@ -130,7 +130,7 @@ hasta 45 dias. Sin cortos, con minimis, con confidencialidad."
 
 | Bloqueante | Existentes | Ausentes | Estado |
 |---|---|---|---|
-| B1 | coverage.py (API P38), target_universe.py, catalogo 242 filas | target_builder.py, integracion nipc.py, refactor nombres | PARCIAL 60% |
+| B1 | coverage.py (API P38), target_universe.py, catalogo 242 filas | target_builder.py, integracion nipc.py, refactor nombres | PARCIAL |
 | B2 | source_date (no contractual), valid_from/to en 2 tablas | catalog_version, catalog_valid_from/to, target_catalog_as_of, snapshot+hash | AUSENTE |
 | B3 | Doctrina P63/64/65, FILING_DATE+PERIODOFREPORT brutos | knowledge_date, period_end+filing_date, absence_reason, ZERO_REPORTED/NOT_PRESENT | DOCUMENTAL |
 ---
