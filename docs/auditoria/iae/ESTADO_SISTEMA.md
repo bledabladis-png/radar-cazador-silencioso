@@ -2,7 +2,7 @@
 
 Hechos verificables del sistema. Generado por script.
 
-**Generado en:** 2026-09-21 18:25:28 UTC
+**Generado en:** 2026-09-21 18:27:12 UTC
 **Snapshot de:** commit HEAD (fecha: 2026-09-21)
 **NO editar a mano.** Regenerar con:
 
@@ -16,25 +16,25 @@ proyecto describen su tema; NO declaran el estado del sistema.
 
 ## 1. Git
 
-- **HEAD:** `3d38242`
-- **HEAD completo:** `3d3824284b37f55e078a6815f319f8a82bb98db3`
-- **Fecha commit HEAD:** 2026-09-21 20:25:03 +0200
-- **Asunto commit HEAD:** docs(iae): crear ESTADO_DECLARADO.md (fuente unica de declaraciones subjetivas)
-- **Ahead:** 254
+- **HEAD:** `af6303a`
+- **HEAD completo:** `af6303ae55a1d69a0074b71dd0a7c3ff2004e565`
+- **Fecha commit HEAD:** 2026-09-21 20:26:55 +0200
+- **Asunto commit HEAD:** fix(iae): limpiar pyflakes en generador ESTADO_SISTEMA + regenerar
+- **Ahead:** 256
 - **Behind:** 3
 - **origin/main:** `e49f6b3`
 - **Working tree:** MODIFICADO
-  - `?? scripts/generate_estado_sistema.py`
+  - `MM scripts/generate_estado_sistema.py`
 
 ## 2. Tests (pytest real)
 
-- **Resumen:** 3 failed, 1301 passed, 2 skipped in 27.29s
+- **Resumen:** 3 failed, 1301 passed, 2 skipped in 27.07s
 - **Exit code:** 1
 
 ## 3. Integridad del codigo
 
 - **compileall:** OK (exit 0)
-- **pyflakes:** 6 warnings (exit 1)
+- **pyflakes:** LIMPIO
 
 ## 4. Modulos IAE
 

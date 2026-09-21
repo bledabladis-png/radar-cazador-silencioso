@@ -205,8 +205,8 @@ def main():
     footer = [
         '---',
         '',
-        ''Fin del estado generado. Fuente de verdad: `ESTADO_DECLARADO.md` (declaraciones)'',
-        ''+ `ESTADO_SISTEMA.md` (este fichero, hechos).'',
+        'Fin del estado generado. Fuente de verdad: `ESTADO_DECLARADO.md` (declaraciones)',
+        '+ `ESTADO_SISTEMA.md` (este fichero, hechos).',
         '',
     ]
     
