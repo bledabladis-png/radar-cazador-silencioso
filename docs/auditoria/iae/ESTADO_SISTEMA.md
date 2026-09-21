@@ -2,7 +2,7 @@
 
 Hechos verificables del sistema. Generado por script.
 
-**Generado en:** 2026-09-21 20:52:57 UTC
+**Generado en:** 2026-09-21 21:45:27 UTC
 **Snapshot tomado sobre:** commit HEAD de la fecha indicada, al momento de generar
 **NO editar a mano.** Regenerar con:
 
@@ -16,16 +16,16 @@ proyecto describen su tema; NO declaran el estado del sistema.
 
 ## 1. Git
 
-- **HEAD:** `a1eaa79`
-- **HEAD completo:** `a1eaa795b8b6bf06ef6d451b266f43128323858f`
-- **Fecha commit HEAD:** 2026-09-21 22:47:36 +0200
-- **Ahead:** 283
+- **HEAD:** `157211e`
+- **HEAD completo:** `157211e0c2f91399f1f29d7f2834b13bd00cffdb`
+- **Fecha commit HEAD:** 2026-09-21 23:45:10 +0200
+- **Ahead:** 289
 - **Behind:** 0
 - **origin/main:** `5f1d9ab`
 
 ## 2. Tests (pytest real)
 
-- **Resumen:** 3 failed, 1303 passed, 2 skipped, 1 xfailed in 27.98s
+- **Resumen:** 3 failed, 1309 passed, 2 skipped in 27.34s
 - **Exit code:** 1
 
 **Tests fallidos (nombre completo):**
@@ -45,9 +45,9 @@ proyecto describen su tema; NO declaran el estado del sistema.
 | `src/institutional_accumulation/__init__.py` | 28 |
 | `src/institutional_accumulation/absence.py` | 77 |
 | `src/institutional_accumulation/aggregation/__init__.py` | 97 |
-| `src/institutional_accumulation/aggregation/catalog_p38_adapter.py` | 167 |
+| `src/institutional_accumulation/aggregation/catalog_p38_adapter.py` | 170 |
 | `src/institutional_accumulation/aggregation/catalog_validator.py` | 94 |
-| `src/institutional_accumulation/aggregation/coverage.py` | 161 |
+| `src/institutional_accumulation/aggregation/coverage.py` | 180 |
 | `src/institutional_accumulation/aggregation/delta_shares.py` | 380 |
 | `src/institutional_accumulation/aggregation/nipc.py` | 395 |
 | `src/institutional_accumulation/aggregation/reporting_dedup.py` | 880 |
@@ -55,9 +55,9 @@ proyecto describen su tema; NO declaran el estado del sistema.
 | `src/institutional_accumulation/identity/__init__.py` | 13 |
 | `src/institutional_accumulation/identity/catalog_key.py` | 375 |
 | `src/institutional_accumulation/identity/openfigi_client.py` | 180 |
-| `src/institutional_accumulation/identity/period_state.py` | 140 |
+| `src/institutional_accumulation/identity/period_state.py` | 212 |
 | `src/institutional_accumulation/identity/radar_target_catalog.py` | 145 |
-| `src/institutional_accumulation/identity/target_builder.py` | 134 |
+| `src/institutional_accumulation/identity/target_builder.py` | 181 |
 | `src/institutional_accumulation/identity/target_universe.py` | 171 |
 | `src/institutional_accumulation/operational_universe.py` | 194 |
 | `src/institutional_accumulation/sec_13f/__init__.py` | 22 |
@@ -77,7 +77,7 @@ proyecto describen su tema; NO declaran el estado del sistema.
 | `src/institutional_accumulation/security_type.py` | 397 |
 | `src/institutional_accumulation/temporal_validity.py` | 92 |
 | `src/institutional_accumulation/timestamps.py` | 153 |
-| **TOTAL** | **35 ficheros, 7530 LOC** |
+| **TOTAL** | **35 ficheros, 7671 LOC** |
 
 ## 5. Datos IAE
 
