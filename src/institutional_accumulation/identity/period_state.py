@@ -51,13 +51,48 @@ FEASIBLE_WEIGHT_STATUSES = frozenset({
 })
 
 
+# --- operational_mapping_status (P61 seccion 2.3) ---
+OPERATIONAL_VERIFIED = "VERIFIED"
+OPERATIONAL_TEMPORAL_UNVERIFIED = "TEMPORAL_UNVERIFIED"
+OPERATIONAL_UNRESOLVED = "UNRESOLVED"
+OPERATIONAL_CONFLICT = "CONFLICT"
+
+ALL_OPERATIONAL_MAPPING_STATUSES = (
+    OPERATIONAL_VERIFIED,
+    OPERATIONAL_TEMPORAL_UNVERIFIED,
+    OPERATIONAL_UNRESOLVED,
+    OPERATIONAL_CONFLICT,
+)
+
+
 @dataclass(frozen=True)
 class PeriodState:
-    """Estado de una catalog_key en un periodo."""
+    """Estado de una catalog_key en un periodo.
+
+    Campos B1 (A62BIS_B1_SUBFASE.md v4 secciones 4-6):
+      identity_status            ver ALL_IDENTITY_STATUSES.
+      weight_status              ver ALL_WEIGHT_STATUSES.
+      figi                       shareClassFIGI unico o None.
+      ticker                     ticker o None.
+
+    Campos A2 (fix H-10.1, 2026-09-21):
+      sshprnamt                  SSHPRNAMT efectivo agregado por
+                                 shareClassFIGI desde el
+                                 canonical_snapshot post-amendments.
+                                 None si no hay evidencia observada.
+                                 Default None (backward compat).
+      operational_mapping_status estado P61 seccion 2.3:
+                                 VERIFIED | TEMPORAL_UNVERIFIED |
+                                 UNRESOLVED | CONFLICT.
+                                 Default UNRESOLVED (fail-closed).
+                                 NO se infiere VERIFIED.
+    """
     identity_status: str
     weight_status: str
     figi: Optional[str]
     ticker: Optional[str]
+    sshprnamt: Optional[float] = None
+    operational_mapping_status: str = OPERATIONAL_UNRESOLVED
 
     def __post_init__(self):
         if self.identity_status not in ALL_IDENTITY_STATUSES:
@@ -68,22 +103,46 @@ class PeriodState:
             raise ValueError(
                 "weight_status invalido: " + repr(self.weight_status)
             )
+        if self.operational_mapping_status not in ALL_OPERATIONAL_MAPPING_STATUSES:
+            raise ValueError(
+                "operational_mapping_status invalido: "
+                + repr(self.operational_mapping_status)
+            )
+        if self.sshprnamt is not None:
+            if not isinstance(self.sshprnamt, (int, float)):
+                raise ValueError(
+                    "sshprnamt debe ser numerico o None: "
+                    + repr(self.sshprnamt)
+                )
+            if self.sshprnamt < 0:
+                raise ValueError(
+                    "sshprnamt debe ser >= 0: " + repr(self.sshprnamt)
+                )
 
 
 class StateBuildError(ValueError):
     """Error en la construccion de estados."""
 
 
-def build_period_state(universe, *, figi_evidence=None, weight_evidence=None):
+def build_period_state(universe, *, figi_evidence=None, weight_evidence=None,
+                       operational_evidence=None, sshprnamt_evidence=None):
     """Construye state[K] para K in universe.declared_keys.
 
     Parametros:
-      universe        TargetUniverse.
-      figi_evidence   dict {catalog_key: {"status": RESOLVED|...,
-                        "figi": str|None}}.
-                      Por defecto: cada key con figi no vacio -> RESOLVED.
-      weight_evidence dict {catalog_key: weight_status}.
-                      Por defecto: RESOLVED_OBSERVED.
+      universe              TargetUniverse.
+      figi_evidence         dict {catalog_key: {"status": RESOLVED|...,
+                            "figi": str|None}}.
+                            Por defecto: cada key con figi no vacio ->
+                            RESOLVED.
+      weight_evidence       dict {catalog_key: weight_status}.
+                            Por defecto: RESOLVED_OBSERVED.
+      operational_evidence  dict {catalog_key: operational_mapping_status}.
+                            Por defecto: OPERATIONAL_UNRESOLVED.
+                            NO se infiere VERIFIED.
+      sshprnamt_evidence    dict {catalog_key: float|None}.
+                            SSHPRNAMT efectivo del canonical_snapshot
+                            post-amendments, agregado por shareClassFIGI.
+                            Por defecto: None.
 
     Devuelve dict {catalog_key: PeriodState}.
     """
@@ -107,12 +166,25 @@ def build_period_state(universe, *, figi_evidence=None, weight_evidence=None):
         else:
             weight_status = WEIGHT_RESOLVED_OBSERVED
 
+        if (operational_evidence is not None
+                and k in operational_evidence):
+            operational_mapping_status = operational_evidence[k]
+        else:
+            operational_mapping_status = OPERATIONAL_UNRESOLVED
+
+        if sshprnamt_evidence is not None and k in sshprnamt_evidence:
+            sshprnamt = sshprnamt_evidence[k]
+        else:
+            sshprnamt = None
+
         ticker = universe.ticker_by_key.get(k)
         out[k] = PeriodState(
             identity_status=identity_status,
             weight_status=weight_status,
             figi=figi,
             ticker=ticker,
+            sshprnamt=sshprnamt,
+            operational_mapping_status=operational_mapping_status,
         )
     return out
 
