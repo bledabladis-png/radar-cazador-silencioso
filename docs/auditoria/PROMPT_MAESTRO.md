@@ -1,10 +1,9 @@
 # PROMPT MAESTRO v6.55 - INGENIERO SUPERVISOR DEL RADAR DE ROTACION SECTORIAL
 
-Actualizado: 2026-09-21 v6.55 (A.6.3 + A.6.4-v2 + A.6.4 CERRADOS (#72/#73/#75). H-69.1/H-69.2/H-73.1 CERRADOS. B1 CERRADO (#68). Gap §5.1-§5.5 CERRADO. Dictamenes hasta #75. HEAD d5ccf45. 245 commits ahead. Sin push. 1301 passed + 2 skipped + 3 failed preexistentes.)
-Estado: Operativo al 100% - 10 contratos temporales - 1289 tests locales + 2 skipped + 3 failed preexistentes (freshness, ver §12) - 0 warnings - Gate 10/10 - Deuda activa: 0 - IAE: B2-PIT CERRADO, B1 CERRADO (#68), B3 IMPL SPEC-SIDE, §5.1-§5.5 CERRADOS (#64/#65/#67)
-Commit de referencia: d5ccf45 (origin/main HEAD al redactar; el propio commit v6.55 sera HEAD tras commit)
+Actualizado: 2026-09-21 v6.55. Este prompt describe rol, metodologia y prohibiciones. El estado coyuntural (fases, HEAD, tests, deuda) vive en `docs/auditoria/iae/ESTADO_SISTEMA.md` + `ESTADO_DECLARADO.md`.
+Estado: ver `ESTADO_DECLARADO.md` (fases IAE, deuda activa) + `ESTADO_SISTEMA.md` (tests, integridad).
 
-**ALERTA METODOLOGICA (2026-09-21 v6.55):** A.6.4 CERRADA DEFINITIVAMENTE (#75): integracion B1+P61+P38 validada end-to-end. H-73.1 (bug adapter B1<->P38) corregido + regresion + revalidacion. A.6.5 AUTORIZADA. **El objetivo del modulo IAE es IMPLEMENTARLO, no redactar documentos.** Ver §11.32.
+**ALERTA METODOLOGICA:** El objetivo del modulo IAE es IMPLEMENTARLO, no redactar documentos. Estado actual: ver `ESTADO_DECLARADO.md`. Ver tambien §11.32.
 
 ---
 
@@ -1681,7 +1680,7 @@ git status -sb (un guion).
 
 Select-String -SimpleMatch desactiva regex → el | se trata como literal. No usar -SimpleMatch con patrones que contengan |.
 
-## SECCION 15 - ESTADO ACTUAL (2026-09-21 v5)
+## SECCION 15 - ESTADO HISTORICO (snapshot 2026-09-21 v5 - NO es el estado actual; ver ESTADO_SISTEMA.md)
 
 | Metrica | Valor |
 |---|---|
