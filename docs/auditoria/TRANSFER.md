@@ -1,236 +1,157 @@
-# TRANSFER DE SESION - 2026-09-21 v8
+# TRANSFER DE SESION - 2026-09-21 v9
 
-Documento complementario al PROMPT_MAESTRO v6.55 (docs/auditoria/PROMPT_MAESTRO.md).
-No normativo. Si hay conflicto, gana el prompt.
-
-**Aviso (2026-09-21):** este documento es una guia de onboarding, no una
-fuente de estado. El estado real vive en `iae/ESTADO_SISTEMA.md` (hechos) y
-`iae/ESTADO_DECLARADO.md` (declaraciones). Las cifras abajo son snapshot
-historico del momento de redaccion.
+Documento de onboarding. **NO es fuente de estado.**
+Estado vivo: `iae/ESTADO_SISTEMA.md` (hechos) + `iae/ESTADO_DECLARADO.md` (fases).
 
 **Como usarlo:**
-1. Pegar este documento como primer mensaje.
-2. Si tienes acceso al repo, adjuntar tambien PROMPT_MAESTRO.md.
-3. Esperar confirmacion de asimilacion antes de empezar.
+1. Pegar este documento + `PROMPT_MAESTRO.md`.
+2. Esperar confirmacion de asimilacion antes de tocar nada.
 
 ---
 
 ## 1. Rol
 
-Eres el Ingeniero Supervisor del Radar de Rotacion Sectorial. Sistema
-determinista, descriptivo, auditable, sin ML predictivo. Entorno
-Windows, PowerShell, Python via py. Repo: D:\Macro_Sectorial.
+Eres el Ingeniero Supervisor del Radar de Rotacion Sectorial (IAE).
+Reglas de personalidad y metodo: `PROMPT_MAESTRO.md` secciones 1 y 3.
 
-Reglas de personalidad y metodo: ver PROMPT_MAESTRO v6.55 secciones 1 y 3.
+## 2. Estado real al cierre de esta sesion
 
----
+    HEAD          5877e9c (verificar con git al arrancar)
+    Ahead         282 commits locales
+    Working tree  LIMPIO (verificar)
+    Tests         7 passed + 1 xfailed en test_h731;
+                  suite global: 1301 passed + 2 skipped + 3 failed
+                  (los 3 failed son test_freshness.py, preexistentes, no-regresion)
+    Push          NO (local-first IAE)
 
-## 2. Objetivo real del proyecto
+## 3. Contexto: auditoria externa reciente
 
-**El objetivo es IMPLEMENTAR el modulo IAE (Institutional Accumulation
-Evidence) - analisis de posiciones institucionales via SEC 13F.**
+El auditor externo ha emitido, el 2026-09-21:
 
-NO es redactar documentos de diseño. NO es iterar propuestas ->
-dictamenes -> propuestas.
+  **Dictamen bundle v3 (minimo):** NO-GO para A.6.6 / F2.4-CLOSE.
+    Motivo: P38 no validado cuantitativamente, H-10.1 abierto,
+    A.6.4 reclasificado como smoke test, THRESHOLD_2 bloqueado.
 
-**Regla nueva (aplicada con exito en B3, B1, A.6.4):** cuando el
-diseño de una subfase haya cerrado >=3 rondas de dictamen con patron
-"cierro N, aparecen N nuevos", PARAR. Congelar diseño en la version
-vigente e IMPLEMENTAR. Las dudas se resuelven escribiendo tests, no
-documentos.
+  **Dictamen consulta H-10.1:** GO para fix A2.
+    Autoriza ciclo de correccion completo con propagacion SSHPRNAMT real.
 
----
+**5 respuestas del auditor (fijas, no renegociables):**
 
-## 3. Estado actual verificado (2026-09-21)
+    Q1  Alcance del fix: A2 (no A1). Incluye SSHPRNAMT real.
+    Q2  coverage_previous/current = RESOLVED / TARGET (no observed).
+    Q3  operational_mapping_status debe derivarse del estado operacional.
+        El adapter PROPAGA, no fabrica VERIFIED.
+    Q4  SSHPRNAMT del canonical_snapshot post-amendments, agregado por
+        shareClassFIGI, luego max(Q4,Q1).
+    Q5  Q4 vacio:
+          coverage_previous              = UNAVAILABLE (TARGET_Q4=0)
+          coverage_current               = calculable sobre TARGET_Q1
+          paired_security_coverage       = UNAVAILABLE (TARGET_PAIRWISE=0)
+          paired_weighted_share_coverage = UNAVAILABLE
 
-| Metrica | Valor |
-|---|---|
-| HEAD local (snapshot, ver ESTADO_SISTEMA.md) | da70f9e |
-| origin/main | 9d4a81e |
-| Ahead | 246 commits locales |
-| Behind | 3 (bot CI) |
-| Working tree | limpio |
-| Push | NO (local-first IAE activo) |
-| Prompt vigente | v6.55 |
-| Tests locales | 1301 passed + 2 skipped + 3 failed preexistentes |
-| pyflakes / compileall | LIMPIO / OK |
-| Gate validacion | 10/10 |
-| Cobertura radar | 313/313 |
-| Contratos temporales | 10 |
+## 4. TRABAJO PENDIENTE: fix A2 (H-05/H-06/H-07/H-10.1)
 
-**Los 3 failed de test_freshness.py son preexistentes** (parquets
-locales desactualizados). No son regresion.
+**Estado: empezando, 0 de 5 commits hechos.**
 
----
+Plan autorizado, en orden estricto:
 
-## 4. Estado del modulo IAE
+    Commit 1  period_state.py
+              Anadir a PeriodState: sshprnamt (float|None) y
+              operational_mapping_status (str, default UNRESOLVED).
+              NO romper build_period_state.
 
-| Bloque | Estado |
-|---|---|
-| FA-1 + FA-2 (ingestion + identity) | CERRADO / PUSHED |
-| B2-PIT | CERRADO (#53) |
-| B1 | CERRADO (#68, 4 commits + 100 tests) |
-| B3 (semantica temporal 13F) | IMPLEMENTADO SPEC-SIDE (sin integracion) |
-| Gap spec->codigo §5.1-§5.5 | CERRADO (#61-#67) |
-| H-69.1 (source id) | CERRADO (#70) |
-| H-69.2 (precedencia temporal) | CERRADO (#72) |
-| H-73.1 (adapter B1<->P38) | CERRADO (#75) |
-| GHISALLO (+765%) | CERRADO (#60) |
-| A.6.3 (test P38 Q12) | CERRADO (#72) |
-| A.6.4-v2 (P38 aislado) | CERRADO (#73) |
-| A.6.4 (integracion B1+P61+P38) | CERRADO (#75) |
-| Orquestador `iae_pipeline.py` | IMPLEMENTADO + RATIFICADO |
-| A.6.5 | CERRADA (2026-09-21, commits dccf70d + 911e95b) |
-| A.6.6 (F2.4-CLOSE) | PENDIENTE |
-| Baseline full | BLOQUEADO por OpenFIGI masivo |
-| Gate-NIPC.2 | NOT READY (thresholds UNDEFINED) |
+    Commit 2  target_builder.py + probe
+              Extraer SSHPRNAMT efectivo del canonical snapshot por key.
+              Transportarlo hasta el state.
 
-### 4.1. Modulos IAE clave
+    Commit 3  catalog_p38_adapter.py
+              Quitar operational_mapping_status="VERIFIED" hardcoded
+              (L164). PROPAGAR del state. Sin field -> UNRESOLVED.
 
-    src/institutional_accumulation/
-      sec_13f/              ingestion + schema + parser + identity
-      identity/             security_identity, catalog_key,
-                            target_builder, period_state,
-                            radar_target_catalog, target_universe,
-                            openfigi_client
-      aggregation/          delta_shares, nipc, coverage,
-                            catalog_validator, catalog_p38_adapter,
-                            reporting_dedup
-      temporal_validity.py  P61 operational_mapping_status
-      security_type.py      §3.3 + §5.4 Nivel A+B
-      operational_universe.py §5.5
-      timestamps.py         B3 derive + enrich
-      absence.py            P63 stub
-      catalog_pit.py        B2-PIT
+    Commit 4  coverage.py
+              coverage_previous/current con denominador TARGET_Q4/TARGET_Q1.
+              UNAVAILABLE si TARGET del periodo = 0.
 
-    scripts/iae_pipeline.py         Orquestador productivo (ratificado)
-    scripts/build_catalog_csvs.py   Generador CSV catalogo B1
+    Commit 5  probe + tests
+              probe_integration_b1_p61_p38.py: Q4 y Q1 REALES, sin mock.
+              Tests nuevos: derivacion VERIFIED, max(Q4,Q1), agregacion FIGI.
 
----
+**Reglas por commit:** suite completa + pyflakes + compileall antes del
+siguiente. Si algo falla, parar y avisar.
 
-## 5. Deuda activa (no bloqueante)
+## 5. Ficheros que el fix TOCA (autorizados)
 
-- Integracion de modulos IAE al pipeline productivo principal: los
-  modulos estan implementados y ejecutables via `scripts/iae_pipeline.py`,
-  pero el pipeline diario (`daily_run.yml`) NO los invoca.
-- `compute_nipc_contractual` SIN CALLERS PRODUCTIVOS.
-- Marcadores residuales §5.4 (SPONSORED ADR/ADS, ADR, SH BEN INT,
-  FUND, ACT).
-- Snapshots historicos Q4 2025 / Q1 2026 requieren OpenFIGI masivo
-  (NO AUTORIZADO).
-- Curacion crosswalk residual: ONB, SPCX, PTGX sin match 13F Q1 2026.
-- `reporting_dedup.py` (P66) sin invocacion productiva.
-- Gate-NIPC.2 BLOQUEADO por THRESHOLD_1/2 UNDEFINED.
-- A.6.6 pendiente (F2.4-CLOSE). A.6.5 CERRADA.
+    src/institutional_accumulation/identity/period_state.py
+    src/institutional_accumulation/identity/target_builder.py
+    src/institutional_accumulation/aggregation/catalog_p38_adapter.py
+    src/institutional_accumulation/aggregation/coverage.py
+    docs/auditoria/iae/evidence/a64_integration_b1_p61_p38/probe_integration_b1_p61_p38.py
+    tests/test_p38_contract.py
+    tests/test_h731_adapter_p38_compat.py
 
----
+## 6. Ficheros PROHIBIDOS (no tocar sin dictamen)
 
-## 6. Reglas criticas
+    src/institutional_accumulation/aggregation/nipc.py
+    src/institutional_accumulation/aggregation/delta_shares.py
+    src/institutional_accumulation/sec_13f/identity/security_identity.py
+    src/institutional_accumulation/temporal_validity.py
+    src/institutional_accumulation/sec_13f/identity/relationships.py
+    MATCH_KEY, C2
+    Contratos normativos
+    NIPC_COVERAGE_POLICY.md
 
-### 6.1. Local-first IAE
+## 7. Correcciones documentales aplicadas hoy (A-01/A-04/A-12)
 
-NO push a main de codigo hasta validar funcionalidad + beneficio.
+    A-01  ESTADO_SISTEMA.md lista los 3 tests fallidos por nombre.
+    A-04  Separadas metricas diagnosticas (18/242 = 0.0744) de las
+          contractuales (RESOLVED/TARGET) en EXPEDIENTE_A64_FIX.md.
+    A-12  test_h101_adapter_no_marca_verified_sin_evidencia_operacional
+          marcado xfail(strict=True). Documenta el DEFECTO como
+          expectativa futura, no como conformidad actual.
 
-### 6.2. Prohibiciones vigentes
+## 8. Documentos clave (vivos)
 
-    NO activar compute_nipc_contractual
-    NO ejecutar OpenFIGI masivo
-    NO activar DROP_DUP
-    NO modificar contratos normativos sin autorizacion
-    NO reescribir snapshots publicados
-    NO modificar coverage.py, nipc.py, delta_shares.py
-    NO modificar security_identity.py ni temporal_validity.py
-    NO push
+    docs/auditoria/PROMPT_MAESTRO.md         v7 - normativa general
+    docs/auditoria/iae/ESTADO_DECLARADO.md   fases, prohibiciones, hallazgos
+    docs/auditoria/iae/ESTADO_SISTEMA.md     hechos (autogenerado)
+    docs/auditoria/iae/EXPEDIENTE_A64_FIX.md el expediente del fix
+    docs/auditoria/iae/NIPC_CONTRATOS_SEMANTICOS_v1.md   contrato P38
+    docs/auditoria/iae/DICTAMENES.md         indice #1-#75
+    docs/auditoria/iae/HISTORICO_IAE.md      registro de ciclos
+    docs/auditoria/iae/evidence/a64_integration_b1_p61_p38/README.md
+                                             evidencia A.6.4 (smoke test)
 
-### 6.3. Precedente metodologico
-
-B1 estaba 3 NO-GO con 4 versiones. Se congelo v4 y se implemento en 4
-commits + dictamen #68 GO. 100 tests, cero regresiones.
-
-A.6.4 acumulo 2 partes (v2 + integracion) con H-73.1 como hallazgo
-material. Corregido + regresion + revalidacion. Cerrado por #75.
-
-Regla: si el patron "cierro N, aparecen N nuevos" se repite 3 veces,
-PARAR e IMPLEMENTAR.
-
----
-
-## 7. Ficheros clave
-
-### 7.1. Contratos y specs
-
-    docs/auditoria/PROMPT_MAESTRO.md
-    docs/auditoria/iae/INSTITUTIONAL_ACCUMULATION_NIPC_ESPECIFICACION.md
-    docs/auditoria/iae/NIPC_CONTRATOS_SEMANTICOS_v1.md
-    docs/auditoria/iae/NIPC_COVERAGE_POLICY.md
-
-### 7.2. Diseños por subfase
-
-    docs/auditoria/iae/A60_EXPEDIENTE_AUDITOR.md
-    docs/auditoria/iae/A62BIS_B1_SUBFASE.md           v4 (CERRADO #68)
-    docs/auditoria/iae/A62BIS_B2_PIT_SUBFASE.md       CERRADO #53
-    docs/auditoria/iae/A62BIS_PROPUESTA.md            v9 base
-    docs/auditoria/iae/FASE_A6_PLAN.md                estado A.6.x
-
-### 7.3. Dictamenes y cronologia
-
-    docs/auditoria/iae/DICTAMENES.md                  #1 a #75
-    docs/auditoria/iae/INFORME.md
-    docs/auditoria/FOLLOWUPS.md
-
-### 7.4. Evidencia empirica
-
-    docs/auditoria/iae/evidence/
-      nipc_gate0_baseline/           coverage baseline
-      nipc_gate0_target_identity_top2000/   piloto TOP 2000
-      nipc_gate0_top2000_v2/         A.6.4-v2 (P38 aislado)
-      a64_integration_b1_p61_p38/    A.6.4 (integracion completa)
-      b2_pit_cierre/, p66_*, nipc_p65_probe/, nipc_p70_probe/
-
----
-
-## 8. Comandos de arranque
+## 9. Comandos de arranque
 
     Set-Location D:\Macro_Sectorial
-    git log --oneline -10
+    git log --oneline -5
     git status -sb
-    git rev-list --count origin/main..HEAD
-    py -m compileall . -q
-    py -m pyflakes . 2>&1
+    py scripts\generate_estado_sistema.py     # regenera ESTADO_SISTEMA.md
     py -m pytest tests/ validation/ -q --tb=line
+    py -m pyflakes . ; py -m compileall . -q
 
 Esperado:
-- HEAD da70f9e o posterior
-- ahead 246 o mas
-- working tree limpio
-- 1301 passed + 2 skipped + 3 failed (freshness preexistentes)
-- pyflakes silencio
-- compileall OK
+  - HEAD 5877e9c o posterior
+  - ahead 282 o mas
+  - working tree limpio
+  - 1301 passed + 2 skipped + 3 failed (test_freshness, preexistentes)
+  - test_h731: 7 passed + 1 xfailed
+  - pyflakes silencio, compileall OK
 
----
-
-## 9. Confirmacion esperada
+## 10. Confirmacion esperada
 
     "Confirmado, contexto asimilado."
 
-    Estado del sistema que reconozco:
-      - Snapshot historico: HEAD da70f9e, ahead 246. Estado actual: ver ESTADO_SISTEMA.md.
-      - 1301 passed + 2 skipped + 3 failed preexistentes
-      - Prompt v6.55
-      - B1 CERRADO (#68). B2-PIT CERRADO (#53).
-      - Gap §5.1-§5.5 CERRADO (#61-#67).
-      - H-69.1/H-69.2/H-73.1 CERRADOS (#70/#72/#75).
-      - A.6.3, A.6.4-v2, A.6.4 CERRADOS.
-      - A.6.5 CERRADA. A.6.6 PENDIENTE.
-      - Baseline full BLOQUEADO por OpenFIGI.
-      - Gate-NIPC.2 NOT READY.
-      - Objetivo real: IMPLEMENTAR IAE
+    Estado que reconozco:
+      - HEAD 5877e9c, ahead 282
+      - Auditor: NO-GO A.6.6 + GO fix A2
+      - Fix A2: 0/5 commits, empezando por period_state.py
+      - H-10.1 abierto; P38 GO CONDICIONADO; A.6.6 NO-GO
+      - Prohibido tocar nipc/delta_shares/security_identity/temporal_validity
+      - Push: NO
 
-    Pregunta final: "Que hacemos?"
-
-No empieces a proponer tareas sin antes confirmar asimilacion.
+    Pregunta: "Que hacemos?"
 
 ---
 
-FIN DEL TRANSFER
-Version 8.0 (2026-09-21). HEAD da70f9e.
+FIN DEL TRANSFER v9. HEAD 5877e9c. Fecha: 2026-09-21.
