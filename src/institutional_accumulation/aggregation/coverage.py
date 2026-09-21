@@ -86,13 +86,25 @@ def compute_contractual_coverage(target_q4, target_q1, records_q4, records_q1):
     records_q4, records_q1: iterables de PositionRecord.
 
     Devuelve dict con:
-      coverage_previous                float
-      coverage_current                 float
-      paired_security_coverage         float
+      coverage_previous                float | None
+      coverage_current                 float | None
+      paired_security_coverage         float | None
       paired_weighted_share_coverage   float | None
       coverage_status                  "VALID" | "UNAVAILABLE"
       unmapped_count_previous          int
       unmapped_count_current           int
+
+    A2 c4/5 (auditor Q2 + Q5):
+      - coverage_previous = len(res_q4 INTERSECT tq4) / len(tq4).
+        Denominador TARGET_Q4 (contractual), no observed.
+        None si TARGET_Q4 vacio.
+      - coverage_current idem con Q1.
+      - paired_security_coverage = None si TARGET_PAIRWISE vacio
+        (auditor Q5: fail-closed, no se fabrica 0.0).
+
+    Nota (no tocar en este commit): unmapped_count_previous/current
+    siguen midiendo observed sin VERIFIED (no TARGET sin resolver).
+    Requiere dictamen para redefinir su semantica contra TARGET.
     """
     tq4 = set(target_q4) if target_q4 else set()
     tq1 = set(target_q1) if target_q1 else set()
@@ -116,8 +128,14 @@ def compute_contractual_coverage(target_q4, target_q1, records_q4, records_q1):
         and r.operational_mapping_status == "VERIFIED"
     }
 
-    coverage_previous = (len(res_q4) / len(all_q4)) if all_q4 else 0.0
-    coverage_current = (len(res_q1) / len(all_q1)) if all_q1 else 0.0
+    # A2 c4/5: denominador TARGET (contractual). Interseccion con
+    # res_q4 para que FIGIs VERIFIED fuera de TARGET no inflen.
+    coverage_previous = (
+        len(res_q4 & tq4) / len(tq4) if tq4 else None
+    )
+    coverage_current = (
+        len(res_q1 & tq1) / len(tq1) if tq1 else None
+    )
 
     # TARGET_PAIRWISE = TARGET_Q4 INTERSECT TARGET_Q1.
     target_pairwise = tq4 & tq1
@@ -125,8 +143,9 @@ def compute_contractual_coverage(target_q4, target_q1, records_q4, records_q1):
     # PAIRED = TARGET_PAIRWISE INTERSECT res_q4 INTERSECT res_q1.
     paired = target_pairwise & res_q4 & res_q1
 
+    # A2 c4/5 (auditor Q5): TARGET_PAIRWISE vacio -> None (no 0.0).
     paired_security_coverage = (
-        len(paired) / len(target_pairwise) if target_pairwise else 0.0
+        len(paired) / len(target_pairwise) if target_pairwise else None
     )
 
     # Ponderado: w(s) = max(Q4_total(s), Q1_total(s)).

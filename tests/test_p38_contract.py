@@ -216,7 +216,7 @@ def test_p38_cusip_distinto_figi_igual_paired():
 
 
 def test_p38_figi_distinto_not_paired():
-    """FIGI distinto -> NOT_PAIRED."""
+    """FIGI distinto -> TARGET_PAIRWISE vacio -> None (auditor Q5)."""
     rq4 = [
         coverage.PositionRecord(
             period="Q4", observed_security_key="cusip:A",
@@ -233,12 +233,61 @@ def test_p38_figi_distinto_not_paired():
             weight=120.0,
         ),
     ]
-    # TARGET_Q4={FIGI_A}; TARGET_Q1={FIGI_B}. Interseccion = {}.
+    # TARGET_Q4={FIGI_A}; TARGET_Q1={FIGI_B}. TARGET_PAIRWISE = {}.
+    # A2 c4/5 (Q5): TARGET_PAIRWISE vacio -> paired_security_coverage
+    # es None (fail-closed), no 0.0.
     result = coverage.compute_contractual_coverage(
         target_q4={"FIGI_A"}, target_q1={"FIGI_B"},
         records_q4=rq4, records_q1=rq1,
     )
-    assert result["paired_security_coverage"] == 0.0
+    assert result["paired_security_coverage"] is None
+    assert result["paired_weighted_share_coverage"] is None
+    assert result["coverage_status"] == "UNAVAILABLE"
+
+
+def test_p38_q5_target_q4_vacio_coverage_previous_none():
+    """Auditor Q5: TARGET_Q4 vacio -> coverage_previous UNAVAILABLE.
+
+    coverage_current sigue siendo calculable sobre TARGET_Q1.
+    """
+    rq1 = [
+        coverage.PositionRecord(
+            period="Q1", observed_security_key="cusip:A",
+            share_class_figi="FIGI_X", canonical_security="equity:X",
+            resolution_status="CANONICAL", operational_mapping_status="VERIFIED",
+            weight=100.0,
+        ),
+    ]
+    result = coverage.compute_contractual_coverage(
+        target_q4=set(), target_q1={"FIGI_X"},
+        records_q4=[], records_q1=rq1,
+    )
+    assert result["coverage_previous"] is None
+    assert result["coverage_current"] == 1.0
+    assert result["paired_security_coverage"] is None
+    assert result["paired_weighted_share_coverage"] is None
+    assert result["coverage_status"] == "UNAVAILABLE"
+
+
+def test_p38_q5_target_q1_vacio_coverage_current_none():
+    """Auditor Q5 simetrico: TARGET_Q1 vacio -> coverage_current UNAVAILABLE."""
+    rq4 = [
+        coverage.PositionRecord(
+            period="Q4", observed_security_key="cusip:A",
+            share_class_figi="FIGI_X", canonical_security="equity:X",
+            resolution_status="CANONICAL", operational_mapping_status="VERIFIED",
+            weight=100.0,
+        ),
+    ]
+    result = coverage.compute_contractual_coverage(
+        target_q4={"FIGI_X"}, target_q1=set(),
+        records_q4=rq4, records_q1=[],
+    )
+    assert result["coverage_previous"] == 1.0
+    assert result["coverage_current"] is None
+    assert result["paired_security_coverage"] is None
+    assert result["paired_weighted_share_coverage"] is None
+    assert result["coverage_status"] == "UNAVAILABLE"
 
 
 def test_p38_unmapped_count_es_int():
