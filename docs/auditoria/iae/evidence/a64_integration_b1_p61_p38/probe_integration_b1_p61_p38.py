@@ -115,12 +115,18 @@ def filter_universe_by_tickers(universe, ticker_set):
     return out
 
 
-def build_sub_state(universe, keys_subset):
+def build_sub_state(universe, keys_subset, *, sshprnamt_evidence=None):
     """Construye state para las keys del subconjunto.
 
-    Usa figi_by_key del universo. Default: RESOLVED + RESOLVED_OBSERVED.
+    Usa figi_by_key del universo. Default: RESOLVED + RESOLVED_OBSERVED
+    + operational_mapping_status=UNRESOLVED + sshprnamt=None.
+    A2 c2/5: sshprnamt_evidence es dict {catalog_key: float}, NO
+    {shareClassFIGI: float}. El state vive por catalog_key.
     """
-    st_full = ps.build_period_state(universe)
+    st_full = ps.build_period_state(
+        universe,
+        sshprnamt_evidence=sshprnamt_evidence,
+    )
     return {k: st_full[k] for k in keys_subset}
 
 
@@ -173,6 +179,7 @@ def main():
             "oper_rows": len(oper),
             "tickers_by_cusip": tickers,
             "ticker_set": set(tickers.values()),
+            "snap": snap,
         }
         print("  " + label + ": " + str(len(oper)) + " filas oper, "
               + str(len(tickers)) + " tickers equity")
@@ -182,6 +189,42 @@ def main():
     print("=== 2. TargetUniverse (B1) ===")
     universe = build_target_universe()
     print("  declared_keys: " + str(len(universe.declared_keys)))
+
+    # --- 2b. SSHPRNAMT efectivo por catalog_key (A2 c2/5) ---
+    # El resolver NO devuelve share_class_figi: el FIGI contractual
+    # vive en universe.figi_by_key (B2-PIT). Construimos:
+    #   ticker_to_figi: {radar_ticker: share_class_figi}
+    #   figi_to_keys:   {share_class_figi: [catalog_key, ...]}
+    # Luego agregamos SSHPRNAMT por FIGI sobre el INFOTABLE del
+    # canonical_snapshot post-amendments, y replicamos a las keys.
+    ticker_to_figi = {}
+    figi_to_keys = {}
+    for k in universe.declared_keys:
+        f = universe.figi_by_key.get(k)
+        t = universe.ticker_by_key.get(k)
+        if f:
+            if t:
+                ticker_to_figi[t] = f
+            figi_to_keys.setdefault(f, []).append(k)
+
+    for label, d in per_data.items():
+        figi_by_cusip = {}
+        for cusip, t in d["tickers_by_cusip"].items():
+            f = ticker_to_figi.get(t)
+            if f:
+                figi_by_cusip[str(cusip)] = str(f)
+        sh_by_figi = tb.extract_sshprnamt_by_figi(
+            d["snap"]["INFOTABLE"], figi_by_cusip,
+        )
+        sh_by_key = {}
+        for f, v in sh_by_figi.items():
+            for k in figi_to_keys.get(f, []):
+                sh_by_key[k] = v
+        d["sshprnamt_by_figi"] = sh_by_figi
+        d["sshprnamt_by_key"] = sh_by_key
+        print("  SSHPRNAMT " + label + ": "
+              + str(len(sh_by_figi)) + " FIGIs, "
+              + str(len(sh_by_key)) + " keys")
 
     # --- 3. Cruce ---
     print()
@@ -215,7 +258,10 @@ def main():
             result[label] = {"keys": 0, "p38": None, "fail_closed": True}
             continue
         tickers_by_key = {k: universe.ticker_by_key[k] for k in keys_sub}
-        st_q = build_sub_state(universe, keys_sub)
+        st_q = build_sub_state(
+            universe, keys_sub,
+            sshprnamt_evidence=per_data[label]["sshprnamt_by_key"],
+        )
 
         records_q = build_records_for_subset(
             keys_sub, universe, st_q, tickers_by_key, "Q1")
@@ -239,7 +285,10 @@ def main():
     else:
         keys_sub = {k for k in filter_universe_by_tickers(universe, shared_q1)
                     if universe.figi_by_key.get(k)}
-        st_q = build_sub_state(universe, keys_sub)
+        st_q = build_sub_state(
+            universe, keys_sub,
+            sshprnamt_evidence=per_data["2026Q1"]["sshprnamt_by_key"],
+        )
 
         # Sub-universo restringido (TargetUniverse con declared_keys
         # del subconjunto). Permite invocar catalog_to_p38_targets.
@@ -276,9 +325,13 @@ def main():
         print("  Q4 tiene subconjunto -> revisar")
 
     out = {
-        "periods": {k: {kk: vv for kk, vv in v.items()
-                        if kk != "tickers_by_cusip" and kk != "ticker_set"}
-                    for k, v in per_data.items()},
+        "periods": {k: dict(
+            {kk: vv for kk, vv in v.items()
+             if kk not in ("tickers_by_cusip", "ticker_set", "snap",
+                           "sshprnamt_by_figi", "sshprnamt_by_key")},
+            n_sshprnamt_by_figi=len(v.get("sshprnamt_by_figi", {})),
+            n_sshprnamt_by_key=len(v.get("sshprnamt_by_key", {})),
+        ) for k, v in per_data.items()},
         "universe_keys": len(universe.declared_keys),
         "shared_q1": len(shared_q1),
         "shared_q4": len(shared_q4),

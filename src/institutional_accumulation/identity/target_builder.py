@@ -132,3 +132,50 @@ def build_target(snapshot_df, membership_df, assignments_df, *,
         row_uid_by_key=row_uid_by_key,
         key_by_row_uid=key_by_row_uid,
     )
+
+
+# --- A2 c2/5 (fix H-10.1, 2026-09-21): SSHPRNAMT efectivo por FIGI ---
+
+
+def extract_sshprnamt_by_figi(infotable_df, figi_by_cusip):
+    """Extrae SSHPRNAMT efectivo agregado por shareClassFIGI.
+
+    Fuente: INFOTABLE del canonical_snapshot post-amendments (Q1)
+    o del filing base (Q4). La agregacion es SUM por FIGI sobre
+    todos los CUSIP que resuelven al mismo shareClassFIGI dentro
+    del periodo (contrato P38 seccion 3.3: w(s) por security,
+    no por manager).
+
+    Parametros:
+      infotable_df    DataFrame con columnas CUSIP y SSHPRNAMT.
+      figi_by_cusip   dict {CUSIP: shareClassFIGI}. CUSIPs no
+                      presentes se ignoran (no se infiere FIGI).
+
+    Devuelve dict {shareClassFIGI: float}. Valores SSHPRNAMT no
+    numericos o negativos se descartan. DataFrame vacio o sin
+    columnas requeridas -> {}.
+    """
+    if infotable_df is None or len(infotable_df) == 0:
+        return {}
+    cols = list(infotable_df.columns)
+    if "CUSIP" not in cols or "SSHPRNAMT" not in cols:
+        return {}
+    out = {}
+    for _, row in infotable_df.iterrows():
+        cusip = str(row.get("CUSIP") or "").strip()
+        if not cusip:
+            continue
+        figi = figi_by_cusip.get(cusip)
+        if not figi:
+            continue
+        raw_val = row.get("SSHPRNAMT")
+        if raw_val is None:
+            continue
+        try:
+            v = float(raw_val)
+        except (TypeError, ValueError):
+            continue
+        if v < 0:
+            continue
+        out[figi] = out.get(figi, 0.0) + v
+    return out
