@@ -1,7 +1,7 @@
 # IAE - REGISTRO DE DICTAMENES
 
 **Generado:** 2026-09-20
-**Actualizado:** 2026-09-21. Indice cronologico: #1-#75. Detalle expandido: #1-#75. Sin saltos de autoridad (consolidado tras auditoria externa 2026-09-21).
+**Actualizado:** 2026-09-22. Indice cronologico: #1-#76. Detalle expandido: #1-#76. Sin saltos de autoridad (consolidado tras auditoria externa 2026-09-21).
 **Consolida:** dictamenes del ciclo IAE y radar
 
 **Regla:** este fichero es la cadena autoritativa. Los dictamenes originales

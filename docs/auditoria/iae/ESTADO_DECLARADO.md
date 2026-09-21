@@ -56,6 +56,8 @@ documentos describen su tema; NO declaran el estado del sistema.
 | `NIPC_CONTRATOS_SEMANTICOS_v1.md` | VIGENTE. P60/P61 GO, P38 GO CONDICIONADO |
 | `NIPC_COVERAGE_POLICY.md` v1.0 | VIGENTE (normativa) |
 | `INSTITUTIONAL_ACCUMULATION_NIPC_ESPECIFICACION.md` v1.4 | Referencia, no normativa |
+| `A66_BUNDLE.md` | Entregable al auditor (dictamen #76). Refleja estado post-A2. |
+| `A67_CONSULTA.md` | Consulta abierta al auditor sobre B-02/B-03/B-04. |
 
 ## 4. Prohibiciones vigentes
 
@@ -71,7 +73,10 @@ documentos describen su tema; NO declaran el estado del sistema.
 ## 5. Deuda activa (no bloqueante)
 
 - Integracion de modulos IAE al pipeline productivo (`daily_run.yml` NO los invoca)
-- `compute_nipc_contractual` SIN CALLERS PRODUCTIVOS (verificado: solo tests)
+- `compute_nipc_contractual` SIN CALLERS PRODUCTIVOS. Caller de smoke
+  anadido al probe A.6.4 (commit `6126c0d`, seccion 7): computa sin
+  error con delta vacio. No activa el modulo productivamente
+  (thresholds UNDEFINED, dictamen #76).
 - `build_effective_reporting_snapshot` SIN CALLERS PRODUCTIVOS (verificado: solo tests)
 - `DROP_DUP` NO ACTIVADO (capacidad diferida v2)
 - Marcadores seccion 5.4 VERIFICADOS (2026-09-22): no son deuda.
@@ -92,7 +97,10 @@ documentos describen su tema; NO declaran el estado del sistema.
   catalogo radar (sin share_class_figi). No resoluble via crosswalk
   (ambos ya estan en `cusip_ticker_exceptions.csv`). Requiere OpenFIGI.
 - Gate-NIPC.2 BLOQUEADO por THRESHOLD_1/2 UNDEFINED
-- A.6.6 NO-GO (#76). Saneamiento post-dictamen CERRADO (este commit).
+- A.6.6 NO-GO (#76). Saneamiento post-dictamen CERRADO.
+- Cobertura de tests: 9 funciones publicas IAE sin test directo
+  cubiertas por `tests/test_iae_gap_coverage.py` (commit `12e1e3f`).
+  Cobertura directa actual: 110/110 funciones publicas mencionadas.
 
 ## 6. Proxima accion autorizada
 
