@@ -1377,7 +1377,6 @@ versiones (v1-v4), cero codigo B1.
     - B3 semantica temporal (parcialmente independiente).
     - Integracion de `temporal_validity` en `security_identity` (div. D1).
     - Integracion de `reporting_dedup` en el pipeline NIPC.
-    - Probe GHISALLO CIK 0001825214.
     - Curacion adicional del crosswalk CUSIP->ticker.
 
 **Ficheros clave del ciclo A.6.2-bis:**
@@ -1570,7 +1569,7 @@ Cobertura NIPC (2026-09-19) -> CERRADA COMO INSUFFICIENT. Crosswalk interno (3 c
 
 Filer continuity (2026-09-19) -> CERRADA COMO CARACTERIZACION. Concentracion en Vanguard (4 discontinuidades en top 50). NO es threshold. Reconciliacion NT-HR NO AUTORIZADA. Regla canonical_snapshot CONGELADA.
 
-GHISALLO CIK 0001825214 (+765% Q4->Q1) -> PROBE DIAGNOSTICO AUTORIZADO, no bloqueante. Pendiente.
+GHISALLO CIK 0001825214 (+765% Q4->Q1) -> CERRADO COMO CARACTERIZACION (2026-09-21). El +765% de `sum(SSHPRNAMT)` es artefacto del probe `probe_filer_continuity_top50.py`, que aplica la seccion 5.1 sin 5.3-5.5. VALUE reportado Q4->Q1: +62% (variacion del valor reportado de las posiciones, no delta economico). CUSIP 329882225 y 329882250 fuera de Official List SEC Q4 2025 y Q1 2026. Dictamenes #57-#60. Deuda asociada: implementacion seccion 5.3-5.5 pendiente, registrada como sub-deuda de K-INSTITUTIONAL-ACCUMULATION-01.
 
 ## SECCION 13 - DEUDA TECNICA
 Monolitos restantes:

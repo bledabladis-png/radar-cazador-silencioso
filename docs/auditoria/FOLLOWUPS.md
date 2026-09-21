@@ -2557,3 +2557,47 @@ P65 v3 (ver iae/DICTAMENES.md #26). GO CONDICIONADO con 3 correcciones.
   - Probe e2e.
   - Auditoria de salida.
   - Activacion DROP_DUP (requiere nuevo dictamen).
+
+## IAE GHISALLO - Cierre por caracterizacion (2026-09-21)
+
+**Ciclo:** auditoria del pendiente Q-MINI-3 / Q-T50-4 (GHISALLO CIK
+0001825214, +765% Q4 2025 -> Q1 2026). 7 Gates empiricos, todos
+read-only. Sin commits de codigo. Sin push.
+
+**Hallazgo:**
+- El +765% documentado en prompt v6.50 sec.12 es artefacto del probe
+  `probe_filer_continuity_top50.py`, que aplica la seccion 5.1
+  (SSHPRNAMTTYPE=SH + PUTCALL NULL) sin la cadena normativa 5.3-5.5.
+- 2 posiciones top (NIPST 02/14/29 CVT y NIPST 02/14/31 CVT PUT,
+  ambas CONVERTIBLE BOND) suman 17.58B de 20.69B (85%).
+- VALUE reportado Q4->Q1: 2,239,631,536 -> 3,630,298,935 (+62%).
+  Variacion del valor reportado, no delta economico.
+- CUSIP 329882225 y 329882250 no aparecen en Official List SEC de
+  Q4 2025 ni Q1 2026.
+
+**Gap spec->codigo detectado (independiente del fenomeno GHISALLO):**
+- Spec v1.4 secciones 5.3-5.5 definen cadena canonica
+  (5.1 -> 5.3 section13f_eligible -> 5.4
+  security_type_status == RESOLVED_EQUITY -> 5.5 ticker_mapped).
+- En codigo productivo revisado no se encontro materializacion de
+  `security_type_status` ni `operational_universe`.
+- `compute_nipc_contractual` sin callers productivos (Gate 4).
+
+**Cadena de dictamenes:**
+- #57 GO DIAGNOSTICO / NO-GO CORRECCION.
+- #58 GO CONDICIONAL v2 (5 cambios obligatorios).
+- #59 GO CONDICIONAL v3 (3 cambios obligatorios).
+- #60 GO PARA SOMETIMIENTO FORMAL (3 ajustes de redaccion).
+
+**Decisiones del auditor (#60):**
+- GHISALLO: CHARACTERIZED / CLOSED.
+- Probe: DEFECTUOSO RESPECTO DEL USO EQUITY.
+- Secciones 5.3-5.5: GAP SPEC->CODIGO confirmado.
+- Motor NIPC: NO DEFECT DETERMINED.
+- K-ID nuevo: NO NECESARIO.
+- Sub-deuda registrada bajo K-INSTITUTIONAL-ACCUMULATION-01.
+- Gate-NIPC.2: NOT READY / DEPENDENCY PENDING.
+- B1, B2-PIT: NO AFECTADOS.
+- Correccion de codigo: NO AUTORIZADA.
+
+**Estado:** 218+ commits locales ahead. Sin push.

@@ -1894,8 +1894,17 @@ del ciclo NIPC).
     Abordaje: reverse lookup OpenFIGI con idType=TICKER en Gate-NIPC.2.
   - Deuda: 9,351,957,157 SSHPRNAMT Q4 / 25,746,947,582 SSHPRNAMT Q1
     fuera de Official List SEC.
-    Estado: Aceptado como no-equity (mayoria convertibles, MMF, cash).
-    Abordaje: ninguno; documentar.
+    Estado: Aceptado como no-equity segun la clasificacion contractual
+    de la spec.
+    Tratamiento normativo: la seccion 5.4 define su exclusion del
+    operational_universe.
+    Estado de implementacion: la seccion 5.4 no esta materializada en el
+    codigo productivo revisado (Gate 4 / sub-deuda de
+    K-INSTITUTIONAL-ACCUMULATION-01).
+    GHISALLO (2026-09-21): los CUSIP 329882225 y 329882250 forman parte
+    de esta poblacion documental fuera de Official List para Q4 2025 y
+    Q1 2026. Estar fuera de Official List no implica error de filing ni
+    no-reportabilidad (dictamenes #57-#60).
   - Deuda: tabla data/mappings/cusip_equivalence.csv (nueva, para
     corporate actions).
     Estado: PENDIENTE creacion.
