@@ -159,6 +159,13 @@ EQUITY_ANCHOR_TOKENS = frozenset({
     "COMMON",
     "ORD",
     "ORDINARY",
+    # Dictamen #62 seccion 4: marcadores autorizados como candidatos
+    # de alta confianza. ADR / SPONSORED ADR / SPONSORED ADS NO
+    # autorizados (permanecen UNRESOLVED).
+    "SHS",
+    "COMM",
+    "CMN",
+    "STK",
 })
 
 
@@ -170,6 +177,12 @@ EQUITY_PHRASES = (
     "CAP STK",
     "ORD SHS",
     "ORDINARY SHARES",
+    # Dictamen #62 seccion 4: frases compuestas autorizadas.
+    "COMM STK",
+    "CL A",
+    "CL B",
+    "SHS CL A",
+    "SPON ADS",
 )
 
 

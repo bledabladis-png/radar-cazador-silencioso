@@ -43,12 +43,13 @@ def test_E3_com_cl_a_resolved_equity():
     assert _cls("COM CL A") == ("EQUITY", "RESOLVED_EQUITY")
 
 
-def test_E4_cl_a_unresolved():
-    assert _cls("CL A") == ("UNKNOWN", "UNRESOLVED")
+def test_E4_cl_a_resolved_equity_segun_d62():
+    """Dictamen #62: CL A autorizado como candidato de alta confianza."""
+    assert _cls("CL A") == ("EQUITY", "RESOLVED_EQUITY")
 
 
-def test_E5_shs_unresolved():
-    assert _cls("SHS") == ("UNKNOWN", "UNRESOLVED")
+def test_E5_shs_resolved_equity_segun_d62():
+    assert _cls("SHS") == ("EQUITY", "RESOLVED_EQUITY")
 
 
 def test_E6_sponsored_adr_unresolved():
@@ -132,8 +133,8 @@ def test_pfd_preferred():
 
 def test_not_aprobados_no_marcan_equity():
     """Dictamen #61: CL A, SHS, STOCK, EQUITY, ADR, REIT, NEW -> UNRESOLVED."""
-    for toc in ("CL A", "CL B", "CL C", "CLASS A", "CLASS B",
-                "SHS", "SHARES", "STOCK", "EQUITY",
+    for toc in ("CL C", "CLASS A", "CLASS B",
+                "SHARES", "STOCK", "EQUITY",
                 "ADR", "ADS", "SPONSORED ADR", "SPONSORED ADS",
                 "REIT", "NEW"):
         assert _cls(toc) == ("UNKNOWN", "UNRESOLVED"), toc
@@ -165,12 +166,13 @@ def test_resolve_sin_evidencia_externa():
 
 
 def test_resolve_ext_anula_title_unresolved():
-    r = st.resolve_security_type("CL A", {"security_type": "EQUITY"})
+    # CLASS A sigue UNRESOLVED tras dictamen #62.
+    r = st.resolve_security_type("CLASS A", {"security_type": "EQUITY"})
     assert r == ("EQUITY", "RESOLVED_EQUITY")
 
 
 def test_resolve_ext_anula_title_unresolved_non_equity():
-    r = st.resolve_security_type("CL A", {"security_type": "NON_EQUITY"})
+    r = st.resolve_security_type("CLASS A", {"security_type": "NON_EQUITY"})
     assert r == ("NON_EQUITY", "RESOLVED_NON_EQUITY")
 
 
