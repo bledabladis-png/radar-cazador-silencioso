@@ -1,14 +1,13 @@
-# Evidencia A.6.4 - hashes SHA-256
+# Evidencia A.6.4 / A.6.6 - hashes SHA-256
+
+**Regenerado:** 2026-09-21 tras fix A2 (5 commits).
+**HEAD al regenerar:** 473ce06 (ver `ESTADO_SISTEMA.md`).
 
 ## Outputs del probe (script + resultados + documentacion)
 
-c99249b26af79488d781a5ff783be20a388c54abe27308c1bc395acba0524ea1  probe_integration_b1_p61_p38.py
-2bd24be767a0284dd5dc648d1ee0c8ae65820e15b718d46d15e7955d3649e768  probe_diagnose_h101.py
-b30cc7a3f734a19ef83ed3e60433b2aaa4c38b3a09a1a4f487138159a0cf9582  result.json
-8532e2ddcb9cf3926b63b6e10f9cc5f9a3394e39c58fdd9582b3575d2c09e51a  diagnose_result.json
-6523ddbd67131838ab1fa94dfaf627e70316b8173d1494dea7401dc0b77386f7  output.txt
-e91e6c145dcdde6e1473b2e72e5b791edeb05f1eee90e2108a7ac0e16e680d89  diagnose_output.txt
-acdb719d406bd906d0c70ecae53f755b2749e55be57c8854f0b88da3cf3ab8df  README.md
+508bd16d28944a0dd5616c162099d8805a7846b27eaa49fce518d5b1b97d02df  probe_integration_b1_p61_p38.py
+f00197ed3083155fa77318c7fc51805903411f12d3491750a522e596403b9703  result.json
+3ef9cfc6cd20c8cbf4e055f4aff532cdf6993076f8e3947484052bcccab67e5f  README.md
 
 ## Inputs 13F - Q4 2025 (data/sec_13f/processed/2025Q4/)
 
@@ -42,7 +41,8 @@ ad59cc913ad579797070206ca3552160faccab69d2ee53f56de4999108e54888  catalog_member
 
 ## Notas
 
-- Hashes calculados sobre bytes fisicos en disco al generar este documento.
+- Hashes calculados sobre bytes fisicos en disco.
+- Los hashes de probe/result/README cambiaron con el fix A2. Los inputs
+  (13F + snapshot + mappings) NO cambiaron.
 - `snapshot_20260921_01.csv` y `radar_target_catalog.csv` comparten hash:
   el snapshot B2-PIT es una copia del catalogo radar materializado.
-- HEAD al generar: ver `ESTADO_SISTEMA.md`.
