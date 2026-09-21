@@ -471,6 +471,34 @@ def _resolve_identity_inner(
 
     # 2. crosswalk_internal
     cw_tickers = _find_active_crosswalk(cusip_s, report_period, crosswalk_internal_df)
+
+    # R-69.2 (dictamen #71): precedencia por evidencia temporal.
+    # Si hay varios candidatos pero exactamente uno tiene vigencia
+    # temporal verificable para report_period, ese gana. Los
+    # candidatos sin vigencia no generan CONFLICT contra un unico
+    # candidato temporalmente VERIFIED. Dos o mas VERIFIED -> CONFLICT.
+    if len(cw_tickers) > 1:
+        verified = []
+        for tup in cw_tickers:
+            tk, src, vf, vt = tup
+            try:
+                st = _resolve_op_source_status(src, vf, vt, report_period)
+            except (ValueError, TypeError):
+                st = "UNRESOLVED"
+            if st == "VERIFIED":
+                verified.append(tup)
+        if len(verified) == 1:
+            cw_tickers = verified
+        elif len(verified) >= 2:
+            result["security_resolution_status"] = STATUS_CONFLICT
+            result["canonical_security_kind"] = KIND_OBSERVED_CUSIP_ONLY
+            result["evidence"] = {
+                "source": "crosswalk_internal",
+                "candidates": cw_tickers,
+                "verified_candidates": verified,
+            }
+            return result
+
     if len(cw_tickers) > 1:
         result["security_resolution_status"] = STATUS_CONFLICT
         result["canonical_security_kind"] = KIND_OBSERVED_CUSIP_ONLY
