@@ -134,8 +134,8 @@ def test_pfd_preferred():
 def test_not_aprobados_no_marcan_equity():
     """Dictamen #61: CL A, SHS, STOCK, EQUITY, ADR, REIT, NEW -> UNRESOLVED."""
     for toc in ("CL C", "CLASS A", "CLASS B",
-                "SHARES", "STOCK", "EQUITY",
-                "ADR", "ADS", "SPONSORED ADR", "SPONSORED ADS",
+                "SHARES", "ADR", "ADS",
+                "SPONSORED ADR", "SPONSORED ADS",
                 "REIT", "NEW"):
         assert _cls(toc) == ("UNKNOWN", "UNRESOLVED"), toc
 
@@ -231,3 +231,75 @@ def test_coverage_stats_admite_dicts():
     r = st.coverage_stats(records)
     assert r["total"] == 2
     assert r["pct_operational"] == 50.0
+
+# --- Dictamen #63: EQUITY/STOCK exactos ---
+
+def test_equity_exacto():
+    assert _cls("EQUITY") == ("EQUITY", "RESOLVED_EQUITY")
+
+
+def test_stock_exacto():
+    assert _cls("STOCK") == ("EQUITY", "RESOLVED_EQUITY")
+
+
+def test_stock_como_substring_no_clasifica():
+    """Dictamen #63: STOCK exacto, no substring."""
+    for toc in ("STOCK FUND", "STOCK INDEX FUND", "GROWTH STOCK"):
+        assert _cls(toc) == ("UNKNOWN", "UNRESOLVED"), toc
+
+
+def test_equity_como_substring_no_clasifica():
+    for toc in ("EQUITY FUND", "EQUITY INCOME"):
+        assert _cls(toc) == ("UNKNOWN", "UNRESOLVED"), toc
+
+
+# --- Dictamen #63: handoff §5.4 -> §5.5 ---
+
+def test_handoff_resolved_equity_entra():
+    assert st.is_operational_candidate("EQUITY", "RESOLVED_EQUITY") is True
+
+
+def test_handoff_non_equity_excluido():
+    assert st.is_operational_candidate("NON_EQUITY", "RESOLVED_NON_EQUITY") is False
+
+
+def test_handoff_unresolved_excluido():
+    assert st.is_operational_candidate("UNKNOWN", "UNRESOLVED") is False
+
+
+def test_handoff_conflict_excluido():
+    assert st.is_operational_candidate("UNKNOWN", "CONFLICT") is False
+
+
+def test_handoff_valor_inesperado_fail_closed():
+    """Fail-closed: cualquier valor raro -> False."""
+    assert st.is_operational_candidate("FOO", "RESOLVED_EQUITY") is False
+    assert st.is_operational_candidate("EQUITY", "FOO") is False
+    assert st.is_operational_candidate(None, None) is False
+
+
+def test_operational_universe_candidate_com():
+    assert st.operational_universe_candidate("COM") is True
+
+
+def test_operational_universe_candidate_convertible():
+    assert st.operational_universe_candidate("CONVERTIBLE BOND") is False
+
+
+def test_operational_universe_candidate_cl_a():
+    assert st.operational_universe_candidate("CL A") is True
+
+
+def test_operational_universe_candidate_adr():
+    """Dictamen #63: ADR sigue UNRESOLVED, excluido del operational."""
+    assert st.operational_universe_candidate("ADR") is False
+    assert st.operational_universe_candidate("SPONSORED ADR") is False
+
+
+def test_operational_universe_candidate_fund():
+    assert st.operational_universe_candidate("FUND") is False
+
+
+def test_operational_universe_candidate_class_a():
+    """CLASS A no autorizado -> UNRESOLVED -> excluido."""
+    assert st.operational_universe_candidate("CLASS A") is False

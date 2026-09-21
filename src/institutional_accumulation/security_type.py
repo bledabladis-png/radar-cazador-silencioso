@@ -169,6 +169,15 @@ EQUITY_ANCHOR_TOKENS = frozenset({
 })
 
 
+# Dictamen #63 seccion 2 + 4: EQUITY y STOCK aprobados como match
+# exacto del titulo normalizado (NO substring). "STOCK FUND" no
+# hereda la clasificacion de "STOCK".
+EQUITY_EXACT_TITLES = frozenset({
+    "EQUITY",
+    "STOCK",
+})
+
+
 # --- Frases EQUITY aprobadas ---
 EQUITY_PHRASES = (
     "COMMON STOCK",
@@ -251,6 +260,8 @@ def classify_title_of_class(title_of_class):
     if _has_token(tokens, EQUITY_ANCHOR_TOKENS):
         return (SECURITY_TYPE_EQUITY, STATUS_RESOLVED_EQUITY)
     if _has_any_phrase(norm, EQUITY_PHRASES):
+        return (SECURITY_TYPE_EQUITY, STATUS_RESOLVED_EQUITY)
+    if norm in EQUITY_EXACT_TITLES:
         return (SECURITY_TYPE_EQUITY, STATUS_RESOLVED_EQUITY)
 
     # 4. Fallback
@@ -353,3 +364,34 @@ def coverage_stats(records):
         "pct_conflict": round(100.0 * counts[STATUS_CONFLICT] / total, 4),
         "pct_operational": round(100.0 * operational / total, 4),
     }
+
+
+# --- Handoff §5.4 -> §5.5 (dictamen #63 seccion 9) ---
+
+def is_operational_candidate(security_type_value, security_type_status):
+    """Filtro contractual §5.4 -> §5.5 (dictamen #63 seccion 9).
+
+    Devuelve True SOLO si (type, status) == (EQUITY, RESOLVED_EQUITY).
+
+    Handoff probado:
+      RESOLVED_EQUITY       -> True
+      RESOLVED_NON_EQUITY   -> False
+      UNRESOLVED            -> False
+      CONFLICT              -> False
+
+    Sin fallback. Cualquier valor inesperado -> False (fail-closed).
+    """
+    return (
+        security_type_value == SECURITY_TYPE_EQUITY
+        and security_type_status == STATUS_RESOLVED_EQUITY
+    )
+
+
+def operational_universe_candidate(toc):
+    """Aplica el filtro de handoff a un TITLEOFCLASS crudo.
+
+    Utilidad para callers de §5.5: devuelve True solo si el titulo
+    clasifica como RESOLVED_EQUITY.
+    """
+    t, s = classify_title_of_class(toc)
+    return is_operational_candidate(t, s)
