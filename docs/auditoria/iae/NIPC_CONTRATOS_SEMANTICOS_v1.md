@@ -370,7 +370,7 @@ confirmado. Implementacion con evidencia contractual en A.6.2 + A.6.2-bis.
                                   v
                              RESOLVED
                                   |
-                             canonical_security
+                             shareClassFIGI
                              comun Q4 <-> Q1
                                   |
                                   v
@@ -441,8 +441,8 @@ Reglas duras:
    resuelve, sigue siendo TARGET (afecta al denominador).
 2. RESOLVED no se filtra por TARGET. Un CANONICAL fuera de target no
    participa en el pairing pero sigue siendo RESOLVED.
-3. PAIRED requiere ambas condiciones + identidad canonica comun +
-   operational_mapping_status VERIFIED en ambos periodos.
+3. PAIRED requiere ambas condiciones + `shareClassFIGI` comun (Modelo A)
+   + operational_mapping_status VERIFIED en ambos periodos.
 
 ### 4.7. Filer continuity NO interviene
 

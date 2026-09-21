@@ -120,7 +120,7 @@ Deterministico. Sin red. Sin datetime.now().
 - Dictamenes: #72, #73, #74.
 - Estado vigente: `ESTADO_DECLARADO.md` seccion 8 (H-10.1).
 
-## Provenance de los inputs (H-07, resuelto 2026-09-21)
+## Provenance de los inputs (H-11, resuelto 2026-09-21)
 
 Hashes SHA-256 de los inputs que produjeron el diagnostico:
 

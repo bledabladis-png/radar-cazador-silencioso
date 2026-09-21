@@ -109,12 +109,14 @@ sin dictamen).
 | H-07 | ALTA | `paired_weighted_share_coverage=1.0` porque `PositionRecord.weight=1.0` hardcoded. No hay ponderacion por SSHPRNAMT. | `catalog_p38_adapter.py` |
 | H-08 | MEDIA | Test H-73.1 no cubre estados ortogonales (`identity=RESOLVED` pero `weight=NOT_PRESENT`). | `tests/test_h731_adapter_p38_compat.py` |
 | H-10.1 | CRITICA | `catalog_p38_adapter._records` marca `operational_mapping_status="VERIFIED"` incondicionalmente. `coverage.py` divide por observed (no TARGET). Combinado con `weight=1.0`, el resultado es **estructuralmente 1.0**, incluso si la cobertura real fuera 0%. | `catalog_p38_adapter.py`, `coverage.py`, `period_state.py` |
+| H-11 | ALTA | (provenance) Hashes de inputs 13F + snapshot + mappings no publicados en evidencia. CERRADO 2026-09-21 con `HASHES.txt` + `README.md` seccion Provenance. | `evidence/a64_integration_b1_p61_p38/HASHES.txt` |
+| H-12 | MEDIA | (trazabilidad) Hash del catalogo ambiguo (VIGENTE LF vs historico CRLF). CERRADO 2026-09-21 etiquetando en contrato P38. | `NIPC_CONTRATOS_SEMANTICOS_v1.md` |
 
 **Consecuencia:** A.6.4 queda reclasificado como **smoke test de integracion
 del adapter** (ver `evidence/a64_integration_b1_p61_p38/README.md`), NO como
 evidencia cuantitativa de cobertura contractual.
 
-**Proximo paso:** expediente para dictamen externo sobre H-05/H-06/H-07/H-10.1.
+**Proximo paso:** expediente para dictamen externo sobre H-05/H-06/H-10.1.
 Sin dictamen, no se toca codigo productivo. H-08 se puede cerrar con test si
 el dictamen lo autoriza.
 
