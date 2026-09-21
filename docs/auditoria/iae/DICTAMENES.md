@@ -61,6 +61,7 @@
 | 47 | Ver entrada §47 de este fichero | A.6.2-bis v4 NO-GO. A1 catalog_key + A2 denominador. |
 | 48 | Ver entrada §48 de este fichero | A.6.2-bis v5 NO-GO. weight_status + adaptador P38 + PIT cross-snapshot. |
 | 49 | Ver entrada §49 de este fichero | A.6.2-bis v6 NO-GO. NOT_PRESENT + TARGET_PAIRWISE formal + colision catalog_key -> FIGI. |
+| 50 | Ver entrada §50 de este fichero | A.6.2-bis v7 NO-GO. check_continuity en flujo + dominio collision + TARGET_PAIRWISE vacio. |
 
 ---
 
@@ -1258,6 +1259,132 @@ B3: RESTATEMENT + NEW HOLDINGS + ambiguous con provenance.
 
 **Conclusion: v7 que cierre NOT_PRESENT + TARGET_PAIRWISE formal +
 colision catalog_key -> FIGI -> apta para GO DE IMPLEMENTACION.**
+
+---
+
+## 50. A.6.2-bis - Dictamen de verificacion documental v7 (2026-09-21)
+
+**Tipo:** dictamen del auditor externo sobre A62BIS_PROPUESTA.md v7.
+**Dictamen anterior:** #49 (v6 NO-GO).
+
+**Resultado:** NO-GO DE IMPLEMENTACION. ARQUITECTURA APROBADA
+CONDICIONALMENTE.
+
+### Lo que la v7 cierra correctamente
+
+- NOT_PRESENT -> UNAVAILABLE (fail-closed, alineado P63).
+- TARGET_PAIRWISE formal sobre catalog_key.
+- Estados por periodo (state_q4 / state_q1).
+- Colision catalog_key -> FIGI -> CATALOG_ECONOMIC_COLLISION.
+- B2 con "que cubren period_end".
+- B3 sin regresion.
+
+### Bloqueo material A - check_continuity no en flujo normativo
+
+v7 §2.4 define `same catalog_key + different FIGI -> CONFLICT_FIGI_CHANGE
+-> UNAVAILABLE`. Pero §3.6 flujo normativo es:
+  TARGET_PAIRWISE -> feasible(K) -> check_economic_collision
+                    -> catalog_to_p38_targets -> compute_contractual_coverage
+
+check_continuity no aparece en el flujo. Declararlo como "precondicion"
+en docstring no basta si el algoritmo normativo no establece DONDE se
+ejecuta.
+
+Caso: K1 con FIGI_A en Q4 y FIGI_B en Q1.
+Ambos pueden satisfacer identity=RESOLVED, weight=RESOLVED_OBSERVED.
+feasible(K1)=True. Sin check_continuity obligatorio, adaptador recibe
+dos FIGIs distintos. Reabre el riesgo del #48.
+
+Correccion exigida (v8): flujo normativo explicito:
+  TARGET_PAIRWISE
+    -> state_q4 / state_q1
+    -> check_continuity(Q4, Q1)
+    -> check_economic_collision(...)
+    -> feasibility final
+    -> catalog_to_p38_targets
+    -> P38
+CONFLICT_FIGI_CHANGE -> UNAVAILABLE -> no invocar P38.
+
+### Bloqueo material B - dominio de check_economic_collision ambiguo
+
+v7 define `check_economic_collision(universe)` para un unico
+TargetUniverse. El calculo contractual trabaja con universe_q4 y
+universe_q1. El flujo no especifica sobre cual se ejecuta.
+
+Correccion exigida (v8):
+  collision_q4 = check_economic_collision(universe_q4)
+  collision_q1 = check_economic_collision(universe_q1)
+  collision_q4 != empty OR collision_q1 != empty
+    -> CATALOG_ECONOMIC_COLLISION -> UNAVAILABLE
+
+### Bloqueo material C - TARGET_PAIRWISE = vacio sin semantica
+
+v7 §3.3: "Si TODAS las entradas de TARGET_PAIRWISE tienen feasible(K)
+== True -> FEASIBLE". Cuando TARGET_PAIRWISE = empty set,
+all(feasible(K) for K in []) es True por vacuidad.
+
+Riesgo: FEASIBLE -> compute_contractual_coverage(empty_target, ...)
+sin que el contrato defina que significa target vacio.
+
+F2.4 #24 exigio expresamente test de "target vacio".
+
+Correccion exigida (v8):
+  TARGET_PAIRWISE == empty_set -> UNAVAILABLE explicito.
+  Subordinado a P38: si P38 tiene semantica aprobada para target vacio,
+  aplicar esa. Si no la tiene, fail-closed.
+  NUNCA depender de all([]) == True.
+
+### Incidencia documental menor - HEAD
+
+v7 cabecera declara HEAD 641ef38, pero 641ef38 es HEAD de v6.
+La v7 tiene commit propio (2f1f323). Corregir cabecera en v8.
+
+### Estado de areas (consolidado #50 seccion 13)
+
+  catalog_key                     APPROVED
+  unicidad intra-snapshot         APPROVED
+  unicidad global                 APPROVED
+  PIT FIGI change                 APPROVED COND.
+  weight_status                   APPROVED
+  NOT_PRESENT                     APPROVED / FAIL-CLOSED
+  TARGET_PAIRWISE                 APPROVED COND.
+  estados Q4/Q1                   APPROVED
+  adaptador P38                   APPROVED COND.
+  colision economica              APPROVED COND.
+  TARGET_PAIRWISE = empty         BLOCKED
+  obligatoriedad check_continuity BLOCKED
+  dominio collision Q4/Q1         BLOCKED
+  B2 point-in-time                APPROVED
+  B3 knowledge_date               APPROVED COND.
+  P38 API                         INTACTA
+  coverage.py                     NO CAMBIO CONTRACTUAL
+
+### Criterio de cierre v8 (#50 seccion 14)
+
+1. Flujo PIT obligatorio con check_continuity.
+2. Dominio collision Q4 + Q1 explicitos.
+3. TARGET_PAIRWISE vacio -> UNAVAILABLE sin all([]).
+4. Tests: empty target + Q4/Q1 symmetric difference + FIGI change
+   + Q4 collision + Q1 collision + UNRESOLVED + CONFLICT
+   + NOT_PRESENT + ZERO_REPORTED.
+
+### Estado operativo
+
+    A.6.0                  CLOSED
+    A.6.2-bis v7           NO-GO IMPLEMENTATION
+    ARQUITECTURA           APPROVED CONDITIONAL
+    B1 TARGET              APPROVED CONDITIONAL
+    B2 POINT-IN-TIME       APPROVED
+    B3 KNOWLEDGE_DATE      APPROVED CONDITIONAL
+    A.6.3                  BLOCKED
+    A.6.4                  BLOCKED
+    F2.4-CLOSE             BLOCKED
+    DROP_DUP               NOT AUTHORIZED
+    OpenFIGI masivo        NOT AUTHORIZED
+    P38                    INTACTO
+
+**Conclusion: v8 que cierre flujo PIT obligatorio + dominio collision
+Q4/Q1 + TARGET_PAIRWISE vacio -> GO DE IMPLEMENTACION.**
 
 ---
 
