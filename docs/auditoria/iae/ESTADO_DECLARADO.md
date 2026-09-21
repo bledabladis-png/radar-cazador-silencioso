@@ -76,7 +76,15 @@ documentos describen su tema; NO declaran el estado del sistema.
 - `DROP_DUP` NO ACTIVADO (capacidad diferida v2)
 - Marcadores residuales seccion 5.4 (SPONSORED ADR/ADS, ADR, SH BEN INT, FUND, ACT)
 - Snapshots historicos Q4 2025 / Q1 2026 requieren OpenFIGI masivo
-- Curacion crosswalk residual: ONB, SPCX, PTGX sin match 13F Q1 2026
+- Curacion crosswalk residual CERRADA (2026-09-22): ONB (CUSIP 680033107)
+  y PTGX (CUSIP 74366E102) anadidos a `cusip_ticker_exceptions.csv` tras
+  verificacion en INFOTABLE Q1 (98 y 617 hits). SPCX NO procede:
+  SpaceX es empresa privada; los hits del patron son el ETF ARK Space
+  Exploration (CUSIP 00214Q807). La entrada de SPCX en el catalogo
+  radar queda marcada como observacion pendiente de dictamen.
+- Nueva sub-deuda detectada: BRK-B y MOG-A con `status=MISS` en el
+  catalogo radar (sin share_class_figi). No resoluble via crosswalk
+  (ambos ya estan en `cusip_ticker_exceptions.csv`). Requiere OpenFIGI.
 - Gate-NIPC.2 BLOQUEADO por THRESHOLD_1/2 UNDEFINED
 - A.6.6 NO-GO (#76). Saneamiento post-dictamen CERRADO (este commit).
 
