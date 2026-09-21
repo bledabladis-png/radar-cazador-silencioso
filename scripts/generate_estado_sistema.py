@@ -173,7 +173,7 @@ def main():
         'Hechos verificables del sistema. Generado por script.',
         '',
         f'**Generado en:** {now_utc}',
-        f'**Snapshot tomado sobre:** commit HEAD de la fecha indicada, al momento de generar',
+        '**Snapshot tomado sobre:** commit HEAD de la fecha indicada, al momento de generar',
         '**NO editar a mano.** Regenerar con:',
         '',
         '    py scripts/generate_estado_sistema.py',
