@@ -67,7 +67,7 @@ infraestructura PIT + probe.
 
 ### 3.1. Descripcion del bloqueo
 
-`TARGET_Q1 = 18 FIGIs` sobre un universo B2-PIT de 242 keys. El TARGET
+`TARGET_Q1 = 20 FIGIs` sobre un universo B2-PIT de 242 keys. El TARGET
 contractual completo requiere resolver los ~24.838 CUSIPs del universo
 13F contra OpenFIGI, operacion no autorizada. Mientras no se resuelva,
 el `coverage_current = 1.0` es correcto sobre el subconjunto materializado

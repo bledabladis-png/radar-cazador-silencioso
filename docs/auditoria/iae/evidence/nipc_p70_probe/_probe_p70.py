@@ -12,9 +12,13 @@ Reutiliza filter_by_period + order_filings + classify_strategy.
 from __future__ import annotations
 
 import json
+import sys
 from pathlib import Path
 
 import pandas as pd
+
+ROOT = Path(r"D:\Macro_Sectorial")
+sys.path.insert(0, str(ROOT))
 
 from src.institutional_accumulation.sec_13f.storage import load_parquets
 from src.institutional_accumulation.sec_13f.identity import (
