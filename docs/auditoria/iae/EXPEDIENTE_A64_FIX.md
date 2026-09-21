@@ -1,7 +1,7 @@
 # EXPEDIENTE - Fix de cobertura contractual P38 (A.6.4)
 
-**Fecha:** 2026-09-21
-**Estado:** PENDIENTE de dictamen externo
+**Fecha:** 2026-09-21 (actualizado tras aplicar fix A2)
+**Estado:** APLICADO (fix A2, commits 1-5, 2026-09-21)
 **Origen:** auditoria externa del bundle 2026-09-21 (hallazgos H-05/H-06/H-07)
 + hallazgo adicional H-10.1 detectado por el supervisor.
 
@@ -70,7 +70,7 @@ A.6.4 queda reclasificado como **smoke test de integracion del adapter**,
 NO como evidencia cuantitativa de cobertura contractual. Ya aplicado en
 `README.md` + `ESTADO_DECLARADO.md` seccion 8.
 
-## 5. Propuesta de fix
+## 5. Fix A2 APLICADO (commits 1-5, 2026-09-21)
 
 ### 5.1. Fix minimo (A1)
 

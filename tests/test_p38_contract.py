@@ -317,6 +317,102 @@ def test_p38_unmapped_count_es_int():
     assert result["unmapped_count_previous"] == 0
 
 
+def test_p38_paired_weighted_max_por_figi_con_cobertura_asimetrica():
+    """A2 c5/5 (H-06): paired_weighted calcula max(Q4,Q1) POR FIGI.
+
+    Cobertura asimetrica:
+      FIGI_X: Q4=1000, Q1=1200 (VERIFIED ambos) -> max=1200, PAIRED
+      FIGI_Y: Q4=500,  Q1=300 (solo Q4 VERIFIED) -> max=500, NO PAIRED
+    TARGET_PAIRWISE = {FIGI_X, FIGI_Y}
+    numer = 1200 (X); denom = 1200 + 500 = 1700
+    """
+    rq4 = [
+        coverage.PositionRecord(
+            period="Q4", observed_security_key="cusip:X",
+            share_class_figi="FIGI_X", canonical_security="equity:X",
+            resolution_status="CANONICAL", operational_mapping_status="VERIFIED",
+            weight=1000.0,
+        ),
+        coverage.PositionRecord(
+            period="Q4", observed_security_key="cusip:Y",
+            share_class_figi="FIGI_Y", canonical_security="equity:Y",
+            resolution_status="CANONICAL", operational_mapping_status="VERIFIED",
+            weight=500.0,
+        ),
+    ]
+    rq1 = [
+        coverage.PositionRecord(
+            period="Q1", observed_security_key="cusip:X",
+            share_class_figi="FIGI_X", canonical_security="equity:X",
+            resolution_status="CANONICAL", operational_mapping_status="VERIFIED",
+            weight=1200.0,
+        ),
+        coverage.PositionRecord(
+            period="Q1", observed_security_key="cusip:Y",
+            share_class_figi="FIGI_Y", canonical_security="equity:Y",
+            resolution_status="CANONICAL",
+            operational_mapping_status="TEMPORAL_UNVERIFIED",
+            weight=300.0,
+        ),
+    ]
+    result = coverage.compute_contractual_coverage(
+        target_q4={"FIGI_X", "FIGI_Y"},
+        target_q1={"FIGI_X", "FIGI_Y"},
+        records_q4=rq4, records_q1=rq1,
+    )
+    assert result["paired_security_coverage"] == 0.5
+    assert result["paired_weighted_share_coverage"] == 1200.0 / 1700.0
+    assert result["coverage_status"] == "VALID"
+
+
+def test_p38_agregacion_figi_multiples_cusip_pesos_reales():
+    """A2 c5/5: agregacion FIGI con SSHPRNAMT reales (no weight=1.0).
+
+    FIGI_X acumula 2 CUSIPs en Q4 y 2 en Q1:
+      Q4: CUSIP_A=1000 + CUSIP_B=500 = 1500
+      Q1: CUSIP_A=1200 + CUSIP_B=400 = 1600
+    max = 1600. Se agrega ANTES de max (contrato P38 s.3.3).
+    """
+    rq4 = [
+        coverage.PositionRecord(
+            period="Q4", observed_security_key="cusip:A",
+            share_class_figi="FIGI_X", canonical_security="equity:X",
+            resolution_status="CANONICAL", operational_mapping_status="VERIFIED",
+            weight=1000.0,
+        ),
+        coverage.PositionRecord(
+            period="Q4", observed_security_key="cusip:B",
+            share_class_figi="FIGI_X", canonical_security="equity:X",
+            resolution_status="CANONICAL", operational_mapping_status="VERIFIED",
+            weight=500.0,
+        ),
+    ]
+    rq1 = [
+        coverage.PositionRecord(
+            period="Q1", observed_security_key="cusip:A",
+            share_class_figi="FIGI_X", canonical_security="equity:X",
+            resolution_status="CANONICAL", operational_mapping_status="VERIFIED",
+            weight=1200.0,
+        ),
+        coverage.PositionRecord(
+            period="Q1", observed_security_key="cusip:B",
+            share_class_figi="FIGI_X", canonical_security="equity:X",
+            resolution_status="CANONICAL", operational_mapping_status="VERIFIED",
+            weight=400.0,
+        ),
+    ]
+    agg_q4 = coverage.aggregate_positions_by_shareclass_figi(rq4, "Q4")
+    agg_q1 = coverage.aggregate_positions_by_shareclass_figi(rq1, "Q1")
+    assert agg_q4 == {"FIGI_X": 1500.0}
+    assert agg_q1 == {"FIGI_X": 1600.0}
+    result = coverage.compute_contractual_coverage(
+        target_q4={"FIGI_X"}, target_q1={"FIGI_X"},
+        records_q4=rq4, records_q1=rq1,
+    )
+    assert result["paired_security_coverage"] == 1.0
+    assert result["paired_weighted_share_coverage"] == 1.0
+
+
 # --- Tests de la ruta contractual de alto nivel (compute_nipc_contractual) ---
 
 

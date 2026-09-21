@@ -115,17 +115,23 @@ def filter_universe_by_tickers(universe, ticker_set):
     return out
 
 
-def build_sub_state(universe, keys_subset, *, sshprnamt_evidence=None):
+def build_sub_state(universe, keys_subset, *, sshprnamt_evidence=None,
+                    operational_evidence=None):
     """Construye state para las keys del subconjunto.
 
     Usa figi_by_key del universo. Default: RESOLVED + RESOLVED_OBSERVED
     + operational_mapping_status=UNRESOLVED + sshprnamt=None.
     A2 c2/5: sshprnamt_evidence es dict {catalog_key: float}, NO
     {shareClassFIGI: float}. El state vive por catalog_key.
+    A2 c5/5: operational_evidence es dict {catalog_key: status}.
+    El probe lo pasa con VERIFIED para las keys del operational_
+    universe (5.5), que garantiza CANONICAL + VERIFIED por
+    construccion. El adapter PROPAGA lo que el state declara.
     """
     st_full = ps.build_period_state(
         universe,
         sshprnamt_evidence=sshprnamt_evidence,
+        operational_evidence=operational_evidence,
     )
     return {k: st_full[k] for k in keys_subset}
 
@@ -134,17 +140,14 @@ def build_records_for_subset(keys_subset, universe, state, tickers_by_key,
                               period_label):
     """PositionRecords para el subconjunto, con FIGI del snapshot.
 
-    NOTA SEMANTICA (hallazgo H-73.1):
-      El operacional viene de P61 §5.5 (CANONICAL + VERIFIED). Por
-      construccion, todo record aqui tiene operational_mapping_status
-      = VERIFIED. weight_status (RESOLVED_OBSERVED | ...) es un campo
-      ORTOGONAL de period_state (si hubo peso observado o no) y NO
-      debe confundirse con operational_mapping_status.
+    A2 c5/5: el adapter productivo PROPAGA operational_mapping_status
+    y weight desde el state (commit 3, H-07 + H-10.1). Este helper
+    del probe debe ser coherente: PROPAGA del state, no fabrica
+    VERIFIED ni weight=1.0.
 
-      El adapter catalog_p38_adapter._records mapea weight_status
-      -> operational_mapping_status (1:1), lo que produce 0 cobertura
-      cuando weight_status es RESOLVED_OBSERVED (no VERIFIED). Bug
-      de integracion B1 <-> P38, documentado en README.
+    El probe declara VERIFIED en el state via operational_evidence
+    porque las keys vienen del operational_universe (5.5), que
+    garantiza CANONICAL + VERIFIED. Aqui solo se propaga.
     """
     records = []
     for k in sorted(keys_subset):
@@ -155,8 +158,8 @@ def build_records_for_subset(keys_subset, universe, state, tickers_by_key,
             share_class_figi=s.figi,
             canonical_security="equity:" + tickers_by_key[k],
             resolution_status=s.identity_status,
-            operational_mapping_status="VERIFIED",
-            weight=1.0,
+            operational_mapping_status=s.operational_mapping_status,
+            weight=(float(s.sshprnamt) if s.sshprnamt is not None else 0.0),
         ))
     return records
 
@@ -274,53 +277,114 @@ def main():
             "fail_closed": False,
         }
 
-    # --- 5. P38 sobre el subconjunto Q1 via catalog_to_p38_targets ---
-    # Sin bypass manual (dictamen #74 seccion 5): los records son los
-    # producidos por el adapter real, no construidos a mano.
+    # --- 5. P38 real: Q4 y Q1 sin mock (fix A2 c5/5, H-05/H-06) ---
+    # Q4 y Q1 son universos DISTINTOS. Se invoca el adapter real
+    # con (u_q4, u_q1). Cuando un lado esta vacio, NO se fabrica
+    # coverage=1.0: se aplica Q5 literal del auditor:
+    #   - coverage_previous = UNAVAILABLE si TARGET_Q4 vacio
+    #   - coverage_current  = calculable sobre TARGET_Q1
+    #   - paired_*          = UNAVAILABLE si TARGET_PAIRWISE vacio
     print()
-    print("=== 5. compute_contractual_coverage (Q1 real, via adapter) ===")
-    if result.get("2026Q1", {}).get("fail_closed", True):
-        print("  Q1 fail-closed: no se invoca P38.")
-        p38_result = {"coverage_status": "UNAVAILABLE", "reason": "Q1 empty"}
-    else:
-        keys_sub = {k for k in filter_universe_by_tickers(universe, shared_q1)
-                    if universe.figi_by_key.get(k)}
-        st_q = build_sub_state(
-            universe, keys_sub,
-            sshprnamt_evidence=per_data["2026Q1"]["sshprnamt_by_key"],
-        )
+    print("=== 5. compute_contractual_coverage (Q4 y Q1 reales) ===")
 
-        # Sub-universo restringido (TargetUniverse con declared_keys
-        # del subconjunto). Permite invocar catalog_to_p38_targets.
-        import dataclasses
-        universe_sub = dataclasses.replace(
-            universe,
-            declared_keys=set(keys_sub),
-            ticker_by_key={k: universe.ticker_by_key[k] for k in keys_sub},
-            figi_by_key={k: universe.figi_by_key[k] for k in keys_sub},
-            row_uid_by_key={k: universe.row_uid_by_key[k] for k in keys_sub},
-            key_by_row_uid={universe.row_uid_by_key[k]: k for k in keys_sub},
-        )
+    import dataclasses
 
+    def _sub_universe(u, shared):
+        keys = {k for k in filter_universe_by_tickers(u, shared)
+                if u.figi_by_key.get(k)}
+        if not keys:
+            return None, set()
+        usub = dataclasses.replace(
+            u,
+            declared_keys=set(keys),
+            ticker_by_key={k: u.ticker_by_key[k] for k in keys},
+            figi_by_key={k: u.figi_by_key[k] for k in keys},
+            row_uid_by_key={k: u.row_uid_by_key[k] for k in keys},
+            key_by_row_uid={u.row_uid_by_key[k]: k for k in keys},
+        )
+        return usub, keys
+
+    u_q4, keys_q4 = _sub_universe(universe, shared_q4)
+    u_q1, keys_q1 = _sub_universe(universe, shared_q1)
+    pairwise_keys = keys_q4 & keys_q1
+
+    print("  catalog_keys Q4: " + str(len(keys_q4)))
+    print("  catalog_keys Q1: " + str(len(keys_q1)))
+    print("  TARGET_PAIRWISE (catalog_keys): " + str(len(pairwise_keys)))
+
+    def _build_side(u, keys, period_label):
+        if u is None or not keys:
+            return None, set(), []
+        st = build_sub_state(
+            u, keys,
+            sshprnamt_evidence=per_data[period_label]["sshprnamt_by_key"],
+            operational_evidence={k: "VERIFIED" for k in keys},
+        )
+        tb_key = {k: u.ticker_by_key[k] for k in keys}
+        tgt = {st[k].figi for k in keys if st[k].figi}
+        recs = build_records_for_subset(
+            keys, u, st, tb_key, period_label)
+        return st, tgt, recs
+
+    st_q4_side, t4, r4 = _build_side(u_q4, keys_q4, "2025Q4")
+    st_q1_side, t1, r1 = _build_side(u_q1, keys_q1, "2026Q1")
+
+    if u_q4 is not None and u_q1 is not None and pairwise_keys:
         t4, t1, r4, r1, feas = ca.catalog_to_p38_targets(
-            universe_sub, universe_sub,
-            state_q4=st_q, state_q1=st_q,
-            pairwise_keys=set(keys_sub),
+            u_q4, u_q1,
+            state_q4=st_q4_side, state_q1=st_q1_side,
+            pairwise_keys=pairwise_keys,
         )
         print("  feasibility: " + str(feas))
-        print("  records_q4: " + str(len(r4)))
-        print("  records_q1: " + str(len(r1)))
-        print("  records VERIFIED: "
-              + str(sum(1 for r in r4 if r.operational_mapping_status == "VERIFIED")))
+        p38_result = cov.compute_contractual_coverage(
+            t4, t1, r4, r1)
+    else:
+        if u_q4 is None:
+            reason = "TARGET_Q4 vacio"
+        elif u_q1 is None:
+            reason = "TARGET_Q1 vacio"
+        else:
+            reason = "TARGET_PAIRWISE vacio"
+        print("  fail-closed: " + reason)
         p38_result = cov.compute_contractual_coverage(t4, t1, r4, r1)
-        for k, v in p38_result.items():
-            print("  " + str(k).ljust(35) + " " + str(v))
+    for k, v in p38_result.items():
+        print("  " + str(k).ljust(35) + " " + str(v))
 
-    # --- 6. Q4 fail-closed ---
+    # H-06: publicar cardinalidades REALES (auditoria 2026-09-21).
+    res_q4_figi = {r.share_class_figi for r in r4
+                   if r.share_class_figi
+                   and r.operational_mapping_status == "VERIFIED"}
+    res_q1_figi = {r.share_class_figi for r in r1
+                   if r.share_class_figi
+                   and r.operational_mapping_status == "VERIFIED"}
+    cardinalities = {
+        "target_q4_figi": len(t4),
+        "target_q1_figi": len(t1),
+        "target_pairwise_figi": len(t4 & t1),
+        "records_q4": len(r4),
+        "records_q1": len(r1),
+        "records_q4_verified": sum(
+            1 for r in r4 if r.operational_mapping_status == "VERIFIED"
+        ),
+        "records_q1_verified": sum(
+            1 for r in r1 if r.operational_mapping_status == "VERIFIED"
+        ),
+        "paired_figi": len((t4 & t1) & res_q4_figi & res_q1_figi),
+    }
+    print()
+    print("=== 5b. Cardinalidades reales (H-06) ===")
+    for k, v in cardinalities.items():
+        print("  " + k.ljust(30) + " " + str(v))
+
+    # --- 6. Q4 fail-closed (fix H-05) ---
     print()
     print("=== 6. Q4 fail-closed ===")
     if result.get("2025Q4", {}).get("fail_closed", True):
         print("  Q4 sin subconjunto -> fail-closed correcto")
+        assert p38_result.get("coverage_previous") is None, \
+            "H-05: Q4 vacio debe producir coverage_previous=None"
+        assert p38_result.get("paired_security_coverage") is None, \
+            "H-05: Q4 vacio debe producir paired_security_coverage=None"
     else:
         print("  Q4 tiene subconjunto -> revisar")
 
@@ -336,6 +400,8 @@ def main():
         "shared_q1": len(shared_q1),
         "shared_q4": len(shared_q4),
         "result_periods": result,
+        "cardinalities": cardinalities,
+        "p38_pairwise": dict(p38_result),
         "p38_q1": dict(p38_result),
     }
     (HERE / "result.json").write_text(

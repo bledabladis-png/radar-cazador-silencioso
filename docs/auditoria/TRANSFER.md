@@ -51,7 +51,7 @@ El auditor externo ha emitido, el 2026-09-21:
 
 ## 4. TRABAJO PENDIENTE: fix A2 (H-05/H-06/H-07/H-10.1)
 
-**Estado: empezando, 0 de 5 commits hechos.**
+**Estado: COMPLETADO, 5 de 5 commits hechos (2026-09-21).**
 
 Plan autorizado, en orden estricto:
 

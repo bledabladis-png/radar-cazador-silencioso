@@ -3,12 +3,16 @@
     "2025Q4": {
       "folder": "2025Q4",
       "period_iso": "2025-12-31",
-      "oper_rows": 0
+      "oper_rows": 0,
+      "n_sshprnamt_by_figi": 0,
+      "n_sshprnamt_by_key": 0
     },
     "2026Q1": {
       "folder": "2026Q1",
       "period_iso": "2026-03-31",
-      "oper_rows": 28371
+      "oper_rows": 28371,
+      "n_sshprnamt_by_figi": 18,
+      "n_sshprnamt_by_key": 18
     }
   },
   "universe_keys": 242,
@@ -27,12 +31,31 @@
       "fail_closed": true
     }
   },
-  "p38_q1": {
-    "coverage_previous": 1.0,
+  "cardinalities": {
+    "target_q4_figi": 0,
+    "target_q1_figi": 18,
+    "target_pairwise_figi": 0,
+    "records_q4": 0,
+    "records_q1": 18,
+    "records_q4_verified": 0,
+    "records_q1_verified": 18,
+    "paired_figi": 0
+  },
+  "p38_pairwise": {
+    "coverage_previous": null,
     "coverage_current": 1.0,
-    "paired_security_coverage": 1.0,
-    "paired_weighted_share_coverage": 1.0,
-    "coverage_status": "VALID",
+    "paired_security_coverage": null,
+    "paired_weighted_share_coverage": null,
+    "coverage_status": "UNAVAILABLE",
+    "unmapped_count_previous": 0,
+    "unmapped_count_current": 0
+  },
+  "p38_q1": {
+    "coverage_previous": null,
+    "coverage_current": 1.0,
+    "paired_security_coverage": null,
+    "paired_weighted_share_coverage": null,
+    "coverage_status": "UNAVAILABLE",
     "unmapped_count_previous": 0,
     "unmapped_count_current": 0
   }

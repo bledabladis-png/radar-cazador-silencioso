@@ -32,6 +32,7 @@ documentos describen su tema; NO declaran el estado del sistema.
 | A.6.4-v2 (P38 aislado sobre TOP 2000) | CERRADO | #73 |
 | A.6.4 (integracion B1+P61+P38; SMOKE TEST, no cobertura real) | CERRADO como smoke test | #75 + auditoria 2026-09-21 |
 | A.6.5 (actualizar contratos in-place) | CERRADA | dccf70d + 911e95b + 0f0583d + a21b0db |
+| A.6.4-fix-A2 (H-05/H-06/H-07/H-10.1) | CERRADO | 2f98926..(c5) 2026-09-21 |
 | A.6.6 (F2.4-CLOSE) | PENDIENTE - requiere dictamen externo | - |
 
 ## 2. Hallazgos cerrados
@@ -42,6 +43,10 @@ documentos describen su tema; NO declaran el estado del sistema.
 | H-69.2 | colision BRK-B vs BRK.B; regla R-69.2 | #72 |
 | H-73.1 | adapter B1<->P38 (weight_status mapeado a operational_mapping_status) | #75 |
 | GHISALLO | +765% caracterizado como artefacto del probe (no economico) | #60 |
+| H-05 | probe sin mock Q4=Q1; Q4 vacio -> coverage_previous=None | A2 c5 |
+| H-06 | probe publica cardinalidades reales | A2 c5 |
+| H-07 | adapter propaga weight desde state.sshprnamt | A2 c3 |
+| H-10.1 | adapter propaga operational_mapping_status desde state | A2 c3 |
 
 ## 3. Contratos y policies vigentes
 
@@ -102,13 +107,16 @@ sin dictamen).
 
 | ID | Severidad | Descripcion | Ficheros afectados |
 |---|---|---|---|
-| H-05 | ALTA | Q4 declarado vacio pero `coverage_previous=1.0`. Probe pasa Q4=Q1 (mock). | `probe_integration_b1_p61_p38.py` |
-| H-06 | ALTA | El probe no publica cardinalidades reales (`len(target_q4)`, `len(TARGET_PAIRWISE)`, `len(PAIRED)`). | `probe_integration_b1_p61_p38.py` |
-| H-07 | ALTA | `paired_weighted_share_coverage=1.0` porque `PositionRecord.weight=1.0` hardcoded. No hay ponderacion por SSHPRNAMT. | `catalog_p38_adapter.py` |
 | H-08 | MEDIA | Test H-73.1 no cubre estados ortogonales (`identity=RESOLVED` pero `weight=NOT_PRESENT`). | `tests/test_h731_adapter_p38_compat.py` |
-| H-10.1 | CRITICA | `catalog_p38_adapter._records` marca `operational_mapping_status="VERIFIED"` incondicionalmente. `coverage.py` divide por observed (no TARGET). Combinado con `weight=1.0`, el resultado es **estructuralmente 1.0**, incluso si la cobertura real fuera 0%. | `catalog_p38_adapter.py`, `coverage.py`, `period_state.py` |
-| H-11 | ALTA | (provenance) Hashes de inputs 13F + snapshot + mappings no publicados en evidencia. CERRADO 2026-09-21 con `HASHES.txt` + `README.md` seccion Provenance. | `evidence/a64_integration_b1_p61_p38/HASHES.txt` |
-| H-12 | MEDIA | (trazabilidad) Hash del catalogo ambiguo (VIGENTE LF vs historico CRLF). CERRADO 2026-09-21 etiquetando en contrato P38. | `NIPC_CONTRATOS_SEMANTICOS_v1.md` |
+
+**Cerrados 2026-09-21 (fix A2, commits 1-5):**
+
+- H-05 (ALTA): eliminado mock Q4=Q1 en probe (commit 5). Fail-closed cuando Q4 vacio.
+- H-06 (ALTA): probe publica cardinalidades reales (commit 5).
+- H-07 (ALTA): adapter propaga weight desde state.sshprnamt (commit 3).
+- H-10.1 (CRITICA): adapter propaga operational_mapping_status desde state (commit 3).
+- H-11 (ALTA): hashes de provenance (cerrado antes del fix A2).
+- H-12 (MEDIA): hash de catalogo etiquetado (cerrado antes del fix A2).
 
 **Consecuencia:** A.6.4 queda reclasificado como **smoke test de integracion
 del adapter** (ver `evidence/a64_integration_b1_p61_p38/README.md`), NO como
