@@ -49,7 +49,6 @@ documentos describen su tema; NO declaran el estado del sistema.
 |---|---|
 | `NIPC_CONTRATOS_SEMANTICOS_v1.md` | VIGENTE. P60/P61 GO, P38 GO CONDICIONADO |
 | `NIPC_COVERAGE_POLICY.md` v1.0 | VIGENTE (normativa) |
-| `NIPC_COVERAGE_POLICY_V11/V12/V13` | NO APROBADAS (borradores) |
 | `INSTITUTIONAL_ACCUMULATION_NIPC_ESPECIFICACION.md` v1.4 | Referencia, no normativa |
 
 ## 4. Prohibiciones vigentes

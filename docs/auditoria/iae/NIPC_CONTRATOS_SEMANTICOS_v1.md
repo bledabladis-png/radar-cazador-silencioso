@@ -487,10 +487,12 @@ El fix propuesto en NIPC_P70_DICTAMEN.md seccion 6 anade guarda explicita
 sin modificar la logica. No es bloqueante para P38/P60/P61.
 ---
 
-## 7. Impacto en policy v1.2
+## 7. Impacto en policy (historico)
 
-Cambios requeridos en `NIPC_COVERAGE_POLICY_V12_PROPUESTA.md` (borrador no
-aplicado) y en la version final v1.2 antes de aprobacion:
+Nota (2026-09-21): las propuestas V11/V12/V13 fueron descartadas. La policy
+vigente es `NIPC_COVERAGE_POLICY.md` v1.0. Los cambios abajo listados
+fueron absorbidos por este contrato y por la implementacion en codigo:
+
 
 1. **Seccion TARGET/RESOLVED/PAIRED** — reemplazar definiciones actuales por
    las de secciones 3 y 4 de este documento.
@@ -598,7 +600,6 @@ bloqueados: OpenFIGI masivo NO AUTORIZADO, thresholds UNDEFINED.
 |---|---|
 | NIPC_P70_DICTAMEN.md | Cierre P70 |
 | NIPC_COVERAGE_POLICY.md (v1.0) | Policy vigente, INTACTA |
-| NIPC_COVERAGE_POLICY_V12_PROPUESTA.md | Borrador v1.2 |
 | INSTITUTIONAL_ACCUMULATION_NIPC_GATE0_COVERAGE_BASELINE_INFORME.md | Baseline Fase A |
 | INSTITUTIONAL_ACCUMULATION_OPENFIGI_TOP2000_INFORME.md | TOP 2000 |
 | INSTITUTIONAL_ACCUMULATION_NIPC_GATE0_COVERAGE_BASELINE_DICTAMEN.md | Dictamen baseline |
