@@ -1,5 +1,13 @@
 # Follow-ups tecnicos registrados
 
+**Nota (2026-09-22):** las referencias a ficheros `*.md` que aparecen
+en entradas historicas de este documento apuntan a originales
+consolidados en `iae/DICTAMENES.md` o `iae/INFORME.md` y borrados tras
+consolidacion (regla §3.7 PROMPT_MAESTRO: los dictamenes e informes
+se consolidan; los originales se borran). La cadena autoritativa es
+`iae/DICTAMENES.md`. Verificacion 2026-09-22: 12 referencias de este
+tipo en el documento.
+
 ## FU-001 — ffill global sobre DataFrame consolidado (RESUELTO)
 
 - **Origen:** C1, sesion 2026-09-12. Dictamen auditor.

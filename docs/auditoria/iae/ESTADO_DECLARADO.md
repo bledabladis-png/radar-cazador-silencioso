@@ -95,10 +95,17 @@ Cerrados:
 - `INFORME.md` (17 fantasmas, commit `8e04d22`)
 - Contradiccion A.6.5 en contrato NIPC (commits `0f0583d` + `a21b0db`)
 
-Pendientes (no bloqueantes para A.6.6):
-- `FOLLOWUPS.md` (~20 fantasmas)
-- `PROMPT_MAESTRO.md` (8 fantasmas materiales; se limpian al escribir v6.56)
-- Casos especificos de categoria C (~8)
+Cerrado en este commit (2026-09-22):
+- `FOLLOWUPS.md`: 12 referencias a ficheros consolidados, cubiertas
+  con nota de consolidacion (§3.7). Los 5 hits restantes son
+  placeholders pedagogicos del §3.7 o un path vivo no versionado
+  (`outputs/report/reporte_diario.md`).
+- `PROMPT_MAESTRO.md`: 0 fantasmas reales (verificado por script sobre
+  disco, 2026-09-22). Los 5 hits detectados son placeholders
+  pedagogicos del propio §3.7. La afirmacion previa '8 fantasmas
+  materiales' queda refutada.
+- `iae/*.md`: 5 orphans verificados como expedientes legitimos del
+  ciclo A.6.x. No se borran.
 
 ## 8. Hallazgos del auditor pendientes (2026-09-21)
 
