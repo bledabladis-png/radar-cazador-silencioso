@@ -189,39 +189,44 @@ def test_h101_adapter_rechaza_state_no_resolved():
 
 
 @pytest.mark.xfail(
-    strict=False,
+    strict=True,
     reason=(
-        "H-10.1 ABIERTO (auditoria 2026-09-21, A-12): este test documenta "
-        "un comportamiento DEFECTUOSO del adapter (VERIFIED incondicional). "
-        "NO es evidencia de conformidad contractual P61. Se reescribira "
-        "tras dictamen del fix H-10.1."
+        "H-10.1 ABIERTO (auditoria 2026-09-21, A-12): el adapter actual "
+        "marca VERIFIED incondicionalmente sin derivarlo de evidencia "
+        "operacional. Este test verifica el comportamiento ESPERADO, que "
+        "requiere el fix (dictamen externo). Cuando se aplique el fix, "
+        "este test pasara y con strict=True la suite fallara -> senal "
+        "para reescribirlo como test positivo."
     ),
 )
-def test_h101_adapter_verified_incondicional_documentado():
-    """DOCUMENTA (no corrige) el comportamiento H-10.1.
+def test_h101_adapter_no_marca_verified_sin_evidencia_operacional():
+    """Contrato P61: operational_mapping_status=VERIFIED debe derivarse
+    de la evidencia temporal que cubre el periodo. El adapter actual lo
+    asigna incondicionalmente (H-10.1 CRITICA).
 
-    **NO es evidencia de correccion contractual.** Este test fija el
-    comportamiento ACTUAL del adapter, que la auditoria externa ha
-    marcado como DEFECTUOSO (H-10.1 CRITICA): el adapter marca
-    operational_mapping_status="VERIFIED" incondicionalmente para todo
-    record con identity_status==RESOLVED.
+    **Este test verifica el comportamiento ESPERADO, NO el actual.**
 
-    Marcado xfail(strict=False) para que NO cuente como test verde
-    del suite de cierre. Ver auditoria 2026-09-21 A-12.
+    Estado actual: FALLA porque el adapter SI marca VERIFIED sin
+    derivarlo del state. Marcado xfail(strict=True) -> XFAIL mientras
+    el bug persiste (no cuenta como verde de conformidad).
 
-    Se reescribira cuando el fix de H-10.1 (dictamen externo) cambie
-    el comportamiento del adapter.
+    Cuando se aplique el fix H-10.1:
+      - El adapter derivara VERIFIED del state.
+      - Este test pasara (XPASS).
+      - Con strict=True, XPASS se cuenta como FALLO -> senal de que
+        hay que reescribirlo como test positivo.
     """
     u = _make_universe([("AAPL", "FIGI_A")])
-    st = ps.build_period_state(u)  # default: identity=RESOLVED, weight=RESOLVED_OBSERVED
+    st = ps.build_period_state(u)  # state sin evidencia operacional real
     keys = set(u.declared_keys)
     _, _, r4, _, _ = ca.catalog_to_p38_targets(
         u, u, state_q4=st, state_q1=st, pairwise_keys=keys)
-    # Comportamiento ACTUAL (a cambiar por fix H-10.1):
+    # El adapter debe DERIVAR VERIFIED del state. Como el state actual
+    # NO transporta evidencia operacional, no puede justificar VERIFIED.
     for r in r4:
-        assert r.operational_mapping_status == "VERIFIED", (
-            "comportamiento H-10.1: adapter marca VERIFIED incondicionalmente"
+        assert r.operational_mapping_status != "VERIFIED", (
+            "H-10.1: adapter marca VERIFIED sin derivarlo de evidencia. "
+            "El state no transporta evidencia operacional, por lo que el "
+            "adapter no puede justificar VERIFIED."
         )
-    # Nota: cuando se implemente fix, esta afirmacion cambia. El test
-    # se reescribira en el ciclo de fix.
 
