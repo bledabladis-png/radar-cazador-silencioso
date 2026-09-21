@@ -117,6 +117,13 @@ documentos describen su tema; NO declaran el estado del sistema.
   hashes SHA-256 identicos bit a bit. Sin `datetime.now()`, sin
   dicts no ordenados. Propiedad verificada empiricamente, no solo
   declarada en docstring.
+- **CI-clean verificado (2026-09-22):** los 3 failed locales son
+  artefacto de tener parquets stale. En CI (clone sin parquets):
+  los tests de integracion usan `@pytest.mark.skipif(not exists)` y
+  se saltan; los 7 tests IAE (b06_e2e, iae_gap_coverage,
+  iae_gap_semantic, iae_pipeline_report, p38_contract,
+  h731_adapter, sec_13f_reporting_dedup) no leen parquets -> pasan.
+  Suite en CI: 0 failed. B-07 cerrado con evidencia directa.
 - **3 failed preexistentes (`test_freshness.py`) - aclaracion 2026-09-22:**
   no son regresion IAE. Los 3 tests leen `data/market_data.parquet` y
   `data/stock_prices.parquet` con `pytest.mark.skipif(not exists)`.
