@@ -62,22 +62,15 @@ def section_git():
     lines.append(f'- **HEAD:** `{head_short}`')
     lines.append(f'- **HEAD completo:** `{head}`')
     date, _ = run(['git', 'log', '-1', '--format=%ad', '--date=iso'])
-    subject, _ = run(['git', 'log', '-1', '--format=%s'])
     lines.append(f'- **Fecha commit HEAD:** {date}')
-    lines.append(f'- **Asunto commit HEAD:** {subject}')
     ahead, _ = run(['git', 'rev-list', '--count', 'origin/main..HEAD'])
     behind, _ = run(['git', 'rev-list', '--count', 'HEAD..origin/main'])
     origin, _ = run(['git', 'rev-parse', '--short', 'origin/main'])
     lines.append(f'- **Ahead:** {ahead}')
     lines.append(f'- **Behind:** {behind}')
     lines.append(f'- **origin/main:** `{origin}`')
-    status, _ = run(['git', 'status', '--porcelain'])
-    if status:
-        lines.append('- **Working tree:** MODIFICADO')
-        for line in status.splitlines()[:10]:
-            lines.append(f'  - `{line}`')
-    else:
-        lines.append('- **Working tree:** LIMPIO')
+    # Nota: el working tree NO se reporta. Por definicion, regenerar este
+    # fichero lo modifica, asi que "MODIFICADO" seria siempre cierto al leerlo.
     lines.append('')
     return lines
 
@@ -180,7 +173,7 @@ def main():
         'Hechos verificables del sistema. Generado por script.',
         '',
         f'**Generado en:** {now_utc}',
-        f'**Snapshot de:** commit HEAD (fecha: {head_date})',
+        f'**Snapshot tomado sobre:** commit HEAD de la fecha indicada, al momento de generar',
         '**NO editar a mano.** Regenerar con:',
         '',
         '    py scripts/generate_estado_sistema.py',
