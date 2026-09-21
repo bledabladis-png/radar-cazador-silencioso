@@ -104,3 +104,43 @@ def test_enrich_idempotente():
     out1 = ts.enrich_positions_with_timestamps(positions, _snapshot())
     out2 = ts.enrich_positions_with_timestamps(out1, _snapshot())
     pd.testing.assert_frame_equal(out1, out2)
+
+# --- provenance helpers (commit 3b) ---
+
+
+def test_build_provenance_vacio():
+    assert ts.build_provenance() == {}
+
+
+def test_build_provenance_solo_accession():
+    out = ts.build_provenance(accession="acc-A")
+    assert out == {ts.PROVENANCE_KEY_EFFECTIVE_FILING_ACCESSION: "acc-A"}
+
+
+def test_build_provenance_completo():
+    out = ts.build_provenance(
+        accession="acc-A",
+        knowledge_date_status=ts.KD_STATUS_DERIVED_FROM_FILING_DATE,
+    )
+    assert out[ts.PROVENANCE_KEY_EFFECTIVE_FILING_ACCESSION] == "acc-A"
+    assert (
+        out[ts.PROVENANCE_KEY_KNOWLEDGE_DATE_STATUS]
+        == ts.KD_STATUS_DERIVED_FROM_FILING_DATE
+    )
+
+
+def test_build_provenance_status_invalido_lanza():
+    with pytest.raises(ValueError):
+        ts.build_provenance(
+            accession="acc-A",
+            knowledge_date_status="NO_EXISTE",
+        )
+
+
+def test_kd_status_constantes():
+    assert ts.KD_STATUS_DERIVED_FROM_FILING_DATE == "DERIVED_FROM_FILING_DATE"
+    assert ts.KD_STATUS_NOT_AVAILABLE == "NOT_AVAILABLE"
+    assert ts.ALL_KD_STATUSES == (
+        "DERIVED_FROM_FILING_DATE",
+        "NOT_AVAILABLE",
+    )

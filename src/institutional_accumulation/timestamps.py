@@ -109,3 +109,45 @@ def enrich_positions_with_timestamps(
     out["filing_date"] = accs.map(sub_clean["FILING_DATE"]).map(_to_date_str)
     out["knowledge_date"] = out["filing_date"]
     return out
+
+# --- provenance keys (contrato semantico seccion 12) ---
+PROVENANCE_KEY_EFFECTIVE_FILING_ACCESSION = "effective_filing_accession"
+PROVENANCE_KEY_KNOWLEDGE_DATE_STATUS = "knowledge_date_status"
+
+
+# --- knowledge_date_status (contrato semantico seccion 12) ---
+KD_STATUS_DERIVED_FROM_FILING_DATE = "DERIVED_FROM_FILING_DATE"
+KD_STATUS_NOT_AVAILABLE = "NOT_AVAILABLE"
+
+ALL_KD_STATUSES = (
+    KD_STATUS_DERIVED_FROM_FILING_DATE,
+    KD_STATUS_NOT_AVAILABLE,
+)
+
+
+def build_provenance(accession=None, knowledge_date_status=None):
+    """Construye un dict de provenance canonico para PositionRecord.
+
+    NO infiere valores. El caller decide.
+
+    Parametros:
+      accession              str | None.
+      knowledge_date_status  KD_STATUS_* | None.
+
+    Devuelve dict con 0, 1 o 2 claves segun los argumentos.
+    Si knowledge_date_status no es valido -> ValueError (fail-closed).
+    """
+    if knowledge_date_status is not None:
+        if knowledge_date_status not in ALL_KD_STATUSES:
+            raise ValueError(
+                "knowledge_date_status invalido: "
+                + repr(knowledge_date_status)
+                + ". Validos: "
+                + repr(ALL_KD_STATUSES)
+            )
+    out = {}
+    if accession is not None:
+        out[PROVENANCE_KEY_EFFECTIVE_FILING_ACCESSION] = str(accession)
+    if knowledge_date_status is not None:
+        out[PROVENANCE_KEY_KNOWLEDGE_DATE_STATUS] = knowledge_date_status
+    return out
