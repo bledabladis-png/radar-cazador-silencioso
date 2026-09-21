@@ -35,6 +35,8 @@ Referencia: DICTAMENES.md seccion 24 + INFORME.md seccion 18.
 17. [INFORME TECNICO - SISTEMA IAE (INSTITUTIONAL ACCUMULATION EVIDENCE)](#informe-tecnico---sistema-iae-(institutional-accum)
 18. [INFORME F2.4 - Dictamen formal y bloqueantes](#informe-f24---dictamen-formal-y-bloqueantes)
 19. [INFORME P65 v1 - Manager Duplication (ciclo completo)](#informe-p65-v1---manager-duplication-ciclo-completo)
+20. [INFORME P66 L3 - Reformulacion contrato 14.3 (ciclo completo)](#informe-p66-l3---reformulacion-contrato-143-ciclo-completo)
+21. [INVENTARIO A.6.0 - Gate 0 de los 3 bloqueantes F2.4](#inventario-a60---gate-0-de-los-3-bloqueantes-f24)
 
 ---
 
@@ -1126,3 +1128,165 @@ period_end != filing_date != knowledge_date; unmapped_count int separado de unma
 Gate 0 de los 3 bloqueantes (inventario de codigo, sin tocar codigo). Actualizar FASE_A6_PLAN.md + REESTRUCTURACION_MODULO.md + NIPC_CONTRATOS_SEMANTICOS_v1.md.
 
 ---
+
+
+---
+
+## 21. INVENTARIO A.6.0 - Gate 0 de los 3 bloqueantes F2.4
+
+**Fecha:** 2026-09-21.
+**Origen:** FASE_A6_PLAN.md seccion A.6.0 (PENDIENTE hasta la fecha).
+**Alcance:** inventario empirico con referencias archivo:linea. Sin
+cambios de codigo productivo. Sin OpenFIGI. Sin tocar contratos.
+**Referencias:** DICTAMENES.md #24 (F2.4), RECONCILIACION_CONTRATO_CODIGO.md
+seccion 3 (D1/D2/D3), REESTRUCTURACION_MODULO.md.
+
+**Objetivo:** mapear cuanto de los 3 bloqueantes estructurales introducidos
+por el dictamen F2.4 (2026-09-20) esta ya cubierto por el codigo actual y
+cuanto requiere rediseno antes de tocar codigo productivo.
+
+**Metodo:** lectura directa de modulos y CSVs en disco. Grep sobre
+`src/institutional_accumulation/**/*.py`. Ejecutado 2026-09-21.
+`HEAD` al ejecutar: `bb3e106` o posterior.
+
+---
+
+### 21.1. B1 - TARGET independiente del exito del mapping
+
+**Enunciado F2.4:** el denominador de `paired_weighted_share_coverage`
+no puede depender del exito del mapping. Separar CATALOGO (externo,
+versionado) de TARGET_OBSERVED.
+
+**Que existe:**
+
+- `src/institutional_accumulation/aggregation/coverage.py::compute_contractual_coverage(target_q4, target_q1, records_q4, records_q1)` (L64-...). API contractual P38. Recibe TARGET como parametro externo, construido por el caller. NO construye TARGET internamente.
+- `src/institutional_accumulation/aggregation/coverage.py::PositionRecord` (L25-38). Dataclass tipado (F2.4 regla #4).
+- `src/institutional_accumulation/aggregation/coverage.py::aggregate_positions_by_shareclass_figi(records, period)` (L41-61). Agregacion por `share_class_figi`. F2.4 Opcion 2.
+- `src/institutional_accumulation/identity/radar_target_catalog.py` (4.5 KB). Constructor del catalogo desde OpenFIGI probe result.
+- `src/institutional_accumulation/identity/target_universe.py::resolve_cusips(cusips, catalog_df)` (L81-...). Resolver CUSIP_13F -> target membership por `share_class_figi`.
+- `data/mappings/radar_target_catalog.csv` (242 filas). Columnas: `radar_ticker, figi, share_class_figi, composite_figi, ticker_from_openfigi, name, security_type, market_sector, exch_code, source, source_date, status`. 240 OK, 2 MISS.
+
+**Que falta:**
+
+- `src/institutional_accumulation/identity/target_builder.py`. NO EXISTE. Es la pieza descrita en REESTRUCTURACION_MODULO.md seccion 4.2. Debe materializar TARGET_P (set de `share_class_figi`) desde RADAR_TARGET_CATALOG + OpenFIGI batch + observacion 13F del periodo.
+- Integracion en `src/institutional_accumulation/aggregation/nipc.py::compute_coverage_pairwise` (L150-265). La implementacion actual:
+  - L185-188: `_securities(df) = set(observed_security_key)` — CUSIPs observados, NO `share_class_figi` del catalogo.
+  - L213: `target_pairwise = sec_c & sec_p` — interseccion de CUSIPs observados, no de TARGET.
+  - L240: `denom = sum(by_sec.get(k, 0.0) for k in target_pairwise)` — el denominador ponderado usa CUSIPs observados.
+  - El nombre `target_pairwise` es nominal: la implementacion real es `observed_pairwise`.
+  - `nipc.py` NO importa `radar_target_catalog` ni `target_universe` (verificado en imports, L26-30).
+
+**Evaluacion:** P38 tiene 2 APIs conviviendo.
+
+| API | Fichero | Estado |
+|---|---|---|
+| Contractual P38 | `aggregation/coverage.py` | COMPLETA. Recibe TARGET externo. |
+| Operativa | `aggregation/nipc.py::compute_coverage_pairwise` | PROXY observacional. NO invoca la contractual. |
+
+Falta `target_builder.py` + integracion. El nombre `target_pairwise` en `nipc.py` es enganoso (D2 GRAVE confirmado).
+
+**Riesgo si no se materializa:** los valores de `paired_weighted_share_coverage` publicados en baseline (`e9fd830`) y TOP 2000 (`32baf9d`) son historicos, no aptos para THRESHOLD_2 bajo la definicion contractual.
+
+**Propuesta (fuera de A.6.0):** `target_builder.py` + refactor de `compute_coverage_pairwise` para invocar `compute_contractual_coverage`. Requiere autorizacion (A.6.2-bis).
+
+---
+
+### 21.2. B2 - Semantica point-in-time
+
+**Enunciado F2.4:** toda entidad (catalogo, mapping, universos) aplicada a un periodo historico debe declarar validez temporal. Aplicar la version de hoy retroactivamente produce survivorship y look-ahead bias.
+
+**Que existe:**
+
+- `data/mappings/radar_target_catalog.csv::source_date` (columna). Valor actual: `2026-09-19` para las 242 filas. Es fecha de snapshot del probe, NO fecha de vigencia.
+- `data/mappings/cusip_equivalence.csv::valid_from / valid_to` (columnas). 0 filas por diseno (regla C1-revisada).
+- `data/mappings/cusip_ticker_exceptions.csv::valid_from / valid_to` (columnas). 3 filas COM (Q-CUR).
+
+**Que falta:**
+
+- Columnas `catalog_version`, `catalog_valid_from`, `catalog_valid_to` en `radar_target_catalog.csv`. Grep en `src/`: **0 hits**.
+- Funcion `target_catalog_as_of(period_end)` en `src/`. Grep: **0 hits**.
+- `effective_date` en `identity/openfigi_client.py`. NO EXISTE. OpenFIGI no lo expone (verificado). La unica fecha asociada es la del probe, no la de vigencia historica del mapping.
+- Snapshot + hash por consulta OpenFIGI (F2.4). NO IMPLEMENTADO.
+
+**Evaluacion:** B2 esta completamente ausente excepto el `source_date` del catalogo (que no cumple la semantica point-in-time).
+
+**Riesgo si no se materializa:** el catalogo actual, aplicado retrospectivamente a Q4 2025 / Q1 2026, asume que la identificacion de hoy es valida para periodos pasados. Survivorship + look-ahead bias.
+
+**Propuesta (fuera de A.6.0):** anadir `catalog_version` + `catalog_valid_from` + `catalog_valid_to` al catalogo. Implementar `target_catalog_as_of(period_end)`. Requiere dictamen especifico.
+
+---
+
+### 21.3. B3 - 13F != flujo en tiempo real
+
+**Enunciado F2.4:** "posiciones al cierre de trimestre + publicacion hasta 45 dias. Sin cortos, con minimis, con confidencialidad. Etiqueta correcta: cambio trimestral observado de posiciones institucionales reportables via 13F."
+
+**Que existe:**
+
+- Doctrina P63/P64/P65 documentada en docstrings de `delta_shares.py` (`DELTA_SEMANTICS_GROSS_OBSERVED` L56, `P64_EVENTS_DEFERRED` L57).
+- `SUBMISSION.parquet` con columnas `FILING_DATE` + `PERIODOFREPORT`. Disponibles en bruto.
+- `COVERPAGE.parquet` con `DATEREPORTED` + `REPORTCALENDARORQUARTER`.
+
+**Que falta:**
+
+- Columna `knowledge_date` (fecha de ingesta). Grep en `src/`: **0 hits**.
+- Campos `period_end` / `filing_date` como dimensiones separadas en `PositionRecord` (`coverage.py::PositionRecord` solo tiene `period: str`, L31).
+- Clasificador `absence_reason` (`MISSING` / `BELOW_REPORTING_THRESHOLD` / `CONFIDENTIAL` / `OTHER_MANAGER` / `UNKNOWN`). Grep: **0 hits**.
+- Estados `ZERO_REPORTED` / `NOT_PRESENT` como enums materializados. Grep: **0 hits**.
+- Distincion explicita corporate action vs economic accumulation en `delta_shares.py`. `DELTA_SEMANTICS_GROSS_OBSERVED = True` documenta que NO se distingue (capacidad diferida v1).
+
+**Evaluacion:** doctrina documentada (P63/P64/P65 en `NIPC_CONTRATOS_SEMANTICOS_v1.md` secciones 12/13/14). Materializacion: AUSENTE.
+
+**Riesgo si no se materializa:** los outputs pueden leerse como "flujo en tiempo real" o como "el manager vendio". El contrato exige la etiqueta "cambio trimestral observado". `delta_shares` no crea `SOLD` (regla P63 R8), pero el clasificador de ausencia no existe.
+
+**Propuesta (fuera de A.6.0):** anadir `knowledge_date` al pipeline de ingest. Ampliar `PositionRecord` con `period_end` + `filing_date`. Implementar clasificador de ausencia como capa posterior. Requiere dictamen especifico.
+
+---
+
+### 21.4. Matriz de cobertura de los 3 bloqueantes
+
+| Bloqueante | Piezas existentes | Piezas ausentes | Estado global |
+|---|---|---|---|
+| B1 TARGET independiente | `coverage.py::compute_contractual_coverage`, `PositionRecord`, `aggregate_positions_by_shareclass_figi`, `target_universe.py::resolve_cusips`, `radar_target_catalog.csv` | `target_builder.py`, integracion en `nipc.py::compute_coverage_pairwise`, refactor de nombres | PARCIAL: 60% existe, 40% falta |
+| B2 point-in-time | `source_date` (no contractual), `valid_from`/`valid_to` en tablas con vigencia | `catalog_version`, `catalog_valid_from`, `catalog_valid_to`, `target_catalog_as_of`, snapshot+hash OpenFIGI | AUSENTE: solo `source_date` no contractual |
+| B3 13F != real-time | Doctrina P63/P64/P65 (docstrings), `FILING_DATE`+`PERIODOFREPORT` en bruto | `knowledge_date`, `period_end`+`filing_date` en `PositionRecord`, clasificador `absence_reason`, estados `ZERO_REPORTED`/`NOT_PRESENT` | DOCUMENTAL: doctrina si, materializacion no |
+
+---
+
+### 21.5. Lo que NO se toca en A.6.0
+
+- Codigo productivo: `nipc.py`, `coverage.py`, `delta_shares.py`, `security_identity.py`, `relationships.py`.
+- Contratos: `NIPC_CONTRATOS_SEMANTICOS_v1.md`, `NIPC_COVERAGE_POLICY.md` v1.0.
+- Catalogos en disco: `radar_target_catalog.csv`, `cusip_equivalence.csv`, `cusip_ticker_exceptions.csv`.
+- OpenFIGI: NO ejecutado. NO autorizado.
+- `DROP_DUP`: NO activado.
+
+---
+
+### 21.6. Estado tras A.6.0
+
+**Que desbloquea:** A.6.0 es prerequisito de A.6.2. Con este inventario, A.6.2 (fixes quirurgicos) y A.6.2-bis (rediseno TARGET) tienen base empirica.
+
+**Que queda pendiente:**
+
+- A.6.2 (fixes quirurgicos post F2.4): CERRADO segun FASE_A6_PLAN.md, pero su base ahora es explicita y trazable.
+- A.6.2-bis (rediseno TARGET): PENDIENTE. Requiere autorizacion especifica. Materialmente bloqueado por OpenFIGI masivo NO AUTORIZADO.
+- A.6.3 (test P38 segun Q12): PENDIENTE.
+- A.6.4 (recalculo evidencia): condicional a F2.4.
+- A.6.6 (F2.4-CLOSE): PENDIENTE.
+
+**Criterio de aceptacion A.6.0 (segun FASE_A6_PLAN.md):** inventario completo con referencias archivo:linea. Sin tocar codigo. **CUMPLIDO.**
+
+---
+
+### 21.7. Referencias
+
+- `FASE_A6_PLAN.md` seccion A.6.0.
+- `RECONCILIACION_CONTRATO_CODIGO.md` seccion 3 (D1/D2/D3).
+- `REESTRUCTURACION_MODULO.md` secciones 4.1-4.5.
+- `DICTAMENES.md` #24 (F2.4, 2026-09-20).
+- `NIPC_CONTRATOS_SEMANTICOS_v1.md` secciones 3 (P38), 11 (P62), 12 (P63), 13 (P64), 14 (P65).
+- Modulos auditados: `coverage.py`, `nipc.py`, `delta_shares.py`, `radar_target_catalog.py`, `target_universe.py`, `temporal_validity.py`.
+
+---
+
+Fin de la seccion 21 (A.6.0).
