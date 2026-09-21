@@ -15,7 +15,6 @@ metadata de generacion, no como dato del sistema.
 from __future__ import annotations
 
 import hashlib
-import re
 import subprocess
 import sys
 from datetime import datetime, timezone
@@ -74,11 +73,11 @@ def section_git():
     lines.append(f'- **origin/main:** `{origin}`')
     status, _ = run(['git', 'status', '--porcelain'])
     if status:
-        lines.append(f'- **Working tree:** MODIFICADO')
+        lines.append('- **Working tree:** MODIFICADO')
         for line in status.splitlines()[:10]:
             lines.append(f'  - `{line}`')
     else:
-        lines.append(f'- **Working tree:** LIMPIO')
+        lines.append('- **Working tree:** LIMPIO')
     lines.append('')
     return lines
 
@@ -104,7 +103,7 @@ def section_integridad():
     lines.append(f'- **compileall:** {"OK" if rc_c == 0 else "FAIL"} (exit {rc_c})')
     out_p, rc_p = run(['py', '-m', 'pyflakes', '.'])
     if rc_p == 0:
-        lines.append(f'- **pyflakes:** LIMPIO')
+        lines.append('- **pyflakes:** LIMPIO')
     else:
         lines.append(f'- **pyflakes:** {len(out_p.splitlines())} warnings (exit {rc_p})')
     lines.append('')
@@ -206,8 +205,8 @@ def main():
     footer = [
         '---',
         '',
-        f'Fin del estado generado. Fuente de verdad: `ESTADO_DECLARADO.md` (declaraciones)',
-        f'+ `ESTADO_SISTEMA.md` (este fichero, hechos).',
+        ''Fin del estado generado. Fuente de verdad: `ESTADO_DECLARADO.md` (declaraciones)'',
+        ''+ `ESTADO_SISTEMA.md` (este fichero, hechos).'',
         '',
     ]
     
