@@ -1941,6 +1941,26 @@ del ciclo NIPC).
   - El fichero .gitignore bloquea `_*.py` pero no `_*.json` ni `_*.txt`;
     los originales se borraron manualmente tras migracion a evidence/.
 
+### 15.4. Estado del ciclo A.6 (2026-09-21)
+
+  A.6.0     CERRADO. Gate 0 de los 3 bloqueantes F2.4.
+  A.6.1     CERRADO. Dictamen F2.4 sobre las 3 divergencias.
+  A.6.2     CERRADO. Fixes quirurgicos aplicados.
+  A.6.2-bis B2-PIT CERRADO (#53).
+  A.6.2-bis B1     CERRADO (#68). 4 commits + 100 tests.
+  A.6.2-bis B3     IMPLEMENTADO SPEC-SIDE. Sin integracion.
+  A.6.3     CERRADO. Test P38 Q12 (Modelo A). Dictamen #72.
+  A.6.4-v2  CERRADO. P38 aislado sobre TOP 2000. Dictamen #73.
+  A.6.4     CERRADO. Integracion B1+P61+P38 end-to-end. Dictamen #75.
+            H-73.1 (adapter B1<->P38) corregido + regresion.
+  A.6.5     AUTORIZADA. Pendiente de ejecucion.
+  A.6.6     PENDIENTE. F2.4-CLOSE.
+
+  Gap spec->codigo §5.1-§5.5: CERRADO (#61-#67).
+  Orquestador `scripts/iae_pipeline.py`: IMPLEMENTADO y RATIFICADO.
+  Baseline full: BLOQUEADO por OpenFIGI masivo (no autorizado).
+  Gate-NIPC.2: NOT READY (thresholds UNDEFINED).
+
 ---
 
 ## 16. Referencias
@@ -1974,7 +1994,7 @@ del ciclo NIPC).
 
 ### 16.4. Prompt maestro
 
-  docs/auditoria/PROMPT_MAESTRO.md (v6.35)
+  docs/auditoria/PROMPT_MAESTRO.md (v6.55 al cierre de A.6.4)
 
 ---
 

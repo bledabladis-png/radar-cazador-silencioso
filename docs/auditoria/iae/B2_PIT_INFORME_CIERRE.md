@@ -12,6 +12,11 @@ completas.
 **HEAD al redactar:** d98de03.
 **Naturaleza:** documento de entrega. NO normativo.
 
+**NOTA DE CIERRE (2026-09-21, prompt v6.55):** B2-PIT CERRADO
+(dictamen #53). Documento historico. Estado actual del ciclo A.6:
+A.6.0/A.6.2/A.6.2-bis/A.6.3/A.6.4 CERRADOS. A.6.5 AUTORIZADA.
+Ver `FASE_A6_PLAN.md`.
+
 ---
 
 ## 0. Resumen ejecutivo

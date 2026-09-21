@@ -12,6 +12,12 @@ una nueva v10 de todo A.6.2-bis."
 **Naturaleza:** documento de subfase. Autoriza implementacion de
 B2-PIT bajo sus estrictos limites.
 
+**NOTA DE CIERRE (2026-09-21, prompt v6.55):** B2-PIT fue CERRADO
+por dictamen #53. El ciclo A.6.2-bis completo (B1, B2-PIT, B3) esta
+CERRADO. B1 por #68, B3 IMPLEMENTADO SPEC-SIDE, gap §5.1-§5.5 por
+#61-#67, H-69.1/H-69.2/H-73.1 corregidos y cerrados. A.6.4 cerrada
+definitivamente por #75.
+
 ---
 
 ## 0. Resumen ejecutivo

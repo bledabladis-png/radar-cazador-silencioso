@@ -12,6 +12,12 @@
 gana FASE_A6_PLAN.md, RECONCILIACION_CONTRATO_CODIGO.md o el dictamen
 F2.4.
 
+**NOTA DE CIERRE (2026-09-21, prompt v6.55):** el ciclo A.6 esta
+practicamente cerrado. A.6.0 (este documento), A.6.2 (B2-PIT), A.6.2-bis
+(B1, B3), A.6.3 (test P38 Q12) y A.6.4 (integracion B1+P61+P38) estan
+CERRADOS. Ver `FASE_A6_PLAN.md` para el estado por subfase y dictamenes
+#68, #72, #73, #75 para los cierres formales.
+
 ---
 
 ## 0. Resumen ejecutivo

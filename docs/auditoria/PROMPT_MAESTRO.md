@@ -273,9 +273,17 @@ D:\Macro_Sectorial
 | +-- pipeline/ (16 modulos - refactor C2)
 | +-- institutional_accumulation/ (IAE)
 |  +-- sec_13f/ (schema, downloader, parser, storage, manifest, ingest)
-|  |  +-- identity/ (temporal_filter, cusip_resolver, relationships, amendments,
-|  |                 sec13f_list, security_identity)
-|  +-- aggregation/ (delta_shares, nipc)
+|  |  +-- identity/ (temporal_filter, cusip_resolver, relationships,
+|  |                 amendments, sec13f_list, security_identity)
+|  +-- identity/ (catalog_key, target_builder, period_state,
+|  |              target_universe, radar_target_catalog, openfigi_client)
+|  +-- aggregation/ (delta_shares, nipc, coverage, catalog_validator,
+|  |                 catalog_p38_adapter, reporting_dedup)
+|  +-- security_type.py (§3.3 + §5.4 Nivel A+B)
+|  +-- operational_universe.py (§5.5)
+|  +-- temporal_validity.py (P61 operational_mapping_status)
+|  +-- timestamps.py, absence.py (B3)
+|  +-- catalog_pit.py (B2-PIT)
 +-- data/
 | +-- providers/ (29 providers; +futures.py OilPriceAPI FU-021-3C-bis)
 | +-- macro_manual/ (12 CSVs FRED)
@@ -286,12 +294,12 @@ D:\Macro_Sectorial
 | +-- stock_prices.parquet (+ .manifest.json)
 | +-- commodities_futures.parquet (+ .manifest.json) [FU-021-3C-bis]
 | +-- commodities_spot.parquet (+ .manifest.json) [FU-021-3C-bis]
-+-- scripts/ (14 activos + archive/; +update_futures.py FU-021-3C-bis)
++-- scripts/ (16+ activos + archive/; +iae_pipeline.py, build_catalog_csvs.py)
 +-- validation/ (6 activos + archive/ 59)
-+-- tests/ (498 tests)
++-- tests/ (~1300 tests; ver sec 15 para conteo actual)
 +-- docs/
 | +-- automatica/ (22 .md auto-generados, LF)
-| +-- auditoria/ (24 .md: dictamenes + informes + prompt + planes + FOLLOWUPS.md)
+| +-- auditoria/ (30+ .md: dictamenes + informes + prompt + planes + FOLLOWUPS.md)
 | +-- plan/ (planes historicos)
 +-- outputs/
 +-- history/ (versionado)

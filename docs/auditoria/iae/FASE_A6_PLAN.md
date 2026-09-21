@@ -373,6 +373,19 @@ Baseline full permanece BLOQUEADO (OpenFIGI masivo NO AUTORIZADO).
 
 **Siguiente: A.6.5.**
 
+### A.6.5 - Actualizacion de contratos (AUTORIZADA)
+
+**Estado (2026-09-21, dictamen #75):** AUTORIZADA. Pendiente de
+ejecucion. Alcance previsto: actualizar `NIPC_CONTRATOS_SEMANTICOS_v1.md`
+si procede, segun el resultado de A.6.4. No debe modificar contratos
+normativos fuera del alcance previsto ni usar H-73.1 como excusa para
+cambios adicionales.
+
+### A.6.6 - F2.4-CLOSE
+
+**Estado:** PENDIENTE. Requiere A.6.5 cerrado. F2.4-CLOSE no
+autorizado por #75.
+
 **Precondicion:** A.6.2 y A.6.3 cerrados + decisiones F2.4 que
 afecten a la semantica de la evidencia materializadas (D1, D2, D3,
 Q12, AGREG., Policy v1.3).

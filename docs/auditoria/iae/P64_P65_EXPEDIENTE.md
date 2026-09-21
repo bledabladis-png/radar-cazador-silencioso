@@ -10,6 +10,12 @@ del auditor externo.
 **Estado:** P64 CERRADO. P65 GO CONDICIONADO v3 (pendiente implementar
 las 3 correcciones de cierre).
 
+**NOTA DE CIERRE (2026-09-21, prompt v6.55):** P66 (continuacion de
+P65) fue CERRADO con la reformulacion del contrato §14.3 y la
+implementacion de `reporting_dedup.py` (dictamenes #40, #56). El
+modulo `reporting_dedup.py` existe y tiene tests, pero no esta
+invocado productivamente (P66 §11.31). DROP_DUP NO activado.
+
 **Referencias autoritativas:**
 - Contrato: `iae/NIPC_CONTRATOS_SEMANTICOS_v1.md` secciones 13 y 14.
 - Dictamenes: `iae/DICTAMENES.md` (entradas #25 P63, #26 P65 v3).
