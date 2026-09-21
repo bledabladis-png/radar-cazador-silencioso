@@ -1,43 +1,70 @@
 # A.6.4 - Integracion B1 + P61 + P38
 
-**Origen:** dictamen #73 (integracion autorizada) + #74 (H-73.1
-confirmado + correccion del adapter).
-**Objetivo:** demostrar la cadena end-to-end sobre el subconjunto que
-atraviesa realmente las tres capas, SIN bypass manual.
+**Origen:** dictamen #73 (integracion autorizada) + #74 (H-73.1 confirmado).
+**Objetivo:** demostrar que el adapter B1 <-> P38 funciona sobre records reales
+(no como evidencia cuantitativa de cobertura contractual).
 
-## Alcance
+---
 
-**Q1 2026:**
-1. P61 resuelve identidades (`resolve_batch_identities`).
-2. §5.1-§5.5 (`build_operational_universe`) → 28.371 filas, 22 tickers.
-3. Cruce §5.5 ∩ snapshot B2-PIT (242 tickers) → 20 tickers.
-4. `build_target` sobre el snapshot → TargetUniverse (242 keys).
-5. Sub-universo B1 filtrado a los 20 tickers.
-6. Filtro adicional: solo keys con `share_class_figi` real.
-   BRK-B y MOG-A no tienen FIGI en el snapshot → 18 keys.
-7. `catalog_to_p38_targets` (adapter corregido H-73.1) → records con
-   `operational_mapping_status=VERIFIED`.
-8. `compute_contractual_coverage` → VALID.
+## Alcance REAL de este probe (corregido 2026-09-21, auditoria externa)
 
-**Q4 2025:** P61 devuelve §5.5 = 0. Sub-conjunto vacio -> fail-closed.
-No se fabrica TARGET historico.
+**Este probe NO demuestra cobertura contractual.** Demuestra que:
 
-## Resultado
+1. La cadena P61 seccion 5.5 -> B1 `build_target` -> `period_state` ->
+   `catalog_p38_adapter` -> `compute_contractual_coverage` se ejecuta sin
+   excepciones sobre datos reales Q1 2026.
+2. El adapter H-73.1 corregido produce `PositionRecord` con
+   `operational_mapping_status="VERIFIED"`.
+3. `compute_contractual_coverage` acepta esos records.
+
+**Este probe NO demuestra:**
+
+- Cobertura pairwise real entre Q4 2025 y Q1 2026 (los states Q4 y Q1 son
+  identicos por construccion).
+- Ponderacion por masa (SSHPRNAMT) real (todos los `PositionRecord.weight`
+  son 1.0 hardcoded en el adapter).
+- Fail-closed real de Q4 (Q4 = Q1 por mock, no vacio).
+- Flujo PIT completo (target_catalog_as_of no se invoca).
+
+## Por que el resultado siempre es 1.0
+
+Tres problemas estructurales (ver ESTADO_DECLARADO.md seccion 8, H-10.1):
+
+1. **Mock Q4=Q1 en el probe.** La llamada
+   `catalog_to_p38_targets(universe_sub, universe_sub, state_q4=st_q,
+   state_q1=st_q, ...)` pasa el mismo objeto para ambos periodos.
+   `coverage_previous` es matematicamente identico a `coverage_current`.
+
+2. **Peso hardcoded.** `catalog_p38_adapter._records` asigna `weight=1.0`
+   a todos los records. `paired_weighted_share_coverage` es igual a
+   `paired_security_coverage`, no pondera.
+
+3. **Adapter marca VERIFIED incondicionalmente.** `_records` declara
+   `operational_mapping_status="VERIFIED"` sin verificar el estado
+   operacional real. Combinado con
+   `coverage_previous = len(res_q4) / len(all_q4)` (denominador es
+   observed con FIGI, no TARGET), el resultado es 1.0 incluso si hubiera
+   cobertura real baja.
+
+## Resultado (honesto)
 
 | Etapa | Q1 2026 | Q4 2025 |
 |---|---:|---:|
-| §5.5 filas | 28.371 | 0 |
-| §5.5 tickers equity unicos | 22 | 0 |
-| Cruce §5.5 ∩ snapshot | 20 | 0 |
-| Keys con FIGI | 18 | — |
-| Records VERIFIED | 18 | — |
-| coverage_previous | 1.0 | fail-closed |
-| coverage_current | 1.0 | fail-closed |
-| paired_security_coverage | 1.0 | fail-closed |
-| paired_weighted_share_coverage | 1.0 | fail-closed |
-| coverage_status | **VALID** | fail-closed |
+| seccion 5.5 filas | 28.371 | 0 |
+| seccion 5.5 tickers equity unicos | 22 | 0 |
+| Cruce seccion 5.5 interseccion snapshot | 20 | 0 |
+| Keys con FIGI | 18 | mock = Q1 |
+| Records VERIFIED | 18 | mock = Q1 |
+| coverage_previous | 1.0 | 1.0 (mock, no real) |
+| coverage_current | 1.0 | 1.0 (mock) |
+| paired_security_coverage | 1.0 | 1.0 (mock) |
+| paired_weighted_share_coverage | 1.0 | 1.0 (peso hardcoded) |
+| coverage_status | VALID | VALID |
 
-## Hallazgo H-73.1 - CORREGIDO
+**Lectura:** el probe se ejecuta, pero las cifras son **triviales por
+construccion**, no evidencia de cobertura.
+
+## Hallazgo H-73.1 - CORREGIDO (sigue vigente)
 
 `catalog_p38_adapter._records` mapeaba `period_state.weight_status`
 directamente a `PositionRecord.operational_mapping_status` (1:1).
@@ -48,24 +75,38 @@ Son conceptos ortogonales:
 | weight_status: RESOLVED_OBSERVED / ZERO_REPORTED / NOT_PRESENT | operational_mapping_status: VERIFIED / TEMPORAL_UNVERIFIED / UNRESOLVED / CONFLICT |
 
 `compute_contractual_coverage` filtra por `operational_mapping_status == "VERIFIED"`.
-El adapter producia `RESOLVED_OBSERVED` → cobertura = 0.
+El adapter producia `RESOLVED_OBSERVED` -> cobertura = 0.
 
 **Corregido en dictamen #74.** El adapter ahora:
+
 - Declara `resolution_status="CANONICAL"` y `operational_mapping_status="VERIFIED"`.
-- Excluye keys con `identity_status != "RESOLVED"` (defensa por si el caller salta PASO 8).
+- Excluye keys con `identity_status != "RESOLVED"` (defensa por si el caller
+  salta PASO 8).
 
 **Test de regresion:** `tests/test_h731_adapter_p38_compat.py` (5 tests).
-Verifica no solo estructura del PositionRecord, sino su COMPATIBILIDAD
-con `compute_contractual_coverage` (el test que faltaba).
+Verifica no solo estructura del `PositionRecord`, sino su COMPATIBILIDAD
+con `compute_contractual_coverage`.
 
-**Este probe ya no usa bypass.** Los records vienen del adapter real.
+## Hallazgos abiertos (auditoria externa 2026-09-21)
 
-## Limitaciones
+- **H-05:** Q4 declarado vacio pero `coverage_previous=1.0`. Causa: mock
+  Q4=Q1 en el probe. Fix propuesto: separar run Q1 positivo del run Q4
+  fail-closed.
+- **H-06:** no se publican cardinalidades reales
+  (`len(target_q4)`, `len(target_q1)`, `len(TARGET_PAIRWISE)`,
+  `len(RESOLVED_Q4)`, `len(RESOLVED_Q1)`, `len(PAIRED)`). Fix propuesto:
+  instrumentar el probe.
+- **H-07:** `paired_weighted_share_coverage=1.0` con todos los pesos = 1.0.
+  Fix propuesto: propagar SSHPRNAMT real desde 13F hasta `PositionRecord.weight`.
+- **H-10.1 (nuevo, 2026-09-21):** `catalog_p38_adapter._records` marca
+  `operational_mapping_status="VERIFIED"` incondicionalmente. `coverage.py`
+  divide por observed, no por target. Combinado con peso = 1.0, el resultado
+  es estructuralmente 1.0.
 
-- Solo 18 keys (subconjunto real Q1 con FIGI).
-- No se ejecuta `target_catalog_as_of` (PIT). El snapshot B2-PIT tiene
-  `valid_from=2026-09-21`; no cubre Q1/Q4 por PIT.
-- BRK-B y MOG-A excluidos (sin FIGI en snapshot).
+Los fixes H-05 a H-10.1 tocan codigo productivo (`coverage.py`,
+`catalog_p38_adapter.py`, `period_state.py`). Requieren dictamen externo
+antes de implementarse (regla 4 del prompt: prohibicion de modificar
+`coverage.py` sin dictamen).
 
 ## Uso
 
@@ -77,5 +118,4 @@ Deterministico. Sin red. Sin datetime.now().
 
 - A.6.4-v2: `evidence/nipc_gate0_top2000_v2/`.
 - Dictamenes: #72, #73, #74.
-- Adapter corregido: `src/institutional_accumulation/aggregation/catalog_p38_adapter.py`.
-- Test regresion: `tests/test_h731_adapter_p38_compat.py`.
+- Estado vigente: `ESTADO_DECLARADO.md` seccion 8 (H-10.1).

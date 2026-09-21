@@ -30,7 +30,7 @@ documentos describen su tema; NO declaran el estado del sistema.
 | A.6.2-bis-B3 | IMPLEMENTADO SPEC-SIDE | - |
 | A.6.3 (test Q12 Modelo A) | CERRADO | #72 |
 | A.6.4-v2 (P38 aislado sobre TOP 2000) | CERRADO | #73 |
-| A.6.4 (integracion B1+P61+P38 end-to-end) | CERRADO | #75 |
+| A.6.4 (integracion B1+P61+P38; SMOKE TEST, no cobertura real) | CERRADO como smoke test | #75 + auditoria 2026-09-21 |
 | A.6.5 (actualizar contratos in-place) | CERRADA | dccf70d + 911e95b + 0f0583d + a21b0db |
 | A.6.6 (F2.4-CLOSE) | PENDIENTE - requiere dictamen externo | - |
 
@@ -94,3 +94,27 @@ Pendientes (no bloqueantes para A.6.6):
 - `PROMPT_MAESTRO.md` (8 fantasmas materiales; se limpian al escribir v6.56)
 - `NIPC_COVERAGE_POLICY_V13_PROPUESTA.md` (2 fantasmas + 1 hash stale)
 - Casos especificos de categoria C (~8)
+
+## 8. Hallazgos del auditor pendientes (2026-09-21)
+
+Hallazgos detectados en la auditoria externa del bundle del 2026-09-21,
+tras revisar la evidencia A.6.4. **Requieren dictamen antes de tocar codigo
+productivo** (regla: NO modificar `coverage.py`, `nipc.py`, `delta_shares.py`
+sin dictamen).
+
+| ID | Severidad | Descripcion | Ficheros afectados |
+|---|---|---|---|
+| H-05 | ALTA | Q4 declarado vacio pero `coverage_previous=1.0`. Probe pasa Q4=Q1 (mock). | `probe_integration_b1_p61_p38.py` |
+| H-06 | ALTA | El probe no publica cardinalidades reales (`len(target_q4)`, `len(TARGET_PAIRWISE)`, `len(PAIRED)`). | `probe_integration_b1_p61_p38.py` |
+| H-07 | ALTA | `paired_weighted_share_coverage=1.0` porque `PositionRecord.weight=1.0` hardcoded. No hay ponderacion por SSHPRNAMT. | `catalog_p38_adapter.py` |
+| H-08 | MEDIA | Test H-73.1 no cubre estados ortogonales (`identity=RESOLVED` pero `weight=NOT_PRESENT`). | `tests/test_h731_adapter_p38_compat.py` |
+| H-10.1 | CRITICA | `catalog_p38_adapter._records` marca `operational_mapping_status="VERIFIED"` incondicionalmente. `coverage.py` divide por observed (no TARGET). Combinado con `weight=1.0`, el resultado es **estructuralmente 1.0**, incluso si la cobertura real fuera 0%. | `catalog_p38_adapter.py`, `coverage.py`, `period_state.py` |
+
+**Consecuencia:** A.6.4 queda reclasificado como **smoke test de integracion
+del adapter** (ver `evidence/a64_integration_b1_p61_p38/README.md`), NO como
+evidencia cuantitativa de cobertura contractual.
+
+**Proximo paso:** expediente para dictamen externo sobre H-05/H-06/H-07/H-10.1.
+Sin dictamen, no se toca codigo productivo. H-08 se puede cerrar con test si
+el dictamen lo autoriza.
+
