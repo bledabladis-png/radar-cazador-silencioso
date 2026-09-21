@@ -145,7 +145,7 @@ def build_operational_universe(
     period_iso,
     *,
     identity_results,
-    identity_period_iso=None,
+    identity_period_iso,
 ):
     """Construye el operational_universe §5.5 (dictamen #65).
 
@@ -157,8 +157,8 @@ def build_operational_universe(
       period_iso          str YYYY-MM-DD del periodo evaluado.
       identity_results    dict {cusip: dict P61}. OBLIGATORIO.
                           Debe corresponder al mismo period_iso.
-      identity_period_iso str | None. Si se pasa, debe coincidir con
-                          period_iso. Si no coincide -> ValueError.
+      identity_period_iso str. OBLIGATORIO. Debe coincidir con period_iso.
+                          PIT fail-closed (dictamen #66 H-66.1).
 
     Devuelve DataFrame con columnas originales + DIAGNOSTIC_COLUMNS.
     Universo vacio -> DataFrame vacio con las columnas esperadas.
@@ -172,15 +172,19 @@ def build_operational_universe(
         raise ValueError(
             "identity_results es obligatorio (§5.5 arquitectura C, dictamen #65)"
         )
-    if identity_period_iso is not None:
-        if str(identity_period_iso) != str(period_iso):
-            raise ValueError(
-                "identity_results corresponde a period "
-                + repr(identity_period_iso)
-                + ", no a "
-                + repr(period_iso)
-                + " (§5.5 PIT, dictamen #65)"
-            )
+    if identity_period_iso is None:
+        raise ValueError(
+            "identity_period_iso es obligatorio (§5.5 PIT, dictamen #66 H-66.1). "
+            "Toda ejecucion debe quedar PIT-validada."
+        )
+    if str(identity_period_iso) != str(period_iso):
+        raise ValueError(
+            "identity_results corresponde a period "
+            + repr(identity_period_iso)
+            + ", no a "
+            + repr(period_iso)
+            + " (§5.5 PIT, dictamen #65)"
+        )
     _check_required_columns(infotable_df)
 
     df = _apply_5_1(infotable_df)

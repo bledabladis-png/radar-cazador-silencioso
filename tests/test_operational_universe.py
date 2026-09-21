@@ -60,7 +60,7 @@ def test_T1_mapping_ok_incluido():
     info = pd.DataFrame([_infotable_row("037833100", "COM")])
     off = _official_active("037833100")
     ids = {"037833100": _identity_ok()}
-    out = ou.build_operational_universe(info, off, PERIOD, identity_results=ids)
+    out = ou.build_operational_universe(info, off, PERIOD, identity_results=ids, identity_period_iso=PERIOD)
     assert len(out) == 1
     assert out.iloc[0]["CUSIP"] == "037833100"
     assert out.iloc[0]["_ticker_mapped"] == True
@@ -72,7 +72,7 @@ def test_T2_unresolved_excluido():
     info = pd.DataFrame([_infotable_row("037833100", "COM")])
     off = _official_active("037833100")
     ids = {"037833100": _identity_status("UNRESOLVED", "UNRESOLVED", None)}
-    out = ou.build_operational_universe(info, off, PERIOD, identity_results=ids)
+    out = ou.build_operational_universe(info, off, PERIOD, identity_results=ids, identity_period_iso=PERIOD)
     assert len(out) == 0
 
 
@@ -80,7 +80,7 @@ def test_T3_temporal_unverified_excluido():
     info = pd.DataFrame([_infotable_row("037833100", "COM")])
     off = _official_active("037833100")
     ids = {"037833100": _identity_status("CANONICAL", "TEMPORAL_UNVERIFIED")}
-    out = ou.build_operational_universe(info, off, PERIOD, identity_results=ids)
+    out = ou.build_operational_universe(info, off, PERIOD, identity_results=ids, identity_period_iso=PERIOD)
     assert len(out) == 0
 
 
@@ -89,7 +89,7 @@ def test_T4_provisional_excluido():
     info = pd.DataFrame([_infotable_row("037833100", "COM")])
     off = _official_active("037833100")
     ids = {"037833100": _identity_status("OBSERVED_ONLY", "UNRESOLVED", None)}
-    out = ou.build_operational_universe(info, off, PERIOD, identity_results=ids)
+    out = ou.build_operational_universe(info, off, PERIOD, identity_results=ids, identity_period_iso=PERIOD)
     assert len(out) == 0
 
 
@@ -97,7 +97,7 @@ def test_T5_ambiguous_excluido():
     info = pd.DataFrame([_infotable_row("037833100", "COM")])
     off = _official_active("037833100")
     ids = {"037833100": _identity_status("AMBIGUOUS", "UNRESOLVED", None)}
-    out = ou.build_operational_universe(info, off, PERIOD, identity_results=ids)
+    out = ou.build_operational_universe(info, off, PERIOD, identity_results=ids, identity_period_iso=PERIOD)
     assert len(out) == 0
 
 
@@ -105,7 +105,7 @@ def test_T6_conflict_excluido():
     info = pd.DataFrame([_infotable_row("037833100", "COM")])
     off = _official_active("037833100")
     ids = {"037833100": _identity_status("CONFLICT", "CONFLICT", None)}
-    out = ou.build_operational_universe(info, off, PERIOD, identity_results=ids)
+    out = ou.build_operational_universe(info, off, PERIOD, identity_results=ids, identity_period_iso=PERIOD)
     assert len(out) == 0
 
 # --- T-7: NON_EQUITY + ticker valido -> excluido ---
@@ -114,7 +114,7 @@ def test_T7_non_equity_excluido():
     info = pd.DataFrame([_infotable_row("329882225", "CONVERTIBLE BOND")])
     off = _official_active("329882225")
     ids = {"329882225": _identity_ok("NIPST")}
-    out = ou.build_operational_universe(info, off, PERIOD, identity_results=ids)
+    out = ou.build_operational_universe(info, off, PERIOD, identity_results=ids, identity_period_iso=PERIOD)
     assert len(out) == 0
 
 
@@ -125,7 +125,7 @@ def test_T8_tipo_unresolved_excluido():
     info = pd.DataFrame([_infotable_row("037833100", "CLASS A")])
     off = _official_active("037833100")
     ids = {"037833100": _identity_ok()}
-    out = ou.build_operational_universe(info, off, PERIOD, identity_results=ids)
+    out = ou.build_operational_universe(info, off, PERIOD, identity_results=ids, identity_period_iso=PERIOD)
     assert len(out) == 0
 
 
@@ -148,8 +148,8 @@ def test_T9_orden_invariante():
         "594918104": _identity_ok("MSFT"),
         "329882225": _identity_ok("NIPST"),
     }
-    out1 = ou.build_operational_universe(info, off, PERIOD, identity_results=ids)
-    out2 = ou.build_operational_universe(info.iloc[::-1], off, PERIOD, identity_results=ids)
+    out1 = ou.build_operational_universe(info, off, PERIOD, identity_results=ids, identity_period_iso=PERIOD)
+    out2 = ou.build_operational_universe(info.iloc[::-1], off, PERIOD, identity_results=ids, identity_period_iso=PERIOD)
     assert len(out1) == 2
     assert set(out1["CUSIP"]) == set(out2["CUSIP"])
 
@@ -158,7 +158,7 @@ def test_T9_orden_invariante():
 def test_T10_universo_vacio():
     info = pd.DataFrame([], columns=["CUSIP","TITLEOFCLASS","SSHPRNAMTTYPE","PUTCALL"])
     off = _official_active("037833100")
-    out = ou.build_operational_universe(info, off, PERIOD, identity_results={})
+    out = ou.build_operational_universe(info, off, PERIOD, identity_results={}, identity_period_iso=PERIOD)
     assert len(out) == 0
 
 
@@ -168,7 +168,11 @@ def test_T11_identity_none():
     info = pd.DataFrame([_infotable_row("037833100", "COM")])
     off = _official_active("037833100")
     with pytest.raises(ValueError):
-        ou.build_operational_universe(info, off, PERIOD, identity_results=None)
+        ou.build_operational_universe(
+            info, off, PERIOD,
+            identity_results=None,
+            identity_period_iso=PERIOD,
+        )
 
 
 # --- T-12: NOT_IN_LIST -> excluido ---
@@ -177,7 +181,7 @@ def test_T12_not_in_list_excluido():
     info = pd.DataFrame([_infotable_row("037833100", "COM")])
     off = _official_not_in_list()
     ids = {"037833100": _identity_ok()}
-    out = ou.build_operational_universe(info, off, PERIOD, identity_results=ids)
+    out = ou.build_operational_universe(info, off, PERIOD, identity_results=ids, identity_period_iso=PERIOD)
     assert len(out) == 0
 
 
@@ -187,7 +191,7 @@ def test_T13a_prn_excluido():
     info = pd.DataFrame([_infotable_row("037833100", "COM", ssh_type="PRN")])
     off = _official_active("037833100")
     ids = {"037833100": _identity_ok()}
-    out = ou.build_operational_universe(info, off, PERIOD, identity_results=ids)
+    out = ou.build_operational_universe(info, off, PERIOD, identity_results=ids, identity_period_iso=PERIOD)
     assert len(out) == 0
 
 
@@ -195,7 +199,7 @@ def test_T13b_putcall_not_null_excluido():
     info = pd.DataFrame([_infotable_row("037833100", "COM", putcall="CALL")])
     off = _official_active("037833100")
     ids = {"037833100": _identity_ok()}
-    out = ou.build_operational_universe(info, off, PERIOD, identity_results=ids)
+    out = ou.build_operational_universe(info, off, PERIOD, identity_results=ids, identity_period_iso=PERIOD)
     assert len(out) == 0
 
 # --- T-14: identity_results de otro periodo -> ValueError ---
@@ -230,13 +234,27 @@ def test_columnas_requeridas_faltantes():
     info = pd.DataFrame([{"CUSIP": "X"}])
     off = _official_active("X")
     with pytest.raises(ValueError):
-        ou.build_operational_universe(info, off, PERIOD, identity_results={})
+        ou.build_operational_universe(info, off, PERIOD, identity_results={}, identity_period_iso=PERIOD)
 
 
 def test_columnas_diagnosticas_presentes():
     info = pd.DataFrame([_infotable_row("037833100", "COM")])
     off = _official_active("037833100")
     ids = {"037833100": _identity_ok()}
-    out = ou.build_operational_universe(info, off, PERIOD, identity_results=ids)
+    out = ou.build_operational_universe(info, off, PERIOD, identity_results=ids, identity_period_iso=PERIOD)
     for c in ou.DIAGNOSTIC_COLUMNS:
         assert c in out.columns, "falta " + c
+
+# --- T-14c: identity_period_iso=None -> ValueError (dictamen #66 H-66.1) ---
+
+def test_T14c_identity_period_none_rechazado():
+    """Dictamen #66: el contrato PIT es obligatorio. None -> ValueError."""
+    info = pd.DataFrame([_infotable_row("037833100", "COM")])
+    off = _official_active("037833100")
+    ids = {"037833100": _identity_ok()}
+    with pytest.raises(ValueError):
+        ou.build_operational_universe(
+            info, off, PERIOD,
+            identity_results=ids,
+            identity_period_iso=None,
+        )
