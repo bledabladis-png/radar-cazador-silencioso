@@ -220,12 +220,15 @@ proceso que se mide.
 NO incluye `catalog_key`, adaptador P38, TARGET_PAIRWISE, colisiones,
 validadores de asignacion (todo eso va en B1).
 
-**Estado:** CERRADO 2026-09-21.
-- Commit: `5eee203` (feat(b2-pit): infraestructura temporal del catalogo).
+**Estado:** CERRADO 2026-09-21 por dictamen #53 (GO - B2-PIT CLOSED).
+- Commits: `5eee203` (implementacion) + `d98de03` (cierre operativo) +
+  `5fb86e5` (informe de cierre).
 - Modulo: `src/institutional_accumulation/catalog_pit.py`.
 - Tests: `tests/test_catalog_pit.py` (16 tests, PASS).
 - Evidencia: `iae/evidence/b2_pit_cierre/`.
 - Documento de subfase: `iae/A62BIS_B2_PIT_SUBFASE.md`.
+- Informe de cierre: `iae/B2_PIT_INFORME_CIERRE.md`.
+- Dictamen de cierre: #53.
 
 ### A.6.2-bis-B1 - TARGET independiente del mapping (BLOQUEADO)
 

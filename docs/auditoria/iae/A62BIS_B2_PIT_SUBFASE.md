@@ -282,7 +282,9 @@ en P38/P65/P66 + compileall + pyflakes.
 
     A.6.2-bis-B2-PIT CLOSED
       requiere:
-        - 14 tests de §5 PASS
+        - tests de §5 PASS (14 casos enumerados; 16 tests implementados,
+          +2 adicionales: manifest_inexistente_raise,
+          list_snapshots_devuelve_entradas)
         - P38 tests PASS (existentes intactos)
         - P65 tests PASS (31)
         - P66 tests PASS (31)

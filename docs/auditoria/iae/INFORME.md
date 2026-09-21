@@ -1383,10 +1383,13 @@ preexistentes en `iae/evidence/p66_baseline_pre/`.
 
 ### Estado del ciclo A.6.2-bis
 
-    A.6.2-bis-B2-PIT    CERRADO (este informe)
+    A.6.2-bis-B2-PIT    CERRADO por dictamen #53 (GO - B2-PIT CLOSED)
     A.6.2-bis-B1        OPEN - bloqueado por #51 (asignacion + dominio P38)
     A.6.2-bis-B3        APPROVED CONDITIONAL
     A.6.2-bis completo  NO CERRADO
+
+Cierre formal: dictamen #53 (2026-09-21). El auditor valido la evidencia
+documental sin reabrir bloqueantes de B1. Siguiente ciclo recomendado: B1.
 
     A.6.3                BLOCKED (requiere B1)
     A.6.4                BLOCKED (requiere A.6.3)

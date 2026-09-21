@@ -64,6 +64,7 @@
 | 50 | Ver entrada §50 de este fichero | A.6.2-bis v7 NO-GO. check_continuity en flujo + dominio collision + TARGET_PAIRWISE vacio. |
 | 51 | Ver entrada §51 de este fichero | A.6.2-bis v8 NO-GO. Asignacion catalog_key + preservacion dominio P38. |
 | 52 | Ver entrada §52 de este fichero | Dictamen estrategico: Opcion 1 aprobada. B2-PIT autorizado a implementar. B1/B3 en diseno. |
+| 53 | Ver entrada §53 de este fichero | B2-PIT CERRADO formalmente. Siguiente ciclo recomendado: B1. |
 
 ---
 
@@ -1639,6 +1640,134 @@ permanecen en diseno. A.6.2-bis completo NO CERRADO.**
 
 Tratar B2-PIT como subfase implementable independiente. NO producir
 v10 de todo A.6.2-bis. Preparar documento dedicado de B2-PIT.
+
+---
+
+## 53. A.6.2-bis-B2-PIT - Dictamen de cierre formal (2026-09-21)
+
+**Tipo:** dictamen del auditor externo sobre B2_PIT_INFORME_CIERRE.md.
+**Origen:** solicitud contenida en el informe de cierre.
+**Referencia:** dictamen #52 (estrategia, Opcion 1 aprobada).
+**HEAD implementacion:** 5eee203.
+**HEAD cierre documental:** d98de03.
+**HEAD informe:** 5fb86e5.
+
+**Resultado:** GO - A.6.2-bis-B2-PIT CERRADO.
+
+### Verificacion de alcance
+
+Todos los elementos del alcance autorizado por #52 confirmados:
+
+    snapshot materializado                CUMPLIDO
+    manifest                              CUMPLIDO
+    version_id independiente del hash     CUMPLIDO
+    sha256 externo                        CUMPLIDO
+    [valid_from, valid_to)                CUMPLIDO
+    target_catalog_as_of(period_end)      CUMPLIDO
+    0 snapshots -> CatalogNotAvailable    CUMPLIDO
+    1 snapshot -> resolucion valida       CUMPLIDO
+    >1 snapshots -> CatalogAmbiguous      CUMPLIDO
+    snapshot existente pero no vigente    CUMPLIDO
+    integridad hash publicada/recalculada CUMPLIDO
+    corrupcion simulada                   CUMPLIDO
+    no backdating                         CUMPLIDO
+
+### Frontera con B1 preservada
+
+El auditor confirma que B2-PIT NO resuelve ningun elemento de B1:
+
+    catalog_key
+    catalog_key_assignment_unique
+    resolucion economica FIGI
+    continuidad catalog_key -> FIGI
+    TARGET_PAIRWISE
+    adaptador P38
+    collision catalog_key -> FIGI
+    validador de asignacion
+
+**No procede reabrir B2 por cuestiones de B1.**
+
+### Point-in-time
+
+Regla `[valid_from, valid_to)` + fail-closed validada.
+Snapshot existente que no cubre period_end NO convierte la consulta
+en valida. Backdating prohibido (Q4 2025 / Q1 2026 -> CatalogNotAvailable)
+es la consecuencia correcta, no un defecto.
+
+### Integridad e inmutabilidad
+
+Cadena CSV publicado -> SHA publicado -> SHA recalculado ->
+comparacion -> mismatch FAIL-CLOSED: compatible con el diseno.
+Manifest mutable no constituye violacion de inmutabilidad (la evidencia
+historica reside en snapshots y hashes independientes).
+
+### Tests
+
+    16 passed
+    pyflakes    LIMPIO
+    compileall  OK
+    Suite completa 1083 passed + 2 skipped + 3 failed preexistentes
+
+Sin regresion nueva atribuible a B2-PIT.
+
+### Observacion documental no bloqueante
+
+El subfase doc §7 indicaba "14 tests" mientras la implementacion tiene
+16. Inconsistencia documental menor, no bloqueante. Corregida en este
+ciclo.
+
+### Significado del cierre
+
+    B2-PIT CLOSED = infraestructura PIT implementada y validada para
+                    los snapshots disponibles.
+    NO significa que exista evidencia historica suficiente para
+    reconstruir Q4-2025 o Q1-2026.
+
+### Elementos que permanecen bloqueados
+
+    A.6.3                BLOCKED (requiere B1)
+    A.6.4                BLOCKED (requiere A.6.3)
+    F2.4-CLOSE           BLOCKED
+    OpenFIGI masivo      NO AUTORIZADO
+    DROP_DUP             NO AUTORIZADO
+    Policy v1.3          NO AUTORIZADA
+    Gate-NIPC.2/3        NO AUTORIZADOS
+    Modificacion P38     NO AUTORIZADA
+    Certificacion final  NO AUTORIZADA
+
+### Siguiente ciclo recomendado
+
+**B1** (no nueva iteracion global de A.6.2-bis). Bloqueantes a atacar:
+
+    1. semantica correcta de catalog_key_assignment_unique
+    2. preservacion del dominio economico completo hacia P38
+    3. imposibilidad de reduccion silenciosa del denominador por FIGI incompleto
+    4. comportamiento fail-closed ante identidades asimetricas/no resueltas
+    5. preservacion de colisiones catalog_key -> FIGI en dominio completo
+
+B2-PIT no debe volver a acoplarse a esos problemas.
+
+### Reserva de auditoria
+
+El dictamen se emite sobre evidencia documental + tests + trazabilidad
+proporcionados. No constituye nueva ejecucion independiente del
+repositorio.
+
+### Estado operativo
+
+    A.6.2-bis-B2-PIT       CLOSED
+    A.6.2-bis-B1           OPEN / BLOCKED
+    A.6.2-bis-B3           APPROVED CONDITIONAL / NO IMPLEMENTATION
+    A.6.2-bis completo     OPEN
+    A.6.3                  BLOCKED
+    A.6.4                  BLOCKED
+    F2.4-CLOSE             BLOCKED
+    DROP_DUP               NO
+    OpenFIGI masivo        NO
+    Push                   NO
+
+**Conclusion: B2-PIT CLOSED sin reabrir bloqueantes de B1. Siguiente
+objeto: B1.**
 
 ---
 
