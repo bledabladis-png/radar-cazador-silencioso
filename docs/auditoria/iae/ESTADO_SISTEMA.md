@@ -2,7 +2,7 @@
 
 Hechos verificables del sistema. Generado por script.
 
-**Generado en:** 2026-09-21 20:35:54 UTC
+**Generado en:** 2026-09-21 20:40:22 UTC
 **Snapshot tomado sobre:** commit HEAD de la fecha indicada, al momento de generar
 **NO editar a mano.** Regenerar con:
 
@@ -16,17 +16,22 @@ proyecto describen su tema; NO declaran el estado del sistema.
 
 ## 1. Git
 
-- **HEAD:** `3acddbb`
-- **HEAD completo:** `3acddbb343eaf703dde853e4f2c3174d9a75c5e6`
-- **Fecha commit HEAD:** 2026-09-21 22:33:27 +0200
-- **Ahead:** 276
+- **HEAD:** `c429c48`
+- **HEAD completo:** `c429c48cf2cf8cbe2a896aacb3a90a15d9da4682`
+- **Fecha commit HEAD:** 2026-09-21 22:38:18 +0200
+- **Ahead:** 279
 - **Behind:** 3
 - **origin/main:** `e49f6b3`
 
 ## 2. Tests (pytest real)
 
-- **Resumen:** 3 failed, 1304 passed, 2 skipped in 30.04s
+- **Resumen:** 3 failed, 1303 passed, 2 skipped, 1 xpassed in 27.39s
 - **Exit code:** 1
+
+**Tests fallidos (nombre completo):**
+- `FAILED tests/test_freshness.py::test_market_data_fresh - AssertionError: mark...`
+- `FAILED tests/test_freshness.py::test_stock_prices_fresh - AssertionError: sto...`
+- `FAILED tests/test_freshness.py::test_european_tickers_recent - AssertionError...`
 
 ## 3. Integridad del codigo
 

@@ -87,9 +87,21 @@ Alcance: cerrar H-05/H-06/H-10.1. H-07 queda declarado no resuelto.
 3. **`probe_integration_b1_p61_p38.py`**: eliminar mock Q4=Q1. Reportar
    fail-closed cuando Q4 este vacio. Publicar cardinalidades reales.
 
-Resultado esperado: `coverage_previous = UNAVAILABLE` (Q4 vacio) o
-`0.0744` si se usa Q1 vs universo; `paired_security_coverage = UNAVAILABLE`
-(pairwise vacio). Honestidad > cifras bonitas.
+Resultado esperado del fix (metricas CONTRACTUALES P38):
+
+    coverage_previous               UNAVAILABLE (TARGET_Q4 vacio)
+    coverage_current                UNAVAILABLE o RESOLVED_Q1/TARGET_Q1
+    paired_security_coverage        UNAVAILABLE (TARGET_PAIRWISE vacio)
+    paired_weighted_share_coverage  UNAVAILABLE (TARGET_PAIRWISE vacio)
+
+Metrica DIAGNOSTICA auxiliar (NO contractual P38):
+
+    Cobertura Q1 / universo B2-PIT = 18/242 = 0.0744
+
+Nota (auditoria 2026-09-21, A-04): esta cifra auxiliar NO debe
+presentarse nunca como `coverage_previous` ni `coverage_current`
+contractuales. Ambas magnitudes tienen denominadores distintos y
+NO son intercambiables. Honestidad > cifras bonitas.
 
 ### 5.2. Fix completo (A2)
 

@@ -77,16 +77,28 @@ def section_git():
 def section_tests():
     lines = ['## 2. Tests (pytest real)', '']
     out, rc = run(['py', '-m', 'pytest', 'tests/', 'validation/', '-q', '--tb=no', '--no-header'])
-    # Buscar linea resumen "N passed, M skipped..." o similar
+    # Resumen
     summary = None
     for line in out.splitlines():
         if 'passed' in line and ('failed' in line or 'skipped' in line):
             summary = line.strip()
     if summary:
         lines.append(f'- **Resumen:** {summary}')
-    else:
-        lines.append(f'- **Exit code:** {rc}')
     lines.append(f'- **Exit code:** {rc}')
+    # Tests fallidos con nombre completo
+    failed = [l.strip() for l in out.splitlines() if l.strip().startswith('FAILED ')]
+    if failed:
+        lines.append('')
+        lines.append('**Tests fallidos (nombre completo):**')
+        for f in failed:
+            lines.append(f'- `{f}`')
+    # Tests skip (nombres)
+    skipped = [l.strip() for l in out.splitlines() if l.strip().startswith('SKIPPED ')]
+    if skipped:
+        lines.append('')
+        lines.append('**Tests skip:**')
+        for s in skipped:
+            lines.append(f'- `{s}`')
     lines.append('')
     return lines
 

@@ -188,17 +188,29 @@ def test_h101_adapter_rechaza_state_no_resolved():
                                    pairwise_keys=set(keys))
 
 
+@pytest.mark.xfail(
+    strict=False,
+    reason=(
+        "H-10.1 ABIERTO (auditoria 2026-09-21, A-12): este test documenta "
+        "un comportamiento DEFECTUOSO del adapter (VERIFIED incondicional). "
+        "NO es evidencia de conformidad contractual P61. Se reescribira "
+        "tras dictamen del fix H-10.1."
+    ),
+)
 def test_h101_adapter_verified_incondicional_documentado():
-    """Documenta (no corrige) el comportamiento H-10.1: el adapter
-    actual marca operational_mapping_status="VERIFIED" para todo
+    """DOCUMENTA (no corrige) el comportamiento H-10.1.
+
+    **NO es evidencia de correccion contractual.** Este test fija el
+    comportamiento ACTUAL del adapter, que la auditoria externa ha
+    marcado como DEFECTUOSO (H-10.1 CRITICA): el adapter marca
+    operational_mapping_status="VERIFIED" incondicionalmente para todo
     record con identity_status==RESOLVED.
 
-    Este test actua como CONTRATO DE COMPORTAMIENTO ACTUAL. Si el fix
-    de H-10.1 (dictamen externo) cambia el comportamiento, este test
-    debe actualizarse para reflejar la derivacion real.
+    Marcado xfail(strict=False) para que NO cuente como test verde
+    del suite de cierre. Ver auditoria 2026-09-21 A-12.
 
-    NO verifica que el adapter derive VERIFIED del estado operacional:
-    el estado operacional no esta propagado en period_state.
+    Se reescribira cuando el fix de H-10.1 (dictamen externo) cambie
+    el comportamiento del adapter.
     """
     u = _make_universe([("AAPL", "FIGI_A")])
     st = ps.build_period_state(u)  # default: identity=RESOLVED, weight=RESOLVED_OBSERVED
