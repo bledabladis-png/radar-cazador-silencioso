@@ -27,6 +27,18 @@ class PositionRecord:
 
     Sustituye las estructuras paralelas
     (target/resolved/canonical/weights) por un record unico.
+
+    Timestamps (B3, A.6.2-bis): los 3 campos temporales son opcionales
+    y por defecto None para preservar retrocompatibilidad con
+    consumidores existentes (test_p38_contract.py). Su semantica
+    contractual esta definida en el contrato semantico seccion 12:
+      period_end      fecha de cierre del periodo 13F observado.
+      filing_date     fecha de presentacion del filing (SUBMISSION.FILING_DATE).
+      knowledge_date  fecha en que la observacion era publicamente conocida
+                      (opcion A: == filing_date del accession efectivo;
+                       amendments incluidos).
+    La coherencia de los 3 (o su ausencia conjunta) es responsabilidad
+    del productor; PositionRecord no valida cross-field.
     """
     period: str
     observed_security_key: str
@@ -36,6 +48,9 @@ class PositionRecord:
     operational_mapping_status: str
     weight: float
     provenance: dict = field(default_factory=dict)
+    period_end: Optional[str] = None
+    filing_date: Optional[str] = None
+    knowledge_date: Optional[str] = None
 
 
 def aggregate_positions_by_shareclass_figi(records, period):
