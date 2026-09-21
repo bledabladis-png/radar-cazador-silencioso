@@ -694,6 +694,135 @@ Cierre: A.6.2-bis CLOSED -> A.6.3 AUTHORIZED.
 
 ---
 
+## 46. A.6.2-bis - Dictamen de verificacion documental v3 (2026-09-21)
+
+**Tipo:** dictamen del auditor externo sobre A62BIS_PROPUESTA.md v3.
+**HEAD auditado:** 9aa0727.
+**Dictamen anterior:** #45 (v2 GO CONDICIONAL).
+
+**Resultado:** NO-GO DE IMPLEMENTACION. Arquitectura APPROVED CONDITIONAL.
+
+### Lo que la v3 corrige correctamente
+
+- Separacion TARGET declarado / resoluble / observado.
+- Hash externo + deteccion de corrupcion.
+- Prohibicion de backdating.
+- knowledge_date basado en filing que origina la observacion.
+- Precision de amendments.
+- Invariantes de PositionRecord.
+- Orden B2 -> B1 -> B3.
+
+### Bloqueo A (B1) - unidad contractual del TARGET
+
+`radar_ticker` no es la unidad economica del contrato P38. El modelo
+Q12 = Modelo A fijo `share_class_figi` como unidad economica
+(share class).
+
+La v3 no puede cambiar silenciosamente esa unidad via ajuste de
+`coverage.py` (A.6.2-bis no autoriza modificacion contractual).
+
+Ademas, `len(declared)` es CARDINALIDAD de universo, mientras que
+P38 se refiere a `paired_weighted_share_coverage` (magnitud ponderada).
+Deben separarse:
+  cardinalidad TARGET != denominador numerico del indicador ponderado
+
+### Precision adicional sobre identidad del catalogo
+
+Debe introducirse `catalog_key` estable, separado del ticker. Probar:
+- `radar_ticker` NOT NULL + unico dentro del snapshot.
+- La misma unidad economica no cambia de identidad por cambio de ticker.
+- Un set() con 2 filas de mismo ticker colapsa a 1 -> altera cardinalidad.
+- Cambio de ticker entre Q4 y Q1 -> falso TARGET diferente.
+
+NO usar `source_date` como parte de la identidad (pertenece a provenance).
+
+### Bloqueo B (B3) - knowledge_date con NEW HOLDINGS
+
+Para RESTATEMENT, la v3 es correcta: el estado sustituido lleva la
+fecha del filing que sustituye.
+
+Para NEW HOLDINGS, insuficiente: una enmienda que anade holdings
+SUPLEMENTA (no sustituye). El snapshot efectivo mezcla:
+  Holdings originales (con fecha original)
+  + Holdings nuevas (con fecha del amendment)
+
+Asignar a todas la fecha del amendment introduce look-ahead.
+
+Correccion exigida:
+  knowledge_date = propiedad de la OBSERVACION efectiva/posicion
+  + provenance, NO propiedad uniforme del snapshot consolidado.
+
+  RESTATEMENT: estado sustituido -> filing del restatement.
+  NEW HOLDINGS:
+    estado heredado -> fecha original.
+    nueva entrada -> fecha del amendment.
+  Si no se puede reconstruir -> knowledge_date = N/D.
+
+### B2 point-in-time
+
+APROBADO CON PRECISIONES.
+
+- Layout snapshot.csv + .sha256 + manifest.json: OK.
+- Intervalos [valid_from, valid_to): OK.
+- Hash publicado vs recalculado -> fail-closed: OK.
+- Test "inmutabilidad entre runs" no es prueba principal.
+- Precision no bloqueante: conservar revision del manifest en
+  provenance (commit/revision del repo) para reproducibilidad.
+
+### PositionRecord
+
+APROBADO CONDICIONADO. Provenir identifica el filing que aporta la
+observacion. Fecha no disociada del origen documental.
+
+### absence.py
+
+APROBADO. `P63 absence classifier = DEFERRED`.
+
+### Criterio de cierre revisado (#46 seccion 9)
+
+B1:
+  catalog_key -> TARGET declarado -> shareClassFIGI / identidad economica
+  con:
+    - clave declarada unica;
+    - cardinalidad independiente del mapping;
+    - unidad economica compatible con P38;
+    - separacion cardinalidad / denominador ponderado;
+    - mapping fallido no altera TARGET.
+
+B2:
+  period_end -> exactamente 1 snapshot valido
+  + 0 fail-closed + 1 OK + >1 ambiguous + hash incorrecto fail-closed
+  + sin backdating + evidencia historica no modificada.
+
+B3:
+  Test explicito:
+    Original -> RESTATEMENT -> knowledge_date = fecha RESTATEMENT.
+    Original -> NEW HOLDINGS -> posicion original: fecha original;
+                                posicion nueva: fecha amendment.
+  filing posterior NO produce conocimiento anterior.
+
+Global:
+  P65 PASS + P66 PASS + nuevos PASS + compileall + pyflakes
+  + sin regresion nueva.
+
+### Estado operativo
+
+    A.6.0                  CLOSED
+    A.6.2-bis v3           NO-GO IMPLEMENTATION
+    ARQUITECTURA           APPROVED CONDITIONAL
+    B1 TARGET              BLOCKED - unidad contractual
+    B2 POINT-IN-TIME       APPROVED CONDITIONAL
+    B3 KNOWLEDGE_DATE      BLOCKED - NEW HOLDINGS
+    A.6.3                  BLOCKED
+    A.6.4                  BLOCKED
+    F2.4-CLOSE             BLOCKED
+    DROP_DUP               NOT AUTHORIZED
+
+**Conclusion: v4 que cierre A (B1) + B (B3) sin heuristicas ni
+modificacion contractual -> apta para GO DE IMPLEMENTACION.**
+
+---
+
 Fin del registro de dictamenes.
 
 
