@@ -119,3 +119,25 @@ Deterministico. Sin red. Sin datetime.now().
 - A.6.4-v2: `evidence/nipc_gate0_top2000_v2/`.
 - Dictamenes: #72, #73, #74.
 - Estado vigente: `ESTADO_DECLARADO.md` seccion 8 (H-10.1).
+
+## Provenance de los inputs (H-07, resuelto 2026-09-21)
+
+Hashes SHA-256 de los inputs que produjeron el diagnostico:
+
+**Snapshot B2-PIT + mappings:**
+
+| Fichero | SHA-256 (prefijo) |
+|---|---|
+| snapshot_20260921_01.csv | `e5d8f9c8...` |
+| radar_target_catalog.csv | `e5d8f9c8...` (mismo contenido) |
+| cusip_ticker_exceptions.csv | `6f545880...` |
+| cusip_equivalence.csv | `21a88790...` |
+| catalog_manifest.json | `2fa5eee5...` |
+| catalog_membership.csv | `ad59cc91...` |
+| catalog_assignments.csv | `287061f6...` |
+
+**13F parquets Q4 2025 / Q1 2026:** hashes completos en `HASHES.txt`
+y en `data/manifests/sec_13f_*.json`.
+
+La cadena input -> codigo -> resultado es reconstruible a partir de
+los hashes registrados. Ver `HASHES.txt`.

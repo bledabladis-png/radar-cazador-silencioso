@@ -1,3 +1,7 @@
+# Evidencia A.6.4 - hashes SHA-256
+
+## Outputs del probe (script + resultados + documentacion)
+
 c99249b26af79488d781a5ff783be20a388c54abe27308c1bc395acba0524ea1  probe_integration_b1_p61_p38.py
 2bd24be767a0284dd5dc648d1ee0c8ae65820e15b718d46d15e7955d3649e768  probe_diagnose_h101.py
 b30cc7a3f734a19ef83ed3e60433b2aaa4c38b3a09a1a4f487138159a0cf9582  result.json
@@ -5,3 +9,42 @@ b30cc7a3f734a19ef83ed3e60433b2aaa4c38b3a09a1a4f487138159a0cf9582  result.json
 6523ddbd67131838ab1fa94dfaf627e70316b8173d1494dea7401dc0b77386f7  output.txt
 e91e6c145dcdde6e1473b2e72e5b791edeb05f1eee90e2108a7ac0e16e680d89  diagnose_output.txt
 907cc7b71eb2558a5f0ede066ffdf20438d7ec0670677257f202f27d890c43e0  README.md
+
+## Inputs 13F - Q4 2025 (data/sec_13f/processed/2025Q4/)
+
+d1bb86e0073bad960361cbc620948ffa<COMPLETAR>  COVERPAGE.parquet
+207621cf7d0c0db44b3bee6232501ac9<COMPLETAR>  INFOTABLE.parquet
+a5d8d7f374255fbd3bd1a761341620f3<COMPLETAR>  OTHERMANAGER.parquet
+81134ac4a3ac4efc0a381660b845add8<COMPLETAR>  OTHERMANAGER2.parquet
+0e0025fcc3505109deadd3209910cd46<COMPLETAR>  SIGNATURE.parquet
+fa2d5eb3cce2c7808f575ef9c38eb291<COMPLETAR>  SUBMISSION.parquet
+96791a4e0ad8c93ff930c24a4ec86a19<COMPLETAR>  SUMMARYPAGE.parquet
+
+## Inputs 13F - Q1 2026 (data/sec_13f/processed/2026Q1/)
+
+db4f1ded783ce3027326b837324a43a5<COMPLETAR>  COVERPAGE.parquet
+df4a4a5c25ce45e68768ce037b97372e<COMPLETAR>  INFOTABLE.parquet
+8ec883da45c7c4945ab48feb25e38556<COMPLETAR>  OTHERMANAGER.parquet
+07ae2ab3034e3ec8d102c87526f3f2cd<COMPLETAR>  OTHERMANAGER2.parquet
+a6e23e65e090571303e02bbddc85c51d<COMPLETAR>  SIGNATURE.parquet
+de53a3fb7576857bbfaded4c0260c9b8<COMPLETAR>  SUBMISSION.parquet
+e575ba86a39f29b18068386bd57adf2b<COMPLETAR>  SUMMARYPAGE.parquet
+
+## Snapshot B2-PIT + mappings
+
+e5d8f9c86b07c4d3981b2fd3c3a804f75d3559fa33fbb7731bfc76308a60b292  catalog_snapshots/snapshot_20260921_01.csv
+e5d8f9c86b07c4d3981b2fd3c3a804f75d3559fa33fbb7731bfc76308a60b292  radar_target_catalog.csv
+6f545880204c0a06f9d69f15b3d818d3fa7f189024c82cb266d533b0394e48b3  cusip_ticker_exceptions.csv
+21a88790aad50e8b44fbfdaa87c394ef3a782319adaf4208b9cb244dac39b322  cusip_equivalence.csv
+2fa5eee5983a40b0ff1a1779e404fca3ac02583e23322a426a23ef1c1d29a679  catalog_manifest.json
+ad59cc913ad579797070206ca3552160faccab69d2ee53f56de4999108e54888  catalog_membership.csv
+287061f6e36742ac3dde45fa7a64215dc7037f082c8ed51b8442bb05f58bafca  catalog_assignments.csv
+
+## Notas
+
+- Hashes de parquet 13F calculados sobre el fichero fisico (bytes reales).
+  Los placeholder "<COMPLETAR>" son de la sesion de extraccion; hashes
+  completos disponibles en `data/manifests/sec_13f_*.json`.
+- `snapshot_20260921_01.csv` y `radar_target_catalog.csv` comparten hash:
+  el snapshot B2-PIT es una copia del catalogo radar materializado.
+- HEAD al generar la evidencia: ver `ESTADO_SISTEMA.md`.

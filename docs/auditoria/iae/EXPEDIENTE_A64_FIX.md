@@ -128,6 +128,11 @@ Adicional a A1:
 
 ## 7. Evidencia adjunta
 
+**H-07 RESUELTO (2026-09-21):** hashes SHA-256 de inputs 13F Q4/Q1 +
+snapshot B2-PIT + mappings anadidos a `HASHES.txt` y `README.md`
+seccion "Provenance de los inputs". Cadena input -> codigo -> resultado
+reconstruible.
+
 - `probe_diagnose_h101.py` - probe deterministico del diagnostico.
 - `diagnose_output.txt` - salida cruda.
 - `diagnose_result.json` - resultado estructurado.
