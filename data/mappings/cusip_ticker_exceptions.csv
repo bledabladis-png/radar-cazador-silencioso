@@ -1,7 +1,7 @@
 CUSIP,ticker,valid_from,valid_to,source,reason,title_of_class,verified_by
-26614N102,DD,2026-03-31,2026-03-31,SEC-EDGAR,CUSIP observado para DuPont de Nemours en el periodo 13F Q1 2026,COM,manual
-438516106,HON,2026-03-31,2026-03-31,SEC-EDGAR,CUSIP observado para Honeywell International en el periodo 13F Q1 2026; sustituido posteriormente tras reverse split efectivo 2026-06-29,COM,manual
-30231G102,XOM,2026-03-31,2026-03-31,SEC-EDGAR,CUSIP observado para Exxon Mobil en el periodo 13F Q1 2026,COM,manual
+26614N102,DD,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado para DuPont de Nemours en el periodo 13F Q1 2026,COM,manual
+438516106,HON,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado para Honeywell International en el periodo 13F Q1 2026; sustituido posteriormente tras reverse split efectivo 2026-06-29,COM,manual
+30231G102,XOM,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado para Exxon Mobil en el periodo 13F Q1 2026,COM,manual
 084670702,BRK-B,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado para Berkshire Hathaway Cl B en el periodo 13F Q1 2026,CL B NEW,manual
 10950A106,BTSG,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado para BrightSpring Health Services en el periodo 13F Q1 2026,COM,manual
 14174T107,CTRE,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado para CareTrust REIT en el periodo 13F Q1 2026,COM,manual
