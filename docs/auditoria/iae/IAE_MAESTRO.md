@@ -3,7 +3,7 @@
 Documento unico del modulo IAE. Estado, arquitectura, verificacion.
 
 **Actualizado:** 2026-09-23
-**HEAD:** bcf454d (verificar con git al arrancar)
+**HEAD:** 7caa86b (verificar con git al arrancar)
 
 **Que es este documento.** Describe el modulo IAE tal como esta
 implementado y verificado. No certifica cumplimiento de contratos
@@ -1695,13 +1695,18 @@ no como conteo exhaustivo. Conteo autoritativo del modulo (42 ficheros,
 
 Esta seccion documenta la validacion completa del motor sobre datos reales
 de los dos trimestres disponibles. Todos los números fueron medidos el
-2026-09-22 sobre el repositorio en HEAD b817858, con pandas 2.3.3.
+2026-09-22/23 sobre el repositorio en HEAD 7caa86b, con pandas 2.3.3.
+La primera ejecución se hizo sobre b817858 (2026-09-22T22:20:44Z);
+la cadena A+B+C posterior no modifica la ruta E2E (delta_shares + nipc)
+y el motor fue reejecutado sobre 7caa86b (2026-09-22T23:48:30Z) con
+resultado identico. Los sha256 de INFOTABLE no cambian entre ejecuciones.
 
 Cadena forense (A.1, ver `scripts/iae_reconciliation_b1.py`):
 
     sha256 INFOTABLE 2025Q4: 207621CF7D0C0DB44B3BEE6232501AC9FD07B4AF9ABF6EDF7946C6BF9E009536
     sha256 INFOTABLE 2026Q1: DF4A4A5C25CE45E68768CE037B97372EF46B059C782F6C335F0B3FA37950C7D2
-    timestamp UTC:           2026-09-22T22:20:44Z
+    timestamp UTC:           2026-09-22T23:48:30Z (reejecucion sobre 7caa86b)
+    sha256 json B1:          outputs/audit/b1_reconciliation/20260922T234830Z_b1_final.json
 
 ### 12.1. Estado inicial (antes de los fixes)
 
