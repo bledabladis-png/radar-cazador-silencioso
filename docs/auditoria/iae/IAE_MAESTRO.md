@@ -37,7 +37,7 @@ Opera de forma aislada del pipeline productivo del radar sectorial.
 | Funciones publicas | 110 |
 | Ficheros de test | 42 |
 | Tests que pasan | 758 |
-| Cobertura de lineas | 83% |
+| Cobertura de lineas | 81% |
 | Integrado en produccion | NO (aislado por diseno) |
 
 El conteo de tests sigue el criterio: ficheros `tests/test_*.py` que
@@ -158,7 +158,7 @@ a `daily_run.yml` es una decision futura, no un hecho actual.
 
 Las 110 funciones estan invocadas al menos una vez en la suite de tests.
 Esto no equivale a verificacion exhaustiva. La cobertura de lineas es
-83% (ver §3.2). Los 4 ficheros con cobertura inferior al 80% se
+81% (ver §3.2). Los 6 ficheros con cobertura inferior al 80% se
 declaran como riesgo pendiente, no como deuda que "subira sola".
 
 ### 3.2 Cobertura de tests
@@ -367,7 +367,8 @@ de FIGI por OpenFIGI tras corporate action.
 ### 5.2 Deuda de cobertura
 
 - `timestamps.py` (20%), `openfigi_client.py` (31%),
-  `reporting_dedup.py` (55%), `temporal_validity.py` (79%).
+  `target_universe.py` (31%), `reporting_dedup.py` (55%),
+  `security_type.py` (64%), `temporal_validity.py` (79%).
   Subira cuando el modulo se integre en produccion.
 
 ### 5.3 Deuda de datos
