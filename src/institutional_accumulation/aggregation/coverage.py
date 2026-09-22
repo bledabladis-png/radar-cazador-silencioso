@@ -21,6 +21,11 @@ from dataclasses import dataclass, field
 from typing import Optional
 
 
+# C10 (2026-09-23): threshold de coverage_quality. Alineado con
+# guard_coverage.py (0.95) y con la politica del PROMPT_MAESTRO.
+COVERAGE_COMPLETE_THRESHOLD = 0.95
+
+
 @dataclass(frozen=True)
 class PositionRecord:
     """Registro tipado de una posicion observada (F2.4 regla #4).
@@ -128,9 +133,13 @@ def compute_contractual_coverage(target_q4, target_q1, records_q4, records_q1):
       coverage_current                 float | None
       paired_security_coverage         float | None
       paired_weighted_share_coverage   float | None
-      coverage_status                  "VALID" | "UNAVAILABLE"
+      coverage_status                  "VALID" | "UNAVAILABLE"  (legacy)
       unmapped_count_previous          int
       unmapped_count_current           int
+      coverage_available               bool   (C10: medible, no bueno)
+      coverage_quality                 "UNAVAILABLE" | "PARTIAL" | "COMPLETE"
+                                       (C10: COMPLETE exige las DOS
+                                       dimensiones >= 0.95)
 
     A2 c4/5 (auditor Q2 + Q5):
       - coverage_previous = len(res_q4 INTERSECT tq4) / len(tq4).
@@ -205,6 +214,23 @@ def compute_contractual_coverage(target_q4, target_q1, records_q4, records_q1):
         paired_weighted = None
         coverage_status = "UNAVAILABLE"
 
+    # C10 (2026-09-23): coverage_available y coverage_quality.
+    # coverage_available = True si la cobertura contractual es medible
+    #   (TARGET_PAIRWISE no vacio). NO significa "cobertura buena".
+    # coverage_quality exige simultaneamente las dos dimensiones
+    #   (paired_security_coverage Y paired_weighted_share_coverage)
+    #   >= COVERAGE_COMPLETE_THRESHOLD para declarar COMPLETE.
+    coverage_available = bool(target_pairwise)
+    if not coverage_available:
+        coverage_quality = "UNAVAILABLE"
+    elif (paired_security_coverage is not None
+          and paired_weighted is not None
+          and paired_security_coverage >= COVERAGE_COMPLETE_THRESHOLD
+          and paired_weighted >= COVERAGE_COMPLETE_THRESHOLD):
+        coverage_quality = "COMPLETE"
+    else:
+        coverage_quality = "PARTIAL"
+
     # Regla #2 F2.4: unmapped_count es int, no float.
     unmapped_count_previous = len(all_q4) - len(res_q4)
     unmapped_count_current = len(all_q1) - len(res_q1)
@@ -227,4 +253,6 @@ def compute_contractual_coverage(target_q4, target_q1, records_q4, records_q1):
         "n_excluded_q1": stats_q1["n_excluded"],
         "excluded_by_status_q4": stats_q4["excluded_by_status"],
         "excluded_by_status_q1": stats_q1["excluded_by_status"],
+        "coverage_available": coverage_available,
+        "coverage_quality": coverage_quality,
     }

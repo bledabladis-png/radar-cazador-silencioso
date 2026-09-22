@@ -616,3 +616,112 @@ def test_p38_coverage_expone_stats_q4_q1():
     assert result["excluded_by_status_q4"] == {"TEMPORAL_UNVERIFIED": 1}
     assert result["excluded_by_status_q1"] == {}
 
+# --- C10 (2026-09-23): coverage_available + coverage_quality ---
+
+
+def test_p38_coverage_available_false_si_target_pairwise_vacio():
+    """Sin TARGET_PAIRWISE: coverage_available=False, quality=UNAVAILABLE."""
+    from src.institutional_accumulation.aggregation.coverage import (
+        compute_contractual_coverage)
+    result = compute_contractual_coverage(set(), set(), [], [])
+    assert result["coverage_available"] is False
+    assert result["coverage_quality"] == "UNAVAILABLE"
+
+
+def test_p38_coverage_available_true_si_target_pairwise_no_vacio():
+    """Con TARGET_PAIRWISE: coverage_available=True (aunque sea 0% cubierto)."""
+    from src.institutional_accumulation.aggregation.coverage import (
+        compute_contractual_coverage)
+    records_q4 = [_rec("FIGI_A", "VERIFIED", 1.0, period="Q4")]
+    records_q1 = [_rec("FIGI_A", "VERIFIED", 1.0, period="Q1")]
+    # TARGET_PAIRWISE = {FIGI_A, FIGI_B} no vacio.
+    result = compute_contractual_coverage(
+        {"FIGI_A", "FIGI_B"}, {"FIGI_A", "FIGI_B"},
+        records_q4, records_q1)
+    assert result["coverage_available"] is True
+
+
+def test_p38_coverage_quality_complete_si_ambas_dimensiones_altas():
+    """COMPLETE exige paired_security y paired_weighted >= 0.95."""
+    from src.institutional_accumulation.aggregation.coverage import (
+        compute_contractual_coverage)
+    records_q4 = [_rec("FIGI_A", "VERIFIED", 1.0, period="Q4")]
+    records_q1 = [_rec("FIGI_A", "VERIFIED", 1.0, period="Q1")]
+    result = compute_contractual_coverage(
+        {"FIGI_A"}, {"FIGI_A"}, records_q4, records_q1)
+    assert result["coverage_quality"] == "COMPLETE"
+    assert result["paired_security_coverage"] == 1.0
+    assert result["paired_weighted_share_coverage"] == 1.0
+
+
+def test_p38_coverage_quality_partial_si_security_coverage_baja():
+    """Con security coverage < 0.95 pero weighted alto: PARTIAL, no COMPLETE."""
+    from src.institutional_accumulation.aggregation.coverage import (
+        compute_contractual_coverage)
+    # TARGET_PAIRWISE = {FIGI_A, FIGI_B}, solo FIGI_A VERIFIED.
+    # security = 1/2 = 0.5 < 0.95. weighted: FIGI_A peso 100, FIGI_B peso 1.
+    # weighted = 100 / 101 = 0.99 >= 0.95. Debe ser PARTIAL igualmente.
+    records_q4 = [
+        _rec("FIGI_A", "VERIFIED", 100.0, period="Q4"),
+        _rec("FIGI_B", "TEMPORAL_UNVERIFIED", 1.0, period="Q4"),
+    ]
+    records_q1 = [
+        _rec("FIGI_A", "VERIFIED", 100.0, period="Q1"),
+        _rec("FIGI_B", "TEMPORAL_UNVERIFIED", 1.0, period="Q1"),
+    ]
+    result = compute_contractual_coverage(
+        {"FIGI_A", "FIGI_B"}, {"FIGI_A", "FIGI_B"},
+        records_q4, records_q1)
+    assert result["coverage_quality"] == "PARTIAL"
+    assert result["paired_security_coverage"] == 0.5
+    assert result["paired_weighted_share_coverage"] > 0.95
+
+
+def test_p38_coverage_quality_partial_si_weighted_bajo():
+    """Con weighted < 0.95 pero security alto: PARTIAL, no COMPLETE."""
+    from src.institutional_accumulation.aggregation.coverage import (
+        compute_contractual_coverage)
+    # TARGET_PAIRWISE con 20 FIGIs. 19 VERIFIED peso 1, 1 UNRESOLVED peso 1000.
+    # security = 19/20 = 0.95 >= 0.95 (justo en el threshold).
+    # weighted = 19 / 1019 = 0.0186 < 0.95.
+    targets = {"FIGI_" + str(i).zfill(3) for i in range(20)}
+    records_q4 = [_rec(f, "VERIFIED", 1.0, period="Q4") for f in targets - {"FIGI_019"}]
+    records_q4.append(_rec("FIGI_019", "UNRESOLVED", 1000.0, period="Q4"))
+    records_q1 = list(records_q4)
+    result = compute_contractual_coverage(targets, targets, records_q4, records_q1)
+    assert result["coverage_quality"] == "PARTIAL"
+    assert result["paired_security_coverage"] == 0.95
+    assert result["paired_weighted_share_coverage"] < 0.95
+
+
+def test_p38_coverage_quality_no_colapsa_con_status():
+    """coverage_status sigue siendo VALID aunque quality sea PARTIAL."""
+    from src.institutional_accumulation.aggregation.coverage import (
+        compute_contractual_coverage)
+    records_q4 = [
+        _rec("FIGI_A", "VERIFIED", 1.0, period="Q4"),
+        _rec("FIGI_B", "TEMPORAL_UNVERIFIED", 1.0, period="Q4"),
+    ]
+    records_q1 = list(records_q4)
+    result = compute_contractual_coverage(
+        {"FIGI_A", "FIGI_B"}, {"FIGI_A", "FIGI_B"},
+        records_q4, records_q1)
+    # Legacy intacto.
+    assert result["coverage_status"] == "VALID"
+    # Nuevo, mas estricto.
+    assert result["coverage_quality"] == "PARTIAL"
+
+
+def test_p38_coverage_available_y_quality_presentes_siempre():
+    """Ambos campos deben estar siempre en el dict de retorno."""
+    from src.institutional_accumulation.aggregation.coverage import (
+        compute_contractual_coverage)
+    r1 = compute_contractual_coverage(set(), set(), [], [])
+    r2 = compute_contractual_coverage(
+        {"FIGI_A"}, {"FIGI_A"},
+        [_rec("FIGI_A", "VERIFIED", 1.0, period="Q4")],
+        [_rec("FIGI_A", "VERIFIED", 1.0, period="Q1")])
+    for r in (r1, r2):
+        assert "coverage_available" in r
+        assert "coverage_quality" in r
+
