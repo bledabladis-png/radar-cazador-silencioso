@@ -1,0 +1,2539 @@
+Re-query OpenFIGI BRK-B + MOG-A
+Run: 2026-09-22T02:10:48
+API key presente: True
+Payload sha256: 62c63f2da1e2a3880bda83d03707dc9a23a6fc85dd713fa0fa73523aa55c20a2
+Raw sha256: c8f943186201530fb9d221b04aafa8c9c418bf0f275eba16910d8be5a0323f8d
+
+======================================================================
+
+CUSIP: 084670702  (radar_ticker esperado: BRK-B)
+  ok:     True
+  error:  None
+  n_rows: 215
+    row[0]:
+      figi:             BBG000DWG505
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRK/B
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         US
+    row[1]:
+      figi:             BBG000DWG587
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRK/B
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         UA
+    row[2]:
+      figi:             BBG000DWG5L2
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRK/B
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         UC
+    row[3]:
+      figi:             BBG000DWH8Q0
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRK/B
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         UN
+    row[4]:
+      figi:             BBG000DWH997
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRK/B
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         UP
+    row[5]:
+      figi:             BBG000DWHB29
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRK/B
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         UB
+    row[6]:
+      figi:             BBG000DWHBB9
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRK/B
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         UT
+    row[7]:
+      figi:             BBG000DWHBK9
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRK/B
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         UM
+    row[8]:
+      figi:             BBG000DWHCM5
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRK/B
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         UX
+    row[9]:
+      figi:             BBG000DWHGG3
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRK/B
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         UD
+    row[10]:
+      figi:             BBG000DWHJP7
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRK/B
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         UF
+    row[11]:
+      figi:             BBG000DWHK74
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRK/B
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         VY
+    row[12]:
+      figi:             BBG000DWHKY4
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRK/B
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         VJ
+    row[13]:
+      figi:             BBG000DWHLJ9
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRK/B
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         VK
+    row[14]:
+      figi:             BBG000FQHLT9
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRYN
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         GR
+    row[15]:
+      figi:             BBG000FQHMF2
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRYN
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         GF
+    row[16]:
+      figi:             BBG000FQJP63
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRYN
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         GD
+    row[17]:
+      figi:             BBG000FQJQ70
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRYN
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         GY
+    row[18]:
+      figi:             BBG000FQJRZ7
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRYN
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         GS
+    row[19]:
+      figi:             BBG000FQJSN8
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRYN
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         GM
+    row[20]:
+      figi:             BBG000FQKX19
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRYN
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         GI
+    row[21]:
+      figi:             BBG000FQKXR1
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRYN
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         GH
+    row[22]:
+      figi:             BBG000NSFGH2
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRK/B*
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         MM
+    row[23]:
+      figi:             BBG000NSFJC1
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRK/B*
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         MF
+    row[24]:
+      figi:             BBG000RYR4S7
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRYN
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         TH
+    row[25]:
+      figi:             BBG006TLNCC3
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRK/B
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         SW
+    row[26]:
+      figi:             BBG006TLNCF0
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRK/B
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         SE
+    row[27]:
+      figi:             BBG006TLNCK4
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRK/B
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         BW
+    row[28]:
+      figi:             BBG007255SX7
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRK/BEUR
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         EO
+    row[29]:
+      figi:             BBG007255T01
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRK/BEUR
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         XH
+    row[30]:
+      figi:             BBG007255T29
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRK/BEUR
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         XF
+    row[31]:
+      figi:             BBG007255T47
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRK/BEUR
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         XE
+    row[32]:
+      figi:             BBG007255T56
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRK/BEUR
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         XJ
+    row[33]:
+      figi:             BBG007255T65
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRK/BEUR
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         XL
+    row[34]:
+      figi:             BBG007255T74
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRK/BEUR
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         XG
+    row[35]:
+      figi:             BBG007255T83
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRK/BEUR
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         XO
+    row[36]:
+      figi:             BBG007255TF5
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRK/BEUR
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         XA
+    row[37]:
+      figi:             BBG007255TG4
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRK/BEUR
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         E1
+    row[38]:
+      figi:             BBG007255TJ1
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRK/BEUR
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         XW
+    row[39]:
+      figi:             BBG007255TK9
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRK/BEUR
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         XU
+    row[40]:
+      figi:             BBG007255TM7
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRK/BEUR
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         XV
+    row[41]:
+      figi:             BBG007255TP4
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRK/BEUR
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         EU
+    row[42]:
+      figi:             BBG0077GTX25
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRYN
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         QT
+    row[43]:
+      figi:             BBG007F5VS73
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRK/BCHF
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         EO
+    row[44]:
+      figi:             BBG007F5VSB8
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRK/BCHF
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         XH
+    row[45]:
+      figi:             BBG007F5VSD6
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRK/BCHF
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         XF
+    row[46]:
+      figi:             BBG007F5VSG3
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRK/BCHF
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         XE
+    row[47]:
+      figi:             BBG007F5VSJ0
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRK/BCHF
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         XJ
+    row[48]:
+      figi:             BBG007F5VSK8
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRK/BCHF
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         XL
+    row[49]:
+      figi:             BBG007F5VSL7
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRK/BCHF
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         XG
+    row[50]:
+      figi:             BBG007F5VSM6
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRK/BCHF
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         XO
+    row[51]:
+      figi:             BBG007F5VSS0
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRK/BCHF
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         XA
+    row[52]:
+      figi:             BBG007F5VST9
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRK/BCHF
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         E1
+    row[53]:
+      figi:             BBG007F5VSW5
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRK/BCHF
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         XW
+    row[54]:
+      figi:             BBG007F5VSX4
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRK/BCHF
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         XU
+    row[55]:
+      figi:             BBG007F5VSZ2
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRK/BCHF
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         XV
+    row[56]:
+      figi:             BBG007F5VT17
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRK/BCHF
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         EU
+    row[57]:
+      figi:             BBG0089KKRH8
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRK/BUSD
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         EO
+    row[58]:
+      figi:             BBG0089KKRL3
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRK/BUSD
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         XH
+    row[59]:
+      figi:             BBG0089KKRN1
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRK/BUSD
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         XF
+    row[60]:
+      figi:             BBG0089KKRQ8
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRK/BUSD
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         XE
+    row[61]:
+      figi:             BBG0089KKRR7
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRK/BUSD
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         XJ
+    row[62]:
+      figi:             BBG0089KKRS6
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRK/BUSD
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         XL
+    row[63]:
+      figi:             BBG0089KKRT5
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRK/BUSD
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         XG
+    row[64]:
+      figi:             BBG0089KKRV2
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRK/BUSD
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         XO
+    row[65]:
+      figi:             BBG0089KKS04
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRK/BUSD
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         XA
+    row[66]:
+      figi:             BBG0089KKS13
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRK/BUSD
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         E1
+    row[67]:
+      figi:             BBG0089KKS31
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRK/BUSD
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         XW
+    row[68]:
+      figi:             BBG0089KKS40
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRK/BUSD
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         XU
+    row[69]:
+      figi:             BBG0089KKS68
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRK/BUSD
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         XV
+    row[70]:
+      figi:             BBG0089KKS86
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRK/BUSD
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         EU
+    row[71]:
+      figi:             BBG009STMY70
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRK/B
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         PE
+    row[72]:
+      figi:             BBG00DJDFRW1
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRK/B
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         VF
+    row[73]:
+      figi:             BBG00FZMG9L9
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRYN
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         GZ
+    row[74]:
+      figi:             BBG00HLHD7W6
+      shareClassFIGI:   BBG001S90346
+      ticker:           4BRK
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         TE
+    row[75]:
+      figi:             BBG00JN87SW1
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRK/BEUR
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         XX
+    row[76]:
+      figi:             BBG00JN891R4
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRK/BCHF
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         XX
+    row[77]:
+      figi:             BBG00JN8BJT0
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRK/BUSD
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         XX
+    row[78]:
+      figi:             BBG00JPYB6J0
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRK/BGBP
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         X2
+    row[79]:
+      figi:             BBG00JPYB6M6
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRK/BGBP
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         XH
+    row[80]:
+      figi:             BBG00JPYB6P3
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRK/BGBP
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         XF
+    row[81]:
+      figi:             BBG00JPYB6R1
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRK/BGBP
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         XE
+    row[82]:
+      figi:             BBG00JPYB6S0
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRK/BGBP
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         XJ
+    row[83]:
+      figi:             BBG00JPYB6T9
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRK/BGBP
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         XL
+    row[84]:
+      figi:             BBG00JPYB6V6
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRK/BGBP
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         XG
+    row[85]:
+      figi:             BBG00JPYB6W5
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRK/BGBP
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         XO
+    row[86]:
+      figi:             BBG00JPYB726
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRK/BGBP
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         XA
+    row[87]:
+      figi:             BBG00JPYB735
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRK/BGBP
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         E1
+    row[88]:
+      figi:             BBG00JPYB753
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRK/BGBP
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         XW
+    row[89]:
+      figi:             BBG00JPYB762
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRK/BGBP
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         XU
+    row[90]:
+      figi:             BBG00JPYB771
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRK/BGBP
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         XV
+    row[91]:
+      figi:             BBG00JPYB7B6
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRK/BGBP
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         XQ
+    row[92]:
+      figi:             BBG00JPYB7C5
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRK/BGBP
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         XX
+    row[93]:
+      figi:             BBG00JPYB7D4
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRK/BGBP
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         XZ
+    row[94]:
+      figi:             BBG00JPYB7H0
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRK/BGBP
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         EU
+    row[95]:
+      figi:             BBG00JRQRTN3
+      shareClassFIGI:   BBG001S90346
+      ticker:           0R37
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         LN
+    row[96]:
+      figi:             BBG00JX0PGG1
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRK/B*
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         MU
+    row[97]:
+      figi:             BBG00KTDTPN3
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRKB
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         AV
+    row[98]:
+      figi:             BBG00LB9FKF4
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRKN
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         PO
+    row[99]:
+      figi:             BBG00LB9FY73
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRKN
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         L3
+    row[100]:
+      figi:             BBG00LB9G3D3
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRKN
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         B3
+    row[101]:
+      figi:             BBG00PPY7LW3
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRK/BEUR
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         EP
+    row[102]:
+      figi:             BBG00PPY7LY1
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRK/BEUR
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         EZ
+    row[103]:
+      figi:             BBG00PPY7M06
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRK/BUSD
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         EP
+    row[104]:
+      figi:             BBG00PPY7M24
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRK/BUSD
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         EZ
+    row[105]:
+      figi:             BBG00PPY7M42
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRK/BCHF
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         EP
+    row[106]:
+      figi:             BBG00PPY7M60
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRK/BCHF
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         EZ
+    row[107]:
+      figi:             BBG00Q6S04B3
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRK/BUSD
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         X2
+    row[108]:
+      figi:             BBG00Q6SF8H2
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRK/BGBP
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         X2
+    row[109]:
+      figi:             BBG00QFZ2NK3
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRK/BEUR
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         X1
+    row[110]:
+      figi:             BBG00QFZ3XH4
+      shareClassFIGI:   None
+      ticker:           BRK/BCHF
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         X1
+    row[111]:
+      figi:             BBG00QFZ5F54
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRK/BUSD
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         X1
+    row[112]:
+      figi:             BBG00QFZLWR5
+      shareClassFIGI:   None
+      ticker:           BRK/BGBP
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         X1
+    row[113]:
+      figi:             BBG00QPGQ162
+      shareClassFIGI:   BBG001S90346
+      ticker:           0R37L
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         PO
+    row[114]:
+      figi:             BBG00QPGRKR6
+      shareClassFIGI:   BBG001S90346
+      ticker:           0R37L
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         L3
+    row[115]:
+      figi:             BBG00QPGSHH3
+      shareClassFIGI:   BBG001S90346
+      ticker:           0R37L
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         B3
+    row[116]:
+      figi:             BBG00QXQYF52
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRYND
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         PO
+    row[117]:
+      figi:             BBG00QXQYWC7
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRYND
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         L3
+    row[118]:
+      figi:             BBG00QXQZ3L0
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRYND
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         B3
+    row[119]:
+      figi:             BBG00THDNF82
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRK/B
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         VL
+    row[120]:
+      figi:             BBG00X1LS7C0
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRK/B
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         VG
+    row[121]:
+      figi:             BBG00X1Q6J91
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRK/B
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         VP
+    row[122]:
+      figi:             BBG00Y7B5JT5
+      shareClassFIGI:   BBG001S90346
+      ticker:           0R37L
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         L1
+    row[123]:
+      figi:             BBG00Y7BJ6M5
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRKN
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         L1
+    row[124]:
+      figi:             BBG00Y7BJ930
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRYND
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         L1
+    row[125]:
+      figi:             BBG00YJ5W980
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRK/BEUR
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         X9
+    row[126]:
+      figi:             BBG00YJ7G813
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRK/BUSD
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         X9
+    row[127]:
+      figi:             BBG00ZH8QBM9
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRK/BRUB
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         XS
+    row[128]:
+      figi:             BBG00ZH8QBN8
+      shareClassFIGI:   None
+      ticker:           BRK/BRUB
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         X2
+    row[129]:
+      figi:             BBG00ZH8QBQ5
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRK/BRUB
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         XH
+    row[130]:
+      figi:             BBG00ZH8QBS3
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRK/BRUB
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         XF
+    row[131]:
+      figi:             BBG00ZH8QBV9
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRK/BRUB
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         XE
+    row[132]:
+      figi:             BBG00ZH8QBX7
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRK/BRUB
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         XL
+    row[133]:
+      figi:             BBG00ZH8QBY6
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRK/BRUB
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         XG
+    row[134]:
+      figi:             BBG00ZH8QBZ5
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRK/BRUB
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         XO
+    row[135]:
+      figi:             BBG00ZH8QC38
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRK/BRUB
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         XA
+    row[136]:
+      figi:             BBG00ZH8QC47
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRK/BRUB
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         E1
+    row[137]:
+      figi:             BBG00ZH8QC65
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRK/BRUB
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         XW
+    row[138]:
+      figi:             BBG00ZH8QC74
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRK/BRUB
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         XU
+    row[139]:
+      figi:             BBG00ZH8QC92
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRK/BRUB
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         XV
+    row[140]:
+      figi:             BBG00ZH8QCC8
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRK/BRUB
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         XQ
+    row[141]:
+      figi:             BBG00ZH8QCD7
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRK/BRUB
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         XX
+    row[142]:
+      figi:             BBG00ZH8QCF5
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRK/BRUB
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         XZ
+    row[143]:
+      figi:             BBG00ZH8QCH3
+      shareClassFIGI:   None
+      ticker:           BRK/BRUB
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         X1
+    row[144]:
+      figi:             BBG00ZH8QCK9
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRK/BRUB
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         EU
+    row[145]:
+      figi:             BBG018H7MVW9
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRYN
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         LA
+    row[146]:
+      figi:             BBG018J18YB3
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRYN
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         LU
+    row[147]:
+      figi:             BBG01FRZGZ21
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRYND
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         EB
+    row[148]:
+      figi:             BBG01FRZH7B2
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRYND
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         IX
+    row[149]:
+      figi:             BBG01FRZHQP5
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRYND
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         I2
+    row[150]:
+      figi:             BBG01FSR1Q79
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRYND
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         S1
+    row[151]:
+      figi:             BBG01FSR1RD0
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRYND
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         S4
+    row[152]:
+      figi:             BBG01G4G57K0
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRKBCO
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         CB
+    row[153]:
+      figi:             BBG01G4G57L9
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRKBCO
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         CX
+    row[154]:
+      figi:             BBG01K3X3PQ1
+      shareClassFIGI:   BBG001S90346
+      ticker:           1BRK
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         IM
+    row[155]:
+      figi:             BBG01K3X3PT8
+      shareClassFIGI:   BBG001S90346
+      ticker:           1BRK
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         IF
+    row[156]:
+      figi:             BBG01L6XPB01
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRYND
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         BQ
+    row[157]:
+      figi:             BBG01L8XTV38
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRYND
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         QX
+    row[158]:
+      figi:             BBG01L8XTW45
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRYND
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         QE
+    row[159]:
+      figi:             BBG01N9ZCGL9
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRKBCL
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         CI
+    row[160]:
+      figi:             BBG01N9ZCGM8
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRKBCL
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         CC
+    row[161]:
+      figi:             BBG01NWNLJ07
+      shareClassFIGI:   BBG001S90346
+      ticker:           1BRKM
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         PO
+    row[162]:
+      figi:             BBG01NWNLLX6
+      shareClassFIGI:   BBG001S90346
+      ticker:           1BRKM
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         L1
+    row[163]:
+      figi:             BBG01NWNLQB9
+      shareClassFIGI:   BBG001S90346
+      ticker:           1BRKM
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         L3
+    row[164]:
+      figi:             BBG01NWNLTG8
+      shareClassFIGI:   BBG001S90346
+      ticker:           1BRKM
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         B3
+    row[165]:
+      figi:             BBG01QVZFSY4
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRKB
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         CI
+    row[166]:
+      figi:             BBG01QVZFSZ3
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRKB
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         CC
+    row[167]:
+      figi:             BBG01V7WKW45
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRK/B
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         OC
+    row[168]:
+      figi:             BBG01WXRW8R0
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRKB
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         PW
+    row[169]:
+      figi:             BBG01WZLLWF3
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRK/BPLN
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         EO
+    row[170]:
+      figi:             BBG01WZLLWG2
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRK/BPLN
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         X2
+    row[171]:
+      figi:             BBG01WZLLWJ9
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRK/BPLN
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         XH
+    row[172]:
+      figi:             BBG01WZLLWL6
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRK/BPLN
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         XF
+    row[173]:
+      figi:             BBG01WZLLWP2
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRK/BPLN
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         XJ
+    row[174]:
+      figi:             BBG01WZLLWQ1
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRK/BPLN
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         XL
+    row[175]:
+      figi:             BBG01WZLLWR0
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRK/BPLN
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         XG
+    row[176]:
+      figi:             BBG01WZLLWS9
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRK/BPLN
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         XO
+    row[177]:
+      figi:             BBG01WZLLWX3
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRK/BPLN
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         XA
+    row[178]:
+      figi:             BBG01WZLLWY2
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRK/BPLN
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         E1
+    row[179]:
+      figi:             BBG01WZLLX07
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRK/BPLN
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         XW
+    row[180]:
+      figi:             BBG01WZLLX16
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRK/BPLN
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         XU
+    row[181]:
+      figi:             BBG01WZLLX25
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRK/BPLN
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         XY
+    row[182]:
+      figi:             BBG01WZLLX34
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRK/BPLN
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         XV
+    row[183]:
+      figi:             BBG01WZLLX52
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRK/BPLN
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         XQ
+    row[184]:
+      figi:             BBG01WZLLX61
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRK/BPLN
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         XX
+    row[185]:
+      figi:             BBG01WZLLX70
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRK/BPLN
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         XZ
+    row[186]:
+      figi:             BBG01WZLLX98
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRK/BPLN
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         X1
+    row[187]:
+      figi:             BBG01WZLLXJ7
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRK/BPLN
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         EU
+    row[188]:
+      figi:             BBG01X4JVVJ7
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRK/B
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         OD
+    row[189]:
+      figi:             BBG01YTQHD35
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRK/BUSD
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         SW
+    row[190]:
+      figi:             BBG01YTQHD53
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRK/BUSD
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         SE
+    row[191]:
+      figi:             BBG021C26JS9
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRK/B
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         VT
+    row[192]:
+      figi:             BBG023NB7QM2
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRKBV
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         PO
+    row[193]:
+      figi:             BBG023NB7R31
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRKBV
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         L1
+    row[194]:
+      figi:             BBG023NB7RR5
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRKBV
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         L3
+    row[195]:
+      figi:             BBG023NB7TX4
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRKBV
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         B3
+    row[196]:
+      figi:             BBG023S1N5Y4
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRKZ
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         PO
+    row[197]:
+      figi:             BBG023S1N6C6
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRKZ
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         L1
+    row[198]:
+      figi:             BBG023S1N6Q1
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRKZ
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         L3
+    row[199]:
+      figi:             BBG023S1N7G0
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRKZ
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         B3
+    row[200]:
+      figi:             BBG023ZBB5D0
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRKZ
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         S1
+    row[201]:
+      figi:             BBG024065RL7
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRKBN
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         BQ
+    row[202]:
+      figi:             BBG024DKRBG9
+      shareClassFIGI:   BBG001S90346
+      ticker:           1BRKM
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         EB
+    row[203]:
+      figi:             BBG024DKRCN9
+      shareClassFIGI:   BBG001S90346
+      ticker:           1BRKM
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         IX
+    row[204]:
+      figi:             BBG024DKRJ54
+      shareClassFIGI:   BBG001S90346
+      ticker:           1BRKM
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         I2
+    row[205]:
+      figi:             BBG024YNVP83
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRK/DEUR
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         ER
+    row[206]:
+      figi:             BBG024YPMDN8
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRK/VEUR
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         ER
+    row[207]:
+      figi:             BBG0250B2DX4
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRK/BGBP
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         ER
+    row[208]:
+      figi:             BBG0250BKZW6
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRK/BEUR
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         ER
+    row[209]:
+      figi:             BBG0250BS6Z9
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRK/B
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         ER
+    row[210]:
+      figi:             BBG0250BZMY7
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRK/MEUR
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         ER
+    row[211]:
+      figi:             BBG0250DZ5R8
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRK/BMXN
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         ER
+    row[212]:
+      figi:             BBG0250GR7M1
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRK/BCHF
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         ER
+    row[213]:
+      figi:             BBG0252YVMN1
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRK/BL
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         ER
+    row[214]:
+      figi:             BBG0253BBWD1
+      shareClassFIGI:   BBG001S90346
+      ticker:           BRK/BZ
+      name:             BERKSHIRE HATHAWAY INC-CL B
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         ER
+  ASIGNACION:
+    share_class_figi: BBG001S90346
+
+CUSIP: 615394202  (radar_ticker esperado: MOG-A)
+  ok:     True
+  error:  None
+  n_rows: 99
+    row[0]:
+      figi:             BBG000BP7RH6
+      shareClassFIGI:   BBG001S5T922
+      ticker:           MOG/A
+      name:             MOOG INC-CLASS A
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         US
+    row[1]:
+      figi:             BBG000BP7RV0
+      shareClassFIGI:   BBG001S5T922
+      ticker:           MOG/A
+      name:             MOOG INC-CLASS A
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         UA
+    row[2]:
+      figi:             BBG000BP7S02
+      shareClassFIGI:   BBG001S5T922
+      ticker:           MOG/A
+      name:             MOOG INC-CLASS A
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         UC
+    row[3]:
+      figi:             BBG000BP7SD8
+      shareClassFIGI:   BBG001S5T922
+      ticker:           MOG/A
+      name:             MOOG INC-CLASS A
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         UN
+    row[4]:
+      figi:             BBG000BP7T82
+      shareClassFIGI:   BBG001S5T922
+      ticker:           MOG/A
+      name:             MOOG INC-CLASS A
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         UP
+    row[5]:
+      figi:             BBG000BP7TW5
+      shareClassFIGI:   BBG001S5T922
+      ticker:           MOG/A
+      name:             MOOG INC-CLASS A
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         UB
+    row[6]:
+      figi:             BBG000BP7V32
+      shareClassFIGI:   BBG001S5T922
+      ticker:           MOG/A
+      name:             MOOG INC-CLASS A
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         UT
+    row[7]:
+      figi:             BBG000BP7VD1
+      shareClassFIGI:   BBG001S5T922
+      ticker:           MOG/A
+      name:             MOOG INC-CLASS A
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         UM
+    row[8]:
+      figi:             BBG000BP7VQ7
+      shareClassFIGI:   BBG001S5T922
+      ticker:           MOG/A
+      name:             MOOG INC-CLASS A
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         UX
+    row[9]:
+      figi:             BBG000BP7Z24
+      shareClassFIGI:   BBG001S5T922
+      ticker:           MOG/A
+      name:             MOOG INC-CLASS A
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         UD
+    row[10]:
+      figi:             BBG000BP7ZZ8
+      shareClassFIGI:   BBG001S5T922
+      ticker:           MOG/A
+      name:             MOOG INC-CLASS A
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         UF
+    row[11]:
+      figi:             BBG000BP80Q4
+      shareClassFIGI:   BBG001S5T922
+      ticker:           MOG/A
+      name:             MOOG INC-CLASS A
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         VY
+    row[12]:
+      figi:             BBG000BP8164
+      shareClassFIGI:   BBG001S5T922
+      ticker:           MOG/A
+      name:             MOOG INC-CLASS A
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         VJ
+    row[13]:
+      figi:             BBG000BP82G1
+      shareClassFIGI:   BBG001S5T922
+      ticker:           MOG/A
+      name:             MOOG INC-CLASS A
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         VK
+    row[14]:
+      figi:             BBG000JHP469
+      shareClassFIGI:   BBG001S5T922
+      ticker:           MO7A
+      name:             MOOG INC-CLASS A
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         GR
+    row[15]:
+      figi:             BBG000JHP4X9
+      shareClassFIGI:   BBG001S5T922
+      ticker:           MO7A
+      name:             MOOG INC-CLASS A
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         GF
+    row[16]:
+      figi:             BBG000JHP5B0
+      shareClassFIGI:   BBG001S5T922
+      ticker:           MO7A
+      name:             MOOG INC-CLASS A
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         GD
+    row[17]:
+      figi:             BBG000JHP5Z4
+      shareClassFIGI:   BBG001S5T922
+      ticker:           MO7A
+      name:             MOOG INC-CLASS A
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         GY
+    row[18]:
+      figi:             BBG000JHP6K8
+      shareClassFIGI:   BBG001S5T922
+      ticker:           MO7A
+      name:             MOOG INC-CLASS A
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         GS
+    row[19]:
+      figi:             BBG000JHP7Q0
+      shareClassFIGI:   BBG001S5T922
+      ticker:           MO7A
+      name:             MOOG INC-CLASS A
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         GM
+    row[20]:
+      figi:             BBG00DJCX891
+      shareClassFIGI:   BBG001S5T922
+      ticker:           MOG/A
+      name:             MOOG INC-CLASS A
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         VF
+    row[21]:
+      figi:             BBG00JWTK7Z3
+      shareClassFIGI:   BBG001S5T922
+      ticker:           MO7A
+      name:             MOOG INC-CLASS A
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         TH
+    row[22]:
+      figi:             BBG00JX8XC01
+      shareClassFIGI:   BBG001S5T922
+      ticker:           MOG/AEUR
+      name:             MOOG INC-CLASS A
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         X2
+    row[23]:
+      figi:             BBG00JX8XC10
+      shareClassFIGI:   BBG001S5T922
+      ticker:           MOG/AEUR
+      name:             MOOG INC-CLASS A
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         XB
+    row[24]:
+      figi:             BBG00JX8XC38
+      shareClassFIGI:   BBG001S5T922
+      ticker:           MOG/AEUR
+      name:             MOOG INC-CLASS A
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         XH
+    row[25]:
+      figi:             BBG00JX8XC56
+      shareClassFIGI:   BBG001S5T922
+      ticker:           MOG/AEUR
+      name:             MOOG INC-CLASS A
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         XF
+    row[26]:
+      figi:             BBG00JX8XC74
+      shareClassFIGI:   BBG001S5T922
+      ticker:           MOG/AEUR
+      name:             MOOG INC-CLASS A
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         XE
+    row[27]:
+      figi:             BBG00JX8XC83
+      shareClassFIGI:   BBG001S5T922
+      ticker:           MOG/AEUR
+      name:             MOOG INC-CLASS A
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         XJ
+    row[28]:
+      figi:             BBG00JX8XC92
+      shareClassFIGI:   BBG001S5T922
+      ticker:           MOG/AEUR
+      name:             MOOG INC-CLASS A
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         XL
+    row[29]:
+      figi:             BBG00JX8XCB9
+      shareClassFIGI:   BBG001S5T922
+      ticker:           MOG/AEUR
+      name:             MOOG INC-CLASS A
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         XG
+    row[30]:
+      figi:             BBG00JX8XCC8
+      shareClassFIGI:   BBG001S5T922
+      ticker:           MOG/AEUR
+      name:             MOOG INC-CLASS A
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         XO
+    row[31]:
+      figi:             BBG00JX8XCH3
+      shareClassFIGI:   BBG001S5T922
+      ticker:           MOG/AEUR
+      name:             MOOG INC-CLASS A
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         XS
+    row[32]:
+      figi:             BBG00JX8XCJ1
+      shareClassFIGI:   BBG001S5T922
+      ticker:           MOG/AEUR
+      name:             MOOG INC-CLASS A
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         XA
+    row[33]:
+      figi:             BBG00JX8XCK9
+      shareClassFIGI:   BBG001S5T922
+      ticker:           MOG/AEUR
+      name:             MOOG INC-CLASS A
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         E1
+    row[34]:
+      figi:             BBG00JX8XCM7
+      shareClassFIGI:   BBG001S5T922
+      ticker:           MOG/AEUR
+      name:             MOOG INC-CLASS A
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         XW
+    row[35]:
+      figi:             BBG00JX8XCN6
+      shareClassFIGI:   BBG001S5T922
+      ticker:           MOG/AEUR
+      name:             MOOG INC-CLASS A
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         XU
+    row[36]:
+      figi:             BBG00JX8XCP4
+      shareClassFIGI:   BBG001S5T922
+      ticker:           MOG/AEUR
+      name:             MOOG INC-CLASS A
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         XV
+    row[37]:
+      figi:             BBG00JX8XCS1
+      shareClassFIGI:   BBG001S5T922
+      ticker:           MOG/AEUR
+      name:             MOOG INC-CLASS A
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         XQ
+    row[38]:
+      figi:             BBG00JX8XCT0
+      shareClassFIGI:   BBG001S5T922
+      ticker:           MOG/AEUR
+      name:             MOOG INC-CLASS A
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         XX
+    row[39]:
+      figi:             BBG00JX8XCV7
+      shareClassFIGI:   BBG001S5T922
+      ticker:           MOG/AEUR
+      name:             MOOG INC-CLASS A
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         XZ
+    row[40]:
+      figi:             BBG00JX8XCX5
+      shareClassFIGI:   BBG001S5T922
+      ticker:           MOG/AEUR
+      name:             MOOG INC-CLASS A
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         EU
+    row[41]:
+      figi:             BBG00KB2PM02
+      shareClassFIGI:   BBG001S5T922
+      ticker:           MOG/AUSD
+      name:             MOOG INC-CLASS A
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         X2
+    row[42]:
+      figi:             BBG00KB2PM11
+      shareClassFIGI:   BBG001S5T922
+      ticker:           MOG/AUSD
+      name:             MOOG INC-CLASS A
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         XB
+    row[43]:
+      figi:             BBG00KB2PM39
+      shareClassFIGI:   BBG001S5T922
+      ticker:           MOG/AUSD
+      name:             MOOG INC-CLASS A
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         XH
+    row[44]:
+      figi:             BBG00KB2PM57
+      shareClassFIGI:   BBG001S5T922
+      ticker:           MOG/AUSD
+      name:             MOOG INC-CLASS A
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         XF
+    row[45]:
+      figi:             BBG00KB2PM75
+      shareClassFIGI:   BBG001S5T922
+      ticker:           MOG/AUSD
+      name:             MOOG INC-CLASS A
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         XE
+    row[46]:
+      figi:             BBG00KB2PM84
+      shareClassFIGI:   BBG001S5T922
+      ticker:           MOG/AUSD
+      name:             MOOG INC-CLASS A
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         XJ
+    row[47]:
+      figi:             BBG00KB2PM93
+      shareClassFIGI:   BBG001S5T922
+      ticker:           MOG/AUSD
+      name:             MOOG INC-CLASS A
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         XL
+    row[48]:
+      figi:             BBG00KB2PMB0
+      shareClassFIGI:   BBG001S5T922
+      ticker:           MOG/AUSD
+      name:             MOOG INC-CLASS A
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         XG
+    row[49]:
+      figi:             BBG00KB2PMC9
+      shareClassFIGI:   BBG001S5T922
+      ticker:           MOG/AUSD
+      name:             MOOG INC-CLASS A
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         XO
+    row[50]:
+      figi:             BBG00KB2PMH4
+      shareClassFIGI:   BBG001S5T922
+      ticker:           MOG/AUSD
+      name:             MOOG INC-CLASS A
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         XS
+    row[51]:
+      figi:             BBG00KB2PMJ2
+      shareClassFIGI:   BBG001S5T922
+      ticker:           MOG/AUSD
+      name:             MOOG INC-CLASS A
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         XA
+    row[52]:
+      figi:             BBG00KB2PMK0
+      shareClassFIGI:   BBG001S5T922
+      ticker:           MOG/AUSD
+      name:             MOOG INC-CLASS A
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         E1
+    row[53]:
+      figi:             BBG00KB2PML9
+      shareClassFIGI:   BBG001S5T922
+      ticker:           MOG/AUSD
+      name:             MOOG INC-CLASS A
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         XT
+    row[54]:
+      figi:             BBG00KB2PMM8
+      shareClassFIGI:   BBG001S5T922
+      ticker:           MOG/AUSD
+      name:             MOOG INC-CLASS A
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         XW
+    row[55]:
+      figi:             BBG00KB2PMN7
+      shareClassFIGI:   BBG001S5T922
+      ticker:           MOG/AUSD
+      name:             MOOG INC-CLASS A
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         XU
+    row[56]:
+      figi:             BBG00KB2PMP5
+      shareClassFIGI:   BBG001S5T922
+      ticker:           MOG/AUSD
+      name:             MOOG INC-CLASS A
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         XV
+    row[57]:
+      figi:             BBG00KB2PMS2
+      shareClassFIGI:   BBG001S5T922
+      ticker:           MOG/AUSD
+      name:             MOOG INC-CLASS A
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         XQ
+    row[58]:
+      figi:             BBG00KB2PMT1
+      shareClassFIGI:   BBG001S5T922
+      ticker:           MOG/AUSD
+      name:             MOOG INC-CLASS A
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         XX
+    row[59]:
+      figi:             BBG00KB2PMV8
+      shareClassFIGI:   BBG001S5T922
+      ticker:           MOG/AUSD
+      name:             MOOG INC-CLASS A
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         XZ
+    row[60]:
+      figi:             BBG00KB2PMX6
+      shareClassFIGI:   BBG001S5T922
+      ticker:           MOG/AUSD
+      name:             MOOG INC-CLASS A
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         EU
+    row[61]:
+      figi:             BBG00L780SW1
+      shareClassFIGI:   BBG001S5T922
+      ticker:           MOG/AGBP
+      name:             MOOG INC-CLASS A
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         XS
+    row[62]:
+      figi:             BBG00L780SZ8
+      shareClassFIGI:   BBG001S5T922
+      ticker:           MOG/AGBP
+      name:             MOOG INC-CLASS A
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         XH
+    row[63]:
+      figi:             BBG00L780T13
+      shareClassFIGI:   BBG001S5T922
+      ticker:           MOG/AGBP
+      name:             MOOG INC-CLASS A
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         XF
+    row[64]:
+      figi:             BBG00L780T31
+      shareClassFIGI:   BBG001S5T922
+      ticker:           MOG/AGBP
+      name:             MOOG INC-CLASS A
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         XE
+    row[65]:
+      figi:             BBG00L780T59
+      shareClassFIGI:   BBG001S5T922
+      ticker:           MOG/AGBP
+      name:             MOOG INC-CLASS A
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         XJ
+    row[66]:
+      figi:             BBG00L780T68
+      shareClassFIGI:   BBG001S5T922
+      ticker:           MOG/AGBP
+      name:             MOOG INC-CLASS A
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         XL
+    row[67]:
+      figi:             BBG00L780T77
+      shareClassFIGI:   BBG001S5T922
+      ticker:           MOG/AGBP
+      name:             MOOG INC-CLASS A
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         XG
+    row[68]:
+      figi:             BBG00L780T86
+      shareClassFIGI:   BBG001S5T922
+      ticker:           MOG/AGBP
+      name:             MOOG INC-CLASS A
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         XO
+    row[69]:
+      figi:             BBG00L780TD0
+      shareClassFIGI:   BBG001S5T922
+      ticker:           MOG/AGBP
+      name:             MOOG INC-CLASS A
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         XA
+    row[70]:
+      figi:             BBG00L780TF8
+      shareClassFIGI:   BBG001S5T922
+      ticker:           MOG/AGBP
+      name:             MOOG INC-CLASS A
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         E1
+    row[71]:
+      figi:             BBG00L780TH6
+      shareClassFIGI:   BBG001S5T922
+      ticker:           MOG/AGBP
+      name:             MOOG INC-CLASS A
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         XW
+    row[72]:
+      figi:             BBG00L780TJ4
+      shareClassFIGI:   BBG001S5T922
+      ticker:           MOG/AGBP
+      name:             MOOG INC-CLASS A
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         XU
+    row[73]:
+      figi:             BBG00L780TK2
+      shareClassFIGI:   BBG001S5T922
+      ticker:           MOG/AGBP
+      name:             MOOG INC-CLASS A
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         XV
+    row[74]:
+      figi:             BBG00L780TM0
+      shareClassFIGI:   BBG001S5T922
+      ticker:           MOG/AGBP
+      name:             MOOG INC-CLASS A
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         XQ
+    row[75]:
+      figi:             BBG00L780TN9
+      shareClassFIGI:   BBG001S5T922
+      ticker:           MOG/AGBP
+      name:             MOOG INC-CLASS A
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         XX
+    row[76]:
+      figi:             BBG00L780TP7
+      shareClassFIGI:   BBG001S5T922
+      ticker:           MOG/AGBP
+      name:             MOOG INC-CLASS A
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         XZ
+    row[77]:
+      figi:             BBG00L780TS4
+      shareClassFIGI:   BBG001S5T922
+      ticker:           MOG/AGBP
+      name:             MOOG INC-CLASS A
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         EU
+    row[78]:
+      figi:             BBG00QFZSHJ0
+      shareClassFIGI:   None
+      ticker:           MOG/AEUR
+      name:             MOOG INC-CLASS A
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         X1
+    row[79]:
+      figi:             BBG00QFZY0T9
+      shareClassFIGI:   None
+      ticker:           MOG/AUSD
+      name:             MOOG INC-CLASS A
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         X1
+    row[80]:
+      figi:             BBG00QG03SH1
+      shareClassFIGI:   None
+      ticker:           MOG/AGBP
+      name:             MOOG INC-CLASS A
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         X1
+    row[81]:
+      figi:             BBG00THD3ZN3
+      shareClassFIGI:   BBG001S5T922
+      ticker:           MOG/A
+      name:             MOOG INC-CLASS A
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         VL
+    row[82]:
+      figi:             BBG00X1L7SN5
+      shareClassFIGI:   BBG001S5T922
+      ticker:           MOG/A
+      name:             MOOG INC-CLASS A
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         VG
+    row[83]:
+      figi:             BBG00X1PP2P1
+      shareClassFIGI:   BBG001S5T922
+      ticker:           MOG/A
+      name:             MOOG INC-CLASS A
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         VP
+    row[84]:
+      figi:             BBG00ZR22SZ6
+      shareClassFIGI:   BBG001S5T922
+      ticker:           MOG/AUSD
+      name:             MOOG INC-CLASS A
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         X9
+    row[85]:
+      figi:             BBG018H7ZX97
+      shareClassFIGI:   BBG001S5T922
+      ticker:           MO7A
+      name:             MOOG INC-CLASS A
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         LA
+    row[86]:
+      figi:             BBG018J1MZW1
+      shareClassFIGI:   BBG001S5T922
+      ticker:           MO7A
+      name:             MOOG INC-CLASS A
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         LU
+    row[87]:
+      figi:             BBG01FDR7JP5
+      shareClassFIGI:   BBG001S5T922
+      ticker:           MO7A
+      name:             MOOG INC-CLASS A
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         GZ
+    row[88]:
+      figi:             BBG01LW2GGS9
+      shareClassFIGI:   BBG001S5T922
+      ticker:           MOG/AEUR
+      name:             MOOG INC-CLASS A
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         X9
+    row[89]:
+      figi:             BBG01MDZFC41
+      shareClassFIGI:   BBG001S5T922
+      ticker:           MO7A
+      name:             MOOG INC-CLASS A
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         QT
+    row[90]:
+      figi:             BBG01V7W1FF1
+      shareClassFIGI:   BBG001S5T922
+      ticker:           MOG/A
+      name:             MOOG INC-CLASS A
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         OC
+    row[91]:
+      figi:             BBG01X4JBDP2
+      shareClassFIGI:   BBG001S5T922
+      ticker:           MOG/A
+      name:             MOOG INC-CLASS A
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         OD
+    row[92]:
+      figi:             BBG01XM4HVG9
+      shareClassFIGI:   BBG001S5T922
+      ticker:           MOG*
+      name:             MOOG INC-CLASS A
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         MM
+    row[93]:
+      figi:             BBG01XM4HVH8
+      shareClassFIGI:   BBG001S5T922
+      ticker:           MOG*
+      name:             MOOG INC-CLASS A
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         MF
+    row[94]:
+      figi:             BBG01XM4HVJ6
+      shareClassFIGI:   BBG001S5T922
+      ticker:           MOG*
+      name:             MOOG INC-CLASS A
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         MU
+    row[95]:
+      figi:             BBG021BYJMN4
+      shareClassFIGI:   BBG001S5T922
+      ticker:           MOG/A
+      name:             MOOG INC-CLASS A
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         VT
+    row[96]:
+      figi:             BBG024YRG3H0
+      shareClassFIGI:   BBG001S5T922
+      ticker:           MOG/A
+      name:             MOOG INC-CLASS A
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         ER
+    row[97]:
+      figi:             BBG0250BX111
+      shareClassFIGI:   BBG001S5T922
+      ticker:           MOG/AGBP
+      name:             MOOG INC-CLASS A
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         ER
+    row[98]:
+      figi:             BBG0250CKPL8
+      shareClassFIGI:   BBG001S5T922
+      ticker:           MOG/AEUR
+      name:             MOOG INC-CLASS A
+      securityType:     Common Stock
+      marketSector:     Equity
+      exchCode:         ER
+  ASIGNACION:
+    share_class_figi: BBG001S5T922
+
+======================================================================
+
+RESUMEN:
+  BRK-B -> RESUELTO, share_class_figi = BBG001S90346
+  MOG-A -> RESUELTO, share_class_figi = BBG001S5T922

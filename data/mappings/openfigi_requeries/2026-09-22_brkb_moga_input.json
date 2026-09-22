@@ -1,0 +1,25 @@
+{
+  "run_date": "2026-09-22",
+  "run_ts": "2026-09-22T02:10:48",
+  "id_type": "ID_CUSIP",
+  "cusips": [
+    "084670702",
+    "615394202"
+  ],
+  "tickers_esperados": {
+    "084670702": "BRK-B",
+    "615394202": "MOG-A"
+  },
+  "payload": [
+    {
+      "idType": "ID_CUSIP",
+      "idValue": "084670702"
+    },
+    {
+      "idType": "ID_CUSIP",
+      "idValue": "615394202"
+    }
+  ],
+  "payload_sha256": "62c63f2da1e2a3880bda83d03707dc9a23a6fc85dd713fa0fa73523aa55c20a2",
+  "has_api_key": true
+}

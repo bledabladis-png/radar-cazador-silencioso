@@ -9,6 +9,15 @@
       "csv_path": "catalog_snapshots/snapshot_20260921_01.csv",
       "rows": 242,
       "producer": "radar_target_catalog.build_from_probe_result"
+    },
+    {
+      "version_id": "20260922_01",
+      "valid_from": "2026-09-22",
+      "valid_to": null,
+      "sha256": "4a78e2695aca64ec5601c246d176199ce98e9e10e73e53e4b8f11385fe00ef38",
+      "csv_path": "catalog_snapshots/snapshot_20260922_01.csv",
+      "rows": 242,
+      "producer": "radar_target_catalog.build_from_probe_result + OpenFIGI requery BRK-B/MOG-A"
     }
   ]
 }
