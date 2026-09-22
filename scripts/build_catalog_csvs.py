@@ -111,32 +111,80 @@ def build_assignments(df, alta_date):
     return pd.DataFrame(rows, columns=list(ASSIGNMENT_COLUMNS))
 
 
-def build_membership(df, version_id, assignments_df):
-    """242 filas, 1 por key. predecessor=null, justification='initial migration'."""
+def build_membership(df, version_id, assignments_df, *,
+                     prev_uid_by_key=None, prev_just_by_key=None):
+    """242 filas, 1 por key.
+
+    prev_uid_by_key: dict {catalog_key: uid_en_snapshot_anterior}. Si el
+    UID calculado en el snapshot vigente difiere, predecessor_row_uid
+    se rellena con el UID anterior.
+
+    prev_just_by_key: dict {catalog_key: justification_previa_no_inicial}.
+    Se hereda para preservar historia.
+    """
+    prev_uid_by_key = prev_uid_by_key or {}
+    prev_just_by_key = prev_just_by_key or {}
     ordered = df.sort_values("radar_ticker").reset_index(drop=True)
     assign_ordered = assignments_df.reset_index(drop=True)
     cols = list(df.columns)
+
     rows = []
     for i, (_, row) in enumerate(ordered.iterrows()):
+        key = assign_ordered.iloc[i]["catalog_key"]
+        new_uid = compute_snapshot_row_uid(row, cols)
+        old_uid = prev_uid_by_key.get(key)
+
+        if old_uid is None or old_uid == new_uid:
+            pred = ""
+            just = prev_just_by_key.get(key, "initial migration")
+        else:
+            pred = old_uid
+            just = prev_just_by_key.get(key, "snapshot UID change")
+
         rows.append({
             "version_id": version_id,
-            "catalog_key": assign_ordered.iloc[i]["catalog_key"],
-            "snapshot_row_uid": compute_snapshot_row_uid(row, cols),
-            "predecessor_row_uid": "",
-            "justification": "initial migration",
+            "catalog_key": key,
+            "snapshot_row_uid": new_uid,
+            "predecessor_row_uid": pred,
+            "justification": just,
         })
     return pd.DataFrame(rows, columns=list(MEMBERSHIP_COLUMNS))
 
 
+
+def _previous_snapshot_version_id(current_vid):
+    """Devuelve el version_id del snapshot inmediatamente anterior.
+
+    Ordena el manifest por valid_from asc, localiza current_vid,
+    devuelve el anterior. Si no hay anterior, devuelve None.
+    """
+    manifest = load_manifest()
+    snaps = sorted(manifest.get("snapshots", []),
+                   key=lambda s: s["valid_from"])
+    ids = [s["version_id"] for s in snaps]
+    if current_vid not in ids:
+        return None
+    i = ids.index(current_vid)
+    if i == 0:
+        return None
+    return ids[i - 1]
+
+
 def _pick_snapshot():
-    """Selecciona el snapshot referenciado por el manifest."""
+    """Selecciona el snapshot vigente mas reciente del manifest.
+
+    P62 permite multiples snapshots. Los publicados no se borran:
+    el vigente es el de valid_to=null con valid_from mas reciente.
+    """
     manifest = load_manifest()
     snaps = manifest.get("snapshots", [])
-    if len(snaps) != 1:
-        raise RuntimeError(
-            "manifest debe contener exactamente 1 snapshot, tiene " + str(len(snaps))
-        )
-    s = snaps[0]
+    if not snaps:
+        raise RuntimeError("manifest sin snapshots")
+    live = [s for s in snaps if s.get("valid_to") is None]
+    if not live:
+        raise RuntimeError("manifest sin snapshot vigente (valid_to=null)")
+    live.sort(key=lambda s: s["valid_from"], reverse=True)
+    s = live[0]
     version_id = s["version_id"]
     csv_path = ROOT / "data" / "mappings" / s["csv_path"]
     alta_date = str(s["valid_from"]).replace("-", "")
@@ -146,14 +194,50 @@ def _pick_snapshot():
 def main():
     csv_path, version_id, alta_date = _pick_snapshot()
     df = load_snapshot(csv_path)
-    assignments = build_assignments(df, alta_date)
-    membership = build_membership(df, version_id, assignments)
 
-    assignments.to_csv(ASSIGNMENTS_PATH, index=False, lineterminator="\n")
+    # Assignments: inmutables (catalog_key no se reasigna, contrato A1).
+    if not ASSIGNMENTS_PATH.exists():
+        assignments = build_assignments(df, alta_date)
+        assignments.to_csv(ASSIGNMENTS_PATH, index=False, lineterminator="\n")
+        print("OK assignments (creados): " + str(len(assignments)))
+    else:
+        assignments = pd.read_csv(ASSIGNMENTS_PATH, dtype=str, keep_default_na=False)
+        print("OK assignments (existentes, inmutables): " + str(len(assignments)))
+
+    # Comparar contra el snapshot inmediatamente anterior del manifest.
+    prev_uid_by_key = {}
+    prev_just_by_key = {}
+    prev_vid = _previous_snapshot_version_id(version_id)
+    if prev_vid is not None:
+        manifest = load_manifest()
+        entry = next(s for s in manifest["snapshots"] if s["version_id"] == prev_vid)
+        prev_csv = ROOT / "data" / "mappings" / entry["csv_path"]
+        prev_df = load_snapshot(prev_csv)
+        prev_ordered = prev_df.sort_values("radar_ticker").reset_index(drop=True)
+        prev_cols = list(prev_df.columns)
+        assign_ordered = assignments.reset_index(drop=True)
+        for i, (_, prow) in enumerate(prev_ordered.iterrows()):
+            key = assign_ordered.iloc[i]["catalog_key"]
+            prev_uid_by_key[key] = compute_snapshot_row_uid(prow, prev_cols)
+        print("    comparando contra snapshot anterior: " + prev_vid)
+
+    # Si existe membership previa, heredar justifications no-iniciales
+    # (preserva historia de migraciones previas sobre las mismas keys)
+    if MEMBERSHIP_PATH.exists():
+        prev_mem = pd.read_csv(MEMBERSHIP_PATH, dtype=str, keep_default_na=False)
+        for _, r in prev_mem.iterrows():
+            j = r.get("justification", "")
+            if j and j != "initial migration":
+                prev_just_by_key[r["catalog_key"]] = j
+
+    membership = build_membership(
+        df, version_id, assignments,
+        prev_uid_by_key=prev_uid_by_key,
+        prev_just_by_key=prev_just_by_key,
+    )
     membership.to_csv(MEMBERSHIP_PATH, index=False, lineterminator="\n")
 
-    print("OK assignments: " + str(len(assignments)) + " filas -> " + str(ASSIGNMENTS_PATH))
-    print("OK membership:  " + str(len(membership)) + " filas -> " + str(MEMBERSHIP_PATH))
+    print("OK membership:  " + str(len(membership)) + " filas")
     print("    version_id=" + version_id + " alta_date=" + alta_date)
 
 

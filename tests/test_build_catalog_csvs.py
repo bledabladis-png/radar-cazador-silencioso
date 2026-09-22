@@ -88,14 +88,24 @@ def test_membership_catalog_keys_en_assignments():
     assert m == a
 
 
-def test_predecessor_null_en_migracion():
+def test_predecessor_solo_en_filas_cambiadas():
+    """Migracion inicial: predecessor vacio. Tras cambios de snapshot,
+    las filas cuyo UID cambia llevan predecessor. Actualmente 2:
+    BRK-B y MOG-A (resueltas via OpenFIGI 2026-09-22)."""
     df = pd.read_csv(MEMBER, dtype=str, keep_default_na=False)
-    assert (df["predecessor_row_uid"] == "").all()
+    n_pred = int((df["predecessor_row_uid"] != "").sum())
+    assert n_pred == 2, "esperado 2 filas con predecessor, hay " + str(n_pred)
+    keys_con_pred = set(df[df["predecessor_row_uid"] != ""]["catalog_key"])
+    assert keys_con_pred == {"radar_20260921_0029", "radar_20260921_0145"}
 
 
-def test_justification_initial():
+def test_justification_por_fila():
+    """240 filas intactas = initial migration; 2 modificadas llevan
+    justification especifica del cambio de snapshot."""
     df = pd.read_csv(MEMBER, dtype=str, keep_default_na=False)
-    assert (df["justification"] == "initial migration").all()
+    assert (df["justification"] != "").all()
+    n_init = int((df["justification"] == "initial migration").sum())
+    assert n_init == 240, "esperado 240 iniciales, hay " + str(n_init)
 
 
 def test_valid_to_null():
@@ -104,18 +114,17 @@ def test_valid_to_null():
 
 
 def test_idempotencia():
-    """Re-ejecutar el generador produce el mismo output."""
+    """Re-ejecutar main() produce el mismo output (idempotente)."""
     df_before_a = pd.read_csv(ASSIGN, dtype=str, keep_default_na=False)
     df_before_m = pd.read_csv(MEMBER, dtype=str, keep_default_na=False)
 
-    # Regenerar
-    csv_path, version_id, alta_date = gen._pick_snapshot()
-    df = gen.load_snapshot(csv_path)
-    assignments = gen.build_assignments(df, alta_date)
-    membership = gen.build_membership(df, version_id, assignments)
+    # Regenerar via main() - idempotente por diseno
+    gen.main()
 
-    pd.testing.assert_frame_equal(df_before_a, assignments, check_dtype=False)
-    pd.testing.assert_frame_equal(df_before_m, membership, check_dtype=False)
+    df_after_a = pd.read_csv(ASSIGN, dtype=str, keep_default_na=False)
+    df_after_m = pd.read_csv(MEMBER, dtype=str, keep_default_na=False)
+    pd.testing.assert_frame_equal(df_before_a, df_after_a, check_dtype=False)
+    pd.testing.assert_frame_equal(df_before_m, df_after_m, check_dtype=False)
 
 
 def test_canonical_serialization_estable():
