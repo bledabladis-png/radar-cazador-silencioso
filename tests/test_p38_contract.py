@@ -678,16 +678,24 @@ def test_p38_coverage_quality_partial_si_security_coverage_baja():
 
 
 def test_p38_coverage_quality_partial_si_weighted_bajo():
-    """Con weighted < 0.95 pero security alto: PARTIAL, no COMPLETE."""
+    """Con weighted < 0.95 pero security >= 0.95: PARTIAL, no COMPLETE.
+
+    Construccion: 20 FIGIs en TARGET_PAIRWISE. 19 VERIFIED en AMBOS
+    trimestres (peso 1). FIGI_019 VERIFIED solo en Q4 con peso 1000
+    y TEMPORAL_UNVERIFIED en Q1.
+    security = 19/20 = 0.95 (threshold, pasa).
+    weighted: denom incluye _w(FIGI_019) = max(1000, 0) = 1000.
+    numer = 19*1 = 19. weighted = 19/1019 ~= 0.0186 < 0.95.
+    """
     from src.institutional_accumulation.aggregation.coverage import (
         compute_contractual_coverage)
-    # TARGET_PAIRWISE con 20 FIGIs. 19 VERIFIED peso 1, 1 UNRESOLVED peso 1000.
-    # security = 19/20 = 0.95 >= 0.95 (justo en el threshold).
-    # weighted = 19 / 1019 = 0.0186 < 0.95.
     targets = {"FIGI_" + str(i).zfill(3) for i in range(20)}
-    records_q4 = [_rec(f, "VERIFIED", 1.0, period="Q4") for f in targets - {"FIGI_019"}]
-    records_q4.append(_rec("FIGI_019", "UNRESOLVED", 1000.0, period="Q4"))
-    records_q1 = list(records_q4)
+    records_q4 = [_rec(f, "VERIFIED", 1.0, period="Q4")
+                  for f in targets if f != "FIGI_019"]
+    records_q4.append(_rec("FIGI_019", "VERIFIED", 1000.0, period="Q4"))
+    records_q1 = [_rec(f, "VERIFIED", 1.0, period="Q1")
+                  for f in targets if f != "FIGI_019"]
+    records_q1.append(_rec("FIGI_019", "TEMPORAL_UNVERIFIED", 1000.0, period="Q1"))
     result = compute_contractual_coverage(targets, targets, records_q4, records_q1)
     assert result["coverage_quality"] == "PARTIAL"
     assert result["paired_security_coverage"] == 0.95
