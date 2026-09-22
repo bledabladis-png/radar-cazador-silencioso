@@ -61,6 +61,7 @@ documentos describen su tema; NO declaran el estado del sistema.
 | `B02_EXPEDIENTE.md` | Correccion material #76: P62 implementado, bloqueo=snapshot historico. |
 | `B034_EXPEDIENTE.md` | Correccion material #76: universo=242, Q4 tiene datos. |
 | `A67_RESUMEN.md` | Resumen ejecutivo entregado al auditor (2026-09-22). |
+| `A68_RESUMEN.md` | Respuesta a dictamen #77 (B-02+B-03+B-04 cerrados). |
 | `evidence/p66_e2e_probe/` | Evidencia P66 e2e (10.676 filings Q4, 0 R4 no clasificables). Complementa a `p66_gate*`. |
 
 ## 4. Prohibiciones vigentes
