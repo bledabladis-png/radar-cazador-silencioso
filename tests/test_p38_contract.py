@@ -497,3 +497,122 @@ def test_p38_compute_nipc_legacy_evidence_class_proxy():
     delta = pd.DataFrame()
     result = nipc.compute_nipc(delta)
     assert result["evidence_class"] == "PROXY"
+
+# --- C9 (2026-09-23): stats observables en aggregate_positions_by_shareclass_figi ---
+
+
+def _rec(figi, status, weight=1.0, period="Q4"):
+    from src.institutional_accumulation.aggregation.coverage import PositionRecord
+    return PositionRecord(
+        period=period,
+        observed_security_key="cusip:TEST",
+        share_class_figi=figi,
+        canonical_security=None,
+        resolution_status="CANONICAL",
+        operational_mapping_status=status,
+        weight=weight,
+    )
+
+
+def test_p38_aggregate_stats_backward_compatible():
+    """Sin return_stats, la firma antigua sigue devolviendo solo dict."""
+    from src.institutional_accumulation.aggregation.coverage import (
+        aggregate_positions_by_shareclass_figi)
+    records = [_rec("FIGI_A", "VERIFIED", 1.0), _rec("FIGI_B", "VERIFIED", 2.0)]
+    result = aggregate_positions_by_shareclass_figi(records, "Q4")
+    assert isinstance(result, dict)
+    assert result == {"FIGI_A": 1.0, "FIGI_B": 2.0}
+
+
+def test_p38_aggregate_stats_contadores_basicos():
+    """Con return_stats, devuelve (agg, stats) con contadores correctos."""
+    from src.institutional_accumulation.aggregation.coverage import (
+        aggregate_positions_by_shareclass_figi)
+    records = [
+        _rec("FIGI_A", "VERIFIED", 1.0),
+        _rec("FIGI_B", "TEMPORAL_UNVERIFIED", 2.0),
+        _rec("FIGI_C", "TEMPORAL_UNVERIFIED", 3.0),
+        _rec("FIGI_D", "UNRESOLVED", 4.0),
+    ]
+    agg, stats = aggregate_positions_by_shareclass_figi(records, "Q4", return_stats=True)
+    assert agg == {"FIGI_A": 1.0}
+    assert stats["n_received"] == 4
+    assert stats["n_verified"] == 1
+    assert stats["n_excluded"] == 3
+    assert stats["n_temporal_unverified"] == 2
+    assert stats["n_period_mismatch"] == 0
+    assert stats["n_missing_figi"] == 0
+    assert stats["excluded_by_status"] == {"TEMPORAL_UNVERIFIED": 2, "UNRESOLVED": 1}
+
+
+def test_p38_aggregate_stats_period_mismatch():
+    """Records con period != arg se cuentan en n_period_mismatch."""
+    from src.institutional_accumulation.aggregation.coverage import (
+        aggregate_positions_by_shareclass_figi)
+    records = [
+        _rec("FIGI_A", "VERIFIED", 1.0, period="Q4"),
+        _rec("FIGI_B", "VERIFIED", 2.0, period="Q1"),
+        _rec("FIGI_C", "VERIFIED", 3.0, period="Q1"),
+    ]
+    agg, stats = aggregate_positions_by_shareclass_figi(records, "Q4", return_stats=True)
+    assert agg == {"FIGI_A": 1.0}
+    assert stats["n_received"] == 3
+    assert stats["n_period_mismatch"] == 2
+    assert stats["n_verified"] == 1
+
+
+def test_p38_aggregate_stats_missing_figi():
+    """Records con figi vacio se cuentan en n_missing_figi."""
+    from src.institutional_accumulation.aggregation.coverage import (
+        aggregate_positions_by_shareclass_figi)
+    records = [
+        _rec("FIGI_A", "VERIFIED", 1.0),
+        _rec(None, "VERIFIED", 2.0),
+        _rec("", "VERIFIED", 3.0),
+    ]
+    agg, stats = aggregate_positions_by_shareclass_figi(records, "Q4", return_stats=True)
+    assert agg == {"FIGI_A": 1.0}
+    assert stats["n_received"] == 3
+    assert stats["n_missing_figi"] == 2
+    assert stats["n_verified"] == 1
+
+
+def test_p38_aggregate_stats_vacio():
+    """Sin records: contadores a 0, agg vacio."""
+    from src.institutional_accumulation.aggregation.coverage import (
+        aggregate_positions_by_shareclass_figi)
+    agg, stats = aggregate_positions_by_shareclass_figi([], "Q4", return_stats=True)
+    assert agg == {}
+    assert stats["n_received"] == 0
+    assert stats["n_verified"] == 0
+    assert stats["n_excluded"] == 0
+    assert stats["excluded_by_status"] == {}
+
+
+def test_p38_coverage_expone_stats_q4_q1():
+    """compute_contractual_coverage propaga los contadores de stats."""
+    from src.institutional_accumulation.aggregation.coverage import (
+        compute_contractual_coverage)
+    records_q4 = [
+        _rec("FIGI_A", "VERIFIED", 1.0, period="Q4"),
+        _rec("FIGI_B", "TEMPORAL_UNVERIFIED", 2.0, period="Q4"),
+    ]
+    records_q1 = [
+        _rec("FIGI_A", "VERIFIED", 1.0, period="Q1"),
+        _rec("FIGI_C", "VERIFIED", 3.0, period="Q1"),
+    ]
+    result = compute_contractual_coverage(
+        {"FIGI_A", "FIGI_B"}, {"FIGI_A", "FIGI_C"},
+        records_q4, records_q1)
+    assert "n_received_q4" in result
+    assert result["n_received_q4"] == 2
+    assert result["n_verified_q4"] == 1
+    assert result["n_temporal_unverified_q4"] == 1
+    assert result["n_excluded_q4"] == 1
+    assert result["n_received_q1"] == 2
+    assert result["n_verified_q1"] == 2
+    assert result["n_temporal_unverified_q1"] == 0
+    assert result["n_excluded_q1"] == 0
+    assert result["excluded_by_status_q4"] == {"TEMPORAL_UNVERIFIED": 1}
+    assert result["excluded_by_status_q1"] == {}
+

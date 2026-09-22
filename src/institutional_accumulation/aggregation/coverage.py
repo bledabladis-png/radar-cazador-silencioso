@@ -53,7 +53,7 @@ class PositionRecord:
     knowledge_date: Optional[str] = None
 
 
-def aggregate_positions_by_shareclass_figi(records, period):
+def aggregate_positions_by_shareclass_figi(records, period, *, return_stats=False):
     """Agrega weights por shareClassFIGI dentro de un periodo.
 
     F2.4 Opcion 2 AGREG.: solo contribuyen al peso contractual los
@@ -61,19 +61,57 @@ def aggregate_positions_by_shareclass_figi(records, period):
 
     records: iterable de PositionRecord.
     period: string identificador del periodo (p.ej. "Q4", "Q1").
+    return_stats: si True, devuelve (agg, stats) en lugar de agg.
+        Convencion consistente con _filter_canonical (delta_shares.py).
 
-    Devuelve dict {share_class_figi: weight_total}.
+    Devuelve dict {share_class_figi: weight_total} o
+    (dict, stats) si return_stats=True. El dict stats tiene:
+      n_received               total de records de entrada al filtro
+      n_period_mismatch        descartados por period != period arg
+      n_missing_figi           descartados por share_class_figi vacio
+      n_verified               records VERIFIED que contribuyen
+      n_excluded               records con status != VERIFIED
+      excluded_by_status       dict {status: count} de no-VERIFIED
+      n_temporal_unverified    atajo: excluded_by_status['TEMPORAL_UNVERIFIED']
+
+    Los contadores cuentan RECORDS de entrada, no FIGIs unicos, ni
+    CUSIPs, ni pesos. n_received != n_period_mismatch + n_missing_figi
+    + n_verified + n_excluded porque los descartes por period/figi
+    ocurren antes del conteo por status.
     """
     agg = {}
+    n_received = 0
+    n_period_mismatch = 0
+    n_missing_figi = 0
+    n_verified = 0
+    excluded_by_status = {}
     for r in records:
+        n_received += 1
         if r.period != period:
-            continue
-        if r.operational_mapping_status != "VERIFIED":
+            n_period_mismatch += 1
             continue
         if not r.share_class_figi:
+            n_missing_figi += 1
             continue
+        st = r.operational_mapping_status
+        if st != "VERIFIED":
+            excluded_by_status[st] = excluded_by_status.get(st, 0) + 1
+            continue
+        n_verified += 1
         agg[r.share_class_figi] = agg.get(r.share_class_figi, 0.0) + float(r.weight)
-    return agg
+    if not return_stats:
+        return agg
+    n_excluded = sum(excluded_by_status.values())
+    stats = {
+        "n_received": n_received,
+        "n_period_mismatch": n_period_mismatch,
+        "n_missing_figi": n_missing_figi,
+        "n_verified": n_verified,
+        "n_excluded": n_excluded,
+        "excluded_by_status": dict(excluded_by_status),
+        "n_temporal_unverified": excluded_by_status.get("TEMPORAL_UNVERIFIED", 0),
+    }
+    return agg, stats
 
 
 def compute_contractual_coverage(target_q4, target_q1, records_q4, records_q1):
@@ -149,8 +187,10 @@ def compute_contractual_coverage(target_q4, target_q1, records_q4, records_q1):
     )
 
     # Ponderado: w(s) = max(Q4_total(s), Q1_total(s)).
-    weights_q4 = aggregate_positions_by_shareclass_figi(rq4, "Q4")
-    weights_q1 = aggregate_positions_by_shareclass_figi(rq1, "Q1")
+    weights_q4, stats_q4 = aggregate_positions_by_shareclass_figi(
+        rq4, "Q4", return_stats=True)
+    weights_q1, stats_q1 = aggregate_positions_by_shareclass_figi(
+        rq1, "Q1", return_stats=True)
 
     def _w(figi):
         return max(weights_q4.get(figi, 0.0), weights_q1.get(figi, 0.0))
@@ -177,4 +217,14 @@ def compute_contractual_coverage(target_q4, target_q1, records_q4, records_q1):
         "coverage_status": coverage_status,
         "unmapped_count_previous": unmapped_count_previous,
         "unmapped_count_current": unmapped_count_current,
+        "n_received_q4": stats_q4["n_received"],
+        "n_verified_q4": stats_q4["n_verified"],
+        "n_temporal_unverified_q4": stats_q4["n_temporal_unverified"],
+        "n_excluded_q4": stats_q4["n_excluded"],
+        "n_received_q1": stats_q1["n_received"],
+        "n_verified_q1": stats_q1["n_verified"],
+        "n_temporal_unverified_q1": stats_q1["n_temporal_unverified"],
+        "n_excluded_q1": stats_q1["n_excluded"],
+        "excluded_by_status_q4": stats_q4["excluded_by_status"],
+        "excluded_by_status_q1": stats_q1["excluded_by_status"],
     }
