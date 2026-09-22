@@ -241,8 +241,12 @@ materializado.
 ### 4.3 CUSIPs con excepcion documentada
 
 `cusip_radar_crosswalk.csv` contiene 246 filas con vigencia
-`2025-12-31` a `2026-03-31`, `source = SEC-EDGAR`. Las 246 cubren los
-246 CUSIPs del radar.
+`2025-12-31` a `2026-03-31`, `source = SEC-EDGAR`. Las 246 filas
+corresponden a 242 tickers unicos. La diferencia se debe a 4 tickers
+con doble CUSIP (AMCR, AMZN, LRCX, MU, ver §12.3).
+El crosswalk incluye tambien 2 tickers que no estan en el radar
+canonico actual (DD, HON), y NO incluye 2 tickers del radar (OKE,
+SPCX). Ver §13.2 para el detalle.
 
 Las 24 originales (valid_from=2026-03-31) fueron extendidas a Q4 y
 se anadieron 222 nuevas desde el crosswalk CUSIP->radar (construido
@@ -635,7 +639,7 @@ una seccion de este documento. Este documento llega solo hasta §13.
 #### `aggregation\coverage.py`
 
 - **class `PositionRecord`** — Registro tipado de una posicion observada (F2.4 regla #4).
-- `aggregate_positions_by_shareclass_figi(records, period)` — Agrega weights por shareClassFIGI dentro de un periodo.
+- `aggregate_positions_by_shareclass_figi(records, period, *, return_stats=False)` — Agrega weights por shareClassFIGI dentro de un periodo.
 - `compute_contractual_coverage(target_q4, target_q1, records_q4, records_q1)` — 6 metricas P38 contractuales.
 
 
@@ -848,7 +852,8 @@ Verificación de coherencia:
 
 ### 10.4. Agregación de pesos por shareClassFIGI
 
-Función: `coverage.aggregate_positions_by_shareclass_figi(records, period)`.
+Función: `coverage.aggregate_positions_by_shareclass_figi(records, period, *,
+return_stats=False)`.
 
 Entrada: lista de PositionRecord, cada uno con (share_class_figi, weight,
 period, operational_mapping_status).
@@ -859,9 +864,18 @@ Formula:
                            r.share_class_figi = S}  r.weight
 
 Solo contribuyen al peso contractual los records con status VERIFIED.
-Records TEMPORAL_UNVERIFIED se descartan silenciosamente.
+Records con status distinto de VERIFIED (TEMPORAL_UNVERIFIED, UNRESOLVED,
+CONFLICT) se excluyen del agregado, y con `return_stats=True` se
+publican como contadores observables (ver mas abajo). El descarte deja
+de ser silencioso.
 
-Salida: dict {shareClassFIGI: weight_total}.
+Salida:
+  - return_stats=False (default): dict {shareClassFIGI: weight_total}.
+  - return_stats=True: tupla (agg, stats), donde stats es un dict con
+    n_received, n_period_mismatch, n_missing_figi, n_verified,
+    n_excluded, excluded_by_status (dict status->count) y
+    n_temporal_unverified (atajo). Los contadores cuentan RECORDS de
+    entrada al filtro, no FIGIs unicos, no CUSIPs, ni pesos.
 
 ---
 
@@ -899,11 +913,23 @@ Formulas pairwise:
 
   Fail-closed: si TARGET_PAIRWISE vacío, se devuelve None, NO 0.0.
 
-Estado agregado:
+Estado agregado (legacy):
   coverage_status = "VALID"      si TARGET_Q4, TARGET_Q1 y TARGET_PAIRWISE
                                  tienen valores no nulos y el cálculo
                                  produce cobertura > 0 en ambos.
   coverage_status = "UNAVAILABLE" en otro caso.
+
+Estado agregado (C10, aditivo). Se anaden dos campos que separan
+"medible" de "bueno":
+  coverage_available = True      si TARGET_PAIRWISE no vacio (la
+                                 cobertura es medible, aunque sea 0%).
+  coverage_available = False     si TARGET_PAIRWISE vacio.
+  coverage_quality = "UNAVAILABLE"  si TARGET_PAIRWISE vacio.
+  coverage_quality = "COMPLETE"     si paired_security_coverage >= 0.95
+                                    Y paired_weighted_share_coverage >= 0.95.
+  coverage_quality = "PARTIAL"      en cualquier otro caso medible.
+Threshold: COVERAGE_COMPLETE_THRESHOLD = 0.95 (alineado con
+guard_coverage.py). `coverage_status` se conserva como campo legacy.
 
 **Ejemplo Q4 -> Q1 2026 (radar, con crosswalk extendido):**
   TARGET_Q4 = 239 · TARGET_Q1 = 240 · TARGET_PAIRWISE = 239
@@ -965,7 +991,7 @@ contractual es §10.5.
   compute_delta_shares (§10.2)    build_target + catalog_to_p38_targets
         |              |
         v              v
-  compute_nipc_contractual (§10.3)    compute_contractual_coverage (§10.5)
+  compute_nipc_contractual (§10.3, ver nota)  compute_contractual_coverage (§10.5)
         |              |
         +------+-------+
                |
@@ -1848,23 +1874,34 @@ Impacto: el motor resuelve identidad por CUSIP via crosswalk, no por FIGI.
 La cobertura efectiva del radar es 100%, pero la cobertura de securities
 pequeños (fuera del radar) es baja.
 
-### 13.2. XOM, OKE, SPCX no aparecen en filings con FIGI matching
+### 13.2. OKE y SPCX no estan en el crosswalk canonico
 
-Los tres tickers no aparecen en el overlap porque:
-  - SPCX: emisor privado, sin filings 13F.
-  - XOM: FIGI en catalogo BBG023CY9NL0, FIGIs en filings BBG001S69V32 etc.
-  - OKE: mismo caso que XOM.
+De los 242 tickers del catalogo radar, 240 estan en
+`cusip_radar_crosswalk.csv`. Los 2 ausentes:
 
-Resolucion actual: los tres estan en `cusip_radar_crosswalk.csv` con
-sus CUSIPs. Resuelven por CUSIP, no por FIGI. La cobertura final los
-incluye.
+- **OKE**. Se resuelve via `etf_holdings.csv` con CUSIP 682680103.
+  No esta en `cusip_radar_crosswalk.csv`, pero si en el crosswalk
+  interno combinado (crosswalk + etf_holdings). Contribuye al delta
+  y al NIPC normalmente.
 
-### 13.3. Cobertura de tests: 83% global, 4 ficheros < 80%
+- **SPCX**. No esta en ninguna fuente de identidad. No contribuye
+  al delta (coincide con la verificacion de " + chr(167) + "12.6: split B detecta
+  241 de 242 tickers con contribucion, SPCX es el unico ausente).
+  Emisor privado (SpaceX), sin filings 13F.
+
+Adicionalmente, `cusip_radar_crosswalk.csv` contiene 2 tickers que NO
+estan en el radar canonico actual: DD y HON. Fueron extendidos a Q4
+2025 por el fix 7609a56 (ver " + chr(167) + "12.3). Son entradas validas del crosswalk
+pero no pertenecen al universo radar.
+
+### 13.3. Cobertura de tests: 81% global, 6 ficheros < 80%
 
 Ficheros por debajo del 80% de cobertura de lineas:
   - `timestamps.py`: 20%
   - `openfigi_client.py`: 31%
+  - `target_universe.py`: 31%
   - `reporting_dedup.py`: 55%
+  - `security_type.py`: 64%
   - `temporal_validity.py`: 79%
 
 Ninguno esta integrado en produccion. Son deuda diferida.
@@ -1892,7 +1929,13 @@ emisores pequeños.
 Al filtrar al radar, n_unresolved_identity = 0. El motor contractual
 opera solo sobre securities resueltas.
 
-### 13.7. El NIPC incluye solo posiciones long
+### 13.7. El NIPC suma solo posiciones long reportadas en 13F
+
+Aclaracion de alcance: 13F solo reporta posiciones long (acciones,
+opciones, bonos convertibles, etc.). El motor no filtra long vs
+short: no hay shorts en los filings. El titulo anterior ("El NIPC
+incluye solo posiciones long") sugeria una decision de diseno que
+no existe: es una propiedad del dataset, no del motor.
 
 La metrica NIPC (Net Institutional Position Change) suma deltas de
 SSHPRNAMT entre trimestres. No distingue entre apertura/cierre de
