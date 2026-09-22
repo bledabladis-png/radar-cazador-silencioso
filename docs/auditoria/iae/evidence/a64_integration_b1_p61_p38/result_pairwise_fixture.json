@@ -1,0 +1,77 @@
+{
+  "aggregate_by_figi": {
+    "Q1": {
+      "FIGI_A": 1200.0,
+      "FIGI_C": 400.0
+    },
+    "Q4": {
+      "FIGI_A": 1000.0,
+      "FIGI_B": 500.0,
+      "FIGI_D": 200.0
+    }
+  },
+  "ciclo": "B-04",
+  "dictamen": "#77",
+  "fixture": {
+    "records_q1": [
+      {
+        "figi": "FIGI_A",
+        "key": "key_A",
+        "op_status": "VERIFIED",
+        "weight": 1200.0
+      },
+      {
+        "figi": "FIGI_C",
+        "key": "key_C",
+        "op_status": "VERIFIED",
+        "weight": 400.0
+      },
+      {
+        "figi": "FIGI_D",
+        "key": "key_D",
+        "op_status": "TEMPORAL_UNVERIFIED",
+        "weight": 200.0
+      }
+    ],
+    "records_q4": [
+      {
+        "figi": "FIGI_A",
+        "key": "key_A",
+        "op_status": "VERIFIED",
+        "weight": 1000.0
+      },
+      {
+        "figi": "FIGI_B",
+        "key": "key_B",
+        "op_status": "VERIFIED",
+        "weight": 500.0
+      },
+      {
+        "figi": "FIGI_D",
+        "key": "key_D",
+        "op_status": "VERIFIED",
+        "weight": 200.0
+      }
+    ],
+    "target_q1": [
+      "FIGI_A",
+      "FIGI_C",
+      "FIGI_D"
+    ],
+    "target_q4": [
+      "FIGI_A",
+      "FIGI_B",
+      "FIGI_D"
+    ]
+  },
+  "marker": "NON-PRODUCTION / CONTRACT_TEST_FIXTURE",
+  "p38_result": {
+    "coverage_current": 0.6666666666666666,
+    "coverage_previous": 1.0,
+    "coverage_status": "VALID",
+    "paired_security_coverage": 0.5,
+    "paired_weighted_share_coverage": 0.8571428571428571,
+    "unmapped_count_current": 1,
+    "unmapped_count_previous": 0
+  }
+}
