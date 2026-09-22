@@ -999,16 +999,21 @@ separada, no como etapa del flujo productivo. Los numeros de §12.5 y
 Cada fichero de test cubre una parte del modulo. Se listan las
 funciones de test con su docstring cuando existe.
 
-Ejecucion actual: **758 casos de test pasan** (0 fallos). Este listado
-muestra las 694 funciones de test detectables por AST. La diferencia
+Ejecucion actual: **758 casos de test pasan** (0 fallos). El modulo
+completo (42 ficheros que importan `src.institutional_accumulation`)
+tiene 694 funciones de test detectables por AST. La diferencia
 (758 vs 694) corresponde a casos parametrizados via
 @pytest.mark.parametrize, que pytest expande a multiples casos por
 funcion.
 
+La seccion 11 lista funciones de test de 29 de los 42 ficheros del
+modulo (listado parcial, ver §11). El conteo autoritativo del modulo
+completo esta en el resumen ejecutivo (§1) y se reproduce con
+`scripts/iae_test_census.py`.
+
 Nota historica (2026-09-23). El conteo anterior declaraba 641 tests,
 no reproducible con ningun criterio mecanico. El conteo actual usa
-el criterio AST declarado en el resumen ejecutivo y se obtiene con
-`scripts/iae_test_census.py`.
+el criterio AST declarado en el resumen ejecutivo.
 
 
 ### `tests/test_build_catalog_csvs.py` (20 tests)
@@ -1164,7 +1169,7 @@ el criterio AST declarado en el resumen ejecutivo y se obtiene con
 - `test_report_identities_status_ordenados_descendente` — Etapa 2 ordena por frecuencia descendente.
 
 
-### `tests/test_p38_contract.py` (19 tests)
+### `tests/test_p38_contract.py` (32 tests)
 
 - `test_p38_legacy_denominador_cero_unavailable` — Ruta PROXY: denominador cero -> UNAVAILABLE.
 - `test_p38_legacy_usa_observed_key` — Ruta PROXY: opera sobre observed_security_key, no sobre TARGET.
@@ -1619,7 +1624,25 @@ el criterio AST declarado en el resumen ejecutivo y se obtiene con
 - `test_membership_summary_vacio`
 
 
-**Total tests listados: 492**
+**Cobertura de este listado (parcial).** §11 lista 29 ficheros con sus
+funciones de test detectables por AST. La suma de funciones listadas es
+505 (492 hasta la revision 2026-09-22; +13 en `test_p38_contract.py`
+por C9+C10).
+
+El modulo completo tiene 42 ficheros que importan
+`src.institutional_accumulation`. 15 no aparecen en §11:
+`test_absence`, `test_b06_e2e_aggregation`, `test_b1_schema`,
+`test_h692_temporal_precedence`, `test_openfigi_client`,
+`test_operational_universe`, `test_p60_contract`, `test_p61_contract`,
+`test_p66_contract`, `test_p66_pipeline`, `test_period_state`,
+`test_position_record`, `test_security_type`, `test_temporal_validity`,
+`test_timestamps`.
+
+Este listado tiene valor como inventario nominal de funciones de test,
+no como conteo exhaustivo. Conteo autoritativo del modulo (42 ficheros,
+758 casos pytest, 694 funciones AST): §1 (resumen ejecutivo) y
+`scripts/iae_test_census.py`.
+
 
 ---
 
