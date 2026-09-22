@@ -1116,7 +1116,9 @@ autoriza DROP_DUP. GO CONDICIONADO v3. NO activar DROP_DUP sin dictamen.
                   coverage_current anulado como contractual.
     B-03          CERRADO (commits a8ad54b..d18cf62). 242/242 keys;
                   snapshot 20260922_01; BRK-B y MOG-A via OpenFIGI.
-    B-04          PENDIENTE. Fixture pairwise NON-PRODUCTION.
+    B-04          CERRADO. Fixture pairwise NON-PRODUCTION
+                  (paired_coverage=0.5, weighted=6/7 sobre
+                  TARGET_PAIRWISE={A,D} con PAIRED={A}).
 
 ### 15.5. Hallazgos cerrados (H y B)
 
@@ -1138,6 +1140,8 @@ autoriza DROP_DUP. GO CONDICIONADO v3. NO activar DROP_DUP sin dictamen.
     compute_nipc_contractual: sin callers productivos (smoke test A.6.4 §7)
     build_effective_reporting_snapshot: 2 probes en nipc_p65_probe/
     DROP_DUP: no activado (requiere dictamen)
+    TARGET_PAIRWISE > 0 sobre 13F real: pendiente (requiere
+      snapshot historico PIT, no autorizado)
     THRESHOLD_1/THRESHOLD_2: UNDEFINED / BLOQUEADO
     Gate-NIPC.2: bloqueado
     OpenFIGI masivo: NO autorizado

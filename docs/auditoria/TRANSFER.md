@@ -1,4 +1,4 @@
-# TRANSFER DE SESION - 2026-09-22 v10
+# TRANSFER DE SESION - 2026-09-22 v10.1
 
 Documento de onboarding. **NO es fuente de estado.**
 Estado vivo: `iae/ESTADO_SISTEMA.md` (hechos) + `iae/ESTADO_DECLARADO.md` (fases).
@@ -16,16 +16,17 @@ Reglas de personalidad y metodo: `PROMPT_MAESTRO.md` secciones 1 y 3.
 
 ## 2. Estado real al cierre de esta sesion
 
-    HEAD          ac1edc3 (verificar con git al arrancar)
-    Ahead         331 commits locales
+    HEAD          post-B-04 (verificar con git al arrancar)
+    Ahead         333 commits locales
     Working tree  LIMPIO (verificar)
     Tests         test_h731: 11 passed;
-                  suite global: 1415 passed + 2 skipped + 3 failed
+                  suite global: 1421 passed + 2 skipped + 3 failed
                   (los 3 failed son test_freshness.py, ambientales:
                    parquets stale en local; en CI se skipean via
                    @pytest.mark.skipif -> suite CI = 0 failed)
     Push          NO (local-first IAE, dictamenes #76/#77)
     Cobertura     IAE 110/110 funciones publicas con test semantico
+                  + 6 tests fixture pairwise (B-04)
 
 ## 3. Contexto: auditoria externa reciente
 
@@ -67,6 +68,20 @@ Reglas de personalidad y metodo: `PROMPT_MAESTRO.md` secciones 1 y 3.
     B-06  Cadena end-to-end sin doble conteo (test + probe)
     B-07  Suite CI = 0 failed (verificado; skip en clone fresco)
     H-08  Test ortogonal identity=RESOLVED + weight=NOT_PRESENT
+
+### 3.6. Ciclo B-04 (fixture pairwise) - CERRADO
+
+Commit (proximo). Fixture NON-PRODUCTION ejercita rama pairwise:
+
+    TARGET_Q4 = {A, B, D}; TARGET_Q1 = {A, C, D}
+    TARGET_PAIRWISE = {A, D}; PAIRED = {A}
+    paired_security_coverage         = 0.5
+    paired_weighted_share_coverage   = 6/7
+    coverage_status                  = VALID
+
+Ficheros: `tests/test_p38_pairwise_fixture.py`,
+`evidence/a64_integration_b1_p61_p38/probe_pairwise_fixture.py`,
+`result_pairwise_fixture.json`. NO toca mappings productivos.
 
 ### 3.4. Ciclo B-02 (PIT_UNAVAILABLE) - CERRADO
 
@@ -202,11 +217,11 @@ Esperado:
     "Confirmado, contexto asimilado."
 
     Estado que reconozco:
-      - HEAD ac1edc3, ahead 331
+      - HEAD post-B-04, ahead 333
       - Dictamenes #76 (A2=GO, A.6.6=NO-GO) + #77 (B-02/B-03/B-04)
       - Fix A2 y saneamiento post-#76: CERRADOS
       - Ciclo B-02 (PIT_UNAVAILABLE) + B-03 (242/242): CERRADOS
-      - Pendiente unico autorizado: B-04 (fixture pairwise)
+      - B-04 (fixture pairwise NON-PRODUCTION) CERRADO
       - Prohibido: nipc/delta_shares/security_identity/temporal_validity,
         contratos normativos, push, OpenFIGI masivo, retro-fechado
 
@@ -214,4 +229,4 @@ Esperado:
 
 ---
 
-FIN DEL TRANSFER v10. HEAD ac1edc3. 2026-09-22.
+FIN DEL TRANSFER v10.1. 2026-09-22. Ciclos B-02, B-03 y B-04 CERRADOS.

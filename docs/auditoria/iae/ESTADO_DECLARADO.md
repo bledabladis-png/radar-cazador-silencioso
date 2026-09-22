@@ -127,6 +127,17 @@ documentos describen su tema; NO declaran el estado del sistema.
   tecnico pre-PIT se preserva bajo `coverage_current_technical_pre_pit`
   para trazabilidad. Modo `--no-pit`: bypass documentado con
   `PIT_BYPASS_DOCUMENTED`. Prohibido retro-fechado (dictamen #77).
+- **B-04 CERRADO (2026-09-22, dictamen #77):** rama pairwise ejercitada
+  con fixture sintetico explicitamente marcado
+  `NON-PRODUCTION / CONTRACT_TEST_FIXTURE`. Ficheros:
+  `tests/test_p38_pairwise_fixture.py` (6 tests) +
+  `evidence/a64_integration_b1_p61_p38/probe_pairwise_fixture.py`.
+  Evidencia: `paired_security_coverage=0.5`, `paired_weighted_share_coverage`
+  `= 6/7`, `coverage_status=VALID` sobre TARGET_PAIRWISE={A,D} con PAIRED={A}.
+  NO se han fabricado exceptions ni tocado mappings productivos
+  (prohibicion explicita #77). Ver `result_pairwise_fixture.json`.
+  Pendiente: TARGET_PAIRWISE real > 0 sobre datos 13F reales, que
+  requiere snapshot historico PIT (B-02.2, no autorizado).
 - Sub-deuda documental (2026-09-22): `NIPC_CONTRATOS_SEMANTICOS_v1.md`
   L332 cita '18 FIGI -> 18 records VERIFIED' en la trazabilidad A.6.4,
   pero tras la curacion ONB/PTGX el valor real es 20. NO se ha tocado

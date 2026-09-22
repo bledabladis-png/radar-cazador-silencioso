@@ -2,7 +2,7 @@
 
 Hechos verificables del sistema. Generado por script.
 
-**Generado en:** 2026-09-22 15:55:55 UTC
+**Generado en:** 2026-09-22 16:04:01 UTC
 **Snapshot tomado sobre:** commit HEAD de la fecha indicada, al momento de generar
 **NO editar a mano.** Regenerar con:
 
@@ -16,16 +16,16 @@ proyecto describen su tema; NO declaran el estado del sistema.
 
 ## 1. Git
 
-- **HEAD:** `ac1edc3`
-- **HEAD completo:** `ac1edc356eb0c691b7708400b0fab70976816594`
-- **Fecha commit HEAD:** 2026-09-22 14:45:29 +0200
-- **Ahead:** 331
+- **HEAD:** `f628ec0`
+- **HEAD completo:** `f628ec0cabb19c3141c7abc74569be359455ebf6`
+- **Fecha commit HEAD:** 2026-09-22 18:03:53 +0200
+- **Ahead:** 333
 - **Behind:** 0
 - **origin/main:** `5f1d9ab`
 
 ## 2. Tests (pytest real)
 
-- **Resumen:** 3 failed, 1415 passed, 2 skipped in 28.53s
+- **Resumen:** 3 failed, 1421 passed, 2 skipped in 28.30s
 - **Exit code:** 1
 
 **Tests fallidos (nombre completo):**
@@ -104,7 +104,7 @@ proyecto describen su tema; NO declaran el estado del sistema.
 - `docs/auditoria/iae/evidence/nipc_gate0_baseline`: 5 ficheros
 - `docs/auditoria/iae/evidence/nipc_gate0_target_identity_top2000`: 10 ficheros
 - `docs/auditoria/iae/evidence/nipc_gate0_top2000_v2`: 6 ficheros
-- `docs/auditoria/iae/evidence/a64_integration_b1_p61_p38`: 10 ficheros
+- `docs/auditoria/iae/evidence/a64_integration_b1_p61_p38`: 13 ficheros
 - `docs/auditoria/iae/evidence/b2_pit_cierre`: 2 ficheros
 - `docs/auditoria/iae/evidence/nipc_p70_probe`: 5 ficheros
 
