@@ -1625,8 +1625,11 @@ radar.
 
 ### 12.4. Validacion externa con OpenFIGI
 
-Sample aleatorio (seed=42) de 100 CUSIPs entre los 35.123 sin cobertura
-en el crosswalk. Consulta a OpenFIGI por ID_CUSIP.
+La validacion externa se hizo en dos pasos complementarios.
+
+**Paso 1 - descarte de perdidas (2026-09-22).** Sample aleatorio
+(seed=42) de 100 CUSIPs entre los 35.123 sin cobertura en el crosswalk.
+Consulta a OpenFIGI por ID_CUSIP.
 
     Con hit:          44/100
     Errores:          56/100
@@ -1636,8 +1639,31 @@ Los 56 errores se desglosan:
   26x "Invalid idValue format" (formato CUSIP invalido)
   30x "No identifier found" (bonos, munis, foreign issuers)
 
-Conclusion: **ningun ticker del radar estaba perdido**. La cobertura 1.0
-es legitima, no tautologica.
+Esto demuestra que **ningun ticker del radar quedaba fuera del
+crosswalk en el subconjunto muestreado**. NO demuestra la correccion
+individual de los 246 mapeos del crosswalk.
+
+**Paso 2 - validacion positiva de los mapeos (2026-09-22).**
+Consulta dirigida de los 243 CUSIPs de `cusip_to_radar_figi.csv` a
+OpenFIGI (ID_CUSIP, exchCode=US). Script:
+`scripts/iae_validate_crosswalk_openfigi.py`.
+
+    CUSIPs validados:          243
+    con respuesta valida:      227
+    match shareClassFIGI:      227  (100% de los resolubles)
+    mismatch shareClassFIGI:     0
+    sin data:                    0
+    error API:                  16
+
+Los 16 sin hit son CUSIPs de emisores con prefijo no-USA (G, H, M, V
+- Irlanda, Jersey, Suiza, Islas Caiman) o con formato que OpenFIGI no
+reconoce por ID_CUSIP. No son contra-evidencia: quedan fuera del
+alcance de esta validacion.
+
+Conclusion: la validacion externa confirma la identidad CUSIP ->
+shareClassFIGI de los 227 mapeos resolubles. Los 16 restantes no son
+verificables por este canal. La cobertura 1.0 sobre el radar es
+legitima, con el alcance declarado.
 
 ### 12.5. Resultado de la cadena de delta y NIPC
 
@@ -1775,6 +1801,30 @@ que se regenera cada dia. No hay versionado PIT de periodos anteriores.
 
 Esto significa: la reconstruccion de un TARGET para periodos anteriores
 al nacimiento del sistema no es posible con los datos actuales.
+
+### 13.9. Riesgo PIT no demostrado
+
+El crosswalk CUSIP -> ticker se construyo cruzando filings Q4 2025 +
+Q1 2026 contra el catalogo radar. Se aplico retroactivamente a Q4 2025
+con `valid_from=2025-12-31`.
+
+Distincion critica entre dos conceptos que el diseno actual no puede
+separar con la evidencia disponible:
+
+- **Identidad historica** de la security: probablemente estable. Un
+  CUSIP X corresponde al mismo ticker entre periodos consecutivos
+  (evidencia: la validacion positiva del §12.4 sobre los 227 mapeos
+  resolubles no muestra ningun mismatch).
+- **Pertenencia historica** al universo radar: NO demostrado. Un
+  ticker puede estar en el radar en Q1 2026 pero no en Q4 2025 (o al
+  reves). El sistema no dispone de snapshots PIT del catalogo radar
+  anteriores a 2026-09-21.
+
+La reconstruccion de identidad es plausible. La pertenencia historica
+no es verificable con la evidencia actual. Se declara como limitacion
+de alcance, no como bug. Reabrir si aparece un snapshot PIT historico
+o si auditoria externa exige reconstruir el radar en fechas previas a
+2026-09-21.
 
 ## FIN DEL IAE_MAESTRO
 
