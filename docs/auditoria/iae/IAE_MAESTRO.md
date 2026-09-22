@@ -3,7 +3,13 @@
 Documento unico del modulo IAE. Estado, arquitectura, verificacion.
 
 **Actualizado:** 2026-09-22
-**HEAD:** 8b9b80f
+**HEAD:** 1a74d4b
+
+**Que es este documento.** Describe el modulo IAE tal como esta
+implementado y verificado. No certifica cumplimiento de contratos
+externos ni periodos historicos. Los contratos P60-P70 en
+`NIPC_CONTRATOS_SEMANTICOS_v1.md` se mantienen como documentacion
+historica del diseno, no como normativa vigente.
 
 ---
 
@@ -164,10 +170,6 @@ Deuda registrada:
 
 ---
 
-[CONTINUARA EN BLOQUE 2: verificacion empirica, deuda tecnica,
-reglas de operacion, anexo]
----
-
 ## 4. Verificacion empirica
 
 Toda la evidencia de esta seccion ha sido medida el 2026-09-22
@@ -281,9 +283,10 @@ Presencia en el catalogo cuestionable.
 **XOM** (BBG023CY9NL0 en catalogo). Filings Q1 2026 contienen CUSIP
 30231G102 con 7.575 filas. Los FIGIs historicos en filings son
 BBG001S69V32, BBG000GZQBJ1, BBG000GZQ728. Ninguno coincide con el
-FIGI del catalogo. OpenFIGI reasigno el FIGI en algun momento.
+FIGI del catalogo. **Causa probable (no verificada):** reasignacion
+de FIGI por OpenFIGI tras corporate action.
 
-**OKE** (BBG024TZWVS6 en catalogo). Misma causa que XOM. CUSIP
+**OKE** (BBG024TZWVS6 en catalogo). Misma situacion que XOM. CUSIP
 682680103, 2.673 filas en Q1.
 
 ### 4.8 Que se ha verificado y que no
@@ -297,12 +300,13 @@ FIGI del catalogo. OpenFIGI reasigno el FIGI en algun momento.
 - El modulo esta aislado de produccion.
 
 **No verificado:**
-- Que el catalogo radar sea representativo de un universo historico
-  anterior a septiembre de 2026. El sistema nacio en ese mes; no hay
-  historia previa.
 - Que el overlap completo (resolviendo el 88% de filas sin FIGI)
   coincida con el overlap observable.
 - Que el pipeline productivo vaya a integrar el modulo.
+
+**Fuera de alcance:**
+- El sistema nacio en septiembre de 2026. No hay periodos anteriores
+  auditables.
 
 ---
 
