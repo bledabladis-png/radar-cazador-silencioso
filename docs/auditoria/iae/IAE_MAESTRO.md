@@ -3,7 +3,7 @@
 Documento unico del modulo IAE. Estado, arquitectura, verificacion.
 
 **Actualizado:** 2026-09-22
-**HEAD:** 1a74d4b
+**HEAD:** 4e644ac
 
 **Que es este documento.** Describe el modulo IAE tal como esta
 implementado y verificado. No certifica cumplimiento de contratos
@@ -42,12 +42,17 @@ Opera de forma aislada del pipeline productivo del radar sectorial.
 
 ### Verificacion clave
 
-Sobre los filings reales de Q4 2025 y Q1 2026, el modulo identifica
-correctamente un overlap de 239 FIGIs compartidos entre el radar y los
-datos observados. Los pesos agregados son coherentes y reproducibles.
+Sobre los filings reales de Q4 2025 y Q1 2026, con el crosswalk CUSIP
+extendido a los 246 CUSIPs del radar, el motor produce:
 
-El sistema entrega los datos necesarios para el analisis de acumulacion
-institucional.
+- Q4 2025: 239 tickers operativos · Q1 2026: 243 tickers operativos.
+- TARGET_PAIRWISE = 239 · coverage_status = VALID.
+- Delta radar: 553.321 filas (BOTH 444.276 · NEW 60.324 · EXIT 48.721).
+- NIPC radar: -4.316.734.936 (SOLE -32.485B, DFND +28.318B, OTR -0.150B).
+
+Los pesos agregados son reproducibles y coherentes con la realidad de
+mercado observada. La cadena completa de calculo esta en la seccion 12
+de este documento.
 
 ---
 
@@ -175,6 +180,11 @@ Deuda registrada:
 Toda la evidencia de esta seccion ha sido medida el 2026-09-22
 mediante comandos reproducibles. Los comandos estan en el anexo.
 
+**Nota:** esta seccion documenta las mediciones iniciales del motor
+(antes del crosswalk extendido). Para la validacion completa del
+estado final (crosswalk de 246 CUSIPs, delta Q4->Q1, NIPC, validacion
+cruzada con OpenFIGI), ver seccion 12.
+
 ### 4.1 Datos disponibles
 
     data/sec_13f/processed/2025Q4/
@@ -208,10 +218,13 @@ materializado.
 
 ### 4.3 CUSIPs con excepcion documentada
 
-`cusip_ticker_exceptions.csv` contiene 24 filas con `valid_from =
-valid_to = 2026-03-31`, `source = SEC-EDGAR`, `verified_by = manual`.
+`cusip_ticker_exceptions.csv` contiene 246 filas con vigencia
+`2025-12-31` a `2026-03-31`, `source = SEC-EDGAR`. Las 246 cubren los
+246 CUSIPs del radar.
 
-Los 24 aparecen en INFOTABLE Q1 2026 (24/24).
+Las 24 originales (valid_from=2026-03-31) fueron extendidas a Q4 y
+se anadieron 222 nuevas desde el crosswalk CUSIP->radar (construido
+cruzando filings con el catalogo radar, ver seccion 12.2).
 
 ### 4.4 Overlap sobre datos reales
 
@@ -330,8 +343,8 @@ de FIGI por OpenFIGI tras corporate action.
   fallback CUSIP -> FIGI por OpenFIGI cerraria el resto.
 - XOM y OKE tienen FIGI mismatch entre catalogo y filings. Requiere
   crosswalk adicional.
-- SPCX esta en el catalogo actual pero no tiene filings. Probablemente
-  no deberia estar.
+- SPCX esta en el catalogo actual pero no tiene filings (emisor
+  privado). Ver seccion 13.2.
 
 ### 5.4 Deuda de trazabilidad
 
@@ -399,8 +412,6 @@ de FIGI por OpenFIGI tras corporate action.
 - Estado declarado: `docs/auditoria/iae/ESTADO_DECLARADO.md`.
 - Normativa general: `docs/auditoria/PROMPT_MAESTRO.md`.
 - Onboarding: `docs/auditoria/TRANSFER.md`.
-
----
 
 ---
 
