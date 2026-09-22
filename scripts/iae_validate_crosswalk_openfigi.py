@@ -1,4 +1,4 @@
-﻿"""A.3 v2 - Validacion positiva del crosswalk contra OpenFIGI.
+"""A.3 v2 - Validacion positiva del crosswalk contra OpenFIGI.
 
 v2: la v1 fallo con IncompleteRead porque un batch de 100 CUSIPs devuelve
 ~3.5MB y urllib no completa la lectura en 30s. Solucion: chunks de 25
@@ -151,16 +151,16 @@ def main() -> int:
         lines.append("")
 
     summary_path = OUT_DIR / (slug + "_summary.txt")
-    summary_path.write_text("\n".join(lines), encoding="utf-8")
+    summary_path.write_bytes("\n".join(lines).encode("utf-8"))
 
     lines_h = []
     for fn in [slug + "_input.json", slug + "_raw.json", slug + "_summary.txt"]:
         p = OUT_DIR / fn
         if p.exists():
             lines_h.append(sha256(p) + "  " + fn)
-    (OUT_DIR / ("HASHES_" + slug + ".txt")).write_text(
+    (OUT_DIR / ("HASHES_" + slug + ".txt")).write_bytes(
         "# A.3 v3 - hashes SHA-256\n# Run: " + ts + "\n\n"
-        + "\n".join(lines_h) + "\n", encoding="utf-8")
+        + "\n".join(lines_h) + "\n".encode("utf-8"))
 
     print()
     print("\n".join(lines))
