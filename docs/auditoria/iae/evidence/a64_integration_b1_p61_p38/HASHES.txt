@@ -5,8 +5,8 @@
 
 ## Outputs del probe (script + resultados + documentacion)
 
-5395e5aae4cdb4ae083485e13b199f3d0537c2aa305b20fec6f5fc62be35fd3b  probe_integration_b1_p61_p38.py
-762d5ed069017121829f0cef31d59b89c695e695cf44afefd98c3ba41fb66d39  result.json
+5408840a72358a01504922ac8dfe780d875dd07b9c08b8e7b5638049fa566574  probe_integration_b1_p61_p38.py
+8ae54d9b5b6746426556be3d7fcd84d9faf6f1b4d139c9a1a4a4be665fecbc98  result.json
 fc257a2c18ac093fe033b949e8784690adab9d0204fe91a15e76490b7ad4e2b5  README.md
 
 ## Inputs 13F - Q4 2025 (data/sec_13f/processed/2025Q4/)

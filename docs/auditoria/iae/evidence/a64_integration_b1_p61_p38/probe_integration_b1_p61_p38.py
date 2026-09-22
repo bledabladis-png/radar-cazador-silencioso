@@ -44,6 +44,7 @@ from src.institutional_accumulation.identity import period_state as ps
 from src.institutional_accumulation.aggregation import coverage as cov
 from src.institutional_accumulation.aggregation import catalog_p38_adapter as ca
 from src.institutional_accumulation import operational_universe as ou
+from src.institutional_accumulation import catalog_pit as cpit
 
 DATA = ROOT / "data" / "sec_13f" / "processed"
 MAPPINGS = ROOT / "data" / "mappings"
@@ -111,6 +112,49 @@ def extract_tickers(oper, ids):
             t = str(cs)[7:]
             tickers[cusip] = t
     return tickers
+
+
+def _resolve_pit_target(period_end, *, strict):
+    """Resuelve el TARGET via PIT (dictamen #77, B-02).
+
+    strict=True (default): invoca catalog_pit.target_catalog_as_of.
+      Si no hay snapshot que cubra period_end -> PIT_UNAVAILABLE.
+    strict=False: modo bypass documentado (no evalua PIT). El resultado
+      tecnico se marca como PIT_BYPASS_DOCUMENTED, NUNCA como
+      contractual historico.
+
+    Devuelve dict con: mode, pit_status, snapshot_used, reason.
+    """
+    if not strict:
+        return {
+            "mode": "no-pit",
+            "pit_status": "PIT_BYPASS_DOCUMENTED",
+            "snapshot_used": None,
+            "reason": "bypass: build_target directo, PIT no evaluado",
+        }
+    try:
+        _df, vid, _sha = cpit.target_catalog_as_of(
+            period_end, catalog_root=MAPPINGS)
+        return {
+            "mode": "strict-pit",
+            "pit_status": "PIT_OK",
+            "snapshot_used": vid,
+            "reason": None,
+        }
+    except cpit.CatalogNotAvailable as _e:
+        return {
+            "mode": "strict-pit",
+            "pit_status": "PIT_UNAVAILABLE",
+            "snapshot_used": None,
+            "reason": str(_e),
+        }
+    except Exception as _e:
+        return {
+            "mode": "strict-pit",
+            "pit_status": "PIT_ERROR",
+            "snapshot_used": None,
+            "reason": type(_e).__name__ + ": " + str(_e),
+        }
 
 
 def build_target_universe():
@@ -191,10 +235,28 @@ def build_records_for_subset(keys_subset, universe, state, tickers_by_key,
     return records
 
 
-def main():
+def main(strict_pit=True):
     print("=" * 72)
     print("A.6.4 - Integracion B1 + P61 + P38 (dictamen #73)")
     print("=" * 72)
+
+    # --- 0. Resolucion PIT (dictamen #77, B-02) ---
+    pit_info = _resolve_pit_target("2026-03-31", strict=strict_pit)
+    print()
+    print("=== 0. Resolucion PIT (B-02) ===")
+    print("  mode:        " + str(pit_info["mode"]))
+    print("  pit_status:  " + str(pit_info["pit_status"]))
+    print("  snapshot:    " + str(pit_info["snapshot_used"]))
+    if pit_info.get("reason"):
+        print("  reason:      " + str(pit_info["reason"]))
+
+    pit_is_valid = (pit_info["pit_status"] == "PIT_OK")
+    if strict_pit and not pit_is_valid:
+        print()
+        print("PIT_UNAVAILABLE: no se emite cobertura contractual")
+        print("historica para 2026-03-31. El probe continua en modo")
+        print("tecnico (evidencia de integracion), pero coverage_*")
+        print("NO se marca como contractual.")
 
     # --- 1. §5.5 por periodo ---
     print()
@@ -445,7 +507,29 @@ def main():
                       "error": type(_exc).__name__ + ": " + str(_exc)}
         print("  ERROR: " + nipc_smoke["error"])
 
+    # Marcar p38_result con pit_status (dictamen #77, B-02).
+    # coverage_current solo es contractual si PIT_OK. En otro caso es
+    # evidencia tecnica del subconjunto materializado, NO cobertura
+    # historica certificada.
+    p38_result_marked = dict(p38_result)
+    p38_result_marked["pit_status"] = pit_info["pit_status"]
+    p38_result_marked["pit_mode"] = pit_info["mode"]
+    if pit_info["pit_status"] != "PIT_OK":
+        # Preservar el numero tecnico bajo clave separada para trazabilidad,
+        # pero anular coverage_current como metrica contractual (dictamen #77).
+        _cov_tech = p38_result_marked.get("coverage_current")
+        p38_result_marked["coverage_current_technical_pre_pit"] = _cov_tech
+        p38_result_marked["coverage_current"] = None
+        p38_result_marked["coverage_status"] = "PIT_UNAVAILABLE"
+        p38_result_marked["coverage_contractual"] = False
+        p38_result_marked["coverage_contractual_note"] = (
+            "coverage_current anulado como contractual: PIT "
+            + pit_info["pit_status"])
+    else:
+        p38_result_marked["coverage_contractual"] = True
+
     out = {
+        "pit": pit_info,
         "periods": {k: dict(
             {kk: vv for kk, vv in v.items()
              if kk not in ("tickers_by_cusip", "ticker_set", "snap",
@@ -458,8 +542,8 @@ def main():
         "shared_q4": len(shared_q4),
         "result_periods": result,
         "cardinalities": cardinalities,
-        "p38_pairwise": dict(p38_result),
-        "p38_q1": dict(p38_result),
+        "p38_pairwise": dict(p38_result_marked),
+        "p38_q1": dict(p38_result_marked),
         "nipc_smoke": nipc_smoke,
     }
     (HERE / "result.json").write_text(
@@ -470,4 +554,6 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    import sys as _sys
+    _strict = "--no-pit" not in _sys.argv
+    main(strict_pit=_strict)

@@ -1,4 +1,10 @@
 {
+  "pit": {
+    "mode": "strict-pit",
+    "pit_status": "PIT_UNAVAILABLE",
+    "snapshot_used": null,
+    "reason": "sin snapshot que cubra 2026-03-31"
+  },
   "periods": {
     "2025Q4": {
       "folder": "2025Q4",
@@ -43,21 +49,31 @@
   },
   "p38_pairwise": {
     "coverage_previous": null,
-    "coverage_current": 1.0,
+    "coverage_current": null,
     "paired_security_coverage": null,
     "paired_weighted_share_coverage": null,
-    "coverage_status": "UNAVAILABLE",
+    "coverage_status": "PIT_UNAVAILABLE",
     "unmapped_count_previous": 0,
-    "unmapped_count_current": 0
+    "unmapped_count_current": 0,
+    "pit_status": "PIT_UNAVAILABLE",
+    "pit_mode": "strict-pit",
+    "coverage_current_technical_pre_pit": 1.0,
+    "coverage_contractual": false,
+    "coverage_contractual_note": "coverage_current anulado como contractual: PIT PIT_UNAVAILABLE"
   },
   "p38_q1": {
     "coverage_previous": null,
-    "coverage_current": 1.0,
+    "coverage_current": null,
     "paired_security_coverage": null,
     "paired_weighted_share_coverage": null,
-    "coverage_status": "UNAVAILABLE",
+    "coverage_status": "PIT_UNAVAILABLE",
     "unmapped_count_previous": 0,
-    "unmapped_count_current": 0
+    "unmapped_count_current": 0,
+    "pit_status": "PIT_UNAVAILABLE",
+    "pit_mode": "strict-pit",
+    "coverage_current_technical_pre_pit": 1.0,
+    "coverage_contractual": false,
+    "coverage_contractual_note": "coverage_current anulado como contractual: PIT PIT_UNAVAILABLE"
   },
   "nipc_smoke": {
     "status": "OK",
