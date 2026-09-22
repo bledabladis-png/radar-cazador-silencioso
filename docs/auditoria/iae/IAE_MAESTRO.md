@@ -47,7 +47,7 @@ Reproducible con `scripts/iae_test_census.py`.
 ### Verificacion clave
 
 Sobre los filings reales de Q4 2025 y Q1 2026, con el crosswalk CUSIP
-extendido a los 246 CUSIPs del radar, el motor produce:
+extendido a 246 filas (242 tickers unicos), el motor produce:
 
 - Q4 2025: 239 tickers operativos · Q1 2026: 243 tickers operativos.
 - TARGET_PAIRWISE = 239 · coverage_status = VALID.
