@@ -976,6 +976,15 @@ diseno contractual. La ejecucion actual del motor (§12.5 y §12.6) usa
 `evidence_class = "PROXY"`. `compute_nipc_contractual` existe y esta
 testeado pero no tiene callers productivos (ver §5.1).
 
+**Capa auxiliar: reporting_dedup.** `build_effective_reporting_snapshot`
+(`reporting_dedup.py`) opera PRE-delta, con 64 tests y 0 callers
+productivos. NO forma parte de la cadena contractual y NO modifica
+MATCH_KEY, delta_shares, NIPC ni coverage. Su frontera semantica es
+REPORTING RELATIONSHIP != REPORTING NETWORK != DEDUP AUTHORIZATION
+!= ECONOMIC OWNERSHIP. Se mantiene como capa de diagnostico/auditoria
+separada, no como etapa del flujo productivo. Los numeros de §12.5 y
+§12.6 corresponden a la cadena sin esta capa.
+
 
 ---
 
