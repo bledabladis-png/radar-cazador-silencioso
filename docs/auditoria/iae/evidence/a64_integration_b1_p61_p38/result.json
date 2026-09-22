@@ -1,79 +1,80 @@
 {
   "pit": {
-    "mode": "strict-pit",
-    "pit_status": "PIT_UNAVAILABLE",
+    "mode": "no-pit",
+    "pit_status": "PIT_BYPASS_DOCUMENTED",
     "snapshot_used": null,
-    "reason": "sin snapshot que cubra 2026-03-31"
+    "reason": "bypass: build_target directo, PIT no evaluado"
   },
   "periods": {
     "2025Q4": {
       "folder": "2025Q4",
       "period_iso": "2025-12-31",
-      "oper_rows": 0,
-      "n_sshprnamt_by_figi": 0,
-      "n_sshprnamt_by_key": 0
+      "oper_rows": 621046,
+      "n_sshprnamt_by_figi": 239,
+      "n_sshprnamt_by_key": 239
     },
     "2026Q1": {
       "folder": "2026Q1",
       "period_iso": "2026-03-31",
-      "oper_rows": 29549,
-      "n_sshprnamt_by_figi": 22,
-      "n_sshprnamt_by_key": 22
+      "oper_rows": 641457,
+      "n_sshprnamt_by_figi": 240,
+      "n_sshprnamt_by_key": 240
     }
   },
   "universe_keys": 242,
-  "shared_q1": 22,
-  "shared_q4": 0,
+  "shared_q1": 240,
+  "shared_q4": 239,
   "result_periods": {
     "2026Q1": {
-      "keys": 22,
-      "target_figi": 22,
-      "records": 22,
+      "keys": 240,
+      "target_figi": 240,
+      "records": 240,
       "fail_closed": false
     },
     "2025Q4": {
-      "keys": 0,
-      "p38": null,
-      "fail_closed": true
+      "keys": 239,
+      "target_figi": 239,
+      "records": 239,
+      "fail_closed": false
     }
   },
   "cardinalities": {
-    "target_q4_figi": 0,
-    "target_q1_figi": 22,
-    "target_pairwise_figi": 0,
-    "records_q4": 0,
-    "records_q1": 22,
-    "records_q4_verified": 0,
-    "records_q1_verified": 22,
-    "paired_figi": 0
+    "target_q4_figi": 239,
+    "target_q1_figi": 240,
+    "target_pairwise_figi": 239,
+    "records_q4": 239,
+    "records_q1": 240,
+    "records_q4_verified": 239,
+    "records_q1_verified": 240,
+    "paired_figi": 239
   },
   "p38_pairwise": {
-    "coverage_previous": null,
+    "coverage_previous": 1.0,
     "coverage_current": null,
-    "paired_security_coverage": null,
-    "paired_weighted_share_coverage": null,
+    "paired_security_coverage": 1.0,
+    "paired_weighted_share_coverage": 1.0,
     "coverage_status": "PIT_UNAVAILABLE",
     "unmapped_count_previous": 0,
     "unmapped_count_current": 0,
-    "pit_status": "PIT_UNAVAILABLE",
-    "pit_mode": "strict-pit",
+    "pit_status": "PIT_BYPASS_DOCUMENTED",
+    "pit_mode": "no-pit",
     "coverage_current_technical_pre_pit": 1.0,
     "coverage_contractual": false,
-    "coverage_contractual_note": "coverage_current anulado como contractual: PIT PIT_UNAVAILABLE"
+    "coverage_contractual_note": "coverage_current anulado como contractual: PIT PIT_BYPASS_DOCUMENTED"
   },
   "p38_q1": {
-    "coverage_previous": null,
+    "coverage_previous": 1.0,
     "coverage_current": null,
-    "paired_security_coverage": null,
-    "paired_weighted_share_coverage": null,
+    "paired_security_coverage": 1.0,
+    "paired_weighted_share_coverage": 1.0,
     "coverage_status": "PIT_UNAVAILABLE",
     "unmapped_count_previous": 0,
     "unmapped_count_current": 0,
-    "pit_status": "PIT_UNAVAILABLE",
-    "pit_mode": "strict-pit",
+    "pit_status": "PIT_BYPASS_DOCUMENTED",
+    "pit_mode": "no-pit",
     "coverage_current_technical_pre_pit": 1.0,
     "coverage_contractual": false,
-    "coverage_contractual_note": "coverage_current anulado como contractual: PIT PIT_UNAVAILABLE"
+    "coverage_contractual_note": "coverage_current anulado como contractual: PIT PIT_BYPASS_DOCUMENTED"
   },
   "nipc_smoke": {
     "status": "OK",
@@ -89,11 +90,11 @@
       "nipc_sole": "0.0",
       "nipc_dfnd": "0.0",
       "nipc_otr": "0.0",
-      "coverage_previous": "None",
+      "coverage_previous": "1.0",
       "coverage_current": "1.0",
-      "paired_security_coverage": "None",
-      "paired_weighted_share_coverage": "None",
-      "coverage_status": "UNAVAILABLE",
+      "paired_security_coverage": "1.0",
+      "paired_weighted_share_coverage": "1.0",
+      "coverage_status": "VALID",
       "unmapped_count_previous": "0",
       "unmapped_count_current": "0",
       "status": "UNRESOLVED"
