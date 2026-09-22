@@ -35,10 +35,14 @@ Opera de forma aislada del pipeline productivo del radar sectorial.
 | Ficheros de produccion | 35 |
 | LOC produccion | ~6.500 |
 | Funciones publicas | 110 |
-| Ficheros de test | 29 |
-| Tests que pasan | 641 |
+| Ficheros de test | 42 |
+| Tests que pasan | 758 |
 | Cobertura de lineas | 83% |
 | Integrado en produccion | NO (aislado por diseno) |
+
+El conteo de tests sigue el criterio: ficheros `tests/test_*.py` que
+importan `src.institutional_accumulation` (verificado por AST).
+Reproducible con `scripts/iae_test_census.py`.
 
 ### Verificacion clave
 
@@ -995,11 +999,16 @@ separada, no como etapa del flujo productivo. Los numeros de §12.5 y
 Cada fichero de test cubre una parte del modulo. Se listan las
 funciones de test con su docstring cuando existe.
 
-Ejecucion actual: **641 casos de test pasan** (0 fallos). Este listado
-muestra las 492 funciones de test detectables por AST. La diferencia
-(641 vs 492) corresponde a casos parametrizados via
+Ejecucion actual: **758 casos de test pasan** (0 fallos). Este listado
+muestra las 694 funciones de test detectables por AST. La diferencia
+(758 vs 694) corresponde a casos parametrizados via
 @pytest.mark.parametrize, que pytest expande a multiples casos por
 funcion.
+
+Nota historica (2026-09-23). El conteo anterior declaraba 641 tests,
+no reproducible con ningun criterio mecanico. El conteo actual usa
+el criterio AST declarado en el resumen ejecutivo y se obtiene con
+`scripts/iae_test_census.py`.
 
 
 ### `tests/test_build_catalog_csvs.py` (20 tests)
