@@ -1,0 +1,30 @@
+A.3 v2 - Validacion positiva crosswalk vs OpenFIGI
+Run: 2026-09-22T22:28:26
+HEAD: c6185e1a9a490b73eba531b495678a9e421b76b1
+API key presente: True
+Chunk size: 25
+
+CUSIPs validados: 243
+  con respuesta valida:     227
+  match shareClassFIGI:     227
+  mismatch shareClassFIGI:  0
+  sin data:                 0
+  error API:                16
+
+SIN HIT (primeros 30):
+  G0250X149 (AMCR): No identifier found.
+  G0250X107 (AMCR): No identifier found.
+  023135906 (AMZN): Invalid idValue format.
+  H1467J104 (CB): No identifier found.
+  G25508105 (CRH): No identifier found.
+  G29183103 (ETN): No identifier found.
+  M6191J100 (FROG): No identifier found.
+  G51502105 (JCI): No identifier found.
+  G54950103 (LIN): No identifier found.
+  512807108 (LRCX): No identifier found.
+  G5960L103 (MDT): No identifier found.
+  595112903 (MU): Invalid idValue format.
+  V7780T103 (RCL): No identifier found.
+  G7997R103 (STX): No identifier found.
+  G8267P108 (SW): No identifier found.
+  G8994E103 (TT): No identifier found.

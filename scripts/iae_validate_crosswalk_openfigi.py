@@ -158,8 +158,8 @@ def main() -> int:
         p = OUT_DIR / fn
         if p.exists():
             lines_h.append(sha256(p) + "  " + fn)
-    (OUT_DIR / "HASHES.txt").write_text(
-        "# A.3 v2 - hashes SHA-256\n# Run: " + ts + "\n\n"
+    (OUT_DIR / ("HASHES_" + slug + ".txt")).write_text(
+        "# A.3 v3 - hashes SHA-256\n# Run: " + ts + "\n\n"
         + "\n".join(lines_h) + "\n", encoding="utf-8")
 
     print()
