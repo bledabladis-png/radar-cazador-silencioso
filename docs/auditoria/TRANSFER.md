@@ -15,8 +15,8 @@ Reglas de personalidad y metodo: `PROMPT_MAESTRO.md` secciones 1 y 3.
 
 ## Estado al cierre de la consolidacion (2026-09-22)
 
-    HEAD                 8b9b80f (verificar con git al arrancar)
-    Ahead                ~340 commits locales
+    HEAD                 ce6a390 (verificar con git al arrancar)
+    Ahead                348 commits locales
     Working tree         LIMPIO
     Tests IAE            641 passed
     Suite global         1421 passed + 2 skipped + 3 failed
@@ -28,26 +28,32 @@ Reglas de personalidad y metodo: `PROMPT_MAESTRO.md` secciones 1 y 3.
 
 ## Documentos clave
 
-    docs/auditoria/PROMPT_MAESTRO.md              v7.1
+    docs/auditoria/PROMPT_MAESTRO.md              v7.2
     docs/auditoria/TRANSFER.md                    este documento
     docs/auditoria/README.md                      navegacion
 
     docs/auditoria/iae/IAE_MAESTRO.md             referencia unica del modulo IAE
     docs/auditoria/iae/ESTADO_DECLARADO.md        estado de fases y deuda
     docs/auditoria/iae/ESTADO_SISTEMA.md          hechos autogenerados
-    docs/auditoria/iae/NIPC_CONTRATOS_SEMANTICOS_v1.md   contrato historico
-    docs/auditoria/iae/NIPC_COVERAGE_POLICY.md           policy historica
-    docs/auditoria/iae/INSTITUTIONAL_ACCUMULATION_NIPC_ESPECIFICACION.md
     docs/auditoria/iae/evidence/                  evidencia empirica
+
+Documentos historicos (no normativos): NIPC_CONTRATOS_SEMANTICOS_v1.md,
+NIPC_COVERAGE_POLICY.md, INSTITUTIONAL_ACCUMULATION_NIPC_ESPECIFICACION.md.
 
 ---
 
 ## Estado del modulo IAE en una frase
 
-Implementado, testeado y verificado sobre datos reales (overlap de
-239 FIGIs sobre 13F Q4 2025 / Q1 2026). Aislado del pipeline
-productivo. Entrega los datos necesarios para el analisis de
-acumulacion institucional.
+Implementado, testeado y verificado end-to-end sobre datos reales.
+Con el crosswalk CUSIP extendido a 246 entradas:
+
+- Q4 2025: 239 tickers operativos
+- Q1 2026: 243 tickers operativos
+- Delta radar: 553.321 filas (n_unresolved_identity = 0)
+- NIPC radar: -4.316.734.936
+
+Aislado del pipeline productivo. Entrega los datos necesarios para
+el analisis de acumulacion institucional.
 
 Detalle completo en `iae/IAE_MAESTRO.md`.
 
@@ -73,8 +79,8 @@ Detalle completo en `iae/IAE_MAESTRO.md`.
 
 Esperado:
 
-- HEAD 8b9b80f o posterior
-- ahead 340 o mas
+- HEAD ce6a390 o posterior
+- ahead 348 o mas
 - working tree limpio
 - 1421 passed + 2 skipped + 3 failed (test_freshness, preexistentes)
 - pyflakes silencio, compileall OK
@@ -89,9 +95,10 @@ Estado que reconozco:
 
 - HEAD 8b9b80f o posterior
 - IAE implementado, testeado, aislado
-- Overlap verificado sobre 13F real: 239 FIGIs
+- Crosswalk extendido a 246 CUSIPs
+- Verificado end-to-end sobre 13F real Q4/Q1 (NIPC radar -4.32B)
 - Prohibiciones respetadas
-- Sin certificacion externa requerida
+- Siguiente: auditoria externa de formulas (Fase 2)
 
 Pregunta: "Que hacemos?"
 
