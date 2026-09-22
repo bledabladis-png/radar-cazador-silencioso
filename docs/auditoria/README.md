@@ -4,19 +4,19 @@ Navegacion de la documentacion de auditoria.
 
 ## Estructura
 
-    PROMPT_MAESTRO.md    norma vigente (rol, metodologia, arquitectura)
-    TRANSFER.md          guia de onboarding (no es fuente de estado)
+    PROMPT_MAESTRO.md    norma general (rol, metodologia, arquitectura)
+    TRANSFER.md          guia de onboarding
     README.md            este documento
-    iae/                 modulo IAE (IAE_MAESTRO.md + evidencia)
+    iae/                 modulo IAE
 
 ## iae/
 
     IAE_MAESTRO.md                                  referencia unica del modulo IAE
-    ESTADO_DECLARADO.md                             fases y prohibiciones
+    ESTADO_DECLARADO.md                             estado de fases y deuda
     ESTADO_SISTEMA.md                               hechos autogenerados
-    NIPC_CONTRATOS_SEMANTICOS_v1.md                 contrato P60-P70 vigente
-    NIPC_COVERAGE_POLICY.md                         policy normativa
-    INSTITUTIONAL_ACCUMULATION_NIPC_ESPECIFICACION.md  especificacion v1.4
+    NIPC_CONTRATOS_SEMANTICOS_v1.md                 contrato historico de diseno
+    NIPC_COVERAGE_POLICY.md                         policy historica
+    INSTITUTIONAL_ACCUMULATION_NIPC_ESPECIFICACION.md  especificacion
     evidence/                                       evidencia empirica de probes
 
 ## Lectura recomendada
@@ -24,17 +24,13 @@ Navegacion de la documentacion de auditoria.
 1. PROMPT_MAESTRO.md (completo)
 2. TRANSFER.md (onboarding)
 3. iae/IAE_MAESTRO.md (modulo IAE completo)
-4. iae/ESTADO_DECLARADO.md (prohibiciones vigentes)
-5. iae/ESTADO_SISTEMA.md (hechos)
+4. iae/ESTADO_SISTEMA.md (hechos)
 
-## Prohibiciones vigentes (resumen)
+## Reglas de operacion
 
-- NO push a origin/main (local-first IAE).
-- NO modificar contratos normativos sin dictamen.
-- NO modificar codigo del IAE sin dictamen (nipc.py, delta_shares.py,
-  security_identity.py, temporal_validity.py, relationships.py,
-  target_universe.py).
-- NO OpenFIGI masivo.
-- NO retro-fechar snapshots.
+- No push a origin/main (local-first IAE).
+- No OpenFIGI masivo.
+- No modificar codigo sin ciclo previo.
+- No integracion a produccion sin validacion funcional.
 
-Lista completa en iae/IAE_MAESTRO.md seccion 9.
+Detalle en iae/IAE_MAESTRO.md seccion 6.
