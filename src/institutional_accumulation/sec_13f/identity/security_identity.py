@@ -102,7 +102,7 @@ EQUIVALENCE_REQUIRED = (
 CROSSWALK_COLUMNS = ("CUSIP", "ticker", "valid_from", "valid_to", "source")
 
 DEFAULT_EQUIVALENCE_PATH = Path("data/mappings/cusip_equivalence.csv")
-DEFAULT_EXCEPTIONS_PATH = Path("data/mappings/cusip_ticker_exceptions.csv")
+DEFAULT_EXCEPTIONS_PATH = Path("data/mappings/cusip_radar_crosswalk.csv")
 DEFAULT_ETF_HOLDINGS_PATH = Path("data/etf_holdings.csv")
 
 VERIFIED_BY_VALUES = frozenset({"SEC", "OpenFIGI", "manual"})
@@ -257,7 +257,7 @@ def load_crosswalk_internal(
     """Carga el crosswalk interno combinado.
 
     Fuentes:
-      - cusip_ticker_exceptions.csv (con vigencia temporal).
+      - cusip_radar_crosswalk.csv (con vigencia temporal).
       - etf_holdings.csv (sin vigencia; activo siempre).
 
     Devuelve DataFrame con columnas CROSSWALK_COLUMNS.

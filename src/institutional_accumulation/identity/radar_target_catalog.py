@@ -5,7 +5,7 @@ Contrato (dictamen F2.3 del auditor):
   - Identidad: shareClassFIGI (estable frente a corporate actions).
   - Provenance: source + source_date por fila.
   - Independiente del crosswalk interno (etf_holdings.csv,
-    cusip_ticker_exceptions.csv).
+    cusip_radar_crosswalk.csv).
   - El catalog es INPUT del resolver, no output. Construirlo NO consume
     el resolver evaluado.
 

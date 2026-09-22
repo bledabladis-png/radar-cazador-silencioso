@@ -191,7 +191,7 @@ mediante comandos reproducibles. Los comandos estan en el anexo.
 
 **Aviso de alcance.** Esta seccion documenta el estado PRE-crosswalk
 (2026-09-21). Las mediciones aqui reflejan el motor antes de extender
-`cusip_ticker_exceptions.csv` de 24 a 246 entradas y no son
+`cusip_radar_crosswalk.csv` de 24 a 246 entradas y no son
 representativas del estado actual. Algunos valores concretos (242
 tickers del catalogo, 246 CUSIPs del crosswalk) se conservan como
 referencia historica. Para el estado final ver §12.
@@ -229,13 +229,20 @@ materializado.
 
 ### 4.3 CUSIPs con excepcion documentada
 
-`cusip_ticker_exceptions.csv` contiene 246 filas con vigencia
+`cusip_radar_crosswalk.csv` contiene 246 filas con vigencia
 `2025-12-31` a `2026-03-31`, `source = SEC-EDGAR`. Las 246 cubren los
 246 CUSIPs del radar.
 
 Las 24 originales (valid_from=2026-03-31) fueron extendidas a Q4 y
 se anadieron 222 nuevas desde el crosswalk CUSIP->radar (construido
 cruzando filings con el catalogo radar, ver seccion 12.2).
+
+Nota de nomenclatura. El fichero se renombro de
+`cusip_ticker_exceptions.csv` a `cusip_radar_crosswalk.csv` el
+2026-09-23. El string `source` `cusip_ticker_exceptions` que
+aparece en los registros de identidad se conserva como
+provenance historica y NO se renombra: los registros resueltos
+en el pasado deben seguir declarando la fuente original.
 
 ### 4.4 Overlap sobre datos reales
 
@@ -1628,7 +1635,7 @@ Se construyo `data/mappings/cusip_to_radar_figi.csv` cruzando filings
 (CUSIP+FIGI) contra el catalogo radar (shareClassFIGI). Resultado:
 **243 filas, 239 tickers unicos**.
 
-Se extendio `cusip_ticker_exceptions.csv` de 24 a 246 filas, asignando
+Se extendio `cusip_radar_crosswalk.csv` de 24 a 246 filas, asignando
 `valid_from=2025-12-31` y `valid_to=2026-03-31` a todas las entradas del
 radar.
 
@@ -1637,7 +1644,7 @@ aparecen en esta seccion y en §12.5 transicionan asi:
 
     etapa                                  valor   razon
     -------------------------------------  ------  ----------------------------------
-    crosswalk filas                          246   fichero cusip_ticker_exceptions.csv
+    crosswalk filas                          246   fichero cusip_radar_crosswalk.csv
     crosswalk tickers unicos                 242   AMCR/AMZN/LRCX/MU con 2 CUSIPs (-4)
     radar_figi filas                         243   excluye DD/HON/XOM (-3)
     radar_figi tickers unicos                239   AMCR/AMZN/LRCX/MU duplicados (-4)
@@ -1800,7 +1807,7 @@ Los tres tickers no aparecen en el overlap porque:
   - XOM: FIGI en catalogo BBG023CY9NL0, FIGIs en filings BBG001S69V32 etc.
   - OKE: mismo caso que XOM.
 
-Resolucion actual: los tres estan en `cusip_ticker_exceptions.csv` con
+Resolucion actual: los tres estan en `cusip_radar_crosswalk.csv` con
 sus CUSIPs. Resuelven por CUSIP, no por FIGI. La cobertura final los
 incluye.
 

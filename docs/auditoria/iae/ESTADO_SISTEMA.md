@@ -85,7 +85,7 @@ proyecto describen su tema; NO declaran el estado del sistema.
   - sha256: `4a78e2695aca64ec5601c246d176199ce98e9e10e73e53e4b8f11385fe00ef38`
   - bytes: 29986
   - lineas: 243
-- `data/mappings/cusip_ticker_exceptions.csv`
+- `data/mappings/cusip_radar_crosswalk.csv`
   - sha256: `073c68e26774b1bfbc55429d5d31453b28e25be1c4346b84bee9b2ab0f196001`
   - bytes: 3096
   - lineas: 25

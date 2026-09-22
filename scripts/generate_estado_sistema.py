@@ -31,7 +31,7 @@ SCRIPTS_IAE = [
 ]
 MAPPINGS_IAE = [
     'data/mappings/radar_target_catalog.csv',
-    'data/mappings/cusip_ticker_exceptions.csv',
+    'data/mappings/cusip_radar_crosswalk.csv',
     'data/mappings/cusip_equivalence.csv',
 ]
 EVIDENCE_DIRS = [

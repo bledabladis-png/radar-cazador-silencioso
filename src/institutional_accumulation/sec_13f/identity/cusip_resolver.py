@@ -27,7 +27,7 @@ REQUIRED_COLUMNS = (
 
 FORBIDDEN_SOURCES = frozenset({"manual", "internet", "known", "unknown"})
 VALID_VERIFIED_BY = frozenset({"SEC", "OpenFIGI", "manual"})
-DEFAULT_EXCEPTIONS_PATH = Path("data/mappings/cusip_ticker_exceptions.csv")
+DEFAULT_EXCEPTIONS_PATH = Path("data/mappings/cusip_radar_crosswalk.csv")
 
 
 def load_exceptions(path=DEFAULT_EXCEPTIONS_PATH):
