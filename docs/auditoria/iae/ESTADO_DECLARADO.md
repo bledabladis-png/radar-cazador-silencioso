@@ -176,12 +176,9 @@ real). Requieren dictamen especifico antes de tocarse. Push: NO.
 Sesion 2026-09-21: detectadas 82 referencias fantasma en `docs/auditoria/`.
 
 Cerrados:
-- `DICTAMENES.md` (23 fantasmas, commit `10f65bb`)
-- `INFORME.md` (17 fantasmas, commit `8e04d22`)
 - Contradiccion A.6.5 en contrato NIPC (commits `0f0583d` + `a21b0db`)
 
 Cerrado en este commit (2026-09-22):
-- `FOLLOWUPS.md`: 12 referencias a ficheros consolidados, cubiertas
   con nota de consolidacion (§3.7). Los 5 hits restantes son
   placeholders pedagogicos del §3.7 o un path vivo no versionado
   (`outputs/report/reporte_diario.md`).

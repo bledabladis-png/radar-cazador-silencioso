@@ -1,8 +1,0 @@
-# SHA-256 de la evidencia P66 Gate 0.6
-
-README.md              bc705c2acf59c146bc430c3f8c5f9daee3310488739c60abf9d7841249bf849a
-gate06_output.txt      fbde937c971ce728cd963cd19770ea10c70909ca87c3f64d15091e38e62e291b
-
-Registro: 2026-09-21.
-Algoritmo: SHA-256.
-Entorno: D:\Macro_Sectorial.

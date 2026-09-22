@@ -128,7 +128,6 @@ Cambio de INSUFFICIENT a READY:
 
   - Solo el auditor promueve.
   - Se realiza tras validacion formal en Gate-NIPC.3.
-  - Queda registrado en FOLLOWUPS.md.
   - Requiere actualizacion del prompt maestro si aplica.
 
 ## 10. Relacion con el operational_universe

@@ -1,9 +1,0 @@
-# SHA-256 de la evidencia P66 Gate 0.8
-
-README.md                     741e9ea15b47aa6e60f112570f07b2daf25ef7feca6f3f0112b5fbdff8676097
-gate08_output.txt             ff571f9aaaa3e68f539b9df53e26ea54f046d6fa00d10d1df0472c3f22c92b2e
-gate08_drill_output.txt       f197a3ce9793f7055c7583931dc8710e0209d134641591aa45558503755b8ddc
-
-Registro: 2026-09-21.
-Algoritmo: SHA-256.
-Entorno: D:\Macro_Sectorial.

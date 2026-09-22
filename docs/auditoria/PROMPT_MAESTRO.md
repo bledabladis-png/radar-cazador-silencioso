@@ -8,7 +8,7 @@ Este documento describe **rol, metodologia, arquitectura y prohibiciones vigente
 - `docs/auditoria/iae/ESTADO_DECLARADO.md` - fases IAE, deuda activa, prohibiciones.
 - `docs/auditoria/iae/ESTADO_SISTEMA.md` - hechos verificables (HEAD, tests, integridad).
 
-**Registro historico:** `docs/auditoria/iae/HISTORICO_IAE.md` (ciclos, fixes, cierres).
+**Referencia unica del modulo IAE:** `docs/auditoria/iae/IAE_MAESTRO.md`.
 
 **Alerta metodologica:** El objetivo del modulo IAE es IMPLEMENTARLO, no
 redactar documentos. Cuando el diseno de una subfase cierre >=3 rondas de
@@ -209,23 +209,14 @@ aplica a nuevos ficheros.
 unico fichero por tema, con indice y resumen. La cadena autoritativa vive en
 el registro consolidado.
 
-**Registros consolidados vigentes:**
-
-    iae/DICTAMENES.md          indice de dictamenes con resumen por entrada
-    iae/INFORME.md             informes consolidados del ciclo IAE
-    iae/HISTORICO_IAE.md       ciclos, fixes y cierres del prompt (v7)
-    iae/ESTADO_DECLARADO.md    fases IAE, deuda activa, prohibiciones
-    iae/ESTADO_SISTEMA.md      hechos autogenerados (HEAD, tests, integridad)
+**Registro consolidado vigente:** `iae/IAE_MAESTRO.md` (referencia unica del modulo IAE).
 
 **Estructura de `docs/auditoria/`:**
 
     PROMPT_MAESTRO.md    norma vigente (rol, metodologia, arquitectura)
     TRANSFER.md          guia de onboarding (no es fuente de estado)
-    FOLLOWUPS.md         cronologia de ciclos
     README.md            navegacion
     iae/                 modulo IAE (contratos, registros, estado, evidencia)
-    radar/               contratos temporales del radar
-    auditorias/          auditorias estructurales
 
 **Regla de lectura:** cualquier referencia en este prompt a
 `docs/auditoria/X.md` debe leerse como `docs/auditoria/<categoria>/X.md`
@@ -308,7 +299,7 @@ D:\Macro_Sectorial
 +-- tests/ (~1300 tests; ver sec 15 para conteo actual)
 +-- docs/
 | +-- automatica/ (22 .md auto-generados, LF)
-| +-- auditoria/ (30+ .md: dictamenes + informes + prompt + planes + FOLLOWUPS.md)
+| +-- auditoria/ (prompt + transfer + readme + iae/)
 | +-- plan/ (planes historicos)
 +-- outputs/
 +-- history/ (versionado)
@@ -1078,7 +1069,7 @@ REPORTING_EDGE, L2 POSITION_SCOPED_EDGE, L3 DEDUP_AUTHORIZATION. Solo L3
 autoriza DROP_DUP. GO CONDICIONADO v3. NO activar DROP_DUP sin dictamen.
 
 **P70 - Amendments Invariants.** HR_PLUS_RESTATEMENT -> cardinalidad
-== 2. CERRADO. Consolidado en DICTAMENES.md seccion 23.
+== 2. CERRADO.
 
 ### 15.3. Formula contractual P38 (resumen ejecutivo)
 
@@ -1211,6 +1202,6 @@ No empieces a proponer tareas sin antes confirmar la asimilacion completa.
 **Regla critica heredada de v6.50:** si vas a trabajar en IAE, recuerda
 que el objetivo es IMPLEMENTARLO. No inicies un nuevo ciclo de
 propuestas->dictamenes sobre A.6.2-bis sin antes consultar con el
-usuario. Ver HISTORICO_IAE.md para el contexto.
+usuario. Ver IAE_MAESTRO.md para el contexto.
 
 Fin del prompt maestro v7.

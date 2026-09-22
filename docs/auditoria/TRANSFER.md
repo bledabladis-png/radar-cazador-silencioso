@@ -45,15 +45,11 @@ Cobertura IAE         110/110 funciones con llamada real en tests
 ```
 docs/auditoria/PROMPT_MAESTRO.md              v7.1 - normativa general
 docs/auditoria/TRANSFER.md                    este documento (onboarding)
-docs/auditoria/FOLLOWUPS.md                   cronologia de ciclos
 docs/auditoria/README.md                      navegacion
 
 docs/auditoria/iae/IAE_MAESTRO.md             REFERENCIA UNICA DEL MODULO IAE
 docs/auditoria/iae/ESTADO_DECLARADO.md        fases, prohibiciones, hallazgos
 docs/auditoria/iae/ESTADO_SISTEMA.md          hechos (autogenerado)
-docs/auditoria/iae/DICTAMENES.md              indice #1-#78
-docs/auditoria/iae/HISTORICO_IAE.md           registro de ciclos
-docs/auditoria/iae/INFORME.md                 informes consolidados
 docs/auditoria/iae/NIPC_CONTRATOS_SEMANTICOS_v1.md  contrato P60-P70
 docs/auditoria/iae/NIPC_COVERAGE_POLICY.md          policy normativa
 docs/auditoria/iae/INSTITUTIONAL_ACCUMULATION_NIPC_ESPECIFICACION.md

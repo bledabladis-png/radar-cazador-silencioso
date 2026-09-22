@@ -2,9 +2,9 @@
 
 **Objeto:** contrato habilitante de identidad, validez temporal y cobertura pairwise para el modulo NIPC.
 **Estado del sistema:** ver `ESTADO_SISTEMA.md` (hechos) + `ESTADO_DECLARADO.md` (declaraciones).
-**Estado:** VIGENTE (2026-09-21). F2.4 EMITIDO (GO CONDICIONADO). A.6.0-A.6.4 cerrados. Fix A2 EJECUTADO + NO-GO A.6.6 (#76). H-73.1 corregido. Q12 Modelo A confirmado. Ver DICTAMENES.md #24, #72, #75, #76.
+**Estado:** VIGENTE (2026-09-21). F2.4 EMITIDO (GO CONDICIONADO). A.6.0-A.6.4 cerrados. Fix A2 EJECUTADO + NO-GO A.6.6 (#76). H-73.1 corregido. Q12 Modelo A confirmado. Ver IAE_MAESTRO.md seccion 7.
 
-**Precedencia:** la policy vigente es `NIPC_COVERAGE_POLICY.md` v1.0. Este contrato es VIGENTE (F2.4 emitido 2026-09-20). Las propuestas V11/V12/V13 fueron descartadas (ver `HISTORICO_IAE.md`).
+**Precedencia:** la policy vigente es `NIPC_COVERAGE_POLICY.md` v1.0. Este contrato es VIGENTE (F2.4 emitido 2026-09-20). Las propuestas V11/V12/V13 fueron descartadas (ver IAE_MAESTRO.md seccion 8).
 **Origen:** dictamen formal del auditor (2026-09-20), que clasifico P38/P60/P61 como NO GO con contrato requerido.
 **Relacion:** cierra la seccion 2, 3 y 4 del dictamen. P70 cerrado por NIPC_P70_DICTAMEN.md.
 **Autor:** Ingeniero Supervisor (revision interna).
@@ -599,8 +599,6 @@ bloqueados: OpenFIGI masivo NO AUTORIZADO, thresholds UNDEFINED.
 |---|---|
 | NIPC_P70_DICTAMEN.md | Cierre P70 |
 | NIPC_COVERAGE_POLICY.md (v1.0) | Policy vigente, INTACTA |
-| INSTITUTIONAL_ACCUMULATION_NIPC_GATE0_COVERAGE_BASELINE_INFORME.md | Baseline Fase A |
-| INSTITUTIONAL_ACCUMULATION_OPENFIGI_TOP2000_INFORME.md | TOP 2000 |
 | INSTITUTIONAL_ACCUMULATION_NIPC_GATE0_COVERAGE_BASELINE_DICTAMEN.md | Dictamen baseline |
 | INSTITUTIONAL_ACCUMULATION_NIPC_F21BIS_FUENTES_IDENTIDAD.md | F2.1-bis |
 | docs/auditoria/iae/evidence/nipc_p70_probe/ | Evidencia P70 |
@@ -612,7 +610,7 @@ bloqueados: OpenFIGI masivo NO AUTORIZADO, thresholds UNDEFINED.
                                   (historico CRLF: 11eabce8f8aaed1be6aa3c3557b5e392ad305757230333f84f37285c401b62b7)
     probe_p70_result.json:        809c51af47ae154c6c01bba1cf3983a6c0143fd3b0711958fa8b9e6e18bae96f
     probe_p70_summary.txt:        9e8c42d6a742d773be7e531782a7d8514a5c00aa64efc5080d81a718d6384fe5
-    NIPC_P70_DICTAMEN.md:         e8d4e4e825fe6136b23573705b800108247eb07c9a46e2f62c2c06980f179092 (historico; consolidado en DICTAMENES.md seccion 23)
+    NIPC_P70_DICTAMEN.md:         e8d4e4e825fe6136b23573705b800108247eb07c9a46e2f62c2c06980f179092 (consolidado en NIPC_CONTRATOS_SEMANTICOS_v1.md seccion P70)
 
 Nota EOL (2026-09-21): radar_target_catalog.csv registra hash sobre
 variante CRLF (pre-.gitattributes). El hash vigente corresponde a la
@@ -627,7 +625,7 @@ variante LF (normativa por .gitattributes). Contenido identico.
     P63   FORMALIZADO (F2.4, 2026-09-20)
     P64   FORMALIZADO (F2.4, 2026-09-20)
     P65   FORMALIZADO (F2.4, 2026-09-20)
-    P70   CERRADO (NIPC_P70_DICTAMEN.md, consolidado en DICTAMENES.md seccion 23)
+    P70   CERRADO
 
     A.6.0   CERRADO (dictamen #43)
     A.6.1   CERRADO (F2.4, 2026-09-20)
@@ -699,7 +697,7 @@ historica. Snapshot + hash por consulta (ver seccion 13).
 ## 12. Missing != Sold Contract (P63)
 
 **Origen:** dictamen F2.4 seccion 11 + dictamen P63 formal (2026-09-20,
-ver DICTAMENES.md #25).
+ver IAE_MAESTRO.md seccion 7).
 
 ### 12.1. Principio rector
 
