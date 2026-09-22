@@ -65,3 +65,6 @@ data/sec_13f/processed/
 # Coverage (pytest-cov)
 .coverage
 htmlcov/
+
+# Outputs (nunca versionar)
+outputs/
