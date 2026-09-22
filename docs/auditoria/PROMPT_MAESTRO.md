@@ -200,8 +200,8 @@ conservar ficheros.
 en revision.
 
 **Excepcion documentada (H-10, 2026-09-21):** `iae/NIPC_CONTRATOS_SEMANTICOS_v1.md`
-conserva el sufijo `_v1` por herencia historica. Es el nombre bajo el que fue
-conservado por herencia historica.
+conserva el sufijo `_v1` por herencia historica: es el nombre bajo el que
+fue publicado originalmente.
 Renombrarlo rompe la cadena de referencia sin aportar valor. La excepcion NO
 aplica a nuevos ficheros.
 
@@ -216,7 +216,7 @@ el registro consolidado.
     PROMPT_MAESTRO.md    norma vigente (rol, metodologia, arquitectura)
     TRANSFER.md          guia de onboarding (no es fuente de estado)
     README.md            navegacion
-    iae/                 modulo IAE (contratos, registros, estado, evidencia)
+    iae/                 modulo IAE (IAE_MAESTRO.md + estado + evidencia)
 
 **Regla de lectura:** cualquier referencia en este prompt a
 `docs/auditoria/X.md` debe leerse como `docs/auditoria/<categoria>/X.md`
@@ -455,7 +455,7 @@ Nota: daily_run.yml commitea Daily hist/state. Aplicar git fetch + pull --rebase
 
 ## SECCION 10 - VALIDACION Y TESTS
 10.1. Tests
-1289 passed + 2 skipped + 3 failed preexistentes (test_freshness, ver §12) en local; CI similar con parquet gitignored.
+1421 passed + 2 skipped + 3 failed preexistentes (test_freshness, ver §12) en local; CI similar con parquet gitignored. Incluye 641 tests del modulo IAE (ver seccion 15).
 
 10.2. Validation Gate (10/10)
 SLPM v1.2 (sin errores de validacion)
@@ -539,6 +539,19 @@ test_darkpool_characterization.py - 12 tests (contrato de compute_darkpool_signa
 
 test_darkpool_edge_cases.py - 18 tests (robust_zscore mad=0/outlier/vacio, rolling_percentile, classify_darkpool extremos, _get_all_tickers formato invalido, _get_volume_from_df, _compute_z_for_window, identidad de re-exports).
 
+bloque IAE (641 tests):
+  test_sec_13f_*.py - 12 ficheros (downloader, ingest, parser, schema, storage,
+    manifest, temporal_filter, amendments, cusip_resolver, relationships,
+    sec13f_list, security_identity). Cubren ingestion, identity, enmiendas,
+    relaciones y elegibilidad SEC.
+  test_p38_*.py - 3 ficheros (contract, pairwise_fixture, adapter compat).
+  test_catalog_*.py - 4 ficheros (key, membership, pit, p38_adapter).
+  test_target_*.py - 2 ficheros (builder, universe).
+  test_iae_*.py - 3 ficheros (gap_coverage, gap_semantic, pipeline_report).
+  test_build_catalog_csvs.py, test_radar_target_catalog.py,
+    test_h731_adapter_p38_compat.py.
+  Detalle completo: IAE_MAESTRO.md seccion 11.
+
 ## SECCION 11 - DECISIONES ARQUITECTONICAS CLAVE
 11.1. Generales
 Europa primero.
@@ -609,7 +622,7 @@ Doble candado: is_market_day(date) == False AND date in CONFIRMED_B2_DATES.
 
 6 fechas B2: 2026-05-25, 06-19, 07-03, 09-06, 09-07, 09-12.
 
-Snapshot PRE/POST en outputs/audit/c4_data/.
+Snapshot PRE/POST en outputs/audit/c4_data/ (borrado en la limpieza del 2026-09-22). Referencia historica.
 
 11.8. FU-002 — Manifest de artefacto (2026-09-15)
 Principio: todo parquet producido por el pipeline lleva un manifest <parquet>.manifest.json con:
@@ -806,7 +819,7 @@ K-DT3-RUNTIMEWARN (RESUELTO 2026-09-17, `2656a5e`): early return `pd.Series([], 
 
 OilPriceAPI retention_period=30_days -> Solo 30 dias de historico remoto. Acumulacion local en commodities_*.parquet es obligatoria (append_dedup por fecha). Aceptado.
 
-H1 (CERRADO 2026-09-17, WONT FIX / POLITICA ACEPTADA): mutabilidad del dataset historico (proveedor + pipeline + append_dedup). Dictamen C+D futuro. Informe: docs/auditoria/H1_INFORME_MUTABILIDAD_HISTORICA.md. Dictamen: docs/auditoria/H1_DICTAMEN_AUDITOR.md. Reabrir solo si: requisito regulatorio/compliance, reconstruccion exacta de inputs exigida, auditoria externa necesita verificar dataset completo de fecha pasada, o necesidad de distinguir automaticamente revision de proveedor vs regeneracion pipeline.
+H1 (CERRADO 2026-09-17, WONT FIX / POLITICA ACEPTADA): mutabilidad del dataset historico (proveedor + pipeline + append_dedup). Informe y dictamen archivados en git history (docs/auditoria/radar/ borrado en limpieza 2026-09-22). Reabrir solo si: requisito regulatorio/compliance, reconstruccion exacta de inputs exigida, auditoria externa necesita verificar dataset completo de fecha pasada, o necesidad de distinguir automaticamente revision de proveedor vs regeneracion pipeline.
 
 FU-021-3C -> RESUELTO 2026-09-16 via FU-021-3C-bis (OilPriceAPI). FUTURE_SETTLEMENT paso de BLOCKED a activo para BZ/CL.
 
@@ -867,8 +880,8 @@ viven en `iae/IAE_MAESTRO.md`. No se duplican aqui.
 
 ### 13.3. Estado del repo al cierre (2026-09-22)
 
-    HEAD            48bd637
-    Ahead           342 commits locales
+    HEAD            5aac705
+    Ahead           347 commits locales
     Push            NO (local-first IAE)
     Working tree    LIMPIO
     Suite local     1421 passed + 2 skipped + 3 failed (test_freshness)
