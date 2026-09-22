@@ -3954,3 +3954,47 @@ GO. Los siguientes requieren su propio ciclo.
 
 **Siguiente ciclo autorizado:** saneamiento B-01/B-05/B-06/B-07 + H-08.
 **Bloqueos que requieren nuevo dictamen:** B-02, B-03, B-04, push.
+
+## 77. A.6.7 - Desbloqueo B-02/B-03/B-04 (2026-09-22)
+
+**Tipo:** dictamen del auditor externo.
+**HEAD declarado al solicitar:** `c40896d`.
+**Resultado:**
+
+- Acepta correcciones materiales: P62 implementado; 35k CUSIPs son
+  OUT_OF_TARGET; Q4 tiene datos (cuello = vigencia de fuentes).
+- **Punto contractual critico:** `CATALOG_UNIVERSE=242` NO es lo mismo
+  que `TARGET_P` (universo por periodo). TARGET no se filtra por
+  RESOLVED. Las 2 MISS no pueden desaparecer del TARGET por falta de
+  resolucion.
+- **B-02 (P62/PIT):** GO CONDICIONADO. Prohibido retro-fechado
+  administrativo. Se autoriza declarar limitacion y diferir hasta
+  snapshot historico real. Probe debe emitir `CatalogNotAvailable` o
+  `PIT_UNAVAILABLE` explicitamente, nunca cobertura historica ficticia.
+- **B-03 (TARGET):** GO PARCIAL. Autoriza 2 re-queries OpenFIGI
+  (BRK-B, MOG-A) con provenance+hash. Rechaza OpenFIGI masivo.
+  No se autoriza cerrar B-03 con `240/242=99.17%` sin definir TARGET.
+- **B-04 (pairwise):** NO-GO a Opcion C (20-30 exceptions para fabricar
+  overlap). GO a fixture sintetico `NON-PRODUCTION` o mappings Q4 con
+  vigencia historica real documentada.
+- **A.6.6 / F2.4-CLOSE = NO AUTORIZADO.** Aunque se completen las
+  2 re-queries y el fixture, sigue pendiente B-02.2 (ausencia de
+  snapshot historico PIT).
+- **Hallazgos nuevos:** H-19 (MEDIA: HEAD ambiguo en bundle -
+  HEAD_DEL_EXPEDIENTE != HEAD_DEL_CODIGO_AUDITADO); H-20 (MEDIA:
+  CI sin SHA/run/resultado verificable).
+- Push: NO AUTORIZADO.
+
+**Principio rector del dictamen:**
+
+> No usar la evidencia para hacer que P38 de un numero.
+> Usar P38 para describir fielmente lo que la evidencia permite.
+
+**Orden autorizado:**
+
+1. B-02: cerrar decision PIT (sin retro-fechado).
+2. B-03: 2 re-queries OpenFIGI + fijar CATALOG_UNIVERSE != TARGET_P.
+3. B-04: fixture sintetico y/o mappings Q4 con PIT real.
+4. Actualizar estado documental.
+5. Nuevo probe: sin snapshot PIT -> `PIT_UNAVAILABLE`.
+6. Nuevo bundle. 7. Nuevo dictamen A.6.6.

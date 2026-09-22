@@ -1508,3 +1508,41 @@ en la tabla `OTHERMANAGER`.
 **Hallazgos cerrados:** H-05, H-06, H-07, H-10.1, H-08, B-01, B-05, B-06, B-07.
 **Bloqueos residuales (NO-GO A.6.6):** B-02 (P62/PIT), B-03 (TARGET completo),
 B-04 (pairwise real).
+
+## Ciclo B-03 - Materializacion TARGET via OpenFIGI requery (2026-09-22)
+
+**Dictamen:** #77 (GO PARCIAL para 2 re-queries).
+
+**Objetivo:** cerrar las 2 keys MISS del catalogo radar (BRK-B, MOG-A)
+sin recurrir a OpenFIGI masivo.
+
+**Commits:**
+
+    a8ad54b  data: BRK-B + MOG-A materializados + snapshot 20260922_01
+    7f314ef  data: membership migrada + probe lee snapshot vigente
+    9e04cb8  docs: ESTADO_DECLARADO + ESTADO_SISTEMA post B-03
+    d18cf62  fix: build_catalog_csvs soporta N snapshots (P62)
+    (actual) docs: sync DICTAMENES #77 + HISTORICO + TRANSFER v9.8
+
+**Evidencia empirica:**
+
+    BRK-B: CUSIP 084670702 -> OpenFIGI US -> scf BBG001S90346
+    MOG-A: CUSIP 615394202 -> OpenFIGI US -> scf BBG001S5T922
+    Catalogo radar: 240/242 -> 242/242 keys OK
+    Snapshot B2-PIT: 20260922_01 (anterior 20260921_01 preservado, P62)
+    Probe A.6.4: catalog_keys Q1 20 -> 22; records_q1 18 -> 22
+    coverage_current = 1.0 (22/22 VERIFIED sobre TARGET_Q1 materializado)
+
+**Ficheros clave:**
+
+    data/mappings/radar_target_catalog.csv         (242/242 OK)
+    data/mappings/catalog_manifest.json            (2 snapshots)
+    data/mappings/catalog_snapshots/snapshot_20260922_01.csv
+    data/mappings/catalog_membership.csv           (migrada, predecessors)
+    data/mappings/openfigi_requeries/              (evidencia raw + hash)
+    scripts/build_catalog_csvs.py                  (multi-snapshot + P62)
+    docs/auditoria/iae/evidence/a64_integration_b1_p61_p38/
+
+**Nota:** la materializacion resuelve B-03 pero NO cierra A.6.6.
+Sigue pendiente B-02.2 (snapshot historico PIT no existe) y B-04
+(pairwise real). P38 = GO CONDICIONADO.

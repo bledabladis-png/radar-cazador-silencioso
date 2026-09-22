@@ -60,6 +60,7 @@ documentos describen su tema; NO declaran el estado del sistema.
 | `A67_CONSULTA.md` | Consulta abierta al auditor sobre B-02/B-03/B-04. |
 | `B02_EXPEDIENTE.md` | Correccion material #76: P62 implementado, bloqueo=snapshot historico. |
 | `B034_EXPEDIENTE.md` | Correccion material #76: universo=242, Q4 tiene datos. |
+| `A67_RESUMEN.md` | Resumen ejecutivo entregado al auditor (2026-09-22). |
 | `evidence/p66_e2e_probe/` | Evidencia P66 e2e (10.676 filings Q4, 0 R4 no clasificables). Complementa a `p66_gate*`. |
 
 ## 4. Prohibiciones vigentes
@@ -103,6 +104,12 @@ documentos describen su tema; NO declaran el estado del sistema.
   catalogo radar (sin share_class_figi). No resoluble via crosswalk
   (ambos ya estan en `cusip_ticker_exceptions.csv`). Requiere OpenFIGI.
 - Gate-NIPC.2 BLOQUEADO por THRESHOLD_1/2 UNDEFINED
+- **Hallazgos #77 (MEDIA, no bloqueantes):**
+  - H-19: bundle con multiples HEAD ambiguos. Requiere etiquetar
+    `HEAD_DEL_EXPEDIENTE` vs `HEAD_DEL_CODIGO_AUDITADO` vs
+    `HEAD_DE_LA_EVIDENCIA` antes del proximo bundle.
+  - H-20: afirmacion CI 0 failed sin SHA/run. Requiere aportar
+    CI run + commit SHA + resultado en el proximo expediente.
 - **B-03 CERRADO (2026-09-22, dictamen #77):** BRK-B (scf BBG001S90346)
   y MOG-A (scf BBG001S5T922) materializados via OpenFIGI re-query.
   Catalogo 240/242 -> 242/242 keys con share_class_figi. Snapshot B2-PIT
