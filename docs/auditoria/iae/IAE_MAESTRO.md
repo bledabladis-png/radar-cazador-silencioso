@@ -2,8 +2,8 @@
 
 Documento unico del modulo IAE. Estado, arquitectura, verificacion.
 
-**Actualizado:** 2026-09-22
-**HEAD:** b817858
+**Actualizado:** 2026-09-23
+**HEAD:** bcf454d (verificar con git al arrancar)
 
 **Que es este documento.** Describe el modulo IAE tal como esta
 implementado y verificado. No certifica cumplimiento de contratos
@@ -65,47 +65,51 @@ documento.
 ### 2.1 Estructura de ficheros
 
     src/institutional_accumulation/
-    ├── __init__.py                          24 LOC
-    ├── absence.py                           58 LOC
-    ├── catalog_pit.py                      176 LOC
-    ├── operational_universe.py             160 LOC
-    ├── security_type.py                    315 LOC
-    ├── temporal_validity.py                 73 LOC
-    ├── timestamps.py                       123 LOC
+    ├── __init__.py                          28 LOC
+    ├── absence.py                           77 LOC
+    ├── catalog_pit.py                      232 LOC
+    ├── operational_universe.py             194 LOC
+    ├── security_type.py                    397 LOC
+    ├── temporal_validity.py                 92 LOC
+    ├── timestamps.py                       153 LOC
     ├── aggregation/
-    │   ├── __init__.py                      90 LOC
-    │   ├── catalog_p38_adapter.py          141 LOC
-    │   ├── catalog_validator.py             74 LOC
-    │   ├── coverage.py                     146 LOC
-    │   ├── delta_shares.py                 322 LOC
-    │   ├── nipc.py                         339 LOC
-    │   └── reporting_dedup.py              722 LOC
+    │   ├── __init__.py                      97 LOC
+    │   ├── catalog_p38_adapter.py          170 LOC
+    │   ├── catalog_validator.py             94 LOC
+    │   ├── coverage.py                     258 LOC
+    │   ├── delta_shares.py                 380 LOC
+    │   ├── nipc.py                         395 LOC
+    │   └── reporting_dedup.py              880 LOC
     ├── identity/
-    │   ├── __init__.py                      10 LOC
-    │   ├── catalog_key.py                  304 LOC
-    │   ├── openfigi_client.py              152 LOC
-    │   ├── period_state.py                 178 LOC
-    │   ├── radar_target_catalog.py         127 LOC
-    │   ├── target_builder.py               154 LOC
-    │   └── target_universe.py              148 LOC
+    │   ├── __init__.py                      13 LOC
+    │   ├── catalog_key.py                  375 LOC
+    │   ├── openfigi_client.py              180 LOC
+    │   ├── period_state.py                 212 LOC
+    │   ├── radar_target_catalog.py         145 LOC
+    │   ├── target_builder.py               181 LOC
+    │   └── target_universe.py              171 LOC
     └── sec_13f/
-        ├── __init__.py                      18 LOC
-        ├── downloader.py                   143 LOC
-        ├── ingest.py                       112 LOC
-        ├── manifest.py                     126 LOC
-        ├── parser.py                       117 LOC
-        ├── schema.py                       171 LOC
-        ├── storage.py                       67 LOC
+        ├── __init__.py                      22 LOC
+        ├── downloader.py                   176 LOC
+        ├── ingest.py                       131 LOC
+        ├── manifest.py                     150 LOC
+        ├── parser.py                       142 LOC
+        ├── schema.py                       185 LOC
+        ├── storage.py                       89 LOC
         └── identity/
-            ├── __init__.py                 157 LOC
-            ├── amendments.py               372 LOC
-            ├── cusip_resolver.py           120 LOC
-            ├── relationships.py            310 LOC
-            ├── sec13f_list.py              218 LOC
-            ├── security_identity.py        576 LOC
-            └── temporal_filter.py           82 LOC
+            ├── __init__.py                 161 LOC
+            ├── amendments.py               444 LOC
+            ├── cusip_resolver.py           149 LOC
+            ├── relationships.py            367 LOC
+            ├── sec13f_list.py              255 LOC
+            ├── security_identity.py        654 LOC
+            └── temporal_filter.py          100 LOC
+**Totales:** 35 ficheros, 7.749 LOC produccion, ~8.100 LOC test.
 
-**Totales:** 35 ficheros, ~6.500 LOC produccion, ~5.600 LOC test.
+LOC medidos el 2026-09-23 sobre el commit `bcf454d`. Se cuentan
+todas las lineas del fichero (codigo, comentarios y lineas en
+blanco). Pueden desfasarse con cada commit; el valor de este
+bloque es orden de magnitud, no cifra contractual.
 
 ### 2.2 Capas funcionales
 
@@ -159,23 +163,26 @@ declaran como riesgo pendiente, no como deuda que "subira sola".
 
 ### 3.2 Cobertura de tests
 
-    Cobertura de lineas:           83%  (2942 stmts, 492 miss)
-    Ficheros >= 95%:               13
+    Cobertura de lineas:           81%  (2964 stmts, 568 miss)
+    Ficheros >= 95%:               16
     Ficheros 80-94%:               13
-    Ficheros < 80%:                 4
-      - temporal_validity.py:      79%
-      - reporting_dedup.py:        55%
-      - openfigi_client.py:        31%
+    Ficheros < 80%:                 6
       - timestamps.py:             20%
+      - openfigi_client.py:        31%
+      - target_universe.py:        31%
+      - reporting_dedup.py:        55%
+      - security_type.py:          64%
+      - temporal_validity.py:      79%
 
-Los 4 ficheros con cobertura inferior al 80% no estan integrados en
+Los 6 ficheros con cobertura inferior al 80% no estan integrados en
 produccion. Son codigo preparado para integracion futura.
 
-Nota de alcance. La cobertura se calcula sobre 30 ficheros con
-statements instrumentables. Los 5 ficheros restantes hasta 35 son
+Nota de alcance. La cobertura se calcula sobre 32 ficheros con
+statements instrumentables. Los 3 ficheros restantes hasta 35 son
 `__init__.py` sin statements: `src/institutional_accumulation/__init__.py`,
-`aggregation/__init__.py`, `identity/__init__.py`, `sec_13f/__init__.py`,
-`sec_13f/identity/__init__.py`.
+`identity/__init__.py`, `sec_13f/__init__.py`. Los otros 2
+`__init__.py` (`aggregation/` 6 stmts, `sec_13f/identity/` 7 stmts)
+si contienen statements y se cuentan en el total.
 
 ### 3.3 Estado de integracion
 
@@ -1932,4 +1939,4 @@ o si auditoria externa exige reconstruir el radar en fechas previas a
 Documento unico del modulo IAE. No depende de expedientes previos,
 contratos externos ni dictamenes.
 
-2026-09-22.
+2026-09-23.
