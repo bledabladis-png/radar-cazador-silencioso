@@ -1040,10 +1040,20 @@ tiene 694 funciones de test detectables por AST. La diferencia
 @pytest.mark.parametrize, que pytest expande a multiples casos por
 funcion.
 
-La seccion 11 lista funciones de test de 29 de los 42 ficheros del
-modulo (listado parcial, ver §11). El conteo autoritativo del modulo
-completo esta en el resumen ejecutivo (§1) y se reproduce con
-`scripts/iae_test_census.py`.
+Censo del listado. La seccion 11 tiene 29 bloques `### tests/test_*.py`.
+De ellos, 27 corresponden a ficheros que importan el modulo
+(criterio AST) y 2 son extra: `test_build_catalog_csvs.py` (importa
+`scripts/build_catalog_csvs`) y `test_iae_pipeline_report.py` (fuera
+del AST por dependencia indirecta). Del universo de 42 ficheros del
+modulo, 27 estan listados en §11 y 15 no aparecen:
+`test_absence`, `test_b06_e2e_aggregation`, `test_b1_schema`,
+`test_h692_temporal_precedence`, `test_openfigi_client`,
+`test_operational_universe`, `test_p60_contract`, `test_p61_contract`,
+`test_p66_contract`, `test_p66_pipeline`, `test_period_state`,
+`test_position_record`, `test_security_type`, `test_temporal_validity`,
+`test_timestamps`. Comprobacion: 27 listados + 15 ausentes = 42.
+El conteo autoritativo del modulo completo esta en el resumen
+ejecutivo (§1) y se reproduce con `scripts/iae_test_census.py`.
 
 Nota historica (2026-09-23). El conteo anterior declaraba 641 tests,
 no reproducible con ningun criterio mecanico. El conteo actual usa
@@ -1658,10 +1668,11 @@ el criterio AST declarado en el resumen ejecutivo.
 - `test_membership_summary_vacio`
 
 
-**Cobertura de este listado (parcial).** §11 lista 29 ficheros con sus
-funciones de test detectables por AST. La suma de funciones listadas es
-505 (492 hasta la revision 2026-09-22; +13 en `test_p38_contract.py`
-por C9+C10).
+**Cobertura de este listado (parcial).** §11 tiene 29 bloques. De
+ellos, 27 corresponden a ficheros del modulo (criterio AST) y 2 son
+extra. La suma de funciones de test detectables por AST en los 29
+bloques es 505 (492 hasta la revision 2026-09-22; +13 en
+`test_p38_contract.py` por C9+C10).
 
 El modulo completo tiene 42 ficheros que importan
 `src.institutional_accumulation`. 15 no aparecen en §11:
