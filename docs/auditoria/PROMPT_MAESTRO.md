@@ -112,7 +112,7 @@ Eres el Ingeniero Supervisor del Radar de Rotacion Sectorial, un sistema determi
 - **"Ver el contenido real antes del patch."** Nunca aplicar un patch sin haber inspeccionado el bloque exacto.
 - **"Un cambio = una verificacion = un commit."** No mezclar cambios.
 - **"Local-first."** Para refactors grandes: 15-20 commits locales, verificacion exhaustiva, push unico al final.
-- **"Local-first IAE (K-INSTITUTIONAL-ACCUMULATION-01)."** Modulo nuevo, grande, no consolidado: NO push a main hasta validar funcionalidad + beneficio del reporte. Ver INSTITUTIONAL_ACCUMULATION_PROPUESTA.md seccion 16.
+- **"Local-first IAE (K-INSTITUTIONAL-ACCUMULATION-01)."** Modulo nuevo, grande, no consolidado: NO push a main hasta validar funcionalidad + beneficio del reporte. Ver iae/IAE_MAESTRO.md.
 - **"Deteccion por contenido > por indices."** Los indices cambian tras cada extraccion. Usar strings unicos como anclas.
 - **"Rollback quirurgico."** Si un patch falla, revertir solo la parte rota.
 - **"Saber parar."** Si una tarea tiene ROI < 1, cerrarla como WONT FIX.
@@ -851,16 +851,7 @@ externa lo exige.
 
 K-INSTITUTIONAL-ACCUMULATION-01 (2026-09-19) -> FA-1 CERRADO + PUSHED. FA-2 CERRADO / PASS. NIPC implementado (spec v1.4, 5 modulos + 91 tests). Filer continuity CERRADO. Gate-NIPC.2 BLOQUEADO por thresholds UNDEFINED. 45 commits locales por pushear.
 Origen: propuesta del usuario + ciclo de dictamenes del auditor externo.
-Documentos completos (9):
-  - PROPUESTA: docs/auditoria/INSTITUTIONAL_ACCUMULATION_PROPUESTA.md
-  - CONTRATO v1.1: docs/auditoria/INSTITUTIONAL_ACCUMULATION_CONTRATO.md
-  - INFORME Gate 0: docs/auditoria/INSTITUTIONAL_ACCUMULATION_GATE0_INFORME.md
-  - DICTAMEN Gate 0: docs/auditoria/INSTITUTIONAL_ACCUMULATION_DICTAMEN_GATE0.md
-  - ADDENDUM contrato v1.1 (D1-D5): docs/auditoria/INSTITUTIONAL_ACCUMULATION_CONTRATO_ADDENDUM.md
-  - INFORME Gate FA-1: docs/auditoria/INSTITUTIONAL_ACCUMULATION_GATE_FA1_INFORME.md
-  - DICTAMEN FA-2.3 hallazgo: docs/auditoria/INSTITUTIONAL_ACCUMULATION_FA23_DICTAMEN.md
-  - DICTAMEN FA-2.3 cierre: docs/auditoria/INSTITUTIONAL_ACCUMULATION_FA23_DICTAMEN_CIERRE.md
-  - INFORME + DICTAMEN Gate FA-2: docs/auditoria/INSTITUTIONAL_ACCUMULATION_GATE_FA2_INFORME.md + GATE_FA2_DICTAMEN.md
+Documentos completos consolidados en iae/IAE_MAESTRO.md (los originales se han absorbido en el documento maestro).
 
 Estado tras Gate 0 empirico (13F Q1 2026, 10,776 filings, 3.3M holdings):
   Q2 (relacion de managers): REFORMULADO. Framework 3 niveles (identidad
@@ -965,7 +956,7 @@ ACTIVOS:
 - THRESHOLD_1/2 UNDEFINED / BLOQUEADO. Gate-NIPC.2 bloqueado.
 - OpenFIGI masivo NO autorizado (no necesario; catalogo 242/242).
 - SPCX: entrada en catalogo cuestionable (SpaceX privada).
-- OpenFIGI requeries raw.json 121 KB (excluir del proximo A66_DIFFS).
+- OpenFIGI requeries raw.json 121 KB (ya no aplica tras consolidacion en IAE_MAESTRO.md).
 
 Cobertura: IAE 110/110 funciones publicas con test semantico.
 

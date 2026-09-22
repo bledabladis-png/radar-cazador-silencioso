@@ -56,12 +56,7 @@ documentos describen su tema; NO declaran el estado del sistema.
 | `NIPC_CONTRATOS_SEMANTICOS_v1.md` | VIGENTE. P60/P61 GO, P38 GO CONDICIONADO |
 | `NIPC_COVERAGE_POLICY.md` v1.0 | VIGENTE (normativa) |
 | `INSTITUTIONAL_ACCUMULATION_NIPC_ESPECIFICACION.md` v1.4 | Referencia, no normativa |
-| `A66_BUNDLE.md` | Entregable al auditor (dictamen #76). Refleja estado post-A2. |
-| `A67_CONSULTA.md` | Consulta abierta al auditor sobre B-02/B-03/B-04. |
-| `B02_EXPEDIENTE.md` | Correccion material #76: P62 implementado, bloqueo=snapshot historico. |
-| `B034_EXPEDIENTE.md` | Correccion material #76: universo=242, Q4 tiene datos. |
-| `A67_RESUMEN.md` | Resumen ejecutivo entregado al auditor (2026-09-22). |
-| `A68_RESUMEN.md` | Respuesta a dictamen #77 (B-02+B-03+B-04 cerrados). |
+| `IAE_MAESTRO.md` | Referencia unica del modulo IAE. Estado, arquitectura, evidencia, consulta. |
 | `evidence/p66_e2e_probe/` | Evidencia P66 e2e (10.676 filings Q4, 0 R4 no clasificables). Complementa a `p66_gate*`. |
 
 ## 4. Prohibiciones vigentes
@@ -94,7 +89,7 @@ documentos describen su tema; NO declaran el estado del sistema.
 - Snapshots historicos Q4 2025 / Q1 2026: **correccion 2026-09-22**.
   Universo contractual real = 242 keys (no 35.649 CUSIPs 13F, que son
   OUT_OF_TARGET). Hueco real: 2 MISS (BRK-B, MOG-A) -> 2 re-queries
-  OpenFIGI, NO masivo. Ver `B034_EXPEDIENTE.md`.
+  OpenFIGI, NO masivo. Ver `IAE_MAESTRO.md` seccion 4.
 - Curacion crosswalk residual CERRADA (2026-09-22): ONB (CUSIP 680033107)
   y PTGX (CUSIP 74366E102) anadidos a `cusip_ticker_exceptions.csv` tras
   verificacion en INFOTABLE Q1 (98 y 617 hits). SPCX NO procede:
@@ -221,7 +216,7 @@ sin dictamen).
 **evidencia contractual parcial**: valida rama Q1 (20/20 sobre TARGET_Q1
 materializado) y rama fail-closed (Q4 vacio -> coverage_previous=None),
 pero NO valida pairwise real (TARGET_PAIRWISE=0). Ver
-`evidence/a64_integration_b1_p61_p38/README.md` y `A66_BUNDLE.md`.
+`evidence/a64_integration_b1_p61_p38/README.md` y `IAE_MAESTRO.md` seccion 4.
 
 **Pendientes de dictamen:** B-02 (P62/PIT), B-03 (TARGET completo,
 requiere OpenFIGI masivo), B-04 (pairwise real). Ver seccion 9.

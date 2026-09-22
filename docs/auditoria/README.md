@@ -57,9 +57,7 @@ Orden recomendado para entender el sistema actual:
     NIPC_COVERAGE_POLICY.md               policy v1.0 vigente
     INFORME.md                            consolidado de 17 informes
     DICTAMENES.md                         registro de 23 dictamenes
-    RECONCILIACION_CONTRATO_CODIGO.md     divergencias contrato<->codigo
-    REESTRUCTURACION_MODULO.md            plan arquitectonico
-    FASE_A6_PLAN.md                       plan de ejecucion A.6
+    IAE_MAESTRO.md                        documento maestro del modulo IAE
 
 ### tests/ (contractuales para F2.4)
 

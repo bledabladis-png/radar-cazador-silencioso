@@ -61,3 +61,7 @@ _snapshot_*.md
 data/sec_13f/raw/
 data/sec_13f/processed/
 !data/sec_13f/manifests/
+
+# Coverage (pytest-cov)
+.coverage
+htmlcov/
