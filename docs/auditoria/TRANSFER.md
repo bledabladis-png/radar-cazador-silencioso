@@ -1,4 +1,4 @@
-# TRANSFER DE SESION - 2026-09-22 v9.9
+# TRANSFER DE SESION - 2026-09-22 v10
 
 Documento de onboarding. **NO es fuente de estado.**
 Estado vivo: `iae/ESTADO_SISTEMA.md` (hechos) + `iae/ESTADO_DECLARADO.md` (fases).
@@ -16,121 +16,126 @@ Reglas de personalidad y metodo: `PROMPT_MAESTRO.md` secciones 1 y 3.
 
 ## 2. Estado real al cierre de esta sesion
 
-    HEAD          ea672a8 (verificar con git al arrancar)
-    Ahead         330 commits locales
+    HEAD          ac1edc3 (verificar con git al arrancar)
+    Ahead         331 commits locales
     Working tree  LIMPIO (verificar)
-    Tests         test_h731: 11 passed (incluye H-08);
+    Tests         test_h731: 11 passed;
                   suite global: 1415 passed + 2 skipped + 3 failed
-                  (los 3 failed son test_freshness.py, preexistentes)
-    Push          NO (local-first IAE, dictamen #76/#77)
+                  (los 3 failed son test_freshness.py, ambientales:
+                   parquets stale en local; en CI se skipean via
+                   @pytest.mark.skipif -> suite CI = 0 failed)
+    Push          NO (local-first IAE, dictamenes #76/#77)
+    Cobertura     IAE 110/110 funciones publicas con test semantico
 
 ## 3. Contexto: auditoria externa reciente
 
-El auditor externo ha emitido, el 2026-09-21:
+### 3.1. Cadena de dictamenes
 
-  **Dictamen bundle v3 (minimo):** NO-GO para A.6.6 / F2.4-CLOSE.
-    Motivo: P38 no validado cuantitativamente, H-10.1 abierto,
-    A.6.4 reclasificado como smoke test, THRESHOLD_2 bloqueado.
+    #76 (2026-09-21)  A2 = GO; A.6.6 = NO-GO. Bloqueos residuales:
+                      B-02 (P62/PIT), B-03 (TARGET), B-04 (pairwise).
+    #77 (2026-09-22)  Respuesta a la consulta A.6.7:
+                      - B-02: GO CONDICIONADO. Prohibido retro-fechado.
+                        Probe debe declarar PIT_UNAVAILABLE si no hay
+                        snapshot que cubra el periodo. A.6.6 NO.
+                      - B-03: GO PARCIAL. 2 re-queries OpenFIGI
+                        (BRK-B, MOG-A). NO OpenFIGI masivo. NO cerrar
+                        con 240/242 sin definir TARGET_P.
+                      - B-04: NO-GO a fabricar overlap con exceptions.
+                        GO a fixture sintetico NON-PRODUCTION o a
+                        mappings Q4 con vigencia historica real.
+                      - Punto contractual clave: CATALOG_UNIVERSE (242)
+                        NO es TARGET_P (universo por periodo). TARGET
+                        no se filtra por RESOLVED.
+                      - Hallazgos nuevos: H-19 (HEAD ambiguo), H-20
+                        (CI sin SHA/run verificable).
+                      - Push: NO.
 
-  **Dictamen consulta H-10.1:** GO para fix A2.
-    Autoriza ciclo de correccion completo con propagacion SSHPRNAMT real.
+### 3.2. Fix A2 (H-05/H-06/H-07/H-10.1) - CERRADO
 
-**5 respuestas del auditor (fijas, no renegociables):**
+5 commits (2f98926..473ce06) ejecutados 2026-09-21. Estado:
 
-    Q1  Alcance del fix: A2 (no A1). Incluye SSHPRNAMT real.
-    Q2  coverage_previous/current = RESOLVED / TARGET (no observed).
-    Q3  operational_mapping_status debe derivarse del estado operacional.
-        El adapter PROPAGA, no fabrica VERIFIED.
-    Q4  SSHPRNAMT del canonical_snapshot post-amendments, agregado por
-        shareClassFIGI, luego max(Q4,Q1).
-    Q5  Q4 vacio:
-          coverage_previous              = UNAVAILABLE (TARGET_Q4=0)
-          coverage_current               = calculable sobre TARGET_Q1
-          paired_security_coverage       = UNAVAILABLE (TARGET_PAIRWISE=0)
-          paired_weighted_share_coverage = UNAVAILABLE
+    period_state       transporta sshprnamt + operational_mapping_status
+    target_builder     extract_sshprnamt_by_figi agregado por FIGI
+    adapter P38        propaga VERIFIED + weight desde el state
+    coverage           denominador TARGET + Q5 fail-closed
+    probe A.6.4        sin mock Q4=Q1; Q5 literal; cardinalidades
 
-**Fix A2 EJECUTADO (2026-09-21, commits 2f98926..473ce06).**
+### 3.3. Saneamiento post-#76 - CERRADO
 
-Evidencia empirica sobre 13F Q4 2025 / Q1 2026 reales
-(probe_integration_b1_p61_p38.py, result.json):
+    B-01  Contradiccion documental post-fix (docs sincronizados)
+    B-05  Precision: coverage_current sobre TARGET materializado
+    B-06  Cadena end-to-end sin doble conteo (test + probe)
+    B-07  Suite CI = 0 failed (verificado; skip en clone fresco)
+    H-08  Test ortogonal identity=RESOLVED + weight=NOT_PRESENT
 
-    coverage_previous              = None    (Q4 vacio, Q5 literal)
-    coverage_current               = 1.0     (20/20 VERIFIED sobre TARGET_Q1)
-    paired_security_coverage       = None    (TARGET_PAIRWISE = 0)
-    paired_weighted_share_coverage = None
-    coverage_status                = UNAVAILABLE
+### 3.4. Ciclo B-02 (PIT_UNAVAILABLE) - CERRADO
 
-Dictamen #76 (2026-09-21): A2 = GO; A.6.6 = NO-GO.
-Hallazgos cerrados: H-05, H-06, H-07, H-10.1, H-08, B-01, B-05, B-06, B-07.
-Bloqueos residuales (NO AUTORIZADOS): B-02 (P62/PIT), B-03 (TARGET
-completo), B-04 (pairwise real), push.
+Commit `ea672a8`. Probe A.6.4 emite `pit_status` explicito:
 
-Consulta A.6.7 ENVIADA al auditor (commit `ba59d39`,
-`A67_CONSULTA.md`). Pendiente respuesta para desbloquear B-02/B-03/B-04.
+    strict-pit (default): target_catalog_as_of("2026-03-31") ->
+      CatalogNotAvailable (snapshot vigente valid_from=2026-09-22
+      no cubre Q1) -> PIT_UNAVAILABLE, coverage_current=None,
+      coverage_contractual=False, coverage_status=PIT_UNAVAILABLE.
+    --no-pit: bypass documentado con PIT_BYPASS_DOCUMENTED.
 
-Trabajo post-consulta (sin dictamen):
-- Curacion crosswalk ONB (680033107) + PTGX (74366E102) cerrada
-  (commit `7357e1d`). Sub-deuda nueva: BRK-B + MOG-A con status=MISS
-  (requiere OpenFIGI masivo).
-- Smoke NIPC contractual anadido al probe (commit `6126c0d`).
-- Regresion cruzada P65 verificada tras A2: sin impacto.
-- Cobertura semantica IAE 110/110 (commits `12e1e3f`, `de6b737`).
-- B-06 end-to-end sin doble conteo (commit `33881df`).
-- Saneamiento: 3 failed de test_freshness aclarados como ambientales.
-- Sync 18->20 post-curacion ONB/PTGX en docs vivos (`8bf6812`).
-- Sub-deuda registrada: contrato NIPC L332 cita 18 (desactualizado,
-  requiere dictamen para actualizar in-place).
-- 3 expedientes tecnicos anadidos (correccion material #76):
-  B02_EXPEDIENTE (P62 implementado), B034_EXPEDIENTE (universo=242,
-  Q4 tiene datos). A67_CONSULTA ampliada con seccion 7.
+El numero tecnico pre-PIT se preserva bajo
+`coverage_current_technical_pre_pit` para trazabilidad.
 
-## 4. TRABAJO PENDIENTE: fix A2 (H-05/H-06/H-07/H-10.1)
+### 3.5. Ciclo B-03 (materializacion TARGET) - CERRADO
 
-**Estado: COMPLETADO, 5 de 5 commits hechos (2026-09-21).**
+Commits `a8ad54b` + `7f314ef` + `9e04cb8` + `d18cf62`.
 
-Plan autorizado, en orden estricto:
+    BRK-B: CUSIP 084670702 -> OpenFIGI US -> scf BBG001S90346
+    MOG-A: CUSIP 615394202 -> OpenFIGI US -> scf BBG001S5T922
+    Catalogo: 240/242 -> 242/242 keys OK
+    Snapshot B2-PIT: 20260922_01 (anterior 20260921_01 preservado)
+    Membership: migrada, catalog_key inmutable, 2 predecessors
+    Probe A.6.4: catalog_keys Q1 20 -> 22 (coverage tecnico 22/22)
 
-    Commit 1  period_state.py
-              Anadir a PeriodState: sshprnamt (float|None) y
-              operational_mapping_status (str, default UNRESOLVED).
-              NO romper build_period_state.
+Evidencia: `data/mappings/openfigi_requeries/` con input/raw/summary
+y HASHES.txt.
 
-    Commit 2  target_builder.py + probe
-              Extraer SSHPRNAMT efectivo del canonical snapshot por key.
-              Transportarlo hasta el state.
+## 4. TRABAJO PENDIENTE
 
-    Commit 3  catalog_p38_adapter.py
-              Quitar operational_mapping_status="VERIFIED" hardcoded
-              (L164) y weight=1.0 hardcoded (L165). PROPAGAR del state:
-                operational_mapping_status = state[k].operational_mapping_status
-                weight = float(state[k].sshprnamt) if not None else 0.0
-              (cierra H-10.1 + H-07 en el mismo bloque _records).
-              Adicionalmente: reescribir tests/test_h731_adapter_p38_compat.py
-              (xfail A-12 -> positivo con 3 direcciones a/b/c; compat_a/b/c/d
-              actualizados a propagacion; nuevo test weight). Motivo: regla
-              3.1 PROMPT_MAESTRO (un commit = un veredicto verde) prima
-              sobre el plan original que diferia el xfail a Commit 5.
+### 4.1. Autorizado por #77
 
-    Commit 4  coverage.py
-              coverage_previous/current con denominador TARGET_Q4/TARGET_Q1.
-              UNAVAILABLE si TARGET del periodo = 0.
+    B-04 (fixture pairwise NON-PRODUCTION):
+      Disenar fixture sintetico con 2-5 FIGIs, overlap Q4<->Q1
+      no vacio, marcado explicitamente NON_PRODUCTION /
+      CONTRACT_TEST_FIXTURE. NO toca mappings productivos.
+      Objetivo: ejercitar la rama pairwise (paired_security_coverage
+      y paired_weighted_share_coverage con TARGET_PAIRWISE > 0).
+      Alternativa aceptada por #77: mappings Q4 con evidencia
+      historica real (NO fabricados para producir overlap).
 
-    Commit 5  probe + tests
-              probe_integration_b1_p61_p38.py: Q4 y Q1 REALES, sin mock.
-              Tests nuevos: max(Q4,Q1), agregacion FIGI.
+### 4.2. Sub-deudas registradas (no bloqueantes)
 
-**Reglas por commit:** suite completa + pyflakes + compileall antes del
-siguiente. Si algo falla, parar y avisar.
+    H-19 (MEDIA): bundle con multiples HEAD ambiguos.
+      Requiere etiquetar HEAD_DEL_EXPEDIENTE vs HEAD_DEL_CODIGO_AUDITADO
+      vs HEAD_DE_LA_EVIDENCIA antes del proximo bundle.
+    H-20 (MEDIA): afirmacion CI 0 failed sin SHA/run.
+      Requiere aportar CI run + commit SHA + resultado.
+    Contrato NIPC L332: cita 18 FIGI -> 18 records; real ahora 22.
+      Prohibido tocar sin dictamen (contrato normativo).
+    OpenFIGI requeries raw.json = 121 KB (expandido en A66_DIFFS.txt).
+      Considerar excluir del proximo bundle via git pathspec.
 
-## 5. Ficheros que el fix TOCA (autorizados)
+### 4.3. NO autorizado (esperar dictamen)
 
-    src/institutional_accumulation/identity/period_state.py
-    src/institutional_accumulation/identity/target_builder.py
-    src/institutional_accumulation/aggregation/catalog_p38_adapter.py
-    src/institutional_accumulation/aggregation/coverage.py
-    docs/auditoria/iae/evidence/a64_integration_b1_p61_p38/probe_integration_b1_p61_p38.py
-    tests/test_p38_contract.py
-    tests/test_h731_adapter_p38_compat.py
+    A.6.6 / F2.4-CLOSE: NO-GO en #76 y #77.
+    Push a origin/main: NO (local-first IAE).
+    OpenFIGI masivo: NO.
+    Fabricar overlap con exceptions Q4: NO.
+    Retro-fechar snapshot: NO.
+    Modificar contratos normativos sin dictamen: NO.
+
+## 5. Ficheros que el trabajo pendiente TOCA (autorizados)
+
+    docs/auditoria/iae/evidence/a64_integration_b1_p61_p38/
+      probe_pairwise_fixture.py        (nuevo, B-04)
+      result_pairwise_fixture.json     (nuevo, B-04)
+      HASHES.txt                       (regenerar tras B-04)
+    tests/test_p38_pairwise_fixture.py (nuevo, B-04)
 
 ## 6. Ficheros PROHIBIDOS (no tocar sin dictamen)
 
@@ -140,44 +145,55 @@ siguiente. Si algo falla, parar y avisar.
     src/institutional_accumulation/temporal_validity.py
     src/institutional_accumulation/sec_13f/identity/relationships.py
     MATCH_KEY, C2
-    Contratos normativos
-    NIPC_COVERAGE_POLICY.md
+    Contratos normativos (NIPC_CONTRATOS_SEMANTICOS_v1.md,
+      NIPC_COVERAGE_POLICY.md, INSTITUTIONAL_ACCUMULATION_NIPC_ESPECIFICACION.md)
 
-## 7. Correcciones documentales aplicadas hoy (A-01/A-04/A-12)
+## 7. Correcciones documentales aplicadas hoy (2026-09-22)
 
-    A-01  ESTADO_SISTEMA.md lista los 3 tests fallidos por nombre.
-    A-04  Separadas metricas diagnosticas (18/242 = 0.0744) de las
-          contractuales (RESOLVED/TARGET) en EXPEDIENTE_A64_FIX.md.
-    A-12  test_h101_adapter_no_marca_verified_sin_evidencia_operacional
-          marcado xfail(strict=True). Documenta el DEFECTO como
-          expectativa futura, no como conformidad actual.
+    A-01  ESTADO_SISTEMA lista los 3 tests fallidos por nombre
+    A-04  Separadas metricas diagnosticas (18/242) de contractuales
+          (RESOLVED/TARGET) en EXPEDIENTE_A64_FIX
+    A-12  Test xfail(strict=True) H-10.1 -> reescrito como positivo
+          en commit 3 (A2 cierra H-10.1)
+    #77   Correcciones materiales a #76 aplicadas en 3 expedientes:
+          B02_EXPEDIENTE, B034_EXPEDIENTE, A67_CONSULTA
+    B-02  Probe declara PIT_UNAVAILABLE; coverage_current anulado
+          como contractual (commit ea672a8)
+    B-03  242/242 keys materializadas; snapshot 20260922_01
+    H-05..H-10.1, H-08, B-01..B-07: CERRADOS
 
 ## 8. Documentos clave (vivos)
 
-    docs/auditoria/PROMPT_MAESTRO.md         v7 - normativa general
+    docs/auditoria/PROMPT_MAESTRO.md         v7.1 - normativa general
     docs/auditoria/iae/ESTADO_DECLARADO.md   fases, prohibiciones, hallazgos
     docs/auditoria/iae/ESTADO_SISTEMA.md     hechos (autogenerado)
-    docs/auditoria/iae/EXPEDIENTE_A64_FIX.md el expediente del fix
-    docs/auditoria/iae/NIPC_CONTRATOS_SEMANTICOS_v1.md   contrato P38
-    docs/auditoria/iae/DICTAMENES.md         indice #1-#75
+    docs/auditoria/iae/DICTAMENES.md         indice #1-#77
     docs/auditoria/iae/HISTORICO_IAE.md      registro de ciclos
+    docs/auditoria/iae/NIPC_CONTRATOS_SEMANTICOS_v1.md  contrato P60-P70
+    docs/auditoria/iae/NIPC_COVERAGE_POLICY.md          policy normativa
+    docs/auditoria/iae/EXPEDIENTE_A64_FIX.md  expediente del fix A2
+    docs/auditoria/iae/A66_BUNDLE.md          bundle previo #76
+    docs/auditoria/iae/A67_CONSULTA.md        consulta #77 (larga)
+    docs/auditoria/iae/A67_RESUMEN.md         resumen ejecutivo #77
+    docs/auditoria/iae/B02_EXPEDIENTE.md      correccion P62
+    docs/auditoria/iae/B034_EXPEDIENTE.md     correccion B-03/B-04
+    docs/auditoria/iae/A66_DIFFS.txt          diffs completos del ciclo
     docs/auditoria/iae/evidence/a64_integration_b1_p61_p38/README.md
-                                             evidencia A.6.4 (smoke test)
 
 ## 9. Comandos de arranque
 
     Set-Location D:\Macro_Sectorial
     git log --oneline -5
     git status -sb
-    py scripts\generate_estado_sistema.py     # regenera ESTADO_SISTEMA.md
+    py scripts\generate_estado_sistema.py
     py -m pytest tests/ validation/ -q --tb=line
     py -m pyflakes . ; py -m compileall . -q
 
 Esperado:
-  - HEAD ba59d39 o posterior
-  - ahead 295 o mas
+  - HEAD ac1edc3 o posterior
+  - ahead 331 o mas
   - working tree limpio
-  - 1312 passed + 2 skipped + 3 failed (test_freshness, preexistentes)
+  - 1415 passed + 2 skipped + 3 failed (test_freshness, preexistentes)
   - test_h731: 11 passed, 0 xfailed
   - pyflakes silencio, compileall OK
 
@@ -186,15 +202,16 @@ Esperado:
     "Confirmado, contexto asimilado."
 
     Estado que reconozco:
-      - HEAD ea672a8, ahead 330
-      - Auditor #76: A2 = GO; A.6.6 = NO-GO
-      - H-05/H-06/H-07/H-10.1/H-08/B-01/B-05/B-06/B-07 cerrados
-      - Consulta A.6.7 enviada: B-02/B-03/B-04 pendientes de dictamen
-      - Prohibido tocar nipc/delta_shares/security_identity/temporal_validity
-      - Prohibido push; prohibido B-02/B-03/B-04 sin nuevo dictamen
+      - HEAD ac1edc3, ahead 331
+      - Dictamenes #76 (A2=GO, A.6.6=NO-GO) + #77 (B-02/B-03/B-04)
+      - Fix A2 y saneamiento post-#76: CERRADOS
+      - Ciclo B-02 (PIT_UNAVAILABLE) + B-03 (242/242): CERRADOS
+      - Pendiente unico autorizado: B-04 (fixture pairwise)
+      - Prohibido: nipc/delta_shares/security_identity/temporal_validity,
+        contratos normativos, push, OpenFIGI masivo, retro-fechado
 
     Pregunta: "Que hacemos?"
 
 ---
 
-FIN DEL TRANSFER v9.9. Fecha: 2026-09-22. Ciclos B-02 + B-03 CERRADOS. Pendiente unico: B-04 (fixture sintetico NON-PRODUCTION).
+FIN DEL TRANSFER v10. HEAD ac1edc3. 2026-09-22.

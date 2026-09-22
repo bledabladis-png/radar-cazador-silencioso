@@ -1,6 +1,6 @@
-# PROMPT MAESTRO v7 - INGENIERO SUPERVISOR DEL RADAR DE ROTACION SECTORIAL
+# PROMPT MAESTRO v7.1 - INGENIERO SUPERVISOR DEL RADAR DE ROTACION SECTORIAL
 
-**Actualizado:** 2026-09-21 (reestructuracion v7: estado y registro historico fuera del prompt).
+**Actualizado:** 2026-09-22 (v7.1: anade SECCION 15 con arquitectura IAE F2.4, contratos P60-P70 y ciclos A.6/A2/B-02/B-03; reemplaza deuda tecnica y limitaciones).
 
 Este documento describe **rol, metodologia, arquitectura y prohibiciones vigentes**.
 **NO declara el estado del sistema.** Para estado, ver:
@@ -923,56 +923,60 @@ Filer continuity (2026-09-19) -> CERRADA COMO CARACTERIZACION. Concentracion en 
 
 GHISALLO CIK 0001825214 (+765% Q4->Q1) -> CERRADO COMO CARACTERIZACION (2026-09-21). El +765% de `sum(SSHPRNAMT)` es artefacto del probe `probe_filer_continuity_top50.py`, que aplica la seccion 5.1 sin 5.3-5.5. VALUE reportado Q4->Q1: +62% (variacion del valor reportado de las posiciones, no delta economico). CUSIP 329882225 y 329882250 fuera de Official List SEC Q4 2025 y Q1 2026. Dictamenes #57-#60. Deuda asociada: implementacion seccion 5.3-5.5 pendiente, registrada como sub-deuda de K-INSTITUTIONAL-ACCUMULATION-01.
 
-## SECCION 13 - DEUDA TECNICA
-Monolitos restantes:
 
-Ninguno de los tres principales. Todos resueltos:
+IAE (post dictamenes #76/#77):
+- P62 implementado; snapshot historico Q1 2026 NO existe -> PIT_UNAVAILABLE.
+  coverage_current NO es certificable como contractual historico.
+- TARGET_PAIRWISE real = 0 (Q4 sin VERIFIED por vigencia de fuentes).
+- Pairwise empirico no ejercitado. Pendiente B-04 (fixture).
+- THRESHOLD_1/THRESHOLD_2 UNDEFINED. Gate-NIPC.2 bloqueado.
+- OpenFIGI masivo NO autorizado. 242/242 catalogo cerrado sin masivo.
+- 3 failed de test_freshness son ambientales (parquets stale en local);
+  en CI se skipean -> 0 failed.
+## SECCION 13 - DEUDA TECNICA
+
+### 13.1. Radar (historico)
+
+Monolitos restantes: ninguno de los tres principales. Todos resueltos:
 
 - indicators/mte.py (1964 LOC) -> indicators/mte/ paquete (DT2, 2026-09-17).
-- regimes/sector_regime.py (827 LOC brutas, 156 reales) -> 272 lineas (DT1, 2026-09-17).
+- regimes/sector_regime.py -> 272 lineas (DT1, 2026-09-17).
 - indicators/darkpool.py (286 LOC) -> 4 modulos (DT3, 2026-09-17).
 
 .git size: ~12.6 MB tras gc --aggressive.
+Cache datos: parquet market_data (~57 MB), stock_prices (~14 MB).
 
-Cache datos: Parquet en data/market_data.parquet (~57 MB) y data/stock_prices.parquet (~14 MB).
+DT4 (WONT FIX razonado 2026-09-17): reorganizacion validation/ y scripts/.
 
-DT4 (WONT FIX razonado 2026-09-17): reorganizacion de validation/ y scripts/. Gate 0: estructura actual funcional (8 + 16 ficheros activos, archive/ ya separa 120 + 8 historicos). Reorganizar implicaria tocar 14 referencias en workflows y 1 en tests con riesgo de romper CI sin beneficio funcional. Reabrir si: >40 scripts activos en cualquiera de las dos carpetas, o nueva necesidad de subcategorizacion por dominio, o solicitud de auditoria externa por compliance.
+### 13.2. IAE (post #76/#77)
 
-Deudas ciclo FU-021-3C-bis:
+CERRADOS: H-05, H-06, H-07, H-08, H-10.1, H-11, H-12, B-01, B-05, B-06,
+B-07, ciclo A2, saneamiento, B-02 (PIT_UNAVAILABLE), B-03 (242/242).
 
-K-FU-021-3C-bis-01 (ALTA): RESUELTO 2026-09-17 (03fcb3e). `daily_run.yml` ahora hace `git pull --rebase origin main` antes del `git push` del commit automatico.
+ACTIVOS:
 
-K-FU-021-3C-bis-02 (OBSOLETO / RESUELTO DE HECHO 2026-09-17): `SPOT_COMMODITY` STALE con lag=1 <= max_lag=1 es la respuesta correcta de la FSM, identica a FUTURE_SETTLEMENT. No es bug.
+- B-04 (fixture pairwise NON-PRODUCTION). Autorizado por #77.
+- H-19 (MEDIA): HEAD ambiguo en bundles.
+- H-20 (MEDIA): CI sin SHA/run verificable.
+- Contrato NIPC L332 cita 18; real 22. Prohibido tocar sin dictamen.
+- Integracion modulos IAE a daily_run.yml. NO autorizada.
+- compute_nipc_contractual sin callers productivos.
+- DROP_DUP sin activar.
+- THRESHOLD_1/2 UNDEFINED / BLOQUEADO. Gate-NIPC.2 bloqueado.
+- OpenFIGI masivo NO autorizado (no necesario; catalogo 242/242).
+- SPCX: entrada en catalogo cuestionable (SpaceX privada).
+- OpenFIGI requeries raw.json 121 KB (excluir del proximo A66_DIFFS).
 
-K-FU-021-3C-bis-03 (ALTA): RESUELTO 2026-09-17. Cron `0 4 * * *` verificado (`35204004152`, EQUITY_EOD=OK).
+Cobertura: IAE 110/110 funciones publicas con test semantico.
 
-K-FU-021-3C-bis-04 (OBSOLETO / RESUELTO DE HECHO 2026-09-17): REF sobrevive solo en tests con mocks (df None/vacio), por decision deliberada de K-04 (`18601ee`). Tests con df_real ya usan `_ref_from_df`. Verificado: 22/22 consolidate passing.
+### 13.3. Estado del repo al cierre (2026-09-22)
 
-K-FU-021-3C-bis-05 (OBSOLETO 2026-09-17): transfer doc original nunca commiteado. Gate 0: 0 ficheros *TRANSFER*/*transfer* en repo.
-
-K-FU-021-3C-bis-06 (ALTA): RESUELTO. Este prompt es v6.35.
-
-Ciclo H.2 (post 2026-09-18) - cerrado:
-
-K-RUN-OUT-OF-WINDOW-01 (BAJA): RESUELTO 2026-09-18 (`f3114b4`). Guard coverage en workflow. Ver Seccion 12 y 15.22.
-
-K-STOCK-PRICES-EOD-01 (BAJA): MONITORED. Ver Seccion 12.
-
-K-FU-021-3C-bis-07 (WONT FIX razonado 2026-09-17): ciclo documentado en prompt seccion 11.16 + 15.1 (commits + verificacion). Informe standalone no aporta valor diferencial. Reabrir si auditoria externa lo requiere o si H1 escala a decision arquitectonica.
-
-K-FU-021-3C-bis-08 (BAJA): RESUELTO 2026-09-17 (03fcb3e). `data_loader.py` usa `len(_resolutions)` en lugar de "9 contratos".
-
-K-FU-021-3C-bis-09 (OBSOLETO / RESUELTO DE HECHO 2026-09-17): Refutado por inspeccion directa. Los 6 workflows ya tienen `git pull --rebase origin main` antes de `git push`. No patch. No abrir K-ID sustituto para variaciones cosmeticas.
-
-Ciclo DT3 (post 2026-09-17) - cerrado:
-
-K-DT3-YF-DIRECTO (WONT FIX / EXCEPCION ACEPTADA): ver seccion 12.
-
-K-DT3-SIDE-EFFECT (WONT FIX / MONITORED): ver seccion 12.
-
-K-DT3-RUNTIMEWARN (RESUELTO 2026-09-17, `2656a5e`): early return en `robust_zscore`.
-
-Deuda BAJA activa: 0. U+FFFD RESUELTO 2026-09-17 (27 ocurrencias corregidas: 26 U+FFFD + 1 CP1252 em-dash). Git historico agotado; reconstruccion por contexto linguistico. H1 (mutabilidad del dataset historico) CERRADO 2026-09-17 como WONT FIX / politica aceptada.
+    HEAD            ac1edc3
+    Ahead           331 commits locales
+    Push            NO (local-first IAE)
+    Working tree    LIMPIO
+    Suite local     1415 passed + 2 skipped + 3 failed (test_freshness)
+    Suite CI        0 failed
 
 ## SECCION 14 - COMANDOS UTILES
 powershell
@@ -1018,6 +1022,151 @@ git status -sb (un guion).
 @'...'@ no expande variables. @"..."@ sí, pero hay que escapar $ como `$ y " como "".
 
 Select-String -SimpleMatch desactiva regex → el | se trata como literal. No usar -SimpleMatch con patrones que contengan |.
+
+## SECCION 15 - IAE: CICLO F2.4 Y ESTADO ACTUAL (2026-09-22)
+
+Esta seccion resume la arquitectura IAE post-contrato F2.4 y los ciclos
+de correccion A.6.x / A2 / B-02 / B-03. La fuente normativa de contratos
+es `NIPC_CONTRATOS_SEMANTICOS_v1.md`; esta seccion es resumen ejecutivo.
+
+### 15.1. Estructura de `src/institutional_accumulation/`
+
+    sec_13f/             ingestion + identity 13F (FA-1/FA-2 cerrados)
+      schema.py, downloader.py, parser.py, storage.py, manifest.py, ingest.py
+      identity/  temporal_filter, cusip_resolver, relationships,
+                 amendments, sec13f_list, security_identity
+    identity/            catalogo B1 + PIT
+      catalog_key.py, target_builder.py, period_state.py,
+      target_universe.py, radar_target_catalog.py, openfigi_client.py
+    aggregation/         paquete puro (NIPC, P38)
+      delta_shares.py, nipc.py, coverage.py, catalog_validator.py,
+      catalog_p38_adapter.py, reporting_dedup.py
+    catalog_pit.py       B2-PIT: target_catalog_as_of (P62)
+    operational_universe.py  §5.5: CANONICAL + VERIFIED
+    security_type.py     clasificacion TITLEOFCLASS (spec 3.3 + #61)
+    temporal_validity.py P61 operational_mapping_status
+    timestamps.py, absence.py (B3)
+
+### 15.2. Contratos semanticos (fuente: NIPC_CONTRATOS_SEMANTICOS_v1.md)
+
+**P60 - Identity Contract.** `(valor, identity_type) -> canonical_security`.
+No se infiere prefijo. Enum: TICKER, FIGI, CUSIP, ISIN. CUSIP no produce
+canonical. Enum kind: CANONICAL_FIGI | CANONICAL_EQUIVALENCE |
+OBSERVED_CUSIP_ONLY | UNRESOLVED. IMPLEMENTADO (A.6.2).
+
+**P61 - Temporal Validity Contract.** Identidad != validez temporal.
+`operational_mapping_status`: VERIFIED | TEMPORAL_UNVERIFIED | UNRESOLVED |
+CONFLICT. Fuente sin vigencia -> TEMPORAL_UNVERIFIED. Solo entran al
+conjunto operacional las que cumplen CANONICAL + VERIFIED.
+IMPLEMENTADO (A.6.2).
+
+**P38 - Coverage Contract.** TARGET -> RESOLVED -> OPERATIONALLY_RESOLVED
+-> PAIRED. TARGET no se filtra por RESOLVED. `coverage_previous/current`
+con denominador TARGET (no observed). `paired_weighted_share_coverage`
+con denominador TARGET_PAIRWISE, w(s) = max(Q4_total, Q1_total) por FIGI.
+GO CONDICIONADO. Denominador implementado A.6.2 + Q5 fail-closed A2 c4.
+
+**P62 - Point-in-time Contract.** Todo artefacto aplicado a un periodo
+historico debe declarar vigencia. `target_catalog_as_of(period_end)` en
+`catalog_pit.py`: 0 snapshots cubren -> CatalogNotAvailable; 1 -> exito;
+>1 -> CatalogAmbiguous. Prohibido retro-fechado sin evidencia documental.
+IMPLEMENTADO; bloqueo real = ausencia de snapshot historico.
+
+**P63 - Missing != Sold Contract.** 13F delta NO crea SOLD. Estado
+`PRESENT | ZERO_REPORTED | NOT_PRESENT`; `absence_reason` (MISSING,
+BELOW_REPORTING_THRESHOLD, CONFIDENTIAL, OTHER_MANAGER, UNKNOWN);
+`identity_status` ortogonal; `sale_evidence` (NONE | DIRECT).
+GO CONDICIONADO (docstring + 2 tests contractuales).
+
+**P64 - Corporate Actions Contract.** `delta_shares = GROSS_OBSERVED_DELTA`,
+no delta_economic. CUSIP_A -> X y CUSIP_B -> X produce BOTH: continuidad
+de identidad, NO deteccion de evento. CERRADO.
+
+**P65 - Manager Duplication Contract.** 3 niveles de evidencia: L1
+REPORTING_EDGE, L2 POSITION_SCOPED_EDGE, L3 DEDUP_AUTHORIZATION. Solo L3
+autoriza DROP_DUP. GO CONDICIONADO v3. NO activar DROP_DUP sin dictamen.
+
+**P70 - Amendments Invariants.** HR_PLUS_RESTATEMENT -> cardinalidad
+== 2. CERRADO. Consolidado en DICTAMENES.md seccion 23.
+
+### 15.3. Formula contractual P38 (resumen ejecutivo)
+
+    TARGET_P     = 13F observado en P INTERSECT radar_target_catalog
+    RESOLVED_P   = TARGET_P con security_resolution_status == CANONICAL
+    OPERATIONALLY_RESOLVED_P = RESOLVED_P con operational_mapping_status
+                                == VERIFIED
+    PAIRED       = OPERATIONALLY_RESOLVED_Q4 INTERSECT OPERATIONALLY_RESOLVED_Q1
+                   por shareClassFIGI comun (Modelo A, dictamen #72)
+    TARGET_PAIRWISE = TARGET_Q4 INTERSECT TARGET_Q1
+
+    paired_weighted_share_coverage
+      = sum(w(s) : s in PAIRED) / sum(w(s) : s in TARGET_PAIRWISE)
+    w(s) = max(SSHPRNAMT_Q4(s), SSHPRNAMT_Q1(s)) por FIGI (agregado antes)
+
+    CATALOG_UNIVERSE (242) != TARGET_P (universo por periodo)
+
+### 15.4. Ciclos ejecutados (resumen)
+
+    A.6.0-A.6.5   CERRADOS (dictamenes #43-#75). Contrato vigente.
+    A2 (H-05,     CERRADOS. Commits 2f98926..473ce06. Cierra
+      H-06, H-07,    H-05, H-06, H-07, H-10.1.
+      H-10.1)
+    Saneamiento   CERRADO (commit 6d2f17f). B-01, B-05, B-06, B-07, H-08.
+    B-02          CERRADO (commit ea672a8). Probe declara PIT_UNAVAILABLE;
+                  coverage_current anulado como contractual.
+    B-03          CERRADO (commits a8ad54b..d18cf62). 242/242 keys;
+                  snapshot 20260922_01; BRK-B y MOG-A via OpenFIGI.
+    B-04          PENDIENTE. Fixture pairwise NON-PRODUCTION.
+
+### 15.5. Hallazgos cerrados (H y B)
+
+    H-05    probe sin mock Q4=Q1 (A2 c5)
+    H-06    probe publica cardinalidades (A2 c5)
+    H-07    adapter propaga weight (A2 c3)
+    H-08    test ortogonal identity=RESOLVED + weight=NOT_PRESENT
+    H-10.1  adapter propaga operational_mapping_status (A2 c3)
+    H-11    hashes de provenance
+    H-12    hash de catalogo etiquetado
+    B-01    saneamiento documental post-fix
+    B-05    precision: coverage_current sobre TARGET materializado
+    B-06    cadena de pesos sin doble conteo
+    B-07    suite CI = 0 failed (ambiental en local)
+
+### 15.6. Sub-deuda IAE activa (no bloqueante)
+
+    Integracion modulos IAE a daily_run.yml: NO implementada
+    compute_nipc_contractual: sin callers productivos (smoke test A.6.4 §7)
+    build_effective_reporting_snapshot: 2 probes en nipc_p65_probe/
+    DROP_DUP: no activado (requiere dictamen)
+    THRESHOLD_1/THRESHOLD_2: UNDEFINED / BLOQUEADO
+    Gate-NIPC.2: bloqueado
+    OpenFIGI masivo: NO autorizado
+    H-19 (MEDIA): HEAD ambiguo en bundles. Etiquetar antes del proximo
+    H-20 (MEDIA): CI 0 failed sin SHA/run verificable
+    Contrato NIPC L332: cita 18; real 22 (prohibido tocar sin dictamen)
+    SPCX: entrada en catalogo cuestionable (SpaceX privada); pendiente
+
+### 15.7. Prohibiciones IAE vigentes
+
+    NO push a main de codigo IAE (local-first hasta dictamen A.6.6)
+    NO activar compute_nipc_contractual sin thresholds
+    NO ejecutar OpenFIGI masivo
+    NO activar DROP_DUP
+    NO modificar contratos normativos sin dictamen
+    NO reescribir snapshots publicados
+    NO modificar nipc.py / delta_shares.py / security_identity.py /
+      temporal_validity.py / relationships.py sin dictamen
+    NO retro-fechar snapshots (P62)
+    NO fabricar overlap con exceptions ad-hoc
+
+### 15.8. Fuentes normativas
+
+    NIPC_CONTRATOS_SEMANTICOS_v1.md   contrato P60-P70 (VIGENTE)
+    NIPC_COVERAGE_POLICY.md v1.0      policy normativa (INTACTA)
+    INSTITUTIONAL_ACCUMULATION_NIPC_ESPECIFICACION.md v1.4
+                                      referencia, no normativa
+
+---
 
 ## SECCION 16 - FRASE GUIA
 "Determinista, descriptivo, auditado. Paso a paso. Documentar. Saber parar."
