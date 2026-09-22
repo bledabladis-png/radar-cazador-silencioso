@@ -2,7 +2,7 @@
 
 Hechos verificables del sistema. Generado por script.
 
-**Generado en:** 2026-09-22 17:42:13 UTC
+**Generado en:** 2026-09-22 23:04:32 UTC
 **Snapshot tomado sobre:** commit HEAD de la fecha indicada, al momento de generar
 **NO editar a mano.** Regenerar con:
 
@@ -16,16 +16,16 @@ proyecto describen su tema; NO declaran el estado del sistema.
 
 ## 1. Git
 
-- **HEAD:** `a03afee`
-- **HEAD completo:** `a03afee90fad396d99ccae03b326f5ced1443154`
-- **Fecha commit HEAD:** 2026-09-22 19:42:13 +0200
-- **Ahead:** 339
+- **HEAD:** `41dc8d3`
+- **HEAD completo:** `41dc8d390273d76bb4b6127ae13338c174ca42ba`
+- **Fecha commit HEAD:** 2026-09-23 01:03:58 +0200
+- **Ahead:** 367
 - **Behind:** 0
 - **origin/main:** `5f1d9ab`
 
 ## 2. Tests (pytest real)
 
-- **Resumen:** 3 failed, 1421 passed, 2 skipped in 27.20s
+- **Resumen:** 3 failed, 1434 passed, 2 skipped in 28.29s
 - **Exit code:** 1
 
 **Tests fallidos (nombre completo):**
@@ -47,7 +47,7 @@ proyecto describen su tema; NO declaran el estado del sistema.
 | `src/institutional_accumulation/aggregation/__init__.py` | 97 |
 | `src/institutional_accumulation/aggregation/catalog_p38_adapter.py` | 170 |
 | `src/institutional_accumulation/aggregation/catalog_validator.py` | 94 |
-| `src/institutional_accumulation/aggregation/coverage.py` | 180 |
+| `src/institutional_accumulation/aggregation/coverage.py` | 258 |
 | `src/institutional_accumulation/aggregation/delta_shares.py` | 380 |
 | `src/institutional_accumulation/aggregation/nipc.py` | 395 |
 | `src/institutional_accumulation/aggregation/reporting_dedup.py` | 880 |
@@ -77,7 +77,7 @@ proyecto describen su tema; NO declaran el estado del sistema.
 | `src/institutional_accumulation/security_type.py` | 397 |
 | `src/institutional_accumulation/temporal_validity.py` | 92 |
 | `src/institutional_accumulation/timestamps.py` | 153 |
-| **TOTAL** | **35 ficheros, 7671 LOC** |
+| **TOTAL** | **35 ficheros, 7749 LOC** |
 
 ## 5. Datos IAE
 
@@ -86,9 +86,9 @@ proyecto describen su tema; NO declaran el estado del sistema.
   - bytes: 29986
   - lineas: 243
 - `data/mappings/cusip_radar_crosswalk.csv`
-  - sha256: `073c68e26774b1bfbc55429d5d31453b28e25be1c4346b84bee9b2ab0f196001`
-  - bytes: 3096
-  - lineas: 25
+  - sha256: `032ef307e9810fd2b3a8b3361462a03bf04ecc43c5c25313346bcef8c38e858b`
+  - bytes: 30203
+  - lineas: 247
 - `data/mappings/cusip_equivalence.csv`
   - sha256: `21a88790aad50e8b44fbfdaa87c394ef3a782319adaf4208b9cb244dac39b322`
   - bytes: 103
@@ -106,7 +106,7 @@ proyecto describen su tema; NO declaran el estado del sistema.
 - `docs/auditoria/iae/evidence/nipc_gate0_top2000_v2`: 6 ficheros
 - `docs/auditoria/iae/evidence/a64_integration_b1_p61_p38`: 13 ficheros
 - `docs/auditoria/iae/evidence/b2_pit_cierre`: 2 ficheros
-- `docs/auditoria/iae/evidence/nipc_p70_probe`: 5 ficheros
+- `docs/auditoria/iae/evidence/nipc_p70_probe`: NO EXISTE
 
 ---
 
