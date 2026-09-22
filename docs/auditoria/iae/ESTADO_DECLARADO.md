@@ -103,6 +103,14 @@ documentos describen su tema; NO declaran el estado del sistema.
   catalogo radar (sin share_class_figi). No resoluble via crosswalk
   (ambos ya estan en `cusip_ticker_exceptions.csv`). Requiere OpenFIGI.
 - Gate-NIPC.2 BLOQUEADO por THRESHOLD_1/2 UNDEFINED
+- **B-03 CERRADO (2026-09-22, dictamen #77):** BRK-B (scf BBG001S90346)
+  y MOG-A (scf BBG001S5T922) materializados via OpenFIGI re-query.
+  Catalogo 240/242 -> 242/242 keys con share_class_figi. Snapshot B2-PIT
+  `20260922_01` creado (P62: no se borra el anterior). Probe A.6.4
+  actualizado para leer snapshot vigente del manifest: `catalog_keys Q1`
+  pasa de 20 a 22, `records_q1_verified: 22`, `coverage_current: 1.0`.
+  Membership migrada preservando catalog_key (inmutable) y marcando
+  `predecessor_row_uid` para las 2 filas con UID cambiado.
 - Sub-deuda documental (2026-09-22): `NIPC_CONTRATOS_SEMANTICOS_v1.md`
   L332 cita '18 FIGI -> 18 records VERIFIED' en la trazabilidad A.6.4,
   pero tras la curacion ONB/PTGX el valor real es 20. NO se ha tocado

@@ -2,7 +2,7 @@
 
 Hechos verificables del sistema. Generado por script.
 
-**Generado en:** 2026-09-21 23:59:12 UTC
+**Generado en:** 2026-09-22 00:40:50 UTC
 **Snapshot tomado sobre:** commit HEAD de la fecha indicada, al momento de generar
 **NO editar a mano.** Regenerar con:
 
@@ -16,19 +16,22 @@ proyecto describen su tema; NO declaran el estado del sistema.
 
 ## 1. Git
 
-- **HEAD:** `50b4396`
-- **HEAD completo:** `50b439699fd40c5d0f5d49722c50131d140a3420`
-- **Fecha commit HEAD:** 2026-09-22 01:55:01 +0200
-- **Ahead:** 322
+- **HEAD:** `7f314ef`
+- **HEAD completo:** `7f314ef880c5e4569befe9338c282c1701e02218`
+- **Fecha commit HEAD:** 2026-09-22 02:40:38 +0200
+- **Ahead:** 326
 - **Behind:** 0
 - **origin/main:** `5f1d9ab`
 
 ## 2. Tests (pytest real)
 
-- **Resumen:** 3 failed, 1415 passed, 2 skipped in 27.92s
+- **Resumen:** 6 failed, 1412 passed, 2 skipped in 28.77s
 - **Exit code:** 1
 
 **Tests fallidos (nombre completo):**
+- `FAILED tests/test_build_catalog_csvs.py::test_predecessor_null_en_migracion`
+- `FAILED tests/test_build_catalog_csvs.py::test_justification_initial - Asserti...`
+- `FAILED tests/test_build_catalog_csvs.py::test_idempotencia - RuntimeError: ma...`
 - `FAILED tests/test_freshness.py::test_market_data_fresh - AssertionError: mark...`
 - `FAILED tests/test_freshness.py::test_stock_prices_fresh - AssertionError: sto...`
 - `FAILED tests/test_freshness.py::test_european_tickers_recent - AssertionError...`
@@ -82,8 +85,8 @@ proyecto describen su tema; NO declaran el estado del sistema.
 ## 5. Datos IAE
 
 - `data/mappings/radar_target_catalog.csv`
-  - sha256: `e5d8f9c86b07c4d3981b2fd3c3a804f75d3559fa33fbb7731bfc76308a60b292`
-  - bytes: 29849
+  - sha256: `4a78e2695aca64ec5601c246d176199ce98e9e10e73e53e4b8f11385fe00ef38`
+  - bytes: 29986
   - lineas: 243
 - `data/mappings/cusip_ticker_exceptions.csv`
   - sha256: `073c68e26774b1bfbc55429d5d31453b28e25be1c4346b84bee9b2ab0f196001`
