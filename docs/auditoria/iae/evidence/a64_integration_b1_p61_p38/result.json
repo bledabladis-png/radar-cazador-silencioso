@@ -11,8 +11,8 @@
       "folder": "2026Q1",
       "period_iso": "2026-03-31",
       "oper_rows": 29549,
-      "n_sshprnamt_by_figi": 20,
-      "n_sshprnamt_by_key": 20
+      "n_sshprnamt_by_figi": 22,
+      "n_sshprnamt_by_key": 22
     }
   },
   "universe_keys": 242,
@@ -20,9 +20,9 @@
   "shared_q4": 0,
   "result_periods": {
     "2026Q1": {
-      "keys": 20,
-      "target_figi": 20,
-      "records": 20,
+      "keys": 22,
+      "target_figi": 22,
+      "records": 22,
       "fail_closed": false
     },
     "2025Q4": {
@@ -33,12 +33,12 @@
   },
   "cardinalities": {
     "target_q4_figi": 0,
-    "target_q1_figi": 20,
+    "target_q1_figi": 22,
     "target_pairwise_figi": 0,
     "records_q4": 0,
-    "records_q1": 20,
+    "records_q1": 22,
     "records_q4_verified": 0,
-    "records_q1_verified": 20,
+    "records_q1_verified": 22,
     "paired_figi": 0
   },
   "p38_pairwise": {

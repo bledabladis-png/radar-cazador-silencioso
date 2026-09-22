@@ -47,7 +47,23 @@ from src.institutional_accumulation import operational_universe as ou
 
 DATA = ROOT / "data" / "sec_13f" / "processed"
 MAPPINGS = ROOT / "data" / "mappings"
-SNAPSHOT_CSV = MAPPINGS / "catalog_snapshots" / "snapshot_20260921_01.csv"
+# Lee el snapshot mas reciente del manifest (P62: valid_from <= hoy).
+def _latest_snapshot_path():
+    """Resuelve el snapshot vigente mas reciente desde el manifest.
+
+    Independiente del orden de definicion de constantes: construye
+    su propio path desde MAPPINGS."""
+    import json as _json
+    m = _json.loads((MAPPINGS / "catalog_manifest.json").read_text(encoding="utf-8"))
+    snaps = m["snapshots"]
+    live = [s for s in snaps if s.get("valid_to") is None]
+    live.sort(key=lambda s: s["valid_from"], reverse=True)
+    if not live:
+        raise RuntimeError("sin snapshot vigente en manifest")
+    return MAPPINGS / live[0]["csv_path"]
+
+
+SNAPSHOT_CSV = _latest_snapshot_path()
 MEMBERSHIP = MAPPINGS / "catalog_membership.csv"
 ASSIGNMENTS = MAPPINGS / "catalog_assignments.csv"
 MANIFEST = MAPPINGS / "catalog_manifest.json"
@@ -102,7 +118,11 @@ def build_target_universe():
     mem_df = pd.read_csv(MEMBERSHIP, dtype=str, keep_default_na=False)
     asg_df = pd.read_csv(ASSIGNMENTS, dtype=str, keep_default_na=False)
     manifest = json.loads(MANIFEST.read_text(encoding="utf-8"))
-    m = manifest["snapshots"][0]
+    live = [s for s in manifest["snapshots"] if s.get("valid_to") is None]
+    live.sort(key=lambda s: s["valid_from"], reverse=True)
+    if not live:
+        raise RuntimeError("sin snapshot vigente en manifest")
+    m = live[0]
     return tb.build_target(
         snap_df, mem_df, asg_df,
         version_id=m["version_id"],
