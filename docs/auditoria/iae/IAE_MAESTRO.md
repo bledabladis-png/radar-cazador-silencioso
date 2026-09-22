@@ -50,9 +50,9 @@ extendido a los 246 CUSIPs del radar, el motor produce:
 - Delta radar: 553.321 filas (BOTH 444.276 · NEW 60.324 · EXIT 48.721).
 - NIPC radar: -4.316.734.936 (SOLE -32.485B, DFND +28.318B, OTR -0.150B).
 
-Los pesos agregados son reproducibles y coherentes con la realidad de
-mercado observada. La cadena completa de calculo esta en la seccion 12
-de este documento.
+Los pesos agregados son reproducibles a partir de los parquets de
+entrada. La cadena completa de calculo esta en la seccion 12 de este
+documento.
 
 ---
 
@@ -148,7 +148,10 @@ a `daily_run.yml` es una decision futura, no un hecho actual.
     Clases / excepciones:          14
     Total simbolos publicos:       124
 
-Las 110 funciones tienen al menos una llamada real en tests.
+Las 110 funciones estan invocadas al menos una vez en la suite de tests.
+Esto no equivale a verificacion exhaustiva. La cobertura de lineas es
+83% (ver §3.2). Los 4 ficheros con cobertura inferior al 80% se
+declaran como riesgo pendiente, no como deuda que "subira sola".
 
 ### 3.2 Cobertura de tests
 
@@ -163,6 +166,12 @@ Las 110 funciones tienen al menos una llamada real en tests.
 
 Los 4 ficheros con cobertura inferior al 80% no estan integrados en
 produccion. Son codigo preparado para integracion futura.
+
+Nota de alcance. La cobertura se calcula sobre 30 ficheros con
+statements instrumentables. Los 5 ficheros restantes hasta 35 son
+`__init__.py` sin statements: `src/institutional_accumulation/__init__.py`,
+`aggregation/__init__.py`, `identity/__init__.py`, `sec_13f/__init__.py`,
+`sec_13f/identity/__init__.py`.
 
 ### 3.3 Estado de integracion
 
@@ -180,10 +189,12 @@ Deuda registrada:
 Toda la evidencia de esta seccion ha sido medida el 2026-09-22
 mediante comandos reproducibles. Los comandos estan en el anexo.
 
-**Nota:** esta seccion documenta las mediciones iniciales del motor
-(antes del crosswalk extendido). Para la validacion completa del
-estado final (crosswalk de 246 CUSIPs, delta Q4->Q1, NIPC, validacion
-cruzada con OpenFIGI), ver seccion 12.
+**Aviso de alcance.** Esta seccion documenta el estado PRE-crosswalk
+(2026-09-21). Las mediciones aqui reflejan el motor antes de extender
+`cusip_ticker_exceptions.csv` de 24 a 246 entradas y no son
+representativas del estado actual. Algunos valores concretos (242
+tickers del catalogo, 246 CUSIPs del crosswalk) se conservan como
+referencia historica. Para el estado final ver §12.
 
 ### 4.1 Datos disponibles
 
@@ -283,8 +294,8 @@ tienen distribucion identica. El overlap de 239 es real.
       MSFT:   267.184.259
       CMCSA:  251.737.199
 
-Los pesos agregados son reproducibles y coherentes con la realidad
-de mercado observada.
+Los pesos agregados son reproducibles a partir de los parquets de
+entrada.
 
 ### 4.7 Anomalias identificadas
 
@@ -1598,6 +1609,23 @@ Se construyo `data/mappings/cusip_to_radar_figi.csv` cruzando filings
 Se extendio `cusip_ticker_exceptions.csv` de 24 a 246 filas, asignando
 `valid_from=2025-12-31` y `valid_to=2026-03-31` a todas las entradas del
 radar.
+
+**Tabla de reconciliacion de universos.** Los distintos numeros que
+aparecen en esta seccion y en §12.5 transicionan asi:
+
+    etapa                                  valor   razon
+    -------------------------------------  ------  ----------------------------------
+    crosswalk filas                          246   fichero cusip_ticker_exceptions.csv
+    crosswalk tickers unicos                 242   AMCR/AMZN/LRCX/MU con 2 CUSIPs (-4)
+    radar_figi filas                         243   excluye DD/HON/XOM (-3)
+    radar_figi tickers unicos                239   AMCR/AMZN/LRCX/MU duplicados (-4)
+    catalogo radar                           242   radar_target_catalog.csv (canonico)
+
+Los 3 CUSIPs del crosswalk que no estan en `cusip_to_radar_figi.csv`
+son DD (26614N102), HON (438516106) y XOM (30231G102), extendidos a
+Q4 2025 por el fix 7609a56. Los 4 tickers con doble CUSIP en el radar
+son AMCR (G0250X149, G0250X107), AMZN (023135906, 023135106),
+LRCX (512807108, 512807306) y MU (595112103, 595112903).
 
 ### 12.3. Resultado del probe end-to-end
 
