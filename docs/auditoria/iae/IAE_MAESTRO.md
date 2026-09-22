@@ -3,7 +3,7 @@
 Documento unico del modulo IAE. Estado, arquitectura, verificacion.
 
 **Actualizado:** 2026-09-22
-**HEAD:** 4e644ac
+**HEAD:** b817858
 
 **Que es este documento.** Describe el modulo IAE tal como esta
 implementado y verificado. No certifica cumplimiento de contratos
@@ -1569,7 +1569,13 @@ funcion.
 
 Esta seccion documenta la validacion completa del motor sobre datos reales
 de los dos trimestres disponibles. Todos los números fueron medidos el
-2026-09-22 sobre el repositorio en HEAD 7609a56.
+2026-09-22 sobre el repositorio en HEAD b817858, con pandas 2.3.3.
+
+Cadena forense (A.1, ver `scripts/iae_reconciliation_b1.py`):
+
+    sha256 INFOTABLE 2025Q4: 207621CF7D0C0DB44B3BEE6232501AC9FD07B4AF9ABF6EDF7946C6BF9E009536
+    sha256 INFOTABLE 2026Q1: DF4A4A5C25CE45E68768CE037B97372EF46B059C782F6C335F0B3FA37950C7D2
+    timestamp UTC:           2026-09-22T22:20:44Z
 
 ### 12.1. Estado inicial (antes de los fixes)
 
@@ -1635,13 +1641,15 @@ es legitima, no tautologica.
 
 ### 12.5. Resultado de la cadena de delta y NIPC
 
-Ejecucion con el crosswalk completo y el filtro correcto (por
-canonical_security y por CUSIP del radar):
+Ejecucion con el crosswalk completo y el filtro correcto (split oficial: por canonical_security -> `equity:TICKER`; el
+split por CUSIP observado NO es viable porque las filas con
+observed_security_key=`cusip:XXX` son UNRESOLVED_IDENTITY y no
+contribuyen al NIPC):
 
     Delta full:   4.066.694 filas
-      BOTH:          705.557
-      NEW:           115.136
-      EXIT:           94.465
+      BOTH:          713.865
+      NEW:           106.828
+      EXIT:           95.105
       UNRESOLVED:  3.150.896
 
     Delta radar:    553.321 filas
@@ -1665,13 +1673,29 @@ Verificacion de coherencia:
 El delta full se descompone en radar (553.321) y complemento (3.513.373).
 La suma de sus NIPC coincide con el NIPC full en todas las metricas:
 
-    metrica             radar          complemento         full
-    nipc_total         -4.316.734.936   +164.048.507     -1.404.191.665
-    nipc_sole         -32.484.713.330  -10.906.459.871  -42.035.826.260
-    nipc_dfnd         +28.317.652.408  +11.029.241.487  +40.712.414.445
-    nipc_otr             -149.674.014      +41.266.891      -80.779.850
+    metrica             radar           complemento     full
+    nipc_total         -4.316.734.936   -696.974.111    -5.013.709.047
+    nipc_sole         -32.484.713.330  -11.359.019.235  -43.843.732.565
+    nipc_dfnd         +28.317.652.408  +10.633.699.724  +38.951.352.132
+    nipc_otr             -149.674.014      +28.345.400     -121.328.614
 
 Verificacion: radar + complemento = full en todas las metricas.
+
+Nota metodologica (A.1 v3, 2026-09-22). El split radar/complemento se
+hace por `canonical_security` (formato `equity:TICKER`). El delta esta
+particionado en dos subpoblaciones disjuntas: filas UNRESOLVED con
+`observed_security_key=cusip:XXX` y `canonical_security=None`
+(3.150.896 filas, no contribuyen al NIPC); filas CANONICAL con
+`observed_security_key=None` y `canonical_security=equity:XXX`
+(915.798 filas). No existe ninguna fila con ambos campos poblados, por
+lo que un filtro por CUSIP sobre el delta no puede recuperar ninguna
+fila contribuyente.
+
+Los valores anteriores de esta tabla (complemento = +164.048.507,
+full = -1.404.191.665) provenian de una ejecucion pre-fix del crosswalk
+(antes de extender valid_from a Q4 para DD, HON, XOM) y no eran
+reproducibles. Ver `scripts/iae_reconciliation_b1.py` y
+`outputs/audit/b1_reconciliation/` para la cadena completa.
 
 ---
 
