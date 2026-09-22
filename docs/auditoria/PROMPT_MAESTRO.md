@@ -455,7 +455,7 @@ Nota: daily_run.yml commitea Daily hist/state. Aplicar git fetch + pull --rebase
 
 ## SECCION 10 - VALIDACION Y TESTS
 10.1. Tests
-1421 passed + 2 skipped + 3 failed preexistentes (test_freshness, ver §12) en local; CI similar con parquet gitignored. Incluye 641 tests del modulo IAE (ver seccion 15).
+1434 passed + 2 skipped + 3 failed preexistentes (test_freshness, ver §12) en local; CI similar con parquet gitignored. Incluye 758 tests del modulo IAE (criterio AST, ver seccion 15).
 
 10.2. Validation Gate (10/10)
 SLPM v1.2 (sin errores de validacion)
@@ -539,11 +539,11 @@ test_darkpool_characterization.py - 12 tests (contrato de compute_darkpool_signa
 
 test_darkpool_edge_cases.py - 18 tests (robust_zscore mad=0/outlier/vacio, rolling_percentile, classify_darkpool extremos, _get_all_tickers formato invalido, _get_volume_from_df, _compute_z_for_window, identidad de re-exports).
 
-bloque IAE (641 tests):
-  test_sec_13f_*.py - 12 ficheros (downloader, ingest, parser, schema, storage,
+bloque IAE (758 tests, criterio AST):
+  test_sec_13f_*.py - 15 ficheros (downloader, ingest, parser, schema, storage,
     manifest, temporal_filter, amendments, cusip_resolver, relationships,
-    sec13f_list, security_identity). Cubren ingestion, identity, enmiendas,
-    relaciones y elegibilidad SEC.
+    sec13f_list, security_identity, delta_shares, nipc, reporting_dedup).
+    Cubren ingestion, identity, enmiendas, relaciones y elegibilidad SEC.
   test_p38_*.py - 3 ficheros (contract, pairwise_fixture, adapter compat).
   test_catalog_*.py - 4 ficheros (key, membership, pit, p38_adapter).
   test_target_*.py - 2 ficheros (builder, universe).
@@ -878,14 +878,14 @@ DT4 (WONT FIX razonado 2026-09-17): reorganizacion validation/ y scripts/.
 Estado, arquitectura, verificacion y deuda tecnica del modulo IAE
 viven en `iae/IAE_MAESTRO.md`. No se duplican aqui.
 
-### 13.3. Estado del repo al cierre (2026-09-22)
+### 13.3. Estado del repo al cierre (2026-09-23)
 
-    HEAD            5aac705
-    Ahead           347 commits locales
+    HEAD            7f121b7
+    Ahead           365 commits locales
     Push            NO (local-first IAE)
     Working tree    LIMPIO
-    Suite local     1421 passed + 2 skipped + 3 failed (test_freshness)
-    Suite IAE       641 passed
+    Suite local     1434 passed + 2 skipped + 3 failed (test_freshness)
+    Suite IAE       758 passed (criterio AST)
     Suite CI        0 failed
 
 ## SECCION 14 - COMANDOS UTILES
