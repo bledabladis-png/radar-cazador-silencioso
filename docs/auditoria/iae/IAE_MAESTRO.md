@@ -360,6 +360,10 @@ de FIGI por OpenFIGI tras corporate action.
 ### 5.4 Deuda de trazabilidad
 
 - Registro de bundles enviados a terceros: `outputs/BUNDLES_SENT.log`.
+- Deuda semantica del nombre `NIPC`. Si el modulo se integra a
+  `run.py`, la superficie visible del reporte debe usar un nombre no
+  ambiguo (`observed_position_change` o similar) para evitar confusion
+  con las capas de flujo del radar. Ver §10.3.
 
 ---
 
@@ -431,6 +435,11 @@ de FIGI por OpenFIGI tras corporate action.
 Cada funcion publica del modulo, agrupada por capa.
 Formato: firma completa + primera linea del docstring.
 Detalle completo en el codigo fuente.
+
+**Nota sobre referencias 14.3.x.** Las menciones a `14.3.1`, `14.3.2`,
+`14.3.4`, `14.3.5`, `14.3.6` en docstrings y firmas corresponden al
+contrato P65 historico (ver `NIPC_CONTRATOS_SEMANTICOS_v1.md`), no a
+una seccion de este documento. Este documento llega solo hasta §13.
 
 
 ### 9.1. Ingestion (sec_13f/)
@@ -772,13 +781,19 @@ lanza ValueError. No se imputa silenciosamente.
 
 **Ejemplo Q4 -> Q1 2026:**
   Delta completo: 4.066.694 filas
-    BOTH: 705.557 · NEW: 115.136 · EXIT: 94.465 · UNRESOLVED: 3.150.896
+    BOTH: 713.865 · NEW: 106.828 · EXIT: 95.105 · UNRESOLVED: 3.150.896
   Delta filtrado al radar: 553.321 filas
     BOTH: 444.276 · NEW: 60.324 · EXIT: 48.721 · UNRESOLVED: 0
 
 ---
 
 ### 10.3. NIPC (Net Institutional Position Change)
+
+**Nota semantica.** A pesar del nombre, NIPC NO mide flujo economico.
+Mide la variacion neta de posiciones **reportadas** en 13F entre dos
+periodos consecutivos (gross observed delta). No distingue apertura
+o cierre de posiciones de cambios de tamano dentro de una posicion
+existente. Ver tambien §13.7.
 
 Función: `nipc.compute_nipc(delta_df, *, discretion_breakdown=True)`.
 
@@ -932,7 +947,7 @@ contractual es §10.5.
   compute_delta_shares (§10.2)    build_target + catalog_to_p38_targets
         |              |
         v              v
-  compute_nipc (§10.3)    compute_contractual_coverage (§10.5)
+  compute_nipc_contractual (§10.3)    compute_contractual_coverage (§10.5)
         |              |
         +------+-------+
                |
@@ -947,6 +962,13 @@ El resultado contractual se emite como dict con:
   paired_security_coverage, paired_weighted_share_coverage
   coverage_status
   evidence_class = "CONTRACTUAL"
+
+**Estado actual (2026-09-22).** La cadena mostrada arriba describe el
+diseno contractual. La ejecucion actual del motor (§12.5 y §12.6) usa
+`compute_nipc` sobre delta filtrado al radar, con
+`evidence_class = "PROXY"`. `compute_nipc_contractual` existe y esta
+testeado pero no tiene callers productivos (ver §5.1).
+
 
 ---
 
@@ -1694,6 +1716,9 @@ verificables por este canal. La cobertura 1.0 sobre el radar es
 legitima, con el alcance declarado.
 
 ### 12.5. Resultado de la cadena de delta y NIPC
+
+Nota semantica: NIPC = Observed Reported Position Change. NO es flujo
+economico. Ver §10.3.
 
 Ejecucion con el crosswalk completo y el filtro correcto (split oficial: por canonical_security -> `equity:TICKER`; el
 split por CUSIP observado NO es viable porque las filas con
