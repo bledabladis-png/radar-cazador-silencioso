@@ -1,4 +1,4 @@
-# TRANSFER DE SESION - 2026-09-22 v9.8
+# TRANSFER DE SESION - 2026-09-22 v9.9
 
 Documento de onboarding. **NO es fuente de estado.**
 Estado vivo: `iae/ESTADO_SISTEMA.md` (hechos) + `iae/ESTADO_DECLARADO.md` (fases).
@@ -16,13 +16,13 @@ Reglas de personalidad y metodo: `PROMPT_MAESTRO.md` secciones 1 y 3.
 
 ## 2. Estado real al cierre de esta sesion
 
-    HEAD          d18cf62 (verificar con git al arrancar)
-    Ahead         328 commits locales
+    HEAD          ea672a8 (verificar con git al arrancar)
+    Ahead         330 commits locales
     Working tree  LIMPIO (verificar)
     Tests         test_h731: 11 passed (incluye H-08);
                   suite global: 1415 passed + 2 skipped + 3 failed
                   (los 3 failed son test_freshness.py, preexistentes)
-    Push          NO (local-first IAE, dictamen #76)
+    Push          NO (local-first IAE, dictamen #76/#77)
 
 ## 3. Contexto: auditoria externa reciente
 
@@ -186,7 +186,7 @@ Esperado:
     "Confirmado, contexto asimilado."
 
     Estado que reconozco:
-      - HEAD d18cf62, ahead 328
+      - HEAD ea672a8, ahead 330
       - Auditor #76: A2 = GO; A.6.6 = NO-GO
       - H-05/H-06/H-07/H-10.1/H-08/B-01/B-05/B-06/B-07 cerrados
       - Consulta A.6.7 enviada: B-02/B-03/B-04 pendientes de dictamen
@@ -197,4 +197,4 @@ Esperado:
 
 ---
 
-FIN DEL TRANSFER v9.8. Fecha: 2026-09-22. Ciclo B-03 CERRADO (242/242, snapshot 20260922_01). Pendientes: B-02 (PIT_UNAVAILABLE), B-04 (fixture).
+FIN DEL TRANSFER v9.9. Fecha: 2026-09-22. Ciclos B-02 + B-03 CERRADOS. Pendiente unico: B-04 (fixture sintetico NON-PRODUCTION).

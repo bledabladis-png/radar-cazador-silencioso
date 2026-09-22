@@ -118,6 +118,15 @@ documentos describen su tema; NO declaran el estado del sistema.
   pasa de 20 a 22, `records_q1_verified: 22`, `coverage_current: 1.0`.
   Membership migrada preservando catalog_key (inmutable) y marcando
   `predecessor_row_uid` para las 2 filas con UID cambiado.
+- **B-02 CERRADO (2026-09-22, dictamen #77):** el probe A.6.4 emite
+  `pit_status` explicito. Modo `strict-pit` (default): invoca
+  `catalog_pit.target_catalog_as_of("2026-03-31")`, que lanza
+  `CatalogNotAvailable` porque el snapshot vigente (valid_from
+  2026-09-22) no cubre Q1. El probe publica `PIT_UNAVAILABLE`,
+  `coverage_current=None`, `coverage_contractual=False`. El numero
+  tecnico pre-PIT se preserva bajo `coverage_current_technical_pre_pit`
+  para trazabilidad. Modo `--no-pit`: bypass documentado con
+  `PIT_BYPASS_DOCUMENTED`. Prohibido retro-fechado (dictamen #77).
 - Sub-deuda documental (2026-09-22): `NIPC_CONTRATOS_SEMANTICOS_v1.md`
   L332 cita '18 FIGI -> 18 records VERIFIED' en la trazabilidad A.6.4,
   pero tras la curacion ONB/PTGX el valor real es 20. NO se ha tocado
