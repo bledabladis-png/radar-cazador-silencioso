@@ -98,7 +98,9 @@ IAE_MAESTRO). Detalle en §2.
 
 ## 3. Deuda activa
 
-- Integracion a `daily_run.yml` no implementada.
+- Integracion a `run.py` completada el 2026-09-23 (fase adicional del
+  pipeline productivo, + seccion del reporte diario). La integracion a
+  `daily_run.yml` queda cubierta porque `daily_run.yml` invoca `run.py`.
 - `compute_nipc_contractual` sin callers productivos.
 - `build_effective_reporting_snapshot` sin callers productivos.
 - `scripts/iae_contractual_coverage.py` reproduce §12.3; pendiente

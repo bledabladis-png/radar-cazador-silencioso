@@ -173,22 +173,32 @@ puro: no lee ni escribe ficheros, no usa datetime.now(), determinista.
 `security_type.py`, `temporal_validity.py`, `timestamps.py`,
 `absence.py`.
 
-### 2.3 Aislamiento verificado
+### 2.3 Integracion unidireccional
 
-Verificado empiricamente:
+**Estado 2026-09-23:** el IAE se ha integrado a `run.py` y al reporte
+diario como una seccion adicional. La integracion es unidireccional
+y controlada.
 
-    Ficheros produccion analizados:              118
-    Importaciones del IAE desde fuera:            0
-    Ningun modulo IAE se importa desde:
-      - run.py
-      - scripts/*.py
-      - src/report/*
-      - src/pipeline/*
-      - src/regimes/*
-      - src/indicators/*
+Flujo permitido (unico):
 
-El IAE no contamina el pipeline productivo del radar. Su integracion
-a `daily_run.yml` es una decision futura, no un hecho actual.
+    run.py -> src.pipeline.iae_section -> IAE -> reporte
+
+Restriccion inversa (prohibida):
+
+    IAE -X-> run.py
+    IAE -X-> src.report.*
+    IAE -X-> src.regimes.*
+    IAE -X-> src.indicators.*
+
+El modulo mantiene su encapsulamiento interno. Se permite que la
+capa de ejecucion (run.py) y de reporte (src.report.iae) consuman el
+IAE; se prohibe que el IAE dependa de ellas. Los scripts de
+`scripts/*.py` que invocan IAE son scripts reproducibles de auditoria,
+no consumidores productivos.
+
+Verificacion inversa (2026-09-23): no existe ningun import desde
+`src/institutional_accumulation/*` hacia `run.py`, `src.report`,
+`src.pipeline`, `src.regimes` o `src.indicators`.
 
 ---
 
@@ -2148,11 +2158,18 @@ El minimo actual es `catalog_key.py` con 82%. La deuda de cobertura
 como tal queda cerrada; los ficheros con cobertura mas baja siguen
 sin estar integrados en produccion (13.4).
 
-### 13.4. Modulo aislado de produccion
+### 13.4. Integracion unidireccional a produccion
 
-Verificado empiricamente: 0 imports del IAE desde fuera del paquete.
-El modulo no se ejecuta en el pipeline productivo. La integracion a
-`run.py` y `daily_run.yml` es una decision pendiente.
+**Estado 2026-09-23:** el IAE esta integrado en `run.py` como fase
+adicional del pipeline. Se ejecuta en cada run productivo.
+
+Restriccion que se mantiene: la integracion es unidireccional
+(`run.py -> IAE`). El IAE no importa `run.py`, `src.report`,
+`src.regimes` ni `src.indicators`. Se conserva el encapsulamiento
+interno del modulo.
+
+Verificacion inversa (2026-09-23): 0 imports desde
+`src/institutional_accumulation/*` hacia las capas consumidoras.
 
 ### 13.5. Alcance de la cobertura contractual 1.0
 
