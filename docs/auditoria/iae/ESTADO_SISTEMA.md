@@ -2,7 +2,7 @@
 
 Hechos verificables del sistema. Generado por script.
 
-**Generado en:** 2026-09-23 11:07:55 UTC
+**Generado en:** 2026-09-23 11:11:49 UTC
 **Snapshot tomado sobre:** commit HEAD de la fecha indicada, al momento de generar
 **NO editar a mano.** Regenerar con:
 
@@ -16,16 +16,16 @@ proyecto describen su tema; NO declaran el estado del sistema.
 
 ## 1. Git
 
-- **HEAD:** `0eeb6a2`
-- **HEAD completo:** `0eeb6a2faa413d2c5b35ca1cda03ef150710a78b`
-- **Fecha commit HEAD:** 2026-09-23 13:07:43 +0200
-- **Ahead:** 417
+- **HEAD:** `5728f93`
+- **HEAD completo:** `5728f93f5525b70179734b50c6eb203e7389c0ed`
+- **Fecha commit HEAD:** 2026-09-23 13:11:11 +0200
+- **Ahead:** 418
 - **Behind:** 0
 - **origin/main:** `5f1d9ab`
 
 ## 2. Tests (pytest real)
 
-- **Resumen:** 3 failed, 1440 passed, 2 skipped in 30.75s
+- **Resumen:** 3 failed, 1440 passed, 2 skipped in 27.66s
 - **Exit code:** 1
 
 **Tests fallidos (nombre completo):**
@@ -102,6 +102,8 @@ proyecto describen su tema; NO declaran el estado del sistema.
 - `scripts/iae_validate_crosswalk_openfigi.py`: 179 LOC
 - `scripts/iae_test_census.py`: 161 LOC
 - `scripts/iae_contractual_coverage.py`: 205 LOC
+- `scripts/iae_coverage.py`: 55 LOC
+- `scripts/iae_identity_uniqueness_audit.py`: 270 LOC
 
 ## 7. Evidencia empirica (directorios)
 
