@@ -36,10 +36,11 @@ lectores nuevos:
   `scripts/iae_identity_uniqueness_audit.py`). Resto de puntos
   cubiertos por dictamenes previos o declarados como limitacion.
 
-**Limitaciones declaradas** (no bugs): PIT historico Q4 2025 (§13.9),
-identidad canonica dual (§13.10), NIPC como variacion reportada, no
-flujo economico (§10.3, §13.7), cobertura 12,2% FIGI en INFOTABLE
-(§13.1).
+**Limitaciones declaradas** (no bugs): PIT historico Q4 2025 (§13.9,
+ASSUMPTION de reconstruccion retrospectiva), NIPC como variacion
+reportada, no flujo economico (§10.3, §13.7), cobertura 12,2% FIGI en
+INFOTABLE (§13.1). La dualidad teorica `equity:` / `figi:` del
+resolver (§13.10) no se manifiesta en la configuracion E2E auditada.
 
 **Deuda activa:** ver `ESTADO_DECLARADO.md` seccion 3.
 
