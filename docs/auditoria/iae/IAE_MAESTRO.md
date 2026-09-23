@@ -937,7 +937,14 @@ Threshold: COVERAGE_COMPLETE_THRESHOLD = 0.95 (alineado con
 guard_coverage.py). `coverage_status` se conserva como campo legacy.
 
 **Ejemplo Q4 -> Q1 2026 (radar, con crosswalk extendido):**
-  TARGET_Q4 = 239 · TARGET_Q1 = 240 · TARGET_PAIRWISE = 239
+  TARGET_Q4 = 240 · TARGET_Q1 = 240 · TARGET_PAIRWISE = 240
+  coverage_previous = 1.0
+  coverage_current = 1.0
+  paired_security_coverage = 1.0
+  paired_weighted_share_coverage = 1.0
+  coverage_status = VALID
+  coverage_available = True
+  coverage_quality = COMPLETE
   coverage_previous = 1.0
   coverage_current = 1.0
   paired_security_coverage = 1.0
