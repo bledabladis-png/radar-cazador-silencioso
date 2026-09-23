@@ -373,8 +373,9 @@ entrada.
 
 ### 4.7 Anomalias identificadas (estado intermedio)
 
-En el momento de estas mediciones (2026-09-22), 3 FIGIs del catalogo
-radar no aparecian en ningun filing via matching directo por FIGI:
+En el momento de estas mediciones (2026-09-22), 3 securities del
+catalogo radar (tickers SPCX, XOM, OKE) no aparecian en ningun filing
+via matching directo por FIGI:
 
 **SPCX** (BBG001SQPN65). Emisor privado (SpaceX). Sin filings 13F.
 Presencia en el catalogo cuestionable. Sigue sin fuente de identidad
@@ -809,7 +810,9 @@ y verificada contra una ejecución real sobre Q4 2025 y Q1 2026. Los números
 de ejemplo provienen de esa ejecución.
 
 Notación:
-  S        security identificada por shareClassFIGI.
+  S        security canonica cuando esta resuelta (identificada por
+           shareClassFIGI). Las filas no resueltas conservan
+           observed_security_key=cusip:XXX y no participan en el NIPC.
   M        manager institucional identificado por filing_manager_cik.
   D        tipo de discreción (SOLE | DFND | OTR).
   P        periodo (2025-12-31 o 2026-03-31).
@@ -2217,11 +2220,10 @@ operativo definido en §10.1. El calculo actual esta restringido al
 universo de securities elegibles para el radar: las filas CALL, PUT
 y no-equity se excluyen y, por tanto, no forman parte del NIPC.
 
-Aclaracion de alcance: 13F solo reporta posiciones long (acciones,
-opciones, bonos convertibles, etc.). El motor no filtra long vs
-short: no hay shorts en los filings. El titulo anterior ("El NIPC
-incluye solo posiciones long") sugeria una decision de diseno que
-no existe: es una propiedad del dataset, no del motor.
+Aclaracion de alcance: los filings 13F no proporcionan una medida
+integral de exposicion long/short. El NIPC utiliza las posiciones
+reportadas por 13F que superan el filtro operativo definido en §10.1;
+no calcula exposicion neta long/short.
 
 La metrica NIPC (Net Institutional Position Change) suma deltas de
 SSHPRNAMT entre trimestres. No distingue entre apertura/cierre de
