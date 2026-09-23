@@ -37,7 +37,7 @@ Opera de forma aislada del pipeline productivo del radar sectorial.
 | Funciones publicas | 110 |
 | Ficheros de test | 42 |
 | Tests que pasan | 758 |
-| Cobertura de lineas | 81% |
+| Cobertura de lineas | 92% |
 | Integrado en produccion | NO (aislado por diseno) |
 
 El conteo de tests sigue el criterio: ficheros `tests/test_*.py` que
@@ -166,19 +166,14 @@ declaran como riesgo pendiente, no como deuda que "subira sola".
 
 ### 3.2 Cobertura de tests
 
-    Cobertura de lineas:           81%  (2964 stmts, 568 miss)
-    Ficheros >= 95%:               16
-    Ficheros 80-94%:               13
-    Ficheros < 80%:                 6
-      - timestamps.py:             20%
-      - openfigi_client.py:        31%
-      - target_universe.py:        31%
-      - reporting_dedup.py:        55%
-      - security_type.py:          64%
-      - temporal_validity.py:      79%
+    Cobertura de lineas:           92%  (2964 stmts, 228 miss)
+    Ficheros >= 95%:               17
+    Ficheros 80-94%:               15
+    Ficheros < 80%:                 0
 
-Los 6 ficheros con cobertura inferior al 80% no estan integrados en
-produccion. Son codigo preparado para integracion futura.
+Ningun fichero del modulo queda por debajo del 80% de cobertura de
+lineas. El minimo actual es catalog_key.py (82%). Los ficheros con
+cobertura mas baja siguen sin estar integrados en produccion.
 
 Nota de alcance. La cobertura se calcula sobre 32 ficheros con
 statements instrumentables. Los 3 ficheros restantes hasta 35 son
@@ -2002,17 +1997,17 @@ estan en el radar canonico actual: DD y HON. Fueron extendidos a Q4
 2025 por el fix 7609a56 (ver §12.3, nota historica). Son entradas
 validas del crosswalk pero no pertenecen al universo radar.
 
-### 13.3. Cobertura de tests: 81% global, 6 ficheros < 80%
+### 13.3. Cobertura de tests: 92% global, 0 ficheros < 80%
 
-Ficheros por debajo del 80% de cobertura de lineas:
-  - `timestamps.py`: 20%
-  - `openfigi_client.py`: 31%
-  - `target_universe.py`: 31%
-  - `reporting_dedup.py`: 55%
-  - `security_type.py`: 64%
-  - `temporal_validity.py`: 79%
+Ningun fichero del modulo queda por debajo del 80% de cobertura de
+lineas. Los 6 ficheros que en la revision anterior estaban por debajo
+(`timestamps.py` 87%, `openfigi_client.py` 89%, `target_universe.py`
+93%, `reporting_dedup.py` 91%, `security_type.py` 98%,
+`temporal_validity.py` 96%) superan hoy ese umbral.
 
-Ninguno esta integrado en produccion. Son deuda diferida.
+El minimo actual es `catalog_key.py` con 82%. La deuda de cobertura
+como tal queda cerrada; los ficheros con cobertura mas baja siguen
+sin estar integrados en produccion (13.4).
 
 ### 13.4. Modulo aislado de produccion
 

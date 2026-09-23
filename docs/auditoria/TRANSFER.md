@@ -22,7 +22,7 @@ Reglas de personalidad y metodo: `PROMPT_MAESTRO.md` secciones 1 y 3.
     Suite global         1434 passed + 2 skipped + 3 failed
                          (los 3 failed son test_freshness, ambientales)
     Push                 NO (local-first IAE)
-    Cobertura IAE        110/110 funciones con llamada real (81% lineas)
+    Cobertura IAE        110/110 funciones con llamada real (92% lineas)
 
 Criterio del conteo de tests IAE: ficheros `tests/test_*.py` que importan
 `src.institutional_accumulation` (verificado por AST). Reproducible con
