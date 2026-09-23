@@ -39,8 +39,9 @@ lectores nuevos:
 **Limitaciones declaradas** (no bugs): PIT historico Q4 2025 (§13.9,
 ASSUMPTION de reconstruccion retrospectiva), NIPC como variacion
 reportada, no flujo economico (§10.3, §13.7), cobertura 12,2% FIGI en
-INFOTABLE (§13.1). La dualidad teorica `equity:` / `figi:` del
-resolver (§13.10) no se manifiesta en la configuracion E2E auditada.
+INFOTABLE (§13.1). La dualidad `equity:` / `figi:` del resolver
+(§13.10) es una capacidad implementada y cubierta por tests, no
+activada en la configuracion E2E auditada.
 
 **Deuda activa:** ver `ESTADO_DECLARADO.md` seccion 3.
 
@@ -2282,11 +2283,11 @@ E2E auditado, con `figi_lookup=None`:
 | Delta NIPC al normalizar por `shareClassFIGI`            |     **0** |
 
 **Conclusion:** en la configuracion E2E auditada no se observa
-fragmentacion de identidad. La dualidad documentada es una **propiedad
-teorica del resolver**, cuya segunda rama se activa unicamente cuando
-se proporciona `figi_lookup`. Los `unresolved_ref` corresponden a
-`equity:X` cuyo ticker X esta fuera del radar y no constituyen
-fragmentacion.
+fragmentacion de identidad. La dualidad es una **capacidad del
+resolver** (implementada y cubierta por tests); su segunda rama no se
+activa en el pipeline auditado porque `figi_lookup=None`. Los
+`unresolved_ref` corresponden a `equity:X` cuyo ticker X esta fuera
+del radar y no constituyen fragmentacion.
 
 Reabrir esta auditoria si:
 
