@@ -363,6 +363,10 @@ de FIGI por OpenFIGI tras corporate action.
 - Integracion del modulo IAE a `daily_run.yml`. No implementada.
 - `compute_nipc_contractual` sin callers productivos.
 - `build_effective_reporting_snapshot` sin callers productivos.
+- `scripts/iae_contractual_coverage.py` (nuevo, 2026-09-23) reproduce
+  §12.3 con la cadena contractual completa (target_builder ->
+  catalog_to_p38_targets -> compute_contractual_coverage). Pendiente
+  integrarlo al flujo continuo de validacion.
 
 ### 5.2 Deuda de cobertura
 
@@ -641,7 +645,7 @@ una seccion de este documento. Este documento llega solo hasta §13.
 
 - **class `PositionRecord`** — Registro tipado de una posicion observada (F2.4 regla #4).
 - `aggregate_positions_by_shareclass_figi(records, period, *, return_stats=False)` — Agrega weights por shareClassFIGI dentro de un periodo.
-- `compute_contractual_coverage(target_q4, target_q1, records_q4, records_q1)` — 6 metricas P38 contractuales.
+- `compute_contractual_coverage(target_q4, target_q1, records_q4, records_q1)` — Cobertura contractual P38 (6 metricas base) + contadores C9 de agregacion (n_received/n_verified/n_excluded) + campos C10 (coverage_available, coverage_quality). Ver §10.5.
 
 
 #### `aggregation\delta_shares.py`
@@ -1749,27 +1753,67 @@ LRCX (512807108, 512807306) y MU (595112103, 595112903).
 
 ### 12.3. Resultado del probe end-to-end
 
-    === Operational universes por periodo ===
-    Q4 2025: 621.046 filas oper, 239 tickers equity
-    Q1 2026: 641.457 filas oper, 243 tickers equity
+Reproducido con `scripts/iae_contractual_coverage.py`. El script
+construye los TargetUniverse por periodo con las keys observadas en
+cada uno (VERIFIED + con CUSIP resoluble por crosswalk), puebla
+`build_period_state` con `operational_evidence` y `sshprnamt_evidence`,
+invoca el adapter y `compute_contractual_coverage`.
 
-    === Cruce §5.5 <-> snapshot ===
-    tickers §5.5 Q1:     242
-    tickers §5.5 Q4:     239
-    tickers snapshot:    242
-    shared Q1:           240
-    shared Q4:           239
+    === Operational universes por periodo ===
+    Q4 2025: 632.339 filas oper
+    Q1 2026: 641.457 filas oper
+
+    === Sub-universos por periodo ===
+    universe catalogo:            242 keys
+    Q4 keys observadas:           240
+    Q1 keys observadas:           240
+    pairwise (interseccion):      240
+    ausentes:                     OKE, SPCX (ver §13.2)
+
+    === Adapter (catalog_to_p38_targets) ===
+    feasibility:                  FEASIBLE
+    TARGET_Q4:                    240
+    TARGET_Q1:                    240
+    records_q4:                   240
+    records_q1:                   240
 
     === compute_contractual_coverage ===
-    catalog_keys Q4:              239
-    catalog_keys Q1:              240
-    TARGET_PAIRWISE (catalog):    239
-    feasibility:                  FEASIBLE
     coverage_previous:            1.0
     coverage_current:             1.0
     paired_security_coverage:     1.0
     paired_weighted_share_coverage: 1.0
     coverage_status:              VALID
+    coverage_available:           True
+    coverage_quality:             COMPLETE
+
+    === Contadores C9 (observabilidad del filtrado) ===
+    n_received_q4:                240
+    n_verified_q4:                240
+    n_temporal_unverified_q4:     0
+    n_excluded_q4:                0
+    excluded_by_status_q4:        {}
+    n_received_q1:                240
+    n_verified_q1:                240
+    n_temporal_unverified_q1:     0
+    n_excluded_q1:                0
+    excluded_by_status_q1:        {}
+
+    === unmapped_count legacy ===
+    unmapped_count_previous:      0
+    unmapped_count_current:       0
+
+Semantica del TARGET. El TARGET contractual de cada periodo es el
+sub-universo de keys del catalogo radar con observacion VERIFIED en el
+periodo. Las 2 keys sin observacion (OKE, SPCX) se excluyen del
+sub-universo antes del adapter. Esto alinea la cobertura con lo que el
+motor realmente construye (§13.5).
+
+Nota historica (2026-09-23). Los valores anteriores de esta seccion
+(Q4 621.046 filas oper, catalog_keys Q4 239, TARGET_PAIRWISE 239)
+provenian de una ejecucion pre-fix del crosswalk, antes de extender
+`valid_from` a Q4 2025 para DD/HON/XOM (commit 7609a56). No eran
+reproducibles con el codigo actual. Los valores actuales se reproducen
+con `scripts/iae_contractual_coverage.py` sobre HEAD 7caa86b.
 
 ### 12.4. Validacion externa con OpenFIGI
 
@@ -1891,25 +1935,25 @@ Impacto: el motor resuelve identidad por CUSIP via crosswalk, no por FIGI.
 La cobertura efectiva del radar es 100%, pero la cobertura de securities
 pequeños (fuera del radar) es baja.
 
-### 13.2. OKE y SPCX no estan en el crosswalk canonico
+### 13.2. OKE y SPCX no contribuyen al TARGET contractual
 
-De los 242 tickers del catalogo radar, 240 estan en
-`cusip_radar_crosswalk.csv`. Los 2 ausentes:
+De los 242 tickers del catalogo radar, 240 contribuyen al TARGET
+contractual de Q4 2025 y Q1 2026. Los 2 ausentes:
 
-- **OKE**. Se resuelve via `etf_holdings.csv` con CUSIP 682680103.
-  No esta en `cusip_radar_crosswalk.csv`, pero si en el crosswalk
-  interno combinado (crosswalk + etf_holdings). Contribuye al delta
-  y al NIPC normalmente.
+- **OKE**. CUSIP 682680103 aparece en `etf_holdings.csv` (sin
+  vigencia temporal). El resolver P61 lo clasifica como
+  `TEMPORAL_UNVERIFIED`, y el filtro §5.5 (CANONICAL AND VERIFIED)
+  lo excluye del operational universe. No contribuye al delta ni al
+  NIPC.
 
-- **SPCX**. No esta en ninguna fuente de identidad. No contribuye
-  al delta (coincide con la verificacion de " + chr(167) + "12.6: split B detecta
-  241 de 242 tickers con contribucion, SPCX es el unico ausente).
-  Emisor privado (SpaceX), sin filings 13F.
+- **SPCX**. No esta en ninguna fuente de identidad (ni
+  `cusip_radar_crosswalk.csv` ni `etf_holdings.csv`). Emisor privado
+  (SpaceX), sin filings 13F. Tampoco contribuye.
 
 Adicionalmente, `cusip_radar_crosswalk.csv` contiene 2 tickers que NO
 estan en el radar canonico actual: DD y HON. Fueron extendidos a Q4
-2025 por el fix 7609a56 (ver " + chr(167) + "12.3). Son entradas validas del crosswalk
-pero no pertenecen al universo radar.
+2025 por el fix 7609a56 (ver §12.3, nota historica). Son entradas
+validas del crosswalk pero no pertenecen al universo radar.
 
 ### 13.3. Cobertura de tests: 81% global, 6 ficheros < 80%
 
@@ -1929,13 +1973,27 @@ Verificado empiricamente: 0 imports del IAE desde fuera del paquete.
 El modulo no se ejecuta en el pipeline productivo. La integracion a
 `run.py` y `daily_run.yml` es una decision pendiente.
 
-### 13.5. La cobertura 1.0 es sobre el radar
+### 13.5. Alcance de la cobertura contractual 1.0
 
-El crosswalk se construyo cruzando filings contra el catalogo radar.
-La validacion externa confirma que no hay tickers del radar perdidos.
-Pero el universo observado (35.649 CUSIPs en INFOTABLE Q1) es mucho
-mayor que el radar (242). El motor mide acumulacion institucional
-**sobre el radar**, no sobre el universo 13F completo.
+La cobertura 1.0 de §12.3 se interpreta como: **cobertura contractual
+del TARGET que el sistema construye en el periodo**. No equivale a:
+
+- Reconstruccion PIT historica del radar de Q4 2025 con fidelidad
+  total. El catalogo radar nacio en 2026-09-21 (§13.8) y la pertenencia
+  historica al radar no esta demostrada (§13.9).
+- Cobertura del universo 13F completo. El universo observado (35.649
+  CUSIPs en INFOTABLE Q1) es mucho mayor que el radar (242). El motor
+  mide acumulacion institucional **sobre el radar**, no sobre el
+  universo 13F completo.
+- Inclusión efectiva de los 242 tickers del catalogo. 240 contribuyen
+  (ver §13.2); OKE y SPCX quedan fuera del TARGET por falta de
+  observacion VERIFIED en los periodos analizados.
+
+Lo que si esta respaldado: el TARGET contractual construido para Q4
+2025 y Q1 2026 tiene cobertura 1.0 en las dos dimensiones (security
+y weighted share), y la validacion externa con OpenFIGI (§12.4)
+confirma la identidad CUSIP->shareClassFIGI de los 227 mapeos
+resolubles del crosswalk.
 
 ### 13.6. n_unresolved_identity en delta full es 77.5%
 
