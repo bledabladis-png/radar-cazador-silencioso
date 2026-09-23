@@ -2,7 +2,7 @@
 
 Hechos verificables del sistema. Generado por script.
 
-**Generado en:** 2026-09-23 01:41:11 UTC
+**Generado en:** 2026-09-23 01:50:45 UTC
 **Snapshot tomado sobre:** commit HEAD de la fecha indicada, al momento de generar
 **NO editar a mano.** Regenerar con:
 
@@ -16,16 +16,16 @@ proyecto describen su tema; NO declaran el estado del sistema.
 
 ## 1. Git
 
-- **HEAD:** `6869a85`
-- **HEAD completo:** `6869a854f989e830814f225354c4e084a64d1be0`
-- **Fecha commit HEAD:** 2026-09-23 03:40:56 +0200
-- **Ahead:** 407
+- **HEAD:** `5520ca4`
+- **HEAD completo:** `5520ca4a8255c928effc15dd1db8b33ad5f37f58`
+- **Fecha commit HEAD:** 2026-09-23 03:50:37 +0200
+- **Ahead:** 411
 - **Behind:** 0
 - **origin/main:** `5f1d9ab`
 
 ## 2. Tests (pytest real)
 
-- **Resumen:** 3 failed, 1435 passed, 2 skipped in 27.95s
+- **Resumen:** 3 failed, 1440 passed, 2 skipped in 27.74s
 - **Exit code:** 1
 
 **Tests fallidos (nombre completo):**
@@ -99,7 +99,7 @@ proyecto describen su tema; NO declaran el estado del sistema.
 - `scripts/iae_pipeline.py`: 156 LOC
 - `scripts/build_catalog_csvs.py`: 245 LOC
 - `scripts/iae_reconciliation_b1.py`: 193 LOC
-- `scripts/iae_validate_crosswalk_openfigi.py`: 173 LOC
+- `scripts/iae_validate_crosswalk_openfigi.py`: 179 LOC
 - `scripts/iae_test_census.py`: 161 LOC
 - `scripts/iae_contractual_coverage.py`: 205 LOC
 
