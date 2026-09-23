@@ -34,6 +34,7 @@ SCRIPTS_IAE = [
     'scripts/iae_contractual_coverage.py',
     'scripts/iae_coverage.py',
     'scripts/iae_identity_uniqueness_audit.py',
+    'scripts/iae_contractual_nipc_e2e.py',
 ]
 MAPPINGS_IAE = [
     'data/mappings/radar_target_catalog.csv',

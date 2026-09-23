@@ -2,7 +2,7 @@
 
 Hechos verificables del sistema. Generado por script.
 
-**Generado en:** 2026-09-23 21:37:36 UTC
+**Generado en:** 2026-09-23 21:40:10 UTC
 **Snapshot tomado sobre:** commit HEAD de la fecha indicada, al momento de generar
 **NO editar a mano.** Regenerar con:
 
@@ -16,16 +16,16 @@ proyecto describen su tema; NO declaran el estado del sistema.
 
 ## 1. Git
 
-- **HEAD:** `867355e`
-- **HEAD completo:** `867355e223b520eec1539f3a746ba1ba7ed66f78`
-- **Fecha commit HEAD:** 2026-09-23 23:19:47 +0200
-- **Ahead:** 442
+- **HEAD:** `eb23aaf`
+- **HEAD completo:** `eb23aafcbd1a9aa71050514e1e0e06bf89812f71`
+- **Fecha commit HEAD:** 2026-09-23 23:38:12 +0200
+- **Ahead:** 443
 - **Behind:** 0
 - **origin/main:** `5f1d9ab`
 
 ## 2. Tests (pytest real)
 
-- **Resumen:** 1467 passed, 2 skipped in 28.75s
+- **Resumen:** 1467 passed, 2 skipped in 28.32s
 - **Exit code:** 0
 
 ## 3. Integridad del codigo
@@ -100,6 +100,7 @@ proyecto describen su tema; NO declaran el estado del sistema.
 - `scripts/iae_contractual_coverage.py`: 205 LOC
 - `scripts/iae_coverage.py`: 55 LOC
 - `scripts/iae_identity_uniqueness_audit.py`: 270 LOC
+- `scripts/iae_contractual_nipc_e2e.py`: 111 LOC
 
 ## 7. Evidencia empirica (directorios)
 
