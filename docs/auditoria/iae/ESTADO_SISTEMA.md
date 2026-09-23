@@ -2,7 +2,7 @@
 
 Hechos verificables del sistema. Generado por script.
 
-**Generado en:** 2026-09-23 21:44:35 UTC
+**Generado en:** 2026-09-23 23:29:43 UTC
 **Snapshot tomado sobre:** commit HEAD de la fecha indicada, al momento de generar
 **NO editar a mano.** Regenerar con:
 
@@ -16,16 +16,16 @@ proyecto describen su tema; NO declaran el estado del sistema.
 
 ## 1. Git
 
-- **HEAD:** `82856e4`
-- **HEAD completo:** `82856e444ed81d9cb5c9e6f862015f1c34128474`
-- **Fecha commit HEAD:** 2026-09-23 23:44:34 +0200
-- **Ahead:** 448
+- **HEAD:** `0a0f042`
+- **HEAD completo:** `0a0f0420f34e722cffd436581cdc3ff640af6e41`
+- **Fecha commit HEAD:** 2026-09-24 01:29:16 +0200
+- **Ahead:** 454
 - **Behind:** 0
 - **origin/main:** `5f1d9ab`
 
 ## 2. Tests (pytest real)
 
-- **Resumen:** 1467 passed, 2 skipped in 28.79s
+- **Resumen:** 1521 passed, 2 skipped in 28.18s
 - **Exit code:** 0
 
 ## 3. Integridad del codigo
@@ -55,9 +55,9 @@ proyecto describen su tema; NO declaran el estado del sistema.
 | `src/institutional_accumulation/identity/target_builder.py` | 181 |
 | `src/institutional_accumulation/identity/target_universe.py` | 171 |
 | `src/institutional_accumulation/operational_universe.py` | 194 |
-| `src/institutional_accumulation/pipeline_contractual.py` | 210 |
+| `src/institutional_accumulation/pipeline_contractual.py` | 211 |
 | `src/institutional_accumulation/sec_13f/__init__.py` | 22 |
-| `src/institutional_accumulation/sec_13f/downloader.py` | 176 |
+| `src/institutional_accumulation/sec_13f/downloader.py` | 224 |
 | `src/institutional_accumulation/sec_13f/identity/__init__.py` | 161 |
 | `src/institutional_accumulation/sec_13f/identity/amendments.py` | 444 |
 | `src/institutional_accumulation/sec_13f/identity/cusip_resolver.py` | 149 |
@@ -73,7 +73,7 @@ proyecto describen su tema; NO declaran el estado del sistema.
 | `src/institutional_accumulation/security_type.py` | 397 |
 | `src/institutional_accumulation/temporal_validity.py` | 92 |
 | `src/institutional_accumulation/timestamps.py` | 153 |
-| **TOTAL** | **36 ficheros, 7959 LOC** |
+| **TOTAL** | **36 ficheros, 8008 LOC** |
 
 ## 5. Datos IAE
 
@@ -92,12 +92,12 @@ proyecto describen su tema; NO declaran el estado del sistema.
 
 ## 6. Scripts IAE
 
-- `scripts/iae_pipeline.py`: 156 LOC
+- `scripts/iae_pipeline.py`: 159 LOC
 - `scripts/build_catalog_csvs.py`: 245 LOC
 - `scripts/iae_reconciliation_b1.py`: 193 LOC
 - `scripts/iae_validate_crosswalk_openfigi.py`: 179 LOC
 - `scripts/iae_test_census.py`: 161 LOC
-- `scripts/iae_contractual_coverage.py`: 205 LOC
+- `scripts/iae_contractual_coverage.py`: 207 LOC
 - `scripts/iae_coverage.py`: 55 LOC
 - `scripts/iae_identity_uniqueness_audit.py`: 270 LOC
 - `scripts/iae_contractual_nipc_e2e.py`: 111 LOC
