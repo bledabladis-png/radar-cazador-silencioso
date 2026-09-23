@@ -22,7 +22,7 @@ Reglas de personalidad y metodo: `PROMPT_MAESTRO.md` secciones 1 y 3.
     Suite global         1434 passed + 2 skipped + 3 failed
                          (los 3 failed son test_freshness, ambientales)
     Push                 NO (local-first IAE)
-    Cobertura IAE        110/110 funciones con llamada real (83% lineas)
+    Cobertura IAE        110/110 funciones con llamada real (81% lineas)
 
 Criterio del conteo de tests IAE: ficheros `tests/test_*.py` que importan
 `src.institutional_accumulation` (verificado por AST). Reproducible con
@@ -46,6 +46,8 @@ Scripts reproducibles del modulo IAE:
     scripts/iae_reconciliation_b1.py              cadena completa delta + NIPC
     scripts/iae_validate_crosswalk_openfigi.py    validacion externa del crosswalk
     scripts/iae_test_census.py                    censo riguroso de tests
+    scripts/iae_contractual_coverage.py           cadena contractual
+                                                  (target -> adapter -> coverage)
     scripts/iae_pipeline.py                       orquestador ingestion + identity
 
 Documentos historicos (no normativos): NIPC_CONTRATOS_SEMANTICOS_v1.md,
@@ -58,8 +60,8 @@ NIPC_COVERAGE_POLICY.md, INSTITUTIONAL_ACCUMULATION_NIPC_ESPECIFICACION.md.
 Implementado, testeado y verificado end-to-end sobre datos reales.
 Con el crosswalk CUSIP extendido (246 filas, 242 tickers unicos):
 
-- Q4 2025: 239 tickers operativos
-- Q1 2026: 243 tickers operativos
+- Q4 2025: 240 tickers contribuyen al TARGET
+- Q1 2026: 240 tickers contribuyen al TARGET
 - Delta radar: 553.321 filas (n_unresolved_identity = 0)
 - NIPC radar: -4.316.734.936
 
@@ -128,7 +130,7 @@ Fase C (3 cambios funcionales, cerrada):
 Esperado:
 
 - HEAD ver docs/auditoria/iae/ESTADO_SISTEMA.md
-- ahead 366 o mas
+- ahead ver docs/auditoria/iae/ESTADO_SISTEMA.md
 - working tree limpio
 - 1434 passed + 2 skipped + 3 failed (test_freshness, preexistentes)
 - pyflakes silencio, compileall OK
