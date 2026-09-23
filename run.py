@@ -23,6 +23,7 @@ from src.pipeline.market_data import compute_market_data
 from src.pipeline.mte_confirmation import compute_mte_confirmation
 from src.pipeline.indices_intl import compute_indices_intl
 from src.pipeline.validation_gate import run_validation_gate
+from src.pipeline.iae_section import compute_iae_section
 from src.pipeline.finalize import (
     compute_final_matrices,
     save_regime_history,
@@ -191,6 +192,8 @@ def main():
     sector_regime_matrix_df = mats['sector_regime_matrix_df']
     evidence_matrix_df = mats['evidence_matrix_df']
 
+    iae_section = compute_iae_section(reference_date, run_id)
+
     print("Generando reporte...")
     generate_daily_report(macro_score, macro_regime, macro_conf,
                           financial_score, financial_regime, liq_conf,
@@ -231,6 +234,7 @@ def main():
                           cross_asset_context_data=cross_asset_summary_df,
                           volatility_structure_data=vol_structure_df,
                           data_quality_data=data_quality_df,
+                          iae_section=iae_section,
 
                           all_signals=all_signals)
     print("Reporte generado en outputs/report/reporte_diario.md")
