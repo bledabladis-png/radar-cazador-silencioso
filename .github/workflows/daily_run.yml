@@ -71,6 +71,21 @@ jobs:
       - name: Update CBOE (VIX3M, best-effort)
         run: python scripts/update_cboe.py || echo "CBOE fetch failed, continuing"
 
+      - name: Restore cache parquets 13F (IAE)
+        id: cache_13f
+        uses: actions/cache/restore@v4
+        with:
+          path: data/sec_13f/processed
+          key: 13f-processed-v1-${{ hashFiles('data/sec_13f/latest_quarter.txt') }}
+          restore-keys: |
+            13f-processed-v1-
+          fail-on-cache-miss: false
+
+      - name: Avisar si cache IAE no disponible
+        if: steps.cache_13f.outputs.cache-hit != 'true'
+        run: |
+          echo "::warning::Cache 13F no disponible. Seccion IAE mostrara STALE."
+
       - name: Run Macro Sectorial
         env:
           POLYGON_API_KEY: ${{ secrets.POLYGON_API_KEY }}

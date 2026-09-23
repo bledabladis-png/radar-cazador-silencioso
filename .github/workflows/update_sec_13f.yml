@@ -1,0 +1,90 @@
+﻿name: Actualizar SEC 13F (trimestral)
+
+on:
+  schedule:
+    # 20 feb/may/ago/nov, 06:00 UTC. 5 dias despues del deadline SEC
+    # (45 dias post-cierre de trimestre). Cubre los 4 trimestres.
+    - cron: '0 6 20 2,5,8,11 *'
+  workflow_dispatch:
+
+concurrency:
+  group: update_sec_13f
+  cancel-in-progress: false
+
+jobs:
+  update-13f:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Configurar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.14'
+
+      - name: Instalar dependencias
+        run: pip install -r requirements.txt
+
+      - name: Validate Python syntax
+        run: python -m compileall -q .
+
+      - name: Restore cache parquets 13F
+        id: cache_13f
+        uses: actions/cache@v4
+        with:
+          path: data/sec_13f/processed
+          key: 13f-processed-v1-${{ hashFiles('data/sec_13f/latest_quarter.txt') }}
+          restore-keys: |
+            13f-processed-v1-
+
+      - name: Determinar trimestre a actualizar
+        id: quarter
+        run: |
+          # 5 dias de margen tras deadline. SEC cierra Q1 el 31-mar y publica
+          # a mediados de mayo. El cron del dia 20 va sobrado.
+          #
+          # Regla: mes del run -> trimestre reciente cerrado hace >=60 dias.
+          # - Feb: Q4 del año anterior (cierre 31-dic).
+          # - May: Q1 de este año (cierre 31-mar).
+          # - Ago: Q2 de este año (cierre 30-jun).
+          # - Nov: Q3 de este año (cierre 30-sep).
+          M=$(date -u +%m)
+          Y=$(date -u +%Y)
+          case "$M" in
+            02) Q="$((Y-1))Q4" ;;
+            05) Q="${Y}Q1" ;;
+            08) Q="${Y}Q2" ;;
+            11) Q="${Y}Q3" ;;
+            *)  echo "Mes inesperado: $M"; exit 1 ;;
+          esac
+          echo "quarter=${Q}" >> "$GITHUB_OUTPUT"
+          echo "Trimestre a actualizar: ${Q}"
+
+      - name: Ejecutar actualizacion 13F
+        run: python scripts/update_sec_13f.py --quarter "${{ steps.quarter.outputs.quarter }}"
+
+      - name: Save cache parquets 13F
+        if: success()
+        uses: actions/cache/save@v4
+        with:
+          path: data/sec_13f/processed
+          key: 13f-processed-v1-${{ hashFiles('data/sec_13f/latest_quarter.txt') }}
+
+      - name: Commit y push si hay cambios
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/sec_13f/latest_quarter.txt
+          git add data/sec_13f/official_list_13f/
+          git add data/sec_13f/manifests/ 2>/dev/null || true
+          if git diff --staged --quiet; then
+            echo "No hay cambios en 13F metadata."
+          else
+            git commit -m "Update SEC 13F metadata (${{ steps.quarter.outputs.quarter }})"
+            git pull --rebase origin main
+            git push
+          fi
