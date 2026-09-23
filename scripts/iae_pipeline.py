@@ -17,6 +17,7 @@ Referencia: PROMPT_MAESTRO v6.53. Modulos consumidos (no modificados):
 from __future__ import annotations
 
 import argparse
+import os
 import sys
 from pathlib import Path
 
@@ -35,7 +36,9 @@ from src.institutional_accumulation.sec_13f.identity.security_identity import (
 from src.institutional_accumulation import operational_universe as ou
 
 DATA_DIR = ROOT / "data" / "sec_13f" / "processed"
-OFFICIAL_DIR = Path(r"D:\13f_probe\official_list_13f")
+OFFICIAL_DIR = Path(os.environ.get(
+    "IAE_OFFICIAL_DIR",
+    str(ROOT / "data" / "sec_13f" / "official_list_13f")))
 TSVS = ["SUBMISSION", "COVERPAGE", "SUMMARYPAGE", "OTHERMANAGER",
         "OTHERMANAGER2", "SIGNATURE", "INFOTABLE"]
 

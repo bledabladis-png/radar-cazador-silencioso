@@ -5,7 +5,7 @@ observado en ese periodo (VERIFIED + CUSIP en crosswalk). Las keys sin
 observacion no entran al TargetUniverse del periodo.
 """
 from __future__ import annotations
-import json, subprocess, sys
+import json, os, subprocess, sys
 from datetime import datetime, timezone
 from pathlib import Path
 import pandas as pd
@@ -28,7 +28,9 @@ from src.institutional_accumulation.aggregation import coverage as cov
 DATA = ROOT / "data" / "sec_13f" / "processed"
 MAPPINGS = ROOT / "data" / "mappings"
 OUT = ROOT / "outputs" / "audit" / "contractual_coverage"
-OFFICIAL = Path(r"D:\13f_probe\official_list_13f")
+OFFICIAL = Path(os.environ.get(
+    "IAE_OFFICIAL_DIR",
+    str(ROOT / "data" / "sec_13f" / "official_list_13f")))
 TSVS = ("SUBMISSION","COVERPAGE","SUMMARYPAGE","OTHERMANAGER",
         "OTHERMANAGER2","SIGNATURE","INFOTABLE")
 PERIODS = {"2025Q4": "2025-12-31", "2026Q1": "2026-03-31"}

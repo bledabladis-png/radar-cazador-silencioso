@@ -39,7 +39,8 @@ ROOT = Path(__file__).resolve().parent.parent.parent
 DEFAULT_DATA = ROOT / "data" / "sec_13f" / "processed"
 DEFAULT_MAPPINGS = ROOT / "data" / "mappings"
 DEFAULT_OFFICIAL = Path(os.environ.get(
-    "IAE_OFFICIAL_DIR", r"D:\13f_probe\official_list_13f"))
+    "IAE_OFFICIAL_DIR",
+    str(ROOT / "data" / "sec_13f" / "official_list_13f")))
 TSVS = ("SUBMISSION", "COVERPAGE", "SUMMARYPAGE", "OTHERMANAGER",
         "OTHERMANAGER2", "SIGNATURE", "INFOTABLE")
 
