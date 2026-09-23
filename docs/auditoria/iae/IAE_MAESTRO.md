@@ -440,15 +440,14 @@ Criterio AST (42 ficheros del modulo, 759 casos):
 
     py scripts/iae_test_census.py
 
-Cobertura de lineas con pytest-cov (usa los 42 ficheros del censo):
+Cobertura de lineas sobre el universo canonico (los 759 casos):
 
-    py -m pytest tests/ -q --tb=line `
-      -k "iae or nipc or p38 or pairwise or catalog or pit or 13f" `
-      --cov=src/institutional_accumulation `
-      --cov-report=term-missing
+    py scripts/iae_coverage.py
 
-Nota: el filtro -k por nombre de test cubre 557 casos (no 759). El
-criterio canonico es el AST del modulo completo.
+El script resuelve los 42 ficheros de test por AST (mismo criterio
+que `iae_test_census.py`) y ejecuta pytest con
+`--cov=src/institutional_accumulation` sobre el universo completo.
+Resultado esperado a 2026-09-23: 759 passed, 92% coverage.
 ### A.4 Overlap sobre datos reales
 
     py -c "
