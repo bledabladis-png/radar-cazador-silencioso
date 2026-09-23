@@ -3,7 +3,7 @@
 Documento unico del modulo IAE. Estado, arquitectura, verificacion.
 
 **Actualizado:** 2026-09-23
-**HEAD:** 7caa86b (verificar con git al arrancar)
+**HEAD:** ver `docs/auditoria/iae/ESTADO_SISTEMA.md`
 
 **Que es este documento.** Describe el modulo IAE tal como esta
 implementado y verificado. No certifica cumplimiento de contratos

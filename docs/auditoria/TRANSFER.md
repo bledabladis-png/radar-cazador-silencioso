@@ -15,8 +15,8 @@ Reglas de personalidad y metodo: `PROMPT_MAESTRO.md` secciones 1 y 3.
 
 ## Estado al cierre de la sesion (2026-09-23)
 
-    HEAD                 105b674 (verificar con git al arrancar)
-    Ahead                366 commits locales
+    HEAD                 ver docs/auditoria/iae/ESTADO_SISTEMA.md
+    Ahead                ver docs/auditoria/iae/ESTADO_SISTEMA.md
     Working tree         LIMPIO
     Tests IAE            758 passed (criterio AST, ver abajo)
     Suite global         1434 passed + 2 skipped + 3 failed

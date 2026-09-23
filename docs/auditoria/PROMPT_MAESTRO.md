@@ -887,8 +887,8 @@ viven en `iae/IAE_MAESTRO.md`. No se duplican aqui.
 
 ### 13.3. Estado del repo al cierre (2026-09-23)
 
-    HEAD            8d76115 (verificar con git al arrancar)
-    Ahead           381 commits locales
+    HEAD            ver docs/auditoria/iae/ESTADO_SISTEMA.md
+    Ahead           ver docs/auditoria/iae/ESTADO_SISTEMA.md
     Push            NO (local-first IAE)
     Working tree    LIMPIO
     Suite local     1434 passed + 2 skipped + 3 failed (test_freshness)
