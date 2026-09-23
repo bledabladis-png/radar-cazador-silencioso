@@ -22,11 +22,12 @@ lectores nuevos:
   `scripts/iae_coverage.py`; separacion contractual/PROXY en §10.7;
   umbral 0.95 declarado operativo; fail-closed denominador ponderado=0
   en §10.5.
-- **Dictamen v4** (11 puntos): 10 cerrados + 1 diferido. Ref cruzada
-  §10.7, error historico §13.3, frase OpenFIGI §12.4, invariante C9
-  §10.4, fail-closed ponderado §10.5, `reporting_dedup` §10.7, HEAD
-  operativo. Diferido: evidencia externa OpenFIGI sin artefacto
-  reproducible (deuda activa, `ESTADO_DECLARADO §3`).
+- **Dictamen v4** (11 puntos): cerrado. Ref cruzada §10.7, error
+  historico §13.3, frase OpenFIGI §12.4, invariante C9 §10.4,
+  fail-closed ponderado §10.5, `reporting_dedup` §10.7, HEAD
+  operativo. Punto 7 (evidencia OpenFIGI reproducible) cerrado
+  2026-09-23 con `script_version` + tests + artefactos versionados
+  (§12.4). Deuda #8 eliminada de `ESTADO_DECLARADO §3`.
 - **Dictamen v5** (auditor fresco, 15 puntos): GATE 2 cerrado por
   verificacion empirica — `canonical_security` admite dos modelos
   (`equity:` / `figi:`) que no colapsan (ver §13.10). GATE 1
