@@ -62,7 +62,8 @@ Responde a una pregunta concreta:
 ### Estado actual
 
 El modulo esta implementado, testeado y verificado sobre datos reales.
-Opera de forma aislada del pipeline productivo del radar sectorial.
+Opera integrado en el pipeline productivo del radar sectorial
+mediante una dependencia unidireccional (run.py -> IAE).
 
 Las mediciones estructurales siguientes corresponden al snapshot
 `7caa86b` (2026-09-23); el conteo de tests y la cobertura se actualizan
@@ -76,7 +77,7 @@ tras cada commit (ver cabecera del documento).
 | Ficheros de test | 42 |
 | Tests que pasan | 759 |
 | Cobertura de lineas | 92% |
-| Integrado en produccion | NO (aislado por diseno) |
+| Integrado en produccion | SI (integracion unidireccional) |
 
 El conteo de tests sigue el criterio: ficheros `tests/test_*.py` que
 importan `src.institutional_accumulation` (verificado por AST).
@@ -236,11 +237,21 @@ si contienen statements y se cuentan en el total.
 
 ### 3.3 Estado de integracion
 
-Ningun modulo IAE esta integrado en el pipeline productivo.
+El IAE esta integrado en `run.py` como fase adicional del pipeline
+productivo, y expone una seccion en el reporte diario. La integracion
+es unidireccional (ver §2.3): `run.py` consume el IAE; el IAE no
+importa `run.py` ni las capas de reporte/regimes/indicators.
 
-Deuda registrada:
-- Integracion a `daily_run.yml`: no implementada.
-- `compute_nipc_contractual`: sin callers productivos.
+Componentes integrados:
+- `src/pipeline/iae_section.py::compute_iae_section` invocado desde
+  `run.py` tras el calculo de matrices finales.
+- `src/report/iae.py::render_iae_section` invocado desde
+  `src/report_generator.py` al final del reporte.
+
+Deuda residual:
+- `compute_nipc_contractual`: sin callers productivos directos (lo
+  consume `pipeline_contractual.run_contractual_nipc`, que si tiene
+  caller productivo).
 - `build_effective_reporting_snapshot`: sin callers productivos.
 
 ---
@@ -412,7 +423,7 @@ y queda fuera del filtro §5.5. No contribuye al TARGET (§13.2).
 - Los 24 CUSIPs de la excepcion original (pre-extension del 22-09)
   aparecen en los filings.
 - Los pesos agregados son reproducibles.
-- El modulo esta aislado de produccion.
+- El modulo se integra unidireccionalmente en produccion.
 
 **No verificado:**
 - Que el overlap completo (resolviendo el 88% de filas sin FIGI)
@@ -429,7 +440,6 @@ y queda fuera del filtro §5.5. No contribuye al TARGET (§13.2).
 
 ### 5.1 Deuda funcional
 
-- Integracion del modulo IAE a `daily_run.yml`. No implementada.
 - `compute_nipc_contractual` sin callers productivos.
 - `build_effective_reporting_snapshot` sin callers productivos.
 - `scripts/iae_contractual_coverage.py` (nuevo, 2026-09-23) reproduce

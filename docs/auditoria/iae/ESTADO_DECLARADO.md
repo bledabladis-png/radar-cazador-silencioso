@@ -18,7 +18,7 @@ Documento vivo. Se actualiza cuando cambia el estado.
 | Fase B - criticos dictamen v1 (C1-C18) | CERRADA |
 | Fase C - funcionales (C8, C9, C10) | CERRADA |
 | Fase D - reenviar al auditor externo | PENDIENTE |
-| Fase E - integracion a `run.py` | BLOQUEADA hasta Fase D |
+| Fase E - integracion a `run.py` | CERRADA 2026-09-23 |
 
 Dictamenes externos aplicados al modulo IAE (todos cerrados):
 v2 (8 puntos), v3 (6), v4 (11), v5 (GATE 1 nomenclatura + GATE 2
