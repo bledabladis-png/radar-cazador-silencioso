@@ -2,7 +2,7 @@
 
 Hechos verificables del sistema. Generado por script.
 
-**Generado en:** 2026-09-23 00:41:50 UTC
+**Generado en:** 2026-09-23 00:58:05 UTC
 **Snapshot tomado sobre:** commit HEAD de la fecha indicada, al momento de generar
 **NO editar a mano.** Regenerar con:
 
@@ -16,16 +16,16 @@ proyecto describen su tema; NO declaran el estado del sistema.
 
 ## 1. Git
 
-- **HEAD:** `55cdc2e`
-- **HEAD completo:** `55cdc2e88cb2360cb3f4ecff946f66c9981778f4`
-- **Fecha commit HEAD:** 2026-09-23 02:41:40 +0200
-- **Ahead:** 386
+- **HEAD:** `5c516b2`
+- **HEAD completo:** `5c516b2b3d9055a85171cc347915c0597b25748a`
+- **Fecha commit HEAD:** 2026-09-23 02:42:25 +0200
+- **Ahead:** 387
 - **Behind:** 0
 - **origin/main:** `5f1d9ab`
 
 ## 2. Tests (pytest real)
 
-- **Resumen:** 3 failed, 1434 passed, 2 skipped in 30.60s
+- **Resumen:** 3 failed, 1434 passed, 2 skipped in 27.22s
 - **Exit code:** 1
 
 **Tests fallidos (nombre completo):**
@@ -98,6 +98,10 @@ proyecto describen su tema; NO declaran el estado del sistema.
 
 - `scripts/iae_pipeline.py`: 156 LOC
 - `scripts/build_catalog_csvs.py`: 245 LOC
+- `scripts/iae_reconciliation_b1.py`: 193 LOC
+- `scripts/iae_validate_crosswalk_openfigi.py`: 173 LOC
+- `scripts/iae_test_census.py`: 161 LOC
+- `scripts/iae_contractual_coverage.py`: 205 LOC
 
 ## 7. Evidencia empirica (directorios)
 

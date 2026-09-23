@@ -28,6 +28,10 @@ IAE_ROOT = ROOT / 'src' / 'institutional_accumulation'
 SCRIPTS_IAE = [
     'scripts/iae_pipeline.py',
     'scripts/build_catalog_csvs.py',
+    'scripts/iae_reconciliation_b1.py',
+    'scripts/iae_validate_crosswalk_openfigi.py',
+    'scripts/iae_test_census.py',
+    'scripts/iae_contractual_coverage.py',
 ]
 MAPPINGS_IAE = [
     'data/mappings/radar_target_catalog.csv',
