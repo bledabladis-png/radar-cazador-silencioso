@@ -4,7 +4,7 @@ Documento unico del modulo IAE. Estado, arquitectura, verificacion.
 
 **Actualizado:** 2026-09-23
 **HEAD operativo:** ver `docs/auditoria/iae/ESTADO_SISTEMA.md` (campo HEAD).
-**Snapshot de mediciones (§2.1, §12):** `7caa86b` (2026-09-23).
+**Snapshot de mediciones:** §2.1 y §12 sobre `7caa86b` (2026-09-23); §3.2 sobre HEAD actual (post-fix `89b98e9`).
 
 
 **Que es este documento.** Describe el modulo IAE tal como esta
@@ -450,6 +450,7 @@ El script resuelve los 42 ficheros de test por AST (mismo criterio
 que `iae_test_census.py`) y ejecuta pytest con
 `--cov=src/institutional_accumulation` sobre el universo completo.
 Resultado esperado a 2026-09-23: 759 passed, 92% coverage.
+
 ### A.4 Overlap sobre datos reales
 
     py -c "
@@ -1068,8 +1069,8 @@ testeado pero no tiene callers productivos (ver §5.1).
 
 **Capa auxiliar: reporting_dedup.** `build_effective_reporting_snapshot`
 (`reporting_dedup.py`) opera PRE-delta, con 35 funciones de test AST /
-64 casos pytest expandidos y 0 callers
-productivos. NO forma parte de la cadena contractual y NO modifica
+64 casos pytest expandidos y 0 callers productivos. NO forma parte de
+la cadena contractual y NO modifica
 MATCH_KEY, delta_shares, NIPC ni coverage. Su frontera semantica es
 REPORTING RELATIONSHIP != REPORTING NETWORK != DEDUP AUTHORIZATION
 != ECONOMIC OWNERSHIP. Se mantiene como capa de diagnostico/auditoria
@@ -1266,7 +1267,7 @@ el criterio AST declarado en el resumen ejecutivo.
 - `test_report_identities_status_ordenados_descendente` — Etapa 2 ordena por frecuencia descendente.
 
 
-### `tests/test_p38_contract.py` (32 tests)
+### `tests/test_p38_contract.py` (33 tests)
 
 - `test_p38_legacy_denominador_cero_unavailable` — Ruta PROXY: denominador cero -> UNAVAILABLE.
 - `test_p38_legacy_usa_observed_key` — Ruta PROXY: opera sobre observed_security_key, no sobre TARGET.
@@ -1287,6 +1288,7 @@ el criterio AST declarado en el resumen ejecutivo.
 - `test_p38_compute_nipc_contractual_evidence_class` — Contrato: la ruta contractual marca evidence_class=CONTRACTUAL.
 - `test_p38_compute_nipc_contractual_sin_target_error` — F2.4 regla #3: target None en ruta contractual -> error duro.
 - `test_p38_compute_nipc_legacy_evidence_class_proxy` — Regla #3: la ruta legacy marca evidence_class=PROXY.
+- `test_p38_coverage_quality_unavailable_si_pesos_cero` — C10 fail-closed: target pairwise no vacio + peso 0 -> UNAVAILABLE (no PARTIAL).
 
 
 ### `tests/test_p38_pairwise_fixture.py` (6 tests)
@@ -1724,8 +1726,8 @@ el criterio AST declarado en el resumen ejecutivo.
 **Cobertura de este listado (parcial).** §11 tiene 29 bloques. De
 ellos, 27 corresponden a ficheros del modulo (criterio AST) y 2 son
 extra. La suma de funciones de test detectables por AST en los 29
-bloques es 505 (492 hasta la revision 2026-09-22; +13 en
-`test_p38_contract.py` por C9+C10).
+bloques es 506 (492 hasta la revision 2026-09-22; +14 en
+`test_p38_contract.py` por C9+C10+fix fail-closed).
 
 El modulo completo tiene 42 ficheros que importan
 `src.institutional_accumulation`. 15 no aparecen en §11:
