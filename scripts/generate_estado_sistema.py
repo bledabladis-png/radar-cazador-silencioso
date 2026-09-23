@@ -32,6 +32,8 @@ SCRIPTS_IAE = [
     'scripts/iae_validate_crosswalk_openfigi.py',
     'scripts/iae_test_census.py',
     'scripts/iae_contractual_coverage.py',
+    'scripts/iae_coverage.py',
+    'scripts/iae_identity_uniqueness_audit.py',
 ]
 MAPPINGS_IAE = [
     'data/mappings/radar_target_catalog.csv',
