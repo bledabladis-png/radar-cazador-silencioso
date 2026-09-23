@@ -2,7 +2,7 @@
 
 Hechos verificables del sistema. Generado por script.
 
-**Generado en:** 2026-09-23 20:38:08 UTC
+**Generado en:** 2026-09-23 20:58:57 UTC
 **Snapshot tomado sobre:** commit HEAD de la fecha indicada, al momento de generar
 **NO editar a mano.** Regenerar con:
 
@@ -16,16 +16,16 @@ proyecto describen su tema; NO declaran el estado del sistema.
 
 ## 1. Git
 
-- **HEAD:** `481ace9`
-- **HEAD completo:** `481ace916f27a0bc9cca658494fde283ffe59175`
-- **Fecha commit HEAD:** 2026-09-23 22:38:07 +0200
-- **Ahead:** 432
+- **HEAD:** `a3a524d`
+- **HEAD completo:** `a3a524da66aa8d4d72d0eb925d2384bd3815b65e`
+- **Fecha commit HEAD:** 2026-09-23 22:58:57 +0200
+- **Ahead:** 435
 - **Behind:** 0
 - **origin/main:** `5f1d9ab`
 
 ## 2. Tests (pytest real)
 
-- **Resumen:** 3 failed, 1440 passed, 2 skipped in 33.30s
+- **Resumen:** 3 failed, 1440 passed, 2 skipped in 36.50s
 - **Exit code:** 1
 
 **Tests fallidos (nombre completo):**
@@ -60,6 +60,7 @@ proyecto describen su tema; NO declaran el estado del sistema.
 | `src/institutional_accumulation/identity/target_builder.py` | 181 |
 | `src/institutional_accumulation/identity/target_universe.py` | 171 |
 | `src/institutional_accumulation/operational_universe.py` | 194 |
+| `src/institutional_accumulation/pipeline_contractual.py` | 210 |
 | `src/institutional_accumulation/sec_13f/__init__.py` | 22 |
 | `src/institutional_accumulation/sec_13f/downloader.py` | 176 |
 | `src/institutional_accumulation/sec_13f/identity/__init__.py` | 161 |
@@ -77,7 +78,7 @@ proyecto describen su tema; NO declaran el estado del sistema.
 | `src/institutional_accumulation/security_type.py` | 397 |
 | `src/institutional_accumulation/temporal_validity.py` | 92 |
 | `src/institutional_accumulation/timestamps.py` | 153 |
-| **TOTAL** | **35 ficheros, 7749 LOC** |
+| **TOTAL** | **36 ficheros, 7959 LOC** |
 
 ## 5. Datos IAE
 
