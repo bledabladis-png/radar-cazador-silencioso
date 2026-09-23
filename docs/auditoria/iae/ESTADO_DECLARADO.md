@@ -50,6 +50,22 @@ cobertura con cautela).
   (E2E no ejercita exclusion; validado por tests con fixture). §5.2
   reformulado sin prediccion. Censo IAE 758 -> 759 tests (42 ficheros).
   Commits: 89b98e9, 97dd12d, 373c75d.
+- Dictamen v4 (auditor externo, 2026-09-23): 11 puntos.
+  3 bloqueantes cerrados: cobertura 92% reproducible via
+  scripts/iae_coverage.py; separadas cobertura catalogo (99,17%) y
+  cobertura TARGET construido (100%), con endogeneidad declarada en
+  §13.5; §13.7 retitulado a "Alcance de posiciones del NIPC" con
+  filtro §10.1 explicito.
+  7 importantes cerrados: ref cruzada §10.7 (§10.3 -> §10.5); §13.3
+  error historico (valores 20/31/31/55/64/79 vs actuales 87/89/93/91/98/96);
+  frase OpenFIGI reformulada (evidencia sobre la muestra, no sobre el
+  universo); invariante C9 (n_received = suma disjunta ordenada);
+  fail-closed Σw(TARGET_PAIRWISE)=0 explicito en §10.5; reporting_dedup
+  35 funciones AST / 64 casos pytest; cabecera con HEAD operativo +
+  snapshot de mediciones (§2.1, §12) en 7caa86b.
+  1 importante diferido: evidencia externa OpenFIGI no archivada con
+  hash/timestamp; registrado como deuda activa en §3.
+  Commits: 4e6b012, 7a4c38a, a2c64b5.
 
 ---
 
@@ -63,6 +79,11 @@ cobertura con cautela).
 - SPCX en catalogo radar sin fuente de identidad (emisor privado).
 - Cobertura FIGI del 12,2% en INFOTABLE.
 - Deuda semantica del nombre `NIPC` si se expone en reporte (§5.4).
+- Evidencia externa OpenFIGI (consulta 2026-09-22) no archivada con
+  hash/timestamp reproducible. Pendiente: extender
+  `scripts/iae_validate_crosswalk_openfigi.py` para emitir un artefacto
+  con timestamp UTC, parametros de consulta, hash de input, hash de
+  respuesta y version del script. Detectado por auditor v4 (punto 7).
 
 Detalle en `IAE_MAESTRO.md` seccion 5.
 
