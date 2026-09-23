@@ -1863,6 +1863,12 @@ periodo. Las 2 keys sin observacion (OKE, SPCX) se excluyen del
 sub-universo antes del adapter. Esto alinea la cobertura con lo que el
 motor realmente construye (§13.5).
 
+Distincion importante: la cobertura 1.0 declarada en esta seccion es
+endogena al TARGET construido (todo elemento del TARGET tiene
+evidencia VERIFIED por construccion). NO es lo mismo que la cobertura
+del catalogo radar declarado (240 de 242 = 99,17%). Ver §13.5 para la
+tabla de las dos metricas.
+
 Nota historica (2026-09-23). Los valores anteriores de esta seccion
 (Q4 621.046 filas oper, catalog_keys Q4 239, TARGET_PAIRWISE 239)
 provenian de una ejecucion pre-fix del crosswalk, antes de extender
@@ -2032,7 +2038,23 @@ El modulo no se ejecuta en el pipeline productivo. La integracion a
 ### 13.5. Alcance de la cobertura contractual 1.0
 
 La cobertura 1.0 de §12.3 se interpreta como: **cobertura contractual
-del TARGET que el sistema construye en el periodo**. No equivale a:
+del TARGET que el sistema construye en el periodo**, NO del catalogo
+radar declarado. La distincion es relevante: el TARGET se construye a
+partir de las keys del catalogo con observacion VERIFIED, por lo que
+todos sus elementos tienen evidencia por construccion. La cobertura
+1.0 es, en ese sentido, endogena al TARGET.
+
+Dos metricas distintas, que no deben confundirse:
+
+| Metrica                          | Resultado | Que significa                                              |
+| -------------------------------- | --------: | ---------------------------------------------------------- |
+| Cobertura catalogo declarado Q4  |    99,17% | 240 / 242 keys con observacion VERIFIED                    |
+| Cobertura catalogo declarado Q1  |    99,17% | 240 / 242 keys con observacion VERIFIED                    |
+| TARGET operacional Q4            |       240 | sub-universo construido con observacion VERIFIED           |
+| TARGET operacional Q1            |       240 | sub-universo construido con observacion VERIFIED           |
+| Cobertura contractual del TARGET |      100% | todos los elementos del TARGET tienen evidencia verificada |
+
+No equivale a:
 
 - Reconstruccion PIT historica del radar de Q4 2025 con fidelidad
   total. El catalogo radar nacio en 2026-09-21 (§13.8) y la pertenencia
@@ -2060,7 +2082,12 @@ emisores pequeños.
 Al filtrar al radar, n_unresolved_identity = 0. El motor contractual
 opera solo sobre securities resueltas.
 
-### 13.7. El NIPC suma solo posiciones long reportadas en 13F
+### 13.7. Alcance de posiciones del NIPC
+
+El NIPC utiliza unicamente las lineas 13F que superan el filtro
+operativo definido en §10.1. El calculo actual esta restringido al
+universo de securities elegibles para el radar: las filas CALL, PUT
+y no-equity se excluyen y, por tanto, no forman parte del NIPC.
 
 Aclaracion de alcance: 13F solo reporta posiciones long (acciones,
 opciones, bonos convertibles, etc.). El motor no filtra long vs
