@@ -438,7 +438,9 @@ integracion sea una decision activa, no hoy.
 ### 5.3 Deuda de datos
 
 - Solo el 12,2% de las filas de INFOTABLE llevan FIGI poblado. Un
-  fallback CUSIP -> FIGI por OpenFIGI cerraria el resto.
+  fallback CUSIP -> FIGI por OpenFIGI podria ampliar la cobertura de
+  identidad, pero no se ha demostrado que resuelva exhaustivamente
+  los CUSIPs restantes (ver §13.1 y §12.4).
 - SPCX esta en el catalogo radar pero no tiene fuente de identidad
   (ni crosswalk ni etf_holdings). Emisor privado sin filings 13F.
   No contribuye al TARGET. Ver §13.2.
