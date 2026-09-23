@@ -1995,8 +1995,9 @@ alcance de esta validacion.
 
 Conclusion: la validacion externa confirma la identidad CUSIP ->
 shareClassFIGI de los 227 mapeos resolubles. Los 16 restantes no son
-verificables por este canal. La cobertura 1.0 sobre el radar es
-legitima, con el alcance declarado.
+verificables por este canal. La cobertura interna del TARGET construido
+es 1,0, con el alcance declarado; la cobertura observable del catalogo
+radar declarado es 240/242 = 99,17% (§13.5).
 
 **Evidencia archivada.** Cada ejecucion de
 `scripts/iae_validate_crosswalk_openfigi.py` versiona sus artefactos en
@@ -2063,9 +2064,11 @@ La suma de sus NIPC coincide con el NIPC full en todas las metricas:
 Verificacion: radar + complemento = full en todas las metricas.
 
 Nota metodologica (A.1 v3, 2026-09-22). El split radar/complemento se
-hace por `canonical_security` (forma observada: `equity:TICKER`; el
-resolver admite tambien `figi:FIGI`, pero esa rama no se activa en el
-E2E observado con `figi_lookup=None`, ver §13.10). El delta esta
+hace por `canonical_security`, con `canonical_security in
+{equity:<TICKER>, figi:<FIGI>}`. En el E2E auditado: observados =
+`equity:<TICKER>`, `figi:*` = 0 (la segunda rama requiere
+`figi_lookup` no nulo, no activado en el pipeline auditado, ver §13.10).
+El delta esta
 particionado en dos subpoblaciones disjuntas: filas UNRESOLVED con
 `observed_security_key=cusip:XXX` y `canonical_security=None`
 (3.150.896 filas, no contribuyen al NIPC); filas CANONICAL con
@@ -2259,7 +2262,7 @@ de alcance, no como bug. Reabrir si aparece un snapshot PIT historico
 o si auditoria externa exige reconstruir el radar en fechas previas a
 2026-09-21.
 
-### 13.10. Dualidad teorica de canonical_security - no observada en E2E
+### 13.10. Dualidad de representacion de canonical_security - rama figi:* no activada en E2E
 
 El resolver (`security_identity.py::_normalize_canonical`) admite dos
 formas: `equity:<TICKER>` (crosswalk/equivalence) y `figi:<FIGI>`
