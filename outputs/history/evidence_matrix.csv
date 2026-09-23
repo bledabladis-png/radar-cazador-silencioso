@@ -1,12 +1,12 @@
 date,sector,price_evidence,breadth_evidence,primary_flow_evidence,proxy_flow_evidence,wyckoff_evidence,credit_evidence,volatility_evidence,n_sector_evidence_valid,n_sector_evidence_positive,n_sector_evidence_negative,n_sector_evidence_neutral,evidence_quality,alignment_reading,price_quality,breadth_quality,primary_flow_quality,proxy_flow_quality,wyckoff_quality,credit_quality,volatility_quality
-2026-09-18,XLB,-1,-1,-1,-1,1,-1,0,5,1,4,0,Media,EVIDENCIA PREDOMINANTEMENTE DESFAVORABLE,Alta,Media,Alta,Media,Media,Alta,Baja
-2026-09-18,XLC,1,-1,1,-1,1,-1,0,5,3,2,0,Media,EVIDENCIA PREDOMINANTEMENTE FAVORABLE,Alta,Media,Alta,Media,Media,Alta,Baja
-2026-09-18,XLE,1,1,-1,-1,1,-1,0,5,3,2,0,Media,EVIDENCIA PREDOMINANTEMENTE FAVORABLE,Alta,Alta,Alta,Media,Alta,Alta,Baja
-2026-09-18,XLF,-1,-1,-1,-1,1,-1,0,5,1,4,0,Baja,EVIDENCIA PREDOMINANTEMENTE DESFAVORABLE,Alta,Baja,Alta,Baja,Baja,Alta,Baja
-2026-09-18,XLI,-1,-1,-1,1,1,-1,0,5,2,3,0,Baja,EVIDENCIA PREDOMINANTEMENTE DESFAVORABLE,Alta,Baja,Alta,Baja,Baja,Alta,Baja
-2026-09-18,XLK,1,1,-1,1,1,-1,0,5,4,1,0,Baja,EVIDENCIA PREDOMINANTEMENTE FAVORABLE,Alta,Baja,Alta,Baja,Baja,Alta,Baja
-2026-09-18,XLP,-1,-1,-1,-1,1,-1,0,5,1,4,0,Baja,EVIDENCIA PREDOMINANTEMENTE DESFAVORABLE,Alta,Media,Alta,Baja,Media,Alta,Baja
-2026-09-18,XLRE,-1,-1,-1,-1,1,-1,0,5,1,4,0,Baja,EVIDENCIA PREDOMINANTEMENTE DESFAVORABLE,Alta,Media,Alta,Baja,Media,Alta,Baja
-2026-09-18,XLU,-1,-1,1,-1,1,-1,0,5,2,3,0,Baja,EVIDENCIA PREDOMINANTEMENTE DESFAVORABLE,Alta,Media,Alta,Baja,Media,Alta,Baja
-2026-09-18,XLV,-1,1,-1,1,1,-1,0,5,3,2,0,Baja,EVIDENCIA PREDOMINANTEMENTE FAVORABLE,Alta,Baja,Alta,Baja,Baja,Alta,Baja
-2026-09-18,XLY,-1,-1,-1,-1,1,-1,0,5,1,4,0,Baja,EVIDENCIA PREDOMINANTEMENTE DESFAVORABLE,Alta,Baja,Alta,Baja,Baja,Alta,Baja
+2026-09-23,XLB,-1,-1,-1,-1,1,-1,0,5,1,4,0,Media,EVIDENCIA PREDOMINANTEMENTE DESFAVORABLE,Alta,Media,Alta,Media,Media,Alta,Baja
+2026-09-23,XLC,1,-1,1,-1,1,-1,0,5,3,2,0,Media,EVIDENCIA PREDOMINANTEMENTE FAVORABLE,Alta,Media,Alta,Media,Media,Alta,Baja
+2026-09-23,XLE,1,-1,-1,-1,1,-1,0,5,2,3,0,Media,EVIDENCIA PREDOMINANTEMENTE DESFAVORABLE,Alta,Alta,Alta,Media,Alta,Alta,Baja
+2026-09-23,XLF,-1,-1,-1,1,1,-1,0,5,2,3,0,Baja,EVIDENCIA PREDOMINANTEMENTE DESFAVORABLE,Alta,Baja,Alta,Baja,Baja,Alta,Baja
+2026-09-23,XLI,-1,-1,-1,1,1,-1,0,5,2,3,0,Baja,EVIDENCIA PREDOMINANTEMENTE DESFAVORABLE,Alta,Baja,Alta,Baja,Baja,Alta,Baja
+2026-09-23,XLK,1,1,-1,1,1,-1,0,5,4,1,0,Baja,EVIDENCIA PREDOMINANTEMENTE FAVORABLE,Alta,Baja,Alta,Baja,Baja,Alta,Baja
+2026-09-23,XLP,-1,-1,-1,-1,1,-1,0,5,1,4,0,Baja,EVIDENCIA PREDOMINANTEMENTE DESFAVORABLE,Alta,Media,Alta,Baja,Media,Alta,Baja
+2026-09-23,XLRE,-1,-1,-1,1,1,-1,0,5,2,3,0,Baja,EVIDENCIA PREDOMINANTEMENTE DESFAVORABLE,Alta,Media,Alta,Baja,Media,Alta,Baja
+2026-09-23,XLU,-1,-1,1,-1,1,-1,0,5,2,3,0,Baja,EVIDENCIA PREDOMINANTEMENTE DESFAVORABLE,Alta,Media,Alta,Baja,Media,Alta,Baja
+2026-09-23,XLV,-1,1,-1,1,1,-1,0,5,3,2,0,Baja,EVIDENCIA PREDOMINANTEMENTE FAVORABLE,Alta,Baja,Alta,Baja,Baja,Alta,Baja
+2026-09-23,XLY,-1,-1,1,-1,1,-1,0,5,2,3,0,Baja,EVIDENCIA PREDOMINANTEMENTE DESFAVORABLE,Alta,Baja,Alta,Baja,Baja,Alta,Baja

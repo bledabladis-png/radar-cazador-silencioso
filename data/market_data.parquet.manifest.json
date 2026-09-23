@@ -2,37 +2,37 @@
   "schema_version": 1,
   "artifact": {
     "path": "data/market_data.parquet",
-    "sha256": "1b70561e57625b12278be61232250d477068791f2a28838e5d99053b13e1d6c3",
-    "bytes": 57067717,
-    "written_at": "2026-09-21T09:44:55.144945"
+    "sha256": "f6707d36508bd902937716893d2f273ff160c99044dbaed7a1176d153a743159",
+    "bytes": 57005161,
+    "written_at": "2026-09-23T23:24:35.299147"
   },
   "producer": {
     "module": "src.utils",
     "function": "write_artifact_with_manifest",
-    "run_id": "20260921_114009",
+    "run_id": "20260923_231959",
     "source": "yahoo"
   },
   "content": {
-    "rows": 2606,
+    "rows": 2605,
     "cols": 2810,
     "n_tickers": 562,
-    "date_min": "2016-09-19",
-    "date_max": "2026-09-18"
+    "date_min": "2016-09-23",
+    "date_max": "2026-09-23"
   },
   "temporal": {
     "contract": null
   },
   "quality": {
-    "last_date": "2026-09-18",
-    "expected_session": "2026-09-18",
+    "last_date": "2026-09-23",
+    "expected_session": "2026-09-23",
     "last_date_is_expected_session": true,
-    "pct_dup_last": 0.003578,
-    "close_nan_last": 2,
+    "pct_dup_last": 0.0,
+    "close_nan_last": 0,
     "n_tickers_expected_last": 562,
-    "n_tickers_with_close_last": 560,
-    "n_tickers_missing_close_last": 2,
-    "coverage_pct_last": 0.996441,
-    "last_row_is_partial": true,
-    "status": "VALID_WITH_MISSING"
+    "n_tickers_with_close_last": 562,
+    "n_tickers_missing_close_last": 0,
+    "coverage_pct_last": 1.0,
+    "last_row_is_partial": false,
+    "status": "VALID"
   }
 }
