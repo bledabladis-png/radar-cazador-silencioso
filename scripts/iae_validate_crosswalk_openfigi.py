@@ -1,4 +1,4 @@
-"""A.3 v2 - Validacion positiva del crosswalk contra OpenFIGI.
+"""A.3 - Validacion positiva del crosswalk contra OpenFIGI.
 
 v2: la v1 fallo con IncompleteRead porque un batch de 100 CUSIPs devuelve
 ~3.5MB y urllib no completa la lectura en 30s. Solucion: chunks de 25
@@ -19,6 +19,7 @@ from src.institutional_accumulation.identity.openfigi_client import map_identifi
 MAPPINGS = ROOT / "data" / "mappings"
 OUT_DIR = MAPPINGS / "openfigi_requeries"
 CHUNK = 25
+SCRIPT_VERSION = "2.1"  # expuesto en artefacto (v4 punto 7)
 
 
 def sha256(p: Path) -> str:
@@ -63,6 +64,7 @@ def main() -> int:
 
     input_data = {
         "run_date": date_tag, "run_ts": ts, "git_head": git_head(),
+        "script_version": SCRIPT_VERSION,
         "id_type": "ID_CUSIP", "exch_code": "US", "chunk": CHUNK,
         "n_cusips": len(cusips), "cusips": cusips,
     }
@@ -124,8 +126,9 @@ def main() -> int:
             })
 
     lines = [
-        "A.3 v2 - Validacion positiva crosswalk vs OpenFIGI",
+        "A.3 - Validacion positiva crosswalk vs OpenFIGI",
         "Run: " + ts, "HEAD: " + git_head(),
+        "Script version: " + SCRIPT_VERSION,
         "API key presente: " + str(bool(api_key)),
         "Chunk size: " + str(CHUNK),
         "",
@@ -158,9 +161,12 @@ def main() -> int:
         p = OUT_DIR / fn
         if p.exists():
             lines_h.append(sha256(p) + "  " + fn)
+    header_h = ("# A.3 - hashes SHA-256\n"
+                "# Run: " + ts + "\n"
+                "# Script version: " + SCRIPT_VERSION + "\n\n"
+                + "\n".join(lines_h) + "\n")
     (OUT_DIR / ("HASHES_" + slug + ".txt")).write_bytes(
-        "# A.3 v3 - hashes SHA-256\n# Run: " + ts + "\n\n"
-        + "\n".join(lines_h) + "\n".encode("utf-8"))
+        header_h.encode("utf-8"))
 
     print()
     print("\n".join(lines))
