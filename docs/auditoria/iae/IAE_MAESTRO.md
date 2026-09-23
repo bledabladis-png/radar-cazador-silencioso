@@ -1984,6 +1984,25 @@ shareClassFIGI de los 227 mapeos resolubles. Los 16 restantes no son
 verificables por este canal. La cobertura 1.0 sobre el radar es
 legitima, con el alcance declarado.
 
+**Evidencia archivada.** Cada ejecucion de
+`scripts/iae_validate_crosswalk_openfigi.py` versiona sus artefactos en
+`data/mappings/openfigi_requeries/`:
+
+    <slug>_input.json     parametros, timestamp UTC, git_head,
+                          script_version, lista de CUSIPs.
+    <slug>_raw.json       respuesta cruda por CUSIP.
+    <slug>_summary.txt    resumen legible + script_version + HEAD.
+    HASHES_<slug>.txt     sha256 de los 3 ficheros anteriores +
+                          timestamp + script_version.
+
+El artefacto de la validacion 2026-09-22 (run
+`2026-09-22_crosswalk_243_v2`, HEAD `c6185e1a`, script_version `2.1` en
+la version actual) esta versionado en git. Esto cierra el punto 7 del
+dictamen v4: la evidencia externa es reproducible y auditable. Los
+raws quedan versionados (tamano moderado); si en el futuro crecen
+significativamente, la politica puede pasar a conservar solo `HASHES_*`
+y `summary`.
+
 ### 12.5. Resultado de la cadena de delta y NIPC
 
 Nota semantica: NIPC = Observed Reported Position Change. NO es flujo

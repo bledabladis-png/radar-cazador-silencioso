@@ -66,6 +66,13 @@ cobertura con cautela).
   1 importante diferido: evidencia externa OpenFIGI no archivada con
   hash/timestamp; registrado como deuda activa en §3.
   Commits: 4e6b012, 7a4c38a, a2c64b5.
+- Dictamen v4, punto 7 (evidencia externa OpenFIGI): CERRADO 2026-09-23.
+  Script `iae_validate_crosswalk_openfigi.py` versiona los artefactos
+  (_input.json, _raw.json, _summary.txt, HASHES_*.txt) con timestamp UTC,
+  parametros, hashes y script_version. Fix str/bytes latente en el
+  bloque de escritura de HASHES. 5 tests con fixture mock cubren la
+  generacion de artefactos (verificado: script_version en input/summary/
+  hashes). Commits: 0d5b3ab, 47cba12.
 
 ---
 
@@ -79,11 +86,6 @@ cobertura con cautela).
 - SPCX en catalogo radar sin fuente de identidad (emisor privado).
 - Cobertura FIGI del 12,2% en INFOTABLE.
 - Deuda semantica del nombre `NIPC` si se expone en reporte (§5.4).
-- Evidencia externa OpenFIGI (consulta 2026-09-22) no archivada con
-  hash/timestamp reproducible. Pendiente: extender
-  `scripts/iae_validate_crosswalk_openfigi.py` para emitir un artefacto
-  con timestamp UTC, parametros de consulta, hash de input, hash de
-  respuesta y version del script. Detectado por auditor v4 (punto 7).
 - Coexistencia de dos modelos de identidad en `canonical_security`:
   `equity:<TICKER>` (crosswalk/equivalence) y `figi:<FIGI>` (figi_lookup
   directo). No colapsan por construccion del MATCH_KEY. Impacto medido

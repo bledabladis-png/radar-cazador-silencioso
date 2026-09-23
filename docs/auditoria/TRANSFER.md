@@ -19,7 +19,7 @@ Reglas de personalidad y metodo: `PROMPT_MAESTRO.md` secciones 1 y 3.
     Ahead                ver docs/auditoria/iae/ESTADO_SISTEMA.md
     Working tree         LIMPIO
     Tests IAE            759 passed (criterio AST, ver abajo)
-    Suite global         1435 passed + 2 skipped + 3 failed
+    Suite global         1440 passed + 2 skipped + 3 failed
                          (los 3 failed son test_freshness, ambientales)
     Push                 NO (local-first IAE)
     Cobertura IAE        110/110 funciones con llamada real (92% lineas)
@@ -132,7 +132,7 @@ Esperado:
 - HEAD ver docs/auditoria/iae/ESTADO_SISTEMA.md
 - ahead ver docs/auditoria/iae/ESTADO_SISTEMA.md
 - working tree limpio
-- 1435 passed + 2 skipped + 3 failed (test_freshness, preexistentes)
+- 1440 passed + 2 skipped + 3 failed (test_freshness, preexistentes)
 - pyflakes silencio, compileall OK
 
 Censo del modulo IAE (comando aparte, tarda unos segundos):
