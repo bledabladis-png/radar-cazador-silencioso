@@ -49,10 +49,13 @@ Reproducible con `scripts/iae_test_census.py`.
 Sobre los filings reales de Q4 2025 y Q1 2026, con el crosswalk CUSIP
 extendido a 246 filas (242 tickers unicos), el motor produce:
 
-- Q4 2025: 239 tickers operativos · Q1 2026: 243 tickers operativos.
-- TARGET_PAIRWISE = 239 · coverage_status = VALID.
+- Q4 2025: 240 tickers contribuyen al TARGET · Q1 2026: 240.
+- TARGET_PAIRWISE = 240 · coverage_status = VALID · coverage_quality = COMPLETE.
 - Delta radar: 553.321 filas (BOTH 444.276 · NEW 60.324 · EXIT 48.721).
 - NIPC radar: -4.316.734.936 (SOLE -32.485B, DFND +28.318B, OTR -0.150B).
+
+Detalle de sub-universos y contadores C9/C10 en §12.3. OKE y SPCX no
+contribuyen al TARGET (§13.2).
 
 Los pesos agregados son reproducibles a partir de los parquets de
 entrada. La cadena completa de calculo esta en la seccion 12 de este
@@ -106,7 +109,7 @@ documento.
             └── temporal_filter.py          100 LOC
 **Totales:** 35 ficheros, 7.749 LOC produccion, ~8.100 LOC test.
 
-LOC medidos el 2026-09-23 sobre el commit `bcf454d`. Se cuentan
+LOC medidos el 2026-09-23 sobre el commit `7caa86b`. Se cuentan
 todas las lineas del fichero (codigo, comentarios y lineas en
 blanco). Pueden desfasarse con cada commit; el valor de este
 bloque es orden de magnitud, no cifra contractual.
@@ -379,10 +382,12 @@ de FIGI por OpenFIGI tras corporate action.
 
 - Solo el 12,2% de las filas de INFOTABLE llevan FIGI poblado. Un
   fallback CUSIP -> FIGI por OpenFIGI cerraria el resto.
-- XOM y OKE tienen FIGI mismatch entre catalogo y filings. Requiere
-  crosswalk adicional.
-- SPCX esta en el catalogo actual pero no tiene filings (emisor
-  privado). Ver seccion 13.2.
+- SPCX esta en el catalogo radar pero no tiene fuente de identidad
+  (ni crosswalk ni etf_holdings). Emisor privado sin filings 13F.
+  No contribuye al TARGET. Ver §13.2.
+- OKE se resuelve via etf_holdings sin vigencia temporal, por lo que
+  el resolver lo marca TEMPORAL_UNVERIFIED y queda fuera del filtro
+  §5.5 (CANONICAL AND VERIFIED). No contribuye al TARGET. Ver §13.2.
 
 ### 5.4 Deuda de trazabilidad
 
@@ -419,11 +424,19 @@ de FIGI por OpenFIGI tras corporate action.
 
 ### A.3 Cobertura de tests
 
+Criterio AST (42 ficheros del modulo, 758 casos):
+
+    py scripts/iae_test_census.py
+
+Cobertura de lineas con pytest-cov (usa los 42 ficheros del censo):
+
     py -m pytest tests/ -q --tb=line `
       -k "iae or nipc or p38 or pairwise or catalog or pit or 13f" `
       --cov=src/institutional_accumulation `
       --cov-report=term-missing
 
+Nota: el filtro -k por nombre de test cubre 557 casos (no 758). El
+criterio canonico es el AST del modulo completo.
 ### A.4 Overlap sobre datos reales
 
     py -c "
@@ -945,11 +958,6 @@ guard_coverage.py). `coverage_status` se conserva como campo legacy.
   coverage_status = VALID
   coverage_available = True
   coverage_quality = COMPLETE
-  coverage_previous = 1.0
-  coverage_current = 1.0
-  paired_security_coverage = 1.0
-  paired_weighted_share_coverage = 1.0
-  coverage_status = VALID
 
 ---
 
@@ -1939,8 +1947,9 @@ Solo 468.237 de 3.822.885 filas de INFOTABLE Q1 2026 tienen FIGI poblado.
 El resto solo tienen CUSIP.
 
 Impacto: el motor resuelve identidad por CUSIP via crosswalk, no por FIGI.
-La cobertura efectiva del radar es 100%, pero la cobertura de securities
-pequeños (fuera del radar) es baja.
+La cobertura contractual del TARGET construido por periodo es 1.0 (ver
+§12.3 y las cautelas de §13.5). La cobertura de securities pequeños
+fuera del radar sigue siendo baja.
 
 ### 13.2. OKE y SPCX no contribuyen al TARGET contractual
 
