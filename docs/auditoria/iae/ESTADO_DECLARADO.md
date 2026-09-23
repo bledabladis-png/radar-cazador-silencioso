@@ -20,9 +20,10 @@ Documento vivo. Se actualiza cuando cambia el estado.
 | Fase D - reenviar al auditor externo | PENDIENTE |
 | Fase E - integracion a `run.py` | BLOQUEADA hasta Fase D |
 
-Dictamen del auditor v2: 8 puntos cerrados (BLOQUEANTE HEAD, 3
-CRITICOS de coherencia, 2 IMPORTANTES C9/C10, incoherencia OKE,
-cobertura con cautela).
+Dictamenes externos aplicados al modulo IAE (todos cerrados):
+v2 (8 puntos), v3 (6), v4 (11), v5 (GATE 1 nomenclatura + GATE 2
+identidad dual), v6 (auditoria empirica A.1), v7 (cierre final
+IAE_MAESTRO). Detalle en §2.
 
 ---
 
@@ -31,10 +32,11 @@ cobertura con cautela).
 - H-05 a H-12, B-01 a B-07: ver historial en git.
 - Fase A: B1 reconciliacion radar/complemento/full; B2 cadena forense
   (HEAD + sha256 + pandas + timestamp); B3 validacion externa OpenFIGI
-  (227/227 match, 16 sin hit no-USA); B4 riesgo PIT declarado (§13.9).
+  (227/227 match sobre 243 CUSIPs resolubles por OpenFIGI, 16 sin hit
+  no-USA); B4 riesgo PIT declarado (§13.9).
 - Fase B: C5 tabla universos, C6 aviso §4, C7 cadena contractual,
   C11 semantica NIPC, C12 frase eliminada, C13 invocadas != verificadas,
-  C14 30+5 ficheros, C15 rename crosswalk, C16 nota 14.3.x,
+  C14 27 listados + 15 ausentes = 42 ficheros (criterio AST), C15 rename crosswalk, C16 nota 14.3.x,
   C18 coherencia numerica.
 - Fase C: C8 reporting_dedup diagnostico separado, C9 stats observables,
   C10 coverage_available + coverage_quality.
@@ -73,6 +75,24 @@ cobertura con cautela).
   bloque de escritura de HASHES. 5 tests con fixture mock cubren la
   generacion de artefactos (verificado: script_version en input/summary/
   hashes). Commits: 0d5b3ab, 47cba12.
+- Dictamen v5 (auditor fresco, 2026-09-23): 15 puntos. GATE 1 cerrado
+  (nomenclatura catalog/TARGET, IAE_MAESTRO §1, §13.5). GATE 2
+  verificado empiricamente: 0 fragmentacion por shareClassFIGI en la
+  configuracion E2E auditada. §13.10 reformulada: dualidad
+  `equity:` / `figi:` = capacidad teorica del resolver, no observada
+  en E2E con `figi_lookup=None`. Commits: 66557fb, 6869a85.
+- Dictamen v6 (auditor externo, 2026-09-23): GATE 2 cerrado
+  empiricamente sobre los 4.780.572 units del E2E. Script nuevo
+  `scripts/iae_identity_uniqueness_audit.py`. 0 shareClassFIGI
+  fragmentadas, 0 uso de rama `figi:*`, delta NIPC = 0 al normalizar.
+  §12.5/§12.6 corregidos para reconocer `canonical_security in
+  {equity:*, figi:*}`. 4 puntos menores aplicados (§13.1 OpenFIGI
+  suavizado, §13.9 titulado ASSUMPTION, §4.3 source_raw + derivation,
+  §1 marca de snapshot). Commits: d3e5fa2, bbbd7d2, 0eeb6a2.
+- Dictamen v7 (auditor externo, 2026-09-23): cierre final.
+  §12.4 corregido (cobertura interna TARGET 1,0 / catalogo declarado
+  99,17%). §13.10 retitulado. §12.6 reformulado con conjunto canonico
+  explicito. Commits: 0772272, 8b00303.
 
 ---
 
@@ -84,16 +104,19 @@ cobertura con cautela).
 - `scripts/iae_contractual_coverage.py` reproduce §12.3; pendiente
   integrarlo al flujo continuo de validacion.
 - SPCX en catalogo radar sin fuente de identidad (emisor privado).
-- Cobertura FIGI del 12,2% en INFOTABLE.
+- Cobertura FIGI del 12,2% en INFOTABLE. Un fallback CUSIP -> FIGI
+  via OpenFIGI podria ampliar la cobertura, pero no se ha demostrado
+  que resuelva exhaustivamente los CUSIPs restantes (ver IAE_MAESTRO
+  §13.1 y §12.4).
 - Deuda semantica del nombre `NIPC` si se expone en reporte (§5.4).
-- Coexistencia de dos modelos de identidad en `canonical_security`:
-  `equity:<TICKER>` (crosswalk/equivalence) y `figi:<FIGI>` (figi_lookup
-  directo). No colapsan por construccion del MATCH_KEY. Impacto medido
-  sobre Alphabet: ~110 filas con FIGI composite (BBG009S3NB30 /
-  BBG009S39JX6) que no se unen al CUSIP principal. No es bug, es
-  limitacion de identidad canonica no unificada. Ver IAE_MAESTRO §13.10.
-  Detectado en dictamen v5 (auditor fresco, GATE 2). Reabrir si el
-  impacto agregado deja de ser anecdotico o antes de Fase E.
+- Identidad canonica dual (`equity:<TICKER>` / `figi:<FIGI>` en
+  `canonical_security`): capacidad del resolver no observada en la
+  configuracion E2E auditada. Auditoria empirica A.1 sobre 4.780.572
+  units: 0 shareClassFIGI bajo dos canonical_security, 0 uso de la
+  rama `figi:*`, delta NIPC = 0 al normalizar por shareClassFIGI.
+  Ver IAE_MAESTRO §13.10. Reabrir si se activa `figi_lookup` en algun
+  punto del pipeline, si aparece un caso `figi:*` en units o delta,
+  o si se modifica el modelo de resolucion de identidad.
 
 Detalle en `IAE_MAESTRO.md` seccion 5.
 
@@ -116,6 +139,17 @@ Detalle en `IAE_MAESTRO.md` seccion 5.
 - `IAE_MAESTRO.md` - referencia unica del modulo.
 - `ESTADO_SISTEMA.md` - hechos autogenerados (fuente unica de HEAD).
 - `ESTADO_DECLARADO.md` - este documento.
+
+### Scripts IAE publicados
+
+- `scripts/iae_test_census.py` - censo AST de tests del modulo.
+- `scripts/iae_coverage.py` - cobertura reproducible sobre los 759 tests.
+- `scripts/iae_contractual_coverage.py` - cadena contractual completa.
+- `scripts/iae_reconciliation_b1.py` - reconciliacion radar + complemento = full.
+- `scripts/iae_validate_crosswalk_openfigi.py` - validacion externa OpenFIGI.
+- `scripts/iae_identity_uniqueness_audit.py` - auditoria unicidad por shareClassFIGI.
+- `scripts/iae_pipeline.py` - orquestador ingestion + identity.
+- `scripts/build_catalog_csvs.py` - construccion de catalogos CSV.
 
 Documentos historicos (no normativos): `NIPC_CONTRATOS_SEMANTICOS_v1.md`,
 `NIPC_COVERAGE_POLICY.md`, `INSTITUTIONAL_ACCUMULATION_NIPC_ESPECIFICACION.md`.
