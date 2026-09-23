@@ -161,8 +161,9 @@ a `daily_run.yml` es una decision futura, no un hecho actual.
 
 Las 110 funciones estan invocadas al menos una vez en la suite de tests.
 Esto no equivale a verificacion exhaustiva. La cobertura de lineas es
-81% (ver §3.2). Los 6 ficheros con cobertura inferior al 80% se
-declaran como riesgo pendiente, no como deuda que "subira sola".
+92% (ver §3.2); ningun fichero queda por debajo del 80%. Los modulos
+con menor cobertura siguen siendo riesgo pendiente de mejora antes de
+su integracion en produccion, no deuda que "subira sola".
 
 ### 3.2 Cobertura de tests
 
@@ -435,7 +436,7 @@ integracion sea una decision activa, no hoy.
 
 ### A.3 Cobertura de tests
 
-Criterio AST (42 ficheros del modulo, 758 casos):
+Criterio AST (42 ficheros del modulo, 759 casos):
 
     py scripts/iae_test_census.py
 
@@ -446,7 +447,7 @@ Cobertura de lineas con pytest-cov (usa los 42 ficheros del censo):
       --cov=src/institutional_accumulation `
       --cov-report=term-missing
 
-Nota: el filtro -k por nombre de test cubre 557 casos (no 758). El
+Nota: el filtro -k por nombre de test cubre 557 casos (no 759). El
 criterio canonico es el AST del modulo completo.
 ### A.4 Overlap sobre datos reales
 
@@ -1070,10 +1071,10 @@ separada, no como etapa del flujo productivo. Los numeros de §12.5 y
 Cada fichero de test cubre una parte del modulo. Se listan las
 funciones de test con su docstring cuando existe.
 
-Ejecucion actual: **758 casos de test pasan** (0 fallos). El modulo
+Ejecucion actual: **759 casos de test pasan** (0 fallos). El modulo
 completo (42 ficheros que importan `src.institutional_accumulation`)
-tiene 694 funciones de test detectables por AST. La diferencia
-(758 vs 694) corresponde a casos parametrizados via
+tiene 695 funciones de test detectables por AST. La diferencia
+(759 vs 695) corresponde a casos parametrizados via
 @pytest.mark.parametrize, que pytest expande a multiples casos por
 funcion.
 
@@ -1722,7 +1723,7 @@ El modulo completo tiene 42 ficheros que importan
 
 Este listado tiene valor como inventario nominal de funciones de test,
 no como conteo exhaustivo. Conteo autoritativo del modulo (42 ficheros,
-758 casos pytest, 694 funciones AST): §1 (resumen ejecutivo) y
+759 casos pytest, 695 funciones AST): §1 (resumen ejecutivo) y
 `scripts/iae_test_census.py`.
 
 
