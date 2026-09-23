@@ -84,6 +84,14 @@ cobertura con cautela).
   `scripts/iae_validate_crosswalk_openfigi.py` para emitir un artefacto
   con timestamp UTC, parametros de consulta, hash de input, hash de
   respuesta y version del script. Detectado por auditor v4 (punto 7).
+- Coexistencia de dos modelos de identidad en `canonical_security`:
+  `equity:<TICKER>` (crosswalk/equivalence) y `figi:<FIGI>` (figi_lookup
+  directo). No colapsan por construccion del MATCH_KEY. Impacto medido
+  sobre Alphabet: ~110 filas con FIGI composite (BBG009S3NB30 /
+  BBG009S39JX6) que no se unen al CUSIP principal. No es bug, es
+  limitacion de identidad canonica no unificada. Ver IAE_MAESTRO §13.10.
+  Detectado en dictamen v5 (auditor fresco, GATE 2). Reabrir si el
+  impacto agregado deja de ser anecdotico o antes de Fase E.
 
 Detalle en `IAE_MAESTRO.md` seccion 5.
 

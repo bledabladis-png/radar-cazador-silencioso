@@ -821,7 +821,21 @@ Procedimiento:
   2. Agregar por MATCH_KEY sumando `sshprnamt_total`:
        cur_agg[M, S, D] = sum sshprnamt_total sobre units_current
        prev_agg[M, S, D] = sum sshprnamt_total sobre units_previous
-     (esto colapsa múltiples CUSIPs del mismo canonical, p.ej. GOOG/GOOGL).
+     (esto colapsa multiples CUSIPs del mismo canonical: por ejemplo,
+     CUSIP historico y CUSIP actual del mismo ticker, o CUSIP de la
+     misma security con distintos codigos de mercado).
+
+     Nota sobre identidad canonica. `canonical_security` puede tomar
+     dos formas disjuntas:
+       - `equity:<TICKER>` cuando la resolucion pasa por crosswalk o
+         tabla de equivalencias.
+       - `figi:<FIGI>` cuando la resolucion pasa por figi_lookup
+         directo (p.ej. INFOTABLE con FIGI poblado).
+     Ambas formas coexisten en el delta y NO se colapsan entre si por
+     construccion del MATCH_KEY. GOOG (shareClassFIGI BBG009S3NB21) y
+     GOOGL (shareClassFIGI BBG009S39JY5) son tickers distintos, cada
+     uno con su propio `equity:` — no son un caso de colapso. Ver §13.10
+     para el detalle y el impacto medido.
   3. Full outer join por MATCH_KEY.
 
 Reglas por origen del join:
@@ -2156,6 +2170,51 @@ no es verificable con la evidencia actual. Se declara como limitacion
 de alcance, no como bug. Reabrir si aparece un snapshot PIT historico
 o si auditoria externa exige reconstruir el radar en fechas previas a
 2026-09-21.
+
+### 13.10. Coexistencia de dos modelos de identidad en canonical_security
+
+`canonical_security` (formado en `security_identity.py::_normalize_canonical`)
+admite dos formas mutuamente excluyentes:
+
+    equity:<TICKER>   cuando la resolucion pasa por crosswalk o tabla
+                      de equivalencias (P60 ruta TICKER).
+    figi:<FIGI>       cuando la resolucion pasa por figi_lookup directo
+                      (P60 ruta FIGI).
+
+Ambas formas son legitimas y estan definidas por el contrato P60. El
+MATCH_KEY del delta (§10.2) las trata como claves distintas: dos
+posiciones del mismo emisor no se colapsan si una resuelve por ticker
+y otra por FIGI.
+
+**Impacto medido (2026-09-23).** Sobre los CUSIPs de Alphabet en
+INFOTABLE:
+
+    Q4 2025: 7 CUSIPs con FIGI poblado (02079K107/305/905/907/955/957)
+             mas 2 CUSIPs de bonos (02079KAD9, 02079KAX5).
+    Q1 2026: identico, mas CUSIPs con FIGI nulo (02079K105/109/309,
+             02079KAJ6).
+
+Los CUSIPs principales (02079K107 -> GOOG, 02079K305 -> GOOGL) resuelven
+por crosswalk a `equity:GOOG` / `equity:GOOGL`. Los CUSIPs 905/907/955/957
+tienen FIGI composite (BBG009S3NB30 / BBG009S39JX6) y resuelven por
+figi_lookup a `figi:BBG...`. En el delta son claves distintas.
+
+Magnitud: ~110 filas (de ~16.000 en el universo Alphabet, Q4+Q1). No
+se ha medido el impacto agregado sobre el total del delta, pero se
+declara como deuda controlada.
+
+**No es bug.** El motor es correcto respecto a la regla definida en
+P60. La regla es la que admite dos canales. Declarado como limitacion
+de alcance (identidad canonica no unificada) para transparencia.
+
+**Reabrir si:**
+  - Aparece evidencia de que un mismo emisor contribuye al NIPC con
+    dos entradas separadas de forma sistematica (no anecdótica).
+  - Auditoria externa exige modelo de identidad unico.
+  - Se decide integrar a produccion (Fase E): la unificacion de
+    identidad debe evaluarse como decision previa.
+
+Deuda registrada en `ESTADO_DECLARADO.md` seccion 3.
 
 ## FIN DEL IAE_MAESTRO
 
