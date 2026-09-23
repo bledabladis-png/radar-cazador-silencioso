@@ -3,7 +3,9 @@
 Documento unico del modulo IAE. Estado, arquitectura, verificacion.
 
 **Actualizado:** 2026-09-23
-**HEAD:** ver `docs/auditoria/iae/ESTADO_SISTEMA.md`
+**HEAD operativo:** ver `docs/auditoria/iae/ESTADO_SISTEMA.md` (campo HEAD).
+**Snapshot de mediciones (§2.1, §12):** `7caa86b` (2026-09-23).
+
 
 **Que es este documento.** Describe el modulo IAE tal como esta
 implementado y verificado. No certifica cumplimiento de contratos
@@ -906,6 +908,14 @@ Salida:
     n_temporal_unverified (atajo). Los contadores cuentan RECORDS de
     entrada al filtro, no FIGIs unicos, no CUSIPs, ni pesos.
 
+    Invariante de reconciliacion (categorias disjuntas, aplicadas en
+    este orden):
+      n_received = n_period_mismatch + n_missing_figi
+                 + n_verified + n_excluded
+    Si en algun caso n_missing_figi pudiera pertenecer tambien a
+    n_excluded (no es el caso en esta implementacion), la identidad
+    no debe aplicarse.
+
 ---
 
 ### 10.5. Cobertura contractual P38
@@ -941,6 +951,11 @@ Formulas pairwise:
       w(S) = max(agg(S; Q4), agg(S; Q1))
 
   Fail-closed: si TARGET_PAIRWISE vacío, se devuelve None, NO 0.0.
+  Fail-closed ponderado: si TARGET_PAIRWISE no vacío pero
+    sum_{S in TARGET_PAIRWISE} w(S) = 0, entonces
+    paired_weighted_share_coverage = None y
+    coverage_quality = UNAVAILABLE. Nunca division por cero, nunca
+    NaN, nunca interpretacion de 0%.
 
 Estado agregado (legacy):
   coverage_status = "VALID"      si TARGET_Q4, TARGET_Q1 y TARGET_PAIRWISE
@@ -1028,7 +1043,7 @@ contractual es §10.5.
   compute_delta_shares (§10.2)    build_target + catalog_to_p38_targets
         |              |
         v              v
-  compute_nipc_contractual (§10.3, ver nota)  compute_contractual_coverage (§10.5)
+  compute_nipc_contractual (§10.5, ruta contractual)  compute_contractual_coverage (§10.5)
         |              |
         +------+-------+
                |
@@ -1052,7 +1067,8 @@ ejecucion. La ejecucion actual del motor (§12.5 y §12.6) usa
 testeado pero no tiene callers productivos (ver §5.1).
 
 **Capa auxiliar: reporting_dedup.** `build_effective_reporting_snapshot`
-(`reporting_dedup.py`) opera PRE-delta, con 64 tests y 0 callers
+(`reporting_dedup.py`) opera PRE-delta, con 35 funciones de test AST /
+64 casos pytest expandidos y 0 callers
 productivos. NO forma parte de la cadena contractual y NO modifica
 MATCH_KEY, delta_shares, NIPC ni coverage. Su frontera semantica es
 REPORTING RELATIONSHIP != REPORTING NETWORK != DEDUP AUTHORIZATION
@@ -1892,9 +1908,11 @@ Los 56 errores se desglosan:
   26x "Invalid idValue format" (formato CUSIP invalido)
   30x "No identifier found" (bonos, munis, foreign issuers)
 
-Esto demuestra que **ningun ticker del radar quedaba fuera del
-crosswalk en el subconjunto muestreado**. NO demuestra la correccion
-individual de los 246 mapeos del crosswalk.
+En la muestra aleatoria, ninguno de los 100 CUSIPs no cubiertos por
+el crosswalk resolvio mediante OpenFIGI a un ticker del radar. Esto
+aporta evidencia negativa sobre la muestra, pero NO demuestra
+cobertura exhaustiva fuera del crosswalk ni la correccion individual
+de los 246 mapeos del crosswalk.
 
 **Paso 2 - validacion positiva de los mapeos (2026-09-22).**
 Consulta dirigida de los 243 CUSIPs de `cusip_to_radar_figi.csv` a
@@ -2021,9 +2039,11 @@ validas del crosswalk pero no pertenecen al universo radar.
 
 Ningun fichero del modulo queda por debajo del 80% de cobertura de
 lineas. Los 6 ficheros que en la revision anterior estaban por debajo
-(`timestamps.py` 87%, `openfigi_client.py` 89%, `target_universe.py`
-93%, `reporting_dedup.py` 91%, `security_type.py` 98%,
-`temporal_validity.py` 96%) superan hoy ese umbral.
+del 80% eran `timestamps.py` (20%), `openfigi_client.py` (31%),
+`target_universe.py` (31%), `reporting_dedup.py` (55%),
+`security_type.py` (64%) y `temporal_validity.py` (79%). Hoy sus
+coberturas respectivas son 87%, 89%, 93%, 91%, 98% y 96%, todas por
+encima del umbral.
 
 El minimo actual es `catalog_key.py` con 82%. La deuda de cobertura
 como tal queda cerrada; los ficheros con cobertura mas baja siguen
