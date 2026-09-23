@@ -2,7 +2,7 @@
 
 Hechos verificables del sistema. Generado por script.
 
-**Generado en:** 2026-09-23 21:13:24 UTC
+**Generado en:** 2026-09-23 21:37:36 UTC
 **Snapshot tomado sobre:** commit HEAD de la fecha indicada, al momento de generar
 **NO editar a mano.** Regenerar con:
 
@@ -16,27 +16,22 @@ proyecto describen su tema; NO declaran el estado del sistema.
 
 ## 1. Git
 
-- **HEAD:** `947d84a`
-- **HEAD completo:** `947d84ad14f3f75d2a656124eb1afc3697fdff08`
-- **Fecha commit HEAD:** 2026-09-23 23:12:52 +0200
-- **Ahead:** 439
+- **HEAD:** `867355e`
+- **HEAD completo:** `867355e223b520eec1539f3a746ba1ba7ed66f78`
+- **Fecha commit HEAD:** 2026-09-23 23:19:47 +0200
+- **Ahead:** 442
 - **Behind:** 0
 - **origin/main:** `5f1d9ab`
 
 ## 2. Tests (pytest real)
 
-- **Resumen:** 3 failed, 1458 passed, 2 skipped in 29.21s
-- **Exit code:** 1
-
-**Tests fallidos (nombre completo):**
-- `FAILED tests/test_freshness.py::test_market_data_fresh - AssertionError: mark...`
-- `FAILED tests/test_freshness.py::test_stock_prices_fresh - AssertionError: sto...`
-- `FAILED tests/test_freshness.py::test_european_tickers_recent - AssertionError...`
+- **Resumen:** 1467 passed, 2 skipped in 28.75s
+- **Exit code:** 0
 
 ## 3. Integridad del codigo
 
 - **compileall:** OK (exit 0)
-- **pyflakes:** 1 warnings (exit 1)
+- **pyflakes:** LIMPIO
 
 ## 4. Modulos IAE
 
