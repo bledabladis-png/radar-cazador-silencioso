@@ -955,7 +955,11 @@ Estado agregado (C10, aditivo). Se anaden dos campos que separan
   coverage_available = True      si TARGET_PAIRWISE no vacio (la
                                  cobertura es medible, aunque sea 0%).
   coverage_available = False     si TARGET_PAIRWISE vacio.
-  coverage_quality = "UNAVAILABLE"  si TARGET_PAIRWISE vacio.
+  coverage_quality = "UNAVAILABLE"  si TARGET_PAIRWISE vacio, o si
+                                    paired_weighted_share_coverage
+                                    es None (target no vacio pero
+                                    denominador ponderado = 0: no
+                                    medible, no parcial).
   coverage_quality = "COMPLETE"     si paired_security_coverage >= 0.95
                                     Y paired_weighted_share_coverage >= 0.95.
   coverage_quality = "PARTIAL"      en cualquier otro caso medible.

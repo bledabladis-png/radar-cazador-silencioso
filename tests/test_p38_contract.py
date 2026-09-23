@@ -702,6 +702,25 @@ def test_p38_coverage_quality_partial_si_weighted_bajo():
     assert result["paired_weighted_share_coverage"] < 0.95
 
 
+def test_p38_coverage_quality_unavailable_si_pesos_cero():
+    """Target pairwise no vacio + denominador ponderado = 0 -> UNAVAILABLE.
+
+    Regresion: antes del fix este caso caia en PARTIAL porque
+    coverage_available=True pero paired_weighted=None. PARTIAL sugiere
+    "medible pero incompleto", cuando la dimension ponderada no es
+    medible en absoluto.
+    """
+    from src.institutional_accumulation.aggregation.coverage import (
+        compute_contractual_coverage)
+    records_q4 = [_rec("FIGI_A", "VERIFIED", 0.0, period="Q4")]
+    records_q1 = [_rec("FIGI_A", "VERIFIED", 0.0, period="Q1")]
+    result = compute_contractual_coverage(
+        {"FIGI_A"}, {"FIGI_A"}, records_q4, records_q1)
+    assert result["coverage_available"] is True
+    assert result["paired_weighted_share_coverage"] is None
+    assert result["coverage_quality"] == "UNAVAILABLE"
+
+
 def test_p38_coverage_quality_no_colapsa_con_status():
     """coverage_status sigue siendo VALID aunque quality sea PARTIAL."""
     from src.institutional_accumulation.aggregation.coverage import (

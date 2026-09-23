@@ -221,7 +221,7 @@ def compute_contractual_coverage(target_q4, target_q1, records_q4, records_q1):
     #   (paired_security_coverage Y paired_weighted_share_coverage)
     #   >= COVERAGE_COMPLETE_THRESHOLD para declarar COMPLETE.
     coverage_available = bool(target_pairwise)
-    if not coverage_available:
+    if not coverage_available or paired_weighted is None:
         coverage_quality = "UNAVAILABLE"
     elif (paired_security_coverage is not None
           and paired_weighted is not None
