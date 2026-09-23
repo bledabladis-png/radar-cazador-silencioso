@@ -36,7 +36,7 @@ Opera de forma aislada del pipeline productivo del radar sectorial.
 | LOC produccion | 7.749 |
 | Funciones publicas | 110 |
 | Ficheros de test | 42 |
-| Tests que pasan | 758 |
+| Tests que pasan | 759 |
 | Cobertura de lineas | 92% |
 | Integrado en produccion | NO (aislado por diseno) |
 
@@ -381,10 +381,13 @@ y queda fuera del filtro §5.5. No contribuye al TARGET (§13.2).
 
 ### 5.2 Deuda de cobertura
 
-- `timestamps.py` (20%), `openfigi_client.py` (31%),
-  `target_universe.py` (31%), `reporting_dedup.py` (55%),
-  `security_type.py` (64%), `temporal_validity.py` (79%).
-  Subira cuando el modulo se integre en produccion.
+Estado actual: 92% global, ningun fichero por debajo del 80%
+(ver §3.2). El minimo es `catalog_key.py` con 82%.
+
+Deuda residual: mejorar la cobertura de los modulos con menor
+cobertura ANTES de su integracion en produccion. El criterio
+concreto (que umbral, que ficheros) se fijara cuando la
+integracion sea una decision activa, no hoy.
 
 ### 5.3 Deuda de datos
 
@@ -958,8 +961,10 @@ Estado agregado (C10, aditivo). Se anaden dos campos que separan
   coverage_quality = "COMPLETE"     si paired_security_coverage >= 0.95
                                     Y paired_weighted_share_coverage >= 0.95.
   coverage_quality = "PARTIAL"      en cualquier otro caso medible.
-Threshold: COVERAGE_COMPLETE_THRESHOLD = 0.95 (alineado con
-guard_coverage.py). `coverage_status` se conserva como campo legacy.
+Threshold: COVERAGE_COMPLETE_THRESHOLD = 0.95. Umbral operativo de
+gobernanza del sistema (alineado con guard_coverage.py), NO una
+derivacion matematica de las formulas base de P38. `coverage_status`
+se conserva como campo legacy.
 
 **Ejemplo Q4 -> Q1 2026 (radar, con crosswalk extendido):**
   TARGET_Q4 = 240 · TARGET_Q1 = 240 · TARGET_PAIRWISE = 240
@@ -1004,7 +1009,7 @@ contractual es §10.5.
 
 ---
 
-### 10.7. Cadena completa de cálculo
+### 10.7. Cadena contractual (diseñada, no ejecutada en producción)
 
   filings 13F (parquets)
         |
@@ -1028,7 +1033,7 @@ contractual es §10.5.
         +------+-------+
                |
                v
-           Resultado contractual:
+           Resultado contractual (diseñado):
              nipc_total + coverage_*
 
 El resultado contractual se emite como dict con:
@@ -1039,8 +1044,9 @@ El resultado contractual se emite como dict con:
   coverage_status
   evidence_class = "CONTRACTUAL"
 
-**Estado actual (2026-09-22).** La cadena mostrada arriba describe el
-diseno contractual. La ejecucion actual del motor (§12.5 y §12.6) usa
+**Cadena E2E ejecutada en §12: PROXY (estado 2026-09-22).** La
+cadena mostrada arriba describe el diseno contractual, no la
+ejecucion. La ejecucion actual del motor (§12.5 y §12.6) usa
 `compute_nipc` sobre delta filtrado al radar, con
 `evidence_class = "PROXY"`. `compute_nipc_contractual` existe y esta
 testeado pero no tiene callers productivos (ver §5.1).
@@ -1842,6 +1848,14 @@ invoca el adapter y `compute_contractual_coverage`.
     === unmapped_count legacy ===
     unmapped_count_previous:      0
     unmapped_count_current:       0
+
+Nota de alcance (C9). En esta ejecucion los contadores de exclusion
+(n_excluded_q4, n_excluded_q1, excluded_by_status_*) valen 0: los 240
+records de cada periodo son VERIFIED, sin TEMPORAL_UNVERIFIED ni otros
+estados. La E2E demuestra que el flujo nominal no excluye registros,
+pero NO ejercita el camino de exclusion sobre datos reales. El
+comportamiento del contador cuando hay registros excluidos esta
+cubierto por tests con fixture (test_p38_*), no por esta ejecucion.
 
 Semantica del TARGET. El TARGET contractual de cada periodo es el
 sub-universo de keys del catalogo radar con observacion VERIFIED en el
