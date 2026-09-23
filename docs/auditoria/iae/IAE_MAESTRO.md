@@ -13,6 +13,34 @@ externos ni periodos historicos. Los contratos P60-P70 en
 `NIPC_CONTRATOS_SEMANTICOS_v1.md` se mantienen como documentacion
 historica del diseno, no como normativa vigente.
 
+### Estado de puntos (indice de auditoria)
+
+Este documento ha pasado por varios dictamenes externos. Indice para
+lectores nuevos:
+
+- **Dictamen v3** (6 puntos): cerrado. Cobertura 92% reproducible via
+  `scripts/iae_coverage.py`; separacion contractual/PROXY en §10.7;
+  umbral 0.95 declarado operativo; fail-closed denominador ponderado=0
+  en §10.5.
+- **Dictamen v4** (11 puntos): 10 cerrados + 1 diferido. Ref cruzada
+  §10.7, error historico §13.3, frase OpenFIGI §12.4, invariante C9
+  §10.4, fail-closed ponderado §10.5, `reporting_dedup` §10.7, HEAD
+  operativo. Diferido: evidencia externa OpenFIGI sin artefacto
+  reproducible (deuda activa, `ESTADO_DECLARADO §3`).
+- **Dictamen v5** (auditor fresco, 15 puntos): GATE 2 cerrado por
+  verificacion empirica — `canonical_security` admite dos modelos
+  (`equity:` / `figi:`) que no colapsan (ver §13.10). GATE 1
+  (nomenclatura cobertura) aplicado en esta revision (§1, §13.5).
+  Resto de puntos ya cubiertos por dictamenes previos o declarados
+  como limitacion.
+
+**Limitaciones declaradas** (no bugs): PIT historico Q4 2025 (§13.9),
+identidad canonica dual (§13.10), NIPC como variacion reportada, no
+flujo economico (§10.3, §13.7), cobertura 12,2% FIGI en INFOTABLE
+(§13.1).
+
+**Deuda activa:** ver `ESTADO_DECLARADO.md` seccion 3.
+
 ---
 
 ## 1. Resumen ejecutivo
@@ -52,7 +80,10 @@ Sobre los filings reales de Q4 2025 y Q1 2026, con el crosswalk CUSIP
 extendido a 246 filas (242 tickers unicos), el motor produce:
 
 - Q4 2025: 240 tickers contribuyen al TARGET · Q1 2026: 240.
-- TARGET_PAIRWISE = 240 · coverage_status = VALID · coverage_quality = COMPLETE.
+- TARGET_PAIRWISE = 240 · cobertura catalogo declarado 240/242 = 99,17%
+  · cobertura interna del TARGET construido = 100% (coverage_status = VALID,
+  coverage_quality = COMPLETE). Las dos metricas son distintas: la
+  segunda es endogena al TARGET por construccion. Ver §13.5.
 - Delta radar: 553.321 filas (BOTH 444.276 · NEW 60.324 · EXIT 48.721).
 - NIPC radar: -4.316.734.936 (SOLE -32.485B, DFND +28.318B, OTR -0.150B).
 
@@ -1896,10 +1927,11 @@ sub-universo antes del adapter. Esto alinea la cobertura con lo que el
 motor realmente construye (§13.5).
 
 Distincion importante: la cobertura 1.0 declarada en esta seccion es
-endogena al TARGET construido (todo elemento del TARGET tiene
-evidencia VERIFIED por construccion). NO es lo mismo que la cobertura
-del catalogo radar declarado (240 de 242 = 99,17%). Ver §13.5 para la
-tabla de las dos metricas.
+`target_internal_coverage` (endogena al TARGET construido: todo
+elemento del TARGET tiene evidencia VERIFIED por construccion). NO es
+lo mismo que `catalog_coverage_declared`, la cobertura del catalogo
+radar declarado (240 de 242 = 99,17%). Ver §13.5 para la tabla y la
+nomenclatura canonica.
 
 Nota historica (2026-09-23). Los valores anteriores de esta seccion
 (Q4 621.046 filas oper, catalog_keys Q4 239, TARGET_PAIRWISE 239)
@@ -2073,22 +2105,34 @@ El modulo no se ejecuta en el pipeline productivo. La integracion a
 
 ### 13.5. Alcance de la cobertura contractual 1.0
 
-La cobertura 1.0 de §12.3 se interpreta como: **cobertura contractual
-del TARGET que el sistema construye en el periodo**, NO del catalogo
-radar declarado. La distincion es relevante: el TARGET se construye a
-partir de las keys del catalogo con observacion VERIFIED, por lo que
-todos sus elementos tienen evidencia por construccion. La cobertura
-1.0 es, en ese sentido, endogena al TARGET.
+**El 100% NUNCA debe leerse como cobertura del radar declarado.** La
+cobertura 1.0 de §12.3 es la cobertura interna del TARGET que el
+sistema construye en el periodo, NO del catalogo radar declarado. El
+TARGET se construye a partir de las keys del catalogo con observacion
+VERIFIED, por lo que todos sus elementos tienen evidencia por
+construccion. La cobertura 1.0 es, en ese sentido, endogena al TARGET.
 
-Dos metricas distintas, que no deben confundirse:
+Nomenclatura canonica (adoptada a partir del dictamen v5):
+
+    catalog_coverage_declared = TARGET_OBSERVABLE / CATALOG_DECLARED
+                              = 240 / 242 = 99,17%
+    target_internal_coverage  = VERIFIED / TARGET_CONSTRUIDO
+                              = 240 / 240 = 100%
+
+`catalog_coverage_declared` es la metrica independiente del radar. Es
+la que debe citarse cuando se hable de "cobertura del radar".
+
+`target_internal_coverage` es la metrica interna del pipeline. Solo
+declara que todos los elementos del TARGET construido tienen evidencia
+verificada. Es endogena, no es evidencia de cobertura del radar.
 
 | Metrica                          | Resultado | Que significa                                              |
 | -------------------------------- | --------: | ---------------------------------------------------------- |
-| Cobertura catalogo declarado Q4  |    99,17% | 240 / 242 keys con observacion VERIFIED                    |
-| Cobertura catalogo declarado Q1  |    99,17% | 240 / 242 keys con observacion VERIFIED                    |
+| catalog_coverage_declared Q4     |    99,17% | 240 / 242 keys con observacion VERIFIED                    |
+| catalog_coverage_declared Q1     |    99,17% | 240 / 242 keys con observacion VERIFIED                    |
 | TARGET operacional Q4            |       240 | sub-universo construido con observacion VERIFIED           |
 | TARGET operacional Q1            |       240 | sub-universo construido con observacion VERIFIED           |
-| Cobertura contractual del TARGET |      100% | todos los elementos del TARGET tienen evidencia verificada |
+| target_internal_coverage         |      100% | todos los elementos del TARGET tienen evidencia verificada |
 
 No equivale a:
 
