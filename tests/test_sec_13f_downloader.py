@@ -49,15 +49,53 @@ def test_sha256_conocido(tmp_path):
     expected = "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824"
     assert downloader._sha256(p) == expected
 
-def test_http_4xx_no_retry():
+def test_http_401_no_retry():
+    # 401 Unauthorized: 4xx real, no mejora con retry.
     with patch("requests.get") as mock_get:
+        resp = MagicMock()
+        resp.status_code = 401
+        resp.raise_for_status.side_effect = requests.HTTPError("401")
+        mock_get.return_value = resp
+        with pytest.raises(requests.HTTPError):
+            downloader._http_get_with_retry("http://x", {})
+        assert mock_get.call_count == 1
+
+
+def test_http_404_reintenta_por_rate_limit():
+    # 404: Akamai/SEC lo usa como senal de rate limiting transitorio.
+    # Retry con backoff largo (5s, 15s, 45s) y falla tras agotar intentos.
+    with patch("requests.get") as mock_get, patch("time.sleep"):
         resp = MagicMock()
         resp.status_code = 404
         resp.raise_for_status.side_effect = requests.HTTPError("404")
         mock_get.return_value = resp
         with pytest.raises(requests.HTTPError):
-            downloader._http_get_with_retry("http://x", {})
-        assert mock_get.call_count == 1
+            downloader._http_get_with_retry("http://x", {}, max_retries=3)
+        assert mock_get.call_count == 3
+
+
+def test_http_408_reintenta():
+    # 408 Request Timeout: transitorio, retry.
+    with patch("requests.get") as mock_get, patch("time.sleep"):
+        resp = MagicMock()
+        resp.status_code = 408
+        resp.raise_for_status.side_effect = requests.HTTPError("408")
+        mock_get.return_value = resp
+        with pytest.raises(requests.HTTPError):
+            downloader._http_get_with_retry("http://x", {}, max_retries=3)
+        assert mock_get.call_count == 3
+
+
+def test_http_429_reintenta():
+    # 429 Too Many Requests: rate limit explicito, retry.
+    with patch("requests.get") as mock_get, patch("time.sleep"):
+        resp = MagicMock()
+        resp.status_code = 429
+        resp.raise_for_status.side_effect = requests.HTTPError("429")
+        mock_get.return_value = resp
+        with pytest.raises(requests.HTTPError):
+            downloader._http_get_with_retry("http://x", {}, max_retries=3)
+        assert mock_get.call_count == 3
 
 
 def test_http_5xx_retry_agotado():
