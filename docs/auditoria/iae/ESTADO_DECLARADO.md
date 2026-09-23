@@ -41,6 +41,15 @@ cobertura con cautela).
 - Dictamen v2: HEAD unificado via ESTADO_SISTEMA; 83% -> 81%;
   4 -> 6 ficheros; censo 27+15=42; C9/C10 en E2E; OKE via etf_holdings
   TEMPORAL_UNVERIFIED.
+- Dictamen v3 (auditor externo, 2026-09-23): 6 puntos cerrados.
+  Cobertura real sobre los 759 tests: 92% (antes declarado 81% sobre
+  los 557 seleccionados por -k). Contractual vs PROXY separado en
+  IAE_MAESTRO §10.7. Umbral 0.95 etiquetado como operativo (gobernanza)
+  en §10.5. Fail-closed denom=0 en coverage.py: coverage_quality
+  UNAVAILABLE, no PARTIAL (fix + test de regresion). Nota C9 en §12.3
+  (E2E no ejercita exclusion; validado por tests con fixture). §5.2
+  reformulado sin prediccion. Censo IAE 758 -> 759 tests (42 ficheros).
+  Commits: 89b98e9, 97dd12d, 373c75d.
 
 ---
 
