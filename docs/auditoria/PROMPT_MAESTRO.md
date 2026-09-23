@@ -161,7 +161,7 @@ py -m pytest tests/ validation/ -q --tb=short
 
 text
 
-Esperado: `compileall OK`, `pyflakes LIMPIO`, `820 passed + 2 skipped`.
+Esperado: `compileall OK`, `pyflakes LIMPIO`, `1434 passed + 2 skipped + 3 failed (test_freshness, ambientales)`.
 
 ### 3.5. Verificacion de no regresion (refactors grandes)
 
@@ -293,7 +293,7 @@ D:\Macro_Sectorial
 | +-- commodities_spot.parquet (+ .manifest.json) [FU-021-3C-bis]
 +-- scripts/ (16+ activos + archive/; +iae_pipeline.py, build_catalog_csvs.py)
 +-- validation/ (6 activos + archive/ 59)
-+-- tests/ (~1300 tests; ver sec 15 para conteo actual)
++-- tests/ (1439 casos; ver sec 15 para conteo del modulo IAE)
 +-- docs/
 | +-- automatica/ (22 .md auto-generados, LF)
 | +-- auditoria/ (prompt + transfer + readme + iae/)
@@ -455,7 +455,7 @@ Nota: daily_run.yml commitea Daily hist/state. Aplicar git fetch + pull --rebase
 
 ## SECCION 10 - VALIDACION Y TESTS
 10.1. Tests
-1434 passed + 2 skipped + 3 failed preexistentes (test_freshness, ver §12) en local; CI similar con parquet gitignored. Incluye 758 tests del modulo IAE (criterio AST, ver seccion 15).
+1434 passed + 2 skipped + 3 failed preexistentes (test_freshness, ambientales) en local; CI similar con parquet gitignored. Incluye 758 tests del modulo IAE (criterio AST, ver seccion 15).
 
 10.2. Validation Gate (10/10)
 SLPM v1.2 (sin errores de validacion)
@@ -544,12 +544,19 @@ bloque IAE (758 tests, criterio AST):
     manifest, temporal_filter, amendments, cusip_resolver, relationships,
     sec13f_list, security_identity, delta_shares, nipc, reporting_dedup).
     Cubren ingestion, identity, enmiendas, relaciones y elegibilidad SEC.
-  test_p38_*.py - 3 ficheros (contract, pairwise_fixture, adapter compat).
+  test_p38_*.py - 2 ficheros (contract, pairwise_fixture).
   test_catalog_*.py - 4 ficheros (key, membership, pit, p38_adapter).
   test_target_*.py - 2 ficheros (builder, universe).
   test_iae_*.py - 3 ficheros (gap_coverage, gap_semantic, pipeline_report).
   test_build_catalog_csvs.py, test_radar_target_catalog.py,
     test_h731_adapter_p38_compat.py.
+  Nota: listado parcial. 27 de los 42 ficheros del modulo (criterio AST).
+  Ausentes: test_absence, test_b06_e2e_aggregation, test_b1_schema,
+  test_h692_temporal_precedence, test_openfigi_client,
+  test_operational_universe, test_p60_contract, test_p61_contract,
+  test_p66_contract, test_p66_pipeline, test_period_state,
+  test_position_record, test_security_type, test_temporal_validity,
+  test_timestamps.
   Detalle completo: IAE_MAESTRO.md seccion 11.
 
 ## SECCION 11 - DECISIONES ARQUITECTONICAS CLAVE
@@ -880,8 +887,8 @@ viven en `iae/IAE_MAESTRO.md`. No se duplican aqui.
 
 ### 13.3. Estado del repo al cierre (2026-09-23)
 
-    HEAD            7f121b7
-    Ahead           365 commits locales
+    HEAD            8d76115 (verificar con git al arrancar)
+    Ahead           381 commits locales
     Push            NO (local-first IAE)
     Working tree    LIMPIO
     Suite local     1434 passed + 2 skipped + 3 failed (test_freshness)
