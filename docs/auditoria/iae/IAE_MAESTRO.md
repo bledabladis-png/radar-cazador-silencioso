@@ -28,12 +28,13 @@ lectores nuevos:
   operativo. Punto 7 (evidencia OpenFIGI reproducible) cerrado
   2026-09-23 con `script_version` + tests + artefactos versionados
   (§12.4). Deuda #8 eliminada de `ESTADO_DECLARADO §3`.
-- **Dictamen v5** (auditor fresco, 15 puntos): GATE 2 cerrado por
-  verificacion empirica — `canonical_security` admite dos modelos
-  (`equity:` / `figi:`) que no colapsan (ver §13.10). GATE 1
-  (nomenclatura cobertura) aplicado en esta revision (§1, §13.5).
-  Resto de puntos ya cubiertos por dictamenes previos o declarados
-  como limitacion.
+- **Dictamen v5** (auditor fresco, 15 puntos): GATE 1 cerrado
+  (nomenclatura catalog/TARGET, §1, §13.5). GATE 2 cerrado
+  empiricamente para la configuracion E2E auditada: 0 fragmentacion
+  de identidad por shareClassFIGI, 0 uso de la rama `figi:*`, delta
+  NIPC = 0 al normalizar (§13.10, auditoria
+  `scripts/iae_identity_uniqueness_audit.py`). Resto de puntos
+  cubiertos por dictamenes previos o declarados como limitacion.
 
 **Limitaciones declaradas** (no bugs): PIT historico Q4 2025 (§13.9),
 identidad canonica dual (§13.10), NIPC como variacion reportada, no
@@ -60,6 +61,10 @@ Responde a una pregunta concreta:
 
 El modulo esta implementado, testeado y verificado sobre datos reales.
 Opera de forma aislada del pipeline productivo del radar sectorial.
+
+Las mediciones estructurales siguientes corresponden al snapshot
+`7caa86b` (2026-09-23); el conteo de tests y la cobertura se actualizan
+tras cada commit (ver cabecera del documento).
 
 | Aspecto | Valor |
 |---|---|
@@ -281,7 +286,12 @@ materializado.
 ### 4.3 CUSIPs con excepcion documentada
 
 `cusip_radar_crosswalk.csv` contiene 246 filas con vigencia
-`2025-12-31` a `2026-03-31`, `source = SEC-EDGAR`. Las 246 filas
+`2025-12-31` a `2026-03-31`. El campo `source` con valor `SEC-EDGAR`
+identifica la fuente primaria de evidencia (CUSIPs observados en
+filings SEC); el mapping `CUSIP -> radar ticker` es una **derivacion**
+que combina filings SEC + `radar_target_catalog.csv` (ver §12.2). No
+debe interpretarse como si SEC proporcionara directamente el mapping.
+Las 246 filas
 corresponden a 242 tickers unicos. La diferencia se debe a 4 tickers
 con doble CUSIP (AMCR, AMZN, LRCX, MU, ver §12.3).
 El crosswalk incluye tambien 2 tickers que no estan en el radar
@@ -2009,7 +2019,7 @@ y `summary`.
 Nota semantica: NIPC = Observed Reported Position Change. NO es flujo
 economico. Ver §10.3.
 
-Ejecucion con el crosswalk completo y el filtro correcto (split oficial: por canonical_security -> `equity:TICKER`; el
+Ejecucion con el crosswalk completo y el filtro correcto (split oficial: por `canonical_security`, con `canonical_security in {equity:<TICKER>, figi:<FIGI>}`; en el E2E observado solo aparece la forma `equity:<TICKER>`, ver §13.10; el
 split por CUSIP observado NO es viable porque las filas con
 observed_security_key=`cusip:XXX` son UNRESOLVED_IDENTITY y no
 contribuyen al NIPC):
@@ -2050,13 +2060,17 @@ La suma de sus NIPC coincide con el NIPC full en todas las metricas:
 Verificacion: radar + complemento = full en todas las metricas.
 
 Nota metodologica (A.1 v3, 2026-09-22). El split radar/complemento se
-hace por `canonical_security` (formato `equity:TICKER`). El delta esta
+hace por `canonical_security` (forma observada: `equity:TICKER`; el
+resolver admite tambien `figi:FIGI`, pero esa rama no se activa en el
+E2E observado con `figi_lookup=None`, ver §13.10). El delta esta
 particionado en dos subpoblaciones disjuntas: filas UNRESOLVED con
 `observed_security_key=cusip:XXX` y `canonical_security=None`
 (3.150.896 filas, no contribuyen al NIPC); filas CANONICAL con
-`observed_security_key=None` y `canonical_security=equity:XXX`
-(915.798 filas). No existe ninguna fila con ambos campos poblados, por
-lo que un filtro por CUSIP sobre el delta no puede recuperar ninguna
+`observed_security_key=None` y `canonical_security in {equity:XXX,
+figi:BBG...}` (915.798 filas; la forma `figi:` puede aparecer
+teoricamente si el resolver recibe `figi_lookup`, no en el E2E
+auditado). No existe ninguna fila con ambos campos poblados, por lo
+que un filtro por CUSIP sobre el delta no puede recuperar ninguna
 fila contribuyente.
 
 Los valores anteriores de esta tabla (complemento = +164.048.507,
@@ -2082,6 +2096,13 @@ Impacto: el motor resuelve identidad por CUSIP via crosswalk, no por FIGI.
 La cobertura contractual del TARGET construido por periodo es 1.0 (ver
 §12.3 y las cautelas de §13.5). La cobertura de securities pequeños
 fuera del radar sigue siendo baja.
+
+Un fallback CUSIP -> FIGI via OpenFIGI podria ampliar la cobertura de
+identidad, pero NO se ha demostrado que resuelva exhaustivamente los
+CUSIPs restantes: en la validacion de §12.4, 56 de 100 CUSIPs de la
+muestra aleatoria y 16 de 243 del crosswalk no obtuvieron hit de
+OpenFIGI. Por tanto, OpenFIGI es una via de mejora, no una garantia
+de cierre.
 
 ### 13.2. OKE y SPCX no contribuyen al TARGET contractual
 
@@ -2211,7 +2232,7 @@ que se regenera cada dia. No hay versionado PIT de periodos anteriores.
 Esto significa: la reconstruccion de un TARGET para periodos anteriores
 al nacimiento del sistema no es posible con los datos actuales.
 
-### 13.9. Riesgo PIT no demostrado
+### 13.9. ASSUMPTION / Historical reconstruction limitation
 
 El crosswalk CUSIP -> ticker se construyo cruzando filings Q4 2025 +
 Q1 2026 contra el catalogo radar. Se aplico retroactivamente a Q4 2025
@@ -2235,50 +2256,41 @@ de alcance, no como bug. Reabrir si aparece un snapshot PIT historico
 o si auditoria externa exige reconstruir el radar en fechas previas a
 2026-09-21.
 
-### 13.10. Coexistencia de dos modelos de identidad en canonical_security
+### 13.10. Dualidad teorica de canonical_security - no observada en E2E
 
-`canonical_security` (formado en `security_identity.py::_normalize_canonical`)
-admite dos formas mutuamente excluyentes:
+El resolver (`security_identity.py::_normalize_canonical`) admite dos
+formas: `equity:<TICKER>` (crosswalk/equivalence) y `figi:<FIGI>`
+(figi_lookup directo). La segunda requiere `figi_lookup` no nulo.
 
-    equity:<TICKER>   cuando la resolucion pasa por crosswalk o tabla
-                      de equivalencias (P60 ruta TICKER).
-    figi:<FIGI>       cuando la resolucion pasa por figi_lookup directo
-                      (P60 ruta FIGI).
+**Auditoria empirica (2026-09-23).** Sobre los 4.780.572 `units` del
+E2E auditado, con `figi_lookup=None`:
 
-Ambas formas son legitimas y estan definidas por el contrato P60. El
-MATCH_KEY del delta (§10.2) las trata como claves distintas: dos
-posiciones del mismo emisor no se colapsan si una resuelve por ticker
-y otra por FIGI.
+| Metrica                                                  | Resultado |
+| -------------------------------------------------------- | --------: |
+| `canonical_security = equity:*`                          | 1.629.676 |
+| - dentro del radar                                       |   997.610 |
+| - fuera del radar (`unresolved_ref`)                     |   632.066 |
+| `canonical_security = figi:*`                            |     **0** |
+| `shareClassFIGI` bajo dos `canonical_security` distintos |     **0** |
+| Tickers del catalogo con >1 `shareClassFIGI`             |     **0** |
+| Delta NIPC al normalizar por `shareClassFIGI`            |     **0** |
 
-**Impacto medido (2026-09-23).** Sobre los CUSIPs de Alphabet en
-INFOTABLE:
+**Conclusion:** en la configuracion E2E auditada no se observa
+fragmentacion de identidad. La dualidad documentada es una **propiedad
+teorica del resolver**, cuya segunda rama se activa unicamente cuando
+se proporciona `figi_lookup`. Los `unresolved_ref` corresponden a
+`equity:X` cuyo ticker X esta fuera del radar y no constituyen
+fragmentacion.
 
-    Q4 2025: 7 CUSIPs con FIGI poblado (02079K107/305/905/907/955/957)
-             mas 2 CUSIPs de bonos (02079KAD9, 02079KAX5).
-    Q1 2026: identico, mas CUSIPs con FIGI nulo (02079K105/109/309,
-             02079KAJ6).
+Reabrir esta auditoria si:
 
-Los CUSIPs principales (02079K107 -> GOOG, 02079K305 -> GOOGL) resuelven
-por crosswalk a `equity:GOOG` / `equity:GOOGL`. Los CUSIPs 905/907/955/957
-tienen FIGI composite (BBG009S3NB30 / BBG009S39JX6) y resuelven por
-figi_lookup a `figi:BBG...`. En el delta son claves distintas.
+  - se activa `figi_lookup` en algun punto del pipeline;
+  - aparece un caso `figi:*` en `units` o `delta`;
+  - se modifica el modelo de resolucion de identidad;
+  - se decide integrar el IAE en produccion.
 
-Magnitud: ~110 filas (de ~16.000 en el universo Alphabet, Q4+Q1). No
-se ha medido el impacto agregado sobre el total del delta, pero se
-declara como deuda controlada.
-
-**No es bug.** El motor es correcto respecto a la regla definida en
-P60. La regla es la que admite dos canales. Declarado como limitacion
-de alcance (identidad canonica no unificada) para transparencia.
-
-**Reabrir si:**
-  - Aparece evidencia de que un mismo emisor contribuye al NIPC con
-    dos entradas separadas de forma sistematica (no anecdótica).
-  - Auditoria externa exige modelo de identidad unico.
-  - Se decide integrar a produccion (Fase E): la unificacion de
-    identidad debe evaluarse como decision previa.
-
-Deuda registrada en `ESTADO_DECLARADO.md` seccion 3.
+Script reproducible: `scripts/iae_identity_uniqueness_audit.py`.
+Salida: `outputs/audit/iae_identity_audit/`.
 
 ## FIN DEL IAE_MAESTRO
 
