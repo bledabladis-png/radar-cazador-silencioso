@@ -127,7 +127,7 @@ Fase C (3 cambios funcionales, cerrada):
 
 Esperado:
 
-- HEAD 105b674 o posterior
+- HEAD ver docs/auditoria/iae/ESTADO_SISTEMA.md
 - ahead 366 o mas
 - working tree limpio
 - 1434 passed + 2 skipped + 3 failed (test_freshness, preexistentes)
@@ -147,7 +147,7 @@ Esperado: 42 ficheros, 758 tests collected.
 
 Estado que reconozco:
 
-- HEAD 105b674 o posterior
+- HEAD ver docs/auditoria/iae/ESTADO_SISTEMA.md
 - IAE implementado, testeado, aislado
 - Crosswalk extendido a 246 filas (242 tickers unicos)
 - Verificado end-to-end sobre 13F real Q4/Q1 (NIPC radar -4.316.734.936)
