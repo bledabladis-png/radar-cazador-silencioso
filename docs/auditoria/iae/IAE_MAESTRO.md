@@ -33,7 +33,7 @@ Opera de forma aislada del pipeline productivo del radar sectorial.
 | Aspecto | Valor |
 |---|---|
 | Ficheros de produccion | 35 |
-| LOC produccion | ~6.500 |
+| LOC produccion | 7.749 |
 | Funciones publicas | 110 |
 | Ficheros de test | 42 |
 | Tests que pasan | 758 |
@@ -203,12 +203,19 @@ Deuda registrada:
 Toda la evidencia de esta seccion ha sido medida el 2026-09-22
 mediante comandos reproducibles. Los comandos estan en el anexo.
 
-**Aviso de alcance.** Esta seccion documenta el estado PRE-crosswalk
-(2026-09-21). Las mediciones aqui reflejan el motor antes de extender
-`cusip_radar_crosswalk.csv` de 24 a 246 entradas y no son
-representativas del estado actual. Algunos valores concretos (242
-tickers del catalogo, 246 CUSIPs del crosswalk) se conservan como
-referencia historica. Para el estado final ver §12.
+**Aviso de alcance.** Esta seccion documenta un estado INTERMEDIO del
+motor: post-crosswalk parcial (`cusip_to_radar_figi.csv` con 243
+filas), PRE-fix 7609a56 (que extendio `valid_from` a Q4 2025 para
+DD/HON/XOM). Las mediciones aqui no son representativas del estado
+actual: el crosswalk tiene 246 filas y el fix 7609a56 corrigio la
+resolucion Q4. Los valores concretos que aqui aparecen (242 tickers
+del catalogo, TARGET_PAIRWISE = 239) se conservan como referencia
+historica del estado intermedio. Para el estado final ver §12.
+
+Fechas relevantes: el catalogo radar nacio el 2026-09-21 (§13.8).
+Las mediciones de esta seccion se tomaron el 2026-09-22. El rename
+`cusip_ticker_exceptions.csv` -> `cusip_radar_crosswalk.csv` se hizo
+el 2026-09-23 (§4.3, nota de nomenclatura).
 
 ### 4.1 Datos disponibles
 
@@ -322,21 +329,26 @@ tienen distribucion identica. El overlap de 239 es real.
 Los pesos agregados son reproducibles a partir de los parquets de
 entrada.
 
-### 4.7 Anomalias identificadas
+### 4.7 Anomalias identificadas (estado intermedio)
 
-De los 242 FIGIs del catalogo radar, 3 no aparecen en ningun filing:
+En el momento de estas mediciones (2026-09-22), 3 FIGIs del catalogo
+radar no aparecian en ningun filing via matching directo por FIGI:
 
 **SPCX** (BBG001SQPN65). Emisor privado (SpaceX). Sin filings 13F.
-Presencia en el catalogo cuestionable.
+Presencia en el catalogo cuestionable. Sigue sin fuente de identidad
+a 2026-09-23. Ver §13.2.
 
 **XOM** (BBG023CY9NL0 en catalogo). Filings Q1 2026 contienen CUSIP
 30231G102 con 7.575 filas. Los FIGIs historicos en filings son
 BBG001S69V32, BBG000GZQBJ1, BBG000GZQ728. Ninguno coincide con el
-FIGI del catalogo. **Causa probable (no verificada):** reasignacion
-de FIGI por OpenFIGI tras corporate action.
+FIGI del catalogo. **Resuelto por CUSIP** a partir del fix 7609a56:
+XOM esta en `cusip_radar_crosswalk.csv` con CUSIP 30231G102 y
+contribuye al TARGET contractual (§13.2).
 
 **OKE** (BBG024TZWVS6 en catalogo). Misma situacion que XOM. CUSIP
-682680103, 2.673 filas en Q1.
+682680103, 2.673 filas en Q1. Se resuelve via `etf_holdings.csv`
+sin vigencia temporal, por lo que P61 lo marca TEMPORAL_UNVERIFIED
+y queda fuera del filtro §5.5. No contribuye al TARGET (§13.2).
 
 ### 4.8 Que se ha verificado y que no
 
@@ -344,7 +356,8 @@ de FIGI por OpenFIGI tras corporate action.
 - Estructura del modulo coincide con la declarada.
 - Los 242 tickers del catalogo son reproducibles por la regla.
 - Existe overlap real de 239 FIGIs entre radar y filings.
-- Los 24 CUSIPs de excepcion aparecen en los filings.
+- Los 24 CUSIPs de la excepcion original (pre-extension del 22-09)
+  aparecen en los filings.
 - Los pesos agregados son reproducibles.
 - El modulo esta aislado de produccion.
 
@@ -1748,6 +1761,20 @@ Se construyo `data/mappings/cusip_to_radar_figi.csv` cruzando filings
 Se extendio `cusip_radar_crosswalk.csv` de 24 a 246 filas, asignando
 `valid_from=2025-12-31` y `valid_to=2026-03-31` a todas las entradas del
 radar.
+
+**Ficheros de mappings relevantes.** Tres ficheros con nombres
+parecidos, contenido distinto:
+
+    fichero                              filas  contenido
+    -----------------------------------  -----  ----------------------------
+    cusip_to_radar_figi.csv                243  CUSIP -> radar_ticker + FIGI
+    cusip_radar_crosswalk.csv              246  CUSIP -> ticker + vigencia
+                                                 (crosswalk del resolver P61)
+    radar_target_catalog.csv               242  catalogo radar canonico
+
+`cusip_to_radar_figi.csv` excluye DD/HON/XOM (3 CUSIPs que si estan en
+el crosswalk). `cusip_radar_crosswalk.csv` incluye todos los mapeos
+activos, con vigencia temporal y provenance.
 
 **Tabla de reconciliacion de universos.** Los distintos numeros que
 aparecen en esta seccion y en §12.5 transicionan asi:
