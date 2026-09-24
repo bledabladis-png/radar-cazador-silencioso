@@ -1,9 +1,11 @@
-# ESTADO_DECLARADO - Modulo IAE
+﻿# ESTADO_DECLARADO - Modulo IAE
 
 Estado declarado de fases, prohibiciones y hallazgos del modulo IAE.
 Documento vivo. Se actualiza cuando cambia el estado.
 
 **Actualizado:** 2026-09-24
+**HEAD de cierre:** ver `ESTADO_SISTEMA.md` (se regenera con cada commit).
+**Estado del sistema:** `ESTADO_SISTEMA.md`.
 
 ---
 
@@ -218,7 +220,7 @@ IAE_MAESTRO). Detalle en §2.
   Efecto esperado: cobertura ~95-100% en 10 sectores, ~90-95% en
   sectores con IPO reciente (XLI con GEV, XLK con SNDK, XLP con
   KVUE). Marca `[BAJA]` solo donde sea real.
-  Verificacion en reporte CI pendiente (cron 23:00 UTC 2026-09-24).
+  Verificacion en reporte CI pendiente (cron 2026-09-24 23:00 UTC).
 - Etiquetas semanticamente enganosas en el reporte. RESUELTAS
   2026-09-24 (commits f4f8003 + 664d839).
   - `Flujo Institucional - Sectores (Proxy)` -> renombrado a
@@ -260,7 +262,7 @@ IAE_MAESTRO). Detalle en §2.
   aplicada (3 correcciones materiales + 5 puntos adicionales).
   Politica de schema declarada en PROMPT seccion 11.8: campos aditivos
   backward-compatible, sin bump de schema_version.
-  Commits: 88c27d1 (doc), d09f928 (manifest), 62e38d9 (guard).
+  Commits: 88c27d1 (doc), d09f928 (manifest), 62e38d9 (guard), 07104c8 (cierre doc).
 
 - Fechas no bursatiles residuales en `stock_prices.parquet` - RESUELTO
   2026-09-24 (commit 1822ed9). El dry-run de `cleanup_stock_prices_nyse_holidays.py`
@@ -322,7 +324,9 @@ Detalle en `IAE_MAESTRO.md` seccion 5.
 - `ESTADO_SISTEMA.md` - hechos autogenerados (fuente unica de HEAD).
 - `ESTADO_DECLARADO.md` - este documento.
 
-### Scripts IAE publicados
+### Scripts publicados
+
+#### Scripts del modulo IAE
 
 - `scripts/iae_test_census.py` - censo AST de tests del modulo.
 - `scripts/iae_coverage.py` - cobertura reproducible sobre los 845 tests.
@@ -340,13 +344,18 @@ Detalle en `IAE_MAESTRO.md` seccion 5.
   trimestral + Official List.
 - `scripts/download_official_list_13f.py` - descargador Official
   List 13(f) de SEC.
-- `scripts/cleanup_stock_prices_nyse_holidays.py` - saneamiento
-  puntual del parquet stock_prices (F-IAE-HOLIDAY-01).
+#### Scripts de mantenimiento del radar (fuera del modulo IAE)
+
 - `scripts/health_check.py` - vigilancia semanal del sistema
   (workflows, cache 13F, manifests, cobertura, fechas no
   bursatiles, contaminacion Europa-USA, seccion IAE). Reporta
   via GitHub Issue. Wireado en `.github/workflows/health_check.yml`
   (lunes 07:00 UTC). Commit 8ec488e.
+- `scripts/cleanup_stock_prices_nyse_holidays.py` - saneamiento
+  puntual del parquet stock_prices (F-IAE-HOLIDAY-01).
+- `scripts/guard_coverage.py` - guard pre-commit del pipeline
+  (bloquea commit si coverage/status/last_date no cumplen). Con
+  exencion condicional FU-002-bymarket (seccion 11.17 del PROMPT).
 
 Documentos historicos (no normativos): `NIPC_CONTRATOS_SEMANTICOS_v1.md`,
 `NIPC_COVERAGE_POLICY.md`, `INSTITUTIONAL_ACCUMULATION_NIPC_ESPECIFICACION.md`.
