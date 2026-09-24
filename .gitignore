@@ -66,5 +66,3 @@ data/sec_13f/processed/
 .coverage
 htmlcov/
 
-# Outputs (nunca versionar)
-outputs/

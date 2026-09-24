@@ -198,7 +198,7 @@ jobs:
           echo "=== status BEFORE git add ==="
           git status --porcelain
           git add -u
-          git add outputs/history outputs/state
+          git add -u outputs/history outputs/state
           git add data/commodities_futures.parquet \
             data/commodities_futures.parquet.manifest.json \
             data/commodities_spot.parquet \
