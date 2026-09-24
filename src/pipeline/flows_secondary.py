@@ -106,9 +106,9 @@ def compute_flows_secondary(sector_flow_rank, etf_primary_flow_data,
                 signs.append(0)
         pos = sum(1 for x in signs if x > 0)
         neg = sum(1 for x in signs if x < 0)
-        if pos == 3 or neg == 3:
+        if pos >= 3 or neg >= 3:
             flow_synthesis['confidence'] = 'ALTA'
-        elif pos == 2 or neg == 2:
+        elif pos >= 2 or neg >= 2:
             flow_synthesis['confidence'] = 'MEDIA'
         else:
             flow_synthesis['confidence'] = 'BAJA'

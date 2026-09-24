@@ -45,6 +45,7 @@ def render_rotacion_reciente(sector_rank_deltas_data):
         for _, row in sector_rank_deltas_data.iterrows():
             out.append(f"| {row['sector']} | {row['rank_actual']} | {_fmt_signed(row['rank_change_5d'], '{:+.0f}', '{:.0f}')} | {_fmt_signed(row['rank_change_10d'], '{:+.0f}', '{:.0f}')} | {_fmt_signed(row['rank_change_20d'], '{:+.0f}', '{:.0f}')} | {row['lectura_5d']} | {row['lectura_10d']} | {row['lectura_20d']} |\n")
         out.append("\n")
+        out.append("*Semantica del delta: rank menor = mejor posicion. Un delta negativo indica mejora (subir en el ranking). Ej: D20d=-5 = haber subido 5 posiciones en 20 sesiones.*\n\n")
     return out
 
 

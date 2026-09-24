@@ -37,7 +37,7 @@ def render_sector_breadth(sector_breadth_data, is_stale=False):
                 cov_label += " [BAJA]"
             out.append(f"| {row['sector']} | {_fmt_num(row['pct_above_ema20'], '{:.1f}%')} | {_fmt_num(row['pct_above_ema50'], '{:.1f}%')} | {_fmt_num(row['pct_above_ema200'], '{:.1f}%')} | {_fmt_num(row['pct_rs_positive'], '{:.1f}%')} | {_fmt_num(row['pct_momentum_positive'], '{:.1f}%')} | {_fmt_num(row['count_accumulation'], '{:.0f}')} | {_fmt_num(row['count_markup'], '{:.0f}')} | {_fmt_num(row['count_distribution'], '{:.0f}')} | {_fmt_num(row['count_markdown'], '{:.0f}')} | {_fmt_num(row['new_highs'], '{:.0f}')} | {_fmt_num(row['new_lows'], '{:.0f}')} | {_fmt_ad_net(row['advances'], row['declines'], row['ad_net'])} | {cov_label} |\n")
         out.append("\n")
-        out.append(f"*[BAJA] = cobertura < {MIN_SECTOR_COVERAGE:.0%} del universo del sector. Los ratios se calculan sobre la parte valida.*\n\n")
+        out.append(f"*[BAJA] = cobertura < {MIN_SECTOR_COVERAGE:.0%} del universo del sector. Los ratios se calculan sobre la parte valida; el valor puede no ser representativo del sector completo. Los derivados (SLPM, Opportunity Map, scores) usan estos mismos ratios sin invalidacion automatica.*\n\n")
     return out
 
 

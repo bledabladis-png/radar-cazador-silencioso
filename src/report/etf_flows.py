@@ -28,6 +28,7 @@ def render_flujo_spdr(etf_primary_flow_data):
         except Exception:
             _ultima_fecha = "N/D"
         out.append(f"\n*Fuente: State Street Global Advisors (SSGA). ETF Primary Flow = ΔShares Outstanding × NAV. Z-score sobre {ETF_PRIMARY_FLOW_ZSCORE_WINDOW} sesiones. Ultima fecha: {_ultima_fecha}.*\n\n")
+        out.append("*Esta tabla muestra flujo por ETF (dato atomico). Para la lectura agregada con persistencia y regimen, ver la tabla siguiente: Flujo Primario ETF - Caracteristicas.*\n\n")
     return out
 
 
@@ -48,6 +49,7 @@ def render_flujo_caracteristicas(sector_flow_characteristics_data):
             regime_str = regime if pd.notna(regime) else 'N/D'
             out.append(f"| {row['sector']} | {_fmt_signed(row['flow_dollar'], '{:+,.2f}', '{:,.2f}')} | {_fmt_num(row['flow_pct_aum'], '{:.2f}%')} | {_fmt_num(row['flow_zscore'], '{:.2f}')} | {_fmt_signed(row['flow_5d_sum'], '{:+,.2f}', '{:,.2f}')} | {_fmt_signed(row['flow_20d_sum'], '{:+,.2f}', '{:,.2f}')} | {_fmt_num(row['persistence_5d'], '{:.0%}')} | {_fmt_num(row['persistence_20d'], '{:.0%}')} | {_fmt_num(row['price_ret_20d'], '{:.2%}')} | {regime_str} |\n")
         out.append("\n")
+        out.append("*Esta tabla agrega el flujo por sector con metricas derivadas (persistencia, regimen). Es la lectura sectorial de la tabla anterior (dato atomico por ETF).*\n\n")
     return out
 
 

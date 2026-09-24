@@ -207,5 +207,6 @@ def render_flujo_sintesis(flow_synthesis):
         out.append(f"| CFTC Position Flow | {_fmt_signed(flow_synthesis.get('cftc_flow_sign'), '{:+.2f}', '{:.2f}')} |\n")
         out.append(f"| Europa Primary Flow | {_fmt_signed(flow_synthesis.get('european_flow_sign', 0), '{:+.2f}', '{:.2f}')} |\n")
         out.append(f"\n**FLOW_CONFIDENCE:** {flow_synthesis.get('confidence', 'N/A')}\n")
+        out.append("*Regla: ALTA si 3 o mas capas comparten signo (> +/-0.1); MEDIA si 2 comparten signo; BAJA en otro caso. Capas evaluadas: Flow Proxy, ETF Primary Flow, CFTC Position Flow, Europa Primary Flow.*\n")
         out.append("\n*Interpretación descriptiva: concordancia de signos entre capas. No es señal predictiva.*\n\n")
     return out
