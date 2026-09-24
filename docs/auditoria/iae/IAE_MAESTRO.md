@@ -65,18 +65,19 @@ El modulo esta implementado, testeado y verificado sobre datos reales.
 Opera integrado en el pipeline productivo del radar sectorial
 mediante una dependencia unidireccional (run.py -> IAE).
 
-Las mediciones estructurales siguientes corresponden al snapshot
-`7caa86b` (2026-09-23); el conteo de tests y la cobertura se actualizan
-tras cada commit (ver cabecera del documento).
+Las mediciones estructurales siguientes corresponden al estado del
+repositorio a 2026-09-24 (post F.1-F.4 + F-IAE-HOLIDAY-01); el conteo
+de tests y la cobertura se actualizan tras cada commit (ver cabecera
+del documento).
 
 | Aspecto | Valor |
 |---|---|
-| Ficheros de produccion | 35 |
-| LOC produccion | 7.749 |
+| Ficheros de produccion | 36 |
+| LOC produccion | 8.008 |
 | Funciones publicas | 110 |
-| Ficheros de test | 42 |
-| Tests que pasan | 759 |
-| Cobertura de lineas | 92% |
+| Ficheros de test | 44 |
+| Tests que pasan | 819 |
+| Cobertura de lineas | 90% |
 | Integrado en produccion | SI (integracion unidireccional) |
 
 El conteo de tests sigue el criterio: ficheros `tests/test_*.py` que
@@ -114,6 +115,7 @@ documento.
     ├── absence.py                           77 LOC
     ├── catalog_pit.py                      232 LOC
     ├── operational_universe.py             194 LOC
+    ├── pipeline_contractual.py             211 LOC
     ├── security_type.py                    397 LOC
     ├── temporal_validity.py                 92 LOC
     ├── timestamps.py                       153 LOC
@@ -135,7 +137,7 @@ documento.
     │   └── target_universe.py              171 LOC
     └── sec_13f/
         ├── __init__.py                      22 LOC
-        ├── downloader.py                   176 LOC
+        ├── downloader.py                   224 LOC
         ├── ingest.py                       131 LOC
         ├── manifest.py                     150 LOC
         ├── parser.py                       142 LOC
@@ -149,12 +151,12 @@ documento.
             ├── sec13f_list.py              255 LOC
             ├── security_identity.py        654 LOC
             └── temporal_filter.py          100 LOC
-**Totales:** 35 ficheros, 7.749 LOC produccion, ~8.100 LOC test.
+**Totales:** 36 ficheros, 8.008 LOC produccion, ~8.300 LOC test.
 
-LOC medidos el 2026-09-23 sobre el commit `7caa86b`. Se cuentan
-todas las lineas del fichero (codigo, comentarios y lineas en
-blanco). Pueden desfasarse con cada commit; el valor de este
-bloque es orden de magnitud, no cifra contractual.
+LOC medidos el 2026-09-24 sobre el estado del repositorio en ese
+momento. Se cuentan todas las lineas del fichero (codigo, comentarios
+y lineas en blanco). Pueden desfasarse con cada commit; el valor de
+este bloque es orden de magnitud, no cifra contractual.
 
 ### 2.2 Capas funcionales
 
@@ -213,23 +215,31 @@ Verificacion inversa (2026-09-23): no existe ningun import desde
 
 Las 110 funciones estan invocadas al menos una vez en la suite de tests.
 Esto no equivale a verificacion exhaustiva. La cobertura de lineas es
-92% (ver §3.2); ningun fichero queda por debajo del 80%. Los modulos
+90% (ver §3.2); ningun fichero queda por debajo del 80%. Los modulos
 con menor cobertura siguen siendo riesgo pendiente de mejora antes de
 su integracion en produccion, no deuda que "subira sola".
 
 ### 3.2 Cobertura de tests
 
-    Cobertura de lineas:           92%  (2964 stmts, 228 miss)
+    Cobertura de lineas:           90%  (3093 stmts, 304 miss)
     Ficheros >= 95%:               17
     Ficheros 80-94%:               15
     Ficheros < 80%:                 0
+
+Nota de actualizacion (2026-09-24). La cobertura bajo de 92% a 90%
+tras anadir `pipeline_contractual.py` (+129 stmts instrumentables).
+De esos, 76 no estan cubiertos por tests unitarios: `run_contractual_nipc`
+se verifica via E2E real (`scripts/iae_contractual_nipc_e2e.py`, PASS),
+no via tests unitarios con mock. Recuperar 92% requeriria tests unitarios
+adicionales con mock de la cadena completa; se considera deuda de
+cobertura residual.
 
 Ningun fichero del modulo queda por debajo del 80% de cobertura de
 lineas. El minimo actual es catalog_key.py (82%). Los ficheros con
 cobertura mas baja siguen sin estar integrados en produccion.
 
-Nota de alcance. La cobertura se calcula sobre 32 ficheros con
-statements instrumentables. Los 3 ficheros restantes hasta 35 son
+Nota de alcance. La cobertura se calcula sobre 33 ficheros con
+statements instrumentables. Los 3 ficheros restantes hasta 36 son
 `__init__.py` sin statements: `src/institutional_accumulation/__init__.py`,
 `identity/__init__.py`, `sec_13f/__init__.py`. Los otros 2
 `__init__.py` (`aggregation/` 6 stmts, `sec_13f/identity/` 7 stmts)
@@ -505,18 +515,18 @@ integracion sea una decision activa, no hoy.
 
 ### A.3 Cobertura de tests
 
-Criterio AST (42 ficheros del modulo, 759 casos):
+Criterio AST (44 ficheros del modulo, 819 casos):
 
     py scripts/iae_test_census.py
 
-Cobertura de lineas sobre el universo canonico (los 759 casos):
+Cobertura de lineas sobre el universo canonico (los 819 casos):
 
     py scripts/iae_coverage.py
 
-El script resuelve los 42 ficheros de test por AST (mismo criterio
+El script resuelve los 44 ficheros de test por AST (mismo criterio
 que `iae_test_census.py`) y ejecuta pytest con
 `--cov=src/institutional_accumulation` sobre el universo completo.
-Resultado esperado a 2026-09-23: 759 passed, 92% coverage.
+Resultado esperado a 2026-09-24: 819 passed, 90% coverage.
 
 ### A.4 Overlap sobre datos reales
 
@@ -1170,10 +1180,10 @@ separada, no como etapa del flujo productivo. Los numeros de §12.5 y
 Cada fichero de test cubre una parte del modulo. Se listan las
 funciones de test con su docstring cuando existe.
 
-Ejecucion actual: **759 casos de test pasan** (0 fallos). El modulo
-completo (42 ficheros que importan `src.institutional_accumulation`)
-tiene 695 funciones de test detectables por AST. La diferencia
-(759 vs 695) corresponde a casos parametrizados via
+Ejecucion actual: **819 casos de test pasan** (0 fallos). El modulo
+completo (44 ficheros que importan `src.institutional_accumulation`)
+tiene 714 funciones de test detectables por AST. La diferencia
+(819 vs 714) corresponde a casos parametrizados via
 @pytest.mark.parametrize, que pytest expande a multiples casos por
 funcion.
 
@@ -1812,18 +1822,19 @@ extra. La suma de funciones de test detectables por AST en los 29
 bloques es 506 (492 hasta la revision 2026-09-22; +14 en
 `test_p38_contract.py` por C9+C10+fix fail-closed).
 
-El modulo completo tiene 42 ficheros que importan
-`src.institutional_accumulation`. 15 no aparecen en §11:
+El modulo completo tiene 44 ficheros que importan
+`src.institutional_accumulation`. 17 no aparecen en §11:
 `test_absence`, `test_b06_e2e_aggregation`, `test_b1_schema`,
 `test_h692_temporal_precedence`, `test_openfigi_client`,
 `test_operational_universe`, `test_p60_contract`, `test_p61_contract`,
 `test_p66_contract`, `test_p66_pipeline`, `test_period_state`,
-`test_position_record`, `test_security_type`, `test_temporal_validity`,
-`test_timestamps`.
+`test_pipeline_contractual`, `test_position_record`,
+`test_security_type`, `test_temporal_validity`, `test_timestamps`,
+`test_update_sec_13f`.
 
 Este listado tiene valor como inventario nominal de funciones de test,
-no como conteo exhaustivo. Conteo autoritativo del modulo (42 ficheros,
-759 casos pytest, 695 funciones AST): §1 (resumen ejecutivo) y
+no como conteo exhaustivo. Conteo autoritativo del modulo (44 ficheros,
+819 casos pytest, 714 funciones AST): §1 (resumen ejecutivo) y
 `scripts/iae_test_census.py`.
 
 
