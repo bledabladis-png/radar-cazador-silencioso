@@ -34,7 +34,12 @@ def render_representatividad_lider(leader_representativeness_data):
         out.append("## Representatividad del líder\n")
         out.append("| Sector | Líder | RS ΔMed | Mom ΔMed | Flow ΔMed | WLS ΔMed | Rank pct |\n")
         out.append("|--------|-------|---------|----------|-----------|----------|----------|\n")
-        for _, row in leader_representativeness_data.iterrows():
+        # C2 fix 2026-09-24: filtrar a la ultima fecha para no concatenar dias
+        df_rep = leader_representativeness_data.copy()
+        if 'date' in df_rep.columns and df_rep['date'].notna().any():
+            latest = pd.to_datetime(df_rep['date']).max()
+            df_rep = df_rep[pd.to_datetime(df_rep['date']) == latest]
+        for _, row in df_rep.iterrows():
             out.append(f"| {row['sector']} | {row['ticker']} | {row['rs_distance_to_median']:+.4f} | {row['mom_distance_to_median']:+.4f} | {row['flow_distance_to_median']:+.2f} | {row['wls_distance_to_median']:+.2f} | {row['sector_rank_pct']:.0%} |\n")
         out.append("\n")
     return out
