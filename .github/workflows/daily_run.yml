@@ -82,9 +82,9 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: data/sec_13f/processed
-          key: 13f-processed-v1-${{ hashFiles('data/sec_13f/latest_quarter.txt') }}
+          key: 13f-processed-v2-${{ hashFiles('data/sec_13f/latest_quarter.txt') }}
           restore-keys: |
-            13f-processed-v1-
+            13f-processed-v2-
           fail-on-cache-miss: false
 
       - name: Avisar si cache IAE no disponible

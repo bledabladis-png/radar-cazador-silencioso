@@ -42,9 +42,9 @@ jobs:
         uses: actions/cache@v4
         with:
           path: data/sec_13f/processed
-          key: 13f-processed-v1-${{ hashFiles('data/sec_13f/latest_quarter.txt') }}
+          key: 13f-processed-v2-${{ hashFiles('data/sec_13f/latest_quarter.txt') }}
           restore-keys: |
-            13f-processed-v1-
+            13f-processed-v2-
 
       - name: Determinar trimestre a actualizar
         id: quarter
@@ -75,7 +75,10 @@ jobs:
           echo "Trimestre a actualizar: ${Q}"
 
       - name: Ejecutar actualizacion 13F
-        run: python scripts/update_sec_13f.py --quarter "${{ steps.quarter.outputs.quarter }}"
+        run: |
+          python scripts/update_sec_13f.py \
+            --quarter "${{ steps.quarter.outputs.quarter }}" \
+            --backfill 2
 
       - name: Regenerar crosswalk CUSIP (IAE)
         if: success()
@@ -86,7 +89,7 @@ jobs:
         uses: actions/cache/save@v4
         with:
           path: data/sec_13f/processed
-          key: 13f-processed-v1-${{ hashFiles('data/sec_13f/latest_quarter.txt') }}
+          key: 13f-processed-v2-${{ hashFiles('data/sec_13f/latest_quarter.txt') }}
 
       - name: Commit y push si hay cambios
         run: |

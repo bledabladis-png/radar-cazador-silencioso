@@ -133,3 +133,41 @@ def test_pick_base_url_override():
 def test_pick_base_url_vacio_lanza():
     with pytest.raises(ValueError):
         _pick_base_url("")
+
+
+# --- _prev_quarter / _quarters_range (backfill) ------------------------
+
+from scripts.update_sec_13f import _prev_quarter, _quarters_range
+
+
+@pytest.mark.parametrize("q,expected", [
+    ("2026Q2", "2026Q1"),
+    ("2026Q1", "2025Q4"),
+    ("2025Q1", "2024Q4"),
+    ("2024Q4", "2024Q3"),
+])
+def test_prev_quarter(q, expected):
+    assert _prev_quarter(q) == expected
+
+
+def test_prev_quarter_invalido_lanza():
+    with pytest.raises((ValueError, TypeError)):
+        _prev_quarter("INVALID")
+
+
+def test_quarters_range_cero():
+    assert _quarters_range("2026Q2", 0) == ["2026Q2"]
+
+
+def test_quarters_range_dos():
+    assert _quarters_range("2026Q2", 2) == ["2025Q4", "2026Q1", "2026Q2"]
+
+
+def test_quarters_range_cruce_ano():
+    assert _quarters_range("2026Q1", 2) == ["2025Q3", "2025Q4", "2026Q1"]
+
+
+def test_quarters_range_tres():
+    assert _quarters_range("2026Q3", 3) == [
+        "2025Q4", "2026Q1", "2026Q2", "2026Q3"
+    ]

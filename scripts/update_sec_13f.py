@@ -68,6 +68,25 @@ def _parse_quarter(quarter):
     return int(year_s), qn
 
 
+def _prev_quarter(quarter):
+    """Devuelve el quarter anterior en formato YYYYQn."""
+    year, qn = _parse_quarter(quarter)
+    n = int(qn[1])
+    if n == 1:
+        return f"{year - 1}Q4"
+    return f"{year}Q{n - 1}"
+
+
+def _quarters_range(current, n_back):
+    """Devuelve [Q_{k-n}, ..., Q_{k-1}, Q_k] en orden cronologico."""
+    out = [current]
+    q = current
+    for _ in range(n_back):
+        q = _prev_quarter(q)
+        out.append(q)
+    return list(reversed(out))
+
+
 def quarter_to_iso_end(quarter):
     """YYYYQn -> fecha ISO del cierre del trimestre (YYYY-MM-DD)."""
     year, qn = _parse_quarter(quarter)
@@ -179,6 +198,8 @@ def main():
                     help="Usa el ultimo trimestre probablemente publicado")
     ap.add_argument("--force", action="store_true",
                     help="Ignora cache y redescarga")
+    ap.add_argument("--backfill", type=int, default=0,
+                    help="Ingesta tambien los N trimestres anteriores (historico)")
     args = ap.parse_args()
 
     if args.quarter:
@@ -192,11 +213,19 @@ def main():
     else:
         ap.error("--quarter o --latest requerido")
 
-    try:
-        info = ensure_quarter(quarter, force=args.force)
-    except Exception as e:
-        print("[FAIL] {}: {}".format(type(e).__name__, e))
-        return 1
+    quarters = _quarters_range(quarter, args.backfill)
+    if len(quarters) > 1:
+        print("[BACKFILL] {} trimestres: {}".format(len(quarters), quarters))
+
+    infos = []
+    for q in quarters:
+        try:
+            infos.append(ensure_quarter(q, force=args.force))
+        except Exception as e:
+            print("[FAIL] {}: {}: {}".format(q, type(e).__name__, e))
+            return 1
+
+    info = infos[-1]
 
     print("\n== Resultado ==")
     for k, v in info.items():
