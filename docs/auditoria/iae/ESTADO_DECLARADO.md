@@ -208,11 +208,20 @@ IAE_MAESTRO). Detalle en §2.
     Fix: filtro a ultima fecha.
   - `Divergencia sector-lideres`: mismo patron que el anterior.
     Fix: filtro a ultima fecha.
-- Fiabilidad de metricas sectoriales: 8 de 11 sectores con cobertura
-  < 70% del universo. Ratios de breadth/concentracion calculados
-  sobre la parte valida. Marca `[BAJA]` no invalida los derivados.
-  Decision de producto pendiente (excluir, marcar como no-analizables,
-  o avisar de forma mas prominente).
+- Fiabilidad de metricas sectoriales. RESUELTO 2026-09-24 (commit
+  8c6330f, pendiente verificacion CI).
+  Causa raiz: `compute_sector_breadth` contaba `n_total` como todos
+  los componentes del ETF (78 en XLF, 85 en XLI, etc.), mientras que
+  `get_stock_list()` solo descarga los top-20 por weight. Cobertura
+  artificialmente baja (26-32% con [BAJA] en 8 de 11 sectores).
+  Fix: replicar el cap top-20 en `indicators/sector_breadth.py` via
+  nueva constante `TOP_N_SECTOR_COMPONENTS = 20` en
+  `config/settings.py`. Los 3 `head(20)` hardcoded de
+  `src/stock_data_loader.py` migrados a la constante.
+  Efecto esperado: cobertura ~95-100% en 10 sectores, ~90-95% en
+  sectores con IPO reciente (XLI con GEV, XLK con SNDK, XLP con
+  KVUE). Marca `[BAJA]` solo donde sea real.
+  Verificacion en reporte CI pendiente (cron 23:00 UTC 2026-09-24).
 - Etiquetas semanticamente enganosas en el reporte. RESUELTAS
   2026-09-24 (commits f4f8003 + 664d839).
   - `Flujo Institucional - Sectores (Proxy)` -> renombrado a
