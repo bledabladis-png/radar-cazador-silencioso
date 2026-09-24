@@ -20,6 +20,7 @@ Documento vivo. Se actualiza cuando cambia el estado.
 | Fase D - reenviar al auditor externo | PENDIENTE |
 | Fase E - integracion a `run.py` | CERRADA 2026-09-23 |
 | Fase F - automatizacion GitHub | CERRADA 2026-09-24 |
+| Fase G - automatizacion de mappings (catalogo + crosswalk) | CERRADA 2026-09-24 |
 
 Dictamenes externos aplicados al modulo IAE (todos cerrados):
 v2 (8 puntos), v3 (6), v4 (11), v5 (GATE 1 nomenclatura + GATE 2
@@ -117,6 +118,51 @@ IAE_MAESTRO). Detalle en §2.
   23:00 UTC, la ejecucion tipica queda a 04:00 UTC = 05:00/06:00
   Madrid (pre-apertura europea). Margen de retraso tolerado: 8h.
   Commits: 6dec2cf, f396e99.
+- Fase G - automatizacion de mappings (2026-09-24): CERRADA.
+  Problema diagnostico: el crosswalk CUSIP y el catalogo radar eran
+  ficheros estaticos mantenidos a mano. Cada trimestre SEC publica
+  CUSIPs nuevos que no entraban al pipeline. La cobertura caia en
+  silencio sin aviso.
+  G.1 `scripts/regenerate_radar_catalog.py`: regenera el catalogo
+  radar desde `stock_prices.parquet` + OpenFIGI (TICKER/US). Wireado
+  en `daily_run.yml` tras `run.py`. No-op si no hay tickers nuevos.
+  G.2 `scripts/regenerate_cusip_crosswalk.py`: regenera el crosswalk
+  CUSIP cruzando filings + catalogo. Acumulativo (preserva historico
+  en runners sin cache completa). Wireado en `update_sec_13f.yml`.
+  G.3 `update_sec_13f.py --backfill N`: ingesta historica.
+  `update_sec_13f.yml` invoca con `--backfill 2`.
+  G.4 Cache 13F bump v1 -> v2. Motivo: la cache v1 tenia solo 1
+  trimestre; save fallaba al intentar sobreescribir key existente.
+  G.5 `workflow_dispatch.inputs.quarter` en `update_sec_13f.yml`
+  para lanzamientos manuales en meses fuera de cron.
+  G.6 Aviso de cobertura < 90% en el reporte (`catalog_coverage_warning`
+  en `iae_section.py` + render en `report/iae.py`).
+  G.7 Chequeo defensivo equity-only en el catalogo.
+  Commits: 0066a64, 15382d6, e6fac26, 9c15823, c706c0d, f02a495,
+  21561ac, 581f3c6, 58d01be, 6eadf9c, 1f93267, 9807e11, b58acac.
+- Fixes estructurales (2026-09-24):
+  - ROOT via `__file__`: 11 ficheros con `Path(r"D:\Macro_Sectorial")`
+    hardcodeado migrados a `Path(__file__).resolve().parent.parent`.
+    Bug funcional: en CI (Linux) `DATA_DIR` resolvia a un path
+    inexistente y la seccion IAE estaba STALE silenciosamente. Ademas
+    bloqueaba la coleccion de tests en CI. Commits: 64b2bce, d2fc7d9.
+  - `.gitignore`: eliminada la linea `outputs/` que anulaba las
+    excepciones `!outputs/history/` y `!outputs/state/`. El step
+    `Commit and push hist/state` fallaba en bash `-e`. Commit: 16d8def.
+  - `_MONTHS` en ingles: SEC publica `aug`/`dec`, no `ago`/`dic`.
+    El cron trimestral fallaba para Q2/Q4 de cada ano. Q1/Q3
+    funcionaban por coincidencia de idioma. Commit: 4c60f8f.
+  - Filtro 5.1 (SH + PUTCALL NULL) en el crosswalk. Sin el, CALL/PUT
+    se colaban como tickers validos. Commit: e6fac26.
+  - `iae_section.py`: campos `stale_reason` (insufficient_quarters /
+    official_list_pending) y `catalog_coverage_warning`. El IAE ya no
+    enmascara la ausencia de Official List como ERROR. Commits:
+    b357870, c706c0d.
+  - `regenerate_cusip_crosswalk.py` acumulativo: preserva filas del
+    crosswalk actual con `valid_from < cutoff` para no perder cobertura
+    historica cuando el runner solo tiene 1 trimestre. Commit: 58d01be.
+  - Restauracion del crosswalk degradado tras el primer run en CI:
+    commit 6eadf9c.
 
 ---
 
@@ -148,10 +194,31 @@ IAE_MAESTRO). Detalle en §2.
   Ver IAE_MAESTRO §13.10. Reabrir si se activa `figi_lookup` en algun
   punto del pipeline, si aparece un caso `figi:*` en units o delta,
   o si se modifica el modelo de resolucion de identidad.
-- `stock_prices.parquet.manifest.json` stale tras F-IAE-HOLIDAY-01.
-  El parquet fue reescrito el 2026-09-24 pero el manifest mantiene
-  el timestamp del 2026-09-23. El proximo `run.py` lo detectara como
-  INVALID y lo regenerara con el fix del ffill aplicado.
+- Seccion IAE en produccion: STALE con razon `official_list_pending`.
+  SEC no ha publicado `13flist2026q2.txt` en formato TXT (solo PDF
+  desde 2026-08-14). Verificado con curl (404). Los parquets 13F
+  Q4+Q1+Q2 estan en cache v2; el NIPC Q1->Q2 se calculara
+  automaticamente cuando SEC publique el TXT.
+- Deuda visible en el REPORTE (no en el pipeline): 3 bugs de render
+  detectados tras revision del reporte diario 2026-09-24.
+  - `Momentum de amplitud`: `Δ1d EMA20 = nan` en 11/11 sectores
+    (columnas Δ5d, Δ20d si tienen valores).
+  - `Representatividad del lider`: 3 bloques concatenados sin columna
+    distintiva. Mismo ticker con 3 valores distintos por sector.
+  - `Divergencia sector-lideres`: mismo patron (3 bloques sin etiqueta).
+- Fiabilidad de metricas sectoriales: 7 de 11 sectores tienen
+  cobertura < 70% del universo. Los ratios de breadth/concentracion
+  se calculan sobre la parte valida, pero la marca `[BAJA]` no
+  invalida los derivados. Decision de producto pendiente (excluir,
+  marcar como no-analizables, o avisar de forma mas prominente).
+- Etiquetas semanticamente enganosas en el reporte:
+  - `Flujo Institucional - Sectores (Proxy)`: el titulo dice
+    "Institucional" pero la nota aclara "no implica flujo institucional
+    real". Renombrar.
+  - `Acciones Seleccionadas por el Modelo`: no se declara el criterio
+    de seleccion de los 5 lideres por sector.
+- Deuda residual de cobertura unitaria de `run_contractual_nipc`:
+  76 stmts no cubiertos por tests con mock (ver IAE_MAESTRO 3.2 y 5.1).
 
 Detalle en `IAE_MAESTRO.md` seccion 5.
 
@@ -178,7 +245,9 @@ Detalle en `IAE_MAESTRO.md` seccion 5.
 ### Scripts IAE publicados
 
 - `scripts/iae_test_census.py` - censo AST de tests del modulo.
-- `scripts/iae_coverage.py` - cobertura reproducible sobre los 819 tests.
+- `scripts/iae_coverage.py` - cobertura reproducible sobre los 845 tests.
+- `scripts/regenerate_radar_catalog.py` - regenera catalogo radar (daily).
+- `scripts/regenerate_cusip_crosswalk.py` - regenera crosswalk CUSIP (trimestral).
 - `scripts/iae_contractual_coverage.py` - cadena contractual completa.
 - `scripts/iae_reconciliation_b1.py` - reconciliacion radar + complemento = full.
 - `scripts/iae_validate_crosswalk_openfigi.py` - validacion externa OpenFIGI.
