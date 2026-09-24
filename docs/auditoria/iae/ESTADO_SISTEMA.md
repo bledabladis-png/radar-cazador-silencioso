@@ -2,7 +2,7 @@
 
 Hechos verificables del sistema. Generado por script.
 
-**Generado en:** 2026-09-24 01:48:16 UTC
+**Generado en:** 2026-09-24 15:21:00 UTC
 **Snapshot tomado sobre:** commit HEAD de la fecha indicada, al momento de generar
 **NO editar a mano.** Regenerar con:
 
@@ -16,16 +16,16 @@ proyecto describen su tema; NO declaran el estado del sistema.
 
 ## 1. Git
 
-- **HEAD:** `2a8014d`
-- **HEAD completo:** `2a8014d87c05c3c97f870cca5bbad4e2f2ca9339`
-- **Fecha commit HEAD:** 2026-09-24 03:48:13 +0200
-- **Ahead:** 467
+- **HEAD:** `c0f537d`
+- **HEAD completo:** `c0f537db88b2a5494d0f3b69e7bc63d0853d9724`
+- **Fecha commit HEAD:** 2026-09-24 17:20:59 +0200
+- **Ahead:** 4
 - **Behind:** 0
-- **origin/main:** `5f1d9ab`
+- **origin/main:** `b58acac`
 
 ## 2. Tests (pytest real)
 
-- **Resumen:** 1529 passed, 2 skipped in 27.73s
+- **Resumen:** 1587 passed, 2 skipped in 27.83s
 - **Exit code:** 0
 
 ## 3. Integridad del codigo
@@ -51,7 +51,7 @@ proyecto describen su tema; NO declaran el estado del sistema.
 | `src/institutional_accumulation/identity/catalog_key.py` | 375 |
 | `src/institutional_accumulation/identity/openfigi_client.py` | 180 |
 | `src/institutional_accumulation/identity/period_state.py` | 212 |
-| `src/institutional_accumulation/identity/radar_target_catalog.py` | 145 |
+| `src/institutional_accumulation/identity/radar_target_catalog.py` | 154 |
 | `src/institutional_accumulation/identity/target_builder.py` | 181 |
 | `src/institutional_accumulation/identity/target_universe.py` | 171 |
 | `src/institutional_accumulation/operational_universe.py` | 194 |
@@ -73,7 +73,7 @@ proyecto describen su tema; NO declaran el estado del sistema.
 | `src/institutional_accumulation/security_type.py` | 397 |
 | `src/institutional_accumulation/temporal_validity.py` | 92 |
 | `src/institutional_accumulation/timestamps.py` | 153 |
-| **TOTAL** | **36 ficheros, 8008 LOC** |
+| **TOTAL** | **36 ficheros, 8017 LOC** |
 
 ## 5. Datos IAE
 
@@ -82,9 +82,9 @@ proyecto describen su tema; NO declaran el estado del sistema.
   - bytes: 29986
   - lineas: 243
 - `data/mappings/cusip_radar_crosswalk.csv`
-  - sha256: `032ef307e9810fd2b3a8b3361462a03bf04ecc43c5c25313346bcef8c38e858b`
-  - bytes: 30203
-  - lineas: 247
+  - sha256: `c344bee55fa5149853ed029e59ee2acbccd94d39990f1b493048ea0cb06a60cc`
+  - bytes: 22491
+  - lineas: 246
 - `data/mappings/cusip_equivalence.csv`
   - sha256: `21a88790aad50e8b44fbfdaa87c394ef3a782319adaf4208b9cb244dac39b322`
   - bytes: 103
