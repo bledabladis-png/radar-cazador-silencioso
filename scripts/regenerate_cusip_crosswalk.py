@@ -111,10 +111,33 @@ def _build_auto_rows(observations: dict, latest_quarter: str) -> list:
         })
     return rows
 
-def _merge(manual_df: pd.DataFrame, auto_rows: list) -> pd.DataFrame:
-    """Manuales preservadas + auto regeneradas."""
-    out = pd.concat([manual_df, pd.DataFrame(auto_rows, columns=list(COLUMNS))],
-                    ignore_index=True)
+def _load_historical_auto(current_df: pd.DataFrame, cutoff: str) -> pd.DataFrame:
+    """Filas auto del crosswalk actual con valid_from < cutoff.
+
+    Son filas que el script NO puede regenerar con los trimestres
+    disponibles en este entorno (p.ej. el runner de CI solo tiene el
+    trimestre recien ingestado). Se preservan para no perder cobertura
+    historica.
+    """
+    if current_df.empty or "verified_by" not in current_df.columns:
+        return pd.DataFrame(columns=list(COLUMNS))
+    auto = current_df[current_df["verified_by"] == "auto"].copy()
+    if auto.empty:
+        return auto
+    auto["valid_from"] = auto["valid_from"].astype(str)
+    return auto[auto["valid_from"] < cutoff]
+
+
+def _merge(manual_df: pd.DataFrame, auto_rows: list,
+           historical_df: pd.DataFrame | None = None) -> pd.DataFrame:
+    """Manuales + auto regeneradas + (opcional) historicas.
+
+    Precedencia por CUSIP: manual > auto regenerada > historica.
+    """
+    parts = [manual_df, pd.DataFrame(auto_rows, columns=list(COLUMNS))]
+    if historical_df is not None and not historical_df.empty:
+        parts.append(historical_df)
+    out = pd.concat(parts, ignore_index=True)
     out = out.drop_duplicates(subset=["CUSIP"], keep="first")
     return out.sort_values(["ticker", "valid_from"]).reset_index(drop=True)
 
@@ -174,7 +197,11 @@ def main() -> int:
     manual = current[current["verified_by"] == "manual"].copy()
     print(f"filas manual preservadas: {len(manual)}")
 
-    merged = _merge(manual, auto_rows)
+    cutoff = _period_end(quarters[0])
+    historical = _load_historical_auto(current, cutoff)
+    print(f"filas historicas preservadas: {len(historical)}")
+
+    merged = _merge(manual, auto_rows, historical_df=historical)
     print(f"total filas: {len(merged)}")
 
     try:

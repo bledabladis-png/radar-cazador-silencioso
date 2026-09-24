@@ -189,3 +189,59 @@ def test_extract_excluye_call_put(tmp_path):
     idx = {"SC_AAPL": "AAPL", "SC_ABBV": "ABBV"}
     obs = rcc._extract_observations("2026Q1", p, idx)
     assert set(obs.keys()) == {("111", "AAPL")}
+
+
+# --- _load_historical_auto + merge acumulativo (fix CI) -----------------
+
+def _mk_crosswalk_row(cusip, ticker, valid_from, valid_to, verified_by="auto"):
+    return {
+        "CUSIP": cusip, "ticker": ticker, "valid_from": valid_from,
+        "valid_to": valid_to, "source": "SEC-EDGAR", "reason": "x",
+        "title_of_class": "COM", "verified_by": verified_by,
+    }
+
+
+def test_load_historical_auto_filtra_por_cutoff():
+    current = pd.DataFrame([
+        _mk_crosswalk_row("111", "AAA", "2025-12-31", ""),   # historica
+        _mk_crosswalk_row("222", "BBB", "2026-06-30", ""),   # mismo cutoff
+        _mk_crosswalk_row("333", "CCC", "2025-12-31", "", verified_by="manual"),
+    ])
+    hist = rcc._load_historical_auto(current, "2026-06-30")
+    # Solo la fila 111 es auto con valid_from < 2026-06-30
+    assert len(hist) == 1
+    assert hist.iloc[0]["CUSIP"] == "111"
+
+
+def test_load_historical_auto_vacio_si_df_vacio():
+    hist = rcc._load_historical_auto(pd.DataFrame(columns=list(rcc.COLUMNS)), "2026-06-30")
+    assert hist.empty
+
+
+def test_merge_con_historical_preserva_cobertura_ci():
+    """Escenario CI: solo hay Q2, pero la historica no se pierde."""
+    manual = pd.DataFrame([_mk_crosswalk_row("999", "MAN", "2020-01-01", "2025-12-31", verified_by="manual")])
+    auto_nuevas = [_mk_crosswalk_row("222", "BBB", "2026-06-30", "")]
+    historicas = pd.DataFrame([_mk_crosswalk_row("111", "AAA", "2025-12-31", "")])
+    out = rcc._merge(manual, auto_nuevas, historical_df=historicas)
+    assert len(out) == 3
+    cusips = set(out["CUSIP"])
+    assert cusips == {"111", "222", "999"}
+
+
+def test_merge_precedencia_manual_sobre_historical():
+    """Si el mismo CUSIP esta en manual y en historica, gana manual."""
+    manual = pd.DataFrame([_mk_crosswalk_row("111", "MAN", "2020-01-01", "", verified_by="manual")])
+    historicas = pd.DataFrame([_mk_crosswalk_row("111", "HIST", "2025-12-31", "")])
+    out = rcc._merge(manual, [], historical_df=historicas)
+    assert len(out) == 1
+    assert out.iloc[0]["ticker"] == "MAN"
+
+
+def test_merge_precedencia_auto_nueva_sobre_historical():
+    """Si el mismo CUSIP esta en auto nueva y en historica, gana la nueva."""
+    auto_nuevas = [_mk_crosswalk_row("111", "NEW", "2026-06-30", "")]
+    historicas = pd.DataFrame([_mk_crosswalk_row("111", "HIST", "2025-12-31", "")])
+    out = rcc._merge(pd.DataFrame(columns=list(rcc.COLUMNS)), auto_nuevas, historical_df=historicas)
+    assert len(out) == 1
+    assert out.iloc[0]["ticker"] == "NEW"
