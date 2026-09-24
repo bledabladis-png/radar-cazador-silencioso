@@ -4,7 +4,7 @@
 Extraidos de src/report_generator.py (refactor C1, fase C1-6c1).
 """
 
-from config.settings import MOMENTUM_PRICE_WINDOW, MOMENTUM_LONG_WINDOW
+from config.settings import MOMENTUM_PRICE_WINDOW, MOMENTUM_LONG_WINDOW, TOP_N_CANDIDATES, TOP_N_LEADERS
 from config.tickers import SECTOR_NAMES
 from src.report.helpers import _fmt_num
 
@@ -134,6 +134,14 @@ def render_acciones_seleccionadas(leader_lines):
     if leader_lines:
         out.append("\n## Acciones Seleccionadas por el Modelo de Liderazgo Sectorial\n")
         out.append("> Solo se muestran sectores en fase ACCUMULATION o MARKUP. El resto se omiten por no cumplir criterios de liderazgo estructural.\n\n")
+        out.append(
+            f"*Criterio de seleccion: los {TOP_N_LEADERS} lideres por sector "
+            f"se eligen en dos pasos: (1) los {TOP_N_CANDIDATES} valores del ETF "
+            f"sectorial con mayor peso en cartera; (2) entre esos, los "
+            f"{TOP_N_LEADERS} con mayor WLS (score compuesto 35% RS Level + "
+            f"30% Flujo proxy + 25% Wyckoff + 10% Estabilidad, ajustado por "
+            f"persistencia 10d).*\n\n"
+        )
         out.extend(leader_lines)
     else:
         out.append("\n## Acciones Seleccionadas por el Modelo de Liderazgo Sectorial\n")
