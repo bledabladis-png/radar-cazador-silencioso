@@ -450,12 +450,16 @@ y queda fuera del filtro §5.5. No contribuye al TARGET (§13.2).
 
 ### 5.1 Deuda funcional
 
-- `compute_nipc_contractual` sin callers productivos.
+- `compute_nipc_contractual`: **ya tiene caller productivo** desde
+  2026-09-24 via `pipeline_contractual.run_contractual_nipc`, invocado
+  por `compute_iae_section` desde `run.py`. Reconciliacion exacta con
+  §12.5 verificada via `scripts/iae_contractual_nipc_e2e.py` (PASS).
 - `build_effective_reporting_snapshot` sin callers productivos.
-- `scripts/iae_contractual_coverage.py` (nuevo, 2026-09-23) reproduce
-  §12.3 con la cadena contractual completa (target_builder ->
-  catalog_to_p38_targets -> compute_contractual_coverage). Pendiente
-  integrarlo al flujo continuo de validacion.
+- `scripts/iae_contractual_coverage.py` reproduce §12.3 con la cadena
+  contractual completa. Su logica se consume ahora a traves de
+  `pipeline_contractual` (ver §13.11).
+- Cobertura unitaria de `run_contractual_nipc`: 76 stmts no cubiertos
+  por tests con mock (ver §3.2). Deuda residual de cobertura.
 
 ### 5.2 Deuda de cobertura
 
@@ -1842,6 +1846,13 @@ no como conteo exhaustivo. Conteo autoritativo del modulo (44 ficheros,
 
 ## 12. Validacion end-to-end Q4 2025 / Q1 2026
 
+**Nota (2026-09-24).** La validacion documentada en esta seccion cubre
+el par Q4 2025 -> Q1 2026. Q2 2026 esta publicado por SEC pero pendiente
+de descarga (bloqueo rate limit 2026-09-23; reintento programado).
+Cuando se descargue, el motor detectara automaticamente el par mas
+reciente (Q1 2026 -> Q2 2026) y la seccion IAE del reporte reflejara
+ese nuevo delta. Ver §13.11 para el flujo automatico.
+
 Esta seccion documenta la validacion completa del motor sobre datos reales
 de los dos trimestres disponibles. Todos los números fueron medidos el
 2026-09-22/23 sobre el repositorio en HEAD 7caa86b, con pandas 2.3.3.
@@ -2338,6 +2349,44 @@ Reabrir esta auditoria si:
 
 Script reproducible: `scripts/iae_identity_uniqueness_audit.py`.
 Salida: `outputs/audit/iae_identity_audit/`.
+
+### 13.11. Operacion autonoma en GitHub Actions
+
+El modulo IAE se mantiene actualizado sin intervencion manual. Dos
+workflows lo soportan:
+
+  - `update_sec_13f.yml` (trimestral, cron `0 6 20 2,5,8,11 *`):
+    descarga el dataset SEC 13F del trimestre cerrado, lo ingesta
+    (7 parquets + manifest) y descarga la Official List 13(f).
+    Cachea `data/sec_13f/processed/` con key
+    `13f-processed-v1-<latest_quarter>`.
+  - `daily_run.yml` (diario): restaura la cache 13F antes de ejecutar
+    `run.py`. La seccion IAE del reporte se calcula con lo disponible.
+
+Artefactos versionados en git:
+  - `data/sec_13f/latest_quarter.txt` (2 bytes): identifica el ultimo
+    trimestre ingestado. Usado como key de cache.
+  - `data/sec_13f/official_list_13f/13flist_*.txt` (~1-2 MB/trimestre):
+    versionado para auditabilidad.
+  - `data/sec_13f/manifests/`: lineage de cada ingesta.
+  - `data/sec_13f/processed/`: **NO versionado**. Vive solo en cache
+    de Actions (~195 MB/trimestre). Un clone local fresco no lo tiene
+    y la seccion IAE devolvera `STALE` hasta que se ejecute
+    `scripts/update_sec_13f.py`.
+
+Comportamiento ante fallos:
+  - Cache miss en `daily_run`: warning + seccion IAE `STALE`. El radar
+    diario NO se bloquea.
+  - Error en `update_sec_13f`: workflow rojo, sin commit. La cache
+    previa se mantiene.
+  - SEC rate limit (404/408/429): `downloader._http_get_with_retry`
+    reintenta con backoff exponencial (5s, 15s, 45s).
+
+Scripts reproducibles:
+  - `scripts/update_sec_13f.py` - orquesta descarga + ingesta.
+  - `scripts/download_official_list_13f.py` - descarga Official List.
+  - `scripts/cleanup_stock_prices_nyse_holidays.py` - saneamiento
+    puntual de parquets (F-IAE-HOLIDAY-01).
 
 ## FIN DEL IAE_MAESTRO
 
