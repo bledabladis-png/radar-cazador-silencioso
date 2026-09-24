@@ -56,7 +56,7 @@ def _pick_base_url(period, override=None):
     year = int(year_s)
     if year > 2026:
         return SEC_BASE_URL_NEW
-    if year == 2026 and month in ("jun", "sep", "dic"):
+    if year == 2026 and month in ("jun", "sep", "dec"):
         return SEC_BASE_URL_NEW
     return SEC_BASE_URL_OLD
 

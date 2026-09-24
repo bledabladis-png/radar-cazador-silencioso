@@ -30,17 +30,17 @@ from scripts.download_official_list_13f import download_official_list
 # de parquets 13F cuando aparece un trimestre nuevo.
 LATEST_FILE = ROOT / "data" / "sec_13f" / "latest_quarter.txt"
 
-# Meses del formato SEC (espanol, 3 letras):
+# Meses del formato SEC (ingles, 3 letras):
 _MONTHS = {
-    1: "ene", 2: "feb", 3: "mar", 4: "abr", 5: "may", 6: "jun",
-    7: "jul", 8: "ago", 9: "sep", 10: "oct", 11: "nov", 12: "dic",
+    1: "jan", 2: "feb", 3: "mar", 4: "apr", 5: "may", 6: "jun",
+    7: "jul", 8: "aug", 9: "sep", 10: "oct", 11: "nov", 12: "dec",
 }
 
 # Trimestre -> mes de inicio del period SEC (1-based):
 # Q1 cierra 31-mar, dataset cubre 01-mar a 31-may
-# Q2 cierra 30-jun, dataset cubre 01-jun a 31-ago
+# Q2 cierra 30-jun, dataset cubre 01-jun a 31-aug
 # Q3 cierra 30-sep, dataset cubre 01-sep a 30-nov
-# Q4 cierra 31-dic, dataset cubre 01-dic a 28/29-feb (año+1)
+# Q4 cierra 31-dec, dataset cubre 01-dec a 28/29-feb (año+1)
 _QUARTER_START_MONTH = {"Q1": 3, "Q2": 6, "Q3": 9, "Q4": 12}
 
 _DAYS_IN_MONTH = {1: 31, 2: 28, 3: 31, 4: 30, 5: 31, 6: 30,

@@ -83,16 +83,16 @@ def test_quarter_to_iso_end(q, expected):
 # --- quarter_to_source_period -------------------------------------------
 
 @pytest.mark.parametrize("q,expected", [
-    ("2025Q4", "01dic2025-28feb2026"),
+    ("2025Q4", "01dec2025-28feb2026"),
     ("2026Q1", "01mar2026-31may2026"),
-    ("2026Q2", "01jun2026-31ago2026"),
+    ("2026Q2", "01jun2026-31aug2026"),
     ("2026Q3", "01sep2026-30nov2026"),
-    ("2026Q4", "01dic2026-28feb2027"),
+    ("2026Q4", "01dec2026-28feb2027"),
     ("2027Q1", "01mar2027-31may2027"),
     # Bisiesto: 2024Q4 -> end_year 2025 (no leap) -> 28feb2025
-    ("2024Q4", "01dic2024-28feb2025"),
+    ("2024Q4", "01dec2024-28feb2025"),
     # Bisiesto: 2023Q4 -> end_year 2024 (leap) -> 29feb2024
-    ("2023Q4", "01dic2023-29feb2024"),
+    ("2023Q4", "01dec2023-29feb2024"),
 ])
 def test_quarter_to_source_period(q, expected):
     assert quarter_to_source_period(q) == expected
@@ -114,11 +114,11 @@ def test_latest_published_quarter(today, expected):
 # --- _pick_base_url -----------------------------------------------------
 
 @pytest.mark.parametrize("period,expected", [
-    ("01dic2025-28feb2026", SEC_BASE_URL_OLD),
+    ("01dec2025-28feb2026", SEC_BASE_URL_OLD),
     ("01mar2026-31may2026", SEC_BASE_URL_OLD),
-    ("01jun2026-31ago2026", SEC_BASE_URL_NEW),
+    ("01jun2026-31aug2026", SEC_BASE_URL_NEW),
     ("01sep2026-30nov2026", SEC_BASE_URL_NEW),
-    ("01dic2026-28feb2027", SEC_BASE_URL_NEW),
+    ("01dec2026-28feb2027", SEC_BASE_URL_NEW),
     ("01mar2027-31may2027", SEC_BASE_URL_NEW),
 ])
 def test_pick_base_url_por_period(period, expected):
