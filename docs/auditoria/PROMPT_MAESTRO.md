@@ -696,6 +696,8 @@ Los 5 return True silenciosos eliminados. "No pude validar" ≠ "validé y pasó
 
 Escritura unificada: src/utils.py::write_artifact_with_manifest(df, parquet_path, source, reference_date, run_id, schema_version=1, *, temporal_contract=None).
 
+Politica de schema (2026-09-24, dictamen auditor FU-002-by_market): los campos adicionales dentro de los bloques artifact, producer, content, quality y temporal son backward-compatible. schema_version solo se incrementa ante un cambio incompatible: eliminacion de campo, cambio de tipo, o cambio de semantica de un campo existente. Los consumidores contractuales deben ignorar campos desconocidos. Esta politica permite ampliaciones aditivas (p. ej. quality.by_market) sin requerir bump de schema.
+
 11.9. FU-007 / FU-007-b — Walk-back de fechas
 _last_market_session(d) en src/market_calendar.py.
 
