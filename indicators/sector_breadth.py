@@ -7,7 +7,7 @@ No alimenta motores, scores, pesos ni State Machine.
 import pandas as pd
 import numpy as np
 from src.utils import get_col
-from src.market_calendar import is_market_day
+from src.market_calendar import is_market_day, previous_market_day
 from indicators.wyckoff import classify_wyckoff_phase
 from src.stock_data_loader import normalize_yahoo_ticker
 from config.settings import TOP_N_SECTOR_COMPONENTS
@@ -157,15 +157,28 @@ def compute_sector_breadth(df_market, df_stocks, holdings_df, as_of_date=None, t
                     nl_count += 1
 
             # Advance/Decline diario (último día)
+            # Bug latente 2026-09-24: si la penúltima observación no
+            # es la sesión inmediatamente anterior, la resta es un
+            # movimiento multi-día etiquetado como 1d. Con el gap del
+            # 22-Sep (Yahoo incompleto) afectaba a 206/313 tickers.
+            # Fix: exigir continuidad temporal. Si hay gap interno, el
+            # ticker no contribuye al A/D del día (no se inventa dato).
+            # El universo de compute_sector_breadth es US_EQUITY
+            # (verificado 2026-09-24: 219/220 top-20 son USA), por lo
+            # que previous_market_day (calendario NYSE) es el correcto.
             if len(close) >= 2:
-                n_valid_ad += 1
-                daily_ret = close.iloc[-1] - close.iloc[-2]
-                if daily_ret > 0:
-                    advances += 1
-                elif daily_ret < 0:
-                    declines += 1
-                else:
-                    unchanged += 1
+                _last_date = close.index[-1].date()
+                _prev_date = close.index[-2].date()
+                _expected_prev = previous_market_day(_last_date)
+                if _prev_date == _expected_prev:
+                    n_valid_ad += 1
+                    daily_ret = close.iloc[-1] - close.iloc[-2]
+                    if daily_ret > 0:
+                        advances += 1
+                    elif daily_ret < 0:
+                        declines += 1
+                    else:
+                        unchanged += 1
 
             # Wyckoff (consumir indicador oficial)
             if len(close) >= 60:
