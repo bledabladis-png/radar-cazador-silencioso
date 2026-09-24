@@ -73,7 +73,7 @@ cabecera del documento).
 | Aspecto | Valor |
 |---|---|
 | Ficheros de produccion | 36 |
-| LOC produccion | 8.008 |
+| LOC produccion | 8.017 |
 | Funciones publicas | 110 |
 | Ficheros de test | 45 |
 | Tests que pasan | 845 |
@@ -132,7 +132,7 @@ documento.
     │   ├── catalog_key.py                  375 LOC
     │   ├── openfigi_client.py              180 LOC
     │   ├── period_state.py                 212 LOC
-    │   ├── radar_target_catalog.py         145 LOC
+    │   ├── radar_target_catalog.py         154 LOC
     │   ├── target_builder.py               181 LOC
     │   └── target_universe.py              171 LOC
     └── sec_13f/
@@ -270,10 +270,12 @@ Componentes integrados:
   `src/report_generator.py` al final del reporte.
 
 Deuda residual:
-- `compute_nipc_contractual`: sin callers productivos directos (lo
-  consume `pipeline_contractual.run_contractual_nipc`, que si tiene
-  caller productivo).
 - `build_effective_reporting_snapshot`: sin callers productivos.
+
+Nota (2026-09-24): `compute_nipc_contractual` ya tiene caller productivo
+desde 2026-09-24 via `pipeline_contractual.run_contractual_nipc`, invocado
+por `compute_iae_section` desde `run.py`. Reconciliacion exacta con
+seccion 12.5 verificada via `scripts/iae_contractual_nipc_e2e.py` (PASS). Ver seccion 5.1.
 
 ---
 
@@ -512,11 +514,15 @@ integracion sea una decision activa, no hoy.
   NIPC Q1->Q2 se calculara automaticamente cuando SEC publique el TXT.
   Verificado con curl (404). No es bug.
 - Bugs de render en el reporte diario (no en el pipeline del IAE,
-  pero afectan la lectura del modulo si se expone): 3 detectados en
-  revision 2026-09-24. Detalle en ESTADO_DECLARADO 3.
-- Cobertura sectorial baja: 7 de 11 sectores con cobertura <70% del
-  universo. Impacta fiabilidad de metricas derivadas (breadth,
-  concentracion, scores de oportunidad). Decision de producto pendiente.
+  pero afectan la lectura del modulo si se expone): 3 detectados
+  en revision 2026-09-24. RESUELTOS 2026-09-24 (commits 2fe1c45,
+  740be35, dfd93c4). Detalle en PROMPT_MAESTRO seccion 11.21.
+- Cobertura sectorial baja. RESUELTO 2026-09-24 (commit 8c6330f).
+  Bug: el sistema calculaba cobertura contra el total del ETF
+  (78 en XLF, 85 en XLI) mientras solo descarga top-20 por weight.
+  Cobertura artificialmente baja (8 de 11 sectores con [BAJA] falso
+  positivo). Fix: replicar head(TOP_N_SECTOR_COMPONENTS) en
+  indicators/sector_breadth.py. Detalle en PROMPT_MAESTRO seccion 11.21.
 
 ---
 
@@ -545,18 +551,18 @@ integracion sea una decision activa, no hoy.
 
 ### A.3 Cobertura de tests
 
-Criterio AST (44 ficheros del modulo, 819 casos):
+Criterio AST (45 ficheros del modulo, 845 casos):
 
     py scripts/iae_test_census.py
 
-Cobertura de lineas sobre el universo canonico (los 819 casos):
+Cobertura de lineas sobre el universo canonico (los 845 casos):
 
     py scripts/iae_coverage.py
 
-El script resuelve los 44 ficheros de test por AST (mismo criterio
+El script resuelve los 45 ficheros de test por AST (mismo criterio
 que `iae_test_census.py`) y ejecuta pytest con
 `--cov=src/institutional_accumulation` sobre el universo completo.
-Resultado esperado a 2026-09-24: 819 passed, 90% coverage.
+Resultado esperado a 2026-09-24: 845 passed, 90% coverage.
 
 ### A.4 Overlap sobre datos reales
 
@@ -1187,8 +1193,8 @@ El resultado contractual se emite como dict con:
 cadena mostrada arriba describe el diseno contractual, no la
 ejecucion. La ejecucion actual del motor (§12.5 y §12.6) usa
 `compute_nipc` sobre delta filtrado al radar, con
-`evidence_class = "PROXY"`. `compute_nipc_contractual` existe y esta
-testeado pero no tiene callers productivos (ver §5.1).
+`evidence_class = "PROXY"`. `compute_nipc_contractual` existe, esta testeado y ya
+tiene caller productivo desde 2026-09-24 (ver §5.1).
 
 **Capa auxiliar: reporting_dedup.** `build_effective_reporting_snapshot`
 (`reporting_dedup.py`) opera PRE-delta, con 35 funciones de test AST /
@@ -1210,10 +1216,10 @@ separada, no como etapa del flujo productivo. Los numeros de §12.5 y
 Cada fichero de test cubre una parte del modulo. Se listan las
 funciones de test con su docstring cuando existe.
 
-Ejecucion actual: **819 casos de test pasan** (0 fallos). El modulo
-completo (44 ficheros que importan `src.institutional_accumulation`)
-tiene 714 funciones de test detectables por AST. La diferencia
-(819 vs 714) corresponde a casos parametrizados via
+Ejecucion actual: **845 casos de test pasan** (0 fallos). El modulo
+completo (45 ficheros que importan `src.institutional_accumulation`)
+tiene 737 funciones de test detectables por AST. La diferencia
+(845 vs 737) corresponde a casos parametrizados via
 @pytest.mark.parametrize, que pytest expande a multiples casos por
 funcion.
 
@@ -1852,7 +1858,7 @@ extra. La suma de funciones de test detectables por AST en los 29
 bloques es 506 (492 hasta la revision 2026-09-22; +14 en
 `test_p38_contract.py` por C9+C10+fix fail-closed).
 
-El modulo completo tiene 44 ficheros que importan
+El modulo completo tiene 45 ficheros que importan
 `src.institutional_accumulation`. 17 no aparecen en §11:
 `test_absence`, `test_b06_e2e_aggregation`, `test_b1_schema`,
 `test_h692_temporal_precedence`, `test_openfigi_client`,
