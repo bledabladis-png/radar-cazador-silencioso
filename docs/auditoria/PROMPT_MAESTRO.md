@@ -450,12 +450,13 @@ update_european_holdings.yml	0 5 1 1,4,7,10 *	Holdings europeos
 update_index_holdings.yml	0 4 1 1,4,7,10 *	SPY/DIA/QQQ/IWM
 update_qqq_sec_flow.yml	0 6 15 1,7 *	QQQ SEC flow
 update_sec_nport.yml	0 6 20 1,4,7,10 *	N-PORT
+update_sec_13f.yml	0 6 20 2,5,8,11 *	SEC 13F trimestral + cache parquets IAE
 update_sector_holdings.yml	0 3 1 1,4,7,10 *	Holdings sectoriales
 Nota: daily_run.yml commitea Daily hist/state. Aplicar git fetch + pull --rebase antes de cualquier push local.
 
 ## SECCION 10 - VALIDACION Y TESTS
 10.1. Tests
-1434 passed + 2 skipped + 3 failed preexistentes (test_freshness, ambientales) en local; CI similar con parquet gitignored. Incluye 758 tests del modulo IAE (criterio AST, ver seccion 15).
+1529 passed + 2 skipped + 0 failed en local tras run.py. Los 3 test_freshness (ambientales) pasan tras un run que refresca los parquets; vuelven a fallar si pasan >4 dias sin ejecutar el pipeline. CI similar con parquet gitignored. Incluye 819 tests del modulo IAE (criterio AST, ver seccion 15).
 
 10.2. Validation Gate (10/10)
 SLPM v1.2 (sin errores de validacion)
@@ -865,6 +866,22 @@ O1 SPDR `Ultima fecha: N/D` (2026-09-18) -> WONT FIX / MONITORED. El render
 `Calidad, frescura y cobertura de datos` (`SSGA ETF Flow: YYYY-MM-DD`). Reabrir si
 otra seccion necesita la fecha exacta.
 
+F-IAE-HOLIDAY-01 (2026-09-24) -> RESUELTO. Fix en
+`src/stock_data_loader.py::_fill_holes_respecting_sessions`: tickers USA en
+festivos NYSE (dia laborable) preservan NaN, sin ffill. Antes se
+propagaban valores de tickers UK (LSE abierto en festivos USA) mezclados
+en lotes Yahoo mixtos. Saneamiento puntual del parquet historico: 50
+celdas limpiadas (5 festivos 2026 x 10 tickers USA). Nuevo script
+`scripts/cleanup_stock_prices_nyse_holidays.py` (dry-run + apply).
+Commit: 2423526.
+
+F-IAE-CRON-01 (2026-09-24) -> RESUELTO. Cron de `daily_run.yml` movido
+de `0 4 * * *` a `0 23 * * *` UTC. Motivo: con retraso observado de ~5h,
+la ejecucion real caia a las 09:00 UTC = 11:00 Madrid, dentro de la
+sesion europea. Con 23:00 UTC, la ejecucion tipica queda a 04:00 UTC
+= 05:00/06:00 Madrid (pre-apertura europea). Margen de retraso tolerado:
+hasta 8h (antes 3h). Commits: 6dec2cf, f396e99.
+
 ## SECCION 13 - DEUDA TECNICA
 
 ### 13.1. Radar (historico)
@@ -885,15 +902,19 @@ DT4 (WONT FIX razonado 2026-09-17): reorganizacion validation/ y scripts/.
 Estado, arquitectura, verificacion y deuda tecnica del modulo IAE
 viven en `iae/IAE_MAESTRO.md`. No se duplican aqui.
 
-### 13.3. Estado del repo al cierre (2026-09-23)
+### 13.3. Estado del repo al cierre (2026-09-24)
 
     HEAD            ver docs/auditoria/iae/ESTADO_SISTEMA.md
     Ahead           ver docs/auditoria/iae/ESTADO_SISTEMA.md
     Push            NO (local-first IAE)
     Working tree    LIMPIO
-    Suite local     1434 passed + 2 skipped + 3 failed (test_freshness)
-    Suite IAE       758 passed (criterio AST)
+    Suite local     1529 passed + 2 skipped + 0 failed
+    Suite IAE       819 passed (criterio AST)
     Suite CI        0 failed
+
+Nota. Los 3 test_freshness pasan tras un `py run.py` que refresca los
+parquets; vuelven a fallar si pasan >4 dias sin ejecutar el pipeline.
+Es comportamiento ambiental, no un bug.
 
 ## SECCION 14 - COMANDOS UTILES
 powershell
