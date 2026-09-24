@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pandas as pd
 
-ROOT = Path(r"D:\Macro_Sectorial")
+ROOT = Path(__file__).resolve().parent.parent
 ASSIGN = ROOT / "data" / "mappings" / "catalog_assignments.csv"
 MEMBER = ROOT / "data" / "mappings" / "catalog_membership.csv"
 SNAPSHOT = ROOT / "data" / "mappings" / "catalog_snapshots" / "snapshot_20260921_01.csv"

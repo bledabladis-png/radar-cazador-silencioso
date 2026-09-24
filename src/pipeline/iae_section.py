@@ -18,7 +18,7 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
-ROOT = Path(r"D:\Macro_Sectorial")
+ROOT = Path(__file__).resolve().parent.parent.parent
 DATA_DIR = ROOT / "data" / "sec_13f" / "processed"
 
 _QUARTER_RE = re.compile(r"^(20\d\d)Q([1-4])$")
