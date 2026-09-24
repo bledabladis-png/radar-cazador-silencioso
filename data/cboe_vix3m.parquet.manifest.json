@@ -4,12 +4,12 @@
     "path": "data/cboe_vix3m.parquet",
     "sha256": "2dc0daf32ef04cd77e864afe36d08e0c1a99952886dfb4fe5a11146d882e6b9b",
     "bytes": 96726,
-    "written_at": "2026-09-24T14:21:43.188363"
+    "written_at": "2026-09-24T14:47:26.118546"
   },
   "producer": {
     "module": "src.utils",
     "function": "write_artifact_with_manifest",
-    "run_id": "20260924_162142",
+    "run_id": "20260924_164725",
     "source": "cboe_vix3m"
   },
   "content": {
