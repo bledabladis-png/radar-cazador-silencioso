@@ -13,16 +13,24 @@ Reglas de personalidad y metodo: `PROMPT_MAESTRO.md` secciones 1 y 3.
 
 ---
 
-## Estado al cierre de la sesion (2026-09-23)
+## Estado al cierre de la sesion (2026-09-24)
 
     HEAD                 ver docs/auditoria/iae/ESTADO_SISTEMA.md
     Ahead                ver docs/auditoria/iae/ESTADO_SISTEMA.md
     Working tree         LIMPIO
-    Tests IAE            759 passed (criterio AST, ver abajo)
-    Suite global         1440 passed + 2 skipped + 3 failed
-                         (los 3 failed son test_freshness, ambientales)
+    Tests IAE            819 passed (criterio AST, ver abajo)
+    Suite global         1529 passed + 2 skipped + 0 failed
+                         (los 3 test_freshness pasan tras run.py; vuelven
+                          a fallar si los parquets llevan >4 dias sin
+                          refrescar - ver nota abajo)
     Push                 NO (local-first IAE)
-    Cobertura IAE        110/110 funciones con llamada real (92% lineas)
+    Cobertura IAE        110/110 funciones con llamada real (90% lineas)
+
+Nota. `test_freshness` valida que market_data.parquet y stock_prices.parquet
+esten actualizados a la ultima sesion NYSE. Pasan tras un `py run.py` y
+vuelven a fallar si pasan >4 dias sin ejecutar el pipeline. Son
+ambientales, no bugs. La suite local refleja el estado del repositorio
+en el momento del test, no un valor fijo.
 
 Criterio del conteo de tests IAE: ficheros `tests/test_*.py` que importan
 `src.institutional_accumulation` (verificado por AST). Reproducible con
@@ -46,9 +54,15 @@ Scripts reproducibles del modulo IAE:
     scripts/iae_reconciliation_b1.py              cadena completa delta + NIPC
     scripts/iae_validate_crosswalk_openfigi.py    validacion externa del crosswalk
     scripts/iae_test_census.py                    censo riguroso de tests
+    scripts/iae_coverage.py                       cobertura reproducible (44 ficheros)
     scripts/iae_contractual_coverage.py           cadena contractual
                                                   (target -> adapter -> coverage)
+    scripts/iae_contractual_nipc_e2e.py           validacion E2E NIPC vs §12.5
+    scripts/iae_identity_uniqueness_audit.py      auditoria unicidad shareClassFIGI
     scripts/iae_pipeline.py                       orquestador ingestion + identity
+    scripts/update_sec_13f.py                     ingesta trimestral SEC 13F
+    scripts/download_official_list_13f.py         descarga Official List 13(f)
+    scripts/cleanup_stock_prices_nyse_holidays.py saneamiento F-IAE-HOLIDAY-01
 
 Documentos historicos (no normativos): NIPC_CONTRATOS_SEMANTICOS_v1.md,
 NIPC_COVERAGE_POLICY.md, INSTITUTIONAL_ACCUMULATION_NIPC_ESPECIFICACION.md.
@@ -105,6 +119,37 @@ Fase C (3 cambios funcionales, cerrada):
   (UNAVAILABLE/PARTIAL/COMPLETE con threshold 0.95 sobre las DOS
   dimensiones). `coverage_status` legacy intacto.
 
+Sesion 2026-09-24 (Fases E + F + fixes):
+
+Fase E - Integracion a `run.py` (cerrada):
+
+- E.1 - `scripts/iae_contractual_nipc_e2e.py`: validacion E2E de
+  `compute_nipc_contractual` con reconciliacion exacta contra §12.5.
+- E.2 - Extraccion del pipeline contractual a
+  `src/institutional_accumulation/pipeline_contractual.py`.
+- E.3 - `src/pipeline/iae_section.py::compute_iae_section`: detector
+  automatico de ultimo par de trimestres + orquestador.
+- E.4 - Wire a `run.py` + `src/report/iae.py::render_iae_section`.
+  Seccion "Acumulacion Institucional (13F)" en el reporte diario.
+  Validation Gate 10/10 intacto.
+- E.5 - Documentacion de integracion unidireccional (IAE_MAESTRO §2.3
+  y §13.4).
+
+Fase F - Automatizacion GitHub (cerrada):
+
+- F.1 - Rutas portables (`IAE_OFFICIAL_DIR`, default al repo).
+- F.2 - Descargador Official List 13(f) + versionado Q4/Q1.
+- F.3 - Doble ruta SEC + retry + orquestador trimestral.
+- F.4 - Workflow `update_sec_13f.yml` + cache parquets + restore en
+  `daily_run.yml`.
+
+Fixes puntuales:
+
+- F-IAE-HOLIDAY-01: no ffill USA en festivos NYSE (dia laborable).
+  Saneamiento de 50 celdas en `stock_prices.parquet`.
+- F-IAE-CRON-01: cron `daily_run.yml` 04:00 -> 23:00 UTC
+  (pre-apertura europea).
+
 ---
 
 ## Reglas de operacion
@@ -132,14 +177,14 @@ Esperado:
 - HEAD ver docs/auditoria/iae/ESTADO_SISTEMA.md
 - ahead ver docs/auditoria/iae/ESTADO_SISTEMA.md
 - working tree limpio
-- 1440 passed + 2 skipped + 3 failed (test_freshness, preexistentes)
+- 1529 passed + 2 skipped + 0 failed (test_freshness pasa tras run.py)
 - pyflakes silencio, compileall OK
 
 Censo del modulo IAE (comando aparte, tarda unos segundos):
 
     py scripts\iae_test_census.py
 
-Esperado: 42 ficheros, 759 tests collected.
+Esperado: 44 ficheros, 819 tests collected.
 
 ---
 
@@ -150,17 +195,20 @@ Esperado: 42 ficheros, 759 tests collected.
 Estado que reconozco:
 
 - HEAD ver docs/auditoria/iae/ESTADO_SISTEMA.md
-- IAE implementado, testeado, aislado
+- IAE implementado, testeado, integrado unidireccionalmente en run.py
 - Crosswalk extendido a 246 filas (242 tickers unicos)
 - Verificado end-to-end sobre 13F real Q4/Q1 (NIPC radar -4.316.734.936)
 - Bloqueantes A (B1-B4) cerrados
 - Criticos B (C1-C18) cerrados, salvo C17 (registro, sin accion)
 - Fase C (C8, C9, C10) cerrada
+- Fase D (auditor externo) PENDIENTE - IAE_MAESTRO congelable segun v8
+- Fase E (integracion a run.py) CERRADA 2026-09-24
+- Fase F (automatizacion GitHub) CERRADA 2026-09-24
 - Prohibiciones respetadas
-- Siguiente: Fase D - reenviar IAE_MAESTRO.md al auditor externo
+- Pendiente: descargar Q2 2026 (SEC rate limit), primer push a origin/main
 
 Pregunta: "Que hacemos?"
 
 ---
 
-FIN DE TRANSFER. 2026-09-23.
+FIN DE TRANSFER. 2026-09-24.
