@@ -164,7 +164,7 @@ ALL_KEYS = (
     "n_delta_observable","n_both","n_new","n_exit","n_unresolved_identity",
     "coverage_status","coverage_quality",
     "catalog_coverage_declared","catalog_keys_total","catalog_keys_observed",
-    "evidence_class","stale_reason","error",
+    "evidence_class","stale_reason","catalog_coverage_warning","error",
 )
 
 
@@ -219,3 +219,54 @@ def test_iae_section_ok_stale_reason_none(tmp_path):
         r = iae_section.compute_iae_section(None, "TEST")
     assert r["status"] == "OK"
     assert r["stale_reason"] is None
+
+
+# --- catalog_coverage_warning (Fase 3.1) --------------------------------
+
+def test_iae_section_coverage_warning_true_si_bajo_umbral(tmp_path):
+    """Con cobertura < 90%, warning=True."""
+    d = _ok_env(tmp_path)
+    fake = _fake_result()
+    # 220/242 = 90.9% -> NO warning. Bajamos a 200/242 = 82.6% -> SI warning.
+    fake["target_q4_size"] = 200
+    fake["target_q1_size"] = 200
+    with patch.object(iae_section, "DATA_DIR", d), \
+         patch("src.institutional_accumulation.pipeline_contractual"
+               ".run_contractual_nipc", return_value=fake):
+        r = iae_section.compute_iae_section(None, "TEST")
+    assert r["status"] == "OK"
+    assert r["catalog_coverage_warning"] is True
+
+
+def test_iae_section_coverage_warning_false_si_sobre_umbral(tmp_path):
+    """Con cobertura >= 90%, warning=False."""
+    d = _ok_env(tmp_path)
+    fake = _fake_result()
+    fake["target_q4_size"] = 240
+    fake["target_q1_size"] = 240
+    with patch.object(iae_section, "DATA_DIR", d), \
+         patch("src.institutional_accumulation.pipeline_contractual"
+               ".run_contractual_nipc", return_value=fake):
+        r = iae_section.compute_iae_section(None, "TEST")
+    assert r["status"] == "OK"
+    assert r["catalog_coverage_warning"] is False
+
+
+def test_iae_section_coverage_warning_none_en_stale(tmp_path):
+    """En STALE, warning=None (no aplica)."""
+    d = _stale_env(tmp_path, 0)
+    with patch.object(iae_section, "DATA_DIR", d):
+        r = iae_section.compute_iae_section(None, "TEST")
+    assert r["status"] == "STALE"
+    assert r["catalog_coverage_warning"] is None
+
+
+def test_iae_section_coverage_warning_none_en_error(tmp_path):
+    """En ERROR, warning=None (no aplica)."""
+    d = _ok_env(tmp_path)
+    with patch.object(iae_section, "DATA_DIR", d), \
+         patch("src.institutional_accumulation.pipeline_contractual"
+               ".run_contractual_nipc", side_effect=RuntimeError("boom")):
+        r = iae_section.compute_iae_section(None, "TEST")
+    assert r["status"] == "ERROR"
+    assert r["catalog_coverage_warning"] is None

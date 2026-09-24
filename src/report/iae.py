@@ -94,6 +94,8 @@ def render_iae_section(iae_section):
     cov = iae_section.get("catalog_coverage_declared")
     cov_s = f"{cov:.2%}" if isinstance(cov, (int, float)) else "N/D"
     out.append(f"- Cobertura observable: **{obs} / {tot} ({cov_s})**\n")
+    if iae_section.get("catalog_coverage_warning"):
+        out.append("**[WARN] Cobertura del catalogo por debajo del 90%.**\n")
     out.append(f"- TARGET construido: **{obs}/{obs} (100%, por construccion)**\n")
     out.append(f"- Estado contractual: "
                f"{iae_section.get('coverage_status') or 'N/D'}\n")

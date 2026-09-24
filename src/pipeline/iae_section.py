@@ -23,6 +23,7 @@ DATA_DIR = ROOT / "data" / "sec_13f" / "processed"
 
 _QUARTER_RE = re.compile(r"^(20\d\d)Q([1-4])$")
 _QUARTER_END = {"Q1": "03-31", "Q2": "06-30", "Q3": "09-30", "Q4": "12-31"}
+COVERAGE_WARNING_THRESHOLD = 0.90
 
 
 def _list_available_quarters():
@@ -84,6 +85,7 @@ def compute_iae_section(reference_date, run_id, *, official_dir=None):
         return {
             "status": "STALE",
             "stale_reason": "insufficient_quarters",
+            "catalog_coverage_warning": None,
             "period_previous": quarters[0][0] if quarters else None,
             "period_current": None,
             "iso_previous": quarters[0][1] if quarters else None,
@@ -122,6 +124,7 @@ def compute_iae_section(reference_date, run_id, *, official_dir=None):
             return {
                 "status": "STALE",
                 "stale_reason": "official_list_pending",
+                "catalog_coverage_warning": None,
                 "period_previous": f_prev, "period_current": f_curr,
                 "iso_previous": iso_prev, "iso_current": iso_curr,
                 "nipc_total": None, "nipc_sole": None,
@@ -143,6 +146,7 @@ def compute_iae_section(reference_date, run_id, *, official_dir=None):
         return {
             "status": "ERROR",
             "stale_reason": None,
+            "catalog_coverage_warning": None,
             "period_previous": f_prev, "period_current": f_curr,
             "iso_previous": iso_prev, "iso_current": iso_curr,
             "nipc_total": None, "nipc_sole": None,
@@ -164,6 +168,10 @@ def compute_iae_section(reference_date, run_id, *, official_dir=None):
     cat_obs = max(int(r.get("target_q4_size") or 0),
                   int(r.get("target_q1_size") or 0))
     catalog_cov = (cat_obs / cat_total) if cat_total else None
+    catalog_warn = (
+        catalog_cov is not None
+        and catalog_cov < COVERAGE_WARNING_THRESHOLD
+    ) if catalog_cov is not None else None
 
     print("  Periodo: " + f_prev + " -> " + f_curr)
     print("  NIPC total: " + str(r.get("nipc_total")))
@@ -178,6 +186,7 @@ def compute_iae_section(reference_date, run_id, *, official_dir=None):
     return {
         "status": "OK",
         "stale_reason": None,
+        "catalog_coverage_warning": catalog_warn,
         "period_previous": f_prev, "period_current": f_curr,
         "iso_previous": iso_prev, "iso_current": iso_curr,
         "nipc_total": r.get("nipc_total"),

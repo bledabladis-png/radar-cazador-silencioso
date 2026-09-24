@@ -99,3 +99,40 @@ def test_stale_official_list_pending_render():
     assert "Official List" in txt
     assert "2026Q1 -> 2026Q2" in txt
     assert "PDF" in txt
+
+
+# --- coverage_warning render (Fase 3.1) ---------------------------------
+
+def test_render_coverage_warning_visible():
+    """Si catalog_coverage_warning=True, se anade la linea [WARN]."""
+    r = render_iae_section({
+        "status": "OK",
+        "period_previous": "2025Q4", "period_current": "2026Q1",
+        "nipc_total": 0, "nipc_sole": 0, "nipc_dfnd": 0, "nipc_otr": 0,
+        "n_delta_observable": 0, "n_both": 0, "n_new": 0, "n_exit": 0,
+        "n_unresolved_identity": 0,
+        "coverage_status": "VALID", "coverage_quality": "COMPLETE",
+        "catalog_keys_observed": 200, "catalog_keys_total": 242,
+        "catalog_coverage_declared": 200/242,
+        "catalog_coverage_warning": True,
+    })
+    txt = "".join(r)
+    assert "[WARN]" in txt
+    assert "90%" in txt
+
+
+def test_render_coverage_warning_ausente_si_no_flag():
+    """Sin catalog_coverage_warning, no aparece [WARN]."""
+    r = render_iae_section({
+        "status": "OK",
+        "period_previous": "2025Q4", "period_current": "2026Q1",
+        "nipc_total": 0, "nipc_sole": 0, "nipc_dfnd": 0, "nipc_otr": 0,
+        "n_delta_observable": 0, "n_both": 0, "n_new": 0, "n_exit": 0,
+        "n_unresolved_identity": 0,
+        "coverage_status": "VALID", "coverage_quality": "COMPLETE",
+        "catalog_keys_observed": 240, "catalog_keys_total": 242,
+        "catalog_coverage_declared": 240/242,
+        "catalog_coverage_warning": False,
+    })
+    txt = "".join(r)
+    assert "[WARN]" not in txt
