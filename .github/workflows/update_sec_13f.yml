@@ -67,6 +67,16 @@ jobs:
       - name: Ejecutar actualizacion 13F
         run: python scripts/update_sec_13f.py --quarter "${{ steps.quarter.outputs.quarter }}"
 
+      - name: Regenerar catalogo radar (IAE)
+        if: success()
+        env:
+          OPENFIGI_API_KEY: ${{ secrets.OPENFIGI_API_KEY }}
+        run: python scripts/regenerate_radar_catalog.py
+
+      - name: Regenerar crosswalk CUSIP (IAE)
+        if: success()
+        run: python scripts/regenerate_cusip_crosswalk.py
+
       - name: Save cache parquets 13F
         if: success()
         uses: actions/cache/save@v4
@@ -81,6 +91,10 @@ jobs:
           git add data/sec_13f/latest_quarter.txt
           git add data/sec_13f/official_list_13f/
           git add data/sec_13f/manifests/ 2>/dev/null || true
+          git add data/mappings/radar_target_catalog.csv
+          git add data/mappings/catalog_manifest.json
+          git add data/mappings/catalog_snapshots/
+          git add data/mappings/cusip_radar_crosswalk.csv
           if git diff --staged --quiet; then
             echo "No hay cambios en 13F metadata."
           else
