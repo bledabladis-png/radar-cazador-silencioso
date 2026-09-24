@@ -293,7 +293,7 @@ D:\Macro_Sectorial
 | +-- commodities_spot.parquet (+ .manifest.json) [FU-021-3C-bis]
 +-- scripts/ (16+ activos; +iae_pipeline.py, build_catalog_csvs.py)
 +-- validation/ (6 activos)
-+-- tests/ (1439 casos; ver sec 15 para conteo del modulo IAE)
++-- tests/ (1531 casos; ver sec 15 para conteo del modulo IAE)
 +-- docs/
 | +-- automatica/ (22 .md auto-generados, LF)
 | +-- auditoria/ (prompt + transfer + readme + iae/)
@@ -892,7 +892,7 @@ Monolitos restantes: ninguno de los tres principales. Todos resueltos:
 - regimes/sector_regime.py -> 272 lineas (DT1, 2026-09-17).
 - indicators/darkpool.py (286 LOC) -> 4 modulos (DT3, 2026-09-17).
 
-.git size: ~12.6 MB tras gc --aggressive.
+.git size: ~18.7 MiB packed (1 pack, 0 loose) tras gc --prune=now.
 Cache datos: parquet market_data (~57 MB), stock_prices (~14 MB).
 
 DT4 (WONT FIX razonado 2026-09-17): reorganizacion validation/ y scripts/.
