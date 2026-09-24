@@ -1,6 +1,6 @@
 {
   "dataset": "SEC_FORM_13F",
-  "generated_at_utc": "2026-09-24T03:41:36.650764+00:00",
+  "generated_at_utc": "2026-09-24T14:45:06.769527+00:00",
   "parquet_files": {
     "COVERPAGE": {
       "file": "data/sec_13f/processed/2026Q2/COVERPAGE.parquet",

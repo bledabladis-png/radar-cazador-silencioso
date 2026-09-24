@@ -1,0 +1,106 @@
+{
+  "dataset": "SEC_FORM_13F",
+  "generated_at_utc": "2026-09-24T14:44:14.172286+00:00",
+  "parquet_files": {
+    "COVERPAGE": {
+      "file": "data/sec_13f/processed/2025Q4/COVERPAGE.parquet",
+      "rows": 11372,
+      "sha256": "d1bb86e0073bad960361cbc620948ffa5a93c4ae6bf5e6ddd8410bae33ecdd96",
+      "size_bytes": 808963
+    },
+    "INFOTABLE": {
+      "file": "data/sec_13f/processed/2025Q4/INFOTABLE.parquet",
+      "rows": 3473209,
+      "sha256": "207621cf7d0c0db44b3bee6232501ac9fd07b4af9abf6edf7946c6bf9e009536",
+      "size_bytes": 96568998
+    },
+    "OTHERMANAGER": {
+      "file": "data/sec_13f/processed/2025Q4/OTHERMANAGER.parquet",
+      "rows": 4751,
+      "sha256": "a5d8d7f374255fbd3bd1a761341620f30c2b19e0fc30d75a3c75117a75c81512",
+      "size_bytes": 139378
+    },
+    "OTHERMANAGER2": {
+      "file": "data/sec_13f/processed/2025Q4/OTHERMANAGER2.parquet",
+      "rows": 3925,
+      "sha256": "81134ac4a3ac4efc0a381660b845add8edcaee0eb6c3f730ae5f47c2da0db117",
+      "size_bytes": 123923
+    },
+    "SIGNATURE": {
+      "file": "data/sec_13f/processed/2025Q4/SIGNATURE.parquet",
+      "rows": 11372,
+      "sha256": "0e0025fcc3505109deadd3209910cd46f1e408f23de16c8b8996a4690c32ae17",
+      "size_bytes": 575683
+    },
+    "SUBMISSION": {
+      "file": "data/sec_13f/processed/2025Q4/SUBMISSION.parquet",
+      "rows": 11372,
+      "sha256": "fa2d5eb3cce2c7808f575ef9c38eb291939004eca406fbc4fd05bd1b98054422",
+      "size_bytes": 201647
+    },
+    "SUMMARYPAGE": {
+      "file": "data/sec_13f/processed/2025Q4/SUMMARYPAGE.parquet",
+      "rows": 9500,
+      "sha256": "96791a4e0ad8c93ff930c24a4ec86a19592bbcf869b8564a2a4e9ebb813ecd81",
+      "size_bytes": 188086
+    }
+  },
+  "parser_version": "1.0",
+  "quarter": "2025Q4",
+  "schema_version": "1.0",
+  "source": {
+    "filename": "01dec2025-28feb2026_form13f.zip",
+    "sha256": "ff340fc5dc0bc60539b03c3a97fffa3fe4ab0d728d6507a4aadabb4a888fbe01",
+    "url": "https://www.sec.gov/files/structureddata/data/form-13f-data-sets/01dec2025-28feb2026_form13f.zip"
+  },
+  "source_period": "01dec2025-28feb2026",
+  "tsv_files": {
+    "COVERPAGE": {
+      "file": "data/sec_13f/raw/01dec2025-28feb2026/extracted/COVERPAGE.tsv",
+      "rows": 11372,
+      "sha256": "5e1b088469f26309c31133fe13ff9cb4a30d4590d7f1576e4cc1eb653cf855e9",
+      "size_bytes": 2017164
+    },
+    "INFOTABLE": {
+      "file": "data/sec_13f/raw/01dec2025-28feb2026/extracted/INFOTABLE.tsv",
+      "rows": 3473209,
+      "sha256": "c7400465cebf1fded57f3b4edcdf226f39153608b43fb31f13ea622bb5d3b445",
+      "size_bytes": 359402218
+    },
+    "OTHERMANAGER": {
+      "file": "data/sec_13f/raw/01dec2025-28feb2026/extracted/OTHERMANAGER.tsv",
+      "rows": 4751,
+      "sha256": "59cc35e21ed971206bf6bfe4acea491888493a6f8de3064c294687f0d68be577",
+      "size_bytes": 388598
+    },
+    "OTHERMANAGER2": {
+      "file": "data/sec_13f/raw/01dec2025-28feb2026/extracted/OTHERMANAGER2.tsv",
+      "rows": 3925,
+      "sha256": "2a83ea46e6d587b51ffe586e012b95e97f0d94b493b1e3fe0804b1d6a6797b86",
+      "size_bytes": 286777
+    },
+    "SIGNATURE": {
+      "file": "data/sec_13f/raw/01dec2025-28feb2026/extracted/SIGNATURE.tsv",
+      "rows": 11372,
+      "sha256": "8c8e8e01f0470344e3416e64be58322ea1676649b83f981e6d3a1696ad13431e",
+      "size_bytes": 1291011
+    },
+    "SUBMISSION": {
+      "file": "data/sec_13f/raw/01dec2025-28feb2026/extracted/SUBMISSION.tsv",
+      "rows": 11372,
+      "sha256": "e17c81ab6582e9092f9908b4aa862045e85798e27fc39043173bc4c0bab3ad21",
+      "size_bytes": 717216
+    },
+    "SUMMARYPAGE": {
+      "file": "data/sec_13f/raw/01dec2025-28feb2026/extracted/SUMMARYPAGE.tsv",
+      "rows": 9500,
+      "sha256": "d82cc505e3b5f245f9e26ee26f8fe1e703fa856cda527a539b636b8f88a140c2",
+      "size_bytes": 361613
+    }
+  },
+  "validation": {
+    "expected_files_present": true,
+    "schema_valid": true,
+    "zip_crc_valid": true
+  }
+}
