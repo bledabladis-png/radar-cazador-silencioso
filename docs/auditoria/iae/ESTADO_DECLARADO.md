@@ -252,6 +252,16 @@ IAE_MAESTRO). Detalle en §2.
   da dato atomico por ETF, la segunda agrega por sector con
   metricas derivadas. Anadidas notas cruzadas de complementariedad
   en `etf_flows.py`.
+- Fechas no bursatiles residuales en `stock_prices.parquet`.
+  Detectadas por `health_check.py` (2026-09-24): 6 fechas
+  (`2026-01-19` MLK, `2026-02-16` Presidents, `2026-05-25`
+  Memorial, `2026-06-19` Juneteenth, `2026-07-03` Independence
+  observed, `2026-09-07` Labor Day). El PROMPT v7.3 §11.7 solo
+  documenta 6 fechas B2. Hay filas espurias historicas no
+  documentadas. Deuda MONITORED (no bloquea produccion; el
+  health check las reporta en cada ejecucion).
+  Fix propuesto: aplicar `cleanup_stock_prices_nyse_holidays.py`
+  con lista extendida, previo dictamen de alcance.
 - Deuda residual de cobertura unitaria de `run_contractual_nipc`:
   76 stmts no cubiertos por tests con mock (ver IAE_MAESTRO 3.2 y 5.1).
 
@@ -297,6 +307,11 @@ Detalle en `IAE_MAESTRO.md` seccion 5.
   List 13(f) de SEC.
 - `scripts/cleanup_stock_prices_nyse_holidays.py` - saneamiento
   puntual del parquet stock_prices (F-IAE-HOLIDAY-01).
+- `scripts/health_check.py` - vigilancia semanal del sistema
+  (workflows, cache 13F, manifests, cobertura, fechas no
+  bursatiles, contaminacion Europa-USA, seccion IAE). Reporta
+  via GitHub Issue. Wireado en `.github/workflows/health_check.yml`
+  (lunes 07:00 UTC). Commit 8ec488e.
 
 Documentos historicos (no normativos): `NIPC_CONTRATOS_SEMANTICOS_v1.md`,
 `NIPC_COVERAGE_POLICY.md`, `INSTITUTIONAL_ACCUMULATION_NIPC_ESPECIFICACION.md`.
