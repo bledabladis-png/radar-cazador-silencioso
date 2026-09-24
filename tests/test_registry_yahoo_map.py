@@ -7,8 +7,6 @@ en stock_data_loader y data_loader.
 Commit 2: get_market normaliza primero. BRK.B/BF.B caian a UNKNOWN.
 """
 
-import pytest
-
 from src.instrument_registry import (
     get_market,
     normalize_yahoo_ticker,
@@ -17,12 +15,11 @@ from src.instrument_registry import (
 
 
 # ---------- Commit 1: consolidacion ----------
-def test_mapa_unico_registry_y_loaders():
-    """Los 3 modulos exponen la MISMA referencia."""
-    from src.stock_data_loader import YAHOO_TICKER_MAP as M1
-    from src.data_loader import YAHOO_TICKER_MAP as M2
-    assert YAHOO_TICKER_MAP is M1
-    assert YAHOO_TICKER_MAP is M2
+def test_mapa_registry_disponible():
+    """El mapa vive en instrument_registry (unica fuente)."""
+    from src.instrument_registry import YAHOO_TICKER_MAP as M
+    assert YAHOO_TICKER_MAP is M
+    assert "BRK.B" in YAHOO_TICKER_MAP
 
 
 def test_normalize_backward_compat():

@@ -11,8 +11,7 @@ from src.effective_date import resolve_effective_date
 from src.market_hours import is_trading_session, is_session_closed
 from src.instrument_registry import (
     get_market,
-    normalize_yahoo_ticker as normalize_yahoo_ticker,  # re-export backward-compat
-    YAHOO_TICKER_MAP as YAHOO_TICKER_MAP,  # re-export backward-compat
+    normalize_yahoo_ticker,  # usado internamente + re-export
 )
 
 
