@@ -265,16 +265,31 @@ IAE_MAESTRO). Detalle en §2.
   backward-compatible, sin bump de schema_version.
   Commits: 88c27d1 (doc), d09f928 (manifest), 62e38d9 (guard).
 
-- Fechas no bursatiles residuales en `stock_prices.parquet`.
-  Detectadas por `health_check.py` (2026-09-24): 6 fechas
-  (`2026-01-19` MLK, `2026-02-16` Presidents, `2026-05-25`
-  Memorial, `2026-06-19` Juneteenth, `2026-07-03` Independence
-  observed, `2026-09-07` Labor Day). El PROMPT v7.3 §11.7 solo
-  documenta 6 fechas B2. Hay filas espurias historicas no
-  documentadas. Deuda MONITORED (no bloquea produccion; el
-  health check las reporta en cada ejecucion).
-  Fix propuesto: aplicar `cleanup_stock_prices_nyse_holidays.py`
-  con lista extendida, previo dictamen de alcance.
+- Fechas no bursatiles residuales en `stock_prices.parquet` - RESUELTO
+  2026-09-24 (commit 1822ed9). El dry-run de `cleanup_stock_prices_nyse_holidays.py`
+  confirmo 0 celdas a limpiar: no hay filas espurias USA en
+  festivos NYSE. Las 6 fechas detectadas (MLK, Presidents,
+  Memorial, Juneteenth, Independence observed, Labor Day) solo
+  tienen datos europeos legitimos. El health check estaba siendo
+  demasiado estricto: alertaba por cualquier fila en fecha no
+  bursatil NYSE sin distinguir el mercado. Fix: check_non_market_days
+  ahora solo alerta si hay tickers US_EQUITY con Close. Los
+  europeos operan en festivos USA y sus datos son correctos.
+- Bug latente A/D en compute_sector_breadth - RESUELTO 2026-09-24
+  (commit fc21671). Detectado al auditar el 22-Sep: 206/313
+  tickers USA sin Close ese dia por fallo puntual de Yahoo. El
+  calculo daily_ret = close.iloc[-1] - close.iloc[-2] comparaba
+  23-Sep contra 21-Sep y lo etiquetaba como movimiento 1d. El
+  A/D del reporte mezclaba 107 movimientos reales 1d con 206
+  movimientos 2d aparentes. Fix: exigir continuidad temporal via
+  previous_market_day (calendario NYSE, universo USA verificado).
+  Si hay gap interno, el ticker no contribuye al A/D.
+  Verificacion empirica: 107 contribuyen / 206 no contribuyen.
+- 22-Sep incompleto marcado como fecha historicamente incompleta.
+  RESUELTO 2026-09-24 (commit 5651d2a). Constante
+  CONFIRMED_INCOMPLETE_DATES = {2026-09-22} en health_check.py.
+  Uso exclusivo en check_coverage_last_5 para no generar WARN en
+  cada ejecucion. Otros controles siguen evaluando la fecha.
 - Deuda residual de cobertura unitaria de `run_contractual_nipc`:
   76 stmts no cubiertos por tests con mock (ver IAE_MAESTRO 3.2 y 5.1).
 
