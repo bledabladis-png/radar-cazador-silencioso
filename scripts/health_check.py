@@ -39,6 +39,13 @@ COVERAGE_FAIL_THRESHOLD = 0.50
 COVERAGE_WARN_THRESHOLD = 0.80
 COVERAGE_OK_THRESHOLD = 0.95
 
+# Fechas bursatiles con cobertura historicamente incompleta.
+# Uso exclusivo en check_coverage_last_5 para no alertar de un
+# defecto ya documentado. NO excluye la fecha de otros controles.
+# 2026-09-22: fallo puntual de Yahoo. 206/313 tickers USA sin Close
+# en esa sesion. Solo 36 llegaron (los top de cada sector).
+CONFIRMED_INCOMPLETE_DATES = {"2026-09-22"}
+
 WORKFLOW_EXPECTATIONS = {
     "daily_run.yml": {"max_days": 2},
     "update_macro_manual.yml": {"max_days": 2},
@@ -198,13 +205,25 @@ def check_coverage_last_5(df: pd.DataFrame) -> list:
     else:
         results.append(Result("coverage:last", OK,
             f"{last_date}: {last_cov:.1%}"))
-    bad_hist = [(d, c) for d, c in coverages[:-1] if c < COVERAGE_WARN_THRESHOLD]
+    # Fechas marcadas como historicamente incompletas no cuentan como
+    # defecto actual (fueron un fallo puntual documentado).
+    bad_hist = [(d, c) for d, c in coverages[:-1]
+                if c < COVERAGE_WARN_THRESHOLD
+                and d not in CONFIRMED_INCOMPLETE_DATES]
     if bad_hist:
         detail = ", ".join(f"{d}={c:.0%}" for d, c in bad_hist)
         results.append(Result("coverage:hist", WARN,
             f"{len(bad_hist)}/4 filas < {COVERAGE_WARN_THRESHOLD:.0%}: {detail}"))
     else:
-        results.append(Result("coverage:hist", OK, "4 filas historicas OK"))
+        n_checked = sum(1 for d, _ in coverages[:-1]
+                        if d not in CONFIRMED_INCOMPLETE_DATES)
+        excluded = len(coverages[:-1]) - n_checked
+        if excluded:
+            results.append(Result("coverage:hist", OK,
+                f"{n_checked} filas OK ({excluded} excluidas por incompletez documentada)"))
+        else:
+            results.append(Result("coverage:hist", OK,
+                f"{n_checked} filas historicas OK"))
     return results
 
 
