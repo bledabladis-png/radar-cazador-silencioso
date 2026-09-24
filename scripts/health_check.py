@@ -231,18 +231,58 @@ def check_coverage_last_5(df: pd.DataFrame) -> list:
 # CHECK E - Fechas no bursatiles en el indice
 # =========================================================
 def check_non_market_days(df: pd.DataFrame) -> list:
+    """Detecta datos US_EQUITY en fechas no bursatiles NYSE.
+
+    Commit C (dictamen auditor 2026-09-24): el universo es multi-mercado.
+    Los mercados europeos (EURONEXT, XETRA, BME, LSE) operan en festivos
+    USA y sus datos son legitimos. Solo es anomalia si hay tickers
+    US_EQUITY con Close poblado en una fecha no bursatil NYSE.
+
+    Regla:
+      fecha no bursatil NYSE
+        + algun Close US_EQUITY -> WARN
+        + solo Close europeos   -> OK
+    """
     from src.market_calendar import is_market_day
-    non_market = []
+    from src.instrument_registry import get_market
+
+    close_cols = [c for c in df.columns if isinstance(c, tuple) and c[0] == "Close"]
+    non_market_with_usa = []
+    non_market_with_only_eu = []
+
     for idx in df.index:
         try:
             d = idx.date() if hasattr(idx, "date") else idx
-            if not is_market_day(d):
-                non_market.append(str(d))
+            if is_market_day(d):
+                continue
+            # Fecha no bursatil NYSE. Hay US_EQUITY con Close?
+            row = df.loc[idx]
+            usa_with_close = []
+            for col in close_cols:
+                ticker = col[1]
+                if pd.isna(row[col]):
+                    continue
+                try:
+                    m = get_market(str(ticker))
+                except Exception:
+                    m = "UNKNOWN"
+                if m == "US_EQUITY":
+                    usa_with_close.append(ticker)
+            if usa_with_close:
+                non_market_with_usa.append((str(d), len(usa_with_close)))
+            else:
+                non_market_with_only_eu.append(str(d))
         except Exception:
             continue
-    if non_market:
+
+    if non_market_with_usa:
+        detail = ", ".join(f"{d}({n} USA)" for d, n in non_market_with_usa[:5])
         return [Result("fechas_no_bursatiles", WARN,
-            f"{len(non_market)} fechas no bursatiles: {non_market[:5]}")]
+            f"{len(non_market_with_usa)} fechas no bursatiles con datos USA: {detail}")]
+    if non_market_with_only_eu:
+        detail = ", ".join(non_market_with_only_eu[:5])
+        return [Result("fechas_no_bursatiles", OK,
+            f"{len(non_market_with_only_eu)} fechas no bursatiles con solo datos europeos: {detail}")]
     return [Result("fechas_no_bursatiles", OK,
         f"{len(df)} fechas todas bursatiles")]
 
