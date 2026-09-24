@@ -174,9 +174,6 @@ IAE_MAESTRO). Detalle en §2.
 - `compute_nipc_contractual`: ya tiene caller productivo desde
   2026-09-24 via `pipeline_contractual.run_contractual_nipc`,
   invocado por `compute_iae_section` desde `run.py`.
-- Cobertura unitaria de `run_contractual_nipc`: 76 stmts no
-  cubiertos por tests con mock. Deuda residual (ver IAE_MAESTRO
-  §3.2 y §5.1).
 - `build_effective_reporting_snapshot` sin callers productivos.
 - `scripts/iae_contractual_coverage.py` reproduce §12.3; pendiente
   integrarlo al flujo continuo de validacion.
@@ -290,6 +287,16 @@ IAE_MAESTRO). Detalle en §2.
   CONFIRMED_INCOMPLETE_DATES = {2026-09-22} en health_check.py.
   Uso exclusivo en check_coverage_last_5 para no generar WARN en
   cada ejecucion. Otros controles siguen evaluando la fecha.
+- Registry de tickers - Consolidacion 2026-09-24 (commit 7025a89).
+  `YAHOO_TICKER_MAP` + `normalize_yahoo_ticker(t)` movidos de
+  `stock_data_loader.py` y `data_loader.py` (duplicados con riesgo de
+  divergencia silenciosa) a `instrument_registry.py` (fuente unica).
+  Los dos loaders re-exportan por backward-compat. Fix derivado:
+  `get_market` ahora normaliza antes de clasificar por sufijo.
+  Bug: `get_market('BRK.B')` devolvia UNKNOWN mientras
+  `get_market('BRK-B')` devolvia US_EQUITY. Ahora ambos US_EQUITY.
+  Tests: 9 nuevos (test_registry_yahoo_map.py).
+  Commits: 7025a89, d1a4676.
 - Deuda residual de cobertura unitaria de `run_contractual_nipc`:
   76 stmts no cubiertos por tests con mock (ver IAE_MAESTRO 3.2 y 5.1).
 
