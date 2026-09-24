@@ -444,7 +444,7 @@ NUNCA se mezclan. NUNCA se construye superindicador.
 
 ## SECCION 9 - WORKFLOWS GITHUB ACTIONS
 Workflow	Cron	Proposito
-daily_run.yml	0 4 * * *	Run diario + validacion + push de outputs
+daily_run.yml	0 23 * * *	Run diario + validacion + push de outputs
 update_macro_manual.yml	0 6 * * *	FRED auto (25 series)
 update_european_holdings.yml	0 5 1 1,4,7,10 *	Holdings europeos
 update_index_holdings.yml	0 4 1 1,4,7,10 *	SPY/DIA/QQQ/IWM
