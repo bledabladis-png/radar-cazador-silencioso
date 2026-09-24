@@ -208,7 +208,7 @@ IAE_MAESTRO). Detalle en §2.
     Fix: filtro a ultima fecha.
   - `Divergencia sector-lideres`: mismo patron que el anterior.
     Fix: filtro a ultima fecha.
-- Fiabilidad de metricas sectoriales: 7 de 11 sectores con cobertura
+- Fiabilidad de metricas sectoriales: 8 de 11 sectores con cobertura
   < 70% del universo. Ratios de breadth/concentracion calculados
   sobre la parte valida. Marca `[BAJA]` no invalida los derivados.
   Decision de producto pendiente (excluir, marcar como no-analizables,
@@ -219,18 +219,30 @@ IAE_MAESTRO). Detalle en §2.
     `Flujo de Mercado - Sectores (Proxy)` (idem Otros Activos).
   - `Acciones Seleccionadas por el Modelo`: anadida nota de criterio
     de seleccion (peso en ETF -> WLS).
-- Contexto faltante para analisis (BACKLOG 2026-09-24, pendiente):
-  - D1: Rendimiento QQQ sin benchmark. No interpretable sin
-    comparacion con SPY o media historica.
-  - D2: Metricas sin percentil historico: Institutional Hedge Ratio;
-    MTE Confidence Score (explicito "no calibrado"); FLOW_CONFIDENCE
-    (calculo no declarado).
-  - D3: Rotacion sectorial reciente: signo ambiguo (rank menor = mejor
-    pero signo negativo sugiere empeorar). Documentar o invertir.
-- Redundancia en reporte (BACKLOG 2026-09-24, pendiente):
-  dos tablas SSGA con mismo dato base (Flujo Primario ETF (SPDR)
-  por ticker + Caracteristicas por sector). Aclarar cual es la
-  oficial o si son complementarias.
+- Contexto faltante para analisis (BACKLOG 2026-09-24). RESUELTOS
+  2026-09-24 (commits c4b7138 + bb9251b).
+  - D1: Rendimiento QQQ sin benchmark. Anadida fila SPY al CSV
+    `outputs/history/qqq_returns_yahoo.csv` via generalizacion de
+    `scripts/qqq_returns_yahoo.py` a N tickers. El render ya itera.
+  - D2: Metricas sin percentil historico. Casos revisados:
+    - D2a Institutional Hedge Ratio (2.26): WONT FIX. Bandas
+      (<1.2 / 1.2-1.6 / >1.6) ya interpretables; percentil no
+      anade valor.
+    - D2b MTE Confidence Score: WONT FIX. El reporte declara
+      explicitamente "no calibrado"; percentil no tiene sentido.
+    - D2c FLOW_CONFIDENCE: FIX. Anadida regla explicita en
+      `flows_international.py` + corregido bug latente en
+      `flows_secondary.py` (`pos == 3` -> `pos >= 3`, que devolvia
+      BAJA cuando las 4 capas estaban alineadas).
+  - D3: Rotacion sectorial reciente. FIX: anadida nota semantica
+    en `market_context.py` aclarando que delta negativo = mejora
+    (rank menor = mejor posicion).
+- Redundancia en reporte (BACKLOG 2026-09-24). RESUELTA 2026-09-24
+  (commit c4b7138). Las dos tablas SSGA (`render_flujo_spdr` y
+  `render_flujo_caracteristicas`) NO son redundantes: la primera
+  da dato atomico por ETF, la segunda agrega por sector con
+  metricas derivadas. Anadidas notas cruzadas de complementariedad
+  en `etf_flows.py`.
 - Deuda residual de cobertura unitaria de `run_contractual_nipc`:
   76 stmts no cubiertos por tests con mock (ver IAE_MAESTRO 3.2 y 5.1).
 
