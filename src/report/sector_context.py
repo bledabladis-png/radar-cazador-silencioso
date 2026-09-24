@@ -76,7 +76,12 @@ def render_divergencia_sector_lideres(sector_leader_divergence_data):
         out.append("## Divergencia sector-líderes\n")
         out.append("| Sector | Ret sector | Líderes + | Líderes - | Líderes > Sector | Válidos | Lectura |\n")
         out.append("|--------|------------|-----------|-----------|------------------|---------|---------|\n")
-        for _, row in sector_leader_divergence_data.iterrows():
+        # C3 fix 2026-09-24: filtrar a la ultima fecha para no concatenar dias
+        df_div = sector_leader_divergence_data.copy()
+        if 'date' in df_div.columns and df_div['date'].notna().any():
+            latest = pd.to_datetime(df_div['date']).max()
+            df_div = df_div[pd.to_datetime(df_div['date']) == latest]
+        for _, row in df_div.iterrows():
             out.append(f"| {row['sector']} | {row['sector_ret_20d']:.2%} | {row['n_leaders_positive']} | {row['n_leaders_negative']} | {row['n_leaders_beating_sector']} | {row['n_leaders_valid']} | {row['classification']} |\n")
         out.append("\n")
     return out
