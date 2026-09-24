@@ -200,23 +200,37 @@ IAE_MAESTRO). Detalle en §2.
   Q4+Q1+Q2 estan en cache v2; el NIPC Q1->Q2 se calculara
   automaticamente cuando SEC publique el TXT.
 - Deuda visible en el REPORTE (no en el pipeline): 3 bugs de render
-  detectados tras revision del reporte diario 2026-09-24.
-  - `Momentum de amplitud`: `Δ1d EMA20 = nan` en 11/11 sectores
-    (columnas Δ5d, Δ20d si tienen valores).
-  - `Representatividad del lider`: 3 bloques concatenados sin columna
-    distintiva. Mismo ticker con 3 valores distintos por sector.
-  - `Divergencia sector-lideres`: mismo patron (3 bloques sin etiqueta).
-- Fiabilidad de metricas sectoriales: 7 de 11 sectores tienen
-  cobertura < 70% del universo. Los ratios de breadth/concentracion
-  se calculan sobre la parte valida, pero la marca `[BAJA]` no
-  invalida los derivados. Decision de producto pendiente (excluir,
-  marcar como no-analizables, o avisar de forma mas prominente).
-- Etiquetas semanticamente enganosas en el reporte:
-  - `Flujo Institucional - Sectores (Proxy)`: el titulo dice
-    "Institucional" pero la nota aclara "no implica flujo institucional
-    real". Renombrar.
-  - `Acciones Seleccionadas por el Modelo`: no se declara el criterio
-    de seleccion de los 5 lideres por sector.
+  detectados tras revision del reporte diario 2026-09-24. RESUELTOS
+  2026-09-24 (commits 2fe1c45 + 740be35 + dfd93c4).
+  - `Momentum de amplitud`: `delta_1d_ema20 = nan` en 11/11 sectores.
+    Fix: `_delta` tolera finde+festivo (days+5).
+  - `Representatividad del lider`: 3 bloques sin columna distintiva.
+    Fix: filtro a ultima fecha.
+  - `Divergencia sector-lideres`: mismo patron que el anterior.
+    Fix: filtro a ultima fecha.
+- Fiabilidad de metricas sectoriales: 7 de 11 sectores con cobertura
+  < 70% del universo. Ratios de breadth/concentracion calculados
+  sobre la parte valida. Marca `[BAJA]` no invalida los derivados.
+  Decision de producto pendiente (excluir, marcar como no-analizables,
+  o avisar de forma mas prominente).
+- Etiquetas semanticamente enganosas en el reporte. RESUELTAS
+  2026-09-24 (commits f4f8003 + 664d839).
+  - `Flujo Institucional - Sectores (Proxy)` -> renombrado a
+    `Flujo de Mercado - Sectores (Proxy)` (idem Otros Activos).
+  - `Acciones Seleccionadas por el Modelo`: anadida nota de criterio
+    de seleccion (peso en ETF -> WLS).
+- Contexto faltante para analisis (BACKLOG 2026-09-24, pendiente):
+  - D1: Rendimiento QQQ sin benchmark. No interpretable sin
+    comparacion con SPY o media historica.
+  - D2: Metricas sin percentil historico: Institutional Hedge Ratio;
+    MTE Confidence Score (explicito "no calibrado"); FLOW_CONFIDENCE
+    (calculo no declarado).
+  - D3: Rotacion sectorial reciente: signo ambiguo (rank menor = mejor
+    pero signo negativo sugiere empeorar). Documentar o invertir.
+- Redundancia en reporte (BACKLOG 2026-09-24, pendiente):
+  dos tablas SSGA con mismo dato base (Flujo Primario ETF (SPDR)
+  por ticker + Caracteristicas por sector). Aclarar cual es la
+  oficial o si son complementarias.
 - Deuda residual de cobertura unitaria de `run_contractual_nipc`:
   76 stmts no cubiertos por tests con mock (ver IAE_MAESTRO 3.2 y 5.1).
 
