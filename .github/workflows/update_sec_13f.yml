@@ -6,6 +6,11 @@ on:
     # (45 dias post-cierre de trimestre). Cubre los 4 trimestres.
     - cron: '0 6 20 2,5,8,11 *'
   workflow_dispatch:
+    inputs:
+      quarter:
+        description: 'Trimestre YYYYQn (ej. 2026Q2). Vacio = autodetectado por mes.'
+        required: false
+        type: string
 
 concurrency:
   group: update_sec_13f
@@ -52,15 +57,20 @@ jobs:
           # - May: Q1 de este año (cierre 31-mar).
           # - Ago: Q2 de este año (cierre 30-jun).
           # - Nov: Q3 de este año (cierre 30-sep).
-          M=$(date -u +%m)
-          Y=$(date -u +%Y)
-          case "$M" in
-            02) Q="$((Y-1))Q4" ;;
-            05) Q="${Y}Q1" ;;
-            08) Q="${Y}Q2" ;;
-            11) Q="${Y}Q3" ;;
-            *)  echo "Mes inesperado: $M"; exit 1 ;;
-          esac
+          if [ -n "${{ inputs.quarter }}" ]; then
+            Q="${{ inputs.quarter }}"
+            echo "Trimestre forzado por input: ${Q}"
+          else
+            M=$(date -u +%m)
+            Y=$(date -u +%Y)
+            case "$M" in
+              02) Q="$((Y-1))Q4" ;;
+              05) Q="${Y}Q1" ;;
+              08) Q="${Y}Q2" ;;
+              11) Q="${Y}Q3" ;;
+              *)  echo "Mes inesperado: $M"; exit 1 ;;
+            esac
+          fi
           echo "quarter=${Q}" >> "$GITHUB_OUTPUT"
           echo "Trimestre a actualizar: ${Q}"
 
