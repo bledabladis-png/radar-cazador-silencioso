@@ -151,7 +151,7 @@ documento.
             ├── sec13f_list.py              255 LOC
             ├── security_identity.py        654 LOC
             └── temporal_filter.py          100 LOC
-**Totales:** 36 ficheros, 8.008 LOC produccion, ~8.300 LOC test.
+**Totales:** 36 ficheros, 8.017 LOC produccion, ~8.300 LOC test.
 
 LOC medidos el 2026-09-24 sobre el estado del repositorio en ese
 momento. Se cuentan todas las lineas del fichero (codigo, comentarios
