@@ -35,6 +35,11 @@ SCRIPTS_IAE = [
     'scripts/iae_coverage.py',
     'scripts/iae_identity_uniqueness_audit.py',
     'scripts/iae_contractual_nipc_e2e.py',
+    # Fase G (2026-09-24): automatizacion de mappings del IAE
+    'scripts/regenerate_radar_catalog.py',
+    'scripts/regenerate_cusip_crosswalk.py',
+    'scripts/update_sec_13f.py',
+    'scripts/download_official_list_13f.py',
 ]
 MAPPINGS_IAE = [
     'data/mappings/radar_target_catalog.csv',
