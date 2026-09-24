@@ -1,6 +1,6 @@
 # PROMPT MAESTRO v7.4 - INGENIERO SUPERVISOR DEL RADAR DE ROTACION SECTORIAL
 
-**Actualizado:** 2026-09-24 (v7.4: ciclo BACKLOG del reporte + FU-002-bymarket + health check semanal + consolidacion registry; ver §11.17-§11.21. Base v7.3: Fase G - automatizacion de mappings del IAE; estado del sistema refleja cache 13F v2 con 3 trimestres y crosswalk regenerado por script).
+**Actualizado:** 2026-09-24 (v7.4: ciclo BACKLOG del reporte + FU-002-bymarket + health check semanal + consolidacion registry; ver §11.17-§11.21. Base v7.3: Fase G - automatizacion de mappings del IAE; estado del sistema refleja cache 13F v2 con 3 trimestres y crosswalk regenerado por script. Cifras internas alineadas con HEAD de cierre del ciclo: suite 1682 passed + 2 skipped, bloque IAE 845 tests).
 
 Este documento describe **rol, metodologia, arquitectura y prohibiciones vigentes**.
 **NO declara el estado del sistema.** Para estado, ver:
@@ -161,7 +161,7 @@ py -m pytest tests/ validation/ -q --tb=short
 
 text
 
-Esperado: `compileall OK`, `pyflakes LIMPIO`, `1434 passed + 2 skipped + 3 failed (test_freshness, ambientales)`.
+Esperado: `compileall OK`, `pyflakes LIMPIO`, `1682 passed + 2 skipped + 0 failed`.
 
 ### 3.5. Verificacion de no regresion (refactors grandes)
 
@@ -295,7 +295,7 @@ D:\Macro_Sectorial
 |            qqq_returns_yahoo.py, regenerate_radar_catalog.py,
 |            regenerate_cusip_crosswalk.py)
 +-- validation/ (6 activos)
-+-- tests/ (1589 casos; ver sec 15 para conteo del modulo IAE)
++-- tests/ (1682+ casos; ver sec 15 para conteo del modulo IAE)
 +-- docs/
 | +-- automatica/ (22 .md auto-generados, LF)
 | +-- auditoria/ (prompt + transfer + readme + iae/)
@@ -484,7 +484,7 @@ Fase G (2026-09-24) - automatizacion de mappings del IAE:
 
 ## SECCION 10 - VALIDACION Y TESTS
 10.1. Tests
-1587 passed + 2 skipped + 0 failed en local tras run.py. Los 3 test_freshness (ambientales) pasan tras un run que refresca los parquets; vuelven a fallar si pasan >4 dias sin ejecutar el pipeline. CI similar con parquet gitignored. Incluye 845 tests del modulo IAE (criterio AST, 45 ficheros, ver seccion 15).
+1682 passed + 2 skipped + 0 failed en local tras run.py. Los 3 test_freshness (ambientales) pasan tras un run que refresca los parquets; vuelven a fallar si pasan >4 dias sin ejecutar el pipeline. CI similar con parquet gitignored. Incluye 845 tests del modulo IAE (criterio AST, 45 ficheros, ver seccion 15).
 
 10.2. Validation Gate (10/10)
 SLPM v1.2 (sin errores de validacion)
@@ -568,7 +568,7 @@ test_darkpool_characterization.py - 12 tests (contrato de compute_darkpool_signa
 
 test_darkpool_edge_cases.py - 18 tests (robust_zscore mad=0/outlier/vacio, rolling_percentile, classify_darkpool extremos, _get_all_tickers formato invalido, _get_volume_from_df, _compute_z_for_window, identidad de re-exports).
 
-bloque IAE (758 tests, criterio AST):
+bloque IAE (845 tests, criterio AST, 45 ficheros):
   test_sec_13f_*.py - 15 ficheros (downloader, ingest, parser, schema, storage,
     manifest, temporal_filter, amendments, cusip_resolver, relationships,
     sec13f_list, security_identity, delta_shares, nipc, reporting_dedup).
@@ -904,10 +904,12 @@ solo el PDF (2026-08-14). La seccion IAE del reporte diario muestra
 No es bug. Comportamiento correcto documentado en iae_section.py
 (stale_reason=official_list_pending).
 
-Cobertura sectorial baja: 7 de 11 sectores con cobertura <70% del
-universo. Los ratios de breadth/concentracion se calculan sobre la
-parte valida pero la marca [BAJA] no invalida derivados. Decision de
-producto pendiente.
+Cobertura sectorial baja - RESUELTO 2026-09-24 (commit 8c6330f).
+El sistema calculaba cobertura contra el total del ETF (78 en XLF,
+85 en XLI) mientras solo descarga los top-20 por weight. Cobertura
+artificialmente baja (8 de 11 sectores con [BAJA] falso positivo).
+Fix: replicar head(TOP_N_SECTOR_COMPONENTS) en
+indicators/sector_breadth.py. Ver §11.21.
 
 Bugs de render en el reporte (no en pipeline): 3 detectados 2026-09-24,
 RESUELTOS 2026-09-24. Detalle en §11.21.
@@ -1010,16 +1012,17 @@ universo explicito (stock_prices + market_data). Verificado en CI real: run 3537
 bloqueo commit con dos [FAIL] en stock_prices y [OK] en market_data; origin/main intacto
 en f3114b4. Cron 04:00 UTC no afectado (sesion cerrada, coverage 1.0).
 
-K-STOCK-PRICES-EOD-01 (2026-09-18) -> MONITORED / BAJA. Origen: hallazgo del ciclo H.2.
-stock_prices.parquet persiste fila intradia en runs fuera de cron porque el merge
-europeo (Euronext/Xetra) anade velas EOD legitimas de mercados que ya cerraron mientras
-USA/UK/BME siguen NaN. coverage_pct_last puede caer a 0.13. Impacto contenido por
-guard_coverage (bloquea commit). No es bug de descarga: FU-018 ya retrocede Yahoo a EOD.
-Es bug de contrato FU-002: manifest trata last_date como global cuando el parquet es
-universo heterogeneo. Fix propuesto (diferido): filtro por mercado en stock_prices +
-coverage por mercado en manifest. Toca FU-002 y FU-018, requiere dictamen auditor.
-Reabrir si: runs manuales se vuelven frecuentes, cron cambia de hora, o auditoria
-externa lo exige.
+K-STOCK-PRICES-EOD-01 (2026-09-18) -> MITIGADO / RESUELTO 2026-09-24 via
+FU-002-bymarket. Ver §11.17. La entrada historica de esta limitacion
+describia el bug del contrato FU-002 que colapsaba el universo multi-mercado
+a una unica ultima fecha global. FU-002-bymarket lo cierra: el manifest
+expone cobertura por mercado y el guard exime condicionalmente cuando cada
+mercado activo cumple el threshold en su propia ultima sesion cerrada.
+Pendiente de verificacion en CI (cron 23:00 UTC).
+Reabrir solo si: el patron reaparece en el log con mercados NO conformes
+(en cuyo caso el fix no cubre un caso no previsto), o si la politica de
+exencion condicional demuestra permitir corrupcion real (en cuyo caso se
+revisa la regla del guard).
 
 VIX3M/VIX nan 2026-09-14 (2026-09-18) -> WONT FIX (data artifact). El reporte del CI
 muestra `nan` en el ratio VIX3M/VIX del 14/09, pero `data/cboe_vix3m.parquet` tiene
@@ -1082,9 +1085,9 @@ viven en `iae/IAE_MAESTRO.md`. No se duplican aqui.
     Ahead           0 (sincronizado con origin/main)
     Push            SI (integrado en produccion desde 2026-09-24)
     Working tree    LIMPIO
-    Suite local     1587 passed + 2 skipped + 0 failed
+    Suite local     1682 passed + 2 skipped + 0 failed
     Suite IAE       845 passed (criterio AST, 45 ficheros)
-    Suite CI        0 failed (verificado en run 36015197250)
+    Suite CI        0 failed (ultima verificacion completa: run 36015197250, anterior al ciclo 2026-09-24)
 
 Nota. Los 3 test_freshness pasan tras un `py run.py` que refresca los
 parquets; vuelven a fallar si pasan >4 dias sin ejecutar el pipeline.
