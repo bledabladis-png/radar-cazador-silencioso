@@ -19,6 +19,7 @@ Documento vivo. Se actualiza cuando cambia el estado.
 | Fase C - funcionales (C8, C9, C10) | CERRADA |
 | Fase D - reenviar al auditor externo | PENDIENTE |
 | Fase E - integracion a `run.py` | CERRADA 2026-09-23 |
+| Fase F - automatizacion GitHub | CERRADA 2026-09-24 |
 
 Dictamenes externos aplicados al modulo IAE (todos cerrados):
 v2 (8 puntos), v3 (6), v4 (11), v5 (GATE 1 nomenclatura + GATE 2
@@ -93,6 +94,29 @@ IAE_MAESTRO). Detalle en §2.
   §12.4 corregido (cobertura interna TARGET 1,0 / catalogo declarado
   99,17%). §13.10 retitulado. §12.6 reformulado con conjunto canonico
   explicito. Commits: 0772272, 8b00303.
+- Fase F - automatizacion GitHub (2026-09-24): CERRADA.
+  F.1 rutas portables (`IAE_OFFICIAL_DIR` env var override, default
+  al repo). F.2 descargador Official List 13(f) + versionado Q4 2025
+  y Q1 2026. F.3.a doble ruta SEC (`structureddata` /
+  `datastandardsinnovation`) + retry 404/408/429. F.3.b orquestador
+  `update_sec_13f.py` (`quarter_to_source_period`,
+  `latest_published_quarter`, `ensure_quarter`). F.3.c 51 tests.
+  F.4 workflow `update_sec_13f.yml` trimestral + cache parquets 13F +
+  restore en `daily_run.yml`. Commits: f514295, 0ffeda2, d4c105d,
+  feb77d6, 0a0f042, f2082d7.
+- F-IAE-HOLIDAY-01 (2026-09-24): RESUELTO.
+  Fix de `_fill_holes_respecting_sessions`: tickers USA en festivos
+  NYSE (dia laborable) preservan NaN, sin ffill. Antes se propagaban
+  valores de tickers UK (LSE abierto en festivos USA) mezclados en
+  lotes Yahoo mixtos. Saneamiento del parquet historico: 50 celdas
+  limpiadas (5 festivos × 10 tickers USA). Commit: 2423526.
+- F-IAE-CRON-01 (2026-09-24): RESUELTO.
+  Cron de `daily_run.yml` movido de `0 4 * * *` a `0 23 * * *` UTC.
+  Motivo: con retraso observado de ~5h, la ejecucion real caia a
+  las 09:00 UTC = 11:00 Madrid, dentro de la sesion europea. Con
+  23:00 UTC, la ejecucion tipica queda a 04:00 UTC = 05:00/06:00
+  Madrid (pre-apertura europea). Margen de retraso tolerado: 8h.
+  Commits: 6dec2cf, f396e99.
 
 ---
 
@@ -101,7 +125,12 @@ IAE_MAESTRO). Detalle en §2.
 - Integracion a `run.py` completada el 2026-09-23 (fase adicional del
   pipeline productivo, + seccion del reporte diario). La integracion a
   `daily_run.yml` queda cubierta porque `daily_run.yml` invoca `run.py`.
-- `compute_nipc_contractual` sin callers productivos.
+- `compute_nipc_contractual`: ya tiene caller productivo desde
+  2026-09-24 via `pipeline_contractual.run_contractual_nipc`,
+  invocado por `compute_iae_section` desde `run.py`.
+- Cobertura unitaria de `run_contractual_nipc`: 76 stmts no
+  cubiertos por tests con mock. Deuda residual (ver IAE_MAESTRO
+  §3.2 y §5.1).
 - `build_effective_reporting_snapshot` sin callers productivos.
 - `scripts/iae_contractual_coverage.py` reproduce §12.3; pendiente
   integrarlo al flujo continuo de validacion.
@@ -119,6 +148,10 @@ IAE_MAESTRO). Detalle en §2.
   Ver IAE_MAESTRO §13.10. Reabrir si se activa `figi_lookup` en algun
   punto del pipeline, si aparece un caso `figi:*` en units o delta,
   o si se modifica el modelo de resolucion de identidad.
+- `stock_prices.parquet.manifest.json` stale tras F-IAE-HOLIDAY-01.
+  El parquet fue reescrito el 2026-09-24 pero el manifest mantiene
+  el timestamp del 2026-09-23. El proximo `run.py` lo detectara como
+  INVALID y lo regenerara con el fix del ffill aplicado.
 
 Detalle en `IAE_MAESTRO.md` seccion 5.
 
@@ -152,6 +185,14 @@ Detalle en `IAE_MAESTRO.md` seccion 5.
 - `scripts/iae_identity_uniqueness_audit.py` - auditoria unicidad por shareClassFIGI.
 - `scripts/iae_pipeline.py` - orquestador ingestion + identity.
 - `scripts/build_catalog_csvs.py` - construccion de catalogos CSV.
+- `scripts/iae_contractual_nipc_e2e.py` - validacion E2E
+  `compute_nipc_contractual` vs §12.5 (PASS).
+- `scripts/update_sec_13f.py` - orquesta descarga + ingesta SEC 13F
+  trimestral + Official List.
+- `scripts/download_official_list_13f.py` - descargador Official
+  List 13(f) de SEC.
+- `scripts/cleanup_stock_prices_nyse_holidays.py` - saneamiento
+  puntual del parquet stock_prices (F-IAE-HOLIDAY-01).
 
 Documentos historicos (no normativos): `NIPC_CONTRATOS_SEMANTICOS_v1.md`,
 `NIPC_COVERAGE_POLICY.md`, `INSTITUTIONAL_ACCUMULATION_NIPC_ESPECIFICACION.md`.
