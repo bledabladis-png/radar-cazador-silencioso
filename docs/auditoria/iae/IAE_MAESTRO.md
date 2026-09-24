@@ -4,7 +4,7 @@ Documento unico del modulo IAE. Estado, arquitectura, verificacion.
 
 **Actualizado:** 2026-09-24
 **HEAD operativo:** ver `docs/auditoria/iae/ESTADO_SISTEMA.md` (campo HEAD).
-**Snapshot de mediciones:** §2.1 y §12 sobre `7caa86b` (2026-09-23); §3.2 sobre HEAD actual (post-fix `89b98e9`).
+**Snapshot de mediciones:** §2.1 y §12 (E2E Q4/Q1) sobre `7caa86b` (2026-09-23). Conteo de tests actualizado tras Fase G (45 ficheros, 845 tests). §3.2 verificada 2026-09-24.
 
 
 **Que es este documento.** Describe el modulo IAE tal como esta
@@ -66,17 +66,17 @@ Opera integrado en el pipeline productivo del radar sectorial
 mediante una dependencia unidireccional (run.py -> IAE).
 
 Las mediciones estructurales siguientes corresponden al estado del
-repositorio a 2026-09-24 (post F.1-F.4 + F-IAE-HOLIDAY-01); el conteo
-de tests y la cobertura se actualizan tras cada commit (ver cabecera
-del documento).
+repositorio a 2026-09-24 (post F.1-F.4 + Fase G + fixes estructurales);
+el conteo de tests y la cobertura se actualizan tras cada commit (ver
+cabecera del documento).
 
 | Aspecto | Valor |
 |---|---|
 | Ficheros de produccion | 36 |
 | LOC produccion | 8.008 |
 | Funciones publicas | 110 |
-| Ficheros de test | 44 |
-| Tests que pasan | 819 |
+| Ficheros de test | 45 |
+| Tests que pasan | 845 |
 | Cobertura de lineas | 90% |
 | Integrado en produccion | SI (integracion unidireccional) |
 
@@ -195,9 +195,20 @@ Restriccion inversa (prohibida):
 
 El modulo mantiene su encapsulamiento interno. Se permite que la
 capa de ejecucion (run.py) y de reporte (src.report.iae) consuman el
-IAE; se prohibe que el IAE dependa de ellas. Los scripts de
-`scripts/*.py` que invocan IAE son scripts reproducibles de auditoria,
-no consumidores productivos.
+IAE; se prohibe que el IAE dependa de ellas.
+
+Consumidores productivos (2026-09-24): ademas de run.py, dos workflows
+invocan scripts que escriben en el repositorio:
+
+  - `daily_run.yml` -> `scripts/regenerate_radar_catalog.py`.
+  - `update_sec_13f.yml` -> `scripts/update_sec_13f.py` +
+    `scripts/regenerate_cusip_crosswalk.py`.
+
+Los scripts de auditoria (`iae_reconciliation_b1.py`,
+`iae_contractual_coverage.py`, `iae_validate_crosswalk_openfigi.py`,
+`iae_identity_uniqueness_audit.py`, `iae_contractual_nipc_e2e.py`,
+`iae_coverage.py`, `iae_test_census.py`) siguen siendo reproducibles
+de auditoria, no consumidores productivos.
 
 Verificacion inversa (2026-09-23): no existe ningun import desde
 `src/institutional_accumulation/*` hacia `run.py`, `src.report`,
@@ -491,9 +502,21 @@ integracion sea una decision activa, no hoy.
   `run.py`, la superficie visible del reporte debe usar un nombre no
   ambiguo (`observed_position_change` o similar) para evitar confusion
   con las capas de flujo del radar. Ver §10.3.
-- Manifest `stock_prices.parquet.manifest.json` stale tras F-IAE-HOLIDAY-01
-  (parquet reescrito el 2026-09-24 sin regenerar el manifest). El proximo
-  `run.py` lo detectara como INVALID y lo regenerara.
+---
+
+## 5.5 Deuda operativa (2026-09-24)
+
+- Seccion IAE en produccion: `STALE` con razon `official_list_pending`.
+  SEC no ha publicado `13flist2026q2.txt` en formato TXT (solo PDF
+  desde 2026-08-14). Los parquets 13F Q4+Q1+Q2 estan en cache v2; el
+  NIPC Q1->Q2 se calculara automaticamente cuando SEC publique el TXT.
+  Verificado con curl (404). No es bug.
+- Bugs de render en el reporte diario (no en el pipeline del IAE,
+  pero afectan la lectura del modulo si se expone): 3 detectados en
+  revision 2026-09-24. Detalle en ESTADO_DECLARADO 3.
+- Cobertura sectorial baja: 7 de 11 sectores con cobertura <70% del
+  universo. Impacta fiabilidad de metricas derivadas (breadth,
+  concentracion, scores de oportunidad). Decision de producto pendiente.
 
 ---
 
@@ -1840,8 +1863,8 @@ El modulo completo tiene 44 ficheros que importan
 `test_update_sec_13f`.
 
 Este listado tiene valor como inventario nominal de funciones de test,
-no como conteo exhaustivo. Conteo autoritativo del modulo (44 ficheros,
-819 casos pytest, 714 funciones AST): §1 (resumen ejecutivo) y
+no como conteo exhaustivo. Conteo autoritativo del modulo (45 ficheros,
+845 casos pytest, 737 funciones AST): §1 (resumen ejecutivo) y
 `scripts/iae_test_census.py`.
 
 
@@ -1850,11 +1873,11 @@ no como conteo exhaustivo. Conteo autoritativo del modulo (44 ficheros,
 ## 12. Validacion end-to-end Q4 2025 / Q1 2026
 
 **Nota (2026-09-24).** La validacion documentada en esta seccion cubre
-el par Q4 2025 -> Q1 2026. Q2 2026 esta publicado por SEC pero pendiente
-de descarga (bloqueo rate limit 2026-09-23; reintento programado).
-Cuando se descargue, el motor detectara automaticamente el par mas
-reciente (Q1 2026 -> Q2 2026) y la seccion IAE del reporte reflejara
-ese nuevo delta. Ver §13.11 para el flujo automatico.
+el par Q4 2025 -> Q1 2026. Q2 2026 fue descargado e ingestado
+2026-09-24 via `update_sec_13f.yml` con `--backfill 2` (cache v2 con
+Q4+Q1+Q2). El motor detectara automaticamente el par Q1 2026 -> Q2 2026
+y la seccion IAE del reporte reflejara ese delta cuando SEC publique
+la Official List 13(f) de Q2 en TXT. Ver §13.11.
 
 Esta seccion documenta la validacion completa del motor sobre datos reales
 de los dos trimestres disponibles. Todos los números fueron medidos el
@@ -2359,12 +2382,18 @@ El modulo IAE se mantiene actualizado sin intervencion manual. Dos
 workflows lo soportan:
 
   - `update_sec_13f.yml` (trimestral, cron `0 6 20 2,5,8,11 *`):
-    descarga el dataset SEC 13F del trimestre cerrado, lo ingesta
-    (7 parquets + manifest) y descarga la Official List 13(f).
+    descarga el dataset SEC 13F del trimestre cerrado via
+    `--backfill 2` (3 trimestres por defecto: Q_k-2, Q_k-1, Q_k), lo
+    ingesta (7 parquets + manifest por trimestre), regenera el
+    crosswalk CUSIP y descarga la Official List 13(f).
     Cachea `data/sec_13f/processed/` con key
-    `13f-processed-v1-<latest_quarter>`.
+    `13f-processed-v2-<hash latest_quarter>`.
+    Acepta `workflow_dispatch.inputs.quarter` para forzar un trimestre
+    manualmente (mes 09 no esta en el cron).
   - `daily_run.yml` (diario): restaura la cache 13F antes de ejecutar
-    `run.py`. La seccion IAE del reporte se calcula con lo disponible.
+    `run.py`. Tras `run.py`, ejecuta `regenerate_radar_catalog.py`
+    (no-op si no hay tickers nuevos). La seccion IAE del reporte se
+    calcula con lo disponible.
 
 Artefactos versionados en git:
   - `data/sec_13f/latest_quarter.txt` (2 bytes): identifica el ultimo
@@ -2386,8 +2415,13 @@ Comportamiento ante fallos:
     reintenta con backoff exponencial (5s, 15s, 45s).
 
 Scripts reproducibles:
-  - `scripts/update_sec_13f.py` - orquesta descarga + ingesta.
+  - `scripts/update_sec_13f.py` - orquesta descarga + ingesta +
+    Official List + `--backfill N`.
   - `scripts/download_official_list_13f.py` - descarga Official List.
+  - `scripts/regenerate_radar_catalog.py` - regenera catalogo radar
+    (consumido en daily_run.yml).
+  - `scripts/regenerate_cusip_crosswalk.py` - regenera crosswalk CUSIP
+    (consumido en update_sec_13f.yml). Acumulativo.
   - `scripts/cleanup_stock_prices_nyse_holidays.py` - saneamiento
     puntual de parquets (F-IAE-HOLIDAY-01).
 
@@ -2396,4 +2430,4 @@ Scripts reproducibles:
 Documento unico del modulo IAE. No depende de expedientes previos,
 contratos externos ni dictamenes.
 
-2026-09-23.
+2026-09-24.
