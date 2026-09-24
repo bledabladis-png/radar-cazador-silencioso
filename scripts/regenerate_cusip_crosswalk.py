@@ -66,7 +66,14 @@ def _load_radar_index(catalog_path: Path) -> dict:
 
 def _extract_observations(quarter: str, infotable: Path, radar_index: dict) -> dict:
     """Devuelve {(cusip, ticker): {title, quarters: [quarter]}}."""
-    df = pd.read_parquet(infotable, columns=["CUSIP", "FIGI", "TITLEOFCLASS"])
+    df = pd.read_parquet(
+        infotable,
+        columns=["CUSIP", "FIGI", "TITLEOFCLASS", "SSHPRNAMTTYPE", "PUTCALL"],
+    )
+    # Filtro 5.1 del pipeline contractual: solo SH con PUTCALL NULL.
+    # Excluye CALL/PUT explicitos y otros tipos no-equity.
+    df = df[df["SSHPRNAMTTYPE"].astype(str).str.strip() == "SH"].copy()
+    df = df[df["PUTCALL"].isna()].copy()
     df = df[df["FIGI"].notna()].copy()
     df = df[df["FIGI"].isin(radar_index.keys())].copy()
 

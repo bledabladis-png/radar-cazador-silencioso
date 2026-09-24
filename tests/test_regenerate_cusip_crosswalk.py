@@ -12,11 +12,24 @@ from scripts import regenerate_cusip_crosswalk as rcc
 # --- helpers ---
 
 def _mk_infotable(tmp_path: Path, quarter: str, rows: list) -> Path:
-    """Crea processed/<q>/INFOTABLE.parquet con CUSIP/FIGI/TITLEOFCLASS."""
+    """Crea processed/<q>/INFOTABLE.parquet con las 5 columnas necesarias.
+
+    rows: lista de tuplas (CUSIP, FIGI, TITLEOFCLASS, SSHPRNAMTTYPE, PUTCALL).
+          SSHPRNAMTTYPE default 'SH', PUTCALL default None.
+    """
     d = tmp_path / quarter
     d.mkdir(parents=True, exist_ok=True)
     p = d / "INFOTABLE.parquet"
-    pd.DataFrame(rows, columns=["CUSIP", "FIGI", "TITLEOFCLASS"]).to_parquet(p)
+    norm = []
+    for r in rows:
+        if len(r) == 3:
+            norm.append((r[0], r[1], r[2], "SH", None))
+        elif len(r) == 4:
+            norm.append((r[0], r[1], r[2], r[3], None))
+        else:
+            norm.append(r)
+    pd.DataFrame(norm, columns=["CUSIP", "FIGI", "TITLEOFCLASS",
+                                "SSHPRNAMTTYPE", "PUTCALL"]).to_parquet(p)
     return p
 
 
@@ -163,3 +176,16 @@ def test_main_aborta_sin_trimestres(tmp_path, monkeypatch):
     monkeypatch.setattr(rcc, "DATA_DIR", tmp_path / "nope")
     monkeypatch.setattr("sys.argv", ["regenerate_cusip_crosswalk.py"])
     assert rcc.main() == 1
+
+
+def test_extract_excluye_call_put(tmp_path):
+    """Filtro 5.1: SSHPRNAMTTYPE != 'SH' o PUTCALL no-null -> excluido."""
+    p = _mk_infotable(tmp_path, "2026Q1", [
+        ("111", "SC_AAPL", "COM", "SH", None),        # OK
+        ("222", "SC_AAPL", "COM", "SH", "CALL"),      # PUTCALL -> fuera
+        ("333", "SC_AAPL", "COM", "PRN", None),       # no SH -> fuera
+        ("444", "SC_ABBV", "COM", "SH", "PUT"),       # PUTCALL -> fuera
+    ])
+    idx = {"SC_AAPL": "AAPL", "SC_ABBV": "ABBV"}
+    obs = rcc._extract_observations("2026Q1", p, idx)
+    assert set(obs.keys()) == {("111", "AAPL")}
