@@ -252,6 +252,19 @@ IAE_MAESTRO). Detalle en §2.
   da dato atomico por ETF, la segunda agrega por sector con
   metricas derivadas. Anadidas notas cruzadas de complementariedad
   en `etf_flows.py`.
+- FU-002-bymarket (2026-09-24) - RESUELTO. Manifest de stock_prices
+  ampliado con quality.by_market (cobertura por mercado en su propia
+  ultima sesion cerrada via is_session_closed de FU-018). Guard
+  guard_coverage.py gana exencion condicional cuando la cobertura
+  global es baja pero todos los mercados activos cumplen el threshold
+  (C-2: solo si status == VALID_WITH_MISSING; C-3: mismo threshold
+  que el guard; punto 5: UNKNOWN con n>0 -> INVALID).
+  Dictamen auditor externo 2026-09-24: APROBACION CONDICIONADA
+  aplicada (3 correcciones materiales + 5 puntos adicionales).
+  Politica de schema declarada en PROMPT seccion 11.8: campos aditivos
+  backward-compatible, sin bump de schema_version.
+  Commits: 88c27d1 (doc), d09f928 (manifest), 62e38d9 (guard).
+
 - Fechas no bursatiles residuales en `stock_prices.parquet`.
   Detectadas por `health_check.py` (2026-09-24): 6 fechas
   (`2026-01-19` MLK, `2026-02-16` Presidents, `2026-05-25`
