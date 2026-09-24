@@ -89,10 +89,19 @@ def _get_yf_session():
         return None
 
 def _fill_holes_respecting_sessions(df, reference_date):
-    """Rellena NaN solo en fechas que NO son sesion NYSE.
+    """Rellena NaN solo en fechas que NO son sesion del mercado del ticker.
 
-    Cualquier NaN en una fecha que SI es sesion NYSE se preserva: representa
-    un hueco real del proveedor y no debe imputarse silenciosamente.
+    Reglas:
+      - NaN en sesion del mercado del ticker: se preserva (hueco real).
+      - Ticker USA en festivo NYSE: se preserva (no es hueco, es cierre).
+      - Ticker no-USA en festivo NYSE pero sesion en su mercado: se preserva
+        (fin de semana del calendario local).
+      - Resto: ffill(limit=3).
+
+    Este bug (2026-09-24) surgia porque los lotes de Yahoo mezclan tickers
+    UK (LSE abierto en festivos USA) con USA. El ffill global propagaba
+    valores de UK al viernes previo para los USA, generando Close no nulo
+    en NYSE holidays. Ver doc deuda #F-IAE-HOLIDAY-01.
 
     Args:
         df: DataFrame con columnas MultiIndex (Close/High/Low/Volume, ticker).
@@ -101,8 +110,9 @@ def _fill_holes_respecting_sessions(df, reference_date):
     Returns:
         (df_filled, diagnostics_dict) con:
             n_nan_pre_fill: total NaN en columnas Close
-            n_nan_preserved: NaN preservados (eran sesion NYSE)
+            n_nan_preserved: NaN preservados (sesion del ticker o festivo)
             affected_tickers: tickers con NaN preservado
+            n_preserved_by_us_holiday: subconjunto por festivo NYSE
     """
     expected_session = last_expected_market_date(reference_date)
     diag = {
@@ -110,6 +120,7 @@ def _fill_holes_respecting_sessions(df, reference_date):
         'n_nan_preserved': 0,
         'affected_tickers': [],
         'expected_session': expected_session,
+        'n_preserved_by_us_holiday': 0,
     }
     if df is None or df.empty:
         return df, diag
@@ -128,11 +139,26 @@ def _fill_holes_respecting_sessions(df, reference_date):
         nan_dates = series.index[nan_mask]
         diag['n_nan_pre_fill'] += int(nan_mask.sum())
 
+        try:
+            market = get_market(str(ticker))
+        except Exception:
+            market = 'UNKNOWN'
+        is_us = (market == 'US_EQUITY')
+
         session_nan_dates = []
         for d in nan_dates:
             d_norm = pd.Timestamp(d).normalize()
             if is_market_day(d_norm.date()):
+                # Sesion NYSE: siempre preservar
                 diag['n_nan_preserved'] += 1
+                session_nan_dates.append(d)
+            elif is_us and d_norm.weekday() < 5:
+                # FIX (2026-09-24): ticker USA en festivo NYSE (dia
+                # laborable) -> preservar. No es hueco, es cierre de
+                # mercado. Los fines de semana (weekday >= 5) mantienen
+                # el comportamiento original (ffill).
+                diag['n_nan_preserved'] += 1
+                diag['n_preserved_by_us_holiday'] += 1
                 session_nan_dates.append(d)
 
         if session_nan_dates:
