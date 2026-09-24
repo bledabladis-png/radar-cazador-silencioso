@@ -8,7 +8,7 @@ Determinista. Sin red. Sin datetime.now().
 import sys
 from pathlib import Path
 
-ROOT = Path(r"D:\Macro_Sectorial")
+ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
 import pandas as pd

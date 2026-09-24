@@ -27,7 +27,7 @@ from pathlib import Path
 
 import pandas as pd
 
-ROOT = Path(r"D:\Macro_Sectorial")
+ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
 SNAPSHOT_DIR = ROOT / "data" / "mappings" / "catalog_snapshots"

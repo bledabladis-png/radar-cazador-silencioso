@@ -10,7 +10,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 import pandas as pd
 
-ROOT = Path(r"D:\Macro_Sectorial")
+ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
 from src.institutional_accumulation.sec_13f.identity.temporal_filter import filter_by_period
