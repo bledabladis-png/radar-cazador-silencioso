@@ -291,8 +291,8 @@ D:\Macro_Sectorial
 | +-- stock_prices.parquet (+ .manifest.json)
 | +-- commodities_futures.parquet (+ .manifest.json) [FU-021-3C-bis]
 | +-- commodities_spot.parquet (+ .manifest.json) [FU-021-3C-bis]
-+-- scripts/ (16+ activos + archive/; +iae_pipeline.py, build_catalog_csvs.py)
-+-- validation/ (6 activos + archive/ 59)
++-- scripts/ (16+ activos; +iae_pipeline.py, build_catalog_csvs.py)
++-- validation/ (6 activos)
 +-- tests/ (1439 casos; ver sec 15 para conteo del modulo IAE)
 +-- docs/
 | +-- automatica/ (22 .md auto-generados, LF)

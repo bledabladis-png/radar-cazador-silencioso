@@ -9,7 +9,6 @@ recibieran ffill desde el viernes previo en festivos NYSE.
 """
 import numpy as np
 import pandas as pd
-import pytest
 
 from src.stock_data_loader import _fill_holes_respecting_sessions
 

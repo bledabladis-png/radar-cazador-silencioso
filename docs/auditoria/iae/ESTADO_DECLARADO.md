@@ -3,7 +3,7 @@
 Estado declarado de fases, prohibiciones y hallazgos del modulo IAE.
 Documento vivo. Se actualiza cuando cambia el estado.
 
-**Actualizado:** 2026-09-23
+**Actualizado:** 2026-09-24
 
 ---
 
@@ -178,7 +178,7 @@ Detalle en `IAE_MAESTRO.md` seccion 5.
 ### Scripts IAE publicados
 
 - `scripts/iae_test_census.py` - censo AST de tests del modulo.
-- `scripts/iae_coverage.py` - cobertura reproducible sobre los 759 tests.
+- `scripts/iae_coverage.py` - cobertura reproducible sobre los 819 tests.
 - `scripts/iae_contractual_coverage.py` - cadena contractual completa.
 - `scripts/iae_reconciliation_b1.py` - reconciliacion radar + complemento = full.
 - `scripts/iae_validate_crosswalk_openfigi.py` - validacion externa OpenFIGI.

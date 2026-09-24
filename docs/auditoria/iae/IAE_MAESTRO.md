@@ -2,7 +2,7 @@
 
 Documento unico del modulo IAE. Estado, arquitectura, verificacion.
 
-**Actualizado:** 2026-09-23
+**Actualizado:** 2026-09-24
 **HEAD operativo:** ver `docs/auditoria/iae/ESTADO_SISTEMA.md` (campo HEAD).
 **Snapshot de mediciones:** §2.1 y §12 sobre `7caa86b` (2026-09-23); §3.2 sobre HEAD actual (post-fix `89b98e9`).
 
@@ -463,7 +463,7 @@ y queda fuera del filtro §5.5. No contribuye al TARGET (§13.2).
 
 ### 5.2 Deuda de cobertura
 
-Estado actual: 92% global, ningun fichero por debajo del 80%
+Estado actual: 90% global, ningun fichero por debajo del 80%
 (ver §3.2). El minimo es `catalog_key.py` con 82%.
 
 Deuda residual: mejorar la cobertura de los modulos con menor
@@ -491,6 +491,9 @@ integracion sea una decision activa, no hoy.
   `run.py`, la superficie visible del reporte debe usar un nombre no
   ambiguo (`observed_position_change` o similar) para evitar confusion
   con las capas de flujo del radar. Ver §10.3.
+- Manifest `stock_prices.parquet.manifest.json` stale tras F-IAE-HOLIDAY-01
+  (parquet reescrito el 2026-09-24 sin regenerar el manifest). El proximo
+  `run.py` lo detectara como INVALID y lo regenerara.
 
 ---
 
@@ -2176,7 +2179,7 @@ estan en el radar canonico actual: DD y HON. Fueron extendidos a Q4
 2025 por el fix 7609a56 (ver §12.3, nota historica). Son entradas
 validas del crosswalk pero no pertenecen al universo radar.
 
-### 13.3. Cobertura de tests: 92% global, 0 ficheros < 80%
+### 13.3. Cobertura de tests: 90% global, 0 ficheros < 80%
 
 Ningun fichero del modulo queda por debajo del 80% de cobertura de
 lineas. Los 6 ficheros que en la revision anterior estaban por debajo
