@@ -187,3 +187,45 @@ def test_main_dry_run_no_escribe(tmp_path, monkeypatch):
     assert not list(snapshots.glob("*.csv"))
     m = json.loads(manifest.read_text())
     assert m["snapshots"] == []
+
+
+# --- _check_equity_only (chequeo defensivo post-construccion) ------------
+
+def test_check_equity_only_ok_sin_no_equity():
+    """Todos Equity -> sin avisos."""
+    df = pd.DataFrame([
+        {"radar_ticker": "AAPL", "status": "OK",
+         "market_sector": "Equity", "security_type": "Common Stock"},
+        {"radar_ticker": "AMT", "status": "OK",
+         "market_sector": "Equity", "security_type": "REIT"},
+    ])
+    assert rrc._check_equity_only(df) == []
+
+
+def test_check_equity_only_detecta_etf():
+    """Ticker con market_sector=ETF -> aparece en el listado."""
+    df = pd.DataFrame([
+        {"radar_ticker": "AAPL", "status": "OK",
+         "market_sector": "Equity", "security_type": "Common Stock"},
+        {"radar_ticker": "XLK", "status": "OK",
+         "market_sector": "Equity", "security_type": "ETF"},  # market_sector Equity
+        {"radar_ticker": "SPY", "status": "OK",
+         "market_sector": "ETF", "security_type": "ETF"},     # sector != Equity
+    ])
+    bad = rrc._check_equity_only(df)
+    assert len(bad) == 1
+    assert bad[0]["radar_ticker"] == "SPY"
+
+
+def test_check_equity_only_ignora_status_no_ok():
+    """Un no-equity con status != OK no genera aviso (no es canonical)."""
+    df = pd.DataFrame([
+        {"radar_ticker": "SPY", "status": "MISS",
+         "market_sector": "ETF", "security_type": "ETF"},
+    ])
+    assert rrc._check_equity_only(df) == []
+
+
+def test_check_equity_only_vacio():
+    assert rrc._check_equity_only(pd.DataFrame()) == []
+    assert rrc._check_equity_only(pd.DataFrame(columns=list(rrc.COLUMNS))) == []

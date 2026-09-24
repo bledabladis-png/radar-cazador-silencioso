@@ -86,6 +86,27 @@ def _resolve_new_tickers(tickers: list, *, api_key: str | None) -> dict:
     return map_identifiers("TICKER", tickers, exch_code="US", api_key=api_key)
 
 
+def _check_equity_only(df: pd.DataFrame) -> list:
+    """Devuelve tickers con status=OK y market_sector != Equity.
+
+    Chequeo defensivo. El radar solo contiene equity por construccion
+    (load_radar_tickers filtra USA stocks). Si OpenFIGI resuelve un
+    ticker del radar a market_sector distinto, es senal de que un
+    instrumento no-equity (ETF, indice, fondo) se ha colado.
+    """
+    if df.empty:
+        return []
+    ok = df[df["status"] == "OK"].copy()
+    if ok.empty:
+        return []
+    bad = ok[
+        ok["market_sector"].notna()
+        & (ok["market_sector"].astype(str).str.strip() != "")
+        & (ok["market_sector"].astype(str).str.strip() != "Equity")
+    ]
+    return bad[["radar_ticker", "market_sector", "security_type"]].to_dict("records")
+
+
 def _build_updated_catalog(
     catalog_df: pd.DataFrame,
     nuevos: list,
@@ -174,6 +195,13 @@ def main() -> int:
         cat_actual, diff["nuevos"], hits, source_date=date_tag,
     )
     print("\ncoverage: " + str(coverage_summary(nuevo_catalogo)))
+
+    no_equity = _check_equity_only(nuevo_catalogo)
+    if no_equity:
+        print(f"\n[WARN] {len(no_equity)} tickers del radar con market_sector != Equity:")
+        for r in no_equity[:10]:
+            print(f"  {r['radar_ticker']}: sector={r['market_sector']}, "
+                  f"type={r['security_type']}")
 
     if args.dry_run:
         print("\n[DRY-RUN] nada escrito.")
