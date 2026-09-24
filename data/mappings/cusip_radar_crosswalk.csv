@@ -1,247 +1,246 @@
 CUSIP,ticker,valid_from,valid_to,source,reason,title_of_class,verified_by
-26614N102,DD,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado para DuPont de Nemours en el periodo 13F Q1 2026,COM,manual
-438516106,HON,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado para Honeywell International en el periodo 13F Q1 2026; sustituido posteriormente tras reverse split efectivo 2026-06-29,COM,manual
-30231G102,XOM,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado para Exxon Mobil en el periodo 13F Q1 2026,COM,manual
+037833100,AAPL,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+00287Y109,ABBV,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+009066101,ABNB,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM CL A,auto
+002824100,ABT,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+039483102,ADM,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+053015103,ADP,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+023608102,AEE,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+025537101,AEP,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+038222105,AMAT,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+G0250X107,AMCR,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q1,ORD,auto
+G0250X149,AMCR,2026-03-31,,SEC-EDGAR,CUSIP observado en filings 2026Q1..2026Q2,COM NEW,auto
+007903107,AMD,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+031162100,AMGN,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+03027X100,AMT,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+023135106,AMZN,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+009158106,APD,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+03831W108,APP,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM CL A,auto
+049560105,ATO,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+11135F101,AVGO,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+030420103,AWK,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+025816109,AXP,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+053332102,AZO,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+097023105,BA,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+060505104,BAC,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+09857L108,BKNG,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+05722G100,BKR,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,CL A,auto
+09290D101,BLK,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+110122108,BMY,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+064058100,BNY,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
 084670702,BRK-B,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado para Berkshire Hathaway Cl B en el periodo 13F Q1 2026,CL B NEW,manual
 10950A106,BTSG,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado para BrightSpring Health Services en el periodo 13F Q1 2026,COM,manual
+09260D107,BX,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+172967424,C,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM NEW,auto
+147528103,CASY,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+149123101,CAT,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+H1467J104,CB,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+12504L109,CBRE,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,CL A,auto
+22822V101,CCI,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+21037T109,CEG,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+125269100,CF,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+16119P108,CHTR,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,CL A,auto
+194162103,CL,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+20030N101,CMCSA,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,CL A,auto
+12572Q105,CME,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+169656105,CMG,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+14040H105,COF,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+20825C104,COP,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+22160K105,COST,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+G25508105,CRH,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,ORD,auto
+79466L302,CRM,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+22788C105,CRWD,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,CL A,auto
+17275R102,CSCO,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+126408103,CSX,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
 14174T107,CTRE,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado para CareTrust REIT en el periodo 13F Q1 2026,COM,manual
+22052L104,CTVA,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+146869102,CVNA,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,CL A,auto
+126650100,CVS,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+166764100,CVX,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
 23282W605,CYTK,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado para Cytokinetics en el periodo 13F Q1 2026,COM NEW,manual
+25746U109,D,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+25809K105,DASH,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,CL A,auto
+26614N102,DD,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado para DuPont de Nemours en el periodo 13F Q1 2026,COM,manual
+244199105,DE,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+256677105,DG,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+235851102,DHR,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+254687106,DIS,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+253868103,DLR,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+260557103,DOW,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+233331107,DTE,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+26441C204,DUK,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM NEW,auto
+25179M103,DVN,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
 109641100,EAT,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado para Brinker International en el periodo 13F Q1 2026,COM,manual
+278768106,ECHO,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,CL A,auto
+278865100,ECL,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+209115104,ED,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+036752103,ELV,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+26875P101,EOG,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+29444U700,EQIX,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+26884L109,EQT,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+30040W108,ES,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+297178105,ESS,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+G29183103,ETN,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,SHS,auto
+29364G103,ETR,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+30161N101,EXC,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+165167735,EXE,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+30225T102,EXR,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+345370860,F,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+25278X109,FANG,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
 33768G107,FCFS,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado para FirstCash Holdings en el periodo 13F Q1 2026,COM,manual
+35671D857,FCX,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,CL B,auto
+35137L204,FOX,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,CL B COM,auto
+35137L105,FOXA,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,CL A COM,auto
 M6191J100,FROG,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado para JFrog Ltd en el periodo 13F Q1 2026,ORD SHS,manual
+369550108,GD,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+369604301,GE,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM NEW,auto
+36828A101,GEV,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+375558103,GILD,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
 377322102,GKOS,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado para Glaukos Corp en el periodo 13F Q1 2026,COM,manual
+37045V100,GM,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+02079K107,GOOG,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,CAP STK CL C,auto
+02079K305,GOOGL,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,CAP STK CL A,auto
+38141G104,GS,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+406216101,HAL,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+437076102,HD,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+43300A203,HLT,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+438516106,HON,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado para Honeywell International en el periodo 13F Q1 2026; sustituido posteriormente tras reverse split efectivo 2026-06-29,COM,manual
+427866108,HSY,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
 44812J104,HUT,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado para Hut 8 Corp en el periodo 13F Q1 2026,COM,manual
+443201108,HWM,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+459200101,IBM,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
 45867G101,IDCC,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado para InterDigital en el periodo 13F Q1 2026,COM,manual
+459506101,IFF,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+458140100,INTC,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+46187W107,INVH,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+460146103,IP,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+46284V101,IRM,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+46120E602,ISRG,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM NEW,auto
+G51502105,JCI,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,SHS,auto
+478160104,JNJ,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+46625H100,JPM,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
 46817M107,JXN,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado para Jackson Financial en el periodo 13F Q1 2026,COM CL A,manual
+49271V100,KDP,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+49446R109,KIM,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+482480100,KLAC,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM NEW,auto
+494368103,KMB,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+49456B101,KMI,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+191216100,KO,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+501044101,KR,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
 501147102,KRYS,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado para Krystal Biotech en el periodo 13F Q1 2026,COM,manual
+49177J102,KVUE,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+G54950103,LIN,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,SHS,auto
+532457108,LLY,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+539830109,LMT,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+548661107,LOW,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+512807108,LRCX,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+512807306,LRCX,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM NEW,auto
+538034109,LYV,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+57636Q104,MA,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,CL A,auto
+571903202,MAR,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,CL A,auto
+580135101,MCD,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+58155Q103,MCK,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+609207105,MDLZ,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,CL A,auto
+G5960L103,MDT,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,SHS,auto
+30303M102,META,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,CL A,auto
+573284106,MLM,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+88579Y101,MMM,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+61174X109,MNST,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+02209S103,MO,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
 615394202,MOG-A,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado para Moog Inc Cl A en el periodo 13F Q1 2026,CL A,manual
-74006W207,PRAX,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado para Praxis Precision Medicines en el periodo 13F Q1 2026,COM NEW,manual
-78377T107,RHP,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado para Ryman Hospitality Properties en el periodo 13F Q1 2026,REIT,manual
-78454L100,SM,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado para SM Energy en el periodo 13F Q1 2026,COM,manual
-90184D100,TWST,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado para Twist Bioscience en el periodo 13F Q1 2026,COM,manual
-902788108,UMBF,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado para UMB Financial en el periodo 13F Q1 2026,COM,manual
-92552V100,VSAT,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado para Viasat en el periodo 13F Q1 2026,COM,manual
+56585A102,MPC,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+58933Y105,MRK,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+617446448,MS,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM NEW,auto
+594918104,MSFT,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+595112103,MU,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+65339F101,NEE,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+651639106,NEM,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+64110L106,NFLX,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+670346105,NUE,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+67066G104,NVDA,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+65249B109,NWSA,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,CL A,auto
+756109104,O,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+681919106,OMC,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
 680033107,ONB,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado para Old National Bancorp en el periodo 13F Q1 2026,COM,manual
+68389X105,ORCL,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+67103H107,ORLY,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+674599105,OXY,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+697435105,PANW,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+69331C108,PCG,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+744573106,PEG,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+713448108,PEP,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+717081103,PFE,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+742718109,PG,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+743315103,PGR,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+701094104,PH,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+695156109,PKG,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+74340W103,PLD,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+69608A108,PLTR,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,CL A,auto
+718172109,PM,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+693475105,PNC,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+693506107,PPG,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+74006W207,PRAX,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado para Praxis Precision Medicines en el periodo 13F Q1 2026,COM NEW,manual
+74460D109,PSA,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+718546104,PSX,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
 74366E102,PTGX,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado para Protagonist Therapeutics en el periodo 13F Q1 2026,COM,manual
-037833100,AAPL,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001S5N8V8),,auto
-00287Y109,ABBV,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG0025Y4RZ3),,auto
-009066101,ABNB,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001Y2XS16),,auto
-002824100,ABT,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001S5N9M6),,auto
-039483102,ADM,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001S5ND74),,auto
-053015103,ADP,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001S82KF6),,auto
-023608102,AEE,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001S5NF24),,auto
-025537101,AEP,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001S5NFD2),,auto
-038222105,AMAT,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001S5NMM7),,auto
-G0250X149,AMCR,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG00LNJRQ18),,auto
-G0250X107,AMCR,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG00LNJRQ18),,auto
-007903107,AMD,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001S5NN36),,auto
-031162100,AMGN,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001S5NNL6),,auto
-03027X100,AMT,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001S5NPQ6),,auto
-023135906,AMZN,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001S5PQL7),,auto
-023135106,AMZN,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001S5PQL7),,auto
-009158106,APD,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001S5NSB6),,auto
-03831W108,APP,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG006HFPX86),,auto
-049560105,ATO,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001S5VG05),,auto
-11135F101,AVGO,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG00KHY5SY8),,auto
-030420103,AWK,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001SPHYW3),,auto
-025816109,AXP,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001S5P034),,auto
-053332102,AZO,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001S6Q5D9),,auto
-097023105,BA,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001S5P0V3),,auto
-060505104,BAC,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001S5P0Y0),,auto
-09857L108,BKNG,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001S89N72),,auto
-05722G100,BKR,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG00GBVBK60),,auto
-09290D101,BLK,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG01PSW2WR0),,auto
-110122108,BMY,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001S8N8J6),,auto
-064058100,BNY,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001S5P6Q6),,auto
-09260D107,BX,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001S7H949),,auto
-172967424,C,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001S72ZG4),,auto
-147528103,CASY,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001S5PHZ2),,auto
-149123101,CAT,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001S5PJ06),,auto
-H1467J104,CB,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001S8S1L3),,auto
-12504L109,CBRE,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001SC2D27),,auto
-22822V101,CCI,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001S7W5T3),,auto
-21037T109,CEG,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG014KFRPJ9),,auto
-125269100,CF,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001SJ8KV8),,auto
-16119P108,CHTR,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001T3TDG2),,auto
-194162103,CL,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001S5PVM5),,auto
-20030N101,CMCSA,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001S5PXL2),,auto
-12572Q105,CME,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001S86547),,auto
-169656105,CMG,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001SP50B3),,auto
-14040H105,COF,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001S65PV8),,auto
-20825C104,COP,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001S5TZM2),,auto
-22160K105,COST,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001S9KRQ7),,auto
-G25508105,CRH,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001S61NK9),,auto
-79466L302,CRM,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001SDLP09),,auto
-22788C105,CRWD,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG00BLYKRZ7),,auto
-17275R102,CSCO,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001S6HC62),,auto
-126408103,CSX,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001S5Q7Q3),,auto
-22052L104,CTVA,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG00BN969D0),,auto
-146869102,CVNA,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG00GCTWF71),,auto
-126650100,CVS,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001S5QBD8),,auto
-166764100,CVX,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001S67ZC5),,auto
-25746U109,D,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001S5QCP3),,auto
-25809K105,DASH,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG005D7QCK1),,auto
-244199105,DE,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001S5QFF7),,auto
-256677105,DG,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001T5BM30),,auto
-235851102,DHR,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001S5QGT0),,auto
-254687106,DIS,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001S5QHF3),,auto
-253868103,DLR,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001SM0K30),,auto
-260557103,DOW,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG00BN96931),,auto
-233331107,DTE,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001S5QN88),,auto
-26441C204,DUK,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001S5QNR7),,auto
-25179M103,DVN,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001S63VG4),,auto
-278768106,ECHO,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001T048Z5),,auto
-278865100,ECL,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001S5QRB5),,auto
-209115104,ED,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001S5QRL4),,auto
-036752103,ELV,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001S6KBQ8),,auto
-26875P101,EOG,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001S5ZB93),,auto
-29444U700,EQIX,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001SKBNS9),,auto
-26884L109,EQT,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001S5QXJ4),,auto
-30040W108,ES,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001S5TRL1),,auto
-297178105,ESS,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001S81418),,auto
-G29183103,ETN,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001S5QZ45),,auto
-29364G103,ETR,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001S67KF5),,auto
-30161N101,EXC,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001SBJMT2),,auto
-165167735,EXE,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG00Z6DX607),,auto
-30225T102,EXR,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001SLSXK5),,auto
-345370860,F,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001S5TZ33),,auto
-25278X109,FANG,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG002PHSZN7),,auto
-35671D857,FCX,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001S5R3F3),,auto
-35137L204,FOX,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG00JHNKKR3),,auto
-35137L105,FOXA,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG00JHNJX06),,auto
-369550108,GD,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001S5RHP1),,auto
-369604301,GE,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001S5PVD5),,auto
-36828A101,GEV,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG013G17W77),,auto
-375558103,GILD,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001S6Y1X7),,auto
-37045V100,GM,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001SM1DK6),,auto
-02079K107,GOOG,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG009S3NB21),,auto
-02079K305,GOOGL,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG009S39JY5),,auto
-38141G104,GS,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001SC07Z6),,auto
-406216101,HAL,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001S5RS59),,auto
-437076102,HD,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001S5RTW7),,auto
-43300A203,HLT,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG0058KMH49),,auto
-427866108,HSY,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001S5S148),,auto
-443201108,HWM,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG00DYNJH69),,auto
-459200101,IBM,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001S5S399),,auto
-459506101,IFF,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001S5S5F7),,auto
-458140100,INTC,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001S5SF65),,auto
-46187W107,INVH,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG00FQH6CJ7),,auto
-460146103,IP,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001S5SBF4),,auto
-46284V101,IRM,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001SCQ2X1),,auto
-46120E602,ISRG,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001S7XR78),,auto
-G51502105,JCI,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001S5WZ84),,auto
-478160104,JNJ,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001S5SHQ9),,auto
-46625H100,JPM,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001S8CRC3),,auto
-49271V100,KDP,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001ST5W34),,auto
-49446R109,KIM,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001S70279),,auto
-482480100,KLAC,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001S5SLM4),,auto
-494368103,KMB,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001S5SLZ0),,auto
-49456B101,KMI,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001TG2YZ5),,auto
-191216100,KO,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001S5SMQ8),,auto
-501044101,KR,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001S5SN40),,auto
-49177J102,KVUE,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG01C79X614),,auto
-G54950103,LIN,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG01FND0CH6),,auto
-532457108,LLY,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001S5STL8),,auto
-539830109,LMT,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001S7PS57),,auto
-548661107,LOW,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001S5SVL3),,auto
-512807108,LRCX,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001S5SW40),,auto
-512807306,LRCX,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001S5SW40),,auto
-538034109,LYV,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001SNP2B2),,auto
-57636Q104,MA,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001SKNNS6),,auto
-571903202,MAR,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001S78K44),,auto
-580135101,MCD,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001S5T110),,auto
-58155Q103,MCK,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001S8F8P8),,auto
-609207105,MDLZ,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001SHHZJ3),,auto
-G5960L103,MDT,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001S5T2S9),,auto
-30303M102,META,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001SQCQC5),,auto
-573284106,MLM,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001S7QC51),,auto
-88579Y101,MMM,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001S5T7X2),,auto
-61174X109,MNST,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG008NVB1F7),,auto
-02209S103,MO,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001S5T8T5),,auto
-56585A102,MPC,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001S169P1),,auto
-58933Y105,MRK,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001S5TC52),,auto
-617446448,MS,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001S9V5Z3),,auto
-594918104,MSFT,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001S5TD05),,auto
-595112103,MU,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001S6P675),,auto
-595112903,MU,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001S6P675),,auto
-65339F101,NEE,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001S5RB29),,auto
-651639106,NEM,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001S5TKX3),,auto
-64110L106,NFLX,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001SF6L46),,auto
-670346105,NUE,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001S5TRV0),,auto
-67066G104,NVDA,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001S5TZJ6),,auto
-65249B109,NWSA,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG0035LY922),,auto
-756109104,O,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001S884K0),,auto
-681919106,OMC,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001S5VR10),,auto
-68389X105,ORCL,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001S5SJG6),,auto
-67103H107,ORLY,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001S78TL6),,auto
-674599105,OXY,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001S5TZG9),,auto
-697435105,PANW,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001T9NWN5),,auto
-69331C108,PCG,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001S5V206),,auto
-744573106,PEG,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001S5V3C1),,auto
-713448108,PEP,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001S695T1),,auto
-717081103,PFE,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001S5V466),,auto
-742718109,PG,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001S5V4L9),,auto
-743315103,PGR,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001S5V509),,auto
-701094104,PH,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001S5V554),,auto
-695156109,PKG,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001S5V741),,auto
-74340W103,PLD,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001S5NMN6),,auto
-69608A108,PLTR,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001T53796),,auto
-718172109,PM,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001STP9N1),,auto
-693475105,PNC,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001S5V947),,auto
-693506107,PPG,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001S5VC13),,auto
-74460D109,PSA,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001S5TH79),,auto
-718546104,PSX,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG00286S4P7),,auto
-74762E102,PWR,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001S5VH85),,auto
-V7780T103,RCL,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001S5RMJ7),,auto
-75886F107,REGN,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001S6PX49),,auto
-778296103,ROST,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001S5VRS1),,auto
-75513E101,RTX,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001S5X5Q9),,auto
-78410G104,SBAC,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001SCWNN9),,auto
-855244109,SBUX,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001S72KH6),,auto
-808513105,SCHW,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001S5VXD4),,auto
-824348106,SHW,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001S5W2F9),,auto
-806857108,SLB,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001S5W4C8),,auto
-80004C200,SNDK,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG01R388JK6),,auto
-842587107,SO,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001S5W777),,auto
-828806109,SPG,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001S77WM9),,auto
-78409V104,SPGI,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001S5T5M8),,auto
-816851109,SRE,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001SBVZ73),,auto
-858119100,STLD,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001S98JK5),,auto
-G7997R103,STX,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG0113JGQG9),,auto
-G8267P108,SW,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG01NJC0037),,auto
-863667101,SYK,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001S8FR03),,auto
-871829107,SYY,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001S5WJS8),,auto
-00206R102,T,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001S5VWH2),,auto
-87612E106,TGT,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001SC0K41),,auto
-872540109,TJX,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001S5WQ93),,auto
-87256C101,TKO,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG01G9JKWW4),,auto
-883556102,TMO,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001S5WS08),,auto
-872590104,TMUS,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001SKR9Y6),,auto
-88262P102,TPL,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG00YRJXKC0),,auto
-87612G101,TRGP,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001TC94B9),,auto
-89417E109,TRV,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001S5R103),,auto
-88160R101,TSLA,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001SQKGD7),,auto
-G8994E103,TT,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001S5SBV6),,auto
-874054109,TTWO,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001S9TN41),,auto
-882508104,TXN,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001S5WYZ7),,auto
-90353T100,UBER,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG002B04MW4),,auto
-91324P102,UNH,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001S6WCJ1),,auto
-907818108,UNP,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001S5X2M0),,auto
-92826C839,V,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001SRCFY3),,auto
-925652109,VICI,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG00HVVB4B6),,auto
-91913Y100,VLO,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001S5X8K9),,auto
-929160109,VMC,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001S5X8R2),,auto
-29476L107,VMRK,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001S723L9),,auto
-92537N108,VRT,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG00L2B8LM7),,auto
-92532F100,VRTX,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001S68LJ8),,auto
-92840M102,VST,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG00DXDL6R0),,auto
-92276F100,VTR,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001S9T7M6),,auto
-92343V104,VZ,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001S67QY1),,auto
-934423104,WBD,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG011386VG3),,auto
-92939U106,WEC,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001S5XDC7),,auto
-95040Q104,WELL,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001S5RTQ4),,auto
-949746101,WFC,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001S5XF23),,auto
-969457100,WMB,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001S5XH10),,auto
-931142103,WMT,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001S5XH92),,auto
-962166104,WY,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001S5XL11),,auto
-98389B100,XEL,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado en filings con FIGI del catalogo radar (BBG001S7F0X8),,auto
+74762E102,PWR,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+V7780T103,RCL,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+75886F107,REGN,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+78377T107,RHP,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado para Ryman Hospitality Properties en el periodo 13F Q1 2026,REIT,manual
+778296103,ROST,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+75513E101,RTX,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+78410G104,SBAC,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,CL A,auto
+855244109,SBUX,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+808513105,SCHW,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+824348106,SHW,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+806857108,SLB,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM STK,auto
+78454L100,SM,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado para SM Energy en el periodo 13F Q1 2026,COM,manual
+80004C200,SNDK,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+842587107,SO,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+84615Q103,SPCX,2026-06-30,,SEC-EDGAR,CUSIP observado en filings 2026Q2..2026Q2,CLASS A COM STK,auto
+828806109,SPG,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+78409V104,SPGI,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+816851109,SRE,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+858119100,STLD,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+G7997R103,STX,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,ORD SHS,auto
+G8267P108,SW,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,SHS,auto
+863667101,SYK,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+871829107,SYY,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+00206R102,T,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+87612E106,TGT,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+872540109,TJX,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+87256C101,TKO,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,CL A,auto
+883556102,TMO,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+872590104,TMUS,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+88262P102,TPL,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+87612G101,TRGP,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+89417E109,TRV,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+88160R101,TSLA,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+G8994E103,TT,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,SHS,auto
+874054109,TTWO,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+90184D100,TWST,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado para Twist Bioscience en el periodo 13F Q1 2026,COM,manual
+882508104,TXN,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+90353T100,UBER,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+902788108,UMBF,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado para UMB Financial en el periodo 13F Q1 2026,COM,manual
+91324P102,UNH,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+907818108,UNP,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+92826C839,V,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM CL A,auto
+925652109,VICI,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+91913Y100,VLO,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+929160109,VMC,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+29476L107,VMRK,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,SH BEN INT,auto
+92537N108,VRT,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM CL A,auto
+92532F100,VRTX,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+92552V100,VSAT,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado para Viasat en el periodo 13F Q1 2026,COM,manual
+92840M102,VST,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+92276F100,VTR,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+92343V104,VZ,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+934423104,WBD,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM SER A,auto
+92939U106,WEC,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+95040Q104,WELL,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+949746101,WFC,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+969457100,WMB,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+931142103,WMT,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+962166104,WY,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM NEW,auto
+98389B100,XEL,2025-12-31,,SEC-EDGAR,CUSIP observado en filings 2025Q4..2026Q2,COM,auto
+30231G102,XOM,2025-12-31,2026-03-31,SEC-EDGAR,CUSIP observado para Exxon Mobil en el periodo 13F Q1 2026,COM,manual
