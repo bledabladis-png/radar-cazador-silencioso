@@ -9,21 +9,12 @@ from data.providers.router import DataRouter
 from data.providers.backup_providers import BackupProvider
 from src.effective_date import resolve_effective_date
 from src.market_hours import is_trading_session, is_session_closed
-from src.instrument_registry import get_market
+from src.instrument_registry import (
+    get_market,
+    normalize_yahoo_ticker as normalize_yahoo_ticker,  # re-export backward-compat
+    YAHOO_TICKER_MAP as YAHOO_TICKER_MAP,  # re-export backward-compat
+)
 
-YAHOO_TICKER_MAP = {
-    "BRK.B": "BRK-B",
-    "BF.B": "BF-B",
-    "MOGA": "MOG-A",
-    "MOG A": "MOG-A",
-    "GEF B": "GEF-B",
-    "CRD A": "CRD-A",
-    "BH A": "BH-A",
-}
-
-def normalize_yahoo_ticker(t):
-    """Convierte tickers problemáticos al formato que acepta Yahoo Finance."""
-    return YAHOO_TICKER_MAP.get(t, t)
 
 def _ticker_list():
     tickers = []

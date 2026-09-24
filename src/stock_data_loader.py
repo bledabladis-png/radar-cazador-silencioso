@@ -1,4 +1,4 @@
-import pandas as pd
+﻿import pandas as pd
 import yfinance as yf
 from datetime import datetime, timedelta
 from config.settings import CACHE_HOURS, CACHE_VALIDATE_TRADING_DATE, TOP_N_SECTOR_COMPONENTS
@@ -7,25 +7,16 @@ from data.providers.xetra_provider import XetraProvider
 from data.providers.bme_provider import BMEProvider
 from src.market_calendar import last_expected_market_date, is_market_day
 from src.market_hours import is_trading_session, is_session_closed
-from src.instrument_registry import get_market
+from src.instrument_registry import (
+    get_market,
+    normalize_yahoo_ticker as normalize_yahoo_ticker,  # re-export backward-compat
+    YAHOO_TICKER_MAP as YAHOO_TICKER_MAP,  # re-export backward-compat
+)
 from zoneinfo import ZoneInfo
 import os
 import time
 
 
-YAHOO_TICKER_MAP = {
-    "BRK.B": "BRK-B",
-    "BF.B": "BF-B",
-    "MOGA": "MOG-A",
-    "MOG A": "MOG-A",
-    "GEF B": "GEF-B",
-    "CRD A": "CRD-A",
-    "BH A": "BH-A",
-}
-
-def normalize_yahoo_ticker(t):
-    """Convierte tickers problemáticos al formato que acepta Yahoo Finance."""
-    return YAHOO_TICKER_MAP.get(t, t)
 
 def get_usa_tickers():
     """Obtiene solo tickers de sectores USA (data/etf_holdings.csv)."""

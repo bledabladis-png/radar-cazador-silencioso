@@ -710,6 +710,26 @@ INSTRUMENTS = {
     },
 }
 
+# Mapa de normalizacion de tickers al formato Yahoo.
+# Movido aqui desde stock_data_loader y data_loader (2026-09-24)
+# para eliminar duplicacion y permitir que get_market normalice
+# antes de clasificar (BRK.B -> BRK-B).
+YAHOO_TICKER_MAP = {
+    "BRK.B": "BRK-B",
+    "BF.B": "BF-B",
+    "MOGA": "MOG-A",
+    "MOG A": "MOG-A",
+    "GEF B": "GEF-B",
+    "CRD A": "CRD-A",
+    "BH A": "BH-A",
+}
+
+
+def normalize_yahoo_ticker(t):
+    """Convierte tickers problematicos al formato que acepta Yahoo Finance."""
+    return YAHOO_TICKER_MAP.get(t, t)
+
+
 def resolve_symbol(canonical_ticker: str, provider: str):
     """Devuelve el símbolo específico del proveedor para un ticker canónico.
     Si no hay mapeo especial, asume que el ticker es el mismo y lo devuelve sin cambios.
@@ -756,6 +776,10 @@ def get_market(ticker: str) -> str:
     """
     if not isinstance(ticker, str):
         return "UNKNOWN"
+    # Normalizar primero (BRK.B -> BRK-B). El mapa incluye los
+    # tickers con clase accionaria (punto en INSTRUMENTS, guion
+    # en Yahoo). Sin esto, BRK.B/BF.B caian a UNKNOWN.
+    ticker = normalize_yahoo_ticker(ticker)
     if ticker.endswith(".L"):
         return "LSE"
     if ticker.endswith(".DE"):
