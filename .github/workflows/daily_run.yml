@@ -10,7 +10,13 @@ on:
     # Madrid). Si el retraso de GitHub excede 4h, el run cae fuera de la
     # ventana y el manifest lo refleja (close_nan alto). No contamina: los
     # NaN quedan como NaN tras FU-001 y FU-002-evo2.
-    - cron: '0 4 * * *'
+    #
+    # F-IAE-CRON-01 (2026-09-24): cron movido de 04:00 a 23:00 UTC. Motivo:
+    # con el cron anterior + retraso de 5h observado, la ejecucion real caia
+    # a las 09:00 UTC = 11:00 Madrid, dentro de la sesion europea. Con
+    # 23:00 UTC, el run ejecuta a ~04:00 UTC = 05:00/06:00 Madrid, dentro de
+    # la ventana limpia. Margen de retraso tolerado: hasta 8h (antes 3h).
+    - cron: '0 23 * * *'
   workflow_dispatch:
 
 concurrency:
