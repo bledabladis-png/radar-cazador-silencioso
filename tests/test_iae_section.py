@@ -164,7 +164,7 @@ ALL_KEYS = (
     "n_delta_observable","n_both","n_new","n_exit","n_unresolved_identity",
     "coverage_status","coverage_quality",
     "catalog_coverage_declared","catalog_keys_total","catalog_keys_observed",
-    "evidence_class","error",
+    "evidence_class","stale_reason","error",
 )
 
 
@@ -184,3 +184,38 @@ def test_iae_section_todas_las_claves_presentes_ok(tmp_path):
         r = iae_section.compute_iae_section(None, "TEST")
     for k in ALL_KEYS:
         assert k in r, f"falta {k} en OK"
+
+
+# --- stale_reason (Bug B: Official List pendiente) ----------------------
+
+def test_iae_section_stale_insufficient_quarters_reason(tmp_path):
+    d = _stale_env(tmp_path, 0)
+    with patch.object(iae_section, "DATA_DIR", d):
+        r = iae_section.compute_iae_section(None, "TEST")
+    assert r["status"] == "STALE"
+    assert r["stale_reason"] == "insufficient_quarters"
+
+
+def test_iae_section_official_list_pending(tmp_path):
+    d = _ok_env(tmp_path)
+    with patch.object(iae_section, "DATA_DIR", d), \
+         patch("src.institutional_accumulation.pipeline_contractual"
+               ".run_contractual_nipc",
+               side_effect=FileNotFoundError(
+                   "Official List no existe: /tmp/13flist_2025Q4.txt")):
+        r = iae_section.compute_iae_section(None, "TEST")
+    assert r["status"] == "STALE"
+    assert r["stale_reason"] == "official_list_pending"
+    assert r["period_current"] == "2025Q4"
+    assert r["nipc_total"] is None
+    assert "Official List" in r["error"]
+
+
+def test_iae_section_ok_stale_reason_none(tmp_path):
+    d = _ok_env(tmp_path)
+    with patch.object(iae_section, "DATA_DIR", d), \
+         patch("src.institutional_accumulation.pipeline_contractual"
+               ".run_contractual_nipc", return_value=_fake_result()):
+        r = iae_section.compute_iae_section(None, "TEST")
+    assert r["status"] == "OK"
+    assert r["stale_reason"] is None

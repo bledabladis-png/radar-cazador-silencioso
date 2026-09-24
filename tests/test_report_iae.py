@@ -86,3 +86,16 @@ def test_status_desconocido():
     r = render_iae_section({"status": "FOO"})
     txt = "".join(r)
     assert "desconocido" in txt.lower() or "FOO" in txt
+
+
+def test_stale_official_list_pending_render():
+    r = render_iae_section({
+        "status": "STALE",
+        "stale_reason": "official_list_pending",
+        "period_previous": "2026Q1",
+        "period_current": "2026Q2",
+    })
+    txt = "".join(r)
+    assert "Official List" in txt
+    assert "2026Q1 -> 2026Q2" in txt
+    assert "PDF" in txt

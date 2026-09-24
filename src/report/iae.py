@@ -37,6 +37,21 @@ def render_iae_section(iae_section):
     status = iae_section.get("status")
 
     if status == "STALE":
+        reason = iae_section.get("stale_reason")
+        if reason == "official_list_pending":
+            prev = iae_section.get("period_previous")
+            curr = iae_section.get("period_current")
+            out.append(
+                f"**Datos 13F cargados ({prev} -> {curr}), pero la "
+                f"Official List 13(f) de {curr} aun no ha sido publicada "
+                f"por SEC.**\n"
+            )
+            out.append(
+                "*SEC publica primero el PDF y despues el TXT (a veces con "
+                "semanas de retraso). El NIPC se calculara automaticamente "
+                "cuando el TXT este disponible.*\n\n"
+            )
+            return out
         out.append("**Sin suficientes trimestres 13F disponibles para "
                    "calcular variacion.**\n")
         prev = iae_section.get("period_previous")

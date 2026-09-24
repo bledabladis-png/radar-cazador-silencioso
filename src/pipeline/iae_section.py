@@ -71,6 +71,7 @@ def compute_iae_section(reference_date, run_id, *, official_dir=None):
             catalog_keys_total (int)
             catalog_keys_observed (int)
             evidence_class (str): CONTRACTUAL
+            stale_reason (str | None): insufficient_quarters | official_list_pending
             error (str | None)
     """
     print("Calculando seccion IAE (13F - NIPC contractual)...")
@@ -82,6 +83,7 @@ def compute_iae_section(reference_date, run_id, *, official_dir=None):
         print("  Sin suficientes trimestres 13F para calcular delta.")
         return {
             "status": "STALE",
+            "stale_reason": "insufficient_quarters",
             "period_previous": quarters[0][0] if quarters else None,
             "period_current": None,
             "iso_previous": quarters[0][1] if quarters else None,
@@ -113,10 +115,34 @@ def compute_iae_section(reference_date, run_id, *, official_dir=None):
             folders=(f_prev, f_curr),
             periods=(iso_prev, iso_curr),
             **kwargs)
+    except FileNotFoundError as e:
+        msg = str(e)
+        if "Official List" in msg:
+            print("  STALE en IAE (Official List pendiente): " + msg)
+            return {
+                "status": "STALE",
+                "stale_reason": "official_list_pending",
+                "period_previous": f_prev, "period_current": f_curr,
+                "iso_previous": iso_prev, "iso_current": iso_curr,
+                "nipc_total": None, "nipc_sole": None,
+                "nipc_dfnd": None, "nipc_otr": None,
+                "n_delta_observable": 0,
+                "n_both": 0, "n_new": 0, "n_exit": 0,
+                "n_unresolved_identity": 0,
+                "coverage_status": "UNAVAILABLE",
+                "coverage_quality": "UNAVAILABLE",
+                "catalog_coverage_declared": None,
+                "catalog_keys_total": None,
+                "catalog_keys_observed": None,
+                "evidence_class": None,
+                "error": msg,
+            }
+        raise
     except Exception as e:
         print("  ERROR en IAE: " + str(type(e).__name__) + ": " + str(e))
         return {
             "status": "ERROR",
+            "stale_reason": None,
             "period_previous": f_prev, "period_current": f_curr,
             "iso_previous": iso_prev, "iso_current": iso_curr,
             "nipc_total": None, "nipc_sole": None,
@@ -151,6 +177,7 @@ def compute_iae_section(reference_date, run_id, *, official_dir=None):
 
     return {
         "status": "OK",
+        "stale_reason": None,
         "period_previous": f_prev, "period_current": f_curr,
         "iso_previous": iso_prev, "iso_current": iso_curr,
         "nipc_total": r.get("nipc_total"),
