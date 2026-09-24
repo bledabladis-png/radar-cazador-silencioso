@@ -1,6 +1,6 @@
-# PROMPT MAESTRO v7.2 - INGENIERO SUPERVISOR DEL RADAR DE ROTACION SECTORIAL
+# PROMPT MAESTRO v7.3 - INGENIERO SUPERVISOR DEL RADAR DE ROTACION SECTORIAL
 
-**Actualizado:** 2026-09-22 (v7.2: limpieza de andamiaje contractual heredado; el modulo IAE se documenta en `iae/IAE_MAESTRO.md`).
+**Actualizado:** 2026-09-24 (v7.3: Fase G - automatizacion de mappings del IAE; estado del sistema refleja cache 13F v2 con 3 trimestres y crosswalk regenerado por script).
 
 Este documento describe **rol, metodologia, arquitectura y prohibiciones vigentes**.
 **NO declara el estado del sistema.** Para estado, ver:
@@ -293,7 +293,7 @@ D:\Macro_Sectorial
 | +-- commodities_spot.parquet (+ .manifest.json) [FU-021-3C-bis]
 +-- scripts/ (16+ activos; +iae_pipeline.py, build_catalog_csvs.py)
 +-- validation/ (6 activos)
-+-- tests/ (1531 casos; ver sec 15 para conteo del modulo IAE)
++-- tests/ (1589 casos; ver sec 15 para conteo del modulo IAE)
 +-- docs/
 | +-- automatica/ (22 .md auto-generados, LF)
 | +-- auditoria/ (prompt + transfer + readme + iae/)
@@ -454,9 +454,26 @@ update_sec_13f.yml	0 6 20 2,5,8,11 *	SEC 13F trimestral + cache parquets IAE
 update_sector_holdings.yml	0 3 1 1,4,7,10 *	Holdings sectoriales
 Nota: daily_run.yml commitea Daily hist/state. Aplicar git fetch + pull --rebase antes de cualquier push local.
 
+Fase G (2026-09-24) - automatizacion de mappings del IAE:
+
+- daily_run.yml gana el step "Regenerar catalogo radar (IAE)" tras run.py.
+  Ejecuta scripts/regenerate_radar_catalog.py. No-op si no hay tickers
+  nuevos. Consulta OpenFIGI (TICKER/US) con el secret OPENFIGI_API_KEY.
+- update_sec_13f.yml gana:
+  - Input 'quarter' en workflow_dispatch (override manual).
+  - '--backfill 2' para ingesta historica de 3 trimestres (Q_k-2..Q_k).
+  - Step "Regenerar crosswalk CUSIP (IAE)" tras la ingesta.
+- Cache 13F: key '13f-processed-v2-<hash>'. La v1 tenia 1 trimestre;
+  save fallaba al sobreescribir. La v2 se genera con 3 trimestres.
+- Estructura de mappings del IAE:
+  - data/mappings/radar_target_catalog.csv: regenerado en daily_run.
+  - data/mappings/catalog_manifest.json + catalog_snapshots/: PIT.
+  - data/mappings/cusip_radar_crosswalk.csv: regenerado en trimestral.
+    Acumulativo (preserva historico en runners con cache parcial).
+
 ## SECCION 10 - VALIDACION Y TESTS
 10.1. Tests
-1529 passed + 2 skipped + 0 failed en local tras run.py. Los 3 test_freshness (ambientales) pasan tras un run que refresca los parquets; vuelven a fallar si pasan >4 dias sin ejecutar el pipeline. CI similar con parquet gitignored. Incluye 819 tests del modulo IAE (criterio AST, ver seccion 15).
+1587 passed + 2 skipped + 0 failed en local tras run.py. Los 3 test_freshness (ambientales) pasan tras un run que refresca los parquets; vuelven a fallar si pasan >4 dias sin ejecutar el pipeline. CI similar con parquet gitignored. Incluye 845 tests del modulo IAE (criterio AST, 45 ficheros, ver seccion 15).
 
 10.2. Validation Gate (10/10)
 SLPM v1.2 (sin errores de validacion)
@@ -757,6 +774,25 @@ Dark Pool con retraso FINRA (2-4 sem) -> Marcado ARCHIVAL.
 
 Confidence sensible a N componentes -> Documentado (C19).
 
+Fase G (2026-09-24): automatizacion de mappings del IAE.
+
+Official List 13(f) Q2 2026 sin TXT -> STALE honesto. SEC ha publicado
+solo el PDF (2026-08-14). La seccion IAE del reporte diario muestra
+"Datos 13F cargados (2026Q1 -> 2026Q2), pero la Official List 13(f) de
+2026Q2 aun no ha sido publicada por SEC." Verificado con curl (404).
+No es bug. Comportamiento correcto documentado en iae_section.py
+(stale_reason=official_list_pending).
+
+Cobertura sectorial baja: 7 de 11 sectores con cobertura <70% del
+universo. Los ratios de breadth/concentracion se calculan sobre la
+parte valida pero la marca [BAJA] no invalida derivados. Decision de
+producto pendiente.
+
+Bugs de render en el reporte (no en pipeline): 3 detectados 2026-09-24.
+- Momentum de amplitud: Δ1d EMA20 = nan en 11/11 sectores.
+- Representatividad del lider: 3 bloques concatenados sin etiqueta.
+- Divergencia sector-lideres: mismo patron.
+
 FU-001 (ffill multi-calendario L352) -> RESUELTO 2026-09-15 (38f9ce1 + 8a76380).
 
 FU-002 (validacion circular BackupProvider) -> RESUELTO 2026-09-15 (45f29c2 + 2da234f).
@@ -905,12 +941,12 @@ viven en `iae/IAE_MAESTRO.md`. No se duplican aqui.
 ### 13.3. Estado del repo al cierre (2026-09-24)
 
     HEAD            ver docs/auditoria/iae/ESTADO_SISTEMA.md
-    Ahead           ver docs/auditoria/iae/ESTADO_SISTEMA.md
-    Push            NO (local-first IAE)
+    Ahead           0 (sincronizado con origin/main)
+    Push            SI (integrado en produccion desde 2026-09-24)
     Working tree    LIMPIO
-    Suite local     1529 passed + 2 skipped + 0 failed
-    Suite IAE       819 passed (criterio AST)
-    Suite CI        0 failed
+    Suite local     1587 passed + 2 skipped + 0 failed
+    Suite IAE       845 passed (criterio AST, 45 ficheros)
+    Suite CI        0 failed (verificado en run 36015197250)
 
 Nota. Los 3 test_freshness pasan tras un `py run.py` que refresca los
 parquets; vuelven a fallar si pasan >4 dias sin ejecutar el pipeline.
