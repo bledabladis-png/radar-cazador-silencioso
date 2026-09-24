@@ -2,29 +2,29 @@
   "schema_version": 1,
   "artifact": {
     "path": "data/cboe_vix3m.parquet",
-    "sha256": "fe57a53f86dc65391a13ee989bd2253dd6cc499f7bd05849735f56b0ab1e6fc0",
-    "bytes": 96712,
-    "written_at": "2026-09-20T09:07:04.621711"
+    "sha256": "e481a15de9323c65254d18a063482bd2e458f4febc3dfabbad642ce8b56853cd",
+    "bytes": 96719,
+    "written_at": "2026-09-22T09:04:56.678467"
   },
   "producer": {
     "module": "src.utils",
     "function": "write_artifact_with_manifest",
-    "run_id": "20260920_110704",
+    "run_id": "20260922_110456",
     "source": "cboe_vix3m"
   },
   "content": {
-    "rows": 4276,
+    "rows": 4277,
     "cols": 5,
     "n_tickers": 1,
     "date_min": "2009-09-18",
-    "date_max": "2026-09-18"
+    "date_max": "2026-09-21"
   },
   "temporal": {
     "contract": null
   },
   "quality": {
-    "last_date": "2026-09-18",
-    "expected_session": "2026-09-18",
+    "last_date": "2026-09-21",
+    "expected_session": "2026-09-21",
     "last_date_is_expected_session": true,
     "pct_dup_last": 0.0,
     "close_nan_last": 0,
