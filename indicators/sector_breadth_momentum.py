@@ -40,7 +40,7 @@ def _delta(series, dates, days):
 
     # Tolerancia de días naturales: sesiones + fines de semana + festivos
 
-    max_calendar_days = max(days + 2, int(days * 1.6) + 3)
+    max_calendar_days = max(days + 5, int(days * 1.6) + 3)  # C1 fix 2026-09-24: days+5 absorbe finde+festivo
 
     if diff_days > max_calendar_days:
 
