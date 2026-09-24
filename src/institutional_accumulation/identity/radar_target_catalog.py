@@ -73,6 +73,15 @@ def build_from_probe_result(
     No consulta OpenFIGI. Determinista.
     """
     raw = json.loads(Path(result_json_path).read_text(encoding="utf-8"))
+    return build_from_hits(raw, source_date=source_date)
+
+
+def build_from_hits(raw: dict, *, source_date: str) -> pd.DataFrame:
+    """Construye el catalog desde un dict {ticker: hit_dict}.
+
+    El hit_dict debe seguir el formato de
+    openfigi_client.map_identifiers: {ok, data, error}.
+    """
     rows = []
     for tk, hit in raw.items():
         ident = extract_stable_identity(hit)
