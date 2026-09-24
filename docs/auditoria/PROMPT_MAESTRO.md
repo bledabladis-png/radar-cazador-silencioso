@@ -1,6 +1,6 @@
-# PROMPT MAESTRO v7.3 - INGENIERO SUPERVISOR DEL RADAR DE ROTACION SECTORIAL
+# PROMPT MAESTRO v7.4 - INGENIERO SUPERVISOR DEL RADAR DE ROTACION SECTORIAL
 
-**Actualizado:** 2026-09-24 (v7.3: Fase G - automatizacion de mappings del IAE; estado del sistema refleja cache 13F v2 con 3 trimestres y crosswalk regenerado por script).
+**Actualizado:** 2026-09-24 (v7.4: ciclo BACKLOG del reporte + FU-002-bymarket + health check semanal + consolidacion registry; ver §11.17-§11.21. Base v7.3: Fase G - automatizacion de mappings del IAE; estado del sistema refleja cache 13F v2 con 3 trimestres y crosswalk regenerado por script).
 
 Este documento describe **rol, metodologia, arquitectura y prohibiciones vigentes**.
 **NO declara el estado del sistema.** Para estado, ver:
@@ -291,7 +291,9 @@ D:\Macro_Sectorial
 | +-- stock_prices.parquet (+ .manifest.json)
 | +-- commodities_futures.parquet (+ .manifest.json) [FU-021-3C-bis]
 | +-- commodities_spot.parquet (+ .manifest.json) [FU-021-3C-bis]
-+-- scripts/ (16+ activos; +iae_pipeline.py, build_catalog_csvs.py)
++-- scripts/ (20+ activos; +health_check.py, guard_coverage.py,
+|            qqq_returns_yahoo.py, regenerate_radar_catalog.py,
+|            regenerate_cusip_crosswalk.py)
 +-- validation/ (6 activos)
 +-- tests/ (1589 casos; ver sec 15 para conteo del modulo IAE)
 +-- docs/
@@ -302,6 +304,13 @@ D:\Macro_Sectorial
 +-- history/ (versionado)
 +-- state/ (versionado)
 +-- report/ (NO versionado)
++-- .github/
+| +-- workflows/ (9 workflows; +health_check.yml)
+| | daily_run.yml, update_macro_manual.yml,
+| | update_european_holdings.yml, update_index_holdings.yml,
+| | update_sec_nport.yml, update_qqq_sec_flow.yml,
+| | update_sec_13f.yml, update_sector_holdings.yml,
+| | health_check.yml (lunes 07:00 UTC, semanal)
 +-- audit/ (NO versionado)
 
 text
@@ -324,7 +333,7 @@ text
 - **`src/utils.py::write_artifact_with_manifest` es la fuente unica de escritura de parquet + manifest.**
 - **`src/effective_date.py::resolve_effective_date` es un resolutor por cobertura. No consulta calendario. No sustituye a `is_session_closed`. Ver R4 (Seccion 2).**
 - **`src/temporal_contracts/` es la fuente unica de contratos temporales (FU-021-5 + FU-021-3C-bis). `base.py::compute_status` implementa la FSM (PENDING|OK|STALE|INSUFFICIENT|BLOCKED). `consolidate.py::build_temporal_meta` construye el dict. `__init__.py::resolve_all_contracts` resuelve los 10 contratos. `get_contract(name)` devuelve instancia. `MarketDataBundle` es el transporte (Q-P.3). Los contratos de commodities declaran `settlement_semantics` (close_proxy | spot_reference).**
-- **`src/instrument_registry.py` expone dos funciones con responsabilidades disjuntas: `get_market(ticker)` (calendario bursatil) y `get_instrument_class(ticker)` (clase economica). No mezclar: `INSTRUMENT CLASS != MARKET != TEMPORAL CONTRACT`.**
+- **`src/instrument_registry.py` expone dos funciones con responsabilidades disjuntas: `get_market(ticker)` (calendario bursatil) y `get_instrument_class(ticker)` (clase economica). No mezclar: `INSTRUMENT CLASS != MARKET != TEMPORAL CONTRACT`. Desde 2026-09-24 es tambien la fuente unica de `YAHOO_TICKER_MAP` + `normalize_yahoo_ticker(t)` (mapa de normalizacion de simbolos con clase accionaria: `BRK.B -> BRK-B`, `BF.B -> BF-B`, `MOGA -> MOG-A`, etc.). `get_market` normaliza antes de clasificar por sufijo (fix 2026-09-24: BRK.B/BF.B caian a UNKNOWN). `stock_data_loader.py` y `data_loader.py` re-exportan `normalize_yahoo_ticker` desde aqui por backward-compat.**
 - **`src/institutional_accumulation/` es el modulo IAE.** Documentacion completa en `iae/IAE_MAESTRO.md`.
 
 - **`indicators/mte/` es paquete con 5 submodulos (DT2): `engine.py::compute_mte` (entry point), `state.py::load_previous_scenario/save_scenario` (persistencia `mte_state.json`), `scoring.py` (SRS, SHS, CSS, IPS, MSI, IPI, `score_scenarios` + helpers `tanh`, `_get_last`), `decision.py` (`validate_transition`, `consensus_score`, `distance_to_threshold`, `compute_confidence`, `classify_mte`, `NORMAL_TRANSITIONS`, `EXCEPTION_TRANSITIONS`). API publica preservada: `from indicators.mte import compute_mte`.**
@@ -452,7 +461,9 @@ update_qqq_sec_flow.yml	0 6 15 1,7 *	QQQ SEC flow
 update_sec_nport.yml	0 6 20 1,4,7,10 *	N-PORT
 update_sec_13f.yml	0 6 20 2,5,8,11 *	SEC 13F trimestral + cache parquets IAE
 update_sector_holdings.yml	0 3 1 1,4,7,10 *	Holdings sectoriales
+health_check.yml                  0 7 * * 1              Vigilancia semanal (workflows, cache 13F, manifests, cobertura, fechas no bursatiles, patron EU-USA, seccion IAE). Abre/cierra GitHub Issue con label health-check.
 Nota: daily_run.yml commitea Daily hist/state. Aplicar git fetch + pull --rebase antes de cualquier push local.
+Nota F-IAE-CRON-01 (2026-09-24): el cron de daily_run.yml se movio de 0 4 * * * a 0 23 * * * UTC para evitar la ventana donde guard_coverage bloqueaba commits (sesion USA abierta). Con retraso tipico de ~5h, la ejecucion real cae a 04:00 UTC (pre-apertura europea).
 
 Fase G (2026-09-24) - automatizacion de mappings del IAE:
 
@@ -765,6 +776,114 @@ Bug latente corregido (FU-002): `write_artifact_with_manifest` con df de 1 fila 
 
 Nota metodologica en reporte: seccion "Momentum de Precio - Otros Activos" indica semantica de los 5 tickers.
 
+11.17. FU-002-bymarket - Manifest con cobertura por mercado (2026-09-24)
+Ciclo completo con dictamen auditor externo (APROBACION CONDICIONADA, 3 correcciones
+materiales aplicadas + 5 puntos adicionales).
+
+Problema: coverage_pct_last colapsa un universo multi-mercado a una unica ultima
+fecha global. Cuando run.py ejecuta entre cierre europeo (~15:30 UTC) y cierre USA
+(~20:00 UTC), el parquet tiene legitimamente una ultima fila con solo europeos
+(~16% cobertura). El guard bloqueaba el commit de datos correctos.
+
+Fix: manifest amplia quality.by_market con cobertura por mercado en su propia
+ultima sesion cerrada (via is_session_closed de FU-018, independiente de
+resolve_effective_date). Guard_coverage exime cuando la cobertura global es baja
+pero todos los mercados activos cumplen el threshold.
+
+Correcciones del auditor:
+- C-1 (GATE critico): last_closed_session por calendario + FU-018, NO por datos.
+  Evita que una ausencia completa de datos en la sesion esperada se enmascare
+  retrocediendo a una sesion anterior con datos.
+- C-2: guard NO exime si quality.status == INVALID. Solo cuando status ==
+  VALID_WITH_MISSING. No convierte una exencion de cobertura en una exencion
+  de integridad general.
+- C-3: _all_markets_valid usa el MISMO threshold del guard, no un valor fijo.
+- Punto 5: UNKNOWN con n>0 -> status INVALID (anomalia de integridad, no SKIP).
+- Punto 6: by_market itera sobre _KNOWN_MARKETS dinamicamente (no fija 5 claves).
+- Punto 9: reference_date propagado desde el caller (no datetime.now() interno).
+
+Politica de schema declarada en §11.8: campos adicionales son backward-compatible,
+sin bump de schema_version.
+
+Tests: 28 nuevos (14 manifest + 14 guard). Verificacion empirica: 107 tickers
+contribuyen al A/D del 23-Sep / 206 no contribuyen (con gap interno del 22-Sep).
+Commits: 88c27d1, d09f928, 62e38d9.
+
+11.18. Health check semanal (2026-09-24)
+Workflow health_check.yml (lunes 07:00 UTC) ejecuta scripts/health_check.py.
+Verifica 7 bloques:
+- A: workflow: ultima ejecucion por schedule dentro de su ventana esperada.
+- B: cache_13f: trimestre actualizado (4 trimestres cerrados).
+- C: manifest: quality.status de stock_prices y market_data.
+- D: coverage:last + coverage:hist (ultimas 5 filas del parquet).
+- E: fechas no bursatiles NYSE con datos USA (solo alerta si hay US_EQUITY
+  con Close; los europeos operan en festivos USA y son legitimos).
+- F: patron contaminacion Europa-USA en ultima fila (K-STOCK-PRICES-EOD-01).
+- G: seccion IAE presente en el reporte.
+
+Abre/cierra GitHub Issue con label health-check. Uso exclusivo del check
+coverage:hist: la constante CONFIRMED_INCOMPLETE_DATES = {2026-09-22} marca
+fechas con incompletez historica documentada (fallo Yahoo puntual, 206/313
+tickers USA sin Close). Otros controles siguen evaluando la fecha.
+
+Commits: 8ec488e, 0464145, 5651d2a, 1822ed9.
+
+11.19. Bug latente A/D - Continuidad temporal en compute_sector_breadth (2026-09-24)
+Detectado al auditar el 22-Sep: 206/313 tickers USA sin Close ese dia por fallo
+puntual de Yahoo. El calculo daily_ret = close.iloc[-1] - close.iloc[-2] comparaba
+23-Sep contra 21-Sep y lo etiquetaba como movimiento 1d. El A/D del reporte
+mezclaba 107 movimientos reales 1d con 206 movimientos 2d aparentes (magnitudes
+x2 en 2/3 del universo).
+
+Fix: exigir continuidad temporal via previous_market_day (calendario NYSE,
+universo USA verificado: 219/220 top-20 son US_EQUITY). Si la penultima
+observacion no es la sesion inmediatamente anterior, el ticker no contribuye
+al A/D (no se inventa dato).
+
+Verificacion empirica: 107 contribuyen / 206 no contribuyen. Commit fc21671.
+Tests: 4 nuevos.
+
+11.20. Consolidacion del mapa de normalizacion de tickers (2026-09-24)
+YAHOO_TICKER_MAP + normalize_yahoo_ticker(t) movidos de stock_data_loader.py y
+data_loader.py (duplicados, riesgo de divergencia silenciosa) a
+instrument_registry.py (fuente unica). Los dos loaders re-exportan por
+backward-compat.
+
+Fix derivado: get_market normaliza antes de clasificar por sufijo. Bug:
+get_market('BRK.B') devolvia UNKNOWN (el punto no es sufijo europeo) mientras
+get_market('BRK-B') devolvia US_EQUITY. Ahora ambos devuelven US_EQUITY.
+
+Impacto: consumidores downstream (compute_sector_breadth, check_non_market_days,
+compute_by_market) ya no ven UNKNOWN para BRK.B/BF.B.
+Commits: 7025a89, d1a4676. Tests: 9 nuevos.
+
+11.21. Ciclo BACKLOG del reporte (2026-09-24)
+Cerrado el backlog de bugs de presentacion detectados tras revision del reporte
+en CI. Todos son de render/nomenclatura, no de pipeline:
+- C1: _delta en sector_breadth_momentum.py toleraba mal gaps de calendario.
+  Fix: max_calendar_days = max(days+5, int(days*1.6)+3). Commit 2fe1c45.
+- C2: render_representatividad_lider no filtraba a ultima fecha. Fix: filtro
+  analogo al de render_wyckoff_sectorial. Commit 740be35.
+- C3: render_divergencia_sector_lideres mismo patron. Commit dfd93c4.
+- B1: 'Flujo Institucional' renombrado a 'Flujo de Mercado' (la metrica es
+  FLOW_PROXY, no flujo institucional real; contradicia la nota de slpm.py).
+  Commit f4f8003.
+- B2: anadida nota de criterio de seleccion de lideres (peso ETF + WLS) en
+  render_acciones_seleccionadas. Commit 664d839.
+- D1: anadida fila SPY como benchmark en Rendimiento QQQ. Commit bb9251b.
+- D2c: declarada regla de FLOW_CONFIDENCE + bug latente corregido (pos==3
+  reportaba BAJA cuando 4/4 capas alineadas; ahora pos>=3). Commit c4b7138.
+- D3/E1: notas semanticas en rotacion sectorial y complementariedad SSGA.
+  Commit c4b7138.
+- A1: cobertura sectorial calculada contra top-20 componentes reales (no ETF
+  completo). Bug: n_total contaba 78 para XLF (78 componentes del ETF) mientras
+  solo se descargan 20 (top-20 por weight). Cobertura 26% con [BAJA] falso
+  positivo. Fix: replicar head(TOP_N_SECTOR_COMPONENTS) en
+  indicators/sector_breadth.py + constante en config/settings.py. Commit 8c6330f.
+
+Tests del ciclo: 49 nuevos. Commits: 2fe1c45, 740be35, dfd93c4, f4f8003,
+664d839, c4b7138, bb9251b, 8c6330f, y commits documentales.
+
 ## SECCION 12 - LIMITACIONES CONOCIDAS
 20 tickers .L sin provider oficial -> Aceptado.
 
@@ -790,10 +909,21 @@ universo. Los ratios de breadth/concentracion se calculan sobre la
 parte valida pero la marca [BAJA] no invalida derivados. Decision de
 producto pendiente.
 
-Bugs de render en el reporte (no en pipeline): 3 detectados 2026-09-24.
-- Momentum de amplitud: Δ1d EMA20 = nan en 11/11 sectores.
-- Representatividad del lider: 3 bloques concatenados sin etiqueta.
-- Divergencia sector-lideres: mismo patron.
+Bugs de render en el reporte (no en pipeline): 3 detectados 2026-09-24,
+RESUELTOS 2026-09-24. Detalle en §11.21.
+- C1 Momentum de amplitud: fix tolerancia calendario en _delta. Commit 2fe1c45.
+- C2 Representatividad del lider: filtro a ultima fecha. Commit 740be35.
+- C3 Divergencia sector-lideres: mismo fix. Commit dfd93c4.
+
+K-STOCK-PRICES-EOD-01 (2026-09-18): mitigado por FU-002-bymarket (2026-09-24).
+El guard ya no bloquea commits cuando la ultima fila es parcial por desfase de
+cierre de mercados. La exencion es condicional (solo si todos los mercados
+activos cumplen el threshold en su propia ultima sesion cerrada). Ver §11.17.
+
+22-Sep incompletez historica: 206/313 tickers USA sin Close por fallo puntual
+de Yahoo. Marcado en CONFIRMED_INCOMPLETE_DATES (health_check.py). No bloquea
+otros controles. Bug latente derivado (A/D sin continuidad temporal) corregido
+en commit fc21671. Ver §11.18 y §11.19.
 
 FU-001 (ffill multi-calendario L352) -> RESUELTO 2026-09-15 (38f9ce1 + 8a76380).
 
@@ -934,6 +1064,12 @@ Monolitos restantes: ninguno de los tres principales. Todos resueltos:
 Cache datos: parquet market_data (~57 MB), stock_prices (~14 MB).
 
 DT4 (WONT FIX razonado 2026-09-17): reorganizacion validation/ y scripts/.
+
+Ciclo 2026-09-24: 6 bugs latentes detectados y corregidos durante la sesion
+(FLOW_CONFIDENCE pos==3, cobertura sectorial top-20, A/D sin continuidad
+temporal, check_non_market_days multi-mercado, get_market(BRK.B), duplicacion
+YAHOO_TICKER_MAP). Herramientas de vigilancia anadidas: health_check.py
+(semanal) + guard_coverage.py (pre-commit). Suite: 1587 -> 1682 passed.
 
 ### 13.2. IAE
 
