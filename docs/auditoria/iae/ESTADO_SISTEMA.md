@@ -2,7 +2,7 @@
 
 Hechos verificables del sistema. Generado por script.
 
-**Generado en:** 2026-09-23 23:29:43 UTC
+**Generado en:** 2026-09-24 01:09:52 UTC
 **Snapshot tomado sobre:** commit HEAD de la fecha indicada, al momento de generar
 **NO editar a mano.** Regenerar con:
 
@@ -16,22 +16,22 @@ proyecto describen su tema; NO declaran el estado del sistema.
 
 ## 1. Git
 
-- **HEAD:** `0a0f042`
-- **HEAD completo:** `0a0f0420f34e722cffd436581cdc3ff640af6e41`
-- **Fecha commit HEAD:** 2026-09-24 01:29:16 +0200
-- **Ahead:** 454
+- **HEAD:** `f396e99`
+- **HEAD completo:** `f396e990282fec86ec05746d704775e9ce43a001`
+- **Fecha commit HEAD:** 2026-09-24 03:08:08 +0200
+- **Ahead:** 458
 - **Behind:** 0
 - **origin/main:** `5f1d9ab`
 
 ## 2. Tests (pytest real)
 
-- **Resumen:** 1521 passed, 2 skipped in 28.18s
+- **Resumen:** 1529 passed, 2 skipped in 27.71s
 - **Exit code:** 0
 
 ## 3. Integridad del codigo
 
 - **compileall:** OK (exit 0)
-- **pyflakes:** LIMPIO
+- **pyflakes:** 4 warnings (exit 1)
 
 ## 4. Modulos IAE
 
