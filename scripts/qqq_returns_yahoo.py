@@ -22,7 +22,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(PROJECT_ROOT))
 
 OUTPUT = PROJECT_ROOT / "outputs" / "history" / "qqq_returns_yahoo.csv"
-TICKER = "QQQ"
+TICKERS = [("QQQ", "QQQ (Yahoo Finance)"), ("SPY", "SPY (Yahoo Finance)")]
 
 def get_adjusted_prices(ticker: str) -> pd.Series:
     """Descarga precios ajustados de cierre desde Yahoo Finance."""
@@ -35,7 +35,7 @@ def get_adjusted_prices(ticker: str) -> pd.Series:
         raise RuntimeError(f"Historial insuficiente para {ticker}: {len(prices)} filas")
     return prices
 
-def calculate_returns(prices: pd.Series) -> dict:
+def calculate_returns(prices: pd.Series, display_label: str) -> dict:
     """Calcula rendimientos porcentuales para varios periodos."""
     latest = prices.iloc[-1]
     latest_date = prices.index[-1]
@@ -68,27 +68,30 @@ def calculate_returns(prices: pd.Series) -> dict:
         "y10": y10,
         "inception": inception,
         "label": "marketPrice",
-        "displayLabel": "QQQ (Yahoo Finance)",
+        "displayLabel": display_label,
         "effectiveDate": latest_date.strftime("%Y-%m-%d"),
         "as_of_date": f"{latest_date.strftime('%Y-%m-%d')} {datetime.now().strftime('%H:%M:%S')}",
         "performancePeriod": "daily",
     }
 
-def save_csv(data: dict) -> None:
+def save_csv(rows: list) -> None:
     OUTPUT.parent.mkdir(parents=True, exist_ok=True)
-    df = pd.DataFrame([data])
-    # Reordenar para que coincida con el formato esperado
+    df = pd.DataFrame(rows)
     df = df[["ytd", "y1", "y3", "y5", "y10", "inception", "label", "displayLabel", "effectiveDate", "as_of_date", "performancePeriod"]]
     df.to_csv(OUTPUT, index=False, encoding="utf-8-sig")
 
 def main() -> None:
-    print("Descargando precios de QQQ desde Yahoo Finance...")
-    prices = get_adjusted_prices(TICKER)
-    returns = calculate_returns(prices)
-    save_csv(returns)
-    print(f"Rendimientos QQQ calculados y guardados en {OUTPUT}")
-    print(f"  YTD: {returns['ytd']:.2f}% | 1Y: {returns['y1']:.2f}% | 3Y: {returns['y3']:.2f}% | "
-          f"5Y: {returns['y5']:.2f}% | 10Y: {returns['y10']:.2f}% | Inicio: {returns['inception']:.2f}%")
+    rows = []
+    for ticker, label in TICKERS:
+        print(f"Descargando precios de {ticker} desde Yahoo Finance...")
+        prices = get_adjusted_prices(ticker)
+        returns = calculate_returns(prices, label)
+        rows.append(returns)
+        print(f"Rendimientos {ticker} calculados")
+        print(f"  YTD: {returns['ytd']:.2f}% | 1Y: {returns['y1']:.2f}% | 3Y: {returns['y3']:.2f}% | "
+              f"5Y: {returns['y5']:.2f}% | 10Y: {returns['y10']:.2f}% | Inicio: {returns['inception']:.2f}%")
+    save_csv(rows)
+    print(f"Guardados {len(rows)} tickers en {OUTPUT}")
 
 if __name__ == "__main__":
     main()
