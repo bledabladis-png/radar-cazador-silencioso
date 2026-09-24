@@ -19,7 +19,7 @@ Reglas de personalidad y metodo: `PROMPT_MAESTRO.md` secciones 1 y 3.
     Ahead                0 (sincronizado con origin/main)
     Working tree         LIMPIO
     Tests IAE            845 passed (criterio AST, 45 ficheros)
-    Suite global         1587 passed + 2 skipped + 0 failed
+    Suite global         1682 passed + 2 skipped + 0 failed
                          (los 3 test_freshness pasan tras run.py; vuelven
                           a fallar si los parquets llevan >4 dias sin
                           refrescar - ver nota abajo)
@@ -40,7 +40,7 @@ Criterio del conteo de tests IAE: ficheros `tests/test_*.py` que importan
 
 ## Documentos clave
 
-    docs/auditoria/PROMPT_MAESTRO.md              v7.2
+    docs/auditoria/PROMPT_MAESTRO.md              v7.4
     docs/auditoria/TRANSFER.md                    este documento
     docs/auditoria/README.md                      navegacion
 
@@ -74,7 +74,7 @@ NIPC_COVERAGE_POLICY.md, INSTITUTIONAL_ACCUMULATION_NIPC_ESPECIFICACION.md.
 ## Estado del modulo IAE en una frase
 
 Integrado, automatizado y verificado end-to-end sobre datos reales.
-Con el crosswalk CUSIP regenerado por script (245 filas, 242 tickers):
+Con el crosswalk CUSIP regenerado por script (246 filas, 242 tickers):
 
 - Cache 13F en GitHub: 3 trimestres (Q4 2025, Q1 2026, Q2 2026).
 - Crosswalk regenerado por `regenerate_cusip_crosswalk.py` en cada
@@ -90,6 +90,59 @@ NIPC Q1 2026 -> Q2 2026 pendiente de dato externo. Ultimo calculado:
 NIPC Q4 2025 -> Q1 2026 = -4.316.734.936 (referencia historica).
 
 Detalle completo en `iae/IAE_MAESTRO.md`.
+
+---
+
+## Sesion 2026-09-24 (Radar: BACKLOG + FU-002-bymarket + health check)
+
+**Ciclos cerrados (no-IAE):**
+
+1. **BACKLOG del reporte** (bugs de presentacion, no pipeline):
+   - C1: _delta en sector_breadth_momentum.py toleraba mal gaps de
+     calendario. Fix: days+5. Commit 2fe1c45.
+   - C2/C3: render_representatividad_lider y render_divergencia_sector_lideres
+     no filtraban a ultima fecha. Commits 740be35 + dfd93c4.
+   - B1: 'Flujo Institucional' -> 'Flujo de Mercado' (la metrica es
+     FLOW_PROXY). Commit f4f8003.
+   - B2: criterio de seleccion de lideres (peso ETF -> WLS). Commit 664d839.
+   - D1: benchmark SPY en Rendimiento QQQ. Commit bb9251b.
+   - D2c: bug latente FLOW_CONFIDENCE pos==3 -> pos>=3. Commit c4b7138.
+   - D3/E1: notas semanticas (rotacion + SSGA). Commit c4b7138.
+   - A1: cobertura sectorial contra top-20 real (no ETF completo).
+     Commit 8c6330f.
+
+2. **FU-002-bymarket** (manifest + guard, dictamen auditor externo):
+   - Manifest stock_prices gana quality.by_market (cobertura por mercado
+     en su ultima sesion cerrada via FU-018).
+   - Guard_coverage exime condicionalmente cuando todos los mercados
+     activos cumplen threshold (C-2: solo con VALID_WITH_MISSING;
+     C-3: mismo threshold del guard).
+   - Cierra el falso bloqueo de commits en ventana desfasada Europa-USA
+     (K-STOCK-PRICES-EOD-01 mitigado).
+   - Commits 88c27d1, d09f928, 62e38d9.
+
+3. **Health check semanal** (`health_check.yml` lunes 07:00 UTC):
+   - scripts/health_check.py con 7 bloques (workflows, cache 13F,
+     manifests, cobertura, fechas no bursatiles, patron EU-USA, IAE).
+   - Abre/cierra GitHub Issue con label health-check.
+   - Commits 8ec488e, 0464145.
+
+4. **Bug latente A/D en compute_sector_breadth**:
+   - Detectado al auditar el 22-Sep (206/313 tickers USA sin Close
+     por fallo puntual Yahoo). El calculo diario comparaba 23 vs 21
+     sin verificar continuidad. Fix: exigir previous_market_day.
+   - Verificacion empirica: 107 contribuyen / 206 no contribuyen.
+   - Commit fc21671. 22-Sep marcado en CONFIRMED_INCOMPLETE_DATES.
+
+5. **Consolidacion del registry de tickers**:
+   - YAHOO_TICKER_MAP + normalize_yahoo_ticker movidos de
+     stock_data_loader.py y data_loader.py (duplicados) a
+     instrument_registry.py (fuente unica).
+   - get_market ahora normaliza: BRK.B/BF.B -> US_EQUITY (antes UNKNOWN).
+   - Commits 7025a89, d1a4676.
+
+Suite acumulada: 1587 -> 1682 passed (+95 tests, 6 bugs latentes
+corregidos, 30 commits pusheados).
 
 ---
 
@@ -215,6 +268,17 @@ Estado de la seccion IAE en produccion:
 - No integracion a produccion sin validacion funcional.
 - Todo bloque que haga `git commit` debe condicionarse a tests verdes
   (`if ($LASTEXITCODE -eq 0)`). Leccion del commit 977249b.
+- Dispatch manual de `daily_run.yml` solo FUERA de la sesion USA abierta
+  (13:30-20:00 UTC). El cron productivo es `0 23 * * *` UTC. Dispatches
+  manuales en ventana USA abierta disparan guard_coverage. Leccion de
+  F-IAE-CRON-01 (2026-09-24).
+- En here-strings PowerShell que contengan backticks markdown, usar
+  `chr(96)` o eliminar los backticks del contenido. PowerShell interpreta
+  el backtick como escape y cierra el here-string silenciosamente. Leccion
+  del ciclo 2026-09-24 (perdida de 3 operaciones en PROMPT v7.4).
+- Antes de commitear patches multi-operacion, verificar que el script
+  NO escribe parcialmente si algun assert falla. Corregir el patron para
+  que todas las ops se apliquen o ninguna. Leccion del ciclo 2026-09-24.
 
 ---
 
@@ -232,7 +296,7 @@ Esperado:
 - HEAD ver docs/auditoria/iae/ESTADO_SISTEMA.md
 - ahead 0, behind 0
 - working tree limpio
-- 1587 passed + 2 skipped + 0 failed (test_freshness pasa tras run.py)
+- 1682 passed + 2 skipped + 0 failed (test_freshness pasa tras run.py)
 - pyflakes silencio, compileall OK
 
 Censo del modulo IAE (comando aparte, tarda unos segundos):
@@ -251,12 +315,15 @@ Estado que reconozco:
 
 - HEAD ver docs/auditoria/iae/ESTADO_SISTEMA.md
 - IAE integrado en run.py, automatizado en GitHub, sincronizado con origin/main
-- Crosswalk regenerado por script (245 filas, 242 tickers)
+- Crosswalk regenerado por script (246 filas, 242 tickers)
 - Cache 13F v2 con 3 trimestres en GitHub
 - Seccion IAE STALE por Official List Q2 pendiente de SEC (comportamiento correcto)
 - Fases A-F cerradas; Fase G (automatizacion de mappings) cerrada 2026-09-24
 - Fase D (auditor externo) PENDIENTE
-- Deuda visible en el reporte: bugs de render + cobertura sectorial baja
+- Bugs de render C1-C3 RESUELTOS 2026-09-24 (commits 2fe1c45, 740be35, dfd93c4)
+- Cobertura sectorial A1 RESUELTA 2026-09-24 (top-20 real, commit 8c6330f)
+- FU-002-bymarket integrado (manifest + guard, commits 88c27d1, d09f928, 62e38d9)
+- Health check semanal operativo (lunes 07:00 UTC)
 - Pendiente: SEC publique Official List Q2 TXT
 
 Pregunta: "Que hacemos?"
