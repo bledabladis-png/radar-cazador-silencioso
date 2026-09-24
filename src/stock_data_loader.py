@@ -1,7 +1,7 @@
 import pandas as pd
 import yfinance as yf
 from datetime import datetime, timedelta
-from config.settings import CACHE_HOURS, CACHE_VALIDATE_TRADING_DATE
+from config.settings import CACHE_HOURS, CACHE_VALIDATE_TRADING_DATE, TOP_N_SECTOR_COMPONENTS
 from data.providers.euronext_provider import EuronextProvider
 from data.providers.xetra_provider import XetraProvider
 from data.providers.bme_provider import BMEProvider
@@ -36,7 +36,7 @@ def get_usa_tickers():
         if 'weight' in df_sect.columns:
             df_sect = df_sect.sort_values(['etf', 'weight'], ascending=[True, False])
         for etf, group in df_sect.groupby('etf'):
-            tickers.extend([normalize_yahoo_ticker(t) for t in group['ticker'].head(20).tolist()])
+            tickers.extend([normalize_yahoo_ticker(t) for t in group['ticker'].head(TOP_N_SECTOR_COMPONENTS).tolist()])
     except Exception as e:
         print(f"  [WARN] get_usa_tickers: etf_holdings.csv: {e}")
     # Eliminar duplicados
@@ -58,7 +58,7 @@ def get_stock_list():
         if 'weight' in df_sect.columns:
             df_sect = df_sect.sort_values(['etf', 'weight'], ascending=[True, False])
         for etf, group in df_sect.groupby('etf'):
-            tickers.extend([normalize_yahoo_ticker(t) for t in group['ticker'].head(20).tolist()])
+            tickers.extend([normalize_yahoo_ticker(t) for t in group['ticker'].head(TOP_N_SECTOR_COMPONENTS).tolist()])
     except Exception as e:
         print(f"  [WARN] get_stock_list: etf_holdings.csv: {e}")
 
@@ -68,7 +68,7 @@ def get_stock_list():
         if 'weight' in df_idx.columns:
             df_idx = df_idx.sort_values(['etf', 'weight'], ascending=[True, False])
         for etf, group in df_idx.groupby('etf'):
-            tickers.extend([normalize_yahoo_ticker(t) for t in group['ticker'].head(20).tolist()])
+            tickers.extend([normalize_yahoo_ticker(t) for t in group['ticker'].head(TOP_N_SECTOR_COMPONENTS).tolist()])
     except Exception as e:
         print(f"  [WARN] get_stock_list: index_holdings.csv: {e}")
 

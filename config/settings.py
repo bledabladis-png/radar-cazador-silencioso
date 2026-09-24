@@ -211,6 +211,7 @@ MANIFEST_DUP_THRESHOLD = 0.5
 # ============================================================
 
 TOP_N_CANDIDATES = 15   # pre-filtro por weight antes del WLS
+TOP_N_SECTOR_COMPONENTS = 20  # componentes por sector descargados y considerados en breadth
 TOP_N_LEADERS = 5       # cuantos se muestran en el reporte
 
 
