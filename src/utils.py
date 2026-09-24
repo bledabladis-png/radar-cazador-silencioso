@@ -356,6 +356,139 @@ def _try_cleanup(*paths):
             pass
 
 
+def _latest_closed_session(market, reference_date):
+    """Ultima sesion del mercado que ya cerro segun FU-018 a reference_date.
+
+    FU-002-bymarket (dictamen auditor 2026-09-24, C-1):
+    Se determina EXCLUSIVAMENTE por calendario + is_session_closed.
+    NO depende de que existan datos en el parquet. Esto evita que una
+    ausencia completa de datos en la sesion esperada se enmascare
+    retrocediendo a una sesion anterior con datos.
+
+    Busca hasta 30 dias atras desde reference_date.date().
+    Devuelve date o None si no encuentra.
+    """
+    from datetime import timedelta
+    from src.market_hours import is_session_closed, is_trading_session
+
+    if reference_date is None or getattr(reference_date, "tzinfo", None) is None:
+        return None
+
+    d = reference_date.date()
+    for _ in range(30):
+        try:
+            if is_trading_session(market, d):
+                if is_session_closed(market, d, reference_date):
+                    return d
+        except Exception:
+            pass
+        d = d - timedelta(days=1)
+    return None
+
+
+def _compute_by_market(df, reference_date):
+    """Cobertura por mercado en su propia ultima sesion cerrada.
+
+    FU-002-bymarket (dictamen auditor 2026-09-24):
+      - C-1: last_closed_session por calendario + FU-018, no por datos.
+      - C-3: coverage_at_session es el dato contractual; el guard
+              aplica SU propio threshold sobre este valor.
+      - Punto 5: market == 'UNKNOWN' con n > 0 -> status INVALID
+                 (anomalia de integridad, no SKIP).
+      - SKIP solo cuando n == 0.
+      - Punto 9: usa el reference_date del caller, no datetime.now().
+
+    Devuelve dict {market: {n, last_closed_session, coverage_at_session, status}}.
+    Devuelve {} si df no tiene MultiIndex o reference_date es tz-naive.
+    """
+    from src.instrument_registry import get_market
+    from src.market_hours import _KNOWN_MARKETS
+
+    if not isinstance(df.columns, pd.MultiIndex):
+        return {}
+    if reference_date is None or getattr(reference_date, "tzinfo", None) is None:
+        return {}
+
+    close_cols = [c for c in df.columns if c[0] == "Close"]
+    by_market_cols = {}
+    for col in close_cols:
+        ticker = col[1]
+        try:
+            market = get_market(ticker)
+        except Exception:
+            market = "UNKNOWN"
+        by_market_cols.setdefault(market, []).append(col)
+
+    all_markets = set(by_market_cols.keys()) | set(_KNOWN_MARKETS)
+
+    result = {}
+    for market in sorted(all_markets):
+        cols = by_market_cols.get(market, [])
+        n = len(cols)
+
+        if n == 0:
+            result[market] = {
+                "n": 0,
+                "last_closed_session": None,
+                "coverage_at_session": None,
+                "status": "SKIP",
+            }
+            continue
+
+        # Punto 5 del dictamen: UNKNOWN con n>0 es anomalia -> INVALID.
+        if market == "UNKNOWN":
+            result[market] = {
+                "n": n,
+                "last_closed_session": None,
+                "coverage_at_session": None,
+                "status": "INVALID",
+            }
+            continue
+
+        last_session = _latest_closed_session(market, reference_date)
+        if last_session is None:
+            result[market] = {
+                "n": n,
+                "last_closed_session": None,
+                "coverage_at_session": None,
+                "status": "INVALID",
+            }
+            continue
+
+        # Contar Close no-NaN en ESA fecha exacta (C-1).
+        # last_session es datetime.date; el indice es DatetimeIndex.
+        # Convertir a Timestamp para poder indexar.
+        try:
+            last_ts = pd.Timestamp(last_session)
+            if last_ts in df.index:
+                row = df.loc[last_ts]
+                if hasattr(row, "iloc") and len(row.shape) > 1:
+                    # Multiples filas en esa fecha: tomar la ultima.
+                    row = row.iloc[-1]
+                n_valid = int(row[cols].notna().sum())
+            else:
+                n_valid = 0
+        except Exception:
+            n_valid = 0
+
+        coverage = n_valid / n if n > 0 else None
+        if coverage is None or coverage == 0:
+            status = "INVALID"
+        elif coverage >= 0.95:
+            status = "VALID"
+        else:
+            status = "VALID_WITH_MISSING"
+
+        result[market] = {
+            "n": n,
+            "last_closed_session": last_session.strftime("%Y-%m-%d"),
+            "coverage_at_session": round(coverage, 6) if coverage is not None else None,
+            "status": status,
+        }
+
+    return result
+
+
 def write_artifact_with_manifest(df, parquet_path, source,
                                   reference_date, run_id,
                                   schema_version=1, *,
@@ -477,6 +610,11 @@ def write_artifact_with_manifest(df, parquet_path, source,
         else:
             status = 'VALID'
 
+        # FU-002-bymarket (dictamen auditor 2026-09-24): cobertura por
+        # mercado en su propia ultima sesion cerrada. Campo aditivo,
+        # backward-compatible segun politica de schema.
+        by_market = _compute_by_market(df, reference_date)
+
         # FU-002-evo2: metadata de cobertura de la ultima fila.
         n_tickers_expected_last = int(n_tickers)
         n_tickers_with_close_last = int(n_tickers - close_nan_last)
@@ -524,6 +662,7 @@ def write_artifact_with_manifest(df, parquet_path, source,
                 'coverage_pct_last': round(coverage_pct_last, 6),
                 'last_row_is_partial': last_row_is_partial,
                 'status': status,
+                'by_market': by_market,
             },
         }
 
