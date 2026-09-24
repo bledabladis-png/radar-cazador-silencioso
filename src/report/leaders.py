@@ -29,11 +29,11 @@ def render_momentum_sectores(sector_price_rank, sector_flow_rank):
                "sectorial mostrado en 'Flujo Primario ETF - Caracteristicas'.*\n")
 
     if sector_flow_rank:
-        out.append("\n## Flujo Institucional - Sectores (Proxy)\n")
+        out.append("\n## Flujo de Mercado - Sectores (Proxy)\n")
         out.append("| # | Sector | Flujo (z-score) |\n")
         out.append("|---|--------|------------------|\n")
     else:
-        out.append("\n## Flujo Institucional - Sectores (Proxy)\n")
+        out.append("\n## Flujo de Mercado - Sectores (Proxy)\n")
         out.append("*No hay datos disponibles para Flow Proxy.*\n")
     for i, (ticker, flow) in enumerate(sector_flow_rank[:11], 1):
         name = SECTOR_NAMES.get(ticker, ticker)
@@ -88,11 +88,11 @@ def render_momentum_otros(otros_price_rank, otros_flow_rank):
                "de OilPriceAPI (no son futuros).*\n\n")
 
     if otros_flow_rank:
-        out.append("\n## Flujo Institucional - Otros Activos (Proxy)\n")
+        out.append("\n## Flujo de Mercado - Otros Activos (Proxy)\n")
         out.append("| # | Activo | Flujo (z-score) |\n")
         out.append("|---|--------|------------------|\n")
     else:
-        out.append("\n## Flujo Institucional - Otros Activos (Proxy)\n")
+        out.append("\n## Flujo de Mercado - Otros Activos (Proxy)\n")
         out.append("*No hay datos disponibles para Flow Proxy.*\n")
     for i, (ticker, flow) in enumerate(otros_flow_rank[:15], 1):
         out.append(f"| {i} | {ticker} | {flow:.2f} |\n")
