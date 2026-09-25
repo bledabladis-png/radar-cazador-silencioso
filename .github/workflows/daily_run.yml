@@ -2,38 +2,70 @@ name: Daily Macro Sectorial Run
 
 on:
   schedule:
-    # FU-001 (2026-09-15): cron ajustado a 04:00 UTC (06:00 Madrid verano /
-    # 05:00 Madrid invierno). Da ~8h post-cierre USA para que Yahoo publique,
-    # con 4h de margen contra retrasos de la cola de GitHub (observado hasta
-    # 8h en el run del 2026-09-15: cron 06:00 UTC, ejecucion 14:10 UTC). Ventana limpia: sin pre-market USA
-    # (empieza ~10:00 Madrid) y sin mercados europeos abiertos (abren ~09:00
-    # Madrid). Si el retraso de GitHub excede 4h, el run cae fuera de la
-    # ventana y el manifest lo refleja (close_nan alto). No contamina: los
-    # NaN quedan como NaN tras FU-001 y FU-002-evo2.
-    #
-    # F-IAE-CRON-01 (2026-09-24): cron movido de 04:00 a 23:00 UTC. Motivo:
-    # con el cron anterior + retraso de 5h observado, la ejecucion real caia
-    # a las 09:00 UTC = 11:00 Madrid, dentro de la sesion europea. Con
-    # 23:00 UTC, el run ejecuta a ~04:00 UTC = 05:00/06:00 Madrid, dentro de
-    # la ventana limpia. Margen de retraso tolerado: hasta 8h (antes 3h).
-    - cron: '0 23 * * *'
+    # F-IAE-CRON-02 (2026-09-25): 4 slots con idempotencia por cobertura.
+    # Sustituye al cron unico 0 23 * * * (F-IAE-CRON-01).
+    # Razon: la latencia de Yahoo para poblar Close varia (>5h26m observado
+    # a 100% NaN, 16h12m a 0% NaN). Un solo deadline no garantiza exito.
+    # Los 4 slots apuntan a la misma target_session (ver pipeline_gate.py):
+    #   slot 1: 17 23 * * *  (~5h17m post-cierre USA)
+    #   slot 2: 17 3 * * *   (~9h17m)
+    #   slot 3: 17 7 * * *   (~13h17m)
+    #   slot 4: 17 11 * * *  (~17h17m, ultimo intento)
+    # Minutos en :17 (evitar :00, franja de alta carga documentada por GitHub).
+    - cron: '17 23 * * *'
+    - cron: '17 3 * * *'
+    - cron: '17 7 * * *'
+    - cron: '17 11 * * *'
   workflow_dispatch:
 
 concurrency:
+  # F-IAE-CRON-02: queue: max permite hasta 100 pendientes y evita que un
+  # slot sustituya al anterior. Incompatible con cancel-in-progress.
+  # Dispatches manuales comparten cola con schedule (seguro, no concurrente).
   group: daily-run
-  cancel-in-progress: false
+  queue: max
 
 jobs:
-  run-system:
+  gate:
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    outputs:
+      state: ${{ steps.gate.outputs.state }}
+      should_run: ${{ steps.gate.outputs.should_run }}
+      expected_session: ${{ steps.gate.outputs.expected_session }}
+      is_last_slot: ${{ steps.gate.outputs.is_last_slot }}
+      reason: ${{ steps.gate.outputs.reason }}
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.14'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run gate
+        id: gate
+        env:
+          PYTHONIOENCODING: utf-8
+        run: python scripts/pipeline_gate.py --slot "${{ github.event.schedule }}"
+
+  run-system:
+    needs: gate
+    if: needs.gate.outputs.should_run == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
     permissions:
       contents: write
 
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
-
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
@@ -223,3 +255,44 @@ jobs:
             git pull --rebase origin main
             git push
           fi
+
+  issue-manager:
+    # F-IAE-CRON-02 (2026-09-25): post-run manager de Issues.
+    # Diseño aprobado auditor externo. Corre siempre (siempre que gate
+    # haya pasado), incluso si run-system skip o falla.
+    #   CURRENT                      -> cerrar issue si existe
+    #   READY + success              -> cerrar issue si existe
+    #   READY + failure/cancelled    -> NOOP (dejar abierto)
+    #   NOT_READY + last_slot + sch  -> abrir o comentar issue
+    #   ERROR + last_slot + sch      -> abrir o comentar issue
+    #   dispatch manual              -> nunca abre; puede cerrar
+    needs:
+      - gate
+      - run-system
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.14'
+
+      - name: Manage issue
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TARGET_SESSION: ${{ needs.gate.outputs.expected_session }}
+          GATE_STATE: ${{ needs.gate.outputs.state }}
+          GATE_REASON: ${{ needs.gate.outputs.reason }}
+          IS_LAST_SLOT: ${{ needs.gate.outputs.is_last_slot }}
+          RUN_SYSTEM_RESULT: ${{ needs.run-system.result }}
+          EVENT_NAME: ${{ github.event_name }}
+          RUN_ID: ${{ github.run_id }}
+          PYTHONIOENCODING: utf-8
+        run: python scripts/issue_manager.py
