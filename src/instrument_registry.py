@@ -77,6 +77,7 @@ INSTRUMENTS = {
         "finnhub": "AAL.L",
         "fmp": "AAL.L",
         "polygon": "AAL.L",
+        "refinitiv": "AAL.L",
     },
     "ACS.MC": {
         "yahoo": "ACS.MC",
@@ -167,6 +168,7 @@ INSTRUMENTS = {
         "finnhub": "AZN.L",
         "fmp": "AZN.L",
         "polygon": "AZN.L",
+        "refinitiv": "AZN.L",
     },
     "BA.L": {
         "yahoo": "BA.L",
@@ -176,6 +178,17 @@ INSTRUMENTS = {
         "finnhub": "BA.L",
         "fmp": "BA.L",
         "polygon": "BA.L",
+        "refinitiv": "BAES.L",
+    },
+    "DGE.L": {
+        "yahoo": "DGE.L",
+        "twelve_data": "DGE",
+        "alpha_vantage": "DGE.L",
+        "tiingo": "DGE.L",
+        "finnhub": "DGE.L",
+        "fmp": "DGE.L",
+        "polygon": "DGE.L",
+        "refinitiv": "DGE.L",
     },
     "BARC.L": {
         "yahoo": "BARC.L",
@@ -185,6 +198,7 @@ INSTRUMENTS = {
         "finnhub": "BARC.L",
         "fmp": "BARC.L",
         "polygon": "BARC.L",
+        "refinitiv": "BARC.L",
     },
     "BAS.DE": {
         "yahoo": "BAS.DE",
@@ -203,6 +217,7 @@ INSTRUMENTS = {
         "finnhub": "BATS.L",
         "fmp": "BATS.L",
         "polygon": "BATS.L",
+        "refinitiv": "BATS.L",
     },
     "BAYN.DE": {
         "yahoo": "BAYN.DE",
@@ -257,6 +272,7 @@ INSTRUMENTS = {
         "finnhub": "BP.L",
         "fmp": "BP.L",
         "polygon": "BP.L",
+        "refinitiv": "BP.L",
     },
     "CABK.MC": {
         "yahoo": "CABK.MC",
@@ -374,6 +390,7 @@ INSTRUMENTS = {
         "finnhub": "GLEN.L",
         "fmp": "GLEN.L",
         "polygon": "GLEN.L",
+        "refinitiv": "GLEN.L",
     },
     "GSK.L": {
         "yahoo": "GSK.L",
@@ -383,6 +400,7 @@ INSTRUMENTS = {
         "finnhub": "GSK.L",
         "fmp": "GSK.L",
         "polygon": "GSK.L",
+        "refinitiv": "GSK.L",
     },
     "HEI.DE": {
         "yahoo": "HEI.DE",
@@ -401,6 +419,7 @@ INSTRUMENTS = {
         "finnhub": "HSBA.L",
         "fmp": "HSBA.L",
         "polygon": "HSBA.L",
+        "refinitiv": "HSBA.L",
     },
     "IAG.MC": {
         "yahoo": "IAG.MC",
@@ -464,6 +483,7 @@ INSTRUMENTS = {
         "finnhub": "LLOY.L",
         "fmp": "LLOY.L",
         "polygon": "LLOY.L",
+        "refinitiv": "LLOY.L",
     },
     "LSEG.L": {
         "yahoo": "LSEG.L",
@@ -473,6 +493,7 @@ INSTRUMENTS = {
         "finnhub": "LSEG.L",
         "fmp": "LSEG.L",
         "polygon": "LSEG.L",
+        "refinitiv": "LSEG.L",
     },
     "MBG.DE": {
         "yahoo": "MBG.DE",
@@ -518,6 +539,7 @@ INSTRUMENTS = {
         "finnhub": "NG.L",
         "fmp": "NG.L",
         "polygon": "NG.L",
+        "refinitiv": "NG.L",
     },
     "NTGY.MC": {
         "yahoo": "NTGY.MC",
@@ -536,6 +558,7 @@ INSTRUMENTS = {
         "finnhub": "NWG.L",
         "fmp": "NWG.L",
         "polygon": "NWG.L",
+        "refinitiv": "NWG.L",
     },
     "OR.PA": {
         "yahoo": "OR.PA",
@@ -554,6 +577,7 @@ INSTRUMENTS = {
         "finnhub": "REL.L",
         "fmp": "REL.L",
         "polygon": "REL.L",
+        "refinitiv": "REL.L",
     },
     "REP.MC": {
         "yahoo": "REP.MC",
@@ -581,6 +605,7 @@ INSTRUMENTS = {
         "finnhub": "RIO.L",
         "fmp": "RIO.L",
         "polygon": "RIO.L",
+        "refinitiv": "RIO.L",
     },
     "RR.L": {
         "yahoo": "RR.L",
@@ -590,6 +615,7 @@ INSTRUMENTS = {
         "finnhub": "RR.L",
         "fmp": "RR.L",
         "polygon": "RR.L",
+        "refinitiv": "RR.L",
     },
     "RWE.DE": {
         "yahoo": "RWE.DE",
@@ -644,6 +670,7 @@ INSTRUMENTS = {
         "finnhub": "SHEL.L",
         "fmp": "SHEL.L",
         "polygon": "SHEL.L",
+        "refinitiv": "SHEL.L",
     },
     "SIE.DE": {
         "yahoo": "SIE.DE",
@@ -662,6 +689,7 @@ INSTRUMENTS = {
         "finnhub": "STAN.L",
         "fmp": "STAN.L",
         "polygon": "STAN.L",
+        "refinitiv": "STAN.L",
     },
     "SU.PA": {
         "yahoo": "SU.PA",
@@ -707,6 +735,7 @@ INSTRUMENTS = {
         "finnhub": "ULVR.L",
         "fmp": "ULVR.L",
         "polygon": "ULVR.L",
+        "refinitiv": "ULVR.L",
     },
 }
 
