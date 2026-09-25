@@ -16,6 +16,7 @@ validation/test_*.py
 
 # Outputs generados/efimeros
 outputs/report/
+outputs/_ci_artifacts_*/
 outputs/audit/
 outputs/holdings/
 outputs/cache/
