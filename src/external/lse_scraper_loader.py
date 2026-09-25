@@ -197,6 +197,10 @@ def write_lse_provenance(
     tickers_from_scraper,
     tickers_from_yahoo,
     run_id,
+    scraper_available=None,
+    tickers_missing=None,
+    status=None,
+    reason=None,
 ):
     """Escribe provenance persistente del uso del scraper LSE.
 
@@ -220,6 +224,19 @@ def write_lse_provenance(
         tickers_from_scraper: lista de tickers (radar) que vinieron del scraper.
         tickers_from_yahoo: lista de tickers .L que cayeron a Yahoo.
         run_id: 'YYYYMMDD_HHMMSS'.
+        scraper_available: True si el directorio del scraper existe y tiene
+            JSONs validos. Distinto de scraper_used (que indica si el
+            override actuo). Default None (se deriva).
+        tickers_missing: tickers .L que no aparecen ni en scraper ni en
+            Yahoo con la sesion esperada. Default None (= lista vacia).
+        status: 'OK' | 'UNAVAILABLE' | 'NO_COVERAGE' | 'PARTIAL'. Default
+            None (se deriva de scraper_available y scraper_used).
+        reason: texto libre con contexto del status. Default None.
+
+    Dictamen auditor externo 2026-09-25 (D4):
+        No colapsar todos los escenarios de loaded=={} en scraper_used=False.
+        Diferenciar disponibilidad (repositorio/directorio) de uso efectivo
+        (filas aplicadas al dataset).
 
     Returns:
         dict con el payload escrito.
@@ -229,6 +246,28 @@ def write_lse_provenance(
     from pathlib import Path as _Path
 
     scraper_used = bool(tickers_from_scraper)
+
+    # Derivar scraper_available si no se pasa.
+    if scraper_available is None:
+        # Heuristica: el scraper estaba disponible si algo vino de el o
+        # si se declaro explicitamente que Yahoo cubrio (indicando que se
+        # intento el override y el repositorio estaba presente).
+        scraper_available = bool(tickers_from_scraper) or bool(tickers_from_yahoo)
+
+    # Derivar status si no se pasa.
+    if status is None:
+        if not scraper_available:
+            status = "UNAVAILABLE"
+        elif not scraper_used:
+            status = "NO_COVERAGE"
+        elif tickers_missing:
+            status = "PARTIAL"
+        else:
+            status = "OK"
+
+    if tickers_missing is None:
+        tickers_missing = []
+
     if scraper_used and not source_commit:
         raise ValueError(
             "write_lse_provenance: source_commit obligatorio cuando el "
@@ -252,8 +291,12 @@ def write_lse_provenance(
         "source_commit": source_commit if source_commit else None,
         "tickers_from_scraper": sorted(tickers_from_scraper or []),
         "tickers_from_yahoo": sorted(tickers_from_yahoo or []),
+        "tickers_missing": sorted(tickers_missing or []),
         "run_id": run_id,
+        "scraper_available": bool(scraper_available),
         "scraper_used": scraper_used,
+        "status": status,
+        "reason": reason,
     }
 
     out_path = _Path(path)
@@ -264,3 +307,85 @@ def write_lse_provenance(
     _os.replace(tmp_path, str(out_path))
 
     return payload
+
+
+def aplicar_override_close(data, override_df):
+    """Aplica override de Close sobre el DataFrame de Yahoo.
+
+    Reglas (dictamen auditor externo 2026-09-25, subciclo 2a):
+      - Solo sobrescribe columnas ('Close', ticker).
+      - NO modifica Open/High/Low/Volume (Volume preservado por Yahoo).
+      - NO anade filas nuevas. Si el ticker no existe en data, skip.
+      - Solo actua si la fecha del override existe EXACTAMENTE en data.index.
+      - Igualdad exacta. Nunca max(), nunca tolerancia.
+
+    Casos cubiertos:
+      fila existe + Close NaN       -> override
+      fila existe + Close valido    -> override
+      ticker no existe en data      -> skip (skipped_no_column)
+      fecha del override no esta    -> skip (skipped_date_mismatch)
+
+    Mutacion: in-place sobre `data`. NO se devuelve copia.
+
+    Args:
+        data: DataFrame con MultiIndex (campo, ticker). Resultado de
+              pd.concat(all_data) tras dedup. Puede ser None/vacio.
+        override_df: DataFrame con solo ('Close', ticker), una fila,
+                     index == Timestamp de lse_expected_session.
+
+    Returns:
+        (data, stats) con stats = {
+            "applied": [tickers sobrescritos],
+            "skipped_no_column": [tickers ausentes en data],
+            "skipped_date_mismatch": [tickers con fecha no coincidente],
+            "override_date": ISO date del override o None,
+        }
+    """
+    stats = {
+        "applied": [],
+        "skipped_no_column": [],
+        "skipped_date_mismatch": [],
+        "override_date": None,
+    }
+
+    if data is None or data.empty:
+        return data, stats
+    if override_df is None or override_df.empty:
+        return data, stats
+
+    override_date = override_df.index[0]
+    # Normalizar a YYYY-MM-DD (coherente con el resto del sistema).
+    if hasattr(override_date, "date") and callable(override_date.date):
+        stats["override_date"] = override_date.date().isoformat()
+    elif hasattr(override_date, "isoformat"):
+        stats["override_date"] = override_date.isoformat()
+    else:
+        stats["override_date"] = str(override_date)
+
+    # Extraer todos los tickers del override (solo Close).
+    override_tickers = [
+        col[1] for col in override_df.columns
+        if isinstance(col, tuple) and len(col) == 2 and col[0] == "Close"
+    ]
+    if not override_tickers:
+        return data, stats
+
+    # Regla dura: fecha exacta en data.index.
+    if override_date not in data.index:
+        stats["skipped_date_mismatch"] = sorted(override_tickers)
+        return data, stats
+
+    for ticker in override_tickers:
+        close_col = ("Close", ticker)
+        if close_col not in data.columns:
+            stats["skipped_no_column"].append(ticker)
+            continue
+        data.loc[override_date, close_col] = override_df.loc[
+            override_date, close_col
+        ]
+        stats["applied"].append(ticker)
+
+    stats["applied"] = sorted(stats["applied"])
+    stats["skipped_no_column"] = sorted(stats["skipped_no_column"])
+    stats["skipped_date_mismatch"] = sorted(stats["skipped_date_mismatch"])
+    return data, stats
