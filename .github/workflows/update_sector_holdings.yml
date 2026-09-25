@@ -2,7 +2,7 @@
 
 on:
   schedule:
-    - cron: '0 3 1 1,4,7,10 *'   # 1 enero, 1 abril, 1 julio, 1 octubre a las 03:00 UTC
+    - cron: '47 2 1 1,4,7,10 *'   # 1 enero, 1 abril, 1 julio, 1 octubre a las 02:47 UTC
   workflow_dispatch:               # permite ejecución manual desde GitHub
 
 concurrency:

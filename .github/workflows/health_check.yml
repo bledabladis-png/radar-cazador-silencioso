@@ -2,8 +2,8 @@ name: Health Check (semanal)
 
 on:
   schedule:
-    # Lunes 07:00 UTC. Despues de todos los cron del fin de semana.
-    - cron: '0 7 * * 1'
+    # Lunes 06:47 UTC. Despues de todos los cron del fin de semana.
+    - cron: '47 6 * * 1'
   workflow_dispatch:
 
 concurrency:

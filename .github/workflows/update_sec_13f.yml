@@ -2,9 +2,9 @@
 
 on:
   schedule:
-    # 20 feb/may/ago/nov, 06:00 UTC. 5 dias despues del deadline SEC
+    # 20 feb/may/ago/nov, 06:17 UTC. 5 dias despues del deadline SEC
     # (45 dias post-cierre de trimestre). Cubre los 4 trimestres.
-    - cron: '0 6 20 2,5,8,11 *'
+    - cron: '17 6 20 2,5,8,11 *'
   workflow_dispatch:
     inputs:
       quarter:

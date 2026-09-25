@@ -455,14 +455,14 @@ NUNCA se mezclan. NUNCA se construye superindicador.
 ## SECCION 9 - WORKFLOWS GITHUB ACTIONS
 Workflow	Cron	Proposito
 daily_run.yml	17 23 / 17 3 / 17 7 / 17 11 UTC	Run diario multi-slot con gate pre-pipeline (F-IAE-CRON-02) + validacion + push de outputs
-update_macro_manual.yml	0 6 * * *	FRED auto (25 series)
-update_european_holdings.yml	0 5 1 1,4,7,10 *	Holdings europeos
-update_index_holdings.yml	0 4 1 1,4,7,10 *	SPY/DIA/QQQ/IWM
-update_qqq_sec_flow.yml	0 6 15 1,7 *	QQQ SEC flow
-update_sec_nport.yml	0 6 20 1,4,7,10 *	N-PORT
-update_sec_13f.yml	0 6 20 2,5,8,11 *	SEC 13F trimestral + cache parquets IAE
-update_sector_holdings.yml	0 3 1 1,4,7,10 *	Holdings sectoriales
-health_check.yml                  0 7 * * 1              Vigilancia semanal (workflows, cache 13F, manifests, cobertura, fechas no bursatiles, patron EU-USA, seccion IAE). Abre/cierra GitHub Issue con label health-check.
+update_macro_manual.yml	17 6 * * *	FRED auto (25 series)
+update_european_holdings.yml	17 5 1 1,4,7,10 *	Holdings europeos
+update_index_holdings.yml	17 4 1 1,4,7,10 *	SPY/DIA/QQQ/IWM
+update_qqq_sec_flow.yml	17 6 15 1,7 *	QQQ SEC flow
+update_sec_nport.yml	17 6 20 1,4,7,10 *	N-PORT
+update_sec_13f.yml	17 6 20 2,5,8,11 *	SEC 13F trimestral + cache parquets IAE
+update_sector_holdings.yml	47 2 1 1,4,7,10 *	Holdings sectoriales
+health_check.yml                  47 6 * * 1              Vigilancia semanal (workflows, cache 13F, manifests, cobertura, fechas no bursatiles, patron EU-USA, seccion IAE). Abre/cierra GitHub Issue con label health-check.
 Nota: daily_run.yml commitea Daily hist/state. Aplicar git fetch + pull --rebase antes de cualquier push local.
 Nota F-IAE-CRON-01 (2026-09-24, SUPERSEDED por F-IAE-CRON-02): el cron de daily_run.yml se movio de 0 4 * * * a 0 23 * * * UTC para evitar la ventana donde guard_coverage bloqueaba commits (sesion USA abierta). Con retraso tipico de ~5h, la ejecucion real cae a 04:00 UTC (pre-apertura europea).
 

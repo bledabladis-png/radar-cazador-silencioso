@@ -2,7 +2,7 @@
 
 on:
   schedule:
-    - cron: '0 6 20 1,4,7,10 *'  # 20 enero, abril, julio, octubre (último trimestre cerrado)
+    - cron: '17 6 20 1,4,7,10 *'  # 20 enero, abril, julio, octubre a las 06:17 UTC (último trimestre cerrado)
   workflow_dispatch:
 
 concurrency:
