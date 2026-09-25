@@ -13,17 +13,17 @@ Reglas de personalidad y metodo: `PROMPT_MAESTRO.md` secciones 1 y 3.
 
 ---
 
-## Estado al cierre de la sesion (2026-09-25)
+## Estado al cierre de la sesion (2026-09-26)
 
     HEAD                 ver docs/auditoria/iae/ESTADO_SISTEMA.md
     Ahead                0 (sincronizado con origin/main)
     Working tree         LIMPIO
     Tests IAE            845 passed (criterio AST, 45 ficheros)
-    Suite global         1766 passed + 2 skipped + 0 failed
+    Suite global         1857 passed + 2 skipped + 0 failed
                          (los 3 test_freshness pasan tras run.py; vuelven
                           a fallar si los parquets llevan >4 dias sin
                           refrescar - ver nota abajo)
-    Push                 SI (integrado en produccion desde 2026-09-25)
+    Push                 SI (integrado en produccion desde 2026-09-26)
     Cobertura IAE        90% lineas (reproducible con scripts/iae_coverage.py)
 
 Nota. `test_freshness` valida que market_data.parquet y stock_prices.parquet
@@ -398,4 +398,90 @@ Ciclos cerrados (3 commits, un subciclo de implementacion por commit):
 
 ---
 
-FIN DE TRANSFER. 2026-09-25.
+## Sesion 2026-09-26 (F-IAE-LSE-INTEGRATION)
+
+**Problema.** Los 20 tickers `.L` (FTSE 100) se cubrian exclusivamente
+via Yahoo, con el mismo patron de latencia variable documentado en
+F-IAE-CRON-02 para USA. El radar marcaba `DATA_ISSUE`
+(MISSING_CLOSE_EXPECTED_SESSION) cuando Yahoo aun no habia publicado
+el Close del cierre LSE.
+
+**Diagnostico.** No hay proveedor oficial LSE. Euronext/Xetra/BME no
+cubren LSE. Yahoo tarda horas en poblar Close. El sistema actual no
+tenia segunda fuente para esos 20.
+
+**Solucion.** Scraper LSE privado (`lse-close-scraper`) alimentado via
+Refinitiv Widgets. El radar aplica override PARCIAL de Close sobre la
+fila ya presente de Yahoo. NO sustituye el registro: Open/High/Low/
+Volume siguen viniendo de Yahoo (evita degradar flow_proxy_z, OBV, CMF).
+
+Ciclos cerrados (5 commits, subciclos incrementales):
+
+1. **0313879.** Loader LSE base: `src/external/lse_scraper_loader.py`
+   (load_lse_close_for_session) + instrument_registry con refinitiv
+   (20 entradas `.L`, BA.L -> BAES.L). +30 tests.
+
+2. **71e32d2.** Subciclo 1: `last_expected_lse_session` (calendario
+   LSE) + `build_lse_close_override` + `write_lse_provenance`. +32
+   tests.
+
+3. **de30f3b.** Subciclo 2a: provenance con status/reason (dictamen
+   D4) + `aplicar_override_close` (solo Close, sin anadir filas).
+   +18 tests.
+
+4. **9d5b19e.** Subciclo 2b: integracion en `stock_data_loader.py`
+   (`_apply_lse_close_override` tras dedup, antes del manifest).
+   +11 tests.
+
+5. **c5ffcd4.** Subciclo 2c: wiring en `daily_run.yml` (2 steps:
+   Fetch LSE scraper con PAT fine-grained + Capture SHA) + git add
+   de provenance.
+
+**Verificacion en CI real.** Dispatch manual 36189310171: gate dio
+CURRENT (manifest cubria sesion anterior). run-system skipped.
+Override no ejecutado en ese run; el codigo esta en produccion y se
+activara cuando el gate de READY.
+
+**Dictamenes externos aplicados:**
+- D1: sesion LSE especifica, no la global NYSE.
+- D2: override tras dedup (frontera robusta).
+- D3: solo DATOS_DIR en config; repo/ref/commit via env del workflow.
+- D4: provenance distingue availability/usage con status/reason.
+- D5: `persist-credentials: false` en el checkout privado.
+- D7: GBX sin conversion (verificado empiricamente vs Yahoo).
+
+**Rechazos tecnicos:**
+- `/100` en loader: refutado por comparacion empirica Yahoo vs Refinitiv
+  (ambos GBX). Lo detecto el auditor.
+- `Volume = NaN` en tickers del scraper: rechazado por auditor. El
+  override solo sobrescribe Close, preservando Volume de Yahoo.
+- `max(_DATE_END)` como criterio temporal: rechazado. Igualdad exacta
+  con `lse_expected_session`, resuelta por FU-018.
+- `source_commit` opcional: rechazado (D4). Obligatorio si scraper
+  usado.
+- Checkout sin `persist-credentials: false`: rechazado (D5).
+
+**Invariante de seguridad:** el radar NO ejecuta codigo del repo
+externo. Solo lee sus JSON. El PAT tiene `contents: read` sobre un
+unico repositorio.
+
+**Cambios prohibidos en este ciclo (preservados intactos):**
+- `run.py`, `guard_coverage.py`, pipeline, IAE, manifest FU-002,
+  contratos temporales.
+
+**Lecciones aplicables a ciclos futuros:**
+- `git commit -m "..."` con here-string PowerShell: los `$` y comillas
+  anidadas rompen el argumento en PowerShell. Patron seguro:
+  `[System.IO.File]::WriteAllText` a `_commit_msg.txt` + `git commit -F`.
+  `-F` y `-m` no son compatibles entre si.
+- `ast.parse()` NO valida YAML. Para YAML, `yaml.safe_load`.
+- Cifras en documentacion: contarlas con evidencia (`git log` + `pytest`)
+  antes de escribirlas. Un "+83 tests" que deberia ser "+91" es
+  detectable cruzando los commits.
+- Verificacion del override end-to-end diferida al primer slot de
+  produccion donde el gate de READY (proximo cron con target_session
+  = hoy y manifest desactualizado).
+
+---
+
+FIN DE TRANSFER. 2026-09-26.

@@ -1,6 +1,6 @@
-# PROMPT MAESTRO v7.4 - INGENIERO SUPERVISOR DEL RADAR DE ROTACION SECTORIAL
+# PROMPT MAESTRO v7.5 - INGENIERO SUPERVISOR DEL RADAR DE ROTACION SECTORIAL
 
-**Actualizado:** 2026-09-24 (v7.4: ciclo BACKLOG del reporte + FU-002-bymarket + health check semanal + consolidacion registry; ver §11.17-§11.21. Base v7.3: Fase G - automatizacion de mappings del IAE; estado del sistema refleja cache 13F v2 con 3 trimestres y crosswalk regenerado por script. Cifras internas alineadas con HEAD de cierre del ciclo: suite 1682 passed + 2 skipped, bloque IAE 845 tests).
+**Actualizado:** 2026-09-26 (v7.5: ciclo F-IAE-LSE-INTEGRATION - scraper LSE privado + override parcial de Close para los 20 tickers .L; F-IAE-CRON-02 / F-IAE-GATE-01 - multi-slot con gate pre-pipeline; ver §11.22-§11.23. Base v7.4: ciclo BACKLOG del reporte + FU-002-bymarket + health check semanal + consolidacion registry. Cifras internas alineadas con HEAD de cierre del ciclo: suite 1857 passed + 2 skipped, bloque IAE 845 tests).
 
 Este documento describe **rol, metodologia, arquitectura y prohibiciones vigentes**.
 **NO declara el estado del sistema.** Para estado, ver:
@@ -162,7 +162,7 @@ py -m pytest tests/ validation/ -q --tb=short
 
 text
 
-Esperado: `compileall OK`, `pyflakes LIMPIO`, `1682 passed + 2 skipped + 0 failed`.
+Esperado: `compileall OK`, `pyflakes LIMPIO`, `1857 passed + 2 skipped + 0 failed`.
 
 ### 3.5. Verificacion de no regresion (refactors grandes)
 
@@ -296,7 +296,7 @@ D:\Macro_Sectorial
 |            qqq_returns_yahoo.py, regenerate_radar_catalog.py,
 |            regenerate_cusip_crosswalk.py)
 +-- validation/ (6 activos)
-+-- tests/ (1682+ casos; ver sec 15 para conteo del modulo IAE)
++-- tests/ (1857+ casos; ver sec 15 para conteo del modulo IAE)
 +-- docs/
 | +-- automatica/ (22 .md auto-generados, LF)
 | +-- auditoria/ (prompt + transfer + readme + iae/)
@@ -468,6 +468,8 @@ Nota F-IAE-CRON-01 (2026-09-24, SUPERSEDED por F-IAE-CRON-02): el cron de daily_
 
 Nota F-IAE-CRON-02 (2026-09-25): un deadline unico no cubre la latencia variable de Yahoo (observado: >5h26m a 100% NaN, 16h12m a 0% NaN). Solucion: 4 slots con idempotencia por cobertura y gate pre-pipeline. Los 4 apuntan a la misma target_session. Minutos en :17 para evitar la franja :00 de alta carga documentada por GitHub. concurrency usa queue: max (hasta 100 pendientes, sin colapsar slot anterior; incompatible con cancel-in-progress).
 
+Nota F-IAE-LSE-INTEGRATION (2026-09-26): daily_run.yml gana dos steps antes de "Run Macro Sectorial": "Fetch LSE scraper" (actions/checkout@v4 del repo privado bledabladis-png/lse-close-scraper, token PAT fine-grained via secret LSE_SCRAPER_TOKEN con contents: read, path data/external/lse_close, sparse-checkout datos, persist-credentials: false, continue-on-error: true) y "Capture LSE scraper SHA" (git rev-parse HEAD -> $GITHUB_ENV LSE_SCRAPER_COMMIT). El step Commit anade git add data/lse_close_provenance.json para versionar la provenance. Ver seccion 11.23.
+
 Fase G (2026-09-24) - automatizacion de mappings del IAE:
 
 - daily_run.yml gana el step "Regenerar catalogo radar (IAE)" tras run.py.
@@ -487,7 +489,7 @@ Fase G (2026-09-24) - automatizacion de mappings del IAE:
 
 ## SECCION 10 - VALIDACION Y TESTS
 10.1. Tests
-1682 passed + 2 skipped + 0 failed en local tras run.py. Los 3 test_freshness (ambientales) pasan tras un run que refresca los parquets; vuelven a fallar si pasan >4 dias sin ejecutar el pipeline. CI similar con parquet gitignored. Incluye 845 tests del modulo IAE (criterio AST, 45 ficheros, ver seccion 15).
+1857 passed + 2 skipped + 0 failed en local tras run.py. Los 3 test_freshness (ambientales) pasan tras un run que refresca los parquets; vuelven a fallar si pasan >4 dias sin ejecutar el pipeline. CI similar con parquet gitignored. Incluye 845 tests del modulo IAE (criterio AST, 45 ficheros, ver seccion 15).
 
 10.2. Validation Gate (10/10)
 SLPM v1.2 (sin errores de validacion)
@@ -916,8 +918,66 @@ El guard sigue siendo la ultima linea de defensa contra corrupcion real.
 Estado: integrado en produccion. Verificado en CI real (run 36148143256):
 gate -> CURRENT, run-system skipped, issue-manager CLOSE (no-op sin Issue abierto).
 
+11.23. F-IAE-LSE-INTEGRATION - Scraper LSE + override parcial de Close (2026-09-26)
+Problema: los 20 tickers .L (FTSE 100) se cubrian exclusivamente via
+Yahoo. Durante la ventana post-cierre LSE, Yahoo publica la fila con
+Close=NaN (mismo patron que F-IAE-CRON-02 documenta para USA). El
+radar marcaba DATA_ISSUE (MISSING_CLOSE_EXPECTED_SESSION) cuando el
+dato aun no estaba disponible.
+
+Solucion estructural: scraper LSE privado como fuente primaria, con
+override PARCIAL de Close sobre la fila ya presente de Yahoo.
+
+Componentes:
+- Repo privado `lse-close-scraper` (separado del radar). Cron L-V
+  18:00 UTC (post-cierre LSE). Playwright navega la web del LSE y
+  captura SID+JWT del widget Refinitiv; requests consulta el endpoint
+  historical con samples=D. GBX sin conversion (coincide con Yahoo).
+  Sin secrets en CI (Playwright renueva en cada run). SID/Token
+  enmascarados en logs. RIC canonico: 19 identidad + BAES.L para BA.L.
+- `src/market_hours.py::last_expected_lse_session(reference_date)`:
+  sesion LSE esperada con calendario propio (lunes-viernes, sin
+  festivos UK; limitacion documentada). Diferente del calendario
+  NYSE que usa last_expected_market_date.
+- `src/external/lse_scraper_loader.py`: 4 funciones publicas
+  (load_lse_close_for_session, build_lse_close_override,
+  aplicar_override_close, write_lse_provenance). RIC -> ticker via
+  INSTRUMENTS[ticker]["refinitiv"] (fuente unica de identidad).
+- `src/instrument_registry.py`: 20 entradas .L con refinitiv.
+- `src/stock_data_loader.py::_apply_lse_close_override`: hook tras
+  el dedup y antes del write_artifact_with_manifest. Solo sobrescribe
+  ('Close', ticker). NO toca Open/High/Low/Volume (evita degradar
+  flow_proxy_z, OBV, CMF). NO anade filas si Yahoo no trajo la fila.
+  NO modifica `classification` (diagnostico historico).
+- `data/lse_close_provenance.json`: persistente y versionado junto al
+  parquet. Incluye target_session, lse_expected_session, source_repo,
+  source_ref, source_commit (SHA del scraper), tickers_from_scraper,
+  tickers_from_yahoo, tickers_missing, scraper_available, scraper_used,
+  status (OK/PARTIAL/NO_COVERAGE/UNAVAILABLE), reason, run_id.
+- `config/settings.py`: LSE_SCRAPER_DATOS_DIR (overrideable por env var),
+  LSE_SCRAPER_PROVENANCE_PATH, LSE_SCRAPER_REPO.
+
+Dictamenes externos aplicados:
+- D1: sesion LSE especifica (no usar la global NYSE).
+- D2: override tras dedup (frontera robusta).
+- D3: solo DATOS_DIR en config; repo/ref via env var del workflow.
+- D4: provenance distingue availability/usage con status/reason.
+- D5: actions/checkout con persist-credentials: false.
+- D7: GBX sin conversion.
+
+Invariante de seguridad: el radar NO ejecuta codigo del repositorio
+externo. Solo lee sus JSON. El PAT tiene contents: read sobre un unico
+repositorio.
+
+Test suite: +91 nuevos (30 loader LSE base en 0313879, +32 subciclo 1,
++18 subciclo 2a, +11 subciclo 2b). Suite: 1766 -> 1857 passed.
+Commits: 0313879, 71e32d2, de30f3b, 9d5b19e, c5ffcd4.
+
 ## SECCION 12 - LIMITACIONES CONOCIDAS
-20 tickers .L sin provider oficial -> Aceptado.
+20 tickers .L sin provider oficial -> RESUELTO 2026-09-26 via F-IAE-LSE-INTEGRATION.
+Ahora se cubren con el scraper privado `lse-close-scraper` (Refinitiv Widgets)
+como fuente primaria, con fallback a Yahoo y override parcial de Close.
+El radar NO ejecuta codigo del repo externo, solo lee sus JSON. Ver §11.23.
 
 N-PORT con retraso SEC (60d) -> Aceptado.
 
@@ -1112,20 +1172,25 @@ temporal, check_non_market_days multi-mercado, get_market(BRK.B), duplicacion
 YAHOO_TICKER_MAP). Herramientas de vigilancia anadidas: health_check.py
 (semanal) + guard_coverage.py (pre-commit). Suite: 1587 -> 1682 passed.
 
+Ciclo 2026-09-25/26: F-IAE-CRON-02 / F-IAE-GATE-01 (multi-slot con gate
+pre-pipeline) + F-IAE-LSE-INTEGRATION (scraper LSE + override parcial de
+Close para los 20 tickers .L). Suite: 1682 -> 1857 passed. Ver secciones
+11.22 y 11.23.
+
 ### 13.2. IAE
 
 Estado, arquitectura, verificacion y deuda tecnica del modulo IAE
 viven en `iae/IAE_MAESTRO.md`. No se duplican aqui.
 
-### 13.3. Estado del repo al cierre (2026-09-24)
+### 13.3. Estado del repo al cierre (2026-09-26)
 
     HEAD            ver docs/auditoria/iae/ESTADO_SISTEMA.md
     Ahead           0 (sincronizado con origin/main)
-    Push            SI (integrado en produccion desde 2026-09-24)
+    Push            SI (integrado en produccion desde 2026-09-26)
     Working tree    LIMPIO
-    Suite local     1682 passed + 2 skipped + 0 failed
+    Suite local     1857 passed + 2 skipped + 0 failed
     Suite IAE       845 passed (criterio AST, 45 ficheros)
-    Suite CI        0 failed (ultima verificacion completa: run 36015197250, anterior al ciclo 2026-09-24)
+    Suite CI        0 failed (ultima verificacion completa: run 36189310171, dispatch manual)
 
 Nota. Los 3 test_freshness pasan tras un `py run.py` que refresca los
 parquets; vuelven a fallar si pasan >4 dias sin ejecutar el pipeline.
@@ -1242,4 +1307,4 @@ que el objetivo es IMPLEMENTARLO. No inicies un nuevo ciclo de
 propuestas->dictamenes sobre A.6.2-bis sin antes consultar con el
 usuario. Ver IAE_MAESTRO.md para el contexto.
 
-Fin del prompt maestro v7.
+Fin del prompt maestro v7.5.

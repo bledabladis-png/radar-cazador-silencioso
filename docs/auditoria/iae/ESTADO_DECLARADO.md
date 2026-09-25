@@ -136,6 +136,54 @@ IAE_MAESTRO). Detalle en §2.
   gestiona Issues: abre o comenta si los 4 slots fallan (schedule + last slot),
   cierra si recuperacion confirmada, nunca abre en workflow_dispatch.
   Commits: ed0fb07, 5657b1c, 3642038.
+- F-IAE-LSE-INTEGRATION (2026-09-26): RESUELTO. Fuente primaria para los
+  20 tickers .L (FTSE 100) via scraper privado lse-close-scraper.
+  Problema: los .L se cubrian exclusivamente via Yahoo, que durante
+  la ventana post-cierre LSE publica la fila con Close=NaN (mismo patron
+  que F-IAE-CRON-02 documenta para USA). El radar usaba Yahoo como unica
+  fuente y marcaba DATA_ISSUE (MISSING_CLOSE_EXPECTED_SESSION) cuando el
+  dato aun no estaba disponible.
+  Solucion: scraper LSE (repo privado) alimenta via Refinitiv Widgets
+  (endpoint historical, samples=D, GBX sin conversion) y el radar
+  aplica un override PARCIAL de Close sobre la fila ya presente de
+  Yahoo. NO sustituye el registro completo: Open/High/Low/Volume siguen
+  viniendo de Yahoo (evita degradar flow_proxy_z, OBV, CMF en
+  analisis_lideres_internacionales).
+  Piezas:
+  - Repo privado `lse-close-scraper`: cron L-V 18:00 UTC, Playwright
+    captura SID+JWT, requests consulta timeseries/historical. Sin
+    secrets en CI (Playwright renueva en cada run). SID/Token
+    enmascarados en logs.
+  - `src/market_hours.py::last_expected_lse_session(reference_date)`:
+    sesion LSE esperada con calendario propio (lunes-viernes, sin
+    festivos UK; limitacion documentada).
+  - `src/external/lse_scraper_loader.py`: loader con 4 funciones
+    publicas (`load_lse_close_for_session`, `build_lse_close_override`,
+    `aplicar_override_close`, `write_lse_provenance`). RIC -> ticker
+    via `INSTRUMENTS[ticker]["refinitiv"]`.
+  - `src/instrument_registry.py`: 20 entradas `.L` con `refinitiv`
+    (19 identidad + `BA.L` -> `BAES.L`).
+  - `src/stock_data_loader.py::_apply_lse_close_override`: hook tras
+    dedup, antes del manifest. Solo sobrescribe Close si la sesion
+    LSE esperada esta disponible.
+  - `data/lse_close_provenance.json`: versionado junto al parquet.
+    Trazabilidad reproducible: target_session, lse_expected_session,
+    source_repo, source_ref, source_commit (SHA del scraper), status
+    (OK / PARTIAL / NO_COVERAGE / UNAVAILABLE), tickers desde scraper,
+    desde yahoo, missing, run_id.
+  - `.github/workflows/daily_run.yml`: steps "Fetch LSE scraper" y
+    "Capture LSE scraper SHA". PAT fine-grained (contents: read) via
+    secret LSE_SCRAPER_TOKEN. persist-credentials: false.
+    continue-on-error: true (fallback Yahoo si falla el checkout).
+  Dictamenes externos: D1 (sesion LSE especifica, no global),
+  D2 (override tras dedup), D3 (solo DATOS_DIR en config),
+  D4 (provenance distingue available/used/status), D5 (checkout
+  privado + persist-credentials false), D7 (GBX sin conversion).
+  Invariante: el radar NO ejecuta codigo del repo externo, solo lee
+  sus JSON.
+  Test suite: +91 nuevos (30 loader LSE base en 0313879, +32 subciclo 1,
+  +18 subciclo 2a, +11 subciclo 2b). Suite: 1766 -> 1857 passed.
+  Commits: 0313879, 71e32d2, de30f3b, 9d5b19e, c5ffcd4.
 - Fase G - automatizacion de mappings (2026-09-24): CERRADA.
   Problema diagnostico: el crosswalk CUSIP y el catalogo radar eran
   ficheros estaticos mantenidos a mano. Cada trimestre SEC publica
