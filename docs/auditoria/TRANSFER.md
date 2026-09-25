@@ -13,17 +13,17 @@ Reglas de personalidad y metodo: `PROMPT_MAESTRO.md` secciones 1 y 3.
 
 ---
 
-## Estado al cierre de la sesion (2026-09-24)
+## Estado al cierre de la sesion (2026-09-25)
 
     HEAD                 ver docs/auditoria/iae/ESTADO_SISTEMA.md
     Ahead                0 (sincronizado con origin/main)
     Working tree         LIMPIO
     Tests IAE            845 passed (criterio AST, 45 ficheros)
-    Suite global         1682 passed + 2 skipped + 0 failed
+    Suite global         1766 passed + 2 skipped + 0 failed
                          (los 3 test_freshness pasan tras run.py; vuelven
                           a fallar si los parquets llevan >4 dias sin
                           refrescar - ver nota abajo)
-    Push                 SI (integrado en produccion desde 2026-09-24)
+    Push                 SI (integrado en produccion desde 2026-09-25)
     Cobertura IAE        90% lineas (reproducible con scripts/iae_coverage.py)
 
 Nota. `test_freshness` valida que market_data.parquet y stock_prices.parquet
@@ -330,4 +330,72 @@ Pregunta: "Que hacemos?"
 
 ---
 
-FIN DE TRANSFER. 2026-09-24.
+## Sesion 2026-09-25 (F-IAE-CRON-02 / F-IAE-GATE-01)
+
+**Problema.** Fallo del run 36080921484 (25-Sep 01:11 UTC) con 262/313
+tickers USA sin Close. Analisis forense: Yahoo devolvio la fila de
+expected_session con Close=NaN. Dispatch manual 11:57 UTC del mismo dia
+paso OK sin cambios de codigo. Ventana de latencia real: >5h26m a 100%
+NaN, 16h12m a 0% NaN.
+
+**Diagnostico.** El sistema apostaba a un deadline unico. Si Yahoo no
+publicaba en esa ventana, no habia recuperacion ese dia. Mover el cron
+(F-IAE-CRON-01 -> F-IAE-CRON-03) es un cambio de parametro, no de clase.
+
+**Solucion.** Multi-slot con gate pre-pipeline. Aprobado por auditor
+externo con 2 rondas de dictamen (informe inicial + correcciones).
+
+Ciclos cerrados (3 commits, un subciclo de implementacion por commit):
+
+1. **Commit 1 - ed0fb07.** `scripts/pipeline_gate.py` (182 lineas) +
+   `tests/test_pipeline_gate.py` (30 tests iniciales). Decision pura
+   CURRENT / READY / NOT_READY / ERROR. Sin tocar produccion.
+
+2. **Commit 2a - 5657b1c.** Extension del gate: CRON_SLOTS,
+   resolve_slot_flags, retry corto del probe (3 intentos, sleeps 10/30s).
+   +21 tests. 51 tests totales del gate.
+
+3. **Commit 2b - 3642038.** Wiring productivo:
+   - `daily_run.yml`: 4 slots (17 23 / 17 3 / 17 7 / 17 11 UTC),
+     concurrency queue: max, job gate, run-system condicionado,
+     job issue-manager.
+   - `scripts/issue_manager.py`: decide_action pura (NOOP / CLOSE /
+     ENSURE_FAILURE), validate_target_session pura, execute_action via
+     gh CLI (mismo patron que health_check.py). Busqueda de Issue por
+     comparacion EXACTA de title en Python.
+   - `tests/test_issue_manager.py`: 33 tests (maquina de estados
+     completa, execute_action con subprocess mockeado, contrato de
+     seguridad GH_TOKEN, drift CRON_SLOTS vs daily_run.yml).
+
+**Verificacion en CI real.** Run 36148143256 (dispatch manual):
+- gate -> CURRENT, should_run=false (manifest ya cubre 2026-09-24).
+- run-system -> skipped (condicion).
+- issue-manager -> CLOSE (no-op sin Issue abierto).
+- Overall -> success.
+
+**Rechazos tecnicos durante el ciclo:**
+- `issue_manager.js` + `actions/github-script@v9`: rechazado por falta
+  de `node` en entorno local (imposibilidad de testear la maquina de
+  estados antes del push). Sustituido por `issue_manager.py` + `gh` CLI.
+- `queue: max`: adoptado por dictamen auditor. Incompatible con
+  cancel-in-progress.
+- `issue-manager` con `needs: gate` solo: rechazado por dictamen auditor.
+  Añadido `run-system` como dependencia y `if: always()` para asegurar
+  que la decision se toma tras conocer el resultado del pipeline.
+
+**Cambios prohibidos en este ciclo (preservados intactos):**
+- `guard_coverage.py`.
+- `run.py`, pipeline, IAE, manifest FU-002, contratos temporales.
+
+**Lecciones aplicables a ciclos futuros:**
+- Un here-string grande de PowerShell con comillas anidadas se corrompe
+  silenciosamente. Patron seguro: chunks de ~50 lineas con
+  `[System.IO.File]::WriteAllText`/`AppendAllText` y ruta absoluta
+  (`Join-Path $PWD ...`). El `$PWD` es obligatorio: el metodo .NET
+  usa el CWD del proceso, no el de PowerShell.
+- La regex `##` de aqui-strings choca con delimitadores. Verificar con
+  `ast.parse` antes de escribir.
+
+---
+
+FIN DE TRANSFER. 2026-09-25.

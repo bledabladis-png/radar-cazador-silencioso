@@ -454,7 +454,7 @@ NUNCA se mezclan. NUNCA se construye superindicador.
 
 ## SECCION 9 - WORKFLOWS GITHUB ACTIONS
 Workflow	Cron	Proposito
-daily_run.yml	0 23 * * *	Run diario + validacion + push de outputs
+daily_run.yml	17 23 / 17 3 / 17 7 / 17 11 UTC	Run diario multi-slot con gate pre-pipeline (F-IAE-CRON-02) + validacion + push de outputs
 update_macro_manual.yml	0 6 * * *	FRED auto (25 series)
 update_european_holdings.yml	0 5 1 1,4,7,10 *	Holdings europeos
 update_index_holdings.yml	0 4 1 1,4,7,10 *	SPY/DIA/QQQ/IWM
@@ -464,7 +464,9 @@ update_sec_13f.yml	0 6 20 2,5,8,11 *	SEC 13F trimestral + cache parquets IAE
 update_sector_holdings.yml	0 3 1 1,4,7,10 *	Holdings sectoriales
 health_check.yml                  0 7 * * 1              Vigilancia semanal (workflows, cache 13F, manifests, cobertura, fechas no bursatiles, patron EU-USA, seccion IAE). Abre/cierra GitHub Issue con label health-check.
 Nota: daily_run.yml commitea Daily hist/state. Aplicar git fetch + pull --rebase antes de cualquier push local.
-Nota F-IAE-CRON-01 (2026-09-24): el cron de daily_run.yml se movio de 0 4 * * * a 0 23 * * * UTC para evitar la ventana donde guard_coverage bloqueaba commits (sesion USA abierta). Con retraso tipico de ~5h, la ejecucion real cae a 04:00 UTC (pre-apertura europea).
+Nota F-IAE-CRON-01 (2026-09-24, SUPERSEDED por F-IAE-CRON-02): el cron de daily_run.yml se movio de 0 4 * * * a 0 23 * * * UTC para evitar la ventana donde guard_coverage bloqueaba commits (sesion USA abierta). Con retraso tipico de ~5h, la ejecucion real cae a 04:00 UTC (pre-apertura europea).
+
+Nota F-IAE-CRON-02 (2026-09-25): un deadline unico no cubre la latencia variable de Yahoo (observado: >5h26m a 100% NaN, 16h12m a 0% NaN). Solucion: 4 slots con idempotencia por cobertura y gate pre-pipeline. Los 4 apuntan a la misma target_session. Minutos en :17 para evitar la franja :00 de alta carga documentada por GitHub. concurrency usa queue: max (hasta 100 pendientes, sin colapsar slot anterior; incompatible con cancel-in-progress).
 
 Fase G (2026-09-24) - automatizacion de mappings del IAE:
 
@@ -885,6 +887,35 @@ en CI. Todos son de render/nomenclatura, no de pipeline:
 Tests del ciclo: 49 nuevos. Commits: 2fe1c45, 740be35, dfd93c4, f4f8003,
 664d839, c4b7138, bb9251b, 8c6330f, y commits documentales.
 
+11.22. F-IAE-CRON-02 / F-IAE-GATE-01 - Multi-slot con gate pre-pipeline (2026-09-25)
+Causa raiz: el fallo del 25-Sep (run 36080921484) con 262/313 tickers USA
+sin Close. Analisis forense: Yahoo devolvio la fila de expected_session
+con Close=NaN. La latencia real de Yahoo para poblar Close es variable
+(>5h26m a 100% NaN, 16h12m a 0% NaN, sin cambio de codigo entre runs).
+
+Solucion estructural: eliminar la apuesta a un deadline unico. En su lugar:
+- 4 slots de cron (17 23 / 17 3 / 17 7 / 17 11 UTC) con minutos :17
+  (evitar la franja :00 de alta carga documentada por GitHub).
+- Idempotencia por cobertura (coverage_pct_last), NO por last_date. El
+  manifest del run fallido tenia last_date_is_expected_session=True y
+  coverage_pct_last=0.163 simultaneamente.
+- target_session = sesion bursatil objetivo (via last_expected_market_date),
+  no el dia calendario UTC del slot. Los 4 slots apuntan a la misma.
+- Gate pre-pipeline: scripts/pipeline_gate.py decide 4 estados (CURRENT /
+  READY / NOT_READY / ERROR). Probe fresco del panel fijo de 20 tickers USA.
+  Retry corto (3 intentos, sleeps 10/30s) solo para errores de red.
+- concurrency con queue: max (hasta 100 pendientes, evita colapso).
+- issue-manager post-run: scripts/issue_manager.py abre/comenta si los 4
+  slots fallan (schedule + last_slot), cierra si recuperacion confirmada,
+  nunca abre en workflow_dispatch. Permisos minimos: contents:read + issues:write.
+  GH_TOKEN solo en env (nunca argv).
+
+Doble capa de validacion preservada: gate = disponibilidad, guard = integridad.
+El guard sigue siendo la ultima linea de defensa contra corrupcion real.
+
+Estado: integrado en produccion. Verificado en CI real (run 36148143256):
+gate -> CURRENT, run-system skipped, issue-manager CLOSE (no-op sin Issue abierto).
+
 ## SECCION 12 - LIMITACIONES CONOCIDAS
 20 tickers .L sin provider oficial -> Aceptado.
 
@@ -1053,6 +1084,12 @@ la ejecucion real caia a las 09:00 UTC = 11:00 Madrid, dentro de la
 sesion europea. Con 23:00 UTC, la ejecucion tipica queda a 04:00 UTC
 = 05:00/06:00 Madrid (pre-apertura europea). Margen de retraso tolerado:
 hasta 8h (antes 3h). Commits: 6dec2cf, f396e99.
+SUPERSEDED por F-IAE-CRON-02 (2026-09-25, ver seccion 11.22).
+
+F-IAE-CRON-02 / F-IAE-GATE-01 (2026-09-25) -> RESUELTO. Multi-slot con
+gate pre-pipeline. El fallo del 25-Sep demostro que un deadline unico
+no cubre la latencia variable de Yahoo. 4 slots con idempotencia por
+cobertura. Ver seccion 11.22. Commits: ed0fb07, 5657b1c, 3642038.
 
 ## SECCION 13 - DEUDA TECNICA
 

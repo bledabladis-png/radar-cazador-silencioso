@@ -113,13 +113,29 @@ IAE_MAESTRO). Detalle en §2.
   valores de tickers UK (LSE abierto en festivos USA) mezclados en
   lotes Yahoo mixtos. Saneamiento del parquet historico: 50 celdas
   limpiadas (5 festivos × 10 tickers USA). Commit: 2423526.
-- F-IAE-CRON-01 (2026-09-24): RESUELTO.
+- F-IAE-CRON-01 (2026-09-24): RESUELTO. SUPERSEDED por F-IAE-CRON-02 (2026-09-25, ver abajo).
   Cron de `daily_run.yml` movido de `0 4 * * *` a `0 23 * * *` UTC.
   Motivo: con retraso observado de ~5h, la ejecucion real caia a
   las 09:00 UTC = 11:00 Madrid, dentro de la sesion europea. Con
   23:00 UTC, la ejecucion tipica queda a 04:00 UTC = 05:00/06:00
   Madrid (pre-apertura europea). Margen de retraso tolerado: 8h.
   Commits: 6dec2cf, f396e99.
+- F-IAE-CRON-02 (2026-09-25): RESUELTO. Multi-slot de cron con idempotencia.
+  Sustituye al cron unico `0 23 * * *` (F-IAE-CRON-01). Razon: el fallo
+  del 25-Sep (run 36080921484) demostro que un deadline unico no cubre la
+  latencia variable de Yahoo (>5h26m observado a 100% NaN, 16h12m a 0% NaN).
+  Solucion: 4 slots (17 23 / 17 3 / 17 7 / 17 11 UTC) con gate pre-pipeline.
+  Los 4 apuntan a la misma target_session. Minutos en :17 para evitar la
+  franja :00 de alta carga documentada por GitHub.
+  Commits: ed0fb07, 5657b1c, 3642038.
+- F-IAE-GATE-01 (2026-09-25): RESUELTO. Gate de disponibilidad pre-pipeline.
+  `scripts/pipeline_gate.py` decide 4 estados (CURRENT / READY / NOT_READY /
+  ERROR) leyendo el manifest + probe fresco de un panel fijo de 20 tickers
+  USA. Idempotencia por cobertura (no por last_date). Retry corto (3 intentos,
+  sleeps 10/30s) para errores transitorios de red. `scripts/issue_manager.py`
+  gestiona Issues: abre o comenta si los 4 slots fallan (schedule + last slot),
+  cierra si recuperacion confirmada, nunca abre en workflow_dispatch.
+  Commits: ed0fb07, 5657b1c, 3642038.
 - Fase G - automatizacion de mappings (2026-09-24): CERRADA.
   Problema diagnostico: el crosswalk CUSIP y el catalogo radar eran
   ficheros estaticos mantenidos a mano. Cada trimestre SEC publica
