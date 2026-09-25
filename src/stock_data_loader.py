@@ -1,15 +1,33 @@
 ﻿import pandas as pd
 import yfinance as yf
 from datetime import datetime, timedelta
-from config.settings import CACHE_HOURS, CACHE_VALIDATE_TRADING_DATE, TOP_N_SECTOR_COMPONENTS
+from pathlib import Path
+from config.settings import (
+    CACHE_HOURS,
+    CACHE_VALIDATE_TRADING_DATE,
+    TOP_N_SECTOR_COMPONENTS,
+    LSE_SCRAPER_DATOS_DIR,
+    LSE_SCRAPER_PROVENANCE_PATH,
+    LSE_SCRAPER_REPO,
+)
 from data.providers.euronext_provider import EuronextProvider
 from data.providers.xetra_provider import XetraProvider
 from data.providers.bme_provider import BMEProvider
 from src.market_calendar import last_expected_market_date, is_market_day
-from src.market_hours import is_trading_session, is_session_closed
+from src.market_hours import (
+    is_trading_session,
+    is_session_closed,
+    last_expected_lse_session,
+)
 from src.instrument_registry import (
     get_market,
     normalize_yahoo_ticker,  # usado internamente + re-export
+)
+from src.external.lse_scraper_loader import (
+    load_lse_close_for_session,
+    build_lse_close_override,
+    aplicar_override_close,
+    write_lse_provenance,
 )
 from zoneinfo import ZoneInfo
 import os
@@ -309,6 +327,172 @@ def _classify_ticker(ticker, df, expected_session):
 
 # Nota: sin @retry global. El bucle por lotes ya gestiona fallos:
 # los tickers fallidos se reintentan individualmente tras el bucle principal.
+
+
+def _apply_lse_close_override(data, reference_date, run_id, target_session):
+    """Override parcial de Close para tickers LSE (F-IAE-LSE-INTEGRATION 2b).
+
+    Sustituye el Close de los .L con la observacion del scraper privado
+    lse-close-scraper si la sesion LSE esperada esta disponible.
+
+    Reglas (dictamen auditor externo 2026-09-25):
+      - Solo sobrescribe ('Close', ticker).
+      - NO toca Open/High/Low/Volume.
+      - NO anade filas nuevas.
+      - Igualdad exacta de fecha (nunca max, nunca tolerancia).
+      - Scraper ausente -> no-op, provenance con status=UNAVAILABLE.
+      - Si el override actua, provenance con status OK o PARTIAL.
+
+    No modifica `classification`: es diagnostico historico del flujo Yahoo.
+
+    Returns:
+        (data, stats) con stats = aplicar_override_close().stats ampliado
+        con tickers_from_scraper, tickers_from_yahoo, tickers_missing.
+    """
+    stats = {
+        "applied": [],
+        "skipped_no_column": [],
+        "skipped_date_mismatch": [],
+        "override_date": None,
+        "tickers_from_scraper": [],
+        "tickers_from_yahoo": [],
+        "tickers_missing": [],
+        "scraper_available": False,
+        "provenance_status": "UNAVAILABLE",
+    }
+
+    if data is None or data.empty:
+        return data, stats
+
+    # Universo LSE presente en el DataFrame final.
+    lse_tickers = sorted({
+        col[1] for col in data.columns
+        if isinstance(col, tuple) and len(col) == 2
+        and col[0] == "Close"
+        and get_market(col[1]) == "LSE"
+    })
+    if not lse_tickers:
+        return data, stats
+
+    # Resolver sesion LSE esperada (calendario propio LSE, no NYSE).
+    try:
+        lse_expected_session = last_expected_lse_session(reference_date)
+    except Exception as e:
+        print(f"  [LSE-OVERRIDE] no se pudo resolver sesion LSE: {e}")
+        return data, stats
+
+    # Cargar observaciones del scraper.
+    datos_dir = Path(LSE_SCRAPER_DATOS_DIR)
+    if not datos_dir.exists():
+        print(f"  [LSE-OVERRIDE] scraper no disponible en {datos_dir}")
+        stats["tickers_from_yahoo"] = lse_tickers
+        _write_lse_provenance_safe(
+            lse_expected_session, target_session, run_id,
+            stats, source_commit=os.environ.get("LSE_SCRAPER_COMMIT", ""),
+            reason="datos_dir ausente",
+        )
+        return data, stats
+
+    stats["scraper_available"] = True
+    loaded = load_lse_close_for_session(
+        datos_dir, lse_expected_session, lse_tickers
+    )
+
+    if not loaded:
+        print(f"  [LSE-OVERRIDE] scraper sin observacion para {lse_expected_session}")
+        stats["tickers_from_yahoo"] = lse_tickers
+        stats["tickers_missing"] = lse_tickers
+        stats["provenance_status"] = "NO_COVERAGE"
+        _write_lse_provenance_safe(
+            lse_expected_session, target_session, run_id,
+            stats, source_commit=os.environ.get("LSE_SCRAPER_COMMIT", ""),
+            reason="sin observacion para sesion LSE esperada",
+        )
+        return data, stats
+
+    # Construir override y aplicarlo.
+    override_df = build_lse_close_override(loaded)
+    data, apply_stats = aplicar_override_close(data, override_df)
+
+    stats["applied"] = apply_stats["applied"]
+    stats["skipped_no_column"] = apply_stats["skipped_no_column"]
+    stats["skipped_date_mismatch"] = apply_stats["skipped_date_mismatch"]
+    stats["override_date"] = apply_stats["override_date"]
+
+    applied_set = set(stats["applied"])
+    stats["tickers_from_scraper"] = sorted(applied_set)
+    stats["tickers_from_yahoo"] = sorted(
+        t for t in lse_tickers if t not in applied_set
+    )
+
+    # tickers_missing: .L sin cobertura valida final.
+    missing = []
+    override_ts = None
+    if stats["override_date"]:
+        try:
+            override_ts = pd.Timestamp(stats["override_date"])
+        except Exception:
+            override_ts = None
+    for t in lse_tickers:
+        if t in applied_set:
+            continue
+        col = ("Close", t)
+        if col not in data.columns:
+            missing.append(t)
+            continue
+        if override_ts is not None and override_ts in data.index:
+            if pd.isna(data.loc[override_ts, col]):
+                missing.append(t)
+    stats["tickers_missing"] = sorted(missing)
+
+    # Status de provenance.
+    if stats["applied"] and not stats["tickers_missing"]:
+        stats["provenance_status"] = "OK"
+    elif stats["applied"]:
+        stats["provenance_status"] = "PARTIAL"
+
+    print(
+        f"  [LSE-OVERRIDE] session={lse_expected_session} "
+        f"applied={len(stats['applied'])}/"
+        f"{len(lse_tickers)} status={stats['provenance_status']}"
+    )
+
+    _write_lse_provenance_safe(
+        lse_expected_session, target_session, run_id,
+        stats, source_commit=os.environ.get("LSE_SCRAPER_COMMIT", ""),
+        reason=None,
+    )
+    return data, stats
+
+
+def _write_lse_provenance_safe(lse_session, target_session, run_id,
+                                 stats, *, source_commit, reason):
+    """Wrapper de write_lse_provenance que tolera fallos sin abortar el pipeline."""
+    try:
+        write_lse_provenance(
+            LSE_SCRAPER_PROVENANCE_PATH,
+            target_session=target_session,
+            lse_expected_session=lse_session,
+            source_repo=LSE_SCRAPER_REPO,
+            source_ref=os.environ.get("LSE_SCRAPER_REF", "main"),
+            source_commit=source_commit,
+            tickers_from_scraper=stats["tickers_from_scraper"],
+            tickers_from_yahoo=stats["tickers_from_yahoo"],
+            run_id=run_id,
+            scraper_available=stats["scraper_available"],
+            tickers_missing=stats["tickers_missing"],
+            status=stats["provenance_status"],
+            reason=reason,
+        )
+    except ValueError as e:
+        # source_commit obligatorio cuando scraper_used=True (dictamen D4).
+        # Fallo visible pero no bloqueante: la provenance es auditoria,
+        # no parte del pipeline funcional.
+        print(f"  [LSE-OVERRIDE][WARN] provenance no escrita: {e}")
+    except Exception as e:
+        print(f"  [LSE-OVERRIDE][WARN] provenance fallo inesperado: {e}")
+
+
 def download_stock_prices(reference_date=None, run_id=None):
     # B1 (2026-09-12): reference_date se normaliza UNA vez al inicio.
     # FU-018-3c (2026-09-15): tz-aware en horario Madrid. Requerido por
@@ -602,6 +786,16 @@ def download_stock_prices(reference_date=None, run_id=None):
         n_dup = int(data.columns.duplicated().sum())
         print(f"  AVISO: {n_dup} columnas duplicadas detectadas, deduplicando (keep=last)")
         data = data.loc[:, ~data.columns.duplicated(keep='last')]
+
+    # F-IAE-LSE-INTEGRATION (subciclo 2b): LSE Close Override.
+    # Aplica tras el dedup, antes del manifest. Sobrescribe SOLO Close
+    # de los tickers LSE con la observacion del scraper privado si la
+    # sesion LSE esperada esta disponible. Preserva Open/High/Low/Volume
+    # de Yahoo (evita degradar flow_proxy_z, OBV, CMF).
+    # No-op si el scraper no esta disponible.
+    data, _lse_stats = _apply_lse_close_override(
+        data, reference_date, run_id, _expected_session
+    )
 
     # FU-002 (2026-09-15): parquet + manifest atomico.
     from src.utils import write_artifact_with_manifest

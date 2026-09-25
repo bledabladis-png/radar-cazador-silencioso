@@ -67,3 +67,5 @@ data/sec_13f/processed/
 .coverage
 htmlcov/
 
+# LSE scraper (repo privado, no versionado)
+data/external/

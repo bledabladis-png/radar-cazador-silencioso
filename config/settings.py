@@ -6,6 +6,8 @@ data quality thresholds, cache parameters, and SLPM coverage.
 Model-specific weights remain in config/weights.py.
 """
 
+import os
+
 # ============================================================
 # TIME WINDOWS — TRADING SESSIONS
 # ============================================================
@@ -228,3 +230,20 @@ CONFIDENCE_RANGE_DIVISOR = 2.0
 # ============================================================
 
 CURRENT_TEMPORAL_CONTRACT_VERSION = "FU-021-5-v2"
+
+# ============================================================
+# LSE SCRAPER (F-IAE-LSE-INTEGRATION)
+# ============================================================
+# Override parcial de Close para tickers .L (LSE) usando los JSON
+# del scraper privado lse-close-scraper. Solo se envia via env var
+# LSE_SCRAPER_DATOS_DIR. El repo/ref/commit los resuelve el workflow
+# (dictamen auditor externo 2026-09-25, D3).
+LSE_SCRAPER_DATOS_DIR = os.environ.get(
+    "LSE_SCRAPER_DATOS_DIR",
+    "data/external/lse_close/datos",
+)
+LSE_SCRAPER_PROVENANCE_PATH = os.environ.get(
+    "LSE_SCRAPER_PROVENANCE_PATH",
+    "data/lse_close_provenance.json",
+)
+LSE_SCRAPER_REPO = "bledabladis-png/lse-close-scraper"
