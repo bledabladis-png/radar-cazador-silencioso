@@ -7,7 +7,7 @@ observacion del provider es un cierre EOD valido o una vela en curso.
 NO es un calendario oficial completo. Es el minimo necesario para
 filtrar Yahoo USA/UK y Xetra cuando el mercado esta abierto.
 """
-from datetime import datetime, time as dtime
+from datetime import datetime, time as dtime, timedelta
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
@@ -69,6 +69,45 @@ def _normalize_date(d):
     if isinstance(d, str):
         return pd.Timestamp(d).date()
     return d
+
+
+def last_expected_lse_session(reference_date):
+    """Ultima sesion LSE cerrada antes o en reference_date.
+
+    Itera hacia atras desde reference_date.date(). Devuelve la primera
+    fecha d que cumple:
+      - is_trading_session("LSE", d) == True
+      - is_session_closed("LSE", d, reference_date) == True
+
+    Contraste con src.market_calendar.last_expected_market_date():
+      - Aquel usa calendario NYSE + PUBLISH_HOUR (Madrid, 23:00).
+      - Este usa horario de cierre LSE (16:30 London) y calendario LSE
+        (lunes-viernes).
+
+    En dias normales coinciden. En festivos NYSE (LSE abierto) pueden
+    diferir. En festivos UK (LSE cerrado, NYSE abierto) NO estan
+    contemplados: is_trading_session("LSE", d) es lunes-viernes sin
+    festivos UK. Limitacion documentada.
+
+    Precondicion: reference_date debe ser timezone-aware.
+    """
+    if reference_date is None or reference_date.tzinfo is None:
+        raise ValueError(
+            "reference_date must be timezone-aware. "
+            "Pass datetime.now(ZoneInfo('Europe/Madrid')) or equivalent."
+        )
+    d = reference_date.date()
+    # Limite de seguridad: 30 dias. Sin esto, un reference_date
+    # patologico (todo festivo) provocaria un bucle infinito.
+    for _ in range(30):
+        if is_trading_session("LSE", d) and \
+           is_session_closed("LSE", d, reference_date):
+            return d
+        d = d - timedelta(days=1)
+    raise RuntimeError(
+        "last_expected_lse_session: no se encontro sesion LSE cerrada "
+        "en los ultimos 30 dias desde {0}".format(reference_date)
+    )
 
 
 def is_trading_session(market: str, session_date) -> bool:

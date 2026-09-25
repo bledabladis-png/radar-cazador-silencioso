@@ -140,3 +140,127 @@ def load_lse_close_for_session(datos_dir, expected_session, tickers):
         result[ticker] = row
 
     return result
+
+
+def build_lse_close_override(loaded_dict):
+    """Construye un DataFrame con solo ('Close', ticker) para override.
+
+    Entrada: dict[ticker, {date, open, high, low, close}] tal como
+    devuelve load_lse_close_for_session. Todas las entradas deben
+    tener la MISMA date (una sola sesion por llamada).
+
+    Salida: DataFrame con MultiIndex de una fila:
+        columns = MultiIndex.from_product([['Close'], tickers])
+        index = DatetimeIndex([pd.Timestamp(date)])
+
+    El DataFrame resultante se combinara con el de Yahoo para
+    sobrescribir Close, preservando Open/High/Low/Volume.
+
+    Raises:
+        ValueError si las fechas no son homogeneas.
+        ValueError si el dict esta vacio.
+
+    Sin conversion de unidad (GBX). Sin datetime.now().
+    """
+    import pandas as pd
+
+    if not loaded_dict:
+        raise ValueError("build_lse_close_override: dict vacio")
+
+    dates = {row["date"] for row in loaded_dict.values()}
+    if len(dates) != 1:
+        raise ValueError(
+            "build_lse_close_override: fechas no homogeneas: {0}".format(
+                sorted(dates))
+        )
+
+    fecha = next(iter(dates))
+    tickers = sorted(loaded_dict.keys())
+    close_values = [loaded_dict[t]["close"] for t in tickers]
+
+    df = pd.DataFrame(
+        [close_values],
+        index=pd.DatetimeIndex([pd.Timestamp(fecha)]),
+        columns=pd.MultiIndex.from_product([["Close"], tickers]),
+    )
+    return df
+
+
+def write_lse_provenance(
+    path,
+    *,
+    target_session,
+    lse_expected_session,
+    source_repo,
+    source_ref,
+    source_commit,
+    tickers_from_scraper,
+    tickers_from_yahoo,
+    run_id,
+):
+    """Escribe provenance persistente del uso del scraper LSE.
+
+    Dictamen auditor externo 2026-09-25:
+      - Persistente y versionado junto al parquet.
+      - source_commit obligatorio si el scraper se uso (tickers_from_scraper
+        no vacio). En local, sin scraper, puede ser None.
+      - Si el scraper se usa y source_commit esta vacio -> ValueError.
+
+    Escritura atomica: tmp + os.replace. Sin datetime.now().
+
+    Args:
+        path: destino (Path o str). Por convencion:
+              'data/lse_close_provenance.json'.
+        target_session: fecha global objetivo del pipeline (date|str).
+        lse_expected_session: sesion LSE especifica (date|str).
+        source_repo: 'bledabladis-png/lse-close-scraper'.
+        source_ref: 'main' u otra ref.
+        source_commit: SHA del commit del scraper consumido. None o ''
+                       solo si tickers_from_scraper esta vacio.
+        tickers_from_scraper: lista de tickers (radar) que vinieron del scraper.
+        tickers_from_yahoo: lista de tickers .L que cayeron a Yahoo.
+        run_id: 'YYYYMMDD_HHMMSS'.
+
+    Returns:
+        dict con el payload escrito.
+    """
+    import json
+    import os as _os
+    from pathlib import Path as _Path
+
+    scraper_used = bool(tickers_from_scraper)
+    if scraper_used and not source_commit:
+        raise ValueError(
+            "write_lse_provenance: source_commit obligatorio cuando el "
+            "scraper se ha usado (dictamen D4). "
+            "tickers_from_scraper={0}, source_commit={1!r}".format(
+                len(tickers_from_scraper), source_commit)
+        )
+
+    def _iso(d):
+        if d is None:
+            return None
+        if hasattr(d, "isoformat"):
+            return d.isoformat()
+        return str(d)
+
+    payload = {
+        "target_session": _iso(target_session),
+        "lse_expected_session": _iso(lse_expected_session),
+        "source_repo": source_repo,
+        "source_ref": source_ref,
+        "source_commit": source_commit if source_commit else None,
+        "tickers_from_scraper": sorted(tickers_from_scraper or []),
+        "tickers_from_yahoo": sorted(tickers_from_yahoo or []),
+        "run_id": run_id,
+        "scraper_used": scraper_used,
+    }
+
+    out_path = _Path(path)
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    tmp_path = str(out_path) + ".tmp." + (run_id or "norunid")
+    with open(tmp_path, "w", encoding="utf-8") as f:
+        json.dump(payload, f, indent=2, ensure_ascii=False, sort_keys=True)
+    _os.replace(tmp_path, str(out_path))
+
+    return payload
