@@ -279,3 +279,177 @@ def test_state_should_run_consistency(isolated_project):
         result_notready = evaluate("2026-09-24")
     assert result_notready["state"] == "NOT_READY"
     assert result_notready["should_run"] is False
+
+
+# ---------------- resolve_slot_flags ----------------
+
+from scripts.pipeline_gate import (
+    CRON_SLOTS,
+    LAST_SLOT_CRON,
+    resolve_slot_flags,
+)
+
+
+def test_cron_slots_contiene_4():
+    assert len(CRON_SLOTS) == 4
+
+
+def test_last_slot_cron_es_ultimo_de_cron_slots():
+    assert CRON_SLOTS[-1] == LAST_SLOT_CRON
+
+
+def test_resolve_slot_vacio():
+    assert resolve_slot_flags("") == (False, False)
+
+
+def test_resolve_slot_manual():
+    assert resolve_slot_flags("manual") == (False, False)
+
+
+def test_resolve_slot_desconocido():
+    assert resolve_slot_flags("0 0 * * *") == (False, False)
+
+
+def test_resolve_slot_1_no_last():
+    assert resolve_slot_flags("17 23 * * *") == (True, False)
+
+
+def test_resolve_slot_2_no_last():
+    assert resolve_slot_flags("17 3 * * *") == (True, False)
+
+
+def test_resolve_slot_3_no_last():
+    assert resolve_slot_flags("17 7 * * *") == (True, False)
+
+
+def test_resolve_slot_4_is_last():
+    assert resolve_slot_flags("17 11 * * *") == (True, True)
+
+
+def test_resolve_slot_cada_cron_slots_conocido():
+    for slot in CRON_SLOTS:
+        known, _ = resolve_slot_flags(slot)
+        assert known is True, f"{slot} no reconocido"
+
+
+# ---------------- retry del probe ----------------
+
+from scripts.pipeline_gate import (
+    PROBE_MAX_RETRIES,
+    PROBE_RETRY_SLEEPS,
+    _probe_panel,
+)
+
+
+def test_retry_constants():
+    assert PROBE_MAX_RETRIES == 3
+    assert len(PROBE_RETRY_SLEEPS) == PROBE_MAX_RETRIES - 1
+
+
+def test_probe_panel_ok_sin_retry(isolated_project):
+    """Primer intento OK -> no llama time.sleep."""
+    df = _make_download_df("2026-09-24", coverage_frac=1.0)
+    with patch.object(gate.yf, "download", return_value=df) as mock_dl:
+        with patch.object(gate.time, "sleep") as mock_sleep:
+            cov, err = _probe_panel("2026-09-24")
+    assert err is None
+    assert cov == 1.0
+    assert mock_dl.call_count == 1
+    assert mock_sleep.call_count == 0
+
+
+def test_probe_panel_not_ready_sin_retry(isolated_project):
+    """Coverage=0 pero sin error -> sin retry (Yahoo aun sin Close)."""
+    df = _make_download_df("2026-09-24", coverage_frac=0.0)
+    with patch.object(gate.yf, "download", return_value=df) as mock_dl:
+        with patch.object(gate.time, "sleep") as mock_sleep:
+            cov, err = _probe_panel("2026-09-24")
+    assert err is None
+    assert cov == 0.0
+    assert mock_dl.call_count == 1
+    assert mock_sleep.call_count == 0
+
+
+def test_probe_panel_error_retry_exitoso(isolated_project):
+    """Primer intento excepcion, segundo OK -> 1 sleep, sin error final."""
+    df = _make_download_df("2026-09-24", coverage_frac=1.0)
+    side = [RuntimeError("timeout"), df]
+    def fake_download(*a, **kw):
+        r = side.pop(0)
+        if isinstance(r, Exception):
+            raise r
+        return r
+    with patch.object(gate.yf, "download", side_effect=fake_download) as mock_dl:
+        with patch.object(gate.time, "sleep") as mock_sleep:
+            cov, err = _probe_panel("2026-09-24")
+    assert err is None
+    assert cov == 1.0
+    assert mock_dl.call_count == 2
+    assert mock_sleep.call_count == 1
+
+
+def test_probe_panel_error_agota_retries(isolated_project):
+    """3 intentos fallidos -> ERROR tras 2 sleeps."""
+    with patch.object(gate.yf, "download",
+                      side_effect=RuntimeError("network down")) as mock_dl:
+        with patch.object(gate.time, "sleep") as mock_sleep:
+            cov, err = _probe_panel("2026-09-24")
+    assert cov == 0.0
+    assert err is not None
+    assert "network down" in err
+    assert mock_dl.call_count == PROBE_MAX_RETRIES
+    assert mock_sleep.call_count == PROBE_MAX_RETRIES - 1
+
+
+def test_probe_panel_error_tercero_ok(isolated_project):
+    """Excepcion, excepcion, OK -> 2 sleeps, resultado OK."""
+    df = _make_download_df("2026-09-24", coverage_frac=1.0)
+    side = [RuntimeError("a"), RuntimeError("b"), df]
+    def fake_download(*a, **kw):
+        r = side.pop(0)
+        if isinstance(r, Exception):
+            raise r
+        return r
+    with patch.object(gate.yf, "download", side_effect=fake_download) as mock_dl:
+        with patch.object(gate.time, "sleep") as mock_sleep:
+            cov, err = _probe_panel("2026-09-24")
+    assert err is None
+    assert cov == 1.0
+    assert mock_dl.call_count == 3
+    assert mock_sleep.call_count == 2
+
+
+# ---------------- formato de CRON_SLOTS ----------------
+
+def test_cron_slots_formato_posix_5_campos():
+    for slot in CRON_SLOTS:
+        parts = slot.split()
+        assert len(parts) == 5, f"{slot} no tiene 5 campos"
+
+
+def test_cron_slots_minuto_17():
+    """Todos los slots arrancan en :17 (auditor 2026-09-25)."""
+    for slot in CRON_SLOTS:
+        minute = slot.split()[0]
+        assert minute == "17", f"{slot} no arranca en :17"
+
+
+def test_cron_slots_orden_cronologico_recuperacion():
+    """Los slots siguen el orden cronologico de la ventana de recuperacion.
+
+    Arranca a las 23:17 del dia D y continua 03:17, 07:17, 11:17 del dia
+    D+1. El orden numerico de horas UTC no es [3, 7, 11, 23] porque el
+    slot "23" precede al "3" en el ciclo real.
+    """
+    horas = [int(s.split()[1]) for s in CRON_SLOTS]
+    assert horas == [23, 3, 7, 11], f"horas en orden inesperado: {horas}"
+
+
+def test_cron_slots_unicos():
+    assert len(set(CRON_SLOTS)) == len(CRON_SLOTS)
+
+
+def test_cron_slots_horas_esperadas():
+    """23, 3, 7, 11 UTC: cubren 5h17m a 17h17m post-cierre USA."""
+    horas = [int(s.split()[1]) for s in CRON_SLOTS]
+    assert horas == [23, 3, 7, 11]

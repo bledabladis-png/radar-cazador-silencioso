@@ -19,6 +19,7 @@ import argparse
 import json
 import os
 import sys
+import time
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -44,6 +45,21 @@ GATE_PANEL_USA = (
 PROBE_MIN_COVERAGE = 0.90
 MANIFEST_THRESHOLD = 0.95
 MANIFEST_PATH = "data/stock_prices.parquet.manifest.json"
+
+# Retry corto del probe para errores transitorios de red (auditor 2026-09-25).
+# NO cubre "Yahoo aun no tiene el Close" (eso es NOT_READY, sin retry).
+PROBE_MAX_RETRIES = 3
+PROBE_RETRY_SLEEPS = (10, 30)
+
+# Slots de cron declarados en .github/workflows/daily_run.yml (deben coincidir
+# caracter por caracter). Fuente unica de verdad en Python.
+CRON_SLOTS = (
+    "17 23 * * *",
+    "17 3 * * *",
+    "17 7 * * *",
+    "17 11 * * *",
+)
+LAST_SLOT_CRON = "17 11 * * *"
 
 
 def _read_manifest(path):
@@ -72,7 +88,7 @@ def _manifest_satisfies(manifest, target_session):
     return cov >= MANIFEST_THRESHOLD
 
 
-def _probe_panel(target_session, tickers=GATE_PANEL_USA):
+def _probe_panel_once(target_session, tickers):
     """Descarga fresca del panel. Devuelve (coverage, error).
 
     coverage: fraccion de tickers con Close no-NaN en target_session.
@@ -126,6 +142,37 @@ def _probe_panel(target_session, tickers=GATE_PANEL_USA):
     n_total = len(tickers)
     n_valid = int(row.notna().sum())
     return n_valid / n_total, None
+
+
+def _probe_panel(target_session, tickers=GATE_PANEL_USA):
+    """Probe con retry corto para errores transitorios de red.
+
+    Retry SOLO si _probe_panel_once devuelve error (excepcion de red).
+    Si devuelve (0.0, None) es NOT_READY (Yahoo aun sin Close), sin retry.
+    Tras agotar los intentos, devuelve (0.0, last_error) -> ERROR.
+    """
+    last_err = None
+    for attempt in range(1, PROBE_MAX_RETRIES + 1):
+        cov, err = _probe_panel_once(target_session, tickers)
+        if err is None:
+            return cov, None
+        last_err = err
+        if attempt < PROBE_MAX_RETRIES:
+            time.sleep(PROBE_RETRY_SLEEPS[attempt - 1])
+    return 0.0, last_err
+
+
+def resolve_slot_flags(slot_expr):
+    """Devuelve (is_known_slot, is_last_slot).
+
+    slot_expr vacio o "manual" -> (False, False).
+    slot_expr no reconocido -> (False, False).
+    """
+    if not slot_expr or slot_expr == "manual":
+        return False, False
+    if slot_expr not in CRON_SLOTS:
+        return False, False
+    return True, slot_expr == LAST_SLOT_CRON
 
 
 def evaluate(target_session):
@@ -186,6 +233,10 @@ def _write_github_output(result):
                 "true" if result["should_run"] else "false"))
             f.write("expected_session={0}\n".format(result["expected_session"]))
             f.write("reason={0}\n".format(result["reason"]))
+            f.write("is_known_slot={0}\n".format(
+                "true" if result.get("is_known_slot") else "false"))
+            f.write("is_last_slot={0}\n".format(
+                "true" if result.get("is_last_slot") else "false"))
     except Exception:
         pass
 
@@ -203,6 +254,9 @@ def main():
                     help="ISO datetime (testing). Default: now UTC")
     ap.add_argument("--target-session", default=None,
                     help="Forzar target_session ISO date (testing)")
+    ap.add_argument("--slot", default="",
+                    help="github.event.schedule (cron string). "
+                         "Vacio o manual en workflow_dispatch.")
     args = ap.parse_args()
 
     if args.target_session:
@@ -213,6 +267,7 @@ def main():
         target = resolve_target_session()
 
     result = evaluate(target)
+    result["is_known_slot"], result["is_last_slot"] = resolve_slot_flags(args.slot)
 
     print(json.dumps(result, indent=2, ensure_ascii=False))
     _write_github_output(result)
