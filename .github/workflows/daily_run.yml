@@ -124,6 +124,25 @@ jobs:
         run: |
           echo "::warning::Cache 13F no disponible. Seccion IAE mostrara STALE."
 
+      - name: Fetch LSE scraper (best-effort)
+        id: lse_checkout
+        continue-on-error: true
+        uses: actions/checkout@v4
+        with:
+          repository: bledabladis-png/lse-close-scraper
+          token: ${{ secrets.LSE_SCRAPER_TOKEN }}
+          path: data/external/lse_close
+          sparse-checkout: datos
+          sparse-checkout-cone-mode: false
+          persist-credentials: false
+
+      - name: Capture LSE scraper SHA
+        if: steps.lse_checkout.outcome == 'success'
+        run: |
+          SHA=$(git -C data/external/lse_close rev-parse HEAD)
+          echo "LSE_SCRAPER_COMMIT=${SHA}" >> "$GITHUB_ENV"
+          echo "[LSE] source_commit=${SHA}"
+
       - name: Run Macro Sectorial
         env:
           POLYGON_API_KEY: ${{ secrets.POLYGON_API_KEY }}
@@ -242,6 +261,7 @@ jobs:
           git add data/mappings/radar_target_catalog.csv
           git add data/mappings/catalog_manifest.json
           git add data/mappings/catalog_snapshots/
+          git add data/lse_close_provenance.json 2>/dev/null || true
           echo "=== status AFTER git add ==="
           git status --porcelain
           UNTRACKED=$(git status --porcelain | grep -E '^\?\? (outputs/history|outputs/state)/' || true)
