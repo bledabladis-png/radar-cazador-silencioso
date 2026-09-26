@@ -88,7 +88,7 @@ def compute_data_quality():
         {
             'source': 'SEC N-PORT',
             'file': 'outputs/history/sec_nport_position_change_quarterly.csv',
-            'date_cols': ['date'],
+            'date_cols': ['REPORT_DATE'],
             'frequency': 'sec',
             'coverage_logic': None,
             'notes': 'Trimestral'
