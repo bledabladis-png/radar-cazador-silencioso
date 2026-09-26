@@ -66,14 +66,24 @@ class YahooProvider(MarketDataProvider):
         except Exception as e:
             print(f"  Yahoo fallo definitivamente: {e}")
             print("  Intentando fallback a cache local...")
-            return self._load_cache()
+            return self._load_cache(tickers)
 
-    def _load_cache(self) -> pd.DataFrame:
+    def _load_cache(self, tickers=None) -> pd.DataFrame:
         cache_path = Path(CACHE_MARKET_PATH)
         if cache_path.exists():
             try:
                 data = pd.read_parquet(cache_path)
                 print(f"  Cache local cargado: {cache_path} ({len(data)} filas)")
+                if tickers is not None and isinstance(data.columns, pd.MultiIndex):
+                    requested = set(tickers)
+                    cols = [c for c in data.columns if c[1] in requested]
+                    if not cols:
+                        raise RuntimeError(
+                            f"Cache local no contiene ninguno de los {len(tickers)} tickers solicitados."
+                        )
+                    data = data[cols]
+                    n_ok = len({c[1] for c in cols})
+                    print(f"  Cache filtrado a {n_ok}/{len(tickers)} tickers.")
                 return data
             except Exception as e:
                 print(f"  Error leyendo cache local: {e}")
