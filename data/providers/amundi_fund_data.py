@@ -8,6 +8,7 @@ import pandas as pd
 import json
 from pathlib import Path
 from datetime import datetime, timedelta
+from ._fund_flow_utils import fund_flow_robust_zscore_with_regime
 
 ISIN_LYXI = 'FR0010251744'
 API_URL = 'https://www.amundietf.es/mapi/ProductAPI/getProductsData'
@@ -166,10 +167,11 @@ def compute_primary_flow(df: pd.DataFrame) -> pd.DataFrame:
     df['estimated_flow_eur'] = df['shares_change'] * df['nav']
     df['flow_pct_assets'] = df['estimated_flow_eur'] / df['class_aum']  # decimal
 
-    # Normalización robusta (media y desviación estándar, clip ±3)
-    mean = df['flow_pct_assets'].rolling(120, min_periods=20).mean()
-    std = df['flow_pct_assets'].rolling(120, min_periods=20).std()
-    df['flow_zscore'] = ((df['flow_pct_assets'] - mean) / (std + 1e-9)).clip(-3, 3)
+    # Normalización robusta (mediana/MAD, clip ±5).
+    # Contrato común con DAXEX, ISF e IWM (auditor 2026-09-27).
+    df['flow_zscore'], df['flow_zscore_regime'] = fund_flow_robust_zscore_with_regime(
+        df['flow_pct_assets'], window=120, min_periods=20,
+    )
     df['flow_5d'] = df['estimated_flow_eur'].rolling(5).mean()
     df['flow_20d'] = df['estimated_flow_eur'].rolling(20).mean()
 
@@ -198,7 +200,7 @@ def get_amundi_lyxi_primary_flow(force_download: bool = False) -> pd.DataFrame:
     cols = [
         'date', 'shares_outstanding', 'nav', 'fund_aum', 'class_aum',
         'shares_change', 'estimated_flow_eur', 'flow_pct_assets',
-        'flow_zscore', 'flow_5d', 'flow_20d'
+        'flow_zscore', 'flow_zscore_regime', 'flow_5d', 'flow_20d'
     ]
     df[cols].to_csv(HISTORY_CSV, index=False)
     print(f'  Histórico guardado en {HISTORY_CSV}')

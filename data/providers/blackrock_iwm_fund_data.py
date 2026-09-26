@@ -44,6 +44,7 @@ from pathlib import Path
 
 import pandas as pd
 import requests
+from ._fund_flow_utils import fund_flow_robust_zscore_with_regime
 
 
 # =============================================================================
@@ -340,55 +341,6 @@ def parse_historical_sheet(
 # CÁLCULO PRIMARY FLOW
 # =============================================================================
 
-def robust_zscore(
-    series: pd.Series,
-    window: int = 120,
-    min_periods: int = 20,
-) -> pd.Series:
-    """
-    Z-score robusto rolling mediante mediana + MAD.
-
-    z = (x - median) / (1.4826 * MAD)
-
-    No se recortan los valores originales.
-    """
-
-    def calculate(window_values: pd.Series) -> float:
-
-        values = window_values.dropna()
-
-        if len(values) < min_periods:
-            return float("nan")
-
-        median = values.median()
-
-        mad = (
-            values
-            .sub(median)
-            .abs()
-            .median()
-        )
-
-        if pd.isna(mad) or mad <= 0:
-            return 0.0
-
-        latest = values.iloc[-1]
-
-        return (
-            latest - median
-        ) / (
-            1.4826 * mad + 1e-12
-        )
-
-    return series.rolling(
-        window=window,
-        min_periods=min_periods,
-    ).apply(
-        calculate,
-        raw=False,
-    )
-
-
 def compute_primary_flow(
     df: pd.DataFrame,
 ) -> pd.DataFrame:
@@ -450,7 +402,7 @@ def compute_primary_flow(
     # SIGNAL
     # -------------------------------------------------------------------------
 
-    df["primary_flow_z"] = robust_zscore(
+    df["primary_flow_z"], df["primary_flow_z_regime"] = fund_flow_robust_zscore_with_regime(
         df["primary_flow_pct"],
         window=120,
         min_periods=20,
@@ -613,6 +565,7 @@ def get_blackrock_iwm_primary_flow(
                 "estimated_net_assets_usd",
                 "primary_flow_pct",
                 "primary_flow_z",
+                "primary_flow_z_regime",
                 "primary_flow_5d",
                 "primary_flow_20d",
             ]

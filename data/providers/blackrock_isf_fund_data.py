@@ -9,6 +9,7 @@ import numpy as np
 import xml.etree.ElementTree as ET
 from pathlib import Path
 from datetime import datetime, timedelta
+from ._fund_flow_utils import fund_flow_robust_zscore_with_regime
 
 URL_ISF = (
     "https://www.blackrock.com/es/profesionales/productos/251795/"
@@ -40,12 +41,6 @@ def parse_fecha_es(fecha_str):
         return pd.Timestamp(year=anio, month=mes, day=dia)
     except:
         return None
-
-def robust_z(series, window=120, min_periods=20):
-    """Z-score rodante basado en media y desviación estándar."""
-    mean = series.rolling(window, min_periods=min_periods).mean()
-    std = series.rolling(window, min_periods=min_periods).std()
-    return (series - mean) / (std + 1e-9)
 
 def download_fund_file():
     """Descarga el archivo de BlackRock si no existe o si tiene más de 23 horas."""
@@ -183,12 +178,14 @@ def get_blackrock_isf_primary_flow(force_download: bool = False) -> pd.DataFrame
     df_flow['shares_change'] = df_flow['shares_outstanding'].diff()
     df_flow['estimated_flow_eur'] = df_flow['shares_change'] * df_flow['nav']
     df_flow['flow_pct_assets'] = df_flow['estimated_flow_eur'] / df_flow['total_net_assets']
-    df_flow['flow_zscore'] = robust_z(df_flow['flow_pct_assets'], 120, 20)
+    df_flow['flow_zscore'], df_flow['flow_zscore_regime'] = fund_flow_robust_zscore_with_regime(
+    df_flow['flow_pct_assets'], window=120, min_periods=20,
+)
     df_flow['flow_5d'] = df_flow['estimated_flow_eur'].rolling(5).mean()
     df_flow['flow_20d'] = df_flow['estimated_flow_eur'].rolling(20).mean()
 
     cols = ['date','nav','shares_outstanding','shares_change','total_net_assets',
-            'estimated_flow_eur','flow_pct_assets','flow_zscore','flow_5d','flow_20d']
+            'estimated_flow_eur','flow_pct_assets','flow_zscore','flow_zscore_regime','flow_5d','flow_20d']
     result = df_flow[cols]
 
     OUTPUT_CSV.parent.mkdir(parents=True, exist_ok=True)
