@@ -492,7 +492,8 @@ def _compute_by_market(df, reference_date):
 def write_artifact_with_manifest(df, parquet_path, source,
                                   reference_date, run_id,
                                   schema_version=1, *,
-                                  temporal_contract=None):
+                                  temporal_contract=None,
+                                  fail_on_invalid=False):
     """Escribe parquet + manifest de forma atomica (FU-002, 2026-09-15).
 
     Pasos:
@@ -609,6 +610,16 @@ def write_artifact_with_manifest(df, parquet_path, source,
             status = 'VALID_WITH_MISSING'
         else:
             status = 'VALID'
+
+        # F3-16: si el caller exige fail_on_invalid y la calidad es INVALID,
+        # abortar antes de escribir el parquet + manifest. Los .tmp ya
+        # existen (parquet escrito en paso 1); hay que limpiarlos. Retornar
+        # {} para que el caller sepa que no se escribio nada.
+        if fail_on_invalid and status == 'INVALID':
+            print(f"  [MANIFEST] {parquet_path}: status=INVALID "
+                  f"(fail_on_invalid=True). Escritura abortada.")
+            _try_cleanup(tmp_parquet, tmp_manifest)
+            return {}
 
         # FU-002-bymarket (dictamen auditor 2026-09-24): cobertura por
         # mercado en su propia ultima sesion cerrada. Campo aditivo,

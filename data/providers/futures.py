@@ -255,6 +255,7 @@ class FuturesProvider(MarketDataProvider):
                 reference_date=reference_date,
                 run_id=run_id,
                 temporal_contract=None,
+                fail_on_invalid=True,
             )
         else:
             print("  [WARN] futures: sin datos nuevos")
@@ -267,6 +268,7 @@ class FuturesProvider(MarketDataProvider):
                 reference_date=reference_date,
                 run_id=run_id,
                 temporal_contract=None,
+                fail_on_invalid=True,
             )
         else:
             print("  [WARN] spot: sin datos nuevos")
