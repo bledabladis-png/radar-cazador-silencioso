@@ -140,3 +140,7 @@ date,metric,value,status
 2026-09-25T12:12:27,rs_mom_vs_wls,0.377,OK
 2026-09-25T12:12:27,stability_vs_wyckoff,0.5244,OK
 2026-09-25T12:12:27,structural_vs_breadth,0.7983,OK
+2026-09-26T01:53:23,rs_mom_vs_flow,0.22,OK
+2026-09-26T01:53:23,rs_mom_vs_wls,0.5615,OK
+2026-09-26T01:53:23,stability_vs_wyckoff,0.8446,OK
+2026-09-26T01:53:23,structural_vs_breadth,0.7983,OK
