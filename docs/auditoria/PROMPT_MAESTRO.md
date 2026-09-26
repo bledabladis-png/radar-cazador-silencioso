@@ -95,8 +95,8 @@ Eres el Ingeniero Supervisor del Radar de Rotacion Sectorial, un sistema determi
 - **R3 (FU-020):** La misma resolucion temporal debe compartirse entre metricas derivadas que utilizan el mismo universo y base de datos. Prohibido que A/D, NH/NL y thrust calculen cada uno su propia fecha efectiva.
 - **R4 (FU-021-3A):** El filtro de sesion (FU-018) y la resolucion por cobertura (`resolve_effective_date`) son controles independientes y no intercambiables. La cobertura mide presencia de datos, no cierre de sesion. `resolve_effective_date` no sustituye a `is_session_closed` y viceversa.
 - **R5 (FU-021-3C-bis):** Los tickers de commodities se alimentan exclusivamente via OilPriceAPI. Prohibido mezclar con Yahoo para estos tickers.
-  - BZ=F, CL=F: `close` de OilPriceAPI como proxy del settlement oficial ICE/NYMEX (`settlement_semantics=close_proxy`).
-  - GC=F, HG=F, NG=F: precio spot de OilPriceAPI (`settlement_semantics=spot_reference`).
+  - GC=F, HG=F, NG=F: precio spot de OilPriceAPI (`settlement_semantics=spot_reference`). Operativos.
+  - BZ=F, CL=F: BLOCKED. El endpoint `/v1/futures/*` requiere plan Professional. La API responde 403 "Feature access required" desde el 2026-09-22. Ver F3-05.
   - Nunca imputar spot como futuro ni viceversa.
 - **R6 (FU-021-3D):** Los indices de term structure de volatilidad se alimentan exclusivamente via CBOE. Prohibido mezclar con Yahoo para estos tickers.
   - ^VIX3M: CSV publico de CBOE (`cdn.cboe.com/api/global/us_indices/daily_prices/VIX3M_History.csv`).
@@ -354,7 +354,7 @@ Fase 1 data_load load_all_data(reference_date, run_id)
 -> resolve_all_contracts(...) + build_temporal_meta(...) [FU-021-5]
 -> write_artifact_with_manifest(...) [market_data.parquet]
 Fase 1.5 (GH Actions only) update_futures.py [FU-021-3C-bis]
--> OilPriceAPI fetch (BZ/CL/GC/HG/NG), skip si parquets al dia
+-> OilPriceAPI fetch (GC/HG/NG), skip si parquets al dia
 -> write commodities_futures.parquet + commodities_spot.parquet
 Fase 2 regimes compute_all_regimes() -> 4 regimenes
 Fase 3 sectors_base compute_sectors_base() -> rankings sectoriales
@@ -392,10 +392,10 @@ Si `validation_gate['passed'] == False` -> `sys.exit(1)`.
 | Euronext | 13 (.PA, .AS, .MI) |
 | Xetra | 19 (.DE) |
 | BME | 19 (.MC) |
-| OilPriceAPI | 5 commodities (BZ=F, CL=F, GC=F, HG=F, NG=F) [FU-021-3C-bis] |
+| OilPriceAPI | 3 commodities (GC=F, HG=F, NG=F) [FU-021-3C-bis] |
 | **TOTAL** | **313/313 (100%)** |
 
-Nota: OilPriceAPI alimenta los 5 commodities; Yahoo los descarga pero el merge en data_loader los sobrescribe. Ver R5 y Seccion 11.16.
+Nota: OilPriceAPI alimenta los 3 commodities spot (GC/HG/NG); Yahoo los descarga pero el merge en data_loader los sobrescribe. BZ=F y CL=F estan BLOCKED por plan (endpoint de futuros requiere Professional, 403 desde 2026-09-22). Ver R5 y Seccion 11.16.
 
 ### 6.2. Cascada europea "Europa primero"
 
@@ -765,14 +765,14 @@ Darkpool: `compute_darkpool_signals(df_market, df_stocks)` con fallback parquet 
 A3.1 DESBLOQUEADA (Fase 9): `trim_to_last_valid_date` retirado de `data_load.py`. Verificado empiricamente: diff filas = 0 con/sin trim (redundante con FU-021-3A). Funcion marcada DEPRECATED en `src/utils.py`.
 
 11.16. FU-021-3C-bis — Commodities via OilPriceAPI (2026-09-16)
-Ciclo completo. Cierra FU-021-3C (antes BLOCKED).
+Estado 2026-09-26 (F3-05): SPOT_COMMODITY operativo. FUTURE_SETTLEMENT BLOCKED de facto.
 
 Fuente: OilPriceAPI. Endpoints /v1/futures/ice-brent, /v1/futures/ice-wti, /v1/prices/latest.
 API key: env var `OIL_PRICE_API` (secret GH Actions) con fallback local a `D:\Descarga-Futuros\OilPriceApi\config\oilpriceapi-key.txt`. Presupuesto: 3 requests/dia (90/mes sobre 200 del plan free).
 
 Contratos temporales:
-- `FUTURE_SETTLEMENT` (reducido a BZ=F, CL=F). `settlement_semantics=close_proxy`. close de OilPriceAPI como proxy del settlement oficial ICE/NYMEX (<0.5% diff).
-- `SPOT_COMMODITY` (nuevo, GC=F, HG=F, NG=F). `settlement_semantics=spot_reference`. Spot, no futuros.
+- `SPOT_COMMODITY` (GC=F, HG=F, NG=F). `settlement_semantics=spot_reference`. Spot, no futuros. OPERATIVO.
+- `FUTURE_SETTLEMENT` (BZ=F, CL=F). BLOCKED desde 2026-09-22. El endpoint /v1/futures/ice-brent y /v1/futures/ice-wti responden 403 "Feature access required. Futures Data is included in the Professional plan." El codigo mantiene la logica intacta; solo la API no sirve los datos con el plan actual. Ver F3-05 y F3-17.
 
 Provider: `data/providers/futures.py::FuturesProvider`. Reintentos: 1 en timeout, 0 en 401/429.
 Escritura: `write_artifact_with_manifest` a `data/commodities_futures.parquet` y `data/commodities_spot.parquet`. `temporal_contract=None` (el contrato se resuelve via `resolve_all_contracts`).
@@ -1108,7 +1108,7 @@ OilPriceAPI retention_period=30_days -> Solo 30 dias de historico remoto. Acumul
 
 H1 (CERRADO 2026-09-17, WONT FIX / POLITICA ACEPTADA): mutabilidad del dataset historico (proveedor + pipeline + append_dedup). Informe y dictamen archivados en git history (docs/auditoria/radar/ borrado en limpieza 2026-09-22). Reabrir solo si: requisito regulatorio/compliance, reconstruccion exacta de inputs exigida, auditoria externa necesita verificar dataset completo de fecha pasada, o necesidad de distinguir automaticamente revision de proveedor vs regeneracion pipeline.
 
-FU-021-3C -> RESUELTO 2026-09-16 via FU-021-3C-bis (OilPriceAPI). FUTURE_SETTLEMENT paso de BLOCKED a activo para BZ/CL.
+FU-021-3C -> PARCIALMENTE RESUELTO 2026-09-16 via FU-021-3C-bis (OilPriceAPI). SPOT_COMMODITY operativo (GC/HG/NG). FUTURE_SETTLEMENT (BZ/CL) BLOCKED desde 2026-09-22 por plan (403 del endpoint de futuros). Ver F3-05.
 
 KHC / lote parcial (2026-09-17) -> DETECCION ANIADIDA. En un run manual realizado el 17/09/2026 a las 11:15 ET, 1 de 562 tickers (`KHC`) no presento la observacion de la sesion esperada, aunque el resto del lote si fue aceptado. El cron productivo se ejecuta a las 00:00 ET. No se ha demostrado que el fenomeno sea exclusivo de ejecuciones manuales ni que no pueda aparecer en produccion. Deteccion `[K-HUERFANO]` anadida en `download_market_data`. Retry NO implementado. Monitorizacion activa. Distinto de `FUTURE_SETTLEMENT=INSUFFICIENT` (contrato temporal). Reabrir ciclo si: mismo ticker repetidamente, multiples tickers, produccion 04:00 UTC, o cobertura materialmente inferior.
 
