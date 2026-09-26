@@ -499,7 +499,6 @@ integracion sea una decision activa, no hoy.
 
 ### 5.4 Deuda de trazabilidad
 
-- Registro de bundles enviados a terceros: `outputs/BUNDLES_SENT.log`.
 - Deuda semantica del nombre `NIPC`. Si el modulo se integra a
   `run.py`, la superficie visible del reporte debe usar un nombre no
   ambiguo (`observed_position_change` o similar) para evitar confusion
