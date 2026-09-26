@@ -42,6 +42,7 @@ def render_representatividad_lider(leader_representativeness_data):
         for _, row in df_rep.iterrows():
             out.append(f"| {row['sector']} | {row['ticker']} | {row['rs_distance_to_median']:+.4f} | {row['mom_distance_to_median']:+.4f} | {row['flow_distance_to_median']:+.2f} | {row['wls_distance_to_median']:+.2f} | {row['sector_rank_pct']:.0%} |\n")
         out.append("\n")
+        out.append("*Criterio: los tickers del sector ordenados por WLS desc. La primera fila de cada sector es el 'lider por WLS'. No coincide con Concentracion del liderazgo ni con Liderazgo interno, que priorizan por retorno 20d.*\n\n")
     return out
 
 

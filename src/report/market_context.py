@@ -22,13 +22,15 @@ def render_liderazgo_interno(rs_internal_data):
         for sector in _rs_latest['sector'].unique():
             top = _rs_latest[_rs_latest['sector'] == sector].nlargest(5, 'price_ret_20d')['ticker']
             top_tickers.update(top)
-        report_df = _rs_latest[_rs_latest['ticker'].isin(top_tickers)]
+        report_df = (_rs_latest[_rs_latest['ticker'].isin(top_tickers)]
+                     .sort_values(['sector', 'price_ret_20d'], ascending=[True, False]))
         out.append("## Liderazgo relativo interno\n")
         out.append("| Sector | Ticker | vs mercado 20d | vs sector 20d | Clasificación |\n")
         out.append("|--------|--------|----------------|---------------|----------------|\n")
         for _, row in report_df.iterrows():
             out.append(f"| {row['sector']} | {row['ticker']} | {row['rs_abs_20d']:.2%} | {row['rs_internal_20d']:.2%} | {row['classification']} |\n")
         out.append("\n")
+        out.append("*Criterio: los 5 tickers de mayor price_ret_20d del sector, ordenados desc. La primera fila de cada sector coincide con la columna Lider de Concentracion del liderazgo (mismo criterio: retorno 20d maximo). No coincide con la primera fila de Representatividad, que ordena por WLS.*\n\n")
     return out
 
 
