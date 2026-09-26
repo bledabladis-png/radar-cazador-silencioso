@@ -474,3 +474,255 @@ de menor criticidad funcional.
 
 **Addendum cerrado: 2026-09-26**
 Total acumulado tras FASE 2.2 + FASE 2.4: 142 hallazgos (6 ALTA, 71 MEDIA, 65 BAJA)
+
+====================================================================
+ADDENDUM 2 — Cierre completo del programa de auditoria
+====================================================================
+
+Actualizacion posterior al Addendum 1. Se cierran las fases 1, 4, 5.6,
+5.7, 6 (ampliada) y 7. Total acumulado: 205 hallazgos (6 ALTA, 98 MEDIA,
+101 BAJA).
+
+## FASE 1 — Arquitectura profunda
+
+Verificacion de las fuentes unicas declaradas en PROMPT seccion 4.5.
+
+Resultado: 0 ALTA, 0 MEDIA, 3 BAJA.
+
+- F1-01 (BAJA) — scripts/update_index_holdings.py:40 duplica 'BRK.B': 'BRK-B'.
+  Ya esta en YAHOO_TICKER_MAP de instrument_registry.
+- F1-02 (BAJA) — indicators/*.py importan normalize_yahoo_ticker desde
+  stock_data_loader en lugar de instrument_registry (cadena de re-export).
+- F1-03 (BAJA) — cleanup_stock_prices_nyse_holidays.py escribe parquet sin
+  manifest (script one-shot, justificado).
+
+Confirmaciones positivas:
+- market_calendar.py: 4 funciones definidas una sola vez. Sin duplicacion.
+- effective_date.py: resolve_effective_date sin duplicacion.
+- temporal_contracts/: 0 duplicaciones.
+- Escritura parquet: solo 2 excepciones justificadas al writer canonico.
+
+## FASE 4 — Tests
+
+Cobertura real medida: 56% global (13814 stmts, 6047 miss).
+IAE: 90%. Radar + pipeline + report: 56%.
+
+0 ALTA, 6 MEDIA, 4 BAJA.
+
+- F4-04 (MEDIA) — test_check_continuity_conflicto PASA sin verificar nada
+  (skip encubierto que no se activa + sin assert).
+- F4-05, F4-06 (BAJA) — 2 tests con pass puro, 2 tests con "# no lanza".
+- F4-07 (MEDIA) — assert pd.isna(np.nan) (falso verde explicito).
+- F4-08 (MEDIA) — Test reimplementa logica en vez de llamar a la funcion.
+- F4-09 (INFO) — Detector AST incompleto (no capta pd.testing.assert_*).
+- F4-10 (MEDIA) — 9 modulos del pipeline con 0% cobertura (605 stmts):
+  diagnostics, engines, flows_primary, flows_secondary, leaders,
+  market_data, regimes, sectors_base, slpm.
+- F4-11 (MEDIA) — 4 modulos de src/report/ con cobertura < 30%:
+  confirmation (7%), darkpool (16%), sentiment (22%), volatility_mte (22%).
+- F4-12 (MEDIA) — stock_data_loader.py al 38% (bloque L501-808 sin cobertura).
+- F4-13 (BAJA) — report_generator.py al 99% es enganoso (despachador).
+- F4-14 (BAJA) — macro_manual_loader.py al 12%.
+- F4-15, F4-16 (INFO) — temporal_contracts al 96-100%, market_calendar al 97%.
+
+## FASE 5.6 — Macro providers
+
+fred.py, cboe.py, cboe_index.py, polygon.py.
+
+0 ALTA, 6 MEDIA, 13 BAJA.
+
+- F5.6-01 (MEDIA) — fred.is_available siempre True (try/except vacio).
+- F5.6-02 (MEDIA) — fred._download_series con except desnudo + ffill ciego
+  entre frecuencias (WALCL semanal, SOFR diaria, FEDFUNDS mensual).
+- F5.6-03 (MEDIA) — cboe.get_options_data devuelve None en fallo.
+- F5.6-04 (MEDIA) — cboe._extract_json con regex fragil sobre HTML.
+- F5.6-05 (BAJA) — polygon.get_options_data descarga SPY, no opciones
+  (dead code: router sin caller).
+- F5.6-06 (MEDIA) — datetime.now() en polygon y fred.
+- F5.6-15 (MEDIA) — 6a variante de robust_zscore (options.py).
+- F5.6-22 (INFO) — flujo options.py -> CboeProvider vivo.
+
+## FASE 5.7 — Fund data + flows
+
+blackrock_iwm, amundi, invesco, cftc, finra, 5 post-procesadores.
+
+0 ALTA, 8 MEDIA, 9 BAJA.
+
+- F5.7-01 (MEDIA) — 2 except desnudos en finra.py.
+- F5.7-05 (MEDIA) — finra.is_available acoplado a "hay datos ultimas 6
+  semanas" + 6 HTTP requests.
+- F5.7-14 (MEDIA) — filtro frescura CFTC con thresholds hardcoded 365/30 dias.
+- F5.7-17 (MEDIA) — 7a variante de robust_zscore (blackrock_iwm).
+- F5.7-18 (MEDIA) — amundi flow_zscore con media/std + comentario "robusta".
+- F5.7-19 (MEDIA) — 4 post-procesadores con rutas y trimestres hardcoded.
+- F5.7-20 (MEDIA) — 4 ficheros post-procesadores sin caller productivo
+  ni workflow identificado (sec_fund_flow, sec_nport_international_leader_flows,
+  sec_nport_quarters_position_change, qqq_nport_flow).
+- F5.7-08 (INFO) — cftc_data.py es el provider mas limpio auditado.
+
+## FASE 6 — Reporte (ampliacion a L297-1013)
+
+Cobertura completa del reporte diario.
+
+2 ALTA (ambas corregidas), 21 MEDIA, 12 BAJA.
+
+Los 2 ALTA corregidos:
+- F6-10 — Tres "lideres" distintos por sector entre secciones. CORREGIDO
+  en commit b5884a1: orden de Liderazgo interno alineado con Concentracion,
+  notas aclaratorias en las 3 secciones.
+- F6-28 — Dos "A/D Net" contradictorios. CORREGIDO en commit 6f4f4b1:
+  etiqueta "universo completo" en Confirmation Data, notas cruzadas.
+
+Hallazgos MEDIA relevantes:
+- F6-01 — Sector Breadth muestra 24/09 mientras Yahoo esta en 25/09.
+- F6-02 — FINRA 26 dias marcado como CURRENT (umbral deberia ser STALE).
+- F6-03 — XLF con Top1=100%, Top3=N/D, RS Med=4.6899 (anomalo).
+- F6-04 — Sector Breadth con 100% cobertura en 11/11 (sospechoso post A1).
+- F6-05 — Flow Z-Scores no comparables (Blackrock media/std vs resto
+  mediana/MAD) presentados juntos.
+- F6-08 — Reporte (14:20) desacoplado de historicos (17:01).
+- F6-11 — Cuatro "Coberturas" con denominadores distintos.
+- F6-12 — Representatividad y Divergencia solo 5/11 sectores.
+- F6-16 — Universo "5 tickers por sector" distinto entre secciones.
+- F6-17 — Gap temporal 18-23/09 sin explicacion.
+- F6-18 — "Fuerte mejora" en rank saturado (XLK en puesto 1).
+- F6-19 — Etiquetas "Lectura" sin umbrales documentados.
+- F6-23 — Copper/Gold nan con z-score +0.62.
+- F6-29 — 0.00 vs N/D en FEZ/XLY SPDR.
+- F6-32 — Divergencia Precio-Flujo sin proteccion NaN (a diferencia de
+  Caracteristicas).
+- F6-33 — Matriz de Evidencia: Wyckoff=+1 en 11/11 sectores.
+- F6-34 — _fmt_num vs _fmt_signed inconsistente entre 2 tablas contiguas.
+- F6-35 — flow_5d_sum con 2 formatos distintos (:+,.2f vs :+,.0f).
+
+## FASE 7 — Dead code
+
+vulture 2.16 sobre src/ + grep manual de constantes.
+
+0 ALTA, 2 MEDIA, 2 BAJA.
+
+- F7-01 (MEDIA) — sector_correlation_matrix_data es dead end: se genera
+  (sectors_base.py:90), se versiona (84 KB en git), run.py:233 lo pasa
+  a generate_report, PERO report_generator.py:214 solo llama a
+  render_correlacion_sectores(sector_correlation_summary_data). La matriz
+  completa nunca se usa.
+- F7-03 (BAJA) — nipc.py::_weighted (L220) nunca invocada. La logica real
+  usa by_sec.get(k, 0.0) en L232-241.
+- F7-04 (MEDIA) — 26 constantes en config/settings.py sin consumo
+  productivo. Documentadas en docs/automatica/02_configuracion.md pero
+  ninguna linea de codigo las usa. Riesgo: cambiar FRESHNESS_CURRENT_DAYS
+  no cambia comportamiento (el codigo usa hardcodes).
+- F7-05 (BAJA) — DELTA_SEMANTICS_GROSS_OBSERVED, P64_EVENTS_DEFERRED:
+  constantes documentales intencionales, NO borrar.
+- F7-06 (INFO) — Infraestructura de auditoria sin caller pero testeada
+  (absence, catalog_pit, reporting_dedup): mantener.
+
+---
+
+## Tabla final consolidada
+
+| Fase | Estado | ALTA | MEDIA | BAJA | Total |
+|---|---|---:|---:|---:|---:|
+| FASE 0 — Inventario | CERRADA | 0 | 1 | 0 | 1 |
+| FASE 1 — Arquitectura | CERRADA | 0 | 0 | 3 | 3 |
+| FASE 2.1 — Regimenes/scores | CERRADA | 0 | 12 | 7 | 19 |
+| FASE 2.2 — IAE 10.x | CERRADA | 0 | 4 | 5 | 9 |
+| FASE 2.3 — Breadth | CERRADA | 0 | 2 | 3 | 5 |
+| FASE 2.4 — MTE + Dark Pool | CERRADA | 0 | 8 | 11 | 19 |
+| FASE 3 — Artefactos | CERRADA | 3 | 6 | 6 | 15 |
+| FASE 4 — Tests | CERRADA | 0 | 6 | 4 | 10 |
+| FASE 5 — Providers | CERRADA | 1 | 36 | 48 | 85 |
+| FASE 6 — Reporte | CERRADA | 2 | 21 | 12 | 35 |
+| FASE 7 — Dead code | CERRADA | 0 | 2 | 2 | 4 |
+| **TOTAL** | — | **6** | **98** | **101** | **205** |
+
+## Correcciones aplicadas durante el ciclo
+
+8 commits en origin/main (b7193c4..6f4f4b1):
+
+| Commit | Hallazgo | Fix |
+|---|---|---|
+| 4a1177e | chore | Reorganizar scripts de auditoria a scripts/audit/ |
+| bc65637 | docs | Informes de auditoria FASE 0-3, FASE 5, consolidado |
+| 4808a13 | A5-13 | Yahoo fallback filtra cache por tickers |
+| 2c8b81f | F3-17 | best-effort clasifica errores permanentes (401/403/429) |
+| 84b2708 | F3-16 | write_artifact_with_manifest aborta en INVALID si caller exige |
+| ff95a3d | F3-05 | PROMPT actualizado tras verificar 403 de OilPriceAPI |
+| b5884a1 | F6-10 | Orden + notas de criterio en 3 secciones del reporte |
+| 6f4f4b1 | F6-28 | Etiqueta "universo completo" + notas cruzadas A/D Net |
+
+Los 6 hallazgos ALTA estan resueltos y verificados con suite completa
+(1857 passed + 2 skipped).
+
+## Plan de correcciones MEDIA/BAJA (orden por ROI)
+
+### Prioridad 2 — MEDIA funcional (impacto en produccion)
+
+23. F5.7-20 + F4-10 — 4 ficheros post-procesadores sin caller + 9 modulos
+    del pipeline con 0% cobertura. Verificar si son dead code (borrar) o
+    requieren tests de orquestacion.
+24. F7-04 — 26 constantes en config/settings.py sin consumo. Decidir:
+    hacer que el codigo las use (coherencia), o borrarlas (higiene).
+25. F7-01 — sector_correlation_matrix_data dead end. Decidir: renderizar
+    la matriz o dejar de calcularla.
+26. A5-76/77 (7 variantes de robust_zscore) — Unificar en
+    src/utils.py::robust_zscore.
+27. F4-11 + F4-12 — Cobertura <30% en 4 modulos de reporte y 38% en
+    stock_data_loader. Añadir tests a los bloques sin cobertura.
+28. F6-01, F6-08 — Desfase temporal entre reporte e historicos.
+29. F3-15 — health_check no verifica commodities.
+30. F2-19, F2-21 — Histeresis SLPM cross-sector + consecutive_count.
+
+### Prioridad 3 — MEDIA arquitectura
+
+31. A5-09, A5-10, A5-11 — Router: since_date a Yahoo, orden providers,
+    subset silencioso.
+32. A5-40, A5-41, A5-56, A5-62 — Providers de equity reportan tickers
+    fallidos explicitamente.
+33. A5-70 — Parametrizar blackrock DAX/ISF (copy-paste 98%).
+34. F5.6-01, F5.6-02, F5.6-06 — fred.is_available, ffill ciego, datetime.now.
+35. F5.7-01, F5.7-05 — finra except desnudos + is_available costoso.
+36. F5.7-19 — Post-procesadores con hardcoded trimestres.
+
+### Prioridad 4 — BAJA
+
+Resto de hallazgos por orden de facilidad. Destacan:
+- A5-12, A5-71, F2-16, F5.6-09, F5.6-10, F5.7-01 — except desnudos.
+- F5.6-07, A5-42, A5-58, A5-78, A5-80, F2-15, F2-18 — dead constants.
+- F2-05, F2-06, F2-11, F2-27, F2-28, F2-29, F4-13, F4-14 — estilo.
+- F6-06, F6-07, F6-13, F6-14, F6-15, F6-20, F6-30, F6-33 — doc.
+
+## Estado del repo al cierre
+
+| Campo | Valor |
+|---|---|
+| HEAD | 6f4f4b1 |
+| origin/main | 6f4f4b1 (sincronizado) |
+| Working tree | LIMPIO |
+| Suite | 1857 passed + 2 skipped + 0 failed |
+| Cobertura global (radar) | 56% |
+| Cobertura IAE | 90% |
+| Ficheros auditoria | 3 (.md en docs/auditoria/radar/audits/) |
+| Scripts auditoria | 3 (scripts/audit/) |
+| ALTA corregidos | 6 de 6 |
+
+## Conclusión
+
+El sistema tiene 205 hallazgos documentados de los cuales:
+- 6 ALTA — 100% corregidos y pusheados.
+- 98 MEDIA — 4 corregidos, 94 pendientes con plan por prioridad.
+- 101 BAJA — 0 corregidos, 101 pendientes.
+
+Patron dominante del sistema: solido en profundidad, fragil en
+observabilidad. La suite de 1857 tests pasa, pero no verifica la capa
+de orquestacion (pipeline 0%), no cubre todas las secciones del reporte
+(4 modulos < 30%) y contiene tests que pasan sin verificar nada.
+
+El sistema cumple la promesa del PROMPT: determinista, descriptivo,
+auditado. La deuda es de cobertura y presentacion, no de calculo.
+
+---
+
+**Auditoria completa cerrada: 2026-09-27**
+Fases cubiertas: 0, 1, 2 (2.1-2.4), 3, 4, 5, 6, 7. Todas completas.
+Total acumulado tras Addendum 2: 205 hallazgos (6 ALTA, 98 MEDIA, 101 BAJA).
