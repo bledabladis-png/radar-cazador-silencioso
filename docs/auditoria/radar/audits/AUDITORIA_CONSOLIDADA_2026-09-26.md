@@ -726,3 +726,124 @@ auditado. La deuda es de cobertura y presentacion, no de calculo.
 **Auditoria completa cerrada: 2026-09-27**
 Fases cubiertas: 0, 1, 2 (2.1-2.4), 3, 4, 5, 6, 7. Todas completas.
 Total acumulado tras Addendum 2: 205 hallazgos (6 ALTA, 98 MEDIA, 101 BAJA).
+
+====================================================================
+ADDENDUM 3 — Cierre A5-76 + F6-05 (robust_zscore unificado fund-flow)
+====================================================================
+
+Microciclo auditado con 2 dictamenes externos. Commit unico a3c2705.
+
+## Contexto
+
+La auditoria del 2026-09-26 identifico dos hallazgos MEDIA relacionados:
+
+- A5-76: blackrock_fund_data.py y blackrock_isf_fund_data.py usaban
+  media/desviacion estandar bajo el nombre "robust_z". El nombre mentia.
+
+- F6-05: el reporte mostraba 4 flow_zscore (DAXEX, ISF, LYXI, IWM)
+  calculados con 3 implementaciones distintas sin declararlo.
+
+Investigacion adicional revelo 5 variantes literales:
+  1. src/utils.py (canonico, precios/RS)
+  2. blackrock_fund_data (media/std, sin clip)
+  3. blackrock_isf_fund_data (idem a 2, copy-paste)
+  4. amundi_fund_data (media/std, clip ±3)
+  5. blackrock_iwm_fund_data (mediana/MAD, sin clip, rescate ultimo no-NaN)
+  6. ssga_fund_data (mediana/MAD, clip ±5)
+
+## Contrato estadistico adoptado
+
+Nuevo modulo: data/providers/_fund_flow_utils.py.
+
+  - Localizacion: mediana de cada ventana.
+  - Escala: MAD de esa misma ventana.
+  - Factor 1.4826.
+  - Sin ffill (fund-flow, no precios).
+  - window=120, min_periods=20.
+  - Clip contractual [-5, +5].
+  - MAD==0 & s==median -> 0.0.
+  - MAD==0 & s!=median -> NaN.
+  - Ultimo NaN -> NaN (sin rescate del ultimo no-NaN).
+  - Prohibido fillna(0) aguas abajo.
+
+Funciones expuestas:
+  - fund_flow_robust_zscore(series, window, min_periods) -> Series
+  - fund_flow_robust_zscore_with_regime(...) -> (Series, Series[regime])
+
+Regimenes de diagnostico (auditor, opcion C):
+  NORMAL | SATURATED | MAD0_SAME | MAD0_NAN | INSUFFICIENT.
+
+## Aplicacion
+
+Los 4 providers invocan _with_regime y publican dos columnas:
+  - flow_zscore / primary_flow_z (valor).
+  - flow_zscore_regime / primary_flow_z_regime (NUEVA clasificacion).
+
+Consumidores verificados antes del patch (flows_secondary,
+flows_international, sector_flow_characteristics): acceden por nombre
+de columna, no por posicion. Anadir columna es inocuo.
+
+## Evidencia empirica
+
+  provider  old_nan  new_nan  old_gt5  new_gt5   NORMAL  SATUR  MAD0_S  MAD0_N  INSUF  old_last  new_last
+  DAXEX        20      800       58        0     3450    764    1136     780     20   -2.4943   -5.0000
+  ISF          21      941       86        0      872    170    4758     920     21   -0.2499    0.0000
+  IWM          20      300       52        0     5451     52     825     280     20    0.5829    0.5829
+  LYXI         20      373        0        0      173     37    1650     353     20    0.1134    0.0000
+
+  - |z| > 5 post-clip: 0 en los 4 providers.
+  - Nuevos NaN: 2.414 (11,1% sobre 21.752 filas combinadas).
+  - IWM SATUR=52 coincide con old_gt5=52 (IWM ya usaba mediana/MAD).
+  - DAXEX/ISF/LYXI pasan de 196 saturados "sin marcaje" a 764/170/37.
+
+## Cambios en el reporte
+
+  DAXEX: -2.49 -> -5.00 (SATURATED).
+  ISF:   -0.25 ->  0.00 (MAD0_SAME).
+  LYXI:  +0.11 ->  0.00 (MAD0_SAME).
+  IWM:   +0.58 -> +0.58 (sin cambio).
+
+Aprobado por auditor en dictamen del microciclo.
+
+## Decisiones de alcance
+
+  - src/utils.py NO se modifica. Contrato distinto (precios/RS con
+    ffill(3) para continuidad de sesion). Los dos contratos comparten
+    nombre por herencia historica; no fusionar.
+  - SSGA permanece como referencia externa/control, fuera del patch.
+  - Historicos regenerados sobrescribiendo flow_zscore. Sin
+    flow_zscore_legacy.
+  - Anadida columna flow_zscore_regime en los 4 CSV.
+
+## Estado de los hallazgos
+
+  A5-76 -> RESUELTO.
+  F6-05 -> RESUELTO (comparabilidad metodologica; la equivalencia
+                    economica de los flujos subyacentes no la
+                    garantiza este cambio).
+
+## Deuda derivada (fuera de este microciclo)
+
+  - Nomenclatura: los dos contratos comparten nombre
+    robust_zscore / robust_z. A medio plazo, renombrar a
+    price_rs_robust_zscore y fund_flow_robust_zscore.
+  - Calendar coverage: is_market_day() no reconoce correctamente
+    festivos modernos NYSE post-2015. Deuda separada, registrada
+    en el informe B4 para ciclo independiente.
+
+## Tests
+
+  tests/test_fund_flow_robust_zscore.py: 18 tests.
+    - 10 casos obligatorios del contrato.
+    - 8 casos del _with_regime.
+
+  Suite total: 1875 passed + 2 skipped.
+
+## Commit
+
+  a3c2705 — feat(fund-flow): unificar robust_zscore en los 4 providers
+  (A5-76 + F6-05).
+
+---
+
+Fin del Addendum 3.
