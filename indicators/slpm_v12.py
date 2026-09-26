@@ -121,7 +121,7 @@ def evaluate_slpm_v12(df_market, sector_results, leader_metrics, top_sector_flow
         instant_reason += f" El sector lider ({sector_name}) esta en fase {sector_phase}, lo que impide calcular metricas de lideres."
     instant_reason_code = result.get('reason_code', 'UNKNOWN')
 
-    transition_data = confirm_transition(instant_state)
+    transition_data = confirm_transition(sector_etf, instant_state)
     state = transition_data['confirmed_state']
     reason = instant_reason
     reason_code = instant_reason_code
