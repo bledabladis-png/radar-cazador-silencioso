@@ -89,7 +89,6 @@ def main():
     otros_flow_rank = sb['otros_flow_rank']
     sector_dispersion_df = sb['sector_dispersion_df']
     sector_corr_summary_df = sb['sector_corr_summary_df']
-    sector_corr_matrix_df = sb['sector_corr_matrix_df']
     cross_asset_summary_df = sb['cross_asset_summary_df']
     breadth_values = sb['breadth_values']
 
@@ -230,7 +229,6 @@ def main():
                           evidence_matrix_data=evidence_matrix_df,
                           sector_dispersion_data=sector_dispersion_df,
                           sector_correlation_summary_data=sector_corr_summary_df,
-                          sector_correlation_matrix_data=sector_corr_matrix_df,
                           cross_asset_context_data=cross_asset_summary_df,
                           volatility_structure_data=vol_structure_df,
                           data_quality_data=data_quality_df,
