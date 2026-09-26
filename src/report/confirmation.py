@@ -56,12 +56,13 @@ def render_confirmation(confirmation_data):
 
         ad = confirmation_data.get('ad', {})
         if ad:
-            out.append(f"- **Advance/Decline Net:** {ad.get('ad_net', 0):+d} ({ad.get('advances', 0)} avances / {ad.get('declines', 0)} descensos)\n")
+            out.append(f"- **Advance/Decline Net (universo completo):** {ad.get('ad_net', 0):+d} ({ad.get('advances', 0)} avances / {ad.get('declines', 0)} descensos)\n")
             out.append(f"- **New Highs/Lows (mercado):** {ad.get('new_highs', 0)} maximos / {ad.get('new_lows', 0)} minimos (NH-NL: {ad.get('nh_nl', 0):+d})\n")
             thrust = ad.get('breadth_thrust', 0.5)
             if thrust > 0.70 or thrust < 0.30:
                 out.append(f"- **Breadth Thrust extremo:** {thrust*100:.1f}%\n")
             out.append(f"- **A/D Line (acumulada):** {ad.get('ad_line', 0):.0f}\n")
+            out.append("*Universo: todos los tickers USA de stock_prices (sin filtro sectorial). No coincide con la columna A/D de Sector Breadth, que agrega solo top-20 por sector.*\n")
 
         mte_scenario_conf = confirmation_data.get('mte_scenario', '')
         if mte_scenario_conf == 'RECESSION':
