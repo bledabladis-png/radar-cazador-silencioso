@@ -437,10 +437,29 @@ Ciclos cerrados (5 commits, subciclos incrementales):
    Fetch LSE scraper con PAT fine-grained + Capture SHA) + git add
    de provenance.
 
-**Verificacion en CI real.** Dispatch manual 36189310171: gate dio
-CURRENT (manifest cubria sesion anterior). run-system skipped.
-Override no ejecutado en ese run; el codigo esta en produccion y se
-activara cuando el gate de READY.
+**Verificacion en CI real.** Dos runs relevantes:
+
+1. **Dispatch manual 36189310171.** 21:03 UTC, gate dio CURRENT
+   (manifest cubria sesion anterior). run-system skipped. Esperado
+   por horario; no sirvio para ver el override.
+
+2. **Cron slot 1 36208872855.** 01:36 UTC (26-Sep). gate READY,
+   run-system completo (18m16s). Log del step Run Macro Sectorial:
+   `[LSE-OVERRIDE] session=2026-09-25 applied=20/20 status=OK`.
+   Provenance commiteada con el parquet (commit 9569bf6):
+   source_commit=3609bd7..., scraper_available=true, scraper_used=true,
+   status=OK, tickers_from_scraper=20, tickers_from_yahoo=0,
+   tickers_missing=0.
+
+**Comprobaciones cruzadas post-ciclo (2026-09-26):**
+- Close parquet vs scraper: 20/20 match byte-exacto (delta 0.000000).
+- OHLCV coherentes (L<=C<=H, L<=O<=H): 20/20.
+- Volume preservado (no NaN): 20/20.
+- Coherencia reporte vs CSV: 100% (con redondeo 2 decimales).
+- Validation Gate: 10/10.
+- Divergencia CI vs local en WLS (5 tickers FTSE 100) atribuida a
+  revision retrospectiva de Yahoo. No afecta al Close del 25-Sep.
+  Documentado como K-LSE-YAHOO-REVISION-01 (PROMPT §12). No es bug.
 
 **Dictamenes externos aplicados:**
 - D1: sesion LSE especifica, no la global NYSE.
@@ -479,8 +498,19 @@ unico repositorio.
   antes de escribirlas. Un "+83 tests" que deberia ser "+91" es
   detectable cruzando los commits.
 - Verificacion del override end-to-end diferida al primer slot de
-  produccion donde el gate de READY (proximo cron con target_session
-  = hoy y manifest desactualizado).
+  produccion donde el gate de READY. Ejecutado con exito el 2026-09-26
+  (cron 01:36 UTC, run 36208872855): 20/20 applied.
+- Yahoo revisa OHLC historico retrospectivamente. La sesion nueva del
+  override coincide byte-exacta (20/20), pero los componentes de WLS
+  que dependen de ventanas largas (`wyckoff_score` -> `rws_z`,
+  `stability` -> `stab_z`) pueden diferir entre runs. Documentado como
+  K-LSE-YAHOO-REVISION-01. No es bug del sistema.
+- La funcion `robust_intra()` (indicators/index_leaders.py) normaliza
+  cada componente del WLS DENTRO del universo de 15 candidatos. Un
+  solo candidato con historico revisado desplaza el z-score de todos.
+  Al diagnosticar divergencias entre runs, comprobar primero si
+  `rs_z` (Close reciente) coincide. Si coincide y `wls` no, es
+  revision historica, no bug.
 
 ---
 

@@ -3,7 +3,7 @@
 Estado declarado de fases, prohibiciones y hallazgos del modulo IAE.
 Documento vivo. Se actualiza cuando cambia el estado.
 
-**Actualizado:** 2026-09-24
+**Actualizado:** 2026-09-26
 **HEAD de cierre:** ver `ESTADO_SISTEMA.md` (se regenera con cada commit).
 **Estado del sistema:** `ESTADO_SISTEMA.md`.
 
@@ -184,6 +184,23 @@ IAE_MAESTRO). Detalle en §2.
   Test suite: +91 nuevos (30 loader LSE base en 0313879, +32 subciclo 1,
   +18 subciclo 2a, +11 subciclo 2b). Suite: 1766 -> 1857 passed.
   Commits: 0313879, 71e32d2, de30f3b, 9d5b19e, c5ffcd4.
+  Verificacion end-to-end en CI real (2026-09-26):
+  - Run 36208872855 (cron slot 1, 01:36 UTC). Log: `[LSE-OVERRIDE]
+    session=2026-09-25 applied=20/20 status=OK`.
+  - Close parquet vs scraper: 20/20 match byte-exacto (delta 0.000000).
+  - OHLCV coherentes (L<=C<=H, L<=O<=H): 20/20.
+  - Volume preservado (no NaN): 20/20.
+  - Coherencia reporte vs CSV: 100% (con redondeo 2 decimales).
+  - Validation Gate: 10/10.
+  - Provenance commiteada con el parquet (commit 9569bf6):
+    source_commit=3609bd7..., target_session=2026-09-25,
+    lse_expected_session=2026-09-25, status=OK, scraper_available=true,
+    scraper_used=true, tickers_from_scraper=20, tickers_from_yahoo=0,
+    tickers_missing=0.
+  Limitacion asociada: K-LSE-YAHOO-REVISION-01 (Yahoo revisa OHLC
+  historico retrospectivamente; los componentes de WLS que dependen
+  de ventanas largas pueden diferir entre runs sin que el override
+  LSE tenga nada que ver). Ver PROMPT_MAESTRO seccion 12.
 - Fase G - automatizacion de mappings (2026-09-24): CERRADA.
   Problema diagnostico: el crosswalk CUSIP y el catalogo radar eran
   ficheros estaticos mantenidos a mano. Cada trimestre SEC publica

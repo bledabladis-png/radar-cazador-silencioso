@@ -973,6 +973,21 @@ Test suite: +91 nuevos (30 loader LSE base en 0313879, +32 subciclo 1,
 +18 subciclo 2a, +11 subciclo 2b). Suite: 1766 -> 1857 passed.
 Commits: 0313879, 71e32d2, de30f3b, 9d5b19e, c5ffcd4.
 
+Verificacion end-to-end en CI real (2026-09-26). Run 36208872855
+(cron slot 1). Log del step Run Macro Sectorial:
+    [LSE-OVERRIDE] session=2026-09-25 applied=20/20 status=OK
+
+Comprobaciones cruzadas (local + CI):
+- Close parquet vs scraper: 20/20 match byte-exacto (delta 0.000000).
+- OHLCV coherentes (L<=C<=H, L<=O<=H): 20/20.
+- Volume preservado (no NaN): 20/20 (confirma solucion al D-Volume).
+- Coherencia reporte local vs CSV local: 100% (con redondeo 2 dec.).
+- Provenance commiteada con el parquet (commit 9569bf6):
+  source_commit=3609bd7..., scraper_available=true, scraper_used=true,
+  status=OK, tickers_from_scraper=20, tickers_from_yahoo=0,
+  tickers_missing=0.
+- Validation Gate: 10/10.
+
 ## SECCION 12 - LIMITACIONES CONOCIDAS
 20 tickers .L sin provider oficial -> RESUELTO 2026-09-26 via F-IAE-LSE-INTEGRATION.
 Ahora se cubren con el scraper privado `lse-close-scraper` (Refinitiv Widgets)
@@ -1150,6 +1165,28 @@ F-IAE-CRON-02 / F-IAE-GATE-01 (2026-09-25) -> RESUELTO. Multi-slot con
 gate pre-pipeline. El fallo del 25-Sep demostro que un deadline unico
 no cubre la latencia variable de Yahoo. 4 slots con idempotencia por
 cobertura. Ver seccion 11.22. Commits: ed0fb07, 5657b1c, 3642038.
+
+K-LSE-YAHOO-REVISION-01 (2026-09-26) -> MONITORED / NO BUG. Yahoo
+revisa OHLC historico retrospectivamente (ajustes de splits,
+dividendos, correcciones puntuales). Detectado durante la verificacion
+end-to-end de F-IAE-LSE-INTEGRATION: la sesion 25-Sep coincide 20/20
+byte-exacta entre parquet local y scraper, pero el historico previo
+puede diferir en algunos tickers (observado delta maximo de 6.22
+peniques en GLEN.L sobre una serie de ~560, ~1.1%).
+Impacto: la funcion `robust_intra()` en `indicators/index_leaders.py`
+normaliza cada componente del WLS DENTRO del universo de 15 candidatos
+por indice. Un solo candidato con historico revisado desplaza la
+mediana y MAD del grupo, moviendo el z-score de todos. Efecto: el WLS
+puede diferir entre dos runs de CI/local sin que el override LSE tenga
+nada que ver. El `rs` (que solo depende del Close reciente) coincide;
+el `wls` (que depende de `wyckoff_score` -> `rws_z`, ventanas largas)
+puede divergir.
+No es bug del sistema ni del override. Es naturaleza de Yahoo.
+Reabrir solo si: se necesita reproducibilidad estricta entre runs,
+o si un ajuste de Yahoo provoca un cambio materialmente incorrecto en
+los componentes del WLS (falso positivo con impacto en el ranking).
+Mitigacion futura posible (no requerida hoy): congelar OHLC historico
+en un parquet propio tras cada run.
 
 ## SECCION 13 - DEUDA TECNICA
 
