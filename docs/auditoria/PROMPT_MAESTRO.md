@@ -1,6 +1,6 @@
-# PROMPT MAESTRO v7.5 - INGENIERO SUPERVISOR DEL RADAR DE ROTACION SECTORIAL
+# PROMPT MAESTRO v7.6 - INGENIERO SUPERVISOR DEL RADAR DE ROTACION SECTORIAL
 
-**Actualizado:** 2026-09-26 (v7.5: ciclo F-IAE-LSE-INTEGRATION - scraper LSE privado + override parcial de Close para los 20 tickers .L; F-IAE-CRON-02 / F-IAE-GATE-01 - multi-slot con gate pre-pipeline; ver §11.22-§11.23. Base v7.4: ciclo BACKLOG del reporte + FU-002-bymarket + health check semanal + consolidacion registry. Cifras internas alineadas con HEAD de cierre del ciclo: suite 1857 passed + 2 skipped, bloque IAE 845 tests).
+**Actualizado:** 2026-09-26 (v7.6: auditoria interna del prompt - correcciones documentales en el arbol §4.2 (indicators/darkpool, providers, outputs/*, docs/plan, audit, src/external, provenance LSE, scripts nuevos), en los listados §4.3/§4.4 (iae.py, iae_section.py) y en la referencia §10.1. Sin cambios de codigo ni de arquitectura. Base v7.5: ciclo F-IAE-LSE-INTEGRATION + F-IAE-CRON-02 / F-IAE-GATE-01. Cifras internas alineadas: suite 1857 passed + 2 skipped, bloque IAE 845 tests).
 
 Este documento describe **rol, metodologia, arquitectura y prohibiciones vigentes**.
 **NO declara el estado del sistema.** Para estado, ver:
@@ -270,8 +270,9 @@ D:\Macro_Sectorial
 | +-- commodities_merge.py (FU-021-3C-bis: merge commodities en df_market)
 | +-- dependency_tracker.py
 | +-- macro_manual_loader.py
+| +-- external/ (F-IAE-LSE-INTEGRATION: lse_scraper_loader.py)
 | +-- report/ (19 modulos - refactor C1)
-| +-- pipeline/ (16 modulos - refactor C2)
+| +-- pipeline/ (17 modulos - refactor C2)
 | +-- institutional_accumulation/ (IAE)
 |  +-- sec_13f/ (schema, downloader, parser, storage, manifest, ingest)
 |  |  +-- identity/ (temporal_filter, cusip_resolver, relationships,
@@ -283,7 +284,7 @@ D:\Macro_Sectorial
 |  +-- security_type.py, operational_universe.py, temporal_validity.py
 |  +-- timestamps.py, absence.py, catalog_pit.py
 +-- data/
-| +-- providers/ (29 providers; +futures.py OilPriceAPI FU-021-3C-bis)
+| +-- providers/ (27 providers .py + __init__; +futures.py OilPriceAPI FU-021-3C-bis)
 | +-- macro_manual/ (12 CSVs FRED)
 | +-- etf_holdings.csv
 | +-- index_holdings.csv
@@ -292,19 +293,21 @@ D:\Macro_Sectorial
 | +-- stock_prices.parquet (+ .manifest.json)
 | +-- commodities_futures.parquet (+ .manifest.json) [FU-021-3C-bis]
 | +-- commodities_spot.parquet (+ .manifest.json) [FU-021-3C-bis]
+| +-- lse_close_provenance.json (F-IAE-LSE-INTEGRATION, versionado)
 +-- scripts/ (20+ activos; +health_check.py, guard_coverage.py,
 |            qqq_returns_yahoo.py, regenerate_radar_catalog.py,
-|            regenerate_cusip_crosswalk.py)
+|            regenerate_cusip_crosswalk.py,
+|            pipeline_gate.py, issue_manager.py [F-IAE-CRON-02])
 +-- validation/ (6 activos)
-+-- tests/ (1857+ casos; ver sec 15 para conteo del modulo IAE)
++-- tests/ (1857+ casos; ver IAE_MAESTRO.md seccion 11 para conteo del modulo IAE)
 +-- docs/
 | +-- automatica/ (22 .md auto-generados, LF)
 | +-- auditoria/ (prompt + transfer + readme + iae/)
-| +-- plan/ (planes historicos)
 +-- outputs/
-+-- history/ (versionado)
-+-- state/ (versionado)
-+-- report/ (NO versionado)
+| +-- history/ (versionado)
+| +-- state/ (versionado)
+| +-- report/ (NO versionado)
+| +-- audit/ (NO versionado)
 +-- .github/
 | +-- workflows/ (9 workflows; +health_check.yml)
 | | daily_run.yml, update_macro_manual.yml,
@@ -312,17 +315,16 @@ D:\Macro_Sectorial
 | | update_sec_nport.yml, update_qqq_sec_flow.yml,
 | | update_sec_13f.yml, update_sector_holdings.yml,
 | | health_check.yml (lunes 07:00 UTC, semanal)
-+-- audit/ (NO versionado)
 
 text
 
 ### 4.3. Modulos de src/report/ (refactor C1)
 
-`helpers.py`, `header.py`, `freshness.py`, `alerts.py`, `breadth.py`, `sectorial.py`, `leaders.py`, `rankings.py`, `slpm.py`, `sentiment.py`, `etf_flows.py`, `market_context.py`, `sector_context.py`, `flows_international.py`, `volatility_mte.py`, `confirmation.py`, `darkpool.py`, `synthesis.py`.
+`helpers.py`, `header.py`, `freshness.py`, `alerts.py`, `breadth.py`, `sectorial.py`, `leaders.py`, `rankings.py`, `slpm.py`, `sentiment.py`, `etf_flows.py`, `market_context.py`, `sector_context.py`, `flows_international.py`, `volatility_mte.py`, `confirmation.py`, `darkpool.py`, `synthesis.py`, `iae.py`.
 
 ### 4.4. Modulos de src/pipeline/ (refactor C2)
 
-`data_load.py`, `regimes.py`, `sectors_base.py`, `flows_primary.py`, `flows_secondary.py`, `leaders.py`, `sector_metrics.py`, `breadth_metrics.py`, `engines.py`, `slpm.py`, `diagnostics.py`, `market_data.py`, `mte_confirmation.py`, `indices_intl.py`, `validation_gate.py`, `finalize.py`. (16 modulos + `__init__.py` = 17 ficheros.)
+`data_load.py`, `regimes.py`, `sectors_base.py`, `flows_primary.py`, `flows_secondary.py`, `leaders.py`, `sector_metrics.py`, `breadth_metrics.py`, `engines.py`, `slpm.py`, `diagnostics.py`, `market_data.py`, `mte_confirmation.py`, `indices_intl.py`, `validation_gate.py`, `finalize.py`, `iae_section.py`. (17 modulos + `__init__.py` = 18 ficheros.)
 
 ### 4.5. Contrato de modulos
 
@@ -339,7 +341,7 @@ text
 
 - **`indicators/mte/` es paquete con 5 submodulos (DT2): `engine.py::compute_mte` (entry point), `state.py::load_previous_scenario/save_scenario` (persistencia `mte_state.json`), `scoring.py` (SRS, SHS, CSS, IPS, MSI, IPI, `score_scenarios` + helpers `tanh`, `_get_last`), `decision.py` (`validate_transition`, `consensus_score`, `distance_to_threshold`, `compute_confidence`, `classify_mte`, `NORMAL_TRANSITIONS`, `EXCEPTION_TRANSITIONS`). API publica preservada: `from indicators.mte import compute_mte`.**
 
-- **`indicators/darkpool/` es paquete con 4 modulos (DT3): `darkpool.py` (orquestador + API publica + re-exports + `__all__`), `darkpool_scoring.py` (robust_zscore, rolling_percentile, classify_darkpool, _compute_z_for_window), `darkpool_io.py` (_get_all_tickers, _get_volume_from_df), `darkpool_history.py` (_backfill_history). API publica preservada: `from indicators.darkpool import compute_darkpool_signals`. Re-exports con noqa: F401 para preservar la API interna historica.**
+- **`indicators/darkpool.py` es el modulo orquestador del bloque DT3, con 3 modulos hermanos en `indicators/`: `darkpool.py` (orquestador + API publica + re-exports + `__all__`), `darkpool_scoring.py` (robust_zscore, rolling_percentile, classify_darkpool, _compute_z_for_window), `darkpool_io.py` (_get_all_tickers, _get_volume_from_df), `darkpool_history.py` (_backfill_history). API publica preservada: `from indicators.darkpool import compute_darkpool_signals`. Re-exports con noqa: F401 para preservar la API interna historica.**
 
 ---
 
@@ -489,7 +491,7 @@ Fase G (2026-09-24) - automatizacion de mappings del IAE:
 
 ## SECCION 10 - VALIDACION Y TESTS
 10.1. Tests
-1857 passed + 2 skipped + 0 failed en local tras run.py. Los 3 test_freshness (ambientales) pasan tras un run que refresca los parquets; vuelven a fallar si pasan >4 dias sin ejecutar el pipeline. CI similar con parquet gitignored. Incluye 845 tests del modulo IAE (criterio AST, 45 ficheros, ver seccion 15).
+1857 passed + 2 skipped + 0 failed en local tras run.py. Los 3 test_freshness (ambientales) pasan tras un run que refresca los parquets; vuelven a fallar si pasan >4 dias sin ejecutar el pipeline. CI similar con parquet gitignored. Incluye 845 tests del modulo IAE (criterio AST, 45 ficheros, ver IAE_MAESTRO.md seccion 11).
 
 10.2. Validation Gate (10/10)
 SLPM v1.2 (sin errores de validacion)
@@ -1344,4 +1346,4 @@ que el objetivo es IMPLEMENTARLO. No inicies un nuevo ciclo de
 propuestas->dictamenes sobre A.6.2-bis sin antes consultar con el
 usuario. Ver IAE_MAESTRO.md para el contexto.
 
-Fin del prompt maestro v7.5.
+Fin del prompt maestro v7.6.
