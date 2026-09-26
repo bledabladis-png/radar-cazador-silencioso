@@ -847,3 +847,71 @@ Aprobado por auditor en dictamen del microciclo.
 ---
 
 Fin del Addendum 3.
+
+====================================================================
+ADDENDUM 4 — Cierre bloque 6: F6-08 reclasificado
+====================================================================
+
+Microciclo de investigacion del hallazgo F6-08 ("Reporte desacoplado
+de historicos: 14:20 vs 17:01"). Sin commit de codigo: la investigacion
+concluye que F6-08 NO es bug funcional.
+
+## Evidencia
+
+Investigacion 2026-09-27:
+
+  - outputs/report/: 0 ficheros tracked en git.
+  - outputs/history/: 42 ficheros tracked.
+  - .gitignore excluye outputs/report/ explicitamente.
+  - Workflow daily_run.yml L176-200: el reporte se sube como
+    actions/upload-artifact@v4 (name=daily-report).
+  - Workflow L245-266: el commit "Daily hist/state" solo anade
+    outputs/history + outputs/state + manifests + mappings.
+  - run.py: validation_gate en L25 (import), ejecucion del gate
+    antes de "Generando reporte" (L196). Un solo run.py = un solo
+    proceso que escribe reporte + todos los CSV en el mismo orden.
+
+## Interpretacion
+
+En produccion (CI):
+
+  1. py run.py ejecuta el pipeline completo en un proceso unico.
+  2. Genera el reporte Y todos los CSV de outputs/history.
+  3. validation_gate corre antes de Fase 12; si falla, aborta.
+  4. El workflow sube outputs/report/* como artifact (efimero).
+  5. El workflow commitea outputs/history/* + outputs/state/*.
+
+  Resultado: reporte y CSV del mismo run. Sin desfase.
+
+En local (desarrollo):
+
+  El reporte NO se versiona; los CSV SI. Si se ejecuta run.py dos
+  veces sin commitear entre medias, el reporte refleja el primer run
+  y los CSV el segundo. Esto es un artefacto de desarrollo, no un
+  bug del pipeline.
+
+## Reclasificacion
+
+  F6-08: MEDIA -> INFO / WONT FIX.
+  Motivo: la observacion ("14:20 vs 17:01") describia correctamente
+  un estado local, pero no era reproducible en CI ni afectaba al
+  artefacto publicado.
+
+## Estado del bloque 6
+
+  Sin cambios de codigo. Ninguna accion requerida.
+
+  Deuda residual (no urgente): decidir politica de versionado del
+  reporte. Dos opciones:
+    (a) Mantener como artifact efimero (actual). Recomendado:
+        el reporte se regenera en cada run y no aporta estado
+        historico.
+    (b) Versionar el reporte junto a los CSV. Aportaria
+        trazabilidad historica pero duplicaria informacion ya
+        contenida en los CSV.
+
+  Se mantiene (a) por defecto.
+
+---
+
+Fin del Addendum 4.
