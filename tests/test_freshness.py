@@ -77,11 +77,18 @@ def test_classify_freshness_por_frecuencia_cftc():
 
 
 def test_classify_freshness_por_frecuencia_sec():
-    """SEC: 45/90/120 dias."""
-    assert classify_freshness(45, "sec") == "CURRENT"
-    assert classify_freshness(90, "sec") == "RECENT"
-    assert classify_freshness(120, "sec") == "STALE"
-    assert classify_freshness(121, "sec") == "ARCHIVAL"
+    """SEC: 90/180/270 dias (F7-08, 2026-09-27).
+
+    SEC N-PORT es trimestral con latencia ~45-60d. Los umbrales reflejan
+    1/2/3 trimestres desde el cierre del periodo.
+    """
+    assert classify_freshness(0, "sec") == "CURRENT"
+    assert classify_freshness(90, "sec") == "CURRENT"
+    assert classify_freshness(91, "sec") == "RECENT"
+    assert classify_freshness(180, "sec") == "RECENT"
+    assert classify_freshness(181, "sec") == "STALE"
+    assert classify_freshness(270, "sec") == "STALE"
+    assert classify_freshness(271, "sec") == "ARCHIVAL"
 
 
 def test_classify_freshness_por_frecuencia_finra():
