@@ -20,7 +20,17 @@ def classify_freshness(age_days, frequency):
         elif age_days <= 45: return 'RECENT'
         elif age_days <= 60: return 'STALE'
         else: return 'ARCHIVAL'
-    elif frequency == 'sec' or frequency == 'cftc':
+    elif frequency == 'sec':
+        # F7-08: SEC N-PORT es trimestral con latencia regulatoria ~45-60d.
+        # Un ciclo completo es 90d. Los umbrales reflejan 1/2/3 trimestres.
+        # Antes compartia umbrales con cftc (45/90/120), lo que marcaba
+        # ARCHIVAL al dato mas reciente disponible.
+        if age_days <= 90: return 'CURRENT'
+        elif age_days <= 180: return 'RECENT'
+        elif age_days <= 270: return 'STALE'
+        else: return 'ARCHIVAL'
+    elif frequency == 'cftc':
+        # CFTC TFF: semanal, publicacion viernes. 45d ya es anomalia.
         if age_days <= 45: return 'CURRENT'
         elif age_days <= 90: return 'RECENT'
         elif age_days <= 120: return 'STALE'
