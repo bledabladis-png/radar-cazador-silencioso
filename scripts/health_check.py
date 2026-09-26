@@ -5,7 +5,8 @@
 Verifica 7 bloques:
   A. Workflows: ultima ejecucion por schedule dentro de ventana.
   B. Cache 13F (IAE): trimestre actualizado.
-  C. Manifests: quality.status de stock_prices y market_data.
+  C. Manifests: quality.status de stock_prices, market_data y commodities.
+  C2. Frescura temporal de commodities (F3-15).
   D. Cobertura ultimas 5 sesiones del parquet.
   E. Fechas no bursatiles en el indice del parquet.
   F. Patron contaminacion Europa-USA en ultima fila.
@@ -181,6 +182,68 @@ def check_manifest(name: str) -> list:
         return [Result(f"manifest:{name}", OK, f"VALID (last={last})")]
     return [Result(f"manifest:{name}", WARN, f"status={status}")]
 
+
+# =========================================================
+# CHECK C2 - Commodities: frescura temporal (F3-15)
+# =========================================================
+def check_commodities_staleness() -> list:
+    """Verifica que los 2 parquet de commodities no esten obsoletos.
+
+    F3-15: health_check original solo verificaba stock_prices y market_data.
+    Los commodities quedaron fuera. Este check vigila su last_date contra
+    la ultima sesion esperada.
+
+    Umbrales:
+      commodities_spot: 4 dias (daily, deberia actualizarse cada run).
+      commodities_futures: 7 dias (BLOCKED desde 2026-09-22 por plan;
+                            el umbral permite monitorizar si reaparece
+                            actualizacion sin alertar cada dia).
+    """
+    from src.market_calendar import last_expected_market_date
+    import pandas as _pd
+
+    results = []
+    expected = last_expected_market_date()
+    if expected is None:
+        return [Result("commodities_staleness", SKIP, "no se pudo resolver expected")]
+
+    specs = [
+        ("commodities_spot", 4),
+        ("commodities_futures", 7),
+    ]
+    for name, threshold_days in specs:
+        p = PROJECT_ROOT / "data" / f"{name}.parquet.manifest.json"
+        if not p.exists():
+            results.append(Result(f"staleness:{name}", WARN, "manifest no existe"))
+            continue
+        try:
+            m = json.loads(p.read_text(encoding="utf-8"))
+            last = m.get("quality", {}).get("last_date")
+        except Exception as e:
+            results.append(Result(f"staleness:{name}", FAIL, f"manifest invalido: {e}"))
+            continue
+        if last is None:
+            results.append(Result(f"staleness:{name}", WARN, "sin last_date"))
+            continue
+        try:
+            last_dt = _pd.Timestamp(last).date()
+            age = (expected - last_dt).days
+        except Exception as e:
+            results.append(Result(f"staleness:{name}", WARN, f"last_date invalido: {e}"))
+            continue
+        if age > threshold_days:
+            results.append(Result(
+                f"staleness:{name}", WARN,
+                f"last_date={last_dt} age={age}d > {threshold_days}d"
+            ))
+        else:
+            results.append(Result(
+                f"staleness:{name}", OK,
+                f"last_date={last_dt} age={age}d"
+            ))
+    return results
+
+
 # =========================================================
 # CHECK D - Cobertura ultimas 5 sesiones
 # =========================================================
@@ -351,6 +414,10 @@ def run_all_checks() -> list:
     # C
     results.extend(check_manifest("stock_prices"))
     results.extend(check_manifest("market_data"))
+    results.extend(check_manifest("commodities_spot"))
+    results.extend(check_manifest("commodities_futures"))
+    # C2 (F3-15)
+    results.extend(check_commodities_staleness())
     # D, E, F - requieren parquet
     sp_path = PROJECT_ROOT / "data" / "stock_prices.parquet"
     if sp_path.exists():
