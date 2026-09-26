@@ -40,7 +40,7 @@ Criterio del conteo de tests IAE: ficheros `tests/test_*.py` que importan
 
 ## Documentos clave
 
-    docs/auditoria/PROMPT_MAESTRO.md              v7.4
+    docs/auditoria/PROMPT_MAESTRO.md              v7.6
     docs/auditoria/TRANSFER.md                    este documento
     docs/auditoria/README.md                      navegacion
 
@@ -268,10 +268,17 @@ Estado de la seccion IAE en produccion:
 - No integracion a produccion sin validacion funcional.
 - Todo bloque que haga `git commit` debe condicionarse a tests verdes
   (`if ($LASTEXITCODE -eq 0)`). Leccion del commit 977249b.
-- Dispatch manual de `daily_run.yml` solo FUERA de la sesion USA abierta
-  (13:30-20:00 UTC). El cron productivo es `0 23 * * *` UTC. Dispatches
-  manuales en ventana USA abierta disparan guard_coverage. Leccion de
-  F-IAE-CRON-01 (2026-09-24).
+- Cron productivo de `daily_run.yml`: multi-slot (4 disparos: 17 23 /
+  17 3 / 17 7 / 17 11 UTC) con gate pre-pipeline + concurrency queue: max.
+  F-IAE-CRON-01 (cron unico 0 23) queda SUPERSEDED por F-IAE-CRON-02
+  (2026-09-25). El gate decide en cada slot si correr (READY) o skip
+  (CURRENT / NOT_READY / ERROR).
+- Dispatch manual de `daily_run.yml`: preferible FUERA de la sesion USA
+  abierta (13:30-20:00 UTC). Motivo actual: el gate puede dar READY y
+  correr el pipeline con datos intradia USA si el manifest no cubre la
+  sesion esperada; en ese caso guard_coverage bloqueara el commit. La
+  regla se mantiene por prudencia operativa, no por el mismo motivo que
+  antes de F-IAE-CRON-02.
 - En here-strings PowerShell que contengan backticks markdown, usar
   `chr(96)` o eliminar los backticks del contenido. PowerShell interpreta
   el backtick como escape y cierra el here-string silenciosamente. Leccion
@@ -296,7 +303,7 @@ Esperado:
 - HEAD ver docs/auditoria/iae/ESTADO_SISTEMA.md
 - ahead 0, behind 0
 - working tree limpio
-- 1682 passed + 2 skipped + 0 failed (test_freshness pasa tras run.py)
+- 1857 passed + 2 skipped + 0 failed (test_freshness pasa tras run.py)
 - pyflakes silencio, compileall OK
 
 Censo del modulo IAE (comando aparte, tarda unos segundos):
@@ -324,6 +331,12 @@ Estado que reconozco:
 - Cobertura sectorial A1 RESUELTA 2026-09-24 (top-20 real, commit 8c6330f)
 - FU-002-bymarket integrado (manifest + guard, commits 88c27d1, d09f928, 62e38d9)
 - Health check semanal operativo (lunes 07:00 UTC)
+- F-IAE-CRON-02 / F-IAE-GATE-01 integrados en produccion (multi-slot +
+  gate pre-pipeline + issue-manager). Verificado en CI real.
+- F-IAE-LSE-INTEGRATION integrado en produccion (scraper LSE + override
+  parcial de Close). Verificado end-to-end en CI real (run 36208872855,
+  applied=20/20 status=OK).
+- PROMPT_MAESTRO vigente: v7.6 (auditoria interna aplicada, commit 5d54ddf).
 - Pendiente: SEC publique Official List Q2 TXT
 
 Pregunta: "Que hacemos?"
@@ -511,6 +524,52 @@ unico repositorio.
   Al diagnosticar divergencias entre runs, comprobar primero si
   `rs_z` (Close reciente) coincide. Si coincide y `wls` no, es
   revision historica, no bug.
+
+---
+
+## Sesion 2026-09-26 (auditoria interna PROMPT v7.5 -> v7.6)
+
+**Motivo.** Auditoria interna del PROMPT_MAESTRO por peticion del
+usuario. Metodo: cruce del documento con la realidad verificable
+(ficheros, workflows, git, pytest). Sin cambios de codigo ni de
+arquitectura. Solo correccion documental.
+
+**Resultado.** 15 correcciones aplicadas:
+
+- 7 errores reales:
+  * `indicators/darkpool/` no es un paquete, son 4 ficheros sueltos en
+    `indicators/`. Corregido en §4.5.
+  * `docs/plan/` no existe en disco. Eliminado del arbol §4.2.
+  * `audit/` no existe en raiz (es `outputs/audit/`). Movido bajo outputs.
+  * `history/`, `state/`, `report/` mal indentados (en raiz, no bajo
+    `outputs/`). Corregida indentacion.
+  * `providers/`: decia 29, reales 27 ficheros `.py` + `__init__`. El 29
+    contaba `__pycache__/`.
+  * §4.3: faltaba `iae.py` en `src/report/`.
+  * §4.4: faltaba `iae_section.py`. Total ajustado a 17 modulos.
+
+- 1 inconsistencia menor:
+  * §10.1: "ver seccion 15" redirige a IAE_MAESTRO. Cambiado a
+    "ver IAE_MAESTRO.md seccion 11".
+
+- 3 omisiones nuevas (elementos del ciclo LSE no documentados en §4.2):
+  * `src/external/`.
+  * `data/lse_close_provenance.json`.
+  * `pipeline_gate.py` + `issue_manager.py` en scripts.
+
+- Bump v7.5 -> v7.6 (fecha 2026-09-26) + pie actualizado.
+
+**Verificaciones cruzadas sin hallazgos:** 28/28 ficheros referenciados
+existen; 9/9 workflows coinciden en nombre y cron; 64 SHAs citados
+(63 OK radar + 1 OK scraper privado); 1857 tests declarados = 1859
+collected - 2 skipped; IAE 845 tests coherentes; 10 contratos
+temporales; 20 `.L` con refinitiv; 4 funciones publicas del loader LSE.
+
+**Commit:** `5d54ddf` (docs(prompt): v7.5 -> v7.6).
+
+**No propagado a `ESTADO_DECLARADO.md` ni `ESTADO_SISTEMA.md`.** La
+auditoria es puramente documental del PROMPT; no cambia hechos del
+sistema, no introduce decisiones nuevas, no modifica arquitectura.
 
 ---
 
