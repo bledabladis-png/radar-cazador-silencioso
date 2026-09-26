@@ -490,8 +490,6 @@ def generate_sec_nport_positions():
     proposito = "Documenta los módulos de extracción de posiciones institucionales desde SEC N-PORT, con granularidad fondo + activo + fecha de reporte."
     arquitectura = """
 - data/providers/sec_nport_quarters_position_change.py: compara trimestres Q1 y Q2.
-- data/providers/sec_fund_flow.py: extrae flujos de fondos desde FUND_REPORTED_INFO.
-- data/providers/sec_nport_international_leader_flows.py: cruza N-PORT de FEZ con líderes internacionales.
 """
     formulas = """
 - **Position Change:** BALANCE(t) - BALANCE(t-1).
@@ -500,8 +498,6 @@ def generate_sec_nport_positions():
 """
     salidas = """
 - outputs/history/sec_nport_position_change_quarterly.csv
-- outputs/history/sec_fund_flow.csv
-- outputs/report/sec_nport_international_leader_flows.csv
 """
     limitaciones = "Los datasets N-PORT se publican trimestralmente aunque los datos son mensuales. No se integra en run.py diario."
     return template(proposito, arquitectura, formulas, salidas, limitaciones)
