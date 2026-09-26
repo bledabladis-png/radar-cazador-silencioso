@@ -28,9 +28,12 @@ Navegacion de la documentacion de auditoria.
 
 ## Reglas de operacion
 
-- No push a origin/main (local-first IAE).
-- No OpenFIGI masivo.
-- No modificar codigo sin ciclo previo.
+- Push a origin/main autorizado tras validacion funcional completa
+  (compileall + pyflakes + suite verde) y verificacion en CI cuando
+  proceda. Regla vigente en PROMPT_MAESTRO.md seccion 2.
+- No OpenFIGI masivo. Solo consultas dirigidas.
+- No modificar codigo sin ciclo previo (reconocimiento -> diseno ->
+  implementacion -> verificacion -> documentacion).
 - No integracion a produccion sin validacion funcional.
 
-Detalle en iae/IAE_MAESTRO.md seccion 6.
+Detalle en PROMPT_MAESTRO.md secciones 2 y 3.
