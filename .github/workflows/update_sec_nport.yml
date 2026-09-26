@@ -33,11 +33,18 @@ jobs:
       - name: Ejecutar actualización N-PORT
         run: python scripts/update_sec_nport_data.py
 
+      - name: Regenerar cambios trimestrales agregados
+        run: python data/providers/sec_nport_quarters_position_change.py
+
+      - name: Regenerar flujo de participaciones QQQ (NPORT-P B.6)
+        run: python data/providers/qqq_nport_flow.py
+
       - name: Commit y push si hay cambios
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add outputs/history/sec_nport_*
+          git add outputs/history/qqq_nport_flow.csv
           if git diff --cached --quiet; then
             echo "No hay cambios."
           else
