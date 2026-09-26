@@ -11,9 +11,10 @@ class DataRouter:
         self.providers = {
             "yahoo": YahooProvider(),
             "fred": FredProvider(),
-                    "polygon": PolygonProvider(),
+            "polygon": PolygonProvider(),
         }
-        self.preferred_order = ["yahoo", "fred", "polygon"]
+        # A5-10: Polygon es equity (prioridad); FRED es macro (ultimo recurso).
+        self.preferred_order = ["yahoo", "polygon", "fred"]
 
     def get_market_data(self, tickers: list, period: str = "10y"):
         for name in self.preferred_order:
@@ -30,22 +31,27 @@ class DataRouter:
         return self._load_cache(tickers)
 
     def _load_cache(self, tickers):
+        """Carga cache local. A5-11: NO devuelve subset silencioso.
+
+        Si algun ticker solicitado no esta en el cache, raise RuntimeError.
+        El caller (data_loader) captura y pasa al backup provider.
+        Principio PROMPT Seccion 2: "si no hay suficiente -> N/D u omitir.
+        No imputar." Devolver un subset parcial es equivalente a imputar
+        silenciosamente ausencia de datos.
+        """
         cache_path = Path(CACHE_MARKET_PATH)
-        if cache_path.exists():
-            data = pd.read_parquet(cache_path)
-            missing = [t for t in tickers if t not in data.columns.get_level_values(1)]
-            if missing:
-                print(f"  Cache no contiene {len(missing)} tickers.")
-                # Filtrar a los disponibles
-                available = [t for t in tickers if t in data.columns.get_level_values(1)]
-                if available:
-                    subset = data.loc[:, data.columns.get_level_values(1).isin(available)]
-                    print(f"  Usando {len(available)} tickers del cache.")
-                    return subset
-                raise RuntimeError("Cache no tiene tickers solicitados.")
-            print(f"  Cache local cargado: {len(data)} filas.")
-            return data
-        raise RuntimeError("Ningun proveedor disponible y no hay cache local.")
+        if not cache_path.exists():
+            raise RuntimeError("Ningun proveedor disponible y no hay cache local.")
+        data = pd.read_parquet(cache_path)
+        available = data.columns.get_level_values(1)
+        missing = [t for t in tickers if t not in available]
+        if missing:
+            raise RuntimeError(
+                f"Cache local no contiene {len(missing)}/{len(tickers)} "
+                f"tickers solicitados. No se devuelve subset parcial."
+            )
+        print(f"  Cache local cargado: {len(data)} filas.")
+        return data
 
     def get_treasury_data(self):
         for name in ["fred", "yahoo"]:
@@ -53,7 +59,8 @@ class DataRouter:
             if provider.is_available():
                 try:
                     return provider.get_treasury_yields()
-                except:
+                except Exception as e:
+                    print(f"  [WARN] router: {provider.get_name()} get_treasury_yields fallo: {e}")
                     continue
         return None
 
@@ -132,6 +139,7 @@ class DataRouter:
                     data = provider.get_options_data()
                     if data is not None and not data.empty:
                         return data
-                except:
+                except Exception as e:
+                    print(f"  [WARN] router: {provider.get_name()} get_options_data fallo: {e}")
                     continue
         return None
