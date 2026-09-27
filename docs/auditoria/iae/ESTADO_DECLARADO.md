@@ -3,7 +3,7 @@
 Estado declarado de fases, prohibiciones y hallazgos del modulo IAE.
 Documento vivo. Se actualiza cuando cambia el estado.
 
-**Actualizado:** 2026-09-27 (rev.4)
+**Actualizado:** 2026-09-27 (rev.5)
 **HEAD de cierre:** ver `ESTADO_SISTEMA.md` (se regenera con cada commit).
 **Estado del sistema:** `ESTADO_SISTEMA.md`.
 
@@ -412,8 +412,14 @@ IAE_MAESTRO). Detalle en §2.
     escalas intencionalmente (cls en [0,1] vs srs/shs/ips en [-1,+1]).
     Cambiar la escala altera compute_confidence en produccion y
     requiere recalibracion estadistica.
-  - state.py::save_scenario queda sin uso productivo tras aff0afd.
-    Auditoria de eliminacion diferida a ciclo posterior.
+  - state.py::save_scenario ELIMINADO 2026-09-27 (commit ff782d7).
+    Gate 0 read-only confirmo: 0 usos productivos, unicos consumidores
+    3 tests de TestSaveScenario. Ademas de codigo muerto era footgun:
+    escribia un subset de 4 campos frente a los 12+ del writer efectivo
+    (engine.py). Su invocacion sobrescribia el state file borrando
+    effective_date, expected_date, coverage, futures_status, confidence,
+    msi, ipi. Eliminado de state.py, __init__.py (API publica) y tests.
+    Suite: 2184 -> 2181 passed (-3 tests, esperado).
 
 - Ciclo 2026-09-27 (complemento). Nuevos cierres fuera del IAE estricto
   pero relevantes para la operativa:

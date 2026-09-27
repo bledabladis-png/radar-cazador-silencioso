@@ -715,4 +715,29 @@ No lee flow_zscore_regime.
 
 ---
 
+**Anexo 2026-09-27 (post-cierre 2): state.py::save_scenario eliminado.**
+
+Ciclo corto. Deuda diferida del commit aff0afd (F2.4-10). Tras ese
+fix, classify_mte dejo de escribir y engine.py paso a ser el unico
+writer de mte_state.json. save_scenario (state.py:46) quedo sin uso
+productivo.
+
+Gate 0 read-only: 0 usos productivos; unicos consumidores 3 tests
+de TestSaveScenario. Ademas era footgun: escribia un subset de 4
+campos (schema_version, temporal_contract_version, scenario, pending)
+frente a los 12+ del writer inline de engine.py (que anade
+effective_date, expected_date, coverage, futures_status, confidence,
+msi, ipi). Invocarlo sobrescribia el state file BORRANDO esos campos;
+el siguiente load_previous_scenario lo leeria sin errores pero con
+state incompleto.
+
+Accion: eliminado de state.py (junto con import os huerfano),
+indicators/mte/__init__.py (import + __all__) y
+tests/test_mte_state.py (TestSaveScenario, 3 tests).
+
+Verificacion: pyflakes limpio, compileall OK, suite 2181 passed +
+2 skipped (-3 tests, esperado). Commit ff782d7.
+
+---
+
 FIN DE TRANSFER. 2026-09-27.

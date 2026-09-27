@@ -1,6 +1,6 @@
 # PROMPT MAESTRO v7.9 - INGENIERO SUPERVISOR DEL RADAR DE ROTACION SECTORIAL
 
-**Actualizado:** 2026-09-27 (v7.10: cierre K-BLACKROCK-CSV-STALE-01 (reordenacion byte-preserving de columnas de 3 CSV fund-flow al orden del writer). Sin cambios de codigo productivo. Base v7.9: cierre A5-70 (refactor BlackRock providers) + rectificacion G7/G8 + registro K-BLACKROCK-CSV-STALE-01. Suite 2173 -> 2184 + 2 skipped. Base v7.8: ciclo F2.4-10/11/12/13 - persistencia de estado MTE reparada (histeresis adaptativa operativa), F2.4-11 except acotado en engine.py, F2.4-13 documentado WONT FIX, 19 warnings pyflakes limpiados. Suite 2163 -> 2173 + 2 skipped. Base v7.7: ciclo Cat 1 - 5 fixes quirurgicos de la auditoria radar pusheados (A5-71, F3-18, F2.4-01/02/03). Suite 2097 -> 2163 + 2 skipped. Base v7.6: auditoria interna del prompt - correcciones documentales en el arbol §4.2 (indicators/darkpool, providers, outputs/*, docs/plan, audit, src/external, provenance LSE, scripts nuevos), en los listados §4.3/§4.4 (iae.py, iae_section.py) y en la referencia §10.1. Sin cambios de codigo ni de arquitectura. Base v7.5: ciclo F-IAE-LSE-INTEGRATION + F-IAE-CRON-02 / F-IAE-GATE-01. Cifras internas alineadas: suite 1857 passed + 2 skipped, bloque IAE 845 tests).
+**Actualizado:** 2026-09-27 (v7.11: cierre del ciclo state.py::save_scenario (eliminado, codigo muerto + footgun de schema incompleto). Sin cambios funcionales en produccion. Base v7.10: cierre K-BLACKROCK-CSV-STALE-01 (reordenacion byte-preserving de columnas de 3 CSV fund-flow al orden del writer). Sin cambios de codigo productivo. Base v7.9: cierre A5-70 (refactor BlackRock providers) + rectificacion G7/G8 + registro K-BLACKROCK-CSV-STALE-01. Suite 2173 -> 2184 + 2 skipped. Base v7.8: ciclo F2.4-10/11/12/13 - persistencia de estado MTE reparada (histeresis adaptativa operativa), F2.4-11 except acotado en engine.py, F2.4-13 documentado WONT FIX, 19 warnings pyflakes limpiados. Suite 2163 -> 2173 + 2 skipped. Base v7.7: ciclo Cat 1 - 5 fixes quirurgicos de la auditoria radar pusheados (A5-71, F3-18, F2.4-01/02/03). Suite 2097 -> 2163 + 2 skipped. Base v7.6: auditoria interna del prompt - correcciones documentales en el arbol §4.2 (indicators/darkpool, providers, outputs/*, docs/plan, audit, src/external, provenance LSE, scripts nuevos), en los listados §4.3/§4.4 (iae.py, iae_section.py) y en la referencia §10.1. Sin cambios de codigo ni de arquitectura. Base v7.5: ciclo F-IAE-LSE-INTEGRATION + F-IAE-CRON-02 / F-IAE-GATE-01. Cifras internas alineadas: suite 1857 passed + 2 skipped, bloque IAE 845 tests).
 
 Este documento describe **rol, metodologia, arquitectura y prohibiciones vigentes**.
 **NO declara el estado del sistema.** Para estado, ver:
@@ -1094,8 +1094,14 @@ consolidada. 3 commits pusheados.
     - `engine.py` es el UNICO writer efectivo de `mte_state.json`.
       Anade `'pending': pending_out` al dump.
     - El schema del fichero se preserva (13 campos + `pending`).
-    - `state.py::save_scenario` queda como codigo sin uso productivo
-      (auditoria de eliminacion diferida a ciclo posterior).
+    - `state.py::save_scenario` fue eliminado en commit `ff782d7`
+      (2026-09-27). Gate 0 read-only confirmo: 0 usos productivos,
+      unicos consumidores 3 tests de `TestSaveScenario`. Ademas de
+      codigo muerto era footgun: escribia un subset de 4 campos
+      frente a los 12+ del writer efectivo (engine.py), por lo que
+      su invocacion sobrescribia el state file borrando effective_date,
+      expected_date, coverage, futures_status, confidence, msi, ipi.
+      Eliminado de state.py, __init__.py (API publica) y tests.
   - **Cambio de comportamiento:** a partir del proximo run, la
     histeresis de dos pasos opera. Un candidato nuevo (ej. `RECESSION`
     con prev=`MIXED`) se persiste como `pending` y se confirma en el
@@ -1538,4 +1544,4 @@ que el objetivo es IMPLEMENTARLO. No inicies un nuevo ciclo de
 propuestas->dictamenes sobre A.6.2-bis sin antes consultar con el
 usuario. Ver IAE_MAESTRO.md para el contexto.
 
-Fin del prompt maestro v7.10.
+Fin del prompt maestro v7.11.
