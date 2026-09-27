@@ -122,7 +122,9 @@ def test_indices_intl_sin_acumulacion_no_descarga():
     assert out["index_leaders"] == {}
 
 
-def test_indices_intl_con_acumulacion_descarga_y_selecciona():
+def test_indices_intl_con_acumulacion_descarga_y_selecciona(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    (tmp_path / "outputs" / "report").mkdir(parents=True)
     leaders_df = pd.DataFrame({"ticker": ["AAA"], "wls": [1.5]})
     with patch("src.pipeline.indices_intl.compute_index_phases",
                return_value=({"^DJI": "ACCUMULATION"}, {})), \
