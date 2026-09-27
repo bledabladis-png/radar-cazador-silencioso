@@ -3,7 +3,7 @@
 Estado declarado de fases, prohibiciones y hallazgos del modulo IAE.
 Documento vivo. Se actualiza cuando cambia el estado.
 
-**Actualizado:** 2026-09-27 (rev.7)
+**Actualizado:** 2026-09-27 (rev.8)
 **HEAD de cierre:** ver `ESTADO_SISTEMA.md` (se regenera con cada commit).
 **Estado del sistema:** `ESTADO_SISTEMA.md`.
 
@@ -274,11 +274,15 @@ IAE_MAESTRO). Detalle en §2.
   Ver IAE_MAESTRO §13.10. Reabrir si se activa `figi_lookup` en algun
   punto del pipeline, si aparece un caso `figi:*` en units o delta,
   o si se modifica el modelo de resolucion de identidad.
-- Seccion IAE en produccion: STALE con razon `official_list_pending`.
-  SEC no ha publicado `13flist2026q2.txt` en formato TXT (solo PDF
-  desde 2026-08-14). Verificado con curl (404). Los parquets 13F
-  Q4+Q1+Q2 estan en cache v2; el NIPC Q1->Q2 se calculara
-  automaticamente cuando SEC publique el TXT.
+- Seccion IAE en produccion: OPERATIVA 2026-09-27. Desbloqueada
+  tras localizar el fichero Q2 2026 con sufijo `-txt`
+  (13flist2026q2-txt.txt, 25333 filas). El downloader solo probaba la
+  URL canonica y obtenia 404. Fix commit 08a6c6a: entrada en
+  URL_EXCEPTIONS + fallback automatico 404 -> sufijo `-txt`.
+  Verificado end-to-end: NIPC Q1 2026 -> Q2 2026 = 8.254.818.120
+  (SOLE 5.956.164.211 / DFND 2.328.005.496 / OTR -29.351.587).
+  Cobertura catalogo 240/242 (99.17%), coverage_quality COMPLETE.
+  Validation Gate 10/10 OK.
 - Deuda visible en el REPORTE (no en el pipeline): 3 bugs de render
   detectados tras revision del reporte diario 2026-09-24. RESUELTOS
   2026-09-24 (commits 2fe1c45 + 740be35 + dfd93c4).

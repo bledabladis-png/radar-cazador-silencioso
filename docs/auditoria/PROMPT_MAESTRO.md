@@ -1,6 +1,6 @@
 # PROMPT MAESTRO v7.9 - INGENIERO SUPERVISOR DEL RADAR DE ROTACION SECTORIAL
 
-**Actualizado:** 2026-09-27 (v7.12: cierre de sesion con 12 commits. Bloque Cat 4 desmontado y 8 findings cerrados: F5.6-01, F5.6-02, F5.6-03, F5.6-06, F5.7-01, F5.7-05, F5.7-14, F5.7-19, F7-01, F7-03, F7-04; 2 subrogados (F5.6-15, F5.7-20); 1 rectificacion (K-BLACKROCK-CSV-STALE-01). Suite 2184 -> 2205 + 2 skipped. Base v7.11: cierre del ciclo state.py::save_scenario (eliminado, codigo muerto + footgun de schema incompleto). Sin cambios funcionales en produccion. Base v7.10: cierre K-BLACKROCK-CSV-STALE-01 (reordenacion byte-preserving de columnas de 3 CSV fund-flow al orden del writer). Sin cambios de codigo productivo. Base v7.9: cierre A5-70 (refactor BlackRock providers) + rectificacion G7/G8 + registro K-BLACKROCK-CSV-STALE-01. Suite 2173 -> 2184 + 2 skipped. Base v7.8: ciclo F2.4-10/11/12/13 - persistencia de estado MTE reparada (histeresis adaptativa operativa), F2.4-11 except acotado en engine.py, F2.4-13 documentado WONT FIX, 19 warnings pyflakes limpiados. Suite 2163 -> 2173 + 2 skipped. Base v7.7: ciclo Cat 1 - 5 fixes quirurgicos de la auditoria radar pusheados (A5-71, F3-18, F2.4-01/02/03). Suite 2097 -> 2163 + 2 skipped. Base v7.6: auditoria interna del prompt - correcciones documentales en el arbol §4.2 (indicators/darkpool, providers, outputs/*, docs/plan, audit, src/external, provenance LSE, scripts nuevos), en los listados §4.3/§4.4 (iae.py, iae_section.py) y en la referencia §10.1. Sin cambios de codigo ni de arquitectura. Base v7.5: ciclo F-IAE-LSE-INTEGRATION + F-IAE-CRON-02 / F-IAE-GATE-01. Cifras internas alineadas: suite 1857 passed + 2 skipped, bloque IAE 845 tests).
+**Actualizado:** 2026-09-27 (v7.13: desbloqueo SEC Official List Q2 2026 (sufijo -txt) + NIPC Q1 2026 -> Q2 2026 calculado por primera vez. Fallback automatico en download_official_list_13f.py. Suite 2205 + 2 skipped. Base v7.12: cierre de sesion con 12 commits. Bloque Cat 4 desmontado y 8 findings cerrados: F5.6-01, F5.6-02, F5.6-03, F5.6-06, F5.7-01, F5.7-05, F5.7-14, F5.7-19, F7-01, F7-03, F7-04; 2 subrogados (F5.6-15, F5.7-20); 1 rectificacion (K-BLACKROCK-CSV-STALE-01). Suite 2184 -> 2205 + 2 skipped. Base v7.11: cierre del ciclo state.py::save_scenario (eliminado, codigo muerto + footgun de schema incompleto). Sin cambios funcionales en produccion. Base v7.10: cierre K-BLACKROCK-CSV-STALE-01 (reordenacion byte-preserving de columnas de 3 CSV fund-flow al orden del writer). Sin cambios de codigo productivo. Base v7.9: cierre A5-70 (refactor BlackRock providers) + rectificacion G7/G8 + registro K-BLACKROCK-CSV-STALE-01. Suite 2173 -> 2184 + 2 skipped. Base v7.8: ciclo F2.4-10/11/12/13 - persistencia de estado MTE reparada (histeresis adaptativa operativa), F2.4-11 except acotado en engine.py, F2.4-13 documentado WONT FIX, 19 warnings pyflakes limpiados. Suite 2163 -> 2173 + 2 skipped. Base v7.7: ciclo Cat 1 - 5 fixes quirurgicos de la auditoria radar pusheados (A5-71, F3-18, F2.4-01/02/03). Suite 2097 -> 2163 + 2 skipped. Base v7.6: auditoria interna del prompt - correcciones documentales en el arbol §4.2 (indicators/darkpool, providers, outputs/*, docs/plan, audit, src/external, provenance LSE, scripts nuevos), en los listados §4.3/§4.4 (iae.py, iae_section.py) y en la referencia §10.1. Sin cambios de codigo ni de arquitectura. Base v7.5: ciclo F-IAE-LSE-INTEGRATION + F-IAE-CRON-02 / F-IAE-GATE-01. Cifras internas alineadas: suite 1857 passed + 2 skipped, bloque IAE 845 tests).
 
 Este documento describe **rol, metodologia, arquitectura y prohibiciones vigentes**.
 **NO declara el estado del sistema.** Para estado, ver:
@@ -1204,12 +1204,17 @@ Confidence sensible a N componentes -> Documentado (C19).
 
 Fase G (2026-09-24): automatizacion de mappings del IAE.
 
-Official List 13(f) Q2 2026 sin TXT -> STALE honesto. SEC ha publicado
-solo el PDF (2026-08-14). La seccion IAE del reporte diario muestra
-"Datos 13F cargados (2026Q1 -> 2026Q2), pero la Official List 13(f) de
-2026Q2 aun no ha sido publicada por SEC." Verificado con curl (404).
-No es bug. Comportamiento correcto documentado en iae_section.py
-(stale_reason=official_list_pending).
+Official List 13(f) Q2 2026 -> DESBLOQUEADO 2026-09-27.
+SEC si publico el fichero, pero con sufijo `-txt`:
+13flist2026q2-txt.txt (25333 filas). El downloader probaba solo la URL
+canonica (13flist2026q2.txt) y obtenia 404. Fix: entrada explicita en
+URL_EXCEPTIONS + fallback automatico 404 -> sufijo `-txt` (patron ya
+observado en 2025Q3 y 2026Q2; el fallback cubre futuros trimestres).
+Commit 08a6c6a. Verificado end-to-end con run.py local: NIPC Q1 2026 ->
+Q2 2026 = 8.254.818.120 (SOLE 5.956.164.211 / DFND 2.328.005.496 /
+OTR -29.351.587). Cobertura catalogo 240/242 (99.17%), TARGET 240/240
+(100% por construccion), coverage_quality COMPLETE. Validation Gate
+10/10 OK. Secciones ## del reporte identicas (55 pre/post).
 
 Cobertura sectorial baja - RESUELTO 2026-09-24 (commit 8c6330f).
 El sistema calculaba cobertura contra el total del ETF (78 en XLF,
@@ -1544,4 +1549,4 @@ que el objetivo es IMPLEMENTARLO. No inicies un nuevo ciclo de
 propuestas->dictamenes sobre A.6.2-bis sin antes consultar con el
 usuario. Ver IAE_MAESTRO.md para el contexto.
 
-Fin del prompt maestro v7.12.
+Fin del prompt maestro v7.13.

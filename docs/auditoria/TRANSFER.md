@@ -810,4 +810,41 @@ Verificacion: pyflakes limpio, compileall OK, suite 2205 + 2 skipped.
 
 ---
 
+**Anexo 2026-09-27 (post-cierre 5): desbloqueo SEC Official List Q2 2026.**
+
+Finding external-dependency: la seccion IAE del reporte llevaba
+semanas STALE con stale_reason=official_list_pending. La causa: SEC
+habia publicado Q2 2026 con sufijo `-txt` (13flist2026q2-txt.txt),
+pero el downloader solo probaba la URL canonica
+(13flist2026q2.txt) y obtenia 404.
+
+Gate 0:
+  - Verificacion manual: HEAD a URLs canonicas devolvio 403 (rate
+    limit de SEC, no bloqueo real). Esperar 60s y repetir.
+  - Q1 2026 descarga OK (24641 filas). Q2 2026 404 en la canonica.
+  - Q2 2026 SI existe con sufijo `-txt`: 25333 filas, parsea
+    correctamente.
+
+Fix (commit 08a6c6a):
+  - data/sec_13f/.../URL_EXCEPTIONS: + 2026Q2.
+  - Fallback automatico: si 404 en canonica y no esta en excepciones,
+    probar sufijo `-txt`. Cubre futuros trimestres sin tocar codigo.
+  - data/sec_13f/official_list_13f/13flist_2026Q2.txt versionado.
+
+Verificacion end-to-end (run.py local, exit=0):
+  - Seccion IAE del reporte: NIPC Q1 2026 -> Q2 2026 =
+    8.254.818.120 (SOLE 5.956.164.211 / DFND 2.328.005.496 /
+    OTR -29.351.587). Cobertura catalogo 240/242 (99.17%).
+  - Validation Gate 10/10 OK.
+  - Secciones ## del reporte: 55 pre, 55 post, identicas.
+  - Fix F7-01 verificado: sector_correlation_matrix.csv no regenerado.
+  - Fix F5.7-05 verificado: get_latest_week memoizado.
+  - Fix F5.7-14 verificado: print CFTC usa las nuevas constantes.
+
+Pendiente externo: Fase D (auditor externo IAE).
+
+Verificacion: pyflakes limpio, compileall OK, suite 2205 + 2 skipped.
+
+---
+
 FIN DE TRANSFER. 2026-09-27.
