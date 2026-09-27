@@ -14,12 +14,17 @@ consumira en el proximo `run.py`.
 from __future__ import annotations
 
 import argparse
+import getpass
+import json
+import os
 import sys
 from datetime import date, datetime
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
+
+from config import settings
 
 from src.institutional_accumulation.sec_13f.ingest import ingest_13f
 from src.institutional_accumulation.sec_13f.downloader import _pick_base_url
@@ -121,20 +126,53 @@ def latest_published_quarter(today=None):
     ser conservador, asumimos 60 dias.
     """
     today = today or date.today()
-    # Probar Q actual hacia atras. Solo consideramos hasta 60 dias post-cierre.
+    lag = settings.SEC_13F_QUARTER_LAG_DAYS
     candidate_year = today.year
     candidates = []
     for y in (candidate_year, candidate_year - 1):
         for qn in ("Q4", "Q3", "Q2", "Q1"):
             iso = quarter_to_iso_end("{:04d}{}".format(y, qn))
             end = datetime.strptime(iso, "%Y-%m-%d").date()
-            if (today - end).days >= 60:
+            if (today - end).days >= lag:
                 candidates.append(("{:04d}{}".format(y, qn), end))
     candidates.sort(key=lambda x: x[1], reverse=True)
     return candidates[0][0] if candidates else None
 
+def _write_ingest_trace(quarter, source, actor):
+    """Anade ingest_source + ingest_actor al manifest del trimestre.
+
+    Trazabilidad para distinguir cron vs dispatch vs manual (H5.3).
+    """
+    mp = ROOT / "data" / "sec_13f" / "manifests" / ("sec_13f_" + quarter + ".json")
+    if not mp.exists():
+        print("[WARN] manifest no existe para {}".format(quarter))
+        return
+    try:
+        data = json.loads(mp.read_text(encoding="utf-8"))
+    except Exception as e:
+        print("[WARN] manifest no parseable: {}: {}".format(type(e).__name__, e))
+        return
+    data["ingest_source"] = source
+    data["ingest_actor"] = actor
+    mp.write_text(json.dumps(data, indent=2, ensure_ascii=False),
+                  encoding="utf-8")
+    print("[OK] ingest trace {} source={} actor={}".format(quarter, source, actor))
+
+
+def _resolve_actor():
+    """Devuelve el actor de la ingesta (CI o local)."""
+    gh = os.environ.get("GITHUB_ACTOR")
+    if gh:
+        return gh
+    try:
+        return getpass.getuser()
+    except Exception:
+        return "unknown"
+
+
 def ensure_quarter(quarter, *, force=False,
-                   data_dir=None, official_dir=None):
+                   data_dir=None, official_dir=None,
+                   source="manual", actor=None):
     """Asegura que el trimestre esta ingestado y con official list.
 
     data_dir: raiz de data/sec_13f (default ROOT/data/sec_13f).
@@ -188,6 +226,10 @@ def ensure_quarter(quarter, *, force=False,
     else:
         print("[WARN] processed/ no existe; latest_quarter.txt no escrito")
 
+    # H5.3: trazabilidad de la ingesta (cron/dispatch/manual)
+    actor = actor or _resolve_actor()
+    _write_ingest_trace(quarter, source, actor)
+
     return info
 
 
@@ -200,6 +242,11 @@ def main():
                     help="Ignora cache y redescarga")
     ap.add_argument("--backfill", type=int, default=0,
                     help="Ingesta tambien los N trimestres anteriores (historico)")
+    ap.add_argument("--source", default="manual",
+                    choices=("cron", "dispatch", "manual"),
+                    help="Origen de la ingesta (trazabilidad H5.3)")
+    ap.add_argument("--actor", default=None,
+                    help="Actor (default: GITHUB_ACTOR o usuario local)")
     args = ap.parse_args()
 
     if args.quarter:
@@ -220,7 +267,9 @@ def main():
     infos = []
     for q in quarters:
         try:
-            infos.append(ensure_quarter(q, force=args.force))
+            infos.append(ensure_quarter(q, force=args.force,
+                                        source=args.source,
+                                        actor=args.actor))
         except Exception as e:
             print("[FAIL] {}: {}: {}".format(q, type(e).__name__, e))
             return 1

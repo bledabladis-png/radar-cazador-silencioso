@@ -26,6 +26,16 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
+      - name: Validar input quarter (H5.4)
+        if: ${{ inputs.quarter != '' }}
+        run: |
+          Q="${{ inputs.quarter }}"
+          if ! [[ "$Q" =~ ^[0-9]{4}Q[1-4]$ ]]; then
+            echo "::error::quarter invalido: '$Q' (esperado YYYYQn, ej. 2026Q2)"
+            exit 1
+          fi
+          echo "quarter OK: $Q"
+
       - name: Configurar Python
         uses: actions/setup-python@v5
         with:
@@ -42,9 +52,22 @@ jobs:
         uses: actions/cache@v4
         with:
           path: data/sec_13f/processed
-          key: 13f-processed-v2-${{ hashFiles('data/sec_13f/latest_quarter.txt') }}
+          # H5.5: incluye sha256 del manifest mas reciente. Si SEC republica
+          # un trimestre, el sha256 cambia y la cache se invalida.
+          key: 13f-processed-v3-${{ hashFiles('data/sec_13f/latest_quarter.txt', 'data/sec_13f/manifests/sec_13f_*.json') }}
           restore-keys: |
+            13f-processed-v3-
             13f-processed-v2-
+
+      - name: Determinar origen (cron/dispatch) - H5.3
+        id: source
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "value=dispatch" >> "$GITHUB_OUTPUT"
+          else
+            echo "value=cron" >> "$GITHUB_OUTPUT"
+          fi
+          echo "Origen: $(cat "$GITHUB_OUTPUT" | grep value | cut -d= -f2)"
 
       - name: Determinar trimestre a actualizar
         id: quarter
@@ -74,24 +97,54 @@ jobs:
           echo "quarter=${Q}" >> "$GITHUB_OUTPUT"
           echo "Trimestre a actualizar: ${Q}"
 
-      - name: Ejecutar actualizacion 13F
+      - name: Ejecutar actualizacion 13F (con retry, H5.2)
         run: |
-          python scripts/update_sec_13f.py \
-            --quarter "${{ steps.quarter.outputs.quarter }}" \
-            --backfill 2
+          for i in 1 2 3; do
+            echo "::group::Intento $i/3"
+            if python scripts/update_sec_13f.py \
+                --quarter "${{ steps.quarter.outputs.quarter }}" \
+                --backfill 2 \
+                --source "${{ steps.source.outputs.value }}"; then
+              echo "::endgroup::"
+              echo "Ingesta OK en intento $i"
+              exit 0
+            fi
+            echo "::endgroup::"
+            if [ $i -lt 3 ]; then
+              sleep $((i * 30))
+            fi
+          done
+          echo "::error::ingesta fallida tras 3 intentos"
+          exit 1
 
       - name: Regenerar crosswalk CUSIP (IAE)
         if: success()
         run: python scripts/regenerate_cusip_crosswalk.py
+
+      - name: Abrir Issue si fallo la ingesta (H5.2)
+        if: failure()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TITLE="SEC 13F ingest failure (${{ steps.quarter.outputs.quarter }})"
+          EXISTING=$(gh issue list --label sec-13f-failure --state open --json number --jq '.[0].number // empty')
+          BODY="Fallo en la ingesta trimestral 13F. Quarter: ${{ steps.quarter.outputs.quarter }}. Source: ${{ steps.source.outputs.value }}. Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          gh label create sec-13f-failure --color "d73a4a" --description "Fallo de ingesta SEC 13F" 2>/dev/null || true
+          if [ -n "$EXISTING" ]; then
+            gh issue comment "$EXISTING" --body "$BODY"
+          else
+            gh issue create --title "$TITLE" --body "$BODY" --label sec-13f-failure || true
+          fi
 
       - name: Save cache parquets 13F
         if: success()
         uses: actions/cache/save@v4
         with:
           path: data/sec_13f/processed
-          key: 13f-processed-v2-${{ hashFiles('data/sec_13f/latest_quarter.txt') }}
+          key: 13f-processed-v3-${{ hashFiles('data/sec_13f/latest_quarter.txt', 'data/sec_13f/manifests/sec_13f_*.json') }}
 
       - name: Commit y push si hay cambios
+        if: success()
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"

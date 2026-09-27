@@ -168,6 +168,11 @@ MANIFEST_DUP_THRESHOLD = 0.5
 
 TOP_N_CANDIDATES = 15   # pre-filtro por weight antes del WLS
 TOP_N_SECTOR_COMPONENTS = 20  # componentes por sector descargados y considerados en breadth
+
+# SEC 13F trimestral: dias minimos desde el cierre del trimestre antes
+# de intentar descargar el dataset. SEC publica ~45-60 dias despues.
+# Fuente unica: update_sec_13f.yml + scripts/update_sec_13f.py.
+SEC_13F_QUARTER_LAG_DAYS = 60
 TOP_N_LEADERS = 5       # cuantos se muestran en el reporte
 
 # ============================================================
