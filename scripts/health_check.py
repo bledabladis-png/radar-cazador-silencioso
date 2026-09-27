@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """Health check del sistema Radar.
 
-Verifica 7 bloques:
+Verifica 8 bloques:
   A. Workflows: ultima ejecucion por schedule dentro de ventana.
   B. Cache 13F (IAE): trimestre actualizado.
   C. Manifests: quality.status de stock_prices, market_data y commodities.
@@ -11,6 +11,7 @@ Verifica 7 bloques:
   E. Fechas no bursatiles en el indice del parquet.
   F. Patron contaminacion Europa-USA en ultima fila.
   G. Seccion IAE en el ultimo reporte generado.
+  H. Cron slots: los 4 disparos diarios de daily_run.yml en 24h.
 
 Uso:
     py scripts/health_check.py              # ejecucion local, salida consola
@@ -25,7 +26,7 @@ import json
 import os
 import subprocess
 import sys
-from datetime import date, datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 
 import pandas as pd
@@ -60,6 +61,14 @@ WORKFLOW_EXPECTATIONS = {
 
 OK, WARN, FAIL, SKIP = "OK", "WARN", "FAIL", "SKIP"
 
+# Finding 2026-09-27: GitHub Actions scheduler es best-effort, no
+# garantiza el disparo de cada slot. Concurrency queue: max protege
+# contra sustitucion, no contra no-disparo. Los 4 slots de daily_run.yml
+# deben dispararse en 24h; si faltan 2+ consecutivos, riesgo de perder
+# el ciclo sin alerta. Ver PROMPT seccion 11.26.
+CRON_SLOTS_DAILY = ("17 23", "17 3", "17 7", "17 11")  # HH:MM UTC
+CRON_WINDOW_HOURS = 24
+
 
 class Result:
     __slots__ = ("name", "status", "message")
@@ -83,6 +92,52 @@ def _run_gh(args: list) -> str | None:
         return r.stdout.strip()
     except Exception:
         return None
+
+# =========================================================
+# CHECK H - Cron slots: los 4 disparos diarios de daily_run.yml
+# =========================================================
+def check_cron_slots() -> list:
+    """Verifica que los 4 slots de daily_run.yml han disparado en 24h.
+
+    Finding 2026-09-27: GitHub Actions puede no disparar un slot
+    silenciosamente (scheduler best-effort, no garantizado). El
+    2026-09-27 solo se observaron 3 de 4 slots. Concurrency queue:
+    max no protege contra este fallo.
+
+    Devuelve OK si los 4 slots dispararon, WARN si faltan 1, FAIL
+    si faltan 2 o mas.
+    """
+    out = _run_gh([
+        "run", "list", "--workflow", "daily_run.yml",
+        "--event", "schedule", "--limit", "20",
+        "--json", "createdAt,conclusion,status",
+    ])
+    if out is None:
+        return [Result("cron_slots", SKIP, "gh no disponible")]
+    try:
+        runs = json.loads(out)
+    except Exception:
+        return [Result("cron_slots", WARN, "JSON invalido")]
+
+    now = datetime.now(timezone.utc)
+    cutoff = now - timedelta(hours=CRON_WINDOW_HOURS)
+    n = 0
+    for r in runs:
+        try:
+            created = datetime.fromisoformat(r["createdAt"].replace("Z", "+00:00"))
+        except Exception:
+            continue
+        if created >= cutoff:
+            n += 1
+
+    expected = len(CRON_SLOTS_DAILY)
+    detail = f"{n}/{expected} slots en {CRON_WINDOW_HOURS}h"
+    if n >= expected:
+        return [Result("cron_slots", OK, detail)]
+    if n == expected - 1:
+        return [Result("cron_slots", WARN, detail)]
+    return [Result("cron_slots", FAIL, detail)]
+
 
 # =========================================================
 # CHECK A - Workflows: ultima ejecucion por schedule
@@ -409,6 +464,7 @@ def run_all_checks() -> list:
     results = []
     # A
     results.extend(check_workflows())
+    results.extend(check_cron_slots())
     # B
     results.extend(check_13f_cache())
     # C
