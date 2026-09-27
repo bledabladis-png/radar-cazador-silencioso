@@ -9,6 +9,8 @@ from datetime import datetime
 import pandas as pd
 
 from src.market_calendar import _last_market_session
+from config.settings import FRESHNESS_CBOE, FRESHNESS_YAHOO
+
 from src.report.helpers import (
     _classify_freshness,
     _classify_finra_freshness,
@@ -32,7 +34,7 @@ def render_data_freshness(pcr_data, darkpool_data, sector_results):
         try:
             d = pd.Timestamp(pcr_data['last_date'])
             age = (now - d).days
-            cboe_status = _classify_freshness(age, 3, 5, 10)
+            cboe_status = _classify_freshness(age, *FRESHNESS_CBOE)
             cboe_conf = 'Alta' if cboe_status in ('CURRENT', 'RECENT') else 'Baja'
             out.append(f"| CBOE (Opciones) | {d.strftime('%Y-%m-%d')} | {age} dias | {cboe_status} | {cboe_conf} |\n")
         except:
@@ -91,7 +93,7 @@ def render_data_freshness(pcr_data, darkpool_data, sector_results):
                 continue
             _yahoo_last = _last_market_session(_df_pq.index[-1])  # FU-007
             _yahoo_age = (now - _yahoo_last).days
-            _yahoo_status = _classify_freshness(_yahoo_age, 3, 7, 14)
+            _yahoo_status = _classify_freshness(_yahoo_age, *FRESHNESS_YAHOO)
             _yahoo_conf = "Alta" if _yahoo_status in ("CURRENT", "RECENT") else "Baja"
             break
     except Exception:

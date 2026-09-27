@@ -6,6 +6,12 @@ Extraidos de src/report_generator.py (refactor C1).
 
 import pandas as pd
 
+from config.settings import (
+    FRESHNESS_DEFAULT,
+    FRESHNESS_FINRA,
+    FRESHNESS_FRED,
+)
+
 
 def _fmt_num(v, fmt="{:.2f}"):
     if pd.isna(v):
@@ -63,7 +69,13 @@ def _fmt_ad_net(advances, declines, ad_net, fmt="{:+d}"):
     return _fmt_num(ad_net, fmt)
 
 
-def _classify_freshness(age_days, max_current=3, max_recent=7, max_stale=14):
+def _classify_freshness(age_days, max_current=None, max_recent=None, max_stale=None):
+    if max_current is None:
+        max_current = FRESHNESS_DEFAULT[0]
+    if max_recent is None:
+        max_recent = FRESHNESS_DEFAULT[1]
+    if max_stale is None:
+        max_stale = FRESHNESS_DEFAULT[2]
     if age_days <= max_current:
         return 'CURRENT'
     elif age_days <= max_recent:
@@ -77,11 +89,12 @@ def _classify_freshness(age_days, max_current=3, max_recent=7, max_stale=14):
 def _classify_finra_freshness(age_days):
     """Clasificación de frescura para FINRA Dark Pools.
     Retraso regulatorio: 2-4 semanas (14-30 días). Umbrales amplios."""
-    if age_days <= 30:
+    max_current, max_recent, max_stale = FRESHNESS_FINRA
+    if age_days <= max_current:
         return 'CURRENT'
-    elif age_days <= 45:
+    elif age_days <= max_recent:
         return 'RECENT'
-    elif age_days <= 60:
+    elif age_days <= max_stale:
         return 'STALE'
     return 'ARCHIVAL'
 
@@ -130,10 +143,11 @@ def _generate_coverage_table(pcr_data, darkpool_data, sector_results):
 
 
 def _classify_fred_freshness(age_days):
-    if age_days <= 30:
+    max_current, max_recent, max_stale = FRESHNESS_FRED
+    if age_days <= max_current:
         return 'CURRENT'
-    elif age_days <= 60:
+    elif age_days <= max_recent:
         return 'RECENT'
-    elif age_days <= 90:
+    elif age_days <= max_stale:
         return 'STALE'
     return 'ARCHIVAL'

@@ -25,7 +25,18 @@ VOLATILITY_BASELINE_WINDOW = 756  # ~3 años (252 * 3)
 CACHE_HOURS = 23              # regenerar caché tras 23 horas
 CACHE_VALIDATE_TRADING_DATE = True  # verificar que la caché cubre el último día de mercado
 
-MAX_RETRIES = 3
+# ============================================================
+# FRESHNESS THRESHOLDS (src/report/helpers.py)
+# ============================================================
+# (max_current, max_recent, max_stale) en dias. Ver helpers.py.
+# Cada tupla corresponde a una fuente. Si un umbral debe cambiarse,
+# cambiarlo aqui: helpers.py lee estas constantes.
+
+FRESHNESS_DEFAULT = (3, 7, 14)    # resto de fuentes
+FRESHNESS_CBOE = (3, 5, 10)       # CBOE (options)
+FRESHNESS_YAHOO = (3, 7, 14)      # Yahoo Finance
+FRESHNESS_FINRA = (30, 45, 60)    # FINRA (retraso regulatorio 2-4 sem.)
+FRESHNESS_FRED = (30, 60, 90)     # FRED (series macro)
 
 # ============================================================
 # DATA QUALITY
