@@ -777,4 +777,37 @@ Verificacion: pyflakes limpio, compileall OK, suite 2181 + 2 skipped.
 
 ---
 
+**Anexo 2026-09-27 (post-cierre 4): cierre de sesion, 12 commits.**
+
+Sesion larga de cierre del backlog de la auditoria consolidada
+2026-09-26. 12 commits pusheados. Suite: 2184 -> 2205 + 2 skipped.
+10 tests de provider anadidos (cboe, cftc, nport, finra).
+
+Cierres por commit (orden cronologico):
+  a0c0ce4, 3aff5be  K-BLACKROCK-CSV-STALE-01 (reorder CSV + docs)
+  ff782d7, 3e967ed  state.py::save_scenario eliminado
+  1805766, dc6aea2  Cat 4 desmontado + F5.6-01 + F5.7-01 + F7-03
+  9cce7dd           F5.6-02b FRED cleanup (DGS2, put_call,
+                    get_options_data muerto)
+  4fd5d57           F7-04 freshness -> settings.py
+  bfe030c           F7-01 sector_correlation_matrix dead end
+  743896e           F5.6-03 CboeProvider except tipados
+  62d4992           F5.7-14 CFTC thresholds -> settings.py
+  b7d1c31           F5.7-19 N-PORT dinamico (trimestres, XML)
+  3376bb3           F5.7-05 FINRA get_latest_week memoize
+  d84902b           F5.6-06 datetime.now como fecha de ejecucion
+
+Hallazgo metodologico recurrente: ~50% de los findings revisados
+estaban subrogados, eran falso positivo, o ya resueltos por ciclos
+previos. Refuerza la practica de Gate 0 read-only antes de invertir
+ciclos.
+
+Pendiente externo (no accionable internamente):
+  - SEC Official List Q2 2026 TXT: sin publicar (curl 404).
+  - Fase D (auditor externo IAE): pendiente.
+
+Verificacion: pyflakes limpio, compileall OK, suite 2205 + 2 skipped.
+
+---
+
 FIN DE TRANSFER. 2026-09-27.

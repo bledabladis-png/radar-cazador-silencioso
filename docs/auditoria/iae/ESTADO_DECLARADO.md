@@ -3,7 +3,7 @@
 Estado declarado de fases, prohibiciones y hallazgos del modulo IAE.
 Documento vivo. Se actualiza cuando cambia el estado.
 
-**Actualizado:** 2026-09-27 (rev.6)
+**Actualizado:** 2026-09-27 (rev.7)
 **HEAD de cierre:** ver `ESTADO_SISTEMA.md` (se regenera con cada commit).
 **Estado del sistema:** `ESTADO_SISTEMA.md`.
 
@@ -445,9 +445,13 @@ IAE_MAESTRO). Detalle en §2.
     Impacto nulo para el pipeline: validate_history_quality.py solo
     lee date/nav/shares_outstanding. Ver PROMPT seccion 11.26 y
     seccion 12.
-  - _backfill_history (indicators/darkpool_history.py): yf.download
-    ticker a ticker en bucle. 7s residuales tras FINRA cache. Mismo
-    patron: cuello de red, no computo. Ciclo separado pendiente.
+  - _backfill_history (indicators/darkpool_history.py): SUBROGADO
+    2026-09-27. Gate 0 midio que la ruta no se ejecuta en el flujo
+    normal: darkpool.py:103 la invoca solo si len(hist) < 104; el CSV
+    actual tiene 111 filas. Ademas MAX_PER_RUN=1, asi que incluso si
+    se ejecutara costaria ~7s puntuales, no por run. K-DT3-YF-DIRECTO
+    sigue vigente como excepcion arquitectonica; las 3 condiciones de
+    reapertura no se han cumplido.
   - Cat 4 (20+ providers) - DESMONTADO 2026-09-27. NO es un bloque con
     entidad: es un agregado de 3 secciones de la auditoria consolidada
     2026-09-26 (FASE 5.6 Macro providers, FASE 5.7 Fund data+flows,
@@ -461,9 +465,31 @@ IAE_MAESTRO). Detalle en §2.
         existen; 2 tienen caller en update_sec_nport.yml), F5.6-15
         (options.py::robust_zscore es funcion distinta, no variante;
         solo comparte nombre). 2 findings.
-      - Backlog diferido (vivos probables sin ciclo abierto):
-        F5.6-02/03/04/06, F5.7-05/14/19, F7-01, F7-04. 8 findings.
-    No perseguir por defecto; abrir ciclo solo si hay motivo.
+      - Backlog diferido CERRADO en sesion 2026-09-27:
+          * F5.6-02 (fred ffill sin limite): REFUTADO. Analisis
+            empirico mostro Liquidity Score identico (delta 0.0000,
+            mismo regime). No hay bug observable.
+          * F5.6-03 (cboe except desnudo): CERRADO 743896e.
+          * F5.6-04 (cboe regex fragil): WONT FIX razonado en el
+            comentario de 743896e.
+          * F5.6-06 (datetime.now en polygon/fred): NO BUG, cerrado
+            2026-09-27 con comentarios aclaratorios (d84902b).
+          * F5.7-05 (finra is_available costoso): CERRADO con memoize
+            de get_latest_week (3376bb3).
+          * F5.7-14 (cftc thresholds hardcoded): CERRADO 62d4992.
+          * F5.7-19 (post-procesadores N-PORT congelados): CERRADO
+            b7d1c31.
+          * F7-01 (sector_correlation_matrix dead end): CERRADO
+            bfe030c.
+          * F7-04 (constantes settings.py sin uso): CERRADO 4fd5d57.
+      - Fuera del bloque Cat 4, cerrados en la misma sesion:
+          * K-BLACKROCK-CSV-STALE-01 (a0c0ce4, 3aff5be).
+          * state.py::save_scenario eliminado (ff782d7, 3e967ed).
+          * F5.6-01 (fred.is_available decorativo) y F5.7-01 (finra
+            except desnudos) cerrados en 1805766.
+          * F7-03 (nipc._weighted dead code) cerrado en 1805766.
+    Ningun finding de Cat 4 queda pendiente. Los no listados arriba
+    estan subrogados (F5.6-15) o eran falso positivo (F5.7-20).
 
 Detalle en `IAE_MAESTRO.md` seccion 5.
 
