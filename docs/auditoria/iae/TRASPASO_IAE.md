@@ -16,6 +16,26 @@ Si eres un asistente entrante (otro LLM o humano):
 4. **No toques codigo productivo del IAE sin dictamen del auditor externo.** Hay una auditoria abierta (seccion 5).
 5. **Al arrancar**, ejecuta los comandos de la seccion 10 y compara con lo esperado.
 
+### 0.1. Lecturas obligatorias antes de operar
+
+En este orden:
+
+1. **`PROMPT_MAESTRO.md`** - norma vigente del sistema (rol, metodologia, arquitectura).
+2. **`TRASPASO_IAE.md`** - este documento (contexto operativo del IAE).
+3. **`IAE_MAESTRO.md`** - referencia unica del modulo IAE. 110 KB, 2400+ lineas.
+   Contiene la arquitectura completa, formulas exactas del NIPC, superficie
+   publica (115 funciones), evidencia empirica E2E y limitaciones declaradas.
+   **Imprescindible para entender como funciona el modulo.**
+4. **`AUDITORIA_EXTERNA_2026-09-27.md`** - dictamen del auditor externo.
+   Estado de los hallazgos H1-A / H1-B / H4 / H5.
+5. **`DISENO_H1B.md`** - diseno tecnico del fix bloqueante principal.
+   Pendiente de aprobacion del auditor antes de implementar.
+6. **`ESTADO_DECLARADO.md`** - fases del IAE, deuda activa, prohibiciones.
+7. **`ESTADO_SISTEMA.md`** - hechos verificables (HEAD, tests, integridad).
+   Autogenerado, no editar a mano.
+8. **`EVIDENCIA_FORENSE_H1A.md`** - cadena forense del drift historico (opcional,
+   solo si necesitas reproducir la prueba del cierre H1-A).
+
 ---
 
 ## 1. El sistema en una frase
@@ -127,13 +147,27 @@ Reglas que exige:
 6. **No congelar NIPC baseline** hasta despues del fix. `-4.317.678.307` = `PRE_H1B_OBSERVATION`; `-4.264.449.932` = "resultado de mitigacion".
 7. **Rehacer** E2E + reconciliacion + cobertura + determinismo tras el fix.
 
-### 5.4. Lo que NO debes hacer
+### 5.4. Lo que NO debes hacer (prohibiciones consolidadas del auditor)
 
 - **No tocar codigo productivo del IAE** hasta cerrar H1-B con el auditor.
-- **No congelar ningun NIPC como baseline.**
-- **No actualizar los `EXPECTED` hardcoded del E2E** para "hacer pasar" el test.
-- **No elevar cobertura de tests artificialmente.**
-- **No commitear outputs del pipeline** mezclados con cambios de 13F.
+  El diseno debe aprobarse antes de implementar (ver `DISENO_H1B.md`).
+- **No congelar ningun NIPC como baseline.** Ni `-4.317.678.307` ni
+  `-4.264.449.932`. Los nombres validos son `PRE_H1B_OBSERVATION` y
+  `MITIGATION_RESULT`. El baseline contractual final se creara solo
+  despues de cerrar H1-B y con aprobacion del auditor.
+- **No actualizar los `EXPECTED` hardcoded del E2E** para "hacer pasar" el
+  test. El E2E fallido es evidencia de un drift real, no un bug del test.
+- **No elevar cobertura de tests artificialmente.** El auditor exige
+  verificacion funcional, no numeros de cobertura.
+- **No commitear outputs del pipeline** mezclados con cambios de 13F
+  (leccion H5.7 del auditor).
+- **No usar `--quarter` con formato distinto a `YYYYQn`** (mayusculas).
+  Derivado de H5.4: el workflow no valida formato.
+- **No modificar `_filter_canonical` sin coordinar con el diseno H1-B.**
+  La regex `TITLEOFCLASS` es defensa secundaria, no autoridad principal.
+  El filtro primario va en `operational_universe.py::_apply_5_3b`.
+- **No introducir `fillna`/`ffill`/`bfill`/`interpolate`** en los caminos
+  del IAE sin declaracion explicita. Derivado de O1 del auditor.
 
 ### 5.5. Siguiente paso inmediato
 
@@ -236,6 +270,8 @@ Esperado: `compileall OK` - `pyflakes LIMPIO` - `2205 passed + 2 skipped`.
 | `docs/auditoria/iae/ESTADO_DECLARADO.md` | Fases IAE, deuda activa, prohibiciones. |
 | `docs/auditoria/iae/ESTADO_SISTEMA.md` | Hechos verificables. Autogenerado. |
 | `docs/auditoria/iae/AUDITORIA_EXTERNA_2026-09-27.md` | Registro consolidado del dictamen. |
+| `docs/auditoria/iae/DISENO_H1B.md` | Diseno tecnico del fix bloqueante H1-B. Pendiente de aprobacion. |
+| `docs/auditoria/iae/EVIDENCIA_FORENSE_H1A.md` | Cadena forense del cierre H1-A. Reproducible. |
 | `docs/auditoria/iae/TRASPASO_IAE.md` | Este documento. |
 | `docs/auditoria/iae/evidence/` | Evidencia empirica por ciclo. |
 
@@ -322,3 +358,7 @@ El auditor externo es otro LLM. Se le entrega el material en formato Markdown au
 
 **Fin del traspaso.**
 Ultima actualizacion: 2026-09-27, HEAD `de8b8ff`.
+
+Documentos anadidos tras la primera version:
+- `DISENO_H1B.md` (13547 bytes) - diseno tecnico del fix bloqueante.
+- `EVIDENCIA_FORENSE_H1A.md` (7476 bytes) - cadena forense del cierre H1-A.
