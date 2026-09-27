@@ -8,14 +8,10 @@ FRED_SERIES = {
     "reverse_repo": "RRPONTSYD",
     "fed_funds": "FEDFUNDS",
     "treasury_3m": "DTB3",
-    "treasury_2y": "DTB2Y",
+    "treasury_2y": "DGS2",
     "treasury_5y": "DGS5",
     "treasury_10y": "DGS10",
     "treasury_30y": "DGS30",
-    # Opciones
-    "put_call_total": "PCALLQ622S",
-    "put_call_equity": "PCEQVQ622S",
-    "put_call_index": "PCINDQ622S",
 }
 
 class FredProvider(MarketDataProvider):
@@ -42,7 +38,8 @@ class FredProvider(MarketDataProvider):
                 full_index = pd.date_range(start=s.index[0], end=today, freq='D')
                 s = s.reindex(full_index).ffill()
             return s
-        except:
+        except (KeyError, ValueError, TypeError) as e:
+            print(f"FRED {series_id}: {e}")
             return pd.Series(dtype=float)
 
     def get_prices(self, tickers: list, start: str = None, end: str = None, period: str = "10y") -> pd.DataFrame:
@@ -69,12 +66,3 @@ class FredProvider(MarketDataProvider):
                     df[key] = s
         return df
 
-    def get_options_data(self, index=None) -> pd.DataFrame:
-        series_ids = ["put_call_total", "put_call_equity", "put_call_index"]
-        df = pd.DataFrame()
-        for key in series_ids:
-            if key in FRED_SERIES:
-                s = self._download_series(FRED_SERIES[key], index=index)
-                if not s.empty:
-                    df[key] = s
-        return df

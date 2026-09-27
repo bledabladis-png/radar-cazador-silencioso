@@ -100,24 +100,3 @@ class PolygonProvider(MarketDataProvider):
     def get_fed_data(self, series=None):
         raise NotImplementedError("Usar FRED para datos de la Fed")
 
-    def get_options_data(self, index=None):
-        today = datetime.now().strftime('%Y-%m-%d')
-        two_years_ago = (datetime.now() - timedelta(days=730)).strftime('%Y-%m-%d')
-        url = f"https://api.polygon.io/v2/aggs/ticker/SPY/range/1/day/{two_years_ago}/{today}?adjusted=true&sort=asc&limit=5000&apiKey={self.api_key}"
-        try:
-            resp = requests.get(url, timeout=10)
-            if resp.status_code != 200:
-                return pd.DataFrame()
-            data = resp.json()
-            if 'results' not in data:
-                return pd.DataFrame()
-            df = pd.DataFrame(data['results'])
-            df['date'] = pd.to_datetime(df['t'], unit='ms')
-            df.set_index('date', inplace=True)
-            result = pd.DataFrame(index=df.index)
-            result['volume'] = df['v']
-            result['close'] = df['c']
-            return result
-        except Exception as e:
-            print(f"Error descargando datos de Polygon: {e}")
-            return pd.DataFrame()

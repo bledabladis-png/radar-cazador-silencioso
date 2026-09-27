@@ -131,15 +131,3 @@ class DataRouter:
             return None
         return combined
 
-    def get_options_data(self):
-        for name in ["polygon", "fred"]:
-            provider = self.providers[name]
-            if provider.is_available():
-                try:
-                    data = provider.get_options_data()
-                    if data is not None and not data.empty:
-                        return data
-                except Exception as e:
-                    print(f"  [WARN] router: {provider.get_name()} get_options_data fallo: {e}")
-                    continue
-        return None
