@@ -16,12 +16,26 @@ class CboeProvider(MarketDataProvider):
         try:
             resp = requests.get(URL, headers={"User-Agent": "Mozilla/5.0"}, timeout=10)
             return resp.status_code == 200
-        except:
+        except requests.RequestException:
             return False
 
     def _extract_json(self):
-        """Extrae el JSON de optionsData del HTML del CBOE."""
-        html = requests.get(URL, headers={"User-Agent": "Mozilla/5.0"}, timeout=30).text
+        """Extrae el JSON de optionsData del HTML del CBOE.
+
+        F5.6-03: un fallo de red (timeout, conexion cortada) devolvia
+        la excepcion al caller, propagaba hasta compute_pcr_signals y
+        tumbaba el pipeline. Ahora devuelve None: el caller ya maneja
+        el caso 'sin datos' como degradacion (return None).
+
+        F5.6-04 (WONT FIX razonado): la regex sobre HTML es fragil en
+        teoria, pero funciona hoy contra el HTML real de CBOE. Rediseñar
+        el parser (BeautifulSoup / json puro) es ciclo aparte.
+        """
+        try:
+            html = requests.get(URL, headers={"User-Agent": "Mozilla/5.0"}, timeout=30).text
+        except requests.RequestException as e:
+            print(f"  [WARN] cboe._extract_json: red fallo: {e}")
+            return None
         pattern = r'\[1,"(.*?)"\]'
         matches = re.findall(pattern, html)
         if not matches:
@@ -56,7 +70,10 @@ class CboeProvider(MarketDataProvider):
     def _ratio(self, data, name):
         for item in data.get("ratios", []):
             if item.get("name") == name:
-                return float(item["value"])
+                try:
+                    return float(item["value"])
+                except (KeyError, TypeError, ValueError):
+                    return None
         return None
 
     def _section(self, data, name):
