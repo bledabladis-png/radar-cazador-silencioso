@@ -686,4 +686,33 @@ auditoria radar 2026-09-26. 12 ciclos completados. Suite 1857 -> 2184.
 
 ---
 
+**Anexo 2026-09-27 (post-cierre): K-BLACKROCK-CSV-STALE-01 CERRADO.**
+
+Ciclo separado tras el cierre de los 12 ciclos de la sesion.
+
+Gate 0 read-only localizo el writer real de los 4 CSV (dentro de
+cada provider, no en flows_primary). Inspeccion de columnas:
+flow_zscore_regime en posicion 8 (BlackRock) / 9 (Amundi) en el
+writer, vs posicion 10/11 en el CSV commiteado. Enunciado original
+del finding ('schema anterior a a3c2705') era incorrecto: el commit
+a3c2705 si modifico los CSV, pero el reorder no se propago.
+
+Cierre con reorder byte-preserving de los 3 CSV afectados
+(blackrock_dax, blackrock_isf, amundi_lyxi). IWM excluido: su
+schema es evolutivo por update_history (concat + drop_duplicates),
+21 columnas (13 producidas por el codigo + 8 de legado), no un
+desfase.
+
+Verificacion: validate_history_quality.py exit 0; diff 15127
+insertions / 15127 deletions; hunk headers identicos; 0 reformateo
+de floats; suite 2184 passed + 2 skipped. Commit a0c0ce4.
+
+Hallazgo colateral: validate_history_quality.py (script autonomo
+en daily_run.yml:241) SI consume esos CSV, contradiciendo el
+enunciado original del finding ('nadie los lee'). Verificado: solo
+exige existencia + min_rows=20 + no-NaN en date/nav/shares_outstanding.
+No lee flow_zscore_regime.
+
+---
+
 FIN DE TRANSFER. 2026-09-27.

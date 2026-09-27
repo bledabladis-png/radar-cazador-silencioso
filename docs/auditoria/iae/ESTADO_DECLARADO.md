@@ -3,7 +3,7 @@
 Estado declarado de fases, prohibiciones y hallazgos del modulo IAE.
 Documento vivo. Se actualiza cuando cambia el estado.
 
-**Actualizado:** 2026-09-27 (rev.3)
+**Actualizado:** 2026-09-27 (rev.4)
 **HEAD de cierre:** ver `ESTADO_SISTEMA.md` (se regenera con cada commit).
 **Estado del sistema:** `ESTADO_SISTEMA.md`.
 
@@ -430,12 +430,15 @@ IAE_MAESTRO). Detalle en §2.
     9da8b53. Finding: slot '17 3' no disparo desde el deploy del
     multi-slot. Anadidos _cron_probe.yml (aislado), 5o slot '17 5' y
     bloque H en health_check.py que verifica los slots slot-por-slot.
-  - K-BLACKROCK-CSV-STALE-01 (2026-09-27): ABIERTO. Los CSV
-    outputs/history/blackrock_{dax,isf}_primary_flow.csv en git tienen
-    schema anterior al commit a3c2705 (flow_zscore_regime al final vs
-    posicion 9 actual). Impacto nulo para el pipeline. Decision politica
-    pendiente: regenerar / ignorar / congelar via workflow. Ver PROMPT
-    seccion 11.26 y seccion 12.
+  - K-BLACKROCK-CSV-STALE-01 (2026-09-27): CERRADO 2026-09-27
+    (commit a0c0ce4). Rectificacion: no era 'schema anterior' sino
+    'orden de columnas distinto al del writer'. 3 CSV afectados
+    (blackrock_dax, blackrock_isf, amundi_lyxi) con flow_zscore_regime
+    al final vs posicion 8/9 del writer. IWM excluido por diseno
+    (update_history concat + drop_duplicates). Fix byte-preserving.
+    Impacto nulo para el pipeline: validate_history_quality.py solo
+    lee date/nav/shares_outstanding. Ver PROMPT seccion 11.26 y
+    seccion 12.
   - _backfill_history (indicators/darkpool_history.py): yf.download
     ticker a ticker en bucle. 7s residuales tras FINRA cache. Mismo
     patron: cuello de red, no computo. Ciclo separado pendiente.

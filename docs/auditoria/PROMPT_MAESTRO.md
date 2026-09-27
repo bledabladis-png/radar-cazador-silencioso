@@ -1,6 +1,6 @@
 # PROMPT MAESTRO v7.9 - INGENIERO SUPERVISOR DEL RADAR DE ROTACION SECTORIAL
 
-**Actualizado:** 2026-09-27 (v7.9: cierre A5-70 (refactor BlackRock providers) + rectificacion G7/G8 + registro K-BLACKROCK-CSV-STALE-01. Suite 2173 -> 2184 + 2 skipped. Base v7.8: ciclo F2.4-10/11/12/13 - persistencia de estado MTE reparada (histeresis adaptativa operativa), F2.4-11 except acotado en engine.py, F2.4-13 documentado WONT FIX, 19 warnings pyflakes limpiados. Suite 2163 -> 2173 + 2 skipped. Base v7.7: ciclo Cat 1 - 5 fixes quirurgicos de la auditoria radar pusheados (A5-71, F3-18, F2.4-01/02/03). Suite 2097 -> 2163 + 2 skipped. Base v7.6: auditoria interna del prompt - correcciones documentales en el arbol §4.2 (indicators/darkpool, providers, outputs/*, docs/plan, audit, src/external, provenance LSE, scripts nuevos), en los listados §4.3/§4.4 (iae.py, iae_section.py) y en la referencia §10.1. Sin cambios de codigo ni de arquitectura. Base v7.5: ciclo F-IAE-LSE-INTEGRATION + F-IAE-CRON-02 / F-IAE-GATE-01. Cifras internas alineadas: suite 1857 passed + 2 skipped, bloque IAE 845 tests).
+**Actualizado:** 2026-09-27 (v7.10: cierre K-BLACKROCK-CSV-STALE-01 (reordenacion byte-preserving de columnas de 3 CSV fund-flow al orden del writer). Sin cambios de codigo productivo. Base v7.9: cierre A5-70 (refactor BlackRock providers) + rectificacion G7/G8 + registro K-BLACKROCK-CSV-STALE-01. Suite 2173 -> 2184 + 2 skipped. Base v7.8: ciclo F2.4-10/11/12/13 - persistencia de estado MTE reparada (histeresis adaptativa operativa), F2.4-11 except acotado en engine.py, F2.4-13 documentado WONT FIX, 19 warnings pyflakes limpiados. Suite 2163 -> 2173 + 2 skipped. Base v7.7: ciclo Cat 1 - 5 fixes quirurgicos de la auditoria radar pusheados (A5-71, F3-18, F2.4-01/02/03). Suite 2097 -> 2163 + 2 skipped. Base v7.6: auditoria interna del prompt - correcciones documentales en el arbol §4.2 (indicators/darkpool, providers, outputs/*, docs/plan, audit, src/external, provenance LSE, scripts nuevos), en los listados §4.3/§4.4 (iae.py, iae_section.py) y en la referencia §10.1. Sin cambios de codigo ni de arquitectura. Base v7.5: ciclo F-IAE-LSE-INTEGRATION + F-IAE-CRON-02 / F-IAE-GATE-01. Cifras internas alineadas: suite 1857 passed + 2 skipped, bloque IAE 845 tests).
 
 Este documento describe **rol, metodologia, arquitectura y prohibiciones vigentes**.
 **NO declara el estado del sistema.** Para estado, ver:
@@ -1155,26 +1155,33 @@ acreditada por G9 con igualdad SHA256 byte a byte. La combinacion
 G7/G8 + G9 cubre el espectro entero. Dictamen auditor 2026-09-27
 ratifica el cierre sin exigir modificacion de codigo.
 
-**Fuera de alcance (ciclo separado):**
-K-BLACKROCK-CSV-STALE-01 (ver seccion 12).
+**Fuera de alcance (ciclo separado, cerrado 2026-09-27):**
+K-BLACKROCK-CSV-STALE-01 (ver seccion 12). Reclasificado y cerrado
+2026-09-27 (commit `a0c0ce4`).
 
-Commits pusheados: `4049439`.
+Commits pusheados: `4049439`, `a0c0ce4`.
 
 ## SECCION 12 - LIMITACIONES CONOCIDAS
-K-BLACKROCK-CSV-STALE-01 (2026-09-27) -> ABIERTO. Los CSV
-`outputs/history/blackrock_{dax,isf}_primary_flow.csv`
-versionados en git tienen un schema anterior al introducido por
-`a3c2705` (2026-09-24): el codigo define `flow_zscore_regime` en
-posicion 9; los CSV commiteados lo tienen al final. El workflow
-diario no regenera estos CSV desde CI (BlackRock bloquea con
-Referer desde runners). Se regeneran solo en runs locales.
-Impacto: nulo para el pipeline (los CSV son output de auditoria
-manual, no input del radar). No reabre A5-70. Requiere decision
-de politica: (a) regenerar y commitear con schema actual,
-(b) dejar de versionarlos, (c) congelar via workflow dedicado.
-El dictamen auditor 2026-09-27 recomienda determinar primero si
-los CSV son artefactos de evidencia historica o derivados locales,
-antes de decidir la politica. Ver seccion 11.26.
+K-BLACKROCK-CSV-STALE-01 (2026-09-27) -> CERRADO 2026-09-27 (commit
+`a0c0ce4`). Enunciado rectificado: no era 'schema anterior al
+introducido por a3c2705' sino 'orden de columnas distinto al del
+writer actual'. 3 de los 4 CSV (blackrock_dax, blackrock_isf,
+amundi_lyxi) tenian flow_zscore_regime al final, mientras el writer
+lo emite en posicion 8 (BlackRock) / 9 (Amundi). El cuarto
+(blackrock_iwm_historical.csv) NO es un desfase: su schema lo
+gestiona update_history via concat + drop_duplicates por diseno
+(21 columnas, 13 producidas por el codigo actual, 8 de legado).
+
+Impacto: cosmetico, no funcional. `validate_history_quality.py`
+solo verifica existencia + min_rows=20 + no-NaN en date/nav/
+shares_outstanding. Nadie lee flow_zscore_regime desde los CSV.
+Ni src/, ni scripts/, ni workflows, ni tests los consumen como
+datos.
+
+Fix aplicado: reordenacion byte-preserving de los 3 CSV al orden
+del writer (sin reformateo de floats, sin tocar EOL ni BOM).
+Insertions == deletions, hunk headers identicos. Validador exit 0.
+IWM excluido por diseno. Ver seccion 11.26.
 
 20 tickers .L sin provider oficial -> RESUELTO 2026-09-26 via F-IAE-LSE-INTEGRATION.
 Ahora se cubren con el scraper privado `lse-close-scraper` (Refinitiv Widgets)
@@ -1531,4 +1538,4 @@ que el objetivo es IMPLEMENTARLO. No inicies un nuevo ciclo de
 propuestas->dictamenes sobre A.6.2-bis sin antes consultar con el
 usuario. Ver IAE_MAESTRO.md para el contexto.
 
-Fin del prompt maestro v7.6.
+Fin del prompt maestro v7.10.
