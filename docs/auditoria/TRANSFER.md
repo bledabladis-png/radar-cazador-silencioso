@@ -847,4 +847,42 @@ Verificacion: pyflakes limpio, compileall OK, suite 2205 + 2 skipped.
 
 ---
 
+**Anexo 2026-09-27 (post-cierre 6): auditoria externa del IAE.**
+
+Ciclo de auditoria externa iniciado. Se entrega informe completo al
+auditor externo (LLM independiente). Dictamen: APROBADO CON CONDICIONES.
+
+Documentos nuevos creados:
+  - docs/auditoria/iae/AUDITORIA_EXTERNA_2026-09-27.md
+    Registro consolidado del dictamen + hallazgos H1-A/H1-B/H4/H5.
+  - docs/auditoria/iae/TRASPASO_IAE.md
+    Documento maestro autocontenido para el asistente entrante.
+
+Hallazgos bloqueantes al cierre:
+  - H1-B (clasificacion CALL/PUT incompleta): +53.228.375 de dano sobre
+    el NIPC actual. Fix definitivo exige mapping CUSIP->tipo desde
+    Official List trimestral.
+  - H5.3 (dependencia manual Q2 2026): commit c5e3ee0 con autor humano.
+
+Hallazgos cerrados:
+  - H1-A (drift historico del E2E): causa demostrada (regeneracion
+    crosswalk Fase G). Prueba forense CUSIP-por-CUSIP.
+  - H5.6 (Official List Q2 fail): resuelto con sufijo -txt.
+
+Sin cambios en la logica de calculo productiva del IAE en este ciclo.
+El commit 08a6c6a si toco codigo de workflow y scripts de descarga, pero
+NO la logica de calculo del NIPC.
+
+Estado del NIPC:
+  - -4.317.678.307 = PRE_H1B_OBSERVATION (no baseline).
+  - -4.264.449.932 = resultado de mitigacion (regex TITLEOFCLASS).
+  - Baseline contractual final: pendiente de cierre H1-B.
+
+Siguiente paso: Gate 0 de H1-B (verificar que las 3 Official List
+locales contienen Option Indicator parseable).
+
+Verificacion: pyflakes limpio, compileall OK, suite 2205 + 2 skipped.
+
+---
+
 FIN DE TRANSFER. 2026-09-27.

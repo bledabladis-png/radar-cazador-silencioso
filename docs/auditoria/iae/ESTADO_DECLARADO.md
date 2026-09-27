@@ -3,7 +3,7 @@
 Estado declarado de fases, prohibiciones y hallazgos del modulo IAE.
 Documento vivo. Se actualiza cuando cambia el estado.
 
-**Actualizado:** 2026-09-27 (rev.8)
+**Actualizado:** 2026-09-27 (rev.9)
 **HEAD de cierre:** ver `ESTADO_SISTEMA.md` (se regenera con cada commit).
 **Estado del sistema:** `ESTADO_SISTEMA.md`.
 
@@ -250,6 +250,36 @@ IAE_MAESTRO). Detalle en §2.
 ---
 
 ## 3. Deuda activa
+
+**Auditoria externa del IAE (2026-09-27) - Estado: APROBADO CON CONDICIONES.**
+Detalle completo en `AUDITORIA_EXTERNA_2026-09-27.md` y `TRASPASO_IAE.md`.
+
+- **H1-A (drift historico del E2E):** CERRADO. Prueba forense: crosswalk
+  regenerado por Fase G. Prueba directa: restaurar crosswalk 7caa86b
+  reproduce el golden seccion 12.5 con tolerancia 0.
+- **H1-B (clasificacion CALL/PUT):** ABIERTO / BLOQUEANTE. El filtro
+  `_filter_canonical` acepta filas con `PUTCALL=NULL` y TITLEOFCLASS con
+  semantica de opcion. Dano medido: +53.228.375 sobre el NIPC actual
+  (-4.317.678.307 -> -4.264.449.932 con filtro reforzado). Fix definitivo
+  exige mapping CUSIP->tipo desde Official List trimestral. No congelar
+  NIPC baseline hasta cerrar H1-B.
+- **H4 (golden versionado):** ABIERTO, pendiente de H1-B.
+- **H5 (workflow trimestral):** AUDITADO / HALLAZGOS ABIERTOS.
+  - H5.1 (MEDIO): criterio de seleccion duplicado (workflow 51d vs script 60d).
+  - H5.2 (MEDIO): fallo de ingesta sin alerta (no retry, no Issue).
+  - H5.3 (BLOQUEANTE): Q2 2026 ingestado manualmente (commit c5e3ee0,
+    autor humano, fuera de cron).
+  - H5.4 (BAJO): workflow no valida formato de inputs.quarter.
+  - H5.5 (BAJO): cache no invalida ante republicaciones SEC.
+  - H5.6 (CERRADO / HISTORICO): Official List Q2 fail (404) resuelto
+    con sufijo -txt.
+  - H5.7 (BAJO / HISTORICO): commit mixto c5e3ee0 (13F + outputs pipeline).
+- **O1 (observacion):** falta evidencia especifica de ausencia de
+  imputacion en todos los caminos del IAE.
+- **H2/H3 (no bloqueantes):** contadores documentales desactualizados;
+  scripts auxiliares sin clasificacion explicita.
+
+---
 
 - Integracion a `run.py` completada el 2026-09-23 (fase adicional del
   pipeline productivo, + seccion del reporte diario). La integracion a

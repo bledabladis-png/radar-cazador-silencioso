@@ -2,7 +2,7 @@
 
 Hechos verificables del sistema. Generado por script.
 
-**Generado en:** 2026-09-27 15:14:07 UTC
+**Generado en:** 2026-09-27 20:09:56 UTC
 **Snapshot tomado sobre:** commit HEAD de la fecha indicada, al momento de generar
 **NO editar a mano.** Regenerar con:
 
@@ -16,16 +16,16 @@ proyecto describen su tema; NO declaran el estado del sistema.
 
 ## 1. Git
 
-- **HEAD:** `e672f65`
-- **HEAD completo:** `e672f65625349e1cd144e5e1ee8156334ca45c3a`
-- **Fecha commit HEAD:** 2026-09-27 17:12:06 +0200
+- **HEAD:** `de8b8ff`
+- **HEAD completo:** `de8b8ffa34102a19a6005fce584a34a8268dae87`
+- **Fecha commit HEAD:** 2026-09-27 19:33:32 +0200
 - **Ahead:** 0
 - **Behind:** 0
-- **origin/main:** `e672f65`
+- **origin/main:** `de8b8ff`
 
 ## 2. Tests (pytest real)
 
-- **Resumen:** 2184 passed, 2 skipped in 70.94s (0:01:10)
+- **Resumen:** 2205 passed, 2 skipped in 73.36s (0:01:13)
 - **Exit code:** 0
 
 ## 3. Integridad del codigo
@@ -44,7 +44,7 @@ proyecto describen su tema; NO declaran el estado del sistema.
 | `src/institutional_accumulation/aggregation/catalog_validator.py` | 94 |
 | `src/institutional_accumulation/aggregation/coverage.py` | 258 |
 | `src/institutional_accumulation/aggregation/delta_shares.py` | 380 |
-| `src/institutional_accumulation/aggregation/nipc.py` | 395 |
+| `src/institutional_accumulation/aggregation/nipc.py` | 387 |
 | `src/institutional_accumulation/aggregation/reporting_dedup.py` | 880 |
 | `src/institutional_accumulation/catalog_pit.py` | 232 |
 | `src/institutional_accumulation/identity/__init__.py` | 13 |
@@ -73,7 +73,7 @@ proyecto describen su tema; NO declaran el estado del sistema.
 | `src/institutional_accumulation/security_type.py` | 397 |
 | `src/institutional_accumulation/temporal_validity.py` | 92 |
 | `src/institutional_accumulation/timestamps.py` | 153 |
-| **TOTAL** | **36 ficheros, 8017 LOC** |
+| **TOTAL** | **36 ficheros, 8009 LOC** |
 
 ## 5. Datos IAE
 
@@ -104,7 +104,7 @@ proyecto describen su tema; NO declaran el estado del sistema.
 - `scripts/regenerate_radar_catalog.py`: 238 LOC
 - `scripts/regenerate_cusip_crosswalk.py`: 225 LOC
 - `scripts/update_sec_13f.py`: 237 LOC
-- `scripts/download_official_list_13f.py`: 131 LOC
+- `scripts/download_official_list_13f.py`: 147 LOC
 
 ## 7. Evidencia empirica (directorios)
 
