@@ -13,13 +13,13 @@ Reglas de personalidad y metodo: `PROMPT_MAESTRO.md` secciones 1 y 3.
 
 ---
 
-## Estado al cierre de la sesion (2026-09-26)
+## Estado al cierre de la sesion (2026-09-27)
 
     HEAD                 ver docs/auditoria/iae/ESTADO_SISTEMA.md
     Ahead                0 (sincronizado con origin/main)
     Working tree         LIMPIO
     Tests IAE            845 passed (criterio AST, 45 ficheros)
-    Suite global         1857 passed + 2 skipped + 0 failed
+    Suite global         2184 passed + 2 skipped + 0 failed
                          (los 3 test_freshness pasan tras run.py; vuelven
                           a fallar si los parquets llevan >4 dias sin
                           refrescar - ver nota abajo)
@@ -573,4 +573,117 @@ sistema, no introduce decisiones nuevas, no modifica arquitectura.
 
 ---
 
-FIN DE TRANSFER. 2026-09-26.
+## Sesion 2026-09-27 (12 ciclos: Cat 1 + MTE + providers + cron + A5-70)
+
+**Resumen.** Sesion de cierre del backlog MEDIA/BAJA pendiente de la
+auditoria radar 2026-09-26. 12 ciclos completados. Suite 1857 -> 2184.
+
+**Commits pusheados (sobre 062cd10):**
+
+    8abb6b0  fix(providers): A5-71 except acotado en parse_fecha_es (blackrock x2)
+    cf20292  fix(commodities): F3-18 sort_index fuera del bucle preserva in-place
+    c576158  test(providers): cubrir parse_fecha_es A5-71 (52 tests)
+    9a6ff6a  fix(mte): F2.4-01 + F2.4-02 + F2.4-03 (auditoria radar)
+    45124fd  docs(audit): cerrar ciclo Cat 1 (v7.6 -> v7.7)
+    e8d68c3  fix(tests): aislar test_indices_intl con tmp_path (side-effect)
+    dc16f5c  chore(tests): limpiar 19 warnings pyflakes (F401 + F841 + F541)
+    6e5cf03  fix(mte): F2.4-11 except acotado en engine.py + docstring F2.4-13
+    aff0afd  fix(mte): F2.4-10 persistir pending + F2.4-12 (ii) reset temporal
+    9c07ff8  docs(audit): cerrar ciclo F2.4-10/11/12/13 (v7.7 -> v7.8)
+    12b220e  refactor(mte): F2.4-04 eliminar codigo muerto NFCI/OAS
+    062cd10  perf(finra): cache local por (endpoint, payload) 30d hit / 24h empty
+    03f3b42  ops(ci): probe cron 17 3 + 5o slot defensivo + health-check
+    f49277a  feat(health-check): bloque H verifica los 4 cron slots
+    9da8b53  fix(health-check): bloque H detecta slot-por-slot (no agregado 24h)
+    4049439  refactor(providers): A5-70 extraer _blackrock_base (DAXEX + ISF.L)
+    e672f65  docs(audit): cierre A5-70 + rectificacion G7/G8 + K-BLACKROCK-CSV
+
+**Ciclos cerrados:**
+
+1. **Cat 1 quirurgicos.** A5-71 (except acotado en blackrock x2) + F3-18
+   (sort_index fuera del bucle) + F2.4-01/02/03 (MTE scoring). 52 tests
+   nuevos de parse_fecha_es. Commits 8abb6b0..9a6ff6a + docs 45124fd.
+
+2. **Fix side-effect en test.** test_indices_intl_con_acumulacion
+   escribia en outputs/report/ real sin tmp_path. Mismo patron que el CSV
+   contaminado con AAA,1.5. Fix: anadir tmp_path + monkeypatch.chdir.
+   Commit e8d68c3.
+
+3. **19 warnings pyflakes.** Limpiados (F401 + F841 + F541) en 12 ficheros
+   de tests, introducidos por los commits de coverage previos.
+   Commit dc16f5c.
+
+4. **F2.4-11 + F2.4-13.** except acotado en engine.py L89; consensus_score
+   documentado como WONT FIX (mezcla de escalas intencional). Commit
+   6e5cf03.
+
+5. **F2.4-10 + F2.4-12 (ii).** Histeresis adaptativa MTE estaba
+   desactivada en produccion: classify_mte escribia via save_scenario
+   pero engine.py sobreescribia el state file sin pending. Fix:
+   classify_mte ya no escribe; engine.py es el unico writer. Anclado por
+   8 tests (5 ramas + hysteresis 2 runs + 2 reset). Golden MTE intacto.
+   Commit aff0afd.
+
+6. **F2.4-04.** robust_zscore_series en credit_stress_score era codigo
+   muerto (nunca se ejecutaba: nfci_series/credit_oas_series siempre
+   None). Eliminadas 182 LOC. Commit 12b220e.
+
+7. **FINRA cache.** compute_darkpool_signals tardaba 68s por 25 requests
+   paginadas con sleep(2). Anadida cache local por (endpoint, payload)
+   con TTL 30d hit / 24h empty. Segunda llamada: 68s -> 0.04s.
+   actions/cache@v4 ya existente en daily_run.yml propaga el beneficio
+   a CI. Commit 062cd10.
+
+8. **Cron probe + 5o slot + health-check.** Finding: slot '17 3' no
+   habia disparado desde el deploy del multi-slot (25/09). Causa probable:
+   GitHub Actions scheduler best-effort. Solucion:
+   - _cron_probe.yml: workflow aislado con solo '17 3' para diagnostico.
+   - 5o slot '17 5' defensivo.
+   - health_check.py bloque H: verifica los slots slot-por-slot.
+   Commits 03f3b42, f49277a, 9da8b53.
+
+9. **A5-70.** Refactor blackrock_fund_data + blackrock_isf_fund_data a
+   _blackrock_base.py (213 LOC) + 2 wrappers (56 LOC c/u). -153 LOC netas,
+   ~90% duplicacion eliminada. 15 gates superados con dictamen de auditor
+   externo (GO CONDICIONADO -> CERRADO). 11 tests directos. Manifiesto
+   SHA256 versionado en docs/auditoria/a5_70_baseline.json. Commit 4049439.
+
+**Docs:** v7.6 -> v7.7 -> v7.8 -> v7.9.
+
+**Pendientes reales al cierre:**
+
+- **K-BLACKROCK-CSV-STALE-01.** Los CSV blackrock_{dax,isf}_primary_flow.csv
+  en git tienen schema anterior al commit a3c2705. Decision politica
+  pendiente: (a) regenerar con schema actual, (b) dejar de versionarlos,
+  (c) congelar via workflow. El auditor recomienda determinar primero si
+  son evidencia historica o derivados locales. No reabre A5-70.
+
+- **_backfill_history (indicators/darkpool_history.py).** yf.download
+  ticker a ticker en bucle. 7s residuales en compute_darkpool_signals
+  tras FINRA cache. Mismo patron que FINRA: cuello de red, no computo.
+
+- **Cat 4 (20+ providers).** Bloque grande. Requiere Gate 0 read-only
+  para filtrar vigentes vs obsoletos (precedente 2026-09-17: 9/9 BAJA
+  revisados eran obsoletos).
+
+- **_cron_probe.yml.** En observacion 24-48h. Determinar si '17 3'
+  dispara alguna vez de forma aislada.
+
+**Observaciones metodologicas aprendidas en esta sesion:**
+
+- Heredoc PowerShell: acentos y caracteres no-ASCII se manglean al
+  procesar here-strings. Patron seguro: placeholders ASCII +
+  chr(codepoint) dentro del script Python.
+- `py -c "..."` con comillas dobles anidadas rompe el parser. Usar
+  fichero Python temporal escrito con [System.IO.File]::WriteAllText.
+- Verificacion empirica > auditoria de codigo: F2.4-20/21 (darkpool)
+  parecian MEDIA por analisis estatico, pero el cProfile revelo que el
+  cuello era FINRA (68s en red), no el codigo de scoring. Los findings
+  quedaron retractados.
+- No commitear automaticamente. Cada ciclo verificado con
+  pyflakes + suite + (si aplica) smoke test funcional. ast.parse solo
+  para ficheros Python, nunca para Markdown.
+
+---
+
+FIN DE TRANSFER. 2026-09-27.

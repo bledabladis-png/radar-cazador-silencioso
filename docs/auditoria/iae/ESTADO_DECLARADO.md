@@ -3,7 +3,7 @@
 Estado declarado de fases, prohibiciones y hallazgos del modulo IAE.
 Documento vivo. Se actualiza cuando cambia el estado.
 
-**Actualizado:** 2026-09-27 (rev.2)
+**Actualizado:** 2026-09-27 (rev.3)
 **HEAD de cierre:** ver `ESTADO_SISTEMA.md` (se regenera con cada commit).
 **Estado del sistema:** `ESTADO_SISTEMA.md`.
 
@@ -414,6 +414,33 @@ IAE_MAESTRO). Detalle en §2.
     requiere recalibracion estadistica.
   - state.py::save_scenario queda sin uso productivo tras aff0afd.
     Auditoria de eliminacion diferida a ciclo posterior.
+
+- Ciclo 2026-09-27 (complemento). Nuevos cierres fuera del IAE estricto
+  pero relevantes para la operativa:
+  - A5-70 (2026-09-27): refactor blackrock_fund_data +
+    blackrock_isf_fund_data a data/providers/_blackrock_base.py.
+    Commit 4049439. -153 LOC netas, ~90% duplicacion eliminada. 15/15
+    gates superados con dictamen auditor externo (GO CONDICIONADO ->
+    CERRADO). Manifiesto SHA256 en docs/auditoria/a5_70_baseline.json.
+  - FINRA cache (2026-09-27): commit 062cd10. Cache local por
+    (endpoint, payload) 30d hit / 24h empty en data/providers/finra.py.
+    compute_darkpool_signals: 68s -> 7s. Primera ejecucion 31s, segunda
+    0.04s. actions/cache@v4 en daily_run.yml propaga a CI.
+  - Cron probe + health-check (2026-09-27): commits 03f3b42, f49277a,
+    9da8b53. Finding: slot '17 3' no disparo desde el deploy del
+    multi-slot. Anadidos _cron_probe.yml (aislado), 5o slot '17 5' y
+    bloque H en health_check.py que verifica los slots slot-por-slot.
+  - K-BLACKROCK-CSV-STALE-01 (2026-09-27): ABIERTO. Los CSV
+    outputs/history/blackrock_{dax,isf}_primary_flow.csv en git tienen
+    schema anterior al commit a3c2705 (flow_zscore_regime al final vs
+    posicion 9 actual). Impacto nulo para el pipeline. Decision politica
+    pendiente: regenerar / ignorar / congelar via workflow. Ver PROMPT
+    seccion 11.26 y seccion 12.
+  - _backfill_history (indicators/darkpool_history.py): yf.download
+    ticker a ticker en bucle. 7s residuales tras FINRA cache. Mismo
+    patron: cuello de red, no computo. Ciclo separado pendiente.
+  - Cat 4 (20+ providers): Gate 0 read-only pendiente antes de decidir
+    que findings siguen vigentes vs subrogados.
 
 Detalle en `IAE_MAESTRO.md` seccion 5.
 
