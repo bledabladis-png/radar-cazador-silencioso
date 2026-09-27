@@ -1,11 +1,24 @@
-﻿import requests
-import pandas as pd
+﻿import hashlib
+import json
 import time
 from datetime import datetime, timedelta
 from io import StringIO
+from pathlib import Path
+
+import pandas as pd
+import requests
+
 from .base import MarketDataProvider
 
 BASE_URL = "https://api.finra.org/data/group/otcMarket/name"
+
+# Cache local de respuestas paginadas. Los datos FINRA son semanales
+# e inmutables una vez publicados; se cachean 30 dias. Los resultados
+# vacios (semana aun no publicada) se cachean 24h para no machacar
+# la API con reintentos inutiles.
+_CACHE_DIR = Path("data/cache/finra")
+_CACHE_TTL_HIT = 30 * 86400
+_CACHE_TTL_EMPTY = 24 * 3600
 
 class FinraProvider(MarketDataProvider):
     def __init__(self):
@@ -30,7 +43,62 @@ class FinraProvider(MarketDataProvider):
             return False
 
     # ------------------------------------------------------------
-    # FUNCIONES PRIVADAS (GENÉRICAS)
+    # CACHE LOCAL
+    # ------------------------------------------------------------
+    def _cache_key(self, endpoint, payload):
+        """Hash estable del payload (sin offset/limit que cambian por pagina)."""
+        clean = {k: v for k, v in payload.items() if k not in ("offset", "limit")}
+        blob = json.dumps({"endpoint": endpoint, "payload": clean},
+                          sort_keys=True, default=str)
+        digest = hashlib.sha256(blob.encode("utf-8")).hexdigest()[:16]
+        return f"{endpoint}_{digest}"
+
+    def _load_cache(self, key):
+        """Devuelve DataFrame si hay cache valida, None si no.
+
+        - Hit real: parquet con TTL 30d.
+        - Miss marcado: fichero .empty con TTL 24h (resultado vacio reciente).
+        """
+        cache_dir = _CACHE_DIR
+        parquet = cache_dir / f"{key}.parquet"
+        empty = cache_dir / f"{key}.empty"
+        now = time.time()
+        if parquet.exists():
+            age = now - parquet.stat().st_mtime
+            if age < _CACHE_TTL_HIT:
+                try:
+                    return pd.read_parquet(parquet)
+                except Exception:
+                    parquet.unlink(missing_ok=True)
+        if empty.exists():
+            age = now - empty.stat().st_mtime
+            if age < _CACHE_TTL_EMPTY:
+                return pd.DataFrame()
+        return None
+
+    def _save_cache(self, key, df):
+        cache_dir = _CACHE_DIR
+        cache_dir.mkdir(parents=True, exist_ok=True)
+        target = cache_dir / f"{key}.parquet"
+        tmp = target.with_suffix(".parquet.tmp")
+        try:
+            df.to_parquet(tmp, index=False)
+            tmp.replace(target)
+        except Exception as e:
+            print(f"  [finra] no se pudo escribir cache {target.name}: {e}")
+            tmp.unlink(missing_ok=True)
+
+    def _save_empty_marker(self, key):
+        cache_dir = _CACHE_DIR
+        cache_dir.mkdir(parents=True, exist_ok=True)
+        marker = cache_dir / f"{key}.empty"
+        try:
+            marker.write_text("", encoding="utf-8")
+        except Exception as e:
+            print(f"  [finra] no se pudo escribir marker {marker.name}: {e}")
+
+    # ------------------------------------------------------------
+    # PETICIONES
     # ------------------------------------------------------------
     def _post(self, endpoint, payload):
         try:
@@ -45,6 +113,10 @@ class FinraProvider(MarketDataProvider):
             return None
 
     def _paginated_request(self, endpoint, payload):
+        key = self._cache_key(endpoint, payload)
+        cached = self._load_cache(key)
+        if cached is not None:
+            return cached
         offset = 0
         frames = []
         while True:
@@ -69,7 +141,12 @@ class FinraProvider(MarketDataProvider):
             if offset >= total:
                 break
             time.sleep(2)
-        return pd.concat(frames, ignore_index=True) if frames else pd.DataFrame()
+        if frames:
+            result = pd.concat(frames, ignore_index=True)
+            self._save_cache(key, result)
+            return result
+        self._save_empty_marker(key)
+        return pd.DataFrame()
 
     # ------------------------------------------------------------
     # MÉTODOS PÚBLICOS
