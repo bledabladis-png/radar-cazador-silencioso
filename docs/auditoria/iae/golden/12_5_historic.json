@@ -1,0 +1,59 @@
+{
+  "golden_id": "12_5_historic",
+  "description": "Snapshot inmutable de la seccion 12.5 de IAE_MAESTRO (par Q4 2025 -> Q1 2026). Reproducible con el crosswalk de 7caa86b. NO reescribir.",
+  "status": "FROZEN",
+  "auditor_finding": "H4",
+  "periods": {
+    "previous": "2025-12-31",
+    "current": "2026-03-31",
+    "quarter_previous": "2025Q4",
+    "quarter_current": "2026Q1"
+  },
+  "git_head": "7caa86b",
+  "generated_at": "2026-09-22T23:48:30Z",
+  "source_reference": "IAE_MAESTRO.md seccion 12.5 (7caa86b)",
+  "crosswalk_sha256": "032ef307e9810fd2b3a8b3361462a03bf04ecc43c5c25313346bcef8c38e858b",
+  "catalog_sha256": "4a78e2695aca64ec5601c246d176199ce98e9e10e73e53e4b8f11385fe00ef38",
+  "equivalence_sha256": "21a88790aad50e8b44fbfdaa87c394ef3a782319adaf4208b9cb244dac39b322",
+  "parquet_hashes": {
+    "INFOTABLE_2025Q4": "207621CF7D0C0DB44B3BEE6232501AC9FD07B4AF9ABF6EDF7946C6BF9E009536",
+    "INFOTABLE_2026Q1": "DF4A4A5C25CE45E68768CE037B97372EF46B059C782F6C335F0B3FA37950C7D2"
+  },
+  "expected": {
+    "delta_full_rows": 4066694,
+    "delta_full_both": 713865,
+    "delta_full_new": 106828,
+    "delta_full_exit": 95105,
+    "delta_full_unresolved": 3150896,
+    "delta_radar_rows": 553321,
+    "delta_radar_both": 444276,
+    "delta_radar_new": 60324,
+    "delta_radar_exit": 48721,
+    "delta_radar_unresolved": 0,
+    "nipc_total": -4316734936,
+    "nipc_sole": -32484713330,
+    "nipc_dfnd": 28317652408,
+    "nipc_otr": -149674014,
+    "n_delta_observable": 553321,
+    "n_unresolved_identity": 0,
+    "target_q4": 240,
+    "target_q1": 240,
+    "target_pairwise": 240,
+    "coverage_previous": 1.0,
+    "coverage_current": 1.0,
+    "paired_security_coverage": 1.0,
+    "paired_weighted_share_coverage": 1.0,
+    "coverage_status": "VALID",
+    "coverage_available": true,
+    "coverage_quality": "COMPLETE"
+  },
+  "security_type_source": null,
+  "security_type_source_hash": null,
+  "notes": [
+    "security_type_source es null porque el snapshot es anterior al fix H1-B.",
+    "El campo queda declarado como contrato para futuros goldens (post-fix).",
+    "Este golden es inmutable. No se reescribe. Si se necesita un snapshot nuevo, crear current.json tras cierre de H1-B.",
+    "Reproduccion: scripts/iae_contractual_nipc_e2e.py con crosswalk restaurado a 7caa86b.",
+    "Verificacion forense de H1-A: restaurar crosswalk 7caa86b reproduce este golden con tolerancia 0."
+  ]
+}

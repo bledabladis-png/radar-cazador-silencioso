@@ -1,0 +1,23 @@
+{
+  "golden_id": "current",
+  "description": "Snapshot del par activo tras el cierre de H1-B. Actualmente BLOQUEADO: H1-B no esta cerrado.",
+  "status": "BLOCKED",
+  "auditor_finding": "H4",
+  "blocked_by": "H1-B",
+  "blocked_reason": "No se congela NIPC baseline hasta cierre de H1-B. Ver AUDITORIA_EXTERNA_2026-09-27.md seccion 5.",
+  "periods": null,
+  "git_head": null,
+  "generated_at": null,
+  "crosswalk_sha256": null,
+  "catalog_sha256": null,
+  "equivalence_sha256": null,
+  "parquet_hashes": null,
+  "expected": null,
+  "security_type_source": null,
+  "security_type_source_hash": null,
+  "notes": [
+    "Este fichero se completa tras el paso 6 del plan de cierre de H1-B (DISENO_H1B.md seccion 8).",
+    "Los valores actuales del pipeline (-4.317.678.307; 8.254.818.120 para Q1->Q2) son OBSERVACIONES, no baseline contractual.",
+    "Al cerrar H1-B, rellenar todos los campos con los hashes del par vigente y el resultado del E2E post-fix."
+  ]
+}
