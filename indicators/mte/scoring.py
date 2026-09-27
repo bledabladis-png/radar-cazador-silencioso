@@ -194,7 +194,7 @@ def sector_rotation_score(df_market):
 
 
 
-    except:
+    except (KeyError, ValueError, TypeError, AttributeError):
 
 
 
@@ -890,7 +890,7 @@ SCENARIO_WEIGHTS = {
 
 
 
-    "IPS": {"weight": 2, "reason": "La inflación diferencia recesión de estanflación."}
+    "IPS": {"weight": 3, "reason": "La inflación diferencia recesión de estanflación."}
 
 
 
@@ -954,7 +954,6 @@ def score_scenarios(srs, shs, cls, ips):
 
 
 
-    if cls > 0.7: crisis += 2
 
 
 
@@ -1022,7 +1021,7 @@ def score_scenarios(srs, shs, cls, ips):
 
 
 
-    if ips > 0.15: stagflation += 3  # IPS es el factor distintivo de STAGFLATION (umbral reducido)
+    if ips > 0.15: stagflation += SCENARIO_WEIGHTS["IPS"]["weight"]  # IPS es el factor distintivo de STAGFLATION
 
 
 
