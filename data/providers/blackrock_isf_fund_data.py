@@ -39,7 +39,7 @@ def parse_fecha_es(fecha_str):
         if mes is None:
             return None
         return pd.Timestamp(year=anio, month=mes, day=dia)
-    except:
+    except (ValueError, TypeError):
         return None
 
 def download_fund_file():
