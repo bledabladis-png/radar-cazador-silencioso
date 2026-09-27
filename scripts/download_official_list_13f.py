@@ -1,7 +1,8 @@
 ﻿"""Descarga la Official List of Section 13(f) de SEC.
 
 URL canonica: https://www.sec.gov/files/investment/13flist{YYYY}q{Q}.txt
-Excepcion historica: 2025Q3 -> 13flist2025q3-txt.txt
+Excepciones historicas (patron `-txt`): 2025Q3, 2026Q2.
+Fallback automatico: si 404 en la canonica, probar el sufijo `-txt`.
 
 Destino: data/sec_13f/official_list_13f/13flist_{YYYYQn}.txt
 
@@ -28,9 +29,13 @@ SEC_BASE = "https://www.sec.gov/files/investment"
 USER_AGENT = "Radar Sectorial Research <bledabladis@gmail.com>"
 DEST_DIR = ROOT / "data" / "sec_13f" / "official_list_13f"
 
-# Excepciones historicas conocidas
+# Excepciones historicas conocidas.
+# SEC cambio la nomenclatura a `-txt` en algunos trimestres: el fichero
+# sigue siendo texto plano pero con sufijo en el nombre. F5.6-X: 2 casos
+# observados (2025Q3, 2026Q2); el fallback automatico cubre futuros.
 URL_EXCEPTIONS = {
     "2025Q3": "13flist2025q3-txt.txt",
+    "2026Q2": "13flist2026q2-txt.txt",
 }
 
 # Sanity check: la lista oficial tiene >10.000 filas. Umbral bajo
@@ -98,7 +103,18 @@ def download_official_list(quarter, *, force=False):
     url = _build_url(quarter)
     print("[DOWNLOAD] " + url)
 
-    body = _http_get(url)
+    try:
+        body = _http_get(url)
+    except urllib.error.HTTPError as e:
+        # F5.6-X: fallback. Si la URL canonica da 404 y no estaba ya en
+        # URL_EXCEPTIONS, probar el patron `-txt` (2025Q3, 2026Q2).
+        if e.code != 404 or quarter in URL_EXCEPTIONS:
+            raise
+        year, qn = _parse_quarter(quarter)
+        alt = "{}/13flist{}q{}-txt.txt".format(SEC_BASE, year, qn)
+        print("[FALLBACK] " + alt)
+        body = _http_get(alt)
+
     text = body.decode("utf-8")
     n = _validate_content(text)
     dest.write_text(text, encoding="utf-8", newline="\n")
