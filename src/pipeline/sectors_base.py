@@ -22,7 +22,7 @@ def compute_sectors_base(df_market, temporal_meta=None):
             sector_results, sector_rank_deltas_df,
             sector_price_rank, sector_flow_rank, otros_price_rank, otros_flow_rank,
             sector_dispersion_df,
-            sector_corr_summary_df, sector_corr_matrix_df,
+            sector_corr_summary_df,
             cross_asset_summary_df, cross_asset_detail_df,
             breadth_values
     """
@@ -81,20 +81,15 @@ def compute_sectors_base(df_market, temporal_meta=None):
         print(f"  Dispersion entre sectores omitida: {e}")
         sector_dispersion_df = None
 
-    # --- Correlacion entre sectores v1.0 (descriptivo) ---
+    # --- Correlacion entre sectores v1.1 (descriptivo) ---
+    # F7-01: la matriz por pares fue eliminada (dead end sin consumidor).
+    # Solo se persiste el summary (stats agregadas por ventana).
     sector_corr_summary_df = None
-    sector_corr_matrix_df = None
     try:
         from indicators.sector_correlation import compute_sector_correlation
-        sector_corr_matrix_df, sector_corr_summary_df = compute_sector_correlation(df_market, temporal_meta=temporal_meta)
-        cm_path = Path('outputs/history/sector_correlation_matrix.csv')
+        sector_corr_summary_df = compute_sector_correlation(df_market, temporal_meta=temporal_meta)
         cs_path = Path('outputs/history/sector_correlation_summary.csv')
-        cm_path.parent.mkdir(parents=True, exist_ok=True)
-        if not sector_corr_matrix_df.empty:
-            if cm_path.exists():
-                hist_cm = pd.read_csv(cm_path)
-                sector_corr_matrix_df = append_dedup(hist_cm, sector_corr_matrix_df, ['date','window','sector1','sector2'])
-            sector_corr_matrix_df.to_csv(cm_path, index=False)
+        cs_path.parent.mkdir(parents=True, exist_ok=True)
         if not sector_corr_summary_df.empty:
             if cs_path.exists():
                 hist_cs = pd.read_csv(cs_path)
@@ -103,7 +98,6 @@ def compute_sectors_base(df_market, temporal_meta=None):
             print("  Correlacion entre sectores calculada.")
         else:
             sector_corr_summary_df = None
-            sector_corr_matrix_df = None
     except Exception as e:
         print(f"  Correlacion entre sectores omitida: {e}")
         sector_corr_summary_df = None
@@ -161,7 +155,6 @@ def compute_sectors_base(df_market, temporal_meta=None):
         'otros_flow_rank': otros_flow_rank,
         'sector_dispersion_df': sector_dispersion_df,
         'sector_corr_summary_df': sector_corr_summary_df,
-        'sector_corr_matrix_df': sector_corr_matrix_df,
         'cross_asset_summary_df': cross_asset_summary_df,
         'breadth_values': breadth_values,
     }

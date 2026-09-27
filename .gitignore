@@ -28,6 +28,8 @@ outputs/*.png
 # Excepciones: historicos y estado se versionan
 !outputs/history/
 !outputs/history/*.csv
+# F7-01: dead end eliminado (0 consumidores, ~84KB/commit en git).
+outputs/history/sector_correlation_matrix.csv
 !outputs/state/
 !outputs/state/*.json
 *.bak_repair

@@ -57,7 +57,7 @@ def test_sectors_base_contract_keys(tmp_path, monkeypatch):
          patch("indicators.sector_dispersion.compute_sector_dispersion",
                return_value=pd.DataFrame()), \
          patch("indicators.sector_correlation.compute_sector_correlation",
-               return_value=(pd.DataFrame(), pd.DataFrame())), \
+               return_value=pd.DataFrame()), \
          patch("indicators.cross_asset_context.compute_cross_asset_context",
                return_value=(pd.DataFrame(), pd.DataFrame())):
         out = compute_sectors_base(_df_market_min())
@@ -66,7 +66,7 @@ def test_sectors_base_contract_keys(tmp_path, monkeypatch):
         "sector_price_rank", "sector_flow_rank",
         "otros_price_rank", "otros_flow_rank",
         "sector_dispersion_df",
-        "sector_corr_summary_df", "sector_corr_matrix_df",
+        "sector_corr_summary_df",
         "cross_asset_summary_df", "breadth_values",
     }
     assert set(out.keys()) == expected_keys
@@ -88,7 +88,7 @@ def test_sectors_base_breadth_values_derivados(tmp_path, monkeypatch):
          patch("indicators.sector_dispersion.compute_sector_dispersion",
                return_value=pd.DataFrame()), \
          patch("indicators.sector_correlation.compute_sector_correlation",
-               return_value=(pd.DataFrame(), pd.DataFrame())), \
+               return_value=pd.DataFrame()), \
          patch("indicators.cross_asset_context.compute_cross_asset_context",
                return_value=(pd.DataFrame(), pd.DataFrame())):
         out = compute_sectors_base(_df_market_min())
@@ -116,7 +116,7 @@ def test_sectors_base_degrada_sub_bloque_dispersion(tmp_path, monkeypatch):
          patch("indicators.sector_dispersion.compute_sector_dispersion",
                side_effect=RuntimeError("x")), \
          patch("indicators.sector_correlation.compute_sector_correlation",
-               return_value=(pd.DataFrame(), pd.DataFrame())), \
+               return_value=pd.DataFrame()), \
          patch("indicators.cross_asset_context.compute_cross_asset_context",
                return_value=(pd.DataFrame(), pd.DataFrame())):
         out = compute_sectors_base(_df_market_min())

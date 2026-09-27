@@ -30,7 +30,11 @@ def _classify_corr(mean_corr):
 def compute_sector_correlation(df_market, windows=(20, 60), min_obs_ratio=0.75, temporal_meta=None):
     """
     Calcula matrices de correlación de Pearson para retornos diarios de sectores.
-    Devuelve (matrix_df, summary_df).
+    Devuelve summary_df (estadisticas agregadas por ventana).
+
+    F7-01: la matriz por pares se calculaba pero nunca se consumia.
+    Se elimino el output. Los pares siguen calculandose internamente
+    porque alimentan al summary.
     """
     if df_market is None:
         return pd.DataFrame(), pd.DataFrame()
@@ -59,7 +63,6 @@ def compute_sector_correlation(df_market, windows=(20, 60), min_obs_ratio=0.75, 
         lambda: _observation_date_from_df(returns_df))
     _eff_meta = get_effective_meta(temporal_meta or {}, ['EQUITY_EOD'])
 
-    matrix_rows = []
     summary_rows = []
 
     for window in windows:
@@ -147,8 +150,5 @@ def compute_sector_correlation(df_market, windows=(20, 60), min_obs_ratio=0.75, 
             'correlation_reading': _classify_corr(mean_corr),
         })
 
-        matrix_rows.extend(pairs)
-
-    matrix_df = pd.DataFrame(matrix_rows) if matrix_rows else pd.DataFrame()
     summary_df = pd.DataFrame(summary_rows) if summary_rows else pd.DataFrame()
-    return matrix_df, summary_df
+    return summary_df
