@@ -63,10 +63,10 @@ OK, WARN, FAIL, SKIP = "OK", "WARN", "FAIL", "SKIP"
 
 # Finding 2026-09-27: GitHub Actions scheduler es best-effort, no
 # garantiza el disparo de cada slot. Concurrency queue: max protege
-# contra sustitucion, no contra no-disparo. Los 4 slots de daily_run.yml
-# deben dispararse en 24h; si faltan 2+ consecutivos, riesgo de perder
-# el ciclo sin alerta. Ver PROMPT seccion 11.26.
-CRON_SLOTS_DAILY_HM = ((23, 17), (3, 17), (7, 17), (11, 17))  # (HH, MM) UTC
+# contra sustitucion, no contra no-disparo. Los slots de daily_run.yml
+# deben dispararse en 24h; si falta 1 -> WARN, si faltan 2+ -> FAIL.
+# Los slots deben coincidir con .github/workflows/daily_run.yml.
+CRON_SLOTS_DAILY_HM = ((23, 17), (3, 17), (5, 17), (7, 17), (11, 17))  # (HH, MM) UTC
 CRON_WINDOW_HOURS = 24
 
 
@@ -115,7 +115,7 @@ def _expected_slots(cutoff: datetime, now: datetime) -> list:
 
 
 def check_cron_slots() -> list:
-    """Verifica slot-por-slot que los 4 disparos de daily_run.yml han ocurrido.
+    """Verifica slot-por-slot que los disparos de daily_run.yml han ocurrido.
 
     Finding 2026-09-27: GitHub Actions puede no disparar un slot
     silenciosamente (scheduler best-effort, no garantizado). Se
@@ -126,7 +126,7 @@ def check_cron_slots() -> list:
     slot se asigna al intervalo [slot_i, slot_{i+1}). Un slot esta
     cubierto si hay >=1 run en su intervalo.
 
-    Devuelve OK si 4/4, WARN si 3/4, FAIL si <=2/4.
+    Devuelve OK si todos, WARN si falta 1, FAIL si faltan 2 o mas.
     """
     out = _run_gh([
         "run", "list", "--workflow", "daily_run.yml",
