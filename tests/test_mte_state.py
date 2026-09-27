@@ -25,18 +25,20 @@ class TestLoadPreviousScenario:
         }), encoding="utf-8")
         monkeypatch.setattr("indicators.mte.state.MTE_STATE_FILE", str(state))
 
-        scenario, pending = mte_module.load_previous_scenario()
+        scenario, pending, temporal_reset = mte_module.load_previous_scenario()
         assert scenario == "EXPANSION"
         assert pending == "SOFT LANDING"
+        assert temporal_reset is False
 
     def test_fichero_inexistente(self, tmp_path, monkeypatch):
         import indicators.mte as mte_module
         state = tmp_path / "no_existe.json"
         monkeypatch.setattr("indicators.mte.state.MTE_STATE_FILE", str(state))
 
-        scenario, pending = mte_module.load_previous_scenario()
+        scenario, pending, temporal_reset = mte_module.load_previous_scenario()
         assert scenario == "MIXED"
         assert pending is None
+        assert temporal_reset is False
 
     def test_version_distinta_hace_reset(self, tmp_path, monkeypatch):
         import indicators.mte as mte_module
@@ -49,9 +51,10 @@ class TestLoadPreviousScenario:
         }), encoding="utf-8")
         monkeypatch.setattr("indicators.mte.state.MTE_STATE_FILE", str(state))
 
-        scenario, pending = mte_module.load_previous_scenario()
+        scenario, pending, temporal_reset = mte_module.load_previous_scenario()
         assert scenario == "MIXED"
         assert pending is None
+        assert temporal_reset is True
 
     def test_json_corrupto(self, tmp_path, monkeypatch):
         import indicators.mte as mte_module
@@ -59,9 +62,10 @@ class TestLoadPreviousScenario:
         state.write_text("no soy json", encoding="utf-8")
         monkeypatch.setattr("indicators.mte.state.MTE_STATE_FILE", str(state))
 
-        scenario, pending = mte_module.load_previous_scenario()
+        scenario, pending, temporal_reset = mte_module.load_previous_scenario()
         assert scenario == "MIXED"
         assert pending is None
+        assert temporal_reset is False
 
 
 class TestSaveScenario:

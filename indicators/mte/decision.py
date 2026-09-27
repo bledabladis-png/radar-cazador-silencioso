@@ -8,7 +8,7 @@ import numpy as np
 
 from src.utils import safe_mean
 
-from .state import load_previous_scenario, save_scenario
+from .state import load_previous_scenario
 from .scoring import score_scenarios
 
 
@@ -300,7 +300,7 @@ def classify_mte(srs, shs, cls, ips):
 
 
 
-    prev_scenario, pending = load_previous_scenario()
+    prev_scenario, pending, temporal_reset = load_previous_scenario()
 
 
 
@@ -324,7 +324,7 @@ def classify_mte(srs, shs, cls, ips):
 
 
 
-        save_scenario(new_scenario)
+        pending_out = None
 
 
 
@@ -340,7 +340,7 @@ def classify_mte(srs, shs, cls, ips):
 
 
 
-            save_scenario(prev_scenario, new_scenario)
+            pending_out = new_scenario
 
 
 
@@ -352,7 +352,7 @@ def classify_mte(srs, shs, cls, ips):
 
 
 
-            save_scenario(new_scenario)
+            pending_out = None
 
 
 
@@ -364,7 +364,7 @@ def classify_mte(srs, shs, cls, ips):
 
 
 
-            save_scenario(prev_scenario, None)
+            pending_out = None
 
 
 
@@ -376,11 +376,7 @@ def classify_mte(srs, shs, cls, ips):
 
 
 
-        if pending is not None:
-
-
-
-            save_scenario(new_scenario)
+        pending_out = None
 
 
 
@@ -408,7 +404,7 @@ def classify_mte(srs, shs, cls, ips):
 
 
 
-    return final_scenario, confidence
+    return final_scenario, confidence, pending_out, temporal_reset
 
 
 

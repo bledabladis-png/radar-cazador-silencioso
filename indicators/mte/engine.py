@@ -166,7 +166,7 @@ def compute_mte(df_market, financial_conditions_score, credit_signal,
 
 
 
-        scenario, confidence = classify_mte(srs, shs, cls, ips)
+        scenario, confidence, pending_out, temporal_reset = classify_mte(srs, shs, cls, ips)
 
 
 
@@ -225,7 +225,8 @@ def compute_mte(df_market, financial_conditions_score, credit_signal,
 
 
 
-                    'ips': ips
+                    'ips': ips,
+                    'pending': pending_out
 
 
 

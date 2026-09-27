@@ -19,17 +19,28 @@ from config.settings import MTE_STATE_FILE, CURRENT_TEMPORAL_CONTRACT_VERSION
 
 
 def load_previous_scenario():
-    """Lee scenario y pending del state previo. Reset a MIXED si version no cuadra."""
+    """Lee scenario, pending y flag temporal_reset del state previo.
+
+    Retorna (scenario, pending, temporal_reset):
+      - (MIXED, None, True)   si la version del contrato no coincide
+      - (scenario, pending, False) si el fichero es valido y compatible
+      - (MIXED, None, False)  si no existe o hay error de lectura
+
+    F2.4-12 (ii): temporal_reset=True invalida el estado previo
+    (prev=MIXED, pending=None) pero NO invalida el calculo MTE del
+    run actual. El writer final (engine.py) persiste el scenario
+    calculado normalmente y actualiza temporal_contract_version.
+    """
     try:
         with open(MTE_STATE_FILE, 'r') as f:
             data = json.load(f)
             _stored_version = data.get('temporal_contract_version')
             if _stored_version != CURRENT_TEMPORAL_CONTRACT_VERSION:
                 print(f'  MTE state: contrato cambio ({_stored_version} -> {CURRENT_TEMPORAL_CONTRACT_VERSION}). Reset.')
-                return 'MIXED', None
-            return data.get('scenario', 'MIXED'), data.get('pending', None)
+                return 'MIXED', None, True
+            return data.get('scenario', 'MIXED'), data.get('pending', None), False
     except Exception:
-        return 'MIXED', None
+        return 'MIXED', None, False
 
 
 def save_scenario(scenario, pending=None):
