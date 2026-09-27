@@ -170,7 +170,15 @@ def run_contractual_nipc(
         if "_operational_mapping_status" in op.columns:
             op = op[op["_operational_mapping_status"] == "VERIFIED"]
         op = op[op["_figi_radar"].notna()]
-        sshp = pd.to_numeric(op["SSHPRNAMT"], errors="coerce").fillna(0.0)
+        # O1 (auditor externo 2026-09-27): NO imputar SSHPRNAMT.
+        # Filas sin SSHPRNAMT parseable se descartan (coherente con
+        # delta_shares.py::_filter_canonical). Imputar 0 contaria una
+        # posicion inexistente como presente con peso 0.
+        op = op.assign(
+            _sshp=pd.to_numeric(op["SSHPRNAMT"], errors="coerce")
+        )
+        op = op.dropna(subset=["_sshp"])
+        sshp = op["_sshp"]
         sh_by_figi = {}
         for f, v in zip(op["_figi_radar"], sshp):
             sh_by_figi[f] = sh_by_figi.get(f, 0.0) + float(v)
