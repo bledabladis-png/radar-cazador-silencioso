@@ -19,11 +19,20 @@ BASE_URL = "https://api.finra.org/data/group/otcMarket/name"
 _CACHE_DIR = Path("data/cache/finra")
 _CACHE_TTL_HIT = 30 * 86400
 _CACHE_TTL_EMPTY = 24 * 3600
+_LATEST_WEEK_TTL = 300  # F5.7-05: TTL de memoize de get_latest_week (s).
 
 class FinraProvider(MarketDataProvider):
     def __init__(self):
         self.name = "FINRA ATS"
         self._session = requests.Session()
+        # F5.7-05: memoize de get_latest_week().
+        # get_latest_week() itera hasta 6 semanas hacia atras, cada una
+        # con su propia peticion HTTP. Dentro de un mismo run se llama
+        # desde darkpool.py y darkpool_history.py con la misma instancia
+        # (darkpool pasa la instancia a _backfill_history); sin memoize
+        # el resultado se recalcula aunque sea identico.
+        self._latest_week_cache = None
+        self._latest_week_ts = 0.0
         self._session.headers.update({
             "Accept": "text/plain",
             "Content-Type": "application/json",
@@ -165,13 +174,23 @@ class FinraProvider(MarketDataProvider):
         return []
 
     def get_latest_week(self):
+        # F5.7-05: memoize por instancia con TTL 300s.
+        # Evita repetir la busqueda (hasta 6 semanas x 1 request) cuando
+        # la misma instancia se reutiliza dentro del mismo run.
+        now = time.time()
+        if now - self._latest_week_ts < _LATEST_WEEK_TTL and self._latest_week_ts > 0:
+            return self._latest_week_cache
         for i in range(6):
             test_date = (datetime.now() - timedelta(weeks=i))
             monday = test_date - timedelta(days=test_date.weekday())
             monday_str = monday.strftime('%Y-%m-%d')
             data = self.get_week_summary(monday_str)
             if not data.empty:
+                self._latest_week_cache = monday_str
+                self._latest_week_ts = now
                 return monday_str
+        self._latest_week_cache = None
+        self._latest_week_ts = now
         return None
 
     def get_week_summary(self, week, tier="T1"):
