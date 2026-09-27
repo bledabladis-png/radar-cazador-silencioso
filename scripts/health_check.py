@@ -66,7 +66,7 @@ OK, WARN, FAIL, SKIP = "OK", "WARN", "FAIL", "SKIP"
 # contra sustitucion, no contra no-disparo. Los 4 slots de daily_run.yml
 # deben dispararse en 24h; si faltan 2+ consecutivos, riesgo de perder
 # el ciclo sin alerta. Ver PROMPT seccion 11.26.
-CRON_SLOTS_DAILY = ("17 23", "17 3", "17 7", "17 11")  # HH:MM UTC
+CRON_SLOTS_DAILY_HM = ((23, 17), (3, 17), (7, 17), (11, 17))  # (HH, MM) UTC
 CRON_WINDOW_HOURS = 24
 
 
@@ -96,21 +96,42 @@ def _run_gh(args: list) -> str | None:
 # =========================================================
 # CHECK H - Cron slots: los 4 disparos diarios de daily_run.yml
 # =========================================================
+def _expected_slots(cutoff: datetime, now: datetime) -> list:
+    """Devuelve los slots de cron esperados en [cutoff, now].
+
+    Los slots de CRON_SLOTS_DAILY se enumeran para cada dia calendario
+    tocado por la ventana. Filtra los que caen fuera del intervalo.
+    """
+    slots = []
+    day = cutoff.date() - timedelta(days=1)
+    while day <= now.date():
+        for hh, mm in CRON_SLOTS_DAILY_HM:
+            t = datetime(day.year, day.month, day.day, hh, mm, tzinfo=timezone.utc)
+            if cutoff <= t <= now:
+                slots.append(t)
+        day += timedelta(days=1)
+    slots.sort()
+    return slots
+
+
 def check_cron_slots() -> list:
-    """Verifica que los 4 slots de daily_run.yml han disparado en 24h.
+    """Verifica slot-por-slot que los 4 disparos de daily_run.yml han ocurrido.
 
     Finding 2026-09-27: GitHub Actions puede no disparar un slot
-    silenciosamente (scheduler best-effort, no garantizado). El
-    2026-09-27 solo se observaron 3 de 4 slots. Concurrency queue:
-    max no protege contra este fallo.
+    silenciosamente (scheduler best-effort, no garantizado). Se
+    observo la perdida sistematica del slot 17 3 durante 26/09 y
+    27/09. Concurrency queue: max no protege contra este fallo.
 
-    Devuelve OK si los 4 slots dispararon, WARN si faltan 1, FAIL
-    si faltan 2 o mas.
+    Algoritmo: se enumeran los slots esperados en [now-24h, now]; cada
+    slot se asigna al intervalo [slot_i, slot_{i+1}). Un slot esta
+    cubierto si hay >=1 run en su intervalo.
+
+    Devuelve OK si 4/4, WARN si 3/4, FAIL si <=2/4.
     """
     out = _run_gh([
         "run", "list", "--workflow", "daily_run.yml",
         "--event", "schedule", "--limit", "20",
-        "--json", "createdAt,conclusion,status",
+        "--json", "createdAt",
     ])
     if out is None:
         return [Result("cron_slots", SKIP, "gh no disponible")]
@@ -119,22 +140,38 @@ def check_cron_slots() -> list:
     except Exception:
         return [Result("cron_slots", WARN, "JSON invalido")]
 
-    now = datetime.now(timezone.utc)
-    cutoff = now - timedelta(hours=CRON_WINDOW_HOURS)
-    n = 0
+    run_times = []
     for r in runs:
         try:
-            created = datetime.fromisoformat(r["createdAt"].replace("Z", "+00:00"))
+            run_times.append(
+                datetime.fromisoformat(r["createdAt"].replace("Z", "+00:00"))
+            )
         except Exception:
             continue
-        if created >= cutoff:
-            n += 1
 
-    expected = len(CRON_SLOTS_DAILY)
-    detail = f"{n}/{expected} slots en {CRON_WINDOW_HOURS}h"
-    if n >= expected:
+    now = datetime.now(timezone.utc)
+    cutoff = now - timedelta(hours=CRON_WINDOW_HOURS)
+    slots = _expected_slots(cutoff, now)
+    expected = len(slots)
+    if expected == 0:
+        return [Result("cron_slots", SKIP, "sin slots esperados en ventana")]
+
+    missing = []
+    for i, slot in enumerate(slots):
+        next_slot = slots[i + 1] if i + 1 < len(slots) else now
+        covered = any(slot <= rt < next_slot for rt in run_times)
+        if not covered:
+            missing.append(slot)
+
+    n_ok = expected - len(missing)
+    detail = f"{n_ok}/{expected} slots en {CRON_WINDOW_HOURS}h"
+    if missing:
+        fmt = ", ".join(m.strftime("%d/%m %H:%M") for m in missing)
+        detail += f" (missing: {fmt})"
+
+    if not missing:
         return [Result("cron_slots", OK, detail)]
-    if n == expected - 1:
+    if len(missing) == 1:
         return [Result("cron_slots", WARN, detail)]
     return [Result("cron_slots", FAIL, detail)]
 
