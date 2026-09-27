@@ -1,6 +1,6 @@
-# PROMPT MAESTRO v7.8 - INGENIERO SUPERVISOR DEL RADAR DE ROTACION SECTORIAL
+# PROMPT MAESTRO v7.9 - INGENIERO SUPERVISOR DEL RADAR DE ROTACION SECTORIAL
 
-**Actualizado:** 2026-09-27 (v7.8: ciclo F2.4-10/11/12/13 - persistencia de estado MTE reparada (histeresis adaptativa operativa), F2.4-11 except acotado en engine.py, F2.4-13 documentado WONT FIX, 19 warnings pyflakes limpiados. Suite 2163 -> 2173 + 2 skipped. Base v7.7: ciclo Cat 1 - 5 fixes quirurgicos de la auditoria radar pusheados (A5-71, F3-18, F2.4-01/02/03). Suite 2097 -> 2163 + 2 skipped. Base v7.6: auditoria interna del prompt - correcciones documentales en el arbol §4.2 (indicators/darkpool, providers, outputs/*, docs/plan, audit, src/external, provenance LSE, scripts nuevos), en los listados §4.3/§4.4 (iae.py, iae_section.py) y en la referencia §10.1. Sin cambios de codigo ni de arquitectura. Base v7.5: ciclo F-IAE-LSE-INTEGRATION + F-IAE-CRON-02 / F-IAE-GATE-01. Cifras internas alineadas: suite 1857 passed + 2 skipped, bloque IAE 845 tests).
+**Actualizado:** 2026-09-27 (v7.9: cierre A5-70 (refactor BlackRock providers) + rectificacion G7/G8 + registro K-BLACKROCK-CSV-STALE-01. Suite 2173 -> 2184 + 2 skipped. Base v7.8: ciclo F2.4-10/11/12/13 - persistencia de estado MTE reparada (histeresis adaptativa operativa), F2.4-11 except acotado en engine.py, F2.4-13 documentado WONT FIX, 19 warnings pyflakes limpiados. Suite 2163 -> 2173 + 2 skipped. Base v7.7: ciclo Cat 1 - 5 fixes quirurgicos de la auditoria radar pusheados (A5-71, F3-18, F2.4-01/02/03). Suite 2097 -> 2163 + 2 skipped. Base v7.6: auditoria interna del prompt - correcciones documentales en el arbol §4.2 (indicators/darkpool, providers, outputs/*, docs/plan, audit, src/external, provenance LSE, scripts nuevos), en los listados §4.3/§4.4 (iae.py, iae_section.py) y en la referencia §10.1. Sin cambios de codigo ni de arquitectura. Base v7.5: ciclo F-IAE-LSE-INTEGRATION + F-IAE-CRON-02 / F-IAE-GATE-01. Cifras internas alineadas: suite 1857 passed + 2 skipped, bloque IAE 845 tests).
 
 Este documento describe **rol, metodologia, arquitectura y prohibiciones vigentes**.
 **NO declara el estado del sistema.** Para estado, ver:
@@ -162,7 +162,7 @@ py -m pytest tests/ validation/ -q --tb=short
 
 text
 
-Esperado: `compileall OK`, `pyflakes LIMPIO`, `2173 passed + 2 skipped + 0 failed`.
+Esperado: `compileall OK`, `pyflakes LIMPIO`, `2184 passed + 2 skipped + 0 failed`.
 
 ### 3.5. Verificacion de no regresion (refactors grandes)
 
@@ -299,7 +299,7 @@ D:\Macro_Sectorial
 |            regenerate_cusip_crosswalk.py,
 |            pipeline_gate.py, issue_manager.py [F-IAE-CRON-02])
 +-- validation/ (6 activos)
-+-- tests/ (2173+ casos; ver IAE_MAESTRO.md seccion 11 para conteo del modulo IAE)
++-- tests/ (2184+ casos; ver IAE_MAESTRO.md seccion 11 para conteo del modulo IAE)
 +-- docs/
 | +-- automatica/ (22 .md auto-generados, LF)
 | +-- auditoria/ (prompt + transfer + readme + iae/)
@@ -496,7 +496,7 @@ Fase G (2026-09-24) - automatizacion de mappings del IAE:
 
 ## SECCION 10 - VALIDACION Y TESTS
 10.1. Tests
-2173 passed + 2 skipped + 0 failed en local tras run.py. Los 3 test_freshness (ambientales) pasan tras un run que refresca los parquets; vuelven a fallar si pasan >4 dias sin ejecutar el pipeline. CI similar con parquet gitignored. Incluye 845 tests del modulo IAE (criterio AST, 45 ficheros, ver IAE_MAESTRO.md seccion 11).
+2184 passed + 2 skipped + 0 failed en local tras run.py. Los 3 test_freshness (ambientales) pasan tras un run que refresca los parquets; vuelven a fallar si pasan >4 dias sin ejecutar el pipeline. CI similar con parquet gitignored. Incluye 845 tests del modulo IAE (criterio AST, 45 ficheros, ver IAE_MAESTRO.md seccion 11).
 
 10.2. Validation Gate (10/10)
 SLPM v1.2 (sin errores de validacion)
@@ -1110,7 +1110,72 @@ Suite: 2163 -> 2173 passed + 2 skipped (+10 tests netos).
 
 Commits pusheados: `dc16f5c`, `6e5cf03`, `aff0afd`.
 
+### 11.26. Cierre A5-70 + rectificacion G7/G8 (2026-09-27)
+
+Refactor de los providers BlackRock (DAXEX + ISF.L) a un modulo
+base comun `data/providers/_blackrock_base.py`. Commit `4049439`.
+
+**Estructura resultante:**
+
+    _blackrock_base.py (213 LOC) - logica comun
+        |
+        +-- blackrock_fund_data.py (56 LOC, era 211)
+        +-- blackrock_isf_fund_data.py (56 LOC, era 202)
+
+Reduccion neta: -153 LOC. Duplicacion eliminada: ~90%.
+
+**API publica preservada:**
+
+    blackrock_fund_data.__all__ = [
+        "MESES_ES", "parse_fecha_es", "get_blackrock_dax_primary_flow"
+    ]
+    blackrock_isf_fund_data.__all__ = [
+        "MESES_ES", "parse_fecha_es", "get_blackrock_isf_primary_flow"
+    ]
+
+**Evidencia de no-regresion (15 gates):**
+
+La equivalencia se acredita en dos niveles complementarios:
+
+  - G7/G8: `assert_frame_equal` sobre el DataFrame de RETORNO de la
+    funcion publica (`get_blackrock_*_primary_flow`), que por diseño
+    devuelve `result.tail(1)` -> shape (1, 11). dtypes y valores
+    identicos PRE/POST.
+
+  - G9: SHA256 byte a byte identico del CSV completo generado
+    (6150 filas DAXEX, 6741 filas ISF.L) PRE/POST:
+      DAXEX: a7dccede...670ddd
+      ISF.L: ba2b4b08...c17af8
+
+**Rectificacion metodologica.** El informe inicial de cierre describio
+G7/G8 como "equivalencia completa DataFrame". Redaccion correcta:
+G7/G8 acreditan equivalencia del objeto de retorno (1x11); la
+equivalencia COMPLETA del artefacto (6150x11 / 6741x11) queda
+acreditada por G9 con igualdad SHA256 byte a byte. La combinacion
+G7/G8 + G9 cubre el espectro entero. Dictamen auditor 2026-09-27
+ratifica el cierre sin exigir modificacion de codigo.
+
+**Fuera de alcance (ciclo separado):**
+K-BLACKROCK-CSV-STALE-01 (ver seccion 12).
+
+Commits pusheados: `4049439`.
+
 ## SECCION 12 - LIMITACIONES CONOCIDAS
+K-BLACKROCK-CSV-STALE-01 (2026-09-27) -> ABIERTO. Los CSV
+`outputs/history/blackrock_{dax,isf}_primary_flow.csv`
+versionados en git tienen un schema anterior al introducido por
+`a3c2705` (2026-09-24): el codigo define `flow_zscore_regime` en
+posicion 9; los CSV commiteados lo tienen al final. El workflow
+diario no regenera estos CSV desde CI (BlackRock bloquea con
+Referer desde runners). Se regeneran solo en runs locales.
+Impacto: nulo para el pipeline (los CSV son output de auditoria
+manual, no input del radar). No reabre A5-70. Requiere decision
+de politica: (a) regenerar y commitear con schema actual,
+(b) dejar de versionarlos, (c) congelar via workflow dedicado.
+El dictamen auditor 2026-09-27 recomienda determinar primero si
+los CSV son artefactos de evidencia historica o derivados locales,
+antes de decidir la politica. Ver seccion 11.26.
+
 20 tickers .L sin provider oficial -> RESUELTO 2026-09-26 via F-IAE-LSE-INTEGRATION.
 Ahora se cubren con el scraper privado `lse-close-scraper` (Refinitiv Widgets)
 como fuente primaria, con fallback a Yahoo y override parcial de Close.
@@ -1347,7 +1412,7 @@ viven en `iae/IAE_MAESTRO.md`. No se duplican aqui.
     Ahead           0 (sincronizado con origin/main)
     Push            SI (integrado en produccion desde 2026-09-26)
     Working tree    LIMPIO
-    Suite local     2173 passed + 2 skipped + 0 failed
+    Suite local     2184 passed + 2 skipped + 0 failed
     Suite IAE       845 passed (criterio AST, 45 ficheros)
     Suite CI        0 failed (ultima verificacion completa: run 36189310171, dispatch manual)
 
