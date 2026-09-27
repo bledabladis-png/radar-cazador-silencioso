@@ -68,6 +68,7 @@ def merge_commodities_into_market(
                   f'{comm.index.max().date()})')
             continue
 
+        new_cols_added = False
         for col in comm.columns:
             field, ticker = col
             values = comm.loc[common_idx, col]
@@ -83,7 +84,13 @@ def merge_commodities_into_market(
                 new_col = pd.Series(index=df_market.index, dtype=float)
                 new_col.loc[common_idx] = values.values
                 df_market[(field, ticker)] = new_col
-                df_market = df_market.sort_index(axis=1)
+                new_cols_added = True
+
+        # F3-18: sort_index(axis=1) genera una nueva referencia en pandas
+        # cuando hay columnas nuevas. Hacerlo UNA vez por fichero, tras el
+        # bucle, preservando el contrato "in-place" del return.
+        if new_cols_added:
+            df_market = df_market.sort_index(axis=1)
 
         n_cols = len(comm.columns)
         print(f'  [commodities_merge] {os.path.basename(path)}: '
