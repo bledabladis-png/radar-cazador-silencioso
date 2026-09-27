@@ -10,6 +10,8 @@ import requests
 from pathlib import Path
 from datetime import datetime, timedelta
 
+from config.settings import CFTC_HISTORY_DAYS, CFTC_ACTIVE_CONTRACT_DAYS
+
 CFTC_TFF_URL = "https://publicreporting.cftc.gov/api/v3/views/gpe5-46if/export.csv"
 CACHE_PATH = Path('data/cache/cftc_tff.csv')
 HISTORY_PATH = Path('outputs/history/cftc_position_flow.csv')
@@ -151,15 +153,15 @@ def get_cftc_position_flow_data() -> pd.DataFrame:
 
         # Filtrar a los últimos 365 días para mostrar solo lo reciente
         max_date = result['date'].max()
-        recent = result[result['date'] >= max_date - pd.Timedelta(days=365)]
+        recent = result[result['date'] >= max_date - pd.Timedelta(days=CFTC_HISTORY_DAYS)]
 
         # Filtro de frescura: descartar contratos con datos más antiguos que 30 días
         # respecto a la fecha máxima global
-        recent = recent[recent['date'] >= recent['date'].max() - pd.Timedelta(days=30)]
+        recent = recent[recent['date'] >= recent['date'].max() - pd.Timedelta(days=CFTC_ACTIVE_CONTRACT_DAYS)]
 
         HISTORY_PATH.parent.mkdir(parents=True, exist_ok=True)
         recent.to_csv(HISTORY_PATH, index=False)
-        print(f'  Histórico CFTC guardado (últimos 365 días, frescura 30 días): {HISTORY_PATH}')
+        print(f'  Historico CFTC guardado (ultimos {CFTC_HISTORY_DAYS} dias, actividad {CFTC_ACTIVE_CONTRACT_DAYS} dias): {HISTORY_PATH}')
 
         return recent.sort_values('date', ascending=False).reset_index(drop=True)
     except Exception as e:

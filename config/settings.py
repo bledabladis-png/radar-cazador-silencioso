@@ -39,6 +39,20 @@ FRESHNESS_FINRA = (30, 45, 60)    # FINRA (retraso regulatorio 2-4 sem.)
 FRESHNESS_FRED = (30, 60, 90)     # FRED (series macro)
 
 # ============================================================
+# CFTC POSITION FLOW (data/providers/cftc_data.py)
+# ============================================================
+# CFTC_HISTORY_DAYS: ventana historica de contratos incluidos en el CSV.
+# CFTC_ACTIVE_CONTRACT_DAYS: un contrato se descarta si su ultimo dato
+#   reportado es mas antiguo que este valor respecto al maximo global.
+# Nota: la clasificacion de frescura de la fuente (indicators/data_quality.py)
+#   usa umbrales distintos (45/90/120) por frecuencia declarada. No son el
+#   mismo concepto: aqui se decide actividad operativa del contrato, alli
+#   frescura de la fuente.
+
+CFTC_HISTORY_DAYS = 365
+CFTC_ACTIVE_CONTRACT_DAYS = 30
+
+# ============================================================
 # DATA QUALITY
 # ============================================================
 
