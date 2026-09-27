@@ -1,8 +1,25 @@
 ﻿import pandas as pd
 from pathlib import Path
 
-QUARTERS = ['2026q1', '2026q2']
 BASE = Path('data/nport')
+
+
+def discover_quarters(base=Path('data/nport')):
+    """Descubre dinamicamente los trimestres disponibles en data/nport/.
+
+    F5.7-19: antes la lista de trimestres estaba hardcoded a dos
+    valores fijos. El workflow trimestral descarga uno nuevo cada
+    3 meses, pero este script solo procesaba los originales. Los
+    trimestres nuevos quedaban invisibles. Ademas, si un trimestre
+    de la lista no existia en disco, load_quarter fallaba.
+    """
+    if not base.exists():
+        return []
+    names = sorted([
+        d.name for d in base.iterdir()
+        if d.is_dir() and d.name.lower().startswith('20') and 'q' in d.name.lower()
+    ])
+    return names
 OUTPUT = Path('outputs/history/sec_nport_position_change_quarterly.csv')
 TARGET_CIKS = {1064641, 884394, 1041130, 936958, 1168164}
 
@@ -38,7 +55,13 @@ def load_quarter(q):
     return hold
 
 def main():
-    frames = [load_quarter(q) for q in QUARTERS]
+    quarters = discover_quarters()
+    if len(quarters) < 2:
+        print(f'AVISO: data/nport/ contiene {len(quarters)} trimestre(s); '
+              f'se necesitan >=2 para calcular cambios. Nada que hacer.')
+        return
+    print(f'Trimestres detectados: {quarters}')
+    frames = [load_quarter(q) for q in quarters]
     all_data = pd.concat(frames, ignore_index=True)
 
     all_data['SECURITY_KEY'] = all_data['IDENTIFIER_ISIN'].fillna(all_data['ISSUER_CUSIP'])
