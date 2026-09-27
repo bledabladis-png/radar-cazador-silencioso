@@ -2,7 +2,6 @@
 
 Cubre:
 - load_previous_scenario: fichero valido, inexistente, version distinta.
-- save_scenario: schema correcto, pending persistido.
 - validate_transition: transiciones normales, excepciones con cls, bloqueos.
 
 Sin tocar outputs/state/. Todo con tmp_path + monkeypatch.
@@ -66,44 +65,6 @@ class TestLoadPreviousScenario:
         assert scenario == "MIXED"
         assert pending is None
         assert temporal_reset is False
-
-
-class TestSaveScenario:
-
-    def test_escribe_schema_correcto(self, tmp_path, monkeypatch):
-        import indicators.mte as mte_module
-        state = tmp_path / "mte_state.json"
-        monkeypatch.setattr("indicators.mte.state.MTE_STATE_FILE", str(state))
-
-        mte_module.save_scenario("EXPANSION")
-
-        data = json.loads(state.read_text(encoding="utf-8"))
-        assert data["schema_version"] == 1
-        assert data["temporal_contract_version"] == mte_module.CURRENT_TEMPORAL_CONTRACT_VERSION
-        assert data["scenario"] == "EXPANSION"
-        assert data["pending"] is None
-
-    def test_escribe_pending(self, tmp_path, monkeypatch):
-        import indicators.mte as mte_module
-        state = tmp_path / "mte_state.json"
-        monkeypatch.setattr("indicators.mte.state.MTE_STATE_FILE", str(state))
-
-        mte_module.save_scenario("EXPANSION", "SOFT LANDING")
-
-        data = json.loads(state.read_text(encoding="utf-8"))
-        assert data["scenario"] == "EXPANSION"
-        assert data["pending"] == "SOFT LANDING"
-
-    def test_crea_directorio_si_no_existe(self, tmp_path, monkeypatch):
-        import indicators.mte as mte_module
-        nested = tmp_path / "a" / "b" / "mte_state.json"
-        monkeypatch.setattr("indicators.mte.state.MTE_STATE_FILE", str(nested))
-
-        mte_module.save_scenario("EXPANSION")
-
-        assert nested.exists()
-        data = json.loads(nested.read_text(encoding="utf-8"))
-        assert data["scenario"] == "EXPANSION"
 
 
 class TestValidateTransition:

@@ -10,7 +10,6 @@ from __future__ import annotations
 
 from .state import (
     load_previous_scenario,
-    save_scenario,
     MTE_STATE_FILE,
     CURRENT_TEMPORAL_CONTRACT_VERSION,
 )
@@ -56,7 +55,6 @@ __all__ = [
     "distance_to_threshold",
     "compute_confidence",
     "load_previous_scenario",
-    "save_scenario",
     "MTE_STATE_FILE",
     "CURRENT_TEMPORAL_CONTRACT_VERSION",
     "NORMAL_TRANSITIONS",

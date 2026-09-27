@@ -13,7 +13,6 @@ para permitir monkeypatch del path en tests sin tocar produccion.
 from __future__ import annotations
 
 import json
-import os
 
 from config.settings import MTE_STATE_FILE, CURRENT_TEMPORAL_CONTRACT_VERSION
 
@@ -41,15 +40,3 @@ def load_previous_scenario():
             return data.get('scenario', 'MIXED'), data.get('pending', None), False
     except Exception:
         return 'MIXED', None, False
-
-
-def save_scenario(scenario, pending=None):
-    """Persiste scenario + pending en MTE_STATE_FILE con schema minimo."""
-    os.makedirs(os.path.dirname(MTE_STATE_FILE), exist_ok=True)
-    with open(MTE_STATE_FILE, 'w', encoding='utf-8') as f:
-        json.dump({
-            'schema_version': 1,
-            'temporal_contract_version': CURRENT_TEMPORAL_CONTRACT_VERSION,
-            'scenario': scenario,
-            'pending': pending,
-        }, f, indent=2)
