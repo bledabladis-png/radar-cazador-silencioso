@@ -378,11 +378,7 @@ def credit_stress_score(financial_conditions, credit_signal,
 
 
 
-                        volatility_signal, vix_term, darkpool_z, pcr_z,
-
-
-
-                        nfci_series=None, credit_oas_series=None):
+                        volatility_signal, vix_term, darkpool_z, pcr_z):
 
 
 
@@ -390,15 +386,7 @@ def credit_stress_score(financial_conditions, credit_signal,
 
 
 
-    CLS v1.1 - Arquitectura por familias con NFCI y Credit OAS.
-
-
-
-    Si Credit OAS no está disponible, usa HYG/LQD como proxy.
-
-
-
-    Si NFCI no está disponible, usa financial_conditions como proxy.
+    CLS v1.1 - Arquitectura por familias.
 
 
 
@@ -407,54 +395,6 @@ def credit_stress_score(financial_conditions, credit_signal,
 
 
     """
-
-
-
-    def robust_zscore_series(series, window=104):
-
-
-
-        if len(series) < 20:
-
-
-
-            return pd.Series([0.0], index=series.index)
-
-
-
-        median = series.rolling(window, min_periods=20).median()
-
-
-
-        def mad_func(x):
-
-
-
-            return np.median(np.abs(x - np.median(x)))
-
-
-
-        mad = series.rolling(window, min_periods=20).apply(mad_func, raw=True)
-
-
-
-        return (series - median) / (1.4826 * mad + 1e-9)
-
-
-
-    
-
-
-
-    def stress_transform(z):
-
-
-
-        return float(np.clip(np.tanh(z.iloc[-1] / 2.0), 0, 1)) if len(z) > 0 else 0.5
-
-
-
-    
 
 
 
@@ -478,129 +418,13 @@ def credit_stress_score(financial_conditions, credit_signal,
 
 
 
-    # Familia 1: Liquidez (NFCI si existe, si no Financial Conditions)
+    # Familia 1: Liquidez (financial_conditions)
 
+    nfci_stress = stress(-financial_conditions) if financial_conditions is not None else 0.5
 
+    # Familia 2: Crédito (HYG/LQD)
 
-    # Verificar si NFCI tiene datos VÁLIDOS para la fecha actual
-
-
-
-    nfci_valid = False
-
-
-
-    if nfci_series is not None and len(nfci_series) > 0:
-
-
-
-        nfci_val = nfci_series.iloc[-1] if hasattr(nfci_series, 'iloc') else nfci_series
-
-
-
-        if pd.notna(nfci_val) and np.isfinite(nfci_val):
-
-
-
-            nfci_valid = True
-
-
-
-    
-
-
-
-    if nfci_valid:
-
-
-
-        nfci_z = robust_zscore_series(nfci_series)
-
-
-
-        nfci_stress = stress_transform(nfci_z)
-
-
-
-    else:
-
-
-
-        nfci_stress = stress(-financial_conditions) if financial_conditions is not None else 0.5
-
-
-
-    
-
-
-
-    # Familia 2: Crédito (Credit OAS si existe, si no HYG/LQD)
-
-
-
-    # Verificar si Credit OAS tiene datos VÁLIDOS para la fecha actual
-
-
-
-    oas_valid = False
-
-
-
-    if credit_oas_series is not None and len(credit_oas_series) > 0:
-
-
-
-        oas_val = credit_oas_series.iloc[-1] if hasattr(credit_oas_series, 'iloc') else credit_oas_series
-
-
-
-        if pd.notna(oas_val) and np.isfinite(oas_val):
-
-
-
-            oas_valid = True
-
-
-
-    
-
-
-
-    if oas_valid:
-
-
-
-        oas_z = robust_zscore_series(credit_oas_series)
-
-
-
-        oas_stress = stress_transform(oas_z)
-
-
-
-        hyg_stress = stress(-credit_signal) if credit_signal is not None else 0.5
-
-
-
-        credit_stress_val = 0.60 * oas_stress + 0.40 * hyg_stress
-
-
-
-    else:
-
-
-
-        # Fallback a HYG/LQD cuando Credit OAS no está disponible
-
-
-
-        credit_stress_val = stress(-credit_signal) if credit_signal is not None else 0.5
-
-
-
-    
-
-
+    credit_stress_val = stress(-credit_signal) if credit_signal is not None else 0.5
 
     # Familia 3: Volatilidad (VIX)
 
