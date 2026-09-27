@@ -264,3 +264,100 @@ def test_compute_eligibility_coverage_vacio():
     m = sl.compute_eligibility_coverage([], pd.DataFrame())
     assert m["n_total"] == 0
     assert m["pct_eligible"] == 0.0
+
+# --- H1-B: classify_instrument_type + resolve_eligibility extendido ---
+
+def test_classify_instrument_type_common():
+    assert sl.classify_instrument_type("COM") == sl.INSTRUMENT_EQUITY
+
+
+def test_classify_instrument_type_common_new():
+    assert sl.classify_instrument_type("COM NEW") == sl.INSTRUMENT_EQUITY
+
+
+def test_classify_instrument_type_call():
+    assert sl.classify_instrument_type("CALL") == sl.INSTRUMENT_OPTION
+
+
+def test_classify_instrument_type_put():
+    assert sl.classify_instrument_type("PUT") == sl.INSTRUMENT_OPTION
+
+
+def test_classify_instrument_type_empty():
+    assert sl.classify_instrument_type("") == sl.INSTRUMENT_UNKNOWN
+    assert sl.classify_instrument_type(None) == sl.INSTRUMENT_UNKNOWN
+
+
+def test_classify_instrument_type_word_boundary():
+    # "CALLON PETROLEUM" contiene CALL como substring pero no como palabra.
+    # Debe devolver UNKNOWN, no OPTION.
+    assert sl.classify_instrument_type("CALLON PETROLEUM") == sl.INSTRUMENT_UNKNOWN
+
+
+def test_classify_instrument_type_mixed():
+    # Prioridad derivadas sobre equity.
+    assert sl.classify_instrument_type("COM CALL") == sl.INSTRUMENT_OPTION
+
+
+def test_resolve_eligibility_extension_backward_compat():
+    df = pd.DataFrame({
+        "cusip": ["AAA"],
+        "option_indicator": ["*"],
+        "issuer_name": ["X"],
+        "issuer_description": ["COM"],
+        "status_raw": ["   "],
+        "status": [sl.STATUS_ACTIVE],
+        "raw_line": ["x" * 80],
+        "_line_no": [1],
+        "_order": [0],
+    })
+    r = sl.resolve_eligibility(["AAA"], df)
+    # Campos existentes intactos.
+    assert r["AAA"]["status"] == sl.STATUS_ACTIVE
+    assert r["AAA"]["option_indicator"] == "*"
+    assert r["AAA"]["eligible"] is True
+    # Campos nuevos presentes.
+    assert r["AAA"]["instrument_type"] == sl.INSTRUMENT_EQUITY
+    assert r["AAA"]["eligible_for_nipc"] is True
+
+
+def test_resolve_eligibility_adds_instrument_type():
+    df = pd.DataFrame({
+        "cusip": ["AAA", "BBB", "CCC"],
+        "option_indicator": ["*", " ", " "],
+        "issuer_name": ["X", "Y", "Z"],
+        "issuer_description": ["COM", "CALL", "PUT"],
+        "status_raw": ["   ", "   ", "   "],
+        "status": [sl.STATUS_ACTIVE] * 3,
+        "raw_line": ["x" * 80] * 3,
+        "_line_no": [1, 2, 3],
+        "_order": [0, 1, 2],
+    })
+    r = sl.resolve_eligibility(["AAA", "BBB", "CCC"], df)
+    assert r["AAA"]["instrument_type"] == sl.INSTRUMENT_EQUITY
+    assert r["BBB"]["instrument_type"] == sl.INSTRUMENT_OPTION
+    assert r["CCC"]["instrument_type"] == sl.INSTRUMENT_OPTION
+    assert r["BBB"]["eligible_for_nipc"] is False
+
+
+def test_resolve_eligibility_eligible_for_nipc_unresolved_false():
+    df = pd.DataFrame({
+        "cusip": ["AAA"],
+        "option_indicator": ["*"],
+        "issuer_name": ["X"],
+        "issuer_description": ["COM"],
+        "status_raw": ["   "],
+        "status": [sl.STATUS_ACTIVE],
+        "raw_line": ["x" * 80],
+        "_line_no": [1],
+        "_order": [0],
+    })
+    r = sl.resolve_eligibility(["MISSING"], df)
+    assert r["MISSING"]["instrument_type"] == sl.INSTRUMENT_UNKNOWN
+    assert r["MISSING"]["eligible_for_nipc"] is False
+
+
+def test_resolve_eligibility_empty_official_df_adds_new_fields():
+    r = sl.resolve_eligibility(["ANY"], None)
+    assert r["ANY"]["instrument_type"] == sl.INSTRUMENT_UNKNOWN
+    assert r["ANY"]["eligible_for_nipc"] is False

@@ -32,6 +32,7 @@ Estados internos (5, no booleano puro; dictamen v1.1 seccion 14):
 """
 from __future__ import annotations
 
+import re
 from pathlib import Path
 
 import pandas as pd
@@ -60,6 +61,56 @@ ALL_STATUSES = (
 )
 
 ELIGIBLE_STATES = (STATUS_ADDED, STATUS_ACTIVE)
+
+
+# --- H1-B: clasificacion de tipo de instrumento (auditor 2026-09-27) ---
+
+INSTRUMENT_EQUITY = "EQUITY"
+INSTRUMENT_OPTION = "OPTION"
+INSTRUMENT_UNKNOWN = "UNKNOWN"
+
+_DERIVATIVE_RE = re.compile(r"\b(?:CALL|PUT|OPTION|OPT)\b", re.IGNORECASE)
+_EQUITY_RE = re.compile(
+    r"\b(?:COM|SHS|SHARE|STOCK|NAMEN|AKT|ORD|ORDINARY)\b",
+    re.IGNORECASE,
+)
+
+
+def classify_instrument_type(description):
+    """Clasifica el tipo de instrumento segun issuer_description.
+
+    Contrato H1-B (auditor 2026-09-27): 3 estados.
+    UNKNOWN se propaga como UNRESOLVED en el caller, que lo excluye
+    del NIPC por aplicacion del principio 'no imputar'.
+
+    Word-boundary obligatorio: evita falsos positivos por substring
+    (p.ej. 'CALLON PETROLEUM').
+    """
+    desc = (description or "").strip()
+    if not desc:
+        return INSTRUMENT_UNKNOWN
+    if _DERIVATIVE_RE.search(desc):
+        return INSTRUMENT_OPTION
+    if _EQUITY_RE.search(desc):
+        return INSTRUMENT_EQUITY
+    return INSTRUMENT_UNKNOWN
+
+
+def _aggregate_instrument_type(sub):
+    """Agrega tipo sobre las filas de un CUSIP.
+
+    Todas EQUITY -> EQUITY. Todas OPTION -> OPTION. Mezcla o todas
+    UNKNOWN -> UNKNOWN.
+    """
+    types = {
+        classify_instrument_type(d)
+        for d in sub["issuer_description"].tolist()
+    }
+    types.discard(INSTRUMENT_UNKNOWN)
+    if len(types) == 1:
+        return types.pop()
+    return INSTRUMENT_UNKNOWN
+
 
 COLUMNS = (
     "cusip",
@@ -209,6 +260,8 @@ def resolve_eligibility(cusips, official_df):
             "status": STATUS_NOT_IN_LIST,
             "option_indicator": None,
             "eligible": False,
+            "instrument_type": INSTRUMENT_UNKNOWN,
+            "eligible_for_nipc": False,
         } for c in cusips}
 
     by_cusip = official_df.groupby("cusip", sort=False)
@@ -223,10 +276,18 @@ def resolve_eligibility(cusips, official_df):
         else:
             st = STATUS_NOT_IN_LIST
             opt = None
+        itype = (
+            _aggregate_instrument_type(sub)
+            if c in by_cusip.groups else INSTRUMENT_UNKNOWN
+        )
         resolved[c] = {
             "status": st,
             "option_indicator": opt,
             "eligible": st in ELIGIBLE_STATES,
+            "instrument_type": itype,
+            "eligible_for_nipc": (
+                st in ELIGIBLE_STATES and itype == INSTRUMENT_EQUITY
+            ),
         }
     return resolved
 

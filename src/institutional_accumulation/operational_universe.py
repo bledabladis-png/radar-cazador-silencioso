@@ -42,6 +42,7 @@ REQUIRED_INFOTABLE_COLUMNS = (
 
 # --- Columnas de trazabilidad anadidas a la salida ---
 DIAGNOSTIC_COLUMNS = (
+    "_instrument_type",
     "_security_type",
     "_security_type_status",
     "_elig_status",
@@ -83,6 +84,33 @@ def _apply_5_3(df, official_df):
     )
     eligible_mask = df["_elig_status"].isin(sl.ELIGIBLE_STATES)
     return df[eligible_mask].copy()
+
+
+def _apply_5_3b(df, official_df):
+    """Filtro H1-B: excluir CUSIPs cuyo instrument_type no sea EQUITY.
+
+    Contrato del auditor (2026-09-27): EQUITY / OPTION / UNRESOLVED.
+    UNRESOLVED (incluye UNKNOWN) -> excluido. Regla: no imputar.
+    """
+    cusips = df["CUSIP"].astype(str).unique()
+    elig = sl.resolve_eligibility(cusips, official_df)
+    df = df.copy()
+    df["_instrument_type"] = df["CUSIP"].astype(str).map(
+        lambda c: elig.get(c, {}).get(
+            "instrument_type", sl.INSTRUMENT_UNKNOWN
+        )
+    )
+    mask_keep = df["_instrument_type"] == sl.INSTRUMENT_EQUITY
+    stats = {
+        "n_equity": int(mask_keep.sum()),
+        "n_option": int(
+            (df["_instrument_type"] == sl.INSTRUMENT_OPTION).sum()
+        ),
+        "n_unresolved": int(
+            (df["_instrument_type"] == sl.INSTRUMENT_UNKNOWN).sum()
+        ),
+    }
+    return df[mask_keep].copy(), stats
 
 
 def _apply_5_4(df):
@@ -188,7 +216,26 @@ def build_operational_universe(
     _check_required_columns(infotable_df)
 
     df = _apply_5_1(infotable_df)
+    n_after_5_1 = int(len(df))
     df = _apply_5_3(df, official_df)
+    n_after_5_3 = int(len(df))
+    df, stats_5_3b = _apply_5_3b(df, official_df)
+    n_after_5_3b = int(len(df))
     df = _apply_5_4(df)
+    n_after_5_4 = int(len(df))
     df = _apply_5_5(df, identity_results)
+    n_after_5_5 = int(len(df))
+
+    df.attrs["audit_stats"] = {
+        "n_total_input": int(len(infotable_df)),
+        "n_after_5_1_sh_putcall_null": n_after_5_1,
+        "n_after_5_3_official_list_eligible": n_after_5_3,
+        "n_after_5_3b_instrument_type_equity": n_after_5_3b,
+        "n_after_5_4_security_type_resolved_equity": n_after_5_4,
+        "n_after_5_5_canonical_verified": n_after_5_5,
+        "n_dropped_by_instrument_type": n_after_5_3 - n_after_5_3b,
+        "n_equity": stats_5_3b["n_equity"],
+        "n_option": stats_5_3b["n_option"],
+        "n_unresolved": stats_5_3b["n_unresolved"],
+    }
     return df

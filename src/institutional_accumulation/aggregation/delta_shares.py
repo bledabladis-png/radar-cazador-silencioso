@@ -31,7 +31,13 @@ NO por deteccion de evento societario.
 """
 from __future__ import annotations
 
+import re
+
 import pandas as pd
+
+_OPTION_HINTS_RE = re.compile(
+    r"\b(?:CALL|PUT|OPTION|OPT)\b", re.IGNORECASE
+)
 
 MATCH_KEY = ("filing_manager_cik", "canonical_security", "discretion_type")
 VALID_DISCRETIONS = ("SOLE", "DFND", "OTR")
@@ -113,6 +119,18 @@ def _filter_canonical(infotable_df):
     mask_sh = df["SSHPRNAMTTYPE"].astype(str).str.strip() == "SH"
     mask_null = df["PUTCALL"].isna()
     df = df[mask_sh & mask_null].copy()
+
+    # H1-B defensa secundaria: descartar filas con TITLEOFCLASS
+    # sugerente de opcion. NO sustituye al filtro primario
+    # (Official List via operational_universe._apply_5_3b).
+    # Word-boundary obligatorio: evita falsos positivos.
+    if "TITLEOFCLASS" in df.columns:
+        _toc = df["TITLEOFCLASS"].fillna("").astype(str)
+        _mask_clean = ~_toc.str.contains(_OPTION_HINTS_RE, regex=True)
+        n_dropped_by_toc = int((~_mask_clean).sum())
+        df = df[_mask_clean].copy()
+    else:
+        n_dropped_by_toc = 0
     n_after_sh_putcall = int(len(df))
 
     # SSHPRNAMT a float64 nullable
@@ -126,6 +144,7 @@ def _filter_canonical(infotable_df):
         "n_after_sh_putcall_null": n_after_sh_putcall,
         "n_dropped_not_sh_or_putcall": n_input - n_after_sh_putcall,
         "n_dropped_invalid_sshprnamt": n_dropped_invalid,
+        "n_dropped_by_titleofclass": n_dropped_by_toc,
         "n_rows_output": int(len(df)),
     }
     return df, stats

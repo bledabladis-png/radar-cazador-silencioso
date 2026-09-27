@@ -258,3 +258,116 @@ def test_T14c_identity_period_none_rechazado():
             identity_results=ids,
             identity_period_iso=None,
         )
+
+
+# --- H1-B: _apply_5_3b ---
+
+def _official_df(rows):
+    """Helper: construir official_df minimo para los tests H1-B."""
+    import pandas as pd
+    cusips = [r[0] for r in rows]
+    descs = [r[1] for r in rows]
+    return pd.DataFrame({
+        "cusip": cusips,
+        "option_indicator": ["*" if d == "COM" else " " for d in descs],
+        "issuer_name": ["X"] * len(rows),
+        "issuer_description": descs,
+        "status_raw": ["   "] * len(rows),
+        "status": ["ACTIVE"] * len(rows),
+        "raw_line": ["x" * 80] * len(rows),
+        "_line_no": list(range(1, len(rows) + 1)),
+        "_order": list(range(len(rows))),
+    })
+
+
+def _infotable_df(cusips):
+    import pandas as pd
+    return pd.DataFrame({
+        "CUSIP": cusips,
+        "TITLEOFCLASS": ["COM"] * len(cusips),
+        "SSHPRNAMTTYPE": ["SH"] * len(cusips),
+        "PUTCALL": [None] * len(cusips),
+        "SSHPRNAMT": ["1000"] * len(cusips),
+    })
+
+
+def test_apply_5_3b_excluye_option():
+    from src.institutional_accumulation import operational_universe as ou
+    df = _infotable_df(["CALL1"])
+    official_df = _official_df([("CALL1", "CALL")])
+    out, stats = ou._apply_5_3b(df, official_df)
+    assert len(out) == 0
+    assert stats["n_option"] == 1
+    assert stats["n_equity"] == 0
+    assert stats["n_unresolved"] == 0
+
+
+def test_apply_5_3b_acepta_equity():
+    from src.institutional_accumulation import operational_universe as ou
+    df = _infotable_df(["EQ1"])
+    official_df = _official_df([("EQ1", "COM")])
+    out, stats = ou._apply_5_3b(df, official_df)
+    assert len(out) == 1
+    assert stats["n_equity"] == 1
+    assert stats["n_option"] == 0
+    assert stats["n_unresolved"] == 0
+
+
+def test_apply_5_3b_excluye_unresolved():
+    from src.institutional_accumulation import operational_universe as ou
+    df = _infotable_df(["MISSING1"])
+    official_df = _official_df([("OTHER", "COM")])
+    out, stats = ou._apply_5_3b(df, official_df)
+    assert len(out) == 0
+    assert stats["n_unresolved"] == 1
+    assert stats["n_equity"] == 0
+    assert stats["n_option"] == 0
+
+
+def test_apply_5_3b_mixto():
+    from src.institutional_accumulation import operational_universe as ou
+    df = _infotable_df(["EQ1", "CALL1", "MISSING1"])
+    official_df = _official_df([("EQ1", "COM"), ("CALL1", "CALL")])
+    out, stats = ou._apply_5_3b(df, official_df)
+    assert len(out) == 1
+    assert stats["n_equity"] == 1
+    assert stats["n_option"] == 1
+    assert stats["n_unresolved"] == 1
+
+
+def test_build_operational_universe_audit_stats_en_attrs():
+    """El dict audit_stats debe quedar en df.attrs tras build."""
+    from src.institutional_accumulation import operational_universe as ou
+    infotable = _infotable_df(["EQ1", "CALL1"])
+    official_df = _official_df([("EQ1", "COM"), ("CALL1", "CALL")])
+    identity_results = {
+        "EQ1": {
+            "security_resolution_status": "CANONICAL",
+            "operational_mapping_status": "VERIFIED",
+            "canonical_security": "equity:EQ1",
+            "canonical_security_kind": "EQUITY",
+            "observed_security_key": "cusip:EQ1",
+        },
+        "CALL1": {
+            "security_resolution_status": "CANONICAL",
+            "operational_mapping_status": "VERIFIED",
+            "canonical_security": "equity:CALL1",
+            "canonical_security_kind": "EQUITY",
+            "observed_security_key": "cusip:CALL1",
+        },
+    }
+    out = ou.build_operational_universe(
+        infotable,
+        official_df,
+        "2026-03-31",
+        identity_results=identity_results,
+        identity_period_iso="2026-03-31",
+    )
+    # CALL1 debe haber sido excluido por _apply_5_3b.
+    assert len(out) == 1
+    stats = out.attrs.get("audit_stats")
+    assert stats is not None
+    assert stats["n_equity"] == 1
+    assert stats["n_option"] == 1
+    assert stats["n_unresolved"] == 0
+    assert stats["n_dropped_by_instrument_type"] == 1
