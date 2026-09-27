@@ -1,6 +1,6 @@
-# PROMPT MAESTRO v7.6 - INGENIERO SUPERVISOR DEL RADAR DE ROTACION SECTORIAL
+# PROMPT MAESTRO v7.7 - INGENIERO SUPERVISOR DEL RADAR DE ROTACION SECTORIAL
 
-**Actualizado:** 2026-09-26 (v7.6: auditoria interna del prompt - correcciones documentales en el arbol §4.2 (indicators/darkpool, providers, outputs/*, docs/plan, audit, src/external, provenance LSE, scripts nuevos), en los listados §4.3/§4.4 (iae.py, iae_section.py) y en la referencia §10.1. Sin cambios de codigo ni de arquitectura. Base v7.5: ciclo F-IAE-LSE-INTEGRATION + F-IAE-CRON-02 / F-IAE-GATE-01. Cifras internas alineadas: suite 1857 passed + 2 skipped, bloque IAE 845 tests).
+**Actualizado:** 2026-09-27 (v7.7: ciclo Cat 1 - 5 fixes quirurgicos de la auditoria radar pusheados (A5-71, F3-18, F2.4-01/02/03). Suite 2097 -> 2163 + 2 skipped. Base v7.6: auditoria interna del prompt - correcciones documentales en el arbol §4.2 (indicators/darkpool, providers, outputs/*, docs/plan, audit, src/external, provenance LSE, scripts nuevos), en los listados §4.3/§4.4 (iae.py, iae_section.py) y en la referencia §10.1. Sin cambios de codigo ni de arquitectura. Base v7.5: ciclo F-IAE-LSE-INTEGRATION + F-IAE-CRON-02 / F-IAE-GATE-01. Cifras internas alineadas: suite 1857 passed + 2 skipped, bloque IAE 845 tests).
 
 Este documento describe **rol, metodologia, arquitectura y prohibiciones vigentes**.
 **NO declara el estado del sistema.** Para estado, ver:
@@ -162,7 +162,7 @@ py -m pytest tests/ validation/ -q --tb=short
 
 text
 
-Esperado: `compileall OK`, `pyflakes LIMPIO`, `1857 passed + 2 skipped + 0 failed`.
+Esperado: `compileall OK`, `pyflakes LIMPIO`, `2163 passed + 2 skipped + 0 failed`.
 
 ### 3.5. Verificacion de no regresion (refactors grandes)
 
@@ -299,7 +299,7 @@ D:\Macro_Sectorial
 |            regenerate_cusip_crosswalk.py,
 |            pipeline_gate.py, issue_manager.py [F-IAE-CRON-02])
 +-- validation/ (6 activos)
-+-- tests/ (1857+ casos; ver IAE_MAESTRO.md seccion 11 para conteo del modulo IAE)
++-- tests/ (2163+ casos; ver IAE_MAESTRO.md seccion 11 para conteo del modulo IAE)
 +-- docs/
 | +-- automatica/ (22 .md auto-generados, LF)
 | +-- auditoria/ (prompt + transfer + readme + iae/)
@@ -496,7 +496,7 @@ Fase G (2026-09-24) - automatizacion de mappings del IAE:
 
 ## SECCION 10 - VALIDACION Y TESTS
 10.1. Tests
-1857 passed + 2 skipped + 0 failed en local tras run.py. Los 3 test_freshness (ambientales) pasan tras un run que refresca los parquets; vuelven a fallar si pasan >4 dias sin ejecutar el pipeline. CI similar con parquet gitignored. Incluye 845 tests del modulo IAE (criterio AST, 45 ficheros, ver IAE_MAESTRO.md seccion 11).
+2163 passed + 2 skipped + 0 failed en local tras run.py. Los 3 test_freshness (ambientales) pasan tras un run que refresca los parquets; vuelven a fallar si pasan >4 dias sin ejecutar el pipeline. CI similar con parquet gitignored. Incluye 845 tests del modulo IAE (criterio AST, 45 ficheros, ver IAE_MAESTRO.md seccion 11).
 
 10.2. Validation Gate (10/10)
 SLPM v1.2 (sin errores de validacion)
@@ -995,6 +995,60 @@ Comprobaciones cruzadas (local + CI):
   tickers_missing=0.
 - Validation Gate: 10/10.
 
+### 11.24. Ciclo Cat 1 - Fixes quirurgicos de la auditoria radar (2026-09-27)
+
+Cierre del bloque "Categoria 1" del inventario de la auditoria
+consolidada (`docs/auditoria/radar/audits/AUDITORIA_CONSOLIDADA_2026-09-26.md`).
+5 fixes MEDIA/BAJA de bajo riesgo, todos pusheados.
+
+Fixes aplicados (4 commits):
+
+- **8abb6b0** fix(providers): A5-71 - except acotado en `parse_fecha_es`
+  (`blackrock_fund_data.py` + `blackrock_isf_fund_data.py`).
+  `except:` -> `except (ValueError, TypeError):`. El guard
+  `len(partes) != 3` previo descarta IndexError y AttributeError por
+  construccion; el acotamiento no cambia el contrato observable.
+
+- **cf20292** fix(commodities): F3-18 - sort_index fuera del bucle
+  preserva in-place (`src/commodities_merge.py`). `sort_index(axis=1)`
+  ahora se aplica UNA vez por fichero tras el bucle, con flag
+  `new_cols_added`. Mismo resultado; evita reordenaciones multiples.
+
+- **c576158** test(providers): cubrir `parse_fecha_es` A5-71 (52 tests).
+  `tests/test_provider_blackrock_parse_fecha.py`: contrato observable
+  (None/NaN/vacio/1-2-4 tokens), timestamps validos (formato
+  "27 dic 2000", mes en mayusculas, espacios), regresion A5-71
+  (dia/mes/anio invalidos) y consistencia DAX<->ISF.
+
+- **9a6ff6a** fix(mte): F2.4-01 + F2.4-02 + F2.4-03 (`scoring.py`).
+  - F2.4-01: eliminado el bonus `cls > 0.7` duplicado en CRISIS
+    (dentro y fuera del else). Antes +5, ahora +3. Anclado por test
+    de caracterizacion + assert AST que verifica una sola condicion.
+  - F2.4-02: except acotado en SRS (`defensive_beating_spy`):
+    `(KeyError, ValueError, TypeError, AttributeError)`, sin print.
+  - F2.4-03: `SCENARIO_WEIGHTS["IPS"]["weight"]` = 3 (antes 2, no
+    usado) y se usa en lugar del hardcode `+3`. Comportamiento
+    preservado.
+  - Efecto lateral: F2.4-07 (comentario "(umbral reducido)" obsoleto)
+    resuelto en la misma linea de F2.4-03.
+  - Tests: 14 nuevos (`test_mte_scoring_characterization.py`).
+
+WONT FIX razonado (declarados, no tocados):
+
+- F2.4-05 (BAJA): wrapper trivial `tanh`. Re-exportado en `__init__`,
+  usado en 8 sitios + `engine.py`. Coste > valor.
+- F2.4-06 (BAJA): `stress` vs `stress_transform`. Contratos distintos
+  (Series vs escalar), no son duplicado.
+- F2.4-08 (BAJA): `scores['MIXED'] = 2` es baseline explicito del
+  escenario MIXED.
+- F2.4-22..25 (BAJA): redundancias cosmeticas o micro-optimizaciones.
+
+F2.4-04, F2.4-10, F2.4-11, F2.4-12, F2.4-13, F2.4-20, F2.4-21 quedan
+como deuda activa (ver `ESTADO_DECLARADO.md` seccion 3).
+
+Suite: 2097 -> 2163 passed + 2 skipped (+66 tests).
+Commits pusheados: `8abb6b0`, `cf20292`, `c576158`, `9a6ff6a`.
+
 ## SECCION 12 - LIMITACIONES CONOCIDAS
 20 tickers .L sin provider oficial -> RESUELTO 2026-09-26 via F-IAE-LSE-INTEGRATION.
 Ahora se cubren con el scraper privado `lse-close-scraper` (Refinitiv Widgets)
@@ -1232,7 +1286,7 @@ viven en `iae/IAE_MAESTRO.md`. No se duplican aqui.
     Ahead           0 (sincronizado con origin/main)
     Push            SI (integrado en produccion desde 2026-09-26)
     Working tree    LIMPIO
-    Suite local     1857 passed + 2 skipped + 0 failed
+    Suite local     2163 passed + 2 skipped + 0 failed
     Suite IAE       845 passed (criterio AST, 45 ficheros)
     Suite CI        0 failed (ultima verificacion completa: run 36189310171, dispatch manual)
 

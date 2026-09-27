@@ -3,7 +3,7 @@
 Estado declarado de fases, prohibiciones y hallazgos del modulo IAE.
 Documento vivo. Se actualiza cuando cambia el estado.
 
-**Actualizado:** 2026-09-26
+**Actualizado:** 2026-09-27
 **HEAD de cierre:** ver `ESTADO_SISTEMA.md` (se regenera con cada commit).
 **Estado del sistema:** `ESTADO_SISTEMA.md`.
 
@@ -382,6 +382,17 @@ IAE_MAESTRO). Detalle en §2.
   Commits: 7025a89, d1a4676.
 - Deuda residual de cobertura unitaria de `run_contractual_nipc`:
   76 stmts no cubiertos por tests con mock (ver IAE_MAESTRO 3.2 y 5.1).
+
+- Ciclo Cat 1 de la auditoria radar (2026-09-27). 5 fixes quirurgicos
+  MEDIA/BAJA pusheados. Commits: 8abb6b0 (A5-71 blackrock x2),
+  cf20292 (F3-18 commodities_merge), c576158 (test A5-71),
+  9a6ff6a (F2.4-01/02/03 scoring.py). Suite: 2097 -> 2163 (+66).
+  - F2.4-01 cambio comportamiento de MTE: CRISIS con cls > 0.7 suma
+    +3 (antes +5). Anclado por tests en
+    test_mte_scoring_characterization.py.
+  - WONT FIX razonado: F2.4-05, F2.4-06, F2.4-08, F2.4-22..25.
+  - Pendientes de ciclo propio: F2.4-04, F2.4-10, F2.4-11, F2.4-12,
+    F2.4-13, F2.4-20, F2.4-21.
 
 Detalle en `IAE_MAESTRO.md` seccion 5.
 
