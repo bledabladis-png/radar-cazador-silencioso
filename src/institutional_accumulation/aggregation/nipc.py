@@ -217,14 +217,6 @@ def compute_coverage_pairwise(units_current, units_previous):
     )
 
     # --- ponderado por SSHPRNAMT ---
-    def _weighted(df, subset_keys):
-        if df.empty or not subset_keys:
-            return 0.0
-        sub = df[df["observed_security_key"].astype(str).isin(subset_keys)]
-        if sub.empty:
-            return 0.0
-        return float(pd.to_numeric(sub["sshprnamt_total"], errors="coerce").sum())
-
     # para cada security, tomar SSHPRNAMT max entre periodos (evita doble conteo)
     all_units = pd.concat(
         [curr, prev], ignore_index=True,

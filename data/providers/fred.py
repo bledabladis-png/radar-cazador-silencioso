@@ -27,10 +27,7 @@ class FredProvider(MarketDataProvider):
         return self.name
 
     def is_available(self) -> bool:
-        try:
-            return True
-        except:
-            return False
+        return True
 
     def _download_series(self, series_id: str, start="2000-01-01", index=None) -> pd.Series:
         try:

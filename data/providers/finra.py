@@ -39,7 +39,7 @@ class FinraProvider(MarketDataProvider):
         try:
             week = self.get_latest_week()
             return week is not None
-        except:
+        except (requests.RequestException, ValueError, KeyError, TypeError):
             return False
 
     # ------------------------------------------------------------
@@ -155,7 +155,7 @@ class FinraProvider(MarketDataProvider):
         url = "https://otctransparency.finra.org/otctransparency/assets/archives/atsdownload/index.json"
         try:
             return requests.get(url).json()
-        except:
+        except (requests.RequestException, ValueError, KeyError, TypeError):
             return []
 
     def get_available_weeks(self):
