@@ -12,11 +12,11 @@
 
 | ID | Hallazgo | Severidad | Estado |
 |---|---|---|---|
-| H5.1 | Criterio de seleccion duplicado (workflow 51d vs script 60d) | MEDIO | ABIERTO |
-| H5.2 | Fallo de ingesta sin alerta (no retry, no Issue) | MEDIO | ABIERTO |
-| H5.3 | Q2 2026 ingestado manualmente (commit c5e3ee0) | BLOQUEANTE | ABIERTO |
-| H5.4 | Workflow no valida formato de inputs.quarter | BAJO | ABIERTO |
-| H5.5 | Cache no invalida ante republicaciones SEC | BAJO | ABIERTO |
+| H5.1 | Criterio de seleccion duplicado (workflow 51d vs script 60d) | MEDIO | RESUELTO c042fef |
+| H5.2 | Fallo de ingesta sin alerta (no retry, no Issue) | MEDIO | RESUELTO c042fef |
+| H5.3 | Q2 2026 ingestado manualmente (commit c5e3ee0) | BLOQUEANTE | TRAZABILIDAD IMPLEMENTADA c042fef - pendiente verificacion en cron nov 2026 |
+| H5.4 | Workflow no valida formato de inputs.quarter | BAJO | RESUELTO c042fef |
+| H5.5 | Cache no invalida ante republicaciones SEC | BAJO | RESUELTO c042fef |
 | H5.6 | Official List Q2 404 resuelto con sufijo -txt | HISTORICO | CERRADO |
 | H5.7 | Commit mixto c5e3ee0 (13F + outputs pipeline) | BAJO | HISTORICO |
 
@@ -211,3 +211,37 @@ Cada fix es un commit independiente. `git revert <sha>` limpio.
 Estado H5: AUDITADO / HALLAZGOS ABIERTOS. H5.3 no se declara cerrado
 hasta que exista al menos una ingesta por cron con trazabilidad
 completa.
+
+---
+
+## 9. Cierre H5.1-H5.5 (2026-09-28, commit c042fef)
+
+**Implementacion:**
+
+- H5.1: `config/settings.py::SEC_13F_QUARTER_LAG_DAYS = 60`. Fuente unica
+  consumida por `update_sec_13f.py::latest_published_quarter`.
+- H5.2: retry loop 3 intentos con sleeps 30/60s + step "Abrir Issue
+  si fallo" con `if: failure()`, label `sec-13f-failure`, creacion
+  automatica del label si no existe.
+- H5.3: `--source {cron|dispatch|manual}` + `--actor`. Workflow detecta
+  `event_name` y pasa `source=cron|dispatch`. Manifest gana campos
+  `ingest_source` + `ingest_actor` via `_write_ingest_trace`.
+- H5.4: step previo a Python con regex `^[0-9]{4}Q[1-4]$`. Falla con
+  `::error::` si no matchea.
+- H5.5: cache key v3 incluye `hashFiles('data/sec_13f/manifests/*.json')`.
+  Republicacion SEC -> cambio sha256 -> invalida cache.
+- Extra: commit del workflow condicionado a `if: success()`.
+
+**Verificacion pendiente (H5.3):** la trazabilidad se verifica en el
+proximo cron real (nov 2026, Q3 2026). En ese momento el manifest debe
+mostrar `ingest_source=cron` e `ingest_actor=github-actions[bot]`. Si
+no, H5.3 se reabre.
+
+**Q2 2026 (ingesta manual historica):** el manifest actual no tiene
+`ingest_source` porque se ingesto antes del fix. La trazabilidad se
+anadira retroactivamente si se reejecuta `update_sec_13f.py --quarter
+2026Q2 --force`, o se documenta como `manual_legacy` sin reejecutar.
+Decision pendiente.
+
+**No se declara H5 CERRADO.** Estado: AUDITADO / 5 de 7 sub-hallazgos
+resueltos, H5.3 con trazabilidad implementada pendiente de verificacion.
