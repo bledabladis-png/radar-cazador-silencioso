@@ -34,6 +34,11 @@ class FredProvider(MarketDataProvider):
                 s = s.reindex(index).ffill()
             else:
                 # Extender el índice hasta hoy y rellenar
+                # F5.6-06: fecha de ejecucion (extremo de rejilla
+                # para reindexar). No es fecha de observacion: la
+                # observacion real es s.index[-1]. El consumidor
+                # (regimes/liquidity.py) usa dropna(how='all').
+                # index[-1], no la longitud del indice.
                 today = pd.Timestamp.today().normalize()
                 full_index = pd.date_range(start=s.index[0], end=today, freq='D')
                 s = s.reindex(full_index).ffill()

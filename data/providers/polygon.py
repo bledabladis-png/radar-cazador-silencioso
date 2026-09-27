@@ -32,6 +32,9 @@ class PolygonProvider(MarketDataProvider):
 
     def _period_to_dates(self, period: str):
         """Convierte period ('5y', '1y', etc.) a fechas de inicio y fin."""
+        # F5.6-06: fecha de ejecucion (parametro de query HTTP).
+        # No es fecha de observacion: los timestamps del dataset
+        # vienen de la respuesta de Polygon, no de este calculo.
         end = datetime.now()
         if period.endswith('y'):
             years = int(period[:-1])
