@@ -741,3 +741,91 @@ def test_p64_cusip_change_es_identidad_no_corporate_action():
     # declare, ni constante P64_EVENTS_DETECTED.
     assert "corporate_action" not in delta.columns
     assert not hasattr(ds, "P64_EVENTS_DETECTED")
+
+
+# --- H1-B: filtro por tipo de instrumento (Official List SEC) ---
+
+def test_compute_units_filtro_h1b_excluye_call():
+    """H1-B v2.3: CUSIP CALL en Official List -> excluido de units."""
+    import pandas as pd
+    info = pd.DataFrame({
+        "ACCESSION_NUMBER": ["A1", "A2"],
+        "INFOTABLE_SK": [1, 2],
+        "CUSIP": ["EQ", "CALL1"],
+        "SSHPRNAMTTYPE": ["SH", "SH"],
+        "PUTCALL": [None, None],
+        "SSHPRNAMT": ["1000", "2000"],
+        "INVESTMENTDISCRETION": ["SOLE", "SOLE"],
+    })
+    sub = pd.DataFrame({
+        "ACCESSION_NUMBER": ["A1", "A2"],
+        "CIK": ["M1", "M1"],
+    })
+    official_df = pd.DataFrame({
+        "cusip": ["EQ", "CALL1"],
+        "option_indicator": ["*", " "],
+        "issuer_name": ["X", "Y"],
+        "issuer_description": ["COM", "CALL"],
+        "status_raw": ["   ", "   "],
+        "status": ["ACTIVE", "ACTIVE"],
+        "raw_line": ["x" * 80] * 2,
+        "_line_no": [1, 2],
+        "_order": [0, 1],
+    })
+    units = ds.compute_reported_position_units(
+        info, sub, report_period="2026-03-31",
+        official_df=official_df)
+    assert len(units) == 1
+    assert units.iloc[0]["observed_security_key"] == "cusip:EQ"
+
+
+def test_compute_units_filtro_h1b_mantiene_unresolved():
+    """H1-B v2.3: CUSIP no en Official List -> UNRESOLVED -> se mantiene.
+
+    Motivo: excluirlo produce falsos positivos sobre equity real
+    (AMCR, LRCX) ausente de la Official List.
+    """
+    import pandas as pd
+    info = pd.DataFrame({
+        "ACCESSION_NUMBER": ["A1"],
+        "INFOTABLE_SK": [1],
+        "CUSIP": ["MISSING1"],
+        "SSHPRNAMTTYPE": ["SH"],
+        "PUTCALL": [None],
+        "SSHPRNAMT": ["1000"],
+        "INVESTMENTDISCRETION": ["SOLE"],
+    })
+    sub = pd.DataFrame({"ACCESSION_NUMBER": ["A1"], "CIK": ["M1"]})
+    official_df = pd.DataFrame({
+        "cusip": ["OTHER"],
+        "option_indicator": ["*"],
+        "issuer_name": ["X"],
+        "issuer_description": ["COM"],
+        "status_raw": ["   "],
+        "status": ["ACTIVE"],
+        "raw_line": ["x" * 80],
+        "_line_no": [1],
+        "_order": [0],
+    })
+    units = ds.compute_reported_position_units(
+        info, sub, report_period="2026-03-31",
+        official_df=official_df)
+    assert len(units) == 1
+
+
+def test_compute_units_filtro_h1b_sin_official_df_no_filtra():
+    """H1-B: sin official_df, no se filtra por instrument_type."""
+    import pandas as pd
+    info = pd.DataFrame({
+        "ACCESSION_NUMBER": ["A1"],
+        "INFOTABLE_SK": [1],
+        "CUSIP": ["CALL1"],
+        "SSHPRNAMTTYPE": ["SH"],
+        "PUTCALL": [None],
+        "SSHPRNAMT": ["1000"],
+        "INVESTMENTDISCRETION": ["SOLE"],
+    })
+    sub = pd.DataFrame({"ACCESSION_NUMBER": ["A1"], "CIK": ["M1"]})
+    units = ds.compute_reported_position_units(
+        info, sub, report_period="2026-03-31")
+    assert len(units) == 1

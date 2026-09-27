@@ -117,13 +117,17 @@ def run_contractual_nipc(
     i_prev = build_identities(s_prev, iso_prev, mappings_dir=mp)
     i_curr = build_identities(s_curr, iso_curr, mappings_dir=mp)
 
-    # 3. Units
+    # 3. Units (con filtro H1-B por Official List)
+    off_prev = sl.load_official_list(off_dir / ("13flist_" + f_prev + ".txt"))
+    off_curr = sl.load_official_list(off_dir / ("13flist_" + f_curr + ".txt"))
     u_prev = compute_reported_position_units(
         s_prev["INFOTABLE"], s_prev["SUBMISSION"],
-        report_period=iso_prev, identity_results=i_prev)
+        report_period=iso_prev, identity_results=i_prev,
+        official_df=off_prev)
     u_curr = compute_reported_position_units(
         s_curr["INFOTABLE"], s_curr["SUBMISSION"],
-        report_period=iso_curr, identity_results=i_curr)
+        report_period=iso_curr, identity_results=i_curr,
+        official_df=off_curr)
 
     # 4. Delta full
     delta = compute_delta_shares(u_curr, u_prev)

@@ -35,6 +35,8 @@ import re
 
 import pandas as pd
 
+from ..sec_13f.identity import sec13f_list as _sl
+
 _OPTION_HINTS_RE = re.compile(
     r"\b(?:CALL|PUT|OPTION|OPT)\b", re.IGNORECASE
 )
@@ -220,6 +222,7 @@ def compute_reported_position_units(
     *,
     report_period,
     identity_results=None,
+    official_df=None,
     return_stats=False,
 ):
     """Agrega SSHPRNAMT por reported_position_unit.
@@ -243,6 +246,24 @@ def compute_reported_position_units(
     df, filter_stats = _filter_canonical(infotable_df)
     df = _attach_filing_manager(df, submission_df)
     df = _attach_identity(df, identity_results)
+
+    # H1-B v2.3: filtro por tipo de instrumento (Official List SEC).
+    # Solo se excluye OPTION confirmada. UNRESOLVED se mantiene para
+    # no imputar opcion sobre equity real ausente de la Official List.
+    n_dropped_by_instrument_type = 0
+    if official_df is not None and len(df) > 0:
+        cusips = df["CUSIP"].astype(str).str.strip().unique()
+        elig = _sl.resolve_eligibility(cusips, official_df)
+        df["_instrument_type"] = df["CUSIP"].astype(str).str.strip().map(
+            lambda c: elig.get(c, {}).get(
+                "instrument_type", _sl.INSTRUMENT_UNKNOWN
+            )
+        )
+        mask_keep = df["_instrument_type"] != _sl.INSTRUMENT_OPTION
+        n_dropped_by_instrument_type = int((~mask_keep).sum())
+        df = df[mask_keep].drop(columns=["_instrument_type"]).copy()
+    filter_stats = dict(filter_stats)
+    filter_stats["n_dropped_by_instrument_type"] = n_dropped_by_instrument_type
 
     # normalizar discretion
     df["discretion_type"] = df["INVESTMENTDISCRETION"].astype(str).str.strip()

@@ -87,10 +87,17 @@ def _apply_5_3(df, official_df):
 
 
 def _apply_5_3b(df, official_df):
-    """Filtro H1-B: excluir CUSIPs cuyo instrument_type no sea EQUITY.
+    """Filtro H1-B v2.3: excluir SOLO opciones confirmadas.
 
-    Contrato del auditor (2026-09-27): EQUITY / OPTION / UNRESOLVED.
-    UNRESOLVED (incluye UNKNOWN) -> excluido. Regla: no imputar.
+    Contrato revisado: EQUITY / OPTION / UNRESOLVED.
+    - OPTION (evidencia positiva en Official List) -> excluir.
+    - EQUITY (evidencia positiva) -> incluir.
+    - UNRESOLVED (sin evidencia) -> incluir. NO imputar opcion.
+
+    Motivo v2.3: la regla literal del auditor ("UNRESOLVED -> excluir")
+    produce falsos positivos sobre equity real que no aparece en la
+    Official List (AMCR, LRCX). El principio "no imputar" aplica en
+    ambas direcciones: no imputar equity NI imputar opcion.
     """
     cusips = df["CUSIP"].astype(str).unique()
     elig = sl.resolve_eligibility(cusips, official_df)
@@ -100,15 +107,18 @@ def _apply_5_3b(df, official_df):
             "instrument_type", sl.INSTRUMENT_UNKNOWN
         )
     )
-    mask_keep = df["_instrument_type"] == sl.INSTRUMENT_EQUITY
+    mask_keep = df["_instrument_type"] != sl.INSTRUMENT_OPTION
     stats = {
-        "n_equity": int(mask_keep.sum()),
+        "n_equity": int(
+            (df["_instrument_type"] == sl.INSTRUMENT_EQUITY).sum()
+        ),
         "n_option": int(
             (df["_instrument_type"] == sl.INSTRUMENT_OPTION).sum()
         ),
         "n_unresolved": int(
             (df["_instrument_type"] == sl.INSTRUMENT_UNKNOWN).sum()
         ),
+        "n_kept": int(mask_keep.sum()),
     }
     return df[mask_keep].copy(), stats
 

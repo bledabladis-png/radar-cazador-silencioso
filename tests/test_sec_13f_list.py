@@ -290,8 +290,11 @@ def test_classify_instrument_type_empty():
 
 def test_classify_instrument_type_word_boundary():
     # "CALLON PETROLEUM" contiene CALL como substring pero no como palabra.
-    # Debe devolver UNKNOWN, no OPTION.
-    assert sl.classify_instrument_type("CALLON PETROLEUM") == sl.INSTRUMENT_UNKNOWN
+    # Con el contrato actual, todo lo no-derivado es EQUITY, asi que
+    # CALLON PETROLEUM -> EQUITY (no OPTION). Lo importante es que NO
+    # sea clasificado como OPTION por substring.
+    assert sl.classify_instrument_type("CALLON PETROLEUM") != sl.INSTRUMENT_OPTION
+    assert sl.classify_instrument_type("CALLON PETROLEUM") == sl.INSTRUMENT_EQUITY
 
 
 def test_classify_instrument_type_mixed():
@@ -361,3 +364,35 @@ def test_resolve_eligibility_empty_official_df_adds_new_fields():
     r = sl.resolve_eligibility(["ANY"], None)
     assert r["ANY"]["instrument_type"] == sl.INSTRUMENT_UNKNOWN
     assert r["ANY"]["eligible_for_nipc"] is False
+
+
+# --- H1-B regression: equity con descripciones no-COM ---
+
+def test_classify_instrument_type_equity_variants():
+    """Descripciones de equity variadas que NO son COM/SHS.
+
+    Regresion: el primer fix las clasificaba como UNKNOWN y excluia
+    22 tickers legitimos (GOOGL, GOOG, META, MA, CMCSA, etc.).
+    """
+    equity_descs = [
+        "CL A", "CL B NEW", "CL C",
+        "CAP STK CL A", "CAP STK CL C",
+        "SH BEN INT",
+        "CL A COM", "CL A NEW",
+        "SPONSORED ADS", "SPONSORED ADR",
+        "STATE STREET SPD", "LEVERAGE SHS 2X",
+        "ORD SHS CL A", "COM CL A",
+    ]
+    for d in equity_descs:
+        assert sl.classify_instrument_type(d) == sl.INSTRUMENT_EQUITY, (
+            f"desc={d!r} deberia ser EQUITY"
+        )
+
+
+def test_classify_instrument_type_option_still_wins():
+    """Las descripciones con CALL/PUT/OPTION/OPT siguen siendo OPTION."""
+    option_descs = ["CALL", "PUT", "OPTION", "OPT", "CALL COM"]
+    for d in option_descs:
+        assert sl.classify_instrument_type(d) == sl.INSTRUMENT_OPTION, (
+            f"desc={d!r} deberia ser OPTION"
+        )

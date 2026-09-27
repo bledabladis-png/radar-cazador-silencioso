@@ -313,23 +313,29 @@ def test_apply_5_3b_acepta_equity():
     assert stats["n_unresolved"] == 0
 
 
-def test_apply_5_3b_excluye_unresolved():
+def test_apply_5_3b_mantiene_unresolved():
+    """H1-B v2.3: UNRESOLVED (no en lista) -> se mantiene.
+
+    Motivo: excluirlo produce falsos positivos sobre equity real
+    (AMCR, LRCX) que no aparece en la Official List.
+    """
     from src.institutional_accumulation import operational_universe as ou
     df = _infotable_df(["MISSING1"])
     official_df = _official_df([("OTHER", "COM")])
     out, stats = ou._apply_5_3b(df, official_df)
-    assert len(out) == 0
+    assert len(out) == 1
     assert stats["n_unresolved"] == 1
     assert stats["n_equity"] == 0
     assert stats["n_option"] == 0
 
 
 def test_apply_5_3b_mixto():
+    """H1-B v2.3: EQUITY + UNRESOLVED se mantienen, solo OPTION se excluye."""
     from src.institutional_accumulation import operational_universe as ou
     df = _infotable_df(["EQ1", "CALL1", "MISSING1"])
     official_df = _official_df([("EQ1", "COM"), ("CALL1", "CALL")])
     out, stats = ou._apply_5_3b(df, official_df)
-    assert len(out) == 1
+    assert len(out) == 2
     assert stats["n_equity"] == 1
     assert stats["n_option"] == 1
     assert stats["n_unresolved"] == 1

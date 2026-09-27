@@ -70,11 +70,6 @@ INSTRUMENT_OPTION = "OPTION"
 INSTRUMENT_UNKNOWN = "UNKNOWN"
 
 _DERIVATIVE_RE = re.compile(r"\b(?:CALL|PUT|OPTION|OPT)\b", re.IGNORECASE)
-_EQUITY_RE = re.compile(
-    r"\b(?:COM|SHS|SHARE|STOCK|NAMEN|AKT|ORD|ORDINARY)\b",
-    re.IGNORECASE,
-)
-
 
 def classify_instrument_type(description):
     """Clasifica el tipo de instrumento segun issuer_description.
@@ -82,6 +77,12 @@ def classify_instrument_type(description):
     Contrato H1-B (auditor 2026-09-27): 3 estados.
     UNKNOWN se propaga como UNRESOLVED en el caller, que lo excluye
     del NIPC por aplicacion del principio 'no imputar'.
+
+    Logica: en la Official List, todo lo que no es CALL/PUT/OPTION/OPT
+    es equity por construccion. Las descripciones no-equity (NOTE,
+    BOND, DEB, WARRANT, UNIT) no llegan a esta funcion porque el filtro
+    §5.1 (SSHPRNAMTTYPE=SH + PUTCALL=NULL) las excluye antes. Si
+    alguna llegara, seria finding separado.
 
     Word-boundary obligatorio: evita falsos positivos por substring
     (p.ej. 'CALLON PETROLEUM').
@@ -91,9 +92,7 @@ def classify_instrument_type(description):
         return INSTRUMENT_UNKNOWN
     if _DERIVATIVE_RE.search(desc):
         return INSTRUMENT_OPTION
-    if _EQUITY_RE.search(desc):
-        return INSTRUMENT_EQUITY
-    return INSTRUMENT_UNKNOWN
+    return INSTRUMENT_EQUITY
 
 
 def _aggregate_instrument_type(sub):
