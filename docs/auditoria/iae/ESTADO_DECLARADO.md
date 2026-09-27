@@ -567,6 +567,33 @@ Detalle en `IAE_MAESTRO.md` seccion 5.
   trimestral + Official List.
 - `scripts/download_official_list_13f.py` - descargador Official
   List 13(f) de SEC.
+#### Scripts IAE clasificados por proposito (H3)
+
+Criterio del auditor externo: cada script auxiliar debe tener
+clasificacion explicita. Categorias:
+
+- **Normativo**: parte del flujo productivo, invocado por workflows.
+- **Auditoria**: reproducible bajo demanda, genera evidencia.
+- **Diagnostico**: soporte puntual, no productivo.
+- **Experimental / legacy**: no usado en produccion actual.
+
+| Script | Categoria | Invocado por |
+|---|---|---|
+| `iae_pipeline.py` | Diagnostico | Manual |
+| `build_catalog_csvs.py` | Diagnostico | Manual (setup inicial) |
+| `iae_reconciliation_b1.py` | Auditoria | Manual |
+| `iae_validate_crosswalk_openfigi.py` | Auditoria | Manual |
+| `iae_test_census.py` | Auditoria | Manual |
+| `iae_contractual_coverage.py` | Auditoria | Manual |
+| `iae_coverage.py` | Auditoria | Manual |
+| `iae_identity_uniqueness_audit.py` | Auditoria | Manual |
+| `iae_contractual_nipc_e2e.py` | Auditoria | Manual |
+| `regenerate_radar_catalog.py` | Normativo | daily_run.yml |
+| `regenerate_cusip_crosswalk.py` | Normativo | update_sec_13f.yml |
+| `update_sec_13f.py` | Normativo | update_sec_13f.yml |
+| `download_official_list_13f.py` | Normativo | update_sec_13f.py (import) |
+| `generate_estado_sistema.py` | Normativo | Manual + documentado |
+
 #### Scripts de mantenimiento del radar (fuera del modulo IAE)
 
 - `scripts/health_check.py` - vigilancia semanal del sistema

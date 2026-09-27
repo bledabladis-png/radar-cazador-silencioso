@@ -1226,7 +1226,7 @@ Censo del listado. La seccion 11 tiene 29 bloques `### tests/test_*.py`.
 De ellos, 27 corresponden a ficheros que importan el modulo
 (criterio AST) y 2 son extra: `test_build_catalog_csvs.py` (importa
 `scripts/build_catalog_csvs`) y `test_iae_pipeline_report.py` (fuera
-del AST por dependencia indirecta). Del universo de 42 ficheros del
+del AST por dependencia indirecta). Del universo de 45 ficheros del
 modulo, 27 estan listados en §11 y 15 no aparecen:
 `test_absence`, `test_b06_e2e_aggregation`, `test_b1_schema`,
 `test_h692_temporal_precedence`, `test_openfigi_client`,
@@ -1856,6 +1856,30 @@ ellos, 27 corresponden a ficheros del modulo (criterio AST) y 2 son
 extra. La suma de funciones de test detectables por AST en los 29
 bloques es 506 (492 hasta la revision 2026-09-22; +14 en
 `test_p38_contract.py` por C9+C10+fix fail-closed).
+
+Nota H2 (auditor externo 2026-09-27, cerrada 2026-09-28):
+
+Cifra autoritativa del modulo (criterio AST estricto): **45 ficheros**.
+Verificable con `scripts/iae_test_census.py`.
+
+El listado nominal de §11 tiene 29 bloques:
+- 27 corresponden a ficheros del modulo (criterio AST).
+- 2 son extra: `test_build_catalog_csvs.py` y
+  `test_iae_pipeline_report.py` (dependencia indirecta).
+
+De los 45 ficheros del modulo:
+- 27 aparecen listados en §11.
+- 17 estan declarados como ausentes en §11 (los 15 originales
+  declarados en la revision v6 + `test_pipeline_contractual.py` +
+  `test_update_sec_13f.py`, anadidos en ciclos posteriores).
+- 1 huerfano no declarado: `test_regenerate_radar_catalog.py`.
+
+Reconciliacion: 27 listados + 17 declarados ausentes + 1 huerfano = 45.
+
+El huerfano `test_regenerate_radar_catalog.py` se reconoce aqui y queda
+declarado en este documento. No se anade al listado nominal §11 (que
+se mantiene con 29 bloques por herencia historica); su existencia
+consta en esta nota y en la cifra autoritativa §1.
 
 El modulo completo tiene 45 ficheros que importan
 `src.institutional_accumulation`. 17 no aparecen en §11:

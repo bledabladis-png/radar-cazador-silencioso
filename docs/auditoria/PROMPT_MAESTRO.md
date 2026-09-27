@@ -546,7 +546,7 @@ test_report_generator_helpers.py — incluye SLPM n=0 → N/D.
 
 test_temporal_contracts_base.py — 14 tests (FSM 5 estados).
 
-test_temporal_contracts_registry.py — 13 tests (catalogo 9 contratos).
+test_temporal_contracts_registry.py — 13 tests (catalogo 10 contratos).
 
 test_temporal_contracts_contracts.py — 37 tests (EQUITY + 4 INDEX + get_contract).
 
@@ -591,7 +591,7 @@ bloque IAE (845 tests, criterio AST, 45 ficheros):
   test_iae_*.py - 3 ficheros (gap_coverage, gap_semantic, pipeline_report).
   test_build_catalog_csvs.py, test_radar_target_catalog.py,
     test_h731_adapter_p38_compat.py.
-  Nota: listado parcial. 27 de los 42 ficheros del modulo (criterio AST).
+  Nota: listado parcial. 27 de los 45 ficheros del modulo (criterio AST).
   Ausentes: test_absence, test_b06_e2e_aggregation, test_b1_schema,
   test_h692_temporal_precedence, test_openfigi_client,
   test_operational_universe, test_p60_contract, test_p61_contract,
@@ -697,7 +697,7 @@ VALID en cualquier otro caso.
 
 temporal_contract: declarado por el caller del writer. Si es None, no se aplica validacion temporal (comportamiento FU-002-evo2). Cuando esta declarado, se aplica la validacion temporal definida para ese contrato. En esta version del sistema, la resolucion concreta de la fecha esperada por clase queda pendiente de FU-021-5; no debe inferirse un calendario comun para contratos heterogeneos.
 
-Estado actual (FU-002-bis + FU-021-5, HEAD 7560e12): los artefactos market_data.parquet y stock_prices.parquet siguen con temporal_contract=None en el manifest (universos heterogeneos). FU-021-5 introdujo contratos temporales declarativos (9 contratos por clase) pero su integracion en el manifest queda para FU-021-5-futuro. MTE state si versiona temporal_contract_version.
+Estado actual (FU-002-bis + FU-021-5, HEAD 7560e12): los artefactos market_data.parquet y stock_prices.parquet siguen con temporal_contract=None en el manifest (universos heterogeneos). FU-021-5 introdujo contratos temporales declarativos (10 contratos por clase) pero su integracion en el manifest queda para FU-021-5-futuro. MTE state si versiona temporal_contract_version.
 
 VALID_WITH_MISSING: introducido por FU-002-evo (commit 8d908db). Aceptado por el reader como referencia valida.
 
@@ -754,7 +754,7 @@ No toca: `resolve_effective_date`, `market_hours.py`, `instrument_registry.py`, 
 Hallazgo colateral: `instrument_registry.get_market()` clasifica futuros, indices no-USA y FX como `US_EQUITY` (22 de 23 tickers no-equity). Deuda registry (A2.3). No bloquea EQUITY_EOD.
 
 11.15. FU-021-5 — Contratos temporales de df_market (2026-09-16)
-Ciclo completo. 9 contratos en 5 familias. FSM: PENDING -> OK | STALE | INSUFFICIENT | BLOCKED.
+Ciclo completo. 10 contratos en 5 familias. FSM: PENDING -> OK | STALE | INSUFFICIENT | BLOCKED.
 Contratos: EQUITY_EOD (539, NYSE, max_lag=0, min_cov=0.90); INDEX_EOD_USA (^GSPC ^DJI ^NDX ^RUT); INDEX_EOD_EUROPA (^FTSE ^GDAXI ^IBEX ^STOXX50E, per_ticker_lag, max_lag=5); INDEX_EOD_COMMODITY (^SPGSCI); INDEX_EOD_CURRENCY (DX-Y.NYB, ICE); VOLATILITY_INDEX (^VIX ^VIX3M ^VXN, hereda de INDEX_EOD_USA); RATE_YIELD (^FVX ^TNX); FUTURE_SETTLEMENT (BZ=F CL=F GC=F HG=F NG=F, BLOCKED por Q-B.4); FX_DAILY_CUT (EURUSD=X USDCNY=X USDJPY=X, per_pair_max_lag).
 
 Autoridad (Q-P.3): `temporal_meta` es dict explicito. `df.attrs` es espejo auxiliar, nunca autoridad.
