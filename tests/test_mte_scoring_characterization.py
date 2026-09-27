@@ -126,3 +126,31 @@ class TestF24_03_IPSUsesConstante:
         r = score_scenarios(0.0, 0.0, 0.0, 0.1)
         # solo cls < 0.3: +3
         assert r["STAGFLATION"] == 3
+
+class TestF24_11_SinBareExceptEngine:
+    """F2.4-11: no debe haber except desnudo en engine.py."""
+
+    def test_sin_bare_except_engine(self):
+        tree = ast.parse(Path("indicators/mte/engine.py").read_text(encoding="utf-8-sig"))
+        bare = [n.lineno for n in ast.walk(tree)
+                if isinstance(n, ast.ExceptHandler) and n.type is None]
+        assert bare == [], f"except desnudo en engine.py lineas: {bare}"
+
+    def test_engine_vix_term_except_tupla(self):
+        """El except del bloque vix_term captura los 4 tipos reales."""
+        tree = ast.parse(Path("indicators/mte/engine.py").read_text(encoding="utf-8-sig"))
+        for node in ast.walk(tree):
+            if isinstance(node, ast.ExceptHandler) and node.lineno == 89:
+                assert isinstance(node.type, ast.Tuple), (
+                    "el except en engine.py L89 debe ser una tupla"
+                )
+                names = sorted(
+                    elt.id for elt in node.type.elts
+                    if isinstance(elt, ast.Name)
+                )
+                assert names == ["AttributeError", "KeyError",
+                                 "TypeError", "ValueError"], (
+                    f"tupla inesperada: {names}"
+                )
+                return
+        pytest.fail("no se encontro ExceptHandler en engine.py L89")

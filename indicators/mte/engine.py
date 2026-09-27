@@ -86,7 +86,7 @@ def compute_mte(df_market, financial_conditions_score, credit_signal,
 
 
 
-        except:
+        except (KeyError, ValueError, TypeError, AttributeError):
 
 
 

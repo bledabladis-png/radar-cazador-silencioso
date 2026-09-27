@@ -108,6 +108,19 @@ def validate_transition(previous, current, cls):
 
 
 def consensus_score(srs, shs, cls, ips):
+    """Consenso entre las 4 senales (SRS, SHS, CLS, IPS).
+
+    Escalas heterogeneas (F2.4-13, WONT FIX documentado):
+      - srs, shs, ips -> [-1, +1] (salidas de tanh)
+      - cls -> [0, 1] (credit/liquidity stress score)
+
+    La heterogeneidad es INTENCIONAL. consensus_score mide dispersion
+    respecto a la mediana; el resultado pondera en compute_confidence
+    (0.6 * distance + 0.4 * consensus). Cambiar la escala de cls
+    altera la confidence en produccion para todos los runs y requiere
+    recalibracion estadistica del motor MTE. Ver
+    AUDITORIA_CONSOLIDADA_2026-09-26.md F2.4-13.
+    """
 
 
 
