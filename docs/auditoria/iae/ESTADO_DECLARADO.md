@@ -3,7 +3,7 @@
 Estado declarado de fases, prohibiciones y hallazgos del modulo IAE.
 Documento vivo. Se actualiza cuando cambia el estado.
 
-**Actualizado:** 2026-09-27
+**Actualizado:** 2026-09-27 (rev.2)
 **HEAD de cierre:** ver `ESTADO_SISTEMA.md` (se regenera con cada commit).
 **Estado del sistema:** `ESTADO_SISTEMA.md`.
 
@@ -393,6 +393,27 @@ IAE_MAESTRO). Detalle en §2.
   - WONT FIX razonado: F2.4-05, F2.4-06, F2.4-08, F2.4-22..25.
   - Pendientes de ciclo propio: F2.4-04, F2.4-10, F2.4-11, F2.4-12,
     F2.4-13, F2.4-20, F2.4-21.
+
+- Ciclo F2.4-10/11/12/13 (2026-09-27). Cierre del bloque MTE de la
+  auditoria radar. Commits: dc16f5c (pyflakes), 6e5cf03 (F2.4-11 +
+  F2.4-13 doc), aff0afd (F2.4-10 + F2.4-12 ii). Suite: 2163 -> 2173.
+  - F2.4-10 (MEDIA): doble writer sobre mte_state.json. classify_mte
+    escribia via save_scenario pero engine.py sobreescribia sin
+    'pending'. Histeresis adaptativa de 2 pasos estaba desactivada en
+    produccion. Fix: classify_mte ya no escribe; engine.py es el unico
+    writer y anade 'pending'. Cambio de comportamiento esperado:
+    reduccion de flip-flops MTE.
+  - F2.4-12 (BAJA) interpretacion (ii): load_previous_scenario
+    devuelve 3 valores (scenario, pending, temporal_reset). El reset
+    por cambio de contrato invalida el estado previo (prev=MIXED,
+    pending=None) pero NO el calculo del run actual.
+  - F2.4-11 (BAJA): except acotado en engine.py L89.
+  - F2.4-13 (BAJA): WONT FIX documentado. consensus_score mezcla
+    escalas intencionalmente (cls en [0,1] vs srs/shs/ips en [-1,+1]).
+    Cambiar la escala altera compute_confidence en produccion y
+    requiere recalibracion estadistica.
+  - state.py::save_scenario queda sin uso productivo tras aff0afd.
+    Auditoria de eliminacion diferida a ciclo posterior.
 
 Detalle en `IAE_MAESTRO.md` seccion 5.
 

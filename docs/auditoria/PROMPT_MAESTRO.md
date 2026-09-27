@@ -1,6 +1,6 @@
-# PROMPT MAESTRO v7.7 - INGENIERO SUPERVISOR DEL RADAR DE ROTACION SECTORIAL
+# PROMPT MAESTRO v7.8 - INGENIERO SUPERVISOR DEL RADAR DE ROTACION SECTORIAL
 
-**Actualizado:** 2026-09-27 (v7.7: ciclo Cat 1 - 5 fixes quirurgicos de la auditoria radar pusheados (A5-71, F3-18, F2.4-01/02/03). Suite 2097 -> 2163 + 2 skipped. Base v7.6: auditoria interna del prompt - correcciones documentales en el arbol §4.2 (indicators/darkpool, providers, outputs/*, docs/plan, audit, src/external, provenance LSE, scripts nuevos), en los listados §4.3/§4.4 (iae.py, iae_section.py) y en la referencia §10.1. Sin cambios de codigo ni de arquitectura. Base v7.5: ciclo F-IAE-LSE-INTEGRATION + F-IAE-CRON-02 / F-IAE-GATE-01. Cifras internas alineadas: suite 1857 passed + 2 skipped, bloque IAE 845 tests).
+**Actualizado:** 2026-09-27 (v7.8: ciclo F2.4-10/11/12/13 - persistencia de estado MTE reparada (histeresis adaptativa operativa), F2.4-11 except acotado en engine.py, F2.4-13 documentado WONT FIX, 19 warnings pyflakes limpiados. Suite 2163 -> 2173 + 2 skipped. Base v7.7: ciclo Cat 1 - 5 fixes quirurgicos de la auditoria radar pusheados (A5-71, F3-18, F2.4-01/02/03). Suite 2097 -> 2163 + 2 skipped. Base v7.6: auditoria interna del prompt - correcciones documentales en el arbol §4.2 (indicators/darkpool, providers, outputs/*, docs/plan, audit, src/external, provenance LSE, scripts nuevos), en los listados §4.3/§4.4 (iae.py, iae_section.py) y en la referencia §10.1. Sin cambios de codigo ni de arquitectura. Base v7.5: ciclo F-IAE-LSE-INTEGRATION + F-IAE-CRON-02 / F-IAE-GATE-01. Cifras internas alineadas: suite 1857 passed + 2 skipped, bloque IAE 845 tests).
 
 Este documento describe **rol, metodologia, arquitectura y prohibiciones vigentes**.
 **NO declara el estado del sistema.** Para estado, ver:
@@ -162,7 +162,7 @@ py -m pytest tests/ validation/ -q --tb=short
 
 text
 
-Esperado: `compileall OK`, `pyflakes LIMPIO`, `2163 passed + 2 skipped + 0 failed`.
+Esperado: `compileall OK`, `pyflakes LIMPIO`, `2173 passed + 2 skipped + 0 failed`.
 
 ### 3.5. Verificacion de no regresion (refactors grandes)
 
@@ -299,7 +299,7 @@ D:\Macro_Sectorial
 |            regenerate_cusip_crosswalk.py,
 |            pipeline_gate.py, issue_manager.py [F-IAE-CRON-02])
 +-- validation/ (6 activos)
-+-- tests/ (2163+ casos; ver IAE_MAESTRO.md seccion 11 para conteo del modulo IAE)
++-- tests/ (2173+ casos; ver IAE_MAESTRO.md seccion 11 para conteo del modulo IAE)
 +-- docs/
 | +-- automatica/ (22 .md auto-generados, LF)
 | +-- auditoria/ (prompt + transfer + readme + iae/)
@@ -496,7 +496,7 @@ Fase G (2026-09-24) - automatizacion de mappings del IAE:
 
 ## SECCION 10 - VALIDACION Y TESTS
 10.1. Tests
-2163 passed + 2 skipped + 0 failed en local tras run.py. Los 3 test_freshness (ambientales) pasan tras un run que refresca los parquets; vuelven a fallar si pasan >4 dias sin ejecutar el pipeline. CI similar con parquet gitignored. Incluye 845 tests del modulo IAE (criterio AST, 45 ficheros, ver IAE_MAESTRO.md seccion 11).
+2173 passed + 2 skipped + 0 failed en local tras run.py. Los 3 test_freshness (ambientales) pasan tras un run que refresca los parquets; vuelven a fallar si pasan >4 dias sin ejecutar el pipeline. CI similar con parquet gitignored. Incluye 845 tests del modulo IAE (criterio AST, 45 ficheros, ver IAE_MAESTRO.md seccion 11).
 
 10.2. Validation Gate (10/10)
 SLPM v1.2 (sin errores de validacion)
@@ -1049,6 +1049,67 @@ como deuda activa (ver `ESTADO_DECLARADO.md` seccion 3).
 Suite: 2097 -> 2163 passed + 2 skipped (+66 tests).
 Commits pusheados: `8abb6b0`, `cf20292`, `c576158`, `9a6ff6a`.
 
+### 11.25. Ciclo F2.4-10/11/12/13 - State MTE + fixes menores (2026-09-27)
+
+Cierre de los 4 findings F2.4 restantes del bloque MTE de la auditoria
+consolidada. 3 commits pusheados.
+
+**8abb6b0 -> ya integrado en §11.24.**
+
+- **dc16f5c** chore(tests): limpiar 19 warnings pyflakes (F401 + F841 +
+  F541) en tests introducidos por los commits de coverage
+  (`cc79c92`..`a27baf5`). 12 ficheros, sin cambio funcional.
+
+- **6e5cf03** fix(mte): F2.4-11 + F2.4-13.
+  - F2.4-11: `except:` desnudo en `engine.py` L89 (bloque vix_term) ->
+    `except (KeyError, ValueError, TypeError, AttributeError):`,
+    mismo patron que F2.4-02.
+  - F2.4-13 (WONT FIX documentado): `consensus_score` mezcla escalas
+    (`srs/shs/ips` en [-1,+1], `cls` en [0,1]). La mezcla es
+    INTENCIONAL. Cambiar la escala de `cls` altera `compute_confidence`
+    en produccion para todos los runs y requiere recalibracion
+    estadistica de MTE. Anadida docstring aclarando el contrato.
+  - Tests: `TestF24_11_SinBareExceptEngine` (2 tests AST) anadidos a
+    `tests/test_mte_scoring_characterization.py`.
+
+- **aff0afd** fix(mte): F2.4-10 + F2.4-12 (ii) - persistencia de estado MTE.
+  - **F2.4-10 (MEDIA):** doble writer sobre `outputs/state/mte_state.json`.
+    `classify_mte` (decision.py) implementaba histeresis adaptativa de 5
+    ramas y llamaba a `save_scenario(...)` tras cada decision. Pero
+    `engine.py` sobreescribia el mismo fichero con un dump inline
+    (13 campos) que NO incluia `pending`. Resultado: la histeresis de
+    dos pasos (candidato -> confirmacion) estaba funcionalmente
+    desactivada en produccion; `load_previous_scenario` siempre
+    devolvia `pending=None`.
+  - **F2.4-12 (BAJA) interpretacion (ii):** `load_previous_scenario`
+    devuelve ahora `(scenario, pending, temporal_reset)`. Cuando el
+    `temporal_contract_version` del fichero no coincide con el vigente,
+    devuelve `('MIXED', None, True)`. El reset invalida el estado
+    previo pero NO el calculo MTE del run actual: el writer final
+    persiste el `scenario` calculado normalmente y actualiza el
+    contrato en disco. Se rechaza (i) (forzar MIXED en el output).
+  - **Arquitectura resultante:**
+    - `classify_mte` ya no escribe. Devuelve
+      `(final_scenario, confidence, pending_out, temporal_reset)`.
+    - `engine.py` es el UNICO writer efectivo de `mte_state.json`.
+      Anade `'pending': pending_out` al dump.
+    - El schema del fichero se preserva (13 campos + `pending`).
+    - `state.py::save_scenario` queda como codigo sin uso productivo
+      (auditoria de eliminacion diferida a ciclo posterior).
+  - **Cambio de comportamiento:** a partir del proximo run, la
+    histeresis de dos pasos opera. Un candidato nuevo (ej. `RECESSION`
+    con prev=`MIXED`) se persiste como `pending` y se confirma en el
+    siguiente run. Reduccion esperada de flip-flops de escenario MTE.
+  - **Tests:** `tests/test_mte_classify_mte.py` nuevo (8 tests: 5
+    ramas + hysteresis 2 runs + 2 reset temporal). `tests/test_mte_state.py`
+    ampliado (4 asserts `temporal_reset is ...`). Golden MTE intacto
+    (`confidence=0.6505`, `scenario=MIXED`): `compute_mte` produce el
+    mismo output.
+
+Suite: 2163 -> 2173 passed + 2 skipped (+10 tests netos).
+
+Commits pusheados: `dc16f5c`, `6e5cf03`, `aff0afd`.
+
 ## SECCION 12 - LIMITACIONES CONOCIDAS
 20 tickers .L sin provider oficial -> RESUELTO 2026-09-26 via F-IAE-LSE-INTEGRATION.
 Ahora se cubren con el scraper privado `lse-close-scraper` (Refinitiv Widgets)
@@ -1286,7 +1347,7 @@ viven en `iae/IAE_MAESTRO.md`. No se duplican aqui.
     Ahead           0 (sincronizado con origin/main)
     Push            SI (integrado en produccion desde 2026-09-26)
     Working tree    LIMPIO
-    Suite local     2163 passed + 2 skipped + 0 failed
+    Suite local     2173 passed + 2 skipped + 0 failed
     Suite IAE       845 passed (criterio AST, 45 ficheros)
     Suite CI        0 failed (ultima verificacion completa: run 36189310171, dispatch manual)
 
