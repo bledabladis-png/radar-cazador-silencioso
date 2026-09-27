@@ -740,4 +740,41 @@ Verificacion: pyflakes limpio, compileall OK, suite 2181 passed +
 
 ---
 
+**Anexo 2026-09-27 (post-cierre 3): Cat 4 desmontado + 3 fixes.**
+
+Ciclo de cierre del bloque que PROMPT/TRANSFER agrupaban como
+"Cat 4 (20+ providers)". Gate 0 read-only sobre la auditoria
+consolidada 2026-09-26 revelo que Cat 4 no es un bloque con entidad:
+es un agregado de 3 secciones (FASE 5.6, FASE 5.7, FASE 7), cuyos
+hallazgos ya estan mayoritariamente cerrados o subrogados.
+
+Inventario ejecutado:
+  - 26 providers clasificados por uso real (imports en src/scripts,
+    imports relativos intra-providers, invocacion CLI via workflow).
+  - 0 huerfanos reales.
+  - 1 falso positivo del Gate 0 inicial: qqq_nport_flow y
+    sec_nport_quarters_position_change se invocan como scripts CLI
+    desde update_sec_nport.yml, no se importan. Leccion metodologica:
+    incluir invocacion CLI en Gate 0 de providers.
+
+3 fixes aplicados (commit 1805766):
+  - F5.6-01 fred.is_available: try/except decorativo eliminado.
+  - F5.7-01 finra: 2 except desnudos -> tuple tipada
+    (requests.RequestException, ValueError, KeyError, TypeError).
+  - F7-03 nipc._weighted: dead code eliminado (7 lineas). Logica real
+    vive en by_sec.get(k, 0.0).
+
+Fuera de scope: F5.6-02 (fred._download_series) sigue con except
+desnudo y ffill ciego entre frecuencias. Es un finding separado.
+
+Estado consolidado de Cat 4:
+  - Cerrados: 13 findings.
+  - Subrogados / falsos positivos: 2 findings.
+  - Backlog diferido: 8 findings (F5.6-02/03/04/06, F5.7-05/14/19,
+    F7-01, F7-04). No perseguir por defecto.
+
+Verificacion: pyflakes limpio, compileall OK, suite 2181 + 2 skipped.
+
+---
+
 FIN DE TRANSFER. 2026-09-27.

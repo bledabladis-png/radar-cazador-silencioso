@@ -3,7 +3,7 @@
 Estado declarado de fases, prohibiciones y hallazgos del modulo IAE.
 Documento vivo. Se actualiza cuando cambia el estado.
 
-**Actualizado:** 2026-09-27 (rev.5)
+**Actualizado:** 2026-09-27 (rev.6)
 **HEAD de cierre:** ver `ESTADO_SISTEMA.md` (se regenera con cada commit).
 **Estado del sistema:** `ESTADO_SISTEMA.md`.
 
@@ -448,8 +448,22 @@ IAE_MAESTRO). Detalle en §2.
   - _backfill_history (indicators/darkpool_history.py): yf.download
     ticker a ticker en bucle. 7s residuales tras FINRA cache. Mismo
     patron: cuello de red, no computo. Ciclo separado pendiente.
-  - Cat 4 (20+ providers): Gate 0 read-only pendiente antes de decidir
-    que findings siguen vigentes vs subrogados.
+  - Cat 4 (20+ providers) - DESMONTADO 2026-09-27. NO es un bloque con
+    entidad: es un agregado de 3 secciones de la auditoria consolidada
+    2026-09-26 (FASE 5.6 Macro providers, FASE 5.7 Fund data+flows,
+    FASE 7 Dead code). Gate 0 read-only ejecutado (inventario de 26
+    providers por uso real + cruce con la auditoria). Resultado:
+      - Cerrados por ciclos previos + hoy: A5-70 (4049439), A5-71
+        (8abb6b0), A5-76/F6-05/F5.7-17/F5.7-18 (a3c2705), F2.4-04
+        (12b220e), F2.4-10/11/12/13 (aff0afd + 6e5cf03), FINRA cache
+        (062cd10), F5.6-01/F5.7-01/F7-03 (1805766). 13 findings.
+      - Subrogados / falsos positivos: F5.7-20 (2 de 4 ficheros no
+        existen; 2 tienen caller en update_sec_nport.yml), F5.6-15
+        (options.py::robust_zscore es funcion distinta, no variante;
+        solo comparte nombre). 2 findings.
+      - Backlog diferido (vivos probables sin ciclo abierto):
+        F5.6-02/03/04/06, F5.7-05/14/19, F7-01, F7-04. 8 findings.
+    No perseguir por defecto; abrir ciclo solo si hay motivo.
 
 Detalle en `IAE_MAESTRO.md` seccion 5.
 
