@@ -13,9 +13,7 @@ from datetime import datetime
 from pathlib import Path
 from unittest.mock import patch
 
-import numpy as np
 import pandas as pd
-import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
@@ -115,7 +113,7 @@ def test_snapshot_sin_columna_date(tmp_path):
 def test_snapshot_dias_no_bursatiles_filtrados(tmp_path):
     """Un sabado con 11 sectores -> filtrado, sin snapshot valido."""
     p = tmp_path / "solo_sabado.csv"
-    filas = [f"2026-09-26,XLK"] + [f"2026-09-26,{s}" for s in
+    filas = ["2026-09-26,XLK"] + [f"2026-09-26,{s}" for s in
         ["XLF","XLV","XLE","XLY","XLP","XLI","XLB","XLU","XLRE","XLC"]]
     p.write_text("date,sector\n" + "\n".join(filas), encoding="utf-8")
     assert bm._load_latest_valid_breadth_snapshot(p) is None

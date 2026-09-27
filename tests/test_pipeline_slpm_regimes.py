@@ -7,10 +7,9 @@ excepciones, rutas de degradacion.
 """
 import sys
 from pathlib import Path
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 
 import pandas as pd
-import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
@@ -164,7 +163,7 @@ def test_regimes_sin_vix_usa_volatilidad_plana():
                return_value=(0.0, 'MIXED', 0.5, {})), \
          patch('src.pipeline.regimes.get_col',
                side_effect=KeyError('^VIX')):
-        out = pipeline_regimes.compute_all_regimes(pd.DataFrame(), pd.DataFrame())
+        pipeline_regimes.compute_all_regimes(pd.DataFrame(), pd.DataFrame())
     # Verificar que compute_volatility_regime recibio una Series vacia
     args, _ = mock_vol.call_args
     assert isinstance(args[0], pd.Series)

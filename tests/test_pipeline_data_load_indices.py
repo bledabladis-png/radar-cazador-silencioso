@@ -10,7 +10,6 @@ from pathlib import Path
 from unittest.mock import patch
 
 import pandas as pd
-import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
@@ -115,7 +114,7 @@ def test_indices_intl_contrato_2_keys():
 def test_indices_intl_sin_acumulacion_no_descarga():
     """Si ningun indice esta en ACCUMULATION/MARKUP, NO se descargan stocks."""
     with patch("src.pipeline.indices_intl.compute_index_phases",
-               return_value=({"^GSPC": "RANGE", "^DJI": "DISTRIBUTION"}, {})) as mock_phases, \
+               return_value=({"^GSPC": "RANGE", "^DJI": "DISTRIBUTION"}, {})), \
          patch("src.pipeline.indices_intl.download_stock_prices") as mock_dl:
         out = compute_indices_intl(pd.DataFrame())
     mock_dl.assert_not_called()

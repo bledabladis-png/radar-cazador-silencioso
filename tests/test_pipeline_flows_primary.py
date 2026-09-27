@@ -15,7 +15,6 @@ from pathlib import Path
 from unittest.mock import patch
 
 import pandas as pd
-import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
@@ -56,7 +55,7 @@ def _all_none(tmp_path, monkeypatch):
 
 
 def test_flows_primary_contract_8_keys(tmp_path, monkeypatch):
-    patches = _all_none(tmp_path, monkeypatch)
+    _all_none(tmp_path, monkeypatch)
     with patch("src.pipeline.flows_primary.retry_call",
                side_effect=_passthrough_retry), \
          patch("src.pipeline.flows_primary.get_etf_primary_flow_data", return_value=None), \
