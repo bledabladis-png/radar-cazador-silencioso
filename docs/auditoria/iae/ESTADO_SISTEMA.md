@@ -2,7 +2,7 @@
 
 Hechos verificables del sistema. Generado por script.
 
-**Generado en:** 2026-09-27 20:09:56 UTC
+**Generado en:** 2026-09-28 00:41:43 UTC
 **Snapshot tomado sobre:** commit HEAD de la fecha indicada, al momento de generar
 **NO editar a mano.** Regenerar con:
 
@@ -16,16 +16,16 @@ proyecto describen su tema; NO declaran el estado del sistema.
 
 ## 1. Git
 
-- **HEAD:** `de8b8ff`
-- **HEAD completo:** `de8b8ffa34102a19a6005fce584a34a8268dae87`
-- **Fecha commit HEAD:** 2026-09-27 19:33:32 +0200
+- **HEAD:** `f6b596a`
+- **HEAD completo:** `f6b596a2c8d47c20b6fe5e45695e97ca988a3469`
+- **Fecha commit HEAD:** 2026-09-28 02:41:20 +0200
 - **Ahead:** 0
 - **Behind:** 0
-- **origin/main:** `de8b8ff`
+- **origin/main:** `f6b596a`
 
 ## 2. Tests (pytest real)
 
-- **Resumen:** 2205 passed, 2 skipped in 73.36s (0:01:13)
+- **Resumen:** 2226 passed, 2 skipped in 72.32s (0:01:12)
 - **Exit code:** 0
 
 ## 3. Integridad del codigo
@@ -43,7 +43,7 @@ proyecto describen su tema; NO declaran el estado del sistema.
 | `src/institutional_accumulation/aggregation/catalog_p38_adapter.py` | 170 |
 | `src/institutional_accumulation/aggregation/catalog_validator.py` | 94 |
 | `src/institutional_accumulation/aggregation/coverage.py` | 258 |
-| `src/institutional_accumulation/aggregation/delta_shares.py` | 380 |
+| `src/institutional_accumulation/aggregation/delta_shares.py` | 420 |
 | `src/institutional_accumulation/aggregation/nipc.py` | 387 |
 | `src/institutional_accumulation/aggregation/reporting_dedup.py` | 880 |
 | `src/institutional_accumulation/catalog_pit.py` | 232 |
@@ -54,15 +54,15 @@ proyecto describen su tema; NO declaran el estado del sistema.
 | `src/institutional_accumulation/identity/radar_target_catalog.py` | 154 |
 | `src/institutional_accumulation/identity/target_builder.py` | 181 |
 | `src/institutional_accumulation/identity/target_universe.py` | 171 |
-| `src/institutional_accumulation/operational_universe.py` | 194 |
-| `src/institutional_accumulation/pipeline_contractual.py` | 211 |
+| `src/institutional_accumulation/operational_universe.py` | 251 |
+| `src/institutional_accumulation/pipeline_contractual.py` | 223 |
 | `src/institutional_accumulation/sec_13f/__init__.py` | 22 |
 | `src/institutional_accumulation/sec_13f/downloader.py` | 224 |
 | `src/institutional_accumulation/sec_13f/identity/__init__.py` | 161 |
 | `src/institutional_accumulation/sec_13f/identity/amendments.py` | 444 |
 | `src/institutional_accumulation/sec_13f/identity/cusip_resolver.py` | 149 |
 | `src/institutional_accumulation/sec_13f/identity/relationships.py` | 367 |
-| `src/institutional_accumulation/sec_13f/identity/sec13f_list.py` | 255 |
+| `src/institutional_accumulation/sec_13f/identity/sec13f_list.py` | 315 |
 | `src/institutional_accumulation/sec_13f/identity/security_identity.py` | 654 |
 | `src/institutional_accumulation/sec_13f/identity/temporal_filter.py` | 100 |
 | `src/institutional_accumulation/sec_13f/ingest.py` | 131 |
@@ -73,7 +73,7 @@ proyecto describen su tema; NO declaran el estado del sistema.
 | `src/institutional_accumulation/security_type.py` | 397 |
 | `src/institutional_accumulation/temporal_validity.py` | 92 |
 | `src/institutional_accumulation/timestamps.py` | 153 |
-| **TOTAL** | **36 ficheros, 8009 LOC** |
+| **TOTAL** | **36 ficheros, 8178 LOC** |
 
 ## 5. Datos IAE
 
@@ -103,7 +103,7 @@ proyecto describen su tema; NO declaran el estado del sistema.
 - `scripts/iae_contractual_nipc_e2e.py`: 111 LOC
 - `scripts/regenerate_radar_catalog.py`: 238 LOC
 - `scripts/regenerate_cusip_crosswalk.py`: 225 LOC
-- `scripts/update_sec_13f.py`: 237 LOC
+- `scripts/update_sec_13f.py`: 286 LOC
 - `scripts/download_official_list_13f.py`: 147 LOC
 
 ## 7. Evidencia empirica (directorios)
