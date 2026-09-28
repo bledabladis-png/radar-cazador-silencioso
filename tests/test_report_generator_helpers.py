@@ -90,23 +90,24 @@ class TestClassifyFinraFreshness:
     def test_cero_current(self):
         assert _classify_finra_freshness(0) == 'CURRENT'
 
-    def test_30_dias_current(self):
-        assert _classify_finra_freshness(30) == 'CURRENT'
+    def test_20_dias_current(self):
+        # F6-1c (2026-09-28): umbral FINRA actualizado a CURRENT<=20.
+        assert _classify_finra_freshness(20) == 'CURRENT'
 
-    def test_31_dias_recent(self):
-        assert _classify_finra_freshness(31) == 'RECENT'
+    def test_21_dias_recent(self):
+        assert _classify_finra_freshness(21) == 'RECENT'
 
-    def test_45_dias_recent(self):
-        assert _classify_finra_freshness(45) == 'RECENT'
+    def test_28_dias_recent(self):
+        assert _classify_finra_freshness(28) == 'RECENT'
 
-    def test_46_dias_stale(self):
-        assert _classify_finra_freshness(46) == 'STALE'
+    def test_29_dias_stale(self):
+        assert _classify_finra_freshness(29) == 'STALE'
 
-    def test_60_dias_stale(self):
-        assert _classify_finra_freshness(60) == 'STALE'
+    def test_45_dias_stale(self):
+        assert _classify_finra_freshness(45) == 'STALE'
 
-    def test_61_dias_archival(self):
-        assert _classify_finra_freshness(61) == 'ARCHIVAL'
+    def test_46_dias_archival(self):
+        assert _classify_finra_freshness(46) == 'ARCHIVAL'
 
 
 # ============================================================

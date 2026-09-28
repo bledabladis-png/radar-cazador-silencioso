@@ -45,13 +45,16 @@ def test_classify_freshness_boundaries():
 
 def test_classify_finra_boundaries():
     """finra: 30/45/60 dias (retraso regulatorio)."""
+    # F6-1b (2026-09-28): umbrales FINRA actualizados a (20, 28, 45).
+    # Antes (30, 45, 60) marcaba 26d como CURRENT, fuera del rango
+    # regulatorio documentado (2-4 semanas = 14-28d).
     assert _classify_finra_freshness(0) == "CURRENT"
-    assert _classify_finra_freshness(30) == "CURRENT"
-    assert _classify_finra_freshness(31) == "RECENT"
-    assert _classify_finra_freshness(45) == "RECENT"
-    assert _classify_finra_freshness(46) == "STALE"
-    assert _classify_finra_freshness(60) == "STALE"
-    assert _classify_finra_freshness(61) == "ARCHIVAL"
+    assert _classify_finra_freshness(20) == "CURRENT"
+    assert _classify_finra_freshness(21) == "RECENT"
+    assert _classify_finra_freshness(28) == "RECENT"
+    assert _classify_finra_freshness(29) == "STALE"
+    assert _classify_finra_freshness(45) == "STALE"
+    assert _classify_finra_freshness(46) == "ARCHIVAL"
 
 
 def test_classify_fred_boundaries():

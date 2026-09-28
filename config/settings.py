@@ -35,7 +35,11 @@ CACHE_VALIDATE_TRADING_DATE = True  # verificar que la caché cubre el último d
 FRESHNESS_DEFAULT = (3, 7, 14)    # resto de fuentes
 FRESHNESS_CBOE = (3, 5, 10)       # CBOE (options)
 FRESHNESS_YAHOO = (3, 7, 14)      # Yahoo Finance
-FRESHNESS_FINRA = (30, 45, 60)    # FINRA (retraso regulatorio 2-4 sem.)
+# F6-02 (2026-09-28): umbrales ajustados. Antes (30, 45, 60) marcaba
+# CURRENT a un retraso de 26d, fuera del rango regulatorio documentado
+# (2-4 semanas = 14-28d). Ahora CURRENT <= 20d (dentro de lo normal),
+# RECENT <= 28d (limite superior del retraso regulatorio).
+FRESHNESS_FINRA = (20, 28, 45)    # FINRA (retraso regulatorio 2-4 sem.)
 FRESHNESS_FRED = (30, 60, 90)     # FRED (series macro)
 
 # ============================================================
