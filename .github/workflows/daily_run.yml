@@ -113,7 +113,8 @@ jobs:
         run: python scripts/update_futures.py
 
       - name: Update CBOE (VIX3M, best-effort)
-        run: python scripts/update_cboe.py || echo "CBOE fetch failed, continuing"
+        continue-on-error: true
+        run: python scripts/update_cboe.py
 
       - name: Restore cache parquets 13F (IAE)
         id: cache_13f

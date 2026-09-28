@@ -2,8 +2,11 @@
 
 Entry point del step 'Update CBOE' en daily_run.yml.
 
-Politica best-effort: si CBOE falla, exit 0. El pipeline sigue;
-el contrato VOLATILITY_INDEX degrada a INSUFFICIENT (estado conocido).
+Politica best-effort (F3-17-extendido, 2026-09-28): errores
+transitorios (timeout, red, 5xx) -> exit 0. Errores permanentes
+(401, 403, 429) -> exit 2. El pipeline sigue (continue-on-error
+en el workflow) pero la alerta queda visible en el log. El
+contrato VOLATILITY_INDEX degrada a INSUFFICIENT en cualquier caso.
 
 Skip si el parquet ya esta al dia (date_max >= ultimo dia esperado).
 Evita fetch innecesario en runs manuales repetidos.
@@ -55,6 +58,30 @@ def _already_up_to_date(path, expected_date):
         return False
 
 
+def _classify_error(exc) -> str:
+    """Clasifica el error para decidir exit code.
+
+    F3-17-extendido (patron de update_futures.py): best-effort no
+    debe ocultar errores permanentes (credenciales invalidas, plan
+    sin acceso, limite agotado). Transitorios (timeout, red, 5xx)
+    siguen siendo best-effort.
+
+    Returns:
+      "permanent" -> exit 2. El workflow debe alertar.
+      "transient" -> exit 0. El cron reintenta en el siguiente slot.
+    """
+    msg = str(exc).lower()
+    permanent_markers = (
+        "401", "unauthorized",
+        "403", "feature access", "required_addon", "required_feature",
+        "429", "too many",
+    )
+    for marker in permanent_markers:
+        if marker in msg:
+            return "permanent"
+    return "transient"
+
+
 def main():
     reference_date = datetime.now(ZoneInfo('Europe/Madrid'))
     run_id = reference_date.strftime('%Y%m%d_%H%M%S')
@@ -78,8 +105,9 @@ def main():
         print(f'update_cboe: ok={ok}')
         return 0
     except Exception as e:
-        print(f'update_cboe: ERROR {e}')
-        return 0  # best-effort: no romper el pipeline
+        kind = _classify_error(e)
+        print(f'update_cboe: ERROR ({kind}) {e}')
+        return 2 if kind == 'permanent' else 0
 
 
 if __name__ == '__main__':
