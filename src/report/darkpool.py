@@ -8,7 +8,7 @@ from datetime import datetime
 
 import pandas as pd
 
-from src.report.helpers import _classify_finra_freshness
+from src.report.helpers import _classify_finra_freshness, _fmt_num
 from config.settings import DARKPOOL_FULL_HISTORY_WEEKS
 
 
@@ -31,7 +31,7 @@ def render_darkpool(darkpool_data):
                     out.append(f"**DATOS OBSOLETOS:** Ultimo dato con {age} dias de antiguedad. No se usa para clasificacion actual. Contexto historico solamente.\n\n")
             except (ValueError, TypeError):
                 pass
-        out.append(f"- **% Volumen en ATS medio:** {darkpool_data.get('media_dark_pool', 0):.2f}% "
+        out.append(f"- **% Volumen en ATS medio:** {_fmt_num(darkpool_data.get('media_dark_pool', 0), '{:.2f}%')} "
                      f"({darkpool_data.get('n_tickers_ats', 0)}/{darkpool_data.get('n_tickers_total', 0)} tickers)\n")
         
         z_windows = darkpool_data.get('z_windows', {})
@@ -39,10 +39,10 @@ def render_darkpool(darkpool_data):
             out.append("- **Z-Scores por ventana:**\n")
             for w_name, w_data in z_windows.items():
                 if w_data:
-                    out.append(f"  - {w_name}: Z={w_data['z']:.2f}, Estado={w_data['state']}\n")
+                    out.append(f"  - {w_name}: Z={_fmt_num(w_data['z'], '{:.2f}')}, Estado={w_data['state']}\n")
         elif pd.notna(darkpool_data.get('z_score')):
             out.append(f"- **Robust Z-Score:** {darkpool_data['z_score']:.2f}\n")
-            out.append(f"- **Momentum:** {darkpool_data.get('momentum', 0):.2f}\n")
+            out.append(f"- **Momentum:** {_fmt_num(darkpool_data.get('momentum', 0), '{:.2f}')}\n")
             out.append(f"- **Percentil:** {darkpool_data.get('percentile', 0):.0f}%\n")
             out.append(f"- **Estado ATS:** {darkpool_data.get('state', 'N/A')}\n")
         else:
@@ -63,7 +63,7 @@ def render_darkpool(darkpool_data):
             out.append("|--------|:-----:|:-------:|:---------:|\n")
             top5 = darkpool_data['datos'].nlargest(5, 'dark_pool_pct')
             for _, row in top5.iterrows():
-                out.append(f"| {row['ticker']} | {row['dark_pool_pct']:.2f}% | {row['ats_volume']:,.0f} | {row['total_volume']:,.0f} |\n")
+                out.append(f"| {row['ticker']} | {_fmt_num(row['dark_pool_pct'], '{:.2f}%')} | {row['ats_volume']:,.0f} | {row['total_volume']:,.0f} |\n")
             out.append("\n*Nota: Un alto % de volumen en ATS NO implica acumulación institucional. Las categorias reflejan el nivel de actividad ATS relativa a su historial, no la direccion del flujo institucional.*\n")
         out.append("\n*Fuente: FINRA ATS Transparency Data.*\n\n")
     return out
