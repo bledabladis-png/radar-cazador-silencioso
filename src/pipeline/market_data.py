@@ -70,10 +70,10 @@ def _compute_vol_structure(df_market, pcr_data):
     return vol_structure_df
 
 
-def _compute_data_quality():
+def _compute_data_quality(reference_date=None):
     try:
         from indicators.data_quality import compute_data_quality
-        data_quality_df = compute_data_quality()
+        data_quality_df = compute_data_quality(reference_date=reference_date)
         dq_path = Path('outputs/history/data_quality.csv')
         dq_path.parent.mkdir(parents=True, exist_ok=True)
         if not data_quality_df.empty:
@@ -90,8 +90,12 @@ def _compute_data_quality():
     return data_quality_df
 
 
-def compute_market_data(df_market, df_stocks=None, temporal_meta=None):
+def compute_market_data(df_market, df_stocks=None, temporal_meta=None,
+                        reference_date=None):
     """Ejecuta PCR + Dark Pools + Volatilidad estructural + Calidad datos.
+
+    F-UX-03 (2026-09-28): reference_date opcional se propaga a
+    compute_data_quality.
 
     Returns:
         dict con keys:
@@ -100,7 +104,7 @@ def compute_market_data(df_market, df_stocks=None, temporal_meta=None):
     pcr_data = _compute_pcr()
     darkpool_data = _compute_darkpool(df_market, df_stocks=df_stocks)
     vol_structure_df = _compute_vol_structure(df_market, pcr_data)
-    data_quality_df = _compute_data_quality()
+    data_quality_df = _compute_data_quality(reference_date=reference_date)
     return {
         'pcr_data': pcr_data,
         'darkpool_data': darkpool_data,

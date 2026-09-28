@@ -52,8 +52,16 @@ def _read_date_col(df, possible_cols):
             return col
     return None
 
-def compute_data_quality():
-    now = datetime.now()
+def compute_data_quality(reference_date=None):
+    """Calcula frescura y cobertura de las fuentes.
+
+    F-UX-03 (2026-09-28): con reference_date, la decision no depende
+    de datetime.now(). Fallback legacy cuando es None.
+    """
+    if reference_date is not None:
+        now = reference_date
+    else:
+        now = datetime.now()
     sources = [
         {
             'source': 'Yahoo Finance',
