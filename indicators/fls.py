@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 
 
 import pandas as pd
@@ -11,30 +11,27 @@ import numpy as np
 
 
 
-def manual_robust_zscore(series, window=252):
+def _zscore_last_over_lookback(series, window=252):
+    """Z-score robusto de la ultima observacion contra los ultimos N puntos.
 
-
+    A3.4-04 (2026-09-28): renombrada de manual_robust_zscore ->
+    _zscore_last_over_lookback. Motivo: el nombre "manual" no describia
+    el contrato. La funcion:
+      - recibe serie completa;
+      - toma los ultimos `window` valores no-NaN;
+      - calcula mediana/MAD sobre esa ventana;
+      - devuelve ESCALAR (z-score de la ultima observacion).
+    Contrato DISTINTO al canonico src/utils.robust_zscore (rolling +
+    Series + clip + ffill). No es variante del canonico.
+    Uso: FLS (Liquidity Stress) sobre las 5 series FRED.
+    """
     if len(series.dropna()) < window:
-
-
         return 0.0
-
-
     last_values = series.dropna().iloc[-window:]
-
-
     median = last_values.median()
-
-
     mad = np.median(np.abs(last_values - median))
-
-
     if mad == 0:
-
-
         return 0.0
-
-
     return (series.iloc[-1] - median) / (1.4826 * mad)
 
 
@@ -98,7 +95,7 @@ def compute_fls():
         sofr = pd.read_csv(files['sofr'], index_col=0, parse_dates=True)['SOFR']
 
 
-        sofr_z = manual_robust_zscore(sofr)
+        sofr_z = _zscore_last_over_lookback(sofr)
 
 
         sofr_stress = float(np.tanh(sofr_z))
@@ -131,7 +128,7 @@ def compute_fls():
         walcl_chg = walcl.pct_change(252, fill_method=None)
 
 
-        walcl_z = -manual_robust_zscore(walcl_chg)
+        walcl_z = -_zscore_last_over_lookback(walcl_chg)
 
 
         walcl_stress = float(np.tanh(walcl_z))
@@ -164,7 +161,7 @@ def compute_fls():
         rrpp_chg = rrpp.pct_change(252, fill_method=None)
 
 
-        rrpp_z = -manual_robust_zscore(rrpp_chg)
+        rrpp_z = -_zscore_last_over_lookback(rrpp_chg)
 
 
         rrpp_stress = float(np.tanh(rrpp_z))
@@ -194,7 +191,7 @@ def compute_fls():
         cp = pd.read_csv(files['cp'], index_col=0, parse_dates=True)['COMPOUT']
 
 
-        cp_z = manual_robust_zscore(cp)
+        cp_z = _zscore_last_over_lookback(cp)
 
 
         cp_stress = float(np.tanh(cp_z))
@@ -224,7 +221,7 @@ def compute_fls():
         disc = pd.read_csv(files['discount'], index_col=0, parse_dates=True)['DPRIME']
 
 
-        disc_z = manual_robust_zscore(disc)
+        disc_z = _zscore_last_over_lookback(disc)
 
 
         disc_stress = float(np.tanh(disc_z))

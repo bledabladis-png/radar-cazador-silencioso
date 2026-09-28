@@ -28,16 +28,23 @@ from indicators.options_metrics import (
 
 
 
-def robust_zscore(series):
+def _zscore_last_in_window(series):
+    """Z-score robusto de la ULTIMA observacion de la ventana.
 
+    A3.4-03 (2026-09-28): renombrada de robust_zscore -> _zscore_last_in_window.
+    Motivo: contrato DISTINTO al canonico src/utils.robust_zscore.
+      - canonico: recibe serie completa, rolling(window=60), devuelve Series.
+      - esta:     recibe ventana ya recortada, calcula mediana/MAD estatica
+                  sobre la ventana, devuelve ESCALAR (el z-score de la ultima
+                  observacion).
+    Uso unico: options.py:138 dentro de rolling.apply, que le pasa la ventana
+    ya recortada. El nombre anterior (robust_zscore) sugeria equivalencia con
+    el canonico; no la hay. Ver AUDITORIA_CONSOLIDADA_2026-09-26.md F5.6-15.
+    """
     median = series.median()
-
     mad = np.median(np.abs(series - median))
-
     if mad == 0:
-
         return 0.0
-
     return (series.iloc[-1] - median) / (1.4826 * mad)
 
 
@@ -135,7 +142,7 @@ def compute_pcr_signals():
 
         window = min(252, len(pcr_ewm))
 
-        z_series = pcr_ewm.rolling(window, min_periods=20).apply(lambda x: robust_zscore(pd.Series(x)), raw=False)
+        z_series = pcr_ewm.rolling(window, min_periods=20).apply(lambda x: _zscore_last_in_window(pd.Series(x)), raw=False)
 
         z = z_series.iloc[-1]
 
