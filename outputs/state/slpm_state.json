@@ -1,9 +1,9 @@
 {
   "sector_etf": "XLK",
   "state": "UNRESOLVED",
-  "consecutive_count": 5,
+  "consecutive_count": 6,
   "candidate_state": null,
   "candidate_count": 0,
   "schema_version": 2,
-  "last_updated": "2026-09-28T20:52:00.351361"
+  "last_updated": "2026-09-28T21:42:19.039935"
 }
