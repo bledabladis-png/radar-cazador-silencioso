@@ -20,7 +20,7 @@ def render_momentum_sectores(sector_price_rank, sector_flow_rank):
     out.append("|---|--------|------------------|\n")
     for i, (ticker, mom) in enumerate(sector_price_rank[:11], 1):
         name = SECTOR_NAMES.get(ticker, ticker)
-        out.append(f"| {i} | {name} ({ticker}) | {mom*100:.2f}% |\n")
+        out.append(f"| {i} | {name} ({ticker}) | {_fmt_num(mom*100, '{:.2f}%')} |\n")
 
     # I1 (2026-09-18): aclarar metrica para evitar confusion con otras
     # secciones que usan "Retorno 20d" para el retorno del ETF sectorial.
@@ -37,7 +37,7 @@ def render_momentum_sectores(sector_price_rank, sector_flow_rank):
         out.append("*No hay datos disponibles para Flow Proxy.*\n")
     for i, (ticker, flow) in enumerate(sector_flow_rank[:11], 1):
         name = SECTOR_NAMES.get(ticker, ticker)
-        out.append(f"| {i} | {name} ({ticker}) | {flow:.2f} |\n")
+        out.append(f"| {i} | {name} ({ticker}) | {_fmt_num(flow, '{:.2f}')} |\n")
     return out
 
 
@@ -80,7 +80,7 @@ def render_momentum_otros(otros_price_rank, otros_flow_rank):
     out.append("| # | Activo | Retorno 20d (%) |\n")
     out.append("|---|--------|------------------|\n")
     for i, (ticker, mom) in enumerate(otros_price_rank[:15], 1):
-        out.append(f"| {i} | {ticker} | {mom*100:.2f}% |\n")
+        out.append(f"| {i} | {ticker} | {_fmt_num(mom*100, '{:.2f}%')} |\n")
 
     out.append("\n*Nota metodologica (commodities): BZ=F y CL=F usan 'close' "
                "de OilPriceAPI como proxy del settlement oficial ICE/NYMEX "
@@ -95,7 +95,7 @@ def render_momentum_otros(otros_price_rank, otros_flow_rank):
         out.append("\n## Flujo de Mercado - Otros Activos (Proxy)\n")
         out.append("*No hay datos disponibles para Flow Proxy.*\n")
     for i, (ticker, flow) in enumerate(otros_flow_rank[:15], 1):
-        out.append(f"| {i} | {ticker} | {flow:.2f} |\n")
+        out.append(f"| {i} | {ticker} | {_fmt_num(flow, '{:.2f}')} |\n")
     return out
 
 
