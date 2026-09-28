@@ -19,7 +19,7 @@ Reglas de personalidad y metodo: `PROMPT_MAESTRO.md` secciones 1 y 3.
     Ahead                0 (sincronizado con origin/main)
     Working tree         LIMPIO
     Tests IAE            845 passed (criterio AST, 45 ficheros)
-    Suite global         2226 passed + 2 skipped + 0 failed
+    Suite global         2267 passed + 2 skipped + 0 failed
                          (los 3 test_freshness pasan tras run.py; vuelven
                           a fallar si los parquets llevan >4 dias sin
                           refrescar - ver nota abajo)
@@ -308,7 +308,7 @@ Esperado:
 - HEAD ver docs/auditoria/iae/ESTADO_SISTEMA.md
 - ahead 0, behind 0
 - working tree limpio
-- 2226 passed + 2 skipped + 0 failed (test_freshness pasa tras run.py)
+- 2267 passed + 2 skipped + 0 failed (test_freshness pasa tras run.py)
 - pyflakes silencio, compileall OK
 
 Censo del modulo IAE (comando aparte, tarda unos segundos):
@@ -965,6 +965,25 @@ y "valor verificado".
   de `reconciliation_status = OPEN`.
 
 Sin bloqueantes activos.
+
+---
+
+**Anexo 2026-09-28 (post-cierre): sesion masiva de cierre de auditoria.**
+
+30 commits pusheados (ea828db -> 8b77d13). Suite: 2226 -> 2267 + 2 skipped.
+
+Fases del consolidado cerradas: FASE 3, FASE 5 (completas); FASE 4, FASE 6
+(parciales, ver pendientes).
+
+Hallazgos cerrados principales: F3-05/06/10/11/16/17, F3-19, A5-15, A5-30/31/32/33,
+A5-40/41/56/62, A5-50/51/59, F-UX-01/02/03, F6-01/02/23, F6-32/33/34/35,
+F-IAE-CRON-03, E722 (10 bare excepts), 9 funciones dead code + 2 legacy,
+cadena Invesco zombie, 7 tests fantasma reescritos.
+
+Hallazgos abiertos: F2-25/26 (latentes), F0-01, F2-01/10/14, F2-02..06,
+F4-10/11/12, F6-06/07/13/14/15/20/36 (sin descripcion detallada).
+
+Detalle completo en docs/auditoria/SESION_2026-09-28.md.
 
 ---
 

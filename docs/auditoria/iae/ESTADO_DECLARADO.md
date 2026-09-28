@@ -3,9 +3,10 @@
 Estado declarado de fases, prohibiciones y hallazgos del modulo IAE.
 Documento vivo. Se actualiza cuando cambia el estado.
 
-**Actualizado:** 2026-09-27 (rev.9)
+**Actualizado:** 2026-09-28 (rev.10)
 **HEAD de cierre:** ver `ESTADO_SISTEMA.md` (se regenera con cada commit).
 **Estado del sistema:** `ESTADO_SISTEMA.md`.
+**Sesion 2026-09-28:** 30 commits de cierre masivo de auditoria radar. Detalle en `docs/auditoria/SESION_2026-09-28.md`.
 
 ---
 
