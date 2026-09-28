@@ -57,7 +57,7 @@ def _backfill_history(hist, finra):
                             total = float(data[vol_col].sum())
                             if total > 0:
                                 volumes[t] = total
-                except Exception as e:
+                except (ValueError, KeyError, TypeError, OSError, AttributeError) as e:
                     print(f'  [WARN] darkpool backfill {t}: {e}')
             if not volumes:
                 current -= timedelta(weeks=1)
@@ -75,7 +75,7 @@ def _backfill_history(hist, finra):
                 print(f"      OK: {week_str} - Ratio={media_dp/100:.4f} ({len(resultados)} tickers)")
             else:
                 print(f"      Sin resultados para {week_str}")
-        except Exception as e:
+        except (ValueError, KeyError, TypeError, OSError) as e:
             print(f"      Error en {week_str}: {e}")
         current -= timedelta(weeks=1)
     if new_rows:

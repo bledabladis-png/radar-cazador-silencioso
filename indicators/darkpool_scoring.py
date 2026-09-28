@@ -13,12 +13,19 @@ def robust_zscore(series):
     # K-DT3-RUNTIMEWARN: serie vacia -> Series vacia sin warnings de numpy
     # (antes: series.median() y np.median() sobre vacio emitidos como
     # RuntimeWarning "Mean of empty slice" + "invalid value in divide").
+    #
+    # A3.3-01 (2026-09-28): el consumidor (_compute_z_for_window) hace
+    # .iloc[-1] sobre el retorno. Contrato implicito: la funcion debe
+    # devolver una pd.Series indexada. La rama mad==0 devolvia
+    # np.zeros(len(series)) (ndarray) -> .iloc[-1] lanzaba AttributeError
+    # cuando MAD==0 en cualquier ventana. Devuelve Series con el mismo
+    # indice que la entrada, consistente con las otras dos ramas.
     if len(series) == 0:
         return pd.Series([], dtype=float)
     median = series.median()
     mad = np.median(np.abs(series - median))
     if mad == 0:
-        return np.zeros(len(series))
+        return pd.Series(np.zeros(len(series)), index=series.index)
     return (series - median) / (1.4826 * mad)
 
 

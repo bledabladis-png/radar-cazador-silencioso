@@ -53,7 +53,7 @@ def compute_darkpool_signals(df_market=None, df_stocks=None):
     if _df_market is None:
         try:
             _df_market = pd.read_parquet('data/market_data.parquet')
-        except Exception as e:
+        except (OSError, ValueError, pd.errors.ParserError) as e:
             print(f'  [WARN] darkpool: market_data.parquet no disponible: {e}')
     if _df_market is not None:
         volumes.update(_get_volume_from_df(_df_market, week_start, end_date_str))
@@ -62,7 +62,7 @@ def compute_darkpool_signals(df_market=None, df_stocks=None):
     if _df_stocks is None:
         try:
             _df_stocks = pd.read_parquet('data/stock_prices.parquet')
-        except Exception as e:
+        except (OSError, ValueError, pd.errors.ParserError) as e:
             print(f'  [WARN] darkpool: stock_prices.parquet no disponible: {e}')
     if _df_stocks is not None:
         volumes.update(_get_volume_from_df(_df_stocks, week_start, end_date_str))
