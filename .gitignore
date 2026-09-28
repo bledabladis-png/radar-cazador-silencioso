@@ -71,3 +71,11 @@ htmlcov/
 
 # LSE scraper (repo privado, no versionado)
 data/external/
+
+
+# Auditoria temporal (barridos de sesion)
+_audit_*.txt
+_audit_cov_html/
+_patch_*.py
+_check_*.py
+_commit_msg.txt
