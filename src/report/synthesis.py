@@ -138,6 +138,16 @@ def render_matriz_evidencia(evidence_matrix_data):
             iv = int(v)
             return f"{iv:+d}" if iv != 0 else "0"
 
+        # F6-29a (2026-09-28): WONT FIX razonado. El valor de la A/D Line
+        # acumulada es un contador descriptivo del historico del radar
+        # (suma neta de avanzantes - descensos). No tiene "referencia
+        # historica" porque el propio valor ES la referencia acumulada.
+        # F6-30 (2026-09-28): WONT FIX razonado. Que ningun sector
+        # aparezca con "Lectura MIXTA" es consecuencia de los umbrales
+        # de alignment_reading: exige n_positivos >= 3 y n_positivos >
+        # n_negativos (o simetrico). Sectores con 2-2-1 caen en MIXTA.
+        # En regimenes homogeneos, la mayoria cae en FAVORABLE o
+        # DESFAVORABLE, no en MIXTA.
         out.append("\n## Matriz de Evidencia\n\n")
         out.append("| Sector | Precio | Amplitud | Flujo 1º | Flujo Proxy | Wyckoff | Crédito* | Volat* | Calidad | Lectura |\n")
         out.append("|--------|--------|----------|----------|-------------|---------|----------|--------|---------|----------|\n")

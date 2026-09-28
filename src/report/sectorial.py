@@ -42,7 +42,7 @@ def render_sector_breadth(sector_breadth_data, is_stale=False, stale_reason=None
             else:
                 # MARKET_CLOSED o legacy (None): texto historico.
                 out.append(f"*Sin actualizacion - mercado cerrado. Ultima observacion: {_latest_str}.*\n\n")
-        out.append("| Sector | EMA20 | EMA50 | EMA200 | RS+ | Mom+ | Acc | Markup | Dist | Markdown | NH | NL | A/D | Cobertura |\n")
+        out.append("| Sector | EMA20 | EMA50 | EMA200 | RS+ | Mom+ | Acc | Markup | Dist | Markdown | NH | NL | A/D | Cob EMA200 |\n")
         out.append("|--------|-------|-------|--------|-----|------|-----|--------|------|----------|----|----|-----|-----------|\n")
         for _, row in breadth_latest.iterrows():
             cobertura = (row['n_valid_ema200'] / row['n_total'] * 100) if row['n_total'] else 0

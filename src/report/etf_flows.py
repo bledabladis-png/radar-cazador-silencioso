@@ -29,6 +29,8 @@ def render_flujo_spdr(etf_primary_flow_data):
             _ultima_fecha = "N/D"
         out.append(f"\n*Fuente: State Street Global Advisors (SSGA). ETF Primary Flow = ΔShares Outstanding × NAV. Z-score sobre {ETF_PRIMARY_FLOW_ZSCORE_WINDOW} sesiones. Ultima fecha: {_ultima_fecha}.*\n\n")
         out.append("*Esta tabla muestra flujo por ETF (dato atomico). Para la lectura agregada con persistencia y regimen, ver la tabla siguiente: Flujo Primario ETF - Caracteristicas.*\n\n")
+        # F6-29b (2026-09-28): aclarar +0.00 vs N/D.
+        out.append("*En la columna Primary Flow $: `+0.00` indica flujo calculado exactamente cero (shares outstanding sin cambio); `N/D` indica dato no disponible (NaN en shares o NAV). Son estados distintos.*\n\n")
     return out
 
 

@@ -40,7 +40,9 @@ def compute_sector_leader_divergence(df_stocks, holdings_df, leader_df, df_marke
             continue
 
         # Top 5 líderes del sector desde leader_df
-        sector_leaders = leader_df[leader_df['sector'] == sector_etf].head(5)
+        # F6-16 (2026-09-28): head(5) hardcoded -> TOP_N_LEADERS.
+        from config.settings import TOP_N_LEADERS as _TOP_N_LEADERS
+        sector_leaders = leader_df[leader_df['sector'] == sector_etf].head(_TOP_N_LEADERS)
         if sector_leaders.empty:
             continue
 

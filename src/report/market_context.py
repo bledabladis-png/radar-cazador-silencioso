@@ -55,6 +55,8 @@ def render_rotacion_reciente(sector_rank_deltas_data):
         # la posicion absoluta. Rank=1 + D20d=-6 es correcto: 'Fuerte
         # mejora' por haber ascendido 6 puestos.
         out.append("*Un sector en rank=1 puede mostrar delta negativo: subio posiciones para llegar al top. La etiqueta de lectura depende del signo y magnitud del delta, no de la posicion absoluta.*\n\n")
+        # F6-19 (2026-09-28): documentar los umbrales de la etiqueta "Lectura".
+        out.append('*Umbrales de la etiqueta Lectura: delta <= -3 -> "Fuerte mejora"; -2 <= delta <= +2 -> "Estable"; delta >= +3 -> "Fuerte deterioro". El signo es inverso al rank (menor rank = mejor posicion).*\n\n')
     return out
 
 
