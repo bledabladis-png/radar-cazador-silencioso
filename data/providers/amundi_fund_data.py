@@ -181,6 +181,10 @@ def get_amundi_lyxi_primary_flow(force_download: bool = False) -> pd.DataFrame:
     """Descarga histórico, calcula flujo y devuelve la última fila."""
     # Rango amplio para intentar obtener máximo histórico
     start_date = '2018-01-01'
+    # A5-73 (2026-09-28): WONT FIX razonado. now() define la cota
+    # superior del rango de descarga. La fecha de observacion real
+    # viene del dataset. Propagar reference_date requiriria cambiar
+    # get_amundi_lyxi_primary_flow + su caller en flows_primary.py.
     end_date = datetime.now().strftime('%Y-%m-%d')
 
     product = download_historical_data(ISIN_LYXI, start_date, end_date)

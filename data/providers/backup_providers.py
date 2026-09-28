@@ -320,6 +320,11 @@ class BackupProvider:
         return pd.DataFrame()
 
     # ================= MÉTODOS DE DESCARGA =================
+    # A5-36 (2026-09-28): WONT FIX razonado. Los datetime.now() de
+    # los metodos _*_daily son execution time legitimo: definen el
+    # rango temporal de la peticion a la API, no la fecha de
+    # observacion (que viene del dataset devuelto por la API).
+    # Propagar reference_date requeriria cascada por router + get_prices.
     def _tiingo_daily(self, ticker: str) -> pd.DataFrame:
         key = self.providers['tiingo']['key']
         end = datetime.now().date()
