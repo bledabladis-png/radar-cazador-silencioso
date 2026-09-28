@@ -1,13 +1,12 @@
 # -*- coding: utf-8 -*-
-def _safe_mean(values):
-    """Media de valores válidos; 0.0 si no hay ninguno."""
-    if not values:
-        return 0.0
-    valid = [v for v in values if pd.notna(v)]
-    return float(np.mean(valid)) if valid else 0.0
+"""slpm_v12.py -- SLPM v1.2 (con ajuste de cobertura y documentacion).
 
-"""
-slpm_v12.py -- SLPM v1.2 (con ajuste de cobertura y documentacion)
+A3.3-08 (2026-09-28): antes la funcion _safe_mean estaba definida entre
+el coding line y el docstring del modulo. Efecto: (a) slpm_v12.__doc__
+era None (el string de triple comilla no era el primer statement), (b)
+la funcion referenciaba pd/np importados mas abajo. El contrato seguia
+funcionando por late-binding de Python, pero la estructura era
+enganosa. Reordenado: docstring primero, luego imports, luego helpers.
 """
 import pandas as pd
 from src.utils import safe_std
@@ -17,6 +16,14 @@ from config.weights import SLPM_WEIGHTS
 from config.settings import SLPM_EXPECTED_LEADERS
 from indicators.state_machine import classify_leadership_state, get_opportunity_quadrant, validate_state
 from indicators.state_transition import confirm_transition
+
+
+def _safe_mean(values):
+    """Media de valores válidos; 0.0 si no hay ninguno."""
+    if not values:
+        return 0.0
+    valid = [v for v in values if pd.notna(v)]
+    return float(np.mean(valid)) if valid else 0.0
 
 # LIS: métrica de diagnóstico, no señal decisoria.
 # Breadth: 0-1 = proporcion de lideres que cumplen condiciones.
@@ -29,6 +36,11 @@ def compute_leader_breadth_v2(leader_metrics, expected_leaders=SLPM_EXPECTED_LEA
     coverage = min(n / expected_leaders, 1.0) if expected_leaders > 0 else 0
 
     rs_positive = sum(1 for m in leader_metrics if m and (m.get('rs', 1.0) or 1.0) > 1.0) / n
+    # A3.3-06: fallback rs_momentum -> rs_mom_20. El pipeline actual
+    # provee rs_momentum; rs_mom_20 es defensa en profundidad por
+    # compatibilidad con versiones previas del leader_metrics dict.
+    # WONT FIX razonado: no hay evidencia de que rs_mom_20 se use hoy,
+    # pero eliminarlo sin verificar productores externos es riesgo.
     momentum_positive = sum(1 for m in leader_metrics if m and (m.get('rs_momentum', m.get('rs_mom_20', 0)) or 0) > 0) / n
     flow_positive = sum(1 for m in leader_metrics if m and pd.notna(m.get('flow_proxy_z', np.nan)) and m.get('flow_proxy_z', np.nan) > 0) / n
     wyckoff_favorable = sum(1 for m in leader_metrics if m and m.get('wyckoff_phase', '') in ('ACCUMULATION', 'MARKUP')) / n

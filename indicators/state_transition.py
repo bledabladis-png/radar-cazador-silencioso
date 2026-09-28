@@ -61,6 +61,15 @@ CANDIDATE_THRESHOLD = 2
 
 # Pares (previous, candidate) que requieren histeresis.
 # Sets en lugar de dict: los valores del dict anterior eran dead code (F2-13).
+#
+# A3.3-05 (2026-09-28): ("CONFIRMED","TACTICAL_CORRECTION") es
+# inalcanzable en produccion: classify_leadership_state (state_machine.py)
+# solo produce CONFIRMED, EMERGING, STRUCTURAL_DECAY, LOST, UNRESOLVED.
+# TACTICAL_CORRECTION no se genera en ningun caso.
+# WONT FIX razonado: (a) se conserva como defensa en profundidad para
+# extension futura de la state machine; (b) test_slpm_state_transition.py
+# lo ejercita como parte del contrato de confirm_transition; (c) borrarlo
+# obligaria a modificar el test sin ganancia funcional.
 HYSTERESIS = {
     ("EMERGING", "CONFIRMED"),
     ("CONFIRMED", "EMERGING"),
@@ -87,7 +96,8 @@ def _load_state() -> dict:
     try:
         with open(SLPM_STATE_FILE, "r", encoding="utf-8") as f:
             data = json.load(f)
-    except Exception:
+    except (json.JSONDecodeError, OSError, ValueError):
+        # A3.3-11: fichero corrupto / ilegible / JSON invalido -> reset.
         return _empty_state()
     if not isinstance(data, dict):
         return _empty_state()
