@@ -66,7 +66,7 @@ def compute_flows_secondary(sector_flow_rank, etf_primary_flow_data,
                 df_nport = pd.read_csv(nport_path, parse_dates=['REPORT_DATE'])
                 if not df_nport.empty:
                     nport_position_change_data = df_nport.sort_values('REPORT_DATE', ascending=False).head(20)
-        except Exception as e:
+        except (OSError, ValueError, KeyError, TypeError, IndexError, pd.errors.ParserError, pd.errors.EmptyDataError) as e:
             print(f"  N-PORT no cargado: {e}")
             nport_position_change_data = None
 
@@ -75,7 +75,7 @@ def compute_flows_secondary(sector_flow_rank, etf_primary_flow_data,
             qqq_nport_path = Path('outputs/history/qqq_nport_flow.csv')
             if qqq_nport_path.exists():
                 qqq_nport_flow_data = pd.read_csv(qqq_nport_path)
-        except Exception as e:
+        except (OSError, ValueError, KeyError, TypeError, IndexError, pd.errors.ParserError, pd.errors.EmptyDataError) as e:
             print(f"  QQQ NPORT-P no cargado: {e}")
             qqq_nport_flow_data = None
 
@@ -91,7 +91,7 @@ def compute_flows_secondary(sector_flow_rank, etf_primary_flow_data,
                     print(f"  QQQ returns Yahoo omitidos: datos con {age.days} dias")
             else:
                 print("  [WARN] QQQ returns Yahoo no disponibles: no se encontro outputs/history/qqq_returns_yahoo.csv.")
-        except Exception as e:
+        except (OSError, ValueError, KeyError, TypeError, IndexError, pd.errors.ParserError, pd.errors.EmptyDataError) as e:
             print(f"  QQQ returns Yahoo no cargados: {e}")
             qqq_performance_data = None
 

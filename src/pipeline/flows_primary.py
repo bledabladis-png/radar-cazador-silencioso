@@ -39,7 +39,7 @@ def compute_flows_primary(df_market, temporal_meta=None):
         else:
             etf_primary_flow_data = None
             print("  ETF Primary Flow sin datos.")
-    except Exception as e:
+    except (RuntimeError, ValueError, KeyError, TypeError, OSError, pd.errors.ParserError, IndexError) as e:
         print(f"  ETF Primary Flow omitido: {e}")
         etf_primary_flow_data = None
 
@@ -60,7 +60,7 @@ def compute_flows_primary(df_market, temporal_meta=None):
                     )
                 sector_flow_characteristics_df.to_csv(sfc_path, index=False, encoding='utf-8')
                 print("  Sector Flow Characteristics calculado.")
-    except Exception as e:
+    except (OSError, ValueError, KeyError, TypeError, IndexError, RuntimeError, pd.errors.ParserError, pd.errors.EmptyDataError) as e:
         print(f"  Sector Flow Characteristics omitido: {e}")
         sector_flow_characteristics_df = None
 
@@ -73,7 +73,7 @@ def compute_flows_primary(df_market, temporal_meta=None):
         else:
             blackrock_dax_flow = None
             print("  DAXEX Primary Flow sin datos.")
-    except Exception as e:
+    except (RuntimeError, ValueError, KeyError, TypeError, OSError, pd.errors.ParserError, IndexError) as e:
         print(f"  DAXEX Primary Flow omitido: {e}")
         blackrock_dax_flow = None
 
@@ -86,7 +86,7 @@ def compute_flows_primary(df_market, temporal_meta=None):
         else:
             blackrock_isf_flow = None
             print("  ISF.L Primary Flow sin datos.")
-    except Exception as e:
+    except (RuntimeError, ValueError, KeyError, TypeError, OSError, pd.errors.ParserError, IndexError) as e:
         print(f"  ISF.L Primary Flow omitido: {e}")
         blackrock_isf_flow = None
 
@@ -99,7 +99,7 @@ def compute_flows_primary(df_market, temporal_meta=None):
         else:
             blackrock_iwm_flow = None
             print("  IWM Primary Flow sin datos.")
-    except Exception as e:
+    except (RuntimeError, ValueError, KeyError, TypeError, OSError, pd.errors.ParserError, IndexError) as e:
         print(f"  IWM Primary Flow omitido: {e}")
         blackrock_iwm_flow = None
 
@@ -112,7 +112,7 @@ def compute_flows_primary(df_market, temporal_meta=None):
         else:
             amundi_lyxi_flow = None
             print("  LYXI Primary Flow sin datos.")
-    except Exception as e:
+    except (RuntimeError, ValueError, KeyError, TypeError, OSError, pd.errors.ParserError, IndexError) as e:
         print(f"  LYXI Primary Flow omitido: {e}")
         amundi_lyxi_flow = None
 
@@ -125,7 +125,7 @@ def compute_flows_primary(df_market, temporal_meta=None):
         else:
             qqq_sec_flow = None
             print("  QQQ SEC Primary Flow sin datos.")
-    except Exception as e:
+    except (RuntimeError, ValueError, KeyError, TypeError, OSError, pd.errors.ParserError, IndexError) as e:
         print(f"  QQQ SEC Primary Flow omitido: {e}")
         qqq_sec_flow = None
 
@@ -138,7 +138,7 @@ def compute_flows_primary(df_market, temporal_meta=None):
         else:
             cftc_position_flow_data = None
             print("  CFTC Position Flow sin datos.")
-    except Exception as e:
+    except (RuntimeError, ValueError, KeyError, TypeError, OSError, pd.errors.ParserError, IndexError) as e:
         print(f"  CFTC Position Flow omitido: {e}")
         cftc_position_flow_data = None
 

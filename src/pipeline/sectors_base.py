@@ -54,7 +54,7 @@ def compute_sectors_base(df_market, temporal_meta=None):
             sector_rank_deltas_df.to_csv(srd_path, index=False, encoding='utf-8')
         else:
             sector_rank_deltas_df = None
-    except Exception as e:
+    except (KeyError, ValueError, TypeError, IndexError, AttributeError, OSError, RuntimeError) as e:
         print(f"  Rotacion sectorial omitida: {e}")
         sector_rank_deltas_df = None
 
@@ -77,7 +77,7 @@ def compute_sectors_base(df_market, temporal_meta=None):
             print("  Dispersion entre sectores calculada.")
         else:
             sector_dispersion_df = None
-    except Exception as e:
+    except (KeyError, ValueError, TypeError, IndexError, AttributeError, OSError, RuntimeError) as e:
         print(f"  Dispersion entre sectores omitida: {e}")
         sector_dispersion_df = None
 
@@ -98,7 +98,7 @@ def compute_sectors_base(df_market, temporal_meta=None):
             print("  Correlacion entre sectores calculada.")
         else:
             sector_corr_summary_df = None
-    except Exception as e:
+    except (KeyError, ValueError, TypeError, IndexError, AttributeError, OSError, RuntimeError) as e:
         print(f"  Correlacion entre sectores omitida: {e}")
         sector_corr_summary_df = None
 
@@ -125,7 +125,7 @@ def compute_sectors_base(df_market, temporal_meta=None):
         else:
             cross_asset_summary_df = None
             cross_asset_detail_df = None
-    except Exception as e:
+    except (KeyError, ValueError, TypeError, IndexError, AttributeError, OSError, RuntimeError) as e:
         print(f"  Contexto Cross-Asset omitido: {e}")
         cross_asset_summary_df = None
         cross_asset_detail_df = None
