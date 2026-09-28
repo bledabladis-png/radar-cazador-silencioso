@@ -19,7 +19,21 @@ def render_estructura_volatilidad(volatility_structure_data):
         out.append("|-------|-----|----------|----------|-----------|-------|----------|---------------------|----------------|\n")
         for _, row in volatility_structure_data.iterrows():
             date_str = pd.Timestamp(row['date']).strftime('%Y-%m-%d') if pd.notna(row['date']) else 'N/D'
-            out.append(f"| {date_str} | {row['vix_level']:.2f} | {row['vix_percentile_20d']:.2f} | {row['vix_percentile_60d']:.2f} | {row['term_structure_ratio']:.2f} | {row['pcr_zscore']:.2f} | {row['pcr_percentile_20d']:.2f} | {row['volatility_reading']} | {row['term_structure_reading']} |\n")
+            # A4-b (2026-09-28): guard NaN en los 6 campos numericos.
+            # Bug observado en el reporte del 2026-09-28: la fila
+            # 2026-09-14 tiene term_structure_ratio=NaN y se renderizaba
+            # como 'nan' literal (f'{nan:.2f}' -> 'nan'). El resto de
+            # campos numericos no tienen NaN hoy pero el defecto es
+            # latente. Fix: extender el mismo patron _fmt_num ya usado
+            # en otros renders del paquete.
+            def _fmt(v):
+                return f"{v:.2f}" if pd.notna(v) else "N/D"
+            out.append(
+                f"| {date_str} | {_fmt(row['vix_level'])} | {_fmt(row['vix_percentile_20d'])} | "
+                f"{_fmt(row['vix_percentile_60d'])} | {_fmt(row['term_structure_ratio'])} | "
+                f"{_fmt(row['pcr_zscore'])} | {_fmt(row['pcr_percentile_20d'])} | "
+                f"{row['volatility_reading']} | {row['term_structure_reading']} |\n"
+            )
         out.append("\n")
         out.append("*Estructura descriptiva de volatilidad implícita y posicionamiento en opciones. No incluye Dark Pool.*\n\n")
 
