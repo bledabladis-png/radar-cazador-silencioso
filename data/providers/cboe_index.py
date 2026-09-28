@@ -87,7 +87,7 @@ class CboeIndexProvider(MarketDataProvider):
         try:
             r = self.session.head(URL, timeout=DEFAULT_TIMEOUT)
             return r.status_code == 200
-        except Exception as e:
+        except requests.RequestException as e:
             print("CboeIndexProvider.is_available: " + str(e))
             return False
 
@@ -111,7 +111,7 @@ class CboeIndexProvider(MarketDataProvider):
         """
         try:
             text = self._get_csv()
-        except Exception as e:
+        except (requests.RequestException, RuntimeError, ValueError, TypeError) as e:
             print("  [WARN] CBOE fetch: " + str(e))
             return pd.DataFrame()
         return _parse_csv_to_wide(text, ticker=TICKER)
@@ -189,7 +189,7 @@ def _merge_with_existing(new_df: pd.DataFrame, path: str) -> pd.DataFrame:
         return new_df
     try:
         existing = pd.read_parquet(p)
-    except Exception as e:
+    except (OSError, ValueError, TypeError, pd.errors.ParserError) as e:
         print("  [WARN] no se pudo leer " + str(p) + ": " + str(e))
         return new_df
 
