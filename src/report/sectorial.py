@@ -10,13 +10,18 @@ from config.settings import MIN_SECTOR_COVERAGE
 from src.report.helpers import _fmt_num, _fmt_ad_net
 
 
-def render_sector_breadth(sector_breadth_data, is_stale=False):
+def render_sector_breadth(sector_breadth_data, is_stale=False, stale_reason=None):
     """Renderiza la tabla Sector Breadth & Health.
 
     C2-followup (2026-09-12): is_stale=True indica que la observacion
-    mostrada es la ultima valida del historico (mercado cerrado), no
-    una actualizacion del dia. Se anade un aviso entre el titulo y la
-    tabla. La fecha de cada fila se mantiene tal cual viene del snapshot.
+    mostrada es la ultima valida del historico, no una actualizacion del
+    dia. Se anade un aviso entre el titulo y la tabla.
+
+    F6-01 (2026-09-28): stale_reason distingue las causas del stale.
+    Valores: None (legacy, texto generico 'mercado cerrado'),
+    'MARKET_CLOSED' (reference_date no es sesion NYSE),
+    'DATA_PENDING' (sesion NYSE con datos aun ausentes en stock_prices),
+    'ERROR' (excepcion durante el calculo).
 
     Devuelve lista de lineas markdown. Sin side effects.
     """
@@ -27,7 +32,16 @@ def render_sector_breadth(sector_breadth_data, is_stale=False):
         out.append("## Sector Breadth & Health\n")
         if is_stale:
             _latest_str = pd.Timestamp(latest_date).strftime('%Y-%m-%d')
-            out.append(f"*Sin actualizacion - mercado cerrado. Ultima observacion: {_latest_str}.*\n\n")
+            if stale_reason == 'DATA_PENDING':
+                out.append(f"**[WARN]** Sin actualizacion - sesion NYSE pendiente "
+                           f"de datos en stock_prices. Ultima observacion: {_latest_str}. "
+                           f"No es festivo: verificar cobertura de stock_prices.parquet.*\n\n")
+            elif stale_reason == 'ERROR':
+                out.append(f"**[WARN]** Sin actualizacion - error en el calculo de "
+                           f"Sector Breadth. Ultima observacion: {_latest_str}.*\n\n")
+            else:
+                # MARKET_CLOSED o legacy (None): texto historico.
+                out.append(f"*Sin actualizacion - mercado cerrado. Ultima observacion: {_latest_str}.*\n\n")
         out.append("| Sector | EMA20 | EMA50 | EMA200 | RS+ | Mom+ | Acc | Markup | Dist | Markdown | NH | NL | A/D | Cobertura |\n")
         out.append("|--------|-------|-------|--------|-----|------|-----|--------|------|----------|----|----|-----|-----------|\n")
         for _, row in breadth_latest.iterrows():

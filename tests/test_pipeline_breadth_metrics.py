@@ -229,11 +229,16 @@ def test_sbh_error_en_compute_devuelve_none(tmp_path, monkeypatch):
 # compute_breadth_metrics
 # =============================================================================
 
-def test_compute_breadth_metrics_contrato_3_keys(tmp_path, monkeypatch):
+def test_compute_breadth_metrics_contrato_4_keys(tmp_path, monkeypatch):
+    """F6-2b (2026-09-28): contrato ampliado a 4 keys.
+
+    sector_breadth_stale_reason se anade para distinguir
+    MARKET_CLOSED vs DATA_PENDING (F6-01).
+    """
     monkeypatch.chdir(tmp_path)
     (tmp_path / "outputs" / "history").mkdir(parents=True)
     with patch("src.pipeline.breadth_metrics._compute_sector_breadth_health",
-               return_value=(None, True)), \
+               return_value=(None, True, 'DATA_PENDING')), \
          patch("src.pipeline.breadth_metrics._compute_momentum_amplitud",
                return_value=None):
         out = bm.compute_breadth_metrics(
@@ -242,7 +247,7 @@ def test_compute_breadth_metrics_contrato_3_keys(tmp_path, monkeypatch):
         )
     assert set(out.keys()) == {
         "sector_breadth_momentum_df", "sector_breadth_df",
-        "sector_breadth_is_stale"}
+        "sector_breadth_is_stale", "sector_breadth_stale_reason"}
 
 
 def test_compute_breadth_metrics_propaga_is_stale(tmp_path, monkeypatch):
@@ -250,7 +255,7 @@ def test_compute_breadth_metrics_propaga_is_stale(tmp_path, monkeypatch):
     (tmp_path / "outputs" / "history").mkdir(parents=True)
     fake_sb = pd.DataFrame([{"date": "2026-09-24", "sector": "XLK"}])
     with patch("src.pipeline.breadth_metrics._compute_sector_breadth_health",
-               return_value=(fake_sb, True)), \
+               return_value=(fake_sb, True, 'MARKET_CLOSED')), \
          patch("src.pipeline.breadth_metrics._compute_momentum_amplitud",
                return_value=None):
         out = bm.compute_breadth_metrics(
@@ -258,4 +263,5 @@ def test_compute_breadth_metrics_propaga_is_stale(tmp_path, monkeypatch):
             holdings_df=pd.DataFrame(),
         )
     assert out["sector_breadth_is_stale"] is True
+    assert out["sector_breadth_stale_reason"] == 'MARKET_CLOSED'
     assert out["sector_breadth_df"] is fake_sb
