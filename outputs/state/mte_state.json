@@ -5,13 +5,13 @@
   "expected_date": "2026-09-25",
   "coverage": 1.0,
   "futures_status": "BLOCKED",
-  "scenario": "MIXED",
-  "confidence": 0.6664649508461467,
+  "scenario": "STAGFLATION",
+  "confidence": 0.4633657723771082,
   "msi": 28.011453602756454,
   "ipi": 48.79970288500658,
   "srs": 0.010651427115913867,
   "shs": -0.5676442403727746,
   "cls": 0.06839937328851012,
   "ips": -0.024005942299868407,
-  "pending": "STAGFLATION"
+  "pending": null
 }

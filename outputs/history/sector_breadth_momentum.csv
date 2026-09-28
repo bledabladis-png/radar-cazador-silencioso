@@ -111,7 +111,7 @@ date,sector,delta_1d_ema20,delta_5d_ema20,delta_20d_ema20,delta_1d_ema50,delta_5
 2026-09-23,XLC,,-60.0,-50.0,,-50.0,-55.0,,-15.0,-20.0,Deterioro fuerte,Deterioro fuerte,Deterioro fuerte,False,True
 2026-09-24,XLK,0.0,30.0,55.95238095238095,0.0,30.0,36.66666666666667,0.0,10.0,-0.7142857142857082,Expansión fuerte,Expansión fuerte,Expansión fuerte,True,False
 2026-09-24,XLF,0.0,-30.0,-55.00000000000001,10.0,-35.0,-65.0,0.0,-25.0,-40.0,Deterioro fuerte,Deterioro fuerte,Deterioro fuerte,False,True
-2026-09-24,XLV,5.000000000000007,15.000000000000009,-24.999999999999996,5.0,0.0,-15.0,0.0,-5.0,-10.0,Expansión fuerte,Estable,Deterioro fuerte,False,False
+2026-09-24,XLV,5.000000000000007,15.000000000000009,-25.0,5.0,0.0,-15.0,0.0,-5.0,-10.0,Expansión fuerte,Estable,Deterioro fuerte,False,False
 2026-09-24,XLE,15.0,-40.0,-60.0,0.0,-30.0,-45.0,-5.0,-5.0,-10.0,Deterioro fuerte,Deterioro fuerte,Deterioro fuerte,False,True
 2026-09-24,XLY,5.0,20.0,-50.0,0.0,5.0,-40.00000000000001,0.0,0.0,-30.0,Expansión fuerte,Expansión fuerte,Estable,False,False
 2026-09-24,XLP,-10.0,-15.0,-70.0,-10.0,-25.0,-60.0,-5.0,-10.000000000000009,-35.0,Deterioro fuerte,Deterioro fuerte,Deterioro fuerte,False,True
