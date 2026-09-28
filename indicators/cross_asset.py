@@ -52,7 +52,7 @@ def compute_cross_asset_ratios(df_market, temporal_meta=None):
             try:
                 z = robust_zscore(ratio_series, window=60)
                 result[f'{name}_zscore'] = float(z.iloc[-1]) if len(z) > 0 and pd.notna(z.iloc[-1]) else None
-            except:
+            except (KeyError, ValueError, TypeError, IndexError, ZeroDivisionError):
                 result[f'{name}_zscore'] = None
                 
         except (KeyError, IndexError):

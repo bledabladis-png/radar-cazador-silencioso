@@ -181,7 +181,7 @@ def compute_data_quality(reference_date=None):
                     last_date = _last_market_session(_ld) if pd.notna(_ld) else pd.NaT
                 else:
                     last_date = pd.NaT
-            except Exception:
+            except (OSError, json.JSONDecodeError, ValueError, TypeError, KeyError, AttributeError):
                 last_date = pd.NaT
             age = (now - last_date.date()).days if pd.notna(last_date) else np.nan
             freshness = classify_freshness(age, src['frequency'])
@@ -233,7 +233,7 @@ def compute_data_quality(reference_date=None):
                     'coverage': np.nan,
                     'notes': src.get('notes', ''),
                 })
-            except Exception as e:
+            except (OSError, ValueError, TypeError, KeyError, pd.errors.ParserError) as e:
                 rows.append({
                     'date': now.strftime('%Y-%m-%d'),
                     'source': src['source'],
@@ -306,7 +306,7 @@ def compute_data_quality(reference_date=None):
                 'coverage': coverage,
                 'notes': src.get('notes', ''),
             })
-        except Exception as e:
+        except (OSError, ValueError, TypeError, KeyError, pd.errors.ParserError) as e:
             rows.append({
                 'date': now.strftime('%Y-%m-%d'),
                 'source': src['source'],
@@ -358,7 +358,7 @@ def compute_data_quality(reference_date=None):
                     _row['n_valid'] = _ok
                     _row['coverage'] = _ok / _n_total if _n_total else np.nan
                     _row['notes'] = f'{_eu_source} ({_ok}/{_n_total} OK)'
-        except Exception as _e:
+        except (OSError, ValueError, TypeError, KeyError, pd.errors.ParserError) as _e:
             _row['notes'] = f'Error lectura european_coverage.csv: {_e}'
         rows.append(_row)
 

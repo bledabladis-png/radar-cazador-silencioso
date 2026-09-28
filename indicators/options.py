@@ -79,11 +79,8 @@ def compute_pcr_signals():
     # ---------- HISTORIAL ----------
 
     try:
-
         hist = pd.read_csv('outputs/history/pcr_history.csv', parse_dates=['date'], index_col='date')
-
-    except:
-
+    except (FileNotFoundError, OSError, ValueError, pd.errors.EmptyDataError, pd.errors.ParserError):
         hist = pd.DataFrame()
 
 

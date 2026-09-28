@@ -19,7 +19,7 @@ def compute_index_phases(df_market, temporal_meta=None):
             ticker_df = build_ticker_df(df_market, ticker)
             fase = wyckoff_structure_core(ticker_df, ticker)
             phases[nombre] = fase
-        except:
+        except (KeyError, ValueError, TypeError, IndexError, AttributeError):
             missing_tickers.append(ticker)
     
     # Si faltan indices, descargarlos directamente
@@ -34,10 +34,10 @@ def compute_index_phases(df_market, temporal_meta=None):
                         ticker_df = build_ticker_df(index_data, ticker)
                         fase = wyckoff_structure_core(ticker_df, ticker)
                         phases[nombre] = fase
-                    except Exception as e:
+                    except (KeyError, ValueError, TypeError, IndexError, AttributeError) as e:
                         print(f"  Indice {nombre} ({ticker}): error al calcular fase - {e}")
                         phases[nombre] = 'ERROR'
-        except Exception as e:
+        except (KeyError, ValueError, TypeError, OSError) as e:
             print(f"  Error al descargar indices: {e}")
             for nombre, config in INDEX_CONFIG.items():
                 if config['index_ticker'] in missing_tickers:

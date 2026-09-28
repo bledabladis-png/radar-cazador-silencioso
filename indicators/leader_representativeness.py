@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 """
 Representatividad del líder v1.0
 Calcula la distancia del líder a la mediana sectorial.
@@ -11,7 +11,7 @@ import numpy as np
 def _latest_medians(conc_path):
     try:
         df = pd.read_csv(conc_path, parse_dates=['date'])
-    except Exception:
+    except (OSError, ValueError, TypeError, pd.errors.ParserError):
         return pd.DataFrame()
     if df.empty:
         return pd.DataFrame()

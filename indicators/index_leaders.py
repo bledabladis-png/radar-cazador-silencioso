@@ -32,7 +32,7 @@ def compute_stock_metrics_for_index(df_stocks, index_name, stock_list, df_index_
             else:
                 print(f'  [INDEX-LEADERS] {ticker} no esta en df_stocks, saltando')
                 continue
-        except:
+        except (KeyError, ValueError, TypeError, IndexError, AttributeError):
             continue
 
         if len(close.dropna()) < 60:
@@ -55,13 +55,13 @@ def compute_stock_metrics_for_index(df_stocks, index_name, stock_list, df_index_
 
         try:
             ticker_df = build_ticker_df(df_stocks, ticker)
-        except Exception:
+        except (KeyError, ValueError, TypeError, IndexError, AttributeError):
             continue
 
         try:
             wyckoff_sc, _, _, _, _, _, _ = wyckoff_score(ticker_df, ticker)
             wyckoff_sc = wyckoff_sc.iloc[-1] if not wyckoff_sc.empty else np.nan
-        except Exception:
+        except (KeyError, ValueError, TypeError, IndexError, AttributeError):
             wyckoff_sc = np.nan
         wyckoff_ph = classify_wyckoff_phase(ticker_df, ticker)
 
