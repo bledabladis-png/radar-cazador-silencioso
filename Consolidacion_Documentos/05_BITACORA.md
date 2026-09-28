@@ -69,13 +69,28 @@ USA-abierta, el df contiene fila europea con date > expected_session.
   `Consolidacion_Documentos/06_IAE_P65_P66.md`.
 - Reapuntado CONTRATO en `tests/test_p66_contract.py`.
 
-**Commits.** 3f789f1 (G-01), 5a039e6 (P66-01, amend de 6550b13).
+**Refactor G-01 + tests (ddb4d31).**
+- El fix G-01 estaba inline en `download_stock_prices`, sin cobertura.
+- Se extrae a `_truncate_to_expected_session(df, expected_session)`
+  -> (df_truncado, n_excluidas). Contrato documentado.
+- 8 tests unitarios en `test_stock_data_loader_helpers.py`: noop (None,
+  vacio, index no-Datetime, index == expected, index < expected),
+  caso G-01 (descarta fila post-expected), no mutacion, y test de
+  integracion (df truncado al writer + df intacto al caller).
+- Suite: 2267 -> 2275 passed + 2 skipped.
+- Justificacion de no hacer run end-to-end: el bug solo se manifiesta
+  en ventana UE-cerrada + USA-abierta (~16:30-20:00 UTC). Un run
+  manual ahora (madrugada UTC) no lo reproduce. Los tests unitarios
+  cubren la logica independientemente de la hora y del slot.
+
+**Commits.** 3f789f1 (G-01), 5a039e6 (P66-01, amend de 6550b13),
+ddb4d31 (refactor G-01 + tests), a4095b1 (docs cierre), fabcdae (snapshot).
 
 **Pendiente.** A6.1 (nucleo compartido). B (IAE completo). C (tests).
 H5.3 (cron nov 2026). C2 (920).
 
-**Proximo paso sugerido.** Verificar en CI que el proximo run real del
-slot post-cierre USA publica parquet sin fallo de guard. Despues retomar A6.1.
+**Proximo paso sugerido.** Retomar A6.1 (nucleo compartido). Verificar en
+CI, cuando corra un slot real, que el guard pasa con el parquet nuevo.
 
 ---
 
