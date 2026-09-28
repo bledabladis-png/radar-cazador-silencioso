@@ -36,7 +36,7 @@ def _compute_divergencia(df_stocks, holdings_df, leader_df, df_market, temporal_
                 print("  Divergencia sector-lideres calculada.")
         else:
             sector_leader_divergence_df = None
-    except Exception as e:
+    except (KeyError, ValueError, TypeError, IndexError, AttributeError, OSError, RuntimeError, pd.errors.ParserError) as e:
         print(f"  Divergencia sector-lideres omitida: {e}")
         sector_leader_divergence_df = None
     return sector_leader_divergence_df
@@ -56,7 +56,7 @@ def _compute_wyckoff(df_stocks, holdings_df):
                 print("  Distribucion Wyckoff sectorial calculada.")
         else:
             sector_wyckoff_distribution_df = None
-    except Exception as e:
+    except (KeyError, ValueError, TypeError, IndexError, AttributeError, OSError, RuntimeError, pd.errors.ParserError) as e:
         print(f"  Distribucion Wyckoff sectorial omitida: {e}")
         sector_wyckoff_distribution_df = None
     return sector_wyckoff_distribution_df
@@ -76,7 +76,7 @@ def _compute_rs_internal(df_stocks, holdings_df, df_market, temporal_meta=None):
                 print("  RS Interno y Absoluto calculado.")
         else:
             rs_internal_df = None
-    except Exception as e:
+    except (KeyError, ValueError, TypeError, IndexError, AttributeError, OSError, RuntimeError, pd.errors.ParserError) as e:
         print(f"  RS Interno y Absoluto omitido: {e}")
         rs_internal_df = None
     return rs_internal_df
@@ -110,7 +110,7 @@ def _compute_concentration(df_stocks, holdings_df, leader_df, full_metrics_df, r
                 print("  Sector Concentration calculado.")
         else:
             sector_concentration_df = None
-    except Exception as e:
+    except (KeyError, ValueError, TypeError, IndexError, AttributeError, OSError, RuntimeError, pd.errors.ParserError) as e:
         print(f"  Sector Concentration omitido: {e}")
         sector_concentration_df = None
     return sector_concentration_df
@@ -133,7 +133,7 @@ def _compute_representativeness(leader_df, reference_date=None):
                 print("  Representatividad del lider calculada.")
         else:
             leader_representativeness_df = None
-    except Exception as e:
+    except (KeyError, ValueError, TypeError, IndexError, AttributeError, OSError, RuntimeError, pd.errors.ParserError) as e:
         print(f"  Representatividad del lider omitida: {e}")
         leader_representativeness_df = None
     return leader_representativeness_df

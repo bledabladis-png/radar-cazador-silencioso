@@ -32,7 +32,7 @@ def _compute_momentum_amplitud(df_stocks):
                 print("  Momentum de amplitud sectorial calculado.")
         else:
             sector_breadth_momentum_df = None
-    except Exception as e:
+    except (KeyError, ValueError, TypeError, IndexError, AttributeError, OSError, RuntimeError, pd.errors.ParserError) as e:
         print(f"  Momentum de amplitud sectorial omitido: {e}")
         sector_breadth_momentum_df = None
     return sector_breadth_momentum_df
@@ -72,7 +72,7 @@ def _load_latest_valid_breadth_snapshot(csv_path):
                 return snap.copy()
         print(f"  [WARN] C2F: snapshot no disponible: ningun dia con {EXPECTED_SECTOR_COUNT} sectores.")
         return None
-    except Exception as e:
+    except (KeyError, ValueError, TypeError, IndexError, AttributeError, OSError, RuntimeError, pd.errors.ParserError) as e:
         print(f"  [WARN] C2F: snapshot no disponible: {e}")
         return None
 
@@ -145,7 +145,7 @@ def _compute_sector_breadth_health(df_stocks, df_market, holdings_df,
         if return_reason:
             return sector_breadth_df, False, None
         return sector_breadth_df, False
-    except Exception as e:
+    except (KeyError, ValueError, TypeError, IndexError, AttributeError, OSError, RuntimeError, pd.errors.ParserError) as e:
         print(f"  Sector Breadth & Health omitido: {e}")
         if return_reason:
             return None, False, 'ERROR'

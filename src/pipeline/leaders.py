@@ -50,18 +50,29 @@ def compute_leaders(df_market, sector_results, reference_date=None, run_id=None,
                 print("  [FU-020] INSUFFICIENT_COVERAGE (min_coverage=0.90). "
                       "df_stocks omitido.")
                 df_stocks = None
+            # A5-07 (2026-09-28): bug estructural corregido. Antes:
+            #   if df_stocks is not None:
+            #       _close_cols = [...]
+            #   _n_close = len(_close_cols)     <- FUERA del if
+            # Si df_stocks se anulaba por INSUFFICIENT_COVERAGE (linea 52),
+            # _close_cols quedaba indefinido -> NameError -> capturado por
+            # el outer except -> mensaje generico "Modulo de lideres
+            # omitido" enmascarando la causa real. Bug latente en la rama
+            # INSUFFICIENT_COVERAGE (comun en runs con cobertura < 90%).
             if df_stocks is not None:
                 _close_cols = [c for c in df_stocks.columns if c[0] == 'Close']
-            _n_close = len(_close_cols)
-            if _n_close > 0:
-                _last_valid = df_stocks[_close_cols].iloc[-1].notna().sum()
-                _coverage_ratio = _last_valid / _n_close
-                print(f"  DEBUG df_stocks Close columns: {_n_close}; shape={df_stocks.shape}; last_valid={_last_valid} ({_coverage_ratio:.2f})")
-                if _coverage_ratio < 0.5:
-                    print("  WARN Cobertura ultima fila insuficiente. Posible festivo. Se omitiran metricas dependientes de acciones.")
-                    HOLIDAY_MODE = True
+                _n_close = len(_close_cols)
+                if _n_close > 0:
+                    _last_valid = df_stocks[_close_cols].iloc[-1].notna().sum()
+                    _coverage_ratio = _last_valid / _n_close
+                    print(f"  DEBUG df_stocks Close columns: {_n_close}; shape={df_stocks.shape}; last_valid={_last_valid} ({_coverage_ratio:.2f})")
+                    if _coverage_ratio < 0.5:
+                        print("  WARN Cobertura ultima fila insuficiente. Posible festivo. Se omitiran metricas dependientes de acciones.")
+                        HOLIDAY_MODE = True
+                    else:
+                        HOLIDAY_MODE = False
                 else:
-                    HOLIDAY_MODE = False
+                    HOLIDAY_MODE = True
             else:
                 HOLIDAY_MODE = True
             holdings_df = pd.read_csv('data/etf_holdings.csv')
