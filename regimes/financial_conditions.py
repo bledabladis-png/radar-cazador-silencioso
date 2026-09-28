@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 
 """
 
@@ -150,16 +150,6 @@ def compute_financial_conditions(df):
 
 
     return financial_score, regime, confidence.iloc[-1] if not confidence.empty else 0.5
-
-
-
-
-
-# Mantener compatibilidad con codigo existente que importa compute_liquidity_score
-
-def compute_liquidity_score(df):
-
-    return compute_financial_conditions(df)
 
 
 compute_financial_conditions.__doc__ = f"""

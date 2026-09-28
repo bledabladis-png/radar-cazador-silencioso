@@ -1,4 +1,4 @@
-﻿import pandas as pd
+import pandas as pd
 
 from config.tickers import SECTOR_NAMES, CYCLICAL_SECTORS, DEFENSIVE_SECTORS, MARKET_TICKERS
 
@@ -201,28 +201,21 @@ def compute_price_flow_rankings(df):
     for t in sectors:
 
         try:
-
             mom = compute_price_momentum(df, t, window=20).iloc[-1]
-
             if pd.notna(mom):
-
                 sector_price[t] = mom
-
-        except Exception:
-
-            pass
+        except (KeyError, ValueError, TypeError, IndexError, AttributeError) as e:
+            # A3.1-04: ticker sin momentum disponible (columna ausente,
+            # serie vacia, etc). El ticker se omite del ranking, pero
+            # el motivo queda registrado.
+            print(f"  [WARN] sector_regime: sin momentum para {t}: {e}")
 
         try:
-
             flow = compute_flow_proxy(df, t).iloc[-1]
-
             if pd.notna(flow):
-
                 sector_flow[t] = flow
-
-        except Exception:
-
-            pass
+        except (KeyError, ValueError, TypeError, IndexError, AttributeError) as e:
+            print(f"  [WARN] sector_regime: sin flow para {t}: {e}")
 
     # Calcular para otros activos
 
@@ -235,28 +228,18 @@ def compute_price_flow_rankings(df):
         for t in tickers:
 
             try:
-
                 mom = compute_price_momentum(df, t, window=20).iloc[-1]
-
                 if pd.notna(mom):
-
                     otros_price[t] = mom
-
-            except Exception:
-
-                pass
+            except (KeyError, ValueError, TypeError, IndexError, AttributeError) as e:
+                print(f"  [WARN] sector_regime: sin momentum para {t}: {e}")
 
             try:
-
                 flow = compute_flow_proxy(df, t).iloc[-1]
-
                 if pd.notna(flow):
-
                     otros_flow[t] = flow
-
-            except Exception:
-
-                pass
+            except (KeyError, ValueError, TypeError, IndexError, AttributeError) as e:
+                print(f"  [WARN] sector_regime: sin flow para {t}: {e}")
 
     # Retornar 4 listas ordenadas
 
