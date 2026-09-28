@@ -324,14 +324,29 @@ def _latest_closed_session(market, reference_date):
         return None
 
     d = reference_date.date()
+    _n_errors = 0
+    _last_error = None
     for _ in range(30):
         try:
             if is_trading_session(market, d):
                 if is_session_closed(market, d, reference_date):
                     return d
-        except Exception:
-            pass
+        except Exception as e:
+            # A6.1-01 (2026-09-29): antes era 'except Exception: pass'.
+            # Silenciaba cualquier fallo de calendario para un mercado
+            # y devolvia None tras 30 iteraciones sin traza. Fail-closed
+            # se mantiene (retorno None), pero se cuenta y reporta el
+            # primer error para diagnostico.
+            _n_errors += 1
+            if _last_error is None:
+                _last_error = e
         d = d - timedelta(days=1)
+    if _n_errors > 0:
+        print(
+            f"  [WARN] _latest_closed_session({market}): "
+            f"{_n_errors}/30 iteraciones con excepcion. "
+            f"Primer error: {_last_error!r}"
+        )
     return None
 
 
