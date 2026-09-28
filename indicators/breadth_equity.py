@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 
 """
 
@@ -125,7 +125,7 @@ def compute_advance_decline(df_stocks, effective_meta=None):
         _eff_d = effective_meta.get('date')
         try:
             result['effective_date'] = pd.Timestamp(_eff_d).strftime('%Y-%m-%d') if _eff_d is not None else None
-        except Exception:
+        except (ValueError, TypeError):
             result['effective_date'] = None
         result['coverage'] = float(effective_meta.get('coverage', 0.0))
         result['n_observed'] = int(effective_meta.get('n_observed', 0))

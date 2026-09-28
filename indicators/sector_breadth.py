@@ -192,7 +192,7 @@ def compute_sector_breadth(df_market, df_stocks, holdings_df, as_of_date=None, t
                     }).dropna()
                     phase = classify_wyckoff_phase(ticker_df, ticker)
                     wyckoff_phases.append(phase)
-                except Exception:
+                except (KeyError, ValueError, TypeError, IndexError, AttributeError):
                     wyckoff_phases.append('INSUFICIENTE')
 
         # Agregar sector

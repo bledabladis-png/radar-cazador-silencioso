@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 """
 Distribución de fases Wyckoff por sector v1.0
 Consume classify_wyckoff_phase de indicators/wyckoff.py.
@@ -35,7 +35,7 @@ def compute_sector_wyckoff_distribution(df_stocks, holdings_df):
             try:
                 ticker_df = build_ticker_df(df_stocks, ticker)
                 phase = classify_wyckoff_phase(ticker_df, ticker)
-            except Exception:
+            except (KeyError, ValueError, TypeError, IndexError, AttributeError):
                 n_insufficient += 1
                 continue
 

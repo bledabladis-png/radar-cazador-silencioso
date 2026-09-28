@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 
 """
 
@@ -63,7 +63,7 @@ def update_rank_history(sector_results, history_csv_path, date=None):
     if history_path.exists():
         try:
             hist = pd.read_csv(history_path, parse_dates=['date'])
-        except Exception:
+        except (OSError, ValueError, TypeError, pd.errors.ParserError):
             hist = pd.DataFrame(columns=['date','sector','score','rank'])
     else:
         hist = pd.DataFrame(columns=['date','sector','score','rank'])
