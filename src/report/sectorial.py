@@ -53,6 +53,11 @@ def render_sector_breadth(sector_breadth_data, is_stale=False, stale_reason=None
         out.append("\n")
         out.append(f"*[BAJA] = cobertura < {MIN_SECTOR_COVERAGE:.0%} del universo del sector. Los ratios se calculan sobre la parte valida; el valor puede no ser representativo del sector completo. Los derivados (SLPM, Opportunity Map, scores) usan estos mismos ratios sin invalidacion automatica.*\n\n")
         out.append("*La columna A/D de esta tabla agrega solo top-20 por sector (suma total = ~220 tickers). No coincide con la metrica Advance/Decline Net de Confirmation Data (universo completo, ~313 tickers).*\n\n")
+        # F6-04 (2026-09-28): WONT FIX razonado. Cobertura ~100% es el
+        # objetivo tras A1 (2026-09-24, commit 8c6330f). n_total cuenta
+        # los top-20 reales descargados (config TOP_N_SECTOR_COMPONENTS),
+        # no el ETF completo. Marcar [BAJA] solo si < MIN_SECTOR_COVERAGE.
+        out.append("*Cobertura cercana al 100% es el comportamiento esperado: n_total cuenta los 20 componentes por sector realmente descargados (config TOP_N_SECTOR_COMPONENTS), no el universo completo del ETF. Ver commit 8c6330f (A1, 2026-09-24).*\n\n")
     return out
 
 

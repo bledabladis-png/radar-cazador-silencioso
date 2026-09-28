@@ -116,6 +116,13 @@ def compute_sector_concentration(df_stocks, holdings_df, full_metrics_df,
             'n_total': n_total,
             'n_valid_return20': len(ret_df),
             'n_positive_return20': len(positive),
+            # F6-03 (2026-09-28): WONT FIX razonado.
+            # top1=100% con n_positive=1 es correcto por definicion
+            # (100% de la suma positiva esta en el top-1).
+            # top3/top5=N/D con n_positive<3/5 es correcto: no se puede
+            # calcular la concentracion sobre menos valores que el top N.
+            # rs_median puede ser extremo en universos pequenos sin que
+            # sea error.
             'top1_positive_return_concentration': top1,
             'top3_positive_return_concentration': top3,
             'top5_positive_return_concentration': top5,

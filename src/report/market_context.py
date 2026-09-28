@@ -48,6 +48,13 @@ def render_rotacion_reciente(sector_rank_deltas_data):
             out.append(f"| {row['sector']} | {row['rank_actual']} | {_fmt_signed(row['rank_change_5d'], '{:+.0f}', '{:.0f}')} | {_fmt_signed(row['rank_change_10d'], '{:+.0f}', '{:.0f}')} | {_fmt_signed(row['rank_change_20d'], '{:+.0f}', '{:.0f}')} | {row['lectura_5d']} | {row['lectura_10d']} | {row['lectura_20d']} |\n")
         out.append("\n")
         out.append("*Semantica del delta: rank menor = mejor posicion. Un delta negativo indica mejora (subir en el ranking). Ej: D20d=-5 = haber subido 5 posiciones en 20 sesiones.*\n\n")
+        # F6-18 (2026-09-28): WONT FIX razonado. Un sector en rank=1 puede
+        # mostrar delta negativo: subio posiciones para llegar al top. La
+        # etiqueta de lectura ('Fuerte mejora' / 'Estable' / 'Fuerte
+        # deterioro') se basa solo en el signo y magnitud del delta, no en
+        # la posicion absoluta. Rank=1 + D20d=-6 es correcto: 'Fuerte
+        # mejora' por haber ascendido 6 puestos.
+        out.append("*Un sector en rank=1 puede mostrar delta negativo: subio posiciones para llegar al top. La etiqueta de lectura depende del signo y magnitud del delta, no de la posicion absoluta.*\n\n")
     return out
 
 
