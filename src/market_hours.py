@@ -91,7 +91,7 @@ def _normalize_date(d):
     return d
 
 
-def _is_provisional_trading_day(d) -> bool:
+def is_provisional_trading_day(d) -> bool:
     """Regla provisional lunes-viernes para mercados no-USA.
 
     Limitacion documentada: NO es calendario oficial. Festivos locales
@@ -145,7 +145,7 @@ def is_trading_session(market: str, session_date) -> bool:
 
     - US_EQUITY: calendario oficial NYSE (is_market_day).
     - LSE/XETRA/BME/EURONEXT: regla provisional lunes-viernes
-      (_is_provisional_trading_day). NO es calendario oficial.
+      (is_provisional_trading_day). NO es calendario oficial.
       Festivos locales no contemplados.
     - Otro: UnknownMarketError.
     """
@@ -153,7 +153,7 @@ def is_trading_session(market: str, session_date) -> bool:
     d = _normalize_date(session_date)
     if market == "US_EQUITY":
         return is_market_day(d)
-    return _is_provisional_trading_day(d)
+    return is_provisional_trading_day(d)
 
 
 def get_session_close(market: str, session_date) -> datetime:

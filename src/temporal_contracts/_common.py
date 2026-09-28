@@ -1,6 +1,7 @@
 """Helpers compartidos para los contratos temporales (FU-021-5 Fase 2)."""
 from __future__ import annotations
 
+import logging
 from datetime import date, datetime, timedelta
 from typing import Optional
 
@@ -9,6 +10,9 @@ import pandas as pd
 from src.effective_date import resolve_effective_date
 from src.instrument_registry import get_instrument_class
 from src.market_calendar import last_expected_market_date
+from src.market_hours import is_provisional_trading_day
+
+logger = logging.getLogger(__name__)
 
 
 def extract_close(df_market: pd.DataFrame) -> pd.DataFrame:
@@ -50,10 +54,15 @@ def to_date(value) -> Optional[date]:
 
 
 def nyse_expected(reference_date) -> Optional[date]:
-    """Ultima sesion NYSE esperada en reference_date."""
+    """Ultima sesion NYSE esperada en reference_date.
+
+    Devuelve None solo si reference_date no es convertible a date.
+    Excepciones de tipo no controlado se propagan (no se enmascaran).
+    """
     try:
         return to_date(last_expected_market_date(reference_date))
-    except Exception:
+    except (TypeError, ValueError) as e:
+        logger.warning("nyse_expected: entrada invalida %r: %s", reference_date, e)
         return None
 
 
@@ -62,11 +71,13 @@ def weekday_expected(reference_date) -> Optional[date]:
 
     No usa calendario de festivos locales. Se sustituira por
     calendarios oficiales de LSE/XETRA/BME/EURONEXT en fase posterior.
+    Delega en market_hours.is_provisional_trading_day (punto unico
+    de la regla L-V del sistema).
     """
     d = to_date(reference_date)
     if d is None:
         return None
-    while d.weekday() >= 5:
+    while not is_provisional_trading_day(d):
         d = d - timedelta(days=1)
     return d
 

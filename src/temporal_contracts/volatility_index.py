@@ -4,11 +4,11 @@ Hereda de INDEX_EOD_USA (mismo calendario CBOE/NYSE, cierre 16:15 ET).
 """
 from __future__ import annotations
 
-from src.temporal_contracts.index_eod import _IndexEODBase
+from src.temporal_contracts.index_eod import IndexEODBase
 from src.temporal_contracts._common import nyse_expected
 
 
-class VolatilityIndex(_IndexEODBase):
+class VolatilityIndex(IndexEODBase):
     name = "VOLATILITY_INDEX"
     family = "INDEX"
     session_calendar = "NYSE"

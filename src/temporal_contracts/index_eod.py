@@ -18,7 +18,15 @@ from src.temporal_contracts.base import (
 )
 
 
-class _IndexEODBase(TemporalContract):
+class IndexEODBase(TemporalContract):
+    """Base para contratos resueltos por cobertura de universo.
+
+    Subclases deben declarar: name, family, session_calendar,
+    max_lag_days, min_coverage, eligible_universe, y sobreescribir
+    _expected(reference_date) -> date | None.
+
+    Usada por INDEX_EOD_*, VOLATILITY_INDEX, RATE_YIELD.
+    """
     family = "INDEX"
     min_coverage = 1.0
     per_ticker_lag = None
@@ -59,7 +67,7 @@ class _IndexEODBase(TemporalContract):
         )
 
 
-class IndexEODUSA(_IndexEODBase):
+class IndexEODUSA(IndexEODBase):
     name = "INDEX_EOD_USA"
     session_calendar = "NYSE"
     max_lag_days = 1
@@ -70,7 +78,7 @@ class IndexEODUSA(_IndexEODBase):
         return nyse_expected(reference_date)
 
 
-class IndexEODEuropa(_IndexEODBase):
+class IndexEODEuropa(IndexEODBase):
     name = "INDEX_EOD_EUROPA"
     session_calendar = "LSE|XETRA|BME|EURONEXT"
     max_lag_days = 5
@@ -81,7 +89,7 @@ class IndexEODEuropa(_IndexEODBase):
         return weekday_expected(reference_date)
 
 
-class IndexEODCommodity(_IndexEODBase):
+class IndexEODCommodity(IndexEODBase):
     name = "INDEX_EOD_COMMODITY"
     session_calendar = "NYSE"
     max_lag_days = 1
@@ -92,7 +100,7 @@ class IndexEODCommodity(_IndexEODBase):
         return nyse_expected(reference_date)
 
 
-class IndexEODCurrency(_IndexEODBase):
+class IndexEODCurrency(IndexEODBase):
     name = "INDEX_EOD_CURRENCY"
     session_calendar = "ICE"
     max_lag_days = 1

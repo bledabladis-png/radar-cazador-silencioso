@@ -1,11 +1,11 @@
 """Contrato RATE_YIELD (FU-021-5 Fase 2.2)."""
 from __future__ import annotations
 
-from src.temporal_contracts.index_eod import _IndexEODBase
+from src.temporal_contracts.index_eod import IndexEODBase
 from src.temporal_contracts._common import nyse_expected
 
 
-class RateYield(_IndexEODBase):
+class RateYield(IndexEODBase):
     name = "RATE_YIELD"
     family = "RATE_YIELD"
     session_calendar = "NYSE"
