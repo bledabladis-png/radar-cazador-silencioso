@@ -30,10 +30,8 @@ def load_all_data(reference_date=None, run_id=None):
     # download_market_data aplica _filter_non_eod_equity + _trim_market_data_to_equity_eod
     # (FU-021-3A), que recortan a la ultima sesion con cobertura EQUITY_EOD >= 90%.
     # El trim legacy era redundante (verificado empiricamente: diff filas = 0).
-    if df_market is None or df_market.empty:
-        print("Error: no hay datos validos de mercado.")
-        return None
-
+    # A5-01 (2026-09-28): eliminada la comprobacion duplicada de df_market
+    # (identica a la de las lineas anteriores). Era residuo del trim retirado.
     print("Validando datos...")
     valid, issues = validate_market_data(df_market)
     if issues:

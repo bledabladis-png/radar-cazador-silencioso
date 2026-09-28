@@ -55,7 +55,11 @@ def main():
         if os.path.exists(_csv_path):
             try:
                 os.remove(_csv_path)
-            except Exception:
+            except OSError:
+                # A5-02: borrado best-effort. Si falla por permisos o
+                # fichero bloqueado, no es critico: el run actual
+                # regenerara o dejara el CSV obsoleto, que es un estado
+                # que los consumidores ya contemplan.
                 pass
     data = load_all_data(reference_date=reference_date, run_id=run_id)
     if data is None:
@@ -251,20 +255,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

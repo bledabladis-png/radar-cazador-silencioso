@@ -40,7 +40,7 @@ def compute_final_matrices(sector_breadth_df, sector_concentration_df,
             print("  Matriz de regimen sectorial calculada.")
         else:
             sector_regime_matrix_df = None
-    except Exception as e:
+    except (ImportError, OSError, ValueError, KeyError, TypeError, AttributeError) as e:
         print(f"  Matriz de regimen sectorial omitida: {e}")
         sector_regime_matrix_df = None
 
@@ -65,7 +65,7 @@ def compute_final_matrices(sector_breadth_df, sector_concentration_df,
             print("  Matriz de evidencia calculada.")
         else:
             evidence_matrix_df = None
-    except Exception as e:
+    except (ImportError, OSError, ValueError, KeyError, TypeError, AttributeError) as e:
         print(f"  Matriz de evidencia omitida: {e}")
         evidence_matrix_df = None
 
@@ -132,5 +132,5 @@ def generate_european_coverage(reference_date=None):
     try:
         from src.european_coverage import generate_european_coverage_report
         generate_european_coverage_report(reference_date=reference_date)
-    except Exception as e:
+    except (ImportError, OSError, ValueError, KeyError, TypeError, AttributeError) as e:
         print(f"  Cobertura europea omitida: {e}")
