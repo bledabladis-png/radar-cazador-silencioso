@@ -24,10 +24,12 @@ class YahooProvider(MarketDataProvider):
         return self.name
 
     def is_available(self) -> bool:
+        # A5-14 / E722 (2026-09-28): except desnudo -> except Exception.
+        # La sonda no debe silenciar KeyboardInterrupt / SystemExit.
         try:
             test = self._download_with_retries(["^GSPC"], period="5d")
             return test is not None and not test.empty
-        except:
+        except Exception:
             return False
 
     def _download_with_retries(self, tickers, **kwargs):

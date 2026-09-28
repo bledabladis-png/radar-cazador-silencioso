@@ -17,17 +17,38 @@ class DataRouter:
         self.preferred_order = ["yahoo", "polygon", "fred"]
 
     def get_market_data(self, tickers: list, period: str = "10y"):
+        """Obtiene datos de mercado para el lote completo de tickers.
+
+        A5-15 (2026-09-28): NO acepta subset parcial silencioso. Si un
+        provider devuelve N tickers pero se pidieron M > N, se prueba el
+        siguiente. Si ninguno cubre el lote, cae al fallback de cache
+        (que a su vez raise RuntimeError si falta alguno).
+        """
+        requested = set(tickers)
         for name in self.preferred_order:
             provider = self.providers[name]
-            if provider.is_available():
-                try:
-                    print(f"Usando {provider.get_name()} para datos de mercado...")
-                    return provider.get_prices(tickers, period=period)
-                except Exception as e:
-                    print(f"{provider.get_name()} fallo: {e}; intentando siguiente...")
+            if not provider.is_available():
+                continue
+            try:
+                print(f"Usando {provider.get_name()} para datos de mercado...")
+                df = provider.get_prices(tickers, period=period)
+                if df is None or df.empty:
+                    print(f"  [ROUTER] {provider.get_name()} devolvio vacio; probando siguiente...")
                     continue
+                if isinstance(df.columns, pd.MultiIndex):
+                    covered = {c[1] for c in df.columns if len(c) >= 2 and c[1]}
+                    missing = requested - covered
+                    if missing:
+                        print(f"  [ROUTER] {provider.get_name()} no cubrio "
+                              f"{len(missing)}/{len(tickers)} tickers "
+                              f"({sorted(missing)[:5]}...); probando siguiente...")
+                        continue
+                return df
+            except Exception as e:
+                print(f"{provider.get_name()} fallo: {e}; intentando siguiente...")
+                continue
         # Fallback global
-        print("Todos los proveedores fallaron. Intentando cache local global...")
+        print("Ningun proveedor cubrio el lote completo. Intentando cache local global...")
         return self._load_cache(tickers)
 
     def _load_cache(self, tickers):
