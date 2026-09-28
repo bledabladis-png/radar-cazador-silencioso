@@ -13,18 +13,19 @@ Reglas de personalidad y metodo: `PROMPT_MAESTRO.md` secciones 1 y 3.
 
 ---
 
-## Estado al cierre de la sesion (2026-09-27)
+## Estado al cierre de la sesion (2026-09-28)
 
     HEAD                 ver docs/auditoria/iae/ESTADO_SISTEMA.md
     Ahead                0 (sincronizado con origin/main)
     Working tree         LIMPIO
     Tests IAE            845 passed (criterio AST, 45 ficheros)
-    Suite global         2184 passed + 2 skipped + 0 failed
+    Suite global         2226 passed + 2 skipped + 0 failed
                          (los 3 test_freshness pasan tras run.py; vuelven
                           a fallar si los parquets llevan >4 dias sin
                           refrescar - ver nota abajo)
-    Push                 SI (integrado en produccion desde 2026-09-26)
+    Push                 SI (integrado en produccion)
     Cobertura IAE        90% lineas (reproducible con scripts/iae_coverage.py)
+    Auditoria IAE        CERRADA (C2 residual abierto no bloqueante)
 
 Nota. `test_freshness` valida que market_data.parquet y stock_prices.parquet
 esten actualizados a la ultima sesion NYSE. Pasan tras un `py run.py` y
@@ -40,7 +41,7 @@ Criterio del conteo de tests IAE: ficheros `tests/test_*.py` que importan
 
 ## Documentos clave
 
-    docs/auditoria/PROMPT_MAESTRO.md              v7.6
+    docs/auditoria/PROMPT_MAESTRO.md              v7.15
     docs/auditoria/TRANSFER.md                    este documento
     docs/auditoria/README.md                      navegacion
 
@@ -81,13 +82,17 @@ Con el crosswalk CUSIP regenerado por script (246 filas, 242 tickers):
   ingesta trimestral. Acumulativo. Preserva filas manuales.
 - Catalogo radar regenerado por `regenerate_radar_catalog.py` tras
   cada `run.py` en `daily_run.yml`. No-op si no hay tickers nuevos.
-- Seccion IAE en el reporte diario. Actualmente STALE con razon honesta:
-  SEC no ha publicado la Official List 13(f) de Q2 2026 en formato TXT
-  (solo PDF desde 2026-08-14). El NIPC se calculara automaticamente
-  cuando SEC publique el TXT.
+- Seccion IAE en el reporte diario. DESBLOQUEADA 2026-09-27: SEC
+  publico la Official List 13(f) de Q2 2026 con sufijo `-txt`
+  (13flist2026q2-txt.txt). El downloader usa URL_EXCEPTIONS + fallback
+  automatico 404 -> sufijo `-txt`. Commit 08a6c6a.
 
-NIPC Q1 2026 -> Q2 2026 pendiente de dato externo. Ultimo calculado:
-NIPC Q4 2025 -> Q1 2026 = -4.316.734.936 (referencia historica).
+NIPC Q1 2026 -> Q2 2026 = 8.254.818.120 (calculado 2026-09-27).
+NIPC Q4 2025 -> Q1 2026 = -4.264.449.012 (baseline local reproducible
+post-fix H1-B v2.3, commit 72fa824). El valor declarado por el auditor
+-4.264.449.932 queda registrado como discrepancia abierta en
+golden/current.json (reconciliation_delta = 920,
+reconciliation_status = OPEN).
 
 Detalle completo en `iae/IAE_MAESTRO.md`.
 
@@ -303,7 +308,7 @@ Esperado:
 - HEAD ver docs/auditoria/iae/ESTADO_SISTEMA.md
 - ahead 0, behind 0
 - working tree limpio
-- 1857 passed + 2 skipped + 0 failed (test_freshness pasa tras run.py)
+- 2226 passed + 2 skipped + 0 failed (test_freshness pasa tras run.py)
 - pyflakes silencio, compileall OK
 
 Censo del modulo IAE (comando aparte, tarda unos segundos):
@@ -324,9 +329,13 @@ Estado que reconozco:
 - IAE integrado en run.py, automatizado en GitHub, sincronizado con origin/main
 - Crosswalk regenerado por script (246 filas, 242 tickers)
 - Cache 13F v2 con 3 trimestres en GitHub
-- Seccion IAE STALE por Official List Q2 pendiente de SEC (comportamiento correcto)
+- Seccion IAE OPERATIVA 2026-09-27 (Official List Q2 desbloqueada con sufijo -txt)
 - Fases A-F cerradas; Fase G (automatizacion de mappings) cerrada 2026-09-24
-- Fase D (auditor externo) PENDIENTE
+- Fase D (auditor externo IAE) CERRADA 2026-09-28 con C2 residual abierto
+- H1-B: CERRADO con C2 (920) no bloqueante. Baseline local reproducible -4.264.449.012
+- H4: CERRADO (golden/current.json ACTIVE_WITH_OPEN_DISCREPANCY)
+- H2, H3, H5.1, H5.2, H5.4, H5.5, O1: CERRADOS 2026-09-28
+- H5.3: trazabilidad implementada, pendiente verificacion cron nov 2026
 - Bugs de render C1-C3 RESUELTOS 2026-09-24 (commits 2fe1c45, 740be35, dfd93c4)
 - Cobertura sectorial A1 RESUELTA 2026-09-24 (top-20 real, commit 8c6330f)
 - FU-002-bymarket integrado (manifest + guard, commits 88c27d1, d09f928, 62e38d9)
@@ -336,8 +345,8 @@ Estado que reconozco:
 - F-IAE-LSE-INTEGRATION integrado en produccion (scraper LSE + override
   parcial de Close). Verificado end-to-end en CI real (run 36208872855,
   applied=20/20 status=OK).
-- PROMPT_MAESTRO vigente: v7.6 (auditoria interna aplicada, commit 5d54ddf).
-- Pendiente: SEC publique Official List Q2 TXT
+- PROMPT_MAESTRO vigente: v7.15 (cierre H1-B, commit fd1b01b).
+- Pendiente: H5.3 en cron nov 2026. C2 (920) pendiente de comando + HEAD del auditor.
 
 Pregunta: "Que hacemos?"
 
@@ -885,4 +894,78 @@ Verificacion: pyflakes limpio, compileall OK, suite 2205 + 2 skipped.
 
 ---
 
-FIN DE TRANSFER. 2026-09-27.
+**Anexo 2026-09-28 (post-cierre): H1-B + H4 + H2 + H3 + H5.1-5.5 + O1 cerrados.**
+
+Sesion de cierre del dictamen externo IAE 2026-09-27. 14 commits
+pusheados. Suite: 2205 -> 2226 + 2 skipped.
+
+**Hallazgos cerrados:**
+
+| Hallazgo | Estado final |
+|---|---|
+| H1-A | CERRADO |
+| H1-B | CERRADO con C2 abierto no bloqueante |
+| H2 | CERRADO (42 vs 45, reconciliacion 27+17+1=45) |
+| H3 | CERRADO (tabla de clasificacion de scripts) |
+| H4 | CERRADO (golden/current.json) |
+| H5.1 | CERRADO (SEC_13F_QUARTER_LAG_DAYS unificado) |
+| H5.2 | CERRADO (retry + Issue automatico) |
+| H5.3 | TRAZABILIDAD IMPLEMENTADA - pendiente cron nov 2026 |
+| H5.4 | CERRADO (validacion regex YYYYQn) |
+| H5.5 | CERRADO (cache key v3 con hash del manifest) |
+| H5.6 | CERRADO (historico) |
+| H5.7 | HISTORICO |
+| O1 | CERRADO (barrido + fix SSHPRNAMT) |
+
+**H1-B v2.3 - resumen tecnico:**
+
+Fix implementado en `sec13f_list.py` (classify_instrument_type),
+`operational_universe.py` (_apply_5_3b) y
+`delta_shares.py::compute_reported_position_units` (filtro primario
+por Official List).
+
+Regla: EQUITY confirmada incluye; OPTION confirmada excluye;
+UNRESOLVED no se imputa (mantiene). Word-boundary en regex
+(`\b(?:CALL|PUT|OPTION|OPT)\b`).
+
+Baseline local reproducible: `-4.264.449.012` (commit 72fa824).
+Referencia externa declarada por auditor: `-4.264.449.932`.
+`reconciliation_delta = 920`, `reconciliation_status = OPEN`.
+Detalle: INFORME_H1B_RECONCILIACION_FINAL.md, golden/current.json.
+
+**Hallazgo metodologico registrado:**
+
+El primer informe presento el `-4.264.449.932` como si fuera un
+golden medido, con "coincidencia dentro del margen de redondeo".
+El auditor lo rechazo: no es reproducible. Corregido a "no
+reproducido bajo las configuraciones y entorno controlados
+actualmente auditados". Este hallazgo metodologico se documenta
+como leccion permanente: distinguir siempre entre "valor declarado"
+y "valor verificado".
+
+**Commits pusheados:**
+
+    fd1b01b  PROMPT v7.15 + TRASPASO actualizado
+    e16737e  cierre H1-B - H4 cerrado + current.json
+    4ed2bcf  aclarar que el 932 no es golden reproducible
+    528c088  informe reconciliacion final H1-B
+    72fa824  O1 - imputacion SSHPRNAMT
+    bd8a501  H2 + H3
+    7870a57  H5_WORKFLOW_TRIMESTRAL cierre
+    c042fef  H5.1-H5.5 workflow
+    0308922  informe H1-B post-implementacion
+    ce32c77  H1-B v2.3
+    54d8435  H1-B v1
+    321c385  cierre parcial H1-B + H5 + H4
+
+**Pendientes reales al cierre:**
+
+- H5.3: verificacion en cron real de noviembre 2026.
+- C2 (920): comando + HEAD del auditor, o aceptacion definitiva
+  de `reconciliation_status = OPEN`.
+
+Sin bloqueantes activos.
+
+---
+
+FIN DE TRANSFER. 2026-09-28.
