@@ -30,10 +30,9 @@ def compute_liquidity_score():
 
 
     if fed_data is None or fed_data.empty:
-
-
-
-        return None, None, None
+        # A3.1-03 (2026-09-28): aridad uniforme 4-tuple (None, None, None, None)
+        # para que el caller no dependa de un contrato implicito 3-vs-4.
+        return None, None, None, None
 
 
 
@@ -84,10 +83,7 @@ def compute_liquidity_score():
             signals['fed_funds'] = last_val
 
     if not signals:
-
-
-
-        return None, None, None
+        return None, None, None, None
 
 
 
@@ -104,10 +100,7 @@ def compute_liquidity_score():
 
 
     if not available:
-
-
-
-        return None, None, None
+        return None, None, None, None
 
 
 
@@ -204,46 +197,18 @@ def compute_liquidity_score():
 
 
     try:
-
-
-
         import json, os
-
-
-
         delta_file = 'outputs/state/liquidity_state.json'
-
-
-
         if os.path.exists(delta_file):
-
-
-
             with open(delta_file, 'r') as f:
-
-
-
                 prev = json.load(f)
-
-
-
                 previous_score = prev.get('score', None)
-
-
-
         with open(delta_file, 'w') as f:
-
-
-
             json.dump({'score': float(score), 'date': str(fed_data.dropna(how='all').index[-1].date()) if len(fed_data.dropna(how='all')) > 0 else str(fed_data.index[-1].date())}, f)
-
-
-
-    except:
-
-
-
-        pass
+    except (json.JSONDecodeError, OSError, ValueError, TypeError, KeyError, IndexError) as e:
+        # A3.1-01: fallo de persistencia de state no debe tumbar el pipeline,
+        # pero tampoco debe ser invisible. previous_score queda en None.
+        print(f"  [WARN] liquidity_state no actualizado: {e}")
 
 
 

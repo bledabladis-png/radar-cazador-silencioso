@@ -28,13 +28,14 @@ def compute_all_regimes(df_market, df_macro_manual, temporal_meta=None):
     print(f"  Cond. Financieras: {financial_regime} (conf: {liq_conf:.0%})")
 
     print("Calculando liquidez real (FRED)...")
-    result = compute_real_liquidity()
-    if result[0] is not None:
-        real_liq_score, real_liq_regime, real_liq_conf, real_liq_prev = result
-        print(f"  Liquidez real: {real_liq_regime} (conf: {real_liq_conf:.0%})")
-    else:
-        real_liq_score, real_liq_regime, real_liq_conf, real_liq_prev = None, 'N/A', 0.0, None
+    # A3.1-03: compute_liquidity_score ahora devuelve siempre 4-tuple
+    # (score | None, regime | None, confidence | None, previous_score | None).
+    real_liq_score, real_liq_regime, real_liq_conf, real_liq_prev = compute_real_liquidity()
+    if real_liq_score is None:
+        real_liq_regime, real_liq_conf = 'N/A', 0.0
         print("  Liquidez real: no disponible (sin datos FRED)")
+    else:
+        print(f"  Liquidez real: {real_liq_regime} (conf: {real_liq_conf:.0%})")
 
     print("Calculando regimen de volatilidad...")
     try:
