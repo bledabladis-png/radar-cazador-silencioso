@@ -1,4 +1,4 @@
-﻿"""
+"""
 Flujo primario de ETFs SPDR desde State Street (SSGA).
 Calcula ETF Primary Flow = (SharesOutstanding_t - SharesOutstanding_{t-1}) * NAV_t
 """
@@ -7,6 +7,8 @@ import requests
 from io import BytesIO
 from datetime import datetime, timedelta
 from pathlib import Path
+
+from ._fund_flow_utils import fund_flow_robust_zscore_with_regime
 
 SECTOR_TICKERS = ['XLK','XLF','XLV','XLE','XLY','XLP','XLI','XLB','XLRE','XLU','XLC','FEZ']
 CACHE_DIR = Path('data/cache/ssga_navhist')
@@ -61,23 +63,22 @@ def _download_single(ticker: str) -> pd.DataFrame:
     return df
 
 def _compute_primary_flow(df: pd.DataFrame) -> pd.DataFrame:
-    """Añade columnas de flujo primario y z-score."""
+    """Añade columnas de flujo primario y z-score.
+
+    A2.4-01 (2026-09-28): migrado de implementacion local (rolling.apply
+    con robust_z inline, sin regimen) al contrato comun
+    _fund_flow_utils.fund_flow_robust_zscore_with_regime. Coherente con
+    DAXEX (blackrock_fund_data), ISF.L (blackrock_isf_fund_data),
+    LYXI (amundi_fund_data) e IWM (blackrock_iwm_fund_data).
+    Publica dos columnas: primary_flow_z y primary_flow_z_regime.
+    """
     df = df.copy()
     df['primary_flow_usd'] = df['shares_outstanding'].diff() * df['nav']
     df['primary_flow_pct'] = (df['primary_flow_usd'] / df['total_net_assets']) * 100.0
 
-    def robust_z(series):
-        if len(series) < 20:
-            return 0.0
-        median = series.median()
-        mad = (series - median).abs().median()
-        if mad == 0:
-            return 0.0
-        z = (series.iloc[-1] - median) / (1.4826 * mad + 1e-9)
-        # Clip a [-5, +5] coherente con src/utils.robust_zscore.
-        return max(-5.0, min(5.0, float(z)))
-
-    df['primary_flow_z'] = df['primary_flow_pct'].rolling(120).apply(robust_z, raw=False)
+    df['primary_flow_z'], df['primary_flow_z_regime'] = fund_flow_robust_zscore_with_regime(
+        df['primary_flow_pct'], window=120, min_periods=20,
+    )
     return df
 
 def get_etf_primary_flow_data(force_download: bool = False) -> pd.DataFrame:
@@ -136,5 +137,6 @@ def get_etf_primary_flow_data(force_download: bool = False) -> pd.DataFrame:
 
     last_df = full_df.dropna(subset=['primary_flow_pct']).groupby('ticker').tail(1)
     return last_df[['ticker','nav','shares_outstanding','total_net_assets',
-                    'primary_flow_usd','primary_flow_pct','primary_flow_z']].reset_index(drop=True)
+                    'primary_flow_usd','primary_flow_pct','primary_flow_z',
+                    'primary_flow_z_regime']].reset_index(drop=True)
 

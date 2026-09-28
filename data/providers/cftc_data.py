@@ -164,6 +164,7 @@ def get_cftc_position_flow_data() -> pd.DataFrame:
         print(f'  Historico CFTC guardado (ultimos {CFTC_HISTORY_DAYS} dias, actividad {CFTC_ACTIVE_CONTRACT_DAYS} dias): {HISTORY_PATH}')
 
         return recent.sort_values('date', ascending=False).reset_index(drop=True)
-    except Exception as e:
+    except (requests.RequestException, ValueError, KeyError,
+            TypeError, OSError, pd.errors.ParserError) as e:
         print(f'  Error en CFTC Position Flow: {e}')
         return pd.DataFrame()

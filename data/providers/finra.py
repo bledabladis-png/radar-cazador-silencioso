@@ -1,4 +1,4 @@
-﻿import hashlib
+import hashlib
 import json
 import time
 from datetime import datetime, timedelta
@@ -77,7 +77,7 @@ class FinraProvider(MarketDataProvider):
             if age < _CACHE_TTL_HIT:
                 try:
                     return pd.read_parquet(parquet)
-                except Exception:
+                except (OSError, ValueError, TypeError, pd.errors.ParserError):
                     parquet.unlink(missing_ok=True)
         if empty.exists():
             age = now - empty.stat().st_mtime
@@ -93,7 +93,7 @@ class FinraProvider(MarketDataProvider):
         try:
             df.to_parquet(tmp, index=False)
             tmp.replace(target)
-        except Exception as e:
+        except (OSError, ValueError, TypeError, KeyError) as e:
             print(f"  [finra] no se pudo escribir cache {target.name}: {e}")
             tmp.unlink(missing_ok=True)
 
@@ -103,7 +103,7 @@ class FinraProvider(MarketDataProvider):
         marker = cache_dir / f"{key}.empty"
         try:
             marker.write_text("", encoding="utf-8")
-        except Exception as e:
+        except OSError as e:
             print(f"  [finra] no se pudo escribir marker {marker.name}: {e}")
 
     # ------------------------------------------------------------
@@ -114,7 +114,7 @@ class FinraProvider(MarketDataProvider):
             resp = self._session.post(f"{BASE_URL}/{endpoint}", json=payload, timeout=60)
             resp.raise_for_status()
             return resp
-        except Exception as e:
+        except requests.RequestException as e:
             print(f"ERROR en {endpoint}: {e}")
             if 'resp' in locals():
                 print(f"Status: {resp.status_code}")

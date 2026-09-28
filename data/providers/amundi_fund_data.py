@@ -1,4 +1,4 @@
-﻿"""
+"""
 Proveedor Amundi para flujo primario de LYXI.
 Descarga series históricas de SHARES_OUT, NAV y AUM desde la API oficial.
 Calcula ETF Primary Flow = ΔSharesOutstanding × NAV.
@@ -108,7 +108,8 @@ def download_historical_data(isin: str, start_date: str, end_date: str) -> dict:
         _tmp.replace(cache_file)
         print(f'  Guardado en caché: {cache_file}')
         return product
-    except Exception as e:
+    except (requests.RequestException, ValueError, KeyError,
+            TypeError, OSError, json.JSONDecodeError) as e:
         print(f'  Error descargando histórico {isin}: {e}')
         if cache_file.exists():
             # A5-72 (2026-09-28): WARN explicito con mtime al caer a
