@@ -1,4 +1,4 @@
-﻿import pandas as pd
+import pandas as pd
 import yfinance as yf
 import time
 import random
@@ -17,7 +17,7 @@ class YahooProvider(MarketDataProvider):
             from curl_cffi import requests as curl_requests
             self.session = curl_requests.Session(impersonate="chrome")
             print("YahooProvider: usando curl_cffi con impersonate=chrome")
-        except Exception as e:
+        except (ImportError, AttributeError, RuntimeError) as e:
             print(f"YahooProvider: curl_cffi no disponible, usando requests estándar ({e})")
 
     def get_name(self) -> str:
@@ -29,7 +29,7 @@ class YahooProvider(MarketDataProvider):
         try:
             test = self._download_with_retries(["^GSPC"], period="5d")
             return test is not None and not test.empty
-        except Exception:
+        except RuntimeError:
             return False
 
     def _download_with_retries(self, tickers, **kwargs):
@@ -65,31 +65,32 @@ class YahooProvider(MarketDataProvider):
             if not isinstance(data.columns, pd.MultiIndex):
                 data.columns = pd.MultiIndex.from_tuples([(c, '') for c in data.columns])
             return data
-        except Exception as e:
+        except (RuntimeError, ValueError, TypeError, KeyError) as e:
             print(f"  Yahoo fallo definitivamente: {e}")
             print("  Intentando fallback a cache local...")
             return self._load_cache(tickers)
 
     def _load_cache(self, tickers=None) -> pd.DataFrame:
         cache_path = Path(CACHE_MARKET_PATH)
-        if cache_path.exists():
-            try:
-                data = pd.read_parquet(cache_path)
-                print(f"  Cache local cargado: {cache_path} ({len(data)} filas)")
-                if tickers is not None and isinstance(data.columns, pd.MultiIndex):
-                    requested = set(tickers)
-                    cols = [c for c in data.columns if c[1] in requested]
-                    if not cols:
-                        raise RuntimeError(
-                            f"Cache local no contiene ninguno de los {len(tickers)} tickers solicitados."
-                        )
-                    data = data[cols]
-                    n_ok = len({c[1] for c in cols})
-                    print(f"  Cache filtrado a {n_ok}/{len(tickers)} tickers.")
-                return data
-            except Exception as e:
-                print(f"  Error leyendo cache local: {e}")
-        raise RuntimeError("No hay cache local disponible. Descarga fallida.")
+        if not cache_path.exists():
+            raise RuntimeError("No hay cache local disponible. Descarga fallida.")
+        try:
+            data = pd.read_parquet(cache_path)
+        except (OSError, ValueError, pd.errors.ParserError) as e:
+            print(f"  Error leyendo cache local: {e}")
+            raise RuntimeError("No hay cache local disponible. Descarga fallida.")
+        print(f"  Cache local cargado: {cache_path} ({len(data)} filas)")
+        if tickers is not None and isinstance(data.columns, pd.MultiIndex):
+            requested = set(tickers)
+            cols = [c for c in data.columns if c[1] in requested]
+            if not cols:
+                raise RuntimeError(
+                    f"Cache local no contiene ninguno de los {len(tickers)} tickers solicitados."
+                )
+            data = data[cols]
+            n_ok = len({c[1] for c in cols})
+            print(f"  Cache filtrado a {n_ok}/{len(tickers)} tickers.")
+        return data
 
     def get_treasury_yields(self, maturities: list = None) -> pd.DataFrame:
         raise NotImplementedError("Yahoo Finance no tiene rendimientos del Tesoro. Usa FRED.")

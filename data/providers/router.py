@@ -1,4 +1,4 @@
-﻿from .yahoo import YahooProvider
+from .yahoo import YahooProvider
 from .fred import FredProvider
 from .polygon import PolygonProvider
 import pandas as pd
@@ -87,7 +87,7 @@ class DataRouter:
             if provider.is_available():
                 try:
                     return provider.get_treasury_yields()
-                except Exception as e:
+                except (RuntimeError, ValueError, KeyError, AttributeError) as e:
                     print(f"  [WARN] router: {provider.get_name()} get_treasury_yields fallo: {e}")
                     continue
         return None
@@ -102,7 +102,8 @@ class DataRouter:
                     if data is not None and not data.empty:
                         print(f"Usando {provider.get_name()} para datos de liquidez.")
                         return data
-                except Exception:
+                except (RuntimeError, ValueError, KeyError, AttributeError) as e:
+                    print(f"  [WARN] router: {provider.get_name()} get_fed_data fallo: {e}")
                     continue
 
         # 2) Fallback a CSVs manuales
@@ -131,7 +132,7 @@ class DataRouter:
                     prefix = os.path.splitext(fname)[0]
                     df = df.add_prefix(f'{prefix}_')
                     dfs.append(df)
-                except Exception as e:
+                except (OSError, ValueError, KeyError, TypeError, pd.errors.ParserError) as e:
                     print(f"  [WARN] router: _load_macro_manual: {e}")
 
         if not dfs:

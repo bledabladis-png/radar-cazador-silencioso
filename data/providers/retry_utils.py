@@ -15,5 +15,8 @@ def retry_call(func, *args, retries=3, backoff=2, **kwargs):
             return func(*args, **kwargs)
         except Exception as exc:
             last_exc = exc
-            time.sleep(backoff * attempt)
+            # Solo dormir si hay un siguiente intento. A2.1-10: antes
+            # se dormia tambien en el ultimo, desperdiciando backoff*(n-1)s.
+            if attempt < retries - 1:
+                time.sleep(backoff * attempt)
     raise last_exc
