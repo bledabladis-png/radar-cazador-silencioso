@@ -20,7 +20,7 @@ def render_sentimiento_opciones(pcr_data):
     out = []
     if pcr_data:
         out.append("## Sentimiento de Opciones\n")
-        out.append(f"- **PCR Total:** {pcr_data.get('total_pcr', np.nan):.2f} ")
+        out.append(f"- **PCR Total:** {_fmt_num(pcr_data.get('total_pcr', np.nan), '{:.2f}')} ")
         ewma_val = pcr_data.get('pcr_ewm', np.nan)
         if pd.notna(ewma_val):
             out.append(f"(EWMA(5): {ewma_val:.2f})\n")
@@ -28,21 +28,21 @@ def render_sentimiento_opciones(pcr_data):
             out.append("(EWMA(5): N/D - historial insuficiente)\n")
         if pd.notna(pcr_data.get('z_score')):
             out.append(f"- **Robust Z-Score:** {pcr_data['z_score']:.2f}\n")
-            out.append(f"- **Momentum:** {pcr_data.get('momentum', 0):.2f}\n")
-            out.append(f"- **Percentil:** {pcr_data.get('percentile', 0):.0f}%\n")
+            out.append(f"- **Momentum:** {_fmt_num(pcr_data.get('momentum', np.nan), '{:.2f}')}\n")
+            out.append(f"- **Percentil:** {_fmt_num(pcr_data.get('percentile', np.nan), '{:.0f}%')}\n")
             out.append(f"- **Estado:** {pcr_data.get('state', 'N/A')}\n")
         out.append(f"- **PCR Indices:** {_fmt_num(pcr_data.get('index_pcr', np.nan), '{:.2f}')} | "
-                     f"**PCR Acciones:** {pcr_data.get('equity_pcr', np.nan):.2f} | "
-                     f"**PCR ETP:** {pcr_data.get('etp_pcr', np.nan):.2f}\n")
-        out.append(f"- **PCR VIX:** {pcr_data.get('vix_pcr', np.nan):.2f} | "
-                     f"**PCR SPX:** {pcr_data.get('spx_pcr', np.nan):.2f}\n")
-        out.append(f"- **Institutional Hedge Ratio:** {pcr_data.get('ihr', np.nan):.2f} "
+                     f"**PCR Acciones:** {_fmt_num(pcr_data.get('equity_pcr', np.nan), '{:.2f}')} | "
+                     f"**PCR ETP:** {_fmt_num(pcr_data.get('etp_pcr', np.nan), '{:.2f}')}\n")
+        out.append(f"- **PCR VIX:** {_fmt_num(pcr_data.get('vix_pcr', np.nan), '{:.2f}')} | "
+                     f"**PCR SPX:** {_fmt_num(pcr_data.get('spx_pcr', np.nan), '{:.2f}')}\n")
+        out.append(f"- **Institutional Hedge Ratio:** {_fmt_num(pcr_data.get('ihr', np.nan), '{:.2f}')} "
                      f"({pcr_data.get('ihr_state', 'N/A')}, bandas: <1.2 Especulacion, 1.2-1.6 Equilibrado, >1.6 Cobertura institucional)\n")
-        out.append(f"- **Volumen en Indices:** {pcr_data.get('index_volume_share', np.nan):.1%} del total\n")
-        out.append(f"- **Put Share:** {pcr_data.get('put_share', np.nan):.1%} | "
-                     f"**Call Share:** {pcr_data.get('call_share', np.nan):.1%}\n")
-        out.append(f"- **Volume PCR (calculado):** {pcr_data.get('volume_pcr', np.nan):.2f} | "
-                     f"**OI PCR:** {pcr_data.get('oi_pcr', np.nan):.2f}\n")
+        out.append(f"- **Volumen en Indices:** {_fmt_num(pcr_data.get('index_volume_share', np.nan), '{:.1%}')} del total\n")
+        out.append(f"- **Put Share:** {_fmt_num(pcr_data.get('put_share', np.nan), '{:.1%}')} | "
+                     f"**Call Share:** {_fmt_num(pcr_data.get('call_share', np.nan), '{:.1%}')}\n")
+        out.append(f"- **Volume PCR (calculado):** {_fmt_num(pcr_data.get('volume_pcr', np.nan), '{:.2f}')} | "
+                     f"**OI PCR:** {_fmt_num(pcr_data.get('oi_pcr', np.nan), '{:.2f}')}\n")
         last_date = pcr_data.get('last_date', 'N/A')
         out.append(f"- **Ultimo dato:** {last_date}")
         if last_date != 'N/A':
