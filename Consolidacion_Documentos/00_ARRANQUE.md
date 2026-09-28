@@ -77,8 +77,8 @@ Snapshot al cierre del ultimo commit:
 - Tests: 2267 passed + 2 skipped + 0 failed
 - Validation Gate: 10/10
 - Working tree: limpio
-- PROMPT vigente: v7.15
-- Cobertura radar: 313/313 (100%)
+- Corpus documental: v1 (Consolidacion_Documentos/00-05, 2026-09-29)
+- Cobertura configurada: 313/313 tickers
 
 **Fases IAE:**
 - FA-1, FA-2, NIPC, A, B, C, E, F, G: CERRADAS
@@ -118,7 +118,7 @@ Todos los bugs estructurales verificados con probes + run end-to-end + snapshot 
 ## 5. PENDIENTE
 
 - **A6**: auditoria de src/utils.py, instrument_registry.py, dependency_tracker.py, .github/workflows/, scripts/, validation/.
-- **B**: auditoria del modulo IAE (36 ficheros, 6869 LOC). Ya auditado externamente; C2 residual abierto.
+- **B**: auditoria del modulo IAE (36 ficheros, 8178 LOC). Ya auditado externamente; C2 residual abierto.
 - **C**: auditoria de tests (192 ficheros).
 - **H5.3**: verificacion en cron real de noviembre 2026.
 - **C2 (920)**: comando + HEAD del auditor, o aceptacion definitiva de reconciliation_status = OPEN.
@@ -132,19 +132,22 @@ Pega este bloque al inicio de cada sesion:
     Set-Location D:\Macro_Sectorial
     git log --oneline -5
     git status -sb
+    py scripts\generate_estado_sistema.py
     py -m pytest tests/ -q --tb=line
     py -m pyflakes src\ scripts\ ; py -m compileall . -q
 
 Esperado:
-- HEAD = ver ESTADO_SISTEMA.md
+- HEAD = ver Consolidacion_Documentos/ESTADO_SISTEMA.md
 - ahead 0, behind 0
-- working tree limpio
+- working tree limpio (o solo el propio ESTADO_SISTEMA regenerado)
 - 2267 passed + 2 skipped
 - pyflakes silencio, compileall OK
 
 ---
 
 ## 7. DOCUMENTOS HERMANOS
+
+El corpus consolidado vive en `Consolidacion_Documentos/`. Se compone de 6 ficheros (00-05) + el snapshot auto-generado.
 
 | Doc | Contenido | Cuando consultarlo |
 |---|---|---|
