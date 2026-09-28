@@ -11,9 +11,12 @@ import pandas as pd
 
 from src.utils import append_dedup, get_col, _observation_date_from_df, writer_observation_date, get_effective_meta
 from indicators.persistence import compute_persistence
+from config.tickers import MARKET_TICKERS
 
 
-SECTOR_ETFS = ['XLK','XLF','XLV','XLE','XLY','XLP','XLI','XLB','XLU','XLRE','XLC']
+# A5-11 (2026-09-28): SECTOR_ETFS unificado con MARKET_TICKERS['sectors']
+# (fuente unica declarada). Antes era constante local duplicada.
+SECTOR_ETFS = MARKET_TICKERS['sectors']
 
 
 def _forzar_lideres_slpm(sector_results, sector_flow_rank, otros_flow_rank, leader_df):
@@ -39,7 +42,7 @@ def _forzar_lideres_slpm(sector_results, sector_flow_rank, otros_flow_rank, lead
                     'wyckoff_phase': row['wyckoff_phase'] if pd.notna(row.get('wyckoff_phase')) else ''
                 })
             print(f"    Lideres forzados para SLPM ({top_etf}): {len(leader_metrics_for_slpm)} tickers")
-    except Exception as e:
+    except (KeyError, ValueError, TypeError, IndexError, AttributeError, OSError, RuntimeError, pd.errors.ParserError) as e:
         print(f"    No se pudieron forzar lideres para SLPM: {e}")
 
     return leader_metrics_for_slpm, top_sector_flow
@@ -55,7 +58,7 @@ def _compute_tactical_structural(df_market, temporal_meta=None):
             try:
                 tactical_scores[sector_etf] = compute_tactical_score(df_market, sector_etf, temporal_meta=temporal_meta)
                 structural_scores[sector_etf] = compute_structural_score(df_market, sector_etf, temporal_meta=temporal_meta)
-            except Exception as e:
+            except (KeyError, ValueError, TypeError, IndexError, AttributeError, OSError, RuntimeError, pd.errors.ParserError) as e:
                 print(f"  [WARN] tactical/structural engine: {e}")
                 tactical_scores[sector_etf] = 0.0
                 structural_scores[sector_etf] = 0.0
@@ -76,7 +79,7 @@ def _compute_persistence_and_save(df_market, temporal_meta=None):
                 rs20 = rs.pct_change(20, fill_method=None)
                 pers = compute_persistence(rs20, threshold=0.0, lookback=12)
                 sector_persistence[sector_etf] = pers
-            except Exception as e:
+            except (KeyError, ValueError, TypeError, IndexError, AttributeError, OSError, RuntimeError, pd.errors.ParserError) as e:
                 print(f"  [WARN] persistence: {e}")
                 sector_persistence[sector_etf] = None
         print(f"    Persistence calculada para {len(sector_persistence)} sectores.")
@@ -108,7 +111,7 @@ def _compute_persistence_and_save(df_market, temporal_meta=None):
             persist_df = append_dedup(hist_p, persist_df, ['date','sector'])
         persist_df.to_csv(p_path, index=False, encoding='utf-8')
         print("  Sector Persistence CSV guardado.")
-    except Exception as e:
+    except (OSError, ValueError, KeyError, TypeError, pd.errors.ParserError) as e:
         print(f"  Sector Persistence CSV omitido: {e}")
 
     return sector_persistence

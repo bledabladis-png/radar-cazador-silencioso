@@ -11,9 +11,11 @@ import pandas as pd
 from src.utils import get_col
 from indicators.signal_agreement import compute_signal_agreement
 from indicators.price_flow_divergence import detect_price_flow_divergence
+from config.tickers import MARKET_TICKERS
 
 
-SECTOR_ETFS = ['XLK','XLF','XLV','XLE','XLY','XLP','XLI','XLB','XLU','XLRE','XLC']
+# A5-11 (2026-09-28): SECTOR_ETFS unificado con MARKET_TICKERS['sectors'].
+SECTOR_ETFS = MARKET_TICKERS['sectors']
 
 
 def _compute_directional_agreement(df_market, tactical_scores, structural_scores, sector_flow_rank):
@@ -30,7 +32,7 @@ def _compute_directional_agreement(df_market, tactical_scores, structural_scores
                 rs = close_sector / close_spy
                 rs20 = rs.pct_change(20, fill_method=None).iloc[-1]
                 signals['rs20'] = np.tanh(rs20 * 5) if pd.notna(rs20) else 0
-            except Exception as e:
+            except (KeyError, ValueError, TypeError, IndexError, AttributeError, OSError) as e:
                 print(f"  [WARN] rs20 signal: {e}")
                 signals['rs20'] = 0
             flow_val = next((f for t, f in sector_flow_rank if t == sector_etf), 0)
@@ -53,7 +55,7 @@ def _compute_price_flow_divergence(df_market, sector_flow_rank):
             try:
                 close_sector = get_col(df_market, sector_etf, 'Close')
                 price_ret_20d = (close_sector.iloc[-1] / close_sector.iloc[-21] - 1) if len(close_sector) >= 21 else 0.0
-            except Exception as e:
+            except (KeyError, ValueError, TypeError, IndexError, AttributeError, OSError) as e:
                 print(f"  [WARN] price_ret_20d: {e}")
                 price_ret_20d = 0.0
             flow_val = next((f for t, f in sector_flow_rank if t == sector_etf), 0)

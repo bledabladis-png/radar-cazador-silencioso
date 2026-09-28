@@ -19,22 +19,38 @@ def compute_indices_intl(df_market, reference_date=None, run_id=None, temporal_m
             index_phases, index_data, index_leaders
     """
     print("Calculando fases Wyckoff para indices internacionales...")
-    index_phases, index_data = compute_index_phases(df_market, temporal_meta=temporal_meta)
+    # A5-09 (2026-09-28): compute_index_phases sin guard tumbaba el
+    # pipeline entero si fallaba. Contrato del fichero: cada bloque
+    # degrada. Fix: try/except que devuelve ({}, {}) si falla.
+    try:
+        index_phases, _index_data = compute_index_phases(df_market, temporal_meta=temporal_meta)
+    except (KeyError, ValueError, TypeError, IndexError, AttributeError, OSError, RuntimeError) as e:
+        print(f"  Fases Wyckoff indices omitidas: {e}")
+        index_phases = {}
     indices_en_acumulacion = [nombre for nombre, fase in index_phases.items() if fase in ['ACCUMULATION', 'MARKUP']]
     if indices_en_acumulacion:
         print(f"  Indices en acumulacion: {', '.join(indices_en_acumulacion)}")
-        df_index_stocks = download_stock_prices(reference_date=reference_date, run_id=run_id)
+        # A5-10 (2026-09-28): download_stock_prices sin guard.
+        # Fix: try/except con degradacion a None -> bloque lideres omite.
+        try:
+            df_index_stocks = download_stock_prices(reference_date=reference_date, run_id=run_id)
+        except (ValueError, TypeError, OSError, RuntimeError, KeyError) as e:
+            print(f"  Descarga indices internacionales omitida: {e}")
+            df_index_stocks = None
         index_leaders = {}
-        for nombre in indices_en_acumulacion:
-            try:
-                leaders_single = select_index_leaders(None, df_index_stocks, [nombre], temporal_meta=temporal_meta)
-                if nombre in leaders_single and not leaders_single[nombre].empty:
-                    index_leaders[nombre] = leaders_single[nombre]
-                    print(f"    {nombre}: {len(leaders_single[nombre])} empresas seleccionadas")
-                else:
-                    print(f"    {nombre}: sin lideres disponibles")
-            except Exception as e:
-                print(f"    {nombre}: error al calcular lideres - {e}")
+        if df_index_stocks is not None:
+            for nombre in indices_en_acumulacion:
+                try:
+                    leaders_single = select_index_leaders(None, df_index_stocks, [nombre], temporal_meta=temporal_meta)
+                    if nombre in leaders_single and not leaders_single[nombre].empty:
+                        index_leaders[nombre] = leaders_single[nombre]
+                        print(f"    {nombre}: {len(leaders_single[nombre])} empresas seleccionadas")
+                    else:
+                        print(f"    {nombre}: sin lideres disponibles")
+                except (KeyError, ValueError, TypeError, IndexError, AttributeError, OSError, RuntimeError) as e:
+                    print(f"    {nombre}: error al calcular lideres - {e}")
+        else:
+            print("  Sin df_stocks de indices: lideres internacionales omitidos.")
     else:
         print("  Ningun indice en fase de acumulacion.")
         index_leaders = {}
@@ -52,7 +68,7 @@ def compute_indices_intl(df_market, reference_date=None, run_id=None, temporal_m
                     'outputs/report/analisis_lideres_internacionales.csv', index=False
                 )
                 print("  CSV de lideres internacionales generado.")
-        except Exception as e:
+        except (OSError, ValueError, KeyError, TypeError, RuntimeError, pd.errors.ParserError) as e:
             print(f"  Error al generar CSV internacional: {e}")
 
     return {

@@ -17,8 +17,17 @@ def _compute_mte(df_market, financial_score, all_signals, pcr_data, darkpool_dat
     try:
         from indicators.mte import compute_mte
         fc_score = financial_score
-        cred_signal = all_signals['credit'] if 'all_signals' in dir() and 'credit' in all_signals.columns else 0
-        vol_signal = all_signals['volatility'] if 'all_signals' in dir() and 'volatility' in all_signals.columns else 0
+        # A5-08 (2026-09-28): 'all_signals' in dir() era siempre True
+        # (parametro de la funcion). Sustituido por check real:
+        # not None + es DataFrame + tiene la columna.
+        _has_credit = (all_signals is not None
+                       and hasattr(all_signals, 'columns')
+                       and 'credit' in all_signals.columns)
+        _has_volatility = (all_signals is not None
+                          and hasattr(all_signals, 'columns')
+                          and 'volatility' in all_signals.columns)
+        cred_signal = all_signals['credit'] if _has_credit else 0
+        vol_signal = all_signals['volatility'] if _has_volatility else 0
 
         # Verificar frescura de Dark Pool antes de pasarlo al MTE
         mte_darkpool = darkpool_data
@@ -31,7 +40,7 @@ def _compute_mte(df_market, financial_score, all_signals, pcr_data, darkpool_dat
                     if age > 14:
                         print(f"    Dark Pool ARCHIVAL ({age}d). Excluido del MTE.")
                         mte_darkpool = None
-                except Exception:
+                except (ValueError, TypeError, OSError):
                     pass
 
         mte_result = compute_mte(df_market, fc_score, cred_signal, vol_signal, pcr_data, mte_darkpool, temporal_meta=temporal_meta)
@@ -65,7 +74,7 @@ def _compute_confirmation(df_market, df_stocks, df_stocks_effective_meta=None, t
         t10y3m_df = pd.read_csv('data/macro_manual/10y3m.csv', index_col=0, parse_dates=True)
         if not t10y3m_df.empty:
             confirmation_data['t10y3m'] = float(t10y3m_df['T10Y3M'].iloc[-1])
-    except Exception as e:
+    except (KeyError, ValueError, TypeError, IndexError, AttributeError, OSError, RuntimeError, pd.errors.ParserError) as e:
         print(f"  [WARN] t10y3m confirmation: {e}")
         confirmation_data['t10y3m'] = None
 
@@ -74,7 +83,7 @@ def _compute_confirmation(df_market, df_stocks, df_stocks_effective_meta=None, t
         from indicators.vol_metrics import compute_vol_metrics
         vol_data = compute_vol_metrics(df_market, temporal_meta=temporal_meta)
         confirmation_data.update(vol_data)
-    except Exception as e:
+    except (KeyError, ValueError, TypeError, IndexError, AttributeError, OSError, RuntimeError, pd.errors.ParserError) as e:
         print(f"    Vol Metrics: Error - {e}")
 
     # Cross-Asset Ratios con tendencia
@@ -82,7 +91,7 @@ def _compute_confirmation(df_market, df_stocks, df_stocks_effective_meta=None, t
         from indicators.cross_asset import compute_cross_asset_ratios
         ratios = compute_cross_asset_ratios(df_market, temporal_meta=temporal_meta)
         confirmation_data['ratios'] = ratios
-    except Exception as e:
+    except (KeyError, ValueError, TypeError, IndexError, AttributeError, OSError, RuntimeError, pd.errors.ParserError) as e:
         print(f"    Cross-Asset Ratios: Error - {e}")
         confirmation_data['ratios'] = {}
 
@@ -95,7 +104,7 @@ def _compute_confirmation(df_market, df_stocks, df_stocks_effective_meta=None, t
             stressed = fls_data.get('stressed_components', fls_data.get('components', 0))
             total_comp = fls_data.get('total_components', 5)
             print(f"    FLS: {fls_data['fls_normalized']:.2f} ({stressed}/{total_comp} componentes en estres)")
-    except Exception as e:
+    except (KeyError, ValueError, TypeError, IndexError, AttributeError, OSError, RuntimeError, pd.errors.ParserError) as e:
         print(f"    FLS: Error - {e}")
 
     # Advance/Decline
@@ -117,7 +126,7 @@ def _compute_confirmation(df_market, df_stocks, df_stocks_effective_meta=None, t
         else:
             confirmation_data['ad'] = None
             print("    A/D: Sin datos suficientes (cobertura temporal baja). Se omite.")
-    except Exception as e:
+    except (KeyError, ValueError, TypeError, IndexError, AttributeError, OSError, RuntimeError, pd.errors.ParserError) as e:
         print(f"    A/D: Error - {e}")
         confirmation_data['ad'] = None
 
