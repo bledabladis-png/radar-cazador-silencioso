@@ -1,4 +1,4 @@
-﻿import os
+import os
 import requests
 import pandas as pd
 from datetime import datetime, timedelta
@@ -162,7 +162,7 @@ class BackupProvider:
                 continue
             try:
                 manifest = _json.loads(manifest_path.read_text(encoding='utf-8'))
-            except Exception as e:
+            except (OSError, ValueError, TypeError, KeyError, _json.JSONDecodeError) as e:
                 print(f"  [REF-CACHE] {path}: manifest ilegible ({e}) -> UNAVAILABLE")
                 statuses.append('UNAVAILABLE')
                 continue
@@ -176,7 +176,7 @@ class BackupProvider:
                     for chunk in iter(lambda: fh.read(65536), b''):
                         h.update(chunk)
                 actual_sha = h.hexdigest()
-            except Exception as e:
+            except (OSError, ValueError, TypeError) as e:
                 print(f"  [REF-CACHE] {path}: error sha256 ({e}) -> UNAVAILABLE")
                 statuses.append('UNAVAILABLE')
                 continue
@@ -203,7 +203,7 @@ class BackupProvider:
                 if not df.empty:
                     frames.append(df)
                 statuses.append('VALID')
-            except Exception as e:
+            except (OSError, ValueError, TypeError, pd.errors.ParserError) as e:
                 print(f"  [REF-CACHE] {path}: error lectura ({e}) -> UNAVAILABLE")
                 statuses.append('UNAVAILABLE')
 
@@ -282,7 +282,7 @@ class BackupProvider:
                 print(f"  [VALIDACION] {ticker}: discrepancia >5% con cache ({ref_close:.2f} vs {new_close:.2f}). Dato rechazado.")
                 return ValidationOutcome.REJECTED
             return ValidationOutcome.VALIDATED
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, IndexError, AttributeError) as e:
             print(f"  [WARN] backup validate_with_cache {ticker}: {e}")
             return ValidationOutcome.ERROR
 
@@ -379,7 +379,7 @@ class BackupProvider:
             df.columns = ['Open','High','Low','Close','Volume']
             df.columns = pd.MultiIndex.from_product([df.columns, [ticker]])
             return df
-        except Exception:
+        except (requests.RequestException, ValueError, TypeError, KeyError, IndexError):
             return None
 
     def _twelve_data_daily(self, ticker: str) -> pd.DataFrame:
@@ -408,7 +408,7 @@ class BackupProvider:
             df.columns = ['Open','High','Low','Close','Volume']
             df.columns = pd.MultiIndex.from_product([df.columns, [ticker]])
             return df
-        except Exception:
+        except (requests.RequestException, ValueError, TypeError, KeyError, IndexError):
             return None
 
     def _alpha_vantage_daily(self, ticker: str) -> pd.DataFrame:
@@ -436,11 +436,15 @@ class BackupProvider:
                 '4. close': 'Close',
                 '5. volume': 'Volume'
             }, inplace=True)
+            # A2.1-12: con outputsize='compact' la respuesta ya viene
+            # limitada a ~100 dias, asi que este cutoff es un no-op hoy.
+            # Se mantiene como defensa en profundidad si en el futuro se
+            # cambia a outputsize='full' (plan premium).
             cutoff = pd.Timestamp.now() - pd.DateOffset(years=5)
             df = df[df.index >= cutoff]
             df.columns = pd.MultiIndex.from_product([df.columns, [ticker]])
             return df
-        except Exception:
+        except (requests.RequestException, ValueError, TypeError, KeyError, IndexError):
             return None
 
     def _finnhub_daily(self, ticker: str) -> pd.DataFrame:
@@ -472,7 +476,7 @@ class BackupProvider:
             }).set_index('Date')
             df.columns = pd.MultiIndex.from_product([df.columns, [ticker]])
             return df
-        except Exception:
+        except (requests.RequestException, ValueError, TypeError, KeyError, IndexError):
             return None
 
     def _fmp_daily(self, ticker: str) -> pd.DataFrame:
@@ -494,5 +498,5 @@ class BackupProvider:
             df.columns = ['Open','High','Low','Close','Volume']
             df.columns = pd.MultiIndex.from_product([df.columns, [ticker]])
             return df
-        except Exception:
+        except (requests.RequestException, ValueError, TypeError, KeyError, IndexError):
             return None
