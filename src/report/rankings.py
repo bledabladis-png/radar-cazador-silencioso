@@ -6,7 +6,7 @@ Extraidos de src/report_generator.py (refactor C1, fase C1-6c2).
 
 import numpy as np
 
-from config.tickers import SECTOR_NAMES
+from config.tickers import SECTOR_NAMES, MARKET_TICKERS
 from src.utils import safe_mean
 
 
@@ -51,7 +51,7 @@ def render_persistencia(sector_persistence):
         out.append("## Persistencia sectorial\n")
         out.append("| Sector | Persistencia |\n")
         out.append("|--------|-------------|\n")
-        for ticker in ['XLK','XLF','XLV','XLE','XLY','XLP','XLI','XLB','XLU','XLRE','XLC']:
+        for ticker in MARKET_TICKERS['sectors']:
             val = sector_persistence.get(ticker)
             val_str = f"{val:.0%}" if val is not None else "N/D"
             out.append(f"| {ticker} | {val_str} |\n")
@@ -85,7 +85,7 @@ def render_opportunity_map(tactical_scores, structural_scores,
         'Transition': []
     }
     
-    for ticker in ['XLK','XLF','XLV','XLE','XLY','XLP','XLI','XLB','XLU','XLRE','XLC']:
+    for ticker in MARKET_TICKERS['sectors']:
         t = tactical_scores.get(ticker, 0) if tactical_scores else 0
         s = structural_scores.get(ticker, 0) if structural_scores else 0
         name = SECTOR_NAMES.get(ticker, ticker)

@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 
 """
 
@@ -20,7 +20,9 @@ from src.utils import get_col
 
 
 
-SECTORS = ['XLK','XLF','XLV','XLE','XLY','XLP','XLI','XLB','XLU','XLRE','XLC']
+from config.tickers import MARKET_TICKERS
+
+SECTORS = MARKET_TICKERS['sectors']
 
 
 

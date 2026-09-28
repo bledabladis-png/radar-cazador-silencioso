@@ -9,7 +9,9 @@ import numpy as np
 from src.utils import get_col, _observation_date_from_df
 from indicators.wyckoff import build_ticker_df, classify_wyckoff_phase
 
-SECTORS = ['XLK','XLF','XLV','XLE','XLY','XLP','XLI','XLB','XLU','XLRE','XLC']
+from config.tickers import MARKET_TICKERS
+
+SECTORS = MARKET_TICKERS['sectors']
 VALID_PHASES = ['ACCUMULATION','MARKUP','RANGE','DISTRIBUTION','MARKDOWN']
 
 def compute_sector_wyckoff_distribution(df_stocks, holdings_df):

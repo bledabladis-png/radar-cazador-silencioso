@@ -33,7 +33,19 @@ def make_synthetic_df(seed=SEED, n=N_DAYS):
     rng = np.random.RandomState(seed)
     data = {}
     data[("Close", "^GSPC")] = 100 * np.cumprod(1 + rng.normal(0.0005, 0.01, n))
-    for k, s in enumerate(sectors):
+    # A3.2-b (2026-09-28): iteracion en orden alfabetico fijo.
+    # Razon: el golden debe ser invariante al orden de la config. Hay
+    # DOS dependencias al orden que hay que eliminar:
+    #   (a) el drift debe depender de la posicion alfabetica del ticker,
+    #       no de su indice en MARKET_TICKERS['sectors'];
+    #   (b) el RandomState es un stream secuencial: si el bucle itera
+    #       en orden de config, cada ticker consume un bloque distinto
+    #       del stream. Hay que iterar siempre en el mismo orden.
+    # Solucion: derivar sorted_sectors y usar 'for s in sorted_sectors'.
+    # Ver auditoria A3.2-b.
+    sorted_sectors = sorted(sectors)
+    for s in sorted_sectors:
+        k = sorted_sectors.index(s)
         drift = 0.0001 * (k + 1)
         close = 100 * np.cumprod(1 + rng.normal(drift, 0.015, n))
         data[("Close", s)] = close

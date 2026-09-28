@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 """
 Universo de activos del Radar de Rotación Sectorial v4.3.
 """
@@ -10,7 +10,7 @@ MARKET_TICKERS = {
         'spy': 'SPY', 'qqq': 'QQQ', 'iwm': 'IWM', 'msci_world': 'URTH',
         'dow': '^DJI', 'ibex': '^IBEX', 'dax': '^GDAXI', 'ftse': '^FTSE',
     },
-    'sectors': ['XLK', 'XLF', 'XLV', 'XLE', 'XLY', 'XLP', 'XLI', 'XLB', 'XLRE', 'XLU', 'XLC'],
+    'sectors': ['XLK', 'XLF', 'XLV', 'XLE', 'XLY', 'XLP', 'XLI', 'XLB', 'XLU', 'XLRE', 'XLC'],
     'bonds': ['BIL', 'IEF', 'TLT'],
     'credit': ['HYG', 'LQD'],
     'volatility': ['^VIX', '^VIX3M', '^VXN'],

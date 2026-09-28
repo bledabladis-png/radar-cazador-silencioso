@@ -11,7 +11,9 @@ import numpy as np
 from src.utils import _observation_date_from_df, writer_observation_date, get_effective_meta
 from src.utils import get_col
 
-SECTORS = ['XLK','XLF','XLV','XLE','XLY','XLP','XLI','XLB','XLU','XLRE','XLC']
+from config.tickers import MARKET_TICKERS
+
+SECTORS = MARKET_TICKERS['sectors']
 
 def _classify_corr(mean_corr):
     if pd.isna(mean_corr):

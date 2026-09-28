@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 """
 Matriz de Régimen Sectorial v1.0
 Sintetiza alineación descriptiva entre precio, amplitud, flujo y estructura.
@@ -9,7 +9,9 @@ import numpy as np
 
 from src.utils import _observation_date_from_df
 
-SECTORS = ['XLK','XLF','XLV','XLE','XLY','XLP','XLI','XLB','XLU','XLRE','XLC']
+from config.tickers import MARKET_TICKERS
+
+SECTORS = MARKET_TICKERS['sectors']
 
 def _phase_positive(phase):
     if phase in ('ACCUMULATION', 'MARKUP'):

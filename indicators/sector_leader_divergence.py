@@ -9,7 +9,9 @@ import pandas as pd
 import numpy as np
 from src.utils import get_col, _observation_date_from_df, writer_observation_date, get_effective_meta
 
-SECTORS = ['XLK','XLF','XLV','XLE','XLY','XLP','XLI','XLB','XLU','XLRE','XLC']
+from config.tickers import MARKET_TICKERS
+
+SECTORS = MARKET_TICKERS['sectors']
 
 def _ret_20d(close):
     if len(close) < 21:
