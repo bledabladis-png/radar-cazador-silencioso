@@ -234,10 +234,7 @@ def compute_mte(df_market, financial_conditions_score, credit_signal,
 
 
 
-        except Exception as e:
-
-
-
+        except (OSError, ValueError, TypeError) as e:
             print(f'  MTE: No se pudo guardar estado JSON - {e}')
 
 

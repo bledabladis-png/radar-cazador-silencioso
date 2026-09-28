@@ -38,5 +38,7 @@ def load_previous_scenario():
                 print(f'  MTE state: contrato cambio ({_stored_version} -> {CURRENT_TEMPORAL_CONTRACT_VERSION}). Reset.')
                 return 'MIXED', None, True
             return data.get('scenario', 'MIXED'), data.get('pending', None), False
-    except Exception:
+    except (json.JSONDecodeError, OSError, ValueError, TypeError, AttributeError):
+        # A3.3-04: fichero ausente/corrupto/no-dict -> reset silencioso.
+        # AttributeError si el JSON contiene un no-dict (data.get falla).
         return 'MIXED', None, False
