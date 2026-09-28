@@ -146,6 +146,13 @@ def render_matriz_evidencia(evidence_matrix_data):
                 f"| {row['sector']} | {_fmt_evidence(row['price_evidence'])} | {_fmt_evidence(row['breadth_evidence'])} | {_fmt_evidence(row['primary_flow_evidence'])} | {_fmt_evidence(row['proxy_flow_evidence'])} | {_fmt_evidence(row['wyckoff_evidence'])} | {_fmt_evidence(row['credit_evidence'])} | {_fmt_evidence(row['volatility_evidence'])} | {row['evidence_quality']} | {row['alignment_reading']} |\n"
             )
         out.append("\n*Crédito y volatilidad representan contexto común de mercado y no participan en el balance de evidencia sectorial.*\n")
+        # F6-34 aspecto 1 (2026-09-28): WONT FIX razonado. Que Wyckoff,
+        # Credito y Volat aparezcan constantes entre sectores es esperado:
+        # - Credito y Volat son contexto global (mismo valor para los 11
+        #   sectores por diseno).
+        # - Wyckoff depende de pct_accumulation+markup vs distribution+
+        #   markdown; en regimenes alcistas los 11 suelen coincidir en +1.
+        out.append("*Credito y Volat son contexto global (mismo valor para los 11 sectores por diseno). Wyckoff puede aparecer uniforme cuando el mercado esta en un regimen homogeneo.*\n\n")
         out.append("\n*La ausencia de Flow Proxy (NaN) representa ausencia de evidencia disponible y no se interpreta como neutralidad.*\n")
         out.append("\n")
     return out

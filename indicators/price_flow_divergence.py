@@ -23,6 +23,11 @@ def detect_price_flow_divergence(price_return_20d, flow_proxy_z):
     La asimetria es intencionada: detectar falta de confirmacion requiere
     menos exigencia que detectar soporte en debilidad.
     """
+    # F6-32 (2026-09-28): WONT FIX razonado. La proteccion NaN ya existe
+    # en doble guard: is None + np.isfinite. El hallazgo del auditor
+    # (2026-09-26) era falso positivo: probablemente confundio con
+    # sector_flow_characteristics. Ver test_price_flow_divergence.py
+    # (test_detect_price_flow_divergence_states) que ya ancla el caso None.
     if price_return_20d is None or flow_proxy_z is None:
         return {'status': 'UNAVAILABLE', 'message': 'Datos insuficientes para evaluar divergencia.'}
 

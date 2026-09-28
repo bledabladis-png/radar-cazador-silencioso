@@ -33,6 +33,12 @@ def _sign_from_pct_above(value, threshold=50.0):
 
 
 def _wyckoff_sign(row):
+    # F6-33 (2026-09-28): WONT FIX razonado. El hallazgo 'Wyckoff=+1 en
+    # 11/11 sectores' es consecuencia del estado del mercado en esa
+    # fecha (los 11 sectores con favorable > unfavorable), no de una
+    # binarizacion laxa. Introducir banda neutral (abs(diff) < umbral ->
+    # 0) requeriria justificacion estadistica (PROMPT Seccion 1.3: no
+    # tocar parametros sin evidencia).
     if pd.isna(row.get('pct_accumulation')) or pd.isna(row.get('pct_markup')) or pd.isna(row.get('pct_distribution')) or pd.isna(row.get('pct_markdown')):
         return np.nan
     favorable = row['pct_accumulation'] + row['pct_markup']

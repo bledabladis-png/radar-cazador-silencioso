@@ -47,7 +47,7 @@ def render_flujo_caracteristicas(sector_flow_characteristics_data):
         for _, row in flow_latest.iterrows():
             regime = row.get('price_flow_regime', None)
             regime_str = regime if pd.notna(regime) else 'N/D'
-            out.append(f"| {row['sector']} | {_fmt_signed(row['flow_dollar'], '{:+,.2f}', '{:,.2f}')} | {_fmt_num(row['flow_pct_aum'], '{:.2f}%')} | {_fmt_num(row['flow_zscore'], '{:.2f}')} | {_fmt_signed(row['flow_5d_sum'], '{:+,.2f}', '{:,.2f}')} | {_fmt_signed(row['flow_20d_sum'], '{:+,.2f}', '{:,.2f}')} | {_fmt_num(row['persistence_5d'], '{:.0%}')} | {_fmt_num(row['persistence_20d'], '{:.0%}')} | {_fmt_num(row['price_ret_20d'], '{:.2%}')} | {regime_str} |\n")
+            out.append(f"| {row['sector']} | {_fmt_signed(row['flow_dollar'], '{:+,.2f}', '{:,.2f}')} | {_fmt_num(row['flow_pct_aum'], '{:.2f}%')} | {_fmt_num(row['flow_zscore'], '{:.2f}')} | {_fmt_signed(row['flow_5d_sum'], '{:+,.0f}', '{:,.0f}')} | {_fmt_signed(row['flow_20d_sum'], '{:+,.0f}', '{:,.0f}')} | {_fmt_num(row['persistence_5d'], '{:.0%}')} | {_fmt_num(row['persistence_20d'], '{:.0%}')} | {_fmt_num(row['price_ret_20d'], '{:.2%}')} | {regime_str} |\n")
         out.append("\n")
         out.append("*Esta tabla agrega el flujo por sector con metricas derivadas (persistencia, regimen). Es la lectura sectorial de la tabla anterior (dato atomico por ETF).*\n\n")
     return out
