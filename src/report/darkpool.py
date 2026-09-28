@@ -29,7 +29,7 @@ def render_darkpool(darkpool_data):
                 freshness = _classify_finra_freshness(age)
                 if freshness == 'ARCHIVAL':
                     out.append(f"**DATOS OBSOLETOS:** Ultimo dato con {age} dias de antiguedad. No se usa para clasificacion actual. Contexto historico solamente.\n\n")
-            except:
+            except (ValueError, TypeError):
                 pass
         out.append(f"- **% Volumen en ATS medio:** {darkpool_data.get('media_dark_pool', 0):.2f}% "
                      f"({darkpool_data.get('n_tickers_ats', 0)}/{darkpool_data.get('n_tickers_total', 0)} tickers)\n")

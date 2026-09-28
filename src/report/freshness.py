@@ -37,7 +37,7 @@ def render_data_freshness(pcr_data, darkpool_data, sector_results):
             cboe_status = _classify_freshness(age, *FRESHNESS_CBOE)
             cboe_conf = 'Alta' if cboe_status in ('CURRENT', 'RECENT') else 'Baja'
             out.append(f"| CBOE (Opciones) | {d.strftime('%Y-%m-%d')} | {age} dias | {cboe_status} | {cboe_conf} |\n")
-        except:
+        except (KeyError, ValueError, TypeError):
             out.append(f"| CBOE (Opciones) | {pcr_data.get('last_date', 'N/A')} | N/D | N/D | N/D |\n")
     else:
         out.append("| CBOE (Opciones) | N/D | N/D | N/D | N/D |\n")
@@ -51,7 +51,7 @@ def render_data_freshness(pcr_data, darkpool_data, sector_results):
                 finra_status = _classify_finra_freshness(age)
                 finra_conf = 'Alta' if finra_status in ('CURRENT', 'RECENT') else 'Baja'
                 out.append(f"| FINRA (Dark Pools) | {d.strftime('%Y-%m-%d')} | {age} dias | {finra_status} | {finra_conf} |\n")
-            except:
+            except (ValueError, TypeError):
                 out.append(f"| FINRA (Dark Pools) | {week} | N/D | N/D | N/D |\n")
         else:
             out.append("| FINRA (Dark Pools) | N/D | N/D | N/D | N/D |\n")

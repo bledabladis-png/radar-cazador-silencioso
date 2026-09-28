@@ -60,7 +60,7 @@ def render_regimenes(macro_score, macro_regime, macro_conf,
             else:
                 delta_str = "ESTABLE"
             out.append(f"  - *Liquidity Delta (vs ejecución anterior): {_fmt_signed(delta, '{:+.3f}', '{:.3f}')} ({delta_str})*\n")
-        except:
+        except (ValueError, TypeError, IndexError, AttributeError):
             pass
     
     # Fix: alinear con patron de lineas 26/40 (macro_score, liquidity_score).

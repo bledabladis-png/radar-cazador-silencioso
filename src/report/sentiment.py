@@ -50,7 +50,7 @@ def render_sentimiento_opciones(pcr_data):
                 data_date = pd.Timestamp(last_date)
                 age = (datetime.now() - data_date).days
                 out.append(f" (desfase: {age} dias)")
-            except:
+            except (ValueError, TypeError):
                 pass
         out.append("\n")
         out.append(f"\n*Fuente: CBOE Official Data. Timestamp: {pcr_data.get('timestamp', 'N/A')}.*\n\n")

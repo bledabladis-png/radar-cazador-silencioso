@@ -110,7 +110,7 @@ def compute_fls():
         detail['SOFR'] = {'value': sofr_stress, 'stressed': sofr_stress > 0.3}
 
 
-    except:
+    except (KeyError, OSError, ValueError, TypeError):
 
 
         detail['SOFR'] = {'value': None, 'stressed': False}
@@ -143,7 +143,7 @@ def compute_fls():
         detail['WALCL'] = {'value': walcl_stress, 'stressed': walcl_stress > 0.3}
 
 
-    except:
+    except (KeyError, OSError, ValueError, TypeError):
 
 
         detail['WALCL'] = {'value': None, 'stressed': False}
@@ -176,7 +176,7 @@ def compute_fls():
         detail['RRP'] = {'value': rrpp_stress, 'stressed': rrpp_stress > 0.3}
 
 
-    except:
+    except (KeyError, OSError, ValueError, TypeError):
 
 
         detail['RRP'] = {'value': None, 'stressed': False}
@@ -206,7 +206,7 @@ def compute_fls():
         detail['CP'] = {'value': cp_stress, 'stressed': cp_stress > 0.3}
 
 
-    except:
+    except (KeyError, OSError, ValueError, TypeError):
 
 
         detail['CP'] = {'value': None, 'stressed': False}
@@ -236,7 +236,7 @@ def compute_fls():
         detail['Discount'] = {'value': disc_stress, 'stressed': disc_stress > 0.3}
 
 
-    except:
+    except (KeyError, OSError, ValueError, TypeError):
 
 
         detail['Discount'] = {'value': None, 'stressed': False}
