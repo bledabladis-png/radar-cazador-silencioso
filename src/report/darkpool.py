@@ -52,7 +52,7 @@ def render_darkpool(darkpool_data):
                 d = pd.Timestamp(week)
                 age = (datetime.now() - d).days
                 out.append(f"- **Semana FINRA:** {week} (retraso: {age} dias)\n")
-            except Exception:
+            except (ValueError, TypeError, OSError):
                 out.append(f"- **Semana FINRA:** {week}\n")
         else:
             out.append("- **Semana FINRA:** N/D\n")

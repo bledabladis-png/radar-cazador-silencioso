@@ -75,7 +75,7 @@ def render_data_freshness(pcr_data, darkpool_data, sector_results):
                 out.append("| FRED (Macro) | N/D | N/D | N/D | N/D |\n")
         else:
             out.append("| FRED (Macro) | N/D | N/D | N/D | N/D |\n")
-    except Exception:
+    except (json.JSONDecodeError, OSError, ValueError, TypeError, AttributeError):
         out.append("| FRED (Macro) | N/D | N/D | N/D | N/D |\n")
     # Yahoo Finance: leer fecha real desde Parquet (coherencia total)
     _yahoo_last = None
@@ -96,7 +96,7 @@ def render_data_freshness(pcr_data, darkpool_data, sector_results):
             _yahoo_status = _classify_freshness(_yahoo_age, *FRESHNESS_YAHOO)
             _yahoo_conf = "Alta" if _yahoo_status in ("CURRENT", "RECENT") else "Baja"
             break
-    except Exception:
+    except (KeyError, IndexError, ValueError, TypeError, OSError):
         pass
     if _yahoo_last is not None:
         out.append(f"| Yahoo Finance (Precios) | {_yahoo_last.strftime('%Y-%m-%d')} | {_yahoo_age} dias | {_yahoo_status} | {_yahoo_conf} |\n")

@@ -121,7 +121,7 @@ def _generate_coverage_table(pcr_data, darkpool_data, sector_results):
         # FU-005 (2026-09-13): sin sectores favorables no se genera el CSV.
         # Es estado esperado, no un WARN.
         pass
-    except Exception as e:
+    except (OSError, ValueError, KeyError, pd.errors.ParserError) as e:
         print(f"  [WARN] report_generator: analisis_lideres.csv: {e}")
     lines.append(f"| Acciones lideres | {n_acciones} tickers | - |\n")
     if pcr_data and pcr_data.get('last_date'):

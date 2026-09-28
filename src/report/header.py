@@ -26,7 +26,7 @@ def render_regimenes(macro_score, macro_regime, macro_conf,
     out.append("## Resumen de Regimenes\n")
     try:
         score_value = float(macro_score.iloc[-1])
-    except Exception:
+    except (AttributeError, IndexError, ValueError, TypeError):
         score_value = float('nan')
 
     if pd.isna(score_value):
@@ -40,7 +40,7 @@ def render_regimenes(macro_score, macro_regime, macro_conf,
     
     try:
         cond_score = float(liquidity_score.iloc[-1])
-    except Exception:
+    except (AttributeError, IndexError, ValueError, TypeError):
         cond_score = float('nan')
     cond_score_str = f'{cond_score:.2f}' if pd.notna(cond_score) else 'N/D'
     liq_conf_str = f'{liq_conf:.0%}' if pd.notna(liq_conf) else 'N/D'
@@ -66,7 +66,7 @@ def render_regimenes(macro_score, macro_regime, macro_conf,
     # Fix: alinear con patron de lineas 26/40 (macro_score, liquidity_score).
     try:
         vol_z = float(volatility_score.iloc[-1]) if hasattr(volatility_score, 'iloc') else float(volatility_score)
-    except Exception:
+    except (AttributeError, IndexError, ValueError, TypeError):
         vol_z = float('nan')
     if pd.notna(vol_z) and vol_conf < 0.05 and abs(vol_z) < 0.1:
         vol_conf_str = "Señal neutra (sin desviación significativa)"

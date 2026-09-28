@@ -72,7 +72,7 @@ def render_sintesis_senales(macro_regime, slpm_v12_data, liquidity_regime,
                 lectura = last.get('dispersion_reading') or last.get('Lectura')
                 if lectura and isinstance(lectura, str):
                     disp_txt = lectura.lower()
-        except Exception as e:
+        except (KeyError, IndexError, ValueError, TypeError, AttributeError) as e:
             print(f"  [WARN] report_generator: sector_dispersion_data: {e}")
         resumen.append(f"- **Régimen macro: MIXED** — ROTATIONAL / MIXED — rotación sectorial activa con dispersión {disp_txt}.")
     else:

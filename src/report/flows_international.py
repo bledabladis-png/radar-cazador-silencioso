@@ -157,7 +157,7 @@ def render_rendimiento_qqq(qqq_performance_data):
             elif _aso:
                 _aso_short = str(_aso).split(" ")[0]
                 out.append(f"*Fecha del dato (as_of_date): {_aso_short}*\n")
-        except Exception:
+        except (AttributeError, TypeError, ValueError, KeyError):
             pass
         out.append("\n*Fuente: Yahoo Finance. Rendimientos calculados desde precios ajustados.*\n\n")
     # FLUJO DE PARTICIPACIONES QQQ (NPORT-P)
@@ -179,7 +179,7 @@ def render_qqq_nport_flow(qqq_nport_flow_data):
                 year_month = pd.Timestamp(report_date_str)
                 quarter = (year_month.month - 1) // 3 + 1
                 out.append(f"*Trimestre: Q{quarter} {year_month.year}*\n")
-        except Exception:
+        except (ValueError, TypeError, AttributeError):
             pass
         out.append("| Mes | Ventas (M$) | Redenciones (M$) | Flujo Neto (M$) |\n")
         out.append("|-----|-------------|------------------|-----------------|\n")

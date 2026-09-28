@@ -25,7 +25,7 @@ def render_flujo_spdr(etf_primary_flow_data):
         # O1 (2026-09-18): declarar la fecha efectiva del dataset.
         try:
             _ultima_fecha = str(etf_primary_flow_data["Date"].max())[:10]
-        except Exception:
+        except (KeyError, AttributeError, ValueError, TypeError):
             _ultima_fecha = "N/D"
         out.append(f"\n*Fuente: State Street Global Advisors (SSGA). ETF Primary Flow = ΔShares Outstanding × NAV. Z-score sobre {ETF_PRIMARY_FLOW_ZSCORE_WINDOW} sesiones. Ultima fecha: {_ultima_fecha}.*\n\n")
         out.append("*Esta tabla muestra flujo por ETF (dato atomico). Para la lectura agregada con persistencia y regimen, ver la tabla siguiente: Flujo Primario ETF - Caracteristicas.*\n\n")
