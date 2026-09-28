@@ -85,7 +85,7 @@ for etf, url in SECTOR_ETFS.items():
                     w = df.iloc[i, weight_col]
                     try:
                         weights.append(float(str(w).replace(',', '.')))
-                    except:
+                    except (ValueError, TypeError):
                         weights.append(0.0)
                 else:
                     weights.append(0.0)

@@ -65,7 +65,7 @@ def validate_yahoo(ticker):
         y = yf.Ticker(ticker)
         hist = y.history(period='5d', auto_adjust=False)
         return not hist.empty
-    except:
+    except (ValueError, TypeError, KeyError, IndexError, AttributeError):
         return False
 
 for etf, url in urls.items():
@@ -91,7 +91,7 @@ for etf, url in urls.items():
 
         try:
             weight = float(weight_str.replace(',', '.'))
-        except:
+        except (ValueError, TypeError, AttributeError):
             continue
 
         yahoo_ticker = map_yahoo(ticker, f.get('Exchange'))

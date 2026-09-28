@@ -123,7 +123,7 @@ def get_blackrock_iwm_holdings():
         weight_str = row.get('Weight (%)', '0')
         try:
             weight = float(str(weight_str).replace(',', '.'))
-        except:
+        except (ValueError, TypeError):
             weight = 0.0
 
         rows.append({
@@ -186,7 +186,7 @@ def get_state_street_holdings(etf, url):
                 w_raw = df_raw.iloc[i, weight_col]
                 try:
                     w = float(str(w_raw).replace(',', '.'))
-                except:
+                except (ValueError, TypeError):
                     w = 0.0
                 weights.append(w)
             else:

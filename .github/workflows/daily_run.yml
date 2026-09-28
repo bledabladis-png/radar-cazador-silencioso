@@ -239,7 +239,8 @@ jobs:
         run: python validation/validate_history_quality.py
 
       - name: Monitor double counting
-        run: python validation/monitor_double_counting.py || echo "Monitoreo double counting no disponible"
+        continue-on-error: true
+        run: python validation/monitor_double_counting.py
 
 
       - name: Guard coverage
