@@ -28,8 +28,18 @@ def compute_cross_asset_ratios(df_market, temporal_meta=None):
         try:
             num_close = get_col(df_market, num, 'Close')
             den_close = get_col(df_market, den, 'Close')
-            ratio_series = num_close / den_close
-            result[name] = float(ratio_series.iloc[-1]) if len(ratio_series) > 0 else None
+            # F6-23 (2026-09-28): dropna() antes de leer iloc[-1] y antes
+            # de robust_zscore. Sin esto, si el ultimo Close de num o den
+            # es NaN, ratio_series.iloc[-1] = NaN pero el z-score (que usa
+            # ffill interno) si podia ser valido -> incoherencia
+            # (ratio nan con z-score +0.62).
+            ratio_series = (num_close / den_close).dropna()
+            if ratio_series.empty:
+                result[name] = None
+                result[f'{name}_delta20'] = None
+                result[f'{name}_zscore'] = None
+                continue
+            result[name] = float(ratio_series.iloc[-1])
             
             # Delta 20d usando log-retorno (mas robusto para ratios)
             if len(ratio_series) >= 21:
