@@ -120,6 +120,9 @@ class XetraProvider:
         self._token = None
         self._token_expires_at = 0.0
         XETRA_CACHE_DIR.mkdir(parents=True, exist_ok=True)
+        # F5-3 (2026-09-28): diagnostico de la ultima llamada a get_prices.
+        self._last_stale = []
+        self._last_failed = []
 
     # -------------------- Mapa --------------------
 
@@ -142,6 +145,14 @@ class XetraProvider:
 
     def supported_tickers(self):
         return list(self._map.keys())
+
+    def get_last_stale_tickers(self) -> list:
+        """F5-3: tickers que cayeron a cache stale en la ultima get_prices."""
+        return list(self._last_stale)
+
+    def get_last_failed_tickers(self) -> list:
+        """F5-3: tickers que fallaron en la ultima get_prices."""
+        return list(self._last_failed)
 
     # -------------------- Token --------------------
 
@@ -345,6 +356,9 @@ class XetraProvider:
         Returns:
             DataFrame MultiIndex compatible con el resto del sistema.
         """
+        # F5-3: reset diagnostico por llamada.
+        self._last_stale = []
+        self._last_failed = []
         if not tickers:
             return pd.DataFrame()
 
@@ -354,6 +368,7 @@ class XetraProvider:
         # Filtrar por cache primero
         for t in tickers:
             if not self.supports(t):
+                self._last_failed.append(t)
                 print(f"  [XETRA] {t} no está en el mapa")
                 continue
             if use_cache and self._cache_is_fresh(t, reference_date=reference_date):
@@ -400,6 +415,7 @@ class XetraProvider:
             ws = self._open_ws()
         except Exception as e:
             print(f"  [XETRA] No se pudo abrir WebSocket: {e}")
+            self._last_failed.extend(t for t, _ in pending)
             return self._concat_frames(frames)
 
         try:
@@ -414,6 +430,7 @@ class XetraProvider:
                         if not df_cached_fb.empty:
                             last_cached = pd.to_datetime(
                                 df_cached_fb["date"]).max().date()
+                            self._last_stale.append(t)
                             print(f"  [XETRA] {t} WS sin datos tras retries -> "
                                   f"usando cache ({len(df_cached_fb)} filas, "
                                   f"ultima {last_cached})")
@@ -421,6 +438,7 @@ class XetraProvider:
                                 df_cached_fb, t, reference_date)
                             frames.append(self._to_multiindex(df_cached_fb, t))
                             continue
+                        self._last_failed.append(t)
                         print(f"  [XETRA] {t} sin datos (WS timeout + sin cache)")
                         continue
                     df_new = self._rows_to_df(rows)
@@ -442,6 +460,7 @@ class XetraProvider:
                           f"{df_new['date'].max().strftime('%Y-%m-%d')})")
                     frames.append(self._to_multiindex(df_new, t))
                 except Exception as e:
+                    self._last_failed.append(t)
                     print(f"  [XETRA] {t} error: {e}")
                     continue
         finally:

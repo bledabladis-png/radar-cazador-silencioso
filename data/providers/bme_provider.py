@@ -52,6 +52,9 @@ class BMEProvider:
         self._session = requests.Session()
         self._session.headers.update(BME_HEADERS)
         BME_CACHE_DIR.mkdir(parents=True, exist_ok=True)
+        # F5-3 (2026-09-28): diagnostico de la ultima llamada a get_prices.
+        self._last_stale = []
+        self._last_failed = []
 
     # -------------------- Mapa --------------------
 
@@ -74,6 +77,14 @@ class BMEProvider:
 
     def supported_tickers(self):
         return list(self._map.keys())
+
+    def get_last_stale_tickers(self) -> list:
+        """F5-3: tickers que cayeron a cache stale en la ultima get_prices."""
+        return list(self._last_stale)
+
+    def get_last_failed_tickers(self) -> list:
+        """F5-3: tickers que fallaron en la ultima get_prices."""
+        return list(self._last_failed)
 
     # -------------------- HTTP --------------------
 
@@ -192,12 +203,16 @@ class BMEProvider:
             since_date: opcional, fecha ISO 'YYYY-MM-DD' minima a descargar.
             use_cache: si True, reutiliza cache fresca.
         """
+        # F5-3: reset diagnostico por llamada.
+        self._last_stale = []
+        self._last_failed = []
         frames = []
         today = reference_date if reference_date is not None else datetime.now()
         default_from = (today - timedelta(days=430)).strftime("%Y%m%d")
 
         for t in tickers:
             if not self.supports(t):
+                self._last_failed.append(t)
                 print("  [BME] " + t + " no esta en el mapa")
                 continue
 
@@ -244,6 +259,7 @@ class BMEProvider:
                 df_new = self._rows_to_df(rows)
 
                 if df_new.empty:
+                    self._last_failed.append(t)
                     print("  [BME] " + t + " sin datos")
                     continue
 
@@ -262,6 +278,7 @@ class BMEProvider:
                 time.sleep(INTER_REQUEST_DELAY)
 
             except Exception as e:
+                self._last_failed.append(t)
                 print("  [BME] " + t + " error: " + str(e))
                 continue
 

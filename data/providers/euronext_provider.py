@@ -142,6 +142,9 @@ class EuronextProvider:
         self._session = requests.Session()
         self._session.headers.update(EURONEXT_HEADERS)
         EURONEXT_CACHE_DIR.mkdir(parents=True, exist_ok=True)
+        # F5-3 (2026-09-28): diagnostico de la ultima llamada a get_prices.
+        self._last_stale = []
+        self._last_failed = []
 
     # -------------------- Map --------------------
 
@@ -165,6 +168,14 @@ class EuronextProvider:
 
     def supported_tickers(self):
         return list(self._map.keys())
+
+    def get_last_stale_tickers(self) -> list:
+        """F5-3: tickers que cayeron a cache stale en la ultima get_prices."""
+        return list(self._last_stale)
+
+    def get_last_failed_tickers(self) -> list:
+        """F5-3: tickers que fallaron en la ultima get_prices."""
+        return list(self._last_failed)
 
     # -------------------- HTTP --------------------
 
@@ -245,11 +256,15 @@ class EuronextProvider:
         Returns:
             DataFrame MultiIndex ('Open', ticker), ('High', ticker), ...
         """
+        # F5-3: reset diagnostico por llamada.
+        self._last_stale = []
+        self._last_failed = []
         frames = []
         enddate = (reference_date if reference_date is not None else datetime.now()).strftime("%Y-%m-%d")
 
         for t in tickers:
             if not self.supports(t):
+                self._last_failed.append(t)
                 print(f"  [EURONEXT] {t} no está en el mapa")
                 continue
 
@@ -285,6 +300,7 @@ class EuronextProvider:
                 df = _rows_to_dataframe(rows)
 
                 if df.empty:
+                    self._last_failed.append(t)
                     print(f"  [EURONEXT] {t} sin datos")
                     continue
 
@@ -303,6 +319,7 @@ class EuronextProvider:
                 frames.append(self._to_multiindex(df, t))
 
             except Exception as e:
+                self._last_failed.append(t)
                 print(f"  [EURONEXT] {t} error: {e}")
                 continue
 

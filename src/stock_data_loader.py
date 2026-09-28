@@ -746,6 +746,22 @@ def download_stock_prices(reference_date=None, run_id=None):
 
         print(f"  Cascada cubrio {len(cascade_covered_set)} tickers europeos")
 
+        # F5-3 (2026-09-28): clasificar stale/failed reportados por los
+        # EU providers. La cascada marco como OK todo lo cubierto; ahora
+        # se reclasifica lo que vino de fallback a cache o de fallo
+        # silencioso (A5-40, A5-41, A5-56, A5-62).
+        for _provider in (euronext, xetra, bme):
+            for _t in _provider.get_last_stale_tickers():
+                if _t in classification['OK']:
+                    classification['OK'].remove(_t)
+                if _t not in classification['STALE']:
+                    classification['STALE'].append(_t)
+            for _t in _provider.get_last_failed_tickers():
+                if _t in classification['OK']:
+                    classification['OK'].remove(_t)
+                if _t not in classification['FAILED']:
+                    classification['FAILED'].append(_t)
+
     # Reportar europeos SIN cobertura (sin fallback a Yahoo)
     european_missing = [t for t in european_tickers if t not in cascade_covered_set]
     if european_missing:
