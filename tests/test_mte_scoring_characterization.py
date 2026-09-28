@@ -137,20 +137,27 @@ class TestF24_11_SinBareExceptEngine:
         assert bare == [], f"except desnudo en engine.py lineas: {bare}"
 
     def test_engine_vix_term_except_tupla(self):
-        """El except del bloque vix_term captura los 4 tipos reales."""
+        """El except del bloque vix_term captura los 4 tipos reales.
+
+        A3.3-13 (2026-09-28): antes el test anclaba node.lineno == 89.
+        Cualquier refactor que desplace esa linea (whitespace collapse,
+        nuevo import arriba, comentario) rompia el test SIN que el
+        contrato cambiara. Reescrito para buscar por estructura: la
+        tupla exacta (AttributeError, KeyError, TypeError, ValueError)
+        debe aparecer exactamente una vez en engine.py.
+        """
         tree = ast.parse(Path("indicators/mte/engine.py").read_text(encoding="utf-8-sig"))
+        expected = ["AttributeError", "KeyError", "TypeError", "ValueError"]
+        candidates = []
         for node in ast.walk(tree):
-            if isinstance(node, ast.ExceptHandler) and node.lineno == 89:
-                assert isinstance(node.type, ast.Tuple), (
-                    "el except en engine.py L89 debe ser una tupla"
-                )
+            if isinstance(node, ast.ExceptHandler) and isinstance(node.type, ast.Tuple):
                 names = sorted(
                     elt.id for elt in node.type.elts
                     if isinstance(elt, ast.Name)
                 )
-                assert names == ["AttributeError", "KeyError",
-                                 "TypeError", "ValueError"], (
-                    f"tupla inesperada: {names}"
-                )
-                return
-        pytest.fail("no se encontro ExceptHandler en engine.py L89")
+                candidates.append((node.lineno, names))
+        matches = [ln for ln, names in candidates if names == expected]
+        assert len(matches) == 1, (
+            f"esperaba exactamente 1 except con tupla {expected}; "
+            f"candidatos: {candidates}"
+        )

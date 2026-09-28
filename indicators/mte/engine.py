@@ -29,7 +29,6 @@ def compute_mte(df_market, financial_conditions_score, credit_signal,
                 temporal_meta=None):
 
 
-
     """
 
 
@@ -41,157 +40,97 @@ def compute_mte(df_market, financial_conditions_score, credit_signal,
     """
 
 
-
     try:
-
 
 
         # Extraer scores existentes
 
 
-
         fc = _get_last(financial_conditions_score)
-
 
 
         cred = _get_last(credit_signal)
 
 
-
         vol = _get_last(volatility_signal)
-
-
-
-
-
 
 
         # VIX term (VIX3M - VIX)
 
 
-
         try:
-
 
 
             vix_close = get_col(df_market, '^VIX', 'Close')
 
 
-
             vix3m_close = get_col(df_market, '^VIX3M', 'Close')
-
 
 
             vix_term = _get_last(tanh(robust_zscore(vix3m_close - vix_close, 60)))
 
 
-
         except (KeyError, ValueError, TypeError, AttributeError):
-
 
 
             vix_term = 0.0
 
 
-
-
-
-
-
         # Dark Pool Z-Score
-
 
 
         darkpool_z = darkpool_data.get('z_score', None) if darkpool_data else None
 
 
-
-
-
-
-
         # PCR Z-Score
-
 
 
         pcr_z = pcr_data.get('z_score', None) if pcr_data else None
 
 
-
-
-
-
-
         # Calcular los 4 motores
-
 
 
         srs = sector_rotation_score(df_market)
 
 
-
         shs = safe_haven_score(df_market)
-
 
 
         cls = credit_stress_score(fc, cred, vol, vix_term, darkpool_z, pcr_z)
 
 
-
         ips = inflation_pressure_score(df_market)
-
-
-
-
-
 
 
         # Índices
 
 
-
         msi = compute_msi(srs, shs, cls)
-
 
 
         ipi = compute_ipi(ips)
 
 
-
-
-
-
-
         # Escenario
-
 
 
         scenario, confidence, pending_out, temporal_reset = classify_mte(srs, shs, cls, ips)
 
 
-
-
-
-
-
         # Guardar estado en JSON para trazabilidad
-
 
 
         try:
 
 
-
             os.makedirs(os.path.dirname(_mte_state.MTE_STATE_FILE), exist_ok=True)
-
 
 
             with open(_mte_state.MTE_STATE_FILE, 'w', encoding='utf-8') as f:
 
 
-
                 json.dump({
-
 
 
                     'schema_version': 1,
@@ -204,91 +143,66 @@ def compute_mte(df_market, financial_conditions_score, credit_signal,
                     'confidence': confidence,
 
 
-
                     'msi': msi,
-
 
 
                     'ipi': ipi,
 
 
-
                     'srs': srs,
-
 
 
                     'shs': shs,
 
 
-
                     'cls': cls,
-
 
 
                     'ips': ips,
                     'pending': pending_out
 
 
-
                 }, f, indent=2, default=str)
-
 
 
         except (OSError, ValueError, TypeError) as e:
             print(f'  MTE: No se pudo guardar estado JSON - {e}')
 
 
-
-
-
-
-
         return {
-
 
 
             'scenario': scenario,
 
 
-
             'confidence': confidence,
-
 
 
             'msi': msi,
 
 
-
             'ipi': ipi,
-
 
 
             'srs': srs,
 
 
-
             'shs': shs,
-
 
 
             'cls': cls,
 
 
-
             'ips': ips
-
 
 
         }
 
 
-
     except Exception as e:
 
 
-
         print(f"  MTE: Error - {e}")
-
 
 
         return None

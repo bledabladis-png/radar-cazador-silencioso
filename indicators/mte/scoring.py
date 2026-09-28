@@ -19,40 +19,28 @@ from src.utils import robust_zscore, get_col
 def tanh(x):
 
 
-
     return np.tanh(x)
 
 
 def _get_last(x):
 
 
-
     """Extrae el último valor de una Series o float."""
-
 
 
     if isinstance(x, pd.Series):
 
 
-
         return x.iloc[-1]
-
 
 
     return x
 
 
-
-
-
-
-
 # ============================================================
 
 
-
 # 1. SECTOR ROTATION SCORE (SRS)
-
 
 
 # ============================================================
@@ -61,325 +49,202 @@ def _get_last(x):
 def sector_rotation_score(df_market):
 
 
-
     cyclical = ['XLK', 'XLY', 'XLI', 'XLF', 'XLB', 'XLE']
-
 
 
     defensive = ['XLU', 'XLP', 'XLV', 'XLRE', 'XLC']
 
 
-
     sectors = cyclical + defensive
-
-
-
-
-
 
 
     rs = {}
 
 
-
     for s in sectors:
-
 
 
         try:
 
 
-
             close_s = get_col(df_market, s, 'Close')
-
 
 
             close_spy = get_col(df_market, '^GSPC', 'Close')
 
 
-
             rs[s] = close_s / close_spy
-
 
 
         except KeyError:
 
 
-
             continue
-
-
-
-
-
 
 
     if not rs:
 
 
-
         return 0.0
-
-
-
-
-
 
 
     rs_cyclical = pd.concat([rs[s] for s in cyclical if s in rs], axis=1).mean(axis=1)
 
 
-
     rs_defensive = pd.concat([rs[s] for s in defensive if s in rs], axis=1).mean(axis=1)
-
-
-
-
-
 
 
     spread = rs_defensive - rs_cyclical
 
 
-
     mom_spread = spread.pct_change(20, fill_method=None)
-
 
 
     speed_spread = (spread - spread.shift(20)).abs()
 
 
-
-
-
-
-
     # Dispersión cross-sectional
-
 
 
     rs_all = pd.concat([rs[s] for s in sectors if s in rs], axis=1)
 
 
-
     dispersion = rs_all.std(axis=1)
-
-
-
-
-
 
 
     # Amplitud interna: % de sectores defensivos que baten al SPY
 
 
-
     try:
-
 
 
         spy_close = get_col(df_market, '^GSPC', 'Close')
 
 
-
         spy_mom = spy_close.pct_change(20, fill_method=None)
-
 
 
         defensive_mom = pd.concat([rs[s].pct_change(20, fill_method=None) for s in defensive if s in rs], axis=1)
 
 
-
         defensive_beating_spy = (defensive_mom.gt(spy_mom, axis=0)).mean(axis=1)
-
 
 
     except (KeyError, ValueError, TypeError, AttributeError):
 
 
-
         defensive_beating_spy = pd.Series(0.5, index=df_market.index)
-
-
-
-
-
 
 
     z_spread   = robust_zscore(spread, 60)
 
 
-
     z_mom      = robust_zscore(mom_spread, 60)
-
 
 
     z_speed    = robust_zscore(speed_spread, 60)
 
 
-
     z_disp     = robust_zscore(dispersion, 60)
-
 
 
     z_breadth_def = robust_zscore(defensive_beating_spy, 60)
 
 
-
-
-
-
-
     srs = (0.35 * tanh(z_spread) +
-
 
 
            0.20 * tanh(z_mom) +
 
 
-
            0.15 * tanh(z_speed) +
-
 
 
            0.15 * tanh(z_disp) +
 
 
-
            0.15 * tanh(z_breadth_def))
-
 
 
     return _get_last(srs)
 
 
-
-
-
-
-
-
-
-
-
 # ============================================================
-
 
 
 # 2. SAFE HAVEN SCORE (SHS)
 
 
-
 # ============================================================
-
 
 
 def safe_haven_score(df_market):
 
 
-
     hard_havens = ['GLD', 'SLV', 'TLT']
-
 
 
     defensive_havens = ['XLP', 'XLV', 'XLU', 'QUAL', 'IEF', 'BIL']
 
 
-
-
-
-
-
     def haven_subscore(tickers):
-
 
 
         signals = []
 
 
-
         for t in tickers:
-
 
 
             try:
 
 
-
                 close = get_col(df_market, t, 'Close')
-
 
 
                 mom = close.pct_change(20, fill_method=None)
 
 
-
                 signals.append(tanh(robust_zscore(mom, 60)))
-
 
 
             except KeyError:
 
 
-
                 pass
-
 
 
         if not signals:
 
 
-
             return 0.0
-
 
 
         return _get_last(pd.concat(signals, axis=1).mean(axis=1))
 
 
-
-
-
-
-
     hard_score = haven_subscore(hard_havens)
-
 
 
     defensive_score = haven_subscore(defensive_havens)
 
 
-
     return 0.6 * hard_score + 0.4 * defensive_score
 
 
-
-
-
-
-
-
-
-
-
 # ============================================================
-
 
 
 # 3. CREDIT STRESS SCORE (CLS)
 
 
-
 # ============================================================
-
 
 
 def credit_stress_score(financial_conditions, credit_signal,
 
 
-
                         volatility_signal, vix_term, darkpool_z, pcr_z):
-
 
 
     """
@@ -397,25 +262,16 @@ def credit_stress_score(financial_conditions, credit_signal,
     """
 
 
-
     def stress(val):
-
 
 
         if val is None or not pd.notna(val):
 
 
-
             return 0.5
 
 
-
         return float(np.clip(np.tanh(val / 2), 0, 1))
-
-
-
-    
-
 
 
     # Familia 1: Liquidez (financial_conditions)
@@ -429,516 +285,322 @@ def credit_stress_score(financial_conditions, credit_signal,
     # Familia 3: Volatilidad (VIX)
 
 
-
     vix_stress = stress(volatility_signal) if volatility_signal is not None else 0.5
-
-
-
-    
-
 
 
     # Familia 4: Complementarios
 
 
-
     pcr_stress = stress(pcr_z) if pcr_z is not None else 0.5
-
 
 
     dp_stress = stress(darkpool_z) if (darkpool_z is not None and not np.isnan(darkpool_z)) else 0.5
 
 
-
     complementary_stress = 0.50 * pcr_stress + 0.50 * dp_stress
-
-
-
-    
-
 
 
     cls = (0.25 * nfci_stress +
 
 
-
            0.35 * credit_stress_val +
-
 
 
            0.25 * vix_stress +
 
 
-
            0.15 * complementary_stress)
-
-
-
-    
-
 
 
     # Bloquear si algún componente es NaN
 
 
-
     if np.isnan(cls):
-
 
 
         return np.nan
 
 
-
-    
-
-
-
     return float(np.clip(cls, 0.0, 1.0))
 
 
-
-
-
-
-
-
-
-
-
 # ============================================================
-
 
 
 # 4. INFLATION PRESSURE SCORE (IPS)
 
 
-
 # ============================================================
-
 
 
 def inflation_pressure_score(df_market):
 
 
-
     assets = ['XLE', '^SPGSCI', 'TIP']
-
 
 
     signals = []
 
 
-
     for t in assets:
-
 
 
         try:
 
 
-
             close = get_col(df_market, t, 'Close')
-
 
 
             mom = close.pct_change(20, fill_method=None)
 
 
-
             signals.append(tanh(robust_zscore(mom, 60)))
-
 
 
         except KeyError:
 
 
-
             pass
-
-
-
-
-
 
 
     try:
 
 
-
         tip_close = get_col(df_market, 'TIP', 'Close')
-
 
 
         ief_close = get_col(df_market, 'IEF', 'Close')
 
 
-
         tip_ief_ratio = tip_close / ief_close
-
 
 
         tip_ief_mom = tip_ief_ratio.pct_change(20, fill_method=None)
 
 
-
         signals.append(tanh(robust_zscore(tip_ief_mom, 60)))
-
 
 
     except KeyError:
 
 
-
         pass
-
-
-
-
-
 
 
     if not signals:
 
 
-
         return 0.0
-
-
-
-
-
 
 
     ips_raw = pd.concat(signals, axis=1).mean(axis=1)
 
 
-
     ips = ips_raw.ewm(span=20).mean()
-
 
 
     return _get_last(ips)
 
 
-
-
-
-
-
-
-
-
-
 # ============================================================
-
 
 
 # 5. ÍNDICES AGREGADOS
 
 
-
 # ============================================================
-
 
 
 def compute_msi(srs, shs, cls):
 
 
-
     srs_mapped = (srs + 1) / 2
-
 
 
     shs_mapped = (shs + 1) / 2
 
 
-
     raw = 0.40 * srs_mapped + 0.35 * cls + 0.25 * shs_mapped
-
 
 
     return max(0, min(100, raw * 100))
 
 
-
-
-
-
-
 def compute_ipi(ips):
-
 
 
     ips_mapped = (ips + 1) / 2
 
 
-
     return max(0, min(100, ips_mapped * 100))
 
 
-
-
-
-
-
-
-
-
-
 # ============================================================
-
 
 
 # 6. SISTEMA DE PUNTUACIÓN DE ESCENARIOS
 
 
-
 # ============================================================
-
 
 
 SCENARIO_WEIGHTS = {
 
 
-
     "CLS": {"weight": 3, "reason": "El deterioro financiero es condición necesaria en una crisis."},
-
 
 
     "SHS": {"weight": 2, "reason": "Los activos refugio suelen liderar durante las fases defensivas."},
 
 
-
     "SRS": {"weight": 2, "reason": "La rotación sectorial suele preceder al deterioro macro."},
-
 
 
     "IPS": {"weight": 3, "reason": "La inflación diferencia recesión de estanflación."}
 
 
-
 }
-
-
-
-
-
 
 
 def score_scenarios(srs, shs, cls, ips):
 
 
-
     scores = {}
-
-
-
-
-
 
 
     # CRISIS (prioridad máxima: bonus base por cumplir condiciones)
 
 
-
     crisis = 0
-
 
 
     if not np.isfinite(cls):
 
 
-
         crisis = -999  # CLS inválido ? CRISIS bloqueado
-
 
 
     else:
 
 
-
         if cls > 0.5:
-
 
 
             crisis += 6  # CLS > 0.5 ya indica estrés financiero extremo
 
 
-
         if cls > 0.7: crisis += 3  # Bonus adicional por estrés severo
-
 
 
         if shs > 0.3: crisis += SCENARIO_WEIGHTS["SHS"]["weight"]
 
 
-
         if srs > 0.3: crisis += SCENARIO_WEIGHTS["SRS"]["weight"]
-
-
-
-
 
 
     if cls > 0.85: crisis += 3
 
 
-
     scores['CRISIS'] = crisis
-
-
-
-
-
 
 
     # RECESSION
 
 
-
     recession = 0
-
 
 
     if np.isfinite(cls):
 
 
-
         if cls > 0.25 and srs > 0.1 and cls <= 0.5: recession += 1  # bonus base
-
 
 
         if cls > 0.2: recession += SCENARIO_WEIGHTS["CLS"]["weight"]
 
 
-
         if cls > 0.4 and cls <= 0.5: recession += 1
-
 
 
     if shs > 0.2: recession += SCENARIO_WEIGHTS["SHS"]["weight"]
 
 
-
     if srs > 0.2: recession += SCENARIO_WEIGHTS["SRS"]["weight"]
-
 
 
     scores['RECESSION'] = recession
 
 
-
-
-
-
-
     # STAGFLATION
-
 
 
     stagflation = 0
 
 
-
     if ips > 0.15 and srs > 0: stagflation += 1  # bonus base (umbral reducido)
-
 
 
     if ips > 0.15: stagflation += SCENARIO_WEIGHTS["IPS"]["weight"]  # IPS es el factor distintivo de STAGFLATION
 
 
-
     if srs > 0: stagflation += SCENARIO_WEIGHTS["SRS"]["weight"]
-
 
 
     if cls < 0.3: stagflation += SCENARIO_WEIGHTS["CLS"]["weight"]
 
 
-
     if ips > 0.5: stagflation += 2
-
 
 
     scores['STAGFLATION'] = stagflation
 
 
-
-
-
-
-
     # SOFT LANDING
-
 
 
     soft = 0
 
 
-
     if srs > 0.1 and shs > 0.1: soft += 1  # bonus base
-
 
 
     if srs > 0.1: soft += SCENARIO_WEIGHTS["SRS"]["weight"]
 
 
-
     if shs > 0.1: soft += SCENARIO_WEIGHTS["SHS"]["weight"]
-
 
 
     if cls < 0: soft += SCENARIO_WEIGHTS["CLS"]["weight"]
 
 
-
     if cls < -0.2: soft += 1
-
 
 
     scores['SOFT LANDING'] = soft
 
 
-
-
-
-
-
     # EXPANSION
-
 
 
     expansion = 0
 
 
-
     if srs < -0.1: expansion += SCENARIO_WEIGHTS["SRS"]["weight"]
-
 
 
     if cls < -0.1: expansion += SCENARIO_WEIGHTS["CLS"]["weight"]
 
 
-
     if shs < 0: expansion += SCENARIO_WEIGHTS["SHS"]["weight"]
-
 
 
     if srs < -0.3: expansion += 1
 
 
-
     scores['EXPANSION'] = expansion
 
 
-
-
-
-
-
     scores['MIXED'] = 2
-
 
 
     return scores
