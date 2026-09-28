@@ -1,74 +1,99 @@
-# Radar de Rotación Sectorial
+# Radar de Rotacion Sectorial
 
-Sistema determinista y descriptivo de análisis macro-sectorial.
-Sin ML predictivo. Sin señales de trading. Solo diagnóstico.
+Sistema determinista, descriptivo y auditable de analisis macro-sectorial.
+Sin ML predictivo. Sin senales de trading. Solo diagnostico.
 
-## Estado actual
+---
 
-- **Cobertura**: 313/313 tickers (100%)
-- **Validation Gate**: 10/10
-- **Tests**: 820 passed + 2 skipped
-- **Fuentes europeas**: Euronext (13) + Xetra (19) + BME (19)
+## Arranque
 
-## Filosofía
+Si eres un asistente entrante, lee primero:
 
-- Determinista, no predictivo.
-- Descriptivo, no prescriptivo.
-- Auditable: cada score es trazable a sus fuentes.
-- Sin datos ficticios: si no hay dato, se omite (N/D).
-- Sin mezcla de capas de flujo.
+**[Consolidacion_Documentos/00_ARRANQUE.md](Consolidacion_Documentos/00_ARRANQUE.md)**
+
+Ese documento es autosuficiente para empezar. Referencia on-demand:
+`01_METODO.md` (metodo), `02_ARQUITECTURA.md` (mapa), `03_IAE.md`
+(subsistema IAE), `04_HISTORICO.md` (cronologia),
+`05_BITACORA.md` (sesiones).
+
+---
+
+## Estado del sistema
+
+Snapshot autoritativo: `Consolidacion_Documentos/ESTADO_SISTEMA.md`
+(regenerable con `py scripts/generate_estado_sistema.py`).
+
+Resumen:
+- Tests: 2267 passed + 2 skipped.
+- Validation Gate: 10/10.
+- Cobertura configurada: 313 tickers.
+- Working tree limpio.
+
+---
+
+## Comandos de arranque
+
+    Set-Location D:\Macro_Sectorial
+    git log --oneline -5
+    git status -sb
+    py scripts\generate_estado_sistema.py
+    py -m pytest tests/ -q --tb=line
+    py -m pyflakes src\ scripts\ ; py -m compileall . -q
+
+Ejecucion completa del pipeline (~10-15 min):
+
+    py run.py
+
+Salida: `outputs/report/reporte_diario.md`.
+
+---
 
 ## Estructura
 
 | Directorio | Contenido |
-|------------|-----------|
-| `config/` | Parámetros, tickers, pesos |
-| `indicators/` | 30+ módulos de indicadores sectoriales |
-| `regimes/` | 5 regímenes macro |
-| `data/providers/` | 28 proveedores (Yahoo, Euronext, Xetra, BME, FRED, SEC...) |
-| `src/` | Orquestador, loaders, report generator |
-| `src/institutional_accumulation/` | Modulo IAE (SEC 13F) - Fase A cerrada (FA-1 + FA-2) |
-| `validation/` | 61 auditorías y validaciones |
-| `tests/` | 86 archivos / 820 tests |
-| `docs/` | Documentación completa |
-| `outputs/` | Reportes, históricos, estado |
+|---|---|
+| `config/` | Parametros, tickers, pesos |
+| `regimes/` | 4 regimenes macro (financial, liquidity, volatility, macro) |
+| `indicators/` | 50 modulos de indicadores (incluye paquete `mte/`) |
+| `src/` | Orquestador, loaders, nucleo temporal, report generator |
+| `src/report/` | 20 modulos de render |
+| `src/pipeline/` | 18 modulos (12 fases + IAE) |
+| `src/temporal_contracts/` | 10 contratos temporales (FU-021-5) |
+| `src/institutional_accumulation/` | Modulo IAE (SEC 13F), 36 ficheros |
+| `data/providers/` | 26 providers (Yahoo, Euronext, Xetra, BME, LSE, FRED, SEC...) |
+| `scripts/` | 34 scripts + 3 en `scripts/audit/` |
+| `validation/` | 7 modulos de validacion |
+| `tests/` | 182 ficheros locales (~22900 LOC) |
+| `docs/` | `automatica/` (auto-generados) + `auditoria/` (evidencia IAE) |
+| `outputs/` | Reportes, historicos, estado |
 
-## Ejecución
+---
 
-```
-pip install -r requirements.txt
-py run.py
-```
+## Filosofia
 
-El pipeline:
+- Determinista, no predictivo.
+- Descriptivo, no prescriptivo.
+- Auditable: cada score es trazable a sus fuentes.
+- Sin datos ficticios: `N/D` antes que imputar.
+- Sin mezcla de capas de flujo (ETF_PRIMARY_FLOW, CFTC_POSITION_FLOW,
+  SEC_POSITION_FLOW, FLOW_PROXY, QQQ NPORT-P FLOW, QQQ SEC FLOW).
+- Sin superindicadores.
 
-1. Descarga datos de mercado (Yahoo + Euronext + Xetra + BME + OilPriceAPI + CBOE).
-2. Calcula regímenes macro (Financial Conditions, Liquidity, Volatility, Macro).
-3. Ejecuta motores táctico y estructural por sector.
-4. Calcula 30+ indicadores (momentum, breadth, wyckoff, MTE, dark pool...).
-5. Genera reporte diario en `outputs/report/reporte_diario.md`.
+---
 
-## Documentación
+## Fuentes de datos (resumen)
 
-- [Índice completo](docs/automatica/README.md) - Arquitectura, módulos, fórmulas
-- [IAE (SEC 13F)](docs/auditoria/INSTITUTIONAL_ACCUMULATION_GATE_FA2_INFORME.md) - Fase A cerrada (FA-1 + FA-2)
-- [Auditorías](docs/auditoria/) - Dictámenes y validaciones externas
-
-## Fuentes de datos
-
-| Fuente | Tickers | Método |
-|--------|:-------:|--------|
+| Fuente | Tickers | Metodo |
+|---|:---:|---|
 | Yahoo | 262 | yfinance |
-| Euronext | 13 | API AJAX pública (AES-256-CBC) |
+| Euronext | 13 | API AJAX publica (AES-256-CBC) |
 | Xetra | 19 | WebSocket MDS + JWT |
-| BME | 19 | API REST pública (JSON) |
-
-## Reglas de operación
-
-- No mezclar capas de flujo (ETF_PRIMARY_FLOW, CFTC_POSITION_FLOW, SEC_POSITION_FLOW, FLOW_PROXY).
-- No construir superindicadores predictivos.
-- No imputar valores artificiales.
-- Documentar limitaciones descriptivas.
+| BME | 19 | API REST publica (JSON) |
+| LSE | 20 | Scraper privado (Refinitiv Widgets) |
+| OilPriceAPI | 3 | Spot GC/HG/NG |
+| CBOE | - | Opciones diarias + ^VIX3M |
+| FRED | - | Liquidez y yields |
+| CFTC / FINRA / SEC | - | Position flow / Dark pools / 13F + N-PORT |
 
 ---
 
