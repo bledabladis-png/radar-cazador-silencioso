@@ -264,3 +264,36 @@ def test_schema_v1_with_temporal_block_reader_accepts(patched_paths):
     bp = BackupProvider()
     assert bp.reference_cache_status == 'VALID'
 
+
+
+# --- A5-30 + A5-33 (2026-09-28): orden por velocidad ---
+
+def test_providers_ordenados_por_velocidad(patched_paths):
+    """A5-30 (MEDIA): providers iterados por velocidad descendente.
+
+    El bucle de fallback itera self.providers.items() en orden de
+    insercion. El primer provider debe ser el de mayor minute_limit
+    (o sin daily limit) para minimizar tiempo del fallback.
+    """
+    from data.providers.backup_providers import BackupProvider
+    bp = BackupProvider()
+    names = list(bp.providers.keys())
+    assert names == ['finnhub', 'twelve_data', 'fmp', 'alpha_vantage', 'tiingo'], \
+        f"orden inesperado: {names}"
+    # Semantico: finnhub tiene el mayor minute_limit (60/min)
+    limits = {n: bp.providers[n]['limiter'].minute_limit for n in names}
+    limited = {n: v for n, v in limits.items() if v is not None}
+    assert limits['finnhub'] == max(limited.values()), \
+        f"finnhub deberia tener el mayor minute_limit, obtenido {limits}"
+
+
+def test_tiingo_es_ultimo_recurso(patched_paths):
+    """A5-33 (MEDIA): tiingo (1/min) queda como ultimo recurso.
+
+    Antes era el primero; con 15 tickers en fallback tardaba ~15 min.
+    """
+    from data.providers.backup_providers import BackupProvider
+    bp = BackupProvider()
+    names = list(bp.providers.keys())
+    assert names[-1] == 'tiingo', f"tiingo no es ultimo: {names}"
+    assert bp.providers['tiingo']['limiter'].minute_limit == 1

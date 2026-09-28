@@ -66,10 +66,16 @@ class CircuitBreaker:
 class BackupProvider:
     """Respaldo multi-proveedor con rate limiting, circuit breaker y validación cruzada."""
     def __init__(self):
+        # A5-30 + A5-33 (2026-09-28): orden por velocidad descendente.
+        # El bucle de fallback (get_prices) itera self.providers.items()
+        # en orden de insercion (Python 3.7+). Antes: tiingo (1/min)
+        # primero -> 15 tickers ~ 15 min, riesgo de timeout del workflow.
+        # Ahora: finnhub (60/min) primero -> 15 tickers ~ 15 s. tiingo
+        # queda como ultimo recurso.
         self.providers = {
-            'tiingo': {
-                'key': os.environ.get('TIINGO_API_KEY'),
-                'limiter': RateLimiter(daily_limit=200, minute_limit=1),
+            'finnhub': {
+                'key': os.environ.get('FINNHUB_API_KEY'),
+                'limiter': RateLimiter(daily_limit=None, minute_limit=60),
                 'breaker': CircuitBreaker(),
             },
             'twelve_data': {
@@ -77,19 +83,19 @@ class BackupProvider:
                 'limiter': RateLimiter(daily_limit=800, minute_limit=8),
                 'breaker': CircuitBreaker(),
             },
+            'fmp': {
+                'key': os.environ.get('FMP_API_KEY'),
+                'limiter': RateLimiter(daily_limit=250, minute_limit=None),
+                'breaker': CircuitBreaker(),
+            },
             'alpha_vantage': {
                 'key': os.environ.get('ALPHA_VANTAGE_API_KEY'),
                 'limiter': RateLimiter(daily_limit=25, minute_limit=5),
                 'breaker': CircuitBreaker(),
             },
-            'finnhub': {
-                'key': os.environ.get('FINNHUB_API_KEY'),
-                'limiter': RateLimiter(daily_limit=None, minute_limit=60),
-                'breaker': CircuitBreaker(),
-            },
-            'fmp': {
-                'key': os.environ.get('FMP_API_KEY'),
-                'limiter': RateLimiter(daily_limit=250, minute_limit=None),
+            'tiingo': {
+                'key': os.environ.get('TIINGO_API_KEY'),
+                'limiter': RateLimiter(daily_limit=200, minute_limit=1),
                 'breaker': CircuitBreaker(),
             },
         }
