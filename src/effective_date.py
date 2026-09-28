@@ -14,6 +14,28 @@ from collections.abc import Collection
 import pandas as pd
 
 
+def _dedup_preserving_order(items):
+    seen = set()
+    out = []
+    for x in items:
+        if x not in seen:
+            seen.add(x)
+            out.append(x)
+    return out
+
+
+def _empty_result(requested_date, n_eligible, status="INSUFFICIENT_COVERAGE"):
+    return {
+        "date": None,
+        "requested_date": requested_date,
+        "lag_days": None,
+        "n_eligible": n_eligible,
+        "n_observed": 0,
+        "coverage": 0.0,
+        "status": status,
+    }
+
+
 def resolve_effective_date(
     prices: pd.DataFrame,
     eligible_tickers: Collection[str],
@@ -43,32 +65,23 @@ def resolve_effective_date(
         - Duplicados en eligible_tickers se deduplican preservando el orden.
         - Tickers elegibles sin columna en prices cuentan como NO observados.
         - coverage = observed / eligible.
+        - Si el index de prices contiene timestamps duplicados, se agrupa
+          por nivel 0 aplicando .last() antes de calcular cobertura.
+          Garantiza que close_df.loc[effective_date, present] sea siempre
+          una Series, no un DataFrame.
+        - `requested_date` es None si y solo si prices es None o vacio.
+          En el resto de paths siempre es un Timestamp.
     """
-    # Deduplicar eligible preservando orden.
-    seen = set()
-    eligible = []
-    for t in eligible_tickers:
-        if t not in seen:
-            seen.add(t)
-            eligible.append(t)
+    eligible = _dedup_preserving_order(eligible_tickers)
     n_eligible = len(eligible)
 
-    # Casos degenerados.
+    # Casos degenerados: sin datos -> requested_date=None.
     if prices is None or prices.empty or n_eligible == 0:
-        return {
-            "date": None,
-            "requested_date": None,
-            "lag_days": None,
-            "n_eligible": n_eligible,
-            "n_observed": 0,
-            "coverage": 0.0,
-            "status": "INSUFFICIENT_COVERAGE",
-        }
+        return _empty_result(None, n_eligible)
 
     requested_date = prices.index[-1]
 
     # Normalizar a DataFrame con columnas planas (tickers).
-    # Si es MultiIndex (field, ticker), extraer solo Close.
     if isinstance(prices.columns, pd.MultiIndex):
         close_cols = [c for c in prices.columns if c[0] == 'Close']
         close_df = prices[close_cols].copy()
@@ -76,42 +89,37 @@ def resolve_effective_date(
     else:
         close_df = prices
 
-    # Columnas presentes del universo elegible.
+    # Index duplicado: agrupar por nivel 0 y tomar la ultima observacion
+    # por fecha. Garantiza acceso escalar en close_df.loc[date, present].
+    if close_df.index.has_duplicates:
+        close_df = close_df.groupby(level=0, sort=True).last()
+
     present = [t for t in eligible if t in close_df.columns]
 
     if not present:
-        return {
-            "date": None,
-            "requested_date": requested_date,
-            "lag_days": None,
-            "n_eligible": n_eligible,
-            "n_observed": 0,
-            "coverage": 0.0,
-            "status": "INSUFFICIENT_COVERAGE",
-        }
+        return _empty_result(requested_date, n_eligible)
 
-    # Cobertura por fila: observados / eligible (no / present).
     coverage_series = close_df[present].notna().sum(axis=1) / n_eligible
     valid_rows = coverage_series[coverage_series >= min_coverage]
 
     if valid_rows.empty:
-        return {
-            "date": None,
-            "requested_date": requested_date,
-            "lag_days": None,
-            "n_eligible": n_eligible,
-            "n_observed": 0,
-            "coverage": 0.0,
-            "status": "INSUFFICIENT_COVERAGE",
-        }
+        return _empty_result(requested_date, n_eligible)
 
     effective_date = valid_rows.index[-1]
-    n_observed = int(close_df.loc[effective_date, present].notna().sum())
+    row = close_df.loc[effective_date, present]
+    # Con index agrupado y present deduplicado, row es Series.
+    # Defensa adicional: si por alguna razon llegara un DataFrame,
+    # colapsar a Series.
+    if isinstance(row, pd.DataFrame):
+        row = row.iloc[-1]
+    n_observed = int(row.notna().sum())
     coverage = n_observed / n_eligible
 
     try:
-        lag_days = (pd.Timestamp(requested_date) - pd.Timestamp(effective_date)).days
-    except Exception:
+        lag_days = (
+            pd.Timestamp(requested_date) - pd.Timestamp(effective_date)
+        ).days
+    except (TypeError, ValueError):
         lag_days = None
 
     return {
