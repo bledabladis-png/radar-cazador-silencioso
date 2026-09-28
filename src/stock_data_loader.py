@@ -815,10 +815,34 @@ def download_stock_prices(reference_date=None, run_id=None):
         data, reference_date, run_id, _expected_session
     )
 
+    # G-01 (2026-09-29): truncado pre-write a la ultima sesion NYSE.
+    # Razon: stock_prices.parquet es multi-mercado (US + LSE + Euronext
+    # + Xetra), pero expected_session es NYSE-only por construccion
+    # (last_expected_market_date usa el calendario NYSE). Cuando el run
+    # coincide con UE-cerrada + USA-abierta, el df contiene una fila
+    # europea con date > expected_session. El guard aborta el push por
+    # "last_date > expected_session" y el run queda rojo. Esa fila no la
+    # consume nadie aguas abajo: leaders.py aplica resolve_effective_date
+    # y trunca antes de propagar. Truncamos SOLO el df que va al parquet;
+    # el df en memoria se devuelve intacto.
+    _data_for_parquet = data
+    if isinstance(data.index, pd.DatetimeIndex) and len(data.index) > 0:
+        _last_obs = data.index[-1].normalize().date()
+        if _last_obs > _expected_session:
+            _expected_ts = pd.Timestamp(_expected_session)
+            _mask = data.index <= _expected_ts
+            _n_drop = int((~_mask).sum())
+            _data_for_parquet = data.loc[_mask]
+            print(
+                f"  [TRUNC] stock_prices: {_n_drop} fila(s) post-"
+                f"expected_session={_expected_session} excluidas del "
+                f"parquet (ultima observacion df={_last_obs})."
+            )
+
     # FU-002 (2026-09-15): parquet + manifest atomico.
     from src.utils import write_artifact_with_manifest
     write_artifact_with_manifest(
-        data, parquet_path,
+        _data_for_parquet, parquet_path,
         source='yahoo_european_cascade',
         reference_date=reference_date,
         run_id=run_id,
