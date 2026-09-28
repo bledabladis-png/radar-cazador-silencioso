@@ -31,7 +31,7 @@
 5. **Validar sintaxis con `ast.parse()` ANTES de escribir.**
 6. **Si falla -> restaurar backup automaticamente.**
 7. **Escribir con `encode()` correcto** (`utf-8-sig` si habia BOM, `utf-8` si no).
-8. **Para here-strings PowerShell:** usar `@"..."@` (double-quote) con escapes `\"\"\"` para docstrings internos.
+8. **Para here-strings PowerShell que contienen Python:** usar `@'...'@` (single-quote, no expande variables). Si el contenido lleva `$` o comillas dobles, escribir a `_patch_XXX.py` con `WriteAllText` y ejecutar con `py`. Nunca `py -c` con comillas anidadas.
 9. **No usar caracteres especiales (á, é, í, —, →) en patrones de busqueda.** Preferir ASCII-safe.
 10. **En here-strings PowerShell con `py -c`**, los escapes `\"` dentro de f-strings rompen el parser.
 11. **Un script de patch con multiples `assert text.count(anchor) == 1` debe abortar ANTES de escribir si cualquier assert falla.**
@@ -177,6 +177,11 @@ Estas son las reglas que hemos aprendido rompiendo cosas. Se aplican.
 - **Un dump de consola no es evidencia.** Para bugs, probes reproducibles. Para encoding, `read_bytes` + `repr`.
 - **Un falso positivo es una leccion.** Documentarlo evita repetirlo.
 
+**Sobre herramientas concretas (2026-09-28/29):**
+- **`ast.parse` solo aplica a Python.** Nunca invocar sobre markdown. `ast.parse(markdown)` lanza SyntaxError. Para validar markdown, no hay parser: se revisa a mano o con regex.
+- **`Write-Host` no soporta `-f` del mismo modo que `Write-Output`.** Para formatear strings en `Write-Host`, usar `[string]::Format(...)` o concatenacion directa. Fallo cometido 3x en la sesion de consolidacion documental.
+- **Here-string de 500+ lineas se descarta silenciosamente al pegar en PowerShell.** Incluso con el patron `WriteAllText` correcto. Sintoma: no se escribe nada, `git status` no muestra el fichero. Solucion: escribir en chunks de ~25-50 lineas (seccion 10). Verificar con `Test-Path` + `(Get-Item $path).Length` tras cada chunk.
+
 ---
 
 ## 9. FRASES GUIA
@@ -219,3 +224,34 @@ Los patches, probes y checks se hacen con ficheros temporales en `%TEMP%`. Patro
     $salida | ForEach-Object { Write-Host $_ }
 
 Regla: **ver la salida del patch ANTES de la verificacion.** Un patch multi-anchor que aborta silenciosamente en PowerShell es comun. Sin ver el `exit=` y el `[OK]`/`[ABORT]`, la verificacion posterior mide un estado que no es el esperado.
+
+Ademas:
+- **Si el `$py` here-string tiene >50 lineas, escribirlo en chunks.** Un here-string grande puede descartarse silenciosamente al pegar. Verificar con `Test-Path $tmp` + `(Get-Item $tmp).Length` tras escribir.
+- **Verificar la salida del patch inmediatamente.** Antes de cualquier otra accion. Si no aparece `[OK]`, el fichero no se toco.
+
+---
+
+## 11. CORPUS DOCUMENTAL
+
+El corpus consolidado vive en `Consolidacion_Documentos/` (6 ficheros + snapshot auto-generado). Reglas de actualizacion:
+
+**`00_ARRANQUE.md`:** se actualiza cuando cambia el estado del sistema (HEAD, tests, pendientes) o las reglas duras. Es el unico documento que se pega al arrancar — su tamano importa (<=10 KB).
+
+**`01_METODO.md` (este documento):** se actualiza cuando se aprende una leccion nueva. Crece lentamente. Si supera 20 KB, dividir.
+
+**`02_ARQUITECTURA.md`:** se actualiza cuando cambia la estructura de directorios, los contratos de modulo, las decisiones arquitectonicas vigentes, o el pipeline. Es referencia on-demand. Si supera 40 KB, revisar.
+
+**`03_IAE.md`:** se actualiza cuando cambia el subsistema IAE. Independiente del resto.
+
+**`04_HISTORICO.md`:** se actualiza **por acumulacion**. Cada cierre de sesion anade una entrada tematica. No se poda.
+
+**`05_BITACORA.md`:** se actualiza al **cierre de cada sesion**. Formato definido en el propio fichero. Mantener solo las ultimas **5 sesiones**. La 6ª se elimina (o se resume en `04_HISTORICO.md`).
+
+**`ESTADO_SISTEMA.md`:** NO se edita a mano. Se regenera con `py scripts/generate_estado_sistema.py`.
+
+**Reglas duras del corpus:**
+- Nada duplica lo que otro documento ya cubre. Si un concepto aparece en dos sitios, uno de los dos sobra.
+- Los documentos del corpus NO se citan a ficheros borrados. Los unicos que pueden mencionar el corpus antiguo son `04_HISTORICO.md` (cronologia) y `05_BITACORA.md` (referencia historica).
+- Cuando se cierra una sesion: actualizar `05_BITACORA.md` (anadir entrada) + `04_HISTORICO.md` (si hubo decision estructural). El resto solo cambia si el contenido lo exige.
+- **Toda afirmacion sin evidencia directa se marca como hipotesis.** No "el sistema hace X" si no se ha verificado.
+- **El sistema prevalece sobre la documentacion.** Si el codigo y el documento discrepan, gana el codigo y se corrige el documento.
