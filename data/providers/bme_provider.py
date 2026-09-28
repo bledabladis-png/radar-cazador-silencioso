@@ -18,7 +18,7 @@ con el cierre previo y actua como precio de referencia de la sesion.
 import time
 from datetime import datetime, timedelta
 
-from src.market_calendar import is_market_day
+from src.market_calendar import is_market_day, last_expected_market_date
 from pathlib import Path
 
 import pandas as pd
@@ -139,9 +139,8 @@ class BMEProvider:
         if df.empty:
             return False
         last = pd.to_datetime(df["date"]).max()
-        if reference_date is None:
-            return (pd.Timestamp.now().normalize() - last).days <= 1
-        return (reference_date.date() - last.date()).days <= 1
+        expected = last_expected_market_date(reference_date)
+        return (expected - last.date()).days <= 1
 
     # -------------------- Conversion --------------------
 
@@ -206,7 +205,7 @@ class BMEProvider:
         self._last_stale = []
         self._last_failed = []
         frames = []
-        today = reference_date if reference_date is not None else datetime.now()
+        today = last_expected_market_date(reference_date)
         default_from = (today - timedelta(days=430)).strftime("%Y%m%d")
 
         for t in tickers:
@@ -231,7 +230,7 @@ class BMEProvider:
                 df_cached = self._load_cache(t)
                 if not df_cached.empty:
                     last_date = pd.to_datetime(df_cached["date"]).max()
-                    ref_d = reference_date.date() if reference_date is not None else pd.Timestamp.now().date()
+                    ref_d = today
                     days_gap = (ref_d - last_date.date()).days
                     if days_gap > 7:
                         print("  [BME] CACHE VIEJA: " + t + " sin datos desde " + str(last_date.date()) + " (" + str(days_gap) + " dias)")
@@ -239,7 +238,7 @@ class BMEProvider:
                     next_day = last_date + pd.Timedelta(days=1)
                     while not is_market_day(next_day.date()):
                         next_day = next_day + pd.Timedelta(days=1)
-                    today_norm = reference_date.date() if reference_date is not None else pd.Timestamp.now().date()
+                    today_norm = today
                     if next_day.date() > today_norm:
                         print("  [BME] " + t + " sin nuevas sesiones (next=" + str(next_day.date()) + ")")
                         frames.append(self._to_multiindex(df_cached, t))

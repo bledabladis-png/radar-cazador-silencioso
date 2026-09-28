@@ -52,16 +52,23 @@ def _read_date_col(df, possible_cols):
             return col
     return None
 
+def _ref_to_date(ref):
+    """Normaliza reference_date (None/date/datetime/Timestamp, tz-aware o naive) a date.
+
+    A2.2-03: evita TypeError por restar tz-naive y tz-aware.
+    """
+    if ref is None:
+        return datetime.now().date()
+    return pd.Timestamp(ref).date()
+
+
 def compute_data_quality(reference_date=None):
     """Calcula frescura y cobertura de las fuentes.
 
     F-UX-03 (2026-09-28): con reference_date, la decision no depende
     de datetime.now(). Fallback legacy cuando es None.
     """
-    if reference_date is not None:
-        now = reference_date
-    else:
-        now = datetime.now()
+    now = _ref_to_date(reference_date)
     sources = [
         {
             'source': 'Yahoo Finance',
@@ -176,7 +183,7 @@ def compute_data_quality(reference_date=None):
                     last_date = pd.NaT
             except Exception:
                 last_date = pd.NaT
-            age = (now - last_date).days if pd.notna(last_date) else np.nan
+            age = (now - last_date.date()).days if pd.notna(last_date) else np.nan
             freshness = classify_freshness(age, src['frequency'])
             rows.append({
                 'date': now.strftime('%Y-%m-%d'),
@@ -212,7 +219,7 @@ def compute_data_quality(reference_date=None):
             try:
                 df_pq = pd.read_parquet(path)
                 last_date = _last_market_session(pd.Timestamp(df_pq.index[-1])) if len(df_pq) > 0 else pd.NaT
-                age = (now - last_date).days if pd.notna(last_date) else np.nan
+                age = (now - last_date.date()).days if pd.notna(last_date) else np.nan
                 freshness = classify_freshness(age, src['frequency'])
                 rows.append({
                     'date': now.strftime('%Y-%m-%d'),
@@ -249,7 +256,7 @@ def compute_data_quality(reference_date=None):
             else:
                 _ld = pd.to_datetime(df[date_col], errors='coerce').max()
                 last_date = _last_market_session(_ld) if pd.notna(_ld) else pd.NaT
-            age = (now - last_date).days if pd.notna(last_date) else np.nan
+            age = (now - last_date.date()).days if pd.notna(last_date) else np.nan
             freshness = classify_freshness(age, src['frequency'])
 
             n_total = np.nan
@@ -342,7 +349,7 @@ def compute_data_quality(reference_date=None):
                     _n_total = len(_eu_df)
                     _last_raw = pd.to_datetime(_eu_df['last_date'], errors='coerce').max()
                     _last = _last_market_session(_last_raw) if pd.notna(_last_raw) else pd.NaT
-                    _age = (now - _last).days if pd.notna(_last) else np.nan
+                    _age = (now - _last.date()).days if pd.notna(_last) else np.nan
                     _fresh = classify_freshness(_age, 'daily')
                     _row['last_date'] = _last.strftime('%Y-%m-%d') if pd.notna(_last) else np.nan
                     _row['age_calendar_days'] = _age

@@ -18,6 +18,16 @@ OUTPUT_CSV = Path('outputs/history/european_coverage.csv')
 GAP_THRESHOLD = 7
 
 
+def _ref_to_date(ref):
+    """Normaliza reference_date (None/date/datetime/Timestamp, tz-aware o naive) a date.
+
+    A2.2-02: evita TypeError por restar tz-naive y tz-aware.
+    """
+    if ref is None:
+        return pd.Timestamp.now().date()
+    return pd.Timestamp(ref).date()
+
+
 def _collect(reference_date=None):
     """Devuelve lista de dicts con info de cobertura por ticker.
 
@@ -30,10 +40,7 @@ def _collect(reference_date=None):
         ('Xetra', XetraProvider()),
         ('BME', BMEProvider()),
     ]
-    if reference_date is not None:
-        today = pd.Timestamp(reference_date).normalize()
-    else:
-        today = pd.Timestamp.now().normalize()
+    today = _ref_to_date(reference_date)
 
     for source_name, provider in providers:
         for ticker in provider.supported_tickers():
@@ -49,7 +56,7 @@ def _collect(reference_date=None):
                 continue
 
             last_date = pd.to_datetime(df['date']).max()
-            days_gap = int((today - last_date).days)
+            days_gap = (today - last_date.date()).days
             status = 'REVISAR' if days_gap > GAP_THRESHOLD else 'OK'
 
             rows.append({
@@ -151,10 +158,7 @@ def generate_european_coverage_report(reference_date=None):
     F-UX-02 (2026-09-28): reference_date opcional para alinear la
     fecha del reporte con el pipeline. Fallback legacy si None.
     """
-    if reference_date is not None:
-        today = pd.Timestamp(reference_date).normalize()
-    else:
-        today = pd.Timestamp.now().normalize()
+    today = _ref_to_date(reference_date)
     today_str = today.strftime('%Y-%m-%d')
 
     rows = _collect(reference_date=reference_date)
