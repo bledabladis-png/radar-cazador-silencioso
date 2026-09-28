@@ -2,9 +2,25 @@
 import requests
 import pandas as pd
 from datetime import datetime, timedelta
+from enum import Enum
 from pathlib import Path
 from src.instrument_registry import resolve_symbol
 from config.settings import CACHE_MARKET_PATH, CACHE_STOCKS_PATH
+
+
+class ValidationOutcome(Enum):
+    """A5-31 (2026-09-28): resultado explicito de _validate_with_cache.
+
+    Antes: True/False/None colapsaba 6 causas distintas. Ahora cada
+    causa tiene su propio valor para diagnostico.
+    """
+    VALIDATED = 'validated'                # comparacion OK contra cache VALID
+    REJECTED = 'rejected'                  # discrepancia >5% contra cache VALID
+    UNAVAILABLE = 'unavailable'            # cache global INVALID o UNAVAILABLE
+    CACHE_EMPTY = 'cache_empty'            # reference_cache vacio
+    TICKER_NOT_IN_CACHE = 'ticker_not_in_cache'  # ticker ausente en cache
+    INSUFFICIENT_DATA = 'insufficient_data'      # close_cache vacio o ref_close==0
+    ERROR = 'error'                        # excepcion durante la validacion
 
 class RateLimiter:
     """Controla llamadas por minuto y por día para un proveedor."""
@@ -201,6 +217,16 @@ class BackupProvider:
         if frames:
             combined = pd.concat(frames, axis=1)
             if combined.columns.duplicated().any():
+                # A5-32 (2026-09-28): dedup silenciosa market_data > stock_prices.
+                # keep='first' pisa stock_prices cuando hay solapamiento. Se
+                # documenta el numero de columnas y los tickers afectados
+                # para diagnostico (A5-46: inconsistencia keep first vs last).
+                _dup_mask = combined.columns.duplicated(keep=False)
+                _dup_cols = combined.columns[_dup_mask]
+                _dup_tickers = sorted({c[1] for c in _dup_cols if len(c) >= 2})
+                print(f"  [REF-CACHE] solapamiento detectado: {len(_dup_cols)} "
+                      f"columnas duplicadas, tickers={_dup_tickers[:10]}. "
+                      f"keep='first' (market_data gana sobre stock_prices).")
                 combined = combined.loc[:, ~combined.columns.duplicated(keep='first')]
         else:
             combined = pd.DataFrame()
@@ -221,40 +247,44 @@ class BackupProvider:
                 return False
         return True
 
-    def _validate_with_cache(self, ticker, df):
+    def _validate_with_cache(self, ticker, df) -> ValidationOutcome:
         """Compara ultimo cierre con cache (FU-002, 2026-09-15).
 
+        A5-31 (2026-09-28): devuelve ValidationOutcome, no True/False/None.
+
         Returns:
-            True  -> comparacion paso contra referencia VALID.
-            False -> discrepancia >5% contra referencia VALID.
-            None  -> referencia no disponible (UNAVAILABLE) o invalidada
-                     (INVALID). El dato del proveedor se acepta pero NO
-                     se marca como validado.
+            VALIDATED          -> comparacion OK contra cache VALID.
+            REJECTED           -> discrepancia >5% contra cache VALID.
+            UNAVAILABLE        -> cache global INVALID o UNAVAILABLE.
+            CACHE_EMPTY        -> reference_cache vacio.
+            TICKER_NOT_IN_CACHE -> ticker ausente en cache.
+            INSUFFICIENT_DATA  -> close_cache vacio o ref_close==0.
+            ERROR              -> excepcion durante la validacion.
         """
         if self.reference_cache_status in ('INVALID', 'UNAVAILABLE'):
-            return None
+            return ValidationOutcome.UNAVAILABLE
         if self.reference_cache.empty:
-            return None
+            return ValidationOutcome.CACHE_EMPTY
         try:
             if ticker not in self.reference_cache.columns.get_level_values(1):
-                return None
+                return ValidationOutcome.TICKER_NOT_IN_CACHE
             close_cache = self.reference_cache.loc[:, ('Close', ticker)].dropna()
             if close_cache.empty:
-                return None
+                return ValidationOutcome.INSUFFICIENT_DATA
             if isinstance(close_cache, pd.DataFrame):
                 close_cache = close_cache.iloc[:, 0]
             ref_close = float(close_cache.iloc[-1])
             new_close = float(df[('Close', ticker)].iloc[-1])
             if ref_close == 0:
-                return None
+                return ValidationOutcome.INSUFFICIENT_DATA
             diff = abs(new_close - ref_close) / abs(ref_close)
             if diff > 0.05:
                 print(f"  [VALIDACION] {ticker}: discrepancia >5% con cache ({ref_close:.2f} vs {new_close:.2f}). Dato rechazado.")
-                return False
-            return True
+                return ValidationOutcome.REJECTED
+            return ValidationOutcome.VALIDATED
         except Exception as e:
             print(f"  [WARN] backup validate_with_cache {ticker}: {e}")
-            return None
+            return ValidationOutcome.ERROR
 
     def get_prices(self, tickers: list, period: str = '5y') -> pd.DataFrame:
         if not self._can_call_global():
@@ -292,12 +322,15 @@ class BackupProvider:
                         df.columns = pd.MultiIndex.from_product([df.columns.get_level_values(0), [t]])
                         # Validacion cruzada con cache (FU-002: True/False/None)
                         result = self._validate_with_cache(t, df)
-                        if result is False:
+                        if result is ValidationOutcome.REJECTED:
                             print(f"  [VALIDACION] {provider_name}: dato rechazado para {t}")
                             config['breaker'].record_failure()
                             break  # no probar mas proveedores para este ticker
-                        # True (validado) o None (sin referencia confiable): aceptar
-                        tag = 'validado' if result is True else 'sin referencia'
+                        # A5-31: tag especifico segun ValidationOutcome.
+                        if result is ValidationOutcome.VALIDATED:
+                            tag = 'validado'
+                        else:
+                            tag = 'sin validacion (' + result.value + ')'
                         print(f"  [RESPALDO] {provider_name} suministro datos para {t} (simbolo {provider_symbol}, {tag})")
                         frames.append(df)
                         self.calls += 1

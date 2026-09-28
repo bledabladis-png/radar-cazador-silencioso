@@ -17,6 +17,7 @@ import pandas as pd
 import pytest
 
 from src.utils import write_artifact_with_manifest
+from data.providers.backup_providers import ValidationOutcome
 
 
 def _make_df(last_date='2026-09-15', n_tickers=5, dup_ratio=0.0, add_nan_last=False):
@@ -128,7 +129,7 @@ def test_fu_002_7_cache_invalid_not_legitimizing(patched_paths):
 
     df_new = _make_df(dup_ratio=0.0)
     result = bp._validate_with_cache('T0', df_new)
-    assert result is None
+    assert result is ValidationOutcome.UNAVAILABLE
 
 
 def test_fu_002_8_clean_cache_valid(patched_paths):
@@ -143,7 +144,7 @@ def test_fu_002_8_clean_cache_valid(patched_paths):
 
     df_new = _make_df(dup_ratio=0.0)
     result = bp._validate_with_cache('T0', df_new)
-    assert result is True
+    assert result is ValidationOutcome.VALIDATED
 
 
 def test_fu_002_6_discrepancy_rejected(patched_paths):
@@ -161,7 +162,7 @@ def test_fu_002_6_discrepancy_rejected(patched_paths):
     df_new[('Close', 'T0')] = df_new[('Close', 'T0')] * 1.10
 
     result = bp._validate_with_cache('T0', df_new)
-    assert result is False
+    assert result is ValidationOutcome.REJECTED
 
 
 # --- FU-002-bis: writer <-> reader con temporal_contract ---
