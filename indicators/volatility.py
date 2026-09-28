@@ -18,10 +18,3 @@ def atr(df, ticker, window=14):
     prev_close = close.shift(1)
     tr = pd.concat([high - low, (high - prev_close).abs(), (low - prev_close).abs()], axis=1).max(axis=1)
     return tr.rolling(window).mean()
-
-def beta(returns, benchmark_returns, window=60):
-    cov = returns.rolling(window).cov(benchmark_returns)
-    var = benchmark_returns.rolling(window).var()
-    return cov / (var + 1e-9)
-
-

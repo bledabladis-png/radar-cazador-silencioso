@@ -773,14 +773,6 @@ def resolve_symbol(canonical_ticker: str, provider: str):
     # Si no está en el registro, asumir que el ticker es directo (acciones USA, ETFs, etc.)
     return canonical_ticker
 
-def is_supported(canonical_ticker: str, provider: str) -> bool:
-    """Indica si un proveedor puede proporcionar datos para el ticker canónico."""
-    inst = INSTRUMENTS.get(canonical_ticker)
-    if inst:
-        return inst.get(provider) is not None
-    # Para tickers no mapeados, asumimos soporte (puede fallar pero no lo sabremos)
-    return True
-
 def get_market(ticker: str) -> str:
     """Devuelve el mercado del ticker segun sufijo.
 

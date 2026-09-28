@@ -2,7 +2,7 @@
 import numpy as np
 import sys
 sys.path.insert(0, '.')
-from src.utils import robust_zscore, tanh_normalize, sigmoid, get_col, clean_oil_prices, append_dedup
+from src.utils import robust_zscore, tanh_normalize, get_col, clean_oil_prices, append_dedup
 
 def test_robust_zscore_normal():
     s = pd.Series([1,2,3,4,5,6,7,8,9,10] * 20)
@@ -23,10 +23,6 @@ def test_tanh_normalize():
     valid = t.dropna()
     assert len(valid) > 50
     assert valid.iloc[-20:].between(-1, 1).all()
-
-def test_sigmoid():
-    assert sigmoid(0) == 0.5
-    assert sigmoid(2) > 0.8
 
 def test_get_col_multindex():
     df = pd.DataFrame({'A_Close': [1,2,3]})

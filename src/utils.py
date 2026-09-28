@@ -116,20 +116,6 @@ def tanh_normalize(series):
     z = robust_zscore(series)
     return np.tanh(z)
 
-def sigmoid(x):
-    return (np.tanh(x) + 1) / 2
-
-def ema_smooth(series, span=10):
-    return series.ewm(span=span, min_periods=5).mean()
-
-def winsorize(series, limits=(0.01, 0.99)):
-    lower = series.quantile(limits[0])
-    upper = series.quantile(limits[1])
-    return series.clip(lower, upper)
-
-def standardize_series(series):
-    return (series - series.mean()) / (series.std() + 1e-9)
-
 def get_col(df, ticker, field='Close'):
     if isinstance(df.columns, pd.MultiIndex):
         # Recorrer todas las columnas y buscar la que coincida
@@ -151,43 +137,6 @@ def get_col(df, ticker, field='Close'):
             series = df[field]
             return series
         raise KeyError(f'Columna {col} o {field} no encontrada')
-
-def trim_to_last_valid_date(df, min_coverage=0.5):
-    """
-    Recorta un DataFrame MultiIndex a la última fila donde al menos
-    min_coverage de las columnas 'Close' tienen dato no nulo.
-    Evita operar con filas festivas/vacías.
-
-    DEPRECATED (FU-021-5 Fase 9, A3.1, 2026-09-16):
-    Redundante con _trim_market_data_to_equity_eod (FU-021-3A).
-    La responsabilidad temporal vive en el productor (download_market_data).
-    Se mantiene por compatibilidad con scripts externos. No usar en pipeline.
-    """
-    if df is None or df.empty:
-        return df
-    close_cols = [c for c in df.columns if c[0] == 'Close']
-    if not close_cols:
-        return df
-    coverage = df[close_cols].notna().sum(axis=1) / len(close_cols)
-    valid_rows = coverage[coverage >= min_coverage]
-    if valid_rows.empty:
-        return df
-    last_valid_date = valid_rows.index[-1]
-    return df.loc[:last_valid_date]
-
-def trim_to_last_valid_date_for_tickers(df, tickers, min_coverage=0.8):
-    """Recorta a la última fecha donde los tickers indicados tengan cobertura >= min_coverage."""
-    if df is None or df.empty:
-        return df
-    close_cols = [c for c in df.columns if c[0] == 'Close' and c[1] in tickers]
-    if not close_cols:
-        return df
-    coverage = df[close_cols].notna().sum(axis=1) / len(close_cols)
-    valid_rows = coverage[coverage >= min_coverage]
-    if valid_rows.empty:
-        return df
-    last_valid_date = valid_rows.index[-1]
-    return df.loc[:last_valid_date]
 
 def safe_mean(values):
     """Media de valores no nulos; 0.0 si no hay ninguno."""

@@ -46,7 +46,7 @@ from config.settings import (
 )
 
 
-from src.utils import safe_std, robust_zscore, get_col
+from src.utils import robust_zscore, get_col
 
 
 
@@ -287,24 +287,6 @@ def wyckoff_score(df, ticker):
 
 
     return combined, struct_score, tact_score, t_norm, c_norm, v_norm, e_norm
-
-
-
-
-
-def wyckoff_confidence(t_norm, c_norm, v_norm, e_norm):
-
-
-    components = np.array([t_norm.iloc[-1], c_norm.iloc[-1], v_norm.iloc[-1], e_norm.iloc[-1]])
-
-
-    dispersion = safe_std(components)
-
-
-    confidence = 1.0 / (1.0 + dispersion)
-
-
-    return confidence, dispersion
 
 
 
