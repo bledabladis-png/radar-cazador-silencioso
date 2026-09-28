@@ -37,44 +37,55 @@ historico `7caa86b`. Corregido en esta medicion.
 
 ---
 
-## 2. C2 - Diferencial 920: no reproducible en nuestro entorno
+## 2. C2 - Diferencial 920: valor del auditor no reproducible
 
-El auditor indico `MITIGATION_RESULT = -4.264.449.932`.
-Nuestro resultado v2.3 es `-4.264.449.012`. Diferencia: 920.
+**Aclaracion previa (critica).** El valor `-4.264.449.932` **no es un
+golden medido por este repositorio**. Es un valor **declarado** por el
+auditor externo en su dictamen inicial (`AUDITORIA_EXTERNA_2026-09-27.md`,
+seccion 3.2). El auditor no publico ni el comando ni el HEAD con el que
+lo midio. Todas las referencias a `-4.264.449.932` en los documentos
+del proyecto derivan de esa unica declaracion.
 
-Hipotesis y resultados empiricos:
+**Estado real del numero:**
 
-| Configuracion medida | nipc_total | Diff vs auditor |
+- Declarado por el auditor: `-4.264.449.932`.
+- No reproducido por este repositorio con ninguna configuracion conocida.
+- No se dispone del comando ni del HEAD originales.
+
+**Mediciones efectivas realizadas** (todas con codigo y datos de este
+repo, HEAD `72fa824`, salvo la indicada):
+
+| Configuracion | nipc_total | Diff vs declaracion (932) |
 |---|---:|---:|
 | HEAD 72fa824 (v2.3) | -4.264.449.012 | +920 |
 | Regex sin word-boundary | -4.264.162.748 | +287.184 |
 | Regex case-sensitive | -4.264.756.045 | -306.113 |
 | Regex sin OPTION\|OPT | -4.262.598.745 | +1.851.187 |
-| Crosswalk 7caa86b | -4.264.948.151 | -498.219 |
+| Crosswalk 7caa86b (git show) | -4.264.948.151 | -498.219 |
 
-**Ninguna configuracion reproduce exactamente `-4.264.449.932`.**
+**Lectura correcta:** el +920 que aparece en el informe previo **no es
+un diferencial entre dos mediciones reproducibles**. Es la diferencia
+entre:
+- Nuestra unica medicion reproducible: `-4.264.449.012`.
+- Una cifra declarada por el auditor sin metodologia publicada.
 
-**Interpretacion honesta:**
+Tratar el +920 como una discrepancia tecnica a resolver es un error
+metodologico: presupone que el valor del auditor es un golden
+verificable. No lo es.
 
-- No puedo afirmar "es redondeo" sin evidencia.
-- Tampoco puedo reproducir el valor exacto del auditor.
-- La diferencia (920 sobre 4.264 millones = 2,2e-7 relativo) es mas
-  pequena que cualquier variacion estructural que he podido medir.
-- Hipotesis plausibles (no demostrables desde este repo):
-  1. El auditor midio en un HEAD intermedio entre befa95b y ce32c77,
-     con codigo parcialmente migrado (uno de los tres fixes aplicado,
-     los otros no).
-  2. El auditor anadio instrumentacion que altero marginalmente el
-     conjunto de filas (por ejemplo, un filtro extra de NaN).
-  3. Diferencia de dtype en la agregacion (float32 vs float64).
-  4. La cifra del auditor procede de una medicion de la mitigacion
-     por regex sobre el crosswalk `7caa86b` con un HEAD intermedio.
+**Lo que se puede afirmar con evidencia:**
 
-**Conclusion C2:** no atribuible a nuestro codigo actual. Se declara
-como discrepancia abierta y no bloqueante. Si el auditor puede aportar
-el comando exacto con el que midio `-4.264.449.932`, cierro la causa
-en el siguiente ciclo. Mientras tanto, el valor que nuestro sistema
-produce es `-4.264.449.012`, reproducible y determinista (C3).
+- Nuestro sistema produce `-4.264.449.012` (determinista, C3 verde).
+- Ese valor es reproducible por cualquier tercero con el comando
+  documentado.
+- El valor `-4.264.449.932` no es reproducible localmente.
+- Cualquier comparacion contra el 932 presupone una metodologia que
+  desconocemos.
+
+**Peticion al auditor:** si aporta el comando exacto y el HEAD con el
+que midio `-4.264.449.932`, la diferencia se puede atribuir. Sin esa
+informacion, la discrepancia se declara como **no atribuible a este
+repositorio** y no bloqueante para el cierre de H1-B.
 
 ---
 

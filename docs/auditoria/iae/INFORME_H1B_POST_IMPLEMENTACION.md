@@ -26,13 +26,21 @@ Comparacion con el dictamen del auditor:
 
 | Valor | Origen | Diferencia vs nuestro |
 |---|---:|---:|
-| -4.317.678.307 | PRE_H1B_OBSERVATION (auditor) | 0 (identico) |
-| -4.264.449.932 | MITIGATION_RESULT (auditor, regex sola) | **920** |
-| -4.264.449.012 | **Nuestro H1-B v2.3** | - |
+| -4.317.678.307 | PRE_H1B_OBSERVATION (medido por nosotros) | 0 |
+| -4.264.449.932 | **Declarado** por el auditor, sin comando ni HEAD | 920 |
+| -4.264.449.012 | **Nuestro H1-B v2.3** (medido y reproducible) | - |
 
-**Interpretacion:** el NIPC post-fix coincide con el `MITIGATION_RESULT`
-del auditor dentro del margen de redondeo (920 sobre 4.264 millones
-= 2,2e-7). Confirmamos empiricamente la prediccion del auditor.
+**Nota metodologica (post-dictamen 2026-09-28).** El valor
+`-4.264.449.932` **no es un golden medido por este repositorio**. Es un
+valor declarado por el auditor en su dictamen inicial, sin publicar el
+comando ni el HEAD. No ha sido posible reproducirlo con ninguna
+configuracion. Ver `INFORME_H1B_RECONCILIACION_FINAL.md` seccion C2
+para el detalle completo.
+
+La afirmacion original "coincide dentro del margen de redondeo" se
+retira: presuponia una metodologia del auditor no documentada. Lo que
+si se puede afirmar: nuestro sistema produce `-4.264.449.012`,
+determinista y reproducible.
 
 ---
 

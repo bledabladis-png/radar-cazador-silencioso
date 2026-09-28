@@ -260,7 +260,9 @@ Detalle completo en `AUDITORIA_EXTERNA_2026-09-27.md` y `TRASPASO_IAE.md`.
 - **H1-B (clasificacion CALL/PUT):** ABIERTO / BLOQUEANTE. El filtro
   `_filter_canonical` acepta filas con `PUTCALL=NULL` y TITLEOFCLASS con
   semantica de opcion. Dano medido: +53.228.375 sobre el NIPC actual
-  (-4.317.678.307 -> -4.264.449.932 con filtro reforzado). Fix definitivo
+  (-4.317.678.307 -> -4.264.449.932 con filtro reforzado; el segundo
+  valor es **declarado por el auditor**, no reproducido localmente —
+  ver INFORME_H1B_RECONCILIACION_FINAL.md seccion C2). Fix definitivo
   exige mapping CUSIP->tipo desde Official List trimestral. No congelar
   NIPC baseline hasta cerrar H1-B.
 - **H4 (golden versionado):** ABIERTO, pendiente de H1-B.

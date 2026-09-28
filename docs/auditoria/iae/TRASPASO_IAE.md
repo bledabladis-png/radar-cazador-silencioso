@@ -144,7 +144,9 @@ Reglas que exige:
 3. **Aplicacion en capa de identidad**, no en `_filter_canonical`.
 4. **Regex `TITLEOFCLASS`** como defensa secundaria, no como autoridad principal.
 5. **Auditoria explicita** de exclusiones: contadores `excluded_by_official_list_type`, `excluded_by_titleofclass`, `unresolved_type`, `conflict_filer_vs_external`.
-6. **No congelar NIPC baseline** hasta despues del fix. `-4.317.678.307` = `PRE_H1B_OBSERVATION`; `-4.264.449.932` = "resultado de mitigacion".
+6. **No congelar NIPC baseline** hasta despues del fix. `-4.317.678.307` = `PRE_H1B_OBSERVATION`; `-4.264.449.932` = valor
+declarado por el auditor como "resultado de mitigacion" (no reproducido
+localmente; ver INFORME_H1B_RECONCILIACION_FINAL.md seccion C2).
 7. **Rehacer** E2E + reconciliacion + cobertura + determinismo tras el fix.
 
 ### 5.4. Lo que NO debes hacer (prohibiciones consolidadas del auditor)
