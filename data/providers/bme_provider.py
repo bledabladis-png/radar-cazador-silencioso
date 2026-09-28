@@ -104,7 +104,7 @@ class BMEProvider:
                     raise RuntimeError("HTTP " + str(r.status_code))
                 data = r.json()
                 return data.get("data", [])
-            except Exception as e:
+            except (requests.RequestException, RuntimeError, ValueError, KeyError) as e:
                 last_exc = e
                 if attempt < retries:
                     time.sleep(2 * attempt)
@@ -121,7 +121,7 @@ class BMEProvider:
             return pd.DataFrame()
         try:
             return pd.read_csv(p, parse_dates=["date"])
-        except Exception:
+        except (OSError, ValueError, pd.errors.ParserError):
             return pd.DataFrame()
 
     def _save_cache(self, ticker: str, df: pd.DataFrame):
@@ -162,7 +162,7 @@ class BMEProvider:
                     "close": r.get("close"),
                     "volume": r.get("volume"),
                 })
-            except Exception:
+            except (ValueError, TypeError, KeyError, AttributeError):
                 continue
         if not records:
             return pd.DataFrame(columns=_CSV_COLUMNS)

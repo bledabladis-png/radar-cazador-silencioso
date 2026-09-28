@@ -1,4 +1,4 @@
-﻿import pandas as pd
+import pandas as pd
 import yfinance as yf
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -45,7 +45,7 @@ def get_usa_tickers():
             df_sect = df_sect.sort_values(['etf', 'weight'], ascending=[True, False])
         for etf, group in df_sect.groupby('etf'):
             tickers.extend([normalize_yahoo_ticker(t) for t in group['ticker'].head(TOP_N_SECTOR_COMPONENTS).tolist()])
-    except Exception as e:
+    except (OSError, ValueError, KeyError, pd.errors.ParserError) as e:
         print(f"  [WARN] get_usa_tickers: etf_holdings.csv: {e}")
     # Eliminar duplicados
     seen = set()
@@ -67,7 +67,7 @@ def get_stock_list():
             df_sect = df_sect.sort_values(['etf', 'weight'], ascending=[True, False])
         for etf, group in df_sect.groupby('etf'):
             tickers.extend([normalize_yahoo_ticker(t) for t in group['ticker'].head(TOP_N_SECTOR_COMPONENTS).tolist()])
-    except Exception as e:
+    except (OSError, ValueError, KeyError, pd.errors.ParserError) as e:
         print(f"  [WARN] get_stock_list: etf_holdings.csv: {e}")
 
     # 2) Índices americanos/europeos (data/index_holdings.csv)
@@ -77,7 +77,7 @@ def get_stock_list():
             df_idx = df_idx.sort_values(['etf', 'weight'], ascending=[True, False])
         for etf, group in df_idx.groupby('etf'):
             tickers.extend([normalize_yahoo_ticker(t) for t in group['ticker'].head(TOP_N_SECTOR_COMPONENTS).tolist()])
-    except Exception as e:
+    except (OSError, ValueError, KeyError, pd.errors.ParserError) as e:
         print(f"  [WARN] get_stock_list: index_holdings.csv: {e}")
 
     # Eliminar duplicados preservando orden
@@ -93,7 +93,7 @@ def _get_yf_session():
     try:
         from curl_cffi import requests as curl_requests
         return curl_requests.Session(impersonate="chrome")
-    except Exception:
+    except (ImportError, AttributeError):
         return None
 
 def _fill_holes_respecting_sessions(df, reference_date):
@@ -149,7 +149,7 @@ def _fill_holes_respecting_sessions(df, reference_date):
 
         try:
             market = get_market(str(ticker))
-        except Exception:
+        except (ValueError, KeyError, TypeError, AttributeError):
             market = 'UNKNOWN'
         is_us = (market == 'US_EQUITY')
 
@@ -377,7 +377,7 @@ def _apply_lse_close_override(data, reference_date, run_id, target_session):
     # Resolver sesion LSE esperada (calendario propio LSE, no NYSE).
     try:
         lse_expected_session = last_expected_lse_session(reference_date)
-    except Exception as e:
+    except (ValueError, TypeError, RuntimeError, AttributeError) as e:
         print(f"  [LSE-OVERRIDE] no se pudo resolver sesion LSE: {e}")
         return data, stats
 
@@ -431,7 +431,7 @@ def _apply_lse_close_override(data, reference_date, run_id, target_session):
     if stats["override_date"]:
         try:
             override_ts = pd.Timestamp(stats["override_date"])
-        except Exception:
+        except (ValueError, TypeError):
             override_ts = None
     for t in lse_tickers:
         if t in applied_set:
@@ -489,7 +489,7 @@ def _write_lse_provenance_safe(lse_session, target_session, run_id,
         # Fallo visible pero no bloqueante: la provenance es auditoria,
         # no parte del pipeline funcional.
         print(f"  [LSE-OVERRIDE][WARN] provenance no escrita: {e}")
-    except Exception as e:
+    except (OSError, ValueError, KeyError, TypeError) as e:
         print(f"  [LSE-OVERRIDE][WARN] provenance fallo inesperado: {e}")
 
 
@@ -526,7 +526,7 @@ def download_stock_prices(reference_date=None, run_id=None):
             if _fmt == 'parquet':
                 try:
                     _df = pd.read_parquet(_path)
-                except Exception as e:
+                except (OSError, ValueError, pd.errors.ParserError) as e:
                     print(f'  [WARN] Error leyendo Parquet: {e}')
             else:
                 _df = pd.read_csv(_path, header=[0,1], index_col=0, parse_dates=True)

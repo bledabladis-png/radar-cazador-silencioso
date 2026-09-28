@@ -53,7 +53,7 @@ def _read_json(datos_dir, ric):
         return None
     try:
         return json.loads(path.read_text(encoding="utf-8"))
-    except Exception:
+    except (OSError, json.JSONDecodeError, UnicodeDecodeError):
         return None
 
 

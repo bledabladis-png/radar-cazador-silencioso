@@ -1,4 +1,4 @@
-﻿import base64
+import base64
 import json
 import re
 import time
@@ -201,7 +201,7 @@ class EuronextProvider:
                     raise RuntimeError(f"HTTP {r.status_code}")
                 payload = r.json()
                 return _decrypt_payload(payload)
-            except Exception as e:
+            except (requests.RequestException, RuntimeError, ValueError, KeyError) as e:
                 last_exc = e
                 if attempt < retries:
                     time.sleep(2 * attempt)
@@ -219,7 +219,7 @@ class EuronextProvider:
         try:
             df = pd.read_csv(p, parse_dates=["date"])
             return df
-        except Exception:
+        except (OSError, ValueError, pd.errors.ParserError):
             return pd.DataFrame()
 
     def _save_cache(self, ticker: str, df: pd.DataFrame):

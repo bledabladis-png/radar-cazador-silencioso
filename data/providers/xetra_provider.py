@@ -1,4 +1,4 @@
-﻿import hashlib
+import hashlib
 import json
 import time
 from datetime import datetime, timezone
@@ -96,7 +96,7 @@ def _fetch_token(retries: int = 3) -> str:
             if not token:
                 raise RuntimeError(f"Sin token en respuesta: {data}")
             return token
-        except Exception as e:
+        except (requests.RequestException, RuntimeError, ValueError, KeyError) as e:
             last_exc = e
             if attempt < retries:
                 time.sleep(2 * attempt)
@@ -275,7 +275,7 @@ class XetraProvider:
             return pd.DataFrame()
         try:
             return pd.read_csv(p, parse_dates=["date"])
-        except Exception:
+        except (OSError, ValueError, pd.errors.ParserError):
             return pd.DataFrame()
 
     def _save_cache(self, ticker: str, df: pd.DataFrame):
@@ -473,7 +473,7 @@ class XetraProvider:
         finally:
             try:
                 ws.close()
-            except Exception:
+            except (websocket.WebSocketException, OSError):
                 pass
 
         return self._concat_frames(frames)
