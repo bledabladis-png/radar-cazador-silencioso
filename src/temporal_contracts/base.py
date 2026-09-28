@@ -104,7 +104,7 @@ class MarketDataBundle:
 
 
 class TemporalContract(ABC):
-    """Interfaz comun de los 9 contratos temporales (FU-021-5 A.1)."""
+    """Interfaz comun de los 10 contratos temporales (FU-021-5 A.1)."""
 
     name: str
     family: str

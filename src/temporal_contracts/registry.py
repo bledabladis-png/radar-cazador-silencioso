@@ -1,4 +1,4 @@
-"""Catalogo declarativo de los 9 contratos temporales (FU-021-5 Fase 1).
+"""Catalogo declarativo de los 10 contratos temporales (FU-021-5 Fase 1).
 
 Fase 1 solo declara el catalogo. Las clases con resolve() se anaden en Fase 2.
 
@@ -113,7 +113,7 @@ CONTRACTS_REGISTRY = {
 
 
 def list_contracts() -> list:
-    """Devuelve los nombres de los 9 contratos registrados."""
+    """Devuelve los nombres de los 10 contratos registrados."""
     return list(CONTRACTS_REGISTRY.keys())
 
 

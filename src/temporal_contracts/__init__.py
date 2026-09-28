@@ -59,7 +59,7 @@ def get_contract(name: str) -> TemporalContract:
 
 
 def resolve_all_contracts(df_market, reference_date) -> dict:
-    """Resuelve los 9 contratos. Devuelve dict[str, TemporalResolution]."""
+    """Resuelve los 10 contratos. Devuelve dict[str, TemporalResolution]."""
     result = {}
     for name in list_contracts():
         result[name] = get_contract(name).resolve(df_market, reference_date)
