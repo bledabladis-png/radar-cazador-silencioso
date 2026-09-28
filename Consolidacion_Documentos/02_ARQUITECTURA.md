@@ -241,7 +241,6 @@ Si `validation_gate['passed'] == False` -> `sys.exit(1)`.
 | update_sec_13f.yml | 17 6 20 2,5,8,11 * | SEC 13F trimestral + cache IAE |
 | update_sector_holdings.yml | 47 2 1 1,4,7,10 * | Holdings sectoriales |
 | health_check.yml | 47 6 * * 1 | Vigilancia semanal (7 bloques) |
-| _cron_probe.yml | aislado | Diagnostico de slots de cron |
 
 **Notas:**
 - `daily_run.yml` aplica `git fetch + pull --rebase` antes de cualquier push local.

@@ -13,9 +13,12 @@ on:
     #   slot 4: 17 7 * * *   (~13h17m)
     #   slot 5: 17 11 * * *  (~17h17m, ultimo intento)
     # Minutos en :17 (evitar :00, franja de alta carga documentada por GitHub).
-    # Finding 2026-09-27: slot '17 3' no ha disparado desde el deploy
-    # del multi-slot. Se anade '17 5' como redundancia defensiva. Ver
-    # _cron_probe.yml para diagnostico en curso.
+    # Finding 2026-09-27 (cerrado 2026-09-29): slot '17 3' observado
+    # con retrasos variables (2-8h) en lugar de no-disparo. El probe
+    # temporal (_cron_probe.yml, 2026-09-27 a 2026-09-29) confirmo que
+    # el cron SI dispara, pero GitHub no garantiza el timing. Se
+    # mantiene '17 5' como redundancia defensiva. Probe eliminado en
+    # A6.2-02.
     - cron: '17 23 * * *'
     - cron: '17 3 * * *'
     - cron: '17 5 * * *'
