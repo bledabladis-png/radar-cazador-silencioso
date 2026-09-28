@@ -115,13 +115,22 @@ Todos los bugs estructurales verificados con probes + run end-to-end + snapshot 
 
 ---
 
-## 5. PENDIENTE
+## 5. PENDIENTE (DESGLOSE)
 
-- **A6**: auditoria de src/utils.py, instrument_registry.py, dependency_tracker.py, .github/workflows/, scripts/, validation/.
-- **B**: auditoria del modulo IAE (36 ficheros, 8178 LOC). Ya auditado externamente; C2 residual abierto.
-- **C**: auditoria de tests (192 ficheros).
-- **H5.3**: verificacion en cron real de noviembre 2026.
-- **C2 (920)**: comando + HEAD del auditor, o aceptacion definitiva de reconciliation_status = OPEN.
+**A6 - Auditoria de infraestructura y orquestacion.** 4 sub-bloques:
+
+- **A6.1** - Nucleo compartido (src/utils.py, instrument_registry.py, dependency_tracker.py). Foco: contrato de robust_zscore, write_artifact_with_manifest, get_market/get_instrument_class, audit_double_counting.
+- **A6.2** - Workflows (.github/workflows/, 10 ficheros .yml). Foco: cron, cache, secrets, orden de steps, condicionales de commit, gate pre-pipeline.
+- **A6.3** - Scripts (34 + 3 en scripts/audit/). Foco: dead code, invocacion por workflows, contratos de CLI.
+- **A6.4** - Validation (7 ficheros) + data/validator.py. Foco: contratos de validacion, cobertura.
+
+**B - Auditoria del modulo IAE.** 36 ficheros, 8178 LOC. Ya auditado externamente (dictamen CERRADO con C2 abierto). Subdivision: 5 subpaquetes (raiz, aggregation, identity, sec_13f, sec_13f/identity). Foco: coherencia con 03_IAE, deuda activa, tests con mock.
+
+**C - Auditoria de tests.** 192 ficheros, ~22900 LOC. Foco: tests fantasma (que pasan sin verificar), cobertura real por modulo del radar, tests anclados a numero de linea.
+
+**H5.3 - Trazabilidad cron trimestral.** Pendiente verificacion en cron real de noviembre 2026.
+
+**C2 (920) - Discrepancia H1-B.** Comando + HEAD del auditor, o aceptacion definitiva de reconciliation_status = OPEN.
 
 ---
 
@@ -147,7 +156,17 @@ Esperado:
 
 ## 7. DOCUMENTOS HERMANOS
 
-El corpus consolidado vive en `Consolidacion_Documentos/`. Se compone de 6 ficheros (00-05) + el snapshot auto-generado.
+El corpus consolidado vive en `Consolidacion_Documentos/`:
+
+| Fichero | Bytes aprox | Rol |
+|---|---:|---|
+| `00_ARRANQUE.md` | 9 KB | Este documento. Se pega al arrancar. |
+| `01_METODO.md` | 15 KB | Metodo de patch, auditoria, lecciones, patrones de bug. |
+| `02_ARQUITECTURA.md` | 22 KB | Mapa del sistema, contratos, decisiones vigentes. |
+| `03_IAE.md` | 18 KB | Subsistema IAE completo. |
+| `04_HISTORICO.md` | 17 KB | Cronologia de decisiones. |
+| `05_BITACORA.md` | 7 KB | Sesiones recientes (se poda). |
+| `ESTADO_SISTEMA.md` | 5 KB | Snapshot auto-generado (no editar a mano). |
 
 | Doc | Contenido | Cuando consultarlo |
 |---|---|---|

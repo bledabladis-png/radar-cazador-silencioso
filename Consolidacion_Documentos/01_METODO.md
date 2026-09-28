@@ -184,6 +184,64 @@ Estas son las reglas que hemos aprendido rompiendo cosas. Se aplican.
 
 ---
 
+## 8.5. CATALOGO DE PATRONES DE BUG
+
+Patrones recurrentes detectados en las auditorias A1-A5. Aplicables a A6, B y C. **Cada vez que se audita un modulo, buscar estos patrones antes de leer linea por linea.**
+
+**Patron 1 - `except Exception` outer que enmascara bug interno.**
+El bloque entero envuelto en `except Exception` con mensaje generico. Un bug interno (`NameError`, `AttributeError`, `IndexError`) queda silenciado como "modulo omitido". **Caso A5-07:** `leaders.py`, `NameError` en rama INSUFFICIENT_COVERAGE oculto como "Modulo de lideres omitido". **Como detectar:** indentacion visible sospechosa; variables usadas fuera del scope donde se definen.
+
+**Patron 2 - Check muerto (siempre True / siempre False).**
+`if 'x' in dir()` (siempre True para parametros). `if x is not None` (si x es Series vacia, nunca None). `if len(x) > 0` tras filtrar por `.empty`. **Caso A5-08:** `'all_signals' in dir()` siempre True.
+
+**Patron 3 - tz-naive vs tz-aware en comparaciones.**
+Restar `datetime.now()` (naive) contra timestamp tz-aware. Rinde `TypeError`, a menudo silenciado por `except`. **Caso A2.2-02/03:** `european_coverage` y `data_quality`.
+
+**Patron 4 - Aridad variable de retorno entre ramas.**
+`return a, b, c` en early returns; `return a, b, c, d` en exito. El caller sortea por coincidencia (`result[0] is not None`). **Caso A3.1-03:** `compute_liquidity_score`.
+
+**Patron 5 - Bucle sin guard.**
+`while not is_market_day(d): d -= timedelta(days=1)`. Sin limite. Si `NYSE_HOLIDAYS` corrupto o rango no cubierto → bucle infinito. **Caso A1-11.**
+
+**Patron 6 - Variante local de funcion canonica.**
+`robust_zscore` definido dos veces con contratos distintos. `tanh` local. `_robust_z` con ffill. **Casos A3.4-03/04:** `options.robust_zscore`, `fls.manual_robust_zscore`. **Como detectar:** grep por `def robust_zscore|def _robust|def tanh`.
+
+**Patron 7 - Test anclado a numero de linea.**
+`for node in ast.walk(tree): if node.lineno == 89: ...`. Rompe con cualquier refactor de whitespace. **Caso A3.3-13.**
+
+**Patron 8 - Dead code por refactor.**
+`def f(): return wrapper()` sin consumidor. Alias conservados por "compatibilidad" sin importadores. Constantes sin uso. **Casos:** `compute_liquidity_score` alias, `_n_close` fuera de scope, `robust_zscore_series` en MTE.
+
+**Patron 9 - Fallback silencioso en provider.**
+`except Exception: return self._load_cache()`. Devuelve datos sin marcar staleness. **Caso A5-13:** Yahoo devolvia parquet completo.
+
+**Patron 10 - Documento vs codigo.**
+Docstring dice "9 contratos" pero hay 10. Comentario "esto hace X" pero el codigo hace Y. **Caso A3.2-01:** 7 literales `SECTORS = [...]` vs `MARKET_TICKERS['sectors']`.
+
+**Como aplicar:** al abrir un modulo nuevo, primer paso: `grep` de estos 10 patrones con regex. Los hits se convierten en hallazgos preliminares. Se verifican uno a uno. No se declaran sin evidencia directa.
+
+---
+
+## 8.6. LISTA NEGRA DE FALSOS POSITIVOS
+
+Cosas que **parecen** un hallazgo pero no lo son. Antes de declarar, aplicar el check.
+
+| Falso positivo | Check obligatorio |
+|---|---|
+| "Mojibake en el fichero" | `p.read_bytes().decode('utf-8')` + `repr()`. Si los codepoints son UTF-8 validos, no es mojibake; es artefacto CP850 de la consola. |
+| "Variable no definida" en un except | ¿El `except` captura el error? Puede ser red de seguridad deliberada. Ver contexto completo. |
+| "Duplicacion de constante" | Grep de **consumidores indirectos via config**. Si un modulo importa `MARKET_TICKERS['sectors']` y otro tiene literal `SECTORS = [...]`, **no es duplicacion**: es una divergencia real que hay que unificar. |
+| "Test fragil porque anclaba linea X" | Ver si el test tiene estructura alternativa. A veces el numero de linea es porque la funcion es unica en el fichero. |
+| "except Exception sin acotar" | Puede ser contrato defensivo (mte/engine.py, flows_secondary:116). Comprobar si hay tests que dependen de la genericidad. |
+| "Dead code porque no aparece el nombre en grep" | Buscar por patron alternativo. `compute_liquidity_score` en `financial_conditions.py` era alias; el consumidor importaba el de `liquidity.py`. |
+| "Commit sin autor conocido" | `git log --format='%an <%ae>'`. Si es de github-actions, es bot. |
+| "CSV modificado sin razon" | Verificar si es append (fecha nueva) o reescritura (mismas fechas, valores cambiados). Los runs legitimos anaden filas. |
+| "Test que pasa pero no verifica nada" | Buscar `assert` con valor constante, `pass`, `# no lanza`, `skip` mal configurado. Verificar con cobertura. |
+
+**Regla dura:** antes de proponer un patch por un "hallazgo", verificar que no cae en uno de estos casos. Un falso positivo documentado vale mas que un patch a ciegas.
+
+---
+
 ## 9. FRASES GUIA
 
 "Determinista, descriptivo, auditado. Paso a paso. Documentar. Saber parar."
