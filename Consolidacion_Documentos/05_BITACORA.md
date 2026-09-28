@@ -83,8 +83,48 @@ USA-abierta, el df contiene fila europea con date > expected_session.
   manual ahora (madrugada UTC) no lo reproduce. Los tests unitarios
   cubren la logica independientemente de la hora y del slot.
 
+**A6.1 (nucleo compartido).** Gate 0 + auditoria de
+`src/utils.py` (629 LOC), `src/instrument_registry.py` (863 LOC),
+`src/dependency_tracker.py` (112 LOC).
+
+- Gate 0: `outputs/audit/A6_1_1_20260929_011819.txt` (426 lineas).
+- **A6.1-01 (MEDIA) CORREGIDO (2f63db7).** `utils.py::_latest_closed_session`
+  tenia `except Exception: pass` en el bucle de 30 iteraciones. Si
+  `is_trading_session` / `is_session_closed` fallaban sistematicamente
+  para un mercado, retornaba None sin traza. `_compute_by_market` lo
+  traducia a `status=INVALID` (fail-closed correcto), pero el
+  diagnostico se perdia. Fix: contar y reportar el primer error.
+  Contrato fail-closed preservado.
+- **A6.1-02 (MEDIA) DEUDA DOCUMENTADA, sin patch.** El outer
+  `except Exception` de `write_artifact_with_manifest` retorna `{}` y
+  deja el parquet previo intacto ante fallo tecnico (dtype, sha, json,
+  os.replace). El test `test_artifact_manifest.py:85-103` ancla este
+  contrato como intencional. Los 4 callers productivos
+  (`data_loader.py:186`, `stock_data_loader.py:865`,
+  `cboe_index.py:135`, `futures.py:265/278`) NO comprueban el retorno
+  `{}`. El pipeline continua como si la escritura hubiera ocurrido. Fix
+  requiere coordinar writer + 4 callers + tests; ROI bajo sin evidencia
+  empirica de dano real. Se deja como deuda para bloque C (tests) o
+  posterior.
+- **Falsos positivos descartados (contra 01_METODO §8.6):**
+  - `_latest_closed_session` en utils.py: **no es** patron 6. Compone
+    `is_trading_session` + `is_session_closed` de `market_hours.py`.
+  - `instrument_registry.py` sin imports top-level: data-driven
+    (INSTRUMENTS + 4 funciones puras). `get_instrument_class` llama
+    `get_market` internamente (L882).
+  - Re-exports `normalize_yahoo_ticker` en data_loader/stock_data_loader:
+    validados por `test_registry_yahoo_map.py:27-28`.
+  - `dependency_tracker.py:102` `except Exception`: defensivo
+    deliberado (import + inspect.signature; fallback a "No disponible").
+- **Deuda fuera de A6.1, documentada:**
+  `indicators/darkpool_scoring.py:12 def robust_zscore(series)` es
+  variante local de 1 arg con contrato distinto al canonico (3 args,
+  window=60). A3.4 solo cerro `options.py` y `fls.py`. Reabrir en
+  bloque de calculo.
+
 **Commits.** 3f789f1 (G-01), 5a039e6 (P66-01, amend de 6550b13),
-ddb4d31 (refactor G-01 + tests), a4095b1 (docs cierre), fabcdae (snapshot).
+ddb4d31 (refactor G-01 + tests), a4095b1 (docs cierre), fabcdae (snapshot),
+2f63db7 (A6.1-01), 73758ce (snapshot A6.1-01).
 
 **Pendiente.** A6.1 (nucleo compartido). B (IAE completo). C (tests).
 H5.3 (cron nov 2026). C2 (920).

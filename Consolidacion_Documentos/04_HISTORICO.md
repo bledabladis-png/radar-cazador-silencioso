@@ -136,6 +136,14 @@ Ciclos completados (12 en la sesion principal):
 - Suite: 2267 passed + 2 skipped (antes: 2257 + 10 failed por P66).
 - **Cronologia del corpus:** nuevo documento `06_IAE_P65_P66.md`. Corpus
   consolidado pasa a v2 (00-06).
+- **A6.1 (nucleo compartido):** Gate 0 + auditoria de `src/utils.py`,
+  `src/instrument_registry.py`, `src/dependency_tracker.py`. A6.1-01
+  (MEDIA, corregido): `_latest_closed_session` con `except: pass` en
+  30 iteraciones -> ahora reporta excepciones. A6.1-02 (MEDIA, deuda
+  documentada): `write_artifact_with_manifest` retorna `{}` ante fallo
+  tecnico y los 4 callers lo ignoran; el contrato actual esta anclado
+  por `test_artifact_manifest.py:85-103`. Deuda fuera de A6.1:
+  `darkpool_scoring.py::robust_zscore` variante local. Commit 2f63db7.
 
 ---
 
