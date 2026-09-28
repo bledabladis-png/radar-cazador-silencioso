@@ -144,6 +144,9 @@ def test_validate_ok():
         "valid_to": "2026-03-31", "source": "SEC-EDGAR", "reason": "x",
         "title_of_class": "COM", "verified_by": "auto",
     }])
+    # F4-05a (2026-09-28): WONT FIX. El contrato del test es "no lanza".
+    # La ausencia de assert es intencional: la propia ejecucion es la
+    # verificacion. Documentado para que no parezca un placeholder.
     rcc._validate(df)  # no lanza
 
 

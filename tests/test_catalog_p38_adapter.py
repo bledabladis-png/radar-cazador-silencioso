@@ -141,16 +141,20 @@ def test_check_continuity_ok():
 
 
 def test_check_continuity_conflicto():
+    """F4-04 (2026-09-28): dos universos con la misma catalog_key pero
+    distinto FIGI deben detectarse como ERR_CONFLICT_FIGI_CHANGE.
+
+    Reescrito: el test original hacia un no-op en todos los casos
+    (no-op si keys coincidian; skip si no). Ahora verifica el contrato
+    real de check_continuity.
+    """
     u4 = _make_universe([("AAPL", "FIGI_A")])
     u1 = _make_universe([("AAPL", "FIGI_B")])
-    # Ambas tienen la misma key? no: generadas por orden. Vamos a forzar.
-    # En su lugar: verificar via mapa directo
     k = list(u4.declared_keys)[0]
-    k1 = list(u1.declared_keys)[0]
-    # Son keys distintas. Simulamos continuidad con TargetUniverse manual.
-    # Skip si keys distintas.
-    if k != k1:
-        pytest.skip("keys generadas distintas; test no aplica")
+    assert k in u1.declared_keys, "setup: ambos universos deben compartir key"
+    errors = cv.check_continuity(u4, u1)
+    assert k in errors, f"esperado conflicto en {k}, obtenido {errors}"
+    assert errors[k] == cv.ERR_CONFLICT_FIGI_CHANGE
 
 # --- Full resolution validator ---
 
