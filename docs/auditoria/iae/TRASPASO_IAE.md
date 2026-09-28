@@ -1,208 +1,201 @@
 # TRASPASO DEL MODULO IAE - Documento maestro para asistente entrante
 
-**Fecha:** 2026-09-27
-**HEAD de referencia:** `de8b8ffa34102a19a6005fce584a34a8268dae87`
-**Proposito:** onboarding completo del asistente que retoma el trabajo del Ingeniero Supervisor sobre el modulo IAE del Radar de Rotacion Sectorial. Este documento es autocontenido.
+**Actualizado:** 2026-09-28
+**Estado:** modulo IAE con dictamen externo CERRADO (C2 residual abierto no bloqueante).
+**Referencia unica del modulo:** `docs/auditoria/iae/IAE_MAESTRO.md`.
+**Estado autoritativo:** `docs/auditoria/iae/ESTADO_SISTEMA.md` + `ESTADO_DECLARADO.md`.
 
 ---
 
 ## 0. Como usar este documento
 
-Si eres un asistente entrante (otro LLM o humano):
+Este documento es **capa complementaria, no normativa**. La norma vigente
+es `docs/auditoria/PROMPT_MAESTRO.md` (v7.15). Si hay conflicto, gana el
+PROMPT.
 
-1. **Lee este documento completo antes de tocar nada.** Tiene 12 secciones; la seccion 5 (trabajo en curso) es la operativa critica.
-2. **Consulta la seccion 8 (mapa de documentos)** para saber donde vive cada tipo de informacion.
-3. **Respeta las reglas de la seccion 7 (metodologia y prohibiciones).** Son restricciones duras del sistema, no sugerencias.
-4. **No toques codigo productivo del IAE sin dictamen del auditor externo.** Hay una auditoria abierta (seccion 5).
-5. **Al arrancar**, ejecuta los comandos de la seccion 10 y compara con lo esperado.
+Cuando entres a trabajar:
+
+1. Lee este documento completo.
+2. Lee `ESTADO_SISTEMA.md` (hechos autogenerados).
+3. Lee `ESTADO_DECLARADO.md` (fases y deuda activa).
+4. No empieces a proponer trabajo sin haber confirmado la asimilacion
+   completa al usuario.
 
 ### 0.1. Lecturas obligatorias antes de operar
 
-En este orden:
-
-1. **`PROMPT_MAESTRO.md`** - norma vigente del sistema (rol, metodologia, arquitectura).
-2. **`TRASPASO_IAE.md`** - este documento (contexto operativo del IAE).
-3. **`IAE_MAESTRO.md`** - referencia unica del modulo IAE. 110 KB, 2400+ lineas.
-   Contiene la arquitectura completa, formulas exactas del NIPC, superficie
-   publica (115 funciones), evidencia empirica E2E y limitaciones declaradas.
-   **Imprescindible para entender como funciona el modulo.**
-4. **`AUDITORIA_EXTERNA_2026-09-27.md`** - dictamen del auditor externo.
-   Estado de los hallazgos H1-A / H1-B / H4 / H5.
-5. **`DISENO_H1B.md`** - diseno tecnico del fix bloqueante principal.
-   Pendiente de aprobacion del auditor antes de implementar.
-6. **`ESTADO_DECLARADO.md`** - fases del IAE, deuda activa, prohibiciones.
-7. **`ESTADO_SISTEMA.md`** - hechos verificables (HEAD, tests, integridad).
-   Autogenerado, no editar a mano.
-8. **`EVIDENCIA_FORENSE_H1A.md`** - cadena forense del drift historico (opcional,
-   solo si necesitas reproducir la prueba del cierre H1-A).
+1. **`PROMPT_MAESTRO.md`** v7.15 - rol, metodologia, prohibiciones.
+2. **`ESTADO_SISTEMA.md`** - HEAD, tests, integridad. Se regenera con
+   cada commit.
+3. **`ESTADO_DECLARADO.md`** - estado de hallazgos H1-A a H5, deuda.
+4. **`IAE_MAESTRO.md`** - referencia unica del modulo.
+5. **`golden/current.json`** + **`golden/12_5_historic.json`** -
+   baselines.
 
 ---
 
 ## 1. El sistema en una frase
 
-El Radar de Rotacion Sectorial es un sistema determinista y descriptivo de analisis macro-sectorial. Ejecuta un pipeline diario (`run.py`) que descarga datos de mercado, calcula regimenes, indicadores y scores sectoriales, y genera un reporte Markdown con validacion automatica 10/10. No predice, no opera, no usa ML.
-
-**Entorno:** Windows, PowerShell, Python 3.14 (`py`).
-**Repo:** `https://github.com/bledabladis-png/radar-cazador-silencioso`
-**Raiz local:** `D:\Macro_Sectorial`
+Radar de rotacion sectorial: sistema determinista, descriptivo, auditable.
+Sin ML predictivo, sin optimizacion de parametros, sin automatizacion de
+trading. Todos los outputs son diagnosticos, no recomendaciones.
 
 ---
 
 ## 2. Que es el IAE (modulo que retomas)
 
-El **Institutional Accumulation Engine (IAE)** es el modulo del radar que analiza posiciones institucionales a partir de filings 13F de la SEC. Responde a:
+El Institutional Accumulation Engine (IAE) analiza posiciones
+institucionales a partir de filings 13F de la SEC. Responde:
 
-> Dado el universo de tickers del radar (catalogo radar de 242 tickers USA), que instituciones han aumentado o reducido su posicion entre dos trimestres consecutivos, y con que cobertura de datos se puede afirmar.
+> Dado un universo de tickers del radar, que instituciones han aumentado
+> o reducido su posicion entre dos trimestres consecutivos, y con que
+> cobertura de datos se puede afirmar.
 
-**Caracteristicas:**
-- Descriptivo (no predice).
-- Determinista (misma entrada -> mismo output).
-- Auditable (trazable a filings SEC).
-- Publica **una sola seccion** en el reporte diario: `## Acumulacion Institucional (13F)`.
-- Metrica principal: **NIPC** (Net Institutional Position Change). Nota semantica: NO es flujo economico; es variacion neta de posiciones reportadas.
+Opera integrado en el pipeline productivo del radar con dependencia
+unidireccional (`run.py -> IAE`). Prohibido lo inverso.
 
-**Ubicacion:** `src/institutional_accumulation/` (36 ficheros, 8.009 LOC).
-**Integracion:** `run.py` invoca `compute_iae_section`; `src/report_generator.py` invoca `render_iae_section`.
+Documentacion completa: `IAE_MAESTRO.md`.
 
 ---
 
-## 3. Estado del IAE (verificado 2026-09-27)
+## 3. Estado del IAE (verificado 2026-09-28)
 
-| Aspecto | Valor |
+    Suite global       2226 passed + 2 skipped + 0 failed
+    Suite IAE          845 passed (criterio AST, 45 ficheros)
+    Validation Gate    10/10
+    Cobertura radar    313/313 (100%)
+    Working tree       LIMPIO
+    Push               SI (sincronizado con origin/main)
+
+Auditoria externa del IAE (2026-09-27): **APROBADO CON CONDICIONES**.
+Estado final tras cierre 2026-09-28:
+
+| Hallazgo | Estado |
 |---|---|
-| Suite global | **2205 passed + 2 skipped + 0 failed** |
-| Suite IAE (45 ficheros) | 845 tests |
-| Cobertura IAE | 90% (3.088 stmts, 298 miss) |
-| Aislamiento arquitectonico | 0 violaciones |
-| Integracion produccion | Verificada (run.py + report_generator.py) |
-| Ultimo run local | exit 0, 953s, Validation Gate 10/10 |
-| Cache 13F | 3 trimestres (Q4 2025, Q1 2026, Q2 2026) |
-| Official List 13(f) | Q4 2025, Q1 2026, Q2 2026 descargadas |
-| Seccion IAE en reporte | OPERATIVA (NIPC Q1->Q2: 8.254.818.120) |
----
+| H1-A | CERRADO |
+| H1-B | CERRADO con C2 abierto no bloqueante (920) |
+| H2   | CERRADO |
+| H3   | CERRADO |
+| H4   | CERRADO (golden/current.json ACTIVE_WITH_OPEN_DISCREPANCY) |
+| H5.1 | CERRADO |
+| H5.2 | CERRADO |
+| H5.3 | TRAZABILIDAD IMPLEMENTADA - pendiente cron nov 2026 |
+| H5.4 | CERRADO |
+| H5.5 | CERRADO |
+| H5.6 | CERRADO (historico) |
+| H5.7 | HISTORICO |
+| O1   | CERRADO |
 
-## 4. Cronologia de la sesion anterior (2026-09-27)
+**Baseline H1-B:**
 
-Sesion larga de cierre de backlog. 17 commits pusheados. Los mas relevantes:
+- `local_observed_nipc_total` = **-4.264.449.012** (reproducible por
+  nosotros con HEAD `72fa824`).
+- `external_auditor_reference` = **-4.264.449.932** (declarado por
+  auditoria, sin cadena de custodia reproducible).
+- `reconciliation_delta` = **920**.
+- `reconciliation_status` = **OPEN**.
 
-| Commit | Que hizo |
-|---|---|
-| `a0c0ce4`, `3aff5be` | K-BLACKROCK-CSV-STALE-01 (reorder CSV + docs) |
-| `ff782d7`, `3e967ed` | save_scenario eliminado (codigo muerto) |
-| `1805766`, `dc6aea2` | Cat 4 desmontado + F5.6-01 + F5.7-01 + F7-03 |
-| `9cce7dd` | F5.6-02b FRED cleanup (DGS2, put_call, get_options_data muerto) |
-| `4fd5d57` | F7-04 freshness -> settings.py |
-| `bfe030c` | F7-01 sector_correlation_matrix dead end eliminado |
-| `743896e` | F5.6-03 CboeProvider guardas |
-| `62d4992` | F5.7-14 CFTC thresholds -> settings.py |
-| `b7d1c31` | F5.7-19 N-PORT dinamico (trimestres, XML) |
-| `3376bb3` | F5.7-05 FINRA get_latest_week memoize |
-| `d84902b` | F5.6-06 datetime.now como fecha de ejecucion (NO BUG) |
-| `c233855` | Cierre documental de la sesion (v7.12, rev.7) |
-| `08a6c6a` | **SEC Official List Q2 desbloqueada (sufijo -txt)** |
-| `de8b8ff` | Cierre documental del desbloqueo (v7.13, rev.8) |
-
-**Estado:** todo pusheado a `origin/main`. Working tree limpio.
+Ver `INFORME_H1B_RECONCILIACION_FINAL.md` y `golden/current.json`.
 
 ---
 
-## 5. TRABAJO EN CURSO - Auditoria externa del IAE
+## 4. Cronologia de sesiones recientes
+
+### 2026-09-27
+
+- Auditoria externa del IAE abierta. Dictamen APROBADO CON CONDICIONES.
+- H1-A cerrado por el auditor.
+- H1-B / H5.3 bloqueantes.
+- Desbloqueo SEC Official List Q2 2026 (commit `08a6c6a`): NIPC Q1 2026
+  -> Q2 2026 calculado por primera vez = 8.254.818.120.
+
+### 2026-09-28 (sesion de cierre)
+
+12 commits encadenados:
+
+1. Reconciliacion H1-B: descubrimiento de que la Official List Q4 2025
+   existe pero no contiene todos los option CUSIPs observados en filings.
+2. Implementacion H1-B v2 (clasificacion CALL/PUT por Official List).
+3. Correccion H1-B v2.3 (solo excluir OPTION confirmada; UNRESOLVED
+   mantenido).
+4. H5.1-H5.5 cerrados (workflow trimestral).
+5. H2 (cifra 45 ficheros) + H3 (clasificacion de scripts) cerrados.
+6. O1 (ausencia de imputacion) cerrado.
+7. H1-B cerrado con C2 abierto. H4 cerrado (`current.json`).
+8. Hallazgo metodologico importante: el valor `-4.264.449.932` citado
+   por el auditor **no es reproducible en local**. Tras multiples
+   variantes, ninguno coincide. Se registra como discrepancia abierta.
+
+---
+
+## 5. Auditoria externa del IAE - CERRADA
 
 ### 5.1. Contexto
 
-La "Fase D" del plan original del IAE estaba pendiente desde antes del 2026-09-23: enviar el modulo a un **auditor externo** para dictamen independiente. El 2026-09-27 se materializo:
+Fase D del plan original: envio del modulo a auditor externo (LLM
+independiente con acceso al repo). El auditor emitio dictamen con
+hallazgos H1-A, H1-B, H2, H3, H4, H5, O1.
 
-1. Se preparo un **informe de auditoria externa completo** (ver `AUDITORIA_EXTERNA_2026-09-27.md`).
-2. Se entrego a un auditor independiente (LLM externo con acceso al repo).
-3. El auditor emitio dictamen: **APROBADO CON CONDICIONES** con hallazgos H1 a H5.
+### 5.2. Estado final
 
-### 5.2. Estado de los hallazgos (dictamen final)
+Todos los hallazgos del dictamen estan cerrados, salvo:
 
-| Finding | Estado | Descripcion breve |
-|---|---|---|
-| **H1-A** | CERRADO | Drift historico del E2E explicado por regeneracion de crosswalk (prueba forense CUSIP-por-CUSIP). |
-| **H1-B** | ABIERTO / BLOQUEANTE | Clasificacion CALL/PUT incompleta. Filas con `PUTCALL=NULL` pero `TITLEOFCLASS` de opcion pasan el filtro. Dano medido: **+53.228.375** sobre el NIPC actual. |
-| **H4** | ABIERTO, pendiente H1-B | Golden no versionado como artefacto independiente. |
-| **H5.1** | ABIERTO | Criterio de seleccion duplicado (workflow 51d vs script 60d). |
-| **H5.2** | ABIERTO | Fallo de ingesta trimestral sin alerta (no retry, no Issue). |
-| **H5.3** | ABIERTO / BLOQUEANTE | Q2 2026 ingestado manualmente (commit `c5e3ee0`, autor humano, fuera de cron). |
-| **H5.4** | ABIERTO | Workflow no valida formato de `inputs.quarter`. |
-| **H5.5** | ABIERTO | Cache de parquets no invalida ante republicaciones SEC. |
-| **H5.6** | CERRADO | Official List Q2 fail (404) resuelto con sufijo `-txt` (commit `08a6c6a`). |
-| **H5.7** | HISTORICO | Commit mixto (`c5e3ee0` mezclo 13F + outputs pipeline). |
+- **C2 (920):** discrepancia entre `-4.264.449.012` (nuestro) y
+  `-4.264.449.932` (del auditor). El auditor lo acepto como
+  discrepancia abierta no bloqueante y autorizo el cierre de H1-B con
+  esa condicion.
+- **H5.3:** trazabilidad implementada, pendiente de verificacion en el
+  cron real de noviembre 2026.
 
-### 5.3. Instruccion del auditor sobre H1-B (BLOQUEANTE)
+### 5.3. Hallazgo residual C2 (920)
 
-El auditor ha sido explicito:
+**Estado:** OPEN, no bloqueante.
 
-> **Implementar el fix definitivo de H1-B basado en identificacion por CUSIP + tipo de security temporalmente apropiado, usando la Official List como fuente primaria.**
+**Resumen:**
 
-Reglas que exige:
+- `local_observed_nipc_total = -4.264.449.012`
+- `external_auditor_reference = -4.264.449.932`
+- `reconciliation_delta = 920`
 
-1. **Fuente primaria de tipo:** Official List de la SEC (Option Indicator en posicion 10).
-2. **Resolucion temporal:** Q4 2025 usa lista Q4 2025; Q1 2026 usa lista Q1 2026; etc.
-3. **Aplicacion en capa de identidad**, no en `_filter_canonical`.
-4. **Regex `TITLEOFCLASS`** como defensa secundaria, no como autoridad principal.
-5. **Auditoria explicita** de exclusiones: contadores `excluded_by_official_list_type`, `excluded_by_titleofclass`, `unresolved_type`, `conflict_filer_vs_external`.
-6. **No congelar NIPC baseline** hasta despues del fix. `-4.317.678.307` = `PRE_H1B_OBSERVATION`; `-4.264.449.932` = valor
-declarado por el auditor como "resultado de mitigacion" (no reproducido
-localmente; ver INFORME_H1B_RECONCILIACION_FINAL.md seccion C2).
-7. **Rehacer** E2E + reconciliacion + cobertura + determinismo tras el fix.
+**Leccion metodologica:** en el primer informe se presento el valor del
+auditor como si fuera un golden medido, con "coincidencia dentro del
+margen de redondeo". El auditor lo rechazo correctamente: el valor
+`-4.264.449.932` no tiene cadena de custodia reproducible desde este
+repositorio. Se corrigio a "no reproducido bajo las configuraciones y
+el entorno controlados actualmente auditados".
 
-### 5.4. Lo que NO debes hacer (prohibiciones consolidadas del auditor)
+**Si el auditor aporta comando + HEAD:** reproducir y cerrar por
+atribucion.
+**Si no lo aporta:** mantener `reconciliation_status = OPEN`. No
+convertir el 920 en "tolerancia aceptada" sin decision explicita.
 
-- **No tocar codigo productivo del IAE** hasta cerrar H1-B con el auditor.
-  El diseno debe aprobarse antes de implementar (ver `DISENO_H1B.md`).
-- **No congelar ningun NIPC como baseline.** Ni `-4.317.678.307` ni
-  `-4.264.449.932`. Los nombres validos son `PRE_H1B_OBSERVATION` y
-  `MITIGATION_RESULT`. El baseline contractual final se creara solo
-  despues de cerrar H1-B y con aprobacion del auditor.
-- **No actualizar los `EXPECTED` hardcoded del E2E** para "hacer pasar" el
-  test. El E2E fallido es evidencia de un drift real, no un bug del test.
-- **No elevar cobertura de tests artificialmente.** El auditor exige
-  verificacion funcional, no numeros de cobertura.
-- **No commitear outputs del pipeline** mezclados con cambios de 13F
-  (leccion H5.7 del auditor).
-- **No usar `--quarter` con formato distinto a `YYYYQn`** (mayusculas).
-  Derivado de H5.4: el workflow no valida formato.
-- **No modificar `_filter_canonical` sin coordinar con el diseno H1-B.**
-  La regex `TITLEOFCLASS` es defensa secundaria, no autoridad principal.
-  El filtro primario va en `operational_universe.py::_apply_5_3b`.
-- **No introducir `fillna`/`ffill`/`bfill`/`interpolate`** en los caminos
-  del IAE sin declaracion explicita. Derivado de O1 del auditor.
+### 5.4. Prohibiciones consolidadas
 
-### 5.5. Siguiente paso inmediato
-
-**Gate 0 de H1-B** - verificacion previa al fix:
-
-1. Verificar que las 3 Official List locales (`data/sec_13f/official_list_13f/13flist_2025Q4.txt`, `13flist_2026Q1.txt`, `13flist_2026Q2.txt`) contienen el Option Indicator correctamente parseable.
-2. Confirmar que `023135906` aparece como CALL y `023135106` como COMMON en la lista Q1 2026.
-3. Confirmar que `595112903` aparece como CALL y `595112103` como COMMON en la lista Q1 2026.
-4. Disenar la integracion en `identity/` (nueva funcion `resolve_security_type_from_official_list(cusip, quarter)`).
-
+- **No congelar como golden contractual** ningun valor que no sea
+  reproducible por el sistema local.
+- **No presentar cifras declaradas por el auditor como hechos
+  verificados.** Marcarlas siempre como "declaradas, sin cadena de
+  custodia".
+- **No mezclar breakdowns de estados distintos** en la misma tabla
+  (el error que produjo el "943.371 fantasma").
+- **No inventar explicaciones** para discrepancias no reproducidas.
+  Declararlas y preguntar.
+- **No modificar codigo productivo sin ciclo previo.**
+- **No integrar a produccion sin validacion funcional** + dictamen del
+  auditor cuando aplique.
+- **No push sin validacion local completa.**
 
 ---
 
 ## 6. Hallazgo H1-A - prueba forense (cerrada, no reabrir)
 
-**Cadena demostrada:**
+**Estado:** CERRADO.
 
-```
-7caa86b  (crosswalk 246 filas: AMZNx2, MUx2)
-    |
-    | Fase G regenera
-    v
-HEAD     (crosswalk 245 filas: AMZNx1, MUx1, SPCXx1)
-    |
-    v
-delta_radar_rows = -2    nipc_total = -943.371
+`scripts/iae_contractual_nipc_e2e.py` fallaba contra el golden §12.5
+(`553.319` vs `553.321`). Causa: regeneracion del crosswalk por Fase G.
+Prueba forense: restaurando el crosswalk `7caa86b`, el E2E reproduce
+el golden con tolerancia cero.
 
-Descomposicion: AMZN -943.169  -  MU -202
-```
-
-**Prueba:** al restaurar el crosswalk `7caa86b` sobre los parquets actuales, el E2E reproduce **exactamente** el golden seccion 12.5 con tolerancia 0 (553.321 / -4.316.734.936).
-
-**No hay regresion de codigo.** El drift es atribuible integramente a la regeneracion del crosswalk por Fase G.
+**No reabrir.**
 
 ---
 
@@ -210,157 +203,164 @@ Descomposicion: AMZN -943.169  -  MU -202
 
 ### 7.1. Metodologia
 
-- **Gate 0 read-only antes de invertir ciclos.** ~50% de los findings revisados recientemente estaban subrogados o eran falso positivo.
-- **Un cambio = una verificacion = un commit.** No mezclar cambios.
-- **Local-first.** Refactors grandes: commits locales, verificacion exhaustiva, push unico.
-- **Ver antes del patch.** Nunca aplicar sin inspeccionar el bloque exacto.
-- **Saber parar.** ROI < 1 -> WONT FIX razonado.
+- Ver el contenido real antes del patch.
+- Un cambio = una verificacion = un commit.
+- Local-first.
+- Deteccion por contenido > por indices.
+- Rollback quirurgico.
+- Saber parar (ROI < 1 -> WONT FIX).
+- Auditor externo antes de decisiones irreversibles.
+- Gate 0 antes de tocar datos.
+- Un fix destapa el siguiente.
 
 ### 7.2. Estructura estandar de un patch (Python)
 
-1. Backup `.orig` / `.bak` (o escribir patch a `_patch_XXX.py`).
-2. Detectar BOM: `raw[:3] == b'\xef\xbb\xbf'`.
-3. Detectar LF/CRLF: `text.count('\r\n') vs text.count('\n')`.
-4. Aplicar con `read_bytes()` / `write_bytes()`.
+1. Backup `.orig` (si aplica).
+2. Detectar BOM: `data[:3] == b'\xef\xbb\xbf'`.
+3. Detectar LF/CRLF: `count('\r\n') vs count('\n')`. Preservar EOL.
+4. Aplicar cambio con `read_bytes()` / `write_bytes()`.
 5. Validar sintaxis con `ast.parse()`.
-6. **Todos los asserts ANTES de cualquier write.** Patron: acumular reemplazos en memoria, escribir una sola vez.
-7. `compileall . -q` + `pyflakes .` + `pytest tests/ validation/ -q`.
+6. Si falla -> restaurar backup.
+7. Escribir con `encode()` correcto.
+8. Asserts `== 1` acumulados antes del write unico.
+9. `pyflakes` + `compileall` + suite antes de commit.
 
 ### 7.3. Verificaciones obligatorias antes de commit
 
-```powershell
-py -m compileall . -q
-py -m pyflakes . 2>&1
-py -m pytest tests/ validation/ -q --tb=short
-```
+    py -m compileall . -q
+    py -m pyflakes . 2>&1
+    py -m pytest tests/ validation/ -q --tb=short
 
-Esperado: `compileall OK` - `pyflakes LIMPIO` - `2205 passed + 2 skipped`.
+Esperado: `compileall OK` - `pyflakes LIMPIO` - `2226 passed + 2 skipped`.
 
 ### 7.4. Prohibiciones duras
 
-- No push sin validacion local completa.
-- No tocar pesos ni parametros sin justificacion estadistica.
-- No inventar datos. Si no hay suficiente -> `N/D`.
-- No usar `datetime.now()` como fecha de observacion. Solo como log.
-- No mezclar capas de flujo.
-- No mezclar commits de ingesta 13F con outputs del pipeline (leccion H5.7).
+- No tocar datos historicos sin snapshot pre/post.
+- No limpiar fecha sospechosa sin doble candado
+  (`is_market_day(date)==False` AND `date in CONFIRMED_SET`).
+- No mezclar commits de ingesta 13F con outputs del pipeline
+  (leccion H5.7).
+- No imputar valores (ni en IAE ni en radar).
+- No convertir ausencia de evidencia en evidencia negativa.
 
 ### 7.5. Trampas de PowerShell
 
-- Here-strings `@'...'@` no expanden `$`. `@"..."@` si, pero hay que escapar.
-- Ficheros con `$`, backticks o >20 lineas: escribir a `_patch_XXX.py` con `[System.IO.File]::WriteAllText`.
-- Ficheros sin newline final -> anchor con `\n` no cuadra. Usar `repr()` para verificar.
-- Mojibake en acentos: anchor ASCII-safe o extraccion por substring.
+- Here-strings >20 lineas o >5 `$` van a `_patch_XXX.py` con
+  `[System.IO.File]::WriteAllText`.
+- Backticks Markdown en here-string se corrompen: usar placeholders
+  ASCII + `chr(96)`.
+- `[System.IO.File]::WriteAllText` usa el CWD del proceso .NET, no el
+  de PowerShell: usar `Join-Path $PWD`.
+- `py -c "..."` con comillas dobles anidadas rompe el parser. Escribir
+  a fichero temporal.
+- BOM: si el fichero empieza con `\xef\xbb\xbf`, leer con
+  `encoding="utf-8-sig"` y escribir con `utf-8-sig`.
+- CRLF vs LF: normalizar a LF para matching de anchors, restaurar al
+  escribir si el fichero original era CRLF.
 
 ### 7.6. Personalidad
 
-- Directo, estructurado, orientado a la accion.
-- Autocritico, sin grandilocuencia.
-- Idioma: espanol tecnico, tuteo neutro.
-- Terminas cada mensaje con pregunta accionable.
+Directo, estructurado, orientado a la accion. Autocritico. Sin
+grandilocuencia. Documentar todo. Reconocer cuando una investigacion
+no merece la pena. Espanol tecnico, tuteo neutro. Sin emojis
+decorativos.
 
 ---
 
 ## 8. Mapa de documentos
 
-| Fichero | Proposito |
-|---|---|
-| `docs/auditoria/PROMPT_MAESTRO.md` | Norma vigente del sistema. **No declara estado.** |
-| `docs/auditoria/TRANSFER.md` | Guia de onboarding. **No es fuente de estado.** |
-| `docs/auditoria/README.md` | Navegacion. |
-| `docs/auditoria/iae/IAE_MAESTRO.md` | **Referencia unica del modulo IAE.** |
-| `docs/auditoria/iae/ESTADO_DECLARADO.md` | Fases IAE, deuda activa, prohibiciones. |
-| `docs/auditoria/iae/ESTADO_SISTEMA.md` | Hechos verificables. Autogenerado. |
-| `docs/auditoria/iae/AUDITORIA_EXTERNA_2026-09-27.md` | Registro consolidado del dictamen. |
-| `docs/auditoria/iae/DISENO_H1B.md` | Diseno tecnico del fix bloqueante H1-B. Pendiente de aprobacion. |
-| `docs/auditoria/iae/EVIDENCIA_FORENSE_H1A.md` | Cadena forense del cierre H1-A. Reproducible. |
-| `docs/auditoria/iae/TRASPASO_IAE.md` | Este documento. |
-| `docs/auditoria/iae/evidence/` | Evidencia empirica por ciclo. |
-
-**Documentos historicos (no normativos):** `NIPC_CONTRATOS_SEMANTICOS_v1.md`, `NIPC_COVERAGE_POLICY.md`, `INSTITUTIONAL_ACCUMULATION_NIPC_ESPECIFICACION.md`.
+| Documento | Proposito | Estado |
+|---|---|---|
+| `PROMPT_MAESTRO.md` | Norma vigente | v7.15 |
+| `ESTADO_SISTEMA.md` | Hechos autogenerados (HEAD, tests) | regenerado por script |
+| `ESTADO_DECLARADO.md` | Fases y deuda activa | actualizado 2026-09-28 |
+| `IAE_MAESTRO.md` | Referencia unica del modulo IAE | vigente |
+| `AUDITORIA_EXTERNA_2026-09-27.md` | Dictamen original del auditor | historico |
+| `DISENO_H1B.md` | Diseno tecnico H1-B v2 | aprobado e implementado |
+| `CONSULTA_H1B.md` | Consulta Gate 0 al auditor | historico |
+| `H5_WORKFLOW_TRIMESTRAL.md` | Analisis y cierre H5 | cerrado salvo H5.3 |
+| `INFORME_H1B_POST_IMPLEMENTACION.md` | Resultado empirico H1-B | cerrado |
+| `INFORME_H1B_RECONCILIACION_FINAL.md` | C1+C2+C3 final | cerrado |
+| `INFORME_O1_AUSENCIA_IMPUTACION.md` | Barrido imputaciones | cerrado |
+| `golden/12_5_historic.json` | Snapshot historico (FROZEN) | inmutable |
+| `golden/current.json` | Baseline local (ACTIVE_WITH_OPEN_DISCREPANCY) | vigente |
+| `golden/README.md` | Explicacion del directorio golden | vigente |
+| `TRASPASO_IAE.md` | Este documento | actualizado 2026-09-28 |
 
 ---
 
 ## 9. Scripts reproducibles clave
 
-| Script | Proposito |
-|---|---|
-| `scripts/iae_test_census.py` | Censo AST. Esperado: 45 ficheros, 845 tests. |
-| `scripts/iae_coverage.py` | Cobertura de lineas. Esperado: 90%. |
-| `scripts/iae_contractual_coverage.py` | Cadena contractual completa. Esperado: exit 0, coverage 1.0. |
-| `scripts/iae_contractual_nipc_e2e.py` | E2E contra seccion 12.5. **Falla hoy con HEAD** (H1-A/H1-B). |
-| `scripts/iae_reconciliation_b1.py` | Reconciliacion radar + complemento = full. Esperado: PASS. |
-| `scripts/iae_identity_uniqueness_audit.py` | Auditoria unicidad shareClassFIGI. Esperado: PASS. |
-| `scripts/iae_validate_crosswalk_openfigi.py` | Validacion externa OpenFIGI. Requiere API key. |
+- `scripts/iae_test_census.py` - censo AST de tests.
+- `scripts/iae_coverage.py` - cobertura reproducible.
+- `scripts/iae_contractual_nipc_e2e.py` - E2E contractual.
+- `scripts/iae_contractual_coverage.py` - coverage contractual.
+- `scripts/iae_reconciliation_b1.py` - reconciliacion radar+complemento.
+- `scripts/iae_validate_crosswalk_openfigi.py` - validacion externa.
+- `scripts/iae_identity_uniqueness_audit.py` - unicidad por shareClassFIGI.
+- `scripts/update_sec_13f.py` - ingesta trimestral.
+- `scripts/download_official_list_13f.py` - Official List SEC.
 
 ---
 
 ## 10. Comandos de arranque
 
-```powershell
-Set-Location D:\Macro_Sectorial
-
-git log --oneline -5
-git status -sb
-py scripts\generate_estado_sistema.py
-py -m pytest tests/ validation/ -q --tb=short
-py scripts\iae_coverage.py
-py scripts\iae_contractual_nipc_e2e.py
-py scripts\iae_reconciliation_b1.py
-```
+    Set-Location D:\Macro_Sectorial
+    git log --oneline -5
+    git status -sb
+    py scripts\generate_estado_sistema.py
+    py -m pytest tests/ -q --tb=line
+    py -m pyflakes src\ scripts\
+    py -m compileall . -q
 
 Esperado:
-- HEAD = `de8b8ff`.
-- ahead 0, behind 0.
-- working tree limpio.
-- **2205 passed + 2 skipped + 0 failed.**
-- IAE coverage 90%.
-- E2E contractual: **FAIL** (esperado).
-- Reconciliacion B1: **PASS**.
+
+- `ahead 0, behind 0`, working tree limpio.
+- **2226 passed + 2 skipped + 0 failed.**
+- pyflakes silencio, compileall OK.
+
+Censo IAE (tarda unos segundos):
+
+    py scripts\iae_test_census.py
+
+Esperado: 45 ficheros, 845 tests.
 
 ---
 
 ## 11. Contacto con el auditor
 
-El auditor externo es otro LLM. Se le entrega el material en formato Markdown autocontenido. Sus dictamenes son formales y numerados. Los hallazgos reciben IDs (`H1-A`, `H1-B`, `H4`, `H5.x`) y severidad explicita.
+El auditor externo es otro LLM. Se le entrega material en formato
+Markdown autocontenido. Sus dictamenes son vinculantes para cerrar
+hallazgos.
 
-**Cuando contactarle:**
-- Antes de congelar cualquier NIPC baseline.
-- Antes de aplicar el fix de H1-B.
-- Antes de cerrar H4 (golden versionado).
-- Antes de tocar el workflow `update_sec_13f.yml`.
+**Cuando consultar al auditor:**
 
-**Material a preparar:**
-- Resumen ejecutivo del ciclo.
-- Evidencia forense reproducible.
-- Nuevas preguntas explicitas.
-- Estado actualizado de hallazgos.
+- Antes de cerrar hallazgos bloqueantes.
+- Antes de congelar baselines.
+- Si hay discrepancia entre valores locales y externos.
+
+**Cuando NO consultar:**
+
+- Para decisiones de implementacion sin impacto contractual.
+- Para refactors internos sin cambio de contrato observable.
+
+**Formato:** documento Markdown con contexto, evidencia empirica y
+preguntas concretas. Nada de "que opinas", si "aceptas X dado Y".
 
 ---
 
 ## 12. Resumen operativo
 
-**Si el usuario pide "seguir con la auditoria":**
-1. Lee `AUDITORIA_EXTERNA_2026-09-27.md`.
-2. Confirma estado con comandos de arranque (seccion 10).
-3. Arranca el **Gate 0 de H1-B** (seccion 5.5).
+1. El modulo IAE esta implementado, testeado e integrado en produccion.
+2. La auditoria externa esta cerrada. Queda C2 (920) como discrepancia
+   abierta no bloqueante.
+3. El baseline local es `-4.264.449.012`. La referencia externa
+   `-4.264.449.932` es declarada, no reproducible.
+4. H5.3 espera verificacion en el cron de noviembre 2026.
+5. No quedan bloqueantes activos.
 
-**Si el usuario pide "arreglar H1-B":**
-1. Verifica que el usuario ha autorizado tocar codigo productivo.
-2. Ejecuta Gate 0 primero.
-3. Disena el fix segun las 7 reglas del auditor (seccion 5.3).
-4. Envia el diseno al auditor antes de codificar.
+**Proximo trabajo real (no hay bloqueantes):**
 
-**En cualquier caso:**
-- No inventes datos ni resultados.
-- No digas "voy a hacer X" sin hacerlo.
-- Terminas cada mensaje con pregunta accionable.
-
----
-
-**Fin del traspaso.**
-Ultima actualizacion: 2026-09-27, HEAD `de8b8ff`.
-
-Documentos anadidos tras la primera version:
-- `DISENO_H1B.md` (13547 bytes) - diseno tecnico del fix bloqueante.
-- `EVIDENCIA_FORENSE_H1A.md` (7476 bytes) - cadena forense del cierre H1-A.
+- Esperar verificacion H5.3 en cron nov 2026.
+- Si el auditor aporta comando + HEAD del 932, cerrar C2 por atribucion.
+- Cualquier ciclo nuevo requiere consulta previa al usuario.

@@ -1,6 +1,6 @@
-# PROMPT MAESTRO v7.9 - INGENIERO SUPERVISOR DEL RADAR DE ROTACION SECTORIAL
+# PROMPT MAESTRO v7.15 - INGENIERO SUPERVISOR DEL RADAR DE ROTACION SECTORIAL
 
-**Actualizado:** 2026-09-27 (v7.14: auditoria externa del IAE abierta. Dictamen APROBADO CON CONDICIONES. H1-A cerrado, H1-B y H5.3 bloqueantes. Sin cambios de codigo. Base v7.13: desbloqueo SEC Official List Q2 2026 (sufijo -txt) + NIPC Q1 2026 -> Q2 2026 calculado por primera vez. Fallback automatico en download_official_list_13f.py. Suite 2205 + 2 skipped. Base v7.12: cierre de sesion con 12 commits. Bloque Cat 4 desmontado y 8 findings cerrados: F5.6-01, F5.6-02, F5.6-03, F5.6-06, F5.7-01, F5.7-05, F5.7-14, F5.7-19, F7-01, F7-03, F7-04; 2 subrogados (F5.6-15, F5.7-20); 1 rectificacion (K-BLACKROCK-CSV-STALE-01). Suite 2184 -> 2205 + 2 skipped. Base v7.11: cierre del ciclo state.py::save_scenario (eliminado, codigo muerto + footgun de schema incompleto). Sin cambios funcionales en produccion. Base v7.10: cierre K-BLACKROCK-CSV-STALE-01 (reordenacion byte-preserving de columnas de 3 CSV fund-flow al orden del writer). Sin cambios de codigo productivo. Base v7.9: cierre A5-70 (refactor BlackRock providers) + rectificacion G7/G8 + registro K-BLACKROCK-CSV-STALE-01. Suite 2173 -> 2184 + 2 skipped. Base v7.8: ciclo F2.4-10/11/12/13 - persistencia de estado MTE reparada (histeresis adaptativa operativa), F2.4-11 except acotado en engine.py, F2.4-13 documentado WONT FIX, 19 warnings pyflakes limpiados. Suite 2163 -> 2173 + 2 skipped. Base v7.7: ciclo Cat 1 - 5 fixes quirurgicos de la auditoria radar pusheados (A5-71, F3-18, F2.4-01/02/03). Suite 2097 -> 2163 + 2 skipped. Base v7.6: auditoria interna del prompt - correcciones documentales en el arbol §4.2 (indicators/darkpool, providers, outputs/*, docs/plan, audit, src/external, provenance LSE, scripts nuevos), en los listados §4.3/§4.4 (iae.py, iae_section.py) y en la referencia §10.1. Sin cambios de codigo ni de arquitectura. Base v7.5: ciclo F-IAE-LSE-INTEGRATION + F-IAE-CRON-02 / F-IAE-GATE-01. Cifras internas alineadas: suite 1857 passed + 2 skipped, bloque IAE 845 tests).
+**Actualizado:** 2026-09-28 (v7.15: cierre H1-B con C2 abierto. H4 cerrado (golden/current.json ACTIVE_WITH_OPEN_DISCREPANCY). H2 + H3 cerrados. H5.1/H5.2/H5.4/H5.5 cerrados. O1 cerrado. Baseline local reproducible -4.264.449.012. Referencia externa declarada por auditor -4.264.449.932 con reconciliation_status=OPEN. Suite 2205 -> 2226 + 2 skipped. Base v7.14: auditoria externa del IAE abierta. Dictamen APROBADO CON CONDICIONES. H1-A cerrado, H1-B y H5.3 bloqueantes. Sin cambios de codigo. Base v7.13: desbloqueo SEC Official List Q2 2026 (sufijo -txt) + NIPC Q1 2026 -> Q2 2026 calculado por primera vez. Fallback automatico en download_official_list_13f.py. Suite 2205 + 2 skipped.)
 
 Este documento describe **rol, metodologia, arquitectura y prohibiciones vigentes**.
 **NO declara el estado del sistema.** Para estado, ver:
@@ -162,7 +162,7 @@ py -m pytest tests/ validation/ -q --tb=short
 
 text
 
-Esperado: `compileall OK`, `pyflakes LIMPIO`, `2184 passed + 2 skipped + 0 failed`.
+Esperado: `compileall OK`, `pyflakes LIMPIO`, `2226 passed + 2 skipped + 0 failed`.
 
 ### 3.5. Verificacion de no regresion (refactors grandes)
 
@@ -299,7 +299,7 @@ D:\Macro_Sectorial
 |            regenerate_cusip_crosswalk.py,
 |            pipeline_gate.py, issue_manager.py [F-IAE-CRON-02])
 +-- validation/ (6 activos)
-+-- tests/ (2184+ casos; ver IAE_MAESTRO.md seccion 11 para conteo del modulo IAE)
++-- tests/ (2226+ casos; ver IAE_MAESTRO.md seccion 11 para conteo del modulo IAE)
 +-- docs/
 | +-- automatica/ (22 .md auto-generados, LF)
 | +-- auditoria/ (prompt + transfer + readme + iae/)
@@ -496,7 +496,7 @@ Fase G (2026-09-24) - automatizacion de mappings del IAE:
 
 ## SECCION 10 - VALIDACION Y TESTS
 10.1. Tests
-2184 passed + 2 skipped + 0 failed en local tras run.py. Los 3 test_freshness (ambientales) pasan tras un run que refresca los parquets; vuelven a fallar si pasan >4 dias sin ejecutar el pipeline. CI similar con parquet gitignored. Incluye 845 tests del modulo IAE (criterio AST, 45 ficheros, ver IAE_MAESTRO.md seccion 11).
+2226 passed + 2 skipped + 0 failed en local tras run.py. Los 3 test_freshness (ambientales) pasan tras un run que refresca los parquets; vuelven a fallar si pasan >4 dias sin ejecutar el pipeline. CI similar con parquet gitignored. Incluye 845 tests del modulo IAE (criterio AST, 45 ficheros, ver IAE_MAESTRO.md seccion 11).
 
 10.2. Validation Gate (10/10)
 SLPM v1.2 (sin errores de validacion)
@@ -1424,15 +1424,35 @@ Close para los 20 tickers .L). Suite: 1682 -> 1857 passed. Ver secciones
 Estado, arquitectura, verificacion y deuda tecnica del modulo IAE
 viven en `iae/IAE_MAESTRO.md`. No se duplican aqui.
 
-### 13.3. Estado del repo al cierre (2026-09-26)
+### 13.3. Estado del repo al cierre (2026-09-28)
 
     HEAD            ver docs/auditoria/iae/ESTADO_SISTEMA.md
     Ahead           0 (sincronizado con origin/main)
-    Push            SI (integrado en produccion desde 2026-09-26)
+    Push            SI (integrado en produccion)
     Working tree    LIMPIO
-    Suite local     2184 passed + 2 skipped + 0 failed
+    Suite local     2226 passed + 2 skipped + 0 failed
     Suite IAE       845 passed (criterio AST, 45 ficheros)
-    Suite CI        0 failed (ultima verificacion completa: run 36189310171, dispatch manual)
+
+Cierre de hallazgos del dictamen externo IAE 2026-09-27:
+
+    H1-A    CERRADO
+    H1-B    CERRADO con C2 abierto no bloqueante (920)
+    H2      CERRADO
+    H3      CERRADO
+    H4      CERRADO (golden/current.json ACTIVE_WITH_OPEN_DISCREPANCY)
+    H5.1    CERRADO
+    H5.2    CERRADO
+    H5.3    TRAZABILIDAD IMPLEMENTADA - pendiente cron nov 2026
+    H5.4    CERRADO
+    H5.5    CERRADO
+    H5.6    CERRADO
+    H5.7    HISTORICO
+    O1      CERRADO
+
+Baseline local reproducible H1-B: -4.264.449.012 (commit 72fa824).
+Referencia externa declarada por auditor: -4.264.449.932.
+reconciliation_delta = 920, reconciliation_status = OPEN.
+Detalle: INFORME_H1B_RECONCILIACION_FINAL.md, golden/current.json.
 
 Nota. Los 3 test_freshness pasan tras un `py run.py` que refresca los
 parquets; vuelven a fallar si pasan >4 dias sin ejecutar el pipeline.
