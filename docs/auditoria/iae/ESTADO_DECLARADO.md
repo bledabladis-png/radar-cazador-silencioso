@@ -257,15 +257,21 @@ Detalle completo en `AUDITORIA_EXTERNA_2026-09-27.md` y `TRASPASO_IAE.md`.
 - **H1-A (drift historico del E2E):** CERRADO. Prueba forense: crosswalk
   regenerado por Fase G. Prueba directa: restaurar crosswalk 7caa86b
   reproduce el golden seccion 12.5 con tolerancia 0.
-- **H1-B (clasificacion CALL/PUT):** ABIERTO / BLOQUEANTE. El filtro
-  `_filter_canonical` acepta filas con `PUTCALL=NULL` y TITLEOFCLASS con
-  semantica de opcion. Dano medido: +53.228.375 sobre el NIPC actual
-  (-4.317.678.307 -> -4.264.449.932 con filtro reforzado; el segundo
-  valor es **declarado por el auditor**, no reproducido localmente —
-  ver INFORME_H1B_RECONCILIACION_FINAL.md seccion C2). Fix definitivo
-  exige mapping CUSIP->tipo desde Official List trimestral. No congelar
-  NIPC baseline hasta cerrar H1-B.
-- **H4 (golden versionado):** ABIERTO, pendiente de H1-B.
+- **H1-B (clasificacion CALL/PUT):** CERRADO 2026-09-28 con C2 abierto
+  (no bloqueante). Implementado v2.3 (filtro OPTION confirmada por
+  Official List + regex TITLEOFCLASS secundaria). Baseline local
+  reproducible: `-4.264.449.012` (commit 72fa824). Referencia externa
+  declarada por auditor sin cadena de custodia: `-4.264.449.932`.
+  `reconciliation_delta = 920`, `reconciliation_status = OPEN`.
+  Detalle: INFORME_H1B_RECONCILIACION_FINAL.md, INFORME_H1B_POST_IMPLEMENTACION.md
+  y `golden/current.json`. El auditor aprobo el cierre con C2 documentado
+  como discrepancia abierta (no bloqueante).
+- **H4 (golden versionado):** CERRADO 2026-09-28. `golden/12_5_historic.json`
+  (FROZEN) + `golden/current.json` (ACTIVE_WITH_OPEN_DISCREPANCY) +
+  `golden/README.md`. El golden `current.json` incluye hashes de
+  parquets INFOTABLE Q4/Q1, Official Lists Q4/Q1, mappings, y los
+  campos de discrepancia (external_auditor_reference, reconciliation_delta,
+  reconciliation_status).
 - **H5 (workflow trimestral):** AUDITADO / HALLAZGOS ABIERTOS.
   - H5.1 (MEDIO): criterio de seleccion duplicado (workflow 51d vs script 60d).
   - H5.2 (MEDIO): fallo de ingesta sin alerta (no retry, no Issue).

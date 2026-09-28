@@ -122,6 +122,13 @@ delta_radar_rows (553.314 vs 553.314, identico) y el nipc_total
 a v2.0 y preserva la correccion de v2.3 sobre los falsos positivos de
 v2.2.
 
+**Alcance del determinismo (nota post-dictamen 2026-09-28).** El
+determinismo probado aplica al dominio verificado: mismo proceso, mismo
+HEAD, mismos inputs, misma ejecucion. No se interpreta como determinismo
+absoluto en cualquier entorno. Pendiente de fijar para reproducibilidad
+completa: hash/version de inputs, version de Python, versiones de
+dependencias, plataforma.
+
 **Caso adversarial pendiente de verificar con datos reales:**
 `PUTCALL=NULL` + `TITLEOFCLASS='COM'` + CUSIP de opcion que la regex
 no captura. Buscamos candidatos en INFOTABLE Q4/Q1 y no encontramos

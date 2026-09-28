@@ -1,23 +1,54 @@
 {
   "golden_id": "current",
-  "description": "Snapshot del par activo tras el cierre de H1-B. Actualmente BLOQUEADO: H1-B no esta cerrado.",
-  "status": "BLOCKED",
+  "description": "Baseline LOCAL reproducible del par Q4 2025 -> Q1 2026 con H1-B v2.3. NO es un golden contractual: convive con la referencia externa no reproducida del auditor (-4.264.449.932).",
+  "status": "ACTIVE_WITH_OPEN_DISCREPANCY",
   "auditor_finding": "H4",
-  "blocked_by": "H1-B",
-  "blocked_reason": "No se congela NIPC baseline hasta cierre de H1-B. Ver AUDITORIA_EXTERNA_2026-09-27.md seccion 5.",
-  "periods": null,
-  "git_head": null,
-  "generated_at": null,
-  "crosswalk_sha256": null,
-  "catalog_sha256": null,
-  "equivalence_sha256": null,
-  "parquet_hashes": null,
-  "expected": null,
-  "security_type_source": null,
-  "security_type_source_hash": null,
+  "created_after": "H1-B v2.3 cerrado (dictamen auditor 2026-09-28, APROBADO CON C2 ABIERTO)",
+  "periods": {
+    "previous": "2025-12-31",
+    "current": "2026-03-31",
+    "quarter_previous": "2025Q4",
+    "quarter_current": "2026Q1"
+  },
+  "git_head": "4ed2bcf",
+  "generated_at": "2026-09-28T02:45:00Z",
+
+  "local_observed_nipc_total": -4264449012,
+  "local_observed_nipc_sole": -32431459286,
+  "local_observed_nipc_dfnd": 28316684288,
+  "local_observed_nipc_otr": -149674014,
+  "local_observed_delta_radar_rows": 553314,
+  "local_observed_delta_full_rows": 4063484,
+
+  "external_auditor_reference": -4264449932,
+  "external_auditor_reference_source": "AUDITORIA_EXTERNA_2026-09-27.md seccion 3.2 (declarado, sin comando ni HEAD publicados)",
+  "reconciliation_delta": 920,
+  "reconciliation_status": "OPEN",
+  "reconciliation_note": "El valor externo -4.264.449.932 no ha sido reproducido por este repositorio con ninguna configuracion conocida (HEAD 72fa824, regex sin word-boundary, regex case-sensitive, regex sin OPTION/OPT, crosswalk 7caa86b). El valor local -4.264.449.012 es determinista y reproducible. Ver INFORME_H1B_RECONCILIACION_FINAL.md seccion C2.",
+
+  "crosswalk_sha256": "C344BEE55FA5149853ED029E59EE2ACBCCD94D39990F1B493048EA0CB06A60CC",
+  "catalog_sha256": "4A78E2695ACA64EC5601C246D176199CE98E9E10E73E53E4B8F11385FE00EF38",
+  "equivalence_sha256": "21A88790AAD50E8B44FBFDAA87C394EF3A782319ADAF4208B9CB244DAC39B322",
+  "parquet_hashes": {
+    "INFOTABLE_2025Q4": "207621CF7D0C0DB44B3BEE6232501AC9FD07B4AF9ABF6EDF7946C6BF9E009536",
+    "INFOTABLE_2026Q1": "DF4A4A5C25CE45E68768CE037B97372EF46B059C782F6C335F0B3FA37950C7D2"
+  },
+  "official_list_hashes": {
+    "13flist_2025Q4": "6A70489393BC1D1977D00FABEDB58550E904FE9C0A4A98CF35361920B91847C9",
+    "13flist_2026Q1": "8C6B35079CCADBADDA946D59523AADC697E5E8DC64B60AE1AAE3C4C3047455FB"
+  },
+
+  "security_type_source": "data/sec_13f/official_list_13f/13flist_2025Q4.txt + 13flist_2026Q1.txt",
+  "security_type_source_hash": "6A70489393BC1D1977D00FABEDB58550E904FE9C0A4A98CF35361920B91847C9",
+
   "notes": [
-    "Este fichero se completa tras el paso 6 del plan de cierre de H1-B (DISENO_H1B.md seccion 8).",
-    "Los valores actuales del pipeline (-4.317.678.307; 8.254.818.120 para Q1->Q2) son OBSERVACIONES, no baseline contractual.",
-    "Al cerrar H1-B, rellenar todos los campos con los hashes del par vigente y el resultado del E2E post-fix."
+    "local_observed_* = resultado reproducible del sistema con H1-B v2.3.",
+    "external_auditor_reference = valor declarado por el auditor externo, sin cadena de custodia reproducible.",
+    "reconciliation_delta = 920 = (external_auditor_reference) - (local_observed_nipc_total).",
+    "reconciliation_status = OPEN hasta que el auditor aporte comando + HEAD del 932.",
+    "NO usar local_observed como golden contractual: sirve como baseline de regresion local.",
+    "NO usar external_auditor_reference como golden contractual: no reproducible.",
+    "Regenerado por: scripts/iae_contractual_nipc_e2e.py + scripts/iae_contractual_coverage.py.",
+    "C1 (PRE/POST) y C3 (determinismo) VERDE. Solo C2 (920) queda abierto."
   ]
 }

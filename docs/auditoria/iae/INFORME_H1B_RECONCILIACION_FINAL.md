@@ -82,10 +82,31 @@ verificable. No lo es.
 - Cualquier comparacion contra el 932 presupone una metodologia que
   desconocemos.
 
+**Conclusion C2 (corregida tras dictamen 2026-09-28).** El auditor
+ha objetado la formulacion original. La frase "no atribuible a nuestro
+codigo actual" se retira: excede lo demostrado. La formulacion correcta
+es:
+
+> El valor externo no es reproducible bajo las configuraciones y el
+> entorno controlados actualmente auditados. El origen no ha sido
+> localizado.
+
+Es decir: no se afirma que la causa este fuera del repositorio. Se
+constata unicamente que ninguna de las 5 configuraciones medidas lo
+reproduce.
+
 **Peticion al auditor:** si aporta el comando exacto y el HEAD con el
-que midio `-4.264.449.932`, la diferencia se puede atribuir. Sin esa
-informacion, la discrepancia se declara como **no atribuible a este
-repositorio** y no bloqueante para el cierre de H1-B.
+que midio `-4.264.449.932`, la causa se puede atribuir. Mientras tanto,
+la discrepancia se mantiene como **abierta y no bloqueante**, con
+`reconciliation_status = OPEN`.
+
+**Cierre H1-B (dictamen 2026-09-28):** el auditor aprueba el cierre con
+C2 documentado como discrepancia abierta. El valor
+`-4.264.449.012` se congela como **baseline local reproducible**, NO
+como golden contractual. El valor externo `-4.264.449.932` queda
+registrado como referencia declarada por auditoria, sin cadena de
+custodia reproducible desde este repositorio. Ver
+`golden/current.json` (status: `ACTIVE_WITH_OPEN_DISCREPANCY`).
 
 ---
 
