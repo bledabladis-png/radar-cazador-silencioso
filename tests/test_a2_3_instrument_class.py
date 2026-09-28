@@ -108,9 +108,39 @@ def test_market_unchanged_no_equity_classification():
         assert get_market(t) == "US_EQUITY", t
     for t in ("^GSPC", "^VIX", "^TNX", "^FTSE"):
         assert get_market(t) == "US_EQUITY", t
-    assert get_market("DX-Y.NYB") == "UNKNOWN"
+    # F3-19 / A2.3-parcial (2026-09-28): DX-Y.NYB tiene override
+    # explicito a US_EQUITY (calendario NYSE). Ver mas abajo.
+    assert get_market("DX-Y.NYB") == "US_EQUITY"
 
 
 def test_market_unchanged_unknown_suffix():
     assert get_market("XYZ.ZZ") == "UNKNOWN"
     assert get_market(None) == "UNKNOWN"
+
+
+# --- F3-19 / A2.3-parcial (2026-09-28) ---
+
+def test_get_market_dxy_es_us_equity():
+    """DX-Y.NYB (ICE US Dollar Index) opera con calendario NYSE.
+
+    Sin el override caia a UNKNOWN por tener punto no-europeo, y
+    _compute_by_market (Punto 5 FU-002-bymarket) lo marcaba INVALID,
+    inhabilitando la exencion condicional del guard.
+    """
+    from src.instrument_registry import get_market
+    assert get_market("DX-Y.NYB") == "US_EQUITY"
+
+
+def test_get_market_punto_no_europeo_sigue_siendo_unknown():
+    """El fallback UNKNOWN sigue vigente para tickers no reconocidos
+    con punto no-europeo. El override de DX-Y.NYB no debe generalizarse.
+    """
+    from src.instrument_registry import get_market
+    assert get_market("FAKE.NYSE") == "UNKNOWN"
+    assert get_market("ZZZ.BOGUS") == "UNKNOWN"
+
+
+def test_get_instrument_class_dxy_sin_cambios():
+    """F3-19 no toca la clase economica de DX-Y.NYB (sigue INDEX)."""
+    from src.instrument_registry import get_instrument_class
+    assert get_instrument_class("DX-Y.NYB") == "INDEX"

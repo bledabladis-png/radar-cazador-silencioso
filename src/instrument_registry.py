@@ -790,10 +790,17 @@ def get_market(ticker: str) -> str:
     'que calendario bursatil aplica', NO 'que clase economica es el
     instrumento'. Para clase economica usar get_instrument_class (A2.3).
     El fallback US_EQUITY para tickers sin punto (p.ej. BZ=F, ^GSPC,
-    EURUSD=X) es un limite conocido y documentado. Verificado 2026-09-17:
-    cero consumidores afectados; los 5 callers (data_loader, stock_data_loader,
-    xetra_provider) operan sobre universo ya filtrado a equity o sobre
-    tickers con sufijo europeo.
+    EURUSD=X) es un limite conocido y documentado.
+
+    ACTUALIZACION 2026-09-28 (F3-19 / A2.3-parcial): la verificacion
+    del 2026-09-17 ('cero consumidores afectados') dejo de ser cierta
+    el 2026-09-24. FU-002-bymarket (commit d09f928) anadio el Punto 5
+    en _compute_by_market: market=='UNKNOWN' con n>0 -> status INVALID
+    en el manifest. Cualquier ticker que caiga a UNKNOWN se convierte
+    en un INVALID sistematico que inhabilita la exencion condicional
+    del guard (guard_coverage.py C-2). DX-Y.NYB (ICE US Dollar Index)
+    es el unico del universo con punto no-europeo; ahora tiene override
+    explicito a US_EQUITY mas abajo.
     """
     if not isinstance(ticker, str):
         return "UNKNOWN"
@@ -809,6 +816,12 @@ def get_market(ticker: str) -> str:
         return "BME"
     if any(ticker.endswith(s) for s in (".PA", ".AS", ".MI")):
         return "EURONEXT"
+    # F3-19 / A2.3-parcial (2026-09-28): DX-Y.NYB (ICE US Dollar Index)
+    # opera con calendario NYSE. Sin este override caia a UNKNOWN por
+    # tener punto no-europeo, y _compute_by_market (Punto 5 FU-002-
+    # bymarket) lo marcaba INVALID, inhabilitando la exencion del guard.
+    if ticker == "DX-Y.NYB":
+        return "US_EQUITY"
     if "." not in ticker:
         return "US_EQUITY"
     return "UNKNOWN"
