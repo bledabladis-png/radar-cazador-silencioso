@@ -361,7 +361,7 @@ Regeneracion automatica:
 
 **Alcance del NIPC:** solo posiciones declaradas en filings 13F sobre el universo del radar. `§10.1` filtro explicito. No es NIPC del mercado completo.
 
-**Cobertura del catalogo:** declarada 99.17% sobre 242 tickers. Cobertura TARGET construido: 100% por construccion (endogeneidad declarada en IAE_MAESTRO §13.5 historico).
+**Cobertura del catalogo:** declarada 99.17% sobre 242 tickers. Cobertura TARGET construido: 100% por construccion (endogeneidad por diseño: el TARGET se construye desde el catalogo, asi que la cobertura TARGET es 100% por definicion).
 
 **Latencia regulatoria:** N-PORT ~60 dias, 13F trimestral (~45d post cierre trimestre).
 

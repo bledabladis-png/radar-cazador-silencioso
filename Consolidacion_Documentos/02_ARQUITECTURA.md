@@ -19,10 +19,10 @@ Sistema determinista, descriptivo, auditable. Sin ML predictivo. Sin optimizacio
 
 ## 2. ESTRUCTURA REAL DE DIRECTORIOS
 
-Verificada el 2026-09-28 (auditoria interna A0). Las cifras entre parentesis son lo que declaraba el corpus documental antiguo; el valor real es el que aparece a la izquierda.
+Verificada el 2026-09-28 en la auditoria interna A0.
 
     D:\Macro_Sectorial
-    +-- run.py                      (231 LOC reales; el doc decia 250)
+    +-- run.py                      (231 LOC)
     +-- config/                     (11 ficheros)
     |   +-- settings.py, tickers.py, weights.py, index_tickers.py, __init__.py
     |   +-- bme_ticker_map.csv, euronext_ticker_map.csv, xetra_ticker_map.csv
@@ -30,7 +30,7 @@ Verificada el 2026-09-28 (auditoria interna A0). Las cifras entre parentesis son
     +-- regimes/                    (8 ficheros)
     |   +-- financial_conditions.py, liquidity.py, macro_regime.py, sector_regime.py
     |   +-- structural_engine.py, tactical_engine.py, volatility_regime.py, __init__.py
-    +-- indicators/                 (50 ficheros; el doc decia "30+")
+    +-- indicators/                 (50 ficheros)
     |   +-- breadth.py, breadth_core.py, breadth_equity.py
     |   +-- commodity_market_correlation.py, credit.py
     |   +-- cross_asset.py, cross_asset_context.py
@@ -57,7 +57,7 @@ Verificada el 2026-09-28 (auditoria interna A0). Las cifras entre parentesis son
     |   +-- market_calendar.py, market_hours.py
     |   +-- report_generator.py, stock_data_loader.py, utils.py, __init__.py
     |   +-- external/               (2 ficheros: lse_scraper_loader.py + __init__.py)
-    |   +-- report/                 (20 ficheros; el doc decia 19)
+    |   +-- report/                 (20 ficheros)
     |   |   +-- helpers.py, header.py, freshness.py, alerts.py, breadth.py
     |   |   +-- sectorial.py, leaders.py, rankings.py, slpm.py, sentiment.py
     |   |   +-- etf_flows.py, market_context.py, sector_context.py
@@ -74,13 +74,13 @@ Verificada el 2026-09-28 (auditoria interna A0). Las cifras entre parentesis son
     |   |   +-- base.py, registry.py, _common.py, consolidate.py, __init__.py
     |   |   +-- equity_eod.py, index_eod.py, volatility_index.py, rate_yield.py
     |   |   +-- future_settlement.py, fx_daily_cut.py, spot_commodity.py
-    |   +-- institutional_accumulation/   (36 ficheros, 6869 LOC)
+    |   +-- institutional_accumulation/   (36 ficheros, 8178 LOC)
     |       +-- aggregation/, identity/, sec_13f/ (subpaquetes)
     |       +-- absence.py, catalog_pit.py, operational_universe.py
     |       +-- pipeline_contractual.py, security_type.py
     |       +-- temporal_validity.py, timestamps.py
     +-- data/
-    |   +-- providers/              (26 ficheros; el doc decia 27)
+    |   +-- providers/              (26 ficheros)
     |   +-- macro_manual/           (12 CSVs FRED)
     |   +-- mappings/               (catalogos + snapshots + crosswalk)
     |   +-- sec_13f/                (raw, processed, official_list, manifests)
@@ -94,7 +94,7 @@ Verificada el 2026-09-28 (auditoria interna A0). Las cifras entre parentesis son
     |   +-- etf_holdings.csv, index_holdings.csv
     |   +-- lse_close_provenance.json
     +-- scripts/                    (34 activos + 3 en scripts/audit/)
-    +-- validation/                 (7 ficheros; el doc decia 6)
+    +-- validation/                 (7 ficheros)
     +-- tests/                      (182 ficheros locales, 192 tracked)
     +-- docs/
     |   +-- automatica/             (22 .md auto-generados)
@@ -104,11 +104,9 @@ Verificada el 2026-09-28 (auditoria interna A0). Las cifras entre parentesis son
     |   +-- state/                  (versionado: mte_state.json, slpm_state.json, liquidity_state.json)
     |   +-- report/                 (NO versionado)
     |   +-- audit/                  (NO versionado)
-    +-- .github/workflows/          (10 workflows; el doc decia 9, _cron_probe.yml no estaba documentado)
+    +-- .github/workflows/          (10 workflows)
 
-**Notas de auditoria:**
-- `.git`: 26.18 MB total, 18.67 MB packed, **2643 loose objects** (el doc decia "0 loose").
-- Los 3 workflows adicionales a los 9 declarados: `_cron_probe.yml`.
+**Nota de auditoria:** cifras verificadas en la auditoria A0 (2026-09-28).
 ---
 
 ## 3. CAPAS DE FLUJO (SEPARADAS, NUNCA SE MEZCLAN)
