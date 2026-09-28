@@ -8,8 +8,12 @@ Consume retornos oficiales desde df_market.
 import pandas as pd
 import numpy as np
 
-from src.utils import _observation_date_from_df, writer_observation_date, get_effective_meta
-from src.utils import get_col
+from src.utils import (
+    _observation_date_from_df,
+    writer_observation_date,
+    get_effective_meta,
+    get_col,
+)
 
 from config.tickers import MARKET_TICKERS
 
