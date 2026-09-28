@@ -30,6 +30,7 @@ Refs: FU-021-3C-bis, PROMPT_MAESTRO Seccion 11.8 (FU-002).
 from __future__ import annotations
 
 import os
+from datetime import date as _date, timedelta as _td
 from pathlib import Path
 from typing import Optional
 
@@ -37,6 +38,7 @@ import pandas as pd
 import requests
 
 from .base import MarketDataProvider
+from src.market_calendar import is_market_day as _is_market_day
 
 
 API_BASE = "https://api.oilpriceapi.com/v1"
@@ -127,7 +129,7 @@ class FuturesProvider(MarketDataProvider):
         try:
             self._get("/prices/latest", params={"by_code": "GOLD_USD"})
             return True
-        except Exception as e:
+        except (RuntimeError, requests.RequestException, ValueError, KeyError) as e:
             print("FuturesProvider.is_available: " + str(e))
             return False
 
@@ -162,8 +164,6 @@ class FuturesProvider(MarketDataProvider):
         }
 
     def _fetch_spot(self) -> list:
-        from datetime import date as _date, timedelta as _td
-        from src.market_calendar import is_market_day as _is_market_day
         codes = ",".join(cfg["code"] for cfg in SPOT_MAP.values())
         data = self._get("/prices/latest", params={"by_code": codes})
         prices = (data.get("data") or {}).get("prices") or []
@@ -228,7 +228,7 @@ class FuturesProvider(MarketDataProvider):
                 row = self._fetch_futures_front_month(ticker)
                 if row is not None:
                     fut_rows.append(row)
-            except Exception as e:
+            except (RuntimeError, requests.RequestException, ValueError, KeyError, TypeError) as e:
                 print("  [WARN] futures " + ticker + ": " + str(e))
 
         if skip_spot:
@@ -236,7 +236,7 @@ class FuturesProvider(MarketDataProvider):
         else:
             try:
                 spot_rows = self._fetch_spot()
-            except Exception as e:
+            except (RuntimeError, requests.RequestException, ValueError, KeyError, TypeError) as e:
                 print("  [WARN] spot: " + str(e))
                 spot_rows = []
 
@@ -345,7 +345,7 @@ def _merge_with_existing(new_df: pd.DataFrame, path: str) -> pd.DataFrame:
         return new_df
     try:
         existing = pd.read_parquet(p)
-    except Exception as e:
+    except (OSError, ValueError, TypeError, pd.errors.ParserError) as e:
         print("  [WARN] no se pudo leer " + str(p) + ": " + str(e))
         return new_df
 

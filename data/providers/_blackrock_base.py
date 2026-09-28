@@ -1,4 +1,4 @@
-﻿"""
+"""
 Logica compartida de los providers BlackRock (DAXEX, ISF.L).
 
 Los modulos `blackrock_fund_data.py` y `blackrock_isf_fund_data.py`
@@ -61,6 +61,11 @@ def download_fund_file(url, cache_file, referer, label):
     """Descarga el archivo de BlackRock si no existe o si tiene más de 23 horas.
 
     A5-80 (2026-09-28): devuelve FundFileOutcome, no True/False.
+
+    A2.1-01 (WONT FIX): los datetime.now() de esta funcion miden
+    antiguedad del fichero de cache (mtime - now), no la fecha de
+    observacion del dato. La fecha real viene de parse_hist_sheet
+    (columna 'date' del XML). Mismo criterio que A5-36 (execution time).
     """
     cache_file.parent.mkdir(parents=True, exist_ok=True)
     use_cache = cache_file.exists()
@@ -89,7 +94,7 @@ def download_fund_file(url, cache_file, referer, label):
         _tmp.replace(cache_file)
         print(f'  Guardado en caché: {cache_file} ({len(r.content)} bytes)')
         return FundFileOutcome.FRESH_DOWNLOAD
-    except Exception as e:
+    except (requests.RequestException, OSError, ValueError) as e:
         print(f'  Error descargando {label}: {e}')
         if cache_file.exists():
             _mtime = datetime.fromtimestamp(cache_file.stat().st_mtime)
