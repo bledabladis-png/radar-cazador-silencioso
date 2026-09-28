@@ -52,7 +52,6 @@ from __future__ import annotations
 import json
 import os
 from datetime import datetime
-from typing import Optional, Tuple
 
 
 SLPM_STATE_FILE = "outputs/state/slpm_state.json"
@@ -106,15 +105,6 @@ def _save_state(payload: dict) -> None:
     payload["last_updated"] = datetime.now().isoformat()
     with open(SLPM_STATE_FILE, "w", encoding="utf-8") as f:
         json.dump(payload, f, indent=2)
-
-
-def load_previous_state() -> Tuple[Optional[str], int]:
-    """API legacy. Devuelve (state, consecutive_count) del state file.
-
-    Mantenida por compatibilidad con consumidores externos (validators).
-    """
-    data = _load_state()
-    return data.get("state"), data.get("consecutive_count", 0)
 
 
 def confirm_transition(sector_etf: str, instant_state: str) -> dict:
@@ -226,17 +216,3 @@ def confirm_transition(sector_etf: str, instant_state: str) -> dict:
         "transition": f"HOLDING_{prev_state}_CANDIDATE_{instant_state}",
         "consecutive_count": prev_count,
     }
-
-
-def save_current_state(state: str, count: int) -> None:
-    """API legacy. Escribe el state file con schema v2 minimo.
-
-    Mantenida por compatibilidad. Preferir confirm_transition().
-    """
-    _save_state({
-        "sector_etf": None,
-        "state": state,
-        "consecutive_count": count,
-        "candidate_state": None,
-        "candidate_count": 0,
-    })
