@@ -182,6 +182,41 @@ ddb4d31 (refactor G-01 + tests), a4095b1 (docs cierre), fabcdae (snapshot),
 - **CLI contract:** 0 issues en 16 invocaciones de workflow contra
   12 scripts con argparse.
 
+**A6.4 (validation + data/validator.py).** Gate 0:
+`outputs/audit/A6_4_1_20260929_014123.txt`.
+
+- **A6.4-01 (MEDIA) CORREGIDO.** `validate_history_quality.py` y
+  `verify_leader_selection.py` ejecutaban al importar. Refactor a
+  `main()` + guard.
+- **A6.4-04 (MEDIA) CERRADO por dead code.** `run_all_audits.py`
+  (354 LOC) sin caller, ultima modificacion 2026-09-10, invoca
+  `['py', ...]` (Windows-only). Eliminado.
+- **A6.4-02 (BAJA) WONT FIX razonado.** Los 2 scripts de validacion
+  cruzada (`cross_provider_validation`, `qqq_sec_nport_cross_validation`)
+  son descriptivos por diseno: escriben CSV a outputs/audit/ como
+  artifact. No son gates. El contrato se preserva.
+- **A6.4-05 / A6.4-03 (BAJA) falsos positivos.** `verify_leader_selection`
+  ya limpiaba el md anterior. `data/validator.py` es solo 2 funciones
+  puras.
+- **Bug introducido y corregido en el refactor:** dos `import os`
+  internos en `verify_leader_selection` se volvieron locales a
+  `main()` y rompian refs previas. Eliminados.
+
+**A6 CERRADO** (A6.1 + A6.2 + A6.3 + A6.4). Resumen del bloque:
+
+- A6.1 (nucleo compartido): 1 fix (A6.1-01), 1 deuda documentada (A6.1-02).
+- A6.2 (workflows): 1 fix (A6.2-02, eliminacion del probe residual),
+  3 deudas documentadas (A6.2-01/03/04).
+- A6.3 (scripts): 2 fixes (A6.3-01/02), 3 descartes razonados.
+- A6.4 (validation): 2 fixes (A6.4-01/04), 1 WONT FIX, 2 falsos positivos.
+
+Suite final: 2275 passed + 2 skipped + 0 failed (antes de A6: 2267,
++8 tests nuevos del refactor G-01).
+
+**Commits.** ... 2f63db7 (A6.1-01), 73758ce (snapshot A6.1-01), 4a31d4f
+(cierre A6.1), 4fbb135 (A6.2-02), d321802 (cierre A6.2), 1049b2a
+(A6.3-01/02), 84bb1ee (cierre A6.3), +A6.4 (pendiente de SHA final).
+
 **Pendiente.** A6.1 (nucleo compartido). B (IAE completo). C (tests).
 H5.3 (cron nov 2026). C2 (920).
 

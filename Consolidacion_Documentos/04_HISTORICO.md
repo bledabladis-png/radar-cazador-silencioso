@@ -156,6 +156,13 @@ Ciclos completados (12 en la sesion principal):
   ejecutaban al importar (sin `if __name__ == "__main__"`). Refactor
   a `main()`. Commit 1049b2a. Sin dead code confirmado. Contrato CLI
   workflow<->argparse verificado: 0 issues.
+- **A6.4 (validation):** Gate 0 + auditoria de 6 ficheros en
+  `validation/` + `data/validator.py`. A6.4-01 (MEDIA, corregido):
+  `validate_history_quality` y `verify_leader_selection` ejecutaban
+  al importar. Refactor a `main()`. A6.4-04 (MEDIA, cerrado por dead
+  code): `run_all_audits.py` sin caller, eliminado. A6.4-02 (BAJA,
+  WONT FIX razonado): scripts de validacion cruzada descriptivos por
+  diseno. **A6 (auditoria interna de infraestructura) CERRADO.**
 
 ---
 
