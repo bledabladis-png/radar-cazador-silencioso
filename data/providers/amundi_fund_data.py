@@ -101,14 +101,23 @@ def download_historical_data(isin: str, start_date: str, end_date: str) -> dict:
         if not products:
             raise ValueError('No products returned')
         product = products[0]
-        with open(cache_file, 'w', encoding='utf-8') as f:
+        # A5-79 (2026-09-28): escritura atomica tmp + replace.
+        _tmp = cache_file.with_suffix(cache_file.suffix + '.tmp')
+        with open(_tmp, 'w', encoding='utf-8') as f:
             json.dump(product, f, ensure_ascii=False, indent=2)
+        _tmp.replace(cache_file)
         print(f'  Guardado en caché: {cache_file}')
         return product
     except Exception as e:
         print(f'  Error descargando histórico {isin}: {e}')
         if cache_file.exists():
-            print('  Usando caché existente pese al error.')
+            # A5-72 (2026-09-28): WARN explicito con mtime al caer a
+            # cache obsoleta.
+            _mtime = datetime.fromtimestamp(cache_file.stat().st_mtime)
+            _age_h = (datetime.now() - _mtime).total_seconds() / 3600.0
+            print(f'  [WARN] {isin}: usando cache OBSOLETA pese al error '
+                  f'(mtime={_mtime.isoformat(timespec="minutes")}, '
+                  f'{_age_h:.1f}h). El dato puede estar desactualizado.')
             with open(cache_file, 'r', encoding='utf-8') as f:
                 return json.load(f)
         return {}

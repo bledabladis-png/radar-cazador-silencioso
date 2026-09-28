@@ -15,6 +15,7 @@ import pandas as pd
 import pytest
 
 from data.providers import _blackrock_base as bb
+from data.providers._blackrock_base import FundFileOutcome
 
 
 # ---------------------------------------------------------------------
@@ -97,7 +98,7 @@ class TestDownloadFundFile:
             referer="http://example.com/",
             label="TEST",
         )
-        assert ok is True
+        assert ok is FundFileOutcome.FRESH_CACHE
 
     def test_cache_obsoleta_descarga(self, tmp_path, monkeypatch):
         cache = tmp_path / "fund.xml"
@@ -126,7 +127,7 @@ class TestDownloadFundFile:
             referer="http://example.com/",
             label="TEST",
         )
-        assert ok is True
+        assert ok is FundFileOutcome.FRESH_DOWNLOAD
         assert called["n"] == 1
         assert cache.read_bytes() == b"y" * 500000
 
@@ -147,7 +148,7 @@ class TestDownloadFundFile:
             referer="http://example.com/",
             label="TEST",
         )
-        assert ok is True
+        assert ok is FundFileOutcome.STALE_CACHE
 
     def test_error_red_sin_cache_devuelve_false(self, tmp_path, monkeypatch):
         cache = tmp_path / "no_existe.xml"
@@ -162,7 +163,7 @@ class TestDownloadFundFile:
             referer="http://example.com/",
             label="TEST",
         )
-        assert ok is False
+        assert ok is FundFileOutcome.FAIL
 
 
 # ---------------------------------------------------------------------
@@ -256,3 +257,42 @@ class TestGetBlackrockPrimaryFlow:
         )
         assert isinstance(df, pd.DataFrame)
         assert df.empty
+
+
+# ---------------------------------------------------------------------
+# F5-6b (2026-09-28): enum + comportamiento stale
+# ---------------------------------------------------------------------
+
+class TestFundFileOutcome:
+
+    def test_enum_tiene_4_valores(self):
+        assert len(list(FundFileOutcome)) == 4
+        names = {o.name for o in FundFileOutcome}
+        assert names == {"FRESH_CACHE", "FRESH_DOWNLOAD", "STALE_CACHE", "FAIL"}
+
+
+class TestStaleCacheWarns:
+
+    def test_stale_cache_imprime_warn_y_sigue(self, tmp_path, monkeypatch, capsys):
+        """A5-72: cache obsoleta tras fallo de red -> WARN + sigue."""
+        cache = tmp_path / "fund.xml"
+        cache.write_bytes(b"x" * 200000)
+        old = time.time() - 2 * 86400
+        import os
+        os.utime(cache, (old, old))
+
+        def _boom(*a, **kw):
+            raise ConnectionError("red caida")
+        monkeypatch.setattr(bb.requests, "get", _boom)
+
+        outcome = bb.download_fund_file(
+            url="http://example.com/x",
+            cache_file=cache,
+            referer="http://example.com/",
+            label="TEST",
+        )
+        assert outcome is FundFileOutcome.STALE_CACHE
+        captured = capsys.readouterr()
+        assert "[WARN]" in captured.out
+        assert "OBSOLETA" in captured.out
+        assert "TEST" in captured.out

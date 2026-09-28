@@ -106,7 +106,10 @@ def get_etf_primary_flow_data(force_download: bool = False) -> pd.DataFrame:
                 df['Date'] = pd.to_datetime(df['Date'], errors='coerce')
             else:
                 df = _download_single(ticker)
-                df.to_csv(cache_file, index=False)
+                # A5-79 (2026-09-28): escritura atomica tmp + replace.
+                _tmp = cache_file.with_suffix(cache_file.suffix + '.tmp')
+                df.to_csv(_tmp, index=False)
+                _tmp.replace(cache_file)
 
             df = _compute_primary_flow(df)
             df['ticker'] = ticker
@@ -123,7 +126,10 @@ def get_etf_primary_flow_data(force_download: bool = False) -> pd.DataFrame:
     full_df = full_df.sort_values(['ticker', 'Date']).reset_index(drop=True)
 
     HISTORY_PATH.parent.mkdir(parents=True, exist_ok=True)
-    full_df.to_csv(HISTORY_PATH, index=False)
+    # A5-79 (2026-09-28): escritura atomica del historico consolidado.
+    _tmp_hist = HISTORY_PATH.with_suffix(HISTORY_PATH.suffix + '.tmp')
+    full_df.to_csv(_tmp_hist, index=False)
+    _tmp_hist.replace(HISTORY_PATH)
     print(f'  Histórico guardado: {HISTORY_PATH}')
     if errors:
         print(f'  Tickers con error: {errors}')

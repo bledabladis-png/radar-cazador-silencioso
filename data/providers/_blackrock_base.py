@@ -9,6 +9,7 @@ Refs: A5-70 (refactor 2026-09-27).
 """
 import xml.etree.ElementTree as ET
 from datetime import datetime, timedelta
+from enum import Enum
 from pathlib import Path
 
 import numpy as np
@@ -41,8 +42,26 @@ def parse_fecha_es(fecha_str):
     except (ValueError, TypeError):
         return None
 
+class FundFileOutcome(Enum):
+    """A5-72, A5-78, A5-80 (2026-09-28): resultado explicito de
+    download_fund_file.
+
+    Antes: True/False colapsaba 3 causas (cache fresca, descarga OK,
+    cache stale pese a error). El dead code en el caller
+    (if not download_fund_file(): ...) nunca se activaba en produccion
+    porque el retorno era siempre True con cache existente.
+    """
+    FRESH_CACHE = 'fresh_cache'         # cache local < 23h
+    FRESH_DOWNLOAD = 'fresh_download'   # descarga OK, guardada
+    STALE_CACHE = 'stale_cache'         # descarga fallo, cache obsoleta usada
+    FAIL = 'fail'                       # descarga fallo y no hay cache
+
+
 def download_fund_file(url, cache_file, referer, label):
-    """Descarga el archivo de BlackRock si no existe o si tiene más de 23 horas."""
+    """Descarga el archivo de BlackRock si no existe o si tiene más de 23 horas.
+
+    A5-80 (2026-09-28): devuelve FundFileOutcome, no True/False.
+    """
     cache_file.parent.mkdir(parents=True, exist_ok=True)
     use_cache = cache_file.exists()
     if use_cache:
@@ -52,7 +71,7 @@ def download_fund_file(url, cache_file, referer, label):
 
     if use_cache:
         print(f'  Usando caché para {label}')
-        return True
+        return FundFileOutcome.FRESH_CACHE
 
     print(f'  Descargando {label} desde BlackRock...')
     headers = {
@@ -64,15 +83,22 @@ def download_fund_file(url, cache_file, referer, label):
         r.raise_for_status()
         if len(r.content) < 100000:
             raise ValueError('Archivo demasiado pequeño, posible bloqueo')
-        cache_file.write_bytes(r.content)
+        # A5-79 (2026-09-28): escritura atomica tmp + replace.
+        _tmp = cache_file.with_suffix(cache_file.suffix + '.tmp')
+        _tmp.write_bytes(r.content)
+        _tmp.replace(cache_file)
         print(f'  Guardado en caché: {cache_file} ({len(r.content)} bytes)')
-        return True
+        return FundFileOutcome.FRESH_DOWNLOAD
     except Exception as e:
         print(f'  Error descargando {label}: {e}')
         if cache_file.exists():
-            print('  Usando caché existente pese al error.')
-            return True
-        return False
+            _mtime = datetime.fromtimestamp(cache_file.stat().st_mtime)
+            _age_h = (datetime.now() - _mtime).total_seconds() / 3600.0
+            print(f'  [WARN] {label}: usando cache OBSOLETA pese al error '
+                  f'(mtime={_mtime.isoformat(timespec="minutes")}, '
+                  f'{_age_h:.1f}h). El dato puede estar desactualizado.')
+            return FundFileOutcome.STALE_CACHE
+        return FundFileOutcome.FAIL
 
 def parse_hist_sheet(file_path: Path):
     """Parsea el SpreadsheetML y extrae la hoja Histórico como DataFrame."""
@@ -182,8 +208,15 @@ def get_blackrock_primary_flow(
     if force_download:
         download_fund_file(url, cache_file, referer, label)
     else:
-        if not download_fund_file(url, cache_file, referer, label):
+        _outcome = download_fund_file(url, cache_file, referer, label)
+        # A5-78 (2026-09-28): el return vacio ahora es alcanzable. Antes
+        # era dead code porque el retorno era siempre True con cache.
+        if _outcome is FundFileOutcome.FAIL:
+            print(f'  [WARN] {label}: sin cache y descarga fallida. '
+                  f'Devolviendo DataFrame vacio.')
             return pd.DataFrame()
+        # FRESH_CACHE / FRESH_DOWNLOAD / STALE_CACHE -> seguir.
+        # STALE_CACHE ya imprimio su WARN dentro de download_fund_file.
 
     print('  Parseando hoja Histórico...')
     df = parse_hist_sheet(cache_file)
