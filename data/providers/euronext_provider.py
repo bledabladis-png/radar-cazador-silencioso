@@ -217,17 +217,24 @@ class EuronextProvider:
         p = self._cache_path(ticker)
         df.to_csv(p, index=False)
 
-    def _cache_is_fresh(self, ticker: str) -> bool:
-        """Considera fresco si el último dato es de hoy o del último día hábil."""
+    def _cache_is_fresh(self, ticker: str, reference_date=None) -> bool:
+        """Considera fresco si el ultimo dato es de hoy o del ultimo dia habil.
+
+        A5-50 (2026-09-28): con reference_date, la decision no depende
+        de datetime.now(). Fallback legacy cuando es None.
+        """
         df = self._load_cache(ticker)
         if df.empty:
             return False
         last = pd.to_datetime(df["date"]).max()
-        return (pd.Timestamp.now().normalize() - last).days <= 1
+        if reference_date is None:
+            return (pd.Timestamp.now().normalize() - last).days <= 1
+        return (reference_date.date() - last.date()).days <= 1
 
     # -------------------- API pública --------------------
 
-    def get_prices(self, tickers, nb_session: int = 500, use_cache: bool = True) -> pd.DataFrame:
+    def get_prices(self, tickers, nb_session: int = 500, use_cache: bool = True,
+                   reference_date=None) -> pd.DataFrame:
         """Descarga OHLCV de los tickers indicados.
 
         Args:
@@ -239,7 +246,7 @@ class EuronextProvider:
             DataFrame MultiIndex ('Open', ticker), ('High', ticker), ...
         """
         frames = []
-        enddate = datetime.now().strftime("%Y-%m-%d")
+        enddate = (reference_date if reference_date is not None else datetime.now()).strftime("%Y-%m-%d")
 
         for t in tickers:
             if not self.supports(t):
@@ -247,7 +254,7 @@ class EuronextProvider:
                 continue
 
             # Cache fresca
-            if use_cache and self._cache_is_fresh(t):
+            if use_cache and self._cache_is_fresh(t, reference_date=reference_date):
                 df_cached = self._load_cache(t)
                 if not df_cached.empty:
                     print(f"  [EURONEXT] {t} desde cache ({len(df_cached)} filas)")
@@ -260,7 +267,8 @@ class EuronextProvider:
                 df_cached = self._load_cache(t)
                 if not df_cached.empty:
                     last_date = pd.to_datetime(df_cached["date"]).max()
-                    days_gap = (pd.Timestamp.now().normalize() - last_date).days
+                    ref_d = reference_date.date() if reference_date is not None else pd.Timestamp.now().date()
+                    days_gap = (ref_d - last_date.date()).days
                     if days_gap > 7:
                         print(f"  [EURONEXT] CACHE VIEJA: {t} sin datos desde {last_date.date()} ({days_gap} dias)")
                     # Estimar sesiones: dias naturales * 1.4 + 5 de margen

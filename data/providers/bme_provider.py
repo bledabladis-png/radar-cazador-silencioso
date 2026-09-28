@@ -119,12 +119,19 @@ class BMEProvider:
             return
         self._cache_path(ticker).write_bytes(df.to_csv(index=False).encode("utf-8"))
 
-    def _cache_is_fresh(self, ticker: str) -> bool:
+    def _cache_is_fresh(self, ticker: str, reference_date=None) -> bool:
+        """True si la cache contiene la ultima sesion esperada.
+
+        A5-59 (2026-09-28): con reference_date, la decision no depende
+        de datetime.now(). Fallback legacy cuando es None.
+        """
         df = self._load_cache(ticker)
         if df.empty:
             return False
         last = pd.to_datetime(df["date"]).max()
-        return (pd.Timestamp.now().normalize() - last).days <= 1
+        if reference_date is None:
+            return (pd.Timestamp.now().normalize() - last).days <= 1
+        return (reference_date.date() - last.date()).days <= 1
 
     # -------------------- Conversion --------------------
 
@@ -176,7 +183,8 @@ class BMEProvider:
 
     # -------------------- API publica --------------------
 
-    def get_prices(self, tickers, since_date=None, use_cache: bool = True) -> pd.DataFrame:
+    def get_prices(self, tickers, since_date=None, use_cache: bool = True,
+                   reference_date=None) -> pd.DataFrame:
         """Descarga OHLCV de los tickers .MC via BME.
 
         Args:
@@ -185,7 +193,7 @@ class BMEProvider:
             use_cache: si True, reutiliza cache fresca.
         """
         frames = []
-        today = datetime.now()
+        today = reference_date if reference_date is not None else datetime.now()
         default_from = (today - timedelta(days=430)).strftime("%Y%m%d")
 
         for t in tickers:
@@ -194,7 +202,7 @@ class BMEProvider:
                 continue
 
             # Cache fresca -> skip
-            if use_cache and self._cache_is_fresh(t):
+            if use_cache and self._cache_is_fresh(t, reference_date=reference_date):
                 df_cached = self._load_cache(t)
                 if not df_cached.empty:
                     print("  [BME] " + t + " desde cache (" + str(len(df_cached)) + " filas)")
@@ -209,15 +217,16 @@ class BMEProvider:
                 df_cached = self._load_cache(t)
                 if not df_cached.empty:
                     last_date = pd.to_datetime(df_cached["date"]).max()
-                    days_gap = (pd.Timestamp.now().normalize() - last_date).days
+                    ref_d = reference_date.date() if reference_date is not None else pd.Timestamp.now().date()
+                    days_gap = (ref_d - last_date.date()).days
                     if days_gap > 7:
                         print("  [BME] CACHE VIEJA: " + t + " sin datos desde " + str(last_date.date()) + " (" + str(days_gap) + " dias)")
                     # FU-014 (2026-09-13): avanzar date_from al siguiente dia bursatil.
                     next_day = last_date + pd.Timedelta(days=1)
                     while not is_market_day(next_day.date()):
                         next_day = next_day + pd.Timedelta(days=1)
-                    today_norm = pd.Timestamp.now().normalize()
-                    if next_day > today_norm:
+                    today_norm = reference_date.date() if reference_date is not None else pd.Timestamp.now().date()
+                    if next_day.date() > today_norm:
                         print("  [BME] " + t + " sin nuevas sesiones (next=" + str(next_day.date()) + ")")
                         frames.append(self._to_multiindex(df_cached, t))
                         continue

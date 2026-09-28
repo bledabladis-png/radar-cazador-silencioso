@@ -372,7 +372,8 @@ class XetraProvider:
                 df_cached = self._load_cache(t)
                 if not df_cached.empty:
                     last_date = pd.to_datetime(df_cached["date"]).max()
-                    days_gap = (pd.Timestamp.now().normalize() - last_date).days
+                    ref_d = reference_date.date() if reference_date is not None else pd.Timestamp.now().date()
+                    days_gap = (ref_d - last_date.date()).days
                     if days_gap > 7:
                         print(f"  [XETRA] CACHE VIEJA: {t} sin datos desde {last_date.date()} ({days_gap} dias)")
                     # FU-014 (2026-09-13): avanzar start al siguiente dia bursatil.
@@ -381,8 +382,8 @@ class XetraProvider:
                     next_day = last_date + pd.Timedelta(days=1)
                     while not is_market_day(next_day.date()):
                         next_day = next_day + pd.Timedelta(days=1)
-                    today_norm = pd.Timestamp.now().normalize()
-                    if next_day > today_norm:
+                    today_norm = reference_date.date() if reference_date is not None else pd.Timestamp.now().date()
+                    if next_day.date() > today_norm:
                         print(f"  [XETRA] {t} sin nuevas sesiones (next={next_day.date()}, today={today_norm.date()})")
                         frames.append(self._to_multiindex(df_cached, t))
                         continue

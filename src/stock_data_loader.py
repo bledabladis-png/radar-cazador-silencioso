@@ -694,7 +694,8 @@ def download_stock_prices(reference_date=None, run_id=None):
     if eu_candidates:
         print(f"Intentando Euronext para {len(eu_candidates)} tickers")
         try:
-            eu_data = euronext.get_prices(eu_candidates, nb_session=300, use_cache=True)
+            eu_data = euronext.get_prices(eu_candidates, nb_session=300,
+                                           use_cache=True, reference_date=reference_date)
             if eu_data is not None and not eu_data.empty:
                 cascade_frames.append(eu_data)
         except Exception as e:
@@ -713,7 +714,8 @@ def download_stock_prices(reference_date=None, run_id=None):
     if bm_candidates:
         print(f"Intentando BME para {len(bm_candidates)} tickers")
         try:
-            bm_data = bme.get_prices(bm_candidates, use_cache=True)
+            bm_data = bme.get_prices(bm_candidates, use_cache=True,
+                                      reference_date=reference_date)
             if bm_data is not None and not bm_data.empty:
                 cascade_frames.append(bm_data)
         except Exception as e:
