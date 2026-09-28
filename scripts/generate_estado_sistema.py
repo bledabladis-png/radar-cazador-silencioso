@@ -1,4 +1,4 @@
-"""Genera docs/auditoria/iae/ESTADO_SISTEMA.md.
+"""Genera Consolidacion_Documentos/ESTADO_SISTEMA.md.
 
 Fuente unica de hechos verificables del sistema IAE. Se regenera
 con:
@@ -21,7 +21,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-OUT = ROOT / 'docs' / 'auditoria' / 'iae' / 'ESTADO_SISTEMA.md'
+OUT = ROOT / 'Consolidacion_Documentos' / 'ESTADO_SISTEMA.md'
 
 # Modulos IAE a auditar
 IAE_ROOT = ROOT / 'src' / 'institutional_accumulation'
@@ -202,9 +202,10 @@ def main():
         '',
         '    py scripts/generate_estado_sistema.py',
         '',
-        'Este fichero es complementario a `ESTADO_DECLARADO.md` (declaraciones',
-        'subjetivas de fase, prohibiciones, deuda). Los demas documentos del',
-        'proyecto describen su tema; NO declaran el estado del sistema.',
+        'Snapshot regenerable del sistema. Los documentos del corpus',
+        'consolidado (Consolidacion_Documentos/00-05) describen su tema;',
+        'NO declaran el estado. Este fichero es la fuente autoritativa de',
+        'HEAD, tests e integridad del codigo.',
         '',
         '---',
         '',
@@ -222,8 +223,7 @@ def main():
     footer = [
         '---',
         '',
-        'Fin del estado generado. Fuente de verdad: `ESTADO_DECLARADO.md` (declaraciones)',
-        '+ `ESTADO_SISTEMA.md` (este fichero, hechos).',
+        'Fin del estado generado. Fuente autoritativa: este fichero.',
         '',
     ]
     

@@ -70,7 +70,7 @@ Lo que NUNCA haces:
 
 ## 3. ESTADO DEL SISTEMA
 
-Fuente autoritativa: `docs/auditoria/iae/ESTADO_SISTEMA.md` (regenerado con `py scripts/generate_estado_sistema.py`).
+Fuente autoritativa: `Consolidacion_Documentos/ESTADO_SISTEMA.md` (regenerado con `py scripts/generate_estado_sistema.py`).
 
 Snapshot al cierre del ultimo commit:
 - HEAD: ver ESTADO_SISTEMA.md

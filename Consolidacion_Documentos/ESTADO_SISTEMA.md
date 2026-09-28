@@ -2,30 +2,31 @@
 
 Hechos verificables del sistema. Generado por script.
 
-**Generado en:** 2026-09-28 15:56:02 UTC
+**Generado en:** 2026-09-28 22:09:43 UTC
 **Snapshot tomado sobre:** commit HEAD de la fecha indicada, al momento de generar
 **NO editar a mano.** Regenerar con:
 
     py scripts/generate_estado_sistema.py
 
-Este fichero es complementario a `ESTADO_DECLARADO.md` (declaraciones
-subjetivas de fase, prohibiciones, deuda). Los demas documentos del
-proyecto describen su tema; NO declaran el estado del sistema.
+Snapshot regenerable del sistema. Los documentos del corpus
+consolidado (Consolidacion_Documentos/00-05) describen su tema;
+NO declaran el estado. Este fichero es la fuente autoritativa de
+HEAD, tests e integridad del codigo.
 
 ---
 
 ## 1. Git
 
-- **HEAD:** `8b77d13`
-- **HEAD completo:** `8b77d13852757ff92f0799ed480e9b924f0caa4e`
-- **Fecha commit HEAD:** 2026-09-28 17:48:57 +0200
-- **Ahead:** 0
+- **HEAD:** `a610510`
+- **HEAD completo:** `a610510efadc1e165617ac043f9251955784bda0`
+- **Fecha commit HEAD:** 2026-09-29 00:05:28 +0200
+- **Ahead:** 6
 - **Behind:** 0
-- **origin/main:** `8b77d13`
+- **origin/main:** `33a25fd`
 
 ## 2. Tests (pytest real)
 
-- **Resumen:** 2267 passed, 2 skipped in 72.80s (0:01:12)
+- **Resumen:** 2267 passed, 2 skipped in 70.35s (0:01:10)
 - **Exit code:** 0
 
 ## 3. Integridad del codigo
@@ -117,5 +118,4 @@ proyecto describen su tema; NO declaran el estado del sistema.
 
 ---
 
-Fin del estado generado. Fuente de verdad: `ESTADO_DECLARADO.md` (declaraciones)
-+ `ESTADO_SISTEMA.md` (este fichero, hechos).
+Fin del estado generado. Fuente autoritativa: este fichero.

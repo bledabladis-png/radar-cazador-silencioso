@@ -257,7 +257,7 @@ El 2026-09-28 se inicia el refactor documental. Nuevo corpus:
 - `04_HISTORICO.md` (este fichero, no se pega).
 - `05_BITACORA.md` (sesiones recientes, no se pega).
 
-**`ESTADO_SISTEMA.md`** se mantiene fuera del corpus consolidado porque es auto-generado por `scripts/generate_estado_sistema.py` y se regenera con cada commit. Se referencia desde `00_ARRANQUE.md`.
+**`ESTADO_SISTEMA.md`** se genera en `Consolidacion_Documentos/ESTADO_SISTEMA.md` por `scripts/generate_estado_sistema.py`. Se regenera con cada commit. Se referencia desde `00_ARRANQUE.md`.
 
 **Pendiente:** borrar los ~570 KB del corpus antiguo una vez que los 6 ficheros esten verificados.
 
