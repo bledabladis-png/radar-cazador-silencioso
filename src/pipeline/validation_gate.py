@@ -128,7 +128,7 @@ def run_validation_gate(slpm_v12_data, pcr_data, darkpool_data, mte_result,
                     _add_check(validation_checks, validation_errors, "Freshness Dark Pool", True, f"obsoleto {age} dias (advertencia)")
                 else:
                     _add_check(validation_checks, validation_errors, "Freshness Dark Pool", True, f"{age} dias")
-            except Exception:
+            except (ValueError, TypeError, OSError):
                 _add_check(validation_checks, validation_errors, "Freshness Dark Pool", True, "sin fecha")
         else:
             _add_check(validation_checks, validation_errors, "Freshness Dark Pool", True, "sin fecha")
@@ -146,7 +146,7 @@ def run_validation_gate(slpm_v12_data, pcr_data, darkpool_data, mte_result,
                     _add_check(validation_checks, validation_errors, "Freshness PCR", True, f"desactualizado {age} dias (advertencia)")
                 else:
                     _add_check(validation_checks, validation_errors, "Freshness PCR", True, f"{age} dias")
-            except Exception:
+            except (ValueError, TypeError, OSError):
                 _add_check(validation_checks, validation_errors, "Freshness PCR", True, "sin fecha")
         else:
             _add_check(validation_checks, validation_errors, "Freshness PCR", True, "sin fecha")
@@ -158,7 +158,7 @@ def run_validation_gate(slpm_v12_data, pcr_data, darkpool_data, mte_result,
         from config.weights import validate_weights
         validate_weights()
         _add_check(validation_checks, validation_errors, "Config pesos", True, "validados")
-    except Exception as e:
+    except (ImportError, KeyError, ValueError, TypeError, AttributeError, RuntimeError) as e:
         _add_check(validation_checks, validation_errors, "Config pesos", False, str(e))
 
     # 10. Anti-Double-Counting
@@ -178,7 +178,7 @@ def run_validation_gate(slpm_v12_data, pcr_data, darkpool_data, mte_result,
             _add_check(validation_checks, validation_errors, "Anti-Double-Counting", True, f"correccion LIS activa, {critical_vars} criticas, {high_vars} altas")
         else:
             _add_check(validation_checks, validation_errors, "Anti-Double-Counting", True, f"correccion LIS activa, sin criticas, {high_vars} compartidas")
-    except Exception as e:
+    except (ImportError, KeyError, ValueError, TypeError, AttributeError, RuntimeError) as e:
         _add_check(validation_checks, validation_errors, "Anti-Double-Counting", False, str(e))
 
     # Resultado
@@ -195,7 +195,7 @@ def run_validation_gate(slpm_v12_data, pcr_data, darkpool_data, mte_result,
     try:
         dc_audit = audit_double_counting()
         dc_summary = dc_audit.get('summary', '')
-    except Exception as e:
+    except (KeyError, ValueError, TypeError, AttributeError, RuntimeError) as e:
         print(f"  [WARN] audit_double_counting: {e}")
 
     return {
