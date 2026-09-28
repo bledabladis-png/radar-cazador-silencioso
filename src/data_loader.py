@@ -209,7 +209,13 @@ def _postprocess_market_data(data, reference_date, run_id, *, write_manifest):
 def _check_khuerfano(data_batch, batch, expected_session):
     """K-HUERFANO (2026-09-17): tickers del lote con Close NaN en expected_session.
     Solo observabilidad. No modifica datos ni reintenta descargas.
-    Ver dictamen auditor caso KHC."""
+    Ver dictamen auditor caso KHC.
+
+    A5-18 (2026-09-28): WONT FIX razonado. La deteccion pasiva es
+    deliberada: el retry por ticker es alcance separado. K-HUERFANO
+    esta en PROMPT Seccion 12 como monitorizacion activa con criterios
+    de reapertura (mismo ticker repetidamente, multiples tickers,
+    produccion 04:00 UTC, cobertura materialmente inferior)."""
     if expected_session is None or data_batch is None or data_batch.empty:
         return []
     _exp_ts = pd.Timestamp(expected_session)

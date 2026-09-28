@@ -23,6 +23,13 @@ class DataRouter:
         provider devuelve N tickers pero se pidieron M > N, se prueba el
         siguiente. Si ninguno cubre el lote, cae al fallback de cache
         (que a su vez raise RuntimeError si falta alguno).
+
+        A5-09 (2026-09-28): WONT FIX razonado. period='10y' es diseno
+        deliberado (indicadores necesitan historia larga: EMA200,
+        RS126, Wyckoff, robust_zscore). Cambiar a fetch incremental
+        requiere proyecto separado (leer cache, extraer last_date,
+        descargar desde last_date+1, mergear, deduplicar). Beneficio
+        real: ancho de banda. Cero impacto funcional. ROI < 1.
         """
         requested = set(tickers)
         for name in self.preferred_order:
