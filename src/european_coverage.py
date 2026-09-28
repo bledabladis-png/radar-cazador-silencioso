@@ -18,15 +18,22 @@ OUTPUT_CSV = Path('outputs/history/european_coverage.csv')
 GAP_THRESHOLD = 7
 
 
-def _collect():
-    """Devuelve lista de dicts con info de cobertura por ticker."""
+def _collect(reference_date=None):
+    """Devuelve lista de dicts con info de cobertura por ticker.
+
+    F-UX-02 (2026-09-28): con reference_date, la decision no depende
+    de datetime.now(). Fallback legacy cuando es None.
+    """
     rows = []
     providers = [
         ('Euronext', EuronextProvider()),
         ('Xetra', XetraProvider()),
         ('BME', BMEProvider()),
     ]
-    today = pd.Timestamp.now().normalize()
+    if reference_date is not None:
+        today = pd.Timestamp(reference_date).normalize()
+    else:
+        today = pd.Timestamp.now().normalize()
 
     for source_name, provider in providers:
         for ticker in provider.supported_tickers():
@@ -138,12 +145,19 @@ def _append_csv(rows, today_str):
     df.to_csv(OUTPUT_CSV, index=False)
 
 
-def generate_european_coverage_report():
-    """Genera markdown + anexa CSV historico. Retorna dict resumen."""
-    today = pd.Timestamp.now().normalize()
+def generate_european_coverage_report(reference_date=None):
+    """Genera markdown + anexa CSV historico. Retorna dict resumen.
+
+    F-UX-02 (2026-09-28): reference_date opcional para alinear la
+    fecha del reporte con el pipeline. Fallback legacy si None.
+    """
+    if reference_date is not None:
+        today = pd.Timestamp(reference_date).normalize()
+    else:
+        today = pd.Timestamp.now().normalize()
     today_str = today.strftime('%Y-%m-%d')
 
-    rows = _collect()
+    rows = _collect(reference_date=reference_date)
 
     OUTPUT_MD.parent.mkdir(parents=True, exist_ok=True)
     md_content = _render_markdown(rows, today_str)

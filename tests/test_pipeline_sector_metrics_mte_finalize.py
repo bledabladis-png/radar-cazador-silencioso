@@ -209,7 +209,7 @@ def test_save_sector_rankings_escribe_csv(tmp_path, monkeypatch):
 def test_generate_european_coverage_invoca_modulo(tmp_path, monkeypatch):
     _setup_tmp(tmp_path, monkeypatch)
     called = {"n": 0}
-    def _fake_generate():
+    def _fake_generate(*args, **kwargs):
         called["n"] += 1
     with patch("src.european_coverage.generate_european_coverage_report",
                side_effect=_fake_generate):

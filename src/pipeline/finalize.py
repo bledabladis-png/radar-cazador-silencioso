@@ -124,10 +124,13 @@ def save_sector_rankings(sector_results):
     sector_df.to_csv("outputs/report/sector_rankings.csv", index=False)
 
 
-def generate_european_coverage():
-    """Genera reporte de cobertura europea (descriptivo; no rompe el run si falla)."""
+def generate_european_coverage(reference_date=None):
+    """Genera reporte de cobertura europea (descriptivo; no rompe el run si falla).
+
+    F-UX-02 (2026-09-28): reference_date opcional se propaga al reporte.
+    """
     try:
         from src.european_coverage import generate_european_coverage_report
-        generate_european_coverage_report()
+        generate_european_coverage_report(reference_date=reference_date)
     except Exception as e:
         print(f"  Cobertura europea omitida: {e}")

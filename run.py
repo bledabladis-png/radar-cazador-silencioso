@@ -242,7 +242,7 @@ def main():
                         financial_regime, vol_regime, sector_results,
                         df_macro_manual=df_macro_manual)
     save_sector_rankings(sector_results)
-    generate_european_coverage()
+    generate_european_coverage(reference_date=reference_date)
 
 
 if __name__ == "__main__":
