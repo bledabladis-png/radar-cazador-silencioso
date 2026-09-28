@@ -17,7 +17,7 @@ from pathlib import Path
 
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-CONTRATO = REPO_ROOT / 'docs' / 'auditoria' / 'iae' / 'NIPC_CONTRATOS_SEMANTICOS_v1.md'
+CONTRATO = REPO_ROOT / 'Consolidacion_Documentos' / '06_IAE_P65_P66.md'
 
 
 def _contrato_texto():
