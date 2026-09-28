@@ -126,6 +126,37 @@ USA-abierta, el df contiene fila europea con date > expected_session.
 ddb4d31 (refactor G-01 + tests), a4095b1 (docs cierre), fabcdae (snapshot),
 2f63db7 (A6.1-01), 73758ce (snapshot A6.1-01).
 
+**A6.2 (workflows, en curso).** Gate 0: `outputs/audit/A6_2_1_20260929_012650.txt`
+(557 lineas, 10 workflows). Clasificacion:
+
+- **A6.2-02 (BAJA) CORREGIDO (4fbb135).** `_cron_probe.yml` residual
+  (introducido en 03f3b42 el 2026-09-27 para diagnosticar el finding
+  "slot '17 3' no dispara"). El probe confirmo lo contrario: el cron
+  SI dispara, con retrasos variables 2-8h. Finding cerrado con causa
+  raiz: no-disparo era falso, es retraso variable de GitHub Actions.
+  Probe eliminado. Comentario de `daily_run.yml` actualizado. Tabla
+  de `02_ARQUITECTURA` limpiada.
+- **A6.2-01 (MEDIA) DEUDA DOCUMENTADA.** 4 workflows comparten cron
+  `17 6 UTC` (`update_macro_manual`, `update_qqq_sec_flow`,
+  `update_sec_nport`, `update_sec_13f`). Dias 15 ene/jul (2 concurrentes),
+  dias 20 ene/abr/jul/oct (2-3 concurrentes). Todos con
+  `git pull --rebase` + `git push` sobre `main`. Ventana de race real;
+  sin evidencia empirica de dano en 5 meses. Sin patch por ROI bajo.
+- **A6.2-03 (MEDIA) DEUDA DOCUMENTADA.** 7 workflows `update_*`
+  comparten estructura identica (checkout + setup-python + pip install
+  + compileall + script + git add + commit + pull --rebase + push).
+  Sin `workflow_call` ni composite action. Refactor masivo no procede
+  sin contrato.
+- **A6.2-04 (BAJA) DEUDA DOCUMENTADA.** `git pull --rebase` sin retry
+  en 7 workflows. Fallo por conflicto → workflow rojo. Combinado con
+  A6.2-01, ventana de conflicto.
+- **A6.2-05 (MEDIA) CERRADO por A6.2-02.** Los 5 slots de
+  `daily_run.yml` disparan con retrasos variables (2-8h observados),
+  no con timing fijo. Documentado en el comentario de `daily_run.yml`.
+- **Falsos positivos descartados:** `pytest tests/ validation/` en CI
+  colecta solo `tests/` (2275); `validation/` no tiene tests pytest,
+  sus 7 scripts se invocan en steps dedicados.
+
 **Pendiente.** A6.1 (nucleo compartido). B (IAE completo). C (tests).
 H5.3 (cron nov 2026). C2 (920).
 

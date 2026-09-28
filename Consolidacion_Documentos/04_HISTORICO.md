@@ -144,6 +144,12 @@ Ciclos completados (12 en la sesion principal):
   tecnico y los 4 callers lo ignoran; el contrato actual esta anclado
   por `test_artifact_manifest.py:85-103`. Deuda fuera de A6.1:
   `darkpool_scoring.py::robust_zscore` variante local. Commit 2f63db7.
+- **A6.2 (workflows):** Gate 0 + auditoria de los 10 workflows de
+  `.github/workflows/`. A6.2-02 (BAJA, corregido): `_cron_probe.yml`
+  eliminado tras confirmar que el finding "slot '17 3' no dispara"
+  era falso (retrasos 2-8h, no no-disparo). Commit 4fbb135. A6.2-01,
+  A6.2-03, A6.2-04 (deuda documentada): colision cron `17 6`, duplicacion
+  estructural de 7 workflows `update_*`, `git pull --rebase` sin retry.
 
 ---
 
