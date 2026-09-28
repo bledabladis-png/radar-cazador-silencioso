@@ -323,3 +323,56 @@ class TestRetryPolicy:
         with pytest.raises(RuntimeError, match="429"):
             p._get("/prices/latest")
         assert calls["n"] == 1
+
+
+# --- F3-11 (2026-09-28): walk-back de updated_at ---
+
+def _mock_get_spot(provider, spot_json):
+    def _fake(path, params=None):
+        if path == "/prices/latest":
+            return spot_json
+        raise RuntimeError("endpoint no mockeado: " + path)
+    provider._get = _fake
+
+
+def test_fetch_spot_walk_back_si_updated_at_cae_en_sabado():
+    """F3-11: si updated_at cae en sabado, la fecha del spot se walk-back al viernes.
+
+    2026-09-12 es sabado; el viernes anterior es 2026-09-11.
+    """
+    from datetime import date
+    spot_json = {
+        "status": "ok",
+        "data": {"prices": [
+            {"code": "GOLD_USD", "price": 4000.0, "updated_at": "2026-09-12T14:00:00.000Z"},
+            {"code": "COPPER_USD", "price": 6.5, "updated_at": "2026-09-12T14:00:00.000Z"},
+            {"code": "NATURAL_GAS_USD", "price": 3.2, "updated_at": "2026-09-12T14:00:00.000Z"},
+        ]},
+    }
+    p = FuturesProvider()
+    _mock_get_spot(p, spot_json)
+    _, df_spot = p.fetch_commodities(only_futures=[], skip_spot=False)
+    assert not df_spot.empty
+    assert df_spot.index[0].date() == date(2026, 9, 11), \
+        f"esperado viernes 2026-09-11, obtenido {df_spot.index[0].date()}"
+
+
+def test_fetch_spot_no_walk_back_si_updated_at_es_bursatil():
+    """F3-11: si updated_at ya es dia bursatil, la fecha no cambia.
+
+    2026-09-11 es viernes (dia bursatil).
+    """
+    from datetime import date
+    spot_json = {
+        "status": "ok",
+        "data": {"prices": [
+            {"code": "GOLD_USD", "price": 4000.0, "updated_at": "2026-09-11T14:00:00.000Z"},
+            {"code": "COPPER_USD", "price": 6.5, "updated_at": "2026-09-11T14:00:00.000Z"},
+            {"code": "NATURAL_GAS_USD", "price": 3.2, "updated_at": "2026-09-11T14:00:00.000Z"},
+        ]},
+    }
+    p = FuturesProvider()
+    _mock_get_spot(p, spot_json)
+    _, df_spot = p.fetch_commodities(only_futures=[], skip_spot=False)
+    assert not df_spot.empty
+    assert df_spot.index[0].date() == date(2026, 9, 11)

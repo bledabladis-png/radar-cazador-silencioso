@@ -162,6 +162,8 @@ class FuturesProvider(MarketDataProvider):
         }
 
     def _fetch_spot(self) -> list:
+        from datetime import date as _date, timedelta as _td
+        from src.market_calendar import is_market_day as _is_market_day
         codes = ",".join(cfg["code"] for cfg in SPOT_MAP.values())
         data = self._get("/prices/latest", params={"by_code": codes})
         prices = (data.get("data") or {}).get("prices") or []
@@ -175,8 +177,19 @@ class FuturesProvider(MarketDataProvider):
             ts = p.get("updated_at") or p.get("as_of") or p.get("created_at")
             if not ts:
                 continue
+            # F3-11 (2026-09-28): walk-back a ultimo dia bursatil NYSE.
+            # `updated_at` es la ultima actualizacion del precio en la
+            # API, no la fecha de observacion del instrumento. Si cae
+            # en fin de semana (precio congelado desde el viernes),
+            # se publicaba una fila con fecha no bursatil (F3-06).
+            try:
+                _d = _date.fromisoformat(ts[:10])
+            except ValueError:
+                continue
+            while not _is_market_day(_d):
+                _d -= _td(days=1)
             rows.append({
-                "date": ts[:10],
+                "date": _d.isoformat(),
                 "ticker": ticker,
                 "Open": None,
                 "High": None,

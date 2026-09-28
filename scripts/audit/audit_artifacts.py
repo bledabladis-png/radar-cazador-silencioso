@@ -14,6 +14,12 @@ import pandas as pd
 ROOT = Path(__file__).resolve().parent.parent.parent
 DATA = ROOT / "data"
 
+# F3-10 (2026-09-28): sys.path.insert para que 'from src.* import ...'
+# funcione cuando el script se ejecuta desde un CWD distinto al repo root.
+import sys as _sys
+if str(ROOT) not in _sys.path:
+    _sys.path.insert(0, str(ROOT))
+
 ARTIFACTS = [
     "market_data",
     "stock_prices",
