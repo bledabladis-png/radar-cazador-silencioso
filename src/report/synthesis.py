@@ -7,6 +7,7 @@ Extraidos de src/report_generator.py (refactor C1, fase C1-6d6).
 import pandas as pd
 
 from config.index_tickers import INDEX_CONFIG
+from src.report.helpers import _fmt_num
 from config.tickers import SECTOR_NAMES
 
 
@@ -38,7 +39,7 @@ def render_indices_internacionales(index_phases, index_leaders):
             out.append("| # | Ticker | RS | RS Mom | Flujo (z) | WLS | Fase Wyckoff |\n")
             out.append("|---|--------|----|--------|-----------|-----|---------------|\n")
             for i, (_, row) in enumerate(top5.iterrows(), 1):
-                out.append(f"| {i} | {row['ticker']} | {row['rs']:.2f} | {row['rs_mom']:.2%} | {row['flow_proxy_z']:.2f} | {row['wls']:.2f} | {row['wyckoff_phase']} |\n")
+                out.append(f"| {i} | {row['ticker']} | {_fmt_num(row['rs'], '{:.2f}')} | {_fmt_num(row['rs_mom'], '{:.2%}')} | {_fmt_num(row['flow_proxy_z'], '{:.2f}')} | {_fmt_num(row['wls'], '{:.2f}')} | {row['wyckoff_phase']} |\n")
             out.append("\n")
     else:
         out.append("*Ningún indice en fase de acumulación o markup en esta ejecución.*\n\n")

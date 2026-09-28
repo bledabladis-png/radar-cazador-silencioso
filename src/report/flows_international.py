@@ -7,7 +7,7 @@ Extraidos de src/report_generator.py (refactor C1, fase C1-6d4a).
 
 import pandas as pd
 
-from src.report.helpers import _fmt_signed
+from src.report.helpers import _fmt_num, _fmt_signed
 
 
 def render_flujo_daxex(blackrock_dax_flow):
@@ -144,7 +144,7 @@ def render_rendimiento_qqq(qqq_performance_data):
         out.append("|--------|-----|----|----|----|-----|--------------|\n")
         for _, row in qqq_performance_data.iterrows():
             label = row.get('displayLabel', 'QQQ (Yahoo Finance)')
-            out.append(f"| {label} | {row['ytd']:.2f}% | {row['y1']:.2f}% | {row['y3']:.2f}% | {row['y5']:.2f}% | {row['y10']:.2f}% | {row['inception']:.2f}% |\n")
+            out.append(f"| {label} | {_fmt_num(row['ytd'], '{:.2f}%')} | {_fmt_num(row['y1'], '{:.2f}%')} | {_fmt_num(row['y3'], '{:.2f}%')} | {_fmt_num(row['y5'], '{:.2f}%')} | {_fmt_num(row['y10'], '{:.2f}%')} | {_fmt_num(row['inception'], '{:.2f}%')} |\n")
         # I3 (2026-09-18): declarar la fecha efectiva del dataset
         # (effectiveDate), no el timestamp del run (as_of_date).
         # Fallback a as_of_date truncado si effectiveDate falta.

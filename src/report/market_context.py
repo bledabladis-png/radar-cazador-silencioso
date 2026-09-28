@@ -7,7 +7,7 @@ Extraidos de src/report_generator.py (refactor C1, fase C1-6d3b).
 
 import pandas as pd
 
-from src.report.helpers import _fmt_signed
+from src.report.helpers import _fmt_num, _fmt_signed
 
 
 def render_liderazgo_interno(rs_internal_data):
@@ -72,7 +72,7 @@ def render_dispersion_sectores(sector_dispersion_data):
         out.append("|-------|------------|-----------|------------|---------|----------------|\n")
         for _, row in sector_dispersion_data.iterrows():
             date_str = pd.Timestamp(row['date']).strftime('%Y-%m-%d') if pd.notna(row['date']) else 'N/D'
-            out.append(f"| {date_str} | {row['range_pp']:.2f} | {row['std_pp']:.2f} | {row['mean_ret']:.2f} | {row['dispersion_reading']} | {row['heterogeneity_type']} |\n")
+            out.append(f"| {date_str} | {_fmt_num(row['range_pp'], '{:.2f}')} | {_fmt_num(row['std_pp'], '{:.2f}')} | {_fmt_num(row['mean_ret'], '{:.2f}')} | {row['dispersion_reading']} | {row['heterogeneity_type']} |\n")
         out.append("\n")
         out.append("*La dispersión mide la separación entre los retornos de los 11 sectores. No es un score ni una señal.*\n\n")
     return out
@@ -90,7 +90,7 @@ def render_correlacion_sectores(sector_correlation_summary_data):
         out.append("| Ventana | Media | Mediana | P25 | P75 | Mín | Máx | Lectura |\n")
         out.append("|---------|-------|---------|-----|-----|-----|-----|---------|\n")
         for _, row in _corr_latest.iterrows():
-            out.append(f"| {int(row['window'])}d | {row['corr_mean']:.2f} | {row['corr_median']:.2f} | {row['corr_p25']:.2f} | {row['corr_p75']:.2f} | {row['corr_min']:.2f} | {row['corr_max']:.2f} | {row['correlation_reading']} |\n")
+            out.append(f"| {int(row['window'])}d | {_fmt_num(row['corr_mean'], '{:.2f}')} | {_fmt_num(row['corr_median'], '{:.2f}')} | {_fmt_num(row['corr_p25'], '{:.2f}')} | {_fmt_num(row['corr_p75'], '{:.2f}')} | {_fmt_num(row['corr_min'], '{:.2f}')} | {_fmt_num(row['corr_max'], '{:.2f}')} | {row['correlation_reading']} |\n")
         out.append("\n")
         out.append("*La correlación mide el co-movimiento entre retornos sectoriales. No es un score ni una señal.*\n\n")
     return out

@@ -8,6 +8,7 @@ import numpy as np
 
 from config.tickers import SECTOR_NAMES, MARKET_TICKERS
 from src.utils import safe_mean
+from src.report.helpers import _fmt_num
 
 
 def render_rankings_sectoriales(sector_results, tactical_scores,
@@ -36,7 +37,7 @@ def render_rankings_sectoriales(sector_results, tactical_scores,
         comm_level = shock.get('commodity_level', 'N/A') if shock else 'N/A'
         comm_val = shock.get('commodity_corr_value', None) if shock else None
         comm_display = f"{comm_level} ({comm_val:+.2f})" if comm_val is not None and comm_level != 'N/A' else comm_level
-        out.append(f"| {i} | {name} ({ticker}) | {score:.2f} | {t_score:+.2f} | {s_score:+.2f} | {pers_str} | {agree_display} | {comm_display} | {wyckoff} |\n")
+        out.append(f"| {i} | {name} ({ticker}) | {_fmt_num(score, '{:.2f}')} | {_fmt_num(t_score, '{:+.2f}')} | {_fmt_num(s_score, '{:+.2f}')} | {pers_str} | {agree_display} | {comm_display} | {wyckoff} |\n")
     out.append("\n")
     return out
 
