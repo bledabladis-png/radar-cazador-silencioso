@@ -77,7 +77,7 @@ Snapshot al cierre del ultimo commit:
 - Tests: 2267 passed + 2 skipped + 0 failed
 - Validation Gate: 10/10
 - Working tree: limpio
-- Corpus documental: v1 (Consolidacion_Documentos/00-05, 2026-09-29)
+- Corpus documental: v2 (Consolidacion_Documentos/00-06, 2026-09-29)
 - Cobertura configurada: 313/313 tickers
 
 **Fases IAE:**
@@ -166,6 +166,7 @@ El corpus consolidado vive en `Consolidacion_Documentos/`:
 | `03_IAE.md` | 18 KB | Subsistema IAE completo. |
 | `04_HISTORICO.md` | 17 KB | Cronologia de decisiones. |
 | `05_BITACORA.md` | 7 KB | Sesiones recientes (se poda). |
+| `06_IAE_P65_P66.md` | 11 KB | Contrato P65 + P66 (L3 cruzada). |
 | `ESTADO_SISTEMA.md` | 5 KB | Snapshot auto-generado (no editar a mano). |
 
 | Doc | Contenido | Cuando consultarlo |
@@ -176,6 +177,7 @@ El corpus consolidado vive en `Consolidacion_Documentos/`:
 | 03_IAE.md | Subsistema IAE completo | Al trabajar en IAE |
 | 04_HISTORICO.md | Cronologia de decisiones | Para "por que esta asi" |
 | 05_BITACORA.md | Sesiones recientes | Al cerrar una sesion |
+| 06_IAE_P65_P66.md | Contrato P65 + P66 (L3 cruzada) | Al trabajar en P65/P66 |
 
 ---
 

@@ -118,6 +118,27 @@ Ciclos completados (12 en la sesion principal):
 - **Refactor documental**: creacion del corpus consolidado (00-05). Borrado del corpus antiguo pendiente.
 ---
 
+### 2026-09-29: G-01 (truncado stock_prices) + P66-01 (extraccion 14)
+
+- **G-01:** el run 36466343234 (slot 17 11, retraso GitHub 7h19m) fallo
+  en `guard_coverage` por `last_date=2026-09-28 > expected_session=2026-09-25`.
+  Causa raiz: `stock_prices.parquet` es multi-mercado pero `expected_session`
+  es NYSE-only. En ventana UE-cerrada + USA-abierta, el df contiene fila
+  europea post-expected. Fix: truncado pre-write a `index <= expected_session`
+  en `src/stock_data_loader.py`, solo para el parquet. El df en memoria
+  se devuelve intacto. Commit 3f789f1.
+- **P66-01:** los 10 tests Capa A de `test_p66_contract.py` quedaron
+  huerfanos tras `cdf47ad` (borrado del corpus antiguo). El contrato seguia
+  vigente (docstrings de `reporting_dedup.py`, `absence.py`, `timestamps.py`;
+  Capa C en xfail esperando GO #40 step 2). Extraccion del 14 (P65 + L3
+  cruzada) a `Consolidacion_Documentos/06_IAE_P65_P66.md`. Reapuntado
+  CONTRATO. Commit 5a039e6 (amend de 6550b13).
+- Suite: 2267 passed + 2 skipped (antes: 2257 + 10 failed por P66).
+- **Cronologia del corpus:** nuevo documento `06_IAE_P65_P66.md`. Corpus
+  consolidado pasa a v2 (00-06).
+
+---
+
 ## 3. HALLAZGOS POR BLOQUE TEMATICO
 
 Agrupacion de los cierres mas relevantes por area. El detalle granular esta en `git log`. Los IDs (FU-xxx, K-xxx, F2.4-xx, A5-xx, DT-x, H-x) son de la nomenclatura interna de la auditoria y no se usan ya en el trabajo activo.

@@ -87,7 +87,7 @@ Pipeline contractual: **§10.1 -> §10.7** (catalogo -> identidad -> delta share
 
 ## 3. CONTRATOS DEL MODULO IAE
 
-Cinco contratos semanticos, definidos en `NIPC_CONTRATOS_SEMANTICOS_v1.md` (historico, no normativo vigente) y verificados en el pipeline productivo.
+Cinco contratos semanticos (P38, NIPC, P61/P63, B1, B2-PIT) verificados en el pipeline productivo. El contrato P65/P66 (Manager Duplication + L3 cruzada) vive en `06_IAE_P65_P66.md`, extraido del corpus antiguo tras `cdf47ad`.
 
 ### 3.1. P38 - Coverage contractual
 
@@ -294,7 +294,7 @@ Regeneracion automatica:
 **E2E contractual:** `scripts/iae_contractual_nipc_e2e.py` valida `compute_nipc_contractual` contra §12.5. PASS con crosswalk 7caa86b. FAIL con crosswalk regenerado por Fase G (drift documentado como H1-A, CERRADO con prueba forense).
 
 **Coherencia verificada:**
-- Pesos, MATCH_KEY, DELTA_COLUMNS, filtros SH/PUTCALL, reglas BOTH/NEW/EXIT/UNRESOLVED, fail-closed de TARGET_PAIRWISE vacio: coinciden literalmente con `NIPC_CONTRATOS_SEMANTICOS_v1.md` (historico).
+- Pesos, MATCH_KEY, DELTA_COLUMNS, filtros SH/PUTCALL, reglas BOTH/NEW/EXIT/UNRESOLVED, fail-closed de TARGET_PAIRWISE vacio: coinciden literalmente con los contratos semanticos consolidados (ver `06_IAE_P65_P66.md` para P65/P66).
 - Identidad dual `equity:<TICKER>` / `figi:<FIGI>`: capacidad del resolver, no observada en E2E con `figi_lookup=None`. Auditoria empirica A.1 sobre 4.780.572 units: 0 shareClassFIGI bajo dos canonical_security, 0 uso de rama `figi:*`, delta NIPC = 0 al normalizar por shareClassFIGI.
 - GATE 1 nomenclatura catalog / TARGET. GATE 2 identidad dual (verificada empiricamente).
 - Validacion externa OpenFIGI: 227/227 match sobre 243 CUSIPs resolubles, 16 sin hit (prefijos no-USA).

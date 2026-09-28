@@ -44,6 +44,41 @@ Al cerrar una sesion nueva, se anade arriba (las mas recientes primero). Si hay 
 
 ## 3. SESIONES
 
+### 2026-09-29 — G-01 (truncado stock_prices) + P66-01 (extraccion 14)
+
+**Objetivo.** Diagnosticar el run rojo 36466343234 (slot 17 11, retraso GitHub 7h19m).
+El guard abortaba el push por `last_date=2026-09-28 > expected_session=2026-09-25`.
+Causa raiz: `stock_prices.parquet` es multi-mercado (US + LSE + Euronext + Xetra),
+pero `expected_session` es NYSE-only por construccion. En ventana UE-cerrada +
+USA-abierta, el df contiene fila europea con date > expected_session.
+
+**Hecho.**
+
+*G-01 (src/stock_data_loader.py).*
+- Truncado del df a `index <= expected_session` solo para el parquet.
+- El df en memoria se devuelve intacto: `leaders.py` ya lo trunca por
+  `resolve_effective_date` antes de propagar.
+- Ningun consumidor aguas abajo usa la fila europea parcial.
+
+*P66-01 (test_p66_contract.py + Consolidacion_Documentos/06_IAE_P65_P66.md).*
+- Hallazgo colateral: `cdf47ad` (borrado del corpus antiguo) elimino
+  `docs/auditoria/iae/NIPC_CONTRATOS_SEMANTICOS_v1.md`. Los 10 tests
+  Capa A de P66 quedaron huerfanos (creados en commits posteriores
+  sobre vista obsoleta del repo).
+- Extraccion del §14 (P65 + L3 cruzada P66, 313 lineas) a
+  `Consolidacion_Documentos/06_IAE_P65_P66.md`.
+- Reapuntado CONTRATO en `tests/test_p66_contract.py`.
+
+**Commits.** 3f789f1 (G-01), 5a039e6 (P66-01, amend de 6550b13).
+
+**Pendiente.** A6.1 (nucleo compartido). B (IAE completo). C (tests).
+H5.3 (cron nov 2026). C2 (920).
+
+**Proximo paso sugerido.** Verificar en CI que el proximo run real del
+slot post-cierre USA publica parquet sin fallo de guard. Despues retomar A6.1.
+
+---
+
 ### 2026-09-28 (tarde/noche) — Auditoria interna A1-A5 del sistema + refactor documental
 
 **Objetivo.** Auditoria linea a linea del sistema por bloques, del nucleo temporal al pipeline. Posteriormente: consolidacion documental (dado que el corpus antiguo era inviable de usar).
@@ -142,18 +177,6 @@ Ademas: desbloqueo SEC Official List Q2 2026 (sufijo `-txt`, commit 08a6c6a). Au
 **Pendiente.** Integracion con workflows.
 
 **Proximo paso sugerido.** Continuar con mejoras de infraestructura.
-
----
-
-### 2026-09-24 — BACKLOG + FU-002-bymarket + health check
-
-**Objetivo.** Cerrar backlog de bugs de presentacion del reporte. Blindar el guard_coverage para ventana Europa-USA.
-
-**Hecho.** 8 bugs de render resueltos. FU-002-bymarket (manifest + guard, dictamen auditor externo). Health check semanal. Bug latente A/D (continuidad temporal, commit fc21671). Consolidacion del registry de tickers. F-IAE-HOLIDAY-01. F-IAE-CRON-01.
-
-**Pendiente.** Trazabilidad de IAE.
-
-**Proximo paso sugerido.** Sesion de cierre masivo del IAE.
 
 ---
 
