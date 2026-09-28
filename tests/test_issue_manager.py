@@ -243,10 +243,23 @@ def test_gh_token_no_en_args():
 # ---------------- drift: CRON_SLOTS ----------------
 
 def test_drift_cron_slots_en_daily_run_yml():
-    """CRON_SLOTS en pipeline_gate.py debe coincidir con cron: en daily_run.yml."""
+    """CRON_SLOTS (gate) y cron: (workflow) deben coincidir en AMBAS direcciones.
+
+    F-IAE-CRON-03 (2026-09-28): el test original solo verificaba
+    gate -> workflow. Tras anadir el slot 17 5 al workflow sin
+    sincronizar el gate, el drift paso desapercibido. Ahora es
+    bidireccional.
+    """
+    import re
     from scripts.pipeline_gate import CRON_SLOTS
     yml = (ROOT / ".github" / "workflows" / "daily_run.yml").read_text(
         encoding="utf-8")
-    for slot in CRON_SLOTS:
-        assert "cron: '" + slot + "'" in yml, (
-            "slot {0} no encontrado en daily_run.yml".format(slot))
+    yml_slots = set(re.findall(r"cron:\s*'([^']+)'", yml))
+    gate_slots = set(CRON_SLOTS)
+    assert gate_slots == yml_slots, (
+        "drift CRON_SLOTS vs daily_run.yml\n"
+        "  solo en gate: {0}\n"
+        "  solo en workflow: {1}".format(
+            sorted(gate_slots - yml_slots),
+            sorted(yml_slots - gate_slots),
+        ))

@@ -290,8 +290,8 @@ from scripts.pipeline_gate import (
 )
 
 
-def test_cron_slots_contiene_4():
-    assert len(CRON_SLOTS) == 4
+def test_cron_slots_contiene_5():
+    assert len(CRON_SLOTS) == 5
 
 
 def test_last_slot_cron_es_ultimo_de_cron_slots():
@@ -437,12 +437,12 @@ def test_cron_slots_minuto_17():
 def test_cron_slots_orden_cronologico_recuperacion():
     """Los slots siguen el orden cronologico de la ventana de recuperacion.
 
-    Arranca a las 23:17 del dia D y continua 03:17, 07:17, 11:17 del dia
-    D+1. El orden numerico de horas UTC no es [3, 7, 11, 23] porque el
-    slot "23" precede al "3" en el ciclo real.
+    Arranca a las 23:17 del dia D y continua 03:17, 05:17, 07:17, 11:17 del
+    dia D+1. El orden numerico de horas UTC no es [3, 5, 7, 11, 23] porque
+    el slot "23" precede al "3" en el ciclo real.
     """
     horas = [int(s.split()[1]) for s in CRON_SLOTS]
-    assert horas == [23, 3, 7, 11], f"horas en orden inesperado: {horas}"
+    assert horas == [23, 3, 5, 7, 11], f"horas en orden inesperado: {horas}"
 
 
 def test_cron_slots_unicos():
@@ -450,6 +450,6 @@ def test_cron_slots_unicos():
 
 
 def test_cron_slots_horas_esperadas():
-    """23, 3, 7, 11 UTC: cubren 5h17m a 17h17m post-cierre USA."""
+    """23, 3, 5, 7, 11 UTC: cubren 5h17m a 17h17m post-cierre USA."""
     horas = [int(s.split()[1]) for s in CRON_SLOTS]
-    assert horas == [23, 3, 7, 11]
+    assert horas == [23, 3, 5, 7, 11]
