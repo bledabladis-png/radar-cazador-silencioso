@@ -157,6 +157,31 @@ ddb4d31 (refactor G-01 + tests), a4095b1 (docs cierre), fabcdae (snapshot),
   colecta solo `tests/` (2275); `validation/` no tiene tests pytest,
   sus 7 scripts se invocan en steps dedicados.
 
+**A6.3 (scripts).** Gate 0: `outputs/audit/A6_3_1_20260929_013536.txt`
+(822 lineas, 37 scripts + 3 en audit/).
+
+- **A6.3-01 (MEDIA) CORREGIDO (1049b2a).** `update_european_holdings.py`
+  y `update_sector_holdings.py` no tenian `if __name__ == "__main__"`.
+  Cualquier import disparaba red + escritura (11 GETs a SSGA en sector;
+  3 subprocess en european). Footgun real. Refactor a `main()` +
+  `if __name__ == "__main__"`.
+- **A6.3-02 (BAJA) CORREGIDO (1049b2a).** `subprocess.run(cmd,
+  shell=True)` en `update_european_holdings.py:9`. Comando fijo sin
+  metacaracteres, sin input externo. Cambiado a lista de args.
+- **A6.3-03 (BAJA) DESCARTADO.** Los 20 ORPHAN del Gate no son dead
+  code: `parse_*`/`amundi_holdings` se consumen via
+  `update_european_holdings.py`; los `iae_*` y `generate_*` son
+  auditoria reproducible manual documentada en `03_IAE §5` y
+  `02_ARQUITECTURA §8`. El detector del Gate solo mira workflows
+  directos.
+- **A6.3-04 (BAJA) DESCARTADO.** `scripts/audit/*.py` sin `sys.exit`:
+  exploratorios, se invocan manualmente, el retorno no se usa.
+- **A6.3-05 (BAJA) DESCARTADO.** `datetime.now()` en 8 scripts es
+  log de ejecucion (backup ts, timestamp UTC, doc autogenerada). No
+  como fecha de observacion.
+- **CLI contract:** 0 issues en 16 invocaciones de workflow contra
+  12 scripts con argparse.
+
 **Pendiente.** A6.1 (nucleo compartido). B (IAE completo). C (tests).
 H5.3 (cron nov 2026). C2 (920).
 

@@ -150,6 +150,12 @@ Ciclos completados (12 en la sesion principal):
   era falso (retrasos 2-8h, no no-disparo). Commit 4fbb135. A6.2-01,
   A6.2-03, A6.2-04 (deuda documentada): colision cron `17 6`, duplicacion
   estructural de 7 workflows `update_*`, `git pull --rebase` sin retry.
+- **A6.3 (scripts):** Gate 0 + auditoria de los 37 scripts en
+  `scripts/` (34 raiz + 3 audit/). A6.3-01/A6.3-02 (MEDIA+BAJA,
+  corregidos): `update_european_holdings` y `update_sector_holdings`
+  ejecutaban al importar (sin `if __name__ == "__main__"`). Refactor
+  a `main()`. Commit 1049b2a. Sin dead code confirmado. Contrato CLI
+  workflow<->argparse verificado: 0 issues.
 
 ---
 
