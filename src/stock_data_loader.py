@@ -493,6 +493,37 @@ def _write_lse_provenance_safe(lse_session, target_session, run_id,
         print(f"  [LSE-OVERRIDE][WARN] provenance fallo inesperado: {e}")
 
 
+def _truncate_to_expected_session(df, expected_session):
+    """G-01 (2026-09-29): trunca df a index <= expected_session para el parquet.
+
+    Razon: stock_prices.parquet es multi-mercado (US + LSE + Euronext + Xetra),
+    pero expected_session es NYSE-only por construccion (last_expected_market_date
+    usa calendario NYSE). Cuando el run coincide con UE-cerrada + USA-abierta,
+    el df contiene una fila europea con date > expected_session. El guard
+    aborta el push por "last_date > expected_session" y el run queda rojo.
+
+    Contrato:
+      - No muta df.
+      - df None, sin DatetimeIndex, o vacio -> (df, 0).
+      - index[-1] <= expected_session -> (df, 0).
+      - index[-1] > expected_session -> (df[mask], n_excluidas).
+
+    Devuelve:
+        (df_truncado, n_filas_excluidas)
+    """
+    if df is None:
+        return df, 0
+    if not isinstance(df.index, pd.DatetimeIndex) or len(df.index) == 0:
+        return df, 0
+    _last_obs = df.index[-1].normalize().date()
+    if _last_obs <= expected_session:
+        return df, 0
+    _expected_ts = pd.Timestamp(expected_session)
+    _mask = df.index <= _expected_ts
+    _n_drop = int((~_mask).sum())
+    return df.loc[_mask], _n_drop
+
+
 def download_stock_prices(reference_date=None, run_id=None):
     # B1 (2026-09-12): reference_date se normaliza UNA vez al inicio.
     # FU-018-3c (2026-09-15): tz-aware en horario Madrid. Requerido por
@@ -816,28 +847,18 @@ def download_stock_prices(reference_date=None, run_id=None):
     )
 
     # G-01 (2026-09-29): truncado pre-write a la ultima sesion NYSE.
-    # Razon: stock_prices.parquet es multi-mercado (US + LSE + Euronext
-    # + Xetra), pero expected_session es NYSE-only por construccion
-    # (last_expected_market_date usa el calendario NYSE). Cuando el run
-    # coincide con UE-cerrada + USA-abierta, el df contiene una fila
-    # europea con date > expected_session. El guard aborta el push por
-    # "last_date > expected_session" y el run queda rojo. Esa fila no la
-    # consume nadie aguas abajo: leaders.py aplica resolve_effective_date
-    # y trunca antes de propagar. Truncamos SOLO el df que va al parquet;
-    # el df en memoria se devuelve intacto.
-    _data_for_parquet = data
-    if isinstance(data.index, pd.DatetimeIndex) and len(data.index) > 0:
-        _last_obs = data.index[-1].normalize().date()
-        if _last_obs > _expected_session:
-            _expected_ts = pd.Timestamp(_expected_session)
-            _mask = data.index <= _expected_ts
-            _n_drop = int((~_mask).sum())
-            _data_for_parquet = data.loc[_mask]
-            print(
-                f"  [TRUNC] stock_prices: {_n_drop} fila(s) post-"
-                f"expected_session={_expected_session} excluidas del "
-                f"parquet (ultima observacion df={_last_obs})."
-            )
+    # Ver _truncate_to_expected_session para el contrato completo.
+    # Esa fila europea parcial no la consume nadie aguas abajo: leaders.py
+    # aplica resolve_effective_date y trunca antes de propagar. Truncamos
+    # SOLO el df que va al parquet; el df en memoria se devuelve intacto.
+    _data_for_parquet, _n_trunc = _truncate_to_expected_session(
+        data, _expected_session
+    )
+    if _n_trunc > 0:
+        print(
+            f"  [TRUNC] stock_prices: {_n_trunc} fila(s) post-"
+            f"expected_session={_expected_session} excluidas del parquet."
+        )
 
     # FU-002 (2026-09-15): parquet + manifest atomico.
     from src.utils import write_artifact_with_manifest

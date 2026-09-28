@@ -306,3 +306,105 @@ def test_download_cascade_europea_cubre_tickers(tmp_path, monkeypatch):
         out = sdl.download_stock_prices(reference_date=ref)
     assert out is not None
     assert ("Close", "AIR.PA") in out.columns
+
+# =============================================================================
+# G-01 (2026-09-29): _truncate_to_expected_session + integracion download
+# =============================================================================
+
+def _df_con_fechas(fechas):
+    """DataFrame MultiIndex (Close, AAA) con las fechas dadas."""
+    idx = pd.DatetimeIndex(fechas)
+    cols = pd.MultiIndex.from_product([["Close"], ["AAA"]],
+                                      names=["field", "ticker"])
+    return pd.DataFrame(np.ones((len(idx), 1)), index=idx, columns=cols)
+
+
+def test_truncate_noop_df_none():
+    out, n = sdl._truncate_to_expected_session(None, pd.Timestamp("2026-09-25").date())
+    assert out is None
+    assert n == 0
+
+
+def test_truncate_noop_df_vacio():
+    df = pd.DataFrame()
+    out, n = sdl._truncate_to_expected_session(df, pd.Timestamp("2026-09-25").date())
+    assert out is df
+    assert n == 0
+
+
+def test_truncate_noop_index_no_datetime():
+    df = pd.DataFrame(np.ones((2, 1)), index=["a", "b"], columns=["x"])
+    out, n = sdl._truncate_to_expected_session(df, pd.Timestamp("2026-09-25").date())
+    assert out is df
+    assert n == 0
+
+
+def test_truncate_noop_index_igual_expected():
+    df = _df_con_fechas(["2026-09-24", "2026-09-25"])
+    out, n = sdl._truncate_to_expected_session(df, pd.Timestamp("2026-09-25").date())
+    assert out is df
+    assert n == 0
+
+
+def test_truncate_noop_index_menor_expected():
+    df = _df_con_fechas(["2026-09-23", "2026-09-24"])
+    out, n = sdl._truncate_to_expected_session(df, pd.Timestamp("2026-09-25").date())
+    assert out is df
+    assert n == 0
+
+
+def test_truncate_descarta_fila_post_expected():
+    """Caso G-01: df contiene 2026-09-28 (europeos), expected 2026-09-25."""
+    df = _df_con_fechas(["2026-09-24", "2026-09-25", "2026-09-28"])
+    out, n = sdl._truncate_to_expected_session(df, pd.Timestamp("2026-09-25").date())
+    assert n == 1
+    assert len(out) == 2
+    assert out.index[-1].normalize().date() == pd.Timestamp("2026-09-25").date()
+
+
+def test_truncate_no_muta_df_original():
+    """El df original conserva todas las filas tras la llamada."""
+    df = _df_con_fechas(["2026-09-24", "2026-09-25", "2026-09-28"])
+    shape_antes = df.shape
+    _, _ = sdl._truncate_to_expected_session(df, pd.Timestamp("2026-09-25").date())
+    assert df.shape == shape_antes
+
+
+def test_download_pasa_df_truncado_al_writer_y_df_intacto_al_caller(
+        tmp_path, monkeypatch):
+    """G-01: el writer recibe el df truncado; el caller recibe el df completo."""
+    monkeypatch.chdir(tmp_path)
+    (tmp_path / "data").mkdir()
+    (tmp_path / "outputs" / "history").mkdir(parents=True)
+
+    ref = datetime.now(ZoneInfo("Europe/Madrid"))
+    df_full = _mock_yf_download(["AAPL"])
+    df_truncado = df_full.iloc[:-1]
+
+    captured = {}
+
+    def _fake_write(df, parquet_path, **kwargs):
+        captured["shape_parquet"] = df.shape
+        return {}
+
+    with patch.object(sdl, "get_stock_list", return_value=["AAPL"]), \
+         patch.object(sdl, "_get_yf_session", return_value=None), \
+         patch.object(sdl, "last_expected_market_date",
+                      return_value=pd.Timestamp("2026-09-24").date()), \
+         patch.object(sdl, "last_expected_lse_session",
+                      return_value=pd.Timestamp("2026-09-24").date()), \
+         patch.object(sdl, "_apply_lse_close_override",
+                      return_value=(df_full, {})), \
+         patch.object(sdl, "_classify_ticker",
+                      return_value=("OK", None)), \
+         patch.object(sdl, "_truncate_to_expected_session",
+                      return_value=(df_truncado, 1)) as mock_trunc, \
+         patch("yfinance.download", side_effect=_mock_yf_download), \
+         patch("src.utils.write_artifact_with_manifest", side_effect=_fake_write):
+        out = sdl.download_stock_prices(reference_date=ref)
+
+    mock_trunc.assert_called_once()
+    assert captured["shape_parquet"] == df_truncado.shape
+    # El df devuelto al caller NO esta truncado.
+    assert out.shape == df_full.shape
+
