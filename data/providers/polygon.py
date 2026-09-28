@@ -27,7 +27,9 @@ class PolygonProvider(MarketDataProvider):
         try:
             resp = requests.get(url, timeout=10)
             return resp.status_code == 200
-        except:
+        except Exception:
+            # A5-12 (2026-09-28): except desnudo -> except Exception.
+            # La sonda no debe silenciar KeyboardInterrupt / SystemExit.
             return False
 
     def _period_to_dates(self, period: str):

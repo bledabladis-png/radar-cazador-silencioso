@@ -36,7 +36,6 @@ BME_HEADERS = {
     ),
 }
 
-MAX_SESSIONS = 1250
 INTER_REQUEST_DELAY = 0.3
 
 _CSV_COLUMNS = ["date", "open", "high", "low", "close", "volume"]
@@ -275,12 +274,16 @@ class BMEProvider:
                       + df_new["date"].min().strftime("%Y-%m-%d") + " -> "
                       + df_new["date"].max().strftime("%Y-%m-%d") + ")")
                 frames.append(self._to_multiindex(df_new, t))
-                time.sleep(INTER_REQUEST_DELAY)
 
             except Exception as e:
                 self._last_failed.append(t)
                 print("  [BME] " + t + " error: " + str(e))
-                continue
+            finally:
+                # A5-60 (2026-09-28): el delay se aplica SIEMPRE, incluso
+                # si el fetch ha fallado. Antes solo se aplicaba tras exito,
+                # asi que N fallos consecutivos disparaban N requests sin
+                # pausa y saturaban el endpoint de BME.
+                time.sleep(INTER_REQUEST_DELAY)
 
         if not frames:
             return pd.DataFrame()

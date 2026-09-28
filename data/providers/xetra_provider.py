@@ -21,7 +21,6 @@ XETRA_MDS_TRACING_ID = "ea65e63f-b88f-414f-b1a9-e035263c8b0f"
 XETRA_MAP_PATH = Path("config/xetra_ticker_map.csv")
 XETRA_CACHE_DIR = Path("data/cache/xetra")
 
-TOKEN_TTL_SAFETY = 120  # refresh token si quedan menos de 120s de vida
 WS_RECV_TIMEOUT = 3.0
 WS_QUERY_TIMEOUT = 25  # segundos máximos por consulta de un ticker
 # Histórico inicial: ~300 sesiones (~430 días naturales).
@@ -31,7 +30,15 @@ from datetime import timedelta
 from src.market_calendar import is_market_day
 from src.market_hours import is_trading_session, is_session_closed
 from src.instrument_registry import get_market
-WS_START = (datetime.now() - timedelta(days=430)).strftime("%Y-%m-%dT00:00:00.000Z")
+def _ws_start() -> str:
+    """A5-43 (2026-09-28): start inicial del WS, calculado en cada
+    llamada. Antes era una constante evaluada en import time; en tests
+    con fecha mockeada o runs de larga duracion, la fecha quedaba fija
+    al momento del import.
+    """
+    return (datetime.now() - timedelta(days=430)).strftime("%Y-%m-%dT00:00:00.000Z")
+
+
 WS_RESOLUTION = "1D"
 
 
@@ -382,7 +389,7 @@ class XetraProvider:
                     frames.append(self._to_multiindex(df_cached, t))
                     continue
             # === Auto-recuperacion: start dinamico segun ultima fecha en cache ===
-            start_iso = WS_START
+            start_iso = _ws_start()
             if use_cache:
                 df_cached = self._load_cache(t)
                 if not df_cached.empty:
