@@ -296,18 +296,15 @@ estructural): probes sobre parquets 13F reales y sobre la cadena
 - A6.3 (scripts): 2 fixes (A6.3-01/02), 3 descartes razonados.
 - A6.4 (validation): 2 fixes (A6.4-01/04), 1 WONT FIX, 2 falsos positivos.
 
-Suite final: 2275 passed + 2 skipped + 0 failed (antes de A6: 2267,
-+8 tests nuevos del refactor G-01).
+Suite final: 2297 passed + 2 skipped + 0 failed.
 
 **Commits.** ... 2f63db7 (A6.1-01), 73758ce (snapshot A6.1-01), 4a31d4f
 (cierre A6.1), 4fbb135 (A6.2-02), d321802 (cierre A6.2), 1049b2a
-(A6.3-01/02), 84bb1ee (cierre A6.3), +A6.4 (pendiente de SHA final).
+(A6.3-01/02), 84bb1ee (cierre A6.3), +A6.4.
 
-**Pendiente.** A6.1 (nucleo compartido). B (IAE completo). C (tests).
-H5.3 (cron nov 2026). C2 (920).
+**Pendiente.** H5.3 (cron nov 2026). C2 (920).
 
-**Proximo paso sugerido.** Retomar A6.1 (nucleo compartido). Verificar en
-CI, cuando corra un slot real, que el guard pasa con el parquet nuevo.
+**Proximo paso sugerido.** Verificar en CI, cuando corra un slot real, que el guard pasa con el parquet nuevo.
 
 ---
 
