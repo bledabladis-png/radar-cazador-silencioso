@@ -218,11 +218,29 @@ def ensure_quarter(quarter, *, force=False,
     # latest_quarter.txt: solo se escribe si processed/ existe tras la
     # ejecucion. Si ingest fallo, no actualizamos el fichero para no
     # marcar como disponible un trimestre incompleto.
+    #
+    # Escritura MONOTONA (2026-09-29): solo avanza, nunca retrocede.
+    # Motivo: con --backfill 2, _quarters_range itera [Q_{k-2}, Q_{k-1},
+    # Q_k] en orden cronologico. Sin monotonia, cada iteracion sobrescribe
+    # el fichero. Si el proceso se interrumpe entre Q_{k-1} y Q_k, el
+    # fichero queda apuntando a Q_{k-1} aunque processed/Q_k ya exista.
+    # Consecuencia: regenerate_cusip_crosswalk._build_auto_rows lee
+    # latest_quarter=Q_{k-1} y cierra Q_{k-1} con valid_to=period_end en
+    # vez de dejarlo abierto -> corrupcion silenciosa del crosswalk CUSIP.
     if processed.exists():
         LATEST_FILE.parent.mkdir(parents=True, exist_ok=True)
-        LATEST_FILE.write_text(quarter + "\n", encoding="utf-8", newline="\n")
-        info["latest_quarter_file"] = str(LATEST_FILE)
-        print("[OK] latest_quarter.txt -> " + quarter)
+        prev = None
+        if LATEST_FILE.exists():
+            try:
+                prev = LATEST_FILE.read_text(encoding="utf-8").strip()
+            except Exception:
+                prev = None
+        if prev is None or quarter > prev:
+            LATEST_FILE.write_text(quarter + "\n", encoding="utf-8", newline="\n")
+            info["latest_quarter_file"] = str(LATEST_FILE)
+            print("[OK] latest_quarter.txt -> " + quarter)
+        else:
+            print("[OK] latest_quarter.txt sin cambios (ya en " + str(prev) + ")")
     else:
         print("[WARN] processed/ no existe; latest_quarter.txt no escrito")
 
