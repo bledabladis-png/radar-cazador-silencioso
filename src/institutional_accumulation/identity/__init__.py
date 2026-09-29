@@ -4,6 +4,8 @@ Modulos:
   openfigi_client.py        cliente OpenFIGI /v3/mapping
   radar_target_catalog.py   builder del catalogo radar (242 filas)
   target_universe.py        resolver CUSIP_13F -> target_membership
+                            (implementado, NO integrado al pipeline;
+                            consumidores solo en tests)
 
   catalog_key.py            B1: catalog_key + validadores A1/membership
   target_builder.py         B1: TargetUniverse (vinculacion por row_uid)

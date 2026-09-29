@@ -4,6 +4,15 @@ Dado un conjunto de CUSIPs (observados en 13F),
 resuelve cada uno via OpenFIGI y consulta el RADAR_TARGET_CATALOG
 para decidir si pertenece al target.
 
+ESTADO (2026-09-29): implementado, testeado, NO integrado al
+pipeline productivo. La cadena contractual (pipeline_contractual.py)
+resuelve CUSIP -> ticker via load_crosswalk_internal +
+resolve_batch_identities, no via OpenFIGI. Este modulo existe como
+capacidad alternativa para un contrato futuro (resolucion por FIGI
+con OpenFIGI masivo, hoy fuera de alcance por rate limiting y
+dictamen #61). Sus funciones solo tienen consumidores en tests.
+Activar o retirar es decision de diseno, no de auditoria.
+
 Contrato (dictamen F2.3):
   - El catalogo radar es INPUT independiente. Ya existe
     (data/mappings/radar_target_catalog.csv).
