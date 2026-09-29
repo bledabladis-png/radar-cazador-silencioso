@@ -459,6 +459,36 @@ def _compute_by_market(df, reference_date):
     return result
 
 
+def truncate_to_expected_session(df, expected_session):
+    """G-01 (2026-09-29): trunca df a index <= expected_session.
+
+    Razon: el parquet es multi-mercado, pero expected_session es
+    NYSE-only. Cuando el run coincide con UE-cerrada + USA-abierta,
+    el df contiene una fila con date > expected_session y el guard
+    aborta el push. Este helper aplica el mismo contrato a los
+    parquets que lo necesitan (stock_prices, market_data).
+
+    Contrato:
+      - No muta df.
+      - df None, sin DatetimeIndex, o vacio -> (df, 0).
+      - index[-1] <= expected_session -> (df, 0).
+      - index[-1] > expected_session -> (df[mask], n_excluidas).
+
+    Devuelve: (df_truncado, n_filas_excluidas)
+    """
+    if df is None:
+        return df, 0
+    if not isinstance(df.index, pd.DatetimeIndex) or len(df.index) == 0:
+        return df, 0
+    _last_obs = df.index[-1].normalize().date()
+    if _last_obs <= expected_session:
+        return df, 0
+    _expected_ts = pd.Timestamp(expected_session)
+    _mask = df.index <= _expected_ts
+    _n_drop = int((~_mask).sum())
+    return df.loc[_mask], _n_drop
+
+
 def write_artifact_with_manifest(df, parquet_path, source,
                                   reference_date, run_id,
                                   schema_version=1, *,

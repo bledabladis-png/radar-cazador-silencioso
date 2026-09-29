@@ -14,6 +14,7 @@ from data.providers.euronext_provider import EuronextProvider
 from data.providers.xetra_provider import XetraProvider
 from data.providers.bme_provider import BMEProvider
 from src.market_calendar import last_expected_market_date, is_market_day
+from src.utils import truncate_to_expected_session as _truncate_to_expected_session
 from src.market_hours import (
     is_trading_session,
     is_session_closed,
@@ -491,37 +492,6 @@ def _write_lse_provenance_safe(lse_session, target_session, run_id,
         print(f"  [LSE-OVERRIDE][WARN] provenance no escrita: {e}")
     except (OSError, ValueError, KeyError, TypeError) as e:
         print(f"  [LSE-OVERRIDE][WARN] provenance fallo inesperado: {e}")
-
-
-def _truncate_to_expected_session(df, expected_session):
-    """G-01 (2026-09-29): trunca df a index <= expected_session para el parquet.
-
-    Razon: stock_prices.parquet es multi-mercado (US + LSE + Euronext + Xetra),
-    pero expected_session es NYSE-only por construccion (last_expected_market_date
-    usa calendario NYSE). Cuando el run coincide con UE-cerrada + USA-abierta,
-    el df contiene una fila europea con date > expected_session. El guard
-    aborta el push por "last_date > expected_session" y el run queda rojo.
-
-    Contrato:
-      - No muta df.
-      - df None, sin DatetimeIndex, o vacio -> (df, 0).
-      - index[-1] <= expected_session -> (df, 0).
-      - index[-1] > expected_session -> (df[mask], n_excluidas).
-
-    Devuelve:
-        (df_truncado, n_filas_excluidas)
-    """
-    if df is None:
-        return df, 0
-    if not isinstance(df.index, pd.DatetimeIndex) or len(df.index) == 0:
-        return df, 0
-    _last_obs = df.index[-1].normalize().date()
-    if _last_obs <= expected_session:
-        return df, 0
-    _expected_ts = pd.Timestamp(expected_session)
-    _mask = df.index <= _expected_ts
-    _n_drop = int((~_mask).sum())
-    return df.loc[_mask], _n_drop
 
 
 def download_stock_prices(reference_date=None, run_id=None):

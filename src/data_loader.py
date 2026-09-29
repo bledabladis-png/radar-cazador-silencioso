@@ -8,6 +8,7 @@ from config.settings import CACHE_HOURS, CACHE_VALIDATE_TRADING_DATE
 from data.providers.router import DataRouter
 from data.providers.backup_providers import BackupProvider
 from src.effective_date import resolve_effective_date
+from src.utils import truncate_to_expected_session
 from src.market_hours import is_trading_session, is_session_closed
 from src.instrument_registry import (
     get_market,
@@ -183,8 +184,27 @@ def _postprocess_market_data(data, reference_date, run_id, *, write_manifest):
 
     if write_manifest:
         from src.utils import write_artifact_with_manifest
+        from src.market_calendar import last_expected_market_date
+        # G-01 (2026-09-29): truncar a expected_session antes de escribir.
+        # Mismo contrato que stock_prices. Sin esto, la fila del 29/09
+        # (aun no publicada) entra al parquet y el guard aborta por
+        # 'last_date > expected_session'.
+        try:
+            _expected = last_expected_market_date(reference_date)
+        except Exception:
+            _expected = None
+        _data_for_parquet = data
+        if _expected is not None:
+            _data_for_parquet, _n_trunc = truncate_to_expected_session(
+                data, _expected
+            )
+            if _n_trunc > 0:
+                print(
+                    f"  [TRUNC] market_data: {_n_trunc} fila(s) post-"
+                    f"expected_session={_expected} excluidas del parquet."
+                )
         write_artifact_with_manifest(
-            data, 'data/market_data.parquet',
+            _data_for_parquet, 'data/market_data.parquet',
             source='yahoo',
             reference_date=reference_date,
             run_id=run_id,
