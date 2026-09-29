@@ -149,3 +149,40 @@ def test_flows_primary_sector_char_no_se_calcula_sin_etf_flow(tmp_path, monkeypa
          patch("src.pipeline.flows_primary.compute_sector_flow_characteristics") as mock_sfc:
         fp.compute_flows_primary(pd.DataFrame())
     mock_sfc.assert_not_called()
+
+
+def test_sector_flow_characteristics_fallo_to_csv_no_pierde_filas(tmp_path, monkeypatch):
+    """Si to_csv muere a mitad, el CSV original debe quedar intacto."""
+    monkeypatch.chdir(tmp_path)
+    (tmp_path / "outputs" / "history").mkdir(parents=True)
+    csv = tmp_path / "outputs" / "history" / "sector_flow_characteristics.csv"
+    pd.DataFrame([{"date": "2026-09-24", "sector": "XLK", "v": 0.1}]).to_csv(csv, index=False)
+    filas_antes = pd.read_csv(csv).shape[0]
+    assert filas_antes == 1
+
+    real_to_csv = pd.DataFrame.to_csv
+
+    def fake_to_csv(self, path, **kw):
+        real_to_csv(self.iloc[:0], path, **kw)
+        raise OSError("simulado: fallo a mitad de escritura")
+
+    monkeypatch.setattr(pd.DataFrame, "to_csv", fake_to_csv)
+    fake_df = pd.DataFrame([{"date": "2026-09-25", "sector": "XLK", "v": 0.2}])
+    with patch("src.pipeline.flows_primary.retry_call",
+               side_effect=_passthrough_retry), \
+         patch("src.pipeline.flows_primary.get_etf_primary_flow_data", return_value=_df()), \
+         patch("src.pipeline.flows_primary.get_blackrock_dax_primary_flow", return_value=_df()), \
+         patch("src.pipeline.flows_primary.get_blackrock_isf_primary_flow", return_value=_df()), \
+         patch("src.pipeline.flows_primary.get_blackrock_iwm_primary_flow", return_value=_df()), \
+         patch("src.pipeline.flows_primary.get_amundi_lyxi_primary_flow", return_value=_df()), \
+         patch("src.pipeline.flows_primary.get_qqq_sec_primary_flow", return_value=_df()), \
+         patch("src.pipeline.flows_primary.get_cftc_position_flow_data", return_value=_df()), \
+         patch("src.pipeline.flows_primary.compute_sector_flow_characteristics",
+               return_value=fake_df):
+        fp.compute_flows_primary(pd.DataFrame())
+
+    df = pd.read_csv(csv)
+    assert df.shape[0] == filas_antes, (
+        f"CSV original perdio filas: {filas_antes} -> {df.shape[0]}"
+    )
+    assert df.iloc[0]["date"] == "2026-09-24"
