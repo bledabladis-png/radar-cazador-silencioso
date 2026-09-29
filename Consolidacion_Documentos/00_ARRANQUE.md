@@ -86,6 +86,7 @@ Snapshot al cierre del ultimo commit:
 - H1-B: CERRADO con C2 abierto (baseline local -4.264.449.012)
 - H4: CERRADO (golden/current.json ACTIVE_WITH_OPEN_DISCREPANCY)
 - H5.3: trazabilidad implementada, pendiente cron nov 2026
+- C2 (920): OPEN. Hipotesis P65 descartada 2026-09-29 (por diseno de codigo)
 
 **Auditoria radar externa 2026-09-26:** 205 hallazgos (6 ALTA / 98 MEDIA / 101 BAJA). 6 ALTA corregidos.
 
@@ -163,7 +164,7 @@ Sesion 2026-09-29 (tarde): auditoria funcional frente 6 (IAE) + frente 8 (provid
   if:always() en uploads pre-gate de download_failures,
   env.quarter vacío eliminado en update_sec_nport.
 
-- Suite: 2361 passed + 2 skipped. pyflakes limpio. 0 warnings.
+- Suite: 2375 passed + 2 skipped. pyflakes limpio. 0 warnings.
 
 ---
 
@@ -214,13 +215,19 @@ Sesion 2026-09-29 (tarde): auditoria funcional frente 6 (IAE) + frente 8 (provid
 - H5.3 - Trazabilidad cron trimestral. Verificacion en cron real de
   noviembre 2026.
 - C2 (920) - Discrepancia H1-B. Bloqueado por auditor externo (sin comando
-  + HEAD publicado).
+  + HEAD publicado). Hipotesis descartadas 2026-09-29: regex 4 variantes,
+  crosswalk 7caa86b, filtro OPTION/UNKNOWN (-42M), aplicacion P65
+  (por diseno de codigo, `_apply_intra_period_dedup` v1 solo emite KEEP).
 
 **Deudas documentadas (sin accion pendiente):**
 
 - Modulos no integrados al pipeline productivo: `target_universe`,
-  `timestamps`, `catalog_pit`, `reporting_dedup` (P65/P66), `absence`,
-  `validate_membership`, `cusip_resolver.resolve_cusip`. Documentados.
+  `timestamps`, `catalog_pit`, `absence`, `validate_membership`,
+  `cusip_resolver.resolve_cusip`. Documentados.
+- `reporting_dedup` (P65/P66): capa de diagnostico por decision de diseno,
+  no etapa del flujo contractual. 99 tests pasan. Verificado 2026-09-29:
+  `_apply_intra_period_dedup` v1 no emite DROP_DUP (todas las decisiones
+  son KEEP). Conectar P65 no alteraria `nipc_total`.
 - Dead code declarado: `finra.get_archive_index`, `finra.get_available_weeks`.
 - Modulos con cobertura baja de tests: `macro_manual_loader` (12%),
   `european_coverage` (12%), `pipeline_contractual` (27%), `data_loader` (50%).

@@ -386,6 +386,28 @@ frente 8 (providers). Total: ~35 commits.
 
 ---
 
+### 2026-09-29 (noche): integridad parquets + EU 5y + PENDING BME + P65
+
+- **Integridad parquet vs manifest (2a640f2):** los .parquet estan
+  gitignored, los .manifest.json tracked. Tras git pull divergen. Ni
+  guard_coverage ni pipeline_gate verificaban sha256. Detectados
+  stock_prices (4880... vs 05a0...) y market_data (d077... vs daf6...).
+  Fix: sha256 real del parquet sibling, fail-closed.
+- **G-01 paridad market_data (08fe06b):** stock_prices truncaba a
+  expected_session; market_data no. Movido helper a utils. Aplicado en
+  data_loader antes del write_artifact.
+- **BME publica T+1 (4bb54f8):** verificado 2026-09-29 23:25 CEST: BME
+  devuelve hasta 28/09 mientras Xetra/Euronext/US ya tienen el 29.
+  `_compute_by_market` contaba cobertura en 29 para BME -> INVALID ->
+  guard aborta. Fix: MARKETS_WITH_PUBLICATION_LAG=('BME',), status
+  PENDING. Guard exime PENDING, no todo-PENDING.
+- **EU providers a 5y (4bb54f8):** BME/Xetra 430d -> 1830d. Medido:
+  1277 filas/0.3s, 1274/0.8s. Euronext topa en endpoint (~510 sesiones,
+  verificado con nb_session=1300).
+- **P65 decision de diseno (f131ce3):** `_apply_intra_period_dedup` v1
+  no emite DROP_DUP. Todas las decisiones KEEP. Conectar P65 no alteraria
+  nipc_total. Hipotesis C2 descartada. 03_IAE.md corregido (2 sitios).
+
 ## 3. HALLAZGOS POR BLOQUE TEMATICO
 
 Agrupacion de los cierres mas relevantes por area. El detalle granular esta en `git log`. Los IDs (FU-xxx, K-xxx, F2.4-xx, A5-xx, DT-x, H-x) son de la nomenclatura interna de la auditoria y no se usan ya en el trabajo activo.

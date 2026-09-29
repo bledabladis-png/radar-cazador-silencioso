@@ -44,7 +44,42 @@ Al cerrar una sesion nueva, se anade arriba (las mas recientes primero). Si hay 
 
 ## 3. SESIONES
 
-### 2026-09-29 (noche) — Atomicidad familia 3 (17 sitios) + FU-009-bis
+### 2026-09-29 (noche) — Integridad parquets + EU 5y + PENDING BME + P65
+
+**Objetivo.** Cerrar el frente de integridad detectado al auditar Ibex 35.
+
+**Hecho.**
+- **Guard/gate integridad (2a640f2).** Los .parquet estan gitignored,
+  los .manifest.json tracked. Tras cada git pull divergen. Ni guard_coverage
+  ni pipeline_gate verificaban sha256 real. Detectado: stock_prices y
+  market_data con sha256 divergentes. Fix: ambos calculan sha256 del
+  parquet sibling, fail-closed.
+- **G-01 paridad (08fe06b).** market_data no truncaba a expected_session
+  (stock_prices si). Movido `truncate_to_expected_session` a utils y
+  aplicado en data_loader._postprocess_market_data.
+- **Regeneracion (1ba5df9).** stock_prices con los 19 .MC que BME no
+  habia servido el 28/09 por fallo transitorio.
+- **PENDING + EU 5y (4bb54f8).** BME publica T+1. `_compute_by_market`
+  marca PENDING (no INVALID) cuando la sesion cerro pero no hay
+  observacion. Guard tolera PENDING, no todo-PENDING. Ademas BME y Xetra
+  pasan de 430d a 1830d (5y). Euronext topa en el endpoint (~510 sesiones).
+- **P65 (f131ce3).** Verificado: `_apply_intra_period_dedup` v1 no emite
+  DROP_DUP. Todas las decisiones son KEEP. Conectar P65 no alteraria
+  nipc_total. Hipotesis C2 descartada por diseno de codigo. Doc corregida
+  (03_IAE.md) + current.json actualizado.
+
+**Commits.** 2a640f2, 08fe06b, 1ba5df9, 4bb54f8, f131ce3.
+
+**Pendiente.**
+- Cron 01:17 CEST valida 13F cache, PENDING BME, EU 5y,
+  regularMarketTime de Yahoo.
+- Cabo B: confirmar si Yahoo revisa cierre del 29 a las 04:00 CEST.
+- LSE scraper: cadencia externa + historico en JSON infrautilizado.
+- C2 (920): sin material del auditor.
+
+**Proximo paso sugerido.** Verificar el cron de la madrugada.
+
+### 2026-09-29 (noche) — Atomicidad familia 3 (17 sitios) + FU-009-bis### 2026-09-29 (noche) — Atomicidad familia 3 (17 sitios) + FU-009-bis
 
 **Frente nuevo: familia 3 (escritura no atomica).** Barrido de
 `outputs/history/`: 17 sitios con READ+WRITE del mismo path sin
