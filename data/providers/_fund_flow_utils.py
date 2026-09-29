@@ -66,31 +66,16 @@ def fund_flow_robust_zscore(
         donde el ultimo valor es NaN, o donde MAD==0 y el ultimo
         valor difiere de la mediana.
     """
-
-    def calculate(window_values: pd.Series) -> float:
-        values = window_values.dropna()
-        if len(values) < min_periods:
-            return float("nan")
-
-        latest = window_values.iloc[-1]
-        if pd.isna(latest):
-            return float("nan")
-
-        median = float(values.median())
-        mad = float((values - median).abs().median())
-
-        if pd.isna(mad) or mad <= MAD_EPSILON:
-            if latest == median:
-                return 0.0
-            return float("nan")
-
-        z = (float(latest) - median) / (MAD_SCALE * mad)
-        return float(max(-CLIP_ABS, min(CLIP_ABS, z)))
-
+    # Fix 2026-09-29 (patron 8.5 #6): delegar en _compute_z_value.
+    # Antes esta funcion tenia una copia interna 'calculate' identica
+    # a _compute_z_value (19 lineas duplicadas). Ahora ambos callers
+    # comparten la misma implementacion. El test de coherencia
+    # test_regime_z_coincide_con_funcion_sin_regime garantiza que z y
+    # z_regime siguen produciendo los mismos valores.
     return series.rolling(
         window,
         min_periods=min_periods,
-    ).apply(calculate, raw=False)
+    ).apply(lambda w: _compute_z_value(w, min_periods), raw=False)
 
 
 # ============================================================
