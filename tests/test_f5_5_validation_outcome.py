@@ -79,3 +79,41 @@ def test_outcome_enum_tiene_7_valores():
         'VALIDATED', 'REJECTED', 'UNAVAILABLE', 'CACHE_EMPTY',
         'TICKER_NOT_IN_CACHE', 'INSUFFICIENT_DATA', 'ERROR'
     }
+
+# --- Fix 2026-09-29: finitud en _validate_with_cache ---------------------
+
+def test_outcome_insufficient_data_new_close_nan(bp_empty):
+    """Bug fix 2026-09-29: NaN en new_close pasaba como VALIDATED
+    porque nan > 0.05 es False y no entraba en la rama REJECTED."""
+    bp_empty.reference_cache = _make_cache_df(['AAPL'], close_value=100.0)
+    df = _make_provider_df('AAPL', 100.0)
+    # ultima fila NaN
+    df.iloc[-1, 0] = float('nan')
+    out = bp_empty._validate_with_cache('AAPL', df)
+    assert out is ValidationOutcome.INSUFFICIENT_DATA
+
+
+def test_outcome_insufficient_data_new_close_inf(bp_empty):
+    bp_empty.reference_cache = _make_cache_df(['AAPL'], close_value=100.0)
+    df = _make_provider_df('AAPL', 100.0)
+    df.iloc[-1, 0] = float('inf')
+    out = bp_empty._validate_with_cache('AAPL', df)
+    assert out is ValidationOutcome.INSUFFICIENT_DATA
+
+
+def test_outcome_insufficient_data_new_close_neg_inf(bp_empty):
+    bp_empty.reference_cache = _make_cache_df(['AAPL'], close_value=100.0)
+    df = _make_provider_df('AAPL', 100.0)
+    df.iloc[-1, 0] = float('-inf')
+    out = bp_empty._validate_with_cache('AAPL', df)
+    assert out is ValidationOutcome.INSUFFICIENT_DATA
+
+
+def test_outcome_insufficient_data_ref_close_inf(bp_empty):
+    """ref_close viene de .dropna() que NO elimina inf.
+    Cualquier inf en cache invalida la comparacion."""
+    bp_empty.reference_cache = _make_cache_df(['AAPL'], close_value=100.0)
+    # inf en la ultima fila del cache, dropna no lo elimina
+    bp_empty.reference_cache.iloc[-1, 0] = float('inf')
+    out = bp_empty._validate_with_cache('AAPL', _make_provider_df('AAPL', 100.0))
+    assert out is ValidationOutcome.INSUFFICIENT_DATA

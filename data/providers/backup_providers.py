@@ -2,6 +2,7 @@ import os
 import requests
 import pandas as pd
 from datetime import datetime, timedelta
+import math
 from enum import Enum
 from pathlib import Path
 from src.instrument_registry import resolve_symbol
@@ -275,6 +276,14 @@ class BackupProvider:
                 close_cache = close_cache.iloc[:, 0]
             ref_close = float(close_cache.iloc[-1])
             new_close = float(df[('Close', ticker)].iloc[-1])
+            # Fix 2026-09-29: validar finitud. Sin este guard, NaN
+            # pasaba como VALIDATED silenciosamente (nan > 0.05 es False,
+            # no entra en la rama REJECTED). dropna() aguas arriba elimina
+            # NaN de ref_close pero NO de inf; df[('Close', ticker)] tampoco
+            # se filtra. Misma familia de invariantes que S-03c y
+            # extract_sshprnamt_by_figi.
+            if not math.isfinite(new_close) or not math.isfinite(ref_close):
+                return ValidationOutcome.INSUFFICIENT_DATA
             if ref_close == 0:
                 return ValidationOutcome.INSUFFICIENT_DATA
             diff = abs(new_close - ref_close) / abs(ref_close)
