@@ -202,6 +202,29 @@ ddb4d31 (refactor G-01 + tests), a4095b1 (docs cierre), fabcdae (snapshot),
   internos en `verify_leader_selection` se volvieron locales a
   `main()` y rompian refs previas. Eliminados.
 
+**B (IAE) - bloque abierto y cerrado.**
+
+Gate 0: `outputs/audit/B_1_1_20260929_015604.txt` (510 lineas, 36
+ficheros, 8202 LOC).
+
+- **B-01 (MEDIA) CORREGIDO (7e7f429).** `TargetUniverse.__post_init__`
+  usaba `assert` para 4 invariantes estructurales. Bajo `python -O`
+  los asserts se eliminan y las invariantes desaparecen
+  silenciosamente. Sustituidos por `raise BuildTargetError` con
+  mensaje que incluye tamanos concretos.
+- **B-01b (test) (082cc82).** 5 tests cubriendo las 4 invariantes
+  + caso bien formado. Coverage target_builder 65% -> 70%.
+- **B-02 (docs) (49b471a).** 3 docstrings del modulo IAE actualizados
+  al corpus consolidado (`06_IAE_P65_P66.md`). El `.md` original
+  fue borrado en `cdf47ad`.
+- **B-03 (docs) (0b0bb26 + 9da966f).** Cifras de `03_IAE` corregidas
+  tras verificacion: LOC 8178 -> 8202, `35 funciones AST` -> 19 en
+  `reporting_dedup.py`, firma completa de `compute_nipc_contractual`,
+  censo de tests 845 -> 763 funciones test_ AST (871 pytest).
+- **Deudas documentadas (sin patch por ROI bajo):**
+  `build_effective_reporting_snapshot` sin caller productivo
+  (ya declarada en `03_IAE §10`). C2 (920) OPEN. H5.3 cron nov 2026.
+
 **A6 CERRADO** (A6.1 + A6.2 + A6.3 + A6.4). Resumen del bloque:
 
 - A6.1 (nucleo compartido): 1 fix (A6.1-01), 1 deuda documentada (A6.1-02).

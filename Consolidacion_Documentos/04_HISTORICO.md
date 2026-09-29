@@ -163,6 +163,16 @@ Ciclos completados (12 en la sesion principal):
   code): `run_all_audits.py` sin caller, eliminado. A6.4-02 (BAJA,
   WONT FIX razonado): scripts de validacion cruzada descriptivos por
   diseno. **A6 (auditoria interna de infraestructura) CERRADO.**
+- **B (IAE):** Gate 0 + auditoria de los 36 ficheros / 8202 LOC del
+  modulo. B-01 (MEDIA, corregido): `TargetUniverse.__post_init__`
+  usaba `assert` para 4 invariantes; bajo `python -O` desaparecian
+  silenciosamente. Sustituidos por `raise BuildTargetError`. B-01b
+  (5 tests). B-02 (docstrings IAE actualizados al corpus consolidado).
+  B-03 (cifras de `03_IAE` corregidas tras verificacion). **B CERRADO.**
+- **Cierre sesion 2026-09-29:** 21 commits. G-01 (fix truncado),
+  P66-01 (extraccion §14 + reapuntado tests), A6.1-A6.4, B-01/B-02/B-03.
+  Suite 2267 -> 2280 passed + 2 skipped. **Auditoria interna A6 + B
+  CERRADA.** Queda C (tests).
 
 ---
 

@@ -74,7 +74,7 @@ Fuente autoritativa: `Consolidacion_Documentos/ESTADO_SISTEMA.md` (regenerado co
 
 Snapshot al cierre del ultimo commit:
 - HEAD: ver ESTADO_SISTEMA.md
-- Tests: 2267 passed + 2 skipped + 0 failed
+- Tests: 2280 passed + 2 skipped + 0 failed
 - Validation Gate: 10/10
 - Working tree: limpio
 - Corpus documental: v2 (Consolidacion_Documentos/00-06, 2026-09-29)
@@ -95,8 +95,8 @@ Snapshot al cierre del ultimo commit:
 - A3 (calculo): CERRADO
 - A4 (reporte): CERRADO
 - A5 (pipeline): CERRADO
-- A6 (utils/registry/workflows/scripts): PENDIENTE
-- B (IAE): PENDIENTE
+- A6 (infra/orquestacion: utils/registry/tracker/workflows/scripts/validation): CERRADO
+- B (IAE): CERRADO
 - C (tests): PENDIENTE
 
 ---
@@ -113,20 +113,27 @@ Sesion cerrada: auditoria interna A1-A5 del sistema.
 
 Todos los bugs estructurales verificados con probes + run end-to-end + snapshot pre/post.
 
+Sesion 2026-09-29: auditoria interna A6 + B cerrada.
+
+- A6 (infra/orquestacion): 4 sub-bloques cerrados. Fixes aplicados:
+  A6.1-01 (`_latest_closed_session` reporta excepciones),
+  A6.2-02 (eliminado `_cron_probe.yml` residual),
+  A6.3-01/02 (`update_european_holdings` y `update_sector_holdings`
+  no ejecutan al importar; sin `shell=True`),
+  A6.4-01/04 (refactor a `main()` en `validate_history_quality` y
+  `verify_leader_selection`; eliminado `run_all_audits.py` dead code).
+- B (IAE): Gate 0 + barrido de coherencia. Fixes: B-01 (`TargetUniverse`
+  invariantes explicitas vs `assert`, inmune a `python -O`), B-01b
+  (5 tests cubriendo las invariantes), B-02 (docstrings IAE actualizados
+  al contrato consolidado `06_IAE_P65_P66.md`), B-03 (cifras de `03_IAE`
+  corregidas: 8202 LOC, 19 funciones AST en `reporting_dedup.py`, firma
+  completa de `compute_nipc_contractual`, censo de tests 763/871).
+
 ---
 
 ## 5. PENDIENTE (DESGLOSE)
 
-**A6 - Auditoria de infraestructura y orquestacion.** 4 sub-bloques:
-
-- **A6.1** - Nucleo compartido (src/utils.py, instrument_registry.py, dependency_tracker.py). Foco: contrato de robust_zscore, write_artifact_with_manifest, get_market/get_instrument_class, audit_double_counting.
-- **A6.2** - Workflows (.github/workflows/, 10 ficheros .yml). Foco: cron, cache, secrets, orden de steps, condicionales de commit, gate pre-pipeline.
-- **A6.3** - Scripts (34 + 3 en scripts/audit/). Foco: dead code, invocacion por workflows, contratos de CLI.
-- **A6.4** - Validation (7 ficheros) + data/validator.py. Foco: contratos de validacion, cobertura.
-
-**B - Auditoria del modulo IAE.** 36 ficheros, 8178 LOC. Ya auditado externamente (dictamen CERRADO con C2 abierto). Subdivision: 5 subpaquetes (raiz, aggregation, identity, sec_13f, sec_13f/identity). Foco: coherencia con 03_IAE, deuda activa, tests con mock.
-
-**C - Auditoria de tests.** 192 ficheros, ~22900 LOC. Foco: tests fantasma (que pasan sin verificar), cobertura real por modulo del radar, tests anclados a numero de linea.
+**C - Auditoria de tests.** 192 ficheros, ~22900 LOC. Foco: tests fantasma (que pasan sin verificar), cobertura real por modulo del radar, tests anclados a numero de linea. Los 10 tests huerfanos de P66 (`test_p66_contract.py`) fueron reapuntados al corpus consolidado en P66-01 (sesion 2026-09-29).
 
 **H5.3 - Trazabilidad cron trimestral.** Pendiente verificacion en cron real de noviembre 2026.
 

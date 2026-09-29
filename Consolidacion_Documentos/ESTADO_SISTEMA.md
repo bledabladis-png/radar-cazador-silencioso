@@ -2,7 +2,7 @@
 
 Hechos verificables del sistema. Generado por script.
 
-**Generado en:** 2026-09-28 23:52:11 UTC
+**Generado en:** 2026-09-29 00:18:39 UTC
 **Snapshot tomado sobre:** commit HEAD de la fecha indicada, al momento de generar
 **NO editar a mano.** Regenerar con:
 
@@ -17,16 +17,16 @@ HEAD, tests e integridad del codigo.
 
 ## 1. Git
 
-- **HEAD:** `028842c`
-- **HEAD completo:** `028842cbcc44bf23f4e33d14f6848a721b16f13d`
-- **Fecha commit HEAD:** 2026-09-29 01:52:11 +0200
-- **Ahead:** 1
+- **HEAD:** `9da966f`
+- **HEAD completo:** `9da966f0568bfd0937204beba28abb43381ac161`
+- **Fecha commit HEAD:** 2026-09-29 02:17:48 +0200
+- **Ahead:** 0
 - **Behind:** 0
-- **origin/main:** `84bb1ee`
+- **origin/main:** `9da966f`
 
 ## 2. Tests (pytest real)
 
-- **Resumen:** 2275 passed, 2 skipped in 71.50s (0:01:11)
+- **Resumen:** 2280 passed, 2 skipped in 73.34s (0:01:13)
 - **Exit code:** 0
 
 ## 3. Integridad del codigo
@@ -39,7 +39,7 @@ HEAD, tests e integridad del codigo.
 | Fichero | LOC |
 |---|---:|
 | `src/institutional_accumulation/__init__.py` | 28 |
-| `src/institutional_accumulation/absence.py` | 77 |
+| `src/institutional_accumulation/absence.py` | 78 |
 | `src/institutional_accumulation/aggregation/__init__.py` | 97 |
 | `src/institutional_accumulation/aggregation/catalog_p38_adapter.py` | 170 |
 | `src/institutional_accumulation/aggregation/catalog_validator.py` | 94 |
@@ -53,7 +53,7 @@ HEAD, tests e integridad del codigo.
 | `src/institutional_accumulation/identity/openfigi_client.py` | 180 |
 | `src/institutional_accumulation/identity/period_state.py` | 212 |
 | `src/institutional_accumulation/identity/radar_target_catalog.py` | 154 |
-| `src/institutional_accumulation/identity/target_builder.py` | 181 |
+| `src/institutional_accumulation/identity/target_builder.py` | 203 |
 | `src/institutional_accumulation/identity/target_universe.py` | 171 |
 | `src/institutional_accumulation/operational_universe.py` | 251 |
 | `src/institutional_accumulation/pipeline_contractual.py` | 223 |
@@ -73,8 +73,8 @@ HEAD, tests e integridad del codigo.
 | `src/institutional_accumulation/sec_13f/storage.py` | 89 |
 | `src/institutional_accumulation/security_type.py` | 397 |
 | `src/institutional_accumulation/temporal_validity.py` | 92 |
-| `src/institutional_accumulation/timestamps.py` | 153 |
-| **TOTAL** | **36 ficheros, 8178 LOC** |
+| `src/institutional_accumulation/timestamps.py` | 154 |
+| **TOTAL** | **36 ficheros, 8202 LOC** |
 
 ## 5. Datos IAE
 
