@@ -51,7 +51,9 @@ def compute_sectors_base(df_market, temporal_meta=None):
             print("  Rotacion sectorial historica calculada.")
             srd_path = Path('outputs/history/sector_rank_deltas.csv')
             srd_path.parent.mkdir(parents=True, exist_ok=True)
-            sector_rank_deltas_df.to_csv(srd_path, index=False, encoding='utf-8')
+            _tmp_srd = srd_path.with_suffix(srd_path.suffix + '.tmp')
+            sector_rank_deltas_df.to_csv(_tmp_srd, index=False, encoding='utf-8')
+            _tmp_srd.replace(srd_path)
         else:
             sector_rank_deltas_df = None
     except (KeyError, ValueError, TypeError, IndexError, AttributeError, OSError, RuntimeError) as e:

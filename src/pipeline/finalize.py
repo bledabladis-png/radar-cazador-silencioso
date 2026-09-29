@@ -36,7 +36,9 @@ def compute_final_matrices(sector_breadth_df, sector_concentration_df,
         if sector_regime_matrix_df is not None and not sector_regime_matrix_df.empty:
             mp_path = Path('outputs/history/sector_regime_matrix.csv')
             mp_path.parent.mkdir(parents=True, exist_ok=True)
-            sector_regime_matrix_df.to_csv(mp_path, index=False, encoding='utf-8')
+            _tmp_mp = mp_path.with_suffix(mp_path.suffix + '.tmp')
+            sector_regime_matrix_df.to_csv(_tmp_mp, index=False, encoding='utf-8')
+            _tmp_mp.replace(mp_path)
             print("  Matriz de regimen sectorial calculada.")
         else:
             sector_regime_matrix_df = None
@@ -61,7 +63,9 @@ def compute_final_matrices(sector_breadth_df, sector_concentration_df,
         if evidence_matrix_df is not None and not evidence_matrix_df.empty:
             em_path = Path('outputs/history/evidence_matrix.csv')
             em_path.parent.mkdir(parents=True, exist_ok=True)
-            evidence_matrix_df.to_csv(em_path, index=False)
+            _tmp_em = em_path.with_suffix(em_path.suffix + '.tmp')
+            evidence_matrix_df.to_csv(_tmp_em, index=False)
+            _tmp_em.replace(em_path)
             print("  Matriz de evidencia calculada.")
         else:
             evidence_matrix_df = None

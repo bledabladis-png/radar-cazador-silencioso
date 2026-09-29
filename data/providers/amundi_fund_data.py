@@ -216,7 +216,9 @@ def get_amundi_lyxi_primary_flow(force_download: bool = False) -> pd.DataFrame:
         'shares_change', 'estimated_flow_eur', 'flow_pct_assets',
         'flow_zscore', 'flow_zscore_regime', 'flow_5d', 'flow_20d'
     ]
-    df[cols].to_csv(HISTORY_CSV, index=False)
+    _tmp_hist = HISTORY_CSV.with_suffix(HISTORY_CSV.suffix + '.tmp')
+    df[cols].to_csv(_tmp_hist, index=False)
+    _tmp_hist.replace(HISTORY_CSV)
     print(f'  Histórico guardado en {HISTORY_CSV}')
     print(f'  Total filas: {len(df)}')
 

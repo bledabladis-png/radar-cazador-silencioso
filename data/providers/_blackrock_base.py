@@ -251,7 +251,9 @@ def get_blackrock_primary_flow(
     result = df_flow[cols]
 
     output_csv.parent.mkdir(parents=True, exist_ok=True)
-    result.to_csv(output_csv, index=False)
+    _tmp_out = output_csv.with_suffix(output_csv.suffix + '.tmp')
+    result.to_csv(_tmp_out, index=False)
+    _tmp_out.replace(output_csv)
     print(f'  Guardado en {output_csv}')
     print(f'  Total filas: {len(result)}')
     print(result.tail(5).to_string(index=False))

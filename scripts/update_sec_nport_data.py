@@ -104,7 +104,9 @@ def process_quarter(quarter):
     ]
     pos = hold[pos_cols]
     out_pos = f"outputs/history/sec_nport_positions_{quarter}.csv"
-    pos.to_csv(out_pos, index=False)
+    _tmp_pos = Path(out_pos).with_suffix(Path(out_pos).suffix + '.tmp')
+    pos.to_csv(_tmp_pos, index=False)
+    _tmp_pos.replace(out_pos)
     print(f"Posiciones guardadas: {out_pos}")
 
     # 7. Cambios intra-trimestre
@@ -118,7 +120,9 @@ def process_quarter(quarter):
         ["REPORT_DATE","CIK","REGISTRANT_NAME","SERIES_ID","SERIES_NAME","SECURITY_KEY","ISSUER_NAME","BALANCE","PREV_BALANCE","POSITION_CHANGE","POSITION_CHANGE_PCT"]
     ]
     out_change = f"outputs/history/sec_nport_position_change_{quarter}.csv"
-    change.to_csv(out_change, index=False)
+    _tmp_change = Path(out_change).with_suffix(Path(out_change).suffix + '.tmp')
+    change.to_csv(_tmp_change, index=False)
+    _tmp_change.replace(out_change)
     print(f"Cambios guardados: {out_change}")
 
 def get_last_closed_quarter() -> str:

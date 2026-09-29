@@ -81,7 +81,9 @@ def main():
         'POSITION_CHANGE','POSITION_CHANGE_PCT'
     ]
     change = change[cols]
-    change.to_csv(OUTPUT, index=False)
+    _tmp_out = OUTPUT.with_suffix(OUTPUT.suffix + '.tmp')
+    change.to_csv(_tmp_out, index=False)
+    _tmp_out.replace(OUTPUT)
     print(f'Guardado en {OUTPUT}')
     print(f'Cambios calculados: {len(change)}')
     print(change[change['SERIES_NAME'].str.contains('EURO STOXX', case=False, na=False)].head(20).to_string(index=False))

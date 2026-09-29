@@ -234,7 +234,9 @@ def main() -> None:
     combined = combined.sort_values("year", ascending=False).reset_index(drop=True)
 
     OUTPUT_CSV.parent.mkdir(parents=True, exist_ok=True)
-    combined.to_csv(OUTPUT_CSV, index=False, encoding="utf-8-sig")
+    _tmp_out = OUTPUT_CSV.with_suffix(OUTPUT_CSV.suffix + ".tmp")
+    combined.to_csv(_tmp_out, index=False, encoding="utf-8-sig")
+    _tmp_out.replace(OUTPUT_CSV)
 
     print(f"Consolidado guardado en: {OUTPUT_CSV}")
     print(f"Registros totales: {len(combined)}")
