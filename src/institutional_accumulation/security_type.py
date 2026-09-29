@@ -93,11 +93,21 @@ EMPTY_MARKERS = frozenset({
 
 
 def _normalize(toc):
-    """Mayusculas, sin acentos, colapsa espacios."""
+    """Mayusculas, sin acentos, colapsa espacios.
+
+    C-07 (2026-09-29): normaliza NBSP (U+00A0) y otros whitespace
+    Unicode a espacio ASCII antes del upper+strip. Detectado en
+    datos reales de 2026Q1: 2 filas con TITLEOFCLASS='CL\xa0A'
+    (CL A con NBSP) caian a UNRESOLVED por el NBSP residual.
+    """
     if toc is None:
         return ""
-    s = str(toc).strip().upper()
-    return s
+    s = str(toc)
+    # Reemplazar NBSP + otros whitespace Unicode por espacio ASCII.
+    s = s.replace("\xa0", " ").replace("\u2007", " ").replace("\u202f", " ")
+    # Colapsar espacios multiples.
+    s = " ".join(s.split())
+    return s.strip().upper()
 
 
 def _tokenize(norm):

@@ -303,3 +303,26 @@ def test_operational_universe_candidate_fund():
 def test_operational_universe_candidate_class_a():
     """CLASS A no autorizado -> UNRESOLVED -> excluido."""
     assert st.operational_universe_candidate("CLASS A") is False
+
+# --- C-07 (2026-09-29): NBSP normalizado en TITLEOFCLASS ---
+
+def test_c07_nbsp_normalizado():
+    """'CL\xa0A' (NBSP) debe clasificar como EQUITY."""
+    t, s = st.classify_title_of_class("CL\xa0A")
+    assert t == "EQUITY"
+    assert s == "RESOLVED_EQUITY"
+
+
+def test_c07_nbsp_titulo_conocido():
+    """'COMMON\xa0STOCK' con NBSP debe seguir siendo EQUITY."""
+    t, s = st.classify_title_of_class("COMMON\xa0STOCK")
+    assert t == "EQUITY"
+    assert s == "RESOLVED_EQUITY"
+
+
+def test_c07_espacios_multiples_colapsados():
+    """'  COMMON   STOCK  ' debe seguir siendo EQUITY."""
+    t, s = st.classify_title_of_class("  COMMON   STOCK  ")
+    assert t == "EQUITY"
+    assert s == "RESOLVED_EQUITY"
+
