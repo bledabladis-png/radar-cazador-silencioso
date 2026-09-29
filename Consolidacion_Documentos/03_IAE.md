@@ -329,7 +329,7 @@ Regeneracion automatica:
 
 **`scripts/iae_contractual_coverage.py`** reproduce §12.3 pero no esta integrado al flujo continuo de validacion.
 
-**SPCX en catalogo radar** sin fuente de identidad (emisor privado).
+**SPCX en catalogo radar** (resuelto 2026-09-29): FIGI `BBG000NQF3Z5` presente en catalogo + crosswalk + snapshot. La deuda previa (sin fuente de identidad) ya no aplica.
 
 **Cobertura FIGI del 12.2% en INFOTABLE.** Un fallback CUSIP -> FIGI via OpenFIGI podria ampliar la cobertura, pero no se ha demostrado que resuelva exhaustivamente los CUSIPs restantes.
 
