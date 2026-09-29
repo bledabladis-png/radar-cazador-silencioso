@@ -79,7 +79,10 @@ def _apply_5_3(df, official_df):
     cusips = df["CUSIP"].astype(str).unique()
     elig = sl.resolve_eligibility(cusips, official_df)
     df = df.copy()
-    df["_elig_status"] = df["CUSIP"].astype(str).map(
+    # Fix 2026-09-29: el .get() usa la misma forma de clave que
+    # resolve_eligibility (str(cusip).strip()). Sin este strip, un
+    # CUSIP con espacios caeria silenciosamente a NOT_IN_LIST.
+    df["_elig_status"] = df["CUSIP"].astype(str).str.strip().map(
         lambda c: elig.get(c, {}).get("status", sl.STATUS_NOT_IN_LIST)
     )
     eligible_mask = df["_elig_status"].isin(sl.ELIGIBLE_STATES)
@@ -102,7 +105,8 @@ def _apply_5_3b(df, official_df):
     cusips = df["CUSIP"].astype(str).unique()
     elig = sl.resolve_eligibility(cusips, official_df)
     df = df.copy()
-    df["_instrument_type"] = df["CUSIP"].astype(str).map(
+    # Fix 2026-09-29: misma simetria que _apply_5_3.
+    df["_instrument_type"] = df["CUSIP"].astype(str).str.strip().map(
         lambda c: elig.get(c, {}).get(
             "instrument_type", sl.INSTRUMENT_UNKNOWN
         )
@@ -152,19 +156,23 @@ def _apply_5_5(df, identity_results):
             return None
         return rec.get(key)
 
-    df["_security_resolution_status"] = df["CUSIP"].astype(str).map(
+    # Fix 2026-09-29: el .strip() espeja el de resolve_batch_identities
+    # (str(c).strip()). Sin el, CUSIP con espacios queda sin identidad
+    # y se pierde la fila silenciosamente.
+    _cusip_keys = df["CUSIP"].astype(str).str.strip()
+    df["_security_resolution_status"] = _cusip_keys.map(
         lambda c: _get(c, "security_resolution_status")
     )
-    df["_operational_mapping_status"] = df["CUSIP"].astype(str).map(
+    df["_operational_mapping_status"] = _cusip_keys.map(
         lambda c: _get(c, "operational_mapping_status")
     )
-    df["_canonical_security"] = df["CUSIP"].astype(str).map(
+    df["_canonical_security"] = _cusip_keys.map(
         lambda c: _get(c, "canonical_security")
     )
-    df["_canonical_security_kind"] = df["CUSIP"].astype(str).map(
+    df["_canonical_security_kind"] = _cusip_keys.map(
         lambda c: _get(c, "canonical_security_kind")
     )
-    df["_observed_security_key"] = df["CUSIP"].astype(str).map(
+    df["_observed_security_key"] = _cusip_keys.map(
         lambda c: _get(c, "observed_security_key")
     )
 

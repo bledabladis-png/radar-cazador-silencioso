@@ -377,3 +377,86 @@ def test_build_operational_universe_audit_stats_en_attrs():
     assert stats["n_option"] == 1
     assert stats["n_unresolved"] == 0
     assert stats["n_dropped_by_instrument_type"] == 1
+
+
+# --- Fix 2026-09-29: simetria de strip en claves de lookup ------------
+
+def test_apply_5_3_cusip_con_espacios_encuentra_eligibilidad():
+    """Bug fix 2026-09-29: _apply_5_3 usaba df['CUSIP'].astype(str)
+    como clave de lookup, mientras resolve_eligibility produce claves
+    str(cusip).strip(). Sin strip en el caller, CUSIP con espacios
+    cae silenciosamente a NOT_IN_LIST."""
+    df = pd.DataFrame({
+        "CUSIP": [" 037833100 "],
+        "TITLEOFCLASS": ["COM"],
+        "SSHPRNAMTTYPE": ["SH"],
+        "PUTCALL": [None],
+    })
+    # official_df con CUSIP limpio (sin espacios)
+    official = pd.DataFrame({
+        "cusip": ["037833100"],
+        "option_indicator": [None],
+        "issuer_name": ["APPLE INC"],
+        "issuer_description": ["COM"],
+        "status_raw": ["   "],
+        "status": ["ACTIVE"],
+        "raw_line": ["x" * 80],
+        "_line_no": [1],
+        "_order": [0],
+    })
+    out = ou._apply_5_3(df, official)
+    # Con strip, el CUSIP con espacios se resuelve a ACTIVE (eligible).
+    # Sin strip, caeria a NOT_IN_LIST y la fila se excluiria.
+    assert len(out) == 1
+    assert out.iloc[0]["_elig_status"] == "ACTIVE"
+
+
+def test_apply_5_3b_cusip_con_espacios_encuentra_instrument_type():
+    """Misma simetria que _apply_5_3 para _instrument_type."""
+    df = pd.DataFrame({
+        "CUSIP": [" 037833100 "],
+        "TITLEOFCLASS": ["COM"],
+        "SSHPRNAMTTYPE": ["SH"],
+        "PUTCALL": [None],
+    })
+    official = pd.DataFrame({
+        "cusip": ["037833100"],
+        "option_indicator": [None],
+        "issuer_name": ["APPLE INC"],
+        "issuer_description": ["COM"],
+        "status_raw": ["   "],
+        "status": ["ACTIVE"],
+        "raw_line": ["x" * 80],
+        "_line_no": [1],
+        "_order": [0],
+    })
+    out, stats = ou._apply_5_3b(df, official)
+    # Con strip, el instrument_type es EQUITY (positivo). Sin strip,
+    # seria UNKNOWN y la fila se mantendria (por la regla v2.3), pero
+    # el stat n_equity no la contaria correctamente.
+    assert stats["n_equity"] == 1
+    assert stats["n_unresolved"] == 0
+
+
+def test_apply_5_5_cusip_con_espacios_encuentra_identity():
+    """Simetria con resolve_batch_identities (str(c).strip())."""
+    df = pd.DataFrame({
+        "CUSIP": [" 037833100 "],
+        "TITLEOFCLASS": ["COM"],
+        "SSHPRNAMTTYPE": ["SH"],
+        "PUTCALL": [None],
+    })
+    identity_results = {
+        "037833100": {
+            "security_resolution_status": "CANONICAL",
+            "operational_mapping_status": "VERIFIED",
+            "canonical_security": "equity:AAPL",
+            "canonical_security_kind": "CANONICAL_EQUIVALENCE",
+            "observed_security_key": "cusip:037833100",
+        }
+    }
+    out = ou._apply_5_5(df, identity_results)
+    # Con strip, la fila se resuelve y se mantiene. Sin strip, _get
+    # devolveria None y la fila se excluiria por mask.
+    assert len(out) == 1
+    assert out.iloc[0]["_canonical_security"] == "equity:AAPL"
