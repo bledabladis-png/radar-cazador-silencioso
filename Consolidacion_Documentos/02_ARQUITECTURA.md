@@ -74,7 +74,7 @@ Verificada el 2026-09-28 en la auditoria interna A0.
     |   |   +-- base.py, registry.py, _common.py, consolidate.py, __init__.py
     |   |   +-- equity_eod.py, index_eod.py, volatility_index.py, rate_yield.py
     |   |   +-- future_settlement.py, fx_daily_cut.py, spot_commodity.py
-    |   +-- institutional_accumulation/   (36 ficheros, 8202 LOC)
+    |   +-- institutional_accumulation/   (36 ficheros, 8280 LOC)
     |       +-- aggregation/, identity/, sec_13f/ (subpaquetes)
     |       +-- absence.py, catalog_pit.py, operational_universe.py
     |       +-- pipeline_contractual.py, security_type.py

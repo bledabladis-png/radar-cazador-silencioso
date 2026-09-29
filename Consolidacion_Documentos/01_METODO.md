@@ -63,7 +63,7 @@ Pega este bloque antes de cualquier commit:
 Esperado:
 - compileall OK
 - pyflakes LIMPIO (silencio total)
-- 2267 passed + 2 skipped + 0 failed
+- 2297 passed + 2 skipped + 0 failed
 
 Si algun test falla: NO commitear. Diagnosticar primero.
 

@@ -123,7 +123,7 @@ Sesion 2026-09-29: auditoria interna A6 + B cerrada.
   A6.4-01/04 (refactor a `main()` en `validate_history_quality` y
   `verify_leader_selection`; eliminado `run_all_audits.py` dead code).
 - B (IAE): auditoria **funcional** completa del modulo (36 ficheros,
-  8202 LOC). Fixes aplicados sobre datos y logica reales, no solo
+  8280 LOC). Fixes aplicados sobre datos y logica reales, no solo
   estructura: B-01 (`TargetUniverse` asserts -> raises explicitos,
   inmune a `python -O`), B-04 (C-01 `_derive_status` respeta None en
   paired_weighted; C-04 `_filter_canonical` descarta SSHPRNAMT
@@ -167,7 +167,7 @@ Esperado:
 - HEAD = ver Consolidacion_Documentos/ESTADO_SISTEMA.md
 - ahead 0, behind 0
 - working tree limpio (o solo el propio ESTADO_SISTEMA regenerado)
-- 2267 passed + 2 skipped
+- 2297 passed + 2 skipped
 - pyflakes silencio, compileall OK
 
 ---
