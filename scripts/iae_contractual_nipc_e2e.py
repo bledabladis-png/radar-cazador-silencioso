@@ -1,15 +1,19 @@
-﻿"""E.1 - Validacion E2E compute_nipc_contractual contra §12.5.
+﻿"""E.1 - Validacion E2E compute_nipc_contractual.
 
 Encadena el pipeline contractual via
 src.institutional_accumulation.pipeline_contractual.run_contractual_nipc
-y reconcilia el resultado con la evidencia auditada §12.5.
+y reconcilia el resultado con el baseline vigente.
 
-Salida esperada (identica a §12.5):
-  delta_radar_rows = 553321
-  nipc_total       = -4316734936.0
-  nipc_sole        = -32484713330.0
-  nipc_dfnd        = +28317652408.0
-  nipc_otr         = -149674014.0
+Por defecto reconcilia contra docs/auditoria/iae/golden/current.json
+(baseline local reproducible con HEAD actual). El valor declarado por
+el auditor externo (-4264449932) NO es reproducible y la discrepancia
+(C2, 920) sigue OPEN.
+
+Con --historic: reconcilia contra 12_5_historic.json (FROZEN, commit
+7caa86b, 2026-09-22). Este golden NO es reproducible con HEAD por
+cambios posteriores de codigo (H1-B v2.3 commit ce32c77, O1 commit
+72fa824). Para reproducirlo hay que restaurar tambien el codigo de
+7caa86b, no solo el crosswalk. Se conserva como referencia historica.
 """
 from __future__ import annotations
 import json, subprocess, sys
@@ -24,13 +28,35 @@ from src.institutional_accumulation.pipeline_contractual import (
 
 OUT = ROOT / "outputs" / "audit" / "iae_e1_contractual_nipc"
 
-EXPECTED = {
-    "delta_radar_rows": 553321,
-    "nipc_total": -4316734936.0,
-    "nipc_sole":  -32484713330.0,
-    "nipc_dfnd":   28317652408.0,
-    "nipc_otr":    -149674014.0,
-}
+GOLDEN_DIR = ROOT / "docs" / "auditoria" / "iae" / "golden"
+CURRENT_GOLDEN = GOLDEN_DIR / "current.json"
+HISTORIC_GOLDEN = GOLDEN_DIR / "12_5_historic.json"
+
+
+def load_expected(historic=False):
+    """Carga el baseline de reconciliacion.
+
+    historic=False (default): current.json, campos local_observed_*.
+    historic=True: 12_5_historic.json, campos expected.*.
+    """
+    if historic:
+        data = json.loads(HISTORIC_GOLDEN.read_text(encoding="utf-8"))
+        exp = data["expected"]
+        return {
+            "delta_radar_rows": exp["delta_radar_rows"],
+            "nipc_total": exp["nipc_total"],
+            "nipc_sole":  exp["nipc_sole"],
+            "nipc_dfnd":  exp["nipc_dfnd"],
+            "nipc_otr":   exp["nipc_otr"],
+        }
+    data = json.loads(CURRENT_GOLDEN.read_text(encoding="utf-8"))
+    return {
+        "delta_radar_rows": data["local_observed_delta_radar_rows"],
+        "nipc_total": data["local_observed_nipc_total"],
+        "nipc_sole":  data["local_observed_nipc_sole"],
+        "nipc_dfnd":  data["local_observed_nipc_dfnd"],
+        "nipc_otr":   data["local_observed_nipc_otr"],
+    }
 
 
 def git_head():
@@ -59,14 +85,18 @@ def reconcile(result, expected):
 
 
 def main() -> int:
+    historic = "--historic" in sys.argv[1:]
+    expected = load_expected(historic=historic)
+    tag = "12_5_historic" if historic else "current"
+
     OUT.mkdir(parents=True, exist_ok=True)
     print("=" * 72)
-    print("E.1 - VALIDACION E2E compute_nipc_contractual vs §12.5")
+    print(f"E.1 - VALIDACION E2E compute_nipc_contractual vs {tag}")
     print("=" * 72)
 
     print("\n--- Ejecucion 1 ---")
     r1 = run_contractual_nipc()
-    checks1 = reconcile(r1, EXPECTED)
+    checks1 = reconcile(r1, expected)
 
     print("\n--- Ejecucion 2 (determinismo) ---")
     r2 = run_contractual_nipc()
@@ -74,7 +104,7 @@ def main() -> int:
     det_rows  = (r1["delta_radar_rows"] == r2["delta_radar_rows"])
 
     print("\n" + "=" * 72)
-    print("RECONCILIACION §12.5")
+    print(f"RECONCILIACION {tag}")
     print("=" * 72)
     for c in checks1:
         m = "PASS" if c["pass"] else "FAIL"
@@ -90,7 +120,8 @@ def main() -> int:
         "run_id": ts,
         "git_head": git_head(),
         "timestamp_utc": datetime.now(timezone.utc).isoformat(),
-        "expected_12_5": EXPECTED,
+        "expected_source": tag,
+        "expected": expected,
         "result_summary": {k: r1.get(k) for k in (
             "periods","delta_full_rows","delta_radar_rows",
             "target_q4_size","target_q1_size","feasibility",

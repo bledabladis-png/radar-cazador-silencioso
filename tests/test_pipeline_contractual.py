@@ -2,7 +2,8 @@
 
 Cubren las piezas puras: ticker_of y _subset_universe.
 La orquestacion (run_contractual_nipc) se cubre por E2E via
-scripts/iae_contractual_nipc_e2e.py (E.1 PASS).
+scripts/iae_contractual_nipc_e2e.py (reconcilia contra baseline
+current.json; ver correccion 2026-09-29 en golden/README.md).
 """
 from __future__ import annotations
 

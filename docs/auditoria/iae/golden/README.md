@@ -8,14 +8,18 @@ ver `AUDITORIA_EXTERNA_2026-09-27.md` seccion 3.3).
 
 | Fichero | Estado | Proposito |
 |---|---|---|
-| `12_5_historic.json` | FROZEN | Snapshot del par Q4 2025 -> Q1 2026 con crosswalk de 7caa86b. Inmutable. Reproducible restaurando el crosswalk. |
+| `12_5_historic.json` | FROZEN | Snapshot del par Q4 2025 -> Q1 2026 en el commit 7caa86b. Inmutable. NO reproducible con HEAD actual (requiere tambien restaurar el codigo de 7caa86b). |
 | `current.json` | BLOCKED | Snapshot del par vigente post-H1-B. Se completa tras cierre del fix. Actualmente todos los campos son null. |
 
 ## Reglas
 
 1. **`12_5_historic.json` es inmutable.** No se reescribe. Reproduce
    el estado del pipeline en el commit 7caa86b, con el crosswalk
-   anterior a la regeneracion por Fase G.
+   anterior a la regeneracion por Fase G. **Correccion 2026-09-29:**
+   restaurar solo el crosswalk NO reproduce el golden con HEAD. Los
+   cambios posteriores H1-B v2.3 (ce32c77) y O1 (72fa824) alteran el
+   calculo. Para reproducir 12_5_historic hay que restaurar tambien
+   `src/institutional_accumulation/` al commit 7caa86b.
 2. **`current.json` no se completa hasta que H1-B este cerrado.**
    No se congela ningun NIPC baseline mientras H1-B sea bloqueante.
 3. **Cada golden incluye:** hashes de crosswalk + catalog + equivalence
@@ -28,11 +32,14 @@ ver `AUDITORIA_EXTERNA_2026-09-27.md` seccion 3.3).
 
 ## Reproduccion
 
-- Historic: `py scripts/iae_contractual_nipc_e2e.py` con crosswalk
-  restaurado al de `7caa86b`. Esperado: reproduce el golden con
-  tolerancia 0.
-- Current: tras cierre de H1-B, ejecutar el E2E sobre el estado del
-  pipeline y volcar el resultado.
+- Current (default): `py scripts/iae_contractual_nipc_e2e.py`
+  reconcilia contra `current.json` (baseline local reproducible con
+  HEAD). Gate de regresion activo.
+- Historic: `py scripts/iae_contractual_nipc_e2e.py --historic`
+  reconcilia contra `12_5_historic.json`. Falla con HEAD actual por
+  cambios de codigo post-7caa86b. Para reproducir 12_5_historic con
+  tolerancia 0 hay que restaurar codigo + crosswalk al commit
+  7caa86b.
 
 ## Referencias
 

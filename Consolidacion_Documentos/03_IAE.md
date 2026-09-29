@@ -291,7 +291,7 @@ Regeneracion automatica:
 
 **Cobertura IAE:** 90% lineas (reproducible con `scripts/iae_coverage.py`).
 
-**E2E contractual:** `scripts/iae_contractual_nipc_e2e.py` valida `compute_nipc_contractual` contra §12.5. PASS con crosswalk 7caa86b. FAIL con crosswalk regenerado por Fase G (drift documentado como H1-A, CERRADO con prueba forense).
+**E2E contractual:** `scripts/iae_contractual_nipc_e2e.py` reconcilia `compute_nipc_contractual` contra el baseline vigente (`golden/current.json`, default) o contra el historico (`golden/12_5_historic.json`, `--historic`). **Correccion 2026-09-29:** el golden `12_5_historic` (commit 7caa86b, 2026-09-22) NO es reproducible con HEAD por cambios posteriores de codigo (H1-B v2.3 ce32c77 + O1 72fa824). Restaurar solo el crosswalk ya no basta. Estado: `current` reproducible, `12_5_historic` conservado como referencia historica.
 
 **Coherencia verificada:**
 - Pesos, MATCH_KEY, DELTA_COLUMNS, filtros SH/PUTCALL, reglas BOTH/NEW/EXIT/UNRESOLVED, fail-closed de TARGET_PAIRWISE vacio: coinciden literalmente con los contratos semanticos consolidados (ver `06_IAE_P65_P66.md` para P65/P66).
