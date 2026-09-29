@@ -12,20 +12,17 @@
   },
   "git_head": "4ed2bcf",
   "generated_at": "2026-09-28T02:45:00Z",
-
   "local_observed_nipc_total": -4264449012,
   "local_observed_nipc_sole": -32431459286,
   "local_observed_nipc_dfnd": 28316684288,
   "local_observed_nipc_otr": -149674014,
   "local_observed_delta_radar_rows": 553314,
   "local_observed_delta_full_rows": 4063484,
-
   "external_auditor_reference": -4264449932,
   "external_auditor_reference_source": "AUDITORIA_EXTERNA_2026-09-27.md seccion 3.2 (declarado, sin comando ni HEAD publicados)",
   "reconciliation_delta": 920,
   "reconciliation_status": "OPEN",
-  "reconciliation_note": "El valor externo -4.264.449.932 no ha sido reproducido por este repositorio con ninguna configuracion conocida (HEAD 72fa824, regex sin word-boundary, regex case-sensitive, regex sin OPTION/OPT, crosswalk 7caa86b). El valor local -4.264.449.012 es determinista y reproducible. Ver INFORME_H1B_RECONCILIACION_FINAL.md seccion C2.",
-
+  "reconciliation_note": "El valor externo -4.264.449.932 no ha sido reproducido por este repositorio con ninguna configuracion probada hasta 2026-09-29: regex sin word-boundary, regex case-sensitive, regex sin OPTION/OPT, crosswalk 7caa86b, filtro OPTION/UNKNOWN (h1b_split.json -> delta -42.324.213, no 920). El valor local -4.264.449.012 es determinista y reproducible. El auditor no ha publicado comando ni HEAD, por lo que no es contrastable. Estado: OPEN sin accion tecnica posible sin material adicional del auditor.",
   "crosswalk_sha256": "C344BEE55FA5149853ED029E59EE2ACBCCD94D39990F1B493048EA0CB06A60CC",
   "catalog_sha256": "4A78E2695ACA64EC5601C246D176199CE98E9E10E73E53E4B8F11385FE00EF38",
   "equivalence_sha256": "21A88790AAD50E8B44FBFDAA87C394EF3A782319ADAF4208B9CB244DAC39B322",
@@ -37,10 +34,8 @@
     "13flist_2025Q4": "6A70489393BC1D1977D00FABEDB58550E904FE9C0A4A98CF35361920B91847C9",
     "13flist_2026Q1": "8C6B35079CCADBADDA946D59523AADC697E5E8DC64B60AE1AAE3C4C3047455FB"
   },
-
   "security_type_source": "data/sec_13f/official_list_13f/13flist_2025Q4.txt + 13flist_2026Q1.txt",
   "security_type_source_hash": "6A70489393BC1D1977D00FABEDB58550E904FE9C0A4A98CF35361920B91847C9",
-
   "notes": [
     "local_observed_* = resultado reproducible del sistema con H1-B v2.3.",
     "external_auditor_reference = valor declarado por el auditor externo, sin cadena de custodia reproducible.",
@@ -49,6 +44,7 @@
     "NO usar local_observed como golden contractual: sirve como baseline de regresion local.",
     "NO usar external_auditor_reference como golden contractual: no reproducible.",
     "Regenerado por: scripts/iae_contractual_nipc_e2e.py + scripts/iae_contractual_coverage.py.",
-    "C1 (PRE/POST) y C3 (determinismo) VERDE. Solo C2 (920) queda abierto."
+    "C1 (PRE/POST) y C3 (determinismo) VERDE. Solo C2 (920) queda abierto.",
+    "Hipotesis descartadas (2026-09-29): regex 4 variantes, crosswalk 7caa86b, filtro OPTION/UNKNOWN (-42.324.213, no 920)."
   ]
 }
