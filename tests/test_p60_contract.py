@@ -81,3 +81,49 @@ def test_p60_csv_sin_identity_type_no_asume_ticker():
         "Contrato P60: sin identity_type declarado NO se asume TICKER, "
         "se rechazan las filas. Obtenido: {0}".format(result)
     )
+
+# --- C-06 (2026-09-29): S-03a y S-03b de security_identity ---
+# Auditados como BUG LATENTE PRODUCTIVO. La cadena run.py -> iae_section
+# -> pipeline_contractual.build_identities pasa el CSV por pd.read_csv
+# (dtype=str). En cuanto cusip_equivalence.csv tenga filas reales (uso
+# previsto: autoridad #1 de la cadena), el IAE cae con TypeError y el
+# reporte diario pierde la seccion. Tambien: la invariante dura
+# CANONICAL => canonical != None se violaba con identity_type=CUSIP.
+
+def test_c06_crosswalk_valid_from_string_no_crash():
+    """S-03a bis: defensa en profundidad en _find_active_crosswalk."""
+    cw_raw = pd.DataFrame([
+        {"CUSIP": "333333333", "ticker": "MSFT",
+         "valid_from": "2020-01-01", "valid_to": None,
+         "source": "cusip_ticker_exceptions"},
+    ])
+    assert cw_raw["valid_from"].dtype == object
+
+    result = si.resolve_security_identity(
+        "333333333", "2026-03-31",
+        equivalence_df=None, crosswalk_internal_df=cw_raw,
+    )
+    assert result["security_resolution_status"] == "CANONICAL"
+    assert result["canonical_security"] == "equity:MSFT"
+
+
+def test_c06_identity_type_cusip_no_declara_canonical():
+    """S-03b: invariante dura -- CANONICAL implica canonical != None.
+
+    identity_type=CUSIP -> _normalize_canonical devuelve None.
+    El status NO debe ser CANONICAL.
+    """
+    eq = pd.DataFrame([
+        {"CUSIP_A": "111111111", "canonical_security": "111111111",
+         "valid_from": pd.Timestamp("2020-01-01"), "valid_to": None,
+         "source": "SEC", "reason": "test", "verified_by": "SEC",
+         "source_document": None, "identity_type": "CUSIP"},
+    ])
+    result = si.resolve_security_identity(
+        "111111111", "2026-03-31",
+        equivalence_df=eq, crosswalk_internal_df=None,
+    )
+    assert result["security_resolution_status"] != "CANONICAL"
+    assert result["canonical_security"] is None
+    assert result["security_resolution_status"] == "OBSERVED_ONLY"
+

@@ -26,7 +26,7 @@ from .sec_13f.identity.temporal_filter import filter_by_period
 from .sec_13f.identity.amendments import apply_amendments
 from .sec_13f.identity import sec13f_list as sl
 from .sec_13f.identity.security_identity import (
-    load_crosswalk_internal, resolve_batch_identities)
+    load_crosswalk_internal, load_cusip_equivalence, resolve_batch_identities)
 from . import operational_universe as ou
 from .identity import period_state as ps
 from .identity.target_builder import build_target, TargetUniverse
@@ -58,7 +58,17 @@ def build_identities(snap, iso, *, mappings_dir=None):
     cw = load_crosswalk_internal()
     mp = Path(mappings_dir or DEFAULT_MAPPINGS)
     eqp = mp / "cusip_equivalence.csv"
-    eq = pd.read_csv(eqp, dtype=str) if eqp.exists() else None
+    # S-03a (2026-09-29): antes era pd.read_csv(eqp, dtype=str) -> los
+    # campos valid_from/valid_to llegaban como str y _find_active_equivalence
+    # comparaba str <= Timestamp -> TypeError. Bug latente: enmascarado
+    # porque cusip_equivalence.csv esta vacio (solo header). En cuanto se
+    # anada la primera fila real (uso previsto: autoridad #1 en la cadena),
+    # el IAE del reporte diario caia con status=ERROR.
+    # load_cusip_equivalence valida schema + normaliza dtypes a datetime.
+    if eqp.exists():
+        eq = load_cusip_equivalence(eqp)
+    else:
+        eq = None
     return resolve_batch_identities(cusips, iso, equivalence_df=eq,
         crosswalk_internal_df=cw, figi_lookup=None)
 

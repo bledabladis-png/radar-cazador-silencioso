@@ -309,7 +309,16 @@ def _find_active_equivalence(cusip, report_period, eq_df):
     """
     if eq_df is None or eq_df.empty:
         return []
-    sub = eq_df[eq_df["CUSIP_A"].astype(str).str.strip() == str(cusip).strip()]
+    # S-03a (2026-09-29): defensa en profundidad. Callers que pasan el
+    # CSV crudo (read_csv dtype=str) provocan TypeError al comparar
+    # str <= Timestamp. Normalizacion local. El caller productivo
+    # pipeline_contractual.py ahora usa load_cusip_equivalence.
+    work = eq_df.copy()
+    if "valid_from" in work.columns:
+        work["valid_from"] = pd.to_datetime(work["valid_from"], errors="coerce")
+    if "valid_to" in work.columns:
+        work["valid_to"] = pd.to_datetime(work["valid_to"], errors="coerce")
+    sub = work[work["CUSIP_A"].astype(str).str.strip() == str(cusip).strip()]
     if sub.empty:
         return []
     try:
@@ -376,7 +385,13 @@ def _find_active_crosswalk(cusip, report_period, cw_df):
     """
     if cw_df is None or cw_df.empty:
         return []
-    sub = cw_df[cw_df["CUSIP"].astype(str).str.strip() == str(cusip).strip()]
+    # S-03a bis: misma defensa que en _find_active_equivalence.
+    work = cw_df.copy()
+    if "valid_from" in work.columns:
+        work["valid_from"] = pd.to_datetime(work["valid_from"], errors="coerce")
+    if "valid_to" in work.columns:
+        work["valid_to"] = pd.to_datetime(work["valid_to"], errors="coerce")
+    sub = work[work["CUSIP"].astype(str).str.strip() == str(cusip).strip()]
     if sub.empty:
         return []
     try:
@@ -454,12 +469,30 @@ def _resolve_identity_inner(
         return result
     if len(eq_canon) == 1:
         val, itype, vf, vt, op_src = eq_canon[0]
+        # S-03b (2026-09-29): invariante dura -- CANONICAL implica
+        # canonical_security != None. _normalize_canonical devuelve None
+        # con identity_type CUSIP/ISIN o val NaN-like. En ese caso NO se
+        # declara CANONICAL: se degrada a OBSERVED_ONLY.
+        canonical = _normalize_canonical(val, itype)
+        if canonical is None:
+            result["security_resolution_status"] = STATUS_OBSERVED_ONLY
+            result["canonical_security_kind"] = KIND_OBSERVED_CUSIP_ONLY
+            result["canonical_security"] = None
+            result["evidence"] = {
+                "source": "equivalence",
+                "operational_source": op_src,
+                "identity_type": itype,
+                "valid_from": vf,
+                "valid_to": vt,
+                "reason": "canonical_security normalizado a None",
+            }
+            return result
         result["security_resolution_status"] = STATUS_CANONICAL
         if itype == "FIGI":
             result["canonical_security_kind"] = KIND_CANONICAL_FIGI
         else:
             result["canonical_security_kind"] = KIND_CANONICAL_EQUIVALENCE
-        result["canonical_security"] = _normalize_canonical(val, itype)
+        result["canonical_security"] = canonical
         result["evidence"] = {
             "source": "equivalence",
             "operational_source": op_src,
