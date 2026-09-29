@@ -205,9 +205,11 @@ def compute_evidence_matrix(sector_breadth_df=None,
 
 
 def save_evidence_matrix(df, path='outputs/history/evidence_matrix.csv'):
+    # DEAD CODE (2026-09-29): sin consumidores en src/, indicators/,
+    # scripts/ ni tests/. El writer productivo de evidence_matrix.csv
+    # es finalize.py:66 (atomico). Se preserva por si un caller externo
+    # la importa, pero no se le anade atomicidad sin consumidor real.
     if df is not None and not df.empty:
         Path(path).parent.mkdir(parents=True, exist_ok=True)
-        _tmp = Path(path).with_suffix(Path(path).suffix + '.tmp')
-        df.to_csv(_tmp, index=False)
-        _tmp.replace(path)
+        df.to_csv(path, index=False)
     return df
