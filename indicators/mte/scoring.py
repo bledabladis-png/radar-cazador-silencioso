@@ -264,12 +264,13 @@ def credit_stress_score(financial_conditions, credit_signal,
 
     def stress(val):
 
-
-        if val is None or not pd.notna(val):
-
+        # Fix 2026-09-29: isfinite en lugar de solo pd.notna. Con val=inf,
+        # pd.notna(inf) es True -> np.tanh(inf/2)=1.0 -> clip 1.0. El
+        # resultado 'estres extremo' se colaba silenciosamente. Familia de
+        # invariantes de finitud.
+        if val is None or not np.isfinite(val):
 
             return 0.5
-
 
         return float(np.clip(np.tanh(val / 2), 0, 1))
 
