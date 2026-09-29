@@ -121,8 +121,9 @@ def test_http_5xx_recupera():
         assert mock_get.call_count == 2
 
 def test_download_cache_hit(tmp_path):
+    # Cache-hit valido: fichero existente Y ZIP valido -> no redescarga.
     zip_path = tmp_path / "01mar2026-31may2026_form13f.zip"
-    zip_path.write_bytes(b"cached")
+    _make_zip(zip_path, {"DUMMY.tsv": b"x"})
     with patch("requests.get") as mock_get:
         result = downloader.download_13f_zip("01mar2026-31may2026", tmp_path)
         assert result == zip_path
@@ -177,3 +178,55 @@ def test_extract_extras_ignorados(tmp_path):
 def test_extract_zip_no_existe(tmp_path):
     with pytest.raises(FileNotFoundError):
         downloader.extract_13f_zip(tmp_path / "no_existe.zip", tmp_path / "out")
+
+def test_download_cache_hit_fichero_no_zip_redescarga(tmp_path):
+    # Fix 2026-09-29: si el fichero existe pero no es ZIP valido
+    # (descarga interrumpida, disco lleno, red cortada), redescarga
+    # sin exigir --force. Antes el fallo quedaba cacheado.
+    zip_path = tmp_path / "01mar2026-31may2026_form13f.zip"
+    zip_path.write_bytes(b"corrupt-not-a-zip")
+    with patch("requests.get") as mock_get:
+        resp = MagicMock()
+        resp.status_code = 200
+        resp.headers = {"Content-Length": "4"}
+        resp.iter_content.return_value = [b"PK\x03\x04"]
+        mock_get.return_value = resp
+        result = downloader.download_13f_zip("01mar2026-31may2026", tmp_path)
+        assert result == zip_path
+        assert mock_get.call_count == 1
+        assert zip_path.read_bytes() == b"PK\x03\x04"
+
+
+def test_download_atomico_no_deja_tmp(tmp_path):
+    # Escritura atomica: descarga a .tmp + os.replace. No queda tmp
+    # tras descarga exitosa.
+    with patch("requests.get") as mock_get:
+        resp = MagicMock()
+        resp.status_code = 200
+        resp.headers = {"Content-Length": "4"}
+        resp.iter_content.return_value = [b"PK\x03\x04"]
+        mock_get.return_value = resp
+        downloader.download_13f_zip("01mar2026-31may2026", tmp_path)
+    tmp_files = list(tmp_path.glob("*.tmp"))
+    assert tmp_files == []
+
+
+def test_download_incompleto_limpia_tmp_y_no_sobrescribe(tmp_path):
+    # Si la descarga se corta (Content-Length != bytes recibidos),
+    # se limpia el .tmp y zip_path no se toca. Antes se escribia
+    # directamente a zip_path y quedaba un ZIP corrupto cacheado.
+    zip_path = tmp_path / "01mar2026-31may2026_form13f.zip"
+    zip_path.write_bytes(b"pre-existing-good-zip-bytes")
+    with patch("requests.get") as mock_get:
+        resp = MagicMock()
+        resp.status_code = 200
+        resp.headers = {"Content-Length": "1000000"}  # mucho mayor
+        resp.iter_content.return_value = [b"short"]
+        mock_get.return_value = resp
+        with pytest.raises(IOError, match="Descarga incompleta"):
+            downloader.download_13f_zip("01mar2026-31may2026", tmp_path,
+                                        force=True)
+    # zip_path original intacto
+    assert zip_path.read_bytes() == b"pre-existing-good-zip-bytes"
+    # tmp limpio
+    assert list(tmp_path.glob("*.tmp")) == []

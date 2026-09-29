@@ -11,6 +11,7 @@ Alcance:
 NO incluye: parsing, identity resolution, dedup, CUSIP->ticker, NIPC.
 """
 import hashlib
+import os
 import time
 import zipfile
 from pathlib import Path
@@ -139,10 +140,14 @@ def download_13f_zip(period, dest_dir, user_agent=DEFAULT_USER_AGENT,
     base_url: override opcional de la base URL (si None, se deriva).
     Devuelve: Path al ZIP descargado.
 
-    Cache: si el fichero existe y force=False, se reutiliza. No hay
-    verificacion de tamano en cache-hit. La integridad del ZIP se
-    verifica en extract_13f_zip mediante CRC (zipfile.testzip).
-    El SHA-256 se calcula siempre como lineage local.
+    Cache: si el fichero existe y force=False, se reutiliza SI es un
+    ZIP valido (zipfile.is_zipfile). Si no, se redescarga sin exigir
+    --force. La integridad CRC completa se verifica en extract_13f_zip
+    (zipfile.testzip). El SHA-256 se calcula siempre como lineage local.
+
+    Escritura atomica: descarga a <zip>.tmp, os.replace final. Si el
+    proceso se interrumpe, no deja zip_path a medias; el proximo run
+    ve cache miss y redescarga.
     """
     _validate_user_agent(user_agent)
     dest_dir = Path(dest_dir)
@@ -152,10 +157,18 @@ def download_13f_zip(period, dest_dir, user_agent=DEFAULT_USER_AGENT,
     filename = period + "_form13f.zip"
     zip_path = dest_dir / filename
 
+    # Cache-hit con validacion. Si el ZIP existe pero no es un ZIP
+    # valido (descarga interrumpida, disco lleno, red cortada), no se
+    # devuelve: se redescarga. Sin esta verificacion el fallo quedaba
+    # cacheado indefinidamente y extract_13f_zip fallaba en CRC sin
+    # auto-recuperacion (update_sec_13f.yml nunca pasa --force).
     if zip_path.exists() and not force:
-        print("[DOWNLOAD] cache hit: " + str(zip_path))
-        print("[DOWNLOAD] sha256=" + _sha256(zip_path))
-        return zip_path
+        if zipfile.is_zipfile(zip_path):
+            print("[DOWNLOAD] cache hit: " + str(zip_path))
+            print("[DOWNLOAD] sha256=" + _sha256(zip_path))
+            return zip_path
+        print("[DOWNLOAD] cache hit INVALIDO (no es ZIP): " + str(zip_path))
+        print("[DOWNLOAD] redescargando sin necesidad de --force")
 
     headers = {"User-Agent": user_agent}
     print("[DOWNLOAD] " + url)
@@ -163,17 +176,28 @@ def download_13f_zip(period, dest_dir, user_agent=DEFAULT_USER_AGENT,
     r = _http_get_with_retry(url, headers)
     total = int(r.headers.get("Content-Length", 0))
 
+    # Escritura atomica: tmp + os.replace. Si el proceso se interrumpe
+    # durante la descarga, el fichero final no se sobreescribe y queda
+    # un .tmp parcial. Proximo run: cache-hit miss (porque zip_path no
+    # existe o no es ZIP valido) -> redescarga limpia.
+    tmp_path = zip_path.with_suffix(zip_path.suffix + ".tmp")
     downloaded = 0
-    with open(zip_path, "wb") as f:
+    with open(tmp_path, "wb") as f:
         for chunk in r.iter_content(chunk_size=CHUNK_SIZE):
             if chunk:
                 f.write(chunk)
                 downloaded += len(chunk)
 
     if total and downloaded != total:
+        try:
+            tmp_path.unlink()
+        except OSError:
+            pass
         raise IOError(
             "Descarga incompleta: " + str(downloaded) + "/" + str(total) + " bytes"
         )
+
+    os.replace(tmp_path, zip_path)
 
     print("[DOWNLOAD] bytes=" + str(downloaded))
     print("[DOWNLOAD] sha256=" + _sha256(zip_path))
