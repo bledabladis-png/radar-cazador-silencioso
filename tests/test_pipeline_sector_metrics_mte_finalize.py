@@ -104,6 +104,96 @@ def test_sector_metrics_degrada_si_sub_bloque_lanza(tmp_path, monkeypatch):
     assert out["sector_leader_divergence_df"] is None
 
 
+def _fake_to_csv_that_fails():
+    real_to_csv = pd.DataFrame.to_csv
+
+    def fake_to_csv(self, path, **kw):
+        real_to_csv(self.iloc[:0], path, **kw)
+        raise OSError("simulado: fallo a mitad de escritura")
+
+    return fake_to_csv
+
+
+def _ne_df():
+    """df_stocks NO vacio para pasar el guard de los helpers."""
+    return pd.DataFrame({"x": [1.0]})
+
+
+def test_sm_sld_fallo_to_csv_no_pierde_filas(tmp_path, monkeypatch):
+    _setup_tmp(tmp_path, monkeypatch)
+    csv = tmp_path / "outputs" / "history" / "sector_leader_divergence.csv"
+    pd.DataFrame([{"date": "2026-09-24", "sector": "XLK", "v": 0.1}]).to_csv(csv, index=False)
+    filas_antes = pd.read_csv(csv).shape[0]
+    fake_df = pd.DataFrame([{"date": "2026-09-25", "sector": "XLK", "v": 0.2}])
+    with patch.object(pd.DataFrame, "to_csv", _fake_to_csv_that_fails()), \
+         patch("src.pipeline.sector_metrics.compute_sector_leader_divergence",
+               return_value=fake_df):
+        sm._compute_divergencia(_ne_df(), pd.DataFrame(), _ne_df(), pd.DataFrame())
+    df = pd.read_csv(csv)
+    assert df.shape[0] == filas_antes, f"perdio filas: {filas_antes} -> {df.shape[0]}"
+    assert df.iloc[0]["date"] == "2026-09-24"
+
+
+def test_sm_wy_fallo_to_csv_no_pierde_filas(tmp_path, monkeypatch):
+    _setup_tmp(tmp_path, monkeypatch)
+    csv = tmp_path / "outputs" / "history" / "sector_wyckoff_distribution.csv"
+    pd.DataFrame([{"date": "2026-09-24", "sector": "XLK", "v": 0.1}]).to_csv(csv, index=False)
+    filas_antes = pd.read_csv(csv).shape[0]
+    fake_df = pd.DataFrame([{"date": "2026-09-25", "sector": "XLK", "v": 0.2}])
+    with patch.object(pd.DataFrame, "to_csv", _fake_to_csv_that_fails()), \
+         patch("src.pipeline.sector_metrics.compute_sector_wyckoff_distribution",
+               return_value=fake_df):
+        sm._compute_wyckoff(_ne_df(), pd.DataFrame())
+    df = pd.read_csv(csv)
+    assert df.shape[0] == filas_antes, f"perdio filas: {filas_antes} -> {df.shape[0]}"
+    assert df.iloc[0]["date"] == "2026-09-24"
+
+
+def test_sm_rs_fallo_to_csv_no_pierde_filas(tmp_path, monkeypatch):
+    _setup_tmp(tmp_path, monkeypatch)
+    csv = tmp_path / "outputs" / "history" / "rs_internal.csv"
+    pd.DataFrame([{"date": "2026-09-24", "sector": "XLK", "ticker": "AAPL", "v": 0.1}]).to_csv(csv, index=False)
+    filas_antes = pd.read_csv(csv).shape[0]
+    fake_df = pd.DataFrame([{"date": "2026-09-25", "sector": "XLK", "ticker": "AAPL", "v": 0.2}])
+    with patch.object(pd.DataFrame, "to_csv", _fake_to_csv_that_fails()), \
+         patch("src.pipeline.sector_metrics.compute_rs_internal",
+               return_value=fake_df):
+        sm._compute_rs_internal(_ne_df(), pd.DataFrame(), pd.DataFrame())
+    df = pd.read_csv(csv)
+    assert df.shape[0] == filas_antes, f"perdio filas: {filas_antes} -> {df.shape[0]}"
+    assert df.iloc[0]["date"] == "2026-09-24"
+
+
+def test_sm_sc_fallo_to_csv_no_pierde_filas(tmp_path, monkeypatch):
+    _setup_tmp(tmp_path, monkeypatch)
+    csv = tmp_path / "outputs" / "history" / "sector_concentration.csv"
+    pd.DataFrame([{"date": "2026-09-24", "sector": "XLK", "v": 0.1}]).to_csv(csv, index=False)
+    filas_antes = pd.read_csv(csv).shape[0]
+    fake_df = pd.DataFrame([{"date": "2026-09-25", "sector": "XLK", "v": 0.2}])
+    with patch.object(pd.DataFrame, "to_csv", _fake_to_csv_that_fails()), \
+         patch("src.pipeline.sector_metrics.compute_sector_concentration",
+               return_value=fake_df):
+        sm._compute_concentration(_ne_df(), pd.DataFrame(), pd.DataFrame(), pd.DataFrame())
+    df = pd.read_csv(csv)
+    assert df.shape[0] == filas_antes, f"perdio filas: {filas_antes} -> {df.shape[0]}"
+    assert df.iloc[0]["date"] == "2026-09-24"
+
+
+def test_sm_lr_fallo_to_csv_no_pierde_filas(tmp_path, monkeypatch):
+    _setup_tmp(tmp_path, monkeypatch)
+    csv = tmp_path / "outputs" / "history" / "leader_representativeness.csv"
+    pd.DataFrame([{"date": "2026-09-24", "sector": "XLK", "ticker": "AAPL", "v": 0.1}]).to_csv(csv, index=False)
+    filas_antes = pd.read_csv(csv).shape[0]
+    fake_df = pd.DataFrame([{"date": "2026-09-25", "sector": "XLK", "ticker": "AAPL", "v": 0.2}])
+    with patch.object(pd.DataFrame, "to_csv", _fake_to_csv_that_fails()), \
+         patch("src.pipeline.sector_metrics.compute_leader_representativeness",
+               return_value=fake_df):
+        sm._compute_representativeness(_ne_df())
+    df = pd.read_csv(csv)
+    assert df.shape[0] == filas_antes, f"perdio filas: {filas_antes} -> {df.shape[0]}"
+    assert df.iloc[0]["date"] == "2026-09-24"
+
+
 # =============================================================================
 # mte_confirmation.py
 # =============================================================================
