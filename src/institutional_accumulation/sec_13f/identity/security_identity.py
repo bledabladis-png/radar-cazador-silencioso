@@ -409,7 +409,11 @@ def _find_active_crosswalk(cusip, report_period, cw_df):
         if tk is None or (isinstance(tk, float) and tk != tk):
             continue
         tk_s = str(tk).strip()
-        if not tk_s:
+        # S-03c: filtrar strings placeholder ('nan', 'none', 'null',
+        # '-') que en CSV con dtype=str llegan como literales y que
+        # _normalize_canonical descartaria a None. Evita candidatos
+        # que no producen canonical_security.
+        if not tk_s or tk_s.lower() in ("nan", "none", "null", "-"):
             continue
         src = str(row["source"]).strip() if has_src else ""
         vf = row.get("valid_from")
@@ -542,9 +546,29 @@ def _resolve_identity_inner(
         return result
     if len(cw_tickers) == 1:
         tk, sub_src, vf, vt = cw_tickers[0]
+        # S-03c (2026-09-29): invariante dura -- CANONICAL implica
+        # canonical_security != None. Simetrica con S-03b (rama
+        # equivalence). _normalize_canonical devuelve None si tk es
+        # cadena vacia, 'nan' o 'none' (case-insensitive). Sin esta
+        # guarda el resolver declaraba CANONICAL con canonical_security
+        # = None, rompiendo el contrato declarado en el docstring.
+        canonical = _normalize_canonical(tk, "TICKER")
+        if canonical is None:
+            result["security_resolution_status"] = STATUS_OBSERVED_ONLY
+            result["canonical_security_kind"] = KIND_OBSERVED_CUSIP_ONLY
+            result["canonical_security"] = None
+            result["evidence"] = {
+                "source": "crosswalk_internal",
+                "operational_source": sub_src,
+                "ticker": tk,
+                "valid_from": vf,
+                "valid_to": vt,
+                "reason": "canonical_security normalizado a None",
+            }
+            return result
         result["security_resolution_status"] = STATUS_CANONICAL
         result["canonical_security_kind"] = KIND_CANONICAL_EQUIVALENCE
-        result["canonical_security"] = _normalize_canonical(tk, "TICKER")
+        result["canonical_security"] = canonical
         result["evidence"] = {
             "source": "crosswalk_internal",
             "operational_source": sub_src,

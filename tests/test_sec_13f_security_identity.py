@@ -426,3 +426,63 @@ def test_q8_identity_type_figi(tmp_path):
     assert r["canonical_security"] == "figi:BBG001S69V32"
     assert r["canonical_security_kind"] == si.KIND_CANONICAL_FIGI
 
+
+
+# --- S-03c (2026-09-29): invariante CANONICAL != None en crosswalk ---
+
+def test_s03c_crosswalk_ticker_nan_string_degrada_a_observed_only():
+    """Bug: ticker literal 'nan' producia CANONICAL con canonical_security=None."""
+    cw = _mk_crosswalk([
+        ("A1", "nan", None, None, "etf_holdings"),
+    ])
+    r = si.resolve_security_identity("A1", "2026-03-31",
+                                    crosswalk_internal_df=cw)
+    assert r["security_resolution_status"] == si.STATUS_OBSERVED_ONLY
+    assert r["canonical_security"] is None
+    assert r["canonical_security_kind"] == si.KIND_OBSERVED_CUSIP_ONLY
+
+
+def test_s03c_crosswalk_ticker_none_string_degrada_a_observed_only():
+    cw = _mk_crosswalk([
+        ("A1", "none", None, None, "etf_holdings"),
+    ])
+    r = si.resolve_security_identity("A1", "2026-03-31",
+                                    crosswalk_internal_df=cw)
+    assert r["security_resolution_status"] == si.STATUS_OBSERVED_ONLY
+    assert r["canonical_security"] is None
+
+
+def test_s03c_crosswalk_ticker_null_string_degrada_a_observed_only():
+    cw = _mk_crosswalk([
+        ("A1", "null", None, None, "etf_holdings"),
+    ])
+    r = si.resolve_security_identity("A1", "2026-03-31",
+                                    crosswalk_internal_df=cw)
+    assert r["security_resolution_status"] == si.STATUS_OBSERVED_ONLY
+    assert r["canonical_security"] is None
+
+
+def test_s03c_crosswalk_ticker_valido_mantiene_canonical():
+    """Control positivo: ticker valido sigue produciendo CANONICAL."""
+    cw = _mk_crosswalk([
+        ("A1", "AAPL", None, None, "etf_holdings"),
+    ])
+    r = si.resolve_security_identity("A1", "2026-03-31",
+                                    crosswalk_internal_df=cw)
+    assert r["security_resolution_status"] == si.STATUS_CANONICAL
+    assert r["canonical_security"] == "equity:AAPL"
+
+
+def test_s03c_invariante_canonical_implica_security_no_none():
+    """Bateria: para N tickers problematicos, CANONICAL implica
+    canonical_security != None."""
+    tickers = ["nan", "none", "null", "-", "", "  "]
+    for tk in tickers:
+        cw = _mk_crosswalk([
+            ("A1", tk, None, None, "etf_holdings"),
+        ])
+        r = si.resolve_security_identity("A1", "2026-03-31",
+                                        crosswalk_internal_df=cw)
+        if r["security_resolution_status"] == si.STATUS_CANONICAL:
+            assert r["canonical_security"] is not None, (
+                f"invariante violada para ticker={tk!r}")
