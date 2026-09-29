@@ -67,6 +67,19 @@ def test_momentum_amplitud_calcula_y_persiste(tmp_path, monkeypatch):
     assert p.exists()
 
 
+def test_momentum_amplitud_sin_tmp_residual(tmp_path, monkeypatch):
+    """Escritura atomica (familia 3): no quedan .tmp tras exito."""
+    monkeypatch.chdir(tmp_path)
+    (tmp_path / "outputs" / "history").mkdir(parents=True)
+    fake_sbm = pd.DataFrame([{"date": "2026-09-25", "sector": "XLK",
+                              "delta_1d_ema20": 0.1}])
+    with patch("src.pipeline.breadth_metrics.compute_sector_breadth_momentum",
+               return_value=fake_sbm):
+        bm._compute_momentum_amplitud(_df_stocks())
+    tmps = list((tmp_path / "outputs" / "history").glob("*.tmp*"))
+    assert tmps == [], f"quedan temporales: {tmps}"
+
+
 def test_momentum_amplitud_empty_result_devuelve_df_vacio(tmp_path, monkeypatch):
     """Si compute_sector_breadth_momentum devuelve df vacio, la funcion
     lo propaga (no None). El CSV NO se persiste."""
@@ -206,6 +219,28 @@ def test_sbh_dia_mercado_calcula_observacion(tmp_path, monkeypatch):
     assert is_stale is False
     assert out is not None
     assert len(out) == 1
+
+
+def test_sbh_sin_tmp_residual(tmp_path, monkeypatch):
+    """Escritura atomica (familia 3): no quedan .tmp tras exito."""
+    monkeypatch.chdir(tmp_path)
+    (tmp_path / "outputs" / "history").mkdir(parents=True)
+    df_stocks = _df_stocks_hasta("2026-09-25")
+    fake_sb = pd.DataFrame([
+        {"date": pd.Timestamp("2026-09-25"), "sector": "XLK",
+         "n_total": 20, "n_valid_ema200": 20},
+    ])
+    with patch("src.pipeline.breadth_metrics.last_expected_market_date",
+               return_value=pd.Timestamp("2026-09-25").date()), \
+         patch("src.pipeline.breadth_metrics.compute_sector_breadth",
+               return_value=fake_sb):
+        bm._compute_sector_breadth_health(
+            df_stocks, pd.DataFrame(), pd.DataFrame(),
+            reference_date=MARKET_DAY,
+            output_path=tmp_path / "outputs" / "history" / "sb.csv",
+        )
+    tmps = list((tmp_path / "outputs" / "history").glob("*.tmp*"))
+    assert tmps == [], f"quedan temporales: {tmps}"
 
 
 def test_sbh_error_en_compute_devuelve_none(tmp_path, monkeypatch):

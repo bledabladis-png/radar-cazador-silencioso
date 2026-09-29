@@ -28,7 +28,9 @@ def _compute_momentum_amplitud(df_stocks):
                 if sbm_path.exists():
                     hist_sbm = pd.read_csv(sbm_path)
                     sector_breadth_momentum_df = append_dedup(hist_sbm, sector_breadth_momentum_df, ["date","sector"])
-                sector_breadth_momentum_df.to_csv(sbm_path, index=False)
+                _tmp_sbm = sbm_path.with_suffix(sbm_path.suffix + '.tmp')
+                sector_breadth_momentum_df.to_csv(_tmp_sbm, index=False)
+                _tmp_sbm.replace(sbm_path)
                 print("  Momentum de amplitud sectorial calculado.")
         else:
             sector_breadth_momentum_df = None
@@ -140,7 +142,9 @@ def _compute_sector_breadth_health(df_stocks, df_market, holdings_df,
             if sb_path.exists():
                 hist_sb = pd.read_csv(sb_path)
                 sector_breadth_df = append_dedup(hist_sb, sector_breadth_df, ["date","sector"])
-            sector_breadth_df.to_csv(sb_path, index=False)
+            _tmp_sb = sb_path.with_suffix(sb_path.suffix + '.tmp')
+            sector_breadth_df.to_csv(_tmp_sb, index=False)
+            _tmp_sb.replace(sb_path)
             print("  Sector Breadth & Health calculado.")
         if return_reason:
             return sector_breadth_df, False, None
