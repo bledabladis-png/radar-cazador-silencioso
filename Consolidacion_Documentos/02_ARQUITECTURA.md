@@ -253,7 +253,7 @@ Si `validation_gate['passed'] == False` -> `sys.exit(1)`.
 
 ## 9. VALIDACION Y TESTS
 
-**Suite completa:** 2267 passed + 2 skipped + 0 failed. Incluye 845 tests del modulo IAE (criterio AST, 45 ficheros).
+**Suite completa:** 2297 passed + 2 skipped + 0 failed. Incluye 777 funciones test_ (AST) / 885 tests collected (pytest) del modulo IAE (45 ficheros).
 
 **Los 3 tests `test_freshness`** (ambientales) pasan tras un `py run.py` que refresca los parquets; vuelven a fallar si pasan >4 dias sin ejecutar el pipeline.
 
