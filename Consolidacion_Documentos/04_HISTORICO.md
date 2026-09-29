@@ -196,6 +196,17 @@ Ciclos completados (12 en la sesion principal):
   `validate_membership` sin consumidor productivo (deuda documentada
   en `03_IAE §10`); `cusip_resolver.resolve_cusip` sin caller real.
 - **B CERRADO.** Suite: 2275 -> 2294 passed + 2 skipped.
+- **C (auditoria de tests):** 179 ficheros en `tests/`, 2115 funciones
+  test_ (2280 casos con parametrize). Barrido de tests fantasma
+  (0 hallazgos reales), tests anclados a numero de linea (ya cerrado
+  en A3.3-13), cobertura real por modulo. C-08 (MEDIA, corregido):
+  `regimes/volatility_regime.py` mapeaba NaN a STRESS. Evidencia:
+  1803/1884 detecciones historicas de STRESS eran falsos positivos
+  por NaN heredado de 90 huecos de VIX x rolling(20) x baseline(756).
+  Fix: NaN -> "N/D". Deuda documentada: modulos con cobertura baja
+  (`macro_manual_loader` 12%, `european_coverage` 12%,
+  `pipeline_contractual` 27% ya documentado). **C CERRADO.** Suite:
+  2294 -> 2297 passed + 2 skipped.
 - **Cierre sesion 2026-09-29:** 21 commits. G-01 (fix truncado),
   P66-01 (extraccion §14 + reapuntado tests), A6.1-A6.4, B-01/B-02/B-03.
   Suite 2267 -> 2280 passed + 2 skipped. **Auditoria interna A6 + B

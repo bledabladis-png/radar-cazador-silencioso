@@ -266,6 +266,28 @@ estructural): probes sobre parquets 13F reales y sobre la cadena
 
 **B CERRADO.** Suite: 2275 -> 2294 passed + 2 skipped.
 
+**C (auditoria de tests) CERRADO.**
+
+- Gate 0: 179 ficheros, 28817 LOC, 2115 funciones `test_`, 0 ficheros
+  sin asserts. Patrones sospechosos clasificados: todos falsos
+  positivos (ramas defensivas, fixtures MagicMock, skips condicionales
+  de entorno).
+- **C-07 (BAJA) CORREGIDO (3902503).** NBSP en TITLEOFCLASS
+  (`CL<NBSP>A`) caia a UNRESOLVED.
+- **C-08 (MEDIA) CORREGIDO (09bfa13).** `volatility_regime` mapeaba
+  z=NaN a STRESS por cascada de comparaciones. Evidencia empirica:
+  1803/1884 STRESS historicos eran falsos positivos. Fix: NaN -> "N/D".
+  Coherente con el principio N/D del sistema. Impacto: no afecta a
+  ninguna decision del pipeline (macro_regime usa VIX directo); solo
+  a la etiqueta del reporte y a `detect_cross_module_conflict`.
+- **Cobertura real por modulo**: identificados modulos con cobertura
+  baja (`macro_manual_loader` 12%, `european_coverage` 12%,
+  `pipeline_contractual` 27%, `data_loader` 50%). Sin bug detectado
+  tras inspeccion. Deuda de tests, no de codigo.
+- **Tests anclados a numero de linea**: ya cerrado en A3.3-13.
+
+**C CERRADO.** Suite: 2294 -> 2297 passed + 2 skipped.
+
 **A6 CERRADO** (A6.1 + A6.2 + A6.3 + A6.4). Resumen del bloque:
 
 - A6.1 (nucleo compartido): 1 fix (A6.1-01), 1 deuda documentada (A6.1-02).

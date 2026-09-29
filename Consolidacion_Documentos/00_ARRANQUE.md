@@ -74,7 +74,7 @@ Fuente autoritativa: `Consolidacion_Documentos/ESTADO_SISTEMA.md` (regenerado co
 
 Snapshot al cierre del ultimo commit:
 - HEAD: ver ESTADO_SISTEMA.md
-- Tests: 2294 passed + 2 skipped + 0 failed
+- Tests: 2297 passed + 2 skipped + 0 failed
 - Validation Gate: 10/10
 - Working tree: limpio
 - Corpus documental: v2 (Consolidacion_Documentos/00-06, 2026-09-29)
@@ -97,7 +97,7 @@ Snapshot al cierre del ultimo commit:
 - A5 (pipeline): CERRADO
 - A6 (infra/orquestacion: utils/registry/tracker/workflows/scripts/validation): CERRADO
 - B (IAE): CERRADO (auditoria funcional real + fixes B-01..B-07, C-07)
-- C (tests): PENDIENTE
+- C (tests): CERRADO (auditoria de la suite; hallazgos C-07/C-08)
 
 ---
 
@@ -139,7 +139,12 @@ Sesion 2026-09-29: auditoria interna A6 + B cerrada.
 
 ## 5. PENDIENTE (DESGLOSE)
 
-**C - Auditoria de tests.** 192 ficheros, ~22900 LOC. Foco: tests fantasma (que pasan sin verificar), cobertura real por modulo del radar, tests anclados a numero de linea. Los 10 tests huerfanos de P66 (`test_p66_contract.py`) fueron reapuntados al corpus consolidado en P66-01 (sesion 2026-09-29).
+**C - Auditoria de tests.** CERRADO. 179 ficheros en `tests/`, ~28800 LOC, 2115 funciones test_ (2280 casos ejecutados con parametrize). Barrido de: tests fantasma, cobertura real por modulo, tests anclados a numero de linea.
+
+- **Tests fantasma**: 0 encontrados en la muestra amplia (los 10 casos del Gate 0 eran falsos positivos: `pass` en ramas defensivas, `MagicMock()` para fixtures).
+- **Tests anclados a numero de linea**: ya cerrado en A3.3-13 (`test_mte_scoring_characterization.py` anclaba `node.lineno == 89`).
+- **Modulos con cobertura baja**: `macro_manual_loader` (12%), `european_coverage` (12%), `pipeline_contractual` (27%, ya documentado en 03_IAE), `src/data_loader` (50%). Sin bug detectado tras inspeccion. Deuda de tests, no de codigo.
+- **C-08 (MEDIA) CORREGIDO**: `regimes/volatility_regime.py` mapeaba z=NaN a STRESS por cascada de comparaciones (todas dan False -> else). Evidencia empirica: 1803/1884 STRESS historicos eran falsos positivos por NaN heredado de huecos de VIX. Fix: NaN -> "N/D".
 
 **H5.3 - Trazabilidad cron trimestral.** Pendiente verificacion en cron real de noviembre 2026.
 
