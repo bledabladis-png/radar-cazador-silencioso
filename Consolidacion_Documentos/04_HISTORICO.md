@@ -214,7 +214,7 @@ Ciclos completados (12 en la sesion principal):
 
 ---
 
-### 2026-09-29 (tarde): auditoria funcional frente 6 (IAE) + frente 8 (providers) + orquestacion CI
+### 2026-09-29 (tarde/noche): auditoria funcional frentes 6 (IAE) + 7 (indicators) + 8 (providers) + orquestacion CI
 
 Continuacion de la sesion del mismo dia. Tras cerrar A6 + B + C por la
 manana, se abrieron tres frentes nuevos, en este orden: orquestacion CI
@@ -340,6 +340,35 @@ frente 8 (providers). Total: ~35 commits.
   desalineado con implementacion, pero solo afecta a metricas de conteo
   (807-2120 filas con nombres de manager con coma interna). Docstring
   corregido (2f1da14); sin cambio funcional.
+
+**Frente 7 - indicators/ (9 commits).**
+
+- **call_share (f24e193).** Unica de 7 funciones hermanas en
+  `options_metrics.py` sin `np.isfinite`. Con total_volume=inf -> 0.0/NaN
+  silenciosos.
+- **Escrituras atomicas (88eb2e5, 46854a8, bbf3422).** Cuatro `to_csv`
+  directos sobre ficheros historicos: `darkpool_history.csv`,
+  `sector_rankings_history.csv`, `pcr_history.csv`, `analisis_lideres.csv`.
+  El state file SLPM (`state_transition.py`) tambien: mas grave, porque
+  `_load_state` resetea el state a vacio si detecta JSON corrupto. La
+  maquina de estados pierde `consecutive_count` y `confirmed_state`
+  silenciosamente.
+- **slpm_v12 flow_proxy_z=0.0 (894c03c).** `m.get('flow_proxy_z') or
+  np.nan` convertia un flow z-score exactamente cero (flujo neutro)
+  en NaN. El leader dejaba de contribuir al LIS.
+- **mte/scoring stress (5528ef2).** `stress(val)` con `pd.notna(val)`
+  como guard: `pd.notna(inf)` es True -> `np.tanh(inf/2)=1.0` ->
+  clip 1.0. Retornaba 'estres extremo' silenciosamente.
+- **fls _zscore_last_over_lookback (7e2c1a3).** Con `series.iloc[-1]=NaN`
+  (hueco en el ultimo dato FRED) o inf, la funcion devolvia NaN/inf
+  silenciosamente. Afectaba a los 5 componentes FLS.
+- **mte/decision consensus (7cb5c7a).** Bug real. `consensus_score` con
+  cualquier input NaN propagaba NaN a `compute_confidence` y de ahi a
+  `classify_mte`. El clasificador devolvia `scenario=STAGFLATION
+  confidence=nan` sin senal (el `if confidence == 0.0` no captura NaN).
+- **mte/engine traceback (88eb2e5).** El `except Exception` outer anadia
+  solo mensaje corto. Anadida `traceback.print_exc()` + docstring
+  declarando el contrato 'puede devolver None'.
 
 **Lecciones confirmadas.**
 

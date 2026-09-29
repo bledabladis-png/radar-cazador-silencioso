@@ -95,15 +95,25 @@ frente 6 (IAE funcional avanzado), frente 8 (providers).
 - 04_HISTORICO: entrada tematica de la sesion (9bdc1c7).
 - Este commit (05_BITACORA).
 
-**Commits.** ~38. HEAD final antes de este commit: `9bdc1c7`.
+**Frente 7 - indicators (9 commits).**
+- call_share finitud (f24e193).
+- atómicos: darkpool_history + sector_rank_history (88eb2e5), state_transition
+  (46854a8), pcr_history + analisis_lideres (bbf3422).
+- slpm_v12 flow_proxy_z=0.0 (894c03c).
+- mte/scoring stress finitud (5528ef2).
+- fls zscore finitud (7e2c1a3).
+- mte/decision consensus finitud (7cb5c7a).
+
+**Commits.** ~50. HEAD final antes de este commit: `675b438`.
 
 **Pendiente.**
-- Frente 7 (indicators/, 50 ficheros): NO abierto.
 - H5.3 (cron nov 2026).
 - C2 (920, bloqueado externo).
+- Cierre del corpus documental (actualizar 00_ARRANQUE / 02_ARQUITECTURA /
+  04_HISTORICO / 05_BITACORA + snapshot).
 
-**Proximo paso sugerido.** Abrir frente 7 (indicators) con Gate 0 quirurgico
-y scan por patrones 8.5, focalizando donde hay senales reales.
+**Proximo paso sugerido.** Cerrar sesion: actualizar corpus y snapshot.
+Los tres frentes funcionales abiertos (6, 7, 8) estan cerrados.
 
 ---
 
