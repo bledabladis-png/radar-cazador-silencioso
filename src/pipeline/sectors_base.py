@@ -73,7 +73,9 @@ def compute_sectors_base(df_market, temporal_meta=None):
             if sd_path.exists():
                 hist_sd = pd.read_csv(sd_path)
                 sector_dispersion_df = append_dedup(hist_sd, sector_dispersion_df, ['date'])
-            sector_dispersion_df.to_csv(sd_path, index=False)
+            _tmp_sd = sd_path.with_suffix(sd_path.suffix + '.tmp')
+            sector_dispersion_df.to_csv(_tmp_sd, index=False)
+            _tmp_sd.replace(sd_path)
             print("  Dispersion entre sectores calculada.")
         else:
             sector_dispersion_df = None
@@ -94,7 +96,9 @@ def compute_sectors_base(df_market, temporal_meta=None):
             if cs_path.exists():
                 hist_cs = pd.read_csv(cs_path)
                 sector_corr_summary_df = append_dedup(hist_cs, sector_corr_summary_df, ['date','window'])
-            sector_corr_summary_df.to_csv(cs_path, index=False)
+            _tmp_cs = cs_path.with_suffix(cs_path.suffix + '.tmp')
+            sector_corr_summary_df.to_csv(_tmp_cs, index=False)
+            _tmp_cs.replace(cs_path)
             print("  Correlacion entre sectores calculada.")
         else:
             sector_corr_summary_df = None
@@ -115,12 +119,16 @@ def compute_sectors_base(df_market, temporal_meta=None):
             if ca_detail_path.exists():
                 hist_cad = pd.read_csv(ca_detail_path)
                 cross_asset_detail_df = append_dedup(hist_cad, cross_asset_detail_df, ['date','window','sector','asset'])
-            cross_asset_detail_df.to_csv(ca_detail_path, index=False)
+            _tmp_cad = ca_detail_path.with_suffix(ca_detail_path.suffix + '.tmp')
+            cross_asset_detail_df.to_csv(_tmp_cad, index=False)
+            _tmp_cad.replace(ca_detail_path)
         if not cross_asset_summary_df.empty:
             if ca_summary_path.exists():
                 hist_cas = pd.read_csv(ca_summary_path)
                 cross_asset_summary_df = append_dedup(hist_cas, cross_asset_summary_df, ['date','window','sector','asset_class'])
-            cross_asset_summary_df.to_csv(ca_summary_path, index=False)
+            _tmp_cas = ca_summary_path.with_suffix(ca_summary_path.suffix + '.tmp')
+            cross_asset_summary_df.to_csv(_tmp_cas, index=False)
+            _tmp_cas.replace(ca_summary_path)
             print("  Contexto Cross-Asset calculado.")
         else:
             cross_asset_summary_df = None

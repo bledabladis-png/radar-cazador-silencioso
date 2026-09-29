@@ -124,6 +124,152 @@ def test_sectors_base_degrada_sub_bloque_dispersion(tmp_path, monkeypatch):
 
 
 # =============================================================================
+# Atomicidad (familia 3): fallo de to_csv no debe perder filas
+# =============================================================================
+
+def _fake_to_csv_that_fails():
+    real_to_csv = pd.DataFrame.to_csv
+
+    def fake_to_csv(self, path, **kw):
+        real_to_csv(self.iloc[:0], path, **kw)
+        raise OSError("simulado: fallo a mitad de escritura")
+
+    return fake_to_csv
+
+
+def test_sectors_base_sd_fallo_to_csv_no_pierde_filas(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    (tmp_path / "outputs" / "history").mkdir(parents=True)
+    csv = tmp_path / "outputs" / "history" / "sector_dispersion.csv"
+    pd.DataFrame([{"date": "2026-09-24", "v": 0.1}]).to_csv(csv, index=False)
+    filas_antes = pd.read_csv(csv).shape[0]
+    assert filas_antes == 1
+
+    fake_df = pd.DataFrame([{"date": "2026-09-25", "v": 0.2}])
+    with patch.object(pd.DataFrame, "to_csv", _fake_to_csv_that_fails()), \
+        patch("src.pipeline.sectors_base.compute_sector_scores",
+               return_value={"ranking": [], "regime": "MIXED"}), \
+         patch("src.pipeline.sectors_base.compute_price_flow_rankings",
+               return_value=([], [], [], [])), \
+         patch("src.pipeline.sectors_base.compute_breadth",
+               return_value=(_empty_breadth_series(),) * 5), \
+         patch("indicators.sector_rank_history.update_rank_history",
+               return_value=(pd.DataFrame(), pd.DataFrame())), \
+         patch("indicators.sector_dispersion.compute_sector_dispersion",
+               return_value=fake_df), \
+         patch("indicators.sector_correlation.compute_sector_correlation",
+               return_value=pd.DataFrame()), \
+         patch("indicators.cross_asset_context.compute_cross_asset_context",
+               return_value=(pd.DataFrame(), pd.DataFrame())):
+        compute_sectors_base(_df_market_min())
+
+    df = pd.read_csv(csv)
+    assert df.shape[0] == filas_antes, (
+        f"CSV original perdio filas: {filas_antes} -> {df.shape[0]}"
+    )
+    assert df.iloc[0]["date"] == "2026-09-24"
+
+
+def test_sectors_base_cs_fallo_to_csv_no_pierde_filas(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    (tmp_path / "outputs" / "history").mkdir(parents=True)
+    csv = tmp_path / "outputs" / "history" / "sector_correlation_summary.csv"
+    pd.DataFrame([{"date": "2026-09-24", "window": 20, "v": 0.1}]).to_csv(csv, index=False)
+    filas_antes = pd.read_csv(csv).shape[0]
+    assert filas_antes == 1
+
+    fake_df = pd.DataFrame([{"date": "2026-09-25", "window": 20, "v": 0.2}])
+    with patch.object(pd.DataFrame, "to_csv", _fake_to_csv_that_fails()), \
+        patch("src.pipeline.sectors_base.compute_sector_scores",
+               return_value={"ranking": [], "regime": "MIXED"}), \
+         patch("src.pipeline.sectors_base.compute_price_flow_rankings",
+               return_value=([], [], [], [])), \
+         patch("src.pipeline.sectors_base.compute_breadth",
+               return_value=(_empty_breadth_series(),) * 5), \
+         patch("indicators.sector_rank_history.update_rank_history",
+               return_value=(pd.DataFrame(), pd.DataFrame())), \
+         patch("indicators.sector_dispersion.compute_sector_dispersion",
+               return_value=pd.DataFrame()), \
+         patch("indicators.sector_correlation.compute_sector_correlation",
+               return_value=fake_df), \
+         patch("indicators.cross_asset_context.compute_cross_asset_context",
+               return_value=(pd.DataFrame(), pd.DataFrame())):
+        compute_sectors_base(_df_market_min())
+
+    df = pd.read_csv(csv)
+    assert df.shape[0] == filas_antes, (
+        f"CSV original perdio filas: {filas_antes} -> {df.shape[0]}"
+    )
+    assert df.iloc[0]["date"] == "2026-09-24"
+
+
+def test_sectors_base_cad_fallo_to_csv_no_pierde_filas(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    (tmp_path / "outputs" / "history").mkdir(parents=True)
+    csv = tmp_path / "outputs" / "history" / "cross_asset_correlation.csv"
+    pd.DataFrame([{"date": "2026-09-24", "window": 20, "sector": "XLK", "asset": "SPY", "v": 0.1}]).to_csv(csv, index=False)
+    filas_antes = pd.read_csv(csv).shape[0]
+    assert filas_antes == 1
+
+    fake_cad = pd.DataFrame([{"date": "2026-09-25", "window": 20, "sector": "XLK", "asset": "SPY", "v": 0.2}])
+    with patch.object(pd.DataFrame, "to_csv", _fake_to_csv_that_fails()), \
+        patch("src.pipeline.sectors_base.compute_sector_scores",
+               return_value={"ranking": [], "regime": "MIXED"}), \
+         patch("src.pipeline.sectors_base.compute_price_flow_rankings",
+               return_value=([], [], [], [])), \
+         patch("src.pipeline.sectors_base.compute_breadth",
+               return_value=(_empty_breadth_series(),) * 5), \
+         patch("indicators.sector_rank_history.update_rank_history",
+               return_value=(pd.DataFrame(), pd.DataFrame())), \
+         patch("indicators.sector_dispersion.compute_sector_dispersion",
+               return_value=pd.DataFrame()), \
+         patch("indicators.sector_correlation.compute_sector_correlation",
+               return_value=pd.DataFrame()), \
+         patch("indicators.cross_asset_context.compute_cross_asset_context",
+               return_value=(fake_cad, pd.DataFrame())):
+        compute_sectors_base(_df_market_min())
+
+    df = pd.read_csv(csv)
+    assert df.shape[0] == filas_antes, (
+        f"CSV original perdio filas: {filas_antes} -> {df.shape[0]}"
+    )
+    assert df.iloc[0]["date"] == "2026-09-24"
+
+
+def test_sectors_base_cas_fallo_to_csv_no_pierde_filas(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    (tmp_path / "outputs" / "history").mkdir(parents=True)
+    csv = tmp_path / "outputs" / "history" / "cross_asset_context.csv"
+    pd.DataFrame([{"date": "2026-09-24", "window": 20, "sector": "XLK", "asset_class": "EQ", "v": 0.1}]).to_csv(csv, index=False)
+    filas_antes = pd.read_csv(csv).shape[0]
+    assert filas_antes == 1
+
+    fake_cas = pd.DataFrame([{"date": "2026-09-25", "window": 20, "sector": "XLK", "asset_class": "EQ", "v": 0.2}])
+    with patch.object(pd.DataFrame, "to_csv", _fake_to_csv_that_fails()), \
+        patch("src.pipeline.sectors_base.compute_sector_scores",
+               return_value={"ranking": [], "regime": "MIXED"}), \
+         patch("src.pipeline.sectors_base.compute_price_flow_rankings",
+               return_value=([], [], [], [])), \
+         patch("src.pipeline.sectors_base.compute_breadth",
+               return_value=(_empty_breadth_series(),) * 5), \
+         patch("indicators.sector_rank_history.update_rank_history",
+               return_value=(pd.DataFrame(), pd.DataFrame())), \
+         patch("indicators.sector_dispersion.compute_sector_dispersion",
+               return_value=pd.DataFrame()), \
+         patch("indicators.sector_correlation.compute_sector_correlation",
+               return_value=pd.DataFrame()), \
+         patch("indicators.cross_asset_context.compute_cross_asset_context",
+               return_value=(pd.DataFrame(), fake_cas)):
+        compute_sectors_base(_df_market_min())
+
+    df = pd.read_csv(csv)
+    assert df.shape[0] == filas_antes, (
+        f"CSV original perdio filas: {filas_antes} -> {df.shape[0]}"
+    )
+    assert df.iloc[0]["date"] == "2026-09-24"
+
+
+# =============================================================================
 # leaders.py
 # =============================================================================
 
