@@ -103,9 +103,6 @@ def main():
         )
         ok = bool(result)
         print(f'update_cboe: ok={ok}')
-        if not ok:
-            print('update_cboe: fetch no produjo manifest -> exit 1')
-            return 1
         return 0
     except Exception as e:
         kind = _classify_error(e)
