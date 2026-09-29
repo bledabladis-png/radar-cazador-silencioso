@@ -6,6 +6,7 @@ from datetime import datetime
 from pathlib import Path
 
 import pandas as pd
+import os
 import requests
 
 from Crypto.Cipher import AES
@@ -226,7 +227,12 @@ class EuronextProvider:
         if df.empty:
             return
         p = self._cache_path(ticker)
-        df.to_csv(p, index=False)
+        # Fix 2026-09-29: escritura atomica (.tmp + os.replace).
+        # Antes df.to_csv(p) directo: si el proceso moria a mitad,
+        # quedaba CSV parcial y _load_cache lo leia sin senal.
+        tmp = p.with_suffix(p.suffix + ".tmp")
+        df.to_csv(tmp, index=False)
+        os.replace(tmp, p)
 
     def _cache_is_fresh(self, ticker: str, reference_date=None) -> bool:
         """Considera fresco si el ultimo dato es de hoy o del ultimo dia habil.

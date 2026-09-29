@@ -1,4 +1,5 @@
 import hashlib
+import os
 import json
 import time
 from datetime import datetime, timezone
@@ -281,7 +282,15 @@ class XetraProvider:
     def _save_cache(self, ticker: str, df: pd.DataFrame):
         if df.empty:
             return
-        self._cache_path(ticker).write_bytes(df.to_csv(index=False).encode("utf-8"))
+        p = self._cache_path(ticker)
+        # Fix 2026-09-29: escritura atomica (.tmp + os.replace).
+        # Antes write_bytes directo: si el proceso moria a mitad,
+        # quedaba CSV parcial. Proximo _load_cache lo leia con
+        # pd.read_csv (falla -> DataFrame vacio, o trunca sin error).
+        # Mismo patron que downloader.py / storage.py.
+        tmp = p.with_suffix(p.suffix + ".tmp")
+        tmp.write_bytes(df.to_csv(index=False).encode("utf-8"))
+        os.replace(tmp, p)
 
     def _cache_is_fresh(self, ticker: str, reference_date=None) -> bool:
         """True si la cache contiene la ultima sesion EOD esperada.

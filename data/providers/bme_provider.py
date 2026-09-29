@@ -22,6 +22,7 @@ from src.market_calendar import is_market_day, last_expected_market_date
 from pathlib import Path
 
 import pandas as pd
+import os
 import requests
 
 BME_ENDPOINT = "https://apiweb.bolsasymercados.es/Market/v1/EQ/HistoricalSharesPrices"
@@ -127,7 +128,12 @@ class BMEProvider:
     def _save_cache(self, ticker: str, df: pd.DataFrame):
         if df.empty:
             return
-        self._cache_path(ticker).write_bytes(df.to_csv(index=False).encode("utf-8"))
+        p = self._cache_path(ticker)
+        # Fix 2026-09-29: escritura atomica (.tmp + os.replace).
+        # Mismo patron que downloader.py / storage.py.
+        tmp = p.with_suffix(p.suffix + ".tmp")
+        tmp.write_bytes(df.to_csv(index=False).encode("utf-8"))
+        os.replace(tmp, p)
 
     def _cache_is_fresh(self, ticker: str, reference_date=None) -> bool:
         """True si la cache contiene la ultima sesion esperada.
