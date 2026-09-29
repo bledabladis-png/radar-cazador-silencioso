@@ -189,7 +189,7 @@ Estas son las reglas que hemos aprendido rompiendo cosas. Se aplican.
 Patrones recurrentes detectados en las auditorias A1-A5. Aplicables a A6, B y C. **Cada vez que se audita un modulo, buscar estos patrones antes de leer linea por linea.**
 
 **Patron 1 - `except Exception` outer que enmascara bug interno.**
-El bloque entero envuelto en `except Exception` con mensaje generico. Un bug interno (`NameError`, `AttributeError`, `IndexError`) queda silenciado como "modulo omitido". **Caso A5-07:** `leaders.py`, `NameError` en rama INSUFFICIENT_COVERAGE oculto como "Modulo de lideres omitido". **Como detectar:** indentacion visible sospechosa; variables usadas fuera del scope donde se definen. **Fix aceptable cuando el except es defensivo deliberado:** `traceback.print_exc()` deja traza en el log sin alterar el flujo (caso `mte/engine.py`).
+El bloque entero envuelto en `except Exception` con mensaje generico. Un bug interno (`NameError`, `AttributeError`, `IndexError`) queda silenciado como "modulo omitido". **Caso A5-07:** `leaders.py`, `NameError` en rama INSUFFICIENT_COVERAGE oculto como "Modulo de lideres omitido". **Como detectar:** indentacion visible sospechosa; variables usadas fuera del scope donde se definen.
 
 **Patron 2 - Check muerto (siempre True / siempre False).**
 `if 'x' in dir()` (siempre True para parametros). `if x is not None` (si x es Series vacia, nunca None). `if len(x) > 0` tras filtrar por `.empty`. **Caso A5-08:** `'all_signals' in dir()` siempre True.
@@ -201,7 +201,7 @@ Restar `datetime.now()` (naive) contra timestamp tz-aware. Rinde `TypeError`, a 
 `return a, b, c` en early returns; `return a, b, c, d` en exito. El caller sortea por coincidencia (`result[0] is not None`). **Caso A3.1-03:** `compute_liquidity_score`.
 
 **Patron 5 - Bucle sin guard.**
-`while not is_market_day(d): d -= timedelta(days=1)`. Sin limite. Si `NYSE_HOLIDAYS` corrupto o rango no cubierto → bucle infinito. **Caso A1-11.** **Propagacion incompleta (leccion):** el guard se aplico a `market_calendar.py` pero no se replico a varios providers. Al cerrar un patron, hacer grep global del contrato, no solo del caso reportado.
+`while not is_market_day(d): d -= timedelta(days=1)`. Sin limite. Si `NYSE_HOLIDAYS` corrupto o rango no cubierto → bucle infinito. **Caso A1-11.**
 
 **Patron 6 - Variante local de funcion canonica.**
 `robust_zscore` definido dos veces con contratos distintos. `tanh` local. `_robust_z` con ffill. **Casos A3.4-03/04:** `options.robust_zscore`, `fls.manual_robust_zscore`. **Como detectar:** grep por `def robust_zscore|def _robust|def tanh`.
@@ -218,16 +218,7 @@ Restar `datetime.now()` (naive) contra timestamp tz-aware. Rinde `TypeError`, a 
 **Patron 10 - Documento vs codigo.**
 Docstring dice "9 contratos" pero hay 10. Comentario "esto hace X" pero el codigo hace Y. **Caso A3.2-01:** 7 literales `SECTORS = [...]` vs `MARKET_TICKERS['sectors']`.
 
-**Patron 11 - `or` sobre `.get()` que colisiona con valor legitimo.**
-`df.get('flow_proxy_z', np.nan)` seguido de `x or np.nan` convierte un `0.0` legitimo en `np.nan`. Igual con `x or 0`. El default solo debe aplicarse si la clave no existe, no si el valor es falsy. **Caso:** `slpm_v12.py` (flow_proxy_z=0.0).
-
-**Patron 12 - `pd.notna` no filtra `inf`.**
-`pd.notna(inf)` es `True`. Filtrar solo con `notna()` deja pasar `inf`. Extiende la familia "invariante declarada vs no enforced": `math.isfinite()` antes de la comparacion. **Caso:** `mte/scoring.stress()`. La familia se cerro 8 veces en la sesion 2026-09-29.
-
-**Patron 13 - Escritura no atomica en ficheros historicos/state.**
-`to_csv`, `write_bytes` o `json.dump` directos sobre historicos o state files. Si el proceso muere a mitad, fichero truncado; `_load_state` puede resetear silenciosamente a vacio. Fix: `.tmp + os.replace`. **Cerrado en 8 sitios:** downloader, darkpool_history, sector_rank_history, state_transition, pcr_history, analisis_lideres, caches xetra/bme/euronext/blackrock.
-
-**Como aplicar:** al abrir un modulo nuevo, primer paso: `grep` de estos 13 patrones con regex. Los hits se convierten en hallazgos preliminares. Se verifican uno a uno. No se declaran sin evidencia directa.
+**Como aplicar:** al abrir un modulo nuevo, primer paso: `grep` de estos 10 patrones con regex. Los hits se convierten en hallazgos preliminares. Se verifican uno a uno. No se declaran sin evidencia directa.
 
 ---
 
