@@ -282,6 +282,9 @@ def main():
         print(f'Actualizados: {len(updated)} ETFs ({", ".join(updated)})')
         if failed:
             print(f'Fallidos (usan datos anteriores): {len(failed)} ETFs ({", ".join(failed)})')
+            # Falla visible: no dejar workflow verde con datos parcialmente viejos.
+            print(f'::warning::update_index_holdings: {len(failed)} ETFs fallidos')
+            sys.exit(1)
     else:
         print('\nERROR: No se pudo generar ningún dato.')
         sys.exit(1)

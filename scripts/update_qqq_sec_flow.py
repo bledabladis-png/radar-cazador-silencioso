@@ -213,6 +213,7 @@ def main() -> None:
     annual["flow_zscore"] = None
 
     sem_row = get_ncsrs_semiannual()
+    sem_failed = sem_row is None
     if sem_row:
         sem_df = pd.DataFrame([sem_row])
     else:
@@ -238,6 +239,12 @@ def main() -> None:
     print(f"Consolidado guardado en: {OUTPUT_CSV}")
     print(f"Registros totales: {len(combined)}")
     print(combined.head(5).to_string(index=False))
+
+    if sem_failed:
+        # Falla visible: el CSV se guardo con datos solo anuales, sin el
+        # N-CSRS semestral mas reciente. Antes el workflow salia verde.
+        print("::warning::update_qqq_sec_flow: N-CSRS semestral no disponible")
+        sys.exit(1)
 
 
 if __name__ == "__main__":
