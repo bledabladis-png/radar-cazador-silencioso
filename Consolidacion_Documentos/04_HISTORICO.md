@@ -214,6 +214,149 @@ Ciclos completados (12 en la sesion principal):
 
 ---
 
+### 2026-09-29 (tarde): auditoria funcional frente 6 (IAE) + frente 8 (providers) + orquestacion CI
+
+Continuacion de la sesion del mismo dia. Tras cerrar A6 + B + C por la
+manana, se abrieron tres frentes nuevos, en este orden: orquestacion CI
+(surgio por un push rechazado), frente 6 (IAE funcional avanzado) y
+frente 8 (providers). Total: ~35 commits.
+
+**Orquestacion CI (8 commits).**
+
+- **Bug cache 13F (8b0eb1c).** `update_sec_13f.yml` guardaba cache con
+  key `13f-processed-v3-<hash de latest_quarter + manifests>`; `daily_run.yml`
+  buscaba `v2-<hash de latest_quarter>`. Nunca coincidian. La cache 13F
+  nunca se restauraba en daily_run. Consecuencia: `iae_section.py` no
+  encontraba DATA_DIR -> status=STALE, stale_reason=insufficient_quarters.
+  La seccion IAE del reporte diario llevaba en STALE desde el 28.
+  Degradacion silenciosa (solo un ::warning::). Fix: alinear daily_run a v3.
+- **Bug issues:write (9129278).** `update_sec_13f.yml` declaraba solo
+  `contents: write`. El bloque H5.2 de abrir Issue en fallo ejecuta `gh issue
+  list`, `gh issue comment`, etc. Sin `issues:write`, 403 silencioso. La
+  alerta H5.2 nunca se habria materializado cuando el cron de noviembre
+  fallara. Fix: declarar `issues:write`.
+- **Bug _update_issue (4c15e47).** En `health_check.py`, `_update_issue`
+  no comprobaba el retorno de `_run_gh` en close/comment/edit. Si `gh`
+  fallaba, imprimia 'issue cerrada'/'actualizada' igualmente. Workflow
+  verde, sin issue, sin rastro. Fix: comprobar retorno; imprimir WARN
+  si gh fallo. 3 tests nuevos (los primeros que cubren _run_gh).
+- **Retry en git push (4297785, e3b0287).** 8 workflows con
+  `git pull --rebase && git push` sin retry. Colision real 4-6 dias/ano
+  (cron `17 6 UTC` compartido por 4 workflows). Fix: bucle 3 intentos
+  con backoff, `exit 1` si los 3 fallan (fail-loud, no silent).
+- **if:always() en uploads pre-gate (05acb3f).** Cuando `run.py` fallaba
+  en validation_gate, los steps post-gate se saltaban por default
+  `if:success()`. `download_failures.md` (generado en fase 1) quedaba
+  en disco pero inaccesible. Fix: `if:always()` en Upload download
+  failures y Check download failures alert.
+- **env.quarter vacio (702e2d3).** `update_sec_nport.yml` referenciaba
+  `${{ env.quarter }}` sin bloque `env:`. Commit message quedaba
+  `'Actualizar N-PORT '` sin trimestre. Fix: texto fijo.
+
+**Frente 6 - IAE funcional avanzado (14 commits).**
+
+- **S-03c (b0d3ec3).** Bug real. `security_identity.py`: la rama
+  equivalence tenia guarda S-03b (si `_normalize_canonical` devuelve
+  None, degradar a OBSERVED_ONLY). La rama crosswalk_internal no la
+  tenia. Con ticker literal `'nan'` string (CSV leido con dtype=str),
+  el resolver declaraba CANONICAL con canonical_security=None. Contrato
+  del docstring violado. Fix: guarda simetrica + refuerzo de
+  `_find_active_crosswalk` para filtrar strings placeholder. 5 tests.
+- **PeriodState.sshprnamt (474dd49).** Bug real. Dataclass frozen con
+  `__post_init__` validando `>= 0`. Con NaN: `nan < 0` es False, pasa.
+  Con inf: `inf < 0` es False, pasa. Fix: `math.isfinite()`. 4 tests.
+- **extract_sshprnamt_by_figi (1259542).** Misma familia. Si SSHPRNAMT
+  es NaN o inf, contamina la agregacion por FIGI. Fix: math.isfinite
+  en el bucle. 3 tests.
+- **operational_universe strip (88013bf).** Asimetria. `resolve_eligibility`
+  y `resolve_batch_identities` producen claves con `.strip()`. Los
+  callers `_apply_5_3`, `_apply_5_3b`, `_apply_5_5` buscan sin strip.
+  Con CUSIP con espacios, la busqueda falla silenciosamente (default
+  NOT_IN_LIST). 0 CUSIPs con espacios en datos reales; bug latente.
+  Fix: `.str.strip()` en los 3 sitios. 3 tests.
+- **Dedup catalog_p38_adapter <-> period_state (b870b34).** `_is_feasible`
+  reimplementaba `feasible_state` con strings hardcodeados. Fix: delegar
+  en la funcion canonica + importar IDENTITY_RESOLVED.
+- **Dedup build_catalog_csvs <-> catalog_key (6b32ff0).** `canonical_serialization`
+  y `_canonical_value` duplicadas. Fix: importar de catalog_key.
+- **Docstring P65/P66 (d11bed2).** El documento decia 'Capa C en xfail
+  esperando GO #40'. Falso: implementado desde 33d75cf (2026-09-21).
+  Corregido con el expediente recuperado via `git show 7ba266d^`.
+- **Deudas documentadas:** target_universe (de32ea1), timestamps (6e35715),
+  catalog_pit (sin consumidor productivo, no tocado), reporting_dedup
+  (P65/P66 ya documentado).
+- Suite: 2297 -> 2336 passed + 2 skipped (14 commits de codigo + 14 de
+  tests/corpus, neto +39 tests).
+
+**Frente 8 - providers (12 commits).**
+
+- **downloader atomico (e56a49b).** Descarga directa a zip_path;
+  cache-hit sin validar. Si el proceso moria a mitad o el ZIP era
+  corrupto, `update_sec_13f.yml` fallaba en CRC sin auto-recuperacion
+  (nunca pasa --force). Fix: `.tmp + os.replace` + validar con
+  `zipfile.is_zipfile`. 3 tests.
+- **backup_providers._validate_with_cache (ce273eb).** Misma familia.
+  `diff = abs(new - ref) / abs(ref)` con NaN: `nan > 0.05` es False,
+  no entra en REJECTED, devuelve VALIDATED. El validador certificaba
+  como 'validado' un dato nunca comparado. Fix: `math.isfinite`. 4 tests.
+- **_blackrock_base flow_pct_assets (9250f90).** Si total_net_assets es
+  0/NaN/inf, el cociente puede ser inf. inf contamina
+  `fund_flow_robust_zscore_with_regime` (`dropna` no elimina inf,
+  MAD queda inf, z colapsa a 0). Fix: `where(np.isfinite, np.nan)`.
+- **Cache atomica xetra/bme/euronext (acca9cd) + blackrock_iwm (e197d77).**
+  Mismo patron que downloader. `_save_cache` escribia directo. Fix:
+  `.tmp + replace`. En IWM tambien el CSV historico (mas grave: las
+  filas perdidas por CSV truncado desaparecen para siempre).
+- **Guard 366 en 3 bucles is_market_day (2e83b3e).** Patron A1-11
+  replicado: xetra L405, bme L239, futures L189. Sin guard, un fallo
+  sistematico de `is_market_day` cuelga hasta el timeout de CI (90 min).
+- **Dedup _fund_flow_utils (38a3809).** `calculate` interno identico a
+  `_compute_z_value` (19 lineas). Fix: delegar.
+- **N-PORT F5.7-20 completado (58cf809 + 2b0bd0c).** Dos problemas:
+  (a) `update_sec_nport_data.py` descargaba 1 solo quarter; `discover_quarters`
+  veia 1 -> `len<2` -> return silencioso -> CSV congelado desde 17/08.
+  Fix: `--backfill N` + `sys.exit(1)` en `sec_nport_quarters` si <2.
+  (b) `qqq_nport_flow.py` buscaba XML en cache gitignored que ningun
+  script poblaba en CI. Fix: descarga automatica via submissions API
+  + XML renderizado XSL de EDGAR. CSV pasa de 2026Q1 a 2026Q2.
+- **falsa pista finra (0f48b62).** `get_archive_index` y
+  `get_available_weeks` sin consumidor productivo. Dead code documentado.
+
+**Falsos positivos rectificados (probe sobre datos reales).**
+
+- `sec13f_list.py` con bug activo: descartado. `_aggregate_instrument_type`
+  con mix EQUITY+UNKNOWN no se materializa; los 994-1030 CUSIPs multi
+  por trimestre son todos OPTION (CALL/PUT).
+- `CRON_SLOTS` sin verificacion: falso. `test_issue_manager.py:245`
+  valida drift bidireccional contra daily_run.yml.
+- `catalog_validator.py` dead code: falso. Contrato P66, integrado en
+  `test_p66_pipeline.py` y `test_catalog_p38_adapter.py`.
+- `P66 pendiente de implementar`: falso. 31+68 tests pasan, cero xfail.
+- `guard_coverage.py` con NaN: falso. `coverage_pct_last` viene de
+  division Python con `n_total > 0` guard; NaN imposible.
+- `regenerate_cusip_crosswalk` sin secret: falso. No usa OpenFIGI.
+- `_load_reference_cache`: solido. Verifica manifest + sha256 + quality.
+- `relationships.explode_othermanager_edges`: contrato del docstring
+  desalineado con implementacion, pero solo afecta a metricas de conteo
+  (807-2120 filas con nombres de manager con coma interna). Docstring
+  corregido (2f1da14); sin cambio funcional.
+
+**Lecciones confirmadas.**
+
+- Los bugs reales que aparecen en CI no estan en el codigo local: estan
+  en los contratos entre ficheros (dos workflows que comparten cache,
+  un script que referencia un modulo inexistente, una condicion que
+  solo se materializa en produccion).
+- La familia 'invariante declarada en docstring y no enforced en codigo'
+  se ha repetido 5 veces: S-03c, PeriodState.sshprnamt,
+  extract_sshprnamt_by_figi, _validate_with_cache, flow_pct_assets.
+  Cierre sistematico con `math.isfinite` + tests.
+- El patron 'fallo silencioso con workflow verde' ha aparecido 4 veces:
+  cache 13F, issues:write, _update_issue, update_sector_holdings y
+  familia. Cierre con `raise`/`sys.exit(1)`/`if:always()`.
+
+---
+
 ## 3. HALLAZGOS POR BLOQUE TEMATICO
 
 Agrupacion de los cierres mas relevantes por area. El detalle granular esta en `git log`. Los IDs (FU-xxx, K-xxx, F2.4-xx, A5-xx, DT-x, H-x) son de la nomenclatura interna de la auditoria y no se usan ya en el trabajo activo.
