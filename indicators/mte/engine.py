@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import json
 import os
+import traceback
 
 from src.utils import robust_zscore, get_col
 
@@ -31,12 +32,13 @@ def compute_mte(df_market, financial_conditions_score, credit_signal,
 
     """
 
-
-
     Calcula el MTE completo y devuelve un diccionario con todos los resultados.
 
-
-
+    Contrato: puede devolver None si algo falla internamente (defensa en
+    profundidad). El consumidor (src/pipeline/mte_confirmation._compute_mte)
+    ya envuelve la llamada en try/except y trata None como 'MTE omitido'.
+    El except de esta funcion refuerza el mismo contrato y preserva la
+    trazabilidad via traceback en stdout.
     """
 
 
@@ -200,9 +202,10 @@ def compute_mte(df_market, financial_conditions_score, credit_signal,
 
 
     except Exception as e:
-
-
         print(f"  MTE: Error - {e}")
-
-
+        # Fix 2026-09-29: stacktrace completa. Antes solo el mensaje
+        # corto; con un bug interno (NameError, IndexError) el diagnostico
+        # quedaba limitado a stdout capturado por pytest. traceback va al
+        # mismo stdout.
+        traceback.print_exc()
         return None

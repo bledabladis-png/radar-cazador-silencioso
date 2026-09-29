@@ -10,6 +10,7 @@ No alimenta motores, scores, pesos ni State Machine.
 
 """
 
+import os
 import pandas as pd
 
 import numpy as np
@@ -83,7 +84,11 @@ def update_rank_history(sector_results, history_csv_path, date=None):
 
     history_path.parent.mkdir(parents=True, exist_ok=True)
 
-    combined.to_csv(history_path, index=False, encoding='utf-8')
+    # Fix 2026-09-29: escritura atomica (.tmp + os.replace). Es historico:
+    # si el proceso muere a mitad de to_csv, las filas perdidas desaparecen.
+    _tmp = history_path.with_suffix(history_path.suffix + '.tmp')
+    combined.to_csv(_tmp, index=False, encoding='utf-8')
+    os.replace(_tmp, history_path)
 
 
 
