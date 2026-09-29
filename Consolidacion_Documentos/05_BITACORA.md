@@ -44,6 +44,69 @@ Al cerrar una sesion nueva, se anade arriba (las mas recientes primero). Si hay 
 
 ## 3. SESIONES
 
+### 2026-09-29 (tarde) — Auditoria funcional frente 6 (IAE) + frente 8 (providers) + orquestacion CI
+
+**Objetivo.** Continuar auditoria funcional del sistema tras cerrar A6 + B + C
+por la manana. Orden efectivo: orquestacion CI (surgio por un push rechazado),
+frente 6 (IAE funcional avanzado), frente 8 (providers).
+
+**Hecho.**
+
+*Orquestacion CI (8 commits).*
+- Bug cache 13F v2 <-> v3 desalineada entre daily_run y update_sec_13f.
+  La seccion IAE del reporte llevaba en STALE desde el 28. Commit 8b0eb1c.
+- Bug issues:write ausente en update_sec_13f. La alerta H5.2 era inoperativa.
+  Commit 9129278.
+- _update_issue no comprobaba retorno de gh en health_check (mentia).
+  Commit 4c15e47. +3 tests (primeros que cubren _run_gh).
+- Retry con backoff en git push de los 8 workflows update_*.
+  Commits 4297785, e3b0287.
+- if:always() en uploads pre-gate de download_failures. Commit 05acb3f.
+- env.quarter vacio eliminado en update_sec_nport. Commit 702e2d3.
+
+*Frente 6 - IAE funcional avanzado (14 commits).*
+- S-03c: invariante CANONICAL != None tambien en rama crosswalk_internal.
+  Commit b0d3ec3. +5 tests.
+- PeriodState.sshprnamt: validar finitud (NaN/inf). Commit 474dd49. +4 tests.
+- extract_sshprnamt_by_figi: misma familia. Commit 1259542. +3 tests.
+- operational_universe: simetria de strip en claves de lookup.
+  Commit 88013bf. +3 tests.
+- Dedup catalog_p38_adapter <-> period_state. Commit b870b34.
+- Dedup build_catalog_csvs <-> catalog_key. Commit 6b32ff0.
+- Docstring P65/P66 corregido (contrato implementado desde 33d75cf).
+  Commit d11bed2.
+- Deudas documentadas: target_universe (de32ea1), timestamps (6e35715).
+
+*Frente 8 - providers (12 commits).*
+- downloader: descarga atomica + cache-hit valida ZIP. Commit e56a49b. +3 tests.
+- backup_providers._validate_with_cache: validar finitud. Commit ce273eb.
+  +4 tests.
+- _blackrock_base: flow_pct_assets finitud. Commit 9250f90.
+- Cache atomica xetra/bme/euronext (acca9cd) + blackrock_iwm (e197d77).
+- Guard 366 iteraciones en 3 bucles is_market_day. Commit 2e83b3e.
+- Dedup _fund_flow_utils. Commit 38a3809.
+- N-PORT F5.7-20 completado. Commits 58cf809 (backfill + fallo ruidoso),
+  2b0bd0c (descarga automatica XML EDGAR en qqq_nport_flow).
+- finra dead code documentado. Commit 0f48b62.
+
+*Corpus + coherencia documental (4 commits).*
+- 00_ARRANQUE alineado (da61173).
+- 02_ARQUITECTURA alineado (a73b2dd).
+- 04_HISTORICO: entrada tematica de la sesion (9bdc1c7).
+- Este commit (05_BITACORA).
+
+**Commits.** ~38. HEAD final antes de este commit: `9bdc1c7`.
+
+**Pendiente.**
+- Frente 7 (indicators/, 50 ficheros): NO abierto.
+- H5.3 (cron nov 2026).
+- C2 (920, bloqueado externo).
+
+**Proximo paso sugerido.** Abrir frente 7 (indicators) con Gate 0 quirurgico
+y scan por patrones 8.5, focalizando donde hay senales reales.
+
+---
+
 ### 2026-09-29 — G-01 (truncado stock_prices) + P66-01 (extraccion 14)
 
 **Objetivo.** Diagnosticar el run rojo 36466343234 (slot 17 11, retraso GitHub 7h19m).
@@ -394,18 +457,6 @@ Ademas: desbloqueo SEC Official List Q2 2026 (sufijo `-txt`, commit 08a6c6a). Au
 **Pendiente.** Ciclos MEDIA/BAJA.
 
 **Proximo paso sugerido.** Cerrar backlog.
-
----
-
-### 2026-09-25 — F-IAE-CRON-02 / F-IAE-GATE-01
-
-**Objetivo.** Resolver fallo del run 36080921484 (262/313 tickers sin Close por latencia Yahoo).
-
-**Hecho.** Multi-slot (4 disparos) + gate pre-pipeline (`scripts/pipeline_gate.py`) + issue-manager (`scripts/issue_manager.py`). Idempotencia por cobertura, no por `last_date`. Verificado en CI real (run 36148143256).
-
-**Pendiente.** Integracion con workflows.
-
-**Proximo paso sugerido.** Continuar con mejoras de infraestructura.
 
 ---
 
