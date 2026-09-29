@@ -149,3 +149,23 @@ def test_flows_primary_sector_char_no_se_calcula_sin_etf_flow(tmp_path, monkeypa
          patch("src.pipeline.flows_primary.compute_sector_flow_characteristics") as mock_sfc:
         fp.compute_flows_primary(pd.DataFrame())
     mock_sfc.assert_not_called()
+
+
+def test_flows_primary_sin_tmp_residual(tmp_path, monkeypatch):
+    """Escritura atomica (familia 3): no quedan .tmp tras exito."""
+    monkeypatch.chdir(tmp_path)
+    (tmp_path / "outputs" / "history").mkdir(parents=True)
+    with patch("src.pipeline.flows_primary.retry_call",
+               side_effect=_passthrough_retry), \
+         patch("src.pipeline.flows_primary.get_etf_primary_flow_data", return_value=_df()), \
+         patch("src.pipeline.flows_primary.get_blackrock_dax_primary_flow", return_value=_df()), \
+         patch("src.pipeline.flows_primary.get_blackrock_isf_primary_flow", return_value=_df()), \
+         patch("src.pipeline.flows_primary.get_blackrock_iwm_primary_flow", return_value=_df()), \
+         patch("src.pipeline.flows_primary.get_amundi_lyxi_primary_flow", return_value=_df()), \
+         patch("src.pipeline.flows_primary.get_qqq_sec_primary_flow", return_value=_df()), \
+         patch("src.pipeline.flows_primary.get_cftc_position_flow_data", return_value=_df()), \
+         patch("src.pipeline.flows_primary.compute_sector_flow_characteristics",
+               return_value=_df()):
+        fp.compute_flows_primary(pd.DataFrame())
+    tmps = list((tmp_path / "outputs" / "history").glob("*.tmp*"))
+    assert tmps == [], f"quedan temporales: {tmps}"

@@ -58,7 +58,9 @@ def compute_flows_primary(df_market, temporal_meta=None):
                     sector_flow_characteristics_df = append_dedup(
                         hist_sfc, sector_flow_characteristics_df, ["date", "sector"]
                     )
-                sector_flow_characteristics_df.to_csv(sfc_path, index=False, encoding='utf-8')
+                _tmp_sfc = sfc_path.with_suffix(sfc_path.suffix + '.tmp')
+                sector_flow_characteristics_df.to_csv(_tmp_sfc, index=False, encoding='utf-8')
+                _tmp_sfc.replace(sfc_path)
                 print("  Sector Flow Characteristics calculado.")
     except (OSError, ValueError, KeyError, TypeError, IndexError, RuntimeError, pd.errors.ParserError, pd.errors.EmptyDataError) as e:
         print(f"  Sector Flow Characteristics omitido: {e}")
