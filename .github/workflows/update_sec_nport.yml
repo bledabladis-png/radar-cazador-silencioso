@@ -30,8 +30,8 @@ jobs:
       - name: Validate Python syntax
         run: python -m compileall -q .
 
-      - name: Ejecutar actualización N-PORT
-        run: python scripts/update_sec_nport_data.py
+      - name: Ejecutar actualización N-PORT (con backfill)
+        run: python scripts/update_sec_nport_data.py --backfill 1
 
       - name: Regenerar cambios trimestrales agregados
         run: python data/providers/sec_nport_quarters_position_change.py

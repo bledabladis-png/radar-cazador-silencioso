@@ -135,12 +135,49 @@ def previous_quarter(q):
         return f"{year - 1}q4"
     return f"{year}q{qnum - 1}"
 
+
+def _quarters_range(current, n_back):
+    """Devuelve [Q_{k-n}, ..., Q_{k-1}, Q_k] en orden cronologico.
+
+    Fix 2026-09-29 (F5.7-20 completion): anadido para --backfill. En CI,
+    data/nport/ es efimero (gitignored) y este script descarga un solo
+    quarter por run. Sin backfill, sec_nport_quarters_position_change.py
+    encontraba <2 quarters y salia silencioso (return sin exit).
+    """
+    out = [current]
+    q = current
+    for _ in range(n_back):
+        q = previous_quarter(q)
+        out.append(q)
+    return list(reversed(out))
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--quarter", required=False, help="Ej. 2026q2. Si se omite, se calcula el ultimo trimestre cerrado.")
+    parser.add_argument("--backfill", type=int, default=0,
+                        help="Descarga tambien los N trimestres anteriores para que sec_nport_quarters_position_change.py tenga >=2 en CI.")
     args = parser.parse_args()
     quarter = (args.quarter or get_last_closed_quarter()).lower()
     print(f"Trimestre objetivo inicial: {quarter}")
+
+    if args.backfill > 0:
+        quarters = _quarters_range(quarter, args.backfill)
+        print(f"[BACKFILL] {len(quarters)} trimestres: {quarters}")
+        n_ok = 0
+        for q in quarters:
+            if download_quarter(q):
+                process_quarter(q)
+                print(f"N-PORT actualizado correctamente: {q}")
+                n_ok += 1
+            else:
+                print(f"  [WARN] {q} no disponible en EDGAR, omitido")
+        if n_ok == 0:
+            print("ERROR: ningun trimestre del rango backfill disponible.")
+            sys.exit(1)
+        print(f"[BACKFILL] procesados {n_ok}/{len(quarters)}")
+        return
+
 
     for _ in range(4):
         if download_quarter(quarter):

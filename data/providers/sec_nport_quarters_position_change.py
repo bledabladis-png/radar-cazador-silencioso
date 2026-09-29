@@ -1,4 +1,5 @@
-﻿import pandas as pd
+﻿import sys
+import pandas as pd
 from pathlib import Path
 
 BASE = Path('data/nport')
@@ -57,9 +58,11 @@ def load_quarter(q):
 def main():
     quarters = discover_quarters()
     if len(quarters) < 2:
-        print(f'AVISO: data/nport/ contiene {len(quarters)} trimestre(s); '
-              f'se necesitan >=2 para calcular cambios. Nada que hacer.')
-        return
+        print(f'ERROR: data/nport/ contiene {len(quarters)} trimestre(s); '
+              f'se necesitan >=2 para calcular cambios.')
+        print('En CI, data/nport/ es efimero (gitignored): el step previo '
+              'update_sec_nport_data.py debe ejecutarse con --backfill >=1.')
+        sys.exit(1)
     print(f'Trimestres detectados: {quarters}')
     frames = [load_quarter(q) for q in quarters]
     all_data = pd.concat(frames, ignore_index=True)
