@@ -122,6 +122,11 @@ def main():
         print(f'Actualizados: {len(updated)} ETFs ({", ".join(updated)})')
         if failed:
             print(f'Fallidos (usan datos anteriores): {len(failed)} ETFs ({", ".join(failed)})')
+            # Falla visible: no dejar workflow verde con datos parcialmente viejos.
+            # Patron 8.5 #9 (fallback silencioso) y regla del sistema: 'N/D antes
+            # que imputar'. El fallback a existing se conserva; el exit 1 no.
+            print(f'::warning::update_sector_holdings: {len(failed)} ETFs fallidos')
+            return 1
         return 0
     else:
         print('\nERROR: No se pudo generar ningun dato.')
