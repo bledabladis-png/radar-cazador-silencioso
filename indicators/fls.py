@@ -32,7 +32,16 @@ def _zscore_last_over_lookback(series, window=252):
     mad = np.median(np.abs(last_values - median))
     if mad == 0:
         return 0.0
-    return (series.iloc[-1] - median) / (1.4826 * mad)
+    # Fix 2026-09-29: guard de finitud. Con series.iloc[-1]=NaN (hueco
+    # en el ultimo dato) o inf, el dropna() de la ventana no afecta al
+    # numerador, que sigue leyendo el valor original. La funcion
+    # devolvia NaN o inf silenciosamente, propagados por tanh() a los
+    # 5 componentes FLS (SOFR, WALCL, RRP, CP, Discount). Familia de
+    # invariantes de finitud ya cerrada esta sesion.
+    last_val = series.iloc[-1]
+    if not np.isfinite(last_val):
+        return 0.0
+    return (last_val - median) / (1.4826 * mad)
 
 
 
