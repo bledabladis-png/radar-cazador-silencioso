@@ -163,7 +163,7 @@ Sesion 2026-09-29 (tarde): auditoria funcional frente 6 (IAE) + frente 8 (provid
   if:always() en uploads pre-gate de download_failures,
   env.quarter vacío eliminado en update_sec_nport.
 
-- Suite: 2340 passed + 2 skipped. pyflakes limpio.
+- Suite: 2344 passed + 2 skipped. pyflakes limpio.
 
 ---
 
@@ -197,15 +197,18 @@ Sesion 2026-09-29 (tarde): auditoria funcional frente 6 (IAE) + frente 8 (provid
 - C2 (920) - Discrepancia H1-B. Bloqueado por auditor externo (sin comando
   + HEAD publicado).
 
-**Deudas documentadas (sin accion pendiente):**
+**Deudas documentadas:**
 
 - Modulos no integrados al pipeline productivo: `target_universe`,
   `timestamps`, `catalog_pit`, `reporting_dedup` (P65/P66), `absence`,
   `validate_membership`, `cusip_resolver.resolve_cusip`. Documentados.
 - Dead code declarado: `finra.get_archive_index`, `finra.get_available_weeks`.
-- Modulos con cobertura baja de tests: `macro_manual_loader` (12%),
-  `european_coverage` (12%), `pipeline_contractual` (27%), `data_loader` (50%).
-  Sin bug detectado tras inspeccion.
+- **Pendientes (audit funcional no realizado):** modulos con cobertura
+  baja de tests: `macro_manual_loader` (12%), `european_coverage` (12%),
+  `pipeline_contractual` (27%), `data_loader` (50%). No auditados linea
+  a linea: la marca previa "sin bug detectado tras inspeccion" procedia
+  de la auditoria de cobertura (bloque C, superficie), no de lectura
+  completa con probes sobre datos reales.
 
 ---
 
