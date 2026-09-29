@@ -592,9 +592,12 @@ def _update_issue(overall: str, body: str):
     existing = _find_open_issue()
     if overall == OK:
         if existing:
-            _run_gh(["issue", "close", str(existing),
-                     "--comment", "Health check OK - todo recuperado."])
-            print(f"[health] issue #{existing} cerrada (recuperado)")
+            res = _run_gh(["issue", "close", str(existing),
+                           "--comment", "Health check OK - todo recuperado."])
+            if res is None:
+                print(f"[health] WARN: gh fallo al cerrar issue #{existing}")
+            else:
+                print(f"[health] issue #{existing} cerrada (recuperado)")
         return
     title_prefix = "[health-check]"
     if overall == FAIL:
@@ -602,9 +605,12 @@ def _update_issue(overall: str, body: str):
     else:
         title = f"{title_prefix} WARN - discrepancias no criticas"
     if existing:
-        _run_gh(["issue", "comment", str(existing), "--body", body])
-        _run_gh(["issue", "edit", str(existing), "--title", title])
-        print(f"[health] issue #{existing} actualizada")
+        res_c = _run_gh(["issue", "comment", str(existing), "--body", body])
+        res_e = _run_gh(["issue", "edit", str(existing), "--title", title])
+        if res_c is None or res_e is None:
+            print(f"[health] WARN: gh fallo al actualizar issue #{existing}")
+        else:
+            print(f"[health] issue #{existing} actualizada")
     else:
         r = subprocess.run(
             ["gh", "issue", "create", "--title", title, "--body", body,

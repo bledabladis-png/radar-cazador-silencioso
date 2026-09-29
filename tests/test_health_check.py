@@ -136,3 +136,35 @@ def test_overall_warn_si_no_fail():
 def test_overall_ok():
     results = [hc.Result("a", hc.OK, ""), hc.Result("b", hc.OK, "")]
     assert hc._overall_status(results) == hc.OK
+
+# ---------- _update_issue: gh falla -> no miente ----------
+def test_update_issue_close_gh_falla_no_dice_cerrada(monkeypatch, capsys):
+    monkeypatch.setattr(hc, "_ensure_label", lambda: None)
+    monkeypatch.setattr(hc, "_find_open_issue", lambda: 42)
+    monkeypatch.setattr(hc, "_run_gh", lambda args: None)
+    hc._update_issue(hc.OK, "body")
+    out = capsys.readouterr().out
+    assert "cerrada" not in out
+    assert "WARN" in out
+    assert "#42" in out
+
+
+def test_update_issue_comment_gh_falla_no_dice_actualizada(monkeypatch, capsys):
+    monkeypatch.setattr(hc, "_ensure_label", lambda: None)
+    monkeypatch.setattr(hc, "_find_open_issue", lambda: 42)
+    monkeypatch.setattr(hc, "_run_gh", lambda args: None)
+    hc._update_issue(hc.WARN, "body")
+    out = capsys.readouterr().out
+    assert "actualizada" not in out
+    assert "WARN" in out
+    assert "#42" in out
+
+
+def test_update_issue_close_gh_ok_dice_cerrada(monkeypatch, capsys):
+    monkeypatch.setattr(hc, "_ensure_label", lambda: None)
+    monkeypatch.setattr(hc, "_find_open_issue", lambda: 42)
+    monkeypatch.setattr(hc, "_run_gh", lambda args: "ok")
+    hc._update_issue(hc.OK, "body")
+    out = capsys.readouterr().out
+    assert "cerrada" in out
+    assert "WARN" not in out
