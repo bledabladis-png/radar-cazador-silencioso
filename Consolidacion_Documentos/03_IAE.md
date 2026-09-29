@@ -329,6 +329,8 @@ Regeneracion automatica:
 
 **`scripts/iae_contractual_coverage.py`** reproduce §12.3 pero no esta integrado al flujo continuo de validacion.
 
+**`validate_membership` / `validate_assignment` (catalog_key.py) sin consumidor productivo.** Verificado 2026-09-29: solo invocados en tests. Ademas, `validate_membership` espera un `membership_df` acumulativo (todas las versiones historicas) para resolver `predecessor_row_uid` contra versiones previas. El CSV real (`catalog_membership.csv`) contiene solo la version vigente, producido asi por `build_catalog_csvs.py`. Resultado: la funcion no es usable sobre los datos reales tal como estan. Deuda: o se cambia el generador para acumular versiones, o se cambia el validador para aceptar un `membership_df` por version + el historico como parametro aparte. Sin fix hasta decidir cual de las dos.
+
 **SPCX en catalogo radar** (resuelto 2026-09-29): FIGI `BBG000NQF3Z5` presente en catalogo + crosswalk + snapshot. La deuda previa (sin fuente de identidad) ya no aplica.
 
 **Cobertura FIGI del 12.2% en INFOTABLE.** Un fallback CUSIP -> FIGI via OpenFIGI podria ampliar la cobertura, pero no se ha demostrado que resuelva exhaustivamente los CUSIPs restantes.
