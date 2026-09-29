@@ -23,6 +23,10 @@ from src.institutional_accumulation.aggregation.catalog_validator import (
     check_full_resolution,
 )
 from src.institutional_accumulation.aggregation.coverage import PositionRecord
+from src.institutional_accumulation.identity.period_state import (
+    IDENTITY_RESOLVED,
+    feasible_state,
+)
 
 
 class AdapterError(ValueError):
@@ -106,12 +110,12 @@ def catalog_to_p38_targets(
 
 
 def _is_feasible(state):
-    if state is None:
-        return False
-    return (
-        state.identity_status == "RESOLVED"
-        and state.weight_status in ("RESOLVED_OBSERVED", "ZERO_REPORTED")
-    )
+    # Fix 2026-09-29 (patron 8.5 #6): delegar en la funcion canonica
+    # period_state.feasible_state. Antes reimplementaba la logica con
+    # strings hardcodeados ('RESOLVED', 'RESOLVED_OBSERVED',
+    # 'ZERO_REPORTED'). Si alguien cambia IDENTITY_RESOLVED en
+    # period_state, este filtro se rompia silenciosamente.
+    return feasible_state(state)
 
 
 def _figi_set(universe, state) -> Set[str]:
@@ -120,7 +124,7 @@ def _figi_set(universe, state) -> Set[str]:
         s = state.get(k)
         if s is None:
             continue
-        if s.identity_status == "RESOLVED" and s.figi:
+        if s.identity_status == IDENTITY_RESOLVED and s.figi:
             out.add(s.figi)
     return out
 
@@ -156,7 +160,7 @@ def _records(universe, state, *, period) -> List[PositionRecord]:
         if s is None:
             continue
         # Solo se aceptan identidades RESOLVED (PASO 8 lo garantiza).
-        if s.identity_status != "RESOLVED":
+        if s.identity_status != IDENTITY_RESOLVED:
             continue
         out.append(PositionRecord(
             period=period,
