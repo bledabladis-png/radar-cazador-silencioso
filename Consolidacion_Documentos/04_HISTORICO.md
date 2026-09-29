@@ -208,9 +208,9 @@ Ciclos completados (12 en la sesion principal):
   `pipeline_contractual` 27% ya documentado). **C CERRADO.** Suite:
   2294 -> 2297 passed + 2 skipped.
 - **Cierre sesion 2026-09-29:** 21 commits. G-01 (fix truncado),
-  P66-01 (extraccion §14 + reapuntado tests), A6.1-A6.4, B-01/B-02/B-03.
-  Suite 2267 -> 2280 passed + 2 skipped. **Auditoria interna A6 + B
-  CERRADA.** Queda C (tests).
+  P66-01 (extraccion §14 + reapuntado tests), A6.1-A6.4, B-01/B-02/B-03,
+  B-04..B-07 + C-07, C-08. Suite 2267 -> 2297 passed + 2 skipped.
+  **Auditoria interna A6 + B + C CERRADA.**
 
 ---
 
