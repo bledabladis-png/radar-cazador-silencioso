@@ -149,7 +149,14 @@ def _append_csv(rows, today_str):
         df = df_new
 
     OUTPUT_CSV.parent.mkdir(parents=True, exist_ok=True)
-    df.to_csv(OUTPUT_CSV, index=False)
+    # Escritura atomica (familia 3, 2026-09-29): el CSV es historico
+    # append+dedup. Si el proceso muere a mitad de to_csv, el fichero
+    # queda truncado y el siguiente run lee menos filas -> filas
+    # perdidas para siempre. Mismo patron que pcr_history,
+    # darkpool_history, sector_rank_history, state_transition.
+    _tmp = OUTPUT_CSV.with_suffix(OUTPUT_CSV.suffix + '.tmp')
+    df.to_csv(_tmp, index=False)
+    _tmp.replace(OUTPUT_CSV)
 
 
 def generate_european_coverage_report(reference_date=None):
