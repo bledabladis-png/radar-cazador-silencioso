@@ -124,8 +124,9 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: data/sec_13f/processed
-          key: 13f-processed-v2-${{ hashFiles('data/sec_13f/latest_quarter.txt') }}
+          key: 13f-processed-v3-${{ hashFiles('data/sec_13f/latest_quarter.txt', 'data/sec_13f/manifests/sec_13f_*.json') }}
           restore-keys: |
+            13f-processed-v3-
             13f-processed-v2-
           fail-on-cache-miss: false
 
