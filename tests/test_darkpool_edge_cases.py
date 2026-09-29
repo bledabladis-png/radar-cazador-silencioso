@@ -73,6 +73,19 @@ def test_classify_retorna_str():
         assert isinstance(classify_darkpool(z), str)
 
 
+def test_classify_nan_devuelve_sin_historial():
+    assert classify_darkpool(np.nan) == "Sin historial suficiente"
+
+
+def test_classify_none_devuelve_sin_historial():
+    assert classify_darkpool(None) == "Sin historial suficiente"
+
+
+def test_classify_inf_devuelve_sin_historial():
+    assert classify_darkpool(np.inf) == "Sin historial suficiente"
+    assert classify_darkpool(-np.inf) == "Sin historial suficiente"
+
+
 # --- _get_all_tickers ---
 
 def test_get_all_tickers_sin_csv_no_rompe(monkeypatch, tmp_path):

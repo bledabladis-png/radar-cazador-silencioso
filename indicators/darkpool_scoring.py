@@ -35,6 +35,15 @@ def rolling_percentile(series):
 
 
 def classify_darkpool(z):
+    # C-08-preventivo (2026-09-29): cascada de comparaciones mapea
+    # NaN/None/inf a un estado real sin declararlo. Mismo patron
+    # que classify_pcr (options_metrics.py:73-75), que ya lleva
+    # guard. Aqui z=NaN caia a "extremadamente baja" (todas las
+    # comparaciones False) e inf/-inf idem. Bug latente, no
+    # alcanzable con datos actuales (darkpool_history.csv sin NaN),
+    # pero mismo contrato que classify_pcr por coherencia.
+    if z is None or not np.isfinite(z):
+        return "Sin historial suficiente"
     if z >= DARKPOOL_THRESHOLDS['extremadamente_alta']:
         return "Actividad ATS extremadamente alta"
     elif z >= DARKPOOL_THRESHOLDS['muy_alta']:
