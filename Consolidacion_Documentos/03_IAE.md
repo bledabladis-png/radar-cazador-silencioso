@@ -303,7 +303,7 @@ Regeneracion automatica:
 
 | ID | Estado |
 |---|---|
-| H1-A (drift historico E2E) | CERRADO. Crosswalk 7caa86b reproduce golden con tolerancia 0 |
+| H1-A (drift historico E2E) | CERRADO (drift explicado). `12_5_historic` NO reproducible con HEAD tras H1-B v2.3 + O1; baseline vigente: `current.json` |
 | H1-B (clasificacion CALL/PUT) | CERRADO con C2 abierto no bloqueante (920) |
 | H2 (contadores documentales) | CERRADO |
 | H3 (clasificacion scripts) | CERRADO |
