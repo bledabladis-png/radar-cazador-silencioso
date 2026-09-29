@@ -18,6 +18,14 @@ Regla opcion A (DICTAMENES #45 seccion 11):
 
 Este modulo opera sobre el resultado de apply_amendments() (dict con
 canonical_snapshot + applied_accessions + lineage + ...).
+
+ESTADO DE INTEGRACION (2026-09-29): implementado y testeado,
+sin consumidor productivo. Ningun fichero en src/ ni scripts/ importa
+derive_timestamps, enrich_positions_with_timestamps ni build_provenance.
+Mismo patron que target_universe.py y reporting_dedup.py: capacidad
+escrita para un contrato que nunca se activo. Activar (integrar en el
+enriquecimiento de positions en la cadena contractual) o retirar es
+decision de diseno, no de auditoria.
 """
 from __future__ import annotations
 

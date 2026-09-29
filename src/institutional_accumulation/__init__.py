@@ -23,6 +23,8 @@ Estructura:
   security_type.py        §3.3 + §5.4 Nivel A+B
   operational_universe.py §5.5
   timestamps.py           B3 derive + enrich
+                          (implementado, NO integrado al pipeline;
+                          consumidores solo en tests)
   absence.py              P63 stub
   catalog_pit.py          B2-PIT
 """
