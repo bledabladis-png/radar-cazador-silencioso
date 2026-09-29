@@ -2,21 +2,21 @@
   "schema_version": 1,
   "artifact": {
     "path": "data/stock_prices.parquet",
-    "sha256": "830fed39c5b7a5f05255445ed5b83ce8c86832816493ccdd0249da78a31294ed",
-    "bytes": 15667994,
-    "written_at": "2026-09-29T23:42:42.989687"
+    "sha256": "a0b819502294463a2b4742a2fe0c096f539900ec3d378e79e53d3d1b98238def",
+    "bytes": 14722888,
+    "written_at": "2026-09-29T23:03:19.744818"
   },
   "producer": {
     "module": "src.utils",
     "function": "write_artifact_with_manifest",
-    "run_id": "20260929_234137",
+    "run_id": "20260930_005512",
     "source": "yahoo_european_cascade"
   },
   "content": {
-    "rows": 1295,
+    "rows": 1289,
     "cols": 1565,
     "n_tickers": 313,
-    "date_min": "2021-09-27",
+    "date_min": "2021-09-29",
     "date_max": "2026-09-29"
   },
   "temporal": {
@@ -26,20 +26,20 @@
     "last_date": "2026-09-29",
     "expected_session": "2026-09-29",
     "last_date_is_expected_session": true,
-    "pct_dup_last": 0.013605,
-    "close_nan_last": 19,
+    "pct_dup_last": 0.01278,
+    "close_nan_last": 0,
     "n_tickers_expected_last": 313,
-    "n_tickers_with_close_last": 294,
-    "n_tickers_missing_close_last": 19,
-    "coverage_pct_last": 0.939297,
-    "last_row_is_partial": true,
-    "status": "VALID_WITH_MISSING",
+    "n_tickers_with_close_last": 313,
+    "n_tickers_missing_close_last": 0,
+    "coverage_pct_last": 1.0,
+    "last_row_is_partial": false,
+    "status": "VALID",
     "by_market": {
       "BME": {
         "n": 19,
         "last_closed_session": "2026-09-29",
-        "coverage_at_session": 0.0,
-        "status": "PENDING"
+        "coverage_at_session": 1.0,
+        "status": "VALID"
       },
       "EURONEXT": {
         "n": 13,
