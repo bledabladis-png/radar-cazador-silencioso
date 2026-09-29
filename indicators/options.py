@@ -1,5 +1,6 @@
 import numpy as np
 
+import os
 import pandas as pd
 
 from datetime import datetime
@@ -126,7 +127,13 @@ def compute_pcr_signals():
 
         hist.sort_index(inplace=True)
 
-        hist.to_csv('outputs/history/pcr_history.csv', index_label='date')
+        # Fix 2026-09-29: escritura atomica. Es historico: leido por
+        # data_quality.py:91 (frescura) y options.py:89 (autoread).
+        # Mismo patron que darkpool_history, sector_rank_history y
+        # state_transition.
+        _tmp = 'outputs/history/pcr_history.csv.tmp'
+        hist.to_csv(_tmp, index_label='date')
+        os.replace(_tmp, 'outputs/history/pcr_history.csv')
 
 
 

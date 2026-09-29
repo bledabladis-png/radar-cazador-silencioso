@@ -1,3 +1,4 @@
+import os
 import pandas as pd
 import numpy as np
 from indicators.wyckoff import wyckoff_score, classify_wyckoff_phase, detect_spring, detect_sos
@@ -200,6 +201,11 @@ def generate_leader_section(df_market, df_stocks, holdings_df, fase_dict,
     if output_csv and not leader_df.empty:
         cols = ['ticker','sector','rs','rs_mom','flow_proxy_z','wyckoff_score','wyckoff_phase',
                 'persistence_5d','persistence_10d','persistence_20d','stability','spring','sos','wls','sector_rank_pct']
-        leader_df[cols].to_csv(output_csv, index=False)
+        # Fix 2026-09-29: escritura atomica. Es el CSV consumido por
+        # src/report/helpers.py:117 (pd.read_csv) y por scripts/generate_docs.
+        # Un to_csv truncado rompe el reporte diario.
+        _tmp = str(output_csv) + '.tmp'
+        leader_df[cols].to_csv(_tmp, index=False)
+        os.replace(_tmp, output_csv)
 
     return lines, leader_df, full_metrics_df
