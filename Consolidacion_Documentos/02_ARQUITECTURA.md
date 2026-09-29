@@ -98,7 +98,7 @@ Verificada el 2026-09-28 en la auditoria interna A0.
     +-- tests/                      (182 ficheros locales, 192 tracked)
     +-- docs/
     |   +-- automatica/             (22 .md auto-generados)
-    |   +-- auditoria/              (documentos antiguos - a borrar)
+    |   +-- auditoria/              (parcialmente conservada: iae/evidence + iae/golden en uso)
     +-- outputs/
     |   +-- history/                (versionado)
     |   +-- state/                  (versionado: mte_state.json, slpm_state.json, liquidity_state.json)
