@@ -277,8 +277,14 @@ def _derive_status(coverage, *, threshold_1=None, threshold_2=None,
         return STATUS_AMBIGUOUS
     if threshold_1 is None or threshold_2 is None:
         return STATUS_INSUFFICIENT
-    if (coverage["paired_security_coverage"] >= threshold_1
-            and coverage["paired_weighted_share_coverage"] >= threshold_2):
+    # C-01 (2026-09-29): paired_weighted_share_coverage puede ser None
+    # (UNAVAILABLE por TARGET_PAIRWISE vacio o denom==0). None >= float
+    # lanzaria TypeError. Regla fail-closed: None no cumple threshold.
+    _paired_sec = coverage.get("paired_security_coverage")
+    _paired_w = coverage.get("paired_weighted_share_coverage")
+    if _paired_sec is None or _paired_w is None:
+        return STATUS_INSUFFICIENT
+    if _paired_sec >= threshold_1 and _paired_w >= threshold_2:
         return STATUS_READY
     return STATUS_INSUFFICIENT
 

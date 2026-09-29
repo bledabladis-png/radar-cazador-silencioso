@@ -829,3 +829,35 @@ def test_compute_units_filtro_h1b_sin_official_df_no_filtra():
     units = ds.compute_reported_position_units(
         info, sub, report_period="2026-03-31")
     assert len(units) == 1
+
+# --- C-04 (2026-09-29): SSHPRNAMT negativo se descarta ---
+
+def test_c04_sshprnamt_negativo_descartado():
+    import pandas as pd
+    infotable = pd.DataFrame([
+        {"ACCESSION_NUMBER": "acc1", "INFOTABLE_SK": "sk1", "CUSIP": "111",
+         "SSHPRNAMTTYPE": "SH", "PUTCALL": None, "SSHPRNAMT": -50,
+         "INVESTMENTDISCRETION": "SOLE", "TITLEOFCLASS": "COM"},
+    ])
+    submission = pd.DataFrame([{"ACCESSION_NUMBER": "acc1", "CIK": "M1"}])
+    units, stats = ds.compute_reported_position_units(
+        infotable, submission, report_period="2026-03-31", return_stats=True
+    )
+    assert len(units) == 0
+    assert stats["n_dropped_negative_sshprnamt"] == 1
+
+
+def test_c04_sshprnamt_positivo_intacto():
+    import pandas as pd
+    infotable = pd.DataFrame([
+        {"ACCESSION_NUMBER": "acc1", "INFOTABLE_SK": "sk1", "CUSIP": "111",
+         "SSHPRNAMTTYPE": "SH", "PUTCALL": None, "SSHPRNAMT": 100,
+         "INVESTMENTDISCRETION": "SOLE", "TITLEOFCLASS": "COM"},
+    ])
+    submission = pd.DataFrame([{"ACCESSION_NUMBER": "acc1", "CIK": "M1"}])
+    units, stats = ds.compute_reported_position_units(
+        infotable, submission, report_period="2026-03-31", return_stats=True
+    )
+    assert len(units) == 1
+    assert stats["n_dropped_negative_sshprnamt"] == 0
+

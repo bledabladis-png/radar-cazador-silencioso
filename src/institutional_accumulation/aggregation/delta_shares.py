@@ -141,12 +141,21 @@ def _filter_canonical(infotable_df):
     df = df.dropna(subset=["SSHPRNAMT_f"])
     n_dropped_invalid = n_before_dropna - int(len(df))
 
+    # C-04 (2026-09-29): defensa en profundidad. La especificacion 13F
+    # no admite SSHPRNAMT negativo. Un valor negativo seria corrupcion
+    # de fuente. Se descarta (coherente con O1: no imputar) y se cuenta
+    # para trazabilidad.
+    n_before_neg = int(len(df))
+    df = df[df["SSHPRNAMT_f"] >= 0].copy()
+    n_dropped_negative = n_before_neg - int(len(df))
+
     stats = {
         "n_rows_input": n_input,
         "n_after_sh_putcall_null": n_after_sh_putcall,
         "n_dropped_not_sh_or_putcall": n_input - n_after_sh_putcall,
         "n_dropped_invalid_sshprnamt": n_dropped_invalid,
         "n_dropped_by_titleofclass": n_dropped_by_toc,
+        "n_dropped_negative_sshprnamt": n_dropped_negative,
         "n_rows_output": int(len(df)),
     }
     return df, stats

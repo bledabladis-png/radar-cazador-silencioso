@@ -401,3 +401,35 @@ def test_q6_unmapped_count_nombres():
     assert "unmapped_weight_previous" not in c
     assert "unmapped_weight_current" not in c
 
+# --- C-01 (2026-09-29): _derive_status respeta None en paired_weighted ---
+
+def test_c01_derive_status_paired_weighted_none():
+    """paired_weighted_share_coverage=None no debe lanzar TypeError."""
+    coverage = {
+        "paired_security_coverage": 1.0,
+        "paired_weighted_share_coverage": None,
+    }
+    status = npc._derive_status(coverage, threshold_1=0.5, threshold_2=0.5,
+                                n_conflict=0, n_ambiguous=0, n_total=10)
+    assert status == npc.STATUS_INSUFFICIENT
+
+
+def test_c01_derive_status_paired_security_none():
+    coverage = {
+        "paired_security_coverage": None,
+        "paired_weighted_share_coverage": 1.0,
+    }
+    status = npc._derive_status(coverage, threshold_1=0.5, threshold_2=0.5,
+                                n_conflict=0, n_ambiguous=0, n_total=10)
+    assert status == npc.STATUS_INSUFFICIENT
+
+
+def test_c01_derive_status_ambos_presentes_pasando_thresholds():
+    coverage = {
+        "paired_security_coverage": 0.99,
+        "paired_weighted_share_coverage": 0.99,
+    }
+    status = npc._derive_status(coverage, threshold_1=0.95, threshold_2=0.95,
+                                n_conflict=0, n_ambiguous=0, n_total=10)
+    assert status == npc.STATUS_READY
+
