@@ -74,7 +74,14 @@ def compute_leader_integrity(leader_metrics):
         rs_norm = np.tanh((rs - 1.0) * 2)
         rs_mom = m.get('rs_momentum') or m.get('rs_mom_20', 0) or 0
         mom_norm = np.tanh(rs_mom * 5)
-        flow = m.get('flow_proxy_z') or np.nan
+        # Fix 2026-09-29: 'or np.nan' convertia flow_proxy_z=0.0 en NaN.
+        # 0.0 es un valor legitimo (flujo neutro); su ausencia es la que
+        # debe ir a NaN. Mismo patron que la familia de invariantes de
+        # finitud ya cerrada esta sesion (S-03c, PeriodState.sshprnamt,
+        # extract_sshprnamt_by_figi, _validate_with_cache, flow_pct_assets).
+        flow = m.get('flow_proxy_z')
+        if flow is None:
+            flow = np.nan
         flow_norm = np.tanh(flow / 2)
         wyckoff_map = {'MARKUP': 1.0, 'ACCUMULATION': 0.75, 'RANGE': 0.0, 'DISTRIBUTION': -0.75, 'MARKDOWN': -1.0}
         wyckoff_score = wyckoff_map.get(m.get('wyckoff_phase', ''), 0.0)
