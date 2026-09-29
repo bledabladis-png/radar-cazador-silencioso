@@ -205,7 +205,17 @@ def explode_othermanager_edges(infotable_df, om2_df, *, return_metrics=False):
     Invariantes:
       - source_line_id (ACCESSION, INFOTABLE_SK) NO se pierde.
       - NO_REFERENCE global produce 1 edge con seq=None y status NO_REFERENCE.
-      - Multi-manager produce N edges (uno por token resoluble/no-resoluble).
+      - Multi-manager produce N edges, uno por token con manager_sequence
+        numerico (RESOLVED / UNMAPPED_MISSING_OM2 / INVALID_OUT_OF_DOMAIN).
+        Tokens sin seq parseable (NO_REFERENCE, INVALID_REFERENCE_ZERO,
+        INVALID_REFERENCE_NONNUMERIC) colapsan a 1 edge por (ACCESSION,
+        INFOTABLE_SK): el drop_duplicates de abajo los agrupa por
+        manager_sequence=None. El raw_othermanager completo se preserva
+        en el edge superviviente, asi que no se pierde informacion.
+        Consecuencia: metrics['invalid_reference_non_numeric'] subcuenta
+        cuando el raw tiene 2+ tokens no-numericos (ej. nombres con coma
+        interna tipo 'Capstone,Capstone Financial Advisors'). No afecta a
+        RESOLVED, applied_accessions ni NIPC.
     """
     for col in ("ACCESSION_NUMBER", "INFOTABLE_SK", "OTHERMANAGER"):
         if col not in infotable_df.columns:
