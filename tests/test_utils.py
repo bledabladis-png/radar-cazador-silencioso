@@ -63,3 +63,19 @@ def test_append_dedup_ambos_vacios():
     """FU-009: ambos vacios -> DataFrame vacio."""
     result = append_dedup(pd.DataFrame(), pd.DataFrame(), ['date', 'sector'])
     assert result.empty
+
+
+def test_append_dedup_esquemas_distintos_sin_warning():
+    """FU-009-bis: columnas all-NA no generan FutureWarning ni pierden datos."""
+    import warnings
+    hist = pd.DataFrame([{'date': '2026-09-24', 'sector': 'XLK', 'persistence': 0.5}])
+    new = pd.DataFrame([{'date': '2026-09-25', 'sector': 'XLF', 'persistence': 0.3,
+                         'effective_date': None, 'expected_date': None, 'coverage': None}])
+    with warnings.catch_warnings():
+        warnings.simplefilter('error', FutureWarning)
+        result = append_dedup(hist, new, ['date', 'sector'])
+    assert len(result) == 2
+    assert set(result['sector']) == {'XLK', 'XLF'}
+    assert result['persistence'].notna().all()
+    # Columnas all-NA excluidas: no deben aparecer en el resultado
+    assert 'effective_date' not in result.columns

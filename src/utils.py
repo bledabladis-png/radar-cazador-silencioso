@@ -17,7 +17,13 @@ def append_dedup(hist_df, new_df, subset):
     elif n_empty:
         combined = hist_df.copy()
     else:
-        combined = pd.concat([hist_df, new_df], ignore_index=True)
+        # FU-009-bis (2026-09-29): pandas 2.x FutureWarning por dtype
+        # de columnas all-NA al concatenar esquemas distintos. Pandas
+        # 3.0 cambia el comportamiento. Excluir columnas all-NA antes
+        # del concat (recomendacion oficial del propio warning).
+        _h = hist_df.loc[:, hist_df.notna().any()]
+        _n = new_df.loc[:, new_df.notna().any()]
+        combined = pd.concat([_h, _n], ignore_index=True)
     if 'date' in combined.columns:
         combined['date'] = pd.to_datetime(combined['date'], errors='coerce').dt.strftime('%Y-%m-%d')
     if combined.empty:
