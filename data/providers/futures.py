@@ -186,8 +186,17 @@ class FuturesProvider(MarketDataProvider):
                 _d = _date.fromisoformat(ts[:10])
             except ValueError:
                 continue
-            while not _is_market_day(_d):
+            # A1-11-style guard (2026-09-29): limitar a 366 iteraciones.
+            _limit = 366
+            for _ in range(_limit):
+                if _is_market_day(_d):
+                    break
                 _d -= _td(days=1)
+            else:
+                raise RuntimeError(
+                    "bucle sin fin: sin sesion bursatil en " +
+                    str(_limit) + " dias consecutivos hacia atras"
+                )
             rows.append({
                 "date": _d.isoformat(),
                 "ticker": ticker,

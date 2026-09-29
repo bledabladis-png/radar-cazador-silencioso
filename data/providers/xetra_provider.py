@@ -402,8 +402,21 @@ class XetraProvider:
                     # Sin esto, si last_date es viernes, start cae en sabado y la query
                     # devuelve vacio cuando today tambien es no-bursatil.
                     next_day = last_date + pd.Timedelta(days=1)
-                    while not is_market_day(next_day.date()):
+                    # A1-11-style guard (2026-09-29): limitar a 366
+                    # iteraciones. Sin esto, si is_market_day fallara
+                    # sistematicamente, el bucle colgaria hasta el
+                    # timeout de CI.
+                    _limit = 366
+                    for _ in range(_limit):
+                        if is_market_day(next_day.date()):
+                            break
                         next_day = next_day + pd.Timedelta(days=1)
+                    else:
+                        raise RuntimeError(
+                            "bucle sin fin: sin sesion bursatil en " +
+                            str(_limit) + " dias consecutivos desde " +
+                            str(last_date.date())
+                        )
                     today_norm = reference_date.date() if reference_date is not None else pd.Timestamp.now().date()
                     if next_day.date() > today_norm:
                         print(f"  [XETRA] {t} sin nuevas sesiones (next={next_day.date()}, today={today_norm.date()})")

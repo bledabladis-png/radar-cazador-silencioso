@@ -236,8 +236,22 @@ class BMEProvider:
                         print("  [BME] CACHE VIEJA: " + t + " sin datos desde " + str(last_date.date()) + " (" + str(days_gap) + " dias)")
                     # FU-014 (2026-09-13): avanzar date_from al siguiente dia bursatil.
                     next_day = last_date + pd.Timedelta(days=1)
-                    while not is_market_day(next_day.date()):
+                    # A1-11-style guard (2026-09-29): limitar a 366
+                    # iteraciones. Sin esto, si is_market_day fallara
+                    # sistematicamente (calendario corrupto, fecha
+                    # fuera de rango), el bucle colgaria hasta el
+                    # timeout de CI.
+                    _limit = 366
+                    for _ in range(_limit):
+                        if is_market_day(next_day.date()):
+                            break
                         next_day = next_day + pd.Timedelta(days=1)
+                    else:
+                        raise RuntimeError(
+                            "bucle sin fin: sin sesion bursatil en " +
+                            str(_limit) + " dias consecutivos desde " +
+                            str(last_date.date())
+                        )
                     today_norm = today
                     if next_day.date() > today_norm:
                         print("  [BME] " + t + " sin nuevas sesiones (next=" + str(next_day.date()) + ")")
