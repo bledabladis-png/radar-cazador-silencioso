@@ -109,7 +109,9 @@ def _compute_persistence_and_save(df_market, temporal_meta=None):
         if p_path.exists():
             hist_p = pd.read_csv(p_path, encoding='utf-8')
             persist_df = append_dedup(hist_p, persist_df, ['date','sector'])
-        persist_df.to_csv(p_path, index=False, encoding='utf-8')
+        _tmp_p = p_path.with_suffix(p_path.suffix + '.tmp')
+        persist_df.to_csv(_tmp_p, index=False, encoding='utf-8')
+        _tmp_p.replace(p_path)
         print("  Sector Persistence CSV guardado.")
     except (OSError, ValueError, KeyError, TypeError, pd.errors.ParserError) as e:
         print(f"  Sector Persistence CSV omitido: {e}")
