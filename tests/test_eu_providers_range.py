@@ -10,7 +10,7 @@ requieren historico equivalente entre mercados.
 """
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import datetime
 
 from data.providers.xetra_provider import _ws_start
 

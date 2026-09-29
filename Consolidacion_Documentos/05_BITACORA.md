@@ -79,7 +79,7 @@ Al cerrar una sesion nueva, se anade arriba (las mas recientes primero). Si hay 
 
 **Proximo paso sugerido.** Verificar el cron de la madrugada.
 
-### 2026-09-29 (noche) — Atomicidad familia 3 (17 sitios) + FU-009-bis### 2026-09-29 (noche) — Atomicidad familia 3 (17 sitios) + FU-009-bis
+### 2026-09-29 (noche) — Atomicidad familia 3 (17 sitios) + FU-009-bis
 
 **Frente nuevo: familia 3 (escritura no atomica).** Barrido de
 `outputs/history/`: 17 sitios con READ+WRITE del mismo path sin
@@ -505,36 +505,6 @@ Suite final: 2297 passed + 2 skipped + 0 failed.
 - C (tests).
 
 **Proximo paso sugerido.** Verificar los 6 documentos consolidados (referencias cruzadas, contenido). Borrar corpus antiguo. Retomar A6.
-
----
-
-### 2026-09-27 (anterior) — Ciclos de cierre del backlog consolidado
-
-**Objetivo.** Cerrar el backlog MEDIA/BAJA pendiente de la auditoria radar 2026-09-26.
-
-**Hecho.** 12 ciclos: Cat 1 quirurgicos (A5-71, F3-18, F2.4-01/02/03), fix side-effect test, 19 warnings pyflakes, F2.4-10/11/12/13 (state MTE), F2.4-04 (dead code NFCI/OAS), FINRA cache (68s -> 0.04s), cron probe + 5º slot + health-check bloque H, A5-70 (refactor BlackRock), K-BLACKROCK-CSV-STALE-01, eliminar `state.py::save_scenario`, Cat 4 desmontado, F5.6-02b/F7-04/F7-01/F5.6-03/F5.7-14/F5.7-19/F5.7-05/F5.6-06.
-
-Ademas: desbloqueo SEC Official List Q2 2026 (sufijo `-txt`, commit 08a6c6a). Auditoria externa del IAE entregada.
-
-**Commits.** 12+ commits. Suite: 2205 -> 2226.
-
-**Pendiente.** H1-B (bloqueante en ese momento), H5.3.
-
-**Proximo paso sugerido.** Cerrar H1-B.
-
----
-
-### 2026-09-26 — Auditoria radar consolidada + F-IAE-LSE-INTEGRATION
-
-**Objetivo.** Cerrar auditoria radar externa (205 hallazgos). Integrar scraper LSE.
-
-**Hecho.**
-- Auditoria externa: 205 hallazgos (6 ALTA, 98 MEDIA, 101 BAJA). 6 ALTA corregidos.
-- F-IAE-LSE-INTEGRATION: 20 tickers .L via scraper privado, override parcial de Close. Verificado en CI real (run 36208872855). +91 tests (1766 -> 1857).
-
-**Pendiente.** Ciclos MEDIA/BAJA.
-
-**Proximo paso sugerido.** Cerrar backlog.
 
 ---
 
