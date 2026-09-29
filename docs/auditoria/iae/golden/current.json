@@ -46,6 +46,7 @@
     "Regenerado por: scripts/iae_contractual_nipc_e2e.py + scripts/iae_contractual_coverage.py.",
     "C1 (PRE/POST) y C3 (determinismo) VERDE. Solo C2 (920) queda abierto.",
     "Hipotesis descartadas (2026-09-29): regex 4 variantes, crosswalk 7caa86b, filtro OPTION/UNKNOWN (-42.324.213, no 920).",
-    "Hipotesis C2 descartada (2026-09-29): aplicacion de P65 (reporting_dedup, L3). _apply_intra_period_dedup v1 no emite DROP_DUP: todas las decisiones son KEEP (overlap no resoluble con 13F aislado). Conectar P65 no altera nipc_total. El delta 920 respecto al auditor no proviene de P65."
+    "Hipotesis C2 descartada (2026-09-29): aplicacion de P65 (reporting_dedup, L3). _apply_intra_period_dedup v1 no emite DROP_DUP: todas las decisiones son KEEP (overlap no resoluble con 13F aislado). Conectar P65 no altera nipc_total. El delta 920 respecto al auditor no proviene de P65.",
+    "Este baseline es HISTORICO: corresponde al par Q4-2025 -> Q1-2026, congelado. El run diario publica el NIPC del par vigente (auto-avance a los 2 ultimos quarters en data/sec_13f/processed/). Cuando entra un trimestre nuevo, el numero del reporte cambia y NO es comparable con este baseline. Verificado 2026-09-29: par Q1-2026 -> Q2-2026 = 8256882557."
   ]
 }

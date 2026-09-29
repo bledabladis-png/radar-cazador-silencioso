@@ -111,7 +111,7 @@ Ciclos completados (12 en la sesion principal):
 
 ### 2026-09-28: Cierre masivo de deuda consolidada
 
-- **Sesion IAE** (14 commits): cierre H1-A, H1-B v2/v2.3, H2, H3, H4, H5.1-H5.5, O1. Baseline local reproducible -4.264.449.012. Referencia auditor -4.264.449.932 (delta 920, OPEN).
+- **Sesion IAE** (14 commits): cierre H1-A, H1-B v2/v2.3, H2, H3, H4, H5.1-H5.5, O1. Baseline local reproducible -4.264.449.012 (par Q4-2025 -> Q1-2026, congelado). Referencia auditor -4.264.449.932 (delta 920, OPEN).
 - **Sesion radar** (30 commits): cierre FASE 3, 5 completas; FASE 7; FASE 2.2; FASE 2.4. ~28 commits de cierre.
 - Suite: 2205 -> 2267 passed + 2 skipped.
 - **Auditoria interna A1-A5** iniciada y cerrada (nucleo temporal, providers, calculo, reporte, pipeline). Bugs estructurales corregidos: bug en `leaders.py`, check muerto en `mte_confirmation.py`, guards en `indices_intl.py`, SECTOR_ETFS unificado.
@@ -471,7 +471,7 @@ Agrupacion de los cierres mas relevantes por area. El detalle granular esta en `
 - **Fase D** (auditor externo): CERRADA 2026-09-28. Dictamen APROBADO CON CONDICIONES, luego cerrado con C2 abierto no bloqueante.
 - **Fases E, F, G**: integracion a `run.py`, automatizacion GitHub, automatizacion de mappings. CERRADAS.
 - **H1-A**: CERRADO. Crosswalk 7caa86b reproduce golden con tolerancia 0.
-- **H1-B** (clasificacion CALL/PUT): CERRADO v2.3. Baseline -4.264.449.012.
+- **H1-B** (clasificacion CALL/PUT): CERRADO v2.3. Baseline -4.264.449.012 (par Q4-2025 -> Q1-2026, congelado; el run diario usa el par vigente).
 - **H2** (contadores documentales): CERRADO.
 - **H3** (clasificacion scripts): CERRADO.
 - **H4** (golden versionado): CERRADO.

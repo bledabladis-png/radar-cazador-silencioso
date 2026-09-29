@@ -83,7 +83,10 @@ Snapshot al cierre del ultimo commit:
 **Fases IAE:**
 - FA-1, FA-2, NIPC, A, B, C, E, F, G: CERRADAS
 - Fase D (auditor externo): CERRADA con C2 (920) residual no bloqueante
-- H1-B: CERRADO con C2 abierto (baseline local -4.264.449.012)
+- H1-B: CERRADO con C2 abierto. Baseline **historico del par Q4-2025
+  -> Q1-2026**: -4.264.449.012 (congelado; commit 72fa824). El run
+  diario usa el par vigente (auto-avance a los 2 ultimos quarters
+  disponibles), NO este baseline.
 - H4: CERRADO (golden/current.json ACTIVE_WITH_OPEN_DISCREPANCY)
 - H5.3: trazabilidad implementada, pendiente cron nov 2026
 - C2 (920): OPEN. Hipotesis P65 descartada 2026-09-29 (por diseno de codigo)
@@ -214,10 +217,13 @@ Sesion 2026-09-29 (tarde): auditoria funcional frente 6 (IAE) + frente 8 (provid
 
 - H5.3 - Trazabilidad cron trimestral. Verificacion en cron real de
   noviembre 2026.
-- C2 (920) - Discrepancia H1-B. Bloqueado por auditor externo (sin comando
-  + HEAD publicado). Hipotesis descartadas 2026-09-29: regex 4 variantes,
-  crosswalk 7caa86b, filtro OPTION/UNKNOWN (-42M), aplicacion P65
-  (por diseno de codigo, `_apply_intra_period_dedup` v1 solo emite KEEP).
+- C2 (920) - Discrepancia H1-B, **referida al par Q4-2025 -> Q1-2026**
+  (congelado). El reporte diario publica el NIPC del par vigente, que
+  cambia cada trimestre. No confundir ambos numeros: mismo nombre, distinto
+  periodo. Bloqueado por auditor externo (sin comando + HEAD publicado).
+  Hipotesis descartadas 2026-09-29: regex 4 variantes, crosswalk 7caa86b,
+  filtro OPTION/UNKNOWN (-42M), aplicacion P65 (por diseno de codigo,
+  `_apply_intra_period_dedup` v1 solo emite KEEP).
 
 **Deudas documentadas (sin accion pendiente):**
 

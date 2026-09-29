@@ -44,7 +44,37 @@ Al cerrar una sesion nueva, se anade arriba (las mas recientes primero). Si hay 
 
 ## 3. SESIONES
 
-### 2026-09-29 (noche) — Integridad parquets + EU 5y + PENDING BME + P65
+### 2026-09-30 (madrugada) — Baseline IAE vs par vigente: aclaracion
+
+**Objetivo.** Investigar la diferencia entre el NIPC del run manual de
+GitHub (8256882557) y el baseline del corpus (-4264449012).
+
+**Hallazgo.** No es bug. El reporte diario calcula el NIPC del par de
+trimestres vigente (`_list_available_quarters` toma los 2 ultimos).
+Al entrar 2026Q2 (commit c5e3ee0), el par paso de Q4-2025 -> Q1-2026 a
+Q1-2026 -> Q2-2026. Reproducido localmente con el par nuevo:
+8256882557, identico al CI. El baseline -4264449012 corresponde al par
+antiguo, congelado en `current.json`.
+
+**No se toca codigo.** El auto-avance del par es correcto y autonomo.
+El pipeline se mantiene independiente del usuario. No se hardcodea
+ningun par.
+
+**Corpus actualizado.** 00_ARRANQUE, 02_ARQUITECTURA, 03_IAE,
+04_HISTORICO y `current.json` declaran ahora explicitamente que el
+baseline es historico (par Q4-2025 -> Q1-2026) y que el run diario
+publica el NIPC del par vigente, que cambia con cada trimestre.
+
+**Pendiente.**
+- Cron 01:17 CEST (madrugada del 30): valida PENDING BME, EU 5y,
+  regularMarketTime de Yahoo.
+- Cabo B: revisar si Yahoo actualiza cierre del 29 a las 04:00 CEST.
+- C2 (920): sin material del auditor, referido al par Q4->Q1.
+
+**Proximo paso sugerido.** Ninguno urgente. Esperar al cron de la
+madrugada.
+
+### 2026-09-29 (noche) — Integridad parquets + EU 5y + PENDING BME + P65### 2026-09-29 (noche) — Integridad parquets + EU 5y + PENDING BME + P65
 
 **Objetivo.** Cerrar el frente de integridad detectado al auditar Ibex 35.
 

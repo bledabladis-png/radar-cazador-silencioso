@@ -371,7 +371,7 @@ Si el gate falla, `run.py` aborta con `sys.exit(1)`.
 
 **H5.3 - Trazabilidad cron trimestral:** implementada, pendiente verificacion en cron de noviembre 2026.
 
-**C2 (920) - Discrepancia H1-B:** `-4.264.449.012` (local reproducible) vs `-4.264.449.932` (referencia auditor). `reconciliation_status = OPEN`.
+**C2 (920) - Discrepancia H1-B:** `-4.264.449.012` (local reproducible) vs `-4.264.449.932` (referencia auditor). `reconciliation_status = OPEN`. **Par contractual: Q4-2025 -> Q1-2026** (congelado en `current.json`). El reporte diario publica el NIPC del par vigente (auto-avance a los 2 ultimos quarters disponibles en `data/sec_13f/processed/`). Cuando entra un trimestre nuevo, el numero del reporte cambia: no es comparable con este baseline, ni con C2. Ejemplo verificado 2026-09-29: con Q1-2026 -> Q2-2026 el NIPC total es `8256882557`, reproducible.
 
 ---
 

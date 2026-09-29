@@ -278,8 +278,12 @@ Regeneracion automatica:
 | `current.json` | 3159 | Baseline local (ACTIVE_WITH_OPEN_DISCREPANCY) |
 | `README.md` | 1802 | Explicacion del directorio |
 
-**Baseline actual:**
+**Baseline historico (par Q4-2025 -> Q1-2026, congelado):**
 - `local_observed_nipc_total` = **-4.264.449.012** (reproducible, commit 72fa824).
+- **Distincion critica (2026-09-29):** este numero corresponde al par
+  Q4-2025 -> Q1-2026. El run diario publica el NIPC del par vigente,
+  que avanza automaticamente al entrar un trimestre nuevo en
+  `data/sec_13f/processed/`. No son el mismo numero. Baseline != valor vivo.
 - `external_auditor_reference` = **-4.264.449.932** (declarado, sin cadena de custodia).
 - `reconciliation_delta` = **920**.
 - `reconciliation_status` = **OPEN**.
@@ -323,7 +327,7 @@ Regeneracion automatica:
 
 **H5.3 - Trazabilidad cron trimestral:** implementada. Pendiente verificacion en cron real de noviembre 2026.
 
-**C2 (920) - Discrepancia H1-B:** `-4.264.449.012` (local) vs `-4.264.449.932` (auditor). Estado OPEN. Dos salidas: (a) si el auditor aporta comando + HEAD, se reproduce y cierra por atribucion; (b) si no, se mantiene OPEN sin convertir el 920 en "tolerancia aceptada".
+**C2 (920) - Discrepancia H1-B:** `-4.264.449.012` (local) vs `-4.264.449.932` (auditor). **Par Q4-2025 -> Q1-2026** (congelado). Estado OPEN. Dos salidas: (a) si el auditor aporta comando + HEAD, se reproduce y cierra por atribucion; (b) si no, se mantiene OPEN sin convertir el 920 en "tolerancia aceptada".
 
 **`build_effective_reporting_snapshot`** sin caller productivo (reporting_dedup.py). Funcion testeada (99 tests P65/P66 pasan) pero no invocada en el pipeline. **No es deuda:** es decision de diseno — capa auxiliar de diagnostico. No altera el NIPC (`_apply_intra_period_dedup` v1 solo emite KEEP). Conectar P65 no cambiaria el `nipc_total` actual. Verificado 2026-09-29.
 
