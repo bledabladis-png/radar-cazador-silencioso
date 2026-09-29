@@ -232,6 +232,14 @@ def get_blackrock_primary_flow(
     df_flow['shares_change'] = df_flow['shares_outstanding'].diff()
     df_flow['estimated_flow_eur'] = df_flow['shares_change'] * df_flow['nav']
     df_flow['flow_pct_assets'] = df_flow['estimated_flow_eur'] / df_flow['total_net_assets']
+    # Fix 2026-09-29: si total_net_assets == 0 (o NaN, o inf si el parser
+    # alguna vez deja un valor no finito), la division produce inf/NaN.
+    # inf contamina fund_flow_robust_zscore_with_regime: _compute_z_value
+    # hace dropna (que NO elimina inf), MAD queda inf, z colapsa a 0 sin
+    # senal. Forzar a NaN: coherente con 'N/D antes que imputar'.
+    df_flow['flow_pct_assets'] = df_flow['flow_pct_assets'].where(
+        np.isfinite(df_flow['flow_pct_assets']), np.nan
+    )
     df_flow['flow_zscore'], df_flow['flow_zscore_regime'] = fund_flow_robust_zscore_with_regime(
         df_flow['flow_pct_assets'], window=120, min_periods=20,
     )
