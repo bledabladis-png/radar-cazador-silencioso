@@ -163,7 +163,7 @@ Sesion 2026-09-29 (tarde): auditoria funcional frente 6 (IAE) + frente 8 (provid
   if:always() en uploads pre-gate de download_failures,
   env.quarter vacío eliminado en update_sec_nport.
 
-- Suite: 2340 passed + 2 skipped. pyflakes limpio.
+- Suite: 2361 passed + 2 skipped. pyflakes limpio. 0 warnings.
 
 ---
 
@@ -189,6 +189,14 @@ Sesion 2026-09-29 (tarde): auditoria funcional frente 6 (IAE) + frente 8 (provid
   stock_leader atomicos, mte/engine traceback, slpm_v12 flow_proxy_z=0.0,
   mte/scoring stress finitud, fls zscore finitud, mte/decision consensus
   finitud.
+
+- Frente 9: CERRADO (atomicidad familia 3, 2026-09-29 noche). 17 sitios
+  alta en `outputs/history/`: 1 european_coverage + 2 breadth_metrics +
+  1 engines + 1 flows_primary + 1 finalize + 2 market_data + 4 sectors_base
+  + 5 sector_metrics. Fix: `.tmp + replace`. Cada uno con test fuerte
+  verificado por ambos lados (sin fix rojo, con fix verde).
+- FU-009-bis (append_dedup): columnas all-NA excluidas antes del concat
+  (FutureWarning pandas 2.x -> cambio de dtype en 3.0).
 
 **Pendientes vivos:**
 

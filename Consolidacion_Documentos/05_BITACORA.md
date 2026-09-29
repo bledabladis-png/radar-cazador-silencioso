@@ -44,6 +44,39 @@ Al cerrar una sesion nueva, se anade arriba (las mas recientes primero). Si hay 
 
 ## 3. SESIONES
 
+### 2026-09-29 (noche) — Atomicidad familia 3 (17 sitios) + FU-009-bis
+
+**Frente nuevo: familia 3 (escritura no atomica).** Barrido de
+`outputs/history/`: 17 sitios con READ+WRITE del mismo path sin
+`.tmp + os.replace`. Si el proceso muere a mitad de `to_csv`, el CSV
+original queda truncado y el siguiente run lee menos filas -> perdida
+irrecuperable (append+dedup no regenera lo perdido).
+
+Cerrados: european_coverage (1), breadth_metrics (2), engines (1),
+flows_primary (1), finalize (1), market_data (2), sectors_base (4),
+sector_metrics (5).
+
+**Metodo del test (fuerte, verificado por ambos lados):** simular
+`to_csv` que trunca el destino y lanza `OSError`. Verificar que el CSV
+original queda intacto. Verificacion triple obligatoria: verde con fix
+-> ROJO sin fix (restaurando commit padre) -> verde con fix. Los tests
+debiles (verificar patron `.tmp+replace`, no el bug) se retiraron.
+
+**FU-009-bis (append_dedup):** pd.concat con esquemas distintos genera
+FutureWarning en pandas 2.x (rompera en 3.0). Fix: excluir columnas
+all-NA antes del concat. Detectado via test de atomicidad de engines
+con hist de esquema antiguo + new de esquema nuevo.
+
+**Lecciones:**
+- `git stash` no stashea lo commiteado. Usar `git checkout <pre> -- <file>`.
+- Helpers con guard `if df.empty: return None` no ejecutan el bloque
+  de escritura con df vacio. Llamar al helper directo con datos no vacios.
+- Hasta 3 falsos verdes detectados y corregidos durante el barrido
+  (breadth_metrics, engines, sector_metrics).
+
+**Estado final:** suite 2340 -> 2361 passed + 2 skipped. 0 warnings.
+pyflakes/compileall limpios.
+
 ### 2026-09-29 (tarde) — Auditoria funcional frente 6 (IAE) + frente 8 (providers) + orquestacion CI
 
 **Objetivo.** Continuar auditoria funcional del sistema tras cerrar A6 + B + C

@@ -502,6 +502,20 @@ Las lecciones operativas ya estan destiladas en `01_METODO.md` seccion 8. Aqui s
 
 ---
 
+- **Verificacion triple de tests de bug (2026-09-29 noche):** un test de
+  bug NO vale si solo pasa con fix. Debe: verde con fix -> ROJO sin fix
+  (restaurando el commit padre del fix via `git checkout <pre> -- <file>`)
+  -> verde con fix. Sin el paso intermedio, el test puede estar verde sin
+  ejercitar el codigo (falso positivo). Aplicado al barrido familia 3
+  (17 sitios de escritura no atomica en `outputs/history/`).
+- **`git stash` no stashea lo commiteado:** si el fix ya esta en HEAD, usar
+  `git checkout <commit-padre> -- <archivo>` para revertirlo temporalmente.
+  Detectado al primer intento de verificacion triple (falso negativo).
+- **Guards que esconden el bug en tests:** helpers con `if df_stocks.empty:
+  return None` no ejecutan el bloque de escritura si el test pasa df vacio.
+  Llamar al helper directamente con datos no vacios. Detectado en
+  `sector_metrics`, corregido tras falso verde en el primer intento.
+
 ## 5. ESTADO DEL CORPUS DOCUMENTAL
 
 Antes del 2026-09-28, el corpus documental era:
