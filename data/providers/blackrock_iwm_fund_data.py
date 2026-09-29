@@ -160,7 +160,14 @@ def download_fund_file(
             "La respuesta no parece un fund file SpreadsheetML válido."
         )
 
-    RAW_CACHE_FILE.write_bytes(response.content)
+    # Fix 2026-09-29: escritura atomica (.tmp + replace). Antes
+    # write_bytes directo: si el proceso moria a mitad, quedaba XML
+    # parcial. Proxima ejecucion: cache-hit (age<23h) -> extract_historical
+    # _sheet falla o produce datos truncados. Mismo patron que downloader
+    # 13F, storage.py y providers europeos.
+    tmp = RAW_CACHE_FILE.with_suffix(RAW_CACHE_FILE.suffix + ".tmp")
+    tmp.write_bytes(response.content)
+    tmp.replace(RAW_CACHE_FILE)
 
     print(f"  Caché guardada: {RAW_CACHE_FILE}")
 
@@ -489,10 +496,17 @@ def update_history(
 
         df = df_new.copy()
 
+    # Fix 2026-09-29: escritura atomica del CSV historico. Antes
+    # df.to_csv(HISTORY_CSV) directo. Si el proceso moria a mitad:
+    # CSV truncado. Proximo run lee menos filas, concat, reescribe.
+    # Las filas perdidas desaparecen para siempre (es historico, no
+    # cache). Mismo patron atomico que downloader 13F y storage.py.
+    tmp = HISTORY_CSV.with_suffix(HISTORY_CSV.suffix + ".tmp")
     df.to_csv(
-        HISTORY_CSV,
+        tmp,
         index=False,
     )
+    tmp.replace(HISTORY_CSV)
 
     return df
 
