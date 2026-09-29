@@ -47,12 +47,34 @@ class TargetUniverse:
     key_by_row_uid: Dict[str, str]
 
     def __post_init__(self):
-        # invariantes estructurales
+        # B-01 (2026-09-29): invariantes estructurales explicitas.
+        # Antes eran `assert` (se eliminan con python -O / PYTHONOPTIMIZE
+        # y las invariantes desaparecen silenciosamente). Ahora raise
+        # BuildTargetError para que el chequeo sobreviva a optimizacion.
+        # BuildTargetError se define mas abajo en el modulo; el lookup
+        # es en runtime, cuando el dataclass se instancia, no al definir
+        # la clase.
         n = len(self.declared_keys)
-        assert len(self.ticker_by_key) == n
-        assert len(self.figi_by_key) == n
-        assert len(self.row_uid_by_key) == n
-        assert len(self.key_by_row_uid) == n
+        if len(self.ticker_by_key) != n:
+            raise BuildTargetError(
+                "TargetUniverse invariante: ticker_by_key (%d) "
+                "!= declared_keys (%d)" % (len(self.ticker_by_key), n)
+            )
+        if len(self.figi_by_key) != n:
+            raise BuildTargetError(
+                "TargetUniverse invariante: figi_by_key (%d) "
+                "!= declared_keys (%d)" % (len(self.figi_by_key), n)
+            )
+        if len(self.row_uid_by_key) != n:
+            raise BuildTargetError(
+                "TargetUniverse invariante: row_uid_by_key (%d) "
+                "!= declared_keys (%d)" % (len(self.row_uid_by_key), n)
+            )
+        if len(self.key_by_row_uid) != n:
+            raise BuildTargetError(
+                "TargetUniverse invariante: key_by_row_uid (%d) "
+                "!= declared_keys (%d)" % (len(self.key_by_row_uid), n)
+            )
 
 
 class BuildTargetError(ValueError):
