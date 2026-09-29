@@ -138,6 +138,7 @@ def test_pick_base_url_vacio_lanza():
 # --- _prev_quarter / _quarters_range (backfill) ------------------------
 
 from scripts.update_sec_13f import _prev_quarter, _quarters_range
+from scripts.update_sec_13f import _write_latest_quarter_if_newer
 
 
 @pytest.mark.parametrize("q,expected", [
@@ -171,3 +172,57 @@ def test_quarters_range_tres():
     assert _quarters_range("2026Q3", 3) == [
         "2025Q4", "2026Q1", "2026Q2", "2026Q3"
     ]
+
+
+# --- _write_latest_quarter_if_newer (monotonia, fix 2026-09-29) --------
+
+def test_latest_quarter_primer_valor(tmp_path):
+    f = tmp_path / "latest.txt"
+    written, prev = _write_latest_quarter_if_newer("2026Q2", f)
+    assert written is True
+    assert prev is None
+    assert f.read_text(encoding="utf-8") == "2026Q2\n"
+
+
+def test_latest_quarter_avanza(tmp_path):
+    f = tmp_path / "latest.txt"
+    f.write_text("2026Q1\n", encoding="utf-8")
+    written, prev = _write_latest_quarter_if_newer("2026Q2", f)
+    assert written is True
+    assert prev == "2026Q1"
+    assert f.read_text(encoding="utf-8") == "2026Q2\n"
+
+
+def test_latest_quarter_no_retrocede(tmp_path):
+    """Bug fix 2026-09-29: --backfill no debe retroceder latest_quarter."""
+    f = tmp_path / "latest.txt"
+    f.write_text("2026Q2\n", encoding="utf-8")
+    written, prev = _write_latest_quarter_if_newer("2026Q1", f)
+    assert written is False
+    assert prev == "2026Q2"
+    assert f.read_text(encoding="utf-8") == "2026Q2\n"
+
+
+def test_latest_quarter_mismo_valor_no_reescribe(tmp_path):
+    f = tmp_path / "latest.txt"
+    f.write_text("2026Q2\n", encoding="utf-8")
+    written, prev = _write_latest_quarter_if_newer("2026Q2", f)
+    assert written is False
+    assert prev == "2026Q2"
+
+
+def test_latest_quarter_fichero_ilegible_reescribe(tmp_path):
+    f = tmp_path / "latest.txt"
+    f.write_bytes(b"\xff\xfe\x00")
+    written, prev = _write_latest_quarter_if_newer("2026Q2", f)
+    assert written is True
+    assert prev is None
+    assert f.read_text(encoding="utf-8") == "2026Q2\n"
+
+
+def test_latest_quarter_crea_directorio(tmp_path):
+    f = tmp_path / "sub" / "latest.txt"
+    assert not f.parent.exists()
+    written, prev = _write_latest_quarter_if_newer("2026Q2", f)
+    assert written is True
+    assert f.read_text(encoding="utf-8") == "2026Q2\n"

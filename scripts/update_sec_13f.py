@@ -170,6 +170,27 @@ def _resolve_actor():
         return "unknown"
 
 
+def _write_latest_quarter_if_newer(quarter, latest_file):
+    """Escritura monotona de latest_quarter.txt.
+
+    Devuelve (written: bool, prev: str | None).
+    - written=True si el fichero se escribio (avance o primer valor).
+    - written=False si ya estaba en quarter o en uno posterior.
+    - prev = valor previo leido, o None si ausente/ilegible.
+    """
+    latest_file.parent.mkdir(parents=True, exist_ok=True)
+    prev = None
+    if latest_file.exists():
+        try:
+            prev = latest_file.read_text(encoding="utf-8").strip()
+        except Exception:
+            prev = None
+    if prev is None or quarter > prev:
+        latest_file.write_text(quarter + "\n", encoding="utf-8", newline="\n")
+        return True, prev
+    return False, prev
+
+
 def ensure_quarter(quarter, *, force=False,
                    data_dir=None, official_dir=None,
                    source="manual", actor=None):
@@ -228,15 +249,8 @@ def ensure_quarter(quarter, *, force=False,
     # latest_quarter=Q_{k-1} y cierra Q_{k-1} con valid_to=period_end en
     # vez de dejarlo abierto -> corrupcion silenciosa del crosswalk CUSIP.
     if processed.exists():
-        LATEST_FILE.parent.mkdir(parents=True, exist_ok=True)
-        prev = None
-        if LATEST_FILE.exists():
-            try:
-                prev = LATEST_FILE.read_text(encoding="utf-8").strip()
-            except Exception:
-                prev = None
-        if prev is None or quarter > prev:
-            LATEST_FILE.write_text(quarter + "\n", encoding="utf-8", newline="\n")
+        written, prev = _write_latest_quarter_if_newer(quarter, LATEST_FILE)
+        if written:
             info["latest_quarter_file"] = str(LATEST_FILE)
             print("[OK] latest_quarter.txt -> " + quarter)
         else:
