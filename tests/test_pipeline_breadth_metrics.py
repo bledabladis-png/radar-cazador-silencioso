@@ -14,6 +14,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 import pandas as pd
+import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
@@ -265,3 +266,72 @@ def test_compute_breadth_metrics_propaga_is_stale(tmp_path, monkeypatch):
     assert out["sector_breadth_is_stale"] is True
     assert out["sector_breadth_stale_reason"] == 'MARKET_CLOSED'
     assert out["sector_breadth_df"] is fake_sb
+
+
+def test_momentum_amplitud_fallo_to_csv_no_pierde_filas(tmp_path, monkeypatch):
+    """Si to_csv muere a mitad, el CSV historico debe quedar intacto."""
+    monkeypatch.chdir(tmp_path)
+    (tmp_path / "outputs" / "history").mkdir(parents=True)
+    csv = tmp_path / "outputs" / "history" / "sector_breadth_momentum.csv"
+    pd.DataFrame([{"date": "2026-09-24", "sector": "XLK",
+                   "delta_1d_ema20": 0.05}]).to_csv(csv, index=False)
+    filas_antes = pd.read_csv(csv).shape[0]
+    assert filas_antes == 1
+
+    real_to_csv = pd.DataFrame.to_csv
+
+    def fake_to_csv(self, path, **kw):
+        real_to_csv(self.iloc[:0], path, **kw)
+        raise OSError("simulado: fallo a mitad de escritura")
+
+    monkeypatch.setattr(pd.DataFrame, "to_csv", fake_to_csv)
+    fake_sbm = pd.DataFrame([{"date": "2026-09-25", "sector": "XLK",
+                              "delta_1d_ema20": 0.1}])
+    with patch("src.pipeline.breadth_metrics.compute_sector_breadth_momentum",
+               return_value=fake_sbm):
+        bm._compute_momentum_amplitud(_df_stocks())
+
+    df = pd.read_csv(csv)
+    assert df.shape[0] == filas_antes, (
+        f"CSV original perdio filas: {filas_antes} -> {df.shape[0]}"
+    )
+    assert df.iloc[0]["date"] == "2026-09-24"
+
+
+def test_sbh_fallo_to_csv_no_pierde_filas(tmp_path, monkeypatch):
+    """Si to_csv muere a mitad, el CSV historico debe quedar intacto."""
+    monkeypatch.chdir(tmp_path)
+    (tmp_path / "outputs" / "history").mkdir(parents=True)
+    csv = tmp_path / "outputs" / "history" / "sb.csv"
+    pd.DataFrame([{"date": "2026-09-24", "sector": "XLK",
+                   "n_total": 20, "n_valid_ema200": 20}]).to_csv(csv, index=False)
+    filas_antes = pd.read_csv(csv).shape[0]
+    assert filas_antes == 1
+
+    real_to_csv = pd.DataFrame.to_csv
+
+    def fake_to_csv(self, path, **kw):
+        real_to_csv(self.iloc[:0], path, **kw)
+        raise OSError("simulado: fallo a mitad de escritura")
+
+    monkeypatch.setattr(pd.DataFrame, "to_csv", fake_to_csv)
+    df_stocks = _df_stocks_hasta("2026-09-25")
+    fake_sb = pd.DataFrame([
+        {"date": pd.Timestamp("2026-09-25"), "sector": "XLK",
+         "n_total": 20, "n_valid_ema200": 20},
+    ])
+    with patch("src.pipeline.breadth_metrics.last_expected_market_date",
+               return_value=pd.Timestamp("2026-09-25").date()), \
+         patch("src.pipeline.breadth_metrics.compute_sector_breadth",
+               return_value=fake_sb):
+        bm._compute_sector_breadth_health(
+            df_stocks, pd.DataFrame(), pd.DataFrame(),
+            reference_date=MARKET_DAY,
+            output_path=csv,
+        )
+
+    df = pd.read_csv(csv)
+    assert df.shape[0] == filas_antes, (
+        f"CSV original perdio filas: {filas_antes} -> {df.shape[0]}"
+    )
+    assert df.iloc[0]["date"] == "2026-09-24"
