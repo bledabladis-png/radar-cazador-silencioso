@@ -158,3 +158,29 @@ def test_persistence_degradacion_sin_df(tmp_path, monkeypatch):
     assert p.exists()
     df = pd.read_csv(p)
     assert set(df["sector"].unique()) == set(SECTOR_ETFS)
+
+
+def test_persistence_fallo_to_csv_no_pierde_filas(tmp_path, monkeypatch):
+    """Si to_csv muere a mitad, el CSV original debe quedar intacto."""
+    monkeypatch.chdir(tmp_path)
+    (tmp_path / "outputs" / "history").mkdir(parents=True)
+    csv = tmp_path / "outputs" / "history" / "sector_persistence.csv"
+    pd.DataFrame([{"date": "2026-09-24", "sector": "XLK", "persistence": 0.5}]).to_csv(csv, index=False)
+    filas_antes = pd.read_csv(csv).shape[0]
+    assert filas_antes == 1
+
+    real_to_csv = pd.DataFrame.to_csv
+
+    def fake_to_csv(self, path, **kw):
+        real_to_csv(self.iloc[:0], path, **kw)
+        raise OSError("simulado: fallo a mitad de escritura")
+
+    monkeypatch.setattr(pd.DataFrame, "to_csv", fake_to_csv)
+    with patch("src.pipeline.engines.get_col", side_effect=KeyError("x")):
+        _compute_persistence_and_save(pd.DataFrame())
+
+    df = pd.read_csv(csv)
+    assert df.shape[0] == filas_antes, (
+        f"CSV original perdio filas: {filas_antes} -> {df.shape[0]}"
+    )
+    assert df.iloc[0]["date"] == "2026-09-24"
