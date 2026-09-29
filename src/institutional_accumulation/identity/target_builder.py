@@ -15,6 +15,7 @@ Contrato de pureza:
 """
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass
 from typing import Dict, Set
 
@@ -196,6 +197,12 @@ def extract_sshprnamt_by_figi(infotable_df, figi_by_cusip):
         try:
             v = float(raw_val)
         except (TypeError, ValueError):
+            continue
+        # Fix 2026-09-29: rechazar NaN e inf. El contrato declara
+        # 'valores no numericos o negativos se descartan'. NaN no
+        # cumple (nan < 0 es False) e inf no es valor observable.
+        # Misma invariante que PeriodState.sshprnamt y S-03c.
+        if not math.isfinite(v):
             continue
         if v < 0:
             continue

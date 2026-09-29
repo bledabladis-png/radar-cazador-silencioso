@@ -178,3 +178,39 @@ def test_target_universe_invariante_key_by_row_uid():
     with pytest.raises(tb.BuildTargetError, match="key_by_row_uid"):
         tb.TargetUniverse(**_tu_kwargs(key_by_row_uid={}))
 
+
+
+# --- Fix 2026-09-29: finitud en extract_sshprnamt_by_figi --------------
+
+def test_extract_sshprnamt_nan_descartado():
+    """Bug fix 2026-09-29: NaN pasaba 'v < 0' silenciosamente."""
+    import pandas as pd
+    from src.institutional_accumulation.identity import target_builder as tb
+    df = pd.DataFrame({
+        "CUSIP": ["A", "B"],
+        "SSHPRNAMT": [1000.0, float("nan")],
+    })
+    r = tb.extract_sshprnamt_by_figi(df, {"A": "FIGI_A", "B": "FIGI_A"})
+    assert r == {"FIGI_A": 1000.0}
+
+
+def test_extract_sshprnamt_inf_descartado():
+    import pandas as pd
+    from src.institutional_accumulation.identity import target_builder as tb
+    df = pd.DataFrame({
+        "CUSIP": ["A", "B"],
+        "SSHPRNAMT": [500.0, float("inf")],
+    })
+    r = tb.extract_sshprnamt_by_figi(df, {"A": "FIGI_A", "B": "FIGI_A"})
+    assert r == {"FIGI_A": 500.0}
+
+
+def test_extract_sshprnamt_neg_inf_descartado():
+    import pandas as pd
+    from src.institutional_accumulation.identity import target_builder as tb
+    df = pd.DataFrame({
+        "CUSIP": ["A", "B"],
+        "SSHPRNAMT": [100.0, float("-inf")],
+    })
+    r = tb.extract_sshprnamt_by_figi(df, {"A": "FIGI_A", "B": "FIGI_A"})
+    assert r == {"FIGI_A": 100.0}
