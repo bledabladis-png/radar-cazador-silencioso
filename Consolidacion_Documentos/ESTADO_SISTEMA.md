@@ -2,7 +2,7 @@
 
 Hechos verificables del sistema. Generado por script.
 
-**Generado en:** 2026-09-29 19:35:27 UTC
+**Generado en:** 2026-09-29 19:51:11 UTC
 **Snapshot tomado sobre:** commit HEAD de la fecha indicada, al momento de generar
 **NO editar a mano.** Regenerar con:
 
@@ -17,16 +17,16 @@ HEAD, tests e integridad del codigo.
 
 ## 1. Git
 
-- **HEAD:** `ea5b6c9`
-- **HEAD completo:** `ea5b6c98b03ce5032ba204f72ee5f34d8a690d93`
-- **Fecha commit HEAD:** 2026-09-29 21:28:27 +0200
+- **HEAD:** `a93c77f`
+- **HEAD completo:** `a93c77faa8dd63f96a1dd1b72eb29f210daab59b`
+- **Fecha commit HEAD:** 2026-09-29 21:50:27 +0200
 - **Ahead:** 0
 - **Behind:** 0
-- **origin/main:** `ea5b6c9`
+- **origin/main:** `a93c77f`
 
 ## 2. Tests (pytest real)
 
-- **Resumen:** 2361 passed, 2 skipped in 71.14s (0:01:11)
+- **Resumen:** 2368 passed, 2 skipped in 70.71s (0:01:10)
 - **Exit code:** 0
 
 ## 3. Integridad del codigo
@@ -52,13 +52,13 @@ HEAD, tests e integridad del codigo.
 | `src/institutional_accumulation/identity/catalog_key.py` | 387 |
 | `src/institutional_accumulation/identity/openfigi_client.py` | 180 |
 | `src/institutional_accumulation/identity/period_state.py` | 223 |
-| `src/institutional_accumulation/identity/radar_target_catalog.py` | 154 |
+| `src/institutional_accumulation/identity/radar_target_catalog.py` | 156 |
 | `src/institutional_accumulation/identity/target_builder.py` | 210 |
 | `src/institutional_accumulation/identity/target_universe.py` | 180 |
 | `src/institutional_accumulation/operational_universe.py` | 259 |
 | `src/institutional_accumulation/pipeline_contractual.py` | 233 |
 | `src/institutional_accumulation/sec_13f/__init__.py` | 22 |
-| `src/institutional_accumulation/sec_13f/downloader.py` | 248 |
+| `src/institutional_accumulation/sec_13f/downloader.py` | 250 |
 | `src/institutional_accumulation/sec_13f/identity/__init__.py` | 161 |
 | `src/institutional_accumulation/sec_13f/identity/amendments.py` | 444 |
 | `src/institutional_accumulation/sec_13f/identity/cusip_resolver.py` | 149 |
@@ -74,7 +74,7 @@ HEAD, tests e integridad del codigo.
 | `src/institutional_accumulation/security_type.py` | 407 |
 | `src/institutional_accumulation/temporal_validity.py` | 92 |
 | `src/institutional_accumulation/timestamps.py` | 162 |
-| **TOTAL** | **36 ficheros, 8401 LOC** |
+| **TOTAL** | **36 ficheros, 8405 LOC** |
 
 ## 5. Datos IAE
 
@@ -104,7 +104,7 @@ HEAD, tests e integridad del codigo.
 - `scripts/iae_contractual_nipc_e2e.py`: 142 LOC
 - `scripts/regenerate_radar_catalog.py`: 238 LOC
 - `scripts/regenerate_cusip_crosswalk.py`: 225 LOC
-- `scripts/update_sec_13f.py`: 354 LOC
+- `scripts/update_sec_13f.py`: 356 LOC
 - `scripts/download_official_list_13f.py`: 147 LOC
 
 ## 7. Evidencia empirica (directorios)
