@@ -280,8 +280,15 @@ jobs:
           fi
           if ! git diff --staged --quiet; then
             git commit -m "Daily hist/state "
-            git pull --rebase origin main
-            git push
+            for i in 1 2 3; do
+              git pull --rebase origin main
+              if git push; then
+                exit 0
+              fi
+              sleep $((i * 10))
+            done
+            echo "Push fallido tras 3 intentos"
+            exit 1
           fi
 
   issue-manager:
