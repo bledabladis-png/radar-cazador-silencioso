@@ -287,7 +287,7 @@ Regeneracion automatica:
 
 ## 9. VERIFICACION EMPIRICA
 
-**Suite IAE:** 763 funciones test_ (criterio AST, 45 ficheros). `871` tests collected por pytest (incluye parametrize). Reproducible con `scripts/iae_test_census.py`.
+**Suite IAE:** 777 funciones test_ (criterio AST, 45 ficheros). `885` tests collected por pytest (incluye parametrize). Reproducible con `scripts/iae_test_census.py`.
 
 **Cobertura IAE:** 90% lineas (reproducible con `scripts/iae_coverage.py`).
 
