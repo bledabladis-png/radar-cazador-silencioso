@@ -179,3 +179,40 @@ def test_unique_figi_vacio_none():
 
 def test_unique_figi_none_state():
     assert ps.unique_figi(None) is None
+
+# --- Fix 2026-09-29: validacion de finitud en sshprnamt --------------
+
+def _mk_state(sshprnamt=None):
+    from src.institutional_accumulation.identity.period_state import PeriodState
+    return PeriodState(
+        identity_status="RESOLVED",
+        weight_status="RESOLVED_OBSERVED",
+        figi="BBG000B9XRY4",
+        ticker="AAPL",
+        sshprnamt=sshprnamt,
+    )
+
+
+def test_sshprnamt_nan_rechazado():
+    """Bug fix 2026-09-29: NaN pasaba la validacion '< 0' silenciosamente."""
+    import pytest
+    with pytest.raises(ValueError, match="finito"):
+        _mk_state(float("nan"))
+
+
+def test_sshprnamt_inf_rechazado():
+    import pytest
+    with pytest.raises(ValueError, match="finito"):
+        _mk_state(float("inf"))
+
+
+def test_sshprnamt_neg_inf_rechazado():
+    import pytest
+    with pytest.raises(ValueError, match="finito|>= 0"):
+        _mk_state(float("-inf"))
+
+
+def test_sshprnamt_cero_y_positivo_aceptados():
+    assert _mk_state(0.0).sshprnamt == 0.0
+    assert _mk_state(1000.0).sshprnamt == 1000.0
+    assert _mk_state(500).sshprnamt == 500

@@ -13,6 +13,7 @@ Contrato de pureza: no lee/escribe ficheros, no datetime.now(), determinista.
 """
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass
 from typing import Optional
 
@@ -112,6 +113,16 @@ class PeriodState:
             if not isinstance(self.sshprnamt, (int, float)):
                 raise ValueError(
                     "sshprnamt debe ser numerico o None: "
+                    + repr(self.sshprnamt)
+                )
+            # Fix 2026-09-29: rechazar NaN e inf. El contrato dice
+            # 'sshprnamt debe ser >= 0'. NaN no cumple la comparacion
+            # (nan < 0 es False, nan >= 0 tambien), e inf no es un
+            # valor observable posible. Sin este check, NaN e inf
+            # pasaban silenciosamente. Misma invariante que S-03c.
+            if not math.isfinite(self.sshprnamt):
+                raise ValueError(
+                    "sshprnamt debe ser finito (no NaN/inf): "
                     + repr(self.sshprnamt)
                 )
             if self.sshprnamt < 0:
