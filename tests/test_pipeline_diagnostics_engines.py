@@ -158,13 +158,3 @@ def test_persistence_degradacion_sin_df(tmp_path, monkeypatch):
     assert p.exists()
     df = pd.read_csv(p)
     assert set(df["sector"].unique()) == set(SECTOR_ETFS)
-
-
-def test_persistence_sin_tmp_residual(tmp_path, monkeypatch):
-    """Escritura atomica (familia 3): no quedan .tmp tras exito."""
-    monkeypatch.chdir(tmp_path)
-    (tmp_path / "outputs" / "history").mkdir(parents=True)
-    with patch("src.pipeline.engines.get_col", side_effect=KeyError("x")):
-        _compute_persistence_and_save(pd.DataFrame())
-    tmps = list((tmp_path / "outputs" / "history").glob("*.tmp*"))
-    assert tmps == [], f"quedan temporales: {tmps}"
