@@ -74,7 +74,7 @@ Fuente autoritativa: `Consolidacion_Documentos/ESTADO_SISTEMA.md` (regenerado co
 
 Snapshot al cierre del ultimo commit:
 - HEAD: ver ESTADO_SISTEMA.md
-- Tests: 2336 passed + 2 skipped + 0 failed
+- Tests: 2340 passed + 2 skipped + 0 failed
 - Validation Gate: 10/10
 - Working tree: limpio
 - Corpus documental: v2 (Consolidacion_Documentos/00-06, 2026-09-29)
@@ -163,7 +163,7 @@ Sesion 2026-09-29 (tarde): auditoria funcional frente 6 (IAE) + frente 8 (provid
   if:always() en uploads pre-gate de download_failures,
   env.quarter vacío eliminado en update_sec_nport.
 
-- Suite: 2336 passed + 2 skipped. pyflakes limpio.
+- Suite: 2340 passed + 2 skipped. pyflakes limpio.
 
 ---
 
@@ -183,9 +183,12 @@ Sesion 2026-09-29 (tarde): auditoria funcional frente 6 (IAE) + frente 8 (provid
 
 **Frentes abiertos:**
 
-- **Frente 7 (indicators/, 50 ficheros, ~8000 LOC):** NO ABERTO. Auditoria
-  funcional pendiente. Parcialmente cubierto por A3 (regimenes, breadth, MTE,
-  darkpool, SLPM).
+- Frente 7: CERRADO (indicators/ funcional, 50 ficheros, 6684 LOC). 9 commits.
+  Bugs reales: call_share finitud (unica de 7 funciones hermanas sin guard),
+  darkpool_history / sector_rank_history / state_transition / options /
+  stock_leader atomicos, mte/engine traceback, slpm_v12 flow_proxy_z=0.0,
+  mte/scoring stress finitud, fls zscore finitud, mte/decision consensus
+  finitud.
 
 **Pendientes vivos:**
 
@@ -221,7 +224,7 @@ Esperado:
 - HEAD = ver Consolidacion_Documentos/ESTADO_SISTEMA.md
 - ahead 0, behind 0
 - working tree limpio (o solo el propio ESTADO_SISTEMA regenerado)
-- 2336 passed + 2 skipped
+- 2340 passed + 2 skipped
 - pyflakes silencio, compileall OK
 
 ---
