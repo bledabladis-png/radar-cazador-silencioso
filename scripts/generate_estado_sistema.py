@@ -46,14 +46,11 @@ MAPPINGS_IAE = [
     'data/mappings/cusip_radar_crosswalk.csv',
     'data/mappings/cusip_equivalence.csv',
 ]
-EVIDENCE_DIRS = [
-    'docs/auditoria/iae/evidence/nipc_gate0_baseline',
-    'docs/auditoria/iae/evidence/nipc_gate0_target_identity_top2000',
-    'docs/auditoria/iae/evidence/nipc_gate0_top2000_v2',
-    'docs/auditoria/iae/evidence/a64_integration_b1_p61_p38',
-    'docs/auditoria/iae/evidence/b2_pit_cierre',
-    'docs/auditoria/iae/evidence/nipc_p70_probe',
-]
+# EVIDENCE_DIRS se descubre dinamicamente en section_evidencia() a partir
+# de docs/auditoria/iae/evidence/*/. Antes era una lista hardcodeada que
+# se desincronizo: incluia un directorio inexistente (nipc_p70_probe) y
+# omitia tres reales. El recorrido dinamico evita esa clase de drift.
+EVIDENCE_ROOT = ROOT / 'docs' / 'auditoria' / 'iae' / 'evidence'
 
 def run(cmd):
     r = subprocess.run(cmd, cwd=str(ROOT), capture_output=True, text=True)
@@ -178,12 +175,18 @@ def section_scripts():
 
 def section_evidencia():
     lines = ['## 7. Evidencia empirica (directorios)', '']
-    for rel in EVIDENCE_DIRS:
-        p = ROOT / rel
-        if not p.exists():
-            lines.append(f'- `{rel}`: NO EXISTE')
-            continue
-        files = [f for f in p.rglob('*') if f.is_file()]
+    if not EVIDENCE_ROOT.exists():
+        lines.append(f'- `{EVIDENCE_ROOT.relative_to(ROOT)}`: NO EXISTE')
+        lines.append('')
+        return lines
+    dirs = sorted(d for d in EVIDENCE_ROOT.iterdir() if d.is_dir())
+    if not dirs:
+        lines.append('(sin subdirectorios)')
+        lines.append('')
+        return lines
+    for d in dirs:
+        rel = d.relative_to(ROOT).as_posix()
+        files = [f for f in d.rglob('*') if f.is_file()]
         lines.append(f'- `{rel}`: {len(files)} ficheros')
     lines.append('')
     return lines
@@ -203,7 +206,7 @@ def main():
         '    py scripts/generate_estado_sistema.py',
         '',
         'Snapshot regenerable del sistema. Los documentos del corpus',
-        'consolidado (Consolidacion_Documentos/00-05) describen su tema;',
+        'consolidado (Consolidacion_Documentos/00-06) describen su tema;',
         'NO declaran el estado. Este fichero es la fuente autoritativa de',
         'HEAD, tests e integridad del codigo.',
         '',

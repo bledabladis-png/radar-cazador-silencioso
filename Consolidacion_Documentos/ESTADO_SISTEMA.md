@@ -2,14 +2,14 @@
 
 Hechos verificables del sistema. Generado por script.
 
-**Generado en:** 2026-09-29 03:18:32 UTC
+**Generado en:** 2026-09-29 12:51:41 UTC
 **Snapshot tomado sobre:** commit HEAD de la fecha indicada, al momento de generar
 **NO editar a mano.** Regenerar con:
 
     py scripts/generate_estado_sistema.py
 
 Snapshot regenerable del sistema. Los documentos del corpus
-consolidado (Consolidacion_Documentos/00-05) describen su tema;
+consolidado (Consolidacion_Documentos/00-06) describen su tema;
 NO declaran el estado. Este fichero es la fuente autoritativa de
 HEAD, tests e integridad del codigo.
 
@@ -17,22 +17,22 @@ HEAD, tests e integridad del codigo.
 
 ## 1. Git
 
-- **HEAD:** `09bfa13`
-- **HEAD completo:** `09bfa13e19969e0d30c203be8dcbbad02173907b`
-- **Fecha commit HEAD:** 2026-09-29 05:17:03 +0200
-- **Ahead:** 0
+- **HEAD:** `d11bed2`
+- **HEAD completo:** `d11bed2bf071e1309f106ef50254b842c7d8824f`
+- **Fecha commit HEAD:** 2026-09-29 14:21:49 +0200
+- **Ahead:** 13
 - **Behind:** 0
-- **origin/main:** `09bfa13`
+- **origin/main:** `1f01622`
 
 ## 2. Tests (pytest real)
 
-- **Resumen:** 2297 passed, 2 skipped in 70.93s (0:01:10)
+- **Resumen:** 2297 passed, 2 skipped in 77.33s (0:01:17)
 - **Exit code:** 0
 
 ## 3. Integridad del codigo
 
 - **compileall:** OK (exit 0)
-- **pyflakes:** 1 warnings (exit 1)
+- **pyflakes:** LIMPIO
 
 ## 4. Modulos IAE
 
@@ -109,12 +109,14 @@ HEAD, tests e integridad del codigo.
 
 ## 7. Evidencia empirica (directorios)
 
-- `docs/auditoria/iae/evidence/nipc_gate0_baseline`: 5 ficheros
-- `docs/auditoria/iae/evidence/nipc_gate0_target_identity_top2000`: 10 ficheros
-- `docs/auditoria/iae/evidence/nipc_gate0_top2000_v2`: 6 ficheros
 - `docs/auditoria/iae/evidence/a64_integration_b1_p61_p38`: 13 ficheros
 - `docs/auditoria/iae/evidence/b2_pit_cierre`: 2 ficheros
-- `docs/auditoria/iae/evidence/nipc_p70_probe`: NO EXISTE
+- `docs/auditoria/iae/evidence/nipc_gate0_baseline`: 5 ficheros
+- `docs/auditoria/iae/evidence/nipc_gate0_openfigi`: 9 ficheros
+- `docs/auditoria/iae/evidence/nipc_gate0_probe`: 11 ficheros
+- `docs/auditoria/iae/evidence/nipc_gate0_target_identity`: 11 ficheros
+- `docs/auditoria/iae/evidence/nipc_gate0_target_identity_top2000`: 10 ficheros
+- `docs/auditoria/iae/evidence/nipc_gate0_top2000_v2`: 6 ficheros
 
 ---
 
