@@ -21,7 +21,6 @@ Deterministico. Idempotente. No modifica el snapshot.
 """
 from __future__ import annotations
 
-import hashlib
 import sys
 from pathlib import Path
 
@@ -29,6 +28,14 @@ import pandas as pd
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
+
+# Fix 2026-09-29 (patron 8.5 #6): eliminar duplicacion de las 3
+# funciones canonicas respecto a catalog_key.py. Misma logica,
+# distinto docstring; el generador de CSV debe usar la version
+# canonica para evitar drift futuro.
+from src.institutional_accumulation.identity.catalog_key import (
+    compute_snapshot_row_uid,
+)
 
 SNAPSHOT_DIR = ROOT / "data" / "mappings" / "catalog_snapshots"
 MANIFEST_PATH = ROOT / "data" / "mappings" / "catalog_manifest.json"
@@ -46,38 +53,6 @@ MEMBERSHIP_COLUMNS = (
     "version_id", "catalog_key", "snapshot_row_uid",
     "predecessor_row_uid", "justification",
 )
-
-
-def _canonical_value(v):
-    """Normaliza el valor de una celda para la serializacion canonica."""
-    if v is None:
-        return ""
-    try:
-        if pd.isna(v):
-            return ""
-    except (TypeError, ValueError):
-        pass
-    return str(v).strip()
-
-
-def canonical_serialization(row, columns):
-    """Serializa una fila como "len:name|len:value|..." por columna
-    alfabetica. len en bytes UTF-8."""
-    parts = []
-    for name in sorted(columns):
-        val = _canonical_value(row.get(name))
-        name_b = name.encode("utf-8")
-        val_b = val.encode("utf-8")
-        parts.append(str(len(name_b)) + ":" + name)
-        parts.append(str(len(val_b)) + ":" + val)
-        parts.append("|")
-    return "".join(parts)
-
-
-def compute_snapshot_row_uid(row, columns):
-    """sha256 hex (64 chars) del canonical_serialization."""
-    ser = canonical_serialization(row, columns)
-    return hashlib.sha256(ser.encode("utf-8")).hexdigest()
 
 
 def load_snapshot(snapshot_path):

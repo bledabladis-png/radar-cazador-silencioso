@@ -16,6 +16,18 @@ Contrato de pureza:
   NO escribe ficheros.
   NO usa datetime.now().
   Deterministas.
+
+ESTADO DE INTEGRACION (2026-09-29):
+  - Productivos: check_schema + compute_snapshot_row_uid. Usados por
+    target_builder.py (L97, L126).
+  - NO integrados: validate_assignment, validate_membership, y los
+    loaders asociados. Solo invocados en tests. Ademas,
+    validate_membership espera un membership_df acumulativo (todas las
+    versiones historicas) para resolver predecessor_row_uid contra
+    versiones previas; el CSV real (catalog_membership.csv) contiene
+    solo la version vigente, producido asi por build_catalog_csvs.py.
+    La funcion no es usable sobre los datos reales tal como estan.
+    Activar o retirar es decision de diseno (03_IAE seccion 10).
 """
 from __future__ import annotations
 
