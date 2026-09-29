@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 """Tests del gate de disponibilidad (F-IAE-CRON-02 / F-IAE-GATE-01)."""
+import hashlib
 import json
 import sys
 from datetime import datetime
@@ -31,15 +32,37 @@ def isolated_project(tmp_path, monkeypatch):
 
 
 def _write_manifest(root, expected, coverage, status="VALID"):
+    """Crea parquet sibling + manifest con sha256 correcto."""
+    parquet = root / "data" / "stock_prices.parquet"
+    parquet.parent.mkdir(parents=True, exist_ok=True)
+    parquet_bytes = b"dummy"
+    parquet.write_bytes(parquet_bytes)
+    sha = hashlib.sha256(parquet_bytes).hexdigest()
     p = root / "data" / "stock_prices.parquet.manifest.json"
-    p.parent.mkdir(parents=True, exist_ok=True)
     p.write_text(json.dumps({
+        "artifact": {"sha256": sha},
         "quality": {
             "expected_session": expected,
             "coverage_pct_last": coverage,
             "status": status,
         }
     }), encoding="utf-8")
+
+
+def _make_manifest_dict(root, expected, coverage):
+    """Escribe parquet sibling + devuelve manifest dict con sha."""
+    parquet = root / "data" / "stock_prices.parquet"
+    parquet.parent.mkdir(parents=True, exist_ok=True)
+    parquet_bytes = b"dummy"
+    parquet.write_bytes(parquet_bytes)
+    sha = hashlib.sha256(parquet_bytes).hexdigest()
+    return {
+        "artifact": {"sha256": sha},
+        "quality": {
+            "expected_session": expected,
+            "coverage_pct_last": coverage,
+        },
+    }
 
 
 def _make_download_df(target_session, coverage_frac, tickers=GATE_PANEL_USA):
@@ -134,15 +157,13 @@ def test_manifest_missing_not_satisfied():
     assert _manifest_satisfies(None, "2026-09-24") is False
 
 
-def test_manifest_matching_coverage_high_satisfied():
-    m = {"quality": {"expected_session": "2026-09-24",
-                     "coverage_pct_last": 0.98}}
+def test_manifest_matching_coverage_high_satisfied(isolated_project):
+    m = _make_manifest_dict(isolated_project, "2026-09-24", 0.98)
     assert _manifest_satisfies(m, "2026-09-24") is True
 
 
-def test_manifest_matching_at_threshold_satisfied():
-    m = {"quality": {"expected_session": "2026-09-24",
-                     "coverage_pct_last": 0.95}}
+def test_manifest_matching_at_threshold_satisfied(isolated_project):
+    m = _make_manifest_dict(isolated_project, "2026-09-24", 0.95)
     assert _manifest_satisfies(m, "2026-09-24") is True
 
 

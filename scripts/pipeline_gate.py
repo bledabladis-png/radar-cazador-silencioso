@@ -16,6 +16,7 @@ Exit code: siempre 0. La decision viaja por outputs de GitHub.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
 import sys
@@ -74,8 +75,22 @@ def _read_manifest(path):
         return None
 
 
+def _sha256_file(path):
+    h = hashlib.sha256()
+    with open(path, "rb") as fh:
+        for chunk in iter(lambda: fh.read(65536), b""):
+            h.update(chunk)
+    return h.hexdigest()
+
+
 def _manifest_satisfies(manifest, target_session):
-    """True si el manifest ya cubre target_session con cobertura suficiente."""
+    """True si el manifest cubre target_session con cobertura suficiente.
+
+    2026-09-29: verifica sha256 del parquet real. El manifest puede
+    venir de CI (tracked) mientras el parquet local es de otro run
+    (gitignored). Sin esto el gate decia CURRENT sobre un parquet
+    que no corresponde al manifest.
+    """
     if not isinstance(manifest, dict):
         return False
     q = manifest.get("quality")
@@ -86,7 +101,15 @@ def _manifest_satisfies(manifest, target_session):
     cov = q.get("coverage_pct_last")
     if not isinstance(cov, (int, float)):
         return False
-    return cov >= MANIFEST_THRESHOLD
+    if cov < MANIFEST_THRESHOLD:
+        return False
+    declared_sha = (manifest.get("artifact") or {}).get("sha256")
+    if not isinstance(declared_sha, str) or not declared_sha:
+        return False
+    p = PROJECT_ROOT / MANIFEST_PATH.replace(".manifest.json", "")
+    if not p.exists():
+        return False
+    return _sha256_file(p).lower() == declared_sha.lower()
 
 
 def _probe_panel_once(target_session, tickers):

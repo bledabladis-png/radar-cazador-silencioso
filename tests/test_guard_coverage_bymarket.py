@@ -8,6 +8,7 @@ Cubre las correcciones del dictamen auditor:
   Punto 6: compatibilidad con manifests antiguos (sin by_market).
 """
 
+import hashlib
 import json
 
 from scripts.guard_coverage import (
@@ -18,10 +19,21 @@ from scripts.guard_coverage import (
 
 # ---------- Helpers ----------
 def _write_manifest(tmp_path, name, quality):
+    """Crea parquet sibling + manifest con sha256 correcto.
+
+    2026-09-29: guard verifica sha256 del parquet real vs manifest.
+    El path queda {tmp}/data/{name} (parquet) y
+    {tmp}/data/{name}.manifest.json.
+    """
     d = tmp_path / "data"
     d.mkdir(exist_ok=True)
+    parquet = d / name
+    parquet_bytes = b"dummy"
+    parquet.write_bytes(parquet_bytes)
+    sha = hashlib.sha256(parquet_bytes).hexdigest()
+    manifest = {"artifact": {"sha256": sha}, "quality": quality}
     p = d / f"{name}.manifest.json"
-    p.write_text(json.dumps({"quality": quality}), encoding="utf-8")
+    p.write_text(json.dumps(manifest), encoding="utf-8")
     return str(p)
 
 

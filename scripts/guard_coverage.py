@@ -21,6 +21,7 @@ Uso: python scripts/guard_coverage.py [--threshold 0.95]
 Exit 0 si todos OK, exit 1 si alguno falla.
 """
 import argparse
+import hashlib
 import json
 import sys
 from pathlib import Path
@@ -47,6 +48,14 @@ def _load_manifest(path):
     if not isinstance(data, dict):
         return None, "manifest root is not a dict"
     return data, None
+
+
+def _sha256_file(path):
+    h = hashlib.sha256()
+    with open(path, "rb") as fh:
+        for chunk in iter(lambda: fh.read(65536), b""):
+            h.update(chunk)
+    return h.hexdigest()
 def _all_markets_valid(by_market, threshold):
     """True si cada mercado con n>0 cumple coverage_at_session >= threshold.
 
@@ -89,6 +98,25 @@ def _check_manifest(path, threshold):
         return ["{0}: quality block missing or not a dict".format(path)]
 
     reasons = []
+
+    # Verificacion de integridad parquet vs manifest (2026-09-29).
+    # El manifest puede venir de CI (tracked) mientras el parquet
+    # local es de un run distinto (gitignored). Sin esta verificacion
+    # el guard aceptaba cobertura de un fichero que no existe.
+    declared_sha = (data.get("artifact") or {}).get("sha256")
+    if not isinstance(declared_sha, str) or not declared_sha:
+        reasons.append("{0}: artifact.sha256 missing".format(path))
+    else:
+        parquet_path = Path(str(path).replace(".manifest.json", ""))
+        if not parquet_path.exists():
+            reasons.append("{0}: parquet missing ({1})".format(path, parquet_path))
+        else:
+            real_sha = _sha256_file(parquet_path)
+            if real_sha.lower() != declared_sha.lower():
+                reasons.append(
+                    "{0}: sha256 mismatch (real={1}, declared={2})".format(
+                        path, real_sha[:12], declared_sha[:12])
+                )
 
     status = quality.get("status")
     if status == "INVALID":
