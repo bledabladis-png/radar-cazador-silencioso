@@ -352,10 +352,11 @@ El 2026-09-28 se inicia el refactor documental. Nuevo corpus:
 - `03_IAE.md` (IAE, on-demand).
 - `04_HISTORICO.md` (este fichero, no se pega).
 - `05_BITACORA.md` (sesiones recientes, no se pega).
+- `06_IAE_P65_P66.md` (contrato P65 + P66, on-demand).
 
 **`ESTADO_SISTEMA.md`** se genera en `Consolidacion_Documentos/ESTADO_SISTEMA.md` por `scripts/generate_estado_sistema.py`. Se regenera con cada commit. Se referencia desde `00_ARRANQUE.md`.
 
-**Pendiente:** borrar los ~570 KB del corpus antiguo una vez que los 6 ficheros esten verificados.
+**Borrado del corpus antiguo:** ejecutado en `cdf47ad` (2026-09-29). Se conservan `docs/auditoria/iae/evidence/` y `docs/auditoria/iae/golden/`, en uso activo por `03_IAE`.
 
 ---
 
