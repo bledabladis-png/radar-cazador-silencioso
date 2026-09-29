@@ -190,11 +190,19 @@ Sesion 2026-09-29 (tarde): auditoria funcional frente 6 (IAE) + frente 8 (provid
   mte/scoring stress finitud, fls zscore finitud, mte/decision consensus
   finitud.
 
-- Frente 9: CERRADO (atomicidad familia 3, 2026-09-29 noche). 17 sitios
-  alta en `outputs/history/`: 1 european_coverage + 2 breadth_metrics +
-  1 engines + 1 flows_primary + 1 finalize + 2 market_data + 4 sectors_base
-  + 5 sector_metrics. Fix: `.tmp + replace`. Cada uno con test fuerte
-  verificado por ambos lados (sin fix rojo, con fix verde).
+- Frente 9: CERRADO (atomicidad familia 3, 2026-09-29 noche). 27 sitios
+  en total.
+  - **Alta (17):** `outputs/history/` append+dedup, perdida irrecuperable
+    si trunca. 1 european_coverage + 2 breadth_metrics + 1 engines +
+    1 flows_primary + 1 finalize + 2 market_data + 4 sectors_base +
+    5 sector_metrics. Cada uno con test fuerte verificado por ambos
+    lados (sin fix rojo, con fix verde).
+  - **Media (10):** regenerables (no leen el CSV antes de escribir;
+    siguiente run regenera completo desde fuente). cftc_data,
+    sec_nport_quarters_position_change, amundi_fund_data, _blackrock_base,
+    update_qqq_sec_flow, update_sec_nport_data (x2), finalize (x2),
+    sectors_base (x1). Sin tests: no hay bug a verificar.
+  - Fix comun: `.tmp + replace`.
 - FU-009-bis (append_dedup): columnas all-NA excluidas antes del concat
   (FutureWarning pandas 2.x -> cambio de dtype en 3.0).
 
