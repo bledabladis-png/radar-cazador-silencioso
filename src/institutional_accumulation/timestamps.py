@@ -1,6 +1,7 @@
 """P63/B3 - Derivacion de los 3 timestamps de una observacion 13F.
 
-Contrato semantico: docs/auditoria/iae/NIPC_CONTRATOS_SEMANTICOS_v1.md seccion 12.
+Contrato semantico: Consolidacion_Documentos/06_IAE_P65_P66.md (seccion 12
+original del corpus antiguo, extraida en cdf47ad).
 Dictamen habilitante: A.6.2-bis-B3 (#48/#49).
 
 Los 3 timestamps son:

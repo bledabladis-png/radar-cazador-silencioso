@@ -464,8 +464,8 @@ def classify_reporting_transition(
 # ============================================================================
 # P66 - determinacion del filing efectivo y evidencia R4 (§14.3 reformulada)
 # ----------------------------------------------------------------------------
-# Ciclo P66 (GO CONTRACTUAL #40). Implementa la seccion 14.3 del contrato
-# NIPC_CONTRATOS_SEMANTICOS_v1.md.
+# Ciclo P66 (GO CONTRACTUAL #40). Implementa la seccion 14.3 del contrato,
+# extraida a Consolidacion_Documentos/06_IAE_P65_P66.md (cdf47ad).
 #
 # ALCANCE:
 #   14.3.6 canonicalizacion Form13FFileNumber
