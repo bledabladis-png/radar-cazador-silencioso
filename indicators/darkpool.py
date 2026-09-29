@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import os
 import pandas as pd
 from datetime import timedelta
 from data.providers.finra import FinraProvider
@@ -123,7 +124,14 @@ def compute_darkpool_signals(df_market=None, df_stocks=None):
     percentile = pct_104 if pd.notna(pct_104) else (pct_52 if pd.notna(pct_52) else (pct_26 if pd.notna(pct_26) else pct_13))
     state = state_104 if state_104 != "Sin historial suficiente" else (state_52 if state_52 != "Sin historial suficiente" else (state_26 if state_26 != "Sin historial suficiente" else state_13))
 
-    hist.to_csv('outputs/history/darkpool_history.csv', index=False)
+    # Fix 2026-09-29: escritura atomica (.tmp + os.replace). Es historico,
+    # no cache: si el proceso muere a mitad de to_csv, las filas perdidas
+    # desaparecen para siempre. Mismo patron que downloader.py, storage.py
+    # y blackrock_iwm_fund_data.py.
+    _hist_path = 'outputs/history/darkpool_history.csv'
+    _tmp_path = _hist_path + '.tmp'
+    hist.to_csv(_tmp_path, index=False)
+    os.replace(_tmp_path, _hist_path)
 
     return {
         'status': 'OK',

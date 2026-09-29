@@ -27,7 +27,14 @@ def put_share(put_volume, total_volume):
     return put_volume / total_volume
 
 def call_share(call_volume, total_volume):
-    if total_volume is None or total_volume <= 0:
+    # Fix 2026-09-29: anadir isfinite, simetria con las 6 funciones
+    # hermanas (institutional_hedge_ratio, index_volume_share, put_share,
+    # volume_put_call_ratio, oi_put_call_ratio, relative_volume, oi_change).
+    # Sin el: total_volume=inf/inf -> 0.0/NaN silenciosos; call_volume=inf
+    # -> inf. Misma familia de invariantes de finitud.
+    if total_volume is None or not np.isfinite(total_volume) or total_volume <= 0:
+        return None
+    if not np.isfinite(call_volume):
         return None
     return call_volume / total_volume
 
