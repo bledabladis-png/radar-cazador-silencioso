@@ -90,6 +90,12 @@ def consensus_score(srs, shs, cls, ips):
 
     values = np.array([srs, shs, cls, ips])
 
+    # Fix 2026-09-29: guard de finitud. Con cualquier input NaN o inf,
+    # np.median(values) y los calculos posteriores propagan NaN. El
+    # resultado NaN se colaba a compute_confidence y de ahi al reporte
+    # ('confidence=nan' sin senal). Familia de invariantes de finitud.
+    if not np.all(np.isfinite(values)):
+        return 0.0  # consenso nulo: input envenenado, no imputamos
 
     median = np.median(values)
 
@@ -265,11 +271,13 @@ def classify_mte(srs, shs, cls, ips):
     confidence = compute_confidence(srs, shs, cls, ips, final_scenario)
 
 
-    if confidence == 0.0:
+    # Fix 2026-09-29: tambien captura no-finitos (NaN/inf). Con el guard
+    # en consensus_score ya no deberia llegar NaN, pero doble red de
+    # seguridad: si por cualquier motivo confidence es no finito, forzar
+    # MIXED como se hace con 0.0.
+    if not np.isfinite(confidence) or confidence == 0.0:
 
-
-        print(f"    MTE: Confianza 0% en escenario {final_scenario}. Forzando MIXED.")
-
+        print(f"    MTE: Confianza invalida ({confidence}) en escenario {final_scenario}. Forzando MIXED.")
 
         final_scenario = 'MIXED'
 
