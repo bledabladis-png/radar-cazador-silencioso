@@ -200,8 +200,16 @@ def _build_l3_index(cross_filing_evidence):
 def _make_audit_row(
     unit, period, dedup_decision, dedup_reason, evidence_level,
     evidence_source, acc_rep, acc_repres, ref_seq,
+    reporting_for_cik=None,
 ):
-    """Construye una fila de dedup_audit."""
+    """Construye una fila de dedup_audit.
+
+    C-05 (2026-09-29): reporting_for_manager_cik debe ser el manager
+    reportado (representado) segun la arista L3, NO el filing_manager.
+    Antes tomaba unit.get("filing_manager_cik") como fallback, dejando
+    filing y reporting_for identicos. El audit trail quedaba incorrecto
+    ("A reporta para A" en vez de "A reporta para B").
+    """
     return {
         "source_line_id": (
             str(unit.get("observed_security_key", "")) + "@"
@@ -209,7 +217,7 @@ def _make_audit_row(
         ),
         "period": period,
         "filing_manager_cik": unit.get("filing_manager_cik"),
-        "reporting_for_manager_cik": unit.get("filing_manager_cik"),
+        "reporting_for_manager_cik": reporting_for_cik,
         "canonical_security": unit.get("canonical_security"),
         "dedup_decision": dedup_decision,
         "dedup_reason": dedup_reason,
@@ -296,6 +304,7 @@ def _apply_intra_period_dedup(units, l3_index, *, period):
                         e12["accession_representante"],
                         e12["accession_representado"],
                         e12["reference_seq"],
+                        reporting_for_cik=fm2,
                     ))
                     continue
                 ev = e12 if e12 else e21
@@ -306,6 +315,7 @@ def _apply_intra_period_dedup(units, l3_index, *, period):
                     ev["accession_representante"],
                     ev["accession_representado"],
                     ev["reference_seq"],
+                    reporting_for_cik=fm2,
                 ))
 
     effective = u.drop(columns=["_rid"]).reset_index(drop=True)

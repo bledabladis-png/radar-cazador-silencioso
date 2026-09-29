@@ -8,6 +8,7 @@ Sin red. Deterministas. Sin datetime.now().
 """
 from src.institutional_accumulation.aggregation import reporting_dedup as rd
 from src.institutional_accumulation.sec_13f.identity import relationships as rel
+import pandas as pd
 
 
 # ---- constantes de transicion ----
@@ -645,3 +646,63 @@ def test_evaluate_l3_false_y_no_colapso_estados(r1, r2, r3, r4, r5):
     colapsan a True (contrato: fall-closed respecto de DROP_DUP).
     """
     assert rd.evaluate_l3(r1, r2, r3, r4, r5) is False
+
+# --- C-05 (2026-09-29): audit trail separa filing_manager y reporting_for ---
+
+def test_c05_audit_row_reporting_for_es_representado():
+    """En L3 unidireccional (A->B), reporting_for_manager_cik debe ser B."""
+    units = pd.DataFrame([
+        {"filing_manager_cik": "A", "canonical_security": "equity:AAA",
+         "discretion_type": "SOLE", "observed_security_key": "cusip:AAA"},
+        {"filing_manager_cik": "B", "canonical_security": "equity:AAA",
+         "discretion_type": "SOLE", "observed_security_key": "cusip:AAA"},
+    ])
+    l3_index = {("A", "B"): {
+        "accession_representante": "acc-A",
+        "accession_representado": "acc-B",
+        "reference_seq": 1,
+        "security_key": "cusip:AAA",
+    }}
+    eff, audit = rd._apply_intra_period_dedup(units, l3_index, period="2026-03-31")
+    assert len(eff) == 2  # todo KEEP (sin L3 recíproco)
+    assert len(audit) == 1
+    row = audit.iloc[0].to_dict()
+    assert row["filing_manager_cik"] == "A"
+    assert row["reporting_for_manager_cik"] == "B"
+    assert row["dedup_decision"] == "KEEP"
+    assert row["dedup_reason"] == "REPORTING_OVERLAP_UNRESOLVED"
+
+
+def test_c05_audit_row_conflict_reciproco():
+    """L3 recíproco (A->B y B->A) -> REPORTING_CONFLICT + KEEP."""
+    units = pd.DataFrame([
+        {"filing_manager_cik": "A", "canonical_security": "equity:AAA",
+         "discretion_type": "SOLE", "observed_security_key": "cusip:AAA"},
+        {"filing_manager_cik": "B", "canonical_security": "equity:AAA",
+         "discretion_type": "SOLE", "observed_security_key": "cusip:AAA"},
+    ])
+    l3_index = {
+        ("A", "B"): {"accession_representante": "acc-A",
+                     "accession_representado": "acc-B",
+                     "reference_seq": 1, "security_key": "cusip:AAA"},
+        ("B", "A"): {"accession_representante": "acc-B",
+                     "accession_representado": "acc-A",
+                     "reference_seq": 2, "security_key": "cusip:AAA"},
+    }
+    eff, audit = rd._apply_intra_period_dedup(units, l3_index, period="2026-03-31")
+    assert len(audit) == 1
+    assert audit.iloc[0]["dedup_reason"] == "REPORTING_CONFLICT"
+
+
+def test_c05_find_handoff_pairs_valido():
+    q4_idx = {("equity:AAA", "SOLE"): [("A", "B")]}
+    q1_idx = {("equity:AAA", "SOLE"): [("B", "B")]}
+    assert rd._find_handoff_pairs(q4_idx, q1_idx, ("equity:AAA", "SOLE")) == ["B"]
+
+
+def test_c05_find_handoff_pairs_ambiguo_fail_closed():
+    """Q4 con dos representantes distintos de B -> [] (fail-closed)."""
+    q4_idx = {("equity:AAA", "SOLE"): [("A", "B"), ("D", "B")]}
+    q1_idx = {("equity:AAA", "SOLE"): [("B", "B")]}
+    assert rd._find_handoff_pairs(q4_idx, q1_idx, ("equity:AAA", "SOLE")) == []
+
