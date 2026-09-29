@@ -207,5 +207,7 @@ def compute_evidence_matrix(sector_breadth_df=None,
 def save_evidence_matrix(df, path='outputs/history/evidence_matrix.csv'):
     if df is not None and not df.empty:
         Path(path).parent.mkdir(parents=True, exist_ok=True)
-        df.to_csv(path, index=False)
+        _tmp = Path(path).with_suffix(Path(path).suffix + '.tmp')
+        df.to_csv(_tmp, index=False)
+        _tmp.replace(path)
     return df

@@ -241,8 +241,10 @@ def extract_13f_zip(zip_path, dest_dir, force=False):
             if target.exists() and not force:
                 result[name.removesuffix(".tsv")] = target
                 continue
-            with zf.open(name) as src, open(target, "wb") as dst:
+            _tmp_target = target.with_suffix(target.suffix + '.tmp')
+            with zf.open(name) as src, open(_tmp_target, "wb") as dst:
                 dst.write(src.read())
+            _tmp_target.replace(target)
             result[name.removesuffix(".tsv")] = target
 
     return result

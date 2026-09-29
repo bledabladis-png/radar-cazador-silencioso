@@ -181,7 +181,9 @@ def main():
     df['source'] = 'SEC NPORT-P B.6'
 
     OUTPUT_CSV.parent.mkdir(parents=True, exist_ok=True)
-    df.to_csv(OUTPUT_CSV, index=False)
+    _tmp_out = OUTPUT_CSV.with_suffix(OUTPUT_CSV.suffix + '.tmp')
+    df.to_csv(_tmp_out, index=False)
+    _tmp_out.replace(OUTPUT_CSV)
     print(f"Guardado en {OUTPUT_CSV}")
     print(df[['month','sales','redemptions','net_flow']].to_string(index=False))
 

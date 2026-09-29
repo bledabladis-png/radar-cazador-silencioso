@@ -127,7 +127,11 @@ def save_sector_rankings(sector_results):
         sector_results["ranking"],
         columns=["ticker", "name", "score", "wyckoff_phase"],
     )
-    sector_df.to_csv("outputs/report/sector_rankings.csv", index=False)
+    _sr_path = Path("outputs/report/sector_rankings.csv")
+    _sr_path.parent.mkdir(parents=True, exist_ok=True)
+    _tmp_sr = _sr_path.with_suffix(_sr_path.suffix + '.tmp')
+    sector_df.to_csv(_tmp_sr, index=False)
+    _tmp_sr.replace(_sr_path)
 
 
 def generate_european_coverage(reference_date=None):

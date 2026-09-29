@@ -222,7 +222,9 @@ def _write_latest_quarter_if_newer(quarter, latest_file):
         except Exception:
             prev = None
     if prev is None or quarter > prev:
-        latest_file.write_text(quarter + "\n", encoding="utf-8", newline="\n")
+        _tmp_lf = latest_file.with_suffix(latest_file.suffix + '.tmp')
+        _tmp_lf.write_text(quarter + "\n", encoding="utf-8", newline="\n")
+        _tmp_lf.replace(latest_file)
         return True, prev
     return False, prev
 

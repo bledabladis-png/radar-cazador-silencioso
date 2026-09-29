@@ -126,8 +126,10 @@ def write_catalog(df: pd.DataFrame, out_path: Path) -> None:
     """Escribe el catalog a CSV con UTF-8 sin BOM y LF."""
     out_path = Path(out_path)
     out_path.parent.mkdir(parents=True, exist_ok=True)
-    with out_path.open("w", encoding="utf-8", newline="\n") as f:
+    _tmp = out_path.with_suffix(out_path.suffix + '.tmp')
+    with _tmp.open("w", encoding="utf-8", newline="\n") as f:
         df.to_csv(f, index=False)
+    _tmp.replace(out_path)
 
 
 def coverage_summary(df: pd.DataFrame) -> dict:
