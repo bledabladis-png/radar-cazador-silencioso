@@ -225,6 +225,47 @@ ficheros, 8202 LOC).
   `build_effective_reporting_snapshot` sin caller productivo
   (ya declarada en `03_IAE §10`). C2 (920) OPEN. H5.3 cron nov 2026.
 
+**B-04/05/06/07 + C-07 (auditoria funcional de IAE).**
+
+Tras cerrar B-01/B-02/B-03, se hizo auditoria **funcional** (no solo
+estructural): probes sobre parquets 13F reales y sobre la cadena
+`run.py -> iae_section -> pipeline_contractual -> security_identity`.
+
+- **C-01 (MEDIA) CORREGIDO (a5405e5).** `_derive_status` con
+  `paired_weighted_share_coverage=None` lanzaba `TypeError`
+  (`None >= float`).
+- **C-04 (BAJA) CORREGIDO (a5405e5).** `_filter_canonical` no
+  descartaba SSHPRNAMT negativo.
+- **C-05 (MEDIA) CORREGIDO (4ec29d3).** Audit trail con
+  `reporting_for_manager_cik == filing_manager_cik` ("A reporta
+  para A") en lugar del representado real.
+- **B-05 (docs) CORREGIDO (33b8cca).** E2E reconciliaba contra golden
+  FROZEN obsoleto (12_5_historic); default pasa a `current.json`,
+  `--historic` para el golden. Corregida doc erronea sobre H1-A.
+- **B-06 / S-03 (MEDIA) CORREGIDO (ea0c3cb).** `pipeline_contractual`
+  pasaba el CSV de equivalence crudo a `resolve_batch_identities`;
+  `valid_from` llegaba como str y `_find_active_equivalence` comparaba
+  `str <= Timestamp` -> TypeError. Fix: `load_cusip_equivalence`
+  (valida + normaliza dtypes). Endurecida invariante CANONICAL ->
+  `canonical != None`. Encadenado.
+- **B-07 (MEDIA) CORREGIDO (43b0537).** `catalog_manifest.json` con
+  2 snapshots abiertos. `target_catalog_as_of` inoperativo
+  (CatalogAmbiguous). Cerrado `20260921_01`.
+- **C-07 (BAJA) CORREGIDO (3902503).** NBSP en TITLEOFCLASS
+  (`CL<NBSP>A`) caia a UNRESOLVED. Normalizado whitespace Unicode.
+
+**Falsos positivos descartados** (con datos reales, sin fix):
+- `.upper()` inconsistente en `relationships.classify_token`: el
+  dataset SEC usa `NONE` mayusculas de forma consistente (0 casos).
+- `operational_universe._apply_5_3b` dead-code parcial: es diseño
+  (target excluye CUSIPs fuera de Official List por §5.3).
+- `validate_membership` sin caller productivo: deuda documentada.
+- `cusip_resolver.resolve_cusip` sin caller productivo: sin efecto.
+- Divergencia delta/target (553k vs 240): es diseño del contrato,
+  no bug.
+
+**B CERRADO.** Suite: 2275 -> 2294 passed + 2 skipped.
+
 **A6 CERRADO** (A6.1 + A6.2 + A6.3 + A6.4). Resumen del bloque:
 
 - A6.1 (nucleo compartido): 1 fix (A6.1-01), 1 deuda documentada (A6.1-02).

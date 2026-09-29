@@ -169,6 +169,33 @@ Ciclos completados (12 en la sesion principal):
   silenciosamente. Sustituidos por `raise BuildTargetError`. B-01b
   (5 tests). B-02 (docstrings IAE actualizados al corpus consolidado).
   B-03 (cifras de `03_IAE` corregidas tras verificacion). **B CERRADO.**
+- **B-04 (auditoria funcional de IAE):** una vez cerrado el barrido
+  estructural, se ejecuto auditoria sobre **datos reales** (parquets
+  SEC 13F de 2025Q4, 2026Q1, 2026Q2) y probes sobre la cadena
+  productiva `run.py -> iae_section -> pipeline_contractual`. Fixes
+  aplicados: C-01 (`_derive_status` con `paired_weighted=None`),
+  C-04 (SSHPRNAMT negativo), C-05 (audit trail `reporting_for_manager`
+  separado), S-03 (cadena equivalence productiva: `load_cusip_equivalence`
+  en `pipeline_contractual` + invariante CANONICAL en `security_identity`),
+  C-07 (NBSP en TITLEOFCLASS). C-05 fue detectado por probe sintetico
+  sobre `_apply_intra_period_dedup`; los demas, por probes sobre la
+  cadena completa.
+- **B-05 (E2E contractual):** el script `iae_contractual_nipc_e2e.py`
+  fallaba contra el golden `12_5_historic` desde H1-B v2.3 (2026-09-28).
+  Correccion: por defecto reconcilia contra `golden/current.json`
+  (baseline reproducible con HEAD); flag `--historic` para el golden
+  FROZEN. Corregida la afirmacion erronea "PASS con crosswalk 7caa86b".
+- **B-07 (B2-PIT):** el `catalog_manifest.json` tenia 2 snapshots con
+  `valid_to=null` (violacion del contrato B2-PIT: intervalos sin
+  solapamiento). `target_catalog_as_of` devolvia `CatalogAmbiguous`
+  para cualquier fecha >= 2026-09-22. Cerrado `20260921_01` con
+  `valid_to=2026-09-22`.
+- **Falsos positivos descartados** en B-04: inconsistencia `.upper()`
+  en `relationships.classify_token` (no se dispara en datos reales);
+  `operational_universe._apply_5_3b` dead-code parcial (diseño);
+  `validate_membership` sin consumidor productivo (deuda documentada
+  en `03_IAE §10`); `cusip_resolver.resolve_cusip` sin caller real.
+- **B CERRADO.** Suite: 2275 -> 2294 passed + 2 skipped.
 - **Cierre sesion 2026-09-29:** 21 commits. G-01 (fix truncado),
   P66-01 (extraccion §14 + reapuntado tests), A6.1-A6.4, B-01/B-02/B-03.
   Suite 2267 -> 2280 passed + 2 skipped. **Auditoria interna A6 + B

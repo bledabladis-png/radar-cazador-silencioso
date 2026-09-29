@@ -74,7 +74,7 @@ Fuente autoritativa: `Consolidacion_Documentos/ESTADO_SISTEMA.md` (regenerado co
 
 Snapshot al cierre del ultimo commit:
 - HEAD: ver ESTADO_SISTEMA.md
-- Tests: 2280 passed + 2 skipped + 0 failed
+- Tests: 2294 passed + 2 skipped + 0 failed
 - Validation Gate: 10/10
 - Working tree: limpio
 - Corpus documental: v2 (Consolidacion_Documentos/00-06, 2026-09-29)
@@ -96,7 +96,7 @@ Snapshot al cierre del ultimo commit:
 - A4 (reporte): CERRADO
 - A5 (pipeline): CERRADO
 - A6 (infra/orquestacion: utils/registry/tracker/workflows/scripts/validation): CERRADO
-- B (IAE): CERRADO
+- B (IAE): CERRADO (auditoria funcional real + fixes B-01..B-07, C-07)
 - C (tests): PENDIENTE
 
 ---
@@ -122,12 +122,18 @@ Sesion 2026-09-29: auditoria interna A6 + B cerrada.
   no ejecutan al importar; sin `shell=True`),
   A6.4-01/04 (refactor a `main()` en `validate_history_quality` y
   `verify_leader_selection`; eliminado `run_all_audits.py` dead code).
-- B (IAE): Gate 0 + barrido de coherencia. Fixes: B-01 (`TargetUniverse`
-  invariantes explicitas vs `assert`, inmune a `python -O`), B-01b
-  (5 tests cubriendo las invariantes), B-02 (docstrings IAE actualizados
-  al contrato consolidado `06_IAE_P65_P66.md`), B-03 (cifras de `03_IAE`
-  corregidas: 8202 LOC, 19 funciones AST en `reporting_dedup.py`, firma
-  completa de `compute_nipc_contractual`, censo de tests 763/871).
+- B (IAE): auditoria **funcional** completa del modulo (36 ficheros,
+  8202 LOC). Fixes aplicados sobre datos y logica reales, no solo
+  estructura: B-01 (`TargetUniverse` asserts -> raises explicitos,
+  inmune a `python -O`), B-04 (C-01 `_derive_status` respeta None en
+  paired_weighted; C-04 `_filter_canonical` descarta SSHPRNAMT
+  negativo), B-04c (C-05 audit trail `reporting_for_manager_cik`
+  separado de `filing_manager_cik`), B-05 (E2E reconcilia contra
+  baseline vigente; corregida doc erronea H1-A), B-06 (S-03 cadena
+  equivalence productiva: `load_cusip_equivalence` en
+  `pipeline_contractual` + invariante CANONICAL), B-07 (cerrar
+  snapshot `20260921_01` en manifest: 2 abiertos violaban B2-PIT),
+  C-07 (NBSP normalizado en TITLEOFCLASS).
 
 ---
 

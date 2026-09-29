@@ -2,7 +2,7 @@
 
 Hechos verificables del sistema. Generado por script.
 
-**Generado en:** 2026-09-29 00:18:39 UTC
+**Generado en:** 2026-09-29 02:55:21 UTC
 **Snapshot tomado sobre:** commit HEAD de la fecha indicada, al momento de generar
 **NO editar a mano.** Regenerar con:
 
@@ -17,16 +17,16 @@ HEAD, tests e integridad del codigo.
 
 ## 1. Git
 
-- **HEAD:** `9da966f`
-- **HEAD completo:** `9da966f0568bfd0937204beba28abb43381ac161`
-- **Fecha commit HEAD:** 2026-09-29 02:17:48 +0200
+- **HEAD:** `43b0537`
+- **HEAD completo:** `43b05376b253a84b77e731d9a9451b6bf6df5f21`
+- **Fecha commit HEAD:** 2026-09-29 04:52:59 +0200
 - **Ahead:** 0
 - **Behind:** 0
-- **origin/main:** `9da966f`
+- **origin/main:** `43b0537`
 
 ## 2. Tests (pytest real)
 
-- **Resumen:** 2280 passed, 2 skipped in 73.34s (0:01:13)
+- **Resumen:** 2294 passed, 2 skipped in 82.31s (0:01:22)
 - **Exit code:** 0
 
 ## 3. Integridad del codigo
@@ -44,9 +44,9 @@ HEAD, tests e integridad del codigo.
 | `src/institutional_accumulation/aggregation/catalog_p38_adapter.py` | 170 |
 | `src/institutional_accumulation/aggregation/catalog_validator.py` | 94 |
 | `src/institutional_accumulation/aggregation/coverage.py` | 258 |
-| `src/institutional_accumulation/aggregation/delta_shares.py` | 420 |
-| `src/institutional_accumulation/aggregation/nipc.py` | 387 |
-| `src/institutional_accumulation/aggregation/reporting_dedup.py` | 880 |
+| `src/institutional_accumulation/aggregation/delta_shares.py` | 429 |
+| `src/institutional_accumulation/aggregation/nipc.py` | 393 |
+| `src/institutional_accumulation/aggregation/reporting_dedup.py` | 890 |
 | `src/institutional_accumulation/catalog_pit.py` | 232 |
 | `src/institutional_accumulation/identity/__init__.py` | 13 |
 | `src/institutional_accumulation/identity/catalog_key.py` | 375 |
@@ -56,7 +56,7 @@ HEAD, tests e integridad del codigo.
 | `src/institutional_accumulation/identity/target_builder.py` | 203 |
 | `src/institutional_accumulation/identity/target_universe.py` | 171 |
 | `src/institutional_accumulation/operational_universe.py` | 251 |
-| `src/institutional_accumulation/pipeline_contractual.py` | 223 |
+| `src/institutional_accumulation/pipeline_contractual.py` | 233 |
 | `src/institutional_accumulation/sec_13f/__init__.py` | 22 |
 | `src/institutional_accumulation/sec_13f/downloader.py` | 224 |
 | `src/institutional_accumulation/sec_13f/identity/__init__.py` | 161 |
@@ -64,17 +64,17 @@ HEAD, tests e integridad del codigo.
 | `src/institutional_accumulation/sec_13f/identity/cusip_resolver.py` | 149 |
 | `src/institutional_accumulation/sec_13f/identity/relationships.py` | 367 |
 | `src/institutional_accumulation/sec_13f/identity/sec13f_list.py` | 315 |
-| `src/institutional_accumulation/sec_13f/identity/security_identity.py` | 654 |
+| `src/institutional_accumulation/sec_13f/identity/security_identity.py` | 687 |
 | `src/institutional_accumulation/sec_13f/identity/temporal_filter.py` | 100 |
 | `src/institutional_accumulation/sec_13f/ingest.py` | 131 |
 | `src/institutional_accumulation/sec_13f/manifest.py` | 150 |
 | `src/institutional_accumulation/sec_13f/parser.py` | 142 |
 | `src/institutional_accumulation/sec_13f/schema.py` | 185 |
 | `src/institutional_accumulation/sec_13f/storage.py` | 89 |
-| `src/institutional_accumulation/security_type.py` | 397 |
+| `src/institutional_accumulation/security_type.py` | 407 |
 | `src/institutional_accumulation/temporal_validity.py` | 92 |
 | `src/institutional_accumulation/timestamps.py` | 154 |
-| **TOTAL** | **36 ficheros, 8202 LOC** |
+| **TOTAL** | **36 ficheros, 8280 LOC** |
 
 ## 5. Datos IAE
 
@@ -101,7 +101,7 @@ HEAD, tests e integridad del codigo.
 - `scripts/iae_contractual_coverage.py`: 207 LOC
 - `scripts/iae_coverage.py`: 55 LOC
 - `scripts/iae_identity_uniqueness_audit.py`: 270 LOC
-- `scripts/iae_contractual_nipc_e2e.py`: 111 LOC
+- `scripts/iae_contractual_nipc_e2e.py`: 142 LOC
 - `scripts/regenerate_radar_catalog.py`: 238 LOC
 - `scripts/regenerate_cusip_crosswalk.py`: 225 LOC
 - `scripts/update_sec_13f.py`: 286 LOC
