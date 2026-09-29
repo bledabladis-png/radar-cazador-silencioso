@@ -1,10 +1,100 @@
 ﻿import re
 import sys
+import time
+from datetime import datetime
 from pathlib import Path
 import pandas as pd
+import requests
 
 CACHE_DIR = Path("data/cache/sec/qqq")
 OUTPUT_CSV = Path("outputs/history/qqq_nport_flow.csv")
+
+# Fix 2026-09-29 (F5.7-20 completion): descarga automatica del XML
+# NPORT-P. Antes, data/cache/sec/qqq/ estaba gitignored y ningun
+# script lo poblaba en CI. El step del workflow fallaba con sys.exit(1).
+# Ahora el script descubre el NPORT-P mas reciente via submissions API
+# y descarga el XML renderizado a cache si esta obsoleto.
+SEC_UA = "Radar Sectorial Research <bledabladis@gmail.com>"
+SEC_HEADERS = {"User-Agent": SEC_UA}
+SUBMISSIONS_URL = "https://data.sec.gov/submissions/CIK0001067839.json"
+ARCHIVES_BASE = "https://www.sec.gov/Archives/edgar/data/1067839"
+# NPORT-P publica ~60 dias post-cierre. 120 dias = 1 trimestre completo +
+# margen para cubrir un ciclo entero sin descarga innecesaria.
+STALENESS_DAYS = 120
+DOWNLOAD_RETRIES = 3
+DOWNLOAD_BACKOFF_S = 5
+
+
+def _http_get(url, timeout=60):
+    """GET con retry y backoff. Lanza RuntimeError si agota intentos."""
+    last_exc = None
+    for attempt in range(1, DOWNLOAD_RETRIES + 1):
+        try:
+            r = requests.get(url, headers=SEC_HEADERS, timeout=timeout)
+            if r.status_code >= 400:
+                last_exc = RuntimeError(f"HTTP {r.status_code} en {url}")
+                if r.status_code in (400, 401, 403, 404):
+                    raise last_exc
+            else:
+                return r
+        except (requests.Timeout, requests.ConnectionError) as e:
+            last_exc = e
+        except RuntimeError:
+            raise
+        if attempt < DOWNLOAD_RETRIES:
+            time.sleep(DOWNLOAD_BACKOFF_S * (2 ** (attempt - 1)))
+    raise RuntimeError(f"descarga fallida tras {DOWNLOAD_RETRIES} intentos: {last_exc}")
+
+
+def _discover_latest_nport_metadata():
+    """Devuelve (report_date, accession_clean) del NPORT-P mas reciente."""
+    r = _http_get(SUBMISSIONS_URL)
+    data = r.json()
+    recent = data.get("filings", {}).get("recent", {})
+    forms = recent.get("form", [])
+    accs = recent.get("accessionNumber", [])
+    reports = recent.get("reportDate", [])
+    candidates = []
+    for f, a, rd in zip(forms, accs, reports):
+        if f != "NPORT-P":
+            continue
+        if not rd:
+            continue
+        candidates.append((rd, a))
+    if not candidates:
+        raise RuntimeError("EDGAR no tiene filings NPORT-P para QQQ")
+    candidates.sort(reverse=True)
+    report_date, accession = candidates[0]
+    return report_date, accession.replace("-", "")
+
+
+def download_latest_nport_xml(cache_dir=CACHE_DIR, *, force=False):
+    """Descarga el XML NPORT-P mas reciente a cache si esta obsoleto.
+
+    Devuelve Path al XML en cache. Si el cache ya tiene el NPORT-P mas
+    reciente con menos de STALENESS_DAYS, no descarga (idempotente).
+    force=True fuerza la descarga.
+    """
+    cache_dir = Path(cache_dir)
+    cache_dir.mkdir(parents=True, exist_ok=True)
+    report_date, acc_clean = _discover_latest_nport_metadata()
+    target = cache_dir / f"nport_{report_date}.xml"
+    if target.exists() and not force:
+        age_days = (datetime.now() - datetime.fromtimestamp(target.stat().st_mtime)).days
+        if age_days <= STALENESS_DAYS:
+            print(f"[NPORT-CACHE] hit: {target.name} (age={age_days}d)")
+            return target
+    url = f"{ARCHIVES_BASE}/{acc_clean}/xslFormNPORT-P_X01/primary_doc.xml"
+    print(f"[NPORT-DOWNLOAD] {url}")
+    r = _http_get(url)
+    text = r.text
+    if "Item B.6" not in text or "Item B.7" not in text:
+        raise RuntimeError(
+            f"XML descargado no contiene Item B.6/B.7 (accession={acc_clean})"
+        )
+    target.write_text(text, encoding="utf-8")
+    print(f"[NPORT-DOWNLOAD] guardado {target} ({len(text)} chars)")
+    return target
 
 
 def find_latest_xml(cache_dir=Path("data/cache/sec/qqq")):
@@ -67,6 +157,12 @@ def extract_b6_flow(xml_text):
     return pd.DataFrame(rows)
 
 def main():
+    # Fix 2026-09-29: garantizar cache poblado antes de buscar.
+    try:
+        download_latest_nport_xml()
+    except Exception as e:
+        print(f"ERROR: no se pudo preparar cache NPORT-P: {type(e).__name__}: {e}")
+        sys.exit(1)
     xml_path = find_latest_xml()
     if xml_path is None:
         print(f"ERROR: no hay XML NPORT-P en {CACHE_DIR}")
