@@ -21,7 +21,7 @@ Pipeline contractual: **§10.1 -> §10.7** (catalogo -> identidad -> delta share
 
 ## 2. ARQUITECTURA DEL MODULO
 
-36 ficheros Python, 8178 LOC (metrica `splitlines`, coincide con `ESTADO_SISTEMA.md`).
+36 ficheros Python, 8202 LOC (metrica `splitlines`, coincide con `ESTADO_SISTEMA.md`).
 
 ### 2.1. Estructura de subpaquetes
 
@@ -117,7 +117,7 @@ Cinco contratos semanticos (P38, NIPC, P61/P63, B1, B2-PIT) verificados en el pi
 
 **Reglas R1-R5 + L3:** framework de 3 niveles para resolver la cadena de reporte.
 
-**Ficheros:** `aggregation/reporting_dedup.py` (880 LOC, 35 funciones AST, 64 casos pytest).
+**Ficheros:** `aggregation/reporting_dedup.py` (880 LOC, 19 funciones AST, 64 casos pytest).
 
 **Evidencia:** `ReportingEvidence` enum; `build_effective_reporting_snapshot` (actualmente sin caller productivo — deuda).
 
@@ -186,7 +186,7 @@ Cadena:
 1. **§10.1** - Cargar snapshots de 2 trimestres consecutivos. `load_canonical(folder, iso)`.
 2. **§10.2** - Construir identidades. `build_identities(snap, iso)`.
 3. **§10.3** - Delta shares por `reported_position_unit`. `compute_reported_position_units(infotable, submission, coverpage)` + `compute_delta_shares(units_current, units_previous)`.
-4. **§10.4** - NIPC contractual. `compute_nipc_contractual(delta_df)`.
+4. **§10.4** - NIPC contractual. `compute_nipc_contractual(delta_df, *, target_q4, target_q1, records_q4, records_q1, threshold_1=None, threshold_2=None)`.
 5. **§10.5** - Coverage contractual. `compute_contractual_coverage(target_q4, target_q1, records_q4, records_q1)`.
 6. **§10.6** - Estats observables.
 7. **§10.7** - Evidence class = CONTRACTUAL.
@@ -287,7 +287,7 @@ Regeneracion automatica:
 
 ## 9. VERIFICACION EMPIRICA
 
-**Suite IAE:** 845 tests (criterio AST, 45 ficheros). Reproducible con `scripts/iae_test_census.py`.
+**Suite IAE:** 763 funciones test_ (criterio AST, 45 ficheros). `871` tests collected por pytest (incluye parametrize). Reproducible con `scripts/iae_test_census.py`.
 
 **Cobertura IAE:** 90% lineas (reproducible con `scripts/iae_coverage.py`).
 
