@@ -131,3 +131,50 @@ def test_target_universe_es_frozen():
     u = _build(snap, mem, asg)
     with pytest.raises(Exception):
         u.period_end = "2026-10-01"
+
+# --- B-01 (2026-09-29): invariantes de TargetUniverse.__post_init__ ---
+# Los 4 raises explicitos sustituyen a `assert`. Cubren las 4 invariantes
+# de cardinalidad entre declared_keys y los 4 dicts auxiliares.
+
+def _tu_kwargs(**overrides):
+    """TargetUniverse coherente por defecto (1 key). Overrides por parametro."""
+    base = {
+        "version_id": "v1",
+        "period_end": "2026-09-30",
+        "catalog_version_id": "cat_v1",
+        "catalog_sha256": "a" * 64,
+        "declared_keys": {"K1"},
+        "ticker_by_key": {"K1": "AAPL"},
+        "figi_by_key": {"K1": "BBG001"},
+        "row_uid_by_key": {"K1": "UID1"},
+        "key_by_row_uid": {"UID1": "K1"},
+    }
+    base.update(overrides)
+    return base
+
+
+def test_target_universe_ok_basico():
+    u = tb.TargetUniverse(**_tu_kwargs())
+    assert u.declared_keys == {"K1"}
+    assert u.ticker_by_key["K1"] == "AAPL"
+
+
+def test_target_universe_invariante_ticker_by_key():
+    with pytest.raises(tb.BuildTargetError, match="ticker_by_key"):
+        tb.TargetUniverse(**_tu_kwargs(ticker_by_key={}))
+
+
+def test_target_universe_invariante_figi_by_key():
+    with pytest.raises(tb.BuildTargetError, match="figi_by_key"):
+        tb.TargetUniverse(**_tu_kwargs(figi_by_key={}))
+
+
+def test_target_universe_invariante_row_uid_by_key():
+    with pytest.raises(tb.BuildTargetError, match="row_uid_by_key"):
+        tb.TargetUniverse(**_tu_kwargs(row_uid_by_key={}))
+
+
+def test_target_universe_invariante_key_by_row_uid():
+    with pytest.raises(tb.BuildTargetError, match="key_by_row_uid"):
+        tb.TargetUniverse(**_tu_kwargs(key_by_row_uid={}))
+
