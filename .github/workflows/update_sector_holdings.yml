@@ -42,6 +42,13 @@ jobs:
             echo "No hay cambios en los holdings."
           else
             git commit -m "Actualizar etf_holdings.csv (automático trimestral)"
-            git pull --rebase origin main
-            git push
+            for i in 1 2 3; do
+              git pull --rebase origin main
+              if git push; then
+                exit 0
+              fi
+              sleep $((i * 10))
+            done
+            echo "Push fallido tras 3 intentos"
+            exit 1
           fi
