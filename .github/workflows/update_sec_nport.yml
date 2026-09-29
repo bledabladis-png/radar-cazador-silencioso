@@ -48,7 +48,7 @@ jobs:
           if git diff --cached --quiet; then
             echo "No hay cambios."
           else
-            git commit -m "Actualizar N-PORT ${{ env.quarter }}"
+            git commit -m "Actualizar N-PORT (automatico trimestral)"
             git pull --rebase origin main
             git push
           fi
