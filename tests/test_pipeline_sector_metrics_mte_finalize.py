@@ -194,6 +194,24 @@ def test_save_regime_history_escribe_csv(tmp_path, monkeypatch):
     assert df.iloc[0]["macro_regime"] == "MIXED"
 
 
+def test_save_regime_history_sin_tmp_residual(tmp_path, monkeypatch):
+    """Escritura atomica (familia 3): no quedan .tmp tras exito."""
+    _setup_tmp(tmp_path, monkeypatch)
+    macro_df = pd.DataFrame({"date": [pd.Timestamp("2026-09-25")]})
+    with patch("src.pipeline.finalize.is_market_day", return_value=True):
+        fin.save_regime_history(
+            macro_score=pd.Series([0.0, -0.1]),
+            macro_regime="MIXED",
+            macro_conf=0.5,
+            liquidity_regime="ESTRECHA",
+            vol_regime="NORMAL",
+            sector_results={"regime": "NARROW RALLY", "ranking": []},
+            df_macro_manual=macro_df,
+        )
+    tmps = list((tmp_path / "outputs" / "history").glob("*.tmp*"))
+    assert tmps == [], f"quedan temporales: {tmps}"
+
+
 def test_save_sector_rankings_escribe_csv(tmp_path, monkeypatch):
     _setup_tmp(tmp_path, monkeypatch)
     fin.save_sector_rankings(

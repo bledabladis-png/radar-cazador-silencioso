@@ -109,7 +109,9 @@ def save_regime_history(macro_score, macro_regime, macro_conf,
         hist = hist.drop_duplicates(subset=['date'], keep='last')
     else:
         hist = new_row
-    hist.to_csv(hist_path, index=False)
+    _tmp_hist = Path(hist_path).with_suffix(Path(hist_path).suffix + '.tmp')
+    hist.to_csv(_tmp_hist, index=False)
+    _tmp_hist.replace(hist_path)
 
 
 def save_sector_rankings(sector_results):

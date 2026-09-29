@@ -90,6 +90,7 @@ def test_save_regime_history_usa_fecha_macro(monkeypatch, tmp_path):
 
     monkeypatch.setattr(pd.DataFrame, 'to_csv', fake_to_csv)
     monkeypatch.setattr('os.path.exists', lambda p: False)
+    monkeypatch.setattr(Path, 'replace', lambda self, target: None)
 
     df_macro = pd.DataFrame({
         'date': ['2026-09-09', '2026-09-10', '2026-09-11'],
@@ -230,6 +231,7 @@ def test_t_c4_code_10_sabado_datos_viernes(monkeypatch):
 
     monkeypatch.setattr(pd.DataFrame, 'to_csv', fake_to_csv)
     monkeypatch.setattr('os.path.exists', lambda p: False)
+    monkeypatch.setattr(Path, 'replace', lambda self, target: None)
 
     df_macro = pd.DataFrame({'date': ['2026-09-11'], 'x': [1.0]})
     save_regime_history(pd.Series([0.5]), 'X', 0.5, 'Y', 'Z',
