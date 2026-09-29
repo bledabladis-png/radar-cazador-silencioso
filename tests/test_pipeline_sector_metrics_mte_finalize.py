@@ -13,6 +13,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 import pandas as pd
+import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
@@ -192,6 +193,41 @@ def test_save_regime_history_escribe_csv(tmp_path, monkeypatch):
     df = pd.read_csv(p)
     assert "date" in df.columns
     assert df.iloc[0]["macro_regime"] == "MIXED"
+
+
+def test_save_regime_history_fallo_to_csv_no_pierde_filas(tmp_path, monkeypatch):
+    """Si to_csv muere a mitad, el CSV original debe quedar intacto."""
+    _setup_tmp(tmp_path, monkeypatch)
+    csv = tmp_path / "outputs" / "history" / "macro_regime.csv"
+    pd.DataFrame([{"date": "2026-09-24", "macro_regime": "OLD"}]).to_csv(csv, index=False)
+    filas_antes = pd.read_csv(csv).shape[0]
+    assert filas_antes == 1
+
+    real_to_csv = pd.DataFrame.to_csv
+
+    def fake_to_csv(self, path, **kw):
+        real_to_csv(self.iloc[:0], path, **kw)
+        raise OSError("simulado: fallo a mitad de escritura")
+
+    monkeypatch.setattr(pd.DataFrame, "to_csv", fake_to_csv)
+    macro_df = pd.DataFrame({"date": [pd.Timestamp("2026-09-25")]})
+    with patch("src.pipeline.finalize.is_market_day", return_value=True):
+        with pytest.raises(OSError, match="simulado"):
+            fin.save_regime_history(
+                macro_score=pd.Series([0.0, -0.1]),
+                macro_regime="MIXED",
+                macro_conf=0.5,
+                liquidity_regime="ESTRECHA",
+                vol_regime="NORMAL",
+                sector_results={"regime": "NARROW RALLY", "ranking": []},
+                df_macro_manual=macro_df,
+            )
+
+    df = pd.read_csv(csv)
+    assert df.shape[0] == filas_antes, (
+        f"CSV original perdio filas: {filas_antes} -> {df.shape[0]}"
+    )
+    assert df.iloc[0]["macro_regime"] == "OLD"
 
 
 def test_save_sector_rankings_escribe_csv(tmp_path, monkeypatch):
