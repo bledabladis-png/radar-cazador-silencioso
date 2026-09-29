@@ -45,6 +45,7 @@
     "NO usar external_auditor_reference como golden contractual: no reproducible.",
     "Regenerado por: scripts/iae_contractual_nipc_e2e.py + scripts/iae_contractual_coverage.py.",
     "C1 (PRE/POST) y C3 (determinismo) VERDE. Solo C2 (920) queda abierto.",
-    "Hipotesis descartadas (2026-09-29): regex 4 variantes, crosswalk 7caa86b, filtro OPTION/UNKNOWN (-42.324.213, no 920)."
+    "Hipotesis descartadas (2026-09-29): regex 4 variantes, crosswalk 7caa86b, filtro OPTION/UNKNOWN (-42.324.213, no 920).",
+    "Hipotesis C2 descartada (2026-09-29): aplicacion de P65 (reporting_dedup, L3). _apply_intra_period_dedup v1 no emite DROP_DUP: todas las decisiones son KEEP (overlap no resoluble con 13F aislado). Conectar P65 no altera nipc_total. El delta 920 respecto al auditor no proviene de P65."
   ]
 }

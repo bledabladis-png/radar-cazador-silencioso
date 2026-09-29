@@ -119,7 +119,7 @@ Cinco contratos semanticos (P38, NIPC, P61/P63, B1, B2-PIT) verificados en el pi
 
 **Ficheros:** `aggregation/reporting_dedup.py` (880 LOC, 19 funciones AST, 64 casos pytest).
 
-**Evidencia:** `ReportingEvidence` enum; `build_effective_reporting_snapshot` (actualmente sin caller productivo — deuda).
+**Evidencia:** `ReportingEvidence` enum; `build_effective_reporting_snapshot` (sin caller productivo). **Estado verificado 2026-09-29:** capa de diagnostico por decision de diseno, NO etapa del pipeline contractual. Coexiste con el desglose SOLE/DFND/OTR en `nipc.py` (via activa). `_apply_intra_period_dedup` v1 no emite DROP_DUP: todas las decisiones son KEEP (overlap no resoluble con 13F aislado). Ver `06_IAE_P65_P66.md` seccion 14.
 
 ### 3.4. P61 / P63 - Validez temporal + timestamps
 
@@ -325,7 +325,7 @@ Regeneracion automatica:
 
 **C2 (920) - Discrepancia H1-B:** `-4.264.449.012` (local) vs `-4.264.449.932` (auditor). Estado OPEN. Dos salidas: (a) si el auditor aporta comando + HEAD, se reproduce y cierra por atribucion; (b) si no, se mantiene OPEN sin convertir el 920 en "tolerancia aceptada".
 
-**`build_effective_reporting_snapshot`** sin caller productivo (reporting_dedup.py). Funcion testeada pero no invocada en el pipeline. Deuda o API futura.
+**`build_effective_reporting_snapshot`** sin caller productivo (reporting_dedup.py). Funcion testeada (99 tests P65/P66 pasan) pero no invocada en el pipeline. **No es deuda:** es decision de diseno — capa auxiliar de diagnostico. No altera el NIPC (`_apply_intra_period_dedup` v1 solo emite KEEP). Conectar P65 no cambiaria el `nipc_total` actual. Verificado 2026-09-29.
 
 **`scripts/iae_contractual_coverage.py`** reproduce §12.3 pero no esta integrado al flujo continuo de validacion.
 
