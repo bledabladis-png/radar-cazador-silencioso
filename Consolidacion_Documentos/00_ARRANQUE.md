@@ -74,7 +74,7 @@ Fuente autoritativa: `Consolidacion_Documentos/ESTADO_SISTEMA.md` (regenerado co
 
 Snapshot al cierre del ultimo commit:
 - HEAD: ver ESTADO_SISTEMA.md
-- Tests: 2297 passed + 2 skipped + 0 failed
+- Tests: 2336 passed + 2 skipped + 0 failed
 - Validation Gate: 10/10
 - Working tree: limpio
 - Corpus documental: v2 (Consolidacion_Documentos/00-06, 2026-09-29)
@@ -135,20 +135,74 @@ Sesion 2026-09-29: auditoria interna A6 + B cerrada.
   snapshot `20260921_01` en manifest: 2 abiertos violaban B2-PIT),
   C-07 (NBSP normalizado en TITLEOFCLASS).
 
+Sesion 2026-09-29 (tarde): auditoria funcional frente 6 (IAE) + frente 8 (providers).
+
+- **Frente 6 (IAE funcional):** 14 commits. Bugs reales cerrados:
+  S-03c (invariante CANONICAL != None en rama crosswalk),
+  PeriodState.sshprnamt (finitud),
+  extract_sshprnamt_by_figi (finitud),
+  operational_universe (simetria strip en claves de lookup).
+  Dedup: catalog_p38_adapter <-> period_state, build_catalog_csvs <-> catalog_key.
+  Docstring P65/P66 corregido. Deudas documentadas: target_universe,
+  timestamps, catalog_pit (modulos no integrados al pipeline productivo).
+
+- **Frente 8 (providers):** 12 commits. Bugs reales cerrados:
+  downloader (atómico + cache-hit valida ZIP),
+  xetra/bme/euronext/blackrock (escritura atómica cache),
+  backup_providers._validate_with_cache (finitud),
+  _blackrock_base (flow_pct_assets finitud),
+  _fund_flow_utils (dedup interno),
+  finra (dead code documentado),
+  N-PORT (backfill en update_sec_nport_data + descarga automatica XML EDGAR).
+
+- **Orquestacion CI:** 8 commits. Bugs reales:
+  cache 13F v2<->v3 alineada entre daily_run y update_sec_13f,
+  issues:write en update_sec_13f (alerta H5.2 inoperativa),
+  _update_issue comprueba retorno de gh (deja de mentir),
+  retry con backoff en git push de 8 workflows,
+  if:always() en uploads pre-gate de download_failures,
+  env.quarter vacío eliminado en update_sec_nport.
+
+- Suite: 2336 passed + 2 skipped. pyflakes limpio.
+
 ---
 
 ## 5. PENDIENTE (DESGLOSE)
 
-**C - Auditoria de tests.** CERRADO. 179 ficheros en `tests/`, ~28800 LOC, 2115 funciones test_ (2280 casos ejecutados con parametrize). Barrido de: tests fantasma, cobertura real por modulo, tests anclados a numero de linea.
+**Frentes de auditoria (cerrados):**
 
-- **Tests fantasma**: 0 encontrados en la muestra amplia (los 10 casos del Gate 0 eran falsos positivos: `pass` en ramas defensivas, `MagicMock()` para fixtures).
-- **Tests anclados a numero de linea**: ya cerrado en A3.3-13 (`test_mte_scoring_characterization.py` anclaba `node.lineno == 89`).
-- **Modulos con cobertura baja**: `macro_manual_loader` (12%), `european_coverage` (12%), `pipeline_contractual` (27%, ya documentado en 03_IAE), `src/data_loader` (50%). Sin bug detectado tras inspeccion. Deuda de tests, no de codigo.
-- **C-08 (MEDIA) CORREGIDO**: `regimes/volatility_regime.py` mapeaba z=NaN a STRESS por cascada de comparaciones (todas dan False -> else). Evidencia empirica: 1803/1884 STRESS historicos eran falsos positivos por NaN heredado de huecos de VIX. Fix: NaN -> "N/D".
+- A1-A5: CERRADOS (nucleo temporal, providers, calculo, reporte, pipeline).
+- A6: CERRADO (infra/orquestacion: utils/registry/tracker/workflows/scripts/validation).
+- B: CERRADO (IAE estructural + funcional).
+- C: CERRADO (auditoria de tests).
+- Frente 6: CERRADO (IAE funcional avanzado: security_identity, period_state,
+  target_builder, catalog_key, operational_universe, catalog_p38_adapter).
+- Frente 8: CERRADO (providers: yahoo, router, fred, polygon, cftc, finra,
+  backup_providers, downloader, xetra, bme, euronext, blackrock_*, fund_flow_utils,
+  qqq_nport_flow, sec_nport_quarters_position_change).
 
-**H5.3 - Trazabilidad cron trimestral.** Pendiente verificacion en cron real de noviembre 2026.
+**Frentes abiertos:**
 
-**C2 (920) - Discrepancia H1-B.** Comando + HEAD del auditor, o aceptacion definitiva de reconciliation_status = OPEN.
+- **Frente 7 (indicators/, 50 ficheros, ~8000 LOC):** NO ABERTO. Auditoria
+  funcional pendiente. Parcialmente cubierto por A3 (regimenes, breadth, MTE,
+  darkpool, SLPM).
+
+**Pendientes vivos:**
+
+- H5.3 - Trazabilidad cron trimestral. Verificacion en cron real de
+  noviembre 2026.
+- C2 (920) - Discrepancia H1-B. Bloqueado por auditor externo (sin comando
+  + HEAD publicado).
+
+**Deudas documentadas (sin accion pendiente):**
+
+- Modulos no integrados al pipeline productivo: `target_universe`,
+  `timestamps`, `catalog_pit`, `reporting_dedup` (P65/P66), `absence`,
+  `validate_membership`, `cusip_resolver.resolve_cusip`. Documentados.
+- Dead code declarado: `finra.get_archive_index`, `finra.get_available_weeks`.
+- Modulos con cobertura baja de tests: `macro_manual_loader` (12%),
+  `european_coverage` (12%), `pipeline_contractual` (27%), `data_loader` (50%).
+  Sin bug detectado tras inspeccion.
 
 ---
 
@@ -167,7 +221,7 @@ Esperado:
 - HEAD = ver Consolidacion_Documentos/ESTADO_SISTEMA.md
 - ahead 0, behind 0
 - working tree limpio (o solo el propio ESTADO_SISTEMA regenerado)
-- 2297 passed + 2 skipped
+- 2336 passed + 2 skipped
 - pyflakes silencio, compileall OK
 
 ---
