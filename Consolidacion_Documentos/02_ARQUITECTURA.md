@@ -253,7 +253,7 @@ Si `validation_gate['passed'] == False` -> `sys.exit(1)`.
 
 ## 9. VALIDACION Y TESTS
 
-**Suite completa:** 2336 passed + 2 skipped + 0 failed. Incluye 777 funciones test_ (AST) / 885 tests collected (pytest) del modulo IAE (45 ficheros).
+**Suite completa:** 2340 passed + 2 skipped + 0 failed. Incluye 777 funciones test_ (AST) / 885 tests collected (pytest) del modulo IAE (45 ficheros).
 
 **Los 3 tests `test_freshness`** (ambientales) pasan tras un `py run.py` que refresca los parquets; vuelven a fallar si pasan >4 dias sin ejecutar el pipeline.
 
@@ -447,4 +447,4 @@ Si el gate falla, `run.py` aborta con `sys.exit(1)`.
 | C | tests | CERRADO |
 | F6 | IAE funcional avanzado (security_identity, period_state, catalog_key, operational_universe, catalog_p38_adapter) | CERRADO |
 | F8 | providers (yahoo, router, fred, polygon, cftc, finra, backup, downloader, xetra, bme, euronext, blackrock, fund_flow_utils, nport) | CERRADO |
-| F7 | indicators/ (50 ficheros) | NO ABERTO |
+| F7 | indicators/ (50 ficheros, 6684 LOC) | CERRADO |
