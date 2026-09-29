@@ -157,6 +157,50 @@ def test_guard_c3_exencion_usa_mismo_threshold(tmp_path):
     assert any("coverage_pct_last" in r for r in reasons)
 
 
+def test_guard_exime_si_un_mercado_esta_pending(tmp_path):
+    """BME PENDING + US VALID -> exento (lag de publicacion)."""
+    quality = _valid_quality(
+        coverage_pct_last=0.94,
+        status="VALID_WITH_MISSING",
+        by_market={
+            "US_EQUITY": {"n": 242, "status": "VALID", "coverage_at_session": 1.0},
+            "BME":       {"n": 19,  "status": "PENDING", "coverage_at_session": 0.0},
+        },
+    )
+    p = _write_manifest(tmp_path, "stock_prices", quality)
+    assert _check_manifest(p, 0.95) == []
+
+
+def test_guard_no_exime_si_todos_pending(tmp_path):
+    """Todo PENDING -> nadie ha publicado -> no exento."""
+    quality = _valid_quality(
+        coverage_pct_last=0.0,
+        status="VALID_WITH_MISSING",
+        by_market={
+            "US_EQUITY": {"n": 242, "status": "PENDING", "coverage_at_session": 0.0},
+            "BME":       {"n": 19,  "status": "PENDING", "coverage_at_session": 0.0},
+        },
+    )
+    p = _write_manifest(tmp_path, "stock_prices", quality)
+    reasons = _check_manifest(p, 0.95)
+    assert any("coverage_pct_last" in r for r in reasons)
+
+
+def test_guard_no_exime_si_invalid_sigue_bloqueando(tmp_path):
+    """INVALID (no PENDING) sigue bloqueando."""
+    quality = _valid_quality(
+        coverage_pct_last=0.94,
+        status="VALID_WITH_MISSING",
+        by_market={
+            "US_EQUITY": {"n": 242, "status": "VALID", "coverage_at_session": 1.0},
+            "BME":       {"n": 19,  "status": "INVALID", "coverage_at_session": 0.0},
+        },
+    )
+    p = _write_manifest(tmp_path, "stock_prices", quality)
+    reasons = _check_manifest(p, 0.95)
+    assert any("coverage_pct_last" in r for r in reasons)
+
+
 def test_guard_no_exime_si_by_market_falta(tmp_path):
     """Manifest antiguo (sin by_market) -> FAIL como antes."""
     quality = _valid_quality(

@@ -70,6 +70,7 @@ def _all_markets_valid(by_market, threshold):
         return False
 
     n_active = 0
+    n_valid = 0
     for market, info in by_market.items():
         if not isinstance(info, dict):
             return False
@@ -77,14 +78,21 @@ def _all_markets_valid(by_market, threshold):
         if n == 0:
             continue
         n_active += 1
-        if info.get("status") != "VALID":
+        st = info.get("status")
+        # 2026-09-29: PENDING = sesion cerrada, observacion aun no
+        # publicada (mercados con lag, p.ej. BME). No invalida por si
+        # solo. Si TODOS los mercados activos son PENDING, no exime.
+        if st == "PENDING":
+            continue
+        if st != "VALID":
             return False
+        n_valid += 1
         cov = info.get("coverage_at_session")
         if not isinstance(cov, (int, float)):
             return False
         if cov < threshold:
             return False
-    return n_active > 0
+    return n_active > 0 and n_valid > 0
 
 
 def _check_manifest(path, threshold):

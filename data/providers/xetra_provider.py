@@ -24,7 +24,9 @@ XETRA_CACHE_DIR = Path("data/cache/xetra")
 
 WS_RECV_TIMEOUT = 3.0
 WS_QUERY_TIMEOUT = 25  # segundos máximos por consulta de un ticker
-# Histórico inicial: ~300 sesiones (~430 días naturales).
+# Histórico inicial: 5 años naturales. Ampliado 2026-09-29 (antes
+# ~300 sesiones / 430d). El WS aguanta el rango (medido: 1274 filas
+# en 0.8s).
 # Suficiente para EMA200, RS126 y Wyckoff sin descargar años innecesarios.
 from datetime import timedelta
 
@@ -37,7 +39,7 @@ def _ws_start() -> str:
     con fecha mockeada o runs de larga duracion, la fecha quedaba fija
     al momento del import.
     """
-    return (datetime.now() - timedelta(days=430)).strftime("%Y-%m-%dT00:00:00.000Z")
+    return (datetime.now() - timedelta(days=1830)).strftime("%Y-%m-%dT00:00:00.000Z")
 
 
 WS_RESOLUTION = "1D"

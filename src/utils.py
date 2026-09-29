@@ -442,7 +442,18 @@ def _compute_by_market(df, reference_date):
             n_valid = 0
 
         coverage = n_valid / n if n > 0 else None
-        if coverage is None or coverage == 0:
+        # 2026-09-29: mercados con lag de publicacion. Si la sesion
+        # cerro hoy pero aun no hay observacion (coverage 0), no es
+        # INVALID: es PENDING. El guard lo tolera si no es cronico.
+        from src.market_hours import MARKETS_WITH_PUBLICATION_LAG
+        is_pending = (
+            coverage == 0
+            and market in MARKETS_WITH_PUBLICATION_LAG
+            and last_session == reference_date.date()
+        )
+        if is_pending:
+            status = "PENDING"
+        elif coverage is None or coverage == 0:
             status = "INVALID"
         elif coverage >= 0.95:
             status = "VALID"

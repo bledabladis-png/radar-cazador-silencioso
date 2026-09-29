@@ -75,6 +75,13 @@ def _load_exceptions():
 # Se resuelve una vez al import del modulo. Fail-loud si el CSV falta.
 _KNOWN_MARKETS = tuple(_load_regular_close().keys())
 
+# Mercados que publican el cierre EOD con lag respecto a su sesion.
+# Verificado 2026-09-29: BME a las 23:25 CEST aun no publica el cierre
+# del mismo dia (devuelve hasta T-1). Los demas publican antes del
+# corte nocturno. Uso: _compute_by_market marca status="PENDING" en
+# vez de "INVALID" cuando la sesion cerro pero aun no hay observacion.
+MARKETS_WITH_PUBLICATION_LAG = ("BME",)
+
 
 def _validate_market(market: str) -> None:
     """Valida que market este en _KNOWN_MARKETS (derivado del CSV)."""

@@ -212,7 +212,10 @@ class BMEProvider:
         self._last_failed = []
         frames = []
         today = last_expected_market_date(reference_date)
-        default_from = (today - timedelta(days=430)).strftime("%Y%m%d")
+        # 2026-09-29: ampliado 430 -> 1830 (5y) para alinear con US
+        # y con la ventana del resto del sistema. El endpoint aguanta
+        # el rango sin coste apreciable (medido: 1277 filas en 0.3s).
+        default_from = (today - timedelta(days=1830)).strftime("%Y%m%d")
 
         for t in tickers:
             if not self.supports(t):
