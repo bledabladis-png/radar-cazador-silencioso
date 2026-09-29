@@ -113,8 +113,16 @@ def _save_state(payload: dict) -> None:
     payload = dict(payload)
     payload["schema_version"] = SCHEMA_VERSION
     payload["last_updated"] = datetime.now().isoformat()
-    with open(SLPM_STATE_FILE, "w", encoding="utf-8") as f:
+    # Fix 2026-09-29: escritura atomica (.tmp + os.replace). Sin esto,
+    # si el proceso muere a mitad de json.dump, el state file queda
+    # truncado. _load_state lo detecta como corrupto (except
+    # JSONDecodeError, A3.3-11) y RESETEA el state a vacio. La maquina
+    # de estados SLPM pierde consecutive_count y confirmed_state
+    # silenciosamente. Mismo patron que downloader.py y storage.py.
+    _tmp = SLPM_STATE_FILE + ".tmp"
+    with open(_tmp, "w", encoding="utf-8") as f:
         json.dump(payload, f, indent=2)
+    os.replace(_tmp, SLPM_STATE_FILE)
 
 
 def confirm_transition(sector_etf: str, instant_state: str) -> dict:
