@@ -2,7 +2,7 @@
 
 Hechos verificables del sistema. Generado por script.
 
-**Generado en:** 2026-09-29 12:51:41 UTC
+**Generado en:** 2026-09-29 16:43:41 UTC
 **Snapshot tomado sobre:** commit HEAD de la fecha indicada, al momento de generar
 **NO editar a mano.** Regenerar con:
 
@@ -17,16 +17,16 @@ HEAD, tests e integridad del codigo.
 
 ## 1. Git
 
-- **HEAD:** `d11bed2`
-- **HEAD completo:** `d11bed2bf071e1309f106ef50254b842c7d8824f`
-- **Fecha commit HEAD:** 2026-09-29 14:21:49 +0200
-- **Ahead:** 13
+- **HEAD:** `9250f90`
+- **HEAD completo:** `9250f90a1bfe33b5b124c65bda354140bfa462a5`
+- **Fecha commit HEAD:** 2026-09-29 18:38:24 +0200
+- **Ahead:** 0
 - **Behind:** 0
-- **origin/main:** `1f01622`
+- **origin/main:** `9250f90`
 
 ## 2. Tests (pytest real)
 
-- **Resumen:** 2297 passed, 2 skipped in 77.33s (0:01:17)
+- **Resumen:** 2336 passed, 2 skipped in 71.38s (0:01:11)
 - **Exit code:** 0
 
 ## 3. Integridad del codigo
@@ -38,33 +38,33 @@ HEAD, tests e integridad del codigo.
 
 | Fichero | LOC |
 |---|---:|
-| `src/institutional_accumulation/__init__.py` | 28 |
+| `src/institutional_accumulation/__init__.py` | 30 |
 | `src/institutional_accumulation/absence.py` | 78 |
 | `src/institutional_accumulation/aggregation/__init__.py` | 97 |
-| `src/institutional_accumulation/aggregation/catalog_p38_adapter.py` | 170 |
+| `src/institutional_accumulation/aggregation/catalog_p38_adapter.py` | 174 |
 | `src/institutional_accumulation/aggregation/catalog_validator.py` | 94 |
 | `src/institutional_accumulation/aggregation/coverage.py` | 258 |
 | `src/institutional_accumulation/aggregation/delta_shares.py` | 429 |
 | `src/institutional_accumulation/aggregation/nipc.py` | 393 |
 | `src/institutional_accumulation/aggregation/reporting_dedup.py` | 890 |
 | `src/institutional_accumulation/catalog_pit.py` | 232 |
-| `src/institutional_accumulation/identity/__init__.py` | 13 |
-| `src/institutional_accumulation/identity/catalog_key.py` | 375 |
+| `src/institutional_accumulation/identity/__init__.py` | 15 |
+| `src/institutional_accumulation/identity/catalog_key.py` | 387 |
 | `src/institutional_accumulation/identity/openfigi_client.py` | 180 |
-| `src/institutional_accumulation/identity/period_state.py` | 212 |
+| `src/institutional_accumulation/identity/period_state.py` | 223 |
 | `src/institutional_accumulation/identity/radar_target_catalog.py` | 154 |
-| `src/institutional_accumulation/identity/target_builder.py` | 203 |
-| `src/institutional_accumulation/identity/target_universe.py` | 171 |
-| `src/institutional_accumulation/operational_universe.py` | 251 |
+| `src/institutional_accumulation/identity/target_builder.py` | 210 |
+| `src/institutional_accumulation/identity/target_universe.py` | 180 |
+| `src/institutional_accumulation/operational_universe.py` | 259 |
 | `src/institutional_accumulation/pipeline_contractual.py` | 233 |
 | `src/institutional_accumulation/sec_13f/__init__.py` | 22 |
-| `src/institutional_accumulation/sec_13f/downloader.py` | 224 |
+| `src/institutional_accumulation/sec_13f/downloader.py` | 248 |
 | `src/institutional_accumulation/sec_13f/identity/__init__.py` | 161 |
 | `src/institutional_accumulation/sec_13f/identity/amendments.py` | 444 |
 | `src/institutional_accumulation/sec_13f/identity/cusip_resolver.py` | 149 |
-| `src/institutional_accumulation/sec_13f/identity/relationships.py` | 367 |
+| `src/institutional_accumulation/sec_13f/identity/relationships.py` | 377 |
 | `src/institutional_accumulation/sec_13f/identity/sec13f_list.py` | 315 |
-| `src/institutional_accumulation/sec_13f/identity/security_identity.py` | 687 |
+| `src/institutional_accumulation/sec_13f/identity/security_identity.py` | 711 |
 | `src/institutional_accumulation/sec_13f/identity/temporal_filter.py` | 100 |
 | `src/institutional_accumulation/sec_13f/ingest.py` | 131 |
 | `src/institutional_accumulation/sec_13f/manifest.py` | 150 |
@@ -73,8 +73,8 @@ HEAD, tests e integridad del codigo.
 | `src/institutional_accumulation/sec_13f/storage.py` | 89 |
 | `src/institutional_accumulation/security_type.py` | 407 |
 | `src/institutional_accumulation/temporal_validity.py` | 92 |
-| `src/institutional_accumulation/timestamps.py` | 154 |
-| **TOTAL** | **36 ficheros, 8280 LOC** |
+| `src/institutional_accumulation/timestamps.py` | 162 |
+| **TOTAL** | **36 ficheros, 8401 LOC** |
 
 ## 5. Datos IAE
 
@@ -94,7 +94,7 @@ HEAD, tests e integridad del codigo.
 ## 6. Scripts IAE
 
 - `scripts/iae_pipeline.py`: 159 LOC
-- `scripts/build_catalog_csvs.py`: 245 LOC
+- `scripts/build_catalog_csvs.py`: 220 LOC
 - `scripts/iae_reconciliation_b1.py`: 193 LOC
 - `scripts/iae_validate_crosswalk_openfigi.py`: 179 LOC
 - `scripts/iae_test_census.py`: 161 LOC
@@ -104,7 +104,7 @@ HEAD, tests e integridad del codigo.
 - `scripts/iae_contractual_nipc_e2e.py`: 142 LOC
 - `scripts/regenerate_radar_catalog.py`: 238 LOC
 - `scripts/regenerate_cusip_crosswalk.py`: 225 LOC
-- `scripts/update_sec_13f.py`: 286 LOC
+- `scripts/update_sec_13f.py`: 354 LOC
 - `scripts/download_official_list_13f.py`: 147 LOC
 
 ## 7. Evidencia empirica (directorios)
