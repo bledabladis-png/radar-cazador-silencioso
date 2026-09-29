@@ -27,6 +27,7 @@ sys.path.insert(0, str(ROOT))
 from config import settings
 
 from src.institutional_accumulation.sec_13f.ingest import ingest_13f
+from src.institutional_accumulation.sec_13f.schema import EXPECTED_FILES
 from src.institutional_accumulation.sec_13f.downloader import _pick_base_url
 from scripts.download_official_list_13f import download_official_list
 
@@ -170,6 +171,41 @@ def _resolve_actor():
         return "unknown"
 
 
+def _is_quarter_fully_ingested(quarter, data_dir):
+    """True si el quarter esta completamente ingestado.
+
+    Verifica: (1) processed/<quarter>/ existe y contiene los 7 parquets
+    esperados; (2) manifests/sec_13f_<quarter>.json existe y declara
+    validation completa (expected_files_present + zip_crc_valid +
+    schema_valid).
+
+    Motivo (2026-09-29): antes se usaba processed.exists() como
+    unico criterio. Si un run previo dejaba parquets parciales sin
+    manifest, el siguiente run saltaba la ingesta y escribia
+    latest_quarter.txt como si estuviera completo. Corrupcion
+    silenciosa del crosswalk CUSIP rio abajo.
+    """
+    processed = Path(data_dir) / "processed" / quarter
+    if not processed.is_dir():
+        return False
+    present = {p.stem for p in processed.glob("*.parquet")}
+    expected_stems = {name.replace(".tsv", "") for name in EXPECTED_FILES}
+    if not expected_stems.issubset(present):
+        return False
+    manifest_path = (Path(data_dir) / "manifests" /
+                     ("sec_13f_" + quarter + ".json"))
+    if not manifest_path.is_file():
+        return False
+    try:
+        m = json.loads(manifest_path.read_text(encoding="utf-8"))
+    except Exception:
+        return False
+    v = m.get("validation") or {}
+    return bool(v.get("expected_files_present")
+                and v.get("zip_crc_valid")
+                and v.get("schema_valid"))
+
+
 def _write_latest_quarter_if_newer(quarter, latest_file):
     """Escritura monotona de latest_quarter.txt.
 
@@ -211,8 +247,8 @@ def ensure_quarter(quarter, *, force=False,
     info = {"quarter": quarter, "source_period": source_period,
             "base_url": base_url, "processed_exists": processed.exists()}
 
-    if processed.exists() and not force:
-        print("[SKIP] {} ya ingestado en {}".format(quarter, processed))
+    if _is_quarter_fully_ingested(quarter, data_dir) and not force:
+        print("[SKIP] {} ya ingestado y validado en {}".format(quarter, processed))
     else:
         print("[INGEST] {} desde {}".format(quarter, base_url))
         # ingest_13f gestiona descarga + extract + parse + write + manifest
@@ -248,7 +284,7 @@ def ensure_quarter(quarter, *, force=False,
     # Consecuencia: regenerate_cusip_crosswalk._build_auto_rows lee
     # latest_quarter=Q_{k-1} y cierra Q_{k-1} con valid_to=period_end en
     # vez de dejarlo abierto -> corrupcion silenciosa del crosswalk CUSIP.
-    if processed.exists():
+    if _is_quarter_fully_ingested(quarter, data_dir):
         written, prev = _write_latest_quarter_if_newer(quarter, LATEST_FILE)
         if written:
             info["latest_quarter_file"] = str(LATEST_FILE)
@@ -256,7 +292,7 @@ def ensure_quarter(quarter, *, force=False,
         else:
             print("[OK] latest_quarter.txt sin cambios (ya en " + str(prev) + ")")
     else:
-        print("[WARN] processed/ no existe; latest_quarter.txt no escrito")
+        print("[WARN] quarter no completamente ingestado; latest_quarter.txt no escrito")
 
     # H5.3: trazabilidad de la ingesta (cron/dispatch/manual)
     actor = actor or _resolve_actor()

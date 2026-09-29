@@ -139,6 +139,7 @@ def test_pick_base_url_vacio_lanza():
 
 from scripts.update_sec_13f import _prev_quarter, _quarters_range
 from scripts.update_sec_13f import _write_latest_quarter_if_newer
+from scripts.update_sec_13f import _is_quarter_fully_ingested
 
 
 @pytest.mark.parametrize("q,expected", [
@@ -226,3 +227,71 @@ def test_latest_quarter_crea_directorio(tmp_path):
     written, prev = _write_latest_quarter_if_newer("2026Q2", f)
     assert written is True
     assert f.read_text(encoding="utf-8") == "2026Q2\n"
+
+# --- _is_quarter_fully_ingested (fix 2026-09-29) ---------------------
+
+def _mk_quarter(tmp_path, quarter, *, n_parquets=7, manifest=True,
+                schema_valid=True, crc_valid=True, files_present=True):
+    """Construye un data_dir minimo con processed/<q> y manifest."""
+    import json
+    data_dir = tmp_path / "sec_13f"
+    proc = data_dir / "processed" / quarter
+    proc.mkdir(parents=True)
+    expected = ["COVERPAGE", "INFOTABLE", "OTHERMANAGER",
+                "OTHERMANAGER2", "SIGNATURE", "SUBMISSION", "SUMMARYPAGE"]
+    for name in expected[:n_parquets]:
+        (proc / (name + ".parquet")).write_bytes(b"x")
+    if manifest:
+        mp = data_dir / "manifests"
+        mp.mkdir(parents=True)
+        m = {"quarter": quarter, "validation": {
+            "expected_files_present": files_present,
+            "zip_crc_valid": crc_valid,
+            "schema_valid": schema_valid,
+        }}
+        (mp / ("sec_13f_" + quarter + ".json")).write_text(
+            json.dumps(m), encoding="utf-8")
+    return data_dir
+
+
+def test_quarter_fully_ingested_ok(tmp_path):
+    dd = _mk_quarter(tmp_path, "2026Q2")
+    assert _is_quarter_fully_ingested("2026Q2", dd) is True
+
+
+def test_quarter_no_ingested_sin_dir(tmp_path):
+    dd = tmp_path / "sec_13f"
+    dd.mkdir()
+    assert _is_quarter_fully_ingested("2026Q2", dd) is False
+
+
+def test_quarter_parcial_5_de_7(tmp_path):
+    dd = _mk_quarter(tmp_path, "2026Q2", n_parquets=5)
+    assert _is_quarter_fully_ingested("2026Q2", dd) is False
+
+
+def test_quarter_sin_manifest(tmp_path):
+    dd = _mk_quarter(tmp_path, "2026Q2", manifest=False)
+    assert _is_quarter_fully_ingested("2026Q2", dd) is False
+
+
+def test_quarter_manifest_invalido_schema(tmp_path):
+    dd = _mk_quarter(tmp_path, "2026Q2", schema_valid=False)
+    assert _is_quarter_fully_ingested("2026Q2", dd) is False
+
+
+def test_quarter_manifest_invalido_crc(tmp_path):
+    dd = _mk_quarter(tmp_path, "2026Q2", crc_valid=False)
+    assert _is_quarter_fully_ingested("2026Q2", dd) is False
+
+
+def test_quarter_manifest_invalido_files_present(tmp_path):
+    dd = _mk_quarter(tmp_path, "2026Q2", files_present=False)
+    assert _is_quarter_fully_ingested("2026Q2", dd) is False
+
+
+def test_quarter_manifest_corrupto(tmp_path):
+    dd = _mk_quarter(tmp_path, "2026Q2")
+    mp = dd / "manifests" / "sec_13f_2026Q2.json"
+    mp.write_text("{{not valid", encoding="utf-8")
+    assert _is_quarter_fully_ingested("2026Q2", dd) is False
