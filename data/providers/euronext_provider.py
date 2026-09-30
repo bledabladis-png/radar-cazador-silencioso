@@ -21,6 +21,8 @@ from Crypto.Util.Padding import unpad
 EURONEXT_ENDPOINT = "https://live.euronext.com/en/ajax/getHistoricalPricePopup/{instrument}"
 EURONEXT_PASSWORD = "24ayqVo7yJma"
 EURONEXT_MAP_PATH = Path("config/euronext_ticker_map.csv")
+from ._cache_freshness import european_cache_is_fresh
+
 EURONEXT_CACHE_DIR = Path("data/cache/euronext")
 
 EURONEXT_HEADERS = {
@@ -235,18 +237,18 @@ class EuronextProvider:
         os.replace(tmp, p)
 
     def _cache_is_fresh(self, ticker: str, reference_date=None) -> bool:
-        """Considera fresco si el ultimo dato es de hoy o del ultimo dia habil.
+        """True si la cache contiene la ultima sesion EOD esperada.
 
-        A5-50 (2026-09-28): con reference_date, la decision no depende
-        de datetime.now(). Fallback legacy cuando es None.
+        Fix K (2026-09-30): delega en european_cache_is_fresh. Antes
+        usaba `(reference_date - last).days <= 1`, que consideraba
+        fresco una cache del dia anterior aunque la sesion de hoy
+        ya hubiera cerrado.
         """
         df = self._load_cache(ticker)
         if df.empty:
             return False
         last = pd.to_datetime(df["date"]).max()
-        if reference_date is None:
-            return (pd.Timestamp.now().normalize() - last).days <= 1
-        return (reference_date.date() - last.date()).days <= 1
+        return european_cache_is_fresh(last, ticker, reference_date)
 
     # -------------------- API pública --------------------
 

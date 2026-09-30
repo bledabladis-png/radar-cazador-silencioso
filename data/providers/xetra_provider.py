@@ -20,6 +20,8 @@ XETRA_TRACING_SALT = "af5a8d16eb5dc49f8a72b26fd9185475c7a"
 XETRA_MDS_TRACING_ID = "ea65e63f-b88f-414f-b1a9-e035263c8b0f"
 
 XETRA_MAP_PATH = Path("config/xetra_ticker_map.csv")
+from ._cache_freshness import european_cache_is_fresh
+
 XETRA_CACHE_DIR = Path("data/cache/xetra")
 
 WS_RECV_TIMEOUT = 3.0
@@ -297,27 +299,15 @@ class XetraProvider:
     def _cache_is_fresh(self, ticker: str, reference_date=None) -> bool:
         """True si la cache contiene la ultima sesion EOD esperada.
 
-        FU-018 (2026-09-15): con reference_date, la decision no depende
-        de datetime.now(). Ademas, si hoy es sesion y ya cerro, la
-        cache debe contener hoy (no ayer).
+        Fix K (2026-09-30): delega en european_cache_is_fresh. La
+        logica es identica (FU-018). Se unifica para los 3 providers
+        europeos (Euronext, Xetra, BME).
         """
         df = self._load_cache(ticker)
         if df.empty:
             return False
         last = pd.to_datetime(df["date"]).max()
-        if reference_date is None:
-            # Legacy: comportamiento previo.
-            return (pd.Timestamp.now().normalize() - last).days <= 1
-        market = get_market(ticker)
-        if market == "UNKNOWN":
-            print(f"  [WARN] FU-018: {ticker}: market desconocido. "
-                  f"Fallback legacy (no se pudo verificar FU-018).")
-        else:
-            ref_date = reference_date.date()
-            if is_trading_session(market, ref_date) and \
-               is_session_closed(market, ref_date, reference_date):
-                return last.date() >= ref_date
-        return (reference_date.date() - last.date()).days <= 1
+        return european_cache_is_fresh(last, ticker, reference_date)
 
     # -------------------- API pública --------------------
 

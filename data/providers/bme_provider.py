@@ -27,6 +27,8 @@ import requests
 
 BME_ENDPOINT = "https://apiweb.bolsasymercados.es/Market/v1/EQ/HistoricalSharesPrices"
 BME_MAP_PATH = Path("config/bme_ticker_map.csv")
+from ._cache_freshness import european_cache_is_fresh
+
 BME_CACHE_DIR = Path("data/cache/bme")
 BME_HEADERS = {
     "Accept": "application/json, text/plain, */*",
@@ -136,17 +138,16 @@ class BMEProvider:
         os.replace(tmp, p)
 
     def _cache_is_fresh(self, ticker: str, reference_date=None) -> bool:
-        """True si la cache contiene la ultima sesion esperada.
+        """True si la cache contiene la ultima sesion EOD esperada.
 
-        A5-59 (2026-09-28): con reference_date, la decision no depende
-        de datetime.now(). Fallback legacy cuando es None.
+        Fix K (2026-09-30): delega en european_cache_is_fresh. Antes
+        usaba `(expected - last).days <= 1`, mismo bug que Euronext.
         """
         df = self._load_cache(ticker)
         if df.empty:
             return False
         last = pd.to_datetime(df["date"]).max()
-        expected = last_expected_market_date(reference_date)
-        return (expected - last.date()).days <= 1
+        return european_cache_is_fresh(last, ticker, reference_date)
 
     # -------------------- Conversion --------------------
 
