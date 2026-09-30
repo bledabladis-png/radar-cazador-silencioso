@@ -150,3 +150,86 @@ class TestFetchCommoditiesSelective:
         p.fetch_commodities(only_futures=[], skip_spot=False)
         assert calls["futures"] == []
         assert calls["spot"] == [True]
+
+
+class TestBlockedFutures:
+    """F3-05-bis (2026-09-30): BZ=F/CL=F bloqueados por plan OilPriceAPI.
+
+    BLOCKED_FUTURES evita que update_futures.main() intente fetchear
+    tickers cuyo endpoint devuelve 403 permanente. Yahoo los sirve
+    frescos en market_data. El provider sigue siendo capaz de fetchearlos
+    si se le pide explicitamente.
+    """
+
+    def test_blocked_subset_de_futures_map(self):
+        from scripts.update_futures import FUTURES_MAP, BLOCKED_FUTURES
+        assert BLOCKED_FUTURES <= set(FUTURES_MAP), (
+            f"BLOCKED_FUTURES contiene tickers fuera de FUTURES_MAP: "
+            f"{BLOCKED_FUTURES - set(FUTURES_MAP)}"
+        )
+
+    def test_active_futures_excluye_bloqueados(self):
+        from scripts.update_futures import (
+            FUTURES_MAP, BLOCKED_FUTURES, _active_futures,
+        )
+        active = _active_futures()
+        assert set(active) == set(FUTURES_MAP) - BLOCKED_FUTURES
+
+    def test_main_sin_futuros_activos_no_pasa_bloqueados_al_provider(
+        self, monkeypatch, tmp_path
+    ):
+        """Con todos los futuros bloqueados, main() no pasa BZ=F/CL=F al
+        provider aunque el parquet este stale.
+
+        Test fuerte: usa parquet sintetico stale para futuros y spot.
+        Sin el fix, _inspect_parquet(FUTURES_PATH, expected, FUTURES_MAP)
+        devolveria missing=['BZ=F','CL=F'] y fetch_and_write los recibiria.
+        Con el fix, active_futures=[] hace que solo llegue [].
+        """
+        import pandas as pd
+        from scripts import update_futures as uf
+
+        monkeypatch.setattr(
+            uf, "BLOCKED_FUTURES", frozenset(uf.FUTURES_MAP.keys())
+        )
+
+        idx = pd.to_datetime(["2026-09-15"])
+        fut_cols = pd.MultiIndex.from_tuples(
+            [("Close", "BZ=F"), ("Close", "CL=F")],
+            names=["field", "ticker"],
+        )
+        fut_path = tmp_path / "fut.parquet"
+        pd.DataFrame(100.0, index=idx, columns=fut_cols).to_parquet(fut_path)
+
+        spot_cols = pd.MultiIndex.from_tuples(
+            [("Close", "GC=F"), ("Close", "HG=F"), ("Close", "NG=F")],
+            names=["field", "ticker"],
+        )
+        spot_path = tmp_path / "spot.parquet"
+        pd.DataFrame(3.0, index=idx, columns=spot_cols).to_parquet(spot_path)
+
+        monkeypatch.setattr(uf, "FUTURES_PATH", str(fut_path))
+        monkeypatch.setattr(uf, "SPOT_PATH", str(spot_path))
+
+        captured = {}
+
+        def fake_fetch_and_write(
+            self,
+            reference_date, run_id, futures_path, spot_path,
+            only_futures, skip_spot,
+        ):
+            captured["only_futures"] = list(only_futures)
+            return {"futures": {}, "spot": {"ok": True}}
+
+        monkeypatch.setattr(
+            uf.FuturesProvider, "fetch_and_write", fake_fetch_and_write
+        )
+
+        rc = uf.main()
+
+        assert "only_futures" in captured, "fetch_and_write no fue invocado"
+        assert captured["only_futures"] == [], (
+            "sin el fix, only_futures incluiria los tickers bloqueados: "
+            + str(captured.get("only_futures"))
+        )
+        assert rc == 0, "exit inesperado: " + str(rc)

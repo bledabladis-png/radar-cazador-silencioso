@@ -24,6 +24,7 @@ if str(_ROOT) not in sys.path:
     sys.path.insert(0, str(_ROOT))
 
 from data.providers.futures import (  # noqa: E402
+    BLOCKED_FUTURES,
     FUTURES_MAP,
     SPOT_MAP,
     FuturesProvider,
@@ -107,6 +108,16 @@ def _classify_error(exc) -> str:
     return "transient"
 
 
+def _active_futures() -> list:
+    """Tickers de FUTURES_MAP no bloqueados por plan OilPriceAPI.
+
+    BLOCKED_FUTURES recoge los tickers cuyo endpoint devuelve 403
+    permanente (plan Professional). Yahoo los sirve frescos en
+    market_data; este provider solo aportaria el settlement_proxy.
+    """
+    return [t for t in FUTURES_MAP if t not in BLOCKED_FUTURES]
+
+
 def main():
     reference_date = datetime.now(ZoneInfo('Europe/Madrid'))
     run_id = reference_date.strftime('%Y%m%d_%H%M%S')
@@ -115,8 +126,16 @@ def main():
     print(f'update_futures: reference={reference_date.date()} '
           f'run_id={run_id} expected_settlement={expected}')
 
-    fut_ok, fut_missing = _inspect_parquet(
-        FUTURES_PATH, expected, list(FUTURES_MAP.keys()))
+    active_futures = _active_futures()
+    if not active_futures:
+        print(f'update_futures: futuros BLOCKED por plan '
+              f'({sorted(BLOCKED_FUTURES)}). Yahoo cubre market_data. '
+              f'Skip fetch futuros.')
+        fut_ok, fut_missing = True, []
+    else:
+        fut_ok, fut_missing = _inspect_parquet(
+            FUTURES_PATH, expected, active_futures)
+
     spot_ok, spot_missing = _inspect_parquet(
         SPOT_PATH, expected, list(SPOT_MAP.keys()))
 
@@ -145,7 +164,7 @@ def main():
         # fetch_commodities captura internamente los 403/429 y devuelve
         # DataFrame vacio. main() ve "sin datos nuevos" sin excepcion.
         # Si habia futuros/spot esperados y no se recuperaron -> exit 1.
-        fut_expected = bool(fut_missing)
+        fut_expected = bool(fut_missing) and bool(active_futures)
         spot_expected = bool(spot_missing) and not spot_ok
         if fut_expected and not fut_res:
             print('update_futures: futures esperados pero no recuperados -> exit 1')

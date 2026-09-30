@@ -52,6 +52,15 @@ FUTURES_MAP = {
     "CL=F": {"endpoint": "/futures/ice-wti", "exchange": "NYMEX"},
 }
 
+# BZ=F / CL=F: endpoint de futuros OilPriceAPI devuelve 403
+# "required_feature" (plan Professional). Verificado 2026-09-30 como
+# permanente. Yahoo sirve ambos tickers frescos en market_data; este
+# provider solo aportaria el settlement_proxy. El bloqueo evita el
+# exit 1 diario del step 'Update commodities' sin alterar el resto.
+# Reabrir si se amplia el plan.
+BLOCKED_FUTURES = frozenset({"BZ=F", "CL=F"})
+
+
 SPOT_MAP = {
     "GC=F": {"code": "GOLD_USD"},
     "HG=F": {"code": "COPPER_USD"},
