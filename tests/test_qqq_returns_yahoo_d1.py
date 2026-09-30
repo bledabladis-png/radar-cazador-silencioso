@@ -6,20 +6,10 @@ para dar contexto de benchmark en el reporte. El render ya itera sobre
 el CSV, asi que el fix es agnostico al numero de filas.
 """
 
-import sys
-from pathlib import Path
-
 import pandas as pd
+import pytest
 
-# Importar el script como modulo (vive en scripts/, no en src/)
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-import importlib.util
-spec = importlib.util.spec_from_file_location(
-    "qqq_returns_yahoo",
-    str(Path(__file__).resolve().parents[1] / "scripts" / "qqq_returns_yahoo.py"),
-)
-mod = importlib.util.module_from_spec(spec)
-spec.loader.exec_module(mod)
+from scripts import qqq_returns_yahoo as mod
 
 
 def _make_prices(days=2600, start=100.0, growth=0.0003):
@@ -71,3 +61,68 @@ def test_d1_calculate_returns_estructura():
     keys = {"ytd", "y1", "y3", "y5", "y10", "inception", "label",
             "displayLabel", "effectiveDate", "as_of_date", "performancePeriod"}
     assert keys.issubset(r.keys())
+
+
+# --- get_adjusted_prices (huecos 29-36) ---
+
+def test_get_adjusted_prices_vacio(monkeypatch):
+    def fake_download(*a, **k):
+        return pd.DataFrame()
+    monkeypatch.setattr(mod.yf, "download", fake_download)
+    with pytest.raises(RuntimeError, match="No se pudieron descargar"):
+        mod.get_adjusted_prices("QQQ")
+
+
+def test_get_adjusted_prices_historial_corto(monkeypatch):
+    def fake_download(*a, **k):
+        idx = pd.date_range("2026-01-01", periods=100, freq="B")
+        return pd.DataFrame({"Close": [100.0] * 100}, index=idx)
+    monkeypatch.setattr(mod.yf, "download", fake_download)
+    with pytest.raises(RuntimeError, match="Historial insuficiente"):
+        mod.get_adjusted_prices("QQQ")
+
+
+def test_get_adjusted_prices_happy(monkeypatch):
+    idx = pd.date_range("2015-01-01", periods=2600, freq="B")
+    def fake_download(*a, **k):
+        return pd.DataFrame({"Close": [100.0 + i * 0.1 for i in range(2600)]}, index=idx)
+    monkeypatch.setattr(mod.yf, "download", fake_download)
+    s = mod.get_adjusted_prices("QQQ")
+    assert len(s) == 2600
+    assert isinstance(s, pd.Series)
+
+# --- calculate_returns (huecos 47, 53) ---
+
+def test_calculate_returns_ytd_nan_sin_prev_year():
+    """Serie confinada al año actual -> prev_year_prices vacio -> ytd nan."""
+    idx = pd.date_range("2026-01-02", "2026-12-31", freq="B")
+    prices = pd.Series([100.0 + i * 0.1 for i in range(len(idx))], index=idx)
+    r = mod.calculate_returns(prices, "X")
+    import math
+    assert math.isnan(r["ytd"])
+
+
+def test_calculate_returns_period_return_nan_serie_corta():
+    """Serie de 300 filas: y1 (252) OK, y3/y5/y10 nan."""
+    idx = pd.date_range("2026-01-02", periods=300, freq="B")
+    prices = pd.Series([100.0 + i * 0.1 for i in range(300)], index=idx)
+    r = mod.calculate_returns(prices, "X")
+    import math
+    assert not math.isnan(r["y1"])
+    assert math.isnan(r["y3"])
+    assert math.isnan(r["y5"])
+    assert math.isnan(r["y10"])
+
+# --- main (huecos 84-94) ---
+
+def test_main_happy(monkeypatch, tmp_path):
+    idx = pd.date_range("2015-01-01", periods=2600, freq="B")
+    prices = pd.Series([100.0 + i * 0.1 for i in range(2600)], index=idx)
+    monkeypatch.setattr(mod, "get_adjusted_prices", lambda t: prices)
+    out = tmp_path / "test_main.csv"
+    monkeypatch.setattr(mod, "OUTPUT", out)
+    mod.main()
+    assert out.exists()
+    df = pd.read_csv(out, dtype=str, keep_default_na=False)
+    assert len(df) == len(mod.TICKERS)
+    assert "effectiveDate" in df.columns
