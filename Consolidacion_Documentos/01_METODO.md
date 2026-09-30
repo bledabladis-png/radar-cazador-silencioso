@@ -238,6 +238,9 @@ Cosas que **parecen** un hallazgo pero no lo son. Antes de declarar, aplicar el 
 | "CSV modificado sin razon" | Verificar si es append (fecha nueva) o reescritura (mismas fechas, valores cambiados). Los runs legitimos anaden filas. |
 | "Test que pasa pero no verifica nada" | Buscar `assert` con valor constante, `pass`, `# no lanza`, `skip` mal configurado. Verificar con cobertura. |
 
+
+**Regla anti-falso-positivo del test (D38, 2026-09-30).** Antes de aceptar un verde, comprobar que el test falla con el fix revertido. Si pasa con y sin fix, el test no mide el cambio. Evidencia empirica: `test_load_radar_index_descarta_vacios_y_nan` (rojo sin fix -> verde con fix, destapo bug latente de simetria en `_load_radar_index`); `test_calculate_returns_ytd_nan_sin_prev_year` (mal disenado, rojo por error propio, corregido antes de commitear). Los casos frontera son obligatorios: toda frontera (lag, threshold, borde de ventana, primer/ultimo valor) necesita un caso que la cruce y otro que no.
+
 **Regla dura:** antes de proponer un patch por un "hallazgo", verificar que no cae en uno de estos casos. Un falso positivo documentado vale mas que un patch a ciegas.
 
 ---
