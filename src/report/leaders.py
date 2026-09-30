@@ -82,10 +82,9 @@ def render_momentum_otros(otros_price_rank, otros_flow_rank):
     for i, (ticker, mom) in enumerate(otros_price_rank[:15], 1):
         out.append(f"| {i} | {ticker} | {_fmt_num(mom*100, '{:.2f}%')} |\n")
 
-    out.append("\n*Nota metodologica (commodities): BZ=F y CL=F usan 'close' "
-               "de OilPriceAPI como proxy del settlement oficial ICE/NYMEX "
-               "(diferencia tipica <0.5%). GC=F, HG=F y NG=F usan precio spot "
-               "de OilPriceAPI (no son futuros).*\n\n")
+    out.append("\n*Nota metodologica (commodities): BZ=F, CL=F, GC=F, HG=F "
+               "y NG=F usan 'Close' del front-month correspondiente "
+               "(Yahoo Finance). No es settlement oficial de exchange.*\n\n")
 
     if otros_flow_rank:
         out.append("\n## Flujo de Mercado - Otros Activos (Proxy)\n")
