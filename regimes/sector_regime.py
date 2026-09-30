@@ -50,11 +50,18 @@ def compute_sector_scores(df, benchmark='^GSPC', df_stocks=None, holdings_df=Non
 
         rs_ret = rs.pct_change(fill_method=None)
 
-        mom20 = rs_ret.rolling(20).mean() / (rs_ret.rolling(20).std() + 1e-9)
+        # F3-05-quinquies (2026-09-30): min_periods relajados para
+        # tolerar festivos NYSE. rs_ret usa pct_change(fill_method=None),
+        # que genera 2 NaN consecutivos por festivo (dia + siguiente).
+        # Con min_periods=window, rolling(20/50/126) queda NaN durante
+        # 20/50/126 sesiones tras cada festivo, contaminando 3 de los 6
+        # componentes del score y forzando scores -0.0 por dispersion.
+        # Patron alineado con utils.robust_zscore (min_periods relajado).
+        mom20 = rs_ret.rolling(20, min_periods=15).mean() / (rs_ret.rolling(20, min_periods=15).std() + 1e-9)
 
-        mom50 = rs_ret.rolling(50).mean() / (rs_ret.rolling(50).std() + 1e-9)
+        mom50 = rs_ret.rolling(50, min_periods=40).mean() / (rs_ret.rolling(50, min_periods=40).std() + 1e-9)
 
-        mom126 = rs_ret.rolling(126).mean() / (rs_ret.rolling(126).std() + 1e-9)
+        mom126 = rs_ret.rolling(126, min_periods=100).mean() / (rs_ret.rolling(126, min_periods=100).std() + 1e-9)
 
         trend = trend_position(close_sector)
 
