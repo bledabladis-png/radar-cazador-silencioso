@@ -73,6 +73,14 @@ Si algun test falla: NO commitear. Diagnosticar primero.
 
 Aplicable a cambios que tocan writers, readers, nucleo temporal, o el reporte.
 
+**Criterio fino de aplicacion (D39, 2026-09-30):**
+
+- Fix que puede alterar el output de `run.py` de forma que la suite no lo detecta -> E2E obligatorio. Incluye `src/pipeline/*`, `regimes/*`, `indicators/*` (si se propaga a reporte), `run.py`, `report_generator.py`, `data_loader.py`, `stock_data_loader.py`.
+- Fix que cambia una firma, un valor por defecto o un path de fichero con consumidores en `src/pipeline/` -> E2E.
+- Fix que solo cambia un comportamiento de fallback (rama defensiva) -> verificacion ligera (tests + probe sobre artefacto real). No `run.py`.
+- Helpers puros (`src/utils.py` salvo `write_artifact_with_manifest`), tests, scripts de CI, corpus -> no E2E.
+- Checks de `health_check` que solo leen artefactos -> verificacion ligera en produccion real, no `run.py`.
+
 1. **Snapshot pre:** copiar outputs/report/, outputs/state/, outputs/history/ relevantes a `outputs/audit/pre_<bloque>_<stamp>/`.
 2. **`py run.py` real (~10-15 min).** No sustituto.
 3. **Snapshot post:** copiar los mismos a `outputs/audit/post_<bloque>_<stamp>/`.
