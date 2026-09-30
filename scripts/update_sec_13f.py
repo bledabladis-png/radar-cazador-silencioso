@@ -18,7 +18,7 @@ import getpass
 import json
 import os
 import sys
-from datetime import date, datetime
+from datetime import date, datetime, timezone
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -139,25 +139,40 @@ def latest_published_quarter(today=None):
     candidates.sort(key=lambda x: x[1], reverse=True)
     return candidates[0][0] if candidates else None
 
-def _write_ingest_trace(quarter, source, actor):
-    """Anade ingest_source + ingest_actor al manifest del trimestre.
+def _write_ingest_trace(quarter, source, actor, outcome, trace_path=None):
+    """Append una linea JSONL a data/sec_13f/ingest_traces.jsonl.
 
-    Trazabilidad para distinguir cron vs dispatch vs manual (H5.3).
+    D10 (2026-09-30): trazabilidad H5.3 (cron/dispatch/manual) en
+    fichero append-only. El manifest del trimestre NO se toca:
+    es un artefacto de integridad (sha256 del parquet), no de
+    trazabilidad. Meter metadatos del run ahi era error de
+    categoria y ensuciaba un artefacto productivo en cada
+    invocacion, incluso en rama [SKIP].
+
+    Formato por linea: JSON con ts (UTC), quarter, source,
+    actor, outcome. Append-only: no se reescribe el fichero.
+
+    ts en UTC explicito (timezone.utc). No viola 00_ARRANQUE §2:
+    la fecha de observacion es el quarter (derivado del dataset);
+    el ts es cuando se ejecuto la invocacion, uso legitimo de log.
+
+    trace_path override para tests.
     """
-    mp = ROOT / "data" / "sec_13f" / "manifests" / ("sec_13f_" + quarter + ".json")
-    if not mp.exists():
-        print("[WARN] manifest no existe para {}".format(quarter))
-        return
-    try:
-        data = json.loads(mp.read_text(encoding="utf-8"))
-    except Exception as e:
-        print("[WARN] manifest no parseable: {}: {}".format(type(e).__name__, e))
-        return
-    data["ingest_source"] = source
-    data["ingest_actor"] = actor
-    mp.write_text(json.dumps(data, indent=2, ensure_ascii=False),
-                  encoding="utf-8")
-    print("[OK] ingest trace {} source={} actor={}".format(quarter, source, actor))
+    if trace_path is None:
+        trace_path = ROOT / "data" / "sec_13f" / "ingest_traces.jsonl"
+    trace_path = Path(trace_path)
+    trace_path.parent.mkdir(parents=True, exist_ok=True)
+    entry = {
+        "ts": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "quarter": quarter,
+        "source": source,
+        "actor": actor,
+        "outcome": outcome,
+    }
+    with trace_path.open("a", encoding="utf-8") as f:
+        f.write(json.dumps(entry, ensure_ascii=False) + "\n")
+    print("[OK] ingest trace {} outcome={} source={} actor={}".format(
+        quarter, outcome, source, actor))
 
 
 def _resolve_actor():
@@ -251,8 +266,10 @@ def ensure_quarter(quarter, *, force=False,
 
     if _is_quarter_fully_ingested(quarter, data_dir) and not force:
         print("[SKIP] {} ya ingestado y validado en {}".format(quarter, processed))
+        outcome = "SKIP"
     else:
         print("[INGEST] {} desde {}".format(quarter, base_url))
+        outcome = "INGEST"
         # ingest_13f gestiona descarga + extract + parse + write + manifest
         result = ingest_13f(
             quarter=quarter,
@@ -298,7 +315,7 @@ def ensure_quarter(quarter, *, force=False,
 
     # H5.3: trazabilidad de la ingesta (cron/dispatch/manual)
     actor = actor or _resolve_actor()
-    _write_ingest_trace(quarter, source, actor)
+    _write_ingest_trace(quarter, source, actor, outcome)
 
     return info
 

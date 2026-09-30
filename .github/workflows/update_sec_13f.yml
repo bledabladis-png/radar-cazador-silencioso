@@ -132,6 +132,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add data/sec_13f/latest_quarter.txt
+          git add data/sec_13f/ingest_traces.jsonl
           git add data/sec_13f/official_list_13f/
           git add data/sec_13f/manifests/ 2>/dev/null || true
           git add data/mappings/cusip_radar_crosswalk.csv
