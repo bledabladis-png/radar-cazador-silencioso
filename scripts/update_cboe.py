@@ -61,10 +61,9 @@ def _already_up_to_date(path, expected_date):
 def _classify_error(exc) -> str:
     """Clasifica el error para decidir exit code.
 
-    F3-17-extendido (patron de update_futures.py): best-effort no
-    debe ocultar errores permanentes (credenciales invalidas, plan
-    sin acceso, limite agotado). Transitorios (timeout, red, 5xx)
-    siguen siendo best-effort.
+    F3-17: best-effort no debe ocultar errores permanentes
+    (credenciales invalidas, plan sin acceso, limite agotado).
+    Transitorios (timeout, red, 5xx) siguen siendo best-effort.
 
     Returns:
       "permanent" -> exit 2. El workflow debe alertar.
