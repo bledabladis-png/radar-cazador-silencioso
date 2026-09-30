@@ -168,3 +168,81 @@ def test_update_issue_close_gh_ok_dice_cerrada(monkeypatch, capsys):
     out = capsys.readouterr().out
     assert "cerrada" in out
     assert "WARN" not in out
+
+
+# ---------- Check H: cron_slots (umbral) ----------
+def test_cron_slots_status_ok():
+    assert hc._cron_slots_status(0) == hc.OK
+
+
+def test_cron_slots_status_1_missing_warn():
+    assert hc._cron_slots_status(1) == hc.WARN
+
+
+def test_cron_slots_status_2_missing_warn():
+    assert hc._cron_slots_status(2) == hc.WARN
+
+
+def test_cron_slots_status_3_missing_fail():
+    assert hc._cron_slots_status(3) == hc.FAIL
+
+
+def test_cron_slots_status_5_missing_fail():
+    assert hc._cron_slots_status(5) == hc.FAIL
+
+
+# ---------- Check A: workflows trimestrales ----------
+def test_workflows_trimestral_sin_runs_skip(monkeypatch):
+    monkeypatch.setattr(hc, "_run_gh", lambda args: "[]")
+    results = hc.check_workflows()
+    trim = [r for r in results if "update_sec_13f" in r.name]
+    assert trim and trim[0].status == hc.SKIP
+
+
+def test_workflows_daily_sin_runs_warn(monkeypatch):
+    monkeypatch.setattr(hc, "_run_gh", lambda args: "[]")
+    results = hc.check_workflows()
+    daily = [r for r in results if "daily_run" in r.name]
+    assert daily and daily[0].status == hc.WARN
+
+
+# ---------- Check G: iae_section ----------
+def test_iae_section_sin_reporte_en_ci_skip(monkeypatch, tmp_path):
+    monkeypatch.setattr(hc, "PROJECT_ROOT", tmp_path)
+    results = hc.check_iae_section(is_ci=True)
+    assert results[0].status == hc.SKIP
+
+
+def test_iae_section_sin_reporte_en_local_warn(monkeypatch, tmp_path):
+    monkeypatch.setattr(hc, "PROJECT_ROOT", tmp_path)
+    results = hc.check_iae_section(is_ci=False)
+    assert results[0].status == hc.WARN
+
+
+# ---------- run_all_checks: parquet en CI vs local ----------
+def test_run_all_checks_parquet_skip_en_ci(monkeypatch, tmp_path):
+    monkeypatch.setattr(hc, "IS_CI", True)
+    monkeypatch.setattr(hc, "PROJECT_ROOT", tmp_path)
+    monkeypatch.setattr(hc, "check_workflows", lambda: [])
+    monkeypatch.setattr(hc, "check_cron_slots", lambda: [])
+    monkeypatch.setattr(hc, "check_13f_cache", lambda: [])
+    monkeypatch.setattr(hc, "check_manifest", lambda name: [])
+    monkeypatch.setattr(hc, "check_iae_section", lambda is_ci=False: [])
+    results = hc.run_all_checks()
+    parquet = [r for r in results if r.name == "parquet"]
+    assert len(parquet) == 1
+    assert parquet[0].status == hc.SKIP
+
+
+def test_run_all_checks_parquet_fail_en_local(monkeypatch, tmp_path):
+    monkeypatch.setattr(hc, "IS_CI", False)
+    monkeypatch.setattr(hc, "PROJECT_ROOT", tmp_path)
+    monkeypatch.setattr(hc, "check_workflows", lambda: [])
+    monkeypatch.setattr(hc, "check_cron_slots", lambda: [])
+    monkeypatch.setattr(hc, "check_13f_cache", lambda: [])
+    monkeypatch.setattr(hc, "check_manifest", lambda name: [])
+    monkeypatch.setattr(hc, "check_iae_section", lambda is_ci=False: [])
+    results = hc.run_all_checks()
+    parquet = [r for r in results if r.name == "parquet"]
+    assert len(parquet) == 1
+    assert parquet[0].status == hc.FAIL

@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """Health check del sistema Radar.
 
-Verifica 7 bloques:
+Verifica 8 bloques:
   A. Workflows: ultima ejecucion por schedule dentro de ventana.
   B. Cache 13F (IAE): trimestre actualizado.
   C. Manifests: quality.status de stock_prices y market_data.
@@ -10,7 +10,7 @@ Verifica 7 bloques:
   E. Fechas no bursatiles en el indice del parquet.
   F. Patron contaminacion Europa-USA en ultima fila.
   G. Seccion IAE en el ultimo reporte generado.
-  H. Cron slots: los 4 disparos diarios de daily_run.yml en 24h.
+  H. Cron slots: los 5 disparos diarios de daily_run.yml en 24h.
 
 Uso:
     py scripts/health_check.py              # ejecucion local, salida consola
@@ -63,10 +63,17 @@ OK, WARN, FAIL, SKIP = "OK", "WARN", "FAIL", "SKIP"
 # Finding 2026-09-27: GitHub Actions scheduler es best-effort, no
 # garantiza el disparo de cada slot. Concurrency queue: max protege
 # contra sustitucion, no contra no-disparo. Los slots de daily_run.yml
-# deben dispararse en 24h; si falta 1 -> WARN, si faltan 2+ -> FAIL.
+# deben dispararse en 24h; si faltan <=2 -> WARN, si faltan 3+ -> FAIL.
+# Razon: el scheduler de GitHub es best-effort con delays documentados
+# de 2-8h; 1-2 slots ausentes en 24h es ruido, no incidente.
 # Los slots deben coincidir con .github/workflows/daily_run.yml.
 CRON_SLOTS_DAILY_HM = ((23, 17), (3, 17), (5, 17), (7, 17), (11, 17))  # (HH, MM) UTC
 CRON_WINDOW_HOURS = 24
+
+# Deteccion de entorno CI. GitHub Actions define GITHUB_ACTIONS=true.
+# Permite degradar a SKIP checks que dependen de artefactos no
+# versionados (parquets locales, outputs/report gitignored).
+IS_CI = os.environ.get("GITHUB_ACTIONS") == "true"
 
 
 class Result:
@@ -113,6 +120,19 @@ def _expected_slots(cutoff: datetime, now: datetime) -> list:
     return slots
 
 
+def _cron_slots_status(n_missing: int) -> str:
+    """Severidad de cron_slots segun slots ausentes.
+
+    0 -> OK. 1-2 -> WARN (scheduler best-effort GitHub con delays
+    documentados 2-8h). 3+ -> FAIL (perdida sistematica).
+    """
+    if n_missing == 0:
+        return OK
+    if n_missing <= 2:
+        return WARN
+    return FAIL
+
+
 def check_cron_slots() -> list:
     """Verifica slot-por-slot que los disparos de daily_run.yml han ocurrido.
 
@@ -125,7 +145,8 @@ def check_cron_slots() -> list:
     slot se asigna al intervalo [slot_i, slot_{i+1}). Un slot esta
     cubierto si hay >=1 run en su intervalo.
 
-    Devuelve OK si todos, WARN si falta 1, FAIL si faltan 2 o mas.
+    Severidad delegada a _cron_slots_status: 0 -> OK, 1-2 -> WARN,
+    3+ -> FAIL.
     """
     out = _run_gh([
         "run", "list", "--workflow", "daily_run.yml",
@@ -168,11 +189,8 @@ def check_cron_slots() -> list:
         fmt = ", ".join(m.strftime("%d/%m %H:%M") for m in missing)
         detail += f" (missing: {fmt})"
 
-    if not missing:
-        return [Result("cron_slots", OK, detail)]
-    if len(missing) == 1:
-        return [Result("cron_slots", WARN, detail)]
-    return [Result("cron_slots", FAIL, detail)]
+    status = _cron_slots_status(len(missing))
+    return [Result("cron_slots", status, detail)]
 
 
 # =========================================================
@@ -194,8 +212,15 @@ def check_workflows() -> list:
             results.append(Result(f"workflow:{yml}", WARN, "JSON invalido"))
             continue
         if not runs:
-            results.append(Result(f"workflow:{yml}", WARN,
-                "sin ejecuciones por schedule en el historial"))
+            # Workflows trimestrales (max_days >= 30): sin runs por
+            # schedule es lo esperado la mayor parte del ano.
+            if meta["max_days"] >= 30:
+                results.append(Result(f"workflow:{yml}", SKIP,
+                    f"sin schedule en historial (trimestral, "
+                    f"max_days={meta['max_days']})"))
+            else:
+                results.append(Result(f"workflow:{yml}", WARN,
+                    "sin ejecuciones por schedule en el historial"))
             continue
         last = runs[0]
         try:
@@ -419,9 +444,12 @@ def check_eu_usa_pattern(df: pd.DataFrame) -> list:
 # =========================================================
 # CHECK G - Seccion IAE en el ultimo reporte
 # =========================================================
-def check_iae_section() -> list:
+def check_iae_section(is_ci: bool = False) -> list:
     p = PROJECT_ROOT / "outputs" / "report" / "reporte_diario.md"
     if not p.exists():
+        if is_ci:
+            return [Result("iae_section", SKIP,
+                "reporte_diario.md no versionado (outputs/*.md gitignored)")]
         return [Result("iae_section", WARN, "reporte_diario.md no existe")]
     text = p.read_text(encoding="utf-8", errors="replace")
     if "## Acumulacion Institucional (13F)" not in text:
@@ -456,9 +484,15 @@ def run_all_checks() -> list:
         except Exception as e:
             results.append(Result("parquet", FAIL, f"error leyendo parquet: {e}"))
     else:
-        results.append(Result("parquet", FAIL, "stock_prices.parquet no existe"))
+        # stock_prices.parquet no versionado (existe local, no en git).
+        # En CI su ausencia es la norma; en local es un problema real.
+        if IS_CI:
+            results.append(Result("parquet", SKIP,
+                "stock_prices.parquet no versionado (solo local)"))
+        else:
+            results.append(Result("parquet", FAIL, "stock_prices.parquet no existe"))
     # G
-    results.extend(check_iae_section())
+    results.extend(check_iae_section(is_ci=IS_CI))
     return results
 
 
