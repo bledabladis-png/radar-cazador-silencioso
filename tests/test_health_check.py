@@ -246,3 +246,46 @@ def test_run_all_checks_parquet_fail_en_local(monkeypatch, tmp_path):
     parquet = [r for r in results if r.name == "parquet"]
     assert len(parquet) == 1
     assert parquet[0].status == hc.FAIL
+
+
+# ---------- check_yahoo_revision (K-LSE-YAHOO-REVISION-01) ----------
+def _mk_manifest(sha, last_date):
+    return {
+        "artifact": {"sha256": sha},
+        "quality": {"last_date": last_date},
+    }
+
+
+def test_yahoo_revision_ok_sin_cambio():
+    m = _mk_manifest("abc12345", "2026-09-29")
+    status, _ = hc._yahoo_revision_status(m, m)
+    assert status == hc.OK
+
+
+def test_yahoo_revision_warn_mismo_dia_hash_distinto():
+    cur = _mk_manifest("bbbbbbbb", "2026-09-29")
+    head = _mk_manifest("aaaaaaaa", "2026-09-29")
+    status, detail = hc._yahoo_revision_status(cur, head)
+    assert status == hc.WARN
+    assert "revision Yahoo" in detail
+
+
+def test_yahoo_revision_ok_sesion_nueva():
+    cur = _mk_manifest("cccccccc", "2026-09-30")
+    head = _mk_manifest("aaaaaaaa", "2026-09-29")
+    status, _ = hc._yahoo_revision_status(cur, head)
+    assert status == hc.OK
+
+
+def test_yahoo_revision_skip_sin_sha():
+    cur = {"artifact": {}, "quality": {"last_date": "2026-09-29"}}
+    head = _mk_manifest("aaaaaaaa", "2026-09-29")
+    status, _ = hc._yahoo_revision_status(cur, head)
+    assert status == hc.SKIP
+
+
+def test_yahoo_revision_skip_sin_last_date():
+    cur = {"artifact": {"sha256": "abc"}, "quality": {}}
+    head = _mk_manifest("aaaaaaaa", "2026-09-29")
+    status, _ = hc._yahoo_revision_status(cur, head)
+    assert status == hc.SKIP

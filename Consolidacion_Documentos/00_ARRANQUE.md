@@ -41,7 +41,8 @@ Lo que NUNCA haces:
 ## 2. REGLAS DURAS
 
 **Premisas del sistema:**
-- Determinista, descriptivo, auditable. Sin ML predictivo. Sin optimizacion de parametros. Sin automatizacion de trading.
+- Determinista **dado un snapshot del input**, descriptivo, auditable. Sin ML predictivo. Sin optimizacion de parametros. Sin automatizacion de trading.
+- Revision retrospectiva de Yahoo (K-LSE-YAHOO-REVISION-01): el proveedor puede reescribir OHLC en ventana de horas. El sistema es determinista respecto al snapshot, no respecto al proveedor. `check_yahoo_revision` en health_check lo detecta (WARN).
 - Todos los outputs son diagnosticos, no recomendaciones.
 - Entorno: D:\Macro_Sectorial (Windows, PowerShell, Python con py).
 - Repo: https://github.com/bledabladis-png/radar-cazador-silencioso (main).

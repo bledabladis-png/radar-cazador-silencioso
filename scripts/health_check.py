@@ -302,6 +302,55 @@ def check_manifest(name: str) -> list:
 # =========================================================
 # CHECK D - Cobertura ultimas 5 sesiones
 # =========================================================
+def _yahoo_revision_status(current: dict, head: dict) -> tuple:
+    """Clasifica (status, detail) segun dos manifests de market_data.
+
+    K-LSE-YAHOO-REVISION-01 (2026-09-30): Yahoo revisa OHLC
+    retrospectivamente en ventana de horas. Si el manifest en working
+    tree tiene el mismo last_date que el de HEAD pero sha256 distinto,
+    la revision ha ocurrido dentro de la misma sesion. No es bug
+    (politica aceptada): WARN, no FAIL.
+    """
+    sha_now = current.get("artifact", {}).get("sha256")
+    last_now = current.get("quality", {}).get("last_date")
+    sha_head = head.get("artifact", {}).get("sha256")
+    last_head = head.get("quality", {}).get("last_date")
+    if not sha_now or not last_now:
+        return SKIP, "manifest sin sha256 o last_date"
+    if last_head != last_now:
+        return OK, f"sesion nueva ({last_head} -> {last_now})"
+    if sha_head == sha_now:
+        return OK, f"sin revision (last_date={last_now})"
+    return WARN, (f"revision Yahoo: last_date={last_now}, "
+                  f"sha256 cambio ({str(sha_head)[:8]} -> {str(sha_now)[:8]})")
+
+
+def check_yahoo_revision() -> list:
+    """Detecta revision retrospectiva de Yahoo comparando manifest vs HEAD."""
+    manifest_path = PROJECT_ROOT / "data" / "market_data.parquet.manifest.json"
+    if not manifest_path.exists():
+        return [Result("yahoo_revision", SKIP, "manifest no existe")]
+    try:
+        current = json.loads(manifest_path.read_text(encoding="utf-8"))
+    except Exception as e:
+        return [Result("yahoo_revision", WARN, f"manifest invalido: {e}")]
+    try:
+        out = subprocess.run(
+            ["git", "show", "HEAD:data/market_data.parquet.manifest.json"],
+            cwd=str(PROJECT_ROOT), capture_output=True, text=True, timeout=10,
+        )
+    except Exception as e:
+        return [Result("yahoo_revision", SKIP, f"git no disponible: {e}")]
+    if out.returncode != 0:
+        return [Result("yahoo_revision", SKIP, "manifest no en HEAD")]
+    try:
+        head = json.loads(out.stdout)
+    except Exception:
+        return [Result("yahoo_revision", WARN, "manifest en HEAD invalido")]
+    status, detail = _yahoo_revision_status(current, head)
+    return [Result("yahoo_revision", status, detail)]
+
+
 def check_coverage_last_5(df: pd.DataFrame) -> list:
     close_cols = [c for c in df.columns if isinstance(c, tuple) and c[0] == "Close"]
     if not close_cols:
@@ -473,6 +522,8 @@ def run_all_checks() -> list:
     # C
     results.extend(check_manifest("stock_prices"))
     results.extend(check_manifest("market_data"))
+    # C-bis: revision Yahoo (K-LSE-YAHOO-REVISION-01)
+    results.extend(check_yahoo_revision())
     # D, E, F - requieren parquet
     sp_path = PROJECT_ROOT / "data" / "stock_prices.parquet"
     if sp_path.exists():

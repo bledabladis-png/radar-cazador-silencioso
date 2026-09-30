@@ -13,7 +13,7 @@
                                                                    |
                                                         Side effects + IAE
 
-Sistema determinista, descriptivo, auditable. Sin ML predictivo. Sin optimizacion de parametros. Sin automatizacion de trading. Todos los outputs son diagnosticos.
+Sistema determinista **dado un snapshot del input**, descriptivo, auditable. Sin ML predictivo. Sin optimizacion de parametros. Sin automatizacion de trading. Todos los outputs son diagnosticos. La revision retrospectiva de Yahoo (K-LSE-YAHOO-REVISION-01) puede alterar el snapshot; el determinismo es respecto al snapshot, no al proveedor.
 
 ---
 
