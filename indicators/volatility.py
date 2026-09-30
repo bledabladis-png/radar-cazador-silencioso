@@ -3,6 +3,25 @@ from src.utils import get_col
 from config import settings
 
 def volatility_regime(returns, window=20):
+    """Z-score de volatilidad sobre la serie de retornos con dropna previo.
+
+    F3-05-septies (2026-09-30): vix_returns viene de pct_change con
+    fill_method=None. Un festivo NYSE produce 2 NaN consecutivos
+    (festivo + dia siguiente por contagio). rolling(20).std() sin
+    dropna contamina 20 sesiones por cada NaN, y con ~90 festivos en
+    10 anios el resultado es 80% NaN en el z (2102/2605 verificado
+    2026-09-30). Eso enmascara STRESS reales: la version limpia
+    detecta 261 dias de STRESS historicos vs 81 en la contaminada.
+
+    Fix: dropna antes de los rolling. Coherente con
+    indicators/volatility.atr (F3-05-sexies) y regimes/sector_regime
+    (F3-05-quinquies).
+
+    El indice del retorno refleja la serie limpia (sin fechas con
+    retorno NaN). compute_volatility_regime usa .iloc[-1], no le
+    afecta el cambio.
+    """
+    returns = returns.dropna()
     vol = returns.rolling(window).std()
     vol_median = vol.rolling(settings.VOLATILITY_BASELINE_WINDOW, min_periods=252).median()
     vol_mad = (vol - vol_median).abs().rolling(settings.VOLATILITY_BASELINE_WINDOW, min_periods=252).median()
