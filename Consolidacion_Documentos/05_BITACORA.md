@@ -44,6 +44,79 @@ Al cerrar una sesion nueva, se anade arriba (las mas recientes primero). Si hay 
 
 ## 3. SESIONES
 
+### 2026-09-30 (noche) — D19-D28: verificacion produccion + cobertura indicators/utils
+
+**Objetivo.** Tras cerrar sesion 3 con D16/D18, continuar con la
+verificacion en produccion del check_yahoo_revision (D19) y el barrido
+de cobertura de los modulos restantes.
+
+**Hecho.**
+
+- **D19 (check_yahoo_revision en produccion).** Verificado sin commit:
+  los 3 estados del check dan el resultado esperado. Sin cambio:
+  `[OK] sin revision`. Sha256 modificado, mismo last_date:
+  `[WARN] revision Yahoo: sha256 cambio`. Restaurado: `[OK]`.
+  Sin codigo nuevo.
+
+- **D20 (utils.py).** 74% -> 88%. detect_cross_module_conflict,
+  _confidence_range_row, _try_cleanup. Nota: RECESSION no esta en
+  financial_stress_states (['CRISIS', 'HIGH_STRESS', 'ESTRECHA',
+  'STRESS']). Decision del sistema respetada.
+
+- **D21 (stock_data_loader).** Cerrado como NO-DEUDA. Las funciones
+  puras ya tenian test; los 110 sin cubrir son download_stock_prices
+  (red) + _apply_lse_close_override (scraper LSE). ROI < 1. Mismo
+  criterio que D18 para pipeline_contractual.
+
+- **D22 (indicators).** 3 modulos que alimentan macro_regime:
+  credit (19% -> 100%), breadth (22% -> 100%), macro_fundamental
+  (13% -> 97%).
+
+- **D23 (barrido datetime.now).** El inventario completo del repo dio
+  64 llamadas reales. De ellas, 4 calculaban age contra el reloj en
+  el pipeline productivo (mte_confirmation, validation_gate x2,
+  flows_secondary) + 1 cosmetico en fundamental_signals. Fix: 5
+  funciones reciben reference_date=None, propagado desde
+  compute_all_regimes y run.py. Nota importante: el primer test que
+  escribi usaba reference_date=hoy (2026-09-30) y era CIEGO al
+  cambio. Corregido a una fecha claramente distinta.
+
+- **D24 (verificacion end-to-end).** Run manual. Validation Gate
+  10/10, NIPC 8256882557. La fila 2026-09-29 en macro_regime.csv
+  queda identica (-0.0459, conf 0.3076), prueba de que D23 no altero
+  el calculo previo. La fila nueva 2026-09-30 tiene score -0.0120.
+
+- **D25-D28 (indicators).** Cierre del barrido de modulos con <80%:
+  fls (7% -> 100%), index_phase (11% -> 92%),
+  commodity_market_correlation (10% -> 90%),
+  index_leaders (12% -> 70%), darkpool_history (8% -> 88%),
+  breadth_equity (76% -> 84%), evidence_matrix (78% -> 94%),
+  mte/decision (78% -> 88%), mte/engine (79% -> 95%).
+
+**Falsos positivos detectados durante verificacion triple:**
+- D26: `assert all(v == "ERROR" for v in phases.values())` con
+  `phases={}` es True. Falso positivo. Corregido con verificacion
+  previa de `len(phases)`.
+- D27: fixture con filas ya ordenadas hacia que el test de sort fuera
+  ciego. Corregido con orden intercalado.
+- D23: reference_date = hoy. Falso positivo. Corregido.
+
+**Commits.** `8e92f9a` (D20), `182c181` (D21), `1cbf4a4` (D22),
+`ec9e5b2` (D23), `6dae899` (run D24), `72a3f74` (D25), `3fa7b0f` (D26),
+`d3b1c0b` (D27), `3835476` (D28).
+
+**Pendiente.**
+
+- C2 (920) OPEN. Bloqueado por auditor externo.
+- H5.3: verificacion cron nov 2026.
+- 2 tests skipped por --run-network en test_freshness (opt-in).
+- Cron trimestral 1-oct-2026: aplicar 07_RUNBOOK §3.
+
+**Proximo paso sugerido.** Cron 1-oct. Aplicar 07_RUNBOOK. Si todo
+verde, o retomar deuda o nueva auditoria.
+
+---
+
 ### 2026-09-30 (tarde, sesion 3) — D16 + D18: cobertura y contrato que miente
 
 **Objetivo.** Tras cerrar sesion 2, continuar con D16 (deuda detectada
