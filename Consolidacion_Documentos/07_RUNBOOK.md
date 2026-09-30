@@ -58,10 +58,25 @@ Disparan el dia 1 del mes (holdings) o el dia 20 (SEC):
 
 Los 4 workflows de §2.3 nunca se han disparado por schedule en el
 historial visible. Todos los runs conocidos son workflow_dispatch
-(9-sep, 25-ago). El cron del 1-oct-2026 sera la primera ejecucion
-automatica real. Esto anade un riesgo que el health_check no puede medir:
-si el cron esta mal escrito, si permissions no basta, o si un path no
-existe en el runner, se vera por primera vez manana.
+(9-sep, 25-ago).
+
+**Matiz operativo 1-oct-2026:** de los 4 workflows de la seccion, solo 3
+disparan el dia 1 (sector 04:47, index 06:17, european 07:17 CEST).
+`update_sec_nport` dispara el dia 20. El cron del 1-oct sera la primera
+ejecucion automatica de los 3 primeros; update_sec_nport tendra la
+suya el 20-oct.
+
+**Riesgo de colision el 1-oct:** `update_macro_manual` dispara DIARIO
+a `17 6 UTC` (06:17 CEST), justo cuando `european` lleva 1h corriendo.
+Sus `concurrency.group` son distintos (`update_index_holdings_csv` vs
+`update_macro_manual`), asi que no se serializan. Ambos hacen push a
+main. Con delays de GitHub (2-8h documentados), `european` puede seguir
+activo cuando arranca `macro_manual`. Si el push de uno choca, ver
+seccion 4.3.
+
+Esto anade un riesgo que el health_check no puede medir: si el cron esta
+mal escrito, si permissions no basta, o si un path no existe en el
+runner, se vera por primera vez manana.
 
 ---
 

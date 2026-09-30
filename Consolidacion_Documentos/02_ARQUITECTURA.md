@@ -104,9 +104,9 @@ Verificada el 2026-09-28 en la auditoria interna A0.
     |   +-- state/                  (versionado: mte_state.json, slpm_state.json, liquidity_state.json)
     |   +-- report/                 (NO versionado)
     |   +-- audit/                  (NO versionado)
-    +-- .github/workflows/          (10 workflows)
+    +-- .github/workflows/          (9 workflows)
 
-**Nota de auditoria:** cifras verificadas en la auditoria A0 (2026-09-28).
+**Nota de auditoria:** cifras verificadas en la auditoria A0 (2026-09-28). Cifra de workflows corregida 2026-09-30 (10 -> 9): se elimino `_cron_probe.yml` en A6.2-02, commit 4fbb135.
 ---
 
 ## 3. CAPAS DE FLUJO (SEPARADAS, NUNCA SE MEZCLAN)

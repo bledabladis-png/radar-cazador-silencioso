@@ -217,7 +217,7 @@ Cadena:
 | `iae_validate_crosswalk_openfigi.py` | 179 | Validacion externa OpenFIGI |
 | `regenerate_cusip_crosswalk.py` | 225 | Regenera crosswalk CUSIP (trimestral) |
 | `regenerate_radar_catalog.py` | 238 | Regenera catalogo radar (daily) |
-| `update_sec_13f.py` | 286 | Ingesta trimestral SEC 13F |
+| `update_sec_13f.py` | 373 | Ingesta trimestral SEC 13F |
 
 **Clasificacion (criterio del auditor externo H3):**
 - **Normativo:** `regenerate_radar_catalog.py`, `regenerate_cusip_crosswalk.py`, `update_sec_13f.py`, `download_official_list_13f.py`, `generate_estado_sistema.py`.
