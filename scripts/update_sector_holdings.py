@@ -12,6 +12,8 @@ from io import BytesIO
 import os
 import sys
 
+from src.holdings_filter import is_valid_holding_ticker
+
 # ETFs sectoriales con sus URLs de State Street (formato US)
 SECTOR_ETFS = {
     'XLK': 'https://www.ssga.com/us/en/intermediary/library-content/products/fund-data/etfs/us/holdings-daily-us-en-xlk.xlsx',
@@ -82,7 +84,7 @@ def main():
             weights = []
             for i in range(header_row + 1, len(df)):
                 ticker = df.iloc[i, ticker_col]
-                if isinstance(ticker, str) and ticker.strip():
+                if isinstance(ticker, str) and is_valid_holding_ticker(ticker):
                     tickers.append(ticker.strip().upper())
                     if identifier_col is not None:
                         identifier = df.iloc[i, identifier_col]

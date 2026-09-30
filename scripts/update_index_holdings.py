@@ -11,6 +11,8 @@ from io import BytesIO, StringIO
 import os
 import sys
 
+from src.holdings_filter import is_valid_holding_ticker
+
 # ETFs de EE.UU. que se actualizan desde State Street (Excel)
 US_ETFS = {
     'SPY': 'https://www.ssga.com/us/en/intermediary/library-content/products/fund-data/etfs/us/holdings-daily-us-en-spy.xlsx',
@@ -67,6 +69,8 @@ def get_invesco_qqq_holdings():
         ticker = h.get('ticker')
         if not ticker:
             continue
+        if not is_valid_holding_ticker(normalize_ticker(ticker.strip().upper())):
+            continue
 
         # Filtrar solo Common Stock (securityTypeCode == 'COM')
         sec_code = h.get('securityTypeCode', '')
@@ -117,7 +121,7 @@ def get_blackrock_iwm_holdings():
     rows = []
     for _, row in df_equity.iterrows():
         ticker = row.get('Ticker')
-        if not ticker or not isinstance(ticker, str):
+        if not ticker or not isinstance(ticker, str) or not is_valid_holding_ticker(ticker):
             continue
         name = row.get('Name', '')
         weight_str = row.get('Weight (%)', '0')
@@ -176,8 +180,10 @@ def get_state_street_holdings(etf, url):
     weights = []
     for i in range(header_row + 1, len(df_raw)):
         ticker = df_raw.iloc[i, ticker_col]
-        if isinstance(ticker, str) and ticker.strip():
-            tickers.append(normalize_ticker(ticker.strip().upper()))
+        if isinstance(ticker, str):
+            t_norm = normalize_ticker(ticker.strip().upper())
+            if is_valid_holding_ticker(t_norm):
+                tickers.append(t_norm)
             name = df_raw.iloc[i, name_col] if name_col is not None else ''
             if not isinstance(name, str):
                 name = ''

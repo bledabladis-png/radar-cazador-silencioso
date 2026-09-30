@@ -3,6 +3,8 @@ import csv
 import yfinance as yf
 import time
 
+from src.holdings_filter import is_valid_holding_ticker
+
 urls = {
     'DAXEX': 'https://www.blackrock.com/es/profesionales/productos/251464/ishares-dax-ucits-etf-de-fund/1497267045693.ajax?fileType=csv&fileName=DAXEX_holdings&dataType=fund',
     'ISF.L': 'https://www.blackrock.com/es/profesionales/productos/251795/ishares-ftse-100-ucits-etf-inc-fund/1497267045693.ajax?fileType=csv&fileName=ISF_holdings&dataType=fund',
@@ -75,6 +77,8 @@ for etf, url in urls.items():
 
     for f in filas:
         ticker = clean_text(f.get('Ticker'))
+        if not is_valid_holding_ticker(ticker):
+            continue
         name = clean_text(f.get('Name'))
         weight_str = clean_text(f.get('Weight (%)'))
         asset_class = clean_text(f.get('Asset Class'))

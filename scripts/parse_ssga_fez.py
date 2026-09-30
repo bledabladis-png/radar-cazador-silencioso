@@ -2,6 +2,8 @@
 import pandas as pd
 from io import BytesIO
 
+from src.holdings_filter import is_valid_holding_ticker
+
 URL = 'https://www.ssga.com/us/en/intermediary/library-content/products/fund-data/etfs/us/holdings-daily-us-en-fez.xlsx'
 
 FEZ_TICKER_MAP = {
@@ -70,7 +72,7 @@ if ticker_col is None:
 holdings = []
 for i in range(header_row + 1, len(df)):
     ticker = df.iloc[i, ticker_col]
-    if isinstance(ticker, str) and ticker.strip():
+    if isinstance(ticker, str) and is_valid_holding_ticker(ticker):
         name = df.iloc[i, 0]
         identifier = ''
         if identifier_col is not None:

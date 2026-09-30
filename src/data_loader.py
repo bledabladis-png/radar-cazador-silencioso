@@ -29,13 +29,13 @@ def _ticker_list():
         import pandas as _pd
         holdings = _pd.read_csv('data/etf_holdings.csv')
         if 'ticker' in holdings.columns:
-            # Lista negra de tickers inválidos detectados en holdings (futuros, CUSIP, efectivo)
-            INVALID_TICKERS = {'XARU6','IXDU6','IXIU6','IXAU6','IXTU6','IXRU6',
-                               'IXPU6','IXCU6','IXYU6','IXSU6','XASU6',
-                               '2602335D','-'}
+            # D11 (2026-09-30): el filtro de tickers invalidos se movio
+            # al parser (src/holdings_filter). El CSV de holdings ya
+            # solo contiene tickers validos por construccion. Defensa
+            # en profundidad retirada: ocultaba fallos del parser.
             raw_tickers = holdings['ticker'].tolist()
             for t in raw_tickers:
-                if isinstance(t, str) and t not in INVALID_TICKERS:
+                if isinstance(t, str):
                     tickers.append(normalize_yahoo_ticker(t))
     except Exception as e:
         print(f"  [WARN] _ticker_list: etf_holdings.csv: {e}")
