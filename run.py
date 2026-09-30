@@ -222,6 +222,7 @@ def main():
                             real_liq_score=real_liq_score,
                           pcr_data=pcr_data, darkpool_data=darkpool_data, mte_result=mte_result,
                           confirmation_data=confirmation_data,
+                          reference_date=reference_date,
                           slpm_v12_data=slpm_v12_data,
                           tactical_scores=tactical_scores,
                           structural_scores=structural_scores,

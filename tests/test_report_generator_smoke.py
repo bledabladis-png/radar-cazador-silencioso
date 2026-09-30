@@ -130,3 +130,47 @@ def test_generate_daily_report_with_breadth_values(tmp_path):
     content = output.read_text(encoding='utf-8')
     assert '## Breadth de Mercado' in content, 'Falta seccion Breadth de Mercado con datos'
     assert 'Traceback' not in content
+
+
+def test_generate_daily_report_fecha_deriva_de_reference_date(tmp_path):
+    """D6 (2026-09-30): el header usa reference_date, no datetime.now().
+
+    Dos llamadas con el mismo reference_date deben producir el mismo
+    header. Si se usara datetime.now(), el header cambiaria entre
+    llamadas (segundos distintos). Ver regla 00_ARRANQUE §2.
+    """
+    from datetime import datetime
+    from zoneinfo import ZoneInfo
+
+    fixture = _make_minimal_fixture()
+    ref = datetime(2026, 9, 30, 8, 15, 42, tzinfo=ZoneInfo("Europe/Madrid"))
+
+    out1 = tmp_path / "r1.md"
+    out2 = tmp_path / "r2.md"
+    generate_daily_report(*fixture, output_path=str(out1), reference_date=ref)
+    generate_daily_report(*fixture, output_path=str(out2), reference_date=ref)
+
+    c1 = out1.read_text(encoding="utf-8")
+    c2 = out2.read_text(encoding="utf-8")
+
+    # El header contiene la fecha del reference_date, formateada.
+    esperado = "**Fecha:** 2026-09-30 08:15:42"
+    assert esperado in c1, "Header no contiene la fecha esperada: {!r}".format(
+        [l for l in c1.splitlines() if "Fecha" in l])
+    assert esperado in c2
+
+    # El header es identico byte a byte entre dos llamadas.
+    h1 = [l for l in c1.splitlines() if l.startswith("**Fecha:")]
+    h2 = [l for l in c2.splitlines() if l.startswith("**Fecha:")]
+    assert h1 == h2, "Header distinto entre llamadas: {} vs {}".format(h1, h2)
+
+
+def test_generate_daily_report_sin_reference_date_no_crashea(tmp_path):
+    """D6: si no se pasa reference_date, fallback a now() con tz Madrid."""
+    fixture = _make_minimal_fixture()
+    out = tmp_path / "r.md"
+    generate_daily_report(*fixture, output_path=str(out))
+
+    content = out.read_text(encoding="utf-8")
+    assert "**Fecha:**" in content
+    assert "Traceback" not in content
