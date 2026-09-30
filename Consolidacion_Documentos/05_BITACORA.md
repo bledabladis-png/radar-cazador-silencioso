@@ -71,8 +71,22 @@ publica el NIPC del par vigente, que cambia con cada trimestre.
 - Cabo B: revisar si Yahoo actualiza cierre del 29 a las 04:00 CEST.
 - C2 (920): sin material del auditor, referido al par Q4->Q1.
 
-**Proximo paso sugerido.** Ninguno urgente. Esperar al cron de la
-madrugada.
+**Hallazgos del run manual (2026-09-30, run 36642077307):**
+- `update_futures` exit 1. BZ=F/CL=F BLOCKED (403 OilPriceAPI).
+  `commodities_futures.parquet` atascado en 21-sep. Señal intencional
+  con `continue-on-error: true`.
+- Warning 'Cache 13F no disponible' es falso positivo. La cache se
+  restauro por restore-key (v2), pero `cache-hit != 'true'` dispara
+  la alerta. La primary key v3 aun no existe (se guardara el 20-nov).
+- 3 tests skipped en CI (`market_data`, `stock_prices`,
+  `european_tickers_recent`) por parquets gitignored. Skip silencioso.
+- NIPC del run manual: `8256882557` (par vigente Q1-2026 -> Q2-2026).
+  Distinto del baseline `-4264449012` (par Q4-2025 -> Q1-2026, congelado).
+  Documentado en `c087cb8`.
+
+**Proximo paso sugerido.** Abordar 3 fixes: (a) condicion de la warning
+cache 13F, (b) skipped tests en CI, (c) evaluar sustituto OilPriceAPI
+o documentar futuros como BLOCKED de facto con parquet congelado.
 
 ### 2026-09-29 (noche) — Integridad parquets + EU 5y + PENDING BME + P65### 2026-09-29 (noche) — Integridad parquets + EU 5y + PENDING BME + P65
 

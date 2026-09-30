@@ -160,7 +160,12 @@ Sesion 2026-09-29 (tarde): auditoria funcional frente 6 (IAE) + frente 8 (provid
   N-PORT (backfill en update_sec_nport_data + descarga automatica XML EDGAR).
 
 - **Orquestacion CI:** 8 commits. Bugs reales:
-  cache 13F v2<->v3 alineada entre daily_run y update_sec_13f,
+  cache 13F v2<->v3: **el restore del daily_run pide v3, que aun no
+  existe; cae siempre a v2 por restore-key.** El save con v3 lo hace
+  update_sec_13f (cron trimestral, proximo 20-nov). La warning
+  'Cache 13F no disponible' del daily_run es falso positivo:
+  'cache-hit != true' cuando se restauro por restore-key. Verificado
+  2026-09-30 con run manual.
   issues:write en update_sec_13f (alerta H5.2 inoperativa),
   _update_issue comprueba retorno de gh (deja de mentir),
   retry con backoff en git push de 8 workflows,
@@ -214,6 +219,11 @@ Sesion 2026-09-29 (tarde): auditoria funcional frente 6 (IAE) + frente 8 (provid
   (FutureWarning pandas 2.x -> cambio de dtype en 3.0).
 
 **Pendientes vivos:**
+
+- **3 tests skipped en CI** por parquets gitignored (`market_data`,
+  `stock_prices`, `european_tickers_recent`, todos en `test_freshness.py`).
+  Verificado 2026-09-30 con run manual. Skip silencioso: no aparece en
+  el resumen de cobertura.
 
 - H5.3 - Trazabilidad cron trimestral. Verificacion en cron real de
   noviembre 2026.

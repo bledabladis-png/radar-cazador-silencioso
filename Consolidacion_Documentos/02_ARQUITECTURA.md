@@ -232,7 +232,7 @@ Si `validation_gate['passed'] == False` -> `sys.exit(1)`.
 
 | Workflow | Cron | Proposito |
 |---|---|---|
-| daily_run.yml | 17 23 / 17 3 / 17 7 / 17 11 UTC | Run multi-slot con gate pre-pipeline (F-IAE-CRON-02) + validacion + push de outputs |
+| daily_run.yml | 17 23 / 17 3 / 17 5 / 17 7 / 17 11 UTC (5 slots) | Run multi-slot con gate pre-pipeline (F-IAE-CRON-02) + validacion + push de outputs |
 | update_macro_manual.yml | 17 6 * * * | FRED auto |
 | update_european_holdings.yml | 17 5 1 1,4,7,10 * | Holdings europeos |
 | update_index_holdings.yml | 17 4 1 1,4,7,10 * | SPY/DIA/QQQ/IWM |
@@ -363,7 +363,9 @@ Si el gate falla, `run.py` aborta con `sys.exit(1)`.
 
 **OilPriceAPI retention_period=30d:** solo 30 dias de historico remoto. Acumulacion local obligatoria (append_dedup por fecha).
 
-**Futuros BZ=F / CL=F BLOCKED:** plan OilPriceAPI (F3-05). No hay sustituto. Se acepta.
+**Futuros BZ=F / CL=F BLOCKED:** plan OilPriceAPI (F3-05). No hay sustituto. Se acepta. El step `Update commodities (best-effort)` del daily_run sale exit 1 en cada run (señal intencional con `continue-on-error: true`). `commodities_futures.parquet` queda atascado en su ultima fecha con datos (21-sep al verificar 2026-09-30).
+
+**Cache 13F v3 nunca guardada:** el daily_run pide `13f-processed-v3-<hash>`, que aun no existe (update_sec_13f lo guardara en su cron trimestral, proximo 20-nov). El restore cae siempre a `13f-processed-v2-<hash>` por restore-key. La warning `Cache 13F no disponible` que emite daily_run es falso positivo: `cache-hit != 'true'` no distingue 'no restaurada' de 'restaurada por fallback'.
 
 **K-LSE-YAHOO-REVISION-01 (MONITORED):** Yahoo revisa OHLC historico retrospectivamente. Afecta al WLS (dependiente de ventanas largas). No es bug.
 
