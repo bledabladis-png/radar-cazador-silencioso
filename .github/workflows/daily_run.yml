@@ -133,7 +133,14 @@ jobs:
       - name: Avisar si cache IAE no disponible
         if: steps.cache_13f.outputs.cache-hit != 'true'
         run: |
-          echo "::warning::Cache 13F no disponible. Seccion IAE mostrara STALE."
+          # 2026-09-30: cache-hit=true solo con match exacto del primary
+          # key. Con restore-key (v2 fallback), cache-hit=false aunque la
+          # cache SI se haya restaurado. Comprobar directorio real.
+          if [ -d data/sec_13f/processed ] && [ -n "$(ls -A data/sec_13f/processed 2>/dev/null)" ]; then
+            echo "::notice::Cache 13F restaurada por restore-key (v2 fallback). Cache-hit=false pero directorio poblado."
+          else
+            echo "::warning::Cache 13F no disponible. Seccion IAE mostrara STALE."
+          fi
 
       - name: Fetch LSE scraper (best-effort)
         id: lse_checkout
