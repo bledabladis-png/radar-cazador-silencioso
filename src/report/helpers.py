@@ -99,7 +99,9 @@ def _classify_finra_freshness(age_days):
     return 'ARCHIVAL'
 
 
-def _generate_coverage_table(pcr_data, darkpool_data, sector_results):
+def _generate_coverage_table(pcr_data, darkpool_data, sector_results, reference_date=None):
+    from datetime import datetime
+    _ref = reference_date.replace(tzinfo=None) if reference_date is not None else datetime.now()
     lines = []
     lines.append("### Cobertura de Datos\n")
     lines.append("| Fuente | Cobertura | Antigüedad |\n")
@@ -125,16 +127,14 @@ def _generate_coverage_table(pcr_data, darkpool_data, sector_results):
         print(f"  [WARN] report_generator: analisis_lideres.csv: {e}")
     lines.append(f"| Acciones lideres | {n_acciones} tickers | - |\n")
     if pcr_data and pcr_data.get('last_date'):
-        from datetime import datetime
         import pandas as pd
-        pcr_age = (datetime.now() - pd.Timestamp(pcr_data['last_date'])).days
+        pcr_age = (_ref - pd.Timestamp(pcr_data['last_date'])).days
         lines.append(f"| Opciones (CBOE) | - | {pcr_age} dias |\n")
     else:
         lines.append("| Opciones (CBOE) | - | Sin datos |\n")
     if darkpool_data and darkpool_data.get('week'):
-        from datetime import datetime
         import pandas as pd
-        dp_age = (datetime.now() - pd.Timestamp(darkpool_data['week'])).days
+        dp_age = (_ref - pd.Timestamp(darkpool_data['week'])).days
         lines.append(f"| Dark Pool (FINRA) | - | {dp_age} dias |\n")
     else:
         lines.append("| Dark Pool (FINRA) | - | Sin datos |\n")

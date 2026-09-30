@@ -19,7 +19,7 @@ from src.report.helpers import (
 )
 
 
-def render_data_freshness(pcr_data, darkpool_data, sector_results):
+def render_data_freshness(pcr_data, darkpool_data, sector_results, reference_date=None):
     """Renderiza la seccion 'Data Freshness' + tabla de cobertura.
 
     Devuelve lista de lineas markdown. Sin side effects.
@@ -28,12 +28,12 @@ def render_data_freshness(pcr_data, darkpool_data, sector_results):
     out.append("### Data Freshness\n")
     out.append("| Fuente | Ultimo dato | Antigüedad | Estado | Data Conf |\n")
     out.append("|--------|-------------|------------|--------|----------|\n")
-    now = datetime.now()
+    _ref = reference_date.replace(tzinfo=None) if reference_date is not None else datetime.now()
     
     if pcr_data and pcr_data.get('last_date', 'N/A') != 'N/A':
         try:
             d = pd.Timestamp(pcr_data['last_date'])
-            age = (now - d).days
+            age = (_ref - d).days
             cboe_status = _classify_freshness(age, *FRESHNESS_CBOE)
             cboe_conf = 'Alta' if cboe_status in ('CURRENT', 'RECENT') else 'Baja'
             out.append(f"| CBOE (Opciones) | {d.strftime('%Y-%m-%d')} | {age} dias | {cboe_status} | {cboe_conf} |\n")
@@ -47,7 +47,7 @@ def render_data_freshness(pcr_data, darkpool_data, sector_results):
         if week != 'N/A':
             try:
                 d = pd.Timestamp(week)
-                age = (now - d).days
+                age = (_ref - d).days
                 finra_status = _classify_finra_freshness(age)
                 finra_conf = 'Alta' if finra_status in ('CURRENT', 'RECENT') else 'Baja'
                 out.append(f"| FINRA (Dark Pools) | {d.strftime('%Y-%m-%d')} | {age} dias | {finra_status} | {finra_conf} |\n")
@@ -67,7 +67,7 @@ def render_data_freshness(pcr_data, darkpool_data, sector_results):
             last_fred = liq_state.get('date', 'N/A')
             if last_fred != 'N/A':
                 d = _last_market_session(last_fred)  # FU-007: walk back a ultimo dia bursatil
-                age = (now - d).days
+                age = (_ref - d).days
                 fred_status = _classify_fred_freshness(age)
                 fred_conf = 'Alta' if fred_status in ('CURRENT', 'RECENT') else 'Baja'
                 out.append(f"| FRED (Macro) | {d.strftime('%Y-%m-%d')} | {age} dias | {fred_status} | {fred_conf} |\n")
@@ -92,7 +92,7 @@ def render_data_freshness(pcr_data, darkpool_data, sector_results):
             if _df_pq.empty:
                 continue
             _yahoo_last = _last_market_session(_df_pq.index[-1])  # FU-007
-            _yahoo_age = (now - _yahoo_last).days
+            _yahoo_age = (_ref - _yahoo_last).days
             _yahoo_status = _classify_freshness(_yahoo_age, *FRESHNESS_YAHOO)
             _yahoo_conf = "Alta" if _yahoo_status in ("CURRENT", "RECENT") else "Baja"
             break
@@ -103,7 +103,7 @@ def render_data_freshness(pcr_data, darkpool_data, sector_results):
     else:
         out.append("| Yahoo Finance (Precios) | N/D | N/D | N/D | N/D |\n")
     out.append("\n")
-    coverage_lines = _generate_coverage_table(pcr_data, darkpool_data, sector_results)
+    coverage_lines = _generate_coverage_table(pcr_data, darkpool_data, sector_results, reference_date=reference_date)
     for cl in coverage_lines:
         out.append(cl)
 

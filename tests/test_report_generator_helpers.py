@@ -215,3 +215,18 @@ def test_slpm_n_cero_muestra_nd():
     assert 'Leader Momentum Breadth:** N/D' in joined
     assert 'Effective Breadth:** N/D' in joined
     assert 'Leader Breadth (RS ratio > 1.0):** 0%' not in joined
+
+
+# ---------- D6b: propagacion de reference_date ----------
+def test_generate_coverage_table_usa_reference_date():
+    """D6b (2026-09-30): el age se calcula contra reference_date, no
+    contra datetime.now(). Dos fechas de referencia distintas -> edades
+    distintas, sin depender del reloj real."""
+    from datetime import datetime
+    pcr_data = {'last_date': '2026-09-20'}
+    dp_data = {'week': '2026-09-15'}
+    ref = datetime(2026, 9, 30, 10, 0, 0)
+    result = _generate_coverage_table(pcr_data, dp_data, None, reference_date=ref)
+    joined = ''.join(result)
+    assert '10 dias' in joined, "esperado 10 dias (PCR 2026-09-20 -> 2026-09-30)"
+    assert '15 dias' in joined, "esperado 15 dias (DP 2026-09-15 -> 2026-09-30)"

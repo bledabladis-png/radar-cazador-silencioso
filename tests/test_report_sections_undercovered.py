@@ -363,3 +363,25 @@ def test_mte_nan_en_scores():
     })
     lineas = "".join(out)
     assert "N/D" in lineas
+
+
+# ---------- D6b: propagacion de reference_date ----------
+def test_render_darkpool_usa_reference_date():
+    """D6b (2026-09-30): retraso calculado contra reference_date."""
+    from datetime import datetime
+    dp_data = {'week': '2026-09-15', 'media_dark_pool': 0,
+               'n_tickers_ats': 0, 'n_tickers_total': 0}
+    ref = datetime(2026, 9, 30, 10, 0, 0)
+    out = render_darkpool(dp_data, reference_date=ref)
+    joined = ''.join(out)
+    assert 'retraso: 15 dias' in joined, joined
+
+
+def test_render_sentimiento_usa_reference_date():
+    """D6b (2026-09-30): desfase calculado contra reference_date."""
+    from datetime import datetime
+    pcr_data = {'last_date': '2026-09-20', 'total_pcr': 1.0}
+    ref = datetime(2026, 9, 30, 10, 0, 0)
+    out = render_sentimiento_opciones(pcr_data, reference_date=ref)
+    joined = ''.join(out)
+    assert '(desfase: 10 dias)' in joined, joined

@@ -108,7 +108,7 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
     # =========================================================================
     # DATA FRESHNESS
     # =========================================================================
-    lines.extend(render_data_freshness(pcr_data, darkpool_data, sector_results))
+    lines.extend(render_data_freshness(pcr_data, darkpool_data, sector_results, reference_date=reference_date))
 
 
     # =========================================================================
@@ -205,7 +205,7 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
     # =========================================================================
     # SENTIMIENTO DE OPCIONES (OMS v2.0)
     # =========================================================================
-    lines.extend(render_sentimiento_opciones(pcr_data))
+    lines.extend(render_sentimiento_opciones(pcr_data, reference_date=reference_date))
 
     # =========================================================================
     # ETF PRIMARY FLOW (SPDR) + CARACTERISTICAS + DIVERGENCIA
@@ -270,7 +270,7 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
     # =========================================================================
     # DARK POOLS
     # =========================================================================
-    lines.extend(render_darkpool(darkpool_data))
+    lines.extend(render_darkpool(darkpool_data, reference_date=reference_date))
 
     # =========================================================================
     # INFERENCIA TRANSVERSAL (CORREGIDA)

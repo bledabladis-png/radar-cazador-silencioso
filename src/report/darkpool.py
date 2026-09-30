@@ -12,12 +12,13 @@ from src.report.helpers import _classify_finra_freshness, _fmt_num
 from config.settings import DARKPOOL_FULL_HISTORY_WEEKS
 
 
-def render_darkpool(darkpool_data):
+def render_darkpool(darkpool_data, reference_date=None):
     """Renderiza la seccion Actividad en ATS - Dark Pools (FINRA).
 
     Devuelve lista de lineas markdown. Sin side effects.
     """
     out = []
+    _ref = reference_date.replace(tzinfo=None) if reference_date is not None else datetime.now()
     if darkpool_data:
         out.append("## Actividad en ATS - Dark Pools (FINRA v1.0)\n")
         out.append("*Nota: FINRA publica datos de ATS con retraso regulatorio de 2 a 4 semanas. Los datos pueden estar desfasados por diseño.*\n")
@@ -25,7 +26,7 @@ def render_darkpool(darkpool_data):
         if week != 'N/A':
             try:
                 d = pd.Timestamp(week)
-                age = (datetime.now() - d).days
+                age = (_ref - d).days
                 freshness = _classify_finra_freshness(age)
                 if freshness == 'ARCHIVAL':
                     out.append(f"**DATOS OBSOLETOS:** Ultimo dato con {age} dias de antiguedad. No se usa para clasificacion actual. Contexto historico solamente.\n\n")
@@ -50,7 +51,7 @@ def render_darkpool(darkpool_data):
         if week != 'N/A':
             try:
                 d = pd.Timestamp(week)
-                age = (datetime.now() - d).days
+                age = (_ref - d).days
                 out.append(f"- **Semana FINRA:** {week} (retraso: {age} dias)\n")
             except (ValueError, TypeError, OSError):
                 out.append(f"- **Semana FINRA:** {week}\n")

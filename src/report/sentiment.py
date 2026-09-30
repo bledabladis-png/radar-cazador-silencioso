@@ -12,12 +12,13 @@ import pandas as pd
 from src.report.helpers import _fmt_num
 
 
-def render_sentimiento_opciones(pcr_data):
+def render_sentimiento_opciones(pcr_data, reference_date=None):
     """Renderiza la seccion Sentimiento de Opciones.
 
     Devuelve lista de lineas markdown. Sin side effects.
     """
     out = []
+    _ref = reference_date.replace(tzinfo=None) if reference_date is not None else datetime.now()
     if pcr_data:
         out.append("## Sentimiento de Opciones\n")
         out.append(f"- **PCR Total:** {_fmt_num(pcr_data.get('total_pcr', np.nan), '{:.2f}')} ")
@@ -48,7 +49,7 @@ def render_sentimiento_opciones(pcr_data):
         if last_date != 'N/A':
             try:
                 data_date = pd.Timestamp(last_date)
-                age = (datetime.now() - data_date).days
+                age = (_ref - data_date).days
                 out.append(f" (desfase: {age} dias)")
             except (ValueError, TypeError):
                 pass
