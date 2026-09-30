@@ -249,6 +249,14 @@ Sesion 2026-09-29 (tarde): auditoria funcional frente 6 (IAE) + frente 8 (provid
   E2E-only por diseno), `data_loader` 51%->59% (funciones puras
   cubiertas; `download_market_data` es red, E2E-only). Sin bug
   detectado en los 4 modulos.
+- `stock_data_loader` (77% cobertura, D21 2026-09-30): cerrado como
+  no-deuda. Las funciones puras ya estan cubiertas (get_usa_tickers,
+  get_stock_list, _fill_holes_respecting_sessions, _filter_failed
+  _from_batch, _log_yahoo_raw_diagnostics). Los 110 lineas no
+  cubiertas son download_stock_prices + _apply_lse_close_override
+  (red + scraper LSE, E2E-only) y ramas defensivas. Testearlas
+  exigiria mockear yf.download + scraper: ROI < 1. Mismo criterio
+  que pipeline_contractual en D18.
 
 ---
 
