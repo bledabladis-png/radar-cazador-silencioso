@@ -137,6 +137,17 @@ def get_etf_primary_flow_data(force_download: bool = False) -> pd.DataFrame:
     if HISTORY_PATH.exists():
         try:
             _hist_existing = pd.read_csv(HISTORY_PATH)
+            # append_dedup normaliza solo 'date' (minuscula). SSGA usa
+            # 'Date' (mayuscula). Normalizar ambos a YYYY-MM-DD antes
+            # del dedup, o drop_duplicates no detecta coincidencias
+            # (string '2026-09-25' vs '2026-09-25 00:00:00') y duplica
+            # todo el historico. Detectado en run E2E 2026-09-30.
+            _hist_existing['Date'] = pd.to_datetime(
+                _hist_existing['Date'], errors='coerce'
+            ).dt.strftime('%Y-%m-%d')
+            full_df['Date'] = pd.to_datetime(
+                full_df['Date'], errors='coerce'
+            ).dt.strftime('%Y-%m-%d')
             full_df = append_dedup(_hist_existing, full_df, ["ticker", "Date"])
         except (OSError, ValueError, pd.errors.ParserError, pd.errors.EmptyDataError) as _e:
             print(f'  [WARN] etf_primary_flow existente ilegible: {_e}')

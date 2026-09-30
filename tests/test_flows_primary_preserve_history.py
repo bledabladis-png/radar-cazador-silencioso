@@ -57,6 +57,17 @@ def test_ssga_no_pierde_filas_si_proveedor_devuelve_menos(tmp_path, monkeypatch)
         f"La fila 2026-09-29 desaparecio del historico. "
         f"Fechas presentes: {sorted(fechas)}"
     )
+    # Verificar que NO hay duplicados. Si Date no se normaliza, el
+    # drop_duplicates no detecta coincidencias y duplica el historico.
+    dups = result.duplicated(subset=["ticker", "Date"]).sum()
+    assert dups == 0, (
+        f"etf_primary_flow tiene {dups} filas duplicadas (ticker, Date). "
+        f"Total filas: {len(result)}. Esperado: 3."
+    )
+    assert len(result) == 3, (
+        f"Esperado 3 filas (1 ticker x 3 fechas), hay {len(result)}. "
+        f"Si Date no se normaliza a YYYY-MM-DD, el historico se duplica."
+    )
 
 
 def test_amundi_no_pierde_filas_si_proveedor_devuelve_menos(tmp_path, monkeypatch):
