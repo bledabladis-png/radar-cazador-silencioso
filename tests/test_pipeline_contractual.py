@@ -78,3 +78,134 @@ def test_subset_universe_preserva_metadata():
     assert u2.catalog_version_id == u.catalog_version_id
     assert u2.catalog_sha256 == u.catalog_sha256
     assert u2.ticker_by_key == {"k2": "TK_k2"}
+
+
+# ---------- D18 (2026-09-30): build_identities ----------
+# Cubre las 2 ramas del fichero de equivalencia (existe vs no existe).
+# La orquestacion run_contractual_nipc sigue cubierta por E2E; aqui
+# solo las piezas con ramificacion clara.
+
+def test_build_identities_sin_equivalence_usa_none(tmp_path, monkeypatch):
+    """Sin cusip_equivalence.csv -> eq=None, se pasa None a resolver."""
+    from unittest.mock import patch as _patch
+    from src.institutional_accumulation import pipeline_contractual as pc
+
+    snap = {"INFOTABLE": pd.DataFrame({"CUSIP": ["037833100", "594918104"]})}
+    mp = tmp_path
+    # NO crear cusip_equivalence.csv -> rama else.
+
+    captured = {}
+
+    def fake_resolve(cusips, iso, *, equivalence_df, crosswalk_internal_df,
+                     figi_lookup):
+        captured["cusips"] = sorted(cusips)
+        captured["equivalence_df"] = equivalence_df
+        captured["iso"] = iso
+        return {"resolved": True}
+
+    with _patch.object(pc, "resolve_batch_identities", fake_resolve), \
+         _patch.object(pc, "load_crosswalk_internal", lambda: "CW"):
+        result = pc.build_identities(snap, "2026-03-31", mappings_dir=mp)
+
+    assert result == {"resolved": True}
+    assert captured["cusips"] == ["037833100", "594918104"]
+    assert captured["equivalence_df"] is None
+    assert captured["iso"] == "2026-03-31"
+
+
+def test_build_identities_con_equivalence_la_carga(tmp_path):
+    """Con cusip_equivalence.csv -> load_cusip_equivalence(eqp)."""
+    from unittest.mock import patch as _patch
+    from src.institutional_accumulation import pipeline_contractual as pc
+
+    mp = tmp_path
+    eqp = mp / "cusip_equivalence.csv"
+    eqp.write_text("cusip,valid_from,valid_to\n037833100,2025-01-01,2026-12-31\n",
+                   encoding="utf-8")
+
+    snap = {"INFOTABLE": pd.DataFrame({"CUSIP": ["037833100"]})}
+
+    loaded_paths = []
+    def fake_load(path):
+        loaded_paths.append(str(path))
+        return "EQ_DF"
+
+    captured = {}
+    def fake_resolve(cusips, iso, *, equivalence_df, crosswalk_internal_df,
+                     figi_lookup):
+        captured["equivalence_df"] = equivalence_df
+        return {"ok": True}
+
+    with _patch.object(pc, "load_cusip_equivalence", fake_load), \
+         _patch.object(pc, "resolve_batch_identities", fake_resolve), \
+         _patch.object(pc, "load_crosswalk_internal", lambda: "CW"):
+        pc.build_identities(snap, "2026-03-31", mappings_dir=mp)
+
+    assert loaded_paths == [str(eqp)]
+    assert captured["equivalence_df"] == "EQ_DF"
+
+
+def test_build_identities_dedup_cusips(tmp_path):
+    """CUSIPs duplicados en INFOTABLE se pasan como unicos."""
+    from unittest.mock import patch as _patch
+    from src.institutional_accumulation import pipeline_contractual as pc
+
+    snap = {"INFOTABLE": pd.DataFrame({"CUSIP": ["037833100", "037833100", "594918104"]})}
+    mp = tmp_path
+
+    captured = {}
+    def fake_resolve(cusips, iso, *, equivalence_df, crosswalk_internal_df,
+                     figi_lookup):
+        captured["cusips"] = list(cusips)
+        return {}
+
+    with _patch.object(pc, "resolve_batch_identities", fake_resolve), \
+         _patch.object(pc, "load_crosswalk_internal", lambda: "CW"):
+        pc.build_identities(snap, "2026-03-31", mappings_dir=mp)
+
+    assert sorted(captured["cusips"]) == ["037833100", "594918104"]
+
+
+# ---------- D18: load_canonical ----------
+# Lee los 7 TSVs, aplica filter_by_period y apply_amendments.
+# Test con parquets sinteticos + monkeypatch de las 2 funciones.
+# NO cubre run_contractual_nipc (orquestador E2E por diseno).
+
+_TSVS = ("SUBMISSION", "COVERPAGE", "SUMMARYPAGE", "OTHERMANAGER",
+         "OTHERMANAGER2", "SIGNATURE", "INFOTABLE")
+
+
+def _write_canonical_parquets(base, folder):
+    """Escribe los 7 parquets minimos en base/folder/."""
+    d = base / folder
+    d.mkdir(parents=True, exist_ok=True)
+    for n in _TSVS:
+        pd.DataFrame({"dummy": [1, 2]}).to_parquet(d / (n + ".parquet"))
+
+
+def test_load_canonical_lee_7_tsvs_y_aplica_pipeline(tmp_path):
+    """load_canonical: lee los 7 parquets + filter + apply_amendments."""
+    from unittest.mock import patch as _patch
+    from src.institutional_accumulation import pipeline_contractual as pc
+
+    _write_canonical_parquets(tmp_path, "2026Q1")
+
+    called = {}
+
+    def fake_filter(dfs, iso):
+        called["filter_iso"] = iso
+        called["filter_keys"] = sorted(dfs.keys())
+        return {**dfs, "_filtered": True}
+
+    def fake_amendments(f, *, period):
+        called["amend_period"] = period
+        return {"canonical_snapshot": "SNAP_" + period}
+
+    with _patch.object(pc, "filter_by_period", fake_filter), \
+         _patch.object(pc, "apply_amendments", fake_amendments):
+        result = pc.load_canonical("2026Q1", "2026-03-31", data_dir=tmp_path)
+
+    assert result == "SNAP_2026-03-31"
+    assert called["filter_iso"] == "2026-03-31"
+    assert called["amend_period"] == "2026-03-31"
+    assert called["filter_keys"] == sorted(_TSVS)
