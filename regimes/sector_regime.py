@@ -13,6 +13,7 @@ from indicators.volatility import atr
 from indicators.wyckoff import wyckoff_structure_core, build_ticker_df
 
 from src.utils import tanh_normalize, get_col
+from src.effective_date import resolve_effective_date
 
 
 def _dispersion(row):
@@ -32,6 +33,28 @@ def _dispersion(row):
 def compute_sector_scores(df, benchmark='^GSPC', df_stocks=None, holdings_df=None):
 
     sectors = MARKET_TICKERS['sectors']
+
+    # FU-020/R2 (2026-09-30): resolver effective_date sobre el universo
+    # sectorial. El parquet es multi-mercado: puede tener filas al final
+    # que son festivo NYSE (close NaN para los 11 sectores) o dia de luto.
+    # La ultima fecha publicable es la mas reciente con cobertura >= 90%.
+    _eff_date = None
+    try:
+        _close_map = {}
+        for _s in sectors:
+            try:
+                _close_map[_s] = get_col(df, _s, 'Close')
+            except KeyError:
+                pass
+        if _close_map:
+            _close_df = pd.DataFrame(_close_map)
+            _eff = resolve_effective_date(
+                _close_df, list(_close_df.columns), min_coverage=0.90
+            )
+            if _eff['status'] == 'OK' and _eff['date'] is not None:
+                _eff_date = _eff['date']
+    except Exception as _e:
+        print(f"  [FU-020][WARN] sector_regime: effective_date no resuelto: {_e}")
 
     returns = compute_returns(df, sectors + [benchmark])
 
@@ -144,6 +167,14 @@ def compute_sector_scores(df, benchmark='^GSPC', df_stocks=None, holdings_df=Non
     if scores.empty:
 
         return None
+
+    # FU-020/R2: truncar a effective_date. Sin esto, si el df termina
+    # con un festivo (close NaN), last_scores leeria el score fabricado
+    # de ese dia.
+    if _eff_date is not None:
+        scores = scores.loc[: _eff_date]
+        if scores.empty:
+            return None
 
     last_scores = scores.iloc[-1].sort_values(ascending=False)
 
