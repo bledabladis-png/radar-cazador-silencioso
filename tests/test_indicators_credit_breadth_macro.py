@@ -161,3 +161,37 @@ def test_fundamental_signals_combinado():
     assert "inflation" in out.columns
     assert "employment" in out.columns
     assert "activity" in out.columns
+
+
+# ---------- D23 (2026-09-30): reference_date en fundamental_signals ----------
+def test_fundamental_signals_usa_reference_date():
+    """El date_range interno llega hasta reference_date, no datetime.now().
+
+    Uso un reference_date claramente distinto de hoy (2025-06-15).
+    Con el fix: out.index.max() == 2025-06-15.
+    Con datetime.now(): out.index.max() == fecha de ejecucion (hoy).
+    Si el test solo usara una fecha igual a hoy, seria ciego al cambio.
+    """
+    from datetime import datetime
+
+    df = pd.DataFrame({
+        "date": pd.date_range("2025-01-01", periods=3, freq="MS"),
+        "cpi_total": [1.0, 1.1, 1.2],
+    })
+    ref = datetime(2025, 6, 15)
+    out = fundamental_signals(df, reference_date=ref)
+    assert out is not None
+    assert out.index.max().strftime("%Y-%m-%d") == "2025-06-15"
+    assert out.index.min().strftime("%Y-%m-%d") == "2000-01-01"
+
+
+def test_fundamental_signals_sin_reference_date_fallback():
+    """Sin reference_date, fallback a now() pero no crashea."""
+    df = pd.DataFrame({
+        "date": pd.date_range("2026-01-01", periods=3, freq="MS"),
+        "cpi_total": [1.0, 1.1, 1.2],
+    })
+    out = fundamental_signals(df)
+    assert out is not None
+    # El indice llega hasta una fecha reciente (today)
+    assert out.index.max() >= pd.Timestamp("2026-01-01")

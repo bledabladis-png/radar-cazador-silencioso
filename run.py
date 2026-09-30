@@ -68,7 +68,7 @@ def main():
     df_macro_manual = data['df_macro_manual']
     temporal_meta = data.get('temporal_meta', {})
 
-    regimes = compute_all_regimes(df_market, df_macro_manual, temporal_meta=temporal_meta)
+    regimes = compute_all_regimes(df_market, df_macro_manual, temporal_meta=temporal_meta, reference_date=reference_date)
     financial_score = regimes['financial_score']
     financial_regime = regimes['financial_regime']
     liq_conf = regimes['liq_conf']

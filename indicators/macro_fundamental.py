@@ -2,11 +2,19 @@ import pandas as pd
 from src.utils import tanh_normalize
 from datetime import datetime
 
-def fundamental_signals(df_macro):
+def fundamental_signals(df_macro, reference_date=None):
     if df_macro is None or df_macro.empty:
         return None
 
-    end_date = datetime.now().strftime('%Y-%m-%d')
+    # D23 (2026-09-30): el rango del date_range interno se deriva
+    # de reference_date (o now() como fallback). No es fecha de
+    # observacion publicada: es cota del calendario diario que
+    # soporta el join posterior. Cualquier fecha >= max(df_macro)
+    # da el mismo resultado tras el join.
+    _ref = reference_date if reference_date is not None else datetime.now()
+    if hasattr(_ref, 'tzinfo') and _ref.tzinfo is not None:
+        _ref = _ref.replace(tzinfo=None)
+    end_date = _ref.strftime('%Y-%m-%d')
     daily_index = pd.date_range(start='2000-01-01', end=end_date, freq='D')
 
     base = pd.DataFrame(index=daily_index)

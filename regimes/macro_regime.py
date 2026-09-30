@@ -5,7 +5,7 @@ from indicators.credit import credit_risk_signal
 from indicators.macro_fundamental import fundamental_signals
 from src.utils import tanh_normalize, get_col, confidence_from_range
 
-def compute_macro_signals(df_market, df_macro_manual=None, liquidity_score=None, vol_regime_score=None, real_liquidity_score=None, temporal_meta=None):
+def compute_macro_signals(df_market, df_macro_manual=None, liquidity_score=None, vol_regime_score=None, real_liquidity_score=None, temporal_meta=None, reference_date=None):
     market_signals = {}
 
     # --- Crecimiento ---
@@ -118,7 +118,7 @@ def compute_macro_signals(df_market, df_macro_manual=None, liquidity_score=None,
     # --- Señales fundamentales ---
     fundamental_sigs = None
     if df_macro_manual is not None and not df_macro_manual.empty:
-        fundamental_sigs = fundamental_signals(df_macro_manual)
+        fundamental_sigs = fundamental_signals(df_macro_manual, reference_date=reference_date)
 
     all_signals = pd.DataFrame(market_signals)
     if fundamental_sigs is not None and not fundamental_sigs.empty:
@@ -178,9 +178,9 @@ def compute_macro_score(all_signals):
     macro_score = macro_score.rolling(2, min_periods=1).mean()
     return macro_score
 
-def compute_macro_regime(df_market, df_macro_manual, liquidity_score, vol_score, temporal_meta=None):
+def compute_macro_regime(df_market, df_macro_manual, liquidity_score, vol_score, temporal_meta=None, reference_date=None):
     # Obtener señales y score desde las funciones internas
-    all_signals = compute_macro_signals(df_market, df_macro_manual, liquidity_score, vol_score, temporal_meta=temporal_meta)
+    all_signals = compute_macro_signals(df_market, df_macro_manual, liquidity_score, vol_score, temporal_meta=temporal_meta, reference_date=reference_date)
     macro_score = compute_macro_score(all_signals)
 
     last = macro_score.iloc[-1]

@@ -24,7 +24,8 @@ def _add_check(checks, errors, nombre, ok=True, detalle=""):
 
 
 def run_validation_gate(slpm_v12_data, pcr_data, darkpool_data, mte_result,
-                        tactical_scores, structural_scores):
+                        tactical_scores, structural_scores,
+                        reference_date=None):
     """Ejecuta las 10 comprobaciones del Validation Gate.
 
     Returns:
@@ -34,6 +35,8 @@ def run_validation_gate(slpm_v12_data, pcr_data, darkpool_data, mte_result,
             errors (list[str]): errores detectados
             dc_summary (str): resumen double-counting para el reporte
     """
+    # D23 (2026-09-30): _ref para los calculos de age.
+    _ref = reference_date if reference_date is not None else datetime.now()
     print("Ejecutando Validation Gate...")
     validation_errors = []
     validation_checks = []
@@ -123,7 +126,7 @@ def run_validation_gate(slpm_v12_data, pcr_data, darkpool_data, mte_result,
         if week:
             try:
                 d = pd.Timestamp(week)
-                age = (datetime.now() - d).days
+                age = (_ref - d).days
                 if age > 14:
                     _add_check(validation_checks, validation_errors, "Freshness Dark Pool", True, f"obsoleto {age} dias (advertencia)")
                 else:
@@ -141,7 +144,7 @@ def run_validation_gate(slpm_v12_data, pcr_data, darkpool_data, mte_result,
         if last_date and last_date != 'N/A':
             try:
                 d = pd.Timestamp(last_date)
-                age = (datetime.now() - d).days
+                age = (_ref - d).days
                 if age > 5:
                     _add_check(validation_checks, validation_errors, "Freshness PCR", True, f"desactualizado {age} dias (advertencia)")
                 else:

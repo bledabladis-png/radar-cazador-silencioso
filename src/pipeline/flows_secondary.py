@@ -14,7 +14,8 @@ import pandas as pd
 def compute_flows_secondary(sector_flow_rank, etf_primary_flow_data,
                              cftc_position_flow_data,
                              blackrock_dax_flow, blackrock_isf_flow,
-                             amundi_lyxi_flow, temporal_meta=None):
+                             amundi_lyxi_flow, temporal_meta=None,
+                             reference_date=None):
     """Carga sintesis de flujo + N-PORT + QQQ Yahoo + QQQ NPORT-P.
 
     Returns:
@@ -84,7 +85,8 @@ def compute_flows_secondary(sector_flow_rank, etf_primary_flow_data,
             perf_path = Path('outputs/history/qqq_returns_yahoo.csv')
             if perf_path.exists():
                 mtime = datetime.fromtimestamp(perf_path.stat().st_mtime)
-                age = datetime.now() - mtime
+                _ref = reference_date if reference_date is not None else datetime.now()
+                age = _ref - mtime
                 if age <= timedelta(days=7):
                     qqq_performance_data = pd.read_csv(perf_path)
                 else:

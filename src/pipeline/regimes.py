@@ -13,7 +13,7 @@ from regimes.macro_regime import compute_macro_regime
 from src.utils import get_col
 
 
-def compute_all_regimes(df_market, df_macro_manual, temporal_meta=None):
+def compute_all_regimes(df_market, df_macro_manual, temporal_meta=None, reference_date=None):
     """Calcula los 4 regimenes del sistema.
 
     Returns:
@@ -52,6 +52,7 @@ def compute_all_regimes(df_market, df_macro_manual, temporal_meta=None):
     macro_score, macro_regime, macro_conf, all_signals = compute_macro_regime(
         df_market, df_macro_manual, financial_score, vol_score,
         temporal_meta=temporal_meta,
+        reference_date=reference_date,
     )
     print(f"  Macro: {macro_regime} (conf: {macro_conf:.0%})")
 

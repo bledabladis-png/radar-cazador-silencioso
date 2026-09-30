@@ -11,7 +11,7 @@ from datetime import datetime
 from src.utils import detect_cross_module_conflict
 
 
-def _compute_mte(df_market, financial_score, all_signals, pcr_data, darkpool_data, temporal_meta=None):
+def _compute_mte(df_market, financial_score, all_signals, pcr_data, darkpool_data, temporal_meta=None, reference_date=None):
     print("Calculando Market Transition Engine...")
     mte_result = None
     try:
@@ -31,12 +31,15 @@ def _compute_mte(df_market, financial_score, all_signals, pcr_data, darkpool_dat
 
         # Verificar frescura de Dark Pool antes de pasarlo al MTE
         mte_darkpool = darkpool_data
+        # D23 (2026-09-30): age calculado contra reference_date,
+        # no datetime.now(). Mismo patron que D6b/D16.
+        _ref = reference_date if reference_date is not None else datetime.now()
         if darkpool_data:
             week = darkpool_data.get('week', '')
             if week:
                 try:
                     d = pd.Timestamp(week)
-                    age = (datetime.now() - d).days
+                    age = (_ref - d).days
                     if age > 14:
                         print(f"    Dark Pool ARCHIVAL ({age}d). Excluido del MTE.")
                         mte_darkpool = None
@@ -139,7 +142,8 @@ def _compute_confirmation(df_market, df_stocks, df_stocks_effective_meta=None, t
 def compute_mte_confirmation(df_market, df_stocks, financial_score, all_signals,
                               pcr_data, darkpool_data, macro_regime,
                               financial_regime, vol_regime, real_liq_regime,
-                              df_stocks_effective_meta=None, temporal_meta=None):
+                              df_stocks_effective_meta=None, temporal_meta=None,
+                              reference_date=None):
     """Ejecuta MTE + Cross-Module + Confirmation.
 
     Returns:
