@@ -44,6 +44,65 @@ Al cerrar una sesion nueva, se anade arriba (las mas recientes primero). Si hay 
 
 ## 3. SESIONES
 
+### 2026-09-30 (noche, sesion 6) — D34-D36: cobertura + bug real en freshness
+
+**Objetivo.** Cerrar la cobertura de los modulos con logica real
+pendiente (excluyendo IO/orquestacion E2E-only por diseno).
+
+**Hecho.**
+
+- **D34 (options_metrics + index_leaders).** options_metrics 88% -> 93%
+  (ramas intermedias de classify_pcr/classify_ihr).
+  index_leaders 70% -> 87% (rama router + select_index_leaders).
+  14 tests.
+
+- **D35 (health_check).** 52% -> 84%. 31 tests. Cubre _run_gh,
+  _expected_slots, check_cron_slots, check_workflows,
+  check_13f_cache, check_yahoo_revision, check_eu_usa_pattern,
+  check_iae_section, _render_markdown, _ensure_label,
+  _find_open_issue. No cubre main() (argparse + issue creation).
+
+- **D36 (freshness + bug real).** 65% -> alto. 12 tests. **Durante
+  la escritura de tests se detecto un bug real:** la seccion padre
+  render_data_freshness protegia pd.Timestamp(pcr_data['last_date'])
+  con try/except, pero _generate_coverage_table (llamada al final)
+  repetia el mismo calculo SIN proteccion. Con un last_date no
+  parseable (Yahoo/CBOE devolviendo algo raro), el reporte entero
+  caia con DateParseError. Fix: try/except en los 2 bloques.
+  Verificacion triple reproduce el bug ("no-es-fecha" -> DateParseError
+  en rojo).
+
+**Detalle del bug D36 (relevante):** es un bug latente en produccion,
+no reproducible con datos normales. Solo revienta si la fuente externa
+devuelve una fecha malformada. Sin el barrido de cobertura, habria
+quedado enterrado hasta que Yahoo/CBOE fallara en real y el reporte
+no se generase sin razon aparente.
+
+**Commits.** `9fd7403` (D34), `bda86b9` (D35), `5e75d05` (D36).
+
+**Pendiente.**
+
+- C2 (920) OPEN. Bloqueado por auditor externo.
+- H5.3: verificacion cron nov 2026.
+- 2 tests skipped por --run-network en test_freshness (opt-in).
+- Cron trimestral 1-oct-2026: aplicar 07_RUNBOOK §3.
+- Modulos con cobertura <80% tras D36: pipeline_contractual (38%,
+  orquestador E2E-only), data_loader (59%, red), health_check (84%),
+  options.py (69%, IO), update_sec_13f (62%, red),
+  stock_data_loader (77%), guard_coverage (76%),
+  pipeline_gate (73%), issue_manager (77%),
+  regenerate_cusip_crosswalk (69%), iae_pipeline (63%),
+  qqq_returns_yahoo (63%), download_official_list_13f (27%).
+  Los candidatos a un D37 si se decide: pipeline_gate, guard_coverage,
+  issue_manager (logica real sin red).
+
+**Proximo paso sugerido.** Cron 1-oct. Aplicar 07_RUNBOOK §3 a los
+3 workflows trimestrales (sector_holdings 04:47, index_holdings
+06:17, european_holdings 07:17 CEST). Si verde, continuar con
+pipeline_gate + guard_coverage + issue_manager (D37).
+
+---
+
 ### 2026-09-30 (noche, sesion 5) — D29-D33: cobertura de render, regimes, SLPM, flow, options
 
 **Objetivo.** Continuar el barrido de cobertura tras D28. 5 bloques
