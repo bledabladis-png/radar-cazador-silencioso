@@ -299,11 +299,18 @@ def check_commodities_staleness() -> list:
     if expected is None:
         return [Result("commodities_staleness", SKIP, "no se pudo resolver expected")]
 
+    # F3-05-bis (2026-09-30): commodities_futures bloqueado por plan
+    # OilPriceAPI. El parquet lleva congelado desde 2026-09-21, pero Yahoo
+    # sirve BZ=F/CL=F frescos en market_data; los consumidores productivos
+    # (macro_regime, future_settlement) resuelven contra df_market, no
+    # contra este parquet. Se emite SKIP (no WARN) mientras siga la
+    # condicion. Si el parquet se descongela (age <= threshold), vuelve a
+    # OK normal. Tercer elemento del spec: blocked_by_plan.
     specs = [
-        ("commodities_spot", 4),
-        ("commodities_futures", 7),
+        ("commodities_spot", 4, False),
+        ("commodities_futures", 7, True),
     ]
-    for name, threshold_days in specs:
+    for name, threshold_days, blocked_by_plan in specs:
         p = PROJECT_ROOT / "data" / f"{name}.parquet.manifest.json"
         if not p.exists():
             results.append(Result(f"staleness:{name}", WARN, "manifest no existe"))
@@ -324,10 +331,17 @@ def check_commodities_staleness() -> list:
             results.append(Result(f"staleness:{name}", WARN, f"last_date invalido: {e}"))
             continue
         if age > threshold_days:
-            results.append(Result(
-                f"staleness:{name}", WARN,
-                f"last_date={last_dt} age={age}d > {threshold_days}d"
-            ))
+            if blocked_by_plan:
+                results.append(Result(
+                    f"staleness:{name}", SKIP,
+                    f"last_date={last_dt} age={age}d > {threshold_days}d "
+                    f"(BLOCKED por plan OilPriceAPI; Yahoo cubre market_data)"
+                ))
+            else:
+                results.append(Result(
+                    f"staleness:{name}", WARN,
+                    f"last_date={last_dt} age={age}d > {threshold_days}d"
+                ))
         else:
             results.append(Result(
                 f"staleness:{name}", OK,
