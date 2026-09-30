@@ -44,6 +44,62 @@ Al cerrar una sesion nueva, se anade arriba (las mas recientes primero). Si hay 
 
 ## 3. SESIONES
 
+### 2026-09-30 (tarde, sesion 3) — D16 + D18: cobertura y contrato que miente
+
+**Objetivo.** Tras cerrar sesion 2, continuar con D16 (deuda detectada
+durante D3) y los 4 modulos con cobertura baja documentados en
+00_ARRANQUE §5.
+
+**Hecho.**
+
+- **D16 (check_manifest mentia).** check_manifest solo verificaba el
+  .manifest.json. En CI el manifest esta versionado, el parquet no
+  (gitignored). Resultado: `[OK] VALID` sobre un artefacto ausente,
+  mientras parquet daba `[FAIL]`. Mismo patron que D6/D13/D14:
+  contrato que miente. Fix: manifest OK + parquet ausente -> SKIP en
+  CI, WARN en local. Manifest ausente o invalido -> FAIL sin cambio.
+  4 tests existentes actualizados con parquet dummy, 3 nuevos.
+
+- **D18 (cobertura baja en 4 modulos).** Documentado en 00_ARRANQUE §5
+  como "sin bug detectado tras inspeccion". Los numeros del corpus
+  estaban desfasados: real eran 12/25/27/51%, no 12/12/27/50%.
+
+  - macro_manual_loader: 12% -> 92%. 7 tests de carga de CSVs.
+  - european_coverage: 25% -> 98%. 12 tests de _ref_to_date,
+    _collect, _render_markdown, _append_csv, integracion.
+  - pipeline_contractual: 27% -> 38%. 4 tests de build_identities +
+    load_canonical. Orquestador run_contractual_nipc queda E2E-only
+    por diseno explicito del test existente (scripts/
+    iae_contractual_nipc_e2e.py).
+  - data_loader: 51% -> 59%. 38 tests de _is_equity_ticker,
+    _ticker_list, _check_khuerfano. download_market_data (red)
+    E2E-only.
+
+  Criterio unificado: NO inflar cobertura con mocks del orquestador.
+  El corpus 00_ARRANQUE §5 se actualizo con los valores reales.
+
+- **Verificacion end-to-end** (durante sesion 2, antes de bitacora).
+  Run manual de run.py tras D6+D6b+D13. Confirmado en produccion:
+  header con reference_date, macro_conf = 0.3076 (antes 0.5 fijo),
+  ages coherentes. Validation Gate 10/10. NIPC 8256882557. Commit
+  `66b9d5d`.
+
+**Commits.** `88cc3ad`, `66b9d5d`, `267ae22`, `99f02e2`, `702ce28`,
+`a690562`, `d7ec9df`. El bot intercalo `f3d6c75` (macro_manual FRED).
+
+**Pendiente.**
+
+- C2 (920) OPEN. Bloqueado por auditor externo (sin comando + HEAD).
+- H5.3: verificacion cron nov 2026.
+- 2 tests skipped por --run-network en test_freshness (opt-in).
+- Cron trimestral 1-oct-2026: aplicar 07_RUNBOOK §3 (04:47, 06:17,
+  07:17 CEST).
+
+**Proximo paso sugerido.** Cron 1-oct. Aplicar 07_RUNBOOK. Si todo
+verde, sesion de auditoria nueva o retomar deudas P3 residuales.
+
+---
+
 ### 2026-09-30 (tarde, sesion 2) — D5+D6+D6b+D7+D9+D10+D11+D12+D13+D14+D15
 
 **Objetivo.** Continuacion de la sesion tarde. Atacar deudas menores
