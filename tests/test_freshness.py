@@ -202,6 +202,15 @@ def test_classify_ticker_ultimo_nan_failed():
 # ============================================================
 # CAPA 2 - Integracion sobre datos reales (skipif si no existen)
 # ============================================================
+#
+# D14 (2026-09-30): estos tests requieren artefactos generados por
+# run.py (parquets, outputs/history/*.csv). No estan en git
+# (gitignored). En local corren si hay run previo. En CI:
+#   - Paso 'Run tests' (pytest tests/ validation/): SKIP.
+#   - Paso 'Validate freshness post-run' (tras run.py): ejecutan.
+# La cobertura NO se pierde en CI. Los skips del primer paso son
+# esperados. Marcados con integration_real_data para filtrar.
+# ============================================================
 
 MAX_DAILY_AGE = 4   # tolera fin de semana + 1 festivo
 MAX_DAILY_AGE_EU = 5
@@ -212,9 +221,10 @@ def _age_days(ts):
     return (pd.Timestamp.now() - pd.Timestamp(ts)).days
 
 
+@pytest.mark.integration_real_data
 @pytest.mark.skipif(
     not (BASE / "data" / "market_data.parquet").exists(),
-    reason="market_data.parquet no existe (CI fresco)",
+    reason="market_data.parquet no presente (generado por run.py, gitignored)",
 )
 def test_market_data_fresh():
     df = pd.read_parquet(BASE / "data" / "market_data.parquet")
@@ -224,9 +234,10 @@ def test_market_data_fresh():
     assert age <= MAX_DAILY_AGE, f"market_data stale: {age} dias (max {MAX_DAILY_AGE})"
 
 
+@pytest.mark.integration_real_data
 @pytest.mark.skipif(
     not (BASE / "data" / "stock_prices.parquet").exists(),
-    reason="stock_prices.parquet no existe (CI fresco)",
+    reason="stock_prices.parquet no presente (generado por run.py, gitignored)",
 )
 def test_stock_prices_fresh():
     df = pd.read_parquet(BASE / "data" / "stock_prices.parquet")
@@ -236,9 +247,10 @@ def test_stock_prices_fresh():
     assert age <= MAX_DAILY_AGE, f"stock_prices stale: {age} dias (max {MAX_DAILY_AGE})"
 
 
+@pytest.mark.integration_real_data
 @pytest.mark.skipif(
     not (BASE / "data" / "stock_prices.parquet").exists(),
-    reason="stock_prices.parquet no existe (CI fresco)",
+    reason="stock_prices.parquet no presente (generado por run.py, gitignored)",
 )
 def test_european_tickers_recent():
     """Al menos el 80% de los tickers europeos tiene datos recientes."""
@@ -264,9 +276,10 @@ def test_european_tickers_recent():
     assert ratio >= 0.80, f"solo {recientes}/{len(eu)} ({ratio:.0%}) europeos recientes"
 
 
+@pytest.mark.integration_real_data
 @pytest.mark.skipif(
     not (BASE / "outputs" / "history" / "data_quality.csv").exists(),
-    reason="data_quality.csv no existe (CI fresco)",
+    reason="data_quality.csv no presente (generado por run.py)",
 )
 def test_data_quality_recent():
     """La ultima ejecucion de data_quality debe ser reciente."""
@@ -276,9 +289,10 @@ def test_data_quality_recent():
     assert age <= MAX_DQ_AGE, f"data_quality.csv stale: {age} dias (max {MAX_DQ_AGE})"
 
 
+@pytest.mark.integration_real_data
 @pytest.mark.skipif(
     not (BASE / "outputs" / "history" / "data_quality.csv").exists(),
-    reason="data_quality.csv no existe (CI fresco)",
+    reason="data_quality.csv no presente (generado por run.py)",
 )
 def test_data_quality_sin_archival():
     """Ninguna fuente debe estar en ARCHIVAL en la ultima ejecucion."""
@@ -294,9 +308,10 @@ def test_data_quality_sin_archival():
 # CAPA 2b - Frescura por provider europeo (individual)
 # ============================================================
 
+@pytest.mark.integration_real_data
 @pytest.mark.skipif(
     not (BASE / "outputs" / "history" / "european_coverage.csv").exists(),
-    reason="european_coverage.csv no existe (CI fresco)",
+    reason="european_coverage.csv no presente (generado por run.py)",
 )
 @pytest.mark.parametrize("source", ["Euronext", "Xetra", "BME"])
 def test_european_provider_recent(source):
@@ -310,9 +325,10 @@ def test_european_provider_recent(source):
     assert ratio >= 0.90, f"{source}: solo {ok}/{len(sub)} ({ratio:.0%}) OK"
 
 
+@pytest.mark.integration_real_data
 @pytest.mark.skipif(
     not (BASE / "outputs" / "history" / "data_quality.csv").exists(),
-    reason="data_quality.csv no existe (CI fresco)",
+    reason="data_quality.csv no presente (generado por run.py)",
 )
 def test_data_quality_europeos_si_presentes():
     """Si data_quality.csv incluye Euronext/Xetra/BME, no deben estar ARCHIVAL."""
