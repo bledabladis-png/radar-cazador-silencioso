@@ -118,7 +118,7 @@ def test_calculate_returns_period_return_nan_serie_corta():
 def test_main_happy(monkeypatch, tmp_path):
     idx = pd.date_range("2015-01-01", periods=2600, freq="B")
     prices = pd.Series([100.0 + i * 0.1 for i in range(2600)], index=idx)
-    monkeypatch.setattr(mod, "get_adjusted_prices", lambda t: prices)
+    monkeypatch.setattr(mod, "get_adjusted_prices", lambda t, reference_date=None: prices)
     out = tmp_path / "test_main.csv"
     monkeypatch.setattr(mod, "OUTPUT", out)
     mod.main()

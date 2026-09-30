@@ -100,6 +100,7 @@ def compute_data_quality(reference_date=None):
             'date_cols': ['week'],
             'frequency': 'finra',
             'coverage_logic': None,
+            'walk_back': False,  # Fix G (2026-09-30): 'week' es fecha-semana, no fecha-dia. _last_market_session no aplica.
             'notes': 'Retraso regulatorio 2-4 semanas'
         },
         {
@@ -255,7 +256,12 @@ def compute_data_quality(reference_date=None):
                 last_date = pd.NaT
             else:
                 _ld = pd.to_datetime(df[date_col], errors='coerce').max()
-                last_date = _last_market_session(_ld) if pd.notna(_ld) else pd.NaT
+                # Fix G (2026-09-30): walk_back=False -> no aplicar
+                # _last_market_session. Aplica a FINRA (fecha-semana).
+                if src.get('walk_back', True) and pd.notna(_ld):
+                    last_date = _last_market_session(_ld)
+                else:
+                    last_date = _ld
             age = (now - last_date.date()).days if pd.notna(last_date) else np.nan
             freshness = classify_freshness(age, src['frequency'])
 

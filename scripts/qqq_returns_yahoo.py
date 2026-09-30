@@ -21,16 +21,33 @@ from datetime import datetime
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(PROJECT_ROOT))
 
+from src.market_calendar import last_expected_market_date
+
 OUTPUT = PROJECT_ROOT / "outputs" / "history" / "qqq_returns_yahoo.csv"
 TICKERS = [("QQQ", "QQQ (Yahoo Finance)"), ("SPY", "SPY (Yahoo Finance)")]
 
-def get_adjusted_prices(ticker: str) -> pd.Series:
-    """Descarga precios ajustados de cierre desde Yahoo Finance."""
+def get_adjusted_prices(ticker: str, reference_date=None) -> pd.Series:
+    """Descarga precios ajustados de cierre desde Yahoo Finance.
+
+    Fix H (2026-09-30): trunca a la ultima sesion cerrada. Yahoo
+    devuelve la barra parcial intradia si el mercado USA esta abierto.
+    Coherente con stock_data_loader, data_loader y leaders.
+
+    reference_date: opcional. Si None, usa datetime.now() via
+    last_expected_market_date(). Patron D23 (fecha inyectada).
+    """
     df = yf.download(ticker, period="max", auto_adjust=True, progress=False)
     if df.empty:
         raise RuntimeError(f"No se pudieron descargar precios para {ticker}")
     prices = df["Close"].squeeze()
     prices = prices.dropna()
+    # Fix H (2026-09-30): truncar a la ultima sesion cerrada. Yahoo
+    # devuelve la barra parcial intradia si el mercado USA esta abierto.
+    # Coherente con stock_data_loader, data_loader y leaders.
+    _expected = last_expected_market_date(reference_date)
+    _expected_ts = pd.Timestamp(_expected)
+    if prices.index[-1].normalize() > _expected_ts:
+        prices = prices.loc[: _expected_ts]
     if len(prices) < 252:
         raise RuntimeError(f"Historial insuficiente para {ticker}: {len(prices)} filas")
     return prices
@@ -80,11 +97,11 @@ def save_csv(rows: list) -> None:
     df = df[["ytd", "y1", "y3", "y5", "y10", "inception", "label", "displayLabel", "effectiveDate", "as_of_date", "performancePeriod"]]
     df.to_csv(OUTPUT, index=False, encoding="utf-8-sig")
 
-def main() -> None:
+def main(reference_date=None) -> None:
     rows = []
     for ticker, label in TICKERS:
         print(f"Descargando precios de {ticker} desde Yahoo Finance...")
-        prices = get_adjusted_prices(ticker)
+        prices = get_adjusted_prices(ticker, reference_date=reference_date)
         returns = calculate_returns(prices, label)
         rows.append(returns)
         print(f"Rendimientos {ticker} calculados")
