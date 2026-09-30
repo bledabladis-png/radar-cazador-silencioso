@@ -1,10 +1,10 @@
 {
   "lse_expected_session": "2026-09-30",
   "reason": "sin observacion para sesion LSE esperada",
-  "run_id": "20260930_185156",
+  "run_id": "20260930_224100",
   "scraper_available": true,
   "scraper_used": false,
-  "source_commit": "4504175d4d501e250eb25148cac7e81de3ef0614",
+  "source_commit": null,
   "source_ref": "main",
   "source_repo": "bledabladis-png/lse-close-scraper",
   "status": "NO_COVERAGE",
