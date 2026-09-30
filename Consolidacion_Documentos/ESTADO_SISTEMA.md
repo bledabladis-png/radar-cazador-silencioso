@@ -2,7 +2,7 @@
 
 Hechos verificables del sistema. Generado por script.
 
-**Generado en:** 2026-09-30 07:31:27 UTC
+**Generado en:** 2026-09-30 07:58:43 UTC
 **Snapshot tomado sobre:** commit HEAD de la fecha indicada, al momento de generar
 **NO editar a mano.** Regenerar con:
 
@@ -17,17 +17,21 @@ HEAD, tests e integridad del codigo.
 
 ## 1. Git
 
-- **HEAD:** `c193eef`
-- **HEAD completo:** `c193eefc6866341cb1b41ce5ce97e3563b494081`
-- **Fecha commit HEAD:** 2026-09-30 09:31:27 +0200
-- **Ahead:** 1
+- **HEAD:** `5ecafcb`
+- **HEAD completo:** `5ecafcb3c95c707e5704c36577483c99aa5fb062`
+- **Fecha commit HEAD:** 2026-09-30 09:57:34 +0200
+- **Ahead:** 0
 - **Behind:** 0
-- **origin/main:** `02ebdbb`
+- **origin/main:** `5ecafcb`
 
 ## 2. Tests (pytest real)
 
-- **Resumen:** 2383 passed, 2 skipped in 68.28s (0:01:08)
+- **Resumen:** 2439 passed, 2 skipped in 68.25s (0:01:08)
 - **Exit code:** 0
+
+**Tests skip:**
+- `SKIPPED [1] tests\test_freshness.py:376: requiere --run-network`
+- `SKIPPED [1] tests\test_freshness.py:399: requiere --run-network`
 
 ## 3. Integridad del codigo
 

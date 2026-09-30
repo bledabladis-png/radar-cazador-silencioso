@@ -44,6 +44,85 @@ Al cerrar una sesion nueva, se anade arriba (las mas recientes primero). Si hay 
 
 ## 3. SESIONES
 
+### 2026-09-30 (tarde, sesion 2) — D5+D6+D6b+D7+D9+D10+D11+D12+D13+D14+D15
+
+**Objetivo.** Continuacion de la sesion tarde. Atacar deudas menores
+tras cerrar P1. Algunas eran cosmeticas (BOM, dead code), otras
+reales (D10, D11, D13, D6b).
+
+**Hecho.**
+
+- **D5 (corpus desincronizado).** Cinco ficheros con numeros y
+  afirmaciones desfasadas: 00_ARRANQUE decia 2340 tests (real 2383),
+  corpus v2 (real v3 con 07_RUNBOOK), "10 contratos" (real 9),
+  "OilPriceAPI commodities" (eliminada 2026-09-30), 03_IAE decia
+  8280 LOC (real 7088), 04_HISTORICO afirmaba erroneamente "H1-A
+  reproduce golden con tolerancia 0".
+
+- **D6 + D6b (datetime.now en reporte).** El header del reporte
+  usaba datetime.now() sin tz. Violaba 00_ARRANQUE §2. Fix:
+  generate_daily_report recibe reference_date, con fallback a
+  now(ZoneInfo('Europe/Madrid')). Ademas 6 usos de datetime.now() en
+  calculos de "age" (darkpool, freshness, helpers, sentiment). Todos
+  propagados a reference_date naive.
+
+- **D9 (concurrency.group desalineado).** update_index_holdings.yml y
+  update_european_holdings.yml escriben ambos data/index_holdings.csv
+  con grupos distintos. Fix: unificar en update_index_holdings_csv.
+
+- **D10 (traza 13F).** _write_ingest_trace escribia
+  ingest_source/ingest_actor en el manifest del trimestre, incluso
+  en rama SKIP. El manifest es artefacto de integridad (sha256).
+  Fix: append a data/sec_13f/ingest_traces.jsonl (JSONL versionado),
+  manifest intacto, outcome explicito (SKIP/INGEST).
+
+- **D11 (tickers residuales en holdings).** Los 4 parsers volcaban
+  al CSV todo ticker no vacio: cash ("-"), futuros (IXAU6, XARU6),
+  CUSIPs (2602335D), placeholders SSGA (999USDZ92). El consumidor
+  filtraba con INVALID_TICKERS fragil. Fix: src/holdings_filter.py
+  con regla estructural, aplicada en 4 parsers, INVALID_TICKERS
+  retirada, CSV limpiado (526->502 y 2669->2661 filas).
+
+- **D12 (cosmetico).** D7 (volumen Yahoo no consolidado) documentado
+  como WONT FIX en 02_ARQUITECTURA §11. BOM UTF-8 retirado de 7
+  workflows. Duplicacion de titulo en 05_BITACORA:91 corregida.
+
+- **D13 (macro_conf hardcode).** compute_macro_regime devolvia
+  conf = 0.5 siempre. El aviso de header.py (macro_conf < 0.30)
+  nunca se activaba. Los otros 3 regimenes SI calculan confianza
+  real. Fix: confidence_from_range (misma politica C19).
+
+- **D14 (tests skipped CI).** Verificado: el saliente reportaba
+  deuda de cobertura. FALSO: daily_run.yml ya ejecuta los tests de
+  frescura en post-run con datos reales. Solo era cosmetica: sin -ra
+  no mostraba razones, reason strings mentian ("CI fresco" tambien
+  es falso en local), sin marker. Fix: pytest.ini con -ra + marker
+  integration_real_data, reasons corregidos, daily_run pre-run
+  excluye el marker.
+
+- **D15 (dead code declarado).** Eliminados:
+  finra.get_archive_index, finra.get_available_weeks,
+  evidence_matrix.save_evidence_matrix, import Path huerfano.
+
+**Commits.** `cb217ac`, `ec1f2da` (snapshot), `5ecafcb` (rango
+c193eef..5ecafcb, 8 commits adicionales: D5, D6, D6b, D9, D10, D11,
+D12, D13, D14, D15).
+
+**Pendiente.**
+
+- H5.3 verificacion cron nov 2026.
+- C2 (920) OPEN. Bloqueado por auditor externo.
+- 2 tests skipped por --run-network en test_freshness (opt-in).
+- Modulos con cobertura baja: macro_manual_loader (12%),
+  european_coverage (12%), pipeline_contractual (27%),
+  data_loader (50%).
+- Cron trimestral 1-oct-2026: verificar con 07_RUNBOOK.
+
+**Proximo paso sugerido.** Cron 1-oct (04:47, 06:17, 07:17 CEST).
+Aplicar 07_RUNBOOK §3. Si algo falla, §4.
+
+---
+
 ### 2026-09-30 (tarde) — D4 + D3 + D2 + Runbook + D1: cierre de P1
 
 **Objetivo.** Recibir traspaso del asistente saliente, asimilar contexto,
