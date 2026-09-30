@@ -369,7 +369,7 @@ Regeneracion automatica:
 
 **Cobertura del catalogo:** declarada 99.17% sobre 242 tickers. Cobertura TARGET construido: 100% por construccion (endogeneidad por diseño: el TARGET se construye desde el catalogo, asi que la cobertura TARGET es 100% por definicion).
 
-**Latencia regulatoria:** N-PORT ~60 dias, 13F trimestral (~45d post cierre trimestre).
+**Latencia regulatoria:** N-PORT ~60 dias, 13F trimestral (~45d post cierre trimestre). **Lag efectivo del sistema: 50d** (`SEC_13F_QUARTER_LAG_DAYS`), margen de 5d sobre la latencia regulatoria, alineado con el cron 20-feb/may/ago/nov y con `update_sec_13f.py --latest`.
 
 **Ambiguity de identidad:** el resolver puede en teoria tener dos canonical_security para una misma security (dualidad equity/figi). No observado en E2E. Se reabre si se activa figi_lookup o aparece un caso `figi:*`.
 

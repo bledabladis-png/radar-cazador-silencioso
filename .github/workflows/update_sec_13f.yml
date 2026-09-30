@@ -70,40 +70,22 @@ jobs:
           fi
           echo "Origen: $(cat "$GITHUB_OUTPUT" | grep value | cut -d= -f2)"
 
-      - name: Determinar trimestre a actualizar
-        id: quarter
-        run: |
-          # 5 dias de margen tras deadline. SEC cierra Q1 el 31-mar y publica
-          # a mediados de mayo. El cron del dia 20 va sobrado.
-          #
-          # Regla: mes del run -> trimestre reciente cerrado hace >=60 dias.
-          # - Feb: Q4 del año anterior (cierre 31-dic).
-          # - May: Q1 de este año (cierre 31-mar).
-          # - Ago: Q2 de este año (cierre 30-jun).
-          # - Nov: Q3 de este año (cierre 30-sep).
-          if [ -n "${{ inputs.quarter }}" ]; then
-            Q="${{ inputs.quarter }}"
-            echo "Trimestre forzado por input: ${Q}"
-          else
-            M=$(date -u +%m)
-            Y=$(date -u +%Y)
-            case "$M" in
-              02) Q="$((Y-1))Q4" ;;
-              05) Q="${Y}Q1" ;;
-              08) Q="${Y}Q2" ;;
-              11) Q="${Y}Q3" ;;
-              *)  echo "Mes inesperado: $M"; exit 1 ;;
-            esac
-          fi
-          echo "quarter=${Q}" >> "$GITHUB_OUTPUT"
-          echo "Trimestre a actualizar: ${Q}"
-
       - name: Ejecutar actualizacion 13F (con retry, H5.2)
+        env:
+          Q_INPUT: ${{ inputs.quarter }}
         run: |
+          # Si hay input, usarlo. Si no, --latest (inferencia por
+          # lag 50d en settings; unica fuente de verdad).
+          if [ -n "$Q_INPUT" ]; then
+            ARGS="--quarter $Q_INPUT"
+          else
+            ARGS="--latest"
+          fi
+          echo "args: $ARGS"
           for i in 1 2 3; do
             echo "::group::Intento $i/3"
             if python scripts/update_sec_13f.py \
-                --quarter "${{ steps.quarter.outputs.quarter }}" \
+                $ARGS \
                 --backfill 2 \
                 --source "${{ steps.source.outputs.value }}"; then
               echo "::endgroup::"
@@ -127,9 +109,9 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          TITLE="SEC 13F ingest failure (${{ steps.quarter.outputs.quarter }})"
+          TITLE="SEC 13F ingest failure (${{ inputs.quarter || 'auto' }})"
           EXISTING=$(gh issue list --label sec-13f-failure --state open --json number --jq '.[0].number // empty')
-          BODY="Fallo en la ingesta trimestral 13F. Quarter: ${{ steps.quarter.outputs.quarter }}. Source: ${{ steps.source.outputs.value }}. Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          BODY="Fallo en la ingesta trimestral 13F. Quarter: ${{ inputs.quarter || 'auto' }}. Source: ${{ steps.source.outputs.value }}. Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
           gh label create sec-13f-failure --color "d73a4a" --description "Fallo de ingesta SEC 13F" 2>/dev/null || true
           if [ -n "$EXISTING" ]; then
             gh issue comment "$EXISTING" --body "$BODY"
@@ -156,7 +138,7 @@ jobs:
           if git diff --staged --quiet; then
             echo "No hay cambios en 13F metadata."
           else
-            git commit -m "Update SEC 13F metadata (${{ steps.quarter.outputs.quarter }})"
+            git commit -m "Update SEC 13F metadata (${{ inputs.quarter || 'auto' }})"
             for i in 1 2 3; do
               git pull --rebase origin main
               if git push; then

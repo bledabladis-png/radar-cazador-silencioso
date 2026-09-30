@@ -101,11 +101,18 @@ def test_quarter_to_source_period(q, expected):
 # --- latest_published_quarter -------------------------------------------
 
 @pytest.mark.parametrize("today,expected", [
-    (date(2026, 5, 1), "2025Q4"),   # Q1 2026 aun no pasa 60d (31-mar+60=30-may)
-    (date(2026, 6, 30), "2026Q1"),  # 30-may ya paso; Q2 cierra 30-jun no
-    (date(2026, 9, 23), "2026Q2"),  # 29-ago paso; Q3 cierra 30-sep no
-    (date(2027, 2, 15), "2026Q3"),  # 29-nov-26 paso; Q4 31-dic+60=1-mar-27 no
-    (date(2024, 1, 15), "2023Q3"),  # 29-nov-23 paso; 2023Q4 31-dic+60 no
+    # Casos genericos (validos con lag 50 o 60).
+    (date(2026, 5, 1), "2025Q4"),   # Q1 2026 aun no pasa lag (31-mar+50=20-may)
+    (date(2026, 6, 30), "2026Q1"),  # 20-may ya paso; Q2 cierra 30-jun no
+    (date(2026, 9, 23), "2026Q2"),  # 19-ago paso; Q3 cierra 30-sep no
+    (date(2027, 2, 15), "2026Q3"),  # 19-nov-26 paso; Q4 31-dic+50=19-feb-27 no
+    (date(2024, 1, 15), "2023Q3"),  # 19-nov-23 paso; 2023Q4 31-dic+50 no
+    # Casos frontera: distinguen lag 50 de lag 60. Si alguien revierte
+    # SEC_13F_QUARTER_LAG_DAYS a 60, estos 4 fallan.
+    (date(2026, 5, 25), "2026Q1"),  # Q1 +50d=20-may (cumple); +60d=30-may (no)
+    (date(2026, 8, 25), "2026Q2"),  # Q2 +50d=19-ago (cumple); +60d=29-ago (no)
+    (date(2026, 11, 25), "2026Q3"), # Q3 +50d=19-nov (cumple); +60d=29-nov (no)
+    (date(2027, 2, 20), "2026Q4"),  # Q4 +50d=19-feb (cumple); +60d=1-mar (no)
 ])
 def test_latest_published_quarter(today, expected):
     assert latest_published_quarter(today) == expected
