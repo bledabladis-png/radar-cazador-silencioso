@@ -7,10 +7,16 @@ def trend_position(close):
     """
     Devuelve la posicion con respecto a EMAs 20,50,100,200.
     +1 si esta sobre cada una, -1 si esta debajo. Promedio normalizado a [-1,1].
+
+    H8 (2026-09-30): donde `close` es NaN, el resultado es NaN.
+    Antes, `close > ema` con ambos NaN daba False -> -1.0 (senal
+    bajista fabricada). El valor -1.0 queda reservado para una
+    senal bajista efectivamente observada.
     """
     emas = {'ema20': 20, 'ema50': 50, 'ema100': 100, 'ema200': 200}
     positions = pd.DataFrame()
     for name, w in emas.items():
         ema = ema_series(close, w)
         positions[name] = ((close > ema).astype(int) * 2 - 1)  # +1 o -1
-    return positions.mean(axis=1)  # promedio de senales
+    result = positions.mean(axis=1)  # promedio de senales
+    return result.mask(close.isna())
