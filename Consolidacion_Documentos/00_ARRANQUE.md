@@ -243,9 +243,12 @@ Sesion 2026-09-29 (tarde): auditoria funcional frente 6 (IAE) + frente 8 (provid
   no etapa del flujo contractual. 99 tests pasan. Verificado 2026-09-29:
   `_apply_intra_period_dedup` v1 no emite DROP_DUP (todas las decisiones
   son KEEP). Conectar P65 no alteraria `nipc_total`.
-- Modulos con cobertura baja de tests: `macro_manual_loader` (12%),
-  `european_coverage` (12%), `pipeline_contractual` (27%), `data_loader` (50%).
-  Sin bug detectado tras inspeccion.
+- Modulos con cobertura ampliada en D18 (2026-09-30):
+  `macro_manual_loader` 12%->92%, `european_coverage` 25%->98%,
+  `pipeline_contractual` 27%->38% (orquestador `run_contractual_nipc`
+  E2E-only por diseno), `data_loader` 51%->59% (funciones puras
+  cubiertas; `download_market_data` es red, E2E-only). Sin bug
+  detectado en los 4 modulos.
 
 ---
 
