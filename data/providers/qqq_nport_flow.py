@@ -5,6 +5,8 @@ from datetime import datetime
 from pathlib import Path
 import pandas as pd
 import requests
+from src.utils import append_dedup
+
 
 CACHE_DIR = Path("data/cache/sec/qqq")
 OUTPUT_CSV = Path("outputs/history/qqq_nport_flow.csv")
@@ -181,6 +183,13 @@ def main():
     df['source'] = 'SEC NPORT-P B.6'
 
     OUTPUT_CSV.parent.mkdir(parents=True, exist_ok=True)
+    # Fix D (2026-09-30): preservar historico con append_dedup.
+    if OUTPUT_CSV.exists():
+        try:
+            _hist_existing = pd.read_csv(OUTPUT_CSV)
+            df = append_dedup(_hist_existing, df, ["report_date", "month", "ticker"])
+        except (OSError, ValueError, pd.errors.ParserError, pd.errors.EmptyDataError) as _e:
+            print(f'  [WARN] qqq_nport_flow existente ilegible: {_e}')
     _tmp_out = OUTPUT_CSV.with_suffix(OUTPUT_CSV.suffix + '.tmp')
     df.to_csv(_tmp_out, index=False)
     _tmp_out.replace(OUTPUT_CSV)

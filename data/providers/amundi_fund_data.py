@@ -9,6 +9,7 @@ import json
 from pathlib import Path
 from datetime import datetime, timedelta
 from ._fund_flow_utils import fund_flow_robust_zscore_with_regime
+from src.utils import append_dedup
 
 ISIN_LYXI = 'FR0010251744'
 API_URL = 'https://www.amundietf.es/mapi/ProductAPI/getProductsData'
@@ -216,8 +217,18 @@ def get_amundi_lyxi_primary_flow(force_download: bool = False) -> pd.DataFrame:
         'shares_change', 'estimated_flow_eur', 'flow_pct_assets',
         'flow_zscore', 'flow_zscore_regime', 'flow_5d', 'flow_20d'
     ]
+    # Fix D (2026-09-30): preservar historico con append_dedup.
+    # Mismo bug que ssga_fund_data: sobrescribia sin comparar con
+    # el existente. Si el proveedor devolvia menos filas, se perdian.
+    _df_to_write = df[cols]
+    if HISTORY_CSV.exists():
+        try:
+            _hist_existing = pd.read_csv(HISTORY_CSV)
+            _df_to_write = append_dedup(_hist_existing, _df_to_write, ["date"])
+        except (OSError, ValueError, pd.errors.ParserError, pd.errors.EmptyDataError) as _e:
+            print(f'  [WARN] amundi existente ilegible: {_e}')
     _tmp_hist = HISTORY_CSV.with_suffix(HISTORY_CSV.suffix + '.tmp')
-    df[cols].to_csv(_tmp_hist, index=False)
+    _df_to_write.to_csv(_tmp_hist, index=False)
     _tmp_hist.replace(HISTORY_CSV)
     print(f'  Histórico guardado en {HISTORY_CSV}')
     print(f'  Total filas: {len(df)}')

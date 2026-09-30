@@ -11,6 +11,8 @@ import xml.etree.ElementTree as ET
 from datetime import datetime, timedelta
 from enum import Enum
 from pathlib import Path
+from src.utils import append_dedup
+
 
 import numpy as np
 import pandas as pd
@@ -251,6 +253,13 @@ def get_blackrock_primary_flow(
     result = df_flow[cols]
 
     output_csv.parent.mkdir(parents=True, exist_ok=True)
+    # Fix D (2026-09-30): preservar historico con append_dedup.
+    if output_csv.exists():
+        try:
+            _hist_existing = pd.read_csv(output_csv)
+            result = append_dedup(_hist_existing, result, ["date"])
+        except (OSError, ValueError, pd.errors.ParserError, pd.errors.EmptyDataError) as _e:
+            print(f'  [WARN] {output_csv.name} existente ilegible: {_e}')
     _tmp_out = output_csv.with_suffix(output_csv.suffix + '.tmp')
     result.to_csv(_tmp_out, index=False)
     _tmp_out.replace(output_csv)

@@ -8,6 +8,8 @@ from io import BytesIO
 from datetime import datetime, timedelta
 from pathlib import Path
 
+from src.utils import append_dedup
+
 from ._fund_flow_utils import fund_flow_robust_zscore_with_regime
 
 SECTOR_TICKERS = ['XLK','XLF','XLV','XLE','XLY','XLP','XLI','XLB','XLRE','XLU','XLC','FEZ']
@@ -127,6 +129,17 @@ def get_etf_primary_flow_data(force_download: bool = False) -> pd.DataFrame:
     full_df = full_df.sort_values(['ticker', 'Date']).reset_index(drop=True)
 
     HISTORY_PATH.parent.mkdir(parents=True, exist_ok=True)
+    # Fix D (2026-09-30): preservar historico con append_dedup.
+    # Antes: full_df.to_csv sobreescribia el CSV. Si el proveedor o su
+    # cache devolvia menos filas (delay, cache stale, glitch), el CSV
+    # perdia filas permanentemente. Verificado con test_flows_primary_
+    # preserve_history.py.
+    if HISTORY_PATH.exists():
+        try:
+            _hist_existing = pd.read_csv(HISTORY_PATH)
+            full_df = append_dedup(_hist_existing, full_df, ["ticker", "Date"])
+        except (OSError, ValueError, pd.errors.ParserError, pd.errors.EmptyDataError) as _e:
+            print(f'  [WARN] etf_primary_flow existente ilegible: {_e}')
     # A5-79 (2026-09-28): escritura atomica del historico consolidado.
     _tmp_hist = HISTORY_PATH.with_suffix(HISTORY_PATH.suffix + '.tmp')
     full_df.to_csv(_tmp_hist, index=False)

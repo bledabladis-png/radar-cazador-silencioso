@@ -9,6 +9,8 @@ from io import StringIO
 import requests
 from pathlib import Path
 from datetime import datetime, timedelta
+from src.utils import append_dedup
+
 
 from config.settings import CFTC_HISTORY_DAYS, CFTC_ACTIVE_CONTRACT_DAYS
 
@@ -160,6 +162,13 @@ def get_cftc_position_flow_data() -> pd.DataFrame:
         recent = recent[recent['date'] >= recent['date'].max() - pd.Timedelta(days=CFTC_ACTIVE_CONTRACT_DAYS)]
 
         HISTORY_PATH.parent.mkdir(parents=True, exist_ok=True)
+        # Fix D (2026-09-30): preservar historico con append_dedup.
+        if HISTORY_PATH.exists():
+            try:
+                _hist_existing = pd.read_csv(HISTORY_PATH)
+                recent = append_dedup(_hist_existing, recent, ["date", "contract", "participant"])
+            except (OSError, ValueError, pd.errors.ParserError, pd.errors.EmptyDataError) as _e:
+                print(f'  [WARN] cftc_position_flow existente ilegible: {_e}')
         _tmp_hist = HISTORY_PATH.with_suffix(HISTORY_PATH.suffix + '.tmp')
         recent.to_csv(_tmp_hist, index=False)
         _tmp_hist.replace(HISTORY_PATH)
