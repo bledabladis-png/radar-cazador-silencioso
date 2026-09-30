@@ -2,6 +2,42 @@
 import pandas as pd
 
 
+def _last_row_coverage_ok(df, min_coverage=0.90):
+    """Fix M (2026-10-01): True si la ultima fila tiene cobertura >= min.
+
+    Usado por stock_data_loader y data_loader para decidir si aceptar
+    cache-hit. Sin esto, un parquet con la fila de hoy pero con
+    tickers NaN (p.ej. europeos sin refrescar) se acepta como valido
+    y no se dispara descarga.
+
+    Fail-closed: None, vacio, o sin columnas Close -> False.
+
+    Args:
+        df: DataFrame (MultiIndex (campo, ticker) o plano).
+        min_coverage: umbral [0,1].
+
+    Returns:
+        True si cobertura de la ultima fila >= min_coverage.
+    """
+    if df is None or df.empty:
+        return False
+    # Columnas Close
+    if isinstance(df.columns, pd.MultiIndex):
+        close_cols = [c for c in df.columns if len(c) == 2 and c[0] == "Close"]
+    elif "Close" in df.columns:
+        close_cols = ["Close"]
+    else:
+        close_cols = []
+    if not close_cols:
+        return False
+    last_row = df.iloc[-1]
+    n_total = len(close_cols)
+    n_valid = int(sum(1 for c in close_cols if pd.notna(last_row[c])))
+    if n_total == 0:
+        return False
+    return (n_valid / n_total) >= min_coverage
+
+
 def append_dedup(hist_df, new_df, subset, sort_by=None):
     """Concatena dos DataFrames, normaliza fecha a YYYY-MM-DD y elimina duplicados por subset.
 

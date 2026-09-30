@@ -9,6 +9,7 @@ from data.providers.router import DataRouter
 from data.providers.backup_providers import BackupProvider
 from src.effective_date import resolve_effective_date
 from src.utils import truncate_to_expected_session
+from src.utils import _last_row_coverage_ok
 from src.market_hours import is_trading_session, is_session_closed
 from src.instrument_registry import (
     get_market,
@@ -280,6 +281,10 @@ def download_market_data(reference_date=None, run_id=None):
                 _df_last = _df.index[-1].date() if hasattr(_df.index[-1], 'date') else _df.index[-1]
                 if _df_last < _last_exp:
                     print(f'  [CACHE] datos hasta {_df_last}, esperado >= {_last_exp}. Forzando descarga.')
+                elif not _last_row_coverage_ok(_df, min_coverage=0.90):
+                    # Fix M (2026-10-01): mismo gate que stock_data_loader.
+                    print(f'  [CACHE] datos hasta {_df_last} pero cobertura '
+                          f'< 90% en ultima fila. Forzando descarga.')
                 else:
                     return _postprocess_market_data(_df, reference_date, run_id, write_manifest=False)
             elif _df is not None:

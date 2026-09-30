@@ -15,6 +15,7 @@ from data.providers.xetra_provider import XetraProvider
 from data.providers.bme_provider import BMEProvider
 from src.market_calendar import last_expected_market_date, is_market_day
 from src.utils import truncate_to_expected_session as _truncate_to_expected_session
+from src.utils import _last_row_coverage_ok
 from src.market_hours import (
     is_trading_session,
     is_session_closed,
@@ -538,6 +539,14 @@ def download_stock_prices(reference_date=None, run_id=None):
                 _df_last = _df.index[-1].date() if hasattr(_df.index[-1], 'date') else _df.index[-1]
                 if _df_last < _last_exp:
                     print(f'  [CACHE] datos hasta {_df_last}, esperado >= {_last_exp}. Forzando descarga.')
+                elif not _last_row_coverage_ok(_df, min_coverage=0.90):
+                    # Fix M (2026-10-01): la fecha es la esperada pero la
+                    # cobertura de la ultima fila < 90%. Puede faltar
+                    # cualquier ticker (europeos con cache stale, fallos
+                    # transitorios del proveedor). Forzar descarga para
+                    # que el cascade europeo se ejecute.
+                    print(f'  [CACHE] datos hasta {_df_last} pero cobertura '
+                          f'< 90% en ultima fila. Forzando descarga.')
                 else:
                     return _df
             elif _df is not None:
