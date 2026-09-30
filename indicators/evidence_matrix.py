@@ -5,7 +5,6 @@ No genera score compuesto ni alimenta motores.
 """
 import pandas as pd
 import numpy as np
-from pathlib import Path
 
 from src.utils import _observation_date_from_df
 
@@ -201,15 +200,4 @@ def compute_evidence_matrix(sector_breadth_df=None,
     ev_cols = ['price_evidence','breadth_evidence','primary_flow_evidence','proxy_flow_evidence','wyckoff_evidence','credit_evidence','volatility_evidence']
     for c in ev_cols:
         df[c] = df[c].astype('Int64')
-    return df
-
-
-def save_evidence_matrix(df, path='outputs/history/evidence_matrix.csv'):
-    # DEAD CODE (2026-09-29): sin consumidores en src/, indicators/,
-    # scripts/ ni tests/. El writer productivo de evidence_matrix.csv
-    # es finalize.py:66 (atomico). Se preserva por si un caller externo
-    # la importa, pero no se le anade atomicidad sin consumidor real.
-    if df is not None and not df.empty:
-        Path(path).parent.mkdir(parents=True, exist_ok=True)
-        df.to_csv(path, index=False)
     return df

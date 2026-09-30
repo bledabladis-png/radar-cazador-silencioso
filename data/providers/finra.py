@@ -160,27 +160,6 @@ class FinraProvider(MarketDataProvider):
     # ------------------------------------------------------------
     # MÉTODOS PÚBLICOS
     # ------------------------------------------------------------
-    def get_archive_index(self):
-        # ESTADO (2026-09-29): sin consumidor productivo. Solo tests.
-        # Devuelve [] silencioso ante cualquier error de red o parseo.
-        # Ademas sin timeout ni raise_for_status (a diferencia de _post).
-        # No se toca: activar o retirar es decision de diseno.
-        url = "https://otctransparency.finra.org/otctransparency/assets/archives/atsdownload/index.json"
-        try:
-            return requests.get(url).json()
-        except (requests.RequestException, ValueError, KeyError, TypeError):
-            return []
-
-    def get_available_weeks(self):
-        # ESTADO (2026-09-29): sin consumidor productivo. Solo tests.
-        # Nota: resp.json() sin try/except. Si FINRA devuelve 200 con HTML
-        # (redirect a login), lanza ValueError no capturado. Se deja como
-        # esta porque no hay caller productivo que lo dispare.
-        resp = self._post("weeklyDownloadDetail", {})
-        if resp is not None:
-            return resp.json()
-        return []
-
     def get_latest_week(self):
         # F5.7-05: memoize por instancia con TTL 300s.
         # Evita repetir la busqueda (hasta 6 semanas x 1 request) cuando

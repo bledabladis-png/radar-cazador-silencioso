@@ -214,8 +214,6 @@ Sesion 2026-09-29 (tarde): auditoria funcional frente 6 (IAE) + frente 8 (provid
     sectors_base (x1), radar_target_catalog, sec_13f/downloader,
     qqq_nport_flow, update_sec_13f. Sin tests: no hay bug a verificar.
   - Fix comun: `.tmp + replace`.
-  - **Dead code anotado:** `indicators/evidence_matrix.save_evidence_matrix`
-    (sin consumidores; el writer productivo es `finalize.py:66`).
 - FU-009-bis (append_dedup): columnas all-NA excluidas antes del concat
   (FutureWarning pandas 2.x -> cambio de dtype en 3.0).
 
@@ -245,7 +243,6 @@ Sesion 2026-09-29 (tarde): auditoria funcional frente 6 (IAE) + frente 8 (provid
   no etapa del flujo contractual. 99 tests pasan. Verificado 2026-09-29:
   `_apply_intra_period_dedup` v1 no emite DROP_DUP (todas las decisiones
   son KEEP). Conectar P65 no alteraria `nipc_total`.
-- Dead code declarado: `finra.get_archive_index`, `finra.get_available_weeks`.
 - Modulos con cobertura baja de tests: `macro_manual_loader` (12%),
   `european_coverage` (12%), `pipeline_contractual` (27%), `data_loader` (50%).
   Sin bug detectado tras inspeccion.
