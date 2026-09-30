@@ -173,7 +173,7 @@ Tres capas independientes que NO deben confundirse:
 
 **Macro Regime (12 senales):** Critical (0.60) + Important (0.30) + Contextual (0.10).
 
-**Sector Regime:** `0.25*rs_mom_20 + 0.15*rs_mom_50 + 0.10*rs_mom_126 + 0.15*trend + 0.15*vol_inv + 0.20*breadth`. Aplica `SECTOR_DISPERSION_PENALTY=0.5` y renormaliza por `valid_weight_sum`.
+**Sector Regime:** `0.25*rs_mom_20 + 0.15*rs_mom_50 + 0.10*rs_mom_126 + 0.15*trend + 0.15*vol_inv + 0.20*breadth`. Aplica `SECTOR_DISPERSION_PENALTY=0.5` (dispersion = std(ddof=0) de componentes en [-1,+1] -> penalty en [0.5,1]) y renormaliza por `valid_weight_sum`. **Umbral publicable (D2, 2026-09-30): `n_valid >= 4` -> score NaN si menos.** Con 4 componentes, peso minimo representado 0.55. Detalle en `08_AUDITORIA_SECTOR_REGIME.md`.
 
 **Tactical Score (5 componentes):** RS20 / Flow / Mom20 / Breadth20 / Aceleracion. Pesos en `config/weights.py::TACTICAL_WEIGHTS`.
 
@@ -365,6 +365,12 @@ Si el gate falla, `run.py` aborta con `sys.exit(1)`.
 
 
 
+
+**H8 - NaN convertido en senal bajista (CERRADO 2026-09-30):** cuando `close_sector` es NaN, `trend_position` y `breadth` devolvian `-1.0` (senal bajista maxima fabricada). 1454 filas historicas afectadas. Cuando solo quedaban esos 2 componentes, el sistema producia `score=-1` + `penalty=1`. Fix: `.mask(close.isna())` en `trend_position` (commit `ee24afc`); mismo tratamiento inline para `breadth`. Contrato: `missing observation != bearish observation`. Detalle en `08_AUDITORIA_SECTOR_REGIME.md`.
+
+**Cierres excepcionales NYSE (CERRADO 2026-09-30):** el calendario algoritmico no reconoce cierres no recurrentes. Anadidos `2018-12-05` (Bush) y `2025-01-09` (Carter) a `_EXCEPTIONAL_CLOSURES` en `src/market_calendar.py`. Commit `43a2fdb`. Solo cierres posteriores al inicio del parquet (2016-09-29).
+
+**Fix D - Perdida de filas en historico de flujo (CERRADO 2026-09-30):** 5 providers (`ssga_fund_data`, `amundi_fund_data`, `_blackrock_base`, `qqq_nport_flow`, `cftc_data`) escribian su historico sobrescribiendo el CSV sin leer el existente. Si el proveedor o su cache devolvia menos filas, se perdian permanentemente. Fix: `append_dedup(hist, nuevo, key)` antes de escribir. Commit `c798857`. Fix D2 (`7b0044d`): normalizar `Date` en ssga (usa `Date` mayuscula, `append_dedup` normaliza solo `date` minuscula). Test: `test_flows_primary_preserve_history.py`.
 
 **K-LSE-YAHOO-REVISION-01 (WATCHED con check activo):** Yahoo revisa OHLC historico retrospectivamente. Afecta al WLS (dependiente de ventanas largas). No es bug: el determinismo del sistema es respecto al snapshot del input, no al proveedor (00_ARRANQUE §2, D2 2026-09-30). Detectado via `check_yahoo_revision` (health_check): compara manifest actual vs HEAD por sha256.
 
