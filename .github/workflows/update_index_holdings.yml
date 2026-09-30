@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: update_index_holdings
+  group: update_index_holdings_csv
   cancel-in-progress: false
 
 jobs:
