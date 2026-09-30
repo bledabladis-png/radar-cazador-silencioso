@@ -1,4 +1,4 @@
-﻿name: Actualizar Holdings Europeos (trimestral)
+name: Actualizar Holdings Europeos (trimestral)
 
 on:
   schedule:

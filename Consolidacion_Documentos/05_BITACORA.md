@@ -170,7 +170,7 @@ publica el NIPC del par vigente, que cambia con cada trimestre.
 cache 13F, (b) skipped tests en CI, (c) evaluar sustituto OilPriceAPI
 o documentar futuros como BLOCKED de facto con parquet congelado.
 
-### 2026-09-29 (noche) — Integridad parquets + EU 5y + PENDING BME + P65### 2026-09-29 (noche) — Integridad parquets + EU 5y + PENDING BME + P65
+### 2026-09-29 (noche) — Integridad parquets + EU 5y + PENDING BME + P65
 
 **Objetivo.** Cerrar el frente de integridad detectado al auditar Ibex 35.
 

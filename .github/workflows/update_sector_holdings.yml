@@ -1,4 +1,4 @@
-﻿name: Actualizar ETF Holdings (trimestral)
+name: Actualizar ETF Holdings (trimestral)
 
 on:
   schedule:

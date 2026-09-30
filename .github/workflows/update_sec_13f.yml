@@ -1,4 +1,4 @@
-﻿name: Actualizar SEC 13F (trimestral)
+name: Actualizar SEC 13F (trimestral)
 
 on:
   schedule:

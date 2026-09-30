@@ -1,4 +1,4 @@
-﻿name: Actualizar Index Holdings (trimestral)
+name: Actualizar Index Holdings (trimestral)
 
 on:
   schedule:

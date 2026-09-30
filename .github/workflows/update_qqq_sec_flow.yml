@@ -1,4 +1,4 @@
-﻿name: Actualizar QQQ SEC Flow (semestral)
+name: Actualizar QQQ SEC Flow (semestral)
 
 on:
   schedule:

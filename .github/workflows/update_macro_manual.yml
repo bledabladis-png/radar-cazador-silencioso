@@ -1,4 +1,4 @@
-﻿name: Update Macro Manual (FRED, diario)
+name: Update Macro Manual (FRED, diario)
 
 on:
   schedule:

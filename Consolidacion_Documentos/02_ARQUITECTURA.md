@@ -357,6 +357,8 @@ Si el gate falla, `run.py` aborta con `sys.exit(1)`.
 
 **Dark Pool con retraso FINRA (2-4 sem):** marcado ARCHIVAL si `age > 14d` (excluido de MTE).
 
+**Volumen Yahoo no consolidado intra-dia (D7, WONT FIX):** Yahoo publica el volumen del ultimo dia a ritmos distintos por ticker. Una consulta a las 05:59 UTC puede devolver 2632 para NG=F y otra a las 12:00 devuelve 212563 para el mismo dia. Afecta a `OBV.diff()` y `CMF(20)` -> componente del Flow Proxy (65% del peso). **No es bug del pipeline**, es limite de la fuente. Mitigacion: el reporte se ejecuta con `reference_date` derivado del dataset y los candidatos de flujo son ventanas largas (60 sesiones), donde la ultima fila pesa poco. Fix real requeriria consultar Yahoo a hora fija (posterior a consolidacion), fuera del alcance del sistema (depende de proveedor). Verificado 2026-09-30.
+
 **~31 tickers con DATA ISSUE:** esperado (IPOs recientes).
 
 **Confidence sensible a N componentes:** documentado (C19).
