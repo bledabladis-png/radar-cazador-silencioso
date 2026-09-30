@@ -21,6 +21,20 @@ _MADRID = ZoneInfo("Europe/Madrid")
 PUBLISH_HOUR = 23
 
 
+# Cierres excepcionales NYSE no recurrentes (luto nacional, eventos).
+# No son festivos anuales; el calendario algoritmico no los puede predecir.
+# Solo se incluyen cierres posteriores al inicio del parquet (2016-09-29).
+_EXCEPTIONAL_CLOSURES = {
+    date(2018, 12, 5): "George H.W. Bush (luto nacional)",
+    date(2025, 1, 9): "Jimmy Carter (luto nacional)",
+}
+
+
+def _is_exceptional_closure(d: date) -> bool:
+    """True si `d` es un cierre excepcional NYSE documentado."""
+    return d in _EXCEPTIONAL_CLOSURES
+
+
 def _easter_sunday(year: int) -> date:
     """Domingo de Pascua (Computus, rito gregoriano)."""
     a = year % 19
@@ -115,6 +129,8 @@ def is_market_day(d):
     if d.weekday() >= 5:
         return False
     if _is_nyse_holiday(d):
+        return False
+    if _is_exceptional_closure(d):
         return False
     return True
 
