@@ -408,6 +408,60 @@ frente 8 (providers). Total: ~35 commits.
   no emite DROP_DUP. Todas las decisiones KEEP. Conectar P65 no alteraria
   nipc_total. Hipotesis C2 descartada. 03_IAE.md corregido (2 sitios).
 
+### 2026-09-30 (noche): auditoria externa sector_regime + fixes H8/R2/H1 + Fix D
+
+**Contexto.** Auditoria externa del subsistema
+`regimes/sector_regime.py::compute_sector_scores` en colaboracion con
+un auditor. Tres iteraciones: informe inicial, anexo con hallazgos
+nuevos, dictamen definitivo.
+
+**Hallazgos H1-H10.** El expediente completo esta en
+`08_AUDITORIA_SECTOR_REGIME.md`. El central (H8) es material: cuando
+`close_sector` es NaN, `trend_position` y `breadth` devolvian `-1.0`
+(senal bajista maxima fabricada). 1454 filas historicas afectadas.
+Acoplamiento grave: cuando solo quedan esos 2 componentes, el sistema
+producia `score = -1` + `penalty = 1` (maxima conviccion bajista +
+ausencia de descuento por dispersion), derivados de ausencia de datos.
+
+**Decisiones D1-D4.** D1 propagar NaN desde la raiz. D2 umbral
+n_valid >= 4. D3 mantener formulas, documentar semanticas. D4
+recalcular historico via E2E.
+
+**Fixes ejecutados (6 commits con verificacion triple).**
+
+- **43a2fdb:** cierres excepcionales NYSE (2018-12-05 Bush,
+  2025-01-09 Carter). El calendario algoritmico no los reconoce.
+- **ee24afc:** `trend_position` propaga NaN via `.mask(close.isna())`.
+  Cierra H8 en la raiz.
+- **c98c22a:** `compute_sector_scores` resuelve `effective_date` sobre
+  los 11 sectores (min_coverage=0.90) antes de `last_scores`. Cierra
+  R2 (regla dura: ninguna metrica agregada usa `.iloc[-1]`).
+- **e92f61c:** umbral `n_valid >= 4`. Con menos componentes, la
+  renormalizacion convertia hasta 0.25 del peso original en el 100%
+  del score. Cierra H1.
+- **c798857 (Fix D):** `append_dedup` en 5 writers de historico de
+  flujo (ssga, amundi, _blackrock_base, qqq_nport_flow, cftc). Bug
+  preexistente destapado por el primer run E2E: los writers
+  sobrescribian su CSV sin leer el existente, perdiendo filas si el
+  proveedor devolvia menos.
+- **7b0044d (Fix D2):** normalizar `Date` en ssga antes del
+  `append_dedup`. El primer fix D introdujo duplicacion (56093 ->
+  112173 filas) porque `append_dedup` normaliza solo `date`
+  minuscula y SSGA usa `Date`.
+
+**Verificacion E2E.** Doble run. Primero destapo Fix D, revertido.
+Segundo tras Fix D2: sin perdida ni duplicacion, Gate 10/10, NIPC
+8256882557, ranking identico pre/post. Suite 2961 + 2 skipped.
+
+**Regla nueva en 01_METODO §8.6:** los tests que verifican "fila
+presente" no detectan "conteo correcto". El test de Fix D original
+era ciego; el reforzado verifica `count == N` y `duplicated() == 0`.
+
+**Leccion:** el run E2E detecta bugs que los tests unitarios no ven.
+Verificar siempre la salida de un run con `numstat` (buscar lineas
+perdidas netas) y con conteo de duplicados, no solo con "fila
+presente".
+
 ## 3. HALLAZGOS POR BLOQUE TEMATICO
 
 Agrupacion de los cierres mas relevantes por area. El detalle granular esta en `git log`. Los IDs (FU-xxx, K-xxx, F2.4-xx, A5-xx, DT-x, H-x) son de la nomenclatura interna de la auditoria y no se usan ya en el trabajo activo.
