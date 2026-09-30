@@ -28,7 +28,11 @@ def render_alerts(breadth_values, liquidity_regime, price_flow_divergences):
         for ticker, div in price_flow_divergences.items():
             if div.get('status') != 'ALIGNED':
                 name = SECTOR_NAMES.get(ticker, ticker)
-                alerts.append(f"- **{name} Price-Flow:** Precio fuerte sin confirmación del Flow Proxy. El indicador no permite inferir directamente participacion institucional.")
+                # Fix F (2026-09-30): usar el message del detector, no
+                # un literal fijo. Antes se publicaba "Precio fuerte"
+                # para PRICE_WEAK_FLOW_SUPPORTIVE. Verificado con XLU.
+                _msg = div.get('message') or '(sin detalle)'
+                alerts.append(f"- **{name} Price-Flow:** {_msg}")
     
     if alerts:
         out.append("### Alertas de Divergencia (Inicial)\n")
