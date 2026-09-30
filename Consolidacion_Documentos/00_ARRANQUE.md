@@ -286,6 +286,7 @@ El corpus consolidado vive en `Consolidacion_Documentos/`:
 | `05_BITACORA.md` | 7 KB | Sesiones recientes (se poda). |
 | `06_IAE_P65_P66.md` | 11 KB | Contrato P65 + P66 (L3 cruzada). |
 | `ESTADO_SISTEMA.md` | 5 KB | Snapshot auto-generado (no editar a mano). |
+| `07_RUNBOOK.md` | 8 KB | Procedimiento operativo de los crons. |
 
 | Doc | Contenido | Cuando consultarlo |
 |---|---|---|
@@ -296,6 +297,7 @@ El corpus consolidado vive en `Consolidacion_Documentos/`:
 | 04_HISTORICO.md | Cronologia de decisiones | Para "por que esta asi" |
 | 05_BITACORA.md | Sesiones recientes | Al cerrar una sesion |
 | 06_IAE_P65_P66.md | Contrato P65 + P66 (L3 cruzada) | Al trabajar en P65/P66 |
+| 07_RUNBOOK.md | Procedimiento de los crons y contingencias | Al verificar un cron o diagnosticar un fallo de workflow |
 
 ---
 
