@@ -176,9 +176,6 @@ def _postprocess_market_data(data, reference_date, run_id, *, write_manifest):
     elif _eff:
         print("  [FU-021-3A] EQUITY_EOD INSUFFICIENT_COVERAGE. Sin trim.")
 
-    from src.commodities_merge import merge_commodities_into_market
-    data = merge_commodities_into_market(data)
-
     from src.cboe_merge import merge_cboe_into_market
     data = merge_cboe_into_market(data)
 

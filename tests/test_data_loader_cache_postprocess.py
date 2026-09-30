@@ -18,7 +18,6 @@ import src.data_loader as dl
 
 # Cargar modulos via importlib. Los imports directos (src.temporal_contracts.consolidate)
 # fallan porque __init__.py sombrea el nombre del submodulo con un atributo funcion.
-_cmerge = importlib.import_module('src.commodities_merge')
 _cboemerge = importlib.import_module('src.cboe_merge')
 _utils = importlib.import_module('src.utils')
 _tc = importlib.import_module('src.temporal_contracts')
@@ -39,20 +38,15 @@ def _make_df(n_days=5, n_tickers=3):
 @pytest.fixture
 def patched_pipeline(monkeypatch):
     """Aisla _postprocess_market_data de merges, filter EOD y contracts reales."""
-    calls = {'writer': [], 'merge_comm': 0, 'merge_cboe': 0}
+    calls = {'writer': [], 'merge_cboe': 0}
 
     monkeypatch.setattr(dl, '_filter_non_eod_equity', lambda d, r: (d, {}))
     monkeypatch.setattr(dl, '_trim_market_data_to_equity_eod', lambda d: (d, None))
-
-    def _merge_comm(d):
-        calls['merge_comm'] += 1
-        return d
 
     def _merge_cboe(d):
         calls['merge_cboe'] += 1
         return d
 
-    monkeypatch.setattr(_cmerge, 'merge_commodities_into_market', _merge_comm)
     monkeypatch.setattr(_cboemerge, 'merge_cboe_into_market', _merge_cboe)
 
     def _writer(d, path, source, reference_date, run_id):
@@ -86,7 +80,6 @@ def test_postprocess_write_manifest_true_calls_writer(patched_pipeline):
     assert w['path'] == 'data/market_data.parquet'
     assert w['source'] == 'yahoo'
     assert w['run_id'] == 'rid_001'
-    assert patched_pipeline['merge_comm'] == 1
     assert patched_pipeline['merge_cboe'] == 1
 
 
@@ -94,7 +87,6 @@ def test_postprocess_write_manifest_false_does_not_call_writer(patched_pipeline)
     df = _make_df()
     dl._postprocess_market_data(df, _REF, 'rid_002', write_manifest=False)
     assert patched_pipeline['writer'] == []
-    assert patched_pipeline['merge_comm'] == 1
     assert patched_pipeline['merge_cboe'] == 1
 
 
