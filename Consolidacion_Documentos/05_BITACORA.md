@@ -44,6 +44,53 @@ Al cerrar una sesion nueva, se anade arriba (las mas recientes primero). Si hay 
 
 ## 3. SESIONES
 
+### 2026-09-30 (noche, sesion 8) - Auditoria sector_regime + fixes H8/R2/H1 + Fix D
+
+**Objetivo.** Auditoria externa del subsistema `regimes/sector_regime.py`
+en colaboracion con un auditor. Primero recolectar evidencia y redactar
+informe. Despues, con el dictamen, fase de diseno/contrato. Finalmente,
+implementar los fixes aprobados y verificar end-to-end.
+
+**Hecho.**
+
+- **Fase 1 - Recoleccion y expediente.** Volcado de los 11 sectores
+  sobre data/market_data.parquet (2605 sesiones). Distribucion de
+  n_valid, penalty, dispersion. Identificacion de los 10 hallazgos
+  H1-H10 (H8 material: close=NaN -> trend/breadth=-1.0, 1454 filas).
+  Tres iteraciones con el auditor externo. Version final del
+  expediente consolidado.
+
+- **Fase 2 - Decisiones D1-D4.** D1: propagar NaN desde la raiz.
+  D2: umbral n_valid >= 4. D3: mantener formulas, documentar
+  semanticas. D4: recalcular historico via E2E.
+
+- **Fase 3 - 6 commits de fix con verificacion triple.**
+  43a2fdb (calendario cierres excepcionales Bush/Carter),
+  ee24afc (trend_position propaga NaN, H8),
+  c98c22a (effective_date en sector_regime, R2),
+  e92f61c (umbral n_valid>=4, H1),
+  c798857 (append_dedup en 5 writers de flujo, Fix D),
+  7b0044d (normalizar Date en ssga, Fix D2).
+
+- **Fase 4 - Run E2E doble.** Primer run destapo Fix D (perdida de
+  fila 2026-09-29 en 2 CSV). Segundo run tras Fix D2: sin perdida,
+  sin duplicacion, Gate 10/10, ranking identico.
+
+**Commits.** `43a2fdb`, `ee24afc`, `c98c22a`, `e92f61c`, `c798857`,
+`7b0044d`, `8dc7437` (regeneracion outputs).
+
+**Pendiente.**
+
+- C2 (920): bloqueado externo.
+- H5.3: cron nov 2026.
+- Regeneracion de historico completo (sector_rank_history retiene 2
+  meses) si se quiere verificar H1/H8 sobre warm-up 2016 y XLC
+  pre-2018.
+
+**Proximo paso sugerido.** Verificar cron 1-oct (3 workflows
+trimestrales, primera ejecucion por schedule) con 07_RUNBOOK 3. Si
+verde, documentar tiempos reales en 07_RUNBOOK 2.3.
+
 ### 2026-09-30 (noche, sesion 7) - D37-D40: cobertura final + fósiles + auditoria workflows
 
 **Objetivo.** Cerrar el backlog formal tras D36. Orden por ROI:
