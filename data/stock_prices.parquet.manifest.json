@@ -2,14 +2,14 @@
   "schema_version": 1,
   "artifact": {
     "path": "data/stock_prices.parquet",
-    "sha256": "a0b819502294463a2b4742a2fe0c096f539900ec3d378e79e53d3d1b98238def",
-    "bytes": 14722888,
-    "written_at": "2026-09-29T23:03:19.744818"
+    "sha256": "da2a17076ba4b51b5e0a21ac6f574c7ae48e62395b1c674addd360611943ce5f",
+    "bytes": 14722265,
+    "written_at": "2026-09-30T02:18:29.169027"
   },
   "producer": {
     "module": "src.utils",
     "function": "write_artifact_with_manifest",
-    "run_id": "20260930_005512",
+    "run_id": "20260930_041039",
     "source": "yahoo_european_cascade"
   },
   "content": {
