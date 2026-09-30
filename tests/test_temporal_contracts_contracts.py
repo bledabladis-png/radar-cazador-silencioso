@@ -45,7 +45,11 @@ class TestCommonHelpers:
     def test_extract_close_multiindex(self, df_real):
         close = extract_close(df_real)
         assert not isinstance(close.columns, pd.MultiIndex)
-        assert len(close.columns) == 562
+        # Fix L (2026-09-30): derivar del df_real en vez de hardcodear.
+        # El universo cambia con delistings y ajustes de config sin que
+        # el test deba romperse. Antes: 562 hardcodeado.
+        n_expected = df_real.columns.get_level_values(1).nunique()
+        assert len(close.columns) == n_expected
 
     def test_extract_close_flat_passthrough(self):
         df = pd.DataFrame({"A": [1, 2]})
@@ -71,7 +75,12 @@ class TestCommonHelpers:
 
     def test_get_universe_by_class_equity(self, df_real):
         universe = get_universe_by_class(df_real, "EQUITY")
-        assert len(universe) == 539
+        # Fix L (2026-09-30): rango plausible, no numero exacto.
+        # El universo cambia con delistings y ajustes de config sin que
+        # el test deba romperse. Antes: 539 hardcodeado.
+        assert 500 <= len(universe) <= 600, (
+            f"Universo equity fuera de rango: {len(universe)} (esperado 500-600)"
+        )
 
     def test_get_universe_by_class_index(self, df_real):
         universe = get_universe_by_class(df_real, "INDEX")
@@ -121,7 +130,10 @@ class TestEquityEOD:
     def test_resolve_popula_eligible_universe(self, df_real):
         c = EquityEOD()
         c.resolve(df_real, REF)
-        assert len(c.eligible_universe) == 539
+        # Fix L (2026-09-30): rango plausible, no numero exacto.
+        assert 500 <= len(c.eligible_universe) <= 600, (
+            f"eligible_universe fuera de rango: {len(c.eligible_universe)}"
+        )
 
     def test_resolve_status_coherente_con_coverage_y_lag(self, df_real):
         r = EquityEOD().resolve(df_real, REF)
