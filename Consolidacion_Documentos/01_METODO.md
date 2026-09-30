@@ -171,6 +171,7 @@ Estas son las reglas que hemos aprendido rompiendo cosas. Se aplican.
 - **Un here-string no es un archivo.** Si tiene >20 lineas o >5 `$`, va a `_patch_XXX.py` con `[System.IO.File]::WriteAllText`.
 - **`py -c "..."` con comillas dobles anidadas rompe.** Escribir a fichero temporal.
 - **Backticks en here-string se corrompen.** Placeholders + `chr(96)` o escribir a fichero.
+- **No-ASCII en anchors de scripts temporales se corrompe.** `§`, tildes y similares pueden llegar mal del here-string al `_script.py` (PowerShell 5.x + UTF-8 sin BOM). Evitar no-ASCII en anchors: usar ASCII, o `chr()` explicito. Caso observado 2 veces el 2026-09-30 (anchor con seccion 5 de RUNBOOK, y `py -c` con comillas anidadas).
 
 **Sobre Windows / consola:**
 - **`Get-Content` puede mostrar UTF-8 como CP850.** Artefacto de consola, no corrupcion del fichero. 4 falsos positivos de "mojibake" en la sesion por esto. **Verificar SIEMPRE con `read_bytes().decode('utf-8')` + `repr()` antes de declarar mojibake.**

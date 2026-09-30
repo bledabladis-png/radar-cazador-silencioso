@@ -2,7 +2,7 @@
 
 Hechos verificables del sistema. Generado por script.
 
-**Generado en:** 2026-09-30 15:33:29 UTC
+**Generado en:** 2026-09-30 16:39:35 UTC
 **Snapshot tomado sobre:** commit HEAD de la fecha indicada, al momento de generar
 **NO editar a mano.** Regenerar con:
 
@@ -17,16 +17,16 @@ HEAD, tests e integridad del codigo.
 
 ## 1. Git
 
-- **HEAD:** `5e75d05`
-- **HEAD completo:** `5e75d05d71ba84a70b97ad846bafe59e90ec1743`
-- **Fecha commit HEAD:** 2026-09-30 17:33:07 +0200
+- **HEAD:** `ea60a6c`
+- **HEAD completo:** `ea60a6c49b1535b9f93d423ddae02200d963bd1d`
+- **Fecha commit HEAD:** 2026-09-30 18:39:25 +0200
 - **Ahead:** 0
 - **Behind:** 0
-- **origin/main:** `5e75d05`
+- **origin/main:** `ea60a6c`
 
 ## 2. Tests (pytest real)
 
-- **Resumen:** 2806 passed, 2 skipped in 70.37s (0:01:10)
+- **Resumen:** 2945 passed, 2 skipped in 70.80s (0:01:10)
 - **Exit code:** 0
 
 **Tests skip:**
@@ -107,7 +107,7 @@ HEAD, tests e integridad del codigo.
 - `scripts/iae_identity_uniqueness_audit.py`: 270 LOC
 - `scripts/iae_contractual_nipc_e2e.py`: 142 LOC
 - `scripts/regenerate_radar_catalog.py`: 238 LOC
-- `scripts/regenerate_cusip_crosswalk.py`: 225 LOC
+- `scripts/regenerate_cusip_crosswalk.py`: 238 LOC
 - `scripts/update_sec_13f.py`: 373 LOC
 - `scripts/download_official_list_13f.py`: 147 LOC
 

@@ -44,6 +44,71 @@ Al cerrar una sesion nueva, se anade arriba (las mas recientes primero). Si hay 
 
 ## 3. SESIONES
 
+### 2026-09-30 (noche, sesion 7) - D37-D40: cobertura final + fósiles + auditoria workflows
+
+**Objetivo.** Cerrar el backlog formal tras D36. Orden por ROI:
+cobertura de scripts con logica real, limpieza de fosiles, auditoria
+tematica de workflows.
+
+**Hecho.**
+
+- **D37 (heredado del traspaso).** HEAD inicial `db5705d`. Cerrado
+  sin cambios hoy. pipeline_gate, guard_coverage, issue_manager
+  cubiertos.
+
+- **D38 (3 scripts, 3 commits).** Sub-bloque 1
+  (`download_official_list_13f`): 27% -> 99%. 34 tests. Bug F5.6-X
+  (fallback 404) cubierto. Commit `508bbd0`. Sub-bloque 2
+  (`regenerate_cusip_crosswalk`): 69% -> 99%. 12 tests nuevos + 1
+  bug latente corregido: `_load_radar_index` protegia `scf != "nan"`
+  pero no `tk`. `str(NaN or "")` = "nan" (NaN es truthy). Fix con
+  helper `_clean_str`. Commit `82bef32`. Sub-bloque 3
+  (`qqq_returns_yahoo`): 63% -> 98%. 6 tests nuevos. Refactor del
+  import en el test para que coverage lo instrumente. Commit
+  `8dabcfe`. `iae_pipeline` descartado: E2E-only por diseno
+  (docstring explicito, wrappers sobre modulos auditados).
+
+- **D39 (5 commits).** Dead config CI: `daily_run.yml` intentaba
+  `git add` de 4 rutas de commodities que ya no existen (OilPriceAPI
+  eliminada). `git add <inexistente>` no falla, workflow verde,
+  git add no-op. Fix en `2e4f9f6`. Fosiles de `02_ARQUITECTURA 11`:
+  3 entradas (OilPriceAPI, Futuros BLOCKED, Cache 13F v3) ya no
+  aplican. WONT FIX `as_of_date` (timestamp, no fecha del dato;
+  unico consumidor prefiere `effectiveDate`). Regla anti-falso-
+  positivo del test con evidencia empirica de D38. Commit `08d3fbd`.
+  Poda bitacora: regla 5 sesiones -> 10 + dia en curso (no se
+  aplicaba desde 2026-09-28, habia 12 entradas). `00_ARRANQUE 4`
+  congelado -> puntero a bitacora. Commit `81e8548`. Criterio fino
+  E2E en `01_METODO 4`. Commit `37eb3c3`. Skips opt-in
+  formalizados: `@pytest.mark.network` (2 tests) y
+  `integration_real_data` (8 sitios). Fosiles de cifra
+  (2383 -> 2945). Commit `05f08d1`.
+
+- **D40 (1 commit).** Auditoria tematica de workflows como conjunto
+  (nunca hecha; A6.2 audito 10, hoy 9). Fosiles: `02_ARQUITECTURA`
+  decia 10 workflows (real 9), `03_IAE` decia 286 LOC de
+  `update_sec_13f.py` (real 373). Riesgo operativo para manana
+  documentado: `update_macro_manual` dispara diario a `17 6 UTC`,
+  coincide con `european` (concurrency.group distintos, no se
+  serializan, ambos pushean a main). Commit `ea60a6c`.
+
+**Commits.** `508bbd0`, `82bef32`, `8dabcfe`, `2e4f9f6`, `08d3fbd`,
+`81e8548`, `37eb3c3`, `05f08d1`, `ea60a6c`.
+
+**Pendiente.**
+
+- Cron 1-oct: 3 workflows (sector 04:47, index 06:17, european 07:17
+  CEST). Primera ejecucion por schedule. Riesgo de colision con
+  `update_macro_manual` a 06:17 CEST. Ver `07_RUNBOOK 2.5` + `3`.
+- C2 (920) OPEN. Bloqueado externo.
+- H5.3: verificar cron 20-nov (13F, `source=cron, outcome=INGEST`).
+- Deudas abiertas: cobertura <80% en modulos E2E-only por diseno
+  (pipeline_contractual 38%, data_loader 59%, update_sec_13f 62%,
+  options.py 69%). No accionables sin mocks masivos.
+
+**Proximo paso sugerido.** Verificacion del cron 1-oct con
+`07_RUNBOOK 3`. Si verde, documentar tiempos reales en `07_RUNBOOK 2.3`.
+
 ### 2026-09-30 (noche, sesion 6) — D34-D36: cobertura + bug real en freshness
 
 **Objetivo.** Cerrar la cobertura de los modulos con logica real
