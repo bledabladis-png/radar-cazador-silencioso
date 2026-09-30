@@ -21,7 +21,7 @@ Pipeline contractual: **§10.1 -> §10.7** (catalogo -> identidad -> delta share
 
 ## 2. ARQUITECTURA DEL MODULO
 
-36 ficheros Python, 8280 LOC (metrica `splitlines`, coincide con `ESTADO_SISTEMA.md`).
+36 ficheros Python, 7088 LOC (metrica `splitlines`, coincide con `ESTADO_SISTEMA.md`). Actualizado 2026-09-30.
 
 ### 2.1. Estructura de subpaquetes
 

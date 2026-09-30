@@ -470,7 +470,7 @@ Agrupacion de los cierres mas relevantes por area. El detalle granular esta en `
 - **Fases A, B, C**: bloqueantes + criticos + funcionales. CERRADAS.
 - **Fase D** (auditor externo): CERRADA 2026-09-28. Dictamen APROBADO CON CONDICIONES, luego cerrado con C2 abierto no bloqueante.
 - **Fases E, F, G**: integracion a `run.py`, automatizacion GitHub, automatizacion de mappings. CERRADAS.
-- **H1-A**: CERRADO. Crosswalk 7caa86b reproduce golden con tolerancia 0.
+- **H1-A**: CERRADO. Crosswalk 7caa86b NO reproduce golden con HEAD tras H1-B v2.3 + O1. Baseline vigente: `golden/current.json`. Correccion 2026-09-30 (D5): la afirmacion original era erronea.
 - **H1-B** (clasificacion CALL/PUT): CERRADO v2.3. Baseline -4.264.449.012 (par Q4-2025 -> Q1-2026, congelado; el run diario usa el par vigente).
 - **H2** (contadores documentales): CERRADO.
 - **H3** (clasificacion scripts): CERRADO.

@@ -154,7 +154,7 @@ Tres capas independientes que NO deben confundirse:
 
 **FU-020 - Resolucion por cobertura:** `resolve_effective_date(prices, eligible_tickers, min_coverage)`. Devuelve la fecha mas reciente cuya cobertura alcanza el minimo. NO consulta calendario. Independiente de FU-018.
 
-**FU-021-5 - Contratos temporales:** 10 contratos en 5 familias (EQUITY_EOD, INDEX_EOD_*, VOLATILITY_INDEX, RATE_YIELD, FUTURE_SETTLEMENT, SPOT_COMMODITY, FX_DAILY_CUT). Cada uno declara `max_lag_days`, `min_coverage`, `session_calendar`, `settlement_semantics`. `build_temporal_meta` consolida los 10 en un dict. `temporal_meta` es la autoridad; `df.attrs['temporal_meta']` es solo espejo auxiliar.
+**FU-021-5 - Contratos temporales:** 9 contratos en 5 familias (EQUITY_EOD, INDEX_EOD_*, VOLATILITY_INDEX, RATE_YIELD, FUTURE_SETTLEMENT, FX_DAILY_CUT). SPOT_COMMODITY absorbido en FUTURE_SETTLEMENT el 2026-09-30 al eliminar OilPriceAPI. Cada uno declara `max_lag_days`, `min_coverage`, `session_calendar`, `settlement_semantics`. `build_temporal_meta` consolida los 9 en un dict. `temporal_meta` es la autoridad; `df.attrs['temporal_meta']` es solo espejo auxiliar.
 
 **Reglas asociadas:**
 - **R1:** toda metrica agregada declara fecha efectiva + cobertura del universo elegible.
@@ -367,7 +367,7 @@ Si el gate falla, `run.py` aborta con `sys.exit(1)`.
 
 **Cache 13F v3 nunca guardada:** el daily_run pide `13f-processed-v3-<hash>`, que aun no existe (update_sec_13f lo guardara en su cron trimestral, proximo 20-nov). El restore cae siempre a `13f-processed-v2-<hash>` por restore-key. La warning `Cache 13F no disponible` que emite daily_run es falso positivo: `cache-hit != 'true'` no distingue 'no restaurada' de 'restaurada por fallback'.
 
-**K-LSE-YAHOO-REVISION-01 (MONITORED):** Yahoo revisa OHLC historico retrospectivamente. Afecta al WLS (dependiente de ventanas largas). No es bug.
+**K-LSE-YAHOO-REVISION-01 (WATCHED con check activo):** Yahoo revisa OHLC historico retrospectivamente. Afecta al WLS (dependiente de ventanas largas). No es bug: el determinismo del sistema es respecto al snapshot del input, no al proveedor (00_ARRANQUE §2, D2 2026-09-30). Detectado via `check_yahoo_revision` (health_check): compara manifest actual vs HEAD por sha256.
 
 **KHC / lote parcial:** deteccion anadida en `download_market_data`. Monitorizacion activa, sin retry.
 

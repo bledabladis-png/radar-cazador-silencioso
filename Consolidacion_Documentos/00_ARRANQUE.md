@@ -42,7 +42,7 @@ Lo que NUNCA haces:
 
 **Premisas del sistema:**
 - Determinista **dado un snapshot del input**, descriptivo, auditable. Sin ML predictivo. Sin optimizacion de parametros. Sin automatizacion de trading.
-- Revision retrospectiva de Yahoo (K-LSE-YAHOO-REVISION-01): el proveedor puede reescribir OHLC en ventana de horas. El sistema es determinista respecto al snapshot, no respecto al proveedor. `check_yahoo_revision` en health_check lo detecta (WARN).
+- Revision retrospectiva de Yahoo (K-LSE-YAHOO-REVISION-01): el proveedor puede reescribir OHLC en ventana de horas. El sistema es determinista respecto al snapshot, no respecto al proveedor. `check_yahoo_revision` en health_check lo detecta (WARN). Ver D2 (2026-09-30).
 - Todos los outputs son diagnosticos, no recomendaciones.
 - Entorno: D:\Macro_Sectorial (Windows, PowerShell, Python con py).
 - Repo: https://github.com/bledabladis-png/radar-cazador-silencioso (main).
@@ -64,7 +64,7 @@ Lo que NUNCA haces:
 - R2: Ninguna metrica agregada selecciona observacion por posicion fisica. Se resuelve via resolve_effective_date().
 - R3: La misma resolucion temporal se comparte entre metricas derivadas del mismo universo.
 - R4: El filtro de sesion (FU-018) y la resolucion por cobertura son controles independientes.
-- R5: Commodities via OilPriceAPI. GC=F/HG=F/NG=F spot operativos. BZ=F/CL=F BLOCKED (plan).
+- R5: Commodities via Yahoo (los 5 futuros: BZ=F, CL=F, GC=F, HG=F, NG=F, con OHLCV completo). OilPriceAPI eliminada 2026-09-30: plan free sin futuros, sin historico, sin OHLCV.
 - R6: Indices de volatilidad via CBOE. VIX3M desde CSV publico CDN. VIX9D fuera de alcance.
 
 ---
@@ -75,10 +75,10 @@ Fuente autoritativa: `Consolidacion_Documentos/ESTADO_SISTEMA.md` (regenerado co
 
 Snapshot al cierre del ultimo commit:
 - HEAD: ver ESTADO_SISTEMA.md
-- Tests: 2340 passed + 2 skipped + 0 failed
+- Tests: 2383 passed + 2 skipped + 0 failed
 - Validation Gate: 10/10
 - Working tree: limpio
-- Corpus documental: v2 (Consolidacion_Documentos/00-06, 2026-09-29)
+- Corpus documental: v3 (Consolidacion_Documentos/00-07, 2026-09-30)
 - Cobertura configurada: 313/313 tickers
 
 **Fases IAE:**
@@ -267,7 +267,7 @@ Esperado:
 - HEAD = ver Consolidacion_Documentos/ESTADO_SISTEMA.md
 - ahead 0, behind 0
 - working tree limpio (o solo el propio ESTADO_SISTEMA regenerado)
-- 2340 passed + 2 skipped
+- 2383 passed + 2 skipped
 - pyflakes silencio, compileall OK
 
 ---
