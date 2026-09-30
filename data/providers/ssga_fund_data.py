@@ -148,7 +148,10 @@ def get_etf_primary_flow_data(force_download: bool = False) -> pd.DataFrame:
             full_df['Date'] = pd.to_datetime(
                 full_df['Date'], errors='coerce'
             ).dt.strftime('%Y-%m-%d')
-            full_df = append_dedup(_hist_existing, full_df, ["ticker", "Date"])
+            full_df = append_dedup(
+                _hist_existing, full_df, ["ticker", "Date"],
+                sort_by=["ticker", "Date"],
+            )
         except (OSError, ValueError, pd.errors.ParserError, pd.errors.EmptyDataError) as _e:
             print(f'  [WARN] etf_primary_flow existente ilegible: {_e}')
     # A5-79 (2026-09-28): escritura atomica del historico consolidado.

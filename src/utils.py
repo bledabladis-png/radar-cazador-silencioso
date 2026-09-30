@@ -2,11 +2,18 @@
 import pandas as pd
 
 
-def append_dedup(hist_df, new_df, subset):
+def append_dedup(hist_df, new_df, subset, sort_by=None):
     """Concatena dos DataFrames, normaliza fecha a YYYY-MM-DD y elimina duplicados por subset.
 
     FU-009 (2026-09-13): si hist_df o new_df estan vacios, evitar pd.concat
     (genera FutureWarning en pandas 2.x y rompera en pandas 3.0).
+
+    Fix E (2026-09-30): parametro opcional sort_by. Si se pasa, el
+    resultado se ordena por esas columnas tras el dedup. Sin el,
+    pd.concat + drop_duplicates(keep='last') puede dejar la fila
+    mas reciente ARRIBA si el historico la tenia y el nuevo no.
+    Verificado con amundi_lyxi_primary_flow.csv (2026-09-29 quedo en
+    posicion 0, rompiendo consumidores que usan .iloc[-1]).
     """
     h_empty = hist_df is None or len(hist_df) == 0
     n_empty = new_df is None or len(new_df) == 0
@@ -28,7 +35,12 @@ def append_dedup(hist_df, new_df, subset):
         combined['date'] = pd.to_datetime(combined['date'], errors='coerce').dt.strftime('%Y-%m-%d')
     if combined.empty:
         return combined
-    return combined.drop_duplicates(subset=subset, keep='last')
+    out = combined.drop_duplicates(subset=subset, keep='last')
+    if sort_by:
+        _valid_sort = [c for c in sort_by if c in out.columns]
+        if _valid_sort:
+            out = out.sort_values(_valid_sort).reset_index(drop=True)
+    return out
 
 def _observation_date_from_df(df, col=None):
     """Extrae la ultima fecha de observacion valida de un DataFrame.

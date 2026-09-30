@@ -166,7 +166,10 @@ def get_cftc_position_flow_data() -> pd.DataFrame:
         if HISTORY_PATH.exists():
             try:
                 _hist_existing = pd.read_csv(HISTORY_PATH)
-                recent = append_dedup(_hist_existing, recent, ["date", "contract", "participant"])
+                recent = append_dedup(
+                    _hist_existing, recent, ["date", "contract", "participant"],
+                    sort_by=["date", "contract", "participant"],
+                )
             except (OSError, ValueError, pd.errors.ParserError, pd.errors.EmptyDataError) as _e:
                 print(f'  [WARN] cftc_position_flow existente ilegible: {_e}')
         _tmp_hist = HISTORY_PATH.with_suffix(HISTORY_PATH.suffix + '.tmp')

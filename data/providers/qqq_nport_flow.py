@@ -187,7 +187,10 @@ def main():
     if OUTPUT_CSV.exists():
         try:
             _hist_existing = pd.read_csv(OUTPUT_CSV)
-            df = append_dedup(_hist_existing, df, ["report_date", "month", "ticker"])
+            df = append_dedup(
+                _hist_existing, df, ["report_date", "month", "ticker"],
+                sort_by=["report_date", "month", "ticker"],
+            )
         except (OSError, ValueError, pd.errors.ParserError, pd.errors.EmptyDataError) as _e:
             print(f'  [WARN] qqq_nport_flow existente ilegible: {_e}')
     _tmp_out = OUTPUT_CSV.with_suffix(OUTPUT_CSV.suffix + '.tmp')

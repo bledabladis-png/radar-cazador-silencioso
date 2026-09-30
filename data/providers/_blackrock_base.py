@@ -257,7 +257,9 @@ def get_blackrock_primary_flow(
     if output_csv.exists():
         try:
             _hist_existing = pd.read_csv(output_csv)
-            result = append_dedup(_hist_existing, result, ["date"])
+            result = append_dedup(
+                _hist_existing, result, ["date"], sort_by=["date"]
+            )
         except (OSError, ValueError, pd.errors.ParserError, pd.errors.EmptyDataError) as _e:
             print(f'  [WARN] {output_csv.name} existente ilegible: {_e}')
     _tmp_out = output_csv.with_suffix(output_csv.suffix + '.tmp')

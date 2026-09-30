@@ -224,7 +224,9 @@ def get_amundi_lyxi_primary_flow(force_download: bool = False) -> pd.DataFrame:
     if HISTORY_CSV.exists():
         try:
             _hist_existing = pd.read_csv(HISTORY_CSV)
-            _df_to_write = append_dedup(_hist_existing, _df_to_write, ["date"])
+            _df_to_write = append_dedup(
+                _hist_existing, _df_to_write, ["date"], sort_by=["date"]
+            )
         except (OSError, ValueError, pd.errors.ParserError, pd.errors.EmptyDataError) as _e:
             print(f'  [WARN] amundi existente ilegible: {_e}')
     _tmp_hist = HISTORY_CSV.with_suffix(HISTORY_CSV.suffix + '.tmp')
