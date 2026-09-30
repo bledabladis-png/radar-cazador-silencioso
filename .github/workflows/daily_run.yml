@@ -189,6 +189,14 @@ jobs:
           ALPHA_VANTAGE_API_KEY: ${{ secrets.ALPHA_VANTAGE_API_KEY }}
         run: python validation/cross_provider_validation.py
 
+      - name: Validate freshness post-run
+        # 2026-09-30: los tests de frescura en la fase 'Run tests' saltan
+        # porque los parquets aun no existen (gitignored, CI fresco).
+        # Ejecutados aqui, tras run.py, validan realmente la frescura de
+        # market_data, stock_prices, EU tickers y data_quality. Fail-loud:
+        # si la frescura es insuficiente, no se publica el reporte.
+        run: python -m pytest tests/test_freshness.py -q --tb=short
+
       - name: Upload artifacts (downloadable report)
         uses: actions/upload-artifact@v4
         with:
