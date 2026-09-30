@@ -7,7 +7,7 @@ import requests
 import pandas as pd
 import json
 from pathlib import Path
-from datetime import datetime, timedelta
+from datetime import datetime
 from ._fund_flow_utils import fund_flow_robust_zscore_with_regime
 from src.utils import append_dedup
 
@@ -81,17 +81,9 @@ def download_historical_data(isin: str, start_date: str, end_date: str) -> dict:
     """Descarga datos históricos y los cachea por fecha de consulta."""
     CACHE_DIR.mkdir(parents=True, exist_ok=True)
     cache_file = CACHE_DIR / f'{isin}_hist_{start_date}_{end_date}.json'
-    use_cache = cache_file.exists()
-    if use_cache:
-        mtime = datetime.fromtimestamp(cache_file.stat().st_mtime)
-        if datetime.now() - mtime > timedelta(hours=23):
-            use_cache = False
-
-    if use_cache:
-        print(f'  Usando caché histórico para {isin}')
-        with open(cache_file, 'r', encoding='utf-8') as f:
-            return json.load(f)
-
+    # Fix N (2026-10-01): descarga SIEMPRE. Cache solo como fallback
+    # si la descarga falla. Antes: `mtime < 23h -> cache-hit`, que
+    # perdia el dato si la fuente publicaba despues del ultimo run.
     print(f'  Descargando histórico {isin} desde Amundi...')
     body = build_historical_request(isin, start_date, end_date)
     try:

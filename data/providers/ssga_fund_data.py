@@ -5,7 +5,7 @@ Calcula ETF Primary Flow = (SharesOutstanding_t - SharesOutstanding_{t-1}) * NAV
 import pandas as pd
 import requests
 from io import BytesIO
-from datetime import datetime, timedelta
+from datetime import datetime
 from pathlib import Path
 
 from src.utils import append_dedup
@@ -97,22 +97,41 @@ def get_etf_primary_flow_data(force_download: bool = False) -> pd.DataFrame:
     for ticker in SECTOR_TICKERS:
         try:
             cache_file = CACHE_DIR / f'{ticker}.csv'
-            use_cache = (not force_download) and cache_file.exists()
-            if use_cache:
-                mtime = datetime.fromtimestamp(cache_file.stat().st_mtime)
-                if datetime.now() - mtime > timedelta(hours=23):
-                    use_cache = False
-
-            if use_cache:
-                print(f'  Usando caché para {ticker}')
-                df = pd.read_csv(cache_file)
-                df['Date'] = pd.to_datetime(df['Date'], errors='coerce')
-            else:
+            # Fix N (2026-10-01): intentar descarga SIEMPRE. Cache solo
+            # como fallback si la descarga falla.
+            # Bug previo: `mtime < 23h -> cache-hit`. Si la fuente
+            # publica despues del ultimo run (SSGA publica el 29-sep
+            # despues del run del 30-sep 5:40), el siguiente run acepta
+            # el cache de 22h como "fresco" y no refresca. Resultado:
+            # cache con 28-sep, fuente con 29-sep.
+            # Coste real medido: 0.6s por ticker (7.1s los 12). El run
+            # dura ~12min. No compensa cachear.
+            # force_download queda como no-op (compat de firma): ya
+            # no hay atajo de cache fresca.
+            _ = force_download  # noqa: F841
+            df = None
+            try:
                 df = _download_single(ticker)
                 # A5-79 (2026-09-28): escritura atomica tmp + replace.
                 _tmp = cache_file.with_suffix(cache_file.suffix + '.tmp')
                 df.to_csv(_tmp, index=False)
                 _tmp.replace(cache_file)
+            except Exception as e:
+                # Fallback a cache. Preferimos dato del dia anterior que
+                # perdida total. Se emite WARN explicito con mtime.
+                if cache_file.exists():
+                    _mtime = datetime.fromtimestamp(cache_file.stat().st_mtime)
+                    _age_h = (datetime.now() - _mtime).total_seconds() / 3600.0
+                    print(f'  [WARN] {ticker}: descarga fallo ({e}). '
+                          f'Usando cache OBSOLETA '
+                          f'(mtime={_mtime.isoformat(timespec="minutes")}, '
+                          f'{_age_h:.1f}h).')
+                    df = pd.read_csv(cache_file)
+                    df['Date'] = pd.to_datetime(df['Date'], errors='coerce')
+                else:
+                    # Sin cache ni descarga: propagar para que el caller
+                    # registre el ticker como failed.
+                    raise
 
             df = _compute_primary_flow(df)
             df['ticker'] = ticker

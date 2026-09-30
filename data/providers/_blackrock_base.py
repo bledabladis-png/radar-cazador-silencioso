@@ -8,7 +8,7 @@ son wrappers finos que parametrizan las constantes por ETF
 Refs: A5-70 (refactor 2026-09-27).
 """
 import xml.etree.ElementTree as ET
-from datetime import datetime, timedelta
+from datetime import datetime
 from enum import Enum
 from pathlib import Path
 from src.utils import append_dedup
@@ -70,16 +70,8 @@ def download_fund_file(url, cache_file, referer, label):
     (columna 'date' del XML). Mismo criterio que A5-36 (execution time).
     """
     cache_file.parent.mkdir(parents=True, exist_ok=True)
-    use_cache = cache_file.exists()
-    if use_cache:
-        mtime = datetime.fromtimestamp(cache_file.stat().st_mtime)
-        if datetime.now() - mtime > timedelta(hours=23):
-            use_cache = False
-
-    if use_cache:
-        print(f'  Usando caché para {label}')
-        return FundFileOutcome.FRESH_CACHE
-
+    # Fix N (2026-10-01): descarga SIEMPRE. Cache solo fallback si
+    # la descarga falla. Antes: `mtime < 23h -> FRESH_CACHE`.
     print(f'  Descargando {label} desde BlackRock...')
     headers = {
         'User-Agent': 'Mozilla/5.0',

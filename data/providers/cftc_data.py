@@ -8,7 +8,6 @@ import pandas as pd
 from io import StringIO
 import requests
 from pathlib import Path
-from datetime import datetime, timedelta
 from src.utils import append_dedup
 
 
@@ -39,15 +38,8 @@ PARTICIPANT_COLS = {
 def _download_and_cache():
     """Descarga CSV de CFTC y lo guarda en caché si no existe o si han pasado >23h."""
     CACHE_PATH.parent.mkdir(parents=True, exist_ok=True)
-    use_cache = CACHE_PATH.exists()
-    if use_cache:
-        mtime = datetime.fromtimestamp(CACHE_PATH.stat().st_mtime)
-        if datetime.now() - mtime > timedelta(hours=23):
-            use_cache = False
-
-    if use_cache:
-        print('  Usando caché CFTC TFF')
-        return pd.read_csv(CACHE_PATH, low_memory=False)
+    # Fix N (2026-10-01): descarga SIEMPRE. Cache solo como fallback
+    # si la descarga falla. Antes: `mtime < 23h -> cache-hit`.
 
     print('  Descargando CFTC TFF (Futures Only)...')
     r = requests.post(

@@ -39,7 +39,7 @@ Los outliers únicamente afectan a la señal estadística.
 from __future__ import annotations
 
 import re
-from datetime import datetime, timedelta
+from datetime import datetime
 from pathlib import Path
 
 import pandas as pd
@@ -118,60 +118,63 @@ def download_fund_file(
     """
 
     CACHE_DIR.mkdir(parents=True, exist_ok=True)
-
-    if RAW_CACHE_FILE.exists() and not force_download:
-        mtime = datetime.fromtimestamp(RAW_CACHE_FILE.stat().st_mtime)
-        age = datetime.now() - mtime
-        if age <= timedelta(hours=23):
-            print(f"  Usando caché: {RAW_CACHE_FILE} (antigüedad {age})")
-            return RAW_CACHE_FILE.read_bytes()
-        print(f"  Caché obsoleta ({age}). Descargando de nuevo...")
+    # Fix N (2026-10-01): descarga SIEMPRE. Cache solo como fallback
+    # si la descarga falla. Antes: `age <= 23h -> cache-hit`, que
+    # perdia el dato si la fuente publicaba despues del ultimo run.
+    _ = force_download  # noqa: F841 (compat de firma)
 
     url = build_fund_url()
 
     print("  Descargando fund file IWM desde BlackRock...")
     print(f"  Portfolio ID: {PORTFOLIO_ID}")
 
-    response = requests.get(
-        url,
-        headers=HEADERS,
-        timeout=TIMEOUT,
-    )
-
-    response.raise_for_status()
-
-    content_type = response.headers.get("Content-Type", "")
-    content_length = len(response.content)
-
-    print(f"  HTTP: {response.status_code}")
-    print(f"  Content-Type: {content_type}")
-    print(f"  Bytes: {content_length}")
-
-    if content_length < 1000:
-        raise RuntimeError(
-            "La respuesta de BlackRock es demasiado pequeña; "
-            "posible error del endpoint."
+    try:
+        response = requests.get(
+            url,
+            headers=HEADERS,
+            timeout=TIMEOUT,
         )
 
-    # El fund file de BlackRock es SpreadsheetML/XML aunque
-    # el Content-Type sea application/vnd.ms-excel.
-    if b"<ss:Workbook" not in response.content[:50000]:
-        raise RuntimeError(
-            "La respuesta no parece un fund file SpreadsheetML válido."
-        )
+        response.raise_for_status()
 
-    # Fix 2026-09-29: escritura atomica (.tmp + replace). Antes
-    # write_bytes directo: si el proceso moria a mitad, quedaba XML
-    # parcial. Proxima ejecucion: cache-hit (age<23h) -> extract_historical
-    # _sheet falla o produce datos truncados. Mismo patron que downloader
-    # 13F, storage.py y providers europeos.
-    tmp = RAW_CACHE_FILE.with_suffix(RAW_CACHE_FILE.suffix + ".tmp")
-    tmp.write_bytes(response.content)
-    tmp.replace(RAW_CACHE_FILE)
+        content_type = response.headers.get("Content-Type", "")
+        content_length = len(response.content)
 
-    print(f"  Caché guardada: {RAW_CACHE_FILE}")
+        print(f"  HTTP: {response.status_code}")
+        print(f"  Content-Type: {content_type}")
+        print(f"  Bytes: {content_length}")
 
-    return response.content
+        if content_length < 1000:
+            raise RuntimeError(
+                "La respuesta de BlackRock es demasiado pequeña; "
+                "posible error del endpoint."
+            )
+
+        # El fund file de BlackRock es SpreadsheetML/XML aunque
+        # el Content-Type sea application/vnd.ms-excel.
+        if b"<ss:Workbook" not in response.content[:50000]:
+            raise RuntimeError(
+                "La respuesta no parece un fund file SpreadsheetML válido."
+            )
+
+        # Fix 2026-09-29: escritura atomica (.tmp + replace).
+        tmp = RAW_CACHE_FILE.with_suffix(RAW_CACHE_FILE.suffix + ".tmp")
+        tmp.write_bytes(response.content)
+        tmp.replace(RAW_CACHE_FILE)
+
+        print(f"  Caché guardada: {RAW_CACHE_FILE}")
+        return response.content
+    except (requests.RequestException, OSError, RuntimeError, ValueError) as e:
+        # Fix N: fallback a cache. Preferimos dato del dia anterior
+        # que perdida total. WARN explicito con mtime.
+        if RAW_CACHE_FILE.exists():
+            mtime = datetime.fromtimestamp(RAW_CACHE_FILE.stat().st_mtime)
+            age = datetime.now() - mtime
+            print(f"  [WARN] IWM: descarga fallo ({e}). Usando cache "
+                  f"(mtime={mtime.isoformat(timespec='minutes')}, "
+                  f"antigüedad={age}).")
+            return RAW_CACHE_FILE.read_bytes()
+        raise
 
 
 # =============================================================================

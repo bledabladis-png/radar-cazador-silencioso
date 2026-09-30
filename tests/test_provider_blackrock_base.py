@@ -83,14 +83,28 @@ class TestParseFechaEs:
 
 class TestDownloadFundFile:
 
-    def test_cache_reciente_no_descarga(self, tmp_path, monkeypatch):
+    def test_cache_reciente_tambien_descarga(self, tmp_path, monkeypatch):
+        """Fix N (2026-10-01): descarga siempre, cache solo fallback.
+
+        Contrato viejo: `mtime < 23h -> FRESH_CACHE`. Contrato nuevo:
+        intenta descarga siempre. Si la fuente publica despues del
+        ultimo run, el cache fresco bloqueaba el dato nuevo.
+        """
         cache = tmp_path / "fund.xml"
         cache.write_bytes(b"x" * 200000)
 
-        # Si se llama requests.get, fallar el test
-        def _forbidden(*a, **kw):
-            pytest.fail("requests.get no deberia invocarse con cache reciente")
-        monkeypatch.setattr(bb.requests, "get", _forbidden)
+        called = {"n": 0}
+
+        class _Resp:
+            content = b"y" * 500000
+            def raise_for_status(self):
+                pass
+
+        def _get(url, headers=None, timeout=None):
+            called["n"] += 1
+            return _Resp()
+
+        monkeypatch.setattr(bb.requests, "get", _get)
 
         ok = bb.download_fund_file(
             url="http://example.com/x",
@@ -98,7 +112,10 @@ class TestDownloadFundFile:
             referer="http://example.com/",
             label="TEST",
         )
-        assert ok is FundFileOutcome.FRESH_CACHE
+        assert ok is FundFileOutcome.FRESH_DOWNLOAD, (
+            f"Esperado FRESH_DOWNLOAD con Fix N. Got: {ok}"
+        )
+        assert called["n"] == 1, f"Esperado 1 descarga. Got: {called}"
 
     def test_cache_obsoleta_descarga(self, tmp_path, monkeypatch):
         cache = tmp_path / "fund.xml"
