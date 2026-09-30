@@ -151,7 +151,17 @@ def compute_sector_scores(df, benchmark='^GSPC', df_stocks=None, holdings_df=Non
 
         dispersion_series = comp_df.apply(_dispersion, axis=1)
         penalty_series = (1 - SECTOR_DISPERSION_PENALTY * dispersion_series).clip(lower=0)
-        scores[sector] = score_series * penalty_series
+        _score_final = score_series * penalty_series
+
+        # H1 (2026-09-30): umbral n_valid >= 4. Con menos componentes,
+        # la renormalizacion por valid_weight_sum convierte una fraccion
+        # arbitrariamente pequena del modelo (hasta 0.25 con n_valid=2)
+        # en el 100% del score. Con 4 componentes el peso minimo
+        # representado es 0.10+0.15+0.15+0.15 = 0.55. Bajo ese umbral,
+        # el score no es publicable.
+        _n_valid_series = mask.sum(axis=1)
+        _score_final = _score_final.mask(_n_valid_series < 4)
+        scores[sector] = _score_final
 
         try:
 
