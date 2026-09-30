@@ -12,7 +12,22 @@ from indicators.volatility import atr
 
 from indicators.wyckoff import wyckoff_structure_core, build_ticker_df
 
-from src.utils import safe_mean, safe_std, tanh_normalize, get_col
+from src.utils import tanh_normalize, get_col
+
+
+def _dispersion(row):
+    """Desviacion estandar poblacional (ddof=0) de los componentes no-NaN.
+
+    D1 (2026-09-30): componentes acotados en [-1, +1] -> dispersion en [0, 1].
+    Antes: dispersion = std / (|mean| + 1e-9), que explotaba cuando la media
+    se aproximaba a cero (sectores con senales compensadas). Ver auditoria D1.7.
+    Garantiza multiplier = clip(1 - P * dispersion, 0, 1) en [0.5, 1].
+    """
+    vals = row.dropna().tolist()
+    if len(vals) < 2:
+        return 0.0
+    return float(pd.Series(vals).std(ddof=0))
+
 
 def compute_sector_scores(df, benchmark='^GSPC', df_stocks=None, holdings_df=None):
 
@@ -77,7 +92,12 @@ def compute_sector_scores(df, benchmark='^GSPC', df_stocks=None, holdings_df=Non
         breadth_sector = ((close_sector > ema20_sector).astype(float) +
                           (close_sector > ema50_sector).astype(float) +
                           (close_sector > ema200_sector).astype(float)) / 3.0
-        comp_breadth = tanh_normalize(breadth_sector)
+        # D1 (2026-09-30): breadth_sector es discreta en {0, 1/3, 2/3, 1}.
+        # tanh_normalize(robust_zscore) colapsaba a 0 cuando la serie
+        # se pegaba a 1.0 o 0.0 durante >60d (MAD=0 -> z=0 -> tanh(0)=0).
+        # Verificado: 27-61% de filas por sector con comp_breadth==0.
+        # Mapeo directo a [-1, 1], coherente con trend_position.
+        comp_breadth = (breadth_sector - 0.5) * 2.0
 
         comp_rs20 = tanh_normalize(mom20)
 
@@ -105,12 +125,6 @@ def compute_sector_scores(df, benchmark='^GSPC', df_stocks=None, holdings_df=Non
         weighted_sum = comp_df.mul(weights, axis=1).sum(axis=1)
         valid_weight_sum = mask.mul(weights, axis=1).sum(axis=1)
         score_series = weighted_sum / valid_weight_sum.replace(0, float('nan'))
-
-        def _dispersion(row):
-            vals = row.dropna().tolist()
-            if len(vals) < 2:
-                return 0.0
-            return safe_std(vals) / (abs(safe_mean(vals)) + 1e-9)
 
         dispersion_series = comp_df.apply(_dispersion, axis=1)
         penalty_series = (1 - SECTOR_DISPERSION_PENALTY * dispersion_series).clip(lower=0)

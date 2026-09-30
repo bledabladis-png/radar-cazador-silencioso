@@ -9,90 +9,90 @@
       [
         "XLV",
         "Healthcare",
-        0.2400145875173137,
-        "MARKUP"
-      ],
-      [
-        "XLE",
-        "Energy",
-        0.10286898016826608,
-        "ACCUMULATION"
-      ],
-      [
-        "XLK",
-        "Technology",
-        0.0,
-        "RANGE"
-      ],
-      [
-        "XLRE",
-        "Real Estate",
-        0.0,
-        "MARKUP"
-      ],
-      [
-        "XLP",
-        "Consumer Staples",
-        -0.0,
-        "DISTRIBUTION"
-      ],
-      [
-        "XLI",
-        "Industrials",
-        0.0,
-        "MARKUP"
-      ],
-      [
-        "XLB",
-        "Materials",
-        0.0,
+        0.37699066497926814,
         "MARKUP"
       ],
       [
         "XLC",
         "Communication Services",
-        0.0,
+        0.32540207518991815,
+        "MARKUP"
+      ],
+      [
+        "XLK",
+        "Technology",
+        0.3127681330571812,
+        "RANGE"
+      ],
+      [
+        "XLE",
+        "Energy",
+        0.30165613182782003,
+        "ACCUMULATION"
+      ],
+      [
+        "XLRE",
+        "Real Estate",
+        0.21145631532780515,
+        "MARKUP"
+      ],
+      [
+        "XLI",
+        "Industrials",
+        0.2108943624720512,
         "MARKUP"
       ],
       [
         "XLU",
         "Utilities",
-        0.0,
+        0.13035397065540508,
+        "DISTRIBUTION"
+      ],
+      [
+        "XLB",
+        "Materials",
+        -0.10290911267363666,
+        "MARKUP"
+      ],
+      [
+        "XLP",
+        "Consumer Staples",
+        -0.20512178502419917,
         "DISTRIBUTION"
       ],
       [
         "XLF",
         "Financials",
-        -0.40296298112448814,
+        -0.4219725623590326,
         "ACCUMULATION"
       ],
       [
         "XLY",
         "Consumer Discretionary",
-        -0.5485442587408791,
+        -0.6390874330671061,
         "RANGE"
       ]
     ],
-    "regime": "NARROW RALLY",
+    "regime": "ROTATIONAL",
     "top3": [
       "XLV",
-      "XLE",
+      "XLC",
       "XLK"
     ]
   },
   "diagnostic": {
     "last_scores": {
-      "XLV": 0.2400145875173137,
-      "XLE": 0.10286898016826608,
-      "XLK": 0.0,
-      "XLRE": 0.0,
-      "XLP": -0.0,
-      "XLI": 0.0,
-      "XLB": 0.0,
-      "XLC": 0.0,
-      "XLU": 0.0,
-      "XLF": -0.40296298112448814,
-      "XLY": -0.5485442587408791
+      "XLV": 0.37699066497926814,
+      "XLC": 0.32540207518991815,
+      "XLK": 0.3127681330571812,
+      "XLE": 0.30165613182782003,
+      "XLRE": 0.21145631532780515,
+      "XLI": 0.2108943624720512,
+      "XLU": 0.13035397065540508,
+      "XLB": -0.10290911267363666,
+      "XLP": -0.20512178502419917,
+      "XLF": -0.4219725623590326,
+      "XLY": -0.6390874330671061
     }
   }
 }

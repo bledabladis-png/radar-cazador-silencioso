@@ -81,6 +81,10 @@ STRUCTURAL_WEIGHTS = {
 # los 6 sub-componentes del Sector Score.
 # 0.0 = sin penalización, 1.0 = máxima penalización.
 # ============================================================
+# Penalizacion maxima del 50% por desacuerdo entre componentes.
+# dispersion = std poblacional (ddof=0) de componentes en [-1, +1] -> [0, 1].
+# multiplier = clip(1 - SECTOR_DISPERSION_PENALTY * dispersion, 0, 1)
+# Garantia: multiplier en [0.5, 1]. Ver D1 (2026-09-30).
 SECTOR_DISPERSION_PENALTY = 0.5
 
 FLOW_PROXY_WEIGHTS = {
