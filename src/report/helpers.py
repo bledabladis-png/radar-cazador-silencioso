@@ -126,16 +126,27 @@ def _generate_coverage_table(pcr_data, darkpool_data, sector_results, reference_
     except (OSError, ValueError, KeyError, pd.errors.ParserError) as e:
         print(f"  [WARN] report_generator: analisis_lideres.csv: {e}")
     lines.append(f"| Acciones lideres | {n_acciones} tickers | - |\n")
+    # D36 (2026-09-30): try/except para strings no parseables.
+    # Bug: render_data_freshness protegia pcr_data['last_date'] con
+    # try/except, pero esta tabla no. Con un last_date invalido
+    # (Yahoo/CBOE devolviendo algo raro), el reporte entero caia
+    # con DateParseError. Mismo contrato que la seccion padre.
     if pcr_data and pcr_data.get('last_date'):
         import pandas as pd
-        pcr_age = (_ref - pd.Timestamp(pcr_data['last_date'])).days
-        lines.append(f"| Opciones (CBOE) | - | {pcr_age} dias |\n")
+        try:
+            pcr_age = (_ref - pd.Timestamp(pcr_data['last_date'])).days
+            lines.append(f"| Opciones (CBOE) | - | {pcr_age} dias |\n")
+        except (ValueError, TypeError):
+            lines.append("| Opciones (CBOE) | - | N/D |\n")
     else:
         lines.append("| Opciones (CBOE) | - | Sin datos |\n")
     if darkpool_data and darkpool_data.get('week'):
         import pandas as pd
-        dp_age = (_ref - pd.Timestamp(darkpool_data['week'])).days
-        lines.append(f"| Dark Pool (FINRA) | - | {dp_age} dias |\n")
+        try:
+            dp_age = (_ref - pd.Timestamp(darkpool_data['week'])).days
+            lines.append(f"| Dark Pool (FINRA) | - | {dp_age} dias |\n")
+        except (ValueError, TypeError):
+            lines.append("| Dark Pool (FINRA) | - | N/D |\n")
     else:
         lines.append("| Dark Pool (FINRA) | - | Sin datos |\n")
     lines.append("\n")
