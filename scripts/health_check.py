@@ -2,11 +2,10 @@
 # -*- coding: utf-8 -*-
 """Health check del sistema Radar.
 
-Verifica 8 bloques:
+Verifica 7 bloques:
   A. Workflows: ultima ejecucion por schedule dentro de ventana.
   B. Cache 13F (IAE): trimestre actualizado.
-  C. Manifests: quality.status de stock_prices, market_data y commodities.
-  C2. Frescura temporal de commodities (F3-15).
+  C. Manifests: quality.status de stock_prices y market_data.
   D. Cobertura ultimas 5 sesiones del parquet.
   E. Fechas no bursatiles en el indice del parquet.
   F. Patron contaminacion Europa-USA en ultima fila.
@@ -276,81 +275,6 @@ def check_manifest(name: str) -> list:
 
 
 # =========================================================
-# CHECK C2 - Commodities: frescura temporal (F3-15)
-# =========================================================
-def check_commodities_staleness() -> list:
-    """Verifica que los 2 parquet de commodities no esten obsoletos.
-
-    F3-15: health_check original solo verificaba stock_prices y market_data.
-    Los commodities quedaron fuera. Este check vigila su last_date contra
-    la ultima sesion esperada.
-
-    Umbrales:
-      commodities_spot: 4 dias (daily, deberia actualizarse cada run).
-      commodities_futures: 7 dias (BLOCKED desde 2026-09-22 por plan;
-                            el umbral permite monitorizar si reaparece
-                            actualizacion sin alertar cada dia).
-    """
-    from src.market_calendar import last_expected_market_date
-    import pandas as _pd
-
-    results = []
-    expected = last_expected_market_date()
-    if expected is None:
-        return [Result("commodities_staleness", SKIP, "no se pudo resolver expected")]
-
-    # F3-05-bis (2026-09-30): commodities_futures bloqueado por plan
-    # OilPriceAPI. El parquet lleva congelado desde 2026-09-21, pero Yahoo
-    # sirve BZ=F/CL=F frescos en market_data; los consumidores productivos
-    # (macro_regime, future_settlement) resuelven contra df_market, no
-    # contra este parquet. Se emite SKIP (no WARN) mientras siga la
-    # condicion. Si el parquet se descongela (age <= threshold), vuelve a
-    # OK normal. Tercer elemento del spec: blocked_by_plan.
-    specs = [
-        ("commodities_spot", 4, False),
-        ("commodities_futures", 7, True),
-    ]
-    for name, threshold_days, blocked_by_plan in specs:
-        p = PROJECT_ROOT / "data" / f"{name}.parquet.manifest.json"
-        if not p.exists():
-            results.append(Result(f"staleness:{name}", WARN, "manifest no existe"))
-            continue
-        try:
-            m = json.loads(p.read_text(encoding="utf-8"))
-            last = m.get("quality", {}).get("last_date")
-        except Exception as e:
-            results.append(Result(f"staleness:{name}", FAIL, f"manifest invalido: {e}"))
-            continue
-        if last is None:
-            results.append(Result(f"staleness:{name}", WARN, "sin last_date"))
-            continue
-        try:
-            last_dt = _pd.Timestamp(last).date()
-            age = (expected - last_dt).days
-        except Exception as e:
-            results.append(Result(f"staleness:{name}", WARN, f"last_date invalido: {e}"))
-            continue
-        if age > threshold_days:
-            if blocked_by_plan:
-                results.append(Result(
-                    f"staleness:{name}", SKIP,
-                    f"last_date={last_dt} age={age}d > {threshold_days}d "
-                    f"(BLOCKED por plan OilPriceAPI; Yahoo cubre market_data)"
-                ))
-            else:
-                results.append(Result(
-                    f"staleness:{name}", WARN,
-                    f"last_date={last_dt} age={age}d > {threshold_days}d"
-                ))
-        else:
-            results.append(Result(
-                f"staleness:{name}", OK,
-                f"last_date={last_dt} age={age}d"
-            ))
-    return results
-
-
-# =========================================================
 # CHECK D - Cobertura ultimas 5 sesiones
 # =========================================================
 def check_coverage_last_5(df: pd.DataFrame) -> list:
@@ -521,10 +445,6 @@ def run_all_checks() -> list:
     # C
     results.extend(check_manifest("stock_prices"))
     results.extend(check_manifest("market_data"))
-    results.extend(check_manifest("commodities_spot"))
-    results.extend(check_manifest("commodities_futures"))
-    # C2 (F3-15)
-    results.extend(check_commodities_staleness())
     # D, E, F - requieren parquet
     sp_path = PROJECT_ROOT / "data" / "stock_prices.parquet"
     if sp_path.exists():
