@@ -26,7 +26,6 @@ from src.temporal_contracts.index_eod import (
 from src.temporal_contracts.volatility_index import VolatilityIndex
 from src.temporal_contracts.rate_yield import RateYield
 from src.temporal_contracts.future_settlement import FutureSettlement
-from src.temporal_contracts.spot_commodity import SpotCommodity
 from src.temporal_contracts.fx_daily_cut import FxDailyCut
 from src.temporal_contracts.consolidate import (
     consolidate,
@@ -43,7 +42,6 @@ _IMPLEMENTED_CONTRACTS = {
     "VOLATILITY_INDEX": VolatilityIndex,
     "RATE_YIELD": RateYield,
     "FUTURE_SETTLEMENT": FutureSettlement,
-    "SPOT_COMMODITY": SpotCommodity,
     "FX_DAILY_CUT": FxDailyCut,
 }
 
@@ -59,7 +57,7 @@ def get_contract(name: str) -> TemporalContract:
 
 
 def resolve_all_contracts(df_market, reference_date) -> dict:
-    """Resuelve los 10 contratos. Devuelve dict[str, TemporalResolution]."""
+    """Resuelve los 9 contratos. Devuelve dict[str, TemporalResolution]."""
     result = {}
     for name in list_contracts():
         result[name] = get_contract(name).resolve(df_market, reference_date)
@@ -92,6 +90,5 @@ __all__ = [
     "VolatilityIndex",
     "RateYield",
     "FutureSettlement",
-    "SpotCommodity",
     "FxDailyCut",
 ]

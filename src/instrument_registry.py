@@ -849,8 +849,7 @@ def get_instrument_class(ticker: str) -> str:
     Esta funcion NO decide contratos temporales. La cadena es:
       ticker -> get_instrument_class -> FUTURE
         -> FU-021-5 contrato temporal:
-           BZ=F, CL=F        -> FUTURE_SETTLEMENT (close_proxy)
-           GC=F, HG=F, NG=F  -> SPOT_COMMODITY (spot_reference)
+           BZ=F, CL=F, GC=F, HG=F, NG=F -> FUTURE_SETTLEMENT (future_close)
     """
 
     if not isinstance(ticker, str):

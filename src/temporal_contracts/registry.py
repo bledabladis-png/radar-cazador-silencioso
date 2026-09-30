@@ -81,21 +81,11 @@ CONTRACTS_REGISTRY = {
     },
     "FUTURE_SETTLEMENT": {
         "family": "FUTURE",
-        "eligible_universe": ["BZ=F", "CL=F"],
-        "session_calendar": "CME|ICE",
+        "eligible_universe": ["BZ=F", "CL=F", "GC=F", "HG=F", "NG=F"],
+        "session_calendar": "CME|NYMEX|COMEX",
         "max_lag_days": 1,
         "min_coverage": 1.0,
-        "per_ticker_lag": {"BZ=F": 1, "CL=F": 1},
-        "per_pair_max_lag": None,
-        "activation_req": None,
-    },
-    "SPOT_COMMODITY": {
-        "family": "SPOT",
-        "eligible_universe": ["GC=F", "HG=F", "NG=F"],
-        "session_calendar": "COMEX|NYMEX",
-        "max_lag_days": 1,
-        "min_coverage": 1.0,
-        "per_ticker_lag": {"GC=F": 1, "HG=F": 1, "NG=F": 1},
+        "per_ticker_lag": {"BZ=F": 1, "CL=F": 1, "GC=F": 1, "HG=F": 1, "NG=F": 1},
         "per_pair_max_lag": None,
         "activation_req": None,
     },
@@ -113,7 +103,7 @@ CONTRACTS_REGISTRY = {
 
 
 def list_contracts() -> list:
-    """Devuelve los nombres de los 10 contratos registrados."""
+    """Devuelve los nombres de los 9 contratos registrados."""
     return list(CONTRACTS_REGISTRY.keys())
 
 

@@ -17,7 +17,6 @@ EXPECTED_CONTRACTS = [
     "VOLATILITY_INDEX",
     "RATE_YIELD",
     "FUTURE_SETTLEMENT",
-    "SPOT_COMMODITY",
     "FX_DAILY_CUT",
 ]
 
@@ -30,7 +29,6 @@ EXPECTED_FAMILIES = {
     "VOLATILITY_INDEX": "INDEX",
     "RATE_YIELD": "RATE_YIELD",
     "FUTURE_SETTLEMENT": "FUTURE",
-    "SPOT_COMMODITY": "SPOT",
     "FX_DAILY_CUT": "FX",
 }
 
@@ -38,7 +36,7 @@ EXPECTED_FAMILIES = {
 class TestRegistryShape:
 
     def test_diez_contratos(self):
-        assert len(CONTRACTS_REGISTRY) == 10
+        assert len(CONTRACTS_REGISTRY) == 9
 
     def test_nombres_exactos(self):
         assert list(CONTRACTS_REGISTRY.keys()) == EXPECTED_CONTRACTS
@@ -50,9 +48,9 @@ class TestRegistryShape:
         for name, expected_family in EXPECTED_FAMILIES.items():
             assert CONTRACTS_REGISTRY[name]["family"] == expected_family
 
-    def test_seis_familias_distintas(self):
+    def test_cinco_familias_distintas(self):
         families = {v["family"] for v in CONTRACTS_REGISTRY.values()}
-        assert families == {"EQUITY", "INDEX", "RATE_YIELD", "FUTURE", "FX", "SPOT"}
+        assert families == {"EQUITY", "INDEX", "RATE_YIELD", "FUTURE", "FX"}
 
 
 class TestRegistryEntries:
@@ -73,7 +71,9 @@ class TestRegistryEntries:
         assert e["activation_req"] is None
         assert e["max_lag_days"] == 1
         assert e["min_coverage"] == 1.0
-        assert set(e["eligible_universe"]) == {"BZ=F", "CL=F"}
+        assert set(e["eligible_universe"]) == {
+            "BZ=F", "CL=F", "GC=F", "HG=F", "NG=F"
+        }
 
     def test_fx_daily_cut_tiene_per_pair_max_lag(self):
         e = get_registry_entry("FX_DAILY_CUT")

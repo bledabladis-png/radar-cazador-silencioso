@@ -1,15 +1,13 @@
-"""Contrato FUTURE_SETTLEMENT (FU-021-5 Fase 2.2 + FU-021-3C-bis).
+"""Contrato FUTURE_SETTLEMENT (FU-021-5 Fase 2.2).
 
-Tras FU-021-3C-bis: universo reducido a BZ=F y CL=F. GC=F, HG=F y NG=F
-migrados a SPOT_COMMODITY (spot, no futuros).
+Universo: BZ=F, CL=F, GC=F, HG=F, NG=F (futuros front-month Yahoo).
 
 Semantica temporal: effective_date = settlement_date del exchange
 (tipicamente D-1 laborable). expected = ultimo dia laborable.
 max_lag=1, min_coverage=1.0.
 
-Fuente: OilPriceAPI /v1/futures/ice-brent, /v1/futures/ice-wti.
-Campo consumido: 'close' (proxy del settlement oficial ICE/NYMEX,
-diferencia tipica <0.5%). NO es settlement oficial VWAP.
+Fuente: Yahoo Finance. Campo consumido: 'Close' del front-month.
+NO es settlement oficial de exchange: Yahoo agrega quotes publicas.
 """
 from __future__ import annotations
 
@@ -32,15 +30,15 @@ from src.temporal_contracts.base import (
 class FutureSettlement(TemporalContract):
     name = "FUTURE_SETTLEMENT"
     family = "FUTURE"
-    session_calendar = "CME|ICE"
+    session_calendar = "CME|NYMEX|COMEX"
     max_lag_days = 1
     min_coverage = 1.0
-    eligible_universe = ["BZ=F", "CL=F"]
-    per_ticker_lag = {"BZ=F": 1, "CL=F": 1}
+    eligible_universe = ["BZ=F", "CL=F", "GC=F", "HG=F", "NG=F"]
+    per_ticker_lag = {"BZ=F": 1, "CL=F": 1, "GC=F": 1, "HG=F": 1, "NG=F": 1}
     per_pair_max_lag = None
     activation_req = None
 
-    settlement_semantics = "close_proxy"
+    settlement_semantics = "future_close"
 
     def _expected(self, reference_date) -> Optional:
         return weekday_expected(reference_date)

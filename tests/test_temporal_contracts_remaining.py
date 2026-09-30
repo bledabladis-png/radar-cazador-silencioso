@@ -68,15 +68,15 @@ class TestFutureSettlement:
         assert c.name == "FUTURE_SETTLEMENT"
         assert c.family == "FUTURE"
         assert c.activation_req is None
-        assert c.settlement_semantics == "close_proxy"
-        assert set(c.eligible_universe) == {"BZ=F", "CL=F"}
+        assert c.settlement_semantics == "future_close"
+        assert set(c.eligible_universe) == {"BZ=F", "CL=F", "GC=F", "HG=F", "NG=F"}
         assert c.max_lag_days == 1
 
-    def test_gc_hg_ng_fuera_del_universo(self):
+    def test_gc_hg_ng_dentro_del_universo(self):
         c = FutureSettlement()
-        assert "GC=F" not in c.eligible_universe
-        assert "HG=F" not in c.eligible_universe
-        assert "NG=F" not in c.eligible_universe
+        assert "GC=F" in c.eligible_universe
+        assert "HG=F" in c.eligible_universe
+        assert "NG=F" in c.eligible_universe
 
     def test_resolve_status_valido(self, df_real):
         r = FutureSettlement().resolve(df_real, _ref_from_df(df_real))
@@ -98,14 +98,17 @@ class TestFutureSettlement:
         # K-FS-CI-PARITY-01: si un ticker del universo no tiene Close en la
         # fecha esperada, el contrato debe reportar INSUFFICIENT. Es un
         # estado contractual valido, no un falso positivo.
+        # Universo actual: BZ=F, CL=F, GC=F, HG=F, NG=F. Aqui solo 1/5
+        # tiene Close -> coverage 0.2 < 1.0 -> INSUFFICIENT.
         idx = pd.to_datetime(["2026-09-15"])
         cols = pd.MultiIndex.from_tuples(
-            [("Close", "BZ=F"), ("Close", "CL=F")],
+            [("Close", "BZ=F"), ("Close", "CL=F"),
+             ("Close", "GC=F"), ("Close", "HG=F"), ("Close", "NG=F")],
             names=["field", "ticker"],
         )
         df = pd.DataFrame(index=idx, columns=cols, dtype=float)
         df.loc["2026-09-15", ("Close", "BZ=F")] = 108.32
-        # CL=F permanece NaN -> cobertura 0.5 < min_coverage 1.0
+        # Resto NaN -> cobertura 0.2 < min_coverage 1.0
 
         r = FutureSettlement().resolve(df, REF)
         assert r.status == STATUS_INSUFFICIENT
@@ -114,16 +117,20 @@ class TestFutureSettlement:
         assert r.lag_days is None
 
     def test_cobertura_completa_no_es_insufficient(self):
-        # Contraste: con ambos tickers presentes, el contrato no debe
+        # Contraste: con los 5 tickers presentes, el contrato no debe
         # reportar INSUFFICIENT.
         idx = pd.to_datetime(["2026-09-15"])
         cols = pd.MultiIndex.from_tuples(
-            [("Close", "BZ=F"), ("Close", "CL=F")],
+            [("Close", "BZ=F"), ("Close", "CL=F"),
+             ("Close", "GC=F"), ("Close", "HG=F"), ("Close", "NG=F")],
             names=["field", "ticker"],
         )
         df = pd.DataFrame(index=idx, columns=cols, dtype=float)
         df.loc["2026-09-15", ("Close", "BZ=F")] = 108.32
         df.loc["2026-09-15", ("Close", "CL=F")] = 99.0
+        df.loc["2026-09-15", ("Close", "GC=F")] = 4213.70
+        df.loc["2026-09-15", ("Close", "HG=F")] = 6.65
+        df.loc["2026-09-15", ("Close", "NG=F")] = 3.02
 
         r = FutureSettlement().resolve(df, REF)
         assert r.status in VALID_STATUSES
@@ -150,9 +157,9 @@ class TestFxDailyCut:
 
 class TestResolveAllContracts:
 
-    def test_devuelve_diez_resoluciones(self, df_real):
+    def test_devuelve_nueve_resoluciones(self, df_real):
         resoluciones = resolve_all_contracts(df_real, _ref_from_df(df_real))
-        assert len(resoluciones) == 10
+        assert len(resoluciones) == 9
 
     def test_claves_iguales_a_list_contracts(self, df_real):
         resoluciones = resolve_all_contracts(df_real, _ref_from_df(df_real))
@@ -171,14 +178,14 @@ class TestResolveAllContracts:
         assert r.status != STATUS_BLOCKED
 
 
-class TestGetContractAll10:
+class TestGetContractAll9:
 
-    def test_los_diez_implementados(self):
+    def test_los_nueve_implementados(self):
         names = [
             "EQUITY_EOD", "INDEX_EOD_USA", "INDEX_EOD_EUROPA",
             "INDEX_EOD_COMMODITY", "INDEX_EOD_CURRENCY",
             "VOLATILITY_INDEX", "RATE_YIELD",
-            "FUTURE_SETTLEMENT", "SPOT_COMMODITY", "FX_DAILY_CUT",
+            "FUTURE_SETTLEMENT", "FX_DAILY_CUT",
         ]
         for name in names:
             c = get_contract(name)
