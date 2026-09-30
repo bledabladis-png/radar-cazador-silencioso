@@ -276,6 +276,17 @@ def check_13f_cache() -> list:
 # CHECK C - Manifest quality
 # =========================================================
 def check_manifest(name: str) -> list:
+    """Verifica manifest + presencia del parquet que describe.
+
+    D16 (2026-09-30): antes solo verificaba el .manifest.json. En CI
+    el manifest esta versionado pero el parquet no (gitignored).
+    Resultado: OK sobre un artefacto ausente. Ahora:
+    - manifest ausente o invalido -> FAIL (incondicional).
+    - manifest OK + parquet ausente -> SKIP en CI, WARN en local.
+      El manifest describe un artefacto no presente aqui. En local
+      es un WARN (le falta un run); en CI es la norma.
+    - manifest OK + parquet presente -> clasifica por quality.status.
+    """
     p = PROJECT_ROOT / "data" / f"{name}.parquet.manifest.json"
     if not p.exists():
         return [Result(f"manifest:{name}", FAIL, "manifest no existe")]
@@ -283,6 +294,13 @@ def check_manifest(name: str) -> list:
         m = json.loads(p.read_text(encoding="utf-8"))
     except Exception as e:
         return [Result(f"manifest:{name}", FAIL, f"JSON invalido: {e}")]
+    parquet = PROJECT_ROOT / "data" / f"{name}.parquet"
+    if not parquet.exists():
+        if IS_CI:
+            return [Result(f"manifest:{name}", SKIP,
+                "parquet no versionado (solo manifest en CI)")]
+        return [Result(f"manifest:{name}", WARN,
+            "manifest OK pero parquet ausente en local")]
     q = m.get("quality", {})
     status = q.get("status", "UNKNOWN")
     last = q.get("last_date", "?")

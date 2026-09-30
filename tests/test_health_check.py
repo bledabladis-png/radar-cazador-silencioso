@@ -81,6 +81,7 @@ def test_manifest_valid(tmp_path, monkeypatch):
     d.mkdir()
     m = {"quality": {"status": "VALID", "last_date": "2026-09-23"}}
     (d / "foo.parquet.manifest.json").write_text(json.dumps(m))
+    (d / "foo.parquet").write_bytes(b"dummy")
     results = hc.check_manifest("foo")
     assert results[0].status == hc.OK
 
@@ -92,6 +93,7 @@ def test_manifest_invalid(tmp_path, monkeypatch):
     m = {"quality": {"status": "INVALID", "last_date": "2026-09-25",
                      "expected_session": "2026-09-24"}}
     (d / "foo.parquet.manifest.json").write_text(json.dumps(m))
+    (d / "foo.parquet").write_bytes(b"dummy")
     results = hc.check_manifest("foo")
     assert results[0].status == hc.FAIL
 
@@ -109,6 +111,7 @@ def test_manifest_valid_with_missing_warn(tmp_path, monkeypatch):
     d.mkdir()
     m = {"quality": {"status": "VALID_WITH_MISSING", "close_nan_last": 5}}
     (d / "foo.parquet.manifest.json").write_text(json.dumps(m))
+    (d / "foo.parquet").write_bytes(b"dummy")
     results = hc.check_manifest("foo")
     assert results[0].status == hc.WARN
 
@@ -289,3 +292,45 @@ def test_yahoo_revision_skip_sin_last_date():
     head = _mk_manifest("aaaaaaaa", "2026-09-29")
     status, _ = hc._yahoo_revision_status(cur, head)
     assert status == hc.SKIP
+
+
+# ---------- D16: check_manifest con verificacion de parquet ----------
+def test_manifest_sin_parquet_en_ci_skip(tmp_path, monkeypatch):
+    """D16 (2026-09-30): manifest OK pero parquet ausente en CI -> SKIP.
+
+    En CI el manifest esta versionado, el parquet no (gitignored).
+    Antes: OK sobre un artefacto ausente. Ahora: SKIP honesto.
+    """
+    monkeypatch.setattr(hc, "PROJECT_ROOT", tmp_path)
+    monkeypatch.setattr(hc, "IS_CI", True)
+    d = tmp_path / "data"
+    d.mkdir()
+    m = {"quality": {"status": "VALID", "last_date": "2026-09-23"}}
+    (d / "foo.parquet.manifest.json").write_text(json.dumps(m))
+    results = hc.check_manifest("foo")
+    assert results[0].status == hc.SKIP
+
+
+def test_manifest_sin_parquet_en_local_warn(tmp_path, monkeypatch):
+    """D16: manifest OK pero parquet ausente en local -> WARN."""
+    monkeypatch.setattr(hc, "PROJECT_ROOT", tmp_path)
+    monkeypatch.setattr(hc, "IS_CI", False)
+    d = tmp_path / "data"
+    d.mkdir()
+    m = {"quality": {"status": "VALID", "last_date": "2026-09-23"}}
+    (d / "foo.parquet.manifest.json").write_text(json.dumps(m))
+    results = hc.check_manifest("foo")
+    assert results[0].status == hc.WARN
+
+
+def test_manifest_y_parquet_presentes_ok(tmp_path, monkeypatch):
+    """D16: manifest OK + parquet presente -> clasificacion por status."""
+    monkeypatch.setattr(hc, "PROJECT_ROOT", tmp_path)
+    d = tmp_path / "data"
+    d.mkdir()
+    m = {"quality": {"status": "VALID", "last_date": "2026-09-23"}}
+    (d / "foo.parquet.manifest.json").write_text(json.dumps(m))
+    (d / "foo.parquet").write_bytes(b"dummy")
+    results = hc.check_manifest("foo")
+    assert results[0].status == hc.OK
+    assert "VALID" in results[0].message
