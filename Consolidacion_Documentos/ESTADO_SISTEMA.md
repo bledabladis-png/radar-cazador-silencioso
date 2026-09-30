@@ -2,7 +2,7 @@
 
 Hechos verificables del sistema. Generado por script.
 
-**Generado en:** 2026-09-30 07:04:00 UTC
+**Generado en:** 2026-09-30 07:31:27 UTC
 **Snapshot tomado sobre:** commit HEAD de la fecha indicada, al momento de generar
 **NO editar a mano.** Regenerar con:
 
@@ -17,16 +17,16 @@ HEAD, tests e integridad del codigo.
 
 ## 1. Git
 
-- **HEAD:** `9d34eba`
-- **HEAD completo:** `9d34ebafbc646177cf260209cabf0751960c440c`
-- **Fecha commit HEAD:** 2026-09-30 09:03:46 +0200
-- **Ahead:** 0
+- **HEAD:** `c193eef`
+- **HEAD completo:** `c193eefc6866341cb1b41ce5ce97e3563b494081`
+- **Fecha commit HEAD:** 2026-09-30 09:31:27 +0200
+- **Ahead:** 1
 - **Behind:** 0
-- **origin/main:** `9d34eba`
+- **origin/main:** `02ebdbb`
 
 ## 2. Tests (pytest real)
 
-- **Resumen:** 2369 passed, 2 skipped in 67.74s (0:01:07)
+- **Resumen:** 2383 passed, 2 skipped in 68.28s (0:01:08)
 - **Exit code:** 0
 
 ## 3. Integridad del codigo
@@ -104,7 +104,7 @@ HEAD, tests e integridad del codigo.
 - `scripts/iae_contractual_nipc_e2e.py`: 142 LOC
 - `scripts/regenerate_radar_catalog.py`: 238 LOC
 - `scripts/regenerate_cusip_crosswalk.py`: 225 LOC
-- `scripts/update_sec_13f.py`: 356 LOC
+- `scripts/update_sec_13f.py`: 373 LOC
 - `scripts/download_official_list_13f.py`: 147 LOC
 
 ## 7. Evidencia empirica (directorios)
