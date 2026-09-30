@@ -63,9 +63,16 @@ Pega este bloque antes de cualquier commit:
 Esperado:
 - compileall OK
 - pyflakes LIMPIO (silencio total)
-- 2383 passed + 2 skipped + 0 failed (2026-09-30)
+- 2945 passed + 2 skipped + 0 failed (2026-09-30)
 
 Si algun test falla: NO commitear. Diagnosticar primero.
+
+**Tests opt-in (skipped por diseno):** dos familias, ambas excluidas por defecto.
+
+- `@pytest.mark.network` (2 tests en `test_freshness.py`): consultan CBOE/FINRA reales. Excluidos salvo `--run-network`. Implementado en `conftest.py` (`pytest_addoption` + `pytest_collection_modifyitems`). No es deuda: el test comprueba frescura real y no se puede mockear sin perder su objeto.
+- `integration_real_data` (8 sitios): requieren parquets locales (gitignored en CI). Skip si no existen. En CI corren en el paso "Validate freshness post-run" tras `run.py`.
+
+Ambos son diseno, no deuda. El skip silencioso no aparece en el resumen; se ve con `-ra` (ya en `pytest.ini`).
 
 ---
 

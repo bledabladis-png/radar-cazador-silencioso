@@ -75,7 +75,7 @@ Fuente autoritativa: `Consolidacion_Documentos/ESTADO_SISTEMA.md` (regenerado co
 
 Snapshot al cierre del ultimo commit:
 - HEAD: ver ESTADO_SISTEMA.md
-- Tests: 2383 passed + 2 skipped + 0 failed
+- Tests: 2945 passed + 2 skipped + 0 failed
 - Validation Gate: 10/10
 - Working tree: limpio
 - Corpus documental: v3 (Consolidacion_Documentos/00-07, 2026-09-30)
@@ -159,10 +159,10 @@ e integridad: `ESTADO_SISTEMA.md`.
 
 **Pendientes vivos:**
 
-- **3 tests skipped en CI** por parquets gitignored (`market_data`,
-  `stock_prices`, `european_tickers_recent`, todos en `test_freshness.py`).
-  Verificado 2026-09-30 con run manual. Skip silencioso: no aparece en
-  el resumen de cobertura.
+- **2 tests skipped por `--run-network`** (`test_cboe_pcr_al_dia`,
+  `test_finra_darkpool_al_dia` en `test_freshness.py`). Opt-in, diseno
+  (consultan CBOE/FINRA reales). Mecanismo formal en `conftest.py`.
+  Ver `01_METODO 3` para la politica completa. No es deuda.
 
 - H5.3 - Trazabilidad cron trimestral. Verificacion en cron real de
   noviembre 2026.
@@ -215,7 +215,7 @@ Esperado:
 - HEAD = ver Consolidacion_Documentos/ESTADO_SISTEMA.md
 - ahead 0, behind 0
 - working tree limpio (o solo el propio ESTADO_SISTEMA regenerado)
-- 2383 passed + 2 skipped
+- 2945 passed + 2 skipped
 - pyflakes silencio, compileall OK
 
 ---
