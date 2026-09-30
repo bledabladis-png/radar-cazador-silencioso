@@ -248,3 +248,182 @@ def test_merge_precedencia_auto_nueva_sobre_historical():
     out = rcc._merge(pd.DataFrame(columns=list(rcc.COLUMNS)), auto_nuevas, historical_df=historicas)
     assert len(out) == 1
     assert out.iloc[0]["ticker"] == "NEW"
+
+
+# --- _load_radar_index: descartes ---
+
+def test_load_radar_index_descarta_vacios_y_nan(tmp_path):
+    cat = tmp_path / "catalog.csv"
+    pd.DataFrame([
+        {"radar_ticker": "AAPL", "share_class_figi": "SC_AAPL"},
+        {"radar_ticker": "", "share_class_figi": "SC_EMPTY_TK"},
+        {"radar_ticker": "MSFT", "share_class_figi": ""},
+        {"radar_ticker": "NANTK", "share_class_figi": "nan"},
+        {"radar_ticker": "  GOOG  ", "share_class_figi": "  SC_GOOG  "},
+    ]).to_csv(cat, index=False)
+    idx = rcc._load_radar_index(cat)
+    assert idx == {"SC_AAPL": "AAPL", "SC_GOOG": "GOOG"}
+
+
+# --- _extract_observations: title rellenado en segunda observacion ---
+
+def test_extract_rellena_title_en_segunda_observacion(tmp_path):
+    d = tmp_path / "2026Q1"
+    d.mkdir()
+    pd.DataFrame([
+        ("037833100", "SC_AAPL", "", "SH", None),
+        ("037833100", "SC_AAPL", "COM", "SH", None),
+    ], columns=["CUSIP", "FIGI", "TITLEOFCLASS",
+                "SSHPRNAMTTYPE", "PUTCALL"]).to_parquet(d / "INFOTABLE.parquet")
+    idx = {"SC_AAPL": "AAPL"}
+    obs = rcc._extract_observations("2026Q1", d / "INFOTABLE.parquet", idx)
+    assert obs[("037833100", "AAPL")]["title"] == "COM"
+
+
+# --- _build_auto_rows: title vacio -> COM ---
+
+def test_build_auto_rows_title_vacio_usa_com():
+    obs = {("111", "AAPL"): {"title": "", "quarters": ["2026Q1"]}}
+    rows = rcc._build_auto_rows(obs, latest_quarter="2026Q1")
+    assert rows[0]["title_of_class"] == "COM"
+
+
+# --- main happy path ---
+
+def _mk_workspace(tmp_path):
+    data_dir = tmp_path / "processed"
+    data_dir.mkdir()
+    q = data_dir / "2026Q1"
+    q.mkdir()
+    pd.DataFrame([
+        ("037833100", "SC_AAPL", "COM", "SH", None),
+    ], columns=["CUSIP", "FIGI", "TITLEOFCLASS",
+                "SSHPRNAMTTYPE", "PUTCALL"]).to_parquet(q / "INFOTABLE.parquet")
+    catalog = tmp_path / "catalog.csv"
+    pd.DataFrame([
+        {"radar_ticker": "AAPL", "share_class_figi": "SC_AAPL"},
+    ]).to_csv(catalog, index=False)
+    return data_dir, catalog, tmp_path / "crosswalk.csv"
+
+
+def test_main_happy_path(tmp_path, monkeypatch):
+    data_dir, catalog, crosswalk = _mk_workspace(tmp_path)
+    monkeypatch.setattr(rcc, "DATA_DIR", data_dir)
+    monkeypatch.setattr(rcc, "CATALOG", catalog)
+    monkeypatch.setattr(rcc, "CROSSWALK", crosswalk)
+    monkeypatch.setattr("sys.argv", ["regenerate_cusip_crosswalk.py"])
+    assert rcc.main() == 0
+    assert crosswalk.exists()
+    df = pd.read_csv(crosswalk, dtype=str)
+    assert len(df) == 1
+    assert df.iloc[0]["CUSIP"] == "037833100"
+    assert df.iloc[0]["ticker"] == "AAPL"
+    assert df.iloc[0]["verified_by"] == "auto"
+
+
+def test_main_dry_run_no_escribe(tmp_path, monkeypatch):
+    data_dir, catalog, crosswalk = _mk_workspace(tmp_path)
+    monkeypatch.setattr(rcc, "DATA_DIR", data_dir)
+    monkeypatch.setattr(rcc, "CATALOG", catalog)
+    monkeypatch.setattr(rcc, "CROSSWALK", crosswalk)
+    monkeypatch.setattr("sys.argv",
+                        ["regenerate_cusip_crosswalk.py", "--dry-run"])
+    assert rcc.main() == 0
+    assert not crosswalk.exists()
+
+
+# --- _clean_str ---
+
+def test_clean_str_none_devuelve_vacio():
+    assert rcc._clean_str(None) == ""
+
+
+def test_clean_str_nan_float_devuelve_vacio():
+    assert rcc._clean_str(float("nan")) == ""
+
+
+def test_clean_str_string_nan_devuelve_vacio():
+    assert rcc._clean_str("nan") == ""
+    assert rcc._clean_str("  nan  ") == ""
+
+
+def test_clean_str_vacio_y_espacios():
+    assert rcc._clean_str("") == ""
+    assert rcc._clean_str("   ") == ""
+
+
+def test_clean_str_normaliza_strip():
+    assert rcc._clean_str("  AAPL  ") == "AAPL"
+    assert rcc._clean_str("COM") == "COM"
+
+
+def test_clean_str_excepcion_pd_isna(monkeypatch):
+    """Si pd.isna lanza (objeto raro), cae al try/except y sigue."""
+    def fake_isna(v):
+        raise TypeError("no soportado")
+    monkeypatch.setattr(rcc.pd, "isna", fake_isna)
+    assert rcc._clean_str("AAPL") == "AAPL"
+
+# --- _load_historical_auto: df no vacio sin autos (hueco 139) ---
+
+def test_load_historical_auto_sin_autos_devuelve_vacio():
+    current = pd.DataFrame([
+        _mk_crosswalk_row("111", "AAA", "2025-12-31", "", verified_by="manual"),
+    ])
+    hist = rcc._load_historical_auto(current, "2026-06-30")
+    assert hist.empty
+
+
+# --- _validate: columna faltante (hueco 162) ---
+
+def test_validate_columna_faltante_falla():
+    df = pd.DataFrame([{"CUSIP": "111"}])  # faltan 7 columnas
+    with pytest.raises(ValueError, match="columna faltante"):
+        rcc._validate(df)
+
+
+# --- main: _validate lanza (huecos 223-225) ---
+
+def test_main_validate_falla_devuelve_1(tmp_path, monkeypatch):
+    data_dir, catalog, crosswalk = _mk_workspace(tmp_path)
+    monkeypatch.setattr(rcc, "DATA_DIR", data_dir)
+    monkeypatch.setattr(rcc, "CATALOG", catalog)
+    monkeypatch.setattr(rcc, "CROSSWALK", crosswalk)
+    def fake_validate(df):
+        raise ValueError("simulado")
+    monkeypatch.setattr(rcc, "_validate", fake_validate)
+    monkeypatch.setattr("sys.argv", ["regenerate_cusip_crosswalk.py"])
+    assert rcc.main() == 1
+    assert not crosswalk.exists()
+
+# --- main: mismo cusip en 2 quarters (huecos 201-203) ---
+
+def _mk_workspace_2q(tmp_path):
+    data_dir = tmp_path / "processed"
+    data_dir.mkdir()
+    for q, title in (("2026Q1", ""), ("2026Q2", "COM")):
+        d = data_dir / q
+        d.mkdir()
+        pd.DataFrame([
+            ("037833100", "SC_AAPL", title, "SH", None),
+        ], columns=["CUSIP", "FIGI", "TITLEOFCLASS",
+                    "SSHPRNAMTTYPE", "PUTCALL"]).to_parquet(d / "INFOTABLE.parquet")
+    catalog = tmp_path / "catalog.csv"
+    pd.DataFrame([
+        {"radar_ticker": "AAPL", "share_class_figi": "SC_AAPL"},
+    ]).to_csv(catalog, index=False)
+    return data_dir, catalog, tmp_path / "crosswalk.csv"
+
+
+def test_main_mismo_cusip_dos_quarters(tmp_path, monkeypatch):
+    data_dir, catalog, crosswalk = _mk_workspace_2q(tmp_path)
+    monkeypatch.setattr(rcc, "DATA_DIR", data_dir)
+    monkeypatch.setattr(rcc, "CATALOG", catalog)
+    monkeypatch.setattr(rcc, "CROSSWALK", crosswalk)
+    monkeypatch.setattr("sys.argv", ["regenerate_cusip_crosswalk.py"])
+    assert rcc.main() == 0
+    df = pd.read_csv(crosswalk, dtype=str, keep_default_na=False)
+    assert len(df) == 1
+    assert df.iloc[0]["valid_from"] == "2026-03-31"
+    assert df.iloc[0]["valid_to"] == ""
+    assert df.iloc[0]["title_of_class"] == "COM"

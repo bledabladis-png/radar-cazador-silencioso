@@ -53,14 +53,27 @@ def _period_end(quarter: str) -> str:
     return f"{m.group(1)}-{QUARTER_END['Q' + m.group(2)]}"
 
 
+def _clean_str(v):
+    """Normaliza a str limpio. None/NaN/"" -> "". "nan" (string) -> ""."""
+    if v is None:
+        return ""
+    try:
+        if pd.isna(v):
+            return ""
+    except (TypeError, ValueError):
+        pass
+    s = str(v).strip()
+    return "" if s == "nan" else s
+
+
 def _load_radar_index(catalog_path: Path) -> dict:
     """{share_class_figi: radar_ticker}."""
     cat = pd.read_csv(catalog_path, dtype=str)
     out = {}
     for _, r in cat.iterrows():
-        scf = str(r.get("share_class_figi") or "").strip()
-        tk = str(r.get("radar_ticker") or "").strip()
-        if scf and tk and scf != "nan":
+        scf = _clean_str(r.get("share_class_figi"))
+        tk = _clean_str(r.get("radar_ticker"))
+        if scf and tk:
             out[scf] = tk
     return out
 
@@ -79,9 +92,9 @@ def _extract_observations(quarter: str, infotable: Path, radar_index: dict) -> d
 
     out = {}
     for _, r in df.iterrows():
-        cusip = str(r["CUSIP"]).strip()
-        figi = str(r["FIGI"]).strip()
-        title = str(r.get("TITLEOFCLASS") or "").strip()
+        cusip = _clean_str(r["CUSIP"])
+        figi = _clean_str(r["FIGI"])
+        title = _clean_str(r.get("TITLEOFCLASS"))
         ticker = radar_index[figi]
         key = (cusip, ticker)
         if key not in out:
