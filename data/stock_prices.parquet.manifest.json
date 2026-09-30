@@ -2,36 +2,36 @@
   "schema_version": 1,
   "artifact": {
     "path": "data/stock_prices.parquet",
-    "sha256": "b8882c26075c1f432b128292b3afe8bdc37b8048b2ddb9881a74d33123b86b76",
-    "bytes": 15659571,
-    "written_at": "2026-09-30T22:44:24.875083"
+    "sha256": "f71cfa474bd92ae9f37012a99c5dcf167c59204b5a2be1c59c77ff19dacd693c",
+    "bytes": 15669039,
+    "written_at": "2026-09-30T23:33:57.391455"
   },
   "producer": {
     "module": "src.utils",
     "function": "write_artifact_with_manifest",
-    "run_id": "20260930_224100",
+    "run_id": "20260930_232654",
     "source": "yahoo_european_cascade"
   },
   "content": {
-    "rows": 1295,
+    "rows": 1296,
     "cols": 1565,
     "n_tickers": 313,
     "date_min": "2021-09-27",
-    "date_max": "2026-09-29"
+    "date_max": "2026-09-30"
   },
   "temporal": {
     "contract": null
   },
   "quality": {
-    "last_date": "2026-09-29",
-    "expected_session": "2026-09-29",
+    "last_date": "2026-09-30",
+    "expected_session": "2026-09-30",
     "last_date_is_expected_session": true,
-    "pct_dup_last": 0.013605,
-    "close_nan_last": 19,
+    "pct_dup_last": 0.0,
+    "close_nan_last": 32,
     "n_tickers_expected_last": 313,
-    "n_tickers_with_close_last": 294,
-    "n_tickers_missing_close_last": 19,
-    "coverage_pct_last": 0.939297,
+    "n_tickers_with_close_last": 281,
+    "n_tickers_missing_close_last": 32,
+    "coverage_pct_last": 0.897764,
     "last_row_is_partial": true,
     "status": "VALID_WITH_MISSING",
     "by_market": {
@@ -50,20 +50,20 @@
       "LSE": {
         "n": 20,
         "last_closed_session": "2026-09-30",
-        "coverage_at_session": 0.0,
-        "status": "INVALID"
+        "coverage_at_session": 1.0,
+        "status": "VALID"
       },
       "US_EQUITY": {
         "n": 242,
         "last_closed_session": "2026-09-30",
-        "coverage_at_session": 0.0,
-        "status": "INVALID"
+        "coverage_at_session": 1.0,
+        "status": "VALID"
       },
       "XETRA": {
         "n": 19,
         "last_closed_session": "2026-09-30",
-        "coverage_at_session": 0.0,
-        "status": "INVALID"
+        "coverage_at_session": 1.0,
+        "status": "VALID"
       }
     }
   }
