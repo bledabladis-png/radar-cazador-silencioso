@@ -44,6 +44,60 @@ Al cerrar una sesion nueva, se anade arriba (las mas recientes primero). Si hay 
 
 ## 3. SESIONES
 
+### 2026-09-30 (noche, sesion 5) — D29-D33: cobertura de render, regimes, SLPM, flow, options
+
+**Objetivo.** Continuar el barrido de cobertura tras D28. 5 bloques
+tematicos ordenados por criticidad para el output del sistema.
+
+**Hecho.**
+
+- **D29 (render modules).** 3 modulos con 63-67%. sector_context
+  63% -> 100%, sectorial 67% -> 100%, synthesis 66% -> 96%. 19 tests.
+
+- **D30 (regimes).** volatility_regime 33% -> 100%,
+  tactical_engine 14% -> 97%, structural_engine 21% -> 100%.
+  Nota: volatility_regime requirio mock de la funcion interna
+  (los datos sinteticos daban NaN por el rolling interno).
+
+- **D31 (SLPM).** state_machine 12% -> 100%, slpm_v12 38% -> 93%.
+  38 tests.
+
+- **D32 (flow/divergencia).** sector_leader_divergence 16% -> 79%,
+  sector_flow_characteristics 35% -> 100%. 21 tests.
+
+- **D33 (options/rs/vol).** options_metrics 65% -> 88%,
+  rs_internal 28% -> 98%, vol_metrics 15% -> 100%,
+  options.py 67% -> 69% (solo el helper puro). 33 tests.
+
+**Falsos positivos detectados durante verificacion triple:**
+- D26: assert all sobre dict vacio. Corregido.
+- D27: fixture con filas ya ordenadas. Corregido.
+- D23: reference_date = hoy. Corregido.
+
+Ninguno en D29-D33 (los tests fueron escritos con cuidado tras los
+fallos anteriores).
+
+**Commits.** `2cfcaae` (D29), `6030792` (D30), `d3dbad5` (D31),
+`1c0807e` (D32), `104b4e2` (D33).
+
+**Pendiente.**
+
+- C2 (920) OPEN. Bloqueado por auditor externo.
+- H5.3: verificacion cron nov 2026.
+- 2 tests skipped por --run-network en test_freshness (opt-in).
+- Cron trimestral 1-oct-2026: aplicar 07_RUNBOOK §3.
+- Modulos con cobertura <80% tras D33: options.py (69%),
+  pipeline_contractual (38% por diseño), data_loader (59%),
+  stock_data_loader (77%), index_leaders (70% por ramas defensivas),
+  sector_leader_divergence (79%), health_check (52%),
+  update_sec_13f (62%). Los de IO/orquestacion E2E-only por diseno.
+  Los de logica podrian cubrirse en sesion futura si se decide.
+
+**Proximo paso sugerido.** Cron 1-oct. Aplicar 07_RUNBOOK §3. Si
+verde, revisar si queda deuda P3 accionable o cerrar cobertura.
+
+---
+
 ### 2026-09-30 (noche) — D19-D28: verificacion produccion + cobertura indicators/utils
 
 **Objetivo.** Tras cerrar sesion 3 con D16/D18, continuar con la
