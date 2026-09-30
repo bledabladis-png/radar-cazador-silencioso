@@ -963,8 +963,14 @@ Para sesiones anteriores al 2026-09-24, ver `git log --oneline`. Resumen tematic
 
 ## 5. REGLAS DE PODA
 
-- La bitacora mantiene las ultimas **5 sesiones**.
-- Al anadir una nueva, si hay >5, la mas antigua se elimina.
+- La bitacora mantiene las ultimas **10 sesiones**. Ademas, siempre
+  conserva las del dia en curso, aunque superen 10 (una jornada larga
+  puede generar 6-7 entradas, y perder la de la manana mientras se
+  trabaja la de la noche no aporta).
+- Al anadir una nueva, si hay >10 fuera del dia en curso, la mas antigua
+  se elimina. Nota: la regla era 'ultimas 5' hasta 2026-09-30. Nunca se
+  aplico (12 entradas acumuladas). Se cambia al umbral real observado
+  en lugar de fingir que se poda.
 - **Antes de eliminar**, verificar que sus decisiones clave estan en `04_HISTORICO.md`. Si no, resumir primero.
 
 ---

@@ -108,72 +108,12 @@ Snapshot al cierre del ultimo commit:
 
 ## 4. TRABAJO RECIENTE
 
-Sesion cerrada: auditoria interna A1-A5 del sistema.
-
-- A1: nucleo temporal (calendario NYSE algoritmico, tz Madrid, guards, aridad 4-tuple).
-- A2: providers (BME walk-back, tz-naive, except acotados, SSGA fund-flow, retry_call).
-- A3: calculo (regimenes, breadth, MTE, darkpool, SLPM, indicadores).
-- A4: reporte (guard NaN en 7 renders / 26 sitios, 12 except acotados).
-- A5: pipeline (bug estructural en leaders.py, check muerto en mte_confirmation.py, guards en indices_intl.py, SECTOR_ETFS unificado).
-
-Todos los bugs estructurales verificados con probes + run end-to-end + snapshot pre/post.
-
-Sesion 2026-09-29: auditoria interna A6 + B cerrada.
-
-- A6 (infra/orquestacion): 4 sub-bloques cerrados. Fixes aplicados:
-  A6.1-01 (`_latest_closed_session` reporta excepciones),
-  A6.2-02 (eliminado `_cron_probe.yml` residual),
-  A6.3-01/02 (`update_european_holdings` y `update_sector_holdings`
-  no ejecutan al importar; sin `shell=True`),
-  A6.4-01/04 (refactor a `main()` en `validate_history_quality` y
-  `verify_leader_selection`; eliminado `run_all_audits.py` dead code).
-- B (IAE): auditoria **funcional** completa del modulo (36 ficheros,
-  8280 LOC). Fixes aplicados sobre datos y logica reales, no solo
-  estructura: B-01 (`TargetUniverse` asserts -> raises explicitos,
-  inmune a `python -O`), B-04 (C-01 `_derive_status` respeta None en
-  paired_weighted; C-04 `_filter_canonical` descarta SSHPRNAMT
-  negativo), B-04c (C-05 audit trail `reporting_for_manager_cik`
-  separado de `filing_manager_cik`), B-05 (E2E reconcilia contra
-  baseline vigente; corregida doc erronea H1-A), B-06 (S-03 cadena
-  equivalence productiva: `load_cusip_equivalence` en
-  `pipeline_contractual` + invariante CANONICAL), B-07 (cerrar
-  snapshot `20260921_01` en manifest: 2 abiertos violaban B2-PIT),
-  C-07 (NBSP normalizado en TITLEOFCLASS).
-
-Sesion 2026-09-29 (tarde): auditoria funcional frente 6 (IAE) + frente 8 (providers).
-
-- **Frente 6 (IAE funcional):** 14 commits. Bugs reales cerrados:
-  S-03c (invariante CANONICAL != None en rama crosswalk),
-  PeriodState.sshprnamt (finitud),
-  extract_sshprnamt_by_figi (finitud),
-  operational_universe (simetria strip en claves de lookup).
-  Dedup: catalog_p38_adapter <-> period_state, build_catalog_csvs <-> catalog_key.
-  Docstring P65/P66 corregido. Deudas documentadas: target_universe,
-  timestamps, catalog_pit (modulos no integrados al pipeline productivo).
-
-- **Frente 8 (providers):** 12 commits. Bugs reales cerrados:
-  downloader (atómico + cache-hit valida ZIP),
-  xetra/bme/euronext/blackrock (escritura atómica cache),
-  backup_providers._validate_with_cache (finitud),
-  _blackrock_base (flow_pct_assets finitud),
-  _fund_flow_utils (dedup interno),
-  finra (dead code documentado),
-  N-PORT (backfill en update_sec_nport_data + descarga automatica XML EDGAR).
-
-- **Orquestacion CI:** 8 commits. Bugs reales:
-  cache 13F v2<->v3: **el restore del daily_run pide v3, que aun no
-  existe; cae siempre a v2 por restore-key.** El save con v3 lo hace
-  update_sec_13f (cron trimestral, proximo 20-nov). La warning
-  'Cache 13F no disponible' del daily_run es falso positivo:
-  'cache-hit != true' cuando se restauro por restore-key. Verificado
-  2026-09-30 con run manual.
-  issues:write en update_sec_13f (alerta H5.2 inoperativa),
-  _update_issue comprueba retorno de gh (deja de mentir),
-  retry con backoff en git push de 8 workflows,
-  if:always() en uploads pre-gate de download_failures,
-  env.quarter vacío eliminado en update_sec_nport.
-
-- Suite: 2375 passed + 2 skipped. pyflakes limpio. 0 warnings.
+**Fuente viva: `Consolidacion_Documentos/05_BITACORA.md`.** Este documento
+no duplica el estado de "que se hizo". Se congelo el 2026-09-29 para
+evitar el desfase que acumulo (decia 2383 tests cuando la suite iba por
+2945). La bitacora tiene el detalle cronologico reciente; `04_HISTORICO.md`
+tiene la cronologia tematica estable. Fuente autoritativa de HEAD, tests
+e integridad: `ESTADO_SISTEMA.md`.
 
 ---
 
