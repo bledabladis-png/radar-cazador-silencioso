@@ -44,6 +44,88 @@ Al cerrar una sesion nueva, se anade arriba (las mas recientes primero). Si hay 
 
 ## 3. SESIONES
 
+### 2026-09-30 (tarde) — D4 + D3 + D2 + Runbook + D1: cierre de P1
+
+**Objetivo.** Recibir traspaso del asistente saliente, asimilar contexto,
+atacar la deuda abierta por prioridad. P1 tenia tres frentes (D1, D2, D3)
+mas D4 (puntual) y una R (runbook del cron trimestral que dispara el 1-oct).
+
+**Hecho.**
+
+- **D4 (lag 13F unificado).** El saliente lo reporto como "falla en dispatch
+  manual fuera de {feb,may,ago,nov}". Verificado: los 3 runs X eran
+  `cancelled`, no fallos. No habia incidente. Pero al investigar aparecio
+  una deuda real: **tres politicas de lag distintas convivian** (doc ~45d,
+  cron ~50d, script 60d). El comentario del YAML mentia sobre su propio
+  codigo. Fix: eliminar el `case` del YAML, delegar a `--latest`, unificar
+  `SEC_13F_QUARTER_LAG_DAYS` a 50d, 4 casos frontera en test para que la
+  suite no sea ciega al cambio.
+
+- **D3 (health_check roto por diseno en CI).** El workflow no restaura
+  cache; el runner no tiene parquets (no versionados, confirmado con
+  `git cat-file` -> `exists on disk, but not in HEAD`). Consecuencia: 2 FAIL
+  estructurales en cada run + 9 WARN ruidosos. Fix: `IS_CI` detecta el
+  entorno, `parquet` y `iae_section` pasan a SKIP en CI (FAIL/WARN en local),
+  `cron_slots` relaja umbral a 0->OK/1-2->WARN/3+->FAIL (delays 2-8h de
+  GitHub son ruido, no incidente), workflows trimestrales sin runs -> SKIP.
+
+- **D2 (determinismo vs Yahoo).** El saliente mezclaba dos problemas: A/D Net
+  depende de Close, no de Volume; el volumen es D7. `K-LSE-YAHOO-REVISION-01`
+  no era huerfano: ya tenia ficha en 02_ARQUITECTURA y 04_HISTORICO como
+  MONITORED. Decision de arquitectura (opcion A del usuario): aceptar y
+  documentar. `00_ARRANQUE §2` pasa de "Determinista" a "Determinista **dado
+  un snapshot del input**". Nuevo check `check_yahoo_revision` compara
+  manifest actual vs HEAD por sha256: mismo `last_date` con sha distinto ->
+  WARN (revision detectada). 5 tests del helper.
+
+- **R (runbook del cron 1-oct).** Los 4 workflows trimestrales **nunca se
+  han disparado por schedule** en historial visible. Todos los runs
+  conocidos son `workflow_dispatch`. El cron del 1-oct sera la primera
+  ejecucion automatica real. Creado `Consolidacion_Documentos/07_RUNBOOK.md`
+  con inventario de crons, verificacion post-cron y contingencias
+  (`startup_failure`, conflicto de rebase, cron no disparado).
+  Detectado que el traspaso listaba `update_sec_nport` como dia 1; el YAML
+  dice dia 20.
+
+- **D1 (comp_breadth + penalizacion dispersion).** El saliente lo describia
+  como "tanh_normalize colapsa cuando la serie es constante". Verificado: es
+  correcto, 27-61% de filas por sector con `comp_breadth==0`. Pero al
+  verificar aparecio un **segundo bug independiente**: `_dispersion =
+  std / (|mean|+1e-9)` explotaba cuando la media se aproximaba a cero,
+  aniquilando el score de XLU, XLI, XLB. Fix breadth (mapeo directo
+  `(breadth-0.5)*2`), fix dispersion (std poblacional `ddof=0` sin dividir
+  por media, garantia penalty en [0.5,1]), 5 tests del contrato,
+  verificacion triple (verde con fix, rojo con `ddof=1`, verde restaurado),
+  golden regenerado una sola vez.
+
+**Commits.** `4d1735b`, `9faa8c6`, `8d6076f`, `d446614`, `e3621cc`, `9d34eba`.
+
+**Pendiente.**
+
+- D5 (corpus desincronizado): 00_ARRANQUE decia 2340 tests (real 2369
+  tras esta sesion), `01_METODO` 2297, `02_ARQUITECTURA` "10 contratos"
+  (real 9). Sesion documental completa.
+- D6 (`datetime.now()` en header del reporte). Viola `00_ARRANQUE §2`.
+- D7 (volumen Yahoo no consolidado). WONT FIX razonado, documentar en
+  `02_ARQUITECTURA §11`.
+- BOM en 7 workflows. Cosmetico. Detectado durante D4.
+- `_write_ingest_trace` ensucia manifests productivos incluso en rama
+  `[SKIP]`. `Path.write_text` sin newline final en manifests.
+- `concurrency.group` desalineado: `update_index_holdings` y
+  `update_european_holdings` escriben ambos `data/index_holdings.csv`
+  con grupos distintos. Riesgo de conflicto de rebase si coinciden.
+- Residuos en `etf_holdings.csv` (ticker `-` y `XASU6` con peso negativo).
+- Duplicacion de titulo en `05_BITACORA.md:91` (Integridad parquets).
+- `test_sector_regime_dispersion.py` cuenta 5, pero el delta total
+  de tests entre D4 y cierre es +5; D2 tambien sumo +5. Cuadra
+  2344 -> 2348 (D4) -> 2359 (D3) -> 2364 (D2) -> 2369 (D1).
+
+**Proximo paso sugerido.** Cron trimestral 1-oct-2026 (04:47, 06:17, 07:17
+CEST): verificar con el runbook. D5 (corpus) o D6 (datetime.now) para
+sesion siguiente.
+
+---
+
 ### 2026-09-30 (madrugada) — Baseline IAE vs par vigente: aclaracion
 
 **Objetivo.** Investigar la diferencia entre el NIPC del run manual de
