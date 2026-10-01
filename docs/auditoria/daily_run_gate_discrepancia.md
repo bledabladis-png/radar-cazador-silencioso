@@ -272,23 +272,35 @@ completo, en secuencia, sobre la misma `target_session`.
 
 ## 8. IMPACTO OPERATIVO
 
-- **Coste:** ~20 min por slot, 5 slots/dia -> ~100 min/dia de runner.
-  Si los 4-5 disparan, ~80-100 min. Plan gratuito de GitHub Actions:
-  2000 min/mes. Uso mensual bruto ~3000 min si todos los slots
-  corren todos los dias. Riesgo de agotar la cuota.
+**Nota sobre cuota de minutos:** el repo es publico. En GitHub Actions,
+repos publicos tienen minutos de runner ilimitados y gratuitos. El
+limite de 2000 min/mes aplica solo a repos privados. Por tanto el
+argumento de coste NO aplica en este repo.
+
+Quedan los siguientes impactos, que si son reales:
+
 - **Ruido en el repo:** cada run `chore(daily)` commitea outputs con
-  variacion de floats.
+  variacion de floats. Ejemplo 2026-10-01: `etf_primary_flow.csv`
+  +/- 12 lineas de ruido de precision. Multiplicado por 4-5 slots/dia.
+  Contamina la historia de git con cambios no semanticos.
 - **Presion sobre proveedores externos:** Yahoo, SSGA, BlackRock,
   CFTC, Invesco, Amundi, Xetra, BME, Euronext consultados 5 veces
-  al dia en lugar de 1.
-- **Timeouts:** `run-system` tiene `timeout-minutes: 90`. Si la
-  latencia de GitHub retrasa slots y coinciden en vuelo, la cola
-  (`concurrency.group: daily-run`, `queue: max`) los serializa, pero
-  la ventana diaria se estrecha.
+  al dia en lugar de 1. Riesgo teorico de rate limiting, no observado
+  hasta hoy.
+- **Serializacion:** `run-system` tiene `timeout-minutes: 90`. El
+  `concurrency.group: daily-run` con `queue: max` serializa los
+  slots. Si la latencia de GitHub retrasa varios slots y coinciden
+  en vuelo, la ventana diaria de procesamiento se estrecha. En el
+  peor caso, el slot 5 puede arrancar de madrugada del dia siguiente.
+- **Consumo de recursos del sistema:** 5 pipelines completos diarios
+  multiplican por 5 el desgaste sobre la base de datos de outputs
+  (`outputs/history/*.csv`) via append_dedup, con riesgo de
+  duplicacion si algun writer no es idempotente.
 
-Riesgo actual: no hay evidencia de dano todavia. La cuota no se ha
-agotado. Los proveedores no han bloqueado. El unico dano observable
-es el ruido de commits del bot.
+Riesgo actual: no hay evidencia de dano material (cuota, rate limit,
+corrupcion) todavia. El unico dano observable es el ruido de commits
+del bot. La correccion del bug es una mejora de higiene y de
+contratos, no un incendio.
 
 ---
 
