@@ -62,6 +62,7 @@ jobs:
         id: gate
         env:
           PYTHONIOENCODING: utf-8
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: python scripts/pipeline_gate.py --slot "${{ github.event.schedule }}"
 
   run-system:
