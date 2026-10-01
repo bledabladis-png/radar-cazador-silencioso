@@ -42,15 +42,20 @@ def _zscore_last_in_window(series):
     ya recortada. El nombre anterior (robust_zscore) sugeria equivalencia con
     el canonico; no la hay. Ver AUDITORIA_CONSOLIDADA_2026-09-26.md F5.6-15.
     """
-    median = series.median()
-    # 2026-10-02: np.nanmedian + guard pd.isna(mad). Con NaN en la ventana
+    # 2026-10-02: filtrar NaN antes de calcular. Con NaN en la ventana
     # (huecos de PCR, festivos), np.median propaga NaN silenciosamente a
-    # todo el z-score. Mismo patron que el bug arreglado en index_leaders
-    # (2f956ed, robust_intra).
-    mad = np.nanmedian(np.abs(series - median))
-    if pd.isna(mad) or mad == 0:
+    # todo el z-score. Mismo patron que el bug de index_leaders (2f956ed).
+    valid = series.dropna()
+    if len(valid) < 2:
         return 0.0
-    return (series.iloc[-1] - median) / (1.4826 * mad)
+    median = valid.median()
+    mad = np.median(np.abs(valid - median))
+    if mad == 0:
+        return 0.0
+    last = series.iloc[-1]
+    if pd.isna(last):
+        return 0.0
+    return (last - median) / (1.4826 * mad)
 
 
 
