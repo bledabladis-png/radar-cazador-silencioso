@@ -79,6 +79,12 @@ ERR_B1_SCHEMA_ERROR = "B1_SCHEMA_ERROR"
 
 # --- Helpers ---
 
+def _vid_norm(v):
+    """Normaliza version_id quitando guiones. Formatos coexistentes:
+    20260922_01 y 2026-10-01_01 -> 2026092201 y 2026100101."""
+    return str(v).replace("-", "")
+
+
 def _to_date(v):
     if v is None:
         return None
@@ -372,8 +378,10 @@ def validate_membership(membership_df, assignments_df, manifest,
 
         # predecessor chain
         if pred:
+            vid_n = _vid_norm(vid)
             prior_versions = [
-                v for v in pred_by_key.get(k, {}).keys() if v < vid
+                v for v in pred_by_key.get(k, {}).keys()
+                if _vid_norm(v) < vid_n
             ]
             if not prior_versions:
                 errors[err_key] = ERR_PREDECESSOR_ROW_UID_BROKEN_CHAIN

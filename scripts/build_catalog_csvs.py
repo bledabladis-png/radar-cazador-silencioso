@@ -250,6 +250,98 @@ def merge_assignments(asg_prev, snap, alta_date, new_date_prefix):
     return out
 
 
+# --- Backfill de versiones historicas faltantes ---
+
+def backfill_missing_versions(mem_prev, asg):
+    """Anade a membership las versiones del manifest que falten.
+
+    Itera snapshots por valid_from ASC. Para cada version:
+      - Si ya esta en mem_prev: solo actualiza prev_uid_by_key.
+      - Si falta: genera filas con predecessor = UID de la version
+        inmediatamente anterior procesada (o vacio si es la primera).
+
+    prev_uid_by_key se pobla SOLO con versiones ya procesadas, nunca
+    con versiones futuras.
+    """
+    manifest = load_manifest()
+    snaps = sorted(manifest.get("snapshots", []), key=lambda s: s["valid_from"])
+    existing_vids = set(mem_prev["version_id"].astype(str)) if len(mem_prev) > 0 else set()
+
+    # figi -> key y ticker -> key para alinear con assignments
+    figi_to_key = {}
+    ticker_to_key = {}
+    for _, r in asg.iterrows():
+        f = str(r.get("share_class_figi", "")).strip()
+        if f:
+            figi_to_key[f] = str(r["catalog_key"]).strip()
+        t = str(r.get("radar_ticker", "")).strip()
+        if t:
+            ticker_to_key[t] = str(r["catalog_key"]).strip()
+
+    # UIDs por version y key, solo de mem_prev
+    mem_by_version = {}
+    if len(mem_prev) > 0:
+        for _, r in mem_prev.iterrows():
+            vid = str(r["version_id"]).strip()
+            mem_by_version.setdefault(vid, []).append(r)
+
+    prev_uid_by_key = {}
+    added_rows = []
+    added_vids = set()
+
+    for s in snaps:
+        vid = s["version_id"]
+
+        if vid in existing_vids:
+            # Actualizar prev_uid_by_key con los UIDs de esta version
+            for r in mem_by_version.get(vid, []):
+                k = str(r["catalog_key"]).strip()
+                prev_uid_by_key[k] = str(r["snapshot_row_uid"]).strip()
+            continue
+
+        # Version faltante: generar filas
+        snap = load_snapshot(ROOT / "data" / "mappings" / s["csv_path"])
+        cols = list(snap.columns)
+        new_uid_by_key = {}
+        for _, row in snap.iterrows():
+            ticker = str(row["radar_ticker"]).strip()
+            figi = str(row["share_class_figi"]).strip()
+            key = figi_to_key.get(figi) or ticker_to_key.get(ticker)
+            if key is None:
+                continue
+            uid = compute_snapshot_row_uid(row, cols)
+            prev_uid = prev_uid_by_key.get(key)
+            if prev_uid is None:
+                pred = ""
+                just = "initial migration"
+            elif prev_uid == uid:
+                pred = ""
+                just = "snapshot content unchanged"
+            else:
+                pred = prev_uid
+                just = "snapshot content changed"
+            added_rows.append({
+                "version_id": vid,
+                "catalog_key": key,
+                "radar_ticker": ticker,
+                "snapshot_row_uid": uid,
+                "predecessor_row_uid": pred,
+                "justification": just,
+            })
+            new_uid_by_key[key] = uid
+        prev_uid_by_key.update(new_uid_by_key)
+        added_vids.add(vid)
+
+    if not added_rows:
+        return mem_prev
+    new_df = pd.DataFrame(added_rows, columns=list(MEMBERSHIP_COLUMNS))
+    # Ordenar todo por version_id normalizado (sin guiones) para que el
+    # CSV quede cronologico ascendente.
+    out = pd.concat([new_df, mem_prev], ignore_index=True)
+    out = out.assign(_vk=out["version_id"].str.replace("-", "", regex=False))
+    out = out.sort_values(["_vk", "catalog_key"]).drop(columns=["_vk"]).reset_index(drop=True)
+    return out
+
 # --- Membership acumulativo ---
 
 def build_membership_for_version(snap, asg, version_id, mem_prev):
@@ -258,10 +350,14 @@ def build_membership_for_version(snap, asg, version_id, mem_prev):
         return pd.DataFrame(columns=list(MEMBERSHIP_COLUMNS))
 
     figi_to_key = {}
+    ticker_to_key = {}
     for _, r in asg.iterrows():
         f = str(r.get("share_class_figi", "")).strip()
         if f:
             figi_to_key[f] = str(r["catalog_key"]).strip()
+        t = str(r.get("radar_ticker", "")).strip()
+        if t:
+            ticker_to_key[t] = str(r["catalog_key"]).strip()
 
     prev_uid_by_key = {}
     prev_vid = _previous_snapshot_version_id(version_id)
@@ -277,6 +373,8 @@ def build_membership_for_version(snap, asg, version_id, mem_prev):
         ticker = str(row["radar_ticker"]).strip()
         figi = str(row["share_class_figi"]).strip()
         key = figi_to_key.get(figi)
+        if key is None:
+            key = ticker_to_key.get(ticker)
         if key is None:
             raise RuntimeError("ticker %s sin catalog_key en assignments" % ticker)
         if key in seen_keys:
@@ -329,7 +427,7 @@ def main():
         mem_migrated = False
         print("membership previo: vacio")
 
-    # Assignments.
+    # Assignments (necesario antes del backfill: resuelve figi->key).
     if ASSIGNMENTS_PATH.exists():
         asg_prev = pd.read_csv(ASSIGNMENTS_PATH, dtype=str, keep_default_na=False)
         if "share_class_figi" not in asg_prev.columns:
@@ -345,6 +443,14 @@ def main():
     n_new = len(asg_new) - len(asg_prev)
     _write_csv(asg_new, ASSIGNMENTS_PATH)
     print("OK assignments: %d filas (+%d)" % (len(asg_new), n_new))
+
+    # Backfill de versiones historicas faltantes (idempotente).
+    mem_before_bf = len(mem_prev)
+    mem_prev = backfill_missing_versions(mem_prev, asg_new)
+    n_bf = len(mem_prev) - mem_before_bf
+    if n_bf > 0:
+        mem_migrated = True
+        print("[backfill] membership: +%d filas de versiones historicas" % n_bf)
 
     # Membership: acumular la version vigente si no esta.
     mem_v = build_membership_for_version(snap, asg_new, version_id, mem_prev)

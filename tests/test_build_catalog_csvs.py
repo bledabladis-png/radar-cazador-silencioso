@@ -316,3 +316,36 @@ def test_membership_version_ya_presente_no_repite():
     }], columns=list(gen.MEMBERSHIP_COLUMNS))
     out = gen.build_membership_for_version(snap, asg, "20260201_01", mem0)
     assert len(out) == 0
+
+
+# --- Validator sobre datos reales ---
+
+def test_validate_membership_sobre_datos_reales():
+    """validate_membership debe dar 0 errores sobre el estado actual."""
+    import json
+    from src.institutional_accumulation.identity import catalog_key as ck
+
+    mp = ROOT / "data" / "mappings"
+    mem = ck.load_membership(mp / "catalog_membership.csv")
+    asg = ck.load_assignments(mp / "catalog_assignments.csv")
+    man = json.loads((mp / "catalog_manifest.json").read_text(encoding="utf-8"))
+
+    def loader(vid):
+        for s in man["snapshots"]:
+            if s["version_id"] == vid:
+                return pd.read_csv(mp / s["csv_path"], dtype=str, keep_default_na=False)
+        return None
+
+    errors = ck.validate_membership(mem, asg, man, snapshot_loader=loader)
+    assert errors == {}, "errores inesperados: " + str(errors)
+
+
+def test_membership_versiones_completas():
+    """Cada version_id del manifest debe estar en membership."""
+    import json
+    mp = ROOT / "data" / "mappings"
+    mem = pd.read_csv(mp / "catalog_membership.csv", dtype=str, keep_default_na=False)
+    man = json.loads((mp / "catalog_manifest.json").read_text(encoding="utf-8"))
+    vids_mem = set(mem["version_id"].astype(str))
+    vids_man = set(s["version_id"] for s in man["snapshots"])
+    assert vids_man.issubset(vids_mem), "faltan: " + str(vids_man - vids_mem)

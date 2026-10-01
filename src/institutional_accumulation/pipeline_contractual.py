@@ -1,4 +1,4 @@
-﻿"""Pipeline contractual IAE - cadena §10.1 -> §10.7.
+"""Pipeline contractual IAE - cadena §10.1 -> §10.7.
 
 Ejecuta la cadena contractual completa:
 
@@ -152,7 +152,14 @@ def run_contractual_nipc(
     # 6. Universo catalogo + adapter
     mem = pd.read_csv(mp / "catalog_membership.csv", dtype=str)
     asg = pd.read_csv(mp / "catalog_assignments.csv", dtype=str)
-    version_id = str(mem["version_id"].iloc[0])
+    # version_id vigente: la del snapshot con valid_to=null.
+    import json as _json
+    _man = _json.loads((mp / "catalog_manifest.json").read_text(encoding="utf-8"))
+    _live = [s for s in _man["snapshots"] if s.get("valid_to") is None]
+    if not _live:
+        raise RuntimeError("manifest sin snapshot vigente (valid_to=null)")
+    _live.sort(key=lambda s: s["valid_from"], reverse=True)
+    version_id = str(_live[0]["version_id"])
     u_full = build_target(cat, mem, asg, version_id=version_id,
                           period_end=iso_curr,
                           catalog_version_id="cat", catalog_sha256="a" * 64)
