@@ -241,3 +241,16 @@ radar_20260921_0239,radar_entity_0239,WMT,BBG001S5XH92,20260921,,radar_target_ca
 radar_20260921_0240,radar_entity_0240,WY,BBG001S5XL11,20260921,,radar_target_catalog,initial migration from snapshot
 radar_20260921_0241,radar_entity_0241,XEL,BBG001S7F0X8,20260921,,radar_target_catalog,initial migration from snapshot
 radar_20260921_0242,radar_entity_0242,XOM,BBG023CY9NL0,20260921,,radar_target_catalog,initial migration from snapshot
+radar_20261001_0001,radar_entity_0243,ANET,BBG001T51KQ0,20261001,,radar_target_catalog,snapshot expansion 20261001
+radar_20261001_0002,radar_entity_0244,EL,BBG001S8L5H6,20261001,,radar_target_catalog,snapshot expansion 20261001
+radar_20261001_0003,radar_entity_0245,EMR,BBG001S5QVT7,20261001,,radar_target_catalog,snapshot expansion 20261001
+radar_20261001_0004,radar_entity_0246,GRMN,BBG001SG0H12,20261001,,radar_target_catalog,snapshot expansion 20261001
+radar_20261001_0005,radar_entity_0247,HON,BBG001S5X1N1,20261001,,radar_target_catalog,snapshot expansion 20261001
+radar_20261001_0006,radar_entity_0248,HOOD,BBG008NMBXP6,20261001,,radar_target_catalog,snapshot expansion 20261001
+radar_20261001_0007,radar_entity_0249,HST,BBG001S5RY83,20261001,,radar_target_catalog,snapshot expansion 20261001
+radar_20261001_0008,radar_entity_0250,MRVL,BBG00ZXBJ162,20261001,,radar_target_catalog,snapshot expansion 20261001
+radar_20261001_0009,radar_entity_0251,PPL,BBG001S5VC31,20261001,,radar_target_catalog,snapshot expansion 20261001
+radar_20261001_0010,radar_entity_0252,RDDT,BBG015RGX648,20261001,,radar_target_catalog,snapshot expansion 20261001
+radar_20261001_0011,radar_entity_0253,TGTX,BBG001S8NH06,20261001,,radar_target_catalog,snapshot expansion 20261001
+radar_20261001_0012,radar_entity_0254,TXG,BBG007WX14Y9,20261001,,radar_target_catalog,snapshot expansion 20261001
+radar_20261001_0013,radar_entity_0255,USB,BBG001S6T8C1,20261001,,radar_target_catalog,snapshot expansion 20261001

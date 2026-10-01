@@ -120,8 +120,11 @@ def test_predecessor_coherente_con_uid():
     """
     df = pd.read_csv(MEMBER, dtype=str, keep_default_na=False)
     uids_in_membership = set(df["snapshot_row_uid"].astype(str))
+    # version_id mezcla 2 formatos (20260922_01 y 2026-10-01_01).
+    # Normalizar quitando guiones antes de ordenar.
+    df = df.assign(_vk=df["version_id"].str.replace("-", "", regex=False))
     for key, g in df.groupby("catalog_key"):
-        g = g.sort_values("version_id").reset_index(drop=True)
+        g = g.sort_values("_vk").reset_index(drop=True)
         prev_uid = None
         for i, row in g.iterrows():
             pred = str(row["predecessor_row_uid"]).strip()

@@ -189,6 +189,17 @@ def _next_suffix_for_date(existing_keys, date_prefix):
     return max_n + 1
 
 
+def _next_entity_n(existing_entity_ids):
+    """Contador GLOBAL monotono para assigned_entity_id (no por fecha)."""
+    pat = re.compile(r"^radar_entity_(\d{4})$")
+    max_n = 0
+    for e in existing_entity_ids:
+        m = pat.match(str(e))
+        if m:
+            max_n = max(max_n, int(m.group(1)))
+    return max_n + 1
+
+
 def merge_assignments(asg_prev, snap, alta_date, new_date_prefix):
     """Reconciliacion por share_class_figi. Devuelve el DataFrame completo."""
     by_figi = {}
@@ -199,7 +210,9 @@ def merge_assignments(asg_prev, snap, alta_date, new_date_prefix):
 
     snap_sorted = snap.sort_values("radar_ticker").reset_index(drop=True)
     existing_keys = list(asg_prev["catalog_key"]) if len(asg_prev) > 0 else []
+    existing_ent = list(asg_prev["assigned_entity_id"]) if len(asg_prev) > 0 else []
     next_n = _next_suffix_for_date(existing_keys, new_date_prefix)
+    next_e = _next_entity_n(existing_ent)
 
     updates = {}
     new_rows = []
@@ -212,9 +225,10 @@ def merge_assignments(asg_prev, snap, alta_date, new_date_prefix):
                 updates[k] = ticker
         else:
             suffix = str(next_n).zfill(4)
+            entity_suffix = str(next_e).zfill(4)
             new_rows.append({
                 "catalog_key": CATALOG_KEY_PREFIX + "_" + new_date_prefix + "_" + suffix,
-                "assigned_entity_id": ENTITY_ID_PREFIX + "_" + suffix,
+                "assigned_entity_id": ENTITY_ID_PREFIX + "_" + entity_suffix,
                 "radar_ticker": ticker,
                 "share_class_figi": figi,
                 "valid_from": alta_date,
@@ -223,6 +237,7 @@ def merge_assignments(asg_prev, snap, alta_date, new_date_prefix):
                 "reason": "snapshot expansion " + alta_date,
             })
             next_n += 1
+            next_e += 1
 
     out = asg_prev.copy()
     for k, t in updates.items():
