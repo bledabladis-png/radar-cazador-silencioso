@@ -301,7 +301,7 @@ date,source,last_date,age_calendar_days,frequency,freshness,n_total,n_valid,cove
 2026-09-30,BME,2026-09-28,2.0,daily,CURRENT,19.0,19.0,1.0,BME (19/19 OK)
 2026-10-01,Yahoo Finance,2026-09-30,1.0,daily,CURRENT,,,,Precios y métricas sectoriales
 2026-10-01,SSGA ETF Flow,2026-09-29,2.0,daily,CURRENT,12.0,12.0,1.0,Flujo primario
-2026-10-01,CBOE PCR,2026-09-29,2.0,daily,CURRENT,46.0,46.0,1.0,Put/Call ratio
+2026-10-01,CBOE PCR,2026-09-30,1.0,daily,CURRENT,47.0,47.0,1.0,Put/Call ratio
 2026-10-01,FINRA Dark Pool,2026-09-07,24.0,finra,CURRENT,,,,Retraso regulatorio 2-4 semanas
 2026-10-01,CFTC Position Flow,2026-09-22,9.0,cftc,CURRENT,,,,Frescura 30 días
 2026-10-01,SEC N-PORT,2026-03-31,184.0,sec,STALE,,,,Trimestral

@@ -2,21 +2,21 @@
   "schema_version": 1,
   "artifact": {
     "path": "data/stock_prices.parquet",
-    "sha256": "f6b22a297544fa1ba50d23a373eaee41f14327973b8b9846efcd82fcd663e936",
-    "bytes": 15669359,
-    "written_at": "2026-10-01T01:00:33.217940"
+    "sha256": "44fecf905b69355790b9b70a006bc18962fcaa9472b3b0537fdc6ed11e236178",
+    "bytes": 14725365,
+    "written_at": "2026-10-01T02:19:35.823508"
   },
   "producer": {
     "module": "src.utils",
     "function": "write_artifact_with_manifest",
-    "run_id": "20261001_005755",
+    "run_id": "20261001_041212",
     "source": "yahoo_european_cascade"
   },
   "content": {
-    "rows": 1296,
+    "rows": 1289,
     "cols": 1565,
     "n_tickers": 313,
-    "date_min": "2021-09-27",
+    "date_min": "2021-09-30",
     "date_max": "2026-09-30"
   },
   "temporal": {
@@ -27,13 +27,13 @@
     "expected_session": "2026-09-30",
     "last_date_is_expected_session": true,
     "pct_dup_last": 0.0,
-    "close_nan_last": 20,
+    "close_nan_last": 0,
     "n_tickers_expected_last": 313,
-    "n_tickers_with_close_last": 293,
-    "n_tickers_missing_close_last": 20,
-    "coverage_pct_last": 0.936102,
-    "last_row_is_partial": true,
-    "status": "VALID_WITH_MISSING",
+    "n_tickers_with_close_last": 313,
+    "n_tickers_missing_close_last": 0,
+    "coverage_pct_last": 1.0,
+    "last_row_is_partial": false,
+    "status": "VALID",
     "by_market": {
       "BME": {
         "n": 19,
@@ -50,8 +50,8 @@
       "LSE": {
         "n": 20,
         "last_closed_session": "2026-09-30",
-        "coverage_at_session": 0.0,
-        "status": "INVALID"
+        "coverage_at_session": 1.0,
+        "status": "VALID"
       },
       "US_EQUITY": {
         "n": 242,

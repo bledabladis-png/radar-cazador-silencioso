@@ -1,16 +1,15 @@
 {
   "lse_expected_session": "2026-09-30",
-  "reason": "sin observacion para sesion LSE esperada",
-  "run_id": "20261001_005755",
+  "reason": null,
+  "run_id": "20261001_041212",
   "scraper_available": true,
-  "scraper_used": false,
-  "source_commit": null,
+  "scraper_used": true,
+  "source_commit": "71d8f02d70f62da4b5e27df3fde9c8edc57e7829",
   "source_ref": "main",
   "source_repo": "bledabladis-png/lse-close-scraper",
-  "status": "NO_COVERAGE",
+  "status": "OK",
   "target_session": "2026-09-30",
-  "tickers_from_scraper": [],
-  "tickers_from_yahoo": [
+  "tickers_from_scraper": [
     "AAL.L",
     "AZN.L",
     "BA.L",
@@ -32,26 +31,6 @@
     "STAN.L",
     "ULVR.L"
   ],
-  "tickers_missing": [
-    "AAL.L",
-    "AZN.L",
-    "BA.L",
-    "BARC.L",
-    "BATS.L",
-    "BP.L",
-    "DGE.L",
-    "GLEN.L",
-    "GSK.L",
-    "HSBA.L",
-    "LLOY.L",
-    "LSEG.L",
-    "NG.L",
-    "NWG.L",
-    "REL.L",
-    "RIO.L",
-    "RR.L",
-    "SHEL.L",
-    "STAN.L",
-    "ULVR.L"
-  ]
+  "tickers_from_yahoo": [],
+  "tickers_missing": []
 }
