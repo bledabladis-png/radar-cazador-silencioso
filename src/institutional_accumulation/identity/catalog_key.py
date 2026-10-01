@@ -52,11 +52,11 @@ B1_REQUIRED_COLUMNS = frozenset({
 
 # --- Columnas de los CSV B1 ---
 ASSIGNMENT_COLUMNS = (
-    "catalog_key", "assigned_entity_id",
+    "catalog_key", "assigned_entity_id", "radar_ticker", "share_class_figi",
     "valid_from", "valid_to", "source", "reason",
 )
 MEMBERSHIP_COLUMNS = (
-    "version_id", "catalog_key", "snapshot_row_uid",
+    "version_id", "catalog_key", "radar_ticker", "snapshot_row_uid",
     "predecessor_row_uid", "justification",
 )
 ATTEMPTED_COLUMNS = (

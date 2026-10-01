@@ -132,3 +132,23 @@ def test_A1i_historico_ok():
     ])
     errors = ck.validate_assignment(a, att)
     assert errors == {}
+
+
+# --- Schema v2 (2026-10-01): columnas extendidas ---
+
+def test_assignment_columns_schema_v2():
+    assert "radar_ticker" in ck.ASSIGNMENT_COLUMNS
+    assert "share_class_figi" in ck.ASSIGNMENT_COLUMNS
+    # orden exacto
+    assert ck.ASSIGNMENT_COLUMNS == (
+        "catalog_key", "assigned_entity_id", "radar_ticker",
+        "share_class_figi", "valid_from", "valid_to", "source", "reason",
+    )
+
+
+def test_membership_columns_schema_v2():
+    assert "radar_ticker" in ck.MEMBERSHIP_COLUMNS
+    assert ck.MEMBERSHIP_COLUMNS == (
+        "version_id", "catalog_key", "radar_ticker", "snapshot_row_uid",
+        "predecessor_row_uid", "justification",
+    )
