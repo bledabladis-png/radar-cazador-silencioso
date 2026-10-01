@@ -2,7 +2,7 @@
 
 Hechos verificables del sistema. Generado por script.
 
-**Generado en:** 2026-10-01 15:56:18 UTC
+**Generado en:** 2026-10-01 18:54:26 UTC
 **Snapshot tomado sobre:** commit HEAD de la fecha indicada, al momento de generar
 **NO editar a mano.** Regenerar con:
 
@@ -17,17 +17,20 @@ HEAD, tests e integridad del codigo.
 
 ## 1. Git
 
-- **HEAD:** `31c298b`
-- **HEAD completo:** `31c298bf0a5f632798bdc55a96579c72702f8cbb`
-- **Fecha commit HEAD:** 2026-10-01 17:53:57 +0200
+- **HEAD:** `f5e817f`
+- **HEAD completo:** `f5e817f3248358438c090a4f28c1d2bee21d4620`
+- **Fecha commit HEAD:** 2026-10-01 20:46:18 +0200
 - **Ahead:** 0
 - **Behind:** 0
-- **origin/main:** `31c298b`
+- **origin/main:** `f5e817f`
 
 ## 2. Tests (pytest real)
 
-- **Resumen:** 2997 passed, 2 skipped in 79.20s (0:01:19)
-- **Exit code:** 0
+- **Resumen:** 1 failed, 3012 passed, 2 skipped in 86.49s (0:01:26)
+- **Exit code:** 1
+
+**Tests fallidos (nombre completo):**
+- `FAILED tests/test_build_catalog_csvs.py::test_idempotencia - IndexError: sing...`
 
 **Tests skip:**
 - `SKIPPED [1] tests\test_freshness.py:376: requiere --run-network`
@@ -83,9 +86,9 @@ HEAD, tests e integridad del codigo.
 ## 5. Datos IAE
 
 - `data/mappings/radar_target_catalog.csv`
-  - sha256: `4a78e2695aca64ec5601c246d176199ce98e9e10e73e53e4b8f11385fe00ef38`
-  - bytes: 29986
-  - lineas: 243
+  - sha256: `51ce2b217cedd14b32b7f6e64d29d18179f174c01ac68e2b61aa4291d4d2e2c2`
+  - bytes: 31616
+  - lineas: 256
 - `data/mappings/cusip_radar_crosswalk.csv`
   - sha256: `c344bee55fa5149853ed029e59ee2acbccd94d39990f1b493048ea0cb06a60cc`
   - bytes: 22491
