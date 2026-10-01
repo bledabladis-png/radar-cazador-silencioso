@@ -171,7 +171,7 @@ jobs:
         if: success()
         env:
           OPENFIGI_API_KEY: ${{ secrets.OPENFIGI_API_KEY }}
-        run: python scripts/regenerate_radar_catalog.py
+        run: echo "PAUSED 2026-10-01 catalog_pit_snapshot_growth - ver docs/auditoria/iae/catalog_pit_snapshot_growth_expediente.md"
 
       - name: QQQ SEC vs NPORT-P cross validation
         run: python validation/qqq_sec_nport_cross_validation.py
