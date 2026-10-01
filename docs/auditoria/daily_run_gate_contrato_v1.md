@@ -4,7 +4,7 @@
 **Expediente:** `docs/auditoria/daily_run_gate_discrepancia.md`
 **Dictamen externo:** `docs/auditoria/daily_run_gate_dictamen.md` (recomendacion E, invariantes I1-I8)
 **Fecha:** 2026-10-01
-**Estado:** PROPUESTO. Sin aprobacion no se implementa.
+**Estado:** APROBADO 2026-10-01. Implementacion autorizada.
 
 ---
 
@@ -352,13 +352,20 @@ el auditor. No se implementa una version degradada silenciosamente.
 
 ## 11. FIRMA
 
-Este contrato se considera aprobado cuando:
+**APROBADO 2026-10-01.**
 
-1. Se commitea en `docs/auditoria/daily_run_gate_contrato_v1.md` con
-   la mencion "APROBADO".
-2. Se ha verificado que las 8 invariantes I1-I8 son consistentes con
-   el dictamen externo.
-3. Se anade entrada en `05_BITACORA.md` con la aprobacion.
+Fundamento: dictamen externo de la misma fecha
+(`docs/auditoria/daily_run_gate_dictamen.md`) recomienda (E) como
+unica arquitectura aprobada. El contrato implementa (E) sin
+desviaciones. Las 8 invariantes I1-I8 son transcripcion literal de
+la seccion 15 del dictamen.
 
-Hasta entonces, el contrato esta PROPUESTO y `pipeline_gate.py` NO se
-toca.
+Criterios cumplidos:
+
+1. Commit con mencion "APROBADO" (este).
+2. I1-I8 verificadas contra dictamen: identicas.
+3. Entrada en `05_BITACORA.md`: pendiente al cierre de la sesion de
+   implementacion (se anade en el mismo commit o en el de cierre).
+
+`pipeline_gate.py` y `daily_run.yml` se modifican en la sesion de
+implementacion inmediata.
