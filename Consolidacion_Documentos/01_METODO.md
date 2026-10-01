@@ -57,13 +57,13 @@
 Pega este bloque antes de cualquier commit:
 
     py -m compileall . -q
-    py -m pyflakes src scripts regimes indicators config data\providers validation
+    py -m pyflakes .
     py -m pytest tests/ validation/ -q --tb=short
 
 Esperado:
 - compileall OK
 - pyflakes LIMPIO (silencio total)
-- 2945 passed + 2 skipped + 0 failed (2026-09-30)
+- 2997 passed + 2 skipped + 0 failed (2026-10-01)
 
 Si algun test falla: NO commitear. Diagnosticar primero.
 
@@ -266,7 +266,7 @@ latente: si `ranking` queda vacio, IndexError. **Caso `qqq_returns`
 **Como detectar:** grep `\[0\]\[0\]|\.iloc\[-1\]|\.index\[-1\]` y
 comprobar si el consumidor asume no-vacio. **Fix correcto:** guard
 explicito o derivar por `resolve_effective_date` (R2).
-**Como aplicar:** al abrir un modulo nuevo, primer paso: `grep` de estos 10 patrones con regex. Los hits se convierten en hallazgos preliminares. Se verifican uno a uno. No se declaran sin evidencia directa.
+**Como aplicar:** al abrir un modulo nuevo, primer paso: `grep` de estos 13 patrones con regex. Los hits se convierten en hallazgos preliminares. Se verifican uno a uno. No se declaran sin evidencia directa.
 
 ---
 
@@ -342,7 +342,7 @@ Ademas:
 
 ## 11. CORPUS DOCUMENTAL
 
-El corpus consolidado vive en `Consolidacion_Documentos/` (6 ficheros + snapshot auto-generado). Reglas de actualizacion:
+El corpus consolidado vive en `Consolidacion_Documentos/` (8 ficheros + snapshot auto-generado). Reglas de actualizacion:
 
 **`00_ARRANQUE.md`:** se actualiza cuando cambia el estado del sistema (HEAD, tests, pendientes) o las reglas duras. Es el unico documento que se pega al arrancar — su tamano importa (<=10 KB).
 
@@ -354,7 +354,7 @@ El corpus consolidado vive en `Consolidacion_Documentos/` (6 ficheros + snapshot
 
 **`04_HISTORICO.md`:** se actualiza **por acumulacion**. Cada cierre de sesion anade una entrada tematica. No se poda.
 
-**`05_BITACORA.md`:** se actualiza al **cierre de cada sesion**. Formato definido en el propio fichero. Mantener solo las ultimas **5 sesiones**. La 6ª se elimina (o se resume en `04_HISTORICO.md`).
+**`05_BITACORA.md`:** se actualiza al **cierre de cada sesion**. Formato definido en el propio fichero. Mantener las ultimas **10 sesiones** mas todas las del dia en curso. La que exceda se elimina (o se resume en `04_HISTORICO.md`).
 
 **`ESTADO_SISTEMA.md`:** NO se edita a mano. Se regenera con `py scripts/generate_estado_sistema.py`.
 

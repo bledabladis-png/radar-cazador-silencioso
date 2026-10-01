@@ -75,7 +75,7 @@ Fuente autoritativa: `Consolidacion_Documentos/ESTADO_SISTEMA.md` (regenerado co
 
 Snapshot al cierre del ultimo commit:
 - HEAD: ver ESTADO_SISTEMA.md
-- Tests: 2945 passed + 2 skipped + 0 failed
+- Tests: 2997 passed + 2 skipped + 0 failed
 - Validation Gate: 10/10
 - Working tree: limpio
 - Corpus documental: v3 (Consolidacion_Documentos/00-07, 2026-09-30)
@@ -209,13 +209,13 @@ Pega este bloque al inicio de cada sesion:
     git status -sb
     py scripts\generate_estado_sistema.py
     py -m pytest tests/ -q --tb=line
-    py -m pyflakes src\ scripts\ ; py -m compileall . -q
+    py -m pyflakes . ; py -m compileall . -q
 
 Esperado:
 - HEAD = ver Consolidacion_Documentos/ESTADO_SISTEMA.md
 - ahead 0, behind 0
 - working tree limpio (o solo el propio ESTADO_SISTEMA regenerado)
-- 2945 passed + 2 skipped
+- 2997 passed + 2 skipped
 - pyflakes silencio, compileall OK
 
 ---
@@ -226,15 +226,16 @@ El corpus consolidado vive en `Consolidacion_Documentos/`:
 
 | Fichero | Bytes aprox | Rol |
 |---|---:|---|
-| `00_ARRANQUE.md` | 9 KB | Este documento. Se pega al arrancar. |
-| `01_METODO.md` | 15 KB | Metodo de patch, auditoria, lecciones, patrones de bug. |
-| `02_ARQUITECTURA.md` | 22 KB | Mapa del sistema, contratos, decisiones vigentes. |
-| `03_IAE.md` | 18 KB | Subsistema IAE completo. |
-| `04_HISTORICO.md` | 17 KB | Cronologia de decisiones. |
-| `05_BITACORA.md` | 7 KB | Sesiones recientes (se poda). |
+| `00_ARRANQUE.md` | 12 KB | Este documento. Se pega al arrancar. |
+| `01_METODO.md` | 24 KB | Metodo de patch, auditoria, lecciones, patrones de bug. |
+| `02_ARQUITECTURA.md` | 28 KB | Mapa del sistema, contratos, decisiones vigentes. |
+| `03_IAE.md` | 21 KB | Subsistema IAE completo. |
+| `04_HISTORICO.md` | 40 KB | Cronologia de decisiones. |
+| `05_BITACORA.md` | 53 KB | Sesiones recientes (se poda). |
 | `06_IAE_P65_P66.md` | 11 KB | Contrato P65 + P66 (L3 cruzada). |
+| `07_RUNBOOK.md` | 7 KB | Procedimiento operativo de los crons. |
+| `08_AUDITORIA_SECTOR_REGIME.md` | 10 KB | Expediente auditoria + fixes sector_regime. |
 | `ESTADO_SISTEMA.md` | 5 KB | Snapshot auto-generado (no editar a mano). |
-| `07_RUNBOOK.md` | 8 KB | Procedimiento operativo de los crons. |
 
 | Doc | Contenido | Cuando consultarlo |
 |---|---|---|
@@ -246,6 +247,7 @@ El corpus consolidado vive en `Consolidacion_Documentos/`:
 | 05_BITACORA.md | Sesiones recientes | Al cerrar una sesion |
 | 06_IAE_P65_P66.md | Contrato P65 + P66 (L3 cruzada) | Al trabajar en P65/P66 |
 | 07_RUNBOOK.md | Procedimiento de los crons y contingencias | Al verificar un cron o diagnosticar un fallo de workflow |
+| 08_AUDITORIA_SECTOR_REGIME.md | Expediente auditoria + fixes sector_regime | Al tocar sector_regime o revisar H8/H1/R2 |
 
 ---
 
