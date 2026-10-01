@@ -44,6 +44,90 @@ Al cerrar una sesion nueva, se anade arriba (las mas recientes primero). Si hay 
 
 ## 3. SESIONES
 
+### 2026-10-01 (cierre) - Completion Receipt v1 + fix WLS NaN + deuda
+
+**Objetivo.** Cerrar el dia tras el incidente del cron trimestral
+(entrada anterior). Implementar el Completion Receipt (contrato
+aprobado, dictamen externo) y documentar la deuda abierta.
+
+**Hecho.**
+
+- **Diagnostico externo del gate.** Expediente completo en
+  `docs/auditoria/daily_run_gate_discrepancia.md`. Bug confirmado:
+  `_manifest_satisfies` exige sha256 del parquet (gitignored) -> en
+  CI la rama `CURRENT` es inalcanzable. Los 4 slots del 01-oct
+  ejecutaron pipeline completo por esto.
+
+- **Dictamen externo** (`docs/auditoria/daily_run_gate_dictamen.md`).
+  Veredicto: defecto de diseno. Recomienda (E): separar integridad
+  del artefacto (manifest <-> parquet <-> sha256, sin cambios) de
+  idempotencia del workflow (Completion Receipt inmutable en GitHub
+  Actions Artifacts). 8 invariantes I1-I8.
+
+- **Contrato v1** (`docs/auditoria/daily_run_gate_contrato_v1.md`).
+  Aprobado 2026-10-01. Implementacion autorizada.
+
+- **Implementacion (6 commits).**
+  - `e3c82fb`: `find_completion_receipt` en `pipeline_gate.py`;
+    `_manifest_satisfies` conservado como funcion independiente;
+    `scripts/write_completion_receipt.py`; 10 tests I1-I8.
+  - `e440fec`: diagnostico `wls/tickers/len` en el verifier de
+    lideres.
+  - `feee18d`: `RECEIPT_FILENAME` = basename del artifact
+    (`completion_receipt.json`, no `receipt.json`).
+  - `f5e817f`: `GH_TOKEN` en env del step `Run gate` (GitHub no
+    hereda `secrets.GITHUB_TOKEN` automaticamente).
+
+- **Fix WLS NaN (`2f956ed` + `e819952`).** Independiente del gate.
+  `compute_wls_for_index::robust_intra` usaba `np.median(np.abs(...))`
+  que NO ignora NaN. Con 1 ticker NaN (SPCX en QQQ), toda la
+  columna `rws_z/stab_z` se volvia NaN -> los 5 lideres del bloque
+  Nasdaq-100 con `wls=NaN` -> `verify_leader_selection` FAIL.
+  Fix: `np.nanmedian` + guard `pd.isna(mad)`. 4 tests de regresion.
+
+- **Fix gitignore (`1c0ab0c`).** `completion_receipt.json` y
+  `validation_gate_result.json` deben estar en `.gitignore` para que
+  el guard de untracked del step `Commit and push hist/state` no
+  aborte.
+
+- **Verificacion CI end-to-end.** Run `36904431677` (verde
+  completo): pipeline corre, sube artifact `completion-receipt-
+  2026-09-30` (462 bytes). Run `36909383320`: gate devuelve
+  `state=CURRENT`, `reason="completion receipt for 2026-09-30
+  (run 36904431677)"`, `run-system=skipped`. **Contrato v1
+  confirmado en produccion.**
+
+- **Corpus sincronizado.** `ecd3648` (00_ARRANQUE + 01_METODO),
+  `31c298b` (bitacora + historico atomicidad + poda a 12 entradas),
+  `e0553ec` (§2 vs §5), `215da23` (snapshot final).
+
+- **Limpieza pyflakes.** `912ee3d`: 8 warnings introducidos en la
+  sesion de madrugada + 2 del fix de alineacion.
+
+**Commits.** `1bead8a`, `27248d3`, `912ee3d`, `d0b0869`, `ecd3648`,
+`31c298b`, `e0553ec`, `6858533`, `03b4192`, `f098a2a`, `2cb77ba`,
+`36e013b`, `e3c82fb`, `e440fec`, `2f956ed`, `e819952`, `1c0ab0c`,
+`feee18d`, `f5e817f`, `215da23`.
+
+**Pendiente.**
+
+- **Test rojo `test_build_catalog_csvs::test_idempotencia`**
+  (preexistente, no de hoy). Aparece tras `snapshot_2026-10-01_01`
+  (255 tickers). `build_catalog_csvs.py:195` accede
+  `assign_ordered.iloc[i]` iterando `prev_ordered` (255) pero
+  `assignments` en algun momento es 242. Mismatch positional.
+  Merece sesion propia: ver `main()`, firmas de `build_assignments`
+  / `build_membership`, decidir join por `catalog_key` vs positional.
+- **Deudas latentes documentadas:** `stock_leader.py:59` y
+  `options.py:46` usan `np.median(np.abs(...))` en contextos donde
+  hoy no se manifiesta pero podria (ver `04_HISTORICO §3.3`).
+- C2 (920): bloqueado externo.
+- H5.3: cron nov 2026.
+
+**Proximo paso sugerido.** Sesion de `build_catalog_csvs` + tests
+de los 2 `np.median` latentes. Despues, `01_METODO` a 24 KB
+(umbral 20 KB): dividir.
+
 ### 2026-10-01 (tarde) - Incidente cron trimestral + fix sys.path + fix alineacion
 
 **Objetivo.** Verificar el primer schedule real de los 3 workflows trimestrales

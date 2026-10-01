@@ -197,7 +197,54 @@ YAML. Si sigue sin explicacion, workflow_dispatch manual.
 
 ---
 
-## 5. DEUDAS OBSERVADAS 2026-09-30
+## 5. COMPLETION RECEIPT (contrato v1, 2026-10-01)
+
+El gate del `daily_run` declara `CURRENT` cuando existe un
+`completion receipt` valido para la `target_session`. El receipt es
+un artifact inmutable en GitHub Actions, subido por el job
+`run-system` con `if: success()` tras `guard_coverage` y push.
+
+**Ficheros:**
+- `scripts/pipeline_gate.py::find_completion_receipt` (lee).
+- `scripts/write_completion_receipt.py` (escribe).
+- `docs/auditoria/daily_run_gate_contrato_v1.md` (contrato).
+- `docs/auditoria/daily_run_gate_dictamen.md` (dictamen externo).
+
+**Cuando verificar el receipt:**
+
+- Tras un `daily_run` verde, comprobar que el artifact existe:
+  FENCE
+  gh api "repos/bledabladis-png/radar-cazador-silencioso/actions/runs/<RUN_ID>/artifacts" --jq '.artifacts[] | [.name, .size_in_bytes, .created_at] | @tsv'
+  FENCE
+  Debe aparecer `completion-receipt-<target_session>`.
+- En el siguiente slot, el gate debe devolver `CURRENT`. Verificacion:
+  FENCE
+  gh run view <RUN_ID> --json jobs
+  FENCE
+  `run-system` debe aparecer con `conclusion=skipped`.
+
+**Sintomas tipicos y diagnostico:**
+
+- **Gate devuelve READY tras un pipeline verde**: el receipt no se
+  detecta. Causas observadas 2026-10-01:
+  - `RECEIPT_FILENAME` desalineado con el basename del artifact
+    (upload-artifact@v4 sube el basename).
+  - `GH_TOKEN` ausente en el env del step `Run gate`. Sin token,
+    `_download_receipt_json` sale antes de la llamada.
+- **`Commit and push hist/state` falla con "untracked files in
+  outputs/history or outputs/state"**: algun JSON nuevo en
+  `outputs/state/` no esta en `.gitignore` con exclusion explicita.
+- **Receipt expirado (90 dias)**: el gate cae al probe -> READY ->
+  rerun. Es fail-safe, no bug.
+
+**Invariantes (I1-I8 del contrato).** Si alguna falla, abrir frente
+con el dictamen como referencia. Los 12 tests en
+`tests/test_pipeline_gate_receipt.py` las cubren.
+
+---
+
+## 6. DEUDAS OBSERVADAS 2026-09-30
+
 
 Hallazgos del reconocimiento previo al cron del 1-oct. No abren frentes
 todavia. Se anotan para cuando se decida actuar.
