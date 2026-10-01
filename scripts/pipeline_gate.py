@@ -76,7 +76,11 @@ LAST_SLOT_CRON = "17 11 * * *"
 # --- Completion Receipt (contrato v1, 2026-10-01) ---
 RECEIPT_SCHEMA_VERSION = 1
 RECEIPT_ARTIFACT_PREFIX = "completion-receipt-"
-RECEIPT_FILENAME = "receipt.json"
+# upload-artifact@v4 sube el basename del fichero cuando el path
+# apunta a un fichero suelto. El yml sube
+# outputs/state/completion_receipt.json -> dentro del ZIP el
+# nombre es "completion_receipt.json".
+RECEIPT_FILENAME = "completion_receipt.json"
 RECEIPT_RETENTION_DAYS = 90
 DEFAULT_REPO = "bledabladis-png/radar-cazador-silencioso"
 GH_API_TIMEOUT = 15

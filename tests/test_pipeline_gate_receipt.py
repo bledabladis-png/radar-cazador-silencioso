@@ -269,3 +269,70 @@ def test_validate_receipt_schema_target_session_mismatch():
     r = _valid_receipt("2026-09-30")
     assert gate._validate_receipt_schema(r, "2026-09-29") is False
     assert gate._validate_receipt_schema(r, "2026-09-30") is True
+
+
+# ---------------- Regresion: nombre del fichero dentro del ZIP ----------------
+
+def test_receipt_filename_matches_upload_artifact_path():
+    """RECEIPT_FILENAME debe coincidir con el basename del path del yml.
+
+    Bug 2026-10-01: upload-artifact@v4 sube el basename del fichero
+    cuando el path apunta a un fichero suelto. El yml subia
+    outputs/state/completion_receipt.json -> dentro del ZIP el
+    nombre es "completion_receipt.json". El codigo buscaba
+    "receipt.json" -> ZIP leido pero nombre no encontrado -> None.
+    """
+    yml = (ROOT / ".github" / "workflows" / "daily_run.yml").read_text(
+        encoding="utf-8"
+    )
+    idx = yml.find("Upload completion receipt")
+    assert idx != -1, "step Upload completion receipt debe existir"
+    # Buscar la linea path: dentro del bloque del step
+    fragment = yml[idx:idx + 500]
+    import re
+    m = re.search(r"path:\s*(\S+)", fragment)
+    assert m is not None, "path: no encontrado en el step"
+    path_yml = m.group(1)
+    basename = path_yml.rstrip("/").split("/")[-1]
+    assert basename == gate.RECEIPT_FILENAME, (
+        "RECEIPT_FILENAME ({0}) debe coincidir con el basename del yml "
+        "({1}). upload-artifact@v4 sube el basename del fichero."
+        .format(gate.RECEIPT_FILENAME, basename)
+    )
+
+
+def test_download_receipt_json_encuentra_el_fichero_en_zip():
+    """_download_receipt_json debe leer completion_receipt.json del ZIP."""
+    import io as _io
+    import json as _json
+    import zipfile as _zip
+
+    # ZIP sintetico con el nombre exacto que sube el yml
+    payload = {"schema_version": 1, "status": "COMPLETED"}
+    buf = _io.BytesIO()
+    with _zip.ZipFile(buf, "w") as z:
+        z.writestr(gate.RECEIPT_FILENAME, _json.dumps(payload))
+    zip_bytes = buf.getvalue()
+
+    # Mock requests.get
+    class _R:
+        status_code = 200
+        content = zip_bytes
+
+    original = gate.requests.get
+    gate.requests.get = lambda *a, **k: _R()
+    try:
+        # Necesita token no vacio. Forzamos.
+        import os as _os
+        _os.environ["GH_TOKEN"] = "fake"
+        try:
+            result = gate._download_receipt_json(1)
+            assert result == payload, (
+                "El ZIP contiene {0!r} pero el codigo no lo leyo".format(
+                    gate.RECEIPT_FILENAME
+                )
+            )
+        finally:
+            del _os.environ["GH_TOKEN"]
+    finally:
+        gate.requests.get = original
