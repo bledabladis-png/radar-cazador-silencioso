@@ -10,11 +10,9 @@ con "All arrays must be of the same length".
 Evidencia en produccion: run 36885052188 (workflow_dispatch del
 2026-10-01) fallo con "2 ETFs fallidos (SPY, DIA)" por este motivo.
 """
-import sys
 from io import BytesIO
 
 import openpyxl
-import pytest
 
 from scripts import update_index_holdings as m
 

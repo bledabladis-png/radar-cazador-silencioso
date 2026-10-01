@@ -17,11 +17,9 @@ tres contratos:
   - BMEProvider._cache_is_fresh (idem)
 """
 from datetime import datetime
-from pathlib import Path
 from zoneinfo import ZoneInfo
 
 import pandas as pd
-import pytest
 
 
 def _make_ref(y, m, d, h=23, mi=33):

@@ -16,12 +16,10 @@ forzar descarga. Fail-closed: si no se puede determinar cobertura,
 descargar (mas caro pero seguro).
 """
 import pandas as pd
-import pytest
 
 
 def _make_df(n_tickers: int, n_valid: int, last_date: str = "2026-09-30"):
     """df MultiIndex (campo, ticker) con n_valid tickers con Close."""
-    import numpy as np
     idx = pd.date_range(end=last_date, periods=5, freq="B")
     cols = []
     for i in range(n_tickers):

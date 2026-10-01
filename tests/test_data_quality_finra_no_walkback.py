@@ -16,7 +16,6 @@ Verificado 2026-09-30:
 Fix: las fuentes con frecuencia semanal (FINRA) no pasan por
 _last_market_session.
 """
-from pathlib import Path
 
 import pandas as pd
 

@@ -17,8 +17,6 @@ la descarga falla.
 Verificado 2026-10-01: SSGA FEZ 29-sep en fuente, cache 28-sep.
 """
 import pandas as pd
-import pytest
-from pathlib import Path
 
 
 # --- SSGA ---
@@ -54,7 +52,7 @@ def test_ssga_descarga_siempre_aunque_cache_fresca(tmp_path, monkeypatch):
     monkeypatch.setattr(ssga, "_download_single", fake_download)
     monkeypatch.setattr(ssga, "HISTORY_PATH", tmp_path / "out.csv")
 
-    result = ssga.get_etf_primary_flow_data(force_download=False)
+    ssga.get_etf_primary_flow_data(force_download=False)
 
     # La descarga DEBE haber ocurrido
     assert download_calls == ["XLK"], (
