@@ -188,19 +188,19 @@ def get_state_street_holdings(etf, url):
             t_norm = normalize_ticker(ticker.strip().upper())
             if is_valid_holding_ticker(t_norm):
                 tickers.append(t_norm)
-            name = df_raw.iloc[i, name_col] if name_col is not None else ''
-            if not isinstance(name, str):
-                name = ''
-            names.append(name.strip())
-            if weight_col is not None:
-                w_raw = df_raw.iloc[i, weight_col]
-                try:
-                    w = float(str(w_raw).replace(',', '.'))
-                except (ValueError, TypeError):
-                    w = 0.0
-                weights.append(w)
-            else:
-                weights.append(0.0)
+                name = df_raw.iloc[i, name_col] if name_col is not None else ''
+                if not isinstance(name, str):
+                    name = ''
+                names.append(name.strip())
+                if weight_col is not None:
+                    w_raw = df_raw.iloc[i, weight_col]
+                    try:
+                        w = float(str(w_raw).replace(',', '.'))
+                    except (ValueError, TypeError):
+                        w = 0.0
+                    weights.append(w)
+                else:
+                    weights.append(0.0)
 
     if not tickers:
         raise Exception('No se encontraron tickers')
