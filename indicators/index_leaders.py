@@ -99,9 +99,15 @@ def compute_wls_for_index(df_metrics):
         return df_metrics
 
     def robust_intra(s):
+        # np.median NO ignora NaN (a diferencia de pd.Series.median).
+        # Si s tiene 1 NaN, np.abs(s - median) propaga NaN y np.median
+        # devuelve NaN -> toda la columna z se vuelve NaN.
+        # Bug detectado 2026-10-01: QQQ top20 incluyo SPCX con
+        # wyckoff_score NaN -> rws_z y stab_z NaN -> wls NaN para
+        # todo el bloque Nasdaq-100.
         median = s.median()
-        mad = np.median(np.abs(s - median))
-        if mad == 0:
+        mad = np.nanmedian(np.abs(s - median))
+        if pd.isna(mad) or mad == 0:
             return pd.Series(0.0, index=s.index)
         return (s - median) / (1.4826 * mad + 1e-9)
 
