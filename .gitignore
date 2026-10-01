@@ -32,6 +32,10 @@ outputs/*.png
 outputs/history/sector_correlation_matrix.csv
 !outputs/state/
 !outputs/state/*.json
+# Completion Receipt v1 (2026-10-01): evidencia efimera del run,
+# subida como artifact. NO commitear al repo.
+outputs/state/completion_receipt.json
+outputs/state/validation_gate_result.json
 *.bak_repair
 
 data/nport/
