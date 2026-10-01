@@ -13,7 +13,7 @@
     {
       "version_id": "20260922_01",
       "valid_from": "2026-09-22",
-      "valid_to": "2026-10-01",
+      "valid_to": null,
       "sha256": "4a78e2695aca64ec5601c246d176199ce98e9e10e73e53e4b8f11385fe00ef38",
       "csv_path": "catalog_snapshots/snapshot_20260922_01.csv",
       "rows": 242,
@@ -22,7 +22,7 @@
     {
       "version_id": "2026-10-01_01",
       "valid_from": "2026-10-01",
-      "valid_to": null,
+      "valid_to": "2026-10-01",
       "sha256": "51ce2b217cedd14b32b7f6e64d29d18179f174c01ac68e2b61aa4291d4d2e2c2",
       "csv_path": "catalog_snapshots/snapshot_2026-10-01_01.csv",
       "rows": 255,
