@@ -28,6 +28,7 @@ from .sec_13f.identity import sec13f_list as sl
 from .sec_13f.identity.security_identity import (
     load_crosswalk_internal, load_cusip_equivalence, resolve_batch_identities)
 from . import operational_universe as ou
+from .identity import catalog_key as ck
 from .identity import period_state as ps
 from .identity.target_builder import build_target, TargetUniverse
 from .aggregation import catalog_p38_adapter as ca
@@ -160,6 +161,26 @@ def run_contractual_nipc(
         raise RuntimeError("manifest sin snapshot vigente (valid_to=null)")
     _live.sort(key=lambda s: s["valid_from"], reverse=True)
     version_id = str(_live[0]["version_id"])
+
+    # 6b. Validator de membership (dictamen seccion 11, PASO 0 B1).
+    # Ningun build_target puede ejecutarse sobre membership invalido.
+    def _snapshot_loader(vid):
+        for _s in _man["snapshots"]:
+            if _s["version_id"] == vid:
+                return pd.read_csv(mp / _s["csv_path"], dtype=str,
+                                   keep_default_na=False)
+        return None
+
+    _mem_ck = ck.load_membership(mp / "catalog_membership.csv")
+    _asg_ck = ck.load_assignments(mp / "catalog_assignments.csv")
+    _errs = ck.validate_membership(_mem_ck, _asg_ck, _man,
+                                    snapshot_loader=_snapshot_loader)
+    if _errs:
+        _sample = list(_errs.items())[:3]
+        raise RuntimeError(
+            "validate_membership: %d errores (ejemplos: %s)"
+            % (len(_errs), _sample)
+        )
     u_full = build_target(cat, mem, asg, version_id=version_id,
                           period_end=iso_curr,
                           catalog_version_id="cat", catalog_sha256="a" * 64)
