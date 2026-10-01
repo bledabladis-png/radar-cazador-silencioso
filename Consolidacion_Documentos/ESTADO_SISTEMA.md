@@ -2,7 +2,7 @@
 
 Hechos verificables del sistema. Generado por script.
 
-**Generado en:** 2026-10-01 18:54:26 UTC
+**Generado en:** 2026-10-01 23:36:47 UTC
 **Snapshot tomado sobre:** commit HEAD de la fecha indicada, al momento de generar
 **NO editar a mano.** Regenerar con:
 
@@ -17,20 +17,17 @@ HEAD, tests e integridad del codigo.
 
 ## 1. Git
 
-- **HEAD:** `f5e817f`
-- **HEAD completo:** `f5e817f3248358438c090a4f28c1d2bee21d4620`
-- **Fecha commit HEAD:** 2026-10-01 20:46:18 +0200
+- **HEAD:** `586121f`
+- **HEAD completo:** `586121fc2f65fade1fb1569052febf738793d824`
+- **Fecha commit HEAD:** 2026-10-02 01:35:00 +0200
 - **Ahead:** 0
 - **Behind:** 0
-- **origin/main:** `f5e817f`
+- **origin/main:** `586121f`
 
 ## 2. Tests (pytest real)
 
-- **Resumen:** 1 failed, 3012 passed, 2 skipped in 86.49s (0:01:26)
-- **Exit code:** 1
-
-**Tests fallidos (nombre completo):**
-- `FAILED tests/test_build_catalog_csvs.py::test_idempotencia - IndexError: sing...`
+- **Resumen:** 3024 passed, 2 skipped in 86.90s (0:01:26)
+- **Exit code:** 0
 
 **Tests skip:**
 - `SKIPPED [1] tests\test_freshness.py:376: requiere --run-network`
@@ -56,14 +53,14 @@ HEAD, tests e integridad del codigo.
 | `src/institutional_accumulation/aggregation/reporting_dedup.py` | 890 |
 | `src/institutional_accumulation/catalog_pit.py` | 232 |
 | `src/institutional_accumulation/identity/__init__.py` | 15 |
-| `src/institutional_accumulation/identity/catalog_key.py` | 387 |
+| `src/institutional_accumulation/identity/catalog_key.py` | 395 |
 | `src/institutional_accumulation/identity/openfigi_client.py` | 180 |
 | `src/institutional_accumulation/identity/period_state.py` | 223 |
 | `src/institutional_accumulation/identity/radar_target_catalog.py` | 156 |
 | `src/institutional_accumulation/identity/target_builder.py` | 210 |
 | `src/institutional_accumulation/identity/target_universe.py` | 180 |
 | `src/institutional_accumulation/operational_universe.py` | 259 |
-| `src/institutional_accumulation/pipeline_contractual.py` | 233 |
+| `src/institutional_accumulation/pipeline_contractual.py` | 261 |
 | `src/institutional_accumulation/sec_13f/__init__.py` | 22 |
 | `src/institutional_accumulation/sec_13f/downloader.py` | 250 |
 | `src/institutional_accumulation/sec_13f/identity/__init__.py` | 161 |
@@ -81,7 +78,7 @@ HEAD, tests e integridad del codigo.
 | `src/institutional_accumulation/security_type.py` | 407 |
 | `src/institutional_accumulation/temporal_validity.py` | 92 |
 | `src/institutional_accumulation/timestamps.py` | 162 |
-| **TOTAL** | **36 ficheros, 8405 LOC** |
+| **TOTAL** | **36 ficheros, 8441 LOC** |
 
 ## 5. Datos IAE
 
@@ -101,7 +98,7 @@ HEAD, tests e integridad del codigo.
 ## 6. Scripts IAE
 
 - `scripts/iae_pipeline.py`: 159 LOC
-- `scripts/build_catalog_csvs.py`: 220 LOC
+- `scripts/build_catalog_csvs.py`: 472 LOC
 - `scripts/iae_reconciliation_b1.py`: 193 LOC
 - `scripts/iae_validate_crosswalk_openfigi.py`: 179 LOC
 - `scripts/iae_test_census.py`: 161 LOC

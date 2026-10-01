@@ -75,7 +75,7 @@ Fuente autoritativa: `Consolidacion_Documentos/ESTADO_SISTEMA.md` (regenerado co
 
 Snapshot al cierre del ultimo commit:
 - HEAD: ver ESTADO_SISTEMA.md
-- Tests: 2997 passed + 2 skipped + 0 failed
+- Tests: 3024 passed + 2 skipped + 0 failed
 - Validation Gate: 10/10
 - Working tree: limpio
 - Corpus documental: v3 (Consolidacion_Documentos/00-07, 2026-09-30)
@@ -215,7 +215,7 @@ Esperado:
 - HEAD = ver Consolidacion_Documentos/ESTADO_SISTEMA.md
 - ahead 0, behind 0
 - working tree limpio (o solo el propio ESTADO_SISTEMA regenerado)
-- 2997 passed + 2 skipped
+- 3024 passed + 2 skipped
 - pyflakes silencio, compileall OK
 
 ---

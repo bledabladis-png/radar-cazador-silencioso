@@ -44,6 +44,89 @@ Al cerrar una sesion nueva, se anade arriba (las mas recientes primero). Si hay 
 
 ## 3. SESIONES
 
+### 2026-10-02 (madrugada) - Catalog PIT: 242 -> 255 + schema v5 + validator productivo
+
+**Objetivo.** Tras el incidente del cron trimestral (1-oct), resolver el
+siguiente frente abierto: el subsistema catalog PIT estaba roto por
+alineamiento posicional entre snapshot y assignments.
+
+**Hecho.**
+
+- **Expediente + dictamen externo.** Redactado expediente completo
+  (`docs/auditoria/iae/catalog_pit_snapshot_growth_expediente.md`) y
+  recibido dictamen (`..._dictamen.md`). Decision clave del auditor:
+  `catalog_key` identifica; `radar_ticker` describe. Biyeccion por
+  version activa, no global. Ancla de reconciliacion: share_class_figi.
+  Ausencia puntual != retiro. Membership acumulativo. Commit 6bdb411.
+
+- **Contencion CI (a7c96e2, 018cf42/4e16edf).** Snapshot 255 revertido a
+  242 en el manifest + pausa del step `Regenerar catalogo radar` en
+  daily_run.yml mientras se implementaba el fix. Publicado (037c7ed..4e16edf).
+
+- **Paso 1 - Verificacion cruzada.** Binding de los 242 keys reconstruido
+  por dos caminos independientes (posicion + snapshot_row_uid via
+  membership). PASS 242/242 sin mismatches.
+
+- **Commit A (e61689e).** Schema v5: `radar_ticker` y `share_class_figi`
+  en catalog_assignments.csv; `radar_ticker` en catalog_membership.csv.
+  `build_catalog_csvs.py` reescrito con algoritmo no posicional
+  (merge_assignments por figi). Migracion v1->v2 usa membership como
+  fuente autoritativa. Tests reescritos como invariantes + tests nuevos
+  (binding no-posicional, crecimiento preserva keys, rename misma key,
+  cambio figi nueva key, membership acumulativo).
+
+- **Commit B (00bf59e).** Crecimiento 242 -> 255 real. 13 altas:
+  ANET EL EMR GRMN HON HOOD HST MRVL PPL RDDT TGTX TXG USB.
+  Fix: `assigned_entity_id` pasa a contador global monotono
+  (radar_entity_0243..0255). Sin esto, las altas reutilizaban
+  radar_entity_0001..0013.
+
+- **Commit C (fe7dc74).** 3 fixes:
+  - `catalog_key._vid_norm`: normaliza version_id quitando guiones.
+    Coexisten formatos 20260922_01 y 2026-10-01_01; el `<` string
+    invertia el predecessor chain.
+  - `build_catalog_csvs.backfill_missing_versions`: recorre el
+    manifest por valid_from ASC y solo pobla prev_uid_by_key con
+    versiones ya procesadas. Fallback ticker_to_key cuando el figi
+    cambia (rename o requery OpenFIGI). Backfill de 20260921_01
+    (242 filas) -> membership 739 filas.
+  - `pipeline_contractual.version_id`: se toma del manifest
+    (valid_to=null), no de mem['version_id'].iloc[0].
+
+- **Commit D (288fd7a).** Validator productivo: `validate_membership`
+  invocado como PASO 0 de pipeline_contractual antes de build_target.
+  0 errores sobre datos reales.
+
+- **Commit E (225c09b).** Vista radar_target_catalog.csv regenerada
+  desde snapshot 2026-10-01_01 (255 filas).
+
+- **Limpieza (586121f).** pyflakes limpio.
+
+**Commits.** `6bdb411`, `a7c96e2`, `4e16edf`, `e61689e`, `00bf59e`,
+`fe7dc74`, `288fd7a`, `225c09b`, `586121f`.
+
+**Estado.** assignments 255, membership 739 (242+242+255).
+validate_membership: 0 errores. Suite 3024 passed + 2 skipped.
+pyflakes LIMPIO.
+
+**Nota sobre nipc.** El nipc_total del par vigente Q1/Q2 pasa de
+8256882557 a 8168484363 por las 11 altas de los 13 (TGTX/TXG ausentes)
+que ahora SI contribuyen al calculo. Es el objetivo del fix. El
+baseline C2 (920) del par Q4/Q1 no se reproduce con los datos actuales
+(-4264449012 congelado vs -4286796474 real); es residual conocido,
+bloqueado por auditor externo.
+
+**Pendiente.**
+
+- C2 (920): bloqueado externo.
+- H5.3: cron nov 2026.
+- Regenerar 01_METODO (24 KB, umbral 20 KB).
+
+**Proximo paso sugerido.** Verificar el daily_run del 2-oct con el step
+Regenerar reactivado. Monitorizar que CI procesa el crecimiento correcto
+y no rompe Run tests.
+
+---
 ### 2026-10-01 (cierre) - Completion Receipt v1 + fix WLS NaN + deuda
 
 **Objetivo.** Cerrar el dia tras el incidente del cron trimestral
