@@ -2,11 +2,18 @@
 # -*- coding: utf-8 -*-
 """Gate de disponibilidad para el pipeline diario.
 
-Estados (dictamen auditor 2026-09-25, C3):
-  CURRENT    Manifest ya cumple cobertura para target_session. No correr.
-  READY      Manifest no cumple, probe OK. Correr pipeline.
-  NOT_READY  Manifest no cumple, probe por debajo del threshold. Skip.
-  ERROR      Fallo tecnico del gate. Skip.
+Estados (dictamen auditor 2026-09-25, C3; contrato v1 2026-10-01):
+  CURRENT    Existe completion receipt valido para target_session.
+             No correr. Fuente unica: find_completion_receipt().
+  READY      Sin receipt, probe OK. Correr pipeline.
+  NOT_READY  Sin receipt, probe por debajo del threshold. Skip.
+  ERROR      Fallo tecnico del probe. Skip.
+
+Contrato v1 (docs/auditoria/daily_run_gate_contrato_v1.md):
+- CURRENT depende EXCLUSIVAMENTE de un completion receipt inmutable
+  publicado como artifact en GitHub Actions.
+- _manifest_satisfies() se conserva como contrato independiente de
+  integridad del artefacto. NO participa en la decision de CURRENT.
 
 Concepto clave (C7): target_session es la sesion bursatil que el
 pipeline intenta producir, NO el dia calendario UTC del slot.
@@ -17,14 +24,17 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import io
 import json
 import os
 import sys
 import time
+import zipfile
 from datetime import datetime, timezone
 from pathlib import Path
 
 import pandas as pd
+import requests
 import yfinance as yf
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -62,6 +72,19 @@ CRON_SLOTS = (
     "17 11 * * *",
 )
 LAST_SLOT_CRON = "17 11 * * *"
+
+# --- Completion Receipt (contrato v1, 2026-10-01) ---
+RECEIPT_SCHEMA_VERSION = 1
+RECEIPT_ARTIFACT_PREFIX = "completion-receipt-"
+RECEIPT_FILENAME = "receipt.json"
+RECEIPT_RETENTION_DAYS = 90
+DEFAULT_REPO = "bledabladis-png/radar-cazador-silencioso"
+GH_API_TIMEOUT = 15
+GH_API_ZIP_TIMEOUT = 30
+VALID_RECEIPT_STATUS = frozenset({"COMPLETED"})
+VALID_RECEIPT_WORKFLOWS = frozenset({"daily_run"})
+VALID_RECEIPT_VALIDATION_GATES = frozenset({"10/10"})
+VALID_RECEIPT_PIPELINE_CONCLUSIONS = frozenset({"success"})
 
 
 def _read_manifest(path):
@@ -199,17 +222,174 @@ def resolve_slot_flags(slot_expr):
     return True, slot_expr == LAST_SLOT_CRON
 
 
+# ---------------- Completion Receipt (contrato v1) ----------------
+
+
+def _github_token():
+    """Token de GitHub desde GH_TOKEN o GITHUB_TOKEN. None si no hay."""
+    return os.environ.get("GH_TOKEN") or os.environ.get("GITHUB_TOKEN")
+
+
+def _github_repo():
+    """owner/name del repo. Env o default."""
+    return os.environ.get("GITHUB_REPOSITORY", DEFAULT_REPO)
+
+
+def _github_api(path, params=None):
+    """GET a la API de GitHub. Devuelve dict o None si falla.
+
+    Cumple I6: cualquier error (red, 401/403/404/5xx, JSON invalido)
+    devuelve None. Nunca declara CURRENT por fallo de API.
+    """
+    repo = _github_repo()
+    url = "https://api.github.com/repos/{0}/{1}".format(repo, path)
+    headers = {"Accept": "application/vnd.github+json"}
+    token = _github_token()
+    if token:
+        headers["Authorization"] = "Bearer {0}".format(token)
+    try:
+        r = requests.get(url, headers=headers, params=params,
+                         timeout=GH_API_TIMEOUT)
+        if r.status_code != 200:
+            return None
+        return r.json()
+    except Exception:
+        return None
+
+
+def _download_receipt_json(artifact_id):
+    """Descarga el ZIP del artifact y extrae receipt.json.
+
+    Devuelve dict o None. Requiere token (el ZIP endpoint lo exige).
+    """
+    token = _github_token()
+    if not token:
+        return None
+    repo = _github_repo()
+    url = ("https://api.github.com/repos/{0}/actions/artifacts/"
+           "{1}/zip").format(repo, artifact_id)
+    headers = {
+        "Authorization": "Bearer {0}".format(token),
+        "Accept": "application/vnd.github+json",
+    }
+    try:
+        r = requests.get(url, headers=headers,
+                         timeout=GH_API_ZIP_TIMEOUT, allow_redirects=True)
+        if r.status_code != 200:
+            return None
+        with zipfile.ZipFile(io.BytesIO(r.content)) as z:
+            if RECEIPT_FILENAME not in z.namelist():
+                return None
+            data = z.read(RECEIPT_FILENAME)
+        return json.loads(data)
+    except Exception:
+        return None
+
+
+def _validate_receipt_schema(receipt, target_session):
+    """True si el receipt cumple el schema del contrato v1, seccion 3."""
+    if not isinstance(receipt, dict):
+        return False
+    if receipt.get("schema_version") != RECEIPT_SCHEMA_VERSION:
+        return False
+    if receipt.get("status") not in VALID_RECEIPT_STATUS:
+        return False
+    if receipt.get("target_session") != target_session:
+        return False
+    if receipt.get("workflow") not in VALID_RECEIPT_WORKFLOWS:
+        return False
+    if not isinstance(receipt.get("run_id"), int):
+        return False
+    if receipt.get("validation_gate") not in VALID_RECEIPT_VALIDATION_GATES:
+        return False
+    if receipt.get("pipeline_conclusion") not in VALID_RECEIPT_PIPELINE_CONCLUSIONS:
+        return False
+    if not isinstance(receipt.get("completed_at"), str):
+        return False
+    if not receipt.get("completed_at"):
+        return False
+    return True
+
+
+def find_completion_receipt(target_session):
+    """Devuelve el receipt validado o None.
+
+    Capa 1: existe artifact `completion-receipt-<target_session>` y su
+            contenido cumple el schema del contrato v1.
+    Capa 2: el workflow run que lo subio tiene conclusion == "success".
+
+    Cualquier fallo (sin artifact, schema invalido, run no exitoso,
+    error de API, sin token) devuelve None. Cumple I6. Toda excepcion
+    no capturada internamente se captura aqui para garantizar que
+    jamas escapa un error a evaluate().
+    """
+    try:
+        return _find_completion_receipt_impl(target_session)
+    except Exception:
+        return None
+
+
+def _find_completion_receipt_impl(target_session):
+    """Implementacion de find_completion_receipt. Ver docstring publico."""
+    artifact_name = "{0}{1}".format(RECEIPT_ARTIFACT_PREFIX, target_session)
+
+    data = _github_api("actions/artifacts", params={"name": artifact_name})
+    if not data:
+        return None
+    artifacts = data.get("artifacts") or []
+    if not artifacts:
+        return None
+
+    # El mas reciente por created_at (evita recibir uno antiguo si hay varios)
+    artifacts_sorted = sorted(
+        artifacts,
+        key=lambda a: a.get("created_at") or "",
+        reverse=True,
+    )
+    artifact = artifacts_sorted[0]
+
+    artifact_id = artifact.get("id")
+    if not isinstance(artifact_id, int):
+        return None
+
+    workflow_run = artifact.get("workflow_run") or {}
+    run_id = workflow_run.get("id")
+    if not isinstance(run_id, int):
+        return None
+
+    # Capa 2: el run que genero el receipt debe haber terminado OK.
+    run_data = _github_api("actions/runs/{0}".format(run_id))
+    if not run_data:
+        return None
+    if run_data.get("conclusion") != "success":
+        return None
+
+    receipt = _download_receipt_json(artifact_id)
+    if receipt is None:
+        return None
+
+    if not _validate_receipt_schema(receipt, target_session):
+        return None
+
+    return receipt
+
+
+# ---------------- Gate ----------------
+
+
 def evaluate(target_session):
     """Determina el estado del gate para un target_session dado."""
-    manifest = _read_manifest(MANIFEST_PATH)
-    if _manifest_satisfies(manifest, target_session):
+    receipt = find_completion_receipt(target_session)
+    if receipt is not None:
         return {
             "state": "CURRENT",
             "should_run": False,
-            "reason": "manifest already covers {0}".format(target_session),
+            "reason": "completion receipt for {0} (run {1})".format(
+                target_session, receipt["run_id"]),
             "expected_session": target_session,
             "probe_coverage": None,
-            "manifest_coverage": manifest["quality"]["coverage_pct_last"],
+            "manifest_coverage": None,
+            "receipt_run_id": receipt["run_id"],
         }
 
     probe_cov, probe_err = _probe_panel(target_session)

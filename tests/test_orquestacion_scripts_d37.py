@@ -265,11 +265,10 @@ def test_pg_resolve_slot_flags_ultimo():
 # pipeline_gate.evaluate
 # ============================================================
 def test_pg_evaluate_current(monkeypatch, tmp_path):
-    m = {"quality": {"expected_session": "2026-09-29",
-                      "coverage_pct_last": 0.99},
-         "artifact": {"sha256": "a" * 64}}
-    monkeypatch.setattr(pg, "_read_manifest", lambda p: m)
-    monkeypatch.setattr(pg, "_manifest_satisfies", lambda m, t: True)
+    # Contrato v1 (2026-10-01): CURRENT requiere receipt valido.
+    # _manifest_satisfies dejo de ser la fuente de CURRENT.
+    monkeypatch.setattr(pg, "find_completion_receipt",
+                        lambda t: {"run_id": 99999})
     r = pg.evaluate("2026-09-29")
     assert r["state"] == "CURRENT"
     assert r["should_run"] is False

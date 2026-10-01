@@ -183,13 +183,21 @@ def test_manifest_no_quality_block_not_satisfied():
     assert _manifest_satisfies({}, "2026-09-24") is False
 
 
-def test_current_when_manifest_fresh(isolated_project):
-    """Manifest ya cubre target_session -> CURRENT, sin invocar probe."""
+def test_manifest_fresh_no_produce_current(isolated_project):
+    """Manifest valido NO produce CURRENT por si solo (contrato v1).
+
+    Antes (pre-2026-10-01): manifest -> CURRENT.
+    Ahora: manifest es contrato de integridad, no fuente de CURRENT.
+    Con manifest valido pero sin receipt, el gate cae al probe.
+    """
     _write_manifest(isolated_project, "2026-09-24", 0.99)
-    result = evaluate("2026-09-24")
-    assert result["state"] == "CURRENT"
-    assert result["should_run"] is False
-    assert result["expected_session"] == "2026-09-24"
+    df = _make_download_df("2026-09-24", coverage_frac=1.0)
+    with patch.object(gate.yf, "download", return_value=df), \
+         patch.object(gate, "find_completion_receipt", return_value=None):
+        result = evaluate("2026-09-24")
+    # Cae al probe -> READY, no CURRENT
+    assert result["state"] == "READY"
+    assert result["should_run"] is True
 
 
 def test_ready_when_probe_ok(isolated_project):
@@ -278,9 +286,11 @@ def test_corrupted_manifest_triggers_probe(isolated_project):
 
 
 def test_state_should_run_consistency(isolated_project):
-    # CURRENT -> should_run=False
-    _write_manifest(isolated_project, "2026-09-24", 0.99)
-    result_current = evaluate("2026-09-24")
+    # CURRENT -> should_run=False (requiere receipt valido, contrato v1)
+    receipt_fake = {"run_id": 12345}
+    with patch.object(gate, "find_completion_receipt",
+                      return_value=receipt_fake):
+        result_current = evaluate("2026-09-24")
     assert result_current["state"] == "CURRENT"
     assert result_current["should_run"] is False
 

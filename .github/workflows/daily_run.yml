@@ -39,6 +39,7 @@ jobs:
     timeout-minutes: 5
     permissions:
       contents: read
+      actions: read
     outputs:
       state: ${{ steps.gate.outputs.state }}
       should_run: ${{ steps.gate.outputs.should_run }}
@@ -261,6 +262,10 @@ jobs:
       - name: Guard coverage
         run: python scripts/guard_coverage.py --threshold 0.95
 
+      - name: Generate completion receipt
+        if: success()
+        run: python scripts/write_completion_receipt.py
+
       - name: Commit and push hist/state
         run: |
           git config user.name "github-actions[bot]"
@@ -269,6 +274,9 @@ jobs:
           git status --porcelain
           git add -u
           git add -u outputs/history outputs/state
+          # Completion Receipt v1: no commitear; es evidencia efimera
+          # que se sube como artifact. Excluir del staging.
+          git reset -q HEAD outputs/state/completion_receipt.json 2>/dev/null || true
           git add data/cboe_vix3m.parquet \
             data/cboe_vix3m.parquet.manifest.json \
             data/market_data.parquet.manifest.json \
@@ -297,6 +305,15 @@ jobs:
             echo "Push fallido tras 3 intentos"
             exit 1
           fi
+
+      - name: Upload completion receipt
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: completion-receipt-${{ needs.gate.outputs.expected_session }}
+          path: outputs/state/completion_receipt.json
+          retention-days: 90
+          if-no-files-found: error
 
   issue-manager:
     # F-IAE-CRON-02 (2026-09-25): post-run manager de Issues.

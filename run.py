@@ -3,6 +3,7 @@
 Macro Sectorial v4.3 -- Sistema de analisis macro y rotacion sectorial.
 Fases 1-4 + Correccion 0.5 + P1 + P2 + Mejoras 16-20.
 """
+import json
 import os
 import sys
 from datetime import datetime
@@ -188,6 +189,24 @@ def main():
     if not vg['passed']:
         sys.exit(1)
     dc_summary = vg['dc_summary']
+
+    # Completion Receipt v1 (contrato 2026-10-01): persistir el
+    # resultado del gate para que write_completion_receipt.py pueda
+    # incluirlo. Ruta en outputs/state/ (gitignored-then-negated,
+    # excluida del commit por el step del yml).
+    try:
+        _vg_path = os.path.join(
+            "outputs", "state", "validation_gate_result.json"
+        )
+        os.makedirs(os.path.dirname(_vg_path), exist_ok=True)
+        with open(_vg_path, "w", encoding="utf-8") as _f:
+            json.dump({
+                "passed": bool(vg.get("passed")),
+                "checks_n": len(vg.get("checks") or []),
+                "errors_n": len(vg.get("errors") or []),
+            }, _f)
+    except Exception:
+        pass
 
     mats = compute_final_matrices(
         sector_breadth_df, sector_concentration_df,
