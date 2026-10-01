@@ -1,7 +1,13 @@
+import sys
+from pathlib import Path
+
 import requests
 import csv
 import yfinance as yf
 import time
+
+ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(ROOT))
 
 from src.holdings_filter import is_valid_holding_ticker
 
@@ -70,60 +76,65 @@ def validate_yahoo(ticker):
     except (ValueError, TypeError, KeyError, IndexError, AttributeError):
         return False
 
-for etf, url in urls.items():
-    print(f'\n===== {etf} =====')
-    filas = parse_blackrock(url)
-    holdings = []
+def main():
+    for etf, url in urls.items():
+        print(f'\n===== {etf} =====')
+        filas = parse_blackrock(url)
+        holdings = []
 
-    for f in filas:
-        ticker = clean_text(f.get('Ticker'))
-        if not is_valid_holding_ticker(ticker):
-            continue
-        name = clean_text(f.get('Name'))
-        weight_str = clean_text(f.get('Weight (%)'))
-        asset_class = clean_text(f.get('Asset Class'))
-        type_field = clean_text(f.get('Type'))
+        for f in filas:
+            ticker = clean_text(f.get('Ticker'))
+            if not is_valid_holding_ticker(ticker):
+                continue
+            name = clean_text(f.get('Name'))
+            weight_str = clean_text(f.get('Weight (%)'))
+            asset_class = clean_text(f.get('Asset Class'))
+            type_field = clean_text(f.get('Type'))
 
-        # Filtro: solo Equity
-        if asset_class.lower() != 'equity' and type_field.upper() != 'EQUITY':
-            continue
+            # Filtro: solo Equity
+            if asset_class.lower() != 'equity' and type_field.upper() != 'EQUITY':
+                continue
 
-        # Filtrar no equity por keywords en name/ticker
-        combined = f'{ticker} {name}'.upper()
-        if any(k in combined for k in NON_EQUITY_KEYWORDS):
-            continue
+            # Filtrar no equity por keywords en name/ticker
+            combined = f'{ticker} {name}'.upper()
+            if any(k in combined for k in NON_EQUITY_KEYWORDS):
+                continue
 
-        try:
-            weight = float(weight_str.replace(',', '.'))
-        except (ValueError, TypeError, AttributeError):
-            continue
+            try:
+                weight = float(weight_str.replace(',', '.'))
+            except (ValueError, TypeError, AttributeError):
+                continue
 
-        yahoo_ticker = map_yahoo(ticker, f.get('Exchange'))
+            yahoo_ticker = map_yahoo(ticker, f.get('Exchange'))
 
-        if ticker in SPECIAL_MAP and yahoo_ticker != SPECIAL_MAP[ticker]:
-            yahoo_ticker = SPECIAL_MAP[ticker]
+            if ticker in SPECIAL_MAP and yahoo_ticker != SPECIAL_MAP[ticker]:
+                yahoo_ticker = SPECIAL_MAP[ticker]
 
-        valid = validate_yahoo(yahoo_ticker)
-        if valid:
-            holdings.append({
-                'etf': etf,
-                'ticker': yahoo_ticker,
-                'name': name,
-                'weight': weight,
-            })
-            print(f'OK: {ticker:6s} -> {yahoo_ticker}')
-        else:
-            print(f'FAIL: {ticker:6s} -> {yahoo_ticker} [excluido]')
-        time.sleep(0.1)
+            valid = validate_yahoo(yahoo_ticker)
+            if valid:
+                holdings.append({
+                    'etf': etf,
+                    'ticker': yahoo_ticker,
+                    'name': name,
+                    'weight': weight,
+                })
+                print(f'OK: {ticker:6s} -> {yahoo_ticker}')
+            else:
+                print(f'FAIL: {ticker:6s} -> {yahoo_ticker} [excluido]')
+            time.sleep(0.1)
 
-    # Ordenar por peso descendente y tomar top 10
-    holdings.sort(key=lambda x: x['weight'], reverse=True)
-    top20 = holdings[:20]
+        # Ordenar por peso descendente y tomar top 10
+        holdings.sort(key=lambda x: x['weight'], reverse=True)
+        top20 = holdings[:20]
 
-    out = f'outputs/holdings/{etf}_final_holdings.csv'
-    with open(out, 'w', newline='', encoding='utf-8') as f:
-        escritor = csv.writer(f)
-        escritor.writerow(['etf','ticker','name','weight'])
-        for h in top20:
-            escritor.writerow([h['etf'], h['ticker'], h['name'], f'{h["weight"]:.6f}'])
-    print(f'Guardado: {out} ({len(holdings)} validos, top20 exportado)')
+        out = f'outputs/holdings/{etf}_final_holdings.csv'
+        with open(out, 'w', newline='', encoding='utf-8') as f:
+            escritor = csv.writer(f)
+            escritor.writerow(['etf','ticker','name','weight'])
+            for h in top20:
+                escritor.writerow([h['etf'], h['ticker'], h['name'], f'{h["weight"]:.6f}'])
+        print(f'Guardado: {out} ({len(holdings)} validos, top20 exportado)')
+    return 0
+
+if __name__ == '__main__':
+    sys.exit(main())

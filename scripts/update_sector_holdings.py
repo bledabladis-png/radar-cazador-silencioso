@@ -11,6 +11,10 @@ import pandas as pd
 from io import BytesIO
 import os
 import sys
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(ROOT))
 
 from src.holdings_filter import is_valid_holding_ticker
 
