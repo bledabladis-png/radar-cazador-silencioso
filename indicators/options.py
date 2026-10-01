@@ -43,8 +43,12 @@ def _zscore_last_in_window(series):
     el canonico; no la hay. Ver AUDITORIA_CONSOLIDADA_2026-09-26.md F5.6-15.
     """
     median = series.median()
-    mad = np.median(np.abs(series - median))
-    if mad == 0:
+    # 2026-10-02: np.nanmedian + guard pd.isna(mad). Con NaN en la ventana
+    # (huecos de PCR, festivos), np.median propaga NaN silenciosamente a
+    # todo el z-score. Mismo patron que el bug arreglado en index_leaders
+    # (2f956ed, robust_intra).
+    mad = np.nanmedian(np.abs(series - median))
+    if pd.isna(mad) or mad == 0:
         return 0.0
     return (series.iloc[-1] - median) / (1.4826 * mad)
 

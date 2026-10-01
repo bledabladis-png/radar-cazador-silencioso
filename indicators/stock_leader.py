@@ -56,7 +56,14 @@ def compute_stock_metrics(df_market, df_stocks, etf_ticker, stock_list, temporal
             wyckoff_sc = wyckoff_series.iloc[-1]
             wyckoff_ph = classify_wyckoff_phase(ticker_df, ticker)
             score_median = wyckoff_series.rolling(10).median().iloc[-1]
-            score_mad = wyckoff_series.rolling(10).apply(lambda x: np.median(np.abs(x - np.median(x)))).iloc[-1]
+            # 2026-10-02: np.nanmedian + guard. Mismo patron que options.py
+            # y que robust_intra (2f956ed). Con NaN en la ventana rolling,
+            # np.median propaga NaN a score_mad y stability.
+            score_mad = wyckoff_series.rolling(10).apply(
+                lambda x: np.nanmedian(np.abs(x - np.nanmedian(x)))
+            ).iloc[-1]
+            if pd.isna(score_mad):
+                score_mad = 0.0
             stability = np.tanh(score_median / (score_mad + 1e-9))
             spring = detect_spring(ticker_df, ticker).iloc[-1]
             sos = detect_sos(ticker_df, ticker).iloc[-1]
