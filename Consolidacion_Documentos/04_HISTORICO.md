@@ -528,6 +528,8 @@ Agrupacion de los cierres mas relevantes por area. El detalle granular esta en `
 - **A5-15** (router no cubre subset parcial silencioso): CORREGIDO 2026-09-28.
 - **A2.2-01** (BME 0/19 en run): CERRADO 2026-09-28. `today = last_expected_market_date(reference_date)`.
 - **A2.2-02/A2.2-03** (tz-naive en cobertura/calidad): CERRADO 2026-09-28. Helpers `_ref_to_date`.
+- **Atomicidad familia 3** (escritura no atomica en `outputs/history/`): CERRADO 2026-09-29. 17 sitios con READ+WRITE del mismo path sin `.tmp + os.replace`. Si el proceso muere a mitad de `to_csv`, el CSV original queda truncado y el siguiente run pierde filas. Alta (17): `outputs/history/` append+dedup (1 european_coverage, 2 breadth_metrics, 1 engines, 1 flows_primary, 1 finalize, 2 market_data, 4 sectors_base, 5 sector_metrics). Media (15): regenerables (no leen el CSV antes de escribir). Fix comun: `.tmp + replace`. Tests fuertes por ambos lados (verde con fix, rojo sin fix).
+- **FU-009-bis (append_dedup):** columnas all-NA excluidas antes del `pd.concat` (FutureWarning pandas 2.x, rompera en 3.0). CERRADO 2026-09-29.
 
 ### 3.3. Calculo
 
