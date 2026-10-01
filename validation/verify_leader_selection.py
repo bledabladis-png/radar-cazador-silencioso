@@ -130,6 +130,8 @@ def main():
                 log(f'  [OK] Sector {sector}: top 5 ordenado por WLS desc')
             else:
                 log(f'  [FAIL] Sector {sector}: top 5 no está ordenado por WLS desc')
+                log(f'    wls={list(top5["wls"].values)}')
+                log(f'    tickers={list(top5["ticker"].values)}')
     except Exception as e:
         log(f'  [FAIL] Error sectores: {e}')
 
@@ -148,6 +150,9 @@ def main():
                 log(f'  [OK] Índice {indice}: top 5 ordenado por WLS desc')
             else:
                 log(f'  [FAIL] Índice {indice}: top 5 no está ordenado por WLS desc')
+                log(f'    wls={list(top5["wls"].values)}')
+                log(f'    tickers={list(top5["ticker"].values)}')
+                log(f'    len_csv_indice={len(group)}')
     except Exception as e:
         log(f'  [FAIL] Error índices: {e}')
 
