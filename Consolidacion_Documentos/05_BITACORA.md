@@ -38,7 +38,7 @@ Cada sesion se registra asi:
 
     **Proximo paso sugerido.** Que deberia hacerse a continuacion.
 
-Al cerrar una sesion nueva, se anade arriba (las mas recientes primero). Si hay mas de 5, la mas antigua se elimina o se resume en el historico.
+Al cerrar una sesion nueva, se anade arriba (las mas recientes primero). Si hay mas de 10 fuera del dia en curso, la mas antigua se elimina o se resume en el historico. Ver reglas completas en §5.
 
 ---
 
