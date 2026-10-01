@@ -16,7 +16,6 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
-import pytest
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
@@ -108,7 +107,6 @@ def test_sin_nan_el_resultado_es_identico():
 def test_robust_intra_mediana_ignora_nan():
     """robust_intra usa pd.Series.median (ignora NaN) pero
     np.abs(s - median) propaga NaN. Con np.nanmedian, no propaga."""
-    from indicators.index_leaders import compute_wls_for_index as f
     # Este test es indirecto: si el fix esta bien, una serie con NaN
     # produce una z-serie con NaN solo donde el input era NaN.
     s = pd.Series([1.0, 2.0, 3.0, np.nan, 5.0])
