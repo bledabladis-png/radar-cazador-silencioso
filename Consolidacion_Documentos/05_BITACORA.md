@@ -44,6 +44,63 @@ Al cerrar una sesion nueva, se anade arriba (las mas recientes primero). Si hay 
 
 ## 3. SESIONES
 
+### 2026-10-01 (madrugada) - Auditoria reporte diario + Fixes G/H/K/L/M/N
+
+**Objetivo.** Auditoria del reporte diario generado el 30-sep-2026
+(951 lineas, 70 secciones). Busqueda de NaN, ceros, inconsistencias,
+bugs silenciosos y errores en la presentacion. Derivacion de fixes.
+
+**Hecho (6 fixes).**
+
+- **Fix G (FINRA sin walk-back).** `data_quality.py:258` aplicaba
+  `_last_market_session` a la columna `week` de FINRA. La fecha-semana
+  2026-09-07 (Labor Day) se convertia en 2026-09-04. Mientras el
+  reporte publicaba "Semana FINRA: 2026-09-07". Fix: flag `walk_back`
+  por fuente. Commit `1ca2ab6`.
+- **Fix H (QQQ returns truncado).** `qqq_returns_yahoo.py` usaba
+  `prices.index[-1]` sin truncar. Yahoo devuelve barra parcial intradia.
+  Commit `1ca2ab6`. Verificado en test unitario (en produccion depende
+  del horario; a las 00:00 CEST el mercado ya cerro).
+- **Fix K (cache freshness europea).** Euronext y BME usaban
+  `(ref - last).days <= 1`. Con ref=30-sep y cache=29-sep,
+  consideraban "fresco". 13 Euronext + 19 BME no refrescaban.
+  `stock_prices.parquet` caia a 89.8% cobertura. Xetra ya usaba
+  FU-018 (correcto). Fix: helper `_cache_freshness.py`. Commit `22cbcb5`.
+- **Fix L (tests fragiles).** 3 tests de `test_temporal_contracts`
+  hardcodeaban 562 y 539. El universo cambio a 561/538. Fix: derivar
+  de `df_real` con rango plausible. Commit `93ffb20`.
+- **Fix M (cache-hit valida cobertura).** `stock_data_loader.py:536`
+  y `data_loader.py:277` decidian cache-hit solo por fecha
+  (`_df_last >= _last_exp`). Un parquet del 30-sep con 89.8% de
+  cobertura era aceptado. El cascade europeo nunca se ejecutaba.
+  Fix: helper `_last_row_coverage_ok` en `src/utils.py`. Gate de
+  90%. Commit `c994f01`.
+- **Fix N (fund flow descarga siempre).** 5 writers (ssga, amundi,
+  _blackrock_base, blackrock_iwm, cftc) usaban `mtime < 23h ->
+  cache-hit`. Si la fuente publicaba despues del ultimo run, el
+  siguiente run aceptaba cache de 22h. Coste real de descarga sin
+  cache: 13s. Fix: descarga siempre, cache solo fallback. Commit
+  `b30a918`.
+
+**Verificacion end-to-end.** 3 runs E2E. Fix K+M verificado:
+cache SSGA 28->29-sep, cobertura stock_prices 89.8%->93.6%,
+Sector Breadth publica 30-sep, sin WARN "Sin actualizacion".
+Fix N verificado: 12 descargas SSGA + DAX + ISF + IWM + Amundi +
+CFTC. Cero cache-hits. Cache avanzada al 29-30-sep.
+
+**Commits.** `1ca2ab6`, `22cbcb5`, `93ffb20`, `c994f01`, `b30a918`,
+`eec3d66` (regeneracion).
+
+**Pendiente.**
+
+- Cron trimestral 1-oct (hoy, 04:47/06:17/07:17 CEST).
+- C2 (920): bloqueado externo.
+- H5.3: cron nov 2026.
+- 20 tickers LSE sin observacion local (scraper externo
+  `lse-close-scraper` tiene el 30-sep; local congelado en 25-sep;
+  CI funciona).
+
+**Proximo paso sugerido.** Verificar cron 1-oct con 07_RUNBOOK 3.
 ### 2026-09-30 (noche, sesion 8) - Auditoria sector_regime + fixes H8/R2/H1 + Fix D
 
 **Objetivo.** Auditoria externa del subsistema `regimes/sector_regime.py`

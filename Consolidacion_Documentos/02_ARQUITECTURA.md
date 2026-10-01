@@ -376,6 +376,13 @@ Si el gate falla, `run.py` aborta con `sys.exit(1)`.
 
 **`as_of_date` en `qqq_returns_yahoo.csv` es timestamp, no fecha del dato (WONT FIX razonado):** La columna mezcla `latest_date` (dataset-derived) con `datetime.now()` (reloj de ejecucion, sin tz). El nombre es enganoso. Verificado 2026-09-30: unico consumidor (`flows_international.py:152-159`) prefiere `effectiveDate` (dataset-derived); el fallback trunca `as_of_date` con `split(" ")[0]`, por lo que la hora nunca se publica. La parte publicada es `latest_date`, dataset-derived. No viola regla dura 00_ARRANQUE 2: el campo es log. WONT FIX: renombrar a `run_timestamp` seria correcto pero ROI < 1 (regenerar CSV, actualizar test, sin cambio funcional).
 
+**Fund-flow: descarga siempre, cache solo fallback (CERRADO 2026-10-01):** los 5 writers de fund flow (`ssga_fund_data`, `amundi_fund_data`, `_blackrock_base`, `blackrock_iwm_fund_data`, `cftc_data`) usaban `mtime < 23h -> cache-hit`. Si la fuente publica despues del run, el siguiente run acepta cache de 22h y no refresca. Fix: descarga siempre, cache como fallback si la descarga falla (WARN con mtime). Commit `b30a918`. Coste medido: 13s los 5 providers.
+
+**Cache-hit valida cobertura, no solo fecha (CERRADO 2026-10-01):** `stock_data_loader.py` y `data_loader.py` aceptaban cache si `_df_last >= _last_exp`, sin mirar cobertura de la ultima fila. Un parquet del 30-sep con 89.8% de cobertura se aceptaba. El cascade europeo no se ejecutaba. Fix: helper `_last_row_coverage_ok` en `src/utils.py`, gate 90%. Commit `c994f01`.
+
+**Cache freshness europea unificada (CERRADO 2026-10-01):** Euronext y BME usaban `(ref - last).days <= 1`. Con ref=30-sep y cache=29-sep, "fresco". 13 Euronext + 19 BME no refrescaban. Fix: helper `_cache_freshness.py::european_cache_is_fresh`. Euronext, BME y Xetra (refactor) lo usan. Commit `22cbcb5`.
+
+**LSE scraper (dependencia externa, best-effort):** el repo `bledabladis-png/lse-close-scraper` publica 20 tickers LSE diarios con cron propio. `daily_run.yml:139` lo clona fresco en cada run (CI). Localmente el checkout puede quedar congelado si no se refresca manualmente. No es bug del radar. Si el scraper no corre, esos 20 tickers quedan sin observacion hasta el siguiente run (Yahoo no cubre `.L` con close real, solo ADR).
 **KHC / lote parcial:** deteccion anadida en `download_market_data`. Monitorizacion activa, sin retry.
 
 **H5.3 - Trazabilidad cron trimestral:** implementada, pendiente verificacion en cron de noviembre 2026.

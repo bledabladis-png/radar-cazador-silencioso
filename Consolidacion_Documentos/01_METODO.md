@@ -234,6 +234,38 @@ Restar `datetime.now()` (naive) contra timestamp tz-aware. Rinde `TypeError`, a 
 **Patron 10 - Documento vs codigo.**
 Docstring dice "9 contratos" pero hay 10. Comentario "esto hace X" pero el codigo hace Y. **Caso A3.2-01:** 7 literales `SECTORS = [...]` vs `MARKET_TICKERS['sectors']`.
 
+**Patron 11 - `mtime` como criterio de freshness.**
+`if datetime.now() - mtime < timedelta(hours=23): return cache`.
+Confunde "cache reciente en disco" con "fuente sin dato nuevo". Si la
+fuente publica despues del run, el siguiente run acepta cache de 22h
+como fresco. **Caso Fix K (2026-10-01):** 13 Euronext + 19 BME con
+cache de 29-sep mientras las fuentes tenian 30-sep. **Caso Fix N
+(2026-10-01):** 5 writers de fund flow (ssga, amundi, blackrock_base,
+blackrock_iwm, cftc) con el mismo patron. **Como detectar:** grep
+`datetime.now() - mtime|timedelta(hours=23)|age <= timedelta`.
+**Fix correcto:** intentar descarga SIEMPRE. Cache solo como fallback
+si la descarga falla (WARN explicito con mtime). Coste medido: 13s
+descargar todos los providers vs 12min del run.
+
+**Patron 12 - Cache-hit valida forma, no calidad.**
+`if _df_last >= _last_exp: return cache`. Comprueba la fecha pero no
+la cobertura/estado del dato. Un parquet con la fecha correcta y 89.8%
+de cobertura se acepta como valido. **Caso Fix M (2026-10-01):**
+`stock_data_loader` y `data_loader` con `CACHE_VALIDATE_TRADING_DATE`.
+El cascade europeo no se ejecutaba porque la fecha era correcta pero
+faltaban 32 tickers. **Como detectar:** grep `_df_last < _last_exp|
+CACHE_VALIDATE_TRADING_DATE`. **Fix correcto:** validar cobertura de
+la ultima fila ademas de la fecha. Fail-closed si no se puede medir.
+
+**Patron 13 - Consumidor accede por indice sin guard.**
+`ranking[0][0]` sobre lista que puede quedar vacia. `df.iloc[-1]` sin
+comprobar `len(df) > 0`. **Caso `engines.py:25`** (auditoria
+sector_regime): `sector_results['ranking'][0][0]` sin guard. Bug
+latente: si `ranking` queda vacio, IndexError. **Caso `qqq_returns`
+(pre-Fix H):** `prices.index[-1]` sin comprobar la sesion esperada.
+**Como detectar:** grep `\[0\]\[0\]|\.iloc\[-1\]|\.index\[-1\]` y
+comprobar si el consumidor asume no-vacio. **Fix correcto:** guard
+explicito o derivar por `resolve_effective_date` (R2).
 **Como aplicar:** al abrir un modulo nuevo, primer paso: `grep` de estos 10 patrones con regex. Los hits se convierten en hallazgos preliminares. Se verifican uno a uno. No se declaran sin evidencia directa.
 
 ---

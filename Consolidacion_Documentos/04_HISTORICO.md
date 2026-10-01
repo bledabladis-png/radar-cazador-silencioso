@@ -462,6 +462,49 @@ Verificar siempre la salida de un run con `numstat` (buscar lineas
 perdidas netas) y con conteo de duplicados, no solo con "fila
 presente".
 
+### 2026-10-01: auditoria del reporte diario + 6 fixes G/H/K/L/M/N
+
+**Contexto.** Auditoria linea a linea del reporte diario generado el
+2026-09-30. Busqueda de NaN, ceros, inconsistencias, bugs silenciosos
+y errores en la presentacion. 951 lineas, 70 secciones. Leido completo
+en 5 bloques.
+
+**Hallazgos confirmados (todos cerrados).**
+
+- **Bug activo: alerta Price-Flow con texto fijo incorrecto.**
+  `alerts.py:31` publicaba literal "Precio fuerte" para cualquier
+  `status != ALIGNED`. Con XLU (`PRICE_WEAK_FLOW_SUPPORTIVE`,
+  retorno -6.01%) decia "precio fuerte" cuando el detector decia
+  "precio debil". Fix F en commit `29f72e8`.
+- **Bug activo: 32 tickers europeos sin actualizar.** 13 Euronext +
+  19 BME. `_cache_is_fresh` usaba `(ref - last).days <= 1`. Con
+  ref=30-sep y cache=29-sep, "fresco". Fix K en commit `22cbcb5`.
+- **Bug activo: cache-hit no validaba cobertura.** `stock_data_loader`
+  y `data_loader` aceptaban cache si la fecha era la esperada, sin
+  mirar cobertura de la ultima fila. Con 89.8% de cobertura y 30-sep,
+  el cascade europeo no se ejecutaba. Fix M en commit `c994f01`.
+- **Bug activo: 5 writers de fund flow con cache de 23h.** Mismo
+  patron que Fix K pero en fund flow. Fix N en commit `b30a918`.
+
+**Falsos positivos descartados.**
+
+- NaN literales: 0 publicados. Los 2 hits son notas metodologicas.
+- Encoding tildes: artefacto consola CP850.
+- `-0.00` (61 casos): redondeo de floats.
+- Celdas vacias Spring/SOS: por diseno (eventos Wyckoff).
+- `RS` vs `RS DeltaMed`: metricas distintas con nombres distintos.
+- `flow=0` FEZ: shares_outstanding identico 28 vs 29-sep. Real.
+- Liquidity Delta 0.000: FRED sin dato nuevo entre runs. Real.
+- 3 cifras de tickers (40/220/313): universos distintos.
+
+**Verificacion end-to-end.** 3 runs E2E. Coherencia temporal
+restaurada: Sector Breadth publica 30-sep. Cache SSGA avanzada a
+29-sep. 12 descargas SSGA + DAX + ISF + IWM + Amundi + CFTC.
+
+**Deuda residual.** 20 tickers LSE sin observacion local. El
+scraper externo `lse-close-scraper` tiene el 30-sep; el checkout
+local esta congelado en 25-sep. En CI funciona (workflow
+`daily_run.yml:139` clona el repo fresco). No es bug.
 ## 3. HALLAZGOS POR BLOQUE TEMATICO
 
 Agrupacion de los cierres mas relevantes por area. El detalle granular esta en `git log`. Los IDs (FU-xxx, K-xxx, F2.4-xx, A5-xx, DT-x, H-x) son de la nomenclatura interna de la auditoria y no se usan ya en el trabajo activo.
