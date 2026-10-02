@@ -1197,3 +1197,39 @@ def test_i36b_meta_propaga_sow_params():
         meta = w1.classify_wyckoff_phase_meta(df, 'SYNTH', sow_params=sow_params)
     assert meta["phase"] == "DISTRIBUTION"
     assert meta["distribution_candidate"] is True
+
+# =====================================================================
+# Frente F - QA interno de componentes no-SOW
+# =====================================================================
+
+def test_f02_meta_no_traga_runtime_error():
+    """F-02: classify_wyckoff_phase_meta no debe silenciar RuntimeError.
+
+    Regla 01_METODO seccion 8: RuntimeError va en tuplas acotadas.
+    Un except Exception lo traga silenciosamente. Con el fix (acotar
+    except a tuplas), un RuntimeError de _is_distribution_candidate
+    debe propagar.
+
+    Test rojo sin el fix. Verde tras acotar el except.
+    """
+    from unittest import mock
+    import numpy as np
+    import pandas as pd
+
+    # df minimo que devuelve RANGE para llegar al bloque con el
+    # except. Con mock sobre _is_distribution_candidate forzamos
+    # que lance RuntimeError.
+    n = 500
+    dates = pd.date_range("2024-01-01", periods=n, freq="B")
+    df = pd.DataFrame({
+        "Open": 100.0, "High": 101.0, "Low": 99.0,
+        "Close": 100.0, "Volume": 1_000_000.0,
+    }, index=dates)
+
+    # Mock: classify devuelve RANGE (fuerza entrar al except) y
+    # _is_distribution_candidate lanza RuntimeError.
+    with mock.patch.object(w1, "classify_wyckoff_phase", return_value="RANGE"), \
+         mock.patch.object(w1, "_is_distribution_candidate",
+                           side_effect=RuntimeError("fallo simulado")):
+        with pytest.raises(RuntimeError, match="fallo simulado"):
+            w1.classify_wyckoff_phase_meta(df, "SYNTH")

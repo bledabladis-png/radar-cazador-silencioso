@@ -235,10 +235,14 @@ def classify_wyckoff_phase_meta(df, ticker, as_of=None, sow_params=None):
         candidate = True
     elif phase == FASE_RANGE:
         # Podria ser candidato no confirmado. Comprobar.
+        # F-02 (frente F, 2026-10-02): except acotado. Antes era
+        # except Exception que silenciaba RuntimeError. La regla
+        # 01_METODO seccion 8 pide tuplas explicitas; el sistema usa
+        # RuntimeError como idiom de fallo simulado en tests.
         try:
             df_used = df.loc[:as_of] if as_of is not None else df
             candidate = _is_distribution_candidate(df_used, ticker)
-        except Exception:
+        except (KeyError, ValueError, TypeError, IndexError):
             candidate = False
     return {
         "phase": phase,
