@@ -237,6 +237,22 @@ bloqueado por auditor externo.
 
   Suite tras fix: 3042 passed + 2 skipped.
 
+- **Revision adicional bloques 4-5: 1 fix, 1 no-deuda (2026-10-02).**
+  Segunda pasada sobre el reporte fresco del CI (run 36954815655,
+  2026-10-02 04:18).
+  FIX (commit siguiente): _fmt_num normaliza ruido numerico -0.00 a
+  0.00. Afectaba Concentracion del liderazgo y otras tablas con
+  medianas (rs_median, momentum_median). Mismo patron que FU-003a pero
+  para fmt sin signo.
+  NO-DEUDA documentada: '+0' en columna A/D de Sector Breadth & Health
+  cuando advances=declines>0. NO es violacion de FU-003a: politica B3
+  (2026-09-12) distingue explicitamente '+0' (balance real con datos)
+  de 'N/D' (0/0 sin informacion direccional). Tests C3 lo cubren.
+  Se revirtio un cambio inicial en _fmt_ad_net que quitaba el '+'.
+  Spring/SOS vacios en tablas de lideres por sector: no es bug. '[v]'
+  marca cuando spring/sos==1; vacio cuando 0. Documentado en
+  test_leader_table_markdown.py.
+
 **Proximo paso sugerido.** Verificar el daily_run del 2-oct con el step
 Regenerar reactivado. Monitorizar que CI procesa el crecimiento correcto
 y no rompe Run tests.
