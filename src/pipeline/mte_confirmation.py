@@ -33,7 +33,11 @@ def _compute_mte(df_market, financial_score, all_signals, pcr_data, darkpool_dat
         mte_darkpool = darkpool_data
         # D23 (2026-09-30): age calculado contra reference_date,
         # no datetime.now(). Mismo patron que D6b/D16.
-        _ref = reference_date if reference_date is not None else datetime.now()
+        # D-05 (2026-10-03): normalizar tzinfo. run.py:43 construye
+        # reference_date tz-aware (ZoneInfo Europe/Madrid). pd.Timestamp
+        # (week) es naive. Sin replace(tzinfo=None), _ref - d lanza
+        # TypeError, capturado por el except de L48 -> skip silencioso.
+        _ref = reference_date.replace(tzinfo=None) if reference_date is not None else datetime.now()
         if darkpool_data:
             week = darkpool_data.get('week', '')
             if week:
@@ -149,7 +153,7 @@ def compute_mte_confirmation(df_market, df_stocks, financial_score, all_signals,
     Returns:
         dict con keys: mte_result, cross_module_conflict, confirmation_data
     """
-    mte_result = _compute_mte(df_market, financial_score, all_signals, pcr_data, darkpool_data, temporal_meta=temporal_meta)
+    mte_result = _compute_mte(df_market, financial_score, all_signals, pcr_data, darkpool_data, temporal_meta=temporal_meta, reference_date=reference_date)
     cross_module_conflict = _compute_cross_module(
         macro_regime, financial_regime, vol_regime, real_liq_regime, mte_result
     )

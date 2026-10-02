@@ -178,6 +178,8 @@ def main():
         financial_regime, vol_regime, real_liq_regime,
         df_stocks_effective_meta=df_stocks_effective_meta,
         temporal_meta=temporal_meta,
+        # D-05 (2026-10-03): propagar reference_date tz-aware (L43).
+        reference_date=reference_date,
     )
     mte_result = mc['mte_result']
     cross_module_conflict = mc['cross_module_conflict']
@@ -190,6 +192,8 @@ def main():
     vg = run_validation_gate(
         slpm_v12_data, pcr_data, darkpool_data, mte_result,
         tactical_scores, structural_scores,
+        # D-05 (2026-10-03): propagar reference_date tz-aware (L43).
+        reference_date=reference_date,
     )
     if not vg['passed']:
         sys.exit(1)

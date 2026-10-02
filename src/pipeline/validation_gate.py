@@ -36,7 +36,11 @@ def run_validation_gate(slpm_v12_data, pcr_data, darkpool_data, mte_result,
             dc_summary (str): resumen double-counting para el reporte
     """
     # D23 (2026-09-30): _ref para los calculos de age.
-    _ref = reference_date if reference_date is not None else datetime.now()
+    # D-05 (2026-10-03): normalizar tzinfo. run.py:43 construye
+    # reference_date tz-aware (ZoneInfo Europe/Madrid). pd.Timestamp(week)
+    # y pd.Timestamp(last_date) son naive. Sin replace(tzinfo=None),
+    # _ref - d lanza TypeError, capturado por los except de L129 y L147.
+    _ref = reference_date.replace(tzinfo=None) if reference_date is not None else datetime.now()
     print("Ejecutando Validation Gate...")
     validation_errors = []
     validation_checks = []

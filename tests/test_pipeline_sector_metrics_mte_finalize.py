@@ -425,3 +425,51 @@ def test_compute_confirmation_integracion_minima(tmp_path, monkeypatch):
     assert out["ratios"]["copper_gold"] == 0.0123
     assert out["fls"]["fls_normalized"] == 0.69
     assert out["ad"]["ad_net"] == 74
+
+
+# =============================================================================
+# D-05 (2026-10-03): mte_confirmation + validation_gate con reference_date tz-aware
+# =============================================================================
+
+def test_compute_mte_tz_aware_no_silencia_archival(capsys):
+    """_compute_mte con reference_date tz-aware + darkpool antiguo debe
+    imprimir ARCHIVAL. Si no aparece, el TypeError fue capturado por el
+    except silencioso de L48.
+    """
+    from zoneinfo import ZoneInfo
+    from unittest.mock import patch
+    from src.pipeline.mte_confirmation import _compute_mte
+    ref_tz = datetime.now(ZoneInfo("Europe/Madrid"))
+    darkpool = {"week": "2026-08-18"}  # > 14 dias
+    with patch("indicators.mte.compute_mte",
+               return_value={"scenario": "X", "msi": 0.0, "ipi": 0.0}):
+        _compute_mte(
+            pd.DataFrame(), 0.0, None, None, darkpool,
+            temporal_meta=None, reference_date=ref_tz,
+        )
+    captured = capsys.readouterr()
+    assert "ARCHIVAL" in captured.out, (
+        "con reference_date tz-aware y darkpool antiguo, _compute_mte debe "
+        "detectar ARCHIVAL; si no aparece, el TypeError tz fue silenciado"
+    )
+
+
+def test_compute_mte_confirmation_propaga_reference_date():
+    """compute_mte_confirmation debe pasar reference_date a _compute_mte."""
+    from zoneinfo import ZoneInfo
+    from unittest.mock import patch
+    from src.pipeline import mte_confirmation as m
+    ref_tz = datetime.now(ZoneInfo("Europe/Madrid"))
+    with patch.object(m, "_compute_mte", return_value=None) as mock_mte, \
+         patch.object(m, "_compute_cross_module", return_value=None), \
+         patch.object(m, "_compute_confirmation", return_value=None):
+        m.compute_mte_confirmation(
+            pd.DataFrame(), pd.DataFrame(), 0.0, None, None, None,
+            None, None, None, None, reference_date=ref_tz,
+        )
+    assert mock_mte.called
+    call_kwargs = mock_mte.call_args.kwargs
+    assert call_kwargs.get("reference_date") is ref_tz, (
+        "compute_mte_confirmation no propaga reference_date a _compute_mte"
+    )
+

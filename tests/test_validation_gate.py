@@ -12,6 +12,7 @@ Y un caso feliz que valida que la logica normal sigue OK.
 
 import sys
 import os
+from datetime import datetime
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
@@ -99,3 +100,32 @@ def test_check4_mte_pdna_no_crashea():
     result = run_validation_gate(**kwargs)
     assert result["passed"] is False
     assert any("MTE" in e for e in result["errors"])
+
+
+# =============================================================================
+# D-05 (2026-10-03): validation_gate con reference_date tz-aware
+# =============================================================================
+
+def test_validation_gate_tz_aware_no_silencia_freshness():
+    """Con reference_date tz-aware, Freshness Dark Pool y PCR deben reportar
+    dias, no "sin fecha". Si reportan "sin fecha", el TypeError tz fue
+    capturado por los except ValueError/TypeError/OSError.
+    """
+    from zoneinfo import ZoneInfo
+    ref_tz = datetime.now(ZoneInfo("Europe/Madrid"))
+    kwargs = _base_kwargs()
+    kwargs["reference_date"] = ref_tz
+    result = run_validation_gate(**kwargs)
+    checks_text = " | ".join(result["checks"])
+    assert "Freshness Dark Pool" in checks_text
+    assert "Freshness PCR" in checks_text
+    # Extraer las dos lineas de freshness
+    dp_line = [c for c in result["checks"] if "Freshness Dark Pool" in c][0]
+    pcr_line = [c for c in result["checks"] if "Freshness PCR" in c][0]
+    assert "sin fecha" not in dp_line, (
+        f"Dark Pool con week valido no debe decir sin fecha: {dp_line}"
+    )
+    assert "sin fecha" not in pcr_line, (
+        f"PCR con last_date valido no debe decir sin fecha: {pcr_line}"
+    )
+
