@@ -346,3 +346,56 @@ Hasta dictamen, el sistema queda:
 ---
 
 **Fin del informe 5b.3.**
+
+---
+
+## 14. NOTA DE CIERRE (2026-10-02, post-dictamen)
+
+**Este informe queda superado por `24_dictamen_5b3_D3.md`.**
+
+El dictamen externo ha detectado un sesgo metodologico en el diseno del
+outcome que invalida el `incremental_lift_H20` reportado en las
+secciones 6, 7 y 9 de este informe: el grupo confirmed y el grupo
+baseline no estaban anclados al mismo momento temporal (inmortal time
+bias).
+
+Concretamente:
+
+    CONFIRMED: outcome = struct[t_sow + 20] < struct[t_sow]
+    BASELINE:  outcome = struct[t0   + 20] < struct[t0]
+
+donde t_sow puede estar hasta M=30 sesiones despues de t0. Ambos
+grupos se evaluan en relojes distintos. El lift positivo universal
+(240/240) es **evidencia exploratoria prometedora, no validacion**.
+
+### Estado de los resultados de este informe
+
+- **Validos como diagnostico historico:** cumplimiento D1-D4, conteos,
+  distribuciones por N/M/X/Y, verificacion H1/H3 (SLB/PCG).
+- **Invalidos como evidencia de confirmacion SOW:** todo valor de
+  `incremental_lift_H20` / `H40` y cualquier interpretacion derivada.
+- **Candidata A (N=60, M=30, X=0.50, Y=1.20):** NO congelada.
+  Compite de nuevo bajo el protocolo 5b.4 con landmark temporal.
+- **D3=50%:** se mantiene como resultado formal (FAIL). No se relaja.
+- **Divergencia X=0.50 vs X=1.00:** queda como diagnostico historico.
+  El holdout ya ha sido inspeccionado; no sirve como validacion
+  independiente de 5b.4.
+
+### Que sigue
+
+`25_protocolo_fase_5b4.md` — nuevo protocolo con landmark temporal,
+lift como outcome primario, inferencia agrupada por ticker, criterio
+de seleccion ex-ante, y holdout verdaderamente no inspeccionado.
+
+### Lo que NO cambia
+
+- Contrato v1.8 vigente.
+- `detect_sow` fail-closed (parametros obligatorios).
+- `config/settings.py` con los 4 SOW a None.
+- K=0.25 congelado (5b.2).
+- Legacy intacto. Consumidores sin migrar.
+- 5c.4 y 5d bloqueadas.
+
+---
+
+**Fin de la nota de cierre.**
