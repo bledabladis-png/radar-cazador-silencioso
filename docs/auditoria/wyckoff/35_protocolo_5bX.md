@@ -199,7 +199,9 @@ que la validacion original ha sido abortada.**
 - `outputs/audit/wyckoff_5bX_bootstrap.csv` (una fila).
 - `outputs/audit/wyckoff_5bX_summary.json`.
 - `outputs/audit/wyckoff_5bX_run.log`.
-- `docs/auditoria/wyckoff/36_validacion_5bX_resultados.md`.
+- `docs/auditoria/wyckoff/37_validacion_5bX_resultados.md`.
+  Nota: el 36 esta ocupado por el QA de precondiciones
+  (36_qa_precond_5bX.md). La validacion real usa el 37.
 
 ---
 

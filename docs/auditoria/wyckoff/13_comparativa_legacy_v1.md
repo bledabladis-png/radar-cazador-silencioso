@@ -8,7 +8,7 @@
 
 ## 1. Entorno
 
-- Script: `scripts/compare_wyckoff_legacy_v13.py`.
+- Script: `scripts/compare_wyckoff_legacy_v18.py`.
 - Fuente: `data/stock_prices.parquet`, 316 tickers.
 - Legacy: `indicators/wyckoff.py` (v4.2, `robust_zscore(trend, w=60)`).
 - v1.3: `indicators/wyckoff_v1.py` con K=0.25 (`tanh(trend/0.25)`).
@@ -290,7 +290,6 @@ clasifica como RANGE con flag `distribution_candidate=True` via
 
 ### Estado del script
 
-`scripts/compare_wyckoff_legacy_v13.py` no se ha renombrado. El nombre
-"v13" es historico; el script compara con la version vigente de
-`wyckoff_v1.py` (v1.8). Pendiente: rename a
-`compare_wyckoff_legacy_v18.py` si se decide (cosmetico).
+`scripts/compare_wyckoff_legacy_v18.py` (renombrado 2026-10-02). El
+nombre historico "v13" quedo obsoleto; el script compara con la
+version vigente de `wyckoff_v1.py` (v1.8).
