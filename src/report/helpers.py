@@ -14,10 +14,22 @@ from config.settings import (
 
 
 def _fmt_num(v, fmt="{:.2f}"):
+    """Formatea un numero. NaN -> N/D.
+
+    FU-003a-bis (2026-10-02): normaliza ruido numerico -0.00/-0.0/-0
+    a 0.00/0.0/0. El signo de un cero visual es enganoso, y el ruido
+    de coma flotante (p.ej. -1e-17) formateado a 2 decimales produce
+    '-0.00'. Mismo contrato que _fmt_signed pero para fmt sin signo.
+    """
     if pd.isna(v):
         return "N/D"
     try:
-        return fmt.format(v)
+        s = fmt.format(v)
+        if s.startswith('-'):
+            rest = s[1:]
+            if rest and all(c in '0.,%' for c in rest):
+                s = rest
+        return s
     except Exception:
         return str(v)
 
@@ -66,6 +78,10 @@ def _fmt_ad_net(advances, declines, ad_net, fmt="{:+d}"):
             return "N/D"
     except Exception:
         return "N/D"
+    # Politica B3 (2026-09-12): ad_net=0 con advances=declines>0 es
+    # balance real -> '+0'. Distinto de 0/0 -> N/D. El '+' comunica
+    # 'cero neto con datos disponibles'. NO es una violacion de FU-003a
+    # (que aplica a ruido numerico y a ceros sin informacion).
     return _fmt_num(ad_net, fmt)
 
 
