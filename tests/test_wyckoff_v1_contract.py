@@ -1233,3 +1233,128 @@ def test_f02_meta_no_traga_runtime_error():
                            side_effect=RuntimeError("fallo simulado")):
         with pytest.raises(RuntimeError, match="fallo simulado"):
             w1.classify_wyckoff_phase_meta(df, "SYNTH")
+
+# =====================================================================
+# Frente F - F-03: cobertura directa de funciones puras no-SOW
+# =====================================================================
+
+def _make_flat_ohlcv(n=60, price=100.0, volume=1000.0):
+    """Serie OHLCV plana. Determinista, util para tests de eventos."""
+    dates = pd.date_range("2024-01-01", periods=n, freq="B")
+    return pd.DataFrame({
+        "Open": price, "High": price, "Low": price,
+        "Close": price, "Volume": volume,
+    }, index=dates)
+
+
+def test_f03_atr_normalized_min_periods():
+    """_atr_normalized con min_periods=20 devuelve NaN las primeras 19."""
+    from indicators.wyckoff_v1 import _atr_normalized
+    df = _make_flat_ohlcv(n=40, price=100.0)
+    # Introducir rango minimo para que TR no sea 0
+    df["High"] = 101.0
+    df["Low"] = 99.0
+    atr_norm = _atr_normalized(df, "SYNTH", window=20)
+    assert atr_norm.iloc[:19].isna().all()
+    assert atr_norm.iloc[19:].notna().all()
+
+
+def test_f03_atr_normalized_valor_positivo_con_rango():
+    """_atr_normalized devuelve valor positivo cuando hay rango real."""
+    from indicators.wyckoff_v1 import _atr_normalized
+    df = _make_flat_ohlcv(n=40, price=100.0)
+    df["High"] = 101.0
+    df["Low"] = 99.0
+    atr_norm = _atr_normalized(df, "SYNTH", window=20)
+    last = atr_norm.dropna().iloc[-1]
+    # Rango medio = 2.0 (High-Low constante), close=100 -> ~0.02
+    assert last > 0, f"esperado > 0, obtenido {last}"
+
+
+def test_f03_volume_z_delega_en_robust_zscore():
+    """_volume_z es wrapper directo de robust_zscore(Volume, 60, 20)."""
+    from indicators.wyckoff_v1 import _volume_z
+    from src.utils import robust_zscore
+    from config.settings import WYCKOFF_VOLUME_ZSCORE_WINDOW
+    df = _make_flat_ohlcv(n=100, volume=1_000_000.0)
+    # Introducir dispersion para que robust_zscore no sea constante
+    df["Volume"] = df["Volume"] + np.arange(100) * 1000.0
+    v = _volume_z(df, "SYNTH")
+    expected = robust_zscore(df["Volume"], window=WYCKOFF_VOLUME_ZSCORE_WINDOW, min_periods=20)
+    pd.testing.assert_series_equal(v, expected, check_names=False)
+
+
+def test_f03_effort_vs_result_en_rango():
+    """_effort_vs_result aplica tanh -> en (-1, 1)."""
+    from indicators.wyckoff_v1 import _effort_vs_result
+    n = 200
+    dates = pd.date_range("2024-01-01", periods=n, freq="B")
+    rng = np.random.default_rng(42)
+    close = pd.Series(100 * np.exp(np.cumsum(rng.normal(0, 0.01, n))), index=dates)
+    volume = pd.Series(np.abs(rng.normal(1e6, 2e5, n)), index=dates)
+    df = pd.DataFrame({
+        "Open": close, "High": close * 1.01, "Low": close * 0.99,
+        "Close": close, "Volume": volume,
+    })
+    e = _effort_vs_result(df, "SYNTH").dropna()
+    assert not e.empty
+    assert e.abs().max() <= 1.0 + 1e-9
+
+
+def test_f03_detect_spring_positivo():
+    """detect_spring detecta una configuracion construida."""
+    from indicators.wyckoff_v1 import detect_spring
+    df = _make_flat_ohlcv(n=30, price=100.0, volume=1000.0)
+    # Fila 10: low cae, cierre > open, volumen alto
+    df.iloc[10, df.columns.get_loc("Low")] = 99.0
+    df.iloc[10, df.columns.get_loc("Open")] = 100.0
+    df.iloc[10, df.columns.get_loc("Close")] = 101.0
+    df.iloc[10, df.columns.get_loc("High")] = 101.0
+    df.iloc[10, df.columns.get_loc("Volume")] = 50000.0
+    spring = detect_spring(df, "SYNTH")
+    assert spring.dtype == int or spring.dtype == np.int64
+    assert int(spring.iloc[10]) == 1, (
+        f"spring no detectado en fila 10. Valores: {spring.iloc[8:13].tolist()}"
+    )
+
+
+def test_f03_detect_spring_serie_plana_no_dispara():
+    """detect_spring sobre serie plana devuelve todo 0."""
+    from indicators.wyckoff_v1 import detect_spring
+    df = _make_flat_ohlcv(n=30)
+    spring = detect_spring(df, "SYNTH")
+    assert int(spring.sum()) == 0
+
+
+def test_f03_detect_sos_positivo():
+    """detect_sos detecta una ruptura de maximo con volumen."""
+    from indicators.wyckoff_v1 import detect_sos
+    df = _make_flat_ohlcv(n=30, price=100.0, volume=1000.0)
+    # Filas 0-19: high=100. Fila 20: close=105 > max previos.
+    df.iloc[20, df.columns.get_loc("Close")] = 105.0
+    df.iloc[20, df.columns.get_loc("High")] = 105.0
+    df.iloc[20, df.columns.get_loc("Volume")] = 5000.0
+    sos = detect_sos(df, "SYNTH")
+    assert int(sos.iloc[20]) == 1, (
+        f"sos no detectado. Valores: {sos.iloc[18:23].tolist()}"
+    )
+
+
+def test_f03_detect_sos_no_lookahead():
+    """detect_sos en t no depende de datos > t."""
+    from indicators.wyckoff_v1 import detect_sos
+    df = _make_flat_ohlcv(n=40, price=100.0, volume=1000.0)
+    df.iloc[25, df.columns.get_loc("Close")] = 105.0
+    df.iloc[25, df.columns.get_loc("High")] = 105.0
+    df.iloc[25, df.columns.get_loc("Volume")] = 5000.0
+    sos_ref = detect_sos(df, "SYNTH")
+    t = 20
+    # Modificar datos futuros
+    df_mod = df.copy()
+    df_mod.iloc[21:, df_mod.columns.get_loc("Close")] = 200.0
+    df_mod.iloc[21:, df_mod.columns.get_loc("High")] = 200.0
+    df_mod.iloc[21:, df_mod.columns.get_loc("Volume")] = 99999.0
+    sos_mod = detect_sos(df_mod, "SYNTH")
+    pd.testing.assert_series_equal(
+        sos_ref.iloc[:t+1], sos_mod.iloc[:t+1], check_names=False
+    )
