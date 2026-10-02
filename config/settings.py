@@ -118,6 +118,10 @@ WYCKOFF_TACT_WEIGHT_VOLUME = 0.50
 WYCKOFF_TACT_WEIGHT_EFFORT = 0.50
 # WYCKOFF v1.3 (P1 critico, hallazgo t_norm)
 WYCKOFF_T_NORM_K = 0.25  # CALIBRADO 2026-10-02. Ver 12_calibracion_K_5b2.md.
+# WYCKOFF v1.6 (candidate/confirmed): SOW para confirmar DISTRIBUTION.
+# N y M son PROPUESTOS. Calibracion en 5b.3.
+WYCKOFF_SOW_WINDOW_N = 30   # ventana para definir soporte y baseline de volumen
+WYCKOFF_SOW_MAX_AGE_M = 10  # max edad (sesiones) del SOW para confirmar
 WYCKOFF_COMBINED_STRUCT_WEIGHT = 0.70
 WYCKOFF_COMBINED_TACT_WEIGHT = 0.30
 

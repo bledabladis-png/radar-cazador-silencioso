@@ -684,10 +684,13 @@ def test_distribution_is_reachable(monkeypatch):
         'Open': 100.0, 'High': 101.0, 'Low': 99.0,
         'Close': 100.0, 'Volume': 1_000_000.0,
     }, index=dates)
+    # v1.6: DISTRIBUTION requiere candidate + SOW reciente.
+    sow_vals = np.zeros(n); sow_vals[-1] = 1
+    sow = pd.Series(sow_vals, index=dates)
     with mock.patch.object(
         w1, 'wyckoff_score',
         return_value=(combined, struct, tact, t_norm, c_norm, v_norm, e_norm),
-    ):
+    ), mock.patch.object(w1, 'detect_sow', return_value=sow):
         phase = w1.classify_wyckoff_phase(df, 'SYNTH')
     assert phase == "DISTRIBUTION", (
         f"Esperado DISTRIBUTION alcanzable, obtenido {phase}. "
@@ -746,11 +749,15 @@ def test_distribution_requires_prior_strength():
     t_norm2 = pd.Series(t_norm_vals, index=dates)
     c_norm2 = pd.Series(c_norm_vals, index=dates)
     combined2 = 0.70 * struct2 + 0.30 * tact
+    # v1.6: anadir SOW reciente para confirmar DISTRIBUTION.
+    sow_vals = np.zeros(n); sow_vals[-1] = 1
+    sow = pd.Series(sow_vals, index=dates)
     with mock.patch.object(w1, 'wyckoff_score',
-                            return_value=(combined2, struct2, tact, t_norm2, c_norm2, v_norm, e_norm)):
+                            return_value=(combined2, struct2, tact, t_norm2, c_norm2, v_norm, e_norm)), \
+         mock.patch.object(w1, 'detect_sow', return_value=sow):
         phase_si = w1.classify_wyckoff_phase(df, 'SYNTH')
     assert phase_si == "DISTRIBUTION", (
-        f"Con precedente fuerte + deterioro + t>-0.30, debe ser DISTRIBUTION. "
+        f"Con precedente fuerte + deterioro + t>-0.30 + SOW, debe ser DISTRIBUTION. "
         f"Obtenido: {phase_si}"
     )
 
@@ -781,8 +788,11 @@ def test_distribution_vs_markdown_boundary():
     v_norm = pd.Series(np.zeros(n), index=dates)
     e_norm = pd.Series(np.zeros(n), index=dates)
     combined = 0.70 * struct + 0.30 * tact
+    sow_vals = np.zeros(n); sow_vals[-1] = 1
+    sow = pd.Series(sow_vals, index=dates)
     with mock.patch.object(w1, 'wyckoff_score',
-                            return_value=(combined, struct, tact, t_norm, c_norm, v_norm, e_norm)):
+                            return_value=(combined, struct, tact, t_norm, c_norm, v_norm, e_norm)), \
+         mock.patch.object(w1, 'detect_sow', return_value=sow):
         phase = w1.classify_wyckoff_phase(df, 'SYNTH')
     assert phase == "DISTRIBUTION", f"Esperado DISTRIBUTION, obtenido {phase}"
 
@@ -820,3 +830,164 @@ def test_distribution_no_lookahead(synthetic_df):
         f"Look-ahead detectado: fase en t={t_idx} cambio al modificar "
         f"datos futuros. ref={fase_ref}, mod={fase_mod}"
     )
+
+# =====================================================================
+# v1.6 - DISTRIBUTION_CANDIDATE vs DISTRIBUTION
+# =====================================================================
+
+def test_v16_candidate_no_implica_distribution():
+    """T1 (dictamen v1.6): candidate sin SOW no es DISTRIBUTION."""
+    from unittest import mock
+    n = 500
+    dates = pd.date_range("2024-01-01", periods=n, freq="B")
+    df = pd.DataFrame({
+        'Open': 100.0, 'High': 101.0, 'Low': 99.0,
+        'Close': 100.0, 'Volume': 1_000_000.0,
+    }, index=dates)
+    struct_vals = np.concatenate([
+        np.full(n - 30, 0.40),
+        np.full(30, -0.20),
+    ])
+    struct = pd.Series(struct_vals, index=dates)
+    t_norm = pd.Series(np.concatenate([
+        np.full(n - 30, 0.50), np.full(30, -0.15)
+    ]), index=dates)
+    c_norm = pd.Series(np.full(n, 0.10), index=dates)
+    tact = pd.Series(np.zeros(n), index=dates)
+    v_norm = pd.Series(np.zeros(n), index=dates)
+    e_norm = pd.Series(np.zeros(n), index=dates)
+    combined = 0.70 * struct + 0.30 * tact
+
+    # SOW siempre 0 (df plano no dispara SOW)
+    sow_zeros = pd.Series(np.zeros(n), index=dates)
+    with mock.patch.object(w1, 'wyckoff_score',
+                            return_value=(combined, struct, tact, t_norm, c_norm, v_norm, e_norm)), \
+         mock.patch.object(w1, 'detect_sow', return_value=sow_zeros):
+        phase = w1.classify_wyckoff_phase(df, 'SYNTH')
+    # Candidate cumple condiciones pero sin SOW -> no DISTRIBUTION
+    assert phase != "DISTRIBUTION", (
+        f"Candidate sin SOW no debe ser DISTRIBUTION. Obtenido: {phase}"
+    )
+    assert phase == "RANGE", f"Esperado RANGE, obtenido: {phase}"
+
+
+def test_v16_candidate_con_sow_es_distribution():
+    """T3 (dictamen v1.6): candidate + SOW reciente -> DISTRIBUTION."""
+    from unittest import mock
+    n = 500
+    dates = pd.date_range("2024-01-01", periods=n, freq="B")
+    df = pd.DataFrame({
+        'Open': 100.0, 'High': 101.0, 'Low': 99.0,
+        'Close': 100.0, 'Volume': 1_000_000.0,
+    }, index=dates)
+    struct_vals = np.concatenate([
+        np.full(n - 30, 0.40),
+        np.full(30, -0.20),
+    ])
+    struct = pd.Series(struct_vals, index=dates)
+    t_norm = pd.Series(np.concatenate([
+        np.full(n - 30, 0.50), np.full(30, -0.15)
+    ]), index=dates)
+    c_norm = pd.Series(np.full(n, 0.10), index=dates)
+    tact = pd.Series(np.zeros(n), index=dates)
+    v_norm = pd.Series(np.zeros(n), index=dates)
+    e_norm = pd.Series(np.zeros(n), index=dates)
+    combined = 0.70 * struct + 0.30 * tact
+
+    # SOW en la ultima posicion (dentro de M=10)
+    sow_vals = np.zeros(n)
+    sow_vals[-1] = 1
+    sow = pd.Series(sow_vals, index=dates)
+    with mock.patch.object(w1, 'wyckoff_score',
+                            return_value=(combined, struct, tact, t_norm, c_norm, v_norm, e_norm)), \
+         mock.patch.object(w1, 'detect_sow', return_value=sow):
+        phase = w1.classify_wyckoff_phase(df, 'SYNTH')
+    assert phase == "DISTRIBUTION", (
+        f"Candidate + SOW reciente debe ser DISTRIBUTION. Obtenido: {phase}"
+    )
+
+
+def test_v16_sow_aislado_no_es_distribution():
+    """T2 (dictamen v1.6): SOW sin candidate no es DISTRIBUTION."""
+    from unittest import mock
+    n = 500
+    dates = pd.date_range("2024-01-01", periods=n, freq="B")
+    df = pd.DataFrame({
+        'Open': 100.0, 'High': 101.0, 'Low': 99.0,
+        'Close': 100.0, 'Volume': 1_000_000.0,
+    }, index=dates)
+    # struct positivo (no candidate)
+    struct = pd.Series(np.full(n, 0.40), index=dates)
+    t_norm = pd.Series(np.full(n, 0.50), index=dates)
+    c_norm = pd.Series(np.full(n, 0.10), index=dates)
+    tact = pd.Series(np.zeros(n), index=dates)
+    v_norm = pd.Series(np.zeros(n), index=dates)
+    e_norm = pd.Series(np.zeros(n), index=dates)
+    combined = 0.70 * struct + 0.30 * tact
+    sow_vals = np.zeros(n)
+    sow_vals[-1] = 1
+    sow = pd.Series(sow_vals, index=dates)
+    with mock.patch.object(w1, 'wyckoff_score',
+                            return_value=(combined, struct, tact, t_norm, c_norm, v_norm, e_norm)), \
+         mock.patch.object(w1, 'detect_sow', return_value=sow):
+        phase = w1.classify_wyckoff_phase(df, 'SYNTH')
+    assert phase != "DISTRIBUTION", (
+        f"SOW aislado (sin candidate) no debe ser DISTRIBUTION. Obtenido: {phase}"
+    )
+
+
+def test_v16_sow_antiguo_no_confirma():
+    """T4 (dictamen v1.6): SOW fuera de M no confirma."""
+    from unittest import mock
+    n = 500
+    dates = pd.date_range("2024-01-01", periods=n, freq="B")
+    df = pd.DataFrame({
+        'Open': 100.0, 'High': 101.0, 'Low': 99.0,
+        'Close': 100.0, 'Volume': 1_000_000.0,
+    }, index=dates)
+    struct_vals = np.concatenate([
+        np.full(n - 30, 0.40),
+        np.full(30, -0.20),
+    ])
+    struct = pd.Series(struct_vals, index=dates)
+    t_norm = pd.Series(np.concatenate([
+        np.full(n - 30, 0.50), np.full(30, -0.15)
+    ]), index=dates)
+    c_norm = pd.Series(np.full(n, 0.10), index=dates)
+    tact = pd.Series(np.zeros(n), index=dates)
+    v_norm = pd.Series(np.zeros(n), index=dates)
+    e_norm = pd.Series(np.zeros(n), index=dates)
+    combined = 0.70 * struct + 0.30 * tact
+    # SOW en posicion n-50 (fuera de M=10)
+    sow_vals = np.zeros(n)
+    sow_vals[-50] = 1
+    sow = pd.Series(sow_vals, index=dates)
+    with mock.patch.object(w1, 'wyckoff_score',
+                            return_value=(combined, struct, tact, t_norm, c_norm, v_norm, e_norm)), \
+         mock.patch.object(w1, 'detect_sow', return_value=sow):
+        phase = w1.classify_wyckoff_phase(df, 'SYNTH')
+    assert phase != "DISTRIBUTION", (
+        f"SOW fuera de M no confirma DISTRIBUTION. Obtenido: {phase}"
+    )
+
+
+def test_v16_sow_no_lookahead(synthetic_df):
+    """T5 (dictamen v1.6): SOW_t no depende de datos posteriores a t."""
+    t_idx = synthetic_df.index[420]
+    sow_ref = w1.detect_sow(synthetic_df.loc[:t_idx], 'SYNTH')
+    df_mod = synthetic_df.copy()
+    df_mod.loc[df_mod.index > t_idx, 'Close'] = 999999.0
+    df_mod.loc[df_mod.index > t_idx, 'High'] = 1000000.0
+    df_mod.loc[df_mod.index > t_idx, 'Low'] = 999998.0
+    sow_mod = w1.detect_sow(df_mod.loc[:t_idx], 'SYNTH')
+    pd.testing.assert_series_equal(sow_ref, sow_mod, check_names=False)
+
+
+def test_v16_classify_meta_devuelve_campos():
+    """I29: classify_wyckoff_phase_meta devuelve dict con phase + flag."""
+    df = _make_constant_slope_series(n=600, total_log_ret=1.2)
+    meta = w1.classify_wyckoff_phase_meta(df, 'SYNTH')
+    assert isinstance(meta, dict)
+    assert "phase" in meta
+    assert "distribution_candidate" in meta
+    assert isinstance(meta["distribution_candidate"], bool)

@@ -34,6 +34,8 @@ from config.settings import (
     WYCKOFF_COMBINED_STRUCT_WEIGHT,
     WYCKOFF_COMBINED_TACT_WEIGHT,
     WYCKOFF_T_NORM_K,
+    WYCKOFF_SOW_WINDOW_N,
+    WYCKOFF_SOW_MAX_AGE_M,
 )
 from src.utils import robust_zscore, get_col
 
@@ -210,8 +212,69 @@ def _has_sufficient_data(df, ticker):
     return close.dropna().shape[0] >= WYCKOFF_TREND_SLOW_MA
 
 
+def classify_wyckoff_phase_meta(df, ticker, as_of=None):
+    """Clasifica la fase y devuelve metadata (dict).
+
+    Contrato v1.6:
+        phase ∈ {MARKUP, ACCUMULATION, RANGE, DISTRIBUTION, MARKDOWN,
+                 INSUFFICIENT_DATA}
+        distribution_candidate ∈ {True, False}
+
+    DISTRIBUTION_CANDIDATE NO es una fase. Es un flag que indica que
+    existe deterioro tras fortaleza. Solo se eleva a DISTRIBUTION si
+    ademas hay un SOW reciente.
+    """
+    phase = classify_wyckoff_phase(df, ticker, as_of=as_of)
+    candidate = False
+    if phase == FASE_DISTRIBUTION:
+        candidate = True
+    elif phase == FASE_RANGE:
+        # Podria ser candidato no confirmado. Comprobar.
+        try:
+            df_used = df.loc[:as_of] if as_of is not None else df
+            candidate = _is_distribution_candidate(df_used, ticker)
+        except Exception:
+            candidate = False
+    return {
+        "phase": phase,
+        "distribution_candidate": bool(candidate),
+    }
+
+
+def _is_distribution_candidate(df, ticker):
+    """True si el estado actual cumple las condiciones de CANDIDATE.
+
+    Definicion v1.6: perdida estructural de fuerza tras subida previa.
+        struct_t < STRUCT_DETERIORO
+        AND t_norm_t > -T_NORM_STRONG
+        AND struct_max > PREC_STRUCT_STRONG
+    """
+    if not _has_sufficient_data(df, ticker):
+        return False
+    try:
+        combined, struct_s, tact_s, t_norm, c_norm, v_norm, e_norm = (
+            wyckoff_score(df, ticker)
+        )
+    except (KeyError, ValueError, TypeError, IndexError):
+        return False
+    struct_c = struct_s.dropna()
+    t_c = t_norm.dropna()
+    if struct_c.empty or t_c.empty:
+        return False
+    s = float(struct_c.iloc[-1])
+    t = float(t_c.iloc[-1])
+    prec = _compute_precedent(struct_c, t_c, window=PRECEDENT_WINDOW)
+    if prec is None:
+        return False
+    return (
+        s < STRUCT_DETERIORO
+        and t > -T_NORM_STRONG
+        and prec["struct_max"] > PREC_STRUCT_STRONG
+    )
+
+
 def classify_wyckoff_phase(df, ticker, as_of=None):
-    """Clasifica la fase segun contrato v1.2 (§5).
+    """Clasifica la fase segun contrato v1.6 (§5).
 
     Args:
         df: DataFrame OHLCV (MultiIndex o flat).
@@ -285,26 +348,32 @@ def classify_wyckoff_phase(df, ticker, as_of=None):
             return FASE_RANGE
         return FASE_ACCUMULATION
 
-    # ---------------- DISTRIBUTION (contrato v1.2 §5.4) ----------------
-    # Requiere precedente (formacion de techo).
-    # v1.5 (dictamen 5c O1): DISTRIBUTION = perdida estructural de fuerza
-    # tras subida previa. Eliminada la condicion c_norm: durante el
-    # deterioro la volatilidad expande (c_norm < 0), por lo que exigir
-    # compresion era un defecto de modelado.
+    # ---------------- DISTRIBUTION (contrato v1.6 §5.4) ----------------
+    # Perdida estructural de fuerza tras subida previa, CONFIRMADA por
+    # un Sign of Weakness (SOW) reciente.
     #
-    # Definicion final:
+    # Condiciones candidate:
     #   struct_score_t < STRUCT_DETERIORO (-0.10)
     #   AND t_norm_t > -T_NORM_STRONG (-0.30)
-    #   AND struct_max (historico, [t-W+1, t-1]) > PREC_STRUCT_STRONG (0.30)
+    #   AND struct_max (historico [t-W+1, t-1]) > PREC_STRUCT_STRONG (0.30)
     #
-    # Simplificacion: t_norm > 0 OR |t| < T_NORM_WEAK equivale a
-    # t_norm > -T_NORM_STRONG. Los dos casos (t>0 y -0.30<t<0) ya estan
-    # contenidos en t > -0.30.
+    # Confirmacion: SOW en las ultimas WYCKOFF_SOW_MAX_AGE_M sesiones.
     trend_dist = last_t > -T_NORM_STRONG
     deterioration = last_struct < STRUCT_DETERIORO
     prec_strong = struct_max > PREC_STRUCT_STRONG
     if trend_dist and deterioration and prec_strong:
-        return FASE_DISTRIBUTION
+        # Candidate cumple. Confirmar con SOW reciente.
+        try:
+            df_used = df.loc[:as_of] if as_of is not None else df
+            sow = detect_sow(df_used, ticker)
+            if not sow.empty:
+                recent = sow.iloc[-WYCKOFF_SOW_MAX_AGE_M:]
+                if int(recent.sum()) > 0:
+                    return FASE_DISTRIBUTION
+        except (KeyError, ValueError, TypeError, IndexError):
+            pass
+        # Candidate sin confirmar -> RANGE (segun dictamen: no es fase).
+        return FASE_RANGE
 
     # ---------------- RANGE (contrato v1.2 §5.6) ----------------
     return FASE_RANGE
@@ -335,6 +404,26 @@ def detect_sos(df, ticker):
     high_max = high.rolling(EVENT_WINDOW, min_periods=1).max().shift(1)
     vol_mean = volume.rolling(EVENT_WINDOW, min_periods=1).mean()
     condition = (close > high_max) & (volume > vol_mean * SOS_VOLUME_MULT)
+    return condition.astype(int)
+
+
+def detect_sow(df, ticker, window=WYCKOFF_SOW_WINDOW_N):
+    """Sign of Weakness (dictamen v1.6, opcion A).
+
+    Definicion formal (auditor):
+        support_t          = rolling_min(Low, window).shift(1)
+        volume_baseline_t  = rolling_mean(Volume, window).shift(1)
+        SOW_t              = Close_t < support_t AND Volume_t > volume_baseline_t
+
+    El shift(1) garantiza que tanto soporte como baseline de volumen sean
+    ex-ante: no incluyen la observacion t. Test I29 (no look-ahead).
+    """
+    close = get_col(df, ticker, 'Close')
+    low = get_col(df, ticker, 'Low')
+    volume = get_col(df, ticker, 'Volume')
+    support = low.rolling(window, min_periods=window).min().shift(1)
+    vol_baseline = volume.rolling(window, min_periods=window).mean().shift(1)
+    condition = (close < support) & (volume > vol_baseline)
     return condition.astype(int)
 
 

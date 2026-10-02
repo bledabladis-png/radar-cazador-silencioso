@@ -93,9 +93,14 @@ Es solo una condicion temporal.
 
 ### Opcion C - Estructura de maximos decrecientes (Lower High)
 
-    LH = max(High[t-N : t-M]) < max(High[t-M : t-1])
+    LH = max(High[t-M : t-1]) < max(High[t-N : t-M])
 
 Es decir: el maximo reciente esta por debajo del maximo anterior.
+
+**Correccion (dictamen externo):** la version inicial tenia la
+desigualdad invertida. Escrito correctamente, `max(High[t-N:t-M])` es el
+maximo del periodo ANTIGUO, y `max(High[t-M:t-1])` es el maximo del
+periodo RECIENTE. El Lower High exige reciente < antiguo.
 
 `DISTRIBUTION = candidate AND LH`.
 
