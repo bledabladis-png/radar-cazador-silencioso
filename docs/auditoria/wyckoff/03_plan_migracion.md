@@ -216,3 +216,56 @@ El proyecto se considera cerrado cuando:
 ---
 
 Fin del plan de migracion.
+
+---
+
+## 8. Actualizacion 2026-10-02 (dictamen P1 + revision c_norm/e_norm)
+
+Tras el dictamen externo P1 (t_norm) y la revision de c_norm/e_norm,
+el estado del proyecto queda asi:
+
+    Fases 1-3   CERRADAS
+    Fase 4      CERRADA
+    Fase 5a     IMPLEMENTADA (v1.3)
+    P1          RESUELTO arquitectonicamente con O2
+    K           PROVISIONAL (= 0.15, sin calibrar)
+    Fase 5b     ABIERTA - protocolo formal en 09_protocolo_fase_5b.md
+    Fase 5c     BLOQUEADA oficialmente
+    Fase 5d     BLOQUEADA
+    Legacy      INTACTO
+
+### Aclaraciones del dictamen
+
+1. **K=0.15 se mantiene PROPUESTO.** No se cambia a 0.25/0.35 sin
+   criterio predefinido (evita calibrar sobre los 4 casos).
+2. **5c oficial bloqueada.** Solo se permite sensibilidad exploratoria
+   de K explicitamente etiquetada como calibracion (no como validacion).
+3. **5d sigue bloqueada.** Los 5 consumidores no se migran hasta que K
+   este congelado.
+4. **c_norm aprobado** (mantener como esta). El z-score sobre
+   compression tiene sentido porque el contrato declara posicion
+   relativa al regimen historico.
+5. **e_norm aprobado** (mantener como esta). `tanh(effort_z - result_z)`
+   es coherente con Effort vs Result clasico.
+6. **No abrir P1 para c_norm/e_norm.**
+7. **D-Pendiente registrada:** se asume que effort_z y result_z son
+   suficientemente comparables. Es una hipotesis de escala que debe
+   quedar documentada.
+
+### Siguiente paso aprobado
+
+Redactar el protocolo formal de Fase 5b con:
+- dataset y periodo fijados ex-ante,
+- grid predefinida,
+- metricas definidas antes de observar resultados,
+- criterios de aceptacion ex-ante,
+- validacion walk-forward sobre periodo independiente,
+- congelacion de K solo tras cumplir criterios.
+
+Razon del auditor: "K debe calibrarse sobre trend, no sobre el
+resultado de las fases".
+
+### Sensibilidad exploratoria
+
+Permitida si se etiqueta como analisis exploratorio (no como 5b ni 5c).
+Prohibido usarla para elegir K.
