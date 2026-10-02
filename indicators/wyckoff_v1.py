@@ -1,21 +1,21 @@
 # -*- coding: utf-8 -*-
-"""Modulo Wyckoff v1 - Fases estructurales.
+"""Modulo Wyckoff v1.1 - Fases estructurales con precedente temporal.
 
-Contrato: docs/auditoria/wyckoff/01_contrato_semantico_v1.md
+Contrato: docs/auditoria/wyckoff/01_contrato_semantico_v1_1.md
+Revision v1 -> v1.1: docs/auditoria/wyckoff/04_revision_contrato_v1_1.md
 
-Este modulo implementa el contrato v1. El legacy (indicators/wyckoff.py)
-permanece intacto y operativo. La migracion de consumidores es un paso
-posterior (Fase 5d del plan).
+Cambios respecto a v1.0:
+  - D1: MARKUP sin condicion c_norm < 0.30 (incompatible con bull market
+        ordenado).
+  - D2: MARKUP sin veto de combined. Usa struct_score como umbral.
+  - D3: ACCUMULATION sin exigir tact > 0 (opcional).
+  - Maquina de estados con precedente estructural historico.
+  - Precedente sobre variables continuas (struct_score, t_norm), NO sobre
+    etiquetas de fase previas. Evita circularidad.
+  - Regla de continuidad: MARKUP -> ACCUMULATION no permitida sin
+    precedente compatible.
 
-Diferencias clave respecto al legacy:
-  - 5 fases reales + INSUFFICIENT_DATA (no fallback RANGE).
-  - ACCUMULATION con condiciones estructurales explicitas.
-  - MARKDOWN como fase real.
-  - effort_vs_result en forma clasica (effort - result).
-  - stability como dispersion pura.
-  - ALL_NAN nunca devuelve una fase de mercado.
-
-No genera senales de trading.
+Legacy (indicators/wyckoff.py) permanece intacto.
 """
 from __future__ import annotations
 
@@ -37,20 +37,32 @@ from config.settings import (
 from src.utils import robust_zscore, get_col
 
 
-# --- Parametros del contrato v1 (ver 02_proveniencia) ---
-STABILITY_MAD_WINDOW = 10       # sesiones
-STABILITY_K = 1.0               # escala (PROPUESTO, calibrar en Fase 5b)
-SPRING_VOLUME_MULT = 1.5        # spring: volumen > 1.5x MA20
-SOS_VOLUME_MULT = 1.0           # sos: volumen > 1.0x MA20
-EVENT_WINDOW = 20               # ventana para detectar eventos
+# =====================================================================
+# Parametros del contrato v1.1 (ver 02_proveniencia)
+# =====================================================================
 
-# Umbrales de clasificacion (contrato §5)
-T_NORM_STRONG = 0.30
-T_NORM_WEAK = 0.30
-C_NORM_COMPRESSION = 0.30
-COMBINED_MARKUP = 0.30
-COMBINED_DISTRIBUTION = -0.10
-COMBINED_MARKDOWN = -0.30
+# Ventanas
+STABILITY_MAD_WINDOW = 10                # sesiones
+STABILITY_K = 1.0                        # escala (PROPUESTO, calibrar Fase 5b)
+PRECEDENT_WINDOW = 60                    # sesiones (PROPUESTO, calibrar Fase 5b)
+SPRING_VOLUME_MULT = 1.5
+SOS_VOLUME_MULT = 1.0
+EVENT_WINDOW = 20
+
+# Umbrales estructurales actuales
+T_NORM_STRONG = 0.30                     # t_norm fuerte
+T_NORM_WEAK = 0.30                       # t_norm lateral (banda)
+C_NORM_COMPRESSION = 0.30                # compresion alta
+STRUCT_STRONG = 0.30                     # struct_score fuerte
+STRUCT_WEAK = -0.30                      # struct_score debil
+STRUCT_BASE_LOW = -0.20                  # banda de base: limite inferior
+STRUCT_BASE_HIGH = 0.20                  # banda de base: limite superior
+STRUCT_DETERIORO = -0.10                 # para DISTRIBUTION
+
+# Umbrales de precedente (PROPUESTOS, calibrar Fase 5b)
+PREC_STRUCT_WEAK = -0.20                 # hubo debilidad reciente
+PREC_STRUCT_STRONG = 0.30                # hubo fortaleza reciente
+PREC_STRUCT_NEG = -0.30                  # hubo bajista reciente
 
 # Constantes de fase
 FASE_INSUFFICIENT_DATA = "INSUFFICIENT_DATA"
@@ -68,7 +80,6 @@ ALL_FASES = (FASE_ACCUMULATION, FASE_MARKUP, FASE_DISTRIBUTION,
 # =====================================================================
 
 def _atr_normalized(df, ticker, window=WYCKOFF_ATR_WINDOW):
-    """ATR / Close. Alto = expansion; bajo = compresion."""
     high = get_col(df, ticker, 'High')
     low = get_col(df, ticker, 'Low')
     close = get_col(df, ticker, 'Close')
@@ -83,7 +94,6 @@ def _atr_normalized(df, ticker, window=WYCKOFF_ATR_WINDOW):
 
 
 def _trend_component(df, ticker):
-    """MA_fast / MA_slow - 1. Positivo = tendencia alcista."""
     close = get_col(df, ticker, 'Close')
     ma_fast = close.rolling(WYCKOFF_TREND_FAST_MA,
                             min_periods=WYCKOFF_TREND_FAST_MA).mean()
@@ -93,22 +103,12 @@ def _trend_component(df, ticker):
 
 
 def _volume_z(df, ticker):
-    """Z-score robusto del volumen."""
     volume = get_col(df, ticker, 'Volume')
     return robust_zscore(volume, window=WYCKOFF_VOLUME_ZSCORE_WINDOW,
                          min_periods=20)
 
 
 def _effort_vs_result(df, ticker, window=20):
-    """Effort vs result (forma clasica Wyckoff).
-
-    effort = z_robusto(Volume)
-    result = z_robusto(|Close_t / Close_{t-window} - 1|)
-    return tanh(effort - result)
-
-    Positivo: esfuerzo > resultado -> absorcion.
-    Negativo: resultado > esfuerzo -> movimiento sin esfuerzo.
-    """
     close = get_col(df, ticker, 'Close')
     effort = _volume_z(df, ticker)
     price_move = (close / close.shift(window) - 1).abs()
@@ -121,13 +121,6 @@ def _effort_vs_result(df, ticker, window=20):
 # =====================================================================
 
 def wyckoff_score(df, ticker):
-    """Score compuesto y sus componentes.
-
-    Returns:
-        (combined, struct_score, tact_score, t_norm, c_norm, v_norm, e_norm)
-        Cada elemento es una Series con DatetimeIndex.
-    """
-    # Estructural
     trend = _trend_component(df, ticker)
     compression = _atr_normalized(df, ticker, window=WYCKOFF_ATR_WINDOW)
     t_norm = np.tanh(robust_zscore(trend, window=200, min_periods=60))
@@ -137,7 +130,6 @@ def wyckoff_score(df, ticker):
         + WYCKOFF_STRUCT_WEIGHT_COMPRESSION * c_norm
     )
 
-    # Tactico
     v_norm = np.tanh(_volume_z(df, ticker))
     e_norm = _effort_vs_result(df, ticker)
     tact_score = (
@@ -145,7 +137,6 @@ def wyckoff_score(df, ticker):
         + WYCKOFF_TACT_WEIGHT_EFFORT * e_norm
     )
 
-    # Compuesto
     combined = (
         WYCKOFF_COMBINED_STRUCT_WEIGHT * struct_score
         + WYCKOFF_COMBINED_TACT_WEIGHT * tact_score
@@ -155,12 +146,6 @@ def wyckoff_score(df, ticker):
 
 
 def wyckoff_stability(combined, window=STABILITY_MAD_WINDOW, K=STABILITY_K):
-    """Estabilidad temporal del score. Rango (-1, 1).
-
-    stability = 1 - 2*tanh(score_mad / K)
-
-    Donde score_mad = MAD(combined en ventana). NO depende del nivel.
-    """
     mad = combined.rolling(window, min_periods=window).apply(
         lambda x: float(np.median(np.abs(x - np.median(x)))),
         raw=True,
@@ -169,11 +154,47 @@ def wyckoff_stability(combined, window=STABILITY_MAD_WINDOW, K=STABILITY_K):
 
 
 # =====================================================================
-# Clasificacion
+# Precedente estructural (contrato v1.1 §4)
+# =====================================================================
+
+def _compute_precedent(struct_clean, t_norm_clean, window=PRECEDENT_WINDOW):
+    """Calcula variables de precedente sobre ventana [t-N, t-1].
+
+    Contrato v1.1 §4: precedente sobre variables continuas, no sobre
+    etiquetas. Solo usa datos <= t-1 (excluye t).
+
+    Args:
+        struct_clean: Series de struct_score sin NaN.
+        t_norm_clean: Series de t_norm sin NaN.
+        window: N (ventana de precedente).
+
+    Returns:
+        dict con struct_min, struct_max, struct_mean, t_norm_min, t_norm_max.
+        None si no hay suficientes datos (< window+1).
+    """
+    n_struct = len(struct_clean)
+    if n_struct < window + 1:
+        return None
+
+    # [t-N, t-1]: excluye la ultima observacion (t)
+    struct_window = struct_clean.iloc[-(window + 1):-1]
+    t_norm_window = t_norm_clean.iloc[-(window + 1):-1] if len(t_norm_clean) >= window + 1 else pd.Series(dtype=float)
+
+    out = {
+        'struct_min': float(struct_window.min()),
+        'struct_max': float(struct_window.max()),
+        'struct_mean': float(struct_window.mean()),
+        't_norm_min': float(t_norm_window.min()) if not t_norm_window.empty else np.nan,
+        't_norm_max': float(t_norm_window.max()) if not t_norm_window.empty else np.nan,
+    }
+    return out
+
+
+# =====================================================================
+# Clasificacion v1.1
 # =====================================================================
 
 def _has_sufficient_data(df, ticker):
-    """True si hay al menos 200 observaciones validas de Close."""
     try:
         close = get_col(df, ticker, 'Close')
     except (KeyError, ValueError, TypeError):
@@ -181,13 +202,23 @@ def _has_sufficient_data(df, ticker):
     return close.dropna().shape[0] >= WYCKOFF_TREND_SLOW_MA
 
 
-def classify_wyckoff_phase(df, ticker):
-    """Clasifica la fase segun el contrato v1 (§5).
+def classify_wyckoff_phase(df, ticker, as_of=None):
+    """Clasifica la fase segun contrato v1.2 (§5).
+
+    Args:
+        df: DataFrame OHLCV (MultiIndex o flat).
+        ticker: str.
+        as_of: timestamp opcional. Si se pasa, clasifica en esa fecha
+            usando exclusivamente datos <= as_of. Util para tests de
+            no-look-ahead. Si None, usa el ultimo valor disponible.
 
     Returns:
         Uno de: MARKUP | ACCUMULATION | RANGE | DISTRIBUTION | MARKDOWN
                 INSUFFICIENT_DATA
     """
+    if as_of is not None:
+        df = df.loc[:as_of]
+
     if not _has_sufficient_data(df, ticker):
         return FASE_INSUFFICIENT_DATA
 
@@ -198,46 +229,63 @@ def classify_wyckoff_phase(df, ticker):
     except (KeyError, ValueError, TypeError, IndexError):
         return FASE_INSUFFICIENT_DATA
 
-    combined_clean = combined.dropna()
-    if combined_clean.empty:
+    struct_clean = struct_score.dropna()
+    t_norm_clean = t_norm.dropna()
+    c_norm_clean = c_norm.dropna()
+
+    if struct_clean.empty or t_norm_clean.empty or c_norm_clean.empty:
         return FASE_INSUFFICIENT_DATA
 
-    last = combined_clean.iloc[-1]
-    t_last = t_norm.dropna().iloc[-1] if not t_norm.dropna().empty else np.nan
-    c_last = c_norm.dropna().iloc[-1] if not c_norm.dropna().empty else np.nan
-    tact_last = (tact_score.dropna().iloc[-1]
-                 if not tact_score.dropna().empty else np.nan)
+    last_struct = float(struct_clean.iloc[-1])
+    last_t = float(t_norm_clean.iloc[-1])
+    last_c = float(c_norm_clean.iloc[-1])
 
-    if pd.isna(t_last) or pd.isna(c_last) or pd.isna(tact_last):
-        return FASE_INSUFFICIENT_DATA
-
-    # --- MARKUP (§5.3) ---
-    if t_last > T_NORM_STRONG and c_last < C_NORM_COMPRESSION and last > COMBINED_MARKUP:
+    # ---------------- MARKUP (contrato v1.2 §5.3) ----------------
+    # Estado direccional alcista. Sin precedente. Sin veto tactico.
+    if (
+        last_struct > STRUCT_STRONG
+        and last_t > T_NORM_STRONG
+    ):
         return FASE_MARKUP
 
-    # --- MARKDOWN (§5.5) ---
-    if t_last < -T_NORM_STRONG and c_last < 0 and last < COMBINED_MARKDOWN:
+    # ---------------- MARKDOWN (contrato v1.2 §5.5) ----------------
+    # Estado direccional bajista. Sin precedente. Con expansion (c_norm < 0).
+    if (
+        last_struct < STRUCT_WEAK
+        and last_t < -T_NORM_STRONG
+        and last_c < 0
+    ):
         return FASE_MARKDOWN
 
-    # --- ACCUMULATION (§5.2) ---
-    # 1) tendencia previa negativa o lateral-baja
-    trend_ok = (t_last < 0) or (abs(t_last) < T_NORM_WEAK)
-    # 2) compresion alta
-    compression_ok = c_last > C_NORM_COMPRESSION
-    # 3) base/rango: ATR actual <= mediana historica (aprox. via c_norm > 0)
-    base_ok = c_last > 0
-    # 4) confirmacion tactica
-    tact_ok = tact_last > 0
-    if trend_ok and compression_ok and base_ok and tact_ok:
+    # Precedente estructural (solo para ACCUMULATION y DISTRIBUTION)
+    prec = _compute_precedent(struct_clean, t_norm_clean, window=PRECEDENT_WINDOW)
+    if prec is None:
+        return FASE_INSUFFICIENT_DATA
+
+    struct_min = prec['struct_min']
+    struct_max = prec['struct_max']
+
+    # ---------------- ACCUMULATION (contrato v1.2 §5.2) ----------------
+    # Requiere precedente (formacion de base).
+    trend_weak = (last_t < 0) or (abs(last_t) < T_NORM_WEAK)
+    in_base_band = STRUCT_BASE_LOW <= last_struct <= STRUCT_BASE_HIGH
+    compression = last_c > C_NORM_COMPRESSION
+    prec_weak = struct_min < PREC_STRUCT_WEAK
+    if trend_weak and in_base_band and compression and prec_weak:
+        # Regla de continuidad: MARKUP -> ACCUMULATION directa prohibida.
+        if struct_max >= PREC_STRUCT_STRONG:
+            return FASE_RANGE
         return FASE_ACCUMULATION
 
-    # --- DISTRIBUTION (§5.4) ---
-    trend_dist_ok = (t_last > 0) or (abs(t_last) < T_NORM_WEAK)
-    compression_dist_ok = c_last > C_NORM_COMPRESSION
-    if trend_dist_ok and compression_dist_ok and last < COMBINED_DISTRIBUTION:
+    # ---------------- DISTRIBUTION (contrato v1.2 §5.4) ----------------
+    # Requiere precedente (formacion de techo).
+    trend_dist = (last_t > 0) or (abs(last_t) < T_NORM_WEAK)
+    deterioration = last_struct < STRUCT_DETERIORO
+    prec_strong = struct_max > PREC_STRUCT_STRONG
+    if trend_dist and deterioration and compression and prec_strong:
         return FASE_DISTRIBUTION
 
-    # --- RANGE (§5.6) ---
+    # ---------------- RANGE (contrato v1.2 §5.6) ----------------
     return FASE_RANGE
 
 
@@ -246,7 +294,6 @@ def classify_wyckoff_phase(df, ticker):
 # =====================================================================
 
 def detect_spring(df, ticker):
-    """Spring inspirado en Wyckoff (contrato §6.1)."""
     low = get_col(df, ticker, 'Low')
     close = get_col(df, ticker, 'Close')
     open_ = get_col(df, ticker, 'Open')
@@ -261,7 +308,6 @@ def detect_spring(df, ticker):
 
 
 def detect_sos(df, ticker):
-    """Sign of strength inspirado en Wyckoff (contrato §6.2)."""
     high = get_col(df, ticker, 'High')
     close = get_col(df, ticker, 'Close')
     volume = get_col(df, ticker, 'Volume')
@@ -276,14 +322,6 @@ def detect_sos(df, ticker):
 # =====================================================================
 
 def build_ticker_df(df, ticker):
-    """DataFrame OHLCV con mascaras de validez por campo (contrato §7.3).
-
-    Regla del contrato v1:
-      - Close es el campo autoritativo. Filas con Close NaN se eliminan.
-      - Open/High/Low NaN se rellenan con Close (mismo dia).
-      - Volume NaN se rellena con 0 (sin volumen observado ese dia).
-      - Filas sin ninguna informacion se eliminan.
-    """
     raw = pd.DataFrame({
         'Open': get_col(df, ticker, 'Open'),
         'High': get_col(df, ticker, 'High'),
@@ -291,11 +329,8 @@ def build_ticker_df(df, ticker):
         'Close': get_col(df, ticker, 'Close'),
         'Volume': get_col(df, ticker, 'Volume'),
     })
-    # Close es autoritativo
     raw = raw.dropna(subset=['Close'])
-    # Open/High/Low: rellenar con Close si NaN
     for col in ('Open', 'High', 'Low'):
         raw[col] = raw[col].fillna(raw['Close'])
-    # Volume: 0 si NaN
     raw['Volume'] = raw['Volume'].fillna(0.0)
     return raw
