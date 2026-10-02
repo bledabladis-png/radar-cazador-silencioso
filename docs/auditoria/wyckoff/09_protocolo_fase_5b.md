@@ -3,10 +3,31 @@
 **Documento normativo. Define el procedimiento de calibracion del
 parametro K de `t_norm = tanh(trend / K)`.**
 **Fecha:** 2026-10-02.
-**Aprobacion requerida:** auditor externo (aprobacion arquitectonica de
-v1.3 emitida 2026-10-02). Este protocolo debe aprobarse ANTES de
-ejecutar ningun experimento.
-**Referencia:** dictamen P1 + revision c_norm/e_norm (§14 del dictamen).
+**Version:** v2 (revisada por dictamen externo 2026-10-02).
+**Estado:** APROBADA PARA EJECUCION tras aplicar las correcciones del
+dictamen.
+
+---
+
+## 0. Cambios respecto a v1 (dictamen externo)
+
+El dictamen externo aprobo la arquitectura general pero exigio 5
+correcciones + 2 metodologicas:
+
+1. **Terminologia temporal:** 70/30 es `temporal holdout`, no
+   `walk-forward`. Corregido en §3.3.
+2. **"Hoy" -> "ultima sesion cerrada":** evitar incorporar barra
+   parcial. Corregido en §3.2.
+3. **Regla de seleccion invertida:** "el K mas pequeno" es
+   matematicamente MENOS conservador (K menor -> mas saturacion).
+   Nueva regla: **el mayor K que cumpla todos los criterios duros**.
+   Corregido en §6.6.
+4. **Metrica cross-sectional:** `% valores distintos` no discrimina
+   con variable continua. Sustituido por IQR cross-sectional. §5.5.
+5. **Separacion criterios duros/diagnosticos:** H1-H4 obligatorios,
+   D1-D3 diagnosticos. §6.1-6.5.
+6. **Ponderacion balanceada por ticker** ademas del pooled. §5.0.
+7. **Registrar survivorship bias.** §3.4.
 
 ---
 
@@ -29,32 +50,17 @@ tendencia sobre el universo y periodo definidos.
 
 ---
 
-## 2. Principios de calibracion
+## 2. Principios
 
 **P1. Separacion calibracion/validacion.**
-La eleccion de K debe fijarse antes de observar que fases produce.
-Si K cambia el numero de MARKUP/ACCUMULATION/etc., ese numero NO es
-criterio de eleccion.
-
-**P2. Anclaje sobre `trend`.**
-K se calibra sobre la distribucion historica de `trend = MA50/MA200 - 1`
-en el universo objetivo, no sobre la salida del clasificador.
-
-**P3. Criterio ex-ante.**
-Las metricas y umbrales de aceptacion se fijan en este documento. No
-pueden modificarse a posteriori para justificar un K concreto.
-
+**P2. Anclaje sobre `trend`:** K se calibra sobre la distribucion de
+`trend = MA50/MA200 - 1`, no sobre la salida del clasificador.
+**P3. Criterio ex-ante:** las metricas y umbrales de aceptacion se
+fijan en este documento, no pueden modificarse a posteriori.
 **P4. Grid predefinida.**
-Los candidatos de K son los listados en §4. No se anade un K ad-hoc
-porque "queda bien".
-
-**P5. Congelacion.**
-K se congela tras aplicar §6. Cualquier cambio posterior abre un nuevo
-ciclo de calibracion (5b.2).
-
-**P6. Validacion independiente.**
-El K elegido se valida sobre un periodo distinto al de calibracion
-(§7). Si falla, vuelve a 5b.
+**P5. Congelacion:** K se congela tras aplicar §6. Cualquier cambio
+posterior abre 5b.2.
+**P6. Validacion en holdout temporal independiente.**
 
 ---
 
@@ -64,272 +70,271 @@ El K elegido se valida sobre un periodo distinto al de calibracion
 
 - **Fuente:** `data/stock_prices.parquet` (universo USA + Europa).
 - **Campo:** `Close` por ticker.
-- **Universo:** todos los tickers con historia suficiente para calcular
-  MA200 (>= 200 observaciones validas).
-- **No se filtran por sector ni por cap.** El universo es el completo.
+- **Universo:** todos los tickers con >= 200 observaciones validas.
+- **No se filtran** por sector ni por cap.
 
-### 3.2. Periodo de calibracion
+### 3.2. Periodo
 
-- **Inicio:** 2021-10-01 (fecha de inicio del parquet actual).
-- **Fin:** se fija en el momento de la ejecucion (el "hoy" del pipeline).
-- **Razon:** cobertura completa del parquet. No se inventa un corte
-  arbitrario que pudiera sesgar la distribucion.
+- **Inicio:** 2021-10-01.
+- **Fin:** **ultima sesion bursatil completamente cerrada y consolidada
+  disponible para cada instrumento.** NO "hoy". No se incorporan barras
+  parciales.
+- **Razon:** evita incorporar la barra en curso del dia de ejecucion.
 
-### 3.3. Periodo de validacion
+### 3.3. Split temporal
 
-- **Metodo:** walk-forward. Se reserva el 30% final de la serie para
-  validacion. El 70% inicial es calibracion.
-- **Justificacion:** 70/30 es un corte habitual en calibracion robusta
-  sin optimizacion (suficiente para estimar distribucion; suficiente
-  para validar estabilidad).
-- **Nota:** si el corte 70/30 produce <200 sesiones de validacion, se
-  usa 80/20.
+**Temporal holdout** (no walk-forward):
+
+    70% inicial -> calibracion
+    30% final   -> validacion fuera de muestra
+
+- **Justificacion:** 70/30 es razonable para estimar una escala robusta
+  de transformacion (no es prediccion, no requiere walk-forward con
+  multiples ventanas).
+- **Nota terminologica:** walk-forward implica multiples ventanas
+  train/validate. Aqui solo hay un corte. Se llama `temporal holdout`.
+
+### 3.4. Survivorship bias (registro)
+
+El universo es **el actualmente presente en el parquet**, no el
+universo historico completo en cada fecha desde 2021. Esto introduce
+un sesgo de supervivencia conocido y **debe registrarse como tal** en
+el informe final:
+
+    universo = instrumentos actualmente presentes
+    NO es: universo historico completo
+
+No es bloqueante para calibrar una transformacion matematica, pero
+debe quedar explicito.
 
 ---
 
 ## 4. Candidatos de K
 
-Grid predefinida:
+Grid primaria predefinida:
 
     K in {0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.40}
 
-Siete valores. Rango razonable:
+**Grid 5b.2** (si la primaria falla):
 
-- K=0.10: agresivo, saturacion temprana.
-- K=0.40: laxo, buena resolucion pero t_norm apenas alcanza valores
-  extremos (bull markets muy fuertes).
+    K in {0.45, 0.50, 0.55, 0.60, 0.65, 0.70, 0.75, 0.80}
 
-**Prohibido:** anadir K fuera de esta grid. Si los resultados sugieren
-que el optimo esta entre dos valores, se interpola en 5b.2 (nuevo ciclo).
+**Grid 5b.3** (si 5b.2 tambien falla):
+
+    K in {0.90, 1.00, 1.10, 1.20, 1.30, 1.40}
+
+**Prohibido:** anadir K fuera de las grids predefinidas. Cada grid es
+cerrada.
 
 ---
 
 ## 5. Metricas
 
-Para cada K, sobre la serie de `t_norm` (no sobre las fases):
+### 5.0. Dos vistas: balanced y pooled
+
+Los resultados se calculan en **dos vistas**:
+
+**Vista balanceada (primaria):**
+Para cada ticker se calcula su serie de `t_norm`. Se agregan metricas
+por ticker (mediana por ticker), y despues se agregan los tickers con
+peso igual. **Cada ticker aporta lo mismo**, independientemente de su
+historia.
+
+**Vista pooled (sensibilidad):**
+Todas las observaciones de todos los tickers concatenadas. Los tickers
+con mas historia pesan mas.
+
+Ambas se reportan. La seleccion de K se hace sobre la **vista
+balanceada** (objetivo: K comun comparable entre activos).
 
 ### 5.1. Metricas de saturacion
 
-- `pct_extreme_90`: % de observaciones con `|t_norm| > 0.90`.
-- `pct_extreme_95`: % de observaciones con `|t_norm| > 0.95`.
-- `max_abs_t_norm`: maximo absoluto observado.
+- `pct_extreme_90`: % `|t_norm| > 0.90`.
+- `pct_extreme_95`: % `|t_norm| > 0.95`.
+- `max_abs_t_norm`.
 
 ### 5.2. Metricas de resolucion
 
-- `p05, p25, p50, p75, p95`: percentiles de `t_norm`.
-- `iqr`: rango intercuartilico (`p75 - p25`).
-- `std_t_norm`: desviacion estandar.
+- `p05, p25, p50, p75, p95` de `t_norm`.
+- `IQR = p75 - p25`.
+- `std_t_norm`.
 
 ### 5.3. Metricas de simetria
 
-- `skewness`: asimetria.
-- `pct_positivos`: % observaciones con `t_norm > 0`.
+- `skewness`.
+- `pct_positivos`.
 
 ### 5.4. Metricas de estabilidad temporal
 
-- `std_por_anio`: desviacion estandar de `t_norm` por anio calendario
-  (mide si el regimen cambia de forma dependiente del anio).
-- `rango_p50_por_anio`: max-min de la mediana anual.
+- `std_por_anio` (desviacion estandar anual).
+- `rango_p50_por_anio` (max-min de la mediana anual).
 
-### 5.5. Metricas de comparabilidad cross-sectional
+### 5.5. Metrica de comparabilidad cross-sectional
 
-- `resolucion_en_el_top`: la diferencia minima detectable entre dos
-  tickers ordenados por `t_norm` en una fecha dada.
-- `pct_valores_distintos`: % de valores unicos en el p50 de una fecha.
+**IQR cross-sectional de `t_norm` entre tickers en una misma fecha.**
 
----
+Para cada fecha valida `t` con N >= 5 tickers:
 
-## 6. Criterios de aceptacion (ex-ante)
+    IQR_cs(t) = p75(t_norm_tickers(t)) - p25(t_norm_tickers(t))
 
-Un K se acepta si cumple **todos** los siguientes:
+Metricas agregadas:
 
-### 6.1. Saturacion acotada
+    mediana_IQR_cs     = median(IQR_cs(t) para todas las fechas)
+    pct_fechas_IQR_alto = % fechas con IQR_cs > 0.10
 
-    pct_extreme_90 < 15%
-    pct_extreme_95 < 5%
-
-Razon: si mas del 15% de las observaciones caen en `|t_norm| > 0.90`,
-la senal pierde resolucion en la cola.
-
-### 6.2. Rango util
-
-    p05 <= -0.40  AND  p95 >= +0.40
-
-Razon: la distribucion de `t_norm` debe cubrir un rango amplio, no
-concentrarse en un intervalo estrecho.
-
-### 6.3. Simetria razonable
-
-    |skewness| < 1.0
-
-Razon: `t_norm` deberia ser aproximadamente simetrico si el universo
-tiene tanto tendencias alcistas como bajistas. Asimetria fuerte sugiere
-sesgo del universo o del parametro.
-
-### 6.4. Estabilidad temporal
-
-    rango_p50_por_anio < 0.40
-
-Razon: la mediana anual de `t_norm` no debe cambiar drasticamente. Un
-cambio grande sugiere que K no es robusto entre regimenes.
-
-### 6.5. Resolucion cross-sectional
-
-    pct_valores_distintos > 30%
-
-Razon: en una fecha dada, al menos el 30% de los tickers deben tener
-valores de `t_norm` distintos a nivel de 2 decimales. Por debajo de
-eso, la señal no discrimina.
-
-### 6.6. Seleccion entre candidatos aceptados
-
-Si varios K cumplen §6.1-6.5, se elige el **mas pequeno** (mas
-conservador respecto a la sensibilidad de trend; más cerca de la escala
-natural).
-
-Si ningun K cumple, Fase 5b falla. Se abre ciclo 5b.2 con grid
-extendida.
+**Sustituye** al "pct_valores_distintos" del protocolo v1. Razon: con
+variable continua, `% valores distintos` no discrimina (seria >95%
+para cualquier K).
 
 ---
 
-## 7. Validacion independiente
+## 6. Criterios
 
-Una vez elegido K sobre el 70% de calibracion:
+### 6.1. Criterios DUROS (H1-H4) - todos obligatorios
 
-1. Se calcula `t_norm` sobre el 30% de validacion.
-2. Se aplican §6.1-6.5 sobre la serie de validacion.
-3. **Criterio:** al menos 4 de 5 criterios deben pasar.
-4. Si pasan <4: el K no generaliza. Fase 5b falla.
+    H1  pct_extreme_90 < 15%
+    H2  pct_extreme_95 < 5%
+    H3  p05 <= -0.40
+    H4  p95 >= +0.40
 
-**Nota:** este paso valida que K no esta sobreajustado al periodo de
-calibracion.
+Forman el nucleo: no saturar excesivamente + mantener amplitud util.
+
+### 6.2. Criterios DIAGNOSTICOS (D1-D3) - informativos
+
+    D1  |skewness| < 1.0
+    D2  rango_p50_por_anio < 0.40
+    D3  mediana_IQR_cs >= 0.05
+
+Se reportan. **NO invalidan K automaticamente.** Si fallan, se abre
+observacion para investigacion, pero K sigue valido si cumple H1-H4.
+
+Razon: pueden ser propiedades reales del universo observado, no
+necesariamente defectos de K.
+
+### 6.3. Regla de seleccion
+
+**Entre los K que cumplan TODOS los criterios duros H1-H4:**
+
+    seleccionar el MAYOR K.
+
+**Justificacion matematica:** `K` mayor -> `trend/K` menor -> saturacion
+menor. El "mayor K que aun cumple el rango minimo" es el que **maximiza
+reduccion de saturacion** sin perder resolucion exigida. NO es "el mas
+conservador".
+
+Contraejemplo del protocolo v1: "el mas pequeno" seria **mas
+saturador**, no mas conservador.
+
+### 6.4. Si ningun K cumple H1-H4
+
+Fase 5b falla. Se pasa a grid 5b.2 (predefinida). No se inventan
+valores.
+
+---
+
+## 7. Validacion en holdout temporal (30% final)
+
+Una vez elegido K sobre el 70%:
+
+1. Se calcula `t_norm` sobre el 30% no usado.
+2. Se aplican H1-H4 sobre la serie de validacion.
+3. **H1-H4: TODOS obligatorios.** No se admite "4 de 5".
+4. D1-D3: diagnosticos. Se reportan, no invalidan.
+
+**Si H1, H2, H3 o H4 falla en validacion -> 5b FALLA.**
+
+Razon: la escala debe generalizar. Si la saturacion solo se cumple en
+calibracion, K esta sobreajustado al periodo.
 
 ---
 
 ## 8. Congelacion
 
-Si 5b tiene exito:
+Si 5b tiene exito (grid primaria + validacion OK):
 
-1. `WYCKOFF_T_NORM_K` en `config/settings.py` se actualiza al valor
-   elegido.
-2. `02_proveniencia_parametros.md` pasa el parametro de `PROPUESTO` a
-   `CAL` con la siguiente informacion:
+1. `WYCKOFF_T_NORM_K` en `config/settings.py` -> valor final.
+2. `02_proveniencia_parametros.md`: `PROPUESTO` -> `CAL` con:
    - valor final de K;
    - fecha de calibracion;
-   - periodo de calibracion y validacion;
-   - metricas obtenidas;
-   - criterio de eleccion (el mas pequeno de los aceptados).
-3. Commit documental + codigo en una sola operacion.
+   - periodo;
+   - grid evaluada;
+   - metricas H1-H4 + D1-D3 en calibracion y validacion;
+   - criterio de eleccion ("mayor K cumpliendo H1-H4");
+   - aviso de survivorship bias.
+3. Commit documental + codigo.
 
 ---
 
-## 9. Sensibilidad exploratoria (permitida)
+## 9. Sensibilidad exploratoria
 
-Ademas del protocolo estricto, se permite un analisis exploratorio
-**etiquetado como tal** (no forma parte de 5b):
+Analisis exploratorio permitido (etiquetado como tal, NO es 5b):
 
 - Rango amplio de K (0.05 a 0.50, pasos de 0.05).
 - Sin criterios de aceptacion.
-- Solo para observar:
-  - curvas de saturacion vs K;
-  - percentiles por K;
-  - sensibilidad de fases por K.
+- Solo para observar curvas de saturacion vs K, percentiles,
+  sensibilidad de fases.
 
-**Prohibiciones:**
-
-- No puede usarse para elegir K.
-- No puede llamarse 5b ni 5c.
-- Debe quedar registrado en el expediente como analisis exploratorio.
-
-Razon: separar "conocer el terreno" de "decidir".
+**Prohibido:** usarlo para elegir K.
 
 ---
 
-## 10. Analisis permitidos durante 5b
+## 10. Analisis permitidos
 
-- Distribucion de `trend` en el universo y periodo.
-- Comparacion de los 7 candidatos de K sobre §5.
-- Analisis de la sensibilidad de `t_norm` a cambios de K.
+- Distribucion de `trend` en el universo/periodo.
+- Comparacion de los candidatos de K sobre §5.
+- Analisis de sensibilidad de `t_norm` a K.
 
-## 11. Analisis NO permitidos durante 5b
+## 11. Analisis NO permitidos
 
-- Elegir K maximizando el numero de MARKUP (o de cualquier fase).
+- Elegir K maximizando el numero de MARKUP (o cualquier fase).
 - Elegir K segun los 4 tickers MSFT/PLTR/INTC/AMD.
-- Elegir K segun el resultado sobre un anio concreto.
 - Elegir K segun backtest de WLS.
-- Modificar criterios ex-ante tras ver resultados.
+- Modificar criterios ex-ante.
 
 ---
 
-## 12. Salida esperada
+## 12. Salida
 
-Al cerrar 5b:
-
-- `docs/auditoria/wyckoff/10_calibracion_K_resultados.md` con:
-  - Tabla de K vs metricas §5.
-  - K elegido.
-  - Justificacion segun §6.
-  - Resultado de validacion §7.
-- Actualizacion de `config/settings.py`.
-- Actualizacion de `02_proveniencia_parametros.md`.
+`docs/auditoria/wyckoff/10_calibracion_K_resultados.md` con:
+- Tabla K vs H1-H4 + D1-D3, dos vistas (balanced + pooled).
+- Aviso de survivorship bias.
+- K elegido + justificacion (§6.3).
+- Resultados de validacion H1-H4 (§7).
+- Comparativa balanced vs pooled como sensibilidad.
 
 ---
 
-## 13. Criterios de fallo de Fase 5b
+## 13. Estado del proyecto tras 5b
 
-5b falla si:
+Si exito:
 
-- Ningun K de la grid cumple §6.
-- El K elegido no pasa §7 (validacion independiente).
-- Los resultados sugieren que la formula `tanh(trend/K)` es
-  insuficiente (p.ej. la distribucion de `trend` tiene una forma que
-  ninguna K puede normalizar).
-
-En caso de fallo, se abre ciclo 5b.2 (nueva grid) o se eleva al
-auditor una revision de la formula.
+    Fases 1-3   CERRADAS
+    Fase 4      CERRADA
+    Fase 5a     IMPLEMENTADA (v1.3)
+    Fase 5b     CERRADA (K congelado)
+    Fase 5c     DESBLOQUEADA (comparativa legacy v1)
+    Fase 5d     BLOQUEADA (migracion)
 
 ---
 
-## 14. Estado del proyecto tras 5b
-
-Si 5b tiene exito:
-
-    Fases 1-3      CERRADAS
-    Fase 4         CERRADA
-    Fase 5a        IMPLEMENTADA (v1.3)
-    Fase 5b        CERRADA (K congelado)
-    Fase 5c        DESBLOQUEADA (comparativa legacy v1.3)
-    Fase 5d        BLOQUEADA (migracion)
-
-Si 5b falla:
-
-    Fases 1-3      CERRADAS
-    Fase 4         CERRADA
-    Fase 5a        IMPLEMENTADA (v1.3)
-    Fase 5b        FALLIDA
-    Fase 5b.2      ABIERTA (nueva grid o revision formula)
-    Fase 5c        BLOQUEADA
-    Fase 5d        BLOQUEADA
-
----
-
-## 15. Anexo - Procedimiento paso a paso
+## 14. Procedimiento paso a paso
 
     PASO 1  Cargar stock_prices.parquet
-    PASO 2  Filtrar tickers con >= 200 obs validas
-    PASO 3  Calcular trend para cada ticker (MA50/MA200 - 1)
-    PASO 4  Construir la serie agregada de trend (stack de todos los
-            tickers)
-    PASO 5  Split 70/30 (calibracion/validacion)
-    PASO 6  Para cada K en la grid:
+    PASO 2  Determinar ultima sesion cerrada por ticker
+    PASO 3  Filtrar tickers con >= 200 obs validas
+    PASO 4  Calcular trend para cada ticker
+    PASO 5  Split temporal 70/30 (calibracion/validacion)
+    PASO 6  Para cada K en grid primaria:
               - Calcular t_norm sobre calibracion
-              - Calcular metricas §5
-              - Evaluar criterios §6
-    PASO 7  Seleccionar K segun §6.6
-    PASO 8  Validar sobre 30% (walk-forward) segun §7
-    PASO 9  Congelar K segun §8
-    PASO 10 Documentar resultados segun §12
+              - Calcular H1-H4 (balanced y pooled)
+              - Calcular D1-D3
+    PASO 7  Filtrar K que cumplen H1-H4 en balanced
+    PASO 8  Seleccionar el MAYOR K
+    PASO 9  Si ningun K: grid 5b.2
+    PASO 10 Validar K elegido sobre 30% (H1-H4 obligatorios)
+    PASO 11 Si falla validacion: 5b falla
+    PASO 12 Congelar K + documentar + commit
 
 ---
 
-Fin del protocolo 5b.
+Fin del protocolo 5b v2.
