@@ -106,119 +106,65 @@ Snapshot al cierre del ultimo commit:
 
 ---
 
-## 4. TRABAJO RECIENTE
+## 4. PENDIENTE (DESGLOSE)
 
-**Fuente viva: `Consolidacion_Documentos/05_BITACORA.md`.** Este documento
-no duplica el estado de "que se hizo". Se congelo el 2026-09-29 para
-evitar el desfase que acumulo (decia 2383 tests cuando la suite iba por
-2945). La bitacora tiene el detalle cronologico reciente; `04_HISTORICO.md`
-tiene la cronologia tematica estable. Fuente autoritativa de HEAD, tests
-e integridad: `ESTADO_SISTEMA.md`.
+**Indice de frentes.** El detalle vive en `05_BITACORA.md` (cronologia
+reciente) y `04_HISTORICO.md` (tematica). Este documento solo lista
+estado.
 
----
+### 4.1. Frentes de auditoria (cerrados)
 
-## 5. PENDIENTE (DESGLOSE)
+| Frente | Contenido | Estado |
+|---|---|---|
+| A1-A5 | Nucleo temporal, providers, calculo, reporte, pipeline | CERRADO |
+| A6 | Infra/orquestacion | CERRADO |
+| B | IAE estructural + funcional | CERRADO |
+| C | Auditoria de tests | CERRADO |
+| 6 | IAE funcional avanzado | CERRADO |
+| 7 | `indicators/` funcional (50 ficheros, 6684 LOC) | CERRADO |
+| 8 | Providers (yahoo, router, fred, polygon, cftc, finra, etc.) | CERRADO |
+| 9 | Atomicidad familia 3 (32 sitios) | CERRADO |
+| F | QA interno `wyckoff_v1.py` (F-01 no-deuda, F-02 fix, F-03 cobertura) | CERRADO |
 
-**Frentes de auditoria (cerrados):**
-
-- A1-A5: CERRADOS (nucleo temporal, providers, calculo, reporte, pipeline).
-- A6: CERRADO (infra/orquestacion: utils/registry/tracker/workflows/scripts/validation).
-- B: CERRADO (IAE estructural + funcional).
-- C: CERRADO (auditoria de tests).
-- Frente 6: CERRADO (IAE funcional avanzado: security_identity, period_state,
-  target_builder, catalog_key, operational_universe, catalog_p38_adapter).
-- Frente 8: CERRADO (providers: yahoo, router, fred, polygon, cftc, finra,
-  backup_providers, downloader, xetra, bme, euronext, blackrock_*, fund_flow_utils,
-  qqq_nport_flow, sec_nport_quarters_position_change).
-
-**Frentes abiertos:**
-
-- Frente 7: CERRADO (indicators/ funcional, 50 ficheros, 6684 LOC). 9 commits.
-  Bugs reales: call_share finitud (unica de 7 funciones hermanas sin guard),
-  darkpool_history / sector_rank_history / state_transition / options /
-  stock_leader atomicos, mte/engine traceback, slpm_v12 flow_proxy_z=0.0,
-  mte/scoring stress finitud, fls zscore finitud, mte/decision consensus
-  finitud.
-
-- Frente 9: CERRADO (atomicidad familia 3, 2026-09-29 noche). 32 sitios
-  en total.
-  - **Alta (17):** `outputs/history/` append+dedup, perdida irrecuperable
-    si trunca. 1 european_coverage + 2 breadth_metrics + 1 engines +
-    1 flows_primary + 1 finalize + 2 market_data + 4 sectors_base +
-    5 sector_metrics. Cada uno con test fuerte verificado por ambos
-    lados (sin fix rojo, con fix verde).
-  - **Media (15):** regenerables (no leen el CSV antes de escribir;
-    siguiente run regenera completo desde fuente). cftc_data,
-    sec_nport_quarters_position_change, amundi_fund_data, _blackrock_base,
-    update_qqq_sec_flow, update_sec_nport_data (x2), finalize (x3),
-    sectors_base (x1), radar_target_catalog, sec_13f/downloader,
-    qqq_nport_flow, update_sec_13f. Sin tests: no hay bug a verificar.
-  - Fix comun: `.tmp + replace`.
-- FU-009-bis (append_dedup): columnas all-NA excluidas antes del concat
-  (FutureWarning pandas 2.x -> cambio de dtype en 3.0).
-
-**Frente Wyckoff (rediseno modulo):**
+### 4.2. Frente Wyckoff (rediseno modulo)
 
 - Estado: **v1.9 FROZEN_FOR_VALIDATION / NOT_PRODUCTION.**
 - Candidata SOW congelada: N=60, M=30, X_ATR=0.25, Y_VOL=1.10.
-- `config/settings.py`: los 4 parametros SOW siguen a None. fail-closed.
-- Contrato vigente: v1.8 (productivo) + v1.9 (candidata congelada).
-- Documentacion: `docs/auditoria/wyckoff/` (35 ficheros).
-- Legacy `indicators/wyckoff.py` intacto. Consumidores del pipeline sin
-  migrar.
-- Secuencia ejecutada: 5b.3 (FAIL sesgo temporal) -> 5b.4 (FAIL D3
-  inalcanzable) -> 5b.4-bis (PASS desarrollo, 17/240) -> QA (solo P3
-  con IC95 que no cruza 0) -> contrato v1.9.
-- **Pendiente externo:** dictamen sobre umbrales de 5b.X (expediente
-  36: 12m/50ep/20conf insuficientes para poder estadistico).
+- `config/settings.py`: los 4 parametros SOW a None. fail-closed.
+- Contrato v1.8 (productivo) + v1.9 (candidata congelada).
+- Documentacion: `docs/auditoria/wyckoff/` (35+ ficheros).
+- Legacy `indicators/wyckoff.py` intacto. Consumidores sin migrar.
+- Secuencia: 5b.3 FAIL (sesgo) -> 5b.4 FAIL (D3) -> 5b.4-bis PASS
+  desarrollo (17/240) -> QA (solo P3 sin cruzar 0) -> contrato v1.9.
+- **Pendiente externo:** dictamen umbrales 5b.X (expediente 36).
 - **Bloqueado:** 5b.X (sin datos post-2026-10-01), 5c.4, 5d, 5e.
-- **No bloqueado:** 5c general (comparativa legacy vs v1.8 ya re-ejecutada),
-  frente F QA interno (cerrado).
+- **No bloqueado:** 5c general, plan migracion v2.
 
-**Pendientes vivos:**
+### 4.3. Pendientes vivos
 
-- **2 tests skipped por `--run-network`** (`test_cboe_pcr_al_dia`,
-  `test_finra_darkpool_al_dia` en `test_freshness.py`). Opt-in, diseno
-  (consultan CBOE/FINRA reales). Mecanismo formal en `conftest.py`.
-  Ver `01_METODO 3` para la politica completa. No es deuda.
+- **H5.3** - Trazabilidad cron trimestral. Verificacion en cron real
+  de noviembre 2026.
+- **C2 (920)** - Discrepancia H1-B referida al par Q4-2025 -> Q1-2026
+  (congelado). Bloqueado por auditor externo.
+- **2 tests skipped por `--run-network`** en `test_freshness.py`
+  (opt-in, diseno). Mecanismo formal en `conftest.py`. No es deuda.
 
-- H5.3 - Trazabilidad cron trimestral. Verificacion en cron real de
-  noviembre 2026.
-- C2 (920) - Discrepancia H1-B, **referida al par Q4-2025 -> Q1-2026**
-  (congelado). El reporte diario publica el NIPC del par vigente, que
-  cambia cada trimestre. No confundir ambos numeros: mismo nombre, distinto
-  periodo. Bloqueado por auditor externo (sin comando + HEAD publicado).
-  Hipotesis descartadas 2026-09-29: regex 4 variantes, crosswalk 7caa86b,
-  filtro OPTION/UNKNOWN (-42M), aplicacion P65 (por diseno de codigo,
-  `_apply_intra_period_dedup` v1 solo emite KEEP).
+### 4.4. Deudas documentadas (sin accion pendiente)
 
-**Deudas documentadas (sin accion pendiente):**
+- Modulos no integrados al pipeline: `target_universe`, `timestamps`,
+  `catalog_pit`, `absence`, `validate_membership`,
+  `cusip_resolver.resolve_cusip`.
+- `reporting_dedup` (P65/P66): capa de diagnostico por diseno.
+- Modulos con cobertura ampliada en D18/D21 (no-deuda): ver
+  `04_HISTORICO.md` seccion "Resumen D5-D18".
 
-- Modulos no integrados al pipeline productivo: `target_universe`,
-  `timestamps`, `catalog_pit`, `absence`, `validate_membership`,
-  `cusip_resolver.resolve_cusip`. Documentados.
-- `reporting_dedup` (P65/P66): capa de diagnostico por decision de diseno,
-  no etapa del flujo contractual. 99 tests pasan. Verificado 2026-09-29:
-  `_apply_intra_period_dedup` v1 no emite DROP_DUP (todas las decisiones
-  son KEEP). Conectar P65 no alteraria `nipc_total`.
-- Modulos con cobertura ampliada en D18 (2026-09-30):
-  `macro_manual_loader` 12%->92%, `european_coverage` 25%->98%,
-  `pipeline_contractual` 27%->38% (orquestador `run_contractual_nipc`
-  E2E-only por diseno), `data_loader` 51%->59% (funciones puras
-  cubiertas; `download_market_data` es red, E2E-only). Sin bug
-  detectado en los 4 modulos.
-- `stock_data_loader` (77% cobertura, D21 2026-09-30): cerrado como
-  no-deuda. Las funciones puras ya estan cubiertas (get_usa_tickers,
-  get_stock_list, _fill_holes_respecting_sessions, _filter_failed
-  _from_batch, _log_yahoo_raw_diagnostics). Los 110 lineas no
-  cubiertas son download_stock_prices + _apply_lse_close_override
-  (red + scraper LSE, E2E-only) y ramas defensivas. Testearlas
-  exigiria mockear yf.download + scraper: ROI < 1. Mismo criterio
-  que pipeline_contractual en D18.
+**Nota de deuda del corpus:** `00_ARRANQUE.md` esta en 13.4 KB, por
+encima del umbral autoimpuesto de 10 KB (`01_METODO.md` seccion 11).
+Pendiente podar mas o ajustar umbral. Frente aparte.
 
 ---
 
-## 6. COMANDOS DE ARRANQUE
+## 5. COMANDOS DE ARRANQUE
 
 Pega este bloque al inicio de cada sesion:
 
@@ -238,40 +184,30 @@ Esperado:
 
 ---
 
-## 7. DOCUMENTOS HERMANOS
+## 6. DOCUMENTOS HERMANOS
 
-El corpus consolidado vive en `Consolidacion_Documentos/`:
-
-| Fichero | Bytes aprox | Rol |
-|---|---:|---|
-| `00_ARRANQUE.md` | 12 KB | Este documento. Se pega al arrancar. |
-| `01_METODO.md` | 17 KB | Metodo de patch, auditoria, lecciones. |
-| `01b_PATRONES.md` | 8 KB | Catalogo de patrones de bug + falsos positivos. |
-| `02_ARQUITECTURA.md` | 28 KB | Mapa del sistema, contratos, decisiones vigentes. |
-| `03_IAE.md` | 21 KB | Subsistema IAE completo. |
-| `04_HISTORICO.md` | 40 KB | Cronologia de decisiones. |
-| `05_BITACORA.md` | 53 KB | Sesiones recientes (se poda). |
-| `06_IAE_P65_P66.md` | 11 KB | Contrato P65 + P66 (L3 cruzada). |
-| `07_RUNBOOK.md` | 7 KB | Procedimiento operativo de los crons. |
-| `08_AUDITORIA_SECTOR_REGIME.md` | 10 KB | Expediente auditoria + fixes sector_regime. |
-| `ESTADO_SISTEMA.md` | 5 KB | Snapshot auto-generado (no editar a mano). |
+Corpus consolidado en `Consolidacion_Documentos/`.
 
 | Doc | Contenido | Cuando consultarlo |
 |---|---|---|
-| 00_ARRANQUE.md | Este documento | Siempre, al arrancar |
-| 01_METODO.md | Metodo de patch, verificacion, PowerShell, lecciones | Antes de tocar codigo |
-| 01b_PATRONES.md | Catalogo de patrones de bug + falsos positivos | Al auditar un modulo |
-| 02_ARQUITECTURA.md | Mapa del sistema, contratos, decisiones | Para ubicar modulos |
-| 03_IAE.md | Subsistema IAE completo | Al trabajar en IAE |
-| 04_HISTORICO.md | Cronologia de decisiones | Para "por que esta asi" |
-| 05_BITACORA.md | Sesiones recientes | Al cerrar una sesion |
-| 06_IAE_P65_P66.md | Contrato P65 + P66 (L3 cruzada) | Al trabajar en P65/P66 |
-| 07_RUNBOOK.md | Procedimiento de los crons y contingencias | Al verificar un cron o diagnosticar un fallo de workflow |
-| 08_AUDITORIA_SECTOR_REGIME.md | Expediente auditoria + fixes sector_regime | Al tocar sector_regime o revisar H8/H1/R2 |
+| `00_ARRANQUE.md` | Este documento | Siempre, al arrancar |
+| `01_METODO.md` | Metodo de patch, verificacion, PowerShell | Antes de tocar codigo |
+| `01b_PATRONES.md` | Catalogo de patrones de bug + falsos positivos | Al auditar un modulo |
+| `02_ARQUITECTURA.md` | Mapa del sistema, contratos, decisiones | Para ubicar modulos |
+| `03_IAE.md` | Subsistema IAE completo | Al trabajar en IAE |
+| `04_HISTORICO.md` | Cronologia tematica de decisiones | Para "por que esta asi" |
+| `05_BITACORA.md` | Sesiones recientes (se poda) | Al cerrar una sesion |
+| `06_IAE_P65_P66.md` | Contrato P65 + P66 (L3 cruzada) | Al trabajar en P65/P66 |
+| `07_RUNBOOK.md` | Procedimiento de los crons | Al verificar un cron |
+| `08_AUDITORIA_SECTOR_REGIME.md` | Expediente auditoria sector_regime | Al tocar sector_regime |
+| `ESTADO_SISTEMA.md` | Snapshot auto-generado (no editar) | Fuente autoritativa de HEAD/tests |
+
+`docs/auditoria/wyckoff/` (35+ ficheros) contiene el expediente completo
+del rediseno del modulo Wyckoff. Indice en `docs/auditoria/wyckoff/03_plan_migracion.md`.
 
 ---
 
-## 8. CONFIRMACION
+## 7. CONFIRMACION
 
 Al recibir este documento, responde exactamente:
 
