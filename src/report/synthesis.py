@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Indices Internacionales, Sintesis de Senales y Matriz de Evidencia.
+"""Índices (USA + Europa), Sintesis de Senales y Matriz de Evidencia.
 
 Extraidos de src/report_generator.py (refactor C1, fase C1-6d6).
 """
@@ -12,12 +12,12 @@ from config.tickers import SECTOR_NAMES
 
 
 def render_indices_internacionales(index_phases, index_leaders):
-    """Renderiza las tablas de Indices Internacionales (Wyckoff + Oportunidades).
+    """Renderiza las tablas de Índices (USA + Europa) (Wyckoff + Oportunidades).
 
     Devuelve lista de lineas markdown. Sin side effects.
     """
     out = []
-    out.append("\n## Indices Internacionales — Fases Wyckoff\n")
+    out.append("\n## Índices (USA + Europa) — Fases Wyckoff\n")
     out.append("| Indice | Ticker | Fase Wyckoff |\n")
     out.append("|--------|--------|--------------|\n")
     if index_phases:
@@ -28,8 +28,8 @@ def render_indices_internacionales(index_phases, index_leaders):
         out.append("| No disponible | No disponible | No disponible |\n")
     out.append("\n")
 
-    out.append("\n## Indices Internacionales — Oportunidades de Acumulación y Markup\n")
-    out.append("*Nota: Los componentes se obtienen de ETFs proxy que replican el indice de referencia. Solo se muestran indices en fase ACCUMULATION o MARKUP.*\n\n")
+    out.append("\n## Índices (USA + Europa) — Oportunidades de Acumulación y Markup\n")
+    out.append("*Nota: Los componentes se obtienen de ETFs proxy que replican el indice de referencia. USA: SPY (S&P 500), DIA (Dow Jones), QQQ (Nasdaq-100), IWM (Russell 2000). Europa: FEZ (Euro Stoxx 50), LYXI (Ibex 35), DAXEX (DAX 40), ISF.L (FTSE 100). Solo se muestran indices en fase ACCUMULATION o MARKUP.*\n\n")
     if index_leaders:
         for nombre, top5 in index_leaders.items():
             if top5 is None or top5.empty:

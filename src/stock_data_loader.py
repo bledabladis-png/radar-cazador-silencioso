@@ -82,6 +82,22 @@ def get_stock_list():
     except (OSError, ValueError, KeyError, pd.errors.ParserError) as e:
         print(f"  [WARN] get_stock_list: index_holdings.csv: {e}")
 
+    # 3) Tickers del catalogo radar (data/mappings/radar_target_catalog.csv).
+    # 2026-10-02 (opcion C): el catalogo es monotono (nunca pierde keys), pero
+    # la lista de descarga se limitaba a top-20 por sector + top-20 por indice.
+    # Tickers que caen del top-20 (p.ej. BX, CASY, CMG, ES, FOX, GD, JXN,
+    # PNC, PRAX, WY hoy) dejan de descargarse aunque sigan en el catalogo.
+    # Consecuencia: la cobertura observable del reporte IAE caia a 241/255
+    # por falta de datos frescos, no por bajas reales.
+    # Fix: incluir el catalogo radar completo en el universo de descarga.
+    try:
+        _cat = pd.read_csv('data/mappings/radar_target_catalog.csv', dtype=str)
+        if 'radar_ticker' in _cat.columns:
+            tickers.extend([normalize_yahoo_ticker(t) for t in
+_cat['radar_ticker'].dropna().astype(str).tolist()])
+    except (OSError, ValueError, KeyError, pd.errors.ParserError) as e:
+        print(f"  [WARN] get_stock_list: radar_target_catalog.csv: {e}")
+
     # Eliminar duplicados preservando orden
     seen = set()
     result = []
