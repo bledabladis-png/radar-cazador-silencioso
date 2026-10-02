@@ -118,6 +118,39 @@ elecciones operativas sin calibracion.
 | N sesiones para confirmar spring reciente | 5 | Proximo a la semana bursatil | PROPUESTO |
 | Umbral DISTRIBUTION asimetrico | -0.10 | Justificar o reemplazar por criterio estructural | PENDIENTE |
 
+
+---
+
+## 3.7. Parametros v1.1 (precedente estructural)
+
+Introducidos en el contrato v1.1 (ver 04_revision_contrato_v1_1.md).
+
+| Parametro | Valor | Rationale | Fuente | Fecha | Validacion |
+|---|---:|---|---|---|---|
+| PRECEDENT_WINDOW (N) | 60 | Trimestre bursatil aprox. Alineado con volumen z-score | HEUR | 2026-10-02 | PROPUESTO |
+| PREC_STRUCT_WEAK | -0.20 | Umbral de "debilidad reciente" | HEUR | 2026-10-02 | PROPUESTO |
+| PREC_STRUCT_STRONG | 0.30 | Umbral de "fortaleza reciente" (simetrico a STRUCT_STRONG) | HEUR | 2026-10-02 | PROPUESTO |
+| PREC_STRUCT_NEG | -0.30 | Umbral de "bajista reciente" (simetrico a STRUCT_WEAK) | HEUR | 2026-10-02 | PROPUESTO |
+| STRUCT_BASE_LOW | -0.20 | Banda de base: limite inferior | HEUR | 2026-10-02 | PROPUESTO |
+| STRUCT_BASE_HIGH | 0.20 | Banda de base: limite superior | HEUR | 2026-10-02 | PROPUESTO |
+| STRUCT_DETERIORO | -0.10 | Umbral para DISTRIBUTION | HEUR | 2026-10-02 | PROPUESTO |
+
+**Observacion:** todos los umbrales de precedente son PROPUESTOS. Se
+marcan explicitamente como no validados. Razon: calibracion con dataset
+controlado es Fase 5b posterior. La validacion de contrato (I1-I14) no
+depende de los valores concretos; la calibracion empirica si.
+
+---
+
+## 3.8. Parametros eliminados de v1.0
+
+| Parametro | Valor v1.0 | Motivo de eliminacion |
+|---|---:|---|
+| COMBINED_MARKUP | 0.30 | Veto tactico indebido sobre estructura (D2) |
+| (MARKUP) c_norm < 0.30 | — | Incompatible con bull market ordenado (D1) |
+| (ACCUMULATION) tact > 0 | — | Silencioso por diseno; no debe vetar acumulacion (D3) |
+
+
 ---
 
 ## 4. Proceso de registro
