@@ -693,3 +693,130 @@ def test_distribution_is_reachable(monkeypatch):
         f"Esperado DISTRIBUTION alcanzable, obtenido {phase}. "
         "Si falla, I25 rota (contrato imposible)."
     )
+
+# =====================================================================
+# I26-I28 - DISTRIBUTION v1.5 (dictamen O1)
+# =====================================================================
+
+def test_distribution_requires_prior_strength():
+    """I26: DISTRIBUTION exige precedente fuerte (struct_max > 0.30).
+
+    Casos:
+      1) struct_max <= 0.30 + deterioro actual -> NO DISTRIBUTION.
+      2) struct_max > 0.30 + deterioro actual + t_norm > -0.30 -> DISTRIBUTION.
+    """
+    from unittest import mock
+    n = 500
+    dates = pd.date_range("2024-01-01", periods=n, freq="B")
+    df = pd.DataFrame({
+        'Open': 100.0, 'High': 101.0, 'Low': 99.0,
+        'Close': 100.0, 'Volume': 1_000_000.0,
+    }, index=dates)
+
+    # Caso 1: sin precedente fuerte
+    struct_vals_no = np.concatenate([
+        np.full(n - 30, 0.10),         # NO fuerte
+        np.full(30, -0.20),            # deterioro actual
+    ])
+    t_norm_vals = np.concatenate([
+        np.full(n - 30, 0.15),
+        np.full(30, -0.10),
+    ])
+    c_norm_vals = np.full(n, 0.10)
+    struct = pd.Series(struct_vals_no, index=dates)
+    tact = pd.Series(np.zeros(n), index=dates)
+    t_norm = pd.Series(t_norm_vals, index=dates)
+    c_norm = pd.Series(c_norm_vals, index=dates)
+    v_norm = pd.Series(np.zeros(n), index=dates)
+    e_norm = pd.Series(np.zeros(n), index=dates)
+    combined = 0.70 * struct + 0.30 * tact
+    with mock.patch.object(w1, 'wyckoff_score',
+                            return_value=(combined, struct, tact, t_norm, c_norm, v_norm, e_norm)):
+        phase_no = w1.classify_wyckoff_phase(df, 'SYNTH')
+    assert phase_no != "DISTRIBUTION", (
+        f"Sin precedente fuerte, no debe dar DISTRIBUTION. Obtenido: {phase_no}"
+    )
+
+    # Caso 2: con precedente fuerte
+    struct_vals_si = np.concatenate([
+        np.full(n - 30, 0.40),         # SI fuerte
+        np.full(30, -0.20),            # deterioro actual
+    ])
+    struct2 = pd.Series(struct_vals_si, index=dates)
+    t_norm2 = pd.Series(t_norm_vals, index=dates)
+    c_norm2 = pd.Series(c_norm_vals, index=dates)
+    combined2 = 0.70 * struct2 + 0.30 * tact
+    with mock.patch.object(w1, 'wyckoff_score',
+                            return_value=(combined2, struct2, tact, t_norm2, c_norm2, v_norm, e_norm)):
+        phase_si = w1.classify_wyckoff_phase(df, 'SYNTH')
+    assert phase_si == "DISTRIBUTION", (
+        f"Con precedente fuerte + deterioro + t>-0.30, debe ser DISTRIBUTION. "
+        f"Obtenido: {phase_si}"
+    )
+
+
+def test_distribution_vs_markdown_boundary():
+    """I27: frontera DISTRIBUTION vs MARKDOWN.
+
+    Con struct_max > 0.30:
+      - struct_actual en (-0.30, -0.10) y t > -0.30 -> DISTRIBUTION.
+      - struct_actual < -0.30 y t < -0.30 (con c < 0) -> MARKDOWN.
+    """
+    from unittest import mock
+    n = 500
+    dates = pd.date_range("2024-01-01", periods=n, freq="B")
+    df = pd.DataFrame({
+        'Open': 100.0, 'High': 101.0, 'Low': 99.0,
+        'Close': 100.0, 'Volume': 1_000_000.0,
+    }, index=dates)
+
+    # Caso DISTRIBUTION: struct en (-0.30, -0.10), t > -0.30
+    struct_dist = np.concatenate([np.full(n - 30, 0.40), np.full(30, -0.20)])
+    t_dist = np.concatenate([np.full(n - 30, 0.50), np.full(30, -0.15)])
+    c_dist = np.full(n, 0.10)
+    struct = pd.Series(struct_dist, index=dates)
+    t_norm = pd.Series(t_dist, index=dates)
+    c_norm = pd.Series(c_dist, index=dates)
+    tact = pd.Series(np.zeros(n), index=dates)
+    v_norm = pd.Series(np.zeros(n), index=dates)
+    e_norm = pd.Series(np.zeros(n), index=dates)
+    combined = 0.70 * struct + 0.30 * tact
+    with mock.patch.object(w1, 'wyckoff_score',
+                            return_value=(combined, struct, tact, t_norm, c_norm, v_norm, e_norm)):
+        phase = w1.classify_wyckoff_phase(df, 'SYNTH')
+    assert phase == "DISTRIBUTION", f"Esperado DISTRIBUTION, obtenido {phase}"
+
+    # Caso MARKDOWN: struct < -0.30, t < -0.30, c < 0
+    struct_md = np.full(n, -0.40)
+    t_md = np.full(n, -0.50)
+    c_md = np.full(n, -0.20)
+    struct2 = pd.Series(struct_md, index=dates)
+    t_norm2 = pd.Series(t_md, index=dates)
+    c_norm2 = pd.Series(c_md, index=dates)
+    combined2 = 0.70 * struct2 + 0.30 * tact
+    with mock.patch.object(w1, 'wyckoff_score',
+                            return_value=(combined2, struct2, tact, t_norm2, c_norm2, v_norm, e_norm)):
+        phase2 = w1.classify_wyckoff_phase(df, 'SYNTH')
+    assert phase2 == "MARKDOWN", f"Esperado MARKDOWN, obtenido {phase2}"
+
+
+def test_distribution_no_lookahead(synthetic_df):
+    """I28: la fase en t es invariante a datos posteriores.
+
+    Test con datos reales (sin mock). Clasifica en t = idx[420] con
+    as_of. Luego anade ruido futuro. La fase en t debe coincidir.
+    """
+    t_idx = synthetic_df.index[420]
+    fase_ref = w1.classify_wyckoff_phase(synthetic_df, 'SYNTH', as_of=t_idx)
+
+    # Anadir datos futuros muy distintos
+    df_fut = synthetic_df.copy()
+    df_fut.loc[df_fut.index > t_idx, 'Close'] = 999999.0
+    df_fut.loc[df_fut.index > t_idx, 'High'] = 1000000.0
+    df_fut.loc[df_fut.index > t_idx, 'Low'] = 999998.0
+
+    fase_mod = w1.classify_wyckoff_phase(df_fut, 'SYNTH', as_of=t_idx)
+    assert fase_mod == fase_ref, (
+        f"Look-ahead detectado: fase en t={t_idx} cambio al modificar "
+        f"datos futuros. ref={fase_ref}, mod={fase_mod}"
+    )

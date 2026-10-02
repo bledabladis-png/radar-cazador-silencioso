@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Modulo Wyckoff v1.3 - Fases estructurales con precedente selectivo.
+"""Modulo Wyckoff v1.5 - Fases estructurales con precedente selectivo.
 
 Contrato: docs/auditoria/wyckoff/01_contrato_semantico_v1_1.md
 Revision v1 -> v1.1: docs/auditoria/wyckoff/04_revision_contrato_v1_1.md
@@ -165,8 +165,11 @@ def wyckoff_stability(combined, window=STABILITY_MAD_WINDOW, K=STABILITY_K):
 def _compute_precedent(struct_clean, t_norm_clean, window=PRECEDENT_WINDOW):
     """Calcula variables de precedente sobre ventana [t-N, t-1].
 
-    Contrato v1.1 §4: precedente sobre variables continuas, no sobre
-    etiquetas. Solo usa datos <= t-1 (excluye t).
+    Contrato v1.5 §4 (formalizacion): struct_max(t) := max(struct_score
+    en [t-N, t-1]). Estrictamente historico, sin usar datos posteriores
+    a t-1. Test de no-look-ahead en test_distribution_no_lookahead.
+
+    Solo usa datos <= t-1 (excluye t).
 
     Args:
         struct_clean: Series de struct_score sin NaN.
@@ -284,13 +287,23 @@ def classify_wyckoff_phase(df, ticker, as_of=None):
 
     # ---------------- DISTRIBUTION (contrato v1.2 §5.4) ----------------
     # Requiere precedente (formacion de techo).
-    trend_dist = (last_t > 0) or (abs(last_t) < T_NORM_WEAK)
+    # v1.5 (dictamen 5c O1): DISTRIBUTION = perdida estructural de fuerza
+    # tras subida previa. Eliminada la condicion c_norm: durante el
+    # deterioro la volatilidad expande (c_norm < 0), por lo que exigir
+    # compresion era un defecto de modelado.
+    #
+    # Definicion final:
+    #   struct_score_t < STRUCT_DETERIORO (-0.10)
+    #   AND t_norm_t > -T_NORM_STRONG (-0.30)
+    #   AND struct_max (historico, [t-W+1, t-1]) > PREC_STRUCT_STRONG (0.30)
+    #
+    # Simplificacion: t_norm > 0 OR |t| < T_NORM_WEAK equivale a
+    # t_norm > -T_NORM_STRONG. Los dos casos (t>0 y -0.30<t<0) ya estan
+    # contenidos en t > -0.30.
+    trend_dist = last_t > -T_NORM_STRONG
     deterioration = last_struct < STRUCT_DETERIORO
-    # v1.4 (dictamen 5c): c_norm > 0.30 hacia DISTRIBUTION inalcanzable
-    # (demostrado algebraicamente). Se relaja a "compresion no extrema".
-    compression_dist = last_c > C_NORM_DISTR_MIN
     prec_strong = struct_max > PREC_STRUCT_STRONG
-    if trend_dist and deterioration and compression_dist and prec_strong:
+    if trend_dist and deterioration and prec_strong:
         return FASE_DISTRIBUTION
 
     # ---------------- RANGE (contrato v1.2 §5.6) ----------------
