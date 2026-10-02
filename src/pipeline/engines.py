@@ -22,7 +22,14 @@ SECTOR_ETFS = MARKET_TICKERS['sectors']
 def _forzar_lideres_slpm(sector_results, sector_flow_rank, otros_flow_rank, leader_df):
     """Construye leader_metrics_for_slpm forzando el top sector."""
     leader_metrics_for_slpm = []
-    top_sector_ticker = sector_results['ranking'][0][0]
+    # S-02d (2026-10-03): guard ranking vacio. Caso citado en catalogo
+    # 01b (engines.py:25): sector_results['ranking'][0][0] sin guard
+    # -> IndexError si ranking queda vacio (datos incompletos, fallo
+    # aguas arriba de sector_regime). Devuelve lista vacia + flow 0.0.
+    ranking = sector_results.get('ranking') or []
+    if not ranking:
+        return leader_metrics_for_slpm, 0.0
+    top_sector_ticker = ranking[0][0]
     top_sector_flow = 0.0
     for t, f in sector_flow_rank + otros_flow_rank:
         if t == top_sector_ticker:

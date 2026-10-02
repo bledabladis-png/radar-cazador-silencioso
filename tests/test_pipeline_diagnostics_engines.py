@@ -184,3 +184,22 @@ def test_persistence_fallo_to_csv_no_pierde_filas(tmp_path, monkeypatch):
         f"CSV original perdio filas: {filas_antes} -> {df.shape[0]}"
     )
     assert df.iloc[0]["date"] == "2026-09-24"
+
+
+# =============================================================================
+# S-02d (2026-10-03): _forzar_lideres_slpm con ranking vacio
+# =============================================================================
+
+def test_forzar_lideres_slpm_ranking_vacio_no_crashea():
+    """Bug latente catalogado 01b: sector_results["ranking"][0][0] sin guard.
+
+    Si ranking queda vacio (datos incompletos, sector_regime falla),
+    IndexError. El catalogo ya lo cita como caso engines.py:25.
+    """
+    from src.pipeline.engines import _forzar_lideres_slpm
+    result, flow = _forzar_lideres_slpm(
+        {"ranking": []}, [], [], None,
+    )
+    assert result == []
+    assert flow == 0.0
+

@@ -1,4 +1,4 @@
-﻿import pandas as pd
+import pandas as pd
 import numpy as np
 from config.settings import FLOW_ZSCORE_WINDOW, FLOW_EWM_SPAN, FLOW_CMF_WINDOW, MOMENTUM_SHARPE_WINDOW, MOMENTUM_PRICE_WINDOW
 from src.utils import robust_zscore, get_col
@@ -44,7 +44,10 @@ def compute_cmf(df, ticker, window=FLOW_CMF_WINDOW):
     volume = get_col(df, ticker, 'Volume').ffill()
     mfm = ((close - low) - (high - close)) / (high - low + 1e-9)
     mfv = mfm * volume
-    cmf = mfv.rolling(window).sum() / volume.rolling(window).sum()
+    # D-03 (2026-10-03): +1e-9 en denominador. Volumen 0 sostenido (ffill
+    # de un hueco largo o ticker suspendido) daba 0/0 = NaN silencioso
+    # o inf. Mismo guard que momentum_score:28 (ret/(vol+1e-9)).
+    cmf = mfv.rolling(window).sum() / (volume.rolling(window).sum() + 1e-9)
     return cmf
 
 def compute_flow_proxy(df, ticker, window=FLOW_ZSCORE_WINDOW):
