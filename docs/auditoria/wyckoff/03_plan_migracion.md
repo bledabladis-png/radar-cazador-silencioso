@@ -185,9 +185,22 @@ muestra y bloquea si no es suficiente.
 
 ---
 
-## 5. Fase C (comparativa legacy) - Prevision
+## 5. Fase C (comparativa legacy) - DESBLOQUEADA
 
-Se reescribira tras 5b.X. Estado previsto:
+**Estado: DESBLOQUEADA desde 5b.2** (plan v1 seccion 9, dictamen
+externo). Lo unico bloqueado es 5c.4 y 5d, no la comparativa general.
+
+Se puede ejecutar con el contrato v1.8 vigente (sin SOW activado,
+porque fail-closed impide DISTRIBUTION sin sow_params). El
+comportamiento de v1.8 sin SOW es funcional: clasifica MARKUP,
+MARKDOWN, ACCUMULATION, RANGE y expone distribution_candidate via
+meta.
+
+**Nota de correccion (2026-10-02):** el plan v2 redactado antes de
+este commit decia "se reescribira tras 5b.X". Era un error de
+interpretacion. 5c nunca se bloqueo tras 5b.2.
+
+Estado previsto:
 
 - Comparar salidas de `indicators/wyckoff.py` (legacy v4.2) vs
   `indicators/wyckoff_v1.py` (contrato v1.9) sobre el universo

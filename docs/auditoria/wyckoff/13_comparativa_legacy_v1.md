@@ -244,3 +244,53 @@ clasificados con direccion, el sistema tiene menos base para ranking.
 ---
 
 Fin de comparativa 5c.
+
+---
+
+## Actualizacion post-v1.8 (2026-10-02 noche)
+
+**Motivo.** Tras la sesion 5b.3 -> 5b.4 -> 5b.4-bis + QA + contrato
+v1.9, el modulo vigente es `indicators/wyckoff_v1.py` v1.8 (con
+fail-closed y candidata SOW congelada en v1.9). Se re-ejecuto la
+comparativa con esta version.
+
+### Resultados (identicos al informe original)
+
+    Legacy:  ACC=119  RANGE=113  MARKUP=65  DIST=18  INSUF=1
+    v1.8:    RANGE=211  MARKUP=77  ACC=21  MARKDOWN=6  INSUF=1
+    Cambios: 210/316 (66.5%)
+
+**Los numeros son identicos a los del informe original (v1.3).**
+
+Conclusion: los componentes no-SOW (trend, compression, volume,
+effort, stability) no cambiaron entre v1.3 y v1.8. El contrato v1.8
+solo añade:
+- SOW fail-closed (no afecta a la comparativa sin sow_params).
+- Formalizacion de struct_max con W=60.
+
+### DISTRIBUTION = 0: causa cambiada
+
+El informe original documentaba 0 DISTRIBUTION en v1.3 por condiciones
+algebraicas incompatibles (resuelto en v1.4/v1.5).
+
+Con v1.8 sin `sow_params`, la DISTRIBUTION sigue siendo 0, pero por
+**razon distinta**: el contrato v1.8 declara fail-closed y requiere
+`sow_params` explicitos (dictamen P6). Sin ellos, un candidate se
+clasifica como RANGE con flag `distribution_candidate=True` via
+`classify_wyckoff_phase_meta`.
+
+**Mismo output (0 DISTRIBUTION), causa distinta.**
+
+### Vigencias
+
+- Las tablas del informe original (distribuciones, transiciones,
+  score delta, por sector SPDR) siguen validas con v1.8.
+- Los hallazgos H1-H5 no cambian.
+- Cualquier migracion futura (5d) parte de estos numeros.
+
+### Estado del script
+
+`scripts/compare_wyckoff_legacy_v13.py` no se ha renombrado. El nombre
+"v13" es historico; el script compara con la version vigente de
+`wyckoff_v1.py` (v1.8). Pendiente: rename a
+`compare_wyckoff_legacy_v18.py` si se decide (cosmetico).
