@@ -8,6 +8,23 @@ from config.index_tickers import INDEX_CONFIG
 from config.settings import TOP_N_CANDIDATES, TOP_N_LEADERS
 from data.providers.router import DataRouter
 
+def _mad_filtrado(x):
+    """MAD ignorando NaN. Devuelve 0.0 si quedan <2 valores validos.
+
+    D-02 (2026-10-03): np.median propaga NaN (a diferencia de
+    pd.Series.median). Sin filtrar, con 1 NaN en la ventana rolling(10)
+    score_mad = NaN -> stability = tanh(x/NaN) = NaN para todo el
+    indice. Mismo patron que el fix previo de robust_intra en este
+    fichero (2026-10-01, QQQ top20 con SPCX wyckoff_score NaN) y que
+    stock_leader.py:66-69.
+    """
+    v = x[~np.isnan(x)]
+    if len(v) < 2:
+        return 0.0
+    m = np.median(v)
+    return float(np.median(np.abs(v - m)))
+
+
 def compute_stock_metrics_for_index(df_stocks, index_name, stock_list, df_index_data=None):
     results = []
     etf_ticker = INDEX_CONFIG[index_name]['index_ticker']
@@ -71,7 +88,13 @@ def compute_stock_metrics_for_index(df_stocks, index_name, stock_list, df_index_
         wyckoff_series = wyckoff_score(ticker_df, ticker)[0]
         if len(wyckoff_series) >= 10:
             score_median = wyckoff_series.rolling(10).median().iloc[-1]
-            score_mad = wyckoff_series.rolling(10).apply(lambda x: np.median(np.abs(x - np.median(x)))).iloc[-1]
+            score_mad = wyckoff_series.rolling(10).apply(_mad_filtrado).iloc[-1]
+            # D-02 (2026-10-03): guard finitud. Con 1 NaN en la ventana,
+            # score_mad puede ser NaN si _mad_filtrado no filtrase NaN.
+            # El helper filtra, pero el guard evita propagar NaN si
+            # llega un input patologico. Mismo patron que stock_leader.
+            if pd.isna(score_mad):
+                score_mad = 0.0
             stability = np.tanh(score_median / (score_mad + 1e-9))
         else:
             stability = 0.0
