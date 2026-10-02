@@ -122,6 +122,18 @@ bloqueado por auditor externo.
 - H5.3: cron nov 2026.
 - Regenerar 01_METODO (24 KB, umbral 20 KB).
 
+- **Verificacion CI (2026-10-02 00:11 CEST, run 36942867498).**
+  Primer run real que llega a los steps finales desde el fix del catalog
+  PIT. Resultado: Run tests OK, Regenerar catalogo radar OK, Verify
+  leader selection OK. Fallo unico: `Guard coverage` con
+  `coverage_pct_last=0.20` en stock_prices. NO es regresion del fix:
+  es latencia Yahoo (dispatch a las 22:11 UTC, 1h post-cierre USA, Yahoo
+  aun no habia publicado el cierre del 1-oct). El run verde previo
+  (36904431677, 18:08 UTC) paso Guard porque el gate calculo
+  expected_session=2026-09-30 y Yahoo ya tenia datos completos. Deuda
+  separada: el guard no distingue "latencia Yahoo" de "fallo real" —
+  candidato a expediente propio si se decide atacar.
+
 **Proximo paso sugerido.** Verificar el daily_run del 2-oct con el step
 Regenerar reactivado. Monitorizar que CI procesa el crecimiento correcto
 y no rompe Run tests.
