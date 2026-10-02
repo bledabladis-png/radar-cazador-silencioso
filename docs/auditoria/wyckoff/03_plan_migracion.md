@@ -1,178 +1,256 @@
-# PLAN DE MIGRACION - Modulo Wyckoff v1
+# PLAN DE MIGRACION - Modulo Wyckoff v1 (v2)
 
-**Hoja de ruta del proyecto de rediseno.**
-**Fecha:** 2026-10-02.
-**Referencia:** dictamen auditor externo 2026-10-02, §22 (orden correcto de intervencion).
+**Hoja de ruta actualizada del proyecto.**
+**Fecha:** 2026-10-02 (madrugada del 3-oct).
+**Supersede:** 03_plan_migracion.md v1 (2026-10-02 19:14), que reflejaba
+el estado del proyecto antes de 5b.2/5b.3/5b.4/5b.4-bis/QA/contrato v1.9.
+**Referencia normativa:** contrato v1.9 + protocolo 5b.X + dictamenes
+externos 24, 26, 29, 33.
 
 ---
 
-## 1. Principios
+## 1. Principios (sin cambios respecto a v1)
 
-- **No tocar el legacy hasta cerrar v1.** `indicators/wyckoff.py` permanece
+- No tocar el legacy hasta cerrar v1: `indicators/wyckoff.py` permanece
   operativo durante todo el proyecto.
-- **Un cambio = una verificacion = un commit.** Fase por fase.
-- **Contrato antes que codigo.** Ninguna linea de implementacion se
-  escribe sin haber cerrado la fase documental correspondiente.
-- **Golden tests antes que migracion.** Los consumidores solo migran
-  cuando los tests del contrato pasan.
-- **No mezclar fases.** Fase 5 no empieza sin Fase 4 cerrada.
+- Un cambio = una verificacion = un commit. Fase por fase.
+- Contrato antes que codigo. Ninguna linea de implementacion se escribe
+  sin haber cerrado la fase documental correspondiente.
+- Golden tests antes que migracion. Los consumidores solo migran cuando
+  los tests del contrato pasan.
+- No mezclar fases.
+- **Auditor externo antes de decisiones irreversibles** (activacion de
+  parametros, migracion de consumidores, retirada de legacy).
+- **Fronteras ex-ante.** Los criterios de seleccion se congelan antes
+  de mirar resultados.
 
 ---
 
-## 2. Fases
+## 2. Estado actual (2026-10-02 noche)
 
-### Fase 1 - Semantica CERRADA
+### 2.1. Contratos vigentes
 
-**Entregable:** `01_contrato_semantico_v1.md` §1-§4.
+    v1.8    CONTRATO PRODUCTIVO VIGENTE
+    v1.9    CANDIDATA SOW CONGELADA PARA VALIDACION
+            (STATUS = FROZEN_FOR_VALIDATION / NOT_PRODUCTION)
 
-**Estado:** COMPLETADO 2026-10-02.
+Ver `01_contrato_semantico_v1_8.md` y `01_contrato_semantico_v1_9.md`.
 
-**Criterio de cierre:** las 5 decisiones (naturaleza, stability, effort,
-accumulation, markdown) estan escritas y firmadas en el contrato.
+### 2.2. Frentes
+
+    Frente A - Nucleo v1 (trend, compression, effort, stability,
+               clasificacion MARKUP/MARKDOWN/ACCUMULATION/RANGE)
+        Estado: IMPLEMENTADO en wyckoff_v1.py v1.3.
+        K = 0.25 congelado (5b.2).
+        Pendiente: revisar componentes no-SOW.
+
+    Frente B - SOW (Sign of Weakness, confirmador de DISTRIBUTION)
+        Estado: PASS DESARROLLO / NO CONFIRMADO.
+        Candidata: N=60, M=30, X_ATR=0.25, Y_VOL=1.10.
+        Pendiente: 5b.X (validacion out-of-sample).
+
+    Frente C - Comparativa legacy vs v1
+        Estado: PARCIAL (documento 13_comparativa_legacy_v1.md existe
+        pero es de la fase v1.3 pre-SOW).
+        Pendiente: rehacer tras 5b.X con contrato v1.9 vigente.
+
+    Frente D - Migracion de consumidores
+        Estado: BLOQUEADO.
+        Desbloqueo: tras 5b.X exitoso + cierre 5c.
+
+    Frente E - Retirada del legacy
+        Estado: BLOQUEADO.
+        Desbloqueo: tras 5d + 1 run CI estable.
+
+    Frente F - QA interno del modulo v1
+        Estado: COMPLETADO para SOW (34, 36).
+        Pendiente: revisar el resto de `wyckoff_v1.py`
+        (_trend_component, _atr_normalized, _volume_z,
+        _effort_vs_result, wyckoff_stability, classify_wyckoff_phase).
+
+### 2.3. Configuracion productiva
+
+    config/settings.py:
+        WYCKOFF_SOW_WINDOW_N    = None
+        WYCKOFF_SOW_MAX_AGE_M   = None
+        WYCKOFF_SOW_X_ATR       = None
+        WYCKOFF_SOW_Y_VOL       = None
+        WYCKOFF_T_NORM_K        = 0.25 (congelado 5b.2)
+
+    detect_sow: fail-closed (los cuatro parametros obligatorios).
+
+### 2.4. Consumidores
+
+Ningun consumidor del pipeline usa `wyckoff_v1.py`. Todos siguen con
+`indicators/wyckoff.py` (legacy v4.2):
+
+    indicators/index_phase.py
+    indicators/sector_wyckoff_distribution.py
+    indicators/sector_breadth.py
+    indicators/stock_leader.py
+    indicators/index_leaders.py
+
+### 2.5. Bloqueos activos
+
+    5b.X      BLOQUEADO hasta datos posteriores a 2026-10-01
+    5c        BLOQUEADO hasta cierre 5b.X
+    5d        BLOQUEADO hasta cierre 5c
+    5e        BLOQUEADO hasta cierre 5d
+    5c.4      BLOQUEADO
+    5d        BLOQUEADO
 
 ---
 
-### Fase 2 - Contrato de estados CERRADA
+## 3. Orden estricto de desbloqueo
 
-**Entregable:** `01_contrato_semantico_v1.md` §5-§9.
+    Frentes A-F
+        |
+        v
+    [A] Nucleo v1    ------------ IMPLEMENTADO
+    [F] QA interno   ------------ PARCIAL (SOW si, resto pendiente)
+    [B] 5b.X         ------------ BLOQUEADO hasta datos
+        |
+        v (si 5b.X exitoso)
+    [C] 5c comparativa legacy vs v1 con contrato v1.9
+        |
+        v (si 5c cierra)
+    [D] 5d migracion 5 consumidores
+        |
+        v (si 5d cierra + 1 run CI verde)
+    [E] 5e retirada legacy
 
-**Estado:** COMPLETADO 2026-10-02.
+**No hay atajos.** Cada frontera requiere dictamen externo antes de
+proceder. En particular:
 
-**Contenido:** definicion de ACCUMULATION, MARKUP, DISTRIBUTION, MARKDOWN,
-RANGE, INSUFFICIENT_DATA. Invariantes I1-I10. Transiciones informativas.
-
-**Criterio de cierre:** cada estado tiene condicion de activacion
-explicita; ningun estado es fallback silencioso.
-
----
-
-### Fase 3 - Proveniencia CERRADA
-
-**Entregable:** `02_proveniencia_parametros.md`.
-
-**Estado:** COMPLETADO 2026-10-02.
-
-**Contenido:** tabla de parametro/valor/rationale/fuente/fecha/validacion
-para las ventanas, pesos, umbrales, eventos y constantes.
-
-**Criterio de cierre:** ningun parametro queda como "ND" oculto. Lo
-que no tiene justificacion se declara explicitamente.
-
-**Deuda aceptada:** los parametros marcados `HEUR` o `LEG` sin
-validacion formal quedan registrados como tales. Se priorizan para
-calibracion en Fase 5+ (post-v1).
+- No activar parametros SOW en config hasta 5b.X exitoso.
+- No migrar consumidores hasta que 5c cierre.
+- No retirar legacy hasta que 5d cierre + 1 run CI estable.
 
 ---
 
-### Fase 4 - Golden tests PENDIENTE
+## 4. Fase B (SOW) - Detalle
 
-**Entregable:** `tests/test_wyckoff_contract.py`.
+### 4.1. Estado
 
-**Contenido minimo:**
+    Fase 5b.2  CERRADA  -> K = 0.25 congelado
+    Fase 5b.3  FAIL     -> primera ejecucion con sesgo de anclaje
+    Dictamen 24         -> inmortal time bias detectado
+    Fase 5b.4  FAIL sel -> landmark corregido. D3 inalcanzable.
+    Dictamen 26         -> core landmark aprobado.
+    Fase 5b.4-bis PASS  -> 3 bloques + delta_hetero. 17/240 pasan D1-D3.
+    Dictamen 33         -> freeze de validacion autorizado.
+    QA (34)             -> solo P3 con IC95 que no cruza 0.
+    Contrato v1.9       -> candidata FROZEN_FOR_VALIDATION.
+    5b.X                -> PENDIENTE.
 
-- **T1**: `struct = 0.60*t_norm + 0.40*c_norm` (bit a bit, 1e-12).
-- **T2**: `tact = 0.50*v_norm + 0.50*e_norm`.
-- **T3**: `combined = 0.70*struct + 0.30*tact`.
-- **T4**: todos los `*_norm` en (-1, 1) sobre serie sintetica larga.
-- **T5**: `combined`, `struct`, `tact` en (-1, 1).
-- **T6**: `stability` en (-1, 1).
-- **T7**: `ALL_NAN != RANGE`. Sin observacion valida -> `INSUFFICIENT_DATA`.
-- **T8**: `INSUFFICIENT_DATA` si `len(Close) < 200`.
-- **T9**: sin look-ahead. La clasificacion en `t` no depende de `t+1`.
-- **T10**: umbrales. Se construye una serie que cruce cada umbral y se
-  verifica que el estado cambia en el punto esperado.
-- **T11**: determinismo. Mismo input -> mismo output.
-- **T12**: los 4 pesos suman 1.00 en cada nivel.
+### 4.2. Candidata congelada
 
-**Fixture:** serie OHLCV sintetica de 300 filas, deterministica (seed
-fijo). No usar precios reales como golden (el auditor lo prohibe
-explicitamente, §13).
+    N     = 60
+    M     = 30
+    X_ATR = 0.25
+    Y_VOL = 1.10
 
-**Criterio de cierre:** los 12 tests pasan en verde. Test de mutacion:
-si se altera cualquier peso o umbral en el codigo, algun test cae.
+Documentada en `01_contrato_semantico_v1_9.md` seccion 13.
 
-**Duracion estimada:** 1 sesion.
+### 4.3. Evidencia de desarrollo
+
+    lift_H20_ALL = +0.0740  IC95% [+0.0234, +0.1242]
+    P1: +0.093  IC95 [-0.099, +0.296]  (cruza 0)
+    P2: +0.050  IC95 [-0.024, +0.122]  (cruza 0)
+    P3: +0.106  IC95 [+0.038, +0.178]  (no cruza 0)
+
+Solo P3 tiene IC que no cruza 0. El agregado esta sostenido por P3.
+Esto debilita cualquier lenguaje de "efecto robusto universal".
+
+### 4.4. Protocolo 5b.X (35) - Estado
+
+    Script validate_wyckoff_sow_5bX.py: LISTO.
+    Estado actual: BLOCKED (sin datos post-2026-10-01).
+    Umbrales propuestos: 12 meses + 50 ep + 20 conf.
+    QA (36) demuestra que estos umbrales son insuficientes
+    para poder estadistico.
+
+### 4.5. Bloqueo real de 5b.X
+
+5b.X NO puede ejecutarse hasta:
+
+1. Existan datos posteriores a 2026-10-01.
+2. Con suficiente muestra para tener poder estadistico
+   (~200 confirmed segun QA 36).
+3. El auditor resuelva P1-P5 del expediente 36 (umbrales,
+   escenario D, umbral de lift).
+
+El script esta preparado para las tres condiciones: chequea
+muestra y bloquea si no es suficiente.
 
 ---
 
-### Fase 5 - Implementacion y migracion PENDIENTE
+## 5. Fase C (comparativa legacy) - Prevision
 
-**Entregable:** `indicators/wyckoff_v1.py` + migracion de 5 consumidores.
+Se reescribira tras 5b.X. Estado previsto:
 
-**Sub-fases:**
+- Comparar salidas de `indicators/wyckoff.py` (legacy v4.2) vs
+  `indicators/wyckoff_v1.py` (contrato v1.9) sobre el universo
+  y periodo actuales.
+- Documentar diferencias:
+  - Distribuciones de fases por sector/indice.
+  - Diffs en top-5 de indices.
+  - Diffs en `rws_z` (WLS).
+  - Cambio en la composicion de `sector_wyckoff_distribution.csv`.
+- Criterio de no-regresion: el sistema no cambia de forma traumatica
+  la composicion del top-5 sin justificacion estructural.
 
-**5a. Modulo v1 en paralelo.**
-- Nuevo fichero `indicators/wyckoff_v1.py`.
-- Contrato v1 implementado segun 01.
-- Golden tests de Fase 4 ejecutados sobre el.
-- **Legacy intacto.**
+**Documento de salida:** `13_comparativa_legacy_v1.md` reescrito como
+v2, fechado post-5b.X.
 
-**5b. Calibracion de parametros PROPUESTOS.**
-- K de estabilidad.
-- Umbral DISTRIBUTION.
-- Ventana ATR para base/rango.
-- N sesiones spring reciente.
-- Actualizacion de `02_proveniencia_parametros.md` con resultados.
+---
 
-**5c. Comparativa legacy vs v1.**
-- Run E2E con ambos modulos.
-- Diferencias por sector e indice.
-- Documento: `04_comparativa_legacy_v1.md`.
-- **Criterio de no-regresion:** el sistema v1 no cambia de forma
-  traumática la composicion del top-5 de ningun sector/indice sin
-  justificacion estructural.
+## 6. Fase D (migracion) - Prevision
 
-**5d. Migracion de consumidores (orden por criticidad):**
+5 consumidores, ordenados por criticidad:
 
-1. `indicators/index_phase.py` (menor alcance: fase de indice).
-2. `indicators/sector_wyckoff_distribution.py` (contadores).
-3. `indicators/sector_breadth.py` (contadores).
-4. `indicators/stock_leader.py` (sectores SPDR).
-5. `indicators/index_leaders.py` (indices USA + Europa).
+    1. indicators/index_phase.py (menor alcance)
+    2. indicators/sector_wyckoff_distribution.py
+    3. indicators/sector_breadth.py
+    4. indicators/stock_leader.py
+    5. indicators/index_leaders.py
 
-Cada migracion: un commit, suite verde, verificacion E2E local.
+**Cada migracion:** 1 commit + suite verde + verificacion E2E local
+(obligatoria por tocar writers/readers del pipeline).
 
-**5e. Retirada del legacy.**
-- Solo tras migracion completa + 1 run en CI estable.
-- Renombrar `wyckoff.py` a `wyckoff_legacy.py` (NO borrar; mantener
-  por referencia).
+**Precondiciones:**
+
+- 5b.X exitoso (contrato v1.9 confirmado).
+- 5c cerrada.
+- Dictamen externo autorizando migracion.
+- Tests de contrato pasando sobre `wyckoff_v1.py`.
+
+---
+
+## 7. Fase E (retirada legacy) - Prevision
+
+- Renombrar `indicators/wyckoff.py` a `indicators/wyckoff_legacy.py`
+  (NO borrar; mantener por referencia).
 - Ajustar imports en consumidores residuales.
-- Actualizar `02_ARQUITECTURA.md`.
-
-**Criterio de cierre:** 5/5 consumidores migrados, legacy renombrado,
-suite verde, CI verde con el nuevo modulo en produccion.
-
-**Duracion estimada:** 2-3 sesiones.
+- Actualizar `02_ARQUITECTURA.md` y `03_IAE.md`.
+- Tras 1 run CI estable con v1.9 en produccion.
 
 ---
 
-## 3. Orden estricto
+## 8. Analisis prohibidos en todas las fases
 
-    Fase 1 (CERRADA) -> Fase 2 (CERRADA) -> Fase 3 (CERRADA)
-                                                      │
-                                                      ▼
-                                                  Fase 4
-                                                      │
-                                                      ▼
-                                    Fase 5a -> 5b -> 5c -> 5d -> 5e
-
-**No hay atajos.** El auditor lo ha exigido explicitamente (§22).
-
----
-
-## 4. Riesgos identificados
-
-| Riesgo | Mitigacion |
-|---|---|
-| La nueva clasificacion cambia el top-5 de sectores | Fase 5c (comparativa legacy vs v1). Documentar cada cambio. |
-| Los pesos heurísticos no estan calibrados | Fase 5b. Calibrar con dataset controlado. |
-| Retirada prematura del legacy rompe el pipeline | Fase 5e solo tras 1 run CI estable con v1. |
-| Consumidores con comportamientos implicitos no documentados | Tests de contrato en cada consumidor antes de migrar. |
-| Performance: v1 mas costoso que legacy | Benchmark en Fase 5a. Si supera 2x, revisar. |
+- Recalibrar parametros congelados sin abrir nueva fase + dictamen.
+- Ampliar el grid de busqueda condicionada por resultados.
+- Migrar consumidores sin 5c cerrada.
+- Retirar legacy sin 5d + 1 run CI estable.
+- Activar parametros en config sin 5b.X exitoso.
+- Retirar fail-closed sin dictamen explicito.
+- Cualquier modificacion cuyo objetivo implicito sea hacer pasar
+  alguna configuracion.
 
 ---
 
-## 5. Fuera de alcance
+## 9. Fuera de alcance
 
 Este proyecto NO incluye:
 
@@ -182,123 +260,115 @@ Este proyecto NO incluye:
 - Cambios en `robust_zscore`.
 - Cambios en `get_col`.
 
-Si emergen durante Fase 5, se abren como sub-proyectos separados.
+Si emergen durante alguna fase, se abren como sub-proyectos separados.
 
 ---
 
-## 6. Criterio de exito global
-
-El proyecto se considera cerrado cuando:
-
-1. `indicators/wyckoff_v1.py` implementa el contrato v1 completo.
-2. Los 12 golden tests de Fase 4 pasan en verde.
-3. Los 5 consumidores migrados, suite verde.
-4. Un run CI verde con el nuevo modulo en produccion.
-5. Documento `04_comparativa_legacy_v1.md` publicado.
-6. `02_ARQUITECTURA.md` y `03_IAE.md` actualizados.
-
----
-
-## 7. Bitacora del proyecto
+## 10. Bitacora del proyecto (actualizada)
 
 | Fecha | Hito | Estado |
 |---|---|---|
 | 2026-10-02 | Fase 1 cerrada (semantica) | OK |
 | 2026-10-02 | Fase 2 cerrada (estados) | OK |
 | 2026-10-02 | Fase 3 cerrada (proveniencia) | OK |
-| PENDIENTE | Fase 4 (golden tests) | — |
-| PENDIENTE | Fase 5a (modulo v1 en paralelo) | — |
-| PENDIENTE | Fase 5b (calibracion) | — |
-| PENDIENTE | Fase 5c (comparativa) | — |
-| PENDIENTE | Fase 5d (migracion consumidores) | — |
-| PENDIENTE | Fase 5e (retirada legacy) | — |
+| 2026-10-02 | Fase 4 cerrada (golden tests) | OK |
+| 2026-10-02 | Fase 5a implementada (wyckoff_v1.py v1.3) | OK |
+| 2026-10-02 | 5b.2 exitosa: K=0.25 congelado | OK |
+| 2026-10-02 | 5b.3 ejecutada: FAIL por sesgo de anclaje | OK (diagnostico) |
+| 2026-10-02 | Dictamen 24: inmortal time bias | OK |
+| 2026-10-02 | 5b.4 ejecutada: FAIL por D3 inalcanzable | OK (diagnostico) |
+| 2026-10-02 | Dictamen 26: core landmark aprobado | OK |
+| 2026-10-02 | 5b.4-bis ejecutada: PASS desarrollo (17/240) | OK |
+| 2026-10-02 | Dictamen 29: 5b.4-bis = PASS desarrollo | OK |
+| 2026-10-02 | QA 5b.4-bis (34): solo P3 con IC positivo | OK |
+| 2026-10-02 | Dictamen 33: freeze de validacion autorizado | OK |
+| 2026-10-02 | Contrato v1.9 FROZEN_FOR_VALIDATION | OK |
+| 2026-10-02 | Protocolo 5b.X (35) redactado | OK |
+| 2026-10-02 | Script 5b.X redactado, bloqueado | OK |
+| 2026-10-02 | QA precondiciones 5b.X (36): umbrales insuficientes | OK |
+| PENDIENTE | Dictamen sobre umbrales de 5b.X (36) | - |
+| PENDIENTE | 5b.X ejecucion (requiere datos post-2026-10-01) | - |
+| PENDIENTE | 5c comparativa legacy vs v1 (post-5b.X) | - |
+| PENDIENTE | 5d migracion 5 consumidores | - |
+| PENDIENTE | 5e retirada legacy | - |
 
 ---
 
-Fin del plan de migracion.
+## 11. Frente F (QA interno) - Desglose
+
+QA SOW ya cubierto (34, 36). Componentes no-SOW de
+`indicators/wyckoff_v1.py` pendientes de revision:
+
+- `_trend_component`: rolling MA50/MA200, formula trend.
+  Contrato v1.3.
+- `_atr_normalized`: ATR/Close, ventana 20.
+  Contrato v1.3.
+- `_volume_z`: robust_zscore(Volume, window=60, min_periods=20).
+  Contrato v1.3.
+- `_effort_vs_result`: tanh(effort_z - result_z).
+  Contrato v1.3.
+- `wyckoff_stability`: MAD rolling + tanh. K_STABILITY = 1.0
+  (PROPUESTO, no calibrado).
+- `classify_wyckoff_phase`: las 6 fases.
+
+**Objetivo del frente F:** auditar cada uno como se hizo con el SOW:
+
+1. Verificar que la implementacion coincide con el contrato v1.8.
+2. Buscar `datetime.now()`, `np.median` sin `nanmedian`, y otros
+   patrones de bug del catalogo.
+3. Cobertura de tests: comprobar que cada componente tiene tests
+   de contrato (no solo del flujo agregado).
+4. Documentar hallazgos como expediente si son estructurales.
+
+**Estado:** PENDIENTE. Es el siguiente trabajo no-bloqueado.
 
 ---
 
-## 8. Actualizacion 2026-10-02 (dictamen P1 + revision c_norm/e_norm)
+## 12. Criterio de exito global
 
-Tras el dictamen externo P1 (t_norm) y la revision de c_norm/e_norm,
-el estado del proyecto queda asi:
+El proyecto se considera cerrado cuando:
 
-    Fases 1-3   CERRADAS
-    Fase 4      CERRADA
-    Fase 5a     IMPLEMENTADA (v1.3)
-    P1          RESUELTO arquitectonicamente con O2
-    K           PROVISIONAL (= 0.15, sin calibrar)
-    Fase 5b     ABIERTA - protocolo formal en 09_protocolo_fase_5b.md
-    Fase 5c     BLOQUEADA oficialmente
-    Fase 5d     BLOQUEADA
-    Legacy      INTACTO
+1. `indicators/wyckoff_v1.py` implementa el contrato vigente
+   completo (v1.9 si 5b.X valida; v1.8 con la candidata en
+   validacion si no).
+2. Los golden tests de Fase 4 + tests I1-I36 pasan en verde.
+3. 5b.X confirma o refuta la candidata con datos out-of-sample.
+4. Los 5 consumidores migrados, suite verde (si 5b.X exitoso).
+5. Un run CI verde con el nuevo modulo en produccion.
+6. Documentos `13_comparativa_legacy_v1.md` (v2) y
+   `02_ARQUITECTURA.md` actualizados.
 
-### Aclaraciones del dictamen
-
-1. **K=0.15 se mantiene PROPUESTO.** No se cambia a 0.25/0.35 sin
-   criterio predefinido (evita calibrar sobre los 4 casos).
-2. **5c oficial bloqueada.** Solo se permite sensibilidad exploratoria
-   de K explicitamente etiquetada como calibracion (no como validacion).
-3. **5d sigue bloqueada.** Los 5 consumidores no se migran hasta que K
-   este congelado.
-4. **c_norm aprobado** (mantener como esta). El z-score sobre
-   compression tiene sentido porque el contrato declara posicion
-   relativa al regimen historico.
-5. **e_norm aprobado** (mantener como esta). `tanh(effort_z - result_z)`
-   es coherente con Effort vs Result clasico.
-6. **No abrir P1 para c_norm/e_norm.**
-7. **D-Pendiente registrada:** se asume que effort_z y result_z son
-   suficientemente comparables. Es una hipotesis de escala que debe
-   quedar documentada.
-
-### Siguiente paso aprobado
-
-Redactar el protocolo formal de Fase 5b con:
-- dataset y periodo fijados ex-ante,
-- grid predefinida,
-- metricas definidas antes de observar resultados,
-- criterios de aceptacion ex-ante,
-- validacion walk-forward sobre periodo independiente,
-- congelacion de K solo tras cumplir criterios.
-
-Razon del auditor: "K debe calibrarse sobre trend, no sobre el
-resultado de las fases".
-
-### Sensibilidad exploratoria
-
-Permitida si se etiqueta como analisis exploratorio (no como 5b ni 5c).
-Prohibido usarla para elegir K.
+**Si 5b.X refuta la candidata:** el proyecto se reorienta. Opciones:
+abandonar SOW como confirmador, o abrir 5b.5 con nueva hipotesis.
+Decision del auditor externo.
 
 ---
 
-## 9. Actualizacion 2026-10-02 (5b.2 exitosa)
+## 13. Riesgos identificados
 
-**K = 0.25 congelado.** Fase 5b cerrada. Fase 5c desbloqueada.
+| Riesgo | Mitigacion |
+|---|---|
+| La nueva clasificacion cambia el top-5 de sectores | Fase C (comparativa legacy vs v1). Documentar cada cambio. |
+| El SOW no generaliza out-of-sample | 5b.X. Si refuta, se abandona o se rediseña. |
+| Los umbrales de 5b.X son insuficientes para poder | QA 36. Auditor decide ajuste. |
+| Retirada prematura del legacy rompe el pipeline | 5e solo tras 1 run CI estable con v1.9. |
+| Consumidores con comportamientos implicitos no documentados | Tests de contrato en cada consumidor antes de migrar. |
+| Performance: v1 mas costoso que legacy | Benchmark en 5a/5d. Si supera 2x, revisar. |
+| Fronteras de bloques de validacion contaminadas | Cutoff 2026-10-01 explicito. Datos posteriores solo. |
+| Presion por congelar antes de validacion | Contrato v1.9 declara explicitamente FROZEN_FOR_VALIDATION / NOT_PRODUCTION. |
 
-Estado:
+---
 
-    Fases 1-3   CERRADAS
-    Fase 4      CERRADA
-    Fase 5a     IMPLEMENTADA (v1.3)
-    Fase 5b     CERRADA (K = 0.25, calibrado segun protocolo v3)
-    Fase 5c     DESBLOQUEADA
-    Fase 5d     BLOQUEADA (hasta que 5c cierre)
+## 14. Vigencias contractuales
 
-### 5c - Comparativa legacy v1
+- `01_contrato_semantico_v1_8.md`: contrato productivo vigente.
+- `01_contrato_semantico_v1_9.md`: candidata SOW congelada para
+  validacion. NO activacion productiva.
+- `01_contrato_semantico_v1_7.md` y anteriores: historicos.
 
-Objetivo: comparar salidas de `indicators/wyckoff.py` (legacy) vs
-`indicators/wyckoff_v1.py` (v1.3 con K=0.25) sobre el mismo universo y
-periodo. Documentar diferencias.
+**La migracion de v1.8 a v1.9 en produccion solo ocurre si 5b.X es
+exitoso y el auditor lo autoriza.**
 
-- Distribuciones de fases por sector e indice.
-- Diferencias en top-5 de indices.
-- Diferencias en `rws_z` (que alimenta WLS).
-- Sin migrar consumidores: solo diagnostico comparativo.
+---
 
-Criterio de cierre de 5c: documento `13_comparativa_legacy_v1.md` con
-las discrepancias cuantificadas y su justificacion estructural.
-
-### 5d - Migracion (bloqueada)
-
-Sigue bloqueada hasta que 5c cierre y el auditor lo apruebe.
+**Fin del plan de migracion v2.**
