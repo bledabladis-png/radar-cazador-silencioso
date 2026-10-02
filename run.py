@@ -111,6 +111,11 @@ def main():
         sector_flow_rank, etf_primary_flow_data, cftc_position_flow_data,
         blackrock_dax_flow, blackrock_isf_flow, amundi_lyxi_flow,
         temporal_meta=temporal_meta,
+        # D-04 (2026-10-03): propagar reference_date. run.py:43 lo construye
+        # tz-aware (ZoneInfo Europe/Madrid). Antes esta funcion usaba
+        # datetime.now() como fallback, violando la regla "toda fecha de
+        # observacion se deriva del dataset, nunca de datetime.now()".
+        reference_date=reference_date,
     )
     flow_synthesis = fs['flow_synthesis']
     nport_position_change_data = fs['nport_position_change_data']

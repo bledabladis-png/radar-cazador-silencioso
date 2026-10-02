@@ -197,3 +197,37 @@ def test_flows_secondary_qqq_performance_cargado_si_reciente(tmp_path, monkeypat
         blackrock_isf_flow=None, amundi_lyxi_flow=None,
     )
     assert out["qqq_performance_data"] is not None
+
+
+# =============================================================================
+# D-04 (2026-10-03): flows_secondary con reference_date tz-aware
+# =============================================================================
+
+def test_flows_secondary_reference_date_tz_aware_no_crashea(tmp_path, monkeypatch):
+    """Con reference_date tz-aware, _ref - mtime no debe lanzar TypeError.
+
+    Bug: flows_secondary.py:88 hacia _ref = reference_date sin normalizar
+    tzinfo. mtime = datetime.fromtimestamp(...) es naive. La resta naive -
+    tz-aware lanza TypeError, capturado por el except generico de L96 ->
+    qqq_performance_data = None silencioso. run.py:43 pasa tz-aware
+    (ZoneInfo Europe/Madrid) aunque hoy no lo propaga a esta funcion.
+    """
+    from zoneinfo import ZoneInfo
+    _setup_tmp(tmp_path, monkeypatch)
+    perf = tmp_path / "outputs" / "history" / "qqq_returns_yahoo.csv"
+    perf.write_text("dummy", encoding="utf-8")
+    fresh_ts = datetime.now().timestamp()
+    os.utime(perf, (fresh_ts, fresh_ts))
+
+    ref_tz = datetime.now(ZoneInfo("Europe/Madrid"))
+    out = compute_flows_secondary(
+        sector_flow_rank=None, etf_primary_flow_data=None,
+        cftc_position_flow_data=None, blackrock_dax_flow=None,
+        blackrock_isf_flow=None, amundi_lyxi_flow=None,
+        reference_date=ref_tz,
+    )
+    assert out["qqq_performance_data"] is not None, (
+        "con reference_date tz-aware y mtime fresco, qqq_performance_data "
+        "debe cargarse; si es None, el TypeError fue capturado silenciosamente"
+    )
+

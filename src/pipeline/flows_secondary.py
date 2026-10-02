@@ -85,7 +85,13 @@ def compute_flows_secondary(sector_flow_rank, etf_primary_flow_data,
             perf_path = Path('outputs/history/qqq_returns_yahoo.csv')
             if perf_path.exists():
                 mtime = datetime.fromtimestamp(perf_path.stat().st_mtime)
-                _ref = reference_date if reference_date is not None else datetime.now()
+                # D-04 (2026-10-03): normalizar tzinfo. run.py:43 pasa
+                # reference_date tz-aware (ZoneInfo Europe/Madrid). mtime
+                # es naive. Sin replace(tzinfo=None), _ref - mtime lanza
+                # TypeError, capturado por el except de abajo -> skip
+                # silencioso de qqq_performance_data. Mismo patron que
+                # darkpool.py, freshness.py, helpers.py, sentiment.py.
+                _ref = reference_date.replace(tzinfo=None) if reference_date is not None else datetime.now()
                 age = _ref - mtime
                 if age <= timedelta(days=7):
                     qqq_performance_data = pd.read_csv(perf_path)
