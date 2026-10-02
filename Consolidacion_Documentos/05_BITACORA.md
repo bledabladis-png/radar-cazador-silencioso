@@ -167,6 +167,22 @@ bloqueado por auditor externo.
   Decision de diseno pendiente, sin urgencia. Plan: esperar el slot
   automatico 03:17 UTC (05:17 CEST) del 2-oct.
 
+- **P5 auditoria tests anclados a estado: CERRADO como no-deuda (2026-10-02).**
+  Barrido completo de tests que abren ficheros del repo. Resultado: 7
+  candidatos, 0 anclados a estado real.
+    - test_iae_section.py:124,138,139 -> mocks del pipeline, no ficheros.
+    - test_build_ticker_df_i2.py:41,52 -> df sintetico con seed.
+    - test_c2_temporalidad.py:187 -> verifica que NO se modifica el CSV
+      real (anti-anclaje).
+    - test_european_coverage.py:173 -> tmp_path + providers mockeados.
+    - test_provider_nport.py:65 -> regresion estatica sobre el codigo
+      del provider.
+    - conftest.py:14 -> fixture con pytest.skip si el parquet no existe
+      (solucion al problema CI).
+    - test_holdings_filter.py -> funcion pura con parametrize.
+  El patron del sistema de tests es correcto. El caso test_idempotencia
+  era unico, no un patron. Ya reescrito en e61689e.
+
 **Proximo paso sugerido.** Verificar el daily_run del 2-oct con el step
 Regenerar reactivado. Monitorizar que CI procesa el crecimiento correcto
 y no rompe Run tests.
