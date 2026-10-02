@@ -8,7 +8,6 @@ comparaba last_session (2026-10-01) contra reference_date.date()
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
-import numpy as np
 import pandas as pd
 
 from src.utils import _compute_by_market
@@ -38,9 +37,10 @@ def test_pending_post_medianoche_cest(monkeypatch):
     from src import market_hours as mh
 
     monkeypatch.setattr(ir, "get_market", lambda t: "EURONEXT")
-    # Simular que el cierre europeo ya paso y el dia esperado es 2026-10-01.
+    # Mock realista: a las 01:50 CEST del 2-oct, el cierre del 2-oct NO ha
+    # pasado (18:00 CEST). Solo dias ANTERIORES estan cerrados.
     monkeypatch.setattr(mh, "is_session_closed",
-                        lambda market, sd, ref: sd.weekday() < 5 and sd <= ref.date())
+                        lambda market, sd, ref: sd.weekday() < 5 and sd < ref.date())
     monkeypatch.setattr(mh, "is_trading_session", lambda m, d: d.weekday() < 5)
 
     # df termina el 2026-09-30 (Yahoo no ha publicado el 1-oct)
