@@ -122,6 +122,8 @@ WYCKOFF_T_NORM_K = 0.25  # CALIBRADO 2026-10-02. Ver 12_calibracion_K_5b2.md.
 # N y M son PROPUESTOS. Calibracion en 5b.3.
 WYCKOFF_SOW_WINDOW_N = 30   # ventana para definir soporte y baseline de volumen
 WYCKOFF_SOW_MAX_AGE_M = 10  # max edad (sesiones) del SOW para confirmar
+WYCKOFF_SOW_X_ATR = 0.50  # PROPUESTO (5b.3). Penetracion minima en ATRs.
+WYCKOFF_SOW_Y_VOL = 1.20  # PROPUESTO (5b.3). Ratio minimo de volumen.
 WYCKOFF_COMBINED_STRUCT_WEIGHT = 0.70
 WYCKOFF_COMBINED_TACT_WEIGHT = 0.30
 

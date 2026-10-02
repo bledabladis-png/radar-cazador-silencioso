@@ -991,3 +991,96 @@ def test_v16_classify_meta_devuelve_campos():
     assert "phase" in meta
     assert "distribution_candidate" in meta
     assert isinstance(meta["distribution_candidate"], bool)
+
+# =====================================================================
+# v1.7 - SOW con ATR-normalizacion + umbrales
+# =====================================================================
+
+def test_v17_sow_atr_shift_ex_ante():
+    """I30: ATR se aplica shift(1) (ex-ante). Modificar Close_t no
+    debe cambiar ATR_baseline_t."""
+    n = 200
+    dates = pd.date_range("2024-01-01", periods=n, freq="B")
+    close = pd.Series(np.linspace(100, 90, n), index=dates)
+    high = close + 1.0
+    low = close - 1.0
+    volume = pd.Series(np.full(n, 1_000_000.0), index=dates)
+    df = pd.DataFrame({
+        'Open': close, 'High': high, 'Low': low,
+        'Close': close, 'Volume': volume,
+    })
+    # Detectar ATR en t = n-1 con el close real y con close alterado.
+    t_idx = dates[-1]
+    prev_close = close.shift(1)
+    tr = pd.concat([high - low, (high - prev_close).abs(), (low - prev_close).abs()], axis=1).max(axis=1)
+    atr_ref = tr.rolling(20, min_periods=20).mean().shift(1)
+    # Alterar Close en t.
+    df_mod = df.copy()
+    df_mod.loc[t_idx, 'Close'] = 1.0  # valor absurdo
+    close_mod = df_mod['Close']
+    prev_close_mod = close_mod.shift(1)
+    high_mod = df_mod['High']
+    low_mod = df_mod['Low']
+    tr_mod = pd.concat([
+        high_mod - low_mod,
+        (high_mod - prev_close_mod).abs(),
+        (low_mod - prev_close_mod).abs(),
+    ], axis=1).max(axis=1)
+    atr_mod = tr_mod.rolling(20, min_periods=20).mean().shift(1)
+    # ATR_baseline en t debe ser identico (usa datos <= t-1).
+    assert float(atr_ref.loc[t_idx]) == float(atr_mod.loc[t_idx])
+
+
+def test_v17_sow_break_depth_calculo():
+    """I31: break_depth usa ATR ex-ante y umbral X_ATR."""
+    n = 200
+    dates = pd.date_range("2024-01-01", periods=n, freq="B")
+    # Serie plana con una caida brusca al final
+    close = pd.Series(np.full(n, 100.0), index=dates)
+    close.iloc[-1] = 90.0  # caida -10%
+    high = close + 0.5
+    low = close - 0.5
+    volume = pd.Series(np.full(n, 1_000_000.0), index=dates)
+    volume.iloc[-1] = 2_000_000.0  # 2x volumen
+    df = pd.DataFrame({
+        'Open': close, 'High': high, 'Low': low,
+        'Close': close, 'Volume': volume,
+    })
+    # Con X_ATR=0 y Y_VOL=1.0: debe disparar SOW.
+    sow_permisivo = w1.detect_sow(df, 'SYNTH', window=20, x_atr=0.0, y_vol=1.0)
+    assert int(sow_permisivo.iloc[-1]) == 1, "SOW debe disparar con umbrales laxos"
+    # Con X_ATR=100 (absurdo): no dispara.
+    sow_estricto = w1.detect_sow(df, 'SYNTH', window=20, x_atr=100.0, y_vol=1.0)
+    assert int(sow_estricto.iloc[-1]) == 0, "SOW no debe disparar con X_ATR absurdo"
+
+
+def test_v17_sow_sin_ruptura_no_dispara():
+    """I32: sin ruptura de soporte no hay SOW, aunque volumen sea alto."""
+    n = 200
+    dates = pd.date_range("2024-01-01", periods=n, freq="B")
+    close = pd.Series(np.full(n, 100.0), index=dates)
+    high = close + 0.5
+    low = close - 0.5
+    volume = pd.Series(np.full(n, 1_000_000.0), index=dates)
+    volume.iloc[-1] = 10_000_000.0  # volumen 10x
+    df = pd.DataFrame({
+        'Open': close, 'High': high, 'Low': low,
+        'Close': close, 'Volume': volume,
+    })
+    sow = w1.detect_sow(df, 'SYNTH', window=20, x_atr=0.0, y_vol=1.0)
+    # Close = 100, support = 99.5 (rolling min de low), no hay ruptura.
+    assert int(sow.iloc[-1]) == 0, "Sin ruptura de soporte, no debe disparar SOW"
+
+
+def test_v17_sow_no_lookahead():
+    """I33: SOW_t no cambia si se alteran datos > t."""
+    df = _make_constant_slope_series(n=600, total_log_ret=1.2)
+    t_idx = df.index[420]
+    sow_ref = w1.detect_sow(df.loc[:t_idx], 'SYNTH')
+    df_mod = df.copy()
+    df_mod.loc[df_mod.index > t_idx, 'Close'] = 999999.0
+    df_mod.loc[df_mod.index > t_idx, 'High'] = 1000000.0
+    df_mod.loc[df_mod.index > t_idx, 'Low'] = 999998.0
+    df_mod.loc[df_mod.index > t_idx, 'Volume'] = 1e15
+    sow_mod = w1.detect_sow(df_mod.loc[:t_idx], 'SYNTH')
+    pd.testing.assert_series_equal(sow_ref, sow_mod, check_names=False)

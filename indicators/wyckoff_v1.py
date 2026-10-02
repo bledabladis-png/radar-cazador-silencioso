@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Modulo Wyckoff v1.5 - Fases estructurales con precedente selectivo.
+"""Modulo Wyckoff v1.7 - Fases estructurales con SOW ATR-normalizado.
 
 Contrato: docs/auditoria/wyckoff/01_contrato_semantico_v1_1.md
 Revision v1 -> v1.1: docs/auditoria/wyckoff/04_revision_contrato_v1_1.md
@@ -36,6 +36,8 @@ from config.settings import (
     WYCKOFF_T_NORM_K,
     WYCKOFF_SOW_WINDOW_N,
     WYCKOFF_SOW_MAX_AGE_M,
+    WYCKOFF_SOW_X_ATR,
+    WYCKOFF_SOW_Y_VOL,
 )
 from src.utils import robust_zscore, get_col
 
@@ -407,23 +409,61 @@ def detect_sos(df, ticker):
     return condition.astype(int)
 
 
-def detect_sow(df, ticker, window=WYCKOFF_SOW_WINDOW_N):
-    """Sign of Weakness (dictamen v1.6, opcion A).
+def detect_sow(df, ticker, window=WYCKOFF_SOW_WINDOW_N,
+               x_atr=WYCKOFF_SOW_X_ATR, y_vol=WYCKOFF_SOW_Y_VOL,
+               atr_window=WYCKOFF_ATR_WINDOW):
+    """Sign of Weakness v1.7 (dictamen 5b.3).
 
-    Definicion formal (auditor):
-        support_t          = rolling_min(Low, window).shift(1)
-        volume_baseline_t  = rolling_mean(Volume, window).shift(1)
-        SOW_t              = Close_t < support_t AND Volume_t > volume_baseline_t
+    Formula aprobada por auditor externo:
 
-    El shift(1) garantiza que tanto soporte como baseline de volumen sean
-    ex-ante: no incluyen la observacion t. Test I29 (no look-ahead).
+        support_t          = rolling_min(Low, N).shift(1)
+        ATR_baseline_t     = ATR(window_atr).shift(1)      <-- ex-ante
+        volume_baseline_t  = rolling_mean(Volume, N).shift(1)
+
+        break_depth_t      = (support_t - Close_t) / ATR_baseline_t
+        volume_ratio_t     = Volume_t / volume_baseline_t
+
+        SOW_t = (Close_t < support_t)
+                AND (break_depth_t >= X_ATR)
+                AND (volume_ratio_t >= Y_VOL)
+
+    Cambios respecto a v1.6:
+    - ATR se calcula y se aplica shift(1) para evitar que la propia
+      barra t contamine el denominador de break_depth.
+    - Anadidos umbrales minimos X_ATR (penetracion en ATRs) e Y_VOL
+      (ratio de volumen). PROPUESTOS.
+    - Soporte y baseline de volumen mantienen shift(1).
     """
     close = get_col(df, ticker, 'Close')
     low = get_col(df, ticker, 'Low')
+    high = get_col(df, ticker, 'High')
     volume = get_col(df, ticker, 'Volume')
+
+    # Soporte ex-ante
     support = low.rolling(window, min_periods=window).min().shift(1)
+
+    # ATR ex-ante (shift(1) tras la rolling)
+    prev_close = close.shift(1)
+    tr = pd.concat([
+        high - low,
+        (high - prev_close).abs(),
+        (low - prev_close).abs(),
+    ], axis=1).max(axis=1)
+    atr = tr.rolling(atr_window, min_periods=atr_window).mean().shift(1)
+
+    # Baseline volumen ex-ante
     vol_baseline = volume.rolling(window, min_periods=window).mean().shift(1)
-    condition = (close < support) & (volume > vol_baseline)
+
+    # Magnitudes
+    break_depth = (support - close) / (atr + 1e-9)
+    volume_ratio = volume / (vol_baseline + 1e-9)
+
+    # SOW
+    condition = (
+        (close < support)
+        & (break_depth >= x_atr)
+        & (volume_ratio >= y_vol)
+    )
     return condition.astype(int)
 
 

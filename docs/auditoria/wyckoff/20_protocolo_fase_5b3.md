@@ -4,7 +4,7 @@
 parametros N, M, X_ATR, Y_VOL del SOW de confirmacion.**
 **Fecha:** 2026-10-02.
 **Precedente:** dictamen externo v1.6 5c.3 (O1-R aprobada).
-**Estado:** pendiente de aprobacion antes de ejecutar.
+**Estado:** APROBADO por dictamen externo (2026-10-02) con correcciones.
 
 ---
 
@@ -22,13 +22,104 @@ El auditor aprobo introducir magnitud minima **normalizada por ATR**
 
 ---
 
+
+---
+
+## 0bis. Correcciones del dictamen externo (2026-10-02)
+
+El dictamen externo aprobo el protocolo condicionalmente. Cuatro
+correcciones obligatorias:
+
+**C1. ATR ex-ante.**
+La version inicial usaba `ATR_t = ATR(20)`, que incluye la barra t y
+contamina el denominador. Nueva formula:
+
+    ATR_baseline_t = ATR(window_atr).shift(1)
+
+De esta forma `break_depth_t` se evalua completamente contra
+informacion disponible antes de t.
+
+**C2. Separar struct deterioration de price deterioration.**
+No mezclar ambas en un OR. Reportar por separado:
+
+    struct_deterioration_H{h}   -> struct[t+h] < struct[t]
+    price_weakness_H{h}         -> close[t+h] < close[t] * (1 - 0.02)
+    below_support_H{h}          -> close[t+h] < support[t]
+    lower_low_H{h}              -> min(close[t+1:t+h]) < min(close[t-N:t])
+
+Outcome primario: `struct_deterioration_H20`.
+
+**C3. Baseline candidate sin SOW.**
+La calidad de SOW no se mide en absoluto. Se mide como **incremento
+respecto a un candidate sin SOW**. Anadir:
+
+    P20_confirmed = P(struct_deterioration_H20 | candidate + SOW)
+    P20_baseline  = P(struct_deterioration_H20 | candidate sin SOW)
+    incremental_lift_H20 = P20_confirmed - P20_baseline
+
+**Obligatorio reportar `incremental_lift_H20` y `incremental_lift_H40`.**
+Si SOW no aporta lift positivo, no es buen confirmador aunque el
+porcentaje absoluto sea alto.
+
+**C4. Unidad de observacion y solapamiento de SOW.**
+Un SOW aislado no es una observacion independiente si otros SOW estan
+dentro de la ventana N. Reportar:
+
+    n_sow_raw       (cuenta bruta de SOW=1)
+    n_sow_unique    (agrupados por ticker; SOW a menos de N sesiones
+                     del anterior cuentan como 1)
+
+Definicion ex-ante del agrupamiento: `same ticker AND |t_i - t_{i-1}| < N`.
+
+---
+
+## 0ter. Ajustes menores del dictamen
+
+- **D1 (n_sow_total >= 100):** mantener como guardrail operativo, NO
+  como benchmark empirico. Reportar ademas `sow_rate_per_100_ticker_years`.
+- **D2 (n_confirmed >= 20):** idem, reportar `confirmed_per_100_ticker_years`.
+- **D3 (>= 50%):** aceptado como umbral provisional pero **debe
+  combinarse con incremental_lift**. El criterio real es "lift > 0"
+  (o el umbral que se decida en el informe final), no solo D3.
+- **D4 (variacion <= 30%):** reportar `absolute_delta` y
+  `relative_delta`. Definicion: `relative_delta = (max - min) / mean`
+  sobre el vecindario. Si `mean` < 0.01, no aplicar el criterio.
+- **`WYCKOFF_ATR_WINDOW`:** mantener fijo = 20. Si ATR20 demuestra
+  inadecuado tras 5b.3, abrir 5b.4.
+
+---
+
+## 0quater. Secuencia de ejecucion aprobada
+
+    1. Congelar protocolo 5b.3 corregido (este doc).
+    2. Implementar v1.7 (SOW con ATR.shift(1) + X_ATR + Y_VOL).
+    3. Tests unitarios v1.7 (I30-I33):
+       - ATR ex-ante.
+       - break_depth con X_ATR.
+       - SOW sin ruptura -> no dispara.
+       - no-look-ahead.
+    4. Ejecutar prueba pequena/sintetica.
+    5. Revisar salida estructural.
+    6. Ejecutar grid 240.
+    7. Seleccionar candidato segun criterios.
+    8. Holdout 30%.
+
+**Regla critica del dictamen:**
+
+> 5b.3 no debe concluir que SOW es buen confirmador simplemente porque
+> los casos `candidate + SOW` continuen deteriorandose. Debe demostrar
+> que `candidate + SOW` contiene **mas informacion sobre el deterioro
+> futuro que `candidate` sin SOW**.
+
+---
+
 ## 1. Formula v1.7
 
     support_t          = rolling_min(Low, N).shift(1)
-    ATR_t              = ATR(WYCKOFF_ATR_WINDOW)
+    ATR_baseline_t     = ATR(window_atr).shift(1)      <-- ex-ante
     volume_baseline_t  = rolling_mean(Volume, N).shift(1)
 
-    break_depth_t      = (support_t - Close_t) / ATR_t
+    break_depth_t      = (support_t - Close_t) / ATR_baseline_t
     volume_ratio_t     = Volume_t / volume_baseline_t
 
     SOW_t = (Close_t < support_t)
