@@ -44,6 +44,78 @@ Al cerrar una sesion nueva, se anade arriba (las mas recientes primero). Si hay 
 
 ## 3. SESIONES
 
+### 2026-10-03 - Cierre Wyckoff (umbral 550) + auditoria S-01 (D-01, D-02)
+
+**Objetivo.** Handoff desde asistente saliente. Cerrar el frente Wyckoff
+hasta donde permiten los bloqueos externos + arrancar auditoria S-01
+sobre `indicators/` no-Wyckoff.
+
+**Hecho.**
+
+- **Handoff procesado.** Dossier de 20 preguntas al saliente, con 6
+  gaps detectados en el plan v2 y config. Commits 17773df (8 gaps),
+  7195b96 (regenerar ESTADO_SISTEMA).
+- **Cierres documentales del backlog saliente.** W-07 (renumerar salida
+  5b.X 36->37), W-08 (rename `compare_wyckoff_legacy_v13.py` a
+  `_v18.py`), S-04 (documentar H5.3 en `07_RUNBOOK.md`). Commits
+  39c9c06, ddaa3c5, dbe72a0.
+- **Dictamen externo 5b.X recibido.** El auditor audito 35 v1 + QA 36
+  y dictamino reescritura completa a v2: `t0 >= cutoff` (no `L >=`),
+  H20-complete (no landmark), clasificacion A/B/C por IC (no por
+  lift_point), D como estado de no ejecucion, congelacion del
+  validador con hash+commit antes de OOS.
+- **Power analysis implementado (`scripts/power_analysis_5bX.py`).**
+  Simulacion cluster-bootstrap real reutilizando el calibrador
+  5b.4-bis (load_dataset, precompute_features, compute_sow_cache,
+  build_episodes_landmark, episode_metrics, bootstrap_lift_H20).
+  Grid lift_real {0.03,0.05,0.074,0.10,0.15} x n_conf {100..800}
+  x N_SIM=500. Commit 344dae9.
+- **Umbral 550 confirmed H20-complete congelado.** Decision ex-ante
+  basada en el primer n donde el CI95 lower de la potencia cruza
+  0.80. Para lift=0.074 (observado en desarrollo): n=450 da lower
+  0.780, n=550 da lower 0.806. Ref: `wyckoff_5bX_power_summary.json`.
+- **Protocolo 35 v2 escrito.** 433 lineas, +227/-65, changelog
+  explicito v1->v2 en §13. Commit 9ef7497.
+- **Congelacion del validador.** sha256 CC01A6AB..., commit d324346,
+  python 3.14, seed 20261002, B=2000. Registrado en §2.5 de 35 v2 +
+  sincronizacion de plan v2 (§4.4, §4.5, bitacora, riesgos). Commit
+  ccba3ab.
+- **Auditoria S-01 (indicators/ no-Wyckoff).** Dos barridos de patrones
+  del catalogo 01b:
+  - Barrido 1 (patrones P3, P6, P13): D-01 detectado y cerrado.
+  - Barrido 2 (patrones P1, P2, P4, P8, P13 fino): 0 bugs.
+- **D-01 cerrado.** `darkpool_scoring.robust_zscore` propagaba NaN
+  via `np.median` sobre MAD. Mismo patron que el fix historico de
+  index_leaders (2f956ed) y que los hermanos options.py y fls.py,
+  ya arreglados. Fix + test de regresion (6 casos). Commit 50787d3.
+- **D-02 cerrado.** `index_leaders.compute_stock_metrics_for_index`
+  usaba inline `np.median(np.abs(x - np.median(x)))` sin filtrar NaN.
+  Extraido a `_mad_filtrado` de modulo (mismo contrato que
+  stock_leader). Test de regresion (5 casos). Commit 013618e.
+
+**Commits.** f701350..013618e (10 commits). Rango:
+`17773df`, `7195b96`, `39c9c06`, `ddaa3c5`, `dbe72a0`, `344dae9`,
+`9ef7497`, `ccba3ab`, `50787d3`, `013618e`.
+
+**Pendiente.**
+- 5b.X: esperando datos con t0 >= 2026-10-02 + 550 confirmed
+  H20-complete + guardrail 12m. Sin accion hasta que lleguen datos.
+- 5c.4 / 5d / 5e: bloqueados en cadena por 5b.X.
+- H5.3: verificacion del cron 13F del 20-nov-2026 (`update_sec_13f.yml`).
+  Comando documentado en `07_RUNBOOK.md` §2.4.1.
+- C2 (920): discrepancia H1-B. Bloqueado por auditor externo.
+- S-01: segundo barrido sin hallazgos. No se justifica tercer barrido
+  con los patrones restantes (P5, P6, P9-P12) — ROI < 1.
+- D-03 (robustez menor): `momentum.py:47` `mfv.rolling(w).sum() /
+  volume.rolling(w).sum()` sin `+1e-9`. Sin caso real disparador.
+
+**Proximo paso sugerido.** Esperar dictamen / datos. Frente Wyckoff
+completamente bloqueado hasta que existan datos post-cutoff. Alternativa
+si se quiere avanzar: S-02 (`src/report/` y `src/pipeline/` con el
+mismo metodo del Frente 7).
+
+---
+
 ### 2026-10-02 (tarde/noche) - Wyckoff 5b.3 -> 5b.4 -> 5b.4-bis + QA + contrato v1.9
 
 **Objetivo.** Continuar el rediseno del modulo Wyckoff. El usuario
