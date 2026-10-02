@@ -167,26 +167,30 @@ Documentada en `01_contrato_semantico_v1_9.md` seccion 13.
 Solo P3 tiene IC que no cruza 0. El agregado esta sostenido por P3.
 Esto debilita cualquier lenguaje de "efecto robusto universal".
 
-### 4.4. Protocolo 5b.X (35) - Estado
+### 4.4. Protocolo 5b.X (35 v2) - Estado
 
-    Script validate_wyckoff_sow_5bX.py: LISTO.
-    Estado actual: BLOCKED (sin datos post-2026-10-01).
-    Umbrales propuestos: 12 meses + 50 ep + 20 conf.
-    QA (36) demuestra que estos umbrales son insuficientes
-    para poder estadistico.
+    Script validate_wyckoff_sow_5bX.py: CONGELADO (hash CC01A6AB...,
+    commit d324346, seed 20261002, python 3.14).
+    Estado actual: BLOCKED.
+    Umbral normativo: 550 confirmed H20-complete (congelado).
+    Guardrail temporal: 12 meses.
+    Fuente del umbral: power_analysis_5bX.py (344dae9).
+    Precedente: dictamen externo 2026-10-02 sobre 35 v1 + QA 36.
 
 ### 4.5. Bloqueo real de 5b.X
 
 5b.X NO puede ejecutarse hasta:
 
-1. Existan datos posteriores a 2026-10-01.
-2. Con suficiente muestra para tener poder estadistico
-   (~200 confirmed segun QA 36).
-3. El auditor resuelva P1-P5 del expediente 36 (umbrales,
-   escenario D, umbral de lift).
+1. Existan datos con t0 >= 2026-10-02 (post-cutoff).
+2. n_confirmed_H20_complete >= 550.
+3. Guardrail: >= 12 meses de sesiones post-cutoff.
 
-El script esta preparado para las tres condiciones: chequea
-muestra y bloquea si no es suficiente.
+Las tres condiciones se evaluan de forma independiente. El script
+chequea muestra y bloquea (D = INSUFFICIENT_SAMPLE) si no se cumple
+la condicion 2.
+
+**Dictamen de umbrales: RESUELTO** (dictamen externo 2026-10-02).
+El umbral 550 esta congelado y no es revisable mirando resultados.
 
 ---
 
@@ -310,11 +314,14 @@ Si emergen durante alguna fase, se abren como sub-proyectos separados.
 | 2026-10-02 | QA 5b.4-bis (34): solo P3 con IC positivo | OK |
 | 2026-10-02 | Dictamen 33: freeze de validacion autorizado | OK |
 | 2026-10-02 | Contrato v1.9 FROZEN_FOR_VALIDATION | OK |
-| 2026-10-02 | Protocolo 5b.X (35) redactado | OK |
+| 2026-10-02 | Protocolo 5b.X (35 v1) redactado | OK |
 | 2026-10-02 | Script 5b.X redactado, bloqueado | OK |
 | 2026-10-02 | QA precondiciones 5b.X (36): umbrales insuficientes | OK |
-| PENDIENTE | Dictamen sobre umbrales de 5b.X (36) | - |
-| PENDIENTE | 5b.X ejecucion (requiere datos post-2026-10-01) | - |
+| 2026-10-02 | Dictamen externo: 35 v1 + QA 36 auditados | OK |
+| 2026-10-03 | Power analysis 5b.X (344dae9): umbral 550 derivado | OK |
+| 2026-10-03 | Protocolo 5b.X v2 (9ef7497): 550 congelado | OK |
+| 2026-10-03 | Script validador congelado con hash (CC01A6AB) | OK |
+| PENDIENTE | 5b.X ejecucion (requiere 550 confirmed H20-complete) | - |
 | PENDIENTE | 5c comparativa legacy vs v1 (post-5b.X) | - |
 | PENDIENTE | 5d migracion 5 consumidores | - |
 | PENDIENTE | 5e retirada legacy | - |
@@ -390,7 +397,7 @@ Decision del auditor externo.
 |---|---|
 | La nueva clasificacion cambia el top-5 de sectores | Fase C (comparativa legacy vs v1). Documentar cada cambio. |
 | El SOW no generaliza out-of-sample | 5b.X. Si refuta, se abandona o se rediseña. |
-| Los umbrales de 5b.X son insuficientes para poder | QA 36. Auditor decide ajuste. |
+| Los umbrales de 5b.X son insuficientes para poder | RESUELTO: 550 confirmed H20-complete (congelado 2026-10-03). |
 | Retirada prematura del legacy rompe el pipeline | 5e solo tras 1 run CI estable con v1.9. |
 | Consumidores con comportamientos implicitos no documentados | Tests de contrato en cada consumidor antes de migrar. |
 | Performance: v1 mas costoso que legacy | Benchmark en 5a/5d. Si supera 2x, revisar. |

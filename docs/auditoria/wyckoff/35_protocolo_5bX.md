@@ -119,13 +119,26 @@ derivado de `calibrate_wyckoff_sow_5b4bis.py` **sin tocar la logica
 del landmark, de los bloques, ni del bootstrap**. Antes de observar
 cualquier resultado OOS debe registrarse:
 
-- hash sha256 del fichero del script
-- commit del repo en el que queda congelado
-- version de Python y dependencias relevantes
-- seed exacta empleada
+**Estado de congelacion (2026-10-03):**
 
-La frase "se derivara" de v1 queda sustituida por "se congelara y
-registrara antes de comenzar la ventana de evaluacion".
+    Fichero:   scripts/validate_wyckoff_sow_5bX.py
+    sha256:    CC01A6ABE95E57D7810D77B94AE9E5F85181274403D439E4C8D4EB706AD90D39
+    commit:    d324346
+    python:    3.14
+    seed:      20261002 (heredada del calibrador, BOOT_SEED)
+    B:         2000 (heredada del calibrador, BOOT_B)
+
+**Verificacion obligatoria pre-ejecucion:**
+
+    Set-Location D:\Macro_Sectorial
+    $h = (Get-FileHash scripts\validate_wyckoff_sow_5bX.py -Algorithm SHA256).Hash
+    if ($h -ne "CC01A6ABE95E57D7810D77B94AE9E5F85181274403D439E4C8D4EB706AD90D39") {
+        throw "ABORTAR: hash del validador no coincide con el congelado"
+    }
+
+Si el hash difiere, la validacion original queda invalidada. Se abre
+5b.X-bis con nuevo protocolo y nuevo hash, declarando la original
+abortada.
 
 ---
 
