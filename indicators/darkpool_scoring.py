@@ -22,8 +22,17 @@ def robust_zscore(series):
     # indice que la entrada, consistente con las otras dos ramas.
     if len(series) == 0:
         return pd.Series([], dtype=float)
-    median = series.median()
-    mad = np.median(np.abs(series - median))
+    # D-01 (2026-10-03): filtrar NaN antes de calcular median/MAD.
+    # np.median propaga NaN (a diferencia de Series.median). Con 1 NaN
+    # en la ventana, mad=NaN y todo el z-score de la serie queda NaN,
+    # enmascarado por classify_darkpool como "Sin historial suficiente".
+    # Mismo patron que el fix de index_leaders (2f956ed) y que los
+    # hermanos options.py:44-56 y fls.py:29-40, ya arreglados.
+    valid = series.dropna()
+    if len(valid) == 0:
+        return pd.Series(np.full(len(series), np.nan), index=series.index)
+    median = valid.median()
+    mad = np.median(np.abs(valid - median))
     if mad == 0:
         return pd.Series(np.zeros(len(series)), index=series.index)
     return (series - median) / (1.4826 * mad)
