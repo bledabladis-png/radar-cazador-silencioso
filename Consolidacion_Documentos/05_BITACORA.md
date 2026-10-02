@@ -253,6 +253,58 @@ bloqueado por auditor externo.
   marca cuando spring/sos==1; vacio cuando 0. Documentado en
   test_leader_table_markdown.py.
 
+- **Auditoria completa del reporte (8 fases, 2026-10-02): CERRADA.**
+  Revision linea a linea de las 954 lineas del reporte CI (run
+  36954815655, 2026-10-02 04:18) cruzando cada seccion con el modulo
+  que la genera. Resultado: 6 fixes en 2 commits + 3 no-deuda
+  documentados + 2 cosmeticos pendientes.
+
+  FIXES aplicados:
+  1. _fmt_num normaliza ruido -0.00 (8e1837b). Aplicado a
+     Concentracion del liderazgo, Dispersos y demas tablas con
+     medianas.
+  2. CFTC flow_z (-0.00 en VIX lev_money) con _fmt_signed
+     (a21611f).
+  3. FLS desglose (RRP -0.00) con _fmt_num (a21611f).
+  4. SPDR 'Ultima fecha: N/D': el df de get_etf_primary_flow_data
+     no incluia 'Date'; el render hacia KeyError silencioso a N/D
+     (a21611f).
+
+  NO-DEUDA verificados:
+  - Breadth EMA20/EMA50 = 2/11: correcto (umbral interno >=40% en
+    sectors_base.py:152-154).
+  - Concentracion Lider vs primera fila: correcto (distinto criterio
+    de ordenacion, documentado en nota al pie).
+  - Spring/SOS vacios en tablas de lideres: [v] solo si flag==1,
+    vacio si 0. Documentado en test_leader_table_markdown.py.
+  - ISF.L 'Flujo Estimado (GBP)' lee estimated_flow_eur: nombre
+    historico compartido en _blackrock_base.py con DAXEX. Etiqueta
+    GBP correcta (ISF cotiza en GBP). Renombrar romperia DAXEX.
+  - QQQ SEC flow, IWM flow, N-PORT cambios 0: cifras verificadas a
+    mano, coherentes.
+  - LIS +0.43 verificado con formula: media de los 5 individuales
+    da 0.426.
+  - Leader Health Composite 79% verificado: 0.30*0.60 + 0.25*0.80 +
+    0.25*1.00 + 0.20*0.80 = 0.79.
+  - Opportunity Map 2x2 con umbrales T=-0.36, S=-0.09: clasificacion
+    de los 11 sectores correcta.
+  - Persistencia coincide entre 'Persistencia sectorial' y columna
+    'Persist' de Structural Ranking.
+  - Retornos 20d coinciden entre Momentum / Tactical / Rankings /
+    Alerta XLU.
+
+  COSMETICOS pendientes (baja prioridad):
+  - '1 dias' en Data Freshness (deberia ser '1 dia').
+  - Columna 'Ultima fecha: N/D' resuelta en este fix. Verificar en
+    el proximo run.
+
+  Nota metodologica: la auditoria se hizo cruzando el reporte con
+  el codigo de cada seccion, no solo lectura del texto. Cuando un
+  numero no cuadraba, se aplico la regla "el codigo manda sobre la
+  documentacion" y se verifico con los CSV/parquets. Cuando el
+  propio test cubria el caso (p.ej. '+0' en A/D es politica B3),
+  se documento como no-deuda en lugar de forzar un fix.
+
 **Proximo paso sugerido.** Verificar el daily_run del 2-oct con el step
 Regenerar reactivado. Monitorizar que CI procesa el crecimiento correcto
 y no rompe Run tests.
