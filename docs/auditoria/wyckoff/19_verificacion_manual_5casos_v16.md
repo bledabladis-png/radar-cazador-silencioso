@@ -196,3 +196,104 @@ Y exigir un umbral minimo sobre el score compuesto.
 ---
 
 Fin de la verificacion manual.
+
+---
+
+## 8. DICTAMEN DEL AUDITOR (2026-10-02)
+
+**H1, H2, H3 confirmados.**
+
+### 8.1. Correccion a O1: normalizar por ATR
+
+El auditor aprueba O1 conceptualmente, pero rechaza el umbral fijo
+porcentual (1%). Razon: 1% de precio no significa lo mismo para ATR=1%
+que para ATR=6%.
+
+Formula aprobada (O1-R):
+
+    support_t          = rolling_min(Low, N).shift(1)
+    ATR_t              = ATR(window_ATR)   (window_ATR = WYCKOFF_ATR_WINDOW)
+    break_depth_t      = (support_t - Close_t) / ATR_t
+    volume_ratio_t     = Volume_t / rolling_mean(Volume, N).shift(1)
+
+    SOW_t = (Close_t < support_t)
+            AND (break_depth_t >= X_ATR)
+            AND (volume_ratio_t >= Y_VOL)
+
+**Semantica:** cuantos ATR ha penetrado el precio por debajo del soporte,
+combinado con esfuerzo minimo de volumen. Comparable entre instrumentos
+con volatilidad muy distinta.
+
+### 8.2. Parametros a calibrar en 5b.3
+
+Los 4 parametros del SOW quedan PROPUESTOS:
+
+    N      - ventana para definir soporte y baseline de volumen
+    M      - max edad del SOW para confirmar
+    X_ATR  - penetracion minima en unidades de ATR
+    Y_VOL  - ratio minimo de volumen
+
+Ningun valor se fija a partir de los 5 casos manuales.
+
+### 8.3. Grid ex ante
+
+La grid debe estar definida antes de ejecutar. El auditor propone
+estructura (no valores definitivos):
+
+    N      in {20, 30, 40, 60}
+    M      in {5, 10, 15, 20, 30}
+    X_ATR  in {0.25, 0.50, 0.75, 1.00}
+    Y_VOL  in {1.10, 1.20, 1.50}
+
+Total: 240 combinaciones. Ver protocolo 5b.3 (doc 20).
+
+### 8.4. Metricas obligatorias de 5b.3
+
+Ademas de las clasicas (frecuencia SOW, tasa candidate->confirmed),
+el auditor exige:
+
+- **Comportamiento posterior al SOW.** Comprobar si el SOW realmente
+  diferencia candidatos con deterioro continuo de los que recuperan.
+  Horizontes:
+  - ¿struct continua deteriorandose?
+  - ¿MA50/MA200 continua deteriorando?
+  - ¿precio continua bajo soporte?
+  - ¿se producen lower lows?
+- **Estabilidad ante variaciones pequenas de N/M.**
+- **No optimizar por numero de DISTRIBUTION.**
+
+### 8.5. Decisiones del dictamen
+
+| Pregunta | Dictamen |
+|---|---|
+| H1/H2/H3 | Confirmados. |
+| Introducir magnitud minima | Si. O1 aprobada conceptualmente. |
+| Formula | ATR-normalizada (O1-R), no porcentaje absoluto. |
+| Fijar X/Y ahora | No. PROPUESTOS. |
+| N=30 / M=10 | PROPUESTOS. No congelar. |
+| 5b.3 alcance | N + M + X_ATR + Y_VOL, con grid ex ante. |
+| Cerrar 5c.3 | Si como diagnostico. NO como validacion final. |
+| Desbloquear 5d | No. |
+| v1.7 | Si. El SOW con magnitud es cambio contractual. |
+
+### 8.6. Secuencia aprobada
+
+    v1.6
+    candidate/confirmed (arquitectura)
+        ↓
+    5c.3 diagnostico (CERRADO)
+        ↓
+    v1.7 (SOW con magnitud ATR + volumen)
+        ↓
+    5b.3 (grid ex ante)
+        ↓
+    v1.7.x (contrato SOW congelado)
+        ↓
+    5c.4 (re-evaluacion 316)
+        ↓
+    5d
+
+### 8.7. No usar los 5 casos como ground truth
+
+La verificacion manual sirve para detectar QUE informacion falta, no
+para fabricar un dataset supervisado de 5 observaciones.
