@@ -92,6 +92,20 @@ sobre `indicators/` no-Wyckoff.
   usaba inline `np.median(np.abs(x - np.median(x)))` sin filtrar NaN.
   Extraido a `_mad_filtrado` de modulo (mismo contrato que
   stock_leader). Test de regresion (5 casos). Commit 013618e.
+- **S-02 (auditoria src/report + src/pipeline).** Tres barridos de
+  patrones (P1-P13 del catalogo 01b):
+  - **D-04 cerrado.** `flows_secondary.py:88` hacia `_ref = reference_date`
+    sin `.replace(tzinfo=None)`. `run.py:43` construye tz-aware, el
+    caller no propagaba, TypeError capturado silencioso -> skip de
+    `qqq_performance_data`. Fix + propaga + test. Commit d608711.
+  - **D-05 cerrado.** Mismo patron en `mte_confirmation._compute_mte:36`
+    y `validation_gate:39`. `compute_mte_confirmation:152` no propagaba
+    `reference_date` a `_compute_mte`. Fix: normalizar tz + propagar +
+    run.py callers. 3 tests. Commit e0aacda.
+  - **S-02b/c/d cerrados sin bug.** `helpers.py` except defensivos,
+    `breadth_metrics.py:107` no tiene resta tz (robustez menor),
+    `engines.py:25` es bug latente ya citado en el catalogo 01b.
+    Ver detalle en el acta del barrido (no documento).
 
 **Commits.** f701350..013618e (10 commits). Rango:
 `17773df`, `7195b96`, `39c9c06`, `ddaa3c5`, `dbe72a0`, `344dae9`,
@@ -108,6 +122,10 @@ sobre `indicators/` no-Wyckoff.
   con los patrones restantes (P5, P6, P9-P12) — ROI < 1.
 - D-03 (robustez menor): `momentum.py:47` `mfv.rolling(w).sum() /
   volume.rolling(w).sum()` sin `+1e-9`. Sin caso real disparador.
+
+- S-02c (robustez menor): `breadth_metrics.py:107` fallback a
+  `datetime.now()` cuando `reference_date=None`. Caller productivo
+  (`run.py:140`) lo pasa, no hay bug funcional.
 
 **Proximo paso sugerido.** Esperar dictamen / datos. Frente Wyckoff
 completamente bloqueado hasta que existan datos post-cutoff. Alternativa
