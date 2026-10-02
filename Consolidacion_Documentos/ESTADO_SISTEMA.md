@@ -2,7 +2,7 @@
 
 Hechos verificables del sistema. Generado por script.
 
-**Generado en:** 2026-10-02 00:52:08 UTC
+**Generado en:** 2026-10-02 01:09:34 UTC
 **Snapshot tomado sobre:** commit HEAD de la fecha indicada, al momento de generar
 **NO editar a mano.** Regenerar con:
 
@@ -17,16 +17,16 @@ HEAD, tests e integridad del codigo.
 
 ## 1. Git
 
-- **HEAD:** `927934b`
-- **HEAD completo:** `927934b07768b19febec44ea49bd8254fc795313`
-- **Fecha commit HEAD:** 2026-10-02 02:50:26 +0200
+- **HEAD:** `d4565ab`
+- **HEAD completo:** `d4565ab7ea3e96c2e83e2872c77fd0664926cfe5`
+- **Fecha commit HEAD:** 2026-10-02 03:06:54 +0200
 - **Ahead:** 0
 - **Behind:** 0
-- **origin/main:** `927934b`
+- **origin/main:** `d4565ab`
 
 ## 2. Tests (pytest real)
 
-- **Resumen:** 3037 passed, 2 skipped in 87.70s (0:01:27)
+- **Resumen:** 3037 passed, 2 skipped in 90.22s (0:01:30)
 - **Exit code:** 0
 
 **Tests skip:**

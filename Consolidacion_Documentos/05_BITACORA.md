@@ -183,6 +183,22 @@ bloqueado por auditor externo.
   El patron del sistema de tests es correcto. El caso test_idempotencia
   era unico, no un patron. Ya reescrito en e61689e.
 
+- **Auditoria de ceros del reporte: CERRADA (2026-10-02).**
+  Barrido de las 919 lineas del reporte (outputs/report/reporte_diario.md
+  del 2026-10-01 01:41). Tres categorias:
+    1. Ceros reales (FEZ, NH/NL=0, Matriz Evidencia columna 0, N-PORT
+       cambio 0 con balance identico): correctos sin signo.
+    2. Ceros de formato en 29 sitios con f:+.Xf o _fmt_num(v,{:+.Xf})
+       crudo: violaban FU-003a. Corregidos en d4565ab (aplicado
+       _fmt_signed en confirmation, etf_flows, flows_international,
+       leaders, rankings, sector_context, slpm).
+    3. N/D correctos donde el dato falta.
+  Caso FEZ verificado con evidencia: SSGA publica NAV diario, shares
+  constantes en 63,300,967, primary_flow_usd=0 calculado (no
+  imputado). Cero real, no bug.
+  Regla reforzada: cero != sin dato. Un cero sospechoso se investiga;
+  aqui el unico caso con apariencia sospechosa (FEZ) resulto ser real.
+
 **Proximo paso sugerido.** Verificar el daily_run del 2-oct con el step
 Regenerar reactivado. Monitorizar que CI procesa el crecimiento correcto
 y no rompe Run tests.
