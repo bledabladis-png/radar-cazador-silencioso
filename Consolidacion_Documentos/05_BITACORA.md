@@ -214,6 +214,29 @@ bloqueado por auditor externo.
   valid_to, no reactivar, reaparicion -> nueva key (dictamen auditor
   seccion 4).
 
+- **Auditoria bloques 4-5 del reporte: CERRADA (2026-10-02).**
+  Lectura linea a linea de L800-1099 (Rendimiento QQQ, Flujo QQQ,
+  MTE, Confirmation Data, Cross-Asset Ratios, Dark Pools FINRA,
+  Indices Internacionales, Sintesis, Matriz Evidencia, Anti-Double-
+  Counting, IAE/13F). 4 hallazgos, 2 bugs reales:
+
+  BUG 1 (1edefb1): Cobertura catalogo decia 240/242 (99.17%). El
+  snapshot vigente tiene 255 keys. Causa doble: run_contractual_nipc
+  no devuelve catalog_keys_total, iae_section caia al fallback
+  hardcoded 242. Fix: _get_catalog_total() lee 'rows' del snapshot
+  vigente del manifest.
+
+  BUG 2 (1edefb1): NH-NL en Confirmation Data con ':+d' crudo ->
+  '+0' con signo. Mismo bug latente en ad_net. Fix: _fmt_signed.
+
+  Descartados por diseno (no son bugs):
+  - 535/535 tickers en Dark Pools: universo FINRA ATS != universo
+    stock_prices (313 USA). Distintos por definicion.
+  - CBOE PCR (09-29) vs Estructura volatilidad (09-30): dos fuentes
+    del mismo dataset con lags de actualizacion distintos.
+
+  Suite tras fix: 3042 passed + 2 skipped.
+
 **Proximo paso sugerido.** Verificar el daily_run del 2-oct con el step
 Regenerar reactivado. Monitorizar que CI procesa el crecimiento correcto
 y no rompe Run tests.
