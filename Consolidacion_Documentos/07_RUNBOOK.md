@@ -54,6 +54,21 @@ Disparan el dia 1 del mes (holdings) o el dia 20 (SEC):
     update_sec_13f.yml              17 6 20 2,5,8,11 *   CEST 08:17
       -> ingesta SEC 13F (lag 50d, ver D4 2026-09-30)
 
+#### 2.4.1. Verificacion H5.3 (cron 13F nov 2026)
+
+    gh run list --workflow=update_sec_13f.yml --event schedule --limit 5
+    Get-Content data\sec_13f\ingest_traces.jsonl -Encoding UTF8 | Select-Object -Last 5
+
+Esperado: entrada con {"source":"cron", "outcome":"INGEST", ...} y
+sin rama SKIP inesperada. Fecha de referencia: 20-nov-2026 06:17 UTC.
+
+Si no hay entrada: revisar seccion 4.1 (cron no disparo). Si el
+outcome es SKIP: determinar causa (quarter ya ingestado, feriado,
+fallo upstream).
+
+Trazabilidad: H5.3 implementada 2026-09-30. Ver 03_IAE.md seccion
+H5 y 04_HISTORICO.md.
+
 ### 2.5. Deuda estructural detectada 2026-09-30
 
 Los 4 workflows de §2.3 nunca se han disparado por schedule en el
