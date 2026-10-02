@@ -151,6 +151,36 @@ depende de los valores concretos; la calibracion empirica si.
 | (ACCUMULATION) tact > 0 | — | Silencioso por diseno; no debe vetar acumulacion (D3) |
 
 
+
+---
+
+## 3.9. Parametros v1.3 (K de tendencia)
+
+| Parametro | Valor | Rationale | Fuente | Fecha | Validacion |
+|---|---:|---|---|---|---|
+| WYCKOFF_T_NORM_K | 0.15 | Trend 15% -> t_norm 0.76. Umbral 0.30 <-> trend ~4.64%. | HEUR | 2026-10-02 | PROPUESTO |
+
+**Razon de K=0.15:** una tendencia del 15% en MA50/MA200 es fuerte en
+equity; produce `t_norm = tanh(1.0) = 0.76`. El umbral de clasificacion
+`t_norm > 0.30` se alcanza con `trend ≈ 4.64%`, interpretable como
+"MA50 un 4.6% por encima de MA200".
+
+**Prohibicion:** no se calibra sobre los 4 casos (MSFT, PLTR, INTC,
+AMD). La calibracion real de K es Fase 5b con dataset controlado.
+
+**Estado:** PROPUESTO. Unico valor candidato hasta que Fase 5b lo
+revise.
+
+---
+
+## 3.10. Parametros eliminados en v1.3
+
+| Elemento v1.2 | Motivo |
+|---|---|
+| `robust_zscore(trend, w=200)` | Mide desviacion de regimen, no nivel. P1 critico. |
+| Ventana `200` para trend | Ya no aplica. K la reemplaza. |
+| `min_periods=60` para trend | Idem. |
+
 ---
 
 ## 4. Proceso de registro

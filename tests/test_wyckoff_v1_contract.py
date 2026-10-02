@@ -399,26 +399,20 @@ def _make_uptrend_series(n=600, seed=1):
     })
 
 
-@pytest.mark.xfail(
-    reason=(
-        "Pendiente dictamen P5 (docs/auditoria/wyckoff/06_hallazgo_t_norm_v1_2.md). "
-        "t_norm mide aceleracion de tendencia (robust_zscore de trend), no "
-        "tendencia. Un activo con subida constante +15% da t_norm=0.001 -> "
-        "RANGE. Requiere decision del auditor sobre la metrica correcta."
-    ),
-    strict=True,
-)
 def test_v12_t1_mas_historia_alcista_sigue_markup():
     """Test 1 (dictamen §10): mas historia alcista no rompe MARKUP.
 
-    BLOQUEADO por hallazgo P5: t_norm mide aceleracion, no tendencia.
-    Ver docs/auditoria/wyckoff/06_hallazgo_t_norm_v1_2.md.
+    v1.3 resuelve P1. Se usa el fixture determinista (sin ruido) porque
+    T1 aísla el efecto de "persistencia de tendencia sobre t_norm". Un
+    fixture con volatilidad variable puede dar RANGE por composicion
+    struct (c_norm muy negativo), no por t_norm. Ese es un caso distinto
+    y no debe mezclarse con T1.
     """
-    df = _make_uptrend_series(n=600, seed=1)
+    df = _make_constant_slope_series(n=600, total_log_ret=1.2)
     fase = w1.classify_wyckoff_phase(df, 'SYNTH')
     assert fase == "MARKUP", (
         f"Esperado MARKUP en tendencia alcista sostenida, obtenido {fase}. "
-        "Si falla, D1-v1.1 ha reaparecido."
+        "Si falla, P1 ha reaparecido."
     )
 
 
@@ -509,3 +503,103 @@ def test_v12_i15_markup_no_requiere_precedente(synthetic_df):
     # Verificar que la clasificacion no cae en RANGE por struct_max alto.
     fase = w1.classify_wyckoff_phase(df, 'SYNTH')
     assert fase != "INSUFFICIENT_DATA"
+
+# =====================================================================
+# Tests v1.3 (dictamen §14, P1 resuelto)
+# =====================================================================
+
+def _make_constant_slope_series(n=600, *, total_log_ret=1.2):
+    """Serie con tendencia alcista determinista (constante)."""
+    dates = pd.date_range("2024-01-01", periods=n, freq="B")
+    price = pd.Series(100 * np.exp(np.linspace(0, total_log_ret, n)), index=dates)
+    return pd.DataFrame({
+        'Open': price, 'High': price * 1.003, 'Low': price * 0.997,
+        'Close': price, 'Volume': 1_000_000.0,
+    }, index=dates)
+
+
+def test_v13_constant_uptrend_is_positive():
+    """I19: subida sostenida -> t_norm > 0."""
+    df = _make_constant_slope_series(n=600, total_log_ret=1.2)
+    _, _, _, t_norm, _, _, _ = w1.wyckoff_score(df, 'SYNTH')
+    last = float(t_norm.dropna().iloc[-1])
+    assert last > 0.0, f"t_norm={last} no es > 0 con subida sostenida"
+
+
+def test_v13_constant_downtrend_is_negative():
+    """I19: bajada sostenida -> t_norm < 0."""
+    df = _make_constant_slope_series(n=600, total_log_ret=-1.2)
+    _, _, _, t_norm, _, _, _ = w1.wyckoff_score(df, 'SYNTH')
+    last = float(t_norm.dropna().iloc[-1])
+    assert last < 0.0, f"t_norm={last} no es < 0 con bajada sostenida"
+
+
+def test_v13_flat_trend_is_zero():
+    """I19: trend = 0 -> t_norm = 0."""
+    n = 600
+    dates = pd.date_range("2024-01-01", periods=n, freq="B")
+    price = pd.Series(np.full(n, 100.0), index=dates)
+    df = pd.DataFrame({
+        'Open': price, 'High': price, 'Low': price,
+        'Close': price, 'Volume': 1_000_000.0,
+    }, index=dates)
+    _, _, _, t_norm, _, _, _ = w1.wyckoff_score(df, 'SYNTH')
+    clean = t_norm.dropna()
+    assert not clean.empty
+    last = float(clean.iloc[-1])
+    assert abs(last) < 1e-6, f"t_norm={last} no es ~0 con trend plano"
+
+
+def test_v13_acceleration_does_not_define_direction():
+    """I21: acelerar/desacelerar no invierte el signo si trend > 0."""
+    n = 600
+    dates = pd.date_range("2024-01-01", periods=n, freq="B")
+    # Acelerada
+    drift_acc = np.linspace(0.001, 0.006, n)
+    price_acc = pd.Series(100 * np.exp(np.cumsum(drift_acc)), index=dates)
+    df_acc = pd.DataFrame({
+        'Open': price_acc, 'High': price_acc * 1.003, 'Low': price_acc * 0.997,
+        'Close': price_acc, 'Volume': 1_000_000.0,
+    }, index=dates)
+    # Desacelerada (pero sigue subiendo)
+    drift_dec = np.linspace(0.006, 0.001, n)
+    price_dec = pd.Series(100 * np.exp(np.cumsum(drift_dec)), index=dates)
+    df_dec = pd.DataFrame({
+        'Open': price_dec, 'High': price_dec * 1.003, 'Low': price_dec * 0.997,
+        'Close': price_dec, 'Volume': 1_000_000.0,
+    }, index=dates)
+
+    _, _, _, t_acc, _, _, _ = w1.wyckoff_score(df_acc, 'SYNTH')
+    _, _, _, t_dec, _, _, _ = w1.wyckoff_score(df_dec, 'SYNTH')
+    a = float(t_acc.dropna().iloc[-1])
+    d = float(t_dec.dropna().iloc[-1])
+    assert a > 0, f"acelerada debe ser > 0, es {a}"
+    assert d > 0, f"desacelerada debe ser > 0 (sigue subiendo), es {d}"
+
+
+def test_v13_t_norm_bounds():
+    """I20: t_norm acotado en (-1, 1)."""
+    df = _make_constant_slope_series(n=600, total_log_ret=1.2)
+    _, _, _, t_norm, _, _, _ = w1.wyckoff_score(df, 'SYNTH')
+    clean = t_norm.dropna()
+    assert clean.abs().max() <= 1.0 + 1e-9
+
+
+def test_v13_markup_not_rejected_by_stable_trend():
+    """I22: subida sostenida puede ser MARKUP (T1 formalizado)."""
+    df = _make_constant_slope_series(n=600, total_log_ret=1.2)
+    phase = w1.classify_wyckoff_phase(df, 'SYNTH')
+    assert phase == "MARKUP", (
+        f"Subida sostenida devolvio {phase}. I22 exige MARKUP. "
+        "Si falla, P1 ha reaparecido."
+    )
+
+
+def test_v13_no_lookahead_equivalente_a_T4(synthetic_df):
+    """I23: datos futuros no cambian la fase en t (via as_of)."""
+    t_idx = synthetic_df.index[420]
+    fase_ref = w1.classify_wyckoff_phase(synthetic_df, 'SYNTH', as_of=t_idx)
+    df_mod = synthetic_df.copy()
+    df_mod.loc[df_mod.index > t_idx, 'Close'] = 999999.0
+    fase_mod = w1.classify_wyckoff_phase(df_mod, 'SYNTH', as_of=t_idx)
+    assert fase_mod == fase_ref

@@ -1,4 +1,4 @@
-# HALLAZGO v1.2 - `t_norm` mide aceleracion, no tendencia
+# HALLAZGO v1.2 - `t_norm` mide desviacion del regimen de tendencia, no nivel de tendencia
 
 **Documento de auditoria. Requiere dictamen externo antes de continuar.**
 **Fecha:** 2026-10-02.
@@ -12,7 +12,7 @@ Durante la implementacion de v1.2 (contrato con precedente selectivo) un
 test contractual (T1 del dictamen) fallo. La investigacion descubrio un
 problema **anterior y mas profundo** que los D1/D2/D3 ya corregidos:
 
-> **`t_norm` no mide tendencia. Mide cambio de tendencia.**
+> **`t_norm` no mide nivel de tendencia. Mide desviacion respecto del regimen reciente de tendencia.**
 
 ---
 
@@ -80,7 +80,7 @@ Con `t_norm = tanh(robust_zscore(trend, window=200, min_periods=60))`:
 - Subida acelerada: `t_norm > 0` -> MARKUP aceptado.
 - Subida desacelerada: `t_norm < 0` -> casi MARKDOWN.
 
-**`t_norm` mide la derivada de la tendencia, no la tendencia.**
+**`t_norm` mide la desviacion del nivel de tendencia respecto de su mediana rolling. No mide el nivel absoluto de tendencia.**
 
 ---
 
@@ -292,3 +292,137 @@ Un modulo con metrica semantica incorrecta no debe migrarse a produccion.
 ---
 
 Fin del hallazgo v1.2.
+
+---
+
+# 11. DICTAMEN DEL AUDITOR EXTERNO (2026-10-02)
+
+**Veredicto: P1 - CRITICO, confirmado.**
+
+> Debe bloquearse la migracion de `wyckoff_v1.2` y la calibracion 5b/5c
+> hasta corregir la definicion de `t_norm`.
+
+## 11.1. Correccion terminologica
+
+El auditor corrige el titulo: **no es "aceleracion"**. Es:
+
+> **desviacion robustamente estandarizada del nivel actual de `trend`
+> respecto de su mediana rolling.**
+
+En terminos economicos puede comportarse como proxy de cambio de
+regimen, pero no es una segunda derivada ni un `delta^2 precio`.
+
+Titulo final aplicado: "`t_norm` mide desviacion del regimen de
+tendencia, no nivel de tendencia".
+
+## 11.2. Diagnostico del auditor
+
+- **Serie A (subida constante):** prueba mas fuerte. Activo sube +15.5%
+  y `t_norm = +0.001`. El `robust_zscore` pregunta "que excepcional es
+  este nivel dentro de los ultimos 200 valores", no "es este trend
+  positivo".
+- **Serie C (desacelerada):** activo sigue subiendo pero `t_norm < 0`.
+  Un activo en estructura alcista obtiene senal tendencial negativa
+  solo porque pierde velocidad.
+- **Causa:** fallo de especificacion del input transformado. Ni
+  `robust_zscore` ni `tanh` estan mal considerados aisladamente. La
+  composicion "nivel de tendencia -> z-score temporal -> etiquetado
+  como tendencia absoluta" es el defecto.
+
+## 11.3. Decision sobre las opciones
+
+| Opcion | Dictamen |
+|---|---|
+| O1 `tanh(trend)` | No preferida (escala comprimida, umbral 0.30 inalcanzable) |
+| **O2 `tanh(trend/K)`** | **APROBADA como direccion de diseno** |
+| O3 ventana mayor | Rechazada como solucion; solo mitigacion |
+| O4 `tanh(trend-threshold)` | Tecnicamente viable; introduce otra semantica |
+| O5 explicitar aceleracion | No para `t_norm` de este modulo |
+
+## 11.4. Correcciones obligatorias sobre K
+
+- **K = PROPUESTO**, nunca calibrado en esta ronda.
+- **K no se calibra sobre los 4 casos** (MSFT, PLTR, INTC, AMD).
+- Secuencia: contrato v1.3 -> definicion de K -> proveniencia ->
+  calibracion 5b -> validacion 5c.
+
+## 11.5. Impacto elevado a nivel sistemico
+
+El auditor eleva el hallazgo mas de lo que lo hace este documento:
+
+> Los valores historicos de WLS derivados de `wyckoff_score` no deben
+> interpretarse como si hubieran sido producidos por el contrato que
+> ahora se esta definiendo. Su semantica historica debe quedar marcada
+> como no comparable con una serie recalculada bajo v1.3.
+
+Relevante para cualquier backtest, IC o comparacion IS/OOS que use
+`rws_z`.
+
+## 11.6. Legacy elevado al mismo nivel
+
+El legacy `indicators/wyckoff.py` (mismo concepto, `window=60`) queda
+marcado como:
+
+> **deuda estructural historica del indicador.**
+
+No debe registrarse como "bug introducido por v1.2". Registro correcto:
+
+    causa = diseno heredado
+    deteccion = validacion contractual de v1.2
+
+## 11.7. Condiciones impuestas por el auditor (10)
+
+1. Cambiar "aceleracion" por "desviacion del regimen de tendencia".
+2. Definir `t_norm` como nivel de tendencia escalado.
+3. Introducir `K` como parametro explicito.
+4. Mantener `K=0.15` unicamente como PROPUESTO.
+5. Calibrar `K` fuera de los 4 casos diagnosticos.
+6. Mantener T1 y convertirlo en invariante contractual.
+7. Bloquear fases 5c/5d hasta completar v1.3.
+8. Marcar el legacy como afectado historicamente.
+9. No reinterpretar los WLS historicos como si usaran la nueva
+   semantica.
+10. Prohibir cualquier look-ahead en la nueva clasificacion.
+
+## 11.8. Separacion conceptual obligatoria
+
+    TREND LEVEL        -> t_norm (nivel de tendencia escalado)
+    TREND CHANGE       -> opcional/futuro, NO en este modulo
+    TACTICAL           -> confirmacion / WLS
+
+La distincion entre nivel y cambio debe quedar explicita. El concepto
+anterior (desviacion respecto al regimen) puede conservarse como senal
+separada si interesa en el futuro, pero no debe presentarse como
+tendencia.
+
+## 11.9. Tests obligatorios para v1.3
+
+| Test | Invariante |
+|---|---|
+| `constant_uptrend_is_positive` | subida sostenida -> `t_norm > 0` |
+| `constant_downtrend_is_negative` | bajada sostenida -> `t_norm < 0` |
+| `flat_trend_is_zero` | `trend = 0` -> `t_norm = 0` |
+| `acceleration_does_not_define_direction` | acelerar/desacelerar modifica magnitud pero no invierte el signo |
+| `markup_not_rejected_by_stable_trend` | subida sostenida puede ser MARKUP (T1 conservado) |
+| `future_data_no_effect` | datos posteriores a `t` no afectan fase en `t` |
+| `bounds` | `-1 < t_norm < +1` |
+
+## 11.10. Conclusion del auditor
+
+> La solucion no consiste en buscar una ventana de `robust_zscore`
+> suficientemente grande para que la subida constante "parezca
+> tendencia". Eso intentaria hacer que una metrica disenada para medir
+> desviacion respecto de un regimen se comporte como otra metrica
+> distinta. La correccion estructural es eliminar esa transformacion
+> del nivel de tendencia y conservar el z-score, si interesa, como una
+> senal separada de cambio de regimen.
+
+## 11.11. Pregunta no resuelta (a elevar en el proximo ciclo)
+
+En el mensaje original se planteo una pregunta secundaria al auditor:
+
+> Deberian `c_norm` (`-tanh(robust_zscore(compression))`) y `e_norm`
+> (`tanh(effort - result)`) revisarse con el mismo escrutinio?
+
+El auditor no respondio a esta pregunta en el dictamen actual. Se eleva
+en la siguiente ronda tras cerrar v1.3.

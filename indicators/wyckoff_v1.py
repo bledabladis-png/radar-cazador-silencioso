@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Modulo Wyckoff v1.1 - Fases estructurales con precedente temporal.
+"""Modulo Wyckoff v1.3 - Fases estructurales con precedente selectivo.
 
 Contrato: docs/auditoria/wyckoff/01_contrato_semantico_v1_1.md
 Revision v1 -> v1.1: docs/auditoria/wyckoff/04_revision_contrato_v1_1.md
@@ -33,6 +33,7 @@ from config.settings import (
     WYCKOFF_TACT_WEIGHT_EFFORT,
     WYCKOFF_COMBINED_STRUCT_WEIGHT,
     WYCKOFF_COMBINED_TACT_WEIGHT,
+    WYCKOFF_T_NORM_K,
 )
 from src.utils import robust_zscore, get_col
 
@@ -123,7 +124,10 @@ def _effort_vs_result(df, ticker, window=20):
 def wyckoff_score(df, ticker):
     trend = _trend_component(df, ticker)
     compression = _atr_normalized(df, ticker, window=WYCKOFF_ATR_WINDOW)
-    t_norm = np.tanh(robust_zscore(trend, window=200, min_periods=60))
+    # v1.3 (P1 critico): t_norm = tanh(trend / K). Mide nivel de
+    # tendencia escalado. NO usar robust_zscore: mide desviacion de
+    # regimen, no nivel.
+    t_norm = np.tanh(trend / (WYCKOFF_T_NORM_K + 1e-9))
     c_norm = -np.tanh(robust_zscore(compression, window=200, min_periods=60))
     struct_score = (
         WYCKOFF_STRUCT_WEIGHT_TREND * t_norm
