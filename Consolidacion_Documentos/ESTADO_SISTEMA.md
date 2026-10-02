@@ -2,7 +2,7 @@
 
 Hechos verificables del sistema. Generado por script.
 
-**Generado en:** 2026-10-02 16:15:36 UTC
+**Generado en:** 2026-10-02 21:09:07 UTC
 **Snapshot tomado sobre:** commit HEAD de la fecha indicada, al momento de generar
 **NO editar a mano.** Regenerar con:
 
@@ -17,21 +17,24 @@ HEAD, tests e integridad del codigo.
 
 ## 1. Git
 
-- **HEAD:** `83f94b9`
-- **HEAD completo:** `83f94b9b99a1680db333fd66e686b7b9e10b6154`
-- **Fecha commit HEAD:** 2026-10-02 18:14:10 +0200
+- **HEAD:** `2f277b8`
+- **HEAD completo:** `2f277b8dae37c0280299b07c2232d672c40cd3a7`
+- **Fecha commit HEAD:** 2026-10-02 23:08:36 +0200
 - **Ahead:** 0
 - **Behind:** 0
-- **origin/main:** `83f94b9`
+- **origin/main:** `2f277b8`
 
 ## 2. Tests (pytest real)
 
-- **Resumen:** 3042 passed, 2 skipped in 86.30s (0:01:26)
+- **Resumen:** 3101 passed, 5 skipped in 89.31s (0:01:29)
 - **Exit code:** 0
 
 **Tests skip:**
 - `SKIPPED [1] tests\test_freshness.py:376: requiere --run-network`
 - `SKIPPED [1] tests\test_freshness.py:399: requiere --run-network`
+- `SKIPPED [1] tests\test_wyckoff_v1_contract.py:219: Requiere API as_of en classify_wyckoff_phase. Fase 5b.`
+- `SKIPPED [1] tests\test_wyckoff_v1_contract.py:240: Requiere precedente estructural. Fase 5b.`
+- `SKIPPED [1] tests\test_wyckoff_v1_contract.py:245: Requiere API as_of. Fase 5b.`
 
 ## 3. Integridad del codigo
 
