@@ -269,3 +269,36 @@ resultado de las fases".
 
 Permitida si se etiqueta como analisis exploratorio (no como 5b ni 5c).
 Prohibido usarla para elegir K.
+
+---
+
+## 9. Actualizacion 2026-10-02 (5b.2 exitosa)
+
+**K = 0.25 congelado.** Fase 5b cerrada. Fase 5c desbloqueada.
+
+Estado:
+
+    Fases 1-3   CERRADAS
+    Fase 4      CERRADA
+    Fase 5a     IMPLEMENTADA (v1.3)
+    Fase 5b     CERRADA (K = 0.25, calibrado segun protocolo v3)
+    Fase 5c     DESBLOQUEADA
+    Fase 5d     BLOQUEADA (hasta que 5c cierre)
+
+### 5c - Comparativa legacy v1
+
+Objetivo: comparar salidas de `indicators/wyckoff.py` (legacy) vs
+`indicators/wyckoff_v1.py` (v1.3 con K=0.25) sobre el mismo universo y
+periodo. Documentar diferencias.
+
+- Distribuciones de fases por sector e indice.
+- Diferencias en top-5 de indices.
+- Diferencias en `rws_z` (que alimenta WLS).
+- Sin migrar consumidores: solo diagnostico comparativo.
+
+Criterio de cierre de 5c: documento `13_comparativa_legacy_v1.md` con
+las discrepancias cuantificadas y su justificacion estructural.
+
+### 5d - Migracion (bloqueada)
+
+Sigue bloqueada hasta que 5c cierre y el auditor lo apruebe.

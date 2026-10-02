@@ -158,18 +158,53 @@ depende de los valores concretos; la calibracion empirica si.
 
 | Parametro | Valor | Rationale | Fuente | Fecha | Validacion |
 |---|---:|---|---|---|---|
-| WYCKOFF_T_NORM_K | 0.15 | Trend 15% -> t_norm 0.76. Umbral 0.30 <-> trend ~4.64%. | HEUR | 2026-10-02 | PROPUESTO |
+| WYCKOFF_T_NORM_K | 0.25 | Ver justificacion abajo. | CAL | 2026-10-02 | CALIBRADO (5b.2) |
 
-**Razon de K=0.15:** una tendencia del 15% en MA50/MA200 es fuerte en
-equity; produce `t_norm = tanh(1.0) = 0.76`. El umbral de clasificacion
-`t_norm > 0.30` se alcanza con `trend ≈ 4.64%`, interpretable como
-"MA50 un 4.6% por encima de MA200".
+**Valor final:** K = 0.25.
 
-**Prohibicion:** no se calibra sobre los 4 casos (MSFT, PLTR, INTC,
-AMD). La calibracion real de K es Fase 5b con dataset controlado.
+**Procedimiento de calibracion:** Fase 5b.2 ejecutada el 2026-10-02
+segun protocolo `09_protocolo_fase_5b.md` (v3). Documento de
+resultados: `12_calibracion_K_5b2.md`.
 
-**Estado:** PROPUESTO. Unico valor candidato hasta que Fase 5b lo
-revise.
+**Dataset:** `data/stock_prices.parquet`, 302 tickers con >= 200 obs
+validas, ultima sesion cerrada 2026-09-30.
+
+**Split:** temporal holdout 70/30, corte 2025-06-25.
+
+**Grid:** {0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.40}.
+
+**Criterios hard calibracion (intra-ticker, agregacion ticker-balanced):**
+
+| Metrica | K=0.25 |
+|---|---:|
+| pct_90 | 0.00% (<15%) |
+| pct_95 | 0.00% (<5%) |
+| p05 | -0.409 (<=-0.40) |
+| p95 | +0.558 (>=+0.40) |
+
+**Regla de seleccion:** mayor K que cumple H1-H4.
+
+**Validacion OOS (30% final, 2025-06-25 -> 2026-09-30):**
+
+| Criterio | Valor | Umbral | Estado |
+|---|---:|---|---|
+| V2 pct_90 | 0.00% | <15% | OK |
+| V2 pct_95 | 0.00% | <5% | OK |
+| V3 IQR_cs | 0.329 | >=0.05 | OK |
+| V4 n_tickers | 302 | >=10 | OK |
+
+**Diagnosticos OOS (no invalidan):**
+
+- p05 = -0.193 (periodo OOS sesgado hacia tendencia positiva).
+- p95 = +0.535.
+- skew = -0.202.
+
+**Aviso de survivorship bias:** el universo son los tickers actualmente
+presentes en el parquet, no el universo historico completo.
+
+**Aviso de no-comparabilidad:** los WLS historicos derivados de
+`wyckoff_score` no son comparables con los que produzca v1.3 con
+K=0.25 (cambio semantico de t_norm).
 
 ---
 

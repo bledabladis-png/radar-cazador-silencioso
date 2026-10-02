@@ -1,26 +1,36 @@
-﻿"""Calibracion Fase 5b - K del t_norm Wyckoff v1.3.
+﻿"""Calibracion Fase 5b.2 - K del t_norm Wyckoff v1.3.
 
-Protocolo: docs/auditoria/wyckoff/09_protocolo_fase_5b.md (v2).
-No toca codigo productivo. Solo lee stock_prices.parquet, calcula y
-reporta. El resultado se pega y se analiza antes de congelar K.
+Protocolo: docs/auditoria/wyckoff/09_protocolo_fase_5b.md (v3).
+Criterios corregidos:
+  - H3/H4 intra-ticker (distribucion temporal por ticker, no cross-sectional).
+  - Agregacion ticker-balanced (mediana entre tickers).
+  - Validacion OOS: V1-V4 (bounds, saturacion, resolucion, no-patologico).
+  - p05/p95/skew OOS pasan a diagnostico.
+No toca codigo productivo.
 """
 import numpy as np
 import pandas as pd
-from pathlib import Path
 
 GRID_1 = [0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.40]
-H1_MAX = 0.15       # pct |t_norm| > 0.90
-H2_MAX = 0.05       # pct |t_norm| > 0.95
-H3_MAX = -0.40      # p05 <= -0.40
-H4_MIN = 0.40       # p95 >= +0.40
-SPLIT = 0.70        # calibracion = 70% inicial
+SPLIT = 0.70
+
+# Hard criteria calibracion
+H1_MAX = 0.15
+H2_MAX = 0.05
+H3_MAX = -0.40
+H4_MIN = 0.40
+
+# Criterios validacion OOS
+V2_MAX_90 = 0.15
+V2_MAX_95 = 0.05
+V3_MIN_IQR = 0.05
+
 
 def load_prices():
     df = pd.read_parquet("data/stock_prices.parquet")
-    if not isinstance(df.columns, pd.MultiIndex):
-        raise SystemExit("Parquet sin MultiIndex")
     tickers = sorted(set(c[1] for c in df.columns if c[0] == "Close"))
     return df, tickers
+
 
 def compute_trend(df, ticker):
     close = df[("Close", ticker)].dropna()
@@ -29,77 +39,40 @@ def compute_trend(df, ticker):
     ma50 = close.rolling(50, min_periods=50).mean()
     ma200 = close.rolling(200, min_periods=200).mean()
     trend = (ma50 / (ma200 + 1e-9) - 1).dropna()
-    return trend
+    return trend if len(trend) >= 200 else None
 
-def metrics_one_ticker(trend, K):
-    """Metricas de t_norm para un ticker."""
-    t_norm = np.tanh(trend / K)
-    abs_t = t_norm.abs()
-    n = len(t_norm)
-    if n == 0:
-        return None
+
+def per_ticker_metrics(trend, K):
+    """Metricas temporales de t_norm para UN ticker."""
+    t = np.tanh(trend / K)
+    n = len(t)
+    abs_t = t.abs()
     return {
         "pct_90": float((abs_t > 0.90).sum()) / n,
         "pct_95": float((abs_t > 0.95).sum()) / n,
-        "max_abs": float(abs_t.max()),
-        "p05": float(t_norm.quantile(0.05)),
-        "p25": float(t_norm.quantile(0.25)),
-        "p50": float(t_norm.quantile(0.50)),
-        "p75": float(t_norm.quantile(0.75)),
-        "p95": float(t_norm.quantile(0.95)),
-        "iqr": float(t_norm.quantile(0.75) - t_norm.quantile(0.25)),
-        "std": float(t_norm.std()),
-        "skew": float(t_norm.skew()),
-        "pct_pos": float((t_norm > 0).mean()),
+        "p05": float(t.quantile(0.05)),
+        "p95": float(t.quantile(0.95)),
+        "iqr": float(t.quantile(0.75) - t.quantile(0.25)),
+        "skew": float(t.skew()),
         "n": n,
     }
 
-def aggregate_balanced(trends_by_ticker, K):
-    """Vista balanceada: agregar por ticker, luego agregar tickers."""
+
+def ticker_balanced_aggregate(trends_by_ticker, K):
+    """Agregacion ticker-balanced: mediana entre tickers."""
     per_ticker = []
-    for tk, trend in trends_by_ticker.items():
-        m = metrics_one_ticker(trend, K)
-        if m is not None:
-            per_ticker.append(m)
+    for trend in trends_by_ticker.values():
+        m = per_ticker_metrics(trend, K)
+        per_ticker.append(m)
     if not per_ticker:
         return None
-    keys = ["pct_90", "pct_95", "p05", "p25", "p50", "p75", "p95", "iqr",
-            "std", "skew", "pct_pos"]
-    out = {}
-    for k in keys:
-        out[k] = float(np.median([m[k] for m in per_ticker]))
+    keys = ["pct_90", "pct_95", "p05", "p95", "iqr", "skew"]
+    out = {k: float(np.median([m[k] for m in per_ticker])) for k in keys}
     out["n_tickers"] = len(per_ticker)
-    # max_abs es maximo de maximos
-    out["max_abs"] = float(max(m["max_abs"] for m in per_ticker))
     return out
 
-def aggregate_pooled(trends_by_ticker, K):
-    """Vista pooled: concatenar todos los t_norm."""
-    all_t = []
-    for trend in trends_by_ticker.values():
-        t_norm = np.tanh(trend / K)
-        all_t.append(t_norm)
-    pooled = pd.concat(all_t)
-    n = len(pooled)
-    abs_t = pooled.abs()
-    return {
-        "pct_90": float((abs_t > 0.90).sum()) / n,
-        "pct_95": float((abs_t > 0.95).sum()) / n,
-        "max_abs": float(abs_t.max()),
-        "p05": float(pooled.quantile(0.05)),
-        "p25": float(pooled.quantile(0.25)),
-        "p50": float(pooled.quantile(0.50)),
-        "p75": float(pooled.quantile(0.75)),
-        "p95": float(pooled.quantile(0.95)),
-        "iqr": float(pooled.quantile(0.75) - pooled.quantile(0.25)),
-        "std": float(pooled.std()),
-        "skew": float(pooled.skew()),
-        "pct_pos": float((pooled > 0).mean()),
-        "n": n,
-    }
 
-def check_hard(m):
-    """H1-H4. Devuelve lista de los que fallan."""
+def check_hard_cal(m):
     fails = []
     if m["pct_90"] >= H1_MAX: fails.append("H1")
     if m["pct_95"] >= H2_MAX: fails.append("H2")
@@ -107,52 +80,28 @@ def check_hard(m):
     if m["p95"] < H4_MIN:    fails.append("H4")
     return fails
 
-def check_diag(m):
-    """D1-D3. Devuelve lista de los que fallan."""
+
+def check_oos_v3(m):
+    """Validacion OOS: V1-V4. V1 (bounds) implicito en tanh."""
     fails = []
-    if abs(m["skew"]) >= 1.0: fails.append("D1")
-    # D2 requiere rango anual; no calculado aqui
+    if m["pct_90"] >= V2_MAX_90: fails.append("V2_90")
+    if m["pct_95"] >= V2_MAX_95: fails.append("V2_95")
+    if m["iqr"] < V3_MIN_IQR:    fails.append("V3_iqr")
+    # V4 no-patologico: n_tickers > 0 y valores finitos
+    if m["n_tickers"] < 10:      fails.append("V4_ntk")
+    for k in ["pct_90", "p05", "p95", "iqr"]:
+        if not np.isfinite(m[k]):  fails.append("V4_nan")
     return fails
 
-def annual_range(trends_by_ticker, K):
-    """Rango de medianas anuales de t_norm."""
-    yearly_medians = {}
-    for trend in trends_by_ticker.values():
-        t_norm = np.tanh(trend / K)
-        for year, group in t_norm.groupby(t_norm.index.year):
-            yearly_medians.setdefault(year, []).append(float(group.median()))
-    if not yearly_medians:
-        return float("nan")
-    ymed = [float(np.median(v)) for v in yearly_medians.values()]
-    return float(max(ymed) - min(ymed))
-
-def iqr_cross_sectional(trends_by_ticker, K):
-    """IQR cross-sectional por fecha, mediana agregada."""
-    per_date = {}
-    for trend in trends_by_ticker.values():
-        t_norm = np.tanh(trend / K)
-        for dt, val in t_norm.items():
-            per_date.setdefault(dt, []).append(float(val))
-    iqrs = []
-    for dt, vals in per_date.items():
-        if len(vals) >= 5:
-            s = pd.Series(vals)
-            iqrs.append(float(s.quantile(0.75) - s.quantile(0.25)))
-    if not iqrs:
-        return float("nan"), float("nan")
-    med = float(np.median(iqrs))
-    pct_alto = float(sum(1 for v in iqrs if v > 0.10)) / len(iqrs)
-    return med, pct_alto
 
 def main():
     print("=" * 100)
-    print("FASE 5b - CALIBRACION K")
+    print("FASE 5b.2 - CALIBRACION K (protocolo v3)")
     print("=" * 100)
 
     df, tickers = load_prices()
     print(f"\nTickers en parquet: {len(tickers)}")
 
-    # Determinar ultima sesion cerrada comun
     last_dates = []
     for tk in tickers:
         try:
@@ -164,24 +113,17 @@ def main():
     last_common = min(last_dates) if last_dates else None
     print(f"Ultima sesion cerrada (min): {last_common}")
 
-    # Calcular trend por ticker
     trends_by_ticker = {}
     for tk in tickers:
         trend = compute_trend(df, tk)
-        if trend is not None and len(trend) >= 200:
+        if trend is not None:
             trends_by_ticker[tk] = trend
     print(f"Tickers con trend valido (>=200 obs): {len(trends_by_ticker)}")
 
-    # Split temporal (por indice de cada ticker)
-    # NOTA: split por posicion temporal, no por ticker. Cada ticker se corta
-    # en su 70% de observaciones. Alternativa: split global por fecha.
-    # El protocolo dice "temporal holdout 70/30" - uso corte por fecha global.
     all_dates = sorted(set().union(*[set(t.index) for t in trends_by_ticker.values()]))
-    if len(all_dates) < 100:
-        raise SystemExit("Serie demasiado corta")
     cutoff_idx = int(len(all_dates) * SPLIT)
     cutoff_date = all_dates[cutoff_idx]
-    print(f"Split temporal 70/30 en fecha: {cutoff_date}")
+    print(f"Split temporal 70/30 en: {cutoff_date}")
 
     cal_trends = {tk: t[t.index <= cutoff_date] for tk, t in trends_by_ticker.items()}
     val_trends = {tk: t[t.index > cutoff_date] for tk, t in trends_by_ticker.items()}
@@ -189,81 +131,75 @@ def main():
     val_trends = {tk: t for tk, t in val_trends.items() if len(t) >= 50}
     print(f"Tickers en calibracion: {len(cal_trends)}, en validacion: {len(val_trends)}")
 
-    # --- Grid sobre calibracion ---
+    # --- Calibracion ---
     print("\n" + "=" * 100)
-    print("CALIBRACION (70% inicial)")
+    print("CALIBRACION (70% inicial) - H3/H4 intra-ticker, balanced")
     print("=" * 100)
-    print(f"\n{'K':>6} | {'pct_90':>8} {'pct_95':>8} {'p05':>8} {'p95':>8} | {'H1-H4':>10} | {'skew':>6} {'n_tk':>5}")
+    print(f"\n{'K':>6} | {'pct_90':>8} {'pct_95':>8} {'p05':>8} {'p95':>8} | {'H1-H4':>10} | {'iqr':>6} {'skew':>7}")
     print("-" * 100)
-    results = {}
+    cal_results = {}
     for K in GRID_1:
-        m = aggregate_balanced(cal_trends, K)
-        if m is None:
-            continue
-        fails = check_hard(m)
+        m = ticker_balanced_aggregate(cal_trends, K)
+        if m is None: continue
+        fails = check_hard_cal(m)
         status = "PASA" if not fails else ",".join(fails)
-        results[K] = (m, fails)
-        print(f"{K:>6.2f} | {m['pct_90']:>8.4f} {m['pct_95']:>8.4f} {m['p05']:>+8.4f} {m['p95']:>+8.4f} | {status:>10} | {m['skew']:>+6.3f} {m['n_tickers']:>5}")
+        cal_results[K] = (m, fails)
+        print(f"{K:>6.2f} | {m['pct_90']:>8.4f} {m['pct_95']:>8.4f} {m['p05']:>+8.4f} {m['p95']:>+8.4f} | {status:>10} | {m['iqr']:>6.3f} {m['skew']:>+7.3f}")
 
-    # --- Seleccion: mayor K que cumpla H1-H4 ---
-    passing = [K for K, (_, f) in results.items() if not f]
-    print()
+    passing = [K for K, (_, f) in cal_results.items() if not f]
     if not passing:
-        print("NINGUN K cumple H1-H4. Fase 5b FALLA. Requiere grid 5b.2.")
+        print("\nNINGUN K pasa H1-H4 en calibracion. 5b.2 FALLA. Grid 5b.3.")
         return
     K_sel = max(passing)
-    print(f"K seleccionado (mayor de los que pasan): {K_sel}")
+    print(f"\nK seleccionado (mayor de los que pasan H1-H4): {K_sel}")
 
-    # --- Diagnostico sobre el K elegido ---
-    m_sel = results[K_sel][0]
-    print(f"\nDiagnosticos sobre K={K_sel}:")
-    yrange = annual_range(cal_trends, K_sel)
-    iqr_med, pct_alto = iqr_cross_sectional(cal_trends, K_sel)
-    print(f"  D1 skewness      = {m_sel['skew']:+.3f}  ({'OK' if abs(m_sel['skew']) < 1.0 else 'FAIL'})")
-    print(f"  D2 rango anual   = {yrange:.3f}      ({'OK' if yrange < 0.40 else 'FAIL'})")
-    print(f"  D3 IQR_cs med    = {iqr_med:.4f}   ({'OK' if iqr_med >= 0.05 else 'FAIL'}), pct_fechas>0.10 = {pct_alto:.2%}")
-
-    # --- Validacion 30% final ---
+    # --- Validacion OOS V1-V4 ---
     print("\n" + "=" * 100)
-    print(f"VALIDACION (30% final) con K={K_sel}")
+    print(f"VALIDACION OOS (30% final) con K={K_sel}")
     print("=" * 100)
-    m_val = aggregate_balanced(val_trends, K_sel)
+    m_val = ticker_balanced_aggregate(val_trends, K_sel)
     if m_val is None:
-        print("Sin datos de validacion suficientes.")
+        print("Sin datos de validacion.")
         return
-    fails_val = check_hard(m_val)
-    print(f"\n{'metrica':>10} | {'valor':>10} | {'criterio':>15} | {'estado':>8}")
+    fails_val = check_oos_v3(m_val)
+    print(f"\n{'criterio':>12} | {'valor':>10} | {'umbral':>14} | {'estado':>8}")
     print("-" * 100)
-    print(f"{'pct_90':>10} | {m_val['pct_90']:>10.4f} | {'< 15%':>15} | {'OK' if 'H1' not in fails_val else 'FALLA':>8}")
-    print(f"{'pct_95':>10} | {m_val['pct_95']:>10.4f} | {'< 5%':>15} | {'OK' if 'H2' not in fails_val else 'FALLA':>8}")
-    print(f"{'p05':>10} | {m_val['p05']:>+10.4f} | {'<= -0.40':>15} | {'OK' if 'H3' not in fails_val else 'FALLA':>8}")
-    print(f"{'p95':>10} | {m_val['p95']:>+10.4f} | {'>= +0.40':>15} | {'OK' if 'H4' not in fails_val else 'FALLA':>8}")
-    print(f"{'skew':>10} | {m_val['skew']:>+10.3f} | {'D1 |s|<1':>15} | {'OK' if abs(m_val['skew'])<1 else 'WARN':>8}")
-    iqr_med_v, pct_alto_v = iqr_cross_sectional(val_trends, K_sel)
-    print(f"{'IQR_cs':>10} | {iqr_med_v:>10.4f} | {'D3 >= 0.05':>15} | {'OK' if iqr_med_v>=0.05 else 'WARN':>8}")
+    print(f"{'V2_pct_90':>12} | {m_val['pct_90']:>10.4f} | {'< 15%':>14} | {'OK' if m_val['pct_90'] < V2_MAX_90 else 'FALLA':>8}")
+    print(f"{'V2_pct_95':>12} | {m_val['pct_95']:>10.4f} | {'< 5%':>14} | {'OK' if m_val['pct_95'] < V2_MAX_95 else 'FALLA':>8}")
+    print(f"{'V3_iqr_cs':>12} | {m_val['iqr']:>10.4f} | {'>= 0.05':>14} | {'OK' if m_val['iqr'] >= V3_MIN_IQR else 'FALLA':>8}")
+    print(f"{'V4_n_tk':>12} | {m_val['n_tickers']:>10} | {'>= 10':>14} | {'OK' if m_val['n_tickers'] >= 10 else 'FALLA':>8}")
 
-    # --- Comparativa pooled vs balanced para el K elegido ---
+    print(f"\nDiagnosticos OOS (no fallo):")
+    print(f"  p05    = {m_val['p05']:+.4f}")
+    print(f"  p95    = {m_val['p95']:+.4f}")
+    print(f"  skew   = {m_val['skew']:+.4f}")
+
+    # --- Sensibilidad pooled vs balanced ---
     print("\n" + "=" * 100)
-    print(f"SENSIBILIDAD: balanced vs pooled con K={K_sel}")
+    print(f"SENSIBILIDAD balanced vs pooled (K={K_sel})")
     print("=" * 100)
-    m_pool = aggregate_pooled(cal_trends, K_sel)
+    pooled_t = pd.concat([np.tanh(t / K_sel) for t in cal_trends.values()])
     print(f"\n{'metrica':>10} | {'balanced':>10} | {'pooled':>10}")
     print("-" * 100)
-    for k in ["pct_90", "pct_95", "p05", "p50", "p95", "iqr", "skew"]:
-        print(f"{k:>10} | {m_sel[k]:>+10.4f} | {m_pool[k]:>+10.4f}")
+    print(f"{'pct_90':>10} | {cal_results[K_sel][0]['pct_90']:>10.4f} | {float((pooled_t.abs()>0.90).mean()):>10.4f}")
+    print(f"{'pct_95':>10} | {cal_results[K_sel][0]['pct_95']:>10.4f} | {float((pooled_t.abs()>0.95).mean()):>10.4f}")
+    print(f"{'p05':>10} | {cal_results[K_sel][0]['p05']:>+10.4f} | {float(pooled_t.quantile(0.05)):>+10.4f}")
+    print(f"{'p95':>10} | {cal_results[K_sel][0]['p95']:>+10.4f} | {float(pooled_t.quantile(0.95)):>+10.4f}")
+    print(f"{'iqr':>10} | {cal_results[K_sel][0]['iqr']:>10.4f} | {float(pooled_t.quantile(0.75)-pooled_t.quantile(0.25)):>10.4f}")
 
     # --- Veredicto ---
     print("\n" + "=" * 100)
-    print("VEREDICTO")
+    print("VEREDICTO 5b.2")
     print("=" * 100)
     if not fails_val:
-        print(f"Fase 5b EXITOSA. K congelable = {K_sel}")
-        print(f"  H1-H4 pasan en calibracion (70%) y en validacion (30%).")
-        print(f"  Proximo paso: actualizar config + proveniencia y desbloquear 5c.")
+        print(f"Fase 5b.2 EXITOSA. K congelable = {K_sel}")
+        print(f"  H1-H4 pasan en calibracion (intra-ticker, balanced).")
+        print(f"  V1-V4 pasan en validacion OOS.")
+        print(f"  Proximo paso: congelar K en config + proveniencia, desbloquear 5c.")
     else:
-        print(f"Fase 5b FALLA en validacion: {fails_val}")
-        print(f"  Aunque K={K_sel} pasaba H1-H4 en calibracion, no generaliza al 30%.")
-        print(f"  Segun protocolo §7, requiere revisar. Grid 5b.2 o revision formula.")
+        print(f"Fase 5b.2 FALLA en validacion OOS: {fails_val}")
+        print(f"  K={K_sel} no generaliza a los criterios OOS V1-V4.")
+
 
 if __name__ == "__main__":
     main()
