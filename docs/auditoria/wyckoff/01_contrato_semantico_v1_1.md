@@ -133,6 +133,31 @@ cambia la fase en `t`.
 **Invariante I7:** `ALL_NAN != RANGE`. Sin evidencia, nunca se devuelve
 fase de mercado.
 
+**Hallazgo 2026-10-02 - warm-up doble.**
+El minimo de 200 filas es **teorico** (MA200). El minimo **practico**
+para producir un `struct_score` no vacio es ~460 filas:
+
+    MA200 warm-up                        = 200
+    robust_zscore(trend, w=200, mp=60)   = 200 + 60
+    ---
+    Total                                ~460
+
+Razon: robust_zscore computa `median` **y** `MAD = |s - median|.median()`,
+ambos con `min_periods=60`. El segundo requiere 60 valores no-NaN
+despues de que el primero ya produjo valores. Warm-up doble.
+
+Consecuencia:
+- Series de 200-459 filas: `len(Close) >= 200` pero `struct_score` vacio
+  -> INSUFFICIENT_DATA (correcto por I7).
+- Series de >=460 filas: score valido.
+
+Test de regresion: `test_warmup_real_es_doble_rolling` en
+`tests/test_wyckoff_v1_contract.py`.
+
+Accion futura: revisar si el doble warm-up es deseable o si conviene
+reducir `min_periods` de robust_zscore en alguna capa. Decision en
+Fase 5b (calibracion).
+
 ### 5.2. ACCUMULATION
 
 Precedente:
