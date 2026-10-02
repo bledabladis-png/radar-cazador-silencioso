@@ -77,10 +77,13 @@ _KNOWN_MARKETS = tuple(_load_regular_close().keys())
 
 # Mercados que publican el cierre EOD con lag respecto a su sesion.
 # Verificado 2026-09-29: BME a las 23:25 CEST aun no publica el cierre
-# del mismo dia (devuelve hasta T-1). Los demas publican antes del
-# corte nocturno. Uso: _compute_by_market marca status="PENDING" en
-# vez de "INVALID" cuando la sesion cerro pero aun no hay observacion.
-MARKETS_WITH_PUBLICATION_LAG = ("BME",)
+# del mismo dia (devuelve hasta T-1).
+# Verificado 2026-10-02 (run 36942867498, 01:50 CEST): Yahoo aun no
+# publicaba el cierre del 1-oct para ^FTSE, ^IBEX, ^STOXX50E, Euronext,
+# LSE, Xetra 4h despues del cierre europeo. La lista original (solo BME)
+# era demasiado estrecha. Uso: _compute_by_market marca status="PENDING"
+# en vez de "INVALID" cuando la sesion cerro pero aun no hay observacion.
+MARKETS_WITH_PUBLICATION_LAG = ("BME", "EURONEXT", "LSE", "XETRA")
 
 
 def _validate_market(market: str) -> None:

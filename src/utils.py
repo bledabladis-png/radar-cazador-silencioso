@@ -1,4 +1,4 @@
-﻿import numpy as np
+import numpy as np
 import pandas as pd
 
 
@@ -493,11 +493,22 @@ def _compute_by_market(df, reference_date):
         # 2026-09-29: mercados con lag de publicacion. Si la sesion
         # cerro hoy pero aun no hay observacion (coverage 0), no es
         # INVALID: es PENDING. El guard lo tolera si no es cronico.
+        # 2026-10-02: comparar contra la sesion esperada global
+        # (last_expected_market_date), no contra reference_date.date().
+        # Un run a las 01:50 CEST del 2-oct tiene reference_date.date()
+        # = 02 mientras que la ultima sesion cerrada es 01. Sin este
+        # fix, is_pending jamas se activaba post-medianoche.
         from src.market_hours import MARKETS_WITH_PUBLICATION_LAG
+        from src.market_calendar import last_expected_market_date
+        try:
+            _expected_session_date = last_expected_market_date(reference_date)
+        except Exception:
+            _expected_session_date = None
         is_pending = (
             coverage == 0
             and market in MARKETS_WITH_PUBLICATION_LAG
-            and last_session == reference_date.date()
+            and _expected_session_date is not None
+            and last_session == _expected_session_date
         )
         if is_pending:
             status = "PENDING"
