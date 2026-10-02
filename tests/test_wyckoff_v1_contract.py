@@ -630,3 +630,66 @@ def test_i24b_t_norm_signo():
     assert float(np.tanh(-0.20 / K)) < 0
     assert float(np.tanh(0.0 / K)) == 0.0
     assert float(np.tanh(0.20 / K)) > 0
+
+# =====================================================================
+# I25 - DISTRIBUTION debe ser alcanzable (dictamen 5c v1.4)
+# =====================================================================
+
+def test_distribution_algebraic_conditions():
+    """I25: las condiciones de DISTRIBUTION deben ser satisfacibles.
+
+    v1.3 tenia c_norm > 0.30 + struct < -0.10, algebraicamente
+    incompatibles. v1.4 relaja a c_norm > -0.10. Este test verifica
+    que existe al menos una combinacion valida.
+    """
+    # Peor caso Rama 2: t_norm en banda, c_norm = -0.10, struct < -0.10
+    t_norm = -0.30
+    c_norm = -0.10
+    struct = 0.60 * t_norm + 0.40 * c_norm
+    assert struct < -0.10, f"struct {struct} deberia ser < -0.10"
+    assert c_norm > -0.10 - 1e-9, f"c_norm {c_norm} deberia ser > -0.10"
+    assert abs(t_norm) < 0.30 + 1e-9
+
+
+def test_distribution_is_reachable(monkeypatch):
+    """I25b: DISTRIBUTION alcanzable con mock de wyckoff_score.
+
+    Construye sinteticamente un df cuyas condiciones cumplan §5.4 v1.4.
+    """
+    from unittest import mock
+    n = 500
+    dates = pd.date_range("2024-01-01", periods=n, freq="B")
+    # Estructura: 470 con precedente fuerte, 30 con deterioro reciente.
+    # Razon: la ventana de precedente (60) ve los 60 valores antes del
+    # ultimo. Si el deterioro fuera de 200, la ventana no veria el +0.40.
+    # Con 30 de deterioro, la ventana captura 30 de deterioro + 30 de
+    # precedente fuerte -> struct_max = +0.40 > 0.30.
+    struct_vals = np.concatenate([
+        np.full(n - 30, 0.40),        # precedente fuerte
+        np.full(30, -0.20),           # deterioro reciente
+    ])
+    t_norm_vals = np.concatenate([
+        np.full(n - 30, 0.50),
+        np.full(30, -0.15),           # |t| < 0.30
+    ])
+    c_norm_vals = np.full(n, 0.10)    # > -0.10
+    struct = pd.Series(struct_vals, index=dates)
+    tact = pd.Series(np.full(n, 0.0), index=dates)
+    t_norm = pd.Series(t_norm_vals, index=dates)
+    c_norm = pd.Series(c_norm_vals, index=dates)
+    v_norm = pd.Series(np.zeros(n), index=dates)
+    e_norm = pd.Series(np.zeros(n), index=dates)
+    combined = 0.70 * struct + 0.30 * tact
+    df = pd.DataFrame({
+        'Open': 100.0, 'High': 101.0, 'Low': 99.0,
+        'Close': 100.0, 'Volume': 1_000_000.0,
+    }, index=dates)
+    with mock.patch.object(
+        w1, 'wyckoff_score',
+        return_value=(combined, struct, tact, t_norm, c_norm, v_norm, e_norm),
+    ):
+        phase = w1.classify_wyckoff_phase(df, 'SYNTH')
+    assert phase == "DISTRIBUTION", (
+        f"Esperado DISTRIBUTION alcanzable, obtenido {phase}. "
+        "Si falla, I25 rota (contrato imposible)."
+    )

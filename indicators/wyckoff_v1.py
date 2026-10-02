@@ -59,6 +59,7 @@ STRUCT_WEAK = -0.30                      # struct_score debil
 STRUCT_BASE_LOW = -0.20                  # banda de base: limite inferior
 STRUCT_BASE_HIGH = 0.20                  # banda de base: limite superior
 STRUCT_DETERIORO = -0.10                 # para DISTRIBUTION
+C_NORM_DISTR_MIN = -0.10                 # v1.4: compresion no extrema
 
 # Umbrales de precedente (PROPUESTOS, calibrar Fase 5b)
 PREC_STRUCT_WEAK = -0.20                 # hubo debilidad reciente
@@ -285,8 +286,11 @@ def classify_wyckoff_phase(df, ticker, as_of=None):
     # Requiere precedente (formacion de techo).
     trend_dist = (last_t > 0) or (abs(last_t) < T_NORM_WEAK)
     deterioration = last_struct < STRUCT_DETERIORO
+    # v1.4 (dictamen 5c): c_norm > 0.30 hacia DISTRIBUTION inalcanzable
+    # (demostrado algebraicamente). Se relaja a "compresion no extrema".
+    compression_dist = last_c > C_NORM_DISTR_MIN
     prec_strong = struct_max > PREC_STRUCT_STRONG
-    if trend_dist and deterioration and compression and prec_strong:
+    if trend_dist and deterioration and compression_dist and prec_strong:
         return FASE_DISTRIBUTION
 
     # ---------------- RANGE (contrato v1.2 §5.6) ----------------
