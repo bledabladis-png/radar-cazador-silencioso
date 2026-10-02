@@ -5,7 +5,7 @@ Extraido de src/report_generator.py (refactor C1, fase C1-6d4c2).
 """
 
 import pandas as pd
-from src.report.helpers import _fmt_signed
+from src.report.helpers import _fmt_num, _fmt_signed
 
 
 def render_confirmation(confirmation_data):
@@ -52,7 +52,7 @@ def render_confirmation(confirmation_data):
                 for comp_name, comp_val in fls_detail.items():
                     stress_mark = 'WARN' if comp_val.get('stressed', False) else 'OK'
                     val = comp_val.get('value', 0)
-                    val_str = f'{val:.2f}' if val is not None else 'N/D'
+                    val_str = _fmt_num(val, '{:.2f}') if val is not None else 'N/D'
                     out.append(f"    {stress_mark} {comp_name}: {val_str}\n")
 
         ad = confirmation_data.get('ad', {})

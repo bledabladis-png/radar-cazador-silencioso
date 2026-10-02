@@ -107,7 +107,7 @@ def render_posicionamiento_cftc(cftc_position_flow_data):
         out.append("|-------|----------|--------------|--------------|------------|--------|\n")
         for _, row in cftc_position_flow_data.iterrows():
             fecha = row['date'].strftime('%Y-%m-%d') if hasattr(row['date'], 'strftime') else str(row['date'])
-            out.append(f"| {fecha} | {row['contract']} | {row['participant']} | {row['net_position']:,.0f} | {_fmt_signed(row['position_change'], '{:+,.0f}', '{:,.0f}')} | {row['flow_z']:+.2f} |\n")
+            out.append(f"| {fecha} | {row['contract']} | {row['participant']} | {row['net_position']:,.0f} | {_fmt_signed(row['position_change'], '{:+,.0f}', '{:,.0f}')} | {_fmt_signed(row['flow_z'], '{:+.2f}', '{:.2f}')} |\n")
         out.append("\n*Fuente: CFTC Traders in Financial Futures (Futures Only). Frecuencia semanal.*\n\n")
     return out
 

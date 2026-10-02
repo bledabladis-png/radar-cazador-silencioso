@@ -182,7 +182,11 @@ def get_etf_primary_flow_data(force_download: bool = False) -> pd.DataFrame:
         print(f'  Tickers con error: {errors}')
 
     last_df = full_df.dropna(subset=['primary_flow_pct']).groupby('ticker').tail(1)
-    return last_df[['ticker','nav','shares_outstanding','total_net_assets',
+    # 2026-10-02: incluir Date en el df de retorno. El render de la
+    # tabla SPDR (render_flujo_spdr) lee df["Date"].max() para declarar
+    # la fecha efectiva. Sin esta columna, el reporte mostraba
+    # "Ultima fecha: N/D" aunque el dato estaba disponible.
+    return last_df[['ticker','Date','nav','shares_outstanding','total_net_assets',
                     'primary_flow_usd','primary_flow_pct','primary_flow_z',
                     'primary_flow_z_regime']].reset_index(drop=True)
 
