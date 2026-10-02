@@ -227,7 +227,8 @@ El corpus consolidado vive en `Consolidacion_Documentos/`:
 | Fichero | Bytes aprox | Rol |
 |---|---:|---|
 | `00_ARRANQUE.md` | 12 KB | Este documento. Se pega al arrancar. |
-| `01_METODO.md` | 24 KB | Metodo de patch, auditoria, lecciones, patrones de bug. |
+| `01_METODO.md` | 17 KB | Metodo de patch, auditoria, lecciones. |
+| `01b_PATRONES.md` | 8 KB | Catalogo de patrones de bug + falsos positivos. |
 | `02_ARQUITECTURA.md` | 28 KB | Mapa del sistema, contratos, decisiones vigentes. |
 | `03_IAE.md` | 21 KB | Subsistema IAE completo. |
 | `04_HISTORICO.md` | 40 KB | Cronologia de decisiones. |
@@ -241,6 +242,7 @@ El corpus consolidado vive en `Consolidacion_Documentos/`:
 |---|---|---|
 | 00_ARRANQUE.md | Este documento | Siempre, al arrancar |
 | 01_METODO.md | Metodo de patch, verificacion, PowerShell, lecciones | Antes de tocar codigo |
+| 01b_PATRONES.md | Catalogo de patrones de bug + falsos positivos | Al auditar un modulo |
 | 02_ARQUITECTURA.md | Mapa del sistema, contratos, decisiones | Para ubicar modulos |
 | 03_IAE.md | Subsistema IAE completo | Al trabajar en IAE |
 | 04_HISTORICO.md | Cronologia de decisiones | Para "por que esta asi" |
