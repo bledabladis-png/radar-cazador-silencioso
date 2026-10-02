@@ -118,12 +118,14 @@ WYCKOFF_TACT_WEIGHT_VOLUME = 0.50
 WYCKOFF_TACT_WEIGHT_EFFORT = 0.50
 # WYCKOFF v1.3 (P1 critico, hallazgo t_norm)
 WYCKOFF_T_NORM_K = 0.25  # CALIBRADO 2026-10-02. Ver 12_calibracion_K_5b2.md.
-# WYCKOFF v1.6 (candidate/confirmed): SOW para confirmar DISTRIBUTION.
-# N y M son PROPUESTOS. Calibracion en 5b.3.
-WYCKOFF_SOW_WINDOW_N = None   # PROPUESTO (5b.3). Grid N in {20,30,40,60}. Fail-closed.
-WYCKOFF_SOW_MAX_AGE_M = None  # PROPUESTO (5b.3). Grid M in {5,10,15,20,30}. Fail-closed.
-WYCKOFF_SOW_X_ATR = None  # PROPUESTO (5b.3). Grid X in {0.25,0.50,0.75,1.00}. Fail-closed.
-WYCKOFF_SOW_Y_VOL = None  # PROPUESTO (5b.3). Grid Y in {1.10,1.20,1.50}. Fail-closed.
+# WYCKOFF v1.9 (candidate/confirmed): SOW para confirmar DISTRIBUTION.
+# CANDIDATA v1.9 FROZEN_FOR_VALIDATION / NOT_PRODUCTION.
+# Valores calibrados en 5b.4-bis. Validacion out-of-sample 5b.X
+# pendiente. Ver docs/auditoria/wyckoff/01_contrato_semantico_v1_9.md.
+WYCKOFF_SOW_WINDOW_N = None   # CANDIDATA v1.9 = 60. NO ACTIVAR hasta 5b.X exitoso.
+WYCKOFF_SOW_MAX_AGE_M = None  # CANDIDATA v1.9 = 30. NO ACTIVAR hasta 5b.X exitoso.
+WYCKOFF_SOW_X_ATR = None      # CANDIDATA v1.9 = 0.25. NO ACTIVAR hasta 5b.X exitoso.
+WYCKOFF_SOW_Y_VOL = None      # CANDIDATA v1.9 = 1.10. NO ACTIVAR hasta 5b.X exitoso.
 WYCKOFF_COMBINED_STRUCT_WEIGHT = 0.70
 WYCKOFF_COMBINED_TACT_WEIGHT = 0.30
 

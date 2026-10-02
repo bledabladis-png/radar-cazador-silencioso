@@ -42,7 +42,7 @@ Ver `01_contrato_semantico_v1_8.md` y `01_contrato_semantico_v1_9.md`.
                clasificacion MARKUP/MARKDOWN/ACCUMULATION/RANGE)
         Estado: IMPLEMENTADO en wyckoff_v1.py v1.3.
         K = 0.25 congelado (5b.2).
-        Pendiente: revisar componentes no-SOW.
+        Componentes no-SOW: cubiertos por Frente F (F-01/F-02/F-03).
 
     Frente B - SOW (Sign of Weakness, confirmador de DISTRIBUTION)
         Estado: PASS DESARROLLO / NO CONFIRMADO.
@@ -50,23 +50,29 @@ Ver `01_contrato_semantico_v1_8.md` y `01_contrato_semantico_v1_9.md`.
         Pendiente: 5b.X (validacion out-of-sample).
 
     Frente C - Comparativa legacy vs v1
-        Estado: PARCIAL (documento 13_comparativa_legacy_v1.md existe
-        pero es de la fase v1.3 pre-SOW).
-        Pendiente: rehacer tras 5b.X con contrato v1.9 vigente.
+        Estado: PRIMERA PASADA con v1.8 (824ef72). Documento
+        13_comparativa_legacy_v1.md actualizado; resultados
+        identicos a v1.3 (componentes no-SOW no cambiaron).
+        Pendiente: version v2 definitiva post-5b.X.
 
     Frente D - Migracion de consumidores
         Estado: BLOQUEADO.
         Desbloqueo: tras 5b.X exitoso + cierre 5c.
+        Directos (5): index_phase, sector_wyckoff_distribution,
+        sector_breadth, stock_leader, index_leaders.
+        Indirectos (4, leen columnas derivadas): evidence_matrix,
+        sector_concentration, sector_regime_matrix, slpm_v12.
+        Incluidos en 5d con E2E pre/post. Ver seccion 6.
 
     Frente E - Retirada del legacy
         Estado: BLOQUEADO.
         Desbloqueo: tras 5d + 1 run CI estable.
 
     Frente F - QA interno del modulo v1
-        Estado: COMPLETADO para SOW (34, 36).
-        Pendiente: revisar el resto de `wyckoff_v1.py`
-        (_trend_component, _atr_normalized, _volume_z,
-        _effort_vs_result, wyckoff_stability, classify_wyckoff_phase).
+        Estado: CERRADO.
+        SOW cubierto por 34 + 36.
+        No-SOW: F-01 no-deuda, F-02 fix, F-03 cobertura
+        (commits a00ee2c + aaf7923).
 
 ### 2.3. Configuracion productiva
 
@@ -93,11 +99,10 @@ Ningun consumidor del pipeline usa `wyckoff_v1.py`. Todos siguen con
 ### 2.5. Bloqueos activos
 
     5b.X      BLOQUEADO hasta datos posteriores a 2026-10-01
-    5c        BLOQUEADO hasta cierre 5b.X
-    5d        BLOQUEADO hasta cierre 5c
-    5e        BLOQUEADO hasta cierre 5d
+    5c        DESBLOQUEADA desde 5b.2 (ver seccion 5)
+    5d        BLOQUEADO hasta cierre 5b.X + 5c
+    5e        BLOQUEADO hasta cierre 5d + 1 run CI estable
     5c.4      BLOQUEADO
-    5d        BLOQUEADO
 
 ---
 
@@ -220,13 +225,22 @@ v2, fechado post-5b.X.
 
 ## 6. Fase D (migracion) - Prevision
 
-5 consumidores, ordenados por criticidad:
+Consumidores directos (5) + indirectos (4). Orden por fan-out
+creciente (empezar por el que menos propaga):
 
-    1. indicators/index_phase.py (menor alcance)
-    2. indicators/sector_wyckoff_distribution.py
-    3. indicators/sector_breadth.py
-    4. indicators/stock_leader.py
+    1. indicators/sector_wyckoff_distribution.py (solo contadores)
+    2. indicators/sector_breadth.py
+    3. indicators/stock_leader.py
+    4. indicators/index_phase.py (alimenta sector_regime_matrix)
     5. indicators/index_leaders.py
+
+Indirectos (leen columnas derivadas, no importan el modulo).
+Revalidar con E2E + snapshot pre/post en cada migracion:
+
+    6. indicators/evidence_matrix.py        (wyckoff_evidence)
+    7. indicators/sector_concentration.py   (wyckoff_median, coverage_wyckoff)
+    8. indicators/sector_regime_matrix.py   (wyckoff_phase)
+    9. indicators/slpm_v12.py               (wyckoff_phase, wyckoff_score)
 
 **Cada migracion:** 1 commit + suite verde + verificacion E2E local
 (obligatoria por tocar writers/readers del pipeline).
@@ -333,7 +347,20 @@ QA SOW ya cubierto (34, 36). Componentes no-SOW de
    de contrato (no solo del flujo agregado).
 4. Documentar hallazgos como expediente si son estructurales.
 
-**Estado:** PENDIENTE. Es el siguiente trabajo no-bloqueado.
+**Estado:** CERRADO (2026-10-02, commits a00ee2c + aaf7923).
+
+Cobertura por componente:
+
+- `_trend_component`: tests indirectos via robust_zscore (L353-369).
+- `_atr_normalized`: `test_f03_atr_normalized_min_periods` +
+  `test_f03_atr_normalized_valor_positivo_con_rango`.
+- `_volume_z`: `test_f03_volume_z_delega_en_robust_zscore`.
+- `_effort_vs_result`: `test_f03_effort_vs_result_en_rango`.
+- `wyckoff_stability`: `test_i6_stability_in_range`.
+- `classify_wyckoff_phase`: tests I36, I36b + flujo agregado.
+
+El frente F completo (SOW + no-SOW) queda cerrado. Si emerge
+deuda nueva, abrir frente nuevo; no reabrir F.
 
 ---
 
