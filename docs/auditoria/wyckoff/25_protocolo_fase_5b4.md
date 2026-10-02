@@ -253,11 +253,9 @@ evidencia** de common-shock.
         (sustituye al n_sow_raw >= 100; el numero bruto de SOW del
         universo no mide adecuacion del experimento. Ver dictamen 26
         seccion 10.)
-    D2: n_tickers_con_episodios_elegibles >= 30
-        (muestra de clusters, no solo de episodios)
-    D3: lower_CI(lift_H20) > 0 (bootstrap por ticker, B=2000)
+    D2: lower_CI(lift_H20) > 0 (bootstrap por ticker, B=2000)
         (criterio de DESARROLLO, no de confirmacion out-of-sample)
-    D4: al menos 3 de 4 bloques evaluables con lift_H20 > 0,
+    D3: al menos 3 de 4 bloques evaluables con lift_H20 > 0,
         donde "evaluable" = (n_confirmed >= 20 AND n_baseline >= 20).
         Los 4 bloques deben tener datos suficientes.
 
@@ -281,7 +279,7 @@ Se reporta pero no selecciona:
 Sustituye al antiguo D3=0.50. Ya no es puerta binaria de seleccion
 (dictamen 24 seccion 10).
 
-### 7.4. Ranking entre combinaciones que pasan D1-D4
+### 7.4. Ranking entre combinaciones que pasan D1-D3
 
     Paso 1: mayor mediana_lift (sobre bloques evaluables)
     Paso 2: menor MAD_lift (estabilidad robusta; sustituye a SD)
@@ -337,8 +335,8 @@ por ese hecho. Solo se documenta.
 
 5b.4 tiene exito si:
 
-- Al menos una combinacion pasa D1-D4.
-- La combinacion elegida pasa D1-D4 **y** tiene:
+- Al menos una combinacion pasa D1-D3.
+- La combinacion elegida pasa D1-D3 **y** tiene:
   - mediana_lift > 0;
   - MAD_lift peque\ño;
   - al menos 3 de 4 bloques con lift > 0.
@@ -346,7 +344,7 @@ por ese hecho. Solo se documenta.
 **NO se exige "generalizacion en bloque de validacion"**. Eso pertenece
 a 5b.X (futura, ciega).
 
-Si ninguna combinacion pasa D1-D4: 5b.4 FAIL. Se abre 5b.5 con otra
+Si ninguna combinacion pasa D1-D3: 5b.4 FAIL. Se abre 5b.5 con otra
 hipotesis, o se abandona la linea SOW como confirmador.
 
 ### 11.1. Estado al cierre de 5b.4
@@ -386,3 +384,16 @@ Pero **NO se declaran "validados"**. Quedan a la espera de 5b.X.
 ---
 
 **Fin del protocolo 5b.4 (v2).**
+
+---
+
+## 14. Nota de trazabilidad
+
+Este protocolo v2 incorpora las 10 correcciones del dictamen 26.
+
+**Correccion aplicada 2026-10-02 (post-commit 709a3d3):** se elimino
+un cuarto criterio duro (D2: n_tickers >= 30) que el equipo habia
+anadido por sobre-ingenieria y que el dictamen 26 no habia pedido.
+Los criterios duros quedan en tres (D1, D2, D3), alineados
+exactamente con los dictaminados. La numeracion se ajusto (D3->D2,
+D4->D3).
