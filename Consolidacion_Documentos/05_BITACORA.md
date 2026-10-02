@@ -199,6 +199,21 @@ bloqueado por auditor externo.
   Regla reforzada: cero != sin dato. Un cero sospechoso se investiga;
   aqui el unico caso con apariencia sospechosa (FEZ) resulto ser real.
 
+- **P4 politica de bajas: CERRADO como no-deuda + defensa preventiva
+  (2026-10-02).** El catalogo es monotono por diseno: regenerate_
+  radar_catalog._build_updated_catalog hace concat([catalog_df,
+  nuevas_filas]) sin eliminar filas. Historial: 242 -> 242 -> 255.
+  Cero bajas desde el inicio. El contrato A1 v5 no necesita politica
+  de bajas hoy: no hay mecanismo de baja.
+  Defensa: merge_assignments ahora detecta figis de asg_prev ausentes
+  en el snapshot vigente y emite [WARN] si ocurre (no deberia bajo
+  monotonia). Falla visible en lugar de silencio. Test en
+  tests/test_catalog_bajas_p4.py (2 casos).
+  Si algun dia se decide permitir bajas (delisting, cambio de
+  universo), se hara con flujo administrativo manual: cerrar key con
+  valid_to, no reactivar, reaparicion -> nueva key (dictamen auditor
+  seccion 4).
+
 **Proximo paso sugerido.** Verificar el daily_run del 2-oct con el step
 Regenerar reactivado. Monitorizar que CI procesa el crecimiento correcto
 y no rompe Run tests.

@@ -2,7 +2,7 @@
 
 Hechos verificables del sistema. Generado por script.
 
-**Generado en:** 2026-10-02 01:09:34 UTC
+**Generado en:** 2026-10-02 01:16:10 UTC
 **Snapshot tomado sobre:** commit HEAD de la fecha indicada, al momento de generar
 **NO editar a mano.** Regenerar con:
 
@@ -17,16 +17,16 @@ HEAD, tests e integridad del codigo.
 
 ## 1. Git
 
-- **HEAD:** `d4565ab`
-- **HEAD completo:** `d4565ab7ea3e96c2e83e2872c77fd0664926cfe5`
-- **Fecha commit HEAD:** 2026-10-02 03:06:54 +0200
+- **HEAD:** `d93fe95`
+- **HEAD completo:** `d93fe95a4bc810e5ea683f4dfac88a840b1ea5a6`
+- **Fecha commit HEAD:** 2026-10-02 03:11:10 +0200
 - **Ahead:** 0
 - **Behind:** 0
-- **origin/main:** `d4565ab`
+- **origin/main:** `d93fe95`
 
 ## 2. Tests (pytest real)
 
-- **Resumen:** 3037 passed, 2 skipped in 90.22s (0:01:30)
+- **Resumen:** 3039 passed, 2 skipped in 93.00s (0:01:33)
 - **Exit code:** 0
 
 **Tests skip:**
@@ -98,7 +98,7 @@ HEAD, tests e integridad del codigo.
 ## 6. Scripts IAE
 
 - `scripts/iae_pipeline.py`: 159 LOC
-- `scripts/build_catalog_csvs.py`: 472 LOC
+- `scripts/build_catalog_csvs.py`: 498 LOC
 - `scripts/iae_reconciliation_b1.py`: 193 LOC
 - `scripts/iae_validate_crosswalk_openfigi.py`: 179 LOC
 - `scripts/iae_test_census.py`: 161 LOC

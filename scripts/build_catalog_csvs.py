@@ -201,7 +201,15 @@ def _next_entity_n(existing_entity_ids):
 
 
 def merge_assignments(asg_prev, snap, alta_date, new_date_prefix):
-    """Reconciliacion por share_class_figi. Devuelve el DataFrame completo."""
+    """Reconciliacion por share_class_figi. Devuelve el DataFrame completo.
+
+    2026-10-02 (P4 auditoria): el catalogo es monotono por diseno. Si un
+    figi de asg_prev NO aparece en snap, se conserva la fila con su key
+    (append-only estricto). Se emite WARN para visibilidad: si esto
+    ocurre, es senal de que regenerate_radar_catalog ha cambiado su
+    semantica (antes nunca encojia). Politica de bajas (cierre de key
+    con valid_to) queda pendiente hasta que exista un caso real.
+    """
     by_figi = {}
     for _, r in asg_prev.iterrows():
         f = str(r.get("share_class_figi", "")).strip()
@@ -209,6 +217,24 @@ def merge_assignments(asg_prev, snap, alta_date, new_date_prefix):
             by_figi[f] = r
 
     snap_sorted = snap.sort_values("radar_ticker").reset_index(drop=True)
+
+    # Defensa: detectar figis de asg_prev que ya no estan en snap.
+    # Bajo monotonia (diseno actual) esto no ocurre nunca.
+    snap_figis = set(
+        str(v).strip() for v in snap["share_class_figi"].tolist() if str(v).strip()
+    )
+    orphaned = [
+        (r["catalog_key"], r["radar_ticker"])
+        for _, r in asg_prev.iterrows()
+        if str(r.get("share_class_figi", "")).strip() not in snap_figis
+    ]
+    if orphaned:
+        print(
+            "[WARN] merge_assignments: %d figi(s) de asg_prev no estan en "
+            "el snapshot vigente. El catalogo YA NO es monotono. Revisar "
+            "politica de bajas (P4). Keys huerfanas: %s"
+            % (len(orphaned), [k for k, _ in orphaned[:5]])
+        )
     existing_keys = list(asg_prev["catalog_key"]) if len(asg_prev) > 0 else []
     existing_ent = list(asg_prev["assigned_entity_id"]) if len(asg_prev) > 0 else []
     next_n = _next_suffix_for_date(existing_keys, new_date_prefix)
