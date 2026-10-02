@@ -678,4 +678,106 @@ El 2026-09-28 se inicia el refactor documental. Nuevo corpus:
 
 ---
 
+
+
+---
+
+## Resumen D5-D18 (bitacora podada 2026-10-02)
+
+Extraido de las sesiones 2026-09-30 (tarde, sesiones 2 y 3) al podar
+la bitacora. Los commits siguen en `git log`.
+
+### D5 (corpus desincronizado, 2026-09-30)
+
+Cinco ficheros del corpus con numeros/afirmaciones desfasadas:
+00_ARRANQUE decia 2340 tests (real 2383), corpus v2 (real v3),
+"10 contratos" (real 9), OilPriceAPI commodities (eliminada),
+03_IAE decia 8280 LOC (real 7088). Sesion documental completa.
+
+### D6 + D6b (datetime.now en reporte)
+
+El header del reporte usaba `datetime.now()` sin tz. Violaba
+00_ARRANQUE §2. Fix: `generate_daily_report` recibe `reference_date`
+con fallback a `now(ZoneInfo('Europe/Madrid'))`. Ademas 6 usos de
+`datetime.now()` en calculos de "age" propagados a reference_date naive.
+
+### D6b (idem anterior)
+
+### D7 (volumen Yahoo no consolidado, WONT FIX)
+
+Documentado como WONT FIX en 02_ARQUITECTURA §11. Razon: el volumen
+Yahoo no consolida correctamente en algunos tickers; afecta
+`volume_z` pero el impacto es bajo y el coste de corregir seria alto.
+
+### D9 (concurrency.group desalineado)
+
+`update_index_holdings.yml` y `update_european_holdings.yml`
+escriben ambos `data/index_holdings.csv` con grupos distintos.
+Fix: unificar en `update_index_holdings_csv`.
+
+### D10 (traza 13F)
+
+`_write_ingest_trace` escribia `ingest_source`/`ingest_actor` en el
+manifest del trimestre, incluso en rama SKIP. El manifest es
+artefacto de integridad (sha256). Fix: append a
+`data/sec_13f/ingest_traces.jsonl` (JSONL versionado), manifest
+intacto, outcome explicito (SKIP/INGEST).
+
+### D11 (tickers residuales en holdings)
+
+Los 4 parsers volcaban al CSV todo ticker no vacio: cash ("-"),
+futuros (IXAU6, XARU6), CUSIPs (2602335D), placeholders SSGA
+(999USDZ92). El consumidor filtraba con INVALID_TICKERS fragil.
+Fix: `src/holdings_filter.py` con regla estructural, aplicada en 4
+parsers, INVALID_TICKERS retirada, CSV limpiado (526->502 y
+2669->2661 filas).
+
+### D12 (cosmetico)
+
+D7 documentado como WONT FIX. BOM UTF-8 retirado de 7 workflows.
+Duplicacion de titulo en 05_BITACORA corregida.
+
+### D13 (macro_conf hardcode)
+
+`compute_macro_regime` devolvia `conf = 0.5` siempre. El aviso de
+header.py (`macro_conf < 0.30`) nunca se activaba. Los otros 3
+regimenes SI calculan confianza real. Fix: `confidence_from_range`
+(misma politica C19).
+
+### D14 (tests skipped CI)
+
+El saliente reportaba deuda de cobertura. FALSO: daily_run.yml ya
+ejecuta los tests de frescura en post-run con datos reales. Fix
+cosmetico: pytest.ini con `-ra` + marker `integration_real_data`.
+
+### D15 (dead code declarado)
+
+Eliminados: `finra.get_archive_index`, `finra.get_available_weeks`,
+`evidence_matrix.save_evidence_matrix`, `import Path` huerfano.
+
+### D16 (check_manifest mentia)
+
+`check_manifest` solo verificaba el `.manifest.json`. En CI el
+manifest esta versionado, el parquet no (gitignored). Resultado:
+`[OK] VALID` sobre un artefacto ausente, mientras parquet daba
+`[FAIL]`. Mismo patron que D6/D13/D14: contrato que miente. Fix:
+manifest OK + parquet ausente -> SKIP en CI, WARN en local. Manifest
+ausente o invalido -> FAIL sin cambio.
+
+### D18 (cobertura baja en 4 modulos)
+
+Documentado en 00_ARRANQUE §5 como "sin bug detectado tras
+inspeccion". Los numeros del corpus estaban desfasados: real eran
+12/25/27/51%, no 12/12/27/50%.
+
+- `macro_manual_loader`: 12% -> 92%. 7 tests.
+- `european_coverage`: 25% -> 98%. 12 tests.
+- `pipeline_contractual`: 27% -> 38%. 4 tests. Orquestador
+  `run_contractual_nipc` E2E-only por diseno.
+- `data_loader`: 51% -> 59%. 38 tests. `download_market_data`
+  (red) E2E-only.
+
+Criterio: NO inflar cobertura con mocks del orquestador.
+
+
 **Fin del historico.**

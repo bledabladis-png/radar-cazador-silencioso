@@ -157,6 +157,24 @@ e integridad: `ESTADO_SISTEMA.md`.
 - FU-009-bis (append_dedup): columnas all-NA excluidas antes del concat
   (FutureWarning pandas 2.x -> cambio de dtype en 3.0).
 
+**Frente Wyckoff (rediseno modulo):**
+
+- Estado: **v1.9 FROZEN_FOR_VALIDATION / NOT_PRODUCTION.**
+- Candidata SOW congelada: N=60, M=30, X_ATR=0.25, Y_VOL=1.10.
+- `config/settings.py`: los 4 parametros SOW siguen a None. fail-closed.
+- Contrato vigente: v1.8 (productivo) + v1.9 (candidata congelada).
+- Documentacion: `docs/auditoria/wyckoff/` (35 ficheros).
+- Legacy `indicators/wyckoff.py` intacto. Consumidores del pipeline sin
+  migrar.
+- Secuencia ejecutada: 5b.3 (FAIL sesgo temporal) -> 5b.4 (FAIL D3
+  inalcanzable) -> 5b.4-bis (PASS desarrollo, 17/240) -> QA (solo P3
+  con IC95 que no cruza 0) -> contrato v1.9.
+- **Pendiente externo:** dictamen sobre umbrales de 5b.X (expediente
+  36: 12m/50ep/20conf insuficientes para poder estadistico).
+- **Bloqueado:** 5b.X (sin datos post-2026-10-01), 5c.4, 5d, 5e.
+- **No bloqueado:** 5c general (comparativa legacy vs v1.8 ya re-ejecutada),
+  frente F QA interno (cerrado).
+
 **Pendientes vivos:**
 
 - **2 tests skipped por `--run-network`** (`test_cboe_pcr_al_dia`,

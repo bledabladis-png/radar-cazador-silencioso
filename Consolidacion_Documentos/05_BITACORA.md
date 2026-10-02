@@ -44,6 +44,102 @@ Al cerrar una sesion nueva, se anade arriba (las mas recientes primero). Si hay 
 
 ## 3. SESIONES
 
+### 2026-10-02 (tarde/noche) - Wyckoff 5b.3 -> 5b.4 -> 5b.4-bis + QA + contrato v1.9
+
+**Objetivo.** Continuar el rediseno del modulo Wyckoff. El usuario
+reporto media implementacion en `docs/auditoria/wyckoff/` (27 ficheros)
+con codigo en `indicators/wyckoff_v1.py` (v1.7) sin integracion en
+pipeline.
+
+**Hecho.**
+
+- **Diagnostico inicial.** Verificado que `wyckoff_v1.py` NO esta
+  integrado en el pipeline. Consumidores productivos
+  (sector_wyckoff_distribution, index_leaders, index_phase,
+  sector_breadth, stock_leader) siguen con `indicators/wyckoff.py`
+  legacy v4.2. Solo scripts de analisis importan wyckoff_v1.
+  Implica: local-first, E2E relajado hasta migracion.
+
+- **Expediente 21 + contrato v1.8 + fail-closed.** El contrato v1.7
+  era cosmetico (cuerpo arrastraba v1.3 + SOW v1.6). Se redacto
+  expediente 21 (A1-A8) + dictamen externo. Contrato v1.8 nuevo con
+  seccion SOW corregida. `detect_sow` pasa a fail-closed (kwarg-only
+  obligatorio, ValueError sin args). `classify_wyckoff_phase` recibe
+  `sow_params` opcional; sin el, no emite DISTRIBUTION (I36).
+
+- **5b.3 ejecutada (639fe92).** Grid 240 con protocolo v3. FAIL
+  formal: D3=0/240. Pero lift positivo universal 240/240.
+
+- **Dictamen 24 (ef710e0).** **Inmortal time bias detectado.**
+  Confirmed anclado en t_sow, baseline en t0. Relojes distintos.
+  El +0.192 de 5b.3 no es estimacion valida. Requiere landmark.
+
+- **5b.4 ejecutada (04e0620).** Landmark L=t0+M corregido. D3
+  inalcanzable (bloque A max 12 confirmed, D3 pide 4 bloques
+  evaluables). Lift real +0.064 (no +0.192). Heterogeneidad A/B
+  negativos, C/D positivos.
+
+- **Dictamen 26 (709a3d3).** Core landmark aprobado. 10 correcciones
+  obligatorias al protocolo. Bloqueo: no hay holdout ciego.
+
+- **5b.4-bis ejecutada (848ee23).** 3 bloques P1/P2/P3 (~20 meses).
+  17/240 pasan D1-D3 por primera vez. Candidata N=60, M=30,
+  X_ATR=0.25, Y_VOL=1.10. Firma +++ en los 3 bloques.
+  lift=+0.0740, lower_CI=+0.0234.
+
+- **Dictamen 33 (dacc7b2).** Freeze de validacion autorizado, freeze
+  productivo NO. La firma +++ es consistencia de signo, no
+  homogeneidad. Antes del freeze definitivo: IC por bloque + QA.
+
+- **QA 5b.4-bis (34, dacc7b2).** IC por bloque:
+    P1: +0.093  IC [-0.099, +0.296]  (cruza 0)
+    P2: +0.050  IC [-0.024, +0.122]  (cruza 0)
+    P3: +0.106  IC [+0.038, +0.178]  (NO cruza 0)
+  Solo P3 es estadisticamente informativo. El +0.074 del ALL esta
+  arrastrado por P3. Concentracion por ticker sana (top5=4.4%).
+
+- **Contrato v1.9 (6f4a988).** Candidata SOW FROZEN_FOR_VALIDATION /
+  NOT_PRODUCTION. `config/settings.py` sigue con los 4 SOW a None.
+  fail-closed intacto.
+
+- **Script 5b.X (d324346).** validate_wyckoff_sow_5bX.py listo,
+  estado BLOCKED (sin datos post-2026-10-01).
+
+- **QA precondiciones 5b.X (d82beea).** Los umbrales del protocolo
+  5b.X (12 meses + 50 ep + 20 conf) son insuficientes para poder
+  estadistico. Con lift ~+0.074, 12 meses dan lower_CI ~ -0.04.
+  Se necesitan ~200 confirmed (~24-36 meses). Variabilidad temporal
+  enorme (0 a 85.8 starts/mes entre sub-bloques).
+
+- **Plan migracion v2 (dc5da26).** Reescritura con estado real.
+  Frentes A-F. Correccion posterior: 5c desbloqueada desde 5b.2.
+
+- **Frente F (QA interno).** F-01 no-deuda (rolling min_periods),
+  F-02 fix (except acotado en classify_wyckoff_phase_meta),
+  F-03 cobertura (8 tests directos de funciones puras).
+
+- **Limpieza pyflakes (1ba2d1b).** 5 scripts de analisis sin
+  warnings.
+
+- **5c general (824ef72).** Comparativa legacy vs v1.8 re-ejecutada.
+  Resultados identicos a v1.3 (componentes no-SOW no cambiaron).
+
+**Commits.** 936340c, aabc921, e66cf41, 639fe92, ef710e0, 709a3d3,
+9fb6bcf, 04e0620, 4595676, 848ee23, dacc7b2, 6f4a988, d324346,
+d82beea, dc5da26, a00ee2c, aaf7923, 1ba2d1b, 824ef72.
+
+**Pendiente.**
+
+- Dictamen externo sobre umbrales de 5b.X (expediente 36).
+- 5b.X bloqueada hasta datos post-2026-10-01 (~12+ meses).
+- 5c.4 / 5d / 5e bloqueadas.
+- Cosmetico: rename script compare_wyckoff_legacy_v13.py.
+
+**Proximo paso sugerido.** Pasar 35 + 36 al auditor externo. Despues,
+si el dictamen ajusta umbrales, actualizar protocolo 5b.X a v2.
+Frentes internos no bloqueados: revisar `05_BITACORA` (poda),
+`01_METODO` (division 20 KB), cubrir otros indicadores.
+
 ### 2026-10-02 (madrugada) - Catalog PIT: 242 -> 255 + schema v5 + validator productivo
 
 **Objetivo.** Tras el incidente del cron trimestral (1-oct), resolver el
@@ -833,141 +929,6 @@ verde, o retomar deuda o nueva auditoria.
 
 ---
 
-### 2026-09-30 (tarde, sesion 3) — D16 + D18: cobertura y contrato que miente
-
-**Objetivo.** Tras cerrar sesion 2, continuar con D16 (deuda detectada
-durante D3) y los 4 modulos con cobertura baja documentados en
-00_ARRANQUE §5.
-
-**Hecho.**
-
-- **D16 (check_manifest mentia).** check_manifest solo verificaba el
-  .manifest.json. En CI el manifest esta versionado, el parquet no
-  (gitignored). Resultado: `[OK] VALID` sobre un artefacto ausente,
-  mientras parquet daba `[FAIL]`. Mismo patron que D6/D13/D14:
-  contrato que miente. Fix: manifest OK + parquet ausente -> SKIP en
-  CI, WARN en local. Manifest ausente o invalido -> FAIL sin cambio.
-  4 tests existentes actualizados con parquet dummy, 3 nuevos.
-
-- **D18 (cobertura baja en 4 modulos).** Documentado en 00_ARRANQUE §5
-  como "sin bug detectado tras inspeccion". Los numeros del corpus
-  estaban desfasados: real eran 12/25/27/51%, no 12/12/27/50%.
-
-  - macro_manual_loader: 12% -> 92%. 7 tests de carga de CSVs.
-  - european_coverage: 25% -> 98%. 12 tests de _ref_to_date,
-    _collect, _render_markdown, _append_csv, integracion.
-  - pipeline_contractual: 27% -> 38%. 4 tests de build_identities +
-    load_canonical. Orquestador run_contractual_nipc queda E2E-only
-    por diseno explicito del test existente (scripts/
-    iae_contractual_nipc_e2e.py).
-  - data_loader: 51% -> 59%. 38 tests de _is_equity_ticker,
-    _ticker_list, _check_khuerfano. download_market_data (red)
-    E2E-only.
-
-  Criterio unificado: NO inflar cobertura con mocks del orquestador.
-  El corpus 00_ARRANQUE §5 se actualizo con los valores reales.
-
-- **Verificacion end-to-end** (durante sesion 2, antes de bitacora).
-  Run manual de run.py tras D6+D6b+D13. Confirmado en produccion:
-  header con reference_date, macro_conf = 0.3076 (antes 0.5 fijo),
-  ages coherentes. Validation Gate 10/10. NIPC 8256882557. Commit
-  `66b9d5d`.
-
-**Commits.** `88cc3ad`, `66b9d5d`, `267ae22`, `99f02e2`, `702ce28`,
-`a690562`, `d7ec9df`. El bot intercalo `f3d6c75` (macro_manual FRED).
-
-**Pendiente.**
-
-- C2 (920) OPEN. Bloqueado por auditor externo (sin comando + HEAD).
-- H5.3: verificacion cron nov 2026.
-- 2 tests skipped por --run-network en test_freshness (opt-in).
-- Cron trimestral 1-oct-2026: aplicar 07_RUNBOOK §3 (04:47, 06:17,
-  07:17 CEST).
-
-**Proximo paso sugerido.** Cron 1-oct. Aplicar 07_RUNBOOK. Si todo
-verde, sesion de auditoria nueva o retomar deudas P3 residuales.
-
----
-
-### 2026-09-30 (tarde, sesion 2) — D5+D6+D6b+D7+D9+D10+D11+D12+D13+D14+D15
-
-**Objetivo.** Continuacion de la sesion tarde. Atacar deudas menores
-tras cerrar P1. Algunas eran cosmeticas (BOM, dead code), otras
-reales (D10, D11, D13, D6b).
-
-**Hecho.**
-
-- **D5 (corpus desincronizado).** Cinco ficheros con numeros y
-  afirmaciones desfasadas: 00_ARRANQUE decia 2340 tests (real 2383),
-  corpus v2 (real v3 con 07_RUNBOOK), "10 contratos" (real 9),
-  "OilPriceAPI commodities" (eliminada 2026-09-30), 03_IAE decia
-  8280 LOC (real 7088), 04_HISTORICO afirmaba erroneamente "H1-A
-  reproduce golden con tolerancia 0".
-
-- **D6 + D6b (datetime.now en reporte).** El header del reporte
-  usaba datetime.now() sin tz. Violaba 00_ARRANQUE §2. Fix:
-  generate_daily_report recibe reference_date, con fallback a
-  now(ZoneInfo('Europe/Madrid')). Ademas 6 usos de datetime.now() en
-  calculos de "age" (darkpool, freshness, helpers, sentiment). Todos
-  propagados a reference_date naive.
-
-- **D9 (concurrency.group desalineado).** update_index_holdings.yml y
-  update_european_holdings.yml escriben ambos data/index_holdings.csv
-  con grupos distintos. Fix: unificar en update_index_holdings_csv.
-
-- **D10 (traza 13F).** _write_ingest_trace escribia
-  ingest_source/ingest_actor en el manifest del trimestre, incluso
-  en rama SKIP. El manifest es artefacto de integridad (sha256).
-  Fix: append a data/sec_13f/ingest_traces.jsonl (JSONL versionado),
-  manifest intacto, outcome explicito (SKIP/INGEST).
-
-- **D11 (tickers residuales en holdings).** Los 4 parsers volcaban
-  al CSV todo ticker no vacio: cash ("-"), futuros (IXAU6, XARU6),
-  CUSIPs (2602335D), placeholders SSGA (999USDZ92). El consumidor
-  filtraba con INVALID_TICKERS fragil. Fix: src/holdings_filter.py
-  con regla estructural, aplicada en 4 parsers, INVALID_TICKERS
-  retirada, CSV limpiado (526->502 y 2669->2661 filas).
-
-- **D12 (cosmetico).** D7 (volumen Yahoo no consolidado) documentado
-  como WONT FIX en 02_ARQUITECTURA §11. BOM UTF-8 retirado de 7
-  workflows. Duplicacion de titulo en 05_BITACORA:91 corregida.
-
-- **D13 (macro_conf hardcode).** compute_macro_regime devolvia
-  conf = 0.5 siempre. El aviso de header.py (macro_conf < 0.30)
-  nunca se activaba. Los otros 3 regimenes SI calculan confianza
-  real. Fix: confidence_from_range (misma politica C19).
-
-- **D14 (tests skipped CI).** Verificado: el saliente reportaba
-  deuda de cobertura. FALSO: daily_run.yml ya ejecuta los tests de
-  frescura en post-run con datos reales. Solo era cosmetica: sin -ra
-  no mostraba razones, reason strings mentian ("CI fresco" tambien
-  es falso en local), sin marker. Fix: pytest.ini con -ra + marker
-  integration_real_data, reasons corregidos, daily_run pre-run
-  excluye el marker.
-
-- **D15 (dead code declarado).** Eliminados:
-  finra.get_archive_index, finra.get_available_weeks,
-  evidence_matrix.save_evidence_matrix, import Path huerfano.
-
-**Commits.** `cb217ac`, `ec1f2da` (snapshot), `5ecafcb` (rango
-c193eef..5ecafcb, 8 commits adicionales: D5, D6, D6b, D9, D10, D11,
-D12, D13, D14, D15).
-
-**Pendiente.**
-
-- H5.3 verificacion cron nov 2026.
-- C2 (920) OPEN. Bloqueado por auditor externo.
-- 2 tests skipped por --run-network en test_freshness (opt-in).
-- Modulos con cobertura baja: macro_manual_loader (12%),
-  european_coverage (12%), pipeline_contractual (27%),
-  data_loader (50%).
-- Cron trimestral 1-oct-2026: verificar con 07_RUNBOOK.
-
-**Proximo paso sugerido.** Cron 1-oct (04:47, 06:17, 07:17 CEST).
-Aplicar 07_RUNBOOK §3. Si algo falla, §4.
-
----
-
 ### 2026-09-30 (tarde) — D4 + D3 + D2 + Runbook + D1: cierre de P1
 
 **Objetivo.** Recibir traspaso del asistente saliente, asimilar contexto,
@@ -1093,41 +1054,6 @@ publica el NIPC del par vigente, que cambia con cada trimestre.
 **Proximo paso sugerido.** Abordar 3 fixes: (a) condicion de la warning
 cache 13F, (b) skipped tests en CI, (c) evaluar sustituto OilPriceAPI
 o documentar futuros como BLOCKED de facto con parquet congelado.
-
-### 2026-09-29 (noche) — Integridad parquets + EU 5y + PENDING BME + P65
-
-**Objetivo.** Cerrar el frente de integridad detectado al auditar Ibex 35.
-
-**Hecho.**
-- **Guard/gate integridad (2a640f2).** Los .parquet estan gitignored,
-  los .manifest.json tracked. Tras cada git pull divergen. Ni guard_coverage
-  ni pipeline_gate verificaban sha256 real. Detectado: stock_prices y
-  market_data con sha256 divergentes. Fix: ambos calculan sha256 del
-  parquet sibling, fail-closed.
-- **G-01 paridad (08fe06b).** market_data no truncaba a expected_session
-  (stock_prices si). Movido `truncate_to_expected_session` a utils y
-  aplicado en data_loader._postprocess_market_data.
-- **Regeneracion (1ba5df9).** stock_prices con los 19 .MC que BME no
-  habia servido el 28/09 por fallo transitorio.
-- **PENDING + EU 5y (4bb54f8).** BME publica T+1. `_compute_by_market`
-  marca PENDING (no INVALID) cuando la sesion cerro pero no hay
-  observacion. Guard tolera PENDING, no todo-PENDING. Ademas BME y Xetra
-  pasan de 430d a 1830d (5y). Euronext topa en el endpoint (~510 sesiones).
-- **P65 (f131ce3).** Verificado: `_apply_intra_period_dedup` v1 no emite
-  DROP_DUP. Todas las decisiones son KEEP. Conectar P65 no alteraria
-  nipc_total. Hipotesis C2 descartada por diseno de codigo. Doc corregida
-  (03_IAE.md) + current.json actualizado.
-
-**Commits.** 2a640f2, 08fe06b, 1ba5df9, 4bb54f8, f131ce3.
-
-**Pendiente.**
-- Cron 01:17 CEST valida 13F cache, PENDING BME, EU 5y,
-  regularMarketTime de Yahoo.
-- Cabo B: confirmar si Yahoo revisa cierre del 29 a las 04:00 CEST.
-- LSE scraper: cadencia externa + historico en JSON infrautilizado.
-- C2 (920): sin material del auditor.
-
-**Proximo paso sugerido.** Verificar el cron de la madrugada.
 
 ## 4. REFERENCIA A SESIONES ANTERIORES
 
