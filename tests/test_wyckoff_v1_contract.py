@@ -603,3 +603,30 @@ def test_v13_no_lookahead_equivalente_a_T4(synthetic_df):
     df_mod.loc[df_mod.index > t_idx, 'Close'] = 999999.0
     fase_mod = w1.classify_wyckoff_phase(df_mod, 'SYNTH', as_of=t_idx)
     assert fase_mod == fase_ref
+
+# =====================================================================
+# I24 - Monotonicidad de t_norm (dictamen 5b 2026-10-02)
+# =====================================================================
+
+def test_i24_monotonicidad_t_norm():
+    """I24: trend_a < trend_b -> t_norm_a < t_norm_b.
+
+    Invariante pura de la transformacion t_norm = tanh(trend/K).
+    Protege la semantica principal: a mayor tendencia, mayor t_norm.
+    """
+    K = 0.25
+    trends = [-0.40, -0.30, -0.20, -0.10, 0.0, 0.10, 0.20, 0.30, 0.40]
+    t_norms = [float(np.tanh(t / K)) for t in trends]
+    for i in range(len(trends) - 1):
+        assert t_norms[i] < t_norms[i + 1], (
+            f"Monotonicidad rota: trend {trends[i]} -> t_norm {t_norms[i]}, "
+            f"trend {trends[i+1]} -> t_norm {t_norms[i+1]}"
+        )
+
+
+def test_i24b_t_norm_signo():
+    """I24b: signo de t_norm coincide con signo de trend."""
+    K = 0.25
+    assert float(np.tanh(-0.20 / K)) < 0
+    assert float(np.tanh(0.0 / K)) == 0.0
+    assert float(np.tanh(0.20 / K)) > 0

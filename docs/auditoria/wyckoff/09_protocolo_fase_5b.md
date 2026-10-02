@@ -3,9 +3,8 @@
 **Documento normativo. Define el procedimiento de calibracion del
 parametro K de `t_norm = tanh(trend / K)`.**
 **Fecha:** 2026-10-02.
-**Version:** v2 (revisada por dictamen externo 2026-10-02).
-**Estado:** APROBADA PARA EJECUCION tras aplicar las correcciones del
-dictamen.
+**Version:** v3 (revisada por dictamen externo tras ejecucion 5b v2).
+**Estado:** APROBADA PARA EJECUCION (5b.2).
 
 ---
 
@@ -28,6 +27,39 @@ correcciones + 2 metodologicas:
    D1-D3 diagnosticos. §6.1-6.5.
 6. **Ponderacion balanceada por ticker** ademas del pooled. §5.0.
 7. **Registrar survivorship bias.** §3.4.
+
+
+---
+
+## 0bis. Correcciones v3 (dictamen post-ejecucion 5b v2)
+
+Tras ejecutar 5b v2 (resultado: K=0.25 pasa calibracion, falla
+validacion H3), el dictamen externo exigio 4 correcciones:
+
+**C1. H3/H4 intra-ticker calculados POR SPLIT.**
+En lugar de distribucion cross-sectional agregada, calcular por ticker
+la distribucion temporal de t_norm DENTRO de cada split (cal 70% y
+val 30% por separado). NO se usa la historia completa 2021-2026 para
+seleccionar K.
+
+**C2. H3/H4 fuera de validacion OOS.**
+En validacion, H3/H4 dejan de ser hard criteria. Razon: exigen que el
+periodo OOS reproduzca colas que dependen del regimen. Nuevos criterios
+OOS obligatorios:
+  V1 bounds
+  V2 ausencia de saturacion extrema (pct_90, pct_95)
+  V3 no degradacion grave de resolucion
+  V4 ausencia de comportamiento patologico
+
+Diagnosticos OOS: p05, p95, skewness (reportados, no fallo).
+
+**C3. Monotonicidad como invariante.**
+Anadida al contrato: trend_a < trend_b -> t_norm_a < t_norm_b.
+Test permanente en suite.
+
+**C4. Nomenclatura formal.**
+  Ticker-balanced     -> primario
+  Observation-pooled  -> sensibilidad obligatoria
 
 ---
 
@@ -188,63 +220,76 @@ para cualquier K).
 
 ---
 
-## 6. Criterios
+## 6. Criterios v3
 
-### 6.1. Criterios DUROS (H1-H4) - todos obligatorios
+### 6.1. Calibracion (70% inicial) - hard criteria
 
-    H1  pct_extreme_90 < 15%
-    H2  pct_extreme_95 < 5%
-    H3  p05 <= -0.40
-    H4  p95 >= +0.40
+**H3/H4 calculados intra-ticker:**
 
-Forman el nucleo: no saturar excesivamente + mantener amplitud util.
+    para cada ticker:
+        p05_ticker = p05 de su t_norm dentro del 70%
+        p95_ticker = p95 de su t_norm dentro del 70%
 
-### 6.2. Criterios DIAGNOSTICOS (D1-D3) - informativos
+**Agregados ticker-balanced** (mediana entre tickers):
+
+    H1  mediana(pct_90_ticker) < 15%
+    H2  mediana(pct_95_ticker) < 5%
+    H3  mediana(p05_ticker) <= -0.40
+    H4  mediana(p95_ticker) >= +0.40
+
+Los 4 son obligatorios en calibracion.
+
+### 6.2. Diagnostico (calibracion)
 
     D1  |skewness| < 1.0
     D2  rango_p50_por_anio < 0.40
     D3  mediana_IQR_cs >= 0.05
 
-Se reportan. **NO invalidan K automaticamente.** Si fallan, se abre
-observacion para investigacion, pero K sigue valido si cumple H1-H4.
-
-Razon: pueden ser propiedades reales del universo observado, no
-necesariamente defectos de K.
+Se reportan. No invalidan.
 
 ### 6.3. Regla de seleccion
 
-**Entre los K que cumplan TODOS los criterios duros H1-H4:**
+Entre los K que cumplen H1-H4 (intra-ticker, calibracion):
 
     seleccionar el MAYOR K.
 
-**Justificacion matematica:** `K` mayor -> `trend/K` menor -> saturacion
-menor. El "mayor K que aun cumple el rango minimo" es el que **maximiza
-reduccion de saturacion** sin perder resolucion exigida. NO es "el mas
-conservador".
+Justificacion matematica: mayor K -> menor saturacion. Es el que
+maximiza reduccion de saturacion sin perder resolucion exigida.
 
-Contraejemplo del protocolo v1: "el mas pequeno" seria **mas
-saturador**, no mas conservador.
+### 6.4. Si ningun K cumple
 
-### 6.4. Si ningun K cumple H1-H4
-
-Fase 5b falla. Se pasa a grid 5b.2 (predefinida). No se inventan
-valores.
+Grid 5b.2 (0.45-0.80) o 5b.3 (0.90-1.40), predefinidas.
 
 ---
 
-## 7. Validacion en holdout temporal (30% final)
+## 7. Validacion holdout (30% final) - v3
 
-Una vez elegido K sobre el 70%:
+### 7.1. Criterios obligatorios OOS
 
-1. Se calcula `t_norm` sobre el 30% no usado.
-2. Se aplican H1-H4 sobre la serie de validacion.
-3. **H1-H4: TODOS obligatorios.** No se admite "4 de 5".
-4. D1-D3: diagnosticos. Se reportan, no invalidan.
+    V1 bounds       -> -1 < t_norm < 1 (por construccion)
+    V2 saturacion   -> pct_90 < 15%, pct_95 < 5% (ticker-balanced)
+    V3 resolucion   -> IQR_cs mediana >= 0.05
+    V4 no-patologico -> sin NaN masivos, sin colapso a 0
 
-**Si H1, H2, H3 o H4 falla en validacion -> 5b FALLA.**
+**Todos obligatorios. Si alguno falla, 5b.2 FALLA.**
 
-Razon: la escala debe generalizar. Si la saturacion solo se cumple en
-calibracion, K esta sobreajustado al periodo.
+### 7.2. Diagnosticos OOS (reportados, no fallo)
+
+    p05
+    p95
+    skewness
+
+Su valor se reporta. Un p05 = -0.19 en OOS no significa que K falle,
+significa que el periodo OOS tiene distribucion sesgada hacia positivo.
+
+### 7.3. Criterio de exito
+
+5b.2 tiene exito si:
+- Calibracion: H1-H4 pasan para el K seleccionado (mayor que pasa).
+- Validacion OOS: V1-V4 pasan.
+- Diagnosticos D1-D3 y p05/p95/skew reportados.
+
+**NO se exige que p05/p95 OOS coincidan con calibracion.**
 
 ---
 
@@ -317,24 +362,27 @@ Si exito:
 
 ---
 
-## 14. Procedimiento paso a paso
+## 14. Procedimiento paso a paso (v3)
 
     PASO 1  Cargar stock_prices.parquet
-    PASO 2  Determinar ultima sesion cerrada por ticker
-    PASO 3  Filtrar tickers con >= 200 obs validas
-    PASO 4  Calcular trend para cada ticker
-    PASO 5  Split temporal 70/30 (calibracion/validacion)
-    PASO 6  Para cada K en grid primaria:
+    PASO 2  Ultima sesion cerrada por ticker
+    PASO 3  Filtrar tickers >= 200 obs validas
+    PASO 4  Calcular trend por ticker
+    PASO 5  Split temporal 70/30
+    PASO 6  Para cada K:
               - Calcular t_norm sobre calibracion
-              - Calcular H1-H4 (balanced y pooled)
-              - Calcular D1-D3
-    PASO 7  Filtrar K que cumplen H1-H4 en balanced
-    PASO 8  Seleccionar el MAYOR K
-    PASO 9  Si ningun K: grid 5b.2
-    PASO 10 Validar K elegido sobre 30% (H1-H4 obligatorios)
-    PASO 11 Si falla validacion: 5b falla
-    PASO 12 Congelar K + documentar + commit
+              - Por ticker: p05, p95, pct_90, pct_95, IQR
+              - Agregar ticker-balanced
+              - Evaluar H1-H4
+    PASO 7  Filtrar K con H1-H4 pass
+    PASO 8  Seleccionar MAYOR K
+    PASO 9  Validar sobre 30%: V1-V4 obligatorios
+    PASO 10 Reportar diagnosticos (D1-D3 cal, p05/p95/skew OOS)
+    PASO 11 Si V1-V4 OK y calibracion OK: congelar K
+    PASO 12 Si falla: grid 5b.2
 
----
+Vistas:
+    Primaria: Ticker-balanced (mediana entre tickers)
+    Sensibilidad: Observation-pooled (concatenado)
 
 Fin del protocolo 5b v2.

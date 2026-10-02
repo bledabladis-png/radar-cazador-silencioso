@@ -180,3 +180,75 @@ o su propio p95 alto.
 ---
 
 Fin del hallazgo 5b.
+
+---
+
+# 9. DICTAMEN DEL AUDITOR (2026-10-02)
+
+## 9.1. Veredicto general
+
+> El fallo encontrado es del criterio H3, no de K. La Fase 5b ha
+> funcionado como mecanismo de auditoria: no ha encontrado un K malo,
+> ha encontrado que un criterio intentaba validar una propiedad de la
+> distribucion del mercado como si fuera una propiedad de la
+> transformacion K.
+
+## 9.2. Correcciones al protocolo 5b
+
+**C1. Opcion A corregida (intra-ticker + split estricto).**
+H3/H4 se calculan por ticker **dentro de cada split**:
+- Calibracion: distribucion temporal de t_norm por ticker, sobre el 70%.
+- Validacion: idem, sobre el 30%.
+No se usa la historia completa 2021-2026 para seleccionar K. Eso
+romperia la separacion cal/val.
+
+**C2. H3/H4 fuera de validacion OOS como hard criteria.**
+En validacion, H3/H4 dejan de ser obligatorios. Razon: exigen que el
+periodo OOS reproduzca las dos colas observadas en calibracion, cosa
+que depende del regimen del periodo, no de K.
+
+Validacion OOS pasa a exigir:
+  V1 bounds (rango acotado)
+  V2 ausencia de saturacion extrema (pct_90, pct_95)
+  V3 no degradacion grave de resolucion
+  V4 ausencia de comportamiento patologico
+
+Y como diagnosticos OOS (reportados, no fallo):
+  p05, p95, skewness.
+
+**C3. Nueva invariante contractual: monotonicidad.**
+Para todo trend_a < trend_b: t_norm_a < t_norm_b.
+Y: trend = 0 -> t_norm = 0; trend > 0 -> t_norm > 0; trend < 0 ->
+t_norm < 0. Se anade como test permanente.
+
+**C4. Nomenclatura formal.**
+  Ticker-balanced  -> estimador primario (cada ticker pesa igual).
+  Observation-pooled -> sensibilidad obligatoria (cada observacion pesa
+  igual).
+Ambos se reportan siempre. Pooled no puede generar seleccion ad-hoc
+de K.
+
+## 9.3. Estado de K=0.25
+
+    K=0.25
+    CALIBRACION: PASS
+    VALIDACION: H1 PASS, H2 PASS
+                H3/H4 = criterio no aplicable como fallo
+    → NO CONGELAR
+
+## 9.4. Decision sobre las 4 preguntas
+
+| Pregunta | Dictamen |
+|---|---|
+| Q1 Opcion A | Aprobada SOLO en version corregida (intra-ticker + split estricto). H3/H4 no son hard OOS. |
+| Q2 Congelar K=0.25 | NO |
+| Q3 5b.2 o 5c | 5b.2 corregida. NO 5c. |
+| Q4 Balanced/Pooled | Balanced = primario. Pooled = diagnostico obligatorio. |
+
+## 9.5. Prohibiciones del dictamen
+
+- No cambiar el split a 60/40 para incluir bear market (seria
+  calibracion implicita).
+- No usar 2021-2026 completo para obtener las dos colas (elimina OOS).
+- No elegir K=0.35 "porque parece menos saturado".
+- No elegir K segun los 4 tickers.
