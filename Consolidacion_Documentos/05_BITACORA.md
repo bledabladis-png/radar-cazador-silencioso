@@ -305,6 +305,29 @@ bloqueado por auditor externo.
   propio test cubria el caso (p.ej. '+0' en A/D es politica B3),
   se documento como no-deuda en lugar de forzar un fix.
 
+- **Universo del radar: catalogo extiende el universo de descarga (83f94b9).**
+  Auditoria completa del reporte + investigacion del universo destapo
+  un hueco funcional: el catalogo radar es monotono (255 keys) pero el
+  universo de descarga se limitaba a top-20 por sector + top-20 por
+  indice (~250 tickers). Los tickers que caian del top-20 dejaban de
+  descargarse aunque siguieran en el catalogo.
+  Casos hoy: BX, CASY, CMG, ES, FOX, GD, JXN, PNC, PRAX, WY. Todos en
+  posiciones 21-23 de sus ETFs (por debajo de TOP_N_SECTOR_COMPONENTS=20).
+  Consecuencia: la cobertura observable del reporte IAE caia a
+  241/255 por falta de datos frescos, no por bajas reales del universo.
+  Fix: get_stock_list() anade los tickers del catalogo radar al
+  universo. El catalogo es la fuente autoritativa de "tickers que el
+  sistema sigue". No se toca TOP_N_SECTOR_COMPONENTS (breadth sigue
+  calculando sobre top-20 por sector; solo cambia el universo de
+  descarga).
+  Rename coordinado: "Indices Internacionales" -> "Indices (USA +
+  Europa)" (la seccion ya incluia S&P 500, DJI, NDX, RUT ademas de
+  STOXX50, IBEX, DAX, FTSE). El nombre anterior mentia.
+
+  Verificacion pendiente: el proximo run de CI debe mostrar
+  Cobertura observable ~251/255 (antes 241/255) y los 10 tickers
+  en el universo descargado.
+
 **Proximo paso sugerido.** Verificar el daily_run del 2-oct con el step
 Regenerar reactivado. Monitorizar que CI procesa el crecimiento correcto
 y no rompe Run tests.
