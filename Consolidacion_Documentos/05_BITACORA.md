@@ -154,6 +154,19 @@ bloqueado por auditor externo.
   correcto para el caso europeos-only, pero la causa de hoy es mas
   amplia.
 
+- **Evidencia empirica (2026-10-02 02:48 CEST).** Prueba directa con
+  yfinance sobre 7 tickers (AAPL, MSFT, XOM, GOOGL, ^FTSE, ^IBEX,
+  ^STOXX50E). Resultado: 6/7 tienen fila del 2026-10-01 pero con
+  close=NaN. ^STOXX50E ni tiene fila. Yahoo reconoce el dia como
+  sesion cerrada, pero no ha publicado el precio. Confirmado: no es
+  bug del sistema, es latencia del proveedor.
+  Correccion al fix PENDING (937c0b4): es correcto para el caso
+  europeos-only, pero hoy afecta tambien a USA. Un guard robusto a
+  latencia tendria que reconocer "sesion cerrada, precio pendiente"
+  para cualquier mercado, no solo los de MARKETS_WITH_PUBLICATION_LAG.
+  Decision de diseno pendiente, sin urgencia. Plan: esperar el slot
+  automatico 03:17 UTC (05:17 CEST) del 2-oct.
+
 **Proximo paso sugerido.** Verificar el daily_run del 2-oct con el step
 Regenerar reactivado. Monitorizar que CI procesa el crecimiento correcto
 y no rompe Run tests.
