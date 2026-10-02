@@ -7,7 +7,6 @@ Genera:
   - Por indice (index_holdings.csv): agrupacion.
   - Distribucion de wyckoff_score (componente de rws_z).
 """
-import numpy as np
 import pandas as pd
 from pathlib import Path
 

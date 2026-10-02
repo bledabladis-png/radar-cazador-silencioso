@@ -6,7 +6,6 @@ precedente, fase. Confirmar contra el precio observable.
 import numpy as np
 import pandas as pd
 import sys
-from pathlib import Path
 sys.path.insert(0, ".")
 from indicators import wyckoff_v1 as w1
 from indicators import wyckoff as legacy

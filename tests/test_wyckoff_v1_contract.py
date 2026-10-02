@@ -1213,7 +1213,6 @@ def test_f02_meta_no_traga_runtime_error():
     Test rojo sin el fix. Verde tras acotar el except.
     """
     from unittest import mock
-    import numpy as np
     import pandas as pd
 
     # df minimo que devuelve RANGE para llegar al bloque con el

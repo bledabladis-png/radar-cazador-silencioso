@@ -169,7 +169,7 @@ def main():
     print(f"{'V3_iqr_cs':>12} | {m_val['iqr']:>10.4f} | {'>= 0.05':>14} | {'OK' if m_val['iqr'] >= V3_MIN_IQR else 'FALLA':>8}")
     print(f"{'V4_n_tk':>12} | {m_val['n_tickers']:>10} | {'>= 10':>14} | {'OK' if m_val['n_tickers'] >= 10 else 'FALLA':>8}")
 
-    print(f"\nDiagnosticos OOS (no fallo):")
+    print("\nDiagnosticos OOS (no fallo):")
     print(f"  p05    = {m_val['p05']:+.4f}")
     print(f"  p95    = {m_val['p95']:+.4f}")
     print(f"  skew   = {m_val['skew']:+.4f}")
@@ -193,9 +193,9 @@ def main():
     print("=" * 100)
     if not fails_val:
         print(f"Fase 5b.2 EXITOSA. K congelable = {K_sel}")
-        print(f"  H1-H4 pasan en calibracion (intra-ticker, balanced).")
-        print(f"  V1-V4 pasan en validacion OOS.")
-        print(f"  Proximo paso: congelar K en config + proveniencia, desbloquear 5c.")
+        print("  H1-H4 pasan en calibracion (intra-ticker, balanced).")
+        print("  V1-V4 pasan en validacion OOS.")
+        print("  Proximo paso: congelar K en config + proveniencia, desbloquear 5c.")
     else:
         print(f"Fase 5b.2 FALLA en validacion OOS: {fails_val}")
         print(f"  K={K_sel} no generaliza a los criterios OOS V1-V4.")

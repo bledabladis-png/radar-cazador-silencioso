@@ -8,10 +8,8 @@ Detalle pedido por auditor:
   struct_max, fecha exacta candidate, fecha exacta SOW,
   distancia candidate-SOW, soporte roto por SOW, volumen relativo SOW.
 """
-import numpy as np
 import pandas as pd
 import sys
-from pathlib import Path
 sys.path.insert(0, ".")
 from indicators import wyckoff_v1 as w1
 
@@ -94,7 +92,7 @@ def describe(tk):
         if cand_dates:
             print(f"  [7]   fechas candidate: {len(cand_dates)} totales. Ultima: {cand_dates[-1]}")
         else:
-            print(f"  [7]   sin fechas candidate")
+            print("  [7]   sin fechas candidate")
 
         # 8: fecha SOW mas reciente
         sow_dates = find_sow_dates(tdf, tk)
@@ -102,7 +100,7 @@ def describe(tk):
             print(f"  [8]   fechas SOW: {len(sow_dates)} totales. Ultima: {sow_dates[-1]}")
             print(f"        ultimos 5 SOW: {sow_dates[-5:]}")
         else:
-            print(f"  [8]   sin fechas SOW")
+            print("  [8]   sin fechas SOW")
 
         # 9: distancia candidate-SOW
         if cand_dates and sow_dates:
