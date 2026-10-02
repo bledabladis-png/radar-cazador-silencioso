@@ -109,9 +109,10 @@ n_confirmed, n_baseline.
 
 ### 3.1. Regla de diseno
 
-Las fronteras se fijan mirando solo el calendario y la distribucion
-de candidate episodes disponible en el dataset, NO los resultados de
-lift de 5b.3 o 5b.4. No se busca "donde el SOW funciona".
+Fronteras fijadas antes de la ejecucion de 5b.4-bis, informadas por
+diagnosticos de disponibilidad muestral de la fase anterior
+(protocolo v2) y no por el signo del outcome. NO se busca "donde el
+SOW funciona".
 
 Objetivo: 3 bloques temporalmente comparables con capacidad muestral
 suficiente.
@@ -347,7 +348,13 @@ inspeccion en 5b.3.
 - Dictamen 24: inmortal time bias detectado. Landmark requerido.
 - Dictamen 26: core landmark aprobado. 10 correcciones normativas.
 - Dictamen 29: 5b.4 FAIL en seleccion. 10 directrices para v3.
-- Este protocolo implementa las directrices del dictamen 29.
+- Dictamen 33: freeze de validacion autorizado, freeze productivo no.
+  Ver 33_dictamen_5b4bis_v2.md.
+
+**Nota sobre el landmark (dictamen 33 seccion 21):** el diseno landmark
+corrige el defecto de anclaje asimetrico identificado en 5b.3 y evita
+el immortal-time problem concreto de esa implementacion; sus
+restantes limitaciones se mantienen fuera del alcance de esta fase.
 
 ---
 

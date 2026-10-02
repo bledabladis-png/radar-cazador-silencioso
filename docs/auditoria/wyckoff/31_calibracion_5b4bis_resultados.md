@@ -319,15 +319,20 @@ bloques positivos y 1 negativo. En total 17/240 pasan D1-D3.
 - muestra amplia (635 conf + 1753 base).
 
 **Hecho empirico 4.** La senal se concentra en struct_deterioration y
-below_support. price_weakness tiene lift negativo en P1. Consistente
-con la definicion de SOW como senal estructural, no de precio.
+below_support. price_weakness tiene lift negativo en P1 (signo
+contrario al outcome primario en ese bloque). Se deja como dato
+observado, sin interpretacion semantica.
 
 **Hecho empirico 5.** Las 9 con "+++" son robustas por construccion del
 ranking: ninguna depende de un unico bloque positivo.
 
 ### Bloqueo
 
-La candidata pasa D1-D3 y el ranking v3 la selecciona sin ambiguedad.
+La candidata pasa D1-D3 y el ranking v3 la selecciona como ganadora
+determinista (con el matiz del dictamen 33: existe un grupo de
+vecinas con estructura similar; la ganadora esta claramente
+determinada por la regla, pero no se ha demostrado separacion
+estadistica respecto a sus vecinas).
 **No se congela todavia.** Decision pendiente del auditor externo
 (expediente 32).
 
@@ -358,3 +363,25 @@ Hasta dictamen:
 ---
 
 **Fin del informe 31.**
+
+---
+
+## 11. NOTA DE CIERRE (dictamen 33, 2026-10-02)
+
+El dictamen 33 sobre el expediente 32 ha establecido:
+
+- 5b.4-bis = PASS de desarrollo. NO es validacion final.
+- NO freeze productivo. SI freeze de validacion documental.
+- Antes del freeze documental definitivo: falta anadir IC por bloque
+  (P1/P2/P3 lower/upper CI) y concentracion por ticker. Eso se hace
+  en 34_qa_5b4bis.md.
+- El contrato v1.9 sera FROZEN_FOR_VALIDATION, no produccion.
+- config/settings.py sigue en None. fail-closed intacto.
+
+El presente informe se mantiene como evidencia de desarrollo. Los
+valores absolutos de lift y el signo +++ son validos como diagnostico
+historico, no como demostracion de robustez fuera de muestra.
+
+---
+
+**Fin de la nota de cierre.**
