@@ -134,6 +134,26 @@ bloqueado por auditor externo.
   separada: el guard no distingue "latencia Yahoo" de "fallo real" —
   candidato a expediente propio si se decide atacar.
 
+- **Guard coverage sigue fallando (2026-10-02 02:45 CEST, run 36946066084).**
+  El fix PENDING/INVALID (937c0b4, 925e477) es correcto pero no aplica:
+  la causa real es que Yahoo no ha publicado NINGUN cierre del 1-oct
+  a las 02:28 CEST del 2-oct (ni USA ni EU). El log muestra
+  `[K-HUERFANO] CAT/XOM/GOOGL/PFE/^FTSE/^IBEX/^STOXX50E: sin Close en
+  expected_session=2026-10-01`. cobertura 64/316 = 0.20.
+  El guard hace lo correcto: bloquea el commit con datos incompletos.
+  Es latencia anomala de Yahoo (5h post-cierre USA, 9h post-cierre EU),
+  no un bug del sistema. El diseno ya preve esto: los 5 slots diarios
+  cubren ventanas de latencia. Proximo slot automatico: 03:17 UTC.
+  No seguir disparando manuales en bucle: daran lo mismo hasta que
+  Yahoo publique. Si el slot automatico tambien falla, abrir expediente
+  propio de latencia Yahoo (out of scope de esta sesion).
+
+  Correccion sobre la nota anterior: la hipotesis "Guard vs latencia
+  Yahoo (solo europeos)" era incorrecta. Hoy la latencia afecta a
+  todos los mercados simultaneamente. El fix PENDING sigue siendo
+  correcto para el caso europeos-only, pero la causa de hoy es mas
+  amplia.
+
 **Proximo paso sugerido.** Verificar el daily_run del 2-oct con el step
 Regenerar reactivado. Monitorizar que CI procesa el crecimiento correcto
 y no rompe Run tests.
