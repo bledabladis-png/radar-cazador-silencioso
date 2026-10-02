@@ -33,8 +33,10 @@ de 5b3. Para la Candidata A (N=60,M=30,X=0.50,Y=1.20):
 - 5b3: lift_point = +0.1920
 - 5b4: lift_point = +0.0637
 
-El landmark funciona. El +0.192 de 5b3 era artefacto del anclaje
-asimetrico (inmortal time bias), como anticipo el dictamen 24.
+El landmark funciona. El +0.192 obtenido bajo el diseno de 5b3
+no es una estimacion valida bajo el diseno temporal corregido; al
+aplicar el landmark, el lift de la misma configuracion se reduce a
++0.0637.
 
 **H2 (hallazgo nuevo).** El lift no es homogeneo entre bloques. Para
 la misma candidata A:
@@ -122,9 +124,16 @@ ambos experimentos:
 | cal_n_confirmed | 406 | 475 | — |
 | cal_n_base | 1212 | 1913 | — |
 
-**Interpretacion:** el +0.192 de 5b3 estaba inflado por ~3x respecto al
-valor con landmark. La diferencia (~0.128) es el sesgo que el dictamen
-24 anticipo. El landmark lo corrige.
+**Interpretacion:** el +0.192 de 5b3 no es una estimacion valida
+bajo el diseno temporal corregido. Al aplicar el landmark, el lift de
+la misma configuracion se reduce a +0.0637 (ratio ~0.33).
+
+**Nota de lenguaje (dictamen 29 seccion 0):** no debe escribirse
+`0.1920 - 0.0637 = 0.1283` como "el sesgo". Es la diferencia entre dos
+estimaciones obtenidas bajo disenos diferentes. Otros factores cambian
+entre 5b3 y 5b4 (composicion de muestra, episodios elegibles,
+n_confirmed/n_baseline), por lo que esos 12.83 pp no son atribuibles
+causalmente al sesgo de anclaje.
 
 ---
 
@@ -308,8 +317,9 @@ Salidas:
 ## 12. Conclusiones
 
 **Hecho empirico 1.** El landmark funciona. El lift de la Candidata A
-pasa de +0.192 (5b3) a +0.064 (5b4). El +0.192 era artefacto del
-anclaje asimetrico.
+pasa de +0.192 (5b3) a +0.064 (5b4). El +0.192 no es una estimacion
+valida bajo el diseno temporal corregido: el resultado de 5b3 era
+muy sensible al anclaje temporal.
 
 **Hecho empirico 2.** El lift no es homogeneo entre bloques. Para la
 Candidata A, lift negativo en bloques A (-0.31) y B (-0.18), positivo
