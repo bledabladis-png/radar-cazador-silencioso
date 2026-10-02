@@ -6,6 +6,7 @@ Extraidos de src/report_generator.py (refactor C1, fase C1-6d3c).
 """
 
 import pandas as pd
+from src.report.helpers import _fmt_signed
 
 
 def render_matriz_regimen(sector_regime_matrix_data):
@@ -19,7 +20,7 @@ def render_matriz_regimen(sector_regime_matrix_data):
         out.append("| Sector | Precio 20d | % > EMA50 | Flujo 20d | Fase Wyckoff | Positivas | Lectura |\n")
         out.append("|--------|------------|-----------|-----------|--------------|-----------|---------|\n")
         for _, row in sector_regime_matrix_data.iterrows():
-            out.append(f"| {row['sector']} | {row['price_ret_20d']:.2%} | {row['pct_above_ema50']:.1f}% | {row['flow_20d_sum']:+,.0f} | {row['wyckoff_phase']} | {row['positive_conditions']:.0f} | {row['regime_reading']} |\n")
+            out.append(f"| {row['sector']} | {row['price_ret_20d']:.2%} | {row['pct_above_ema50']:.1f}% | {_fmt_signed(row['flow_20d_sum'], '{:+,.0f}', '{:,.0f}')} | {row['wyckoff_phase']} | {row['positive_conditions']:.0f} | {row['regime_reading']} |\n")
         out.append("\n")
     return out
 
@@ -40,7 +41,7 @@ def render_representatividad_lider(leader_representativeness_data):
             latest = pd.to_datetime(df_rep['date']).max()
             df_rep = df_rep[pd.to_datetime(df_rep['date']) == latest]
         for _, row in df_rep.iterrows():
-            out.append(f"| {row['sector']} | {row['ticker']} | {row['rs_distance_to_median']:+.4f} | {row['mom_distance_to_median']:+.4f} | {row['flow_distance_to_median']:+.2f} | {row['wls_distance_to_median']:+.2f} | {row['sector_rank_pct']:.0%} |\n")
+            out.append(f"| {row['sector']} | {row['ticker']} | {_fmt_signed(row['rs_distance_to_median'], '{:+.4f}', '{:.4f}')} | {_fmt_signed(row['mom_distance_to_median'], '{:+.4f}', '{:.4f}')} | {_fmt_signed(row['flow_distance_to_median'], '{:+.2f}', '{:.2f}')} | {_fmt_signed(row['wls_distance_to_median'], '{:+.2f}', '{:.2f}')} | {row['sector_rank_pct']:.0%} |\n")
         out.append("\n")
         out.append("*Criterio: los tickers del sector ordenados por WLS desc. La primera fila de cada sector es el 'lider por WLS'. No coincide con Concentracion del liderazgo ni con Liderazgo interno, que priorizan por retorno 20d.*\n\n")
         # F6-12 (2026-09-28): nota sobre el filtro de sectores.
@@ -108,6 +109,6 @@ def render_momentum_amplitud(sector_breadth_momentum_data):
             latest = pd.to_datetime(df_mom['date']).max()
             df_mom = df_mom[pd.to_datetime(df_mom['date']) == latest]
         for _, row in df_mom.iterrows():
-            out.append(f"| {row['sector']} | {row['delta_1d_ema20']:+.1f} | {row['delta_5d_ema20']:+.1f} | {row['delta_20d_ema20']:+.1f} | {row['delta_5d_ema50']:+.1f} | {row['delta_5d_ema200']:+.1f} | {row['breadth_expansion_5d']} | {row['breadth_deterioration_5d']} |\n")
+            out.append(f"| {row['sector']} | {_fmt_signed(row['delta_1d_ema20'], '{:+.1f}', '{:.1f}')} | {_fmt_signed(row['delta_5d_ema20'], '{:+.1f}', '{:.1f}')} | {_fmt_signed(row['delta_20d_ema20'], '{:+.1f}', '{:.1f}')} | {_fmt_signed(row['delta_5d_ema50'], '{:+.1f}', '{:.1f}')} | {_fmt_signed(row['delta_5d_ema200'], '{:+.1f}', '{:.1f}')} | {row['breadth_expansion_5d']} | {row['breadth_deterioration_5d']} |\n")
         out.append("\n")
     return out

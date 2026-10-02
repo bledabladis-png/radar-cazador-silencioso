@@ -5,6 +5,7 @@ Extraido de src/report_generator.py (refactor C1, fase C1-6d4c2).
 """
 
 import pandas as pd
+from src.report.helpers import _fmt_signed
 
 
 def render_confirmation(confirmation_data):
@@ -30,11 +31,11 @@ def render_confirmation(confirmation_data):
             out.append(f"- **Realized Vol (60d):** {rv60_str}\n")
         if confirmation_data.get('vrp_21d') is not None:
             vrp21 = confirmation_data['vrp_21d']
-            vrp21_str = f'{vrp21*100:+.2f}%' if pd.notna(vrp21) else 'N/D'
+            vrp21_str = _fmt_signed(vrp21*100, '{:+.2f}%', '{:.2f}%') if pd.notna(vrp21) else 'N/D'
             out.append(f"- **VRP Proxy (VIX - RV21):** {vrp21_str}\n")
         if confirmation_data.get('vrp_60d') is not None:
             vrp60 = confirmation_data['vrp_60d']
-            vrp60_str = f'{vrp60*100:+.2f}%' if pd.notna(vrp60) else 'N/D'
+            vrp60_str = _fmt_signed(vrp60*100, '{:+.2f}%', '{:.2f}%') if pd.notna(vrp60) else 'N/D'
             out.append(f"- **VRP Proxy (VIX - RV60):** {vrp60_str}\n")
 
         fls = confirmation_data.get('fls', {})
@@ -96,8 +97,8 @@ def render_confirmation(confirmation_data):
                     z_key = f'{key}_zscore'
                     delta = ratios.get(delta_key, None)
                     z = ratios.get(z_key, None)
-                    delta_str = f'{delta*100:+.1f}%' if delta is not None and pd.notna(delta) else 'N/D'
-                    z_str = f'{z:+.2f}' if z is not None and pd.notna(z) else 'N/D'
+                    delta_str = _fmt_signed(delta*100, '{:+.1f}%', '{:.1f}%') if delta is not None and pd.notna(delta) else 'N/D'
+                    z_str = _fmt_signed(z, '{:+.2f}', '{:.2f}') if z is not None and pd.notna(z) else 'N/D'
                     out.append(f"| {label} | {val:.4f} | {delta_str} | {z_str} |\n")
         out.append("\n")
     return out

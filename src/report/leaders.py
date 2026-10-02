@@ -7,6 +7,7 @@ Extraidos de src/report_generator.py (refactor C1, fase C1-6c1).
 from config.settings import MOMENTUM_PRICE_WINDOW, MOMENTUM_LONG_WINDOW, TOP_N_CANDIDATES, TOP_N_LEADERS
 from config.tickers import SECTOR_NAMES
 from src.report.helpers import _fmt_num
+from src.report.helpers import _fmt_signed
 
 
 def render_momentum_sectores(sector_price_rank, sector_flow_rank):
@@ -61,8 +62,8 @@ def render_tactical_leaders(tactical_scores, structural_scores,
         shock = shock_sensitivities.get(ticker, {}) if shock_sensitivities else {}
         comm = shock.get('commodity_level', 'N/A') if shock else 'N/A'
         comm_val = shock.get('commodity_corr_value', None) if shock else None
-        comm_display = f"{comm} ({comm_val:+.2f})" if comm_val is not None and comm != 'N/A' else comm
-        out.append(f"| {i} | {name} ({ticker}) | {t_score:+.2f} | {s_score:+.2f} | {mom*100:.2f}% | {_fmt_num(flow, '{:+.2f}')} | {comm_display} |\n")
+        comm_display = f"{comm} ({_fmt_signed(comm_val, '{:+.2f}', '{:.2f}')})" if comm_val is not None and comm != 'N/A' else comm
+        out.append(f"| {i} | {name} ({ticker}) | {_fmt_signed(t_score, '{:+.2f}', '{:.2f}')} | {_fmt_signed(s_score, '{:+.2f}', '{:.2f}')} | {mom*100:.2f}% | {_fmt_signed(flow, '{:+.2f}', '{:.2f}')} | {comm_display} |\n")
     # I1 (2026-09-18): misma metrica que "Momentum de Precio - Sectores".
     out.append("\n*Nota: Retorno 20d usa la misma metrica que 'Momentum de "
                "Precio - Sectores' (mediana de los componentes del sector).*\n\n")
@@ -119,7 +120,7 @@ def render_structural_ranking(structural_scores, tactical_scores,
         agree = signal_agreements.get(ticker, 0.5) if signal_agreements else 0.5
         agree_display = signal_agreements_display.get(ticker, f'{agree:.0%}') if signal_agreements_display else f'{agree:.0%}'
         struct_conf = (pers_val + agree) / 2
-        out.append(f"| {i} | {name} ({ticker}) | {s_score:+.2f} | {t_score:+.2f} | {pers_str} | {agree_display} | {struct_conf:.0%} |\n")
+        out.append(f"| {i} | {name} ({ticker}) | {_fmt_signed(s_score, '{:+.2f}', '{:.2f}')} | {_fmt_signed(t_score, '{:+.2f}', '{:.2f}')} | {pers_str} | {agree_display} | {struct_conf:.0%} |\n")
     out.append("\n")
     return out
 

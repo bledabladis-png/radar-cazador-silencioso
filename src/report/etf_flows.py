@@ -67,7 +67,7 @@ def render_divergencia_precio_flujo(sector_flow_characteristics_data):
         out.append("| Sector | Ret 5d | Flujo 5d | Régimen 5d | Ret 20d | Flujo 20d | Régimen 20d |\n")
         out.append("|--------|--------|----------|------------|---------|-----------|-------------|\n")
         for _, row in _flow_filtered.iterrows():
-            out.append(f"| {row['sector']} | {row['price_ret_5d']:.2%} | {row['flow_5d_sum']:+,.0f} | {row['price_flow_regime_5d']} | {row['price_ret_20d']:.2%} | {row['flow_20d_sum']:+,.0f} | {row['price_flow_regime_20d']} |\n")
+            out.append(f"| {row['sector']} | {row['price_ret_5d']:.2%} | {_fmt_signed(row['flow_5d_sum'], '{:+,.0f}', '{:,.0f}')} | {row['price_flow_regime_5d']} | {row['price_ret_20d']:.2%} | {_fmt_signed(row['flow_20d_sum'], '{:+,.0f}', '{:,.0f}')} | {row['price_flow_regime_20d']} |\n")
         out.append("\n")
         out.append("*«Absorción potencial» describe una configuración de retorno negativo del precio acompañada de flujo primario acumulado positivo. Puede ser compatible con absorción, pero no confirma por sí sola absorción institucional ni establece causalidad.*\n\n")
 

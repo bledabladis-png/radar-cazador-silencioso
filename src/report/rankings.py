@@ -9,6 +9,7 @@ import numpy as np
 from config.tickers import SECTOR_NAMES, MARKET_TICKERS
 from src.utils import safe_mean
 from src.report.helpers import _fmt_num
+from src.report.helpers import _fmt_signed
 
 
 def render_rankings_sectoriales(sector_results, tactical_scores,
@@ -36,8 +37,8 @@ def render_rankings_sectoriales(sector_results, tactical_scores,
         shock = shock_sensitivities.get(ticker, {}) if shock_sensitivities else {}
         comm_level = shock.get('commodity_level', 'N/A') if shock else 'N/A'
         comm_val = shock.get('commodity_corr_value', None) if shock else None
-        comm_display = f"{comm_level} ({comm_val:+.2f})" if comm_val is not None and comm_level != 'N/A' else comm_level
-        out.append(f"| {i} | {name} ({ticker}) | {_fmt_num(score, '{:.2f}')} | {_fmt_num(t_score, '{:+.2f}')} | {_fmt_num(s_score, '{:+.2f}')} | {pers_str} | {agree_display} | {comm_display} | {wyckoff} |\n")
+        comm_display = f"{comm_level} ({_fmt_signed(comm_val, '{:+.2f}', '{:.2f}')})" if comm_val is not None and comm_level != 'N/A' else comm_level
+        out.append(f"| {i} | {name} ({ticker}) | {_fmt_num(score, '{:.2f}')} | {_fmt_signed(t_score, '{:+.2f}', '{:.2f}')} | {_fmt_signed(s_score, '{:+.2f}', '{:.2f}')} | {pers_str} | {agree_display} | {comm_display} | {wyckoff} |\n")
     out.append("\n")
     return out
 
@@ -74,7 +75,7 @@ def render_opportunity_map(tactical_scores, structural_scores,
     tact_median = np.median(tact_values) if tact_values else 0
     struct_median = np.median(struct_values) if struct_values else 0
     
-    out.append(f"*Umbrales del dia: Tactical mediana={tact_median:+.2f}, Structural mediana={struct_median:+.2f}*\n\n")
+    out.append(f"*Umbrales del dia: Tactical mediana={_fmt_signed(tact_median, '{:+.2f}', '{:.2f}')}, Structural mediana={_fmt_signed(struct_median, '{:+.2f}', '{:.2f}')}*\n\n")
     out.append("| Cuadrante | Sectores | Signal Consistency |\n")
     out.append("|-----------|----------|------------|\n")
     

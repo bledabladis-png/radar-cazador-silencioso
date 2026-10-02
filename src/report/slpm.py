@@ -5,7 +5,7 @@ Extraidos de src/report_generator.py (refactor C1, fase C1-6d1).
 """
 
 from config.weights import SLPM_WEIGHTS
-from src.report.helpers import _fmt_num
+from src.report.helpers import _fmt_signed
 
 
 def render_slpm_v12(slpm_v12_data):
@@ -53,10 +53,10 @@ def render_slpm_v12(slpm_v12_data):
             integrity = slpm_v12_data.get("leader_integrity", {}) if slpm_v12_data else {}
             lis_val = integrity.get("lis", 0)
             n_lis = integrity.get("n_leaders", 0)
-            lis_str = f"{lis_val:+.2f}" if n_lis > 0 else "N/D"
+            lis_str = _fmt_signed(lis_val, '{:+.2f}', '{:.2f}') if n_lis > 0 else "N/D"
             n_breadth = breadth.get("n_used", 0) if breadth else 0
             eff_breadth_str = f"{eff_breadth:.2f}" if n_breadth > 0 else "N/D"
-            out.append(f"- **Scores oficiales:** T={tact_val:+.2f} | S={struct_val:+.2f} | LIS={lis_str} | Eff Breadth={eff_breadth_str} | Persist={pers_str} | LQ: P={tact_val:+.2f} C={_fmt_num(flow_val, '{:+.3f}')} S={struct_val:+.2f} Cf={lis_str}\n")
+            out.append(f"- **Scores oficiales:** T={_fmt_signed(tact_val, '{:+.2f}', '{:.2f}')} | S={_fmt_signed(struct_val, '{:+.2f}', '{:.2f}')} | LIS={lis_str} | Eff Breadth={eff_breadth_str} | Persist={pers_str} | LQ: P={_fmt_signed(tact_val, '{:+.2f}', '{:.2f}')} C={_fmt_signed(flow_val, '{:+.3f}', '{:.3f}')} S={_fmt_signed(struct_val, '{:+.2f}', '{:.2f}')} Cf={lis_str}\n")
         
         errors = slpm_v12_data.get('validation_errors', [])
         if errors:
@@ -110,17 +110,17 @@ def render_slpm_v12(slpm_v12_data):
             if n_leaders == 0:
                 out.append("- **LIS:** N/D (n=0)\n")
             else:
-                out.append(f"- **LIS:** {lis:+.2f} (n={n_leaders})\n")
+                out.append(f"- **LIS:** {_fmt_signed(lis, '{:+.2f}', '{:.2f}')} (n={n_leaders})\n")
             out.append(f"- *Formula: LIS_individual = {SLPM_WEIGHTS['lis']['rs']:.2f}*tanh((RS-1)*2) + {SLPM_WEIGHTS['lis']['momentum']:.2f}*tanh(RS_mom*5) + {SLPM_WEIGHTS['lis']['flow']:.2f}*tanh(flow_proxy_z/2) + {SLPM_WEIGHTS['lis']['wyckoff']:.2f}*Wyckoff_score. LIS = media.*\n")
             out.append("- *LIS mide la intensidad/calidad de la señal de los lideres, no el % que cumple condiciones (eso es el Breadth).*\n")
         
         flow_div = slpm_v12_data.get('flow_divergence_v2', {})
         if flow_div:
             out.append("\n### Flow Divergence 2.0\n")
-            out.append(f"- **Composite:** {_fmt_num(flow_div.get('composite'), '{:+.3f}')}\n")
-            out.append(f"  - Leader vs Sector: {_fmt_num(flow_div.get('leader_flow_div'), '{:+.3f}')}\n")
-            out.append(f"  - Sector Flow vs Price: {_fmt_num(flow_div.get('sector_flow_vs_price_div'), '{:+.3f}')}\n")
-            out.append(f"  - Structural: {_fmt_num(flow_div.get('structural_flow_div'), '{:+.3f}')}\n")
+            out.append(f"- **Composite:** {_fmt_signed(flow_div.get('composite'), '{:+.3f}', '{:.3f}')}\n")
+            out.append(f"  - Leader vs Sector: {_fmt_signed(flow_div.get('leader_flow_div'), '{:+.3f}', '{:.3f}')}\n")
+            out.append(f"  - Sector Flow vs Price: {_fmt_signed(flow_div.get('sector_flow_vs_price_div'), '{:+.3f}', '{:.3f}')}\n")
+            out.append(f"  - Structural: {_fmt_signed(flow_div.get('structural_flow_div'), '{:+.3f}', '{:.3f}')}\n")
             out.append("- *Nota: Flujo medido como Flow Proxy (retorno x volumen). No implica flujo institucional real.*\n")
         out.append("\n")
     return out
@@ -137,10 +137,10 @@ def render_slpm_legacy(slpm_data):
         state = slpm_data.get('state', 'N/A')
         out.append(f"- **Sector Líder:** {slpm_data.get('sector', 'N/A')} ({slpm_data.get('sector_etf', '')})\n")
         out.append(f"- **Estado:** {state}\n")
-        out.append(f"- **Structural RS:** {slpm_data.get('struct_rs', 0):+.3f}\n")
+        out.append(f"- **Structural RS:** {_fmt_signed(slpm_data.get('struct_rs', 0), '{:+.3f}', '{:.3f}')}\n")
         out.append(f"- **Leader Breadth:** {slpm_data.get('leader_breadth', 0)*100:.0f}%\n")
-        out.append(f"- **Flow Divergence:** {slpm_data.get('flow_divergence', 0):+.3f}\n")
-        out.append(f"- **Tactical Score (legacy):** {slpm_data.get('tactical_score', 0):+.3f}\n")
-        out.append(f"- **Structural Score (legacy):** {slpm_data.get('structural_score', 0):+.3f}\n")
+        out.append(f"- **Flow Divergence:** {_fmt_signed(slpm_data.get('flow_divergence', 0), '{:+.3f}', '{:.3f}')}\n")
+        out.append(f"- **Tactical Score (legacy):** {_fmt_signed(slpm_data.get('tactical_score', 0), '{:+.3f}', '{:.3f}')}\n")
+        out.append(f"- **Structural Score (legacy):** {_fmt_signed(slpm_data.get('structural_score', 0), '{:+.3f}', '{:.3f}')}\n")
         out.append("\n</details>\n\n")
     return out
