@@ -1,4 +1,4 @@
-﻿"""Tests unitarios de src/pipeline/iae_section (E.3.b).
+"""Tests unitarios de src/pipeline/iae_section (E.3.b).
 
 Cubren:
   - _list_available_quarters: deteccion de trimestres.
@@ -132,12 +132,66 @@ def test_iae_section_ok_cobertura_catalogo(tmp_path):
     fake["target_q4_size"] = 242
     fake["target_q1_size"] = 242
     with patch.object(iae_section, "DATA_DIR", d), \
+         patch.object(iae_section, "_get_catalog_total", return_value=242), \
          patch("src.institutional_accumulation.pipeline_contractual"
                ".run_contractual_nipc", return_value=fake):
         r = iae_section.compute_iae_section(None, "TEST")
     assert r["catalog_keys_total"] == 242
     assert r["catalog_keys_observed"] == 242
     assert abs(r["catalog_coverage_declared"] - 1.0) < 1e-9
+
+
+def test_iae_section_cobertura_usa_manifest(tmp_path):
+    """2026-10-02: cat_total lee del manifest vigente si no viene en r."""
+    d = _ok_env(tmp_path)
+    fake = _fake_result()
+    fake["target_q4_size"] = 240
+    fake["target_q1_size"] = 240
+    with patch.object(iae_section, "DATA_DIR", d), \
+         patch.object(iae_section, "_get_catalog_total", return_value=255), \
+         patch("src.institutional_accumulation.pipeline_contractual"
+               ".run_contractual_nipc", return_value=fake):
+        r = iae_section.compute_iae_section(None, "TEST")
+    assert r["catalog_keys_total"] == 255
+    assert r["catalog_keys_observed"] == 240
+    # 240/255 = 0.94117...
+    assert abs(r["catalog_coverage_declared"] - (240/255)) < 1e-9
+
+
+def test_iae_section_helpers_manifest(tmp_path):
+    """_get_catalog_total lee rows del snapshot vigente del manifest."""
+    import json
+    m = tmp_path / "catalog_manifest.json"
+    m.write_text(json.dumps({
+        "snapshots": [
+            {"version_id": "v1", "valid_from": "2026-01-01",
+             "valid_to": "2026-06-01", "rows": 200},
+            {"version_id": "v2", "valid_from": "2026-06-01",
+             "valid_to": None, "rows": 255},
+        ]
+    }), encoding="utf-8")
+    # _get_catalog_total lee de ROOT/data/mappings/... - parchear ROOT
+    with patch.object(iae_section, "ROOT", tmp_path):
+        # Crear la estructura esperada
+        (tmp_path / "data" / "mappings").mkdir(parents=True)
+        (tmp_path / "data" / "mappings" / "catalog_manifest.json").write_text(
+            m.read_text(encoding="utf-8"), encoding="utf-8"
+        )
+        assert iae_section._get_catalog_total() == 255
+
+
+def test_iae_section_helpers_manifest_sin_vigente(tmp_path):
+    """_get_catalog_total devuelve None si no hay snapshot con valid_to=null."""
+    import json
+    with patch.object(iae_section, "ROOT", tmp_path):
+        (tmp_path / "data" / "mappings").mkdir(parents=True)
+        (tmp_path / "data" / "mappings" / "catalog_manifest.json").write_text(
+            json.dumps({"snapshots": [
+                {"version_id": "v1", "valid_from": "2026-01-01",
+                 "valid_to": "2026-06-01", "rows": 200},
+            ]}), encoding="utf-8"
+        )
+        assert iae_section._get_catalog_total() is None
 
 
 # --- compute_iae_section: ERROR ----------------------------------------

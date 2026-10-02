@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 """Fase 13 del pipeline: IAE (Institutional Accumulation Engine) - 13F.
 
 Calcula el NIPC contractual sobre el ultimo par de trimestres 13F
@@ -48,6 +48,30 @@ def _list_available_quarters():
         out.append((d.name, iso, year + q))
     out.sort(key=lambda x: x[2])
     return [(f, i) for f, i, _ in out]
+
+def _get_catalog_total():
+    """Numero de keys del snapshot vigente del catalogo.
+
+    Lee data/mappings/catalog_manifest.json, selecciona el snapshot con
+    valid_to=null y devuelve su campo 'rows'. None si falla.
+    """
+    import json
+    mp = ROOT / "data" / "mappings" / "catalog_manifest.json"
+    if not mp.exists():
+        return None
+    try:
+        m = json.loads(mp.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return None
+    live = [s for s in m.get("snapshots", []) if s.get("valid_to") is None]
+    if not live:
+        return None
+    live.sort(key=lambda s: s.get("valid_from", ""), reverse=True)
+    try:
+        return int(live[0].get("rows") or 0) or None
+    except (TypeError, ValueError):
+        return None
+
 
 def compute_iae_section(reference_date, run_id, *, official_dir=None):
     """Calcula la seccion IAE para el reporte diario.
@@ -164,7 +188,13 @@ def compute_iae_section(reference_date, run_id, *, official_dir=None):
         }
 
     # Cobertura del catalogo: observadas / total
-    cat_total = int(r.get("catalog_keys_total") or 242)
+    # 2026-10-02: run_contractual_nipc NO devuelve catalog_keys_total
+    # (su out solo tiene target_q4_size/target_q1_size). Fallback al
+    # manifest vigente. El hardcoded 242 era de cuando el catalogo tenia
+    # 242 keys; hoy tiene 255. Si no hay manifest, ultimo recurso 242.
+    cat_total = int(r.get("catalog_keys_total") or 0)
+    if not cat_total:
+        cat_total = _get_catalog_total() or 242
     cat_obs = max(int(r.get("target_q4_size") or 0),
                   int(r.get("target_q1_size") or 0))
     catalog_cov = (cat_obs / cat_total) if cat_total else None
