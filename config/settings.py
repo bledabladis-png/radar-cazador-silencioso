@@ -120,10 +120,10 @@ WYCKOFF_TACT_WEIGHT_EFFORT = 0.50
 WYCKOFF_T_NORM_K = 0.25  # CALIBRADO 2026-10-02. Ver 12_calibracion_K_5b2.md.
 # WYCKOFF v1.6 (candidate/confirmed): SOW para confirmar DISTRIBUTION.
 # N y M son PROPUESTOS. Calibracion en 5b.3.
-WYCKOFF_SOW_WINDOW_N = 30   # ventana para definir soporte y baseline de volumen
-WYCKOFF_SOW_MAX_AGE_M = 10  # max edad (sesiones) del SOW para confirmar
-WYCKOFF_SOW_X_ATR = 0.50  # PROPUESTO (5b.3). Penetracion minima en ATRs.
-WYCKOFF_SOW_Y_VOL = 1.20  # PROPUESTO (5b.3). Ratio minimo de volumen.
+WYCKOFF_SOW_WINDOW_N = None   # PROPUESTO (5b.3). Grid N in {20,30,40,60}. Fail-closed.
+WYCKOFF_SOW_MAX_AGE_M = None  # PROPUESTO (5b.3). Grid M in {5,10,15,20,30}. Fail-closed.
+WYCKOFF_SOW_X_ATR = None  # PROPUESTO (5b.3). Grid X in {0.25,0.50,0.75,1.00}. Fail-closed.
+WYCKOFF_SOW_Y_VOL = None  # PROPUESTO (5b.3). Grid Y in {1.10,1.20,1.50}. Fail-closed.
 WYCKOFF_COMBINED_STRUCT_WEIGHT = 0.70
 WYCKOFF_COMBINED_TACT_WEIGHT = 0.30
 

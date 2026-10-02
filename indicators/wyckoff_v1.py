@@ -1,8 +1,15 @@
 # -*- coding: utf-8 -*-
-"""Modulo Wyckoff v1.7 - Fases estructurales con SOW ATR-normalizado.
+"""Modulo Wyckoff v1.8 - Fases estructurales con SOW ATR-normalizado.
 
-Contrato: docs/auditoria/wyckoff/01_contrato_semantico_v1_1.md
-Revision v1 -> v1.1: docs/auditoria/wyckoff/04_revision_contrato_v1_1.md
+Contrato: docs/auditoria/wyckoff/01_contrato_semantico_v1_8.md
+Historico v1.7: docs/auditoria/wyckoff/01_contrato_semantico_v1_7.md
+Expediente: docs/auditoria/wyckoff/21_expediente_5b3_aclaraciones.md
+
+Cambios v1.7 -> v1.8 (dictamen 5b.3):
+  - detect_sow fail-closed: window/x_atr/y_vol obligatorios (keyword-only).
+    Sin default. Config los mantiene en None hasta que cierre 5b.3.
+  - classify_wyckoff_phase[_meta] acepta sow_params opcional. Sin el,
+    no se emite DISTRIBUTION (solo candidate flag). Invariante I36.
 
 Cambios respecto a v1.0:
   - D1: MARKUP sin condicion c_norm < 0.30 (incompatible con bull market
@@ -34,10 +41,6 @@ from config.settings import (
     WYCKOFF_COMBINED_STRUCT_WEIGHT,
     WYCKOFF_COMBINED_TACT_WEIGHT,
     WYCKOFF_T_NORM_K,
-    WYCKOFF_SOW_WINDOW_N,
-    WYCKOFF_SOW_MAX_AGE_M,
-    WYCKOFF_SOW_X_ATR,
-    WYCKOFF_SOW_Y_VOL,
 )
 from src.utils import robust_zscore, get_col
 
@@ -214,7 +217,7 @@ def _has_sufficient_data(df, ticker):
     return close.dropna().shape[0] >= WYCKOFF_TREND_SLOW_MA
 
 
-def classify_wyckoff_phase_meta(df, ticker, as_of=None):
+def classify_wyckoff_phase_meta(df, ticker, as_of=None, sow_params=None):
     """Clasifica la fase y devuelve metadata (dict).
 
     Contrato v1.6:
@@ -226,7 +229,7 @@ def classify_wyckoff_phase_meta(df, ticker, as_of=None):
     existe deterioro tras fortaleza. Solo se eleva a DISTRIBUTION si
     ademas hay un SOW reciente.
     """
-    phase = classify_wyckoff_phase(df, ticker, as_of=as_of)
+    phase = classify_wyckoff_phase(df, ticker, as_of=as_of, sow_params=sow_params)
     candidate = False
     if phase == FASE_DISTRIBUTION:
         candidate = True
@@ -275,7 +278,7 @@ def _is_distribution_candidate(df, ticker):
     )
 
 
-def classify_wyckoff_phase(df, ticker, as_of=None):
+def classify_wyckoff_phase(df, ticker, as_of=None, sow_params=None):
     """Clasifica la fase segun contrato v1.6 (§5).
 
     Args:
@@ -364,12 +367,23 @@ def classify_wyckoff_phase(df, ticker, as_of=None):
     deterioration = last_struct < STRUCT_DETERIORO
     prec_strong = struct_max > PREC_STRUCT_STRONG
     if trend_dist and deterioration and prec_strong:
-        # Candidate cumple. Confirmar con SOW reciente.
+        # Candidate cumple.
+        # v1.8 (dictamen P6): sin sow_params explicitos NO se emite
+        # DISTRIBUTION. Solo candidate flag via meta.
+        if sow_params is None:
+            return FASE_RANGE
         try:
             df_used = df.loc[:as_of] if as_of is not None else df
-            sow = detect_sow(df_used, ticker)
+            sow = detect_sow(
+                df_used, ticker,
+                window=sow_params["window"],
+                x_atr=sow_params["x_atr"],
+                y_vol=sow_params["y_vol"],
+                atr_window=sow_params.get("atr_window", WYCKOFF_ATR_WINDOW),
+            )
             if not sow.empty:
-                recent = sow.iloc[-WYCKOFF_SOW_MAX_AGE_M:]
+                max_age = sow_params.get("max_age_m", 10)
+                recent = sow.iloc[-max_age:]
                 if int(recent.sum()) > 0:
                     return FASE_DISTRIBUTION
         except (KeyError, ValueError, TypeError, IndexError):
@@ -409,10 +423,9 @@ def detect_sos(df, ticker):
     return condition.astype(int)
 
 
-def detect_sow(df, ticker, window=WYCKOFF_SOW_WINDOW_N,
-               x_atr=WYCKOFF_SOW_X_ATR, y_vol=WYCKOFF_SOW_Y_VOL,
+def detect_sow(df, ticker, *, window=None, x_atr=None, y_vol=None,
                atr_window=WYCKOFF_ATR_WINDOW):
-    """Sign of Weakness v1.7 (dictamen 5b.3).
+    """Sign of Weakness v1.8 (dictamen 5b.3, P6).
 
     Formula aprobada por auditor externo:
 
@@ -434,6 +447,12 @@ def detect_sow(df, ticker, window=WYCKOFF_SOW_WINDOW_N,
       (ratio de volumen). PROPUESTOS.
     - Soporte y baseline de volumen mantienen shift(1).
     """
+    if window is None or x_atr is None or y_vol is None:
+        raise ValueError(
+            "detect_sow requiere window, x_atr y y_vol explicitos. "
+            "Los parametros SOW no tienen default hasta que cierre la "
+            "calibracion 5b.3 (contrato v1.8, dictamen P6)."
+        )
     close = get_col(df, ticker, 'Close')
     low = get_col(df, ticker, 'Low')
     high = get_col(df, ticker, 'High')
