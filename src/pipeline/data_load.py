@@ -18,6 +18,8 @@ def load_all_data(reference_date=None, run_id=None):
             - 'df_macro_manual': DataFrame macro o None
             - 'valid_tickers': lista de tickers validos
             - 'issues': dict de issues por ticker
+            - 'temporal_meta': dict de contratos temporales (de
+              df_market.attrs), vacio si no hay
         Devuelve None si hay fallo critico que debe abortar main().
     """
     print("Descargando datos de mercado...")
