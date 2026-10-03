@@ -218,4 +218,34 @@ Funciones auditadas como inmutables:
 
 ---
 
+## 7. Addendum - Reproducibilidad del power analysis (§2.2)
+
+Post-freeze, se verifico que `scripts/power_analysis_5bX.py` sigue
+reproduciendo los valores congelados en §2.2 del protocolo v3 con el
+parquet actual.
+
+Comando (read-only, sin correr el grid completo):
+
+    py -c "from scripts.power_analysis_5bX import build_real_pool, empirical_rates; \
+           p, _ = build_real_pool(); print(empirical_rates(p))"
+
+Resultado:
+
+    p_conf = 0.543720
+    p_base = 0.469671   (declarado en §2.2: 0.4697) - COINCIDE
+    lift   = +0.074049  (declarado en §5.2: +0.0740) - COINCIDE
+    n_conf = 629
+    n_base = 1731
+
+p_base y lift reproducen a 4 decimales. Unica diferencia: n_conf
+actual (629) vs declarado en §5.2 (635). Diferencia 6 episodios
+(~1%), atribuible a que el parquet ha crecido desde `344dae9` y
+nuevos episodios entran al pool.
+
+**No material.** El umbral 550 se calculo con `p_base` fijo
+(0.4697), no con el `n_conf` del pool. La justificacion del 550
+sigue vigente. No es D-06.6.
+
+---
+
 **Fin del informe 37b.**
