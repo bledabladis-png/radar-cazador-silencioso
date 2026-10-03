@@ -77,14 +77,34 @@ protocolo v2.
 **Commits.** 2b539b6 (00_ARRANQUE), 5e295ac+78bccce+d02e93f (generador),
 b02ec17 (corpus), pendiente (D-06).
 
+**Ampliacion (misma sesion, tramo 5b.X v3).**
+
+- **Protocolo v3 redactado.** `35_protocolo_5bX_v3.md` (commit
+  a7879f3). Preserva v2 + §14 auditoria de equivalencia + §15
+  manifiesto + §16 tests exigidos.
+- **Script v3 conforme.** `validate_wyckoff_sow_5bX.py` (commit
+  d0874f4). 6 cambios normativos D-06, resto funcionalmente
+  equivalente a 5b.4-bis.
+- **Tests contractuales §16.** 19 tests (commit 0fd53fa + 42728ed).
+  14 del contrato + C1 bootstrap + C2 guardrails.
+- **Manifiesto de freeze.** `35_protocolo_5bX_v3.freeze.json`
+  (commit d69e8e3). Rompe autorreferencia como el generador.
+- **Dictamen final FIRMADO.** `38_dictamen_final_5bX_v3.md`
+  (commit 927d7c5). revision_auditor=FIRMADO, estado=FROZEN.
+  C1 (bootstrap equivalencia) y C2 (guardrails no bloqueantes)
+  cerradas. Auditor explicita que la firma es sobre el paquete
+  contractual, no sobre inspeccion visual del diff.
+
 **Pendiente.**
-- 5b.X-bis/v3: no abierto. Requiere contrato de patch firmado y
-  cabeza fresca. Checklist en `37_` §7.
-- Tests contractuales: no escritos. Serian verdes certificando v1.
+- 5b.X v3: ciego. Solo se ejecuta cuando
+  `n_confirmed_H20_complete >= 550` post-2026-10-02 (~2027).
+  Script y protocolo inmutables (T7/T7b lo verifican).
 - S-01-deep (`utils.py`, `instrument_registry.py`,
   `stock_data_loader.py`): candidato para proxima sesion.
+- H5.3: cron 13F 20-nov-2026.
+- C2 (920): bloqueado por auditor externo.
 
-**Proximo paso sugerido.** Abrir 5b.X-bis/v3, o S-01-deep.
+**Proximo paso sugerido.** S-01-deep, o H5.3 si llega la fecha.
 
 ### 2026-10-03 - Cierre Wyckoff (umbral 550) + auditoria S-01 (D-01, D-02)
 

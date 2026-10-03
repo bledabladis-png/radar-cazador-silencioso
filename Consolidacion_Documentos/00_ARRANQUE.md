@@ -128,17 +128,19 @@ estado.
 
 ### 4.2. Frente Wyckoff (rediseno modulo)
 
-- Estado: **v1.9 FROZEN_FOR_VALIDATION / NOT_PRODUCTION.**
-- Candidata SOW congelada: N=60, M=30, X_ATR=0.25, Y_VOL=1.10.
-- `config/settings.py`: los 4 parametros SOW a None. fail-closed.
-- Contrato v1.8 (productivo) + v1.9 (candidata congelada).
-- Documentacion: `docs/auditoria/wyckoff/` (35+ ficheros).
-- Legacy `indicators/wyckoff.py` intacto. Consumidores sin migrar.
-- Secuencia: 5b.3 FAIL (sesgo) -> 5b.4 FAIL (D3) -> 5b.4-bis PASS
-  desarrollo (17/240) -> QA (solo P3 sin cruzar 0) -> contrato v1.9.
-- **Pendiente externo:** dictamen umbrales 5b.X (expediente 36).
-- **Bloqueado:** 5b.X (sin datos post-2026-10-01), 5c.4, 5d, 5e.
-- **No bloqueado:** 5c general, plan migracion v2.
+- Estado: **5b.X v3 FIRMADO / FROZEN** (2026-10-03). Candidata N=60,
+  M=30, X_ATR=0.25, Y_VOL=1.10. Config SOW a None, fail-closed.
+- Contrato v1.8 (productivo) + v1.9 (candidata). Legacy intacto,
+  consumidores sin migrar. Expediente: `docs/auditoria/wyckoff/`.
+- Secuencia: 5b.3 FAIL -> 5b.4 FAIL -> 5b.4-bis PASS (17/240) ->
+  contrato v1.9 -> D-06 -> 5b.X v3 FIRMADO.
+- v3: umbral 550 H20-complete, OOS por t0, escenarios por IC,
+  C1 bootstrap equivalencia, C2 guardrails no bloqueantes, hash
+  congelado (`38_dictamen_final_5bX_v3.md`).
+- **Bloqueado unicamente por datos:** ejecucion cuando
+  `n_confirmed_H20_complete >= 550` post-2026-10-02 (~2027).
+  Script y protocolo inmutables (T7/T7b lo verifican).
+- **Bloqueado aparte:** 5c.4, 5d, 5e. **No bloqueado:** 5c, plan v2.
 
 ### 4.3. Pendientes vivos
 
