@@ -313,3 +313,115 @@ def test_d_no_es_a_b_c():
                 f"lift={lift}, IC=[{lo},{hi}] -> {esc}"
             )
 
+
+
+# =====================================================================
+# C1 - Equivalencia funcional del bootstrap local vs calibrador
+# (condicion de firma del auditor, 2026-10-03)
+# =====================================================================
+
+def test_c1_bootstrap_equivalencia_funcional():
+    """El bootstrap local y el del calibrador producen el mismo output.
+
+    Condicion C1 del dictamen de conformidad: para una fixture
+    determinista comun (mismos episodios, misma B, misma seed),
+    bootstrap_lift local == bootstrap_lift_H20 del calibrador en
+    lift_point, lower_ci, upper_ci, n_confirmed, n_baseline, n_boot.
+
+    No se importa el del calibrador como sustituto: se compara.
+    """
+    from scripts.calibrate_wyckoff_sow_5b4bis import bootstrap_lift_H20
+
+    rows = [
+        ("AAA", True, {"struct_deterioration": 1}),
+        ("AAA", False, {"struct_deterioration": 0}),
+        ("AAA", True, {"struct_deterioration": 1}),
+        ("BBB", True, {"struct_deterioration": 0}),
+        ("BBB", False, {"struct_deterioration": 1}),
+        ("CCC", True, {"struct_deterioration": 0}),
+        ("CCC", False, {"struct_deterioration": 0}),
+        ("CCC", False, {"struct_deterioration": 1}),
+        ("DDD", True, {"struct_deterioration": 1}),
+        ("DDD", False, {"struct_deterioration": 0}),
+        ("EEE", True, {"struct_deterioration": 1}),
+        ("EEE", False, {"struct_deterioration": 1}),
+    ]
+    B = 500
+    seed = 20261002
+
+    ref = bootstrap_lift_H20(rows, B=B, seed=seed)
+    loc = v5bX.bootstrap_lift(rows, B=B, seed=seed)
+
+    assert ref["lift_point"] == loc["lift_point"], (
+        f"lift_point: ref={ref['lift_point']} loc={loc['lift_point']}"
+    )
+    assert ref["lower_ci"] == loc["lower_ci"], (
+        f"lower_ci: ref={ref['lower_ci']} loc={loc['lower_ci']}"
+    )
+    assert ref["upper_ci"] == loc["upper_ci"], (
+        f"upper_ci: ref={ref['upper_ci']} loc={loc['upper_ci']}"
+    )
+    assert ref["n_confirmed"] == loc["n_confirmed"]
+    assert ref["n_baseline"] == loc["n_baseline"]
+    assert ref["n_boot_validos"] == loc["n_boot"]
+
+
+# =====================================================================
+# C2 - Guardrails informativos no bloquean
+# (condicion de firma del auditor, 2026-10-03)
+# =====================================================================
+
+def _make_feats_con_candidate(dates, tk="AAA", candidate_value=False):
+    """feats dict con candidate constante (todo False por defecto)."""
+    candidate = pd.Series(candidate_value, index=dates)
+    struct = pd.Series(0.5, index=dates)
+    close = pd.Series(100.0, index=dates)
+    low = close - 0.5
+    return {tk: {
+        "dates": dates, "struct": struct, "close": close,
+        "low": low, "volume": pd.Series(1000.0, index=dates),
+        "candidate": candidate,
+    }}
+
+
+def test_c2a_menos_12_meses_y_sin_starts_no_bloquea():
+    """3 meses post-cutoff + 0 candidate starts -> ok=True.
+
+    Condicion C2 del dictamen: 12m y 50 starts son informativos,
+    no bloqueantes. Con datos OOS existentes, no se bloquea aunque
+    no se cumplan los guardrails.
+    """
+    dates = pd.date_range("2026-10-02", periods=60, freq="B")
+    df = pd.DataFrame({"Close": 100.0}, index=dates)
+    feats = _make_feats_con_candidate(dates, candidate_value=False)
+    precond = v5bX.check_preconditions(df, ["AAA"], feats)
+    assert precond["guardrails_ok"] is False, "se esperaba guardrails no cumplidos"
+    assert precond["n_candidate_starts_oos"] == 0
+    assert precond["ok"] is True, (
+        "12m y 50 starts NO deben bloquear. "
+        f"reasons={precond['reasons']}"
+    )
+
+
+def test_c2b_mas_12_meses_y_sin_starts_no_bloquea():
+    """15 meses post-cutoff + 0 starts -> ok=True. Solo falla el guardrail
+    de starts, y eso no bloquea.
+    """
+    dates = pd.date_range("2026-10-02", periods=320, freq="B")
+    df = pd.DataFrame({"Close": 100.0}, index=dates)
+    feats = _make_feats_con_candidate(dates, candidate_value=False)
+    precond = v5bX.check_preconditions(df, ["AAA"], feats)
+    assert precond["guardrails_ok"] is False
+    assert precond["ok"] is True
+
+
+def test_c2c_sin_sesiones_oos_si_bloquea():
+    """Sin sesiones post-cutoff -> ok=False. Unico bloqueo valido por
+    precondiciones (fuera del 550, que se comprueba despues).
+    """
+    dates = pd.date_range("2026-01-01", "2026-09-30", freq="B")
+    df = pd.DataFrame({"Close": 100.0}, index=dates)
+    feats = _make_feats_con_candidate(dates, candidate_value=False)
+    precond = v5bX.check_preconditions(df, ["AAA"], feats)
+    assert precond["ok"] is False
+    assert any("sesiones" in r for r in precond["reasons"])

@@ -8,16 +8,21 @@
   },
   "script": {
     "fichero": "scripts/validate_wyckoff_sow_5bX.py",
-    "sha256": "2B1300740360E2D2C7E73A50DBB08A9DCC4E04080990D2B11B1C8E03FE7BD8CD",
+    "sha256": "2b1300740360e2d2c7e73a50dbb08a9dcc4e04080990d2b11b1c8e03fe7bd8cd",
     "commit": "d0874f4"
   },
   "tests_contractuales": {
     "fichero": "tests/test_wyckoff_sow_5bX_contract.py",
-    "commit": "0fd53fa"
+    "sha256": "215508b71905391af4dc909886ba6fc5cbd9794a88a6169f24f78d069cf375cb",
+    "commit_nota": "el commit de los tests es el commit que contiene este manifiesto; se consulta con git log"
   },
   "python": "3.14",
   "seed_bootstrap": 20261002,
   "B_bootstrap": 2000,
   "revision_auditor": "PENDIENTE",
-  "estado": "PENDIENTE_REVISION_AUDITOR"
+  "estado": "PENDIENTE_REVISION_AUDITOR",
+  "condiciones_firma_auditor": {
+    "C1_bootstrap_equivalencia": "CERRADA - test_c1_bootstrap_equivalencia_funcional PASSED",
+    "C2_guardrails_no_bloqueantes": "CERRADA - tests_c2a/c2b/c2c PASSED"
+  }
 }
