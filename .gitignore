@@ -6,6 +6,11 @@ data/market_data.csv
 data/market_data.parquet
 data/stock_prices.csv
 data/stock_prices.parquet
+# Extended history (walk-forward SOW, expediente 41). Datos intermedios,
+# no productivos. Regenerables con scripts/download_extended_history.py
+# + scripts/build_extended_dataset.py.
+data/stock_prices_ext.parquet
+data/stock_prices_extended.parquet
 *.xls
 *.xlsx
 *.bak
