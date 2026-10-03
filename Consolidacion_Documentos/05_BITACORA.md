@@ -44,6 +44,48 @@ Al cerrar una sesion nueva, se anade arriba (las mas recientes primero). Si hay 
 
 ## 3. SESIONES
 
+### 2026-10-03 (tarde/noche) - D-06: validador 5b.X invalidado vs protocolo v2
+
+**Objetivo.** Tests contractuales del validador 5b.X (P7 del handoff).
+Bloqueo detectado antes de escribirlos: el script v1 no implementa el
+protocolo v2.
+
+**Hecho.**
+
+- **D-06 detectado.** `scripts/validate_wyckoff_sow_5bX.py`
+  (sha256 `CC01A6AB...`, commit `d324346`) implementa v1: 20 conf,
+  `L > cutoff`, `12m+50ep`, escenarios por `lift_point`. El protocolo
+  `35_protocolo_5bX.md` (v2, commit `9ef7497`) exige 550 confirmed
+  H20-complete, `t0 >= cutoff`, escenarios por IC95%. El commit
+  `ccba3ab` congelo el hash del script v1 bajo mensaje de
+  sincronizacion v2.
+- **Desalineaciones.** D-06.1 (20 vs 550), D-06.2 (L vs t0),
+  D-06.3 (12m+50ep vigentes), D-06.4 (lift vs IC), D-06.5
+  (H20_complete no verificado).
+- **Dictamen externo 2026-10-03.** 5b.X original INVALIDADA como
+  paquete ejecutable. Requiere 5b.X-bis/v3: nuevo script conforme,
+  tests contractuales, nuevo sha256, revision de conformidad antes
+  del freeze. No se reabre candidata ni umbrales.
+- **Registro.** `docs/auditoria/wyckoff/37_d06_5bX_invalidada.md`.
+- **Bloque de corpus (misma sesion).** Sincronizado `00_ARRANQUE.md`
+  (tests 3024->3118, skips 2->5, nota de deuda del corpus);
+  corregida la autorreferencia del generador `ESTADO_SISTEMA.md`
+  (3 defectos: `datetime.now`, wall-clock de pytest, `%ad` vs `%ct`);
+  quitados campos derivados del HEAD del fichero de estado;
+  corregidas referencias a HEAD en el corpus.
+
+**Commits.** 2b539b6 (00_ARRANQUE), 5e295ac+78bccce+d02e93f (generador),
+b02ec17 (corpus), pendiente (D-06).
+
+**Pendiente.**
+- 5b.X-bis/v3: no abierto. Requiere contrato de patch firmado y
+  cabeza fresca. Checklist en `37_` §7.
+- Tests contractuales: no escritos. Serian verdes certificando v1.
+- S-01-deep (`utils.py`, `instrument_registry.py`,
+  `stock_data_loader.py`): candidato para proxima sesion.
+
+**Proximo paso sugerido.** Abrir 5b.X-bis/v3, o S-01-deep.
+
 ### 2026-10-03 - Cierre Wyckoff (umbral 550) + auditoria S-01 (D-01, D-02)
 
 **Objetivo.** Handoff desde asistente saliente. Cerrar el frente Wyckoff

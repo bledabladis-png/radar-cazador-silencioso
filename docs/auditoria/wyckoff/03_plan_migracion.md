@@ -169,9 +169,11 @@ Esto debilita cualquier lenguaje de "efecto robusto universal".
 
 ### 4.4. Protocolo 5b.X (35 v2) - Estado
 
-    Script validate_wyckoff_sow_5bX.py: CONGELADO (hash CC01A6AB...,
-    commit d324346, seed 20261002, python 3.14).
-    Estado actual: BLOCKED.
+    Script validate_wyckoff_sow_5bX.py: CONGELADO HISTORICAMENTE
+    (hash CC01A6AB..., commit d324346, seed 20261002, python 3.14).
+    [2026-10-03] NO VALIDO como ejecutable v2: ver
+    37_d06_5bX_invalidada.md. Freeze preservado en historia.
+    Estado actual: BLOCKED (datos + contrato sin implementar).
     Umbral normativo: 550 confirmed H20-complete (congelado).
     Guardrail temporal: 12 meses.
     Fuente del umbral: power_analysis_5bX.py (344dae9).

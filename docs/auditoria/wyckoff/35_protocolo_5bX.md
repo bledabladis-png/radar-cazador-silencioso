@@ -140,6 +140,12 @@ Si el hash difiere, la validacion original queda invalidada. Se abre
 5b.X-bis con nuevo protocolo y nuevo hash, declarando la original
 abortada.
 
+**INVALIDADO 2026-10-03 - ver `37_d06_5bX_invalidada.md`.** El hash
+registrado arriba corresponde al script v1, que no implementa este
+protocolo (D-06.1 a D-06.5). 5b.X original queda invalidada como
+paquete ejecutable. Se abre 5b.X-bis / v3. El hash se preserva como
+referencia historica.
+
 ---
 
 ## 3. Definiciones
