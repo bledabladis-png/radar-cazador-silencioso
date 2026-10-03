@@ -813,4 +813,29 @@ Commits: 7f13e6c, 6a60842, 3dc0c1a. Contrato: los tests anclan el
 comportamiento actual, no el declarado. Coherente con "el sistema
 prevalece sobre la documentacion".
 
+### Auditoria linea a linea wyckoff_v1.py (v1.8)
+
+El dictamen externo `38_dictamen_final_5bX_v3.md` (2026-10-03) firmo
+el paquete contractual de 5b.X v3, pero declaro expresamente en su
+seccion 5 que no habia inspeccionado fisicamente el diff
+`d324346..d0874f4`. La firma se emitio sobre la evidencia presentada,
+no como certificacion de inspeccion visual.
+
+Auditoria 2026-10-03 cierra ese hueco sobre
+`indicators/wyckoff_v1.py` (497 LOC, contrato v1.8). Metodo:
+barrido de los 13 patrones de `01b_PATRONES.md` + revision linea a
+linea + cotejo I1-I36 contra tests.
+
+Resultados: 4 BAJA (3 dead code eliminadas, 1 trazabilidad de
+invariantes). Cero ALTA, cero MEDIA. 3 INFO WONT FIX razonado.
+Cotejo invariantes: 36/36 por nombre. Suite sin regresion.
+
+Estado operativo confirmado: el pipeline del 3-oct ejecuto el
+modulo LEGACY, no v1.8. Coherente con el plan de migracion (Frente
+D bloqueado hasta cierre 5b.X, prohibicion vigente del dictamen §3).
+No es bug ni regresion: es el estado esperado del proyecto.
+
+Audit doc: `docs/auditoria/wyckoff/40_auditoria_v18_linea.md`.
+Commits: `036c4ef`, `de7d729`, `6717bf9`.
+
 **Fin del historico.**

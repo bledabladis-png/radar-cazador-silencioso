@@ -44,6 +44,57 @@ Al cerrar una sesion nueva, se anade arriba (las mas recientes primero). Si hay 
 
 ## 3. SESIONES
 
+### 2026-10-03 (noche, tramo 2) - Auditoria linea a linea de wyckoff_v1.py v1.8
+
+**Objetivo.** Verificar el modulo Wyckoff recien reconstruido:
+buen funcionamiento (logica) + buena implementacion (integracion al
+pipeline). Pregunta del usuario: el run automatico del 3-oct puede
+haber ejecutado el modulo sin la logica nueva.
+
+**Hecho.**
+
+- **Fase 0 read-only.** Modulo real: `indicators/wyckoff_v1.py`
+  (18749 B, mtime 02/10/2026 22:50, version v1.8). 497 LOC. 15
+  funciones publicas/privadas. Sin integracion al pipeline.
+- **Confirmacion operativa.** El run del 3-oct 15:08 UTC
+  (37132181161, SHA `b7dd6a3`) ejecuto el modulo LEGACY
+  (`indicators/wyckoff.py`), no v1.8. Los 6 consumidores directos
+  del pipeline importan `from indicators.wyckoff import ...`:
+  `index_leaders.py:4`, `index_phase.py:3`, `sector_breadth.py:11`,
+  `sector_wyckoff_distribution.py:10`, `stock_leader.py:4`,
+  `regimes/sector_regime.py:13`.
+- **No es bug.** El plan de migracion (`03_plan_migracion.md`)
+  tiene el Frente D (migracion de consumidores) BLOQUEADO hasta
+  cierre 5b.X. Prohibicion explicita del dictamen final §3.
+  La migracion requiere 5b.X exitoso, 5c cerrada y dictamen externo.
+- **Auditoria linea a linea.** Cubre el hueco declarado por el
+  propio auditor externo (dictamen 38 §5): "No he inspeccionado
+  fisicamente el diff d324346..d0874f4; por tanto, no voy a afirmar
+  que lo he revisado linea por linea." El dictamen se emitio sobre
+  el paquete contractual, no sobre el codigo.
+- **Metodo.** Barrido de los 13 patrones de `01b_PATRONES.md` +
+  revision linea a linea + cotejo I1-I36 contra tests por nombre.
+- **4 hallazgos BAJA.** 3 dead code (W-01 `C_NORM_DISTR_MIN`, W-02
+  `PREC_STRUCT_NEG`, W-03 `ALL_FASES`), residuos del 2026-10-02.
+  1 trazabilidad (W-04): I16/I17/I18 cubiertas funcionalmente pero
+  no mencionadas por nombre. Cotejo pasa de 33/36 a 36/36.
+- **Cero ALTA, cero MEDIA.** 3 INFO WONT FIX razonado (T_NORM_WEAK
+  duplicado con contrato redundante, fillna de build_ticker_df
+  documentado en contrato §8.3, wyckoff_stability sin consumidor
+  pero API publica en contrato §8.2).
+- **Suite.** 3175 passed + 5 skipped. Sin regresion.
+
+**Commits.** 036c4ef (dead code W-01..W-03), de7d729 (trazabilidad
+I16/I17/I18), 6717bf9 (audit doc `40_auditoria_v18_linea.md`).
+
+**Pendiente.**
+
+- El modulo no tiene trabajo pendiente hasta 5b.X.
+- Pipeline sigue con legacy por diseno.
+
+**Proximo paso sugerido.** Continuar frente Wyckoff si emerge algo,
+o esperar dictamen externo / datos 5b.X.
+
 ### 2026-10-03 (noche) - Frente B: caracterizacion de macro_regime
 
 **Objetivo.** Cubrir el hueco detectado en S-03-deep: 12 ramas del

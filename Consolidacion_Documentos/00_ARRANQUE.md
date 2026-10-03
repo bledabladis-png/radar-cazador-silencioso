@@ -123,6 +123,8 @@ A1-A5, A6, B, C, 6, 7, 8, 9, F: CERRADOS. Detalle tematico en
   M=30, X_ATR=0.25, Y_VOL=1.10. Config SOW a None, fail-closed.
 - Contrato v1.8 (productivo) + v1.9 (candidata). Legacy intacto,
   consumidores sin migrar. Expediente: `docs/auditoria/wyckoff/`.
+- v1.8 auditado linea a linea 2026-10-03 (4 BAJA, 0 ALTA/MEDIA).
+  `40_auditoria_v18_linea.md`. Cotejo I1-I36: 36/36.
 - Secuencia: 5b.3 FAIL -> 5b.4 FAIL -> 5b.4-bis PASS (17/240) ->
   contrato v1.9 -> D-06 -> 5b.X v3 FIRMADO.
 - v3: umbral 550 H20-complete, OOS por t0, escenarios por IC,
