@@ -196,6 +196,25 @@ materiales).
 
 **Commits.** ba91508, f0fad01, 8a640ce.
 
+**Ampliacion (misma sesion, tramo S-03-deep - 6 ficheros).**
+
+- **S-03-deep arrancado.** Alcance: `src/report/` (20 ficheros),
+  `src/pipeline/` (18), `regimes/` (8). Fuera: `indicators/` (frente 7
+  CERRADO) y `src/temporal_contracts/` (A1 CERRADO). El handoff
+  original escribio `src/regimes/` y `src/indicators/` como rutas,
+  pero viven en la raiz del repo, no bajo `src/`.
+- **Primer bloque: ficheros con mtime 2026-10-03 (D-05/D-04).**
+  5 ficheros, 738 LOC. Cero ALTA, cero MEDIA. 1 BAJA corregida
+  (FS-1: mtime sin UTC en `flows_secondary.py`, commit `637d78a`).
+- **Segundo bloque: `iae_section.py`.** 216 LOC, mtime 2026-10-02.
+  Cero ALTA, cero MEDIA. 2 BAJA + 5 INFO, todos WONT FIX razonado.
+- **Total S-03-deep:** 6 ficheros, 954 LOC, ~15% del alcance.
+  Cero ALTA, cero MEDIA, 1 BAJA corregida, 14 INFO/BAJA WONT FIX.
+- **Audit docs:** `docs/auditoria/s03_deep/{validation_gate.md,
+  mte_confirmation.md, d05_d04_block.md, iae_section.md}`.
+
+**Commits.** `dee7edf`, `637d78a`, `f368fa9`, `e869446`, `779a8f5`.
+
 **Pendiente actualizado.**
 - 5b.X v3: ciego hasta 2027 (sin cambios).
 - H5.3: verificado contra codigo 2026-10-03. Pendiente ejecucion cron real 20-nov-2026.
@@ -203,6 +222,7 @@ materiales).
 - S-02-deep: cerrado sin hallazgos materiales en sus 3 ficheros.
 - Cobertura total: `src/report/`, `src/pipeline/` pendientes si se
   quiere exhaustividad.
+- S-03-deep: 6/38 ficheros auditados. Pendiente: src/report/ (20), src/pipeline/ (13 restantes), regimes/ (8).
 
 **Proximo paso sugerido.** Cierre de sesion. S-01-deep + S-02-deep
 completan la auditoria de los 5 ficheros grandes de src/.
