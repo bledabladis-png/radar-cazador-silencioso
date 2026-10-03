@@ -7,6 +7,7 @@ Extraidos de src/report_generator.py (refactor C1, fase C1-6c2).
 import numpy as np
 
 from config.tickers import SECTOR_NAMES, MARKET_TICKERS
+from config.settings import EXPECTED_SECTOR_COUNT
 from src.utils import safe_mean
 from src.report.helpers import _fmt_num
 from src.report.helpers import _fmt_signed
@@ -27,7 +28,7 @@ def render_rankings_sectoriales(sector_results, tactical_scores,
     sep = "|---|--------|-------|----------|------------|---------|-----------|------------|---------------|\n"
     out.append(header)
     out.append(sep)
-    for i, (ticker, name, score, wyckoff) in enumerate(sector_results['ranking'][:11], 1):
+    for i, (ticker, name, score, wyckoff) in enumerate(sector_results['ranking'][:EXPECTED_SECTOR_COUNT], 1):
         t_score = tactical_scores.get(ticker, 0.0) if tactical_scores else 0.0
         s_score = structural_scores.get(ticker, 0.0) if structural_scores else 0.0
         pers_raw = sector_persistence.get(ticker) if sector_persistence else None

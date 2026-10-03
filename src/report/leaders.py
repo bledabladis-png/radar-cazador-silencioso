@@ -4,7 +4,8 @@
 Extraidos de src/report_generator.py (refactor C1, fase C1-6c1).
 """
 
-from config.settings import MOMENTUM_PRICE_WINDOW, MOMENTUM_LONG_WINDOW, TOP_N_CANDIDATES, TOP_N_LEADERS
+from config.settings import (EXPECTED_SECTOR_COUNT, MOMENTUM_PRICE_WINDOW,
+                              MOMENTUM_LONG_WINDOW, TOP_N_CANDIDATES, TOP_N_LEADERS)
 from config.tickers import SECTOR_NAMES
 from src.report.helpers import _fmt_num
 from src.report.helpers import _fmt_signed
@@ -19,7 +20,7 @@ def render_momentum_sectores(sector_price_rank, sector_flow_rank):
     out.append(f"\n## Momentum de Precio - Sectores ({MOMENTUM_PRICE_WINDOW} dias)\n")
     out.append("| # | Sector | Retorno 20d (%) |\n")
     out.append("|---|--------|------------------|\n")
-    for i, (ticker, mom) in enumerate(sector_price_rank[:11], 1):
+    for i, (ticker, mom) in enumerate(sector_price_rank[:EXPECTED_SECTOR_COUNT], 1):
         name = SECTOR_NAMES.get(ticker, ticker)
         out.append(f"| {i} | {name} ({ticker}) | {_fmt_num(mom*100, '{:.2f}%')} |\n")
 
@@ -36,7 +37,7 @@ def render_momentum_sectores(sector_price_rank, sector_flow_rank):
     else:
         out.append("\n## Flujo de Mercado - Sectores (Proxy)\n")
         out.append("*No hay datos disponibles para Flow Proxy.*\n")
-    for i, (ticker, flow) in enumerate(sector_flow_rank[:11], 1):
+    for i, (ticker, flow) in enumerate(sector_flow_rank[:EXPECTED_SECTOR_COUNT], 1):
         name = SECTOR_NAMES.get(ticker, ticker)
         out.append(f"| {i} | {name} ({ticker}) | {_fmt_num(flow, '{:.2f}')} |\n")
     return out
@@ -54,7 +55,7 @@ def render_tactical_leaders(tactical_scores, structural_scores,
     out.append("| # | Sector | Tactical | Structural | Retorno 20d | Flow Proxy (z) | Comm Corr |\n")
     out.append("|---|--------|----------|------------|-------------|----------------|------------|\n")
     tactical_ranking = sorted(tactical_scores.items(), key=lambda x: x[1], reverse=True) if tactical_scores else []
-    for i, (ticker, t_score) in enumerate(tactical_ranking[:11], 1):
+    for i, (ticker, t_score) in enumerate(tactical_ranking[:EXPECTED_SECTOR_COUNT], 1):
         name = SECTOR_NAMES.get(ticker, ticker)
         s_score = structural_scores.get(ticker, 0.0) if structural_scores else 0.0
         mom = next((m for t, m in sector_price_rank if t == ticker), 0)
@@ -111,7 +112,7 @@ def render_structural_ranking(structural_scores, tactical_scores,
     out.append("| # | Sector | Structural | Tactical | Persist | Agreement | Signal Consistency |\n")
     out.append("|---|--------|------------|----------|---------|-----------|------------|\n")
     structural_ranking = sorted(structural_scores.items(), key=lambda x: x[1], reverse=True) if structural_scores else []
-    for i, (ticker, s_score) in enumerate(structural_ranking[:11], 1):
+    for i, (ticker, s_score) in enumerate(structural_ranking[:EXPECTED_SECTOR_COUNT], 1):
         name = SECTOR_NAMES.get(ticker, ticker)
         t_score = tactical_scores.get(ticker, 0.0) if tactical_scores else 0.0
         pers_raw = sector_persistence.get(ticker) if sector_persistence else None
