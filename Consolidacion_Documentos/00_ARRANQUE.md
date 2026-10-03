@@ -75,7 +75,7 @@ Fuente autoritativa: `Consolidacion_Documentos/ESTADO_SISTEMA.md` (regenerado co
 
 Snapshot al cierre del ultimo commit:
 - HEAD: ver ESTADO_SISTEMA.md
-- Tests: 3024 passed + 2 skipped + 0 failed
+- Tests: 3118 passed + 5 skipped + 0 failed
 - Validation Gate: 10/10
 - Working tree: limpio
 - Corpus documental: v3 (Consolidacion_Documentos/00-07, 2026-09-30)
@@ -146,8 +146,12 @@ estado.
   de noviembre 2026.
 - **C2 (920)** - Discrepancia H1-B referida al par Q4-2025 -> Q1-2026
   (congelado). Bloqueado por auditor externo.
-- **2 tests skipped por `--run-network`** en `test_freshness.py`
-  (opt-in, diseno). Mecanismo formal en `conftest.py`. No es deuda.
+- **5 tests skipped** en total:
+  - 2 por `--run-network` en `test_freshness.py` (opt-in, diseno, no deuda).
+  - 3 en `test_wyckoff_v1_contract.py` (219, 240, 245; requieren
+    API `as_of` / precedente estructural, fase 5b pendiente).
+    Deuda de fase, no tecnica.
+  - Mecanismo formal en `conftest.py`.
 
 ### 4.4. Deudas documentadas (sin accion pendiente)
 
@@ -158,9 +162,9 @@ estado.
 - Modulos con cobertura ampliada en D18/D21 (no-deuda): ver
   `04_HISTORICO.md` seccion "Resumen D5-D18".
 
-**Nota de deuda del corpus:** `00_ARRANQUE.md` esta en 13.4 KB, por
-encima del umbral autoimpuesto de 10 KB (`01_METODO.md` seccion 11).
-Pendiente podar mas o ajustar umbral. Frente aparte.
+**Nota de deuda del corpus:** cerrada. `00_ARRANQUE.md` vuelve a estar
+por debajo del umbral autoimpuesto de 10 KB (`01_METODO.md`
+seccion 11). Sin accion pendiente.
 
 ---
 
@@ -179,7 +183,7 @@ Esperado:
 - HEAD = ver Consolidacion_Documentos/ESTADO_SISTEMA.md
 - ahead 0, behind 0
 - working tree limpio (o solo el propio ESTADO_SISTEMA regenerado)
-- 3024 passed + 2 skipped
+- 3118 passed + 5 skipped
 - pyflakes silencio, compileall OK
 
 ---
