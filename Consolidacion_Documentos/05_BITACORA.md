@@ -106,6 +106,41 @@ b02ec17 (corpus), pendiente (D-06).
 
 **Proximo paso sugerido.** S-01-deep, o H5.3 si llega la fecha.
 
+**Ampliacion (misma sesion, tramo S-01-deep).**
+
+- **`src/utils.py` (886 LOC).** D-07 detectado y cerrado (commit 59004c9).
+  `confidence_from_range` con DataFrame devolvia 1.0 cuando una fila
+  tenia 1 solo componente valido (rng=0). Contradecia el docstring
+  ("<2 validos -> 0.5") y la version escalar `_confidence_range_row`.
+  Fix: forzar NaN por fila donde `n_valid < 2`. Impacto real en
+  `regimes/financial_conditions.py:124` (confianza del regimen
+  financiero). 4 tests nuevos. Descartados como no-deuda: D-08-alt
+  (`get_effective_meta` NaT, inalcanzable), D-09-alt
+  (`clean_oil_prices` todos <=0, nulo en produccion).
+- **`src/instrument_registry.py` (886 LOC, solo 4 funciones).**
+  D-08 documental (commit c024c53). `resolve_symbol` tenia 3 casos
+  reales y el docstring describia 1. Aclarado sin cambio de codigo.
+- **`src/stock_data_loader.py` (866 LOC).** D-09 detectado y cerrado
+  (commit 4c852a0). `last_expected_market_date()` sin argumento en
+  las rutas de cache de `stock_data_loader.py:554` y
+  `data_loader.py:280`, cuando la misma funcion ya habia calculado
+  `_expected_session = last_expected_market_date(reference_date)` en
+  linea 529. Divergia en runs post-medianoche (PUBLISH_HOUR). Fix:
+  pasar `reference_date` explicito. Test AST nuevo que prohibe
+  llamadas sin argumento en ambos loaders.
+
+**Commits.** 59004c9 (D-07), c024c53 (D-08), 4c852a0 (D-09).
+
+**Pendiente actualizado.**
+- 5b.X v3: ciego hasta 2027 (sin cambios respecto al tramo anterior).
+- H5.3: cron 13F 20-nov-2026.
+- C2 (920): bloqueado por auditor externo.
+- S-02-deep (si procede): `src/report/`, `src/pipeline/` ya cubiertos;
+  candidatos: `src/data_loader.py` (resto), `src/market_calendar.py`,
+  `src/market_hours.py`.
+
+**Proximo paso sugerido.** S-02-deep o cierre de sesion.
+
 ### 2026-10-03 - Cierre Wyckoff (umbral 550) + auditoria S-01 (D-01, D-02)
 
 **Objetivo.** Handoff desde asistente saliente. Cerrar el frente Wyckoff
