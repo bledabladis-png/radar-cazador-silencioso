@@ -215,6 +215,27 @@ materiales).
 
 **Commits.** `dee7edf`, `637d78a`, `f368fa9`, `e869446`, `779a8f5`.
 
+**Ampliacion (misma sesion, tramo S-03-deep completo + barridos).**
+
+- **S-03-deep cerrado al 100%.** 46/46 ficheros auditados en 3
+  rutas: `src/pipeline/` (18), `regimes/` (8), `src/report/` (20).
+  Cero ALTA, cero MEDIA. 11 BAJA corregidas. 6 BAJA WONT FIX.
+  90+ INFO WONT FIX.
+- **Barrido del patron "11 hardcoded".** 9 ficheros, 27 sitios
+  sustituidos por `EXPECTED_SECTOR_COUNT`.
+- **Barrido de docstrings desalineados.** 5 ficheros corregidos.
+  El barrido AST detecto 2 casos que se escaparon en revision manual.
+- **Contratos mecanicos.** `tests/test_audit_contracts.py` con 6
+  tests (2 contratos + 4 auto-verificaciones).
+- **Lecciones de metodo persistidas en `01_METODO.md`.** 4 reglas
+  nuevas en §7 + 1 en §10. Fichero en 19936 B, cerca del limite
+  de 20 KB.
+
+**Commits (tramo).** `325c714`, `982f135`, `c124674`, `840c355`,
+`7cafe22`, `76b66c5`, `c54d201`, `f340580`, `4e5bf2a`, `b441f36`,
+`aeb7191`, `b3af02c`, `48ef366`, `edb251f`, `a8e3736`, `4757c4f`,
+`f4a227f`, `00f41be`, `22e42b6`.
+
 **Pendiente actualizado.**
 - 5b.X v3: ciego hasta 2027 (sin cambios).
 - H5.3: verificado contra codigo 2026-10-03. Pendiente ejecucion cron real 20-nov-2026.
