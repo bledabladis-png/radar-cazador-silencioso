@@ -149,15 +149,27 @@ b02ec17 (corpus), pendiente (D-06).
 **Commits.** Sin commits funcionales (auditoria sin hallazgos
 materiales).
 
+- **`src/data_loader.py` (377 LOC, resto post D-09).** Limpio.
+  `_ticker_list`, `_is_equity_ticker`, `_filter_non_eod_equity`,
+  `_trim_market_data_to_equity_eod`, `_postprocess_market_data`,
+  `_check_khuerfano`, `download_market_data` verificados sin bug
+  material. D-10-alt (orden no determinista en `list(set(tickers))`)
+  descartado: conjunto total identico, downstream no depende de orden.
+  Fallback `datetime.now()` en L253 documentado.
+
+**Commits.** Sin commits funcionales (auditoria sin hallazgos
+materiales).
+
 **Pendiente actualizado.**
 - 5b.X v3: ciego hasta 2027 (sin cambios).
 - H5.3: cron 13F 20-nov-2026.
 - C2 (920): bloqueado por auditor externo.
-- S-02-deep: cerrado. Pendiente resto de `src/data_loader.py` (post
-  D-09), `src/report/`, `src/pipeline/` si se quiere cobertura total.
+- S-02-deep: cerrado sin hallazgos materiales en sus 3 ficheros.
+- Cobertura total: `src/report/`, `src/pipeline/` pendientes si se
+  quiere exhaustividad.
 
-**Proximo paso sugerido.** `src/data_loader.py` resto, o cierre de
-sesion.
+**Proximo paso sugerido.** Cierre de sesion. S-01-deep + S-02-deep
+completan la auditoria de los 5 ficheros grandes de src/.
 
 ### 2026-10-03 - Cierre Wyckoff (umbral 550) + auditoria S-01 (D-01, D-02)
 
