@@ -261,7 +261,7 @@ Ademas:
 
 El corpus consolidado vive en `Consolidacion_Documentos/` (8 ficheros + snapshot auto-generado). Reglas de actualizacion:
 
-**`00_ARRANQUE.md`:** se actualiza cuando cambia el estado del sistema (HEAD, tests, pendientes) o las reglas duras. Es el unico documento que se pega al arrancar — su tamano importa (<=10 KB).
+**`00_ARRANQUE.md`:** se actualiza cuando cambia el estado del sistema (tests, integridad, pendientes) o las reglas duras. El HEAD se consulta con `git log`; el arranque no lo declara. Es el unico documento que se pega al arrancar — su tamano importa (<=10 KB).
 
 **`01_METODO.md` (este documento):** se actualiza cuando se aprende una leccion nueva. Crece lentamente. Si supera 20 KB, dividir.
 

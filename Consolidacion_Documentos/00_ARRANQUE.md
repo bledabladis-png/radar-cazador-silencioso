@@ -71,10 +71,10 @@ Lo que NUNCA haces:
 
 ## 3. ESTADO DEL SISTEMA
 
-Fuente autoritativa: `Consolidacion_Documentos/ESTADO_SISTEMA.md` (regenerado con `py scripts/generate_estado_sistema.py`).
+Fuente autoritativa de tests, integridad y cobertura: `Consolidacion_Documentos/ESTADO_SISTEMA.md` (regenerado con `py scripts/generate_estado_sistema.py`). El HEAD se consulta con `git log`.
 
 Snapshot al cierre del ultimo commit:
-- HEAD: ver ESTADO_SISTEMA.md
+- HEAD: `git log --oneline -1`
 - Tests: 3118 passed + 5 skipped + 0 failed
 - Validation Gate: 10/10
 - Working tree: limpio
@@ -180,9 +180,9 @@ Pega este bloque al inicio de cada sesion:
     py -m pyflakes . ; py -m compileall . -q
 
 Esperado:
-- HEAD = ver Consolidacion_Documentos/ESTADO_SISTEMA.md
+- HEAD = `git log --oneline -1`
 - ahead 0, behind 0
-- working tree limpio (o solo el propio ESTADO_SISTEMA regenerado)
+- working tree limpio
 - 3118 passed + 5 skipped
 - pyflakes silencio, compileall OK
 
@@ -204,7 +204,7 @@ Corpus consolidado en `Consolidacion_Documentos/`.
 | `06_IAE_P65_P66.md` | Contrato P65 + P66 (L3 cruzada) | Al trabajar en P65/P66 |
 | `07_RUNBOOK.md` | Procedimiento de los crons | Al verificar un cron |
 | `08_AUDITORIA_SECTOR_REGIME.md` | Expediente auditoria sector_regime | Al tocar sector_regime |
-| `ESTADO_SISTEMA.md` | Snapshot auto-generado (no editar) | Fuente autoritativa de HEAD/tests |
+| `ESTADO_SISTEMA.md` | Snapshot auto-generado (no editar) | Fuente autoritativa de tests, integridad, modulos IAE, mappings y evidencia |
 
 `docs/auditoria/wyckoff/` (35+ ficheros) contiene el expediente completo
 del rediseno del modulo Wyckoff. Indice en `docs/auditoria/wyckoff/03_plan_migracion.md`.
@@ -217,7 +217,7 @@ Al recibir este documento, responde exactamente:
 
 > "Confirmado, contexto asimilado."
 
-Estado del sistema que reconoces (breve: HEAD, tests, Gate, version, fase activa).
+Estado del sistema que reconoces (breve: HEAD via `git log --oneline -1`, tests, Gate, version, fase activa).
 
 Pregunta final: "Que hacemos?"
 
