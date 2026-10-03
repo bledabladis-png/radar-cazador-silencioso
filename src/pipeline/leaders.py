@@ -16,9 +16,11 @@ def compute_leaders(df_market, sector_results, reference_date=None, run_id=None,
 
     Returns:
         dict con keys:
-            df_stocks (DataFrame | None), holdings_df (DataFrame | None),
+            df_stocks (DataFrame | None),
+            df_stocks_effective_meta (dict | None),
+            holdings_df (DataFrame | None),
             leader_lines (list | None), leader_df (DataFrame | None),
-            full_metrics_df (DataFrame | None), holiday_mode (bool)
+            full_metrics_df (DataFrame | None)
     """
     leader_lines = None
     df_stocks = None

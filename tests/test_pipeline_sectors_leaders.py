@@ -6,8 +6,9 @@ contrato de retorno, degradacion individual de cada sub-bloque, y la
 logica de HOLIDAY_MODE de leaders.
 
 Nota: leaders.compute_leaders devuelve 6 keys (incluye
-df_stocks_effective_meta), pero el docstring solo menciona 5. Se
-verifica el contrato REAL (6 keys) y se documenta la discrepancia.
+df_stocks_effective_meta). El docstring previo declaraba
+holiday_mode, que no forma parte del return. Corregido
+2026-10-03 (S-03-deep LD-1).
 """
 import sys
 from pathlib import Path
