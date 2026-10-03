@@ -150,9 +150,12 @@ def compute_macro_score(all_signals):
     important_score = weighted_score(all_signals, ['dollar', 'commodities', 'breadth'], IMPORTANT_WEIGHTS)
     contextual_score = weighted_score(all_signals, ['market_strength'], CONTEXTUAL_WEIGHTS)
 
-    # Combinacion de niveles con renormalizacion por fila.
-    # Si un nivel entero no tiene datos en una fecha, su peso se
-    # redistribuye entre los niveles con evidencia disponible.
+    # Combinacion de niveles. Cada nivel se renormaliza por fila
+    # internamente (ver weighted_score). A nivel de nivel NO se
+    # redistribuye peso: si un nivel no tiene evidencia, su serie
+    # vale 0 y el peso W_n sigue en el denominador. Corregido en
+    # auditoria 2026-10-03 (MR-8): el comentario previo describia
+    # una renormalizacion entre niveles que el codigo no hace.
     levels = {
         'critical': critical_score,
         'important': important_score,
