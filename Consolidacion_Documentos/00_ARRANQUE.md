@@ -75,7 +75,7 @@ Fuente autoritativa de tests, integridad y cobertura: `Consolidacion_Documentos/
 
 Snapshot al cierre del ultimo commit:
 - HEAD: `git log --oneline -1`
-- Tests: 3118 passed + 5 skipped + 0 failed
+- Tests: 3142 passed + 5 skipped + 0 failed
 - Validation Gate: 10/10
 - Working tree: limpio
 - Corpus documental: v3 (Consolidacion_Documentos/00-07, 2026-09-30)
@@ -185,7 +185,7 @@ Esperado:
 - HEAD = `git log --oneline -1`
 - ahead 0, behind 0
 - working tree limpio
-- 3118 passed + 5 skipped
+- 3142 passed + 5 skipped
 - pyflakes silencio, compileall OK
 
 ---
