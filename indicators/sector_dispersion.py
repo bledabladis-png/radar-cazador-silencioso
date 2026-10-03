@@ -5,6 +5,8 @@ Mide heterogeneidad cross-sectional de retornos sectoriales 20d.
 No alimenta motores, scores, pesos ni State Machine.
 Consume retornos oficiales desde run.py (sector_price_rank).
 """
+
+from config.settings import EXPECTED_SECTOR_COUNT
 import pandas as pd
 import numpy as np
 
@@ -23,7 +25,7 @@ def compute_sector_dispersion(price_rank_list, reference_date=None):
         return pd.DataFrame()
 
     df = pd.DataFrame(price_rank_list, columns=['ticker','ret']).dropna()
-    n_total = 11
+    n_total = EXPECTED_SECTOR_COUNT
     n_valid = len(df)
     coverage = n_valid / n_total if n_total else 0.0
 

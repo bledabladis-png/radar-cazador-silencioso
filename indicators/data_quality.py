@@ -5,6 +5,8 @@ Describe actualidad y completitud de las principales fuentes.
 No alimenta motores, scores, pesos ni State Machine.
 No crea Data Quality Score.
 """
+
+from config.settings import EXPECTED_SECTOR_COUNT
 import pandas as pd
 import numpy as np
 from datetime import datetime
@@ -273,7 +275,7 @@ def compute_data_quality(reference_date=None):
             if logic == 'sectorial':
                 if date_col is not None:
                     last_df = df[pd.to_datetime(df[date_col], errors='coerce') == last_date]
-                    n_total = 11
+                    n_total = EXPECTED_SECTOR_COUNT
                     n_valid = int(last_df['sector'].nunique())
                     coverage = n_valid / n_total if n_total else np.nan
             elif logic == 'flow_tickers':
@@ -289,13 +291,13 @@ def compute_data_quality(reference_date=None):
             elif logic == 'sectorial_family':
                 if date_col is not None:
                     last_df = df[pd.to_datetime(df[date_col], errors='coerce') == last_date]
-                    n_total = 11
+                    n_total = EXPECTED_SECTOR_COUNT
                     n_valid = int(last_df[last_df['mean_corr'].notna()]['sector'].nunique())
                     coverage = n_valid / n_total if n_total else np.nan
             elif logic == 'sectorial_evidence':
                 if date_col is not None:
                     last_df = df[pd.to_datetime(df[date_col], errors='coerce') == last_date]
-                    n_total = 11
+                    n_total = EXPECTED_SECTOR_COUNT
                     n_valid = int(last_df[last_df['alignment_reading'] != 'EVIDENCIA INSUFICIENTE']['sector'].nunique())
                     coverage = n_valid / n_total if n_total else np.nan
             # else coverage permanece NaN
