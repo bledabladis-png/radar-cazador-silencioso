@@ -408,3 +408,41 @@ def test_download_pasa_df_truncado_al_writer_y_df_intacto_al_caller(
     # El df devuelto al caller NO esta truncado.
     assert out.shape == df_full.shape
 
+
+
+# ============================================================
+# D-09 (2026-10-03): last_expected_market_date sin argumento
+# ============================================================
+
+def test_d09_no_llamadas_sin_argumento():
+    """D-09: en src/stock_data_loader.py y src/data_loader.py,
+    last_expected_market_date debe invocarse con reference_date.
+    Sin argumento, resuelve now() y puede divergir del reference_date
+    propagado por run.py (especialmente en runs post-medianoche o
+    con reference_date historico).
+
+    Invariante de codigo (AST). No ejecuta la funcion, pero captura
+    el contrato: "toda fecha se deriva del dataset o del reference
+    propagado, nunca de now()".
+    """
+    import ast
+    from pathlib import Path as _P
+    root = _P(__file__).resolve().parent.parent
+    targets = [
+        root / "src" / "stock_data_loader.py",
+        root / "src" / "data_loader.py",
+    ]
+    found = []
+    for path in targets:
+        tree = ast.parse(path.read_text(encoding="utf-8-sig"))
+        for node in ast.walk(tree):
+            if (isinstance(node, ast.Call)
+                    and isinstance(node.func, ast.Name)
+                    and node.func.id == "last_expected_market_date"
+                    and not node.args
+                    and not node.keywords):
+                found.append(f"{path.name}:{node.lineno}")
+    assert not found, (
+        f"last_expected_market_date sin argumento en: {found}. "
+        "Debe usar reference_date (D-09)."
+    )

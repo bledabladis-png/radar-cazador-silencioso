@@ -277,7 +277,7 @@ def download_market_data(reference_date=None, run_id=None):
             # el ultimo dia de mercado esperado. Si no, forzar descarga.
             if _df is not None and CACHE_VALIDATE_TRADING_DATE and len(_df) > 0:
                 from src.market_calendar import last_expected_market_date
-                _last_exp = last_expected_market_date()
+                _last_exp = last_expected_market_date(reference_date)
                 _df_last = _df.index[-1].date() if hasattr(_df.index[-1], 'date') else _df.index[-1]
                 if _df_last < _last_exp:
                     print(f'  [CACHE] datos hasta {_df_last}, esperado >= {_last_exp}. Forzando descarga.')
