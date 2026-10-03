@@ -131,15 +131,33 @@ b02ec17 (corpus), pendiente (D-06).
 
 **Commits.** 59004c9 (D-07), c024c53 (D-08), 4c852a0 (D-09).
 
+**Ampliacion (misma sesion, tramo S-02-deep).**
+
+- **`src/market_calendar.py` (203 LOC).** Limpio. Calendario NYSE
+  algoritmico con reglas observed correctas (verificado New Year
+  sabado -> viernes anterior, adyacencia de anos, Juneteenth >=2022,
+  Good Friday). Descartado D-10-alt (PUBLISH_HOUR=23 fijo falla ~1
+  semana/ano en la transicion CET/CEST; limitacion documentada, no
+  bug). Descartado D-10-alt2 (`_is_nyse_holiday` comprueba `d.year-1`
+  innecesariamente; coste de un lookup extra, sin efecto).
+- **`src/market_hours.py` (228 LOC).** Limpio. Fuente unica
+  `config/market_close_regular.csv` con fail-loud al import.
+  `is_session_closed` maneja las 3 ramas (pasado/presente/futuro) sin
+  bug. Descartada redundancia (doble `_validate_market` via
+  `is_trading_session`); no es bug.
+
+**Commits.** Sin commits funcionales (auditoria sin hallazgos
+materiales).
+
 **Pendiente actualizado.**
-- 5b.X v3: ciego hasta 2027 (sin cambios respecto al tramo anterior).
+- 5b.X v3: ciego hasta 2027 (sin cambios).
 - H5.3: cron 13F 20-nov-2026.
 - C2 (920): bloqueado por auditor externo.
-- S-02-deep (si procede): `src/report/`, `src/pipeline/` ya cubiertos;
-  candidatos: `src/data_loader.py` (resto), `src/market_calendar.py`,
-  `src/market_hours.py`.
+- S-02-deep: cerrado. Pendiente resto de `src/data_loader.py` (post
+  D-09), `src/report/`, `src/pipeline/` si se quiere cobertura total.
 
-**Proximo paso sugerido.** S-02-deep o cierre de sesion.
+**Proximo paso sugerido.** `src/data_loader.py` resto, o cierre de
+sesion.
 
 ### 2026-10-03 - Cierre Wyckoff (umbral 550) + auditoria S-01 (D-01, D-02)
 
