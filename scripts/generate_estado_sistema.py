@@ -7,9 +7,11 @@ con:
 
 NO se edita a mano. NO se ejecuta en el pipeline productivo (daily_run.yml).
 
-Determinismo: el fichero es 100% reproducible desde el HEAD actual.
-El campo 'generado_en' usa la fecha del commit HEAD (UTC), no la fecha
-de ejecucion.
+Determinismo: el fichero describe solo hechos del arbol de trabajo.
+No incluye fecha de generacion, HEAD, ahead/behind ni origin/main:
+cualquier campo que dependa del commit que lo contiene queda stale
+al commitear (el commit cambia HEAD). Para cuando se genero, ver
+git log -1 -- Consolidacion_Documentos/ESTADO_SISTEMA.md.
 """
 
 from __future__ import annotations
@@ -17,7 +19,6 @@ from __future__ import annotations
 import hashlib
 import subprocess
 import sys
-from datetime import datetime, timezone
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -188,20 +189,13 @@ def section_evidencia():
         lines.append(f'- `{rel}`: {len(files)} ficheros')
     lines.append('')
     return lines
-def main():
-    head_epoch, _ = run(['git', 'log', '-1', '--format=%ct'])
-    head_utc = datetime.fromtimestamp(
-        int(head_epoch), tz=timezone.utc
-    ).strftime('%Y-%m-%d %H:%M:%S UTC')
-    head_date, _ = run(['git', 'log', '-1', '--format=%ad', '--date=short'])
-    
+def main():    
     header = [
         '# IAE - ESTADO DEL SISTEMA',
         '',
         'Hechos verificables del sistema. Generado por script.',
         '',
-        f'**Generado en:** {head_utc}',
-        '**Snapshot tomado sobre:** commit HEAD de la fecha indicada, al momento de generar',
+        '**Fuente:** arbol de trabajo en HEAD.',
         '**NO editar a mano.** Regenerar con:',
         '',
         '    py scripts/generate_estado_sistema.py',

@@ -2,8 +2,7 @@
 
 Hechos verificables del sistema. Generado por script.
 
-**Generado en:** 2026-10-03 14:59:03 UTC
-**Snapshot tomado sobre:** commit HEAD de la fecha indicada, al momento de generar
+**Fuente:** arbol de trabajo en HEAD.
 **NO editar a mano.** Regenerar con:
 
     py scripts/generate_estado_sistema.py
