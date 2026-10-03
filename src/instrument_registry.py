@@ -760,8 +760,27 @@ def normalize_yahoo_ticker(t):
 
 
 def resolve_symbol(canonical_ticker: str, provider: str):
-    """Devuelve el símbolo específico del proveedor para un ticker canónico.
-    Si no hay mapeo especial, asume que el ticker es el mismo y lo devuelve sin cambios.
+    """Devuelve el simbolo del proveedor para un ticker canonico.
+
+    Tres casos:
+      1. Ticker registrado en INSTRUMENTS y provider presente con valor
+         no-None -> devuelve el symbol especifico del proveedor.
+      2. Ticker registrado en INSTRUMENTS y provider ausente o a None
+         -> devuelve None (el proveedor no soporta ese instrumento,
+         o el mapping no lo contempla).
+      3. Ticker NO registrado en INSTRUMENTS -> devuelve el canonico
+         sin cambios (acciones USA, ETFs y demas instrumentos que
+         comparten simbolo entre proveedores).
+
+    Nota (D-08, 2026-10-03): el caso 2 devuelve None, NO el canonico.
+    Callers deben tratar None como "proveedor no soporta este ticker"
+    (ver backup_providers.get_prices, que salta al siguiente provider).
+
+    Requisito de mantenimiento: si se anade un provider nuevo a
+    backup_providers.self.providers, ese nombre debe anadirse como
+    clave en cada entrada de INSTRUMENTS que ese provider soporte.
+    De lo contrario cae en el caso 2 y el instrumento se salta
+    silenciosamente.
     """
     inst = INSTRUMENTS.get(canonical_ticker)
     if inst:
