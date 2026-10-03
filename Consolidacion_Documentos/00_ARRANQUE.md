@@ -200,6 +200,7 @@ Corpus consolidado en `Consolidacion_Documentos/`.
 | `00_ARRANQUE.md` | Este documento | Siempre, al arrancar |
 | `01_METODO.md` | Metodo de patch, verificacion, PowerShell | Antes de tocar codigo |
 | `01b_PATRONES.md` | Catalogo de patrones de bug + falsos positivos | Al auditar un modulo |
+| `01c_LECCIONES.md` | Lecciones acumuladas | Antes de refactor/auditoria |
 | `02_ARQUITECTURA.md` | Mapa del sistema, contratos, decisiones | Para ubicar modulos |
 | `03_IAE.md` | Subsistema IAE completo | Al trabajar en IAE |
 | `04_HISTORICO.md` | Cronologia tematica de decisiones | Para "por que esta asi" |

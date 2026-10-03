@@ -181,40 +181,11 @@ Cuando se audita codigo linea a linea:
 
 ## 8. LECCIONES ACUMULADAS (A1-A5)
 
-Estas son las reglas que hemos aprendido rompiendo cosas. Se aplican.
+**Movido a `01c_LECCIONES.md`** (2026-10-03, division por tamano).
 
-**Sobre el entorno PowerShell:**
-- **Un here-string no es un archivo.** Si tiene >20 lineas o >5 `$`, va a `_patch_XXX.py` con `[System.IO.File]::WriteAllText`.
-- **`py -c "..."` con comillas dobles anidadas rompe.** Escribir a fichero temporal.
-- **Backticks en here-string se corrompen.** Placeholders + `chr(96)` o escribir a fichero.
-- **No-ASCII en anchors de scripts temporales se corrompe.** `§`, tildes y similares pueden llegar mal del here-string al `_script.py` (PowerShell 5.x + UTF-8 sin BOM). Evitar no-ASCII en anchors: usar ASCII, o `chr()` explicito. Caso observado 2 veces el 2026-09-30 (anchor con seccion 5 de RUNBOOK, y `py -c` con comillas anidadas).
-
-**Sobre Windows / consola:**
-- **`Get-Content` puede mostrar UTF-8 como CP850.** Artefacto de consola, no corrupcion del fichero. 4 falsos positivos de "mojibake" en la sesion por esto. **Verificar SIEMPRE con `read_bytes().decode('utf-8')` + `repr()` antes de declarar mojibake.**
-- **`read_text("utf-8-sig")` + `write_bytes(encode("utf-8"))` consume el BOM.** Para preservar BOM, escribir con `utf-8-sig`.
-- **Para verificar BOM:** `p.read_bytes()[:3] == b'\xef\xbb\xbf'`.
-
-**Sobre tests:**
-- **Un test que asume un comportamiento generico (p.ej. `except Exception`) es un contrato.** Antes de acotar, verificar si el test lo ejercita con excepcion generica. Si lo hace, adaptar la tupla o mantener el generico.
-- **Los tests anclados a numero de linea son fragiles.** Cualquier refactor de whitespace los rompe. Preferir busqueda por estructura.
-- **En el pipeline, `RuntimeError` va SIEMPRE en la tupla de except acotados.** Los tests lo usan como idiom para "fallo simulado en provider/loader/CSV".
-
-**Sobre refactors:**
-- **Antes de unificar una constante, grep de consumidores indirectos via config, no solo literales.** Si un modulo importa `MARKET_TICKERS['sectors']`, no aparece buscando `SECTORS = [...]`. Dos fallos en A3.2 por esto.
-- **Al regenerar un golden, probe de invariancia ANTES.** Si el test no es invariante al cambio, el test esta mal diseñado — se arregla el test, no se regenera a ciegas.
-- **AST check bloqueante para refactors de whitespace.** `ast.dump(ast.parse(antes)) == ast.dump(ast.parse(despues))`. Sin eso, un colapso puede alterar semantica silenciosamente.
-
-**Sobre auditoria:**
-- **"El sistema prevalece sobre la documentacion."** Un comentario que dice una cosa y el codigo otra: manda el codigo.
-- **Un dump de consola no es evidencia.** Para bugs, probes reproducibles. Para encoding, `read_bytes` + `repr`.
-- **Un falso positivo es una leccion.** Documentarlo evita repetirlo.
-
-**Sobre herramientas concretas (2026-09-28/29):**
-- **`ast.parse` solo aplica a Python.** Nunca invocar sobre markdown. `ast.parse(markdown)` lanza SyntaxError. Para validar markdown, no hay parser: se revisa a mano o con regex.
-- **`Write-Host` no soporta `-f` del mismo modo que `Write-Output`.** Para formatear strings en `Write-Host`, usar `[string]::Format(...)` o concatenacion directa. Fallo cometido 3x en la sesion de consolidacion documental.
-- **Here-string de 500+ lineas se descarta silenciosamente al pegar en PowerShell.** Incluso con el patron `WriteAllText` correcto. Sintoma: no se escribe nada, `git status` no muestra el fichero. Solucion: escribir en chunks de ~25-50 lineas (seccion 10). Verificar con `Test-Path` + `(Get-Item $path).Length` tras cada chunk.
-
----
+Las lecciones acumuladas de entorno, tests, refactors y auditoria
+viven en `Consolidacion_Documentos/01c_LECCIONES.md`. Consulta
+obligatoria antes de tocar PowerShell, tests o refactors.
 
 ## 8.5. CATALOGO DE PATRONES DE BUG
 
@@ -277,11 +248,13 @@ Ademas:
 
 ## 11. CORPUS DOCUMENTAL
 
-El corpus consolidado vive en `Consolidacion_Documentos/` (8 ficheros + snapshot auto-generado). Reglas de actualizacion:
+El corpus consolidado vive en `Consolidacion_Documentos/`. Indice vigente en `00_ARRANQUE.md` seccion 6 (+ snapshot auto-generado). Reglas de actualizacion:
 
 **`00_ARRANQUE.md`:** se actualiza cuando cambia el estado del sistema (tests, integridad, pendientes) o las reglas duras. El HEAD se consulta con `git log`; el arranque no lo declara. Es el unico documento que se pega al arrancar — su tamano importa (<=10 KB = 10240 B).
 
 **`01_METODO.md` (este documento):** se actualiza cuando se aprende una leccion nueva. Crece lentamente. Si supera 20 KB, dividir.
+
+**`01c_LECCIONES.md`:** lecciones acumuladas (entorno, tests, refactors, auditoria). Se amplia cuando se aprende una leccion nueva. (2026-10-03, division por tamano de `01_METODO.md`.)
 
 **`02_ARQUITECTURA.md`:** se actualiza cuando cambia la estructura de directorios, los contratos de modulo, las decisiones arquitectonicas vigentes, o el pipeline. Es referencia on-demand. Si supera 40 KB, revisar.
 
