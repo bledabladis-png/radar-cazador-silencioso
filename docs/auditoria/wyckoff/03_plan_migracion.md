@@ -322,7 +322,7 @@ Si emergen durante alguna fase, se abren como sub-proyectos separados.
 | 2026-10-02 | Dictamen externo: 35 v1 + QA 36 auditados | OK |
 | 2026-10-03 | Power analysis 5b.X (344dae9): umbral 550 derivado | OK |
 | 2026-10-03 | Protocolo 5b.X v2 (9ef7497): 550 congelado | OK |
-| 2026-10-03 | Script validador congelado con hash (CC01A6AB) | OK |
+| 2026-10-03 | Script validador congelado con hash (CC01A6AB) | HISTORICO - no valido como ejecutable v2 (D-06, `37_`) |
 | PENDIENTE | 5b.X ejecucion (requiere 550 confirmed H20-complete) | - |
 | PENDIENTE | 5c comparativa legacy vs v1 (post-5b.X) | - |
 | PENDIENTE | 5d migracion 5 consumidores | - |
