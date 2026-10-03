@@ -170,7 +170,8 @@ def compute_breadth_metrics(df_stocks, df_market, holdings_df, reference_date=No
     Returns:
         dict con keys:
             sector_breadth_momentum_df, sector_breadth_df,
-            sector_breadth_is_stale (bool)
+            sector_breadth_is_stale (bool),
+            sector_breadth_stale_reason (str | None)
     """
     sb_df, sb_is_stale, sb_stale_reason = _compute_sector_breadth_health(
         df_stocks, df_market, holdings_df, reference_date=reference_date,

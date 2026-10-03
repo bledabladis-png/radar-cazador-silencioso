@@ -95,6 +95,7 @@ def compute_iae_section(reference_date, run_id, *, official_dir=None):
             catalog_coverage_declared (float): observable/total
             catalog_keys_total (int)
             catalog_keys_observed (int)
+            catalog_coverage_warning (bool | None)
             evidence_class (str): CONTRACTUAL
             stale_reason (str | None): insufficient_quarters | official_list_pending
             error (str | None)
