@@ -7,9 +7,9 @@ con:
 
 NO se edita a mano. NO se ejecuta en el pipeline productivo (daily_run.yml).
 
-Determinismo: el unico campo no reproducible es 'generado_en', que usa la
-fecha del propio commit HEAD. La fecha real de ejecucion se registra como
-metadata de generacion, no como dato del sistema.
+Determinismo: el fichero es 100% reproducible desde el HEAD actual.
+El campo 'generado_en' usa la fecha del commit HEAD (UTC), no la fecha
+de ejecucion.
 """
 
 from __future__ import annotations
@@ -70,7 +70,7 @@ def section_git():
     head_short = head[:7] if head else 'N/D'
     lines.append(f'- **HEAD:** `{head_short}`')
     lines.append(f'- **HEAD completo:** `{head}`')
-    date, _ = run(['git', 'log', '-1', '--format=%ad', '--date=iso'])
+    date, _ = run(['git', 'log', '-1', '--format=%cd', '--date=iso'])
     lines.append(f'- **Fecha commit HEAD:** {date}')
     ahead, _ = run(['git', 'rev-list', '--count', 'origin/main..HEAD'])
     behind, _ = run(['git', 'rev-list', '--count', 'HEAD..origin/main'])
@@ -92,7 +92,10 @@ def section_tests():
         if 'passed' in line and ('failed' in line or 'skipped' in line):
             summary = line.strip()
     if summary:
-        lines.append(f'- **Resumen:** {summary}')
+        # El wall-clock de pytest no es reproducible entre runs.
+        # Nos quedamos solo con los conteos (passed/failed/skipped).
+        summary_counts = summary.split(' in ')[0]
+        lines.append(f'- **Resumen:** {summary_counts}')
     lines.append(f'- **Exit code:** {rc}')
     # Tests fallidos con nombre completo
     failed = [l.strip() for l in out.splitlines() if l.strip().startswith('FAILED ')]
@@ -191,7 +194,10 @@ def section_evidencia():
     lines.append('')
     return lines
 def main():
-    now_utc = datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S UTC')
+    head_epoch, _ = run(['git', 'log', '-1', '--format=%ct'])
+    head_utc = datetime.fromtimestamp(
+        int(head_epoch), tz=timezone.utc
+    ).strftime('%Y-%m-%d %H:%M:%S UTC')
     head_date, _ = run(['git', 'log', '-1', '--format=%ad', '--date=short'])
     
     header = [
@@ -199,7 +205,7 @@ def main():
         '',
         'Hechos verificables del sistema. Generado por script.',
         '',
-        f'**Generado en:** {now_utc}',
+        f'**Generado en:** {head_utc}',
         '**Snapshot tomado sobre:** commit HEAD de la fecha indicada, al momento de generar',
         '**NO editar a mano.** Regenerar con:',
         '',
