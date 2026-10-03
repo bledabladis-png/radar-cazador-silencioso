@@ -12,6 +12,7 @@ import pandas as pd
 from src.utils import append_dedup, writer_observation_date
 from regimes.sector_regime import compute_sector_scores, compute_price_flow_rankings
 from indicators.breadth import compute_breadth
+from config.settings import EXPECTED_SECTOR_COUNT
 
 
 def compute_sectors_base(df_market, temporal_meta=None):
@@ -23,7 +24,7 @@ def compute_sectors_base(df_market, temporal_meta=None):
             sector_price_rank, sector_flow_rank, otros_price_rank, otros_flow_rank,
             sector_dispersion_df,
             sector_corr_summary_df,
-            cross_asset_summary_df, cross_asset_detail_df,
+            cross_asset_summary_df,
             breadth_values
     """
     print("Calculando rankings sectoriales...")
@@ -149,11 +150,11 @@ def compute_sectors_base(df_market, temporal_meta=None):
         '% sobre EMA200': b200.iloc[-1],
         'New Highs (%)': nh.iloc[-1],
         'New Lows (%)': nl.iloc[-1],
-        'EMA20 count': int(round(b20.iloc[-1] * 11)),
-        'EMA50 count': int(round(b50.iloc[-1] * 11)),
-        'EMA200 count': int(round(b200.iloc[-1] * 11)),
-        'New Highs count': int(round(nh.iloc[-1] * 11)),
-        'New Lows count': int(round(nl.iloc[-1] * 11)),
+        'EMA20 count': int(round(b20.iloc[-1] * EXPECTED_SECTOR_COUNT)),
+        'EMA50 count': int(round(b50.iloc[-1] * EXPECTED_SECTOR_COUNT)),
+        'EMA200 count': int(round(b200.iloc[-1] * EXPECTED_SECTOR_COUNT)),
+        'New Highs count': int(round(nh.iloc[-1] * EXPECTED_SECTOR_COUNT)),
+        'New Lows count': int(round(nl.iloc[-1] * EXPECTED_SECTOR_COUNT)),
     }
 
     return {
