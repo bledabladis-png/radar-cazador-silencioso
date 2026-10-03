@@ -75,7 +75,7 @@ Fuente autoritativa de tests, integridad y cobertura: `Consolidacion_Documentos/
 
 Snapshot al cierre del ultimo commit:
 - HEAD: `git log --oneline -1`
-- Tests: 3148 passed + 5 skipped + 0 failed
+- Tests: 3175 passed + 5 skipped + 0 failed
 - Validation Gate: 10/10
 - Working tree: limpio
 - Corpus documental: v3 (Consolidacion_Documentos/00-07, 2026-09-30)
@@ -114,17 +114,8 @@ estado.
 
 ### 4.1. Frentes de auditoria (cerrados)
 
-| Frente | Contenido | Estado |
-|---|---|---|
-| A1-A5 | Nucleo temporal, providers, calculo, reporte, pipeline | CERRADO |
-| A6 | Infra/orquestacion | CERRADO |
-| B | IAE estructural + funcional | CERRADO |
-| C | Auditoria de tests | CERRADO |
-| 6 | IAE funcional avanzado | CERRADO |
-| 7 | `indicators/` funcional (50 ficheros, 6684 LOC) | CERRADO |
-| 8 | Providers (yahoo, router, fred, polygon, cftc, finra, etc.) | CERRADO |
-| 9 | Atomicidad familia 3 (32 sitios) | CERRADO |
-| F | QA interno `wyckoff_v1.py` (F-01 no-deuda, F-02 fix, F-03 cobertura) | CERRADO |
+A1-A5, A6, B, C, 6, 7, 8, 9, F: CERRADOS. Detalle tematico en
+`04_HISTORICO.md`; estado por frente en `ESTADO_SISTEMA.md`.
 
 ### 4.2. Frente Wyckoff (rediseno modulo)
 
@@ -186,7 +177,7 @@ Esperado:
 - HEAD = `git log --oneline -1`
 - ahead 0, behind 0
 - working tree limpio
-- 3148 passed + 5 skipped
+- 3175 passed + 5 skipped
 - pyflakes silencio, compileall OK
 
 ---
