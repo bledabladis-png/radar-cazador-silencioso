@@ -4,7 +4,7 @@
 Extraido de run.py (refactor C2, fase C2-6b).
 """
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 import numpy as np
@@ -84,13 +84,18 @@ def compute_flows_secondary(sector_flow_rank, etf_primary_flow_data,
         try:
             perf_path = Path('outputs/history/qqq_returns_yahoo.csv')
             if perf_path.exists():
-                mtime = datetime.fromtimestamp(perf_path.stat().st_mtime)
+                mtime = datetime.fromtimestamp(perf_path.stat().st_mtime, tz=timezone.utc).replace(tzinfo=None)
                 # D-04 (2026-10-03): normalizar tzinfo. run.py:43 pasa
                 # reference_date tz-aware (ZoneInfo Europe/Madrid). mtime
                 # es naive. Sin replace(tzinfo=None), _ref - mtime lanza
                 # TypeError, capturado por el except de abajo -> skip
                 # silencioso de qqq_performance_data. Mismo patron que
                 # darkpool.py, freshness.py, helpers.py, sentiment.py.
+                # FS-1 (2026-10-03): mtime construido en UTC explicito
+                # antes de quitar tzinfo. datetime.fromtimestamp() sin
+                # tz usa la TZ local del runner (UTC en GitHub Actions,
+                # Madrid en dev). _ref es wall-clock Madrid. Sin fijar
+                # UTC, la diferencia inflaba ~2h en CI.
                 _ref = reference_date.replace(tzinfo=None) if reference_date is not None else datetime.now()
                 age = _ref - mtime
                 if age <= timedelta(days=7):
