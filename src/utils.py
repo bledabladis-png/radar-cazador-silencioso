@@ -331,7 +331,13 @@ def confidence_from_range(scores_df, divisor=2.0):
     valid = scores_df.dropna(axis=1, how='all')
     if valid.shape[1] < 2:
         return pd.Series(0.5, index=scores_df.index)
-    rng = valid.max(axis=1) - valid.min(axis=1)
+    # D-07 (2026-10-03): el chequeo previo es a nivel de columnas; una
+    # fila con <2 componentes validos produce rng=0 -> conf=1.0, en
+    # contradiccion con el contrato ("<2 validos -> 0.5") y con la
+    # version escalar _confidence_range_row. Forzar NaN por fila donde
+    # n_valid < 2 y delegar en fillna(0.5).
+    n_valid = valid.notna().sum(axis=1)
+    rng = (valid.max(axis=1) - valid.min(axis=1)).where(n_valid >= 2)
     return (1.0 - rng / divisor).clip(0, 1).fillna(0.5)
 
 

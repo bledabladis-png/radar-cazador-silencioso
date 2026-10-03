@@ -11,10 +11,12 @@ Cubre:
 - _confidence_range_row: version escalar de confidence_from_range.
 - _try_cleanup: borrado tolerante a fallos.
 """
+import numpy as np
 import pandas as pd
 
 from src.utils import (
     detect_cross_module_conflict,
+    confidence_from_range,
     _confidence_range_row,
     _try_cleanup,
 )
@@ -212,3 +214,61 @@ def test_try_cleanup_multiple_mixto(tmp_path):
 def test_try_cleanup_vacio():
     """Sin argumentos: no lanza."""
     _try_cleanup()
+
+
+# ---------- confidence_from_range (DataFrame path) ----------
+# D-07 (2026-10-03): bug de divergencia con _confidence_range_row.
+# El chequeo previo era a nivel de columnas; por fila, <2 validos
+# producia rng=0 -> conf=1.0 en lugar de 0.5.
+
+def test_confidence_from_range_un_solo_valido_devuelve_05():
+    """Fila con 1 componente valido -> 0.5 (no 1.0)."""
+    df = pd.DataFrame({
+        "a": [1.0, 0.8],
+        "b": [np.nan, 0.6],
+        "c": [np.nan, 0.4],
+    })
+    res = confidence_from_range(df)
+    assert float(res.iloc[0]) == 0.5, f"esperado 0.5, obtenido {res.iloc[0]}"
+
+
+def test_confidence_from_range_dos_validos_comportamiento_intacto():
+    """Fila con 2+ validos: formula 1 - (max-min)/divisor, sin cambios."""
+    df = pd.DataFrame({
+        "a": [1.0, 0.5],
+        "b": [-1.0, 0.5],
+    })
+    res = confidence_from_range(df, divisor=2.0)
+    assert float(res.iloc[0]) == 0.0
+    assert float(res.iloc[1]) == 1.0
+
+
+def test_confidence_from_range_cero_validos_devuelve_05():
+    """Fila con 0 validos -> 0.5."""
+    df = pd.DataFrame({
+        "a": [np.nan, 1.0],
+        "b": [np.nan, 0.5],
+    })
+    res = confidence_from_range(df)
+    assert float(res.iloc[0]) == 0.5
+
+
+def test_confidence_from_range_y_scalar_coinciden():
+    """Coherencia DataFrame path == scalar path para el mismo input.
+
+    Evita que vuelva a existir divergencia semantica entre ambas
+    implementaciones (D-07).
+    """
+    filas = [
+        pd.Series({"a": 1.0, "b": 0.5, "c": 0.0}),
+        pd.Series({"a": 1.0, "b": np.nan, "c": np.nan}),
+        pd.Series({"a": np.nan, "b": np.nan, "c": np.nan}),
+        pd.Series({"a": 1.0, "b": -1.0, "c": np.nan}),
+    ]
+    for i, row in enumerate(filas):
+        df = row.to_frame().T
+        res_df = float(confidence_from_range(df).iloc[0])
+        res_scalar = float(_confidence_range_row(row))
+        assert res_df == res_scalar, (
+            f"fila {i}: DataFrame={res_df} != scalar={res_scalar}"
+        )
