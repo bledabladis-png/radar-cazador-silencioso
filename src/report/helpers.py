@@ -7,6 +7,7 @@ Extraidos de src/report_generator.py (refactor C1).
 import pandas as pd
 
 from config.settings import (
+    EXPECTED_SECTOR_COUNT,
     FRESHNESS_DEFAULT,
     FRESHNESS_FINRA,
     FRESHNESS_FRED,
@@ -122,7 +123,7 @@ def _generate_coverage_table(pcr_data, darkpool_data, sector_results, reference_
     lines.append("### Cobertura de Datos\n")
     lines.append("| Fuente | Cobertura | Antigüedad |\n")
     lines.append("|--------|-----------|------------|\n")
-    sectores_total = 11
+    sectores_total = EXPECTED_SECTOR_COUNT
     sectores_validos = sectores_total
     if sector_results and 'ranking' in sector_results:
         sectores_validos = len([s for s in sector_results['ranking'] if s[1] is not None])
