@@ -131,6 +131,11 @@ Tipos: `fix`, `refactor`, `docs`, `data`, `test`, `chore`, `perf`.
 - **En here-strings PowerShell:** no hay heredoc. Para pasar contenido a Python: escribir a fichero temporal con `[System.IO.File]::WriteAllText`.
 - **`New-Item -ItemType Directory -Force -Path "Consolidacion_Documentos"`:** crear directorio sin fallo si ya existe.
 - **`@' ... '@` dentro de un `$py = @' ... '@`:** no anidar here-strings. Extraer el contenido a una variable previa.
+- **`@(...)` con `[` o `(` sin pareja:** rompe el parser de PS. Usar `list()` / `dict()`, o escribir con `[IO.File]::WriteAllText` desde un array externo.
+- **`[IO.File]::ReadAllBytes` con ruta relativa:** resuelve el CWD de .NET, no el de PS. Usar `Resolve-Path` siempre.
+- **`Select-String | Out-Null; if ($?) { throw }`:** falso positivo. Usar `if (Select-String ...) { throw }`.
+- **`git commit -F` con `Set-Content -Encoding UTF8`:** mete BOM en PS 5.1. Usar `[IO.File]::WriteAllText` + `UTF8Encoding($false)`.
+- **`path.read_text("utf-8")` no elimina BOM:** usar `"utf-8-sig"` cuando se parsea con `ast`.
 
 ---
 
@@ -160,6 +165,12 @@ Cuando se audita codigo linea a linea:
 - **FALSO POSITIVO:** no era hallazgo (artefacto consola, regex del auditor mal, etc.).
 
 **Regla critica:** antes de proponer un patch, verificar que ningun test ancla el comportamiento actual. Si un test falla por el narrowing, el test es el contrato — o se adapta al contrato nuevo, o se mantiene el comportamiento. Nunca ambos.
+
+**Reglas adicionales (2026-10-03):**
+
+- **Alineacion protocolo<->script.** Un script con hash congelado puede no implementar el protocolo que dice congelar. Verificar la alineacion antes de escribir tests contractuales.
+- **Ficheros con autorreferencia.** Un fichero versionado no puede contener campos derivados del commit que lo contiene (bucle). Aplicado a `ESTADO_SISTEMA.md` y manifiestos de freeze.
+- **Tests centinela.** Algunos tests existen para romper si un artefacto cambia (T7/T7b en `test_wyckoff_sow_5bX_contract.py`). Modificar el artefacto produce test rojo, no silencio. No "arreglar" el test sin revisar el contrato.
 
 ---
 
