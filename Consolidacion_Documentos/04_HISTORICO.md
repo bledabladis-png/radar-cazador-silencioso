@@ -838,4 +838,31 @@ No es bug ni regresion: es el estado esperado del proyecto.
 Audit doc: `docs/auditoria/wyckoff/40_auditoria_v18_linea.md`.
 Commits: `036c4ef`, `de7d729`, `6717bf9`.
 
+### Walk-forward historico de SOW (expediente 41)
+
+El plan v3 (§15, cdec27d) introdujo el walk-forward historico como
+metodo de validacion alternativo a 5b.X, con el objetivo de desbloquear
+la migracion del modulo Wyckoff sin esperar 12 meses. El sistema es
+experimental y el legacy no discrimina fases.
+
+Se descargo historico adicional 2015-2021 desde Yahoo (no productivo,
+`data/stock_prices_extended.parquet`) para ampliar la ventana.
+
+Test confirmatorio (split 2021-2023 / 2024-2026): FAIL. La candidata
+SOW no pasa el criterio predefinido. Periodo A sin evidencia, Periodo
+B positivo.
+
+Analisis exploratorio anual (post-hoc, declarado): heterogeneidad
+marcada. 3 anos con IC95 positivo (2020, 2025, 2026), 0 con IC95
+negativo, 9 sin evidencia. Hallazgo etiquetado como HIPOTESIS de
+dependencia de regimen, no como conclusion. Dictamen externo aclara:
+no demuestra "SOW = detector de estres sistemico", no refuta
+overfitting reciente, no autoriza filtro VIX/drawdown ni recalibracion.
+
+Candidata SOW: CONGELADA / NO PRODUCTION. Config `WYCKOFF_SOW_* = None`
+intacto. Fail-closed intacto. 5b.X (2027) sigue siendo juez final.
+
+Expediente: `docs/auditoria/wyckoff/41_walk_forward_sow.md`.
+Commits: cdec27d, 1a08884.
+
 **Fin del historico.**

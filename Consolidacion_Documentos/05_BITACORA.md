@@ -44,6 +44,44 @@ Al cerrar una sesion nueva, se anade arriba (las mas recientes primero). Si hay 
 
 ## 3. SESIONES
 
+### 2026-10-04 - Walk-forward SOW (plan v3) + expediente 41
+
+**Objetivo.** Resolver la pregunta del usuario: validar SOW sin esperar
+12 meses a 5b.X. El sistema es experimental y el legacy no discrimina
+fases (CSV 3-oct: 20/20 RANGE en todos los sectores).
+
+**Hecho.**
+
+- **Plan v3 (cdec27d).** Enmienda al plan v2. Walk-forward historico
+  como metodo alternativo. Split predefinido: A 2021-2023, B 2024-2026.
+  PASS si lower_ci > 0 en ambos.
+- **Descarga historica extendida (no productiva).** Yahoo, 2015-01-02
+  -> 2021-09-23. 10.6s. 306/316 tickers. Fusionada en
+  `data/stock_prices_extended.parquet` (10.7 anos).
+- **Test confirmatorio FAIL.** A: lift -0.037, IC95 [-0.147, +0.077]
+  (cruza 0). B: +0.095, [+0.043, +0.148] (positivo). Criterio plan v3
+  no se cumple.
+- **Analisis exploratorio anual (post-hoc, declarado).** 12 bloques.
+  3 anos positivos (2020 +0.30, 2025 +0.13, 2026 +0.15). 0 negativos.
+  Heterogeneidad temporal marcada.
+- **Dictamen auditor externo.** "Dependencia de regimen" etiquetada
+  como HIPOTESIS, no conclusion. "Refuta overfitting reciente" NO
+  demostrado. 12 bloques = multiple testing. Filtro VIX/drawdown
+  NO autorizado. Migracion core v1.8 SI autorizada, proceso separado.
+- **Expediente 41** (`41_walk_forward_sow.md`). Estructura HECHO /
+  OBSERVACION / HIPOTESIS / NO DEMOSTRADO / PROHIBIDO. Sometido a
+  dictamen externo.
+
+**Commits.** cdec27d (plan v3), 1a08884 (FAIL + scripts + expediente).
+
+**Pendiente.**
+
+- Dictamen externo sobre expediente 41.
+- Migracion core v1.8 (4 fases sin SOW), proceso independiente.
+
+**Proximo paso sugerido.** Esperar dictamen. Arrancar migracion core
+en paralelo.
+
 ### 2026-10-03 (noche, tramo 2) - Auditoria linea a linea de wyckoff_v1.py v1.8
 
 **Objetivo.** Verificar el modulo Wyckoff recien reconstruido:

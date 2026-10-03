@@ -134,6 +134,9 @@ A1-A5, A6, B, C, 6, 7, 8, 9, F: CERRADOS. Detalle tematico en
   `n_confirmed_H20_complete >= 550` post-2026-10-02 (~2027).
   Script y protocolo inmutables (T7/T7b lo verifican).
 - **Bloqueado aparte:** 5c.4, 5d, 5e. **No bloqueado:** 5c, plan v2.
+- **Walk-forward historico (2026-10-04):** test confirmatorio FAIL.
+  Hallazgo exploratorio (heterogeneidad temporal) como hipotesis, no
+  activado. `41_walk_forward_sow.md`. SOW sigue None / fail-closed.
 
 ### 4.3. Pendientes vivos
 
@@ -142,12 +145,9 @@ A1-A5, A6, B, C, 6, 7, 8, 9, F: CERRADOS. Detalle tematico en
   cron real 20-nov-2026 06:17 UTC. Sin accion antes.
 - **C2 (920)** - Discrepancia H1-B referida al par Q4-2025 -> Q1-2026
   (congelado). Bloqueado por auditor externo.
-- **5 tests skipped** en total:
-  - 2 por `--run-network` en `test_freshness.py` (opt-in, diseno, no deuda).
-  - 3 en `test_wyckoff_v1_contract.py` (219, 240, 245; requieren
-    API `as_of` / precedente estructural, fase 5b pendiente).
-    Deuda de fase, no tecnica.
-  - Mecanismo formal en `conftest.py`.
+- **5 tests skipped** (2 opt-in red en `test_freshness.py`, 3 de
+  fase 5b en `test_wyckoff_v1_contract.py`). Mecanismo en
+  `conftest.py`. Diseno, no deuda.
 
 ### 4.4. Deudas documentadas (sin accion pendiente)
 
