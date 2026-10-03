@@ -780,4 +780,37 @@ inspeccion". Los numeros del corpus estaban desfasados: real eran
 Criterio: NO inflar cobertura con mocks del orquestador.
 
 
+### Frente B (caracterizacion de macro_regime)
+
+S-03-deep cerro `regimes/macro_regime.py` como CERRADO SIN CAMBIOS
+(205 LOC, 12 ramas alcanzables, 1 BAJA + 6 INFO WONT FIX). La
+auditoria detecto una asimetria de cobertura: `sector_regime.py`
+tiene golden + 5 suites; `macro_regime.py` solo D13 (confianza) y
+D22 (helpers). Las 12 ramas del regime y `compute_macro_score`
+quedaban sin test directo.
+
+Decision 2026-10-03: caracterizar el modulo con monkeypatch de
+`compute_macro_signals`/`compute_macro_score` en el namespace de
+`regimes.macro_regime`. Descartado df_market sintetico completo
+(20+ columnas fragiles; el autor de `test_macro_regime_confidence.py`
+ya lo rechazo) y descartado refactor-extract (contradice el
+dictamen S-03-deep; requiere contrato firmado). Sin golden: los 12
+casos parametrizados son el contrato.
+
+Resultado: 27 tests (12 ramas + 5 precedencia + 1 contrato de
+ramas inalcanzables sin fundamentales + 5 de score + 4 de cadena de
+fallback de volatilidad). Dos hallazgos cerrados:
+
+- **MR-2** (BAJA, WONT FIX condicional): confirmado con test
+  explicito. Sin `^VIX` ni `vol_regime_score`, `all_signals` sale
+  sin columna `volatility` y `compute_macro_regime` lanzaria
+  KeyError.
+- **MR-8** (BAJA, nuevo): el comentario de `compute_macro_score`
+  afirmaba renormalizacion entre niveles; el codigo solo la hace
+  entre componentes del mismo nivel. Comentario alineado con codigo.
+
+Commits: 7f13e6c, 6a60842, 3dc0c1a. Contrato: los tests anclan el
+comportamiento actual, no el declarado. Coherente con "el sistema
+prevalece sobre la documentacion".
+
 **Fin del historico.**

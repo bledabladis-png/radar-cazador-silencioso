@@ -44,6 +44,59 @@ Al cerrar una sesion nueva, se anade arriba (las mas recientes primero). Si hay 
 
 ## 3. SESIONES
 
+### 2026-10-03 (noche) - Frente B: caracterizacion de macro_regime
+
+**Objetivo.** Cubrir el hueco detectado en S-03-deep: 12 ramas del
+regime y compute_macro_score sin test directo. Frente B, elegido
+sobre C (temporal_contracts) y D (institutional_accumulation).
+
+**Hecho.**
+
+- **Fase 0 read-only.** El handoff del saliente citaba la ruta
+  `src/regimes/macro_regime.py`; no existe. El modulo real esta en
+  `regimes/macro_regime.py` (raiz del repo, paquete hermano de
+  `indicators/`). Consumidor: `src/pipeline/regimes.py`.
+- **Diseno del fixture.** Descartado df_market sintetico completo
+  (20+ columnas mantenidas a mano; ya lo rechazo el autor de
+  `test_macro_regime_confidence.py`). Descartado refactor-extract
+  (cambiaria produccion, contradice dictamen S-03-deep "CERRADO SIN
+  CAMBIOS"). Elegido monkeypatch de `compute_macro_signals` y
+  `compute_macro_score` en el namespace de `regimes.macro_regime`.
+- **Sin golden.** Los 12 casos parametrizados son el contrato; un
+  JSON congelado anadiria fragilidad sin cubrir nada nuevo (no hay
+  ranking ni umbrales acoplados, a diferencia de sector_regime).
+- **27 tests nuevos** en `tests/test_macro_regime_characterization.py`:
+  12 ramas (una por caso), 5 de precedencia (input que satisface 2+
+  ramas, gana la de menor indice), 1 contrato de ramas inalcanzables
+  sin fundamentales (4/5/10 dependen de `last_inflation`; sin
+  `df_macro_manual`, `last_infl=0`), 5 de `compute_macro_score`, 4 de
+  cadena de fallback de `volatility`.
+- **MR-2 cerrado con evidencia.** El ultimo test (sin `^VIX` ni
+  `vol_regime_score`) confirma que `all_signals` sale sin columna
+  `volatility` y `compute_macro_regime` lanzaria KeyError. WONT FIX
+  condicional del audit doc confirmado.
+- **MR-8 detectado y cerrado.** El comentario de `compute_macro_score`
+  afirmaba renormalizacion entre niveles; el codigo solo la hace
+  entre componentes del mismo nivel. Alineado el comentario. Cero
+  cambio de comportamiento.
+- **Fallos intermedios.** Bug propio en `_signals_with` (lista de
+  listas por `[v]*3` sobre una lista); corregido con helper
+  `_signals_const`. Calculo esperado inicial asumia renormalizacion
+  entre niveles que no ocurre; tests reescritos con factor
+  `Wc/(Wc+Wi+Wx)` desde `LEVEL_WEIGHTS`.
+
+**Commits.** 7f13e6c (tests), 6a60842 (audit doc), 3dc0c1a (comentario
+MR-8). Pendiente: este cierre documental.
+
+**Pendiente.**
+
+- Push local-first (3 commits verificados, E2E no aplica).
+- `00_ARRANQUE.md` en 10213 B; margen 27 B. Sin tocar hoy.
+
+**Proximo paso sugerido.** Elegir entre C (temporal_contracts) y D
+(institutional_accumulation). C tiene LOC comparable pero menor
+urgencia (A1 ya cerrado). D es mayor coste y sin sintoma concreto.
+
 ### 2026-10-03 (tarde/noche) - D-06: validador 5b.X invalidado vs protocolo v2
 
 **Objetivo.** Tests contractuales del validador 5b.X (P7 del handoff).

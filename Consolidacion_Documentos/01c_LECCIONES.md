@@ -19,6 +19,13 @@ Estas son las reglas que hemos aprendido rompiendo cosas. Se aplican.
 - **Backticks en here-string se corrompen.** Placeholders + `chr(96)` o escribir a fichero.
 - **No-ASCII en anchors de scripts temporales se corrompe.** `§`, tildes y similares pueden llegar mal del here-string al `_script.py` (PowerShell 5.x + UTF-8 sin BOM). Evitar no-ASCII en anchors: usar ASCII, o `chr()` explicito. Caso observado 2 veces el 2026-09-30 (anchor con seccion 5 de RUNBOOK, y `py -c` con comillas anidadas).
 
+- **Un patch multilinea pegado en consola puede perderse sin error.**
+  Caso 2026-10-03: el patch de MR-8 (5 lineas) desaparecio entre
+  pegar y ejecutar. `git commit` corrio con working tree limpio y el
+  fichero quedo como estaba. Sintoma: silencio, `exit=0` de la nada,
+  `git log` sin el commit esperado. Regla: `git status` justo ANTES
+  de `git commit`, no despues. Si el fichero que esperabas modificar
+  no aparece, abortar el commit y reaplicar el patch.
 **Sobre Windows / consola:**
 - **`Get-Content` puede mostrar UTF-8 como CP850.** Artefacto de consola, no corrupcion del fichero. 4 falsos positivos de "mojibake" en la sesion por esto. **Verificar SIEMPRE con `read_bytes().decode('utf-8')` + `repr()` antes de declarar mojibake.**
 - **`read_text("utf-8-sig")` + `write_bytes(encode("utf-8"))` consume el BOM.** Para preservar BOM, escribir con `utf-8-sig`.
@@ -39,6 +46,13 @@ Estas son las reglas que hemos aprendido rompiendo cosas. Se aplican.
 - **Un dump de consola no es evidencia.** Para bugs, probes reproducibles. Para encoding, `read_bytes` + `repr`.
 - **Un falso positivo es una leccion.** Documentarlo evita repetirlo.
 
+- **Confirmar ruta en disco antes de heredar nombres de un handoff.**
+  Caso 2026-10-03: el handoff citaba `src/regimes/macro_regime.py`;
+  el modulo real esta en `regimes/macro_regime.py` (raiz del repo).
+  Regla: `Get-Item` sobre la ruta antes de disenar el plan; si no
+  existe, `Get-ChildItem -Recurse -Directory` para localizar el
+  paquete. Aplicable a cualquier nombre propio (modulo, fichero,
+  clase) heredado de una sesion previa.
 **Sobre herramientas concretas (2026-09-28/29):**
 - **`ast.parse` solo aplica a Python.** Nunca invocar sobre markdown. `ast.parse(markdown)` lanza SyntaxError. Para validar markdown, no hay parser: se revisa a mano o con regex.
 - **`Write-Host` no soporta `-f` del mismo modo que `Write-Output`.** Para formatear strings en `Write-Host`, usar `[string]::Format(...)` o concatenacion directa. Fallo cometido 3x en la sesion de consolidacion documental.
