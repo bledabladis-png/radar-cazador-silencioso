@@ -65,21 +65,16 @@ def sha256_file(p):
 def loc_file(p):
     return len(p.read_text(encoding='utf-8-sig', errors='replace').splitlines())
 def section_git():
+    # Los campos derivados del HEAD (hash, ahead, behind, origin/main)
+    # son autorreferenciales: el commit que contiene este fichero cambia
+    # HEAD, asi que cualquier valor concreto queda obsoleto al commitear.
+    # Se consultan con `git log` y `git status` al leer. La numeracion
+    # de la seccion se conserva por compatibilidad con referencias
+    # externas a "seccion 1".
     lines = ['## 1. Git', '']
-    head, _ = run(['git', 'rev-parse', 'HEAD'])
-    head_short = head[:7] if head else 'N/D'
-    lines.append(f'- **HEAD:** `{head_short}`')
-    lines.append(f'- **HEAD completo:** `{head}`')
-    date, _ = run(['git', 'log', '-1', '--format=%cd', '--date=iso'])
-    lines.append(f'- **Fecha commit HEAD:** {date}')
-    ahead, _ = run(['git', 'rev-list', '--count', 'origin/main..HEAD'])
-    behind, _ = run(['git', 'rev-list', '--count', 'HEAD..origin/main'])
-    origin, _ = run(['git', 'rev-parse', '--short', 'origin/main'])
-    lines.append(f'- **Ahead:** {ahead}')
-    lines.append(f'- **Behind:** {behind}')
-    lines.append(f'- **origin/main:** `{origin}`')
-    # Nota: el working tree NO se reporta. Por definicion, regenerar este
-    # fichero lo modifica, asi que "MODIFICADO" seria siempre cierto al leerlo.
+    lines.append('Seccion reservada. Los campos derivados del HEAD se consultan')
+    lines.append('con `git log` y `git status`. Este fichero no los incluye')
+    lines.append('porque el commit que lo contiene cambia HEAD.')
     lines.append('')
     return lines
 
@@ -214,7 +209,7 @@ def main():
         'Snapshot regenerable del sistema. Los documentos del corpus',
         'consolidado (Consolidacion_Documentos/00-06) describen su tema;',
         'NO declaran el estado. Este fichero es la fuente autoritativa de',
-        'HEAD, tests e integridad del codigo.',
+        'tests, integridad del codigo, modulos IAE, mappings y evidencia.',
         '',
         '---',
         '',

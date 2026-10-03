@@ -2,7 +2,7 @@
 
 Hechos verificables del sistema. Generado por script.
 
-**Generado en:** 2026-10-03 14:33:05 UTC
+**Generado en:** 2026-10-03 14:59:03 UTC
 **Snapshot tomado sobre:** commit HEAD de la fecha indicada, al momento de generar
 **NO editar a mano.** Regenerar con:
 
@@ -11,18 +11,15 @@ Hechos verificables del sistema. Generado por script.
 Snapshot regenerable del sistema. Los documentos del corpus
 consolidado (Consolidacion_Documentos/00-06) describen su tema;
 NO declaran el estado. Este fichero es la fuente autoritativa de
-HEAD, tests e integridad del codigo.
+tests, integridad del codigo, modulos IAE, mappings y evidencia.
 
 ---
 
 ## 1. Git
 
-- **HEAD:** `2b539b6`
-- **HEAD completo:** `2b539b616ddc83d555f77ecf75a7e88f481e3c7e`
-- **Fecha commit HEAD:** 2026-10-03 16:33:05 +0200
-- **Ahead:** 0
-- **Behind:** 0
-- **origin/main:** `2b539b6`
+Seccion reservada. Los campos derivados del HEAD se consultan
+con `git log` y `git status`. Este fichero no los incluye
+porque el commit que lo contiene cambia HEAD.
 
 ## 2. Tests (pytest real)
 
