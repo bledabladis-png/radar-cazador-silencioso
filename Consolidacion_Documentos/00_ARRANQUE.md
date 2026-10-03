@@ -79,7 +79,7 @@ Snapshot al cierre del ultimo commit:
 - Validation Gate: 10/10
 - Working tree: limpio
 - Corpus documental: v3 (Consolidacion_Documentos/00-07, 2026-09-30)
-- Cobertura configurada: 313/313 tickers
+- Universo USA (stock_prices): 313 tickers (2026-09-22). Ver `04_HISTORICO.md`.
 
 **Fases IAE:**
 - FA-1, FA-2, NIPC, A, B, C, E, F, G: CERRADAS
