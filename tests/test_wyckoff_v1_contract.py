@@ -417,7 +417,7 @@ def test_v12_t1_mas_historia_alcista_sigue_markup():
 
 
 def test_v12_t2_tactical_negativo_no_veta_markup():
-    """Test 2 (dictamen §10): tactical negativo no invalida MARKUP."""
+    """I17: tactical negativo no invalida MARKUP (dictamen §10, Test 2)."""
     from unittest import mock
     n = 500
     dates = pd.date_range("2024-01-01", periods=n, freq="B")
@@ -444,7 +444,7 @@ def test_v12_t2_tactical_negativo_no_veta_markup():
 
 
 def test_v12_t3_tactical_negativo_no_veta_accumulation():
-    """Test 3 (dictamen §10): tactical negativo no invalida ACCUMULATION."""
+    """I17: tactical negativo no invalida ACCUMULATION (dictamen §10, Test 3)."""
     from unittest import mock
     n = 500
     dates = pd.date_range("2024-01-01", periods=n, freq="B")
@@ -703,7 +703,7 @@ def test_distribution_is_reachable(monkeypatch):
 # =====================================================================
 
 def test_distribution_requires_prior_strength():
-    """I26: DISTRIBUTION exige precedente fuerte (struct_max > 0.30).
+    """I18 + I26: DISTRIBUTION exige precedente fuerte (struct_max > 0.30).
 
     Casos:
       1) struct_max <= 0.30 + deterioro actual -> NO DISTRIBUTION.
@@ -765,7 +765,7 @@ def test_distribution_requires_prior_strength():
 
 
 def test_distribution_vs_markdown_boundary():
-    """I27: frontera DISTRIBUTION vs MARKDOWN.
+    """I16 + I27: frontera DISTRIBUTION vs MARKDOWN.
 
     Con struct_max > 0.30:
       - struct_actual en (-0.30, -0.10) y t > -0.30 -> DISTRIBUTION.
