@@ -3,7 +3,7 @@
   "fecha_freeze": "2026-10-03",
   "protocolo": {
     "fichero": "docs/auditoria/wyckoff/35_protocolo_5bX_v3.md",
-    "sha256": "1e634d4d7b5ec8eade30eb38628cb2e177251918982de240527a9238af5c7d9d",
+    "sha256": "d4b570dcfea342fafad20648ccc49b9e491ba0bc2860bb9bf2240a96529218ff",
     "commit_nota": "el commit del protocolo es el commit que contiene este manifiesto; se consulta con git log, no se hardcodea (evita bucle autorreferencial)"
   },
   "script": {
@@ -19,10 +19,12 @@
   "python": "3.14",
   "seed_bootstrap": 20261002,
   "B_bootstrap": 2000,
-  "revision_auditor": "PENDIENTE",
-  "estado": "PENDIENTE_REVISION_AUDITOR",
+  "revision_auditor": "FIRMADO",
+  "estado": "FROZEN",
   "condiciones_firma_auditor": {
     "C1_bootstrap_equivalencia": "CERRADA - test_c1_bootstrap_equivalencia_funcional PASSED",
     "C2_guardrails_no_bloqueantes": "CERRADA - tests_c2a/c2b/c2c PASSED"
-  }
+  },
+  "nota_firma": "La firma del auditor se emite sobre el paquete contractual y la evidencia presentada, no como certificacion de inspeccion visual linea por linea del diff. Ver 38_dictamen_final_5bX_v3.md seccion 5.",
+  "proximo_evento": "Ejecucion unica cuando n_confirmed_H20_complete >= 550. Sin cambios de diseno previos."
 }

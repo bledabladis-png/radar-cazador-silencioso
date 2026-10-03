@@ -372,8 +372,8 @@ que la validacion presente ha sido abortada.**
 - `outputs/audit/wyckoff_5bX_bootstrap.csv` (una fila).
 - `outputs/audit/wyckoff_5bX_summary.json`.
 - `outputs/audit/wyckoff_5bX_run.log`.
-- `docs/auditoria/wyckoff/38_validacion_5bX_resultados.md`.
-  Nota: 36 ocupado por QA precondiciones; 37 ocupado por D-06.
+- `docs/auditoria/wyckoff/39_validacion_5bX_resultados.md`.
+  La validacion real usa el 38.
   La validacion real usa el 38.
 
 **Cambio respecto a v2 (§8):** se elimina `wyckoff_5bX_grid.csv`
@@ -416,7 +416,7 @@ que la validacion presente ha sido abortada.**
     5b.4              FAIL seleccion / diagnostico valido
     5b.4-bis          PASS desarrollo / NO confirmado
     5b.X v2           INVALIDADA (D-06, 2026-10-03)
-    5b.X v3           ESTE DOCUMENTO, pendiente implementacion + datos
+    5b.X v3           FIRMADO / FROZEN (2026-10-03) - pendiente datos
     5c.4, 5d          BLOQUEADAS
     Legacy            INTACTO
     Config SOW        None (fail-closed)
@@ -460,7 +460,7 @@ que la validacion presente ha sido abortada.**
   INVALIDADA como paquete ejecutable. Se abre 5b.X-bis/v3 con nuevo
   script + tests + nuevo hash. Revision de conformidad del auditor
   antes del freeze final. No se reabre candidata ni umbrales.
-- **5b.X v3 (este documento, 2026-10-03):** protocolo que reemplaza
+- **Firma auditor (2026-10-03):** 5b.X v3 FIRMADO / FROZEN. Ver
   operativamente a v2 y preserva su contenido normativo. Anade
   §14 (auditoria de equivalencia), §15 (manifiesto de freeze), §16
   (tests contractuales exigidos).
@@ -560,8 +560,8 @@ En particular, sin cambios en:
 
 ## 15. Manifiesto de freeze
 
-**Estado:** EMITIDO 2026-10-03. Revision de conformidad del auditor
-PENDIENTE.
+**Estado:** FIRMADO 2026-10-03. Revision de conformidad del auditor
+cerrada. Ver `38_dictamen_final_5bX_v3.md`.
 
 El manifiesto de freeze vive en un fichero JSON separado para evitar
 circularidad entre este documento y su propio hash:
