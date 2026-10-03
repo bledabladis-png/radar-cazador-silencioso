@@ -230,7 +230,7 @@ def compute_price_flow_rankings(df):
 
     # Sectores (11 ETFs)
 
-    sectors = ['XLK','XLF','XLV','XLE','XLY','XLP','XLI','XLB','XLU','XLRE','XLC']
+    sectors = MARKET_TICKERS['sectors']
 
     # Otros activos
 
