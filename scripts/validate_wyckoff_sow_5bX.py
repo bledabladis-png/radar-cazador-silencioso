@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """Validacion 5b.X - Out-of-sample de la candidata SOW congelada.
 
-Protocolo: docs/auditoria/wyckoff/35_protocolo_5bX.md
+Protocolo: docs/auditoria/wyckoff/35_protocolo_5bX_v3.md
 Contrato:  docs/auditoria/wyckoff/01_contrato_semantico_v1_9.md
 Dictamen:  33_dictamen_5b4bis_v2.md
 
@@ -52,15 +52,20 @@ CANDIDATA = {
     "Y_VOL": 1.10,
 }
 
-# --- Cutoff: todo dato posterior a esta fecha es candidato a validacion ---
+# --- Cutoff del desarrollo: ultima fecha del historico ---
 CUTOFF_DATE = pd.Timestamp("2026-10-01")
 
-# --- Condiciones previas (protocolo 5b.X seccion 2.1) ---
-# Propuesta sujeta a dictamen. Si el auditor cambia los umbrales, se
-# actualizan aqui antes de ejecutar.
-MIN_MONTHS = 12
-MIN_N_EPISODES = 50
-MIN_N_CONFIRMED = 20
+# --- Universo OOS (protocolo 5b.X v3, seccion 3.1) ---
+# Episodio OOS si y solo si t0 >= OOS_T0_MIN. No: L >= OOS_T0_MIN.
+OOS_T0_MIN = pd.Timestamp("2026-10-02")
+
+# --- Precondiciones (protocolo 5b.X v3, seccion 2) ---
+# Unico umbral normativo (seccion 2.1):
+MIN_N_CONFIRMED_H20 = 550
+
+# Guardrails informativos (seccion 2.3). NO bloquean la ejecucion:
+GUARDRAIL_MIN_MONTHS = 12
+GUARDRAIL_MIN_STARTS_OOS = 50
 
 # --- Rutas de salida ---
 OUT_DIR = ROOT / "outputs" / "audit"
@@ -70,51 +75,55 @@ OUT_LOG = OUT_DIR / "wyckoff_5bX_run.log"
 
 
 def check_preconditions(df, tickers, feats):
-    """Verifica condiciones previas antes de ejecutar la validacion.
+    """Verifica condiciones previas (protocolo 5b.X v3, seccion 2).
+
+    Unico umbral bloqueante: existencia de datos OOS. El umbral 550
+    H20-complete se verifica DESPUES, sobre episodios construidos.
+
+    Guardrails informativos (NO bloquean): meses OOS >=12, candidate
+    starts OOS >=50. Se reportan para contexto (seccion 2.3).
 
     Devuelve dict con:
-        cutoff_date, n_sessions_after, n_months_after,
-        n_tickers_with_data, n_candidate_starts_after, ok (bool),
-        reasons (list).
+        cutoff_date, oos_t0_min, last_data_date,
+        n_sessions_after_cutoff, n_months_after_cutoff,
+        n_candidate_starts_oos, guardrails_ok,
+        min_n_confirmed_h20_required, ok, reasons.
     """
     reasons = []
     idx = df.index
     idx_after = idx[idx > CUTOFF_DATE]
     n_sessions = len(idx_after)
-    # Meses aproximados (20 sesiones/mes)
     n_months = n_sessions / 20.0
 
-    if n_months < MIN_MONTHS:
-        reasons.append(
-            f"meses posteriores al cutoff: {n_months:.1f} < {MIN_MONTHS}"
-        )
     if n_sessions == 0:
         reasons.append("no hay sesiones posteriores al cutoff")
 
-    # Contar candidate starts con L > cutoff
-    n_starts_after = 0
+    # Contar candidate starts OOS: t0 >= OOS_T0_MIN
+    n_starts_oos = 0
     for tk, feat in feats.items():
         starts = find_candidate_starts(feat["candidate"])
         dates = feat["dates"]
         for s in starts:
-            L_idx = int(s) + CANDIDATA["M"]
-            if L_idx < len(dates) and dates[L_idx] > CUTOFF_DATE:
-                n_starts_after += 1
+            t0_idx = int(s)
+            if t0_idx < len(dates) and dates[t0_idx] >= OOS_T0_MIN:
+                n_starts_oos += 1
 
-    if n_starts_after < MIN_N_EPISODES:
-        reasons.append(
-            f"episodios con L > cutoff: {n_starts_after} < {MIN_N_EPISODES}"
-        )
+    guardrails_ok = (
+        n_months >= GUARDRAIL_MIN_MONTHS
+        and n_starts_oos >= GUARDRAIL_MIN_STARTS_OOS
+    )
 
     return {
         "cutoff_date": str(CUTOFF_DATE.date()),
+        "oos_t0_min": str(OOS_T0_MIN.date()),
         "last_data_date": str(idx.max().date()),
         "n_sessions_after_cutoff": n_sessions,
         "n_months_after_cutoff": round(n_months, 1),
-        "n_candidate_starts_with_L_after_cutoff": n_starts_after,
-        "min_months_required": MIN_MONTHS,
-        "min_episodes_required": MIN_N_EPISODES,
-        "min_confirmed_required": MIN_N_CONFIRMED,
+        "n_candidate_starts_oos": n_starts_oos,
+        "guardrail_min_months": GUARDRAIL_MIN_MONTHS,
+        "guardrail_min_starts_oos": GUARDRAIL_MIN_STARTS_OOS,
+        "guardrails_ok": guardrails_ok,
+        "min_n_confirmed_h20_required": MIN_N_CONFIRMED_H20,
         "ok": len(reasons) == 0,
         "reasons": reasons,
     }
@@ -178,47 +187,65 @@ def bootstrap_lift(rows, B=BOOT_B, seed=BOOT_SEED):
 
 
 def classify_scenario(boot):
-    """Clasifica el resultado en uno de los tres escenarios ex-ante
-    (protocolo 5b.X seccion 6.1).
+    """Clasifica el resultado por IC95% (protocolo 5b.X v3, seccion 6.3).
 
-    A: IC95% lower > 0 -> confirma.
-    B: IC95% cruza 0 pero lift_point > 0 -> neutro.
-    C: IC95% cruza 0 y lift_point <= 0 -> refuta.
+    Orden exacto:
+        lower_ci > 0  -> A (validacion confirma)
+        upper_ci < 0  -> C (evidencia contraria)
+        resto (IC cruza 0) -> B (inconcluyente)
+
+    PROHIBIDO usar lift_point como frontera entre B y C (D-06.4).
+    Si el IC no es calculable (boots validos insuficientes), D.
     """
-    lift = boot["lift_point"]
     lower = boot["lower_ci"]
-    if lift is None or lower is None:
-        return "INCONCLUSO", "sin muestra suficiente"
+    upper = boot["upper_ci"]
+    if lower is None or upper is None:
+        return "D", "IC no calculable (boots validos insuficientes)"
     if lower > 0:
         return "A", "IC95% lower > 0: validacion confirma"
-    if lift > 0:
-        return "B", "IC95% cruza 0, lift_point > 0: neutro"
-    return "C", "IC95% cruza 0 y lift_point <= 0: refuta"
+    if upper < 0:
+        return "C", "IC95% upper < 0: evidencia contraria"
+    return "B", "IC95% cruza 0: inconcluyente"
 
 
-def collect_validation_rows(episodes, feats, N, cutoff):
-    """Filtra episodios con L > cutoff y calcula metricas H20.
+def collect_validation_rows(episodes, feats, N, t0_min):
+    """Filtra episodios OOS (t0 >= t0_min) con H20_complete.
 
-    Devuelve lista de (ticker, is_confirmed, m_H20).
+    Protocolo 5b.X v3 secciones 2.1 y 3.1:
+      - OOS: t0_date >= t0_min. No: L_date >= t0_min (D-06.2).
+      - H20_complete: L_idx + 20 < len(dates). No basta con que exista
+        el landmark (D-06.5).
+
+    Devuelve (rows, n_dropped_oos, n_dropped_h20) donde rows es lista
+    de (ticker, is_confirmed, m_H20).
     """
     rows = []
+    n_dropped_oos = 0
+    n_dropped_h20 = 0
     for e in episodes:
-        if e["L_date"] <= cutoff:
+        if e["t0_date"] < t0_min:
+            n_dropped_oos += 1
             continue
-        m = episode_metrics(feats[e["ticker"]], e["L_idx"], N, 20)
+        feat = feats[e["ticker"]]
+        if e["L_idx"] + 20 >= len(feat["struct"]):
+            n_dropped_h20 += 1
+            continue
+        m = episode_metrics(feat, e["L_idx"], N, 20)
         if m is None:
+            n_dropped_h20 += 1
             continue
         rows.append((e["ticker"], e["is_confirmed"], m))
-    return rows
+    return rows, n_dropped_oos, n_dropped_h20
 
 def main():
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     print("== 5b.X - Validacion out-of-sample de la candidata SOW ==")
-    print("Protocolo: 35_protocolo_5bX.md")
+    print("Protocolo: 35_protocolo_5bX_v3.md")
     print("Contrato:  01_contrato_semantico_v1_9.md")
     print(f"Candidata: N={CANDIDATA['N']} M={CANDIDATA['M']} "
           f"X_ATR={CANDIDATA['X_ATR']} Y_VOL={CANDIDATA['Y_VOL']}")
-    print(f"Cutoff:    {CUTOFF_DATE.date()}")
+    print(f"Cutoff desarrollo: {CUTOFF_DATE.date()}")
+    print(f"Universo OOS:      t0 >= {OOS_T0_MIN.date()}")
     print()
 
     df, tickers = load_dataset()
@@ -242,9 +269,11 @@ def main():
         summary = {
             "schema": "wyckoff_5bX_summary_v1",
             "status": "BLOCKED",
-            "protocolo": "35_protocolo_5bX.md",
+            "protocolo": "35_protocolo_5bX_v3.md",
             "contrato": "01_contrato_semantico_v1_9.md",
             "candidata": CANDIDATA,
+            "cutoff_date": str(CUTOFF_DATE.date()),
+            "oos_rule": f"t0 >= {OOS_T0_MIN.date()}",
             "preconditions": precond,
         }
         with open(OUT_SUMMARY, "w", encoding="utf-8") as f:
@@ -265,28 +294,39 @@ def main():
     print(f"Episodios totales: {len(episodes)} "
           f"({time.time()-t0:.1f}s)")
 
-    # Filtrar al bloque de validacion (L > cutoff)
-    rows = collect_validation_rows(episodes, feats, CANDIDATA["N"],
-                                    CUTOFF_DATE)
+    # Filtrar al bloque de validacion (t0 >= OOS_T0_MIN) con H20_complete
+    rows, n_dropped_oos, n_dropped_h20 = collect_validation_rows(
+        episodes, feats, CANDIDATA["N"], OOS_T0_MIN)
     n_conf = sum(1 for _, c, _ in rows if c)
     n_base = len(rows) - n_conf
-    print(f"Episodios de validacion (L > cutoff): {len(rows)} "
+    print(f"Episodios OOS con H20_complete: {len(rows)} "
           f"(conf={n_conf}, base={n_base})")
+    print(f"  descartados por OOS (t0 < {OOS_T0_MIN.date()}): {n_dropped_oos}")
+    print(f"  descartados por H20 censurado: {n_dropped_h20}")
 
-    if n_conf < MIN_N_CONFIRMED:
+    if n_conf < MIN_N_CONFIRMED_H20:
         print()
-        print(f"BLOQUEADO. n_confirmed={n_conf} < {MIN_N_CONFIRMED}.")
+        print(f"BLOQUEADO. n_confirmed_H20_complete={n_conf} < "
+              f"{MIN_N_CONFIRMED_H20}.")
         summary = {
             "schema": "wyckoff_5bX_summary_v1",
-            "status": "BLOCKED_INSUFFICIENT_CONFIRMED",
-            "protocolo": "35_protocolo_5bX.md",
+            "status": "BLOCKED_INSUFFICIENT_H20",
+            "protocolo": "35_protocolo_5bX_v3.md",
             "contrato": "01_contrato_semantico_v1_9.md",
             "candidata": CANDIDATA,
+            "cutoff_date": str(CUTOFF_DATE.date()),
+            "oos_rule": f"t0 >= {OOS_T0_MIN.date()}",
             "preconditions": precond,
             "validation": {
                 "n_episodes": len(rows),
-                "n_confirmed": n_conf,
-                "n_baseline": n_base,
+                "n_confirmed_H20_complete": n_conf,
+                "n_baseline_H20_complete": n_base,
+                "n_dropped_oos": n_dropped_oos,
+                "n_dropped_h20": n_dropped_h20,
+            },
+            "scenario": {
+                "code": "D",
+                "motivo": f"n_confirmed_H20_complete < {MIN_N_CONFIRMED_H20}",
             },
         }
         with open(OUT_SUMMARY, "w", encoding="utf-8") as f:
@@ -328,20 +368,23 @@ def main():
     }]).to_csv(OUT_BOOT, index=False)
     print(f"Bootstrap CSV: {OUT_BOOT}")
 
-    # Summary JSON
+    # Summary JSON (protocolo v3, seccion 8)
     summary = {
         "schema": "wyckoff_5bX_summary_v1",
         "status": "EXECUTED",
-        "protocolo": "35_protocolo_5bX.md",
+        "protocolo": "35_protocolo_5bX_v3.md",
         "contrato": "01_contrato_semantico_v1_9.md",
         "candidata": CANDIDATA,
         "cutoff_date": str(CUTOFF_DATE.date()),
+        "oos_rule": f"t0 >= {OOS_T0_MIN.date()}",
         "preconditions": precond,
         "validation": {
             "n_episodes": len(rows),
-            "n_confirmed": boot["n_confirmed"],
-            "n_baseline": boot["n_baseline"],
+            "n_confirmed_H20_complete": boot["n_confirmed"],
+            "n_baseline_H20_complete": boot["n_baseline"],
             "n_tickers": boot["n_tickers"],
+            "n_dropped_oos": n_dropped_oos,
+            "n_dropped_h20": n_dropped_h20,
         },
         "bootstrap": {
             "B": BOOT_B,
