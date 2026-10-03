@@ -27,6 +27,7 @@ Consumidor: `src/pipeline/regimes.py:12`.
 | MR-5 | INFO | weighted_score | Renormalizacion por fila con fillna(0) + den divisor. Correcto. | WONT FIX. |
 | MR-6 | INFO | L~130 | `from indicators.breadth import compute_breadth` en cuerpo, no cabecera. | WONT FIX: cosmetico. |
 | MR-7 | INFO | L~186 | `all_signals.get('inflation', pd.Series(0))`. DataFrame.get con default. | WONT FIX. |
+| MR-8 | BAJA | compute_macro_score | Comentario decia que la renormalizacion ocurre entre niveles; el codigo solo la hace entre componentes del mismo nivel. | CERRADO 2026-10-03: comentario alineado con codigo. |
 
 ## 3. Contraste con tests
 
@@ -38,10 +39,18 @@ Consumidor: `src/pipeline/regimes.py:12`.
   de los 3 helpers consumidos (credit_risk_signal, compute_breadth,
   fundamental_signals). Incluye D23 (reference_date propagado).
 
-No cubren:
-- Las 12 reglas de precedencia de regime (ninguna tiene test).
-- Los accesos a all_signals['volatility' / 'curve' / 'market_strength'].
-- weighted_score y compute_macro_score.
+Cobertura nueva (2026-10-03, frente B):
+- `tests/test_macro_regime_characterization.py` (27 tests): 12 ramas
+  (una por caso), 5 de precedencia, contrato de ramas inalcanzables
+  sin fundamentales, 5 de compute_macro_score, 4 de cadena de fallback
+  de 'volatility'. El ultimo cierra MR-2 con evidencia.
+- MR-2 confirmado como WONT FIX condicional: sin ^VIX ni
+  vol_regime_score, 'volatility' no existe en all_signals y
+  compute_macro_regime lanzaria KeyError.
+
+No cubren (deliberado, ROI<1):
+- compute_macro_signals end-to-end (df_market real, 20+ columnas).
+- Accesos a all_signals['curve' / 'market_strength'].
 
 Los tests existentes cubren la confianza (D13) y los helpers
 (D22/D23), pero la logica central del regime no tiene cobertura
