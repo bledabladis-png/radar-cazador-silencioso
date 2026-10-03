@@ -144,8 +144,9 @@ estado.
 
 ### 4.3. Pendientes vivos
 
-- **H5.3** - Trazabilidad cron trimestral. Verificacion en cron real
-  de noviembre 2026.
+- **H5.3** - Trazabilidad cron trimestral. Verificada contra codigo
+  2026-10-03 (workflow<->script<->runbook, 9/9). Pendiente ejecucion
+  cron real 20-nov-2026 06:17 UTC. Sin accion antes.
 - **C2 (920)** - Discrepancia H1-B referida al par Q4-2025 -> Q1-2026
   (congelado). Bloqueado por auditor externo.
 - **5 tests skipped** en total:

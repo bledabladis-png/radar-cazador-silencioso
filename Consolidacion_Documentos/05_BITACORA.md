@@ -160,9 +160,45 @@ materiales).
 **Commits.** Sin commits funcionales (auditoria sin hallazgos
 materiales).
 
+**Ampliacion (misma sesion, tramo verificacion de arranque + H5.3).**
+
+- **Verificacion de arranque completa.** HEAD `29f43c1` (posterior
+  al handoff `8661d1a`, avance docs). Suite 3142+5+0, pyflakes y
+  compileall limpios. IAE: 36 ficheros, 8441 LOC; mappings con sha256
+  intactos; evidencia empirica en 8 directorios.
+- **Discrepancia arranque<->fuente, corregida (commit f0fad01).**
+  `00_ARRANQUE.md:82` declaraba "Cobertura configurada: 313/313
+  tickers" sin yaml/constante/test que lo respaldara. `git log -S
+  '313/313'` solo da `073b2fe` (commit fundacional del corpus,
+  2026-09-28). 313 es el universo USA de `stock_prices` observado al
+  2026-09-22 (documentado en `04_HISTORICO.md:498`,
+  `05_BITACORA.md:547`, `scripts/health_check.py:46`). Reformulado
+  a "Universo USA (stock_prices): 313 tickers (2026-09-22).
+  Ver `04_HISTORICO.md`."
+- **Umbral 10 KB explicitado.** `01_METODO.md:264` decia "(<=10 KB)"
+  ambiguo. Fijado a "(<=10 KB = 10240 B)". Arranque queda en 10037 B.
+- **Lecciones 2026-10-03 persistidas** en `01_METODO.md` (commit
+  8a640ce): seccion 6 +5 bullets PowerShell/parsers; seccion 7 +3
+  reglas de auditoria (protocolo<->script, autorreferencia, tests
+  centinela).
+- **H5.3 verificado contra codigo.** Cadena
+  workflow<->script<->runbook alineada 9/9:
+  `update_sec_13f.yml` step `id: source` decide `cron`/`dispatch`
+  por `github.event_name`; pasa `--source` al script;
+  `_write_ingest_trace` escribe JSONL con
+  `{ts, quarter, source, actor, outcome}`; outcome en
+  {INGEST, SKIP}; workflow commitea `ingest_traces.jsonl`. Runbook
+  seccion 2.4.1 describe exactamente ese flujo. Sin desalineaciones.
+  Pendiente unico: ejecucion del cron real 20-nov-2026 06:17 UTC.
+- **`ESTADO_SISTEMA.md` regenerado** (commit ba91508): tests
+  3118 -> 3142, sin campos derivados del HEAD (coherente con la
+  regla de autorreferencia).
+
+**Commits.** ba91508, f0fad01, 8a640ce.
+
 **Pendiente actualizado.**
 - 5b.X v3: ciego hasta 2027 (sin cambios).
-- H5.3: cron 13F 20-nov-2026.
+- H5.3: verificado contra codigo 2026-10-03. Pendiente ejecucion cron real 20-nov-2026.
 - C2 (920): bloqueado por auditor externo.
 - S-02-deep: cerrado sin hallazgos materiales en sus 3 ficheros.
 - Cobertura total: `src/report/`, `src/pipeline/` pendientes si se
