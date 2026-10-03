@@ -66,12 +66,10 @@ STRUCT_WEAK = -0.30                      # struct_score debil
 STRUCT_BASE_LOW = -0.20                  # banda de base: limite inferior
 STRUCT_BASE_HIGH = 0.20                  # banda de base: limite superior
 STRUCT_DETERIORO = -0.10                 # para DISTRIBUTION
-C_NORM_DISTR_MIN = -0.10                 # v1.4: compresion no extrema
 
 # Umbrales de precedente (PROPUESTOS, calibrar Fase 5b)
 PREC_STRUCT_WEAK = -0.20                 # hubo debilidad reciente
 PREC_STRUCT_STRONG = 0.30                # hubo fortaleza reciente
-PREC_STRUCT_NEG = -0.30                  # hubo bajista reciente
 
 # Constantes de fase
 FASE_INSUFFICIENT_DATA = "INSUFFICIENT_DATA"
@@ -80,8 +78,6 @@ FASE_MARKUP = "MARKUP"
 FASE_DISTRIBUTION = "DISTRIBUTION"
 FASE_MARKDOWN = "MARKDOWN"
 FASE_RANGE = "RANGE"
-ALL_FASES = (FASE_ACCUMULATION, FASE_MARKUP, FASE_DISTRIBUTION,
-             FASE_MARKDOWN, FASE_RANGE)
 
 
 # =====================================================================
