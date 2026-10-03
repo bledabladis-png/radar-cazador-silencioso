@@ -171,6 +171,11 @@ Cuando se audita codigo linea a linea:
 - **Alineacion protocolo<->script.** Un script con hash congelado puede no implementar el protocolo que dice congelar. Verificar la alineacion antes de escribir tests contractuales.
 - **Ficheros con autorreferencia.** Un fichero versionado no puede contener campos derivados del commit que lo contiene (bucle). Aplicado a `ESTADO_SISTEMA.md` y manifiestos de freeze.
 - **Tests centinela.** Algunos tests existen para romper si un artefacto cambia (T7/T7b en `test_wyckoff_sow_5bX_contract.py`). Modificar el artefacto produce test rojo, no silencio. No "arreglar" el test sin revisar el contrato.
+- **Auditoria mecanica complementa manual.** Un barrido AST detecto 2 docstrings desalineados que se escaparon en auditoria manual (breadth_metrics, iae_section). Convertidos en tests contractuales (`tests/test_audit_contracts.py`). Ninguna de las dos verificaciones basta por si sola.
+- **Clasificar tras verificar, no antes.** Clasifique F-01/F-02 de `validation_gate.py` como MEDIA antes de leer tests; tras contraste bajaron a BAJA/INFO. Mismo patron con el parser de docstrings: clasifico 5 falsos positivos antes de verificar su tokenizador. Primero la evidencia, luego la severidad.
+- **Regla de estilo: `EXPECTED_SECTOR_COUNT`.** Todo conteo o iteracion sobre los 11 sectores usa `EXPECTED_SECTOR_COUNT` de `config.settings`. Barrido 2026-10-03: 9 ficheros, 27 sitios corregidos. Test mecanico en `tests/test_audit_contracts.py`.
+- **Regla de estilo: docstring `Returns: dict con keys:` alineado.** El bloque debe coincidir con las keys del return real. 5 ficheros corregidos en S-03-deep. Test mecanico en `tests/test_audit_contracts.py`.
+
 
 ---
 
@@ -265,6 +270,8 @@ Regla: **ver la salida del patch ANTES de la verificacion.** Un patch multi-anch
 Ademas:
 - **Si el `$py` here-string tiene >50 lineas, escribirlo en chunks.** Un here-string grande puede descartarse silenciosamente al pegar. Verificar con `Test-Path $tmp` + `(Get-Item $tmp).Length` tras escribir.
 - **Verificar la salida del patch inmediatamente.** Antes de cualquier otra accion. Si no aparece `[OK]`, el fichero no se toco.
+- **Verificar unicidad del ancla antes de escribir el script.** Si el anchor del `.Replace()` aparece N>1 veces, el script aborta antes de escribir. Caso observado 2026-10-03 (H5.3): `- H5.3: cron 13F 20-nov-2026.` aparecia 2 veces. Sin dano. La unicidad se verifica al disenar el script, no solo al ejecutarlo.
+
 
 ---
 
