@@ -23,7 +23,7 @@ def _compute_pcr():
             print(f"  PCR Total: {pcr_data['total_pcr']:.2f} (Z: {pcr_data['z_score']:.2f}, Estado: {pcr_data['state']})")
         elif pcr_data:
             print(f"  OMS STATUS: {pcr_data['status']}")
-    except (KeyError, ValueError, TypeError, IndexError, AttributeError, OSError, RuntimeError, pd.errors.ParserError) as e:
+    except (ImportError, KeyError, ValueError, TypeError, IndexError, AttributeError, OSError, RuntimeError, pd.errors.ParserError) as e:
         print(f"  Modulo PCR omitido: {e}")
     return pcr_data
 
@@ -39,7 +39,7 @@ def _compute_darkpool(df_market=None, df_stocks=None):
                   f"({darkpool_data['n_tickers_ats']}/{darkpool_data['n_tickers_total']} tickers)")
         else:
             print("  Dark Pools: no disponible")
-    except (KeyError, ValueError, TypeError, IndexError, AttributeError, OSError, RuntimeError, pd.errors.ParserError) as e:
+    except (ImportError, KeyError, ValueError, TypeError, IndexError, AttributeError, OSError, RuntimeError, pd.errors.ParserError) as e:
         print(f"  Modulo Dark Pools omitido: {e}")
     return darkpool_data
 
@@ -66,7 +66,7 @@ def _compute_vol_structure(df_market, pcr_data):
             print("  Volatilidad estructural calculada.")
         else:
             vol_structure_df = None
-    except (KeyError, ValueError, TypeError, IndexError, AttributeError, OSError, RuntimeError, pd.errors.ParserError) as e:
+    except (ImportError, KeyError, ValueError, TypeError, IndexError, AttributeError, OSError, RuntimeError, pd.errors.ParserError) as e:
         print(f"  Volatilidad estructural omitida: {e}")
         vol_structure_df = None
     return vol_structure_df
@@ -88,7 +88,7 @@ def _compute_data_quality(reference_date=None):
             print("  Calidad de datos calculada.")
         else:
             data_quality_df = None
-    except (KeyError, ValueError, TypeError, IndexError, AttributeError, OSError, RuntimeError, pd.errors.ParserError) as e:
+    except (ImportError, KeyError, ValueError, TypeError, IndexError, AttributeError, OSError, RuntimeError, pd.errors.ParserError) as e:
         print(f"  Calidad de datos omitida: {e}")
         data_quality_df = None
     return data_quality_df
