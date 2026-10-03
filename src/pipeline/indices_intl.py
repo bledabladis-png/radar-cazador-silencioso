@@ -5,6 +5,7 @@ Extraido de run.py (refactor C2, fase C2-10b).
 """
 
 import pandas as pd
+from pathlib import Path
 
 from src.stock_data_loader import download_stock_prices
 from indicators.index_phase import compute_index_phases
@@ -16,7 +17,7 @@ def compute_indices_intl(df_market, reference_date=None, run_id=None, temporal_m
 
     Returns:
         dict con keys:
-            index_phases, index_data, index_leaders
+            index_phases, index_leaders
     """
     print("Calculando fases Wyckoff para indices internacionales...")
     # A5-09 (2026-09-28): compute_index_phases sin guard tumbaba el
@@ -64,9 +65,11 @@ def compute_indices_intl(df_market, reference_date=None, run_id=None, temporal_m
                 df_copy['indice'] = nombre
                 all_leaders.append(df_copy)
             if all_leaders:
-                pd.concat(all_leaders, ignore_index=True).to_csv(
-                    'outputs/report/analisis_lideres_internacionales.csv', index=False
-                )
+                csv_path = Path('outputs/report/analisis_lideres_internacionales.csv')
+                csv_path.parent.mkdir(parents=True, exist_ok=True)
+                _tmp_csv = csv_path.with_suffix(csv_path.suffix + '.tmp')
+                pd.concat(all_leaders, ignore_index=True).to_csv(_tmp_csv, index=False)
+                _tmp_csv.replace(csv_path)
                 print("  CSV de lideres internacionales generado.")
         except (OSError, ValueError, KeyError, TypeError, RuntimeError, pd.errors.ParserError) as e:
             print(f"  Error al generar CSV internacional: {e}")
