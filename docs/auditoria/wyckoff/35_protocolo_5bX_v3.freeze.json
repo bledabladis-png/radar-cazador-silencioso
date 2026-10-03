@@ -1,0 +1,23 @@
+{
+  "schema": "wyckoff_5bX_freeze_v1",
+  "fecha_freeze": "2026-10-03",
+  "protocolo": {
+    "fichero": "docs/auditoria/wyckoff/35_protocolo_5bX_v3.md",
+    "sha256": "1e634d4d7b5ec8eade30eb38628cb2e177251918982de240527a9238af5c7d9d",
+    "commit_nota": "el commit del protocolo es el commit que contiene este manifiesto; se consulta con git log, no se hardcodea (evita bucle autorreferencial)"
+  },
+  "script": {
+    "fichero": "scripts/validate_wyckoff_sow_5bX.py",
+    "sha256": "2B1300740360E2D2C7E73A50DBB08A9DCC4E04080990D2B11B1C8E03FE7BD8CD",
+    "commit": "d0874f4"
+  },
+  "tests_contractuales": {
+    "fichero": "tests/test_wyckoff_sow_5bX_contract.py",
+    "commit": "0fd53fa"
+  },
+  "python": "3.14",
+  "seed_bootstrap": 20261002,
+  "B_bootstrap": 2000,
+  "revision_auditor": "PENDIENTE",
+  "estado": "PENDIENTE_REVISION_AUDITOR"
+}

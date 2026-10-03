@@ -196,16 +196,45 @@ def test_t5_escenario_c():
 # T7 - Verificacion de hash pre-ejecucion
 # =====================================================================
 
-def test_t7_hash_freeze_pendiente():
-    """Manifiesto de freeze (§15 v3) PENDIENTE.
+def test_t7_hash_freeze_script_coincide():
+    """El sha256 del script coincide con el manifiesto de freeze.
 
-    El test se activa cuando el manifiesto exista: comparar sha256
-    del script con el registrado en el protocolo v3 §15. Actualmente
-    el manifiesto esta sin rellenar (Fase B-3 pendiente).
+    §2.5 del v3: la ejecucion aborta si el hash del script difiere
+    del congelado. Este test verifica la coherencia. Si el script se
+    modifica sin actualizar el manifiesto, este test falla: esa es la
+    senal de que el freeze queda invalidado.
     """
-    pytest.skip(
-        "Manifiesto de freeze PENDIENTE (35_protocolo_5bX_v3.md §15). "
-        "Se activara en Fase B-3 tras revision de conformidad."
+    import hashlib
+    import json
+    mf_path = (ROOT / "docs" / "auditoria" / "wyckoff"
+               / "35_protocolo_5bX_v3.freeze.json")
+    if not mf_path.exists():
+        pytest.skip("Manifiesto de freeze aun no existe")
+    mf = json.loads(mf_path.read_text(encoding="utf-8"))
+    script_path = ROOT / "scripts" / "validate_wyckoff_sow_5bX.py"
+    h = hashlib.sha256(script_path.read_bytes()).hexdigest()
+    assert h == mf["script"]["sha256"].lower(), (
+        "sha256 del script no coincide con el manifiesto\n"
+        f"  script:     {h}\n"
+        f"  manifiesto: {mf['script']['sha256']}"
+    )
+
+
+def test_t7b_revision_auditor_valor_valido():
+    """El campo revision_auditor solo admite PENDIENTE o FIRMADO.
+
+    §15 del v3: la validacion no se ejecuta hasta que sea FIRMADO.
+    Este test garantiza que no se cambia silenciosamente a otro valor
+    ni se olvida actualizar el manifiesto.
+    """
+    import json
+    mf_path = (ROOT / "docs" / "auditoria" / "wyckoff"
+               / "35_protocolo_5bX_v3.freeze.json")
+    if not mf_path.exists():
+        pytest.skip("Manifiesto de freeze aun no existe")
+    mf = json.loads(mf_path.read_text(encoding="utf-8"))
+    assert mf["revision_auditor"] in ("PENDIENTE", "FIRMADO"), (
+        f"valor inesperado: {mf['revision_auditor']}"
     )
 
 

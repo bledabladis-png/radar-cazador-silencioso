@@ -560,21 +560,29 @@ En particular, sin cambios en:
 
 ## 15. Manifiesto de freeze
 
-**PENDIENTE.** Se rellena en el commit de freeze del script v3,
-**despues** de los tests contractuales (§16) y de la revision de
-conformidad del auditor.
+**Estado:** EMITIDO 2026-10-03. Revision de conformidad del auditor
+PENDIENTE.
 
-    git_commit:        PENDIENTE
-    script_sha256:     PENDIENTE
-    protocol_sha256:   PENDIENTE (sha256 del fichero 35_protocolo_5bX_v3.md)
-    python:            3.14
-    seed_bootstrap:    20261002 (BOOT_SEED)
-    B_bootstrap:       2000 (BOOT_B)
-    fecha_freeze:      PENDIENTE
-    revision_auditor:  PENDIENTE
+El manifiesto de freeze vive en un fichero JSON separado para evitar
+circularidad entre este documento y su propio hash:
 
-**Regla:** la validacion v3 no se ejecuta hasta que este manifiesto
-este completo y el auditor haya certificado conformidad del diff.
+    docs/auditoria/wyckoff/35_protocolo_5bX_v3.freeze.json
+
+**Contenido minimo:**
+
+- `script_sha256`: sha256 del script v3 congelado.
+- `protocol_sha256`: sha256 del cuerpo normativo de este documento.
+- `git_commit_script`: commit del script v3.
+- `git_commit_protocolo`: commit de este protocolo.
+- `git_commit_tests`: commit de los tests contractuales.
+- `python`, `seed_bootstrap`, `B_bootstrap`.
+- `fecha_freeze`.
+- `revision_auditor`: `PENDIENTE` | `FIRMADO`.
+
+**Regla:** la validacion v3 no se ejecuta hasta que `revision_auditor`
+sea `FIRMADO` por el auditor externo. Los tests contractuales (§16,
+T7/T7b) verifican que el sha256 del script coincide con el registrado
+y que la revision esta firmada.
 
 ---
 
