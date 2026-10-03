@@ -1,11 +1,16 @@
-# PLAN DE MIGRACION - Modulo Wyckoff v1 (v2)
+# PLAN DE MIGRACION - Modulo Wyckoff v1 (v3)
 
 **Hoja de ruta actualizada del proyecto.**
-**Fecha:** 2026-10-02 (madrugada del 3-oct).
-**Supersede:** 03_plan_migracion.md v1 (2026-10-02 19:14), que reflejaba
-el estado del proyecto antes de 5b.2/5b.3/5b.4/5b.4-bis/QA/contrato v1.9.
+**Fecha:** 2026-10-04.
+**Supersede:** v2 (2026-10-02) y v1 (2026-10-02 19:14).
 **Referencia normativa:** contrato v1.9 + protocolo 5b.X + dictamenes
 externos 24, 26, 29, 33.
+**Cambio v2 -> v3:** se anade el walk-forward historico como metodo
+de validacion alternativo de SOW (§15). Motivo: el sistema es
+experimental, el legacy no discrimina fases (el CSV del 3-oct
+muestra 20/20 RANGE en todos los sectores), y bloquear la migracion
+12 meses por esperar 5b.X deja el pipeline sin mejora durante un
+ano. El walk-forward no sustituye a 5b.X; lo complementa.
 
 ---
 
@@ -47,7 +52,8 @@ Ver `01_contrato_semantico_v1_8.md` y `01_contrato_semantico_v1_9.md`.
     Frente B - SOW (Sign of Weakness, confirmador de DISTRIBUTION)
         Estado: PASS DESARROLLO / NO CONFIRMADO.
         Candidata: N=60, M=30, X_ATR=0.25, Y_VOL=1.10.
-        Pendiente: 5b.X (validacion out-of-sample).
+        Pendiente: 5b.X (validacion out-of-sample, 2027).
+        Metodo alternativo: walk-forward historico (§15).
 
     Frente C - Comparativa legacy vs v1
         Estado: PRIMERA PASADA con v1.8 (824ef72). Documento
@@ -56,8 +62,11 @@ Ver `01_contrato_semantico_v1_8.md` y `01_contrato_semantico_v1_9.md`.
         Pendiente: version v2 definitiva post-5b.X.
 
     Frente D - Migracion de consumidores
-        Estado: BLOQUEADO.
-        Desbloqueo: tras 5b.X exitoso + cierre 5c.
+        Estado: BLOQUEADO hasta cierre 5c.
+        Desbloqueo: tras cierre 5c + decision sobre SOW (§15).
+        Nota: la migracion del core de v1.8 (MARKUP/ACCUMULATION/
+        RANGE/MARKDOWN) no depende de SOW. Solo la activacion de
+        DISTRIBUTION depende del resultado de §15 / 5b.X.
         Directos (5): index_phase, sector_wyckoff_distribution,
         sector_breadth, stock_leader, index_leaders.
         Indirectos (4, leen columnas derivadas): evidence_matrix,
@@ -108,26 +117,35 @@ Ningun consumidor del pipeline usa `wyckoff_v1.py`. Todos siguen con
 
 ## 3. Orden estricto de desbloqueo
 
-    Frentes A-F
+    [A] Nucleo v1    ------------ IMPLEMENTADO
+    [F] QA interno   ------------ CERRADO
         |
         v
-    [A] Nucleo v1    ------------ IMPLEMENTADO
-    [F] QA interno   ------------ PARCIAL (SOW si, resto pendiente)
-    [B] 5b.X         ------------ BLOQUEADO hasta datos
+    [B'] Walk-forward historico (§15) --- validacion SOW temprana
         |
-        v (si 5b.X exitoso)
-    [C] 5c comparativa legacy vs v1 con contrato v1.9
+        +--- PASS ---> activar SOW (v1.8 pasa a v1.9 completa)
         |
-        v (si 5c cierra)
-    [D] 5d migracion 5 consumidores
+        +--- FAIL ---> SOW descartado (v1.8 sin SOW)
         |
-        v (si 5d cierra + 1 run CI verde)
+        v
+    [C] 5c comparativa legacy vs v1 (core + SOW si se activo)
+        |
+        v
+    [D] 5d migracion 9 consumidores (5 directos + 4 indirectos)
+        |
+        v
     [E] 5e retirada legacy
+        |
+        v
+    [B] 5b.X (2027, confirmacion cruzada del SOW)
 
-**No hay atajos.** Cada frontera requiere dictamen externo antes de
-proceder. En particular:
+**Cambio v2 -> v3:** el nodo [B] 5b.X deja de bloquear la migracion.
+Se ejecuta en 2027 como confirmacion cruzada. Si refuta el resultado
+de [B'], se reabre la decision sobre SOW.
 
-- No activar parametros SOW en config hasta 5b.X exitoso.
+Reglas vigentes:
+
+- No activar parametros SOW sin [B'] PASS + dictamen externo.
 - No migrar consumidores hasta que 5c cierre.
 - No retirar legacy hasta que 5d cierre + 1 run CI estable.
 
@@ -253,10 +271,17 @@ Revalidar con E2E + snapshot pre/post en cada migracion:
 
 **Precondiciones:**
 
-- 5b.X exitoso (contrato v1.9 confirmado).
 - 5c cerrada.
+- Decision sobre SOW tomada (§15): PASS (activar) o FAIL (descartar).
 - Dictamen externo autorizando migracion.
 - Tests de contrato pasando sobre `wyckoff_v1.py`.
+
+**Alcance segun resultado de §15:**
+
+- Si SOW activado: migrar con v1.9 completa (5 fases incluyendo
+  DISTRIBUTION).
+- Si SOW descartado: migrar con v1.8-core (4 fases: MARKUP,
+  ACCUMULATION, RANGE, MARKDOWN).
 
 ---
 
@@ -420,4 +445,85 @@ exitoso y el auditor lo autoriza.**
 
 ---
 
-**Fin del plan de migracion v2.**
+## 15. Walk-forward historico de SOW (enmienda v3, 2026-10-04)
+
+### 15.1. Motivo
+
+El plan v2 bloqueaba la activacion de SOW hasta 5b.X (2027), que
+requiere 550 confirmed H20-complete con t0 >= 2026-10-02 + 12 meses
+de sesiones post-cutoff. El bloqueo tenia fundamento metodologico
+(evitar autoengano por reutilizar in-sample), pero dejaba el pipeline
+produciendo outputs con un modulo legacy que clasifica casi todo
+como RANGE durante un ano.
+
+El sistema es experimental. El legacy `indicators/wyckoff.py` no
+discrimina fases utiles. Mantenerlo un ano mas por coherencia
+metodologica estricta no aporta valor.
+
+Se anade un metodo de validacion alternativo: **walk-forward
+historico**.
+
+### 15.2. Metodo
+
+**Corte:** mitad de la ventana historica disponible (2021-10-01 a
+2026-10-01). Bloques:
+
+    Periodo A (in-sample del walk-forward): 2021-10-01 -> 2023-12-31
+    Periodo B (out-of-sample del walk-forward): 2024-01-01 -> 2026-10-01
+
+**Calibracion:** ejecutar el calibrador sobre Periodo A SOLO.
+Obtener candidata C_A = (N, M, X_ATR, Y_VOL) que pasa D1-D3.
+
+**Validacion:** ejecutar C_A sobre Periodo B con la misma metodologia
+de bootstrap y criterios. Medir lift_H20 + IC95%.
+
+**Comparacion adicional:** ejecutar la candidata congelada actual
+(N=60, M=30, X_ATR=0.25, Y_VOL=1.10) sobre Periodo B. Distingue:
+
+  1. ¿La calibracion en A produce candidata parecida?
+  2. ¿La candidata congelada funciona en B sin haberlo visto?
+
+**Robustez:** small-grid alrededor de C_A sobre B
+(N +/- 5, X_ATR +/- 0.05, Y_VOL +/- 0.10) para evaluar si el lift
+aparece solo en el punto exacto o en un entorno.
+
+### 15.3. Criterios de exito
+
+- **PASS si:** candidata C_A o candidata congelada produce lift_H20
+  con IC95% cuyo limite inferior > 0 sobre Periodo B. Ademas, >=2/3
+  de sub-bloques de B con lift > 0 (D3 analogo).
+- **FAIL si:** IC95% cruza 0, o lift < 0, o D3 no se cumple.
+- **INSUFICIENTE si:** n_confirmed < 20 en B.
+
+### 15.4. Consecuencias
+
+- **PASS:** SOW se activa en config (4 parametros). v1.8 pasa a
+  clasificar DISTRIBUTION. Se procede a migracion completa.
+- **FAIL:** SOW se descarta como confirmador. Se activa solo el
+  core de v1.8 (4 fases sin SOW). v1.9 queda como referencia
+  historica.
+- **INSUFICIENTE:** extender el periodo A o el periodo B, o
+  mantener 5b.X como unico criterio.
+
+### 15.5. Relacion con 5b.X
+
+- 5b.X oficial sigue programado (2027). El walk-forward **no lo
+  sustituye**; sirve como decision operativa temprana.
+- Si ambos pasan: refuerzo mutuo.
+- Si walk-forward pasa y 5b.X refuta: discrepancia informativa.
+  Se revisa el contrato del SOW con el auditor externo.
+- Si walk-forward falla y 5b.X pasa: se activa SOW en 2027.
+
+### 15.6. Trazabilidad
+
+- Documento de salida: `docs/auditoria/wyckoff/41_walk_forward_sow.md`.
+- Script: `scripts/walk_forward_sow.py` (read-only sobre data; no
+  toca config).
+- Resultados: `outputs/audit/wyckoff_walk_forward.csv`.
+
+El documento y el script se commitean juntos. La ejecucion se hace
+una sola vez. Los resultados no se ajustan ex-post.
+
+---
+
+**Fin del plan de migracion v3.**
