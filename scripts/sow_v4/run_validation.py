@@ -129,13 +129,10 @@ def run_one_fold(
     t0 = time.time()
     print(f"  [placebos] A y B sobre fold {fold_idx}...")
     plcs = []
-    for scheme in ("A", "B"):
-        if scheme == "B" and not sector_map:
-            print(f"    [placebo {scheme}] omitido: sector_map vacio")
-            continue
+    for scheme in ("P1", "P2"):
         res = placebos.evaluate_placebo(
             train_eps, test_eps, scheme, fold_idx,
-            sector_map if scheme == "B" else None,
+            None,
         )
         if res is None:
             print(f"    [placebo {scheme}] no evaluable")

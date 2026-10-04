@@ -70,6 +70,44 @@ def apply_placebo_B(
     return out
 
 
+def apply_placebo_P1(episodes_train: list[dict], rng: np.random.Generator) -> list[dict]:
+    """P1 - permutacion global intra-regimen.
+
+    Para cada regimen (stress / normal) redistribuye TODAS las etiquetas
+    SOW entre TODOS los episodios del mismo regimen. Rompe ticker y fecha
+    de forma agresiva, conserva la marginal de regimen exacta.
+    """
+    out = [dict(e) for e in episodes_train]
+    by_regime: dict = defaultdict(list)
+    for i, e in enumerate(out):
+        by_regime[e["R_episode"]].append(i)
+    for rname, idxs in by_regime.items():
+        labels = [out[i]["is_confirmed"] for i in idxs]
+        rng.shuffle(labels)
+        for i, lab in zip(idxs, labels):
+            out[i]["is_confirmed"] = bool(lab)
+    return out
+
+
+def apply_placebo_P2(episodes_train: list[dict], rng: np.random.Generator) -> list[dict]:
+    """P2 - permutacion de Y intra-ticker.
+
+    Mantiene SOW intacto. Permuta la etiqueta Y entre episodios del
+    mismo ticker. Rompe la asociacion SOW->Y conservando todas las
+    distribuciones marginales de ticker.
+    """
+    out = [dict(e) for e in episodes_train]
+    by_ticker: dict = defaultdict(list)
+    for i, e in enumerate(out):
+        by_ticker[e["ticker"]].append(i)
+    for tk, idxs in by_ticker.items():
+        ys = [out[i]["Y"] for i in idxs]
+        rng.shuffle(ys)
+        for i, yv in zip(idxs, ys):
+            out[i]["Y"] = int(yv)
+    return out
+
+
 def evaluate_placebo(
     episodes_train: list[dict],
     episodes_eval: list[dict],
@@ -90,7 +128,7 @@ def evaluate_placebo(
     Regla de aceptacion (seccion 11.6):
         q5 >= -DELTA_PLACEBO  AND  q95 <= +DELTA_PLACEBO
     """
-    if scheme not in ("A", "B"):
+    if scheme not in ("A", "B", "P1", "P2"):
         raise ValueError(f"scheme invalido: {scheme}")
 
     fit_real = fit_primary(episodes_train)
@@ -108,10 +146,14 @@ def evaluate_placebo(
         rng = np.random.default_rng(seed_k)
         if scheme == "A":
             perm_train = apply_placebo_A(episodes_train, rng)
-        else:
+        elif scheme == "B":
             if sector_map is None:
                 raise ValueError("sector_map requerido para Placebo B")
             perm_train = apply_placebo_B(episodes_train, sector_map, rng)
+        elif scheme == "P1":
+            perm_train = apply_placebo_P1(episodes_train, rng)
+        elif scheme == "P2":
+            perm_train = apply_placebo_P2(episodes_train, rng)
 
         fit_perm = fit_primary(perm_train)
         if not fit_perm.ok:
