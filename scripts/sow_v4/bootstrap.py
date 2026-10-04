@@ -13,7 +13,7 @@ from __future__ import annotations
 
 import numpy as np
 
-from scripts.sow_v4.model_primary import FitResult, predict_rd
+from scripts.sow_v4.model_primary import FitResult, fit_primary, predict_rd
 
 
 def _session_to_index(session_dates) -> dict:
@@ -106,3 +106,82 @@ def ci95(arr: np.ndarray) -> tuple[float | None, float | None]:
 
 def ci90(arr: np.ndarray) -> tuple[float | None, float | None]:
     return percentile_ci(arr, 5.0, 95.0)
+
+def bootstrap_rd_grounded(
+    episodes_eval: list[dict],
+    session_dates: list,
+    B: int,
+    n_replicas: int,
+    seed: int,
+) -> dict | None:
+    """MBB grounded (v5): resamplea y REAJUSTA el modelo en cada replica.
+
+    Diferencia con bootstrap_rd (v4.1 predictive):
+    - No recibe un fit congelado.
+    - Ajusta fit_primary en cada submuestra bootstrap.
+    - Usa Y observado de la submuestra.
+    - RD mide el contraste observado, no el predicho por modelo fijo.
+
+    Devuelve dict con arrays de RD_stress, RD_normal, RD_pool, y
+    el numero de replicas con fit valido.
+    """
+    if not episodes_eval:
+        return None
+
+    s2i = _session_to_index(session_dates)
+    try:
+        t0_idx = np.array([s2i[e["t0_date"]] for e in episodes_eval], dtype=int)
+    except KeyError:
+        return None
+
+    T = len(session_dates)
+    if T < B:
+        return None
+
+    blocks: list[np.ndarray] = []
+    for start in range(T - B + 1):
+        end = start + B
+        mask = (t0_idx >= start) & (t0_idx < end)
+        blocks.append(np.where(mask)[0])
+
+    n_blocks_per_sample = int(np.ceil(T / B))
+    rng = np.random.default_rng(seed)
+
+    rd_stress = np.full(n_replicas, np.nan)
+    rd_normal = np.full(n_replicas, np.nan)
+    rd_pool = np.full(n_replicas, np.nan)
+
+    n_valid = 0
+    for b in range(n_replicas):
+        chosen: list[np.ndarray] = []
+        for _ in range(n_blocks_per_sample):
+            k = int(rng.integers(0, len(blocks)))
+            chosen.append(blocks[k])
+        idx_sel = np.concatenate(chosen) if chosen else np.array([], dtype=int)
+        if len(idx_sel) == 0:
+            continue
+        sub = [episodes_eval[i] for i in idx_sel]
+
+        fit = fit_primary(sub)
+        if not fit.ok:
+            continue
+        rd = predict_rd(fit, sub)
+        if not rd["ok"]:
+            continue
+        n_valid += 1
+        if rd["RD_stress"] is not None:
+            rd_stress[b] = rd["RD_stress"]
+        if rd["RD_normal"] is not None:
+            rd_normal[b] = rd["RD_normal"]
+        if rd["RD_pool"] is not None:
+            rd_pool[b] = rd["RD_pool"]
+
+    return {
+        "rd_stress": rd_stress,
+        "rd_normal": rd_normal,
+        "rd_pool": rd_pool,
+        "B": B,
+        "n_replicas": n_replicas,
+        "n_replicas_validas": n_valid,
+    }
+

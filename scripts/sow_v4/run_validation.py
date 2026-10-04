@@ -63,6 +63,7 @@ def run_one_fold(
     session_dates: list,
     smoke: bool,
     skip_bootstrap: bool = False,
+    outer_mode: str = "grounded",
 ) -> dict:
     ts, te, vs, ve = config.OUTER_FOLDS[fold_idx]
     print(f"\n[FOLD {fold_idx}] TRAIN {ts}..{te}  TEST {vs}..{ve}")
@@ -85,15 +86,41 @@ def run_one_fold(
           f"n_elegibles={best['n_elegibles']} (t={time.time()-t0:.1f}s)")
 
     t0 = time.time()
-    print("  [outer] evaluando sobre TEST...")
-    out = outer.evaluate_outer(
-        best["combo"], feats, starts_cache, sector_returns,
-        train_dates, test_dates, fold_idx,
-        skip_bootstrap=skip_bootstrap,
-    )
-    if not out.get("ok"):
-        print(f"  [outer] fallo: {out.get('reason')}")
-        return {"ok": False, "reason": f"outer:{out.get('reason')}"}
+    print(f"  [outer] evaluando sobre TEST (mode={outer_mode})...")
+    out_grounded = None
+    out_predictive = None
+
+    if outer_mode in ("grounded", "both"):
+        out_grounded = outer.evaluate_outer_grounded(
+            best["combo"], feats, starts_cache, sector_returns,
+            train_dates, test_dates, fold_idx,
+            skip_bootstrap=skip_bootstrap,
+        )
+        if not out_grounded.get("ok"):
+            print(f"  [outer-grounded] fallo: {out_grounded.get('reason')}")
+            if outer_mode == "grounded":
+                return {"ok": False, "reason": f"outer_grounded:{out_grounded.get('reason')}"}
+
+    if outer_mode in ("predictive", "both"):
+        out_predictive = outer.evaluate_outer(
+            best["combo"], feats, starts_cache, sector_returns,
+            train_dates, test_dates, fold_idx,
+            skip_bootstrap=skip_bootstrap,
+        )
+        if not out_predictive.get("ok"):
+            print(f"  [outer-predictive] fallo: {out_predictive.get('reason')}")
+            if outer_mode == "predictive":
+                return {"ok": False, "reason": f"outer_predictive:{out_predictive.get('reason')}"}
+
+    # El primario es grounded si esta disponible; si no, predictive.
+    if out_grounded and out_grounded.get("ok"):
+        out = out_grounded
+    else:
+        out = out_predictive
+
+    if out is None or not out.get("ok"):
+        return {"ok": False, "reason": "outer_sin_resultado"}
+
     print(f"  [outer] rd_point stress={out['rd_point']['RD_stress']} "
           f"normal={out['rd_point']['RD_normal']} "
           f"pool={out['rd_point']['RD_pool']} (t={time.time()-t0:.1f}s)")
@@ -107,6 +134,10 @@ def run_one_fold(
             "bootstraps": out["bootstraps"],
             "placebos": [],
             "smoke_evaluable": True,
+            "outer_mode": outer_mode,
+            "rd_point_predictive_secondary": (
+                out_predictive["rd_point"] if out_predictive and out_predictive.get("ok") else None
+            ),
         }
 
     # Placebos
@@ -149,11 +180,19 @@ def run_one_fold(
         "rd_point": out["rd_point"],
         "bootstraps": out["bootstraps"],
         "placebos": plcs,
+        "outer_mode": outer_mode,
+        "rd_point_predictive_secondary": (
+            out_predictive["rd_point"] if out_predictive and out_predictive.get("ok") else None
+        ),
+        "bootstraps_predictive_secondary": (
+            out_predictive["bootstraps"] if out_predictive and out_predictive.get("ok") else None
+        ),
     }
 
 
 def run_all(smoke: bool, gate_universal: bool, gate_conditional: bool,
-            gate_muestra_insuficiente: bool, allow_dirty: bool = False) -> dict:
+            gate_muestra_insuficiente: bool, allow_dirty: bool = False,
+            outer_mode: str = "grounded") -> dict:
     print("[1/4] Cargando dataset y precomputando feats...")
     df = pd.read_parquet(config.DATA_PARQUET)
     close = df.xs("Close", axis=1, level=0)
@@ -201,6 +240,7 @@ def run_all(smoke: bool, gate_universal: bool, gate_conditional: bool,
             k, feats, starts_cache, sector_returns, sector_map,
             session_dates, smoke,
             skip_bootstrap=smoke,
+            outer_mode=outer_mode,
         )
         if res.get("ok"):
             fold_results.append(res)
@@ -253,6 +293,9 @@ def main():
     ap.add_argument("--gate-muestra-insuficiente", action="store_true")
     ap.add_argument("--allow-dirty", action="store_true",
                     help="solo con --smoke: permite arbol sucio en desarrollo")
+    ap.add_argument("--outer-mode", choices=["grounded", "predictive", "both"],
+                    default="grounded",
+                    help="grounded=v5 (por defecto); predictive=v4.1; both=compara")
     args = ap.parse_args()
 
     config.OUT_DIR.mkdir(parents=True, exist_ok=True)
@@ -262,9 +305,12 @@ def main():
         gate_conditional=args.gate_conditional,
         gate_muestra_insuficiente=args.gate_muestra_insuficiente,
         allow_dirty=args.allow_dirty,
+        outer_mode=args.outer_mode,
     )
 
-    path = config.OUT_DIR / ("validation_smoke.json" if args.smoke else "validation.json")
+    suffix = args.outer_mode if not args.smoke else f"smoke_{args.outer_mode}"
+    path = config.OUT_DIR / f"validation_{suffix}.json"
+
     path.write_text(json.dumps(out, indent=2, default=str), encoding="utf-8")
     print(f"\n[OK] escrito {path}")
 
