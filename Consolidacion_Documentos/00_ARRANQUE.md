@@ -134,9 +134,9 @@ A1-A5, A6, B, C, 6, 7, 8, 9, F: CERRADOS. Detalle tematico en
   `n_confirmed_H20_complete >= 550` post-2026-10-02 (~2027).
   Script y protocolo inmutables (T7/T7b lo verifican).
 - **Bloqueado aparte:** 5c.4, 5d, 5e. **No bloqueado:** 5c, plan v2.
-- **Walk-forward SOW (2026-10-04):** test confirmatorio FAIL de v1.9
-  (`41_walk_forward_sow.md`). Candidata C2 propuesta como v2.0
-  (`42_candidata_c2.md`), no activada. SOW sigue None / fail-closed.
+- **Walk-forward SOW (2026-10-04):** v1.9 FAIL; C1 con evidencia OOS
+  historica limpia; C2 exploratoria congelada. `43_estado_sow_tras_walkforward.md`.
+  SOW sigue None / fail-closed. 5b.X v3 aplica solo a C0/v1.9.
 
 ### 4.3. Pendientes vivos
 

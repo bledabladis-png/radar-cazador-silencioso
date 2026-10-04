@@ -865,7 +865,7 @@ intacto. Fail-closed intacto. 5b.X (2027) sigue siendo juez final.
 Expediente: `docs/auditoria/wyckoff/41_walk_forward_sow.md`.
 Commits: cdec27d, 1a08884.
 
-### Candidata C2 propuesta como v2.0 (expediente 42)
+### Analisis SOW: walk-forward + grid 240 (expedientes 41-43)
 
 Derivado del walk-forward de calibracion (expediente 41). Se ejecuto
 un grid de 240 combinaciones calibrado SOLO sobre TRAIN 2015-2020 y
@@ -877,20 +877,27 @@ mucho mejor que la candidata congelada v1.9. La ganadora TRAIN cae
 en percentil 1.2 de las 240 combinaciones ordenadas por lift en TEST.
 La v1.9 cae en percentil 20.4.
 
-Candidata C2 (N=60, M=5, X_ATR=0.50, Y_VOL=1.10):
+Expediente 42 propuso C2 como v2.0. Dictamen externo posterior
+corrigio la interpretacion: C2 fue seleccionada sobre TEST, no
+tiene evidencia OOS limpia.
 
-- TRAIN lift +0.271 IC95 [+0.208, +0.330]
-- TEST  lift +0.107 IC95 [+0.043, +0.170]
-- Decaimiento TRAIN->TEST: 2.5x (v1.9: 5.5x).
+Interpretacion consolidada (expediente 43):
 
-Expediente 42 propone C2 como v2.0 al auditor externo. NO activada.
-Config SOW sigue None / fail-closed. Contrato v1.9 sigue vigente como
-candidata congelada de referencia. 5b.X (2027) sigue siendo juez final.
+- **C1** (N=40 M=5 X_ATR=1.00 Y_VOL=1.10): seleccionada solo con
+  TRAIN, TEST lift +0.103 IC95 [+0.018, +0.192]. **Evidencia OOS
+  historica limpia.** No activada.
+- **C2** (N=60 M=5 X_ATR=0.50 Y_VOL=1.10): top-1 del grid sobre TEST.
+  IC95 [+0.043, +0.170] exploratorio, no confirmatorio. Congelada
+  como candidata exploratoria. No validada.
+- **C0/v1.9**: intacta. 5b.X v3 solo aplica a C0.
 
-Reproducibilidad verificada: misma seed produce mismo hash SHA256 del
-CSV de resultados en dos ejecuciones limpias.
+Config SOW sigue None / fail-closed. 5b.X (2027) sigue siendo juez
+final. Nuevo protocolo + nuevo power analysis requeridos para llevar
+C1 o C2 a validacion oficial.
 
-Expediente: `docs/auditoria/wyckoff/42_candidata_c2.md`.
-Commits: acd3632.
+Expedientes: `41_walk_forward_sow.md`, `42_candidata_c2.md`
+(interpretacion corregida), `43_estado_sow_tras_walkforward.md`
+(referencia consolidada).
+Commits: acd3632, 0bb893d, este cierre.
 
 **Fin del historico.**

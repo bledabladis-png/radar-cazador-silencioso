@@ -90,12 +90,15 @@ en paralelo.
 - **Hallazgo:** 39/240 combos pasan D2 en TEST (16.2%). La region
   M=5, X_ATR >= 0.50 concentra los mejores. La ganadora TRAIN cae en
   percentil 1.2 del grid en TEST; la congelada v1.9 en percentil 20.4.
-- **Candidata C2 (N=60, M=5, X_ATR=0.50, Y_VOL=1.10).** Bootstrap
-  B=2000: TEST lift +0.107 IC95 [+0.043, +0.170]. Supera a v1.9 por
-  4x con menor decaimiento TRAIN->TEST (2.5x vs 5.5x).
-- **Expediente 42.** Propone C2 como candidata v2.0 al auditor. NO
-  activada. Config SOW sigue None / fail-closed. v1.9 sigue congelada
-  como referencia.
+- **C1 (N=40, M=5, X_ATR=1.00, Y_VOL=1.10).** Seleccionada solo con
+  TRAIN. TEST lift +0.103, IC95 [+0.018, +0.192]. **Evidencia OOS
+  historica limpia.** No activada.
+- **C2 (N=60, M=5, X_ATR=0.50, Y_VOL=1.10).** Top-1 del grid sobre
+  TEST (seleccion contaminada). TEST lift +0.107, IC95 [+0.043, +0.170].
+  Registrada como **exploratoria congelada**, no validada.
+- **Expediente 43.** Interpretacion consolidada tras dictamen externo:
+  C1 con evidencia OOS limpia, C2 exploratoria, C0/v1.9 intacta.
+  Config SOW sigue None / fail-closed. 5b.X v3 solo aplica a C0.
 - **Reproducibilidad verificada.** Compare ejecutado 2 veces limpias:
   mismo hash SHA256 del CSV, ~63s por ejecucion. Sin cache.
 

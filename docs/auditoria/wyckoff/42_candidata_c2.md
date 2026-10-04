@@ -1,5 +1,17 @@
 # 42 - Candidata C2: propuesta de v2.0 (SOW)
 
+> **NOTA DE CORRECCION (2026-10-04, post-dictamen externo).**
+> Este documento contiene una interpretacion incorrecta de la
+> candidata C2. La formulacion "C2 generaliza out-of-sample" y
+> "propuesta como v2.0" NO son correctas: C2 fue seleccionada
+> usando TEST, por lo que su IC no es confirmatorio OOS.
+> La interpretacion corregida esta en el expediente 43
+> (`43_estado_sow_tras_walkforward.md`), que es el documento
+> de referencia. Este 42 se conserva como registro historico del
+> experimento (el grid, los numeros y los scripts son validos;
+> la interpretacion no).
+
+
 - **Fecha:** 2026-10-04.
 - **Motivo:** hallazgo derivado del walk-forward de calibracion (expediente 41).
 - **Contrato de auditoria:** plan v3 §15 + dictamen externo.
