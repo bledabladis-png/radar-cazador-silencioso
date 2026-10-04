@@ -619,6 +619,32 @@ def select_candidate(rows, boot_map):
     elegido = pasan[0][1]
     return elegido, f"{len(pasan)} combinaciones pasan D1-D3; elegido por ranking v3"
 
+def benjamini_hochberg(pvals, alpha=0.05):
+    """Correccion por multiplicidad (auditor 2026-10-05 seccion 9).
+
+    Recibe lista de p-valores (None permitidos, se ignoran).
+    Devuelve dict: p_original -> q_value ajustado por BH.
+
+    q_(k) = min over j>=k of ( p_(j) * n / j ), con n = numero de
+    p-valores validos y p_(k) ordenados ascendente.
+
+    Rechaza H0 con FDR <= alpha si q_value <= alpha.
+    """
+    valid = [(i, pv) for i, pv in enumerate(pvals) if pv is not None]
+    n = len(valid)
+    if n == 0:
+        return [None] * len(pvals)
+    valid_sorted = sorted(valid, key=lambda x: x[1])
+    q = [None] * len(pvals)
+    running_min = 1.0
+    for rank in range(n - 1, -1, -1):
+        idx, pv = valid_sorted[rank]
+        raw_q = pv * n / (rank + 1)
+        running_min = min(running_min, raw_q)
+        q[idx] = min(1.0, running_min)
+    return q
+
+
 def _short_key(k):
     return {
         "struct_deterioration": "struct",
