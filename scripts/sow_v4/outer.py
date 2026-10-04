@@ -96,16 +96,12 @@ def evaluate_outer(
 def _last_idx_for_date(feats: dict, target_date) -> int:
     if not feats:
         return -1
-    first_key = next(iter(feats))
-    session_dates = feats[first_key]["dates"]
-    mask = session_dates <= target_date
-    if not mask.any():
+    sessions = config.session_union_dates(feats)
+    idx = [i for i, d in enumerate(sessions) if d <= target_date]
+    if not idx:
         return -1
-    return int(np.where(mask)[0].max())
+    return idx[-1]
 
 
 def _session_dates_for(feats: dict) -> list:
-    if not feats:
-        return []
-    first_key = next(iter(feats))
-    return list(feats[first_key]["dates"])
+    return config.session_union_dates(feats)

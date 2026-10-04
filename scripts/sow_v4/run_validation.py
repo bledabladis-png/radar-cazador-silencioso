@@ -34,8 +34,7 @@ from scripts.sow_v4.inner import select_candidate_for_outer
 
 
 def _session_list(feats: dict) -> list:
-    first_key = next(iter(feats))
-    return list(feats[first_key]["dates"])
+    return config.session_union_dates(feats)
 
 
 def _dates_in_range(session_dates: list, start, end) -> list:

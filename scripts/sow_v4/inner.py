@@ -204,17 +204,16 @@ def evaluate_combo_on_inner(
     }
 
 
-def _last_idx_in_dates(feats: dict, target_date, dates_list) -> int:
+def _last_idx_in_dates(feats: dict, target_date, dates_list=None) -> int:
     """Devuelve el indice maximo valido en la sesion del ultimo dia util
-    del segmento. Usa la primera serie disponible como calendario."""
+    del segmento. Usa la union de calendarios de todos los tickers."""
     if not feats:
         return -1
-    first_key = next(iter(feats))
-    session_dates = feats[first_key]["dates"]
-    mask = session_dates <= target_date
-    if not mask.any():
+    sessions = config.session_union_dates(feats)
+    idx = [i for i, d in enumerate(sessions) if d <= target_date]
+    if not idx:
         return -1
-    return int(np.where(mask)[0].max())
+    return idx[-1]
 
 
 def select_candidate_for_outer(
