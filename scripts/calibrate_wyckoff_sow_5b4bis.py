@@ -444,6 +444,9 @@ def bootstrap_lift_H20(rows, B=BOOT_B, seed=BOOT_SEED):
         if v is not None:
             boots.append(v)
     if len(boots) < 50:
+        # Auditor 2026-10-05 §16: defensa contra rows validas pero todas
+        # con struct_deterioration=None -> boots vacio. Sin esto,
+        # np.percentile([], ...) es un camino de error.
         lower = upper = None
     else:
         lower = float(np.percentile(boots, 2.5))
