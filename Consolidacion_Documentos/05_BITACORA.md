@@ -82,6 +82,28 @@ fases (CSV 3-oct: 20/20 RANGE en todos los sectores).
 **Proximo paso sugerido.** Esperar dictamen. Arrancar migracion core
 en paralelo.
 
+**Ampliacion (misma sesion, tramo 2).**
+
+- **Walk-forward de calibracion.** Grid 240 combinaciones calibrado
+  SOLO con TRAIN 2015-2020, validado sobre TEST 2021-2026 (OOS
+  limpio, 10.7 anos de historico via Yahoo extendido).
+- **Hallazgo:** 39/240 combos pasan D2 en TEST (16.2%). La region
+  M=5, X_ATR >= 0.50 concentra los mejores. La ganadora TRAIN cae en
+  percentil 1.2 del grid en TEST; la congelada v1.9 en percentil 20.4.
+- **Candidata C2 (N=60, M=5, X_ATR=0.50, Y_VOL=1.10).** Bootstrap
+  B=2000: TEST lift +0.107 IC95 [+0.043, +0.170]. Supera a v1.9 por
+  4x con menor decaimiento TRAIN->TEST (2.5x vs 5.5x).
+- **Expediente 42.** Propone C2 como candidata v2.0 al auditor. NO
+  activada. Config SOW sigue None / fail-closed. v1.9 sigue congelada
+  como referencia.
+- **Reproducibilidad verificada.** Compare ejecutado 2 veces limpias:
+  mismo hash SHA256 del CSV, ~63s por ejecucion. Sin cache.
+
+**Commits.** acd3632 (expediente 42 + scripts).
+
+**Proximo paso sugerido.** Pasar expedientes 41 y 42 al auditor.
+Arrancar migracion core v1.8.
+
 ### 2026-10-03 (noche, tramo 2) - Auditoria linea a linea de wyckoff_v1.py v1.8
 
 **Objetivo.** Verificar el modulo Wyckoff recien reconstruido:
