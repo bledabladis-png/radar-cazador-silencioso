@@ -438,6 +438,7 @@ def bootstrap_lift_H20(rows, B=BOOT_B, seed=BOOT_SEED):
         # struct_deterioration=None -> by_tk vacio. Cerrar camino.
         return {
             "lift_point": None, "lower_ci": None, "upper_ci": None,
+            "p_one_sided": None,
             "n_tickers": 0, "n_episodes": len(rows), "n_confirmed": 0,
             "n_baseline": 0, "n_boot_validos": 0,
         }
@@ -472,14 +473,24 @@ def bootstrap_lift_H20(rows, B=BOOT_B, seed=BOOT_SEED):
         # con struct_deterioration=None -> boots vacio. Sin esto,
         # np.percentile([], ...) es un camino de error.
         lower = upper = None
+        p_one_sided = None
     else:
         lower = float(np.percentile(boots, 2.5))
         upper = float(np.percentile(boots, 97.5))
+        # p-valor bootstrap one-sided (auditor 2026-10-05 seccion 9).
+        # H0: lift <= 0, Ha: lift > 0.
+        # Recentrar la distribucion bootstrap al lift_point y contar
+        # cuantos valores recentrados >= lift_point.
+        boots_arr = np.asarray(boots, dtype=float)
+        boots_shifted = boots_arr - float(lift_point)
+        n_ge = int((boots_shifted >= float(lift_point)).sum())
+        p_one_sided = (1.0 + n_ge) / (1.0 + len(boots_arr))
 
     return {
         "lift_point": lift_point,
         "lower_ci": lower,
         "upper_ci": upper,
+        "p_one_sided": p_one_sided,
         "n_tickers": len(tickers),
         "n_episodes": len(rows),
         "n_confirmed": n_conf,
@@ -721,6 +732,7 @@ def flatten_bootstrap(boot, row):
         "lift_point": boot["lift_point"],
         "lower_ci": boot["lower_ci"],
         "upper_ci": boot["upper_ci"],
+        "p_one_sided": boot.get("p_one_sided"),
         "n_tickers": boot["n_tickers"],
         "n_episodes": boot["n_episodes"],
         "n_confirmed": boot["n_confirmed"],
