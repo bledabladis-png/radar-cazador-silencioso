@@ -16,17 +16,17 @@ evidencia distintos:
 | Candidata | Parametros | Evidencia | Estado |
 |---|---|---|---|
 | **C0** (v1.9 congelada) | N=60 M=30 X_ATR=0.25 Y_VOL=1.10 | Walk-forward A/B FAIL | Congelada, referencia |
-| **C1** (ganadora TRAIN) | N=40 M=5 X_ATR=1.00 Y_VOL=1.10 | TRAIN seleccion -> TEST OOS PASS | Evidencia OOS historica limpia |
+| **C1** (ganadora TRAIN) | N=40 M=5 X_ATR=1.00 Y_VOL=1.10 | TRAIN seleccion -> TEST D2 PASS (sin purga) | Evidencia temporal historica favorable; pendiente de purga (M+H20) y correccion por multiple testing |
 | **C2** (top-1 TEST) | N=60 M=5 X_ATR=0.50 Y_VOL=1.10 | Seleccionada sobre TEST | Exploratoria congelada |
 
-**C1 es la unica candidata con evidencia OOS historica limpia.**
+**C1 es la unica candidata con evidencia temporal historica favorable. Pendiente de purga (M+H20) y correccion por multiple testing (240 combos).**
 **C2 tiene el mejor numero en TEST, pero fue elegida mirando TEST.**
 **Ninguna se activa en produccion.**
 
 ## 2. Diseno experimental
 
     TRAIN  2015-01-02 -> 2020-12-31   (calibracion)
-    TEST   2021-01-01 -> 2026-10-01   (evaluacion OOS)
+    TEST   2021-01-01 -> 2026-10-01   (evaluacion historica, no OOS virgen)
 
 Historico extendido descargado de Yahoo (`data/stock_prices_extended.parquet`,
 10.7 anos, no productivo). Grid de 240 combinaciones:
@@ -52,7 +52,7 @@ por ranking (lower_ci desc, n_conf desc) es:
 
     C1 = N=40 M=5 X_ATR=1.00 Y_VOL=1.10
 
-### 3.3. C1 sobre TEST (OOS limpio)
+### 3.3. C1 sobre TEST (resultado post-seleccion TRAIN)
 
 C1 se eligio sin ver TEST. Evaluacion sobre TEST:
 
@@ -60,7 +60,7 @@ C1 se eligio sin ver TEST. Evaluacion sobre TEST:
     TEST:  lift +0.103, IC95 [+0.018, +0.192]  (D2 = PASS)
 
 Cadena valida: seleccion en TRAIN -> evaluacion en TEST independiente.
-**C1 tiene evidencia OOS historica limpia.**
+**C1 tiene evidencia temporal historica favorable. Pendiente de purga y correccion por multiple testing (ver 11bis-11quinquies).**
 
 ### 3.4. Grid completo sobre TEST (exploratorio)
 
@@ -101,7 +101,7 @@ El expediente 42 afirmaba:
     C1
         Parametros:    N=40 M=5 X_ATR=1.00 Y_VOL=1.10.
         Contrato:      ninguno especifico (no congelada).
-        Evidencia:     TRAIN -> TEST OOS PASS.
+        Evidencia:     TRAIN -> TEST D2 PASS (sin purga).
                        IC95 TEST [+0.018, +0.192].
         Estado:        REGISTRADA. No activada.
         Produccion:    NO.
@@ -212,6 +212,49 @@ candidatas y a la ausencia de un diseno preespecificado para ese test.
   - `scripts/calibrate_sow_wf_phase3.py`
   - `scripts/compare_sow_candidates.py`
 - Datos: `data/stock_prices_extended.parquet` (no productivo, gitignored).
+
+---
+
+## 11bis. Independencia temporal TRAIN/TEST
+
+TRAIN (2015-01-02 -> 2020-12-31) y TEST (2021-01-01 -> 2026-10-01)
+se construyeron con gap = 0 sesiones. Un episodio con t0 en los
+ultimos M+H20 dias de TRAIN usa precios de TEST para calcular su
+label (outcome = t0 + M + H20). Con M en {5, 30} y H20 = 20, el
+solape es de 25 a 50 sesiones por episodio en la frontera. TRAIN y
+TEST no son independientes como conjuntos de informacion.
+
+Mitigacion (no aplicada a los numeros actuales): embargo de 50
+sesiones sobre TRAIN, drop de episodios con t0_idx + M + 20 >
+last_train_idx. Con M_max = 30 y H20 = 20, el embargo cubre el
+peor caso.
+
+## 11ter. Reutilizacion previa del TEST
+
+El rango 2021-01-01 -> 2026-10-01 no es un holdout virgen a nivel
+programa. Antes de la evaluacion walk-forward de C1, ese rango ya
+fue observado en exp 41 (walk-forward A/B sobre C0/v1.9) y en
+analisis anuales previos. "OOS limpio" en sentido fuerte exige que
+ningun procedimiento de seleccion o diagnostico haya visto el TEST.
+No es el caso.
+
+## 11quater. Seleccion intra-TRAIN de C1
+
+C1 (N=40, M=5, X_ATR=1.00, Y_VOL=1.10) fue top-1 del grid sobre
+TRAIN por criterio `lower_ci desc, n_conf desc` (`_select_winner`
+en `calibrate_sow_wf.py`). De los 240 combos, 237 pasaron D1-D3 en
+TRAIN (seccion 7), asi que la seleccion opero sobre 237 candidatas, no
+sobre 1. El IC95 de C1 en TEST no incorpora la incertidumbre de
+esa seleccion intra-TRAIN.
+
+## 11quinquies. Ausencia de correccion por multiple testing
+
+Se evaluaron 240 combinaciones. Bajo H0 (lift = 0) y alpha = 0.05
+se esperan 12 falsos positivos por azar (seccion 8: declaro esto como
+caveat). No se aplico correccion (Bonferroni, Benjamini-Hochberg
+ni equivalente). Los IC reportados en las secciones 3 y 5 son sin corregir.
+Con BH sobre 240 tests, es plausible que el limite inferior de C1
+en TEST cruce cero.
 
 ---
 
