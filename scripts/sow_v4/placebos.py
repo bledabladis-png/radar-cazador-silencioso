@@ -168,18 +168,39 @@ def evaluate_placebo(
 
     q5 = float(np.percentile(valid, 5.0))
     q95 = float(np.percentile(valid, 95.0))
-    accepted = (q5 >= -config.DELTA_PLACEBO) and (q95 <= config.DELTA_PLACEBO)
+
+    # B2-c: p-valor de aleatorizacion unilateral (dictamen 2026-10-04)
+    # p_rand = (1 + count(RD_placebo >= RD_real)) / (K + 1)
+    # donde K = numero efectivo de permutaciones validas.
+    rd_real_pool = rd_real["RD_pool"]
+    n_ge = int((valid >= rd_real_pool).sum())
+    k_valid = int(len(valid))
+    p_rand = (1.0 + n_ge) / (1.0 + k_valid)
+
+    # B2-a: diagnostico equivalente
+    b2a_pass = bool(rd_real_pool > q95)
+
+    # B2-b: diagnostico de centrado
+    median_placebo = float(np.median(valid))
+    b2b_pass = bool(abs(median_placebo) <= config.DELTA_PLACEBO)
+
+    # B2-c: criterio normativo
+    b2c_pass = bool(p_rand <= 0.05)
 
     return {
         "scheme": scheme,
         "fold_idx": fold_idx,
-        "RD_real_pool": rd_real["RD_pool"],
+        "RD_real_pool": rd_real_pool,
         "RD_placebo_q5": q5,
         "RD_placebo_q95": q95,
-        "RD_placebo_median": float(np.median(valid)),
-        "n_valid": int(len(valid)),
+        "RD_placebo_median": median_placebo,
+        "n_valid": k_valid,
+        "n_ge": n_ge,
+        "p_rand": p_rand,
         "k_permutations": K,
-        "accepted": bool(accepted),
+        "b2a_pass": b2a_pass,
+        "b2b_pass": b2b_pass,
+        "b2c_pass": b2c_pass,
     }
 
 

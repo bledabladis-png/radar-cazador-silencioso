@@ -86,17 +86,33 @@ def decide(
                     "motivo": f"B1_inestabilidad_B20_vs_B40_fold={f['fold_idx']}_reg={r}",
                 }
 
-    # Placebos por fold (B2)
-    placebo_ok_folds = set()
-    for p in placebo_results:
-        if p and p.get("accepted"):
-            placebo_ok_folds.add(p["fold_idx"])
+    # Placebos (B2-c, dictamen 2026-10-04):
+    # p_rand = (1 + count(RD_placebo >= RD_real)) / (K+1)
+    # Pass si p_rand <= 0.05. Cada placebo individual debe cumplir:
+    #   N_pass_p >= ceil(2/3 * N_eval)
+    # No se agregan P1 y P2.
     placebo_required = _ceil_2_3(n_eval)
-    if len(placebo_ok_folds) < placebo_required:
-        return {
-            "estado": "NO VALIDADO",
-            "motivo": f"B2_placebos_ok={len(placebo_ok_folds)}<{placebo_required}",
+    by_scheme: dict = {}
+    for pl in placebo_results:
+        if pl is None:
+            continue
+        by_scheme.setdefault(pl["scheme"], []).append(pl)
+
+    b2_details = {}
+    for scheme in ("P1", "P2"):
+        rows = by_scheme.get(scheme, [])
+        n_pass = sum(1 for r in rows if r.get("b2c_pass"))
+        b2_details[scheme] = {
+            "n_pass": n_pass,
+            "n_required": placebo_required,
+            "n_evaluados": len(rows),
         }
+        if n_pass < placebo_required:
+            return {
+                "estado": "NO VALIDADO",
+                "motivo": f"B2c_placebo_{scheme}_pass={n_pass}<{placebo_required}",
+                "b2_detalles": b2_details,
+            }
 
     # Contar evaluables por regimen
     stress_passes = []
