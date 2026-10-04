@@ -365,11 +365,19 @@ def run_grid(feats, starts_cache, date_cut=None):
                         feats, sow_cache, starts_cache, N, M
                     )
                     # Precalcular metricas por horizonte (una sola vez)
+                    # Auditor 2026-10-05 seccion 4: fuente unica de verdad.
+                    # n_confirmed/n_baseline se calculan sobre ANALYSIS_ROWS
+                    # (H completo), no sobre episodes crudos. Elimina la
+                    # ambiguedad 635/629 documentada en el dictamen.
+                    analysis_H20 = build_analysis_rows(episodes, feats, N, h=20)
                     row = {
                         "N": N, "M": M, "X_ATR": X, "Y_VOL": Y,
-                        "n_episodes": len(episodes),
-                        "n_confirmed": sum(1 for e in episodes if e["is_confirmed"]),
-                        "n_baseline": sum(1 for e in episodes if not e["is_confirmed"]),
+                        "n_episodes_raw": analysis_H20["n_episodes_raw"],
+                        "n_dropped_h_censored": analysis_H20["n_dropped_h_censored"],
+                        "n_dropped_metrics_none": analysis_H20["n_dropped_metrics_none"],
+                        "n_analysis_rows": analysis_H20["n_analysis_rows"],
+                        "n_confirmed": analysis_H20["n_confirmed_H_complete"],
+                        "n_baseline": analysis_H20["n_baseline_H_complete"],
                         "by_horizon": {},
                     }
                     for h in HORIZONS:
@@ -668,7 +676,10 @@ def flatten_row(r):
     """Convierte un row del grid en dict plano para CSV."""
     flat = {
         "N": r["N"], "M": r["M"], "X_ATR": r["X_ATR"], "Y_VOL": r["Y_VOL"],
-        "n_episodes": r["n_episodes"],
+        "n_episodes_raw": r["n_episodes_raw"],
+        "n_dropped_h_censored": r["n_dropped_h_censored"],
+        "n_dropped_metrics_none": r["n_dropped_metrics_none"],
+        "n_analysis_rows": r["n_analysis_rows"],
         "n_confirmed": r["n_confirmed"],
         "n_baseline": r["n_baseline"],
         "D1": r.get("D1"),
