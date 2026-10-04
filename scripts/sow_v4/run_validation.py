@@ -127,7 +127,7 @@ def run_one_fold(
     train_eps = purge_train_frontier(train_eps, M, last_train_idx)
 
     t0 = time.time()
-    print(f"  [placebos] A y B sobre fold {fold_idx}...")
+    print(f"  [placebos] P1 y P2 sobre fold {fold_idx}...")
     plcs = []
     for scheme in ("P1", "P2"):
         res = placebos.evaluate_placebo(
@@ -139,7 +139,8 @@ def run_one_fold(
             continue
         plcs.append(res)
         print(f"    [placebo {scheme}] q5={res['RD_placebo_q5']:.4f} "
-              f"q95={res['RD_placebo_q95']:.4f} accepted={res['accepted']}")
+              f"q95={res['RD_placebo_q95']:.4f} "
+              f"p_rand={res['p_rand']:.4f} b2c_pass={res['b2c_pass']}")
     print(f"  [placebos] t={time.time()-t0:.1f}s")
 
     return {
