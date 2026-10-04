@@ -1536,4 +1536,41 @@ Para sesiones anteriores al 2026-09-24, ver `git log --oneline`. Resumen tematic
 
 ---
 
+## 2026-10-04 (tramo 3)
+
+**Objetivo.** Cerrar expediente 43 (main) e implementar el protocolo
+SOW v4.1 en rama nueva.
+
+**Trabajo.**
+
+- Commit `8c811c1` en main: correccion exp 43 post-dictamen
+  (purga, reutilizacion TEST, seleccion intra-TRAIN, multiple testing).
+
+- Rama `sow-v4-validation` creada desde `8c811c1`.
+  14 ficheros en `scripts/sow_v4/` implementando el protocolo v4.1.
+
+- Iteraciones con auditor externo:
+  - v4 -> v4.1: M1-M12.
+  - Regimen desde 223 tickers US con sector de `data/etf_holdings.csv`.
+  - INNER pooled (sin soporte por regimen).
+  - Placebos P1 (global intra-regimen) y P2 (Y intra-ticker).
+  - B2-c: p-valor de aleatorizacion unilateral.
+
+- Fixes de implementacion:
+  - Calendarios multi-bolsa: `session_union_dates`.
+  - Regimen US-only con drop all-NaN.
+  - Cache de `episode_metrics` por (ticker, N, L_idx).
+
+**Resultado parcial.**
+- N_eval = 7/8 folds evaluables.
+- Placebos P1 y P2: 6/7 folds con p_rand <= 0.05.
+- Bootstrap: pendiente de fix de calendarios.
+- Decision final: pendiente de la ejecucion completa.
+
+**Commits.**
+- `47140d0` feat(sow_v4): implementacion v4.1.
+- `a31f6bd` fix(sow_v4): B2-c criterio normativo.
+- `c956c19` fix(sow_v4): print placebo b2c_pass.
+- (pendiente) fix(sow_v4): session_dates union.
+
 **Fin de la bitacora.**

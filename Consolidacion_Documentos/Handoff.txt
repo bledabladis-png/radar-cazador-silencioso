@@ -1,0 +1,225 @@
+HANDOFF DE SESION 2026-10-04 (tramo 3)
+========================================
+
+Vienes a retomar un trabajo en curso. Antes has recibido
+00_ARRANQUE.md. Es autosuficiente para el rol. Este handoff
+anade el estado real de la sesion y el frente activo.
+
+--- 1. ESTADO DEL SISTEMA AL CIERRE ---
+
+Main:
+  HEAD: 8c811c1 (origin/main sincronizado).
+  Tests: 3175 passed + 5 skipped + 0 failed.
+  Validation Gate: 10/10.
+
+Rama de trabajo activa:
+  sow-v4-validation (creada desde 8c811c1).
+  Commits:
+    47140d0 feat(sow_v4): implementacion v4.1
+    a31f6bd fix(sow_v4): B2-c criterio normativo
+    c956c19 fix(sow_v4): print placebo b2c_pass
+    (pendiente) fix(sow_v4): session_dates union
+  Pendiente de merge a main.
+
+--- 2. QUE SE HIZO EN ESTE TRAMO ---
+
+A) Cierre del expediente 43 (en main).
+
+B) Implementacion completa del protocolo SOW v4.1 en rama nueva
+   sow-v4-validation. 14 ficheros en scripts/sow_v4/:
+
+   config.py         constantes del protocolo
+   manifest.py       SHA-256 dataset + commit + versiones
+   regime.py         regimen US-only con umbrales por fold
+   episodes.py       episodios + X_0 en t0 + caches
+   model_primary.py  logit con y sin interaccion + RD
+   bootstrap.py      moving block bootstrap B20/B40/B50
+   placebos.py       A/B/P1/P2 schemes
+   inner.py          seleccion INNER pooled (agnostico regimen)
+   outer.py          evaluacion exterior
+   decision.py       4 estados + reglas B1..B13
+   power.py          DGP candidate-wise (simplificado)
+   run_validation.py orquestador fase confirmatoria
+   run_power.py      CLI del power analysis
+   __init__.py
+
+C) Iteraciones con auditor externo (v4.1 -> v4.1 final):
+   - M1-M12 del dictamen v4.
+   - Regimen: 223 tickers US con sector de data/etf_holdings.csv.
+   - INNER pooled (sin exigir soporte por regimen).
+   - Placebos P1 (global intra-regimen) y P2 (Y intra-ticker),
+     reemplazan a A/B del protocolo original, que no rompian
+     la senal por permutar dentro de grupos vacios.
+   - B2-c: p-valor de aleatorizacion unilateral como criterio
+     normativo. Reemplaza B2 original, que exigia q5/q95 dentro
+     de +-0.025 y era indecidible con SOW de baja frecuencia.
+
+D) Fix de calendarios multiples:
+   - El parquet extendido tiene calendarios dispares por ticker
+     (LSE, Xetra, NYSE, Madrid, etc.).
+   - "session_dates" debe ser la UNION ordenada de todos.
+   - Afecta a bootstrap_rd, _last_idx_for_date, _last_idx_in_dates,
+     _session_list.
+
+--- 3. FRENTE ACTIVO: SOW v4.1 FASE CONFIRMATORIA ---
+
+Ejecutado run_validation.py. Resultado esperado:
+  - N_eval = 7/8 folds evaluables (minimo protocolo 6).
+  - 7 folds con candidata + bootstrap + placebos.
+  - Decision segun reglas seccion 13.
+
+Estado previo al ultimo fix (calendarios):
+  - Placebos P1: 6/7 folds con p_rand <= 0.05. PASA.
+  - Placebos P2: 6/7 folds con p_rand <= 0.05. PASA.
+  - Bootstrap: solo fold 4 tenia IC (bug calendarios).
+  - Decision: NO VALIDADO por criterios_no_alcanzados.
+
+Tras el fix de calendarios, se espera:
+  - Bootstrap en los 7 folds.
+  - Decision universal / condicional / no validado
+    segun IC95 de RD_stress y RD_normal.
+
+--- 4. REGLAS DEL PROTOCOLO v4.1 (resumen operativo) ---
+
+Regimen (seccion 3):
+  - 223 tickers US con sector asignado en data/etf_holdings.csv.
+  - 11 sectores, retorno equal-weight, vol 20d ddof=1.
+  - Mediana cross-sectorial, log_vol_lag1.
+  - Umbrales q33/q67 por fold, sin look-ahead.
+  - Solo sesiones US (>= 50% cobertura US).
+  - Drop filas all-NaN antes del rolling.
+
+Episodios (seccion 4):
+  - t0 = transicion candidate True -> False.
+  - L = t0 + M.
+  - X_0 en t0: D1_prev, D2_prev, D3_prev.
+  - Excluye R_inter (no participa en modelos).
+  - Excluye si R_episode no es stress/normal.
+
+INNER pooled (seccion 9 revisada):
+  - Elegibilidad: n_conf >= 20, n_base >= 20,
+    >= 5 tickers por clase, en TRAIN y VALID.
+  - NO exige soporte por regimen.
+  - Modelo pooled (sin interaccion regimen).
+  - Score: median(RD_pool) - 0.5 * IQR(RD_pool).
+  - Regla 2 de 3 inner folds.
+
+OUTER (seccion 10):
+  - Modelo con interaccion SOW * R_stress.
+  - Bootstrap MBB B20 (primario), B40 (sensibilidad),
+    B50 (diagnostico).
+  - Decision con IC95 stress y normal.
+
+Placebos (seccion 11 revisada):
+  - P1: permutacion global intra-regimen.
+  - P2: permutacion de Y intra-ticker.
+  - p_rand = (1 + count(placebo >= real)) / (K+1).
+  - Pass si p_rand <= 0.05.
+  - Cada placebo individual debe cumplir >= ceil(2/3 * N_eval).
+
+Decision (seccion 13):
+  - VALIDADO UNIVERSAL: IC95 stress y normal > 0.05
+    en ambos regimenes.
+  - VALIDADO CONDICIONAL: IC95 stress > 0.05,
+    IC90 normal < 0.05.
+  - NO VALIDADO.
+  - MUESTRA INSUFICIENTE si N_eval < 6.
+
+--- 5. COMANDOS DE ARRANQUE ---
+
+Set-Location D:\Macro_Sectorial
+git status -sb
+git log --oneline -5
+py -m pytest tests/ -q --tb=line
+py -m pyflakes scripts\sow_v4\
+py -m compileall scripts\sow_v4\ -q
+
+Verificacion rapida del protocolo:
+py scripts\sow_v4\run_validation.py --smoke --allow-dirty
+
+Ejecucion completa (arbol limpio, ~20 min):
+py scripts\sow_v4\run_validation.py
+
+--- 6. LECCIONES DE ESTE TRAMO ---
+
+1. Parquets multi-calendario.
+   El extendido tiene calendarios dispares por ticker. Nunca
+   usar feats[first_key]["dates"] como calendario global.
+   Usar config.session_union_dates(feats).
+
+2. Regimen US-only.
+   El parquet es union US+EU. En festivos US, los tickers US
+   no tienen Close. Filtrar a sesiones con >= 50% cobertura US.
+   Dropear filas all-NaN antes del rolling(20) para evitar
+   propagacion de NaN.
+
+3. Placebos A/B del protocolo original no funcionan.
+   Permutan dentro de grupos (ticker,ano) o (semana,sector).
+   Con SOW=6% del total, casi ningun grupo tiene 2+ SOW,
+   la permutacion es identidad. Reemplazados por P1/P2.
+
+4. Regla B2 original era indecidible.
+   q5/q95 dentro de +-0.025 es exigir varianza <= 0.025^2,
+   matematicamente imposible con N pequeno. Reemplazada por
+   B2-c: test de aleatorizacion unilateral.
+
+5. Auditor externo es iterativo.
+   v1 -> v2 -> v3 -> v4 -> v4.1 -> v4.1 final.
+   Cada version responde a un dictamen. No tratar como
+   aprobacion binaria.
+
+6. Performance.
+   episode_metrics es la operacion cara. Cachear por
+   (ticker, N, L_idx). Reduce 240 combos x 3 inner de
+   ~620s a ~130s.
+
+7. ConvergenceWarning de statsmodels.
+   Algunos combos del grid no convergen en muestras pequenas.
+   Es esperado, el diagnostico los descarta (fit.ok = False).
+
+--- 7. PROXIMOS PASOS ---
+
+1. Completar la ejecucion de run_validation.py.
+   Ver decision final en outputs/audit/sow_v4/validation.json.
+
+2. Si VALIDADO (universal o condicional):
+   - Redactar exp 44 con el resultado.
+   - Power analysis completo (gate seccion 12).
+   - Congelar hash del protocolo.
+   - Plan de migracion a produccion.
+
+3. Si NO VALIDADO:
+   - Documentar el resultado en exp 44.
+   - Dictamen con auditor sobre siguientes pasos.
+
+4. Pendiente colateral (independiente de SOW):
+   - Migracion core v1.8 sin SOW al pipeline.
+   - Empezar por sector_wyckoff_distribution.py.
+
+--- 8. ARCHIVOS CLAVE ---
+
+Expedientes SOW:
+  docs/auditoria/wyckoff/40_auditoria_v18_linea.md
+  docs/auditoria/wyckoff/41_walk_forward_sow.md
+  docs/auditoria/wyckoff/42_candidata_c2.md
+  docs/auditoria/wyckoff/43_estado_sow_tras_walkforward.md
+
+Codigo SOW v4.1:
+  scripts/sow_v4/  (14 ficheros, ver seccion 2B)
+
+Outputs:
+  outputs/audit/sow_v4/validation.json
+  outputs/audit/sow_v4/validation_smoke.json
+  outputs/audit/sow_v4/manifest.json
+
+Datos:
+  data/stock_prices_extended.parquet  (315 tickers US+EU)
+  data/etf_holdings.csv               (223 tickers US con sector)
+
+--- 9. ESTADO DEL AUDITOR EXTERNO ---
+
+Ultimo dictamen: B2-c aprobado como sustituto normativo de B2.
+  B2-a (RD_real > q95) como diagnostico equivalente.
+  B2-b (|median placebo| <= 0.025) como control de centrado.
+
+Pendiente: resultado final de la fase confirmatoria.

@@ -900,4 +900,44 @@ Expedientes: `41_walk_forward_sow.md`, `42_candidata_c2.md`
 (referencia consolidada).
 Commits: acd3632, 0bb893d, este cierre.
 
+## SOW v4.1 - Protocolo de validacion (2026-10-04)
+
+**Contexto.** Tras el dictamen externo que rechazo la validacion previa
+de SOW (exp 43), se disena un protocolo pre-registrable completo.
+
+**Arquitectura.**
+- Nested walk-forward 8 folds.
+- INNER selecciona candidata (240 combos) con modelo pooled.
+- OUTER evalua solo la candidata con modelo con interaccion
+  `SOW * R_stress`.
+- Bootstrap MBB del panel de episodios (B20/B40/B50).
+- Placebos P1 (global intra-regimen) y P2 (Y intra-ticker).
+- Decision con reglas B1..B13.
+
+**Regimen.**
+- 223 tickers US con sector asignado en `data/etf_holdings.csv`.
+- Retornos sectoriales equal-weight, vol 20d ddof=1.
+- Mediana cross-sectorial, log_vol_lag1.
+- Umbrales q33/q67 por fold, sin look-ahead.
+- Solo sesiones US (>= 50% cobertura US).
+- Drop filas all-NaN antes del rolling.
+
+**Iteraciones con auditor.**
+- v1 (no validado) -> v2 (modificaciones) -> v3 (modificaciones) ->
+  v4 (modificaciones M1-M12) -> v4.1 -> v4.1 final.
+- Correcciones contractuales clave:
+  - INNER pooled en lugar de soporte por regimen.
+  - Placebos P1/P2 en lugar de A/B.
+  - B2-c (test de aleatorizacion) en lugar de B2 (q5/q95).
+
+**Datos tecnicos.**
+- Parquet extendido tiene calendarios multi-bolsa. Requiere
+  `session_union_dates(feats)` para cualquier indice global.
+- Regimen requiere filtrar a sesiones US y drop all-NaN.
+- Cache de episode_metrics por (ticker, N, L_idx) reduce el
+  coste de la busqueda INNER 5x.
+
+**Estado.** En ejecucion confirmatoria al cierre de este tramo.
+Resultado pendiente.
+
 **Fin del historico.**
