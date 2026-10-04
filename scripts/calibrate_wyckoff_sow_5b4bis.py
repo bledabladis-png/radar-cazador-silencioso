@@ -737,6 +737,8 @@ def flatten_row(r):
         "mediana_lift": r.get("_mediana_lift"),
         "mad_lift": r.get("_mad_lift"),
         "delta_hetero": r.get("_delta_hetero"),
+        "p_one_sided": r.get("p_one_sided"),
+        "q_value": r.get("q_value"),
     }
     for h in HORIZONS:
         for label in [b[0] for b in BLOCKS] + ["ALL"]:
@@ -800,6 +802,18 @@ def main():
             el = time.time() - t0
             print(f"  boot [{i+1}/{len(rows)}] {el:.1f}s", flush=True)
     print(f"Bootstrap completado en {time.time()-t0:.1f}s")
+
+    # Correccion por multiplicidad (auditor 2026-10-05 seccion 9).
+    # No modifica D1-D3; solo anade q_value como columna informativa.
+    pvals = [boot_map[i].get("p_one_sided") for i in range(len(rows))]
+    qvals = benjamini_hochberg(pvals)
+    for i, r in enumerate(rows):
+        r["p_one_sided"] = boot_map[i].get("p_one_sided")
+        r["q_value"] = qvals[i]
+    n_q_05 = sum(1 for q in qvals if q is not None and q <= 0.05)
+    n_p_05 = sum(1 for pv in pvals if pv is not None and pv <= 0.05)
+    print(f"Multiplicidad: {n_p_05} combos con p<=0.05, "
+          f"{n_q_05} con q(BH)<=0.05")
 
     # Seleccion (asigna D1-D3 y aplica ranking)
     elegido, motivo = select_candidate(rows, boot_map)
