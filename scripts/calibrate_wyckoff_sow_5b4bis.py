@@ -176,7 +176,8 @@ def first_sow_in_window(sow_arr, start_idx, end_idx):
     return a + int(hits[0])
 
 
-def build_episodes_landmark(feats, sow_cache, starts_cache, N, M):
+def build_episodes_landmark(feats, sow_cache, starts_cache, N, M,
+                             min_gap_sessions=None):
     """Construye episodios con landmark L = t0 + M.
 
     - confirmed = SOW en [t0+1, L]
@@ -196,8 +197,13 @@ def build_episodes_landmark(feats, sow_cache, starts_cache, N, M):
         starts = starts_cache.get(tk, np.array([], dtype=int))
         dates = feat["dates"]
         n = len(dates)
+        last_kept_t0_idx = None
         for t0_idx in starts:
             t0_idx = int(t0_idx)
+            if (min_gap_sessions is not None
+                    and last_kept_t0_idx is not None
+                    and t0_idx - last_kept_t0_idx < min_gap_sessions):
+                continue
             L_idx = t0_idx + M
             if L_idx >= n:
                 continue
@@ -219,6 +225,7 @@ def build_episodes_landmark(feats, sow_cache, starts_cache, N, M):
                 "is_confirmed": is_conf,
                 "block_L": block,
             })
+            last_kept_t0_idx = t0_idx
     return eps
 
 
@@ -348,7 +355,7 @@ def summarize_block(bucket):
     return res
 
 
-def run_grid(feats, starts_cache, date_cut=None):
+def run_grid(feats, starts_cache, date_cut=None, min_gap_sessions=None):
     """Itera grid (N, M, X, Y). Devuelve lista de rows."""
     del date_cut  # no se usa: split diferido a 5b.X
     total_combos = len(GRID_N) * len(GRID_X) * len(GRID_Y) * len(GRID_M)
@@ -362,7 +369,8 @@ def run_grid(feats, starts_cache, date_cut=None):
                 sow_cache = compute_sow_cache(feats, N, X, Y)
                 for M in GRID_M:
                     episodes = build_episodes_landmark(
-                        feats, sow_cache, starts_cache, N, M
+                        feats, sow_cache, starts_cache, N, M,
+                        min_gap_sessions=min_gap_sessions,
                     )
                     # Precalcular metricas por horizonte (una sola vez)
                     # Auditor 2026-10-05 seccion 4: fuente unica de verdad.
@@ -722,8 +730,15 @@ def flatten_bootstrap(boot, row):
 
 
 def main():
+    import argparse
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--min-gap-sessions", type=int, default=None,
+                    help="Gap minimo entre t0 consecutivos del mismo ticker.")
+    args = ap.parse_args()
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     print("== 5b.4-bis - 3 bloques + delta_hetero (v3) ==")
+    if args.min_gap_sessions is not None:
+        print(f"  min_gap_sessions = {args.min_gap_sessions}")
     df, tickers = load_dataset()
     print(f"Tickers en dataset: {len(tickers)}")
     feats = precompute_features(df, tickers)
@@ -734,7 +749,8 @@ def main():
     total_starts = sum(len(v) for v in starts_cache.values())
     print(f"Candidate starts totales: {total_starts}")
 
-    rows = run_grid(feats, starts_cache)
+    rows = run_grid(feats, starts_cache,
+                    min_gap_sessions=args.min_gap_sessions)
 
     # Bootstrap por fila (sobre H20, bloque ALL)
     print(f"Bootstrap: B={BOOT_B}, seed={BOOT_SEED}")
