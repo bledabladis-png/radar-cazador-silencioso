@@ -491,7 +491,9 @@ def block_is_evaluable(block_summary):
 def evaluate_row(row, boot_res):
     """Aplica D1-D3 sobre una fila del grid (protocolo v3 seccion 5.1).
 
-    D1: n_confirmed >= 20 AND n_baseline >= 20 (en ALL, H20).
+    D1: n_confirmed_H20_complete >= 20 AND n_baseline_H20_complete >= 20
+        (en ALL, H20). La metrica se computa sobre ANALYSIS_ROWS
+        (episodios con H completo). Coherente con 5b.X §2.1.
     D2: lower_CI(lift_H20_ALL) > 0 (filtro de desarrollo, no confirmatorio).
     D3: de los bloques EVALUABLES, al menos ceil(2/3) con lift > 0.
         Bloque evaluable = (n_conf>=20 AND n_base>=20). No evaluable = INSUFFICIENT_SAMPLE.
