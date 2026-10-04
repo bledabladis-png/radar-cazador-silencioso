@@ -417,6 +417,14 @@ def bootstrap_lift_H20(rows, B=BOOT_B, seed=BOOT_SEED):
             continue
         by_tk.setdefault(tk, []).append((is_conf, v))
     tickers = list(by_tk.keys())
+    if not tickers:
+        # Auditor 2026-10-05 §16: rows no vacio pero todos con
+        # struct_deterioration=None -> by_tk vacio. Cerrar camino.
+        return {
+            "lift_point": None, "lower_ci": None, "upper_ci": None,
+            "n_tickers": 0, "n_episodes": len(rows), "n_confirmed": 0,
+            "n_baseline": 0, "n_boot_validos": 0,
+        }
 
     def _lift_from_subset(tks):
         n_c = n_b = s_c = s_b = 0
@@ -589,6 +597,71 @@ def _short_key(k):
         "below_support": "below",
         "lower_low": "lower",
     }[k]
+
+
+def build_analysis_rows(episodes, feats, N, h=20, t0_min=None):
+    """Fuente unica de verdad de la poblacion analizada.
+
+    Auditor 2026-10-05 seccion 4: los pares 635/629 y 1753/1731 tienen
+    que salir de una sola funcion para eliminar la ambiguedad entre
+    "episodios con L" y "episodios con H completo".
+
+    Pipeline:
+        episodes_raw
+            -> drop t0 < t0_min (si t0_min)
+            -> drop H censurado (L_idx + h >= len(struct))
+            -> drop metrics=None (struct_L o struct_H NaN)
+            -> ANALYSIS_ROWS
+
+    Args:
+        episodes: lista de dicts producidos por build_episodes_landmark.
+        feats: dict de features por ticker.
+        N: window del SOW (usado por episode_metrics para support_L).
+        h: horizonte. Default 20.
+        t0_min: si se pasa, descarta episodios con t0_date < t0_min.
+
+    Returns:
+        {
+          "n_episodes_raw": int,
+          "n_dropped_oos": int,
+          "n_dropped_h_censored": int,
+          "n_dropped_metrics_none": int,
+          "n_analysis_rows": int,
+          "n_confirmed_H_complete": int,
+          "n_baseline_H_complete": int,
+          "rows": list[(ticker, is_confirmed, metrics)],
+        }
+    """
+    n_raw = len(episodes)
+    n_dropped_oos = 0
+    n_dropped_h = 0
+    n_dropped_metrics = 0
+    rows = []
+    for e in episodes:
+        if t0_min is not None and e["t0_date"] < t0_min:
+            n_dropped_oos += 1
+            continue
+        feat = feats[e["ticker"]]
+        if e["L_idx"] + h >= len(feat["struct"]):
+            n_dropped_h += 1
+            continue
+        m = episode_metrics(feat, e["L_idx"], N, h)
+        if m is None:
+            n_dropped_metrics += 1
+            continue
+        rows.append((e["ticker"], e["is_confirmed"], m))
+    n_conf = sum(1 for _, c, _ in rows if c)
+    n_base = len(rows) - n_conf
+    return {
+        "n_episodes_raw": n_raw,
+        "n_dropped_oos": n_dropped_oos,
+        "n_dropped_h_censored": n_dropped_h,
+        "n_dropped_metrics_none": n_dropped_metrics,
+        "n_analysis_rows": len(rows),
+        "n_confirmed_H_complete": n_conf,
+        "n_baseline_H_complete": n_base,
+        "rows": rows,
+    }
 
 
 def flatten_row(r):
