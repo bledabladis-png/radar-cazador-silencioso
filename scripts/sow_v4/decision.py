@@ -59,13 +59,17 @@ def _upper_ci_90_normal(fold_bootstraps: dict) -> float | None:
 def decide(
     fold_results: list[dict],
     placebo_results: list[dict],
-    gate_universal: bool,
-    gate_conditional: bool,
-    gate_muestra_insuficiente: bool,
+    gate_universal: bool = True,
+    gate_conditional: bool = True,
+    gate_muestra_insuficiente: bool = False,
 ) -> dict:
     """fold_results: lista de dicts con ok/rd_point/bootstraps/fold_idx
-    placebo_results: lista de dicts con scheme/fold_idx/accepted
-    gate_*: resultado del power analysis (seccion 12.9)
+    placebo_results: lista de dicts con scheme/fold_idx/b2c_pass
+    gate_*: parametros retenidos por compatibilidad pero ignorados.
+
+    Dictamen externo 2026-10-04: el power gate se elimina como
+    criterio bloqueante. La potencia no modifica la decision; esta
+    se basa exclusivamente en la evidencia OUTER + placebos.
     """
     if gate_muestra_insuficiente:
         return {"estado": "MUESTRA INSUFICIENTE", "motivo": "gate_potencia"}
@@ -135,8 +139,7 @@ def decide(
 
     # Universal
     if (
-        gate_universal
-        and n_eval_stress >= config.DECISION_MIN_EVAL_STRESS
+        n_eval_stress >= config.DECISION_MIN_EVAL_STRESS
         and n_eval_normal >= config.DECISION_MIN_EVAL_NORMAL
     ):
         req_s = _ceil_2_3(n_eval_stress)
@@ -146,8 +149,7 @@ def decide(
 
     # Condicional
     if (
-        gate_conditional
-        and n_eval_stress >= config.DECISION_MIN_EVAL_STRESS
+        n_eval_stress >= config.DECISION_MIN_EVAL_STRESS
         and n_eval_normal >= config.DECISION_MIN_EVAL_NORMAL
     ):
         req_s = _ceil_2_3(n_eval_stress)

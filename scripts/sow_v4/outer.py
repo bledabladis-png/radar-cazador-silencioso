@@ -7,7 +7,6 @@ congelado.
 """
 from __future__ import annotations
 
-import numpy as np
 import pandas as pd
 
 from scripts.sow_v4 import bootstrap, config, regime
