@@ -157,6 +157,7 @@ def write_paquetes_anotadores(
     blind: "BlindMuestra",
     out_dir: Path,
     pngs_por_anotador: dict[str, dict[int, Path]] | None = None,
+    cases_dir_source: Path | None = None,
 ) -> dict:
     """Escribe estructura separada: ADMIN/ + ANNOTATOR_N/.
 
@@ -165,6 +166,10 @@ def write_paquetes_anotadores(
 
     pngs_por_anotador: dict {anotador: {blind_id: path_png}}.
         Si None, no copia PNGs; solo CSVs.
+
+    cases_dir_source: directorio con PNGs nombrados case_{blind_id}.png.
+        Si se pasa, copia el directorio completo a cada ANNOTATOR_N/cases/.
+        Prioridad sobre pngs_por_anotador.
 
     Devuelve dict con rutas escritas.
     """
@@ -200,9 +205,16 @@ def write_paquetes_anotadores(
         csv_path = an_dir / f"annotation_{nombre}.csv"
         write_anotador_csv(blind, nombre, csv_path)
 
-        # PNGs en su orden aleatorio, con nombre blind_id (sin mapa)
         png_dir = an_dir / "cases"
-        if pngs_por_anotador is not None and nombre in pngs_por_anotador:
+
+        # Modo 1: cases_dir_source (copia completa)
+        if cases_dir_source is not None and cases_dir_source.exists():
+            if png_dir.exists():
+                shutil.rmtree(png_dir)
+            shutil.copytree(cases_dir_source, png_dir)
+
+        # Modo 2: pngs_por_anotador (mapa por anotador)
+        elif pngs_por_anotador is not None and nombre in pngs_por_anotador:
             png_dir.mkdir(exist_ok=True)
             for bid, src in pngs_por_anotador[nombre].items():
                 dst = png_dir / f"case_{bid}.png"
@@ -211,7 +223,10 @@ def write_paquetes_anotadores(
 
         rutas[nombre] = {
             "csv": csv_path,
-            "casos_dir": png_dir if pngs_por_anotador else None,
+            "casos_dir": png_dir if (
+                cases_dir_source is not None
+                or pngs_por_anotador is not None
+            ) else None,
         }
 
     return rutas

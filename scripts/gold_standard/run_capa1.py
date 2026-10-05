@@ -32,7 +32,7 @@ import pandas as pd
 
 from scripts.gold_standard.annotation import (
     build_blind_muestra,
-    write_all_csvs,
+    write_paquetes_anotadores,
 )
 from scripts.gold_standard.constants import (
     CAPACIDAD_MAX_NB,
@@ -244,18 +244,22 @@ def _finalize(args, dataset, smap, sA, sB, meta, n_B, t0):
     print("[capa1] asignando blind_ids...")
     blind = build_blind_muestra(sAB, seed=args.seed)
 
-    # 11. Directorio y CSV
-    args.out_dir.mkdir(parents=True, exist_ok=True)
-    csv_paths = write_all_csvs(blind, args.out_dir)
-    print(f"[capa1] CSVs escritos: {list(csv_paths.keys())}")
-
-    # 12. Render PNGs
+    # 11. Render PNGs en directorio maestro (una sola vez)
     print("[capa1] renderizando PNGs...")
-    cases_dir = args.out_dir / "cases"
-    render_res = render_all(blind.mapping, dataset, cases_dir)
+    args.out_dir.mkdir(parents=True, exist_ok=True)
+    cases_master = args.out_dir / "_cases_master"
+    render_res = render_all(blind.mapping, dataset, cases_master)
     print(f"[capa1] PNGs: ok={render_res['ok']} fail={render_res['fail']}")
 
-    # 13. Manifest
+    # 12. Estructura ADMIN/ANNOTATOR_N con copia de PNGs
+    print("[capa1] escribiendo paquetes ADMIN/ANNOTATOR_N...")
+    rutas = write_paquetes_anotadores(
+        blind, args.out_dir, cases_dir_source=cases_master,
+    )
+    print(f"[capa1] paquetes: {sorted(rutas.keys())}")
+
+    # 13. Manifest en ADMIN/
+    admin_dir = args.out_dir / "ADMIN"
     manifest = {
         "estudio": "gold_standard_capa1",
         "seed": args.seed,
@@ -265,9 +269,10 @@ def _finalize(args, dataset, smap, sA, sB, meta, n_B, t0):
         "n_pngs_ok": render_res["ok"],
         "n_pngs_fail": render_res["fail"],
         "duracion_segundos": round(time.time() - t0, 2),
-        "csv_sha256": {k: sha256_file(v) for k, v in csv_paths.items()},
+        "mapping_sha256": sha256_file(rutas["admin"]["mapping"]),
+        "manifest_admin_sha256": sha256_file(rutas["admin"]["manifest"]),
     }
-    manifest_path = args.out_dir / "manifest.json"
+    manifest_path = admin_dir / "manifest.json"
     manifest_path.write_text(
         json.dumps(manifest, indent=2, ensure_ascii=False),
         encoding="utf-8",
