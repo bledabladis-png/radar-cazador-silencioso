@@ -95,11 +95,17 @@ def _compute_data_quality(reference_date=None):
 
 
 def compute_market_data(df_market, df_stocks=None, temporal_meta=None,
-                        reference_date=None):
+                        reference_date=None, skip_data_quality=False):
     """Ejecuta PCR + Dark Pools + Volatilidad estructural + Calidad datos.
 
     F-UX-03 (2026-09-28): reference_date opcional se propaga a
     compute_data_quality.
+
+    skip_data_quality (2026-10-05): si True, omite _compute_data_quality
+    y devuelve data_quality_df=None. Usado por run.py para diferir el
+    calculo tras compute_final_matrices, de modo que la tabla de
+    frescura lea evidence_matrix.csv ya actualizado (bug BAJA 2026-10-05:
+    reportaba last_date del run anterior).
 
     Returns:
         dict con keys:
@@ -108,7 +114,10 @@ def compute_market_data(df_market, df_stocks=None, temporal_meta=None,
     pcr_data = _compute_pcr()
     darkpool_data = _compute_darkpool(df_market, df_stocks=df_stocks)
     vol_structure_df = _compute_vol_structure(df_market, pcr_data)
-    data_quality_df = _compute_data_quality(reference_date=reference_date)
+    if skip_data_quality:
+        data_quality_df = None
+    else:
+        data_quality_df = _compute_data_quality(reference_date=reference_date)
     return {
         'pcr_data': pcr_data,
         'darkpool_data': darkpool_data,

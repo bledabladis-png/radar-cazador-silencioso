@@ -20,7 +20,7 @@ from src.pipeline.breadth_metrics import compute_breadth_metrics
 from src.pipeline.engines import compute_engines
 from src.pipeline.slpm import compute_slpm_v12
 from src.pipeline.diagnostics import compute_diagnostics
-from src.pipeline.market_data import compute_market_data
+from src.pipeline.market_data import compute_market_data, _compute_data_quality
 from src.pipeline.mte_confirmation import compute_mte_confirmation
 from src.pipeline.indices_intl import compute_indices_intl
 from src.pipeline.validation_gate import run_validation_gate
@@ -166,11 +166,13 @@ def main():
 
     md = compute_market_data(df_market, df_stocks=df_stocks,
                              temporal_meta=temporal_meta,
-                             reference_date=reference_date)
+                             reference_date=reference_date,
+                             skip_data_quality=True)
     pcr_data = md['pcr_data']
     darkpool_data = md['darkpool_data']
     vol_structure_df = md['vol_structure_df']
-    data_quality_df = md['data_quality_df']
+    # data_quality_df se calcula mas abajo, tras compute_final_matrices
+    # (fix frescura Evidence Matrix 2026-10-05).
 
     mc = compute_mte_confirmation(
         df_market, df_stocks, financial_score, all_signals,
@@ -225,6 +227,13 @@ def main():
     )
     sector_regime_matrix_df = mats['sector_regime_matrix_df']
     evidence_matrix_df = mats['evidence_matrix_df']
+
+    # Fix frescura Evidence Matrix (2026-10-05): compute_data_quality
+    # se difiere aqui para que lea evidence_matrix.csv ya escrito por
+    # finalize. Antes corria en compute_market_data, leyendo el CSV
+    # del run anterior, y la tabla de frescura declaraba una fecha
+    # con un run de desfase.
+    data_quality_df = _compute_data_quality(reference_date=reference_date)
 
     iae_section = compute_iae_section(reference_date, run_id)
 
