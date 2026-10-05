@@ -6,8 +6,8 @@
     "sha256": "c6dae718a258ac47e4c75326ec5278397a97f116a56f5070a22f8c8778f3a1f2",
     "commit_nota": "el commit del protocolo es el commit que contiene este manifiesto; se consulta con git log, no se hardcodea (evita bucle autorreferencial)"
   },
-  "revision_auditor": "PENDIENTE",
-  "estado": "PROPUESTO_V3",
+  "revision_auditor": "FIRMADO",
+  "estado": "FROZEN",
   "enmiendas_aplicadas_auditor_2026_10_05": [
     "block_len_principal=120 con tratamiento de fronteras (burn_in_200)",
     "tie_break simplificado: |lift_A - lift_B| <= 1pp -> menor N, sin IC de diferencia",
@@ -19,8 +19,13 @@
     "v3: maxT fixed-SE studentized. Eliminado SE_j*_b, sustituido por SE_j observado fijo."
   ],
   "condiciones_firma_auditor": {
-    "C1_maxT_block_bootstrap": "PENDIENTE",
-    "C2_panel_block_bootstrap_recomputa_pipeline": "PENDIENTE"
+    "C1_maxT_fixed_se": "CERRADA - SE_j observado fijo, sin bootstrap anidado",
+    "C2_panel_block_bootstrap": "CERRADA - diseno aprobado",
+    "C3_block_len_120_burn_in_200": "CERRADA",
+    "C4_anti_solape_50_obligatorio": "CERRADA",
+    "C5_tie_break_1pp": "CERRADA",
+    "C6_fases_100_500_2000_20000": "CERRADA"
   },
-  "proximo_evento": "Firma del auditor -> implementacion bootstrap panel + maxT por fases -> rerun limpio"
+  "proximo_evento": "Implementacion bootstrap panel + maxT por fases",
+  "fecha_firma_auditor": "2026-10-05"
 }
