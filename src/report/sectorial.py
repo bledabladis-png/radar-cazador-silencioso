@@ -42,14 +42,14 @@ def render_sector_breadth(sector_breadth_data, is_stale=False, stale_reason=None
             else:
                 # MARKET_CLOSED o legacy (None): texto historico.
                 out.append(f"*Sin actualizacion - mercado cerrado. Ultima observacion: {_latest_str}.*\n\n")
-        out.append("| Sector | EMA20 | EMA50 | EMA200 | RS+ | Mom+ | Acc | Markup | Dist | Markdown | NH | NL | A/D | Cob EMA200 |\n")
-        out.append("|--------|-------|-------|--------|-----|------|-----|--------|------|----------|----|----|-----|-----------|\n")
+        out.append("| Sector | EMA20 | EMA50 | EMA200 | RS+ | Mom+ | NH | NL | A/D | Cob EMA200 |\n")
+        out.append("|--------|-------|-------|--------|-----|------|----|----|-----|-----------|\n")
         for _, row in breadth_latest.iterrows():
             cobertura = (row['n_valid_ema200'] / row['n_total'] * 100) if row['n_total'] else 0
             cov_label = f"{cobertura:.0f}%"
             if (cobertura / 100) < MIN_SECTOR_COVERAGE:
                 cov_label += " [BAJA]"
-            out.append(f"| {row['sector']} | {_fmt_num(row['pct_above_ema20'], '{:.1f}%')} | {_fmt_num(row['pct_above_ema50'], '{:.1f}%')} | {_fmt_num(row['pct_above_ema200'], '{:.1f}%')} | {_fmt_num(row['pct_rs_positive'], '{:.1f}%')} | {_fmt_num(row['pct_momentum_positive'], '{:.1f}%')} | {_fmt_num(row['count_accumulation'], '{:.0f}')} | {_fmt_num(row['count_markup'], '{:.0f}')} | {_fmt_num(row['count_distribution'], '{:.0f}')} | {_fmt_num(row['count_markdown'], '{:.0f}')} | {_fmt_num(row['new_highs'], '{:.0f}')} | {_fmt_num(row['new_lows'], '{:.0f}')} | {_fmt_ad_net(row['advances'], row['declines'], row['ad_net'])} | {cov_label} |\n")
+            out.append(f"| {row['sector']} | {_fmt_num(row['pct_above_ema20'], '{:.1f}%')} | {_fmt_num(row['pct_above_ema50'], '{:.1f}%')} | {_fmt_num(row['pct_above_ema200'], '{:.1f}%')} | {_fmt_num(row['pct_rs_positive'], '{:.1f}%')} | {_fmt_num(row['pct_momentum_positive'], '{:.1f}%')} | {_fmt_num(row['new_highs'], '{:.0f}')} | {_fmt_num(row['new_lows'], '{:.0f}')} | {_fmt_ad_net(row['advances'], row['declines'], row['ad_net'])} | {cov_label} |\n")
         out.append("\n")
         out.append(f"*[BAJA] = cobertura < {MIN_SECTOR_COVERAGE:.0%} del universo del sector. Los ratios se calculan sobre la parte valida; el valor puede no ser representativo del sector completo. Los derivados (SLPM, Opportunity Map, scores) usan estos mismos ratios sin invalidacion automatica.*\n\n")
         out.append("*La columna A/D de esta tabla agrega solo top-20 por sector (suma total = ~220 tickers). No coincide con la metrica Advance/Decline Net de Confirmation Data (universo completo, ~313 tickers).*\n\n")
