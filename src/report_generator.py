@@ -14,11 +14,10 @@ from src.report.leaders import (
     render_momentum_sectores,
     render_tactical_leaders,
     render_momentum_otros,
-    render_structural_ranking,
     render_acciones_seleccionadas,
 )
 from src.report.rankings import (
-    render_rankings_sectoriales,
+    render_ranking_sectorial_unificado,
     render_persistencia,
     render_opportunity_map,
 )
@@ -154,15 +153,11 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
     # MOMENTUM OTROS ACTIVOS + STRUCTURAL RANKING
     # =========================================================================
     lines.extend(render_momentum_otros(otros_price_rank, otros_flow_rank))
-    lines.extend(render_structural_ranking(
-        structural_scores, tactical_scores,
-        sector_persistence, signal_agreements, signal_agreements_display,
-    ))
 
     # =========================================================================
     # RANKINGS SECTORIALES
     # =========================================================================
-    lines.extend(render_rankings_sectoriales(
+    lines.extend(render_ranking_sectorial_unificado(
         sector_results, tactical_scores, structural_scores,
         sector_persistence, signal_agreements, signal_agreements_display,
         shock_sensitivities,
