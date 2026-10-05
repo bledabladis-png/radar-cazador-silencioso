@@ -8,7 +8,6 @@ import pandas as pd
 import numpy as np
 from src.utils import get_col
 from src.market_calendar import is_market_day, previous_market_day
-from indicators.wyckoff import classify_wyckoff_phase
 from src.stock_data_loader import normalize_yahoo_ticker
 from config.settings import TOP_N_SECTOR_COMPONENTS
 
@@ -68,7 +67,6 @@ def compute_sector_breadth(df_market, df_stocks, holdings_df, as_of_date=None, t
         ema200_above = []
         rs_positive = []
         mom_positive = []
-        wyckoff_phases = []
         nh_count = 0
         nl_count = 0
         advances = 0
@@ -91,7 +89,6 @@ def compute_sector_breadth(df_market, df_stocks, holdings_df, as_of_date=None, t
             close = _get_series(df_stocks, ticker, 'Close')
             high = _get_series(df_stocks, ticker, 'High')
             low = _get_series(df_stocks, ticker, 'Low')
-            volume = _get_series(df_stocks, ticker, 'Volume')
             if close.empty or len(close) == 0:
                 continue
 
@@ -179,21 +176,6 @@ def compute_sector_breadth(df_market, df_stocks, holdings_df, as_of_date=None, t
                         declines += 1
                     else:
                         unchanged += 1
-
-            # Wyckoff (consumir indicador oficial)
-            if len(close) >= 60:
-                try:
-                    ticker_df = pd.DataFrame({
-                        'Open': _get_series(df_stocks, ticker, 'Open'),
-                        'High': high,
-                        'Low': low,
-                        'Close': close,
-                        'Volume': volume
-                    }).dropna()
-                    phase = classify_wyckoff_phase(ticker_df, ticker)
-                    wyckoff_phases.append(phase)
-                except (KeyError, ValueError, TypeError, IndexError, AttributeError):
-                    wyckoff_phases.append('INSUFICIENTE')
 
         # Agregar sector
         row = {
