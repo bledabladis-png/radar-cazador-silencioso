@@ -32,7 +32,7 @@ def test_e1_nota_complementariedad_spdr():
     out = render_flujo_spdr(df)
     body = "".join(out)
     assert "dato atomico" in body
-    assert "Caracteristicas" in body
+    assert "Agregado sectorial" in body
 
 
 def test_e1_nota_complementariedad_caracteristicas():
