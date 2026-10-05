@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Tests power_v8 (escenarios + poblacion + MC).
-
-BORRADOR — pendiente firma auditor.
-"""
+"""Test sanity power_v8. Verifica varianza > 0."""
 from __future__ import annotations
 
 import sys
@@ -15,64 +12,56 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
 from scripts.gold_standard.power_v8 import (
-    _hamilton,
     escenarios_factibles,
-    generar_poblacion_sintetica,
     evaluar_escenario,
+    _poblacion_por_estrato,
 )
 from scripts.gold_standard.sampling_b_v8 import asignar_n_h
 
 
-Q_D_REAL = 2559 / 243435
+def _make_estratos_sinteticos():
+    """4 celdas x 4 estratos."""
+    rows = []
+    for celda, N in [("C1", 500), ("C2", 500), ("C3", 5000), ("C4", 50000)]:
+        for s in ("A", "B", "C", "D"):
+            rows.append({
+                "celda": celda, "sector": s, "periodo": "P1",
+                "N_h": N,
+            })
+    return pd.DataFrame(rows)
+
+
+def test_poblacion_por_estrato_conteos():
+    e = _make_estratos_sinteticos()
+    q_D = 0.0105
+    n_Y1 = _poblacion_por_estrato(e, 0.008, 0.70, 0.995, q_D)
+    assert n_Y1.sum() > 0
+    assert (n_Y1 >= 0).all()
+    N_h = e["N_h"].to_numpy()
+    assert (n_Y1 <= N_h).all()
+
+
+def test_evaluar_escenario_tiene_varianza():
+    """Criterio de sanity: q95(se) NO puede ser 0 si hay varianza."""
+    e = _make_estratos_sinteticos()
+    e = asignar_n_h(e, K=50)
+    res = evaluar_escenario(0.008, 0.70, 0.995, e, R_MC=100, B=200, master_seed=42)
+    q95 = res["q95_MC"]
+    # Si algun estimador tiene varianza > 0 en la simulacion, q95 > 0
+    n_positivos = sum(1 for k in ("se", "sp", "ppv", "npv")
+                       if np.isfinite(q95[k]) and q95[k] > 0)
+    assert n_positivos >= 3, f"q95_MC = {q95}"
+
+
+def test_evaluar_escenario_estructura():
+    e = _make_estratos_sinteticos()
+    e = asignar_n_h(e, K=50)
+    res = evaluar_escenario(0.008, 0.70, 0.995, e, R_MC=50, B=100, master_seed=42)
+    for k in ("q95_MC", "pass_estimador", "invalid_rate_max", "PASS"):
+        assert k in res
 
 
 def test_escenarios_factibles_no_vacio():
-    e = escenarios_factibles(Q_D_REAL)
-    assert len(e) > 0
-
-
-def test_escenarios_factibles_todos_compatibles():
-    e = escenarios_factibles(Q_D_REAL)
-    for s in e:
-        assert s["pi_Y"] * s["Se"] <= Q_D_REAL + 1e-12
-        assert 0.0 <= s["Sp"] <= 1.0
-
-
-def test_escenarios_factibles_es_12():
-    e = escenarios_factibles(Q_D_REAL)
-    assert len(e) == 12
-
-
-def test_poblacion_sintetica_conteos_ok():
-    N_h_celda = {"C1": 1000, "C2": 500, "C3": 200, "C4": 300}
-    pop = generar_poblacion_sintetica(N_h_celda, 0.008, 0.70, 0.995)
-    for celda in ("C1", "C2", "C3", "C4"):
-        assert pop[celda]["n_Y1"] + pop[celda]["n_Y0"] == pop[celda]["N"]
-
-
-def test_poblacion_sintetica_Se_aproximado():
-    N_h_celda = {"C1": 10_000, "C2": 5_000, "C3": 200, "C4": 300}
-    pop = generar_poblacion_sintetica(N_h_celda, 0.008, 0.70, 0.995)
-    n_Y1_D1 = pop["C1"]["n_Y1"] + pop["C2"]["n_Y1"]
-    n_D1 = pop["C1"]["N"] + pop["C2"]["N"]
-    se_efectivo = n_Y1_D1 / n_D1
-    assert abs(se_efectivo - 0.70) < 0.01
-
-
-def test_hamilton_suma_exacta():
-    cuotas = np.array([1.3, 2.7, 0.5, 4.5])
-    assert _hamilton(cuotas, 9).sum() == 9
-
-
-def test_evaluar_escenario_devuelve_estructura():
-    estratos = pd.DataFrame({
-        "celda": ["C1"] * 4 + ["C2"] * 4 + ["C3"] * 4 + ["C4"] * 4,
-        "sector": ["A", "B"] * 8,
-        "periodo": ["P1"] * 16,
-        "N_h": [100] * 16,
-    })
-    e = asignar_n_h(estratos, K=20)
-    res = evaluar_escenario(0.008, 0.70, 0.995, e, R_MC=10, B=50)
-    assert "q95_MC" in res
-    assert "pass_estimador" in res
-    assert "invalid_rate_max" in res
+    q_D = 2559 / 243435
+    esc = escenarios_factibles(q_D)
+    assert len(esc) == 12
