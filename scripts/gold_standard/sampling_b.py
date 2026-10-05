@@ -33,54 +33,48 @@ def collapse_estratos(
     estratos: pd.DataFrame,
     n_min: int = N_MIN_ESTRATO,
 ) -> pd.DataFrame:
-    """Regla determinista de colapso.
+    """Regla determinista de colapso. Solo por periodo (P1.5, dictamen).
 
-    1. Colapsar por sector (fusionar el sector menos poblado con el mas
-       proximo en tamano total).
-    2. Si aun hay celdas < n_min, colapsar por periodo.
-    3. Regla reproducible.
+    Reglas, en orden:
+      1. Mantener sector x periodo si todas las celdas tienen
+         N_h >= n_min.
+      2. Si alguna celda < n_min, colapsar TODOS los periodos de ese
+         sector a "global" (no se fusionan sectores distintos).
+      3. Si tras el colapso un sector sigue con N_h < n_min, se
+         reclasifica ese sector como "OTHER" (categoria predefinida).
+         No se fusiona con otro sector.
+
+    Nunca se fusionan sectores distintos.
+    Regla determinista, congelada antes del muestreo.
     """
     df = estratos.copy()
+    if df.empty:
+        return df
 
-    # Totales por sector
-    sect_tot = df.groupby("sector")["N_h"].sum().sort_values()
-    sector_remap = {s: s for s in sect_tot.index}
-
-    while True:
-        df["sector_eff"] = df["sector"].map(sector_remap)
-        cell = df.groupby(["sector_eff", "periodo"])["N_h"].sum()
-        small = cell[cell < n_min]
-        if small.empty:
-            break
-        # elegir el sector efectivo mas pequeno globalmente y fusionarlo
-        sect_small = (
-            df.groupby("sector_eff")["N_h"].sum().sort_values()
-        )
-        if len(sect_small) <= 1:
-            break
-        smallest = sect_small.index[0]
-        # fusionar con el proximo
-        rest = sect_small.drop(smallest)
-        if rest.empty:
-            break
-        target = rest.index[0]
-        for s, t in sector_remap.items():
-            if t == smallest:
-                sector_remap[s] = target
-        # evitar bucle infinito
-        if sector_remap.get(smallest) == smallest:
-            break
-
-    df["sector_eff"] = df["sector"].map(sector_remap)
-
-    # Colapso por periodo si aun hay celdas pequenas
+    df["sector_eff"] = df["sector"]
     df["periodo_eff"] = df["periodo"]
-    cell2 = df.groupby(["sector_eff", "periodo_eff"])["N_h"].sum()
-    small2 = cell2[cell2 < n_min]
-    if not small2.empty:
-        # colapsar todos los periodos a "global"
-        df["periodo_eff"] = "global"
 
+    # Regla 1-2: por cada sector, si alguna celda < n_min, todo a global
+    celda = df.groupby(["sector_eff", "periodo_eff"])["N_h"].sum()
+    sectores_colapsar = set()
+    for (s, _), n_h in celda.items():
+        if n_h < n_min:
+            sectores_colapsar.add(s)
+    for s in sectores_colapsar:
+        mask = df["sector_eff"] == s
+        df.loc[mask, "periodo_eff"] = "global"
+
+    # Regla 3: si un sector completo sigue < n_min tras colapsar, OTHER
+    totales_sector = df.groupby(["sector_eff", "periodo_eff"])["N_h"].sum()
+    sectores_a_other = set()
+    for (s, _), n_h in totales_sector.items():
+        if n_h < n_min:
+            sectores_a_other.add(s)
+    for s in sectores_a_other:
+        mask = df["sector_eff"] == s
+        df.loc[mask, "sector_eff"] = "OTHER"
+
+    # Reagregar (puede haber colisiones tras el remap)
     out = (
         df.groupby(["sector_eff", "periodo_eff"], dropna=False)["N_h"]
         .sum()
@@ -88,6 +82,7 @@ def collapse_estratos(
         .rename(columns={"sector_eff": "sector", "periodo_eff": "periodo"})
     )
     return out
+
 
 
 def proportional_allocation(
