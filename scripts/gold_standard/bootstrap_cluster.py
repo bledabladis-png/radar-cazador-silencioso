@@ -28,8 +28,10 @@ class ClusterResult:
     hi: float
     samples: np.ndarray
     B: int
-    n_replicas: int
+    n_replicas: int               # replicas con Delta definido
     n_tickers_original: int
+    n_boot_invalid: int = 0       # replicas NaN (celdas sin soporte)
+    invalid_rate: float = 0.0     # n_boot_invalid / B
 
 
 def _delta_from_df(
@@ -74,6 +76,19 @@ def cluster_bootstrap_delta(
     if len(df) == 0:
         raise ValueError("DataFrame vacio")
 
+    # Preflight de soporte (dictamen P0.6).
+    # Cada una de las dos celdas de SOW=1 debe tener K tickers distintos.
+    K_SOPORTE_MIN = 20
+    sub_sow1 = df[df[sow_col] == 1]
+    tickers_c1 = sub_sow1[sub_sow1[ctx_col] == 1][ticker_col].nunique()
+    tickers_c0 = sub_sow1[sub_sow1[ctx_col] == 0][ticker_col].nunique()
+    if tickers_c1 < K_SOPORTE_MIN or tickers_c0 < K_SOPORTE_MIN:
+        raise ValueError(
+            f"Soporte insuficiente: tickers SOW=1,Ctx=1 = {tickers_c1}, "
+            f"SOW=1,Ctx=0 = {tickers_c0}. "
+            f"Se requieren >= {K_SOPORTE_MIN} en cada celda."
+        )
+
     tickers = df[ticker_col].unique()
     n_tickers = len(tickers)
     if n_tickers < 2:
@@ -96,7 +111,11 @@ def cluster_bootstrap_delta(
             replica, sow_col, ctx_col, dist_col, dist_label,
         )
 
-    valid = samples[~np.isnan(samples)]
+    invalid_mask = np.isnan(samples)
+    n_invalid = int(invalid_mask.sum())
+    valid = samples[~invalid_mask]
+    invalid_rate = n_invalid / B if B > 0 else 0.0
+
     if len(valid) == 0:
         lo = hi = float("nan")
     else:
@@ -107,6 +126,8 @@ def cluster_bootstrap_delta(
         lo=float(lo), hi=float(hi),
         samples=samples, B=B, n_replicas=len(valid),
         n_tickers_original=n_tickers,
+        n_boot_invalid=n_invalid,
+        invalid_rate=invalid_rate,
     )
 
 def clasificar_resultado(res: ClusterResult) -> str:
@@ -115,7 +136,10 @@ def clasificar_resultado(res: ClusterResult) -> str:
     PASS: LCI > 0
     EVIDENCIA_EN_CONTRA: UCI < 0
     INCONCLUSO: IC cruza 0
+    BLOQUEADO_INVALID: invalid_rate > 0 (dictamen P0.6)
     """
+    if res.invalid_rate > 0:
+        return "BLOQUEADO_INVALID"
     if np.isnan(res.lo) or np.isnan(res.hi):
         return "INCONCLUSO"
     if res.lo > 0:

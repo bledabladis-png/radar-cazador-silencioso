@@ -93,14 +93,17 @@ def test_cluster_rechaza_columna_faltante():
         cluster_bootstrap_delta(df, B=10, seed=1)
 
 
-def test_cluster_rechaza_pocos_tickers():
+def test_cluster_rechaza_soporte_insuficiente():
+    """Dictamen P0.6: preflight exige >= 20 tickers por celda.
+    2 tickers se rechaza por soporte insuficiente, no por el check <2.
+    """
     df = pd.DataFrame([
         {"ticker": "A", "detect_sow": 1, "contexto_op": 1,
          "label_adjudicada": DIST},
         {"ticker": "A", "detect_sow": 1, "contexto_op": 0,
          "label_adjudicada": NO_DIST},
     ])
-    with pytest.raises(ValueError, match="2 tickers"):
+    with pytest.raises(ValueError, match="Soporte insuficiente"):
         cluster_bootstrap_delta(df, B=10, seed=1)
 
 def test_cluster_remuestrea_globalmente_no_por_celda():
