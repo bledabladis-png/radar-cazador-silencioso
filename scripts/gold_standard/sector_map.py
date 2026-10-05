@@ -79,6 +79,21 @@ def sector_map_dict(df: pd.DataFrame) -> dict[str, str]:
     return dict(zip(df["ticker"], df["sector"]))
 
 
+SECTOR_UNKNOWN = "UNKNOWN"
+
+
+def assign_sector(
+    ticker: str,
+    smap: dict[str, str],
+) -> str:
+    """Asigna sector. Devuelve UNKNOWN si no hay mapping.
+
+    Politica (protocolo v7 corregido, dictamen DOC 53):
+    la ausencia de sector NO excluye la observacion del universo.
+    """
+    return smap.get(ticker, SECTOR_UNKNOWN)
+
+
 def coverage_report(
     sector_df: pd.DataFrame,
     dataset_tickers: set[str],

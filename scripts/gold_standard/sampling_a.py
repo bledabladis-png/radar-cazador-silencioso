@@ -32,12 +32,13 @@ def build_metadata(
     episodes: pd.DataFrame,
     sector_map: dict[str, str],
 ) -> pd.DataFrame:
-    """Anade sector y periodo a los episodios del frame."""
+    """Anade sector y periodo a los episodios del frame.
+
+    Tickers sin mapping sectorial reciben 'UNKNOWN'.
+    NO se descartan. El universo se conserva completo.
+    """
     df = episodes.copy()
-    df["sector"] = df["ticker"].map(sector_map)
-    if df["sector"].isna().any():
-        missing = sorted(df.loc[df["sector"].isna(), "ticker"].unique())
-        raise ValueError(f"Tickers sin sector: {missing}")
+    df["sector"] = df["ticker"].map(sector_map).fillna("UNKNOWN")
     df["year"] = pd.to_datetime(df["t"]).dt.year
     df["periodo"] = df["year"].apply(assign_periodo)
     return df

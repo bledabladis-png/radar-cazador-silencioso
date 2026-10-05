@@ -53,11 +53,13 @@ def test_build_metadata_anade_sector_y_periodo():
     assert set(meta["sector"].unique()) == {"Tech", "Health"}
 
 
-def test_build_metadata_falla_si_falta_sector():
+def test_build_metadata_unknown_si_falta_sector():
+    """Dictamen DOC 53: sector ausente -> UNKNOWN, no descarta observacion."""
     eps = _make_episodes(["AAA", "BBB"], n_per_ticker=5)
     sm = {"AAA": "Tech"}
-    with pytest.raises(ValueError, match="Tickers sin sector"):
-        build_metadata(eps, sm)
+    meta = build_metadata(eps, sm)
+    assert len(meta) == len(eps)
+    assert set(meta["sector"].unique()) == {"Tech", "UNKNOWN"}
 
 
 def test_apply_min_gap_respeta_separacion():

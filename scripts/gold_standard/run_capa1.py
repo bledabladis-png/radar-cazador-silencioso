@@ -156,24 +156,26 @@ def main(argv=None):
     print(f"[capa1] sampling frame: {sf.n_frame} episodios"
           f" sobre {sf.diagnostics['n_tickers_with_frame']} tickers")
 
-    # Filtrar a tickers con sector
-    frame_con_sector = sf.episodes[sf.episodes["ticker"].isin(smap)].copy()
-    print(f"[capa1] frame con sector: {len(frame_con_sector)}")
+    # Universo completo. NO filtrar por sector (dictamen DOC 53).
+    # Tickers sin sector reciben UNKNOWN en build_metadata.
+    frame = sf.episodes.copy()
+    print(f"[capa1] frame universo completo: {len(frame)}")
 
     if not args.go:
         print("[capa1] DRY-RUN. No se calcula detector ni se escribe nada.")
         print(f"[capa1] duracion: {time.time() - t0:.2f}s")
         return 0
 
-    # 4. Detector flags
+    # 4. Detector flags sobre universo completo
     print("[capa1] calculando detect_sow sobre el frame...")
-    flags = compute_detector_flags(frame_con_sector, dataset)
+    flags = compute_detector_flags(frame, dataset)
     print(f"[capa1] positivos detect_sow: {int(flags.sum())}"
           f" / {len(flags)}")
 
-    # 5. Metadata
-    meta = build_metadata(frame_con_sector, smap)
-    print(f"[capa1] metadata: {meta.shape}")
+    # 5. Metadata (sector UNKNOWN si no hay mapping)
+    meta = build_metadata(frame, smap)
+    n_unknown = int((meta["sector"] == "UNKNOWN").sum())
+    print(f"[capa1] metadata: {meta.shape}, UNKNOWN: {n_unknown}")
 
     # 6. Muestreo A
     print("[capa1] muestreo A (enriquecida)...")

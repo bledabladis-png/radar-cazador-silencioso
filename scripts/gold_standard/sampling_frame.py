@@ -8,6 +8,9 @@ Condiciones de elegibilidad (protocolo v7, seccion 2.1):
   - observaciones validas hasta t >= 240 (ventana visual completa)
   - OHLCV completo en las 240 sesiones visuales hasta t
 
+NO filtra por disponibilidad de sector. El universo es completo.
+La asignacion sectorial se hace despues (sector = UNKNOWN si no existe).
+
 BORRADOR — pendiente firma auditor.
 """
 from __future__ import annotations
@@ -65,13 +68,7 @@ def build_sampling_frame(
     warmup_min: int = WARMUP_MIN,
     visual_window: int = VISUAL_WINDOW,
 ) -> SamplingFrame:
-    """Devuelve los (ticker, t) elegibles.
-
-    Para cada ticker:
-      1. Serie booleana de OHLCV completo.
-      2. Rolling sum de visual_window; elegible si == visual_window.
-      3. Excluir posiciones con ordinal < warmup_min + visual_window - 1.
-    """
+    """Devuelve los (ticker, t) elegibles. Universo completo, sin filtro sectorial."""
     _validate_columns(df)
     tickers = sorted(df.columns.get_level_values(1).unique())
 
@@ -106,5 +103,6 @@ def build_sampling_frame(
             "n_tickers_with_frame": int(
                 (pd.Series(n_by_ticker) > 0).sum()
             ),
+            "filtro_sectorial": False,
         },
     )
