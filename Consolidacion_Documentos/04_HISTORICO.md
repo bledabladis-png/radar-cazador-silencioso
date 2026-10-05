@@ -900,4 +900,40 @@ Expedientes: `41_walk_forward_sow.md`, `42_candidata_c2.md`
 (referencia consolidada).
 Commits: acd3632, 0bb893d, este cierre.
 
+### Verificacion E2E del reorder D3 y fix de frescura Evidence Matrix
+
+Sesion 2026-10-05. Cierre del Hueco 1 declarado por el traspaso:
+E2E real en main tras el merge del reorder D3.
+
+E2E ejecutado en main (HEAD 46291c9). Snapshot pre -> run.py ->
+snapshot post. Resultados: exit=0, Gate 10/10, 52 secciones ##
+identicas, 1021 lineas identicas, diff textual de 6 lineas
+(3 timestamps + 3 de tabla de frescura). El reorder D3 no rompe el
+reporte. Commits del reorder: 0dd363d, 1503fe4.
+
+Hallazgo lateral: la fila `Evidence Matrix` de la seccion
+`## Calidad, frescura y cobertura de datos` reportaba un run de
+desfase. Causa: `compute_data_quality` (via `compute_market_data`)
+leia `evidence_matrix.csv` antes de que `finalize` lo reescribiera.
+Bug preexistente, cosmetico (BAJA), ajeno a D3.
+
+Decision estructural: diferir `compute_data_quality` a despues de
+`finalize` en el pipeline. Orden actual:
+... finalize -> data_quality -> IAE -> report. Parametro nuevo
+`skip_data_quality` en `compute_market_data` con default `False`
+(preserva comportamiento legacy para tests existentes). Commit
+538f2aa.
+
+Deuda anotada: pandas `to_csv` escribe CRLF en Windows; `.gitattributes`
+declara `eol=lf` para csv/json. Cada `run.py` marca ~25 ficheros como
+modificados en `outputs/history` y `outputs/state`. Convencion actual:
+commit diario `Daily hist/state`. Fix de raiz pendiente:
+`lineterminator='\n'` en writers.
+
+Anomalias del diff PRE/POST resueltas: (A) `analisis_lideres*.csv`
+generados por el run, no perdidos; (C) 3 CSVs encogen por cambio de
+`coverage 0.998...` -> `1.0`, no por reescritura retroactiva.
+
+Commits: 538f2aa, 7aa9e68.
+
 **Fin del historico.**

@@ -136,6 +136,14 @@ Tipos: `fix`, `refactor`, `docs`, `data`, `test`, `chore`, `perf`.
 - **`Select-String | Out-Null; if ($?) { throw }`:** falso positivo. Usar `if (Select-String ...) { throw }`.
 - **`git commit -F` con `Set-Content -Encoding UTF8`:** mete BOM en PS 5.1. Usar `[IO.File]::WriteAllText` + `UTF8Encoding($false)`.
 - **`path.read_text("utf-8")` no elimina BOM:** usar `"utf-8-sig"` cuando se parsea con `ast`.
+- **`$var:` en strings PS es ambiguo.** `Write-Host "x $ln: y"`
+  produce `La referencia de variable no es valida`. El parser
+  interpreta `$ln:` como drive-variable. Fix: `Write-Host ("x {0}: y" -f $ln)`
+  o `${ln}:`.
+- **`<STAMP>` en bloques de comandos.** No dejar placeholders
+  angulares en bloques que el usuario pegara. Cuando un bloque depende
+  de un valor de salida del bloque anterior, escribir el valor literal
+  o encadenar por variable en el mismo paste.
 
 ---
 

@@ -44,6 +44,50 @@ Al cerrar una sesion nueva, se anade arriba (las mas recientes primero). Si hay 
 
 ## 3. SESIONES
 
+### 2026-10-05 - E2E main post-reorder D3 + fix frescura Evidence Matrix
+
+**Objetivo.** Cerrar el Hueco 1 del handoff: E2E real en main
+post-merge del reorder D3 (commits 0dd363d y 1503fe4). Verificar que
+el reorder no rompe el reporte.
+
+**Hecho.**
+
+- **Arranque verificado.** HEAD 46291c9 == origin/main. Suite 3175
+  passed + 5 skipped. Gate 10/10.
+- **E2E main (Hueco 1).** Snapshot pre -> run.py -> snapshot post.
+  exit=0. Gate 10/10 post. Secciones ## pre/post: 52 == 52. Lineas
+  totales: 1021 == 1021. Diff textual: 6 lineas (3 timestamps + 3 de
+  tabla de frescura). Reorder D3 validado.
+- **Bug BAJA detectado en E2E.** Fila `Evidence Matrix` en
+  `## Calidad, frescura y cobertura de datos` reportaba `2026-10-01`
+  (run anterior) en lugar de `2026-10-02` (run actual). Causa:
+  `compute_data_quality` leia `evidence_matrix.csv` antes de que
+  `finalize` lo reescribiera. Preexistente, cosmetico, ajeno a D3.
+- **Fix.** `compute_market_data` acepta `skip_data_quality=False`.
+  run.py llama con `True` y ejecuta `_compute_data_quality` tras
+  `compute_final_matrices`. Commit 538f2aa. Verificado con E2E.
+- **Anomalias resueltas.** (A) `analisis_lideres*.csv` aparecen en
+  POST, no en PRE: generados por el run, no perdidos. (C) 3 CSVs de
+  history encogen: cambio de `coverage 0.998...` -> `1.0` (mejora de
+  539/540 -> 540/540), no reescritura retroactiva.
+- **Higiene.** `.orig` residual borrado (`flows_secondary.py.orig`,
+  03-oct). Commit 7aa9e68 `Daily hist/state` (convencion existente
+  confirmada por `git log`).
+
+**Commits.** 538f2aa (fix frescura), 7aa9e68 (Daily hist/state).
+
+**Pendiente.**
+
+- Hueco 3: dictamen del auditor sobre merge de gold-standard-v4 a
+  main. Sigue sin pedir.
+- Deuda: churn EOL en outputs/history y outputs/state. Pandas to_csv
+  escribe CRLF; .gitattributes declara eol=lf. Cada run ensucia el
+  working tree con ~25 ficheros. Fix de raiz: `lineterminator='\n'`
+  en writers. Scope separado.
+
+**Proximo paso sugerido.** Abrir Hueco 3 (dictamen gold-standard-v4)
+o retomar pendientes del handoff (v6 AIPW, H5.3, C2).
+
 ### 2026-10-04 - Walk-forward SOW (plan v3) + expediente 41
 
 **Objetivo.** Resolver la pregunta del usuario: validar SOW sin esperar
