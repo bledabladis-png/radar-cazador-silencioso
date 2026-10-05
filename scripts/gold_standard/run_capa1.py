@@ -215,7 +215,7 @@ def main(argv=None):
     if inter:
         print(f"[capa1] ABORTAR: A y B comparten {len(inter)} casos")
         return 1
-    print(f"[capa1] A ∩ B = vacio: OK")
+    print("[capa1] A y B disjuntas: OK")
 
     return _finalize(args, dataset, smap, sA, sB, meta, n_B, t0)
 
