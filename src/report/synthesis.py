@@ -163,7 +163,7 @@ def render_matriz_evidencia(evidence_matrix_data):
         #   sectores por diseno).
         # - Wyckoff depende de pct_accumulation+markup vs distribution+
         #   markdown; en regimenes alcistas los 11 suelen coincidir en +1.
-        out.append("*Credito y Volat son contexto global (mismo valor para los 11 sectores por diseno). Wyckoff puede aparecer uniforme cuando el mercado esta en un regimen homogeneo.*\n\n")
+        out.append("*Credito y Volat son contexto global (mismo valor para los 11 sectores por diseno).*\n\n")
         out.append("\n*La ausencia de Flow Proxy (NaN) representa ausencia de evidencia disponible y no se interpreta como neutralidad.*\n")
         out.append("\n")
     return out
