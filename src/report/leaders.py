@@ -28,7 +28,7 @@ def render_momentum_sectores(sector_price_rank, sector_flow_rank):
     # secciones que usan "Retorno 20d" para el retorno del ETF sectorial.
     out.append("\n*Nota: Retorno 20d mide la mediana de los retornos 20d "
                "de los componentes del sector. Distinta del retorno del ETF "
-               "sectorial mostrado en 'Flujo Primario ETF - Caracteristicas'.*\n")
+               "sectorial mostrado en 'Flujo Primario ETF - Agregado sectorial'.*\n")
 
     if sector_flow_rank:
         out.append("\n## Flujo de Mercado - Sectores (Proxy)\n")
