@@ -28,7 +28,7 @@ def render_flujo_spdr(etf_primary_flow_data):
         except (KeyError, AttributeError, ValueError, TypeError):
             _ultima_fecha = "N/D"
         out.append(f"\n*Fuente: State Street Global Advisors (SSGA). ETF Primary Flow = ΔShares Outstanding × NAV. Z-score sobre {ETF_PRIMARY_FLOW_ZSCORE_WINDOW} sesiones. Ultima fecha: {_ultima_fecha}.*\n\n")
-        out.append("*Esta tabla muestra flujo por ETF (dato atomico). Para la lectura agregada con persistencia y regimen, ver la tabla siguiente: Flujo Primario ETF - Caracteristicas.*\n\n")
+        out.append("*Esta tabla muestra flujo por ETF (dato atomico). Para la lectura agregada con persistencia y regimen, ver la tabla siguiente: Flujo Primario ETF - Agregado sectorial.*\n\n")
         # F6-29b (2026-09-28): aclarar +0.00 vs N/D.
         out.append("*En la columna Primary Flow $: `+0.00` indica flujo calculado exactamente cero (shares outstanding sin cambio); `N/D` indica dato no disponible (NaN en shares o NAV). Son estados distintos.*\n\n")
     return out
@@ -43,7 +43,7 @@ def render_flujo_caracteristicas(sector_flow_characteristics_data):
     if sector_flow_characteristics_data is not None and not sector_flow_characteristics_data.empty:
         latest_date = pd.to_datetime(sector_flow_characteristics_data['date']).max()
         flow_latest = sector_flow_characteristics_data[pd.to_datetime(sector_flow_characteristics_data['date']) == latest_date]
-        out.append("## Flujo Primario ETF — Características\n")
+        out.append("## Flujo Primario ETF - Agregado sectorial\n")
         out.append("| Sector | Flujo $ | % AUM | Z | 5d Acum | 20d Acum | Pers 5d | Pers 20d | Ret 20d | Régimen |\n")
         out.append("|--------|---------|-------|----|---------|----------|---------|----------|---------|----------|\n")
         for _, row in flow_latest.iterrows():
