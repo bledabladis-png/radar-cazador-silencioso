@@ -143,6 +143,7 @@ def render_acciones_seleccionadas(leader_lines):
             f"30% Flujo proxy + 25% Wyckoff + 10% Estabilidad, ajustado por "
             f"persistencia 10d).*\n\n"
         )
+        out.append('*RS = RS Level (precio acción / precio sector). RS Mom = RS Momentum (cambio del RS en 20 días). El WLS combina ambas con pesos 35% y 25% respectivamente.*\n\n')
         out.extend(leader_lines)
     else:
         out.append("\n## Acciones Seleccionadas por el Modelo de Liderazgo Sectorial\n")

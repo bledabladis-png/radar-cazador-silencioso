@@ -195,7 +195,6 @@ def generate_leader_section(df_market, df_stocks, holdings_df, fase_dict,
             sos_flag = '[v]' if row.get('sos', 0) == 1 else ''
             lines.append(f"| {row['ticker']} | {row['rs']:.2f} | {row['rs_mom']:.2%} | {row['flow_proxy_z']:.2f} | {row['wls']:.2f} | {row['wyckoff_phase']} | {row['persistence_5d']:.0%} | {row['persistence_10d']:.0%} | {row['persistence_20d']:.0%} | {spring_flag} | {sos_flag} |\n")
         lines.append('\n')
-        lines.append('*RS = RS Level (precio acción / precio sector). RS Mom = RS Momentum (cambio del RS en 20 días). El WLS combina ambas con pesos 35% y 25% respectivamente.*\n')
 
     # Filtrar métricas None/vacías y concatenar solo si hay datos válidos
     full_metrics_data = [m for m in full_metrics_data if m is not None and not m.empty]
