@@ -150,3 +150,68 @@ def write_all_csvs(
         write_anotador_csv(blind, nombre, p)
         paths[nombre] = p
     return paths
+
+
+
+def write_paquetes_anotadores(
+    blind: "BlindMuestra",
+    out_dir: Path,
+    pngs_por_anotador: dict[str, dict[int, Path]] | None = None,
+) -> dict:
+    """Escribe estructura separada: ADMIN/ + ANNOTATOR_N/.
+
+    Dictamen P1.4: el paquete de cada anotador NO debe contener
+    ninguna ruta administrativa (mapping).
+
+    pngs_por_anotador: dict {anotador: {blind_id: path_png}}.
+        Si None, no copia PNGs; solo CSVs.
+
+    Devuelve dict con rutas escritas.
+    """
+    import json
+    import shutil
+
+    out_dir.mkdir(parents=True, exist_ok=True)
+    admin_dir = out_dir / "ADMIN"
+    admin_dir.mkdir(exist_ok=True)
+
+    # 1. Admin: mapping + manifest
+    mapping_path = admin_dir / "mapping.csv"
+    write_mapping_csv(blind, mapping_path)
+
+    manifest_admin = {
+        "n_casos": int(len(blind.mapping)),
+        "anotadores": list(ANOTADORES),
+        "orden_por_anotador_distinto": True,
+    }
+    manifest_path = admin_dir / "manifest_admin.json"
+    manifest_path.write_text(
+        json.dumps(manifest_admin, indent=2, ensure_ascii=False),
+        encoding="utf-8",
+    )
+
+    # 2. Por anotador
+    rutas = {"admin": {"mapping": mapping_path, "manifest": manifest_path}}
+    for i, nombre in enumerate(ANOTADORES, 1):
+        an_dir = out_dir / f"ANNOTATOR_{i}"
+        an_dir.mkdir(exist_ok=True)
+
+        # CSV del anotador
+        csv_path = an_dir / f"annotation_{nombre}.csv"
+        write_anotador_csv(blind, nombre, csv_path)
+
+        # PNGs en su orden aleatorio, con nombre blind_id (sin mapa)
+        png_dir = an_dir / "cases"
+        if pngs_por_anotador is not None and nombre in pngs_por_anotador:
+            png_dir.mkdir(exist_ok=True)
+            for bid, src in pngs_por_anotador[nombre].items():
+                dst = png_dir / f"case_{bid}.png"
+                if src != dst:
+                    shutil.copyfile(src, dst)
+
+        rutas[nombre] = {
+            "csv": csv_path,
+            "casos_dir": png_dir if pngs_por_anotador else None,
+        }
+
+    return rutas
