@@ -317,6 +317,16 @@ Tras inspeccionar stock_leader.py, la decision P2 se simplifica:
     A. Renombrar seccion Flujo Primario ETF     HECHO (c5f0de4, a3f64a6)
     C. Eliminar conteo duplicado de fases       HECHO (57e9841, 6945df6)
     D. Nuevo criterio de lider                  NO APLICA (revision seccion 9)
-    B. Reducir notas al pie                     PENDIENTE
+    B. Reducir notas al pie                     PARCIAL (B-1 a B-4)
+    D1. Fusionar flujos internacionales diarios  HECHO
+    D2. Unificar rankings sectoriales            HECHO
+    D3. Reordenar por capas                      HECHO
+
+    Ahorro final: 59 -> 52 secciones, 947 -> 885 lineas.
+
+    Fuera de alcance por tests anclados:
+    - Renombrar "Flujo de Mercado - Sectores" (test_leaders_nomenclatura).
+    - Fusionar los pares Momentum/Flujo (tests I1 + nomenclatura).
+    - Eliminar secciones E1-E5 del 61 (inspeccion: ninguna vacia).
 
 Fin del documento 60.
