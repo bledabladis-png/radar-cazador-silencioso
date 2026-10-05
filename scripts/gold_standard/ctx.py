@@ -17,7 +17,6 @@ BORRADOR — pendiente firma auditor.
 """
 from __future__ import annotations
 
-import numpy as np
 import pandas as pd
 
 MA_FAST = 50
@@ -47,7 +46,6 @@ def compute_ctx(
             raise ValueError(f"Falta columna {c}")
 
     close = df_ticker["Close"]
-    n = len(close)
 
     # (a) MA50(t-60) > MA200(t-60)
     ma50 = close.rolling(ma_fast, min_periods=ma_fast).mean()
@@ -59,8 +57,9 @@ def compute_ctx(
     dd_series = (rolling_max - close) / rolling_max
     b_series = dd_series >= dd_umbral
 
-    a_bool = a_series.fillna(False).astype(bool)
-    b_bool = b_series.fillna(False).astype(bool)
+    # (a_series == True) convierte NaN a False sin downcasting
+    a_bool = (a_series == True)  # noqa: E712
+    b_bool = (b_series == True)  # noqa: E712
     ctx = a_bool & b_bool
     ctx.name = "ctx"
     return ctx

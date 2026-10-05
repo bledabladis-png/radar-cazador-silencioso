@@ -15,8 +15,6 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
 from scripts.gold_standard.ctx import (
-    DD_UMBRAL,
-    MA_LOOKBACK,
     compute_ctx,
     ctx_stats,
 )
