@@ -239,4 +239,29 @@ Respuesta: SI / NO / REFORMULAR por cada una.
 - Rediseno del Wyckoff (fase cerrada).
 - IAE y universos institucionales.
 
+## 11. Resultado de la ejecucion (2026-10-05)
+
+Ejecutados los bloques D1-D3. Estado final:
+
+    D1  HECHO  4 flujos internacionales -> 1 tabla    -3 secciones
+    D2  HECHO  3 rankings -> 1 tabla                  -2 secciones
+    D3  HECHO  reorder por capas (5 capas)            0 secciones
+
+    Reduccion total: 59 -> 52 secciones, 947 -> 885 lineas.
+
+No se han hecho F2, F5, F6 (fusiones de pares) porque los tests I1
+y test_report_leaders_nomenclatura anclan los titulos con razon
+semantica (las secciones son complementarias, no duplicadas).
+
+No se han hecho E1-E5 (eliminaciones) porque la inspeccion del
+reporte real muestra que las 5 secciones tienen contenido util.
+Ninguna esta vacia.
+
+Orden final del reporte (5 capas):
+    C1 Regimen global        7 secciones
+    C2 Analisis sectorial   23 secciones
+    C3 Lideres por sector    7 secciones
+    C4 Confirmacion          1 seccion
+    C5 Contexto internac.   14 secciones
+
 Fin del documento 61.
