@@ -31,32 +31,67 @@ def assign_periodo(year: int) -> str:
 def build_metadata(
     episodes: pd.DataFrame,
     sector_map: dict[str, str],
+    calendar_map: dict[str, dict] | None = None,
 ) -> pd.DataFrame:
-    """Anade sector y periodo a los episodios del frame.
+    """Anade sector, periodo y pos_sesion a los episodios del frame.
 
     Tickers sin mapping sectorial reciben 'UNKNOWN'.
     NO se descartan. El universo se conserva completo.
+
+    calendar_map: dict {ticker: {fecha: pos_ordinal}}.
+        Si se pasa, se usa para computar pos_sesion (posicion ordinal
+        dentro del calendario completo del ticker). Necesario para que
+        apply_min_gap mida SESIONES reales, no posiciones dentro del
+        subconjunto filtrado.
     """
     df = episodes.copy()
     df["sector"] = df["ticker"].map(sector_map).fillna("UNKNOWN")
     df["year"] = pd.to_datetime(df["t"]).dt.year
     df["periodo"] = df["year"].apply(assign_periodo)
+    if calendar_map is not None:
+        df["pos_sesion"] = [
+            calendar_map.get(tk, {}).get(t, -1)
+            for tk, t in zip(df["ticker"], df["t"])
+        ]
     return df
+
+
+def build_calendar_map(dataset: pd.DataFrame) -> dict[str, dict]:
+    """dict {ticker: {fecha: pos_ordinal}} sobre las filas validas.
+
+    Usa build_ticker_df para consistencia con el contrato del detector.
+    """
+    from indicators.wyckoff import build_ticker_df
+    out = {}
+    tickers = sorted(dataset.columns.get_level_values(1).unique())
+    for tk in tickers:
+        try:
+            tdf = build_ticker_df(dataset, tk)
+        except KeyError:
+            continue
+        out[tk] = {t: i for i, t in enumerate(tdf.index)}
+    return out
 
 
 def apply_min_gap(
     episodes: pd.DataFrame,
     min_gap_sessions: int = MIN_GAP_A_SESSIONS,
     seed: int = SEED_GLOBAL,
+    pos_col: str | None = "pos_sesion",
 ) -> pd.DataFrame:
     """Aplica min_gap por ticker con aceptacion aleatoria determinista.
 
-    Unidad: SESIONES (posicion en el calendario del ticker), no dias
-    naturales. Dictamen P0.4.
+    Unidad: SESIONES (posicion ordinal en el calendario completo del
+    ticker). Dictamen P0.4 + hallazgo 2026-10-05.
 
-    120 sesiones pueden corresponder a ~168 dias naturales con fines
-    de semana y festivos. La condicion se aplica sobre la distancia
-    ordinal entre sesiones del mismo ticker.
+    Usa columna pos_col si existe (posicion en el calendario completo).
+    Si no, fallback a la posicion dentro del subconjunto (solo valido
+    cuando episodes NO esta filtrado por clase).
+
+    Hallazgo 2026-10-05: sin pos_col, min_gap=5 sobre 40 positivos
+    filtrados de 1200 filas deja solo 7 en vez de ~40, porque la
+    posicion se mide dentro del subconjunto de 14 elementos, no del
+    calendario completo.
     """
     rng = np.random.default_rng(seed)
     accepted_indices = []
@@ -64,14 +99,21 @@ def apply_min_gap(
         g = group.sort_values("t")
         idx_original = g.index.to_numpy()
         n = len(g)
+        if pos_col is not None and pos_col in g.columns:
+            positions = g[pos_col].to_numpy()
+        else:
+            positions = np.arange(n)
         order = rng.permutation(n)
         accepted_pos = []
-        for pos in order:
-            if all(abs(int(pos) - int(p)) >= min_gap_sessions
-                   for p in accepted_pos):
-                accepted_pos.append(int(pos))
-        for pos in accepted_pos:
-            accepted_indices.append(idx_original[pos])
+        for i in order:
+            p_cur = int(positions[i])
+            if all(
+                abs(p_cur - int(positions[j])) >= min_gap_sessions
+                for j in accepted_pos
+            ):
+                accepted_pos.append(i)
+        for i in accepted_pos:
+            accepted_indices.append(idx_original[i])
     return episodes.loc[sorted(accepted_indices)].copy()
 
 
@@ -165,11 +207,19 @@ def sample_a(
     df["detect_sow"] = detector_flags.reindex(df.index).fillna(0).astype(int)
     df = df.reset_index()
 
-    df_gap = apply_min_gap(df, min_gap_sessions, seed)
+    # min_gap POR CLASE, no sobre el conjunto.
+    # Hallazgo 2026-10-05 (preflight): aplicar min_gap al conjunto
+    # elimina 88% de positivos porque los negativos dominan y desplazan
+    # a los positivos en el greedy aleatorio. Medido:
+    #   min_gap por clase: 2559 -> 298 positivos
+    #   min_gap conjunto:  2559 -> 12 positivos
+    pos = apply_min_gap(
+        df[df["detect_sow"] == 1], min_gap_sessions, seed,
+    )
+    neg = apply_min_gap(
+        df[df["detect_sow"] == 0], min_gap_sessions, seed + 1,
+    )
     rng = np.random.default_rng(seed)
-
-    pos = df_gap[df_gap["detect_sow"] == 1]
-    neg = df_gap[df_gap["detect_sow"] == 0]
 
     if strict:
         if len(pos) < n_pos:

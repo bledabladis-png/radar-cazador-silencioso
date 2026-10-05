@@ -31,7 +31,9 @@ from scripts.gold_standard.constants import (
     N_POS_A,
     SEED_GLOBAL,
 )
-from scripts.gold_standard.sampling_a import build_metadata, sample_a
+from scripts.gold_standard.sampling_a import (
+    build_calendar_map, build_metadata, sample_a,
+)
 from scripts.gold_standard.sampling_b import (
     build_estratos,
     collapse_estratos,
@@ -108,10 +110,11 @@ def run_preflight(
 
     frame = sf.episodes.copy()
 
-    # 4. Metadata con sector UNKNOWN
+    # 4. Metadata con sector UNKNOWN + pos_sesion
     if verbose:
         print("[preflight] metadata...")
-    meta = build_metadata(frame, smap)
+    cal_map = build_calendar_map(dataset)
+    meta = build_metadata(frame, smap, calendar_map=cal_map)
     n_unknown = int((meta["sector"] == "UNKNOWN").sum())
     n_unknown_tickers = int(
         meta[meta["sector"] == "UNKNOWN"]["ticker"].nunique()

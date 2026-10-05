@@ -21,6 +21,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
+from indicators.wyckoff import build_ticker_df
 from scripts.gold_standard.constants import (
     WARMUP_MIN,
     VISUAL_WINDOW,
@@ -75,17 +76,23 @@ def build_sampling_frame(
     rows = []
     n_by_ticker = {}
     for tk in tickers:
-        sub = df.xs(tk, axis=1, level=1)
-        n_filas = len(sub)
+        # Contrato implicito del detector: alimentar con df sin NaN.
+        # Los 6 consumidores reales usan build_ticker_df antes de llamar.
+        # Sin dropna, rolling(60, min_periods=60) descarta toda ventana
+        # con un NaN y la senal se pierde 10x.
+        try:
+            tdf = build_ticker_df(df, tk)
+        except KeyError:
+            n_by_ticker[tk] = 0
+            continue
+        n_filas = len(tdf)
         if n_filas < warmup_min + visual_window:
             n_by_ticker[tk] = 0
             continue
 
-        # Dictamen: 240 FILAS en el indice (no 240 contiguas OHLCV-completas).
-        # Los NaN puntuales los filtra el QA previo (technical_ineligible).
         min_pos = warmup_min + visual_window - 1
         positions = np.arange(min_pos, n_filas)
-        dates = sub.index[positions]
+        dates = tdf.index[positions]
         for d in dates:
             rows.append({"ticker": tk, "t": d})
         n_by_ticker[tk] = int(len(dates))

@@ -35,7 +35,7 @@ def _make_muestra(n=30, seed=1):
 def test_estructura_admin_annotator(tmp_path):
     m = _make_muestra(20)
     blind = build_blind_muestra(m, seed=1)
-    rutas = write_paquetes_anotadores(blind, tmp_path)
+    write_paquetes_anotadores(blind, tmp_path)
 
     # ADMIN existe
     assert (tmp_path / "ADMIN").exists()

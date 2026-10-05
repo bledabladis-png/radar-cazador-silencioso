@@ -42,7 +42,9 @@ from scripts.gold_standard.constants import (
     SEED_GLOBAL,
 )
 from scripts.gold_standard.render import render_all
-from scripts.gold_standard.sampling_a import build_metadata, sample_a
+from scripts.gold_standard.sampling_a import (
+    build_calendar_map, build_metadata, sample_a,
+)
 from scripts.gold_standard.sampling_b import (
     build_estratos,
     collapse_estratos,
@@ -102,11 +104,16 @@ def compute_detector_flags(
         dtype=int,
     )
 
+    # Contrato implicito del detector: df sin NaN.
+    # Sin dropna, rolling(60, min_periods=60) descarta toda ventana
+    # con un NaN y la senal se pierde 10x.
+    from indicators.wyckoff import build_ticker_df
+
     tickers_unicos = frame_episodes["ticker"].unique()
     for tk in tickers_unicos:
         sub = frame_episodes[frame_episodes["ticker"] == tk]
         try:
-            df_tk = dataset.xs(tk, axis=1, level=1)
+            df_tk = build_ticker_df(dataset, tk)
         except KeyError:
             continue
         if len(df_tk) < 200:
@@ -172,8 +179,9 @@ def main(argv=None):
     print(f"[capa1] positivos detect_sow: {int(flags.sum())}"
           f" / {len(flags)}")
 
-    # 5. Metadata (sector UNKNOWN si no hay mapping)
-    meta = build_metadata(frame, smap)
+    # 5. Metadata (sector UNKNOWN si no hay mapping) + pos_sesion
+    cal_map = build_calendar_map(dataset)
+    meta = build_metadata(frame, smap, calendar_map=cal_map)
     n_unknown = int((meta["sector"] == "UNKNOWN").sum())
     print(f"[capa1] metadata: {meta.shape}, UNKNOWN: {n_unknown}")
 
