@@ -43,14 +43,23 @@ class BlindMuestra:
 
 
 def _generar_blind_ids(n: int, seed: int) -> np.ndarray:
-    """IDs no secuenciales, unicos, en [10^8, 10^9)."""
+    """IDs unicos en [10^8, 10^9), muestreados sin reemplazo.
+
+    Dictamen P0.5: IDs aleatorios, no permutacion de rango.
+    No materializar el rango (900M enteros = 7.2 GB).
+    Muestreo directo con resolucion de colisiones.
+    """
+    if n <= 0:
+        return np.array([], dtype=np.int64)
     rng = np.random.default_rng(seed)
-    # Muestrear sin reemplazo directamente del rango
-    ids = rng.choice(
-        np.arange(BLIND_ID_MIN, BLIND_ID_MAX + 1),
-        size=n,
-        replace=False,
-    )
+    vistos: set[int] = set()
+    while len(vistos) < n:
+        falta = n - len(vistos)
+        # batch con margen: si quedan pocos por sacar, tirar mas
+        tam = max(falta * 2, 100)
+        batch = rng.integers(BLIND_ID_MIN, BLIND_ID_MAX, size=tam)
+        vistos.update(int(x) for x in batch)
+    ids = np.fromiter(vistos, dtype=np.int64, count=len(vistos))[:n]
     return ids
 
 

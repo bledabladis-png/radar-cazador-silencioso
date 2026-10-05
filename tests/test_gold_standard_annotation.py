@@ -49,11 +49,27 @@ def test_generar_blind_ids_unicos_y_en_rango():
     assert ids.max() <= BLIND_ID_MAX
 
 
-def test_generar_blind_ids_no_secuenciales():
-    ids = _generar_blind_ids(100, seed=1)
-    diffs = np.abs(np.diff(np.sort(ids)))
-    # Esperado: todos > 1 (no secuenciales)
-    assert (diffs > 1).all()
+def test_generar_blind_ids_aleatorios_no_rango_contiguo():
+    """Dictamen P0.5: los IDs son aleatorios, no permutacion de un rango.
+
+    Test: la desviacion estandar de los diffs ordenados es mucho mayor
+    que 1 (lo que seria una permutacion de rango contiguo).
+    """
+    ids = _generar_blind_ids(200, seed=1)
+    diffs = np.diff(np.sort(ids))
+    # Si fuera permutacion de rango contiguo, std ~ 0.
+    # Con aleatorios en [1e8, 1e9), std >> 1.
+    assert diffs.std() > 1000
+
+
+def test_generar_blind_ids_no_materializa_rango():
+    """Con n=10 debe ser instantaneo, no reservar 7.2 GB."""
+    import time
+    t0 = time.time()
+    ids = _generar_blind_ids(10, seed=42)
+    dt = time.time() - t0
+    assert len(ids) == 10
+    assert dt < 1.0  # muy por debajo de lo que tardaria materializando el rango
 
 
 def test_generar_blind_ids_determinista():

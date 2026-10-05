@@ -177,13 +177,7 @@ def main(argv=None):
     n_unknown = int((meta["sector"] == "UNKNOWN").sum())
     print(f"[capa1] metadata: {meta.shape}, UNKNOWN: {n_unknown}")
 
-    # 6. Muestreo A
-    print("[capa1] muestreo A (enriquecida)...")
-    sA = sample_a(meta, flags, n_pos=N_POS_A, n_neg=N_NEG_A,
-                  min_gap_sessions=MIN_GAP_A_SESSIONS, seed=args.seed)
-    print(f"[capa1] muestra A: {len(sA)}")
-
-    # 7. Dimensionar n_B (o usar el del CLI)
+    # 6. Dimensionar n_B (o usar el del CLI)
     if args.skip_power or args.n_B is not None:
         n_B = args.n_B if args.n_B is not None else 300
         print(f"[capa1] n_B fijado por CLI: {n_B}")
@@ -199,18 +193,35 @@ def main(argv=None):
             return 1
         n_B = res["n_B_min"]
         print(f"[capa1] n_B minimo: {n_B}")
-    return _finalize(args, dataset, smap, sA, meta, n_B, t0)
 
-def _finalize(args, dataset, smap, sA, meta, n_B, t0):
-    """Muestreo B, blind IDs, render, CSVs, manifest."""
-    # 8. Muestreo B
+    # 7. Muestreo B PRIMERO (dictamen P0.3: A y B disjuntas)
     print("[capa1] muestreo B (representativa)...")
     estratos = build_estratos(meta)
     estratos_col = collapse_estratos(estratos)
     sB = sample_b(meta, n_B=n_B, estratos_finales=estratos_col, seed=args.seed)
     print(f"[capa1] muestra B: {len(sB)}")
 
-    # 9. Concatenar
+    # 8. Muestreo A sobre frame residual (excluye B)
+    print("[capa1] muestreo A (enriquecida, excluye B)...")
+    sA = sample_a(meta, flags, n_pos=N_POS_A, n_neg=N_NEG_A,
+                  min_gap_sessions=MIN_GAP_A_SESSIONS, seed=args.seed,
+                  excluir=sB[["ticker", "t"]])
+    print(f"[capa1] muestra A: {len(sA)}")
+
+    # Verificar A ∩ B = ∅
+    key_A = set(zip(sA["ticker"], sA["t"]))
+    key_B = set(zip(sB["ticker"], sB["t"]))
+    inter = key_A & key_B
+    if inter:
+        print(f"[capa1] ABORTAR: A y B comparten {len(inter)} casos")
+        return 1
+    print(f"[capa1] A ∩ B = vacio: OK")
+
+    return _finalize(args, dataset, smap, sA, sB, meta, n_B, t0)
+
+def _finalize(args, dataset, smap, sA, sB, meta, n_B, t0):
+    """Blind IDs, render, CSVs, manifest."""
+    # 9. Concatenar (A y B ya disjuntas por construccion)
     sA_ = sA.copy()
     sB_ = sB.copy()
     # Columnas comunes minimas

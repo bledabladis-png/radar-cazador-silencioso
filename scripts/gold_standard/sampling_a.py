@@ -139,9 +139,23 @@ def sample_a(
     n_neg: int = N_NEG_A,
     min_gap_sessions: int = MIN_GAP_A_SESSIONS,
     seed: int = SEED_GLOBAL,
+    excluir: pd.DataFrame | None = None,
 ) -> pd.DataFrame:
-    """Muestra A enriquecida 200+200."""
+    """Muestra A enriquecida 200+200.
+
+    excluir: DataFrame con columnas ticker, t. Esos (ticker, t) se
+    descartan ANTES de muestrear. Sirve para garantizar A ∩ B = ∅
+    cuando B se muestrea primero (dictamen P0.3).
+    """
     df = episodes_meta.copy()
+    if excluir is not None and len(excluir) > 0:
+        clave_excluir = set(zip(excluir["ticker"], excluir["t"]))
+        mask = [
+            (tk, t) not in clave_excluir
+            for tk, t in zip(df["ticker"], df["t"])
+        ]
+        df = df[mask].copy()
+
     df = df.set_index(["ticker", "t"])
     df["detect_sow"] = detector_flags.reindex(df.index).fillna(0).astype(int)
     df = df.reset_index()
