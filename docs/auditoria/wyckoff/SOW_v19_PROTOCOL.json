@@ -1,0 +1,85 @@
+{
+  "schema": "sow_v19_protocol_v1",
+  "fecha_congelacion": "2026-10-05",
+  "rama": "sow-v4-validation",
+  "referencias": {
+    "dictamen_auditor": "2026-10-05 (dossier SOW v1.9)",
+    "contrato_5bX_v3": "docs/auditoria/wyckoff/35_protocolo_5bX_v3.md",
+    "contrato_v18": "docs/auditoria/wyckoff/01_contrato_semantico_v1_8.md",
+    "contrato_v19": "docs/auditoria/wyckoff/01_contrato_semantico_v1_9.md"
+  },
+  "dataset": {
+    "path": "data/stock_prices.parquet",
+    "min_obs": 200
+  },
+  "cutoff": {
+    "desarrollo_end": "2026-10-01",
+    "oos_start": "2026-10-02"
+  },
+  "grid": {
+    "N":     [20, 30, 40, 60],
+    "M":     [5, 10, 15, 20, 30],
+    "X_ATR": [0.25, 0.50, 0.75, 1.00],
+    "Y_VOL": [1.10, 1.20, 1.50],
+    "n_combos": 240
+  },
+  "episodio": {
+    "unidad": "candidate_start",
+    "t0_rule": "candidate_t=1 AND candidate_{t-1}=0",
+    "landmark": "L = t0 + M",
+    "confirmed": "exists SOW in [t0+1, L]",
+    "baseline":  "no SOW in [t0+1, L]",
+    "H": 20,
+    "outcome_primario": "struct[L+H] < struct[L]",
+    "H_complete_filter": "L_idx + H < len(struct)",
+    "canonical_universe": "ANALYSIS_ROWS (build_analysis_rows)",
+    "semantica": "landmark_conditional"
+  },
+  "anti_solape": {
+    "min_gap_sessions": 50,
+    "obligatorio": true,
+    "justificacion": "M+H = 30+20 = 50, evita solape de landmark y H20",
+    "sensibilidad": "None como diagnostico historico, no participa en seleccion"
+  },
+  "MDE": {
+    "theta_0": 0.05,
+    "unidades": "fraccion (5 pp)",
+    "contraste_primario": "H0: theta <= theta_0 vs H1: theta > theta_0"
+  },
+  "bootstrap": {
+    "tipo": "panel_calendar_block",
+    "metodo": "moving_block",
+    "calendario": "session_union_dates(feats)",
+    "recomputa_pipeline": true,
+    "block_len_principal": 120,
+    "block_len_sensibilidad": [60, 120, 200],
+    "B_principal": 20000,
+    "B_sensibilidad": 2000,
+    "seed": 20261005
+  },
+  "multiplicidad": {
+    "principal": "maxT_block_bootstrap",
+    "maxT_metodo": "mismo resample panel, calcular T_j para las 240, tomar max_j T_j",
+    "secundarios": ["BH5", "BH20"]
+  },
+  "criterios_seleccion": {
+    "D1": "n_confirmed_H20_complete >= 20 AND n_baseline_H20_complete >= 20",
+    "D2_primario": "p_vs_mde <= 0.05",
+    "D2_descriptivo": "lower_ci_vs_mde > 0 (no es gate)",
+    "D3": "ceil(2/3) bloques evaluables con lift > 0",
+    "ranking": "n_bloques_lift_pos DESC, mediana_lift DESC, delta_hetero ASC, lexicografico",
+    "tie_break": "si dos configs empatan: diferencia puntual pequena Y IC95% de (lift_A - lift_B) contiene 0 -> elegir menor N"
+  },
+  "oos": {
+    "cutoff": "2026-10-01",
+    "universo": "t0 >= 2026-10-02",
+    "min_confirmed_H20_complete": 550,
+    "referencia": "5b.X v3 congelado",
+    "estado": "BLOQUEADO POR DATOS (~2027)"
+  },
+  "produccion": {
+    "config_sow": "None",
+    "fail_closed": true,
+    "consumidores_migrados": 0
+  }
+}
