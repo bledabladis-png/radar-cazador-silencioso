@@ -264,4 +264,37 @@ Referencias por linea en outputs/report/reporte_diario.md:
     L1008 advertencia de acoplamiento de senales
     (resto: notas de metodo y fuente, mantenibles)
 
+## 7. Decisiones del usuario (2026-10-05)
+
+    P1. Unificar conteo de fases con universo completo del ETF (U2).
+        Eliminar la tabla duplicada de sector_breadth.
+
+    P2. Nueva definicion de lider:
+        - Sector en ACC.
+        - Tomar los 20 mayores por peso en el ETF.
+        - Ordenar por WLS (criterio actual, no inventar).
+        - Mostrar los 5 mejores, marcando cuales estan en ACC
+          y cuales no.
+        Sin filtro previo por fase (los 5 pueden estar fuera de ACC).
+
+    P3. Renombrar las 2 secciones de flujo para distinguirlas.
+
+    P4. Arreglar la causa de cada nota al pie, luego reducir a ~20.
+        Orden de ejecucion: A -> C -> D -> B.
+
+    P5. No anadir aviso sobre Wyckoff plano (redundante, ya se ve
+        en la tabla).
+
+## 8. Plan de ejecucion
+
+    Rama: radar-v5 (desde main).
+    Orden: A -> C -> D -> B.
+
+    A. Renombrar 2 secciones de flujo (src/report/*.py).
+    C. Unificar conteo de fases (eliminar tabla duplicada).
+    D. Nuevo criterio de lider en stock_leader.py.
+    B. Limpiar notas al pie residuales.
+
+    Un commit por bloque. Suite verde + E2E si toca pipeline.
+
 Fin del documento 60.
