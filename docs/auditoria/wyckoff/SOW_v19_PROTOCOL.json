@@ -1,9 +1,9 @@
 {
-  "schema": "sow_v19_protocol_v1",
+  "schema": "sow_v19_protocol_v2",
   "fecha_congelacion": "2026-10-05",
   "rama": "sow-v4-validation",
   "referencias": {
-    "dictamen_auditor": "2026-10-05 (dossier SOW v1.9)",
+    "dictamen_auditor": "2026-10-05 (dossier SOW v1.9 + enmiendas)",
     "contrato_5bX_v3": "docs/auditoria/wyckoff/35_protocolo_5bX_v3.md",
     "contrato_v18": "docs/auditoria/wyckoff/01_contrato_semantico_v1_8.md",
     "contrato_v19": "docs/auditoria/wyckoff/01_contrato_semantico_v1_9.md"
@@ -17,10 +17,30 @@
     "oos_start": "2026-10-02"
   },
   "grid": {
-    "N":     [20, 30, 40, 60],
-    "M":     [5, 10, 15, 20, 30],
-    "X_ATR": [0.25, 0.50, 0.75, 1.00],
-    "Y_VOL": [1.10, 1.20, 1.50],
+    "N": [
+      20,
+      30,
+      40,
+      60
+    ],
+    "M": [
+      5,
+      10,
+      15,
+      20,
+      30
+    ],
+    "X_ATR": [
+      0.25,
+      0.5,
+      0.75,
+      1.0
+    ],
+    "Y_VOL": [
+      1.1,
+      1.2,
+      1.5
+    ],
     "n_combos": 240
   },
   "episodio": {
@@ -28,7 +48,7 @@
     "t0_rule": "candidate_t=1 AND candidate_{t-1}=0",
     "landmark": "L = t0 + M",
     "confirmed": "exists SOW in [t0+1, L]",
-    "baseline":  "no SOW in [t0+1, L]",
+    "baseline": "no SOW in [t0+1, L]",
     "H": 20,
     "outcome_primario": "struct[L+H] < struct[L]",
     "H_complete_filter": "L_idx + H < len(struct)",
@@ -51,24 +71,74 @@
     "metodo": "moving_block",
     "calendario": "session_union_dates(feats)",
     "recomputa_pipeline": true,
+    "recomputa_pipeline_nota": "una recomputacion de pipeline por panel bootstrap; las 240 configs se evaluan conjuntamente sobre ese mismo panel",
     "block_len_principal": 120,
-    "block_len_sensibilidad": [60, 120, 200],
+    "block_len_sensibilidad": [
+      60,
+      120,
+      200
+    ],
+    "fronteras_bloque": {
+      "problema": "pipeline con memoria hasta 200 sesiones (MA200, robust_z window=200)",
+      "tratamiento": "burn_in_200_sesiones_por_frontera",
+      "alternativa_descartada": "excluir episodios cuya ventana efectiva toque frontera",
+      "justificacion": "MA200 y robust_z(200) exigen warmup; concatenar bloques sin contexto introduce discontinuidades artificiales en las propias variables que se validan"
+    },
     "B_principal": 20000,
     "B_sensibilidad": 2000,
+    "B_sensibilidad_nota": "sensibilidad 60/200 NO participa en seleccion, ranking ni firma final; solo comprueba estabilidad frente a block length",
+    "fases_implementacion": [
+      {
+        "B": 100,
+        "proposito": "validacion invariantes"
+      },
+      {
+        "B": 500,
+        "proposito": "rendimiento"
+      },
+      {
+        "B": 2000,
+        "proposito": "QA del bootstrap"
+      },
+      {
+        "B": 20000,
+        "proposito": "resultado definitivo"
+      }
+    ],
     "seed": 20261005
   },
   "multiplicidad": {
     "principal": "maxT_block_bootstrap",
-    "maxT_metodo": "mismo resample panel, calcular T_j para las 240, tomar max_j T_j",
-    "secundarios": ["BH5", "BH20"]
+    "maxT": {
+      "estadistico": "T_j = (lift_j - 0.05) / SE_j",
+      "cola": "right",
+      "nulo": "theta_j <= 0.05 para j=1..240",
+      "SE_j_estimador": "std(boots_j) sobre B replicas del panel bootstrap; invariante al centrado",
+      "bootstrap_nulo": "T_j*_b = (lift_j*_b - lift_j) / SE_j*_b  (recentrado bajo theta_0=0.05)",
+      "resampling": "un panel_calendar_block por replica; las 240 configs evaluadas conjuntamente sobre el mismo panel",
+      "familia": "240 estadisticos evaluados conjuntamente",
+      "ajuste": "maxT",
+      "p_maxT_j": "(1 + #{b : max_k T_k*_b >= T_j_obs}) / (1 + B)"
+    },
+    "secundarios": [
+      "BH5",
+      "BH20"
+    ]
   },
   "criterios_seleccion": {
     "D1": "n_confirmed_H20_complete >= 20 AND n_baseline_H20_complete >= 20",
-    "D2_primario": "p_vs_mde <= 0.05",
-    "D2_descriptivo": "lower_ci_vs_mde > 0 (no es gate)",
+    "D2_primario": "p_maxT_adj <= 0.05",
+    "D2_diagnosticos": [
+      "p_vs_mde (individual, sin ajuste por multiplicidad)",
+      "lower_ci_vs_mde > 0 (descriptivo, no gate)"
+    ],
     "D3": "ceil(2/3) bloques evaluables con lift > 0",
     "ranking": "n_bloques_lift_pos DESC, mediana_lift DESC, delta_hetero ASC, lexicografico",
-    "tie_break": "si dos configs empatan: diferencia puntual pequena Y IC95% de (lift_A - lift_B) contiene 0 -> elegir menor N"
+    "tie_break": {
+      "regla": "si dos configs superan todos los gates primarios y |lift_A - lift_B| <= 0.01 (1pp) -> elegir la de menor N",
+      "no_es": "no es prueba de equivalencia estadistica; es regla determinista de parsimonia",
+      "umbral_justificacion": "1pp es mayor que el diferencial observado N=40 vs N=60 (0.506pp), evitando que la regla coincida con el resultado retrospectivo"
+    }
   },
   "oos": {
     "cutoff": "2026-10-01",

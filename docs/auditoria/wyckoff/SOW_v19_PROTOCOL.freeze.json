@@ -3,14 +3,23 @@
   "fecha_freeze": "2026-10-05",
   "protocolo": {
     "fichero": "docs/auditoria/wyckoff/SOW_v19_PROTOCOL.json",
-    "sha256": "cd73a5074bd53f036dfa6e2765bee757c00f32b56cc8fcbbbb213579acaa8a42",
+    "sha256": "6816a71f6841915489ff7d28241824f377aae52572e644f366c6f5756335f45a",
     "commit_nota": "el commit del protocolo es el commit que contiene este manifiesto; se consulta con git log, no se hardcodea (evita bucle autorreferencial)"
   },
   "revision_auditor": "PENDIENTE",
-  "estado": "PROPUESTO",
+  "estado": "PROPUESTO_V2",
+  "enmiendas_aplicadas_auditor_2026_10_05": [
+    "block_len_principal=120 con tratamiento de fronteras (burn_in_200)",
+    "tie_break simplificado: |lift_A - lift_B| <= 1pp -> menor N, sin IC de diferencia",
+    "B_sensibilidad=2000 exclusivamente para sensibilidad, no participa en seleccion",
+    "fases implementacion 100/500/2000/20000 sin cambiar protocolo congelado",
+    "recomputa_pipeline: una recomputacion por panel, 240 configs conjuntas",
+    "maxT definido formalmente: T_j = (lift_j - 0.05) / SE_j, cola derecha, centrado bajo H0",
+    "D2_primario pasa a p_maxT_adj <= 0.05; p_vs_mde individual queda como diagnostico"
+  ],
   "condiciones_firma_auditor": {
     "C1_maxT_block_bootstrap": "PENDIENTE",
     "C2_panel_block_bootstrap_recomputa_pipeline": "PENDIENTE"
   },
-  "proximo_evento": "Firma del auditor -> implementacion bootstrap panel + maxT -> rerun limpio con B=20000"
+  "proximo_evento": "Firma del auditor -> implementacion bootstrap panel + maxT por fases -> rerun limpio"
 }
