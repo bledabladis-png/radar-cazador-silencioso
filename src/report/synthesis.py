@@ -30,12 +30,12 @@ def render_indices_internacionales(index_phases, index_leaders):
 
     out.append("\n## Índices (USA + Europa) — Oportunidades de Acumulación y Markup\n")
     out.append("*Nota: Los componentes se obtienen de ETFs proxy que replican el indice de referencia. USA: SPY (S&P 500), DIA (Dow Jones), QQQ (Nasdaq-100), IWM (Russell 2000). Europa: FEZ (Euro Stoxx 50), LYXI (Ibex 35), DAXEX (DAX 40), ISF.L (FTSE 100). Solo se muestran indices en fase ACCUMULATION o MARKUP.*\n\n")
+    out.append("*Nota: Flujo (z) es un z-score robusto sobre 60 días. Valores extremos pueden deberse a eventos corporativos o volúmenes inusuales. Para el WLS se usa una versión normalizada limitada a ±3.*\n\n")
     if index_leaders:
         for nombre, top5 in index_leaders.items():
             if top5 is None or top5.empty:
                 continue
             out.append(f"### {nombre}\n")
-            out.append("*Nota: Flujo (z) es un z-score robusto sobre 60 días. Valores extremos pueden deberse a eventos corporativos o volúmenes inusuales. Para el WLS se usa una versión normalizada limitada a ±3.*\n\n")
             out.append("| # | Ticker | RS | RS Mom | Flujo (z) | WLS | Fase Wyckoff |\n")
             out.append("|---|--------|----|--------|-----------|-----|---------------|\n")
             for i, (_, row) in enumerate(top5.iterrows(), 1):
