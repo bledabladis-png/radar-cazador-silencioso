@@ -140,12 +140,17 @@ def sample_a(
     min_gap_sessions: int = MIN_GAP_A_SESSIONS,
     seed: int = SEED_GLOBAL,
     excluir: pd.DataFrame | None = None,
+    strict: bool = True,
 ) -> pd.DataFrame:
     """Muestra A enriquecida 200+200.
 
     excluir: DataFrame con columnas ticker, t. Esos (ticker, t) se
     descartan ANTES de muestrear. Sirve para garantizar A ∩ B = ∅
     cuando B se muestrea primero (dictamen P0.3).
+
+    strict: si True (default), exige n_pos/n_neg disponibles o falla.
+            Si False (preflight), usa min(pedido, disponible) y reporta
+            cuantos hay realmente. No falla por falta de positivos.
     """
     df = episodes_meta.copy()
     if excluir is not None and len(excluir) > 0:
@@ -166,16 +171,20 @@ def sample_a(
     pos = df_gap[df_gap["detect_sow"] == 1]
     neg = df_gap[df_gap["detect_sow"] == 0]
 
-    if len(pos) < n_pos:
-        raise ValueError(
-            f"Muestra A: solo {len(pos)} positivos tras min_gap, "
-            f"se requieren {n_pos}"
-        )
-    if len(neg) < n_neg:
-        raise ValueError(
-            f"Muestra A: solo {len(neg)} negativos tras min_gap, "
-            f"se requieren {n_neg}"
-        )
+    if strict:
+        if len(pos) < n_pos:
+            raise ValueError(
+                f"Muestra A: solo {len(pos)} positivos tras min_gap, "
+                f"se requieren {n_pos}"
+            )
+        if len(neg) < n_neg:
+            raise ValueError(
+                f"Muestra A: solo {len(neg)} negativos tras min_gap, "
+                f"se requieren {n_neg}"
+            )
+    else:
+        n_pos = min(n_pos, len(pos))
+        n_neg = min(n_neg, len(neg))
 
     pos_sel = _sample_stratified(pos, n_pos, rng)
     neg_sel = _sample_stratified(neg, n_neg, rng)

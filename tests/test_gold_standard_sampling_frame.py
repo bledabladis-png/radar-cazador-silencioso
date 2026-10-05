@@ -78,16 +78,21 @@ def test_frame_ticker_con_pocas_sesiones_queda_fuera():
     assert sf.n_frame_by_ticker["AAA"] == 0
 
 
-def test_frame_excluye_ventanas_que_tocan_nan():
+def test_frame_tolera_nan_puntual():
+    """240 sesiones visuales, no 240 contiguas OHLCV-completas.
+    Un NaN puntual NO excluye el episodio."""
     df = _make_synth(["AAA"], n_sessions=500)
-    df.loc[df.index[100], ("Close", "AAA")] = np.nan
+    # Posicion 300: cae dentro de la ventana [200, 439] del primer episodio
+    df.loc[df.index[300], ("Close", "AAA")] = np.nan
     sf = build_sampling_frame(df, warmup_min=200, visual_window=240)
+    assert sf.n_frame > 0
+    hay_con_nan = False
     for _, row in sf.episodes.iterrows():
         t_pos = df.index.get_loc(row["t"])
-        if t_pos - 239 <= 100 <= t_pos:
-            pytest.fail(
-                f"episodio con ventana que toca NaN: ticker={row['ticker']} t={row['t']}"
-            )
+        if t_pos - 239 <= 300 <= t_pos:
+            hay_con_nan = True
+            break
+    assert hay_con_nan
 
 
 def test_frame_primer_episodio_tiene_ventana_completa():

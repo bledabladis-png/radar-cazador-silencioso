@@ -75,18 +75,17 @@ def build_sampling_frame(
     rows = []
     n_by_ticker = {}
     for tk in tickers:
-        complete = _ohlcv_complete_mask(df, tk).astype(int)
-        if complete.sum() < warmup_min + visual_window:
+        sub = df.xs(tk, axis=1, level=1)
+        n_filas = len(sub)
+        if n_filas < warmup_min + visual_window:
             n_by_ticker[tk] = 0
             continue
-        roll = complete.rolling(
-            window=visual_window, min_periods=visual_window
-        ).sum()
-        mask = (roll == visual_window).to_numpy()
-        positions = np.where(mask)[0]
+
+        # Dictamen: 240 FILAS en el indice (no 240 contiguas OHLCV-completas).
+        # Los NaN puntuales los filtra el QA previo (technical_ineligible).
         min_pos = warmup_min + visual_window - 1
-        positions = positions[positions >= min_pos]
-        dates = df.index[positions]
+        positions = np.arange(min_pos, n_filas)
+        dates = sub.index[positions]
         for d in dates:
             rows.append({"ticker": tk, "t": d})
         n_by_ticker[tk] = int(len(dates))
@@ -104,5 +103,6 @@ def build_sampling_frame(
                 (pd.Series(n_by_ticker) > 0).sum()
             ),
             "filtro_sectorial": False,
+            "nota_ventana": "240 filas en indice, NaN puntuales permitidos",
         },
     )
