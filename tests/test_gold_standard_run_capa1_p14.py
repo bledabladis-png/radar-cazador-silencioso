@@ -41,7 +41,7 @@ def test_estructura_con_cases_master(tmp_path):
         (cases_master / f"case_{bid}.png").write_bytes(b"fake")
 
     out = tmp_path / "out"
-    rutas = write_paquetes_anotadores(
+    write_paquetes_anotadores(
         blind, out, cases_dir_source=cases_master,
     )
 
@@ -64,6 +64,6 @@ def test_sin_cases_master_solo_csv(tmp_path):
     m = _make_muestra(5)
     blind = build_blind_muestra(m, seed=1)
     out = tmp_path / "out"
-    rutas = write_paquetes_anotadores(blind, out)
+    write_paquetes_anotadores(blind, out)
     for i in (1, 2, 3):
         assert not (out / f"ANNOTATOR_{i}" / "cases").exists()
