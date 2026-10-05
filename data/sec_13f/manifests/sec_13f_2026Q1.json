@@ -102,5 +102,8 @@
     "expected_files_present": true,
     "schema_valid": true,
     "zip_crc_valid": true
-  }
+  },
+  "notes": [
+    "raw/ purgado 2026-10-05: TSV crudos eliminados para liberar disco. Re-descargable de SEC.gov. Los parquets processed/ son la fuente de verdad."
+  ]
 }
