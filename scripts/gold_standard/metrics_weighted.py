@@ -119,7 +119,14 @@ def weighted_metrics_full(
 
 
 def to_confusion_int(wc: WeightedConfusion) -> Confusion:
-    """Convierte ponderada a entera (para reportes descriptivos)."""
+    """Convierte ponderada a entera.
+
+    Dictamen P1.1: EXCLUSIVAMENTE para reporting descriptivo.
+    NO usar para calcular F1, Precision, Recall ni ninguna metrica
+    operacional. La conversion introduce redondeo bancario de Python
+    (int(round(2.5)) == 2). El F1 operacional se calcula SIEMPRE
+    desde weighted_metrics(wc), no desde esta conversion.
+    """
     return Confusion(
         tp=int(round(wc.tp)),
         fp=int(round(wc.fp)),

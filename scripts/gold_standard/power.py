@@ -33,6 +33,10 @@ from scripts.gold_standard.constants import (
     SEED_GLOBAL,
 )
 
+# Dictamen P1.2: screening con B bajo, confirmacion con B alto.
+B_SCREENING = 500
+B_CONFIRMACION = 2000
+
 
 # 27 escenarios del protocolo
 def escenarios_default() -> list[dict]:
@@ -223,4 +227,83 @@ def dimensionar_n_B(
             "Ningun n_B <= CAPACIDAD_MAX_NB cumple todas las "
             "restricciones. SUSPENDER y revisar diseno."
         ),
+    }
+
+
+
+def dimensionar_n_B_con_confirmacion(
+    estratos: pd.DataFrame,
+    escenarios: list[dict] | None = None,
+    n_min: int = 100,
+    n_max: int = CAPACIDAD_MAX_NB,
+    paso: int = 50,
+    seed: int = SEED_GLOBAL,
+) -> dict:
+    """Dictamen P1.2: screening con B=500, confirmacion con B=2000.
+
+    1. Screening rapido con B=B_SCREENING.
+    2. Confirmacion con B=B_CONFIRMACION sobre n candidato.
+    3. Si confirmacion falla, subir n en pasos hasta pasar o agotar.
+
+    Devuelve dict con n_B_min confirmado y detalle.
+    """
+    if escenarios is None:
+        escenarios = escenarios_default()
+
+    screening = dimensionar_n_B(
+        estratos, escenarios=escenarios,
+        n_min=n_min, n_max=n_max, paso=paso,
+        B=B_SCREENING, seed=seed,
+    )
+    if screening["excede_capacidad"]:
+        screening["fase"] = "screening_fallido"
+        return screening
+
+    n_candidato = screening["n_B_min"]
+
+    resultados_conf = [
+        simular_escenario(
+            e["pi"], e["se"], e["sp"], estratos, n_candidato,
+            B=B_CONFIRMACION, seed=seed,
+        )
+        for e in escenarios
+    ]
+    if all(_cumple_restricciones(r) for r in resultados_conf):
+        return {
+            "n_B_min": n_candidato,
+            "excede_capacidad": False,
+            "capacidad_max": CAPACIDAD_MAX_NB,
+            "fase": "confirmado",
+            "B_screening": B_SCREENING,
+            "B_confirmacion": B_CONFIRMACION,
+            "resultados_confirmacion": resultados_conf,
+        }
+
+    for n_alt in range(n_candidato + paso, n_max + 1, paso):
+        resultados_alt = [
+            simular_escenario(
+                e["pi"], e["se"], e["sp"], estratos, n_alt,
+                B=B_CONFIRMACION, seed=seed,
+            )
+            for e in escenarios
+        ]
+        if all(_cumple_restricciones(r) for r in resultados_alt):
+            return {
+                "n_B_min": n_alt,
+                "excede_capacidad": False,
+                "capacidad_max": CAPACIDAD_MAX_NB,
+                "fase": "confirmado_tras_ajuste",
+                "n_screening_previo": n_candidato,
+                "B_screening": B_SCREENING,
+                "B_confirmacion": B_CONFIRMACION,
+                "resultados_confirmacion": resultados_alt,
+            }
+
+    return {
+        "n_B_min": None,
+        "excede_capacidad": True,
+        "capacidad_max": CAPACIDAD_MAX_NB,
+        "fase": "confirmacion_fallida",
+        "n_screening_previo": n_candidato,
+        "mensaje": "Ningun n_B confirma con B=2000. SUSPENDER.",
     }
