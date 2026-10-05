@@ -3,11 +3,11 @@
   "fecha_freeze": "2026-10-05",
   "protocolo": {
     "fichero": "docs/auditoria/wyckoff/SOW_v19_PROTOCOL.json",
-    "sha256": "6816a71f6841915489ff7d28241824f377aae52572e644f366c6f5756335f45a",
+    "sha256": "c6dae718a258ac47e4c75326ec5278397a97f116a56f5070a22f8c8778f3a1f2",
     "commit_nota": "el commit del protocolo es el commit que contiene este manifiesto; se consulta con git log, no se hardcodea (evita bucle autorreferencial)"
   },
   "revision_auditor": "PENDIENTE",
-  "estado": "PROPUESTO_V2",
+  "estado": "PROPUESTO_V3",
   "enmiendas_aplicadas_auditor_2026_10_05": [
     "block_len_principal=120 con tratamiento de fronteras (burn_in_200)",
     "tie_break simplificado: |lift_A - lift_B| <= 1pp -> menor N, sin IC de diferencia",
@@ -15,7 +15,8 @@
     "fases implementacion 100/500/2000/20000 sin cambiar protocolo congelado",
     "recomputa_pipeline: una recomputacion por panel, 240 configs conjuntas",
     "maxT definido formalmente: T_j = (lift_j - 0.05) / SE_j, cola derecha, centrado bajo H0",
-    "D2_primario pasa a p_maxT_adj <= 0.05; p_vs_mde individual queda como diagnostico"
+    "D2_primario pasa a p_maxT_adj <= 0.05; p_vs_mde individual queda como diagnostico",
+    "v3: maxT fixed-SE studentized. Eliminado SE_j*_b, sustituido por SE_j observado fijo."
   ],
   "condiciones_firma_auditor": {
     "C1_maxT_block_bootstrap": "PENDIENTE",

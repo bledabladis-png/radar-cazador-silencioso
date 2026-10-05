@@ -1,9 +1,9 @@
 {
-  "schema": "sow_v19_protocol_v2",
+  "schema": "sow_v19_protocol_v3",
   "fecha_congelacion": "2026-10-05",
   "rama": "sow-v4-validation",
   "referencias": {
-    "dictamen_auditor": "2026-10-05 (dossier SOW v1.9 + enmiendas)",
+    "dictamen_auditor": "2026-10-05 (dossier SOW v1.9 + enmiendas v2 + correccion firma)",
     "contrato_5bX_v3": "docs/auditoria/wyckoff/35_protocolo_5bX_v3.md",
     "contrato_v18": "docs/auditoria/wyckoff/01_contrato_semantico_v1_8.md",
     "contrato_v19": "docs/auditoria/wyckoff/01_contrato_semantico_v1_9.md"
@@ -110,15 +110,18 @@
   "multiplicidad": {
     "principal": "maxT_block_bootstrap",
     "maxT": {
+      "nombre": "fixed-SE studentized maxT",
       "estadistico": "T_j = (lift_j - 0.05) / SE_j",
       "cola": "right",
       "nulo": "theta_j <= 0.05 para j=1..240",
-      "SE_j_estimador": "std(boots_j) sobre B replicas del panel bootstrap; invariante al centrado",
-      "bootstrap_nulo": "T_j*_b = (lift_j*_b - lift_j) / SE_j*_b  (recentrado bajo theta_0=0.05)",
+      "studentizacion": "fixed_se",
+      "SE_j_estimador": "std(boots_j) sobre B replicas del panel bootstrap; SE observado por configuracion y FIJO durante todas las replicas maxT",
+      "bootstrap_nulo": "T_j*_b = (lift_j*_b - lift_j) / SE_j  (SE_j observado fijo; distribucion recentrada bajo theta_0=0.05)",
       "resampling": "un panel_calendar_block por replica; las 240 configs evaluadas conjuntamente sobre el mismo panel",
       "familia": "240 estadisticos evaluados conjuntamente",
       "ajuste": "maxT",
-      "p_maxT_j": "(1 + #{b : max_k T_k*_b >= T_j_obs}) / (1 + B)"
+      "p_maxT_j": "(1 + #{b : max_k T_k*_b >= T_j_obs}) / (1 + B)",
+      "nota": "Se elimina SE_j*_b (requeriria bootstrap anidado no especificado). El mismo SE_j observado se usa para todas las replicas de la config j."
     },
     "secundarios": [
       "BH5",
