@@ -70,6 +70,7 @@ BLOCKS = (
 D1_MIN_CONFIRMED = 20
 D1_MIN_BASELINE = 20
 D2_LOWER_CI_STRICT = True   # lower_CI > 0 (filtro de desarrollo, no confirmatorio)
+MDE_LIFT = 0.05             # Minimum Detectable Effect (auditor 2026-10-05 seccion 5)
 D3_FRACTION_REQUIRED = 2.0 / 3.0  # al menos ceil(2/3) de bloques evaluables con lift > 0
 
 # --- Bootstrap ---
@@ -422,6 +423,7 @@ def bootstrap_lift_H20(rows, B=BOOT_B, seed=BOOT_SEED):
     if not rows:
         return {
             "lift_point": None, "lower_ci": None, "upper_ci": None,
+            "lower_ci_vs_mde": None, "p_one_sided": None, "p_vs_mde": None,
             "n_tickers": 0, "n_episodes": 0, "n_confirmed": 0,
             "n_baseline": 0, "n_boot_validos": 0,
         }
@@ -438,7 +440,7 @@ def bootstrap_lift_H20(rows, B=BOOT_B, seed=BOOT_SEED):
         # struct_deterioration=None -> by_tk vacio. Cerrar camino.
         return {
             "lift_point": None, "lower_ci": None, "upper_ci": None,
-            "p_one_sided": None,
+            "lower_ci_vs_mde": None, "p_one_sided": None, "p_vs_mde": None,
             "n_tickers": 0, "n_episodes": len(rows), "n_confirmed": 0,
             "n_baseline": 0, "n_boot_validos": 0,
         }
@@ -474,6 +476,8 @@ def bootstrap_lift_H20(rows, B=BOOT_B, seed=BOOT_SEED):
         # np.percentile([], ...) es un camino de error.
         lower = upper = None
         p_one_sided = None
+        p_vs_mde = None
+        lower_ci_vs_mde = None
     else:
         lower = float(np.percentile(boots, 2.5))
         upper = float(np.percentile(boots, 97.5))
@@ -485,12 +489,19 @@ def bootstrap_lift_H20(rows, B=BOOT_B, seed=BOOT_SEED):
         boots_shifted = boots_arr - float(lift_point)
         n_ge = int((boots_shifted >= float(lift_point)).sum())
         p_one_sided = (1.0 + n_ge) / (1.0 + len(boots_arr))
+        # Contraste vs MDE (auditor 2026-10-05 seccion 5):
+        # H0: theta <= MDE_LIFT  vs  Ha: theta > MDE_LIFT
+        n_ge_mde = int((boots_shifted >= float(lift_point) - MDE_LIFT).sum())
+        p_vs_mde = (1.0 + n_ge_mde) / (1.0 + len(boots_arr))
+        lower_ci_vs_mde = lower - MDE_LIFT if lower is not None else None
 
     return {
         "lift_point": lift_point,
         "lower_ci": lower,
         "upper_ci": upper,
+        "lower_ci_vs_mde": lower_ci_vs_mde,
         "p_one_sided": p_one_sided,
+        "p_vs_mde": p_vs_mde,
         "n_tickers": len(tickers),
         "n_episodes": len(rows),
         "n_confirmed": n_conf,
@@ -761,6 +772,8 @@ def flatten_bootstrap(boot, row):
         "lower_ci": boot["lower_ci"],
         "upper_ci": boot["upper_ci"],
         "p_one_sided": boot.get("p_one_sided"),
+        "p_vs_mde": boot.get("p_vs_mde"),
+        "lower_ci_vs_mde": boot.get("lower_ci_vs_mde"),
         "n_tickers": boot["n_tickers"],
         "n_episodes": boot["n_episodes"],
         "n_confirmed": boot["n_confirmed"],
