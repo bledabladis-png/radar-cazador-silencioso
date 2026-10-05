@@ -297,4 +297,26 @@ Referencias por linea en outputs/report/reporte_diario.md:
 
     Un commit por bloque. Suite verde + E2E si toca pipeline.
 
+## 9. Revision de D (2026-10-05)
+
+Tras inspeccionar stock_leader.py, la decision P2 se simplifica:
+
+    El criterio actual ya cumple:
+      - 15 candidatos por peso (TOP_N_CANDIDATES).
+      - Filtro sector: ACC o MARKUP.
+      - Top 5 por WLS.
+      - La columna "Fase Wyckoff" ya marca cada ticker.
+
+    El usuario decide NO cambiar a 20 candidatos.
+    El usuario decide NO anadir marca visual extra.
+
+    D queda sin cambios. No se toca stock_leader.py.
+
+## 10. Estado del plan
+
+    A. Renombrar seccion Flujo Primario ETF     HECHO (c5f0de4, a3f64a6)
+    C. Eliminar conteo duplicado de fases       HECHO (57e9841, 6945df6)
+    D. Nuevo criterio de lider                  NO APLICA (revision seccion 9)
+    B. Reducir notas al pie                     PENDIENTE
+
 Fin del documento 60.
