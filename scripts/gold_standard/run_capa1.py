@@ -31,7 +31,6 @@ from pathlib import Path
 import pandas as pd
 
 from scripts.gold_standard.annotation import (
-    ANOTADORES,
     build_blind_muestra,
     write_all_csvs,
 )
@@ -40,7 +39,6 @@ from scripts.gold_standard.constants import (
     MIN_GAP_A_SESSIONS,
     N_NEG_A,
     N_POS_A,
-    R_BANDA,
     SEED_GLOBAL,
 )
 from scripts.gold_standard.render import render_all
