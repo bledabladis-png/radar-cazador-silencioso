@@ -142,7 +142,6 @@ def simular_escenario(
 ) -> dict:
     """Simula un escenario. Devuelve medias, IC empiricos y errores."""
     rng_pop = np.random.default_rng(seed)
-    rng_sample = np.random.default_rng(seed + 1)
     pob = _generar_poblacion(estratos, pi, se, sp, rng_pop)
     n_h = _asignar_n_h(estratos, n_B)
 
