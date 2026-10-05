@@ -22,6 +22,7 @@ from typing import Callable
 import numpy as np
 
 from scripts.gold_standard.constants import N_MIN_RAO_WU
+from scripts.gold_standard.seeds import replica_seeds
 
 
 def _lambda_h(n_h: int, N_h: int) -> float:
@@ -100,10 +101,11 @@ def rao_wu_yue_ci(
     # Punto
     point = float(metric_fn(y_ref, y_det, w_orig))
 
-    # Replicas
-    rng = np.random.default_rng(seed)
+    # Replicas. Seeds deterministas por replica (P1.3).
+    seeds = replica_seeds(seed, B)
     samples = np.full(B, np.nan, dtype=float)
     for b in range(B):
+        rng = np.random.default_rng(seeds[b])
         w_replica = np.zeros(n, dtype=float)
         for h in estratos:
             h_int = int(h)

@@ -20,6 +20,8 @@ from dataclasses import dataclass
 import numpy as np
 import pandas as pd
 
+from scripts.gold_standard.seeds import replica_seeds
+
 
 @dataclass
 class ClusterResult:
@@ -101,9 +103,10 @@ def cluster_bootstrap_delta(
 
     delta_point = _delta_from_df(df, sow_col, ctx_col, dist_col, dist_label)
 
-    rng = np.random.default_rng(seed)
+    seeds = replica_seeds(seed, B)
     samples = np.full(B, np.nan, dtype=float)
     for b in range(B):
+        rng = np.random.default_rng(seeds[b])
         picks = rng.choice(tickers, size=n_tickers, replace=True)
         parts = [grupos[tk] for tk in picks]
         replica = pd.concat(parts, ignore_index=True)
