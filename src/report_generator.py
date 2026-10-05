@@ -195,16 +195,13 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
     lines.extend(render_acciones_seleccionadas(leader_lines))
 
     # =========================================================================
-    # SENTIMIENTO DE OPCIONES (OMS v2.0)
+    # CONTEXTO SECTORIAL (matriz, representatividad, wyckoff, divergencia, amplitud)
     # =========================================================================
-    lines.extend(render_sentimiento_opciones(pcr_data, reference_date=reference_date))
-
-    # =========================================================================
-    # ETF PRIMARY FLOW (SPDR) + CARACTERISTICAS + DIVERGENCIA
-    # =========================================================================
-    lines.extend(render_flujo_spdr(etf_primary_flow_data))
-    lines.extend(render_flujo_caracteristicas(sector_flow_characteristics_data))
-    lines.extend(render_divergencia_precio_flujo(sector_flow_characteristics_data))
+    lines.extend(render_matriz_regimen(sector_regime_matrix_data))
+    lines.extend(render_representatividad_lider(leader_representativeness_data))
+    lines.extend(render_wyckoff_sectorial(sector_wyckoff_distribution_data))
+    lines.extend(render_divergencia_sector_lideres(sector_leader_divergence_data))
+    lines.extend(render_momentum_amplitud(sector_breadth_momentum_data))
 
     # =========================================================================
     # CONTEXTO DE MERCADO (liderazgo, rotacion, dispersion, correlacion, cross-asset)
@@ -214,14 +211,11 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
     lines.extend(render_dispersion_sectores(sector_dispersion_data))
     lines.extend(render_correlacion_sectores(sector_correlation_summary_data))
     lines.extend(render_contexto_cross_asset(cross_asset_context_data))
+
     # =========================================================================
-    # CONTEXTO SECTORIAL (matriz, representatividad, wyckoff, divergencia, amplitud)
+    # SENTIMIENTO DE OPCIONES (OMS v2.0)
     # =========================================================================
-    lines.extend(render_matriz_regimen(sector_regime_matrix_data))
-    lines.extend(render_representatividad_lider(leader_representativeness_data))
-    lines.extend(render_wyckoff_sectorial(sector_wyckoff_distribution_data))
-    lines.extend(render_divergencia_sector_lideres(sector_leader_divergence_data))
-    lines.extend(render_momentum_amplitud(sector_breadth_momentum_data))
+    lines.extend(render_sentimiento_opciones(pcr_data, reference_date=reference_date))
 
     # =========================================================================
     # FLUJOS INTERNACIONALES (DAXEX, ISF, LYXI, IWM, QQQ SEC, CFTC)
@@ -232,7 +226,6 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
     ))
     lines.extend(render_flujo_qqq_sec(qqq_sec_flow))
     lines.extend(render_posicionamiento_cftc(cftc_position_flow_data))
-
 
     # =========================================================================
     # FLUJO POSICIONAL N-PORT (Trimestral)
@@ -245,6 +238,12 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
     lines.extend(render_flujo_sintesis(flow_synthesis))
 
     # =========================================================================
+    # ETF PRIMARY FLOW (SPDR) + AGREGADO SECTORIAL + DIVERGENCIA
+    # =========================================================================
+    lines.extend(render_flujo_spdr(etf_primary_flow_data))
+    lines.extend(render_flujo_caracteristicas(sector_flow_characteristics_data))
+    lines.extend(render_divergencia_precio_flujo(sector_flow_characteristics_data))
+
     # =========================================================================
     # VOLATILIDAD + CALIDAD + MTE
     # =========================================================================
