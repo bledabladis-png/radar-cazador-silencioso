@@ -578,6 +578,29 @@ Las de 57 seccion 7. Sin cambios: no tocar wyckoff_v1.py, legacy,
 config, protocolo v3; no activar SOW; no reabrir grid; no modificar
 MDE = 5 pp; no migrar consumidores sin 5c; no merge a main.
 
+## 16.3. Cierre 5c (2026-10-05)
+
+Referencia: 58_cierre_5c.md.
+
+Gate 5c (7 puntos del dictamen 57b) cierra como 4/6 consumidores
+compatibles y 2/6 pendientes de decision.
+
+    Puntos 1-4, 6, 7    DOCUMENTADOS / VERIFICADOS / CONGELADOS
+    Punto 5             PARCIAL: 4/6 compatibles, 2/6 requieren
+                        decision (E1/E2/E3 en 58 seccion 5)
+
+Incompatibilidad I-01: wyckoff_structure_core (legacy:301) no existe
+en v1.8. La usan index_phase.py y sector_regime.py. Anadirla a v1.8
+esta prohibido por 57b seccion 6. Opciones (b) adaptar o (c)
+mantener en legacy.
+
+Incompatibilidad I-03: cadena sector_regime -> sector_regime_matrix
+-> src/pipeline/engines.py -> reporte. El plan seccion 6 no listaba
+engines.py entre los indirectos.
+
+Pendiente: respuesta del auditor a E1/E2/E3. Sin ella, 5d no arranca.
+
+
 ---
 
 **Fin del plan de migracion v3.**
