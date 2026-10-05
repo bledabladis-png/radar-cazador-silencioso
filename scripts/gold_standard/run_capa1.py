@@ -28,6 +28,11 @@ import sys
 import time
 from pathlib import Path
 
+# Asegurar que ROOT esta en sys.path antes de imports del proyecto.
+_ROOT = Path(__file__).resolve().parent.parent.parent
+if str(_ROOT) not in sys.path:
+    sys.path.insert(0, str(_ROOT))
+
 import pandas as pd
 
 from scripts.gold_standard.annotation import (
