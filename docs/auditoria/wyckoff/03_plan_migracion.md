@@ -526,4 +526,58 @@ una sola vez. Los resultados no se ajustan ex-post.
 
 ---
 
+## 16. Actualizacion post-dictamen 57 (2026-10-05)
+
+Referencia: 57_frente_wyckoff_decision.md + 57b_dictamen_auditor_frente_wyckoff.md.
+
+Estado vigente del frente (sustituye la tabla implicita de seccion 2
+para efectos de decision):
+
+    Componente                        Estado
+    --------------------------------  ---------------------------------
+    Capa 1 - Semantica SOW            NO VALIDADA
+    Capa 2 - RANGE -> DISTRIBUTION    NO VALIDADA
+    Capa 3 - Predictiva H20           NO VALIDADA / NO EJECUTADA
+                                      CONFIRMATORIAMENTE
+    SOW v1.9                          FROZEN FOR VALIDATION / NOT PROD
+    SOW params                        FAIL-CLOSED / NO ACTIVAR
+    DISTRIBUTION                      FUERA DE PRODUCCION
+    v1.8-core 4 fases                 MIGRACION AUTORIZABLE TRAS 5c
+    Legacy                            Permanece en produccion hasta
+                                      completar 5c + migracion
+    Reapertura Capa 1                 Permitida solo mediante nuevo
+                                      protocolo firmado
+    Merge a main                      NO autorizado todavia
+
+Dictamen D1-D5 (57b): D1 SI / D2 REFORMULAR / D3 SI-CONDICIONADO /
+D4 SI-CONDICIONADO / D5 SI.
+
+Etiqueta obligatoria para el archivo de Capas 1+2:
+UNVALIDATED / INCONCLUSIVE DUE TO SAMPLE-CAPACITY CONSTRAINT.
+NO NEGATIVE / ABSENCE OF EFFECT.
+
+## 16.1. Gate 5c minimo (condicion de D3)
+
+Antes de migrar consumidores a v1.8-core, debe quedar documentado:
+
+    1. Que entradas recibe exactamente legacy y v1.
+    2. Que diferencias de clasificacion aparecen.
+    3. Que diferencias son esperadas por diseno.
+    4. Que no existe dependencia residual de SOW/DISTRIBUTION.
+    5. Que los consumidores no reciben campos semanticamente
+       incompatibles.
+    6. Que el cambio no introduce look-ahead ni fuga temporal.
+    7. Que existe regresion reproducible del comportamiento del core.
+
+Una mejora de discriminacion frente a legacy no constituye evidencia
+de verdad de la clasificacion.
+
+## 16.2. Prohibiciones vigentes
+
+Las de 57 seccion 7. Sin cambios: no tocar wyckoff_v1.py, legacy,
+config, protocolo v3; no activar SOW; no reabrir grid; no modificar
+MDE = 5 pp; no migrar consumidores sin 5c; no merge a main.
+
+---
+
 **Fin del plan de migracion v3.**
