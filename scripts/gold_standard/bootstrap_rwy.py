@@ -92,8 +92,12 @@ def rao_wu_yue_ci(
         N_h = int(N_h_map[h])
         if N_h < n_h:
             raise ValueError(f"N_h < n_h en estrato {h}")
-        if n_h < N_MIN_RAO_WU:
-            raise ValueError(f"n_h < {N_MIN_RAO_WU} en estrato {h}")
+        # Protocolo v8: n_h >= 2 si NO es censo. Si n_h == N_h, censo OK.
+        if n_h < N_MIN_RAO_WU and n_h != N_h:
+            raise ValueError(
+                f"n_h < {N_MIN_RAO_WU} y no es censo, en estrato {h} "
+                f"(n_h={n_h}, N_h={N_h})"
+            )
         idx_por_estrato[int(h)] = idx
         n_h_map[int(h)] = n_h
         N_h_check[int(h)] = N_h
@@ -102,6 +106,9 @@ def rao_wu_yue_ci(
     point = float(metric_fn(y_ref, y_det, w_orig))
 
     # Replicas. Seeds deterministas por replica (P1.3).
+    # Tratamiento censal (protocolo v8, seccion 12.2):
+    #   si n_h == N_h: contribucion fija, no se calcula lambda_h,
+    #   no se remuestrea el estrato.
     seeds = replica_seeds(seed, B)
     samples = np.full(B, np.nan, dtype=float)
     for b in range(B):
@@ -112,6 +119,10 @@ def rao_wu_yue_ci(
             idx = idx_por_estrato[h_int]
             n_h = n_h_map[h_int]
             N_h = N_h_check[h_int]
+            if n_h == N_h:
+                # Censo: contribucion fija
+                w_replica[idx] = w_orig[idx]
+                continue
             lam = _lambda_h(n_h, N_h)
             r = _multiplicidades(n_h, rng)
             m_h = n_h - 1
