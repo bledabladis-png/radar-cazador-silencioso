@@ -49,22 +49,29 @@ def apply_min_gap(
     min_gap_sessions: int = MIN_GAP_A_SESSIONS,
     seed: int = SEED_GLOBAL,
 ) -> pd.DataFrame:
-    """Aplica min_gap por ticker con aceptacion aleatoria determinista."""
+    """Aplica min_gap por ticker con aceptacion aleatoria determinista.
+
+    Unidad: SESIONES (posicion en el calendario del ticker), no dias
+    naturales. Dictamen P0.4.
+
+    120 sesiones pueden corresponder a ~168 dias naturales con fines
+    de semana y festivos. La condicion se aplica sobre la distancia
+    ordinal entre sesiones del mismo ticker.
+    """
     rng = np.random.default_rng(seed)
     accepted_indices = []
     for tk, group in episodes.groupby("ticker", sort=False):
-        g = group.sort_values("t").copy()
-        positions = np.arange(len(g))
-        order = rng.permutation(positions)
+        g = group.sort_values("t")
+        idx_original = g.index.to_numpy()
+        n = len(g)
+        order = rng.permutation(n)
         accepted_pos = []
-        for idx in order:
-            t_cur = g.iloc[idx]["t"]
-            if all(
-                abs((t_cur - g.iloc[p]["t"]).days) >= min_gap_sessions
-                for p in accepted_pos
-            ):
-                accepted_pos.append(idx)
-        accepted_indices.extend(g.index[accepted_pos].tolist())
+        for pos in order:
+            if all(abs(int(pos) - int(p)) >= min_gap_sessions
+                   for p in accepted_pos):
+                accepted_pos.append(int(pos))
+        for pos in accepted_pos:
+            accepted_indices.append(idx_original[pos])
     return episodes.loc[sorted(accepted_indices)].copy()
 
 
