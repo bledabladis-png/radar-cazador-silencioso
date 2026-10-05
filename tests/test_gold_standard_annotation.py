@@ -20,7 +20,6 @@ from scripts.gold_standard.annotation import (
     BLIND_ID_MAX,
     BLIND_ID_MIN,
     CSV_ANOTADOR_COLS,
-    CSV_MAPPING_COLS,
     build_blind_muestra,
     write_all_csvs,
     write_anotador_csv,
