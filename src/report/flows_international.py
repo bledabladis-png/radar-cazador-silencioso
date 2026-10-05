@@ -10,6 +10,92 @@ import pandas as pd
 from src.report.helpers import _fmt_num, _fmt_signed
 
 
+def render_flujos_internacionales_agregados(
+        blackrock_dax_flow, blackrock_isf_flow,
+        amundi_lyxi_flow, blackrock_iwm_flow):
+    """Tabla agregada de los 4 flujos primarios diarios internacionales.
+
+    Fusion de las 4 secciones individuales (DAXEX, ISF.L, LYXI, IWM)
+    en 1 tabla. QQQ SEC, CFTC y QQQ NPORT quedan aparte (otra
+    frecuencia y semantica).
+    """
+    out = []
+    rows = []
+
+    def _fmt_date(v):
+        return v.strftime('%Y-%m-%d') if hasattr(v, 'strftime') else str(v)
+
+    if blackrock_dax_flow is not None and not blackrock_dax_flow.empty:
+        r = blackrock_dax_flow.iloc[-1]
+        rows.append({
+            "fondo": "DAXEX",
+            "fecha": _fmt_date(r['date']),
+            "nav": f"{r['nav']:.4f}",
+            "shares_change": _fmt_signed(r['shares_change'], '{:+,.0f}', '{:,.0f}'),
+            "flujo": _fmt_signed(r['estimated_flow_eur'], '{:+,.2f}', '{:,.2f}') + " EUR",
+            "pct_aum": _fmt_signed(r['flow_pct_assets'] * 100, '{:+.2f}%', '{:.2f}%'),
+            "z": _fmt_signed(r['flow_zscore'], '{:+.2f}', '{:.2f}'),
+        })
+
+    if blackrock_isf_flow is not None and not blackrock_isf_flow.empty:
+        r = blackrock_isf_flow.iloc[-1]
+        rows.append({
+            "fondo": "ISF.L",
+            "fecha": _fmt_date(r['date']),
+            "nav": f"{r['nav']:.4f}",
+            "shares_change": _fmt_signed(r['shares_change'], '{:+,.0f}', '{:,.0f}'),
+            "flujo": _fmt_signed(r['estimated_flow_eur'], '{:+,.2f}', '{:,.2f}') + " GBP",
+            "pct_aum": _fmt_signed(r['flow_pct_assets'] * 100, '{:+.2f}%', '{:.2f}%'),
+            "z": _fmt_signed(r['flow_zscore'], '{:+.2f}', '{:.2f}'),
+        })
+
+    if amundi_lyxi_flow is not None and not amundi_lyxi_flow.empty:
+        r = amundi_lyxi_flow.iloc[-1]
+        if pd.notna(r.get('shares_change')):
+            flujo_str = _fmt_signed(r['estimated_flow_eur'], '{:+,.2f}', '{:,.2f}') + " EUR"
+            sc_str = _fmt_signed(r['shares_change'], '{:+,.0f}', '{:,.0f}')
+            pct_str = _fmt_signed(r['flow_pct_assets'] * 100, '{:+.2f}%', '{:.2f}%')
+            z_str = _fmt_signed(r['flow_zscore'], '{:+.2f}', '{:.2f}') if pd.notna(r.get('flow_zscore')) else "N/D"
+        else:
+            flujo_str = "N/D"
+            sc_str = "N/D"
+            pct_str = "N/D"
+            z_str = "N/D"
+        rows.append({
+            "fondo": "LYXI",
+            "fecha": _fmt_date(r['date']),
+            "nav": f"{r['nav']:.4f}",
+            "shares_change": sc_str,
+            "flujo": flujo_str,
+            "pct_aum": pct_str,
+            "z": z_str,
+        })
+
+    if blackrock_iwm_flow is not None and not blackrock_iwm_flow.empty:
+        r = blackrock_iwm_flow.iloc[-1]
+        rows.append({
+            "fondo": "IWM",
+            "fecha": _fmt_date(r['date']),
+            "nav": f"{r['nav']:.4f}",
+            "shares_change": _fmt_signed(r['shares_change'], '{:+,.0f}', '{:,.0f}'),
+            "flujo": _fmt_signed(r['primary_flow_usd'], '{:+,.2f}', '{:,.2f}') + " USD",
+            "pct_aum": _fmt_signed(r['primary_flow_pct'], '{:+.2f}%', '{:.2f}%'),
+            "z": _fmt_signed(r['primary_flow_z'], '{:+.2f}', '{:.2f}'),
+        })
+
+    if not rows:
+        return out
+
+    out.append("## Flujos primarios internacionales (diarios)\n")
+    out.append("| Fondo | Ultima fecha | NAV | \u0394 Shares | Flujo est. | Flujo % AUM | Z-score |\n")
+    out.append("|-------|--------------|-----|----------|------------|-------------|---------|\n")
+    for r in rows:
+        out.append(f"| {r['fondo']} | {r['fecha']} | {r['nav']} | {r['shares_change']} | {r['flujo']} | {r['pct_aum']} | {r['z']} |\n")
+    out.append("\n")
+    out.append("*Fuente: BlackRock (DAXEX, ISF.L, IWM) y Amundi (LYXI). ETF Primary Flow = \u0394SharesOutstanding \u00d7 NAV.*\n\n")
+    return out
+
+
 def render_flujo_daxex(blackrock_dax_flow):
     """Renderiza la seccion DAXEX."""
     out = []

@@ -42,10 +42,7 @@ from src.report.sector_context import (
     render_momentum_amplitud,
 )
 from src.report.flows_international import (
-    render_flujo_daxex,
-    render_flujo_isf,
-    render_flujo_lyxi,
-    render_flujo_iwm,
+    render_flujos_internacionales_agregados,
     render_flujo_qqq_sec,
     render_posicionamiento_cftc,
     render_flujo_posicional_nport,
@@ -234,10 +231,10 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
     # =========================================================================
     # FLUJOS INTERNACIONALES (DAXEX, ISF, LYXI, IWM, QQQ SEC, CFTC)
     # =========================================================================
-    lines.extend(render_flujo_daxex(blackrock_dax_flow))
-    lines.extend(render_flujo_isf(blackrock_isf_flow))
-    lines.extend(render_flujo_lyxi(amundi_lyxi_flow))
-    lines.extend(render_flujo_iwm(blackrock_iwm_flow))
+    lines.extend(render_flujos_internacionales_agregados(
+        blackrock_dax_flow, blackrock_isf_flow,
+        amundi_lyxi_flow, blackrock_iwm_flow,
+    ))
     lines.extend(render_flujo_qqq_sec(qqq_sec_flow))
     lines.extend(render_posicionamiento_cftc(cftc_position_flow_data))
 
