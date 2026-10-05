@@ -13,33 +13,55 @@ from src.report.helpers import _fmt_num
 from src.report.helpers import _fmt_signed
 
 
-def render_rankings_sectoriales(sector_results, tactical_scores,
-                                 structural_scores, sector_persistence,
-                                 signal_agreements, signal_agreements_display,
-                                 shock_sensitivities):
-    """Renderiza la tabla Rankings Sectoriales (Score combinado).
+def render_ranking_sectorial_unificado(sector_results, tactical_scores,
+                                       structural_scores, sector_persistence,
+                                       signal_agreements,
+                                       signal_agreements_display,
+                                       shock_sensitivities):
+    """Ranking sectorial unificado: 1 tabla con todas las columnas.
 
-    Devuelve lista de lineas markdown. Sin side effects.
+    Fusion de "Structural Ranking" y "Rankings Sectoriales" (antes
+    dos secciones separadas con 5 columnas comunes). Ordenado por
+    el Score combinado (el criterio mas informativo disponible).
+
+    Mantiene el titulo "Rankings Sectoriales" porque esta anclado
+    por test_report_generator_smoke.py.
     """
     out = []
-    out.append("## Rankings Sectoriales (Score combinado original)\n")
-    out.append("> *Nota: Este Score es el ranking historico del sistema (momentum, tendencia, volatilidad, breadth, Wyckoff). No es el Tactical ni el Structural Score.*\n\n")
-    header = "| # | Sector | Score | Tactical | Structural | Persist | Agreement | Comm Corr | Fase Wyckoff |\n"
-    sep = "|---|--------|-------|----------|------------|---------|-----------|------------|---------------|\n"
+    out.append("## Rankings Sectoriales\n")
+    out.append("> *Nota: Score es el ranking historico del sistema "
+               "(momentum, tendencia, volatilidad, breadth, Wyckoff). "
+               "Tactical y Structural son los motores independientes.*\n\n")
+    header = ("| # | Sector | Score | Tactical | Structural | Persist "
+              "| Agreement | Signal Cons | Comm Corr | Fase Wyckoff |\n")
+    sep = ("|---|--------|-------|----------|------------|---------"
+           "|-----------|-------------|-----------|---------------|\n")
     out.append(header)
     out.append(sep)
-    for i, (ticker, name, score, wyckoff) in enumerate(sector_results['ranking'][:EXPECTED_SECTOR_COUNT], 1):
+    for i, (ticker, name, score, wyckoff) in enumerate(
+            sector_results['ranking'][:EXPECTED_SECTOR_COUNT], 1):
         t_score = tactical_scores.get(ticker, 0.0) if tactical_scores else 0.0
         s_score = structural_scores.get(ticker, 0.0) if structural_scores else 0.0
         pers_raw = sector_persistence.get(ticker) if sector_persistence else None
+        pers_val = pers_raw if pers_raw is not None else 0.0
         pers_str = f"{pers_raw:.0%}" if pers_raw is not None else "N/A"
         agree = signal_agreements.get(ticker, 0.5) if signal_agreements else 0.5
-        agree_display = signal_agreements_display.get(ticker, f'{agree:.0%}') if signal_agreements_display else f'{agree:.0%}'
+        agree_display = (signal_agreements_display.get(ticker, f'{agree:.0%}')
+                         if signal_agreements_display else f'{agree:.0%}')
+        signal_cons = (pers_val + agree) / 2
         shock = shock_sensitivities.get(ticker, {}) if shock_sensitivities else {}
         comm_level = shock.get('commodity_level', 'N/A') if shock else 'N/A'
         comm_val = shock.get('commodity_corr_value', None) if shock else None
-        comm_display = f"{comm_level} ({_fmt_signed(comm_val, '{:+.2f}', '{:.2f}')})" if comm_val is not None and comm_level != 'N/A' else comm_level
-        out.append(f"| {i} | {name} ({ticker}) | {_fmt_num(score, '{:.2f}')} | {_fmt_signed(t_score, '{:+.2f}', '{:.2f}')} | {_fmt_signed(s_score, '{:+.2f}', '{:.2f}')} | {pers_str} | {agree_display} | {comm_display} | {wyckoff} |\n")
+        comm_display = (f"{comm_level} ({_fmt_signed(comm_val, '{:+.2f}', '{:.2f}')})"
+                        if comm_val is not None and comm_level != 'N/A'
+                        else comm_level)
+        out.append(
+            f"| {i} | {name} ({ticker}) | {_fmt_num(score, '{:.2f}')} "
+            f"| {_fmt_signed(t_score, '{:+.2f}', '{:.2f}')} "
+            f"| {_fmt_signed(s_score, '{:+.2f}', '{:.2f}')} "
+            f"| {pers_str} | {agree_display} | {signal_cons:.0%} "
+            f"| {comm_display} | {wyckoff} |\n"
+        )
     out.append("\n")
     return out
 

@@ -100,32 +100,6 @@ def render_momentum_otros(otros_price_rank, otros_flow_rank):
     return out
 
 
-def render_structural_ranking(structural_scores, tactical_scores,
-                              sector_persistence, signal_agreements,
-                              signal_agreements_display):
-    """Renderiza la tabla Structural Ranking.
-
-    Devuelve lista de lineas markdown. Sin side effects.
-    """
-    out = []
-    out.append("## Structural Ranking (Fortaleza de largo plazo)\n")
-    out.append("| # | Sector | Structural | Tactical | Persist | Agreement | Signal Consistency |\n")
-    out.append("|---|--------|------------|----------|---------|-----------|------------|\n")
-    structural_ranking = sorted(structural_scores.items(), key=lambda x: x[1], reverse=True) if structural_scores else []
-    for i, (ticker, s_score) in enumerate(structural_ranking[:EXPECTED_SECTOR_COUNT], 1):
-        name = SECTOR_NAMES.get(ticker, ticker)
-        t_score = tactical_scores.get(ticker, 0.0) if tactical_scores else 0.0
-        pers_raw = sector_persistence.get(ticker) if sector_persistence else None
-        pers_val = pers_raw if pers_raw is not None else 0.0
-        pers_str = f"{pers_raw:.0%}" if pers_raw is not None else "N/A"
-        agree = signal_agreements.get(ticker, 0.5) if signal_agreements else 0.5
-        agree_display = signal_agreements_display.get(ticker, f'{agree:.0%}') if signal_agreements_display else f'{agree:.0%}'
-        struct_conf = (pers_val + agree) / 2
-        out.append(f"| {i} | {name} ({ticker}) | {_fmt_signed(s_score, '{:+.2f}', '{:.2f}')} | {_fmt_signed(t_score, '{:+.2f}', '{:.2f}')} | {pers_str} | {agree_display} | {struct_conf:.0%} |\n")
-    out.append("\n")
-    return out
-
-
 def render_acciones_seleccionadas(leader_lines):
     """Renderiza la seccion Acciones Seleccionadas por el Modelo.
 
