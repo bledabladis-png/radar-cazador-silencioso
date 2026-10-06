@@ -98,22 +98,30 @@ en `sector_concentration.csv`.
     0 SIN_DATOS. Cache Xetra con `DB1_DE.csv`, `HEI_DE.csv`,
     `MUV2_DE.csv` (1277 filas cada uno, 2021-10-04 a 2026-10-06).
 
+- **Recuperacion de expedientes SOW (commit e528da19).** Los ficheros
+  46 (dictamen externo v5 grounded) y 47 (estado post-dictamen) vivian
+  solo en la rama `sow-v4-validation`. Se traen a main para que el
+  protocolo v6 pueda referenciarlos desde el corpus.
+- **Borrador protocolo v6 (commit b5370612).** `48_sow_protocol_v6.md`
+  redactado como BORRADOR pendiente de firma del auditor externo.
+  Basado en el dictamen 46: nested validation estricta, AIPW, propensity
+  con soporte ex-ante, dos estimandos (RD^AIPW + Delta Brier/LogLoss),
+  N_eval por regimen, prohibiciones explicitas. Etiquetas [F46] y [PF]
+  distinguen lo fijado por el auditor de lo pendiente. NO hay
+  implementacion de codigo hasta firma.
+
 **Commits.** 34c8029 (fix rs_mom), cc867fd + 5299e4c (fix europeo),
-48a9ee6 + c578ee1 + 15a7391 + cb1d8d0 (Daily hist/state),
-826694b + f847377 (limpieza repo).
+2d9b775f + a005fc75 (fix churn EOL), e528da19 (expedientes 46-47),
+b5370612 (borrador 48), mas los Daily hist/state.
 
 **Pendiente.**
 
-- Churn EOL en `outputs/history` y `outputs/state`: pandas `to_csv`
-  escribe CRLF; `.gitattributes` declara `eol=lf`. Fix de raiz:
-  `lineterminator='\n'` en writers. **WONT FIX razonado:** ~20 writers
-  afectados, ruido visual sin valor funcional. Se aplicara si en algun
-  momento se refactorizan los writers. Regla a seguir: nuevos writers
-  usan `lineterminator='\n'`.
+- Ninguno del dia. Los 3 frentes abiertos al inicio (churn EOL, warnings
+  pyflakes, holdings_filter) se cerraron: los 2 ultimos no existian en el
+  repositorio (solo en el handoff de traspaso).
 
 **Proximo paso sugerido.** Confirmar el run de CI con los fixes
-desplegados (rs_mom con valores, cobertura europea 51/51). Si OK,
-cerrar los dos frentes.
+desplegados. Pendiente firma externa del protocolo v6.
 
 ### 2026-10-05 - E2E main post-reorder D3 + fix frescura Evidence Matrix
 

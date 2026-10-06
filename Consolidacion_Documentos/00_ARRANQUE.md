@@ -137,6 +137,9 @@ A1-A5, A6, B, C, 6, 7, 8, 9, F: CERRADOS. Detalle tematico en
 - **Walk-forward SOW (2026-10-04):** v1.9 FAIL; C1 con evidencia OOS
   historica limpia; C2 exploratoria congelada. `43_estado_sow_tras_walkforward.md`.
   SOW sigue None / fail-closed. 5b.X v3 aplica solo a C0/v1.9.
+- **Protocolo SOW v6 (2026-10-06):** dictamen 46 (2026-10-04) rechaza
+  v5 grounded. Borrador `48_sow_protocol_v6.md` PENDIENTE FIRMA externa.
+  Sin implementacion hasta firma. Ver `46_*` y `47_*` del expediente.
 
 ### 4.3. Pendientes vivos
 
