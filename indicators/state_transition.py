@@ -120,7 +120,7 @@ def _save_state(payload: dict) -> None:
     # de estados SLPM pierde consecutive_count y confirmed_state
     # silenciosamente. Mismo patron que downloader.py y storage.py.
     _tmp = SLPM_STATE_FILE + ".tmp"
-    with open(_tmp, "w", encoding="utf-8") as f:
+    with open(_tmp, "w", encoding="utf-8", newline="\n") as f:
         json.dump(payload, f, indent=2)
     os.replace(_tmp, SLPM_STATE_FILE)
 

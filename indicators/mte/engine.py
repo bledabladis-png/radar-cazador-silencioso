@@ -129,7 +129,7 @@ def compute_mte(df_market, financial_conditions_score, credit_signal,
             os.makedirs(os.path.dirname(_mte_state.MTE_STATE_FILE), exist_ok=True)
 
 
-            with open(_mte_state.MTE_STATE_FILE, 'w', encoding='utf-8') as f:
+            with open(_mte_state.MTE_STATE_FILE, 'w', encoding='utf-8', newline='\n') as f:
 
 
                 json.dump({
