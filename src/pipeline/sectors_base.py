@@ -53,7 +53,7 @@ def compute_sectors_base(df_market, temporal_meta=None):
             srd_path = Path('outputs/history/sector_rank_deltas.csv')
             srd_path.parent.mkdir(parents=True, exist_ok=True)
             _tmp_srd = srd_path.with_suffix(srd_path.suffix + '.tmp')
-            sector_rank_deltas_df.to_csv(_tmp_srd, index=False, encoding='utf-8')
+            sector_rank_deltas_df.to_csv(_tmp_srd, index=False, encoding='utf-8', lineterminator='\n')
             _tmp_srd.replace(srd_path)
         else:
             sector_rank_deltas_df = None
@@ -77,7 +77,7 @@ def compute_sectors_base(df_market, temporal_meta=None):
                 hist_sd = pd.read_csv(sd_path)
                 sector_dispersion_df = append_dedup(hist_sd, sector_dispersion_df, ['date'])
             _tmp_sd = sd_path.with_suffix(sd_path.suffix + '.tmp')
-            sector_dispersion_df.to_csv(_tmp_sd, index=False)
+            sector_dispersion_df.to_csv(_tmp_sd, index=False, lineterminator='\n')
             _tmp_sd.replace(sd_path)
             print("  Dispersion entre sectores calculada.")
         else:
@@ -100,7 +100,7 @@ def compute_sectors_base(df_market, temporal_meta=None):
                 hist_cs = pd.read_csv(cs_path)
                 sector_corr_summary_df = append_dedup(hist_cs, sector_corr_summary_df, ['date','window'])
             _tmp_cs = cs_path.with_suffix(cs_path.suffix + '.tmp')
-            sector_corr_summary_df.to_csv(_tmp_cs, index=False)
+            sector_corr_summary_df.to_csv(_tmp_cs, index=False, lineterminator='\n')
             _tmp_cs.replace(cs_path)
             print("  Correlacion entre sectores calculada.")
         else:
@@ -123,14 +123,14 @@ def compute_sectors_base(df_market, temporal_meta=None):
                 hist_cad = pd.read_csv(ca_detail_path)
                 cross_asset_detail_df = append_dedup(hist_cad, cross_asset_detail_df, ['date','window','sector','asset'])
             _tmp_cad = ca_detail_path.with_suffix(ca_detail_path.suffix + '.tmp')
-            cross_asset_detail_df.to_csv(_tmp_cad, index=False)
+            cross_asset_detail_df.to_csv(_tmp_cad, index=False, lineterminator='\n')
             _tmp_cad.replace(ca_detail_path)
         if not cross_asset_summary_df.empty:
             if ca_summary_path.exists():
                 hist_cas = pd.read_csv(ca_summary_path)
                 cross_asset_summary_df = append_dedup(hist_cas, cross_asset_summary_df, ['date','window','sector','asset_class'])
             _tmp_cas = ca_summary_path.with_suffix(ca_summary_path.suffix + '.tmp')
-            cross_asset_summary_df.to_csv(_tmp_cas, index=False)
+            cross_asset_summary_df.to_csv(_tmp_cas, index=False, lineterminator='\n')
             _tmp_cas.replace(ca_summary_path)
             print("  Contexto Cross-Asset calculado.")
         else:

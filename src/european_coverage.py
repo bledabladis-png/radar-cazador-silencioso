@@ -155,7 +155,7 @@ def _append_csv(rows, today_str):
     # perdidas para siempre. Mismo patron que pcr_history,
     # darkpool_history, sector_rank_history, state_transition.
     _tmp = OUTPUT_CSV.with_suffix(OUTPUT_CSV.suffix + '.tmp')
-    df.to_csv(_tmp, index=False)
+    df.to_csv(_tmp, index=False, lineterminator='\n')
     _tmp.replace(OUTPUT_CSV)
 
 

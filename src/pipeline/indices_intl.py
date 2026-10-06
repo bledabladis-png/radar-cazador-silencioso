@@ -68,7 +68,7 @@ def compute_indices_intl(df_market, reference_date=None, run_id=None, temporal_m
                 csv_path = Path('outputs/report/analisis_lideres_internacionales.csv')
                 csv_path.parent.mkdir(parents=True, exist_ok=True)
                 _tmp_csv = csv_path.with_suffix(csv_path.suffix + '.tmp')
-                pd.concat(all_leaders, ignore_index=True).to_csv(_tmp_csv, index=False)
+                pd.concat(all_leaders, ignore_index=True).to_csv(_tmp_csv, index=False, lineterminator='\n')
                 _tmp_csv.replace(csv_path)
                 print("  CSV de lideres internacionales generado.")
         except (OSError, ValueError, KeyError, TypeError, RuntimeError, pd.errors.ParserError) as e:

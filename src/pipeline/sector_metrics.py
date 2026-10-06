@@ -33,7 +33,7 @@ def _compute_divergencia(df_stocks, holdings_df, leader_df, df_market, temporal_
                     hist_sld = pd.read_csv(sld_path)
                     sector_leader_divergence_df = append_dedup(hist_sld, sector_leader_divergence_df, ["date","sector"])
                 _tmp_sld = sld_path.with_suffix(sld_path.suffix + '.tmp')
-                sector_leader_divergence_df.to_csv(_tmp_sld, index=False, encoding='utf-8')
+                sector_leader_divergence_df.to_csv(_tmp_sld, index=False, encoding='utf-8', lineterminator='\n')
                 _tmp_sld.replace(sld_path)
                 print("  Divergencia sector-lideres calculada.")
         else:
@@ -55,7 +55,7 @@ def _compute_wyckoff(df_stocks, holdings_df):
                     hist_wy = pd.read_csv(wyckoff_path)
                     sector_wyckoff_distribution_df = append_dedup(hist_wy, sector_wyckoff_distribution_df, ["date","sector"])
                 _tmp_wy = wyckoff_path.with_suffix(wyckoff_path.suffix + '.tmp')
-                sector_wyckoff_distribution_df.to_csv(_tmp_wy, index=False, encoding='utf-8')
+                sector_wyckoff_distribution_df.to_csv(_tmp_wy, index=False, encoding='utf-8', lineterminator='\n')
                 _tmp_wy.replace(wyckoff_path)
                 print("  Distribucion Wyckoff sectorial calculada.")
         else:
@@ -77,7 +77,7 @@ def _compute_rs_internal(df_stocks, holdings_df, df_market, temporal_meta=None):
                     hist_rs = pd.read_csv(rs_path)
                     rs_internal_df = append_dedup(hist_rs, rs_internal_df, ["date","sector","ticker"])
                 _tmp_rs = rs_path.with_suffix(rs_path.suffix + '.tmp')
-                rs_internal_df.to_csv(_tmp_rs, index=False, encoding='utf-8')
+                rs_internal_df.to_csv(_tmp_rs, index=False, encoding='utf-8', lineterminator='\n')
                 _tmp_rs.replace(rs_path)
                 print("  RS Interno y Absoluto calculado.")
         else:
@@ -113,7 +113,7 @@ def _compute_concentration(df_stocks, holdings_df, leader_df, full_metrics_df, r
                 sector_concentration_df = sector_concentration_df.dropna(subset=['date'])
                 sector_concentration_df = sector_concentration_df.drop_duplicates(subset=['date','sector'], keep='last')
                 _tmp_sc = sc_path.with_suffix(sc_path.suffix + '.tmp')
-                sector_concentration_df.to_csv(_tmp_sc, index=False)
+                sector_concentration_df.to_csv(_tmp_sc, index=False, lineterminator='\n')
                 _tmp_sc.replace(sc_path)
                 print("  Sector Concentration calculado.")
         else:
@@ -138,7 +138,7 @@ def _compute_representativeness(leader_df, reference_date=None):
                     hist_lr = pd.read_csv(lr_path)
                     leader_representativeness_df = append_dedup(hist_lr, leader_representativeness_df, ["date","sector","ticker"])
                 _tmp_lr = lr_path.with_suffix(lr_path.suffix + '.tmp')
-                leader_representativeness_df.to_csv(_tmp_lr, index=False)
+                leader_representativeness_df.to_csv(_tmp_lr, index=False, lineterminator='\n')
                 _tmp_lr.replace(lr_path)
                 print("  Representatividad del lider calculada.")
         else:

@@ -37,7 +37,7 @@ def compute_final_matrices(sector_breadth_df, sector_concentration_df,
             mp_path = Path('outputs/history/sector_regime_matrix.csv')
             mp_path.parent.mkdir(parents=True, exist_ok=True)
             _tmp_mp = mp_path.with_suffix(mp_path.suffix + '.tmp')
-            sector_regime_matrix_df.to_csv(_tmp_mp, index=False, encoding='utf-8')
+            sector_regime_matrix_df.to_csv(_tmp_mp, index=False, encoding='utf-8', lineterminator='\n')
             _tmp_mp.replace(mp_path)
             print("  Matriz de regimen sectorial calculada.")
         else:
@@ -64,7 +64,7 @@ def compute_final_matrices(sector_breadth_df, sector_concentration_df,
             em_path = Path('outputs/history/evidence_matrix.csv')
             em_path.parent.mkdir(parents=True, exist_ok=True)
             _tmp_em = em_path.with_suffix(em_path.suffix + '.tmp')
-            evidence_matrix_df.to_csv(_tmp_em, index=False)
+            evidence_matrix_df.to_csv(_tmp_em, index=False, lineterminator='\n')
             _tmp_em.replace(em_path)
             print("  Matriz de evidencia calculada.")
         else:
@@ -114,7 +114,7 @@ def save_regime_history(macro_score, macro_regime, macro_conf,
     else:
         hist = new_row
     _tmp_hist = Path(hist_path).with_suffix(Path(hist_path).suffix + '.tmp')
-    hist.to_csv(_tmp_hist, index=False)
+    hist.to_csv(_tmp_hist, index=False, lineterminator='\n')
     _tmp_hist.replace(hist_path)
 
 
@@ -130,7 +130,7 @@ def save_sector_rankings(sector_results):
     _sr_path = Path("outputs/report/sector_rankings.csv")
     _sr_path.parent.mkdir(parents=True, exist_ok=True)
     _tmp_sr = _sr_path.with_suffix(_sr_path.suffix + '.tmp')
-    sector_df.to_csv(_tmp_sr, index=False)
+    sector_df.to_csv(_tmp_sr, index=False, lineterminator='\n')
     _tmp_sr.replace(_sr_path)
 
 

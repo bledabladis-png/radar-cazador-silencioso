@@ -61,7 +61,7 @@ def _compute_vol_structure(df_market, pcr_data):
                 hist_vs = pd.read_csv(vs_path)
                 vol_structure_df = append_dedup(hist_vs, vol_structure_df, ['date'])
             _tmp_vs = vs_path.with_suffix(vs_path.suffix + '.tmp')
-            vol_structure_df.to_csv(_tmp_vs, index=False)
+            vol_structure_df.to_csv(_tmp_vs, index=False, lineterminator='\n')
             _tmp_vs.replace(vs_path)
             print("  Volatilidad estructural calculada.")
         else:
@@ -83,7 +83,7 @@ def _compute_data_quality(reference_date=None):
                 hist_dq = pd.read_csv(dq_path)
                 data_quality_df = append_dedup(hist_dq, data_quality_df, ['date','source'])
             _tmp_dq = dq_path.with_suffix(dq_path.suffix + '.tmp')
-            data_quality_df.to_csv(_tmp_dq, index=False)
+            data_quality_df.to_csv(_tmp_dq, index=False, lineterminator='\n')
             _tmp_dq.replace(dq_path)
             print("  Calidad de datos calculada.")
         else:

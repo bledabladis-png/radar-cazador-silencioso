@@ -59,7 +59,7 @@ def compute_flows_primary(df_market, temporal_meta=None):
                         hist_sfc, sector_flow_characteristics_df, ["date", "sector"]
                     )
                 _tmp_sfc = sfc_path.with_suffix(sfc_path.suffix + '.tmp')
-                sector_flow_characteristics_df.to_csv(_tmp_sfc, index=False, encoding='utf-8')
+                sector_flow_characteristics_df.to_csv(_tmp_sfc, index=False, encoding='utf-8', lineterminator='\n')
                 _tmp_sfc.replace(sfc_path)
                 print("  Sector Flow Characteristics calculado.")
     except (OSError, ValueError, KeyError, TypeError, IndexError, RuntimeError, pd.errors.ParserError, pd.errors.EmptyDataError) as e:
