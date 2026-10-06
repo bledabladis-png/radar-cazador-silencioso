@@ -2,7 +2,7 @@
 
 **Registro de sesiones recientes. NO normativo. NO se pega al arrancar.**
 **Para sesiones anteriores, ver `git log`.**
-**Se poda por antiguedad: mantener las ultimas 5 sesiones. La 6ª se elimina o se resume en 04_HISTORICO.md.**
+**Se poda por antiguedad: mantener las ultimas 10 sesiones + las del dia en curso. Al anadir una nueva, la mas antigua fuera del dia se elimina o se resume en 04_HISTORICO.md. Ver seccion 5.**
 
 ---
 
@@ -22,7 +22,7 @@ Bitacora de las ultimas sesiones. Contiene:
 
 Cada sesion se registra asi:
 
-    ### YYYY-MM-DD — Titulo corto
+    ### YYYY-MM-DD â€” Titulo corto
 
     **Objetivo.** Que se pretendia hacer.
 
@@ -38,7 +38,7 @@ Cada sesion se registra asi:
 
     **Proximo paso sugerido.** Que deberia hacerse a continuacion.
 
-Al cerrar una sesion nueva, se anade arriba (las mas recientes primero). Si hay mas de 10 fuera del dia en curso, la mas antigua se elimina o se resume en el historico. Ver reglas completas en §5.
+Al cerrar una sesion nueva, se anade arriba (las mas recientes primero). Si hay mas de 10 fuera del dia en curso, la mas antigua se elimina o se resume en el historico. Ver reglas completas en Â§5.
 
 ---
 
@@ -251,10 +251,10 @@ haber ejecutado el modulo sin la logica nueva.
   `regimes/sector_regime.py:13`.
 - **No es bug.** El plan de migracion (`03_plan_migracion.md`)
   tiene el Frente D (migracion de consumidores) BLOQUEADO hasta
-  cierre 5b.X. Prohibicion explicita del dictamen final §3.
+  cierre 5b.X. Prohibicion explicita del dictamen final Â§3.
   La migracion requiere 5b.X exitoso, 5c cerrada y dictamen externo.
 - **Auditoria linea a linea.** Cubre el hueco declarado por el
-  propio auditor externo (dictamen 38 §5): "No he inspeccionado
+  propio auditor externo (dictamen 38 Â§5): "No he inspeccionado
   fisicamente el diff d324346..d0874f4; por tanto, no voy a afirmar
   que lo he revisado linea por linea." El dictamen se emitio sobre
   el paquete contractual, no sobre el codigo.
@@ -266,8 +266,8 @@ haber ejecutado el modulo sin la logica nueva.
   no mencionadas por nombre. Cotejo pasa de 33/36 a 36/36.
 - **Cero ALTA, cero MEDIA.** 3 INFO WONT FIX razonado (T_NORM_WEAK
   duplicado con contrato redundante, fillna de build_ticker_df
-  documentado en contrato §8.3, wyckoff_stability sin consumidor
-  pero API publica en contrato §8.2).
+  documentado en contrato Â§8.3, wyckoff_stability sin consumidor
+  pero API publica en contrato Â§8.2).
 - **Suite.** 3175 passed + 5 skipped. Sin regresion.
 
 **Commits.** 036c4ef (dead code W-01..W-03), de7d729 (trazabilidad
@@ -370,12 +370,12 @@ b02ec17 (corpus), pendiente (D-06).
 **Ampliacion (misma sesion, tramo 5b.X v3).**
 
 - **Protocolo v3 redactado.** `35_protocolo_5bX_v3.md` (commit
-  a7879f3). Preserva v2 + §14 auditoria de equivalencia + §15
-  manifiesto + §16 tests exigidos.
+  a7879f3). Preserva v2 + Â§14 auditoria de equivalencia + Â§15
+  manifiesto + Â§16 tests exigidos.
 - **Script v3 conforme.** `validate_wyckoff_sow_5bX.py` (commit
   d0874f4). 6 cambios normativos D-06, resto funcionalmente
   equivalente a 5b.4-bis.
-- **Tests contractuales §16.** 19 tests (commit 0fd53fa + 42728ed).
+- **Tests contractuales Â§16.** 19 tests (commit 0fd53fa + 42728ed).
   14 del contrato + C1 bootstrap + C2 guardrails.
 - **Manifiesto de freeze.** `35_protocolo_5bX_v3.freeze.json`
   (commit d69e8e3). Rompe autorreferencia como el generador.
@@ -518,7 +518,7 @@ materiales).
 - **Contratos mecanicos.** `tests/test_audit_contracts.py` con 6
   tests (2 contratos + 4 auto-verificaciones).
 - **Lecciones de metodo persistidas en `01_METODO.md`.** 4 reglas
-  nuevas en §7 + 1 en §10. Fichero en 19936 B, cerca del limite
+  nuevas en Â§7 + 1 en Â§10. Fichero en 19936 B, cerca del limite
   de 20 KB.
 
 **Commits (tramo).** `325c714`, `982f135`, `c124674`, `840c355`,
@@ -569,10 +569,10 @@ sobre `indicators/` no-Wyckoff.
   0.80. Para lift=0.074 (observado en desarrollo): n=450 da lower
   0.780, n=550 da lower 0.806. Ref: `wyckoff_5bX_power_summary.json`.
 - **Protocolo 35 v2 escrito.** 433 lineas, +227/-65, changelog
-  explicito v1->v2 en §13. Commit 9ef7497.
+  explicito v1->v2 en Â§13. Commit 9ef7497.
 - **Congelacion del validador.** sha256 CC01A6AB..., commit d324346,
-  python 3.14, seed 20261002, B=2000. Registrado en §2.5 de 35 v2 +
-  sincronizacion de plan v2 (§4.4, §4.5, bitacora, riesgos). Commit
+  python 3.14, seed 20261002, B=2000. Registrado en Â§2.5 de 35 v2 +
+  sincronizacion de plan v2 (Â§4.4, Â§4.5, bitacora, riesgos). Commit
   ccba3ab.
 - **Auditoria S-01 (indicators/ no-Wyckoff).** Dos barridos de patrones
   del catalogo 01b:
@@ -610,10 +610,10 @@ sobre `indicators/` no-Wyckoff.
   H20-complete + guardrail 12m. Sin accion hasta que lleguen datos.
 - 5c.4 / 5d / 5e: bloqueados en cadena por 5b.X.
 - H5.3: verificacion del cron 13F del 20-nov-2026 (`update_sec_13f.yml`).
-  Comando documentado en `07_RUNBOOK.md` §2.4.1.
+  Comando documentado en `07_RUNBOOK.md` Â§2.4.1.
 - C2 (920): discrepancia H1-B. Bloqueado por auditor externo.
 - S-01: segundo barrido sin hallazgos. No se justifica tercer barrido
-  con los patrones restantes (P5, P6, P9-P12) — ROI < 1.
+  con los patrones restantes (P5, P6, P9-P12) â€” ROI < 1.
 - D-03 (robustez menor): `momentum.py:47` `mfv.rolling(w).sum() /
   volume.rolling(w).sum()` sin `+1e-9`. Sin caso real disparador.
 
@@ -811,7 +811,7 @@ bloqueado por auditor externo.
   aun no habia publicado el cierre del 1-oct). El run verde previo
   (36904431677, 18:08 UTC) paso Guard porque el gate calculo
   expected_session=2026-09-30 y Yahoo ya tenia datos completos. Deuda
-  separada: el guard no distingue "latencia Yahoo" de "fallo real" —
+  separada: el guard no distingue "latencia Yahoo" de "fallo real" â€”
   candidato a expediente propio si se decide atacar.
 
 - **Guard coverage sigue fallando (2026-10-02 02:45 CEST, run 36946066084).**
@@ -1068,7 +1068,7 @@ aprobado, dictamen externo) y documentar la deuda abierta.
 
 - **Corpus sincronizado.** `ecd3648` (00_ARRANQUE + 01_METODO),
   `31c298b` (bitacora + historico atomicidad + poda a 12 entradas),
-  `e0553ec` (§2 vs §5), `215da23` (snapshot final).
+  `e0553ec` (Â§2 vs Â§5), `215da23` (snapshot final).
 
 - **Limpieza pyflakes.** `912ee3d`: 8 warnings introducidos en la
   sesion de madrugada + 2 del fix de alineacion.
@@ -1089,7 +1089,7 @@ aprobado, dictamen externo) y documentar la deuda abierta.
   / `build_membership`, decidir join por `catalog_key` vs positional.
 - **Deudas latentes documentadas:** `stock_leader.py:59` y
   `options.py:46` usan `np.median(np.abs(...))` en contextos donde
-  hoy no se manifiesta pero podria (ver `04_HISTORICO §3.3`).
+  hoy no se manifiesta pero podria (ver `04_HISTORICO Â§3.3`).
 - C2 (920): bloqueado externo.
 - H5.3: cron nov 2026.
 
@@ -1100,7 +1100,7 @@ de los 2 `np.median` latentes. Despues, `01_METODO` a 24 KB
 ### 2026-10-01 (tarde) - Incidente cron trimestral + fix sys.path + fix alineacion
 
 **Objetivo.** Verificar el primer schedule real de los 3 workflows trimestrales
-(1-oct-2026, CEST 04:47/06:17/07:17). Aplicar 07_RUNBOOK §3. Diagnostico y fix
+(1-oct-2026, CEST 04:47/06:17/07:17). Aplicar 07_RUNBOOK Â§3. Diagnostico y fix
 de los fallos.
 
 **Hecho.**
@@ -1141,7 +1141,7 @@ de los fallos.
   Todos imports unused o variable sin usar. `pyflakes .` limpio tras
   el commit.
 - **Corpus sincronizado (`ecd3648`):** `00_ARRANQUE` (tests 2945 ->
-  2997, pyflakes `.`, `08_AUDITORIA_SECTOR_REGIME` en tabla §7, tamanos
+  2997, pyflakes `.`, `08_AUDITORIA_SECTOR_REGIME` en tabla Â§7, tamanos
   reales) + `01_METODO` (idem + patrones 10 -> 13, corpus 6 -> 8
   ficheros, poda bitacora 5 -> 10). Snapshot regenerado (`d0b0869`).
 
@@ -1262,7 +1262,7 @@ implementar los fixes aprobados y verificar end-to-end.
 trimestrales, primera ejecucion por schedule) con 07_RUNBOOK 3. Si
 verde, documentar tiempos reales en 07_RUNBOOK 2.3.
 
-### 2026-09-30 (noche, sesion 7) - D37-D40: cobertura final + fósiles + auditoria workflows
+### 2026-09-30 (noche, sesion 7) - D37-D40: cobertura final + fÃ³siles + auditoria workflows
 
 **Objetivo.** Cerrar el backlog formal tras D36. Orden por ROI:
 cobertura de scripts con logica real, limpieza de fosiles, auditoria
@@ -1327,7 +1327,7 @@ tematica de workflows.
 **Proximo paso sugerido.** Verificacion del cron 1-oct con
 `07_RUNBOOK 3`. Si verde, documentar tiempos reales en `07_RUNBOOK 2.3`.
 
-### 2026-09-30 (noche, sesion 6) — D34-D36: cobertura + bug real en freshness
+### 2026-09-30 (noche, sesion 6) â€” D34-D36: cobertura + bug real en freshness
 
 **Objetivo.** Cerrar la cobertura de los modulos con logica real
 pendiente (excluyendo IO/orquestacion E2E-only por diseno).
@@ -1368,7 +1368,7 @@ no se generase sin razon aparente.
 - C2 (920) OPEN. Bloqueado por auditor externo.
 - H5.3: verificacion cron nov 2026.
 - 2 tests skipped por --run-network en test_freshness (opt-in).
-- Cron trimestral 1-oct-2026: aplicar 07_RUNBOOK §3.
+- Cron trimestral 1-oct-2026: aplicar 07_RUNBOOK Â§3.
 - Modulos con cobertura <80% tras D36: pipeline_contractual (38%,
   orquestador E2E-only), data_loader (59%, red), health_check (84%),
   options.py (69%, IO), update_sec_13f (62%, red),
@@ -1379,14 +1379,14 @@ no se generase sin razon aparente.
   Los candidatos a un D37 si se decide: pipeline_gate, guard_coverage,
   issue_manager (logica real sin red).
 
-**Proximo paso sugerido.** Cron 1-oct. Aplicar 07_RUNBOOK §3 a los
+**Proximo paso sugerido.** Cron 1-oct. Aplicar 07_RUNBOOK Â§3 a los
 3 workflows trimestrales (sector_holdings 04:47, index_holdings
 06:17, european_holdings 07:17 CEST). Si verde, continuar con
 pipeline_gate + guard_coverage + issue_manager (D37).
 
 ---
 
-### 2026-09-30 (noche, sesion 5) — D29-D33: cobertura de render, regimes, SLPM, flow, options
+### 2026-09-30 (noche, sesion 5) â€” D29-D33: cobertura de render, regimes, SLPM, flow, options
 
 **Objetivo.** Continuar el barrido de cobertura tras D28. 5 bloques
 tematicos ordenados por criticidad para el output del sistema.
@@ -1427,20 +1427,20 @@ fallos anteriores).
 - C2 (920) OPEN. Bloqueado por auditor externo.
 - H5.3: verificacion cron nov 2026.
 - 2 tests skipped por --run-network en test_freshness (opt-in).
-- Cron trimestral 1-oct-2026: aplicar 07_RUNBOOK §3.
+- Cron trimestral 1-oct-2026: aplicar 07_RUNBOOK Â§3.
 - Modulos con cobertura <80% tras D33: options.py (69%),
-  pipeline_contractual (38% por diseño), data_loader (59%),
+  pipeline_contractual (38% por diseÃ±o), data_loader (59%),
   stock_data_loader (77%), index_leaders (70% por ramas defensivas),
   sector_leader_divergence (79%), health_check (52%),
   update_sec_13f (62%). Los de IO/orquestacion E2E-only por diseno.
   Los de logica podrian cubrirse en sesion futura si se decide.
 
-**Proximo paso sugerido.** Cron 1-oct. Aplicar 07_RUNBOOK §3. Si
+**Proximo paso sugerido.** Cron 1-oct. Aplicar 07_RUNBOOK Â§3. Si
 verde, revisar si queda deuda P3 accionable o cerrar cobertura.
 
 ---
 
-### 2026-09-30 (noche) — D19-D28: verificacion produccion + cobertura indicators/utils
+### 2026-09-30 (noche) â€” D19-D28: verificacion produccion + cobertura indicators/utils
 
 **Objetivo.** Tras cerrar sesion 3 con D16/D18, continuar con la
 verificacion en produccion del check_yahoo_revision (D19) y el barrido
@@ -1506,14 +1506,14 @@ de cobertura de los modulos restantes.
 - C2 (920) OPEN. Bloqueado por auditor externo.
 - H5.3: verificacion cron nov 2026.
 - 2 tests skipped por --run-network en test_freshness (opt-in).
-- Cron trimestral 1-oct-2026: aplicar 07_RUNBOOK §3.
+- Cron trimestral 1-oct-2026: aplicar 07_RUNBOOK Â§3.
 
 **Proximo paso sugerido.** Cron 1-oct. Aplicar 07_RUNBOOK. Si todo
 verde, o retomar deuda o nueva auditoria.
 
 ---
 
-### 2026-09-30 (tarde) — D4 + D3 + D2 + Runbook + D1: cierre de P1
+### 2026-09-30 (tarde) â€” D4 + D3 + D2 + Runbook + D1: cierre de P1
 
 **Objetivo.** Recibir traspaso del asistente saliente, asimilar contexto,
 atacar la deuda abierta por prioridad. P1 tenia tres frentes (D1, D2, D3)
@@ -1542,7 +1542,7 @@ mas D4 (puntual) y una R (runbook del cron trimestral que dispara el 1-oct).
   depende de Close, no de Volume; el volumen es D7. `K-LSE-YAHOO-REVISION-01`
   no era huerfano: ya tenia ficha en 02_ARQUITECTURA y 04_HISTORICO como
   MONITORED. Decision de arquitectura (opcion A del usuario): aceptar y
-  documentar. `00_ARRANQUE §2` pasa de "Determinista" a "Determinista **dado
+  documentar. `00_ARRANQUE Â§2` pasa de "Determinista" a "Determinista **dado
   un snapshot del input**". Nuevo check `check_yahoo_revision` compara
   manifest actual vs HEAD por sha256: mismo `last_date` con sha distinto ->
   WARN (revision detectada). 5 tests del helper.
@@ -1574,9 +1574,9 @@ mas D4 (puntual) y una R (runbook del cron trimestral que dispara el 1-oct).
 - D5 (corpus desincronizado): 00_ARRANQUE decia 2340 tests (real 2369
   tras esta sesion), `01_METODO` 2297, `02_ARQUITECTURA` "10 contratos"
   (real 9). Sesion documental completa.
-- D6 (`datetime.now()` en header del reporte). Viola `00_ARRANQUE §2`.
+- D6 (`datetime.now()` en header del reporte). Viola `00_ARRANQUE Â§2`.
 - D7 (volumen Yahoo no consolidado). WONT FIX razonado, documentar en
-  `02_ARQUITECTURA §11`.
+  `02_ARQUITECTURA Â§11`.
 - BOM en 7 workflows. Cosmetico. Detectado durante D4.
 - `_write_ingest_trace` ensucia manifests productivos incluso en rama
   `[SKIP]`. `Path.write_text` sin newline final en manifests.
@@ -1595,7 +1595,7 @@ sesion siguiente.
 
 ---
 
-### 2026-09-30 (madrugada) — Baseline IAE vs par vigente: aclaracion
+### 2026-09-30 (madrugada) â€” Baseline IAE vs par vigente: aclaracion
 
 **Objetivo.** Investigar la diferencia entre el NIPC del run manual de
 GitHub (8256882557) y el baseline del corpus (-4264449012).
@@ -1624,7 +1624,7 @@ publica el NIPC del par vigente, que cambia con cada trimestre.
 
 **Hallazgos del run manual (2026-09-30, run 36642077307):**
 - `update_futures` exit 1. BZ=F/CL=F BLOCKED (403 OilPriceAPI).
-  `commodities_futures.parquet` atascado en 21-sep. Señal intencional
+  `commodities_futures.parquet` atascado en 21-sep. SeÃ±al intencional
   con `continue-on-error: true`.
 - Warning 'Cache 13F no disponible' es falso positivo. La cache se
   restauro por restore-key (v2), pero `cache-hit != 'true'` dispara
