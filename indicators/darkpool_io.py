@@ -35,10 +35,19 @@ def _get_all_tickers():
         # Ticker típico: 1-6 caracteres, letras, punto o guion, no empezar por número
         if re.fullmatch(r'[A-Z][A-Z0-9.-]{0,5}', t) and not t.startswith('-'):
             valid.append(t)
-    return list(set(valid))
+    # K-DT3-AUDIT-01: sorted() para orden determinista (logs reproducibles).
+    return sorted(set(valid))
 
 
 def _get_volume_from_df(df, week_start, end_date_str):
+    """Suma volumen por ticker entre dos fechas.
+
+    Contrato:
+        - Devuelve dict {ticker: volumen_total}.
+        - Solo incluye tickers con volumen > 0 (evita entradas vacias).
+        - Si el DataFrame tiene columnas planas (no MultiIndex),
+          devuelve dict vacio sin error.
+    """
     volumes = {}
     try:
         week_data = df.loc[week_start:end_date_str]

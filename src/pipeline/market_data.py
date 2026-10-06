@@ -35,8 +35,9 @@ def _compute_darkpool(df_market=None, df_stocks=None):
         from indicators.darkpool import compute_darkpool_signals
         darkpool_data = compute_darkpool_signals(df_market=df_market, df_stocks=df_stocks)
         if darkpool_data:
+            # K-DT3-AUDIT-01: n_tickers_ats/n_tickers_total unificado.
             print(f"  Dark Pool medio: {darkpool_data['media_dark_pool']:.2f}% "
-                  f"({darkpool_data['n_tickers_ats']}/{darkpool_data['n_tickers_total']} tickers)")
+                  f"({darkpool_data['n_tickers']} tickers)")
         else:
             print("  Dark Pools: no disponible")
     except (ImportError, KeyError, ValueError, TypeError, IndexError, AttributeError, OSError, RuntimeError, pd.errors.ParserError) as e:

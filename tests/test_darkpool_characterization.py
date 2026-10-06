@@ -1,10 +1,14 @@
 """DT3 Fase 0: caracterizacion de compute_darkpool_signals.
 
 Contrato observable (consumido por src/pipeline/market_data.py):
-  media_dark_pool, n_tickers_ats, n_tickers_total, z_score, week, status
+  media_dark_pool, n_tickers, z_score, week, status
 
 Caracterizacion (regresion interna):
-  state, momentum, percentile, z_windows
+  state, percentile, z_windows
+
+K-DT3-AUDIT-01 (2026-10-06): se elimino `momentum` (era copia
+exacta de z_score) y se unifico `n_tickers_ats`/`n_tickers_total`
+en `n_tickers`.
 
 Bug latente congelado (se corrige en Fase 1):
   fecha = datetime.now() -> test_fecha_actual_es_now
@@ -52,12 +56,10 @@ def test_media_dark_pool(res, golden):
     assert abs(got - exp) < TOL, f"{got} vs {exp}"
 
 
-def test_n_tickers_ats(res, golden):
-    assert int(res["n_tickers_ats"]) == int(golden["contract"]["n_tickers_ats"])
-
-
-def test_n_tickers_total(res, golden):
-    assert int(res["n_tickers_total"]) == int(golden["contract"]["n_tickers_total"])
+def test_n_tickers(res, golden):
+    # K-DT3-AUDIT-01: n_tickers_ats y n_tickers_total eran siempre
+    # iguales (df_res solo contiene tickers con ATS>0). Unificado.
+    assert int(res["n_tickers"]) == int(golden["contract"]["n_tickers"])
 
 
 def test_z_score(res, golden):
@@ -70,10 +72,8 @@ def test_state(res, golden):
     assert res["state"] == golden["characterization"]["state"]
 
 
-def test_momentum(res, golden):
-    got = float(res["momentum"])
-    exp = float(golden["characterization"]["momentum"])
-    assert abs(got - exp) < TOL
+# test_momentum eliminado (K-DT3-AUDIT-01): `momentum` era copia
+# exacta de z_score. No existia como metrica independiente.
 
 
 def test_percentile(res, golden):

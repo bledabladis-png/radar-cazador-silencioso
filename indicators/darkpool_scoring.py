@@ -2,6 +2,16 @@
 
 Funciones puras (sin side effects, sin IO).
 Re-exportadas por indicators/darkpool.py para preservar API interna.
+
+Rediseño K-DT3-AUDIT-01 (2026-10-06):
+- Se elimina el contrato antiguo `_compute_z_for_window` que devolvia
+  (z, momentum, percentile, state). Bug: el `momentum` se calculaba
+  sobre una serie de un solo valor no-NaN (el ultimo de la rolling),
+  por lo que era identico a `z`. El `percentile` se calculaba sobre
+  `ratio_ewm` sin suavizar, distinto de la base del z.
+- Se sustituye por `compute_window_stats(hist, window)` que devuelve
+  un dict `{z, percentile, state}` con z y percentile calculados
+  sobre la MISMA serie suavizada.
 """
 import numpy as np
 import pandas as pd
@@ -10,24 +20,16 @@ from config.settings import DARKPOOL_THRESHOLDS
 
 
 def robust_zscore(series):
-    # K-DT3-RUNTIMEWARN: serie vacia -> Series vacia sin warnings de numpy
-    # (antes: series.median() y np.median() sobre vacio emitidos como
-    # RuntimeWarning "Mean of empty slice" + "invalid value in divide").
-    #
-    # A3.3-01 (2026-09-28): el consumidor (_compute_z_for_window) hace
-    # .iloc[-1] sobre el retorno. Contrato implicito: la funcion debe
-    # devolver una pd.Series indexada. La rama mad==0 devolvia
-    # np.zeros(len(series)) (ndarray) -> .iloc[-1] lanzaba AttributeError
-    # cuando MAD==0 en cualquier ventana. Devuelve Series con el mismo
-    # indice que la entrada, consistente con las otras dos ramas.
+    """Z-score robusto (mediana + MAD) sobre una serie.
+
+    Contrato:
+        - serie vacia -> Series vacia (mismo indice)
+        - NaN originales permanecen NaN
+        - mad == 0 -> todos ceros (mismo indice)
+        - resto -> (x - mediana) / (1.4826 * mad) sobre valores no-NaN
+    """
     if len(series) == 0:
         return pd.Series([], dtype=float)
-    # D-01 (2026-10-03): filtrar NaN antes de calcular median/MAD.
-    # np.median propaga NaN (a diferencia de Series.median). Con 1 NaN
-    # en la ventana, mad=NaN y todo el z-score de la serie queda NaN,
-    # enmascarado por classify_darkpool como "Sin historial suficiente".
-    # Mismo patron que el fix de index_leaders (2f956ed) y que los
-    # hermanos options.py:44-56 y fls.py:29-40, ya arreglados.
     valid = series.dropna()
     if len(valid) == 0:
         return pd.Series(np.full(len(series), np.nan), index=series.index)
@@ -39,18 +41,20 @@ def robust_zscore(series):
 
 
 def rolling_percentile(series):
+    """Percentil del ultimo valor sobre la serie (0-100)."""
+    if len(series) == 0:
+        return np.nan
     last = series.iloc[-1]
-    return (series < last).mean() * 100
+    if pd.isna(last):
+        return np.nan
+    valid = series.dropna()
+    if len(valid) == 0:
+        return np.nan
+    return float((valid < last).mean() * 100)
 
 
 def classify_darkpool(z):
-    # C-08-preventivo (2026-09-29): cascada de comparaciones mapea
-    # NaN/None/inf a un estado real sin declararlo. Mismo patron
-    # que classify_pcr (options_metrics.py:73-75), que ya lleva
-    # guard. Aqui z=NaN caia a "extremadamente baja" (todas las
-    # comparaciones False) e inf/-inf idem. Bug latente, no
-    # alcanzable con datos actuales (darkpool_history.csv sin NaN),
-    # pero mismo contrato que classify_pcr por coherencia.
+    """Clasifica el z-score robusto en estados categoricos."""
     if z is None or not np.isfinite(z):
         return "Sin historial suficiente"
     if z >= DARKPOOL_THRESHOLDS['extremadamente_alta']:
@@ -69,15 +73,36 @@ def classify_darkpool(z):
         return "Actividad ATS extremadamente baja"
 
 
-def _compute_z_for_window(hist, window):
-    """Calcula Z-Score robusto para una ventana especifica."""
-    if len(hist) < window:
-        return np.nan, np.nan, np.nan, "Sin historial suficiente"
+def compute_window_stats(hist, window):
+    """Stats robustos para una ventana de N semanas.
+
+    Contrato:
+        - Si len(hist) < window: {z: nan, percentile: nan, state: "Sin historial suficiente"}.
+        - Si ventana valida: z y percentile calculados sobre la serie
+          `ratio` suavizada con EWM(span=min(4, window//2)) restringida
+          a las ultimas `window` filas. `state` derivado del z.
+        - z es el z-score robusto del ULTIMO valor de la serie suavizada.
+        - percentile es el percentil del ULTIMO valor sobre la misma serie.
+
+    Devuelve dict: {z: float, percentile: float, state: str}
+    """
+    nan_result = {'z': np.nan, 'percentile': np.nan,
+                  'state': 'Sin historial suficiente'}
+    if hist is None or len(hist) < window:
+        return nan_result
     sub = hist.iloc[-window:].copy()
-    sub['ratio_ewm'] = sub['ratio'].ewm(span=min(4, window//2)).mean()
-    z_series = sub['ratio_ewm'].rolling(window).apply(lambda x: robust_zscore(pd.Series(x)).iloc[-1], raw=False)
-    z = z_series.iloc[-1]
-    percentile = rolling_percentile(sub['ratio_ewm'])
-    momentum = z_series.ewm(span=min(4, window//2)).mean().iloc[-1]
-    state = classify_darkpool(z)
-    return z, momentum, percentile, state
+    if 'ratio' not in sub.columns:
+        return nan_result
+    span = min(4, max(2, window // 2))
+    smoothed = sub['ratio'].ewm(span=span).mean().dropna()
+    if len(smoothed) == 0:
+        return nan_result
+    median = smoothed.median()
+    mad = np.median(np.abs(smoothed - median))
+    if mad == 0:
+        z = 0.0
+    else:
+        z = float((smoothed.iloc[-1] - median) / (1.4826 * mad))
+    last = smoothed.iloc[-1]
+    percentile = float((smoothed < last).mean() * 100)
+    return {'z': z, 'percentile': percentile, 'state': classify_darkpool(z)}

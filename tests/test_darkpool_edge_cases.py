@@ -14,7 +14,7 @@ from indicators.darkpool import (
     rolling_percentile,
     _get_all_tickers,
     _get_volume_from_df,
-    _compute_z_for_window,
+    compute_window_stats,
 )
 from config.settings import DARKPOOL_THRESHOLDS
 
@@ -132,28 +132,26 @@ def test_get_volume_from_df_suma_en_rango():
 
 # --- _compute_z_for_window ---
 
-def test_compute_z_for_window_hist_insuficiente():
+def test_compute_window_stats_hist_insuficiente():
     hist = pd.DataFrame({"week": pd.date_range("2026-01-01", periods=5, freq="W-MON"),
                          "ratio": [0.2] * 5})
-    z, mom, pct, state = _compute_z_for_window(hist, 13)
-    assert np.isnan(z)
-    assert np.isnan(mom)
-    assert np.isnan(pct)
-    assert state == "Sin historial suficiente"
+    stats = compute_window_stats(hist, 13)
+    assert np.isnan(stats["z"])
+    assert np.isnan(stats["percentile"])
+    assert stats["state"] == "Sin historial suficiente"
 
 
-def test_compute_z_for_window_ok():
+def test_compute_window_stats_ok():
     n = 26
     rng = np.random.RandomState(7)
     hist = pd.DataFrame({
         "week": pd.date_range("2024-01-01", periods=n, freq="W-MON"),
         "ratio": rng.uniform(0.15, 0.30, n),
     })
-    z, mom, pct, state = _compute_z_for_window(hist, 13)
-    assert not np.isnan(z)
-    assert not np.isnan(mom)
-    assert 0.0 <= pct <= 100.0
-    assert isinstance(state, str)
+    stats = compute_window_stats(hist, 13)
+    assert not np.isnan(stats["z"])
+    assert 0.0 <= stats["percentile"] <= 100.0
+    assert isinstance(stats["state"], str)
 
 
 # --- Paquete refactorizado: import paths ---

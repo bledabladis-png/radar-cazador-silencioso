@@ -20,7 +20,7 @@ suficiente" enmascarando el problema.
 import numpy as np
 import pandas as pd
 
-from indicators.darkpool_scoring import robust_zscore, _compute_z_for_window
+from indicators.darkpool_scoring import robust_zscore, compute_window_stats
 
 
 def test_robust_zscore_nan_en_ventana_no_propaga():
@@ -71,16 +71,17 @@ def test_robust_zscore_todos_nan():
     assert z.isna().all()
 
 
-def test_compute_z_for_window_con_hueco_no_devuelve_nan():
-    """El z final de la ventana debe ser finito si el ultimo no-NaN existe."""
+def test_compute_window_stats_con_hueco_no_devuelve_nan():
+    """El z de la ventana debe ser finito si el ultimo no-NaN existe."""
     # 60 filas, 1 NaN en el medio. window=52.
     n = 60
     ratio = np.linspace(0.5, 1.5, n)
     ratio[25] = np.nan
     hist = pd.DataFrame({"ratio": ratio})
-    z, mom, pct, state = _compute_z_for_window(hist, 52)
-    assert np.isfinite(z), f"z={z} debe ser finito con 1 hueco; state={state}"
-    assert state != "Sin historial suficiente", (
+    stats = compute_window_stats(hist, 52)
+    z = stats["z"]
+    assert np.isfinite(z), f"z={z} debe ser finito con 1 hueco; stats={stats}"
+    assert stats["state"] != "Sin historial suficiente", (
         "con 59 valores validos en ventana 52, el estado no debe ser "
         "Sin historial suficiente"
     )

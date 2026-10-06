@@ -142,16 +142,16 @@ def test_darkpool_dict_vacio_devuelve_vacio():
 
 
 def test_darkpool_basico():
+    # K-DT3-AUDIT-01: n_tickers_ats/n_tickers_total unificado en n_tickers.
     out = render_darkpool({
         "media_dark_pool": 22.66,
-        "n_tickers_ats": 536,
-        "n_tickers_total": 536,
+        "n_tickers": 536,
         "week": "N/A",
     })
     lineas = "".join(out)
     assert "Actividad en ATS" in lineas
     assert "22.66%" in lineas
-    assert "536/536" in lineas
+    assert "536 tickers" in lineas
     assert "Semana FINRA:** N/D" in lineas
 
 
@@ -170,15 +170,18 @@ def test_darkpool_z_windows():
     assert "52w: Z=-0.69" in lineas
 
 
-def test_darkpool_fallback_z_score_sin_windows():
+def test_darkpool_resumen_sin_windows():
+    # K-DT3-AUDIT-01: `momentum` eliminado (era copia de z_score).
+    # El render siempre muestra resumen + ventanas si hay z_score.
     out = render_darkpool({
-        "media_dark_pool": 22.0, "n_tickers_ats": 100, "n_tickers_total": 100,
+        "media_dark_pool": 22.0, "n_tickers": 100,
         "week": "N/A",
-        "z_score": 0.31, "momentum": -0.1, "percentile": 40, "state": "NORMAL",
+        "z_score": 0.31, "percentile": 40, "state": "NORMAL",
     })
     lineas = "".join(out)
     assert "Robust Z-Score:** 0.31" in lineas
-    assert "Momentum:** -0.10" in lineas
+    assert "Percentil:** 40%" in lineas
+    assert "Estado ATS:** NORMAL" in lineas
 
 
 def test_darkpool_sin_z_acumulando_historial():

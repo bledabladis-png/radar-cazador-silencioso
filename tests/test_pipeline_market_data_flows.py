@@ -51,7 +51,7 @@ def test_compute_pcr_devuelve_none_si_modulo_lanza():
 
 
 def test_compute_darkpool_propaga_df_market_y_df_stocks():
-    fake = {"media_dark_pool": 22.0, "n_tickers_ats": 536, "n_tickers_total": 536}
+    fake = {"media_dark_pool": 22.0, "n_tickers": 536}
     with patch("indicators.darkpool.compute_darkpool_signals",
                return_value=fake) as m:
         out = _compute_darkpool(df_market="M", df_stocks="S")

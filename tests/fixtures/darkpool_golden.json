@@ -6,17 +6,15 @@
   "latest_week": "2026-08-24",
   "contract": {
     "media_dark_pool": 30.0,
-    "n_tickers_ats": 5,
-    "n_tickers_total": 5,
+    "n_tickers": 5,
     "z_score": -1.0044317902771254,
     "week": "2026-08-24",
     "status": "OK"
   },
   "characterization": {
     "state": "Actividad ATS baja",
-    "momentum": -1.0044317902771254,
     "percentile": 6.730769230769231,
-    "fecha_pre_fase1": "2026-09-17",
+    "fecha_pre_fase1": "2026-08-24",
     "z_windows": {
       "13w": {
         "z": -0.9590033645530278,

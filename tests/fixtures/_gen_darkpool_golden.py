@@ -60,15 +60,13 @@ def main():
         "latest_week": res["week"],
         "contract": {
             "media_dark_pool": _clean(res["media_dark_pool"]),
-            "n_tickers_ats": _clean(res["n_tickers_ats"]),
-            "n_tickers_total": _clean(res["n_tickers_total"]),
+            "n_tickers": _clean(res["n_tickers"]),
             "z_score": _clean(res["z_score"]),
             "week": res["week"],
             "status": res["status"],
         },
         "characterization": {
             "state": res["state"],
-            "momentum": _clean(res["momentum"]),
             "percentile": _clean(res["percentile"]),
             "fecha_pre_fase1": res["fecha"],
             "z_windows": {
@@ -83,7 +81,7 @@ def main():
     print(f"status={res['status']} week={res['week']} fecha={res['fecha']}")
     print(f"media_dark_pool={res['media_dark_pool']}")
     print(f"z_score={res['z_score']} state={res['state']}")
-    print(f"n_ats={res['n_tickers_ats']} n_total={res['n_tickers_total']}")
+    print(f"n_tickers={res['n_tickers']}")
 
 
 if __name__ == "__main__":
