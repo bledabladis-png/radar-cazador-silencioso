@@ -988,11 +988,51 @@ Verificado E2E: `analisis_lideres.csv` 20/20 rs_mom validos,
 `sector_concentration.csv` n_valid_momentum=14-15 por sector, reporte
 con 0 `nan%`.
 
+**Fix cobertura europea (commits cc867fd, 5299e4c).**
+
+Dos bugs encadenados que provocaban 3 SIN_DATOS perpetuos en Xetra
+(`DB1.DE`, `HEI.DE`, `MUV2.DE`). Sintoma: `european_coverage.md` con
+48 OK + 3 SIN_DATOS en todos los runs.
+
+Bug 1 (cc867fd): `get_stock_list()` construia el universo de descarga
+con 3 fuentes (`etf_holdings.csv`, `index_holdings.csv`,
+`radar_target_catalog.csv`). Los 3 tickers estaban en
+`config/xetra_ticker_map.csv` pero no aparecian en ninguna: el top-20
+del DAX por peso los excluye, y no estaban en el catalogo radar. Fix:
+anadir una 4a fuente = `supported_tickers()` de los 3 providers
+europeos. Razon: el mapa del provider es la fuente de verdad de que
+europeos rastrear.
+
+Bug 2 (5299e4c): al anadir los 3 tickers al universo de descarga, el
+parquet `stock_prices.parquet` seguia aceptandose como cache-hit
+porque la validacion solo miraba fecha y cobertura de columnas
+existentes. Razonamiento: `_last_row_coverage_ok` mide sobre las
+columnas del df, no sobre `all_tickers`. Los 3 tickers no eran
+columnas, no contaban en el denominador, cobertura seguia siendo
+"OK". Fix: mover `get_stock_list()` antes del cache-check y validar
+que el parquet contiene todos los tickers esperados. Si falta alguno,
+forzar descarga.
+
+Efecto colateral observado: la limpieza de `data/cache/` hizo visible
+el bug 2. Sin la limpieza, los 3 tickers tenian cache previa y no se
+notaba el problema. Con la limpieza, la cache se recreo solo para los
+16 tickers que si estaban en `get_stock_list()` antes del fix 1.
+
+Verificado E2E: `european_coverage` 48 OK + 3 SIN_DATOS -> 51 OK,
+0 SIN_DATOS. Cache Xetra con `DB1_DE.csv`, `HEI_DE.csv`,
+`MUV2_DE.csv` (1277 filas, 2021-10-04 a 2026-10-06).
+
 Leccion registrada: una metrica que devuelve NaN puede ser sintoma de
 huecos residuales en los datos, no necesariamente de ausencia. `dropna()`
 antes de operaciones tipo `diff()` sobre series con calendarios parciales.
 
-Commits: 34c8029 (fix), 48a9ee6 + c578ee1 (Daily hist/state), 826694b +
+Leccion registrada (cache-hit): los contratos de cache-hit deben
+validar contra el universo declarado, no contra el subconjunto ya
+presente. Un parquet con N columnas al 100% no implica que cubra el
+universo esperado de N+k tickers.
+
+Commits: 34c8029 (fix rs_mom), cc867fd + 5299e4c (fix europeo),
+48a9ee6 + c578ee1 + 15a7391 + cb1d8d0 (Daily hist/state), 826694b +
 f847377 (limpieza). Tags: `_archivo/backup-pre-rebase-20260912`,
 `_archivo/gold-standard-v1`, `_archivo/gold-standard-v2`,
 `_archivo/gold-standard-v3`.

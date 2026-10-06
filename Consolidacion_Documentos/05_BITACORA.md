@@ -77,20 +77,43 @@ en `sector_concentration.csv`.
   - Verificado E2E: `analisis_lideres.csv` pasa de 0/20 a 20/20 rs_mom
     validos; `sector_concentration.csv` pasa de n_valid_momentum=0 a 14-15;
     reporte pasa de 53 `nan%` a 0.
+- **Fix cobertura europea (commits cc867fd, 5299e4c).** Dos bugs
+  encadenados que causaban 3 SIN_DATOS perpetuos en Xetra (`DB1.DE`,
+  `HEI.DE`, `MUV2.DE`).
+  - **Bug 1 (cc867fd).** `get_stock_list()` ignoraba tickers del mapa
+    del provider si no estaban en `etf_holdings.csv`, `index_holdings.csv`
+    (fuera del top-20 DAX por peso) ni en `radar_target_catalog.csv`.
+    Fix: anadir una 4a fuente = `supported_tickers()` de los 3
+    providers europeos (xetra, euronext, bme).
+  - **Bug 2 (5299e4c).** El cache-hit de `stock_prices.parquet`
+    aceptaba el parquet si la ultima fila tenia cobertura >=90% sobre
+    sus columnas, sin validar que estuvieran TODOS los tickers de
+    `get_stock_list()`. Los 3 nuevos nunca se descargaban. Fix: mover
+    `get_stock_list()` antes del cache-check y validar tickers
+    faltantes; si falta alguno, forzar descarga.
+  - Test nuevo: `test_stock_list_includes_provider_maps.py` (4 tests).
+  - Test adaptado: `test_download_cache_parquet_fresco_devuelve_df`
+    (mockea `get_stock_list` para medir frescura, no universo).
+  - Verificado E2E: `european_coverage` 48 OK + 3 SIN_DATOS -> 51 OK,
+    0 SIN_DATOS. Cache Xetra con `DB1_DE.csv`, `HEI_DE.csv`,
+    `MUV2_DE.csv` (1277 filas cada uno, 2021-10-04 a 2026-10-06).
 
-**Commits.** 34c8029 (fix rs_mom), 48a9ee6 + c578ee1 (Daily hist/state),
+**Commits.** 34c8029 (fix rs_mom), cc867fd + 5299e4c (fix europeo),
+48a9ee6 + c578ee1 + 15a7391 + cb1d8d0 (Daily hist/state),
 826694b + f847377 (limpieza repo).
 
 **Pendiente.**
 
-- Cobertura europea: 51 OK -> 48 OK + 3 SIN_DATOS en el ultimo run.
-  Observar si es transitorio.
-- Churn EOL en `outputs/history` y `outputs/state`: pandas `to_csv` escribe
-  CRLF; `.gitattributes` declara `eol=lf`. Fix de raiz: `lineterminator='\n'`
-  en writers (deuda registrada, no urgente).
+- Churn EOL en `outputs/history` y `outputs/state`: pandas `to_csv`
+  escribe CRLF; `.gitattributes` declara `eol=lf`. Fix de raiz:
+  `lineterminator='\n'` en writers. **WONT FIX razonado:** ~20 writers
+  afectados, ruido visual sin valor funcional. Se aplicara si en algun
+  momento se refactorizan los writers. Regla a seguir: nuevos writers
+  usan `lineterminator='\n'`.
 
-**Proximo paso sugerido.** Confirmar el run de CI de esta noche con el fix
-desplegado. Si rs_mom sale con valores, cerrar el frente.
+**Proximo paso sugerido.** Confirmar el run de CI con los fixes
+desplegados (rs_mom con valores, cobertura europea 51/51). Si OK,
+cerrar los dos frentes.
 
 ### 2026-10-05 - E2E main post-reorder D3 + fix frescura Evidence Matrix
 
