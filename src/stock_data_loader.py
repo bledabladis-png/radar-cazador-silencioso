@@ -59,7 +59,16 @@ def get_usa_tickers():
     return result
 
 def get_stock_list():
-    """Obtiene lista de tickers para descargar: top 20 de cada sector y de cada índice."""
+    """Obtiene lista de tickers para descargar.
+
+    Fuentes: (1) top-20 de cada sector USA (etf_holdings.csv);
+    (2) top-20 de cada indice USA+Europa (index_holdings.csv);
+    (3) catalogo radar completo (radar_target_catalog.csv);
+    (4) tickers europeos soportados por los providers oficiales
+    (xetra, euronext, bme). La fuente (4) cierra el bug 2026-10-06:
+    tickers en el mapa del provider pero fuera del top-20 y del
+    catalogo se quedaban sin descargar.
+    """
     tickers = []
 
     # 1) Sectores USA (data/etf_holdings.csv)
@@ -97,6 +106,25 @@ def get_stock_list():
 _cat['radar_ticker'].dropna().astype(str).tolist()])
     except (OSError, ValueError, KeyError, pd.errors.ParserError) as e:
         print(f"  [WARN] get_stock_list: radar_target_catalog.csv: {e}")
+
+    # 4) Tickers europeos soportados por los providers oficiales.
+    # Bug 2026-10-06: DB1.DE, HEI.DE, MUV2.DE estan en
+    # config/xetra_ticker_map.csv pero no aparecen en etf_holdings,
+    # index_holdings (fuera del top-20 del DAX) ni en el catalogo
+    # radar. Nunca se descargaban -> european_coverage marcaba
+    # SIN_DATOS perpetuo. El mapa del provider es la fuente de
+    # verdad de que europeos rastrear.
+    try:
+        from data.providers.xetra_provider import XetraProvider
+        from data.providers.euronext_provider import EuronextProvider
+        from data.providers.bme_provider import BMEProvider
+        for _p in (XetraProvider(), EuronextProvider(), BMEProvider()):
+            try:
+                tickers.extend([normalize_yahoo_ticker(t) for t in _p.supported_tickers()])
+            except (OSError, ValueError, KeyError, AttributeError) as _e:
+                print(f"  [WARN] get_stock_list: {_p.__class__.__name__}: {_e}")
+    except ImportError as _e:
+        print(f"  [WARN] get_stock_list: providers europeos no disponibles: {_e}")
 
     # Eliminar duplicados preservando orden
     seen = set()
