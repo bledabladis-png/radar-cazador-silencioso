@@ -175,7 +175,7 @@ def get_etf_primary_flow_data(force_download: bool = False) -> pd.DataFrame:
             print(f'  [WARN] etf_primary_flow existente ilegible: {_e}')
     # A5-79 (2026-09-28): escritura atomica del historico consolidado.
     _tmp_hist = HISTORY_PATH.with_suffix(HISTORY_PATH.suffix + '.tmp')
-    full_df.to_csv(_tmp_hist, index=False)
+    full_df.to_csv(_tmp_hist, index=False, lineterminator='\n')
     _tmp_hist.replace(HISTORY_PATH)
     print(f'  Histórico guardado: {HISTORY_PATH}')
     if errors:

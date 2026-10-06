@@ -165,7 +165,7 @@ def get_cftc_position_flow_data() -> pd.DataFrame:
             except (OSError, ValueError, pd.errors.ParserError, pd.errors.EmptyDataError) as _e:
                 print(f'  [WARN] cftc_position_flow existente ilegible: {_e}')
         _tmp_hist = HISTORY_PATH.with_suffix(HISTORY_PATH.suffix + '.tmp')
-        recent.to_csv(_tmp_hist, index=False)
+        recent.to_csv(_tmp_hist, index=False, lineterminator='\n')
         _tmp_hist.replace(HISTORY_PATH)
         print(f'  Historico CFTC guardado (ultimos {CFTC_HISTORY_DAYS} dias, actividad {CFTC_ACTIVE_CONTRACT_DAYS} dias): {HISTORY_PATH}')
 

@@ -220,7 +220,7 @@ def generate_leader_section(df_market, df_stocks, holdings_df, fase_dict,
         # src/report/helpers.py:117 (pd.read_csv) y por scripts/generate_docs.
         # Un to_csv truncado rompe el reporte diario.
         _tmp = str(output_csv) + '.tmp'
-        leader_df[cols].to_csv(_tmp, index=False)
+        leader_df[cols].to_csv(_tmp, index=False, lineterminator='\n')
         os.replace(_tmp, output_csv)
 
     return lines, leader_df, full_metrics_df

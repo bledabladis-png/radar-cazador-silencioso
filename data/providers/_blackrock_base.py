@@ -255,7 +255,7 @@ def get_blackrock_primary_flow(
         except (OSError, ValueError, pd.errors.ParserError, pd.errors.EmptyDataError) as _e:
             print(f'  [WARN] {output_csv.name} existente ilegible: {_e}')
     _tmp_out = output_csv.with_suffix(output_csv.suffix + '.tmp')
-    result.to_csv(_tmp_out, index=False)
+    result.to_csv(_tmp_out, index=False, lineterminator='\n')
     _tmp_out.replace(output_csv)
     print(f'  Guardado en {output_csv}')
     print(f'  Total filas: {len(result)}')

@@ -222,7 +222,7 @@ def get_amundi_lyxi_primary_flow(force_download: bool = False) -> pd.DataFrame:
         except (OSError, ValueError, pd.errors.ParserError, pd.errors.EmptyDataError) as _e:
             print(f'  [WARN] amundi existente ilegible: {_e}')
     _tmp_hist = HISTORY_CSV.with_suffix(HISTORY_CSV.suffix + '.tmp')
-    _df_to_write.to_csv(_tmp_hist, index=False)
+    _df_to_write.to_csv(_tmp_hist, index=False, lineterminator='\n')
     _tmp_hist.replace(HISTORY_CSV)
     print(f'  Histórico guardado en {HISTORY_CSV}')
     print(f'  Total filas: {len(df)}')

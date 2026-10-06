@@ -141,7 +141,7 @@ def compute_pcr_signals():
         # Mismo patron que darkpool_history, sector_rank_history y
         # state_transition.
         _tmp = 'outputs/history/pcr_history.csv.tmp'
-        hist.to_csv(_tmp, index_label='date')
+        hist.to_csv(_tmp, index_label='date', lineterminator='\n')
         os.replace(_tmp, 'outputs/history/pcr_history.csv')
 
 

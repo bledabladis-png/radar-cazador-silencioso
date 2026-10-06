@@ -508,6 +508,7 @@ def update_history(
     df.to_csv(
         tmp,
         index=False,
+        lineterminator='\n',
     )
     tmp.replace(HISTORY_CSV)
 
