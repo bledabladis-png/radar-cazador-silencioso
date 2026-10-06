@@ -128,8 +128,10 @@ def compute_sector_breadth(df_market, df_stocks, holdings_df, as_of_date=None, t
             if sector_price is not None and len(close) >= 21:
                 n_valid_momentum += 1
                 common = close.index.intersection(sector_price.index)
-                rs = close.loc[common] / sector_price.loc[common]
-                rs_mom = np.log(rs).diff(20).iloc[-1]
+                # Fix 2026-10-06: mismo guard que stock_leader.py.
+                # dropna() + len >= 21 evita NaN por huecos residuales.
+                rs = (close.loc[common] / sector_price.loc[common]).dropna()
+                rs_mom = np.log(rs).diff(20).iloc[-1] if len(rs) >= 21 else np.nan
                 if pd.notna(rs_mom) and rs_mom > 0:
                     rs_positive.append(1)
                 else:

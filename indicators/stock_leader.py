@@ -3,6 +3,7 @@ import pandas as pd
 import numpy as np
 from indicators.wyckoff import wyckoff_score, classify_wyckoff_phase, detect_spring, detect_sos
 from src.utils import robust_zscore, get_col
+from src.report.helpers import _fmt_num
 from config.settings import TOP_N_CANDIDATES, TOP_N_LEADERS
 
 def compute_stock_metrics(df_market, df_stocks, etf_ticker, stock_list, temporal_meta=None):
@@ -24,8 +25,12 @@ def compute_stock_metrics(df_market, df_stocks, etf_ticker, stock_list, temporal
 
         # Alinear índices para evitar NaN por diferencias de calendario
         common_idx = close.index.intersection(price_etf.index)
-        rs = close.loc[common_idx] / price_etf.loc[common_idx]
-        rs_mom = np.log(rs).diff(20).iloc[-1]
+        # Fix 2026-10-06: rs puede tener NaN residuales por festivos
+        # USA (Labor Day, Thanksgiving, MLK, Presidents, etc.).
+        # diff(20) los propaga al ultimo valor -> rs_mom = NaN.
+        # dropna() + guard len >= 21 para que sea robusto.
+        rs = (close.loc[common_idx] / price_etf.loc[common_idx]).dropna()
+        rs_mom = np.log(rs).diff(20).iloc[-1] if len(rs) >= 21 else np.nan
 
         ret = close.pct_change(fill_method=None)
         dollar_vol = close * volume
@@ -193,7 +198,7 @@ def generate_leader_section(df_market, df_stocks, holdings_df, fase_dict,
         for _, row in wls_df.head(TOP_N_LEADERS).iterrows():
             spring_flag = '[v]' if row.get('spring', 0) == 1 else ''
             sos_flag = '[v]' if row.get('sos', 0) == 1 else ''
-            lines.append(f"| {row['ticker']} | {row['rs']:.2f} | {row['rs_mom']:.2%} | {row['flow_proxy_z']:.2f} | {row['wls']:.2f} | {row['wyckoff_phase']} | {row['persistence_5d']:.0%} | {row['persistence_10d']:.0%} | {row['persistence_20d']:.0%} | {spring_flag} | {sos_flag} |\n")
+            lines.append(f"| {row['ticker']} | {_fmt_num(row['rs'], '{:.2f}')} | {_fmt_num(row['rs_mom'], '{:.2%}')} | {_fmt_num(row['flow_proxy_z'], '{:.2f}')} | {_fmt_num(row['wls'], '{:.2f}')} | {row['wyckoff_phase']} | {_fmt_num(row['persistence_5d'], '{:.0%}')} | {_fmt_num(row['persistence_10d'], '{:.0%}')} | {_fmt_num(row['persistence_20d'], '{:.0%}')} | {spring_flag} | {sos_flag} |\n")
         lines.append('\n')
 
     # Filtrar métricas None/vacías y concatenar solo si hay datos válidos
