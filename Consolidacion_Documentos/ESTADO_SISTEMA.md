@@ -22,7 +22,7 @@ porque el commit que lo contiene cambia HEAD.
 
 ## 2. Tests (pytest real)
 
-- **Resumen:** 3175 passed, 5 skipped
+- **Resumen:** 3181 passed, 5 skipped
 - **Exit code:** 0
 
 **Tests skip:**
@@ -112,14 +112,7 @@ porque el commit que lo contiene cambia HEAD.
 
 ## 7. Evidencia empirica (directorios)
 
-- `docs/auditoria/iae/evidence/a64_integration_b1_p61_p38`: 13 ficheros
-- `docs/auditoria/iae/evidence/b2_pit_cierre`: 2 ficheros
-- `docs/auditoria/iae/evidence/nipc_gate0_baseline`: 5 ficheros
-- `docs/auditoria/iae/evidence/nipc_gate0_openfigi`: 9 ficheros
-- `docs/auditoria/iae/evidence/nipc_gate0_probe`: 11 ficheros
-- `docs/auditoria/iae/evidence/nipc_gate0_target_identity`: 11 ficheros
-- `docs/auditoria/iae/evidence/nipc_gate0_target_identity_top2000`: 10 ficheros
-- `docs/auditoria/iae/evidence/nipc_gate0_top2000_v2`: 6 ficheros
+- `docs\auditoria\iae\evidence`: NO EXISTE
 
 ---
 
