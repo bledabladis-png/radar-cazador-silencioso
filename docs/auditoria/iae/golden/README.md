@@ -9,7 +9,7 @@ ver `AUDITORIA_EXTERNA_2026-09-27.md` seccion 3.3).
 | Fichero | Estado | Proposito |
 |---|---|---|
 | `12_5_historic.json` | FROZEN | Snapshot del par Q4 2025 -> Q1 2026 en el commit 7caa86b. Inmutable. NO reproducible con HEAD actual (requiere tambien restaurar el codigo de 7caa86b). |
-| `current.json` | BLOCKED | Snapshot del par vigente post-H1-B. Se completa tras cierre del fix. Actualmente todos los campos son null. |
+| `current.json` | ACTIVE_WITH_OPEN_DISCREPANCY | Baseline local reproducible del par Q4 2025 -> Q1 2026 con H1-B v2.3. Convive con la referencia externa no reproducida (-4.264.449.932). Reconciliation delta = 920 (OPEN hasta que el auditor publique comando + HEAD). |
 
 ## Reglas
 
@@ -20,7 +20,7 @@ ver `AUDITORIA_EXTERNA_2026-09-27.md` seccion 3.3).
    cambios posteriores H1-B v2.3 (ce32c77) y O1 (72fa824) alteran el
    calculo. Para reproducir 12_5_historic hay que restaurar tambien
    `src/institutional_accumulation/` al commit 7caa86b.
-2. **`current.json` no se completa hasta que H1-B este cerrado.**
+2. **`current.json` esta completo y activo desde 2026-09-28** (status ACTIVE_WITH_OPEN_DISCREPANCY). Contiene el baseline local reproducible del par Q4 2025 -> Q1 2026 con H1-B v2.3. Se mantiene con discrepancia abierta (C2, delta 920) hasta que el auditor publique comando + HEAD del valor externo.
    No se congela ningun NIPC baseline mientras H1-B sea bloqueante.
 3. **Cada golden incluye:** hashes de crosswalk + catalog + equivalence
    + parquets de INFOTABLE, campos de periodo, y `expected` con el
