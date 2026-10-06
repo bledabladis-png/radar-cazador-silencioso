@@ -556,6 +556,17 @@ def download_stock_prices(reference_date=None, run_id=None):
         run_id = reference_date.strftime('%Y%m%d_%H%M%S')
     _expected_session = last_expected_market_date(reference_date)
 
+    # 2026-10-06: obtener la lista completa ANTES del cache-check
+    # para poder validar que el parquet contiene TODOS los tickers
+    # esperados, no solo que la ultima fila tenga buena cobertura
+    # sobre las columnas existentes. Bug: al anadir tickers a
+    # get_stock_list (p.ej. los 3 Xetra DB1/HEI/MUV2), un parquet
+    # previo ya tenia cobertura 100% sobre sus columnas y se aceptaba
+    # como cache-hit, dejando los nuevos tickers sin descargar.
+    all_tickers = get_stock_list()
+    if not all_tickers:
+        return None
+
     cache_path = 'data/stock_prices.csv'
     parquet_path = 'data/stock_prices.parquet'
     # D3 Fase 2: elegir cache disponible (parquet o csv, el mas reciente)
@@ -576,6 +587,22 @@ def download_stock_prices(reference_date=None, run_id=None):
                     print(f'  [WARN] Error leyendo Parquet: {e}')
             else:
                 _df = pd.read_csv(_path, header=[0,1], index_col=0, parse_dates=True)
+            # 2026-10-06: validar que el parquet contiene todos los
+            # tickers de all_tickers. Si falta alguno, forzar descarga
+            # para que el cascade (Yahoo + europeos) lo rellene.
+            if _df is not None:
+                if isinstance(_df.columns, pd.MultiIndex):
+                    _cached_tickers = set(
+                        c[1] for c in _df.columns
+                        if len(c) == 2 and c[0] == 'Close')
+                else:
+                    _cached_tickers = set()
+                _missing = set(all_tickers) - _cached_tickers
+                if _missing:
+                    print(f'  [CACHE] faltan {len(_missing)} tickers en '
+                          f'parquet (p.ej. {sorted(_missing)[:5]}). '
+                          f'Forzando descarga.')
+                    _df = None
             # CACHE_VALIDATE_TRADING_DATE: verificar que el cache cubre
             # el ultimo dia de mercado esperado. Si no, forzar descarga.
             if _df is not None and CACHE_VALIDATE_TRADING_DATE and len(_df) > 0:
@@ -595,10 +622,6 @@ def download_stock_prices(reference_date=None, run_id=None):
                     return _df
             elif _df is not None:
                 return _df
-
-    all_tickers = get_stock_list()
-    if not all_tickers:
-        return None
 
     # === Europa primero ===
     # Los tickers cubiertos por Euronext, Xetra o BME se descargan SIEMPRE

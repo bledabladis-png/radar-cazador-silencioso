@@ -189,7 +189,12 @@ def test_download_cache_parquet_fresco_devuelve_df(tmp_path, monkeypatch):
     df.to_parquet(pq_path)
 
     ref = datetime.now(ZoneInfo("Europe/Madrid"))
-    with patch.object(sdl, "last_expected_market_date",
+    # 2026-10-06: el contrato de cache-hit ahora exige que el parquet
+    # contenga todos los tickers de get_stock_list(). Mockear la lista
+    # con el ticker del fixture (AAA) para que el test siga midiendo
+    # la logica de frescura, no la cobertura del universo.
+    with patch.object(sdl, "get_stock_list", return_value=["AAA"]), \
+         patch.object(sdl, "last_expected_market_date",
                       return_value=idx[-1].date()), \
          patch.object(sdl, "last_expected_lse_session",
                       return_value=idx[-1].date()):
