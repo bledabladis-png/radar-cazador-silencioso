@@ -936,4 +936,65 @@ generados por el run, no perdidos; (C) 3 CSVs encogen por cambio de
 
 Commits: 538f2aa, 7aa9e68.
 
+### Limpieza estructural del repo y fix rs_mom NaN
+
+Sesion 2026-10-06. Dos frentes independientes ejecutados en el mismo dia.
+
+**Limpieza estructural (~810 MB liberados).**
+
+Se retiro material obsoleto tras inventario con contraste de consumidores:
+- `outputs/audit/`: 29 snapshots de verificaciones cerradas (137 MB).
+- `data/cache/`: cache HTTP regenerable (71 MB).
+- `data/sec_13f/raw/`: TSV crudos 13F (600 MB); `processed/` intacto.
+- `docs/automatica/`: 22 `.md` auto-generados. Retirados y anadido a
+  `.gitignore`; regenerables via `scripts/generate_docs.py`.
+- `docs/auditoria/iae/evidence/`, `docs/auditoria/daily_run_gate_*`, 3
+  scripts Wyckoff sin referencias.
+
+El expediente Wyckoff intermedio (42 ficheros, contratos v1.0-v1.7,
+protocolos 5b.2-5b.4-bis) se archivo en `docs/auditoria/wyckoff/_archivo/`
+con README explicativo. Se conserva por trazabilidad de auditoria externa
+para 5b.X (2027). 15 ficheros vigentes quedan en la raiz del expediente.
+
+4 ramas locales obsoletas (`backup-pre-rebase-20260912`, `gold-standard-v1/v2/v3`)
+se convirtieron en tags `_archivo/*` y se eliminaron las ramas locales.
+Los commits siguen accesibles por tag.
+
+**Fix rs_mom NaN (commit 34c8029).**
+
+Detectado en el run CI 37406727238 (2026-10-06 05:01 UTC): `RS Mom = nan%`
+en las 20 filas de `analisis_lideres.csv`, con `n_valid_momentum=0` en
+`sector_concentration.csv`. En local funcionaba por casualidad (NaN residual
+no caia en posicion -21).
+
+Causa raiz: `rs = close.loc[common] / price_etf.loc[common]` puede contener
+NaN residuales por festivos USA (Labor Day, Thanksgiving, MLK, Presidents)
+presentes en el indice comun de close y price_etf. `np.log(rs).diff(20).iloc[-1]`
+propaga el NaN al ultimo valor. La formula original no hacia `dropna()` ni
+validaba longitud; `index_leaders.py` ya tenia el fix, `stock_leader.py` y
+`sector_breadth.py` no.
+
+Impacto en cascada: `rs_z` (peso 25% del WLS) se anulaba, y el `WLS`
+calculaba sin componente de momentum. Ademas, f-string directo en
+`stock_leader.py:196` imprimia `nan%` en vez de `N/D`.
+
+Fix:
+- `indicators/stock_leader.py`: `rs.dropna()` + guard `len(rs) >= 21`,
+  reemplazo del f-string por `_fmt_num`.
+- `indicators/sector_breadth.py`: mismo guard, mismo patron.
+- `tests/test_stock_leader_rs_mom_nan_guard.py`: 4 tests de regresion.
+
+Verificado E2E: `analisis_lideres.csv` 20/20 rs_mom validos,
+`sector_concentration.csv` n_valid_momentum=14-15 por sector, reporte
+con 0 `nan%`.
+
+Leccion registrada: una metrica que devuelve NaN puede ser sintoma de
+huecos residuales en los datos, no necesariamente de ausencia. `dropna()`
+antes de operaciones tipo `diff()` sobre series con calendarios parciales.
+
+Commits: 34c8029 (fix), 48a9ee6 + c578ee1 (Daily hist/state), 826694b +
+f847377 (limpieza). Tags: `_archivo/backup-pre-rebase-20260912`,
+`_archivo/gold-standard-v1`, `_archivo/gold-standard-v2`,
+`_archivo/gold-standard-v3`.
+
 **Fin del historico.**

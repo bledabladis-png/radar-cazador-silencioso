@@ -44,6 +44,54 @@ Al cerrar una sesion nueva, se anade arriba (las mas recientes primero). Si hay 
 
 ## 3. SESIONES
 
+### 2026-10-06 - Limpieza estructural + fix rs_mom NaN
+
+**Objetivo.** Reducir disco y ruido del repo, eliminar codigo/documentacion
+obsoleta, y arreglar un bug detectado en el reporte del run de CI: `RS Mom`
+aparecia como `nan%` en todas las tablas de acciones, con `n_valid_momentum=0`
+en `sector_concentration.csv`.
+
+**Hecho.**
+
+- **Limpieza ejecutada (~810 MB liberados).**
+  - `outputs/audit/`: 29 snapshots de sesiones cerradas (137 MB).
+  - `data/cache/`: cache HTTP regenerable (71 MB).
+  - `data/sec_13f/raw/`: TSV crudos de 13F (600 MB), `processed/` intacto.
+  - `docs/automatica/`: 22 `.md` auto-generados por `generate_docs.py`.
+  - `docs/auditoria/iae/evidence/`: 60 ficheros de probes de auditorias cerradas.
+  - `docs/auditoria/daily_run_gate_*`: frente cerrado.
+  - `scripts/diagnostico_wyckoff_5c.py`, `verificar_5_casos_v16.py`,
+    `verificar_distribution_v15.py`: sin referencias en el repo.
+  - `_patch_d4.py`, `.bak` residual, `.coverage`, logs temporales.
+- **Archivado en `_archivo/`:** 42 ficheros del expediente Wyckoff (contratos
+  v1.0-v1.7, revisiones, protocolos intermedios 5b.2-5b.4-bis, QA). Se
+  conservan por trazabilidad de auditoria externa (5b.X 2027).
+- **Ramas archivadas como tags `_archivo/*`:** `backup-pre-rebase-20260912`,
+  `gold-standard-v1/v2/v3`. Commits conservados, ramas locales eliminadas.
+- **Fix rs_mom NaN (commit 34c8029).** Causa raiz: `rs = close / price_etf`
+  puede tener NaN residuales por festivos USA presentes en el indice comun.
+  `np.log(rs).diff(20).iloc[-1]` propaga el NaN al ultimo valor.
+  - `stock_leader.py`: `dropna()` + guard `len >= 21`, `_fmt_num` en render.
+  - `sector_breadth.py`: mismo guard (ya presente en `index_leaders.py`).
+  - Test nuevo: `test_stock_leader_rs_mom_nan_guard.py` (4 tests).
+  - Verificado E2E: `analisis_lideres.csv` pasa de 0/20 a 20/20 rs_mom
+    validos; `sector_concentration.csv` pasa de n_valid_momentum=0 a 14-15;
+    reporte pasa de 53 `nan%` a 0.
+
+**Commits.** 34c8029 (fix rs_mom), 48a9ee6 + c578ee1 (Daily hist/state),
+826694b + f847377 (limpieza repo).
+
+**Pendiente.**
+
+- Cobertura europea: 51 OK -> 48 OK + 3 SIN_DATOS en el ultimo run.
+  Observar si es transitorio.
+- Churn EOL en `outputs/history` y `outputs/state`: pandas `to_csv` escribe
+  CRLF; `.gitattributes` declara `eol=lf`. Fix de raiz: `lineterminator='\n'`
+  en writers (deuda registrada, no urgente).
+
+**Proximo paso sugerido.** Confirmar el run de CI de esta noche con el fix
+desplegado. Si rs_mom sale con valores, cerrar el frente.
+
 ### 2026-10-05 - E2E main post-reorder D3 + fix frescura Evidence Matrix
 
 **Objetivo.** Cerrar el Hueco 1 del handoff: E2E real en main
