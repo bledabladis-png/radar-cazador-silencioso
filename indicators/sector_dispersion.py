@@ -21,10 +21,11 @@ def compute_sector_dispersion(price_rank_list, reference_date=None):
             "C4-code (2026-09-12): fecha de observacion inyectada desde el caller."
         )
 
-    if not price_rank_list:
-        return pd.DataFrame()
-
-    df = pd.DataFrame(price_rank_list, columns=['ticker','ret']).dropna()
+    # 2026-10-07 (A-03): si el input es vacio/None, devolver fila con N/D
+    # en lugar de DataFrame vacio. Antes el caller (sectors_base.py) hacia
+    # `if not df.empty: write else: skip` y el dia desaparecia sin log.
+    # Ahora se deja marca con N/D, coherente con el caso n_valid < 8.
+    df = pd.DataFrame(price_rank_list or [], columns=['ticker','ret']).dropna()
     n_total = EXPECTED_SECTOR_COUNT
     n_valid = len(df)
     coverage = n_valid / n_total if n_total else 0.0
