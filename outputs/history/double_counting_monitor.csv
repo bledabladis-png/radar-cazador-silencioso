@@ -190,3 +190,7 @@ date,metric,value,status
 2026-10-03T02:14:28,structural_vs_breadth,0.7983,OK
 2026-10-06T03:19:56,stability_vs_wyckoff,0.8135,OK
 2026-10-06T03:19:56,structural_vs_breadth,0.7983,OK
+2026-10-07T02:48:10,rs_mom_vs_flow,0.3286,OK
+2026-10-07T02:48:10,rs_mom_vs_wls,0.8321,OK
+2026-10-07T02:48:10,stability_vs_wyckoff,0.5714,OK
+2026-10-07T02:48:10,structural_vs_breadth,0.7983,OK
