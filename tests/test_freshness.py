@@ -95,11 +95,17 @@ def test_classify_freshness_por_frecuencia_sec():
 
 
 def test_classify_freshness_por_frecuencia_finra():
-    """FINRA: 30/45/60 dias."""
-    assert classify_freshness(30, "finra") == "CURRENT"
-    assert classify_freshness(45, "finra") == "RECENT"
-    assert classify_freshness(60, "finra") == "STALE"
-    assert classify_freshness(61, "finra") == "ARCHIVAL"
+    """FINRA: 20/28/45 dias (F6-1b, 2026-10-07).
+
+    Antes (30, 45, 60) hardcoded, divergente de settings.FRESHNESS_FINRA.
+    Alineado con F6-02 (2026-09-28) que ya aplicaba 20/28/45 en helpers.
+    """
+    assert classify_freshness(20, "finra") == "CURRENT"
+    assert classify_freshness(21, "finra") == "RECENT"
+    assert classify_freshness(28, "finra") == "RECENT"
+    assert classify_freshness(29, "finra") == "STALE"
+    assert classify_freshness(45, "finra") == "STALE"
+    assert classify_freshness(46, "finra") == "ARCHIVAL"
 
 
 def test_classify_freshness_por_frecuencia_fred():

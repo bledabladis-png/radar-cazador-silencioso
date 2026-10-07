@@ -6,7 +6,7 @@ No alimenta motores, scores, pesos ni State Machine.
 No crea Data Quality Score.
 """
 
-from config.settings import EXPECTED_SECTOR_COUNT
+from config.settings import EXPECTED_SECTOR_COUNT, FRESHNESS_FINRA
 import pandas as pd
 import numpy as np
 from datetime import datetime
@@ -18,9 +18,14 @@ def classify_freshness(age_days, frequency):
     if pd.isna(age_days):
         return 'N/D'
     if frequency == 'finra':
-        if age_days <= 30: return 'CURRENT'
-        elif age_days <= 45: return 'RECENT'
-        elif age_days <= 60: return 'STALE'
+        # F6-1b (2026-10-07): unificar con FRESHNESS_FINRA. Antes tenia
+        # los umbrales antiguos (30, 45, 60) hardcoded, divergentes de
+        # settings.FRESHNESS_FINRA (20, 28, 45). El fix F6-02 del
+        # 2026-09-28 actualizo helpers.py pero no este fichero.
+        max_current, max_recent, max_stale = FRESHNESS_FINRA
+        if age_days <= max_current: return 'CURRENT'
+        elif age_days <= max_recent: return 'RECENT'
+        elif age_days <= max_stale: return 'STALE'
         else: return 'ARCHIVAL'
     elif frequency == 'sec':
         # F7-08: SEC N-PORT es trimestral con latencia regulatoria ~45-60d.
