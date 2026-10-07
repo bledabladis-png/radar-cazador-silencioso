@@ -50,12 +50,22 @@ def compute_flows_secondary(sector_flow_rank, etf_primary_flow_data,
         # Direccion de Europa Primary Flow (promedio de flow_zscore de DAXEX, ISF.L, LYXI)
         europe_sign = np.nan
         european_flows = []
+        # 2026-10-07 (A-01-M03): filtrar NaN antes de agregar. Si el
+        # ultimo flow_zscore de una serie es NaN (p.ej. LYXI en MAD0_NAN),
+        # sum() propagaba NaN y la media completa quedaba N/D pese a tener
+        # 2 de 3 series validas. Ahora se cuentan solo valores finitos.
         if blackrock_dax_flow is not None and not blackrock_dax_flow.empty and 'flow_zscore' in blackrock_dax_flow.columns:
-            european_flows.append(float(blackrock_dax_flow['flow_zscore'].iloc[-1]))
+            _v = blackrock_dax_flow['flow_zscore'].iloc[-1]
+            if pd.notna(_v):
+                european_flows.append(float(_v))
         if blackrock_isf_flow is not None and not blackrock_isf_flow.empty and 'flow_zscore' in blackrock_isf_flow.columns:
-            european_flows.append(float(blackrock_isf_flow['flow_zscore'].iloc[-1]))
+            _v = blackrock_isf_flow['flow_zscore'].iloc[-1]
+            if pd.notna(_v):
+                european_flows.append(float(_v))
         if amundi_lyxi_flow is not None and not amundi_lyxi_flow.empty and 'flow_zscore' in amundi_lyxi_flow.columns:
-            european_flows.append(float(amundi_lyxi_flow['flow_zscore'].iloc[-1]))
+            _v = amundi_lyxi_flow['flow_zscore'].iloc[-1]
+            if pd.notna(_v):
+                european_flows.append(float(_v))
         if european_flows:
             europe_sign = float(sum(european_flows) / len(european_flows))
         flow_synthesis['european_flow_sign'] = europe_sign

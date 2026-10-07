@@ -169,6 +169,38 @@ def test_flows_secondary_european_sign_promedio(tmp_path, monkeypatch):
     assert out["flow_synthesis"]["european_flow_sign"] == pytest.approx(0.4 / 3, abs=1e-6)
 
 
+def test_flows_secondary_european_sign_ignora_nan(tmp_path, monkeypatch):
+    """Fix 2026-10-07: NaN en el ultimo flow_zscore de una serie no debe
+    propagarse a la media. Caso real: LYXI con MAD0_NAN."""
+    _setup_tmp(tmp_path, monkeypatch)
+    out = compute_flows_secondary(
+        sector_flow_rank=None,
+        etf_primary_flow_data=None,
+        cftc_position_flow_data=None,
+        blackrock_dax_flow=pd.DataFrame({"flow_zscore": [0.1, 0.5]}),
+        blackrock_isf_flow=pd.DataFrame({"flow_zscore": [-0.3, -0.5]}),
+        amundi_lyxi_flow=pd.DataFrame({"flow_zscore": [0.2, float("nan")]}),
+    )
+    # ultimos: 0.5, -0.5, NaN -> solo 2 validos -> mean = 0.0
+    assert out["flow_synthesis"]["european_flow_sign"] == pytest.approx(0.0, abs=1e-6)
+
+
+def test_flows_secondary_european_sign_todos_nan(tmp_path, monkeypatch):
+    """Si todas las series tienen NaN en el ultimo valor, la media debe
+    quedar NaN (no 0.0, que seria un valor fabricado)."""
+    _setup_tmp(tmp_path, monkeypatch)
+    out = compute_flows_secondary(
+        sector_flow_rank=None,
+        etf_primary_flow_data=None,
+        cftc_position_flow_data=None,
+        blackrock_dax_flow=pd.DataFrame({"flow_zscore": [0.1, float("nan")]}),
+        blackrock_isf_flow=pd.DataFrame({"flow_zscore": [-0.2, float("nan")]}),
+        amundi_lyxi_flow=pd.DataFrame({"flow_zscore": [0.2, float("nan")]}),
+    )
+    import math
+    assert math.isnan(out["flow_synthesis"]["european_flow_sign"])
+
+
 def test_flows_secondary_qqq_performance_omitido_si_antiguo(tmp_path, monkeypatch):
     _setup_tmp(tmp_path, monkeypatch)
     perf = tmp_path / "outputs" / "history" / "qqq_returns_yahoo.csv"
