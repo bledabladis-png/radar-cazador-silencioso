@@ -38,6 +38,30 @@ REPO = "bledabladis-png/radar-cazador-silencioso"
 # --- Umbrales ---
 COVERAGE_FAIL_THRESHOLD = 0.50
 COVERAGE_WARN_THRESHOLD = 0.80
+# Holdings CSVs (Fix D, 2026-10-08): etf_holdings.csv e index_holdings.csv
+# alimentan el universo de stock_prices. Sin manifest ni check hasta hoy.
+# Si un workflow trimestral falla parcialmente, el CSV queda con datos
+# mixtos sin senal. Estas constantes definen el contrato minimo esperado.
+HOLDINGS_MAX_AGE_DAYS = 120  # trimestral (90d) + margen 30d
+HOLDINGS_MIN_TICKERS_PER_ETF = 10
+
+HOLDINGS_EXPECTED = {
+    "etf_holdings.csv": {
+        "expected_etfs": (
+            "XLB", "XLC", "XLE", "XLF", "XLI", "XLK",
+            "XLP", "XLRE", "XLU", "XLV", "XLY",
+        ),
+        "min_tickers": 15,
+    },
+    "index_holdings.csv": {
+        "expected_etfs": (
+            "DAXEX", "DIA", "FEZ", "ISF.L", "IWM",
+            "LYXI", "QQQ", "SPY",
+        ),
+        "min_tickers": 10,
+    },
+}
+
 COVERAGE_OK_THRESHOLD = 0.95
 
 # Fechas bursatiles con cobertura historicamente incompleta.
@@ -358,6 +382,67 @@ def _yahoo_revision_status(current: dict, head: dict) -> tuple:
                   f"sha256 cambio ({str(sha_head)[:8]} -> {str(sha_now)[:8]})")
 
 
+def check_holdings_csvs() -> list:
+    """Verifica etf_holdings.csv e index_holdings.csv.
+
+    Fix D (2026-10-08): deuda reconocida en 58936778. Sin manifest ni
+    check hasta hoy. Estos CSVs alimentan el universo de stock_prices
+    (src/data_loader.py, src/stock_data_loader.py) y el IAE
+    (security_identity.py). Un fallo parcial del workflow trimestral
+    deja el CSV con datos mixtos sin senal.
+
+    Contrato por fichero:
+      - Existe y es CSV legible -> sino FAIL.
+      - Columna 'etf' presente -> sino FAIL.
+      - Todos los ETFs esperados presentes -> sino WARN.
+      - Cada ETF con >= min_tickers -> sino WARN.
+      - mtime <= HOLDINGS_MAX_AGE_DAYS -> sino WARN.
+
+    La edad se mide por mtime (los CSVs no tienen columna de fecha).
+    """
+    results = []
+    for fname, spec in HOLDINGS_EXPECTED.items():
+        tag = f"holdings:{fname}"
+        path = PROJECT_ROOT / "data" / fname
+        if not path.exists():
+            results.append(Result(tag, FAIL, "no existe"))
+            continue
+        try:
+            df = pd.read_csv(path)
+        except Exception as e:
+            results.append(Result(tag, FAIL, f"CSV ilegible: {e}"))
+            continue
+        if "etf" not in df.columns:
+            results.append(Result(tag, FAIL,
+                f"columna 'etf' ausente (cols={list(df.columns)})"))
+            continue
+        expected = set(spec["expected_etfs"])
+        present = set(df["etf"].astype(str).unique())
+        missing = sorted(expected - present)
+        if missing:
+            results.append(Result(tag, WARN,
+                f"ETFs ausentes: {missing}"))
+            continue
+        min_t = spec["min_tickers"]
+        by_etf = df.groupby("etf").size().to_dict()
+        low = {e: by_etf.get(e, 0) for e in expected if by_etf.get(e, 0) < min_t}
+        if low:
+            results.append(Result(tag, WARN,
+                f"ETFs con <{min_t} tickers: {low}"))
+            continue
+        age_days = (datetime.now() - datetime.fromtimestamp(path.stat().st_mtime)).days
+        n_etfs = len(present)
+        n_rows = len(df)
+        if age_days > HOLDINGS_MAX_AGE_DAYS:
+            results.append(Result(tag, WARN,
+                f"{n_etfs} ETFs, {n_rows} filas, edad {age_days}d "
+                f"(>{HOLDINGS_MAX_AGE_DAYS}d)"))
+        else:
+            results.append(Result(tag, OK,
+                f"{n_etfs} ETFs, {n_rows} filas, {age_days}d"))
+    return results
+
+
 def check_yahoo_revision() -> list:
     """Detecta revision retrospectiva de Yahoo comparando manifest vs HEAD."""
     manifest_path = PROJECT_ROOT / "data" / "market_data.parquet.manifest.json"
@@ -564,6 +649,8 @@ def run_all_checks() -> list:
     # C
     results.extend(check_manifest("stock_prices"))
     results.extend(check_manifest("market_data"))
+    # C-ter: holdings CSVs (Fix D, 2026-10-08)
+    results.extend(check_holdings_csvs())
     # C-bis: revision Yahoo (K-LSE-YAHOO-REVISION-01)
     results.extend(check_yahoo_revision())
     # D, E, F - requieren parquet
