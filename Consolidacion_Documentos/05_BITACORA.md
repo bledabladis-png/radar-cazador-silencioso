@@ -44,6 +44,79 @@ Al cerrar una sesion nueva, se anade arriba (las mas recientes primero). Si hay 
 
 ## 3. SESIONES
 
+### 2026-10-07 - Auditoria del reporte CI + 3 fixes (M-03, A-03, A-01/F6-1b)
+
+**Objetivo.** Auditoria puntual del reporte generado en CI (run 37561760673,
+headSha 446b1b66) en busca de errores, inconsistencias, fallos de
+formulacion, fuentes y volcado de datos. Revisado punto por punto.
+
+**Hallazgos clasificados (5):**
+
+- **M-03 (MEDIA).** `Europa Primary Flow` mostraba N/D pese a tener 2 de 3
+  series con Z-score valido. Causa: `flows_secondary.py` verificaba la
+  columna `flow_zscore`, no el valor. LYXI (MAD0_NAN) aportaba NaN que
+  envenenaba `sum()` y la media completa caia a NaN. Fix 5514c111:
+  filtrar con `pd.notna()`. Verificado local + CI: `0.00` (los 3 series
+  reales dieron shares_change=0 el 10-07; LYXI se filtra).
+
+- **A-03 (ALTA).** `Dispersion entre sectores` saltaba el dia 2026-10-05
+  sin log. Causa: `compute_sector_dispersion` devolvia `pd.DataFrame()`
+  vacio si el input era vacio/None. El caller `sectors_base.py` hacia
+  `if not df.empty: write else: skip`. El dia desaparecia silenciosamente.
+  Fix 8c26bc6e: normalizar `price_rank_list or []`. Cae en la rama
+  `n_valid < 8` ya existente. Fila con N/D. No se reescribe historico.
+  Verificado CI: fila 2026-10-07 con valores reales.
+
+- **A-01 / F6-1b (ALTA).** FINRA Dark Pool aparecia `RECENT` en
+  Data Freshness y `CURRENT` en Calidad, misma fuente (2026-09-14) y
+  misma edad (23d). Causa: F6-02 (2026-09-28) ajusto los umbrales
+  de FINRA de (30, 45, 60) a (20, 28, 45) en `settings.py` y
+  `helpers.py`, pero dejo `indicators/data_quality.py` con los
+  umbrales antiguos hardcoded. Dos contratos paralelos. Fix bdaa0326:
+  `data_quality.py` importa `FRESHNESS_FINRA`. Tests adaptados.
+  Verificado CI: FINRA `RECENT` en ambas secciones (24d).
+
+- **A-02 (INFO).** Top1=100% con Top3/Top5=N/D en Concentracion. No es
+  bug. Top N = fraccion del retorno positivo, no del universo completo.
+  Con 1 solo ticker positivo (XLF 2026-10-06) Top1=100% es trivial y
+  Top3 no se calcula. Fix documental 7b3fe927: nota al pie.
+
+- **INFO.** Print del MTE `Dark Pool ARCHIVAL ({age}d). Excluido del MTE.`
+  usa el termino ARCHIVAL (que en FINRA significa >45d) para referirse
+  a su umbral propio >14d. WONT FIX razonado: el literal esta anclado
+  por `test_compute_mte_tz_aware_no_silencia_archival` como proxy del
+  chequeo tz-aware. Cambiarlo obliga a tocar el test o a fragilizar el
+  proxy. ROI < 1.
+
+**Falsos positivos retirados tras Gate 0:**
+
+- M-01 (Cob_* identicas fila a fila): la columna es cobertura del
+  universo del sector (`n_valid / n_total`), no cobertura por metrica.
+  Etiqueta enganosa, no bug.
+- M-02 (XLU D1d EMA20=+60): dato real. XLU paso de 10% a 70% sobre
+  EMA20 en una sesion (20/20 avances). Confirmado con serie cruda.
+
+**Fix D parte 2 (fuera de la auditoria).** Mismo dia: 8 writers en
+`data/providers/` y `indicators/` escribian CRLF a outputs/history.
+`.gitattributes` los normalizaba al commitear, pero la doc del handoff
+afirmaba cobertura total ("todos los writers"). Fix 3871746f con
+`lineterminator='\n'`. En Linux no se nota; en local asegura LF.
+
+**Verificacion.** Suite 3185 passed + 5 skipped en cada commit. E2E
+local completo (exit=0, 19.5 min, Gate 10/10). Verificacion CI en el
+run scheduled 2026-10-08 02:41 UTC (id 37719126203): los 4 fixes
+confirmados.
+
+**Proximo paso sugerido.** Considerar M-04 (candidato): en los CSV
+`blackrock_dax_primary_flow` y `blackrock_isf_primary_flow`,
+`flow_5d`/`flow_20d` no cambian cuando `shares_change=0`. Puede ser
+diseno o bug. Auditar cuando haya sesion propia.
+
+**Commits del dia (7-oct).** 5514c111 (M-03), 8c26bc6e (A-03),
+bdaa0326 (A-01/F6-1b), 7b3fe927 (A-02), 3871746f (fix D parte 2),
+27a86ce7 (ESTADO_SISTEMA), a486b326 (README golden), 446b1b66
+(bitacora cabecera).
+
 ### 2026-10-06 - Limpieza estructural + fix rs_mom NaN
 
 **Objetivo.** Reducir disco y ruido del repo, eliminar codigo/documentacion
