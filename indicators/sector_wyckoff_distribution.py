@@ -7,7 +7,7 @@ No alimenta motores, scores, pesos ni State Machine.
 import pandas as pd
 import numpy as np
 from src.utils import get_col, _observation_date_from_df
-from indicators.wyckoff import build_ticker_df, classify_wyckoff_phase
+from indicators.wyckoff_v1 import build_ticker_df, classify_wyckoff_phase
 
 from config.tickers import MARKET_TICKERS
 
