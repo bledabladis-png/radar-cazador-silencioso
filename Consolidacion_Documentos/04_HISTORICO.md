@@ -81,7 +81,7 @@ Cronologia de las sesiones principales que dieron forma al sistema actual.
 
 ### 2026-09-26: Auditoria radar consolidada
 
-- Informe externo con 205 hallazgos: 6 ALTA, 98 MEDIA, 101 BAJA.
+- Informe externo con 142 hallazgos: 6 ALTA, 71 MEDIA, 65 BAJA. Informes en `bc656374` (`docs/auditoria/radar/audits/`).
 - **6 ALTA corregidos** con commits verificados:
   - F3-05 OilPriceAPI 403 futuros (ff95a3d).
   - F3-16 writer spot INVALID (84b2708).
@@ -89,7 +89,7 @@ Cronologia de las sesiones principales que dieron forma al sistema actual.
   - A5-13 Yahoo fallback devolviendo parquet completo (4808a13).
   - F6-10 tres "lideres" por sector (b5884a1).
   - F6-28 dos "A/D Net" contradictorios (6f4f4b1).
-- Fases 0-7 auditadas (consolidado 205 hallazgos).
+- Fases 0-7 auditadas (consolidado 142 hallazgos).
 
 ### 2026-09-27: Ciclos de cierre del backlog
 
@@ -1248,17 +1248,19 @@ warm-up, no reescritura arbitraria.
 una foto (un dia, 316 tickers) con legacy vs v1.8. Este cambio
 aplica el mismo criterio al historico del CSV.
 
-### Deuda huerfana: auditoria externa radar 2026-09-26 (2026-10-08)
+### Auditoria externa radar 2026-09-26: cifra corregida (2026-10-08)
 
-El informe de auditoria externa del radar con 205 hallazgos (6 ALTA / 98 MEDIA / 101 BAJA), citado en `00_ARRANQUE` seccion 3, no existe versionado en el repositorio. Verificado 2026-10-08:
+Correccion 2026-10-08: la cifra "205 hallazgos (6 ALTA / 98 MEDIA / 101 BAJA)" que circulaba en `00_ARRANQUE` y en este historico era erronea. Los informes originales existen en git (commit `bc656374`):
 
-- Sin fichero `AUDITORIA_EXTERNA_*` correspondiente.
-- Referencias a "205 hallazgos" solo en `00_ARRANQUE` (cifra agregada) y `04_HISTORICO` (cifra agregada).
-- Las referencias a `AUDITORIA_EXTERNA_2026-09-27.md` en el expediente IAE (`golden/README.md`, `current.json`) corresponden a otra auditoria (H4/C2), no a esta.
+- `docs/auditoria/radar/audits/AUDITORIA_2026-09-26.md` (FASE 0-3)
+- `docs/auditoria/radar/audits/AUDITORIA_FASE_5_2026-09-26.md` (FASE 5)
+- `docs/auditoria/radar/audits/AUDITORIA_CONSOLIDADA_2026-09-26.md` (consolidado + addendum FASE 2.2/2.4)
 
-Los 6 ALTA se corrigieron (trazables en git log pre-2026-10-01). Los 98 MEDIA y 101 BAJA no tienen registro por hallazgo. Se declaran como deuda huerfana sin material de origen.
+Cifra real (tabla por fases + addendum en la consolidada): **142 hallazgos (6 ALTA / 71 MEDIA / 65 BAJA)**.
 
-Accion: ninguna tecnica. La cifra agregada se mantiene en `00_ARRANQUE` como referencia historica.
+Los 3 ficheros fueron borrados de `main` en `cdf47ad2` (limpieza de corpus antiguo). Recuperables desde `bc656374`. Los 6 ALTA se corrigieron (trazables en git log pre-2026-10-01). **No son deuda huerfana**: los informes existen.
+
+Accion: cifras corregidas en `00_ARRANQUE` (commit 634d44d4) y en este historico. Sin accion tecnica adicional.
 
 ### Archivo de gold-standard-v4 (2026-10-08)
 
