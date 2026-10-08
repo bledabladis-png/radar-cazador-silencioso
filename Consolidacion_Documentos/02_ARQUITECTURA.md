@@ -255,7 +255,7 @@ Si `validation_gate['passed'] == False` -> `sys.exit(1)`.
 
 - **Nucleo (`daily_run.yml`)**: `pytest tests/ validation/` + `run.py` + 5 validaciones post-run (cross-validation, freshness, history quality, double counting, guard coverage). Cumple "no push sin validacion local completa".
 - **Datos externos (5)**: `update_macro_manual`, `update_european_holdings`, `update_index_holdings`, `update_sector_holdings`, `update_sec_13f`. Scope acotado a `data/`. Unica validacion: compileall. Excepcion razonada: no dependen de outputs del radar ni afectan determinismo.
-- **Outputs derivados (2)**: `update_qqq_sec_flow`, `update_sec_nport`. Escriben en `outputs/history/` con solo compileall como validacion. Deuda reconocida: pendiente decidir si anadir tests contractuales de los scripts generadores. Declarados como excepcion hasta entonces.
+- **Outputs derivados (2)**: `update_qqq_sec_flow`, `update_sec_nport`. Escriben en `outputs/history/`. Validacion: compileall + tests contractuales de funciones puras (`tests/test_nport_sec_helpers.py`, `tests/test_provider_nport.py`) + los tests que hacen parseo XML/TSV. Queda fuera el HTTP puro (descarga SEC) por ROI < 1. Excepcion de gate local mantenida.
 - **Lectura (`health_check.yml`)**: sin push.
 
 ---
