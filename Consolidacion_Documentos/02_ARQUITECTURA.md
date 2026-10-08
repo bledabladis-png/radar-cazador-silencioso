@@ -473,3 +473,28 @@ Si el gate falla, `run.py` aborta con `sys.exit(1)`.
 | F6 | IAE funcional avanzado (security_identity, period_state, catalog_key, operational_universe, catalog_p38_adapter) | CERRADO |
 | F8 | providers (yahoo, router, fred, polygon, cftc, finra, backup, downloader, xetra, bme, euronext, blackrock, fund_flow_utils, nport) | CERRADO |
 | F7 | indicators/ (50 ficheros, 6684 LOC) | CERRADO |
+
+
+---
+
+## 16. UNIVERSOS DE TICKERS
+
+Cuatro cifras distintas de "universo" conviven en el sistema. Cada una responde a un contrato diferente. No son contradictorias: son vistas distintas de la misma cadena.
+
+| Universo | Tamano | Fuente | Consumer |
+|---|---:|---|---|
+| `get_usa_tickers()` | 220 | `etf_holdings.csv`, top-20 por weight y sector | metricas intra-sectoriales (SLPM, breadth, stock_leader) |
+| `_ticker_list()` (`data_loader`) | 504 | `etf_holdings.csv` completo + `MARKET_TICKERS` | descarga. Despues se filtra con `_is_equity_ticker` al leer Close. |
+| `darkpool_io` | 504 + `MARKET_TICKERS` | `etf_holdings.csv` + `config/tickers.py` | concentracion ATS. Reporte declara `n=534` explicito. |
+| `get_stock_list()` | 329 | 4 fuentes: top-20 sector + top-20 indices + `radar_target_catalog` + europeos de providers | descarga completa del pipeline |
+| Parquet `stock_prices` USA | 255 | filtrado `_is_equity_ticker` sobre la descarga | metricas del radar |
+| Parquet `stock_prices` total | 329 | descarga completa (USA + EU) | analisis cross-market |
+| `radar_target_catalog.csv` | 255 | OpenFIGI + curacion | IAE crosswalk CUSIP-ticker |
+
+**Relacion:** 220 subset 255 subset 329. El CSV fuente (`etf_holdings.csv`) tiene 504; cada consumer corta (o no) segun su contrato.
+
+**De donde vienen los 35 tickers entre 220 y 255:** son componentes del top-20 de indices USA (Russell 2000 sobre todo) que no caen en el top-20 de su sector ETF. Estan en `index_holdings.csv` y en `radar_target_catalog.csv`. Ejemplos: BX, CASY, CMG, CRM, ES, FOX, GD, JXN, PNC, PRAX, WY.
+
+**Regla derivada:** un consumer que lee `etf_holdings.csv` o `index_holdings.csv` directamente debe declarar en su docstring si corta a top-N o usa el pool completo. Un cambio silencioso de uno a otro altera el universo de la metrica sin senal.
+
+Verificado 2026-10-08 (sesion de verificacion del sistema). Sin bug. Ningun huerfano. Cifras cuadran entre manifest, parquet y catalogo.
