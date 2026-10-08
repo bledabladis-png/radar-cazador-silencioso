@@ -284,9 +284,12 @@ def main():
     print("Reporte generado en outputs/report/reporte_diario.md")
 
     # Side effects + cobertura europea (C1-10 + C2-12)
+    _equity_eod = (temporal_meta.get('by_contract') or {}).get('EQUITY_EOD') or {}
+    _equity_eff = _equity_eod.get('effective_date')
     save_regime_history(macro_score, macro_regime, macro_conf,
                         financial_regime, vol_regime, sector_results,
-                        df_macro_manual=df_macro_manual)
+                        df_macro_manual=df_macro_manual,
+                        effective_date=_equity_eff)
     save_sector_rankings(sector_results)
     generate_european_coverage(reference_date=reference_date)
 

@@ -81,13 +81,21 @@ def compute_final_matrices(sector_breadth_df, sector_concentration_df,
 
 def save_regime_history(macro_score, macro_regime, macro_conf,
                         liquidity_regime, vol_regime, sector_results,
-                        df_macro_manual=None):
+                        df_macro_manual=None, effective_date=None):
     """Persiste la fila del regimen actual en outputs/history/macro_regime.csv.
 
     Movido de report_generator.py (C1-10) y consolidado aqui (C2-12).
     """
     hist_path = "outputs/history/macro_regime.csv"
-    obs_date = _observation_date_from_df(df_macro_manual, col='date')
+    # Fix 2026-10-08: prioridad a effective_date (resuelto por
+    # resolve_effective_date sobre el universo de equities). El fallback
+    # a df_macro_manual.date se mantiene para retrocompatibilidad, pero
+    # produce filas huerfanas cuando FRED publica el mismo dia natural
+    # que el run (iorb.csv trae fecha de calendario, no sesion NYSE).
+    if effective_date is not None:
+        obs_date = pd.Timestamp(effective_date)
+    else:
+        obs_date = _observation_date_from_df(df_macro_manual, col='date')
     if obs_date is None:
         print("  [WARN] save_regime_history: sin fecha macro valida. Se omite escritura.")
         return
