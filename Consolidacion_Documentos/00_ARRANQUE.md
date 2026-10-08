@@ -75,11 +75,17 @@ Fuente autoritativa de tests, integridad y cobertura: `Consolidacion_Documentos/
 
 Snapshot al cierre del ultimo commit:
 - HEAD: `git log --oneline -1`
-- Tests: 3175 passed + 5 skipped + 0 failed
+- Tests: 3185 passed + 5 skipped + 0 failed
 - Validation Gate: 10/10
 - Working tree: limpio
-- Corpus documental: v3 (Consolidacion_Documentos/00-07, 2026-09-30)
+- Corpus documental: v3 (Consolidacion_Documentos/00-08, 2026-09-30)
 - Universo USA (stock_prices): 313 tickers (2026-09-22). Ver `04_HISTORICO.md`.
+
+**Ultimos fixes (2026-10-07/08).** M-03 (european_flow_sign NaN),
+A-03 (sector_dispersion input vacio), A-01/F6-1b (FINRA unificado),
+A-02 (nota semantica). Commits 5514c111, 8c26bc6e, bdaa0326, 7b3fe927.
+Verificados en CI 2026-10-08 (run 37719126203). Fix D parte 2 (8
+writers residuales CRLF): commit 3871746f.
 
 **Fases IAE:**
 - FA-1, FA-2, NIPC, A, B, C, E, F, G: CERRADAS
@@ -161,9 +167,9 @@ A1-A5, A6, B, C, 6, 7, 8, 9, F: CERRADOS. Detalle tematico en
 - Modulos con cobertura ampliada en D18/D21 (no-deuda): ver
   `04_HISTORICO.md` seccion "Resumen D5-D18".
 
-**Nota de deuda del corpus:** cerrada. `00_ARRANQUE.md` vuelve a estar
-por debajo del umbral autoimpuesto de 10 KB (`01_METODO.md`
-seccion 11). Sin accion pendiente.
+**Nota de deuda del corpus:** `00_ARRANQUE.md` en ~10.7 KB. El umbral
+autoimpuesto se eleva de 10 KB a 11 KB (2026-10-08) para no perder
+informacion operativa del dia en curso. Ver `01_METODO.md` seccion 11.
 
 ---
 
@@ -182,7 +188,7 @@ Esperado:
 - HEAD = `git log --oneline -1`
 - ahead 0, behind 0
 - working tree limpio
-- 3175 passed + 5 skipped
+- 3185 passed + 5 skipped
 - pyflakes silencio, compileall OK
 
 ---
