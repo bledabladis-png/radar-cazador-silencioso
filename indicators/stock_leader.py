@@ -1,7 +1,7 @@
 import os
 import pandas as pd
 import numpy as np
-from indicators.wyckoff import wyckoff_score, classify_wyckoff_phase, detect_spring, detect_sos
+from indicators.wyckoff_v1 import wyckoff_score, classify_wyckoff_phase, detect_spring, detect_sos
 from src.utils import robust_zscore, get_col
 from src.report.helpers import _fmt_num
 from config.settings import TOP_N_CANDIDATES, TOP_N_LEADERS

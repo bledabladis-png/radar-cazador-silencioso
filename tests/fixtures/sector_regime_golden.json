@@ -10,25 +10,25 @@
         "XLV",
         "Healthcare",
         0.37699066497926814,
-        "MARKUP"
+        "ACCUMULATION"
       ],
       [
         "XLC",
         "Communication Services",
         0.32540207518991815,
-        "MARKUP"
+        "RANGE"
       ],
       [
         "XLK",
         "Technology",
         0.3127681330571812,
-        "RANGE"
+        "MARKUP"
       ],
       [
         "XLE",
         "Energy",
         0.30165613182782003,
-        "ACCUMULATION"
+        "RANGE"
       ],
       [
         "XLRE",
@@ -40,31 +40,31 @@
         "XLI",
         "Industrials",
         0.2108943624720512,
-        "MARKUP"
+        "RANGE"
       ],
       [
         "XLU",
         "Utilities",
         0.13035397065540508,
-        "DISTRIBUTION"
+        "ACCUMULATION"
       ],
       [
         "XLB",
         "Materials",
         -0.10290911267363666,
-        "MARKUP"
+        "ACCUMULATION"
       ],
       [
         "XLP",
         "Consumer Staples",
         -0.20512178502419917,
-        "DISTRIBUTION"
+        "MARKDOWN"
       ],
       [
         "XLF",
         "Financials",
         -0.4219725623590326,
-        "ACCUMULATION"
+        "RANGE"
       ],
       [
         "XLY",

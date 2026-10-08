@@ -1,7 +1,7 @@
 # indicators/index_leaders.py - Selecciona las 5 mejores empresas por WLS
 import pandas as pd
 import numpy as np
-from indicators.wyckoff import build_ticker_df, wyckoff_score, classify_wyckoff_phase, detect_spring, detect_sos
+from indicators.wyckoff_v1 import build_ticker_df, wyckoff_score, classify_wyckoff_phase, detect_spring, detect_sos
 from src.stock_data_loader import normalize_yahoo_ticker
 from src.utils import robust_zscore, get_col
 from config.index_tickers import INDEX_CONFIG
