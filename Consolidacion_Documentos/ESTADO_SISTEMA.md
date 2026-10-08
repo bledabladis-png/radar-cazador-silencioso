@@ -22,12 +22,12 @@ porque el commit que lo contiene cambia HEAD.
 
 ## 2. Tests (pytest real)
 
-- **Resumen:** 3181 passed, 5 skipped
+- **Resumen:** 3185 passed, 5 skipped
 - **Exit code:** 0
 
 **Tests skip:**
-- `SKIPPED [1] tests\test_freshness.py:376: requiere --run-network`
-- `SKIPPED [1] tests\test_freshness.py:399: requiere --run-network`
+- `SKIPPED [1] tests\test_freshness.py:382: requiere --run-network`
+- `SKIPPED [1] tests\test_freshness.py:405: requiere --run-network`
 - `SKIPPED [1] tests\test_wyckoff_v1_contract.py:219: Requiere API as_of en classify_wyckoff_phase. Fase 5b.`
 - `SKIPPED [1] tests\test_wyckoff_v1_contract.py:240: Requiere precedente estructural. Fase 5b.`
 - `SKIPPED [1] tests\test_wyckoff_v1_contract.py:245: Requiere API as_of. Fase 5b.`
