@@ -1061,4 +1061,149 @@ sitios que lo usan. Un fix parcial puede dejar dos verdades paralelas
 que solo se descubren al cruzar el output. En este caso, F6-02 paso
 desapercibido durante 9 dias porque cada test miraba solo su funcion.
 
+## Resumen D1-D4 + D19-D40 + cierre 10-01 (bitacora podada 2026-10-08)
+
+Extraido de las sesiones 2026-09-30 (madrugada, tarde, noche sesiones
+5-8) y 2026-10-01 (madrugada, tarde, cierre) al podar la bitacora.
+Los commits siguen en `git log`.
+
+### Cierre P1: D1-D4 + Runbook (2026-09-30 tarde)
+
+- **D4 (lag 13F unificado).** Tres politicas de lag convivian (doc ~45d,
+  cron ~50d, script 60d). El comentario del YAML mentia sobre su propio
+  codigo. Fix: eliminar el case del YAML, delegar a `--latest`, unificar
+  `SEC_13F_QUARTER_LAG_DAYS` a 50d, 4 tests frontera.
+- **D3 (health_check en CI).** 2 FAIL estructurales por parquets
+  gitignored. Fix: `IS_CI` detecta entorno, `parquet` y `iae_section`
+  pasan a SKIP en CI, `cron_slots` relaja umbral, workflows trimestrales
+  sin runs -> SKIP.
+- **D2 (determinismo vs Yahoo).** `00_ARRANQUE 2` pasa de "Determinista"
+  a "Determinista **dado un snapshot del input**". Nuevo check
+  `check_yahoo_revision`: compara manifest actual vs HEAD por sha256;
+  mismo `last_date` con sha distinto -> WARN.
+- **D1 (comp_breadth + penalizacion dispersion).** `tanh_normalize`
+  colapsa con series constantes (27-61% de filas con `comp_breadth==0`).
+  Segundo bug: `_dispersion = std/(|mean|+1e-9)` explotaba con media
+  proxima a 0. Fix: mapeo directo `(breadth-0.5)*2` + std poblacional
+  `ddof=0` sin dividir por media.
+- **R (runbook cron 1-oct).** Los 4 workflows trimestrales nunca se
+  dispararon por schedule. Creado `07_RUNBOOK.md`. Detectado que el
+  traspaso listaba `update_sec_nport` dia 1; el YAML dice dia 20.
+
+### Barrido de cobertura D19-D40 (2026-09-30 noche)
+
+Cierre de la deuda P3 (cobertura de tests). Regla de parada:
+ROI < 1 -> NO-DEUDA. Resultado: 2297 -> 2945 tests (+648). Detalle
+granular en `git log`.
+
+- **D19.** check_yahoo_revision verificado en produccion, sin commit.
+- **D20.** utils.py 74% -> 88% (detect_cross_module_conflict,
+  _confidence_range_row, _try_cleanup).
+- **D21.** stock_data_loader NO-DEUDA: 110 sin cubrir son
+  download_stock_prices (red) + _apply_lse_close_override (scraper
+  externo). ROI < 1.
+- **D22.** credit 19% -> 100%, breadth 22% -> 100%, macro_fundamental
+  13% -> 97%.
+- **D23 (barrido datetime.now).** 64 llamadas reales; 5 en pipeline
+  productivo (mte_confirmation, validation_gate x2, flows_secondary,
+  fundamental_signals). Fix: `reference_date=None` propagado desde
+  `compute_all_regimes` y `run.py`.
+- **D24.** Verificacion E2E. Gate 10/10, NIPC 8256882557.
+- **D25-D28.** fls 7% -> 100%, index_phase 11% -> 92%,
+  commodity_market_correlation 10% -> 90%, index_leaders 12% -> 70%,
+  darkpool_history 8% -> 88%, breadth_equity 76% -> 84%,
+  evidence_matrix 78% -> 94%, mte/decision 78% -> 88%,
+  mte/engine 79% -> 95%.
+- **Falsos positivos corregidos (verificacion triple):** D26
+  (assert all sobre dict vacio), D27 (fixture ya ordenada), D23
+  (reference_date = hoy).
+- **D29.** sector_context 63% -> 100%, sectorial 67% -> 100%,
+  synthesis 66% -> 96%. 19 tests.
+- **D30.** volatility_regime 33% -> 100%, tactical_engine 14% -> 97%,
+  structural_engine 21% -> 100%.
+- **D31.** state_machine 12% -> 100%, slpm_v12 38% -> 93%. 38 tests.
+- **D32.** sector_leader_divergence 16% -> 79%,
+  sector_flow_characteristics 35% -> 100%. 21 tests.
+- **D33.** options_metrics 65% -> 88%, rs_internal 28% -> 98%,
+  vol_metrics 15% -> 100%, options.py 67% -> 69%. 33 tests.
+- **D34.** options_metrics 88% -> 93%, index_leaders 70% -> 87%.
+- **D35.** health_check 52% -> 84%. 31 tests. No cubre `main()`.
+- **D36 (bug real).** `_generate_coverage_table` repetia
+  `pd.Timestamp(pcr_data['last_date'])` sin proteccion (el padre ya
+  tenia try/except). Con last_date no parseable, el reporte entero
+  caia con DateParseError. Fix en ambos bloques.
+- **D37.** pipeline_gate, guard_coverage, issue_manager cubiertos.
+- **D38.** download_official_list_13f 27% -> 99% (34 tests, bug F5.6-X
+  fallback 404), regenerate_cusip_crosswalk 69% -> 99% (12 tests, bug
+  `str(NaN or "")` = "nan"), qqq_returns_yahoo 63% -> 98% (6 tests).
+  `iae_pipeline` descartado (E2E-only por diseno).
+- **D39.** Dead config CI (`daily_run.yml` con `git add` de 4 rutas
+  inexistentes). Fosiles `02_ARQUITECTURA 11`. Poda bitacora 5 -> 10 +
+  dia. Criterio fino E2E en `01_METODO 4`. Skips opt-in formalizados.
+- **D40 (auditoria workflows).** 9 workflows reales (no 10).
+  `03_IAE` decia 286 LOC update_sec_13f (real 373). Riesgo:
+  `update_macro_manual` (17 6 UTC) coincide con `european` a 06:17
+  (groups distintos, no serializados, ambos pushean a main).
+
+### Incidente cron trimestral + sys.path (2026-10-01 tarde)
+
+- **Los 3 workflows trimestrales fallaron en el primer schedule real**
+  (`ModuleNotFoundError: No module named 'src'`). `python scripts/X.py`
+  pone `scripts/` en sys.path[0], no la raiz. Fix `1bead8a`.
+  `sys.path.insert` en 4 scripts (patron ya en 18). Los 2 ultimos
+  tenian cuerpo al importar: refactor a `main()` + guard.
+- **Fix `27248d3` (desalineacion SSGA).** `get_state_street_holdings`
+  con entradas invalidas del Excel desalineaba las 3 listas.
+- **Tests nuevos.** `test_scripts_sys_path.py` (runpy desde cwd=scripts),
+  `test_update_index_holdings_ssga.py` (Excel sintetico).
+- **Observacion.** Gate `_manifest_satisfies` exige sha256 del parquet
+  gitignored. En CI, rama CURRENT inalcanzable -> siempre READY.
+
+### Completion Receipt v1 + WLS NaN (2026-10-01 cierre)
+
+- **Diagnostico externo del gate** (`daily_run_gate_discrepancia.md`).
+  Bug: `_manifest_satisfies` con sha256 de parquet gitignored ->
+  gate inalcanzable en CI. Los 4 slots del 01-oct ejecutaron pipeline
+  completo por esto.
+- **Dictamen externo** (`daily_run_gate_dictamen.md`). Recomendacion E:
+  separar integridad del artefacto (manifest <-> parquet <-> sha256,
+  sin cambios) de idempotencia del workflow (Completion Receipt en
+  GitHub Actions Artifacts). 8 invariantes I1-I8.
+- **Contrato v1** (`daily_run_gate_contrato_v1.md`). Aprobado
+  2026-10-01.
+- **Implementacion (6 commits).** `e3c82fb` (find_completion_receipt,
+  write_completion_receipt.py, 10 tests I1-I8), `e440fec` (diagnostico
+  wls/tickers/len), `feee18d` (RECEIPT_FILENAME = basename artifact),
+  `f5e817f` (GH_TOKEN en env del step Run gate).
+- **Fix WLS NaN** (`2f956ed` + `e819952`).
+  `compute_wls_for_index::robust_intra` usaba `np.median(np.abs())`
+  que NO ignora NaN. Con 1 ticker NaN (SPCX en QQQ), toda la columna
+  `rws_z/stab_z` -> NaN. Fix: `np.nanmedian` + guard `pd.isna(mad)`.
+- **Fix gitignore** (`1c0ab0c`). `completion_receipt.json` y
+  `validation_gate_result.json` en `.gitignore`.
+- **Verificacion CI.** Run `36904431677` verde (artifact
+  `completion-receipt-2026-09-30`, 462 bytes). Run `36909383320`:
+  `state=CURRENT`, `run-system=skipped`. Contrato v1 confirmado en
+  produccion.
+
+**Pendiente heredado:** test rojo `test_build_catalog_csvs::test_idempotencia`
+(resuelto en sesion Catalog PIT del 10-02). Deudas latentes `np.median`
+en `stock_leader.py:59` y `options.py:46`.
+
+### Baseline IAE vs par vigente (2026-09-30 madrugada)
+
+No es bug. El reporte diario calcula el NIPC del par **vigente**
+(`_list_available_quarters` toma los 2 ultimos). Al entrar 2026Q2
+(`c5e3ee0`), el par paso de Q4-2025 -> Q1-2026 a Q1-2026 -> Q2-2026.
+Reproducido local: 8256882557 (identico al CI). El baseline
+-4264449012 corresponde al par antiguo, congelado en `current.json`.
+No se toca codigo. Corpus actualizado (`c087cb8`).
+
+**Hallazgos del run manual 36642077307:** `update_futures` exit 1
+(BZ=F/CL=F BLOCKED 403 OilPriceAPI). Warning 'Cache 13F' es falso
+positivo (restore-key v2 vs primary v3). 3 tests skipped en CI por
+parquets gitignored.
+
+---
+
 **Fin del historico.**
