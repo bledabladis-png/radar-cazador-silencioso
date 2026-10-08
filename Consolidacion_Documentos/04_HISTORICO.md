@@ -1262,6 +1262,18 @@ Los 3 ficheros fueron borrados de `main` en `cdf47ad2` (limpieza de corpus antig
 
 Accion: cifras corregidas en `00_ARRANQUE` (commit 634d44d4) y en este historico. Sin accion tecnica adicional.
 
+### Archivo de sow-v4-validation: WONT FIX razonado (2026-10-08)
+
+La rama `sow-v4-validation` fue archivada como tag `_archivo/sow-v4-validation-20261008` (2026-10-08). Contiene 88 ficheros unicos frente a `main`: 15 scripts del paquete `scripts/sow_v4/` + `scripts/sow_v19_bootstrap*.py`, y 4 artefactos del protocolo (`SOW_v19_PROTOCOL.json`, `.freeze.json`, `49_sow_v19_resultado.md`, `50_sow_v19_bootstrap_ops.md`). El resto son el expediente wyckoff antiguo ya movido a `_archivo/`.
+
+**WONT FIX razonado.** Verificado 2026-10-08: ningun fichero de `main` referencia `scripts/sow_v4/*`, `sow_v19`, `SOW_v19_PROTOCOL.json`, `49_*` ni `50_*`. Cero referencias colgantes.
+
+Los scripts implementan el protocolo v4.1 / v5, descartado tras el walk-forward del 2026-10-04 (47_estado_sow_tras_v5_grounded.md: `decision.estado = MUESTRA INSUFICIENTE`, `N_eval=2/8`). El protocolo vigente es v6 (borrador `48_sow_protocol_v6.md` en `main`, pendiente firma externa, sin implementacion hasta firma).
+
+Portar el material del tag crearia huerfanos (implementacion de un protocolo descartado, sin consumidor). El tag preserva el material integro y recuperable si el auditor externo lo pide.
+
+Nota adicional: los ficheros 46 y 47 del expediente SOW fueron recuperados selectivamente a `main` en `e528da19` (2026-10-05).
+
 ### Archivo de gold-standard-v4 (2026-10-08)
 
 La rama `gold-standard-v4` (HEAD 8afce786, 2026-10-05) fue archivada como tag `_archivo/gold-standard-v4-superseded-20261008` y borrada. Superseded por `main`:
