@@ -1218,6 +1218,9 @@ contiene dos problemas:
    arranco sin datos suficientes -> `wyckoff_score` devolvia NaN ->
    legacy caia en `return "RANGE"`. No eran clasificaciones, eran
    ausencia de clasificacion.
+   Dos ramas silenciosas del legacy contribuian: `len(close) < 200 ->
+   INSUFFICIENT_DATA` y `score_clean.empty -> RANGE`. La segunda
+   etiquetaba como fase valida una ausencia de datos.
 2. **Mezcla de clasificadores.** Las fechas hasta 10-07 se calcularon
    con legacy; desde 10-08 con v1.8. Un CSV con dos algoritmos
    distintos es incoherente.
