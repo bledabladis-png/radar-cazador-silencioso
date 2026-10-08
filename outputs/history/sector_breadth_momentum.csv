@@ -197,10 +197,10 @@ date,sector,delta_1d_ema20,delta_5d_ema20,delta_20d_ema20,delta_1d_ema50,delta_5
 2026-10-05,XLU,10.0,10.0,-5.0,5.0,5.0,-5.0,0.0,0.0,-25.0,Expansión fuerte,Expansión fuerte,Estable,False,False
 2026-10-05,XLRE,5.0,10.0,0.0,0.0,5.0,-10.0,0.0,5.0,-25.000000000000007,Expansión fuerte,Expansión fuerte,Expansión fuerte,False,False
 2026-10-05,XLC,0.0,10.0,-40.0,10.0,0.0,-35.0,10.0,-5.000000000000007,-10.0,Expansión fuerte,Estable,Deterioro fuerte,False,False
-2026-10-06,XLK,-10.0,15.0,32.61904761904761,0.0,10.0,42.38095238095239,0.0,10.0,14.047619047619051,Expansión fuerte,Expansión fuerte,Expansión fuerte,True,False
-2026-10-06,XLF,10.0,30.0,-50.0,0.0,15.0,-70.0,-4.999999999999993,10.000000000000007,-39.99999999999999,Expansión fuerte,Expansión fuerte,Expansión fuerte,False,False
+2026-10-06,XLK,-10.0,15.0,32.61904761904761,0.0,10.0,42.38095238095239,0.0,10.0,14.047619047619053,Expansión fuerte,Expansión fuerte,Expansión fuerte,True,False
+2026-10-06,XLF,10.0,30.0,-50.0,0.0,15.0,-70.0,-4.999999999999993,10.000000000000009,-39.99999999999999,Expansión fuerte,Expansión fuerte,Expansión fuerte,False,False
 2026-10-06,XLV,-10.0,-25.0,-55.0,10.0,-5.000000000000007,-25.0,0.0,0.0,-10.0,Deterioro fuerte,Deterioro fuerte,Estable,False,True
-2026-10-06,XLE,14.999999999999993,60.0,-20.0,9.999999999999993,40.0,-25.0,0.0,10.0,-20.0,Expansión fuerte,Expansión fuerte,Expansión fuerte,True,False
+2026-10-06,XLE,14.999999999999991,60.0,-20.0,9.999999999999991,40.0,-25.0,0.0,10.0,-20.0,Expansión fuerte,Expansión fuerte,Expansión fuerte,True,False
 2026-10-06,XLY,0.0,10.0,5.0,5.0,10.0,-15.0,10.0,20.0,0.0,Expansión fuerte,Expansión fuerte,Expansión fuerte,False,False
 2026-10-06,XLP,25.0,20.0,0.0,30.0,10.0,-5.0,10.0,5.0,-25.0,Expansión fuerte,Expansión fuerte,Expansión fuerte,False,False
 2026-10-06,XLI,0.0,10.0,35.714285714285715,0.0,15.0,30.714285714285715,0.0,5.0,-11.19047619047619,Expansión fuerte,Expansión fuerte,Expansión fuerte,False,False
@@ -208,3 +208,14 @@ date,sector,delta_1d_ema20,delta_5d_ema20,delta_20d_ema20,delta_1d_ema50,delta_5
 2026-10-06,XLU,60.0,70.0,35.0,5.0,10.0,-5.0,10.0,10.0,-15.0,Expansión fuerte,Expansión fuerte,Expansión fuerte,True,False
 2026-10-06,XLRE,15.0,25.0,0.0,10.0,15.0,-10.0,5.0,10.0,-35.0,Expansión fuerte,Expansión fuerte,Expansión fuerte,False,False
 2026-10-06,XLC,5.0,15.0,-40.0,0.0,10.0,-40.0,0.0,0.0,-10.0,Expansión fuerte,Expansión fuerte,Estable,False,False
+2026-10-07,XLK,5.0,5.0,18.57142857142857,0.0,5.0,37.61904761904761,0.0,5.0,9.285714285714292,Expansión fuerte,Expansión fuerte,Expansión fuerte,True,False
+2026-10-07,XLF,-5.0,25.0,-50.0,5.0,25.0,-60.0,0.0,10.000000000000007,-39.99999999999999,Expansión fuerte,Expansión fuerte,Expansión fuerte,False,False
+2026-10-07,XLV,20.0,15.0,-20.0,5.000000000000007,5.000000000000007,-19.999999999999993,-5.0,5.0,-15.0,Expansión fuerte,Expansión fuerte,Expansión fuerte,False,False
+2026-10-07,XLE,-10.0,40.0,-15.0,-5.0,35.0,-30.0,-5.0,14.999999999999993,-25.0,Expansión fuerte,Expansión fuerte,Expansión fuerte,False,False
+2026-10-07,XLY,-5.0,0.0,5.0,5.0,10.0,0.0,-5.0,15.0,0.0,Estable,Expansión fuerte,Expansión fuerte,False,False
+2026-10-07,XLP,-5.0,35.0,5.0,-10.0,20.0,-5.0,0.0,15.0,-20.0,Expansión fuerte,Expansión fuerte,Expansión fuerte,False,False
+2026-10-07,XLI,-20.0,0.0,20.476190476190474,-5.0,15.0,16.190476190476193,0.0,0.0,-11.19047619047619,Estable,Expansión fuerte,Estable,False,False
+2026-10-07,XLB,0.0,20.0,-10.0,-5.0,20.0,-20.0,5.0,5.0,-15.0,Expansión fuerte,Expansión fuerte,Expansión fuerte,False,False
+2026-10-07,XLU,-14.999999999999993,55.00000000000001,30.000000000000007,5.0,15.0,0.0,0.0,10.0,-20.0,Expansión fuerte,Expansión fuerte,Expansión fuerte,False,False
+2026-10-07,XLRE,-15.0,5.0,-5.0,-15.0,0.0,-20.0,-10.0,-5.0,-35.0,Expansión fuerte,Estable,Deterioro fuerte,False,False
+2026-10-07,XLC,1.5789473684210513,11.578947368421051,-13.421052631578949,1.3157894736842088,11.315789473684209,-28.6842105263158,-2.631578947368425,2.368421052631575,-12.631578947368425,Expansión fuerte,Expansión fuerte,Expansión moderada,False,False
