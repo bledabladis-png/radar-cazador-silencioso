@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """Health check del sistema Radar.
 
@@ -199,9 +199,16 @@ def check_cron_slots() -> list:
 def check_workflows() -> list:
     results = []
     for yml, meta in WORKFLOW_EXPECTATIONS.items():
+        # Fix 2026-10-08: el check original filtraba por --event schedule.
+        # Los workflows trimestrales tuvieron 3 schedule failure el 1-oct
+        # (causa raiz: sys.path + arrays desalineados, corregidos el mismo
+        # dia en 1bead8ad y 27248d35). Los dispatch posteriores pasan, pero
+        # el check seguia mostrando WARN permanente porque el ultimo run
+        # con event=schedule seguia siendo el fallo. Ahora se mira el ultimo
+        # run de cualquier evento: si el workflow esta operativo, OK.
         out = _run_gh([
-            "run", "list", "--workflow", yml, "--event", "schedule",
-            "--limit", "1", "--json", "createdAt,conclusion,status",
+            "run", "list", "--workflow", yml,
+            "--limit", "1", "--json", "createdAt,conclusion,status,event",
         ])
         if out is None:
             results.append(Result(f"workflow:{yml}", SKIP, "gh no disponible"))
@@ -216,7 +223,7 @@ def check_workflows() -> list:
             # schedule es lo esperado la mayor parte del ano.
             if meta["max_days"] >= 30:
                 results.append(Result(f"workflow:{yml}", SKIP,
-                    f"sin schedule en historial (trimestral, "
+                    f"sin runs en historial (trimestral, "
                     f"max_days={meta['max_days']})"))
             else:
                 results.append(Result(f"workflow:{yml}", WARN,
@@ -231,15 +238,23 @@ def check_workflows() -> list:
             results.append(Result(f"workflow:{yml}", WARN, "timestamp ilegible"))
             continue
         conclusion = last.get("conclusion") or "unknown"
+        event = last.get("event", "?")
+        # Conclusiones que no son exito: failure, cancelled, timed_out,
+        # startup_failure, skipped. Todas ellas -> WARN. Solo success
+        # cuenta como OK. Fix 2026-10-08.
+        BAD = ("failure", "cancelled", "timed_out",
+               "startup_failure", "skipped", "action_required")
         if delta_days > meta["max_days"]:
             results.append(Result(f"workflow:{yml}", FAIL,
-                f"ultima schedule hace {delta_days:.1f}d (>{meta['max_days']}d)"))
-        elif conclusion == "failure":
+                f"ultimo run hace {delta_days:.1f}d (>{meta['max_days']}d) "
+                f"({event}, {conclusion})"))
+        elif conclusion in BAD:
             results.append(Result(f"workflow:{yml}", WARN,
-                f"ultima schedule fue failure hace {delta_days:.1f}d"))
+                f"ultimo run fue {conclusion} hace {delta_days:.1f}d "
+                f"({event})"))
         else:
             results.append(Result(f"workflow:{yml}", OK,
-                f"{delta_days*24:.0f}h atras ({conclusion})"))
+                f"{delta_days*24:.0f}h atras ({event}, {conclusion})"))
     return results
 
 
