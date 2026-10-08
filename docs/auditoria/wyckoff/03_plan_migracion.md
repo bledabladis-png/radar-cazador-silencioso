@@ -96,14 +96,21 @@ Ver `01_contrato_semantico_v1_8.md` y `01_contrato_semantico_v1_9.md`.
 
 ### 2.4. Consumidores
 
-Ningun consumidor del pipeline usa `wyckoff_v1.py`. Todos siguen con
-`indicators/wyckoff.py` (legacy v4.2):
+**Actualizado 2026-10-08.** Los 5 consumidores directos migrados a
+`indicators/wyckoff_v1.py` (v1.8 core). Commits 2fd6c449 + 35663000.
 
-    indicators/index_phase.py
-    indicators/sector_wyckoff_distribution.py
-    indicators/sector_breadth.py
-    indicators/stock_leader.py
-    indicators/index_leaders.py
+    indicators/sector_wyckoff_distribution.py   (migrado 2026-10-08)
+    indicators/stock_leader.py                  (migrado 2026-10-08)
+    indicators/index_leaders.py                 (migrado 2026-10-08)
+    indicators/index_phase.py                   (migrado 2026-10-08)
+    regimes/sector_regime.py                    (migrado 2026-10-08)
+
+**Correccion al plan original.** El plan listaba `sector_breadth.py`
+como consumidor. Grep confirma que no importa wyckoff. Se omite.
+`regimes/sector_regime.py` aparecia como indirecto; es directo.
+
+El legacy `indicators/wyckoff.py` permanece en el repo pero sin
+consumidores productivos. Se retirara en 5e.
 
 ### 2.5. Bloqueos activos
 
@@ -247,7 +254,25 @@ v2, fechado post-5b.X.
 
 ---
 
-## 6. Fase D (migracion) - Prevision
+## 6. Fase D (migracion) - Prevision [CERRADA 2026-10-08]
+
+**Estado 2026-10-08:** los 5 consumidores directos migrados a
+v1.8 core (commits 2fd6c449 + 35663000). El CSV historico
+regenerado con v1.8 (commit f782b9d4). E2E local verificado
+(exit=0, Gate 10/10). Los 4 indirectos NO requieren migracion:
+leen columnas derivadas del CSV, no importan el modulo.
+
+Lista real de consumidores directos (corregida respecto al plan
+original):
+
+    1. indicators/sector_wyckoff_distribution.py (2fd6c449)
+    2. indicators/stock_leader.py                (35663000)
+    3. indicators/index_leaders.py               (35663000)
+    4. indicators/index_phase.py                 (35663000)
+    5. regimes/sector_regime.py                  (35663000)
+
+Plan original listaba `sector_breadth.py` como consumidor. Grep
+confirma que no lo es.
 
 Consumidores directos (5) + indirectos (4). Orden por fan-out
 creciente (empezar por el que menos propaga):
@@ -349,6 +374,9 @@ Si emergen durante alguna fase, se abren como sub-proyectos separados.
 | 2026-10-03 | Protocolo 5b.X v2 (9ef7497): 550 congelado | OK |
 | 2026-10-03 | Script validador congelado con hash (CC01A6AB) | HISTORICO - no valido como ejecutable v2 (D-06, `37_`) |
 | PENDIENTE | 5b.X ejecucion (requiere 550 confirmed H20-complete) | - |
+| 2026-10-08 | Migracion core v1.8 (5 consumidores directos) | OK |
+| 2026-10-08 | Regeneracion CSV sector_wyckoff_distribution | OK |
+| 2026-10-08 | Retirada legacy (5e) | PENDIENTE (1 run CI estable) |
 | PENDIENTE | 5c comparativa legacy vs v1 (post-5b.X) | - |
 | PENDIENTE | 5d migracion 5 consumidores | - |
 | PENDIENTE | 5e retirada legacy | - |

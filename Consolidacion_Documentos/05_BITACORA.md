@@ -44,6 +44,74 @@ Al cerrar una sesion nueva, se anade arriba (las mas recientes primero). Si hay 
 
 ## 3. SESIONES
 
+### 2026-10-08 - Auditoria del reporte CI + migracion Wyckoff a v1.8 core
+
+**Objetivo.** Revisar el reporte del run 37719126203 (headSha
+7b3fe927), documentar los hallazgos cosmeticos, y ejecutar la
+migracion del modulo Wyckoff core v1.8 al pipeline productivo.
+
+**Auditoria del reporte (5 hallazgos, todos cosmeticos):**
+
+- **A-04 (falso positivo).** Opportunity Map: XLB y XLF con
+  valores redondeados iguales caen en cuadrantes distintos.
+  Verificado: precision float interna (XLB S=-0.0799, XLF
+  S=-0.0800). El render los muestra igual. No es bug.
+- **A-05.** Nota SSGA no declaraba su lag de publicacion.
+  Fix: anadido 'SSGA publica con lag de 1-2 dias'.
+- **M-05.** Label 'Acciones lideres' ambiguo.
+  Fix: '(sectores activos)'.
+- **M-06.** Breadth de Mercado cuenta sectores (ETFs), no
+  tickers. Fix: nota al pie aclaratoria.
+- **B-06.** Dispersion entre sectores tiene huecos conocidos
+  (2026-09-21, 09-22, 10-05) por input vacio. Fix: nota al pie.
+
+Commit 860eaf63.
+
+**Migracion Wyckoff core v1.8 (frente D, plan v3 §6):**
+
+Expediente 43 §10 declara la migracion core 'Autorizada.
+Independiente'. Alcance: 4 fases (MARKUP, ACCUMULATION, RANGE,
+MARKDOWN). DISTRIBUTION queda excluida (fail-closed, requiere
+sow_params).
+
+Consumidores migrados (5 reales, no 6):
+1. indicators/sector_wyckoff_distribution.py (2fd6c449)
+2. indicators/stock_leader.py (35663000)
+3. indicators/index_leaders.py (35663000)
+4. indicators/index_phase.py (35663000)
+5. regimes/sector_regime.py (35663000)
+
+Discrepancia plan vs codigo: el plan §6 listaba
+sector_breadth.py como consumidor. Grep confirma que no
+importa wyckoff. Plan desactualizado. Sector_regime estaba
+listado como indirecto pero es directo.
+
+**Regeneracion del CSV historico (f782b9d4):**
+
+Al migrar se detecto que sector_wyckoff_distribution.csv tenia
+warm-up artefactual (2026-09-08 a ~09-15: '20 RANGE' en todos
+los sectores, por NaN en wyckoff_score) y mezcla de
+clasificadores (legacy hasta 10-07, v1.8 desde 10-08).
+Regenerado completo con v1.8 + as_of=fecha. Script nuevo
+scripts/regenerate_wyckoff_distribution.py (one-shot).
+
+Preservacion: CSV legacy en git (089f819a) + copia local en
+outputs/audit/wyckoff_legacy_REAL_20261008.csv.
+
+Efecto: 0/220 filas coinciden con legacy. Esperado (legacy
+clasifica por umbral de score, v1.8 por conjuncion estructural).
+
+**Golden regenerado.** tests/fixtures/sector_regime_golden.json
+actualizado: 8/11 sectores cambian de etiqueta wyckoff (scores,
+regimen y top3 sin cambios).
+
+**Verificacion.** Suite 3185 passed + 5 skipped en cada commit.
+E2E local completo (exit=0, 13.9 min, Gate 10/10).
+
+**Commits del dia.** 2fd6c449 (consumidor 1), 35663000
+(consumidores 2-5 + golden), f782b9d4 (regeneracion CSV +
+script + historico).
+
 ### 2026-10-07 - Auditoria del reporte CI + 3 fixes (M-03, A-03, A-01/F6-1b)
 
 **Objetivo.** Auditoria puntual del reporte generado en CI (run 37561760673,

@@ -47,7 +47,9 @@ Verificada el 2026-09-28 en la auditoria interna A0.
     |   +-- slpm_v12.py, state_machine.py, state_transition.py
     |   +-- stock_leader.py, trend.py
     |   +-- volatility.py, volatility_structure.py, vol_metrics.py
-    |   +-- wyckoff.py, __init__.py
+    |   +-- wyckoff.py      (legacy v4.2, sin consumidores productivos desde 2026-10-08)
+    |   +-- wyckoff_v1.py   (v1.8 core, productivo desde 2026-10-08)
+    |   +-- __init__.py
     |   +-- mte/ (paquete: __init__ + engine + state + scoring + decision)
     +-- src/
     |   +-- cboe_merge.py, commodities_merge.py

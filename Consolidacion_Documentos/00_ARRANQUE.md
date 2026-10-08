@@ -87,6 +87,14 @@ A-02 (nota semantica). Commits 5514c111, 8c26bc6e, bdaa0326, 7b3fe927.
 Verificados en CI 2026-10-08 (run 37719126203). Fix D parte 2 (8
 writers residuales CRLF): commit 3871746f.
 
+**Migracion Wyckoff core v1.8 (2026-10-08).** Los 5 consumidores
+directos del legacy `indicators/wyckoff.py` migrados a v1.8 core
+(`indicators/wyckoff_v1.py`). Alcance: 4 fases (MARKUP, ACCUMULATION,
+RANGE, MARKDOWN). DISTRIBUTION excluida por fail-closed (requiere
+SOW, pendiente 5b.X ~2027). CSV historico regenerado. Commits
+2fd6c449, 35663000, f782b9d4. Legacy pendiente de retirada (5e)
+tras 1 run CI estable.
+
 **Fases IAE:**
 - FA-1, FA-2, NIPC, A, B, C, E, F, G: CERRADAS
 - Fase D (auditor externo): CERRADA con C2 (920) residual no bloqueante
