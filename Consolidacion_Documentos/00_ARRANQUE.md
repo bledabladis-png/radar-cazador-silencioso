@@ -79,8 +79,7 @@ Snapshot al cierre del ultimo commit:
 - Validation Gate: 10/10
 - Working tree: limpio
 - Corpus documental: v3 (Consolidacion_Documentos/00-08, 2026-09-30)
-- Universo USA (stock_prices): 255 tickers. Fuente autoritativa: `ESTADO_SISTEMA.md`.
-- Universo total stock_prices: 329 (US + EU). Ver `04_HISTORICO.md`.
+- Universo USA (stock_prices): 255 tickers; total (US+EU): 329. Fuente: `ESTADO_SISTEMA.md`.
 
 **Ultimos fixes (2026-10-07/08).** M-03 (european_flow_sign NaN),
 A-03 (sector_dispersion input vacio), A-01/F6-1b (FINRA unificado),
@@ -107,7 +106,7 @@ tras 1 run CI estable.
 - H5.3: trazabilidad implementada, pendiente cron nov 2026
 - C2 (920): OPEN. Hipotesis P65 descartada 2026-09-29 (por diseno de codigo)
 
-**Auditoria radar externa 2026-09-26:** 205 hallazgos (6 ALTA / 98 MEDIA / 101 BAJA). 6 ALTA corregidos.
+**Auditoria radar externa 2026-09-26:** 142 hallazgos (6 ALTA / 71 MEDIA / 65 BAJA). 6 ALTA corregidos. Informes en `bc656374` (borrados de main en `cdf47ad2`, recuperables por git).
 
 **Auditoria interna del sistema:**
 - A1 (nucleo temporal): CERRADO
