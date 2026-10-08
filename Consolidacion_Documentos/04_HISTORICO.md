@@ -1206,4 +1206,46 @@ parquets gitignored.
 
 ---
 
+### Regeneracion de sector_wyckoff_distribution (2026-10-08)
+
+**Contexto.** Migracion de los 5 consumidores de Wyckoff del legacy
+(`indicators/wyckoff.py`) a v1.8 (`indicators/wyckoff_v1.py`). Al
+migrar se detecto que el CSV historico `sector_wyckoff_distribution.csv`
+contiene dos problemas:
+
+1. **Warm-up artefactual.** Las primeras fechas (2026-09-08 a ~09-15)
+   escribieron `20 RANGE` en todos los sectores. Causa: el pipeline
+   arranco sin datos suficientes -> `wyckoff_score` devolvia NaN ->
+   legacy caia en `return "RANGE"`. No eran clasificaciones, eran
+   ausencia de clasificacion.
+2. **Mezcla de clasificadores.** Las fechas hasta 10-07 se calcularon
+   con legacy; desde 10-08 con v1.8. Un CSV con dos algoritmos
+   distintos es incoherente.
+
+**Decision.** Regenerar el CSV completo con v1.8 core (4 fases).
+Script: `scripts/regenerate_wyckoff_distribution.py`. Recorre las 20
+fechas unicas del CSV, aplica `classify_wyckoff_phase(df, ticker,
+as_of=fecha)` con v1.8, reconstruye la distribucion de fases por
+sector.
+
+**Limitacion reconocida.** El parquet actual esta revisado por Yahoo.
+Las fechas pasadas se calculan con `as_of=fecha` sobre el OHLC
+revisado. No es exactamente lo que v1.8 habria dicho el dia. La
+diferencia es ruido menor (las fases se calculan sobre ventanas de
+200+ dias y los precios apenas cambian).
+
+**Preservacion.** El CSV legacy completo queda en:
+- Git history: commit `089f819a`.
+- `outputs/audit/wyckoff_legacy_REAL_20261008.csv` (copia para
+  referencia).
+
+**Efecto medido.** 0/220 filas coinciden con legacy. Es esperado:
+legacy clasifica por umbral de score; v1.8 por conjuncion
+estructural. El cambio en las primeras fechas es correccion de
+warm-up, no reescritura arbitraria.
+
+**Relacion con 13_comparativa_legacy_v1.md.** Esa comparativa mide
+una foto (un dia, 316 tickers) con legacy vs v1.8. Este cambio
+aplica el mismo criterio al historico del CSV.
+
 **Fin del historico.**
