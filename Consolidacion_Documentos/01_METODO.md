@@ -63,7 +63,7 @@ Pega este bloque antes de cualquier commit:
 Esperado:
 - compileall OK
 - pyflakes LIMPIO (silencio total)
-- 3033 passed + 2 skipped + 0 failed (2026-10-01)
+- Tests verdes con 0 failed. Conteo vigente en `ESTADO_SISTEMA.md` (auto-generado).
 
 Si algun test falla: NO commitear. Diagnosticar primero.
 
@@ -144,6 +144,29 @@ Tipos: `fix`, `refactor`, `docs`, `data`, `test`, `chore`, `perf`.
   angulares en bloques que el usuario pegara. Cuando un bloque depende
   de un valor de salida del bloque anterior, escribir el valor literal
   o encadenar por variable en el mismo paste.
+
+---
+
+### 6bis. TRAMPAS ADICIONALES (2026-10-08)
+
+- **`git show <sha>:<path> > file` en PowerShell escribe UTF-16 con
+  BOM** (`0xFF 0xFE`). `pd.read_csv` falla con `UnicodeDecodeError`.
+  Fix: `[IO.File]::WriteAllLines` con `UTF8Encoding($false)`.
+- **Copiar un CSV *después* de un E2E contamina la comparación
+  pre/post.** Si haces snapshot "pre", corres el E2E, y luego copias
+  el fichero como "frozen": el frozen ya tiene los cambios del E2E.
+  Caso real 2026-10-08 con `sector_wyckoff_distribution.csv`.
+- **El corpus tiene EOL mixto en disco.** `00_ARRANQUE.md` y
+  `01c_LECCIONES.md` en CRLF. `01_METODO.md`, `05_BITACORA.md`, etc.
+  en LF. `.gitattributes` fuerza LF al commitear, pero el working tree
+  conserva el EOL original. Antes de patch multilinea, detectar EOL
+  con `repr()` del bloque objetivo.
+- **`foreach (...) { ... } | pipe` falla en PowerShell 5.1** con
+  `No se permiten elementos de canalización vacíos`. Usar
+  `... | ForEach-Object { ... }` o envolver en `$(...)`.
+- **`git cherry main <rama>` antes de borrar una rama.** Los `+` son
+  commits unicos. Los `-` son duplicados por rebase. Verificar los
+  `A` (added) del `git diff --name-status` antes de borrar.
 
 ---
 

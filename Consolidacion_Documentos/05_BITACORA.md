@@ -108,6 +108,13 @@ regimen y top3 sin cambios).
 **Verificacion.** Suite 3185 passed + 5 skipped en cada commit.
 E2E local completo (exit=0, 13.9 min, Gate 10/10).
 
+**M-04 cerrado.** `flow_5d`/`flow_20d` identicas entre dias
+consecutivos en `blackrock_dax` y `blackrock_isf` cuando
+`shares_change=0`. Verificado en fuente primaria BlackRock el
+2026-10-07: es coincidencia aritmetica (el flujo del primer dia
+de la ventana tambien fue 0). No es bug. Cerrado como falso
+positivo. Solo faltaba documentarlo.
+
 **Commits del dia.** 2fd6c449 (consumidor 1), 35663000
 (consumidores 2-5 + golden), f782b9d4 (regeneracion CSV +
 script + historico).
