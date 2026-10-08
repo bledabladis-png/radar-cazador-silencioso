@@ -1037,4 +1037,28 @@ f847377 (limpieza). Tags: `_archivo/backup-pre-rebase-20260912`,
 `_archivo/gold-standard-v1`, `_archivo/gold-standard-v2`,
 `_archivo/gold-standard-v3`.
 
+### F6-1b (2026-10-07): cierre de la divergencia FINRA
+
+F6-02 (2026-09-28) ajusto los umbrales de frescura FINRA de (30, 45, 60)
+a (20, 28, 45) tras detectar que 26d se marcaba como CURRENT, fuera del
+rango regulatorio documentado (2-4 semanas = 14-28d).
+
+El fix se aplico en `settings.FRESHNESS_FINRA` y en
+`helpers._classify_finra_freshness`, pero dejo `indicators/data_quality.py`
+con los valores antiguos hardcoded. Resultado: dos contratos paralelos
+que se contradician visiblemente en el reporte diario (FINRA RECENT en
+Data Freshness, CURRENT en Calidad, misma fuente y edad).
+
+F6-1b elimina el hardcode. `data_quality.py` importa `FRESHNESS_FINRA`
+de settings. Una unica fuente de verdad. Commit bdaa0326.
+
+No se amplia a SEC/CFTC/FRED: sus clasificadores siguen hardcoded en
+`data_quality.py` pero coinciden con settings hoy. Mismo patron de fix
+si aparece otra divergencia.
+
+Leccion: cuando un valor se centraliza en settings, buscar TODOS los
+sitios que lo usan. Un fix parcial puede dejar dos verdades paralelas
+que solo se descubren al cruzar el output. En este caso, F6-02 paso
+desapercibido durante 9 dias porque cada test miraba solo su funcion.
+
 **Fin del historico.**
