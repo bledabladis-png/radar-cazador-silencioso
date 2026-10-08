@@ -88,6 +88,12 @@ Aplicable a cambios que tocan writers, readers, nucleo temporal, o el reporte.
 - Helpers puros (`src/utils.py` salvo `write_artifact_with_manifest`), tests, scripts de CI, corpus -> no E2E.
 - Checks de `health_check` que solo leen artefactos -> verificacion ligera en produccion real, no `run.py`.
 
+**Ventana de ejecucion de `run.py`.** Un `run.py` manual fuera de la ventana del CI puede producir un snapshot distinto al publicado, aunque la fecha efectiva coincida. Verificado 2026-10-08: mismo `effective=2026-10-07`, `evidence_matrix` con XLRE/XLU cambiados por revision de fuente (Yahoo/FRED) entre las 02:41 UTC del CI y las 18:30 CEST del run manual.
+
+Politica: snapshot pre/post obligatorio y revertir `git checkout -- outputs/history outputs/state` al cerrar, salvo que la ejecucion sea deliberadamente la publicacion del dia.
+
+**Verificacion abortando.** Los bloques que verifican y commitean en el mismo paste deben abortar si `compileall`, `pyflakes` o `pytest` devuelven `LASTEXITCODE != 0`. Anadir `if ($LASTEXITCODE -ne 0) { throw }` tras cada paso. Un commit con pyflakes exit=1 pasó el 2026-10-08 por no abortar (corregido en 6027a943).
+
 1. **Snapshot pre:** copiar outputs/report/, outputs/state/, outputs/history/ relevantes a `outputs/audit/pre_<bloque>_<stamp>/`.
 2. **`py run.py` real (~10-15 min).** No sustituto.
 3. **Snapshot post:** copiar los mismos a `outputs/audit/post_<bloque>_<stamp>/`.

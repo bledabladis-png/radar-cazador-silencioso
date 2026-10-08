@@ -44,6 +44,43 @@ Al cerrar una sesion nueva, se anade arriba (las mas recientes primero). Si hay 
 
 ## 3. SESIONES
 
+### 2026-10-08 (tarde/noche) - Verificacion completa del sistema + 4 fixes
+
+**Objetivo.** Bajo correccion expresa del usuario: revisar el estado real del sistema (pipeline, artefactos, frescura, providers) en lugar de seguir en higiene documental.
+
+**Hecho.**
+
+- Revertido un `run.py` manual ejecutado fuera de ventana CI (18:30 CEST). Sin contaminacion de fecha efectiva (`2026-10-07` en todos los CSV) pero con revision de fuente detectada en `evidence_matrix.csv` (XLRE/XLU).
+- Frente workflows cron trimestrales: cerrado como fix-ya-aplicado. Los 3 schedule del 1-oct fallaron por `sys.path` + arrays desalineados; corregidos el mismo dia en 1bead8ad y 27248d35.
+- Fix A: `check_iae_section` (STALE del N-PORT confundido con el de IAE). Commit c09a268c.
+- Fix B: `save_regime_history` (fila huerfana cuando FRED publica fecha natural + effective es sesion anterior). Commit d495dc1e.
+- Fix C: `check_workflows` (WARN permanente + cancelled mal clasificado). Commit 8e8826f5.
+- Fix D: vigilancia de `etf_holdings.csv` e `index_holdings.csv`. Commit 0017bf4f.
+- Corpus: cierre de 4 pendientes documentales (deuda huerfana auditoria externa, archivo gold-standard-v4, excepcion workflows datos externos, HEAD autorreferente del HANDOFF). Commit 203b61c7.
+- Port de la evidencia IAE completa (53 ficheros) desde tag archivado. Commit a356ae1d.
+
+**Commits.**
+
+- a356ae1d docs(iae): portar evidencia IAE completa desde tag archivado
+- 203b61c7 docs(corpus): cierre de pendientes documentales 2026-10-08
+- c09a268c fix(health_check): aislar STALE de la seccion IAE
+- d495dc1e fix(finalize): save_regime_history prioriza effective_date
+- 8e8826f5 fix(health_check): check_workflows mira ultimo run y trata cancelled como WARN
+- 0017bf4f fix(health_check): vigilancia de etf_holdings.csv e index_holdings.csv
+- 6027a943 chore(test): eliminar import pytest sin uso en test_health_check_holdings
+- (este commit) docs(corpus): cierre de la sesion de verificacion
+
+**Pendiente.**
+
+- E2E del fix B (finalize) en el scheduled 2026-10-08 23:17 UTC o proximo scheduled.
+- Wyckoff 5e (retirada legacy) tras 1 run CI estable.
+- H5.3 (cron trimestral 20-nov-2026 06:17 UTC). Sin accion antes.
+- C2 (920): bloqueado por auditor externo.
+- SOW v6: pendiente firma externa.
+- `00_ARRANQUE` a 45 B del umbral 11 KB.
+
+**Proximo paso sugerido.** Confirmar scheduled 23:17 UTC (E2E fix B). Valorar ROI de los 2 workflows de outputs derivados sin tests (`update_qqq_sec_flow`, `update_sec_nport`) declarados en 02_ARQUITECTURA. Cerrar bitacora si supera 10 entradas fuera del dia.
+
 ### 2026-10-08 - Auditoria del reporte CI + migracion Wyckoff a v1.8 core
 
 **Objetivo.** Revisar el reporte del run 37719126203 (headSha

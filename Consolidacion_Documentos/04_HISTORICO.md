@@ -1273,4 +1273,18 @@ Delta positivo no portado: nota explicativa RS en `stock_leader.py` ("*RS = RS L
 
 Hallazgo colateral corregido el mismo dia: la evidencia IAE de `docs/auditoria/iae/evidence/` (8 directorios, 53 ficheros) referenciada en `03_IAE.md` seccion 6 no existia en `main`. Portada desde el tag antes de archivar (commit a356ae1d). Tabla de conteos corregida de 67 -> 53.
 
+### Verificacion completa del sistema + 4 fixes (2026-10-08)
+
+Sesion de verificacion end-to-end bajo peticion: revisar el estado real del sistema (no solo documentacion). Hallazgos y fixes:
+
+**Hallazgos corregidos.**
+
+- **check_iae_section (health_check).** Buscaba `STALE` en todo el reporte. El STALE del N-PORT en Data Freshness disparaba un falso WARN cuando la seccion IAE estaba limpia. Fix: aislar el check al bloque de la seccion (`## Acumulacion Institucional (13F)`). Commit c09a268c + 4 tests.
+- **save_regime_history (pipeline).** Escribia fila con la fecha natural de FRED (iorb.csv) cuando el pipeline resolvia `effective=sesion NYSE anterior`. Fila huerfana con `date=2026-10-08` y datos de 2026-10-07. Rompia R1 (cobertura no declarada). Fix: parametro `effective_date` propagado desde `temporal_meta['by_contract']['EQUITY_EOD']['effective_date']`. Commit d495dc1e + 3 tests.
+- **check_workflows (health_check).** (a) Filtraba `--event schedule`, manteniendo WARN permanente sobre workflows trimestrales ya corregidos el 1-oct. (b) Trataba `cancelled`/`timed_out`/`startup_failure`/`skipped` como OK. Fix: mirar ultimo run de cualquier evento + WARN para conclusiones no-exito. Commit 8e8826f5 + 5 tests.
+- **etf_holdings.csv / index_holdings.csv sin vigilancia.** Deuda reconocida en 58936778. Sin manifest ni check. Si un workflow trimestral falla parcialmente, el CSV queda con datos mixtos sin senal. Fix: `check_holdings_csvs` (ETFs esperados, min tickers/ETF, edad mtime <= 120d). Commit 0017bf4f + 6 tests.
+
+**Workflows cron trimestrales (frente cerrado, sin fix nuevo).** Los 3 schedule del 1-oct (update_sector_holdings, update_index_holdings, update_european_holdings) fallaron por dos causas raiz ya corregidas el mismo dia: `sys.path` sin insertar (1bead8ad) y arrays desalineados en get_state_street_holdings por tickers invalidos SSGA (27248d35). Los workflow_dispatch posteriores pasan. Proximo schedule: 1-ene-2027.
+
+**Verificacion acumulada.** 3196 -> 3203 tests. Gate 10/10. Pyflakes limpio. Corpus actualizado. Commits: a356ae1d, 203b61c7, c09a268c, d495dc1e, 8e8826f5, 0017bf4f, 6027a943.
 **Fin del historico.**
