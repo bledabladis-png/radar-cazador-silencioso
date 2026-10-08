@@ -519,11 +519,20 @@ def check_iae_section(is_ci: bool = False) -> list:
                 "reporte_diario.md no versionado (outputs/*.md gitignored)")]
         return [Result("iae_section", WARN, "reporte_diario.md no existe")]
     text = p.read_text(encoding="utf-8", errors="replace")
-    if "## Acumulacion Institucional (13F)" not in text:
+    heading = "## Acumulacion Institucional (13F)"
+    if heading not in text:
         return [Result("iae_section", WARN, "seccion IAE no encontrada")]
-    if "STALE" in text and "Official List" in text:
+    # Extraer solo el bloque de la seccion IAE (desde el heading hasta
+    # el siguiente "## " o fin). Antes se buscaba STALE en todo el
+    # reporte, lo que confundia el STALE del N-PORT (tabla de Data
+    # Freshness) con el de la propia seccion IAE. Fix 2026-10-08.
+    i = text.index(heading)
+    rest = text[i + len(heading):]
+    next_h = rest.find("\n## ")
+    section = rest if next_h < 0 else rest[:next_h]
+    if "STALE" in section and "Official List" in section:
         return [Result("iae_section", OK, "STALE (official_list_pending) - esperado")]
-    if "STALE" in text:
+    if "STALE" in section:
         return [Result("iae_section", WARN, "STALE con razon desconocida")]
     return [Result("iae_section", OK, "seccion presente")]
 
