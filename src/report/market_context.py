@@ -75,6 +75,7 @@ def render_dispersion_sectores(sector_dispersion_data):
             out.append(f"| {date_str} | {_fmt_num(row['range_pp'], '{:.2f}')} | {_fmt_num(row['std_pp'], '{:.2f}')} | {_fmt_num(row['mean_ret'], '{:.2f}')} | {row['dispersion_reading']} | {row['heterogeneity_type']} |\n")
         out.append("\n")
         out.append("*La dispersión mide la separación entre los retornos de los 11 sectores. No es un score ni una señal.*\n\n")
+        out.append("*Faltan los dias 2026-09-21, 2026-09-22 y 2026-10-05 por input vacio (fix A-03, 2026-10-07: previene futuros huecos, no rellena historico).*\n\n")
     return out
 
 

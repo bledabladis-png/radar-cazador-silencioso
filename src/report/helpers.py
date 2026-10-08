@@ -142,7 +142,7 @@ def _generate_coverage_table(pcr_data, darkpool_data, sector_results, reference_
         pass
     except (OSError, ValueError, KeyError, pd.errors.ParserError) as e:
         print(f"  [WARN] report_generator: analisis_lideres.csv: {e}")
-    lines.append(f"| Acciones lideres | {n_acciones} tickers | - |\n")
+    lines.append(f"| Acciones lideres (sectores activos) | {n_acciones} tickers | - |\n")
     # D36 (2026-09-30): try/except para strings no parseables.
     # Bug: render_data_freshness protegia pcr_data['last_date'] con
     # try/except, pero esta tabla no. Con un last_date invalido

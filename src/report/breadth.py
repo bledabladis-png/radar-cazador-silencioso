@@ -35,4 +35,5 @@ def render_breadth_market(breadth_values):
         out.append(f"| New Highs sectoriales | {nh_count}/{EXPECTED_SECTOR_COUNT} ({nh_pct:.2%}) |\n")
         out.append(f"| New Lows sectoriales | {nl_count}/{EXPECTED_SECTOR_COUNT} ({nl_pct:.2%}) |\n")
         out.append("\n")
+        out.append("*Cada fila cuenta sectores (ETFs) cuyo precio esta sobre la EMA correspondiente, no tickers individuales.*\n\n")
     return out
