@@ -10,7 +10,6 @@ import os
 from datetime import datetime, timedelta
 
 import pandas as pd
-import pytest
 
 from scripts.health_check import check_holdings_csvs
 
