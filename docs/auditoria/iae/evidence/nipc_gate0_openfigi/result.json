@@ -1,0 +1,1642 @@
+{
+  "url": "https://api.openfigi.com/v3/mapping",
+  "batches_of": 5,
+  "n_cusips": 152,
+  "results": {
+    "00206R102": [
+      {
+        "figi": "BBG000BSJK37",
+        "name": "AT&T INC",
+        "ticker": "T",
+        "exchCode": "US",
+        "compositeFIGI": "BBG000BSJK37",
+        "securityType": "Common Stock",
+        "marketSector": "Equity",
+        "shareClassFIGI": "BBG001S5VWH2",
+        "securityType2": "Common Stock",
+        "securityDescription": "T"
+      }
+    ],
+    "002824100": [
+      {
+        "figi": "BBG000B9ZXB4",
+        "name": "ABBOTT LABORATORIES",
+        "ticker": "ABT",
+        "exchCode": "US",
+        "compositeFIGI": "BBG000B9ZXB4",
+        "securityType": "Common Stock",
+        "marketSector": "Equity",
+        "shareClassFIGI": "BBG001S5N9M6",
+        "securityType2": "Common Stock",
+        "securityDescription": "ABT"
+      }
+    ],
+    "00287Y109": [
+      {
+        "figi": "BBG0025Y4RY4",
+        "name": "ABBVIE INC",
+        "ticker": "ABBV",
+        "exchCode": "US",
+        "compositeFIGI": "BBG0025Y4RY4",
+        "securityType": "Common Stock",
+        "marketSector": "Equity",
+        "shareClassFIGI": "BBG0025Y4RZ3",
+        "securityType2": "Common Stock",
+        "securityDescription": "ABBV"
+      }
+    ],
+    "02072L672": [
+      {
+        "figi": "BBG019T922L8",
+        "name": "SHOC US SEMICON EQUITY ETF",
+        "ticker": "SHOC",
+        "exchCode": "US",
+        "compositeFIGI": "BBG019T922L8",
+        "securityType": "ETP",
+        "marketSector": "Equity",
+        "shareClassFIGI": "BBG019T923G2",
+        "securityType2": "Mutual Fund",
+        "securityDescription": "SHOC"
+      }
+    ],
+    "02079K107": [
+      {
+        "figi": "BBG009S3NB30",
+        "name": "ALPHABET INC-CL C",
+        "ticker": "GOOG",
+        "exchCode": "US",
+        "compositeFIGI": "BBG009S3NB30",
+        "securityType": "Common Stock",
+        "marketSector": "Equity",
+        "shareClassFIGI": "BBG009S3NB21",
+        "securityType2": "Common Stock",
+        "securityDescription": "GOOG"
+      }
+    ],
+    "02079K305": [
+      {
+        "figi": "BBG009S39JX6",
+        "name": "ALPHABET INC-CL A",
+        "ticker": "GOOGL",
+        "exchCode": "US",
+        "compositeFIGI": "BBG009S39JX6",
+        "securityType": "Common Stock",
+        "marketSector": "Equity",
+        "shareClassFIGI": "BBG009S39JY5",
+        "securityType2": "Common Stock",
+        "securityDescription": "GOOGL"
+      }
+    ],
+    "023135106": [
+      {
+        "figi": "BBG000BVPV84",
+        "name": "AMAZON.COM INC",
+        "ticker": "AMZN",
+        "exchCode": "US",
+        "compositeFIGI": "BBG000BVPV84",
+        "securityType": "Common Stock",
+        "marketSector": "Equity",
+        "shareClassFIGI": "BBG001S5PQL7",
+        "securityType2": "Common Stock",
+        "securityDescription": "AMZN"
+      }
+    ],
+    "02319V103": [
+      {
+        "figi": "BBG000BN5VZ4",
+        "name": "AMBEV SA-ADR",
+        "ticker": "ABEV",
+        "exchCode": "US",
+        "compositeFIGI": "BBG000BN5VZ4",
+        "securityType": "ADR",
+        "marketSector": "Equity",
+        "shareClassFIGI": "BBG005KLVT74",
+        "securityType2": "Depositary Receipt",
+        "securityDescription": "ABEV"
+      }
+    ],
+    "037833100": [
+      {
+        "figi": "BBG000B9XRY4",
+        "name": "APPLE INC",
+        "ticker": "AAPL",
+        "exchCode": "US",
+        "compositeFIGI": "BBG000B9XRY4",
+        "securityType": "Common Stock",
+        "marketSector": "Equity",
+        "shareClassFIGI": "BBG001S5N8V8",
+        "securityType2": "Common Stock",
+        "securityDescription": "AAPL"
+      }
+    ],
+    "051774107": [
+      {
+        "figi": "BBG00Z92Y6X1",
+        "name": "AURORA INNOVATION INC",
+        "ticker": "AUR",
+        "exchCode": "US",
+        "compositeFIGI": "BBG00Z92Y6X1",
+        "securityType": "Common Stock",
+        "marketSector": "Equity",
+        "shareClassFIGI": "BBG00Z92Y6Y0",
+        "securityType2": "Common Stock",
+        "securityDescription": "AUR"
+      }
+    ],
+    "05343P109": [
+      {
+        "figi": "BBG000BPSQJ3",
+        "name": "AVALON HOLDINGS CORP-A",
+        "ticker": "AWX",
+        "exchCode": "US",
+        "compositeFIGI": "BBG000BPSQJ3",
+        "securityType": "Common Stock",
+        "marketSector": "Equity",
+        "shareClassFIGI": "BBG001S9D084",
+        "securityType2": "Common Stock",
+        "securityDescription": "AWX"
+      }
+    ],
+    "059460303": [
+      {
+        "figi": "BBG000BS6WW3",
+        "name": "BANCO BRADESCO-ADR",
+        "ticker": "BBD",
+        "exchCode": "US",
+        "compositeFIGI": "BBG000BS6WW3",
+        "securityType": "ADR",
+        "marketSector": "Equity",
+        "shareClassFIGI": "BBG001SF7657",
+        "securityType2": "Depositary Receipt",
+        "securityDescription": "BBD"
+      }
+    ],
+    "060505104": [
+      {
+        "figi": "BBG000BCTLF6",
+        "name": "BANK OF AMERICA CORP",
+        "ticker": "BAC",
+        "exchCode": "US",
+        "compositeFIGI": "BBG000BCTLF6",
+        "securityType": "Common Stock",
+        "marketSector": "Equity",
+        "shareClassFIGI": "BBG001S5P0Y0",
+        "securityType2": "Common Stock",
+        "securityDescription": "BAC"
+      }
+    ],
+    "06849F108": [
+      {
+        "figi": "BBG000BB07P9",
+        "name": "BARRICK MINING CORP",
+        "ticker": "B",
+        "exchCode": "US",
+        "compositeFIGI": "BBG000BB07P9",
+        "securityType": "Common Stock",
+        "marketSector": "Equity",
+        "shareClassFIGI": "BBG001S5N9P3",
+        "securityType2": "Common Stock",
+        "securityDescription": "B"
+      }
+    ],
+    "084670108": [
+      {
+        "figi": "BBG000DWCFL4",
+        "name": "BERKSHIRE HATHAWAY INC-CL A",
+        "ticker": "BRK/A",
+        "exchCode": "US",
+        "compositeFIGI": "BBG000DWCFL4",
+        "securityType": "Common Stock",
+        "marketSector": "Equity",
+        "shareClassFIGI": "BBG001S902J2",
+        "securityType2": "Common Stock",
+        "securityDescription": "BRK/A"
+      }
+    ],
+    "084670702": [
+      {
+        "figi": "BBG000DWG505",
+        "name": "BERKSHIRE HATHAWAY INC-CL B",
+        "ticker": "BRK/B",
+        "exchCode": "US",
+        "compositeFIGI": "BBG000DWG505",
+        "securityType": "Common Stock",
+        "marketSector": "Equity",
+        "shareClassFIGI": "BBG001S90346",
+        "securityType2": "Common Stock",
+        "securityDescription": "BRK/B"
+      }
+    ],
+    "09174Y106": [
+      {
+        "figi": "BBG01ZK73F97",
+        "name": "BITWISE CHAINLINK ETF",
+        "ticker": "CLNK",
+        "exchCode": "US",
+        "compositeFIGI": "BBG01ZK73F97",
+        "securityType": "ETP",
+        "marketSector": "Equity",
+        "shareClassFIGI": "BBG01ZK73G68",
+        "securityType2": "Mutual Fund",
+        "securityDescription": "CLNK"
+      }
+    ],
+    "110122108": [
+      {
+        "figi": "BBG000DQLV23",
+        "name": "BRISTOL-MYERS SQUIBB CO",
+        "ticker": "BMY",
+        "exchCode": "US",
+        "compositeFIGI": "BBG000DQLV23",
+        "securityType": "Common Stock",
+        "marketSector": "Equity",
+        "shareClassFIGI": "BBG001S8N8J6",
+        "securityType2": "Common Stock",
+        "securityDescription": "BMY"
+      }
+    ],
+    "11135F101": [
+      {
+        "figi": "BBG00KHY5S69",
+        "name": "BROADCOM INC",
+        "ticker": "AVGO",
+        "exchCode": "US",
+        "compositeFIGI": "BBG00KHY5S69",
+        "securityType": "Common Stock",
+        "marketSector": "Equity",
+        "shareClassFIGI": "BBG00KHY5SY8",
+        "securityType2": "Common Stock",
+        "securityDescription": "AVGO"
+      }
+    ],
+    "11271J107": [
+      {
+        "figi": "BBG000C9KL89",
+        "name": "BROOKFIELD CORP",
+        "ticker": "BN",
+        "exchCode": "US",
+        "compositeFIGI": "BBG000C9KL89",
+        "securityType": "Common Stock",
+        "marketSector": "Equity",
+        "shareClassFIGI": "BBG001SF86D7",
+        "securityType2": "Common Stock",
+        "securityDescription": "BN"
+      }
+    ],
+    "113004105": [
+      {
+        "figi": "BBG01BPHNXZ3",
+        "name": "BROOKFIELD ASSET MGMT-A",
+        "ticker": "BAM",
+        "exchCode": "US",
+        "compositeFIGI": "BBG01BPHNXZ3",
+        "securityType": "Common Stock",
+        "marketSector": "Equity",
+        "shareClassFIGI": "BBG019Z17GF9",
+        "securityType2": "Common Stock",
+        "securityDescription": "BAM"
+      }
+    ],
+    "11777Q209": [
+      {
+        "figi": "BBG000V9KFD5",
+        "name": "B2GOLD CORP",
+        "ticker": "BTG",
+        "exchCode": "US",
+        "compositeFIGI": "BBG000V9KFD5",
+        "securityType": "Common Stock",
+        "marketSector": "Equity",
+        "shareClassFIGI": "BBG001T0CNW6",
+        "securityType2": "Common Stock",
+        "securityDescription": "BTG"
+      }
+    ],
+    "126408103": [
+      {
+        "figi": "BBG000BGJRC8",
+        "name": "CSX CORP",
+        "ticker": "CSX",
+        "exchCode": "US",
+        "compositeFIGI": "BBG000BGJRC8",
+        "securityType": "Common Stock",
+        "marketSector": "Equity",
+        "shareClassFIGI": "BBG001S5Q7Q3",
+        "securityType2": "Common Stock",
+        "securityDescription": "CSX"
+      }
+    ],
+    "136385101": [
+      {
+        "figi": "BBG000HW5GX3",
+        "name": "CANADIAN NATURAL RESOURCES",
+        "ticker": "CNQ",
+        "exchCode": "US",
+        "compositeFIGI": "BBG000HW5GX3",
+        "securityType": "Common Stock",
+        "marketSector": "Equity",
+        "shareClassFIGI": "BBG001S5YC56",
+        "securityType2": "Common Stock",
+        "securityDescription": "CNQ"
+      }
+    ],
+    "15135U109": [
+      {
+        "figi": "BBG000PSJP22",
+        "name": "CENOVUS ENERGY INC",
+        "ticker": "CVE",
+        "exchCode": "US",
+        "compositeFIGI": "BBG000PSJP22",
+        "securityType": "Common Stock",
+        "marketSector": "Equity",
+        "shareClassFIGI": "BBG001T2PJV8",
+        "securityType2": "Common Stock",
+        "securityDescription": "CVE"
+      }
+    ],
+    "166764100": [
+      {
+        "figi": "BBG000K4ND22",
+        "name": "CHEVRON CORP",
+        "ticker": "CVX",
+        "exchCode": "US",
+        "compositeFIGI": "BBG000K4ND22",
+        "securityType": "Common Stock",
+        "marketSector": "Equity",
+        "shareClassFIGI": "BBG001S67ZC5",
+        "securityType2": "Common Stock",
+        "securityDescription": "CVX"
+      }
+    ],
+    "169656105": [
+      {
+        "figi": "BBG000QX74T1",
+        "name": "CHIPOTLE MEXICAN GRILL INC",
+        "ticker": "CMG",
+        "exchCode": "US",
+        "compositeFIGI": "BBG000QX74T1",
+        "securityType": "Common Stock",
+        "marketSector": "Equity",
+        "shareClassFIGI": "BBG001SP50B3",
+        "securityType2": "Common Stock",
+        "securityDescription": "CMG"
+      }
+    ],
+    "17275R102": [
+      {
+        "figi": "BBG000C3J3C9",
+        "name": "CISCO SYSTEMS INC",
+        "ticker": "CSCO",
+        "exchCode": "US",
+        "compositeFIGI": "BBG000C3J3C9",
+        "securityType": "Common Stock",
+        "marketSector": "Equity",
+        "shareClassFIGI": "BBG001S6HC62",
+        "securityType2": "Common Stock",
+        "securityDescription": "CSCO"
+      }
+    ],
+    "172967424": [
+      {
+        "figi": "BBG000FY4S11",
+        "name": "CITIGROUP INC",
+        "ticker": "C",
+        "exchCode": "US",
+        "compositeFIGI": "BBG000FY4S11",
+        "securityType": "Common Stock",
+        "marketSector": "Equity",
+        "shareClassFIGI": "BBG001S72ZG4",
+        "securityType2": "Common Stock",
+        "securityDescription": "C"
+      }
+    ],
+    "191216100": [
+      {
+        "figi": "BBG000BMX289",
+        "name": "COCA-COLA CO/THE",
+        "ticker": "KO",
+        "exchCode": "US",
+        "compositeFIGI": "BBG000BMX289",
+        "securityType": "Common Stock",
+        "marketSector": "Equity",
+        "shareClassFIGI": "BBG001S5SMQ8",
+        "securityType2": "Common Stock",
+        "securityDescription": "KO"
+      }
+    ],
+    "192108504": [
+      {
+        "figi": "BBG000BF8TF5",
+        "name": "COEUR MINING INC",
+        "ticker": "CDE",
+        "exchCode": "US",
+        "compositeFIGI": "BBG000BF8TF5",
+        "securityType": "Common Stock",
+        "marketSector": "Equity",
+        "shareClassFIGI": "BBG001S5PM54",
+        "securityType2": "Common Stock",
+        "securityDescription": "CDE"
+      }
+    ],
+    "20030N101": [
+      {
+        "figi": "BBG000BFT2L4",
+        "name": "COMCAST CORP-CLASS A",
+        "ticker": "CMCSA",
+        "exchCode": "US",
+        "compositeFIGI": "BBG000BFT2L4",
+        "securityType": "Common Stock",
+        "marketSector": "Equity",
+        "shareClassFIGI": "BBG001S5PXL2",
+        "securityType2": "Common Stock",
+        "securityDescription": "CMCSA"
+      }
+    ],
+    "22266T109": [
+      {
+        "figi": "BBG00XMJRPQ8",
+        "name": "COUPANG INC",
+        "ticker": "CPNG",
+        "exchCode": "US",
+        "compositeFIGI": "BBG00XMJRPQ8",
+        "securityType": "Common Stock",
+        "marketSector": "Equity",
+        "shareClassFIGI": "BBG00XMJRPR7",
+        "securityType2": "Common Stock",
+        "securityDescription": "CPNG"
+      }
+    ],
+    "25434V708": [
+      {
+        "figi": "BBG011DXY5J0",
+        "name": "DIMENSIONAL US CORE EQUITY 2",
+        "ticker": "DFAC",
+        "exchCode": "US",
+        "compositeFIGI": "BBG011DXY5J0",
+        "securityType": "ETP",
+        "marketSector": "Equity",
+        "shareClassFIGI": "BBG011DXY6D4",
+        "securityType2": "Mutual Fund",
+        "securityDescription": "DFAC"
+      }
+    ],
+    "25460E216": [
+      {
+        "figi": "BBG000JLM3X5",
+        "name": "DIREX DLY FIN BEA 3X ETF-USD",
+        "ticker": "FAZ",
+        "exchCode": "US",
+        "compositeFIGI": "BBG000JLM3X5",
+        "securityType": "ETP",
+        "marketSector": "Equity",
+        "shareClassFIGI": "BBG001T3NVH7",
+        "securityType2": "Mutual Fund",
+        "securityDescription": "FAZ"
+      }
+    ],
+    "25460G161": [
+      {
+        "figi": "BBG012NLKK50",
+        "name": "DIREXION DAILY NYSE FANG+ BU",
+        "ticker": "FNGG",
+        "exchCode": "US",
+        "compositeFIGI": "BBG012NLKK50",
+        "securityType": "ETP",
+        "marketSector": "Equity",
+        "shareClassFIGI": "BBG012NLKL12",
+        "securityType2": "Mutual Fund",
+        "securityDescription": "FNGG"
+      }
+    ],
+    "254687106": [
+      {
+        "figi": "BBG000BH4R78",
+        "name": "WALT DISNEY CO/THE",
+        "ticker": "DIS",
+        "exchCode": "US",
+        "compositeFIGI": "BBG000BH4R78",
+        "securityType": "Common Stock",
+        "marketSector": "Equity",
+        "shareClassFIGI": "BBG001S5QHF3",
+        "securityType2": "Common Stock",
+        "securityDescription": "DIS"
+      }
+    ],
+    "269451100": [
+      {
+        "figi": "BBG000PNSM57",
+        "name": "EAGLE CAPITAL GROWTH FUND",
+        "ticker": "XXGRFXX",
+        "exchCode": "US",
+        "compositeFIGI": "BBG000PNSM57",
+        "securityType": "Closed-End Fund",
+        "marketSector": "Equity",
+        "shareClassFIGI": "BBG001S87RC9",
+        "securityType2": "Mutual Fund",
+        "securityDescription": "XXGRFXX"
+      },
+      {
+        "figi": "BBG000PW97Q8",
+        "name": "EAGLE CAPITAL GROWTH FUND",
+        "ticker": "GRF",
+        "exchCode": "US",
+        "compositeFIGI": "BBG000PW97Q8",
+        "securityType": "Closed-End Fund",
+        "marketSector": "Equity",
+        "shareClassFIGI": "BBG001S87RC9",
+        "securityType2": "Mutual Fund",
+        "securityDescription": "GRF"
+      }
+    ],
+    "29250N105": [
+      {
+        "figi": "BBG000K5M1S8",
+        "name": "ENBRIDGE INC",
+        "ticker": "ENB",
+        "exchCode": "US",
+        "compositeFIGI": "BBG000K5M1S8",
+        "securityType": "Common Stock",
+        "marketSector": "Equity",
+        "shareClassFIGI": "BBG001S6Q6D7",
+        "securityType2": "Common Stock",
+        "securityDescription": "ENB"
+      }
+    ],
+    "29273V100": [
+      {
+        "figi": "BBG000BM2FL9",
+        "name": "ENERGY TRANSFER LP",
+        "ticker": "ET",
+        "exchCode": "US",
+        "compositeFIGI": "BBG000BM2FL9",
+        "securityType": "MLP",
+        "marketSector": "Equity",
+        "shareClassFIGI": "BBG001SDHNW4",
+        "securityType2": "Partnership Shares",
+        "securityDescription": "ET"
+      }
+    ],
+    "30303M102": [
+      {
+        "figi": "BBG000MM2P62",
+        "name": "META PLATFORMS INC-CLASS A",
+        "ticker": "META",
+        "exchCode": "US",
+        "compositeFIGI": "BBG000MM2P62",
+        "securityType": "Common Stock",
+        "marketSector": "Equity",
+        "shareClassFIGI": "BBG001SQCQC5",
+        "securityType2": "Common Stock",
+        "securityDescription": "META"
+      }
+    ],
+    "316092253": [
+      {
+        "figi": "BBG012V1ZBK2",
+        "name": "FIDELITY CLEAN ENERGY ETF",
+        "ticker": "FRNW",
+        "exchCode": "US",
+        "compositeFIGI": "BBG012V1ZBK2",
+        "securityType": "ETP",
+        "marketSector": "Equity",
+        "shareClassFIGI": "BBG012V1ZCF6",
+        "securityType2": "Mutual Fund",
+        "securityDescription": "FRNW"
+      }
+    ],
+    "33740U430": [
+      {
+        "figi": "BBG01RP520Q9",
+        "name": "FT USEQ UNCPPDACCL ETF - JAN",
+        "ticker": "UXJA",
+        "exchCode": "US",
+        "compositeFIGI": "BBG01RP520Q9",
+        "securityType": "ETP",
+        "marketSector": "Equity",
+        "shareClassFIGI": "BBG01RP52230",
+        "securityType2": "Mutual Fund",
+        "securityDescription": "UXJA"
+      }
+    ],
+    "345370860": [
+      {
+        "figi": "BBG000BQPC32",
+        "name": "FORD MOTOR CO",
+        "ticker": "F",
+        "exchCode": "US",
+        "compositeFIGI": "BBG000BQPC32",
+        "securityType": "Common Stock",
+        "marketSector": "Equity",
+        "shareClassFIGI": "BBG001S5TZ33",
+        "securityType2": "Common Stock",
+        "securityDescription": "F"
+      }
+    ],
+    "35671D857": [
+      {
+        "figi": "BBG000BJDB15",
+        "name": "FREEPORT-MCMORAN INC",
+        "ticker": "FCX",
+        "exchCode": "US",
+        "compositeFIGI": "BBG000BJDB15",
+        "securityType": "Common Stock",
+        "marketSector": "Equity",
+        "shareClassFIGI": "BBG001S5R3F3",
+        "securityType2": "Common Stock",
+        "securityDescription": "FCX"
+      }
+    ],
+    "37960A388": [
+      {
+        "figi": "BBG01PLXQQR2",
+        "name": "GLOBAL X LONG-TERM TR LA ETF",
+        "ticker": "LLDR",
+        "exchCode": "US",
+        "compositeFIGI": "BBG01PLXQQR2",
+        "securityType": "ETP",
+        "marketSector": "Equity",
+        "shareClassFIGI": "BBG01PLXQRM5",
+        "securityType2": "Mutual Fund",
+        "securityDescription": "LLDR"
+      }
+    ],
+    "44842D101": [
+      {
+        "figi": "BBG004SWPMY7",
+        "name": "HUTCHISON PORT HOLDINGS-ADR",
+        "ticker": "HUPHY",
+        "exchCode": "US",
+        "compositeFIGI": "BBG004SWPMY7",
+        "securityType": "ADR",
+        "marketSector": "Equity",
+        "shareClassFIGI": "BBG004SWPNQ4",
+        "securityType2": "Depositary Receipt",
+        "securityDescription": "HUPHY"
+      }
+    ],
+    "45784N692": [
+      {
+        "figi": "BBG01S3LYTZ8",
+        "name": "INNOVATOR UC BC 20 ETF  QRTL",
+        "ticker": "QBF",
+        "exchCode": "US",
+        "compositeFIGI": "BBG01S3LYTZ8",
+        "securityType": "ETP",
+        "marketSector": "Equity",
+        "shareClassFIGI": "BBG01S3LYVW6",
+        "securityType2": "Mutual Fund",
+        "securityDescription": "QBF"
+      }
+    ],
+    "458140100": [
+      {
+        "figi": "BBG000C0G1D1",
+        "name": "INTEL CORP",
+        "ticker": "INTC",
+        "exchCode": "US",
+        "compositeFIGI": "BBG000C0G1D1",
+        "securityType": "Common Stock",
+        "marketSector": "Equity",
+        "shareClassFIGI": "BBG001S5SF65",
+        "securityType2": "Common Stock",
+        "securityDescription": "INTC"
+      }
+    ],
+    "461308827": [
+      {
+        "figi": "BBG000N015T9",
+        "name": "AMER FND INV CO OF AM-F2",
+        "ticker": "ICAFX",
+        "exchCode": "US",
+        "compositeFIGI": "BBG000N015T9",
+        "securityType": "Open-End Fund",
+        "marketSector": "Equity",
+        "shareClassFIGI": "BBG001T3BJ32",
+        "securityType2": "Mutual Fund",
+        "securityDescription": "ICAFX"
+      }
+    ],
+    "46138E545": [
+      {
+        "figi": "BBG00KJR2128",
+        "name": "INVESCO MSCI GLOBAL TIMBER E",
+        "ticker": "CUT",
+        "exchCode": "US",
+        "compositeFIGI": "BBG00KJR2128",
+        "securityType": "ETP",
+        "marketSector": "Equity",
+        "shareClassFIGI": "BBG00KJR21S0",
+        "securityType2": "Mutual Fund",
+        "securityDescription": "CUT"
+      }
+    ],
+    "464287200": [
+      {
+        "figi": "BBG000BVZ4F5",
+        "name": "ISHARES CORE S&P 500 ETF",
+        "ticker": "IVV",
+        "exchCode": "US",
+        "compositeFIGI": "BBG000BVZ4F5",
+        "securityType": "ETP",
+        "marketSector": "Equity",
+        "shareClassFIGI": "BBG001SFB7R6",
+        "securityType2": "Mutual Fund",
+        "securityDescription": "IVV"
+      }
+    ],
+    "464287226": [
+      {
+        "figi": "BBG000Q123R0",
+        "name": "ISHARES CORE U.S. AGGREGATE",
+        "ticker": "AGG",
+        "exchCode": "US",
+        "compositeFIGI": "BBG000Q123R0",
+        "securityType": "ETP",
+        "marketSector": "Equity",
+        "shareClassFIGI": "BBG001SM1QT8",
+        "securityType2": "Mutual Fund",
+        "securityDescription": "AGG"
+      }
+    ],
+    "464287234": [
+      {
+        "figi": "BBG000M0P5L2",
+        "name": "ISHARES MSCI EMERGING MARKET",
+        "ticker": "EEM",
+        "exchCode": "US",
+        "compositeFIGI": "BBG000M0P5L2",
+        "securityType": "ETP",
+        "marketSector": "Equity",
+        "shareClassFIGI": "BBG001SK77D5",
+        "securityType2": "Mutual Fund",
+        "securityDescription": "EEM"
+      }
+    ],
+    "464287507": [
+      {
+        "figi": "BBG000BWC7P0",
+        "name": "ISHARES CORE S&P MIDCAP ETF",
+        "ticker": "IJH",
+        "exchCode": "US",
+        "compositeFIGI": "BBG000BWC7P0",
+        "securityType": "ETP",
+        "marketSector": "Equity",
+        "shareClassFIGI": "BBG001SFC7V0",
+        "securityType2": "Mutual Fund",
+        "securityDescription": "IJH"
+      }
+    ],
+    "46429B267": [
+      {
+        "figi": "BBG002NCKNY3",
+        "name": "ISHARES US TREASURY BOND ETF",
+        "ticker": "GOVT",
+        "exchCode": "US",
+        "compositeFIGI": "BBG002NCKNY3",
+        "securityType": "ETP",
+        "marketSector": "Equity",
+        "shareClassFIGI": "BBG002NCKPP8",
+        "securityType2": "Mutual Fund",
+        "securityDescription": "GOVT"
+      }
+    ],
+    "46432F842": [
+      {
+        "figi": "BBG003H6TR19",
+        "name": "ISHARES CORE MSCI EAFE ETF",
+        "ticker": "IEFA",
+        "exchCode": "US",
+        "compositeFIGI": "BBG003H6TR19",
+        "securityType": "ETP",
+        "marketSector": "Equity",
+        "shareClassFIGI": "BBG003H6TRS0",
+        "securityType2": "Mutual Fund",
+        "securityDescription": "IEFA"
+      }
+    ],
+    "46434G103": [
+      {
+        "figi": "BBG003HC3CQ0",
+        "name": "ISHARES CORE MSCI EMERGING",
+        "ticker": "IEMG",
+        "exchCode": "US",
+        "compositeFIGI": "BBG003HC3CQ0",
+        "securityType": "ETP",
+        "marketSector": "Equity",
+        "shareClassFIGI": "BBG003HC3DG9",
+        "securityType2": "Mutual Fund",
+        "securityDescription": "IEMG"
+      }
+    ],
+    "465562106": [
+      {
+        "figi": "BBG000BPVKZ4",
+        "name": "ITAU UNIBANCO H-SPON PRF ADR",
+        "ticker": "ITUB",
+        "exchCode": "US",
+        "compositeFIGI": "BBG000BPVKZ4",
+        "securityType": "ADR",
+        "marketSector": "Equity",
+        "shareClassFIGI": "BBG001S65TL1",
+        "securityType2": "Depositary Receipt",
+        "securityDescription": "ITUB"
+      }
+    ],
+    "46625H100": [
+      {
+        "figi": "BBG000DMBXR2",
+        "name": "JPMORGAN CHASE & CO",
+        "ticker": "JPM",
+        "exchCode": "US",
+        "compositeFIGI": "BBG000DMBXR2",
+        "securityType": "Common Stock",
+        "marketSector": "Equity",
+        "shareClassFIGI": "BBG001S8CRC3",
+        "securityType2": "Common Stock",
+        "securityDescription": "JPM"
+      }
+    ],
+    "46641Q449": [
+      {
+        "figi": "BBG00MSHT6G1",
+        "name": "JPMORGAN BETABUILDERS USD IN",
+        "ticker": "BBCB",
+        "exchCode": "US",
+        "compositeFIGI": "BBG00MSHT6G1",
+        "securityType": "ETP",
+        "marketSector": "Equity",
+        "shareClassFIGI": "BBG00MSHT760",
+        "securityType2": "Mutual Fund",
+        "securityDescription": "BBCB"
+      }
+    ],
+    "46654Q690": [
+      {
+        "figi": "BBG01MLMK407",
+        "name": "JPM ACTIV DEVELOP MKT EQ ETF",
+        "ticker": "JADE",
+        "exchCode": "US",
+        "compositeFIGI": "BBG01MLMK407",
+        "securityType": "ETP",
+        "marketSector": "Equity",
+        "shareClassFIGI": "BBG01MLMK5D0",
+        "securityType2": "Mutual Fund",
+        "securityDescription": "JADE"
+      }
+    ],
+    "478160104": [
+      {
+        "figi": "BBG000BMHYD1",
+        "name": "JOHNSON & JOHNSON",
+        "ticker": "JNJ",
+        "exchCode": "US",
+        "compositeFIGI": "BBG000BMHYD1",
+        "securityType": "Common Stock",
+        "marketSector": "Equity",
+        "shareClassFIGI": "BBG001S5SHQ9",
+        "securityType2": "Common Stock",
+        "securityDescription": "JNJ"
+      }
+    ],
+    "49177J102": [
+      {
+        "figi": "BBG01C79X561",
+        "name": "KENVUE INC",
+        "ticker": "KVUE",
+        "exchCode": "US",
+        "compositeFIGI": "BBG01C79X561",
+        "securityType": "Common Stock",
+        "marketSector": "Equity",
+        "shareClassFIGI": "BBG01C79X614",
+        "securityType2": "Common Stock",
+        "securityDescription": "KVUE"
+      }
+    ],
+    "49271V100": [
+      {
+        "figi": "BBG000TJM7F0",
+        "name": "KEURIG DR PEPPER INC",
+        "ticker": "KDP",
+        "exchCode": "US",
+        "compositeFIGI": "BBG000TJM7F0",
+        "securityType": "Common Stock",
+        "marketSector": "Equity",
+        "shareClassFIGI": "BBG001ST5W34",
+        "securityType2": "Common Stock",
+        "securityDescription": "KDP"
+      }
+    ],
+    "49456B101": [
+      {
+        "figi": "BBG0019JZ882",
+        "name": "KINDER MORGAN INC",
+        "ticker": "KMI",
+        "exchCode": "US",
+        "compositeFIGI": "BBG0019JZ882",
+        "securityType": "Common Stock",
+        "marketSector": "Equity",
+        "shareClassFIGI": "BBG001TG2YZ5",
+        "securityType2": "Common Stock",
+        "securityDescription": "KMI"
+      }
+    ],
+    "53656G357": [
+      {
+        "figi": "BBG01RXHHQX3",
+        "name": "YIELDS FOR YOU INCOME STRATE",
+        "ticker": "YFYA",
+        "exchCode": "US",
+        "compositeFIGI": "BBG01RXHHQX3",
+        "securityType": "ETP",
+        "marketSector": "Equity",
+        "shareClassFIGI": "BBG01RXHHRR8",
+        "securityType2": "Mutual Fund",
+        "securityDescription": "YFYA"
+      }
+    ],
+    "54338V101": [
+      {
+        "figi": "BBG000RKFT05",
+        "name": "LONZA GROUP AG-UNSPON ADR",
+        "ticker": "LZAGY",
+        "exchCode": "US",
+        "compositeFIGI": "BBG000RKFT05",
+        "securityType": "ADR",
+        "marketSector": "Equity",
+        "shareClassFIGI": "BBG001T3P092",
+        "securityType2": "Depositary Receipt",
+        "securityDescription": "LZAGY"
+      }
+    ],
+    "56501R106": [
+      {
+        "figi": "BBG000C0Q0K4",
+        "name": "MANULIFE FINANCIAL CORP",
+        "ticker": "MFC",
+        "exchCode": "US",
+        "compositeFIGI": "BBG000C0Q0K4",
+        "securityType": "Common Stock",
+        "marketSector": "Equity",
+        "shareClassFIGI": "BBG001S76KD6",
+        "securityType2": "Common Stock",
+        "securityDescription": "MFC"
+      }
+    ],
+    "58933Y105": [
+      {
+        "figi": "BBG000BPD168",
+        "name": "MERCK & CO. INC.",
+        "ticker": "MRK",
+        "exchCode": "US",
+        "compositeFIGI": "BBG000BPD168",
+        "securityType": "Common Stock",
+        "marketSector": "Equity",
+        "shareClassFIGI": "BBG001S5TC52",
+        "securityType2": "Common Stock",
+        "securityDescription": "MRK"
+      }
+    ],
+    "594918104": [
+      {
+        "figi": "BBG000BPH459",
+        "name": "MICROSOFT CORP",
+        "ticker": "MSFT",
+        "exchCode": "US",
+        "compositeFIGI": "BBG000BPH459",
+        "securityType": "Common Stock",
+        "marketSector": "Equity",
+        "shareClassFIGI": "BBG001S5TD05",
+        "securityType2": "Common Stock",
+        "securityDescription": "MSFT"
+      }
+    ],
+    "617446448": [
+      {
+        "figi": "BBG000BLZRJ2",
+        "name": "MORGAN STANLEY",
+        "ticker": "MS",
+        "exchCode": "US",
+        "compositeFIGI": "BBG000BLZRJ2",
+        "securityType": "Common Stock",
+        "marketSector": "Equity",
+        "shareClassFIGI": "BBG001S9V5Z3",
+        "securityType2": "Common Stock",
+        "securityDescription": "MS"
+      }
+    ],
+    "640655114": [
+      {
+        "figi": "BBG0186GM549",
+        "name": "NEOVOLTA INC -CW27",
+        "ticker": "NEOVW",
+        "exchCode": "US",
+        "compositeFIGI": "BBG0186GM549",
+        "securityType": "Equity WRT",
+        "marketSector": "Equity",
+        "shareClassFIGI": null,
+        "securityType2": "Warrant",
+        "securityDescription": "NEOVW"
+      }
+    ],
+    "64110L106": [
+      {
+        "figi": "BBG000CL9VN6",
+        "name": "NETFLIX INC",
+        "ticker": "NFLX",
+        "exchCode": "US",
+        "compositeFIGI": "BBG000CL9VN6",
+        "securityType": "Common Stock",
+        "marketSector": "Equity",
+        "shareClassFIGI": "BBG001SF6L46",
+        "securityType2": "Common Stock",
+        "securityDescription": "NFLX"
+      }
+    ],
+    "65339F101": [
+      {
+        "figi": "BBG000BJSBJ0",
+        "name": "NEXTERA ENERGY INC",
+        "ticker": "NEE",
+        "exchCode": "US",
+        "compositeFIGI": "BBG000BJSBJ0",
+        "securityType": "Common Stock",
+        "marketSector": "Equity",
+        "shareClassFIGI": "BBG001S5RB29",
+        "securityType2": "Common Stock",
+        "securityDescription": "NEE"
+      }
+    ],
+    "654902204": [
+      {
+        "figi": "BBG000BNGBW9",
+        "name": "NOKIA CORP-SPON ADR",
+        "ticker": "NOK",
+        "exchCode": "US",
+        "compositeFIGI": "BBG000BNGBW9",
+        "securityType": "ADR",
+        "marketSector": "Equity",
+        "shareClassFIGI": "BBG001SCPCG9",
+        "securityType2": "Depositary Receipt",
+        "securityDescription": "NOK"
+      }
+    ],
+    "67066G104": [
+      {
+        "figi": "BBG000BBJQV0",
+        "name": "NVIDIA CORP",
+        "ticker": "NVDA",
+        "exchCode": "US",
+        "compositeFIGI": "BBG000BBJQV0",
+        "securityType": "Common Stock",
+        "marketSector": "Equity",
+        "shareClassFIGI": "BBG001S5TZJ6",
+        "securityType2": "Common Stock",
+        "securityDescription": "NVDA"
+      }
+    ],
+    "68389X105": [
+      {
+        "figi": "BBG000BQLTW7",
+        "name": "ORACLE CORP",
+        "ticker": "ORCL",
+        "exchCode": "US",
+        "compositeFIGI": "BBG000BQLTW7",
+        "securityType": "Common Stock",
+        "marketSector": "Equity",
+        "shareClassFIGI": "BBG001S5SJG6",
+        "securityType2": "Common Stock",
+        "securityDescription": "ORCL"
+      }
+    ],
+    "69331C108": [
+      {
+        "figi": "BBG000BQWPC5",
+        "name": "P G & E CORP",
+        "ticker": "PCG",
+        "exchCode": "US",
+        "compositeFIGI": "BBG000BQWPC5",
+        "securityType": "Common Stock",
+        "marketSector": "Equity",
+        "shareClassFIGI": "BBG001S5V206",
+        "securityType2": "Common Stock",
+        "securityDescription": "PCG"
+      }
+    ],
+    "69608A108": [
+      {
+        "figi": "BBG000N7QR55",
+        "name": "PALANTIR TECHNOLOGIES INC-A",
+        "ticker": "PLTR",
+        "exchCode": "US",
+        "compositeFIGI": "BBG000N7QR55",
+        "securityType": "Common Stock",
+        "marketSector": "Equity",
+        "shareClassFIGI": "BBG001T53796",
+        "securityType2": "Common Stock",
+        "securityDescription": "PLTR"
+      }
+    ],
+    "717081103": [
+      {
+        "figi": "BBG000BR2B91",
+        "name": "PFIZER INC",
+        "ticker": "PFE",
+        "exchCode": "US",
+        "compositeFIGI": "BBG000BR2B91",
+        "securityType": "Common Stock",
+        "marketSector": "Equity",
+        "shareClassFIGI": "BBG001S5V466",
+        "securityType2": "Common Stock",
+        "securityDescription": "PFE"
+      }
+    ],
+    "718172109": [
+      {
+        "figi": "BBG000J2XL74",
+        "name": "PHILIP MORRIS INTERNATIONAL",
+        "ticker": "PM",
+        "exchCode": "US",
+        "compositeFIGI": "BBG000J2XL74",
+        "securityType": "Common Stock",
+        "marketSector": "Equity",
+        "shareClassFIGI": "BBG001STP9N1",
+        "securityType2": "Common Stock",
+        "securityDescription": "PM"
+      }
+    ],
+    "72919P202": [
+      {
+        "figi": "BBG000C1XSP8",
+        "name": "PLUG POWER INC",
+        "ticker": "PLUG",
+        "exchCode": "US",
+        "compositeFIGI": "BBG000C1XSP8",
+        "securityType": "Common Stock",
+        "marketSector": "Equity",
+        "shareClassFIGI": "BBG001S6GJB2",
+        "securityType2": "Common Stock",
+        "securityDescription": "PLUG"
+      }
+    ],
+    "742718109": [
+      {
+        "figi": "BBG000BR2TH3",
+        "name": "PROCTER & GAMBLE CO/THE",
+        "ticker": "PG",
+        "exchCode": "US",
+        "compositeFIGI": "BBG000BR2TH3",
+        "securityType": "Common Stock",
+        "marketSector": "Equity",
+        "shareClassFIGI": "BBG001S5V4L9",
+        "securityType2": "Common Stock",
+        "securityDescription": "PG"
+      }
+    ],
+    "74348A608": [
+      {
+        "figi": "BBG001LWLBP8",
+        "name": "PROSHARES SHORT 7-10 YR TSY",
+        "ticker": "TBX",
+        "exchCode": "US",
+        "compositeFIGI": "BBG001LWLBP8",
+        "securityType": "ETP",
+        "marketSector": "Equity",
+        "shareClassFIGI": "BBG001V0YNS4",
+        "securityType2": "Mutual Fund",
+        "securityDescription": "TBX"
+      }
+    ],
+    "77311W101": [
+      {
+        "figi": "BBG00VY1MYW7",
+        "name": "ROCKET COS INC-CLASS A",
+        "ticker": "RKT",
+        "exchCode": "US",
+        "compositeFIGI": "BBG00VY1MYW7",
+        "securityType": "Common Stock",
+        "marketSector": "Equity",
+        "shareClassFIGI": "BBG00VY1MZN4",
+        "securityType2": "Common Stock",
+        "securityDescription": "RKT"
+      }
+    ],
+    "78464A854": [
+      {
+        "figi": "BBG000KMT5K3",
+        "name": "STE STR SPDR PT S&P 500 ETF",
+        "ticker": "SPYM",
+        "exchCode": "US",
+        "compositeFIGI": "BBG000KMT5K3",
+        "securityType": "ETP",
+        "marketSector": "Equity",
+        "shareClassFIGI": "BBG001SPTB87",
+        "securityType2": "Mutual Fund",
+        "securityDescription": "SPYM"
+      }
+    ],
+    "806857108": [
+      {
+        "figi": "BBG000BT41Q8",
+        "name": "SLB LTD",
+        "ticker": "SLB",
+        "exchCode": "US",
+        "compositeFIGI": "BBG000BT41Q8",
+        "securityType": "Common Stock",
+        "marketSector": "Equity",
+        "shareClassFIGI": "BBG001S5W4C8",
+        "securityType2": "Common Stock",
+        "securityDescription": "SLB"
+      }
+    ],
+    "808513105": [
+      {
+        "figi": "BBG000BSLZY7",
+        "name": "SCHWAB (CHARLES) CORP",
+        "ticker": "SCHW",
+        "exchCode": "US",
+        "compositeFIGI": "BBG000BSLZY7",
+        "securityType": "Common Stock",
+        "marketSector": "Equity",
+        "shareClassFIGI": "BBG001S5VXD4",
+        "securityType2": "Common Stock",
+        "securityDescription": "SCHW"
+      }
+    ],
+    "808524201": [
+      {
+        "figi": "BBG000PS05G1",
+        "name": "SCHWAB US LARGE-CAP ETF",
+        "ticker": "SCHX",
+        "exchCode": "US",
+        "compositeFIGI": "BBG000PS05G1",
+        "securityType": "ETP",
+        "marketSector": "Equity",
+        "shareClassFIGI": "BBG001T5XQV6",
+        "securityType2": "Mutual Fund",
+        "securityDescription": "SCHX"
+      }
+    ],
+    "808524300": [
+      {
+        "figi": "BBG000Q0CS41",
+        "name": "SCHWAB US LARGE-CAP GROWTH",
+        "ticker": "SCHG",
+        "exchCode": "US",
+        "compositeFIGI": "BBG000Q0CS41",
+        "securityType": "ETP",
+        "marketSector": "Equity",
+        "shareClassFIGI": "BBG001T66WN0",
+        "securityType2": "Mutual Fund",
+        "securityDescription": "SCHG"
+      }
+    ],
+    "808524797": [
+      {
+        "figi": "BBG0025RWKW5",
+        "name": "SCHWAB US DVD EQUITY ETF",
+        "ticker": "SCHD",
+        "exchCode": "US",
+        "compositeFIGI": "BBG0025RWKW5",
+        "securityType": "ETP",
+        "marketSector": "Equity",
+        "shareClassFIGI": "BBG0025RWLM4",
+        "securityType2": "Mutual Fund",
+        "securityDescription": "SCHD"
+      }
+    ],
+    "808524805": [
+      {
+        "figi": "BBG000PS0RP3",
+        "name": "SCHWAB INTL EQUITY ETF",
+        "ticker": "SCHF",
+        "exchCode": "US",
+        "compositeFIGI": "BBG000PS0RP3",
+        "securityType": "ETP",
+        "marketSector": "Equity",
+        "shareClassFIGI": "BBG001T5XQY3",
+        "securityType2": "Mutual Fund",
+        "securityDescription": "SCHF"
+      }
+    ],
+    "81752T437": [
+      {
+        "figi": "BBG01RQ9JP50",
+        "name": "INFRASTR CAP BOND INCOME ETF",
+        "ticker": "BNDS",
+        "exchCode": "US",
+        "compositeFIGI": "BBG01RQ9JP50",
+        "securityType": "ETP",
+        "marketSector": "Equity",
+        "shareClassFIGI": "BBG01RQ9JQ03",
+        "securityType2": "Mutual Fund",
+        "securityDescription": "BNDS"
+      }
+    ],
+    "82509L107": [
+      {
+        "figi": "BBG008HBD923",
+        "name": "SHOPIFY INC - CLASS A",
+        "ticker": "SHOP",
+        "exchCode": "US",
+        "compositeFIGI": "BBG008HBD923",
+        "securityType": "Common Stock",
+        "marketSector": "Equity",
+        "shareClassFIGI": "BBG004DW5NC7",
+        "securityType2": "Common Stock",
+        "securityDescription": "SHOP"
+      }
+    ],
+    "86280R126": [
+      {
+        "figi": "BBG01XMMDBL1",
+        "name": "EVENTIDE LARGE CAP VALUE ETF",
+        "ticker": "ESLV",
+        "exchCode": "US",
+        "compositeFIGI": "BBG01XMMDBL1",
+        "securityType": "ETP",
+        "marketSector": "Equity",
+        "shareClassFIGI": "BBG01XMMDCK0",
+        "securityType2": "Mutual Fund",
+        "securityDescription": "ESLV"
+      }
+    ],
+    "867224107": [
+      {
+        "figi": "BBG000BRK7L6",
+        "name": "SUNCOR ENERGY INC",
+        "ticker": "SU",
+        "exchCode": "US",
+        "compositeFIGI": "BBG000BRK7L6",
+        "securityType": "Common Stock",
+        "marketSector": "Equity",
+        "shareClassFIGI": "BBG001S5YSF0",
+        "securityType2": "Common Stock",
+        "securityDescription": "SU"
+      }
+    ],
+    "877409102": [
+      {
+        "figi": "BBG000JN76N2",
+        "name": "TAYLOR WIMPEY PLC-UNSPON ADR",
+        "ticker": "TWODY",
+        "exchCode": "US",
+        "compositeFIGI": "BBG000JN76N2",
+        "securityType": "ADR",
+        "marketSector": "Equity",
+        "shareClassFIGI": "BBG001T38WX4",
+        "securityType2": "Depositary Receipt",
+        "securityDescription": "TWODY"
+      }
+    ],
+    "88160R101": [
+      {
+        "figi": "BBG000N9MNX3",
+        "name": "TESLA INC",
+        "ticker": "TSLA",
+        "exchCode": "US",
+        "compositeFIGI": "BBG000N9MNX3",
+        "securityType": "Common Stock",
+        "marketSector": "Equity",
+        "shareClassFIGI": "BBG001SQKGD7",
+        "securityType2": "Common Stock",
+        "securityDescription": "TSLA"
+      }
+    ],
+    "88636V751": [
+      {
+        "figi": "BBG01V30MBF1",
+        "name": "YLDMX MSTR PRMC & IT 25 ETF",
+        "ticker": "MSST",
+        "exchCode": "US",
+        "compositeFIGI": "BBG01V30MBF1",
+        "securityType": "ETP",
+        "marketSector": "Equity",
+        "shareClassFIGI": "BBG01V30MCC2",
+        "securityType2": "Mutual Fund",
+        "securityDescription": "MSST"
+      }
+    ],
+    "88636X708": [
+      {
+        "figi": "BBG01LQYD996",
+        "name": "YIELDMAX ULTRA OPTION INC",
+        "ticker": "ULTY",
+        "exchCode": "US",
+        "compositeFIGI": "BBG01LQYD996",
+        "securityType": "ETP",
+        "marketSector": "Equity",
+        "shareClassFIGI": "BBG01LQYDB46",
+        "securityType2": "Mutual Fund",
+        "securityDescription": "ULTY"
+      }
+    ],
+    "891160509": [
+      {
+        "figi": "BBG000BXBHJ4",
+        "name": "TORONTO-DOMINION BANK",
+        "ticker": "TD",
+        "exchCode": "US",
+        "compositeFIGI": "BBG000BXBHJ4",
+        "securityType": "Common Stock",
+        "marketSector": "Equity",
+        "shareClassFIGI": "BBG001S60L15",
+        "securityType2": "Common Stock",
+        "securityDescription": "TD"
+      }
+    ],
+    "90353T100": [
+      {
+        "figi": "BBG002B04MT8",
+        "name": "UBER TECHNOLOGIES INC",
+        "ticker": "UBER",
+        "exchCode": "US",
+        "compositeFIGI": "BBG002B04MT8",
+        "securityType": "Common Stock",
+        "marketSector": "Equity",
+        "shareClassFIGI": "BBG002B04MW4",
+        "securityType2": "Common Stock",
+        "securityDescription": "UBER"
+      }
+    ],
+    "91912E105": [
+      {
+        "figi": "BBG000BN5LG7",
+        "name": "VALE SA-SP ADR",
+        "ticker": "VALE",
+        "exchCode": "US",
+        "compositeFIGI": "BBG000BN5LG7",
+        "securityType": "ADR",
+        "marketSector": "Equity",
+        "shareClassFIGI": "BBG001SB54S8",
+        "securityType2": "Depositary Receipt",
+        "securityDescription": "VALE"
+      }
+    ],
+    "921937835": [
+      {
+        "figi": "BBG000BZZS63",
+        "name": "VANGUARD TOTAL BOND MARKET",
+        "ticker": "BND",
+        "exchCode": "US",
+        "compositeFIGI": "BBG000BZZS63",
+        "securityType": "ETP",
+        "marketSector": "Equity",
+        "shareClassFIGI": "BBG001SK7DK4",
+        "securityType2": "Mutual Fund",
+        "securityDescription": "BND"
+      }
+    ],
+    "921943858": [
+      {
+        "figi": "BBG000QVFB47",
+        "name": "VANGUARD FTSE DEVELOPED ETF",
+        "ticker": "VEA",
+        "exchCode": "US",
+        "compositeFIGI": "BBG000QVFB47",
+        "securityType": "ETP",
+        "marketSector": "Equity",
+        "shareClassFIGI": "BBG001SSPWL4",
+        "securityType2": "Mutual Fund",
+        "securityDescription": "VEA"
+      }
+    ],
+    "92203J407": [
+      {
+        "figi": "BBG004N1LFT5",
+        "name": "VANGUARD TOTAL INTL BOND ETF",
+        "ticker": "BNDX",
+        "exchCode": "US",
+        "compositeFIGI": "BBG004N1LFT5",
+        "securityType": "ETP",
+        "marketSector": "Equity",
+        "shareClassFIGI": "BBG004N1LGK2",
+        "securityType2": "Mutual Fund",
+        "securityDescription": "BNDX"
+      }
+    ],
+    "922042858": [
+      {
+        "figi": "BBG000HT88C8",
+        "name": "VANGUARD FTSE EMERGING MARKE",
+        "ticker": "VWO",
+        "exchCode": "US",
+        "compositeFIGI": "BBG000HT88C8",
+        "securityType": "ETP",
+        "marketSector": "Equity",
+        "shareClassFIGI": "BBG001SHTTZ6",
+        "securityType2": "Mutual Fund",
+        "securityDescription": "VWO"
+      }
+    ],
+    "92343V104": [
+      {
+        "figi": "BBG000HS77T5",
+        "name": "VERIZON COMMUNICATIONS INC",
+        "ticker": "VZ",
+        "exchCode": "US",
+        "compositeFIGI": "BBG000HS77T5",
+        "securityType": "Common Stock",
+        "marketSector": "Equity",
+        "shareClassFIGI": "BBG001S67QY1",
+        "securityType2": "Common Stock",
+        "securityDescription": "VZ"
+      }
+    ],
+    "92826C839": [
+      {
+        "figi": "BBG000PSKYX7",
+        "name": "VISA INC-CLASS A SHARES",
+        "ticker": "V",
+        "exchCode": "US",
+        "compositeFIGI": "BBG000PSKYX7",
+        "securityType": "Common Stock",
+        "marketSector": "Equity",
+        "shareClassFIGI": "BBG001SRCFY3",
+        "securityType2": "Common Stock",
+        "securityDescription": "V"
+      }
+    ],
+    "931142103": [
+      {
+        "figi": "BBG000BWXBC2",
+        "name": "WALMART INC",
+        "ticker": "WMT",
+        "exchCode": "US",
+        "compositeFIGI": "BBG000BWXBC2",
+        "securityType": "Common Stock",
+        "marketSector": "Equity",
+        "shareClassFIGI": "BBG001S5XH92",
+        "securityType2": "Common Stock",
+        "securityDescription": "WMT"
+      }
+    ],
+    "934423104": [
+      {
+        "figi": "BBG011386VF4",
+        "name": "WARNER BROS DISCOVERY INC",
+        "ticker": "WBD",
+        "exchCode": "US",
+        "compositeFIGI": "BBG011386VF4",
+        "securityType": "Common Stock",
+        "marketSector": "Equity",
+        "shareClassFIGI": "BBG011386VG3",
+        "securityType2": "Common Stock",
+        "securityDescription": "WBD"
+      }
+    ],
+    "949746101": [
+      {
+        "figi": "BBG000BWQFY7",
+        "name": "WELLS FARGO & CO",
+        "ticker": "WFC",
+        "exchCode": "US",
+        "compositeFIGI": "BBG000BWQFY7",
+        "securityType": "Common Stock",
+        "marketSector": "Equity",
+        "shareClassFIGI": "BBG001S5XF23",
+        "securityType2": "Common Stock",
+        "securityDescription": "WFC"
+      }
+    ]
+  },
+  "errors": {
+    "006190228": "Invalid idValue format.",
+    "006702623": "Invalid idValue format.",
+    "00775Y355": "unknown shape: {'warning': 'No identifier found.'}",
+    "00B02PY11": "Invalid idValue format.",
+    "09073M904": "Invalid idValue format.",
+    "143658300": "unknown shape: {'warning': 'No identifier found.'}",
+    "247131303": "unknown shape: {'warning': 'No identifier found.'}",
+    "30231G102": "unknown shape: {'warning': 'No identifier found.'}",
+    "329882225": "Invalid idValue format.",
+    "329882250": "Invalid idValue format.",
+    "34354p105": "unknown shape: {'warning': 'No identifier found.'}",
+    "42225T957": "Invalid idValue format.",
+    "442871112": "Invalid idValue format.",
+    "46432f339": "unknown shape: {'warning': 'No identifier found.'}",
+    "49326MAA3": "unknown shape: {'warning': 'No identifier found.'}",
+    "54811BZH7": "unknown shape: {'warning': 'No identifier found.'}",
+    "549498952": "Invalid idValue format.",
+    "881624909": "Invalid idValue format.",
+    "912797RF6": "unknown shape: {'warning': 'No identifier found.'}",
+    "912828YX2": "unknown shape: {'warning': 'No identifier found.'}",
+    "91282CPE5": "unknown shape: {'warning': 'No identifier found.'}",
+    "92346j108": "unknown shape: {'warning': 'No identifier found.'}",
+    "92778VME5": "unknown shape: {'warning': 'No identifier found.'}",
+    "931CVR013": "unknown shape: {'warning': 'No identifier found.'}",
+    "F92124100": "unknown shape: {'warning': 'No identifier found.'}",
+    "G0593M107": "unknown shape: {'warning': 'No identifier found.'}",
+    "G2703G103": "unknown shape: {'warning': 'No identifier found.'}",
+    "G4124C109": "unknown shape: {'warning': 'No identifier found.'}",
+    "G57Y3D109": "unknown shape: {'warning': 'No identifier found.'}",
+    "G5960L103": "unknown shape: {'warning': 'No identifier found.'}",
+    "G6683N103": "unknown shape: {'warning': 'No identifier found.'}",
+    "G7945M107": "unknown shape: {'warning': 'No identifier found.'}",
+    "H42097107": "unknown shape: {'warning': 'No identifier found.'}",
+    "H8817H100": "unknown shape: {'warning': 'No identifier found.'}",
+    "M5R635116": "unknown shape: {'warning': 'No identifier found.'}",
+    "N20944109": "unknown shape: {'warning': 'No identifier found.'}",
+    "N82405106": "unknown shape: {'warning': 'No identifier found.'}",
+    "SBLD13F28": "unknown shape: {'warning': 'No identifier found.'}",
+    "ZM7431376": "unknown shape: {'warning': 'No identifier found.'}"
+  }
+}

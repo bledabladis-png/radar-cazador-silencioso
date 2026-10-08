@@ -232,14 +232,14 @@ Cadena:
 
 | Directorio | Ficheros | Contenido |
 |---|---:|---|
-| `a64_integration_b1_p61_p38` | 13 | Integracion B1 + P61 + P38 |
+| `a64_integration_b1_p61_p38` | 10 | Integracion B1 + P61 + P38 |
 | `b2_pit_cierre` | 2 | Cierre B2-PIT |
-| `nipc_gate0_baseline` | 5 | Baseline NIPC |
-| `nipc_gate0_openfigi` | 9 | Validacion OpenFIGI |
-| `nipc_gate0_probe` | 11 | Probes NIPC |
-| `nipc_gate0_target_identity` | 11 | Identidad target |
-| `nipc_gate0_target_identity_top2000` | 10 | Top2000 |
-| `nipc_gate0_top2000_v2` | 6 | Top2000 v2 |
+| `nipc_gate0_baseline` | 4 | Baseline NIPC |
+| `nipc_gate0_openfigi` | 7 | Validacion OpenFIGI |
+| `nipc_gate0_probe` | 7 | Probes NIPC |
+| `nipc_gate0_target_identity` | 9 | Identidad target |
+| `nipc_gate0_target_identity_top2000` | 9 | Top2000 |
+| `nipc_gate0_top2000_v2` | 5 | Top2000 v2 |
 
 Los ficheros de evidencia son reproducibles con los scripts de la Seccion 5.
 

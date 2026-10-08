@@ -1,0 +1,220 @@
+
+========================================================================
+CARGANDO Q4 2025 y Q1 2026
+========================================================================
+Q4_2025 SUBMISSION=8635 INFOTABLE=3211193
+Q1_2026 SUBMISSION=8762 INFOTABLE=3239273
+
+========================================================================
+TOP 50 CIKs por sum(SSHPRNAMT) - Q4 2025
+========================================================================
+  CIK=0000102909  shares=    62,442,074,612  name=VANGUARD GROUP INC
+  CIK=0002012383  shares=    56,138,010,050  name=BlackRock, Inc.
+  CIK=0000093751  shares=    25,475,515,149  name=STATE STREET CORP
+  CIK=0000895421  shares=    17,995,019,392  name=MORGAN STANLEY
+  CIK=0000315066  shares=    17,336,642,577  name=FMR LLC
+  CIK=0001214717  shares=    14,479,052,163  name=GEODE CAPITAL MANAGEMENT, LLC
+  CIK=0000070858  shares=    13,740,836,842  name=BANK OF AMERICA CORP /DE/
+  CIK=0000019617  shares=    12,581,023,607  name=JPMORGAN CHASE & CO
+  CIK=0000884546  shares=     8,365,328,809  name=CHARLES SCHWAB INVESTMENT MANAGEMENT INC
+  CIK=0000886982  shares=     7,872,124,782  name=GOLDMAN SACHS GROUP INC
+  CIK=0001374170  shares=     7,516,874,735  name=NORGES BANK
+  CIK=0000354204  shares=     7,437,918,143  name=DIMENSIONAL FUND ADVISORS LP
+  CIK=0000914208  shares=     7,093,459,451  name=Invesco Ltd.
+  CIK=0000073124  shares=     7,015,300,796  name=NORTHERN TRUST CORP
+  CIK=0000080255  shares=     6,933,647,331  name=PRICE T ROWE ASSOCIATES INC /MD/
+  CIK=0001610520  shares=     6,524,895,878  name=UBS Group AG
+  CIK=0001422849  shares=     5,590,997,484  name=Capital World Investors
+  CIK=0001000275  shares=     5,583,135,451  name=ROYAL BANK OF CANADA
+  CIK=0000902219  shares=     5,442,971,637  name=WELLINGTON MANAGEMENT GROUP LLP
+  CIK=0001390777  shares=     5,095,834,181  name=Bank of New York Mellon Corp
+  CIK=0001403438  shares=     4,964,373,731  name=LPL Financial LLC
+  CIK=0000072971  shares=     4,776,968,570  name=WELLS FARGO & COMPANY/MN
+  CIK=0001562230  shares=     4,711,464,064  name=Capital International Investors
+  CIK=0000820027  shares=     4,552,592,683  name=AMERIPRISE FINANCIAL INC
+  CIK=0001422848  shares=     4,093,177,592  name=Capital Research Global Investors
+  CIK=0001407543  shares=     3,938,351,961  name=ENVESTNET ASSET MANAGEMENT INC
+  CIK=0001897612  shares=     3,696,795,800  name=T. Rowe Price Investment Management, Inc.
+  CIK=0000038777  shares=     3,658,707,216  name=FRANKLIN RESOURCES INC
+  CIK=0000764068  shares=     3,648,883,037  name=Legal & General Group Plc
+  CIK=0001871926  shares=     3,424,895,936  name=Nuveen, LLC
+  CIK=0000861177  shares=     3,403,906,764  name=UBS AM, a distinct business unit of UBS ASSET MANAGEMEN
+  CIK=0000720005  shares=     3,320,197,702  name=RAYMOND JAMES FINANCIAL INC
+  CIK=0001273087  shares=     2,957,673,666  name=MILLENNIUM MANAGEMENT LLC
+  CIK=0000850529  shares=     2,931,127,625  name=Fisher Asset Management, LLC
+  CIK=0000948046  shares=     2,913,206,293  name=DEUTSCHE BANK AG\
+  CIK=0000912938  shares=     2,831,231,781  name=MASSACHUSETTS FINANCIAL SERVICES CO /MA/
+  CIK=0000748054  shares=     2,806,535,723  name=AMERICAN CENTURY COMPANIES INC
+  CIK=0001330387  shares=     2,731,344,201  name=Amundi
+  CIK=0001109448  shares=     2,721,322,296  name=ALLIANCEBERNSTEIN L.P.
+  CIK=0001423053  shares=     2,717,212,732  name=CITADEL ADVISORS LLC
+  CIK=0001167557  shares=     2,667,193,021  name=AQR CAPITAL MANAGEMENT LLC
+  CIK=0000927971  shares=     2,550,079,575  name=BANK OF MONTREAL /CAN/
+  CIK=0001009207  shares=     2,490,042,098  name=D. E. Shaw & Co., Inc.
+  CIK=0001164508  shares=     2,473,912,645  name=ARROWSTREET CAPITAL, LIMITED PARTNERSHIP
+  CIK=0000200217  shares=     2,440,938,732  name=Dodge & Cox
+  CIK=0001067983  shares=     2,440,749,360  name=Berkshire Hathaway Inc
+  CIK=0001825214  shares=     2,392,247,946  name=Ghisallo Capital Management LLC
+  CIK=0000312069  shares=     2,333,016,513  name=BARCLAYS PLC
+  CIK=0000869178  shares=     2,310,938,541  name=VAN ECK ASSOCIATES CORP
+  CIK=0001126328  shares=     2,029,166,497  name=PRINCIPAL FINANCIAL GROUP INC
+
+========================================================================
+TOP 50 CIKs por sum(SSHPRNAMT) - Q1 2026
+========================================================================
+  CIK=0002012383  shares=    56,696,397,221  name=BlackRock, Inc.
+  CIK=0002100119  shares=    35,329,105,562  name=VANGUARD CAPITAL MANAGEMENT LLC
+  CIK=0000093751  shares=    25,747,618,586  name=STATE STREET CORP
+  CIK=0002100121  shares=    21,030,554,644  name=VANGUARD PORTFOLIO MANAGEMENT LLC
+  CIK=0001825214  shares=    20,690,812,146  name=Ghisallo Capital Management LLC
+  CIK=0000895421  shares=    18,260,853,727  name=MORGAN STANLEY
+  CIK=0000315066  shares=    17,564,535,541  name=FMR LLC
+  CIK=0001214717  shares=    14,976,114,036  name=GEODE CAPITAL MANAGEMENT, LLC
+  CIK=0000070858  shares=    14,281,222,583  name=BANK OF AMERICA CORP /DE/
+  CIK=0000019617  shares=    13,358,759,635  name=JPMORGAN CHASE & CO
+  CIK=0000886982  shares=     8,803,361,754  name=GOLDMAN SACHS GROUP INC
+  CIK=0000884546  shares=     8,386,304,943  name=CHARLES SCHWAB INVESTMENT MANAGEMENT INC
+  CIK=0001610520  shares=     7,644,396,758  name=UBS Group AG
+  CIK=0000354204  shares=     7,547,459,133  name=DIMENSIONAL FUND ADVISORS LP
+  CIK=0000914208  shares=     7,378,235,089  name=Invesco Ltd.
+  CIK=0000073124  shares=     7,076,958,071  name=NORTHERN TRUST CORP
+  CIK=0000080255  shares=     6,956,487,078  name=PRICE T ROWE ASSOCIATES INC /MD/
+  CIK=0001422849  shares=     5,950,738,605  name=Capital World Investors
+  CIK=0001000275  shares=     5,497,541,661  name=ROYAL BANK OF CANADA
+  CIK=0001403438  shares=     5,399,255,600  name=LPL Financial LLC
+  CIK=0000902219  shares=     5,305,307,176  name=WELLINGTON MANAGEMENT GROUP LLP
+  CIK=0001390777  shares=     5,279,537,309  name=Bank of New York Mellon Corp
+  CIK=0001422848  shares=     4,924,179,757  name=Capital Research Global Investors
+  CIK=0000072971  shares=     4,889,163,472  name=WELLS FARGO & COMPANY/MN
+  CIK=0001407543  shares=     4,645,659,401  name=ENVESTNET ASSET MANAGEMENT INC
+  CIK=0000820027  shares=     4,578,311,088  name=AMERIPRISE FINANCIAL INC
+  CIK=0000933478  shares=     4,124,421,637  name=VANGUARD FIDUCIARY TRUST CO
+  CIK=0000038777  shares=     3,833,837,129  name=FRANKLIN RESOURCES INC
+  CIK=0000861177  shares=     3,671,081,986  name=UBS AM, a distinct business unit of UBS ASSET MANAGEMEN
+  CIK=0000764068  shares=     3,620,911,854  name=Legal & General Group Plc
+  CIK=0000720005  shares=     3,484,978,253  name=RAYMOND JAMES FINANCIAL INC
+  CIK=0001871926  shares=     3,452,210,770  name=Nuveen, LLC
+  CIK=0001562230  shares=     3,353,036,163  name=Capital International Investors
+  CIK=0001167557  shares=     3,263,147,340  name=AQR CAPITAL MANAGEMENT LLC
+  CIK=0001330387  shares=     3,033,207,853  name=Amundi
+  CIK=0001273087  shares=     2,999,865,194  name=MILLENNIUM MANAGEMENT LLC
+  CIK=0000850529  shares=     2,990,156,390  name=Fisher Asset Management, LLC
+  CIK=0000948046  shares=     2,952,162,817  name=DEUTSCHE BANK AG\
+  CIK=0000312069  shares=     2,901,630,187  name=BARCLAYS PLC
+  CIK=0001179392  shares=     2,842,367,153  name=TWO SIGMA INVESTMENTS, LP
+  CIK=0000748054  shares=     2,812,574,512  name=AMERICAN CENTURY COMPANIES INC
+  CIK=0001109448  shares=     2,687,854,134  name=ALLIANCEBERNSTEIN L.P.
+  CIK=0001423053  shares=     2,676,195,274  name=CITADEL ADVISORS LLC
+  CIK=0001009207  shares=     2,652,336,283  name=D. E. Shaw & Co., Inc.
+  CIK=0000912938  shares=     2,571,855,892  name=MASSACHUSETTS FINANCIAL SERVICES CO /MA/
+  CIK=0000927971  shares=     2,561,983,200  name=BANK OF MONTREAL /CAN/
+  CIK=0001164508  shares=     2,545,626,021  name=ARROWSTREET CAPITAL, LIMITED PARTNERSHIP
+  CIK=0000200217  shares=     2,445,955,077  name=Dodge & Cox
+  CIK=0001067983  shares=     2,429,461,184  name=Berkshire Hathaway Inc
+  CIK=0000869178  shares=     2,408,434,849  name=VAN ECK ASSOCIATES CORP
+
+========================================================================
+UNION TOP 50 (n=54)
+========================================================================
+
+========================================================================
+CLASIFICACION FILER STATUS + NT_TO_HR
+========================================================================
+  CIK=0000019617  Q4=si  Q1=si  Q4_sh= 12,581,023,607  Q1_sh= 13,358,759,635  CONTINUOUS_FILER  nt_hr=False  targets=[]
+  CIK=0000038777  Q4=si  Q1=si  Q4_sh=  3,658,707,216  Q1_sh=  3,833,837,129  CONTINUOUS_FILER  nt_hr=False  targets=[]
+  CIK=0000070858  Q4=si  Q1=si  Q4_sh= 13,740,836,842  Q1_sh= 14,281,222,583  CONTINUOUS_FILER  nt_hr=False  targets=[]
+  CIK=0000072971  Q4=si  Q1=si  Q4_sh=  4,776,968,570  Q1_sh=  4,889,163,472  CONTINUOUS_FILER  nt_hr=False  targets=[]
+  CIK=0000073124  Q4=si  Q1=si  Q4_sh=  7,015,300,796  Q1_sh=  7,076,958,071  CONTINUOUS_FILER  nt_hr=False  targets=[]
+  CIK=0000080255  Q4=si  Q1=si  Q4_sh=  6,933,647,331  Q1_sh=  6,956,487,078  CONTINUOUS_FILER  nt_hr=False  targets=[]
+  CIK=0000093751  Q4=si  Q1=si  Q4_sh= 25,475,515,149  Q1_sh= 25,747,618,586  CONTINUOUS_FILER  nt_hr=False  targets=[]
+  CIK=0000102909  Q4=si  Q1=no  Q4_sh= 62,442,074,612  Q1_sh=              0  FILER_DISCONTINUITY  nt_hr=True  targets=['0001550100', '0002100121', '0002100119']
+  CIK=0000200217  Q4=si  Q1=si  Q4_sh=  2,440,938,732  Q1_sh=  2,445,955,077  CONTINUOUS_FILER  nt_hr=False  targets=[]
+  CIK=0000312069  Q4=si  Q1=si  Q4_sh=  2,333,016,513  Q1_sh=  2,901,630,187  CONTINUOUS_FILER  nt_hr=False  targets=[]
+  CIK=0000315066  Q4=si  Q1=si  Q4_sh= 17,336,642,577  Q1_sh= 17,564,535,541  CONTINUOUS_FILER  nt_hr=False  targets=[]
+  CIK=0000354204  Q4=si  Q1=si  Q4_sh=  7,437,918,143  Q1_sh=  7,547,459,133  CONTINUOUS_FILER  nt_hr=False  targets=[]
+  CIK=0000720005  Q4=si  Q1=si  Q4_sh=  3,320,197,702  Q1_sh=  3,484,978,253  CONTINUOUS_FILER  nt_hr=False  targets=[]
+  CIK=0000748054  Q4=si  Q1=si  Q4_sh=  2,806,535,723  Q1_sh=  2,812,574,512  CONTINUOUS_FILER  nt_hr=False  targets=[]
+  CIK=0000764068  Q4=si  Q1=si  Q4_sh=  3,648,883,037  Q1_sh=  3,620,911,854  CONTINUOUS_FILER  nt_hr=False  targets=[]
+  CIK=0000820027  Q4=si  Q1=si  Q4_sh=  4,552,592,683  Q1_sh=  4,578,311,088  CONTINUOUS_FILER  nt_hr=False  targets=[]
+  CIK=0000850529  Q4=si  Q1=si  Q4_sh=  2,931,127,625  Q1_sh=  2,990,156,390  CONTINUOUS_FILER  nt_hr=False  targets=[]
+  CIK=0000861177  Q4=si  Q1=si  Q4_sh=  3,403,906,764  Q1_sh=  3,671,081,986  CONTINUOUS_FILER  nt_hr=False  targets=[]
+  CIK=0000869178  Q4=si  Q1=si  Q4_sh=  2,310,938,541  Q1_sh=  2,408,434,849  CONTINUOUS_FILER  nt_hr=False  targets=[]
+  CIK=0000884546  Q4=si  Q1=si  Q4_sh=  8,365,328,809  Q1_sh=  8,386,304,943  CONTINUOUS_FILER  nt_hr=False  targets=[]
+  CIK=0000886982  Q4=si  Q1=si  Q4_sh=  7,872,124,782  Q1_sh=  8,803,361,754  CONTINUOUS_FILER  nt_hr=False  targets=[]
+  CIK=0000895421  Q4=si  Q1=si  Q4_sh= 17,995,019,392  Q1_sh= 18,260,853,727  CONTINUOUS_FILER  nt_hr=False  targets=[]
+  CIK=0000902219  Q4=si  Q1=si  Q4_sh=  5,442,971,637  Q1_sh=  5,305,307,176  CONTINUOUS_FILER  nt_hr=False  targets=[]
+  CIK=0000912938  Q4=si  Q1=si  Q4_sh=  2,831,231,781  Q1_sh=  2,571,855,892  CONTINUOUS_FILER  nt_hr=False  targets=[]
+  CIK=0000914208  Q4=si  Q1=si  Q4_sh=  7,093,459,451  Q1_sh=  7,378,235,089  CONTINUOUS_FILER  nt_hr=False  targets=[]
+  CIK=0000927971  Q4=si  Q1=si  Q4_sh=  2,550,079,575  Q1_sh=  2,561,983,200  CONTINUOUS_FILER  nt_hr=False  targets=[]
+  CIK=0000933478  Q4=no  Q1=si  Q4_sh=              0  Q1_sh=  4,124,421,637  FILER_DISCONTINUITY  nt_hr=True  targets=['0000102909']
+  CIK=0000948046  Q4=si  Q1=si  Q4_sh=  2,913,206,293  Q1_sh=  2,952,162,817  CONTINUOUS_FILER  nt_hr=False  targets=[]
+  CIK=0001000275  Q4=si  Q1=si  Q4_sh=  5,583,135,451  Q1_sh=  5,497,541,661  CONTINUOUS_FILER  nt_hr=False  targets=[]
+  CIK=0001009207  Q4=si  Q1=si  Q4_sh=  2,490,042,098  Q1_sh=  2,652,336,283  CONTINUOUS_FILER  nt_hr=False  targets=[]
+  CIK=0001067983  Q4=si  Q1=si  Q4_sh=  2,440,749,360  Q1_sh=  2,429,461,184  CONTINUOUS_FILER  nt_hr=False  targets=[]
+  CIK=0001109448  Q4=si  Q1=si  Q4_sh=  2,721,322,296  Q1_sh=  2,687,854,134  CONTINUOUS_FILER  nt_hr=False  targets=[]
+  CIK=0001126328  Q4=si  Q1=si  Q4_sh=  2,029,166,497  Q1_sh=  2,092,280,497  CONTINUOUS_FILER  nt_hr=False  targets=[]
+  CIK=0001164508  Q4=si  Q1=si  Q4_sh=  2,473,912,645  Q1_sh=  2,545,626,021  CONTINUOUS_FILER  nt_hr=False  targets=[]
+  CIK=0001167557  Q4=si  Q1=si  Q4_sh=  2,667,193,021  Q1_sh=  3,263,147,340  CONTINUOUS_FILER  nt_hr=False  targets=[]
+  CIK=0001179392  Q4=si  Q1=si  Q4_sh=  1,763,444,048  Q1_sh=  2,842,367,153  CONTINUOUS_FILER  nt_hr=False  targets=[]
+  CIK=0001214717  Q4=si  Q1=si  Q4_sh= 14,479,052,163  Q1_sh= 14,976,114,036  CONTINUOUS_FILER  nt_hr=False  targets=[]
+  CIK=0001273087  Q4=si  Q1=si  Q4_sh=  2,957,673,666  Q1_sh=  2,999,865,194  CONTINUOUS_FILER  nt_hr=False  targets=[]
+  CIK=0001330387  Q4=si  Q1=si  Q4_sh=  2,731,344,201  Q1_sh=  3,033,207,853  CONTINUOUS_FILER  nt_hr=False  targets=[]
+  CIK=0001374170  Q4=si  Q1=si  Q4_sh=  7,516,874,735  Q1_sh=              0  CONTINUOUS_FILER  nt_hr=False  targets=[]
+  CIK=0001390777  Q4=si  Q1=si  Q4_sh=  5,095,834,181  Q1_sh=  5,279,537,309  CONTINUOUS_FILER  nt_hr=False  targets=[]
+  CIK=0001403438  Q4=si  Q1=si  Q4_sh=  4,964,373,731  Q1_sh=  5,399,255,600  CONTINUOUS_FILER  nt_hr=False  targets=[]
+  CIK=0001407543  Q4=si  Q1=si  Q4_sh=  3,938,351,961  Q1_sh=  4,645,659,401  CONTINUOUS_FILER  nt_hr=False  targets=[]
+  CIK=0001422848  Q4=si  Q1=si  Q4_sh=  4,093,177,592  Q1_sh=  4,924,179,757  CONTINUOUS_FILER  nt_hr=False  targets=[]
+  CIK=0001422849  Q4=si  Q1=si  Q4_sh=  5,590,997,484  Q1_sh=  5,950,738,605  CONTINUOUS_FILER  nt_hr=False  targets=[]
+  CIK=0001423053  Q4=si  Q1=si  Q4_sh=  2,717,212,732  Q1_sh=  2,676,195,274  CONTINUOUS_FILER  nt_hr=False  targets=[]
+  CIK=0001562230  Q4=si  Q1=si  Q4_sh=  4,711,464,064  Q1_sh=  3,353,036,163  CONTINUOUS_FILER  nt_hr=False  targets=[]
+  CIK=0001610520  Q4=si  Q1=si  Q4_sh=  6,524,895,878  Q1_sh=  7,644,396,758  CONTINUOUS_FILER  nt_hr=False  targets=[]
+  CIK=0001825214  Q4=si  Q1=si  Q4_sh=  2,392,247,946  Q1_sh= 20,690,812,146  CONTINUOUS_FILER  nt_hr=False  targets=[]
+  CIK=0001871926  Q4=si  Q1=si  Q4_sh=  3,424,895,936  Q1_sh=  3,452,210,770  CONTINUOUS_FILER  nt_hr=False  targets=[]
+  CIK=0001897612  Q4=si  Q1=si  Q4_sh=  3,696,795,800  Q1_sh=  2,266,360,917  CONTINUOUS_FILER  nt_hr=False  targets=[]
+  CIK=0002012383  Q4=si  Q1=si  Q4_sh= 56,138,010,050  Q1_sh= 56,696,397,221  CONTINUOUS_FILER  nt_hr=False  targets=[]
+  CIK=0002100119  Q4=no  Q1=si  Q4_sh=              0  Q1_sh= 35,329,105,562  FILER_DISCONTINUITY  nt_hr=False  targets=[]
+  CIK=0002100121  Q4=no  Q1=si  Q4_sh=              0  Q1_sh= 21,030,554,644  FILER_DISCONTINUITY  nt_hr=False  targets=[]
+
+========================================================================
+RESUMEN ESTADOS FILER (Q-MINI-2)
+========================================================================
+  CONTINUOUS_FILER: 50
+  FILER_DISCONTINUITY: 4
+  Total: 54
+  pct_discontinuity: 0.0741
+
+========================================================================
+FILER_DISCONTINUITY - DETALLE
+========================================================================
+  CIK=0000102909  name=VANGUARD GROUP INC
+    Q4_present=True  Q4_sh=    62,442,074,612
+    Q1_present=False  Q1_sh=                 0
+    nt_to_hr_observed=True
+    nt_targets=['0001550100', '0002100121', '0002100119', '0000933478', '0000217448', '0001767306', '0001680208', '0001984256', '0001811242', '0000947529']
+  CIK=0000933478  name=VANGUARD FIDUCIARY TRUST CO
+    Q4_present=False  Q4_sh=                 0
+    Q1_present=True  Q1_sh=     4,124,421,637
+    nt_to_hr_observed=True
+    nt_targets=['0000102909']
+  CIK=0002100119  name=VANGUARD CAPITAL MANAGEMENT LLC
+    Q4_present=False  Q4_sh=                 0
+    Q1_present=True  Q1_sh=    35,329,105,562
+    nt_to_hr_observed=False
+    nt_targets=[]
+  CIK=0002100121  name=VANGUARD PORTFOLIO MANAGEMENT LLC
+    Q4_present=False  Q4_sh=                 0
+    Q1_present=True  Q1_sh=    21,030,554,644
+    nt_to_hr_observed=False
+    nt_targets=[]
+
+========================================================================
+NT_TO_HR OBSERVED - DETALLE
+========================================================================
+  CIK=0000102909  name=VANGUARD GROUP INC  filer_status=FILER_DISCONTINUITY
+    targets=['0001550100', '0002100121', '0002100119', '0000933478', '0000217448', '0001767306', '0001680208', '0001984256', '0001811242', '0000947529']
+  CIK=0000933478  name=VANGUARD FIDUCIARY TRUST CO  filer_status=FILER_DISCONTINUITY
+    targets=['0000102909']
+
+========================================================================
+FIN TOP 50
+========================================================================

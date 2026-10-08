@@ -1,0 +1,11 @@
+{
+  "n_total": 500,
+  "n_target": 142,
+  "n_not_in_radar": 309,
+  "n_no_id": 47,
+  "n_error": 2,
+  "pct_target": 28.4,
+  "period": "2026-03-31",
+  "sample_size": 500,
+  "source_date": "2026-09-19"
+}

@@ -1,0 +1,144 @@
+
+========================================================================
+COVERAGE BASELINE NIPC - Q4 2025 -> Q1 2026
+========================================================================
+radar_equities = 242
+excluidos sufijo EU = 71
+  tickers EU: ['AAL.L', 'ACS.MC', 'ADS.DE', 'AENA.MC', 'AI.PA', 'AIR.PA', 'ALV.DE', 'AMS.MC', 'ANA.MC', 'ASML.AS', 'AZN.L', 'BA.L', 'BARC.L', 'BAS.DE', 'BATS.L', 'BAYN.DE', 'BBVA.MC', 'BKT.MC', 'BMW.DE', 'BNP.PA', 'BP.L', 'CABK.MC', 'CLNX.MC', 'DB1.DE', 'DBK.DE', 'DGE.L', 'DHL.DE', 'DTE.DE', 'DTG.DE', 'ELE.MC', 'ENR.DE', 'EOAN.DE', 'FER.MC', 'GLEN.L', 'GSK.L', 'HEI.DE', 'HSBA.L', 'IAG.MC', 'IBE.MC', 'IDR.MC']
+  ... y 31 mas
+crosswalk_internal rows: 529
+cusip_equivalence rows:  0
+
+========================================================================
+PERIODO Q4_2025
+========================================================================
+period: 2025-12-31
+CUSIPs SH+null:        24129
+CUSIPs elegibles SEC:  11693
+units RAW_13F_SH_NULL: 2360246
+units ELIGIBLE_SEC:    2335031
+units TECHNICAL_RADAR: 474395
+units OPERATIONAL_EQUITY: 474395
+  --- fallout Q4_2025 (ELIGIBLE_SEC -> TECHNICAL_RADAR) ---
+  categoria                             units   %units             peso_ssh   %peso
+  IN_RADAR                             474395   20.32%      207,935,058,532  29.18%
+  CANONICAL_TICKER_OUTSIDE_RADAR       316812   13.57%       76,949,114,953  10.80%
+  FIGI_CANONICAL_NO_TICKER                  0    0.00%                    0   0.00%
+  OBSERVED_ONLY_NO_CANONICAL          1543824   66.12%      427,617,487,973  60.02%
+  UNRESOLVED_NO_CANONICAL                   0    0.00%                    0   0.00%
+  AMBIGUOUS_NO_CANONICAL                    0    0.00%                    0   0.00%
+  CONFLICT_NO_CANONICAL                     0    0.00%                    0   0.00%
+  OTHER                                     0    0.00%                    0   0.00%
+  detalle CANONICAL_TICKER_OUTSIDE_RADAR: 278 tickers unicos
+    HBAN         units=  1143  peso=     1,406,097,880
+    BSX          units=  1909  peso=     1,356,232,363
+    USB          units=  2149  peso=     1,254,156,343
+    APH          units=  2180  peso=     1,239,472,237
+    HPE          units=  1170  peso=     1,202,389,429
+    KHC          units=  1182  peso=     1,011,992,645
+    NKE          units=  2211  peso=     1,007,241,054
+    VTRS         units=  1072  peso=       974,684,392
+    KEY          units=   916  peso=       970,958,801
+    FAST         units=  1477  peso=       962,499,029
+  detalle NO_CANONICAL: 11197 CUSIPs unicos sin canonical_security
+    G4124C109    units=   581  peso=     3,080,218,553  status=OBSERVED_ONLY
+    G6683N103    units=   917  peso=     2,867,293,204  status=OBSERVED_ONLY
+    30231G102    units=  4740  peso=     2,748,494,764  status=OBSERVED_ONLY
+    921943858    units=  2894  peso=     2,354,601,744  status=OBSERVED_ONLY
+    051774107    units=   401  peso=     1,741,652,395  status=OBSERVED_ONLY
+    G0250X107    units=   692  peso=     1,539,837,884  status=OBSERVED_ONLY
+    46434G103    units=  2272  peso=     1,536,037,921  status=OBSERVED_ONLY
+    46432F842    units=  2401  peso=     1,531,134,788  status=OBSERVED_ONLY
+    11271J107    units=   978  peso=     1,529,992,122  status=OBSERVED_ONLY
+    113004105    units=   664  peso=     1,489,869,510  status=OBSERVED_ONLY
+
+========================================================================
+PERIODO Q1_2026
+========================================================================
+period: 2026-03-31
+CUSIPs SH+null:        24580
+CUSIPs elegibles SEC:  12940
+units RAW_13F_SH_NULL: 2420326
+units ELIGIBLE_SEC:    2397186
+units TECHNICAL_RADAR: 490732
+units OPERATIONAL_EQUITY: 490732
+  --- fallout Q1_2026 (ELIGIBLE_SEC -> TECHNICAL_RADAR) ---
+  categoria                             units   %units             peso_ssh   %peso
+  IN_RADAR                             490732   20.47%      207,825,597,694  28.75%
+  CANONICAL_TICKER_OUTSIDE_RADAR       321171   13.40%       77,111,146,439  10.67%
+  FIGI_CANONICAL_NO_TICKER                  0    0.00%                    0   0.00%
+  OBSERVED_ONLY_NO_CANONICAL          1585283   66.13%      437,832,560,640  60.58%
+  UNRESOLVED_NO_CANONICAL                   0    0.00%                    0   0.00%
+  AMBIGUOUS_NO_CANONICAL                    0    0.00%                    0   0.00%
+  CONFLICT_NO_CANONICAL                     0    0.00%                    0   0.00%
+  OTHER                                     0    0.00%                    0   0.00%
+  detalle CANONICAL_TICKER_OUTSIDE_RADAR: 280 tickers unicos
+    HBAN         units=  1216  peso=     1,727,516,122
+    BSX          units=  1811  peso=     1,340,523,447
+    USB          units=  2126  peso=     1,246,026,818
+    HPE          units=  1171  peso=     1,198,913,629
+    APH          units=  2278  peso=     1,152,034,526
+    KHC          units=  1173  peso=       997,967,863
+    VTRS         units=  1085  peso=       990,157,565
+    FAST         units=  1529  peso=       945,964,897
+    NKE          units=  2069  peso=       945,698,661
+    KEY          units=   939  peso=       932,990,636
+  detalle NO_CANONICAL: 12440 CUSIPs unicos sin canonical_security
+    G4124C109    units=   525  peso=     3,057,901,738  status=OBSERVED_ONLY
+    G6683N103    units=   952  peso=     2,863,406,734  status=OBSERVED_ONLY
+    921943858    units=  3020  peso=     2,393,691,928  status=OBSERVED_ONLY
+    46429B267    units=   963  peso=     1,770,991,227  status=OBSERVED_ONLY
+    46434G103    units=  2385  peso=     1,690,755,537  status=OBSERVED_ONLY
+    46432F842    units=  2502  peso=     1,638,879,161  status=OBSERVED_ONLY
+    051774107    units=   430  peso=     1,631,567,073  status=OBSERVED_ONLY
+    136385101    units=   793  peso=     1,573,223,006  status=OBSERVED_ONLY
+    113004105    units=   672  peso=     1,481,590,084  status=OBSERVED_ONLY
+    11271J107    units=   971  peso=     1,475,718,392  status=OBSERVED_ONLY
+
+========================================================================
+PAIRWISE COVERAGE - 4 UNIVERSOS ANIDADOS
+========================================================================
+
+--- RAW_13F_SH_NULL ---
+  Q4 units: 2360246   Q1 units: 2420326
+  delta filas: 4082327
+  match_status: {'UNRESOLVED_IDENTITY': 3177329, 'BOTH': 698245, 'NEW': 113710, 'EXIT': 93043}
+  NIPC total (observable): 23651586
+  coverage_previous=0.0206  coverage_current=0.0204
+  paired_security_coverage=0.0181  paired_weighted_share_coverage=0.2271
+  unmapped_weight_previous=0.9794  unmapped_weight_current=0.9796
+  STATUS: INSUFFICIENT
+
+--- ELIGIBLE_SEC ---
+  Q4 units: 2335031   Q1 units: 2397186
+  delta filas: 4034035
+  match_status: {'UNRESOLVED_IDENTITY': 3129107, 'BOTH': 698182, 'NEW': 113721, 'EXIT': 93025}
+  NIPC total (observable): 52570648
+  coverage_previous=0.0424  coverage_current=0.0386
+  paired_security_coverage=0.0368  paired_weighted_share_coverage=0.2772
+  unmapped_weight_previous=0.9576  unmapped_weight_current=0.9614
+  STATUS: INSUFFICIENT
+
+--- TECHNICAL_RADAR ---
+  Q4 units: 474395   Q1 units: 490732
+  delta filas: 537453
+  match_status: {'BOTH': 427674, 'NEW': 63058, 'EXIT': 46721}
+  NIPC total (observable): -109460838
+  coverage_previous=1.0000  coverage_current=1.0000
+  paired_security_coverage=0.9909  paired_weighted_share_coverage=0.9864
+  unmapped_weight_previous=0.0000  unmapped_weight_current=0.0000
+  STATUS: INSUFFICIENT
+
+--- OPERATIONAL_EQUITY ---
+  Q4 units: 474395   Q1 units: 490732
+  delta filas: 537453
+  match_status: {'BOTH': 427674, 'NEW': 63058, 'EXIT': 46721}
+  NIPC total (observable): -109460838
+  coverage_previous=1.0000  coverage_current=1.0000
+  paired_security_coverage=0.9909  paired_weighted_share_coverage=0.9864
+  unmapped_weight_previous=0.0000  unmapped_weight_current=0.0000
+  STATUS: INSUFFICIENT
+
+========================================================================
+FIN
+========================================================================

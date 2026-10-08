@@ -1,0 +1,10 @@
+{
+  "n_rows": 242,
+  "n_unique_share_class_figi": 240,
+  "duplicate_shareClassFIGI_count": 0,
+  "duplicate_shareClassFIGI_detail": {},
+  "multiple_openfigi_hits": 0,
+  "conflicting_candidates": 0,
+  "radar_snapshot_date": "2026-09-19",
+  "radar_membership_mode": "CURRENT_RETROSPECTIVE"
+}

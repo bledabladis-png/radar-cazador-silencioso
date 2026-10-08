@@ -1,0 +1,16 @@
+b967d30aee83955f5b72adfe98b06fde4ecb321c277b837eddc6aa36106ced8b  README.md
+dc304a7df7dfc494de93200eb0cf418c9371330f9b57f2c305ad16f25fb0693a  run_pilot_13f_top2000.py
+784b8100ff0fccaa444cf4bf224d4b86f56b9d5026c278e0db2de7c42ec80681  pilot_cusips_sample_top2000.csv
+17c185584ef77513f31f2b0d61be1c14fb0a20cbe32c22fa8ba5acf57d0274b1  pilot_13f_top2000.csv
+d1879c31f02cde139a45949a3e3c8e75bb41c3a12c994c6710b7a9e2e5c800af  pilot_13f_summary_2000.json
+305317d98c06da1a07d292ae85b4a9ea8dd4e40474d038857feb84ac094c8928  pilot_13f_summary_2000_corrected.json
+7e101f55a0c7d412402368a2ff731316d9984c70ec2f28f7d04e859d23c7e6a8  catalog_diagnostics.json
+bc7e773b5975963c10779f7d050050f20f02df3096060638e4a320834841b9bc  pilot_run.txt
+
+generated_at: 2026-09-19
+probe_endpoint: https://api.openfigi.com/v3/mapping
+probe_period: 2026Q1 (PERIODOFREPORT=2026-03-31)
+sample: top 2000 CUSIPs por SSHPRNAMT (SH + PUTCALL NULL)
+radar_snapshot_date: 2026-09-19
+radar_membership_mode: CURRENT_RETROSPECTIVE
+eol_policy: LF (git .gitattributes: *.csv *.md *.json *.txt *.py text eol=lf)

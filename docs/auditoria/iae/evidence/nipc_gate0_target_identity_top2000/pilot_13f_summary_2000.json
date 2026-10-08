@@ -1,0 +1,33 @@
+{
+  "n_total": 2000,
+  "total_weight": 668099098447.0,
+  "target_true": {
+    "count": 210,
+    "shares": 219189415704.0,
+    "pct_count": 10.5,
+    "pct_weight": 32.8079
+  },
+  "target_false": {
+    "count": 1567,
+    "shares": 372023632279.0,
+    "pct_count": 78.35,
+    "pct_weight": 55.6839
+  },
+  "no_id": {
+    "count": 220,
+    "shares": 59167263147.0,
+    "pct_count": 11.0,
+    "pct_weight": 8.8561
+  },
+  "error": {
+    "count": 3,
+    "shares": 17718787317.0,
+    "pct_count": 0.15,
+    "pct_weight": 2.6521
+  },
+  "period": "2026-03-31",
+  "sample_size": 2000,
+  "source_date": "2026-09-19",
+  "radar_snapshot_date": "2026-09-19",
+  "radar_membership_mode": "CURRENT_RETROSPECTIVE"
+}

@@ -1,0 +1,103 @@
+{
+  "pit": {
+    "mode": "no-pit",
+    "pit_status": "PIT_BYPASS_DOCUMENTED",
+    "snapshot_used": null,
+    "reason": "bypass: build_target directo, PIT no evaluado"
+  },
+  "periods": {
+    "2025Q4": {
+      "folder": "2025Q4",
+      "period_iso": "2025-12-31",
+      "oper_rows": 621046,
+      "n_sshprnamt_by_figi": 239,
+      "n_sshprnamt_by_key": 239
+    },
+    "2026Q1": {
+      "folder": "2026Q1",
+      "period_iso": "2026-03-31",
+      "oper_rows": 641457,
+      "n_sshprnamt_by_figi": 240,
+      "n_sshprnamt_by_key": 240
+    }
+  },
+  "universe_keys": 242,
+  "shared_q1": 240,
+  "shared_q4": 239,
+  "result_periods": {
+    "2026Q1": {
+      "keys": 240,
+      "target_figi": 240,
+      "records": 240,
+      "fail_closed": false
+    },
+    "2025Q4": {
+      "keys": 239,
+      "target_figi": 239,
+      "records": 239,
+      "fail_closed": false
+    }
+  },
+  "cardinalities": {
+    "target_q4_figi": 239,
+    "target_q1_figi": 240,
+    "target_pairwise_figi": 239,
+    "records_q4": 239,
+    "records_q1": 240,
+    "records_q4_verified": 239,
+    "records_q1_verified": 240,
+    "paired_figi": 239
+  },
+  "p38_pairwise": {
+    "coverage_previous": 1.0,
+    "coverage_current": null,
+    "paired_security_coverage": 1.0,
+    "paired_weighted_share_coverage": 1.0,
+    "coverage_status": "PIT_UNAVAILABLE",
+    "unmapped_count_previous": 0,
+    "unmapped_count_current": 0,
+    "pit_status": "PIT_BYPASS_DOCUMENTED",
+    "pit_mode": "no-pit",
+    "coverage_current_technical_pre_pit": 1.0,
+    "coverage_contractual": false,
+    "coverage_contractual_note": "coverage_current anulado como contractual: PIT PIT_BYPASS_DOCUMENTED"
+  },
+  "p38_q1": {
+    "coverage_previous": 1.0,
+    "coverage_current": null,
+    "paired_security_coverage": 1.0,
+    "paired_weighted_share_coverage": 1.0,
+    "coverage_status": "PIT_UNAVAILABLE",
+    "unmapped_count_previous": 0,
+    "unmapped_count_current": 0,
+    "pit_status": "PIT_BYPASS_DOCUMENTED",
+    "pit_mode": "no-pit",
+    "coverage_current_technical_pre_pit": 1.0,
+    "coverage_contractual": false,
+    "coverage_contractual_note": "coverage_current anulado como contractual: PIT PIT_BYPASS_DOCUMENTED"
+  },
+  "nipc_smoke": {
+    "status": "OK",
+    "result": {
+      "nipc_total": "0.0",
+      "nipc_total_available": "False",
+      "n_both": "0",
+      "n_new": "0",
+      "n_exit": "0",
+      "n_unresolved_identity": "0",
+      "n_delta_observable": "0",
+      "evidence_class": "CONTRACTUAL",
+      "nipc_sole": "0.0",
+      "nipc_dfnd": "0.0",
+      "nipc_otr": "0.0",
+      "coverage_previous": "1.0",
+      "coverage_current": "1.0",
+      "paired_security_coverage": "1.0",
+      "paired_weighted_share_coverage": "1.0",
+      "coverage_status": "VALID",
+      "unmapped_count_previous": "0",
+      "unmapped_count_current": "0",
+      "status": "UNRESOLVED"
+    }
+  }
+}
