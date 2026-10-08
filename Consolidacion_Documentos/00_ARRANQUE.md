@@ -46,7 +46,7 @@ Lo que NUNCA haces:
 - Todos los outputs son diagnosticos, no recomendaciones.
 - Entorno: D:\Macro_Sectorial (Windows, PowerShell, Python con py).
 - Repo: https://github.com/bledabladis-png/radar-cazador-silencioso (main).
-- No push sin validacion local completa.
+- No push sin validacion local completa. Excepcion: ver 02_ARQUITECTURA seccion 8.
 - Backup .orig / .bak antes de tocar; eliminar tras verificar.
 - No mezclar capas de flujo (ETF_PRIMARY_FLOW, CFTC_POSITION_FLOW, SEC_POSITION_FLOW, FLOW_PROXY, QQQ NPORT-P FLOW, QQQ SEC FLOW).
 - No construir superindicadores predictivos.

@@ -251,6 +251,13 @@ Si `validation_gate['passed'] == False` -> `sys.exit(1)`.
 - F-IAE-LSE-INTEGRATION: 2 steps antes de "Run Macro Sectorial" (fetch LSE scraper + capture SHA).
 - Fase G: step "Regenerar catalogo radar (IAE)" tras run.py; `update_sec_13f.yml` gana step "Regenerar crosswalk CUSIP".
 
+**Clasificacion de workflows por validacion local (2026-10-08):**
+
+- **Nucleo (`daily_run.yml`)**: `pytest tests/ validation/` + `run.py` + 5 validaciones post-run (cross-validation, freshness, history quality, double counting, guard coverage). Cumple "no push sin validacion local completa".
+- **Datos externos (5)**: `update_macro_manual`, `update_european_holdings`, `update_index_holdings`, `update_sector_holdings`, `update_sec_13f`. Scope acotado a `data/`. Unica validacion: compileall. Excepcion razonada: no dependen de outputs del radar ni afectan determinismo.
+- **Outputs derivados (2)**: `update_qqq_sec_flow`, `update_sec_nport`. Escriben en `outputs/history/` con solo compileall como validacion. Deuda reconocida: pendiente decidir si anadir tests contractuales de los scripts generadores. Declarados como excepcion hasta entonces.
+- **Lectura (`health_check.yml`)**: sin push.
+
 ---
 
 ## 9. VALIDACION Y TESTS

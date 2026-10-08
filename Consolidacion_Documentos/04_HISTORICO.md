@@ -1248,4 +1248,29 @@ warm-up, no reescritura arbitraria.
 una foto (un dia, 316 tickers) con legacy vs v1.8. Este cambio
 aplica el mismo criterio al historico del CSV.
 
+### Deuda huerfana: auditoria externa radar 2026-09-26 (2026-10-08)
+
+El informe de auditoria externa del radar con 205 hallazgos (6 ALTA / 98 MEDIA / 101 BAJA), citado en `00_ARRANQUE` seccion 3, no existe versionado en el repositorio. Verificado 2026-10-08:
+
+- Sin fichero `AUDITORIA_EXTERNA_*` correspondiente.
+- Referencias a "205 hallazgos" solo en `00_ARRANQUE` (cifra agregada) y `04_HISTORICO` (cifra agregada).
+- Las referencias a `AUDITORIA_EXTERNA_2026-09-27.md` en el expediente IAE (`golden/README.md`, `current.json`) corresponden a otra auditoria (H4/C2), no a esta.
+
+Los 6 ALTA se corrigieron (trazables en git log pre-2026-10-01). Los 98 MEDIA y 101 BAJA no tienen registro por hallazgo. Se declaran como deuda huerfana sin material de origen.
+
+Accion: ninguna tecnica. La cifra agregada se mantiene en `00_ARRANQUE` como referencia historica.
+
+### Archivo de gold-standard-v4 (2026-10-08)
+
+La rama `gold-standard-v4` (HEAD 8afce786, 2026-10-05) fue archivada como tag `_archivo/gold-standard-v4-superseded-20261008` y borrada. Superseded por `main`:
+
+- Migracion Wyckoff v1.8 rehecha con commits 2fd6c449/35663000/f782b9d4 (plan seccion 6 de main corrigio sector_breadth -> sector_regime).
+- Fix D aplicado (5 providers LF).
+- Fix NaN stock_leader (2026-10-06).
+- Manifests sec_13f mas nuevos.
+
+Delta positivo no portado: nota explicativa RS en `stock_leader.py` ("*RS = RS Level (precio accion / precio sector)..."). Recuperable desde el tag si se necesita cherry-pick.
+
+Hallazgo colateral corregido el mismo dia: la evidencia IAE de `docs/auditoria/iae/evidence/` (8 directorios, 53 ficheros) referenciada en `03_IAE.md` seccion 6 no existia en `main`. Portada desde el tag antes de archivar (commit a356ae1d). Tabla de conteos corregida de 67 -> 53.
+
 **Fin del historico.**
