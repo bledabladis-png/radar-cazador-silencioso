@@ -79,7 +79,8 @@ Snapshot al cierre del ultimo commit:
 - Validation Gate: 10/10
 - Working tree: limpio
 - Corpus documental: v3 (Consolidacion_Documentos/00-08, 2026-09-30)
-- Universo USA (stock_prices): 313 tickers (2026-09-22). Ver `04_HISTORICO.md`.
+- Universo USA (stock_prices): 255 tickers. Fuente autoritativa: `ESTADO_SISTEMA.md`.
+- Universo total stock_prices: 329 (US + EU). Ver `04_HISTORICO.md`.
 
 **Ultimos fixes (2026-10-07/08).** M-03 (european_flow_sign NaN),
 A-03 (sector_dispersion input vacio), A-01/F6-1b (FINRA unificado),
