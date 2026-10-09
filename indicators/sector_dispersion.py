@@ -40,7 +40,6 @@ def compute_sector_dispersion(price_rank_list, reference_date=None):
             'std_pp': np.nan,
             'mean_ret': np.nan,
             'dispersion_reading': 'N/D',
-            'heterogeneity_type': 'N/D',
         }])
 
     ret = df['ret'].astype(float) * 100  # Convertir decimal a puntos porcentuales
@@ -60,12 +59,6 @@ def compute_sector_dispersion(price_rank_list, reference_date=None):
     else:
         dispersion_reading = 'Muy alta'
 
-    # Heterogeneidad
-    if range_pp >= 5 and std_pp >= 2.5:
-        heterogeneity_type = 'Heterogeneidad amplia'
-    else:
-        heterogeneity_type = 'Heterogeneidad contenida'
-
     return pd.DataFrame([{
         'date': pd.Timestamp(reference_date).normalize(),
         'n_total': n_total,
@@ -75,5 +68,4 @@ def compute_sector_dispersion(price_rank_list, reference_date=None):
         'std_pp': std_pp,
         'mean_ret': mean_ret,
         'dispersion_reading': dispersion_reading,
-        'heterogeneity_type': heterogeneity_type,
     }])

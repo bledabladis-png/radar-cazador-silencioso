@@ -79,7 +79,7 @@ def test_dispersion_basico():
     df = pd.DataFrame([{
         "date": pd.Timestamp("2026-09-25"),
         "range_pp": 12.68, "std_pp": 3.66, "mean_ret": -2.76,
-        "dispersion_reading": "Baja", "heterogeneity_type": "Heterogeneidad amplia",
+        "dispersion_reading": "Baja",
     }])
     out = render_dispersion_sectores(df)
     lineas = "".join(out)

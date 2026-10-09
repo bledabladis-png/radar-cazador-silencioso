@@ -68,11 +68,11 @@ def render_dispersion_sectores(sector_dispersion_data):
     out = []
     if sector_dispersion_data is not None and not sector_dispersion_data.empty:
         out.append("## Dispersión entre sectores\n")
-        out.append("| Fecha | Rango (pp) | Desv (pp) | Media (pp) | Lectura | Heterogeneidad |\n")
-        out.append("|-------|------------|-----------|------------|---------|----------------|\n")
+        out.append("| Fecha | Rango (pp) | Desv (pp) | Media (pp) | Lectura |\n")
+        out.append("|-------|------------|-----------|------------|---------|\n")
         for _, row in sector_dispersion_data.iterrows():
             date_str = pd.Timestamp(row['date']).strftime('%Y-%m-%d') if pd.notna(row['date']) else 'N/D'
-            out.append(f"| {date_str} | {_fmt_num(row['range_pp'], '{:.2f}')} | {_fmt_num(row['std_pp'], '{:.2f}')} | {_fmt_num(row['mean_ret'], '{:.2f}')} | {row['dispersion_reading']} | {row['heterogeneity_type']} |\n")
+            out.append(f"| {date_str} | {_fmt_num(row['range_pp'], '{:.2f}')} | {_fmt_num(row['std_pp'], '{:.2f}')} | {_fmt_num(row['mean_ret'], '{:.2f}')} | {row['dispersion_reading']} |\n")
         out.append("\n")
         out.append("*La dispersión mide la separación entre los retornos de los 11 sectores. No es un score ni una señal.*\n\n")
         out.append("*Faltan los dias 2026-09-21, 2026-09-22 y 2026-10-05 por input vacio (fix A-03, 2026-10-07: previene futuros huecos, no rellena historico).*\n\n")
