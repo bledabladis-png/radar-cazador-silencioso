@@ -121,6 +121,7 @@ def render_slpm_v12(slpm_v12_data):
             out.append(f"  - Leader vs Sector: {_fmt_signed(flow_div.get('leader_flow_div'), '{:+.3f}', '{:.3f}')}\n")
             out.append(f"  - Sector Flow vs Price: {_fmt_signed(flow_div.get('sector_flow_vs_price_div'), '{:+.3f}', '{:.3f}')}\n")
             out.append(f"  - Structural: {_fmt_signed(flow_div.get('structural_flow_div'), '{:+.3f}', '{:.3f}')}\n")
+            out.append("- *Nota: el composite pondera 3 componentes (leader_flow_div, sector_flow_vs_price_div, structural_flow_div). El segundo no tiene fuente en el pipeline actual (slpm_v12.py:124 pasa None). Mientras no se cablee, el composite sale N/D por diseno. No es error de calculo.*\n")
             out.append("- *Nota: Flujo medido como Flow Proxy (retorno x volumen). No implica flujo institucional real.*\n")
         out.append("\n")
     return out

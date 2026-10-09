@@ -1265,6 +1265,23 @@ Los 3 ficheros fueron borrados de `main` en `cdf47ad2` (limpieza de corpus antig
 
 Accion: cifras corregidas en `00_ARRANQUE` (commit 634d44d4) y en este historico. Sin accion tecnica adicional.
 
+### Deuda detectada en auditoria del reporte 2026-10-09: sector_flow_vs_price_div huerfano
+
+`compute_flow_divergence_v2` (`indicators/slpm_v12.py:97`) declara 3 componentes:
+
+    composite = 0.50 * leader_flow_div + 0.25 * sector_flow_vs_price_div + 0.25 * structural_flow_div
+
+El segundo componente no tiene fuente en el pipeline. El caller `evaluate_slpm_v12` (linea 124) lo pasa como `None` hardcoded. El test `test_flow_div_v2_con_sector_price_flow` lo verifica aislado, pero ninguna ruta de produccion lo alimenta.
+
+Consecuencia: composite siempre NaN. El render muestra `N/D`. Correcto: no es 0 falso.
+
+Opciones evaluadas (no aplicadas):
+- A) Rebalancear pesos a 0.66/0.34 -> requiere justificacion estadistica (no existe).
+- B) Implementar `sector_price_flow` -> scope creep, fuente no definida.
+- C) Documentar el N/D como esperado (aplicado hoy 2026-10-09, mas nota en el render).
+
+Sin accion tecnica pendiente. Deuda declarada.
+
 ### Archivo de sow-v4-validation: WONT FIX razonado (2026-10-08)
 
 La rama `sow-v4-validation` fue archivada como tag `_archivo/sow-v4-validation-20261008` (2026-10-08). Contiene 88 ficheros unicos frente a `main`: 15 scripts del paquete `scripts/sow_v4/` + `scripts/sow_v19_bootstrap*.py`, y 4 artefactos del protocolo (`SOW_v19_PROTOCOL.json`, `.freeze.json`, `49_sow_v19_resultado.md`, `50_sow_v19_bootstrap_ops.md`). El resto son el expediente wyckoff antiguo ya movido a `_archivo/`.

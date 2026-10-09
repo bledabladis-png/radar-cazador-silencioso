@@ -44,6 +44,37 @@ Al cerrar una sesion nueva, se anade arriba (las mas recientes primero). Si hay 
 
 ## 3. SESIONES
 
+### 2026-10-09 - Auditoria del reporte diario: 15 hallazgos clasificados
+
+**Objetivo.** Revision bloque a bloque del reporte del 2026-10-09 buscando errores, incoherencias, ceros/NaN/N-D ocultos.
+
+**Resultado.** 15 hallazgos. 2 corregidos, 13 no-bug / falsos positivos / deuda de diseno documentada.
+
+**Corregidos.**
+- H-07/H-08 (commit 35559c1d): notas de Representatividad del lider y Divergencia sector-lideres declaraban criterios falsos (cobertura / validos >=3). El filtro real es por fase Wyckoff (solo ACCUMULATION o MARKUP).
+- H-09 (commit 4a604b21): `heterogeneity_type` se retiro del writer, del render y del test. Valor constante en el historico observado. Redundante con `dispersion_reading`.
+
+**Falsos positivos / no-bug (verificados con codigo).**
+- H-02: N/D en VIX3M/VIX se debe a falta de VIX, no de VIX3M. Fuente distinta.
+- H-04: coberturas 18-25% son top-15/total-ETF. La metrica usa top-15 por diseno (`TOP_N_CANDIDATES`). Naming confuso.
+- H-05: `signal_cons = (pers + agree) / 2`. 38% es matematica.
+- H-11: Flujo Proxy en dos secciones mide cosas distintas (z-score vs flow_median). Naming confuso.
+- H-12, H-13: cosméticos documentados.
+- H-14: Q1 en N-PORT es calendario. Q2 llega en el cron del 20-oct.
+- H-15: Indices en RANGE por umbrales (`struct > 0.30 AND t_norm > 0.30`). Ningun indice los supera hoy. No es fallback.
+- H-03: `IPS = -0.39` e `IPI = 31` son la misma metrica en escalas [-1,+1] y [0,100]. No incoherencia.
+- H-01, H-10: cosmeticos ya documentados.
+
+**Deuda declarada.**
+- H-06: `sector_flow_vs_price_div` huerfano en `compute_flow_divergence_v2`. Se documenta con nota en el render + entrada en 04_HISTORICO. WONT FIX hasta tener fuente.
+
+**Commits.** 35559c1d, 4a604b21, este.
+
+**Pendiente.** H5.3 (20-nov-2026). C2 y SOW v6 bloqueados por terceros. Wyckoff 5e tras CI estable.
+
+**Proximo paso sugerido.** Ninguno urgente. Verificar H5.3 el 20-nov-2026.
+
+
 ### 2026-10-09 - Continuacion: verificacion E2E fix B + cierres documentales
 
 **Objetivo.** Confirmar en produccion el fix B (`save_regime_history`) y cerrar los frentes abiertos del dia anterior.
