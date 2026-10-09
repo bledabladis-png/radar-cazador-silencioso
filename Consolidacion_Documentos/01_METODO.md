@@ -94,6 +94,15 @@ Politica: snapshot pre/post obligatorio y revertir `git checkout -- outputs/hist
 
 **Verificacion abortando.** Los bloques que verifican y commitean en el mismo paste deben abortar si `compileall`, `pyflakes` o `pytest` devuelven `LASTEXITCODE != 0`. Anadir `if ($LASTEXITCODE -ne 0) { throw }` tras cada paso. Un commit con pyflakes exit=1 pasó el 2026-10-08 por no abortar (corregido en 6027a943).
 
+**Fecha efectiva del historico, no `date.today()`.** Los writers de `outputs/history/` escriben con el `effective_date` resuelto, no con la fecha del run. `effective_date` es la ultima sesion del universo relevante cerrada en el momento de la ejecucion.
+
+- Horario post-cierre USA (>= 20:00 UTC): `effective_date` = mismo dia natural.
+- Horario intradiario USA (< 20:00 UTC): `effective_date` = dia anterior.
+
+Un `run.py` manual en horario intradiario escribe la misma fecha que el scheduled de la manana siguiente. La verificacion correcta NO es "hoy no debe aparecer como fila", sino "la fila debe ser coherente con `effective_date` resuelto por el pipeline". Si `temporal_meta['by_contract']['EQUITY_EOD']['effective_date']` == el primer campo de la ultima fila, el writer esta bien.
+
+Corolario: si un run intradiario produce una fila con la fecha del dia natural Y la ultima sesion cerrada es la anterior, hay bug (fue el caso del fix B, commit d495dc1e, 2026-10-08).
+
 1. **Snapshot pre:** copiar outputs/report/, outputs/state/, outputs/history/ relevantes a `outputs/audit/pre_<bloque>_<stamp>/`.
 2. **`py run.py` real (~10-15 min).** No sustituto.
 3. **Snapshot post:** copiar los mismos a `outputs/audit/post_<bloque>_<stamp>/`.

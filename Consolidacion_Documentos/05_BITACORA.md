@@ -44,6 +44,33 @@ Al cerrar una sesion nueva, se anade arriba (las mas recientes primero). Si hay 
 
 ## 3. SESIONES
 
+### 2026-10-09 - Continuacion: verificacion E2E fix B + cierres documentales
+
+**Objetivo.** Confirmar en produccion el fix B (`save_regime_history`) y cerrar los frentes abiertos del dia anterior.
+
+**Hecho.**
+
+- Fix B confirmado. El scheduled `37876944887` (2026-10-09 02:56 UTC, headSha `c9b600b1`) corrio `run.py` completo con el fix y produjo `macro_regime.csv` con fila `2026-10-08`, que es el `effective_date` correcto (ultima sesion USA cerrada a esa hora). Sin bug.
+- Aclaracion de regla: el writer escribe con `effective_date`, no con `date.today()`. Nueva seccion en `01_METODO` seccion 4. Mi formulacion previa ("hoy no debe aparecer como fila") era incorrecta y genero una falsa alarma.
+- Precisada la causa raiz del warm-up artefactual Wyckoff en `04_HISTORICO` (las dos ramas silenciosas del legacy: `len(close) < 200` y `score_clean.empty`).
+- Corregida la cifra de la auditoria externa 2026-09-26: 205 -> 142 (6 ALTA / 71 MEDIA / 65 BAJA). Los informes existen en `bc656374`, borrados de main en `cdf47ad2`.
+- Cerrado `sow-v4-validation` como WONT FIX razonado (88 ficheros unicos, 0 consumidores en main).
+- Tests de funciones puras SEC/QQQ (`test_nport_sec_helpers.py`, 9 casos).
+- Documentada la cadena de universos de tickers (`02_ARQUITECTURA` seccion 16).
+
+**Commits.** c9b600b1, 55a45cf4, b5413e8b, 06bec8cc, 634d44d4, fd5f0e9a, 90127936, 815e113b, 6027a943, 0017bf4f, 8e8826f5, d495dc1e, c09a268c, 203b61c7, a356ae1d, mas el de esta sesion.
+
+**Pendiente.**
+
+- H5.3 (cron 13F, 20-nov-2026). Sin accion antes.
+- C2 (920): bloqueado por auditor externo.
+- SOW v6: pendiente firma externa.
+- Wyckoff 5e (retirada legacy): tras 1 CI estable.
+- `00_ARRANQUE` margen del umbral: 248 B. Sin urgencia.
+
+**Proximo paso sugerido.** Ninguno urgente. Verificar H5.3 el 20-nov-2026.
+
+
 ### 2026-10-08 (tarde/noche) - Verificacion completa del sistema + 4 fixes
 
 **Objetivo.** Bajo correccion expresa del usuario: revisar el estado real del sistema (pipeline, artefactos, frescura, providers) en lugar de seguir en higiene documental.
