@@ -44,6 +44,27 @@ Al cerrar una sesion nueva, se anade arriba (las mas recientes primero). Si hay 
 
 ## 3. SESIONES
 
+### 2026-10-09 (noche) - Regeneracion de CSVs contaminados por legacy Wyckoff
+
+**Objetivo.** Tras detectar que el clasificador legacy seguia contaminando CSVs historicos, barrer todos los `outputs/history/*.csv` y regenerar los afectados.
+
+**Detectado.** Columnas derivadas de wyckoff tenian dos metricas bajo el mismo nombre: legacy pre-08-oct, v1.8 post. Discontinuidad medida en XLK `wyckoff_median`: 07-oct=+0.0749 (legacy) -> 08-oct=+0.3776 (v1.8). Ratio 5.04.
+
+**Regenerado.**
+- sector_concentration.csv (80cb03f8). Ratio 07/08 post: 1.92. Continuo.
+- leader_representativeness.csv (440750c1). 442 -> 115 filas, 10 -> 3 sectores.
+- sector_leader_divergence.csv (440750c1). 82 -> 23 filas, 10 -> 3 sectores.
+
+**Diagnosticado como limpio o no-bug.** rs_internal (RS, no wyckoff), sector_rank_history (no guarda fase), sector_breadth/_momentum/_persistence (breadth puro), sector_flow_characteristics (lag SSGA 1-2d), evidence_matrix y sector_regime_matrix (solo ultimo dia).
+
+**Error reconocido.** Primera version del script `regenerate_leader_dfs.py` llamaba a `generate_leader_section` con `fase_dict={}`, dejando `leader_df` vacio. Resultado: CSVs con 5 y 1 filas. Restaurado desde snapshot. Script rehecho construyendo `fase_dict` desde `compute_sector_scores(df_market_cut)`, replicando el flujo real del pipeline.
+
+**Commits.** 80cb03f8, 440750c1.
+
+**Pendiente.** H5.3 (20-nov-2026). C2, SOW v6 (terceros). Wyckoff 5e (bloqueado por cadena 5c/5d).
+
+**Proximo paso sugerido.** Verificar scheduled 2026-10-09 23:17 UTC con los nuevos CSVs.
+
 ### 2026-10-09 - Auditoria del reporte diario: 15 hallazgos clasificados
 
 **Objetivo.** Revision bloque a bloque del reporte del 2026-10-09 buscando errores, incoherencias, ceros/NaN/N-D ocultos.

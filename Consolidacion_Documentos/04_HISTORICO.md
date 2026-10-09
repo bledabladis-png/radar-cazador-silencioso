@@ -1265,6 +1265,35 @@ Los 3 ficheros fueron borrados de `main` en `cdf47ad2` (limpieza de corpus antig
 
 Accion: cifras corregidas en `00_ARRANQUE` (commit 634d44d4) y en este historico. Sin accion tecnica adicional.
 
+### Regeneracion de CSVs con legacy Wyckoff (2026-10-09)
+
+El clasificador legacy `indicators/wyckoff.py` usaba `robust_zscore(trend, w=60)` para el score continuo. v1.8 usa `tanh(trend/K)`. Los CSVs historicos acumularon filas pre-08-oct calculadas con legacy y post-08-oct con v1.8. Bajo el mismo nombre de columna, dos metricas distintas.
+
+Ademas, legacy tenia la rama silenciosa `if score_clean.empty: return RANGE` que etiquetaba una ausencia de datos como fase valida. v1.8 devuelve `INSUFFICIENT_DATA` (no computa como fase).
+
+**Barrido completo de outputs/history.** 4 CSVs regenerados, resto diagnosticados como limpios o no-bug.
+
+| CSV | Filas pre-08 | Accion | Commit |
+|---|---:|---|---|
+| sector_wyckoff_distribution.csv | 220 | Regenerado | f782b9d4 |
+| sector_concentration.csv | 187 | Regenerado | 80cb03f8 |
+| leader_representativeness.csv | 110 | Regenerado | 440750c1 |
+| sector_leader_divergence.csv | 22 | Regenerado | 440750c1 |
+| sector_rank_history.csv | 473 | Limpio (no guarda fase) | - |
+| rs_internal.csv | 2917 | Limpio (RS, no wyckoff) | - |
+| sector_breadth/momentum/persistence | 1155/220/220 | Limpio (breadth puro) | - |
+| sector_flow_characteristics.csv | 253 | No-bug (lag SSGA 1-2d) | - |
+| evidence_matrix, sector_regime_matrix | 0 | Solo ultimo dia | - |
+
+**Decisiones tomadas.**
+
+- `sector_concentration.csv`: regeneracion (mismo universo, nueva formula).
+- `leader_representativeness.csv` y `sector_leader_divergence.csv`: **eliminacion de falsos positivos**. Bajo v1.8, solo 3 sectores (XLK, XLE, XLV) cumplen ACCUMULATION/MARKUP en el periodo 17-sep a 07-oct. Legacy clasificaba 10. Los 7 restantes (XLB, XLC, XLF, XLP, XLRE, XLU, XLY) nunca debieron tener seccion de lideres. Verificacion cruzada: la fila del 08-oct escrita por el pipeline con v1.8 solo tiene XLK.
+
+**Trade-off aceptado** (mismo que el CSV de Wyckoff del 08-oct): las filas regeneradas son "v1.8 aplicado retroactivamente sobre el parquet actual", no lo publicado en su momento. Yahoo revisa OHLC (K-LSE-YAHOO-REVISION-01).
+
+**Snapshots pre** en `outputs/audit/*_pre_20261009.csv`.
+
 ### Deuda detectada en auditoria del reporte 2026-10-09: sector_flow_vs_price_div huerfano
 
 `compute_flow_divergence_v2` (`indicators/slpm_v12.py:97`) declara 3 componentes:
