@@ -18,4 +18,5 @@ date,vix_level,vix_percentile_20d,vix_percentile_60d,term_structure_ratio,term_s
 2026-10-02,15.3100004196167,0.35,0.3833333333333333,1.1763552910765305,2.6999995803833023,-0.1055183883979253,45.0,Volatilidad por debajo de la media,Contango (vol. implícita mayor horizonte superior a inmediata),20,60,20
 2026-10-05,15.520000457763672,0.4,0.45,1.159793780224777,2.479999542236328,-0.0806557658730539,50.0,Volatilidad media,Contango (vol. implícita mayor horizonte superior a inmediata),20,60,20
 2026-10-06,15.010000228881836,0.25,0.25,1.1752165043980207,2.6299997711181646,-0.217507456618362,25.0,Volatilidad por debajo de la media,Contango (vol. implícita mayor horizonte superior a inmediata),20,60,20
-2026-10-07,15.079999923706055,0.3,0.26666666666666666,1.1750663189423372,2.640000076293944,0.453326862354397,65.0,Volatilidad por debajo de la media,Contango (vol. implícita mayor horizonte superior a inmediata),20,60,20
+2026-10-07,15.079999923706056,0.3,0.2666666666666666,1.1750663189423372,2.640000076293944,0.453326862354397,65.0,Volatilidad por debajo de la media,Contango (vol. implícita mayor horizonte superior a inmediata),20,60,20
+2026-10-08,15.40999984741211,0.45,0.43333333333333335,1.1732641258290653,2.670000152587889,1.190051748000185,75.0,Volatilidad media,Contango (vol. implícita mayor horizonte superior a inmediata),20,60,20
