@@ -45,7 +45,7 @@ def render_representatividad_lider(leader_representativeness_data):
         out.append("\n")
         out.append("*Criterio: los tickers del sector ordenados por WLS desc. La primera fila de cada sector es el 'lider por WLS'. No coincide con Concentracion del liderazgo ni con Liderazgo interno, que priorizan por retorno 20d.*\n\n")
         # F6-12 (2026-09-28): nota sobre el filtro de sectores.
-        out.append("*Solo se muestran los sectores con medianas disponibles en sector_concentration.csv. Sectores sin cobertura suficiente en esa fuente se omiten (no es un filtro por rendimiento).*\n\n")
+        out.append("*Solo se muestran los sectores en fase ACCUMULATION o MARKUP. El resto (RANGE, DISTRIBUTION, MARKDOWN) se omite porque no genera seccion de lideres. Filtro por fase, no por cobertura ni rendimiento.*\n\n")
     return out
 
 
@@ -89,7 +89,7 @@ def render_divergencia_sector_lideres(sector_leader_divergence_data):
             out.append(f"| {row['sector']} | {row['sector_ret_20d']:.2%} | {row['n_leaders_positive']} | {row['n_leaders_negative']} | {row['n_leaders_beating_sector']} | {row['n_leaders_valid']} | {row['classification']} |\n")
         out.append("\n")
         # F6-12 (2026-09-28): nota sobre el filtro.
-        out.append("*Solo se muestran los sectores con lideres validos >= 3 (criterio de clasificacion minima). Sectores con menos validos se omiten.*\n\n")
+        out.append("*Solo se muestran los sectores en fase ACCUMULATION o MARKUP. El resto se omite porque no genera seccion de lideres. Filtro por fase, no por cobertura.*\n\n")
     return out
 
 
