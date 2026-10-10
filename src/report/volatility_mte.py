@@ -66,6 +66,10 @@ def render_calidad_datos(data_quality_data):
             out.append(f"| {row['source']} | {last} | {age} | {freq} | {fresh} | {cov} | {notes} |\n")
         out.append("\n")
         out.append("*No todas las variables tienen la misma actualidad. Los datos se muestran sin interpolación.*\n\n")
+        out.append("*Vista completa: 26 fuentes del sistema desde data_quality.csv. "
+                   "La tabla compacta 'Data Freshness' lista las 4 fuentes criticas "
+                   "con columna Data Conf. Pueden discrepar si el CSV esta "
+                   "desactualizado respecto a los datos runtime.*\n\n")
     return out
 
 

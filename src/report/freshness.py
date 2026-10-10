@@ -103,6 +103,10 @@ def render_data_freshness(pcr_data, darkpool_data, sector_results, reference_dat
     else:
         out.append("| Yahoo Finance (Precios) | N/D | N/D | N/D | N/D |\n")
     out.append("\n")
+    out.append("*Vista compacta: 4 fuentes criticas con columna Data Conf. "
+               "La tabla 'Calidad, frescura y cobertura' lista las 26 fuentes "
+               "del sistema desde data_quality.csv. Pueden discrepar si el CSV "
+               "esta desactualizado respecto a los datos runtime.*\n\n")
     coverage_lines = _generate_coverage_table(pcr_data, darkpool_data, sector_results, reference_date=reference_date)
     for cl in coverage_lines:
         out.append(cl)
