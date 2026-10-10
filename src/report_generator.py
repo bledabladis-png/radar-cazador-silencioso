@@ -12,13 +12,11 @@ from src.report.sectorial import (
 )
 from src.report.leaders import (
     render_momentum_sectores,
-    render_tactical_leaders,
     render_momentum_otros,
     render_acciones_seleccionadas,
 )
 from src.report.rankings import (
     render_ranking_sectorial_unificado,
-    render_persistencia,
     render_opportunity_map,
 )
 from src.report.etf_flows import (
@@ -132,7 +130,6 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
         sector_persistence, signal_agreements, signal_agreements_display,
         shock_sensitivities,
     ))
-    lines.extend(render_persistencia(sector_persistence))
     lines.extend(render_opportunity_map(
         tactical_scores, structural_scores,
         sector_persistence, signal_agreements,
@@ -154,10 +151,6 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
 
     # C2 - momentum y flow proxy (sectores + otros activos)
     lines.extend(render_momentum_sectores(sector_price_rank, sector_flow_rank))
-    lines.extend(render_tactical_leaders(
-        tactical_scores, structural_scores,
-        sector_price_rank, sector_flow_rank, shock_sensitivities,
-    ))
     lines.extend(render_momentum_otros(otros_price_rank, otros_flow_rank))
 
     # =========================================================================

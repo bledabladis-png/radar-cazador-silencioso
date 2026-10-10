@@ -5,10 +5,9 @@ Extraidos de src/report_generator.py (refactor C1, fase C1-6c1).
 """
 
 from config.settings import (EXPECTED_SECTOR_COUNT, MOMENTUM_PRICE_WINDOW,
-                              MOMENTUM_LONG_WINDOW, TOP_N_CANDIDATES, TOP_N_LEADERS)
+                              TOP_N_CANDIDATES, TOP_N_LEADERS)
 from config.tickers import SECTOR_NAMES
 from src.report.helpers import _fmt_num
-from src.report.helpers import _fmt_signed
 
 
 def render_momentum_sectores(sector_price_rank, sector_flow_rank):
@@ -40,35 +39,6 @@ def render_momentum_sectores(sector_price_rank, sector_flow_rank):
     for i, (ticker, flow) in enumerate(sector_flow_rank[:EXPECTED_SECTOR_COUNT], 1):
         name = SECTOR_NAMES.get(ticker, ticker)
         out.append(f"| {i} | {name} ({ticker}) | {_fmt_num(flow, '{:.2f}')} |\n")
-    return out
-
-
-def render_tactical_leaders(tactical_scores, structural_scores,
-                            sector_price_rank, sector_flow_rank,
-                            shock_sensitivities):
-    """Renderiza la tabla Tactical Leaders.
-
-    Devuelve lista de lineas markdown. Sin side effects.
-    """
-    out = []
-    out.append("## Tactical Leaders (Momentum de corto plazo)\n")
-    out.append("| # | Sector | Tactical | Structural | Retorno 20d | Flow Proxy (z) | Comm Corr |\n")
-    out.append("|---|--------|----------|------------|-------------|----------------|------------|\n")
-    tactical_ranking = sorted(tactical_scores.items(), key=lambda x: x[1], reverse=True) if tactical_scores else []
-    for i, (ticker, t_score) in enumerate(tactical_ranking[:EXPECTED_SECTOR_COUNT], 1):
-        name = SECTOR_NAMES.get(ticker, ticker)
-        s_score = structural_scores.get(ticker, 0.0) if structural_scores else 0.0
-        mom = next((m for t, m in sector_price_rank if t == ticker), 0)
-        flow = next((f for t, f in sector_flow_rank if t == ticker), None)
-        shock = shock_sensitivities.get(ticker, {}) if shock_sensitivities else {}
-        comm = shock.get('commodity_level', 'N/A') if shock else 'N/A'
-        comm_val = shock.get('commodity_corr_value', None) if shock else None
-        comm_display = f"{comm} ({_fmt_signed(comm_val, '{:+.2f}', '{:.2f}')})" if comm_val is not None and comm != 'N/A' else comm
-        out.append(f"| {i} | {name} ({ticker}) | {_fmt_signed(t_score, '{:+.2f}', '{:.2f}')} | {_fmt_signed(s_score, '{:+.2f}', '{:.2f}')} | {mom*100:.2f}% | {_fmt_signed(flow, '{:+.2f}', '{:.2f}')} | {comm_display} |\n")
-    # I1 (2026-09-18): misma metrica que "Momentum de Precio - Sectores".
-    out.append("\n*Nota: Retorno 20d usa la misma metrica que 'Momentum de "
-               "Precio - Sectores' (mediana de los componentes del sector).*\n\n")
-    out.append(f"*Nota: Comm Corr mide la correlación de {MOMENTUM_LONG_WINDOW} dias con ^SPGSCI. No implica causalidad.*\n\n")
     return out
 
 

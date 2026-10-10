@@ -1,14 +1,17 @@
 # -*- coding: utf-8 -*-
 """Test de regresion I1 + O1 (2026-09-18).
 
-I1: dos tablas del reporte usan 'Retorno 20d' con significados
+I1: dos tablas del reporte usaban 'Retorno 20d' con significados
     distintos (mediana de componentes del sector vs retorno del ETF).
-    Aclaracion via nota en ambas tablas.
+    Aclaracion via nota en ambas tablas. La tabla 'Tactical Leaders'
+    se elimino el 2026-10-10 (duplicaba columnas de Rankings
+    Sectoriales). La nota en 'Momentum de Precio - Sectores' se
+    mantiene.
 
 O1: la nota fuente SSGA no declaraba la fecha del dato.
 """
 import pandas as pd
-from src.report.leaders import render_momentum_sectores, render_tactical_leaders
+from src.report.leaders import render_momentum_sectores
 from src.report.etf_flows import render_flujo_spdr
 
 
@@ -20,37 +23,6 @@ def test_i1_momentum_sectores_incluye_nota():
     assert 'mediana de los retornos 20d' in joined
     assert 'Flujo Primario ETF' in joined  # referencia cruzada
     assert 'componentes del sector' in joined
-
-
-def test_i1_tactical_leaders_incluye_nota():
-    out = render_tactical_leaders(
-        tactical_scores={'XLK': 0.5},
-        structural_scores={'XLK': 0.3},
-        sector_price_rank=[('XLK', 0.05)],
-        sector_flow_rank=[('XLK', 0.5)],
-        shock_sensitivities={},
-    )
-    joined = ''.join(out)
-    assert "misma metrica que 'Momentum de Precio - Sectores'" in joined
-    assert 'mediana de los componentes del sector' in joined
-
-
-def test_i1_tactical_nota_separada_de_comm_corr():
-    """La nota I1 y la nota Comm Corr deben ser parrafos separados."""
-    out = render_tactical_leaders(
-        tactical_scores={'XLK': 0.5},
-        structural_scores={'XLK': 0.3},
-        sector_price_rank=[('XLK', 0.05)],
-        sector_flow_rank=[('XLK', 0.5)],
-        shock_sensitivities={},
-    )
-    joined = ''.join(out)
-    # Debe haber doble salto entre la nota I1 y la de Comm Corr
-    idx = joined.find('mediana de los componentes')
-    assert idx > 0
-    resto = joined[idx:idx+200]
-    # En los siguientes 200 chars debe haber '\n\n' antes de 'Comm Corr'
-    assert '\n\n' in resto or '\n\n' in joined[idx:], 'Falta separacion de parrafos'
 
 
 def test_o1_fecha_efectiva_en_nota():

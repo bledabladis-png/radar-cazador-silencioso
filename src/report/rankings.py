@@ -66,25 +66,6 @@ def render_ranking_sectorial_unificado(sector_results, tactical_scores,
     return out
 
 
-def render_persistencia(sector_persistence):
-    """Renderiza la tabla de Persistencia sectorial.
-
-    Devuelve lista de lineas markdown. Sin side effects.
-    """
-    out = []
-    if sector_persistence:
-        out.append("## Persistencia sectorial\n")
-        out.append("| Sector | Persistencia |\n")
-        out.append("|--------|-------------|\n")
-        for ticker in MARKET_TICKERS['sectors']:
-            val = sector_persistence.get(ticker)
-            val_str = f"{val:.0%}" if val is not None else "N/D"
-            out.append(f"| {ticker} | {val_str} |\n")
-        out.append("\n")
-        out.append("*Persistencia calculada sobre RS20 (acción vs SPY) con lookback 12. Descriptiva, no predictiva.*\n\n")
-    return out
-
-
 def render_opportunity_map(tactical_scores, structural_scores,
                            sector_persistence, signal_agreements):
     """Renderiza la tabla Opportunity Map por cuadrantes.
