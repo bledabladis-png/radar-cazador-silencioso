@@ -1265,6 +1265,29 @@ Los 3 ficheros fueron borrados de `main` en `cdf47ad2` (limpieza de corpus antig
 
 Accion: cifras corregidas en `00_ARRANQUE` (commit 634d44d4) y en este historico. Sin accion tecnica adicional.
 
+### Retirada del modulo Wyckoff legacy (5e adelantado, 2026-10-10)
+
+El plan de migracion (§2.2, §7) marcaba la retirada del legacy (5e) como BLOQUEADA hasta cierre de 5d + 1 run CI estable. Se adelanta en 2026-10-10 con la siguiente justificacion:
+
+- Los 5 consumidores productivos fueron migrados a v1.8 el 2026-10-08 (commits 2fd6c449, 35663000).
+- Los 4 CSVs historicos contaminados con legacy/v1.8 fueron regenerados entre 2026-10-08 y 2026-10-09.
+- El CI corre con v1.8 desde 2026-10-08 con run-system=success el 09-oct (headSha cd011629) y el 10-oct (headSha cd011629).
+- Los consumidores residuales (2 tests que documentaban el bug del legacy + 1 script de comparacion) no son de produccion.
+
+El plan original marcaba 5d como bloqueado por 5b.X (~2027). Esa cadena no aplica: 5d es la migracion de consumidores, ya ejecutada parcialmente sin esperar a 5b.X. Mantener el legacy 15 meses por ceremonia no tiene justificacion tecnica.
+
+**Acciones ejecutadas.**
+
+- Retirado `indicators/wyckoff.py` (legacy v4.2).
+- Retirados `tests/test_build_ticker_df_i2.py` y `tests/test_index_phase_range.py`.
+- Retirado `scripts/compare_wyckoff_legacy_v18.py`.
+- Portado el test de regresion I2 / K-INDEX-RANGE-01 a `tests/test_wyckoff_v1_contract.py` (test_regresion_i2_nan_internos_no_degenera).
+- Actualizados 00_ARRANQUE y 02_ARQUITECTURA.
+
+**Verificacion.** Suite: 3204+5+0 (era 3212+5 antes: -8 tests netos al eliminar los 2 ficheros legacy). Barrido de imports residuales: 0. CI de 09-oct y 10-oct corrieron con v1.8 sin incidentes.
+
+**Referencia.** `docs/auditoria/wyckoff/03_plan_migracion.md` (5e pasa a CERRADO).
+
 ### Regeneracion de CSVs con legacy Wyckoff (2026-10-09)
 
 El clasificador legacy `indicators/wyckoff.py` usaba `robust_zscore(trend, w=60)` para el score continuo. v1.8 usa `tanh(trend/K)`. Los CSVs historicos acumularon filas pre-08-oct calculadas con legacy y post-08-oct con v1.8. Bajo el mismo nombre de columna, dos metricas distintas.

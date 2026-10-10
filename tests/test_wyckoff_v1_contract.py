@@ -1357,3 +1357,43 @@ def test_f03_detect_sos_no_lookahead():
     pd.testing.assert_series_equal(
         sos_ref.iloc[:t+1], sos_mod.iloc[:t+1], check_names=False
     )
+
+
+def test_regresion_i2_nan_internos_no_degenera():
+    """Regresion I2 + K-INDEX-RANGE-01 (2026-09-18). Portada de los
+    tests legacy test_build_ticker_df_i2.py y test_index_phase_range.py
+    a v1.8 al retirar el modulo legacy 2026-10-10.
+
+    Bug original: classify_wyckoff_phase degeneraba a RANGE (fallback
+    silencioso) cuando recibia un df con NaN internos, sin aplicar
+    build_ticker_df primero. Afectaba a indices internacionales y
+    ETFs sectoriales.
+
+    Contrato v1.8: build_ticker_df rellena Open/High/Low desde Close
+    y Volume con 0, evitando que los NaN internos propaguen al
+    clasificador. Este test verifica que con NaN internos + el helper,
+    classify_wyckoff_phase produce una fase valida (no colapsa).
+    """
+    import numpy as np
+    rng = np.random.default_rng(20261010)
+    n = 300
+    dates = pd.date_range('2025-01-01', periods=n, freq='B')
+    # Ticker con tendencia alcista clara + NaN internos
+    base = 100 + rng.standard_normal(n).cumsum() + np.linspace(0, 20, n)
+    df = pd.DataFrame({
+        ('Open', 'TST'): base + rng.standard_normal(n) * 0.5,
+        ('High', 'TST'): base + abs(rng.standard_normal(n)) * 1.0,
+        ('Low', 'TST'): base - abs(rng.standard_normal(n)) * 1.0,
+        ('Close', 'TST'): base,
+        ('Volume', 'TST'): rng.integers(1_000_000, 10_000_000, n).astype(float),
+    }, index=dates)
+    df.loc[df.index[50:70], ('Close', 'TST')] = np.nan
+    df.loc[df.index[100:105], ('Volume', 'TST')] = np.nan
+
+    # Contrato: build_ticker_df + classify no colapsa a RANGE por los NaN
+    tdf = w1.build_ticker_df(df, 'TST')
+    assert not tdf.empty, 'build_ticker_df devolvio vacio con NaN internos'
+    assert tdf.notna().all().all(), 'build_ticker_df dejo NaN'
+    phase = w1.classify_wyckoff_phase(tdf, 'TST')
+    valid = {'MARKUP', 'ACCUMULATION', 'RANGE', 'DISTRIBUTION', 'MARKDOWN', 'INSUFFICIENT_DATA'}
+    assert phase in valid, f'fase inesperada: {phase}'

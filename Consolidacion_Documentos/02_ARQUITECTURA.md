@@ -126,6 +126,14 @@ NUNCA se mezclan. NUNCA se construye superindicador.
 
 ---
 
+### Nota: retirada del modulo Wyckoff legacy (2026-10-10)
+
+El fichero `indicators/wyckoff.py` (legacy v4.2) fue retirado el 2026-10-10. Todos los consumidores migraron a `indicators/wyckoff_v1.py` (v1.8) en la migracion del 2026-10-07/08 (commits 2fd6c449, 35663000, f782b9d4). Los 5 CSVs historicos afectados por la mezcla legacy/v1.8 fueron regenerados entre 2026-10-08 y 2026-10-09.
+
+Tests de regresion I2 / K-INDEX-RANGE-01 portados a `test_wyckoff_v1_contract.py` (test_regresion_i2_nan_internos_no_degenera). El script `compare_wyckoff_legacy_v18.py` (comparativa legacy vs v1.8) fue retirado junto al legacy: sin legacy no tiene objeto.
+
+El contrato v1.8 esta en `docs/auditoria/wyckoff/01_contrato_semantico_v1_8.md`. La secuencia completa (5a-5e) en `docs/auditoria/wyckoff/03_plan_migracion.md`.
+
 ## 4. CONTRATO DE MODULOS
 
 - `src/report/*.py`: funciones `render_*(...) -> list[str]`. Sin side effects. Devuelve lista de lineas markdown.

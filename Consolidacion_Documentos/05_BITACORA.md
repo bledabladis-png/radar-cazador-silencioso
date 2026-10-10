@@ -44,6 +44,21 @@ Al cerrar una sesion nueva, se anade arriba (las mas recientes primero). Si hay 
 
 ## 3. SESIONES
 
+### 2026-10-10 - Retirada del modulo Wyckoff legacy (5e)
+
+**Objetivo.** Cerrar el frente legacy: llevar a termino la retirada que el plan tenia bloqueada por ceremonia de fases.
+
+**Hecho.**
+- Portado el test de regresion I2 / K-INDEX-RANGE-01 a `test_wyckoff_v1_contract.py`.
+- Borrados: `indicators/wyckoff.py`, `tests/test_build_ticker_df_i2.py`, `tests/test_index_phase_range.py`, `scripts/compare_wyckoff_legacy_v18.py`.
+- Actualizados `00_ARRANQUE` y `02_ARQUITECTURA`.
+
+**Verificacion.** Barrido de imports residuales: 0. Suite: 3204+5+0. CI con v1.8 confirmado 09-oct y 10-oct.
+
+**Pendiente.** Verificar scheduled 10-oct 23:17 UTC (no debe notar el cambio: ya corria con v1.8).
+
+**Proximo paso sugerido.** Ninguno urgente. H5.3 (20-nov-2026), C2 y SOW v6 bloqueados por terceros.
+
 ### 2026-10-09 (noche) - Regeneracion de CSVs contaminados por legacy Wyckoff
 
 **Objetivo.** Tras detectar que el clasificador legacy seguia contaminando CSVs historicos, barrer todos los `outputs/history/*.csv` y regenerar los afectados.

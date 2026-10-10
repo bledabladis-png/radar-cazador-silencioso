@@ -92,8 +92,8 @@ directos del legacy `indicators/wyckoff.py` migrados a v1.8 core
 (`indicators/wyckoff_v1.py`). Alcance: 4 fases (MARKUP, ACCUMULATION,
 RANGE, MARKDOWN). DISTRIBUTION excluida por fail-closed (requiere
 SOW, pendiente 5b.X ~2027). CSV historico regenerado. Commits
-2fd6c449, 35663000, f782b9d4. Legacy pendiente de retirada (5e)
-tras 1 run CI estable.
+2fd6c449, 35663000, f782b9d4. Legacy retirado 2026-10-10
+(commit siguiente).
 
 **Fases IAE:**
 - FA-1, FA-2, NIPC, A, B, C, E, F, G: CERRADAS
@@ -147,7 +147,8 @@ A1-A5, A6, B, C, 6, 7, 8, 9, F: CERRADOS. Detalle tematico en
 - **Bloqueado unicamente por datos:** ejecucion cuando
   `n_confirmed_H20_complete >= 550` post-2026-10-02 (~2027).
   Script y protocolo inmutables (T7/T7b lo verifican).
-- **Bloqueado aparte:** 5c.4, 5d, 5e. **No bloqueado:** 5c, plan v2.
+- **Bloqueado aparte:** 5c.4, 5d. **No bloqueado:** 5c, plan v2.
+  **5e retirada legacy CERRADO 2026-10-10.**
 - **Walk-forward SOW (2026-10-04):** v1.9 FAIL; C1 con evidencia OOS
   historica limpia; C2 exploratoria congelada. `43_estado_sow_tras_walkforward.md`.
   SOW sigue None / fail-closed. 5b.X v3 aplica solo a C0/v1.9.
