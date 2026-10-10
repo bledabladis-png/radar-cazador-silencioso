@@ -174,6 +174,101 @@ def compute_data_quality(reference_date=None):
             'coverage_logic': 'sectorial_evidence',
             'notes': 'Matriz evidencia'
         },
+        # 2026-10-10: fuentes anadidas. Faltaban 12 CSVs que alimentan
+        # secciones del reporte sin declaracion de frescura. Todas
+        # bursatiles (segundo candado temporal del pipeline).
+        {
+            'source': 'Sector Breadth',
+            'file': 'outputs/history/sector_breadth.csv',
+            'date_cols': ['date'],
+            'frequency': 'daily',
+            'coverage_logic': 'sectorial',
+            'notes': 'Amplitud y salud sectorial'
+        },
+        {
+            'source': 'Sector Persistence',
+            'file': 'outputs/history/sector_persistence.csv',
+            'date_cols': ['date'],
+            'frequency': 'daily',
+            'coverage_logic': 'sectorial',
+            'notes': 'Persistencia sectorial'
+        },
+        # 2026-10-10: SLPM retirado de la lista. slpm_history.csv
+        # esta congelado desde 2026-07-17 (mtime agosto). Grep no
+        # encuentra writer activo. Declarar su frescura sin writer
+        # solo anade ruido ARCHIVAL permanente.
+        {
+            'source': 'Sector Regime Matrix',
+            'file': 'outputs/history/sector_regime_matrix.csv',
+            'date_cols': ['date'],
+            'frequency': 'daily',
+            'coverage_logic': 'sectorial',
+            'notes': 'Matriz de regimen sectorial'
+        },
+        {
+            'source': 'Leader Representativeness',
+            'file': 'outputs/history/leader_representativeness.csv',
+            'date_cols': ['date'],
+            'frequency': 'daily',
+            'coverage_logic': None,
+            'notes': 'Representatividad del lider'
+        },
+        {
+            'source': 'Sector Wyckoff Distribution',
+            'file': 'outputs/history/sector_wyckoff_distribution.csv',
+            'date_cols': ['date'],
+            'frequency': 'daily',
+            'coverage_logic': 'sectorial',
+            'notes': 'Distribucion Wyckoff sectorial'
+        },
+        {
+            'source': 'Sector Leader Divergence',
+            'file': 'outputs/history/sector_leader_divergence.csv',
+            'date_cols': ['date'],
+            'frequency': 'daily',
+            'coverage_logic': None,
+            'notes': 'Divergencia sector-lideres'
+        },
+        {
+            'source': 'RS Internal',
+            'file': 'outputs/history/rs_internal.csv',
+            'date_cols': ['date'],
+            'frequency': 'daily',
+            'coverage_logic': None,
+            'notes': 'Liderazgo relativo interno'
+        },
+        {
+            'source': 'Sector Rank History',
+            'file': 'outputs/history/sector_rank_history.csv',
+            'date_cols': ['date'],
+            'frequency': 'daily',
+            'coverage_logic': None,
+            'notes': 'Rotacion sectorial historica'
+        },
+        {
+            'source': 'Sector Dispersion',
+            'file': 'outputs/history/sector_dispersion.csv',
+            'date_cols': ['date'],
+            'frequency': 'daily',
+            'coverage_logic': None,
+            'notes': 'Dispersion entre sectores'
+        },
+        {
+            'source': 'Sector Correlation Summary',
+            'file': 'outputs/history/sector_correlation_summary.csv',
+            'date_cols': ['date'],
+            'frequency': 'daily',
+            'coverage_logic': None,
+            'notes': 'Correlacion entre sectores'
+        },
+        {
+            'source': 'Sector Flow Characteristics',
+            'file': 'outputs/history/sector_flow_characteristics.csv',
+            'date_cols': ['date'],
+            'frequency': 'daily',
+            'coverage_logic': 'sectorial',
+            'notes': 'Flujo primario sectorial'
+        },
     ]
 
     rows = []
