@@ -109,15 +109,22 @@ Ver `01_contrato_semantico_v1_8.md` y `01_contrato_semantico_v1_9.md`.
 como consumidor. Grep confirma que no importa wyckoff. Se omite.
 `regimes/sector_regime.py` aparecia como indirecto; es directo.
 
-El legacy `indicators/wyckoff.py` permanece en el repo pero sin
-consumidores productivos. Se retirara en 5e.
+El legacy `indicators/wyckoff.py` permanecio en el repo sin
+consumidores productivos hasta el 2026-10-10, fecha en que se retiro
+(5e adelantado, ver seccion 2.5 y 10).
 
 ### 2.5. Bloqueos activos
 
-    5b.X      BLOQUEADO hasta datos posteriores a 2026-10-01
+    5b.X      BLOQUEADO hasta datos posteriores a 2026-10-01 (~2027)
     5c        DESBLOQUEADA desde 5b.2 (ver seccion 5)
-    5d        BLOQUEADO hasta cierre 5b.X + 5c
-    5e        BLOQUEADO hasta cierre 5d + 1 run CI estable
+    5d        PARCIAL: 5 consumidores directos migrados 2026-10-08.
+              Los 4 indirectos leen columnas derivadas, no wyckoff.
+              No hay migracion pendiente por ese lado.
+    5e        CERRADO 2026-10-10 (retirada adelantada del legacy).
+              Justificacion: v1.8 en produccion desde 08-oct, CI
+              estable 08/09/10-oct, consumidores residuales no
+              productivos. El bloqueo de 5d por 5b.X (~2027) no
+              aplicaba: 5d ya se habia ejecutado sin esperar.
     5c.4      BLOQUEADO
 
 ---
@@ -314,6 +321,11 @@ Revalidar con E2E + snapshot pre/post en cada migracion:
 
 - Renombrar `indicators/wyckoff.py` a `indicators/wyckoff_legacy.py`
   (NO borrar; mantener por referencia).
+  **EJECUTADO COMO BORRADO 2026-10-10.** Desviacion del plan: se
+  elimino el fichero en lugar de renombrarlo. Razon: los tests que
+  lo importaban solo documentaban su bug (ya portado a v1.8). El
+  script de comparativa requeria ambos modulos; se elimino junto al
+  legacy. El codigo antiguo queda en git (commit previo a 17747a98).
 - Ajustar imports en consumidores residuales.
 - Actualizar `02_ARQUITECTURA.md` y `03_IAE.md`.
 - Tras 1 run CI estable con v1.9 en produccion.
@@ -376,10 +388,11 @@ Si emergen durante alguna fase, se abren como sub-proyectos separados.
 | PENDIENTE | 5b.X ejecucion (requiere 550 confirmed H20-complete) | - |
 | 2026-10-08 | Migracion core v1.8 (5 consumidores directos) | OK |
 | 2026-10-08 | Regeneracion CSV sector_wyckoff_distribution | OK |
-| 2026-10-08 | Retirada legacy (5e) | PENDIENTE (1 run CI estable) |
+| 2026-10-08 | Retirada legacy (5e) | ADELANTADA 2026-10-10 |
+| 2026-10-09 | Regeneracion 3 CSVs (concentration, leader_repr, leader_div) | OK |
+| 2026-10-10 | Retirada legacy (5e) | OK (commit 17747a98) |
 | PENDIENTE | 5c comparativa legacy vs v1 (post-5b.X) | - |
-| PENDIENTE | 5d migracion 5 consumidores | - |
-| PENDIENTE | 5e retirada legacy | - |
+| N/A | 5d migracion 5 consumidores | OK 2026-10-08; los 4 indirectos no aplican |
 
 ---
 

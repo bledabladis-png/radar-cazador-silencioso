@@ -240,9 +240,9 @@ Respuesta: SI / NO / REFORMULAR por cada una.
       U4: src/pipeline/mte_confirmation.py
       U5: src/institutional_accumulation/operational_universe.py
 
-    Funciones Wyckoff:
-      classify_wyckoff_phase:  indicators/wyckoff.py:383
-      wyckoff_structure_core:  indicators/wyckoff.py:301
+    Funciones Wyckoff (v1.8, legacy retirado 2026-10-10):
+      classify_wyckoff_phase:  indicators/wyckoff_v1.py:281
+      wyckoff_structure_core:  (no existe en v1.8; usa classify_wyckoff_phase)
 
 ## Anexo. Notas al pie del reporte (2026-10-05)
 
