@@ -210,7 +210,7 @@ date,sector,delta_1d_ema20,delta_5d_ema20,delta_20d_ema20,delta_1d_ema50,delta_5
 2026-10-06,XLC,5.0,15.0,-40.0,0.0,10.0,-40.0,0.0,0.0,-10.0,Expansión fuerte,Expansión fuerte,Estable,False,False
 2026-10-07,XLK,5.0,5.0,18.57142857142857,0.0,5.0,37.61904761904761,0.0,5.0,9.285714285714292,Expansión fuerte,Expansión fuerte,Expansión fuerte,True,False
 2026-10-07,XLF,-5.0,25.0,-50.0,5.0,25.0,-60.0,0.0,10.000000000000009,-39.99999999999999,Expansión fuerte,Expansión fuerte,Expansión fuerte,False,False
-2026-10-07,XLV,20.0,15.0,-20.0,5.000000000000007,5.000000000000007,-19.999999999999996,-5.0,5.0,-15.0,Expansión fuerte,Expansión fuerte,Expansión fuerte,False,False
+2026-10-07,XLV,20.0,15.0,-20.0,5.000000000000007,5.000000000000007,-20.0,-5.0,5.0,-15.0,Expansión fuerte,Expansión fuerte,Expansión fuerte,False,False
 2026-10-07,XLE,-10.0,40.0,-15.0,-5.0,35.0,-30.0,-5.0,14.999999999999991,-25.0,Expansión fuerte,Expansión fuerte,Expansión fuerte,False,False
 2026-10-07,XLY,-5.0,0.0,5.0,5.0,10.0,0.0,-5.0,15.0,0.0,Estable,Expansión fuerte,Expansión fuerte,False,False
 2026-10-07,XLP,-5.0,35.0,5.0,-10.0,20.0,-5.0,0.0,15.0,-20.0,Expansión fuerte,Expansión fuerte,Expansión fuerte,False,False
