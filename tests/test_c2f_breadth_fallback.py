@@ -92,13 +92,41 @@ def _mk_market(end_date='2026-09-11', n=300):
 
 
 # ============================================================
-# T-C2F-1: sabado -> fallback + is_stale=True + CSV real intacto
+# T-C2F-1 (2026-10-10): sabado con df_stocks hasta viernes -> escribe
+# la sesion del viernes. reference_date es la fecha del run, no la
+# sesion objetivo. Coherente con pipeline_gate.py (target_session !=
+# dia calendario del slot) y con el resto de modulos del pipeline.
 # ============================================================
-def test_t_c2f_1_sabado_devuelve_fallback(tmp_path):
+def test_t_c2f_1_sabado_produce_sesion_viernes(tmp_path):
     csv = tmp_path / "sb.csv"
-    _mk_breadth_csv(csv, dates=['2026-09-10', '2026-09-11'])
+    _mk_breadth_csv(csv, dates=['2026-09-10'])
     df_market = _mk_market()
-    df_stocks = _mk_stocks()
+    df_stocks = _mk_stocks(end_date='2026-09-11')
+    holdings = pd.DataFrame({'etf': ['XLK'] * 11, 'ticker': SECTORS})
+
+    result, is_stale = _compute_sector_breadth_health(
+        df_stocks, df_market, holdings,
+        reference_date=SATURDAY, output_path=csv)
+
+    assert result is not None
+    assert is_stale is False, "sabado escribe la sesion del viernes, no stale"
+    assert pd.to_datetime(result['date']).max() == pd.Timestamp('2026-09-11')
+    # El CSV si se modifica
+    df_csv = pd.read_csv(csv)
+    assert pd.to_datetime(df_csv['date']).max() == pd.Timestamp('2026-09-11')
+
+
+# ============================================================
+# T-C2F-1b (2026-10-10): sabado con df_stocks stale (jueves) ->
+# DATA_PENDING, CSV intacto. El candado correcto es expected_session
+# vs observed_last, no is_market_day(reference_date).
+# ============================================================
+def test_t_c2f_1b_sabado_con_datos_stale_devuelve_stale(tmp_path):
+    csv = tmp_path / "sb.csv"
+    _mk_breadth_csv(csv, dates=['2026-09-09', '2026-09-10'])
+    df_market = _mk_market()
+    # df_stocks solo hasta jueves 10-sep (falta el viernes 11-sep)
+    df_stocks = _mk_stocks(end_date='2026-09-10')
     holdings = pd.DataFrame({'etf': ['XLK'] * 11, 'ticker': SECTORS})
 
     mtime_before = csv.stat().st_mtime
@@ -108,10 +136,9 @@ def test_t_c2f_1_sabado_devuelve_fallback(tmp_path):
         df_stocks, df_market, holdings,
         reference_date=SATURDAY, output_path=csv)
 
-    assert result is not None, "debe devolver snapshot historico"
+    assert result is not None
     assert is_stale is True
-    assert len(result) == 11
-    assert result['date'].max() == pd.Timestamp('2026-09-11')
+    assert result['date'].max() == pd.Timestamp('2026-09-10')
     # CSV real no modificado
     assert csv.stat().st_mtime == mtime_before
     assert csv.stat().st_size == size_before

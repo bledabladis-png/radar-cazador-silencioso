@@ -85,8 +85,12 @@ def _compute_sector_breadth_health(df_stocks, df_market, holdings_df,
                                     temporal_meta=None, return_reason=False):
     """Calcula y persiste Sector Breadth & Health.
 
-    B2 (2026-09-12): la observacion solo se genera si reference_date es
-    una sesion NYSE y la sesion esperada esta presente en df_stocks.
+    B2 (2026-09-12, revisado 2026-10-10): la observacion se genera si la
+    sesion esperada (last_expected_market_date(reference_date)) esta
+    presente en df_stocks. Ya NO se exige que reference_date sea dia
+    bursatil: reference_date es la fecha del run (reloj), no la sesion
+    objetivo. El pipeline corre en slots de fin de semana que producen
+    la sesion del viernes.
 
     C2-followup (2026-09-12): cuando no hay nueva observacion, devuelve
     el ultimo snapshot historico VALIDO como fallback con is_stale=True.
@@ -113,15 +117,13 @@ def _compute_sector_breadth_health(df_stocks, df_market, holdings_df,
         sb_path = (Path(output_path) if output_path is not None
                    else Path('outputs/history/sector_breadth.csv'))
 
-        # B2: control de dia bursatil en el caller.
-        if not is_market_day(reference_date.date()):
-            print(f"  B2: {reference_date.date()} no es sesion NYSE. Omitiendo nueva observacion.")
-            fallback = _load_latest_valid_breadth_snapshot(sb_path)
-            if fallback is not None:
-                print(f"  C2F: usando snapshot {fallback['date'].max().date()} como stale.")
-            if return_reason:
-                return fallback, True, 'MARKET_CLOSED'
-            return fallback, True
+        # 2026-10-10: eliminado el candado is_market_day(reference_date).
+        # Motivo: reference_date es la fecha del run (reloj), no la sesion
+        # objetivo. El pipeline corre en slots de fin de semana que
+        # producen la sesion del viernes. El candado correcto es el de
+        # mas abajo (expected_session vs observed_last). Coherente con
+        # pipeline_gate.py (target_session != day of slot) y con el
+        # resto de modulos del pipeline.
 
         expected_session = last_expected_market_date(reference_date)
 

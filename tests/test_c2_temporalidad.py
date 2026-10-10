@@ -52,9 +52,12 @@ def _mk_market_and_stocks(end_date='2026-09-11', n=300):
 
 
 # ============================================================
-# T-INT-4: dia no bursatil -> no se genera observacion
+# T-INT-4 (revisado 2026-10-10): sabado con datos hasta viernes ->
+# escribe fila del viernes. reference_date es la fecha del run, no
+# la sesion objetivo. Coherente con pipeline_gate.py (target_session
+# != dia calendario del slot).
 # ============================================================
-def test_t_int_4_dia_no_bursatil_no_genera(tmp_path):
+def test_t_int_4_sabado_produce_sesion_viernes(tmp_path):
     df_market, df_stocks, holdings = _mk_market_and_stocks(end_date='2026-09-11')
     out = tmp_path / "sb.csv"
 
@@ -62,10 +65,28 @@ def test_t_int_4_dia_no_bursatil_no_genera(tmp_path):
         df_stocks, df_market, holdings,
         reference_date=SATURDAY, output_path=out)
 
-    # C2F: sin CSV historico, fallback devuelve (None, True).
+    assert result is not None
+    assert is_stale is False
+    assert out.exists(), "debe escribir la fila del viernes"
+    assert pd.to_datetime(result.iloc[0]['date']).date() == date(2026, 9, 11)
+
+
+# ============================================================
+# T-INT-4b (nuevo 2026-10-10): sabado con datos stale (jueves) ->
+# DATA_PENDING. El candado correcto es expected_session vs
+# observed_last, no is_market_day(reference_date).
+# ============================================================
+def test_t_int_4b_sabado_con_datos_stale_devuelve_stale(tmp_path):
+    df_market, df_stocks, holdings = _mk_market_and_stocks(end_date='2026-09-10')
+    out = tmp_path / "sb.csv"
+
+    result, is_stale = _compute_sector_breadth_health(
+        df_stocks, df_market, holdings,
+        reference_date=SATURDAY, output_path=out)
+
+    # Sin CSV previo y df_stocks stale -> fallback None, stale=True
     assert result is None
     assert is_stale is True
-    assert not out.exists(), "no debe crear CSV en dia no bursatil"
 
 
 # ============================================================
@@ -141,12 +162,11 @@ def test_t_int_11_reference_date_sesion(tmp_path):
 
 
 # ============================================================
-# T-INT-12: reference_date sabado + datos hasta viernes -> no observacion
+# T-INT-12 (revisado 2026-10-10): sabado + datos hasta viernes ->
+# escribe fila del viernes. Es el caso normal del slot 03:17 UTC del
+# sabado: produce el cierre del viernes.
 # ============================================================
 def test_t_int_12_sabado_con_datos_hasta_viernes(tmp_path):
-    # Caso critico: df_stocks.index[-1] = viernes (sesion), reference_date = sabado.
-    # El comportamiento correcto es NO generar, aunque la ultima fecha del df
-    # sea una sesion valida. Sin reference_date no seria detectable.
     df_market, df_stocks, holdings = _mk_market_and_stocks(end_date='2026-09-11')
     out = tmp_path / "sb.csv"
 
@@ -154,10 +174,10 @@ def test_t_int_12_sabado_con_datos_hasta_viernes(tmp_path):
         df_stocks, df_market, holdings,
         reference_date=SATURDAY, output_path=out)
 
-    # C2F: sin CSV historico, fallback devuelve (None, True).
-    assert result is None
-    assert is_stale is True
-    assert not out.exists()
+    assert result is not None
+    assert is_stale is False
+    assert out.exists()
+    assert pd.to_datetime(result.iloc[0]['date']).date() == date(2026, 9, 11)
 
 
 # ============================================================
@@ -183,18 +203,28 @@ def test_t_int_11b_reference_date_pre_publish(tmp_path):
     assert pd.to_datetime(result.iloc[0]['date']) == expected
 
 
-def test_csv_real_no_modificado():
+def test_t_int_4c_sabado_no_toca_csv_real(tmp_path):
+    """2026-10-10: la funcion escribe cuando el sabado produce el
+    viernes, pero SIEMPRE debe respetar output_path. Nunca debe
+    escribir al CSV real si se le pasa una ruta temporal.
+    """
     real_csv = Path('outputs/history/sector_breadth.csv')
     if not real_csv.exists():
         pytest.skip("CSV real no existe")
     mtime_before = real_csv.stat().st_mtime
     size_before = real_csv.stat().st_size
-    # Ejecutar una operacion que escribia al CSV real sin output_path
+
+    out = tmp_path / "sb.csv"
     df_market, df_stocks, holdings = _mk_market_and_stocks(end_date='2026-09-11')
     _ = _compute_sector_breadth_health(
         df_stocks, df_market, holdings,
-        reference_date=SATURDAY)  # sabado -> no escribe
-    mtime_after = real_csv.stat().st_mtime
-    size_after = real_csv.stat().st_size
-    assert mtime_before == mtime_after, "el CSV real no debe cambiar"
-    assert size_before == size_after
+        reference_date=SATURDAY, output_path=out)
+
+    # El CSV real no debe cambiar (aunque la funcion escriba al output_path)
+    assert real_csv.stat().st_mtime == mtime_before, "el CSV real no debe cambiar"
+    assert real_csv.stat().st_size == size_before
+
+    # El output_path si debe haberse escrito
+    assert out.exists()
+    df_out = pd.read_csv(out)
+    assert pd.to_datetime(df_out['date']).max().date() == date(2026, 9, 11)
