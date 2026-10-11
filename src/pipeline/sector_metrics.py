@@ -7,11 +7,9 @@ Sector Concentration + Representatividad del lider.
 Extraido de run.py (refactor C2, fase C2-7b).
 """
 
-from pathlib import Path
-
 import pandas as pd
 
-from src.utils import append_dedup
+from src.pipeline.output_writer import persist, skip
 from indicators.sector_leader_divergence import compute_sector_leader_divergence
 from indicators.sector_wyckoff_distribution import compute_sector_wyckoff_distribution
 from indicators.rs_internal import compute_rs_internal
@@ -26,16 +24,12 @@ def _compute_divergencia(df_stocks, holdings_df, leader_df, df_market, temporal_
                 df_stocks, holdings_df, leader_df, df_market,
                 temporal_meta=temporal_meta,
             )
-            sld_path = Path('outputs/history/sector_leader_divergence.csv')
-            sld_path.parent.mkdir(parents=True, exist_ok=True)
             if not sector_leader_divergence_df.empty:
-                if sld_path.exists():
-                    hist_sld = pd.read_csv(sld_path)
-                    sector_leader_divergence_df = append_dedup(hist_sld, sector_leader_divergence_df, ["date","sector"])
-                _tmp_sld = sld_path.with_suffix(sld_path.suffix + '.tmp')
-                sector_leader_divergence_df.to_csv(_tmp_sld, index=False, encoding='utf-8', lineterminator='\n')
-                _tmp_sld.replace(sld_path)
+                date_val = sector_leader_divergence_df['date'].max()
+                persist('sector_leader_divergence', sector_leader_divergence_df, date_value=date_val)
                 print("  Divergencia sector-lideres calculada.")
+            else:
+                skip('sector_leader_divergence', 'EMPTY_DF')
         else:
             sector_leader_divergence_df = None
     except (KeyError, ValueError, TypeError, IndexError, AttributeError, OSError, RuntimeError, pd.errors.ParserError) as e:
@@ -48,16 +42,12 @@ def _compute_wyckoff(df_stocks, holdings_df):
     try:
         if df_stocks is not None and not df_stocks.empty:
             sector_wyckoff_distribution_df = compute_sector_wyckoff_distribution(df_stocks, holdings_df)
-            wyckoff_path = Path('outputs/history/sector_wyckoff_distribution.csv')
-            wyckoff_path.parent.mkdir(parents=True, exist_ok=True)
             if not sector_wyckoff_distribution_df.empty:
-                if wyckoff_path.exists():
-                    hist_wy = pd.read_csv(wyckoff_path)
-                    sector_wyckoff_distribution_df = append_dedup(hist_wy, sector_wyckoff_distribution_df, ["date","sector"])
-                _tmp_wy = wyckoff_path.with_suffix(wyckoff_path.suffix + '.tmp')
-                sector_wyckoff_distribution_df.to_csv(_tmp_wy, index=False, encoding='utf-8', lineterminator='\n')
-                _tmp_wy.replace(wyckoff_path)
+                date_val = sector_wyckoff_distribution_df['date'].max()
+                persist('sector_wyckoff_distribution', sector_wyckoff_distribution_df, date_value=date_val)
                 print("  Distribucion Wyckoff sectorial calculada.")
+            else:
+                skip('sector_wyckoff_distribution', 'EMPTY_DF')
         else:
             sector_wyckoff_distribution_df = None
     except (KeyError, ValueError, TypeError, IndexError, AttributeError, OSError, RuntimeError, pd.errors.ParserError) as e:
@@ -70,16 +60,12 @@ def _compute_rs_internal(df_stocks, holdings_df, df_market, temporal_meta=None):
     try:
         if df_stocks is not None and not df_stocks.empty:
             rs_internal_df = compute_rs_internal(df_stocks, holdings_df, df_market, benchmark='SPY', temporal_meta=temporal_meta)
-            rs_path = Path('outputs/history/rs_internal.csv')
-            rs_path.parent.mkdir(parents=True, exist_ok=True)
             if not rs_internal_df.empty:
-                if rs_path.exists():
-                    hist_rs = pd.read_csv(rs_path)
-                    rs_internal_df = append_dedup(hist_rs, rs_internal_df, ["date","sector","ticker"])
-                _tmp_rs = rs_path.with_suffix(rs_path.suffix + '.tmp')
-                rs_internal_df.to_csv(_tmp_rs, index=False, encoding='utf-8', lineterminator='\n')
-                _tmp_rs.replace(rs_path)
+                date_val = rs_internal_df['date'].max()
+                persist('rs_internal', rs_internal_df, date_value=date_val)
                 print("  RS Interno y Absoluto calculado.")
+            else:
+                skip('rs_internal', 'EMPTY_DF')
         else:
             rs_internal_df = None
     except (KeyError, ValueError, TypeError, IndexError, AttributeError, OSError, RuntimeError, pd.errors.ParserError) as e:
@@ -100,22 +86,16 @@ def _compute_concentration(df_stocks, holdings_df, leader_df, full_metrics_df, r
             sector_concentration_df = compute_sector_concentration(
                 df_stocks, holdings_df, full_metrics_df, reference_date=reference_date
             )
-            if sc_path is None:
-                sc_path = Path('outputs/history/sector_concentration.csv')
-            sc_path.parent.mkdir(parents=True, exist_ok=True)
             if not sector_concentration_df.empty:
-                if sc_path.exists():
-                    hist_sc = pd.read_csv(sc_path)
-                    hist_sc = hist_sc.dropna(subset=['date'])
-                    # FU-008-b: filtrar tambien strings vacios residuales (dtype=str previo)
-                    hist_sc = hist_sc[hist_sc['date'].astype(str).str.strip() != '']
-                    sector_concentration_df = append_dedup(hist_sc, sector_concentration_df, ["date","sector"])
                 sector_concentration_df = sector_concentration_df.dropna(subset=['date'])
                 sector_concentration_df = sector_concentration_df.drop_duplicates(subset=['date','sector'], keep='last')
-                _tmp_sc = sc_path.with_suffix(sc_path.suffix + '.tmp')
-                sector_concentration_df.to_csv(_tmp_sc, index=False, lineterminator='\n')
-                _tmp_sc.replace(sc_path)
+                date_val = sector_concentration_df['date'].max()
+                persist('sector_concentration', sector_concentration_df,
+                        date_value=date_val,
+                        path_override=sc_path if sc_path is not None else None)
                 print("  Sector Concentration calculado.")
+            else:
+                skip('sector_concentration', 'EMPTY_DF')
         else:
             sector_concentration_df = None
     except (KeyError, ValueError, TypeError, IndexError, AttributeError, OSError, RuntimeError, pd.errors.ParserError) as e:
@@ -131,16 +111,12 @@ def _compute_representativeness(leader_df, reference_date=None):
                 leader_df, 'outputs/history/sector_concentration.csv',
                 reference_date=reference_date
             )
-            lr_path = Path('outputs/history/leader_representativeness.csv')
-            lr_path.parent.mkdir(parents=True, exist_ok=True)
             if not leader_representativeness_df.empty:
-                if lr_path.exists():
-                    hist_lr = pd.read_csv(lr_path)
-                    leader_representativeness_df = append_dedup(hist_lr, leader_representativeness_df, ["date","sector","ticker"])
-                _tmp_lr = lr_path.with_suffix(lr_path.suffix + '.tmp')
-                leader_representativeness_df.to_csv(_tmp_lr, index=False, lineterminator='\n')
-                _tmp_lr.replace(lr_path)
+                date_val = leader_representativeness_df['date'].max()
+                persist('leader_representativeness', leader_representativeness_df, date_value=date_val)
                 print("  Representatividad del lider calculada.")
+            else:
+                skip('leader_representativeness', 'EMPTY_DF')
         else:
             leader_representativeness_df = None
     except (KeyError, ValueError, TypeError, IndexError, AttributeError, OSError, RuntimeError, pd.errors.ParserError) as e:
