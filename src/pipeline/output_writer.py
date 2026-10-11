@@ -6,9 +6,13 @@ duplicado en los writers del pipeline. Toda escritura a outputs/history/
 pasa por persist() o skip(). Emite WriteReceipt para verificacion
 post-run.
 
-El wrapper no decide la fecha de observacion: la calcula el writer
-(usando writer_observation_date / last_expected_market_date) y la pasa
-como date_value. El wrapper solo escribe y emite el receipt.
+path_override: usado por tests para redirigir la escritura a un path
+temporal. Cuando se pasa, el receipt usa ese path y NO se acumula en el
+collector activo (los paths temporales no son parte del registro).
+
+Collector activo: run.py llama set_collector(c) al inicio. Los writers
+invocan persist(name, df) sin pasar collector y el receipt se acumula
+automaticamente. Si no hay collector activo, funciona igual sin acumular.
 """
 from __future__ import annotations
 
@@ -22,13 +26,37 @@ from src.pipeline.output_registry import (
 )
 
 
+_active_collector = None
+
+
+def set_collector(collector):
+    global _active_collector
+    _active_collector = collector
+
+
+def get_collector():
+    return _active_collector
+
+
+def clear_collector():
+    global _active_collector
+    _active_collector = None
+
+
+def _resolve_collector(collector):
+    if collector is not None:
+        return collector
+    return _active_collector
+
+
 def _fmt_date(value):
     if value is None:
         return None
     return pd.Timestamp(value).strftime('%Y-%m-%d')
 
 
-def persist(name, df, *, date_value=None, sort_by=None, collector=None):
+def persist(name, df, *, date_value=None, sort_by=None, collector=None,
+            path_override=None):
     """Persiste df en el CSV del registro.
 
     Args:
@@ -36,20 +64,26 @@ def persist(name, df, *, date_value=None, sort_by=None, collector=None):
         df: DataFrame a persistir. Vacio/None -> skip EMPTY_DF.
         date_value: fecha de observacion (Timestamp/str/date).
         sort_by: columnas de ordenacion tras dedup (opcional).
-        collector: ReceiptCollector opcional.
+        collector: ReceiptCollector opcional. Si None, usa el activo.
+        path_override: Path alternativo (tests). Si se pasa, escribe ahi
+                       y NO acumula receipt en collector.
 
     Returns:
         WriteReceipt
     """
     spec = get_spec(name)
-    path = Path(spec.path)
+    override = path_override is not None
+    path = Path(path_override) if override else Path(spec.path)
+    coll = None if override else _resolve_collector(collector)
 
     if df is None or len(df) == 0:
-        return skip(name, reason='EMPTY_DF', collector=collector)
+        return skip(name, reason='EMPTY_DF', collector=coll,
+                    path_override=path_override)
 
     if spec.kind == 'temporal' and spec.date_column:
         if spec.date_column not in df.columns:
-            return skip(name, reason='NO_DATA', collector=collector)
+            return skip(name, reason='NO_DATA', collector=coll,
+                        path_override=path_override)
 
     path.parent.mkdir(parents=True, exist_ok=True)
 
@@ -73,20 +107,26 @@ def persist(name, df, *, date_value=None, sort_by=None, collector=None):
         name=name, written=True, reason='OK',
         date=_fmt_date(date_value), path=str(path), rows=len(df_out),
     )
-    if collector is not None:
-        collector.add(receipt)
+    if coll is not None:
+        coll.add(receipt)
     return receipt
 
 
-def skip(name, reason, *, collector=None):
-    """Emite un receipt sin escritura. Razon debe ser legitima."""
+def skip(name, reason, *, collector=None, path_override=None):
+    """Emite un receipt sin escritura. Razon debe ser legitima.
+
+    Si path_override se pasa, no acumula en collector.
+    """
     spec = get_spec(name)
     if reason not in LEGITIMATE_SKIP_REASONS:
         raise ValueError("Razon de skip no legitima: " + repr(reason))
+    override = path_override is not None
+    coll = None if override else _resolve_collector(collector)
+    receipt_path = str(path_override) if override else spec.path
     receipt = WriteReceipt(
         name=name, written=False, reason=reason,
-        date=None, path=spec.path, rows=0,
+        date=None, path=receipt_path, rows=0,
     )
-    if collector is not None:
-        collector.add(receipt)
+    if coll is not None:
+        coll.add(receipt)
     return receipt

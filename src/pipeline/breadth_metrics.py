@@ -10,8 +10,8 @@ from pathlib import Path
 
 import pandas as pd
 
-from src.utils import append_dedup
 from src.market_calendar import is_market_day, last_expected_market_date
+from src.pipeline.output_writer import persist, skip
 from config.settings import EXPECTED_SECTOR_COUNT
 from indicators.sector_breadth import compute_sector_breadth
 from indicators.sector_breadth_momentum import compute_sector_breadth_momentum
@@ -23,16 +23,13 @@ def _compute_momentum_amplitud(df_stocks):
             sector_breadth_momentum_df = compute_sector_breadth_momentum(
                 'outputs/history/sector_breadth.csv'
             )
-            sbm_path = Path('outputs/history/sector_breadth_momentum.csv')
-            sbm_path.parent.mkdir(parents=True, exist_ok=True)
             if not sector_breadth_momentum_df.empty:
-                if sbm_path.exists():
-                    hist_sbm = pd.read_csv(sbm_path)
-                    sector_breadth_momentum_df = append_dedup(hist_sbm, sector_breadth_momentum_df, ["date","sector"])
-                _tmp_sbm = sbm_path.with_suffix(sbm_path.suffix + '.tmp')
-                sector_breadth_momentum_df.to_csv(_tmp_sbm, index=False, lineterminator='\n')
-                _tmp_sbm.replace(sbm_path)
+                date_val = sector_breadth_momentum_df['date'].max()
+                persist('sector_breadth_momentum', sector_breadth_momentum_df,
+                        date_value=date_val)
                 print("  Momentum de amplitud sectorial calculado.")
+            else:
+                skip('sector_breadth_momentum', 'EMPTY_DF')
         else:
             sector_breadth_momentum_df = None
     except (KeyError, ValueError, TypeError, IndexError, AttributeError, OSError, RuntimeError, pd.errors.ParserError) as e:
@@ -135,6 +132,8 @@ def _compute_sector_breadth_health(df_stocks, df_market, holdings_df,
             fallback = _load_latest_valid_breadth_snapshot(sb_path)
             if fallback is not None:
                 print(f"  C2F: usando snapshot {fallback['date'].max().date()} como stale.")
+            skip('sector_breadth', 'STALE',
+                 path_override=sb_path if output_path is not None else None)
             if return_reason:
                 return fallback, True, 'DATA_PENDING'
             return fallback, True
@@ -143,15 +142,14 @@ def _compute_sector_breadth_health(df_stocks, df_market, holdings_df,
             df_market, df_stocks, holdings_df, as_of_date=expected_session,
             temporal_meta=temporal_meta)
 
-        sb_path.parent.mkdir(parents=True, exist_ok=True)
         if not sector_breadth_df.empty:
-            if sb_path.exists():
-                hist_sb = pd.read_csv(sb_path)
-                sector_breadth_df = append_dedup(hist_sb, sector_breadth_df, ["date","sector"])
-            _tmp_sb = sb_path.with_suffix(sb_path.suffix + '.tmp')
-            sector_breadth_df.to_csv(_tmp_sb, index=False, lineterminator='\n')
-            _tmp_sb.replace(sb_path)
+            date_val = sector_breadth_df['date'].max()
+            persist('sector_breadth', sector_breadth_df, date_value=date_val,
+                    path_override=sb_path if output_path is not None else None)
             print("  Sector Breadth & Health calculado.")
+        else:
+            skip('sector_breadth', 'EMPTY_DF',
+                 path_override=sb_path if output_path is not None else None)
         if return_reason:
             return sector_breadth_df, False, None
         return sector_breadth_df, False
