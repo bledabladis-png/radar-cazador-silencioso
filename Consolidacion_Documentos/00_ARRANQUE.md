@@ -93,7 +93,14 @@ directos del legacy `indicators/wyckoff.py` migrados a v1.8 core
 RANGE, MARKDOWN). DISTRIBUTION excluida por fail-closed (requiere
 SOW, pendiente 5b.X ~2027). CSV historico regenerado. Commits
 2fd6c449, 35663000, f782b9d4. Legacy retirado 2026-10-10
-(commit siguiente).
+(commit 17747a98).
+
+**Contrato de persistencia de outputs (2026-10-11).** Registro
+declarativo (`src/pipeline/output_registry.py`) + wrapper unico
+(`output_writer.persist/skip`) + verificador post-run
+(`output_verifier.verify`) + test AST de contrato. 19 writers
+migrados. Gate 10/10 intacto. Receipt v1 intacto. Commits
+f0311cdb..ab838dbf.
 
 **Fases IAE:**
 - FA-1, FA-2, NIPC, A, B, C, E, F, G: CERRADAS

@@ -153,6 +153,7 @@ El contrato v1.8 esta en `docs/auditoria/wyckoff/01_contrato_semantico_v1_8.md`.
 - `data/providers/_fund_flow_utils.py::fund_flow_robust_zscore_with_regime` es el canonico para fund-flow (window=120, min_periods=20, clip +-5, MAD==0 & s==median -> 0.0, MAD==0 & s!=median -> NaN). NO fusionar con el canonico de precios.
 - `src/institutional_accumulation/` es el modulo IAE. Detalle en `03_IAE.md`.
 - `config/tickers.py::MARKET_TICKERS['sectors']` es la fuente unica de los 11 ETFs sectoriales (`['XLK','XLF','XLV','XLE','XLY','XLP','XLI','XLB','XLU','XLRE','XLC']`). Cualquier modulo que necesite la lista, la importa - no la duplica.
+- `src/pipeline/output_writer.py::persist/skip` es la fuente unica de escritura a `outputs/history/`. Toda persistencia pasa por aqui. Registro declarativo en `src/pipeline/output_registry.py` (19 outputs). Verificacion post-run en `src/pipeline/output_verifier.py`. Test AST de contrato en `tests/test_output_contract_ast.py`. Excepcion por diseno: `outputs/report/` (snapshots efimeros). Detalle en `01_METODO.md` seccion 12.
 
 ---
 

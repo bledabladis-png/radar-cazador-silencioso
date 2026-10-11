@@ -1373,4 +1373,38 @@ Sesion de verificacion end-to-end bajo peticion: revisar el estado real del sist
 **Workflows cron trimestrales (frente cerrado, sin fix nuevo).** Los 3 schedule del 1-oct (update_sector_holdings, update_index_holdings, update_european_holdings) fallaron por dos causas raiz ya corregidas el mismo dia: `sys.path` sin insertar (1bead8ad) y arrays desalineados en get_state_street_holdings por tickers invalidos SSGA (27248d35). Los workflow_dispatch posteriores pasan. Proximo schedule: 1-ene-2027.
 
 **Verificacion acumulada.** 3196 -> 3203 tests. Gate 10/10. Pyflakes limpio. Corpus actualizado. Commits: a356ae1d, 203b61c7, c09a268c, d495dc1e, 8e8826f5, 0017bf4f, 6027a943.
+
+### Contrato de persistencia de outputs (2026-10-11)
+
+Auditoria del gap 09-oct (sector_breadth no escribio fila, receipt
+se emitio igual). Diagnostico: el sistema no tenia contrato
+declarativo de escritura ni verificacion post-run. Cualquier writer
+podia hacer `return` silencioso sin senal.
+
+Solucion en 3 piezas + contrato AST:
+
+- `src/pipeline/output_registry.py`: registro declarativo de 19
+  outputs (18 temporales + 1 snapshot). `WriteReceipt` +
+  `ReceiptCollector`.
+- `src/pipeline/output_writer.py`: wrapper unico
+  `persist(name, df, ...)` / `skip(name, reason)`. Toda escritura a
+  `outputs/history/` pasa por aqui. Fail-closed: name no registrado
+  -> KeyError; razon de skip no legitima -> ValueError.
+- `src/pipeline/output_verifier.py`: `verify(collector)` con 3
+  reglas (receipt existe, escrito vs disco consistente, skip
+  legitimo con CSV no vacio).
+- Integracion en `run.py`: collector activo al inicio, verificacion
+  antes de cerrar; `sys.exit(1)` si falla. Persiste
+  `outputs/state/writer_receipts.json` (gitignored).
+- `tests/test_output_contract_ast.py`: AST que prohibe `to_csv()`
+  fuera del wrapper. Excepciones documentadas: `output_writer.py`,
+  `save_sector_rankings`, `compute_indices_intl` (outputs/report/,
+  efimeros sin dimension temporal).
+
+19 writers migrados en 6 commits por fichero. Gate 10/10 intacto.
+Receipt v1 intacto. `pipeline_gate.py` intacto.
+
+Commits: f0311cdb, 8596690c, c43a6b00, 2593ac91, ceecad70,
+b1237083, ae752882, ab838dbf.
+
 **Fin del historico.**

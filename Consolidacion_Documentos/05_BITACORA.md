@@ -44,6 +44,36 @@ Al cerrar una sesion nueva, se anade arriba (las mas recientes primero). Si hay 
 
 ## 3. SESIONES
 
+### 2026-10-11 - Contrato de persistencia de outputs
+
+**Objetivo.** Cerrar la clase entera de bugs "writer silencioso"
+(el gap 09-oct fue el sintoma). No un parche por CSV.
+
+**Hecho.**
+- Reconocimiento del sistema (estructura, pipeline, 19 writers,
+  contratos temporales).
+- Deuda limpia: retirados 3 scripts one-shot, `sectorial.py.orig`,
+  `outputs/audit` reducido (131 -> 66 MB).
+- Diseno e implementacion del contrato de persistencia: registro +
+  wrapper + verificador + integracion + AST test.
+- 19 writers migrados en 6 commits por fichero.
+- Test AST cazo un `to_csv` residual en `indices_intl.py`.
+
+**Verificacion.** Suite: 3204 -> 3243 passed. 5 skipped. Pyflakes
+limpio.
+
+**Commits.** f0311cdb, 8596690c, c43a6b00, 2593ac91, ceecad70,
+b1237083, ae752882, ab838dbf.
+
+**Pendiente.**
+- Push a origin.
+- Politica de limpieza para `outputs/audit/pre_*` (apunte, sin
+  codificar).
+
+**Proximo paso sugerido.** Push. Cerrar sesion. La proxima sesion
+arranca con el contrato activo: si un writer falla silenciosamente,
+el run aborta con error explicito.
+
 ### 2026-10-10 - Retirada del modulo Wyckoff legacy (5e)
 
 **Objetivo.** Cerrar el frente legacy: llevar a termino la retirada que el plan tenia bloqueada por ceremonia de fases.
