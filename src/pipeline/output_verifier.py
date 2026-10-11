@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 """Verificador post-run de cobertura temporal de outputs.
 
 Recorre el registro y comprueba, contra los receipts del run y el

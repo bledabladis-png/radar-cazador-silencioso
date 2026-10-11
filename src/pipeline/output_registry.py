@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 """Registro declarativo de outputs persistidos por el pipeline.
 
 Contrato: todo writer que persiste a outputs/history/ tiene entrada aqui.

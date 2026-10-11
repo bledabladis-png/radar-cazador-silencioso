@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 """Test de integracion: el flujo collector->verify cubre el gap 09-oct."""
 import pandas as pd
 

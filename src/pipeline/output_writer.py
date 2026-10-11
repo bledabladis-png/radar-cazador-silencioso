@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 """Wrapper unico de persistencia de outputs historicos.
 
 Sustituye el patron read_csv -> append_dedup -> to_csv(.tmp) -> replace

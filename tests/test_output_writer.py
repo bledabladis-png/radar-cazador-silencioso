@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 """Tests del wrapper de persistencia."""
 import pandas as pd
 import pytest
