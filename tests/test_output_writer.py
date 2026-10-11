@@ -60,12 +60,12 @@ def test_persist_unknown_name_raises(tmp_path, monkeypatch):
         persist('no_existe', pd.DataFrame({'date': ['2026-10-10']}))
 
 
-def test_persist_missing_date_column_returns_no_data(tmp_path, monkeypatch):
+def test_persist_missing_date_column_writes_with_none_date(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
     df = pd.DataFrame({'sector': ['XLK']})
-    r = persist('sector_breadth', df, date_value='2026-10-10')
-    assert r.written is False
-    assert r.reason == 'NO_DATA'
+    r = persist('sector_breadth', df)
+    assert r.written is True
+    assert r.date is None
 
 
 def test_persist_snapshot_no_merge(tmp_path, monkeypatch):

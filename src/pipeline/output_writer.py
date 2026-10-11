@@ -80,10 +80,14 @@ def persist(name, df, *, date_value=None, sort_by=None, collector=None,
         return skip(name, reason='EMPTY_DF', collector=coll,
                     path_override=path_override)
 
-    if spec.kind == 'temporal' and spec.date_column:
-        if spec.date_column not in df.columns:
-            return skip(name, reason='NO_DATA', collector=coll,
-                        path_override=path_override)
+    # Derivar date_value del propio df si no se pasa y hay columna.
+    # Si no hay columna, se escribe igual con receipt date=None
+    # (caso tests / df sin columna fecha).
+    if date_value is None and spec.kind == 'temporal' and spec.date_column:
+        if spec.date_column in df.columns:
+            _d = df[spec.date_column].dropna()
+            if len(_d) > 0:
+                date_value = _d.max()
 
     path.parent.mkdir(parents=True, exist_ok=True)
 

@@ -5,11 +5,9 @@ BlackRock + Amundi + QQQ SEC + CFTC).
 Extraido de run.py (refactor C2, fase C2-6a).
 """
 
-from pathlib import Path
-
 import pandas as pd
 
-from src.utils import append_dedup
+from src.pipeline.output_writer import persist, skip
 from data.providers.retry_utils import retry_call
 from data.providers.ssga_fund_data import get_etf_primary_flow_data
 from data.providers.blackrock_fund_data import get_blackrock_dax_primary_flow
@@ -50,20 +48,14 @@ def compute_flows_primary(df_market, temporal_meta=None):
             sector_flow_characteristics_df = compute_sector_flow_characteristics(
                 'outputs/history/etf_primary_flow.csv', df_market
             )
-            sfc_path = Path('outputs/history/sector_flow_characteristics.csv')
-            sfc_path.parent.mkdir(parents=True, exist_ok=True)
             if not sector_flow_characteristics_df.empty:
-                if sfc_path.exists():
-                    hist_sfc = pd.read_csv(sfc_path)
-                    sector_flow_characteristics_df = append_dedup(
-                        hist_sfc, sector_flow_characteristics_df, ["date", "sector"]
-                    )
-                _tmp_sfc = sfc_path.with_suffix(sfc_path.suffix + '.tmp')
-                sector_flow_characteristics_df.to_csv(_tmp_sfc, index=False, encoding='utf-8', lineterminator='\n')
-                _tmp_sfc.replace(sfc_path)
+                persist('sector_flow_characteristics', sector_flow_characteristics_df)
                 print("  Sector Flow Characteristics calculado.")
+            else:
+                skip('sector_flow_characteristics', 'EMPTY_DF')
     except (OSError, ValueError, KeyError, TypeError, IndexError, RuntimeError, pd.errors.ParserError, pd.errors.EmptyDataError) as e:
         print(f"  Sector Flow Characteristics omitido: {e}")
+        skip('sector_flow_characteristics', 'NO_DATA')
         sector_flow_characteristics_df = None
 
     # Flujo primario DAXEX (BlackRock)

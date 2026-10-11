@@ -5,12 +5,10 @@
 Extraido de run.py (refactor C2, fase C2-9b).
 """
 
-from pathlib import Path
-
 import numpy as np
 import pandas as pd
 
-from src.utils import append_dedup
+from src.pipeline.output_writer import persist, skip
 
 
 def _compute_pcr():
@@ -55,20 +53,15 @@ def _compute_vol_structure(df_market, pcr_data):
             if 'percentile_20d' in pcr_data:
                 pcr_vol['percentile_20d'] = pcr_data['percentile_20d']
         vol_structure_df = compute_volatility_structure(df_market, pcr_data=pcr_vol if pcr_vol else None)
-        vs_path = Path('outputs/history/volatility_structure.csv')
-        vs_path.parent.mkdir(parents=True, exist_ok=True)
         if not vol_structure_df.empty:
-            if vs_path.exists():
-                hist_vs = pd.read_csv(vs_path)
-                vol_structure_df = append_dedup(hist_vs, vol_structure_df, ['date'])
-            _tmp_vs = vs_path.with_suffix(vs_path.suffix + '.tmp')
-            vol_structure_df.to_csv(_tmp_vs, index=False, lineterminator='\n')
-            _tmp_vs.replace(vs_path)
+            persist('volatility_structure', vol_structure_df)
             print("  Volatilidad estructural calculada.")
         else:
+            skip('volatility_structure', 'EMPTY_DF')
             vol_structure_df = None
     except (ImportError, KeyError, ValueError, TypeError, IndexError, AttributeError, OSError, RuntimeError, pd.errors.ParserError) as e:
         print(f"  Volatilidad estructural omitida: {e}")
+        skip('volatility_structure', 'NO_DATA')
         vol_structure_df = None
     return vol_structure_df
 
@@ -77,20 +70,15 @@ def _compute_data_quality(reference_date=None):
     try:
         from indicators.data_quality import compute_data_quality
         data_quality_df = compute_data_quality(reference_date=reference_date)
-        dq_path = Path('outputs/history/data_quality.csv')
-        dq_path.parent.mkdir(parents=True, exist_ok=True)
         if not data_quality_df.empty:
-            if dq_path.exists():
-                hist_dq = pd.read_csv(dq_path)
-                data_quality_df = append_dedup(hist_dq, data_quality_df, ['date','source'])
-            _tmp_dq = dq_path.with_suffix(dq_path.suffix + '.tmp')
-            data_quality_df.to_csv(_tmp_dq, index=False, lineterminator='\n')
-            _tmp_dq.replace(dq_path)
+            persist('data_quality', data_quality_df)
             print("  Calidad de datos calculada.")
         else:
+            skip('data_quality', 'EMPTY_DF')
             data_quality_df = None
     except (ImportError, KeyError, ValueError, TypeError, IndexError, AttributeError, OSError, RuntimeError, pd.errors.ParserError) as e:
         print(f"  Calidad de datos omitida: {e}")
+        skip('data_quality', 'NO_DATA')
         data_quality_df = None
     return data_quality_df
 

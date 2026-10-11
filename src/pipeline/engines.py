@@ -5,12 +5,11 @@
 Extraido de run.py (refactor C2, fase C2-8a).
 """
 
-from pathlib import Path
-
 import pandas as pd
 
-from src.utils import append_dedup, get_col, _observation_date_from_df, writer_observation_date, get_effective_meta
+from src.utils import get_col, _observation_date_from_df, writer_observation_date, get_effective_meta
 from indicators.persistence import compute_persistence
+from src.pipeline.output_writer import persist, skip
 from config.tickers import MARKET_TICKERS
 
 
@@ -111,17 +110,11 @@ def _compute_persistence_and_save(df_market, temporal_meta=None):
                 'persistence': val,
             })
         persist_df = pd.DataFrame(persist_rows)
-        p_path = Path('outputs/history/sector_persistence.csv')
-        p_path.parent.mkdir(parents=True, exist_ok=True)
-        if p_path.exists():
-            hist_p = pd.read_csv(p_path, encoding='utf-8')
-            persist_df = append_dedup(hist_p, persist_df, ['date','sector'])
-        _tmp_p = p_path.with_suffix(p_path.suffix + '.tmp')
-        persist_df.to_csv(_tmp_p, index=False, encoding='utf-8', lineterminator='\n')
-        _tmp_p.replace(p_path)
+        persist('sector_persistence', persist_df)
         print("  Sector Persistence CSV guardado.")
     except (OSError, ValueError, KeyError, TypeError, pd.errors.ParserError) as e:
         print(f"  Sector Persistence CSV omitido: {e}")
+        skip('sector_persistence', 'NO_DATA')
 
     return sector_persistence
 
