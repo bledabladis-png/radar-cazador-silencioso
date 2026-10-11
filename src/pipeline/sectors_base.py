@@ -7,9 +7,8 @@ Extraido de run.py (refactor C2, fase C2-5).
 
 from pathlib import Path
 
-import pandas as pd
-
-from src.utils import append_dedup, writer_observation_date
+from src.utils import writer_observation_date
+from src.pipeline.output_writer import persist, skip
 from regimes.sector_regime import compute_sector_scores, compute_price_flow_rankings
 from indicators.breadth import compute_breadth
 from config.settings import EXPECTED_SECTOR_COUNT
@@ -50,15 +49,13 @@ def compute_sectors_base(df_market, temporal_meta=None):
         )
         if sector_rank_deltas_df is not None and not sector_rank_deltas_df.empty:
             print("  Rotacion sectorial historica calculada.")
-            srd_path = Path('outputs/history/sector_rank_deltas.csv')
-            srd_path.parent.mkdir(parents=True, exist_ok=True)
-            _tmp_srd = srd_path.with_suffix(srd_path.suffix + '.tmp')
-            sector_rank_deltas_df.to_csv(_tmp_srd, index=False, encoding='utf-8', lineterminator='\n')
-            _tmp_srd.replace(srd_path)
+            persist('sector_rank_deltas', sector_rank_deltas_df)
         else:
+            skip('sector_rank_deltas', 'NO_DATA')
             sector_rank_deltas_df = None
     except (KeyError, ValueError, TypeError, IndexError, AttributeError, OSError, RuntimeError) as e:
         print(f"  Rotacion sectorial omitida: {e}")
+        skip('sector_rank_deltas', 'NO_DATA')
         sector_rank_deltas_df = None
 
     print("Calculando rankings de precio y flujo...")
@@ -73,17 +70,15 @@ def compute_sectors_base(df_market, temporal_meta=None):
         sd_path = Path('outputs/history/sector_dispersion.csv')
         sd_path.parent.mkdir(parents=True, exist_ok=True)
         if not sector_dispersion_df.empty:
-            if sd_path.exists():
-                hist_sd = pd.read_csv(sd_path)
-                sector_dispersion_df = append_dedup(hist_sd, sector_dispersion_df, ['date'])
-            _tmp_sd = sd_path.with_suffix(sd_path.suffix + '.tmp')
-            sector_dispersion_df.to_csv(_tmp_sd, index=False, lineterminator='\n')
-            _tmp_sd.replace(sd_path)
+            date_val = sector_dispersion_df['date'].max()
+            persist('sector_dispersion', sector_dispersion_df, date_value=date_val)
             print("  Dispersion entre sectores calculada.")
         else:
+            skip('sector_dispersion', 'EMPTY_DF')
             sector_dispersion_df = None
     except (KeyError, ValueError, TypeError, IndexError, AttributeError, OSError, RuntimeError) as e:
         print(f"  Dispersion entre sectores omitida: {e}")
+        skip('sector_dispersion', 'NO_DATA')
         sector_dispersion_df = None
 
     # --- Correlacion entre sectores v1.1 (descriptivo) ---
@@ -96,17 +91,15 @@ def compute_sectors_base(df_market, temporal_meta=None):
         cs_path = Path('outputs/history/sector_correlation_summary.csv')
         cs_path.parent.mkdir(parents=True, exist_ok=True)
         if not sector_corr_summary_df.empty:
-            if cs_path.exists():
-                hist_cs = pd.read_csv(cs_path)
-                sector_corr_summary_df = append_dedup(hist_cs, sector_corr_summary_df, ['date','window'])
-            _tmp_cs = cs_path.with_suffix(cs_path.suffix + '.tmp')
-            sector_corr_summary_df.to_csv(_tmp_cs, index=False, lineterminator='\n')
-            _tmp_cs.replace(cs_path)
+            date_val = sector_corr_summary_df['date'].max()
+            persist('sector_correlation_summary', sector_corr_summary_df, date_value=date_val)
             print("  Correlacion entre sectores calculada.")
         else:
+            skip('sector_correlation_summary', 'EMPTY_DF')
             sector_corr_summary_df = None
     except (KeyError, ValueError, TypeError, IndexError, AttributeError, OSError, RuntimeError) as e:
         print(f"  Correlacion entre sectores omitida: {e}")
+        skip('sector_correlation_summary', 'NO_DATA')
         sector_corr_summary_df = None
 
     # --- Contexto Cross-Asset v1.1 (descriptivo) ---
@@ -115,29 +108,23 @@ def compute_sectors_base(df_market, temporal_meta=None):
     try:
         from indicators.cross_asset_context import compute_cross_asset_context
         cross_asset_detail_df, cross_asset_summary_df = compute_cross_asset_context(df_market, temporal_meta=temporal_meta)
-        ca_detail_path = Path('outputs/history/cross_asset_correlation.csv')
-        ca_summary_path = Path('outputs/history/cross_asset_context.csv')
-        ca_detail_path.parent.mkdir(parents=True, exist_ok=True)
         if not cross_asset_detail_df.empty:
-            if ca_detail_path.exists():
-                hist_cad = pd.read_csv(ca_detail_path)
-                cross_asset_detail_df = append_dedup(hist_cad, cross_asset_detail_df, ['date','window','sector','asset'])
-            _tmp_cad = ca_detail_path.with_suffix(ca_detail_path.suffix + '.tmp')
-            cross_asset_detail_df.to_csv(_tmp_cad, index=False, lineterminator='\n')
-            _tmp_cad.replace(ca_detail_path)
+            date_val = cross_asset_detail_df['date'].max()
+            persist('cross_asset_correlation', cross_asset_detail_df, date_value=date_val)
+        else:
+            skip('cross_asset_correlation', 'EMPTY_DF')
         if not cross_asset_summary_df.empty:
-            if ca_summary_path.exists():
-                hist_cas = pd.read_csv(ca_summary_path)
-                cross_asset_summary_df = append_dedup(hist_cas, cross_asset_summary_df, ['date','window','sector','asset_class'])
-            _tmp_cas = ca_summary_path.with_suffix(ca_summary_path.suffix + '.tmp')
-            cross_asset_summary_df.to_csv(_tmp_cas, index=False, lineterminator='\n')
-            _tmp_cas.replace(ca_summary_path)
+            date_val = cross_asset_summary_df['date'].max()
+            persist('cross_asset_context', cross_asset_summary_df, date_value=date_val)
             print("  Contexto Cross-Asset calculado.")
         else:
+            skip('cross_asset_context', 'EMPTY_DF')
             cross_asset_summary_df = None
             cross_asset_detail_df = None
     except (KeyError, ValueError, TypeError, IndexError, AttributeError, OSError, RuntimeError) as e:
         print(f"  Contexto Cross-Asset omitido: {e}")
+        skip('cross_asset_correlation', 'NO_DATA')
+        skip('cross_asset_context', 'NO_DATA')
         cross_asset_summary_df = None
         cross_asset_detail_df = None
 
