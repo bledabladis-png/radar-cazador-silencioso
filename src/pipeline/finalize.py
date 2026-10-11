@@ -8,12 +8,12 @@ Extraido de run.py (refactor C2, fase C2-12). Incluye:
 - generate_european_coverage
 """
 
-import os
 from pathlib import Path
 
 import pandas as pd
 
 from src.utils import _observation_date_from_df
+from src.pipeline.output_writer import persist, skip
 from src.market_calendar import is_market_day
 
 
@@ -34,16 +34,14 @@ def compute_final_matrices(sector_breadth_df, sector_concentration_df,
             sector_breadth_df, sector_flow_characteristics_df, sector_results
         )
         if sector_regime_matrix_df is not None and not sector_regime_matrix_df.empty:
-            mp_path = Path('outputs/history/sector_regime_matrix.csv')
-            mp_path.parent.mkdir(parents=True, exist_ok=True)
-            _tmp_mp = mp_path.with_suffix(mp_path.suffix + '.tmp')
-            sector_regime_matrix_df.to_csv(_tmp_mp, index=False, encoding='utf-8', lineterminator='\n')
-            _tmp_mp.replace(mp_path)
+            persist('sector_regime_matrix', sector_regime_matrix_df)
             print("  Matriz de regimen sectorial calculada.")
         else:
+            skip('sector_regime_matrix', 'EMPTY_DF')
             sector_regime_matrix_df = None
     except (ImportError, OSError, ValueError, KeyError, TypeError, AttributeError) as e:
         print(f"  Matriz de regimen sectorial omitida: {e}")
+        skip('sector_regime_matrix', 'NO_DATA')
         sector_regime_matrix_df = None
 
     evidence_matrix_df = None
@@ -61,16 +59,14 @@ def compute_final_matrices(sector_breadth_df, sector_concentration_df,
             liquidity_score=real_liq_score if real_liq_score is not None else financial_score
         )
         if evidence_matrix_df is not None and not evidence_matrix_df.empty:
-            em_path = Path('outputs/history/evidence_matrix.csv')
-            em_path.parent.mkdir(parents=True, exist_ok=True)
-            _tmp_em = em_path.with_suffix(em_path.suffix + '.tmp')
-            evidence_matrix_df.to_csv(_tmp_em, index=False, lineterminator='\n')
-            _tmp_em.replace(em_path)
+            persist('evidence_matrix', evidence_matrix_df)
             print("  Matriz de evidencia calculada.")
         else:
+            skip('evidence_matrix', 'EMPTY_DF')
             evidence_matrix_df = None
     except (ImportError, OSError, ValueError, KeyError, TypeError, AttributeError) as e:
         print(f"  Matriz de evidencia omitida: {e}")
+        skip('evidence_matrix', 'NO_DATA')
         evidence_matrix_df = None
 
     return {
@@ -86,7 +82,6 @@ def save_regime_history(macro_score, macro_regime, macro_conf,
 
     Movido de report_generator.py (C1-10) y consolidado aqui (C2-12).
     """
-    hist_path = "outputs/history/macro_regime.csv"
     # Fix 2026-10-08: prioridad a effective_date (resuelto por
     # resolve_effective_date sobre el universo de equities). El fallback
     # a df_macro_manual.date se mantiene para retrocompatibilidad, pero
@@ -98,6 +93,7 @@ def save_regime_history(macro_score, macro_regime, macro_conf,
         obs_date = _observation_date_from_df(df_macro_manual, col='date')
     if obs_date is None:
         print("  [WARN] save_regime_history: sin fecha macro valida. Se omite escritura.")
+        skip('macro_regime', 'SKIP_CONDITION')
         return
     # B5-followup (2026-09-12): segundo candado. El bot FRED publica iorb.csv con
     # fecha del dia natural (incluye sabado/domingo). Si obs_date no es sesion NYSE,
@@ -105,6 +101,7 @@ def save_regime_history(macro_score, macro_regime, macro_conf,
     obs_date_only = pd.Timestamp(obs_date).date()
     if not is_market_day(obs_date_only):
         print(f"  [WARN] save_regime_history: obs_date {obs_date_only} no es sesion NYSE. Se omite escritura.")
+        skip('macro_regime', 'SKIP_CONDITION')
         return
     new_row = pd.DataFrame({
         "date": [pd.Timestamp(obs_date).strftime('%Y-%m-%d')],
@@ -115,15 +112,7 @@ def save_regime_history(macro_score, macro_regime, macro_conf,
         "volatility_regime": [vol_regime],
         "sector_regime": [sector_results["regime"]],
     })
-    if os.path.exists(hist_path):
-        hist = pd.read_csv(hist_path, dtype=str)
-        hist = pd.concat([hist, new_row.astype(str)], ignore_index=True)
-        hist = hist.drop_duplicates(subset=['date'], keep='last')
-    else:
-        hist = new_row
-    _tmp_hist = Path(hist_path).with_suffix(Path(hist_path).suffix + '.tmp')
-    hist.to_csv(_tmp_hist, index=False, lineterminator='\n')
-    _tmp_hist.replace(hist_path)
+    persist('macro_regime', new_row, date_value=obs_date)
 
 
 def save_sector_rankings(sector_results):
