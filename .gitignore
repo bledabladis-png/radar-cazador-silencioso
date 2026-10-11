@@ -89,3 +89,4 @@ _patch_*.py
 _check_*.py
 _commit_msg.txt
 docs/automatica/
+outputs/state/writer_receipts.json

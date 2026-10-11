@@ -32,6 +32,9 @@ from src.pipeline.finalize import (
     generate_european_coverage,
 )
 from config.tickers import validate_sector_universe
+from src.pipeline.output_registry import ReceiptCollector
+from src.pipeline.output_verifier import verify
+from src.pipeline.output_writer import set_collector
 
 def main():
     # B2 (2026-09-12): reference_date se resuelve UNA vez al inicio del pipeline.
@@ -43,6 +46,11 @@ def main():
     reference_date = datetime.now(ZoneInfo("Europe/Madrid"))
     # FU-002 (2026-09-15): run_id unico para manifests de artefactos.
     run_id = reference_date.strftime('%Y%m%d_%H%M%S')
+    # Contrato de persistencia de outputs (2026-10-11): activar el
+    # collector de receipts. Todos los writers que llaman persist/skip
+    # desde aqui acumulan su receipt, verificado al final del run.
+    _receipts = ReceiptCollector()
+    set_collector(_receipts)
     validate_sector_universe()
     # Crear subcarpetas de outputs necesarias para ejecución limpia
     for subdir in ['report', 'history', 'state', 'holdings', 'audit', 'cache']:
@@ -292,6 +300,28 @@ def main():
                         effective_date=_equity_eff)
     save_sector_rankings(sector_results)
     generate_european_coverage(reference_date=reference_date)
+
+    # Persistir receipts para auditoria post-mortem (gitignored).
+    try:
+        _rr_path = os.path.join('outputs', 'state', 'writer_receipts.json')
+        os.makedirs(os.path.dirname(_rr_path), exist_ok=True)
+        with open(_rr_path, 'w', encoding='utf-8') as _f:
+            json.dump(_receipts.to_dict(), _f, indent=2)
+    except Exception:
+        pass
+
+    # Verificacion post-run: todos los outputs registrados deben tener
+    # receipt coherente con lo escrito en disco. Si falta alguno o hay
+    # inconsistencia, se aborta antes de dar el run por bueno.
+    _vres = verify(_receipts)
+    if not _vres['passed']:
+        print("")
+        print("VERIFICACION DE OUTPUTS FALLIDA:")
+        for _e in _vres['errors']:
+            print("  - " + _e)
+        sys.exit(1)
+    print("Verificacion de outputs: OK (" + str(len(_vres['checks']))
+          + " checks)")
 
 
 if __name__ == "__main__":
