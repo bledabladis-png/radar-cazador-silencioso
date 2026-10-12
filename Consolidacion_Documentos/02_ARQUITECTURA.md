@@ -186,7 +186,7 @@ Tres capas independientes que NO deben confundirse:
 
 **Sector Regime:** `0.25*rs_mom_20 + 0.15*rs_mom_50 + 0.10*rs_mom_126 + 0.15*trend + 0.15*vol_inv + 0.20*breadth`. Aplica `SECTOR_DISPERSION_PENALTY=0.5` (dispersion = std(ddof=0) de componentes en [-1,+1] -> penalty en [0.5,1]) y renormaliza por `valid_weight_sum`. **Umbral publicable (D2, 2026-09-30): `n_valid >= 4` -> score NaN si menos.** Con 4 componentes, peso minimo representado 0.55. Detalle en `08_AUDITORIA_SECTOR_REGIME.md`.
 
-**Tactical Score (5 componentes):** RS20 / Flow / Mom20 / Breadth20 / Aceleracion. Pesos en `config/weights.py::TACTICAL_WEIGHTS`.
+**Tactical Score (5 componentes):** RS20 / Flow / Mom20 / Breadth20 / Aceleracion. Pesos en `config/weights.py::TACTICAL_WEIGHTS`. **Breadth20 es proxy temporal**: `(close_sector.iloc[-20:] > ema20.iloc[-20:]).sum() / 20` sobre el propio ETF sectorial, NO el breadth sectorial por constituyentes (esa es la metrica de Sector Breadth & Health). Hom?nimos entre secciones. Aclarado tras auditoria externa 2026-09-26 (F2-04).
 
 **Structural Score (3 componentes):** RS multi-ventana / Flow structure / Persistence. Pesos en `STRUCTURAL_WEIGHTS`.
 
