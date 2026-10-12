@@ -192,6 +192,8 @@ Tres capas independientes que NO deben confundirse:
 
 **SLPM v1.2:** Leader Breadth + LIS + Effective Breadth. State Machine: CONFIRMED | EMERGING | STRUCTURAL_DECAY | LOST | UNRESOLVED | TACTICAL_CORRECTION (declarado pero inalcanzable, WONT FIX razonado A3.3-05). Con n=0, los campos se muestran como N/D.
 
+**Effective Breadth - discontinuidad en coverage=0.5** (F2-07, 2026-10-12): la formula es `effective_composite = composite * coverage if coverage < 0.5 else composite`. En `coverage=0.5` el salto es x2.04. Comportamiento intencional: degrada proporcionalmente cuando la cobertura cae por debajo del umbral. Documentado tras auditoria externa 2026-09-26.
+
 **Robust Z-Score canonico (precios/RS):**
 
     def robust_zscore(series, window=60, min_periods=None):
@@ -417,7 +419,7 @@ Si el gate falla, `run.py` aborta con `sys.exit(1)`.
 
 **Xetra (19 .DE):** WebSocket MDS + JWT (~175s).
 
-**BME (19 .MC):** REST JSON sin auth.
+**BME (19 .MC):** REST JSON sin auth. **Open <- reference** (precio de referencia del dia, no apertura real de subasta). Contamina indicadores que consuman Open. A5-57 auditoria 2026-09-26.
 
 **LSE (20 .L):** scraper privado (Refinitiv Widgets) + override parcial de Close.
 
