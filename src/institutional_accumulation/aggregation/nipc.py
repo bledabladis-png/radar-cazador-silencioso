@@ -153,7 +153,12 @@ def compute_coverage_pairwise(units_current, units_previous):
     Devuelve dict con:
       coverage_previous, coverage_current
       paired_security_coverage, paired_weighted_share_coverage
-      unmapped_weight_previous, unmapped_weight_current
+      unmapped_count_previous, unmapped_count_current (int, no float)
+      coverage_status (VALID | PARTIAL | UNAVAILABLE)
+
+F2.2-07 (2026-10-12): docstring decia 'unmapped_weight_*' pero la
+clave real es 'unmapped_count_*'. Aclarado. Contraste con 10.5
+(int) resuelto por F2.2-06.
 
     Definicion formal (spec 3.14):
       paired_security_coverage
@@ -171,8 +176,8 @@ def compute_coverage_pairwise(units_current, units_previous):
         "paired_security_coverage": 0.0,
         "paired_weighted_share_coverage": None,
         "coverage_status": "UNAVAILABLE",
-        "unmapped_count_previous": 0.0,
-        "unmapped_count_current": 0.0,
+        "unmapped_count_previous": 0,
+        "unmapped_count_current": 0,
     }
     if units_current is None or units_current.empty:
         if units_previous is None or units_previous.empty:

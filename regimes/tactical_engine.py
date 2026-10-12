@@ -41,6 +41,13 @@ def compute_tactical_score(df_market, sector_etf, benchmark='^GSPC', temporal_me
         flow_norm = 0.0
 
     # Breadth20
+    # F2-05 (2026-10-12): WONT FIX razonado. Aqui se usa el
+    # `adjust=True` por defecto de pandas (EMA clasica). En
+    # sector_regime.py se usa `adjust=False` (EMA de trading con
+    # memoria infinita). Ambas son correctas en su contexto:
+    # tactical calcula un breadth puntual (ventana corta 20),
+    # sector_regime calcula tendencias de medio plazo. Unificar
+    # alteraria scores en produccion sin justificacion estadistica.
     if len(close_sector) >= 20:
         ema20 = close_sector.ewm(span=20, min_periods=20).mean()
         breadth20 = (close_sector.iloc[-20:] > ema20.iloc[-20:]).sum() / 20

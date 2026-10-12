@@ -538,7 +538,10 @@ def score_scenarios(srs, shs, cls, ips):
     stagflation = 0
 
 
-    if ips > 0.15 and srs > 0: stagflation += 1  # bonus base (umbral reducido)
+    # F2.4-07 (2026-10-12): ips>0.15 es umbral de activacion del
+    # bonus base, no 'reducido'. El peso real es 1 (bonus base),
+    # ademas del SCENARIO_WEIGHTS['IPS'] posterior.
+    if ips > 0.15 and srs > 0: stagflation += 1
 
 
     if ips > 0.15: stagflation += SCENARIO_WEIGHTS["IPS"]["weight"]  # IPS es el factor distintivo de STAGFLATION

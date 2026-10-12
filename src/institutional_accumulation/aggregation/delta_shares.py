@@ -398,6 +398,11 @@ def compute_delta_shares(units_current, units_previous):
     merged["observed_security_key"] = None
 
     # Unresolved: por cada fila de units, emitir UNRESOLVED_IDENTITY
+    # F2.2-02 (2026-10-12): WONT FIX razonado. iterrows sobre
+    # cur_unres/prev_unres (subconjunto pequeno: solo las filas
+    # sin mapping canonico). El coste real es <<1s. Reescribir
+    # con vectorizacion (assign, explode) complica sin beneficio
+    # medible. Auditoria 2026-09-26 BAJA por rendimiento.
     unres_rows = []
     for df, side in ((cur_unres, "current"), (prev_unres, "previous")):
         if df.empty:
