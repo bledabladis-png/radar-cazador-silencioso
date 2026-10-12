@@ -5,6 +5,18 @@ El modulo tiene 65% de cobertura. Las ramas sin cubrir son las de
 cada fuente cuando HAY datos: CBOE, FINRA, FRED y Yahoo Finance.
 Aqui van con monkeypatch.chdir a tmp_path para que las rutas
 relativas apunten a directorios limpios.
+
+FRAGILIDAD CONOCIDA (D-04, 2026-10-12): estos tests dependen de
+que `freshness.py` use rutas RELATIVAS al CWD
+(`Path('data/market_data.parquet')`, `Path('outputs/state/...')`).
+Si en el futuro se cambia a `PROJECT_ROOT / ...` con PROJECT_ROOT
+absoluto, los tests accederan a los parquets reales del repo y
+fallaran o daran resultados no deterministas. Al hacer ese cambio,
+habria que:
+  1. Parametrizar el root de lectura en `render_data_freshness`
+     (por ejemplo, via `reference_root=None`).
+  2. Actualizar estos tests para pasar `reference_root=tmp_path`.
+Sin esa refactorizacion, mantener las rutas relativas.
 """
 import json
 from datetime import datetime
