@@ -75,55 +75,31 @@ Fuente autoritativa de tests, integridad y cobertura: `Consolidacion_Documentos/
 
 Snapshot al cierre del ultimo commit:
 - HEAD: `git log --oneline -1`
-- Tests: 3185 passed + 5 skipped + 0 failed
+- Tests: 3247 passed + 5 skipped + 0 failed
 - Validation Gate: 10/10
 - Working tree: limpio
 - Corpus documental: v3 (Consolidacion_Documentos/00-08, 2026-09-30)
 - Universo USA (stock_prices): 255 tickers; total (US+EU): 329. Fuente: `ESTADO_SISTEMA.md`.
 
-**Ultimos fixes (2026-10-07/08).** M-03 (european_flow_sign NaN),
-A-03 (sector_dispersion input vacio), A-01/F6-1b (FINRA unificado),
-A-02 (nota semantica). Commits 5514c111, 8c26bc6e, bdaa0326, 7b3fe927.
-Verificados en CI 2026-10-08 (run 37719126203). Fix D parte 2 (8
-writers residuales CRLF): commit 3871746f.
+**Wyckoff v1.8 en produccion.** Legacy `indicators/wyckoff.py`
+retirado 2026-10-10 (commit 17747a98). Detalle en `04_HISTORICO.md`.
 
-**Migracion Wyckoff core v1.8 (2026-10-08).** Los 5 consumidores
-directos del legacy `indicators/wyckoff.py` migrados a v1.8 core
-(`indicators/wyckoff_v1.py`). Alcance: 4 fases (MARKUP, ACCUMULATION,
-RANGE, MARKDOWN). DISTRIBUTION excluida por fail-closed (requiere
-SOW, pendiente 5b.X ~2027). CSV historico regenerado. Commits
-2fd6c449, 35663000, f782b9d4. Legacy retirado 2026-10-10
-(commit 17747a98).
+**Contrato de persistencia de outputs (2026-10-11).** Registro +
+wrapper `persist/skip` + verificador post-run + test AST. 19
+writers migrados. Detalle en `02_ARQUITECTURA.md` seccion 4.
 
-**Contrato de persistencia de outputs (2026-10-11).** Registro
-declarativo (`src/pipeline/output_registry.py`) + wrapper unico
-(`output_writer.persist/skip`) + verificador post-run
-(`output_verifier.verify`) + test AST de contrato. 19 writers
-migrados. Gate 10/10 intacto. Receipt v1 intacto. Commits
-f0311cdb..ab838dbf.
+**Fases IAE:** todas cerradas salvo las vivas:
+- C2 (920): OPEN. Bloqueado por auditor externo. Baseline del par
+  Q4-2025->Q1-2026 congelado (commit 72fa824). Hipotesis P65
+  descartada 2026-09-29 (por diseno de codigo).
+- H5.3: trazabilidad implementada, pendiente cron 20-nov-2026.
+- Detalle por fase en `ESTADO_SISTEMA.md`.
 
-**Fases IAE:**
-- FA-1, FA-2, NIPC, A, B, C, E, F, G: CERRADAS
-- Fase D (auditor externo): CERRADA con C2 (920) residual no bloqueante
-- H1-B: CERRADO con C2 abierto. Baseline **historico del par Q4-2025
-  -> Q1-2026**: -4.264.449.012 (congelado; commit 72fa824). El run
-  diario usa el par vigente (auto-avance a los 2 ultimos quarters
-  disponibles), NO este baseline.
-- H4: CERRADO (golden/current.json ACTIVE_WITH_OPEN_DISCREPANCY)
-- H5.3: trazabilidad implementada, pendiente cron nov 2026
-- C2 (920): OPEN. Hipotesis P65 descartada 2026-09-29 (por diseno de codigo)
+**Auditoria radar externa 2026-09-26:** 142 hallazgos. Triaje
+completo en `docs/auditoria/radar/audits/TRIAGE_*_2026-10-12.md`.
 
-**Auditoria radar externa 2026-09-26:** 142 hallazgos (6 ALTA / 71 MEDIA / 65 BAJA). 6 ALTA corregidos. Informes en `bc656374` (borrados de main en `cdf47ad2`, recuperables por git).
-
-**Auditoria interna del sistema:**
-- A1 (nucleo temporal): CERRADO
-- A2 (providers): CERRADO
-- A3 (calculo): CERRADO
-- A4 (reporte): CERRADO
-- A5 (pipeline): CERRADO
-- A6 (infra/orquestacion: utils/registry/tracker/workflows/scripts/validation): CERRADO
-- B (IAE): CERRADO (auditoria funcional real + fixes B-01..B-07, C-07)
-- C (tests): CERRADO (auditoria de la suite; hallazgos C-07/C-08)
+**Auditoria interna:** A1-A6, B, C CERRADOS. Detalle en
+`ESTADO_SISTEMA.md`.
 
 ---
 
@@ -183,9 +159,9 @@ A1-A5, A6, B, C, 6, 7, 8, 9, F: CERRADOS. Detalle tematico en
 - Modulos con cobertura ampliada en D18/D21 (no-deuda): ver
   `04_HISTORICO.md` seccion "Resumen D5-D18".
 
-**Nota de deuda del corpus:** `00_ARRANQUE.md` en ~10.7 KB. El umbral
-autoimpuesto se eleva de 10 KB a 11 KB (2026-10-08) para no perder
-informacion operativa del dia en curso. Ver `01_METODO.md` seccion 11.
+**Nota de deuda del corpus:** `00_ARRANQUE.md` ~11.3 KB. Umbral
+autoimpuesto 11 KB (2026-10-08). Poda aplicada 2026-10-12. Ver
+`01_METODO.md` seccion 11.
 
 ---
 

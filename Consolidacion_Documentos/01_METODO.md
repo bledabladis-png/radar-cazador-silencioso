@@ -289,6 +289,18 @@ Ademas:
 - **Verificar la salida del patch inmediatamente.** Antes de cualquier otra accion. Si no aparece `[OK]`, el fichero no se toco.
 - **Verificar unicidad del ancla antes de escribir el script.** Si el anchor del `.Replace()` aparece N>1 veces, el script aborta antes de escribir. Caso observado 2026-10-03 (H5.3): `- H5.3: cron 13F 20-nov-2026.` aparecia 2 veces. Sin dano. La unicidad se verifica al disenar el script, no solo al ejecutarlo.
 
+### 10.1. Artefactos efimeros en `outputs/audit/`
+
+`outputs/audit/` esta en `.gitignore`. Los snapshots `pre_*`/`post_*` de cada sesion de verificacion se acumulan sin tope (130+ MB observados 2026-10-11). Politica:
+
+- **Conservar** (referencia, no tocar):
+  - `ci_*` (capturas de CI).
+  - `pre_wyckoff_mig_*` (snapshot de la migracion Wyckoff).
+  - `sow_*` (dosier SOW).
+- **Borrar** al cerrar cada sesion: `pre_<algo>_<timestamp>` / `post_<algo>_<timestamp>` que no esten en la lista de conservar.
+- **Regla:** antes de borrar, comprobar que ninguno contiene evidencia unica no recogida en un informe o commit. Si la contiene, portarla antes de borrar.
+- **No commitear nunca**: esta gitignored. Si aparece en `git status`, hay un `.gitignore` mal escrito.
+
 
 ---
 
