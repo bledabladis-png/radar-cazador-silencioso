@@ -52,9 +52,14 @@ Todos cerrados por el refactor de providers 2026-09-28/30 (commit `58936778` y s
 | A5-61 | `_to_multiindex` sin try/except | CERRADA |
 | A5-74 | `robust_z` duplicado Blackrock | CERRADA (usa `_fund_flow_utils`) |
 
-## 4. F6-* (12 no portados)
+## 4. F6-* (8 BAJA sin descripcion)
 
-El informe FASE 6 (reporte) no fue portado a `main` (solo el consolidado). Los 12 BAJA F6-* no tienen descripcion en los 3 informes disponibles. **Accion:** no triables sin recuperar el informe original. Muchos probablemente resueltos por los fixes de coherencia del reporte (2026-09-28/30 + 10/11-10). **Estado: sin triar.**
+El commit `bc656374` (donde se portaron los informes) solo tiene 3 ficheros: AUDITORIA_2026-09-26.md (FASE 0-3), AUDITORIA_FASE_5_2026-09-26.md (FASE 5) y AUDITORIA_CONSOLIDADA_2026-09-26.md. **No existe informe FASE 6 separado.** Los 12 MEDIA y 2 ALTA de FASE 6 si tienen descripcion en la consolidada (ya triados). Los siguientes 8 BAJA solo aparecen como IDs sueltos, sin descripcion:
+
+- Doc/nomenclatura: F6-06, F6-07, F6-13, F6-14, F6-15, F6-20.
+- Fixes puntuales: F6-35, F6-36.
+
+**Accion:** no triables sin informe original. El commit `bc656374` esta en git; si en el futuro se necesita, se puede intentar inferir del codigo por el titulo de la categoria ("doc/nomenclatura" y "fixes puntuales"). **Estado: sin descripcion disponible.**
 
 ## 5. Otros (varios)
 
