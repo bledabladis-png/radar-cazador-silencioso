@@ -435,6 +435,15 @@ Si el gate falla, `run.py` aborta con `sys.exit(1)`.
 
 **Fund data:** SSGA (SPDR), BlackRock (DAXEX, ISF.L, IWM), Amundi (LYXI).
 
+**Gap `sector_flow_characteristics` 09-oct** (2026-10-12, WONT FIX
+razonado): falta fila para 2026-10-09. Causa: `etf_primary_flow.csv`
+no tiene datos SSGA de ese dia (la descarga fallo). La funcion
+`compute_sector_flow_characteristics` no acepta `as_of_date`:
+siempre opera sobre la ultima fecha del input. Sin input 09-oct,
+la fila no es reconstruible. Impacto bajo: unica fila, sin
+consumidor especifico de esa fecha. Documentado por
+`scripts/verify_outputs.py`.
+
 **SEC:** N-PORT (trimestral), 13F (trimestral), QQQ SEC flow.
 
 ---
