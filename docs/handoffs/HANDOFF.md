@@ -8,82 +8,98 @@ No crear variantes con fecha.
 
 ---
 
-## 1. ESTADO AL CIERRE (2026-10-11 23:00 CEST)
+## 1. ESTADO AL CIERRE (2026-10-12 ~14:30 CEST)
 
 Rama activa:    main
-HEAD:           ceb21d8a
+HEAD:           06dd6cd6
 Sincronizacion: main == origin/main
-Tests:          3204 passed + 5 skipped + 0 failed
+Tests:          3247 passed + 5 skipped + 0 failed
 Validation Gate: 10/10
 Working tree:   limpio
+Corpus:         v3 (Consolidacion_Documentos/00-08 + ESTADO_SISTEMA)
 
 ---
 
-## 2. QUE SE HIZO 08-11 OCT (3 sesiones)
+## 2. QUE SE HIZO 11-12 OCT (sesion larga, 17 commits)
 
-### 2.1. Verificacion del sistema (08-oct)
+### 2.1. Deuda limpia (11-oct)
 
-Revision bajo peticion del usuario: estado real del pipeline,
-artefactos, frescura, providers.
+- bd2a92b5: retirados 3 scripts one-shot (`regenerate_*`).
+- `src/report/sectorial.py.orig` borrado (huerfano, ignorado por git).
+- `outputs/audit` reducido: 131 -> 66 MB.
+- d67c1548: `ESTADO_SISTEMA.md` regenerado (estaba stale).
 
-Fixes:
-- c09a268c: check_iae_section aislaba STALE al bloque correcto.
-- d495dc1e: save_regime_history prioriza effective_date.
-- 8e8826f5: check_workflows mira ultimo run + trata cancelled como WARN.
-- 0017bf4f: vigilancia de etf_holdings.csv / index_holdings.csv.
+### 2.2. Contrato de persistencia de outputs (11-12 oct)
 
-### 2.2. Retirada modulo Wyckoff legacy (10-oct)
+**Objetivo.** Cerrar la clase entera de bugs "writer silencioso"
+(el gap 09-oct fue el sintoma). No un parche por CSV.
 
-- indicators/wyckoff.py borrado (17747a98).
-- 2 tests legacy retirados. Regresion I2 / K-INDEX-RANGE-01 portada
-  a test_wyckoff_v1_contract.py.
-- 5e cerrado en plan de migracion (f8d6dff9).
-- Motivo: v1.8 en produccion desde 08-oct, CI estable 08/09/10-oct,
-  consumidores residuales no productivos.
+**Solucion en 3 piezas + AST test:**
 
-### 2.3. Auditoria del reporte 10-oct (15 hallazgos)
+- `src/pipeline/output_registry.py`: registro declarativo de 19 outputs
+  (18 temporales + 1 snapshot). `WriteReceipt` + `ReceiptCollector`.
+- `src/pipeline/output_writer.py`: wrapper unico `persist(name, df, ...)`
+  / `skip(name, reason)`. Toda escritura a `outputs/history/` pasa por
+  aqui. Fail-closed: name no registrado -> KeyError; razon de skip no
+  legitima -> ValueError; derivar `date_value` del propio df si no se
+  pasa.
+- `src/pipeline/output_verifier.py`: `verify(collector)` con 3 reglas.
+- `run.py`: collector activo al inicio; verificacion antes de cerrar;
+  `sys.exit(1)` si falla; persiste `outputs/state/writer_receipts.json`.
+- `tests/test_output_contract_ast.py`: AST que prohibe `to_csv()` fuera
+  del wrapper. Excepciones: `output_writer.py`, `save_sector_rankings`,
+  `compute_indices_intl` (outputs/report/, efimeros).
 
-3 bugs reales corregidos:
+**19 writers migrados** en 6 commits por fichero. Gate 10/10, receipt v1
+y `pipeline_gate.py` intactos.
 
-- H-01 (9c33ed3b): candado `is_market_day(reference_date)` en
-  breadth_metrics.py bloqueaba escritura en runs de fin de semana
-  que producen la sesion del viernes. Fix: usar
-  `last_expected_market_date(reference_date)`.
-- H-03 (1d3e0a17): data_quality.py declaraba 15 fuentes.
-  Anadidas 11. SLPM retirado (congelado desde julio sin writer).
-- H-09 (4a604b21): heterogeneity_type retirado (constante, redundante).
+Commits: f0311cdb, 8596690c, c43a6b00, 2593ac91, ceecad70, b1237083,
+ae752882, ab838dbf.
 
-Falsos positivos: H-02, H-04..H-08, H-11..H-15.
+### 2.3. Verificacion extendida de outputs (12-oct)
 
-### 2.4. Duplicidades del reporte (11-oct)
+`scripts/verify_outputs.py`: comprueba que las ultimas N sesiones NYSE
+tienen fila en cada CSV temporal del registro. Default `--since
+2026-10-11` (despliegue del contrato). Gap real detectado:
+`sector_flow_characteristics` sin fila para 09-oct (ROI bajo, sin
+accion). Commits f428bf51, 69506319.
 
-- D-02 (fd56dad3): seccion "Persistencia sectorial" eliminada
-  (duplicaba columna Persist en Rankings).
-- D-03 (fd56dad3): seccion "Tactical Leaders" eliminada
-  (duplicaba 5 de 6 columnas).
-- D-01 (128f1dd7): Data Freshness vs Calidad. Ambas se mantienen.
-  Nota cruzada. Miden por caminos distintos (runtime vs CSV).
+### 2.4. Triaje auditoria externa 2026-09-26 (12-oct)
 
-### 2.5. Run manual 11-oct (gap 09-oct)
+- **ALTA: 6/6 cerradas** (F3-05, F3-16, F3-17, A5-13, F6-10, F6-28).
+- **MEDIA: 71/71 clasificadas, 0 vivas.** 55 cerradas por cambios
+  posteriores + 7 WONT FIX razonado + 9 rescop doc (cerradas hoy).
+- **BAJA: 53/61 triadas.** 8 F6-* sin descripcion (informe original no
+  portado; commit bc656374 solo tiene 3 ficheros).
 
-El bug H-01 bloqueo la escritura de la fila 09-oct en
-sector_breadth.csv y sus 3 derivados durante el run del sabado
-10-oct. El receipt del target se emitio igual, gate no reintenta.
+Documentos: `docs/auditoria/radar/audits/TRIAGE_2026-10-12.md`,
+`TRIAGE_BAJAS_2026-10-12.md`.
 
-Run manual domingo 11-oct (ceb21d8a). Recuperadas las 4 filas
-09-oct. Verifico los 4 fixes anteriores en produccion.
+### 2.5. Verificacion del run del domingo 11-oct
 
-**NO es parche recurrente.** Con 9c33ed3b el run del sabado 03:17 UTC
-escribe siempre el cierre del viernes. El gap fue daño puntual.
+El cron domingo madrugada (38103357426, 03:53 CEST) **skipeo por dise?o
+del gate**: receipt del sabado 38016582210 ya emitido para
+target_session=2026-10-09. Sin anomalia.
+
+Gap 09-oct cerrado por run manual `ceb21d8a` (23:24 CEST). Causa raiz
+(writer silencioso + receipt falso) cerrada por el contrato nuevo.
+
+### 2.6. Cierre de deudas de higiene (12-oct)
+
+- 0035be38: politica `outputs/audit/` en `01_METODO.md` seccion 10.1;
+  poda `00_ARRANQUE` 11670 -> 10240 B; snapshot a 3247 tests.
+- 06dd6cd6: D-07 cerrado con notas cruzadas en `sectorial.py` (Ret Lider
+  = absoluto) y `market_context.py` (vs mercado 20d = relativo).
+  D-04 cerrado sin parche (ya dice "Robust Z-Score").
+- F2-02, F2-03, F2-04, F2-07, A5-57: anotados en `02_ARQUITECTURA`.
 
 ---
 
 ## 3. PENDIENTES VIVOS
 
 ### 3.1. Bloqueados por terceros
-- C2 (920): discrepancia H1-B. Local -4.264.449.012 vs auditor
-  -4.264.449.932. Sin comando del auditor, no contrastable.
-- SOW protocol v6: borrador 48_sow_protocol_v6.md pendiente firma.
+- C2 (920): discrepancia H1-B. Bloqueado por auditor externo.
+- SOW protocol v6: borrador `48_sow_protocol_v6.md` pendiente firma.
 - gold-standard-v4: archivada como tag.
 
 ### 3.2. Bloqueados por datos
@@ -92,16 +108,18 @@ escribe siempre el cierre del viernes. El gap fue daño puntual.
 
 ### 3.3. Con fecha futura
 - H5.3: cron trimestral 13F 20-nov-2026 06:17 UTC.
+- Primer test del contrato en prod: cron 23:17 UTC de hoy (13-oct
+  01:17 CEST) con target_session=2026-10-12. Verificar
+  `gh run view <id> --log | grep "Verificacion de outputs"`.
 
 ### 3.4. Deuda sin urgencia
-- Auto-backfill de CSVs derivados: feature nueva. Diseno minimo
-  ~30 min. Pendiente decision. El fix 9c33ed3b ya previene el bug
-  que lo justifico.
-- 00_ARRANQUE a ~250 B del umbral 11 KB.
-- Auditoria externa 2026-09-26 (142 hallazgos): informes en
-  docs/auditoria/radar/audits/. 71 MEDIA + 65 BAJA sin tracking.
-- Cosmeticos del reporte: D-04 (PCR z vs Robust Z-Score),
-  D-07 (Lider retorno absoluto vs relativo).
+- 8 F6-* sin descripcion (informe FASE 6 no portado).
+- ~11 BAJA vivas de baja prioridad (IAE rendimiento, MTE limpieza,
+  doc IAE).
+- Regenerar `sector_flow_characteristics` 09-oct (ROI bajo).
+- Cosmeticos: `render_calidad_datos` ubicacion (volatility_mte.py),
+  divergencia runtime/CSV sin test, `test_render_freshness_d36`
+  fragilidad.
 
 ---
 
@@ -115,10 +133,10 @@ escribe siempre el cierre del viernes. El gap fue daño puntual.
     py -m pyflakes . ; py -m compileall . -q
 
 Esperado:
-- HEAD = ceb21d8a o posterior.
+- HEAD = 06dd6cd6 o posterior.
 - ahead 0, behind 0.
 - working tree limpio.
-- 3204 passed + 5 skipped.
+- 3247 passed + 5 skipped.
 - pyflakes silencio, compileall OK.
 
 Si divergencia: investigar antes de tocar nada.
@@ -131,12 +149,19 @@ Si divergencia: investigar antes de tocar nada.
   Politica: snapshot pre/post + revertir, salvo publicacion
   deliberada. Aplicado en 01_METODO seccion 4.
 
-- **EOL mixto en corpus.** 00_ARRANQUE y 01c_LECCIONES en CRLF.
-  01_METODO, 02_ARQUITECTURA, 05_BITACORA en LF. 04_HISTORICO
-  mixto. Verificar con repr() antes de patch multilinea.
+- **EOL del corpus: LF** en todos los docs (`00_ARRANQUE`,
+  `01_METODO`, `02_ARQUITECTURA`, `04_HISTORICO`, `05_BITACORA`).
+  Corregido 2026-10-12. **Regla:** al escribir docs con Python, usar
+  `Path.write_text(..., newline='\n')` o `[System.IO.File]::WriteAllText`
+  para no convertirlos a CRLF. Ver `01_METODO` seccion 6.
 
-- **Patrones de bug** en 01b_PATRONES.md. **Trampas PowerShell** en
-  01_METODO seccion 6bis.
+- **BOM:** `Out-File -Encoding utf8` de PowerShell mete BOM (U+FEFF).
+  Usar `-Encoding ascii` para ficheros nuevos o quitar BOM despues.
+  El corpus y los `.py` no llevan BOM. `test_output_contract_ast.py`
+  usa `utf-8-sig` por defensa.
+
+- **Patrones de bug** en `01b_PATRONES.md`. **Trampas PowerShell** en
+  `01_METODO` seccion 6bis.
 
 - **No confundir diagnostico cerrado con hipotesis fuerte.**
 
@@ -154,7 +179,8 @@ Corpus normativo en `Consolidacion_Documentos/` (12 docs):
 07_RUNBOOK, 08_AUDITORIA_SECTOR_REGIME, ESTADO_SISTEMA (auto).
 
 Expedientes: docs/auditoria/wyckoff/, docs/auditoria/iae/golden/,
-docs/auditoria/s03_deep/, docs/auditoria/radar/audits/.
+docs/auditoria/s03_deep/, docs/auditoria/radar/audits/ (incluye
+TRIAGE_2026-10-12.md + TRIAGE_BAJAS_2026-10-12.md).
 
 ---
 

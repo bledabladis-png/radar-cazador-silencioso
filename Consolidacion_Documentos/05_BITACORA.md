@@ -44,6 +44,44 @@ Al cerrar una sesion nueva, se anade arriba (las mas recientes primero). Si hay 
 
 ## 3. SESIONES
 
+### 2026-10-12 - Contrato en prod + triaje auditoria + higiene
+
+**Objetivo.** Cerrar el frente del contrato (verify extendido),
+triage completo de la auditoria externa 2026-09-26, y deudas de
+higiene del corpus.
+
+**Hecho.**
+- `scripts/verify_outputs.py`: verificacion extendida de outputs
+  (ultimas N sesiones). Gap real detectado:
+  `sector_flow_characteristics` 09-oct.
+- Triaje completo auditoria 2026-09-26:
+  ALTA 6/6 cerradas. MEDIA 71/71 clasificadas (0 vivas).
+  BAJA 53/61 triadas (8 F6-* sin informe original).
+- Verificacion run domingo 11-oct: sin anomalia (gate skipeo
+  por diseno).
+- F2-02, F2-03, F2-04, F2-07, A5-57 anotados en `02_ARQUITECTURA`.
+- Politica `outputs/audit/` en `01_METODO` 10.1.
+- Poda `00_ARRANQUE` 11670 -> 10240 B (bajo umbral 11 KB).
+- D-07 cerrado con notas cruzadas. D-04 sin parche (ya renombrado).
+
+**Verificacion.** Suite: 3243 -> 3247 passed. 5 skipped. Pyflakes
+limpio.
+
+**Commits.** 026d182d, 45ec04de, d80cebf8, 0035be38, 06dd6cd6
+  (+ f428bf51, 69506319 del bloque anterior).
+
+**Pendiente.**
+- Primer test del contrato en prod: cron 23:17 UTC hoy.
+- 8 F6-* sin descripcion (informe original no disponible).
+- ~11 BAJA vivas de baja prioridad.
+- Regenerar `sector_flow_characteristics` 09-oct (ROI bajo).
+- Cosmeticos: `render_calidad_datos` ubicacion, divergencia
+  runtime/CSV, `test_render_freshness_d36` fragilidad.
+
+**Proximo paso sugerido.** Verificar el primer run del cron con
+el contrato activo. Si el verificador caza algo, investigar. Si
+OK, el contrato queda validado en produccion.
+
 ### 2026-10-11 - Contrato de persistencia de outputs
 
 **Objetivo.** Cerrar la clase entera de bugs "writer silencioso"
