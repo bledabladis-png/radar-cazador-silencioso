@@ -22,6 +22,14 @@ from config.settings import DARKPOOL_THRESHOLDS
 def robust_zscore(series):
     """Z-score robusto (mediana + MAD) sobre una serie.
 
+    F2.4-20 / A5-77 (2026-10-12): WONT FIX razonado. Esta variante
+    opera sobre serie completa (sin ventana, sin ffill, sin clip),
+    dominio distinto de src.utils.robust_zscore (window-based) y de
+    _fund_flow_utils.fund_flow_robust_zscore (window 120 + MAD rules).
+    No se unifica. Cubierta por test_darkpool_edge_cases.py y
+    test_darkpool_scoring_nan_regression.py. Contrato de re-export
+    verificado en test_darkpool_edge_cases.py:182.
+
     Contrato:
         - serie vacia -> Series vacia (mismo indice)
         - NaN originales permanecen NaN
