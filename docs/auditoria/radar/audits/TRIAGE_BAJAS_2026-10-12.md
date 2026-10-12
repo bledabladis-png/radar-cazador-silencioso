@@ -52,14 +52,36 @@ Todos cerrados por el refactor de providers 2026-09-28/30 (commit `58936778` y s
 | A5-61 | `_to_multiindex` sin try/except | CERRADA |
 | A5-74 | `robust_z` duplicado Blackrock | CERRADA (usa `_fund_flow_utils`) |
 
-## 4. F6-* (8 BAJA sin descripcion)
+## 4. F6-* (8 BAJA sin descripcion) - WONT FIX razonado
 
-El commit `bc656374` (donde se portaron los informes) solo tiene 3 ficheros: AUDITORIA_2026-09-26.md (FASE 0-3), AUDITORIA_FASE_5_2026-09-26.md (FASE 5) y AUDITORIA_CONSOLIDADA_2026-09-26.md. **No existe informe FASE 6 separado.** Los 12 MEDIA y 2 ALTA de FASE 6 si tienen descripcion en la consolidada (ya triados). Los siguientes 8 BAJA solo aparecen como IDs sueltos, sin descripcion:
+**Investigacion cerrada 2026-10-12.** El informe FASE 6 nunca existio como
+fichero. Evidencia:
 
-- Doc/nomenclatura: F6-06, F6-07, F6-13, F6-14, F6-15, F6-20.
-- Fixes puntuales: F6-35, F6-36.
+- `bc656374` (commit original de los informes) contiene 3 ficheros:
+  AUDITORIA_2026-09-26.md (FASE 0-3), AUDITORIA_FASE_5_2026-09-26.md
+  (FASE 5), AUDITORIA_CONSOLIDADA_2026-09-26.md. **No hay FASE 6.**
+- `git log --all -S "FASE 6"` y `-S "F6-06"`: sin resultados en codigo
+  ni tests (solo el TRIAGE_BAJAS los menciona).
+- `git ls-tree bc656374`: arbol completo revisado, sin ficheros
+  adicionales.
+- Reflog y ramas remotas: sin ramas huerfanas con contenido.
+- Expedientes `docs/auditoria/`: solo los 3 ficheros conocidos en
+  `radar/audits/`.
 
-**Accion:** no triables sin informe original. El commit `bc656374` esta en git; si en el futuro se necesita, se puede intentar inferir del codigo por el titulo de la categoria ("doc/nomenclatura" y "fixes puntuales"). **Estado: sin descripcion disponible.**
+Los 8 IDs aparecen **solo** en las categorias "doc/nomenclatura"
+y "fixes puntuales" de la consolidada, sin descripcion individual.
+La tabla resumen reporta "FASE 6 (reporte): 2 ALTA, 16 MEDIA, 7 BAJA".
+Los 2+16 estan documentados (ya triados). Los 7-8 BAJA solo se contaron.
+
+**Riesgo residual minimo:** las dos categorias (doc/nomenclatura y
+fixes puntuales) apuntan a hallazgos de baja severidad. Ademas, entre
+2026-09-28 y 2026-10-12 hubo tres sesiones de coherencia del reporte
+(`fd56dad3`, `1d3e0a17`, `9c33ed3b`, `128f1dd7`, `4a604b21`) que muy
+probablemente cerraron varios de estos IDs sin referencia cruzada.
+
+**Accion:** WONT FIX razonado. No hay informacion adicional recuperable.
+Si en el futuro se necesita auditar el reporte de nuevo, hacerlo con
+criterio actual (no contra los IDs del 26-sep).
 
 ## 5. Otros (varios)
 

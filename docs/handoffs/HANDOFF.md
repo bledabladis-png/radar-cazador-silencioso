@@ -113,7 +113,9 @@ Gap 09-oct cerrado por run manual `ceb21d8a` (23:24 CEST). Causa raiz
   `gh run view <id> --log | grep "Verificacion de outputs"`.
 
 ### 3.4. Deuda sin urgencia
-- 8 F6-* sin descripcion (informe FASE 6 no portado).
+- 8 F6-* sin descripcion: CERRADO como WONT FIX razonado
+  (investigacion 2026-10-12; informe FASE 6 nunca existio como
+  fichero; ver `TRIAGE_BAJAS_2026-10-12.md` seccion 4).
 - ~11 BAJA vivas de baja prioridad (IAE rendimiento, MTE limpieza,
   doc IAE).
 - Regenerar `sector_flow_characteristics` 09-oct (ROI bajo).
