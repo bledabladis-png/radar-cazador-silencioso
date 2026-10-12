@@ -21,8 +21,9 @@ from src.report.confirmation import render_confirmation
 from src.report.darkpool import render_darkpool
 from src.report.sentiment import render_sentimiento_opciones
 from src.report.volatility_mte import (
-    render_estructura_volatilidad, render_calidad_datos, render_mte,
+    render_estructura_volatilidad, render_mte,
 )
+from src.report.freshness import render_calidad_datos
 
 
 # =============================================================================

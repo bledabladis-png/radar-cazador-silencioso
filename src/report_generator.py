@@ -4,7 +4,7 @@ from zoneinfo import ZoneInfo
 from src.report.iae import render_iae_section
 from src.report.alerts import render_alerts, render_cross_module
 from src.report.breadth import render_breadth_market
-from src.report.freshness import render_data_freshness
+from src.report.freshness import render_data_freshness, render_calidad_datos
 from src.report.sectorial import (
     render_sector_breadth,
     render_sector_concentration,
@@ -51,7 +51,6 @@ from src.report.sentiment import render_sentimiento_opciones
 from src.report.slpm import render_slpm_v12, render_slpm_legacy
 from src.report.volatility_mte import (
     render_estructura_volatilidad,
-    render_calidad_datos,
     render_mte,
 )
 from src.report.confirmation import render_confirmation

@@ -112,3 +112,36 @@ def render_data_freshness(pcr_data, darkpool_data, sector_results, reference_dat
         out.append(cl)
 
     return out
+
+
+def render_calidad_datos(data_quality_data):
+    """Renderiza la tabla Calidad, frescura y cobertura de datos.
+
+    Devuelve lista de lineas markdown. Sin side effects.
+    """
+    out = []
+    if data_quality_data is not None and not data_quality_data.empty:
+        out.append("## Calidad, frescura y cobertura de datos\n")
+        out.append("| Fuente | Último dato | Edad (días) | Frecuencia | Frescura | Cobertura | Notas |\n")
+        out.append("|--------|-------------|--------------|------------|----------|-----------|-------|\n")
+        # Mostrar solo la fila más reciente por fuente para evitar duplicados históricos
+        dq = data_quality_data.copy()
+        if 'date' in dq.columns and 'source' in dq.columns:
+            dq['date'] = pd.to_datetime(dq['date'], errors='coerce')
+            latest_idx = dq.groupby('source')['date'].idxmax()
+            dq = dq.loc[latest_idx].sort_values('source')
+        for _, row in dq.iterrows():
+            last = row['last_date'] if pd.notna(row['last_date']) else 'N/D'
+            age = f"{row['age_calendar_days']:.0f}" if pd.notna(row['age_calendar_days']) else 'N/D'
+            freq = row['frequency'] if pd.notna(row['frequency']) else 'N/D'
+            fresh = row['freshness'] if pd.notna(row['freshness']) else 'N/D'
+            cov = f"{row['coverage']:.2%}" if pd.notna(row['coverage']) else 'N/D'
+            notes = row['notes'] if pd.notna(row['notes']) else ''
+            out.append(f"| {row['source']} | {last} | {age} | {freq} | {fresh} | {cov} | {notes} |\n")
+        out.append("\n")
+        out.append("*No todas las variables tienen la misma actualidad. Los datos se muestran sin interpolación.*\n\n")
+        out.append("*Vista completa: 26 fuentes del sistema desde data_quality.csv. "
+                   "La tabla compacta 'Data Freshness' lista las 4 fuentes criticas "
+                   "con columna Data Conf. Pueden discrepar si el CSV esta "
+                   "desactualizado respecto a los datos runtime.*\n\n")
+    return out
