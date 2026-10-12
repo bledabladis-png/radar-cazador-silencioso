@@ -31,6 +31,7 @@ def render_liderazgo_interno(rs_internal_data):
             out.append(f"| {row['sector']} | {row['ticker']} | {row['rs_abs_20d']:.2%} | {row['rs_internal_20d']:.2%} | {row['classification']} |\n")
         out.append("\n")
         out.append("*Criterio: los 5 tickers de mayor price_ret_20d del sector, ordenados desc. La primera fila de cada sector coincide con la columna Lider de Concentracion del liderazgo (mismo criterio: retorno 20d maximo). No coincide con la primera fila de Representatividad, que ordena por WLS.*\n\n")
+        out.append("*vs mercado 20d = retorno relativo 20d del ticker frente al mercado (rs_abs_20d). Distinto de 'Ret Lider' de Concentracion, que es retorno absoluto (leader_return20). Nombre heredado (D-07 auditoria 2026-09-26); ambos se mantienen para no romper series.*\n\n")
     return out
 
 
