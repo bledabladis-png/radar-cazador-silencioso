@@ -82,4 +82,15 @@ def render_divergencia_precio_flujo(sector_flow_characteristics_data):
         out.append("\n")
         out.append("*«Absorción potencial» describe una configuración de retorno negativo del precio acompañada de flujo primario acumulado positivo. Puede ser compatible con absorción, pero no confirma por sí sola absorción institucional ni establece causalidad.*\n\n")
 
+        # P2.7 (2026-10-13, auditor): la columna 'date' de la fila es
+        # la fecha del FLUJO (SSGA, lag T+1/T+2). Los Ret 5d/20d se
+        # calculan sobre df_market, que puede tener fecha posterior
+        # (12-oct en el run de 13-oct). Ambas ventanas pueden terminar
+        # en sesiones distintas. El regimen (Confirmacion/Divergencia/
+        # Absorcion) compara precio y flujo de ventanas no alineadas.
+        out.append("*Asincronia de ventanas: la fecha de cada fila es la "
+                   "del flujo primario (SSGA, lag T+1/T+2). Los retornos "
+                   "5d/20d se calculan sobre el precio mas reciente "
+                   "disponible (puede ser posterior). Ambas series pueden "
+                   "terminar en sesiones distintas.*\n\n")
     return out

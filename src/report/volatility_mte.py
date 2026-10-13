@@ -76,12 +76,14 @@ def render_mte(mte_result):
         ips_val = mte_result.get('ips', 0)
         ips_str = f'{ips_val:.2f}' if pd.notna(ips_val) else 'N/D'
         out.append(f"- **Inflation Pressure Score:** {ips_str}\n\n")
-        # P2.5 (2026-10-13, auditor): explicitar criterios del
-        # escenario STAGFLATION y su estado UNCONFIRMED.
-        out.append("*Criterios STAGFLATION (scoring por suma): "
-                   "ips>0.15 (+1), ips>0.15 (+3), srs>0 (+2), "
-                   "cls<0.3 (+3), ips>0.5 (+2 adicional). Maximo=11. "
-                   "Escenario UNCONFIRMED cuando confidence<0.5. "
-                   "Inflation Pressure: 1/5 es un contador de "
-                   "componentes en presion, no el score final.*\n\n")
+        # P2.5 (2026-10-13, auditor): nota sin umbrales hardcodeados.
+        # Si cambian en scoring.py, esta nota sigue siendo cierta.
+        out.append("*El escenario se asigna por suma ponderada de "
+                   "condiciones (ver indicators/mte/scoring.py, "
+                   "funcion score_scenarios y SCENARIO_WEIGHTS). "
+                   "La etiqueta se publica como UNCONFIRMED cuando "
+                   "la confidence no supera el umbral interno. "
+                   "'Inflation Pressure: N/5' es un contador de "
+                   "componentes en presion, distinto del score "
+                   "agregado Inflation Pressure Score.*\n\n")
     return out
