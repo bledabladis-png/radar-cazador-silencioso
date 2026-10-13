@@ -49,6 +49,10 @@ def render_representatividad_lider(leader_representativeness_data):
     return out
 
 
+# P2.2 (2026-10-13, auditor): la distribucion de fases por sector
+# se calcula sobre los componentes con datos suficientes. Coberturas
+# por debajo del 50% se anotan explicitamente. Regla: cobertura < 50%
+# -> la lectura sectorial es indicativa, no representativa.
 def render_wyckoff_sectorial(sector_wyckoff_distribution_data):
     """Renderiza la tabla Distribucion Wyckoff sectorial.
 
@@ -64,9 +68,24 @@ def render_wyckoff_sectorial(sector_wyckoff_distribution_data):
         if 'date' in df_wy.columns and df_wy['date'].notna().any():
             latest = pd.to_datetime(df_wy['date']).max()
             df_wy = df_wy[pd.to_datetime(df_wy['date']) == latest]
+        _hay_baja = False
         for _, row in df_wy.iterrows():
-            out.append(f"| {row['sector']} | {row['pct_accumulation']:.0f}% | {row['pct_markup']:.0f}% | {row['pct_range']:.0f}% | {row['pct_distribution']:.0f}% | {row['pct_markdown']:.0f}% | {row['n_valid_wyckoff']} | {row['coverage_wyckoff']:.0f}% |\n")
+            _cov = row['coverage_wyckoff']
+            _cov_label = f"{_cov:.0f}%"
+            if pd.notna(_cov) and _cov < 50:
+                _cov_label += " [COB BAJA]"
+                _hay_baja = True
+            out.append(f"| {row['sector']} | {row['pct_accumulation']:.0f}% | {row['pct_markup']:.0f}% | {row['pct_range']:.0f}% | {row['pct_distribution']:.0f}% | {row['pct_markdown']:.0f}% | {row['n_valid_wyckoff']} | {_cov_label} |\n")
         out.append("\n")
+        if _hay_baja:
+            out.append("*[COB BAJA] = cobertura de componentes < 50%. Los "
+                       "porcentajes de fase se calculan sobre los componentes "
+                       "con datos suficientes (>=60 sesiones). Una cobertura "
+                       "baja indica que la distribucion no es representativa "
+                       "del sector completo. En esos casos la fase sectorial "
+                       "del ranking puede diferir de la fase dominante aqui.")
+            out.append("*P2.2 auditor 2026-10-13: la fase sectorial (Rankings) "
+                       "se decide sobre el ETF, no sobre estos componentes.*\n\n")
     return out
 
 

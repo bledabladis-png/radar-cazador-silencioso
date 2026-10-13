@@ -25,9 +25,17 @@ def render_momentum_sectores(sector_price_rank, sector_flow_rank):
 
     # I1 (2026-09-18): aclarar metrica para evitar confusion con otras
     # secciones que usan "Retorno 20d" para el retorno del ETF sectorial.
-    out.append("\n*Nota: Retorno 20d mide la mediana de los retornos 20d "
-               "de los componentes del sector. Distinta del retorno del ETF "
-               "sectorial mostrado en 'Flujo Primario ETF - Agregado sectorial'.*\n")
+    # P1.2 (2026-10-13, auditor): la nota anterior afirmaba que el
+    # retorno era la mediana de los componentes. INCORRECTO: el codigo
+    # aplica close.pct_change(20) sobre el ETF sectorial (ver
+    # regimes/sector_regime.py::compute_price_momentum). Los valores
+    # coinciden con 'Flujo Primario ETF - Agregado sectorial' porque
+    # ambos usan el mismo calculo. Nota corregida.
+    out.append("\n*Nota: Retorno 20d es el retorno del ETF sectorial "
+               "(close.pct_change(20)). Coincide con el retorno mostrado "
+               "en 'Flujo Primario ETF - Agregado sectorial' por usar la "
+               "misma fuente. Distinto de 'Retorno 20d (%)' de Concentracion "
+               "del liderazgo, que mide la mediana de los componentes.*\n")
 
     if sector_flow_rank:
         out.append("\n## Flujo de Mercado - Sectores (Proxy)\n")

@@ -16,13 +16,16 @@ from src.report.etf_flows import render_flujo_spdr
 
 
 def test_i1_momentum_sectores_incluye_nota():
+    """P1.2 auditor 2026-10-13: la nota anterior afirmaba que el
+    retorno era la mediana de los componentes. El codigo aplica
+    close.pct_change(20) sobre el ETF sectorial. Nota corregida."""
     rank = [('XLK', 0.05), ('XLF', -0.02)]
     flow = [('XLK', 0.5), ('XLF', -0.3)]
     out = render_momentum_sectores(rank, flow)
     joined = ''.join(out)
-    assert 'mediana de los retornos 20d' in joined
+    assert 'retorno del ETF sectorial' in joined
     assert 'Flujo Primario ETF' in joined  # referencia cruzada
-    assert 'componentes del sector' in joined
+    assert 'mediana de los componentes' in joined
 
 
 def test_o1_fecha_efectiva_en_nota():

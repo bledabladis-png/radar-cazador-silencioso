@@ -52,7 +52,16 @@ def render_sector_breadth(sector_breadth_data, is_stale=False, stale_reason=None
             out.append(f"| {row['sector']} | {_fmt_num(row['pct_above_ema20'], '{:.1f}%')} | {_fmt_num(row['pct_above_ema50'], '{:.1f}%')} | {_fmt_num(row['pct_above_ema200'], '{:.1f}%')} | {_fmt_num(row['pct_rs_positive'], '{:.1f}%')} | {_fmt_num(row['pct_momentum_positive'], '{:.1f}%')} | {_fmt_num(row['new_highs'], '{:.0f}')} | {_fmt_num(row['new_lows'], '{:.0f}')} | {_fmt_ad_net(row['advances'], row['declines'], row['ad_net'])} | {cov_label} |\n")
         out.append("\n")
         out.append(f"*[BAJA] = cobertura < {MIN_SECTOR_COVERAGE:.0%} del universo del sector. Los ratios se calculan sobre la parte valida; el valor puede no ser representativo del sector completo. Los derivados (SLPM, Opportunity Map, scores) usan estos mismos ratios sin invalidacion automatica.*\n\n")
-        out.append("*La columna A/D de esta tabla agrega solo top-20 por sector (suma total = ~220 tickers). No coincide con la metrica Advance/Decline Net de Confirmation Data (universo completo, ~313 tickers).*\n\n")
+        out.append("*La columna A/D de esta tabla agrega solo top-20 por sector "
+                   "(suma total = ~220 tickers). No coincide con la metrica "
+                   "Advance/Decline Net de Confirmation Data (universo "
+                   "completo, ~313 tickers).*\n\n")
+        # P2.3 (2026-10-13, auditor): aclarar semantica de NH/NL.
+        out.append("*NH/NL = componentes que marcan maximo/minimo de 52 "
+                   "semanas (252 sesiones previas). Un 0 es resultado real "
+                   "(ningun componente bate su extremo anual), no ausencia "
+                   "de dato. Si n_valid_nhnl < n_total, la metrica se "
+                   "calcula sobre menos componentes.*\n\n")
         # F6-04 (2026-09-28): WONT FIX razonado. Cobertura ~100% es el
         # objetivo tras A1 (2026-09-24, commit 8c6330f). n_total cuenta
         # los top-20 reales descargados (config TOP_N_SECTOR_COMPONENTS),
