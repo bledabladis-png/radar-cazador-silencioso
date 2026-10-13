@@ -150,4 +150,23 @@ def render_calidad_datos(data_quality_data):
                    "La tabla compacta 'Data Freshness' lista las 4 fuentes criticas "
                    "con columna Data Conf. Pueden discrepar si el CSV esta "
                    "desactualizado respecto a los datos runtime.*\n\n")
+        # N6.1 (2026-10-13, auditor): formula exacta de cobertura por
+        # coverage_logic. Cada fuente declara su numerador/denominador:
+        # - 'sectorial': sectores unicos con fila en la fecha /
+        #   EXPECTED_SECTOR_COUNT (11).
+        # - 'sectorial_evidence': sectores con alignment_reading !=
+        #   'EVIDENCIA INSUFICIENTE' / 11.
+        # - 'sectorial_family': sectores con mean_corr no nulo / 11.
+        # - 'flow_tickers': tickers unicos / 12.
+        # - 'rows': filas con total_pcr no nulo / total filas.
+        # - None: sin cobertura declarada (N/D en la columna).
+        # Un 9.09% en Evidence Matrix significa 1 de 11 sectores con
+        # lectura != EVIDENCIA INSUFICIENTE, no fallo del render.
+        # Fuente: indicators/data_quality.py lineas 375-403.
+        out.append("*Cobertura por fuente: cada fuente declara su "
+                   "numerador/denominador (ver indicators/data_quality.py). "
+                   "'sectorial': sectores unicos / 11. 'sectorial_evidence': "
+                   "sectores con lectura != EVIDENCIA INSUFICIENTE / 11. "
+                   "'flow_tickers': tickers unicos / 12. 'rows': filas con "
+                   "dato / total filas.*\n\n")
     return out

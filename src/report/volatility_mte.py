@@ -36,13 +36,15 @@ def render_estructura_volatilidad(volatility_structure_data):
             )
         out.append("\n")
         out.append("*Estructura descriptiva de volatilidad implícita y posicionamiento en opciones. No incluye Dark Pool.*\n\n")
-        # P2.4 (2026-10-13, auditor): los dos percentiles de PCR
-        # (Perc PCR aqui, Percentil en Sentimiento) pueden diferir
-        # si la distribucion reciente no coincide con la de 252 sesiones.
-        out.append("*Perc PCR = percentil sobre ventana de 252 sesiones. "
-                   "El 'Percentil' de Sentimiento de Opciones se calcula "
-                   "sobre la misma serie pero puede diferir si la "
-                   "distribucion reciente no coincide.*\n\n")
+        # N6.2 (2026-10-13, auditor): ventanas exactas de cada percentil.
+        # - Perc PCR (esta columna): pcr_percentile_20d, ventana 20 sesiones.
+        # - Percentil (Sentimiento de Opciones): percentile, ventana
+        #   min(252, len) sesiones. Distinta ventana, mismo indicador.
+        out.append("*Perc PCR = percentil de PCR sobre ventana de 20 "
+                   "sesiones (columna pcr_percentile_20d). El 'Percentil' "
+                   "de Sentimiento de Opciones usa la misma serie con "
+                   "ventana min(252, historico disponible). Miden cosas "
+                   "distintas: corto plazo vs largo plazo. Pueden diferir.*\n\n")
 
     return out
 

@@ -30,7 +30,8 @@ def render_sentimiento_opciones(pcr_data, reference_date=None):
         if pd.notna(pcr_data.get('z_score')):
             out.append(f"- **Robust Z-Score:** {pcr_data['z_score']:.2f}\n")
             out.append(f"- **Momentum:** {_fmt_num(pcr_data.get('momentum', np.nan), '{:.2f}')}\n")
-            out.append(f"- **Percentil:** {_fmt_num(pcr_data.get('percentile', np.nan), '{:.0f}%')}\n")
+            # N6.2 (2026-10-13, auditor): Percentil usa ventana min(252, len).
+            out.append(f"- **Percentil (ventana ~252 sesiones):** {_fmt_num(pcr_data.get('percentile', np.nan), '{:.0f}%')}\n")
             out.append(f"- **Estado:** {pcr_data.get('state', 'N/A')}\n")
         out.append(f"- **PCR Indices:** {_fmt_num(pcr_data.get('index_pcr', np.nan), '{:.2f}')} | "
                      f"**PCR Acciones:** {_fmt_num(pcr_data.get('equity_pcr', np.nan), '{:.2f}')} | "
