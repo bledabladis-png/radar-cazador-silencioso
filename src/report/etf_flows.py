@@ -88,9 +88,23 @@ def render_divergencia_precio_flujo(sector_flow_characteristics_data):
         # (12-oct en el run de 13-oct). Ambas ventanas pueden terminar
         # en sesiones distintas. El regimen (Confirmacion/Divergencia/
         # Absorcion) compara precio y flujo de ventanas no alineadas.
-        out.append("*Asincronia de ventanas: la fecha de cada fila es la "
-                   "del flujo primario (SSGA, lag T+1/T+2). Los retornos "
-                   "5d/20d se calculan sobre el precio mas reciente "
-                   "disponible (puede ser posterior). Ambas series pueden "
-                   "terminar en sesiones distintas.*\n\n")
+        # N5 (2026-10-13, auditor): decision explicita = mantener la
+        # comparacion asincrona, pero declararla con la fecha del flujo
+        # visible en el encabezado y con nota reforzada. No se alinean
+        # las series a una fecha comun: los retornos de precio se
+        # calculan sobre el ultimo cierre disponible (12-oct en el run
+        # de 13-oct), el flujo sobre la ultima publicacion SSGA
+        # (9-oct). La lectura debe ser de posicion relativa, no de
+        # senal contemporanea.
+        _flow_date = pd.to_datetime(_flow_filtered['date']).max()
+        _flow_date_str = _flow_date.strftime('%Y-%m-%d') if pd.notna(_flow_date) else 'N/D'
+        out.append(f"*Fecha del flujo (SSGA): {_flow_date_str}. "
+                   "Los retornos 5d/20d usan el ultimo cierre de precio "
+                   "disponible (posterior por lag del proveedor).*\n\n")
+        out.append("*N5 auditoria 2026-10-13: comparacion asincrona "
+                   "declarada. Las series pueden terminar en sesiones "
+                   "distintas. La lectura de divergencia precio-flujo es "
+                   "de posicion relativa, no de senal contemporanea. No "
+                   "usar como confirmacion en tiempo real sin considerar "
+                   "el desfase.*\n\n")
     return out
