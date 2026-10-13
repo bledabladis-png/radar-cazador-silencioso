@@ -43,6 +43,7 @@ def _forzar_lideres_slpm(sector_results, sector_flow_rank, otros_flow_rank, lead
                 leader_metrics_for_slpm.append({
                     'ticker': row['ticker'],
                     'rs': row['rs'] if pd.notna(row.get('rs')) else None,
+                    'rs_ratio_20d': row['rs_ratio_20d'] if pd.notna(row.get('rs_ratio_20d')) else None,
                     'rs_momentum': row['rs_mom'] if pd.notna(row.get('rs_mom')) else None,
                     'flow_proxy_z': row['flow_proxy_z'] if pd.notna(row.get('flow_proxy_z')) else None,
                     'wyckoff_phase': row['wyckoff_phase'] if pd.notna(row.get('wyckoff_phase')) else ''

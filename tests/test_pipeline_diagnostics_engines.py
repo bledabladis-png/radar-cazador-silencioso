@@ -126,8 +126,10 @@ def test_forzar_lideres_slpm_extrae_5_tickers():
         leader_df=leader_df,
     )
     assert len(metrics) == 5
+    # P1.1 (2026-10-13): rs_ratio_20d anadido (retorno relativo
+    # 20d, correcto para criterio binario de Leader Breadth).
     for m in metrics:
-        assert set(m.keys()) == {"ticker", "rs", "rs_momentum", "flow_proxy_z", "wyckoff_phase"}
+        assert set(m.keys()) == {"ticker", "rs", "rs_ratio_20d", "rs_momentum", "flow_proxy_z", "wyckoff_phase"}
 
 
 def test_tactical_structural_degradacion_sin_df():

@@ -32,6 +32,25 @@ def compute_stock_metrics(df_market, df_stocks, etf_ticker, stock_list, temporal
         rs = (close.loc[common_idx] / price_etf.loc[common_idx]).dropna()
         rs_mom = np.log(rs).diff(20).iloc[-1] if len(rs) >= 21 else np.nan
 
+        # P1.1 (2026-10-13): retorno relativo 20d (correcto para
+        # criterio binario de liderazgo). rs (precio accion / precio
+        # ETF) depende de precio nominal y splits: no es comparable
+        # entre acciones. rs_ratio_20d SI lo es.
+        # Fórmula: (1+ret20_stock)/(1+ret20_etf) - 1, mismo criterio
+        # que rs_internal.rs_abs_20d.
+        try:
+            _close = close.loc[common_idx].dropna()
+            _etf = price_etf.loc[common_idx].dropna()
+            _idx = _close.index.intersection(_etf.index)
+            if len(_idx) >= 21:
+                _ret_stk = _close.loc[_idx].iloc[-1] / _close.loc[_idx].iloc[-21] - 1
+                _ret_etf = _etf.loc[_idx].iloc[-1] / _etf.loc[_idx].iloc[-21] - 1
+                rs_ratio_20d = ((1 + _ret_stk) / (1 + _ret_etf) - 1) if pd.notna(_ret_stk) and pd.notna(_ret_etf) else np.nan
+            else:
+                rs_ratio_20d = np.nan
+        except (KeyError, IndexError, ValueError, ZeroDivisionError):
+            rs_ratio_20d = np.nan
+
         ret = close.pct_change(fill_method=None)
         dollar_vol = close * volume
         flow_raw = ret * dollar_vol
@@ -90,6 +109,7 @@ def compute_stock_metrics(df_market, df_stocks, etf_ticker, stock_list, temporal
             'coverage': _eff_meta.get('coverage'),
             'rs': rs.iloc[-1],
             'rs_mom': rs_mom,
+            'rs_ratio_20d': rs_ratio_20d,
             'flow_proxy_z': flow_signal,
             'wyckoff_score': wyckoff_sc,
             'wyckoff_phase': wyckoff_ph,

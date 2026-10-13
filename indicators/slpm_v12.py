@@ -35,7 +35,20 @@ def compute_leader_breadth_v2(leader_metrics, expected_leaders=SLPM_EXPECTED_LEA
     n = len(leader_metrics)
     coverage = min(n / expected_leaders, 1.0) if expected_leaders > 0 else 0
 
-    rs_positive = sum(1 for m in leader_metrics if m and (m.get('rs', 1.0) or 1.0) > 1.0) / n
+    # P1.1 (2026-10-13): el criterio binario de liderazgo usa ahora
+    # el RETORNO RELATIVO 20d (rs_ratio_20d > 0), no el ratio de
+    # precios nominales. El ratio close/price_etf depende de precio
+    # nominal y splits: una accion de 500 con ETF de 200 daba
+    # rs>1 sin haber batido al sector. Fallback al criterio antiguo
+    # si rs_ratio_20d no esta disponible (leaders internacionales).
+    def _rs_positive(m):
+        if not m:
+            return False
+        v = m.get('rs_ratio_20d')
+        if v is not None and pd.notna(v):
+            return float(v) > 0.0
+        return (m.get('rs', 1.0) or 1.0) > 1.0
+    rs_positive = sum(1 for m in leader_metrics if _rs_positive(m)) / n
     # A3.3-06: fallback rs_momentum -> rs_mom_20. El pipeline actual
     # provee rs_momentum; rs_mom_20 es defensa en profundidad por
     # compatibilidad con versiones previas del leader_metrics dict.
@@ -64,6 +77,13 @@ def compute_leader_breadth_v2(leader_metrics, expected_leaders=SLPM_EXPECTED_LEA
 def compute_leader_integrity(leader_metrics):
     if not leader_metrics:
         return {'lis': 0.0, 'n_leaders': 0}
+    # P1.1 (2026-10-13): WONT FIX en este fix. El LIS sigue usando
+    # `rs` (precio/ETF) como input. Cambiar a `rs_ratio_20d` (retorno
+    # relativo, escala +-0.10 tipica vs +-1.5 del ratio de precios)
+    # saturaria tanh(-) y desplazaria la confidence en produccion
+    # para todos los runs. Requiere recalibracion estadistica previa
+    # (mismo caso que F2.4-13: no tocar sin evidencia). Documentado
+    # como deuda viva en el TRIAGE del auditor 2026-10-13.
     scores = []
     for m in leader_metrics:
         if not m:
