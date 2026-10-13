@@ -7,6 +7,7 @@ Extraidos de src/report_generator.py (refactor C1, fase C1-6d3c).
 
 import pandas as pd
 from src.report.helpers import _fmt_signed
+from config.settings import WYCKOFF_MIN_COVERAGE_PCT
 
 
 def render_matriz_regimen(sector_regime_matrix_data):
@@ -72,13 +73,14 @@ def render_wyckoff_sectorial(sector_wyckoff_distribution_data):
         for _, row in df_wy.iterrows():
             _cov = row['coverage_wyckoff']
             _cov_label = f"{_cov:.0f}%"
-            if pd.notna(_cov) and _cov < 50:
+            if pd.notna(_cov) and _cov < WYCKOFF_MIN_COVERAGE_PCT:
                 _cov_label += " [COB BAJA]"
                 _hay_baja = True
             out.append(f"| {row['sector']} | {row['pct_accumulation']:.0f}% | {row['pct_markup']:.0f}% | {row['pct_range']:.0f}% | {row['pct_distribution']:.0f}% | {row['pct_markdown']:.0f}% | {row['n_valid_wyckoff']} | {_cov_label} |\n")
         out.append("\n")
         if _hay_baja:
-            out.append("*[COB BAJA] = cobertura de componentes < 50%. Los "
+            out.append(f"*[COB BAJA] = cobertura de componentes < "
+                       f"{WYCKOFF_MIN_COVERAGE_PCT:.0f}%. Los "
                        "porcentajes de fase se calculan sobre los componentes "
                        "con datos suficientes (>=60 sesiones). Una cobertura "
                        "baja indica que la distribucion no es representativa "

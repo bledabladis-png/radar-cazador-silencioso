@@ -63,6 +63,14 @@ CFTC_ACTIVE_CONTRACT_DAYS = 30
 EXPECTED_SECTOR_COUNT = 11
 MIN_SECTOR_COVERAGE = 0.70    # umbral minimo de cobertura por sector (se marca [BAJA] si < 70%)
 
+# P2.2 (2026-10-13, auditor): umbral de cobertura para la fase
+# Wyckoff por sector. Distinto de MIN_SECTOR_COVERAGE (ese aplica
+# a breadth de precio; este a la distribucion de fases de los
+# componentes). Bajo 50% la distribucion no es representativa
+# del sector. Constante declarada para evitar hardcodeos en el
+# render y permitir ajuste en un unico sitio.
+WYCKOFF_MIN_COVERAGE_PCT = 50.0
+
 # ============================================================
 # DARK POOL / ATS HISTORY
 # ============================================================
