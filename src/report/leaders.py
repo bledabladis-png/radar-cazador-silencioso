@@ -6,6 +6,7 @@ Extraidos de src/report_generator.py (refactor C1, fase C1-6c1).
 
 from config.settings import (EXPECTED_SECTOR_COUNT, MOMENTUM_PRICE_WINDOW,
                               TOP_N_CANDIDATES, TOP_N_LEADERS)
+from config.weights import WLS_WEIGHTS, WLS_PERSISTENCE_FACTOR
 from config.tickers import SECTOR_NAMES
 from src.report.helpers import _fmt_num
 
@@ -96,13 +97,18 @@ def render_acciones_seleccionadas(leader_lines):
             f"sectorial con mayor peso en cartera; (2) entre esos, los "
             f"{TOP_N_LEADERS} con mayor WLS.*\n\n"
         )
+        # P1.3 (2026-10-13, auditor): texto derivado de WLS_WEIGHTS
+        # y WLS_PERSISTENCE_FACTOR. Si cambian los pesos, la nota
+        # se actualiza sola.
+        _w = WLS_WEIGHTS
         out.append(
-            "*WLS (Weighted Leadership Score, universo sectorial) = "
-            "0.35 * rs_z + 0.30 * flow_proxy_z + 0.25 * wyckoff_z + "
-            "0.10 * stability_z, multiplicado por (1 + 0.05 * "
-            "min(persistence_10d, 1.0)). Las componentes rs_z, "
-            "flow_proxy_z, wyckoff_z y stability_z son z-scores robustos "
-            "intra-sector, clipeados a [-3, +3].*\n\n"
+            f"*WLS (Weighted Leadership Score, universo sectorial) = "
+            f"{_w['rs']:.2f} * rs_z + {_w['flow']:.2f} * flow_proxy_z + "
+            f"{_w['wyckoff']:.2f} * wyckoff_z + {_w['stability']:.2f} * "
+            f"stability_z, multiplicado por (1 + {WLS_PERSISTENCE_FACTOR:.2f} * "
+            f"min(persistence_10d, 1.0)). Las componentes rs_z, "
+            f"flow_proxy_z, wyckoff_z y stability_z son z-scores robustos "
+            f"intra-sector, clipeados a [-3, +3].*\n\n"
         )
         out.append(
             "*RS = RS Level (ratio de precio accion / precio ETF sectorial). "

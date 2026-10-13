@@ -5,6 +5,7 @@ from indicators.wyckoff_v1 import wyckoff_score, classify_wyckoff_phase, detect_
 from src.utils import robust_zscore, get_col
 from src.report.helpers import _fmt_num
 from config.settings import TOP_N_CANDIDATES, TOP_N_LEADERS
+from config.weights import WLS_WEIGHTS, WLS_PERSISTENCE_FACTOR
 
 def compute_stock_metrics(df_market, df_stocks, etf_ticker, stock_list, temporal_meta=None):
     results = []
@@ -154,16 +155,20 @@ def compute_wls(df_metrics, weights=None):
             factor = 1 - min(1.0, (rho - 0.7) / 0.3)
             df.loc[mask, 'flow_proxy_z_norm'] *= factor
 
+    # P1.3 (2026-10-13, auditor): los pesos vienen de config.weights
+    # (WLS_WEIGHTS). El parametro `weights` permite override explicito
+    # (usado por tests), pero los defaults son la fuente unica.
     if weights is None:
-        w_rs, w_flow, w_struct, w_stab = 0.35, 0.30, 0.25, 0.10
+        _w = WLS_WEIGHTS
     else:
-        w_rs = weights.get('rs', 0.35)
-        w_flow = weights.get('flow', 0.30)
-        w_struct = weights.get('structure', 0.25)
-        w_stab = weights.get('stability', 0.10)
+        _w = weights
+    w_rs = _w.get('rs', WLS_WEIGHTS['rs'])
+    w_flow = _w.get('flow', WLS_WEIGHTS['flow'])
+    w_struct = _w.get('structure', _w.get('wyckoff', WLS_WEIGHTS['wyckoff']))
+    w_stab = _w.get('stability', WLS_WEIGHTS['stability'])
 
     df['wls'] = w_rs*df['rs_z'] + w_flow*df['flow_proxy_z_norm'] + w_struct*df['rws_z'] + w_stab*df['stab_z']
-    df['wls'] *= (1 + 0.05 * np.minimum(df['persistence_10d'], 1.0))
+    df['wls'] *= (1 + WLS_PERSISTENCE_FACTOR * np.minimum(df['persistence_10d'], 1.0))
     df['sector_rank_pct'] = df.groupby('sector')['wls'].rank(pct=True)
 
     # leader_confidence eliminado (no se usaba)

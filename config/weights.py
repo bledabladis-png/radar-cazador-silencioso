@@ -87,6 +87,24 @@ STRUCTURAL_WEIGHTS = {
 # Garantia: multiplier en [0.5, 1]. Ver D1 (2026-09-30).
 SECTOR_DISPERSION_PENALTY = 0.5
 
+# ============================================================
+# WLS (Weighted Leadership Score) - universo sectorial
+# P1.3 (2026-10-13, auditor): pesos declarados como constante
+# unica. Antes vivian hardcodeados en stock_leader.py y en el
+# texto de la nota del reporte (leaders.py). Al centralizarlos
+# aqui, tanto el calculo como la nota derivan del mismo valor.
+# ============================================================
+WLS_WEIGHTS = {
+    'rs': 0.35,         # rs_z (RS Level intra-sector)
+    'flow': 0.30,       # flow_proxy_z_norm (z intra-sector)
+    'wyckoff': 0.25,    # rws_z (Wyckoff score intra-sector)
+    'stability': 0.10,  # stab_z (estabilidad Wyckoff intra-sector)
+}
+
+# Factor de ajuste por persistencia 10d.
+# wls *= (1 + WLS_PERSISTENCE_FACTOR * min(persistence_10d, 1.0))
+WLS_PERSISTENCE_FACTOR = 0.05
+
 FLOW_PROXY_WEIGHTS = {
     'flow_smooth': 0.30,
     'obv': 0.35,
