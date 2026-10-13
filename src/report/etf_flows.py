@@ -28,7 +28,18 @@ def render_flujo_spdr(etf_primary_flow_data):
         except (KeyError, AttributeError, ValueError, TypeError):
             _ultima_fecha = "N/D"
         out.append(f"\n*Fuente: State Street Global Advisors (SSGA). ETF Primary Flow = ΔShares Outstanding × NAV. Z-score sobre {ETF_PRIMARY_FLOW_ZSCORE_WINDOW} sesiones. Ultima fecha: {_ultima_fecha}. SSGA publica con lag de 1-2 dias; la fecha puede ir por detras del run.*\n\n")
-        out.append("*Esta tabla muestra flujo por ETF (dato atomico). Para la lectura agregada con persistencia y regimen, ver la tabla siguiente: Flujo Primario ETF - Agregado sectorial.*\n\n")
+        out.append("*Esta tabla muestra flujo por ETF (dato atomico). "
+                   "Para la lectura agregada con persistencia y regimen, ver "
+                   "la tabla siguiente: Flujo Primario ETF - Agregado sectorial.*\n\n")
+        # B10 (2026-10-13): SSGA devuelve tambien ETFs no sectoriales
+        # (p. ej. FEZ = SPDR EURO STOXX 50). Aclaracion explicita.
+        _tickers = set(etf_primary_flow_data['ticker'].astype(str).str.upper())
+        _no_sectoriales = _tickers - {'XLB','XLC','XLE','XLF','XLI','XLK','XLP',
+                                        'XLRE','XLU','XLV','XLY'}
+        if _no_sectoriales:
+            out.append("*ETFs no sectoriales presentes en la fuente SSGA "
+                       "(no alimentan el analisis sectorial): " +
+                       ", ".join(sorted(_no_sectoriales)) + ".*\n\n")
         # F6-29b (2026-09-28): aclarar +0.00 vs N/D.
         out.append("*En la columna Primary Flow $: `+0.00` indica flujo calculado exactamente cero (shares outstanding sin cambio); `N/D` indica dato no disponible (NaN en shares o NAV). Son estados distintos.*\n\n")
     return out

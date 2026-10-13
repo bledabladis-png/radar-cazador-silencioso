@@ -35,5 +35,13 @@ def render_breadth_market(breadth_values):
         out.append(f"| New Highs sectoriales | {nh_count}/{EXPECTED_SECTOR_COUNT} ({nh_pct:.2%}) |\n")
         out.append(f"| New Lows sectoriales | {nl_count}/{EXPECTED_SECTOR_COUNT} ({nl_pct:.2%}) |\n")
         out.append("\n")
-        out.append("*Cada fila cuenta sectores (ETFs) cuyo precio esta sobre la EMA correspondiente, no tickers individuales.*\n\n")
+        out.append("*Cada fila cuenta sectores (ETFs) cuyo precio esta "
+                   "sobre la EMA correspondiente, no tickers individuales.*\n\n")
+        # B2 (2026-10-13): aclarar diferencia con 'Sector Breadth & Health'.
+        out.append("*Metrica distinta de 'Sector Breadth & Health': aqui se "
+                   "cuenta el % de ETFs sectoriales por encima de su propia "
+                   "EMA (breadth macro de los 11 sectores). En Sector Breadth "
+                   "& Health se cuenta, para cada sector, el % de sus "
+                   "componentes por encima de la EMA del sector (breadth "
+                   "micro). Los dos numeros no tienen por que coincidir.*\n\n")
     return out
