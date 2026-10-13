@@ -87,15 +87,29 @@ def render_acciones_seleccionadas(leader_lines):
     if leader_lines:
         out.append("\n## Acciones Seleccionadas por el Modelo de Liderazgo Sectorial\n")
         out.append("> Solo se muestran sectores en fase ACCUMULATION o MARKUP. El resto se omiten por no cumplir criterios de liderazgo estructural.\n\n")
+        # P1.3 (2026-10-13, auditor): la nota anterior se contradecia
+        # (4 componentes vs 'RS y RS Mom 35/25'). Corregida a la
+        # formula real de stock_leader.py.
         out.append(
             f"*Criterio de seleccion: los {TOP_N_LEADERS} lideres por sector "
             f"se eligen en dos pasos: (1) los {TOP_N_CANDIDATES} valores del ETF "
             f"sectorial con mayor peso en cartera; (2) entre esos, los "
-            f"{TOP_N_LEADERS} con mayor WLS (score compuesto 35% RS Level + "
-            f"30% Flujo proxy + 25% Wyckoff + 10% Estabilidad, ajustado por "
-            f"persistencia 10d).*\n\n"
+            f"{TOP_N_LEADERS} con mayor WLS.*\n\n"
         )
-        out.append('*RS = RS Level (precio acción / precio sector). RS Mom = RS Momentum (cambio del RS en 20 días). El WLS combina ambas con pesos 35% y 25% respectivamente.*\n\n')
+        out.append(
+            "*WLS (Weighted Leadership Score, universo sectorial) = "
+            "0.35 * rs_z + 0.30 * flow_proxy_z + 0.25 * wyckoff_z + "
+            "0.10 * stability_z, multiplicado por (1 + 0.05 * "
+            "min(persistence_10d, 1.0)). Las componentes rs_z, "
+            "flow_proxy_z, wyckoff_z y stability_z son z-scores robustos "
+            "intra-sector, clipeados a [-3, +3].*\n\n"
+        )
+        out.append(
+            "*RS = RS Level (ratio de precio accion / precio ETF sectorial). "
+            "RS Mom = variacion logaritmica de RS a 20 dias. La tabla de "
+            "'Indices internacionales' usa una variante de WLS con pesos "
+            "0.35/0.25/0.25/0.10 (flow 25% en vez de 30%) por diseno.*\n\n"
+        )
         out.extend(leader_lines)
     else:
         out.append("\n## Acciones Seleccionadas por el Modelo de Liderazgo Sectorial\n")
