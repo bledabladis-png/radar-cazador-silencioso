@@ -12,7 +12,8 @@ from indicators.slpm_v12 import compute_leader_integrity
 
 def test_compute_leader_integrity_lista_vacia():
     out = compute_leader_integrity([])
-    assert out == {'lis': 0.0, 'n_leaders': 0}
+    # N2 (2026-10-13, auditor): lis_validated=False anadido.
+    assert out == {'lis': 0.0, 'n_leaders': 0, 'lis_validated': False}
 
 def test_compute_leader_integrity_flow_proxy_z_cero_no_nan():
     """Fix 2026-09-29: m.get('flow_proxy_z') or np.nan convertia 0.0
@@ -45,3 +46,24 @@ def test_compute_leader_integrity_clip_entre_menos_uno_y_uno():
     ]
     out = compute_leader_integrity(metrics)
     assert -1.0 <= out['lis'] <= 1.0
+
+
+# ============================================================
+# N2 (2026-10-13, auditor): LIS declarado provisional.
+# El campo lis_validated=False viaja en el output para que el
+# render y los consumidores puedan marcar la deuda metodologica.
+# ============================================================
+
+def test_n2_lis_validated_false_en_vacio():
+    out = compute_leader_integrity([])
+    assert out['lis_validated'] is False
+
+
+def test_n2_lis_validated_false_con_leaders():
+    leaders = [
+        {'rs': 1.1, 'rs_momentum': 0.05, 'flow_proxy_z': 1.0,
+         'wyckoff_phase': 'MARKUP'},
+    ]
+    out = compute_leader_integrity(leaders)
+    assert out['lis_validated'] is False
+    assert out['n_leaders'] == 1

@@ -83,8 +83,15 @@ def compute_leader_breadth_v2(leader_metrics, expected_leaders=SLPM_EXPECTED_LEA
     }
 
 def compute_leader_integrity(leader_metrics):
+    # N2 (2026-10-13, auditor): LIS usa `rs` (ratio de precio
+    # nominal accion/ETF) como input. El resto del sistema migro a
+    # `rs_ratio_20d` (retorno relativo). Cambiar la escala de input
+    # de LIS saturaria tanh y desplazaria la confidence en produccion.
+    # Requiere recalibracion estadistica previa. LIS queda PROVISIONAL
+    # y NO validado como senal decisoria. Ver TRIAGE del auditor
+    # 2026-10-13, hallazgo N2.
     if not leader_metrics:
-        return {'lis': 0.0, 'n_leaders': 0}
+        return {'lis': 0.0, 'n_leaders': 0, 'lis_validated': False}
     # P1.1 (2026-10-13): WONT FIX en este fix. El LIS sigue usando
     # `rs` (precio/ETF) como input. Cambiar a `rs_ratio_20d` (retorno
     # relativo, escala +-0.10 tipica vs +-1.5 del ratio de precios)
@@ -116,11 +123,12 @@ def compute_leader_integrity(leader_metrics):
         individual = SLPM_WEIGHTS["lis"]["rs"] * rs_norm + SLPM_WEIGHTS["lis"]["momentum"] * mom_norm + SLPM_WEIGHTS["lis"]["flow"] * flow_norm + SLPM_WEIGHTS["lis"]["wyckoff"] * wyckoff_score
         scores.append(individual)
     if not scores:
-        return {'lis': 0.0, 'n_leaders': 0}
+        return {'lis': 0.0, 'n_leaders': 0, 'lis_validated': False}
     lis_val = _safe_mean(scores)
     if np.isnan(lis_val):
         lis_val = 0.0
-    return {'lis': float(np.clip(lis_val, -1, 1)), 'n_leaders': len(scores)}
+    return {'lis': float(np.clip(lis_val, -1, 1)), 'n_leaders': len(scores),
+            'lis_validated': False}  # N2: provisional
 
 def compute_flow_divergence_v2(leader_metrics, sector_flow_proxy_z, sector_price_flow=None):
     sector_flow_proxy_z = sector_flow_proxy_z if sector_flow_proxy_z is not None else np.nan

@@ -122,6 +122,12 @@ def render_slpm_v12(slpm_v12_data):
                 out.append(f"- **LIS:** {_fmt_signed(lis, '{:+.2f}', '{:.2f}')} (n={n_leaders})\n")
             out.append(f"- *Formula: LIS_individual = {SLPM_WEIGHTS['lis']['rs']:.2f}*tanh((RS-1)*2) + {SLPM_WEIGHTS['lis']['momentum']:.2f}*tanh(RS_mom*5) + {SLPM_WEIGHTS['lis']['flow']:.2f}*tanh(flow_proxy_z/2) + {SLPM_WEIGHTS['lis']['wyckoff']:.2f}*Wyckoff_score. LIS = media.*\n")
             out.append("- *LIS mide la intensidad/calidad de la señal de los lideres, no el % que cumple condiciones (eso es el Breadth).*\n")
+            # N2 (2026-10-13, auditor): LIS declarado provisional.
+            out.append("- *N2 auditoria 2026-10-13: LIS usa `rs` "
+                       "(ratio precio nominal accion/ETF) como input, no "
+                       "`rs_ratio_20d`. PROVISIONAL, no validado como "
+                       "senal decisoria. Requiere recalibracion. Ver "
+                       "TRIAGE del auditor 2026-10-13.*\n")
         
         flow_div = slpm_v12_data.get('flow_divergence_v2', {})
         if flow_div:
