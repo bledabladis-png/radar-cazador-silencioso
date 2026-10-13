@@ -163,7 +163,15 @@ def render_matriz_evidencia(evidence_matrix_data):
         #   sectores por diseno).
         # - Wyckoff depende de pct_accumulation+markup vs distribution+
         #   markdown; en regimenes alcistas los 11 suelen coincidir en +1.
-        out.append("*Credito y Volat son contexto global (mismo valor para los 11 sectores por diseno).*\n\n")
+        out.append("*Credito y Volat son contexto global "
+                   "(mismo valor para los 11 sectores por diseno).*\n\n")
+        # B3 (2026-10-13): explicitar que 3 columnas pueden ser constantes.
+        out.append("*Columnas con frecuencia constante entre sectores: "
+                   "Credit* y Volat* (contexto global, mismo valor para "
+                   "los 11). Wyckoff tiende a +1 en regimenes alcistas "
+                   "(los 11 sectores coinciden). La variabilidad sectorial "
+                   "real proviene de Precio, Amplitud, Flujo 1 y Flujo "
+                   "Proxy.*\n\n")
         out.append("\n*La ausencia de Flow Proxy (NaN) representa ausencia de evidencia disponible y no se interpreta como neutralidad.*\n")
         out.append("\n")
     return out

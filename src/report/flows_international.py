@@ -92,7 +92,18 @@ def render_flujos_internacionales_agregados(
     for r in rows:
         out.append(f"| {r['fondo']} | {r['fecha']} | {r['nav']} | {r['shares_change']} | {r['flujo']} | {r['pct_aum']} | {r['z']} |\n")
     out.append("\n")
-    out.append("*Fuente: BlackRock (DAXEX, ISF.L, IWM) y Amundi (LYXI). ETF Primary Flow = \u0394SharesOutstanding \u00d7 NAV.*\n\n")
+    out.append("*Fuente: BlackRock (DAXEX, ISF.L, IWM) y Amundi (LYXI). "
+               "ETF Primary Flow = \u0394SharesOutstanding \u00d7 NAV.*\n\n")
+    # B4 (2026-10-13): z-score se clipea a [-5, +5] en el canonico
+    # robust_zscore. Un valor exactamente +-5.00 indica saturacion
+    # del clip; el z real puede ser mas extremo.
+    out.append("*Z-score clipeado a [-5, +5]: un valor exactamente "
+               "+/-5.00 indica saturacion del clip, no el z real.*\n\n")
+    # B6 (2026-10-13): Amundi publica con lag T+1/T+2. Las fechas
+    # pueden diferir entre fondos dentro de la misma tabla.
+    out.append("*Las 4 fuentes pueden tener fechas distintas por lag "
+               "del proveedor: BlackRock T+1, Amundi T+1/T+2. La tabla "
+               "es agregada; cada fila declara su propia fecha.*\n\n")
     return out
 
 
