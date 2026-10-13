@@ -31,11 +31,11 @@ def render_confirmation(confirmation_data):
             out.append(f"- **Realized Vol (60d):** {rv60_str}\n")
         if confirmation_data.get('vrp_21d') is not None:
             vrp21 = confirmation_data['vrp_21d']
-            vrp21_str = _fmt_signed(vrp21*100, '{:+.2f}%', '{:.2f}%') if pd.notna(vrp21) else 'N/D'
+            vrp21_str = _fmt_signed(vrp21*100, '{:+.2f}pp', '{:.2f}pp') if pd.notna(vrp21) else 'N/D'
             out.append(f"- **VRP Proxy (VIX - RV21):** {vrp21_str}\n")
         if confirmation_data.get('vrp_60d') is not None:
             vrp60 = confirmation_data['vrp_60d']
-            vrp60_str = _fmt_signed(vrp60*100, '{:+.2f}%', '{:.2f}%') if pd.notna(vrp60) else 'N/D'
+            vrp60_str = _fmt_signed(vrp60*100, '{:+.2f}pp', '{:.2f}pp') if pd.notna(vrp60) else 'N/D'
             out.append(f"- **VRP Proxy (VIX - RV60):** {vrp60_str}\n")
 
         fls = confirmation_data.get('fls', {})

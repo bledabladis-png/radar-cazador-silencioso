@@ -103,10 +103,16 @@ def render_data_freshness(pcr_data, darkpool_data, sector_results, reference_dat
     else:
         out.append("| Yahoo Finance (Precios) | N/D | N/D | N/D | N/D |\n")
     out.append("\n")
-    out.append("*Vista compacta: 4 fuentes criticas con columna Data Conf. "
-               "La tabla 'Calidad, frescura y cobertura' lista las 26 fuentes "
-               "del sistema desde data_quality.csv. Pueden discrepar si el CSV "
-               "esta desactualizado respecto a los datos runtime.*\n\n")
+    # P1.6 (2026-10-13, auditor): la columna Data Conf solo existe
+    # en esta vista compacta (runtime). La tabla completa no la tiene
+    # (solo declara frescura por fuente). No hay contradiccion: son
+    # dos dimensiones distintas.
+    out.append("*Vista compacta (runtime): 4 fuentes criticas con columna "
+               "Data Conf (derivada de la frescura). La tabla 'Calidad, "
+               "frescura y cobertura' lista 26 fuentes desde data_quality.csv "
+               "y NO incluye Data Conf (dimension distinta: declara la "
+               "frescura observada por fuente). Pueden discrepar las fechas "
+               "si el CSV esta desactualizado respecto al runtime.*\n\n")
     coverage_lines = _generate_coverage_table(pcr_data, darkpool_data, sector_results, reference_date=reference_date)
     for cl in coverage_lines:
         out.append(cl)

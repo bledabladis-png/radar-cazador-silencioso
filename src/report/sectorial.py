@@ -86,6 +86,12 @@ def render_sector_concentration(sector_concentration_data):
         out.append("\n")
         out.append("*Criterio 'Lider': ticker con mayor retorno 20d. Universo: top-20 por weight del ETF sectorial. Coincide con la primera fila de Liderazgo interno (mismo criterio). No coincide con Representatividad, que ordena por WLS.*\n\n")
         out.append("*Ret Lider = retorno absoluto 20d del ticker lider (leader_return20). Distinto de 'vs mercado 20d' de Liderazgo interno, que es retorno relativo (rs_abs_20d). Nombre heredado (D-07 auditoria 2026-09-26); ambos se mantienen para no romper series.*\n\n")
+        # P2.8 (2026-10-13, auditor): coberturas identicas entre columnas.
+        out.append("*Cob RS / Mom / Flow / Wyckoff / WLS son identicas por "
+                   "diseno: se calculan sobre la interseccion de tickers con "
+                   "todas las metricas disponibles (dropna comun). No miden "
+                   "cobertura individual por variable, sino el universo "
+                   "comun analizado. Fuente: sector_concentration.py.*\n\n")
         out.append("*Top N = fraccion del retorno positivo total del sector que aportan los N tickers con mayor retorno 20d. Con menos de N positivos, la celda se muestra como N/D (no se calcula sobre menos elementos). Top1=100% con Top3=N/D indica que solo hay 1 ticker con retorno positivo en el sector.*\n\n")
     return out
 

@@ -283,6 +283,13 @@ def render_qqq_nport_flow(qqq_nport_flow_data):
         for _, row in qqq_nport_flow_data.iterrows():
             out.append(f"| {int(row['month'])} | {row['sales']/1e6:,.2f} | {row['redemptions']/1e6:,.2f} | {row['net_flow']/1e6:,.2f} |\n")
         out.append("\n")
+        # P3.1 (2026-10-13, auditor): ventas/redenciones y flujo neto
+        # se redondean por separado. La resta de las columnas visibles
+        # puede diferir 0.01 M$ del flujo neto publicado. Se calcula
+        # sobre valores sin redondear.
+        out.append("*Nota: ventas, redenciones y flujo neto se calculan "
+                   "sobre valores sin redondear. El redondeo a 2 decimales "
+                   "por columna puede producir diferencias de 0.01 M$.*\n\n")
     else:
         out.append("## Flujo de Participaciones QQQ (NPORT-P)\n")
         out.append("*Sin datos NPORT-P de QQQ en esta ejecución.*\n\n")
