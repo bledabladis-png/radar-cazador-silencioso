@@ -30,3 +30,71 @@ def test_nan_no_neutral():
     df = compute_evidence_matrix(b, conc, fc, wy)
     assert df.iloc[0]['n_sector_evidence_valid'] == 3
     assert df.iloc[0]['n_sector_evidence_neutral'] == 0
+
+# ============================================================
+# P2.1 (2026-10-13, auditor): contrato de _wyckoff_sign.
+# El hallazgo 'Wyckoff=+1 en 11/11 sectores' NO es un default:
+# es favorable > unfavorable. Este test fija la regla y evita
+# que un futuro cambio la degrade a 'siempre +1'.
+# ============================================================
+from indicators.evidence_matrix import _wyckoff_sign
+
+
+def test_wyckoff_sign_favorable_mayor():
+    """accumulation + markup > distribution + markdown -> +1."""
+    assert _wyckoff_sign({
+        'pct_accumulation': 40.0, 'pct_markup': 30.0,
+        'pct_distribution': 15.0, 'pct_markdown': 15.0,
+    }) == 1
+
+
+def test_wyckoff_sign_desfavorable_mayor():
+    """distribution + markdown > accumulation + markup -> -1."""
+    assert _wyckoff_sign({
+        'pct_accumulation': 10.0, 'pct_markup': 10.0,
+        'pct_distribution': 40.0, 'pct_markdown': 40.0,
+    }) == -1
+
+
+def test_wyckoff_sign_empate_devuelve_cero():
+    """favorable == unfavorable -> 0 (no +1 por defecto)."""
+    assert _wyckoff_sign({
+        'pct_accumulation': 25.0, 'pct_markup': 25.0,
+        'pct_distribution': 25.0, 'pct_markdown': 25.0,
+    }) == 0
+
+
+def test_wyckoff_sign_todo_cero_devuelve_cero_no_mas_uno():
+    """Todos los porcentajes a 0 (sector sin datos) -> 0.
+    Regresion P2.1: evita que un default genere +1 en todos."""
+    assert _wyckoff_sign({
+        'pct_accumulation': 0.0, 'pct_markup': 0.0,
+        'pct_distribution': 0.0, 'pct_markdown': 0.0,
+    }) == 0
+
+
+def test_wyckoff_sign_nan_devuelve_nan():
+    """Cualquier NaN en los 4 campos -> NaN (no 0, no +1)."""
+    assert pd.isna(_wyckoff_sign({
+        'pct_accumulation': np.nan, 'pct_markup': 30.0,
+        'pct_distribution': 15.0, 'pct_markdown': 15.0,
+    }))
+    assert pd.isna(_wyckoff_sign({
+        'pct_accumulation': 40.0, 'pct_markup': np.nan,
+        'pct_distribution': 15.0, 'pct_markdown': 15.0,
+    }))
+    assert pd.isna(_wyckoff_sign({
+        'pct_accumulation': 40.0, 'pct_markup': 30.0,
+        'pct_distribution': np.nan, 'pct_markdown': 15.0,
+    }))
+    assert pd.isna(_wyckoff_sign({
+        'pct_accumulation': 40.0, 'pct_markup': 30.0,
+        'pct_distribution': 15.0, 'pct_markdown': np.nan,
+    }))
+
+
+def test_wyckoff_sign_campos_ausentes_devuelve_nan():
+    """Dict sin uno de los 4 campos -> NaN (fail-closed)."""
+    assert pd.isna(_wyckoff_sign({
+        'pct_accumulation': 40.0, 'pct_markup': 30.0,
+    }))
