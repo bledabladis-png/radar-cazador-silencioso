@@ -7,6 +7,42 @@ from src.report.helpers import _fmt_num
 from config.settings import TOP_N_CANDIDATES, TOP_N_LEADERS
 from config.weights import WLS_WEIGHTS, WLS_PERSISTENCE_FACTOR
 
+# ============================================================
+# N3 (2026-10-13, auditor): validacion del contrato de WLS.
+# Funcion pura, sin side effects. Testeable sin DataFrame grande.
+# ============================================================
+
+WLS_COMPONENTS = ('rs_z', 'flow_proxy_z_norm', 'rws_z', 'stab_z')
+
+
+def _validate_wls_inputs(df):
+    """Valida el contrato de WLS.
+
+    Returns:
+        (persistence_clipped, status_series, warnings)
+        - persistence_clipped: persistencia recortada a [0, 1].
+        - status_series: 'OK' | 'PERSISTENCE_OUT_OF_RANGE' |
+          'INSUFFICIENT_COMPONENTS'.
+        - warnings: lista de strings con avisos (vacia si todo OK).
+    """
+    warnings = []
+    pers = pd.to_numeric(df['persistence_10d'], errors='coerce')
+    out_of_range = pers.notna() & ((pers < 0.0) | (pers > 1.0))
+    if bool(out_of_range.any()):
+        bad = pers[out_of_range]
+        warnings.append(
+            f"persistence_10d fuera de [0,1] en {int(out_of_range.sum())} "
+            f"filas (min={bad.min()}, max={bad.max()}). Clipeado."
+        )
+    pers_clipped = pers.clip(0.0, 1.0)
+
+    components_missing = df[list(WLS_COMPONENTS)].isna().any(axis=1)
+    status = pd.Series('OK', index=df.index)
+    status[out_of_range] = 'PERSISTENCE_OUT_OF_RANGE'
+    status[components_missing] = 'INSUFFICIENT_COMPONENTS'
+    return pers_clipped, status, warnings
+
+
 def compute_stock_metrics(df_market, df_stocks, etf_ticker, stock_list, temporal_meta=None):
     results = []
     # FU-021-5 Fase 5.3a (P0): fecha contractual para columnas temporales.
@@ -167,8 +203,16 @@ def compute_wls(df_metrics, weights=None):
     w_struct = _w.get('structure', _w.get('wyckoff', WLS_WEIGHTS['wyckoff']))
     w_stab = _w.get('stability', WLS_WEIGHTS['stability'])
 
-    df['wls'] = w_rs*df['rs_z'] + w_flow*df['flow_proxy_z_norm'] + w_struct*df['rws_z'] + w_stab*df['stab_z']
-    df['wls'] *= (1 + WLS_PERSISTENCE_FACTOR * np.minimum(df['persistence_10d'], 1.0))
+    # N3 (2026-10-13, auditor): validacion extraida a funcion pura.
+    _pers_clipped, _status, _warns = _validate_wls_inputs(df)
+    for _w in _warns:
+        print(f"  [WARN] WLS: {_w}")
+
+    df['wls'] = (w_rs*df['rs_z'] + w_flow*df['flow_proxy_z_norm']
+                 + w_struct*df['rws_z'] + w_stab*df['stab_z'])
+    df['wls'] *= (1 + WLS_PERSISTENCE_FACTOR * _pers_clipped)
+    df['wls_status'] = _status
+
     df['sector_rank_pct'] = df.groupby('sector')['wls'].rank(pct=True)
 
     # leader_confidence eliminado (no se usaba)
