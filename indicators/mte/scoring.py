@@ -16,9 +16,12 @@ import pandas as pd
 from src.utils import robust_zscore, get_col
 
 
+# F2.4-05 (2026-10-13): WONT FIX razonado. Wrapper trivial
+# sobre np.tanh. Se mantiene por legibilidad del modulo MTE
+# (evita import directo de numpy en el cuerpo de cada funcion)
+# y por permitir sustitucion futura (clip, escalado) sin tocar
+# los callers. No es dead code.
 def tanh(x):
-
-
     return np.tanh(x)
 
 
@@ -604,6 +607,11 @@ def score_scenarios(srs, shs, cls, ips):
     scores['EXPANSION'] = expansion
 
 
+    # F2.4-08 (2026-10-13): WONT FIX razonado. 'MIXED' = 2 es el
+    # peso interno del escenario MIXED en el sistema de scoring
+    # (mismo orden de magnitud que RECESSION=3, CRISIS=4). No es
+    # una constante magica: es parte del modelo de pesos. Alterarlo
+    # cambiaria la clasificacion final del MTE.
     scores['MIXED'] = 2
 
 

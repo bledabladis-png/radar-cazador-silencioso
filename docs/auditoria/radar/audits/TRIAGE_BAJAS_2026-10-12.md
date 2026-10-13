@@ -87,7 +87,7 @@ criterio actual (no contra los IDs del 26-sep).
 
 | ID | Hallazgo | Estado |
 |---|---|---|
-| F2-05 | `ewm` adjust inconsistente | VIVA (sin impacto funcional; decisiones de diseno) |
+| F2-05 | `ewm` adjust inconsistente | CERRADA (WONT FIX razonado en `tactical_engine.py:44`, 2026-10-12) |
 | F2-06 | Orden componentes Tactical != pesos | CERRADA por declaracion en 02_ARQUITECTURA:189 |
 | F2-15 | Umbrales duplicados | WONT FIX (constantes locales por modulo) |
 | F2-16 | `except:` desnudo | CERRADA (mismo que seccion 2) |
@@ -103,20 +103,22 @@ criterio actual (no contra los IDs del 26-sep).
 | F3-11 | `_fetch_spot` usa `updated_at` | CERRADA (mismo) |
 | F3-12 | Calendario NYSE en ICE/NYMEX | WONT FIX (proxy declarado) |
 | F3-14 | Retry cron sin backoff | WONT FIX (multi-slot cron ya cubre) |
-| F2.2-02 | `iterrows` en delta_shares | VIVA (deuda de rendimiento IAE) |
-| F2.2-06 | `unmapped_count_*` float 0-1 | VIVA (contrato IAE) |
-| F2.2-07 | Docstring 10.6 desactualizado | VIVA (doc IAE) |
-| F2.2-09 | `_operational_mapping_status` opcional | VIVA (IAE) |
+| F2.2-02 | `iterrows` en delta_shares | CERRADA (WONT FIX razonado en `delta_shares.py:401`, 2026-10-12) |
+| F2.2-06 | `unmapped_count_*` float 0-1 | CERRADA (`nipc.py:179-180` usa `0` int, no `0.0`) |
+| F2.2-07 | Docstring 10.6 desactualizado | CERRADA (docstring corregido 2026-10-12) |
+| F2.2-09 | `_operational_mapping_status` opcional | CERRADA (`PeriodState.__post_init__` valida con raise) |
 | F2.4-05 | Wrapper `tanh` trivial | WONT FIX (legibilidad) |
-| F2.4-06 | `stress` y `stress_transform` casi identicas | VIVA (refactor MTE) |
-| F2.4-07 | Comentario obsoleto IPS | VIVA (limpieza) |
+| F2.4-06 | `stress` y `stress_transform` casi identicas | FALSO POSITIVO (`stress_transform` no existe en el codigo actual) |
+| F2.4-07 | Comentario obsoleto IPS | CERRADA (comentario corregido 2026-10-12) |
 | F2.4-08 | `MIXED=2` no documentado | WONT FIX (constante interna) |
-| F2.4-12 | Reset por cambio de contrato no persiste | VIVA (baja) |
-| F2.4-13 | `consensus_score` mezcla escalas | VIVA (ver F2.4-13 MEDIA) |
+| F2.4-12 | Reset por cambio de contrato no persiste | CERRADA (WONT FIX razonado en `state.py` docstring) |
+| F2.4-13 | `consensus_score` mezcla escalas | CERRADA (WONT FIX razonado en `decision.py` docstring) |
 | F2.4-22 | `min(4, window//2)` redundante | CERRADA (darkpool redise?ado 31f5e4e0) |
 | F2.4-23 | Campo `momentum` no es momentum | CERRADA (mismo) |
 | F2.4-24 | `robust_zscore` tipo heterogeneo | CERRADA (mismo) |
 | F2.4-25 | `raw=False` mas lento | CERRADA (mismo) |
+| F2.4-05 | Wrapper `tanh(x) = np.tanh(x)` | CERRADA (WONT FIX razonado en `scoring.py`, 2026-10-13) |
+| F2.4-08 | `MIXED=2` no documentado | CERRADA (WONT FIX razonado en `scoring.py:607`, 2026-10-13) |
 
 ---
 
@@ -126,11 +128,11 @@ criterio actual (no contra los IDs del 26-sep).
 |---|---:|
 | CERRADAS por cambios posteriores | ~38 |
 | WONT FIX razonado | ~8 |
-| VIVAS (baja prioridad) | ~7 |
+| VIVAS (baja prioridad) | 0 (todas cerradas / WONT FIX / falso positivo, 2026-10-13) |
 | Sin triar (F6-*) | 12 |
 | **Total documentado** | 53 + 12 = 65 |
 
-**Reduccion efectiva:** 65 -> ~7 vivas + 12 sin triar. Las 7 vivas son de baja prioridad (IAE rendimiento, MTE limpieza, doc IAE). Las 12 F6-* requieren recuperar el informe original.
+**Reduccion efectiva:** 65 -> 0 vivas + 8 sin descripcion (F6-*). Todas las anteriores "vivas de baja prioridad" quedaron cerradas, WONT FIX razonado, o falsos positivos verificados (2026-10-13). Las 12 F6-* requieren recuperar el informe original.
 
 ---
 

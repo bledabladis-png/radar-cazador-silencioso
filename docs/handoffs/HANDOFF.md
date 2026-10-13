@@ -116,8 +116,8 @@ Gap 09-oct cerrado por run manual `ceb21d8a` (23:24 CEST). Causa raiz
 - 8 F6-* sin descripcion: CERRADO como WONT FIX razonado
   (investigacion 2026-10-12; informe FASE 6 nunca existio como
   fichero; ver `TRIAGE_BAJAS_2026-10-12.md` seccion 4).
-- ~11 BAJA vivas de baja prioridad (IAE rendimiento, MTE limpieza,
-  doc IAE).
+- ~11 BAJA vivas de baja prioridad: CERRADAS 2026-10-13 (ver
+  TRIAGE_BAJAS_2026-10-12.md). 0 vivas reales.
 - Regenerar `sector_flow_characteristics` 09-oct (ROI bajo).
 - Cosmeticos: `render_calidad_datos` ubicacion (volatility_mte.py),
   divergencia runtime/CSV sin test, `test_render_freshness_d36`
