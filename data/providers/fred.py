@@ -39,8 +39,14 @@ class FredProvider(MarketDataProvider):
                 # observacion real es s.index[-1]. El consumidor
                 # (regimes/liquidity.py) usa dropna(how='all').
                 # index[-1], no la longitud del indice.
-                today = pd.Timestamp.today().normalize()
-                full_index = pd.date_range(start=s.index[0], end=today, freq='D')
+                # F5.6-06b (2026-10-13): el reindex hasta 'today' generaba
+                # fechas sinteticas (ffill de dias sin publicacion) que
+                # los consumidores no podian distinguir de un dato real.
+                # Bug observado: liquidity_state.json persistia
+                # date=2026-10-13 cuando el ultimo dato real de FRED
+                # era 2026-10-10. El reporte lo mostraba como 0 dias /
+                # CURRENT. Fix: preservar el indice real (end=s.index[-1]).
+                full_index = pd.date_range(start=s.index[0], end=s.index[-1], freq='D')
                 s = s.reindex(full_index).ffill()
             return s
         except (KeyError, ValueError, TypeError) as e:

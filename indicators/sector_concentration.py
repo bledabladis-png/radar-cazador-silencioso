@@ -83,6 +83,12 @@ def compute_sector_concentration(df_stocks, holdings_df, full_metrics_df,
 
         n_total = len(tickers)
         n_valid_rs = sector_full['rs'].notna().sum() if 'rs' in sector_full.columns else 0
+        # B8 (2026-10-13): n_total es el universo COMPLETO del ETF sectorial
+        # (20-83 tickers por sector). No coincide con el universo de
+        # rs_internal.csv (top-20/22 por sector). Ejemplo XLF:
+        # n_total=76, n_valid_rs=14 (cobertura 18%); rs_internal.csv
+        # tiene 22 XLF con RS. Miden cosas distintas: cobertura amplia
+        # vs subconjunto analizado.
         n_valid_momentum = sector_full['rs_mom'].notna().sum() if 'rs_mom' in sector_full.columns else 0
         n_valid_flow = sector_full['flow_proxy_z'].notna().sum() if 'flow_proxy_z' in sector_full.columns else 0
         n_valid_wyckoff = sector_full['wyckoff_score'].notna().sum() if 'wyckoff_score' in sector_full.columns else 0
