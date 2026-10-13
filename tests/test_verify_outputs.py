@@ -86,6 +86,7 @@ def test_expected_sessions_respects_since():
 def test_verify_upstream_output_only_checks_presence(tmp_path, monkeypatch):
     """Outputs con date_source='upstream' no se verifican por fecha de
     sesion: solo se comprueba que el CSV exista y no este vacio."""
+    from src.pipeline.output_registry import OutputSpec
     monkeypatch.setattr('scripts.verify_outputs.PROJECT_ROOT', tmp_path)
     ref = date(2026, 10, 12)
     since = date(2026, 10, 1)
@@ -106,6 +107,7 @@ def test_verify_upstream_output_only_checks_presence(tmp_path, monkeypatch):
 
 def test_verify_upstream_output_missing_file(tmp_path, monkeypatch):
     """Output upstream sin fichero -> MISSING_FILE."""
+    from src.pipeline.output_registry import OutputSpec
     monkeypatch.setattr('scripts.verify_outputs.PROJECT_ROOT', tmp_path)
     ref = date(2026, 10, 12)
     since = date(2026, 10, 1)
