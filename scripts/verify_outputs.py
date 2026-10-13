@@ -75,8 +75,29 @@ def verify_historical(window=10, reference_date=None, since=None,
         if spec.name in EXCLUDED_FROM_HISTORICAL:
             continue
         path = PROJECT_ROOT / spec.path
-        expected = _expected_sessions(reference_date, window, since)
         dates = _read_dates(path, spec.date_column)
+
+        # Outputs upstream-driven (p. ej. SSGA con lag T+1):
+        # su fecha hereda del input, no de la sesion. Solo se
+        # verifica presencia (CSV existe y no esta vacio).
+        if getattr(spec, 'date_source', 'session') == 'upstream':
+            if dates is None or len(dates) == 0:
+                results.append({
+                    'name': spec.name, 'path': spec.path,
+                    'status': 'MISSING_FILE',
+                    'missing': [],
+                    'present': 0, 'expected': 1,
+                })
+            else:
+                results.append({
+                    'name': spec.name, 'path': spec.path,
+                    'status': 'OK_UPSTREAM',
+                    'missing': [],
+                    'present': 1, 'expected': 1,
+                })
+            continue
+
+        expected = _expected_sessions(reference_date, window, since)
         if dates is None:
             results.append({
                 'name': spec.name, 'path': spec.path,
@@ -130,7 +151,7 @@ def main():
                   f"{r['present']}/{r['expected']:<20} {falt}")
         print()
 
-    has_gap = any(r['status'] != 'OK' for r in results)
+    has_gap = any(r['status'] not in ('OK', 'OK_UPSTREAM') for r in results)
     sys.exit(1 if has_gap else 0)
 
 

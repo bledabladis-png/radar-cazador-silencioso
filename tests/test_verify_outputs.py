@@ -81,3 +81,39 @@ def test_expected_sessions_respects_since():
     out = _expected_sessions(ref, 10, since)
     assert all(d >= since for d in out)
     assert len(out) < 10
+
+
+def test_verify_upstream_output_only_checks_presence(tmp_path, monkeypatch):
+    """Outputs con date_source='upstream' no se verifican por fecha de
+    sesion: solo se comprueba que el CSV exista y no este vacio."""
+    monkeypatch.setattr('scripts.verify_outputs.PROJECT_ROOT', tmp_path)
+    ref = date(2026, 10, 12)
+    since = date(2026, 10, 1)
+    spec = OutputSpec(
+        'sector_flow_characteristics',
+        'outputs/history/sector_flow_characteristics.csv',
+        'temporal', 'date', ('date', 'sector'),
+        date_source='upstream',
+    )
+    # CSV con fecha antigua (upstream lag)
+    p = tmp_path / spec.path
+    p.parent.mkdir(parents=True, exist_ok=True)
+    pd.DataFrame({'date': ['2026-10-09'], 'sector': ['XLK']}).to_csv(p, index=False)
+    results = verify_historical(3, ref, since, registry=[spec])
+    assert results[0]['status'] == 'OK_UPSTREAM'
+    assert results[0]['missing'] == []
+
+
+def test_verify_upstream_output_missing_file(tmp_path, monkeypatch):
+    """Output upstream sin fichero -> MISSING_FILE."""
+    monkeypatch.setattr('scripts.verify_outputs.PROJECT_ROOT', tmp_path)
+    ref = date(2026, 10, 12)
+    since = date(2026, 10, 1)
+    spec = OutputSpec(
+        'sector_flow_characteristics',
+        'outputs/history/sector_flow_characteristics.csv',
+        'temporal', 'date', ('date', 'sector'),
+        date_source='upstream',
+    )
+    results = verify_historical(3, ref, since, registry=[spec])
+    assert results[0]['status'] == 'MISSING_FILE'

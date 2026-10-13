@@ -18,6 +18,15 @@ class OutputSpec:
     kind: str          # 'temporal' | 'snapshot'
     date_column: str   # '' si kind='snapshot'
     merge_keys: tuple  # () si no hay merge con historico
+    date_source: str = 'session'  # 'session' | 'upstream'
+    # date_source:
+    #   'session'  -> la fecha del output es la sesion de referencia
+    #                 (o last_expected_market_date). Verificable contra
+    #                 el target_session del run.
+    #   'upstream' -> la fecha del output hereda del input que lo
+    #                 alimenta (p. ej. SSGA con lag T+1). No
+    #                 verificable contra el target_session; solo se
+    #                 comprueba presencia en el CSV.
 
 
 REGISTRY: tuple = (
@@ -29,7 +38,8 @@ REGISTRY: tuple = (
                'temporal', 'date', ('date', 'sector')),
     OutputSpec('sector_flow_characteristics',
                'outputs/history/sector_flow_characteristics.csv',
-               'temporal', 'date', ('date', 'sector')),
+               'temporal', 'date', ('date', 'sector'),
+               date_source='upstream'),
     OutputSpec('sector_persistence',
                'outputs/history/sector_persistence.csv',
                'temporal', 'date', ('date', 'sector')),
