@@ -35,20 +35,26 @@ def compute_leader_breadth_v2(leader_metrics, expected_leaders=SLPM_EXPECTED_LEA
     n = len(leader_metrics)
     coverage = min(n / expected_leaders, 1.0) if expected_leaders > 0 else 0
 
-    # P1.1 (2026-10-13): el criterio binario de liderazgo usa ahora
-    # el RETORNO RELATIVO 20d (rs_ratio_20d > 0), no el ratio de
-    # precios nominales. El ratio close/price_etf depende de precio
-    # nominal y splits: una accion de 500 con ETF de 200 daba
-    # rs>1 sin haber batido al sector. Fallback al criterio antiguo
-    # si rs_ratio_20d no esta disponible (leaders internacionales).
+    # N1 (2026-10-13, auditor): FAIL-CLOSED. El criterio binario usa
+    # SOLO rs_ratio_20d (retorno relativo 20d). Si falta o es NaN, el
+    # lider NO cuenta como positivo y se marca rs_breadth como N/D.
+    # NO hay fallback al ratio de precios nominales: reactivaria el
+    # bug original (P1.1) de forma silenciosa.
     def _rs_positive(m):
         if not m:
-            return False
+            return None
         v = m.get('rs_ratio_20d')
-        if v is not None and pd.notna(v):
-            return float(v) > 0.0
-        return (m.get('rs', 1.0) or 1.0) > 1.0
-    rs_positive = sum(1 for m in leader_metrics if _rs_positive(m)) / n
+        if v is None or pd.isna(v):
+            return None
+        return float(v) > 0.0
+    _rs_vals = [_rs_positive(m) for m in leader_metrics]
+    _rs_valid = [v for v in _rs_vals if v is not None]
+    _rs_missing = len(_rs_vals) - len(_rs_valid)
+    if _rs_valid:
+        rs_positive = sum(1 for v in _rs_valid if v) / len(_rs_valid)
+    else:
+        rs_positive = float('nan')
+    rs_breadth_status = 'OK' if _rs_missing == 0 else 'INSUFFICIENT_RS_RATIO'
     # A3.3-06: fallback rs_momentum -> rs_mom_20. El pipeline actual
     # provee rs_momentum; rs_mom_20 es defensa en profundidad por
     # compatibilidad con versiones previas del leader_metrics dict.
@@ -63,6 +69,8 @@ def compute_leader_breadth_v2(leader_metrics, expected_leaders=SLPM_EXPECTED_LEA
 
     return {
         'rs_breadth': rs_positive,
+        'rs_breadth_status': rs_breadth_status,
+        'rs_breadth_missing': _rs_missing,
         'momentum_breadth': momentum_positive,
         'flow_breadth': flow_positive,
         'wyckoff_breadth': wyckoff_favorable,

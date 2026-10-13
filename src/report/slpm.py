@@ -78,13 +78,22 @@ def render_slpm_v12(slpm_v12_data):
             coverage = breadth.get('coverage', 0)*100
             # FU-013 (2026-09-13): con n=0 no hay lideres analizados.
             # 0% sugiere "medido y cero"; semanticamente es ausencia -> N/D.
+            # N1 (2026-10-13, auditor): si falta rs_ratio_20d, mostrar
+            # N/D con motivo explicito. NO caer al criterio nominal.
+            _rs_status = breadth.get('rs_breadth_status', 'OK')
+            _rs_missing = breadth.get('rs_breadth_missing', 0)
             if n == 0:
-                out.append("- **Leader Breadth (RS ratio > 1.0):** N/D\n")
+                out.append("- **Leader Breadth (rs_ratio_20d > 0):** N/D\n")
                 out.append("- **Leader Momentum Breadth:** N/D\n")
                 out.append("- **Leader Flow Support:** N/D\n")
                 out.append("- **Leader Wyckoff Health:** N/D\n")
+            elif _rs_status != 'OK':
+                out.append(f"- **Leader Breadth (rs_ratio_20d > 0):** N/D (falta rs_ratio_20d en {_rs_missing} lideres)\n")
+                out.append(f"- **Leader Momentum Breadth:** {mom_b:.0f}%\n")
+                out.append(f"- **Leader Flow Support:** {flow_b:.0f}%\n")
+                out.append(f"- **Leader Wyckoff Health:** {wyck_b:.0f}%\n")
             else:
-                out.append(f"- **Leader Breadth (RS ratio > 1.0):** {rs_b:.0f}%\n")
+                out.append(f"- **Leader Breadth (rs_ratio_20d > 0):** {rs_b:.0f}%\n")
                 out.append(f"- **Leader Momentum Breadth:** {mom_b:.0f}%\n")
                 out.append(f"- **Leader Flow Support:** {flow_b:.0f}%\n")
                 out.append(f"- **Leader Wyckoff Health:** {wyck_b:.0f}%\n")

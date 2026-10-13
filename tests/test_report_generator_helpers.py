@@ -211,10 +211,10 @@ def test_slpm_n_cero_muestra_nd():
     }
     lines = render_slpm_v12(slpm)
     joined = '\n'.join(lines)
-    assert 'Leader Breadth (RS ratio > 1.0):** N/D' in joined
+    assert 'Leader Breadth (rs_ratio_20d > 0):** N/D' in joined
     assert 'Leader Momentum Breadth:** N/D' in joined
     assert 'Effective Breadth:** N/D' in joined
-    assert 'Leader Breadth (RS ratio > 1.0):** 0%' not in joined
+    assert 'Leader Breadth (rs_ratio_20d > 0):** 0%' not in joined
 
 
 # ---------- D6b: propagacion de reference_date ----------

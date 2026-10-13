@@ -135,8 +135,13 @@ def test_safe_mean_todo_nan():
 # ============================================================
 # slpm_v12.compute_leader_breadth_v2
 # ============================================================
-def _leader_metric(rs=1.1, mom=0.05, flow=1.0, wyckoff="MARKUP"):
-    return {"rs": rs, "rs_momentum": mom, "flow_proxy_z": flow,
+def _leader_metric(rs=1.1, mom=0.05, flow=1.0, wyckoff="MARKUP",
+                   rs_ratio_20d=0.02):
+    # N1 (2026-10-13): rs_ratio_20d es el criterio del Leader Breadth
+    # (fail-closed). El campo 'rs' se mantiene por compatibilidad con
+    # LIS pero ya no alimenta el criterio binario.
+    return {"rs": rs, "rs_ratio_20d": rs_ratio_20d,
+            "rs_momentum": mom, "flow_proxy_z": flow,
             "wyckoff_phase": wyckoff}
 
 
@@ -158,8 +163,9 @@ def test_breadth_v2_todos_favorables():
 
 
 def test_breadth_v2_todos_desfavorables():
-    leaders = [_leader_metric(rs=0.9, mom=-0.05, flow=-1.0,
-                              wyckoff="MARKDOWN") for _ in range(5)]
+    leaders = [_leader_metric(rs=0.9, rs_ratio_20d=-0.02, mom=-0.05,
+                              flow=-1.0, wyckoff="MARKDOWN")
+               for _ in range(5)]
     r = compute_leader_breadth_v2(leaders, expected_leaders=5)
     assert r["rs_breadth"] == 0.0
     assert r["momentum_breadth"] == 0.0
@@ -289,3 +295,47 @@ def test_evaluate_slpm_v12_sin_leaders_anade_nota():
         }
         r = evaluate_slpm_v12(None, {"ranking": ranking}, [], 0.0)
     assert "XLK" in r["state_reason"] or "Technology" in r["state_reason"]
+
+
+# ============================================================
+# N1 (2026-10-13, auditor): contrato fail-closed de rs_ratio_20d.
+# Si falta el campo, rs_breadth = NaN + status INSUFFICIENT.
+# NUNCA se cae al criterio de precio nominal (rs > 1.0).
+# ============================================================
+
+def test_n1_sin_rs_ratio_20d_no_cae_a_criterio_nominal():
+    """Sin rs_ratio_20d: rs_breadth = NaN, status INSUFFICIENT.
+    Aunque 'rs' > 1.0 (criterio antiguo), no se usa."""
+    leaders = [{"rs": 5.0, "rs_momentum": 0.05,
+                "flow_proxy_z": 1.0, "wyckoff_phase": "MARKUP"}
+               for _ in range(5)]
+    # NO tienen rs_ratio_20d
+    r = compute_leader_breadth_v2(leaders, expected_leaders=5)
+    import math
+    assert math.isnan(r["rs_breadth"]), "no debe caer al criterio rs>1.0"
+    assert r["rs_breadth_status"] == "INSUFFICIENT_RS_RATIO"
+    assert r["rs_breadth_missing"] == 5
+
+
+def test_n1_con_rs_ratio_20d_parcial():
+    """Si algunos lideres tienen rs_ratio_20d y otros no, se calcula
+    sobre los validos, y el status lo declara."""
+    leaders = [
+        _leader_metric(rs_ratio_20d=0.02),  # positivo
+        _leader_metric(rs_ratio_20d=0.03),  # positivo
+        {"rs": 1.1, "rs_momentum": 0.05,
+         "flow_proxy_z": 1.0, "wyckoff_phase": "MARKUP"},  # sin rs_ratio
+    ]
+    r = compute_leader_breadth_v2(leaders, expected_leaders=3)
+    assert r["rs_breadth"] == 1.0, "calcula sobre los 2 validos"
+    assert r["rs_breadth_status"] == "INSUFFICIENT_RS_RATIO"
+    assert r["rs_breadth_missing"] == 1
+
+
+def test_n1_rs_ratio_20d_negativo_no_es_positivo():
+    """rs_ratio_20d < 0 -> no positivo."""
+    leaders = [_leader_metric(rs_ratio_20d=-0.05) for _ in range(3)]
+    r = compute_leader_breadth_v2(leaders, expected_leaders=3)
+    assert r["rs_breadth"] == 0.0
+    assert r["rs_breadth_status"] == "OK"
+    assert r["rs_breadth_missing"] == 0
