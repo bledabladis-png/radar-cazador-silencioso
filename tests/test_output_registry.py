@@ -82,3 +82,40 @@ def test_collector_to_dict():
     d = c.to_dict()
     assert d['schema_version'] == 1
     assert len(d['receipts']) == 1
+
+# ============================================================
+# N7 (2026-10-13): coherencia merge_keys vs columnas reales.
+# Bug detectado: evidence_matrix y sector_regime_matrix tenian
+# merge_keys=('date',) cuando el CSV tiene columna sector.
+# Consecuencia: append_dedup solo conservaba 1 fila por fecha
+# (se quedaba con el ultimo sector). Bug pre-existente a la
+# migracion del contrato de persistencia. Fix 2026-10-13.
+# ============================================================
+
+def test_merge_keys_incluye_sector_si_csv_lo_tiene():
+    """Cualquier OutputSpec temporal cuyo CSV tenga columna sector
+    debe declarar sector en merge_keys. Previene la clase de bug
+    N7 (perdida de 10 de 11 sectores al deduplicar)."""
+    import os
+    import pandas as pd
+    from src.pipeline.output_registry import REGISTRY
+
+    issues = []
+    for spec in REGISTRY:
+        if spec.kind != 'temporal':
+            continue
+        if not os.path.exists(spec.path):
+            continue
+        try:
+            cols = pd.read_csv(spec.path, nrows=0).columns.tolist()
+        except Exception:
+            continue
+        if 'sector' in cols and 'sector' not in spec.merge_keys:
+            issues.append(
+                f"{spec.name}: CSV tiene 'sector' pero merge_keys="
+                f"{spec.merge_keys}"
+            )
+    assert not issues, (
+        "Outputs con columna sector sin sector en merge_keys:\n  - "
+        + "\n  - ".join(issues)
+    )
