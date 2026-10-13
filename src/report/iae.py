@@ -30,7 +30,11 @@ def render_iae_section(iae_section):
         return []
 
     out = []
-    out.append("## Acumulacion Institucional (13F)\n")
+    # P2.6 (2026-10-13, auditor): el titulo anterior "Acumulacion
+    # Institucional" inducia a leer el NIPC como compras netas. En
+    # realidad es variacion neta de posiciones DECLARADAS, no flujo
+    # economico (puede variar por precio, no solo por compra).
+    out.append("## Variacion neta de posiciones declaradas (13F)\n")
     out.append("*Cambio neto de posiciones reportadas institucionales, "
                "segun filings SEC 13F.*\n\n")
 

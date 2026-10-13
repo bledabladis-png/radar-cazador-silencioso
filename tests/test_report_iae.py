@@ -20,7 +20,9 @@ def test_stale_render_minimo():
         "period_current": None,
     })
     txt = "".join(r)
-    assert "Acumulacion Institucional" in txt
+    # P2.6 (2026-10-13, auditor): titulo cambiado para reflejar
+    # que es variacion neta de posiciones declaradas, no flujo real.
+    assert "Variacion neta de posiciones declaradas" in txt
     assert "Sin suficientes trimestres" in txt
     assert "2025Q1" in txt
 

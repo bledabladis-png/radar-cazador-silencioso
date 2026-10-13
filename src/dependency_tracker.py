@@ -27,22 +27,30 @@ INDIRECT_DEPENDENCIES = {
     'LIS -> SLPM (corregido)': 'LIS era una metrica de intensidad/calidad. Tras detectar redundancia perfecta con Breadth (Spearman=1.0), fue excluido de la State Machine. Ahora es solo diagnostico.',
 }
 
+# P1.5 (2026-10-13, auditor): clasificacion en 3 niveles. El
+# nivel 'INDEPENDIENTE' anterior mezclaba dos conceptos: variables
+# de origen observable y evidencia estadisticamente independiente.
+# Breadth, RS y Flow Proxy comparten informacion (derivan del
+# precio/volumen). Se reclasifican sin tocar los calculos.
 EVIDENCE_CLASSIFICATION = {
-    'Precio': 'INDEPENDIENTE',
-    'Retorno': 'INDEPENDIENTE',
-    'Volumen': 'INDEPENDIENTE',
-    'Breadth': 'INDEPENDIENTE',
-    'VIX': 'INDEPENDIENTE',
-    'Crédito': 'INDEPENDIENTE',
-    'Flujo ETF primario': 'INDEPENDIENTE',
-    'Flow Proxy': 'INDEPENDIENTE',
-    'Relative Strength (RS)': 'DERIVADA',
-    'Momentum': 'DERIVADA',
-    'Persistence': 'DERIVADA',
-    'WLS': 'DERIVADA',
-    'Tactical Score': 'DERIVADA',
-    'Structural Score': 'DERIVADA',
-    'Leader Breadth': 'DERIVADA',
+    # Observables directos: medidas primarias de mercado.
+    'Precio': 'OBSERVABLE',
+    'Volumen': 'OBSERVABLE',
+    'VIX': 'OBSERVABLE',
+    'Crédito': 'OBSERVABLE',
+    'Flujo ETF primario': 'OBSERVABLE',
+    # Derivadas directas: transformaciones de un observable.
+    'Retorno': 'DERIVADA-DIRECTA',
+    'Breadth': 'DERIVADA-DIRECTA',
+    'Flow Proxy': 'DERIVADA-DIRECTA',
+    'Relative Strength (RS)': 'DERIVADA-DIRECTA',
+    'Momentum': 'DERIVADA-DIRECTA',
+    # Derivadas compuestas: agregan varias derivadas.
+    'Persistence': 'DERIVADA-COMPUESTA',
+    'WLS': 'DERIVADA-COMPUESTA',
+    'Tactical Score': 'DERIVADA-COMPUESTA',
+    'Structural Score': 'DERIVADA-COMPUESTA',
+    'Leader Breadth': 'DERIVADA-COMPUESTA',
 }
 
 def audit_double_counting():
@@ -108,7 +116,18 @@ def audit_double_counting():
     lines.append("|----------|------|\n")
     for var, tipo in EVIDENCE_CLASSIFICATION.items():
         lines.append(f"| {var} | {tipo} |\n")
-    lines.append("\n*Evidencias independientes provienen directamente de observables; las derivadas combinan una o más evidencias.*\n")
+    # P1.5b (2026-10-13, auditor): nota alineada con la clasificacion
+    # en 3 niveles. Evita el termino 'independiente' para derivadas.
+    lines.append("\n*Clasificacion en 3 niveles: OBSERVABLE = medida "
+                 "directa (precio, volumen, VIX, credito, flujo ETF). "
+                 "DERIVADA-DIRECTA = transformacion de un observable "
+                 "(retorno, breadth, RS, momentum, flow proxy). "
+                 "DERIVADA-COMPUESTA = agrega varias derivadas "
+                 "(persistence, WLS, tactical, structural, leader "
+                 "breadth).*\n")
+    lines.append("*Nota: DERIVADA-DIRECTA no implica independencia "
+                 "estadistica. Breadth, RS y Flow Proxy comparten "
+                 "informacion del precio.*\n")
     return {
         'critical': critical,
         'high': high,
