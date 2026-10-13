@@ -2,68 +2,68 @@
   "schema_version": 1,
   "artifact": {
     "path": "data/stock_prices.parquet",
-    "sha256": "590cc4893eb7ebb65c813351e6f6baeedf2ea440fd98f8c64e944e77ea4ce49f",
-    "bytes": 16460080,
-    "written_at": "2026-10-11T22:56:15.610786"
+    "sha256": "8db4085276d1b96885cb728e74d39018f87682ada17cdc3e217ba0476d3ee71b",
+    "bytes": 15524895,
+    "written_at": "2026-10-13T03:45:33.660462"
   },
   "producer": {
     "module": "src.utils",
     "function": "write_artifact_with_manifest",
-    "run_id": "20261011_224821",
+    "run_id": "20261013_053709",
     "source": "yahoo_european_cascade"
   },
   "content": {
-    "rows": 1298,
+    "rows": 1293,
     "cols": 1645,
     "n_tickers": 329,
-    "date_min": "2021-10-04",
-    "date_max": "2026-10-09"
+    "date_min": "2021-10-12",
+    "date_max": "2026-10-12"
   },
   "temporal": {
     "contract": null
   },
   "quality": {
-    "last_date": "2026-10-09",
-    "expected_session": "2026-10-09",
+    "last_date": "2026-10-12",
+    "expected_session": "2026-10-12",
     "last_date_is_expected_session": true,
-    "pct_dup_last": 0.0,
-    "close_nan_last": 1,
+    "pct_dup_last": 0.006231,
+    "close_nan_last": 8,
     "n_tickers_expected_last": 329,
-    "n_tickers_with_close_last": 328,
-    "n_tickers_missing_close_last": 1,
-    "coverage_pct_last": 0.99696,
+    "n_tickers_with_close_last": 321,
+    "n_tickers_missing_close_last": 8,
+    "coverage_pct_last": 0.975684,
     "last_row_is_partial": true,
     "status": "VALID_WITH_MISSING",
     "by_market": {
       "BME": {
         "n": 19,
-        "last_closed_session": "2026-10-09",
+        "last_closed_session": "2026-10-12",
         "coverage_at_session": 1.0,
         "status": "VALID"
       },
       "EURONEXT": {
         "n": 13,
-        "last_closed_session": "2026-10-09",
+        "last_closed_session": "2026-10-12",
         "coverage_at_session": 1.0,
         "status": "VALID"
       },
       "LSE": {
         "n": 20,
-        "last_closed_session": "2026-10-09",
-        "coverage_at_session": 1.0,
-        "status": "VALID"
+        "last_closed_session": "2026-10-12",
+        "coverage_at_session": 0.8,
+        "status": "VALID_WITH_MISSING"
       },
       "US_EQUITY": {
         "n": 255,
-        "last_closed_session": "2026-10-09",
+        "last_closed_session": "2026-10-12",
         "coverage_at_session": 0.996078,
         "status": "VALID"
       },
       "XETRA": {
         "n": 22,
-        "last_closed_session": "2026-10-09",
-        "coverage_at_session": 1.0,
-        "status": "VALID"
+        "last_closed_session": "2026-10-12",
+        "coverage_at_session": 0.863636,
+        "status": "VALID_WITH_MISSING"
       }
     }
   }

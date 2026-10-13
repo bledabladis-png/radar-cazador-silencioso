@@ -460,3 +460,29 @@ date,source,last_date,age_calendar_days,frequency,freshness,n_total,n_valid,cove
 2026-10-11,Euronext,2026-10-09,2.0,daily,CURRENT,13.0,13.0,1.0,Euronext (13/13 OK)
 2026-10-11,Xetra,2026-10-09,2.0,daily,CURRENT,19.0,19.0,1.0,Xetra (19/19 OK)
 2026-10-11,BME,2026-10-09,2.0,daily,CURRENT,19.0,19.0,1.0,BME (19/19 OK)
+2026-10-13,Yahoo Finance,2026-10-12,1.0,daily,CURRENT,,,,Precios y métricas sectoriales
+2026-10-13,SSGA ETF Flow,2026-10-09,4.0,daily,RECENT,12.0,12.0,1.0,Flujo primario
+2026-10-13,CBOE PCR,2026-10-12,1.0,daily,CURRENT,55.0,55.0,1.0,Put/Call ratio
+2026-10-13,FINRA Dark Pool,2026-09-21,22.0,finra,RECENT,,,,Retraso regulatorio 2-4 semanas
+2026-10-13,CFTC Position Flow,2026-10-06,7.0,cftc,CURRENT,,,,Frescura 30 días
+2026-10-13,SEC N-PORT,2026-03-31,196.0,sec,STALE,,,,Trimestral
+2026-10-13,Macro FRED,2026-10-13,0.0,fred,CURRENT,,,,Datos macro manuales
+2026-10-13,Sector Concentration,2026-10-12,1.0,daily,CURRENT,11.0,11.0,1.0,Concentración y dispersión
+2026-10-13,Sector Breadth Momentum,2026-10-12,1.0,daily,CURRENT,11.0,11.0,1.0,Momentum amplitud
+2026-10-13,Volatility Structure,2026-10-12,1.0,daily,CURRENT,,,,Estructura volatilidad
+2026-10-13,Cross Asset Context,2026-10-12,1.0,daily,CURRENT,11.0,11.0,1.0,Contexto cross-asset
+2026-10-13,Evidence Matrix,2026-10-12,1.0,daily,CURRENT,11.0,1.0,0.09090909090909091,Matriz evidencia
+2026-10-13,Sector Breadth,2026-10-12,1.0,daily,CURRENT,11.0,11.0,1.0,Amplitud y salud sectorial
+2026-10-13,Sector Persistence,2026-10-12,1.0,daily,CURRENT,11.0,11.0,1.0,Persistencia sectorial
+2026-10-13,Sector Regime Matrix,2026-10-12,1.0,daily,CURRENT,11.0,1.0,0.09090909090909091,Matriz de regimen sectorial
+2026-10-13,Leader Representativeness,2026-10-12,1.0,daily,CURRENT,,,,Representatividad del lider
+2026-10-13,Sector Wyckoff Distribution,2026-10-12,1.0,daily,CURRENT,11.0,11.0,1.0,Distribucion Wyckoff sectorial
+2026-10-13,Sector Leader Divergence,2026-10-12,1.0,daily,CURRENT,,,,Divergencia sector-lideres
+2026-10-13,RS Internal,2026-10-12,1.0,daily,CURRENT,,,,Liderazgo relativo interno
+2026-10-13,Sector Rank History,2026-10-12,1.0,daily,CURRENT,,,,Rotacion sectorial historica
+2026-10-13,Sector Dispersion,2026-10-12,1.0,daily,CURRENT,,,,Dispersion entre sectores
+2026-10-13,Sector Correlation Summary,2026-10-12,1.0,daily,CURRENT,,,,Correlacion entre sectores
+2026-10-13,Sector Flow Characteristics,2026-10-09,4.0,daily,RECENT,11.0,11.0,1.0,Flujo primario sectorial
+2026-10-13,Euronext,2026-10-09,4.0,daily,RECENT,13.0,13.0,1.0,Euronext (13/13 OK)
+2026-10-13,Xetra,2026-10-09,4.0,daily,RECENT,19.0,19.0,1.0,Xetra (19/19 OK)
+2026-10-13,BME,2026-10-09,4.0,daily,RECENT,19.0,19.0,1.0,BME (19/19 OK)
