@@ -172,6 +172,18 @@ def render_matriz_evidencia(evidence_matrix_data):
                    "(los 11 sectores coinciden). La variabilidad sectorial "
                    "real proviene de Precio, Amplitud, Flujo 1 y Flujo "
                    "Proxy.*\n\n")
+        # N4 (2026-10-13, auditor): la agregacion es heuristica de signos
+        # (1 voto por variable, sin pesos). Precio, Amplitud y Flow Proxy
+        # comparten informacion del precio. La etiqueta describe confluencia
+        # de signos, no confirmacion estadistica independiente.
+        out.append("*N4 auditoria 2026-10-13: el balance de evidencia es una "
+                   "heuristica de signos (1 voto por variable). Precio, "
+                   "Amplitud y Flow Proxy comparten informacion del precio: "
+                   "un mismo movimiento puede reflejarse en varias a la vez. "
+                   "La etiqueta describe confluencia de signos, no "
+                   "confirmacion estadistica independiente. Ver clasificacion "
+                   "de evidencia (OBSERVABLE / DERIVADA-DIRECTA / "
+                   "DERIVADA-COMPUESTA) en la seccion Anti-Double-Counting.*\n\n")
         out.append("\n*La ausencia de Flow Proxy (NaN) representa ausencia de evidencia disponible y no se interpreta como neutralidad.*\n")
         out.append("\n")
     return out
