@@ -8,12 +8,12 @@ No crear variantes con fecha.
 
 ---
 
-## 1. ESTADO AL CIERRE (2026-10-12 ~14:30 CEST)
+## 1. ESTADO AL CIERRE (2026-10-13 ~15:00 CEST)
 
 Rama activa:    main
-HEAD:           06dd6cd6
+HEAD:           8b441a7a
 Sincronizacion: main == origin/main
-Tests:          3247 passed + 5 skipped + 0 failed
+Tests:          3253 passed + 5 skipped + 0 failed
 Validation Gate: 10/10
 Working tree:   limpio
 Corpus:         v3 (Consolidacion_Documentos/00-08 + ESTADO_SISTEMA)
