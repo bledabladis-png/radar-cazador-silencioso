@@ -152,7 +152,9 @@ El primer run de CI con v2 en produccion sera el slot 23:17 UTC del
 
 ### 4.4. Deudas sin urgencia
 
-- 8 F6-* sin descripcion (informe original no disponible).
+- Nada por este frente. Los 8 F6-* quedaron cerrados el 12-oct como
+  WONT FIX razonado (ver TRIAGE_BAJAS_2026-10-12.md seccion 4: el
+  informe FASE 6 nunca existio como fichero).
 - `sector_flow_characteristics` 09-oct (ROI bajo).
 - Cosmeticos varios.
 
