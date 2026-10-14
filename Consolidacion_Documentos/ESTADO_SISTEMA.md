@@ -22,12 +22,8 @@ porque el commit que lo contiene cambia HEAD.
 
 ## 2. Tests (pytest real)
 
-- **Resumen:** 2 failed, 3271 passed, 5 skipped
-- **Exit code:** 1
-
-**Tests fallidos (nombre completo):**
-- `FAILED tests/test_freshness.py::test_market_data_fresh - AssertionError: mark...`
-- `FAILED tests/test_freshness.py::test_stock_prices_fresh - AssertionError: sto...`
+- **Resumen:** 3335 passed, 5 skipped
+- **Exit code:** 0
 
 **Tests skip:**
 - `SKIPPED [1] tests\test_freshness.py:382: requiere --run-network`
@@ -39,7 +35,7 @@ porque el commit que lo contiene cambia HEAD.
 ## 3. Integridad del codigo
 
 - **compileall:** OK (exit 0)
-- **pyflakes:** 1 warnings (exit 1)
+- **pyflakes:** LIMPIO
 
 ## 4. Modulos IAE
 

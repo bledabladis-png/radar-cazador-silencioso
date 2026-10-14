@@ -8,207 +8,157 @@ No crear variantes con fecha.
 
 ---
 
-## 1. ESTADO AL CIERRE (2026-10-14 ~12:30 CEST)
+## 1. ESTADO AL CIERRE (2026-10-14 ~18:30 CEST)
 
 Rama activa:    main
-HEAD:           5e58197a
+HEAD:           e8c26d4c (posterior al push; consultar con `git log`)
 Sincronizacion: main == origin/main
-Tests:          3273 passed + 5 skipped + 0 failed
+Tests:          3335 passed + 5 skipped + 0 failed
+                (`pytest tests/ -q -m "not integration_real_data"`)
 Validation Gate: 10/10
 Working tree:   limpio
 Corpus:         v3 (Consolidacion_Documentos/00-08 + ESTADO_SISTEMA)
 
 ---
 
-## 2. SESIONES 13-14 OCT (auditoria externa + revision del reporte)
+## 2. SESION 14-OCT (frente N8 completo + sustitucion v1->v2)
 
-### 2.0. Auditoria externa (13-oct)
+### 2.0. Contexto
 
-Informe tecnico del auditor sobre el reporte del 13-oct: 16 hallazgos
-originales (P1.x, P2.x, P3.x) + dictamen de seguimiento con 6 nuevos
-(N1-N6). Todos atendidos. Documento:
-`docs/auditoria/radar/audits/ANEXO_VERIFICACION_2026-10-13.md`.
+Sesion larga. Cierre del frente N8 (rediseno del score de liquidez)
+tras una cadena de auditorias externas. Se sustituye el score v1
+(regimes/liquidity.py) por v2 (regimes/liquidity_v2.py) en produccion.
 
-- **P1.1 (fix real):** Leader Breadth usaba `close/precio_etf` (ratio
-  nominal, depende de splits). Cambiado a `rs_ratio_20d` (retorno
-  relativo 20d). Commits 0413518e + 00b01f46 (N1 fail-closed).
-- **P1.3:** pesos WLS centralizados en `config/weights.WLS_WEIGHTS`.
-- **P1.5 / N4:** clasificacion de evidencia en 3 niveles (OBSERVABLE /
-  DERIVADA-DIRECTA / DERIVADA-COMPUESTA). Nota explicita de que la
-  agregacion es heuristica descriptiva, no estadistica.
-- **N2:** LIS marcado provisional (`lis_validated=False`), sin validar
-  como senal decisoria. Requiere recalibracion estadistica.
-- **N3:** validacion del contrato WLS extraida a
-  `_validate_wls_inputs` (funcion pura). Persistence fuera de [0,1]
-  clipeada + status. 8 tests en `test_wls_validation_n3.py`.
-- **N5:** decision explicita sobre asincronia precio-flujo: mantener
-  comparacion asincrona pero etiquetar con fecha del flujo en
-  encabezado + nota reforzada.
-- **N6:** formulas de cobertura y ventanas PCR publicadas. Correccion
-  de la nota P2.4 (decia 252 sesiones; real 20).
-- **P2.1:** test de contrato `_wyckoff_sign` (6 casos).
+### 2.0a. Diagnostico del score v1
 
-### 2.0b. N7 - Bug propio detectado durante la auditoria
+El score v1 acumulaba problemas documentados:
+- MAD nula sobre series planas: EFFR 41.3% del tiempo, SOFR 17.5%.
+- Doble `ffill` sobre series FRED contaminando la muestra estadistica.
+- 68 transiciones/ano (una cada 4 dias habiles).
+- 34% del tiempo en regimen CRISIS.
 
-`evidence_matrix.csv` y `sector_regime_matrix.csv` tenian 1 fila por
-fecha en lugar de 11. Causa: `merge_keys=('date',)` en el registro
-declarativo, cuando deberia ser `('date','sector')`. Bug pre-existente
-a la migracion del contrato (los writers originales ya sobreescribian
-con 1 fila). Fix: commit f5db9f5f + test permanente
-`test_merge_keys_incluye_sector_si_csv_lo_tiene`.
+### 2.0b. Forense del CRISIS del 14-oct
 
-### 2.0c. Revision del run del 13-oct (14-oct)
+El run 38498223287 (14-oct 01:54-02:17 UTC) declaro CRISIS a raiz
+de un state stale: `liquidity_state.json` retrocedio de
+`2026-10-13, score=+0.29` a `2026-10-07, score=-0.49`. El run calculo
+con datos FRED de 6 dias antes. Con datos frescos hasta el 13-oct,
+el regimen es ESTRECHA/NEUTRAL. El HANDOFF anterior atribuia el CRISIS
+al fix F5.6-06b; era incorrecto.
 
-Cron de la madrugada: `38498223287` (23m30s, pipeline completo).
-`Verificacion de outputs: OK (19 checks)`. Target session 2026-10-13.
-N7 confirmado: `evidence_matrix` y `sector_regime_matrix` con 11 filas
-en 2026-10-13 (fechas antiguas siguen con 1 fila; irrecuperables).
+### 2.0c. Rediseno B3 (especificacion congelada, dictamen N8 Fase J)
 
-### 2.0d. Hallazgo N8 - LIQUIDEZ REAL (pendiente, documentado)
+Senal A: SOFR - EFFR en puntos basicos.
+Umbrales congelados: 0 / 5 / 20 pb.
+Persistencia: entrada 3/3, salida 3/3 (state machine binaria).
+Alerta diferencial extremo: >= 100 pb, sin persistencia.
+Diagnostico C1: p99 SOFR - EFFR, campo `c1_tail_divergence_candidate`.
+Sin efecto decisorio.
+Contexto de calendario: natural + financiero (habil USA).
 
-**NO fixado, en espera de sesion de diseno.**
+Validacion (C1-bis con episodios independientes):
+- Repo 2019 (16-17 sep): detectado en primer dia de ventana.
+- Q4-2025 (actividad elevada Fed NY): 46/62 dias confirmados.
+- COVID 2020-03: no detectado (dislocacion amplia, no tension repo).
+- 2024-08 (volatilidad carry trade yen): correctamente no detectado.
+- 0 falsas alarmas en 1024 dias de control.
+- Robustez: 10.3% vs 11.3% dias confirmados 2018-20 vs 2024-26.
 
-El run del 13-oct declaro `Liquidez Real: CRISIS` (antes `NEUTRAL`).
-Cambio a raiz del fix B1 (`fred.py` no extiende indice hasta hoy).
-Diagnostico:
-- `fed_funds` es serie MENSUAL (ultimo dato 2026-09-01).
-- Las otras 3 (`fed_balance`, `reverse_repo`, `sofr`) son diarias/semanales.
-- `robust_zscore(window=60)` aplicado por igual a una serie mensual no
-  es estadisticamente valido (~2 observaciones por ventana).
+### 2.0d. Sustitucion v1 -> v2 en produccion
 
-Auditor externo (14-oct) rectifico dos afirmaciones mias:
-- FEDFUNDS y SOFR NO son la misma variable con distinta frecuencia.
-  FEDFUNDS: tasa efectiva overnight no garantizada entre depositarias.
-  SOFR: financiacion overnight garantizada con Treasuries.
-  Segmentos distintos del mercado monetario. No justifican exclusion
-  por duplicidad.
-- El score mezcla magnitudes de balance (fed_balance, reverse_repo)
-  con precios de financiacion (sofr, fed_funds). Decision de diseno,
-  no detalle que se cambia de paso.
+Commit `84f46dd3`: `src/pipeline/regimes.py` invoca v2 via el
+adaptador `compute_liquidity_score_v2()` con contrato 4-tuple
+compatible con v1. Consumidores sin cambios.
 
-**Propuesta (NO ejecutada):** documento de diseno
-`docs/auditoria/radar/design/liquidity_score_redesign.md` con 4 opciones
-(B1: DFF diaria, B2: eliminar FEDFUNDS, B3: separar en dos scores,
-B4: mantener + documentar). Requiere backtest historico antes de tocar
-pesos o composicion. Sesion propia. Estimacion: 3-5 h.
+Rollback disponible: v1 sigue en `regimes/liquidity.py`. Para revertir,
+cambiar `compute_real_liquidity()` para invocar
+`regimes.liquidity.compute_liquidity_score`.
 
-**Lo que NO se ha tocado:** composicion del score, pesos, 4-tuple,
-umbrales, descarga de FEDFUNDS.
+Verificacion en run.py local (18:07 CEST, 20.6 min):
+- exit=0, Gate 10/10, Verificacion outputs OK (19 checks).
+- `Liquidez Real (FRED): NEUTRAL (conf: 90%)` en reporte.
+- State v2 persistido correctamente.
 
-### 2.0e. Deuda doc-codigo detectada
+### 2.0e. Limpieza documental
 
-`Consolidacion_Documentos/02_ARQUITECTURA.md:181` dice "Liquidity Score
-(5 componentes): SOFR, WALCL, RRP, Discount...". El codigo usa 4
-(`fed_balance`, `reverse_repo`, `sofr`, `fed_funds`). Gap preexistente.
+Comandos pytest locales alineados con el filtro de CI
+`-m "not integration_real_data"` en 5 ficheros (00_ARRANQUE,
+01_METODO, 02_ARQUITECTURA, README, HANDOFF). Los 2 fallos de
+`test_freshness` que aparecian en cada sesion eran ambientales:
+parquets locales stale. Con el filtro la suite queda limpia.
 
----
+### 2.1. Commits de la sesion (17)
 
-## 3. QUE SE HIZO 11-12 OCT (sesion larga, 17 commits)
+  e8c26d4c data(state): actualizar liquidity_state.json a esquema v2
+  5babc8e3 docs: alinear comandos pytest locales con el filtro de CI
+  e19ba091 chore(liquidity): retirar script de sombra tras sustitucion
+  84f46dd3 feat(liquidity): sustituir score v1 por v2 en pipeline
+  786b3fc2 feat(liquidity): modo sombra de liquidity_v2 + N/D != False
+  c51372fb feat(liquidity): especificacion experimental B3 congelada
+  456f3a28 chore(fred): instrumentacion de descargas FRED en JSONL
+  3d1a1fb6 fix(liquidity): trazabilidad de fechas + guard de frescura
+  4291593f fix(liquidity): guard de monotonicidad en liquidity_state
+  27c12671 chore(test): eliminar import pytest sin uso
+  953b7fee fix(slpm): contrato fail-closed N1 en compute_leader_breadth_v2
+  f49c85f0 fix(state_machine): guard no finitos + reason_code
+  05b70686 fix(slpm): cortocircuito en evaluate_slpm_v12
+  31f9c00a fix(report): render del state_reason_code en SLPM v1.2
+  0fe4e3e2 test(slpm): integracion end-to-end del contrato N1
+  953b7fee (precedido por los commits N1)
+  ...
 
-### 2.1. Deuda limpia (11-oct)
-
-- bd2a92b5: retirados 3 scripts one-shot (`regenerate_*`).
-- `src/report/sectorial.py.orig` borrado (huerfano, ignorado por git).
-- `outputs/audit` reducido: 131 -> 66 MB.
-- d67c1548: `ESTADO_SISTEMA.md` regenerado (estaba stale).
-
-### 2.2. Contrato de persistencia de outputs (11-12 oct)
-
-**Objetivo.** Cerrar la clase entera de bugs "writer silencioso"
-(el gap 09-oct fue el sintoma). No un parche por CSV.
-
-**Solucion en 3 piezas + AST test:**
-
-- `src/pipeline/output_registry.py`: registro declarativo de 19 outputs
-  (18 temporales + 1 snapshot). `WriteReceipt` + `ReceiptCollector`.
-- `src/pipeline/output_writer.py`: wrapper unico `persist(name, df, ...)`
-  / `skip(name, reason)`. Toda escritura a `outputs/history/` pasa por
-  aqui. Fail-closed: name no registrado -> KeyError; razon de skip no
-  legitima -> ValueError; derivar `date_value` del propio df si no se
-  pasa.
-- `src/pipeline/output_verifier.py`: `verify(collector)` con 3 reglas.
-- `run.py`: collector activo al inicio; verificacion antes de cerrar;
-  `sys.exit(1)` si falla; persiste `outputs/state/writer_receipts.json`.
-- `tests/test_output_contract_ast.py`: AST que prohibe `to_csv()` fuera
-  del wrapper. Excepciones: `output_writer.py`, `save_sector_rankings`,
-  `compute_indices_intl` (outputs/report/, efimeros).
-
-**19 writers migrados** en 6 commits por fichero. Gate 10/10, receipt v1
-y `pipeline_gate.py` intactos.
-
-Commits: f0311cdb, 8596690c, c43a6b00, 2593ac91, ceecad70, b1237083,
-ae752882, ab838dbf.
-
-### 2.3. Verificacion extendida de outputs (12-oct)
-
-`scripts/verify_outputs.py`: comprueba que las ultimas N sesiones NYSE
-tienen fila en cada CSV temporal del registro. Default `--since
-2026-10-11` (despliegue del contrato). Gap real detectado:
-`sector_flow_characteristics` sin fila para 09-oct (ROI bajo, sin
-accion). Commits f428bf51, 69506319.
-
-### 2.4. Triaje auditoria externa 2026-09-26 (12-oct)
-
-- **ALTA: 6/6 cerradas** (F3-05, F3-16, F3-17, A5-13, F6-10, F6-28).
-- **MEDIA: 71/71 clasificadas, 0 vivas.** 55 cerradas por cambios
-  posteriores + 7 WONT FIX razonado + 9 rescop doc (cerradas hoy).
-- **BAJA: 53/61 triadas.** 8 F6-* sin descripcion (informe original no
-  portado; commit bc656374 solo tiene 3 ficheros).
-
-Documentos: `docs/auditoria/radar/audits/TRIAGE_2026-10-12.md`,
-`TRIAGE_BAJAS_2026-10-12.md`.
-
-### 2.5. Verificacion del run del domingo 11-oct
-
-El cron domingo madrugada (38103357426, 03:53 CEST) **skipeo por dise?o
-del gate**: receipt del sabado 38016582210 ya emitido para
-target_session=2026-10-09. Sin anomalia.
-
-Gap 09-oct cerrado por run manual `ceb21d8a` (23:24 CEST). Causa raiz
-(writer silencioso + receipt falso) cerrada por el contrato nuevo.
-
-### 2.6. Cierre de deudas de higiene (12-oct)
-
-- 0035be38: politica `outputs/audit/` en `01_METODO.md` seccion 10.1;
-  poda `00_ARRANQUE` 11670 -> 10240 B; snapshot a 3247 tests.
-- 06dd6cd6: D-07 cerrado con notas cruzadas en `sectorial.py` (Ret Lider
-  = absoluto) y `market_context.py` (vs mercado 20d = relativo).
-  D-04 cerrado sin parche (ya dice "Robust Z-Score").
-- F2-02, F2-03, F2-04, F2-07, A5-57: anotados en `02_ARQUITECTURA`.
+Detalle completo: `git log --oneline -20`.
 
 ---
 
-## 3. PENDIENTES VIVOS
+## 3. FRENTES CERRADOS EN LA SESION
 
-### 3.1. Bloqueados por terceros
-- C2 (920): discrepancia H1-B. Bloqueado por auditor externo.
-- SOW protocol v6: borrador `48_sow_protocol_v6.md` pendiente firma.
-- gold-standard-v4: archivada como tag.
-
-### 3.2. Bloqueados por datos
-- Wyckoff 5b.X v3: bloqueado hasta n_confirmed_H20_complete >= 550
-  (~2027). Script y protocolo inmutables.
-
-### 3.3. Con fecha futura
-- H5.3: cron trimestral 13F 20-nov-2026 06:17 UTC.
-- Primer test del contrato en prod: cron 23:17 UTC de hoy (13-oct
-  01:17 CEST) con target_session=2026-10-12. Verificar
-  `gh run view <id> --log | grep "Verificacion de outputs"`.
-
-### 3.4. Deuda sin urgencia
-- 8 F6-* sin descripcion: CERRADO como WONT FIX razonado
-  (investigacion 2026-10-12; informe FASE 6 nunca existio como
-  fichero; ver `TRIAGE_BAJAS_2026-10-12.md` seccion 4).
-- ~11 BAJA vivas de baja prioridad: CERRADAS 2026-10-13 (ver
-  TRIAGE_BAJAS_2026-10-12.md). 0 vivas reales.
-- Regenerar `sector_flow_characteristics` 09-oct (ROI bajo).
-- Cosmeticos: `render_calidad_datos` ubicacion (volatility_mte.py),
-  divergencia runtime/CSV sin test, `test_render_freshness_d36`
-  fragilidad.
+- **N1 (SLPM fail-closed)**: contrato fail-closed completo en
+  `compute_leader_breadth_v2`, guard de no finitos en state machine,
+  cortocircuito en `evaluate_slpm_v12`, render del `state_reason_code`.
+  21 tests nuevos.
+- **N8 forense**: bug del state retrocedido identificado y documentado.
+- **N8 guard frescura**: trazabilidad + guard por serie en v1 y v2.
+- **N8 sustitucion v1 -> v2**: activa en produccion.
 
 ---
 
-## 4. COMO ARRANCAR
+## 4. PENDIENTES VIVOS
+
+### 4.1. Verificacion del cron 23:17 UTC
+
+El primer run de CI con v2 en produccion sera el slot 23:17 UTC del
+14-oct. Verificar:
+1. `gh run list --workflow=daily_run.yml --limit 3`.
+2. `gh run view <id> --log` sin excepciones.
+3. `outputs/state/liquidity_state.json` con esquema v2 en el commit
+   del bot.
+4. `outputs/audit/fred_downloads.jsonl` con datos frescos (JSONL
+   instrumentado, commit 456f3a28).
+
+### 4.2. Corpus documental
+
+~15 items de deriva detectados durante la sesion: contratos temporales
+(9 vs 10), slots cron (4 vs 5), OilPriceAPI residual, Liquidity Score
+5 vs 4, tests literales desactualizados. Aparcados. No bloquean.
+
+### 4.3. Audiencias externas pendientes
+
+- **N8**: dictamen final sobre sustitucion v1 -> v2. La fase de sombra
+  se ha saltado por decision propia (v2 ya validada contra episodios
+  independientes). El auditor puede objetar. Documentar razonamiento.
+- **N1**: cierre de las 4 condiciones del dictamen sobre rama vacia
+  y datos parciales. Ya aplicado.
+
+### 4.4. Deudas sin urgencia
+
+- 8 F6-* sin descripcion (informe original no disponible).
+- `sector_flow_characteristics` 09-oct (ROI bajo).
+- Cosmeticos varios.
+
+---
+
+## 5. COMO ARRANCAR
 
     Set-Location D:\Macro_Sectorial
     git log --oneline -5
@@ -218,54 +168,54 @@ Gap 09-oct cerrado por run manual `ceb21d8a` (23:24 CEST). Causa raiz
     py -m pyflakes . ; py -m compileall . -q
 
 Esperado:
-- HEAD = 06dd6cd6 o posterior.
+- HEAD = e8c26d4c o posterior.
 - ahead 0, behind 0.
-- working tree limpio.
-- 3247 passed + 5 skipped.
+- working tree limpio (salvo data/ y outputs/ que el bot actualiza).
+- 3335 passed + 5 skipped.
 - pyflakes silencio, compileall OK.
 
-Si divergencia: investigar antes de tocar nada.
+Los tests `integration_real_data` requieren parquets de un run previo.
+El filtro `-m "not integration_real_data"` los excluye (mismo criterio
+que CI en el paso "Run tests"). Tras un `py run.py` local se pueden
+ejecutar manualmente sin el filtro.
 
 ---
 
-## 5. NOTAS CRITICAS
+## 6. NOTAS CRITICAS
 
 - **No usar run.py en horario de mercado** (13:30-20:00 UTC).
-  Politica: snapshot pre/post + revertir, salvo publicacion
-  deliberada. Aplicado en 01_METODO seccion 4.
+  Verificado hoy con la red de seguridad (snapshot pre/post + revert).
+  Aplicar `git checkout -- .` tras la verificacion.
 
-- **EOL del corpus: LF** en todos los docs (`00_ARRANQUE`,
-  `01_METODO`, `02_ARQUITECTURA`, `04_HISTORICO`, `05_BITACORA`).
-  Corregido 2026-10-12. **Regla:** al escribir docs con Python, usar
-  `Path.write_text(..., newline='\n')` o `[System.IO.File]::WriteAllText`
-  para no convertirlos a CRLF. Ver `01_METODO` seccion 6.
+- **liquidity_v2 en produccion.** Cualquier cambio a `liquidity_v2.py`
+  requiere dictamen (spec congelada).
 
-- **BOM:** `Out-File -Encoding utf8` de PowerShell mete BOM (U+FEFF).
-  Usar `-Encoding ascii` para ficheros nuevos o quitar BOM despues.
-  El corpus y los `.py` no llevan BOM. `test_output_contract_ast.py`
-  usa `utf-8-sig` por defensa.
+- **State compartido**: `outputs/state/liquidity_state.json` con
+  esquema v2 (score + date + regime + bloque v2 anidado). Guard de
+  monotonicidad activo.
 
-- **Patrones de bug** en `01b_PATRONES.md`. **Trampas PowerShell** en
-  `01_METODO` seccion 6bis.
+- **Log FRED**: `outputs/audit/fred_downloads.jsonl` (append-only).
+  Instrumentacion del commit 456f3a28. Cada descarga FRED escribe
+  una linea JSON con url, status, dates, duration.
 
-- **No confundir diagnostico cerrado con hipotesis fuerte.**
+- **EOL del corpus**: LF en todos los docs. `[System.IO.File]::WriteAllText`
+  para no convertirlos a CRLF.
 
-- **Antes de tocar un writer/reader temporal**, verificar la
-  cadena completa: productor, consumidor, render.
+- **No push sin validacion local completa.** Aplicado en toda la sesion.
 
 ---
 
-## 6. REFERENCIAS
+## 7. REFERENCIAS
 
-Corpus normativo en `Consolidacion_Documentos/` (12 docs):
-00_ARRANQUE (rol + reglas), 01_METODO (patch/verificacion),
-01b_PATRONES, 01c_LECCIONES, 02_ARQUITECTURA, 03_IAE,
-04_HISTORICO (temas), 05_BITACORA (sesiones), 06_IAE_P65_P66,
-07_RUNBOOK, 08_AUDITORIA_SECTOR_REGIME, ESTADO_SISTEMA (auto).
+Corpus normativo en `Consolidacion_Documentos/`:
+00_ARRANQUE, 01_METODO, 01b_PATRONES, 01c_LECCIONES, 02_ARQUITECTURA,
+03_IAE, 04_HISTORICO, 05_BITACORA, 06_IAE_P65_P66, 07_RUNBOOK,
+08_AUDITORIA_SECTOR_REGIME, ESTADO_SISTEMA (auto).
 
 Expedientes: docs/auditoria/wyckoff/, docs/auditoria/iae/golden/,
-docs/auditoria/s03_deep/, docs/auditoria/radar/audits/ (incluye
-TRIAGE_2026-10-12.md + TRIAGE_BAJAS_2026-10-12.md).
+docs/auditoria/s03_deep/, docs/auditoria/radar/audits/.
+
+Sandbox N8: outputs/audit/liq_backtest/.
 
 ---
 
