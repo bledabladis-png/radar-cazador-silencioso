@@ -193,6 +193,7 @@ def compute_liquidity_score():
 
 
     previous_score = None
+    previous_date = None
 
 
 
@@ -203,8 +204,23 @@ def compute_liquidity_score():
             with open(delta_file, 'r') as f:
                 prev = json.load(f)
                 previous_score = prev.get('score', None)
+                previous_date = prev.get('date', None)
+        # N8 fix (2026-10-14): guard de monotonicidad. Si el run actual
+        # calcula con datos MAS ANTIGUOS que el persistido (cache stale,
+        # latencia FRED, parquets con lag), NO sobreescribir.
+        # Bug observado: fe98c29a (13-oct) state date=2026-10-13;
+        #               5e58197a (14-oct) state date=2026-10-07.
+        last_idx = fed_data.dropna(how='all').index[-1] if len(fed_data.dropna(how='all')) > 0 else fed_data.index[-1]
+        if previous_date is not None:
+            try:
+                prev_ts = pd.Timestamp(previous_date)
+                if last_idx < prev_ts:
+                    print(f"  [WARN] liquidity_state: fecha calculada {last_idx.date()} < persistida {prev_ts.date()}. NO se sobreescribe. Posible dato stale.")
+                    return pd.Series(score, index=[last_idx]), regime, confidence, previous_score
+            except (ValueError, TypeError) as e:
+                print(f"  [WARN] liquidity_state: previous_date invalida ({previous_date!r}): {e}")
         with open(delta_file, 'w') as f:
-            json.dump({'score': float(score), 'date': str(fed_data.dropna(how='all').index[-1].date()) if len(fed_data.dropna(how='all')) > 0 else str(fed_data.index[-1].date())}, f)
+            json.dump({'score': float(score), 'date': str(last_idx.date())}, f)
     except (json.JSONDecodeError, OSError, ValueError, TypeError, KeyError, IndexError) as e:
         # A3.1-01: fallo de persistencia de state no debe tumbar el pipeline,
         # pero tampoco debe ser invisible. previous_score queda en None.
