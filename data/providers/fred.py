@@ -1,6 +1,28 @@
-﻿import pandas as pd
+﻿import json
+import time
+from datetime import datetime, timezone
+from pathlib import Path
+
+import pandas as pd
 import pandas_datareader.data as web
 from .base import MarketDataProvider
+
+
+# N8 (2026-10-14): log de trazabilidad de descargas FRED.
+# Objetivo: diagnosticar el frente de frescura del CI cuando un run
+# recibe datos obsoletos. Cada descarga escribe una linea JSONL con
+# metadata (URL, hora, tamano, ultima observacion).
+_FRED_LOG_PATH = Path("outputs/audit/fred_downloads.jsonl")
+
+
+def _log_fred_download(record: dict) -> None:
+    """Append JSONL. Fallo silencioso: no debe tumbar el pipeline."""
+    try:
+        _FRED_LOG_PATH.parent.mkdir(parents=True, exist_ok=True)
+        with open(_FRED_LOG_PATH, "a", encoding="utf-8") as f:
+            f.write(json.dumps(record, default=str) + "\n")
+    except (OSError, TypeError, ValueError):
+        pass
 
 FRED_SERIES = {
     "fed_balance": "WALCL",
@@ -26,9 +48,31 @@ class FredProvider(MarketDataProvider):
         return True
 
     def _download_series(self, series_id: str, start="2000-01-01", index=None) -> pd.Series:
+        # N8: instrumentacion. Un registro por intento de descarga.
+        _t0 = time.time()
+        _ts = datetime.now(timezone.utc).isoformat()
+        _url = f"https://fred.stlouisfed.org/graph/fredgraph.csv?id={series_id}"
+        _rec = {
+            "timestamp_utc": _ts,
+            "series_id": series_id,
+            "start": start,
+            "url": _url,
+            "status": "unknown",
+            "n_rows": 0,
+            "first_date": None,
+            "last_date": None,
+            "last_value": None,
+            "duration_s": None,
+        }
         try:
             data = web.DataReader(series_id, "fred", start=start)
             s = data.iloc[:, 0].sort_index()
+            _rec["status"] = "ok"
+            if len(s) > 0:
+                _rec["n_rows"] = int(len(s))
+                _rec["first_date"] = str(s.index[0].date())
+                _rec["last_date"] = str(s.index[-1].date())
+                _rec["last_value"] = float(s.iloc[-1]) if pd.notna(s.iloc[-1]) else None
             # Si se proporciona un índice externo, reindexar y rellenar
             if index is not None:
                 s = s.reindex(index).ffill()
@@ -48,8 +92,14 @@ class FredProvider(MarketDataProvider):
                 # CURRENT. Fix: preservar el indice real (end=s.index[-1]).
                 full_index = pd.date_range(start=s.index[0], end=s.index[-1], freq='D')
                 s = s.reindex(full_index).ffill()
+            _rec["duration_s"] = round(time.time() - _t0, 3)
+            _log_fred_download(_rec)
             return s
         except (KeyError, ValueError, TypeError) as e:
+            _rec["status"] = "error"
+            _rec["error"] = str(e)
+            _rec["duration_s"] = round(time.time() - _t0, 3)
+            _log_fred_download(_rec)
             print(f"FRED {series_id}: {e}")
             return pd.Series(dtype=float)
 
