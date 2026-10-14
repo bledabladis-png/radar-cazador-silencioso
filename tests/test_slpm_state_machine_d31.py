@@ -504,3 +504,88 @@ def test_n1_rs_ratio_20d_negativo_no_es_positivo():
     assert r["rs_breadth"] == 0.0
     assert r["rs_breadth_status"] == "OK"
     assert r["rs_breadth_missing"] == 0
+
+
+# ============================================================
+# N1 ronda 2 (2026-10-14): cortocircuito en evaluate_slpm_v12 (opcion D)
+# Los tests mockean confirm_transition para evitar escritura a disco
+# (colision entre workers xdist sobre outputs/state/slpm_state.json).
+# ============================================================
+import pytest as _pytest
+
+
+@_pytest.fixture
+def _mock_confirm_transition(monkeypatch):
+    def _fake(sector_etf, instant_state):
+        return {
+            "confirmed_state": instant_state,
+            "previous_state": instant_state,
+            "transition": False,
+            "consecutive_count": 1,
+        }
+    import indicators.slpm_v12 as _slpm
+    monkeypatch.setattr(_slpm, "confirm_transition", _fake)
+    return _fake
+
+
+def test_evaluate_slpm_shortcircuit_cuando_rs_no_disponible(_mock_confirm_transition):
+    """Si rs_breadth_status != OK, no se llama al clasificador.
+    Dictamen opcion D: cortocircuito principal."""
+    ranking = [("XLK", "Technology", 0.5, "MARKUP")]
+    # Lider sin rs_ratio_20d -> INSUFFICIENT_RS_RATIO -> cortocircuito
+    leaders = [{"rs": 1.1, "rs_momentum": 0.05,
+                "flow_proxy_z": 1.0, "wyckoff_phase": "MARKUP"}]
+    r = evaluate_slpm_v12(
+        None, {"ranking": ranking}, leaders, 0.0,
+        tactical_scores={"XLK": 0.5},
+        structural_scores={"XLK": 0.5},
+        sector_persistence={"XLK": 0.6},
+    )
+    assert r["state"] == "UNRESOLVED"
+    assert r["state_reason_code"] == "INSUFFICIENT_DATA_RS"
+    assert r["data_quality"] == "LOW"
+    assert "rs_ratio_20d" in r["state_reason"]
+
+
+def test_evaluate_slpm_shortcircuit_input_unavailable(_mock_confirm_transition):
+    """leader_metrics=None -> INPUT_UNAVAILABLE propagado."""
+    ranking = [("XLK", "Technology", 0.5, "MARKUP")]
+    r = evaluate_slpm_v12(
+        None, {"ranking": ranking}, None, 0.0,
+        tactical_scores={"XLK": 0.5},
+        structural_scores={"XLK": 0.5},
+        sector_persistence={"XLK": 0.6},
+    )
+    assert r["state"] == "UNRESOLVED"
+    assert r["state_reason_code"] == "INPUT_UNAVAILABLE"
+    assert r["data_quality"] == "LOW"
+
+
+def test_evaluate_slpm_shortcircuit_no_leaders(_mock_confirm_transition):
+    """leader_metrics=[] -> NO_LEADERS propagado."""
+    ranking = [("XLK", "Technology", 0.5, "MARKUP")]
+    r = evaluate_slpm_v12(
+        None, {"ranking": ranking}, [], 0.0,
+        tactical_scores={"XLK": 0.5},
+        structural_scores={"XLK": 0.5},
+        sector_persistence={"XLK": 0.6},
+    )
+    assert r["state"] == "UNRESOLVED"
+    assert r["state_reason_code"] == "NO_LEADERS"
+    assert r["data_quality"] == "LOW"
+
+
+def test_evaluate_slpm_shortcircuit_componente_faltante(_mock_confirm_transition):
+    """Falta flow_proxy_z -> INSUFFICIENT_COMPONENT_DATA propagado."""
+    ranking = [("XLK", "Technology", 0.5, "MARKUP")]
+    leaders = [{"rs_ratio_20d": 0.02, "rs_momentum": 0.05,
+                "wyckoff_phase": "MARKUP"}]  # sin flow_proxy_z
+    r = evaluate_slpm_v12(
+        None, {"ranking": ranking}, leaders, 0.0,
+        tactical_scores={"XLK": 0.5},
+        structural_scores={"XLK": 0.5},
+        sector_persistence={"XLK": 0.6},
+    )
+    assert r["state"] == "UNRESOLVED"
+    assert r["state_reason_code"] == "INSUFFICIENT_COMPONENT_DATA"
+    assert r["data_quality"] == "LOW"

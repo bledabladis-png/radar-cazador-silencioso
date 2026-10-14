@@ -238,7 +238,7 @@ def compute_leader_integrity(leader_metrics):
 
 def compute_flow_divergence_v2(leader_metrics, sector_flow_proxy_z, sector_price_flow=None):
     sector_flow_proxy_z = sector_flow_proxy_z if sector_flow_proxy_z is not None else np.nan
-    leader_flows = [m.get('flow_proxy_z', np.nan) for m in leader_metrics if m and 'flow_proxy_z' in m]
+    leader_flows = [m.get('flow_proxy_z', np.nan) for m in (leader_metrics or []) if m and 'flow_proxy_z' in m]
     valid_leader_flows = [f for f in leader_flows if pd.notna(f)]
     if not valid_leader_flows:
         leader_flow_div = np.nan
@@ -273,14 +273,49 @@ def evaluate_slpm_v12(df_market, sector_results, leader_metrics, top_sector_flow
         print(f"    SLPM v1.2: Persistence no disponible para {sector_name}, usando 0.5 neutro.")
 
     effective_breadth = breadth_v2['effective_composite']
+    lb_status = breadth_v2.get('leader_breadth_status', 'UNKNOWN')
 
-    result = classify_leadership_state(structural_score, effective_breadth, persistence, coverage=breadth_v2['coverage'])
-    instant_state = result['state']
-    instant_reason = result['reason']
-    if not leader_metrics:
-        sector_phase = ranking[0][3] if len(ranking[0]) > 3 else 'desconocida'
-        instant_reason += f" El sector lider ({sector_name}) esta en fase {sector_phase}, lo que impide calcular metricas de lideres."
-    instant_reason_code = result.get('reason_code', 'UNKNOWN')
+    # N1 ronda 2 (2026-10-14, dictamen auditor, opcion D commit 3):
+    #   cortocircuito principal. Si el breadth no esta validado, no se
+    #   llama a classify_leadership_state con un composite no finito.
+    #   La causa ya viene identificada en breadth_v2 y se propaga
+    #   como reason_code en el dict final.
+    if lb_status != 'OK':
+        if lb_status == 'INPUT_UNAVAILABLE':
+            instant_reason = 'Breadth de lideres no disponible (entrada no disponible).'
+            _sp = ranking[0][3] if len(ranking[0]) > 3 else 'desconocida'
+            instant_reason += f" El sector lider ({sector_name}) esta en fase {_sp}."
+            instant_reason_code = 'INPUT_UNAVAILABLE'
+            data_quality = 'LOW'
+        elif lb_status == 'NO_LEADERS':
+            instant_reason = 'Breadth de lideres no disponible (sin lideres evaluables).'
+            _sp = ranking[0][3] if len(ranking[0]) > 3 else 'desconocida'
+            instant_reason += f" El sector lider ({sector_name}) esta en fase {_sp}."
+            instant_reason_code = 'NO_LEADERS'
+            data_quality = 'LOW'
+        elif lb_status == 'INSUFFICIENT_RS_RATIO':
+            _n = breadth_v2.get('rs_breadth_missing', 0)
+            instant_reason = f"Breadth de lideres no disponible (rs_ratio_20d ausente en {_n} lideres)."
+            instant_reason_code = 'INSUFFICIENT_DATA_RS'
+            data_quality = 'LOW'
+        elif lb_status == 'INSUFFICIENT_COMPONENT_DATA':
+            instant_reason = 'Breadth de lideres no disponible (componentes de breadth incompletos).'
+            instant_reason_code = 'INSUFFICIENT_COMPONENT_DATA'
+            data_quality = 'LOW'
+        else:
+            instant_reason = f"Breadth de lideres no disponible (status={lb_status})."
+            instant_reason_code = 'INSUFFICIENT_DATA_BREADTH'
+            data_quality = 'LOW'
+        instant_state = 'UNRESOLVED'
+    else:
+        result = classify_leadership_state(structural_score, effective_breadth, persistence, coverage=breadth_v2['coverage'])
+        instant_state = result['state']
+        instant_reason = result['reason']
+        instant_reason_code = result.get('reason_code', 'UNKNOWN')
+        data_quality = result.get('data_quality', 'UNKNOWN')
+        if not leader_metrics:
+            sector_phase = ranking[0][3] if len(ranking[0]) > 3 else 'desconocida'
+            instant_reason += f" El sector lider ({sector_name}) esta en fase {sector_phase}, lo que impide calcular metricas de lideres."
 
     transition_data = confirm_transition(sector_etf, instant_state)
     state = transition_data['confirmed_state']
@@ -316,7 +351,7 @@ def evaluate_slpm_v12(df_market, sector_results, leader_metrics, top_sector_flow
             'effective_breadth': effective_breadth, 'persistence': persistence
         },
         'validation_errors': errors,
-        'data_quality': result.get('data_quality', 'UNKNOWN'),
+        'data_quality': data_quality,
         'narrow_leadership': (
             flow_div_v2.get('leader_flow_div', 0) > 0.2 and
             top_sector_flow < 0.2 and
