@@ -92,6 +92,60 @@ def test_get_opportunity_quadrant_desconocido():
 
 
 # ============================================================
+# N1 ronda 2 (2026-10-14): guard no finitos + reason_code
+# ============================================================
+def test_classify_nan_breadth_unresolved_insufficient_data_breadth():
+    """Breadth NaN -> UNRESOLVED con reason_code especifico."""
+    r = classify_leadership_state(0.3, float('nan'), 0.6, coverage=0.7)
+    assert r["state"] == "UNRESOLVED"
+    assert r["reason_code"] == "INSUFFICIENT_DATA_BREADTH"
+    assert r["data_quality"] == "LOW"
+    assert "no disponible" in r["reason"].lower() or "no finito" in r["reason"].lower()
+
+
+def test_classify_inf_breadth_unresolved_insufficient_data_breadth():
+    """Breadth +Inf no se clasifica: guard defensivo."""
+    r = classify_leadership_state(0.3, float('inf'), 0.6, coverage=0.7)
+    assert r["state"] == "UNRESOLVED"
+    assert r["reason_code"] == "INSUFFICIENT_DATA_BREADTH"
+    r2 = classify_leadership_state(0.3, float('-inf'), 0.6, coverage=0.7)
+    assert r2["state"] == "UNRESOLVED"
+    assert r2["reason_code"] == "INSUFFICIENT_DATA_BREADTH"
+
+
+def test_classify_none_breadth_unresolved_insufficient_data_breadth():
+    r = classify_leadership_state(0.3, None, 0.6, coverage=0.7)
+    assert r["state"] == "UNRESOLVED"
+    assert r["reason_code"] == "INSUFFICIENT_DATA_BREADTH"
+
+
+def test_classify_string_breadth_unresolved_insufficient_data_breadth():
+    r = classify_leadership_state(0.3, "abc", 0.6, coverage=0.7)
+    assert r["state"] == "UNRESOLVED"
+    assert r["reason_code"] == "INSUFFICIENT_DATA_BREADTH"
+
+
+def test_reason_code_coverage_baja_insufficient_coverage():
+    r = classify_leadership_state(0.9, 0.9, 0.9, coverage=0.2)
+    assert r["state"] == "UNRESOLVED"
+    assert r["reason_code"] == "INSUFFICIENT_COVERAGE"
+
+
+@pytest.mark.parametrize("state,args,expected_code", [
+    ("CONFIRMED", (0.3, 0.5, 0.6, 0.7), "CONFIRMED"),
+    ("EMERGING", (0.3, 0.5, 0.3, 0.7), "EMERGING"),
+    ("STRUCTURAL_DECAY", (-0.25, 0.2, 0.5, 0.7), "STRUCTURAL_DECAY"),
+    ("LOST", (-0.5, 0.2, 0.5, 0.7), "STRUCTURAL_LOST"),
+    ("UNRESOLVED", (0.1, 0.4, 0.4, 0.5), "MIXED_OR_INSUFFICIENT_SIGNALS"),
+])
+def test_reason_code_presente_en_todos_los_estados(state, args, expected_code):
+    """Cada estado devuelve su reason_code especifico."""
+    r = classify_leadership_state(args[0], args[1], args[2], coverage=args[3])
+    assert r["state"] == state
+    assert r["reason_code"] == expected_code
+
+
+# ============================================================
 # state_machine.validate_state
 # ============================================================
 def test_validate_confirmed_ok():
