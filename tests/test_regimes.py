@@ -125,3 +125,84 @@ def test_liquidity_state_no_retrocede_por_dato_stale(tmp_path, monkeypatch):
     written = json.loads((tmp_path / "outputs" / "state" / "liquidity_state.json").read_text())
     assert written["date"] == "2026-10-13", f"state no debe retroceder: {written}"
     assert written["score"] == 0.29
+
+
+
+# ============================================================
+# N8 (2026-10-14): trazabilidad de fechas y guard de frescura
+# ============================================================
+def test_liquidity_state_persiste_trazabilidad(tmp_path, monkeypatch):
+    """El state extendido incluye computed_at, components con
+    observation_date y flag stale."""
+    import json
+    import pandas as pd
+    from regimes import liquidity as liq_mod
+
+    (tmp_path / "outputs" / "state").mkdir(parents=True, exist_ok=True)
+
+    today = pd.Timestamp.now().normalize()
+    idx = pd.date_range(today - pd.Timedelta(days=90), today, freq="D")
+    class FakeRouter:
+        def get_fed_data(self, index=None):
+            return pd.DataFrame({
+                "fed_balance": [6700000.0 + i for i in range(len(idx))],
+                "reverse_repo": [300.0 + i * 0.1 for i in range(len(idx))],
+                "sofr": [3.90 + i * 0.001 for i in range(len(idx))],
+                "fed_funds": [3.63 + i * 0.001 for i in range(len(idx))],
+            }, index=idx)
+
+    monkeypatch.setattr(liq_mod, "DataRouter", FakeRouter)
+    monkeypatch.chdir(tmp_path)
+
+    liq_mod.compute_liquidity_score()
+
+    written = json.loads((tmp_path / "outputs" / "state" / "liquidity_state.json").read_text())
+    assert "score" in written
+    assert "date" in written
+    assert "computed_at" in written
+    assert "components" in written
+    assert "stale" in written
+    # Cada componente con observation_date
+    for name in ["fed_balance", "reverse_repo", "sofr", "fed_funds"]:
+        if name in written["components"]:
+            assert "observation_date" in written["components"][name]
+            assert "value" in written["components"][name]
+
+
+def test_liquidity_state_no_sobreescribe_fresco_con_stale(tmp_path, monkeypatch):
+    """Guard 2: si el nuevo calculo tiene componentes stale y el
+    persistido no, no sobreescribir (aunque la fecha sea >=)."""
+    import json
+    import pandas as pd
+    from regimes import liquidity as liq_mod
+
+    (tmp_path / "outputs" / "state").mkdir(parents=True, exist_ok=True)
+
+    # State previo: score OK, sin stale, con fecha de hace 30 dias
+    old_date = (pd.Timestamp.now().normalize() - pd.Timedelta(days=30))
+    (tmp_path / "outputs" / "state" / "liquidity_state.json").write_text(
+        json.dumps({"score": 0.5, "date": str(old_date.date()),
+                    "stale": False, "components": {}}))
+
+    # Datos de entrada: hasta 30 dias antes de hoy -> componentes stale
+    # (SOFR/RRPONTSYD maximo 4 dias)
+    stale_end = pd.Timestamp.now().normalize() - pd.Timedelta(days=30)
+    idx = pd.date_range(stale_end - pd.Timedelta(days=90), stale_end, freq="D")
+    class FakeRouter:
+        def get_fed_data(self, index=None):
+            return pd.DataFrame({
+                "fed_balance": [6700000.0 + i for i in range(len(idx))],
+                "reverse_repo": [300.0 + i * 0.1 for i in range(len(idx))],
+                "sofr": [3.90 + i * 0.001 for i in range(len(idx))],
+                "fed_funds": [3.63 + i * 0.001 for i in range(len(idx))],
+            }, index=idx)
+
+    monkeypatch.setattr(liq_mod, "DataRouter", FakeRouter)
+    monkeypatch.chdir(tmp_path)
+
+    liq_mod.compute_liquidity_score()
+
+    written = json.loads((tmp_path / "outputs" / "state" / "liquidity_state.json").read_text())
+    # El state debe seguir siendo el anterior (no sobreescrito)
+    assert written["score"] == 0.5, f"state no debe sobreescribirse: {written}"
+    assert written["date"] == str(old_date.date())
