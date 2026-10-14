@@ -74,3 +74,69 @@ def test_fu003b_breadth_n0_but_lis_n5():
     joined = ''.join(lines)
     assert "LIS=+0.42" in joined
     assert "Eff Breadth=N/D" in joined
+
+
+# ============================================================
+# N1 ronda 2 (2026-10-14): render del state_reason_code
+# ============================================================
+def test_render_muestra_motivo_cuando_reason_code_presente():
+    """Si state_reason_code != '' y != 'UNKNOWN', se renderiza."""
+    slpm = {
+        'sector': 'Energy',
+        'state': 'UNRESOLVED',
+        'state_reason': 'Breadth no disponible.',
+        'state_reason_code': 'INSUFFICIENT_DATA_RS',
+        'opportunity_quadrant': 'Transition',
+        'leader_breadth_v2': {
+            'n_used': 3, 'expected_leaders': 5, 'coverage': 0.6,
+            'coverage_warning': False,
+            'rs_breadth': float('nan'),
+            'rs_breadth_status': 'INSUFFICIENT_RS_RATIO',
+            'rs_breadth_missing': 2,
+            'leader_breadth_status': 'INSUFFICIENT_RS_RATIO',
+            'momentum_breadth': 0.8,
+            'flow_breadth': 0.6,
+            'wyckoff_breadth': 1.0,
+            'composite': float('nan'),
+            'effective_composite': float('nan'),
+        },
+        'input_scores': {'effective_breadth': 0.0, 'persistence': 0.5,
+                         'tactical': 0.2, 'structural': 0.1},
+        'flow_divergence_v2': {'composite': None},
+        'leader_integrity': {'lis': 0.0, 'n_leaders': 3},
+    }
+    lines = render_slpm_v12(slpm)
+    joined = chr(10).join(lines)
+    assert 'Motivo: INSUFFICIENT_DATA_RS' in joined
+    assert 'Breadth no disponible' in joined
+    assert 'nan%' not in joined
+
+
+def test_render_no_muestra_motivo_si_unknown():
+    """state_reason_code='UNKNOWN' no se renderiza como motivo."""
+    slpm = {
+        'sector': 'Energy',
+        'state': 'UNRESOLVED',
+        'state_reason': 'test',
+        'state_reason_code': 'UNKNOWN',
+        'opportunity_quadrant': 'Transition',
+        'leader_breadth_v2': {
+            'n_used': 0, 'expected_leaders': 5, 'coverage': 0.0,
+            'coverage_warning': True,
+            'rs_breadth': float('nan'),
+            'rs_breadth_status': 'NO_LEADERS',
+            'leader_breadth_status': 'NO_LEADERS',
+            'momentum_breadth': float('nan'),
+            'flow_breadth': float('nan'),
+            'wyckoff_breadth': float('nan'),
+            'composite': float('nan'),
+            'effective_composite': float('nan'),
+        },
+        'input_scores': {'effective_breadth': 0.0, 'persistence': 0.5,
+                         'tactical': 0.0, 'structural': 0.0},
+        'flow_divergence_v2': {'composite': None},
+        'leader_integrity': {'lis': 0.0, 'n_leaders': 0},
+    }
+    lines = render_slpm_v12(slpm)
+    joined = chr(10).join(lines)
+    assert 'Motivo: UNKNOWN' not in joined

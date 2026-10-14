@@ -31,6 +31,7 @@ def render_slpm_v12(slpm_v12_data):
         sector = slpm_v12_data.get('sector', 'N/A')
         state_v12 = slpm_v12_data.get('state', 'N/A')
         reason = slpm_v12_data.get('state_reason', '')
+        reason_code = slpm_v12_data.get('state_reason_code', '')
         quadrant = slpm_v12_data.get('opportunity_quadrant', 'N/A')
         out.append(f"- **Sector Líder:** {sector}\n")
         out.append("  - *Nota: El SLPM selecciona al líder combinando Structural, Breadth y Persistence. Tactical y LIS son métricas diagnósticas. No es simplemente el sector con mayor Structural Score.*\n")
@@ -38,6 +39,8 @@ def render_slpm_v12(slpm_v12_data):
         if quadrant:
             out.append(f" -> {quadrant}")
         out.append("\n")
+        if reason_code and reason_code not in ('', 'UNKNOWN'):
+            out.append(f"  - *Motivo: {reason_code}*\n")
         if reason:
             out.append(f"  - *{reason}*\n")
         
