@@ -29,57 +29,163 @@ def _safe_mean(values):
 # Breadth: 0-1 = proporcion de lideres que cumplen condiciones.
 # Persistence: 0-1 = proporcion de semanas con senhal positiva.
 
-def compute_leader_breadth_v2(leader_metrics, expected_leaders=SLPM_EXPECTED_LEADERS):
-    if not leader_metrics:
-        return {'rs_breadth': 0.0, 'momentum_breadth': 0.0, 'flow_breadth': 0.0, 'wyckoff_breadth': 0.0, 'composite': 0.0, 'n_used': 0, 'coverage': 0.0, 'effective_composite': 0.0, 'expected_leaders': expected_leaders}
-    n = len(leader_metrics)
-    coverage = min(n / expected_leaders, 1.0) if expected_leaders > 0 else 0
+_VALID_WYCKOFF_PHASES = frozenset({
+    "MARKUP", "ACCUMULATION", "RANGE", "DISTRIBUTION", "MARKDOWN",
+})
 
-    # N1 (2026-10-13, auditor): FAIL-CLOSED. El criterio binario usa
-    # SOLO rs_ratio_20d (retorno relativo 20d). Si falta o es NaN, el
-    # lider NO cuenta como positivo y se marca rs_breadth como N/D.
-    # NO hay fallback al ratio de precios nominales: reactivaria el
-    # bug original (P1.1) de forma silenciosa.
+
+def _safe_float(v):
+    """Conversion segura a float finito. Devuelve None si no aplica.
+
+    N1 ronda 2 (dictamen C1+C8, 2026-10-14): None, NaN, +Inf, -Inf,
+    strings no numericas, listas, dicts, objetos y OverflowError
+    cuentan como dato ausente.
+    """
+    if v is None:
+        return None
+    try:
+        vf = float(v)
+    except (TypeError, ValueError, OverflowError):
+        return None
+    if not np.isfinite(vf):
+        return None
+    return vf
+
+
+def _breadth_unavailable(status, expected_leaders):
+    """Dict de leader_breadth_v2 para casos sin datos calculables.
+
+    status en {"INPUT_UNAVAILABLE", "NO_LEADERS"}.
+    N1 ronda 2 (dictamen C4+C9): ningun campo numerico se fabrica a
+    0.0; todos van a NaN. coverage_warning True si expected_leaders>0.
+    """
+    nan = float("nan")
+    return {
+        "rs_breadth": nan,
+        "rs_breadth_status": status,
+        "rs_breadth_missing": 0,
+        "leader_breadth_status": status,
+        "momentum_breadth": nan,
+        "momentum_breadth_missing": 0,
+        "flow_breadth": nan,
+        "flow_breadth_missing": 0,
+        "wyckoff_breadth": nan,
+        "wyckoff_breadth_missing": 0,
+        "composite": nan,
+        "effective_composite": nan,
+        "n_used": 0,
+        "expected_leaders": expected_leaders,
+        "coverage": 0.0,
+        "coverage_warning": expected_leaders > 0,
+    }
+
+
+def compute_leader_breadth_v2(leader_metrics, expected_leaders=SLPM_EXPECTED_LEADERS):
+    # N1 ronda 2 (2026-10-14, dictamen auditor, C1-C10):
+    #   - Fail-closed por componente: si falta el campo requerido en
+    #     cualquier lider, ese componente queda NaN.
+    #   - composite = NaN si CUALQUIER componente es NaN
+    #     (INSUFFICIENT_RS_RATIO o INSUFFICIENT_COMPONENT_DATA).
+    #   - INPUT_UNAVAILABLE para None, NO_LEADERS para lista vacia.
+    #   - Valores no finitos (+Inf/-Inf/strings/OverflowError)
+    #     tratados como ausentes.
+    #   - No hay fallback a rs nominal (P1.1).
+    if leader_metrics is None:
+        return _breadth_unavailable("INPUT_UNAVAILABLE", expected_leaders)
+    if len(leader_metrics) == 0:
+        return _breadth_unavailable("NO_LEADERS", expected_leaders)
+
+    n = len(leader_metrics)
+    coverage = min(n / expected_leaders, 1.0) if expected_leaders > 0 else 0.0
+
     def _rs_positive(m):
         if not m:
             return None
-        v = m.get('rs_ratio_20d')
-        if v is None or pd.isna(v):
-            return None
-        return float(v) > 0.0
-    _rs_vals = [_rs_positive(m) for m in leader_metrics]
-    _rs_valid = [v for v in _rs_vals if v is not None]
-    _rs_missing = len(_rs_vals) - len(_rs_valid)
-    if _rs_valid:
-        rs_positive = sum(1 for v in _rs_valid if v) / len(_rs_valid)
-    else:
-        rs_positive = float('nan')
-    rs_breadth_status = 'OK' if _rs_missing == 0 else 'INSUFFICIENT_RS_RATIO'
-    # A3.3-06: fallback rs_momentum -> rs_mom_20. El pipeline actual
-    # provee rs_momentum; rs_mom_20 es defensa en profundidad por
-    # compatibilidad con versiones previas del leader_metrics dict.
-    # WONT FIX razonado: no hay evidencia de que rs_mom_20 se use hoy,
-    # pero eliminarlo sin verificar productores externos es riesgo.
-    momentum_positive = sum(1 for m in leader_metrics if m and (m.get('rs_momentum', m.get('rs_mom_20', 0)) or 0) > 0) / n
-    flow_positive = sum(1 for m in leader_metrics if m and pd.notna(m.get('flow_proxy_z', np.nan)) and m.get('flow_proxy_z', np.nan) > 0) / n
-    wyckoff_favorable = sum(1 for m in leader_metrics if m and m.get('wyckoff_phase', '') in ('ACCUMULATION', 'MARKUP')) / n
+        vf = _safe_float(m.get("rs_ratio_20d"))
+        return None if vf is None else vf > 0.0
 
-    composite = SLPM_WEIGHTS["leader_breadth"]["rs"] * rs_positive + SLPM_WEIGHTS["leader_breadth"]["momentum"] * momentum_positive + SLPM_WEIGHTS["leader_breadth"]["flow"] * flow_positive + SLPM_WEIGHTS["leader_breadth"]["wyckoff"] * wyckoff_favorable
-    effective_composite = composite * coverage if coverage < 0.5 else composite
+    def _momentum_positive(m):
+        if not m:
+            return None
+        # A3.3-06: fallback rs_momentum -> rs_mom_20.
+        # Si faltan ambos, cuenta como ausente (no como 0).
+        raw = m.get("rs_momentum")
+        if raw is None:
+            raw = m.get("rs_mom_20")
+        vf = _safe_float(raw)
+        return None if vf is None else vf > 0.0
+
+    def _flow_positive(m):
+        if not m:
+            return None
+        vf = _safe_float(m.get("flow_proxy_z"))
+        return None if vf is None else vf > 0.0
+
+    def _wyckoff_favorable(m):
+        if not m:
+            return None
+        phase = m.get("wyckoff_phase")
+        if phase not in _VALID_WYCKOFF_PHASES:
+            return None
+        return phase in ("ACCUMULATION", "MARKUP")
+
+    def _component(leaders, fn):
+        """(value, missing_count). value = NaN si missing > 0."""
+        vals = [fn(m) for m in leaders]
+        valid = [v for v in vals if v is not None]
+        missing = len(vals) - len(valid)
+        if missing > 0:
+            return float("nan"), missing
+        return sum(1 for v in valid if v) / len(valid), 0
+
+    rs_positive, rs_missing = _component(leader_metrics, _rs_positive)
+    momentum_positive, mom_missing = _component(leader_metrics, _momentum_positive)
+    flow_positive, flow_missing = _component(leader_metrics, _flow_positive)
+    wyckoff_favorable, wyck_missing = _component(leader_metrics, _wyckoff_favorable)
+
+    rs_breadth_status = "OK" if rs_missing == 0 else "INSUFFICIENT_RS_RATIO"
+
+    all_ok = (
+        rs_missing == 0 and mom_missing == 0
+        and flow_missing == 0 and wyck_missing == 0
+    )
+
+    if all_ok:
+        composite = (
+            SLPM_WEIGHTS["leader_breadth"]["rs"] * rs_positive
+            + SLPM_WEIGHTS["leader_breadth"]["momentum"] * momentum_positive
+            + SLPM_WEIGHTS["leader_breadth"]["flow"] * flow_positive
+            + SLPM_WEIGHTS["leader_breadth"]["wyckoff"] * wyckoff_favorable
+        )
+        effective_composite = (
+            composite * coverage if coverage < 0.5 else composite
+        )
+        leader_breadth_status = "OK"
+    else:
+        composite = float("nan")
+        effective_composite = float("nan")
+        if rs_missing > 0:
+            leader_breadth_status = "INSUFFICIENT_RS_RATIO"
+        else:
+            leader_breadth_status = "INSUFFICIENT_COMPONENT_DATA"
 
     return {
-        'rs_breadth': rs_positive,
-        'rs_breadth_status': rs_breadth_status,
-        'rs_breadth_missing': _rs_missing,
-        'momentum_breadth': momentum_positive,
-        'flow_breadth': flow_positive,
-        'wyckoff_breadth': wyckoff_favorable,
-        'composite': composite,
-        'effective_composite': effective_composite,
-        'n_used': n,
-        'expected_leaders': expected_leaders,
-        'coverage': coverage,
-        'coverage_warning': coverage < 0.5
+        "rs_breadth": rs_positive,
+        "rs_breadth_status": rs_breadth_status,
+        "rs_breadth_missing": rs_missing,
+        "leader_breadth_status": leader_breadth_status,
+        "momentum_breadth": momentum_positive,
+        "momentum_breadth_missing": mom_missing,
+        "flow_breadth": flow_positive,
+        "flow_breadth_missing": flow_missing,
+        "wyckoff_breadth": wyckoff_favorable,
+        "wyckoff_breadth_missing": wyck_missing,
+        "composite": composite,
+        "effective_composite": effective_composite,
+        "n_used": n,
+        "expected_leaders": expected_leaders,
+        "coverage": coverage,
+        "coverage_warning": coverage < 0.5,
     }
 
 def compute_leader_integrity(leader_metrics):

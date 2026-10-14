@@ -146,10 +146,15 @@ def _leader_metric(rs=1.1, mom=0.05, flow=1.0, wyckoff="MARKUP",
 
 
 def test_breadth_v2_sin_datos():
+    # N1 ronda 2 (2026-10-14): lista vacia -> NO_LEADERS + NaN.
+    import math
     r = compute_leader_breadth_v2([])
-    assert r["composite"] == 0.0
+    assert math.isnan(r["composite"])
+    assert r["rs_breadth_status"] == "NO_LEADERS"
+    assert r["leader_breadth_status"] == "NO_LEADERS"
     assert r["n_used"] == 0
     assert r["coverage"] == 0.0
+    assert r["coverage_warning"] is True
 
 
 def test_breadth_v2_todos_favorables():
@@ -188,6 +193,110 @@ def test_breadth_v2_fallback_rs_mom_20():
                 "flow_proxy_z": 1.0, "wyckoff_phase": "MARKUP"}]
     r = compute_leader_breadth_v2(leaders, expected_leaders=1)
     assert r["momentum_breadth"] == 1.0
+
+
+# ============================================================
+# N1 ronda 2 (2026-10-14): tests contractuales del nuevo contrato
+# ============================================================
+import math
+
+
+def test_n1_none_input_unavailable():
+    r = compute_leader_breadth_v2(None)
+    assert math.isnan(r["rs_breadth"])
+    assert r["rs_breadth_status"] == "INPUT_UNAVAILABLE"
+    assert r["leader_breadth_status"] == "INPUT_UNAVAILABLE"
+    assert r["n_used"] == 0
+    assert r["coverage_warning"] is True
+
+
+def test_n1_lista_vacia_no_leaders():
+    r = compute_leader_breadth_v2([])
+    assert math.isnan(r["rs_breadth"])
+    assert r["rs_breadth_status"] == "NO_LEADERS"
+    assert r["leader_breadth_status"] == "NO_LEADERS"
+
+
+@pytest.mark.parametrize("bad_value", [
+    float("inf"), float("-inf"), float("nan"),
+    "abc", "1.2.3", [], {}, object(),
+    10**400,
+])
+def test_n1_valores_no_finitos_o_no_numericos_son_ausentes(bad_value):
+    """Cualquier valor RS no convertible o no finito cuenta como
+    ausente (C1+C8, incluye OverflowError)."""
+    leaders = [{"rs_ratio_20d": bad_value, "rs_momentum": 0.05,
+                "flow_proxy_z": 1.0, "wyckoff_phase": "MARKUP"}
+               for _ in range(3)]
+    r = compute_leader_breadth_v2(leaders, expected_leaders=3)
+    assert math.isnan(r["rs_breadth"])
+    assert r["rs_breadth_status"] == "INSUFFICIENT_RS_RATIO"
+    assert r["rs_breadth_missing"] == 3
+
+
+def test_n1_rs_no_finito_no_se_clasifica_como_positivo():
+    """+Inf no es positivo, -Inf no es negativo."""
+    r = compute_leader_breadth_v2(
+        [{"rs_ratio_20d": float("inf"), "rs_momentum": 0.05,
+          "flow_proxy_z": 1.0, "wyckoff_phase": "MARKUP"}],
+        expected_leaders=1)
+    assert math.isnan(r["rs_breadth"])
+    r = compute_leader_breadth_v2(
+        [{"rs_ratio_20d": float("-inf"), "rs_momentum": 0.05,
+          "flow_proxy_z": 1.0, "wyckoff_phase": "MARKUP"}],
+        expected_leaders=1)
+    assert math.isnan(r["rs_breadth"])
+
+
+def test_n1_composite_nan_cuando_rs_no_disponible():
+    """Composite dependiente de rs queda N/D; componentes
+    independientes siguen como diagnostico."""
+    leaders = [
+        _leader_metric(rs_ratio_20d=0.02),
+        {"rs": 1.1, "rs_momentum": 0.05,
+         "flow_proxy_z": 1.0, "wyckoff_phase": "MARKUP"},
+    ]
+    r = compute_leader_breadth_v2(leaders, expected_leaders=2)
+    assert math.isnan(r["composite"])
+    assert math.isnan(r["effective_composite"])
+    assert r["leader_breadth_status"] == "INSUFFICIENT_RS_RATIO"
+    assert r["momentum_breadth"] == 1.0
+    assert r["flow_breadth"] == 1.0
+    assert r["wyckoff_breadth"] == 1.0
+
+
+def test_c6_composite_nan_cuando_falta_otro_componente():
+    """C6: si falta momentum/flow/wyckoff, composite=NaN +
+    INSUFFICIENT_COMPONENT_DATA."""
+    leaders = [
+        _leader_metric(),
+        {"rs_ratio_20d": 0.02, "rs_momentum": 0.05,
+         "wyckoff_phase": "MARKUP"},  # sin flow_proxy_z
+    ]
+    r = compute_leader_breadth_v2(leaders, expected_leaders=2)
+    assert math.isnan(r["composite"])
+    assert r["leader_breadth_status"] == "INSUFFICIENT_COMPONENT_DATA"
+    assert math.isnan(r["flow_breadth"])
+    assert r["rs_breadth"] == 1.0
+    assert r["momentum_breadth"] == 1.0
+    assert r["wyckoff_breadth"] == 1.0
+
+
+def test_c6_falta_ambos_campos_momentum_es_ausente():
+    leaders = [{"rs_ratio_20d": 0.02, "flow_proxy_z": 1.0,
+                "wyckoff_phase": "MARKUP"}]
+    r = compute_leader_breadth_v2(leaders, expected_leaders=1)
+    assert math.isnan(r["momentum_breadth"])
+    assert math.isnan(r["composite"])
+    assert r["leader_breadth_status"] == "INSUFFICIENT_COMPONENT_DATA"
+
+
+def test_c6_wyckoff_phase_invalida_cuenta_como_ausente():
+    leaders = [{"rs_ratio_20d": 0.02, "rs_momentum": 0.05,
+                "flow_proxy_z": 1.0, "wyckoff_phase": "FOO"}]
+    r = compute_leader_breadth_v2(leaders, expected_leaders=1)
+    assert math.isnan(r["wyckoff_breadth"])
+    assert r["leader_breadth_status"] == "INSUFFICIENT_COMPONENT_DATA"
 
 
 # ============================================================
@@ -318,17 +427,19 @@ def test_n1_sin_rs_ratio_20d_no_cae_a_criterio_nominal():
 
 
 def test_n1_con_rs_ratio_20d_parcial():
-    """Si algunos lideres tienen rs_ratio_20d y otros no, se calcula
-    sobre los validos, y el status lo declara."""
+    """N1 ronda 2 (2026-10-14): RS parcial -> fail-closed estricto.
+    No se calcula sobre los validos (dictamen 1.3)."""
+    import math
     leaders = [
-        _leader_metric(rs_ratio_20d=0.02),  # positivo
-        _leader_metric(rs_ratio_20d=0.03),  # positivo
+        _leader_metric(rs_ratio_20d=0.02),
+        _leader_metric(rs_ratio_20d=0.03),
         {"rs": 1.1, "rs_momentum": 0.05,
          "flow_proxy_z": 1.0, "wyckoff_phase": "MARKUP"},  # sin rs_ratio
     ]
     r = compute_leader_breadth_v2(leaders, expected_leaders=3)
-    assert r["rs_breadth"] == 1.0, "calcula sobre los 2 validos"
+    assert math.isnan(r["rs_breadth"]), "parcial no debe calcular"
     assert r["rs_breadth_status"] == "INSUFFICIENT_RS_RATIO"
+    assert r["leader_breadth_status"] == "INSUFFICIENT_RS_RATIO"
     assert r["rs_breadth_missing"] == 1
 
 

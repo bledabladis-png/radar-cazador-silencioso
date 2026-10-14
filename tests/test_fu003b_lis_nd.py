@@ -20,6 +20,8 @@ def _make_slpm(n_leaders=0, n_breadth=0, lis_val=0.0):
             'coverage': 0.0,
             'coverage_warning': False,
             'rs_breadth': 0.0,
+            'rs_breadth_status': 'OK' if n_breadth > 0 else 'NO_LEADERS',
+            'leader_breadth_status': 'OK' if n_breadth > 0 else 'NO_LEADERS',
             'momentum_breadth': 0.0,
             'flow_breadth': 0.0,
             'wyckoff_breadth': 0.0,
