@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """Tests del verificador post-run."""
 import pandas as pd
-import pytest
-
 from src.pipeline.output_registry import REGISTRY, ReceiptCollector, WriteReceipt
 from src.pipeline.output_verifier import verify
 
