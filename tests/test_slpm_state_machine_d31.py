@@ -589,3 +589,83 @@ def test_evaluate_slpm_shortcircuit_componente_faltante(_mock_confirm_transition
     assert r["state"] == "UNRESOLVED"
     assert r["state_reason_code"] == "INSUFFICIENT_COMPONENT_DATA"
     assert r["data_quality"] == "LOW"
+
+
+# ============================================================
+# N1 ronda 2 (2026-10-14): integracion end-to-end del contrato
+# Recorre compute_leader_breadth_v2 -> evaluate_slpm_v12 ->
+# render_slpm_v12 verificando coherencia de los 4 casos y ausencia
+# de conversion silenciosa a cero.
+# ============================================================
+import pytest as _pytest_e2e
+
+
+@_pytest_e2e.fixture
+def _mock_confirm(monkeypatch):
+    def _fake(sector_etf, instant_state):
+        return {
+            "confirmed_state": instant_state,
+            "previous_state": instant_state,
+            "transition": False,
+            "consecutive_count": 1,
+        }
+    import indicators.slpm_v12 as _s
+    monkeypatch.setattr(_s, "confirm_transition", _fake)
+    return _fake
+
+
+@_pytest_e2e.mark.parametrize("leaders,expected_code,expected_breadth_status", [
+    (None, "INPUT_UNAVAILABLE", "INPUT_UNAVAILABLE"),
+    ([], "NO_LEADERS", "NO_LEADERS"),
+    ([{"rs": 1.1, "rs_momentum": 0.05,
+       "flow_proxy_z": 1.0, "wyckoff_phase": "MARKUP"}],
+     "INSUFFICIENT_DATA_RS", "INSUFFICIENT_RS_RATIO"),
+    ([{"rs_ratio_20d": 0.02, "rs_momentum": 0.05,
+       "wyckoff_phase": "MARKUP"}],
+     "INSUFFICIENT_COMPONENT_DATA", "OK"),
+])
+def test_e2e_n1_coherencia_cuatro_casos(
+    leaders, expected_code, expected_breadth_status, _mock_confirm
+):
+    """Los 4 casos del dictamen §1.5 llegan coherentes al render."""
+    from src.report.slpm import render_slpm_v12
+    ranking = [("XLK", "Technology", 0.5, "MARKUP")]
+    r = evaluate_slpm_v12(
+        None, {"ranking": ranking}, leaders, 0.0,
+        tactical_scores={"XLK": 0.5},
+        structural_scores={"XLK": 0.5},
+        sector_persistence={"XLK": 0.6},
+    )
+    assert r["state"] == "UNRESOLVED"
+    assert r["state_reason_code"] == expected_code
+    assert r["data_quality"] == "LOW"
+
+    breadth = r["leader_breadth_v2"]
+    assert breadth["rs_breadth_status"] == expected_breadth_status
+    if expected_breadth_status != "OK":
+        assert math.isnan(breadth["rs_breadth"])
+    assert math.isnan(breadth["composite"])
+    assert math.isnan(breadth["effective_composite"])
+
+    lines = render_slpm_v12(r)
+    joined = chr(10).join(lines)
+    assert "nan%" not in joined
+    assert "N/D" in joined
+
+
+def test_e2e_n1_caso_valido_no_se_convierte_a_cero(_mock_confirm):
+    """Todos los componentes validos: composite calculado, no N/D."""
+    ranking = [("XLK", "Technology", 0.5, "MARKUP")]
+    leaders = [{"rs_ratio_20d": 0.02, "rs_momentum": 0.05,
+                "flow_proxy_z": 1.0, "wyckoff_phase": "MARKUP"}
+               for _ in range(5)]
+    r = evaluate_slpm_v12(
+        None, {"ranking": ranking}, leaders, 0.0,
+        tactical_scores={"XLK": 0.5},
+        structural_scores={"XLK": 0.5},
+        sector_persistence={"XLK": 0.6},
+    )
+    breadth = r["leader_breadth_v2"]
+    assert breadth["leader_breadth_status"] == "OK"
+    assert math.isfinite(breadth["composite"])
+    assert breadth["composite"] > 0
