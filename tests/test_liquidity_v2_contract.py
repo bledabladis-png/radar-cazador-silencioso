@@ -128,11 +128,23 @@ def test_c1_candidate_condiciones():
     a  = pd.Series([10.0, 10.0, 25.0, 5.0, 10.0],
                    index=pd.date_range("2024-01-01", periods=5))
     r = calcular_c1_candidate(c1, a)
-    assert not r.iloc[0]  # C1 < 48.46
-    assert r.iloc[1]      # C1 > 48.46 y A < 20
-    assert not r.iloc[2]  # A = 25 (>= 20)
-    assert r.iloc[3]      # C1 > 48.46 y A < 20
-    assert not r.iloc[4]  # C1 NaN
+    assert r.iloc[0] == False  # C1 < 48.46
+    assert r.iloc[1] == True   # C1 > 48.46 y A < 20
+    assert r.iloc[2] == False  # A = 25 (>= 20)
+    assert r.iloc[3] == True   # C1 > 48.46 y A < 20
+    assert r.iloc[4] is pd.NA  # C1 NaN -> NA, no False
+
+def test_c1_candidate_distingue_na_de_false():
+    """NA != False. Datos ausentes no se convierten en negacion."""
+    c1 = pd.Series([30.0, np.nan, 60.0, 60.0],
+                   index=pd.date_range("2024-01-01", periods=4))
+    a  = pd.Series([10.0, 10.0, np.nan, 5.0],
+                   index=pd.date_range("2024-01-01", periods=4))
+    r = calcular_c1_candidate(c1, a)
+    assert r.iloc[0] == False     # C1 < 48.46
+    assert r.iloc[1] is pd.NA     # C1 NaN
+    assert r.iloc[2] is pd.NA     # A NaN
+    assert r.iloc[3] == True      # ambos validos, condicion OK
 
 
 # ============================================================

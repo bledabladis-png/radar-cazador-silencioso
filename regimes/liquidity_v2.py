@@ -177,8 +177,12 @@ def calcular_regimen_persistente(diff_bp: pd.Series,
 # ===================================================================
 
 def calcular_alerta_diferencial_extremo(diff_bp: pd.Series) -> pd.Series:
-    """Alerta inmediata. Independiente de la persistencia."""
-    return (diff_bp >= UMBRAL_ALERTA).fillna(False)
+    """Alerta inmediata. Independiente de la persistencia.
+
+    Devuelve serie boolean nullable: True / False / pd.NA.
+    pd.NA = dato ausente (no se puede determinar si hubo alerta).
+    """
+    return (diff_bp >= UMBRAL_ALERTA).astype("boolean")
 
 
 # ===================================================================
@@ -187,11 +191,18 @@ def calcular_alerta_diferencial_extremo(diff_bp: pd.Series) -> pd.Series:
 
 def calcular_c1_candidate(c1_bp: pd.Series, diff_bp: pd.Series) -> pd.Series:
     """Campo diagnostico: divergencia de cola C1 > umbral y A < extrema.
-    NO es una alerta operativa. Solo un campo de analisis."""
-    return (
-        (c1_bp > C1_UMBRAL_DIAGNOSTICO)
-        & (diff_bp < UMBRAL_EXTREMA)
-    ).fillna(False)
+
+    Devuelve serie boolean nullable:
+      True  = C1 elevado y A no extrema.
+      False = datos validos, condicion no detectada.
+      NA    = datos ausentes (no se puede evaluar).
+    """
+    cond_ok = (c1_bp > C1_UMBRAL_DIAGNOSTICO) & (diff_bp < UMBRAL_EXTREMA)
+    cond_ok = cond_ok.astype("boolean")
+    # Si alguno de los inputs es NaN, el resultado debe ser NA (no False)
+    mask_na = c1_bp.isna() | diff_bp.isna()
+    cond_ok[mask_na] = pd.NA
+    return cond_ok
 
 
 # ===================================================================
@@ -307,7 +318,8 @@ def evaluar_serie(sofr: pd.Series, effr: pd.Series,
         c1_aligned = c1_bp.reindex(idx)
         c1_cand = calcular_c1_candidate(c1_aligned, diff_bp)
     else:
-        c1_cand = pd.Series(False, index=idx)
+        # Sin serie C1: no se puede evaluar -> NA, no False
+        c1_cand = pd.Series(pd.NA, index=idx, dtype="boolean")
 
     cal_ctx = pd.Series(
         [calendar_context(d) for d in idx], index=idx, name="calendar_context"
