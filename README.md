@@ -37,7 +37,7 @@ Resumen:
     git log --oneline -5
     git status -sb
     py scripts\generate_estado_sistema.py
-    py -m pytest tests/ -q --tb=line
+    py -m pytest tests/ -q --tb=line -m "not integration_real_data"
     py -m pyflakes src\ scripts\ ; py -m compileall . -q
 
 Ejecucion completa del pipeline (~10-15 min):

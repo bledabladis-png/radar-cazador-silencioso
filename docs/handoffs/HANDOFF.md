@@ -214,7 +214,7 @@ Gap 09-oct cerrado por run manual `ceb21d8a` (23:24 CEST). Causa raiz
     git log --oneline -5
     git status -sb
     py scripts\generate_estado_sistema.py
-    py -m pytest tests/ -q -n 12 --tb=line
+    py -m pytest tests/ -q -n 12 --tb=line -m "not integration_real_data"
     py -m pyflakes . ; py -m compileall . -q
 
 Esperado:

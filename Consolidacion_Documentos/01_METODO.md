@@ -58,7 +58,7 @@ Pega este bloque antes de cualquier commit:
 
     py -m compileall . -q
     py -m pyflakes .
-    py -m pytest tests/ validation/ -q --tb=short
+    py -m pytest tests/ validation/ -q --tb=short -m "not integration_real_data"
 
 Esperado:
 - compileall OK

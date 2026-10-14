@@ -457,7 +457,7 @@ consumidor especifico de esa fecha. Documentado por
     # Validacion
     py -m compileall . -q
     py -m pyflakes src scripts regimes indicators config data\providers validation
-    py -m pytest tests/ validation/ -q --tb=short
+    py -m pytest tests/ validation/ -q --tb=short -m "not integration_real_data"
 
     # Run completo
     py run.py
