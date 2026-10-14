@@ -8,19 +8,102 @@ No crear variantes con fecha.
 
 ---
 
-## 1. ESTADO AL CIERRE (2026-10-13 ~15:00 CEST)
+## 1. ESTADO AL CIERRE (2026-10-14 ~12:30 CEST)
 
 Rama activa:    main
-HEAD:           8b441a7a
+HEAD:           5e58197a
 Sincronizacion: main == origin/main
-Tests:          3253 passed + 5 skipped + 0 failed
+Tests:          3273 passed + 5 skipped + 0 failed
 Validation Gate: 10/10
 Working tree:   limpio
 Corpus:         v3 (Consolidacion_Documentos/00-08 + ESTADO_SISTEMA)
 
 ---
 
-## 2. QUE SE HIZO 11-12 OCT (sesion larga, 17 commits)
+## 2. SESIONES 13-14 OCT (auditoria externa + revision del reporte)
+
+### 2.0. Auditoria externa (13-oct)
+
+Informe tecnico del auditor sobre el reporte del 13-oct: 16 hallazgos
+originales (P1.x, P2.x, P3.x) + dictamen de seguimiento con 6 nuevos
+(N1-N6). Todos atendidos. Documento:
+`docs/auditoria/radar/audits/ANEXO_VERIFICACION_2026-10-13.md`.
+
+- **P1.1 (fix real):** Leader Breadth usaba `close/precio_etf` (ratio
+  nominal, depende de splits). Cambiado a `rs_ratio_20d` (retorno
+  relativo 20d). Commits 0413518e + 00b01f46 (N1 fail-closed).
+- **P1.3:** pesos WLS centralizados en `config/weights.WLS_WEIGHTS`.
+- **P1.5 / N4:** clasificacion de evidencia en 3 niveles (OBSERVABLE /
+  DERIVADA-DIRECTA / DERIVADA-COMPUESTA). Nota explicita de que la
+  agregacion es heuristica descriptiva, no estadistica.
+- **N2:** LIS marcado provisional (`lis_validated=False`), sin validar
+  como senal decisoria. Requiere recalibracion estadistica.
+- **N3:** validacion del contrato WLS extraida a
+  `_validate_wls_inputs` (funcion pura). Persistence fuera de [0,1]
+  clipeada + status. 8 tests en `test_wls_validation_n3.py`.
+- **N5:** decision explicita sobre asincronia precio-flujo: mantener
+  comparacion asincrona pero etiquetar con fecha del flujo en
+  encabezado + nota reforzada.
+- **N6:** formulas de cobertura y ventanas PCR publicadas. Correccion
+  de la nota P2.4 (decia 252 sesiones; real 20).
+- **P2.1:** test de contrato `_wyckoff_sign` (6 casos).
+
+### 2.0b. N7 - Bug propio detectado durante la auditoria
+
+`evidence_matrix.csv` y `sector_regime_matrix.csv` tenian 1 fila por
+fecha en lugar de 11. Causa: `merge_keys=('date',)` en el registro
+declarativo, cuando deberia ser `('date','sector')`. Bug pre-existente
+a la migracion del contrato (los writers originales ya sobreescribian
+con 1 fila). Fix: commit f5db9f5f + test permanente
+`test_merge_keys_incluye_sector_si_csv_lo_tiene`.
+
+### 2.0c. Revision del run del 13-oct (14-oct)
+
+Cron de la madrugada: `38498223287` (23m30s, pipeline completo).
+`Verificacion de outputs: OK (19 checks)`. Target session 2026-10-13.
+N7 confirmado: `evidence_matrix` y `sector_regime_matrix` con 11 filas
+en 2026-10-13 (fechas antiguas siguen con 1 fila; irrecuperables).
+
+### 2.0d. Hallazgo N8 - LIQUIDEZ REAL (pendiente, documentado)
+
+**NO fixado, en espera de sesion de diseno.**
+
+El run del 13-oct declaro `Liquidez Real: CRISIS` (antes `NEUTRAL`).
+Cambio a raiz del fix B1 (`fred.py` no extiende indice hasta hoy).
+Diagnostico:
+- `fed_funds` es serie MENSUAL (ultimo dato 2026-09-01).
+- Las otras 3 (`fed_balance`, `reverse_repo`, `sofr`) son diarias/semanales.
+- `robust_zscore(window=60)` aplicado por igual a una serie mensual no
+  es estadisticamente valido (~2 observaciones por ventana).
+
+Auditor externo (14-oct) rectifico dos afirmaciones mias:
+- FEDFUNDS y SOFR NO son la misma variable con distinta frecuencia.
+  FEDFUNDS: tasa efectiva overnight no garantizada entre depositarias.
+  SOFR: financiacion overnight garantizada con Treasuries.
+  Segmentos distintos del mercado monetario. No justifican exclusion
+  por duplicidad.
+- El score mezcla magnitudes de balance (fed_balance, reverse_repo)
+  con precios de financiacion (sofr, fed_funds). Decision de diseno,
+  no detalle que se cambia de paso.
+
+**Propuesta (NO ejecutada):** documento de diseno
+`docs/auditoria/radar/design/liquidity_score_redesign.md` con 4 opciones
+(B1: DFF diaria, B2: eliminar FEDFUNDS, B3: separar en dos scores,
+B4: mantener + documentar). Requiere backtest historico antes de tocar
+pesos o composicion. Sesion propia. Estimacion: 3-5 h.
+
+**Lo que NO se ha tocado:** composicion del score, pesos, 4-tuple,
+umbrales, descarga de FEDFUNDS.
+
+### 2.0e. Deuda doc-codigo detectada
+
+`Consolidacion_Documentos/02_ARQUITECTURA.md:181` dice "Liquidity Score
+(5 componentes): SOFR, WALCL, RRP, Discount...". El codigo usa 4
+(`fed_balance`, `reverse_repo`, `sofr`, `fed_funds`). Gap preexistente.
+
+---
+
+## 3. QUE SE HIZO 11-12 OCT (sesion larga, 17 commits)
 
 ### 2.1. Deuda limpia (11-oct)
 
