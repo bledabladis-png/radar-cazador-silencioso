@@ -34,7 +34,9 @@ Referencias:
 
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Optional
 
 import pandas as pd
@@ -246,6 +248,137 @@ def period_context(d: pd.Timestamp) -> str:
         return "turn_of_month_start"
 
     return "mid_period"
+
+
+# ===================================================================
+# Adaptador al contrato v1 (compatibilidad con consumidores existentes)
+# ===================================================================
+
+# Mapeo de severidad v2 a regimen v1
+_MAPEO_REGIMEN = {
+    "TENSION_BAJA": "ABUNDANTE",
+    "NORMAL": "NEUTRAL",
+    "TENSION_ELEVADA": "ESTRECHA",
+    "TENSION_EXTREMA": "CRISIS",
+}
+
+# Escala del score continuo: diff_bp / ESCALA, clip [-1, +1], signo invertido.
+# v1: score alto = ABUNDANTE. v2: diff_bp alto = tension.
+_ESCALA_SCORE = 30.0
+
+STATE_PATH = Path("outputs/state/liquidity_state.json")
+
+
+def _score_continuo(diff_bp: float) -> float:
+    """Mapeo diff_bp -> score compatible con consumidores v1.
+    v1 usa rango aproximado [-1, +1], score alto = ABUNDANTE."""
+    import numpy as np
+    if pd.isna(diff_bp):
+        return float("nan")
+    return float(-np.clip(diff_bp / _ESCALA_SCORE, -1.0, 1.0))
+
+
+def _confidence(stale_flags: list, c1_available: bool) -> float:
+    """Confianza informativa segun calidad de datos."""
+    if any(s for s in stale_flags):
+        return 0.4
+    if not c1_available:
+        return 0.7
+    return 0.9
+
+
+def compute_liquidity_score_v2(
+    sofr: pd.Series,
+    effr: pd.Series,
+    c1_bp: Optional[pd.Series] = None,
+    persist_state: bool = True,
+) -> tuple:
+    """Adaptador de v2 al contrato de v1.
+
+    Firma:
+        compute_liquidity_score() -> (score_series, regime, confidence, previous)
+
+    Args:
+        sofr: serie SOFR (%).
+        effr: serie EFFR (%).
+        c1_bp: serie p99 SOFR - EFFR en pb (opcional).
+        persist_state: si True, escribe outputs/state/liquidity_state.json.
+
+    Returns:
+        (pd.Series con el score del ultimo dia, regime str,
+         confidence float, previous_score float|None)
+        o (None, None, None, None) si no hay datos.
+    """
+    if sofr is None or effr is None or len(sofr) == 0 or len(effr) == 0:
+        return None, None, None, None
+
+    try:
+        df = evaluar_serie(sofr, effr, c1_bp)
+    except Exception as e:
+        print(f"  [WARN] compute_liquidity_score_v2: {e}")
+        return None, None, None, None
+
+    df_valid = df.dropna(subset=["diff_bp"])
+    if len(df_valid) == 0:
+        return None, None, None, None
+
+    last = df_valid.iloc[-1]
+    last_idx = df_valid.index[-1]
+    diff_bp = float(last["diff_bp"])
+    sev = str(last["severidad_cruda"])
+
+    score = _score_continuo(diff_bp)
+    regime = _MAPEO_REGIMEN.get(sev, "NEUTRAL")
+
+    # Confidence informativa: sin flags de stale por ahora (los gestiona el caller si quiere)
+    c1_avail = pd.notna(last["c1_tail_divergence_candidate"])
+    conf = _confidence([], c1_avail)
+
+    # Leer estado anterior
+    previous_score = None
+    previous_date = None
+    if STATE_PATH.exists():
+        try:
+            prev = json.loads(STATE_PATH.read_text(encoding="utf-8"))
+            previous_score = prev.get("score", None)
+            previous_date = prev.get("date", None)
+        except (json.JSONDecodeError, OSError, ValueError):
+            pass
+
+    # Persistencia: guard de monotonicidad + esquema extendido con campos v2.
+    if persist_state:
+        as_of_str = str(last_idx.date())
+        if previous_date is not None:
+            try:
+                if pd.Timestamp(last_idx) < pd.Timestamp(previous_date):
+                    print(f"  [WARN] liquidity_state: fecha calculada {last_idx.date()} < persistida {previous_date}. NO se sobreescribe.")
+                    score_series = pd.Series(score, index=[last_idx])
+                    return score_series, regime, conf, previous_score
+            except (ValueError, TypeError):
+                pass
+
+        state = {
+            "score": float(score),
+            "date": as_of_str,
+            "regime": regime,
+            "v2": {
+                "diff_bp": diff_bp,
+                "severidad_cruda": sev,
+                "regimen_persistente": None if pd.isna(last["regimen_persistente"]) else bool(last["regimen_persistente"]),
+                "alerta_diferencial_extremo": None if pd.isna(last["alerta_diferencial_extremo"]) else bool(last["alerta_diferencial_extremo"]),
+                "c1_tail_divergence_candidate": None if pd.isna(last["c1_tail_divergence_candidate"]) else bool(last["c1_tail_divergence_candidate"]),
+                "calendar_context": str(last["calendar_context"]),
+                "period_context": str(last["period_context"]),
+            },
+        }
+        try:
+            STATE_PATH.parent.mkdir(parents=True, exist_ok=True)
+            STATE_PATH.write_text(json.dumps(state), encoding="utf-8")
+        except (OSError, TypeError, ValueError) as e:
+            print(f"  [WARN] liquidity_state no actualizado: {e}")
+
+    score_series = pd.Series(score, index=[last_idx])
+    return score_series, regime, conf, previous_score
 
 
 # ===================================================================

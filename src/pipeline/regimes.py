@@ -7,10 +7,78 @@ Extraido de run.py (refactor C2, fase C2-4).
 import pandas as pd
 
 from regimes.financial_conditions import compute_financial_conditions
-from regimes.liquidity import compute_liquidity_score as compute_real_liquidity
+# v1 mantenido para rollback (no se invoca). Para revertir: cambiar
+# compute_real_liquidity a compute_liquidity_score (v1).
+# v2 activo (dictamen N8, sustituye al score v1 que daba senales erroneas).
+from regimes.liquidity_v2 import compute_liquidity_score_v2
 from regimes.volatility_regime import compute_volatility_regime
 from regimes.macro_regime import compute_macro_regime
 from src.utils import get_col
+
+
+def compute_real_liquidity():
+    """Descarga FRED + NY Fed y evalua v2. Contrato: 4-tuple v1."""
+    _sofr, _effr, _c1 = _fetch_liquidity_v2_data()
+    return compute_liquidity_score_v2(_sofr, _effr, _c1)
+
+
+def _fetch_liquidity_v2_data():
+    """Descarga SOFR, EFFR y p99 NY Fed por rutas aisladas.
+
+    No usa FredProvider ni modifica FRED_SERIES global.
+    Devuelve (sofr, effr, c1_bp) o (None, None, None) si falla.
+    """
+    try:
+        import pandas_datareader.data as web
+    except ImportError:
+        return None, None, None
+
+    start = "2018-04-02"
+
+    try:
+        sofr_df = web.DataReader("SOFR", "fred", start=start)
+        sofr = sofr_df.iloc[:, 0].sort_index().dropna()
+    except Exception as e:
+        print(f"  [WARN] SOFR: {e}")
+        return None, None, None
+
+    try:
+        effr_df = web.DataReader("EFFR", "fred", start=start)
+        effr = effr_df.iloc[:, 0].sort_index().dropna()
+    except Exception as e:
+        print(f"  [WARN] EFFR: {e}")
+        return None, None, None
+
+    # p99 NY Fed (opcional)
+    c1_bp = None
+    try:
+        import requests
+        url = "https://markets.newyorkfed.org/api/rates/secured/sofr/search.json"
+        params = {"startDate": start, "endDate": str(pd.Timestamp.now().date()), "type": "rate,volume"}
+        r = requests.get(url, params=params, timeout=20)
+        if r.status_code == 200:
+            refs = r.json().get("refRates", [])
+            def _num(x):
+                if x is None or x == "NA" or x == "":
+                    return float("nan")
+                try:
+                    return float(x)
+                except (ValueError, TypeError):
+                    return float("nan")
+            p99_rows = []
+            for ref in refs:
+                p99_rows.append({
+                    "date": pd.Timestamp(ref.get("effectiveDate")),
+                    "p99": _num(ref.get("percentPercentile99")),
+                })
+            if p99_rows:
+                p99_df = pd.DataFrame(p99_rows).set_index("date").sort_index()
+                idx = p99_df.index.intersection(effr.index)
+                c1_bp = (p99_df.loc[idx, "p99"] - effr.loc[idx]) * 100.0
+    except Exception as e:
+        print(f"  [WARN] NY Fed p99: {e}")
+
+    return sofr, effr, c1_bp
 
 
 def compute_all_regimes(df_market, df_macro_manual, temporal_meta=None, reference_date=None):
@@ -27,9 +95,12 @@ def compute_all_regimes(df_market, df_macro_manual, temporal_meta=None, referenc
     financial_score, financial_regime, liq_conf = compute_financial_conditions(df_market)
     print(f"  Cond. Financieras: {financial_regime} (conf: {liq_conf:.0%})")
 
-    print("Calculando liquidez real (FRED)...")
-    # A3.1-03: compute_liquidity_score ahora devuelve siempre 4-tuple
-    # (score | None, regime | None, confidence | None, previous_score | None).
+    print("Calculando liquidez real (FRED, v2)...")
+    # N8 (2026-10-14): sustituye a liquidity.py::compute_liquidity_score (v1).
+    # v1 daba senales erroneas por: MAD nula sobre series planas, doble ffill
+    # sobre FRED, ausencia de guard de frescura. v2 implementa la especificacion
+    # B3 congelada (dictamen N8 Fase J).
+    # Rollback: cambiar a _compute_real_liquidity_v1().
     real_liq_score, real_liq_regime, real_liq_conf, real_liq_prev = compute_real_liquidity()
     if real_liq_score is None:
         real_liq_regime, real_liq_conf = 'N/A', 0.0
