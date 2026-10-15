@@ -74,6 +74,11 @@ def render_regimenes(macro_score, macro_regime, macro_conf,
         vol_conf_str = f"Signal Consistency: {vol_conf:.0%}"
     vol_z_display = "N/D" if pd.isna(vol_z) else ("0.00" if abs(vol_z) < 0.005 else f"{vol_z:.2f}")
     out.append(f"- **Volatilidad:** {vol_regime} (Z-Score: {vol_z_display}, {vol_conf_str})\n")
+    # H4 (2026-10-15, auditoria externa): aclarar que este regimen mide
+    # la VELOCIDAD del VIX (z-score del retorno), no su nivel. La tabla
+    # 'Estructura de volatilidad' mide el nivel (percentiles del VIX).
+    # No son contradictorios.
+    out.append("  *Este regimen mide la VELOCIDAD de cambio del VIX (z-score del retorno). El NIVEL del VIX (percentil) se reporta en la tabla 'Estructura de volatilidad'. Son dimensiones distintas y pueden no coincidir.*\n")
 
     out.append(f"- **Sectores:** {sector_regime}\n")
     out.append("*Nota: Signal Consistency mide la consistencia entre señales, no una probabilidad estadistica calibrada. Data Conf mide la frescura y cobertura de los datos.*\n\n")
