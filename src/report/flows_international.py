@@ -257,6 +257,19 @@ def render_rendimiento_qqq(qqq_performance_data):
         except (AttributeError, TypeError, ValueError, KeyError):
             pass
         out.append("\n*Fuente: Yahoo Finance. Rendimientos calculados desde precios ajustados.*\n\n")
+        # H18 (2026-10-15, auditoria externa): "Desde inicio" compara
+        # periodos distintos porque QQQ y SPY tienen fechas de lanzamiento
+        # diferentes. QQQ: 1999-03-10. SPY: 1993-01-22 (~6 anos mas antiguo).
+        # La tabla muestra rendimiento ACUMULADO desde el inicio de cada
+        # serie, no anualizado. Los valores no son directamente comparables
+        # entre si en esa columna.
+        out.append("*H18 (2026-10-15, auditor): la columna 'Desde inicio' "
+                   "es rendimiento ACUMULADO desde el inicio de la serie "
+                   "de cada fondo. QQQ cotiza desde 1999-03-10; SPY desde "
+                   "1993-01-22 (~6 anos mas). Los periodos NO son "
+                   "homogeneos: la comparacion directa entre QQQ y SPY en "
+                   "esa columna no es valida. Para comparar horizontes "
+                   "largos usar 10Y (o anualizar).*\n\n")
     # FLUJO DE PARTICIPACIONES QQQ (NPORT-P)
     return out
 
