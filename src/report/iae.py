@@ -90,6 +90,29 @@ def render_iae_section(iae_section):
     out.append(f"| DFND  | {_fmt_int(iae_section.get('nipc_dfnd'))} |\n")
     out.append(f"| OTR   | {_fmt_int(iae_section.get('nipc_otr'))} |\n")
     out.append("\n")
+    # H14 (2026-10-15, auditoria externa): documentar unidad, formula,
+    # tratamiento NEW/EXIT, deduplicacion de gestores y significado
+    # exacto de COMPLETE.
+    out.append("*H14 (2026-10-15, auditor):*\n")
+    out.append("*Unidad: ACCIONES (shares), no dolares. NIPC = suma neta "
+               "de variacion de numero de acciones declaradas, no variacion "
+               "de valor de mercado.*\n")
+    out.append("*Formula: NIPC = SUM_i (Shares_i,t - Shares_i,t-1), sobre "
+               "reported_position_unit = (periodo, CIK gestor, security "
+               "canonica, tipo de discretion).*\n")
+    out.append("*Filtro base: solo SSHPRNAMTTYPE='SH' sin PUTCALL "
+               "(excluye opciones).*\n")
+    out.append("*Discretion: se suman SOLE + DFND + OTR; el breakdown se "
+               "preserva sin mezclar.*\n")
+    out.append("*NEW asume previous=0 (posicion nueva declarada). EXIT "
+               "asume current=0 (posicion desaparecida). UNRESOLVED_IDENTITY "
+               "NO contribuye al total (no se fabrica delta).*\n")
+    out.append("*Deduplicacion: SSHPRNAMT entra UNA SOLA VEZ por source "
+               "line, no se multiplica por edges OTHERMANAGER.*\n")
+    out.append("*Naturaleza: GROSS OBSERVED DELTA. NO distingue "
+               "compra/venta de split/spin-off/merger (requiere fuente "
+               "externa de corporate actions, no disponible en 13F). "
+               "Tampoco es flujo economico.*\n\n")
 
     # Cobertura
     out.append("### Cobertura del catalogo radar\n")
@@ -105,6 +128,13 @@ def render_iae_section(iae_section):
                f"{iae_section.get('coverage_status') or 'N/D'}\n")
     out.append(f"- Calidad de cobertura: "
                f"{iae_section.get('coverage_quality') or 'N/D'}\n")
+    # H14 (2026-10-15): aclarar el significado exacto de los valores.
+    out.append("  - *COMPLETE: la cobertura observable alcanza el umbral "
+               "interno COVERAGE_COMPLETE_THRESHOLD; no implica cobertura "
+               "del 100% del catalogo original.*\n")
+    out.append("  - *PARTIAL: cobertura intermedia entre los dos umbrales.*\n")
+    out.append("  - *UNRESOLVED: por debajo del umbral minimo o sin "
+               "denominador fiable.*\n")
     out.append("\n")
     out.append("*Nota: la cobertura TARGET es interna al universo construido "
                "a partir de observaciones VERIFIED; no constituye una "
