@@ -1408,3 +1408,40 @@ Commits: f0311cdb, 8596690c, c43a6b00, 2593ac91, ceecad70,
 b1237083, ae752882, ab838dbf.
 
 **Fin del historico.**
+
+---
+
+## Resumen bitacora podada 15-oct-2026 (sesiones 02-08 oct)
+
+Indice de las entradas de `05_BITACORA.md` retiradas en la poda
+del 15-oct-2026 (regla §5: mantener las ultimas 10 sesiones +
+las del dia). Las decisiones clave de cada sesion ya estan en
+los bloques tematicos siguientes de este fichero:
+
+- **02-oct (madrugada):** Catalog PIT 242->255 + schema v5.
+  Ver L1190 (resuelto en sesion Catalog PIT del 10-02).
+- **02-oct (tarde/noche):** Wyckoff 5b.3 -> 5b.4 -> 5b.4-bis,
+  contrato v1.9, QA. Ver L841 (walk-forward SOW), L868
+  (grid 240), expedientes 21-33 en `docs/auditoria/wyckoff/`.
+- **03-oct (4 sesiones):** Cierre Wyckoff umbral 550, S-01,
+  Frente B macro_regime, D-06 validador 5b.X. Ver L783
+  (Frente B), L816 (auditoria v1.8 linea a linea), 00_ARRANQUE
+  seccion 4.2, `docs/auditoria/wyckoff/40_*`.
+- **04-oct:** Walk-forward SOW plan v3 + expediente 41.
+  Ver L841, L868.
+- **05-oct:** E2E main post-reorder D3 + fix frescura Evidence
+  Matrix. Ver L903.
+- **06-oct:** Limpieza estructural (~810 MB) + fix rs_mom NaN
+  (commit 34c8029). Ver L939, L963, L985.
+- **07-oct:** Auditoria reporte CI, M-03, A-03, A-01/F6-1b.
+  Ver L1040 (F6-1b).
+- **08-oct:** Auditoria reporte CI + migracion Wyckoff v1.8 core.
+  Ver L1209, L1254, L1291, L1337, L1349, L1362.
+
+Verificacion previa a la poda (15-oct): cada token unico de
+las 11 entradas se cruzo con este fichero. Los tokens
+`B-06`, `K-HUERFANO`, `H20` y `d608711` no aparecen literalmente
+aqui, pero sus decisiones estan cubiertas por los bloques
+anteriores (`B-06` -> `tests/test_b06_e2e_aggregation.py`;
+`K-HUERFANO` -> tag interno en `src/data_loader.py`;
+`H20` -> "H20-complete", 00_ARRANQUE §4.2; `d608711` -> SHA).
