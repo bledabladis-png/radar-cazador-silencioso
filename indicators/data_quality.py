@@ -69,6 +69,218 @@ def _ref_to_date(ref):
     return pd.Timestamp(ref).date()
 
 
+# H3 (2026-10-15): la lista de fuentes se eleva a constante de
+# modulo para permitir tests contractuales sin invocar compute.
+SOURCES = [
+    {
+        'source': 'Yahoo Finance',
+        'file': 'data/market_data.parquet',
+        'date_cols': None,
+        'frequency': 'daily',
+        'coverage_logic': None,
+        'notes': 'Precios y métricas sectoriales'
+    },
+    {
+        'source': 'SSGA ETF Flow',
+        'file': 'outputs/history/etf_primary_flow.csv',
+        'date_cols': ['Date'],
+        'frequency': 'daily',
+        'coverage_logic': 'flow_tickers',
+        'notes': 'Flujo primario'
+    },
+    {
+        'source': 'CBOE PCR',
+        'file': 'outputs/history/pcr_history.csv',
+        'date_cols': ['date'],
+        'frequency': 'daily',
+        'coverage_logic': 'rows',
+        'notes': 'Put/Call ratio'
+    },
+    {
+        'source': 'FINRA Dark Pool',
+        'file': 'outputs/history/darkpool_history.csv',
+        'date_cols': ['week'],
+        'frequency': 'finra',
+        'coverage_logic': None,
+        'walk_back': False,  # Fix G (2026-09-30): 'week' es fecha-semana, no fecha-dia. _last_market_session no aplica.
+        'notes': 'Retraso regulatorio 2-4 semanas'
+    },
+    {
+        'source': 'CFTC Position Flow',
+        'file': 'outputs/history/cftc_position_flow.csv',
+        'date_cols': ['date'],
+        'frequency': 'cftc',
+        'coverage_logic': None,
+        'notes': 'Frescura 30 días'
+    },
+    {
+        'source': 'SEC N-PORT (posiciones)',
+        'file': 'outputs/history/sec_nport_position_change_quarterly.csv',
+        'date_cols': ['REPORT_DATE'],
+        'frequency': 'sec',
+        'coverage_logic': None,
+        'notes': 'Posiciones N-PORT trimestrales (latencia ~60d)'
+    },
+    # H3 (2026-10-15, auditoria externa): el pipeline consume DOS
+    # productos SEC distintos. Antes solo se declaraba el primero y
+    # el reporte daba impresion de que SEC entera estaba stale. El
+    # segundo (flujos N-PORT-P QQQ, Item B.6) tiene su propia
+    # cadencia y va mas adelantado (Q2 mientras posiciones esta en
+    # Q1).
+    {
+        'source': 'SEC N-PORT-P QQQ (flujos)',
+        'file': 'outputs/history/qqq_nport_flow.csv',
+        'date_cols': ['report_date'],
+        'frequency': 'sec',
+        'coverage_logic': None,
+        'notes': 'Flujos trimestrales N-PORT-P QQQ (Item B.6)'
+    },
+    {
+        'source': 'Macro FRED',
+        'file': 'outputs/history/macro_regime.csv',
+        'date_cols': ['date'],
+        'frequency': 'fred',
+        'coverage_logic': None,
+        'notes': 'Datos macro manuales'
+    },
+    {
+        'source': 'Sector Concentration',
+        'file': 'outputs/history/sector_concentration.csv',
+        'date_cols': ['date'],
+        'frequency': 'daily',
+        'coverage_logic': 'sectorial',
+        'notes': 'Concentración y dispersión'
+    },
+    {
+        'source': 'Sector Breadth Momentum',
+        'file': 'outputs/history/sector_breadth_momentum.csv',
+        'date_cols': ['date'],
+        'frequency': 'daily',
+        'coverage_logic': 'sectorial',
+        'notes': 'Momentum amplitud'
+    },
+    {
+        'source': 'Volatility Structure',
+        'file': 'outputs/history/volatility_structure.csv',
+        'date_cols': ['date'],
+        'frequency': 'daily',
+        'coverage_logic': None,
+        'notes': 'Estructura volatilidad'
+    },
+    {
+        'source': 'Cross Asset Context',
+        'file': 'outputs/history/cross_asset_context.csv',
+        'date_cols': ['date'],
+        'frequency': 'daily',
+        'coverage_logic': 'sectorial_family',
+        'notes': 'Contexto cross-asset'
+    },
+    {
+        'source': 'Evidence Matrix',
+        'file': 'outputs/history/evidence_matrix.csv',
+        'date_cols': ['date'],
+        'frequency': 'daily',
+        'coverage_logic': 'sectorial_evidence',
+        'notes': 'Matriz evidencia'
+    },
+    # 2026-10-10: fuentes anadidas. Faltaban 12 CSVs que alimentan
+    # secciones del reporte sin declaracion de frescura. Todas
+    # bursatiles (segundo candado temporal del pipeline).
+    {
+        'source': 'Sector Breadth',
+        'file': 'outputs/history/sector_breadth.csv',
+        'date_cols': ['date'],
+        'frequency': 'daily',
+        'coverage_logic': 'sectorial',
+        'notes': 'Amplitud y salud sectorial'
+    },
+    {
+        'source': 'Sector Persistence',
+        'file': 'outputs/history/sector_persistence.csv',
+        'date_cols': ['date'],
+        'frequency': 'daily',
+        'coverage_logic': 'sectorial',
+        'notes': 'Persistencia sectorial'
+    },
+    # 2026-10-10: SLPM retirado de la lista. slpm_history.csv
+    # esta congelado desde 2026-07-17 (mtime agosto). Grep no
+    # encuentra writer activo. Declarar su frescura sin writer
+    # solo anade ruido ARCHIVAL permanente.
+    {
+        'source': 'Sector Regime Matrix',
+        'file': 'outputs/history/sector_regime_matrix.csv',
+        'date_cols': ['date'],
+        'frequency': 'daily',
+        'coverage_logic': 'sectorial',
+        'notes': 'Matriz de regimen sectorial'
+    },
+    {
+        'source': 'Leader Representativeness',
+        'file': 'outputs/history/leader_representativeness.csv',
+        'date_cols': ['date'],
+        'frequency': 'daily',
+        'coverage_logic': None,
+        'notes': 'Representatividad del lider'
+    },
+    {
+        'source': 'Sector Wyckoff Distribution',
+        'file': 'outputs/history/sector_wyckoff_distribution.csv',
+        'date_cols': ['date'],
+        'frequency': 'daily',
+        'coverage_logic': 'sectorial',
+        'notes': 'Distribucion Wyckoff sectorial'
+    },
+    {
+        'source': 'Sector Leader Divergence',
+        'file': 'outputs/history/sector_leader_divergence.csv',
+        'date_cols': ['date'],
+        'frequency': 'daily',
+        'coverage_logic': None,
+        'notes': 'Divergencia sector-lideres'
+    },
+    {
+        'source': 'RS Internal',
+        'file': 'outputs/history/rs_internal.csv',
+        'date_cols': ['date'],
+        'frequency': 'daily',
+        'coverage_logic': None,
+        'notes': 'Liderazgo relativo interno'
+    },
+    {
+        'source': 'Sector Rank History',
+        'file': 'outputs/history/sector_rank_history.csv',
+        'date_cols': ['date'],
+        'frequency': 'daily',
+        'coverage_logic': None,
+        'notes': 'Rotacion sectorial historica'
+    },
+    {
+        'source': 'Sector Dispersion',
+        'file': 'outputs/history/sector_dispersion.csv',
+        'date_cols': ['date'],
+        'frequency': 'daily',
+        'coverage_logic': None,
+        'notes': 'Dispersion entre sectores'
+    },
+    {
+        'source': 'Sector Correlation Summary',
+        'file': 'outputs/history/sector_correlation_summary.csv',
+        'date_cols': ['date'],
+        'frequency': 'daily',
+        'coverage_logic': None,
+        'notes': 'Correlacion entre sectores'
+    },
+    {
+        'source': 'Sector Flow Characteristics',
+        'file': 'outputs/history/sector_flow_characteristics.csv',
+        'date_cols': ['date'],
+        'frequency': 'daily',
+        'coverage_logic': 'sectorial',
+        'notes': 'Flujo primario sectorial'
+    },
+]
+
+
 def compute_data_quality(reference_date=None):
     """Calcula frescura y cobertura de las fuentes.
 
@@ -76,200 +288,7 @@ def compute_data_quality(reference_date=None):
     de datetime.now(). Fallback legacy cuando es None.
     """
     now = _ref_to_date(reference_date)
-    sources = [
-        {
-            'source': 'Yahoo Finance',
-            'file': 'data/market_data.parquet',
-            'date_cols': None,
-            'frequency': 'daily',
-            'coverage_logic': None,
-            'notes': 'Precios y métricas sectoriales'
-        },
-        {
-            'source': 'SSGA ETF Flow',
-            'file': 'outputs/history/etf_primary_flow.csv',
-            'date_cols': ['Date'],
-            'frequency': 'daily',
-            'coverage_logic': 'flow_tickers',
-            'notes': 'Flujo primario'
-        },
-        {
-            'source': 'CBOE PCR',
-            'file': 'outputs/history/pcr_history.csv',
-            'date_cols': ['date'],
-            'frequency': 'daily',
-            'coverage_logic': 'rows',
-            'notes': 'Put/Call ratio'
-        },
-        {
-            'source': 'FINRA Dark Pool',
-            'file': 'outputs/history/darkpool_history.csv',
-            'date_cols': ['week'],
-            'frequency': 'finra',
-            'coverage_logic': None,
-            'walk_back': False,  # Fix G (2026-09-30): 'week' es fecha-semana, no fecha-dia. _last_market_session no aplica.
-            'notes': 'Retraso regulatorio 2-4 semanas'
-        },
-        {
-            'source': 'CFTC Position Flow',
-            'file': 'outputs/history/cftc_position_flow.csv',
-            'date_cols': ['date'],
-            'frequency': 'cftc',
-            'coverage_logic': None,
-            'notes': 'Frescura 30 días'
-        },
-        {
-            'source': 'SEC N-PORT',
-            'file': 'outputs/history/sec_nport_position_change_quarterly.csv',
-            'date_cols': ['REPORT_DATE'],
-            'frequency': 'sec',
-            'coverage_logic': None,
-            'notes': 'Trimestral'
-        },
-        {
-            'source': 'Macro FRED',
-            'file': 'outputs/history/macro_regime.csv',
-            'date_cols': ['date'],
-            'frequency': 'fred',
-            'coverage_logic': None,
-            'notes': 'Datos macro manuales'
-        },
-        {
-            'source': 'Sector Concentration',
-            'file': 'outputs/history/sector_concentration.csv',
-            'date_cols': ['date'],
-            'frequency': 'daily',
-            'coverage_logic': 'sectorial',
-            'notes': 'Concentración y dispersión'
-        },
-        {
-            'source': 'Sector Breadth Momentum',
-            'file': 'outputs/history/sector_breadth_momentum.csv',
-            'date_cols': ['date'],
-            'frequency': 'daily',
-            'coverage_logic': 'sectorial',
-            'notes': 'Momentum amplitud'
-        },
-        {
-            'source': 'Volatility Structure',
-            'file': 'outputs/history/volatility_structure.csv',
-            'date_cols': ['date'],
-            'frequency': 'daily',
-            'coverage_logic': None,
-            'notes': 'Estructura volatilidad'
-        },
-        {
-            'source': 'Cross Asset Context',
-            'file': 'outputs/history/cross_asset_context.csv',
-            'date_cols': ['date'],
-            'frequency': 'daily',
-            'coverage_logic': 'sectorial_family',
-            'notes': 'Contexto cross-asset'
-        },
-        {
-            'source': 'Evidence Matrix',
-            'file': 'outputs/history/evidence_matrix.csv',
-            'date_cols': ['date'],
-            'frequency': 'daily',
-            'coverage_logic': 'sectorial_evidence',
-            'notes': 'Matriz evidencia'
-        },
-        # 2026-10-10: fuentes anadidas. Faltaban 12 CSVs que alimentan
-        # secciones del reporte sin declaracion de frescura. Todas
-        # bursatiles (segundo candado temporal del pipeline).
-        {
-            'source': 'Sector Breadth',
-            'file': 'outputs/history/sector_breadth.csv',
-            'date_cols': ['date'],
-            'frequency': 'daily',
-            'coverage_logic': 'sectorial',
-            'notes': 'Amplitud y salud sectorial'
-        },
-        {
-            'source': 'Sector Persistence',
-            'file': 'outputs/history/sector_persistence.csv',
-            'date_cols': ['date'],
-            'frequency': 'daily',
-            'coverage_logic': 'sectorial',
-            'notes': 'Persistencia sectorial'
-        },
-        # 2026-10-10: SLPM retirado de la lista. slpm_history.csv
-        # esta congelado desde 2026-07-17 (mtime agosto). Grep no
-        # encuentra writer activo. Declarar su frescura sin writer
-        # solo anade ruido ARCHIVAL permanente.
-        {
-            'source': 'Sector Regime Matrix',
-            'file': 'outputs/history/sector_regime_matrix.csv',
-            'date_cols': ['date'],
-            'frequency': 'daily',
-            'coverage_logic': 'sectorial',
-            'notes': 'Matriz de regimen sectorial'
-        },
-        {
-            'source': 'Leader Representativeness',
-            'file': 'outputs/history/leader_representativeness.csv',
-            'date_cols': ['date'],
-            'frequency': 'daily',
-            'coverage_logic': None,
-            'notes': 'Representatividad del lider'
-        },
-        {
-            'source': 'Sector Wyckoff Distribution',
-            'file': 'outputs/history/sector_wyckoff_distribution.csv',
-            'date_cols': ['date'],
-            'frequency': 'daily',
-            'coverage_logic': 'sectorial',
-            'notes': 'Distribucion Wyckoff sectorial'
-        },
-        {
-            'source': 'Sector Leader Divergence',
-            'file': 'outputs/history/sector_leader_divergence.csv',
-            'date_cols': ['date'],
-            'frequency': 'daily',
-            'coverage_logic': None,
-            'notes': 'Divergencia sector-lideres'
-        },
-        {
-            'source': 'RS Internal',
-            'file': 'outputs/history/rs_internal.csv',
-            'date_cols': ['date'],
-            'frequency': 'daily',
-            'coverage_logic': None,
-            'notes': 'Liderazgo relativo interno'
-        },
-        {
-            'source': 'Sector Rank History',
-            'file': 'outputs/history/sector_rank_history.csv',
-            'date_cols': ['date'],
-            'frequency': 'daily',
-            'coverage_logic': None,
-            'notes': 'Rotacion sectorial historica'
-        },
-        {
-            'source': 'Sector Dispersion',
-            'file': 'outputs/history/sector_dispersion.csv',
-            'date_cols': ['date'],
-            'frequency': 'daily',
-            'coverage_logic': None,
-            'notes': 'Dispersion entre sectores'
-        },
-        {
-            'source': 'Sector Correlation Summary',
-            'file': 'outputs/history/sector_correlation_summary.csv',
-            'date_cols': ['date'],
-            'frequency': 'daily',
-            'coverage_logic': None,
-            'notes': 'Correlacion entre sectores'
-        },
-        {
-            'source': 'Sector Flow Characteristics',
-            'file': 'outputs/history/sector_flow_characteristics.csv',
-            'date_cols': ['date'],
-            'frequency': 'daily',
-            'coverage_logic': 'sectorial',
-            'notes': 'Flujo primario sectorial'
-        },
-    ]
+    sources = SOURCES
 
     rows = []
     for src in sources:
