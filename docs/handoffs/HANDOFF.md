@@ -11,10 +11,10 @@ No crear variantes con fecha.
 ## 1. ESTADO AL CIERRE (2026-10-15 ~19:00 CEST)
 
 Rama activa:    main
-HEAD:           fbcfe4cd (consultar `git log` para HEAD exacto)
+HEAD:           consultar `git log --oneline -1` (no literal; el corpus no fija SHA para evitar deriva)
 Sincronizacion: main == origin/main
-Tests:          3388 passed + 5 skipped (con filtro CI)
-                3397 passed + 5 skipped (sin filtro, parquets frescos)
+Tests:          ver `Consolidacion_Documentos/ESTADO_SISTEMA.md` (fuente autoritativa).
+                Referencia orientativa: ~3390 passed + 5 skipped.
 Validation Gate: 10/10
 Working tree:   limpio
 Corpus:         v3 (Consolidacion_Documentos/00-08 + ESTADO_SISTEMA)
@@ -100,6 +100,8 @@ atendidos. 17 commits de fix/docs + 3 commits previos de la sesion
   16e064f4 docs(H16): unidad pp + reglas flags
   fdbc7ccf docs(H17): desambiguar persistencias
   fbcfe4cd docs(H18): QQQ/SPY Desde inicio
+  9b438549 docs(corpus): cierre de sesion 15-oct (HANDOFF + bitacora)
+  07e75fb0 docs(corpus): barrido de deriva documental (Fase B)
 
 ---
 
@@ -155,7 +157,7 @@ Nada pendiente. La sesion 15-oct responde a la auditoria externa del
     py -m pyflakes . ; py -m compileall . -q
 
 Esperado:
-- HEAD = fbcfe4cd o posterior.
+- HEAD = el que devuelva `git log --oneline -1` (no se fija literal).
 - ahead 0, behind 0.
 - working tree limpio (salvo data/ y outputs/ que el bot actualiza).
 - 3388 passed + 5 skipped (con filtro CI).
