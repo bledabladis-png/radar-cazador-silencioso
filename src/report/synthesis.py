@@ -172,10 +172,31 @@ def render_matriz_evidencia(evidence_matrix_data):
                    "(los 11 sectores coinciden). La variabilidad sectorial "
                    "real proviene de Precio, Amplitud, Flujo 1 y Flujo "
                    "Proxy.*\n\n")
-        # N4 (2026-10-13, auditor): la agregacion es heuristica de signos
-        # (1 voto por variable, sin pesos). Precio, Amplitud y Flow Proxy
-        # comparten informacion del precio. La etiqueta describe confluencia
-        # de signos, no confirmacion estadistica independiente.
+        # N4 (2026-10-13, auditor) + H9 (2026-10-15, auditor):
+        # la agregacion es heuristica de signos (1 voto por variable).
+        # H9 pide CUANTIFICAR la doble contabilizacion. Medicion empirica
+        # sobre outputs/history/evidence_matrix.csv (24 filas con 5
+        # evidencias validas, Pearson):
+        #   price <-> breadth:        r = 0.641   <- unico par material
+        #   price <-> primary_flow:   r = 0.120
+        #   price <-> proxy_flow:     r = 0.015
+        #   primary_flow <-> proxy:   r = 0.130
+        #   wyckoff <-> resto:        |r| < 0.29
+        # Conclusion: de los 10 pares posibles, solo 1 (price-breadth)
+        # presenta correlacion material. La sobre-representacion del
+        # precio en el balance es acotada. No hay justificacion
+        # estadistica para modificar el algoritmo.
+        out.append("*H9 auditoria 2026-10-15: el balance es una heuristica "
+                   "de signos (1 voto por variable). Medicion empirica de "
+                   "la correlacion entre evidencias: solo el par "
+                   "Precio-Amplitud tiene correlacion material (Pearson "
+                   "r=0.64); el resto de los 10 pares presenta |r|<0.3. "
+                   "El Flow Proxy NO correlaciona con Precio (r=0.015): "
+                   "la sospecha de duplicacion no se sostiene en los "
+                   "datos. La etiqueta describe confluencia de signos, "
+                   "no confirmacion estadistica independiente. Ver "
+                   "clasificacion de evidencia (OBSERVABLE / "
+                   "DERIVADA-DIRECTA / DERIVADA-COMPUESTA) mas abajo.*\n\n")
         out.append("*N4 auditoria 2026-10-13: el balance de evidencia es una "
                    "heuristica de signos (1 voto por variable). Precio, "
                    "Amplitud y Flow Proxy comparten informacion del precio: "
