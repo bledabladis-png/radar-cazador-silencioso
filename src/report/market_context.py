@@ -32,6 +32,18 @@ def render_liderazgo_interno(rs_internal_data):
         out.append("\n")
         out.append("*Criterio: los 5 tickers de mayor price_ret_20d del sector, ordenados desc. La primera fila de cada sector coincide con la columna Lider de Concentracion del liderazgo (mismo criterio: retorno 20d maximo). No coincide con la primera fila de Representatividad, que ordena por WLS.*\n\n")
         out.append("*vs mercado 20d = retorno relativo 20d del ticker frente al mercado (rs_abs_20d). Distinto de 'Ret Lider' de Concentracion, que es retorno absoluto (leader_return20). Nombre heredado (D-07 auditoria 2026-09-26); ambos se mantienen para no romper series.*\n\n")
+        # H13 (2026-10-15, auditoria externa): declarar el benchmark
+        # exacto, la fuente del precio y la formula. Sin esto, el auditor
+        # cruzaba con ^GSPC y veia discrepancias numericas que son
+        # diferencias de fuente, no de calculo.
+        out.append("*H13 (2026-10-15, auditor): benchmark = SPY (no ^GSPC). "
+                   "Formula: rs_abs_20d = (1+ret20_ticker)/(1+ret20_SPY) - 1. "
+                   "Fuente del precio: Yahoo Close (no ajustado por dividendos) "
+                   "para ticker y benchmark; ambos toman la misma serie "
+                   "temporal (interseccion de fechas). Ret20 = close[t]/"
+                   "close[t-20] - 1 sobre las 20 sesiones comunes. "
+                   "Discrepancias contra ^GSPC en el mismo horizonte son "
+                   "diferencias de fuente, no de calculo.*\n\n")
     return out
 
 
