@@ -140,3 +140,84 @@ def test_render_no_muestra_motivo_si_unknown():
     lines = render_slpm_v12(slpm)
     joined = chr(10).join(lines)
     assert 'Motivo: UNKNOWN' not in joined
+
+
+# ============================================================
+# H8 (2026-10-15): "Sector Lider" no debe aparecer cuando el estado
+# es UNRESOLVED por falta de datos. En ese caso, "Candidato a lider
+# (no confirmado)".
+# ============================================================
+
+def _make_slpm_h8(state, reason_code, sector='Technology'):
+    return {
+        'sector': sector,
+        'state': state,
+        'state_reason': 'test',
+        'state_reason_code': reason_code,
+        'opportunity_quadrant': 'Transition',
+        'leader_breadth_v2': {
+            'n_used': 0, 'expected_leaders': 5, 'coverage': 0.0,
+            'coverage_warning': True,
+            'rs_breadth': float('nan'),
+            'rs_breadth_status': 'NO_LEADERS',
+            'leader_breadth_status': 'NO_LEADERS',
+            'momentum_breadth': float('nan'),
+            'flow_breadth': float('nan'),
+            'wyckoff_breadth': float('nan'),
+            'composite': float('nan'),
+            'effective_composite': float('nan'),
+        },
+        'input_scores': {'effective_breadth': 0.0, 'persistence': 0.5,
+                         'tactical': 0.0, 'structural': 0.0},
+        'flow_divergence_v2': {'composite': None},
+        'leader_integrity': {'lis': 0.0, 'n_leaders': 0},
+    }
+
+
+def test_h8_sector_lider_confirmado_cuando_estado_normal():
+    """Con estado distinto de UNRESOLVED, se muestra 'Sector Lider'."""
+    slpm = _make_slpm_h8('CONFIRMED', 'CONFIRMED')
+    lines = render_slpm_v12(slpm)
+    joined = '\n'.join(lines)
+    assert 'Sector Líder' in joined
+    assert 'Candidato a líder' not in joined
+
+
+def test_h8_candidato_cuando_no_leaders():
+    slpm = _make_slpm_h8('UNRESOLVED', 'NO_LEADERS')
+    lines = render_slpm_v12(slpm)
+    joined = '\n'.join(lines)
+    assert 'Candidato a líder (no confirmado)' in joined
+    assert 'no confirma liderazgo' in joined
+    assert 'NO_LEADERS' in joined
+
+
+def test_h8_candidato_cuando_input_unavailable():
+    slpm = _make_slpm_h8('UNRESOLVED', 'INPUT_UNAVAILABLE')
+    lines = render_slpm_v12(slpm)
+    joined = '\n'.join(lines)
+    assert 'Candidato a líder' in joined
+
+
+def test_h8_candidato_cuando_insufficient_rs():
+    slpm = _make_slpm_h8('UNRESOLVED', 'INSUFFICIENT_DATA_RS')
+    lines = render_slpm_v12(slpm)
+    joined = '\n'.join(lines)
+    assert 'Candidato a líder' in joined
+
+
+def test_h8_candidato_cuando_insufficient_coverage():
+    slpm = _make_slpm_h8('UNRESOLVED', 'INSUFFICIENT_COVERAGE')
+    lines = render_slpm_v12(slpm)
+    joined = '\n'.join(lines)
+    assert 'Candidato a líder' in joined
+
+
+def test_h8_sector_lider_preservado_en_unresolved_por_senales_mixtas():
+    """UNRESOLVED por MIXED_OR_INSUFFICIENT_SIGNALS no es insuficiencia
+    de datos. En ese caso se mantiene 'Sector Lider'."""
+    slpm = _make_slpm_h8('UNRESOLVED', 'MIXED_OR_INSUFFICIENT_SIGNALS')
+    lines = render_slpm_v12(slpm)
+    joined = '\n'.join(lines)
+    assert 'Sector Líder' in joined
+    assert 'Candidato a líder' not in joined

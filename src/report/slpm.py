@@ -33,8 +33,24 @@ def render_slpm_v12(slpm_v12_data):
         reason = slpm_v12_data.get('state_reason', '')
         reason_code = slpm_v12_data.get('state_reason_code', '')
         quadrant = slpm_v12_data.get('opportunity_quadrant', 'N/A')
-        out.append(f"- **Sector Líder:** {sector}\n")
-        out.append("  - *Nota: El SLPM selecciona al líder combinando Structural, Breadth y Persistence. Tactical y LIS son métricas diagnósticas. No es simplemente el sector con mayor Structural Score.*\n")
+        # H8 (2026-10-15, auditoria externa): no presentar "Sector Lider"
+        # como confirmado cuando el estado es UNRESOLVED por falta de datos.
+        # Cuando el reason_code indica insuficiencia, la etiqueta cambia a
+        # "Candidato a lider" con nota explicita.
+        _no_confirmado = (
+            state_v12 == 'UNRESOLVED'
+            and reason_code in (
+                'NO_LEADERS', 'INPUT_UNAVAILABLE',
+                'INSUFFICIENT_DATA_RS', 'INSUFFICIENT_COMPONENT_DATA',
+                'INSUFFICIENT_COVERAGE', 'INSUFFICIENT_DATA_BREADTH',
+            )
+        )
+        if _no_confirmado:
+            out.append(f"- **Candidato a líder (no confirmado):** {sector}\n")
+            out.append(f"  - *El SLPM no confirma liderazgo: {reason_code}. El sector mostrado es el de mayor Structural Score, no un liderazgo validado.*\n")
+        else:
+            out.append(f"- **Sector Líder:** {sector}\n")
+            out.append("  - *Nota: El SLPM selecciona al líder combinando Structural, Breadth y Persistence. Tactical y LIS son métricas diagnósticas. No es simplemente el sector con mayor Structural Score.*\n")
         out.append(f"- **Estado:** {state_v12}")
         if quadrant:
             out.append(f" -> {quadrant}")
