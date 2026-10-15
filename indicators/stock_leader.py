@@ -282,6 +282,11 @@ def generate_leader_section(df_market, df_stocks, holdings_df, fase_dict,
         leader_data.append(wls_df.head(TOP_N_LEADERS))
 
         lines.append(f'## Sector: {sector} ({fase})\n')
+        # H17 (2026-10-15, auditoria externa): aclarar que Pers 5d/10d/20d
+        # miden la persistencia del retorno POSITIVO del ticker
+        # (fraccion de sesiones con retorno > 0 en la ventana).
+        # Rango [0,1]. Distinta de "Persist" (Structural Ranking sectorial)
+        # y de "Pers 5d/20d" del flujo primario.
         lines.append('| Ticker | RS | RS Mom | Flujo (z) | WLS | Fase Wyckoff | Pers 5d | Pers 10d | Pers 20d | Spring | SOS |\n')
         lines.append('|--------|----|--------|-----------|-----|---------------|--------|--------|---------|--------|-----|\n')
         for _, row in wls_df.head(TOP_N_LEADERS).iterrows():

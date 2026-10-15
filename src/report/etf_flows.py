@@ -89,6 +89,18 @@ def render_flujo_caracteristicas(sector_flow_characteristics_data):
             out.append(f"| {row['sector']} | {_fmt_signed(row['flow_dollar'], '{:+,.2f}', '{:,.2f}')} | {_fmt_num(row['flow_pct_aum'], '{:.2f}%')} | {_fmt_num(row['flow_zscore'], '{:.2f}')} | {_fmt_signed(row['flow_5d_sum'], '{:+,.0f}', '{:,.0f}')} | {_fmt_signed(row['flow_20d_sum'], '{:+,.0f}', '{:,.0f}')} | {_fmt_num(row['persistence_5d'], '{:.0%}')} | {_fmt_num(row['persistence_20d'], '{:.0%}')} | {_fmt_num(row['price_ret_20d'], '{:.2%}')} | {regime_str} |\n")
         out.append("\n")
         out.append("*Esta tabla agrega el flujo por sector con metricas derivadas (persistencia, regimen). Es la lectura sectorial de la tabla anterior (dato atomico por ETF).*\n\n")
+        # H17 (2026-10-15, auditoria externa): aclarar que Pers 5d/20d aqui
+        # es la persistencia del SIGNO DEL FLUJO primario por sector
+        # (pos / (pos+neg) sobre la ventana). Rango [0,1]. Distinta de
+        # "Persist" del Structural Ranking (persistencia del score
+        # sectorial) y de Pers 5d/10d/20d de lideres (retorno positivo
+        # del ticker).
+        out.append("*Pers 5d / Pers 20d en esta tabla: fraccion de la "
+                   "ventana en que el flujo primario del sector fue "
+                   "positivo (pos / (pos+neg)). Rango [0,1]. Distinta de "
+                   "'Persist' del Structural Ranking (persistencia del "
+                   "score sectorial) y de Pers 5d/10d/20d de lideres "
+                   "(retorno positivo del ticker).*\n\n")
     return out
 
 

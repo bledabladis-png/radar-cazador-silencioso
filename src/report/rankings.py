@@ -32,6 +32,12 @@ def render_ranking_sectorial_unificado(sector_results, tactical_scores,
     out.append("> *Nota: Score es el ranking historico del sistema "
                "(momentum, tendencia, volatilidad, breadth, Wyckoff). "
                "Tactical y Structural son los motores independientes.*\n\n")
+    # H17 (2026-10-15, auditoria externa): aclarar que "Persist"
+    # en esta tabla es la persistencia del STRUCTURAL SCORE sectorial
+    # (structural_engine.py), distinta de Pers 5d/10d/20d de lideres
+    # por ticker y de Pers 5d/20d del flujo primario por sector.
+    # Rango [0,1]. Mide la fraccion de la ventana en que el score
+    # sectorial se mantuvo con el mismo signo.
     header = ("| # | Sector | Score | Tactical | Structural | Persist "
               "| Agreement | Signal Cons | Comm Corr | Fase Wyckoff |\n")
     sep = ("|---|--------|-------|----------|------------|---------"
