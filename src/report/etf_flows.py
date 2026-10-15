@@ -41,6 +41,17 @@ def render_flujo_spdr(etf_primary_flow_data):
         except (KeyError, AttributeError, ValueError, TypeError):
             _ultima_fecha = "N/D"
         out.append(f"\n*Fuente: State Street Global Advisors (SSGA). ETF Primary Flow = ΔShares Outstanding × NAV. Z-score sobre {ETF_PRIMARY_FLOW_ZSCORE_WINDOW} sesiones. Ultima fecha: {_ultima_fecha}. SSGA publica con lag de 1-2 dias; la fecha puede ir por detras del run.*\n\n")
+        # H12 (2026-10-15, auditoria externa): aclarar que el flujo es una
+        # estimacion operativa (creaciones/reembolsos), no una observacion
+        # universal del flujo comprador/vendedor en el mercado secundario.
+        out.append("*H12 (2026-10-15, auditor): ETF Primary Flow es una "
+                   "ESTIMACION OPERATIVA (variacion de participaciones x NAV), "
+                   "no una observacion universal del flujo comprador o "
+                   "vendedor en el mercado secundario. La creacion de "
+                   "participaciones implica compras subyacentes por el AP, "
+                   "pero no identifica quien compro el ETF ni a que precio. "
+                   "Se usa como proxy de demanda agregada del vehiculo, no "
+                   "como medida del flujo economico del activo.*\n\n")
         out.append("*Esta tabla muestra flujo por ETF (dato atomico). "
                    "Para la lectura agregada con persistencia y regimen, ver "
                    "la tabla siguiente: Flujo Primario ETF - Agregado sectorial.*\n\n")
