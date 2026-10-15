@@ -67,6 +67,17 @@ def compute_stock_metrics(df_market, df_stocks, etf_ticker, stock_list, temporal
         # diff(20) los propaga al ultimo valor -> rs_mom = NaN.
         # dropna() + guard len >= 21 para que sea robusto.
         rs = (close.loc[common_idx] / price_etf.loc[common_idx]).dropna()
+        # H2 (2026-10-15, auditoria externa): se verifico empiricamente
+        # que rs_mom es INVARIANTE a la escala del precio (splits,
+        # precio nominal por accion). Razon matematica:
+        #   rs_mom = log(P_t / P_{t-20}) - log(E_t / E_{t-20})
+        # Cualquier factor k sobre P se cancela: log(k*P_t) - log(k*P_{t-20})
+        # = log(P_t) - log(P_{t-20}). Por tanto, el rs_z que alimenta el
+        # WLS (via robust_zscore intra-sector de rs_mom) tambien es
+        # invariante a la escala. El problema del rs nominal documentado
+        # en N2 afecta solo a LIS (slpm_v12.py::compute_leader_integrity),
+        # no al WLS. Verificado: NVDA con split 10:1 simulado produce
+        # rs_mom identico (diferencia < 1e-12).
         rs_mom = np.log(rs).diff(20).iloc[-1] if len(rs) >= 21 else np.nan
 
         # P1.1 (2026-10-13): retorno relativo 20d (correcto para
