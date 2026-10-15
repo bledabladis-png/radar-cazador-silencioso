@@ -72,7 +72,7 @@ Verificada el 2026-09-28 en la auditoria interna A0.
     |   |   +-- engines.py, slpm.py, diagnostics.py, market_data.py
     |   |   +-- mte_confirmation.py, indices_intl.py
     |   |   +-- validation_gate.py, finalize.py, iae_section.py
-    |   +-- temporal_contracts/     (12 ficheros: 10 contratos + base + consolidate)
+    |   +-- temporal_contracts/     (12 ficheros: 9 contratos + base + consolidate)
     |   |   +-- base.py, registry.py, _common.py, consolidate.py, __init__.py
     |   |   +-- equity_eod.py, index_eod.py, volatility_index.py, rate_yield.py
     |   |   +-- future_settlement.py, fx_daily_cut.py, spot_commodity.py
@@ -146,14 +146,14 @@ El contrato v1.8 esta en `docs/auditoria/wyckoff/01_contrato_semantico_v1_8.md`.
 - `src/market_calendar.py` es la fuente unica de utilidades temporales NYSE.
 - `src/market_hours.py` es la fuente unica de horarios de cierre y elegibilidad EOD.
 - `src/effective_date.py::resolve_effective_date` es un resolutor por cobertura (no consulta calendario).
-- `src/temporal_contracts/` es la fuente unica de contratos temporales (10 contratos, 5 familias). FSM: PENDING | OK | STALE | INSUFFICIENT | BLOCKED.
+- `src/temporal_contracts/` es la fuente unica de contratos temporales (9 contratos, 5 familias). FSM: PENDING | OK | STALE | INSUFFICIENT | BLOCKED.
 - `src/instrument_registry.py` expone `get_market` (calendario) y `get_instrument_class` (clase economica). Disjuntos. Fuente unica de `YAHOO_TICKER_MAP` + `normalize_yahoo_ticker(t)`.
 - `src/utils.py::write_artifact_with_manifest` es la fuente unica de escritura de parquet + manifest.
 - `src/utils.py::robust_zscore` es el canonico para precios / RS (window=60, ffill(limit=3), clip +-5).
 - `data/providers/_fund_flow_utils.py::fund_flow_robust_zscore_with_regime` es el canonico para fund-flow (window=120, min_periods=20, clip +-5, MAD==0 & s==median -> 0.0, MAD==0 & s!=median -> NaN). NO fusionar con el canonico de precios.
 - `src/institutional_accumulation/` es el modulo IAE. Detalle en `03_IAE.md`.
 - `config/tickers.py::MARKET_TICKERS['sectors']` es la fuente unica de los 11 ETFs sectoriales (`['XLK','XLF','XLV','XLE','XLY','XLP','XLI','XLB','XLU','XLRE','XLC']`). Cualquier modulo que necesite la lista, la importa - no la duplica.
-- `src/pipeline/output_writer.py::persist/skip` es la fuente unica de escritura a `outputs/history/`. Toda persistencia pasa por aqui. Registro declarativo en `src/pipeline/output_registry.py` (19 outputs). Verificacion post-run en `src/pipeline/output_verifier.py`. Test AST de contrato en `tests/test_output_contract_ast.py`. Excepcion por diseno: `outputs/report/` (snapshots efimeros). Detalle en `01_METODO.md` seccion 12.
+- `src/pipeline/output_writer.py::persist/skip` es la fuente unica de escritura a `outputs/history/`. Toda persistencia pasa por aqui. Registro declarativo en `src/pipeline/output_registry.py` (19 outputs). Verificacion post-run en `src/pipeline/output_verifier.py`. Test AST de contrato en `tests/test_output_contract_ast.py`. Excepcion por diseno: `outputs/report/` (snapshots efimeros).
 
 ---
 
@@ -178,7 +178,7 @@ Tres capas independientes que NO deben confundirse:
 
 **Financial Conditions (4 componentes):** VIX (invertido), HYG/LQD (ratio), DXY (invertido), curva TNX-FVX. Pesos en `config/settings.py`. Confidence = clip(1 - (max-min)/2, 0, 1). Ventana 60.
 
-**Liquidity Score (5 componentes):** SOFR, WALCL, RRP, Discount Rate, Commercial Paper. Confidence por std de senales.
+**Liquidity Score (4 componentes, v2 desde 2026-10-14):** fed_balance (WALCL), reverse_repo (RRPONTSYD), SOFR, fed_funds. Confidence informativa segun calidad de datos. Implementacion en `regimes/liquidity_v2.py` (B3 congelada, dictamen N8 Fase J). v1 (`regimes/liquidity.py`) retirado en produccion el 2026-10-14.
 
 **Volatility Regime:** VIX (70%) + termino VIX3M-VIX (30%).
 
@@ -257,8 +257,8 @@ Si `validation_gate['passed'] == False` -> `sys.exit(1)`.
 
 **Notas:**
 - `daily_run.yml` aplica `git fetch + pull --rebase` antes de cualquier push local.
-- Multi-slot (4 disparos) con idempotencia por cobertura y gate pre-pipeline (`scripts/pipeline_gate.py`).
-- Issue-manager (`scripts/issue_manager.py`) abre/comenta/cierra Issues si los 4 slots fallan.
+- Multi-slot (5 disparos) con idempotencia por cobertura y gate pre-pipeline (`scripts/pipeline_gate.py`).
+- Issue-manager (`scripts/issue_manager.py`) abre/comenta/cierra Issues si los 5 slots fallan.
 - F-IAE-LSE-INTEGRATION: 2 steps antes de "Run Macro Sectorial" (fetch LSE scraper + capture SHA).
 - Fase G: step "Regenerar catalogo radar (IAE)" tras run.py; `update_sec_13f.yml` gana step "Regenerar crosswalk CUSIP".
 
@@ -273,7 +273,7 @@ Si `validation_gate['passed'] == False` -> `sys.exit(1)`.
 
 ## 9. VALIDACION Y TESTS
 
-**Suite completa:** 2340 passed + 2 skipped + 0 failed. Incluye 777 funciones test_ (AST) / 885 tests collected (pytest) del modulo IAE (45 ficheros).
+**Suite completa:** ver `Consolidacion_Documentos/ESTADO_SISTEMA.md` (fuente autoritativa, regenerado con `py scripts/generate_estado_sistema.py`). El corpus no fija el literal para evitar deriva.
 
 **Los 3 tests `test_freshness`** (ambientales) pasan tras un `py run.py` que refresca los parquets; vuelven a fallar si pasan >4 dias sin ejecutar el pipeline.
 
@@ -345,16 +345,17 @@ Si el gate falla, `run.py` aborta con `sys.exit(1)`.
 - `reference_lag` = `(reference_date.date() - effective_date.date()).days`.
 
 **FU-021-5 - Contratos temporales de df_market:**
-- 10 contratos, 5 familias, FSM 5 estados.
+- 9 contratos, 5 familias, FSM 5 estados.
 - `temporal_meta` es autoridad; `df.attrs` es espejo auxiliar.
 - `MarketDataBundle` es el transporte.
 - `global_last_date` = max(effective_date) de contratos OK/STALE. Nunca sustituye fechas por contrato.
 
-**FU-021-3C-bis - Commodities:**
-- SPOT (GC=F, HG=F, NG=F) via OilPriceAPI. `settlement_semantics=spot_reference`.
-- FUTURE_SETTLEMENT (BZ=F, CL=F) BLOCKED de facto (403 "Feature access required" desde 2026-09-22).
+**FU-021-3C-bis - Commodities (actualizado 2026-09-30):**
+- Los 5 futuros (BZ=F, CL=F, GC=F, HG=F, NG=F) via Yahoo con OHLCV completo.
+- OilPriceAPI eliminada 2026-09-30: plan free sin futuros, sin historico, sin OHLCV.
+- `settlement_semantics=future_settlement` para los 5. R5 en 00_ARRANQUE.
 **F-IAE-CRON-02 - Multi-slot:**
-- 4 slots de cron (17 23 / 17 3 / 17 7 / 17 11 UTC) con gate pre-pipeline.
+- 5 slots de cron (17 23 / 17 3 / 17 5 / 17 7 / 17 11 UTC) con gate pre-pipeline.
 - Idempotencia por cobertura (no por `last_date`).
 - `target_session` = sesion bursatil objetivo.
 - Retry corto (3 intentos, sleeps 10/30s) para errores de red.
@@ -423,7 +424,6 @@ Si el gate falla, `run.py` aborta con `sys.exit(1)`.
 
 **LSE (20 .L):** scraper privado (Refinitiv Widgets) + override parcial de Close.
 
-**OilPriceAPI:** 3 commodities spot (GC=F, HG=F, NG=F). Budget 3 requests/dia.
 
 **CBOE:** opciones diarias (PCR) + indice ^VIX3M via CSV publico.
 

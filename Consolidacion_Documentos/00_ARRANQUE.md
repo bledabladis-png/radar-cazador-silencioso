@@ -75,7 +75,7 @@ Fuente autoritativa de tests, integridad y cobertura: `Consolidacion_Documentos/
 
 Snapshot al cierre del ultimo commit:
 - HEAD: `git log --oneline -1`
-- Tests: 3247 passed + 5 skipped + 0 failed
+- Tests: ver `Consolidacion_Documentos/ESTADO_SISTEMA.md` (fuente autoritativa). Referencia con filtro CI: ~3388 passed + 5 skipped.
 - Validation Gate: 10/10
 - Working tree: limpio
 - Corpus documental: v3 (Consolidacion_Documentos/00-08, 2026-09-30)
@@ -180,7 +180,7 @@ Esperado:
 - HEAD = `git log --oneline -1`
 - ahead 0, behind 0
 - working tree limpio
-- 3185 passed + 5 skipped
+- Conteo real en `ESTADO_SISTEMA.md` (no literal fijo aqui)
 - pyflakes silencio, compileall OK
 
 ---
