@@ -225,3 +225,72 @@ def test_header_vol_muy_cerca_cero_muestra_0_00():
     out = _reg(volatility_score=0.001, vol_conf=0.5)
     lineas = "".join(out)
     assert "Z-Score: 0.00" in lineas
+
+
+# ============================================================
+# H1 (2026-10-15): la alerta Financial Stress vs Credit depende del
+# Z-score real de HYG/LQD, no de un literal fijo.
+# ============================================================
+
+def test_render_alerts_high_stress_z_positivo():
+    out = render_alerts(
+        breadth_values=None,
+        liquidity_regime="HIGH_STRESS",
+        price_flow_divergences=None,
+        confirmation_data={"ratios": {"hyg_lqd_zscore": 0.15}},
+    )
+    lineas = "".join(out)
+    assert "desviacion positiva" in lineas
+    assert "Z=+0.15" in lineas
+    assert "estres localizado" in lineas.lower() or "localizado" in lineas.lower()
+
+
+def test_render_alerts_high_stress_z_negativo():
+    out = render_alerts(
+        breadth_values=None,
+        liquidity_regime="HIGH_STRESS",
+        price_flow_divergences=None,
+        confirmation_data={"ratios": {"hyg_lqd_zscore": -0.15}},
+    )
+    lineas = "".join(out)
+    assert "desviacion negativa" in lineas
+    assert "Z=-0.15" in lineas
+    assert "no esta localizado" in lineas or "credito lo confirma" in lineas
+
+
+def test_render_alerts_high_stress_z_ausente():
+    out = render_alerts(
+        breadth_values=None,
+        liquidity_regime="HIGH_STRESS",
+        price_flow_divergences=None,
+        confirmation_data=None,
+    )
+    lineas = "".join(out)
+    assert "Z-score de HYG/LQD no disponible" in lineas
+    # No debe afirmar ni positiva ni negativa
+    assert "desviacion positiva" not in lineas
+    assert "desviacion negativa" not in lineas
+
+
+def test_render_alerts_high_stress_z_nan():
+    import numpy as np
+    out = render_alerts(
+        breadth_values=None,
+        liquidity_regime="HIGH_STRESS",
+        price_flow_divergences=None,
+        confirmation_data={"ratios": {"hyg_lqd_zscore": np.nan}},
+    )
+    lineas = "".join(out)
+    assert "no disponible" in lineas
+
+
+def test_render_alerts_no_high_stress_no_alerta():
+    """Sin HIGH_STRESS no se emite la alerta crediticia."""
+    out = render_alerts(
+        breadth_values=None,
+        liquidity_regime="NEUTRAL",
+        price_flow_divergences=None,
+        confirmation_data={"ratios": {"hyg_lqd_zscore": 0.15}},
+    )
+    lineas = "".join(out)
+    assert "Financial Stress vs Credit" not in lineas

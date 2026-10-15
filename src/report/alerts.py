@@ -4,10 +4,12 @@
 Extraidos de src/report_generator.py (refactor C1, fase C1-6a2).
 """
 
+import pandas as pd
+
 from config.tickers import SECTOR_NAMES
 
 
-def render_alerts(breadth_values, liquidity_regime, price_flow_divergences):
+def render_alerts(breadth_values, liquidity_regime, price_flow_divergences, confirmation_data=None):
     """Renderiza la seccion Alertas de Divergencia (Inicial).
 
     Devuelve lista de lineas markdown. Sin side effects.
@@ -22,7 +24,37 @@ def render_alerts(breadth_values, liquidity_regime, price_flow_divergences):
             alerts.append(f"- **Breadth Divergence:** Breadth EMA200: {ema200:.0%}; Breadth EMA20: {ema20:.0%}. La amplitud de corto plazo es inferior a la de largo plazo.")
     
     if liquidity_regime == 'HIGH_STRESS':
-        alerts.append("- **Financial Stress vs Credit:** Condiciones financieras elevadas, pero el crédito relativo (HYG/LQD) presenta una desviación positiva frente a su distribucion reciente. Estres localizado. No se observa confirmación suficiente de estres sistemico.")
+        # H1 (2026-10-15, auditoria externa): el texto afirmaba
+        # "desviacion positiva" sin comprobar el Z-score real. Ahora se
+        # condiciona al valor publicado en Cross-Asset Ratios.
+        # Fuente: confirmation_data['ratios']['hyg_lqd_zscore'].
+        _hyg_z = None
+        if confirmation_data:
+            _ratios = confirmation_data.get('ratios', {}) or {}
+            _hyg_z = _ratios.get('hyg_lqd_zscore', None)
+
+        if _hyg_z is None or (isinstance(_hyg_z, float) and pd.isna(_hyg_z)):
+            alerts.append(
+                "- **Financial Stress vs Credit:** Condiciones financieras "
+                "elevadas. Z-score de HYG/LQD no disponible: no puede "
+                "determinarse si el estres esta localizado o si el credito "
+                "lo confirma."
+            )
+        elif _hyg_z > 0:
+            alerts.append(
+                f"- **Financial Stress vs Credit:** Condiciones financieras "
+                f"elevadas, pero el credito relativo (HYG/LQD) presenta una "
+                f"desviacion positiva frente a su distribucion reciente "
+                f"(Z={_hyg_z:+.2f}). Estres localizado. No se observa "
+                f"confirmacion suficiente de estres sistemico."
+            )
+        else:
+            alerts.append(
+                f"- **Financial Stress vs Credit:** Condiciones financieras "
+                f"elevadas Y el credito relativo (HYG/LQD) muestra desviacion "
+                f"negativa frente a su distribucion reciente (Z={_hyg_z:+.2f}). "
+                f"El estres no esta localizado: el credito lo confirma."
+            )
     
     if price_flow_divergences:
         for ticker, div in price_flow_divergences.items():
