@@ -9,7 +9,10 @@ from datetime import datetime
 import pandas as pd
 
 from src.market_calendar import _last_market_session
-from config.settings import FRESHNESS_CBOE, FRESHNESS_YAHOO
+from config.settings import (
+    FRESHNESS_CBOE, FRESHNESS_YAHOO,
+    FRESHNESS_FINRA, FRESHNESS_FRED, FRESHNESS_DEFAULT,
+)
 
 from src.report.helpers import (
     _classify_freshness,
@@ -113,6 +116,16 @@ def render_data_freshness(pcr_data, darkpool_data, sector_results, reference_dat
                "y NO incluye Data Conf (dimension distinta: declara la "
                "frescura observada por fuente). Pueden discrepar las fechas "
                "si el CSV esta desactualizado respecto al runtime.*\n\n")
+    # H5 (2026-10-15, auditoria externa): publicar los umbrales exactos.
+    out.append("*Umbrales de frescura por fuente (dias): "
+               f"CBOE {FRESHNESS_CBOE}, "
+               f"FINRA {FRESHNESS_FINRA}, "
+               f"FRED {FRESHNESS_FRED}, "
+               f"Yahoo {FRESHNESS_YAHOO}, "
+               f"resto {FRESHNESS_DEFAULT}. "
+               "Cada tupla es (CURRENT, RECENT, STALE); por encima del "
+               "tercer umbral: ARCHIVAL. Data Conf: Alta si CURRENT o "
+               "RECENT; Baja si STALE o ARCHIVAL.*\n\n")
     coverage_lines = _generate_coverage_table(pcr_data, darkpool_data, sector_results, reference_date=reference_date)
     for cl in coverage_lines:
         out.append(cl)

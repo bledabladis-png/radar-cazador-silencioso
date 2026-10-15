@@ -81,7 +81,11 @@ def render_regimenes(macro_score, macro_regime, macro_conf,
     out.append("  *Este regimen mide la VELOCIDAD de cambio del VIX (z-score del retorno). El NIVEL del VIX (percentil) se reporta en la tabla 'Estructura de volatilidad'. Son dimensiones distintas y pueden no coincidir.*\n")
 
     out.append(f"- **Sectores:** {sector_regime}\n")
-    out.append("*Nota: Signal Consistency mide la consistencia entre señales, no una probabilidad estadistica calibrada. Data Conf mide la frescura y cobertura de los datos.*\n\n")
+    # H5 (2026-10-15, auditoria externa): Data Conf se deriva SOLO de
+    # la frescura (CURRENT/RECENT -> Alta; STALE/ARCHIVAL -> Baja). La
+    # nota anterior decia "frescura y cobertura", lo que contradecia el
+    # codigo de src/report/freshness.py.
+    out.append("*Nota: Signal Consistency mide la consistencia entre señales, no una probabilidad estadistica calibrada. Data Conf se deriva SOLO de la frescura observada (CURRENT/RECENT -> Alta; STALE/ARCHIVAL -> Baja). Los umbrales de frescura por fuente estan en config/settings.py (FRESHNESS_*).*\n\n")
 
 
     return out
