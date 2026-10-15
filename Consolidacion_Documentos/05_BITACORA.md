@@ -44,6 +44,35 @@ Al cerrar una sesion nueva, se anade arriba (las mas recientes primero). Si hay 
 
 ## 3. SESIONES
 
+### 2026-10-15 - Auditoria externa H1-H18 del reporte
+
+**Objetivo.** Atender los 18 hallazgos de la auditoria externa del
+reporte del 15-oct. Tres niveles: critico / alto / medio.
+
+**Hecho.**
+
+- H1 (critico): alerta HYG/LQD dependiente del Z real.
+- H2 (critico): FALSO POSITIVO. rs_mom (WLS) es invariante a escala
+  (verificado con split 10:1 simulado). Solo afecta a LIS (N2).
+- H3 (critico): separadas frescura SEC N-PORT (posiciones) y
+  N-PORT-P QQQ (flujos).
+- H7 (critico): BUG REAL. rolling(N, min_periods=N) roto con NaN
+  dispersos -> 289/329 tickers con NH/NL=0. Fix en 5 sitios + AST.
+- H4, H5, H6, H8, H10 (altos): documentacion + exposicion de valores.
+- H9, H11-H18 (medios): documentacion, cuantificaciones, notas.
+- 17 commits. Suite 3335 -> 3388 passed.
+
+**Commits.** edabdb52, 804968b1, db0462c2, 4d905104, 3bd5f68a,
+47b34d82, 3540218b, 0f990fdf, 7e621ea4, e9cefaeb, bb7fd03b,
+16e064f4, fdbc7ccf, fbcfe4cd.
+
+**Pendiente.**
+- Corpus documental (~15 items de deriva).
+- Verificacion del cron 23:17 UTC.
+
+**Proximo paso sugerido.** Barrido de corpus en sesion propia. Los
+15 items son deuda transversal que reaparecen en cada sesion.
+
 ### 2026-10-14 - N8 completo: forense + rediseno + sustitucion v1->v2
 
 **Objetivo.** Cerrar el frente N8 (rediseno del score de liquidez)
