@@ -14,7 +14,6 @@ Excepciones permitidas:
 """
 from pathlib import Path
 import ast
-import pytest
 
 
 ROOT = Path(__file__).resolve().parent.parent

@@ -110,30 +110,28 @@ atendidos. 17 commits de fix/docs + 3 commits previos de la sesion
 - **Auditoria externa H1-H18** completa.
 - **N8** (liquidity_v2) ya en produccion desde el 14-oct.
 - **N1** (SLPM fail-closed) cerrado el 14-oct.
+- **Pyflakes residual** (`import pytest` sin uso en
+  `tests/test_audit_contracts_rolling_nan.py`, introducido
+  por H7) corregido. HANDOFF §5 vuelve a poder declarar
+  pyflakes limpio.
 
 ---
 
 ## 4. PENDIENTES VIVOS
 
-### 4.1. Corpus documental (~15 items de deriva)
+### 4.1. Corpus documental — RESUELTO
 
-Detectados al inicio de la sesion 14-oct. Aparcados. Lista:
+Los 15 items de deriva detectados en la sesion 14-oct quedaron
+resueltos en el barrido Fase B (commit 07e75fb0, 15-oct):
+02_ARQUITECTURA §2/§4 (contratos 10->9), §8/§10 (slots 4->5),
+§10/§12 (OilPriceAPI), §6 (Liquidity 5->4); 00_ARRANQUE §5/§3
+(literales de tests -> remision a ESTADO_SISTEMA); 01_METODO §12
+(referencia rota). Los literales de tests en 04_HISTORICO,
+05_BITACORA y 08_AUDITORIA_SECTOR_REGIME se mantienen: son
+cronologia, no deriva.
 
-- `02_ARQUITECTURA` §2: contratos temporales 10 vs 9 (real: 9).
-- `02_ARQUITECTURA` §4: misma cifra.
-- `02_ARQUITECTURA` §8: slots cron 5 vs 4 (real: 5).
-- `02_ARQUITECTURA` §10: misma cifra al reves (dice 4).
-- `02_ARQUITECTURA` §10/§12: OilPriceAPI residual (eliminada
-  2026-09-30).
-- `02_ARQUITECTURA` §6: Liquidity Score "5 componentes" (real: 4, con
-  nombres distintos).
-- `00_ARRANQUE` §5: 3185 tests literal (real: 3388 con filtro CI).
-- `00_ARRANQUE` §3: 3247 tests (real: 3388).
-- Varios literales de tests sin regenerar.
-- Referencias cruzadas rotas: `01_METODO` §12 (no existe, max es 11).
-- `04_HISTORICO` `pytest.ini` con `-ra` + markers.
-- `HANDOFF` con 8 F6-* listados como pendientes (ya cerrados como
-  WONT FIX razonado el 12-oct).
+Los 8 F6-* figuran como WONT FIX razonado desde 2026-10-12
+(TRIAGE_BAJAS_2026-10-12.md seccion 4). No son pendientes.
 
 ### 4.2. Verificacion del cron 23:17 UTC
 
