@@ -78,7 +78,8 @@ def _compute_primary_flow(df: pd.DataFrame) -> pd.DataFrame:
     df['primary_flow_usd'] = df['shares_outstanding'].diff() * df['nav']
     df['primary_flow_pct'] = (df['primary_flow_usd'] / df['total_net_assets']) * 100.0
 
-    df['primary_flow_z'], df['primary_flow_z_regime'] = fund_flow_robust_zscore_with_regime(
+    # H6/H10 (2026-10-15): 3-tuple con z-score bruto sin clip.
+    df['primary_flow_z'], df['primary_flow_z_regime'], df['primary_flow_z_raw'] = fund_flow_robust_zscore_with_regime(
         df['primary_flow_pct'], window=120, min_periods=20,
     )
     return df

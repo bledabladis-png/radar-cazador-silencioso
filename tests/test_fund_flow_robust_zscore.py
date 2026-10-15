@@ -163,49 +163,49 @@ from data.providers._fund_flow_utils import (
 
 def test_regime_normal():
     s = pd.Series([10.0, 12.0, 14.0, 13.0, 11.0])
-    z, r = fund_flow_robust_zscore_with_regime(s, window=5, min_periods=5)
+    z, r, _ = fund_flow_robust_zscore_with_regime(s, window=5, min_periods=5)
     assert r.iloc[-1] == REGIME_NORMAL
     assert z.iloc[-1] == pytest.approx(-1.0 / 1.4826, abs=1e-6)
 
 
 def test_regime_mad0_same():
     s = pd.Series([10.0, 10.0, 10.0, 10.0, 10.0])
-    z, r = fund_flow_robust_zscore_with_regime(s, window=5, min_periods=5)
+    z, r, _ = fund_flow_robust_zscore_with_regime(s, window=5, min_periods=5)
     assert r.iloc[-1] == REGIME_MAD0_SAME
     assert z.iloc[-1] == 0.0
 
 
 def test_regime_mad0_nan():
     s = pd.Series([10.0, 10.0, 10.0, 10.0, 11.0])
-    z, r = fund_flow_robust_zscore_with_regime(s, window=5, min_periods=5)
+    z, r, _ = fund_flow_robust_zscore_with_regime(s, window=5, min_periods=5)
     assert r.iloc[-1] == REGIME_MAD0_NAN
     assert pd.isna(z.iloc[-1])
 
 
 def test_regime_saturated_superior():
     s = pd.Series([1.0, 2.0, 3.0, 4.0, 100.0])
-    z, r = fund_flow_robust_zscore_with_regime(s, window=5, min_periods=5)
+    z, r, _ = fund_flow_robust_zscore_with_regime(s, window=5, min_periods=5)
     assert r.iloc[-1] == REGIME_SATURATED
     assert z.iloc[-1] == 5.0
 
 
 def test_regime_saturated_inferior():
     s = pd.Series([1.0, 2.0, 3.0, 4.0, -100.0])
-    z, r = fund_flow_robust_zscore_with_regime(s, window=5, min_periods=5)
+    z, r, _ = fund_flow_robust_zscore_with_regime(s, window=5, min_periods=5)
     assert r.iloc[-1] == REGIME_SATURATED
     assert z.iloc[-1] == -5.0
 
 
 def test_regime_insufficient_ventana_corta():
     s = pd.Series([10.0, 11.0, 12.0])
-    z, r = fund_flow_robust_zscore_with_regime(s, window=20, min_periods=10)
+    z, r, _ = fund_flow_robust_zscore_with_regime(s, window=20, min_periods=10)
     assert r.iloc[-1] == REGIME_INSUFFICIENT
     assert pd.isna(z.iloc[-1])
 
 
 def test_regime_insufficient_ultimo_nan():
     s = pd.Series([10.0, 12.0, 14.0, 13.0, np.nan])
-    z, r = fund_flow_robust_zscore_with_regime(s, window=5, min_periods=5)
+    z, r, _ = fund_flow_robust_zscore_with_regime(s, window=5, min_periods=5)
     assert r.iloc[-1] == REGIME_INSUFFICIENT
     assert pd.isna(z.iloc[-1])
 
@@ -215,5 +215,5 @@ def test_regime_z_coincide_con_funcion_sin_regime():
     s = pd.Series([10.0, 11.5, 12.0, 11.8, 12.3, 11.9, 12.1, 12.4,
                    12.0, 11.7, 12.2, 11.9, 12.1, 12.3, 12.0])
     z_simple = fund_flow_robust_zscore(s, window=10, min_periods=5)
-    z_regime, _ = fund_flow_robust_zscore_with_regime(s, window=10, min_periods=5)
+    z_regime, _, _ = fund_flow_robust_zscore_with_regime(s, window=10, min_periods=5)
     pd.testing.assert_series_equal(z_simple, z_regime)

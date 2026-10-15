@@ -412,7 +412,8 @@ def compute_primary_flow(
     # SIGNAL
     # -------------------------------------------------------------------------
 
-    df["primary_flow_z"], df["primary_flow_z_regime"] = fund_flow_robust_zscore_with_regime(
+    # H6/H10 (2026-10-15): 3-tuple con z-score bruto sin clip.
+    df["primary_flow_z"], df["primary_flow_z_regime"], df["primary_flow_z_raw"] = fund_flow_robust_zscore_with_regime(
         df["primary_flow_pct"],
         window=120,
         min_periods=20,

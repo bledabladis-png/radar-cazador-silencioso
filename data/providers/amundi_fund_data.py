@@ -172,7 +172,8 @@ def compute_primary_flow(df: pd.DataFrame) -> pd.DataFrame:
 
     # Normalización robusta (mediana/MAD, clip ±5).
     # Contrato común con DAXEX, ISF e IWM (auditor 2026-09-27).
-    df['flow_zscore'], df['flow_zscore_regime'] = fund_flow_robust_zscore_with_regime(
+    # H6/H10 (2026-10-15): 3-tuple con z-score bruto sin clip.
+    df['flow_zscore'], df['flow_zscore_regime'], df['flow_zscore_raw'] = fund_flow_robust_zscore_with_regime(
         df['flow_pct_assets'], window=120, min_periods=20,
     )
     df['flow_5d'] = df['estimated_flow_eur'].rolling(5).mean()

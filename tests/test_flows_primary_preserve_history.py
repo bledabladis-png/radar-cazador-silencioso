@@ -28,13 +28,13 @@ def test_ssga_no_pierde_filas_si_proveedor_devuelve_menos(tmp_path, monkeypatch)
 
     cols = ["ticker", "Date", "nav", "shares_outstanding",
             "total_net_assets", "primary_flow_usd", "primary_flow_pct",
-            "primary_flow_z", "primary_flow_z_regime"]
+            "primary_flow_z", "primary_flow_z_regime", "primary_flow_z_raw"]
 
     # Historico ya existente con 3 fechas
     _write_existing_history(hist_path, [
-        ["XLK", "2026-09-25", 195.0, 100000, 19500000, 0.0, 0.0, 0.0, "NORMAL"],
-        ["XLK", "2026-09-28", 195.5, 100000, 19550000, 0.0, 0.0, 0.0, "NORMAL"],
-        ["XLK", "2026-09-29", 196.0, 100000, 19600000, 0.0, 0.0, 0.0, "NORMAL"],
+        ["XLK", "2026-09-25", 195.0, 100000, 19500000, 0.0, 0.0, 0.0, "NORMAL", 0.0],
+        ["XLK", "2026-09-28", 195.5, 100000, 19550000, 0.0, 0.0, 0.0, "NORMAL", 0.0],
+        ["XLK", "2026-09-29", 196.0, 100000, 19600000, 0.0, 0.0, 0.0, "NORMAL", 0.0],
     ], cols)
 
     # Simular proveedor que devuelve SOLO hasta 2026-09-28

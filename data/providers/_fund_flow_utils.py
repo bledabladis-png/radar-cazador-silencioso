@@ -103,6 +103,23 @@ _CODE_TO_REGIME = {
 }
 
 
+def _compute_raw_z_value(window_values: pd.Series, min_periods: int) -> float:
+    """Z-score robusto SIN clip. Mismo contrato que _compute_z_value pero
+    sin truncar a [-5, +5]. H6/H10 (2026-10-15, auditoria externa):
+    permite exponer la magnitud real cuando el z-score bruto supera el
+    limite contractual. NaN si MAD==0 (el regimen lo declara aparte)."""
+    values = window_values.dropna()
+    if len(values) < min_periods:
+        return float("nan")
+    s = pd.Series(values)
+    median = float(s.median())
+    mad = float((s - median).abs().median())
+    if mad < MAD_EPSILON:
+        return float("nan")
+    z = (float(s.iloc[-1]) - median) / (MAD_SCALE * mad)
+    return z
+
+
 def _compute_z_value(window_values: pd.Series, min_periods: int) -> float:
     values = window_values.dropna()
     if len(values) < min_periods:
@@ -179,6 +196,9 @@ def fund_flow_robust_zscore_with_regime(
     z_values = series.rolling(window, min_periods=min_p).apply(
         lambda w: _compute_z_value(w, min_p), raw=False,
     )
+    raw_z_values = series.rolling(window, min_periods=min_p).apply(
+        lambda w: _compute_raw_z_value(w, min_p), raw=False,
+    )
     regime_codes = series.rolling(window, min_periods=min_p).apply(
         lambda w: _compute_regime_code(w, min_p), raw=False,
     )
@@ -188,4 +208,8 @@ def fund_flow_robust_zscore_with_regime(
         if pd.notna(c)
         else REGIME_INSUFFICIENT
     )
-    return z_values, regimes
+    # H6/H10: devolver (z_clip, regime, z_raw). Backward-compat: los
+    # llamadores antiguos que hacian `z, regime = fn(...)` deben migrar
+    # a 3-tuple. Todos los consumidores en data/providers/ se han
+    # actualizado en el mismo commit.
+    return z_values, regimes, raw_z_values

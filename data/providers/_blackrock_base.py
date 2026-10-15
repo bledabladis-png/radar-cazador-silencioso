@@ -234,14 +234,16 @@ def get_blackrock_primary_flow(
     df_flow['flow_pct_assets'] = df_flow['flow_pct_assets'].where(
         np.isfinite(df_flow['flow_pct_assets']), np.nan
     )
-    df_flow['flow_zscore'], df_flow['flow_zscore_regime'] = fund_flow_robust_zscore_with_regime(
+    # H6/H10 (2026-10-15): 3-tuple con z-score bruto sin clip.
+    df_flow['flow_zscore'], df_flow['flow_zscore_regime'], df_flow['flow_zscore_raw'] = fund_flow_robust_zscore_with_regime(
         df_flow['flow_pct_assets'], window=120, min_periods=20,
     )
     df_flow['flow_5d'] = df_flow['estimated_flow_eur'].rolling(5).mean()
     df_flow['flow_20d'] = df_flow['estimated_flow_eur'].rolling(20).mean()
 
     cols = ['date','nav','shares_outstanding','shares_change','total_net_assets',
-            'estimated_flow_eur','flow_pct_assets','flow_zscore','flow_zscore_regime','flow_5d','flow_20d']
+            'estimated_flow_eur','flow_pct_assets','flow_zscore','flow_zscore_regime',
+            'flow_zscore_raw','flow_5d','flow_20d']
     result = df_flow[cols]
 
     output_csv.parent.mkdir(parents=True, exist_ok=True)

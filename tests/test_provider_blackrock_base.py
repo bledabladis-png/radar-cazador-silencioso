@@ -242,7 +242,8 @@ class TestGetBlackrockPrimaryFlow:
         expected_cols = [
             "date", "nav", "shares_outstanding", "shares_change",
             "total_net_assets", "estimated_flow_eur", "flow_pct_assets",
-            "flow_zscore", "flow_zscore_regime", "flow_5d", "flow_20d",
+            "flow_zscore", "flow_zscore_regime", "flow_zscore_raw",
+            "flow_5d", "flow_20d",
         ]
         assert list(df.columns) == expected_cols
 

@@ -20,8 +20,21 @@ def render_flujo_spdr(etf_primary_flow_data):
         out.append("## Flujo Primario ETF (SPDR)\n")
         out.append("| Ticker | NAV | Shares Outstanding | Total Net Assets | Primary Flow $ | Flow % AUM | Flow Z |\n")
         out.append("|--------|-----|---------------------|------------------|----------------|------------|--------|\n")
+
+        def _fmt_flow_z(row):
+            """H6/H10 (2026-10-15): si el regimen es SATURATED, muestra el
+            z clipado con * y el bruto entre parentesis. Antes se mostraba
+            +5.00 sin distinguirlo de un z real de +5.00."""
+            _z = row.get('primary_flow_z')
+            _raw = row.get('primary_flow_z_raw')
+            _reg = row.get('primary_flow_z_regime', '')
+            _z_str = _fmt_signed(_z, '{:+.2f}', '{:.2f}')
+            if _reg == 'SATURATED' and _raw is not None and pd.notna(_raw):
+                return f"{_z_str}* ({_raw:+.2f})"
+            return _z_str
+
         for _, row in etf_primary_flow_data.iterrows():
-            out.append(f"| {row['ticker']} | {row['nav']:.2f} | {row['shares_outstanding']:,.0f} | {row['total_net_assets']:,.0f} | {_fmt_signed(row['primary_flow_usd'], '{:+,.2f}', '{:,.2f}')} | {_fmt_signed(row['primary_flow_pct'], '{:+.2f}%', '{:.2f}%')} | {_fmt_signed(row['primary_flow_z'], '{:+.2f}', '{:.2f}')} |\n")
+            out.append(f"| {row['ticker']} | {row['nav']:.2f} | {row['shares_outstanding']:,.0f} | {row['total_net_assets']:,.0f} | {_fmt_signed(row['primary_flow_usd'], '{:+,.2f}', '{:,.2f}')} | {_fmt_signed(row['primary_flow_pct'], '{:+.2f}%', '{:.2f}%')} | {_fmt_flow_z(row)} |\n")
         # O1 (2026-09-18): declarar la fecha efectiva del dataset.
         try:
             _ultima_fecha = str(etf_primary_flow_data["Date"].max())[:10]
@@ -42,6 +55,8 @@ def render_flujo_spdr(etf_primary_flow_data):
                        ", ".join(sorted(_no_sectoriales)) + ".*\n\n")
         # F6-29b (2026-09-28): aclarar +0.00 vs N/D.
         out.append("*En la columna Primary Flow $: `+0.00` indica flujo calculado exactamente cero (shares outstanding sin cambio); `N/D` indica dato no disponible (NaN en shares o NAV). Son estados distintos.*\n\n")
+        # H6/H10 (2026-10-15): el asterisco indica saturacion del clip.
+        out.append("*En la columna Flow Z: `*` indica que el z-score bruto supero el clip contractual [-5, +5]. Se muestra el limite (+/-5.00) seguido del bruto entre parentesis. El flujo subyacente es un dato real; la saturacion es del z-score.*\n\n")
     return out
 
 
