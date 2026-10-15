@@ -132,4 +132,17 @@ def render_momentum_amplitud(sector_breadth_momentum_data):
         for _, row in df_mom.iterrows():
             out.append(f"| {row['sector']} | {_fmt_signed(row['delta_1d_ema20'], '{:+.1f}', '{:.1f}')} | {_fmt_signed(row['delta_5d_ema20'], '{:+.1f}', '{:.1f}')} | {_fmt_signed(row['delta_20d_ema20'], '{:+.1f}', '{:.1f}')} | {_fmt_signed(row['delta_5d_ema50'], '{:+.1f}', '{:.1f}')} | {_fmt_signed(row['delta_5d_ema200'], '{:+.1f}', '{:.1f}')} | {row['breadth_expansion_5d']} | {row['breadth_deterioration_5d']} |\n")
         out.append("\n")
+        # H16 (2026-10-15, auditoria externa): declarar unidad y reglas.
+        out.append("*H16 (2026-10-15, auditor):*\n")
+        out.append("*Unidad: PUNTOS PORCENTUALES (pp). Cada delta es la variacion "
+                   "en pp del % de componentes del sector por encima de su "
+                   "EMA. Ej: +10.0 significa que el % de componentes sobre "
+                   "EMA20 subio 10 pp (de 40% a 50%, no un +10% relativo).*\n")
+        out.append("*Reglas de los flags:*\n")
+        out.append("  - *Expansion = True si delta_5d_ema20 >= +5 pp Y "
+                   "nivel actual pct_above_ema20 > 60%.*\n")
+        out.append("  - *Deterioro = True si delta_5d_ema20 <= -5 pp.*\n")
+        out.append("  - *Ambos flags pueden ser False simultaneamente; no "
+                   "pueden ser True a la vez (umbrales opuestos).*\n")
+        out.append("*Fuente: indicators/sector_breadth_momentum.py.*\n\n")
     return out
