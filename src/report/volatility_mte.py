@@ -92,12 +92,20 @@ def render_mte(mte_result):
         out.append(f"- **Inflation Pressure Score:** {ips_str}\n\n")
         # P2.5 (2026-10-13, auditor): nota sin umbrales hardcodeados.
         # Si cambian en scoring.py, esta nota sigue siendo cierta.
+        # H15 (2026-10-15, auditoria externa): publicar componentes,
+        # pesos y umbrales del scoring de escenarios.
         out.append("*El escenario se asigna por suma ponderada de "
-                   "condiciones (ver indicators/mte/scoring.py, "
-                   "funcion score_scenarios y SCENARIO_WEIGHTS). "
-                   "La etiqueta se publica como UNCONFIRMED cuando "
-                   "la confidence no supera el umbral interno. "
-                   "'Inflation Pressure: N/5' es un contador de "
-                   "componentes en presion, distinto del score "
-                   "agregado Inflation Pressure Score.*\n\n")
+                   "condiciones. Pesos (SCENARIO_WEIGHTS): CLS=3, "
+                   "SHS=2, SRS=2, IPS=3. MIXED es una constante interna "
+                   "(=2). Umbrales de activacion: CLS>0.20 suma su peso; "
+                   "SHS>0.20; SRS>0.10; IPS>0.15. Bonos adicionales: "
+                   "CLS>0.50 suma +6 a CRISIS; CLS>0.85 suma +3; "
+                   "IPS>0.50 suma +2 a STAGFLATION. STAGFLATION se "
+                   "activa cuando IPS>0.15 AND SRS>0; CLS<0.30 refuerza. "
+                   "La etiqueta se publica como UNCONFIRMED cuando la "
+                   "confidence < 0.50. Fuente: "
+                   "indicators/mte/scoring.py::score_scenarios y "
+                   "SCENARIO_WEIGHTS. 'Inflation Pressure: N/5' es un "
+                   "contador de componentes en presion, distinto del "
+                   "score agregado Inflation Pressure Score.*\n\n")
     return out
