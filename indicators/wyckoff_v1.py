@@ -94,16 +94,21 @@ def _atr_normalized(df, ticker, window=WYCKOFF_ATR_WINDOW):
         (high - prev_close).abs(),
         (low - prev_close).abs(),
     ], axis=1).max(axis=1)
-    atr = tr.rolling(window, min_periods=window).mean()
+    atr = tr.dropna().rolling(window, min_periods=window).mean().reindex(tr.index)
     return atr / close
 
 
 def _trend_component(df, ticker):
     close = get_col(df, ticker, 'Close')
-    ma_fast = close.rolling(WYCKOFF_TREND_FAST_MA,
-                            min_periods=WYCKOFF_TREND_FAST_MA).mean()
-    ma_slow = close.rolling(WYCKOFF_TREND_SLOW_MA,
-                            min_periods=WYCKOFF_TREND_SLOW_MA).mean()
+    # Fix H7 (2026-10-15): rolling sobre close dropna. Con NaN dispersos
+    # (huecos USA/EU), rolling(N, mp=N) sobre el indice completo devuelve
+    # NaN en la mayoria de filas. Verificado: rolling(20, mp=20) sobre
+    # close bruto -> 603 filas validas; sobre dropna -> 1235.
+    _close_clean = close.dropna()
+    ma_fast = _close_clean.rolling(WYCKOFF_TREND_FAST_MA,
+                                    min_periods=WYCKOFF_TREND_FAST_MA).mean().reindex(close.index)
+    ma_slow = _close_clean.rolling(WYCKOFF_TREND_SLOW_MA,
+                                    min_periods=WYCKOFF_TREND_SLOW_MA).mean().reindex(close.index)
     return ma_fast / (ma_slow + 1e-9) - 1
 
 
@@ -154,10 +159,14 @@ def wyckoff_score(df, ticker):
 
 
 def wyckoff_stability(combined, window=STABILITY_MAD_WINDOW, K=STABILITY_K):
-    mad = combined.rolling(window, min_periods=window).apply(
-        lambda x: float(np.median(np.abs(x - np.median(x)))),
-        raw=True,
-    )
+    _comb_clean = combined.dropna()
+    if len(_comb_clean) >= window:
+        mad = _comb_clean.rolling(window, min_periods=window).apply(
+            lambda x: float(np.median(np.abs(x - np.median(x)))),
+            raw=True,
+        ).reindex(combined.index)
+    else:
+        mad = pd.Series(index=combined.index, dtype=float)
     return 1.0 - 2.0 * np.tanh(mad / (K + 1e-9))
 
 
@@ -459,7 +468,7 @@ def detect_sow(df, ticker, *, window=None, x_atr=None, y_vol=None,
     volume = get_col(df, ticker, 'Volume')
 
     # Soporte ex-ante
-    support = low.rolling(window, min_periods=window).min().shift(1)
+    support = low.dropna().rolling(window, min_periods=window).min().shift(1).reindex(low.index)
 
     # ATR ex-ante (shift(1) tras la rolling)
     prev_close = close.shift(1)
@@ -468,10 +477,10 @@ def detect_sow(df, ticker, *, window=None, x_atr=None, y_vol=None,
         (high - prev_close).abs(),
         (low - prev_close).abs(),
     ], axis=1).max(axis=1)
-    atr = tr.rolling(atr_window, min_periods=atr_window).mean().shift(1)
+    atr = tr.dropna().rolling(atr_window, min_periods=atr_window).mean().shift(1).reindex(tr.index)
 
     # Baseline volumen ex-ante
-    vol_baseline = volume.rolling(window, min_periods=window).mean().shift(1)
+    vol_baseline = volume.dropna().rolling(window, min_periods=window).mean().shift(1).reindex(volume.index)
 
     # Magnitudes
     break_depth = (support - close) / (atr + 1e-9)

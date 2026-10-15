@@ -85,14 +85,16 @@ def compute_advance_decline(df_stocks, effective_meta=None):
 
 
     # Breadth Thrust (media de 10 dias del ratio avances/(avances+declines))
-
+    # Fix 2026-10-15 (H7): rolling sobre serie dropna. Con NaN dispersos
+    # en el indice (sesiones mixtas USA/EU), rolling(10, mp=10) devuelve
+    # todo NaN si alguna fila tiene NaN.
     daily_total = advances + declines
-
     breadth_ratio = advances / daily_total.replace(0, np.nan)
-
-    breadth_thrust = breadth_ratio.rolling(10, min_periods=10).mean()
-
-
+    _br_clean = breadth_ratio.dropna()
+    if len(_br_clean) >= 10:
+        breadth_thrust = _br_clean.rolling(10, min_periods=10).mean()
+    else:
+        breadth_thrust = pd.Series(dtype=float)
 
     result = {
 
@@ -112,7 +114,11 @@ def compute_advance_decline(df_stocks, effective_meta=None):
 
         'nh_nl': int(nh_nl.iloc[-1]),
 
-        'breadth_thrust': float(breadth_thrust.iloc[-1]) if pd.notna(breadth_thrust.iloc[-1]) else 0.5,
+        'breadth_thrust': (
+            float(breadth_thrust.iloc[-1])
+            if len(breadth_thrust) > 0 and pd.notna(breadth_thrust.iloc[-1])
+            else 0.5
+        ),
 
         'total_tickers': expected,
 

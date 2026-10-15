@@ -94,10 +94,19 @@ def compute_stock_metrics(df_market, df_stocks, etf_ticker, stock_list, temporal
         flow_proxy_z = robust_zscore(flow_raw, window=60)
         flow_signal = flow_proxy_z.ewm(span=5).mean().iloc[-1]
 
-        ret_positive = (ret > 0).astype(int)
-        persistence_10d = ret_positive.rolling(10, min_periods=10).mean().iloc[-1]
-        persistence_5d = ret_positive.rolling(5, min_periods=5).mean().iloc[-1]
-        persistence_20d = ret_positive.rolling(20, min_periods=20).mean().iloc[-1]
+        # Fix 2026-10-15 (H7): rolling sobre serie dropna.
+        # ret_positive tiene NaN donde ret es NaN (huecos USA/EU).
+        # rolling(N, mp=N) sobre el indice completo devuelve todo NaN.
+        ret_positive = (ret > 0).astype(int).where(ret.notna())
+        _ret_pos_clean = ret_positive.dropna()
+        if len(_ret_pos_clean) >= 20:
+            persistence_10d = _ret_pos_clean.rolling(10, min_periods=10).mean().iloc[-1]
+            persistence_5d = _ret_pos_clean.rolling(5, min_periods=5).mean().iloc[-1]
+            persistence_20d = _ret_pos_clean.rolling(20, min_periods=20).mean().iloc[-1]
+        else:
+            persistence_10d = np.nan
+            persistence_5d = np.nan
+            persistence_20d = np.nan
         if pd.isna(persistence_10d):
             persistence_10d = 0.5
 

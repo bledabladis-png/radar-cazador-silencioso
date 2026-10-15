@@ -145,14 +145,19 @@ def compute_sector_breadth(df_market, df_stocks, holdings_df, as_of_date=None, t
                 else:
                     mom_positive.append(0)
 
-            # NH/NL 52 semanas (High/Low, 252 sesiones previas)
-            if len(high) >= 253 and len(low) >= 253:
+            # NH/NL 52 semanas (High/Low, 252 sesiones validas previas)
+            # Fix 2026-10-15 (H7): aplicar rolling sobre serie dropna.
+            # Con NaN dispersos, rolling(252, min_periods=252) sobre el
+            # indice completo devuelve NaN en todas las filas.
+            _high_clean = high.dropna()
+            _low_clean = low.dropna()
+            if len(_high_clean) >= 253 and len(_low_clean) >= 253:
                 n_valid_nhnl += 1
-                prev_high = high.shift(1).rolling(252, min_periods=252).max().iloc[-1]
-                prev_low = low.shift(1).rolling(252, min_periods=252).min().iloc[-1]
-                if high.iloc[-1] >= prev_high:
+                prev_high = _high_clean.shift(1).rolling(252, min_periods=252).max().iloc[-1]
+                prev_low = _low_clean.shift(1).rolling(252, min_periods=252).min().iloc[-1]
+                if pd.notna(prev_high) and _high_clean.iloc[-1] >= prev_high:
                     nh_count += 1
-                if low.iloc[-1] <= prev_low:
+                if pd.notna(prev_low) and _low_clean.iloc[-1] <= prev_low:
                     nl_count += 1
 
             # Advance/Decline diario (último día)

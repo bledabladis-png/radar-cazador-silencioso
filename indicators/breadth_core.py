@@ -1,4 +1,6 @@
-﻿# -*- coding: utf-8 -*-
+﻿import pandas as pd
+
+# -*- coding: utf-8 -*-
 """
 breadth_core.py -- Funciones comunes de amplitud (NH/NL, cobertura, avances/descensos).
 Centraliza la logica compartida entre breadth.py y breadth_equity.py.
@@ -6,24 +8,37 @@ Centraliza la logica compartida entre breadth.py y breadth_equity.py.
 
 def compute_new_highs_lows(prices, window=252):
     """
-    Calcula nuevos maximos y minimos de 52 semanas.
-    Usa shift(1) para comparar contra las 252 sesiones PREVIAS (no incluye el dia actual).
-    
+    Calcula nuevos maximos y minimos de 52 semanas POR TICKER.
+
+    Fix 2026-10-15 (H7): la version anterior hacia shift(1).rolling(N,
+    min_periods=N) sobre el DataFrame completo. Con NaN dispersos
+    (festivos USA/EU, gaps), ninguna ventana consecutiva cumplia -> 0/0
+    en todo el historico (289/329 tickers). Ahora cada ticker se evalua
+    sobre su serie dropna y los conteos se agregan por fecha.
+
     Args:
         prices: DataFrame con precios (columnas = tickers, indice = fechas).
-        window: ventana en sesiones (default 252).
-    
+        window: ventana en sesiones validas por ticker (default 252).
+
     Returns:
         nh: Series con el numero de nuevos maximos por fecha.
         nl: Series con el numero de nuevos minimos por fecha.
     """
-    previous_high = prices.shift(1).rolling(window, min_periods=window).max()
-    previous_low = prices.shift(1).rolling(window, min_periods=window).min()
-    
-    nh = (prices >= previous_high).sum(axis=1)
-    nl = (prices <= previous_low).sum(axis=1)
-    
-    return nh, nl
+    nh_counts = pd.Series(0, index=prices.index, dtype=int)
+    nl_counts = pd.Series(0, index=prices.index, dtype=int)
+
+    for col in prices.columns:
+        s = prices[col].dropna()
+        if len(s) <= window:
+            continue
+        prev_high = s.shift(1).rolling(window, min_periods=window).max()
+        prev_low = s.shift(1).rolling(window, min_periods=window).min()
+        is_nh = (s >= prev_high).reindex(prices.index, fill_value=False).astype(int)
+        is_nl = (s <= prev_low).reindex(prices.index, fill_value=False).astype(int)
+        nh_counts = nh_counts + is_nh
+        nl_counts = nl_counts + is_nl
+
+    return nh_counts, nl_counts
 
 
 def compute_advances_declines(prices):

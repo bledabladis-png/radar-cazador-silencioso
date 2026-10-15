@@ -161,10 +161,18 @@ def robust_zscore(series, window=60, min_periods=None):
     return z.clip(-5, 5)
 
 def rolling_percentile(series, window=120):
-    return series.rolling(window).apply(
-        lambda x: (x.iloc[-1] > x.iloc[:-1]).sum() / (len(x) - 1) if len(x) > 1 else 0.5,
+    """Percentil rolling. Fix H7 (2026-10-15): aplicar sobre serie dropna.
+    Con NaN dispersos (huecos USA/EU), rolling(window) sobre el indice
+    completo devuelve NaN en toda la serie."""
+    _s_clean = series.dropna()
+    if len(_s_clean) == 0:
+        import pandas as _pd
+        return _pd.Series(index=series.index, dtype=float)
+    roll = _s_clean.rolling(window).apply(
+        lambda x: (float(x[-1]) > x[:-1]).sum() / (len(x) - 1) if len(x) > 1 else 0.5,
         raw=True
     )
+    return roll.reindex(series.index)
 
 def tanh_normalize(series):
     z = robust_zscore(series)
