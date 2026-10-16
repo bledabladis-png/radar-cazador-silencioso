@@ -29,11 +29,23 @@ def _iso(hours_ago=0.0):
     return t.strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
-def _manifest(target="2026-10-16", coverage=99.5, sha="deadbeef" * 8):
+def _manifest(target="2026-10-16", coverage=99.5, sha="deadbeef" * 8,
+              by_market=None):
+    """Manifest con by_market valido por defecto.
+
+    Enmienda v1.1: la validacion contractual exige by_market con
+    US_EQUITY (contrato critico EQUITY_EOD).
+    """
+    if by_market is None:
+        by_market = {"US_EQUITY": {"n": 255, "status": "VALID",
+                                     "coverage_at_session": 0.99}}
     return {
         "quality": {
             "expected_session": target,
             "coverage_pct_last": coverage,
+            "last_date": target,
+            "status": "VALID_WITH_MISSING",
+            "by_market": by_market,
         },
         "artifact": {"sha256": sha},
     }
@@ -146,3 +158,45 @@ def test_receipt_schema_v1_compatible(tmp_path, monkeypatch):
     assert r["success_path_reached"] is True
     assert r["validation_gate_checks_n"] == 10
     assert r["validation_gate_errors_n"] == 0
+
+
+def test_receipt_no_emite_si_contract_blocked(tmp_path, monkeypatch):
+    """Enmienda v1.1: si US_EQUITY INVALID -> no se emite receipt."""
+    manifest = _manifest(by_market={
+        "US_EQUITY": {"n": 255, "status": "INVALID",
+                       "coverage_at_session": 0.0}
+    })
+    opath = _setup(tmp_path, monkeypatch, manifest, _vg_pass())
+    assert wcr.main() == 1
+    assert not opath.exists()
+
+
+def test_receipt_emite_si_by_market_ausente(tmp_path, monkeypatch):
+    """Enmienda v1.1: sin by_market -> WARN -> receipt SI se emite.
+    La validacion global (cobertura, VG 10/10) sigue aplicando."""
+    m = _manifest()
+    del m["quality"]["by_market"]
+    opath = _setup(tmp_path, monkeypatch, m, _vg_pass())
+    assert wcr.main() == 0
+    assert opath.exists()
+    r = json.loads(opath.read_text(encoding="utf-8"))
+    assert r.get("contract_validation_status") == "WARN"
+
+
+def test_receipt_no_emite_si_by_market_sin_critico(tmp_path, monkeypatch):
+    """Enmienda v1.1: by_market presente pero sin US_EQUITY -> UNAVAILABLE
+    -> no receipt."""
+    m = _manifest(by_market={
+        "BME": {"n": 19, "status": "VALID", "coverage_at_session": 1.0}
+    })
+    opath = _setup(tmp_path, monkeypatch, m, _vg_pass())
+    assert wcr.main() == 1
+    assert not opath.exists()
+
+
+def test_receipt_incluye_contract_validation_status(tmp_path, monkeypatch):
+    """El receipt guarda contract_validation_status."""
+    opath = _setup(tmp_path, monkeypatch, _manifest(), _vg_pass())
+    assert wcr.main() == 0
+    r = json.loads(opath.read_text(encoding="utf-8"))
+    assert r.get("contract_validation_status") == "OK"

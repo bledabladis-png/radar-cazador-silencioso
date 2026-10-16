@@ -55,9 +55,18 @@ def test_manifest_sin_quality_es_unavailable():
     assert r.status == STATUS_UNAVAILABLE
 
 
-def test_by_market_vacio_es_unavailable():
+def test_by_market_ausente_es_warn():
+    """Enmienda v1.1: sin by_market no hay desglose por mercado.
+    La validacion global del guard sigue aplicando. WARN, no OK ni
+    UNAVAILABLE."""
+    r = validate_artifact_contracts({"quality": {}})
+    assert r.status == STATUS_WARN
+
+
+def test_by_market_vacio_es_warn():
+    """Mismo criterio: dict vacio equivale a ausente."""
     r = validate_artifact_contracts({"quality": {"by_market": {}}})
-    assert r.status == STATUS_UNAVAILABLE
+    assert r.status == STATUS_WARN
 
 
 def test_equity_eod_valido_es_ok():

@@ -170,10 +170,16 @@ def validate_artifact_contracts(manifest: dict) -> ValidationResult:
 
     by_market = quality.get("by_market")
     if not isinstance(by_market, dict) or not by_market:
+        # Enmienda v1.1: un manifest SIN by_market no declara contratos
+        # por mercado. No se puede evaluar el desglose, pero tampoco
+        # afirmar que un contrato falla. La validacion global del guard
+        # (cobertura, status, last_date) sigue aplicando. Se degrada a
+        # WARN, no a UNAVAILABLE: UNAVAILABLE se reserva para "hay
+        # desglose y falta el contrato critico".
         return ValidationResult(
-            STATUS_UNAVAILABLE,
-            reasons=["by_market ausente o vacio (sin evidencia para "
-                     "evaluar contratos criticos)"],
+            STATUS_WARN,
+            reasons=["by_market ausente o vacio: sin desglose por "
+                     "mercado; validacion contractual no aplicable"],
         )
 
     # Comprobar que todos los contratos criticos tienen evidencia en

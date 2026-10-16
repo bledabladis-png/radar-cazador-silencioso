@@ -35,7 +35,6 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from src.temporal_contracts.validation import (
     validate_artifact_contracts,
-    STATUS_OK as V_OK,
     STATUS_WARN as V_WARN,
     STATUS_BLOCKED as V_BLOCKED,
     STATUS_UNAVAILABLE as V_UNAVAILABLE,
