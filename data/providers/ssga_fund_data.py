@@ -192,7 +192,19 @@ def get_etf_primary_flow_data(force_download: bool = False) -> pd.DataFrame:
     # (render_flujo_spdr._fmt_flow_z) recibe _raw=None y nunca emite
     # el asterisco de saturacion. El CSV si la tenia porque to_csv
     # escribe todas las columnas; el df de retorno la omitia.
-    return last_df[['ticker','Date','nav','shares_outstanding','total_net_assets',
+    # H11 (2026-10-16, auditoria): exponer shares_change para que el
+    # render muestre dShares y fecha de comparacion. Antes solo se
+    # publicaba el flujo en dolares sin declarar la variacion que lo
+    # alimenta; el lector no podia reconstruir la cifra.
+    _return_cols = ['ticker','Date','nav','shares_outstanding','total_net_assets',
                     'primary_flow_usd','primary_flow_pct','primary_flow_z',
-                    'primary_flow_z_regime','primary_flow_z_raw']].reset_index(drop=True)
+                    'primary_flow_z_regime','primary_flow_z_raw']
+    if 'shares_change' in last_df.columns:
+        _return_cols.append('shares_change')
+    else:
+        # Derivar dShares desde shares_outstanding (diff) si no existe
+        last_df = last_df.copy()
+        last_df['shares_change'] = last_df['shares_outstanding'].diff()
+        _return_cols.append('shares_change')
+    return last_df[_return_cols].reset_index(drop=True)
 

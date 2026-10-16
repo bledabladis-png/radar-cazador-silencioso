@@ -28,10 +28,18 @@ def render_estructura_volatilidad(volatility_structure_data):
             # en otros renders del paquete.
             def _fmt(v):
                 return f"{v:.2f}" if pd.notna(v) else "N/D"
+            # H16 (2026-10-16, auditoria): homogeneizar unidades. Los
+            # percentiles del VIX vienen en escala [0,1]; el percentil del
+            # PCR viene en escala [0,100]. Se publican todos como [0,100]
+            # con sufijo '%' para evitar lecturas cruzadas erroneas.
+            def _pct_0_1(v):
+                return f"{v*100:.0f}%" if pd.notna(v) else "N/D"
+            def _pct_0_100(v):
+                return f"{v:.0f}%" if pd.notna(v) else "N/D"
             out.append(
-                f"| {date_str} | {_fmt(row['vix_level'])} | {_fmt(row['vix_percentile_20d'])} | "
-                f"{_fmt(row['vix_percentile_60d'])} | {_fmt(row['term_structure_ratio'])} | "
-                f"{_fmt(row['pcr_zscore'])} | {_fmt(row['pcr_percentile_20d'])} | "
+                f"| {date_str} | {_fmt(row['vix_level'])} | {_pct_0_1(row['vix_percentile_20d'])} | "
+                f"{_pct_0_1(row['vix_percentile_60d'])} | {_fmt(row['term_structure_ratio'])} | "
+                f"{_fmt(row['pcr_zscore'])} | {_pct_0_100(row['pcr_percentile_20d'])} | "
                 f"{row['volatility_reading']} | {row['term_structure_reading']} |\n"
             )
         out.append("\n")
@@ -40,6 +48,12 @@ def render_estructura_volatilidad(volatility_structure_data):
         # - Perc PCR (esta columna): pcr_percentile_20d, ventana 20 sesiones.
         # - Percentil (Sentimiento de Opciones): percentile, ventana
         #   min(252, len) sesiones. Distinta ventana, mismo indicador.
+        # H16 (2026-10-16, auditoria): declarar unidades de cada percentil.
+        out.append("*H16 auditoria 2026-10-16: Perc 20d / Perc 60d = "
+                   "percentiles del VIX (escala original 0-1, publicados "
+                   "aqui como 0-100%). Perc PCR = percentil del PCR sobre "
+                   "20 sesiones (escala original 0-100). Unidades "
+                   "homogeneizadas a % para lectura directa.*\n\n")
         out.append("*Perc PCR = percentil de PCR sobre ventana de 20 "
                    "sesiones (columna pcr_percentile_20d). El 'Percentil' "
                    "de Sentimiento de Opciones usa la misma serie con "

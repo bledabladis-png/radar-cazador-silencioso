@@ -18,8 +18,8 @@ def render_flujo_spdr(etf_primary_flow_data):
     out = []
     if etf_primary_flow_data is not None and not etf_primary_flow_data.empty:
         out.append("## Flujo Primario ETF (SPDR)\n")
-        out.append("| Ticker | NAV | Shares Outstanding | Total Net Assets | Primary Flow $ | Flow % AUM | Flow Z |\n")
-        out.append("|--------|-----|---------------------|------------------|----------------|------------|--------|\n")
+        out.append("| Ticker | NAV | Shares Outstanding | ΔShares | Total Net Assets | Primary Flow $ | Flow % AUM | Flow Z |\n")
+        out.append("|--------|-----|---------------------|---------|------------------|----------------|------------|--------|\n")
 
         def _fmt_flow_z(row):
             """H6/H10 (2026-10-15): si el regimen es SATURATED, muestra el
@@ -34,7 +34,9 @@ def render_flujo_spdr(etf_primary_flow_data):
             return _z_str
 
         for _, row in etf_primary_flow_data.iterrows():
-            out.append(f"| {row['ticker']} | {row['nav']:.2f} | {row['shares_outstanding']:,.0f} | {row['total_net_assets']:,.0f} | {_fmt_signed(row['primary_flow_usd'], '{:+,.2f}', '{:,.2f}')} | {_fmt_signed(row['primary_flow_pct'], '{:+.2f}%', '{:.2f}%')} | {_fmt_flow_z(row)} |\n")
+            _sc = row.get('shares_change')
+            _sc_str = _fmt_signed(_sc, '{:+,.0f}', '{:,.0f}') if _sc is not None and pd.notna(_sc) else 'N/D'
+            out.append(f"| {row['ticker']} | {row['nav']:.2f} | {row['shares_outstanding']:,.0f} | {_sc_str} | {row['total_net_assets']:,.0f} | {_fmt_signed(row['primary_flow_usd'], '{:+,.2f}', '{:,.2f}')} | {_fmt_signed(row['primary_flow_pct'], '{:+.2f}%', '{:.2f}%')} | {_fmt_flow_z(row)} |\n")
         # O1 (2026-09-18): declarar la fecha efectiva del dataset.
         try:
             _ultima_fecha = str(etf_primary_flow_data["Date"].max())[:10]
@@ -52,6 +54,16 @@ def render_flujo_spdr(etf_primary_flow_data):
                    "pero no identifica quien compro el ETF ni a que precio. "
                    "Se usa como proxy de demanda agregada del vehiculo, no "
                    "como medida del flujo economico del activo.*\n\n")
+        # H11 (2026-10-16, auditoria): declarar la fuente de dShares y
+        # la fecha de comparacion. El flujo se calcula como dShares x NAV,
+        # donde dShares = shares_outstanding[t] - shares_outstanding[t-1].
+        out.append("*H11 auditoria 2026-10-16: la columna ΔShares declara "
+                   "la variacion de participaciones usada en el calculo "
+                   "(shares_outstanding[t] - shares_outstanding[t-1]). "
+                   "La fecha de comparacion es la fecha inmediatamente "
+                   "anterior con dato disponible. Verificacion de "
+                   "plausibilidad: variaciones >5% del AUM requieren "
+                   "revision manual de la fuente.*\n\n")
         out.append("*Esta tabla muestra flujo por ETF (dato atomico). "
                    "Para la lectura agregada con persistencia y regimen, ver "
                    "la tabla siguiente: Flujo Primario ETF - Agregado sectorial.*\n\n")
