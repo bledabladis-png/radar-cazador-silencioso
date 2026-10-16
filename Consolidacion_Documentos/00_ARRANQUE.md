@@ -59,6 +59,17 @@ Lo que NUNCA haces:
 - Segundo candado temporal: ningun writer publica filas con date no bursatil. Readers exponen walk-back.
 - Los artefactos (parquets) llevan manifest de integridad.
 
+**Gobernanza documental (desde 2026-10-16):**
+- Toda auditoria, frente o dictamen vive en `docs/gobernanza/REGISTRO.yaml`
+  con estado inequivoco (OPEN, IN_PROGRESS, BLOCKED_EXTERNAL, FIXED,
+  WONT_FIX, FALSE_POSITIVE, SUPERSEDED).
+- El HANDOFF, la bitacora y el indice H1-H18 son VISTAS derivadas. Nunca
+  fuente de estado.
+- Antes de cada commit que toque el registro: `py scripts/verifica_gobernanza.py`.
+- Toda fecha literal en asignacion modulo o default de funcion en `src/`
+  o `scripts/` (salvo scripts de calibracion) debe estar en
+  `docs/gobernanza/ANCLAS.yaml`.
+
 **Reglas R1-R6:**
 - R1: Una metrica agregada nunca se publica sin declarar fecha efectiva y cobertura del universo elegible.
 - R2: Ninguna metrica agregada selecciona observacion por posicion fisica. Se resuelve via resolve_effective_date().
@@ -173,17 +184,21 @@ Pega este bloque al inicio de cada sesion:
     git log --oneline -5
     git status -sb
     py scripts\generate_estado_sistema.py
+    py scripts\verifica_gobernanza.py
+    py scripts\genera_indice_auditorias.py
+    py scripts\poda_bitacora.py --check
     py -m pytest tests/ -q --tb=line -m "not integration_real_data"
     py -m pyflakes . ; py -m compileall . -q
 
 Esperado:
 - HEAD = `git log --oneline -1`
-- ahead 0, behind 0
+- ahead 0, behind 0 (o behind N si el bot ha pusheado; `git pull --ff-only`)
 - working tree limpio
 - Conteo real en `ESTADO_SISTEMA.md` (no literal fijo aqui)
+- Gobernanza: `[OK] Gobernanza coherente`
+- Indice H1-H18: `[OK] indice actualizado`
+- Bitacora: `[OK] Bitacora dentro de la regla`
 - pyflakes silencio, compileall OK
-
----
 
 ## 6. DOCUMENTOS HERMANOS
 
@@ -203,6 +218,10 @@ Corpus consolidado en `Consolidacion_Documentos/`.
 | `07_RUNBOOK.md` | Procedimiento de los crons | Al verificar un cron |
 | `08_AUDITORIA_SECTOR_REGIME.md` | Expediente auditoria sector_regime | Al tocar sector_regime |
 | `ESTADO_SISTEMA.md` | Snapshot auto-generado (no editar) | Fuente autoritativa de tests, integridad, modulos IAE, mappings y evidencia |
+| `docs/gobernanza/README.md` | Contrato del sistema de gobernanza documental | Al trabajar con items auditables o anclas temporales |
+| `docs/gobernanza/REGISTRO.yaml` | Fuente canonica de items auditables | Al abrir/cerrar items o auditar estado |
+| `docs/gobernanza/ANCLAS.yaml` | Catalogo central de anclas temporales | Al anadir fechas literales en codigo productivo |
+| `docs/auditoria/radar/audits/INDEX_H1_H18.md` | Indice derivado de auditoria externa 15-oct | Vista derivada; no editar |
 
 `docs/auditoria/wyckoff/` (35+ ficheros) contiene el expediente completo
 del rediseno del modulo Wyckoff. Indice en `docs/auditoria/wyckoff/03_plan_migracion.md`.
