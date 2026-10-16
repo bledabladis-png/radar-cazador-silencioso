@@ -140,7 +140,8 @@ como precondicion. Si `BLOCKED` o `UNAVAILABLE`, no se emite receipt
 
 **Commit 6 — Guard semantico STAGFLATION.**
 - `indicators/mte/decision.py::classify_mte`.
-- Condicion: `IPS > 0.15 AND SRS > 0` (la del contrato H15).
+- Condicion: `IPS > 0.15 AND SRS > 0` (la publicada en el contrato
+  metodologico del MTE).
 - Si no se cumple, STAGFLATION no puede ser el escenario final.
 - Recalcular confidence sobre el escenario efectivamente elegido.
 - Tests obligatorios (tabla del auditor):
