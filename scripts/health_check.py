@@ -222,66 +222,142 @@ def check_cron_slots() -> list:
 # =========================================================
 # CHECK A - Workflows: ultima ejecucion por schedule
 # =========================================================
-def check_workflows() -> list:
-    results = []
-    for yml, meta in WORKFLOW_EXPECTATIONS.items():
-        # Fix 2026-10-08: el check original filtraba por --event schedule.
-        # Los workflows trimestrales tuvieron 3 schedule failure el 1-oct
-        # (causa raiz: sys.path + arrays desalineados, corregidos el mismo
-        # dia en 1bead8ad y 27248d35). Los dispatch posteriores pasan, pero
-        # el check seguia mostrando WARN permanente porque el ultimo run
-        # con event=schedule seguia siendo el fallo. Ahora se mira el ultimo
-        # run de cualquier evento: si el workflow esta operativo, OK.
-        out = _run_gh([
-            "run", "list", "--workflow", yml,
-            "--limit", "1", "--json", "createdAt,conclusion,status,event",
-        ])
-        if out is None:
-            results.append(Result(f"workflow:{yml}", SKIP, "gh no disponible"))
-            continue
-        try:
-            runs = json.loads(out)
-        except Exception:
-            results.append(Result(f"workflow:{yml}", WARN, "JSON invalido"))
-            continue
-        if not runs:
-            # Workflows trimestrales (max_days >= 30): sin runs por
-            # schedule es lo esperado la mayor parte del ano.
+BAD_CONCLUSIONS = ("failure", "cancelled", "timed_out",
+                   "startup_failure", "skipped", "action_required")
+
+# Estados de una consulta gh. Distinguen "no puedo verificar" (SKIP) de
+# "gh OK pero sin runs" (WARN/SKIP segun workflow).
+_GH_ERROR = "gh_error"      # _run_gh devolvio None (red/token/gh ausente)
+_JSON_ERROR = "json_error"  # JSON invalido del gh
+_EMPTY = "empty"            # gh OK, lista vacia
+_OK = "ok"                  # gh OK con al menos un run
+
+
+def _last_run(yml, event=None):
+    """Devuelve (status, run_dict_o_None).
+
+    status ∈ {_GH_ERROR, _JSON_ERROR, _EMPTY, _OK}.
+    Un unico helper para evitar divergencias.
+    """
+    args = [
+        "run", "list", "--workflow", yml,
+        "--limit", "1", "--json", "createdAt,conclusion,status,event",
+    ]
+    if event:
+        args += ["--event", event]
+    out = _run_gh(args)
+    if out is None:
+        return _GH_ERROR, None
+    try:
+        runs = json.loads(out)
+    except Exception:
+        return _JSON_ERROR, None
+    if not runs:
+        return _EMPTY, None
+    return _OK, runs[0]
+
+
+def _delta_days(created_at):
+    """Dias transcurridos desde created_at (ISO str con Z) hasta ahora."""
+    created = datetime.fromisoformat(created_at.replace("Z", "+00:00"))
+    now = datetime.now(created.tzinfo)
+    return (now - created).total_seconds() / 86400
+
+
+def _check_one_workflow(yml, meta):
+    """Verifica Schedule Health de un workflow.
+
+    HD-5 (dictamen auditor externo 2026-10-16): la salud del schedule
+    automatico y la disponibilidad de workflow_dispatch se verifican
+    por separado. Un dispatch reciente NUNCA debe ocultar por si solo
+    que el schedule no esta disparando.
+
+    Reglas:
+      - SKIP: gh no disponible o JSON invalido (no verificable).
+      - SKIP: sin runs de ningun tipo si el workflow es trimestral.
+      - WARN: sin runs de ningun tipo si es diario.
+      - WARN: schedule vacio pero dispatch reciente (no trimestral).
+      - WARN: schedule stale pero dispatch reciente (no trimestral).
+      - WARN: schedule con conclusion BAD.
+      - FAIL: schedule stale (>max_days) sin dispatch compensatorio.
+      - OK: schedule reciente y conclusion OK.
+    """
+    sched_status, sched = _last_run(yml, event="schedule")
+    any_status, any_ = _last_run(yml)
+
+    # gh no disponible: no podemos afirmar nada.
+    if sched_status == _GH_ERROR and any_status == _GH_ERROR:
+        return Result(f"workflow:{yml}", SKIP, "gh no disponible")
+
+    # JSON invalido: anomalia tecnica, WARN (no SKIP, porque gh respondio).
+    if sched_status == _JSON_ERROR or any_status == _JSON_ERROR:
+        return Result(f"workflow:{yml}", WARN, "JSON invalido")
+
+    # Schedule no acreditado (lista vacia). ¿Hay dispatch que compense?
+    if sched is None:
+        if any_ is not None:
             if meta["max_days"] >= 30:
-                results.append(Result(f"workflow:{yml}", SKIP,
-                    f"sin runs en historial (trimestral, "
-                    f"max_days={meta['max_days']})"))
-            else:
-                results.append(Result(f"workflow:{yml}", WARN,
-                    "sin ejecuciones por schedule en el historial"))
-            continue
-        last = runs[0]
-        try:
-            created = datetime.fromisoformat(last["createdAt"].replace("Z", "+00:00"))
-            now = datetime.now(created.tzinfo)
-            delta_days = (now - created).total_seconds() / 86400
-        except Exception:
-            results.append(Result(f"workflow:{yml}", WARN, "timestamp ilegible"))
-            continue
-        conclusion = last.get("conclusion") or "unknown"
-        event = last.get("event", "?")
-        # Conclusiones que no son exito: failure, cancelled, timed_out,
-        # startup_failure, skipped. Todas ellas -> WARN. Solo success
-        # cuenta como OK. Fix 2026-10-08.
-        BAD = ("failure", "cancelled", "timed_out",
-               "startup_failure", "skipped", "action_required")
-        if delta_days > meta["max_days"]:
-            results.append(Result(f"workflow:{yml}", FAIL,
-                f"ultimo run hace {delta_days:.1f}d (>{meta['max_days']}d) "
-                f"({event}, {conclusion})"))
-        elif conclusion in BAD:
-            results.append(Result(f"workflow:{yml}", WARN,
-                f"ultimo run fue {conclusion} hace {delta_days:.1f}d "
-                f"({event})"))
-        else:
-            results.append(Result(f"workflow:{yml}", OK,
-                f"{delta_days*24:.0f}h atras ({event}, {conclusion})"))
-    return results
+                return Result(f"workflow:{yml}", SKIP,
+                    "trimestral, ultimo {0} ({1})".format(
+                        any_.get("event", "?"),
+                        any_.get("conclusion") or "unknown"))
+            return Result(f"workflow:{yml}", WARN,
+                "SCHEDULE no acreditado; ultimo {0} ({1})".format(
+                    any_.get("event", "?"),
+                    any_.get("conclusion") or "unknown"))
+        if meta["max_days"] >= 30:
+            return Result(f"workflow:{yml}", SKIP,
+                "sin runs en historial (trimestral, max_days={0})".format(
+                    meta["max_days"]))
+        return Result(f"workflow:{yml}", WARN,
+            "sin ejecuciones en el historial")
+
+    # Schedule acreditado: mirar su salud.
+    try:
+        delta_days = _delta_days(sched["createdAt"])
+    except Exception:
+        return Result(f"workflow:{yml}", WARN, "timestamp ilegible")
+
+    conclusion = sched.get("conclusion") or "unknown"
+
+    if delta_days > meta["max_days"]:
+        if any_ is not None and any_.get("event") == "workflow_dispatch":
+            try:
+                delta_any = _delta_days(any_["createdAt"])
+            except Exception:
+                delta_any = None
+            if delta_any is not None and delta_any <= meta["max_days"]:
+                if meta["max_days"] >= 30:
+                    return Result(f"workflow:{yml}", SKIP,
+                        "trimestral, ultimo dispatch ({0:.0f}h)".format(
+                            delta_any * 24))
+                return Result(f"workflow:{yml}", WARN,
+                    "SCHEDULE stale ({0:.1f}d); DISPATCH reciente ({1:.0f}h)".format(
+                        delta_days, delta_any * 24))
+        if meta["max_days"] >= 30:
+            return Result(f"workflow:{yml}", SKIP,
+                "trimestral sin schedule ({0:.0f}d)".format(delta_days))
+        return Result(f"workflow:{yml}", FAIL,
+            "schedule hace {0:.1f}d (>{1}d) ({2})".format(
+                delta_days, meta["max_days"], conclusion))
+
+    if conclusion in BAD_CONCLUSIONS:
+        return Result(f"workflow:{yml}", WARN,
+            "schedule {0} hace {1:.0f}h".format(conclusion, delta_days * 24))
+
+    return Result(f"workflow:{yml}", OK,
+        "{0:.0f}h atras (schedule, {1})".format(delta_days * 24, conclusion))
+
+
+def check_workflows() -> list:
+    """Verifica Schedule Health de cada workflow declarado.
+
+    HD-5 (dictamen auditor externo 2026-10-16): separa la salud del
+    schedule automatico de la disponibilidad de dispatch manual. Un
+    dispatch reciente nunca debe ocultar que el schedule no dispara.
+    """
+    return [_check_one_workflow(yml, meta)
+            for yml, meta in WORKFLOW_EXPECTATIONS.items()]
 
 
 # =========================================================
