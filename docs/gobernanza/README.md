@@ -43,3 +43,19 @@ lista de errores. Corre en CI (pendiente de anadir al workflow).
 
 Cada cambio al registro requiere pasar verifica_gobernanza.py antes
 de commitear.
+
+## Campo verificacion
+
+Cada item puede declarar un campo `verificacion` adicional al estado:
+
+| Valor | Significado |
+|---|---|
+| `FIXED` | Fix aplicado + tests en verde. Sin verificacion en produccion. |
+| `VERIFIED_IN_CI` | El workflow real ejecuto el fix (evidencia en run ID). |
+| `VERIFIED_IN_PRODUCTION` | La salida real se contrasto contra el contrato temporal. |
+| `VERIFIED_IN_CI_PENDING` | Fix cerrado, pendiente de verificacion en CI. |
+| `PARTIALLY_VERIFIED` | Causa corregida pero sin confirmar el dato cuestionado. |
+| `FALSE_POSITIVE` | Verificado que no era bug. |
+
+El estado (`FIXED`, `OPEN`, etc.) declara la intencion. La verificacion
+declara la evidencia. Son dimensiones distintas.

@@ -14,6 +14,7 @@ items:
   commit: 3023d2d2
   test: tests/test_classify_mte_stagflation_gate.py
   evidencia: Guard semantico en classify_mte; condicion publicada en H15
+  verificacion: VERIFIED_IN_CI_PENDING
 - id: C3-PROVIDER
   tipo: auditoria_interna
   ciclo: '2026-10-16'
@@ -22,6 +23,7 @@ items:
   commit: e6b2fc0b
   test: tests/test_ssga_provider_return_contract.py
   evidencia: El asterisco de saturacion se emite correctamente en CI
+  verificacion: FIXED
 - id: CI-UBUNTU-PIN
   tipo: auditoria_interna
   ciclo: '2026-10-16'
@@ -88,6 +90,7 @@ items:
   commit: 97c00097
   test: tests/test_write_completion_attempt.py
   evidencia: 'completion_attempt.jsonl subido como artifact con if: always()'
+  verificacion: VERIFIED_IN_CI_PENDING
 - id: DICT2-ENMIENDA
   tipo: dictamen_externo
   ciclo: '2026-10-16'
@@ -96,6 +99,7 @@ items:
   commit: 1859a143
   test: tests/test_temporal_validation.py
   evidencia: 'Contrato del gate: schema v1 mantenido, alcance del guard ampliado'
+  verificacion: VERIFIED_IN_CI_PENDING
 - id: DICT2-R3TEST
   tipo: dictamen_externo
   ciclo: '2026-10-16'
@@ -104,6 +108,7 @@ items:
   commit: daac0003
   test: tests/test_breadth_r3_fecha_efectiva_compartida.py
   evidencia: 'Descubrio bug real: resolve_effective_date usaba index[-1] sin ordenar'
+  verificacion: VERIFIED_IN_CI_PENDING
 - id: H1
   tipo: auditoria_externa
   ciclo: '2026-10-15'
@@ -112,6 +117,7 @@ items:
   commit: edabdb52
   test: tests/test_report_alerts_header.py
   evidencia: '3 ramas por Z real: positivo/negativo/N-D'
+  verificacion: FIXED
 - id: H10
   tipo: auditoria_externa
   ciclo: '2026-10-15'
@@ -119,6 +125,7 @@ items:
   descripcion: Exponer z bruto sin clip cuando saturado
   commit: 4d905104
   test: tests/test_h6_h10_flow_z_saturation.py
+  verificacion: FIXED
 - id: H11
   tipo: auditoria_externa
   ciclo: '2026-10-15'
@@ -128,6 +135,7 @@ items:
   test: tests/test_h3_sec_freshness_sources.py
   razon: Absorbido por H3, que ya separaba las dos fuentes SEC. No requiere accion
     propia.
+  verificacion: FIXED
 - id: H12
   tipo: auditoria_externa
   ciclo: '2026-10-15'
@@ -135,6 +143,7 @@ items:
   descripcion: ETF Primary Flow es estimacion operativa, no flujo secundario
   commit: 0f990fdf
   test: tests/test_h12_primary_flow_disclaimer.py
+  verificacion: FIXED
 - id: H13
   tipo: auditoria_externa
   ciclo: '2026-10-15'
@@ -142,6 +151,7 @@ items:
   descripcion: Benchmark de rs_abs_20d no declarado (SPY vs ^GSPC)
   commit: 7e621ea4
   test: tests/test_h13_rs_abs_benchmark.py
+  verificacion: FIXED
 - id: H14
   tipo: auditoria_externa
   ciclo: '2026-10-15'
@@ -149,6 +159,7 @@ items:
   descripcion: NIPC 13F sin unidad, formula ni tratamiento
   commit: e9cefaeb
   test: tests/test_h14_nipc_documentacion.py
+  verificacion: FIXED
 - id: H15
   tipo: auditoria_externa
   ciclo: '2026-10-15'
@@ -156,6 +167,7 @@ items:
   descripcion: MTE no publicaba pesos ni umbrales
   commit: bb7fd03b
   test: tests/test_h15_mte_weights.py
+  verificacion: FIXED
 - id: H16
   tipo: auditoria_externa
   ciclo: '2026-10-15'
@@ -163,6 +175,7 @@ items:
   descripcion: Momentum amplitud sin unidad ni reglas de flags
   commit: 16e064f4
   test: tests/test_h16_breadth_momentum_units.py
+  verificacion: FIXED
 - id: H17
   tipo: auditoria_externa
   ciclo: '2026-10-15'
@@ -170,6 +183,7 @@ items:
   descripcion: 3 persistencias homonimas sin desambiguar
   commit: fdbc7ccf
   test: tests/test_h17_persistence_disambiguation.py
+  verificacion: FIXED
 - id: H18
   tipo: auditoria_externa
   ciclo: '2026-10-15'
@@ -177,6 +191,7 @@ items:
   descripcion: QQQ/SPY Desde inicio sin fechas reales ni aviso
   commit: fbcfe4cd
   test: tests/test_h18_qqq_spy_inception.py
+  verificacion: FIXED
 - id: H2
   tipo: auditoria_externa
   ciclo: '2026-10-15'
@@ -187,6 +202,7 @@ items:
   evidencia: rs_mom = log(rs).diff(20) invariante a escala
   razon: Verificado empiricamente con split 10:1 simulado, resultado identico. Solo
     afecta a LIS (N2), no a WLS.
+  verificacion: FALSE_POSITIVE
 - id: H3
   tipo: auditoria_externa
   ciclo: '2026-10-15'
@@ -195,6 +211,7 @@ items:
   commit: db0462c2
   test: tests/test_h3_sec_freshness_sources.py
   evidencia: Frescura SEC separada por fuente
+  verificacion: FIXED
 - id: H4
   tipo: auditoria_externa
   ciclo: '2026-10-15'
@@ -202,6 +219,7 @@ items:
   descripcion: Volatilidad (velocidad) vs Lectura (nivel) homonimas
   commit: 3bd5f68a
   test: tests/test_h4_volatility_level_vs_speed.py
+  verificacion: FIXED
 - id: H5
   tipo: auditoria_externa
   ciclo: '2026-10-15'
@@ -209,6 +227,7 @@ items:
   descripcion: Data Conf se deriva solo de frescura, no de cobertura
   commit: 47b34d82
   test: tests/test_h5_data_conf_frescura.py
+  verificacion: VERIFIED_IN_PRODUCTION
 - id: H5.3
   tipo: frente
   ciclo: '2026-10-03'
@@ -222,6 +241,7 @@ items:
   descripcion: Z=5.00 era clip, no valor bruto
   commit: 4d905104
   test: tests/test_h6_h10_flow_z_saturation.py
+  verificacion: FIXED
 - id: H7
   tipo: auditoria_externa
   ciclo: '2026-10-15'
@@ -230,6 +250,7 @@ items:
   commit: 1189b7f8
   test: tests/test_audit_contracts_rolling_nan.py
   evidencia: 289/329 tickers con NH/NL=0 en historico; fix en 5 sitios
+  verificacion: FIXED
 - id: H8
   tipo: auditoria_externa
   ciclo: '2026-10-15'
@@ -237,6 +258,7 @@ items:
   descripcion: Sector Lider publicado cuando state=UNRESOLVED
   commit: 0710db68
   evidencia: Fix en render de SLPM; sin test especifico (cambio de string condicional)
+  verificacion: FIXED
 - id: H9
   tipo: auditoria_externa
   ciclo: '2026-10-15'
@@ -244,6 +266,7 @@ items:
   descripcion: Correlacion entre evidencias no cuantificada
   commit: 3540218b
   test: tests/test_h9_evidence_correlation.py
+  verificacion: VERIFIED_IN_CI
 - id: HD-1
   tipo: auditoria_interna
   ciclo: '2026-10-16'
@@ -315,6 +338,7 @@ items:
   commit: 4b7caba6
   test: tests/test_alert_h1_z_neutral.py
   evidencia: Banda neutral |Z|<0.5 declarada
+  verificacion: FIXED
 - id: M2-FLOW-CONF
   tipo: auditoria_interna
   ciclo: '2026-10-16'
@@ -323,6 +347,7 @@ items:
   commit: 4b7caba6
   test: tests/test_flow_confidence_regla.py
   evidencia: Banda neutral |s|<=0.1 + politica de empate explicitadas
+  verificacion: FIXED
 - id: M3-FRESHNESS
   tipo: auditoria_interna
   ciclo: '2026-10-16'
@@ -331,6 +356,7 @@ items:
   commit: 4b7caba6
   test: tests/test_freshness_alignment.py
   evidencia: Sub-seccion 'Alineacion con sesion esperada' anadida
+  verificacion: FIXED
 - id: N-C1
   tipo: auditoria_interna
   ciclo: '2026-10-16'
@@ -339,6 +365,7 @@ items:
   commit: 4ac3ec0c
   test: tests/test_temporal_validation.py
   evidencia: Contrato EQUITY_EOD (critical=True) bloquea si coverage < 0.90 o status=INVALID
+  verificacion: VERIFIED_IN_CI_PENDING
 - id: N-C2
   tipo: auditoria_interna
   ciclo: '2026-10-16'
@@ -347,6 +374,7 @@ items:
   commit: 4ac3ec0c
   test: tests/test_guard_coverage_validation.py
   evidencia: Validacion contractual compartida en src/temporal_contracts/validation.py
+  verificacion: VERIFIED_IN_CI_PENDING
 - id: N-C3
   tipo: auditoria_interna
   ciclo: '2026-10-16'
@@ -355,6 +383,7 @@ items:
   commit: 4ac3ec0c
   test: tests/test_guard_coverage_validation.py
   evidencia: 'Invariante: cobertura global OK no neutraliza invalid de universo obligatorio'
+  verificacion: VERIFIED_IN_CI_PENDING
 - id: N-C4
   tipo: auditoria_interna
   ciclo: '2026-10-16'
@@ -364,6 +393,7 @@ items:
   test: tests/test_write_completion_receipt.py
   evidencia: 'Precondicion de emision: validate_artifact_contracts() no debe devolver
     BLOCKED ni UNAVAILABLE'
+  verificacion: VERIFIED_IN_CI_PENDING
 - id: N-C5
   tipo: auditoria_interna
   ciclo: '2026-10-16'
@@ -372,6 +402,7 @@ items:
   commit: 97c00097
   test: tests/test_write_completion_attempt.py
   evidencia: Registro de intentos incompletos como artifact por ejecucion
+  verificacion: VERIFIED_IN_CI_PENDING
 - id: N-C6
   tipo: auditoria_interna
   ciclo: '2026-10-16'
@@ -380,6 +411,7 @@ items:
   commit: daac0003
   test: tests/test_breadth_effective_date_nc6.py
   evidencia: resolve_effective_date con sort_index + universo combinado + cap R4
+  verificacion: VERIFIED_IN_CI_PENDING
 - id: N-C7
   tipo: auditoria_interna
   ciclo: '2026-10-16'
@@ -388,6 +420,7 @@ items:
   commit: e87f94f1
   test: tests/test_health_check_session_alignment.py
   evidencia: check_expected_session_alignment detecta LAGGED + mercados INVALID
+  verificacion: VERIFIED_IN_CI_PENDING
 - id: N-C8
   tipo: auditoria_interna
   ciclo: '2026-10-16'
@@ -397,6 +430,7 @@ items:
   commit: e3eb2fe0
   test: tests/test_pipeline_gate_target_session_hours.py
   evidencia: Contrato UTC explicito; 24h naive == 24h aware; ventana cerrada
+  verificacion: VERIFIED_IN_CI_PENDING
 - id: SOW-V6
   tipo: frente
   ciclo: '2026-10-06'
