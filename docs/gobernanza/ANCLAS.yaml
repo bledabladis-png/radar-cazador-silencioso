@@ -1,0 +1,59 @@
+version: 1
+# Catalogo central de anclas temporales en codigo de produccion.
+# Verificado por tests/test_anclas_temporales.py.
+# Categorias: serie_fuente, frontera_contrato, incidente_proveedor,
+#             periodo_congelado, calibracion, otro
+#
+# Excluidos del test (por regla explicita en el test):
+#   - tests/
+#   - scripts/calibrate_*
+#   - scripts/walk_forward_*
+#   - scripts/validate_wyckoff_*
+#   - scripts/qa_precond_*
+#   - scripts/compare_sow_*
+#   - scripts/download_extended_history.py
+#   - scripts/power_analysis_5bX.py
+#   - scripts/iae_*.py  (subsistema IAE, fuera del pipeline diario)
+
+anclas:
+  - id: SOFR_NACIMIENTO
+    valor: "2018-04-02"
+    categoria: serie_fuente
+    ubicaciones:
+      - src/pipeline/regimes.py:36
+    razon: "Primera fecha de publicacion de SOFR en FRED. No hay dato antes en la fuente."
+
+  - id: VERIFY_OUTPUTS_DEFAULT_SINCE
+    valor: "2026-10-11"
+    categoria: frontera_contrato
+    ubicaciones:
+      - scripts/verify_outputs.py:41
+    razon: "Despliegue del contrato de persistencia de outputs. Antes de esa fecha los CSVs sobrescribian, no acumulaban."
+
+  - id: HEALTH_CHECK_CONFIRMED_INCOMPLETE
+    valor: "2026-09-22"
+    categoria: incidente_proveedor
+    ubicaciones:
+      - scripts/health_check.py:72
+    razon: "Fallo puntual de Yahoo: 206/313 tickers USA sin Close. Excluida de los controles como defecto conocido."
+
+  - id: IAE_FULL_PERIOD
+    valor: "2026-03-31"
+    categoria: periodo_congelado
+    ubicaciones:
+      - src/institutional_accumulation/sec_13f/identity/temporal_filter.py:22
+    razon: "Periodo contractual congelado del IAE. Cualquier cambio requiere nuevo dictamen externo."
+
+  - id: IAE_PIPELINE_PERIODS
+    valor: "2025-12-31"
+    categoria: periodo_congelado
+    ubicaciones:
+      - src/institutional_accumulation/pipeline_contractual.py:103
+    razon: "Par contractual congelado del IAE (Q4-2025 -> Q1-2026). Ambos periodos en la misma linea."
+
+  - id: MACRO_MANUAL_START_DATE
+    valor: "2000-01-01"
+    categoria: serie_fuente
+    ubicaciones:
+      - scripts/update_macro_manual.py:24
+    razon: "Inicio de descarga de las series macro de FRED. Ancla de cobertura historica."
