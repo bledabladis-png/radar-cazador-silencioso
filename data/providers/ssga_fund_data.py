@@ -187,7 +187,12 @@ def get_etf_primary_flow_data(force_download: bool = False) -> pd.DataFrame:
     # tabla SPDR (render_flujo_spdr) lee df["Date"].max() para declarar
     # la fecha efectiva. Sin esta columna, el reporte mostraba
     # "Ultima fecha: N/D" aunque el dato estaba disponible.
+    # C3 (dictamen auditor externo 2026-10-16): el df in-memory debe
+    # incluir primary_flow_z_raw. Sin esta columna, el render
+    # (render_flujo_spdr._fmt_flow_z) recibe _raw=None y nunca emite
+    # el asterisco de saturacion. El CSV si la tenia porque to_csv
+    # escribe todas las columnas; el df de retorno la omitia.
     return last_df[['ticker','Date','nav','shares_outstanding','total_net_assets',
                     'primary_flow_usd','primary_flow_pct','primary_flow_z',
-                    'primary_flow_z_regime']].reset_index(drop=True)
+                    'primary_flow_z_regime','primary_flow_z_raw']].reset_index(drop=True)
 
