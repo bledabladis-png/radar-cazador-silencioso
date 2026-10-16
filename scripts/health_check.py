@@ -715,6 +715,66 @@ def check_iae_section(is_ci: bool = False) -> list:
     return [Result("iae_section", OK, "seccion presente")]
 
 # =========================================================
+# CHECK I - Alineacion de sesion esperada (manifests)
+# =========================================================
+def check_expected_session_alignment() -> list:
+    """Verifica que last_date == expected_session en los manifests criticos.
+
+    N-C7 (dictamen auditor externo 2026-10-16): anadido como control
+    explicito. Si un manifest declara last_date < expected_session,
+    se marca WARN (desfase) o FAIL si status==INVALID en algun mercado.
+    La autoridad es el propio manifest, no el parquet.
+    """
+    results = []
+    for name in ("stock_prices", "market_data"):
+        tag = f"session:{name}"
+        mpath = PROJECT_ROOT / "data" / f"{name}.parquet.manifest.json"
+        if not mpath.exists():
+            results.append(Result(tag, SKIP, "manifest ausente"))
+            continue
+        try:
+            m = json.loads(mpath.read_text(encoding="utf-8"))
+        except Exception as e:
+            results.append(Result(tag, WARN, f"manifest invalido: {e}"))
+            continue
+        q = m.get("quality") or {}
+        expected = q.get("expected_session")
+        last = q.get("last_date")
+        status = q.get("status")
+        if not expected or not last:
+            results.append(Result(tag, SKIP, "sin expected_session o last_date"))
+            continue
+        if last == expected:
+            if status == "INVALID":
+                results.append(Result(tag, FAIL,
+                    f"ALIGNED pero status=INVALID ({last})"))
+            else:
+                results.append(Result(tag, OK, f"ALIGNED ({last})"))
+            continue
+        if last < expected:
+            # Desfase hacia atras. Mirar by_market para detectar
+            # mercados criticos invalidados en su sesion esperada.
+            by_market = q.get("by_market") or {}
+            invalid_crit = [
+                mk for mk, info in by_market.items()
+                if isinstance(info, dict)
+                and info.get("status") == "INVALID"
+                and info.get("n", 0) > 0
+            ]
+            if invalid_crit:
+                results.append(Result(tag, FAIL,
+                    f"LAGGED ({last} vs {expected}) con mercados INVALID: "
+                    + ", ".join(sorted(invalid_crit))))
+            else:
+                results.append(Result(tag, WARN,
+                    f"LAGGED ({last} vs {expected})"))
+            continue
+        results.append(Result(tag, WARN,
+            f"ANOMALY last_date={last} > expected_session={expected}"))
+    return results
+
+
+# =========================================================
 # ORQUESTACION
 # =========================================================
 def run_all_checks() -> list:
@@ -727,6 +787,8 @@ def run_all_checks() -> list:
     # C
     results.extend(check_manifest("stock_prices"))
     results.extend(check_manifest("market_data"))
+    # I - N-C7: alineacion de sesion esperada
+    results.extend(check_expected_session_alignment())
     # C-ter: holdings CSVs (Fix D, 2026-10-08)
     results.extend(check_holdings_csvs())
     # C-bis: revision Yahoo (K-LSE-YAHOO-REVISION-01)
