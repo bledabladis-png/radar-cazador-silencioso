@@ -12,6 +12,7 @@ from src.market_calendar import _last_market_session
 from config.settings import (
     FRESHNESS_CBOE, FRESHNESS_YAHOO,
     FRESHNESS_FINRA, FRESHNESS_FRED, FRESHNESS_DEFAULT,
+    FRESHNESS_SEC, FRESHNESS_CFTC,
 )
 
 from src.report.helpers import (
@@ -127,8 +128,8 @@ def render_data_freshness(pcr_data, darkpool_data, sector_results, reference_dat
                f"FINRA {FRESHNESS_FINRA}, "
                f"FRED {FRESHNESS_FRED}, "
                f"Yahoo {FRESHNESS_YAHOO}, "
-               f"CFTC (45, 90, 120), "
-               f"SEC N-PORT (90, 180, 270), "
+               f"CFTC {FRESHNESS_CFTC}, "
+               f"SEC N-PORT {FRESHNESS_SEC}, "
                f"resto {FRESHNESS_DEFAULT}. "
                "Cada tupla es (CURRENT, RECENT, STALE); por encima del "
                "tercer umbral: ARCHIVAL. Data Conf: Alta si CURRENT o "

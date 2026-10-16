@@ -6,7 +6,10 @@ No alimenta motores, scores, pesos ni State Machine.
 No crea Data Quality Score.
 """
 
-from config.settings import EXPECTED_SECTOR_COUNT, FRESHNESS_FINRA
+from config.settings import (
+    EXPECTED_SECTOR_COUNT, FRESHNESS_FINRA,
+    FRESHNESS_SEC, FRESHNESS_CFTC,
+)
 import pandas as pd
 import numpy as np
 from datetime import datetime
@@ -28,19 +31,21 @@ def classify_freshness(age_days, frequency):
         elif age_days <= max_stale: return 'STALE'
         else: return 'ARCHIVAL'
     elif frequency == 'sec':
-        # F7-08: SEC N-PORT es trimestral con latencia regulatoria ~45-60d.
-        # Un ciclo completo es 90d. Los umbrales reflejan 1/2/3 trimestres.
-        # Antes compartia umbrales con cftc (45/90/120), lo que marcaba
-        # ARCHIVAL al dato mas reciente disponible.
-        if age_days <= 90: return 'CURRENT'
-        elif age_days <= 180: return 'RECENT'
-        elif age_days <= 270: return 'STALE'
+        # H7 (2026-10-16, auditoria): umbrales centralizados en
+        # config.settings.FRESHNESS_SEC. Antes hardcoded aqui; ahora la
+        # fuente unica es settings, y la nota del reporte los consume
+        # desde ahi tambien.
+        max_current, max_recent, max_stale = FRESHNESS_SEC
+        if age_days <= max_current: return 'CURRENT'
+        elif age_days <= max_recent: return 'RECENT'
+        elif age_days <= max_stale: return 'STALE'
         else: return 'ARCHIVAL'
     elif frequency == 'cftc':
-        # CFTC TFF: semanal, publicacion viernes. 45d ya es anomalia.
-        if age_days <= 45: return 'CURRENT'
-        elif age_days <= 90: return 'RECENT'
-        elif age_days <= 120: return 'STALE'
+        # H7: umbrales centralizados en config.settings.FRESHNESS_CFTC.
+        max_current, max_recent, max_stale = FRESHNESS_CFTC
+        if age_days <= max_current: return 'CURRENT'
+        elif age_days <= max_recent: return 'RECENT'
+        elif age_days <= max_stale: return 'STALE'
         else: return 'ARCHIVAL'
     elif frequency == 'fred':
         if age_days <= 30: return 'CURRENT'

@@ -41,6 +41,12 @@ FRESHNESS_YAHOO = (3, 7, 14)      # Yahoo Finance
 # RECENT <= 28d (limite superior del retraso regulatorio).
 FRESHNESS_FINRA = (20, 28, 45)    # FINRA (retraso regulatorio 2-4 sem.)
 FRESHNESS_FRED = (30, 60, 90)     # FRED (series macro)
+# H7 (2026-10-16, auditoria): SEC N-PORT es trimestral (latencia
+# regulatoria ~45-60d). Un ciclo completo es 90d. Umbrales a 1/2/3
+# trimestres.
+FRESHNESS_SEC = (90, 180, 270)    # SEC N-PORT (trimestral)
+# CFTC TFF: semanal. 45d ya es anomalia.
+FRESHNESS_CFTC = (45, 90, 120)    # CFTC Traders in Financial Futures
 
 # ============================================================
 # CFTC POSITION FLOW (data/providers/cftc_data.py)
