@@ -110,6 +110,12 @@ def main():
 
     commit_sha = os.environ.get("GITHUB_SHA") or _git_head() or ""
 
+    # guard_coverage y pipeline_conclusion se fijan a "OK"/"success"
+    # porque este script solo se invoca desde daily_run.yml con
+    # `if: success()`, es decir, tras Guard coverage PASS y sin fallo
+    # previo. _validate_receipt_schema (pipeline_gate) exige estos
+    # valores. Si un dia se invoca desde otro contexto, habra que
+    # derivar los campos del estado real del pipeline.
     receipt = {
         "schema_version": SCHEMA_VERSION,
         "status": "COMPLETED",

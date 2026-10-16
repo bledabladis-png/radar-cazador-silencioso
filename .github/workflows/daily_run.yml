@@ -2,11 +2,11 @@ name: Daily Macro Sectorial Run
 
 on:
   schedule:
-    # F-IAE-CRON-02 (2026-09-25): 4 slots con idempotencia por cobertura.
+    # F-IAE-CRON-02 (2026-09-25): 5 slots con idempotencia por cobertura.
     # Sustituye al cron unico 0 23 * * * (F-IAE-CRON-01).
     # Razon: la latencia de Yahoo para poblar Close varia (>5h26m observado
     # a 100% NaN, 16h12m a 0% NaN). Un solo deadline no garantiza exito.
-    # Los 4 slots apuntan a la misma target_session (ver pipeline_gate.py):
+    # Los 5 slots apuntan a la misma target_session (ver pipeline_gate.py):
     #   slot 1: 17 23 * * *  (~5h17m post-cierre USA)
     #   slot 2: 17 3 * * *   (~9h17m)
     #   slot 3: 17 5 * * *   (~11h17m)

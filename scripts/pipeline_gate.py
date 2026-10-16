@@ -450,7 +450,15 @@ def _write_github_output(result):
 
 
 def resolve_target_session(now=None):
-    """Resuelve target_session a partir de now (default: UTC)."""
+    """Resuelve target_session a partir de now (default: UTC).
+
+    Nota (2026-10-16, auditoria): now naive-UTC se pasa a
+    last_expected_market_date, que lo interpreta como Madrid. La
+    diferencia con UTC-aware es 2h en CEST, pero los 5 slots del cron
+    caen en horas donde la interpretacion no cambia el dia esperado.
+    Verificado empiricamente: naive-UTC y UTC-aware dan identico
+    target_session para (23:17, 03:17, 05:17, 07:17, 11:17). No es bug.
+    """
     if now is None:
         now = datetime.now(timezone.utc).replace(tzinfo=None)
     return last_expected_market_date(now).isoformat()

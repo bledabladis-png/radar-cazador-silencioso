@@ -263,3 +263,24 @@ def test_drift_cron_slots_en_daily_run_yml():
             sorted(gate_slots - yml_slots),
             sorted(yml_slots - gate_slots),
         ))
+
+
+def test_drift_cron_slots_vs_health_check():
+    """CRON_SLOTS (gate) y CRON_SLOTS_DAILY_HM (health_check) deben
+    declarar los mismos slots, en las dos direcciones.
+
+    2026-10-16 (auditoria): el drift test original solo cubria
+    pipeline_gate vs daily_run.yml. health_check.py declara los
+    mismos slots en formato (HH, MM) y no estaba cubierto.
+    """
+    from scripts.pipeline_gate import CRON_SLOTS
+    from scripts.health_check import CRON_SLOTS_DAILY_HM
+    gate_slots = set(CRON_SLOTS)
+    hc_slots = {"{} {} * * *".format(mm, hh) for hh, mm in CRON_SLOTS_DAILY_HM}
+    assert gate_slots == hc_slots, (
+        "drift CRON_SLOTS vs CRON_SLOTS_DAILY_HM\n"
+        "  solo en gate: {0}\n"
+        "  solo en health_check: {1}".format(
+            sorted(gate_slots - hc_slots),
+            sorted(hc_slots - gate_slots),
+        ))

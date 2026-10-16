@@ -124,7 +124,7 @@ def _run_gh(args: list) -> str | None:
         return None
 
 # =========================================================
-# CHECK H - Cron slots: los 4 disparos diarios de daily_run.yml
+# CHECK H - Cron slots: los 5 disparos diarios de daily_run.yml
 # =========================================================
 def _expected_slots(cutoff: datetime, now: datetime) -> list:
     """Devuelve los slots de cron esperados en [cutoff, now].
@@ -173,6 +173,8 @@ def check_cron_slots() -> list:
     3+ -> FAIL.
     """
     out = _run_gh([
+        # limit=20: 5 slots/dia * 4 dias de historial.
+        # Suficiente para cubrir la ventana de 24h con margen amplio.
         "run", "list", "--workflow", "daily_run.yml",
         "--event", "schedule", "--limit", "20",
         "--json", "createdAt",
