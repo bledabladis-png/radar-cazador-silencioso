@@ -86,7 +86,7 @@ Fuente autoritativa de tests, integridad y cobertura: `Consolidacion_Documentos/
 
 Snapshot al cierre del ultimo commit:
 - HEAD: `git log --oneline -1`
-- Tests: ver `Consolidacion_Documentos/ESTADO_SISTEMA.md` (fuente autoritativa). Referencia con filtro CI: ~3388 passed + 5 skipped.
+- Tests: fuente autoritativa en `Consolidacion_Documentos/ESTADO_SISTEMA.md` (seccion 2).
 - Validation Gate: 10/10
 - Working tree: limpio
 - Corpus documental: v3 (Consolidacion_Documentos/00-08, 2026-09-30)
