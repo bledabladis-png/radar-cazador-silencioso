@@ -47,7 +47,13 @@ def render_slpm_v12(slpm_v12_data):
         )
         if _no_confirmado:
             out.append(f"- **Candidato a líder (no confirmado):** {sector}\n")
-            out.append(f"  - *El SLPM no confirma liderazgo: {reason_code}. El sector mostrado es el de mayor Structural Score, no un liderazgo validado.*\n")
+            # H3 (2026-10-16, auditoria): la frase previa afirmaba que
+            # el sector mostrado era "el de mayor Structural Score".
+            # Empiricamente no se sostiene (XLP con Structural -0.02 vs
+            # XLE con +0.20). El sector mostrado es el #1 del ranking
+            # estructural general (combinando distintos motores). Se
+            # reformula sin afirmar un criterio que no se cumple.
+            out.append(f"  - *El SLPM no confirma liderazgo: {reason_code}. El sector mostrado es el #1 del ranking estructural general en este snapshot, no un liderazgo validado.*\n")
         else:
             out.append(f"- **Sector Líder:** {sector}\n")
             out.append("  - *Nota: El SLPM selecciona al líder combinando Structural, Breadth y Persistence. Tactical y LIS son métricas diagnósticas. No es simplemente el sector con mayor Structural Score.*\n")

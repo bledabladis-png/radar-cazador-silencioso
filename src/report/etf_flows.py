@@ -46,14 +46,24 @@ def render_flujo_spdr(etf_primary_flow_data):
         # H12 (2026-10-15, auditoria externa): aclarar que el flujo es una
         # estimacion operativa (creaciones/reembolsos), no una observacion
         # universal del flujo comprador/vendedor en el mercado secundario.
-        out.append("*H12 (2026-10-15, auditor): ETF Primary Flow es una "
-                   "ESTIMACION OPERATIVA (variacion de participaciones x NAV), "
-                   "no una observacion universal del flujo comprador o "
-                   "vendedor en el mercado secundario. La creacion de "
-                   "participaciones implica compras subyacentes por el AP, "
-                   "pero no identifica quien compro el ETF ni a que precio. "
-                   "Se usa como proxy de demanda agregada del vehiculo, no "
-                   "como medida del flujo economico del activo.*\n\n")
+        # H12 ampliado (2026-10-16, auditoria): la redaccion previa
+        # decia "implica compras subyacentes por el AP". Es demasiado
+        # absoluta: el mecanismo habitual puede ser in-kind (cesta de
+        # valores entregada por el AP), no necesariamente compra en
+        # mercado.
+        out.append("*H12 (2026-10-15, auditor; matizado 2026-10-16): "
+                   "ETF Primary Flow es una ESTIMACION OPERATIVA "
+                   "(variacion de participaciones x NAV), no una "
+                   "observacion universal del flujo comprador o vendedor "
+                   "en el mercado secundario. La creacion de "
+                   "participaciones implica la contraprestacion exigida "
+                   "por el mecanismo del fondo: puede ser entrega "
+                   "in-kind de una cesta de valores, efectivo u otra "
+                   "modalidad. El cambio de participaciones no demuestra "
+                   "que las compras subyacentes se hayan realizado en el "
+                   "mercado ni identifica al comprador economico final. "
+                   "Se usa como proxy de demanda agregada del vehiculo, "
+                   "no como medida del flujo economico del activo.*\n\n")
         # H11 (2026-10-16, auditoria): declarar la fuente de dShares y
         # la fecha de comparacion. El flujo se calcula como dShares x NAV,
         # donde dShares = shares_outstanding[t] - shares_outstanding[t-1].

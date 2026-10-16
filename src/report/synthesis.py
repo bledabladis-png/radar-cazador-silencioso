@@ -150,12 +150,21 @@ def render_matriz_evidencia(evidence_matrix_data):
         # En regimenes homogeneos, la mayoria cae en FAVORABLE o
         # DESFAVORABLE, no en MIXTA.
         out.append("\n## Matriz de Evidencia\n\n")
-        out.append("| Sector | Precio | Amplitud | Flujo 1º | Flujo Proxy | Wyckoff | Crédito* | Volat* | Calidad | Lectura |\n")
+        # H13 (2026-10-16, auditoria): el nombre "Flujo 1º" no declaraba
+        # el horizonte. Se cambia a "Flujo 1º 20d" y se anade nota
+        # metodologica. La columna se calcula sobre primary_flow_evidence
+        # (flow_20d_sum).
+        out.append("| Sector | Precio | Amplitud | Flujo 1º 20d | Flujo Proxy | Wyckoff | Crédito* | Volat* | Calidad | Lectura |\n")
         out.append("|--------|--------|----------|----------|-------------|---------|----------|--------|---------|----------|\n")
         for _, row in evidence_matrix_data.iterrows():
             out.append(
                 f"| {row['sector']} | {_fmt_evidence(row['price_evidence'])} | {_fmt_evidence(row['breadth_evidence'])} | {_fmt_evidence(row['primary_flow_evidence'])} | {_fmt_evidence(row['proxy_flow_evidence'])} | {_fmt_evidence(row['wyckoff_evidence'])} | {_fmt_evidence(row['credit_evidence'])} | {_fmt_evidence(row['volatility_evidence'])} | {row['evidence_quality']} | {row['alignment_reading']} |\n"
             )
+        out.append("\n*H13 auditoria 2026-10-16: la columna Flujo 1º 20d "
+                   "refleja el signo del flujo primario acumulado a 20 "
+                   "sesiones (flow_20d_sum de sector_flow_characteristics). "
+                   "Umbral de signo: +1 si > 0, -1 si < 0, 0 si neutro. "
+                   "No es el flujo de la ultima sesion.*\n")
         out.append("\n*Crédito y volatilidad representan contexto común de mercado y no participan en el balance de evidencia sectorial.*\n")
         # F6-34 aspecto 1 (2026-09-28): WONT FIX razonado. Que Wyckoff,
         # Credito y Volat aparezcan constantes entre sectores es esperado:
@@ -166,12 +175,16 @@ def render_matriz_evidencia(evidence_matrix_data):
         out.append("*Credito y Volat son contexto global "
                    "(mismo valor para los 11 sectores por diseno).*\n\n")
         # B3 (2026-10-13): explicitar que 3 columnas pueden ser constantes.
+        # H4 (2026-10-16, auditoria): el texto afirmaba "los 11 sectores
+        # coinciden" en Wyckoff. Empiricamente puede haber excepciones
+        # puntuales (ej. XLU=0 en un snapshot). Se reformula sin
+        # afirmar uniformidad total.
         out.append("*Columnas con frecuencia constante entre sectores: "
                    "Credit* y Volat* (contexto global, mismo valor para "
-                   "los 11). Wyckoff tiende a +1 en regimenes alcistas "
-                   "(los 11 sectores coinciden). La variabilidad sectorial "
-                   "real proviene de Precio, Amplitud, Flujo 1 y Flujo "
-                   "Proxy.*\n\n")
+                   "los 11). Wyckoff tiende a +1 en regimenes alcistas; "
+                   "pueden aparecer excepciones puntuales por sector. La "
+                   "variabilidad sectorial real proviene de Precio, "
+                   "Amplitud, Flujo 1 y Flujo Proxy.*\n\n")
         # N4 (2026-10-13, auditor) + H9 (2026-10-15, auditor):
         # la agregacion es heuristica de signos (1 voto por variable).
         # H9 pide CUANTIFICAR la doble contabilizacion. Medicion empirica
@@ -186,17 +199,28 @@ def render_matriz_evidencia(evidence_matrix_data):
         # presenta correlacion material. La sobre-representacion del
         # precio en el balance es acotada. No hay justificacion
         # estadistica para modificar el algoritmo.
-        out.append("*H9 auditoria 2026-10-15: el balance es una heuristica "
-                   "de signos (1 voto por variable). Medicion empirica de "
-                   "la correlacion entre evidencias: solo el par "
-                   "Precio-Amplitud tiene correlacion material (Pearson "
-                   "r=0.64); el resto de los 10 pares presenta |r|<0.3. "
-                   "El Flow Proxy NO correlaciona con Precio (r=0.015): "
-                   "la sospecha de duplicacion no se sostiene en los "
-                   "datos. La etiqueta describe confluencia de signos, "
-                   "no confirmacion estadistica independiente. Ver "
-                   "clasificacion de evidencia (OBSERVABLE / "
-                   "DERIVADA-DIRECTA / DERIVADA-COMPUESTA) mas abajo.*\n\n")
+        # H18 (2026-10-16, auditoria): la nota previa no documentaba
+        # muestra, ventana ni periodo. Se completa. La correlacion
+        # NO prueba independencia estadistica general; describe la
+        # evidencia disponible en un snapshot concreto.
+        out.append("*H9 auditoria 2026-10-15 + H18 auditoria 2026-10-16: "
+                   "el balance es una heuristica de signos (1 voto por "
+                   "variable). Medicion empirica documentada: fuente "
+                   "outputs/history/evidence_matrix.csv, 24 filas con 5 "
+                   "evidencias validas (sectores con las 5 columnas "
+                   "pobladas), correlacion Pearson contemporanea "
+                   "(misma sesion) sobre toda la ventana historica "
+                   "disponible en el momento del analisis. "
+                   "Resultado: solo el par Precio-Amplitud tiene "
+                   "correlacion material (r=0.64); el resto de los 10 "
+                   "pares |r|<0.3. El Flow Proxy NO correlaciona con "
+                   "Precio (r=0.015) en esa muestra. La etiqueta "
+                   "describe confluencia de signos, no confirmacion "
+                   "estadistica independiente general. Puede existir "
+                   "dependencia por construccion que una correlacion "
+                   "puntual no detecta. Ver clasificacion de evidencia "
+                   "(OBSERVABLE / DERIVADA-DIRECTA / DERIVADA-COMPUESTA) "
+                   "mas abajo.*\n\n")
         out.append("*N4 auditoria 2026-10-13: el balance de evidencia es una "
                    "heuristica de signos (1 voto por variable). Precio, "
                    "Amplitud y Flow Proxy comparten informacion del precio: "

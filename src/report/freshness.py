@@ -110,18 +110,25 @@ def render_data_freshness(pcr_data, darkpool_data, sector_results, reference_dat
     # en esta vista compacta (runtime). La tabla completa no la tiene
     # (solo declara frescura por fuente). No hay contradiccion: son
     # dos dimensiones distintas.
+    # H6 (2026-10-16, auditoria): el texto previo decia "26 fuentes".
+    # El conteo real puede variar (hoy 28). Se elimina el literal fijo;
+    # la tabla de Calidad se refiere a las fuentes efectivamente
+    # renderizadas en esa seccion.
     out.append("*Vista compacta (runtime): 4 fuentes criticas con columna "
                "Data Conf (derivada de la frescura). La tabla 'Calidad, "
-               "frescura y cobertura' lista 26 fuentes desde data_quality.csv "
-               "y NO incluye Data Conf (dimension distinta: declara la "
-               "frescura observada por fuente). Pueden discrepar las fechas "
-               "si el CSV esta desactualizado respecto al runtime.*\n\n")
+               "frescura y cobertura' lista las fuentes efectivamente "
+               "presentes en data_quality.csv y NO incluye Data Conf "
+               "(dimension distinta: declara la frescura observada por "
+               "fuente). Pueden discrepar las fechas si el CSV esta "
+               "desactualizado respecto al runtime.*\n\n")
     # H5 (2026-10-15, auditoria externa): publicar los umbrales exactos.
     out.append("*Umbrales de frescura por fuente (dias): "
                f"CBOE {FRESHNESS_CBOE}, "
                f"FINRA {FRESHNESS_FINRA}, "
                f"FRED {FRESHNESS_FRED}, "
                f"Yahoo {FRESHNESS_YAHOO}, "
+               f"CFTC (45, 90, 120), "
+               f"SEC N-PORT (90, 180, 270), "
                f"resto {FRESHNESS_DEFAULT}. "
                "Cada tupla es (CURRENT, RECENT, STALE); por encima del "
                "tercer umbral: ARCHIVAL. Data Conf: Alta si CURRENT o "
@@ -210,10 +217,19 @@ def render_calidad_datos(data_quality_data):
             out.append(f"| {row['source']} | {last} | {age} | {freq} | {fresh} | {cov} | {notes} |\n")
         out.append("\n")
         out.append("*No todas las variables tienen la misma actualidad. Los datos se muestran sin interpolación.*\n\n")
-        out.append("*Vista completa: 26 fuentes del sistema desde data_quality.csv. "
-                   "La tabla compacta 'Data Freshness' lista las 4 fuentes criticas "
-                   "con columna Data Conf. Pueden discrepar si el CSV esta "
-                   "desactualizado respecto a los datos runtime.*\n\n")
+        # H6 (2026-10-16, auditoria): sustituido literal "26 fuentes" por
+        # conteo dinamico sobre la columna 'source' del CSV. Evita deriva
+        # si se anaden o eliminan fuentes del pipeline.
+        _n_fuentes = (
+            data_quality_data['source'].nunique()
+            if 'source' in data_quality_data.columns
+            else len(data_quality_data)
+        )
+        out.append("*Vista completa: {0} fuentes del sistema desde "
+                   "data_quality.csv. La tabla compacta 'Data Freshness' "
+                   "lista las 4 fuentes criticas con columna Data Conf. "
+                   "Pueden discrepar si el CSV esta desactualizado "
+                   "respecto a los datos runtime.*\n\n".format(_n_fuentes))
         # N6.1 (2026-10-13, auditor): formula exacta de cobertura por
         # coverage_logic. Cada fuente declara su numerador/denominador:
         # - 'sectorial': sectores unicos con fila en la fecha /
