@@ -22,6 +22,15 @@ items:
   commit: e6b2fc0b
   test: tests/test_ssga_provider_return_contract.py
   evidencia: El asterisco de saturacion se emite correctamente en CI
+- id: CI-UBUNTU-PIN
+  tipo: auditoria_interna
+  ciclo: '2026-10-16'
+  estado: FIXED
+  descripcion: 9 workflows con ubuntu-latest (alias flotante); riesgo de migracion
+    silenciosa a Ubuntu 26 el 19-oct
+  commit: 7c913031
+  test: tests/test_workflows_runs_on_pinned.py
+  evidencia: Pinning a ubuntu-24.04 LTS + test de contrato + nota de migracion
 - id: DICT-F1
   tipo: dictamen_externo
   ciclo: '2026-10-16'
@@ -379,6 +388,15 @@ items:
   commit: e87f94f1
   test: tests/test_health_check_session_alignment.py
   evidencia: check_expected_session_alignment detecta LAGGED + mercados INVALID
+- id: N-C8
+  tipo: auditoria_interna
+  ciclo: '2026-10-16'
+  estado: FIXED
+  descripcion: resolve_target_session pasaba naive a last_expected_market_date (interpretado
+    como Madrid); ventana de divergencia 21:00-22:00 UTC
+  commit: e3eb2fe0
+  test: tests/test_pipeline_gate_target_session_hours.py
+  evidencia: Contrato UTC explicito; 24h naive == 24h aware; ventana cerrada
 - id: SOW-V6
   tipo: frente
   ciclo: '2026-10-06'

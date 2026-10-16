@@ -240,6 +240,43 @@ completa. Todas las roturas fueron corregidas, pero el patron no
 debe repetirse. Protocolo no negociable: **verificar todos los
 validadores antes de cada commit.**
 
+
+---
+
+### 2026-10-16 (ultima tanda) - Pinning Ubuntu + fix resolve_target_session
+
+**Objetivo.** Cerrar dos hallazgos descubiertos al verificar el cron:
+pinning del runner de CI y el contrato de `resolve_target_session`.
+
+**Hallazgo 1 - Ubuntu 26.** GitHub migra `ubuntu-latest` a Ubuntu 26
+el 19-oct-2026. Los 9 workflows usaban el alias flotante. Con wheels
+pinned (numpy, pyarrow, lxml, curl_cffi) el `pip install` puede
+romperse. Aplicado:
+- Pinning a `ubuntu-24.04` LTS en los 9 workflows (11 runs-on).
+- Test de contrato `test_workflows_runs_on_pinned.py` que prohibe
+  alias flotantes en el futuro.
+- Nota `docs/auditoria/ubuntu_runner_pinning.md` con procedimiento
+  de migracion a 26 (esperar, verificar wheels, dispatch manual).
+
+**Hallazgo 2 - resolve_target_session.** La funcion documentaba
+"default: UTC" pero pasaba naive a `last_expected_market_date`, que
+lo interpreta como Madrid. Ventana de divergencia: 21:00-22:00 UTC
+(2h/dia). Falso positivo inicial (creí que era N-C8 critico) corregido
+al verificar el contrato de la funcion: el bug real es de contrato,
+no de impacto operativo. Aplicado:
+- `resolve_target_session` pasa siempre UTC-aware.
+- Test `test_pipeline_gate_target_session_hours.py`: 24 horas naive
+  == 24 horas aware en viernes y sabado; ventana cerrada.
+
+**Verificacion.** Suite: 3520 passed + 5 skipped. Gobernanza: 55 items,
+`[OK]`. pyflakes silencio. compileall OK.
+
+**Commits.** 7c913031, e3eb2fe0.
+
+**Proximo hito.** Slot del cron 23:17 UTC (target_session=2026-10-16)
+ejecutara el pipeline con la enmienda v1.1 por primera vez en
+produccion. Verificar `completion_attempt.jsonl` como artifact.
+
 ### 2026-10-15 - Auditoria externa H1-H18 del reporte
 
 **Objetivo.** Atender los 18 hallazgos de la auditoria externa del

@@ -14,7 +14,7 @@ Rama activa:    main
 HEAD:           consultar `git log --oneline -1` (no literal; el corpus no fija SHA para evitar deriva)
 Sincronizacion: main == origin/main
 Tests:          ver `Consolidacion_Documentos/ESTADO_SISTEMA.md` (fuente autoritativa).
-                Referencia orientativa: ~3511 passed + 5 skipped (con filtro CI).
+                Referencia orientativa: ~3520 passed + 5 skipped (con filtro CI).
 Validation Gate: 10/10
 Working tree:   limpio (salvo data/ y outputs/ que el bot actualiza)
 Corpus:         v3 (Consolidacion_Documentos/00-08 + ESTADO_SISTEMA)
@@ -107,6 +107,8 @@ como precondicion. Si `BLOCKED` o `UNAVAILABLE`, no se emite receipt
   a4f19514  fix tests H1 a banda neutral + limpieza pyflakes
   e87f94f1  N-C7: check alineacion sesion esperada
   e6b2fc0b  C3: primary_flow_z_raw en SSGA return
+  e3eb2fe0  fix resolve_target_session (contrato UTC)
+  7c913031  chore(ci): pin ubuntu-24.04 en 9 workflows
   4b7caba6  M1+M2+M3
 
 ---
@@ -140,13 +142,17 @@ Con esto, el segundo dictamen del auditor esta completamente aplicado.
 
 ### 4.2. Verificacion del cron tras enmienda v1.1
 
-El primer run del bot tras `df5b6974` verificara:
-- `guard_coverage.py` con validacion contractual.
-- `write_completion_receipt.py` con la misma validacion.
+Dispatch manual del 16-oct 18:48 UTC (run 38950172470): gate devolvio
+`CURRENT` por receipt del run 38834597307 (target_session 2026-10-15).
+Correcto (18:48 UTC es pre-publish para el 16-oct).
 
-Con `market_data` en 14-oct y `expected_session` 15-oct, el guard
-ahora deberia fallar por contrato EQUITY_EOD incumplido. Verificar
-en el cron de la madrugada del 17-oct.
+**Proximo hito:** slot del cron 23:17 UTC (post-publish, target_session
+= 2026-10-16). Ejecutara pipeline con enmienda v1.1 en produccion.
+Verificar:
+- `completion_attempt.jsonl` como artifact (if: always()).
+- Si `market_data.US_EQUITY` cumple contrato EQUITY_EOD -> receipt
+  emitido con `contract_validation_status` en el JSON.
+- Si incumple -> guard falla y no se emite receipt (fail-closed).
 
 ### 4.3. Aviso GitHub
 
