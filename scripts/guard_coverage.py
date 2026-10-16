@@ -6,6 +6,7 @@ Bloquea el step Commit si algun manifest protegido muestra:
   - status == INVALID
   - last_date > expected_session
   - manifest ausente o JSON invalido
+  - validacion contractual (enmienda v1.1): contrato critico incumplido
 
 FU-002-bymarket (dictamen auditor 2026-09-24):
   Exencion condicional cuando la cobertura global es baja pero el
@@ -17,6 +18,10 @@ FU-002-bymarket (dictamen auditor 2026-09-24):
     - Cada mercado con n>0 debe tener status VALID y
       coverage_at_session >= threshold (mismo threshold del guard).
 
+Enmienda v1.1 (2026-10-16): se anade validacion contractual compartida
+con write_completion_receipt.py. Ambas consumen
+src.temporal_contracts.validation::validate_artifact_contracts.
+
 Uso: python scripts/guard_coverage.py [--threshold 0.95]
 Exit 0 si todos OK, exit 1 si alguno falla.
 """
@@ -26,12 +31,25 @@ import json
 import sys
 from pathlib import Path
 
+# Enmienda v1.1: fuente unica de validacion contractual.
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from src.temporal_contracts.validation import (
+    validate_artifact_contracts,
+    STATUS_OK as V_OK,
+    STATUS_WARN as V_WARN,
+    STATUS_BLOCKED as V_BLOCKED,
+    STATUS_UNAVAILABLE as V_UNAVAILABLE,
+)
+
+
 GUARDED_MANIFESTS = (
     "data/stock_prices.parquet.manifest.json",
     "data/market_data.parquet.manifest.json",
 )
 
 DEFAULT_THRESHOLD = 0.95
+
+
 def _load_manifest(path):
     """Devuelve (manifest_dict, error_str)."""
     p = Path(path)
@@ -56,6 +74,8 @@ def _sha256_file(path):
         for chunk in iter(lambda: fh.read(65536), b""):
             h.update(chunk)
     return h.hexdigest()
+
+
 def _all_markets_valid(by_market, threshold):
     """True si cada mercado con n>0 cumple coverage_at_session >= threshold.
 
@@ -79,9 +99,6 @@ def _all_markets_valid(by_market, threshold):
             continue
         n_active += 1
         st = info.get("status")
-        # 2026-09-29: PENDING = sesion cerrada, observacion aun no
-        # publicada (mercados con lag, p.ej. BME). No invalida por si
-        # solo. Si TODOS los mercados activos son PENDING, no exime.
         if st == "PENDING":
             continue
         if st != "VALID":
@@ -107,10 +124,6 @@ def _check_manifest(path, threshold):
 
     reasons = []
 
-    # Verificacion de integridad parquet vs manifest (2026-09-29).
-    # El manifest puede venir de CI (tracked) mientras el parquet
-    # local es de un run distinto (gitignored). Sin esta verificacion
-    # el guard aceptaba cobertura de un fichero que no existe.
     declared_sha = (data.get("artifact") or {}).get("sha256")
     if not isinstance(declared_sha, str) or not declared_sha:
         reasons.append("{0}: artifact.sha256 missing".format(path))
@@ -136,9 +149,6 @@ def _check_manifest(path, threshold):
     if not isinstance(cov, (int, float)):
         reasons.append("{0}: coverage_pct_last missing or non-numeric".format(path))
     elif cov < threshold:
-        # FU-002-bymarket (dictamen auditor 2026-09-24, C-2 + C-3):
-        # exencion condicional. C-2: solo si status == VALID_WITH_MISSING
-        # (nunca si INVALID). C-3: _all_markets_valid usa este threshold.
         by_market = quality.get("by_market")
         if status == "VALID_WITH_MISSING" and _all_markets_valid(by_market, threshold):
             print("[EXEMPT] {0}: coverage_pct_last={1} < {2} "
@@ -154,7 +164,22 @@ def _check_manifest(path, threshold):
     elif last > expected:
         reasons.append("{0}: last_date={1} > expected_session={2}".format(path, last, expected))
 
+    # Enmienda v1.1: validacion contractual compartida.
+    v = validate_artifact_contracts(data)
+    if v.status == V_BLOCKED:
+        for r in v.reasons:
+            reasons.append("{0}: [CONTRACT] {1}".format(path, r))
+    elif v.status == V_UNAVAILABLE:
+        for r in v.reasons:
+            reasons.append("{0}: [CONTRACT-UNAVAILABLE] {1}".format(path, r))
+    elif v.status == V_WARN:
+        # WARN no bloquea; se imprime para observabilidad.
+        for r in v.reasons:
+            print("[WARN] {0}: [CONTRACT] {1}".format(path, r))
+
     return reasons
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--threshold", type=float, default=DEFAULT_THRESHOLD)
