@@ -181,6 +181,24 @@ def classify_mte(srs, shs, cls, ips):
     scores = score_scenarios(srs, shs, cls, ips)
 
 
+    # C2 (dictamen auditor externo 2026-10-16): guard semantico de
+    # STAGFLATION. Condicion publicada en el contrato H15:
+    #     IPS > 0.15 AND SRS > 0
+    # Si no se cumple la condicion distintiva, STAGFLATION no puede
+    # ser el escenario final aunque su puntuacion sea la mayor. Se
+    # excluye del argmax (no de score_scenarios, que sigue calculando
+    # todas las puntuaciones para diagnostico).
+    #
+    # El escenario elegido es el de mayor puntuacion entre los
+    # elegibles. Si ningun escenario cumple (no aplicable hoy: MIXED
+    # siempre existe), el max sobre el dict filtrado lo devolvera
+    # naturalmente.
+    _ips_valido = isinstance(ips, (int, float)) and ips == ips  # no NaN
+    _srs_valido = isinstance(srs, (int, float)) and srs == srs
+    if not (_ips_valido and _srs_valido and ips > 0.15 and srs > 0):
+        scores.pop("STAGFLATION", None)
+
+
     new_scenario = max(scores, key=scores.get)
 
 

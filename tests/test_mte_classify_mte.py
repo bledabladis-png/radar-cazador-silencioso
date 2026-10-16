@@ -146,6 +146,12 @@ class TestTemporalReset:
         assert pending_out is None
 
     def test_reset_clears_pending_in_memory(self, monkeypatch):
+        # C2 (dictamen 2026-10-16): el guard semantico exige
+        # IPS > 0.15 AND SRS > 0 para que STAGFLATION sea elegible.
+        # Los inputs del test se ajustan para cumplir esa condicion
+        # (el test verifica la mecanica de reset+histeresis, no la
+        # elegibilidad, que esta cubierta en
+        # tests/test_classify_mte_stagflation_gate.py).
         _patch_score(monkeypatch, {"MIXED": 0, "STAGFLATION": 5})
         _patch_validate(monkeypatch, True)
         _patch_confidence(monkeypatch, 0.7)
@@ -156,7 +162,7 @@ class TestTemporalReset:
         )
 
         scenario, _, pending_out, reset = classify_mte(
-            srs=0, shs=0, cls=0.3, ips=0.3)
+            srs=0.5, shs=0, cls=0.3, ips=0.3)
 
         assert reset is True
         assert scenario == "MIXED"
