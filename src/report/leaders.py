@@ -111,10 +111,18 @@ def render_acciones_seleccionadas(leader_lines):
             f"intra-sector, clipeados a [-3, +3].*\n\n"
         )
         out.append(
+            # H14 (2026-10-16, auditor): reforzar la nota de no
+            # comparabilidad y explicitar la decision de diseno.
+            # La suma de pesos 0.95 es deliberada, no un error.
             "*RS = RS Level (ratio de precio accion / precio ETF sectorial). "
             "RS Mom = variacion logaritmica de RS a 20 dias. La tabla de "
             "'Indices internacionales' usa una variante de WLS con pesos "
-            "0.35/0.25/0.25/0.10 (flow 25% en vez de 30%) por diseno.*\n\n"
+            "0.35/0.25/0.25/0.10 por diseno (flow 25% en vez de 30%; la "
+            "suma de pesos es 0.95, no 1.00). Decision metodologica "
+            "deliberada, testeada en tests/test_index_leaders_h14_wls_weights.py. "
+            "Los valores WLS de esta tabla NO son comparables directamente "
+            "con los WLS sectoriales (suma 1.00): se restringen al universo "
+            "de cada indice.*\n\n"
         )
         out.extend(leader_lines)
     else:

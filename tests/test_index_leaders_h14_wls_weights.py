@@ -71,3 +71,8 @@ def test_nota_leaders_declara_suma():
     src = inspect.getsource(lr)
     assert "0.35/0.25/0.25/0.10" in src
     assert "flow 25% en vez de 30%" in src
+    # H14 (auditor 2026-10-16): declarar 0.95 y no comparabilidad.
+    assert "0.95" in src, "nota debe mencionar la suma 0.95"
+    assert "NO son comparables" in src, (
+        "nota debe declarar no comparabilidad con WLS sectorial"
+    )

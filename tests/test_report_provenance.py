@@ -157,3 +157,89 @@ def test_render_provenance_se_llama_desde_generator(monkeypatch):
     assert capturado.get("prov") == prov, (
         "render_provenance no fue llamado con el dict esperado"
     )
+
+
+# ============================================================
+# H8 + auditor 2026-10-16: coherencia temporal
+# ============================================================
+def test_coherencia_ok_si_target_igual_effective():
+    from src.report.provenance import _temporal_coherence
+    assert _temporal_coherence("2026-10-16", "2026-10-16") == "OK"
+
+
+def test_coherencia_lag_admitted_dentro_de_max_lag():
+    from src.report.provenance import _temporal_coherence
+    assert _temporal_coherence("2026-10-16", "2026-10-15", contract_max_lag_days=5) == "LAG_ADMITTED"
+
+
+def test_coherencia_incoherent_fuera_de_max_lag():
+    """EQUITY_EOD con max_lag=0: target > effective es incoherente."""
+    from src.report.provenance import _temporal_coherence
+    assert _temporal_coherence("2026-10-16", "2026-10-15", contract_max_lag_days=0) == "INCOHERENT"
+
+
+def test_coherencia_anomaly_effective_posterior():
+    """effective_date posterior a target_session es anomalia."""
+    from src.report.provenance import _temporal_coherence
+    assert _temporal_coherence("2026-10-15", "2026-10-16") == "ANOMALY"
+
+
+def test_coherencia_nd_sin_datos():
+    from src.report.provenance import _temporal_coherence
+    assert _temporal_coherence(None, "2026-10-15") == "N/D"
+    assert _temporal_coherence("2026-10-16", None) == "N/D"
+
+
+def test_build_provenance_marca_gate_incoherent():
+    """Si target > effective con max_lag=0 y gate=10/10, marcar contradiccion."""
+    vg = {"passed": True, "checks": ["a"] * 10, "errors": []}
+    p = build_provenance(
+        reference_date=None,
+        target_session="2026-10-16",
+        effective_date_equity="2026-10-15",
+        validation_gate_result=vg,
+        contract_max_lag_days=0,
+        env={},
+    )
+    assert "INCOHERENT" in p["validation_gate"]
+    assert p["temporal_coherence"] == "INCOHERENT"
+
+
+def test_build_provenance_ok_coherente():
+    vg = {"passed": True, "checks": ["a"] * 10, "errors": []}
+    p = build_provenance(
+        reference_date=None,
+        target_session="2026-10-16",
+        effective_date_equity="2026-10-16",
+        validation_gate_result=vg,
+        env={},
+    )
+    assert p["validation_gate"] == "10/10"
+    assert p["temporal_coherence"] == "OK"
+
+
+def test_build_provenance_lag_admitted_no_contradice():
+    """Con max_lag=5, un lag de 1 dia es admisible y no marca INCOHERENT."""
+    vg = {"passed": True, "checks": ["a"] * 10, "errors": []}
+    p = build_provenance(
+        reference_date=None,
+        target_session="2026-10-16",
+        effective_date_equity="2026-10-15",
+        validation_gate_result=vg,
+        contract_max_lag_days=5,
+        env={},
+    )
+    assert p["validation_gate"] == "10/10"
+    assert p["temporal_coherence"] == "LAG_ADMITTED"
+
+
+def test_render_incluye_temporal_coherence():
+    prov = {
+        "commit_sha": "abc12345",
+        "target_session": "2026-10-16",
+        "effective_date_equity": "2026-10-15",
+        "validation_gate": "10/10 (INCOHERENT)",
+        "temporal_coherence": "INCOHERENT",
+    }
+    body = "".join(render_provenance(prov))
+    assert "`temporal_coherence`: INCOHERENT" in body

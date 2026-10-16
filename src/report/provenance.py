@@ -22,6 +22,8 @@ import subprocess
 from datetime import datetime, timezone
 from typing import Optional
 
+import pandas as pd
+
 
 def _git_head_short() -> Optional[str]:
     """Devuelve primeros 8 chars del HEAD via git rev-parse."""
@@ -56,12 +58,39 @@ def _compute_validation_gate(vg):
     return "{0}/{1}".format(checks_n - errors_n, checks_n)
 
 
+def _temporal_coherence(target_session, effective_date_equity,
+                        contract_max_lag_days=0):
+    """H8 (2026-10-16, auditor): valida coherencia temporal del bloque.
+
+    Si target_session == effective_date -> 'OK'.
+    Si effective_date < target_session por <= max_lag_days -> 'LAG_ADMITTED'.
+    Si effective_date < target_session por > max_lag_days -> 'INCOHERENT'.
+    Si alguno falta -> 'N/D'.
+    """
+    if not target_session or not effective_date_equity:
+        return "N/D"
+    try:
+        t = pd.Timestamp(target_session).date()
+        e = pd.Timestamp(effective_date_equity).date()
+    except Exception:
+        return "N/D"
+    if t == e:
+        return "OK"
+    if e > t:
+        return "ANOMALY"
+    lag = (t - e).days
+    if lag <= contract_max_lag_days:
+        return "LAG_ADMITTED"
+    return "INCOHERENT"
+
+
 def build_provenance(
     reference_date,
     *,
     target_session=None,
     effective_date_equity=None,
     validation_gate_result=None,
+    contract_max_lag_days=0,
     env=None,
     generated_at=None,
 ) -> dict:
@@ -86,6 +115,16 @@ def build_provenance(
         generated_at = datetime.now(timezone.utc).strftime(
             "%Y-%m-%dT%H:%M:%SZ"
         )
+    _gate = _compute_validation_gate(validation_gate_result)
+    _coh = _temporal_coherence(
+        target_session, effective_date_equity,
+        contract_max_lag_days=contract_max_lag_days,
+    )
+    # H8 (2026-10-16, auditor): coherencia temporal. Si INCOHERENT con
+    # validation_gate=10/10, es contradiccion: el gate no deberia haber
+    # pasado. Se marca explicitamente para que el consumidor lo vea.
+    if _coh == "INCOHERENT" and _gate == "10/10":
+        _gate = "10/10 (INCOHERENT)"
     return {
         "commit_sha": commit,
         "run_id": run_id,
@@ -93,7 +132,9 @@ def build_provenance(
         "target_session": target_session,
         "reference_date": reference_date,
         "effective_date_equity": effective_date_equity,
-        "validation_gate": _compute_validation_gate(validation_gate_result),
+        "contract_max_lag_days": contract_max_lag_days,
+        "temporal_coherence": _coh,
+        "validation_gate": _gate,
         "generated_at": generated_at,
     }
 
@@ -135,6 +176,9 @@ def render_provenance(prov: Optional[dict]) -> list:
         _fmt(prov.get("effective_date_equity"))))
     out.append("- `validation_gate`: {0}\n".format(
         _fmt(prov.get("validation_gate"))))
+    _coh = prov.get("temporal_coherence")
+    if _coh and _coh != "N/D":
+        out.append("- `temporal_coherence`: {0}\n".format(_coh))
     out.append("- `generated_at`: {0} (UTC)\n".format(
         _fmt(prov.get("generated_at"))))
 

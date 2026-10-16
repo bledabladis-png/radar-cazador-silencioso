@@ -2,8 +2,15 @@
 
 ## Contexto
 
-GitHub anuncio que el 19-oct-2026 `ubuntu-latest` empieza a resolver
-a Ubuntu 26. Hasta esa fecha apuntaba a Ubuntu 24.04 LTS.
+GitHub anuncio (publicado 17-sep-2026) que el despliegue gradual de
+Ubuntu 26.04 sobre `ubuntu-latest` **comenzara el 19-oct-2026 y
+finalizara el 19-nov-2026**. Hasta esa fecha, `ubuntu-latest` resuelve
+a Ubuntu 24.04 LTS.
+
+**Nota cronologica:** cuando se redacto este documento (16-oct-2026)
+la migracion aun no habia comenzado. El pin a `ubuntu-24.04` es una
+medida **preventiva** anterior al despliegue, no una reaccion a un
+fallo del CI.
 
 ## Riesgo
 
@@ -27,7 +34,8 @@ health check semanal (lunes 06:47 UTC) lo detecte.
 ## Decision
 
 Pinneado explicito de **`ubuntu-24.04` LTS** en los 9 workflows.
-Ubuntu 24.04 tiene soporte hasta 2029. Elimina la sorpresa del 19-oct.
+Ubuntu 24.04 tiene soporte hasta 2029. Elimina la sorpresa del
+despliegue gradual 19-oct a 19-nov 2026.
 
 El cambio lo verifica `tests/test_workflows_runs_on_pinned.py`:
 - Ningun workflow puede usar `ubuntu-latest` ni alias flotantes.
