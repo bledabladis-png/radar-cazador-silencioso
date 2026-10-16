@@ -14,142 +14,149 @@ Rama activa:    main
 HEAD:           consultar `git log --oneline -1` (no literal; el corpus no fija SHA para evitar deriva)
 Sincronizacion: main == origin/main
 Tests:          ver `Consolidacion_Documentos/ESTADO_SISTEMA.md` (fuente autoritativa).
-                Referencia orientativa: ~3430 passed + 5 skipped (con filtro CI).
+                Referencia orientativa: ~3493 passed + 5 skipped (con filtro CI).
 Validation Gate: 10/10
 Working tree:   limpio (salvo data/ y outputs/ que el bot actualiza)
 Corpus:         v3 (Consolidacion_Documentos/00-08 + ESTADO_SISTEMA)
 Gobernanza:     docs/gobernanza/REGISTRO.yaml (fuente canonica de items auditables)
+Contrato gate:  docs/auditoria/daily_run_gate_contrato_v1.md +
+                docs/auditoria/daily_run_gate_enmienda_v1_1.md (2026-10-16)
 
 ---
 
-## 2. SESION 16-OCT (auditoria interna CI + dictamen externo + fases 1-7)
+## 2. SESION 16-OCT (auditoria del reporte + segundo dictamen + enmienda v1.1)
 
 ### 2.0. Contexto
 
-Sesion larga en tres bloques:
+Tercera sesion del dia. Se audita el reporte generado por el run
+38834597307 (16-oct 01:20 UTC). 10 hallazgos clasificados.
+Emitido informe al auditor externo. Recibido dictamen con 6
+precisiones. Aplicadas las fases aprobadas.
 
-**Bloque 1**: auditoria interna del workflow `daily_run.yml` tras el
-cierre del 15-oct. Detectados 9 hallazgos (HD-1 a HD-9). Corregidos
-los 8 accionables + precision de 02_ARQUITECTURA Â§6.
+### 2.1. Hallazgos criticos (auditoria del reporte)
 
-**Bloque 2**: informe al auditor externo + dictamen recibido.
-Aprobados 7 frentes con condiciones (orden estricto, criterio triple
-de calidad). Implementadas fases 1, 2 y 3 del dictamen.
+- **N-C1**: `market_data.parquet` con `last_date=2026-10-14` y
+  `US_EQUITY.coverage_at_session=0.0` (contrato EQUITY_EOD con
+  `max_lag_days=0`). El pipeline no aborto y el receipt se emitio.
+- **N-C2**: `guard_coverage.py` verifica `last > expected` pero no
+  `last < expected`.
+- **N-C3**: `guard_coverage.py` ignora `by_market` cuando la cobertura
+  global pasa el threshold.
+- **N-C4**: `write_completion_receipt.py` no verifica `last_date` vs
+  `expected_session` del manifest.
+- **N-C5**: el receipt emitido con el pipeline desfasado impidio la
+  recuperacion por slots posteriores (idempotencia protegiendo una
+  finalizacion invalida).
+- **N-C6**: `breadth_metrics.py` usaba `df_stocks.index[-1]`
+  (posicion fisica), violando R2.
+- **N-C7**: sin control explicito de alineacion de sesion esperada
+  en `health_check.py`.
+- **C2**: STAGFLATION ganaba el `argmax` sin que `IPS > 0.15`.
+- **C3**: asterisco de saturacion ausente en el reporte CI
+  (`primary_flow_z_raw` no propagado al df in-memory de SSGA).
+- **M1, M2, M3**: alerta H1 categorica con |Z| pequeno;
+  FLOW_CONFIDENCE empate no documentado; Data Freshness vs Sector
+  Breadth sin distincion de dimensiones.
 
-**Bloque 3**: implementadas fases 4, 5, 6 y 7 del dictamen.
-Sistema de gobernanza documental completo.
+### 2.2. Segundo dictamen (precisiones)
 
-### 2.1. Auditoria workflow daily_run.yml (HD-1..HD-9)
+- Criticidad explicita por contrato, no umbral dinamico de volumen.
+- Validacion compartida en `src/temporal_contracts/validation.py`.
+- Registro de intentos como artifact por ejecucion (no commit al repo).
+- Test R3 explicito con datos controlados.
+- Guard semantico STAGFLATION con `IPS > 0.15 AND SRS > 0`.
+- Enmienda contractual v1.1 publicada antes de tocar el guard.
 
-- **HD-1**: drift test `pipeline_gate` vs `health_check` ampliado.
-- **HD-2**: comentarios "4 slots" -> "5 slots" en `daily_run.yml` y
-  `health_check.py`.
-- **HD-3**: `resolve_target_session` naive-UTC vs Madrid. Verificado
-  empiricamente que los 5 slots dan identico target_session. WONT FIX
-  razonado en docstring.
-- **HD-4**: `guard_coverage` y `pipeline_conclusion` hardcodeados en
-  receipt. Resuelto en Fase 2 (ver Â§2.3).
-- **HD-5**: `health_check` no distinguia Schedule vs Dispatch.
-  Resuelto en Fase 1 (ver Â§2.3).
-- **HD-6**: `pyflakes . || true` nunca bloqueaba CI. Resuelto en
-  Fase 3 (ver Â§2.3).
-- **HD-7**: mismo fix que HD-4.
-- **HD-8**: `--limit 20` en `check_cron_slots` con comentario
-  justificativo.
-- **HD-9**: `_manifest_satisfies` verificado que NO es dead code
-  (~8 tests + contrato).
+### 2.3. Implementado
 
-### 2.2. Informe al auditor y dictamen
+**Commits M1, M2, M3, C3, N-C7, N-C6** — cerrados y verificados.
 
-Informe enviado con 3 debilidades de diseno del CI (HD-4/HD-5/HD-6) y
-4 consultas de metodo (P-A gobernanza HANDOFF, P-B anclas temporales,
-P-C trazabilidad normativa, P-D poda bitacora). Dictamen: los 7
-frentes aprobados con condiciones. Orden estricto de implementacion.
-Criterio de calidad triple: estado inequivoco + evidencia verificable
-+ test que detecte regresion.
+**Enmienda v1.1** (`docs/auditoria/daily_run_gate_enmienda_v1_1.md`):
+- Cambia: guard_coverage ya puede modificarse. Anadida validacion
+  contractual compartida con el receipt.
+- No cambia: schema del receipt (v1). Invariantes I1-I8 preservadas.
+- Anade: campo `critical: bool` en registry, funcion
+  `validate_artifact_contracts()`, registro de intentos como artifact.
 
-### 2.3. Fases del dictamen (1-7 implementadas)
+**`src/temporal_contracts/validation.py`**:
+- Estados: OK | WARN | BLOCKED | UNAVAILABLE.
+- Reglas: contrato critico con INVALID o coverage < min -> BLOCKED;
+  contrato critico con n=0 -> BLOCKED; by_market sin el contrato
+  critico -> UNAVAILABLE; by_market ausente -> WARN (no hay desglose).
+- `EQUITY_EOD` marcado `critical=True`. Los demas `critical=False`.
 
-**Fase 1 - HD-5.** Commit `3e8d2828`. `check_workflows` refactorizado
-en `_check_one_workflow` (pura) + helpers. Schedule Health separado de
-Dispatch Health. Dispatch reciente NUNCA oculta ausencia de schedule.
-8 tests.
+**`scripts/guard_coverage.py`**: anade validacion contractual. El
+guard original (cobertura global + sha256 + last>expected) se preserva.
 
-**Fase 2 - HD-4.** Commit `433da326`. `run.py` escribe `written_at`
-al VG result. `write_completion_receipt.py` valida estrictamente:
-`passed=True, errors_n=0, checks_n>=10, written_at <=6h`. Fail-closed.
-Campos anadidos: `success_path_reached`, `validation_gate_checks_n`,
-`validation_gate_errors_n`. Compat schema v1. 9 tests.
+**`scripts/write_completion_receipt.py`**: anade la misma validacion
+como precondicion. Si `BLOCKED` o `UNAVAILABLE`, no se emite receipt
+(fail-closed).
 
-**Fase 3 - HD-6.** Commit `66179b90`. `daily_run.yml`: eliminado
-`|| true` del step pyflakes. Falla el build si hay warnings. Reporte
-preservado en artifact `pyflakes-report` con `if: always()`. 5 tests.
+### 2.4. Commits del dia
 
-**Fase 4 - P-A: registro canonico.** Fuente unica
-`docs/gobernanza/REGISTRO.yaml` (38 items iniciales: H1-H18, HD-1..HD-9,
-DICT-F1..F7, 4 frentes). Estados: OPEN, IN_PROGRESS, BLOCKED_EXTERNAL,
-FIXED, WONT_FIX, FALSE_POSITIVE, SUPERSEDED. Verificador
-`scripts/verifica_gobernanza.py` con 11 reglas. 14 tests.
-
-**Fase 5 - P-C: indice H1-H18.** `docs/auditoria/radar/audits/
-INDEX_H1_H18.md` generado desde REGISTRO por
-`scripts/genera_indice_auditorias.py`. Vista derivada, nunca editada a
-mano. 5 tests.
-
-**Fase 6 - P-B: anclas temporales.** Catalogo
-`docs/gobernanza/ANCLAS.yaml` con 6 anclas documentadas (SOFR,
-DEFAULT_SINCE, CONFIRMED_INCOMPLETE_DATES, IAE_FULL_PERIOD,
-IAE_PIPELINE_PERIODS, MACRO_MANUAL_START_DATE). Test selectivo sobre
-literales ISO en asignaciones modulo y defaults de funcion. 6 tests.
-
-**Fase 7 - P-D: poda bitacora.** `scripts/poda_bitacora.py` con modo
-`--check` (exit 1 si hay que podar, NO muta). Sesion = fecha unica
-(agrupa headings del mismo dia). 7 tests.
-
-### 2.4. Commits de la sesion
-
-  529f4ed2e1ab037940e88f65449cd82f2080a615  feat(gobernanza): fases 4-7 del dictamen 16-oct
-  66179b90 fix(ci): HD-6 - pyflakes como gate real + artifact
-  7b790b12 docs(corpus): cierre sesion 16-oct - HANDOFF + bitacora + ESTADO_SISTEMA
-  433da326 fix(receipt): HD-4 - validar VG result antes de emitir receipt
-  3e8d2828 fix(health_check): HD-5 - separar Schedule vs Dispatch
-  083cfd39 docs(corpus): precisar MTE bonos secundarios y fallback SPY->^GSPC
-  2dda7986 docs(ci)+test: auditoria workflow daily_run (HD-1..HD-8)
-  8269d671 fix(tests)+docs(handoff): residuo pyflakes H7 + cierre deuda HANDOFF
-  fd42010d docs(corpus): MTE + rs_abs_20d en 02_ARQUITECTURA Â§6
-  c8a16f06 docs(corpus): HD-6 - poda bitacora + script poda_bitacora.py
+  4b7caba6  M1+M2+M3
+  a4f19514  fix tests H1 a banda neutral + limpieza pyflakes
+  e6b2fc0b  C3: primary_flow_z_raw en SSGA return
+  e87f94f1  N-C7: check alineacion sesion esperada
+  79a24106  N-C6: fecha efectiva canonica breadth + cap R4
+  1859a143  enmienda v1.1
+  db5cc2db  validation.py + criticidad en registry
+  4ac3ec0c  integracion guard + receipt (con 4 tests rojos; corregido en df5b6974)
+  df5b6974  fix tests post-integracion
 
 ---
 
 ## 3. FRENTES CERRADOS EN LA SESION
 
-- Auditoria workflow `daily_run.yml`: HD-1 a HD-9.
-- Residuo pyflakes H7.
-- Dictamen externo 16-oct: Fases 1-7 implementadas y verificadas.
-- Poda bitacora (21 -> 9 sesiones unicas; script `poda_bitacora.py`
-  con `--check`).
-- Precision `02_ARQUITECTURA Â§6` (bonos MTE secundarios, fallback
-  SPY->^GSPC).
-- Sistema de gobernanza documental (`docs/gobernanza/`).
+- Auditoria del reporte del run 38834597307 (10 hallazgos).
+- M1, M2, M3 (redaccion + notas + alineacion sesion).
+- C3 (provider SSGA).
+- N-C6 (breadth R2).
+- N-C7 (health check alineacion).
+- Enmienda v1.1 + validation.py + integracion guard/receipt.
 
 ---
 
 ## 4. PENDIENTES VIVOS
 
-### 4.1. Frentes bloqueados por externos
+### 4.1. Commits 4, 5, 6 del dictamen (proxima sesion)
 
-- **C2 (920)**: discrepancia IAE par Q4-2025 -> Q1-2026. Bloqueado
-  por auditor externo. Estado en `REGISTRO.yaml`.
-- **SOW v6**: `docs/auditoria/wyckoff/48_sow_protocol_v6.md` pendiente
-  de firma externa.
-- **Wyckoff 5b.X v3**: bloqueado por datos (~2027).
-- **H5.3**: verificacion del cron 13F del 20-nov-2026 06:17 UTC.
+**Commit 4 — Registro de intentos incompletos como artifact.**
+- `scripts/write_completion_attempt.py` (nuevo).
+- `outputs/state/completion_attempt.jsonl` (una linea JSON por intento).
+- Subida como artifact `completion-attempt-<run_id>` en `daily_run.yml`
+  con `if: always()`.
+- Campos: `run_id`, `run_attempt`, `target_session`,
+  `attempt_timestamp`, `outcome`, `failed_contracts`, `reasons`,
+  `manifest_hashes`.
+- Tests: no-mutacion, artefacto subido con always, campos obligatorios.
 
-### 4.2. Verificacion del cron tras Fase 2
+**Commit 5 — Test R3 explicito.**
+- Verificar que la fecha efectiva de `sector_breadth.csv` y
+  `sector_breadth_momentum.csv` se obtiene via `resolve_effective_date()`
+  sobre el universo combinado, no por igualdad entre `max(date)`.
+- Datos controlados: filas desordenadas, observacion final no elegible.
+- Verifica R2 + R3 sin crear nueva abstraccion.
 
-El cambio en `write_completion_receipt.py` es fail-closed. Verificar
-el primer run post-commit que el receipt se sigue emitiendo. Ultimo
-run confirmado: `38834597307` (16-oct 01:20 UTC).
+**Commit 6 — Guard semantico STAGFLATION.**
+- `indicators/mte/decision.py::classify_mte`.
+- Condicion: `IPS > 0.15 AND SRS > 0` (la del contrato H15).
+- Si no se cumple, STAGFLATION no puede ser el escenario final.
+- Recalcular confidence sobre el escenario efectivamente elegido.
+- Tests obligatorios (tabla del auditor):
+  IPS=-0.41 (No), 0.149 (No), 0.15 (No), 0.16+SRS=0 (No),
+  0.16+SRS>0 (Si), IPS invalido (No).
+- **No sustituir** los tests de `score_scenarios` existentes.
+
+### 4.2. Verificacion del cron tras enmienda v1.1
+
+El primer run del bot tras `df5b6974` verificara:
+- `guard_coverage.py` con validacion contractual.
+- `write_completion_receipt.py` con la misma validacion.
+
+Con `market_data` en 14-oct y `expected_session` 15-oct, el guard
+ahora deberia fallar por contrato EQUITY_EOD incumplido. Verificar
+en el cron de la madrugada del 17-oct.
 
 ### 4.3. Aviso GitHub
 
@@ -159,11 +166,11 @@ run confirmado: `38834597307` (16-oct 01:20 UTC).
 
 `[health-check] WARN - discrepancias no criticas`. Deuda de proceso.
 
-### 4.5. Verificacion del propio sistema de gobernanza
+### 4.5. Nota propia (autocritica de la sesion)
 
-Anadir `py scripts/verifica_gobernanza.py` al workflow `daily_run.yml`
-como gate de CI (comando de arranque ya lo incluye). Opcional:
-decidir si va a health_check semanal o a daily_run.
+En esta sesion pusheé 3 veces con tests en rojo (el commit 4ac3ec0c
+y dos iteraciones previas de otros bloques). Corregido. Motivo:
+prisa. Regla no negociable: suite verde antes de commit.
 
 ---
 
@@ -183,11 +190,11 @@ Esperado:
 - HEAD = el que devuelva `git log --oneline -1`.
 - ahead 0, behind 0 (o behind N si el bot ha pusheado).
 - working tree limpio.
-- ~3430 passed + 5 skipped.
+- ~3493 passed + 5 skipped.
 - pyflakes silencio, compileall OK.
-- Verificador: `[OK] Gobernanza coherente`.
-- Indice: `[OK] indice actualizado`.
-- Poda: `[OK] Bitacora dentro de la regla`.
+- Gobernanza: `[OK] Gobernanza coherente`.
+- Indice H1-H18: `[OK] indice actualizado`.
+- Bitacora: `[OK] Bitacora dentro de la regla`.
 
 ---
 
@@ -198,16 +205,19 @@ Esperado:
   necesita rolling sobre series con huecos, dropna previo.
 - **H2 es falso positivo.** `rs_mom` (WLS) invariante a escala.
 - **No usar run.py en horario de mercado USA** (13:30-20:00 UTC).
-- **Receipt fail-closed.** Si el VG result no cumple el contrato
-  estricto, no se emite receipt. Siguiente slot hara READY.
+- **Receipt fail-closed (enmienda v1.1).** Si
+  `validate_artifact_contracts()` devuelve BLOCKED o UNAVAILABLE,
+  no se emite receipt. Siguiente slot hara READY.
+- **Contrato EQUITY_EOD `critical=True`.** `market_data` con
+  `US_EQUITY.status=INVALID` o `coverage_at_session < 0.90` bloquea
+  la publicacion del receipt.
 - **Schedule vs Dispatch.** Un dispatch reciente NUNCA oculta
   ausencia de schedule.
-- **Gobernanza canonica.** Cualquier item de auditoria, frente o
-  dictamen se registra en `docs/gobernanza/REGISTRO.yaml`. El HANDOFF,
-  la bitacora y el indice son VISTAS; nunca fuente de estado.
+- **Gobernanza canonica.** Cualquier item de auditoria va a
+  `docs/gobernanza/REGISTRO.yaml`. El HANDOFF, la bitacora y el
+  indice son VISTAS; nunca fuente de estado.
 - **Anclas temporales.** Cualquier fecha literal en asignacion modulo
   o default de funcion debe estar en `docs/gobernanza/ANCLAS.yaml`.
-  El test `tests/test_anclas_temporales.py` lo exige.
 - **EOL del corpus:** LF.
 
 ---
@@ -216,11 +226,11 @@ Esperado:
 
 Corpus normativo: `Consolidacion_Documentos/` (12 docs).
 Gobernanza: `docs/gobernanza/` (README, REGISTRO.yaml, ANCLAS.yaml).
-Expedientes: `docs/auditoria/wyckoff/`, `docs/auditoria/iae/golden/`,
-`docs/auditoria/s03_deep/`, `docs/auditoria/radar/audits/`.
-Contrato del gate: `docs/auditoria/daily_run_gate_contrato_v1.md`.
+Contrato del gate: `docs/auditoria/daily_run_gate_contrato_v1.md` +
+`docs/auditoria/daily_run_gate_enmienda_v1_1.md`.
 Indice auditoria externa: `docs/auditoria/radar/audits/INDEX_H1_H18.md`.
-Sandbox N8: `outputs/audit/liq_backtest/`.
+Expedientes: `docs/auditoria/wyckoff/`, `docs/auditoria/iae/golden/`,
+`docs/auditoria/s03_deep/`.
 
 ---
 

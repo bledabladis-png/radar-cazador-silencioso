@@ -22,7 +22,7 @@ porque el commit que lo contiene cambia HEAD.
 
 ## 2. Tests (pytest real)
 
-- **Resumen:** 1 failed, 3451 passed, 5 skipped
+- **Resumen:** 1 failed, 3501 passed, 5 skipped
 - **Exit code:** 1
 
 **Tests fallidos (nombre completo):**
