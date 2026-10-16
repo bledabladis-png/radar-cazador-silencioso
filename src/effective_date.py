@@ -79,7 +79,11 @@ def resolve_effective_date(
     if prices is None or prices.empty or n_eligible == 0:
         return _empty_result(None, n_eligible)
 
-    requested_date = prices.index[-1]
+    # R2 (dictamen auditor externo 2026-10-16): la resolucion temporal
+    # NO debe depender de la posicion fisica del indice. Se ordena el
+    # indice antes de tomar [-1]. Detectado por el test R3 sobre
+    # filas desordenadas.
+    requested_date = prices.index.max() if len(prices) > 0 else prices.index[-1]
 
     # Normalizar a DataFrame con columnas planas (tickers).
     if isinstance(prices.columns, pd.MultiIndex):
@@ -94,6 +98,10 @@ def resolve_effective_date(
     if close_df.index.has_duplicates:
         close_df = close_df.groupby(level=0, sort=True).last()
 
+    # R2: garantizar orden temporal ascendente del indice. Sin esto,
+    # index[-1] puede devolver una fecha no-maxima.
+    close_df = close_df.sort_index()
+
     present = [t for t in eligible if t in close_df.columns]
 
     if not present:
@@ -105,6 +113,8 @@ def resolve_effective_date(
     if valid_rows.empty:
         return _empty_result(requested_date, n_eligible)
 
+    # valid_rows.index ordenado por construccion (coverage_series viene
+    # de close_df ordenado).
     effective_date = valid_rows.index[-1]
     row = close_df.loc[effective_date, present]
     # Con index agrupado y present deduplicado, row es Series.
