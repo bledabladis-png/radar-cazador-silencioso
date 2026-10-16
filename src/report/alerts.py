@@ -40,6 +40,22 @@ def render_alerts(breadth_values, liquidity_regime, price_flow_divergences, conf
                 "determinarse si el estres esta localizado o si el credito "
                 "lo confirma."
             )
+        elif abs(_hyg_z) < 0.5:
+            # M1 (dictamen auditor externo 2026-10-16): banda neutral
+            # |Z| < 0.5. Una desviacion marginal no confirma por si sola
+            # el estres crediticio. Se mantiene la alerta de condiciones
+            # financieras elevadas (sus propias condiciones se cumplen),
+            # pero se separa esa observacion de una supuesta confirmacion
+            # crediticia. Umbral documentado como criterio de
+            # clasificacion, no como constante estadistica universal.
+            alerts.append(
+                f"- **Financial Stress vs Credit:** Condiciones financieras "
+                f"elevadas. El ratio crediticio (HYG/LQD) esta proximo a "
+                f"neutral (Z={_hyg_z:+.2f}, banda neutral |Z|<0.5): no "
+                f"confirma por si solo el estres sistemico. La observacion "
+                f"de condiciones financieras elevadas se mantiene por sus "
+                f"propias condiciones."
+            )
         elif _hyg_z > 0:
             alerts.append(
                 f"- **Financial Stress vs Credit:** Condiciones financieras "

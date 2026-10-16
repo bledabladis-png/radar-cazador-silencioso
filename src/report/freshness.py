@@ -130,6 +130,57 @@ def render_data_freshness(pcr_data, darkpool_data, sector_results, reference_dat
     for cl in coverage_lines:
         out.append(cl)
 
+    # M3 (dictamen auditor externo 2026-10-16): separar "frescura por
+    # antiguedad" de "alineacion con sesion esperada". La autoridad
+    # temporal es el manifest (misma que usa guard_coverage). No se
+    # sintetiza con reglas de presentacion. Estados: ALIGNED si
+    # last_date == expected_session; LAGGED si last_date < expected;
+    # ANOMALY si last_date > expected; N/D si no evaluable.
+    out.extend(_render_session_alignment())
+
+    return out
+
+
+def _render_session_alignment():
+    """Sub-seccion: alineacion con la sesion esperada (desde manifests).
+
+    Fuente: manifest de stock_prices y market_data. Misma autoridad
+    que usa guard_coverage.py (evita divergencias).
+    """
+    import json as _json
+    from pathlib import Path as _P
+    out = []
+    out.append("### Alineacion con sesion esperada\n")
+    out.append("| Parquet | Sesion esperada | Ultimo dato | Alineacion |\n")
+    out.append("|---------|-----------------|-------------|------------|\n")
+    for name in ("stock_prices", "market_data"):
+        mpath = _P("data") / (name + ".parquet.manifest.json")
+        if not mpath.exists():
+            out.append(f"| {name} | N/D | N/D | N/D (manifest ausente) |\n")
+            continue
+        try:
+            m = _json.loads(mpath.read_text(encoding="utf-8"))
+            q = m.get("quality") or {}
+            expected = q.get("expected_session")
+            last = q.get("last_date")
+            if not expected or not last:
+                out.append(f"| {name} | {expected or 'N/D'} | {last or 'N/D'} | N/D |\n")
+                continue
+            if last == expected:
+                state = "ALIGNED"
+            elif last < expected:
+                state = f"LAGGED (esperada={expected}, observada={last})"
+            else:
+                state = f"ANOMALY (last_date > expected_session)"
+            out.append(f"| {name} | {expected} | {last} | {state} |\n")
+        except (OSError, ValueError, TypeError):
+            out.append(f"| {name} | N/D | N/D | N/D (manifest invalido) |\n")
+    out.append("\n")
+    out.append("*La frescura por antiguedad (tabla anterior) y la alineacion "
+               "con la sesion esperada (esta tabla) son dimensiones distintas. "
+               "CURRENT con antiguedad < umbral no implica que la sesion "
+               "esperada este disponible; puede aparecer LAGGED sin "
+               "contradiccion.*\n\n")
     return out
 
 

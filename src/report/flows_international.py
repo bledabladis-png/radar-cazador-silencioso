@@ -325,5 +325,10 @@ def render_flujo_sintesis(flow_synthesis):
         out.append(f"| Europa Primary Flow | {_fmt_signed(flow_synthesis.get('european_flow_sign', 0), '{:+.2f}', '{:.2f}')} |\n")
         out.append(f"\n**FLOW_CONFIDENCE:** {flow_synthesis.get('confidence', 'N/A')}\n")
         out.append("*Regla: ALTA si 3 o mas capas comparten signo (> +/-0.1); MEDIA si 2 comparten signo; BAJA en otro caso. Capas evaluadas: Flow Proxy, ETF Primary Flow, CFTC Position Flow, Europa Primary Flow.*\n")
+        # M2 (dictamen auditor externo 2026-10-16): explicitar el caso
+        # de empate real 2-2. La regla actual da MEDIA si pos>=2 o neg>=2;
+        # en empate 2-2 ambos se cumplen y el resultado es MEDIA sin
+        # direccion dominante. La nota lo declara.
+        out.append("*Banda neutral: valores con |s| <= 0.1 cuentan como neutrales, no como capa positiva o negativa. Empate real 2-2 (dos capas positivas y dos negativas): MEDIA - MIXED / SIN DIRECCION DOMINANTE.*\n\n")
         out.append("\n*Interpretación descriptiva: concordancia de signos entre capas. No es señal predictiva.*\n\n")
     return out
