@@ -9,6 +9,8 @@ import sys
 from datetime import datetime
 from zoneinfo import ZoneInfo
 from src.report_generator import generate_daily_report
+from src.report.provenance import build_provenance
+from src.market_calendar import last_expected_market_date
 from src.pipeline.data_load import load_all_data
 from src.pipeline.regimes import compute_all_regimes
 from src.pipeline.sectors_base import compute_sectors_base
@@ -257,6 +259,22 @@ def main():
     iae_section = compute_iae_section(reference_date, run_id)
 
     print("Generando reporte...")
+    # H8 (2026-10-16, auditoria externa): bloque de provenance.
+    # Identifica commit, run de CI, sesion objetivo y fechas efectivas.
+    _prov_effective = None
+    if df_stocks_effective_meta is not None:
+        _prov_effective = df_stocks_effective_meta.get('date')
+    try:
+        _prov_target = last_expected_market_date(reference_date).isoformat()
+    except Exception:
+        _prov_target = None
+    _provenance = build_provenance(
+        reference_date=reference_date,
+        target_session=_prov_target,
+        effective_date_equity=_prov_effective,
+        validation_gate_result=vg,
+    )
+
     generate_daily_report(macro_score, macro_regime, macro_conf,
                           financial_score, financial_regime, liq_conf,
                           vol_score, vol_regime, vol_conf,
@@ -299,7 +317,7 @@ def main():
                           data_quality_data=data_quality_df,
                           iae_section=iae_section,
 
-                          all_signals=all_signals)
+                          all_signals=all_signals, provenance=_provenance)
     print("Reporte generado en outputs/report/reporte_diario.md")
 
     # Side effects + cobertura europea (C1-10 + C2-12)

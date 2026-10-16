@@ -61,6 +61,7 @@ from src.report.synthesis import (
     render_matriz_evidencia,
 )
 from src.report.header import render_regimenes
+from src.report.provenance import render_provenance
 
 MODEL_VERSION = "4.3"
 WEIGHTS_VERSION = "3"
@@ -76,7 +77,7 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
                           sector_persistence=None, signal_agreements=None, signal_agreements_display=None,
                           cross_module_conflict=None, shock_sensitivities=None, price_flow_divergences=None,
                           dc_summary="", all_signals=None, real_liq_score=None, real_liq_prev=None, index_leaders=None, index_phases=None, etf_primary_flow_data=None, cftc_position_flow_data=None, flow_synthesis=None, blackrock_dax_flow=None, blackrock_isf_flow=None, amundi_lyxi_flow=None, blackrock_iwm_flow=None, nport_position_change_data=None, qqq_performance_data=None, qqq_nport_flow_data=None, qqq_sec_flow=None, sector_breadth_data=None, sector_breadth_is_stale=False, sector_breadth_stale_reason=None, sector_concentration_data=None, sector_flow_characteristics_data=None, rs_internal_data=None, sector_rank_deltas_data=None, sector_regime_matrix_data=None, leader_representativeness_data=None, sector_wyckoff_distribution_data=None, sector_leader_divergence_data=None, sector_breadth_momentum_data=None, evidence_matrix_data=None, sector_dispersion_data=None, sector_correlation_summary_data=None, cross_asset_context_data=None, volatility_structure_data=None, data_quality_data=None, iae_section=None, output_path='outputs/report/reporte_diario.md',
-                          reference_date=None):
+                          reference_date=None, provenance=None):
     lines = []
     lines.append("# MACRO SECTORIAL - Reporte Diario\n")
     # D6 (2026-09-30): la fecha del header se deriva del dataset, no
@@ -86,6 +87,11 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
     _ref = reference_date if reference_date is not None else datetime.now(ZoneInfo('Europe/Madrid'))
     lines.append(f"**Fecha:** {_ref.strftime('%Y-%m-%d %H:%M:%S')}\n")
     lines.append(f"**Modelo:** v{MODEL_VERSION} | Pesos: v{WEIGHTS_VERSION} | Indicadores: v{INDICATORS_VERSION}\n\n")
+
+    # H8 (2026-10-16, auditoria externa): bloque de provenance.
+    # Identifica commit, run de CI, sesion objetivo y fechas efectivas.
+    # Permite certificar que la salida corresponde a un commit concreto.
+    lines.extend(render_provenance(provenance))
 
     # =========================================================================
     # RESUMEN DE REGIMENES (extraido a src/report/header.py, C1-5)
