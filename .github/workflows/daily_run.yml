@@ -97,12 +97,33 @@ jobs:
 
       - name: Run tests
         run: pytest tests/ validation/ -v -m "not integration_real_data"
-      - name: Run pyflakes (warnings only)
+      - name: Run pyflakes (gate)
+        # HD-6 (dictamen auditor externo 2026-10-16): pyflakes es un
+        # gate real. Cualquier warning falla el step. El reporte se
+        # preserva en el artifact pyflakes-report con if: always().
+        # Alcance: todo el repo (src/, scripts/, tests/, validation/,
+        # run.py). Baseline actual: 0 warnings. Si en el futuro hace
+        # falta excluir un directorio, se anade con justificacion
+        # explicita aqui y se documenta en 02_ARQUITECTURA.
         run: |
           mkdir -p outputs/audit
-          python -m pyflakes . > outputs/audit/pyflakes_report.txt 2>&1 || true
-          echo "Pyflakes report generated."
+          python -m pyflakes . > outputs/audit/pyflakes_report.txt 2>&1
+          rc=$?
+          echo "Pyflakes exit code: $rc"
           cat outputs/audit/pyflakes_report.txt
+          if [ $rc -ne 0 ]; then
+            echo "::error::Pyflakes detecto warnings o errores. Ver artifact pyflakes-report."
+          fi
+          exit $rc
+
+      - name: Upload pyflakes report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pyflakes-report
+          path: outputs/audit/pyflakes_report.txt
+          retention-days: 30
+          if-no-files-found: ignore
 
       - name: Calculate QQQ returns from Yahoo
         run: python scripts/qqq_returns_yahoo.py
