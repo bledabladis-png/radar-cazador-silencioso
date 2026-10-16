@@ -218,11 +218,22 @@ def main():
             "outputs", "state", "validation_gate_result.json"
         )
         os.makedirs(os.path.dirname(_vg_path), exist_ok=True)
+        # HD-4 (dictamen auditor externo 2026-10-16): anadir
+        # written_at (UTC ISO) para permitir a
+        # write_completion_receipt.py detectar JSON residual de
+        # una ejecucion anterior. El pipeline reescribe este
+        # fichero en cada run; si el receipt script lo lee con
+        # written_at antiguo, lo rechaza (fail-closed).
+        import time as _time_hd4
+        _written_at = _time_hd4.strftime(
+            "%Y-%m-%dT%H:%M:%SZ", _time_hd4.gmtime()
+        )
         with open(_vg_path, "w", encoding="utf-8") as _f:
             json.dump({
                 "passed": bool(vg.get("passed")),
                 "checks_n": len(vg.get("checks") or []),
                 "errors_n": len(vg.get("errors") or []),
+                "written_at": _written_at,
             }, _f)
     except Exception:
         pass

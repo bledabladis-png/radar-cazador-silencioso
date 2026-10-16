@@ -33,6 +33,16 @@ OUT_PATH = ROOT / "outputs" / "state" / "completion_receipt.json"
 SCHEMA_VERSION = 1
 WORKFLOW_NAME = "daily_run"
 
+# HD-4 (dictamen auditor externo 2026-10-16): edad maxima del VG
+# result para considerarlo vigente. El pipeline reescribe el JSON en
+# cada run. Si el fichero es mas antiguo, es residual de una ejecucion
+# previa (por ejemplo, run.py fallo antes de reescribirlo) y el
+# receipt NO debe emitirse.
+RECEIPT_MAX_AGE_HOURS = 6
+
+# Checks minimos del Validation Gate (contrato v1 §3: "10/10").
+VG_MIN_CHECKS = 10
+
 
 def _read_json(path):
     if not path.exists():
@@ -57,6 +67,56 @@ def _git_head():
     return None
 
 
+def _parse_written_at(s):
+    """Parsea written_at ISO (con Z o +00:00) a datetime aware.
+
+    Devuelve None si el valor es invalido o ausente.
+    """
+    if not isinstance(s, str) or not s:
+        return None
+    try:
+        iso = s[:-1] + "+00:00" if s.endswith("Z") else s
+        dt = datetime.fromisoformat(iso)
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        return dt
+    except Exception:
+        return None
+
+
+def _validate_vg_result(vg):
+    """Valida estrictamente el VG result. Devuelve (ok, reason).
+
+    Criterios (dictamen auditor externo 2026-10-16, HD-4):
+      - passed is True (estricto, no truthy).
+      - errors_n == 0.
+      - checks_n >= VG_MIN_CHECKS (10).
+      - written_at presente, parseable, no futuro, <= RECEIPT_MAX_AGE_HOURS.
+
+    Si cualquier criterio falla, el receipt NO se escribe (fail-closed).
+    """
+    if not isinstance(vg, dict):
+        return False, "VG result no es dict"
+    if vg.get("passed") is not True:
+        return False, "passed != True (estricto)"
+    errors_n = vg.get("errors_n")
+    if not isinstance(errors_n, int) or isinstance(errors_n, bool) or errors_n != 0:
+        return False, "errors_n != 0 (tipo {0})".format(type(errors_n).__name__)
+    checks_n = vg.get("checks_n")
+    if not isinstance(checks_n, int) or isinstance(checks_n, bool) or checks_n < VG_MIN_CHECKS:
+        return False, "checks_n < {0}".format(VG_MIN_CHECKS)
+    written_at = _parse_written_at(vg.get("written_at"))
+    if written_at is None:
+        return False, "written_at ausente o invalido"
+    now_utc = datetime.now(timezone.utc)
+    age_h = (now_utc - written_at).total_seconds() / 3600
+    if age_h < -0.1:
+        return False, "written_at en el futuro"
+    if age_h > RECEIPT_MAX_AGE_HOURS:
+        return False, "written_at demasiado antiguo ({0:.1f}h)".format(age_h)
+    return True, "OK"
+
+
 def main():
     manifest = _read_json(MANIFEST_PATH)
     if not isinstance(manifest, dict):
@@ -70,15 +130,21 @@ def main():
         ))
         return 1
 
-    passed = bool(vg.get("passed"))
-    errors_n = int(vg.get("errors_n") or 0)
-    checks_n = int(vg.get("checks_n") or 0)
+    # HD-4: validacion estricta. Si el VG result no demuestra el
+    # contrato (passed=True, errors_n=0, checks_n>=10, written_at
+    # reciente), no se emite receipt (fail-closed).
+    vg_ok, vg_reason = _validate_vg_result(vg)
+    if not vg_ok:
+        print("[ERROR] VG result no valido: {0}".format(vg_reason))
+        return 1
 
-    # validation_gate: "10/10" solo si passed y errors_n == 0. El
-    # gate rechaza cualquier otro valor (contrato v1 §3).
-    validation_gate = "10/10" if (passed and errors_n == 0) else "{0}/{1}".format(
-        checks_n - errors_n, checks_n
-    )
+    # A partir de aqui, los valores estan garantizados por
+    # _validate_vg_result. Se copian al receipt como hechos
+    # verificados, no como literales.
+    checks_n = int(vg["checks_n"])
+    errors_n = int(vg["errors_n"])
+    guard_coverage = "OK"  # derivado del paso anterior (validacion OK)
+    validation_gate = "10/10"  # garantizado por _validate_vg_result
 
     quality = manifest.get("quality") or {}
     artifact = manifest.get("artifact") or {}
@@ -129,9 +195,24 @@ def main():
         "commit_sha": commit_sha,
         "manifest_sha256": manifest_sha,
         "manifest_coverage_pct": float(coverage),
-        "guard_coverage": "OK",
+        # guard_coverage y validation_gate se derivan del VG result
+        # validado arriba. Si la validacion falla, no se llega aqui.
+        "guard_coverage": guard_coverage,
         "validation_gate": validation_gate,
+        # pipeline_conclusion: campo obligatorio del schema v1. No
+        # puede reflejar la conclusion real del workflow porque este
+        # script corre ANTES de que el workflow termine. Se documenta
+        # como precondicion contractual del YAML (if: success()), no
+        # como hecho verificado. Ver success_path_reached.
         "pipeline_conclusion": "success",
+        # success_path_reached (HD-4): hecho comprobable AHORA. Todo
+        # lo anterior paso (VG strict + manifest + run_id + commit_sha).
+        # No sustituye a pipeline_conclusion (compat v1).
+        "success_path_reached": True,
+        # Info de auditoria: valores exactos del VG que soportan el
+        # "10/10" del contrato v1.
+        "validation_gate_checks_n": checks_n,
+        "validation_gate_errors_n": errors_n,
     }
 
     OUT_PATH.parent.mkdir(parents=True, exist_ok=True)
