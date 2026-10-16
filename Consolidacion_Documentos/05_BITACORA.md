@@ -22,7 +22,7 @@ Bitacora de las ultimas sesiones. Contiene:
 
 Cada sesion se registra asi:
 
-    ### YYYY-MM-DD â€” Titulo corto
+    ### YYYY-MM-DD Ã¢â‚¬â€ Titulo corto
 
     **Objetivo.** Que se pretendia hacer.
 
@@ -38,13 +38,50 @@ Cada sesion se registra asi:
 
     **Proximo paso sugerido.** Que deberia hacerse a continuacion.
 
-Al cerrar una sesion nueva, se anade arriba (las mas recientes primero). Si hay mas de 10 fuera del dia en curso, la mas antigua se elimina o se resume en el historico. Ver reglas completas en Â§5.
+Al cerrar una sesion nueva, se anade arriba (las mas recientes primero). Si hay mas de 10 fuera del dia en curso, la mas antigua se elimina o se resume en el historico. Ver reglas completas en Ã‚Â§5.
 
 ---
 
 ## 3. SESIONES
 
-### 2026-10-16 - Auditoria workflow CI + dictamen externo + fases 1-2
+### 2026-10-16 - Auditoria CI + dictamen externo + fases 1-7 + gobernanza
+
+**Objetivo.** (a) Auditar el workflow `daily_run.yml`. (b) Recibir
+dictamen externo sobre los hallazgos. (c) Implementar las 7 fases del
+dictamen en 3 bloques: 1-3, 4-7, cierre documental.
+
+**Hecho.**
+
+- **Auditoria workflow CI.** 9 hallazgos (HD-1..HD-9). Corregidos los
+  8 accionables + precision 02_ARQUITECTURA §6.
+- **Dictamen externo.** 7 frentes aprobados con condiciones. Orden
+  estricto. Criterio triple.
+- **Fases 1-3.** Schedule vs Dispatch (health_check); receipt con
+  evidencia del Guard (fail-closed); pyflakes como gate real.
+- **Fases 4-7.**
+  - Fase 4: registro canonico de gobernanza
+    (`docs/gobernanza/REGISTRO.yaml`) + verificador con 11 reglas.
+  - Fase 5: indice H1-H18 derivado del registro.
+  - Fase 6: catalogo de anclas temporales
+    (`docs/gobernanza/ANCLAS.yaml`) + test selectivo.
+  - Fase 7: `poda_bitacora.py --check` sin mutacion + agrupacion por
+    fecha.
+- **Poda bitacora.** 21 -> 9 sesiones unicas. Bloque indice en
+  04_HISTORICO.
+- **Precision corpus.** `02_ARQUITECTURA §6` (bonos MTE + fallback
+  SPY->^GSPC). HANDOFF reescrito con estado real.
+
+**Commits.** 8269d671, fd42010d, c8a16f06, 2dda7986, 083cfd39,
+3e8d2828, 433da326, 7b790b12, 66179b90, 529f4ed2e1ab037940e88f65449cd82f2080a615.
+
+**Pendiente.**
+- Frentes bloqueados: C2, SOW v6, Wyckoff 5b.X, H5.3.
+- Verificar cron post-Fase 2 (receipt fail-closed).
+- Anadir `verifica_gobernanza.py` como gate de CI.
+
+**Proximo paso sugerido.** Anadir el verificador de gobernanza al
+workflow de CI (health_check semanal o daily_run).
+
 
 **Objetivo.** (a) Auditar el workflow `daily_run.yml` tras el cierre
 del 15-oct. (b) Recibir dictamen del auditor externo sobre los
@@ -79,11 +116,11 @@ hallazgos. (c) Implementar las dos primeras fases del dictamen.
   schema v1. 9 tests nuevos. Commit `433da326`.
 - **Poda bitacora** ejecutada: 21 -> 10 sesiones. Script
   `poda_bitacora.py` creado. Bloque indice en 04_HISTORICO.
-- **Precision 02_ARQUITECTURA §6.** Bonos MTE secundarios + fallback
+- **Precision 02_ARQUITECTURA Â§6.** Bonos MTE secundarios + fallback
   SPY->^GSPC.
-- **HANDOFF reescrito.** §4.1 RESUELTO. §4.2 y §6 corregidos (la
-  version anterior tenia deriva interna: §4.1 decia RESUELTO pero
-  §6 decia "15 items de deriva pendientes").
+- **HANDOFF reescrito.** Â§4.1 RESUELTO. Â§4.2 y Â§6 corregidos (la
+  version anterior tenia deriva interna: Â§4.1 decia RESUELTO pero
+  Â§6 decia "15 items de deriva pendientes").
 
 **Commits.** 8269d671, fd42010d, c8a16f06, 2dda7986, 083cfd39,
 3e8d2828, 433da326.
@@ -329,7 +366,7 @@ el run aborta con error explicito.
 - H-04: coberturas 18-25% son top-15/total-ETF. La metrica usa top-15 por diseno (`TOP_N_CANDIDATES`). Naming confuso.
 - H-05: `signal_cons = (pers + agree) / 2`. 38% es matematica.
 - H-11: Flujo Proxy en dos secciones mide cosas distintas (z-score vs flow_median). Naming confuso.
-- H-12, H-13: cosméticos documentados.
+- H-12, H-13: cosmÃ©ticos documentados.
 - H-14: Q1 en N-PORT es calendario. Q2 llega en el cron del 20-oct.
 - H-15: Indices en RANGE por umbrales (`struct > 0.30 AND t_norm > 0.30`). Ningun indice los supera hoy. No es fallback.
 - H-03: `IPS = -0.39` e `IPI = 31` son la misma metrica en escalas [-1,+1] y [0,100]. No incoherencia.

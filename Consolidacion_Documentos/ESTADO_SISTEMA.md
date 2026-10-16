@@ -22,8 +22,11 @@ porque el commit que lo contiene cambia HEAD.
 
 ## 2. Tests (pytest real)
 
-- **Resumen:** 3415 passed, 5 skipped
-- **Exit code:** 0
+- **Resumen:** 1 failed, 3451 passed, 5 skipped
+- **Exit code:** 1
+
+**Tests fallidos (nombre completo):**
+- `FAILED tests/test_gobernanza.py::test_registro_real_pasa - AssertionError: [H...`
 
 **Tests skip:**
 - `SKIPPED [1] tests\test_freshness.py:382: requiere --run-network`

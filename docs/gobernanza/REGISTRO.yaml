@@ -256,7 +256,7 @@ items:
     ciclo: "2026-10-16"
     estado: FIXED
     descripcion: "Fase 4: registro canonico de gobernanza"
-    commit: PENDING
+    commit: 529f4ed2e1ab037940e88f65449cd82f2080a615
     test: tests/test_gobernanza.py
 
   - id: DICT-F5
@@ -264,7 +264,7 @@ items:
     ciclo: "2026-10-16"
     estado: FIXED
     descripcion: "Fase 5: indice H1-H18 derivado"
-    commit: PENDING
+    commit: 529f4ed2e1ab037940e88f65449cd82f2080a615
     test: tests/test_indice_auditorias.py
 
   - id: DICT-F6
@@ -272,7 +272,7 @@ items:
     ciclo: "2026-10-16"
     estado: FIXED
     descripcion: "Fase 6: catalogo y test de anclas temporales"
-    commit: PENDING
+    commit: 529f4ed2e1ab037940e88f65449cd82f2080a615
     test: tests/test_anclas_temporales.py
 
   - id: DICT-F7
@@ -280,7 +280,7 @@ items:
     ciclo: "2026-10-16"
     estado: FIXED
     descripcion: "Fase 7: --check en poda_bitacora.py sin mutacion"
-    commit: PENDING
+    commit: 529f4ed2e1ab037940e88f65449cd82f2080a615
     test: tests/test_poda_bitacora.py
 
   # ===== Frentes vivos =====

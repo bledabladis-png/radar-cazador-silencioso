@@ -399,7 +399,7 @@ Si el gate falla, `run.py` aborta con `sys.exit(1)`.
 
 **Fix D - Perdida de filas en historico de flujo (CERRADO 2026-09-30):** 5 providers (`ssga_fund_data`, `amundi_fund_data`, `_blackrock_base`, `qqq_nport_flow`, `cftc_data`) escribian su historico sobrescribiendo el CSV sin leer el existente. Si el proveedor o su cache devolvia menos filas, se perdian permanentemente. Fix: `append_dedup(hist, nuevo, key)` antes de escribir. Commit `c798857`. Fix D2 (`7b0044d`): normalizar `Date` en ssga (usa `Date` mayuscula, `append_dedup` normaliza solo `date` minuscula). Test: `test_flows_primary_preserve_history.py`.
 
-**K-LSE-YAHOO-REVISION-01 (WATCHED con check activo):** Yahoo revisa OHLC historico retrospectivamente. Afecta al WLS (dependiente de ventanas largas). No es bug: el determinismo del sistema es respecto al snapshot del input, no al proveedor (00_ARRANQUE §2, D2 2026-09-30). Detectado via `check_yahoo_revision` (health_check): compara manifest actual vs HEAD por sha256.
+**K-LSE-YAHOO-REVISION-01 (WATCHED con check activo):** Yahoo revisa OHLC historico retrospectivamente. Afecta al WLS (dependiente de ventanas largas). No es bug: el determinismo del sistema es respecto al snapshot del input, no al proveedor (00_ARRANQUE Â§2, D2 2026-09-30). Detectado via `check_yahoo_revision` (health_check): compara manifest actual vs HEAD por sha256.
 
 **`as_of_date` en `qqq_returns_yahoo.csv` es timestamp, no fecha del dato (WONT FIX razonado):** La columna mezcla `latest_date` (dataset-derived) con `datetime.now()` (reloj de ejecucion, sin tz). El nombre es enganoso. Verificado 2026-09-30: unico consumidor (`flows_international.py:152-159`) prefiere `effectiveDate` (dataset-derived); el fallback trunca `as_of_date` con `split(" ")[0]`, por lo que la hora nunca se publica. La parte publicada es `latest_date`, dataset-derived. No viola regla dura 00_ARRANQUE 2: el campo es log. WONT FIX: renombrar a `run_timestamp` seria correcto pero ROI < 1 (regenerar CSV, actualizar test, sin cambio funcional).
 
@@ -524,3 +524,47 @@ Cuatro cifras distintas de "universo" conviven en el sistema. Cada una responde 
 **Regla derivada:** un consumer que lee `etf_holdings.csv` o `index_holdings.csv` directamente debe declarar en su docstring si corta a top-N o usa el pool completo. Un cambio silencioso de uno a otro altera el universo de la metrica sin senal.
 
 Verificado 2026-10-08 (sesion de verificacion del sistema). Sin bug. Ningun huerfano. Cifras cuadran entre manifest, parquet y catalogo.
+
+---
+
+## 17. GOBERNANZA DOCUMENTAL
+
+Desde 2026-10-16 el sistema tiene un registro canonico de items
+auditables (hallazgos, frentes, dictamenes).
+
+- **Fuente canonica:** `docs/gobernanza/REGISTRO.yaml`.
+- **Anclas temporales:** `docs/gobernanza/ANCLAS.yaml`.
+- **Verificador:** `scripts/verifica_gobernanza.py` (11 reglas).
+- **Indice derivado:** `docs/auditoria/radar/audits/INDEX_H1_H18.md`.
+- **Generador del indice:** `scripts/genera_indice_auditorias.py`.
+
+El HANDOFF, la bitacora y el indice son VISTAS derivadas. Nunca son
+fuente de estado. Cualquier item de auditoria o frente activo debe
+figurar en `REGISTRO.yaml` con estado inequivoco, evidencia y
+siguiente accion o razon de cierre.
+
+### Modelo de estados
+
+| Estado | Significado | Campos obligatorios |
+|---|---|---|
+| OPEN | Abierto, sin trabajar | siguiente_accion |
+| IN_PROGRESS | En trabajo activo | siguiente_accion |
+| BLOCKED_EXTERNAL | Bloqueado por tercero | dependencia |
+| FIXED | Cerrado con evidencia | commit, test o evidencia |
+| WONT_FIX | Cerrado sin accion | razon (>=20 chars) |
+| FALSE_POSITIVE | No era un bug | razon (>=20 chars) |
+| SUPERSEDED | Reemplazado por otro item | razon (>=20 chars) |
+
+### Verificacion obligatoria
+
+Antes de cada commit que toque el registro: `py scripts/verifica_gobernanza.py`.
+Antes de cada commit que toque el indice H1-H18:
+`py scripts/genera_indice_auditorias.py --apply`.
+Antes de cada cierre de sesion: `py scripts/poda_bitacora.py --check`.
+
+### Regla de anclas temporales
+
+Cualquier fecha literal en una asignacion modulo o default de funcion
+en `src/` o `scripts/` (exceptuando scripts metodologicos de
+calibracion) debe estar declarada en `docs/gobernanza/ANCLAS.yaml`.
+El test `tests/test_anclas_temporales.py` lo exige.
