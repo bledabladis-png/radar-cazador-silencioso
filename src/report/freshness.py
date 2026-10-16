@@ -171,7 +171,7 @@ def _render_session_alignment():
             elif last < expected:
                 state = f"LAGGED (esperada={expected}, observada={last})"
             else:
-                state = f"ANOMALY (last_date > expected_session)"
+                state = "ANOMALY (last_date > expected_session)"
             out.append(f"| {name} | {expected} | {last} | {state} |\n")
         except (OSError, ValueError, TypeError):
             out.append(f"| {name} | N/D | N/D | N/D (manifest invalido) |\n")

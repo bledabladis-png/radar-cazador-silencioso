@@ -237,11 +237,11 @@ def test_render_alerts_high_stress_z_positivo():
         breadth_values=None,
         liquidity_regime="HIGH_STRESS",
         price_flow_divergences=None,
-        confirmation_data={"ratios": {"hyg_lqd_zscore": 0.15}},
+        confirmation_data={"ratios": {"hyg_lqd_zscore": 0.80}},
     )
     lineas = "".join(out)
     assert "desviacion positiva" in lineas
-    assert "Z=+0.15" in lineas
+    assert "Z=+0.80" in lineas
     assert "estres localizado" in lineas.lower() or "localizado" in lineas.lower()
 
 
@@ -250,11 +250,11 @@ def test_render_alerts_high_stress_z_negativo():
         breadth_values=None,
         liquidity_regime="HIGH_STRESS",
         price_flow_divergences=None,
-        confirmation_data={"ratios": {"hyg_lqd_zscore": -0.15}},
+        confirmation_data={"ratios": {"hyg_lqd_zscore": -0.80}},
     )
     lineas = "".join(out)
     assert "desviacion negativa" in lineas
-    assert "Z=-0.15" in lineas
+    assert "Z=-0.80" in lineas
     assert "no esta localizado" in lineas or "credito lo confirma" in lineas
 
 
