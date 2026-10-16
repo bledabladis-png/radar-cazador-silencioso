@@ -22,7 +22,7 @@ porque el commit que lo contiene cambia HEAD.
 
 ## 2. Tests (pytest real)
 
-- **Resumen:** 3397 passed, 5 skipped
+- **Resumen:** 3415 passed, 5 skipped
 - **Exit code:** 0
 
 **Tests skip:**
@@ -35,7 +35,7 @@ porque el commit que lo contiene cambia HEAD.
 ## 3. Integridad del codigo
 
 - **compileall:** OK (exit 0)
-- **pyflakes:** 1 warnings (exit 1)
+- **pyflakes:** LIMPIO
 
 ## 4. Modulos IAE
 

@@ -8,140 +8,157 @@ No crear variantes con fecha.
 
 ---
 
-## 1. ESTADO AL CIERRE (2026-10-15 ~19:00 CEST)
+## 1. ESTADO AL CIERRE (2026-10-16)
 
 Rama activa:    main
 HEAD:           consultar `git log --oneline -1` (no literal; el corpus no fija SHA para evitar deriva)
 Sincronizacion: main == origin/main
 Tests:          ver `Consolidacion_Documentos/ESTADO_SISTEMA.md` (fuente autoritativa).
-                Referencia orientativa: ~3390 passed + 5 skipped.
+                Referencia orientativa: ~3406 passed + 5 skipped (con filtro CI).
 Validation Gate: 10/10
-Working tree:   limpio
+Working tree:   limpio (salvo data/ y outputs/ que el bot actualiza)
 Corpus:         v3 (Consolidacion_Documentos/00-08 + ESTADO_SISTEMA)
 
 ---
 
-## 2. SESION 15-OCT (auditoria externa H1-H18)
+## 2. SESION 16-OCT (auditoria interna CI + dictamen externo + fases 1-2)
 
 ### 2.0. Contexto
 
-Auditoria externa del reporte del 15-oct. 18 hallazgos clasificados
-por el auditor en tres niveles (critico / alto / medio). Todos
-atendidos. 17 commits de fix/docs + 3 commits previos de la sesion
-14-oct (N8). 1 falso positivo verificado (H2), 1 bug real (H7).
+Dos bloques en la sesion del 16-oct:
 
-### 2.1. Criticos cerrados
+**Bloque 1 (mañana/tarde temprano)**: auditoria interna del workflow
+`daily_run.yml` tras el cierre del 15-oct. Detectados 9 hallazgos
+(HD-1 a HD-9) y corregidos los 8 accionables. Emitido informe al
+auditor externo con 3 debilidades de diseno + 4 consultas de metodo.
 
-- **H1 (alerta HYG/LQD)**: el texto era literal fijo. Ahora depende
-  del Z-score real de HYG/LQD. 3 ramas: positivo / negativo / N/D.
-  Commit edabdb52.
-- **H2 (RS nominal en WLS)**: FALSO POSITIVO. Verificado empiricamente
-  que rs_mom = log(rs).diff(20) es invariante a escala (split 10:1 da
-  resultado identico). El problema del rs nominal documentado como N2
-  afecta SOLO a LIS, no a WLS. Commit 804968b1 + 4 tests.
-- **H3 (frescura SEC)**: la tabla declaraba una sola fuente SEC (N-PORT
-  posiciones) cuando el pipeline consume DOS (posiciones + N-PORT-P QQQ
-  flujos). Separadas. Commit db0462c2.
-- **H7 (NH/NL)**: BUG REAL. rolling(N, min_periods=N) sobre series con
-  NaN dispersos devuelve NaN en TODA la serie. 289/329 tickers
-  producian 0/0 NH/NL en el historico. Fix: rolling sobre serie
-  dropna, cada ticker evaluado independientemente. 5 sitios:
-  breadth_core, sector_breadth, stock_leader, breadth_equity,
-  wyckoff_v1 + rolling_percentile en utils. Test AST de regresion.
-  Commit 1189b7f8.
+**Bloque 2 (tarde/noche)**: recibido dictamen del auditor externo.
+Aprobados los 7 frentes con condiciones, con orden de implementacion
+estricto (una fase por sesion). Implementadas Fases 1 y 2.
 
-### 2.2. Altos cerrados
+### 2.1. Auditoria workflow daily_run.yml (HD-1..HD-8)
 
-- **H4**: "Volatilidad LOW" (velocidad del VIX) ≠ "Lectura volatilidad
-  media" (nivel). Nota en 2 sitios. Commit 3bd5f68a.
-- **H5**: `Data Conf` se deriva SOLO de frescura (no cobertura).
-  Publicados los umbrales FRESHNESS_*. Commit 47b34d82.
-- **H6 + H10**: XLP con flujo 622.85M verificado real (7.4M shares x
-  84.17 NAV). El Z=5.00 es el clip contractual. Fix: expuesto el z
-  bruto sin clip con asterisco. Commit 4d905104.
-- **H8**: "Sector Lider" -> "Candidato a lider (no confirmado)" cuando
-  `state=UNRESOLVED` por falta de datos (NO_LEADERS, INPUT_UNAVAILABLE,
-  INSUFFICIENT_*). Commit 0710db68.
+- **HD-1**: drift test entre `pipeline_gate.py` y `daily_run.yml`
+  existia, pero no cubria `health_check.py`. Ampliado con
+  `test_drift_cron_slots_vs_health_check`.
+- **HD-2**: 2 comentarios "4 slots" en `daily_run.yml` y
+  `health_check.py` vs 5 reales. Corregidos.
+- **HD-3**: `resolve_target_session` con naive-UTC interpretado como
+  Madrid. Verificado empiricamente que los 5 slots dan el mismo
+  target_session con naive-UTC o UTC-aware. WONT FIX razonado en
+  docstring.
+- **HD-4** (ver §2.3 abajo, Fase 2 del dictamen).
+- **HD-5** (ver §2.3 abajo, Fase 1 del dictamen).
+- **HD-6**: `pyflakes . || true` nunca bloquea CI. Recogido en
+  dictamen como Fase 3 pendiente.
+- **HD-7**: `guard_coverage: "OK"` y `pipeline_conclusion: "success"`
+  hardcoded en `write_completion_receipt.py`. Resuelto en Fase 2.
+- **HD-8**: `--limit 20` en check_cron_slots sin justificacion.
+  Comentario anadido.
+- **HD-9**: `_manifest_satisfies` sin consumidores. Verificado que SI
+  tiene ~8 tests dedicados + contrato declarado. NO es dead code.
 
-### 2.3. Medios cerrados
+### 2.2. Informe al auditor externo y dictamen recibido
 
-- **H9**: correlacion entre evidencias cuantificada (24 filas, Pearson:
-  solo price-breadth r=0.64; resto |r|<0.3). El Flow Proxy NO
-  correlaciona con Precio. Commit 3540218b.
-- **H11**: cubierto por H3.
-- **H12**: ETF Primary Flow = estimacion operativa, no flujo del
-  mercado secundario. Commit 0f990fdf.
-- **H13**: benchmark SPY + formula de rs_abs_20d publicados. Commit
-  7e621ea4.
-- **H14**: NIPC 13F: unidad (acciones), formula, tratamiento NEW/EXIT,
-  deduplicacion, significado de COMPLETE. Commit e9cefaeb.
-- **H15**: pesos SCENARIO_WEIGHTS, umbrales y condiciones del MTE
-  publicados. Commit bb7fd03b.
-- **H16**: Momentum amplitud: unidad (pp) + reglas de Expansion/
-  Deterioro. Commit 16e064f4.
-- **H17**: desambiguadas las 3 "persistencias" del reporte (Structural
-  Ranking, lideres por ticker, flujo primario). Commit fdbc7ccf.
-- **H18**: "Desde inicio" QQQ/SPY: fechas reales (1999-03-10 / 1993-
-  01-22) y advertencia de no comparabilidad. Commit fbcfe4cd.
+Informe enviado con HD-4/HD-5/HD-6 (debilidades de diseno del CI) +
+P-A/P-B/P-C/P-D (decisiones de metodo). Dictamen del auditor:
+aprobados los 7 frentes con condiciones, orden de implementacion
+estricto, criterio de calidad triple (estado inequivoco + evidencia
+verificable + test de regresion). Dictamen integro en el hilo de
+conversacion del 16-oct; no se transcribe aqui.
 
-### 2.4. Commits de la sesion (17)
+### 2.3. Fases 1 y 2 del dictamen (implementadas)
 
-  edabdb52 fix(alerts): H1
-  804968b1 docs(H2): WLS usa rs_mom invariante a escala
-  db0462c2 fix(H3): separar frescura SEC N-PORT y N-PORT-P QQQ
-  4d905104 fix(H6,H10): exponer z-score bruto sin clip
-  3bd5f68a docs(H4): velocidad vs nivel de volatilidad
-  47b34d82 fix(H5): Data Conf solo de frescura + umbrales
-  3540218b docs(H9): cuantificar correlacion evidencias
-  0f990fdf docs(H12): ETF Primary Flow estimacion operativa
-  7e621ea4 docs(H13): benchmark SPY + formula rs_abs_20d
-  e9cefaeb docs(H14): NIPC unidad, formula y reglas
-  bb7fd03b docs(H15): pesos y umbrales MTE
-  16e064f4 docs(H16): unidad pp + reglas flags
-  fdbc7ccf docs(H17): desambiguar persistencias
-  fbcfe4cd docs(H18): QQQ/SPY Desde inicio
-  9b438549 docs(corpus): cierre de sesion 15-oct (HANDOFF + bitacora)
-  07e75fb0 docs(corpus): barrido de deriva documental (Fase B)
+**Fase 1 — HD-5: separar Schedule vs Dispatch en health_check.**
+Commit `3e8d2828`. `check_workflows` refactorizado en
+`_check_one_workflow` (pura) + helpers `_last_run` y `_delta_days`.
+Nuevo comportamiento: si solo hay `workflow_dispatch` reciente y el
+schedule no esta acreditado, WARN con `SCHEDULE no acreditado; ultimo
+workflow_dispatch`. Si gh no responde, SKIP (no verificable). 8 tests
+en `tests/test_health_check_workflow_schedule.py`.
+
+**Fase 2 — HD-4: receipt con evidencia del Guard.**
+Commit `433da326`. `run.py` escribe `written_at` (UTC ISO) al VG
+result. `write_completion_receipt.py` valida estrictamente antes de
+emitir: `passed is True`, `errors_n == 0`, `checks_n >= 10`,
+`written_at` presente/no futuro/<= 6h. Si falla -> no se emite
+receipt (fail-closed, exit 1). Anadidos campos informativos:
+`success_path_reached: true`, `validation_gate_checks_n`,
+`validation_gate_errors_n`. Compatible con schema v1 (no rompe
+receipts ya emitidos). 9 tests en
+`tests/test_write_completion_receipt.py`.
+
+### 2.4. Commits de la sesion
+
+  433da326 fix(receipt): HD-4 - validar VG result antes de emitir receipt
+  3e8d2828 fix(health_check): HD-5 - separar Schedule vs Dispatch
+  083cfd39 docs(corpus): precisar MTE bonos secundarios y fallback SPY->^GSPC
+  2dda7986 docs(ci)+test: auditoria workflow daily_run (HD-1..HD-8)
+  8269d671 fix(tests)+docs(handoff): residuo pyflakes H7 + cierre deuda HANDOFF
+  fd42010d docs(corpus): MTE + rs_abs_20d en 02_ARQUITECTURA §6
+  c8a16f06 docs(corpus): HD-6 - poda bitacora + script poda_bitacora.py
 
 ---
 
 ## 3. FRENTES CERRADOS EN LA SESION
 
-- **Auditoria externa H1-H18** completa.
-- **N8** (liquidity_v2) ya en produccion desde el 14-oct.
-- **N1** (SLPM fail-closed) cerrado el 14-oct.
-- **Pyflakes residual** (`import pytest` sin uso en
-  `tests/test_audit_contracts_rolling_nan.py`, introducido
-  por H7) corregido. HANDOFF §5 vuelve a poder declarar
-  pyflakes limpio.
+- **Auditoria workflow daily_run.yml**: HD-1 a HD-8 cerrados
+  (comentarios, drift test, docstrings).
+- **Residuo pyflakes H7**: eliminado. `00_ARRANQUE` y HANDOFF dejan
+  de declarar "pyflakes silencio" sin base.
+- **HD-5** (dictamen Fase 1): separacion schedule/dispatch implementada.
+- **HD-4** (dictamen Fase 2): receipt con evidencia del Guard.
+- **HD-6** (poda bitacora): 05_BITACORA 75 KB -> 18 KB; script
+  `poda_bitacora.py` creado.
+- **Precision corpus**: `02_ARQUITECTURA §6` corregido (bonos MTE
+  secundarios, fallback SPY->^GSPC).
+- **HANDOFF §4.1**: los 15 items de deriva aparecen como RESUELTOS por
+  Fase B (fix del 15-oct que el HANDOFF no reflejaba).
 
 ---
 
 ## 4. PENDIENTES VIVOS
 
-### 4.1. Corpus documental — RESUELTO
+### 4.1. Fases del dictamen externo pendientes
 
-Los 15 items de deriva detectados en la sesion 14-oct quedaron
-resueltos en el barrido Fase B (commit 07e75fb0, 15-oct):
-02_ARQUITECTURA §2/§4 (contratos 10->9), §8/§10 (slots 4->5),
-§10/§12 (OilPriceAPI), §6 (Liquidity 5->4); 00_ARRANQUE §5/§3
-(literales de tests -> remision a ESTADO_SISTEMA); 01_METODO §12
-(referencia rota). Los literales de tests en 04_HISTORICO,
-05_BITACORA y 08_AUDITORIA_SECTOR_REGIME se mantienen: son
-cronologia, no deriva.
+Orden estricto del auditor. Una fase por sesion.
 
-Los 8 F6-* figuran como WONT FIX razonado desde 2026-10-12
-(TRIAGE_BAJAS_2026-10-12.md seccion 4). No son pendientes.
+- **Fase 3** — HD-6: convertir pyflakes en gate real de CI (3 etapas:
+  definir alcance, bloquear regresiones, gate permanente).
+- **Fase 4** — P-A: contrato de estados del HANDOFF + verificador que
+  detecte reapertura de items `FIXED`/`WONT_FIX`.
+- **Fase 5** — P-C: indice consolidado H1-H18 en
+  `docs/auditoria/radar/audits/` con estado, evidencia, commit, test.
+- **Fase 6** — P-B: registro y test selectivo de anclas temporales
+  (`# ANCHOR: reason=...` no vacia).
+- **Fase 7** — P-D: modo `--check` en `poda_bitacora.py`, sin borrado
+  automatico.
 
-### 4.2. Verificacion del cron 23:17 UTC
+Cada fase debe cumplir: estado inequivoco + evidencia verificable +
+test que detecte regresion.
 
-Sin cambios respecto a la sesion anterior. El cron del 14-oct ejecuto
-OK (run 38665838881). Siguiente 23:17 UTC.
+### 4.2. Verificacion del cron
 
-### 4.3. Audiencias externas
+Ultimo run exitoso: cron de la madrugada del 16-oct
+(`38834597307`, HEAD `c8a16f06`). Patron confirmado: 1 pipeline
+completo + 4 skip por completion receipt. Siguiente slot: 23:17 UTC
+del 16-oct.
 
-Nada pendiente. La sesion 15-oct responde a la auditoria externa del
-15-oct. Queda a discrecion enviar el anexo si el usuario quiere.
+**Atencion tras Fase 2:** el cambio en `write_completion_receipt.py`
+hace fail-closed si el VG result no cumple el nuevo contrato. Verificar
+el primer run post-commit que el receipt se sigue emitiendo.
+
+### 4.3. Item menor GitHub
+
+Aviso del runner: `ubuntu-latest` migra a Ubuntu 26 el 19-oct-2026.
+No urgente, pero conviene tenerlo presente.
+
+### 4.4. Issue #5 abierta (health-check)
+
+`[health-check] WARN - discrepancias no criticas`. Abierta 18 dias.
+WARN recurrentes: `update_sec_13f` cancelado + cron_slots 3/5.
+Deuda de proceso, no bug. Decidir si forzar el workflow o ajustar
+criterio.
 
 ---
 
@@ -156,9 +173,9 @@ Nada pendiente. La sesion 15-oct responde a la auditoria externa del
 
 Esperado:
 - HEAD = el que devuelva `git log --oneline -1` (no se fija literal).
-- ahead 0, behind 0.
+- ahead 0, behind 0 (o behind N si el bot ha pusheado; `git pull --ff-only`).
 - working tree limpio (salvo data/ y outputs/ que el bot actualiza).
-- 3388 passed + 5 skipped (con filtro CI).
+- ~3406 passed + 5 skipped (con filtro CI).
 - pyflakes silencio, compileall OK.
 
 ---
@@ -171,8 +188,15 @@ Esperado:
   fix futuro necesita rolling sobre series con huecos, dropna previo.
 - **H2 es falso positivo.** rs_mom (WLS) es invariante a escala.
   No modificar a la ligera hacia un ratio nominal.
-- **No usar run.py en horario de mercado USA.**
-- **Corpus desactualizado:** 15 items de deriva pendientes.
+- **No usar run.py en horario de mercado USA** (13:30-20:00 UTC).
+  Contamina el snapshot.
+- **Receipt fail-closed (Fase 2).** El receipt solo se emite si el
+  VG result cumple el contrato estricto (passed=True, errors_n=0,
+  checks_n>=10, written_at reciente). Si falla, no se emite.
+  El siguiente slot hara READY y volvera a correr. Fail-safe.
+- **Schedule vs Dispatch (Fase 1).** El health check distingue
+  Schedule Health de Dispatch Health. Un dispatch reciente NUNCA
+  debe ocultar que el schedule no dispara.
 - **EOL del corpus:** LF.
 
 ---
@@ -182,7 +206,7 @@ Esperado:
 Corpus normativo en `Consolidacion_Documentos/` (12 docs).
 Expedientes: docs/auditoria/wyckoff/, docs/auditoria/iae/golden/,
 docs/auditoria/s03_deep/, docs/auditoria/radar/audits/.
-
+Contrato del gate: docs/auditoria/daily_run_gate_contrato_v1.md.
 Sandbox N8: outputs/audit/liq_backtest/.
 
 ---

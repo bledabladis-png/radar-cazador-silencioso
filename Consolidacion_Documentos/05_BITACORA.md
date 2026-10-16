@@ -44,6 +44,59 @@ Al cerrar una sesion nueva, se anade arriba (las mas recientes primero). Si hay 
 
 ## 3. SESIONES
 
+### 2026-10-16 - Auditoria workflow CI + dictamen externo + fases 1-2
+
+**Objetivo.** (a) Auditar el workflow `daily_run.yml` tras el cierre
+del 15-oct. (b) Recibir dictamen del auditor externo sobre los
+hallazgos. (c) Implementar las dos primeras fases del dictamen.
+
+**Hecho.**
+
+- **Auditoria interna del workflow.** 9 hallazgos detectados
+  (HD-1..HD-9). Corregidos los 8 accionables: drift test ampliado a
+  `health_check.py`, comentarios "4 slots" -> 5, docstrings
+  justificativos en `resolve_target_session` y
+  `write_completion_receipt`, comentario `--limit 20`. HD-9
+  descartado (tiene ~8 tests + contrato).
+- **Informe al auditor externo.** 3 debilidades de diseno del CI
+  (HD-4 receipt hardcoded, HD-5 schedule vs dispatch, HD-6 pyflakes
+  sin gate) + 4 consultas de metodo (P-A gobernanza HANDOFF, P-B
+  anclas temporales, P-C trazabilidad normativa, P-D poda bitacora).
+- **Dictamen recibido.** Los 7 frentes aprobados con condiciones.
+  Orden estricto de implementacion, una fase por sesion. Criterio
+  de calidad triple: estado inequivoco + evidencia verificable +
+  test de regresion.
+- **Fase 1 implementada (HD-5).** `check_workflows` refactorizado:
+  `_check_one_workflow` pura + helpers. Schedule Health separado de
+  Dispatch Health. `workflow_dispatch` reciente NUNCA oculta ausencia
+  de schedule. 8 tests nuevos. Commit `3e8d2828`.
+- **Fase 2 implementada (HD-4).** Receipt con evidencia del Guard.
+  `run.py` escribe `written_at`. `write_completion_receipt.py`
+  valida estrictamente antes de emitir: passed=True, errors_n=0,
+  checks_n>=10, written_at reciente (<=6h). Si falla -> no emite
+  (fail-closed). Anadidos `success_path_reached`,
+  `validation_gate_checks_n`, `validation_gate_errors_n`. Compat
+  schema v1. 9 tests nuevos. Commit `433da326`.
+- **Poda bitacora** ejecutada: 21 -> 10 sesiones. Script
+  `poda_bitacora.py` creado. Bloque indice en 04_HISTORICO.
+- **Precision 02_ARQUITECTURA §6.** Bonos MTE secundarios + fallback
+  SPY->^GSPC.
+- **HANDOFF reescrito.** §4.1 RESUELTO. §4.2 y §6 corregidos (la
+  version anterior tenia deriva interna: §4.1 decia RESUELTO pero
+  §6 decia "15 items de deriva pendientes").
+
+**Commits.** 8269d671, fd42010d, c8a16f06, 2dda7986, 083cfd39,
+3e8d2828, 433da326.
+
+**Pendiente.**
+- Fases 3-7 del dictamen (una por sesion).
+- Verificar primer run del cron tras Fase 2 (receipt fail-closed).
+- Issue #5 (health-check WARN): decidir.
+- Aviso GitHub: ubuntu-latest -> Ubuntu 26 el 19-oct.
+
+**Proximo paso sugerido.** Fase 3 del dictamen: pyflakes como gate
+real de CI.
+
 ### 2026-10-15 - Auditoria externa H1-H18 del reporte
 
 **Objetivo.** Atender los 18 hallazgos de la auditoria externa del
