@@ -77,6 +77,49 @@ def _load_latest_valid_breadth_snapshot(csv_path):
         return None
 
 
+def _resolve_breadth_effective_date(df_stocks, df_market, holdings_df,
+                                     min_coverage=0.90):
+    """N-C6: resuelve la fecha efectiva para Sector Breadth.
+
+    Aplica resolve_effective_date sobre el universo combinado:
+    tickers equity de df_stocks + ETFs sectoriales de df_market
+    (los ETFs sectoriales participan en el calculo de RS).
+
+    Devuelve (effective_date_ts, meta_dict) o (None, meta) si
+    INSUFFICIENT_COVERAGE. El consumidor decide si ir al fallback.
+
+    R2: la fecha no se resuelve por posicion fisica.
+    R3: misma resolucion para sector_breadth y su derivado
+        sector_breadth_momentum (que lee el CSV escrito con esta fecha).
+    """
+    from src.effective_date import resolve_effective_date
+
+    if df_stocks is None or df_stocks.empty:
+        return None, {'status': 'INSUFFICIENT_COVERAGE', 'reason': 'df_stocks empty'}
+
+    # Universo elegible: tickers equity de df_stocks.
+    eligible = [c[1] for c in df_stocks.columns if c[0] == 'Close']
+
+    # Anadir ETFs sectoriales de df_market (input de RS).
+    if df_market is not None and not df_market.empty:
+        for c in df_market.columns:
+            if len(c) == 2 and c[0] == 'Close' and c[1] not in eligible:
+                # Solo ETFs sectoriales presentes en holdings_df.
+                try:
+                    if c[1] in set(holdings_df['etf'].unique()):
+                        eligible.append(c[1])
+                except (KeyError, AttributeError, TypeError):
+                    continue
+
+    if not eligible:
+        return None, {'status': 'INSUFFICIENT_COVERAGE', 'reason': 'sin elegibles'}
+
+    meta = resolve_effective_date(df_stocks, eligible, min_coverage=min_coverage)
+    if meta['status'] != 'OK' or meta['date'] is None:
+        return None, meta
+    return meta['date'], meta
+
+
 def _compute_sector_breadth_health(df_stocks, df_market, holdings_df,
                                     reference_date=None, output_path=None,
                                     temporal_meta=None, return_reason=False):
@@ -123,12 +166,19 @@ def _compute_sector_breadth_health(df_stocks, df_market, holdings_df,
         # resto de modulos del pipeline.
 
         expected_session = last_expected_market_date(reference_date)
-
-        # B2: la sesion esperada debe estar presente en df_stocks.
-        observed_last = pd.Timestamp(df_stocks.index[-1]).normalize().date()
         expected_norm = pd.Timestamp(expected_session).normalize().date()
-        if expected_norm > observed_last:
-            print(f"  B2: EXPECTED_SESSION_ABSENT ({expected_norm} > {observed_last}). Omitiendo nueva observacion.")
+
+        # N-C6 (dictamen auditor externo 2026-10-16): la fecha efectiva
+        # NO se resuelve por posicion fisica (df_stocks.index[-1]).
+        # Se resuelve por resolve_effective_date sobre el universo
+        # combinado (equity df_stocks + ETFs sectoriales de df_market)
+        # con la misma cobertura exigida por el resto del pipeline.
+        effective_date, eff_meta = _resolve_breadth_effective_date(
+            df_stocks, df_market, holdings_df, min_coverage=0.90
+        )
+        if effective_date is None:
+            print("  B2/N-C6: sin fecha efectiva (INSUFFICIENT_COVERAGE). "
+                  "Omitiendo nueva observacion.")
             fallback = _load_latest_valid_breadth_snapshot(sb_path)
             if fallback is not None:
                 print(f"  C2F: usando snapshot {fallback['date'].max().date()} como stale.")
@@ -138,8 +188,39 @@ def _compute_sector_breadth_health(df_stocks, df_market, holdings_df,
                 return fallback, True, 'DATA_PENDING'
             return fallback, True
 
+        eff_norm = pd.Timestamp(effective_date).normalize().date()
+
+        # R4 (dictamen auditor externo 2026-10-16): el filtro de sesion
+        # y el control de cobertura son controles independientes. Si la
+        # fecha efectiva (por dato) supera la sesion esperada (por
+        # reloj), se capa a expected_session. Ejemplo: run pre-publish
+        # en que el df_stocks ya tiene la sesion del dia por un cierre
+        # parcial. Sin cap, la sesion publicada seria posterior a la
+        # que el reloj considera disponible.
+        if eff_norm > expected_norm:
+            print(f"  R4/N-C6: cap effective_date {eff_norm} -> "
+                  f"expected_session {expected_norm} (reloj por detras del dato).")
+            eff_norm = expected_norm
+            effective_date = pd.Timestamp(expected_norm)
+
+        if expected_norm > eff_norm:
+            print(f"  B2/N-C6: EXPECTED_SESSION_ABSENT "
+                  f"(expected={expected_norm}, effective={eff_norm}, "
+                  f"lag={(expected_norm - eff_norm).days}d). "
+                  f"Omitiendo nueva observacion.")
+            fallback = _load_latest_valid_breadth_snapshot(sb_path)
+            if fallback is not None:
+                print(f"  C2F: usando snapshot {fallback['date'].max().date()} como stale.")
+            skip('sector_breadth', 'STALE',
+                 path_override=sb_path if output_path is not None else None)
+            if return_reason:
+                return fallback, True, 'DATA_PENDING'
+            return fallback, True
+
+        # as_of_date = fecha efectiva (capped por R4). Garantiza que
+        # df_market y df_stocks comparten sesion.
         sector_breadth_df = compute_sector_breadth(
-            df_market, df_stocks, holdings_df, as_of_date=expected_session,
+            df_market, df_stocks, holdings_df, as_of_date=effective_date,
             temporal_meta=temporal_meta)
 
         if not sector_breadth_df.empty:
