@@ -3,8 +3,20 @@ import sys
 import time
 from datetime import datetime
 from pathlib import Path
+
 import pandas as pd
 import requests
+
+# H5 (2026-10-16, auditoria): sys.path.insert antes de importar src.*
+# El script vive en data/providers/, dos niveles por debajo del root.
+# Sin esto, el step "Regenerar flujo de participaciones QQQ (NPORT-P B.6)"
+# del workflow update_sec_nport falla con ModuleNotFoundError: No module
+# named 'src'. Mismo patron que scripts/audit/audit_artifacts.py,
+# scripts/build_catalog_csvs.py, etc.
+_ROOT = Path(__file__).resolve().parents[2]
+if str(_ROOT) not in sys.path:
+    sys.path.insert(0, str(_ROOT))
+
 from src.utils import append_dedup
 
 

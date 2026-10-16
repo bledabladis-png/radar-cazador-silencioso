@@ -2,7 +2,11 @@ name: Actualizar SEC N-PORT (trimestral)
 
 on:
   schedule:
-    - cron: '17 6 20 1,4,7,10 *'  # 20 enero, abril, julio, octubre a las 06:17 UTC (último trimestre cerrado)
+    # H5 (2026-10-16, auditoria): la SEC publica el data set N-PORT
+    # con latencia irregular. Cron semanal (miercoles 06:17 UTC)
+    # reacciona en maximo 7 dias. Coste: 52 runs/ano vs 4. Sin ZIP
+    # disponible el run termina en ~30s (404 inmediato).
+    - cron: '17 6 * * 3'
   workflow_dispatch:
 
 concurrency:

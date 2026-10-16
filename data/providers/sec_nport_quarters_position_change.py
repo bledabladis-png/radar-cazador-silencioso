@@ -57,12 +57,24 @@ def load_quarter(q):
 
 def main():
     quarters = discover_quarters()
-    if len(quarters) < 2:
-        print(f'ERROR: data/nport/ contiene {len(quarters)} trimestre(s); '
-              f'se necesitan >=2 para calcular cambios.')
+    if len(quarters) == 0:
+        print('ERROR: data/nport/ no contiene ningun trimestre.')
         print('En CI, data/nport/ es efimero (gitignored): el step previo '
               'update_sec_nport_data.py debe ejecutarse con --backfill >=1.')
         sys.exit(1)
+    if len(quarters) == 1:
+        # H5 (2026-10-16, auditoria): con un solo ZIP disponible
+        # (p.ej. cuando el quarter objetivo no esta publicado todavia),
+        # se genera un consolidado con ese unico trimestre. Las filas
+        # resultantes tienen PREV_BALANCE=NaN y POSITION_CHANGE=NaN
+        # (primera observacion del par). El consumidor (render del
+        # reporte) lee la ultima fecha disponible y no depende de
+        # POSITION_CHANGE para mostrar las posiciones.
+        # Antes de este fix, el script fallaba con exit 1 y tumbaba
+        # el workflow entero aunque los datos disponibles fueran validos.
+        print(f'[WARN] Solo 1 trimestre disponible: {quarters}. '
+              f'Se generara consolidado con POSITION_CHANGE=NaN '
+              f'(primera observacion sin par previo).')
     print(f'Trimestres detectados: {quarters}')
     frames = [load_quarter(q) for q in quarters]
     all_data = pd.concat(frames, ignore_index=True)
