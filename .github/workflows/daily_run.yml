@@ -346,6 +346,23 @@ jobs:
           retention-days: 90
           if-no-files-found: error
 
+      - name: Write completion attempt (always)
+        # Enmienda v1.1 (2026-10-16): registro diagnostico por ejecucion.
+        # Se escribe SIEMPRE (exitoso o no) tras intentar emitir receipt.
+        if: always()
+        env:
+          TARGET_SESSION: ${{ needs.gate.outputs.expected_session }}
+        run: python scripts/write_completion_attempt.py
+
+      - name: Upload completion attempt
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: completion-attempt-${{ github.run_id }}-${{ github.run_attempt }}
+          path: outputs/state/completion_attempt.jsonl
+          retention-days: 90
+          if-no-files-found: ignore
+
   issue-manager:
     # F-IAE-CRON-02 (2026-09-25): post-run manager de Issues.
     # Diseño aprobado auditor externo. Corre siempre (siempre que gate
