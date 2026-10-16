@@ -215,6 +215,31 @@ cerrarlos.
 **Commits del dia (segunda parte).** 4b7caba6, a4f19514, e6b2fc0b,
 e87f94f1, 79a24106, 1859a143, db5cc2db, 4ac3ec0c, df5b6974.
 
+
+**Commits finales (segundo dictamen).** Tras el dictamen del auditor
+sobre las precisiones, se aplicaron los 3 commits pendientes:
+
+- **Commit 4** (`97c00097`): registro de intentos como artifact.
+  `scripts/write_completion_attempt.py` + `outputs/state/completion_attempt.jsonl`
+  subido con `if: always()` en `daily_run.yml`. 5 tests.
+- **Commit 5** (`daac0003`): test R3 explicito. Descubrio un bug real
+  en `resolve_effective_date`: usaba `index[-1]` sin ordenar el indice
+  (violacion de R2). Corregido con `sort_index()`. 5 tests.
+- **Commit 6** (`3023d2d2`): guard semantico de STAGFLATION.
+  `classify_mte` descarta STAGFLATION si no cumple `IPS > 0.15 AND SRS > 0`.
+  8 tests, incluyendo los 6 casos del auditor.
+
+**Estado final de la sesion:** HEAD `3023d2d2`. Suite: 3511 passed
++ 5 skipped. Verificador de gobernanza: 53 items, `[OK]`. Todos los
+commits pusheados a `origin/main`.
+
+**Nota autocritica final.** En esta sesion pusheé varias veces sin
+que todos los validadores estuvieran verdes. La causa fue prisa por
+cerrar bloques antes de verificar pyflakes, gobernanza y suite
+completa. Todas las roturas fueron corregidas, pero el patron no
+debe repetirse. Protocolo no negociable: **verificar todos los
+validadores antes de cada commit.**
+
 ### 2026-10-15 - Auditoria externa H1-H18 del reporte
 
 **Objetivo.** Atender los 18 hallazgos de la auditoria externa del

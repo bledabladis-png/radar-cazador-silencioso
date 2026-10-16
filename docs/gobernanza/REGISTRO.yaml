@@ -1,313 +1,393 @@
 version: 1
-# Fuente canonica de estado de items auditables.
-# Ver docs/gobernanza/README.md para el contrato.
-# Verificado por scripts/verifica_gobernanza.py.
 items:
-
-  # ===== Auditoria externa del reporte 2026-10-15 (H1-H18) =====
-  - id: H1
-    tipo: auditoria_externa
-    ciclo: "2026-10-15"
-    estado: FIXED
-    descripcion: "Alerta HYG/LQD usaba texto literal fijo"
-    commit: edabdb52
-    test: tests/test_report_alerts_header.py
-    evidencia: "3 ramas por Z real: positivo/negativo/N-D"
-
-  - id: H2
-    tipo: auditoria_externa
-    ciclo: "2026-10-15"
-    estado: FALSE_POSITIVE
-    descripcion: "Se creyo bug de rs nominal en WLS"
-    commit: 804968b1
-    test: tests/test_h2_rs_mom_scale_invariance.py
-    evidencia: "rs_mom = log(rs).diff(20) invariante a escala"
-    razon: "Verificado empiricamente con split 10:1 simulado, resultado identico. Solo afecta a LIS (N2), no a WLS."
-
-  - id: H3
-    tipo: auditoria_externa
-    ciclo: "2026-10-15"
-    estado: FIXED
-    descripcion: "Tabla declaraba 1 fuente SEC, hay 2 (N-PORT + N-PORT-P QQQ)"
-    commit: db0462c2
-    test: tests/test_h3_sec_freshness_sources.py
-    evidencia: "Frescura SEC separada por fuente"
-
-  - id: H4
-    tipo: auditoria_externa
-    ciclo: "2026-10-15"
-    estado: FIXED
-    descripcion: "Volatilidad (velocidad) vs Lectura (nivel) homonimas"
-    commit: 3bd5f68a
-    test: tests/test_h4_volatility_level_vs_speed.py
-
-  - id: H5
-    tipo: auditoria_externa
-    ciclo: "2026-10-15"
-    estado: FIXED
-    descripcion: "Data Conf se deriva solo de frescura, no de cobertura"
-    commit: 47b34d82
-    test: tests/test_h5_data_conf_frescura.py
-
-  - id: H6
-    tipo: auditoria_externa
-    ciclo: "2026-10-15"
-    estado: FIXED
-    descripcion: "Z=5.00 era clip, no valor bruto"
-    commit: 4d905104
-    test: tests/test_h6_h10_flow_z_saturation.py
-
-  - id: H7
-    tipo: auditoria_externa
-    ciclo: "2026-10-15"
-    estado: FIXED
-    descripcion: "rolling(N, min_periods=N) sobre NaN dispersos devuelve NaN"
-    commit: 1189b7f8
-    test: tests/test_audit_contracts_rolling_nan.py
-    evidencia: "289/329 tickers con NH/NL=0 en historico; fix en 5 sitios"
-
-  - id: H8
-    tipo: auditoria_externa
-    ciclo: "2026-10-15"
-    estado: FIXED
-    descripcion: "Sector Lider publicado cuando state=UNRESOLVED"
-    commit: 0710db68
-    evidencia: "Fix en render de SLPM; sin test especifico (cambio de string condicional)"
-
-  - id: H9
-    tipo: auditoria_externa
-    ciclo: "2026-10-15"
-    estado: FIXED
-    descripcion: "Correlacion entre evidencias no cuantificada"
-    commit: 3540218b
-    test: tests/test_h9_evidence_correlation.py
-
-  - id: H10
-    tipo: auditoria_externa
-    ciclo: "2026-10-15"
-    estado: FIXED
-    descripcion: "Exponer z bruto sin clip cuando saturado"
-    commit: 4d905104
-    test: tests/test_h6_h10_flow_z_saturation.py
-
-  - id: H11
-    tipo: auditoria_externa
-    ciclo: "2026-10-15"
-    estado: SUPERSEDED
-    descripcion: "Frescura SEC unificada"
-    commit: db0462c2
-    test: tests/test_h3_sec_freshness_sources.py
-    razon: "Absorbido por H3, que ya separaba las dos fuentes SEC. No requiere accion propia."
-
-  - id: H12
-    tipo: auditoria_externa
-    ciclo: "2026-10-15"
-    estado: FIXED
-    descripcion: "ETF Primary Flow es estimacion operativa, no flujo secundario"
-    commit: 0f990fdf
-    test: tests/test_h12_primary_flow_disclaimer.py
-
-  - id: H13
-    tipo: auditoria_externa
-    ciclo: "2026-10-15"
-    estado: FIXED
-    descripcion: "Benchmark de rs_abs_20d no declarado (SPY vs ^GSPC)"
-    commit: 7e621ea4
-    test: tests/test_h13_rs_abs_benchmark.py
-
-  - id: H14
-    tipo: auditoria_externa
-    ciclo: "2026-10-15"
-    estado: FIXED
-    descripcion: "NIPC 13F sin unidad, formula ni tratamiento"
-    commit: e9cefaeb
-    test: tests/test_h14_nipc_documentacion.py
-
-  - id: H15
-    tipo: auditoria_externa
-    ciclo: "2026-10-15"
-    estado: FIXED
-    descripcion: "MTE no publicaba pesos ni umbrales"
-    commit: bb7fd03b
-    test: tests/test_h15_mte_weights.py
-
-  - id: H16
-    tipo: auditoria_externa
-    ciclo: "2026-10-15"
-    estado: FIXED
-    descripcion: "Momentum amplitud sin unidad ni reglas de flags"
-    commit: 16e064f4
-    test: tests/test_h16_breadth_momentum_units.py
-
-  - id: H17
-    tipo: auditoria_externa
-    ciclo: "2026-10-15"
-    estado: FIXED
-    descripcion: "3 persistencias homonimas sin desambiguar"
-    commit: fdbc7ccf
-    test: tests/test_h17_persistence_disambiguation.py
-
-  - id: H18
-    tipo: auditoria_externa
-    ciclo: "2026-10-15"
-    estado: FIXED
-    descripcion: "QQQ/SPY Desde inicio sin fechas reales ni aviso"
-    commit: fbcfe4cd
-    test: tests/test_h18_qqq_spy_inception.py
-
-  # ===== Auditoria interna CI del 2026-10-16 (HD-1..HD-9) =====
-  - id: HD-1
-    tipo: auditoria_interna
-    ciclo: "2026-10-16"
-    estado: FIXED
-    descripcion: "Drift test CRON_SLOTS no cubria health_check.py"
-    commit: 2dda7986
-    test: tests/test_issue_manager.py
-
-  - id: HD-2
-    tipo: auditoria_interna
-    ciclo: "2026-10-16"
-    estado: FIXED
-    descripcion: "Comentarios 4 slots vs 5 reales"
-    commit: 2dda7986
-    evidencia: "2 comentarios corregidos en daily_run.yml y health_check.py"
-
-  - id: HD-3
-    tipo: auditoria_interna
-    ciclo: "2026-10-16"
-    estado: WONT_FIX
-    descripcion: "resolve_target_session naive-UTC interpretado como Madrid"
-    razon: "Verificado empiricamente que los 5 slots del cron dan identico target_session con naive-UTC o UTC-aware. No es bug activo."
-
-  - id: HD-4
-    tipo: auditoria_interna
-    ciclo: "2026-10-16"
-    estado: FIXED
-    descripcion: "Receipt con campos guard_coverage y pipeline_conclusion hardcodeados"
-    commit: 433da326
-    test: tests/test_write_completion_receipt.py
-
-  - id: HD-5
-    tipo: auditoria_interna
-    ciclo: "2026-10-16"
-    estado: FIXED
-    descripcion: "health_check no distingue Schedule vs Dispatch"
-    commit: 3e8d2828
-    test: tests/test_health_check_workflow_schedule.py
-
-  - id: HD-6
-    tipo: auditoria_interna
-    ciclo: "2026-10-16"
-    estado: FIXED
-    descripcion: "pyflakes no bloqueaba CI por || true"
-    commit: 66179b90
-    test: tests/test_daily_run_yaml_pyflakes.py
-
-  - id: HD-7
-    tipo: auditoria_interna
-    ciclo: "2026-10-16"
-    estado: FIXED
-    descripcion: "guard_coverage hardcoded (mismo fix que HD-4)"
-    commit: 433da326
-    test: tests/test_write_completion_receipt.py
-
-  - id: HD-8
-    tipo: auditoria_interna
-    ciclo: "2026-10-16"
-    estado: FIXED
-    descripcion: "--limit 20 en check_cron_slots sin justificacion"
-    commit: 2dda7986
-    evidencia: "Comentario aclaratorio anadido en health_check.py"
-
-  - id: HD-9
-    tipo: auditoria_interna
-    ciclo: "2026-10-16"
-    estado: WONT_FIX
-    descripcion: "_manifest_satisfies presuntamente sin consumidores"
-    razon: "Verificado que tiene ~8 tests dedicados y contrato declarado en docstring. No es dead code."
-
-  # ===== Dictamen externo del 2026-10-16 (fases 1-7) =====
-  - id: DICT-F1
-    tipo: dictamen_externo
-    ciclo: "2026-10-16"
-    estado: FIXED
-    descripcion: "Fase 1: separar Schedule vs Dispatch en health_check"
-    commit: 3e8d2828
-    test: tests/test_health_check_workflow_schedule.py
-
-  - id: DICT-F2
-    tipo: dictamen_externo
-    ciclo: "2026-10-16"
-    estado: FIXED
-    descripcion: "Fase 2: receipt con evidencia del Guard"
-    commit: 433da326
-    test: tests/test_write_completion_receipt.py
-
-  - id: DICT-F3
-    tipo: dictamen_externo
-    ciclo: "2026-10-16"
-    estado: FIXED
-    descripcion: "Fase 3: pyflakes como gate real"
-    commit: 66179b90
-    test: tests/test_daily_run_yaml_pyflakes.py
-
-  - id: DICT-F4
-    tipo: dictamen_externo
-    ciclo: "2026-10-16"
-    estado: FIXED
-    descripcion: "Fase 4: registro canonico de gobernanza"
-    commit: 529f4ed2e1ab037940e88f65449cd82f2080a615
-    test: tests/test_gobernanza.py
-
-  - id: DICT-F5
-    tipo: dictamen_externo
-    ciclo: "2026-10-16"
-    estado: FIXED
-    descripcion: "Fase 5: indice H1-H18 derivado"
-    commit: 529f4ed2e1ab037940e88f65449cd82f2080a615
-    test: tests/test_indice_auditorias.py
-
-  - id: DICT-F6
-    tipo: dictamen_externo
-    ciclo: "2026-10-16"
-    estado: FIXED
-    descripcion: "Fase 6: catalogo y test de anclas temporales"
-    commit: 529f4ed2e1ab037940e88f65449cd82f2080a615
-    test: tests/test_anclas_temporales.py
-
-  - id: DICT-F7
-    tipo: dictamen_externo
-    ciclo: "2026-10-16"
-    estado: FIXED
-    descripcion: "Fase 7: --check en poda_bitacora.py sin mutacion"
-    commit: 529f4ed2e1ab037940e88f65449cd82f2080a615
-    test: tests/test_poda_bitacora.py
-
-  # ===== Frentes vivos =====
-  - id: C2-920
-    tipo: frente
-    ciclo: "2026-09-28"
-    estado: BLOCKED_EXTERNAL
-    descripcion: "Discrepancia 920 en baseline IAE par Q4-2025 -> Q1-2026"
-    dependencia: "Auditor externo debe dictaminar la discrepancia"
-
-  - id: SOW-V6
-    tipo: frente
-    ciclo: "2026-10-06"
-    estado: BLOCKED_EXTERNAL
-    descripcion: "Protocolo SOW v6 pendiente de firma externa"
-    dependencia: "Firma del auditor externo sobre docs/auditoria/wyckoff/48_sow_protocol_v6.md"
-
-  - id: WYCKOFF-5BX
-    tipo: frente
-    ciclo: "2026-10-03"
-    estado: BLOCKED_EXTERNAL
-    descripcion: "Wyckoff 5b.X v3 esperando muestra suficiente"
-    dependencia: "Datos: n_confirmed_H20_complete >= 550 post-2026-10-02 (~2027)"
-
-  - id: H5.3
-    tipo: frente
-    ciclo: "2026-10-03"
-    estado: OPEN
-    descripcion: "Trazabilidad cron trimestral 13F"
-    siguiente_accion: "Verificar cron real del 20-nov-2026 06:17 UTC"
+- id: C2-920
+  tipo: frente
+  ciclo: '2026-09-28'
+  estado: BLOCKED_EXTERNAL
+  descripcion: Discrepancia 920 en baseline IAE par Q4-2025 -> Q1-2026
+  dependencia: Auditor externo debe dictaminar la discrepancia
+- id: C2-STAGFLATION
+  tipo: auditoria_interna
+  ciclo: '2026-10-16'
+  estado: FIXED
+  descripcion: STAGFLATION ganaba argmax sin cumplir IPS>0.15 AND SRS>0
+  commit: 3023d2d2
+  test: tests/test_classify_mte_stagflation_gate.py
+  evidencia: Guard semantico en classify_mte; condicion publicada en H15
+- id: C3-PROVIDER
+  tipo: auditoria_interna
+  ciclo: '2026-10-16'
+  estado: FIXED
+  descripcion: primary_flow_z_raw no propagado al df in-memory de SSGA
+  commit: e6b2fc0b
+  test: tests/test_ssga_provider_return_contract.py
+  evidencia: El asterisco de saturacion se emite correctamente en CI
+- id: DICT-F1
+  tipo: dictamen_externo
+  ciclo: '2026-10-16'
+  estado: FIXED
+  descripcion: 'Fase 1: separar Schedule vs Dispatch en health_check'
+  commit: 3e8d2828
+  test: tests/test_health_check_workflow_schedule.py
+- id: DICT-F2
+  tipo: dictamen_externo
+  ciclo: '2026-10-16'
+  estado: FIXED
+  descripcion: 'Fase 2: receipt con evidencia del Guard'
+  commit: 433da326
+  test: tests/test_write_completion_receipt.py
+- id: DICT-F3
+  tipo: dictamen_externo
+  ciclo: '2026-10-16'
+  estado: FIXED
+  descripcion: 'Fase 3: pyflakes como gate real'
+  commit: 66179b90
+  test: tests/test_daily_run_yaml_pyflakes.py
+- id: DICT-F4
+  tipo: dictamen_externo
+  ciclo: '2026-10-16'
+  estado: FIXED
+  descripcion: 'Fase 4: registro canonico de gobernanza'
+  commit: '19000701'
+  test: tests/test_gobernanza.py
+- id: DICT-F5
+  tipo: dictamen_externo
+  ciclo: '2026-10-16'
+  estado: FIXED
+  descripcion: 'Fase 5: indice H1-H18 derivado'
+  commit: '19000701'
+  test: tests/test_indice_auditorias.py
+- id: DICT-F6
+  tipo: dictamen_externo
+  ciclo: '2026-10-16'
+  estado: FIXED
+  descripcion: 'Fase 6: catalogo y test de anclas temporales'
+  commit: '19000701'
+  test: tests/test_anclas_temporales.py
+- id: DICT-F7
+  tipo: dictamen_externo
+  ciclo: '2026-10-16'
+  estado: FIXED
+  descripcion: 'Fase 7: --check en poda_bitacora.py sin mutacion'
+  commit: c8a16f06
+  test: tests/test_poda_bitacora.py
+- id: DICT2-ATTEMPT
+  tipo: dictamen_externo
+  ciclo: '2026-10-16'
+  estado: FIXED
+  descripcion: registro de intentos incompletos como artifact
+  commit: 97c00097
+  test: tests/test_write_completion_attempt.py
+  evidencia: 'completion_attempt.jsonl subido como artifact con if: always()'
+- id: DICT2-ENMIENDA
+  tipo: dictamen_externo
+  ciclo: '2026-10-16'
+  estado: FIXED
+  descripcion: enmienda contractual v1.1 con validacion compartida
+  commit: 1859a143
+  test: tests/test_temporal_validation.py
+  evidencia: 'Contrato del gate: schema v1 mantenido, alcance del guard ampliado'
+- id: DICT2-R3TEST
+  tipo: dictamen_externo
+  ciclo: '2026-10-16'
+  estado: FIXED
+  descripcion: test R3 explicito con datos desordenados y no elegibles
+  commit: daac0003
+  test: tests/test_breadth_r3_fecha_efectiva_compartida.py
+  evidencia: 'Descubrio bug real: resolve_effective_date usaba index[-1] sin ordenar'
+- id: H1
+  tipo: auditoria_externa
+  ciclo: '2026-10-15'
+  estado: FIXED
+  descripcion: Alerta HYG/LQD usaba texto literal fijo
+  commit: edabdb52
+  test: tests/test_report_alerts_header.py
+  evidencia: '3 ramas por Z real: positivo/negativo/N-D'
+- id: H10
+  tipo: auditoria_externa
+  ciclo: '2026-10-15'
+  estado: FIXED
+  descripcion: Exponer z bruto sin clip cuando saturado
+  commit: 4d905104
+  test: tests/test_h6_h10_flow_z_saturation.py
+- id: H11
+  tipo: auditoria_externa
+  ciclo: '2026-10-15'
+  estado: SUPERSEDED
+  descripcion: Frescura SEC unificada
+  commit: db0462c2
+  test: tests/test_h3_sec_freshness_sources.py
+  razon: Absorbido por H3, que ya separaba las dos fuentes SEC. No requiere accion
+    propia.
+- id: H12
+  tipo: auditoria_externa
+  ciclo: '2026-10-15'
+  estado: FIXED
+  descripcion: ETF Primary Flow es estimacion operativa, no flujo secundario
+  commit: 0f990fdf
+  test: tests/test_h12_primary_flow_disclaimer.py
+- id: H13
+  tipo: auditoria_externa
+  ciclo: '2026-10-15'
+  estado: FIXED
+  descripcion: Benchmark de rs_abs_20d no declarado (SPY vs ^GSPC)
+  commit: 7e621ea4
+  test: tests/test_h13_rs_abs_benchmark.py
+- id: H14
+  tipo: auditoria_externa
+  ciclo: '2026-10-15'
+  estado: FIXED
+  descripcion: NIPC 13F sin unidad, formula ni tratamiento
+  commit: e9cefaeb
+  test: tests/test_h14_nipc_documentacion.py
+- id: H15
+  tipo: auditoria_externa
+  ciclo: '2026-10-15'
+  estado: FIXED
+  descripcion: MTE no publicaba pesos ni umbrales
+  commit: bb7fd03b
+  test: tests/test_h15_mte_weights.py
+- id: H16
+  tipo: auditoria_externa
+  ciclo: '2026-10-15'
+  estado: FIXED
+  descripcion: Momentum amplitud sin unidad ni reglas de flags
+  commit: 16e064f4
+  test: tests/test_h16_breadth_momentum_units.py
+- id: H17
+  tipo: auditoria_externa
+  ciclo: '2026-10-15'
+  estado: FIXED
+  descripcion: 3 persistencias homonimas sin desambiguar
+  commit: fdbc7ccf
+  test: tests/test_h17_persistence_disambiguation.py
+- id: H18
+  tipo: auditoria_externa
+  ciclo: '2026-10-15'
+  estado: FIXED
+  descripcion: QQQ/SPY Desde inicio sin fechas reales ni aviso
+  commit: fbcfe4cd
+  test: tests/test_h18_qqq_spy_inception.py
+- id: H2
+  tipo: auditoria_externa
+  ciclo: '2026-10-15'
+  estado: FALSE_POSITIVE
+  descripcion: Se creyo bug de rs nominal en WLS
+  commit: 804968b1
+  test: tests/test_h2_rs_mom_scale_invariance.py
+  evidencia: rs_mom = log(rs).diff(20) invariante a escala
+  razon: Verificado empiricamente con split 10:1 simulado, resultado identico. Solo
+    afecta a LIS (N2), no a WLS.
+- id: H3
+  tipo: auditoria_externa
+  ciclo: '2026-10-15'
+  estado: FIXED
+  descripcion: Tabla declaraba 1 fuente SEC, hay 2 (N-PORT + N-PORT-P QQQ)
+  commit: db0462c2
+  test: tests/test_h3_sec_freshness_sources.py
+  evidencia: Frescura SEC separada por fuente
+- id: H4
+  tipo: auditoria_externa
+  ciclo: '2026-10-15'
+  estado: FIXED
+  descripcion: Volatilidad (velocidad) vs Lectura (nivel) homonimas
+  commit: 3bd5f68a
+  test: tests/test_h4_volatility_level_vs_speed.py
+- id: H5
+  tipo: auditoria_externa
+  ciclo: '2026-10-15'
+  estado: FIXED
+  descripcion: Data Conf se deriva solo de frescura, no de cobertura
+  commit: 47b34d82
+  test: tests/test_h5_data_conf_frescura.py
+- id: H5.3
+  tipo: frente
+  ciclo: '2026-10-03'
+  estado: OPEN
+  descripcion: Trazabilidad cron trimestral 13F
+  siguiente_accion: Verificar cron real del 20-nov-2026 06:17 UTC
+- id: H6
+  tipo: auditoria_externa
+  ciclo: '2026-10-15'
+  estado: FIXED
+  descripcion: Z=5.00 era clip, no valor bruto
+  commit: 4d905104
+  test: tests/test_h6_h10_flow_z_saturation.py
+- id: H7
+  tipo: auditoria_externa
+  ciclo: '2026-10-15'
+  estado: FIXED
+  descripcion: rolling(N, min_periods=N) sobre NaN dispersos devuelve NaN
+  commit: 1189b7f8
+  test: tests/test_audit_contracts_rolling_nan.py
+  evidencia: 289/329 tickers con NH/NL=0 en historico; fix en 5 sitios
+- id: H8
+  tipo: auditoria_externa
+  ciclo: '2026-10-15'
+  estado: FIXED
+  descripcion: Sector Lider publicado cuando state=UNRESOLVED
+  commit: 0710db68
+  evidencia: Fix en render de SLPM; sin test especifico (cambio de string condicional)
+- id: H9
+  tipo: auditoria_externa
+  ciclo: '2026-10-15'
+  estado: FIXED
+  descripcion: Correlacion entre evidencias no cuantificada
+  commit: 3540218b
+  test: tests/test_h9_evidence_correlation.py
+- id: HD-1
+  tipo: auditoria_interna
+  ciclo: '2026-10-16'
+  estado: FIXED
+  descripcion: Drift test CRON_SLOTS no cubria health_check.py
+  commit: 2dda7986
+  test: tests/test_issue_manager.py
+- id: HD-2
+  tipo: auditoria_interna
+  ciclo: '2026-10-16'
+  estado: FIXED
+  descripcion: Comentarios 4 slots vs 5 reales
+  commit: 2dda7986
+  evidencia: 2 comentarios corregidos en daily_run.yml y health_check.py
+- id: HD-3
+  tipo: auditoria_interna
+  ciclo: '2026-10-16'
+  estado: WONT_FIX
+  descripcion: resolve_target_session naive-UTC interpretado como Madrid
+  razon: Verificado empiricamente que los 5 slots del cron dan identico target_session
+    con naive-UTC o UTC-aware. No es bug activo.
+- id: HD-4
+  tipo: auditoria_interna
+  ciclo: '2026-10-16'
+  estado: FIXED
+  descripcion: Receipt con campos guard_coverage y pipeline_conclusion hardcodeados
+  commit: 433da326
+  test: tests/test_write_completion_receipt.py
+- id: HD-5
+  tipo: auditoria_interna
+  ciclo: '2026-10-16'
+  estado: FIXED
+  descripcion: health_check no distingue Schedule vs Dispatch
+  commit: 3e8d2828
+  test: tests/test_health_check_workflow_schedule.py
+- id: HD-6
+  tipo: auditoria_interna
+  ciclo: '2026-10-16'
+  estado: FIXED
+  descripcion: pyflakes no bloqueaba CI por || true
+  commit: 66179b90
+  test: tests/test_daily_run_yaml_pyflakes.py
+- id: HD-7
+  tipo: auditoria_interna
+  ciclo: '2026-10-16'
+  estado: FIXED
+  descripcion: guard_coverage hardcoded (mismo fix que HD-4)
+  commit: 433da326
+  test: tests/test_write_completion_receipt.py
+- id: HD-8
+  tipo: auditoria_interna
+  ciclo: '2026-10-16'
+  estado: FIXED
+  descripcion: --limit 20 en check_cron_slots sin justificacion
+  commit: 2dda7986
+  evidencia: Comentario aclaratorio anadido en health_check.py
+- id: HD-9
+  tipo: auditoria_interna
+  ciclo: '2026-10-16'
+  estado: WONT_FIX
+  descripcion: _manifest_satisfies presuntamente sin consumidores
+  razon: Verificado que tiene ~8 tests dedicados y contrato declarado en docstring.
+    No es dead code.
+- id: M1-H1-BANDA
+  tipo: auditoria_interna
+  ciclo: '2026-10-16'
+  estado: FIXED
+  descripcion: alerta H1 categorica con |Z|<0.5
+  commit: 4b7caba6
+  test: tests/test_alert_h1_z_neutral.py
+  evidencia: Banda neutral |Z|<0.5 declarada
+- id: M2-FLOW-CONF
+  tipo: auditoria_interna
+  ciclo: '2026-10-16'
+  estado: FIXED
+  descripcion: FLOW_CONFIDENCE empate 2-2 no documentado
+  commit: 4b7caba6
+  test: tests/test_flow_confidence_regla.py
+  evidencia: Banda neutral |s|<=0.1 + politica de empate explicitadas
+- id: M3-FRESHNESS
+  tipo: auditoria_interna
+  ciclo: '2026-10-16'
+  estado: FIXED
+  descripcion: Data Freshness vs Sector Breadth sin separar dimensiones
+  commit: 4b7caba6
+  test: tests/test_freshness_alignment.py
+  evidencia: Sub-seccion 'Alineacion con sesion esperada' anadida
+- id: N-C1
+  tipo: auditoria_interna
+  ciclo: '2026-10-16'
+  estado: FIXED
+  descripcion: market_data con US_EQUITY.coverage_at_session=0.0 no abortaba pipeline
+  commit: 4ac3ec0c
+  test: tests/test_temporal_validation.py
+  evidencia: Contrato EQUITY_EOD (critical=True) bloquea si coverage < 0.90 o status=INVALID
+- id: N-C2
+  tipo: auditoria_interna
+  ciclo: '2026-10-16'
+  estado: FIXED
+  descripcion: guard_coverage.py solo verificaba last > expected, no last < expected
+  commit: 4ac3ec0c
+  test: tests/test_guard_coverage_validation.py
+  evidencia: Validacion contractual compartida en src/temporal_contracts/validation.py
+- id: N-C3
+  tipo: auditoria_interna
+  ciclo: '2026-10-16'
+  estado: FIXED
+  descripcion: guard_coverage.py ignoraba by_market cuando cobertura global pasaba
+  commit: 4ac3ec0c
+  test: tests/test_guard_coverage_validation.py
+  evidencia: 'Invariante: cobertura global OK no neutraliza invalid de universo obligatorio'
+- id: N-C4
+  tipo: auditoria_interna
+  ciclo: '2026-10-16'
+  estado: FIXED
+  descripcion: receipt no verificaba last_date vs expected_session del manifest
+  commit: 4ac3ec0c
+  test: tests/test_write_completion_receipt.py
+  evidencia: 'Precondicion de emision: validate_artifact_contracts() no debe devolver
+    BLOCKED ni UNAVAILABLE'
+- id: N-C5
+  tipo: auditoria_interna
+  ciclo: '2026-10-16'
+  estado: FIXED
+  descripcion: idempotencia protegia finalizacion invalida
+  commit: 97c00097
+  test: tests/test_write_completion_attempt.py
+  evidencia: Registro de intentos incompletos como artifact por ejecucion
+- id: N-C6
+  tipo: auditoria_interna
+  ciclo: '2026-10-16'
+  estado: FIXED
+  descripcion: breadth_metrics.py violaba R2 (df_stocks.index[-1] posicion fisica)
+  commit: daac0003
+  test: tests/test_breadth_effective_date_nc6.py
+  evidencia: resolve_effective_date con sort_index + universo combinado + cap R4
+- id: N-C7
+  tipo: auditoria_interna
+  ciclo: '2026-10-16'
+  estado: FIXED
+  descripcion: health_check.py sin control de alineacion de sesion esperada
+  commit: e87f94f1
+  test: tests/test_health_check_session_alignment.py
+  evidencia: check_expected_session_alignment detecta LAGGED + mercados INVALID
+- id: SOW-V6
+  tipo: frente
+  ciclo: '2026-10-06'
+  estado: BLOCKED_EXTERNAL
+  descripcion: Protocolo SOW v6 pendiente de firma externa
+  dependencia: Firma del auditor externo sobre docs/auditoria/wyckoff/48_sow_protocol_v6.md
+- id: WYCKOFF-5BX
+  tipo: frente
+  ciclo: '2026-10-03'
+  estado: BLOCKED_EXTERNAL
+  descripcion: Wyckoff 5b.X v3 esperando muestra suficiente
+  dependencia: 'Datos: n_confirmed_H20_complete >= 550 post-2026-10-02 (~2027)'

@@ -8,13 +8,13 @@ No crear variantes con fecha.
 
 ---
 
-## 1. ESTADO AL CIERRE (2026-10-16 noche)
+## 1. ESTADO AL CIERRE (2026-10-16 madrugada)
 
 Rama activa:    main
 HEAD:           consultar `git log --oneline -1` (no literal; el corpus no fija SHA para evitar deriva)
 Sincronizacion: main == origin/main
 Tests:          ver `Consolidacion_Documentos/ESTADO_SISTEMA.md` (fuente autoritativa).
-                Referencia orientativa: ~3493 passed + 5 skipped (con filtro CI).
+                Referencia orientativa: ~3511 passed + 5 skipped (con filtro CI).
 Validation Gate: 10/10
 Working tree:   limpio (salvo data/ y outputs/ que el bot actualiza)
 Corpus:         v3 (Consolidacion_Documentos/00-08 + ESTADO_SISTEMA)
@@ -92,17 +92,22 @@ guard original (cobertura global + sha256 + last>expected) se preserva.
 como precondicion. Si `BLOCKED` o `UNAVAILABLE`, no se emite receipt
 (fail-closed).
 
-### 2.4. Commits del dia
+### 2.4. Commits del dia (14)
 
-  4b7caba6  M1+M2+M3
-  a4f19514  fix tests H1 a banda neutral + limpieza pyflakes
-  e6b2fc0b  C3: primary_flow_z_raw en SSGA return
-  e87f94f1  N-C7: check alineacion sesion esperada
-  79a24106  N-C6: fecha efectiva canonica breadth + cap R4
-  1859a143  enmienda v1.1
-  db5cc2db  validation.py + criticidad en registry
-  4ac3ec0c  integracion guard + receipt (con 4 tests rojos; corregido en df5b6974)
+  3023d2d2  C2: guard semantico STAGFLATION
+  daac0003  N-C6 completo: sort_index + test R3 compartida
+  97c00097  enmienda v1.1 - registro de intentos como artifact
+  9bd00fea  fix handoff (cita H15)
+  02a70ec3  cierre intermedio sesion
   df5b6974  fix tests post-integracion
+  4ac3ec0c  integracion guard + receipt
+  db5cc2db  validation.py + criticidad en registry
+  1859a143  enmienda v1.1
+  79a24106  N-C6: fecha efectiva canonica breadth + cap R4
+  a4f19514  fix tests H1 a banda neutral + limpieza pyflakes
+  e87f94f1  N-C7: check alineacion sesion esperada
+  e6b2fc0b  C3: primary_flow_z_raw en SSGA return
+  4b7caba6  M1+M2+M3
 
 ---
 
@@ -119,35 +124,19 @@ como precondicion. Si `BLOCKED` o `UNAVAILABLE`, no se emite receipt
 
 ## 4. PENDIENTES VIVOS
 
-### 4.1. Commits 4, 5, 6 del dictamen (proxima sesion)
+### 4.1. Commits 4, 5, 6 del dictamen — CERRADOS
 
-**Commit 4 — Registro de intentos incompletos como artifact.**
-- `scripts/write_completion_attempt.py` (nuevo).
-- `outputs/state/completion_attempt.jsonl` (una linea JSON por intento).
-- Subida como artifact `completion-attempt-<run_id>` en `daily_run.yml`
-  con `if: always()`.
-- Campos: `run_id`, `run_attempt`, `target_session`,
-  `attempt_timestamp`, `outcome`, `failed_contracts`, `reasons`,
-  `manifest_hashes`.
-- Tests: no-mutacion, artefacto subido con always, campos obligatorios.
+Los tres commits estan aplicados y pusheados:
 
-**Commit 5 — Test R3 explicito.**
-- Verificar que la fecha efectiva de `sector_breadth.csv` y
-  `sector_breadth_momentum.csv` se obtiene via `resolve_effective_date()`
-  sobre el universo combinado, no por igualdad entre `max(date)`.
-- Datos controlados: filas desordenadas, observacion final no elegible.
-- Verifica R2 + R3 sin crear nueva abstraccion.
+- **Commit 4** (`97c00097`): registro de intentos como artifact
+  (`write_completion_attempt.py` + `completion_attempt.jsonl` con
+  `if: always()`).
+- **Commit 5** (`daac0003`): test R3 explicito. Descubrio bug real
+  en `resolve_effective_date` (usaba `index[-1]` sin sort_index).
+  Corregido.
+- **Commit 6** (`3023d2d2`): guard semantico STAGFLATION.
 
-**Commit 6 — Guard semantico STAGFLATION.**
-- `indicators/mte/decision.py::classify_mte`.
-- Condicion: `IPS > 0.15 AND SRS > 0` (la publicada en el contrato
-  metodologico del MTE).
-- Si no se cumple, STAGFLATION no puede ser el escenario final.
-- Recalcular confidence sobre el escenario efectivamente elegido.
-- Tests obligatorios (tabla del auditor):
-  IPS=-0.41 (No), 0.149 (No), 0.15 (No), 0.16+SRS=0 (No),
-  0.16+SRS>0 (Si), IPS invalido (No).
-- **No sustituir** los tests de `score_scenarios` existentes.
+Con esto, el segundo dictamen del auditor esta completamente aplicado.
 
 ### 4.2. Verificacion del cron tras enmienda v1.1
 
