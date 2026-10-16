@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 """Verificador de gobernanza. Exit 0 si OK, exit 1 con errores."""
 from __future__ import annotations
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -17,11 +18,28 @@ VALID_ESTADOS = frozenset({
     "FIXED", "WONT_FIX", "FALSE_POSITIVE", "SUPERSEDED",
 })
 REQUIRE_RAZON = frozenset({"WONT_FIX", "FALSE_POSITIVE", "SUPERSEDED"})
+ESTADOS_CERRADOS = frozenset({
+    "FIXED", "WONT_FIX", "FALSE_POSITIVE", "SUPERSEDED",
+})
 RAZON_MIN = 20
 EVIDENCIA_MIN = 20
 RAZONES_GENERICAS = frozenset({
     "wont fix", "no aplica", "n/a", "sin razon", "descartado",
 })
+
+# Delimitadores que definen un ID como token completo. Evita que "H5"
+# matchee dentro de "H5.3" o "H5.3b". Un ID debe estar precedido y
+# seguido por un caracter que NO sea alfanumerico ni punto ni guion.
+_ID_TOKEN_FMT = r"(?<![A-Za-z0-9_.\-]){0}(?![A-Za-z0-9_.\-])"
+
+
+def _menciona_id(iid, lineas):
+    """True si iid aparece como token completo en alguna linea."""
+    pat = re.compile(_ID_TOKEN_FMT.format(re.escape(iid)))
+    for ln in lineas:
+        if pat.search(ln):
+            return True
+    return False
 
 
 def _git_commit_exists(sha):
@@ -38,11 +56,6 @@ def _git_commit_exists(sha):
 
 
 def _collect_handoff_pendientes(handoff_path):
-    """Lineas de la seccion 4 del HANDOFF que empiezan por "- ".
-
-    handoff_path es obligatorio para evitar dependencia de variable
-    global (mala testabilidad).
-    """
     if not handoff_path or not handoff_path.exists():
         return []
     text = handoff_path.read_text(encoding="utf-8")
@@ -58,10 +71,6 @@ def _collect_handoff_pendientes(handoff_path):
 
 
 def verificar(registro_path=None, handoff_path=None):
-    """Verifica gobernanza.
-
-    Parametros opcionales para tests. Default: paths de modulo.
-    """
     if registro_path is None:
         registro_path = REGISTRO
     if handoff_path is None:
@@ -69,11 +78,11 @@ def verificar(registro_path=None, handoff_path=None):
 
     errores = []
     if not registro_path.exists():
-        return [f"REGISTRO.yaml no existe: {registro_path}"]
+        return ["REGISTRO.yaml no existe: {0}".format(registro_path)]
     try:
         data = yaml.safe_load(registro_path.read_text(encoding="utf-8"))
     except Exception as e:
-        return [f"YAML invalido: {e}"]
+        return ["YAML invalido: {0}".format(e)]
     if not isinstance(data, dict) or data.get("version") != 1:
         errores.append("version != 1")
     items = data.get("items") or []
@@ -87,52 +96,68 @@ def verificar(registro_path=None, handoff_path=None):
     for it in items:
         iid = it.get("id", "<sin id>")
         if iid in ids_vistos:
-            errores.append(f"[{iid}] ID duplicado")
+            errores.append("[{0}] ID duplicado".format(iid))
         ids_vistos.add(iid)
 
         estado = it.get("estado")
         if estado not in VALID_ESTADOS:
-            errores.append(f"[{iid}] estado invalido: {estado!r}")
+            errores.append("[{0}] estado invalido: {1!r}".format(iid, estado))
 
         if estado == "FIXED":
             commit = it.get("commit")
             test = it.get("test")
             evid = it.get("evidencia")
             if not commit:
-                errores.append(f"[{iid}] FIXED sin commit")
+                errores.append("[{0}] FIXED sin commit".format(iid))
             elif commit != "PENDING":
                 if _git_commit_exists(commit) is False:
-                    errores.append(f"[{iid}] commit no existe: {commit}")
+                    errores.append(
+                        "[{0}] commit no existe: {1}".format(iid, commit)
+                    )
             has_test = bool(test)
             has_evid = isinstance(evid, str) and len(evid) >= EVIDENCIA_MIN
             if not has_test and not has_evid:
                 errores.append(
-                    f"[{iid}] FIXED sin test ni evidencia >= {EVIDENCIA_MIN}"
+                    "[{0}] FIXED sin test ni evidencia >= {1}".format(
+                        iid, EVIDENCIA_MIN
+                    )
                 )
             if has_test and commit != "PENDING":
                 if not (ROOT / test).exists():
-                    errores.append(f"[{iid}] test no existe: {test}")
+                    errores.append(
+                        "[{0}] test no existe: {1}".format(iid, test)
+                    )
 
         if estado in REQUIRE_RAZON:
             razon = it.get("razon") or ""
             razon_l = razon.strip().lower()
             if razon_l in RAZONES_GENERICAS:
-                errores.append(f"[{iid}] razon generica: {razon!r}")
+                errores.append(
+                    "[{0}] razon generica: {1!r}".format(iid, razon)
+                )
             elif len(razon) < RAZON_MIN:
                 errores.append(
-                    f"[{iid}] razon < {RAZON_MIN} chars para {estado}"
+                    "[{0}] razon < {1} chars para {2}".format(
+                        iid, RAZON_MIN, estado
+                    )
                 )
 
         if estado == "BLOCKED_EXTERNAL" and not it.get("dependencia"):
-            errores.append(f"[{iid}] BLOCKED_EXTERNAL sin dependencia")
+            errores.append("[{0}] BLOCKED_EXTERNAL sin dependencia".format(iid))
 
         if estado in {"OPEN", "IN_PROGRESS"} and not it.get("siguiente_accion"):
-            errores.append(f"[{iid}] {estado} sin siguiente_accion")
+            errores.append(
+                "[{0}] {1} sin siguiente_accion".format(iid, estado)
+            )
 
-        if estado != "FIXED":
-            if any(iid in ln for ln in handoff_pendientes):
+        # Regla 10: SOLO items cerrados no pueden resucitar en HANDOFF.
+        # Items OPEN/IN_PROGRESS/BLOCKED_EXTERNAL son frentes vivos y
+        # pueden (deben) aparecer como pendientes.
+        if estado in ESTADOS_CERRADOS:
+            if _menciona_id(iid, handoff_pendientes):
                 errores.append(
-                    f"[{iid}] estado={estado} aparece como pendiente en HANDOFF"
+                    "[{0}] estado={1} aparece como pendiente en HANDOFF "
+                    "(reabre un item cerrado)".format(iid, estado)
                 )
 
     return errores
@@ -143,9 +168,9 @@ def main():
     if not errores:
         print("[OK] Gobernanza coherente")
         return 0
-    print(f"[FAIL] {len(errores)} errores de gobernanza:")
+    print("[FAIL] {0} errores de gobernanza:".format(len(errores)))
     for e in errores:
-        print(f"  - {e}")
+        print("  - {0}".format(e))
     return 1
 
 
