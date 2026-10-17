@@ -115,3 +115,78 @@ def test_campos_obligatorios(tmp_path, monkeypatch):
         assert k in entry, "falta campo {0}".format(k)
     assert entry["run_id"] == 12345
     assert entry["run_attempt"] == 1
+
+
+def test_outcome_incomplete_prioritario_sobre_blocked(tmp_path, monkeypatch):
+    """VG failed + contrato bloqueado -> INCOMPLETE, pero la causa BLOCKED se conserva."""
+    _setup_env(monkeypatch, tmp_path)
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(wca, "ROOT", tmp_path)
+    _mk_manifest(tmp_path, "stock_prices",
+                 {"US_EQUITY": {"n": 255, "status": "INVALID",
+                                "coverage_at_session": 0.0}})
+    monkeypatch.setattr(wca, "MANIFESTS", (
+        "data/stock_prices.parquet.manifest.json",
+    ))
+    (tmp_path / "outputs" / "state").mkdir(parents=True)
+    (tmp_path / "outputs" / "state" / "validation_gate_result.json").write_text(
+        json.dumps({"passed": False, "checks_n": 10, "errors_n": 2}),
+        encoding="utf-8",
+    )
+
+    rc = wca.main()
+    assert rc == 0
+    entry = json.loads(
+        (tmp_path / "attempt.jsonl").read_text(encoding="utf-8").strip().splitlines()[0]
+    )
+    assert entry["outcome"] == "INCOMPLETE", (
+        "VG failed debe ganar la etiqueta (pipeline no completo)"
+    )
+    assert any("validation_gate passed=False" in r for r in entry["reasons"])
+    assert entry["failed_contracts"], (
+        "el bloqueo del contrato debe seguir visible en failed_contracts"
+    )
+    assert any("BLOCKED" in f for f in entry["failed_contracts"])
+
+
+def test_outcome_blocked_por_contrato_unavailable(tmp_path, monkeypatch):
+    """Contrato UNAVAILABLE (by_market sin el critico) -> BLOCKED fail-closed."""
+    _setup_env(monkeypatch, tmp_path)
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(wca, "ROOT", tmp_path)
+    # by_market con un mercado NO critico; US_EQUITY ausente -> UNAVAILABLE.
+    _mk_manifest(tmp_path, "stock_prices",
+                 {"BME": {"n": 50, "status": "VALID", "coverage_at_session": 0.99}})
+    monkeypatch.setattr(wca, "MANIFESTS", (
+        "data/stock_prices.parquet.manifest.json",
+    ))
+
+    rc = wca.main()
+    assert rc == 0
+    entry = json.loads(
+        (tmp_path / "attempt.jsonl").read_text(encoding="utf-8").strip().splitlines()[0]
+    )
+    assert entry["outcome"] == "BLOCKED"
+    assert entry["failed_contracts"]
+    assert any("US_EQUITY" in r for r in entry["reasons"]), (
+        "la razon debe mencionar el contrato critico ausente"
+    )
+
+
+def test_outcome_blocked_por_manifest_missing(tmp_path, monkeypatch):
+    """Manifest listado en MANIFESTS pero ausente en disco -> BLOCKED."""
+    _setup_env(monkeypatch, tmp_path)
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(wca, "ROOT", tmp_path)
+    monkeypatch.setattr(wca, "MANIFESTS", (
+        "data/no_existe.parquet.manifest.json",
+    ))
+
+    rc = wca.main()
+    assert rc == 0
+    entry = json.loads(
+        (tmp_path / "attempt.jsonl").read_text(encoding="utf-8").strip().splitlines()[0]
+    )
+    assert entry["outcome"] == "BLOCKED"
+    assert any("manifest_missing" in f for f in entry["failed_contracts"])
+    assert any("manifest no legible" in r for r in entry["reasons"])
