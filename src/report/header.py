@@ -103,11 +103,17 @@ def render_regimenes(macro_score, macro_regime, macro_conf,
         vol_conf_str = f"Signal Consistency: {vol_conf:.0%}"
     vol_z_display = "N/D" if pd.isna(vol_z) else ("0.00" if abs(vol_z) < 0.005 else f"{vol_z:.2f}")
     out.append(f"- **Volatilidad:** {vol_regime} (Z-Score: {vol_z_display}, {vol_conf_str})\n")
-    # H4 (2026-10-15, auditoria externa): aclarar que este regimen mide
-    # la VELOCIDAD del VIX (z-score del retorno), no su nivel. La tabla
-    # 'Estructura de volatilidad' mide el nivel (percentiles del VIX).
-    # No son contradictorios.
-    out.append("  *Este regimen mide la VELOCIDAD de cambio del VIX (z-score del retorno). El NIVEL del VIX (percentil) se reporta en la tabla 'Estructura de volatilidad'. Son dimensiones distintas y pueden no coincidir.*\n")
+    # H15-vol (2026-10-17, REP-AUDIT-20261017-capa6-commitE):
+    # el texto anterior decia 'VELOCIDAD de cambio (z-score del
+    # retorno del VIX)', lo cual es incorrecto. compute_volatility_regime
+    # NO usa el retorno del VIX: usa std(returns, window=20) normalizada
+    # contra baseline de 756d (ver regimes/volatility_regime.py y
+    # indicators/volatility.py::volatility_regime). Es volatilidad
+    # realizada, no velocidad de cambio. Verificado con simulacion
+    # 2026-10-17: retorno diario del VIX +21.45% -> z=-0.12 (porque
+    # un dia no mueve la std rolling de 20 sesiones). El nivel del VIX
+    # (percentil) se reporta en 'Estructura de volatilidad'.
+    out.append("  *Este regimen mide la VOLATILIDAD REALIZADA del VIX: desviacion estandar rolling de sus retornos diarios (ventana 20 sesiones), normalizada contra su baseline de 3 anos. NO mide el retorno diario del VIX. El NIVEL del VIX (percentil del valor absoluto) se reporta en la tabla 'Estructura de volatilidad'. Son dimensiones distintas y pueden no coincidir.*\n")
 
     out.append(f"- **Sectores:** {sector_regime}\n")
     # H5 (2026-10-15, auditoria externa): Data Conf se deriva SOLO de

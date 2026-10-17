@@ -59,18 +59,18 @@ def render_estructura_volatilidad(volatility_structure_data):
                    "de Sentimiento de Opciones usa la misma serie con "
                    "ventana min(252, historico disponible). Miden cosas "
                    "distintas: corto plazo vs largo plazo. Pueden diferir.*\n\n")
-        # H4 (2026-10-15, auditoria externa): aclarar que la 'Lectura
-        # volatilidad' de esta tabla mide el NIVEL del VIX (percentil
-        # del valor absoluto), mientras que el regimen de volatilidad
-        # del Resumen de Regimenes mide la VELOCIDAD (z-score del
-        # retorno del VIX). Son ortogonales: nivel medio con velocidad
-        # baja es un estado valido. No hay contradiccion.
+        # H15-vol (2026-10-17, REP-AUDIT-20261017-capa6-commitE):
+        # mismo bug que header.py. El regimen de volatilidad mide
+        # std(returns, window=20) normalizada, NO el retorno diario del
+        # VIX. Texto corregido para no publicar una definicion falsa.
         out.append("*La 'Lectura volatilidad' mide el NIVEL del VIX "
                    "(percentil del valor absoluto sobre 20 sesiones). Es "
                    "distinta del regimen de volatilidad del Resumen de "
-                   "Regimenes, que mide la VELOCIDAD de cambio (z-score "
-                   "del retorno del VIX). Pueden coincidir o no: nivel "
-                   "medio con velocidad baja es un estado valido.*\n\n")
+                   "Regimenes, que mide la VOLATILIDAD REALIZADA "
+                   "(desviacion estandar rolling de retornos diarios del "
+                   "VIX, ventana 20, normalizada contra baseline de 3 anos). "
+                   "Pueden coincidir o no: nivel medio con volatilidad "
+                   "realizada baja es un estado valido.*\n\n")
 
     return out
 

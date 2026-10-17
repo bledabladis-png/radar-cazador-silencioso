@@ -34,9 +34,16 @@ def test_header_nota_velocidad_vs_nivel():
         sector_regime="ROTATIONAL",
     )
     joined = "".join(out)
-    assert "VELOCIDAD" in joined
+    assert "VOLATILIDAD REALIZADA" in joined, (
+        "CommitE: el regimen mide volatilidad realizada, no velocidad"
+    )
     assert "NIVEL" in joined
-    assert "z-score del retorno" in joined.lower() or "z-score del retorno" in joined
+    assert "desviacion estandar rolling" in joined, (
+        "Debe declarar que es std rolling de retornos"
+    )
+    assert "z-score del retorno" not in joined, (
+        "Texto incorrecto: el regimen NO usa el retorno del VIX"
+    )
     assert "Estructura de volatilidad" in joined
 
 
@@ -57,5 +64,8 @@ def test_estructura_nota_nivel_vs_velocidad():
     out = render_estructura_volatilidad(df)
     joined = "".join(out)
     assert "NIVEL" in joined
-    assert "VELOCIDAD" in joined
+    assert "VOLATILIDAD REALIZADA" in joined, (
+        "CommitE: 'velocidad' era enganoso"
+    )
+    assert "z-score del retorno" not in joined
     assert "Resumen de Regimenes" in joined
