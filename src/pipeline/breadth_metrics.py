@@ -97,19 +97,22 @@ def _resolve_breadth_effective_date(df_stocks, df_market, holdings_df,
     if df_stocks is None or df_stocks.empty:
         return None, {'status': 'INSUFFICIENT_COVERAGE', 'reason': 'df_stocks empty'}
 
-    # Universo elegible: tickers equity de df_stocks.
+    # Universo elegible: SOLO tickers equity de df_stocks.
+    #
+    # H7 (2026-10-17, REP-AUDIT-20261017-H7): bug detectado en el run
+    # del 21:11. Antes se anadian los ETFs sectoriales de df_market
+    # a este universo 'como input de RS'. Pero resolve_effective_date
+    # opera SOBRE df_stocks: los ETFs no estan en df_stocks.columns,
+    # asi que se contaban como 'no observados' en el denominador sin
+    # poder sumar en el numerador. Resultado: cobertura artificialmente
+    # baja (305/340=0.897 en el 16 en lugar de 305/329=0.927), que hacia
+    # retroceder effective_date al 15 y disparaba DATA_PENDING falso.
+    #
+    # Los ETFs sectoriales siguen disponibles para el calculo de RS en
+    # compute_sector_breadth(df_market, ...), que los recibe por
+    # separado. No forman parte del universo de cobertura temporal de
+    # esta funcion.
     eligible = [c[1] for c in df_stocks.columns if c[0] == 'Close']
-
-    # Anadir ETFs sectoriales de df_market (input de RS).
-    if df_market is not None and not df_market.empty:
-        for c in df_market.columns:
-            if len(c) == 2 and c[0] == 'Close' and c[1] not in eligible:
-                # Solo ETFs sectoriales presentes en holdings_df.
-                try:
-                    if c[1] in set(holdings_df['etf'].unique()):
-                        eligible.append(c[1])
-                except (KeyError, AttributeError, TypeError):
-                    continue
 
     if not eligible:
         return None, {'status': 'INSUFFICIENT_COVERAGE', 'reason': 'sin elegibles'}
