@@ -55,7 +55,26 @@ def render_flujos_internacionales_agregados(
             flujo_str = _fmt_signed(r['estimated_flow_eur'], '{:+,.2f}', '{:,.2f}') + " EUR"
             sc_str = _fmt_signed(r['shares_change'], '{:+,.0f}', '{:,.0f}')
             pct_str = _fmt_signed(r['flow_pct_assets'] * 100, '{:+.2f}%', '{:.2f}%')
-            z_str = _fmt_signed(r['flow_zscore'], '{:+.2f}', '{:.2f}') if pd.notna(r.get('flow_zscore')) else "N/D"
+            # H4 (2026-10-17): distinguir el motivo del N/D en la
+            # columna Z-score. La fuente Amundi publica cambios con
+            # muy poca frecuencia (78% de dias con shares_change=0),
+            # lo que deja el MAD de la ventana en 0. El contrato de
+            # _fund_flow_utils clasifica ese caso como MAD0_NAN (z no
+            # definido) o MAD0_SAME (z=0 por coincidir con la mediana).
+            # Ninguno es un hueco de captura: es limite estadistico
+            # de la fuente.
+            _z = r.get('flow_zscore')
+            _zreg = r.get('flow_zscore_regime')
+            if pd.notna(_z):
+                z_str = _fmt_signed(_z, '{:+.2f}', '{:.2f}')
+            elif _zreg == 'MAD0_NAN':
+                z_str = "N/D (MAD0)"
+            elif _zreg == 'INSUFFICIENT':
+                z_str = "N/D (hist. insuf.)"
+            elif _zreg == 'MAD0_SAME':
+                z_str = "0.00 (MAD0)"
+            else:
+                z_str = "N/D"
         else:
             flujo_str = "N/D"
             sc_str = "N/D"
@@ -104,6 +123,13 @@ def render_flujos_internacionales_agregados(
     out.append("*Las 4 fuentes pueden tener fechas distintas por lag "
                "del proveedor: BlackRock T+1, Amundi T+1/T+2. La tabla "
                "es agregada; cada fila declara su propia fecha.*\n\n")
+    # H4 (2026-10-17): explicar por que Z-score puede aparecer como N/D.
+    out.append("*Nota (Z-score): N/D (MAD0) indica que la ventana "
+               "robusta de 120 sesiones no tiene escala (MAD=0), tipico "
+               "de fuentes con cambios de participaciones poco "
+               "frecuentes. No es un hueco de captura: el flujo y el "
+               "resto de la fila estan calculados. N/D (hist. insuf.) "
+               "indica ventana con menos de 20 observaciones validas.*\n\n")
     return out
 
 
