@@ -259,3 +259,14 @@ NEUTRAL_BAND_HYG_LQD_ZSCORE = 0.75
 # la critica del auditor (2026-10-17): 'NEUTRAL de liquidez FRED'
 # no contradice 'FLS 85/100', pero el reporte debe explicarlo.
 FLS_STRESS_THRESHOLD = 70
+
+# ============================================================
+# H17 (REP-AUDIT-20261017-capa2b): umbral de materialidad
+# para las etiquetas de divergencia precio-flujo.
+# ============================================================
+# Retornos |r| < umbral son ruido: no deben publicarse como
+# 'Confirmacion de debilidad' o 'Absorcion potencial' sin
+# cualificar. La etiqueta anade el sufijo ' (debil)'.
+# Casos reales del reporte 2026-10-17: XLRE ret=-0.04%,
+# XLC ret=-0.11%. Antes salian como etiquetas categoricas.
+FLOW_DIVERGENCE_MATERIALITY_THRESHOLD = 0.01

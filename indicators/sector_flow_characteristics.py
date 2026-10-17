@@ -21,6 +21,7 @@ from src.utils import get_col
 
 
 from config.tickers import MARKET_TICKERS
+from config.settings import FLOW_DIVERGENCE_MATERIALITY_THRESHOLD
 
 SECTORS = MARKET_TICKERS['sectors']
 
@@ -35,31 +36,33 @@ def _persistence(pos, neg):
 
 
 def _regime(price_ret, flow_sum):
+    """Clasifica el regimen precio-flujo.
 
+    REP-AUDIT-20261017-capa2b (H17):
+    - Umbral de materialidad: si |price_ret| <
+      FLOW_DIVERGENCE_MATERIALITY_THRESHOLD, se anade el sufijo
+      ' (debil)' a la etiqueta. Retornos marginales (-0.04%,
+      -0.11%) no deben publicarse como 'Confirmacion de debilidad'
+      o 'Absorcion potencial' sin cualificar.
+    - Mojibake corregido: las etiquetas estaban codificadas como
+      'Confirmaci\u00be n' (U+00BE en lugar de U+00F3). Ahora usan
+      UTF-8 correcto con tildes.
+    """
     if pd.isna(price_ret) or pd.isna(flow_sum):
-
         return 'N/D'
-
-    if price_ret > 0 and flow_sum > 0:
-
-        return 'Confirmación'
-
-    elif price_ret > 0 and flow_sum < 0:
-
-        return 'Divergencia bajista'
-
-    elif price_ret < 0 and flow_sum > 0:
-
-        return 'Absorción potencial'
-
-    elif price_ret < 0 and flow_sum < 0:
-
-        return 'Confirmación de debilidad'
-
-    else:
-
+    if price_ret == 0 or flow_sum == 0:
         return 'Neutral / sin confirmación'
-
+    weak = abs(price_ret) < FLOW_DIVERGENCE_MATERIALITY_THRESHOLD
+    suffix = ' (débil)' if weak else ''
+    if price_ret > 0 and flow_sum > 0:
+        return 'Confirmación' + suffix
+    if price_ret > 0 and flow_sum < 0:
+        return 'Divergencia bajista' + suffix
+    if price_ret < 0 and flow_sum > 0:
+        return 'Absorción potencial' + suffix
+    if price_ret < 0 and flow_sum < 0:
+        return 'Confirmación de debilidad' + suffix
+    return 'Neutral / sin confirmación'
 
 
 def compute_sector_flow_characteristics(flow_csv_path, price_df):
