@@ -74,6 +74,24 @@ Si algun test falla: NO commitear. Diagnosticar primero.
 
 Ambos son diseno, no deuda. El skip silencioso no aparece en el resumen; se ve con `-ra` (ya en `pytest.ini`).
 
+**Tests que leen archivos del repo: comprobar `.gitignore` antes de pushear.**
+
+Si un test hace `pd.read_csv`, `pd.read_parquet` o `Path(...)` sobre una ruta
+del repo (no `tmp_path`), y esa ruta puede estar en `.gitignore`, el test
+pasa en local y falla en CI. Regla: cualquier test que lea `data/` u
+`outputs/` debe construir el fichero sintetico en `tmp_path` y hacer
+`monkeypatch.chdir(tmp_path)`. Los archivos reales son para `run.py` y los
+scripts de verificacion manual; los tests no deben depender de ellos.
+
+Patron que fallo 3 veces en 24h (2026-10-16/17): import yaml no declarado,
+shallow clone, tests H1/H2 leyendo parquets gitignored. `ci_tests.yml`
+corre en cada push y lo detecta en 2 min, pero no previene el commit.
+
+Heuristica descartada 2026-10-17: detector AST de tests con rutas gitignored.
+6 falsos positivos en 6 casos (docstrings y regex que mencionan la ruta sin
+leerla). Una regla mecanica con 100% de falsos positivos es peor que la
+regla documental.
+
 ---
 
 ## 4. VERIFICACION END-TO-END (REFACTORS GRANDES)
