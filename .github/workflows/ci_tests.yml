@@ -1,0 +1,52 @@
+# CI de tests. Corre la suite en cada push a main que toque algo
+# distinto de data/ u outputs/. El bot pushea solo data/ y outputs/
+# en "Daily hist/state" y no dispara este workflow.
+#
+# Objetivo (2026-10-17): validar el codigo en CI antes de que el
+# gate del daily_run decida si ejecutar el pipeline. Los tests de
+# gobernanza e imports requieren historia completa (fetch-depth: 0):
+# sin shallow clone, test_registro_real_pasa falla y
+# test_imports_declarados caza imports no declarados.
+name: CI tests
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - 'data/**'
+      - 'outputs/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci_tests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  tests:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.14'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Validate Python syntax
+        run: python -m compileall -q .
+
+      - name: Run tests
+        run: pytest tests/ validation/ -q --tb=short -m "not integration_real_data"
+
+      - name: Run pyflakes
+        run: python -m pyflakes .
