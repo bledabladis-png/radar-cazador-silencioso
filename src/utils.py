@@ -312,20 +312,19 @@ def detect_cross_module_conflict(macro_regime, financial_regime, volatility_regi
         msg = 'Sin direccion clara entre los modulos.'
     
     # Detalle por bloques
+    # REP-AUDIT-20261017-commitH16 (2026-10-17): H16 del dictamen
+    # original. El auditor pedia distinguir 'contador=0' de
+    # 'contador no computado'. Antes los bloques con valor 0 se
+    # omitian, lo cual sugeria 'sin dato' cuando en realidad era
+    # 'cero real'. Ahora se publican siempre Financial Stress e
+    # Inflation Pressure, con N/5 aunque N=0. Expansion sigue
+    # ocultandose si es 0 (un caso todo neutral no necesita
+    # declarar que no hay modulos en expansion).
     blocks = []
-    if fin_stress_count > 0:
-        blocks.append(f'Financial Stress: {fin_stress_count}/{total}')
+    blocks.append(f'Financial Stress: {fin_stress_count}/{total}')
     if fin_exp_count > 0:
-        # REP-AUDIT-20261017-capa4-commitC (2026-10-17): publicar el
-        # recuento de expansion. Antes solo se publicaba el estres
-        # (y la presion inflacionaria). Un caso con 1 modulo en
-        # estres y 1 en expansion se leia como 'solo 1/5 estres',
-        # ocultando que el otro modulo estaba en el lado opuesto.
         blocks.append(f'Expansion: {fin_exp_count}/{total}')
-    if inf_stress_count > 0:
-        blocks.append(f'Inflation Pressure: {inf_stress_count}/{total}')
-    if not blocks:
-        blocks.append('Sin bloque de estres dominante')
+    blocks.append(f'Inflation Pressure: {inf_stress_count}/{total}')
     
     return {
         'conflict_level': level,

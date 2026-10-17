@@ -51,12 +51,14 @@ def test_high_stress_sigue_siendo_estres():
     assert r["details"]["financial"]["bias_financial"] == -1
 
 
-def test_caso_referencia_17_oct_post_commit_a():
+def test_caso_referencia_17_oct_post_h16():
+    """Caso 17-oct con H16: ambos bloques presentes, Inflation 0/5."""
     r = detect_cross_module_conflict(
         "SLOWDOWN", "HIGH_STRESS", "NORMAL", "NEUTRAL", "MIXED",
     )
     assert r["conflict_level"] == "MIXED"
-    assert r["blocks"] == "Financial Stress: 1/5"
+    assert "Financial Stress: 1/5" in r["blocks"]
+    assert "Inflation Pressure: 0/5" in r["blocks"]
     assert "Expansion" not in r["blocks"]
 
 

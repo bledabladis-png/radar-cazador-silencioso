@@ -28,42 +28,47 @@ def test_caso_solo_estres_sin_expansion():
     assert "Expansion" not in r["blocks"]
 
 
-def test_caso_solo_expansion_sin_estres():
-    """Solo RECOVERY: no debe aparecer linea Financial Stress."""
+def test_caso_solo_expansion_con_ceros_h16():
+    """Solo RECOVERY: Financial 0/5 (H16), Expansion 1/5, Inflation 0/5."""
     r = detect_cross_module_conflict(
         "RECOVERY", "NEUTRAL", "NORMAL", "NEUTRAL", "MIXED",
     )
     assert "Expansion: 1/5" in r["blocks"]
-    assert "Financial Stress" not in r["blocks"]
+    assert "Financial Stress: 0/5" in r["blocks"]
+    assert "Inflation Pressure: 0/5" in r["blocks"]
 
 
-def test_caso_referencia_17_oct_post_commit_a_y_c():
-    """SLOWDOWN neutralizado: solo estres, sin Expansion."""
+def test_caso_referencia_17_oct_post_h16():
+    """Caso 17-oct con H16: Financial 1/5 + Inflation 0/5, sin Expansion."""
     r = detect_cross_module_conflict(
         "SLOWDOWN", "HIGH_STRESS", "NORMAL", "NEUTRAL", "MIXED",
     )
     assert r["conflict_level"] == "MIXED"
-    assert r["blocks"] == "Financial Stress: 1/5"
+    assert "Financial Stress: 1/5" in r["blocks"]
+    assert "Inflation Pressure: 0/5" in r["blocks"]
     assert "Expansion" not in r["blocks"]
 
 
-def test_caso_todos_neutrales_sin_bloques():
-    """Todos neutrales -> 'Sin bloque de estres dominante'."""
+def test_caso_todos_neutrales_muestra_ceros():
+    """Todos neutrales: H16 publica Financial 0/5 e Inflation 0/5."""
     r = detect_cross_module_conflict(
         "MIXED", "NEUTRAL", "NORMAL", "NEUTRAL", "MIXED",
     )
-    assert "Sin bloque de estres dominante" in r["blocks"]
+    assert "Financial Stress: 0/5" in r["blocks"]
+    assert "Inflation Pressure: 0/5" in r["blocks"]
     assert "Expansion" not in r["blocks"]
+    assert "Sin bloque de estres dominante" not in r["blocks"]
 
 
-def test_caso_consensus_expansion_no_publica_estres():
-    """CONSENSUS expansion: 5/5. No debe aparecer Financial Stress."""
+def test_caso_consensus_expansion_publica_ceros_h16():
+    """CONSENSUS expansion: Financial 0/5, Expansion 5/5, Inflation 0/5."""
     r = detect_cross_module_conflict(
         "EXPANSION", "ABUNDANTE", "LOW", "EXPANSION", "EXPANSION",
     )
     assert r["conflict_level"] == "CONSENSUS"
     assert "Expansion: 5/5" in r["blocks"]
-    assert "Financial Stress" not in r["blocks"]
+    assert "Financial Stress: 0/5" in r["blocks"]
+    assert "Inflation Pressure: 0/5" in r["blocks"]
 
 
 def test_orden_de_bloques_estable():
@@ -78,3 +83,24 @@ def test_orden_de_bloques_estable():
     assert idx_stress >= 0
     assert idx_infl >= 0
     assert idx_stress < idx_infl
+
+
+
+def test_h16_cero_no_es_ausencia():
+    """H16: contador 0 se publica explicitamente, no se omite."""
+    r = detect_cross_module_conflict(
+        "MIXED", "NEUTRAL", "NORMAL", "NEUTRAL", "MIXED",
+    )
+    blocks = r["blocks"]
+    assert "Financial Stress: 0/5" in blocks
+    assert "Inflation Pressure: 0/5" in blocks
+    assert "Sin bloque de estres dominante" not in blocks
+
+
+def test_h16_inflation_pressure_con_valor():
+    """H16: si hay presion inflacionaria, se publica su valor."""
+    r = detect_cross_module_conflict(
+        "STAGFLATION", "HIGH_STRESS", "STRESS", "ESTRECHA", "MIXED",
+    )
+    assert r["conflict_level"] == "DIVERGENCE"
+    assert "Inflation Pressure: 1/5" in r["blocks"]
