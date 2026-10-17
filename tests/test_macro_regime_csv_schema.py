@@ -37,11 +37,14 @@ def _call(tmp_path, monkeypatch, **kwargs):
     return pd.read_csv(p) if p.exists() else None
 
 
-def test_schema_tiene_3_columnas_de_regimen(tmp_path, monkeypatch):
+def test_schema_tiene_2_columnas_de_regimen(tmp_path, monkeypatch):
     df = _call(tmp_path, monkeypatch)
     assert df is not None
-    for col in ("financial_regime", "real_liq_regime", "liquidity_regime"):
+    for col in ("financial_regime", "real_liq_regime"):
         assert col in df.columns, "Falta columna {}".format(col)
+    assert "liquidity_regime" not in df.columns, (
+        "Alias legacy eliminado en REP-AUDIT-20261017-capa6-commitD"
+    )
 
 
 def test_financial_regime_canonica(tmp_path, monkeypatch):
@@ -49,9 +52,10 @@ def test_financial_regime_canonica(tmp_path, monkeypatch):
     assert df.iloc[0]["financial_regime"] == "EXTREME_STRESS"
 
 
-def test_liquidity_regime_es_alias_de_financial(tmp_path, monkeypatch):
+def test_no_existe_alias_legacy(tmp_path, monkeypatch):
+    """El alias liquidity_regime se elimino en commitD."""
     df = _call(tmp_path, monkeypatch, financial_regime="ESTRECHA")
-    assert df.iloc[0]["liquidity_regime"] == "ESTRECHA"
+    assert "liquidity_regime" not in df.columns
     assert df.iloc[0]["financial_regime"] == "ESTRECHA"
 
 
@@ -72,4 +76,4 @@ def test_financial_y_real_liq_pueden_diferir(tmp_path, monkeypatch):
     )
     assert df.iloc[0]["financial_regime"] == "HIGH_STRESS"
     assert df.iloc[0]["real_liq_regime"] == "ABUNDANTE"
-    assert df.iloc[0]["liquidity_regime"] == "HIGH_STRESS"
+    assert "liquidity_regime" not in df.columns

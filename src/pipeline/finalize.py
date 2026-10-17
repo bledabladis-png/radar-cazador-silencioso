@@ -110,11 +110,10 @@ def save_regime_history(macro_score, macro_regime, macro_conf,
     # real FRED (liquidity_v2.py). A partir de este commit:
     #   - financial_regime: canonica, regimen financiero.
     #   - real_liq_regime: canonica, liquidez real FRED.
-    #   - liquidity_regime: alias legacy de financial_regime (mismo
-    #     valor, mantenido para compatibilidad de consumidores que
-    #     leen la columna con el nombre antiguo).
-    # Filas historicas anteriores a este commit: real_liq_regime=NaN
-    # (no se imputa). El CSV es honesto sobre la perdida de informacion.
+    # REP-AUDIT-20261017-capa6-commitD (2026-10-17): eliminado el
+    # alias legacy 'liquidity_regime'. Verificado con grep que no
+    # habia consumidores del CSV leyendo esa columna. Script
+    # scripts/migrate_macro_regime_csv.py migra el historico.
     new_row = pd.DataFrame({
         "date": [pd.Timestamp(obs_date).strftime('%Y-%m-%d')],
         "macro_regime": [macro_regime],
@@ -122,7 +121,6 @@ def save_regime_history(macro_score, macro_regime, macro_conf,
         "macro_conf": [macro_conf],
         "financial_regime": [financial_regime],
         "real_liq_regime": [real_liq_regime],
-        "liquidity_regime": [financial_regime],
         "volatility_regime": [vol_regime],
         "sector_regime": [sector_results["regime"]],
     })
