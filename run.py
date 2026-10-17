@@ -326,7 +326,8 @@ def main():
     save_regime_history(macro_score, macro_regime, macro_conf,
                         financial_regime, vol_regime, sector_results,
                         df_macro_manual=df_macro_manual,
-                        effective_date=_equity_eff)
+                        effective_date=_equity_eff,
+                        real_liq_regime=real_liq_regime)
     save_sector_rankings(sector_results)
     generate_european_coverage(reference_date=reference_date)
 

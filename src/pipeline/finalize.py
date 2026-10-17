@@ -76,8 +76,9 @@ def compute_final_matrices(sector_breadth_df, sector_concentration_df,
 
 
 def save_regime_history(macro_score, macro_regime, macro_conf,
-                        liquidity_regime, vol_regime, sector_results,
-                        df_macro_manual=None, effective_date=None):
+                        financial_regime, vol_regime, sector_results,
+                        df_macro_manual=None, effective_date=None,
+                        real_liq_regime=None):
     """Persiste la fila del regimen actual en outputs/history/macro_regime.csv.
 
     Movido de report_generator.py (C1-10) y consolidado aqui (C2-12).
@@ -103,12 +104,25 @@ def save_regime_history(macro_score, macro_regime, macro_conf,
         print(f"  [WARN] save_regime_history: obs_date {obs_date_only} no es sesion NYSE. Se omite escritura.")
         skip('macro_regime', 'SKIP_CONDITION')
         return
+    # REP-AUDIT-20261017-capa4-commitB (2026-10-17): esquema del CSV
+    # renombrado. La columna 'liquidity_regime' historicamente contuvo
+    # el regimen FINANCIERO (financial_conditions.py), no el de liquidez
+    # real FRED (liquidity_v2.py). A partir de este commit:
+    #   - financial_regime: canonica, regimen financiero.
+    #   - real_liq_regime: canonica, liquidez real FRED.
+    #   - liquidity_regime: alias legacy de financial_regime (mismo
+    #     valor, mantenido para compatibilidad de consumidores que
+    #     leen la columna con el nombre antiguo).
+    # Filas historicas anteriores a este commit: real_liq_regime=NaN
+    # (no se imputa). El CSV es honesto sobre la perdida de informacion.
     new_row = pd.DataFrame({
         "date": [pd.Timestamp(obs_date).strftime('%Y-%m-%d')],
         "macro_regime": [macro_regime],
         "macro_score": [macro_score.iloc[-1]],
         "macro_conf": [macro_conf],
-        "liquidity_regime": [liquidity_regime],
+        "financial_regime": [financial_regime],
+        "real_liq_regime": [real_liq_regime],
+        "liquidity_regime": [financial_regime],
         "volatility_regime": [vol_regime],
         "sector_regime": [sector_results["regime"]],
     })
