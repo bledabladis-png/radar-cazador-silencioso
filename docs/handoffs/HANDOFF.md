@@ -8,22 +8,22 @@ No crear variantes con fecha.
 
 ---
 
-## 1. ESTADO AL CIERRE (2026-10-17 06:06 UTC)
+## 1. ESTADO AL CIERRE (2026-10-17 06:40 UTC)
 
 Rama activa:    main
 HEAD:           consultar `git log --oneline -1` (no literal; el corpus no fija SHA para evitar deriva)
 Sincronizacion: main == origin/main
-Tests local:    ver `Consolidacion_Documentos/ESTADO_SISTEMA.md`. Al cierre: 3607 passed + 5 skipped.
-Tests CI:       3574 passed + 33 skipped + 9 deselected (los 28 que se skipean requieren parquets gitignored).
+Tests local:    ver `Consolidacion_Documentos/ESTADO_SISTEMA.md`. Al cierre: 3641 passed + 5 skipped.
+Tests CI:       3604 passed + 33 skipped + 9 deselected (los 28 que se skipean requieren parquets gitignored).
 Validation Gate: 10/10
 Working tree:   limpio (salvo data/ y outputs/ que el bot actualiza)
 Corpus:         v3 (Consolidacion_Documentos/00-08 + ESTADO_SISTEMA)
 Gobernanza:     docs/gobernanza/REGISTRO.yaml. Al cierre: 50 FIXED, 3 BLOCKED_EXTERNAL, 2 WONT_FIX, 1 OPEN, 1 SUPERSEDED, 1 FALSE_POSITIVE.
 Contrato gate:  docs/auditoria/daily_run_gate_contrato_v1.md +
                 docs/auditoria/daily_run_gate_enmienda_v1_1.md +
-                docs/auditoria/daily_run_gate_enmienda_v1_2.md (ABIERTO a firma)
+                docs/auditoria/daily_run_gate_enmienda_v1_2.md (APROBADO 2026-10-17)
 CI de tests:    .github/workflows/ci_tests.yml (push a main, paths-ignore: data/, outputs/).
-                Ultimo run verde: 39008384072 (head 237b080a, 2m21s).
+                Ultimo run verde: 39009989796 (head 745df9ed, 2m20s).
 
 ---
 
@@ -79,6 +79,43 @@ Ver resumen previo:
 Registro: `REP-AUDIT-20261017` (agrupado, VERIFIED_IN_PRODUCTION).
 Reversion de data/ y outputs/ tras verificar (politica 01_METODO §4).
 
+### 2.4. Tramo 06:10-06:40: dictamen externo H19-H23
+
+Dictamen externo del 2026-10-17 sobre el addendum v1.2. Aprobo el
+fondo y condiciono la firma a 5 precisiones (H19-H23). Todas
+implementadas con tests:
+
+- H19 (`c8a265ff`): `guard_coverage_result.json` con identidad de
+  ejecucion (schema_version, run_id, run_attempt, target_session,
+  generated_at, threshold efectivo), escritura atomica via
+  tmp + os.replace, placeholder `running` al inicio, captura de
+  excepciones por manifest. 8 tests.
+- H20 (`00c70f4a`): `_read_guard_result()` valida schema, status
+  != running, run_id y run_attempt contra la ejecucion actual, y
+  campo ok booleano. `failed_contracts` usa identificadores
+  estables (`GUARD_COVERAGE`, `GUARD_COVERAGE_UNAVAILABLE`);
+  detalles en `reasons`. 7 tests nuevos + 2 actualizados.
+- H21 (este commit): rollback por grupos A/B/C en el addendum
+  (comunicacion Guard->attempt / guard post-hist MTE /
+  futures_status). Cada grupo con sus tests independientes.
+- H22 (`5dbdce8e`): tests de integracion verifican el state
+  persistido (`mte_state.json`) tras el guard post-hist, no solo
+  el valor devuelto. 5 tests: scenario=MIXED, pending=None,
+  confidence calculada sobre el escenario final.
+- H23 (`20c21c2b`): `futures_status` = `UNAVAILABLE` si falta el
+  metadato o el status esta vacio. Nunca se inventa OK ni BLOCKED.
+  6 tests.
+- Escenario 5 del dictamen + I3/I8 extendidos (`745df9ed`):
+  `_detect_outcome` lee el guard antes del branch VG (ambas causas
+  disponibles). 4 tests. I3 verifica el orden estricto de steps en
+  el yml; I8 verifica que `guard_coverage_result.json ok=true` no
+  produce CURRENT ni sustituye al manifest.
+
+Addendum v1.2 APROBADO 2026-10-17 (ver `docs/auditoria/
+daily_run_gate_enmienda_v1_2.md` seccion 6). CI verde en el run
+`39009989796` (head `745df9ed`). Suite local 3641 passed + 5
+skipped (`ESTADO_SISTEMA.md`, commit `35fcdef7`).
+
 ### 2.3. Tramo 05:35-06:06: CI roto y reparado
 
 5 commits consecutivos con CI rojo (39005974500, 39006131075,
@@ -117,15 +154,28 @@ Verificado en CI run 39008384072 (3574 passed, 33 skipped).
 sera el primer ciclo completo: gate READY sin receipt, pipeline,
 guard, receipt nuevo con `contract_validation_status`.
 
-### 4.2. Addendum v1.2 abierto a firma externa
+### 4.2. Addendum v1.2 aprobado 2026-10-17
 
 `docs/auditoria/daily_run_gate_enmienda_v1_2.md`. Cubre:
 - 3.1-3.3: attempt lee guard_coverage_result (fail-closed ciego
   ante fallo del guard).
 - 3.4: guard C2 post-histeresis y futures_status real.
 
-Firma pendiente antes de considerar el addendum como contrato
-cerrado. La implementacion ya esta en produccion.
+Dictamen externo del 2026-10-17: aprobado con 5 precisiones
+(H19-H23). Todas resueltas con commits y tests:
+- H19 (`c8a265ff`): guard_coverage_result con identidad de
+  ejecucion, escritura atomica, placeholder running, excepciones
+  capturadas.
+- H20 (`00c70f4a`): validacion de identidad, failed_contracts
+  estables (GUARD_COVERAGE / GUARD_COVERAGE_UNAVAILABLE).
+- H21 (este commit): rollback por grupos A/B/C en el addendum.
+- H22 (`5dbdce8e`): persistencia del state MTE (scenario, pending,
+  confidence).
+- H23 (`20c21c2b`): futures_status UNAVAILABLE si falta metadato.
+- Escenario 5 + I3/I8 extendidos (`745df9ed`).
+
+Certificacion de produccion pendiente del primer run scheduled con
+target_session nuevo (lunes 2026-10-19 23:17 UTC).
 
 ### 4.3. Otros frentes
 

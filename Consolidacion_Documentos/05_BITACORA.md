@@ -185,6 +185,39 @@ de punta a punta.
 
 **Commits (ampliacion).** 237b080a (fix tests), b1645634 (HANDOFF).
 
+**Ampliacion 06:10-06:40 UTC (dictamen externo H19-H23).**
+- Recibido dictamen externo sobre addendum v1.2. Aprobado el fondo
+  con 5 precisiones H19-H23.
+- H19: guard_coverage_result con identidad de ejecucion, escritura
+  atomica, placeholder running, excepciones capturadas. 8 tests.
+  Commit c8a265ff.
+- H20: _read_guard_result valida identidad; failed_contracts con
+  GUARD_COVERAGE / GUARD_COVERAGE_UNAVAILABLE. 7 nuevos + 2
+  actualizados. Commit 00c70f4a.
+- H22: tests de persistencia del state MTE (scenario, pending,
+  confidence). 5 tests. Commit 5dbdce8e.
+- H23: futures_status UNAVAILABLE si falta metadato. 6 tests.
+  Commit 20c21c2b.
+- Escenario 5 + I3/I8 extendidos: guard leido antes de VG (ambas
+  causas), orden estricto de steps en yml, guard ok=true no produce
+  CURRENT. 4 tests. Commit 745df9ed.
+- Addendum v1.2 actualizado: seccion 5 con rollback por grupos
+  A/B/C (H21), seccion 6 con APROBADO 2026-10-17 + evidencia de
+  cada condicion.
+- HANDOFF, 00_ARRANQUE y este tramo reflejan APROBADO.
+- ESTADO_SISTEMA regenerado: 3641 passed + 5 skipped (35fcdef7).
+- CI verde: run 39009989796 (head 745df9ed), 3604 passed + 33
+  skipped + 9 deselected.
+
+**Commits (ampliacion).** c8a265ff, 00c70f4a, 5dbdce8e, 20c21c2b,
+745df9ed, 35fcdef7, este commit.
+
+**Nota de proceso.** "Verificar en CI, no solo en local" se ha
+repetido 3 veces en 24h (import yaml, shallow clone, gitignored).
+Regla anotada en 01_METODO seccion 3 (commit bf9a9014). Detector
+AST descartado (6 falsos positivos en 6 casos). La regla queda
+documental + ci_tests.yml en cada push.
+
 **Deuda de proceso reconocida.** "Verificar en CI, no solo en local"
 se ha repetido 3 veces en 24h: 16-oct (import yaml), 17-oct
 madrugada (shallow clone), 17-oct manana (gitignored). Candidato a
@@ -200,7 +233,7 @@ punta.
 **Commits (ampliacion).** d34c15bb (retirar verify_v11.yml).
 
 **Pendiente.**
-- Addendum v1.2: ABIERTO a firma externa.
+- Addendum v1.2: APROBADO 2026-10-17 (dictamen externo con H19-H23).
 - Run del lunes 19-oct 23:17 UTC: verificacion completa de la
   enmienda v1.1 + v1.2 desde cero con target_session nuevo.
 - H5.3 (20-nov), C2/SOW/Wyckoff (bloqueados), Issue #5.

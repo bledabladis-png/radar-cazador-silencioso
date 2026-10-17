@@ -3,7 +3,7 @@
 **Contrato base:** `docs/auditoria/daily_run_gate_contrato_v1.md` (2026-10-01).
 **Enmienda previa:** `docs/auditoria/daily_run_gate_enmienda_v1_1.md` (2026-10-16).
 **Fecha:** 2026-10-17.
-**Estado:** ABIERTO a firma externa. Motivado por evidencia real (run 39001863568).
+**Estado:** APROBADO 2026-10-17 (dictamen externo del 2026-10-17; ver seccion 6). Motivado por evidencia real (run 39001863568).
 **Schema del receipt:** se mantiene en v1. No hay cambio estructural.
 
 ---
@@ -114,17 +114,83 @@ cambia comportamiento existente.
 
 ## 5. Rollback
 
-- Quitar la escritura de `guard_coverage_result.json` en
-  `guard_coverage.py` (linea `_write_result`).
-- Quitar la rama de lectura del guard en `_detect_outcome()`.
-- Eliminar los 4 tests nuevos.
-- Schema del receipt no cambia: no hay migracion.
+El addendum agrupa tres cambios de naturaleza distinta. El rollback
+se hace por grupos independientes (H21 del dictamen externo
+2026-10-17). Revertir un grupo no revierte los otros.
+
+### 5.1. Grupo A: comunicacion Guard -> attempt
+
+- `scripts/guard_coverage.py`: eliminar `_read_target_session`,
+  `_split_failure` y el cuerpo nuevo de `_write_result`. Restaurar
+  la firma `(ok, threshold, failures)` y la escritura no-atomica.
+- `scripts/write_completion_attempt.py`: eliminar
+  `_read_guard_result()` y la lectura del guard en
+  `_detect_outcome()`. Revertir `failed_contracts` a
+  `["guard:<mensaje>"]` si se quiere volver al addendum v1.2
+  pre-dictamen; mantener `GUARD_COVERAGE` /
+  `GUARD_COVERAGE_UNAVAILABLE` si solo se retira la parte MTE.
+- Tests a eliminar (Grupo A):
+  - `tests/test_guard_coverage_result_h19.py` (8 tests).
+  - Los 7 tests H20 y los 2 actualizados en
+    `tests/test_write_completion_attempt.py`.
+  - `tests/test_integration_i3_i8_scenarios.py::test_escenario_5_*`
+    y `test_i8_guard_ok_no_produce_current`.
+
+### 5.2. Grupo B: guard post-histeresis MTE
+
+- `indicators/mte/decision.py`: revertir el bloque "C2 ampliacion
+  2026-10-17" (el que fuerza MIXED si `final_scenario ==
+  STAGFLATION` y no cumple `IPS > 0.15 AND SRS > 0`).
+- Tests a eliminar (Grupo B):
+  - `tests/test_mte_guard_post_hist_persistence.py` (5 tests).
+  - En `tests/test_classify_mte_stagflation_gate.py`:
+    `test_stagfl_no_persiste_por_histeresis_con_prev_stagflation`
+    y `test_stagfl_si_persiste_con_ips_y_srs_validos`.
+
+### 5.3. Grupo C: futures_status derivado del contrato
+
+- `indicators/mte/engine.py`: restaurar
+  `'futures_status': 'BLOCKED'` (literal pre-2026-10-17) o
+  mantener la lectura del metadato sin la rama
+  `or 'UNAVAILABLE'`, segun se prefiera.
+- Tests a eliminar (Grupo C):
+  - `tests/test_mte_futures_status_unavailable.py` (6 tests).
+  - `tests/test_mte_engine.py::test_futures_status_refleja_temporal_meta`.
+
+### 5.4. Invariantes
+
+Schema del receipt no cambia en ningun grupo: no hay migracion de
+artefactos. I1-I8 se mantienen en los tres casos.
 
 ## 6. Firma
 
-**ABIERTO a firma externa.** Evidencia: run `39001863568` (attempt ciego
-ante el fallo real del guard). Fix minimo, contract-additive. Tests
-cubren los dos caminos (guard falla -> BLOCKED, VG falla -> INCOMPLETE
-prioritario sobre guard). Sin tocar schema del receipt.
+**APROBADO 2026-10-17.** Fundamento: dictamen externo del
+2026-10-17 sobre el addendum v1.2. El dictamen aprobo el fondo y
+condiciono la firma a cinco precisiones (H19-H23). Las cinco
+condiciones se han resuelto:
+
+- H19 (identidad de ejecucion, escritura atomica, manejo de
+  excepciones): commit `c8a265ff`, 8 tests en
+  `tests/test_guard_coverage_result_h19.py`.
+- H20 (validacion de identidad y `failed_contracts` estables):
+  commit `00c70f4a`, 7 tests nuevos + 2 actualizados en
+  `tests/test_write_completion_attempt.py`.
+- H21 (rollback por grupos A/B/C): seccion 5 ampliada arriba.
+- H22 (persistencia del state MTE, no solo la etiqueta): commit
+  `5dbdce8e`, 5 tests en
+  `tests/test_mte_guard_post_hist_persistence.py`.
+- H23 (`futures_status` = UNAVAILABLE si falta metadato): commit
+  `20c21c2b`, 6 tests en
+  `tests/test_mte_futures_status_unavailable.py`.
+- Escenario 5 del dictamen (VG + guard: ambas causas) + I3/I8
+  extendidos: commit `745df9ed`, 4 tests en
+  `tests/test_integration_i3_i8_scenarios.py`.
+
+CI verde en el run `39009989796` (head `745df9ed`). Suite local
+3641 passed + 5 skipped (`ESTADO_SISTEMA.md`, commit `35fcdef7`).
+
+La certificacion de produccion queda pendiente del primer run
+scheduled con `target_session` nuevo (lunes 2026-10-19 23:17 UTC),
+que verificara de punta a punta la enmienda v1.1 + este addendum.
 
 **Fin del addendum.**
