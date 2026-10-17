@@ -48,6 +48,9 @@ GUARDED_MANIFESTS = (
 
 DEFAULT_THRESHOLD = 0.95
 
+ROOT = Path(__file__).resolve().parents[1]
+RESULT_PATH = ROOT / "outputs" / "state" / "guard_coverage_result.json"
+
 
 def _load_manifest(path):
     """Devuelve (manifest_dict, error_str)."""
@@ -179,6 +182,27 @@ def _check_manifest(path, threshold):
     return reasons
 
 
+def _write_result(ok, threshold, failures):
+    """Persiste el resultado del guard como artifact para el attempt.
+
+    Contrato (addendum v1.2, 2026-10-17): el attempt lee este fichero
+    para no quedar ciego ante un fallo del guard de cobertura global.
+    """
+    RESULT_PATH.parent.mkdir(parents=True, exist_ok=True)
+    RESULT_PATH.write_text(
+        json.dumps(
+            {
+                "ok": bool(ok),
+                "threshold": threshold,
+                "failures": list(failures),
+            },
+            indent=2,
+            ensure_ascii=False,
+        ) + "\n",
+        encoding="utf-8",
+    )
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--threshold", type=float, default=DEFAULT_THRESHOLD)
@@ -197,9 +221,11 @@ def main():
     if all_failures:
         print("")
         print("Guard coverage: {0} fallo(s). Abortando.".format(len(all_failures)))
+        _write_result(False, args.threshold, all_failures)
         return 1
 
     print("Guard coverage: todos OK.")
+    _write_result(True, args.threshold, [])
     return 0
 
 

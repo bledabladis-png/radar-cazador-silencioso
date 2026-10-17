@@ -234,3 +234,61 @@ def test_failed_contracts_no_duplica_con_multiples_reasons(tmp_path, monkeypatch
     assert len(entry["reasons"]) == 2, (
         "reasons debe conservar las 2 razones (diagnostico completo)"
     )
+
+
+# --- Addendum v1.2 (2026-10-17): attempt lee guard_coverage_result ---
+
+def test_attempt_blocked_por_guard_result(tmp_path, monkeypatch):
+    """Guard falla: attempt BLOCKED con las failures reales."""
+    _setup_env(monkeypatch, tmp_path)
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(wca, "ROOT", tmp_path)
+    monkeypatch.setattr(wca, "MANIFESTS", ())
+
+    (tmp_path / "outputs" / "state").mkdir(parents=True)
+    (tmp_path / "outputs" / "state" / "guard_coverage_result.json").write_text(
+        json.dumps({
+            "ok": False,
+            "threshold": 0.95,
+            "failures": [
+                "data/stock_prices.parquet.manifest.json: "
+                "coverage_pct_last=0.927052 < 0.95"
+            ],
+        }),
+        encoding="utf-8",
+    )
+
+    rc = wca.main()
+    assert rc == 0
+    entry = json.loads(
+        (tmp_path / "attempt.jsonl").read_text(encoding="utf-8").strip().splitlines()[0]
+    )
+    assert entry["outcome"] == "BLOCKED"
+    assert any("0.927" in f for f in entry["failed_contracts"])
+    assert any("guard_coverage" in r for r in entry["reasons"])
+
+
+def test_attempt_vg_prioritario_sobre_guard(tmp_path, monkeypatch):
+    """VG passed=False gana a guard ok=False (INCOMPLETE)."""
+    _setup_env(monkeypatch, tmp_path)
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(wca, "ROOT", tmp_path)
+    monkeypatch.setattr(wca, "MANIFESTS", ())
+
+    (tmp_path / "outputs" / "state").mkdir(parents=True)
+    (tmp_path / "outputs" / "state" / "validation_gate_result.json").write_text(
+        json.dumps({"passed": False, "checks_n": 10, "errors_n": 2}),
+        encoding="utf-8",
+    )
+    (tmp_path / "outputs" / "state" / "guard_coverage_result.json").write_text(
+        json.dumps({"ok": False, "threshold": 0.95, "failures": ["x: y"]}),
+        encoding="utf-8",
+    )
+
+    rc = wca.main()
+    assert rc == 0
+    entry = json.loads(
+        (tmp_path / "attempt.jsonl").read_text(encoding="utf-8").strip().splitlines()[0]
+    )
+    assert entry["outcome"] == "INCOMPLETE"
+    assert any("validation_gate" in r for r in entry["reasons"])

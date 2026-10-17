@@ -149,3 +149,45 @@ def test_universo_explicito():
     assert "data/stock_prices.parquet.manifest.json" in GUARDED_MANIFESTS
     assert "data/market_data.parquet.manifest.json" in GUARDED_MANIFESTS
     assert len(GUARDED_MANIFESTS) == 2
+
+# --- Addendum v1.2 (2026-10-17): _write_result persistido ---
+
+def test_guard_escribe_result_ok(tmp_path, monkeypatch):
+    """Guard OK: escribe outputs/state/guard_coverage_result.json."""
+    import json
+    import scripts.guard_coverage as gc
+
+    result_path = tmp_path / "outputs" / "state" / "guard_coverage_result.json"
+    monkeypatch.setattr(gc, "RESULT_PATH", result_path)
+    monkeypatch.setattr(gc, "GUARDED_MANIFESTS", ())
+
+    monkeypatch.setattr("sys.argv", ["guard_coverage.py"])
+    rc = gc.main()
+    assert rc == 0
+    assert result_path.exists()
+    d = json.loads(result_path.read_text(encoding="utf-8"))
+    assert d["ok"] is True
+    assert d["failures"] == []
+    assert "threshold" in d
+
+
+def test_guard_escribe_result_fallo(tmp_path, monkeypatch):
+    """Guard FAIL: escribe ok=False y las failures."""
+    import json
+    import scripts.guard_coverage as gc
+
+    result_path = tmp_path / "outputs" / "state" / "guard_coverage_result.json"
+    monkeypatch.setattr(gc, "RESULT_PATH", result_path)
+
+    def _fake_check(path, threshold):
+        return [path + ": coverage_pct_last=0.927 < 0.95"]
+
+    monkeypatch.setattr(gc, "_check_manifest", _fake_check)
+    monkeypatch.setattr(gc, "GUARDED_MANIFESTS", ("data/fake.manifest.json",))
+    monkeypatch.setattr("sys.argv", ["guard_coverage.py"])
+
+    rc = gc.main()
+    assert rc == 1
+    d = json.loads(result_path.read_text(encoding="utf-8"))
+    assert d["ok"] is False
+    assert any("0.927" in f for f in d["failures"])

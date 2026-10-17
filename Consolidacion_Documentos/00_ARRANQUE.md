@@ -100,6 +100,9 @@ si BLOCKED o UNAVAILABLE, receipt fail-closed. Verificada en prod
 2026-10-17 (run 38994345784, receipt COMPLETED).
 Contrato: `docs/auditoria/daily_run_gate_contrato_v1.md` +
 `docs/auditoria/daily_run_gate_enmienda_v1_1.md`.
+Addendum v1.2 (2026-10-17): el attempt lee
+`outputs/state/guard_coverage_result.json` para no quedar ciego
+ante un fallo del guard de cobertura global (run 39001863568).
 
 **Wyckoff v1.8 en produccion.** Legacy retirado 2026-10-10. Detalle
 en `04_HISTORICO.md` y `docs/auditoria/wyckoff/`.

@@ -114,6 +114,32 @@ la enmienda v1.1 en produccion.
 contract_validation_status=OK, la enmienda v1.1 queda verificada
 de punta a punta.
 
+**Ampliacion 04:15-05:00 UTC (addendum v1.2).**
+- Verificacion forzada del pipeline (workflow verify_v11.yml,
+  retirado despues): run 39001863568 fallo en Guard coverage con
+  `stock_prices.parquet: coverage_pct_last=0.927 < 0.95`. Es
+  latencia de Yahoo a las 04:15 UTC, no bug. Pipeline real OK en
+  11m35s.
+- El attempt quedo ciego: `outcome: INCOMPLETE` con `reasons: ["sin
+  receipt y sin causa identificada"]` cuando la causa real estaba
+  en el log del guard.
+- Fix: `guard_coverage.py` escribe
+  `outputs/state/guard_coverage_result.json`. `write_completion_attempt`
+  lo lee y emite BLOCKED con la causa. Prioridad: receipt > VG
+  fail > guard fail > contrato fallido > INCOMPLETE sin causa.
+- Addendum v1.2 publicado: `docs/auditoria/daily_run_gate_enmienda_v1_2.md`.
+- `00_ARRANQUE`: mencion del addendum.
+- Tests: +2 guard (result ok/fail) +2 attempt (BLOCKED por guard,
+  VG prioritario). 15 + 11 en los dos ficheros.
+
+**Commits (ampliacion).** d34c15bb (retirar verify_v11.yml).
+
+**Pendiente.**
+- Addendum v1.2: ABIERTO a firma externa.
+- Run del lunes 19-oct 23:17 UTC: verificacion completa de la
+  enmienda v1.1 + v1.2 desde cero con target_session nuevo.
+- H5.3 (20-nov), C2/SOW/Wyckoff (bloqueados), Issue #5.
+
 
 ### 2026-10-16 - Auditoria CI + dictamen externo + fases 1-7 + gobernanza
 

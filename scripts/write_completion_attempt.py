@@ -119,6 +119,19 @@ def _detect_outcome():
         reasons.insert(0, "validation_gate passed=False")
         return "INCOMPLETE", failed, reasons, hashes
 
+    # Addendum v1.2 (2026-10-17): el guard de cobertura global falla
+    # por cobertura, sha256 o last_date de un manifest no critico. El
+    # attempt debe registrar la causa, no quedar ciego.
+    guard = _read_json(ROOT / "outputs" / "state" / "guard_coverage_result.json")
+    if isinstance(guard, dict) and guard.get("ok") is False:
+        guard_failures = guard.get("failures") or []
+        reasons.insert(0, "guard_coverage: {0} fallo(s)".format(len(guard_failures)))
+        combined_failed = list(failed) + [
+            "guard:" + str(f) for f in guard_failures
+        ]
+        combined_reasons = list(reasons) + [str(f) for f in guard_failures]
+        return "BLOCKED", combined_failed, combined_reasons, hashes
+
     if failed:
         return "BLOCKED", failed, reasons, hashes
 
