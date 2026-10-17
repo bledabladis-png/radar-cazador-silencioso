@@ -165,6 +165,32 @@ de punta a punta.
 - Item gobernanza `REP-AUDIT-20261017` (agrupado, 1 item por los 7
   hallazgos). Verificacion: VERIFIED_IN_PRODUCTION.
 
+**Ampliacion 06:00-06:10 UTC (CI roto y reparado).**
+- Los 5 commits desde H3 (2fef491e, 5dd68152, 65ed84c6, a662d882,
+  27f48986) pushearon con CI rojo. Causa: los tests H1 (Yahoo) y
+  H2 (12 fuentes) leian `data/market_data.parquet` y
+  `outputs/history/*.csv`, ambos gitignored. En local pasaban, en
+  CI no. Patron "verificar en local, no en CI" repetido tras la
+  autocritica de la manana.
+- Deteccion: runs 39005974500, 39006131075, 39006407799,
+  39006745624 (1 failed cada uno), 39006311775 (cancelled por
+  push posterior).
+- Fix 237b080a: reescribir ambos tests con fixtures sinteticos en
+  tmp_path (parquet de 11 sectores + CSVs de rows/sectorial/from_row)
+  + test estructural (declaracion de coverage_logic).
+- Verificacion: simulacion CI (ocultando parquets gitignored +
+  outputs/): 6/6 passed. Local: 6/6 passed. Run CI real 39008384072:
+  3574 passed + 33 skipped + 9 deselected en 80.93s.
+- HANDOFF actualizado al estado 06:06 UTC (5 tramos).
+
+**Commits (ampliacion).** 237b080a (fix tests), b1645634 (HANDOFF).
+
+**Deuda de proceso reconocida.** "Verificar en CI, no solo en local"
+se ha repetido 3 veces en 24h: 16-oct (import yaml), 17-oct
+madrugada (shallow clone), 17-oct manana (gitignored). Candidato a
+regla en 01_METODO: "si el test lee archivos del repo, comprobar que
+no estan en .gitignore antes de pushear".
+
 **Proximo paso sugerido.** Verificar run scheduled del lunes
 2026-10-19 23:17 UTC (target_session nuevo) con todos los fixes en
 CI. Si emite receipt COMPLETED con contract_validation_status=OK,
