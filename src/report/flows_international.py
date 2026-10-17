@@ -242,12 +242,35 @@ def render_flujo_posicional_nport(nport_position_change_data):
     out = []
     if nport_position_change_data is not None and not nport_position_change_data.empty:
         out.append("## Flujo Posicional N-PORT (Trimestral)\n")
-        out.append("*Datos del último trimestre disponible. Fuente: SEC N-PORT.*\n")
-        out.append("| Fecha | Fondo | Activo | ISIN | Balance Previo | Balance Actual | Cambio | % Cambio |\n")
-        out.append("|-------|-------|--------|-------|----------------|----------------|--------|-----------|\n")
+        # H11/H12 (2026-10-17, REP-AUDIT-20261017): separar fecha de
+        # observacion (REPORT_DATE, cierre del trimestre) de fecha de
+        # presentacion (FILING_DATE, dia en que SEC recibio el filing).
+        # Antes solo se mostraba la primera. Frecuencias declaradas:
+        # origen mensual (SEC N-PORT), ingesta trimestral (pipeline).
+        out.append("*Datos del ultimo trimestre disponible. Fuente: SEC "
+                   "N-PORT. Frecuencia de origen: mensual. Frecuencia de "
+                   "ingesta: trimestral (ZIPs N-PORT). Fecha de observacion "
+                   "= cierre del trimestre; fecha de presentacion = dia en "
+                   "que SEC recibio el filing.*\n")
+        out.append("| Fecha observacion | Fecha presentacion | Fondo | Activo | ISIN | Balance Previo | Balance Actual | Cambio | % Cambio |\n")
+        out.append("|-------------------|---------------------|-------|--------|-------|----------------|----------------|--------|-----------|\n")
         for _, row in nport_position_change_data.iterrows():
             fecha = row['REPORT_DATE'].strftime('%Y-%m-%d') if hasattr(row['REPORT_DATE'], 'strftime') else str(row['REPORT_DATE'])
-            out.append(f"| {fecha} | {row['REGISTRANT_NAME']} | {row['ISSUER_NAME']} | {row['IDENTIFIER_ISIN']} | {row['PREV_BALANCE']:,.0f} | {row['BALANCE']:,.0f} | {_fmt_signed(row['POSITION_CHANGE'], '{:+,.0f}', '{:,.0f}')} | {_fmt_signed(row['POSITION_CHANGE_PCT'], '{:+.2f}%', '{:.2f}%')} |\n")
+            # FILING_DATE puede faltar en CSV previos a la re-ingesta.
+            # Fallback N/D (no rompe).
+            try:
+                filing_raw = row['FILING_DATE'] if 'FILING_DATE' in row.index else None
+            except (AttributeError, KeyError):
+                filing_raw = None
+            if filing_raw is None or pd.isna(filing_raw):
+                filing_str = 'N/D'
+            elif hasattr(filing_raw, 'strftime'):
+                filing_str = filing_raw.strftime('%Y-%m-%d')
+            else:
+                filing_str = str(filing_raw)
+                if filing_str in ('nan', 'NaT', 'None', ''):
+                    filing_str = 'N/D'
+            out.append(f"| {fecha} | {filing_str} | {row['REGISTRANT_NAME']} | {row['ISSUER_NAME']} | {row['IDENTIFIER_ISIN']} | {row['PREV_BALANCE']:,.0f} | {row['BALANCE']:,.0f} | {_fmt_signed(row['POSITION_CHANGE'], '{:+,.0f}', '{:,.0f}')} | {_fmt_signed(row['POSITION_CHANGE_PCT'], '{:+.2f}%', '{:.2f}%')} |\n")
         out.append("\n")
     else:
         out.append("## Flujo Posicional N-PORT (Trimestral)\n")

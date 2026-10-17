@@ -128,7 +128,15 @@ SOURCES = [
         'frequency': 'sec',
         'coverage_logic': 'rows',
         'coverage_col': 'POSITION_CHANGE',
-        'notes': 'Posiciones N-PORT trimestrales (latencia ~60d)'
+        # H11/H12 (2026-10-17, REP-AUDIT-20261017): declarar las 4
+        # dimensiones temporales. Frecuencia origen (mensual, N-PORT
+        # amendments desde 2024) != frecuencia ingesta (trimestral,
+        # ZIPs N-PORT del pipeline). Fecha observacion (cierre del
+        # trimestre) != fecha presentacion (dia del filing en SEC).
+        'notes': 'Posiciones N-PORT. Origen: mensual (SEC); ingesta: '
+                 'trimestral (ZIPs). Latencia ~60d entre cierre y '
+                 'filing. Fecha observacion = cierre trimestre; fecha '
+                 'presentacion = dia del filing'
     },
     # H3 (2026-10-15, auditoria externa): el pipeline consume DOS
     # productos SEC distintos. Antes solo se declaraba el primero y

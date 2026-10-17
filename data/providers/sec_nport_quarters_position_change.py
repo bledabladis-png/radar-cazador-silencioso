@@ -27,8 +27,20 @@ TARGET_CIKS = {1064641, 884394, 1041130, 936958, 1168164}
 def load_quarter(q):
     print(f'Cargando {q}...')
     sub = pd.read_csv(BASE / q / 'SUBMISSION.tsv', sep='\t', low_memory=False)
-    sub = sub[['ACCESSION_NUMBER', 'REPORT_DATE']].drop_duplicates()
+    # H11/H12 (2026-10-17, REP-AUDIT-20261017): distinguir fecha de
+    # observacion (REPORT_DATE, cierre del trimestre) de fecha de
+    # presentacion (FILING_DATE, dia en que SEC recibio el filing).
+    # Defensivo: si FILING_DATE no esta en el TSV (datos incompletos
+    # o schema antiguo), se anade como NaT y el render publica N/D.
+    _sub_cols = ['ACCESSION_NUMBER', 'REPORT_DATE']
+    if 'FILING_DATE' in sub.columns:
+        _sub_cols.append('FILING_DATE')
+    sub = sub[_sub_cols].drop_duplicates()
     sub['REPORT_DATE'] = pd.to_datetime(sub['REPORT_DATE'], format='%d-%b-%Y', errors='coerce')
+    if 'FILING_DATE' in sub.columns:
+        sub['FILING_DATE'] = pd.to_datetime(sub['FILING_DATE'], format='%d-%b-%Y', errors='coerce')
+    else:
+        sub['FILING_DATE'] = pd.NaT
 
     reg = pd.read_csv(BASE / q / 'REGISTRANT.tsv', sep='\t', low_memory=False)
     reg = reg[reg['CIK'].isin(TARGET_CIKS)][['ACCESSION_NUMBER','CIK','REGISTRANT_NAME']]
@@ -88,9 +100,10 @@ def main():
 
     change = all_data.dropna(subset=['POSITION_CHANGE']).copy()
     cols = [
-        'ACCESSION_NUMBER','REPORT_DATE','CIK','REGISTRANT_NAME','SERIES_NAME','SERIES_ID',
-        'ISSUER_NAME','ISSUER_CUSIP','IDENTIFIER_ISIN','SECURITY_KEY','BALANCE','PREV_BALANCE',
-        'POSITION_CHANGE','POSITION_CHANGE_PCT'
+        'ACCESSION_NUMBER','REPORT_DATE','FILING_DATE',
+        'CIK','REGISTRANT_NAME','SERIES_NAME','SERIES_ID',
+        'ISSUER_NAME','ISSUER_CUSIP','IDENTIFIER_ISIN','SECURITY_KEY',
+        'BALANCE','PREV_BALANCE','POSITION_CHANGE','POSITION_CHANGE_PCT'
     ]
     change = change[cols]
     _tmp_out = OUTPUT.with_suffix(OUTPUT.suffix + '.tmp')
