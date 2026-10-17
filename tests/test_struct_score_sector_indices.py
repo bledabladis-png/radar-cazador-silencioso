@@ -125,7 +125,6 @@ def test_compute_indices_intl_devuelve_index_struct_scores():
 
 def test_compute_sector_scores_devuelve_struct_scores():
     """Contrato: compute_sector_scores devuelve struct_scores (dict)."""
-    from unittest.mock import patch, MagicMock
     from regimes.sector_regime import compute_sector_scores
 
     # Mock df vacio: compute_sector_scores devuelve None si returns.empty.
