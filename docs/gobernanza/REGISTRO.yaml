@@ -461,8 +461,4 @@ items:
     run-system). Run 38994345784 success con receipt COMPLETED y
     contract_validation_status=OK. Suite verde en CI por primera vez
     desde 529f4ed2.
-  siguiente_accion: >
-    Anadir verifica_gobernanza.py + pyflakes como gates bloqueantes en
-    el workflow diario para que un push sin CI verde no pueda pasar
-    desapercibido.
   verificacion: VERIFIED_IN_PRODUCTION
