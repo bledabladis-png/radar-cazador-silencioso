@@ -188,20 +188,28 @@ def _detect_outcome():
     # Sin receipt: determinar razon
     failed, reasons, hashes = _collect_failed_contracts()
 
+    # H20 + escenario 5 del dictamen externo (2026-10-17): leer el
+    # guard ANTES del branch VG, para que la causa del guard quede
+    # disponible aunque VG decida la etiqueta final. Un JSON corrupto,
+    # un schema distinto, un status=running (guard interrumpido a
+    # mitad) o una identidad de run distinta no cuentan como evidencia
+    # valida: se registra GUARD_COVERAGE_UNAVAILABLE, no se ignora.
+    guard = _read_guard_result()
+
     # Si hay validation_gate_result con passed=False, es INCOMPLETE por gate.
     vg = _read_json(ROOT / "outputs" / "state" / "validation_gate_result.json")
     if isinstance(vg, dict) and vg.get("passed") is False:
         reasons.insert(0, "validation_gate passed=False")
+        # Precedencia INCOMPLETE, pero ambas causas disponibles.
+        if guard["state"] == "failed":
+            reasons.append("guard_coverage: {0} fallo(s)".format(len(guard["failures"])))
+            for f in guard["failures"]:
+                reasons.append(str(f))
+        elif guard["state"] == "unavailable":
+            reasons.append("guard_coverage: resultado no valido")
+            reasons.append(guard["reason"])
         return "INCOMPLETE", failed, reasons, hashes
 
-    # H20 (dictamen externo 2026-10-17): el guard result se valida
-    # contra la ejecucion actual. Un JSON corrupto, un schema
-    # distinto, un status=running (guard interrumpido a mitad) o una
-    # identidad de run distinta no cuentan como evidencia valida.
-    # En esos casos se registra GUARD_COVERAGE_UNAVAILABLE, no se
-    # ignora el fallo. failed_contracts usa identificadores estables;
-    # los detalles van en reasons.
-    guard = _read_guard_result()
     if guard["state"] == "failed":
         failed.append("GUARD_COVERAGE")
         reasons.insert(0, "guard_coverage: {0} fallo(s)".format(len(guard["failures"])))
