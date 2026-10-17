@@ -30,7 +30,7 @@ def render_data_freshness(pcr_data, darkpool_data, sector_results, reference_dat
     """
     out = []
     out.append("### Data Freshness\n")
-    out.append("| Fuente | Ultimo dato | Antigüedad | Estado | Data Conf |\n")
+    out.append("| Fuente | Ultimo dato | Antigüedad | Estado | Conf. Frescura |\n")
     out.append("|--------|-------------|------------|--------|----------|\n")
     _ref = reference_date.replace(tzinfo=None) if reference_date is not None else datetime.now()
     
@@ -107,21 +107,23 @@ def render_data_freshness(pcr_data, darkpool_data, sector_results, reference_dat
     else:
         out.append("| Yahoo Finance (Precios) | N/D | N/D | N/D | N/D |\n")
     out.append("\n")
-    # P1.6 (2026-10-13, auditor): la columna Data Conf solo existe
-    # en esta vista compacta (runtime). La tabla completa no la tiene
-    # (solo declara frescura por fuente). No hay contradiccion: son
-    # dos dimensiones distintas.
+    # P1.6 (2026-10-13, auditor) + H10/H19 (2026-10-17): la columna
+    # Conf. Frescura solo existe en esta vista compacta (runtime).
+    # La tabla completa no la tiene (solo declara frescura por
+    # fuente). No hay contradiccion: son dos dimensiones distintas.
+    # Renombrada en H10/H19 (antes se llamaba 'Data Conf').
     # H6 (2026-10-16, auditoria): el texto previo decia "26 fuentes".
     # El conteo real puede variar (hoy 28). Se elimina el literal fijo;
     # la tabla de Calidad se refiere a las fuentes efectivamente
     # renderizadas en esa seccion.
     out.append("*Vista compacta (runtime): 4 fuentes criticas con columna "
-               "Data Conf (derivada de la frescura). La tabla 'Calidad, "
-               "frescura y cobertura' lista las fuentes efectivamente "
-               "presentes en data_quality.csv y NO incluye Data Conf "
-               "(dimension distinta: declara la frescura observada por "
-               "fuente). Pueden discrepar las fechas si el CSV esta "
-               "desactualizado respecto al runtime.*\n\n")
+               "Conf. Frescura (derivada de la frescura observada, NO de "
+               "la cobertura). La tabla 'Calidad, frescura y cobertura' "
+               "lista las fuentes efectivamente presentes en "
+               "data_quality.csv y NO incluye Conf. Frescura (dimension "
+               "distinta: declara solo la frescura observada por fuente, "
+               "no la cobertura). Pueden discrepar las fechas si el CSV "
+               "esta desactualizado respecto al runtime.*\n\n")
     # H5 (2026-10-15, auditoria externa): publicar los umbrales exactos.
     out.append("*Umbrales de frescura por fuente (dias): "
                f"CBOE {FRESHNESS_CBOE}, "
@@ -132,8 +134,9 @@ def render_data_freshness(pcr_data, darkpool_data, sector_results, reference_dat
                f"SEC N-PORT {FRESHNESS_SEC}, "
                f"resto {FRESHNESS_DEFAULT}. "
                "Cada tupla es (CURRENT, RECENT, STALE); por encima del "
-               "tercer umbral: ARCHIVAL. Data Conf: Alta si CURRENT o "
-               "RECENT; Baja si STALE o ARCHIVAL.*\n\n")
+               "tercer umbral: ARCHIVAL. Conf. Frescura: Alta si CURRENT "
+               "o RECENT; Baja si STALE o ARCHIVAL. Es independiente de "
+               "la cobertura.*\n\n")
     coverage_lines = _generate_coverage_table(pcr_data, darkpool_data, sector_results, reference_date=reference_date)
     for cl in coverage_lines:
         out.append(cl)
@@ -228,9 +231,9 @@ def render_calidad_datos(data_quality_data):
         )
         out.append("*Vista completa: {0} fuentes del sistema desde "
                    "data_quality.csv. La tabla compacta 'Data Freshness' "
-                   "lista las 4 fuentes criticas con columna Data Conf. "
-                   "Pueden discrepar si el CSV esta desactualizado "
-                   "respecto a los datos runtime.*\n\n".format(_n_fuentes))
+                   "lista las 4 fuentes criticas con columna Conf. "
+                   "Frescura. Pueden discrepar si el CSV esta "
+                   "desactualizado respecto a los datos runtime.*\n\n".format(_n_fuentes))
         # N6.1 (2026-10-13, auditor): formula exacta de cobertura por
         # coverage_logic. Cada fuente declara su numerador/denominador:
         # - 'sectorial': sectores unicos con fila en la fecha /

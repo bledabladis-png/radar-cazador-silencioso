@@ -23,7 +23,9 @@ def test_header_nota_no_dice_cobertura():
         sector_regime="ROTATIONAL",
     )
     joined = "".join(out)
-    assert "Data Conf" in joined
+    # H10/H19: la etiqueta es "Conf. Frescura", no "Data Conf".
+    assert "Conf. Frescura" in joined
+    assert "Data Conf" not in joined
     # No debe decir "frescura y cobertura"
     assert "frescura y cobertura" not in joined.lower()
     # Debe decir que se deriva de la frescura

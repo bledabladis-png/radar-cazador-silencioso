@@ -116,11 +116,13 @@ def render_regimenes(macro_score, macro_regime, macro_conf,
     out.append("  *Este regimen mide la VOLATILIDAD REALIZADA del VIX: desviacion estandar rolling de sus retornos diarios (ventana 20 sesiones), normalizada contra su baseline de 3 anos. NO mide el retorno diario del VIX. El NIVEL del VIX (percentil del valor absoluto) se reporta en la tabla 'Estructura de volatilidad'. Son dimensiones distintas y pueden no coincidir.*\n")
 
     out.append(f"- **Sectores:** {sector_regime}\n")
-    # H5 (2026-10-15, auditoria externa): Data Conf se deriva SOLO de
-    # la frescura (CURRENT/RECENT -> Alta; STALE/ARCHIVAL -> Baja). La
-    # nota anterior decia "frescura y cobertura", lo que contradecia el
-    # codigo de src/report/freshness.py.
-    out.append("*Nota: Signal Consistency mide la consistencia entre señales, no una probabilidad estadistica calibrada. Data Conf se deriva SOLO de la frescura observada (CURRENT/RECENT -> Alta; STALE/ARCHIVAL -> Baja). Los umbrales de frescura por fuente estan en config/settings.py (FRESHNESS_*).*\n\n")
+    # H5 (2026-10-15) + H10/H19 (2026-10-17): Conf. Frescura se deriva
+    # SOLO de la frescura. Renombrada para evitar que se interprete
+    # como confianza global (el auditor del 2026-10-17 lo marco como
+    # riesgo: una fuente reciente con cobertura 18% aparecia como
+    # "Alta"). La cobertura es dimension independiente y se reporta
+    # en la tabla Calidad.
+    out.append("*Nota: Signal Consistency mide la consistencia entre señales, no una probabilidad estadistica calibrada. Conf. Frescura se deriva SOLO de la frescura observada (CURRENT/RECENT -> Alta; STALE/ARCHIVAL -> Baja), NO de la cobertura. Los umbrales de frescura por fuente estan en config/settings.py (FRESHNESS_*).*\n\n")
 
 
     return out
