@@ -10,6 +10,7 @@ from config.settings import (
     EXPECTED_SECTOR_COUNT, FRESHNESS_FINRA,
     FRESHNESS_SEC, FRESHNESS_CFTC,
 )
+from config.tickers import MARKET_TICKERS
 import pandas as pd
 import numpy as np
 from datetime import datetime
@@ -82,7 +83,7 @@ SOURCES = [
         'file': 'data/market_data.parquet',
         'date_cols': None,
         'frequency': 'daily',
-        'coverage_logic': None,
+        'coverage_logic': 'sectorial',
         'notes': 'Precios y métricas sectoriales'
     },
     {
@@ -348,6 +349,28 @@ def compute_data_quality(reference_date=None):
                 last_date = _last_market_session(pd.Timestamp(df_pq.index[-1])) if len(df_pq) > 0 else pd.NaT
                 age = (now - last_date.date()).days if pd.notna(last_date) else np.nan
                 freshness = classify_freshness(age, src['frequency'])
+
+                n_total = np.nan
+                n_valid = np.nan
+                coverage = np.nan
+                logic = src.get('coverage_logic')
+                if logic == 'sectorial' and len(df_pq) > 0:
+                    # H1 (2026-10-17): market_data.parquet tiene MultiIndex
+                    # (Price, Ticker) e index Date. Cobertura sectorial:
+                    # cuantos de los 11 ETFs sectoriales tienen Close
+                    # no-NaN en la ultima sesion. Regresion del commit
+                    # 1a4e7ea2 (2026-09-12) que cambio sector_breadth.csv
+                    # por market_data.parquet sin reimplementar la logica.
+                    last_row = df_pq.iloc[-1]
+                    sectors = MARKET_TICKERS.get('sectors', [])
+                    n_total = EXPECTED_SECTOR_COUNT
+                    n_valid = int(sum(
+                        1 for t in sectors
+                        if ('Close', t) in df_pq.columns
+                        and pd.notna(last_row[('Close', t)])
+                    ))
+                    coverage = n_valid / n_total if n_total else np.nan
+
                 rows.append({
                     'date': now.strftime('%Y-%m-%d'),
                     'source': src['source'],
@@ -355,9 +378,9 @@ def compute_data_quality(reference_date=None):
                     'age_calendar_days': age,
                     'frequency': src['frequency'],
                     'freshness': freshness,
-                    'n_total': np.nan,
-                    'n_valid': np.nan,
-                    'coverage': np.nan,
+                    'n_total': n_total,
+                    'n_valid': n_valid,
+                    'coverage': coverage,
                     'notes': src.get('notes', ''),
                 })
             except (OSError, ValueError, TypeError, KeyError, pd.errors.ParserError) as e:
