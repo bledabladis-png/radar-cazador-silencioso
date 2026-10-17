@@ -1,9 +1,9 @@
 {
   "sector_etf": "XLP",
   "state": "UNRESOLVED",
-  "consecutive_count": 2,
+  "consecutive_count": 3,
   "candidate_state": null,
   "candidate_count": 0,
   "schema_version": 2,
-  "last_updated": "2026-10-16T01:33:16.792834"
+  "last_updated": "2026-10-17T02:29:59.719223"
 }
