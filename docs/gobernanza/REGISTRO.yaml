@@ -443,3 +443,26 @@ items:
   estado: BLOCKED_EXTERNAL
   descripcion: Wyckoff 5b.X v3 esperando muestra suficiente
   dependencia: 'Datos: n_confirmed_H20_complete >= 550 post-2026-10-02 (~2027)'
+- id: CI-PUSH-NO-VERIF
+  tipo: auditoria_interna
+  ciclo: '2026-10-17'
+  estado: FIXED
+  descripcion: >
+    La sesion 16-oct pusheo al menos 2 commits que rompian CI real sin
+    verificacion local completa: 529f4ed2 introdujo import yaml sin
+    declarar pyyaml en requirements.txt (funcionaba en local por optuna
+    como dependencia transitiva); commit posterior introdujo
+    test_registro_real_pasa, incompatible con el shallow clone por
+    defecto de actions/checkout.
+  commit: bd30aecb
+  test: tests/test_gobernanza.py
+  evidencia: >
+    Fixes 4be5a90c (pyyaml==6.0.3) y bd30aecb (fetch-depth: 0 en
+    run-system). Run 38994345784 success con receipt COMPLETED y
+    contract_validation_status=OK. Suite verde en CI por primera vez
+    desde 529f4ed2.
+  siguiente_accion: >
+    Anadir verifica_gobernanza.py + pyflakes como gates bloqueantes en
+    el workflow diario para que un push sin CI verde no pueda pasar
+    desapercibido.
+  verificacion: VERIFIED_IN_PRODUCTION
