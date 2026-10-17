@@ -290,8 +290,12 @@ def generate_leader_section(df_market, df_stocks, holdings_df, fase_dict,
         lines.append('| Ticker | RS | RS Mom | Flujo (z) | WLS | Fase Wyckoff | Pers 5d | Pers 10d | Pers 20d | Spring | SOS |\n')
         lines.append('|--------|----|--------|-----------|-----|---------------|--------|--------|---------|--------|-----|\n')
         for _, row in wls_df.head(TOP_N_LEADERS).iterrows():
-            spring_flag = '[v]' if row.get('spring', 0) == 1 else ''
-            sos_flag = '[v]' if row.get('sos', 0) == 1 else ''
+            # H5 (2026-10-17): exponer 0/1 explicitos. Antes se pintaba
+            # '[v]' si 1 y celda vacia si 0. El lector no podia distinguir
+            # "spring=0" de "spring=NaN". El dato siempre existe; 0 es
+            # un valor real.
+            spring_flag = str(int(row.get('spring', 0) or 0))
+            sos_flag = str(int(row.get('sos', 0) or 0))
             lines.append(f"| {row['ticker']} | {_fmt_num(row['rs'], '{:.2f}')} | {_fmt_num(row['rs_mom'], '{:.2%}')} | {_fmt_num(row['flow_proxy_z'], '{:.2f}')} | {_fmt_num(row['wls'], '{:.2f}')} | {row['wyckoff_phase']} | {_fmt_num(row['persistence_5d'], '{:.0%}')} | {_fmt_num(row['persistence_10d'], '{:.0%}')} | {_fmt_num(row['persistence_20d'], '{:.0%}')} | {spring_flag} | {sos_flag} |\n")
         lines.append('\n')
 
