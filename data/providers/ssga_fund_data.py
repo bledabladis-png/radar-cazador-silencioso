@@ -75,7 +75,12 @@ def _compute_primary_flow(df: pd.DataFrame) -> pd.DataFrame:
     Publica dos columnas: primary_flow_z y primary_flow_z_regime.
     """
     df = df.copy()
-    df['primary_flow_usd'] = df['shares_outstanding'].diff() * df['nav']
+    # H3 (2026-10-17): exponer shares_change en el df completo (antes
+    # del groupby por ticker). Sin esta columna, last_df (1 fila por
+    # ticker) derivaba shares_change con diff() sobre 1 fila -> NaN.
+    # El reporte mostraba N/D en dShares aunque el dato existia.
+    df['shares_change'] = df['shares_outstanding'].diff()
+    df['primary_flow_usd'] = df['shares_change'] * df['nav']
     df['primary_flow_pct'] = (df['primary_flow_usd'] / df['total_net_assets']) * 100.0
 
     # H6/H10 (2026-10-15): 3-tuple con z-score bruto sin clip.
