@@ -90,3 +90,4 @@ _check_*.py
 _commit_msg.txt
 docs/automatica/
 outputs/state/writer_receipts.json
+outputs/state/guard_coverage_result.json
