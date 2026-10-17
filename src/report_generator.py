@@ -85,7 +85,16 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
     # inicio (tz-aware, Europe/Madrid) y la propaga. Fallback a now()
     # con tz explicita si no llega (uso aislado de la funcion).
     _ref = reference_date if reference_date is not None else datetime.now(ZoneInfo('Europe/Madrid'))
-    lines.append(f"**Fecha:** {_ref.strftime('%Y-%m-%d %H:%M:%S')}\n")
+    # H1 (2026-10-17, REP-AUDIT-20261017-capa3): separar los dos
+    # timestamps que el reporte mezclaba bajo '**Fecha:**'. El
+    # auditor (2026-10-17) detecto que reference_date es el inicio
+    # del run, no el momento de generacion. Ahora se etiquetan
+    # explicitamente:
+    #   - Referencia: instante de corte del pipeline (reference_date).
+    #   - Generado: momento real de generacion (provenance[generated_at]).
+    lines.append(f"**Referencia:** {_ref.strftime('%Y-%m-%d %H:%M:%S')}\n")
+    if provenance and isinstance(provenance, dict) and provenance.get("generated_at"):
+        lines.append(f"**Generado:** {provenance['generated_at']} (UTC)\n")
     lines.append(f"**Modelo:** v{MODEL_VERSION} | Pesos: v{WEIGHTS_VERSION} | Indicadores: v{INDICATORS_VERSION}\n\n")
 
     # H8 (2026-10-16, auditoria externa): bloque de provenance.

@@ -154,7 +154,7 @@ def test_generate_daily_report_fecha_deriva_de_reference_date(tmp_path):
     c2 = out2.read_text(encoding="utf-8")
 
     # El header contiene la fecha del reference_date, formateada.
-    esperado = "**Fecha:** 2026-09-30 08:15:42"
+    esperado = "**Referencia:** 2026-09-30 08:15:42"
     assert esperado in c1, "Header no contiene la fecha esperada: {!r}".format(
         [l for l in c1.splitlines() if "Fecha" in l])
     assert esperado in c2
@@ -172,5 +172,5 @@ def test_generate_daily_report_sin_reference_date_no_crashea(tmp_path):
     generate_daily_report(*fixture, output_path=str(out))
 
     content = out.read_text(encoding="utf-8")
-    assert "**Fecha:**" in content
+    assert "**Referencia:**" in content
     assert "Traceback" not in content

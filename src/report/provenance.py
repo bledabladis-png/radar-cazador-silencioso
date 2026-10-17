@@ -17,6 +17,7 @@ Contrato:
 """
 from __future__ import annotations
 
+import hashlib
 import os
 import subprocess
 from datetime import datetime, timezone
@@ -84,6 +85,17 @@ def _temporal_coherence(target_session, effective_date_equity,
     return "INCOHERENT"
 
 
+def _make_local_run_id(reference_date, commit, generated_at):
+    """H2 (2026-10-17): ID determinista 'local-<8 hex>' para
+    ejecuciones locales (sin GITHUB_RUN_ID valido)."""
+    if hasattr(reference_date, "isoformat"):
+        ref_str = reference_date.isoformat()
+    else:
+        ref_str = str(reference_date or "NONE")
+    seed = "{0}|{1}|{2}".format(ref_str, commit or "NO_COMMIT", generated_at)
+    return "local-{0}".format(hashlib.sha256(seed.encode("utf-8")).hexdigest()[:8])
+
+
 def build_provenance(
     reference_date,
     *,
@@ -115,6 +127,10 @@ def build_provenance(
         generated_at = datetime.now(timezone.utc).strftime(
             "%Y-%m-%dT%H:%M:%SZ"
         )
+    # H2 (2026-10-17): si no hay GITHUB_RUN_ID valido, generar
+    # identificador local determinista.
+    if not run_id or str(run_id) == "0":
+        run_id = _make_local_run_id(reference_date, commit, generated_at)
     _gate = _compute_validation_gate(validation_gate_result)
     _coh = _temporal_coherence(
         target_session, effective_date_equity,
@@ -155,13 +171,16 @@ def render_provenance(prov: Optional[dict]) -> list:
 
     run_id = prov.get("run_id")
     run_attempt = prov.get("run_attempt")
-    if run_id and str(run_id) != "0":
+    # H2 (2026-10-17): tres ramas: local-<hash>, CI run_id, N/D.
+    if run_id and str(run_id).startswith("local-"):
+        out.append("- `run_id`: {0} (ejecucion local)\n".format(run_id))
+    elif run_id and str(run_id) != "0":
         attempt_str = (
             " (attempt {0})".format(run_attempt) if run_attempt else ""
         )
         out.append("- `run_id`: {0}{1}\n".format(run_id, attempt_str))
     else:
-        out.append("- `run_id`: N/D (ejecucion local)\n")
+        out.append("- `run_id`: N/D (no identificado)\n")
 
     out.append("- `target_session`: {0}\n".format(
         _fmt(prov.get("target_session"))))

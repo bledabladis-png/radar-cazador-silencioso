@@ -50,10 +50,24 @@ def test_render_completo():
     assert "`generated_at`: 2026-10-16T19:00:00Z" in body
 
 
-def test_render_sin_run_id_local():
+def test_render_sin_run_id_dice_no_identificado():
+    """H2 (2026-10-17): dict sin run_id (render puro, no build) ->
+    "N/D (no identificado)". Antes decia "N/D (ejecucion local)",
+    pero eso conflacia dos casos: (a) build_provenance genero un
+    local-<hash> valido, (b) el dict llego sin run_id porque no se
+    paso por build. Ahora se distinguen."""
     prov = {"commit_sha": "abc12345", "target_session": "2026-10-16"}
     body = "".join(render_provenance(prov))
-    assert "N/D (ejecucion local)" in body
+    assert "N/D (no identificado)" in body
+    assert "N/D (ejecucion local)" not in body
+
+
+def test_render_con_local_run_id():
+    """H2: run_id local-<hash> se publica con sufijo (ejecucion local)."""
+    prov = {"commit_sha": "abc12345", "target_session": "2026-10-16",
+            "run_id": "local-deadbeef"}
+    body = "".join(render_provenance(prov))
+    assert "`run_id`: local-deadbeef (ejecucion local)" in body
 
 
 def test_render_campos_faltantes_van_a_nd():
