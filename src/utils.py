@@ -231,17 +231,38 @@ def detect_cross_module_conflict(macro_regime, financial_regime, volatility_regi
     Separa estres financiero de presion inflacionaria.
     """
     # Mapeo de estados a tipo de sesgo
-    financial_stress_states = ['CRISIS', 'HIGH_STRESS', 'ESTRECHA', 'STRESS']
-    inflation_stress_states = ['STAGFLATION', 'INFLATION SHOCK']
-    expansion_states = ['EXPANSION', 'RECOVERY', 'LATE EXPANSION', 'GOLDILOCKS', 'ABUNDANTE', 'LOW']
+    # REP-AUDIT-20261017-capa4 (2026-10-17): cambio de substring match
+    # a igualdad exacta. Antes, el patron por subcadena clasificaba
+    # por coincidencia parcial: SLOWDOWN recibia bias +1 (contiene
+    # LOW), LOW_STRESS recibia -1 (contiene STRESS). Ahora los estados
+    # se clasifican solo si coinciden exactamente.
+    #
+    # EXTREME_STRESS y LIQUIDITY CRISIS se anaden a financial_stress_states
+    # porque hoy se clasificaban por subcadena (STRESS y CRISIS
+    # respectivamente). Sin anadirlos, el cambio a igualdad exacta
+    # los convertiria en bias 0, alterando el caso real del 17-oct
+    # (liquidity=EXTREME_STRESS).
+    #
+    # SLOWDOWN y LOW_STRESS quedan fuera de ambas listas por diseno:
+    # son estados legitimamente neutrales respecto al sesgo financiero
+    # (desaceleracion y bajo estres, respectivamente). Bias 0.
+    financial_stress_states = frozenset({
+        'CRISIS', 'HIGH_STRESS', 'EXTREME_STRESS',
+        'ESTRECHA', 'STRESS', 'LIQUIDITY CRISIS',
+    })
+    inflation_stress_states = frozenset({'STAGFLATION', 'INFLATION SHOCK'})
+    expansion_states = frozenset({
+        'EXPANSION', 'RECOVERY', 'LATE EXPANSION',
+        'GOLDILOCKS', 'ABUNDANTE', 'LOW',
+    })
     
     def bias_financial(state):
         if state is None:
             return 0
         s = str(state).upper()
-        if any(x in s for x in financial_stress_states):
+        if s in financial_stress_states:
             return -1
-        if any(x in s for x in expansion_states):
+        if s in expansion_states:
             return 1
         return 0
     
@@ -249,7 +270,7 @@ def detect_cross_module_conflict(macro_regime, financial_regime, volatility_regi
         if state is None:
             return 0
         s = str(state).upper()
-        if any(x in s for x in inflation_stress_states):
+        if s in inflation_stress_states:
             return -1
         return 0
     
