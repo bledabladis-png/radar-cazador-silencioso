@@ -105,14 +105,22 @@ def _calculate_position_flow(df):
             'net_position': df[long_col] - df[short_col],
         })
 
+        # H5 (2026-10-17, REP-AUDIT-20261017-H5): la serie canonica
+        # de position_change es net_position.diff(). Es la unica que
+        # satisface la identidad pos_change[t] == net[t] - net[t-1].
+        # CFTC publica Change_in_Long y Change_in_Short redondeados
+        # por lado; su diferencia puede discrepar del cambio real de
+        # Net Position por 1-2 unidades (326/853 filas en el historico
+        # verificado 2026-10-17). El valor de CFTC se conserva como
+        # fallback SOLO para la primera fila de cada contrato, donde
+        # diff() es NaN por no haber observacion previa.
         if chg_long in df.columns and chg_short in df.columns:
-            pos_change = df[chg_long] - df[chg_short]
-            # Rellenar NaN con diff por si los Change_in_* no vienen completos
-            for contract, group in temp.groupby('contract'):
-                idx = group.index
-                diff = temp.loc[idx, 'net_position'].diff()
-                pos_change.loc[idx] = pos_change.loc[idx].fillna(diff)
-            temp['position_change'] = pos_change.values
+            pos_change_cftc = (df[chg_long] - df[chg_short]).values
+            pos_change = temp.groupby('contract')['net_position'].diff()
+            pos_change = pos_change.fillna(
+                pd.Series(pos_change_cftc, index=temp.index)
+            )
+            temp['position_change'] = pos_change
         else:
             temp['position_change'] = temp.groupby('contract')['net_position'].diff()
 
