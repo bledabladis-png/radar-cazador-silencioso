@@ -45,6 +45,12 @@ def render_regimenes(macro_score, macro_regime, macro_conf,
     cond_score_str = f'{cond_score:.2f}' if pd.notna(cond_score) else 'N/D'
     liq_conf_str = f'{liq_conf:.0%}' if pd.notna(liq_conf) else 'N/D'
     out.append(f"- **Cond. Financieras:** {liquidity_regime} (Score: {cond_score_str}, Signal Consistency: {liq_conf_str})\n")
+    # C2 (2026-10-17): aviso simetrico al de macro (linea 38). Si la
+    # consistencia es baja, los componentes (VIX, credito, dolar,
+    # curva) no coinciden aunque el score agregado de una etiqueta.
+    # La etiqueta refleja el score, no consenso entre componentes.
+    if pd.notna(liq_conf) and liq_conf < 0.30:
+        out.append("  *Signal Consistency baja: los componentes (VIX, credito, dolar, curva) no coinciden. La etiqueta refleja el score agregado, no consenso.*\n")
     if liquidity_regime == 'HIGH_STRESS':
         out.append("  *Nota: El módulo financiero detecta estres significativo, pero volatilidad y liquidez no confirman un deterioro transversal. No se clasifica como CRISIS sistemica.*\n")
     
