@@ -44,6 +44,55 @@ Al cerrar una sesion nueva, se anade arriba (las mas recientes primero). Si hay 
 
 ## 3. SESIONES
 
+### 2026-10-17 - Fix CI (pyyaml, fetch-depth) + verificacion en produccion enmienda v1.1
+
+**Objetivo.** Diagnosticar y corregir los fallos de CI de los runs
+23:17 UTC (16-oct, exit 2) y 01:19 UTC (17-oct, exit 1). Verificar
+la enmienda v1.1 en produccion.
+
+**Hecho.**
+- P0-A pyyaml: el commit 529f4ed2 introdujo `import yaml` en 4
+  ficheros (2 scripts gobernanza + 2 tests) sin anadir `pyyaml` a
+  requirements.txt. En local pasaba porque `optuna` lo traia como
+  dependencia transitiva. En CI los 3 modulos fallaban en
+  collection, exit 2. Fix `4be5a90c`: `pyyaml==6.0.3`.
+- P0-B shallow clone: tras el fix pyyaml, `test_gobernanza.py::
+  test_registro_real_pasa` fallo (exit 1). `actions/checkout@v4`
+  hace fetch-depth:1; el test verifica existencia de 37 SHAs del
+  REGISTRO contra git. Fix `bd30aecb`: `fetch-depth: 0` en el
+  checkout del job `run-system`. Los otros 3 checkouts no se tocan.
+- P1 US_EQUITY INVALID: no era causa, era estado heredado del
+  ultimo run valido. Se resuelve con un run valido.
+- Verificacion: dispatch 02:17 UTC, run `38994345784`, success.
+  Receipt `COMPLETED` con `contract_validation_status: OK`,
+  `manifest_coverage_pct: 0.9757`, `guard_coverage: OK`,
+  `validation_gate: 10/10`, `pipeline_conclusion: success`.
+  Attempt: `outcome: SUCCESS`, `failed_contracts: []`.
+- 12 items `VERIFIED_IN_CI_PENDING` -> `VERIFIED_IN_PRODUCTION`
+  en REGISTRO (`4e2822b5`). Recuento: 19 FIXED, 1 FALSE_POSITIVE,
+  1 VERIFIED_IN_CI, 13 VERIFIED_IN_PRODUCTION, 21 sin campo.
+- `00_ARRANQUE.md`: eliminar cifra literal ~3388 (drift con
+  ESTADO_SISTEMA), `8ec3fbd7`. Linea 89: 11571 -> 11528 B.
+- HANDOFF reescrito con el ciclo 17-oct: `33550d82`.
+
+**Commits.** 8ec3fbd7, 4be5a90c, bd30aecb, 4e2822b5, 33550d82.
+
+**Pendiente.**
+- `00_ARRANQUE.md` en 11528 B > 11264 (tope). Poda + enmienda
+  v1.1 + `validation.py` + `EQUITY_EOD critical=True` + contrato
+  del gate.
+- Deuda gobernanza: la sesion 16-oct pusheo al menos 2 commits
+  sin CI verde (`529f4ed2` con `import yaml` sin dep, y el que
+  introdujo `test_registro_real_pasa` incompatible con shallow
+  clone). Abrir item en REGISTRO.
+- H5.3 (cron 20-nov-2026). Sin accion antes.
+- C2 (920), SOW v6, Wyckoff 5b.X: bloqueados.
+- Issue #5.
+
+**Proximo paso sugerido.** Cerrar la poda de `00_ARRANQUE` y
+la deuda de gobernanza (item de proceso en REGISTRO).
+
+
 ### 2026-10-16 - Auditoria CI + dictamen externo + fases 1-7 + gobernanza
 
 **Objetivo.** (a) Auditar el workflow `daily_run.yml`. (b) Recibir
