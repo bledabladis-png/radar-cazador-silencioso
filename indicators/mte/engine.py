@@ -140,7 +140,17 @@ def compute_mte(df_market, financial_conditions_score, credit_signal,
                     'effective_date': (temporal_meta or {}).get('by_contract', {}).get('EQUITY_EOD', {}).get('effective_date'),
                     'expected_date': (temporal_meta or {}).get('by_contract', {}).get('EQUITY_EOD', {}).get('expected_date'),
                     'coverage': (temporal_meta or {}).get('by_contract', {}).get('EQUITY_EOD', {}).get('coverage'),
-                    'futures_status': (temporal_meta or {}).get('by_contract', {}).get('FUTURE_SETTLEMENT', {}).get('status'),
+                    # H23 (dictamen externo 2026-10-17): si el metadato
+                    # FUTURE_SETTLEMENT no esta o no trae status, el state
+                    # publica UNAVAILABLE. No se inventa OK ni BLOCKED por
+                    # ausencia de dato. UNAVAILABLE es el estado del sistema
+                    # para evidencia insuficiente (src/temporal_contracts/
+                    # validation.py, STATUS_UNAVAILABLE).
+                    'futures_status': (
+                        (temporal_meta or {}).get('by_contract', {})
+                        .get('FUTURE_SETTLEMENT', {}).get('status')
+                        or 'UNAVAILABLE'
+                    ),
                     'scenario': scenario,
                     'confidence': confidence,
 
