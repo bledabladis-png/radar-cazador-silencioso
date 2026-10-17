@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Test M1: alerta H1 con banda neutral |Z| < 0.5.
+"""Test M1 + H14 (2026-10-17): alerta H1 con banda neutral |Z| < 0.75.
 
 Dictamen auditor externo 2026-10-16: con Z=-0.15 la frase
 "el credito lo confirma" era excesivamente categorica. Se introduce
@@ -19,7 +19,7 @@ def _run(hyg_z):
 def test_banda_neutral_z_negativo_pequeno():
     out = _run(-0.15)
     assert "proximo a neutral" in out
-    assert "|Z|<0.5" in out
+    assert "|Z|<0.75" in out
     assert "el credito lo confirma" not in out
 
 

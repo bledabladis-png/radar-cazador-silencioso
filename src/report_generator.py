@@ -103,6 +103,7 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
         real_liquidity_regime, real_liquidity_conf,
         real_liq_score, real_liq_prev,
         sector_regime=sector_results['regime'],
+        confirmation_data=confirmation_data
     ))
     # =========================================================================
     # DATA FRESHNESS + ALERTAS + CROSS-MODULE

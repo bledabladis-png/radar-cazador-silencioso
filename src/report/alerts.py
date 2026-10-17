@@ -7,6 +7,7 @@ Extraidos de src/report_generator.py (refactor C1, fase C1-6a2).
 import pandas as pd
 
 from config.tickers import SECTOR_NAMES
+from config.settings import NEUTRAL_BAND_HYG_LQD_ZSCORE
 
 
 def render_alerts(breadth_values, liquidity_regime, price_flow_divergences, confirmation_data=None):
@@ -40,7 +41,7 @@ def render_alerts(breadth_values, liquidity_regime, price_flow_divergences, conf
                 "determinarse si el estres esta localizado o si el credito "
                 "lo confirma."
             )
-        elif abs(_hyg_z) < 0.5:
+        elif abs(_hyg_z) < NEUTRAL_BAND_HYG_LQD_ZSCORE:
             # M1 (dictamen auditor externo 2026-10-16): banda neutral
             # |Z| < 0.5. Una desviacion marginal no confirma por si sola
             # el estres crediticio. Se mantiene la alerta de condiciones
@@ -51,7 +52,7 @@ def render_alerts(breadth_values, liquidity_regime, price_flow_divergences, conf
             alerts.append(
                 f"- **Financial Stress vs Credit:** Condiciones financieras "
                 f"elevadas. El ratio crediticio (HYG/LQD) esta proximo a "
-                f"neutral (Z={_hyg_z:+.2f}, banda neutral |Z|<0.5): no "
+                f"neutral (Z={_hyg_z:+.2f}, banda neutral |Z|<{NEUTRAL_BAND_HYG_LQD_ZSCORE}): no "
                 f"confirma por si solo el estres sistemico. La observacion "
                 f"de condiciones financieras elevadas se mantiene por sus "
                 f"propias condiciones."

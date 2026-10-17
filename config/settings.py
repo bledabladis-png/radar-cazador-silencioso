@@ -238,3 +238,24 @@ LSE_SCRAPER_PROVENANCE_PATH = os.environ.get(
     "data/lse_close_provenance.json",
 )
 LSE_SCRAPER_REPO = "bledabladis-png/lse-close-scraper"
+
+# ============================================================
+# H14 + H15 (REP-AUDIT-20261017-capa2): umbrales de modulacion
+# del texto del reporte.
+# ============================================================
+# H14: banda neutral del Z-score HYG/LQD en la alerta de credito.
+# Ampliacion de 0.5 a 0.75. Con |Z| < 0.75 la desviacion no confirma
+# por si sola estres sistemico; el texto publica 'proximo a neutral'.
+# Coherente con la critica del auditor externo (2026-10-17): con
+# Z=-0.60 el reporte decia 'el credito lo confirma', lo cual exageraba
+# la evidencia. La banda anterior |Z|<0.5 era demasiado estrecha.
+NEUTRAL_BAND_HYG_LQD_ZSCORE = 0.75
+
+# H15: umbral del Funding & Liquidity Stress (FLS) para modular el
+# texto del Resumen de Regimenes. Por encima del umbral, el texto
+# declara explicitamente que el modulo de financiacion SI senala
+# estres de corto plazo, y separa esa dimension de la liquidez real
+# (FRED). Por debajo, mantiene el texto historico. Coherente con
+# la critica del auditor (2026-10-17): 'NEUTRAL de liquidez FRED'
+# no contradice 'FLS 85/100', pero el reporte debe explicarlo.
+FLS_STRESS_THRESHOLD = 70

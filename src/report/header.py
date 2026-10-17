@@ -7,6 +7,7 @@ Extraido de src/report_generator.py (refactor C1, fase C1-5).
 import pandas as pd
 
 from src.report.helpers import _fmt_signed
+from config.settings import FLS_STRESS_THRESHOLD
 
 
 def render_regimenes(macro_score, macro_regime, macro_conf,
@@ -14,7 +15,7 @@ def render_regimenes(macro_score, macro_regime, macro_conf,
                      volatility_score, vol_regime, vol_conf,
                      real_liquidity_regime, real_liquidity_conf,
                      real_liq_score, real_liq_prev,
-                     sector_regime):
+                     sector_regime, confirmation_data=None):
     """Renderiza la seccion 'Resumen de Regimenes'.
 
     Devuelve lista de lineas markdown. Sin side effects.
@@ -52,7 +53,29 @@ def render_regimenes(macro_score, macro_regime, macro_conf,
     if pd.notna(liq_conf) and liq_conf < 0.30:
         out.append("  *Signal Consistency baja: los componentes (VIX, credito, dolar, curva) no coinciden. La etiqueta refleja el score agregado, no consenso.*\n")
     if liquidity_regime == 'HIGH_STRESS':
-        out.append("  *Nota: El módulo financiero detecta estres significativo, pero volatilidad y liquidez no confirman un deterioro transversal. No se clasifica como CRISIS sistemica.*\n")
+        # H15 (2026-10-17, REP-AUDIT-20261017-capa2): modular el
+        # texto segun FLS. Coherente con la critica del auditor:
+        # 'NEUTRAL de liquidez FRED' no contradice 'FLS 85/100';
+        # el reporte debe explicitar que son dimensiones distintas.
+        _fls_score = None
+        if confirmation_data:
+            _fls = confirmation_data.get('fls', {}) or {}
+            _fls_norm = _fls.get('fls_normalized')
+            if _fls_norm is not None:
+                try:
+                    _fls_score = float(_fls_norm) * 100.0
+                except (TypeError, ValueError):
+                    _fls_score = None
+        if _fls_score is not None and _fls_score >= FLS_STRESS_THRESHOLD:
+            out.append(
+                f"  *Nota: El modulo financiero detecta estres significativo. "
+                f"El Funding & Liquidity Stress (FLS: {_fls_score:.0f}/100) "
+                f"SI senala estres de corto plazo. La liquidez real (FRED) "
+                f"es una dimension distinta y se reporta por separado. "
+                f"No se clasifica como CRISIS sistemica.*\n"
+            )
+        else:
+            out.append("  *Nota: El módulo financiero detecta estres significativo, pero volatilidad y liquidez no confirman un deterioro transversal. No se clasifica como CRISIS sistemica.*\n")
     
     if real_liquidity_regime is not None:
         out.append(f"- **Liquidez Real (FRED):** {real_liquidity_regime} (Signal Consistency: {real_liquidity_conf:.0%})\n")
