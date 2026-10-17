@@ -63,6 +63,30 @@ def render_confirmation(confirmation_data):
             if thrust > 0.70 or thrust < 0.30:
                 out.append(f"- **Breadth Thrust extremo:** {thrust*100:.1f}%\n")
             out.append(f"- **A/D Line (acumulada):** {ad.get('ad_line', 0):.0f}\n")
+            # H6 (2026-10-17, REP-AUDIT-20261017-capa5): la A/D Line
+            # se recalcula en cada run sobre el universo actual de
+            # df_stocks. NO es una serie incremental persistida. Si
+            # el universo o la revision historica del proveedor
+            # (Yahoo) cambia, el valor no es comparable con runs
+            # anteriores. Declaracion explicita en el render, en vez
+            # de presentar el valor como si fuera historico acumulado.
+            _n_active = ad.get('active_tickers')
+            _n_total = ad.get('total_tickers')
+            if _n_active and _n_total:
+                out.append(
+                    f"  *Universo: {_n_active}/{_n_total} tickers. "
+                    f"Recalculada sobre el universo actual en cada run; "
+                    f"no es una serie incremental persistida. Si el universo "
+                    f"o la revision historica del proveedor cambia, el valor "
+                    f"no es comparable con runs anteriores.*\n"
+                )
+            else:
+                out.append(
+                    "  *Recalculada sobre el universo actual en cada run; "
+                    "no es una serie incremental persistida. Si el universo "
+                    "o la revision historica del proveedor cambia, el valor "
+                    "no es comparable con runs anteriores.*\n"
+                )
 
         mte_scenario_conf = confirmation_data.get('mte_scenario', '')
         if mte_scenario_conf == 'RECESSION':
