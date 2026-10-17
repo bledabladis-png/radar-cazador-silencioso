@@ -298,8 +298,12 @@ def compute_price_flow_rankings(df):
 
             try:
                 flow = compute_flow_proxy(df, t).iloc[-1]
-                if pd.notna(flow):
-                    otros_flow[t] = flow
+                # REP-AUDIT-20261017-H4 (2026-10-17): incluir tambien NaN
+                # en otros_flow para que el render publique N/D en lugar
+                # de omitir el ticker. Solo "otros activos": los sectores
+                # (sector_flow, arriba) mantienen el filtro pd.notna,
+                # porque sus ETFs siempre tienen volumen real.
+                otros_flow[t] = flow
             except (KeyError, ValueError, TypeError, IndexError, AttributeError) as e:
                 print(f"  [WARN] sector_regime: sin flow para {t}: {e}")
 
@@ -313,6 +317,15 @@ def compute_price_flow_rankings(df):
 
         sorted(otros_price.items(), key=lambda x: x[1], reverse=True),
 
-        sorted(otros_flow.items(), key=lambda x: x[1], reverse=True)
+        # REP-AUDIT-20261017-H4 (2026-10-17): NaN se trata como 0.0
+        # en la clave de sort (no al final). Se mantiene la posicion
+        # equivalente a los antiguos 0.00 para que el render, que
+        # corta [:15], los incluya y muestre N/D. _fmt_num distingue
+        # NaN (N/D) de 0.0 (0.00).
+        sorted(
+            otros_flow.items(),
+            key=lambda x: (0.0 if x[1] != x[1] else x[1]),
+            reverse=True,
+        )
 
     )

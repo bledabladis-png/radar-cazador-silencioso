@@ -63,6 +63,18 @@ def compute_flow_proxy(df, ticker, window=FLOW_ZSCORE_WINDOW):
     """
     close = get_col(df, ticker, 'Close').ffill()
     volume = get_col(df, ticker, 'Volume').ffill()
+    # REP-AUDIT-20261017-H4 (2026-10-17): instrumentos sin volumen
+    # reportado por el proveedor (FX, ICE Dollar Index, ^SPGSCI). Si
+    # Volume es 0 en TODA la ventana historica disponible, no hay
+    # flujo que calcular. Devolver serie NaN para que el consumidor
+    # publique N/D, no 0.00. Distinto de "volume real cero" (ticker
+    # suspendido un dia): el criterio es "0 sostenido en todo el
+    # historico". No altera robust_zscore (compartido con MTE, credit,
+    # cross_asset, darkpool, index_leaders, options, stock_leader,
+    # wyckoff_v1).
+    _vol_hist = get_col(df, ticker, 'Volume').dropna()
+    if len(_vol_hist) == 0 or bool((_vol_hist == 0).all()):
+        return pd.Series(np.nan, index=close.index)
     signed_volume_pressure = close * volume
     ret = close.pct_change(fill_method=None)
     flow = ret * signed_volume_pressure
