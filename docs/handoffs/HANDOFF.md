@@ -8,7 +8,7 @@ No crear variantes con fecha.
 
 ---
 
-## 1. ESTADO AL CIERRE (2026-10-17 06:40 UTC)
+## 1. ESTADO AL CIERRE (2026-10-17 06:42 UTC)
 
 Rama activa:    main
 HEAD:           consultar `git log --oneline -1` (no literal; el corpus no fija SHA para evitar deriva)
@@ -23,7 +23,14 @@ Contrato gate:  docs/auditoria/daily_run_gate_contrato_v1.md +
                 docs/auditoria/daily_run_gate_enmienda_v1_1.md +
                 docs/auditoria/daily_run_gate_enmienda_v1_2.md (APROBADO 2026-10-17)
 CI de tests:    .github/workflows/ci_tests.yml (push a main, paths-ignore: data/, outputs/).
-                Ultimo run verde: 39009989796 (head 745df9ed, 2m20s).
+                Ultimos runs verdes (sesion completa):
+                  39009989796  head 745df9ed  2m20s  (escenarios H19-H23)
+                  39010438294  head 35fcdef7  2m21s  (ESTADO_SISTEMA)
+                  39010810587  head d15580ca  2m20s  (addendum v1.2 APROBADO)
+Certificacion prod: PENDIENTE. Run scheduled lunes 2026-10-19 23:17 UTC
+                (target_session nuevo): primer ciclo completo v1.1 + v1.2
+                desde cero. Gate READY sin receipt -> pipeline -> guard ->
+                receipt con contract_validation_status -> attempt.
 
 ---
 
