@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """Tests del registro de intentos (enmienda v1.1, commit 4)."""
 import json
+import os
 import sys
 from pathlib import Path
 
@@ -239,17 +240,29 @@ def test_failed_contracts_no_duplica_con_multiples_reasons(tmp_path, monkeypatch
 # --- Addendum v1.2 (2026-10-17): attempt lee guard_coverage_result ---
 
 def test_attempt_blocked_por_guard_result(tmp_path, monkeypatch):
-    """Guard falla: attempt BLOCKED con las failures reales."""
+    """Guard falla con identidad valida: attempt BLOCKED con el
+    identificador estable GUARD_COVERAGE y detalles en reasons (H20)."""
     _setup_env(monkeypatch, tmp_path)
     monkeypatch.chdir(tmp_path)
     monkeypatch.setattr(wca, "ROOT", tmp_path)
     monkeypatch.setattr(wca, "MANIFESTS", ())
 
+    run_id_env = os.environ.get("GITHUB_RUN_ID", "0")
+    run_attempt_env = os.environ.get("GITHUB_RUN_ATTEMPT", "1")
+    expected_run_id = int(run_id_env) if run_id_env.isdigit() else 0
+    expected_run_attempt = int(run_attempt_env) if run_attempt_env.isdigit() else 1
+
     (tmp_path / "outputs" / "state").mkdir(parents=True)
     (tmp_path / "outputs" / "state" / "guard_coverage_result.json").write_text(
         json.dumps({
-            "ok": False,
+            "schema_version": 1,
+            "status": "failed",
+            "run_id": expected_run_id,
+            "run_attempt": expected_run_attempt,
+            "target_session": "2026-10-15",
+            "generated_at": "2026-10-17T06:00:00Z",
             "threshold": 0.95,
+            "ok": False,
             "failures": [
                 "data/stock_prices.parquet.manifest.json: "
                 "coverage_pct_last=0.927052 < 0.95"
@@ -264,8 +277,8 @@ def test_attempt_blocked_por_guard_result(tmp_path, monkeypatch):
         (tmp_path / "attempt.jsonl").read_text(encoding="utf-8").strip().splitlines()[0]
     )
     assert entry["outcome"] == "BLOCKED"
-    assert any("0.927" in f for f in entry["failed_contracts"])
-    assert any("guard_coverage" in r for r in entry["reasons"])
+    assert "GUARD_COVERAGE" in entry["failed_contracts"]
+    assert any("0.927" in r for r in entry["reasons"])
 
 
 def test_attempt_vg_prioritario_sobre_guard(tmp_path, monkeypatch):
@@ -275,13 +288,28 @@ def test_attempt_vg_prioritario_sobre_guard(tmp_path, monkeypatch):
     monkeypatch.setattr(wca, "ROOT", tmp_path)
     monkeypatch.setattr(wca, "MANIFESTS", ())
 
+    run_id_env = os.environ.get("GITHUB_RUN_ID", "0")
+    run_attempt_env = os.environ.get("GITHUB_RUN_ATTEMPT", "1")
+    expected_run_id = int(run_id_env) if run_id_env.isdigit() else 0
+    expected_run_attempt = int(run_attempt_env) if run_attempt_env.isdigit() else 1
+
     (tmp_path / "outputs" / "state").mkdir(parents=True)
     (tmp_path / "outputs" / "state" / "validation_gate_result.json").write_text(
         json.dumps({"passed": False, "checks_n": 10, "errors_n": 2}),
         encoding="utf-8",
     )
     (tmp_path / "outputs" / "state" / "guard_coverage_result.json").write_text(
-        json.dumps({"ok": False, "threshold": 0.95, "failures": ["x: y"]}),
+        json.dumps({
+            "schema_version": 1,
+            "status": "failed",
+            "run_id": expected_run_id,
+            "run_attempt": expected_run_attempt,
+            "target_session": "2026-10-15",
+            "generated_at": "2026-10-17T06:00:00Z",
+            "threshold": 0.95,
+            "ok": False,
+            "failures": ["x: y"],
+        }),
         encoding="utf-8",
     )
 
@@ -292,3 +320,119 @@ def test_attempt_vg_prioritario_sobre_guard(tmp_path, monkeypatch):
     )
     assert entry["outcome"] == "INCOMPLETE"
     assert any("validation_gate" in r for r in entry["reasons"])
+
+
+# --- H20 (dictamen externo 2026-10-17): validacion de identidad del guard ---
+
+def _guard_payload(run_id=12345, run_attempt=1, schema=1,
+                   status="failed", ok=False, failures=None):
+    return {
+        "schema_version": schema,
+        "status": status,
+        "run_id": run_id,
+        "run_attempt": run_attempt,
+        "target_session": "2026-10-15",
+        "generated_at": "2026-10-17T06:00:00Z",
+        "threshold": 0.95,
+        "ok": ok,
+        "failures": failures if failures is not None else ["x: y"],
+    }
+
+
+def _setup_guard(tmp_path, monkeypatch, payload):
+    _setup_env(monkeypatch, tmp_path)
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(wca, "ROOT", tmp_path)
+    monkeypatch.setattr(wca, "MANIFESTS", ())
+    monkeypatch.setenv("GITHUB_RUN_ID", "12345")
+    monkeypatch.setenv("GITHUB_RUN_ATTEMPT", "1")
+    (tmp_path / "outputs" / "state").mkdir(parents=True)
+    (tmp_path / "outputs" / "state" / "guard_coverage_result.json").write_text(
+        json.dumps(payload), encoding="utf-8"
+    )
+
+
+def _entry(tmp_path):
+    return json.loads(
+        (tmp_path / "attempt.jsonl").read_text(encoding="utf-8").strip().splitlines()[0]
+    )
+
+
+def test_guard_run_id_mismatch_bloquea_con_unavailable(tmp_path, monkeypatch):
+    """run_id distinto al actual -> GUARD_COVERAGE_UNAVAILABLE."""
+    _setup_guard(tmp_path, monkeypatch, _guard_payload(run_id=99999))
+    wca.main()
+    entry = _entry(tmp_path)
+    assert entry["outcome"] == "BLOCKED"
+    assert "GUARD_COVERAGE_UNAVAILABLE" in entry["failed_contracts"]
+    assert any("run_id" in r for r in entry["reasons"])
+
+
+def test_guard_run_attempt_mismatch_bloquea(tmp_path, monkeypatch):
+    """run_attempt distinto -> GUARD_COVERAGE_UNAVAILABLE."""
+    _setup_guard(tmp_path, monkeypatch, _guard_payload(run_attempt=5))
+    wca.main()
+    entry = _entry(tmp_path)
+    assert entry["outcome"] == "BLOCKED"
+    assert "GUARD_COVERAGE_UNAVAILABLE" in entry["failed_contracts"]
+
+
+def test_guard_status_running_bloquea(tmp_path, monkeypatch):
+    """status=running (guard interrumpido) -> GUARD_COVERAGE_UNAVAILABLE."""
+    _setup_guard(tmp_path, monkeypatch,
+                 _guard_payload(status="running", ok=None))
+    wca.main()
+    entry = _entry(tmp_path)
+    assert entry["outcome"] == "BLOCKED"
+    assert "GUARD_COVERAGE_UNAVAILABLE" in entry["failed_contracts"]
+    assert any("running" in r for r in entry["reasons"])
+
+
+def test_guard_schema_invalido_bloquea(tmp_path, monkeypatch):
+    """schema_version != 1 -> GUARD_COVERAGE_UNAVAILABLE."""
+    _setup_guard(tmp_path, monkeypatch, _guard_payload(schema=2))
+    wca.main()
+    entry = _entry(tmp_path)
+    assert entry["outcome"] == "BLOCKED"
+    assert "GUARD_COVERAGE_UNAVAILABLE" in entry["failed_contracts"]
+    assert any("schema_version" in r for r in entry["reasons"])
+
+
+def test_guard_json_corrupto_bloquea(tmp_path, monkeypatch):
+    """JSON invalido -> GUARD_COVERAGE_UNAVAILABLE."""
+    _setup_env(monkeypatch, tmp_path)
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(wca, "ROOT", tmp_path)
+    monkeypatch.setattr(wca, "MANIFESTS", ())
+    monkeypatch.setenv("GITHUB_RUN_ID", "12345")
+    monkeypatch.setenv("GITHUB_RUN_ATTEMPT", "1")
+    (tmp_path / "outputs" / "state").mkdir(parents=True)
+    (tmp_path / "outputs" / "state" / "guard_coverage_result.json").write_text(
+        "{not valid json", encoding="utf-8"
+    )
+    wca.main()
+    entry = _entry(tmp_path)
+    assert entry["outcome"] == "BLOCKED"
+    assert "GUARD_COVERAGE_UNAVAILABLE" in entry["failed_contracts"]
+
+
+def test_guard_ok_no_bloquea(tmp_path, monkeypatch):
+    """ok=True con identidad valida -> no aporta causa, sigue el flujo."""
+    _setup_guard(tmp_path, monkeypatch,
+                 _guard_payload(status="passed", ok=True, failures=[]))
+    wca.main()
+    entry = _entry(tmp_path)
+    assert entry["outcome"] == "INCOMPLETE"
+    assert entry["failed_contracts"] == []
+
+
+def test_guard_ausente_no_bloquea(tmp_path, monkeypatch):
+    """Fichero ausente -> no bloquea por guard; INCOMPLETE sin causa."""
+    _setup_env(monkeypatch, tmp_path)
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(wca, "ROOT", tmp_path)
+    monkeypatch.setattr(wca, "MANIFESTS", ())
+    wca.main()
+    entry = _entry(tmp_path)
+    assert entry["outcome"] == "INCOMPLETE"
+    assert entry["failed_contracts"] == []

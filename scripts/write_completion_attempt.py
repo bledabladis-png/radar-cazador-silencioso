@@ -104,6 +104,81 @@ def _write_entry(outcome, failed, reasons, hashes, target_session):
     return entry
 
 
+
+def _read_guard_result():
+    """Lee y valida guard_coverage_result.json (H20, dictamen 2026-10-17).
+
+    Devuelve dict con state: 'ok' | 'failed' | 'unavailable' | 'absent'.
+    Solo 'failed' y 'unavailable' son estados de bloqueo.
+    """
+    path = ROOT / "outputs" / "state" / "guard_coverage_result.json"
+    if not path.exists():
+        return {"state": "absent", "reason": "", "failures": []}
+    try:
+        d = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError) as e:
+        return {
+            "state": "unavailable",
+            "reason": "guard_coverage_result.json ilegible: {0}: {1}".format(
+                type(e).__name__, e
+            ),
+            "failures": [],
+        }
+    if not isinstance(d, dict):
+        return {
+            "state": "unavailable",
+            "reason": "guard_coverage_result.json no es dict",
+            "failures": [],
+        }
+    if d.get("schema_version") != 1:
+        return {
+            "state": "unavailable",
+            "reason": "guard_coverage_result.json schema_version={0!r} != 1".format(
+                d.get("schema_version")
+            ),
+            "failures": [],
+        }
+    if d.get("status") == "running":
+        return {
+            "state": "unavailable",
+            "reason": "guard_coverage_result.json status=running (guard interrumpido a mitad)",
+            "failures": [],
+        }
+    run_id_env = os.environ.get("GITHUB_RUN_ID", "0")
+    run_attempt_env = os.environ.get("GITHUB_RUN_ATTEMPT", "1")
+    expected_run_id = int(run_id_env) if run_id_env.isdigit() else 0
+    expected_run_attempt = int(run_attempt_env) if run_attempt_env.isdigit() else 1
+    if d.get("run_id") != expected_run_id:
+        return {
+            "state": "unavailable",
+            "reason": "guard_coverage_result.json run_id={0} != actual={1}".format(
+                d.get("run_id"), expected_run_id
+            ),
+            "failures": [],
+        }
+    if d.get("run_attempt") != expected_run_attempt:
+        return {
+            "state": "unavailable",
+            "reason": "guard_coverage_result.json run_attempt={0} != actual={1}".format(
+                d.get("run_attempt"), expected_run_attempt
+            ),
+            "failures": [],
+        }
+    ok = d.get("ok")
+    if not isinstance(ok, bool):
+        return {
+            "state": "unavailable",
+            "reason": "guard_coverage_result.json sin campo ok booleano",
+            "failures": [],
+        }
+    failures = d.get("failures") or []
+    if not isinstance(failures, list):
+        failures = [str(failures)]
+    if ok:
+        return {"state": "ok", "reason": "", "failures": [str(f) for f in failures]}
+    return {"state": "failed", "reason": "", "failures": [str(f) for f in failures]}
+
+
 def _detect_outcome():
     """Determina el outcome segun el estado de los manifests y del receipt."""
     receipt_path = ROOT / "outputs" / "state" / "completion_receipt.json"
@@ -119,18 +194,25 @@ def _detect_outcome():
         reasons.insert(0, "validation_gate passed=False")
         return "INCOMPLETE", failed, reasons, hashes
 
-    # Addendum v1.2 (2026-10-17): el guard de cobertura global falla
-    # por cobertura, sha256 o last_date de un manifest no critico. El
-    # attempt debe registrar la causa, no quedar ciego.
-    guard = _read_json(ROOT / "outputs" / "state" / "guard_coverage_result.json")
-    if isinstance(guard, dict) and guard.get("ok") is False:
-        guard_failures = guard.get("failures") or []
-        reasons.insert(0, "guard_coverage: {0} fallo(s)".format(len(guard_failures)))
-        combined_failed = list(failed) + [
-            "guard:" + str(f) for f in guard_failures
-        ]
-        combined_reasons = list(reasons) + [str(f) for f in guard_failures]
-        return "BLOCKED", combined_failed, combined_reasons, hashes
+    # H20 (dictamen externo 2026-10-17): el guard result se valida
+    # contra la ejecucion actual. Un JSON corrupto, un schema
+    # distinto, un status=running (guard interrumpido a mitad) o una
+    # identidad de run distinta no cuentan como evidencia valida.
+    # En esos casos se registra GUARD_COVERAGE_UNAVAILABLE, no se
+    # ignora el fallo. failed_contracts usa identificadores estables;
+    # los detalles van en reasons.
+    guard = _read_guard_result()
+    if guard["state"] == "failed":
+        failed.append("GUARD_COVERAGE")
+        reasons.insert(0, "guard_coverage: {0} fallo(s)".format(len(guard["failures"])))
+        for f in guard["failures"]:
+            reasons.append(str(f))
+        return "BLOCKED", failed, reasons, hashes
+    if guard["state"] == "unavailable":
+        failed.append("GUARD_COVERAGE_UNAVAILABLE")
+        reasons.insert(0, "guard_coverage: resultado no valido")
+        reasons.append(guard["reason"])
+        return "BLOCKED", failed, reasons, hashes
 
     if failed:
         return "BLOCKED", failed, reasons, hashes
