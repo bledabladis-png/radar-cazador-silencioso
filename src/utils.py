@@ -315,6 +315,13 @@ def detect_cross_module_conflict(macro_regime, financial_regime, volatility_regi
     blocks = []
     if fin_stress_count > 0:
         blocks.append(f'Financial Stress: {fin_stress_count}/{total}')
+    if fin_exp_count > 0:
+        # REP-AUDIT-20261017-capa4-commitC (2026-10-17): publicar el
+        # recuento de expansion. Antes solo se publicaba el estres
+        # (y la presion inflacionaria). Un caso con 1 modulo en
+        # estres y 1 en expansion se leia como 'solo 1/5 estres',
+        # ocultando que el otro modulo estaba en el lado opuesto.
+        blocks.append(f'Expansion: {fin_exp_count}/{total}')
     if inf_stress_count > 0:
         blocks.append(f'Inflation Pressure: {inf_stress_count}/{total}')
     if not blocks:
