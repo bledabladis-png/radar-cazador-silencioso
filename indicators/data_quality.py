@@ -107,7 +107,8 @@ SOURCES = [
         'file': 'outputs/history/darkpool_history.csv',
         'date_cols': ['week'],
         'frequency': 'finra',
-        'coverage_logic': None,
+        'coverage_logic': 'rows',
+        'coverage_col': 'ratio',
         'walk_back': False,  # Fix G (2026-09-30): 'week' es fecha-semana, no fecha-dia. _last_market_session no aplica.
         'notes': 'Retraso regulatorio 2-4 semanas'
     },
@@ -116,7 +117,8 @@ SOURCES = [
         'file': 'outputs/history/cftc_position_flow.csv',
         'date_cols': ['date'],
         'frequency': 'cftc',
-        'coverage_logic': None,
+        'coverage_logic': 'rows',
+        'coverage_col': 'net_position',
         'notes': 'Frescura 30 días'
     },
     {
@@ -124,7 +126,8 @@ SOURCES = [
         'file': 'outputs/history/sec_nport_position_change_quarterly.csv',
         'date_cols': ['REPORT_DATE'],
         'frequency': 'sec',
-        'coverage_logic': None,
+        'coverage_logic': 'rows',
+        'coverage_col': 'POSITION_CHANGE',
         'notes': 'Posiciones N-PORT trimestrales (latencia ~60d)'
     },
     # H3 (2026-10-15, auditoria externa): el pipeline consume DOS
@@ -138,7 +141,8 @@ SOURCES = [
         'file': 'outputs/history/qqq_nport_flow.csv',
         'date_cols': ['report_date'],
         'frequency': 'sec',
-        'coverage_logic': None,
+        'coverage_logic': 'rows',
+        'coverage_col': 'net_flow',
         'notes': 'Flujos trimestrales N-PORT-P QQQ (Item B.6)'
     },
     {
@@ -146,7 +150,8 @@ SOURCES = [
         'file': 'outputs/history/macro_regime.csv',
         'date_cols': ['date'],
         'frequency': 'fred',
-        'coverage_logic': None,
+        'coverage_logic': 'rows',
+        'coverage_col': 'macro_score',
         'notes': 'Datos macro manuales'
     },
     {
@@ -170,7 +175,8 @@ SOURCES = [
         'file': 'outputs/history/volatility_structure.csv',
         'date_cols': ['date'],
         'frequency': 'daily',
-        'coverage_logic': None,
+        'coverage_logic': 'rows',
+        'coverage_col': 'vix_level',
         'notes': 'Estructura volatilidad'
     },
     {
@@ -225,7 +231,7 @@ SOURCES = [
         'file': 'outputs/history/leader_representativeness.csv',
         'date_cols': ['date'],
         'frequency': 'daily',
-        'coverage_logic': None,
+        'coverage_logic': 'sectorial',
         'notes': 'Representatividad del lider'
     },
     {
@@ -241,7 +247,7 @@ SOURCES = [
         'file': 'outputs/history/sector_leader_divergence.csv',
         'date_cols': ['date'],
         'frequency': 'daily',
-        'coverage_logic': None,
+        'coverage_logic': 'sectorial',
         'notes': 'Divergencia sector-lideres'
     },
     {
@@ -249,7 +255,7 @@ SOURCES = [
         'file': 'outputs/history/rs_internal.csv',
         'date_cols': ['date'],
         'frequency': 'daily',
-        'coverage_logic': None,
+        'coverage_logic': 'sectorial',
         'notes': 'Liderazgo relativo interno'
     },
     {
@@ -257,7 +263,7 @@ SOURCES = [
         'file': 'outputs/history/sector_rank_history.csv',
         'date_cols': ['date'],
         'frequency': 'daily',
-        'coverage_logic': None,
+        'coverage_logic': 'sectorial',
         'notes': 'Rotacion sectorial historica'
     },
     {
@@ -265,7 +271,7 @@ SOURCES = [
         'file': 'outputs/history/sector_dispersion.csv',
         'date_cols': ['date'],
         'frequency': 'daily',
-        'coverage_logic': None,
+        'coverage_logic': 'from_row',
         'notes': 'Dispersion entre sectores'
     },
     {
@@ -273,7 +279,7 @@ SOURCES = [
         'file': 'outputs/history/sector_correlation_summary.csv',
         'date_cols': ['date'],
         'frequency': 'daily',
-        'coverage_logic': None,
+        'coverage_logic': 'from_row',
         'notes': 'Correlacion entre sectores'
     },
     {
@@ -313,6 +319,24 @@ def compute_data_quality(reference_date=None):
                 last_date = pd.NaT
             age = (now - last_date.date()).days if pd.notna(last_date) else np.nan
             freshness = classify_freshness(age, src['frequency'])
+            # H2 (2026-10-17): aplicar coverage_logic tambien en la rama
+            # especial de Macro FRED. Antes solo escribia NaN aunque el
+            # source declarase 'rows' + coverage_col.
+            _n_total = np.nan
+            _n_valid = np.nan
+            _coverage = np.nan
+            _logic = src.get('coverage_logic')
+            if _logic == 'rows':
+                _csv_p = Path(src['file'])
+                if _csv_p.exists():
+                    try:
+                        _csv_df = pd.read_csv(_csv_p)
+                        _col = src.get('coverage_col') or 'total_pcr'
+                        _n_total = len(_csv_df)
+                        _n_valid = int(_csv_df[_col].notna().sum()) if _col in _csv_df.columns else 0
+                        _coverage = _n_valid / _n_total if _n_total else np.nan
+                    except (OSError, ValueError, pd.errors.ParserError):
+                        pass
             rows.append({
                 'date': now.strftime('%Y-%m-%d'),
                 'source': src['source'],
@@ -320,9 +344,9 @@ def compute_data_quality(reference_date=None):
                 'age_calendar_days': age,
                 'frequency': src['frequency'],
                 'freshness': freshness,
-                'n_total': np.nan,
-                'n_valid': np.nan,
-                'coverage': np.nan,
+                'n_total': _n_total,
+                'n_valid': _n_valid,
+                'coverage': _coverage,
                 'notes': src.get('notes', ''),
             })
             continue
@@ -433,7 +457,12 @@ def compute_data_quality(reference_date=None):
                     coverage = n_valid / n_total if n_total else np.nan
             elif logic == 'rows':
                 n_total = len(df)
-                n_valid = int(df['total_pcr'].notna().sum()) if 'total_pcr' in df.columns else 0
+                # H2 (2026-10-17): coverage_col configurable. Antes
+                # 'rows' estaba hardcodeado a 'total_pcr' (solo PCR).
+                # Las demas fuentes con esta logica declaran su
+                # coverage_col en el bloque SOURCES.
+                _col = src.get('coverage_col') or 'total_pcr'
+                n_valid = int(df[_col].notna().sum()) if _col in df.columns else 0
                 coverage = n_valid / n_total if n_total else np.nan
             elif logic == 'sectorial_family':
                 if date_col is not None:
@@ -447,6 +476,34 @@ def compute_data_quality(reference_date=None):
                     n_total = EXPECTED_SECTOR_COUNT
                     n_valid = int(last_df[last_df['alignment_reading'] != 'EVIDENCIA INSUFICIENTE']['sector'].nunique())
                     coverage = n_valid / n_total if n_total else np.nan
+            elif logic == 'from_row':
+                # H2 (2026-10-17): fuentes que ya calculan n_total/n_valid/
+                # coverage en su writer. Leer de la ultima fila del CSV.
+                # Algunos writers usan nombres propios (n_sectors,
+                # n_valid_pairs). Se aceptan como aliases.
+                _aliases_total = ('n_total', 'n_sectors')
+                _aliases_valid = ('n_valid', 'n_valid_pairs')
+                if date_col is not None:
+                    last_df = df[pd.to_datetime(df[date_col], errors='coerce') == last_date]
+                    if not last_df.empty:
+                        row = last_df.iloc[-1]
+                        for _fld in _aliases_total:
+                            if _fld in row.index and pd.notna(row[_fld]):
+                                try:
+                                    n_total = float(row[_fld]); break
+                                except (TypeError, ValueError):
+                                    pass
+                        for _fld in _aliases_valid:
+                            if _fld in row.index and pd.notna(row[_fld]):
+                                try:
+                                    n_valid = float(row[_fld]); break
+                                except (TypeError, ValueError):
+                                    pass
+                        if 'coverage' in row.index and pd.notna(row['coverage']):
+                            try:
+                                coverage = float(row['coverage'])
+                            except (TypeError, ValueError):
+                                pass
             # else coverage permanece NaN
 
             rows.append({
