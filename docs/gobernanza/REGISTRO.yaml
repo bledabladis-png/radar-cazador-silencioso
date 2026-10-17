@@ -447,19 +447,20 @@ items:
   tipo: auditoria_interna
   ciclo: '2026-10-17'
   estado: FIXED
-  descripcion: 'No existia ningun mecanismo que detectara antes del push los dos fallos
-    que rompieron CI los dias 2026-10-16/17: (1) import yaml sin pyyaml en requirements
-    (localmente funcionaba por optuna como dependencia transitiva); (2) actions/checkout
-    con shallow clone incompatible con tests contractuales que verifican SHAs del
-    historico git.'
-  commit: 0c862502
+  descripcion: No existia ningun mecanismo que validara el codigo en CI antes del
+    push. Los dos fallos de 2026-10-16/17 (import yaml sin pyyaml en requirements,
+    y actions/checkout con shallow clone incompatible con tests contractuales) solo
+    se detectaban despues del push, o cuando el gate del daily_run decidia ejecutar
+    el pipeline.
+  commit: 042033a4
   test: tests/test_imports_declarados.py
-  evidencia: 'Tres tests nuevos en la suite normal (local + CI): test_imports_declarados.py
-    (imports top-level vs requirements, + negativo con mock), test_workflow_fetch_depth.py
-    (todo job con pytest exige fetch-depth: 0, + 4 negativos), y test_write_completion_attempt.py::test_failed_contracts_no_duplica_con_multiples_reasons.
-    Cubren los dos patrones que fallaron. Verificacion en CI: pendiente del proximo
-    run scheduled con target_session nuevo (2026-10-19 23:17 UTC).'
-  verificacion: FIXED
+  evidencia: 'Tres tests nuevos (imports, fetch-depth, attempt-sin-duplicar) corren
+    en la suite normal. Ademas se ha anadido .github/workflows/ci_tests.yml que ejecuta
+    la suite completa en cada push a main (paths-ignore: data/, outputs/), independiente
+    del gate. Verificado en el run 39000723877 (event=push, 3551 passed + 33 skipped
+    + 9 deselected en 1m51s). Cierra el ciclo: los tests entran en CI en cada push,
+    sin esperar al proximo target_session.'
+  verificacion: VERIFIED_IN_PRODUCTION
 - id: CI-PUSH-NO-VERIF
   tipo: auditoria_interna
   ciclo: '2026-10-17'
