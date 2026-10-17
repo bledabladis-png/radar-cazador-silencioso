@@ -190,3 +190,47 @@ def test_outcome_blocked_por_manifest_missing(tmp_path, monkeypatch):
     assert entry["outcome"] == "BLOCKED"
     assert any("manifest_missing" in f for f in entry["failed_contracts"])
     assert any("manifest no legible" in r for r in entry["reasons"])
+
+
+def test_failed_contracts_no_duplica_con_multiples_reasons(tmp_path, monkeypatch):
+    """Un manifest con N reasons BLOCKED -> 1 sola entrada en failed_contracts.
+
+    Regresion 2026-10-17: el append de failed_contracts estaba dentro
+    del bucle de reasons. Si un contrato generaba 2 razones, la ruta
+    aparecia 2 veces en failed_contracts. Ahora el contrato del
+    artifact es "una ruta por manifest fallido".
+    """
+    _setup_env(monkeypatch, tmp_path)
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(wca, "ROOT", tmp_path)
+    # Manifest presente (no manifest_missing) para que entre en el
+    # bloque de validate_artifact_contracts.
+    _mk_manifest(tmp_path, "stock_prices",
+                 {"US_EQUITY": {"n": 255, "status": "VALID",
+                                "coverage_at_session": 0.99}})
+    monkeypatch.setattr(wca, "MANIFESTS", (
+        "data/stock_prices.parquet.manifest.json",
+    ))
+
+    # Mock: validate devuelve 2 reasons. Sin tocar el registry real.
+    class _FakeV:
+        status = "BLOCKED"
+        reasons = ["razon 1", "razon 2"]
+
+    import scripts.write_completion_attempt as _wca
+    monkeypatch.setattr(_wca, "validate_artifact_contracts",
+                        lambda m: _FakeV())
+
+    rc = wca.main()
+    assert rc == 0
+    entry = json.loads(
+        (tmp_path / "attempt.jsonl").read_text(encoding="utf-8").strip().splitlines()[0]
+    )
+    assert entry["outcome"] == "BLOCKED"
+    assert len(entry["failed_contracts"]) == 1, (
+        "failed_contracts debe tener 1 entrada por manifest, "
+        "no 1 por razon. Encontrado: {0}".format(entry["failed_contracts"])
+    )
+    assert len(entry["reasons"]) == 2, (
+        "reasons debe conservar las 2 razones (diagnostico completo)"
+    )

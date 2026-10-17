@@ -73,8 +73,8 @@ def _collect_failed_contracts():
         hashes[mpath] = _sha256_file(mpath)
         v = validate_artifact_contracts(m)
         if v.status in (V_BLOCKED, V_UNAVAILABLE):
+            failed.append(mpath + ":BLOCKED")
             for r in v.reasons:
-                failed.append(mpath + ":BLOCKED")
                 reasons.append(mpath + ": " + r)
     return failed, reasons, hashes
 
