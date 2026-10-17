@@ -27,9 +27,11 @@ Exit 0 si todos OK, exit 1 si alguno falla.
 """
 import argparse
 import hashlib
+import os
 import json
 import sys
 from pathlib import Path
+from datetime import datetime, timezone
 
 # Enmienda v1.1: fuente unica de validacion contractual.
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
@@ -50,6 +52,8 @@ DEFAULT_THRESHOLD = 0.95
 
 ROOT = Path(__file__).resolve().parents[1]
 RESULT_PATH = ROOT / "outputs" / "state" / "guard_coverage_result.json"
+
+RESULT_SCHEMA_VERSION = 1
 
 
 def _load_manifest(path):
@@ -182,25 +186,71 @@ def _check_manifest(path, threshold):
     return reasons
 
 
-def _write_result(ok, threshold, failures):
+def _read_target_session():
+    """target_session declarado por el primer manifest legible (H19).
+
+    None si ningun manifest declara expected_session.
+    """
+    for mpath in GUARDED_MANIFESTS:
+        m, _ = _load_manifest(mpath)
+        if not isinstance(m, dict):
+            continue
+        quality = m.get("quality")
+        if isinstance(quality, dict):
+            ts = quality.get("expected_session")
+            if isinstance(ts, str) and ts:
+                return ts
+    return None
+
+
+def _split_failure(failure):
+    """Descompone '<manifest>: <motivo>' en dict estructurado.
+
+    Si no hay separador, devuelve el string completo como reason.
+    """
+    s = str(failure)
+    if ": " in s:
+        manifest, _, reason = s.partition(": ")
+        return {"manifest": manifest, "reason": reason}
+    return {"manifest": "", "reason": s}
+
+
+def _write_result(ok, threshold, failures, status):
     """Persiste el resultado del guard como artifact para el attempt.
 
-    Contrato (addendum v1.2, 2026-10-17): el attempt lee este fichero
-    para no quedar ciego ante un fallo del guard de cobertura global.
+    Contrato H19 (dictamen externo 2026-10-17):
+    - schema_version y generated_at: detectar resultados obsoletos.
+    - run_id / run_attempt: identidad de ejecucion.
+    - target_session: extraido del manifest (no del entorno).
+    - threshold: valor efectivo (respeta --threshold).
+    - failures: strings (compat con tests existentes).
+    - failures_detail: lista estructurada {manifest, reason}.
+    - escritura atomica via tmp + os.replace: el lector nunca ve
+      un JSON truncado.
+    status: running (placeholder), passed o failed.
     """
+    now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    run_id = os.environ.get("GITHUB_RUN_ID", "0")
+    run_attempt = os.environ.get("GITHUB_RUN_ATTEMPT", "1")
+    payload = {
+        "schema_version": RESULT_SCHEMA_VERSION,
+        "status": status,
+        "run_id": int(run_id) if run_id.isdigit() else 0,
+        "run_attempt": int(run_attempt) if run_attempt.isdigit() else 1,
+        "target_session": _read_target_session(),
+        "generated_at": now,
+        "threshold": float(threshold),
+        "ok": bool(ok) if ok is not None else None,
+        "failures": list(failures),
+        "failures_detail": [_split_failure(f) for f in failures],
+    }
     RESULT_PATH.parent.mkdir(parents=True, exist_ok=True)
-    RESULT_PATH.write_text(
-        json.dumps(
-            {
-                "ok": bool(ok),
-                "threshold": threshold,
-                "failures": list(failures),
-            },
-            indent=2,
-            ensure_ascii=False,
-        ) + "\n",
+    tmp = RESULT_PATH.with_name(RESULT_PATH.name + ".tmp")
+    tmp.write_text(
+        json.dumps(payload, indent=2, ensure_ascii=False) + "\n",
         encoding="utf-8",
     )
+    os.replace(tmp, RESULT_PATH)
 
 
 def main():
@@ -208,9 +258,25 @@ def main():
     parser.add_argument("--threshold", type=float, default=DEFAULT_THRESHOLD)
     args = parser.parse_args()
 
+    # H19: placeholder al inicio. Si el guard muere entre medias
+    # (excepcion no capturada, timeout, kill), el attempt leera
+    # status=running y podra registrarlo como causa de observabilidad,
+    # en lugar de encontrar un resultado obsoleto o ninguno.
+    try:
+        _write_result(None, args.threshold, [], "running")
+    except (OSError, ValueError) as _e:
+        print("[WARN] no se pudo escribir placeholder inicial: {0}".format(_e))
+
     all_failures = []
     for manifest in GUARDED_MANIFESTS:
-        reasons = _check_manifest(manifest, args.threshold)
+        try:
+            reasons = _check_manifest(manifest, args.threshold)
+        except Exception as exc:  # noqa: BLE001 - captura deliberada
+            reasons = [
+                "{0}: EXCEPTION {1}: {2}".format(
+                    manifest, type(exc).__name__, exc
+                )
+            ]
         if reasons:
             for r in reasons:
                 print("[FAIL] " + r)
@@ -221,11 +287,11 @@ def main():
     if all_failures:
         print("")
         print("Guard coverage: {0} fallo(s). Abortando.".format(len(all_failures)))
-        _write_result(False, args.threshold, all_failures)
+        _write_result(False, args.threshold, all_failures, "failed")
         return 1
 
     print("Guard coverage: todos OK.")
-    _write_result(True, args.threshold, [])
+    _write_result(True, args.threshold, [], "passed")
     return 0
 
 
