@@ -10,7 +10,7 @@ from indicators.trend import trend_position
 
 from indicators.volatility import atr
 
-from indicators.wyckoff_v1 import classify_wyckoff_phase, build_ticker_df
+from indicators.wyckoff_v1 import classify_wyckoff_phase, build_ticker_df, wyckoff_score
 
 from src.utils import tanh_normalize, get_col
 from src.effective_date import resolve_effective_date
@@ -65,6 +65,10 @@ def compute_sector_scores(df, benchmark='^GSPC', df_stocks=None, holdings_df=Non
     scores = pd.DataFrame(index=returns.index)
 
     wyckoff_phases = {}
+    # struct_score por sector: magnitud ademas de la etiqueta binaria.
+    # MARKUP con struct=+0.45 (margen amplio) != struct=+0.31 (margen
+    # minimo). XLF struct=+0.23 esta cerca de MARKUP pese a ser RANGE.
+    wyckoff_structs = {}
 
     try:
 
@@ -167,6 +171,13 @@ def compute_sector_scores(df, benchmark='^GSPC', df_stocks=None, holdings_df=Non
 
             ticker_df = build_ticker_df(df, sector)
             wyckoff_phases[sector] = classify_wyckoff_phase(ticker_df, sector)
+            try:
+                _c, _struct, _t, _tn, _cn, _vn, _en = wyckoff_score(ticker_df, sector)
+                _s = _struct.dropna()
+                if not _s.empty:
+                    wyckoff_structs[sector] = float(_s.iloc[-1])
+            except (KeyError, ValueError, TypeError, IndexError, AttributeError):
+                pass
 
         except Exception as e:
 
@@ -224,7 +235,13 @@ def compute_sector_scores(df, benchmark='^GSPC', df_stocks=None, holdings_df=Non
 
         regime = 'MIXED'
 
-    return {'scores': scores, 'ranking': ranking, 'regime': regime, 'last_scores': last_scores}
+    return {
+        'scores': scores,
+        'ranking': ranking,
+        'regime': regime,
+        'last_scores': last_scores,
+        'struct_scores': wyckoff_structs,
+    }
 
 def compute_price_flow_rankings(df):
 

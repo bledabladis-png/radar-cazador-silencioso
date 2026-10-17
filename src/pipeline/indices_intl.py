@@ -9,6 +9,8 @@ from pathlib import Path
 
 from src.stock_data_loader import download_stock_prices
 from indicators.index_phase import compute_index_phases
+from indicators.wyckoff_v1 import wyckoff_score, build_ticker_df
+from config.index_tickers import INDEX_CONFIG
 from indicators.index_leaders import select_index_leaders
 
 
@@ -17,7 +19,7 @@ def compute_indices_intl(df_market, reference_date=None, run_id=None, temporal_m
 
     Returns:
         dict con keys:
-            index_phases, index_leaders
+            index_phases, index_leaders, index_struct_scores
     """
     print("Calculando fases Wyckoff para indices internacionales...")
     # A5-09 (2026-09-28): compute_index_phases sin guard tumbaba el
@@ -28,6 +30,23 @@ def compute_indices_intl(df_market, reference_date=None, run_id=None, temporal_m
     except (KeyError, ValueError, TypeError, IndexError, AttributeError, OSError, RuntimeError) as e:
         print(f"  Fases Wyckoff indices omitidas: {e}")
         index_phases = {}
+    # struct_score por indice: magnitud ademas de la etiqueta. Mismo
+    # criterio que sectores. No se toca compute_index_phases (contrato
+    # publico phases, index_data); el struct se extrae aqui.
+    index_struct_scores = {}
+    if index_phases:
+        for nombre, _fase in index_phases.items():
+            ticker_idx = (INDEX_CONFIG.get(nombre) or {}).get('index_ticker')
+            if not ticker_idx:
+                continue
+            try:
+                _tdf = build_ticker_df(df_market, ticker_idx)
+                _c, _struct, _t, _tn, _cn, _vn, _en = wyckoff_score(_tdf, ticker_idx)
+                _s = _struct.dropna()
+                if not _s.empty:
+                    index_struct_scores[nombre] = float(_s.iloc[-1])
+            except (KeyError, ValueError, TypeError, IndexError, AttributeError):
+                pass
     indices_en_acumulacion = [nombre for nombre, fase in index_phases.items() if fase in ['ACCUMULATION', 'MARKUP']]
     if indices_en_acumulacion:
         print(f"  Indices en acumulacion: {', '.join(indices_en_acumulacion)}")
@@ -77,4 +96,5 @@ def compute_indices_intl(df_market, reference_date=None, run_id=None, temporal_m
     return {
         'index_phases': index_phases,
         'index_leaders': index_leaders,
+        'index_struct_scores': index_struct_scores,
     }

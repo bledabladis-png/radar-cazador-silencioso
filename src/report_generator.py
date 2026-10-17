@@ -76,7 +76,7 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
                           slpm_v12_data=None, tactical_scores=None, structural_scores=None,
                           sector_persistence=None, signal_agreements=None, signal_agreements_display=None,
                           cross_module_conflict=None, shock_sensitivities=None, price_flow_divergences=None,
-                          dc_summary="", all_signals=None, real_liq_score=None, real_liq_prev=None, index_leaders=None, index_phases=None, etf_primary_flow_data=None, cftc_position_flow_data=None, flow_synthesis=None, blackrock_dax_flow=None, blackrock_isf_flow=None, amundi_lyxi_flow=None, blackrock_iwm_flow=None, nport_position_change_data=None, qqq_performance_data=None, qqq_nport_flow_data=None, qqq_sec_flow=None, sector_breadth_data=None, sector_breadth_is_stale=False, sector_breadth_stale_reason=None, sector_concentration_data=None, sector_flow_characteristics_data=None, rs_internal_data=None, sector_rank_deltas_data=None, sector_regime_matrix_data=None, leader_representativeness_data=None, sector_wyckoff_distribution_data=None, sector_leader_divergence_data=None, sector_breadth_momentum_data=None, evidence_matrix_data=None, sector_dispersion_data=None, sector_correlation_summary_data=None, cross_asset_context_data=None, volatility_structure_data=None, data_quality_data=None, iae_section=None, output_path='outputs/report/reporte_diario.md',
+                          dc_summary="", all_signals=None, real_liq_score=None, real_liq_prev=None, index_leaders=None, index_phases=None, index_struct_scores=None, etf_primary_flow_data=None, cftc_position_flow_data=None, flow_synthesis=None, blackrock_dax_flow=None, blackrock_isf_flow=None, amundi_lyxi_flow=None, blackrock_iwm_flow=None, nport_position_change_data=None, qqq_performance_data=None, qqq_nport_flow_data=None, qqq_sec_flow=None, sector_breadth_data=None, sector_breadth_is_stale=False, sector_breadth_stale_reason=None, sector_concentration_data=None, sector_flow_characteristics_data=None, rs_internal_data=None, sector_rank_deltas_data=None, sector_regime_matrix_data=None, leader_representativeness_data=None, sector_wyckoff_distribution_data=None, sector_leader_divergence_data=None, sector_breadth_momentum_data=None, evidence_matrix_data=None, sector_dispersion_data=None, sector_correlation_summary_data=None, cross_asset_context_data=None, volatility_structure_data=None, data_quality_data=None, iae_section=None, output_path='outputs/report/reporte_diario.md',
                           reference_date=None, provenance=None):
     lines = []
     lines.append("# MACRO SECTORIAL - Reporte Diario\n")
@@ -198,7 +198,7 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
     lines.extend(render_qqq_nport_flow(qqq_nport_flow_data))
     lines.extend(render_flujo_sintesis(flow_synthesis))
     # Indices internacionales
-    lines.extend(render_indices_internacionales(index_phases, index_leaders))
+    lines.extend(render_indices_internacionales(index_phases, index_leaders, index_struct_scores))
     # Estado actual y 13F
     lines.extend(render_sintesis_senales(
         macro_regime, slpm_v12_data, financial_regime,

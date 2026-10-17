@@ -39,11 +39,12 @@ def render_ranking_sectorial_unificado(sector_results, tactical_scores,
     # Rango [0,1]. Mide la fraccion de la ventana en que el score
     # sectorial se mantuvo con el mismo signo.
     header = ("| # | Sector | Score | Tactical | Structural | Persist "
-              "| Agreement | Signal Cons | Comm Corr | Fase Wyckoff |\n")
+              "| Agreement | Signal Cons | Comm Corr | Fase Wyckoff | Struct |\n")
     sep = ("|---|--------|-------|----------|------------|---------"
-           "|-----------|-------------|-----------|---------------|\n")
+           "|-----------|-------------|-----------|---------------|--------|\n")
     out.append(header)
     out.append(sep)
+    _struct_map = sector_results.get('struct_scores') or {}
     for i, (ticker, name, score, wyckoff) in enumerate(
             sector_results['ranking'][:EXPECTED_SECTOR_COUNT], 1):
         t_score = tactical_scores.get(ticker, 0.0) if tactical_scores else 0.0
@@ -61,12 +62,14 @@ def render_ranking_sectorial_unificado(sector_results, tactical_scores,
         comm_display = (f"{comm_level} ({_fmt_signed(comm_val, '{:+.2f}', '{:.2f}')})"
                         if comm_val is not None and comm_level != 'N/A'
                         else comm_level)
+        _s = _struct_map.get(ticker)
+        _s_str = _fmt_num(_s, '{:+.2f}') if _s is not None else 'N/D'
         out.append(
             f"| {i} | {name} ({ticker}) | {_fmt_num(score, '{:.2f}')} "
             f"| {_fmt_signed(t_score, '{:+.2f}', '{:.2f}')} "
             f"| {_fmt_signed(s_score, '{:+.2f}', '{:.2f}')} "
             f"| {pers_str} | {agree_display} | {signal_cons:.0%} "
-            f"| {comm_display} | {wyckoff} |\n"
+            f"| {comm_display} | {wyckoff} | {_s_str} |\n"
         )
     out.append("\n")
     return out

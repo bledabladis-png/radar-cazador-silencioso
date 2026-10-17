@@ -12,21 +12,27 @@ from config.tickers import SECTOR_NAMES
 from config.settings import FLOW_ZSCORE_WINDOW
 
 
-def render_indices_internacionales(index_phases, index_leaders):
+def render_indices_internacionales(index_phases, index_leaders, index_struct_scores=None):
     """Renderiza las tablas de Índices (USA + Europa) (Wyckoff + Oportunidades).
 
     Devuelve lista de lineas markdown. Sin side effects.
     """
     out = []
     out.append("\n## Índices (USA + Europa) — Fases Wyckoff\n")
-    out.append("| Indice | Ticker | Fase Wyckoff |\n")
-    out.append("|--------|--------|--------------|\n")
+    # struct_score: magnitud ademas de la etiqueta binaria. Una RANGE
+    # con struct cerca de 0.30 esta proxima a MARKUP. El lector ve
+    # el margen sin tener que consultar el CSV.
+    _struct_map = index_struct_scores or {}
+    out.append("| Indice | Ticker | Fase Wyckoff | Struct |\n")
+    out.append("|--------|--------|--------------|--------|\n")
     if index_phases:
         for nombre, fase in index_phases.items():
             ticker = INDEX_CONFIG.get(nombre, {}).get('index_ticker', '')
-            out.append(f"| {nombre} | {ticker} | {fase} |\n")
+            _s = _struct_map.get(nombre)
+            _s_str = _fmt_num(_s, '{:+.2f}') if _s is not None else 'N/D'
+            out.append(f"| {nombre} | {ticker} | {fase} | {_s_str} |\n")
     else:
-        out.append("| No disponible | No disponible | No disponible |\n")
+        out.append("| No disponible | No disponible | No disponible | N/D |\n")
     out.append("\n")
 
     out.append("\n## Índices (USA + Europa) — Oportunidades de Acumulación y Markup\n")

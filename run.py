@@ -200,6 +200,7 @@ def main():
     ii = compute_indices_intl(df_market, reference_date=reference_date, run_id=run_id, temporal_meta=temporal_meta)
     index_phases = ii['index_phases']
     index_leaders = ii['index_leaders']
+    index_struct_scores = ii.get('index_struct_scores', {})
 
     vg = run_validation_gate(
         slpm_v12_data, pcr_data, darkpool_data, mte_result,
@@ -307,7 +308,7 @@ def main():
                           shock_sensitivities=shock_sensitivities,
                           price_flow_divergences=price_flow_divergences,
                           dc_summary=dc_summary,
-                          real_liq_prev=real_liq_prev, index_leaders=index_leaders, index_phases=index_phases, sector_breadth_data=sector_breadth_df, sector_breadth_is_stale=sector_breadth_is_stale,
+                          real_liq_prev=real_liq_prev, index_leaders=index_leaders, index_phases=index_phases, index_struct_scores=index_struct_scores, sector_breadth_data=sector_breadth_df, sector_breadth_is_stale=sector_breadth_is_stale,
                           sector_breadth_stale_reason=sector_breadth_stale_reason, sector_concentration_data=sector_concentration_df, sector_flow_characteristics_data=sector_flow_characteristics_df, rs_internal_data=rs_internal_df, sector_rank_deltas_data=sector_rank_deltas_df, sector_regime_matrix_data=sector_regime_matrix_df, leader_representativeness_data=leader_representativeness_df, sector_wyckoff_distribution_data=sector_wyckoff_distribution_df, sector_leader_divergence_data=sector_leader_divergence_df, sector_breadth_momentum_data=sector_breadth_momentum_df,
                           evidence_matrix_data=evidence_matrix_df,
                           sector_dispersion_data=sector_dispersion_df,

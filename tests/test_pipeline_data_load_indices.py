@@ -102,13 +102,15 @@ def test_load_all_data_temporal_meta_de_attrs():
 # indices_intl.py
 # =============================================================================
 
-def test_indices_intl_contrato_2_keys():
+def test_indices_intl_contrato_3_keys():
+    """Contrato: 3 keys tras anadir index_struct_scores (H-estructura
+    2026-10-18). El test verifica el schema completo del dict devuelto."""
     with patch("src.pipeline.indices_intl.compute_index_phases",
                return_value=({}, {})), \
          patch("src.pipeline.indices_intl.download_stock_prices",
                return_value=None):
         out = compute_indices_intl(pd.DataFrame())
-    assert set(out.keys()) == {"index_phases", "index_leaders"}
+    assert set(out.keys()) == {"index_phases", "index_leaders", "index_struct_scores"}
 
 
 def test_indices_intl_sin_acumulacion_no_descarga():
