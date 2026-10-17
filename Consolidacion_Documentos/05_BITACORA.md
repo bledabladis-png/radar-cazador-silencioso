@@ -44,6 +44,58 @@ Al cerrar una sesion nueva, se anade arriba (las mas recientes primero). Si hay 
 
 ## 3. SESIONES
 
+### 2026-10-17 - Sostenibilidad: 10 capas de fixes al reporte + auditoria externa
+
+**Objetivo.** Tras auditoria externa del reporte del 2026-10-17, aplicar
+10 capas de fixes con tests contractuales. Eliminar textos categoricos
+sin soporte, literales desincronizados de config, clasificacion de
+regimenes por substring accidental, naming enganoso del CSV. Todo
+pusheado con CI verde.
+
+**Hecho.**
+- Capa 1 (`0d58c5ae`): literales ventana/umbral desde config. 3 tests.
+- Capa 2a (`781da474`): H14 (banda HYG/LQD 0.5->0.75), H15 (texto FLS
+  modular). 8 tests.
+- Capa 2b (`9b3d5b33`): H17 (umbral materialidad 1% en divergencia
+  precio-flujo) + mojibake Confirmacion. 8 tests.
+- Capa 3 (`c2d6b604`): H1 (Referencia:/Generado:, no Fecha: ambiguo),
+  H2 (local_run_id determinista `local-<8hex>`). 11 tests.
+- Capa 5 (`85b79cd9`): H6 (A/D Line declara recalculo por run + universo).
+  6 tests.
+- Capa 4 (`ba4fca3a`, `a92f52e9`, `5d21b45d`): clasificacion exacta de
+  regimenes, CSV financial_regime + real_liq_regime, Expansion: N/5 en
+  INFO Cross-Module. 23 tests. Dictamen Gate 0.5 aprobado con correcciones.
+- Capa 6 (`f2dec91f`, `aa82a549`): eliminar alias legacy liquidity_regime
+  del CSV + script de migracion idempotente, corregir texto de regimen de
+  volatilidad (VELOCIDAD -> VOLATILIDAD REALIZADA). 18 tests.
+- Commit F (`a6adeacd`): renombrar parametros liquidity_regime ->
+  financial_regime en render_alerts/regimenes/sintesis y
+  generate_daily_report. 8 tests adaptados. detect_cross_module_conflict
+  intacto.
+- H4 report (`09f32770`): flow proxy N/D para tickers sin volumen
+  (FX, DX-Y, SPGSCI). E2E con run.py. 4 tests.
+- Gobernanza (`86963d56`): 9 items nuevos FIXED en REGISTRO.yaml.
+- Issue #5 cerrado: `update_sec_13f cancelled` = FALSE_POSITIVE (doble
+  dispatch manual 24-sep, run 36014839961); `cron_slots 3/5` = WONT_FIX
+  (delay GitHub, cubierto por los 5 slots del daily_run).
+
+**Commits.** `09f32770`, `0d58c5ae`, `781da474`, `9b3d5b33`, `c2d6b604`,
+`85b79cd9`, `ba4fca3a`, `a92f52e9`, `5d21b45d`, `f2dec91f`, `aa82a549`,
+`a6adeacd`, `86963d56`.
+
+**Pendiente.**
+- Certificacion scheduled lunes 2026-10-19 23:17 UTC (target_session nuevo).
+- H5.3, C2, Wyckoff 5b.X, SOW v6: sin cambios.
+
+**Proximo paso sugerido.** Verificar scheduled del lunes 23:17 UTC. Si
+a las 23:35 no ha disparado, `gh workflow run daily_run.yml`. Comparar
+bloque INFO Cross-Module del reporte del lunes con el del sabado:
+cambios esperados (Expansion: N/5 si hay modulos en expansion,
+VOLATILIDAD REALIZADA en lugar de VELOCIDAD) deben ser coherentes con
+los commits de la sesion.
+
+---
+
 ### 2026-10-17 - Fix CI (pyyaml, fetch-depth) + verificacion en produccion enmienda v1.1
 
 **Objetivo.** Diagnosticar y corregir los fallos de CI de los runs
