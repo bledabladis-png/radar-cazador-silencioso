@@ -9,6 +9,7 @@ import pandas as pd
 from config.index_tickers import INDEX_CONFIG
 from src.report.helpers import _fmt_num
 from config.tickers import SECTOR_NAMES
+from config.settings import FLOW_ZSCORE_WINDOW
 
 
 def render_indices_internacionales(index_phases, index_leaders):
@@ -30,7 +31,7 @@ def render_indices_internacionales(index_phases, index_leaders):
 
     out.append("\n## Índices (USA + Europa) — Oportunidades de Acumulación y Markup\n")
     out.append("*Nota: Los componentes se obtienen de ETFs proxy que replican el indice de referencia. USA: SPY (S&P 500), DIA (Dow Jones), QQQ (Nasdaq-100), IWM (Russell 2000). Europa: FEZ (Euro Stoxx 50), LYXI (Ibex 35), DAXEX (DAX 40), ISF.L (FTSE 100). Solo se muestran indices en fase ACCUMULATION o MARKUP.*\n\n")
-    out.append("*Nota: Flujo (z) es un z-score robusto sobre 60 días. Valores extremos pueden deberse a eventos corporativos o volúmenes inusuales. Para el WLS se usa una versión normalizada limitada a ±3.*\n\n")
+    out.append(f"*Nota: Flujo (z) es un z-score robusto sobre {FLOW_ZSCORE_WINDOW} dias. Valores extremos pueden deberse a eventos corporativos o volúmenes inusuales. Para el WLS se usa una versión normalizada limitada a ±3.*\n\n")
     if index_leaders:
         for nombre, top5 in index_leaders.items():
             if top5 is None or top5.empty:

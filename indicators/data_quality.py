@@ -119,7 +119,7 @@ SOURCES = [
         'frequency': 'cftc',
         'coverage_logic': 'rows',
         'coverage_col': 'net_position',
-        'notes': 'Frescura 30 días'
+        'notes': 'Frescura CFTC (semanal); umbrales en config/settings.FRESHNESS_CFTC'
     },
     {
         'source': 'SEC N-PORT (posiciones)',
