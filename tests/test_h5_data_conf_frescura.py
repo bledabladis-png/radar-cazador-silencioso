@@ -16,7 +16,7 @@ def test_header_nota_no_dice_cobertura():
     """La nota del header NO debe afirmar que Data Conf mide cobertura."""
     out = render_regimenes(
         macro_score=pd.Series([0.0]), macro_regime="MIXED", macro_conf=0.5,
-        liquidity_score=pd.Series([0.0]), liquidity_regime="NEUTRAL", liq_conf=0.5,
+        liquidity_score=pd.Series([0.0]), financial_regime="NEUTRAL", liq_conf=0.5,
         volatility_score=pd.Series([0.0]), vol_regime="NORMAL", vol_conf=0.5,
         real_liquidity_regime="NEUTRAL", real_liquidity_conf=0.9,
         real_liq_score=pd.Series([0.0]), real_liq_prev=0.0,

@@ -68,7 +68,7 @@ WEIGHTS_VERSION = "3"
 INDICATORS_VERSION = "2"
 
 
-def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score, liquidity_regime, liq_conf,
+def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score, financial_regime, liq_conf,
                           volatility_score, vol_regime, vol_conf, sector_results,
                           sector_price_rank, sector_flow_rank, otros_price_rank, otros_flow_rank,
                           leader_lines=None, breadth_values=None, real_liquidity_regime=None, real_liquidity_conf=None,
@@ -107,7 +107,7 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
     # =========================================================================
     lines.extend(render_regimenes(
         macro_score, macro_regime, macro_conf,
-        liquidity_score, liquidity_regime, liq_conf,
+        liquidity_score, financial_regime, liq_conf,
         volatility_score, vol_regime, vol_conf,
         real_liquidity_regime, real_liquidity_conf,
         real_liq_score, real_liq_prev,
@@ -118,7 +118,7 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
     # DATA FRESHNESS + ALERTAS + CROSS-MODULE
     # =========================================================================
     lines.extend(render_data_freshness(pcr_data, darkpool_data, sector_results, reference_date=reference_date))
-    lines.extend(render_alerts(breadth_values, liquidity_regime, price_flow_divergences, confirmation_data))
+    lines.extend(render_alerts(breadth_values, financial_regime, price_flow_divergences, confirmation_data))
     lines.extend(render_cross_module(cross_module_conflict))
 
     # =========================================================================
@@ -201,7 +201,7 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
     lines.extend(render_indices_internacionales(index_phases, index_leaders))
     # Estado actual y 13F
     lines.extend(render_sintesis_senales(
-        macro_regime, slpm_v12_data, liquidity_regime,
+        macro_regime, slpm_v12_data, financial_regime,
         sector_dispersion_data, breadth_values, price_flow_divergences,
     ))
     if dc_summary:

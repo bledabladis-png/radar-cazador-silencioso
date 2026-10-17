@@ -15,12 +15,12 @@ from src.report.header import render_regimenes
 def _run_alerta(hyg_z):
     conf = {"ratios": {"hyg_lqd_zscore": hyg_z}}
     return "".join(render_alerts(
-        breadth_values=None, liquidity_regime="HIGH_STRESS",
+        breadth_values=None, financial_regime="HIGH_STRESS",
         price_flow_divergences=None, confirmation_data=conf,
     ))
 
 
-def _run_regimenes(liquidity_regime, fls_normalized):
+def _run_regimenes(financial_regime, fls_normalized):
     conf = {}
     if fls_normalized is not None:
         conf["fls"] = {"fls_normalized": fls_normalized}
@@ -28,7 +28,7 @@ def _run_regimenes(liquidity_regime, fls_normalized):
         macro_score=pd.Series([0.5]),
         macro_regime="MIXED", macro_conf=0.6,
         liquidity_score=pd.Series([0.5]),
-        liquidity_regime=liquidity_regime, liq_conf=0.5,
+        financial_regime=financial_regime, liq_conf=0.5,
         volatility_score=pd.Series([0.0]),
         vol_regime="NORMAL", vol_conf=0.1,
         real_liquidity_regime="NEUTRAL", real_liquidity_conf=0.9,

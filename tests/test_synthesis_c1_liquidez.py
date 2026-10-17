@@ -21,7 +21,7 @@ def test_high_stress_no_menciona_liquidez():
     out = render_sintesis_senales(
         macro_regime="SLOWDOWN",
         slpm_v12_data=None,
-        liquidity_regime="HIGH_STRESS",
+        financial_regime="HIGH_STRESS",
         sector_dispersion_data=None,
         breadth_values=None,
         price_flow_divergences=None,

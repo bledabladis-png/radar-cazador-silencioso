@@ -10,7 +10,7 @@ from config.tickers import SECTOR_NAMES
 from config.settings import NEUTRAL_BAND_HYG_LQD_ZSCORE
 
 
-def render_alerts(breadth_values, liquidity_regime, price_flow_divergences, confirmation_data=None):
+def render_alerts(breadth_values, financial_regime, price_flow_divergences, confirmation_data=None):
     """Renderiza la seccion Alertas de Divergencia (Inicial).
 
     Devuelve lista de lineas markdown. Sin side effects.
@@ -24,7 +24,7 @@ def render_alerts(breadth_values, liquidity_regime, price_flow_divergences, conf
         if ema200 > 0.70 and ema20 < 0.60:
             alerts.append(f"- **Breadth Divergence:** Breadth EMA200: {ema200:.0%}; Breadth EMA20: {ema20:.0%}. La amplitud de corto plazo es inferior a la de largo plazo.")
     
-    if liquidity_regime == 'HIGH_STRESS':
+    if financial_regime == 'HIGH_STRESS':
         # H1 (2026-10-15, auditoria externa): el texto afirmaba
         # "desviacion positiva" sin comprobar el Z-score real. Ahora se
         # condiciona al valor publicado en Cross-Asset Ratios.

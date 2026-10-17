@@ -24,7 +24,7 @@ def _base_call(liq_conf):
         macro_regime="SLOWDOWN",
         macro_conf=0.56,
         liquidity_score=pd.Series([-0.57]),
-        liquidity_regime="HIGH_STRESS",
+        financial_regime="HIGH_STRESS",
         liq_conf=liq_conf,
         volatility_score=pd.Series([-0.12]),
         vol_regime="NORMAL",

@@ -11,7 +11,7 @@ from src.report.alerts import render_alerts
 def _run(hyg_z):
     conf = {"ratios": {"hyg_lqd_zscore": hyg_z}}
     return "".join(render_alerts(
-        breadth_values=None, liquidity_regime="HIGH_STRESS",
+        breadth_values=None, financial_regime="HIGH_STRESS",
         price_flow_divergences=None, confirmation_data=conf,
     ))
 

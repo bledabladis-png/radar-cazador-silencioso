@@ -11,7 +11,7 @@ from config.settings import FLS_STRESS_THRESHOLD
 
 
 def render_regimenes(macro_score, macro_regime, macro_conf,
-                     liquidity_score, liquidity_regime, liq_conf,
+                     liquidity_score, financial_regime, liq_conf,
                      volatility_score, vol_regime, vol_conf,
                      real_liquidity_regime, real_liquidity_conf,
                      real_liq_score, real_liq_prev,
@@ -45,14 +45,14 @@ def render_regimenes(macro_score, macro_regime, macro_conf,
         cond_score = float('nan')
     cond_score_str = f'{cond_score:.2f}' if pd.notna(cond_score) else 'N/D'
     liq_conf_str = f'{liq_conf:.0%}' if pd.notna(liq_conf) else 'N/D'
-    out.append(f"- **Cond. Financieras:** {liquidity_regime} (Score: {cond_score_str}, Signal Consistency: {liq_conf_str})\n")
+    out.append(f"- **Cond. Financieras:** {financial_regime} (Score: {cond_score_str}, Signal Consistency: {liq_conf_str})\n")
     # C2 (2026-10-17): aviso simetrico al de macro (linea 38). Si la
     # consistencia es baja, los componentes (VIX, credito, dolar,
     # curva) no coinciden aunque el score agregado de una etiqueta.
     # La etiqueta refleja el score, no consenso entre componentes.
     if pd.notna(liq_conf) and liq_conf < 0.30:
         out.append("  *Signal Consistency baja: los componentes (VIX, credito, dolar, curva) no coinciden. La etiqueta refleja el score agregado, no consenso.*\n")
-    if liquidity_regime == 'HIGH_STRESS':
+    if financial_regime == 'HIGH_STRESS':
         # H15 (2026-10-17, REP-AUDIT-20261017-capa2): modular el
         # texto segun FLS. Coherente con la critica del auditor:
         # 'NEUTRAL de liquidez FRED' no contradice 'FLS 85/100';

@@ -47,7 +47,7 @@ def render_indices_internacionales(index_phases, index_leaders):
     return out
 
 
-def render_sintesis_senales(macro_regime, slpm_v12_data, liquidity_regime,
+def render_sintesis_senales(macro_regime, slpm_v12_data, financial_regime,
                             sector_dispersion_data, breadth_values,
                             price_flow_divergences):
     """Renderiza la seccion Estado Actual - Sintesis de Senales.
@@ -92,9 +92,9 @@ def render_sintesis_senales(macro_regime, slpm_v12_data, liquidity_regime,
                 resumen.append(f"- **Liderazgo sectorial: {leader}** (SLPM: {state}).")
 
     # 3. Condiciones financieras o liquidez (si es relevante)
-    if liquidity_regime in ('HIGH_STRESS', 'EXTREME_STRESS'):
-        resumen.append(f"- **Condiciones financieras: {liquidity_regime}** — estrés elevado en crédito. La liquidez real (FRED) se reporta por separado en el Resumen de Regímenes.")
-    elif liquidity_regime == 'ESTRECHA':
+    if financial_regime in ('HIGH_STRESS', 'EXTREME_STRESS'):
+        resumen.append(f"- **Condiciones financieras: {financial_regime}** — estrés elevado en crédito. La liquidez real (FRED) se reporta por separado en el Resumen de Regímenes.")
+    elif financial_regime == 'ESTRECHA':
         resumen.append("- **Condiciones financieras: ESTRECHA** — señales financieras en territorio restrictivo.")
 
     # Máximo 3 elementos

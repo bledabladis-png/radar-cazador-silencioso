@@ -21,7 +21,7 @@ from src.report.header import render_regimenes
 # =============================================================================
 
 def test_render_alerts_sin_divergencias():
-    out = render_alerts(breadth_values=None, liquidity_regime=None, price_flow_divergences=None)
+    out = render_alerts(breadth_values=None, financial_regime=None, price_flow_divergences=None)
     lineas = "".join(out)
     assert "Alertas de Divergencia" in lineas
     assert "Sin divergencias relevantes" in lineas
@@ -30,7 +30,7 @@ def test_render_alerts_sin_divergencias():
 def test_render_alerts_breadth_divergence():
     out = render_alerts(
         breadth_values={"% sobre EMA200": 0.75, "% sobre EMA20": 0.50},
-        liquidity_regime=None,
+        financial_regime=None,
         price_flow_divergences=None,
     )
     lineas = "".join(out)
@@ -43,7 +43,7 @@ def test_render_alerts_breadth_sin_divergencia():
     """ema200 alto pero ema20 tambien alto -> no alerta."""
     out = render_alerts(
         breadth_values={"% sobre EMA200": 0.75, "% sobre EMA20": 0.75},
-        liquidity_regime=None,
+        financial_regime=None,
         price_flow_divergences=None,
     )
     lineas = "".join(out)
@@ -53,7 +53,7 @@ def test_render_alerts_breadth_sin_divergencia():
 def test_render_alerts_high_stress():
     out = render_alerts(
         breadth_values=None,
-        liquidity_regime="HIGH_STRESS",
+        financial_regime="HIGH_STRESS",
         price_flow_divergences=None,
     )
     lineas = "".join(out)
@@ -62,7 +62,7 @@ def test_render_alerts_high_stress():
 
 def test_render_alerts_price_flow_divergence():
     out = render_alerts(
-        breadth_values=None, liquidity_regime=None,
+        breadth_values=None, financial_regime=None,
         price_flow_divergences={
             "XLK": {"status": "DIVERGENCE"},
             "XLF": {"status": "ALIGNED"},
@@ -132,7 +132,7 @@ def _reg(volatility_score=0.0, macro_score=0.0, liquidity_score=0.0, real_liq_sc
         macro_regime="MIXED",
         macro_conf=0.5,
         liquidity_score=pd.Series([liquidity_score]),
-        liquidity_regime="ABUNDANTE",
+        financial_regime="ABUNDANTE",
         liq_conf=0.9,
         volatility_score=volatility_score,
         vol_regime="NORMAL",
@@ -168,7 +168,7 @@ def test_header_macro_score_nan():
 
 
 def test_header_liquidity_high_stress_muestra_nota():
-    out = _reg(liquidity_regime="HIGH_STRESS")
+    out = _reg(financial_regime="HIGH_STRESS")
     lineas = "".join(out)
     assert "HIGH_STRESS" in lineas
     assert "estres significativo" in lineas
@@ -235,7 +235,7 @@ def test_header_vol_muy_cerca_cero_muestra_0_00():
 def test_render_alerts_high_stress_z_positivo():
     out = render_alerts(
         breadth_values=None,
-        liquidity_regime="HIGH_STRESS",
+        financial_regime="HIGH_STRESS",
         price_flow_divergences=None,
         confirmation_data={"ratios": {"hyg_lqd_zscore": 0.80}},
     )
@@ -248,7 +248,7 @@ def test_render_alerts_high_stress_z_positivo():
 def test_render_alerts_high_stress_z_negativo():
     out = render_alerts(
         breadth_values=None,
-        liquidity_regime="HIGH_STRESS",
+        financial_regime="HIGH_STRESS",
         price_flow_divergences=None,
         confirmation_data={"ratios": {"hyg_lqd_zscore": -0.80}},
     )
@@ -261,7 +261,7 @@ def test_render_alerts_high_stress_z_negativo():
 def test_render_alerts_high_stress_z_ausente():
     out = render_alerts(
         breadth_values=None,
-        liquidity_regime="HIGH_STRESS",
+        financial_regime="HIGH_STRESS",
         price_flow_divergences=None,
         confirmation_data=None,
     )
@@ -276,7 +276,7 @@ def test_render_alerts_high_stress_z_nan():
     import numpy as np
     out = render_alerts(
         breadth_values=None,
-        liquidity_regime="HIGH_STRESS",
+        financial_regime="HIGH_STRESS",
         price_flow_divergences=None,
         confirmation_data={"ratios": {"hyg_lqd_zscore": np.nan}},
     )
@@ -288,7 +288,7 @@ def test_render_alerts_no_high_stress_no_alerta():
     """Sin HIGH_STRESS no se emite la alerta crediticia."""
     out = render_alerts(
         breadth_values=None,
-        liquidity_regime="NEUTRAL",
+        financial_regime="NEUTRAL",
         price_flow_divergences=None,
         confirmation_data={"ratios": {"hyg_lqd_zscore": 0.15}},
     )

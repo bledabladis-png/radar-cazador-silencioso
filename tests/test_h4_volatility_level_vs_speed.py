@@ -22,7 +22,7 @@ def test_header_nota_velocidad_vs_nivel():
         macro_regime="MIXED",
         macro_conf=0.5,
         liquidity_score=pd.Series([0.0]),
-        liquidity_regime="NEUTRAL",
+        financial_regime="NEUTRAL",
         liq_conf=0.5,
         volatility_score=pd.Series([-0.77]),
         vol_regime="LOW",
