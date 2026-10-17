@@ -336,3 +336,119 @@ def test_download_receipt_json_encuentra_el_fichero_en_zip():
             del _os.environ["GH_TOKEN"]
     finally:
         gate.requests.get = original
+
+
+# ---------------- Cobertura anadida 2026-10-17 ----------------
+# Huecos detectados en la cobertura del gate+receipt. Cubren ramas
+# del schema no ejercitadas y la logica de capa 2 (run conclusion) y
+# el sorting de artifacts (multiples receipts para la misma sesion).
+
+def test_schema_workflow_incorrecto_falla():
+    """Schema: workflow != daily_run -> False."""
+    r = _valid_receipt()
+    r["workflow"] = "manual_run"
+    assert gate._validate_receipt_schema(r, "2026-09-30") is False
+
+
+def test_schema_run_id_no_int_falla():
+    """Schema: run_id no int -> False."""
+    r = _valid_receipt()
+    r["run_id"] = "36876380805"
+    assert gate._validate_receipt_schema(r, "2026-09-30") is False
+
+
+def test_schema_completed_at_no_str_falla():
+    """Schema: completed_at no str -> False."""
+    r = _valid_receipt()
+    r["completed_at"] = 12345
+    assert gate._validate_receipt_schema(r, "2026-09-30") is False
+
+
+def test_schema_completed_at_vacio_falla():
+    """Schema: completed_at vacio -> False."""
+    r = _valid_receipt()
+    r["completed_at"] = ""
+    assert gate._validate_receipt_schema(r, "2026-09-30") is False
+
+
+def test_find_receipt_multiples_artifacts_elige_mas_reciente(
+    isolated_project, monkeypatch
+):
+    """Si hay varios artifacts para la misma sesion, elige el mas reciente.
+
+    Re-ejecuciones producen varios artifacts con el mismo nombre. El
+    contrato v1 exige que se use el mas reciente. Esta logica no estaba
+    testeada.
+    """
+    artifacts = [
+        {"id": 1, "created_at": "2026-10-01T10:00:00Z",
+         "workflow_run": {"id": 100}},
+        {"id": 2, "created_at": "2026-10-01T15:00:00Z",
+         "workflow_run": {"id": 200}},
+    ]
+
+    def _api(path, params=None):
+        if path == "actions/artifacts":
+            return {"artifacts": artifacts}
+        if path == "actions/runs/200":
+            return {"conclusion": "success"}
+        return None
+
+    called = {"artifact_id": None}
+
+    def _download(artifact_id):
+        called["artifact_id"] = artifact_id
+        return _valid_receipt()
+
+    monkeypatch.setattr(gate, "_github_api", _api)
+    monkeypatch.setattr(gate, "_download_receipt_json", _download)
+    monkeypatch.setenv("GH_TOKEN", "fake")
+
+    r = gate.find_completion_receipt("2026-09-30")
+    assert r is not None
+    assert called["artifact_id"] == 2, (
+        "debe elegir el artifact mas reciente por created_at"
+    )
+
+
+def test_find_receipt_run_conclusion_no_success_falla(
+    isolated_project, monkeypatch
+):
+    """Capa 2: el workflow_run que subio el receipt debe ser success.
+
+    Si el run termino en failure aunque el receipt diga COMPLETED,
+    find_completion_receipt devuelve None (fail-closed).
+    """
+    artifacts = [{"id": 1, "created_at": "2026-10-01T10:00:00Z",
+                  "workflow_run": {"id": 100}}]
+
+    def _api(path, params=None):
+        if path == "actions/artifacts":
+            return {"artifacts": artifacts}
+        if path == "actions/runs/100":
+            return {"conclusion": "failure"}
+        return None
+
+    monkeypatch.setattr(gate, "_github_api", _api)
+    monkeypatch.setenv("GH_TOKEN", "fake")
+
+    assert gate.find_completion_receipt("2026-09-30") is None
+
+
+def test_download_receipt_json_zip_sin_fichero_falla(monkeypatch):
+    """ZIP valido pero sin el fichero esperado -> None (no revienta)."""
+    import io as _io
+    import zipfile as _zip
+
+    buf = _io.BytesIO()
+    with _zip.ZipFile(buf, "w") as z:
+        z.writestr("otro.json", "{}")
+    zip_bytes = buf.getvalue()
+
+    class _R:
+        status_code = 200
+        content = zip_bytes
+
+    monkeypatch.setattr(gate.requests, "get", lambda *a, **k: _R())
+    monkeypatch.setenv("GH_TOKEN", "fake")
+    assert gate._download_receipt_json(1) is None
