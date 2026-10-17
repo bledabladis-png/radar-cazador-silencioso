@@ -133,3 +133,47 @@ def test_confidence_se_calcula_sobre_escenario_elegido(monkeypatch):
     scenario, _, _, _ = classify_mte(srs=0.5, shs=0, cls=0.1, ips=-0.41)
     assert capturado.get("scenario") == scenario
     assert scenario != "STAGFLATION"
+
+# ============================================================
+# Regresion 2026-10-17: guard post-histeresis
+# ============================================================
+def test_stagfl_no_persiste_por_histeresis_con_prev_stagflation(monkeypatch):
+    """Caso real del run 38994345784 (viernes 16-oct).
+
+    Prev=STAGFLATION. Guard descarta STAGFLATION del argmax (gana
+    SOFT LANDING). validate_transition(STAGFLATION -> SOFT LANDING)
+    es False (STAGFLATION solo permite RECESSION y MIXED). La
+    histeresis revierte a STAGFLATION, pero el guard C2 debe
+    impedir que STAGFLATION se publique si no cumple IPS>0.15 AND
+    SRS>0.
+
+    Escenario esperado: MIXED (neutro). No STAGFLATION.
+    """
+    _patch_prev(monkeypatch, prev="STAGFLATION", pending=None, reset=False)
+    # validate_transition real: STAGFLATION -> SOFT LANDING = False
+    _patch_confidence(monkeypatch, 0.5)
+
+    scenario, _, _, _ = classify_mte(
+        srs=0.32613489757607295,
+        shs=0.1493144238244651,
+        cls=0.16942825639221024,
+        ips=-0.3873353553907696,
+    )
+    assert scenario != "STAGFLATION", (
+        "con IPS<0.15, STAGFLATION no debe persistir por histeresis"
+    )
+    assert scenario == "MIXED", (
+        "el guard debe forzar MIXED (neutro) al descartar STAGFLATION"
+    )
+
+
+def test_stagfl_si_persiste_con_ips_y_srs_validos(monkeypatch):
+    """Contraprueba: si IPS>0.15 y SRS>0, la histeresis SI puede
+    mantener STAGFLATION."""
+    _patch_prev(monkeypatch, prev="STAGFLATION", pending=None, reset=False)
+    _patch_confidence(monkeypatch, 0.7)
+
+    scenario, _, _, _ = classify_mte(
+        srs=0.5, shs=0, cls=0.1, ips=0.5,
+    )
+    assert scenario == "STAGFLATION"

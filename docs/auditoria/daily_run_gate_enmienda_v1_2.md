@@ -76,6 +76,34 @@ del attempt no incluia el resultado del guard.
   `test_attempt_blocked_por_guard_result`,
   `test_attempt_vg_prioritario_sobre_guard`.
 
+### 3.4. Ampliacion 2026-10-17: guard C2 post-histeresis y futures_status
+
+Auditoria del reporte del run 38994345784 (viernes 16-oct) detecto
+dos incoherencias adicionales en el subsistema MTE:
+
+**A. Guard C2 post-histeresis (indicators/mte/decision.py).**
+`classify_mte` aplica `scores.pop("STAGFLATION")` cuando no se cumple
+`IPS > 0.15 AND SRS > 0`. Pero despues, si `validate_transition(prev,
+new) == False`, la histeresis hace `new_scenario = prev_scenario`. Si
+`prev == "STAGFLATION"`, la salida final puede ser STAGFLATION aunque
+el guard lo haya descartado del argmax. Caso real: run 38994345784 con
+`ips=-0.387`, `srs=0.326`, `prev=STAGFLATION`. Fix: aplicar el mismo
+guard POST-histeresis. Si `final_scenario == "STAGFLATION"` y no cumple
+la condicion, forzar `MIXED` y `pending_out=None`. Dos tests nuevos:
+`test_stagfl_no_persiste_por_histeresis_con_prev_stagflation`,
+`test_stagfl_si_persiste_con_ips_y_srs_validos`.
+
+**B. futures_status real (indicators/mte/engine.py).**
+`engine.py:143` escribia `'futures_status': 'BLOCKED'` como literal.
+Vestigio del hallazgo F3-05 (OilPriceAPI sin futuros) cerrado el
+2026-09-30 al sustituir por Yahoo (R5). Desde entonces `FUTURE_SETTLEMENT`
+esta activo en `temporal_contracts`. El state mentia. Fix: leer
+`temporal_meta.by_contract.FUTURE_SETTLEMENT.status`. Un test nuevo:
+`test_futures_status_refleja_temporal_meta`.
+
+Ambos son contract-additive: no cambian schema del receipt ni
+invariantes I1-I8.
+
 ## 4. Justificacion
 
 El contrato del attempt (seccion 3 de la enmienda v1.1) exige "outcome y

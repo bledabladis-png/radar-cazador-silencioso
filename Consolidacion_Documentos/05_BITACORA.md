@@ -132,6 +132,24 @@ de punta a punta.
 - Tests: +2 guard (result ok/fail) +2 attempt (BLOCKED por guard,
   VG prioritario). 15 + 11 en los dos ficheros.
 
+**Ampliacion 04:40-05:30 UTC (auditoria del reporte).**
+- Auditoria del reporte del run 38994345784. Hallazgos:
+  - A: STAGFLATION publicado con `ips=-0.387` (guard C2 solo
+    aplicaba al argmax, no post-histeresis). Fix en
+    `indicators/mte/decision.py`: guard post-hist. Si final ==
+    STAGFLATION y no cumple IPS>0.15 AND SRS>0, forzar MIXED.
+    +2 tests.
+  - B: `futures_status: 'BLOCKED'` hardcoded en `engine.py:143`,
+    vestigio de F3-05 (cerrado 2026-09-30). Fix: leer
+    `temporal_meta.by_contract.FUTURE_SETTLEMENT.status`. +1 test.
+  - C (pendiente): sintesis mezcla `macro_regime` (16) con
+    `liquidity_state` (15) sin declararlo. Coberturas N/D en 12
+    fuentes ambiguas (aplica/no aplica vs falta dato). Cross
+    provider validation solo 2 tickers (SPY, AAPL).
+- Addendum v1.2 ampliado: secciones 3.4 (guard C2 post-hist,
+  futures_status real).
+- 00_ARRANQUE: mencion ampliada.
+
 **Commits (ampliacion).** d34c15bb (retirar verify_v11.yml).
 
 **Pendiente.**

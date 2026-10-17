@@ -140,7 +140,7 @@ def compute_mte(df_market, financial_conditions_score, credit_signal,
                     'effective_date': (temporal_meta or {}).get('by_contract', {}).get('EQUITY_EOD', {}).get('effective_date'),
                     'expected_date': (temporal_meta or {}).get('by_contract', {}).get('EQUITY_EOD', {}).get('expected_date'),
                     'coverage': (temporal_meta or {}).get('by_contract', {}).get('EQUITY_EOD', {}).get('coverage'),
-                    'futures_status': 'BLOCKED',
+                    'futures_status': (temporal_meta or {}).get('by_contract', {}).get('FUTURE_SETTLEMENT', {}).get('status'),
                     'scenario': scenario,
                     'confidence': confidence,
 

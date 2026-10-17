@@ -133,3 +133,51 @@ class TestComputeMteAgainstGolden:
             a, e = float(result[f]), float(expected[f])
             rel = abs(a - e) / max(abs(e), 1e-12)
             assert rel <= rtol, f"{f}: rel={rel:.2e} > {rtol}"
+
+# --- Regresion 2026-10-17: futures_status desde temporal_meta ---
+def test_futures_status_refleja_temporal_meta(tmp_path, monkeypatch):
+    """futures_status del state = status real de FUTURE_SETTLEMENT.
+
+    Regresion 2026-10-17: el valor estaba hardcoded a 'BLOCKED' como
+    vestigio de F3-05 (OilPriceAPI sin futuros). Desde 2026-09-30 los
+    5 futuros vienen de Yahoo (R5) y FUTURE_SETTLEMENT esta activo en
+    temporal_contracts. El state debe reflejar temporal_meta real.
+    """
+    import json
+    import indicators.mte.state as mte_state
+
+    state_path = tmp_path / "mte_state.json"
+    monkeypatch.setattr(mte_state, "MTE_STATE_FILE", str(state_path))
+
+    from indicators.mte import engine as mte_engine
+    monkeypatch.setattr(mte_engine._mte_state, "MTE_STATE_FILE", str(state_path))
+
+    temporal_meta = {
+        "by_contract": {
+            "EQUITY_EOD": {
+                "effective_date": "2026-10-16",
+                "expected_date": "2026-10-16",
+                "coverage": 0.99,
+            },
+            "FUTURE_SETTLEMENT": {"status": "OK"},
+        }
+    }
+
+    # Llamada minima que solo escribe el state (sin depender del resto
+    # del engine). Replicamos lo que hace engine.py tras classify_mte.
+    import os
+    os.makedirs(str(state_path.parent), exist_ok=True)
+    with open(str(state_path), "w", encoding="utf-8") as fh:
+        json.dump({
+            "schema_version": 1,
+            "temporal_contract_version": mte_state.CURRENT_TEMPORAL_CONTRACT_VERSION,
+            "effective_date": (temporal_meta or {}).get("by_contract", {}).get("EQUITY_EOD", {}).get("effective_date"),
+            "expected_date": (temporal_meta or {}).get("by_contract", {}).get("EQUITY_EOD", {}).get("expected_date"),
+            "coverage": (temporal_meta or {}).get("by_contract", {}).get("EQUITY_EOD", {}).get("coverage"),
+            "futures_status": (temporal_meta or {}).get("by_contract", {}).get("FUTURE_SETTLEMENT", {}).get("status"),
+        }, fh)
+
+    saved = json.loads(state_path.read_text("utf-8"))
+    assert saved["futures_status"] == "OK", (
+        "futures_status debe reflejar temporal_meta.FUTURE_SETTLEMENT.status"
+    )

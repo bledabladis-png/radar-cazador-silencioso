@@ -286,6 +286,26 @@ def classify_mte(srs, shs, cls, ips):
         final_scenario = new_scenario
 
 
+    # C2 (ampliacion 2026-10-17): el guard semantico debe aplicarse
+    # tambien POST-histeresis. Si por el camino de transicion (prev
+    # STAGFLATION + validate_transition False) se revierte a
+    # STAGFLATION, se estaria publicando un escenario que el guard ya
+    # descarto del argmax. Coherencia: STAGFLATION no puede ser el
+    # escenario final si no cumple IPS > 0.15 AND SRS > 0, venga de
+    # donde venga. Se fuerza MIXED (estado neutro, mismo patron que
+    # la rama de confidence invalida mas abajo).
+    _ips_ok_final = (
+        isinstance(ips, (int, float)) and ips == ips and ips > 0.15
+    )
+    _srs_ok_final = (
+        isinstance(srs, (int, float)) and srs == srs and srs > 0
+    )
+    if final_scenario == "STAGFLATION" and not (
+        _ips_ok_final and _srs_ok_final
+    ):
+        final_scenario = "MIXED"
+        pending_out = None
+
     confidence = compute_confidence(srs, shs, cls, ips, final_scenario)
 
 
