@@ -443,6 +443,33 @@ items:
   estado: BLOCKED_EXTERNAL
   descripcion: Wyckoff 5b.X v3 esperando muestra suficiente
   dependencia: 'Datos: n_confirmed_H20_complete >= 550 post-2026-10-02 (~2027)'
+- id: CI-PREVENTION-GAP
+  tipo: auditoria_interna
+  ciclo: '2026-10-17'
+  estado: OPEN
+  descripcion: >
+    No existe ningun mecanismo que impida push a main con CI roto.
+    Verificado 2026-10-17: branch protection no configurada
+    (HTTP 404), sin .githooks versionado, sin workflows con
+    pull_request trigger, sin CODEOWNERS. Los gates del workflow
+    diario (pyflakes, pytest, gobernanza via tests) solo actuan
+    DESPUES del push, no antes. El patron "push con tests rojos"
+    documentado en la sesion 16-oct y reproducido en 17-oct
+    (shallow clone) no tiene prevention posible con la
+    infraestructura actual.
+  siguiente_accion: >
+    Decidir e implementar una de estas opciones, con coste y
+    contrapartida: (A) branch protection en main con required
+    checks = los pasos bloqueantes de run-system; coste: rompe
+    el flujo de push directo y los commits del bot
+    ("Daily hist/state") pueden no pasar los checks;
+    (B) hook pre-push versionado en .githooks/ que ejecute
+    compileall + pyflakes + subset rapido de pytest; coste:
+    requiere configurar core.hooksPath por repo y por
+    colaborador, no cubre todos los entornos;
+    (C) aceptar proceso manual ("suite verde antes de push")
+    sin mecanismo tecnico; coste: ya fallo en sesiones 16-oct
+    y 17-oct.
 - id: CI-PUSH-NO-VERIF
   tipo: auditoria_interna
   ciclo: '2026-10-17'
