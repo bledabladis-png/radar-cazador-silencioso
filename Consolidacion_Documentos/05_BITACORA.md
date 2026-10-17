@@ -75,22 +75,44 @@ la enmienda v1.1 en produccion.
   ESTADO_SISTEMA), `8ec3fbd7`. Linea 89: 11571 -> 11528 B.
 - HANDOFF reescrito con el ciclo 17-oct: `33550d82`.
 
-**Commits.** 8ec3fbd7, 4be5a90c, bd30aecb, 4e2822b5, 33550d82.
+**Ampliacion 03:00-04:00 UTC (prevencion).**
+- Fix code smell confirmado con probe: `_collect_failed_contracts`
+  duplicaba `failed_contracts` si un manifest generaba N razones
+  BLOCKED. Movido el append fuera del bucle. `8e96531c`.
+- `tests/test_imports_declarados.py`: import top-level vs
+  requirements.txt, + negativo con mock. Habria cazado pyyaml en
+  0.5s. `30bb02c4`.
+- `tests/test_workflow_fetch_depth.py`: todo job con pytest exige
+  `fetch-depth: 0`. 5 tests (1 positivo + 4 negativos). Habria
+  cazado shallow clone. `0c862502`.
+- `.github/workflows/ci_tests.yml`: suite completa en cada push a
+  main (paths-ignore: data/, outputs/), independiente del gate.
+  Verificado en runs `39000723877` y `39000887521`. `042033a4`.
+- `CI-PREVENTION-GAP`: OPEN -> FIXED -> VERIFIED_IN_PRODUCTION
+  con `042033a4` y los 2 runs como evidencia. `019adbdc`,
+  `161964a3`.
+- `CI-PUSH-NO-VERIF`: `siguiente_accion` incorrecto retirado
+  (`a792fa91`); pyflakes y gobernanza ya eran gates del daily_run.
+
+**Commits (ampliacion).** 8e96531c, 30bb02c4, 0c862502, 019adbdc,
+042033a4, 161964a3.
+
+**Commits totales sesion.** 8ec3fbd7, 4be5a90c, bd30aecb, 4e2822b5,
+33550d82, b63df200, ccff8fca, c91cb76d, a792fa91, d8c42736,
+5ef37d34, 81f8b90f, 93df396f, 3aa67a31, 8e96531c, 30bb02c4,
+0c862502, 3c92cdfd, 019adbdc, 042033a4, 161964a3.
 
 **Pendiente.**
-- `00_ARRANQUE.md` en 11528 B > 11264 (tope). Poda + enmienda
-  v1.1 + `validation.py` + `EQUITY_EOD critical=True` + contrato
-  del gate.
-- Deuda gobernanza: la sesion 16-oct pusheo al menos 2 commits
-  sin CI verde (`529f4ed2` con `import yaml` sin dep, y el que
-  introdujo `test_registro_real_pasa` incompatible con shallow
-  clone). Abrir item en REGISTRO.
+- Verificacion completa de la enmienda v1.1 desde cero: primer
+  run con target_session nuevo (lunes 2026-10-19 23:17 UTC).
 - H5.3 (cron 20-nov-2026). Sin accion antes.
 - C2 (920), SOW v6, Wyckoff 5b.X: bloqueados.
 - Issue #5.
 
-**Proximo paso sugerido.** Cerrar la poda de `00_ARRANQUE` y
-la deuda de gobernanza (item de proceso en REGISTRO).
+**Proximo paso sugerido.** Verificar el run del lunes 19-oct
+(target_session nuevo). Si emite receipt COMPLETED con
+contract_validation_status=OK, la enmienda v1.1 queda verificada
+de punta a punta.
 
 
 ### 2026-10-16 - Auditoria CI + dictamen externo + fases 1-7 + gobernanza

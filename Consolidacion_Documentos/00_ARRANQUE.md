@@ -107,6 +107,13 @@ en `04_HISTORICO.md` y `docs/auditoria/wyckoff/`.
 **Contrato de persistencia de outputs (2026-10-11).** Registro +
 wrapper + verificador + test AST, 19 writers. `02_ARQUITECTURA.md` seccion 4.
 
+**CI tests (2026-10-17).** `.github/workflows/ci_tests.yml` corre la
+suite completa en cada push a main (paths-ignore: `data/`, `outputs/`),
+independiente del gate del `daily_run`. Dos tests de prevencion:
+`test_imports_declarados.py` (imports vs requirements) y
+`test_workflow_fetch_depth.py` (fetch-depth: 0 en jobs con pytest).
+Items `CI-PUSH-NO-VERIF` y `CI-PREVENTION-GAP`: cerrados.
+
 ---
 
 ## 4. PENDIENTE (DESGLOSE)
