@@ -92,25 +92,20 @@ Snapshot al cierre del ultimo commit:
 - Corpus documental: v3 (Consolidacion_Documentos/00-08, 2026-09-30)
 - Universo USA (stock_prices): 255 tickers; total (US+EU): 329. Fuente: `ESTADO_SISTEMA.md`.
 
-**Wyckoff v1.8 en produccion.** Legacy `indicators/wyckoff.py`
-retirado 2026-10-10 (commit 17747a98). Detalle en `04_HISTORICO.md`.
+**Enmienda contractual v1.1 (2026-10-16).** Validacion compartida en
+`src/temporal_contracts/validation.py` (OK|WARN|BLOCKED|UNAVAILABLE).
+`EQUITY_EOD` es `critical=True`: coverage < 0.90 o status INVALID ->
+BLOCKED. Guard y receipt comparten `validate_artifact_contracts()`;
+si BLOCKED o UNAVAILABLE, receipt fail-closed. Verificada en prod
+2026-10-17 (run 38994345784, receipt COMPLETED).
+Contrato: `docs/auditoria/daily_run_gate_contrato_v1.md` +
+`docs/auditoria/daily_run_gate_enmienda_v1_1.md`.
+
+**Wyckoff v1.8 en produccion.** Legacy retirado 2026-10-10. Detalle
+en `04_HISTORICO.md` y `docs/auditoria/wyckoff/`.
 
 **Contrato de persistencia de outputs (2026-10-11).** Registro +
-wrapper `persist/skip` + verificador post-run + test AST. 19
-writers migrados. Detalle en `02_ARQUITECTURA.md` seccion 4.
-
-**Fases IAE:** todas cerradas salvo las vivas:
-- C2 (920): OPEN. Bloqueado por auditor externo. Baseline del par
-  Q4-2025->Q1-2026 congelado (commit 72fa824). Hipotesis P65
-  descartada 2026-09-29 (por diseno de codigo).
-- H5.3: trazabilidad implementada, pendiente cron 20-nov-2026.
-- Detalle por fase en `ESTADO_SISTEMA.md`.
-
-**Auditoria radar externa 2026-09-26:** 142 hallazgos. Triaje
-completo en `docs/auditoria/radar/audits/TRIAGE_*_2026-10-12.md`.
-
-**Auditoria interna:** A1-A6, B, C CERRADOS. Detalle en
-`ESTADO_SISTEMA.md`.
+wrapper + verificador + test AST, 19 writers. `02_ARQUITECTURA.md` seccion 4.
 
 ---
 
@@ -127,39 +122,21 @@ A1-A5, A6, B, C, 6, 7, 8, 9, F: CERRADOS. Detalle tematico en
 
 ### 4.2. Frente Wyckoff (rediseno modulo)
 
-- Estado: **5b.X v3 FIRMADO / FROZEN** (2026-10-03). Candidata N=60,
-  M=30, X_ATR=0.25, Y_VOL=1.10. Config SOW a None, fail-closed.
-- Contrato v1.8 (productivo) + v1.9 (candidata). Legacy intacto,
-  consumidores sin migrar. Expediente: `docs/auditoria/wyckoff/`.
-- v1.8 auditado linea a linea 2026-10-03 (4 BAJA, 0 ALTA/MEDIA).
-  `40_auditoria_v18_linea.md`. Cotejo I1-I36: 36/36.
-- Secuencia: 5b.3 FAIL -> 5b.4 FAIL -> 5b.4-bis PASS (17/240) ->
-  contrato v1.9 -> D-06 -> 5b.X v3 FIRMADO.
-- v3: umbral 550 H20-complete, OOS por t0, escenarios por IC,
-  C1 bootstrap equivalencia, C2 guardrails no bloqueantes, hash
-  congelado (`38_dictamen_final_5bX_v3.md`).
-- **Bloqueado unicamente por datos:** ejecucion cuando
-  `n_confirmed_H20_complete >= 550` post-2026-10-02 (~2027).
-  Script y protocolo inmutables (T7/T7b lo verifican).
-- **Bloqueado aparte:** 5c.4, 5d. **No bloqueado:** 5c, plan v2.
-  **5e retirada legacy CERRADO 2026-10-10.**
-- **Walk-forward SOW (2026-10-04):** v1.9 FAIL; C1 con evidencia OOS
-  historica limpia; C2 exploratoria congelada. `43_estado_sow_tras_walkforward.md`.
-  SOW sigue None / fail-closed. 5b.X v3 aplica solo a C0/v1.9.
-- **Protocolo SOW v6 (2026-10-06):** dictamen 46 (2026-10-04) rechaza
-  v5 grounded. Borrador `48_sow_protocol_v6.md` PENDIENTE FIRMA externa.
-  Sin implementacion hasta firma. Ver `46_*` y `47_*` del expediente.
+- **5b.X v3 FIRMADO / FROZEN** (2026-10-03): N=60, M=30, X_ATR=0.25,
+  Y_VOL=1.10. SOW a None / fail-closed. v3 aplica solo a C0/v1.9.
+- **Bloqueado por datos:** `n_confirmed_H20_complete >= 550` post-2026-10-02
+  (~2027). Script y protocolo inmutables (T7/T7b).
+- **Bloqueado aparte:** 5c.4, 5d. **5e legacy CERRADO 2026-10-10.**
+- **SOW v6:** borrador `48_sow_protocol_v6.md` PENDIENTE FIRMA externa.
+  Sin implementacion hasta firma (dictamen 46 rechaza v5 grounded).
+- Expediente completo: `docs/auditoria/wyckoff/`.
 
 ### 4.3. Pendientes vivos
 
-- **H5.3** - Trazabilidad cron trimestral. Verificada contra codigo
-  2026-10-03 (workflow<->script<->runbook, 9/9). Pendiente ejecucion
-  cron real 20-nov-2026 06:17 UTC. Sin accion antes.
-- **C2 (920)** - Discrepancia H1-B referida al par Q4-2025 -> Q1-2026
-  (congelado). Bloqueado por auditor externo.
-- **5 tests skipped** (2 opt-in red en `test_freshness.py`, 3 de
-  fase 5b en `test_wyckoff_v1_contract.py`). Mecanismo en
-  `conftest.py`. Diseno, no deuda.
+- **H5.3**: cron 20-nov-2026 06:17 UTC. Sin accion antes.
+- **C2 (920)**: bloqueado por auditor externo.
+- **5 tests skipped** (2 network en `test_freshness.py`, 3 fase 5b
+  en `test_wyckoff_v1_contract.py`). Diseno, no deuda.
 
 ### 4.4. Deudas documentadas (sin accion pendiente)
 
@@ -169,10 +146,6 @@ A1-A5, A6, B, C, 6, 7, 8, 9, F: CERRADOS. Detalle tematico en
 - `reporting_dedup` (P65/P66): capa de diagnostico por diseno.
 - Modulos con cobertura ampliada en D18/D21 (no-deuda): ver
   `04_HISTORICO.md` seccion "Resumen D5-D18".
-
-**Nota de deuda del corpus:** `00_ARRANQUE.md` ~11.3 KB. Umbral
-autoimpuesto 11 KB (2026-10-08). Poda aplicada 2026-10-12. Ver
-`01_METODO.md` seccion 11.
 
 ---
 
