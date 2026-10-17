@@ -443,6 +443,28 @@ items:
   estado: BLOCKED_EXTERNAL
   descripcion: Wyckoff 5b.X v3 esperando muestra suficiente
   dependencia: 'Datos: n_confirmed_H20_complete >= 550 post-2026-10-02 (~2027)'
+- id: REP-AUDIT-20261017
+  tipo: auditoria_interna
+  ciclo: '2026-10-17'
+  estado: FIXED
+  descripcion: >
+    Auditoria del reporte del run 38994345784 (cierre viernes 16-oct).
+    7 hallazgos entre reporte, data_quality y MTE. Cada uno tenia su
+    causa raiz trazable, su fix y su test contractual.
+  commit: 27f48986
+  test: tests/test_data_quality_yahoo_coverage.py
+  evidencia: >
+    H1 Yahoo cobertura N/D desde 2026-09-12 (regresion del commit
+    1a4e7ea2): fix dfb8f4d4. H2 12 fuentes con coverage_logic=None:
+    fix 5dd68152. H3 FEZ dShares N/D por diff sobre 1 fila: fix
+    2fef491e. H4 LYXI Z-score N/D sin motivo: fix a662d882. H5
+    Spring/SOS con celda vacia para 0: fix 65ed84c6. A MTE STAGFLATION
+    publicado con IPS=-0.387 (guard solo en argmax, no post-histeresis):
+    fix 05a86817. B futures_status='BLOCKED' hardcoded: fix 05a86817.
+    Verificacion en reporte regenerado (run local 2026-10-17 07:56):
+    los 7 fixes presentes. Tests nuevos: 12 (Yahoo, 12 fuentes,
+    ssga shares_change, z-score motivo, spring/sos, MTE post-hist,
+    futures_status, C1 sintesis, C2 consistency).
 - id: CI-PREVENTION-GAP
   tipo: auditoria_interna
   ciclo: '2026-10-17'

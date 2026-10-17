@@ -150,6 +150,27 @@ de punta a punta.
   futures_status real).
 - 00_ARRANQUE: mencion ampliada.
 
+**Ampliacion 05:30-06:00 UTC (verificacion en reporte real).**
+- `py run.py` local (2026-10-17 05:35 UTC, 20 min). El reporte
+  regenerado confirma los 7 fixes:
+  - H1: Yahoo Finance 100.00% cobertura (antes N/D).
+  - H2: 0 lineas N/D en columna Cobertura (antes 13).
+  - H3: FEZ dShares=0 explicito (antes N/D).
+  - H4: LYXI Z-score `N/D (MAD0)` con nota (antes N/D sin motivo).
+  - H5: Spring/SOS 0/0 (antes vacio/[v]).
+  - A: MTE MIXED con ips=-0.387 (antes STAGFLATION).
+  - B: futures_status OK (antes BLOCKED hardcoded).
+- `git checkout -- data/ outputs/` tras verificar (politica
+ 01_METODO seccion 4: run manual no es publicacion).
+- Item gobernanza `REP-AUDIT-20261017` (agrupado, 1 item por los 7
+  hallazgos). Verificacion: VERIFIED_IN_PRODUCTION.
+
+**Proximo paso sugerido.** Verificar run scheduled del lunes
+2026-10-19 23:17 UTC (target_session nuevo) con todos los fixes en
+CI. Si emite receipt COMPLETED con contract_validation_status=OK,
+la enmienda v1.1 + addendum v1.2 quedan verificadas de punta a
+punta.
+
 **Commits (ampliacion).** d34c15bb (retirar verify_v11.yml).
 
 **Pendiente.**
