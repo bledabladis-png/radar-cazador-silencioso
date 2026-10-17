@@ -8,13 +8,13 @@ No crear variantes con fecha.
 
 ---
 
-## 1. ESTADO AL CIERRE (2026-10-16 madrugada)
+## 1. ESTADO AL CIERRE (2026-10-17 02:46 UTC)
 
 Rama activa:    main
 HEAD:           consultar `git log --oneline -1` (no literal; el corpus no fija SHA para evitar deriva)
 Sincronizacion: main == origin/main
 Tests:          ver `Consolidacion_Documentos/ESTADO_SISTEMA.md` (fuente autoritativa).
-                Referencia orientativa: ~3520 passed + 5 skipped (con filtro CI).
+                Referencia orientativa al cierre: 3570 passed + 5 skipped (con filtro CI).
 Validation Gate: 10/10
 Working tree:   limpio (salvo data/ y outputs/ que el bot actualiza)
 Corpus:         v3 (Consolidacion_Documentos/00-08 + ESTADO_SISTEMA)
@@ -24,149 +24,102 @@ Contrato gate:  docs/auditoria/daily_run_gate_contrato_v1.md +
 
 ---
 
-## 2. SESION 16-OCT (auditoria del reporte + segundo dictamen + enmienda v1.1)
+## 2. SESION 17-OCT (fix CI + verificacion en produccion de la enmienda v1.1)
 
 ### 2.0. Contexto
 
-Tercera sesion del dia. Se audita el reporte generado por el run
-38834597307 (16-oct 01:20 UTC). 10 hallazgos clasificados.
-Emitido informe al auditor externo. Recibido dictamen con 6
-precisiones. Aplicadas las fases aprobadas.
+Los runs scheduled 23:17 UTC (16-oct) y 01:19 UTC (17-oct) fallaron
+en "Run tests" con exit 2 y exit 1 respectivamente. Diagnostico,
+dos fixes P0, dispatch manual, verificacion en produccion.
 
-### 2.1. Hallazgos criticos (auditoria del reporte)
+### 2.1. Hallazgos
 
-- **N-C1**: `market_data.parquet` con `last_date=2026-10-14` y
-  `US_EQUITY.coverage_at_session=0.0` (contrato EQUITY_EOD con
-  `max_lag_days=0`). El pipeline no aborto y el receipt se emitio.
-- **N-C2**: `guard_coverage.py` verifica `last > expected` pero no
-  `last < expected`.
-- **N-C3**: `guard_coverage.py` ignora `by_market` cuando la cobertura
-  global pasa el threshold.
-- **N-C4**: `write_completion_receipt.py` no verifica `last_date` vs
-  `expected_session` del manifest.
-- **N-C5**: el receipt emitido con el pipeline desfasado impidio la
-  recuperacion por slots posteriores (idempotencia protegiendo una
-  finalizacion invalida).
-- **N-C6**: `breadth_metrics.py` usaba `df_stocks.index[-1]`
-  (posicion fisica), violando R2.
-- **N-C7**: sin control explicito de alineacion de sesion esperada
-  en `health_check.py`.
-- **C2**: STAGFLATION ganaba el `argmax` sin que `IPS > 0.15`.
-- **C3**: asterisco de saturacion ausente en el reporte CI
-  (`primary_flow_z_raw` no propagado al df in-memory de SSGA).
-- **M1, M2, M3**: alerta H1 categorica con |Z| pequeno;
-  FLOW_CONFIDENCE empate no documentado; Data Freshness vs Sector
-  Breadth sin distincion de dimensiones.
+- **P0-A - pyyaml no declarado.** El commit `529f4ed2` (gobernanza
+  fases 4-7) introdujo `import yaml` en `scripts/verifica_gobernanza.py`,
+  `scripts/genera_indice_auditorias.py`, `tests/test_gobernanza.py`,
+  `tests/test_anclas_temporales.py` sin anadir `pyyaml` a
+  `requirements.txt`. En local pasaba porque `optuna` lo instalaba
+  como dependencia transitiva (no declarada tampoco). En CI: 3
+  collection errors, exit 2.
+- **P0-B - shallow clone.** Tras fix pyyaml, "Run tests" volvio a
+  fallar (exit 1) en `test_gobernanza.py::test_registro_real_pasa`.
+  Causa: `actions/checkout@v4` hace `fetch-depth: 1` por defecto.
+  El test verifica existencia de los 37 SHAs referenciados en
+  `REGISTRO.yaml` contra git; solo existia HEAD.
+- **P1 - US_EQUITY INVALID.** El `completion_attempt` del run fallido
+  (`38990355276`) reportaba `US_EQUITY: status=INVALID` en
+  `market_data.parquet.manifest.json`. No causa del fallo: era
+  estado heredado del ultimo run valido (el pipeline no corrio).
+### 2.2. Implementado
 
-### 2.2. Segundo dictamen (precisiones)
+- `4be5a90c`: `pyyaml==6.0.3` en `requirements.txt`.
+- `bd30aecb`: `fetch-depth: 0` en el checkout del job `run-system`
+  (solo ese; `gate`, `issue-manager` y LSE scraper no ejecutan
+  pytest ni dependen de historia).
+- `4e2822b5`: 12 items `VERIFIED_IN_CI_PENDING` ->
+  `VERIFIED_IN_PRODUCTION` en `REGISTRO.yaml`.
+- `8ec3fbd7`: eliminar cifra literal de tests en `00_ARRANQUE.md`
+  (drift con `ESTADO_SISTEMA.md`).
 
-- Criticidad explicita por contrato, no umbral dinamico de volumen.
-- Validacion compartida en `src/temporal_contracts/validation.py`.
-- Registro de intentos como artifact por ejecucion (no commit al repo).
-- Test R3 explicito con datos controlados.
-- Guard semantico STAGFLATION con `IPS > 0.15 AND SRS > 0`.
-- Enmienda contractual v1.1 publicada antes de tocar el guard.
+### 2.3. Verificacion en produccion
 
-### 2.3. Implementado
+Run `38994345784` (dispatch 02:17 UTC, head `bd30aecb`): success
+completo. `completion-receipt-2026-10-16` con
+`contract_validation_status: OK`, `manifest_coverage_pct: 0.9757`,
+`guard_coverage: OK`, `validation_gate: 10/10`,
+`pipeline_conclusion: success`. `completion-attempt`:
+`outcome: SUCCESS`, `failed_contracts: []`.
 
-**Commits M1, M2, M3, C3, N-C7, N-C6** — cerrados y verificados.
-
-**Enmienda v1.1** (`docs/auditoria/daily_run_gate_enmienda_v1_1.md`):
-- Cambia: guard_coverage ya puede modificarse. Anadida validacion
-  contractual compartida con el receipt.
-- No cambia: schema del receipt (v1). Invariantes I1-I8 preservadas.
-- Anade: campo `critical: bool` en registry, funcion
-  `validate_artifact_contracts()`, registro de intentos como artifact.
-
-**`src/temporal_contracts/validation.py`**:
-- Estados: OK | WARN | BLOCKED | UNAVAILABLE.
-- Reglas: contrato critico con INVALID o coverage < min -> BLOCKED;
-  contrato critico con n=0 -> BLOCKED; by_market sin el contrato
-  critico -> UNAVAILABLE; by_market ausente -> WARN (no hay desglose).
-- `EQUITY_EOD` marcado `critical=True`. Los demas `critical=False`.
-
-**`scripts/guard_coverage.py`**: anade validacion contractual. El
-guard original (cobertura global + sha256 + last>expected) se preserva.
-
-**`scripts/write_completion_receipt.py`**: anade la misma validacion
-como precondicion. Si `BLOCKED` o `UNAVAILABLE`, no se emite receipt
-(fail-closed).
-
-### 2.4. Commits del dia (14)
-
-  3023d2d2  C2: guard semantico STAGFLATION
-  daac0003  N-C6 completo: sort_index + test R3 compartida
-  97c00097  enmienda v1.1 - registro de intentos como artifact
-  9bd00fea  fix handoff (cita H15)
-  02a70ec3  cierre intermedio sesion
-  df5b6974  fix tests post-integracion
-  4ac3ec0c  integracion guard + receipt
-  db5cc2db  validation.py + criticidad en registry
-  1859a143  enmienda v1.1
-  79a24106  N-C6: fecha efectiva canonica breadth + cap R4
-  a4f19514  fix tests H1 a banda neutral + limpieza pyflakes
-  e87f94f1  N-C7: check alineacion sesion esperada
-  e6b2fc0b  C3: primary_flow_z_raw en SSGA return
-  e3eb2fe0  fix resolve_target_session (contrato UTC)
-  7c913031  chore(ci): pin ubuntu-24.04 en 9 workflows
-  4b7caba6  M1+M2+M3
+Con esto, la enmienda v1.1 queda verificada en produccion (guard +
+receipt compartiendo `validate_artifact_contracts()`).
 
 ---
 
 ## 3. FRENTES CERRADOS EN LA SESION
 
-- Auditoria del reporte del run 38834597307 (10 hallazgos).
-- M1, M2, M3 (redaccion + notas + alineacion sesion).
-- C3 (provider SSGA).
-- N-C6 (breadth R2).
-- N-C7 (health check alineacion).
-- Enmienda v1.1 + validation.py + integracion guard/receipt.
+- pyyaml no declarado (P0-A).
+- shallow clone incompatible con test de gobernanza (P0-B).
+- US_EQUITY INVALID (P1): resuelto por el run valido.
+- Verificacion en produccion de enmienda v1.1.
+- 12 items `PENDING` -> `PRODUCTION` en REGISTRO.
 
 ---
 
 ## 4. PENDIENTES VIVOS
 
-### 4.1. Commits 4, 5, 6 del dictamen — CERRADOS
+### 4.1. Documental
 
-Los tres commits estan aplicados y pusheados:
+- **`00_ARRANQUE.md` sobre tope.** 11528 B > 11264 B (tope
+  autoimpuesto). Pendiente: poda + anadir enmienda v1.1,
+  `validation.py`, `EQUITY_EOD critical=True` y contrato del gate.
+- **Divergencia de comando pytest.** `00_ARRANQUE` sin `-n 12`;
+  HANDOFF anterior con `-n 12`; `pytest-xdist` no esta en
+  `requirements.txt`. Decision: alinear a `00_ARRANQUE` (sin
+  `-n 12`, coincide con el CI). Esta version del HANDOFF lo aplica.
+### 4.2. Gobernanza - proceso
 
-- **Commit 4** (`97c00097`): registro de intentos como artifact
-  (`write_completion_attempt.py` + `completion_attempt.jsonl` con
-  `if: always()`).
-- **Commit 5** (`daac0003`): test R3 explicito. Descubrio bug real
-  en `resolve_effective_date` (usaba `index[-1]` sin sort_index).
-  Corregido.
-- **Commit 6** (`3023d2d2`): guard semantico STAGFLATION.
+- **Deuda detectada.** La sesion 16-oct pusheo al menos dos commits
+  que rompian CI real (`529f4ed2` con `import yaml` sin dep, y el
+  commit que introdujo `test_registro_real_pasa` incompatible con
+  shallow clone). Mismo patron que la autocritica anterior (3 push
+  con tests en rojo). Abrir item en `REGISTRO.yaml` como deuda de
+  proceso.
 
-Con esto, el segundo dictamen del auditor esta completamente aplicado.
+### 4.3. Otros frentes vivos
 
-### 4.2. Verificacion del cron tras enmienda v1.1
+- **H5.3** - cron trimestral 20-nov-2026 06:17 UTC. Sin accion antes.
+- **C2 (920)** - bloqueado por auditor externo.
+- **Wyckoff 5b.X v3** - bloqueado por datos
+  (`n_confirmed_H20_complete >= 550` post-2026-10-02, ~2027).
+- **SOW v6** - pendiente firma externa.
+- **Ubuntu 26** - `ubuntu-latest` migra el 19-oct-2026. Los workflows
+  ya pinnen `ubuntu-24.04` (commit `7c913031`).
+- **Issue #5** - `[health-check] WARN - discrepancias no criticas`.
+  Deuda de proceso.
 
-Dispatch manual del 16-oct 18:48 UTC (run 38950172470): gate devolvio
-`CURRENT` por receipt del run 38834597307 (target_session 2026-10-15).
-Correcto (18:48 UTC es pre-publish para el 16-oct).
+### 4.4. Deudas documentadas (sin accion pendiente)
 
-**Proximo hito:** slot del cron 23:17 UTC (post-publish, target_session
-= 2026-10-16). Ejecutara pipeline con enmienda v1.1 en produccion.
-Verificar:
-- `completion_attempt.jsonl` como artifact (if: always()).
-- Si `market_data.US_EQUITY` cumple contrato EQUITY_EOD -> receipt
-  emitido con `contract_validation_status` en el JSON.
-- Si incumple -> guard falla y no se emite receipt (fail-closed).
-
-### 4.3. Aviso GitHub
-
-`ubuntu-latest` migra a Ubuntu 26 el 19-oct-2026.
-
-### 4.4. Issue #5
-
-`[health-check] WARN - discrepancias no criticas`. Deuda de proceso.
-
-### 4.5. Nota propia (autocritica de la sesion)
-
-En esta sesion pusheé 3 veces con tests en rojo (el commit 4ac3ec0c
-y dos iteraciones previas de otros bloques). Corregido. Motivo:
-prisa. Regla no negociable: suite verde antes de commit.
+Ver `00_ARRANQUE.md` seccion 4.4. Sin cambios.
 
 ---
 
@@ -179,19 +132,18 @@ prisa. Regla no negociable: suite verde antes de commit.
     py scripts\verifica_gobernanza.py
     py scripts\genera_indice_auditorias.py
     py scripts\poda_bitacora.py --check
-    py -m pytest tests/ -q -n 12 --tb=line -m "not integration_real_data"
+    py -m pytest tests/ -q --tb=line -m "not integration_real_data"
     py -m pyflakes . ; py -m compileall . -q
 
 Esperado:
 - HEAD = el que devuelva `git log --oneline -1`.
-- ahead 0, behind 0 (o behind N si el bot ha pusheado).
+- ahead 0, behind 0 (o behind N si el bot ha pusheado; `git pull --ff-only`).
 - working tree limpio.
-- ~3493 passed + 5 skipped.
+- Tests: ver `ESTADO_SISTEMA.md`. Referencia al cierre: 3570 passed + 5 skipped.
 - pyflakes silencio, compileall OK.
 - Gobernanza: `[OK] Gobernanza coherente`.
 - Indice H1-H18: `[OK] indice actualizado`.
 - Bitacora: `[OK] Bitacora dentro de la regla`.
-
 ---
 
 ## 6. NOTAS CRITICAS
@@ -207,6 +159,12 @@ Esperado:
 - **Contrato EQUITY_EOD `critical=True`.** `market_data` con
   `US_EQUITY.status=INVALID` o `coverage_at_session < 0.90` bloquea
   la publicacion del receipt.
+- **Shallow clone rompe tests contractuales de gobernanza.** El
+  job `run-system` necesita `fetch-depth: 0`. Si se anade otro
+  job que corra pytest, replicarlo.
+- **`import yaml` requiere `pyyaml` en `requirements.txt`.**
+  No confiar en dependencias transitivas (optuna lo instalaba
+  en local).
 - **Schedule vs Dispatch.** Un dispatch reciente NUNCA oculta
   ausencia de schedule.
 - **Gobernanza canonica.** Cualquier item de auditoria va a
@@ -214,7 +172,8 @@ Esperado:
   indice son VISTAS; nunca fuente de estado.
 - **Anclas temporales.** Cualquier fecha literal en asignacion modulo
   o default de funcion debe estar en `docs/gobernanza/ANCLAS.yaml`.
-- **EOL del corpus:** LF.
+- **EOL del corpus:** LF. (`00_ARRANQUE.md` es LF; versiones previas
+  del HANDOFF decian CRLF incorrectamente.)
 
 ---
 
