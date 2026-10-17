@@ -502,3 +502,168 @@ items:
     contract_validation_status=OK. Suite verde en CI por primera vez
     desde 529f4ed2.
   verificacion: VERIFIED_IN_PRODUCTION
+- id: REP-AUDIT-20261017-H4-REPORT
+  tipo: auditoria_interna
+  ciclo: '2026-10-17'
+  estado: FIXED
+  descripcion: >
+    compute_flow_proxy devolvia 0.0 para tickers sin volumen reportado
+    por el proveedor (FX, ICE Dollar Index, SPGSCI). El reporte publicaba
+    0.00 (flujo neutro) cuando el dato no existia. Ahora devuelve NaN y
+    el render publica N/D.
+  commit: 09f32770
+  test: tests/test_h4_flow_proxy_volume_zero.py
+  evidencia: >
+    4 tests nuevos. E2E con run.py: tabla "Otros Activos" con 15 filas
+    (10 numericas, 5 N/D en EURUSD=X, USDJPY=X, USDCNY=X, DX-Y.NYB,
+    SPGSCI). Sin efectos colaterales (consumidor _forzar_lideres_slpm
+    busca ETF sectorial top, no FX).
+  verificacion: VERIFIED_IN_CI
+
+- id: REP-AUDIT-20261017-CAPA1
+  tipo: auditoria_interna
+  ciclo: '2026-10-17'
+  estado: FIXED
+  descripcion: >
+    Literales de ventana/umbral en el render del reporte que duplicaban
+    valores de config/settings.py. Si la config cambiaba, el texto
+    quedaba obsoleto sin que ningun test lo detectara.
+  commit: 0d58c5ae
+  test: tests/test_no_stale_literals.py
+  evidencia: >
+    3 tests contractuales: nota CFTC sin numero hardcoded, "RS Mom = ...
+    N dias" usa MOMENTUM_PRICE_WINDOW, "z-score robusto sobre N dias"
+    usa FLOW_ZSCORE_WINDOW.
+  verificacion: VERIFIED_IN_CI
+
+- id: REP-AUDIT-20261017-CAPA2A
+  tipo: auditoria_interna
+  ciclo: '2026-10-17'
+  estado: FIXED
+  descripcion: >
+    H14: alerta "el credito lo confirma" con HYG/LQD Z=-0.60. Banda
+    neutral |Z|<0.5 era demasiado estrecha. H15: Resumen de Regimenes
+    decia "volatilidad y liquidez no confirman deterioro" con FLS 85/100
+    sin explicar que son dimensiones distintas.
+  commit: 781da474
+  test: tests/test_h14_h15_sostenibilidad.py
+  evidencia: >
+    NEUTRAL_BAND_HYG_LQD_ZSCORE=0.75 y FLS_STRESS_THRESHOLD=70 en
+    config/settings.py. Textos modulados: con |Z|<0.75 "neutral", con
+    FLS>=70 aclara que es estres de corto plazo. 8 tests nuevos.
+  verificacion: VERIFIED_IN_CI
+
+- id: REP-AUDIT-20261017-CAPA2B
+  tipo: auditoria_interna
+  ciclo: '2026-10-17'
+  estado: FIXED
+  descripcion: >
+    H17: etiquetas de divergencia precio-flujo por signo puro. XLRE
+    (ret=-0.04%) salia como "Confirmacion de debilidad", XLC (ret=-0.11%)
+    como "Absorcion potencial", sin umbral de materialidad. Ademas:
+    mojibake real en las etiquetas ("Confirmaci¾n" con U+00BE).
+  commit: 9b3d5b33
+  test: tests/test_h17_divergence_materiality.py
+  evidencia: >
+    FLOW_DIVERGENCE_MATERIALITY_THRESHOLD=0.01. Con |ret|<1% la etiqueta
+    lleva sufijo " (debil)". Mojibake corregido a UTF-8 correcto
+    ("Confirmacion", "Absorcion"). 8 tests nuevos con los casos reales
+    del reporte del 17-oct.
+  verificacion: VERIFIED_IN_CI
+
+- id: REP-AUDIT-20261017-CAPA3
+  tipo: auditoria_interna
+  ciclo: '2026-10-17'
+  estado: FIXED
+  descripcion: >
+    H1: cabecera usaba "**Fecha:**" para reference_date (inicio del
+    run), lo cual sugeria que era la fecha de generacion. H2:
+    build_provenance no generaba identificador en ejecuciones locales,
+    publicaba "N/D (ejecucion local)" sin distinguir "no paso por build"
+    de "local sin ID".
+  commit: c2d6b604
+  test: tests/test_h1_h2_timestamps_provenance.py
+  evidencia: >
+    Header publica "**Referencia:**" + "**Generado:**".
+    _make_local_run_id genera "local-<8hex>" determinista desde
+    (reference_date, commit, generated_at). 11 tests nuevos. 3 tests
+    existentes adaptados (smoke, provenance).
+  verificacion: VERIFIED_IN_CI
+
+- id: REP-AUDIT-20261017-CAPA4
+  tipo: auditoria_interna
+  ciclo: '2026-10-17'
+  estado: FIXED
+  descripcion: >
+    detect_cross_module_conflict usaba substring match: SLOWDOWN
+    contenia LOW -> bias +1 (expansion); LOW_STRESS contenia STRESS ->
+    bias -1 (estres). Clasificacion accidental. CSV de regimenes tenia
+    columna liquidity_regime con valores de financial_regime (naming
+    bug). Bloque INFO no publicaba Expansion.
+  commit: 5d21b45d
+  test: tests/test_cross_module_regimes.py
+  evidencia: >
+    3 commits atomicos (ba4fca3a clasificacion exacta, a92f52e9 columnas
+    CSV, 5d21b45d Expansion: N/5). Igualdad exacta con frozensets.
+    EXTREME_STRESS y LIQUIDITY CRISIS anadidos explicitos. 23 tests
+    nuevos. 2 tests existentes adaptados. Dictamen Gate 0.5 aprobado
+    con correcciones.
+  verificacion: VERIFIED_IN_CI
+
+- id: REP-AUDIT-20261017-CAPA5
+  tipo: auditoria_interna
+  ciclo: '2026-10-17'
+  estado: FIXED
+  descripcion: >
+    H6: la A/D Line acumulada paso de 15.010 a 17.455 entre runs
+    consecutivos con ad_net=+75. Causa: la serie se calcula con
+    ad_net.cumsum() sobre df_stocks del run actual, no es incremental
+    persistida. Cambios en el universo o revisiones del proveedor
+    alteran el valor absoluto.
+  commit: 85b79cd9
+  test: tests/test_h6_ad_line_sostenibilidad.py
+  evidencia: >
+    El render declara "Recalculada sobre el universo actual en cada run;
+    no es una serie incremental persistida. Si el universo o la revision
+    historica del proveedor cambia, el valor no es comparable con runs
+    anteriores." Con active_tickers/total_tickers si disponibles.
+    6 tests nuevos.
+  verificacion: VERIFIED_IN_CI
+
+- id: REP-AUDIT-20261017-CAPA6
+  tipo: auditoria_interna
+  ciclo: '2026-10-17'
+  estado: FIXED
+  descripcion: >
+    Eliminado alias legacy liquidity_regime del CSV. Anadida
+    persistencia de real_liq_regime (liquidez real FRED) que se
+    calculaba pero no se guardaba. Corregido texto de regimen de
+    volatilidad: decia "VELOCIDAD (z-score del retorno del VIX)"
+    cuando mide volatilidad realizada (std rolling de retornos).
+  commit: aa82a549
+  test: tests/test_h4_volatility_level_vs_speed.py
+  evidencia: >
+    2 commits (f2dec91f elimina alias + migra CSV + script
+    migrate_macro_regime_csv.py; aa82a549 corrige texto volatilidad).
+    CSV historico 62 filas migradas sin imputacion. 12 tests nuevos +
+    2 adaptados. Verificado que no habia consumidores del alias.
+  verificacion: VERIFIED_IN_CI
+
+- id: REP-AUDIT-20261017-COMMITF
+  tipo: auditoria_interna
+  ciclo: '2026-10-17'
+  estado: FIXED
+  descripcion: >
+    Renombrado parametro liquidity_regime -> financial_regime en
+    render_alerts, render_regimenes, render_sintesis_senales y
+    generate_daily_report. El valor que reciben siempre fue
+    financial_regime; el nombre era residual del bug de naming
+    corregido en capas anteriores.
+  commit: a6adeacd
+  test: tests/test_report_alerts_header.py
+  evidencia: >
+    37 ocurrencias renombradas (13 productivas + 24 en tests). 8 tests
+    adaptados. detect_cross_module_conflict intacto: su parametro
+    liquidity_regime es legitimo (liquidez real). run.py intacto
+    (llamada posicional). Suite completa verde, pyflakes limpio.
+  verificacion: VERIFIED_IN_CI
