@@ -92,7 +92,7 @@ def render_sintesis_senales(macro_regime, slpm_v12_data, liquidity_regime,
 
     # 3. Condiciones financieras o liquidez (si es relevante)
     if liquidity_regime in ('HIGH_STRESS', 'EXTREME_STRESS'):
-        resumen.append(f"- **Condiciones financieras: {liquidity_regime}** — estrés elevado en crédito y liquidez.")
+        resumen.append(f"- **Condiciones financieras: {liquidity_regime}** — estrés elevado en crédito. La liquidez real (FRED) se reporta por separado en el Resumen de Regímenes.")
     elif liquidity_regime == 'ESTRECHA':
         resumen.append("- **Condiciones financieras: ESTRECHA** — señales financieras en territorio restrictivo.")
 
