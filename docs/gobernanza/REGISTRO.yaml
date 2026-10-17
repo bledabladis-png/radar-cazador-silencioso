@@ -14,7 +14,7 @@ items:
   commit: 3023d2d2
   test: tests/test_classify_mte_stagflation_gate.py
   evidencia: Guard semantico en classify_mte; condicion publicada en H15
-  verificacion: VERIFIED_IN_CI_PENDING
+  verificacion: VERIFIED_IN_PRODUCTION
 - id: C3-PROVIDER
   tipo: auditoria_interna
   ciclo: '2026-10-16'
@@ -90,7 +90,7 @@ items:
   commit: 97c00097
   test: tests/test_write_completion_attempt.py
   evidencia: 'completion_attempt.jsonl subido como artifact con if: always()'
-  verificacion: VERIFIED_IN_CI_PENDING
+  verificacion: VERIFIED_IN_PRODUCTION
 - id: DICT2-ENMIENDA
   tipo: dictamen_externo
   ciclo: '2026-10-16'
@@ -99,7 +99,7 @@ items:
   commit: 1859a143
   test: tests/test_temporal_validation.py
   evidencia: 'Contrato del gate: schema v1 mantenido, alcance del guard ampliado'
-  verificacion: VERIFIED_IN_CI_PENDING
+  verificacion: VERIFIED_IN_PRODUCTION
 - id: DICT2-R3TEST
   tipo: dictamen_externo
   ciclo: '2026-10-16'
@@ -108,7 +108,7 @@ items:
   commit: daac0003
   test: tests/test_breadth_r3_fecha_efectiva_compartida.py
   evidencia: 'Descubrio bug real: resolve_effective_date usaba index[-1] sin ordenar'
-  verificacion: VERIFIED_IN_CI_PENDING
+  verificacion: VERIFIED_IN_PRODUCTION
 - id: H1
   tipo: auditoria_externa
   ciclo: '2026-10-15'
@@ -365,7 +365,7 @@ items:
   commit: 4ac3ec0c
   test: tests/test_temporal_validation.py
   evidencia: Contrato EQUITY_EOD (critical=True) bloquea si coverage < 0.90 o status=INVALID
-  verificacion: VERIFIED_IN_CI_PENDING
+  verificacion: VERIFIED_IN_PRODUCTION
 - id: N-C2
   tipo: auditoria_interna
   ciclo: '2026-10-16'
@@ -374,7 +374,7 @@ items:
   commit: 4ac3ec0c
   test: tests/test_guard_coverage_validation.py
   evidencia: Validacion contractual compartida en src/temporal_contracts/validation.py
-  verificacion: VERIFIED_IN_CI_PENDING
+  verificacion: VERIFIED_IN_PRODUCTION
 - id: N-C3
   tipo: auditoria_interna
   ciclo: '2026-10-16'
@@ -383,7 +383,7 @@ items:
   commit: 4ac3ec0c
   test: tests/test_guard_coverage_validation.py
   evidencia: 'Invariante: cobertura global OK no neutraliza invalid de universo obligatorio'
-  verificacion: VERIFIED_IN_CI_PENDING
+  verificacion: VERIFIED_IN_PRODUCTION
 - id: N-C4
   tipo: auditoria_interna
   ciclo: '2026-10-16'
@@ -393,7 +393,7 @@ items:
   test: tests/test_write_completion_receipt.py
   evidencia: 'Precondicion de emision: validate_artifact_contracts() no debe devolver
     BLOCKED ni UNAVAILABLE'
-  verificacion: VERIFIED_IN_CI_PENDING
+  verificacion: VERIFIED_IN_PRODUCTION
 - id: N-C5
   tipo: auditoria_interna
   ciclo: '2026-10-16'
@@ -402,7 +402,7 @@ items:
   commit: 97c00097
   test: tests/test_write_completion_attempt.py
   evidencia: Registro de intentos incompletos como artifact por ejecucion
-  verificacion: VERIFIED_IN_CI_PENDING
+  verificacion: VERIFIED_IN_PRODUCTION
 - id: N-C6
   tipo: auditoria_interna
   ciclo: '2026-10-16'
@@ -411,7 +411,7 @@ items:
   commit: daac0003
   test: tests/test_breadth_effective_date_nc6.py
   evidencia: resolve_effective_date con sort_index + universo combinado + cap R4
-  verificacion: VERIFIED_IN_CI_PENDING
+  verificacion: VERIFIED_IN_PRODUCTION
 - id: N-C7
   tipo: auditoria_interna
   ciclo: '2026-10-16'
@@ -420,7 +420,7 @@ items:
   commit: e87f94f1
   test: tests/test_health_check_session_alignment.py
   evidencia: check_expected_session_alignment detecta LAGGED + mercados INVALID
-  verificacion: VERIFIED_IN_CI_PENDING
+  verificacion: VERIFIED_IN_PRODUCTION
 - id: N-C8
   tipo: auditoria_interna
   ciclo: '2026-10-16'
@@ -430,7 +430,7 @@ items:
   commit: e3eb2fe0
   test: tests/test_pipeline_gate_target_session_hours.py
   evidencia: Contrato UTC explicito; 24h naive == 24h aware; ventana cerrada
-  verificacion: VERIFIED_IN_CI_PENDING
+  verificacion: VERIFIED_IN_PRODUCTION
 - id: SOW-V6
   tipo: frente
   ciclo: '2026-10-06'
