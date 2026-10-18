@@ -7,7 +7,13 @@ Exit code real (fuente autoritativa nunca stale).
 Tests hermeticos: monkeypatch de run + rutas a tmp_path. No leen
 data/ ni outputs/.
 """
-import generate_estado_sistema as ges
+import sys
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(ROOT))
+
+from scripts import generate_estado_sistema as ges
 
 
 def _fake_run(pytest_rc=0, compileall_rc=0, pyflakes_rc=0, pytest_out=None, pyflakes_out=""):
@@ -26,6 +32,7 @@ def _fake_run(pytest_rc=0, compileall_rc=0, pyflakes_rc=0, pytest_out=None, pyfl
 
 def _setup_hermetic(monkeypatch, tmp_path, fake_run):
     monkeypatch.setattr(ges, 'run', fake_run)
+    monkeypatch.setattr(ges, 'ROOT', tmp_path)
     monkeypatch.setattr(ges, 'IAE_ROOT', tmp_path / "iae_no_existe")
     monkeypatch.setattr(ges, 'MAPPINGS_IAE', [])
     monkeypatch.setattr(ges, 'SCRIPTS_IAE', [])

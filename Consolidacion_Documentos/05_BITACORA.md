@@ -51,15 +51,15 @@ anterior (GEN-ESTADO-VALIDATION-VACIO y GEN-ESTADO-TESTS-NOT-FAILCLOSED),
 adelantandolos al mismo dia en lugar de esperar al scheduled del lunes.
 
 **Hecho.**
-- GEN-ESTADO-VALIDATION-VACIO (PON_AQUI_SHA_A): retirar validation/ del
+- GEN-ESTADO-VALIDATION-VACIO (72659a9f): retirar validation/ del
   cmd de pytest. Test estatico AST que verifica el cmd del run().
-- GEN-ESTADO-TESTS-NOT-FAILCLOSED (PON_AQUI_SHA_B): propagar rc de
+- GEN-ESTADO-TESTS-NOT-FAILCLOSED (cb3253d3): propagar rc de
   section_tests() y section_integridad() a main(). Snapshot se
   escribe siempre; exit code 1 si tests/compileall/pyflakes fallan.
   4 tests hermeticos con tmp_path + monkeypatch.
 - Snapshot ESTADO_SISTEMA.md sin cambios (raw 3739).
 
-**Commits.** PON_AQUI_SHA_A, PON_AQUI_SHA_B.
+**Commits.** 72659a9f, cb3253d3.
 
 **Pendiente.**
 - Scheduled lunes 2026-10-19 23:17 UTC (certificacion prod v1.1+v1.2).
