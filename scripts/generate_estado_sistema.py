@@ -81,7 +81,7 @@ def section_git():
 
 def section_tests():
     lines = ['## 2. Tests (pytest real)', '']
-    out, rc = run(['py', '-m', 'pytest', 'tests/', 'validation/', '-q', '--tb=no', '--no-header'])
+    out, rc = run(['py', '-m', 'pytest', 'tests/', '-q', '--tb=no', '--no-header'])
     # Resumen
     summary = None
     for line in out.splitlines():
