@@ -1,594 +1,465 @@
 date,source,last_date,age_calendar_days,frequency,freshness,n_total,n_valid,coverage,notes
-2026-09-07,Yahoo Finance,2026-09-07,0.0,daily,CURRENT,11.0,11.0,1.0,Precios y métricas sectoriales
-2026-09-07,SSGA ETF Flow,2026-09-03,4.0,daily,RECENT,12.0,12.0,1.0,Flujo primario
-2026-09-07,CBOE PCR,2026-09-04,3.0,daily,CURRENT,31.0,31.0,1.0,Put/Call ratio
-2026-09-07,FINRA Dark Pool,2026-08-10,28.0,finra,CURRENT,,,,Retraso regulatorio 2-4 semanas
-2026-09-07,CFTC Position Flow,2026-09-01,6.0,cftc,CURRENT,,,,Frescura 30 días
-2026-09-07,SEC N-PORT,,,sec,N/D,,,,Trimestral
-2026-09-07,Macro FRED,2026-09-06,1.0,fred,CURRENT,,,,Datos macro manuales
-2026-09-07,Sector Concentration,2026-09-07,0.0,daily,CURRENT,11.0,11.0,1.0,Concentración y dispersión
-2026-09-07,Sector Breadth Momentum,2026-09-07,0.0,daily,CURRENT,11.0,11.0,1.0,Momentum amplitud
-2026-09-07,Volatility Structure,2026-09-07,0.0,daily,CURRENT,,,,Estructura volatilidad
-2026-09-07,Cross Asset Context,2026-09-07,0.0,daily,CURRENT,11.0,11.0,1.0,Contexto cross-asset
-2026-09-07,Evidence Matrix,2026-09-07,0.0,daily,CURRENT,11.0,11.0,1.0,Matriz evidencia
-2026-09-08,Yahoo Finance,2026-09-08,0.0,daily,CURRENT,11.0,11.0,1.0,Precios y métricas sectoriales
-2026-09-08,SSGA ETF Flow,2026-09-03,5.0,daily,RECENT,12.0,12.0,1.0,Flujo primario
+2026-09-04,CBOE PCR,2026-09-04,0.0,daily,CURRENT,31.0,31.0,1.0,Put/Call ratio
+2026-09-04,CFTC Position Flow,2026-09-01,3.0,cftc,CURRENT,,,,Frescura 30 días
+2026-09-04,Cross Asset Context,2026-09-07,-3.0,daily,CURRENT,11.0,11.0,1.0,Contexto cross-asset
+2026-09-04,Evidence Matrix,2026-09-07,-3.0,daily,CURRENT,11.0,11.0,1.0,Matriz evidencia
+2026-09-04,FINRA Dark Pool,2026-08-10,25.0,finra,CURRENT,,,,Retraso regulatorio 2-4 semanas
+2026-09-04,Macro FRED,2026-09-06,-2.0,fred,CURRENT,,,,Datos macro manuales
+2026-09-04,SEC N-PORT,,,sec,N/D,,,,Trimestral
+2026-09-04,SSGA ETF Flow,2026-09-03,1.0,daily,RECENT,12.0,12.0,1.0,Flujo primario
+2026-09-04,Sector Breadth Momentum,2026-09-07,-3.0,daily,CURRENT,11.0,11.0,1.0,Momentum amplitud
+2026-09-04,Sector Concentration,2026-09-07,-3.0,daily,CURRENT,11.0,11.0,1.0,Concentración y dispersión
+2026-09-04,Volatility Structure,2026-09-07,-3.0,daily,CURRENT,,,,Estructura volatilidad
+2026-09-04,Yahoo Finance,2026-09-07,-3.0,daily,CURRENT,11.0,11.0,1.0,Precios y métricas sectoriales
 2026-09-08,CBOE PCR,2026-09-04,4.0,daily,RECENT,31.0,31.0,1.0,Put/Call ratio
-2026-09-08,FINRA Dark Pool,2026-08-17,22.0,finra,CURRENT,,,,Retraso regulatorio 2-4 semanas
 2026-09-08,CFTC Position Flow,2026-09-01,7.0,cftc,CURRENT,,,,Frescura 30 días
-2026-09-08,SEC N-PORT,,,sec,N/D,,,,Trimestral
-2026-09-08,Macro FRED,2026-07-22,48.0,fred,RECENT,,,,Datos macro manuales
-2026-09-08,Sector Concentration,2026-09-07,1.0,daily,CURRENT,11.0,11.0,1.0,Concentración y dispersión
-2026-09-08,Sector Breadth Momentum,2026-09-08,0.0,daily,CURRENT,11.0,11.0,1.0,Momentum amplitud
-2026-09-08,Volatility Structure,2026-09-08,0.0,daily,CURRENT,,,,Estructura volatilidad
 2026-09-08,Cross Asset Context,2026-09-08,0.0,daily,CURRENT,11.0,11.0,1.0,Contexto cross-asset
 2026-09-08,Evidence Matrix,2026-09-08,0.0,daily,CURRENT,11.0,11.0,1.0,Matriz evidencia
-2026-09-09,Yahoo Finance,2026-09-09,0.0,daily,CURRENT,11.0,11.0,1.0,Precios y métricas sectoriales
-2026-09-09,SSGA ETF Flow,2026-09-04,5.0,daily,RECENT,12.0,12.0,1.0,Flujo primario
+2026-09-08,FINRA Dark Pool,2026-08-17,22.0,finra,CURRENT,,,,Retraso regulatorio 2-4 semanas
+2026-09-08,Macro FRED,2026-07-22,48.0,fred,RECENT,,,,Datos macro manuales
+2026-09-08,SEC N-PORT,,,sec,N/D,,,,Trimestral
+2026-09-08,SSGA ETF Flow,2026-09-03,5.0,daily,RECENT,12.0,12.0,1.0,Flujo primario
+2026-09-08,Sector Breadth Momentum,2026-09-08,0.0,daily,CURRENT,11.0,11.0,1.0,Momentum amplitud
+2026-09-08,Sector Concentration,2026-09-07,1.0,daily,CURRENT,11.0,11.0,1.0,Concentración y dispersión
+2026-09-08,Volatility Structure,2026-09-08,0.0,daily,CURRENT,,,,Estructura volatilidad
+2026-09-08,Yahoo Finance,2026-09-08,0.0,daily,CURRENT,11.0,11.0,1.0,Precios y métricas sectoriales
 2026-09-09,CBOE PCR,2026-09-08,1.0,daily,CURRENT,32.0,32.0,1.0,Put/Call ratio
-2026-09-09,FINRA Dark Pool,2026-08-17,23.0,finra,CURRENT,,,,Retraso regulatorio 2-4 semanas
 2026-09-09,CFTC Position Flow,2026-09-01,8.0,cftc,CURRENT,,,,Frescura 30 días
-2026-09-09,SEC N-PORT,,,sec,N/D,,,,Trimestral
-2026-09-09,Macro FRED,2026-09-09,0.0,fred,CURRENT,,,,Datos macro manuales
-2026-09-09,Sector Concentration,2026-09-07,2.0,daily,CURRENT,11.0,11.0,1.0,Concentración y dispersión
-2026-09-09,Sector Breadth Momentum,2026-09-09,0.0,daily,CURRENT,11.0,11.0,1.0,Momentum amplitud
-2026-09-09,Volatility Structure,2026-09-09,0.0,daily,CURRENT,,,,Estructura volatilidad
 2026-09-09,Cross Asset Context,2026-09-09,0.0,daily,CURRENT,11.0,11.0,1.0,Contexto cross-asset
 2026-09-09,Evidence Matrix,2026-09-09,0.0,daily,CURRENT,11.0,11.0,1.0,Matriz evidencia
-2026-09-10,Yahoo Finance,2026-09-10,0.0,daily,CURRENT,11.0,11.0,1.0,Precios y métricas sectoriales
-2026-09-10,SSGA ETF Flow,2026-09-08,2.0,daily,CURRENT,12.0,12.0,1.0,Flujo primario
+2026-09-09,FINRA Dark Pool,2026-08-17,23.0,finra,CURRENT,,,,Retraso regulatorio 2-4 semanas
+2026-09-09,Macro FRED,2026-09-09,0.0,fred,CURRENT,,,,Datos macro manuales
+2026-09-09,SEC N-PORT,,,sec,N/D,,,,Trimestral
+2026-09-09,SSGA ETF Flow,2026-09-04,5.0,daily,RECENT,12.0,12.0,1.0,Flujo primario
+2026-09-09,Sector Breadth Momentum,2026-09-09,0.0,daily,CURRENT,11.0,11.0,1.0,Momentum amplitud
+2026-09-09,Sector Concentration,2026-09-07,2.0,daily,CURRENT,11.0,11.0,1.0,Concentración y dispersión
+2026-09-09,Volatility Structure,2026-09-09,0.0,daily,CURRENT,,,,Estructura volatilidad
+2026-09-09,Yahoo Finance,2026-09-09,0.0,daily,CURRENT,11.0,11.0,1.0,Precios y métricas sectoriales
 2026-09-10,CBOE PCR,2026-09-09,1.0,daily,CURRENT,33.0,33.0,1.0,Put/Call ratio
-2026-09-10,FINRA Dark Pool,2026-08-17,24.0,finra,CURRENT,,,,Retraso regulatorio 2-4 semanas
 2026-09-10,CFTC Position Flow,2026-09-01,9.0,cftc,CURRENT,,,,Frescura 30 días
-2026-09-10,SEC N-PORT,,,sec,N/D,,,,Trimestral
-2026-09-10,Macro FRED,2026-09-10,0.0,fred,CURRENT,,,,Datos macro manuales
-2026-09-10,Sector Concentration,2026-09-07,3.0,daily,CURRENT,11.0,11.0,1.0,Concentración y dispersión
-2026-09-10,Sector Breadth Momentum,2026-09-10,0.0,daily,CURRENT,11.0,11.0,1.0,Momentum amplitud
-2026-09-10,Volatility Structure,2026-09-10,0.0,daily,CURRENT,,,,Estructura volatilidad
 2026-09-10,Cross Asset Context,2026-09-10,0.0,daily,CURRENT,11.0,11.0,1.0,Contexto cross-asset
 2026-09-10,Evidence Matrix,2026-09-10,0.0,daily,CURRENT,11.0,11.0,1.0,Matriz evidencia
-2026-09-11,Yahoo Finance,2026-09-11,0.0,daily,CURRENT,11.0,11.0,1.0,Precios y métricas sectoriales
-2026-09-11,SSGA ETF Flow,2026-09-10,1.0,daily,CURRENT,12.0,12.0,1.0,Flujo primario
-2026-09-11,CBOE PCR,2026-09-10,1.0,daily,CURRENT,34.0,34.0,1.0,Put/Call ratio
-2026-09-11,FINRA Dark Pool,2026-08-17,25.0,finra,CURRENT,,,,Retraso regulatorio 2-4 semanas
+2026-09-10,FINRA Dark Pool,2026-08-17,24.0,finra,CURRENT,,,,Retraso regulatorio 2-4 semanas
+2026-09-10,Macro FRED,2026-09-10,0.0,fred,CURRENT,,,,Datos macro manuales
+2026-09-10,SEC N-PORT,,,sec,N/D,,,,Trimestral
+2026-09-10,SSGA ETF Flow,2026-09-08,2.0,daily,CURRENT,12.0,12.0,1.0,Flujo primario
+2026-09-10,Sector Breadth Momentum,2026-09-10,0.0,daily,CURRENT,11.0,11.0,1.0,Momentum amplitud
+2026-09-10,Sector Concentration,2026-09-07,3.0,daily,CURRENT,11.0,11.0,1.0,Concentración y dispersión
+2026-09-10,Volatility Structure,2026-09-10,0.0,daily,CURRENT,,,,Estructura volatilidad
+2026-09-10,Yahoo Finance,2026-09-10,0.0,daily,CURRENT,11.0,11.0,1.0,Precios y métricas sectoriales
+2026-09-11,BME,2026-09-11,0.0,daily,CURRENT,19.0,19.0,1.0,BME (19/19 OK)
+2026-09-11,CBOE PCR,2026-09-11,0.0,daily,CURRENT,35.0,35.0,1.0,Put/Call ratio
 2026-09-11,CFTC Position Flow,2026-09-08,3.0,cftc,CURRENT,,,,Frescura 30 días
-2026-09-11,SEC N-PORT,,,sec,N/D,,,,Trimestral
-2026-09-11,Macro FRED,2026-09-11,0.0,fred,CURRENT,,,,Datos macro manuales
-2026-09-11,Sector Concentration,2026-09-07,4.0,daily,RECENT,11.0,11.0,1.0,Concentración y dispersión
-2026-09-11,Sector Breadth Momentum,2026-09-11,0.0,daily,CURRENT,11.0,11.0,1.0,Momentum amplitud
-2026-09-11,Volatility Structure,2026-09-11,0.0,daily,CURRENT,,,,Estructura volatilidad
 2026-09-11,Cross Asset Context,2026-09-11,0.0,daily,CURRENT,11.0,11.0,1.0,Contexto cross-asset
+2026-09-11,Euronext,2026-09-11,0.0,daily,CURRENT,13.0,13.0,1.0,Euronext (13/13 OK)
 2026-09-11,Evidence Matrix,2026-09-11,0.0,daily,CURRENT,11.0,11.0,1.0,Matriz evidencia
-2026-09-12,Yahoo Finance,2026-09-11,1.0,daily,CURRENT,,,,Precios y métricas sectoriales
-2026-09-12,SSGA ETF Flow,2026-09-10,2.0,daily,CURRENT,12.0,12.0,1.0,Flujo primario
-2026-09-12,CBOE PCR,2026-09-11,1.0,daily,CURRENT,35.0,35.0,1.0,Put/Call ratio
-2026-09-12,FINRA Dark Pool,2026-08-17,26.0,finra,CURRENT,,,,Retraso regulatorio 2-4 semanas
-2026-09-12,CFTC Position Flow,2026-09-08,4.0,cftc,CURRENT,,,,Frescura 30 días
-2026-09-12,SEC N-PORT,,,sec,N/D,,,,Trimestral
-2026-09-12,Macro FRED,2026-09-11,1.0,fred,CURRENT,,,,Datos macro manuales
-2026-09-12,Sector Concentration,2026-09-11,1.0,daily,CURRENT,11.0,11.0,1.0,Concentración y dispersión
-2026-09-12,Sector Breadth Momentum,2026-09-11,1.0,daily,CURRENT,11.0,11.0,1.0,Momentum amplitud
-2026-09-12,Volatility Structure,2026-09-11,1.0,daily,CURRENT,,,,Estructura volatilidad
-2026-09-12,Cross Asset Context,2026-09-11,1.0,daily,CURRENT,11.0,11.0,1.0,Contexto cross-asset
-2026-09-12,Evidence Matrix,2026-09-11,1.0,daily,CURRENT,11.0,11.0,1.0,Matriz evidencia
-2026-09-12,Euronext,2026-09-11,1.0,daily,CURRENT,13.0,13.0,1.0,Euronext (13/13 OK)
-2026-09-12,Xetra,2026-09-11,1.0,daily,CURRENT,19.0,19.0,1.0,Xetra (19/19 OK)
-2026-09-12,BME,2026-09-11,1.0,daily,CURRENT,19.0,19.0,1.0,BME (19/19 OK)
-2026-09-13,Yahoo Finance,2026-09-11,2.0,daily,CURRENT,,,,Precios y métricas sectoriales
-2026-09-13,SSGA ETF Flow,2026-09-10,3.0,daily,CURRENT,12.0,12.0,1.0,Flujo primario
-2026-09-13,CBOE PCR,2026-09-11,2.0,daily,CURRENT,35.0,35.0,1.0,Put/Call ratio
-2026-09-13,FINRA Dark Pool,2026-08-17,27.0,finra,CURRENT,,,,Retraso regulatorio 2-4 semanas
-2026-09-13,CFTC Position Flow,2026-09-08,5.0,cftc,CURRENT,,,,Frescura 30 días
-2026-09-13,SEC N-PORT,,,sec,N/D,,,,Trimestral
-2026-09-13,Macro FRED,2026-09-11,2.0,fred,CURRENT,,,,Datos macro manuales
-2026-09-13,Sector Concentration,2026-09-11,2.0,daily,CURRENT,11.0,11.0,1.0,Concentración y dispersión
-2026-09-13,Sector Breadth Momentum,2026-09-11,2.0,daily,CURRENT,11.0,11.0,1.0,Momentum amplitud
-2026-09-13,Volatility Structure,2026-09-11,2.0,daily,CURRENT,,,,Estructura volatilidad
-2026-09-13,Cross Asset Context,2026-09-11,2.0,daily,CURRENT,11.0,11.0,1.0,Contexto cross-asset
-2026-09-13,Evidence Matrix,2026-09-11,2.0,daily,CURRENT,11.0,11.0,1.0,Matriz evidencia
-2026-09-13,Euronext,2026-09-11,2.0,daily,CURRENT,13.0,13.0,1.0,Euronext (13/13 OK)
-2026-09-13,Xetra,2026-09-11,2.0,daily,CURRENT,19.0,19.0,1.0,Xetra (19/19 OK)
-2026-09-13,BME,2026-09-11,2.0,daily,CURRENT,19.0,19.0,1.0,BME (19/19 OK)
-2026-09-14,Yahoo Finance,2026-09-14,0.0,daily,CURRENT,,,,Precios y métricas sectoriales
-2026-09-14,SSGA ETF Flow,2026-09-11,3.0,daily,CURRENT,12.0,12.0,1.0,Flujo primario
-2026-09-14,CBOE PCR,2026-09-11,3.0,daily,CURRENT,35.0,35.0,1.0,Put/Call ratio
-2026-09-14,FINRA Dark Pool,2026-08-24,21.0,finra,CURRENT,,,,Retraso regulatorio 2-4 semanas
-2026-09-14,CFTC Position Flow,2026-09-08,6.0,cftc,CURRENT,,,,Frescura 30 días
-2026-09-14,SEC N-PORT,,,sec,N/D,,,,Trimestral
-2026-09-14,Macro FRED,2026-09-14,0.0,fred,CURRENT,,,,Datos macro manuales
-2026-09-14,Sector Concentration,2026-09-14,0.0,daily,CURRENT,11.0,11.0,1.0,Concentración y dispersión
-2026-09-14,Sector Breadth Momentum,2026-09-11,3.0,daily,CURRENT,11.0,11.0,1.0,Momentum amplitud
-2026-09-14,Volatility Structure,2026-09-14,0.0,daily,CURRENT,,,,Estructura volatilidad
-2026-09-14,Cross Asset Context,2026-09-14,0.0,daily,CURRENT,11.0,11.0,1.0,Contexto cross-asset
-2026-09-14,Evidence Matrix,2026-09-11,3.0,daily,CURRENT,11.0,11.0,1.0,Matriz evidencia
-2026-09-14,Euronext,2026-09-11,3.0,daily,CURRENT,13.0,13.0,1.0,Euronext (13/13 OK)
-2026-09-14,Xetra,2026-09-11,3.0,daily,CURRENT,19.0,19.0,1.0,Xetra (19/19 OK)
+2026-09-11,FINRA Dark Pool,2026-08-17,25.0,finra,CURRENT,,,,Retraso regulatorio 2-4 semanas
+2026-09-11,Macro FRED,2026-09-11,0.0,fred,CURRENT,,,,Datos macro manuales
+2026-09-11,SEC N-PORT,,,sec,N/D,,,,Trimestral
+2026-09-11,SSGA ETF Flow,2026-09-10,1.0,daily,CURRENT,12.0,12.0,1.0,Flujo primario
+2026-09-11,Sector Breadth Momentum,2026-09-11,0.0,daily,CURRENT,11.0,11.0,1.0,Momentum amplitud
+2026-09-11,Sector Concentration,2026-09-11,0.0,daily,CURRENT,11.0,11.0,1.0,Concentración y dispersión
+2026-09-11,Volatility Structure,2026-09-11,0.0,daily,CURRENT,,,,Estructura volatilidad
+2026-09-11,Xetra,2026-09-11,0.0,daily,CURRENT,19.0,19.0,1.0,Xetra (19/19 OK)
+2026-09-11,Yahoo Finance,2026-09-11,0.0,daily,CURRENT,,,,Precios y métricas sectoriales
 2026-09-14,BME,2026-09-11,3.0,daily,CURRENT,19.0,19.0,1.0,BME (19/19 OK)
-2026-09-15,Yahoo Finance,2026-09-15,0.0,daily,CURRENT,,,,Precios y métricas sectoriales
-2026-09-15,SSGA ETF Flow,2026-09-14,1.0,daily,CURRENT,12.0,12.0,1.0,Flujo primario
-2026-09-15,CBOE PCR,2026-09-14,1.0,daily,CURRENT,36.0,36.0,1.0,Put/Call ratio
-2026-09-15,FINRA Dark Pool,2026-08-24,22.0,finra,CURRENT,,,,Retraso regulatorio 2-4 semanas
-2026-09-15,CFTC Position Flow,2026-09-08,7.0,cftc,CURRENT,,,,Frescura 30 días
-2026-09-15,SEC N-PORT,,,sec,N/D,,,,Trimestral
-2026-09-15,Macro FRED,2026-09-15,0.0,fred,CURRENT,,,,Datos macro manuales
-2026-09-15,Sector Concentration,2026-09-15,0.0,daily,CURRENT,11.0,11.0,1.0,Concentración y dispersión
-2026-09-15,Sector Breadth Momentum,2026-09-14,1.0,daily,CURRENT,11.0,11.0,1.0,Momentum amplitud
-2026-09-15,Volatility Structure,2026-09-15,0.0,daily,CURRENT,,,,Estructura volatilidad
-2026-09-15,Cross Asset Context,2026-09-15,0.0,daily,CURRENT,11.0,11.0,1.0,Contexto cross-asset
-2026-09-15,Evidence Matrix,2026-09-14,1.0,daily,CURRENT,11.0,11.0,1.0,Matriz evidencia
-2026-09-15,Euronext,2026-09-15,0.0,daily,CURRENT,13.0,13.0,1.0,Euronext (13/13 OK)
-2026-09-15,Xetra,2026-09-15,0.0,daily,CURRENT,19.0,19.0,1.0,Xetra (19/19 OK)
+2026-09-14,CBOE PCR,2026-09-11,3.0,daily,CURRENT,35.0,35.0,1.0,Put/Call ratio
+2026-09-14,CFTC Position Flow,2026-09-08,6.0,cftc,CURRENT,,,,Frescura 30 días
+2026-09-14,Cross Asset Context,2026-09-14,0.0,daily,CURRENT,11.0,11.0,1.0,Contexto cross-asset
+2026-09-14,Euronext,2026-09-11,3.0,daily,CURRENT,13.0,13.0,1.0,Euronext (13/13 OK)
+2026-09-14,Evidence Matrix,2026-09-11,3.0,daily,CURRENT,11.0,11.0,1.0,Matriz evidencia
+2026-09-14,FINRA Dark Pool,2026-08-24,21.0,finra,CURRENT,,,,Retraso regulatorio 2-4 semanas
+2026-09-14,Macro FRED,2026-09-14,0.0,fred,CURRENT,,,,Datos macro manuales
+2026-09-14,SEC N-PORT,,,sec,N/D,,,,Trimestral
+2026-09-14,SSGA ETF Flow,2026-09-11,3.0,daily,CURRENT,12.0,12.0,1.0,Flujo primario
+2026-09-14,Sector Breadth Momentum,2026-09-11,3.0,daily,CURRENT,11.0,11.0,1.0,Momentum amplitud
+2026-09-14,Sector Concentration,2026-09-14,0.0,daily,CURRENT,11.0,11.0,1.0,Concentración y dispersión
+2026-09-14,Volatility Structure,2026-09-14,0.0,daily,CURRENT,,,,Estructura volatilidad
+2026-09-14,Xetra,2026-09-11,3.0,daily,CURRENT,19.0,19.0,1.0,Xetra (19/19 OK)
+2026-09-14,Yahoo Finance,2026-09-14,0.0,daily,CURRENT,,,,Precios y métricas sectoriales
 2026-09-15,BME,2026-09-14,1.0,daily,CURRENT,19.0,19.0,1.0,BME (19/19 OK)
-2026-09-16,Yahoo Finance,2026-09-16,0.0,daily,CURRENT,,,,Precios y métricas sectoriales
-2026-09-16,SSGA ETF Flow,2026-09-15,1.0,daily,CURRENT,12.0,12.0,1.0,Flujo primario
-2026-09-16,CBOE PCR,2026-09-15,1.0,daily,CURRENT,37.0,37.0,1.0,Put/Call ratio
-2026-09-16,FINRA Dark Pool,2026-08-24,23.0,finra,CURRENT,,,,Retraso regulatorio 2-4 semanas
-2026-09-16,CFTC Position Flow,2026-09-08,8.0,cftc,CURRENT,,,,Frescura 30 días
-2026-09-16,SEC N-PORT,,,sec,N/D,,,,Trimestral
-2026-09-16,Macro FRED,2026-09-16,0.0,fred,CURRENT,,,,Datos macro manuales
-2026-09-16,Sector Concentration,2026-09-16,0.0,daily,CURRENT,11.0,11.0,1.0,Concentración y dispersión
-2026-09-16,Sector Breadth Momentum,2026-09-16,0.0,daily,CURRENT,11.0,11.0,1.0,Momentum amplitud
-2026-09-16,Volatility Structure,2026-09-16,0.0,daily,CURRENT,,,,Estructura volatilidad
-2026-09-16,Cross Asset Context,2026-09-16,0.0,daily,CURRENT,11.0,11.0,1.0,Contexto cross-asset
-2026-09-16,Evidence Matrix,2026-09-15,1.0,daily,CURRENT,11.0,11.0,1.0,Matriz evidencia
-2026-09-16,Euronext,2026-09-16,0.0,daily,CURRENT,13.0,13.0,1.0,Euronext (13/13 OK)
-2026-09-16,Xetra,2026-09-16,0.0,daily,CURRENT,19.0,19.0,1.0,Xetra (19/19 OK)
+2026-09-15,CBOE PCR,2026-09-14,1.0,daily,CURRENT,36.0,36.0,1.0,Put/Call ratio
+2026-09-15,CFTC Position Flow,2026-09-08,7.0,cftc,CURRENT,,,,Frescura 30 días
+2026-09-15,Cross Asset Context,2026-09-15,0.0,daily,CURRENT,11.0,11.0,1.0,Contexto cross-asset
+2026-09-15,Euronext,2026-09-15,0.0,daily,CURRENT,13.0,13.0,1.0,Euronext (13/13 OK)
+2026-09-15,Evidence Matrix,2026-09-14,1.0,daily,CURRENT,11.0,11.0,1.0,Matriz evidencia
+2026-09-15,FINRA Dark Pool,2026-08-24,22.0,finra,CURRENT,,,,Retraso regulatorio 2-4 semanas
+2026-09-15,Macro FRED,2026-09-15,0.0,fred,CURRENT,,,,Datos macro manuales
+2026-09-15,SEC N-PORT,,,sec,N/D,,,,Trimestral
+2026-09-15,SSGA ETF Flow,2026-09-14,1.0,daily,CURRENT,12.0,12.0,1.0,Flujo primario
+2026-09-15,Sector Breadth Momentum,2026-09-14,1.0,daily,CURRENT,11.0,11.0,1.0,Momentum amplitud
+2026-09-15,Sector Concentration,2026-09-15,0.0,daily,CURRENT,11.0,11.0,1.0,Concentración y dispersión
+2026-09-15,Volatility Structure,2026-09-15,0.0,daily,CURRENT,,,,Estructura volatilidad
+2026-09-15,Xetra,2026-09-15,0.0,daily,CURRENT,19.0,19.0,1.0,Xetra (19/19 OK)
+2026-09-15,Yahoo Finance,2026-09-15,0.0,daily,CURRENT,,,,Precios y métricas sectoriales
 2026-09-16,BME,2026-09-15,1.0,daily,CURRENT,19.0,19.0,1.0,BME (19/19 OK)
-2026-09-17,Yahoo Finance,2026-09-17,0.0,daily,CURRENT,,,,Precios y métricas sectoriales
-2026-09-17,SSGA ETF Flow,2026-09-16,1.0,daily,CURRENT,12.0,12.0,1.0,Flujo primario
-2026-09-17,CBOE PCR,2026-09-16,1.0,daily,CURRENT,38.0,38.0,1.0,Put/Call ratio
-2026-09-17,FINRA Dark Pool,2026-08-24,24.0,finra,CURRENT,,,,Retraso regulatorio 2-4 semanas
-2026-09-17,CFTC Position Flow,2026-09-08,9.0,cftc,CURRENT,,,,Frescura 30 días
-2026-09-17,SEC N-PORT,,,sec,N/D,,,,Trimestral
-2026-09-17,Macro FRED,2026-09-17,0.0,fred,CURRENT,,,,Datos macro manuales
-2026-09-17,Sector Concentration,2026-09-17,0.0,daily,CURRENT,11.0,11.0,1.0,Concentración y dispersión
-2026-09-17,Sector Breadth Momentum,2026-09-17,0.0,daily,CURRENT,11.0,11.0,1.0,Momentum amplitud
-2026-09-17,Volatility Structure,2026-09-17,0.0,daily,CURRENT,,,,Estructura volatilidad
-2026-09-17,Cross Asset Context,2026-09-17,0.0,daily,CURRENT,11.0,11.0,1.0,Contexto cross-asset
-2026-09-17,Evidence Matrix,2026-09-17,0.0,daily,CURRENT,11.0,11.0,1.0,Matriz evidencia
-2026-09-17,Euronext,2026-09-17,0.0,daily,CURRENT,13.0,13.0,1.0,Euronext (13/13 OK)
-2026-09-17,Xetra,2026-09-17,0.0,daily,CURRENT,19.0,19.0,1.0,Xetra (19/19 OK)
+2026-09-16,CBOE PCR,2026-09-15,1.0,daily,CURRENT,37.0,37.0,1.0,Put/Call ratio
+2026-09-16,CFTC Position Flow,2026-09-08,8.0,cftc,CURRENT,,,,Frescura 30 días
+2026-09-16,Cross Asset Context,2026-09-16,0.0,daily,CURRENT,11.0,11.0,1.0,Contexto cross-asset
+2026-09-16,Euronext,2026-09-16,0.0,daily,CURRENT,13.0,13.0,1.0,Euronext (13/13 OK)
+2026-09-16,Evidence Matrix,2026-09-15,1.0,daily,CURRENT,11.0,11.0,1.0,Matriz evidencia
+2026-09-16,FINRA Dark Pool,2026-08-24,23.0,finra,CURRENT,,,,Retraso regulatorio 2-4 semanas
+2026-09-16,Macro FRED,2026-09-16,0.0,fred,CURRENT,,,,Datos macro manuales
+2026-09-16,SEC N-PORT,,,sec,N/D,,,,Trimestral
+2026-09-16,SSGA ETF Flow,2026-09-15,1.0,daily,CURRENT,12.0,12.0,1.0,Flujo primario
+2026-09-16,Sector Breadth Momentum,2026-09-16,0.0,daily,CURRENT,11.0,11.0,1.0,Momentum amplitud
+2026-09-16,Sector Concentration,2026-09-16,0.0,daily,CURRENT,11.0,11.0,1.0,Concentración y dispersión
+2026-09-16,Volatility Structure,2026-09-16,0.0,daily,CURRENT,,,,Estructura volatilidad
+2026-09-16,Xetra,2026-09-16,0.0,daily,CURRENT,19.0,19.0,1.0,Xetra (19/19 OK)
+2026-09-16,Yahoo Finance,2026-09-16,0.0,daily,CURRENT,,,,Precios y métricas sectoriales
 2026-09-17,BME,2026-09-17,0.0,daily,CURRENT,19.0,19.0,1.0,BME (19/19 OK)
-2026-09-18,Yahoo Finance,2026-09-17,1.0,daily,CURRENT,,,,Precios y métricas sectoriales
-2026-09-18,SSGA ETF Flow,2026-09-17,1.0,daily,CURRENT,12.0,12.0,1.0,Flujo primario
-2026-09-18,CBOE PCR,2026-09-17,1.0,daily,CURRENT,39.0,39.0,1.0,Put/Call ratio
-2026-09-18,FINRA Dark Pool,2026-08-24,25.0,finra,CURRENT,,,,Retraso regulatorio 2-4 semanas
-2026-09-18,CFTC Position Flow,2026-09-08,10.0,cftc,CURRENT,,,,Frescura 30 días
-2026-09-18,SEC N-PORT,,,sec,N/D,,,,Trimestral
-2026-09-18,Macro FRED,2026-09-18,0.0,fred,CURRENT,,,,Datos macro manuales
-2026-09-18,Sector Concentration,2026-09-17,1.0,daily,CURRENT,11.0,11.0,1.0,Concentración y dispersión
-2026-09-18,Sector Breadth Momentum,2026-09-17,1.0,daily,CURRENT,11.0,11.0,1.0,Momentum amplitud
-2026-09-18,Volatility Structure,2026-09-17,1.0,daily,CURRENT,,,,Estructura volatilidad
-2026-09-18,Cross Asset Context,2026-09-17,1.0,daily,CURRENT,11.0,11.0,1.0,Contexto cross-asset
-2026-09-18,Evidence Matrix,2026-09-17,1.0,daily,CURRENT,11.0,11.0,1.0,Matriz evidencia
-2026-09-18,Euronext,2026-09-17,1.0,daily,CURRENT,13.0,13.0,1.0,Euronext (13/13 OK)
-2026-09-18,Xetra,2026-09-17,1.0,daily,CURRENT,19.0,19.0,1.0,Xetra (19/19 OK)
+2026-09-17,CBOE PCR,2026-09-16,1.0,daily,CURRENT,38.0,38.0,1.0,Put/Call ratio
+2026-09-17,CFTC Position Flow,2026-09-08,9.0,cftc,CURRENT,,,,Frescura 30 días
+2026-09-17,Cross Asset Context,2026-09-17,0.0,daily,CURRENT,11.0,11.0,1.0,Contexto cross-asset
+2026-09-17,Euronext,2026-09-17,0.0,daily,CURRENT,13.0,13.0,1.0,Euronext (13/13 OK)
+2026-09-17,Evidence Matrix,2026-09-17,0.0,daily,CURRENT,11.0,11.0,1.0,Matriz evidencia
+2026-09-17,FINRA Dark Pool,2026-08-24,24.0,finra,CURRENT,,,,Retraso regulatorio 2-4 semanas
+2026-09-17,Macro FRED,2026-09-17,0.0,fred,CURRENT,,,,Datos macro manuales
+2026-09-17,SEC N-PORT,,,sec,N/D,,,,Trimestral
+2026-09-17,SSGA ETF Flow,2026-09-16,1.0,daily,CURRENT,12.0,12.0,1.0,Flujo primario
+2026-09-17,Sector Breadth Momentum,2026-09-17,0.0,daily,CURRENT,11.0,11.0,1.0,Momentum amplitud
+2026-09-17,Sector Concentration,2026-09-17,0.0,daily,CURRENT,11.0,11.0,1.0,Concentración y dispersión
+2026-09-17,Volatility Structure,2026-09-17,0.0,daily,CURRENT,,,,Estructura volatilidad
+2026-09-17,Xetra,2026-09-17,0.0,daily,CURRENT,19.0,19.0,1.0,Xetra (19/19 OK)
+2026-09-17,Yahoo Finance,2026-09-17,0.0,daily,CURRENT,,,,Precios y métricas sectoriales
 2026-09-18,BME,2026-09-17,1.0,daily,CURRENT,19.0,19.0,1.0,BME (19/19 OK)
-2026-09-20,Yahoo Finance,2026-09-18,2.0,daily,CURRENT,,,,Precios y métricas sectoriales
-2026-09-20,SSGA ETF Flow,2026-09-17,3.0,daily,CURRENT,12.0,12.0,1.0,Flujo primario
-2026-09-20,CBOE PCR,2026-09-18,2.0,daily,CURRENT,40.0,40.0,1.0,Put/Call ratio
-2026-09-20,FINRA Dark Pool,2026-08-24,27.0,finra,CURRENT,,,,Retraso regulatorio 2-4 semanas
-2026-09-20,CFTC Position Flow,2026-09-15,5.0,cftc,CURRENT,,,,Frescura 30 días
-2026-09-20,SEC N-PORT,,,sec,N/D,,,,Trimestral
-2026-09-20,Macro FRED,2026-09-18,2.0,fred,CURRENT,,,,Datos macro manuales
-2026-09-20,Sector Concentration,2026-09-18,2.0,daily,CURRENT,11.0,11.0,1.0,Concentración y dispersión
-2026-09-20,Sector Breadth Momentum,2026-09-17,3.0,daily,CURRENT,11.0,11.0,1.0,Momentum amplitud
-2026-09-20,Volatility Structure,2026-09-18,2.0,daily,CURRENT,,,,Estructura volatilidad
-2026-09-20,Cross Asset Context,2026-09-18,2.0,daily,CURRENT,11.0,11.0,1.0,Contexto cross-asset
-2026-09-20,Evidence Matrix,2026-09-17,3.0,daily,CURRENT,11.0,11.0,1.0,Matriz evidencia
-2026-09-20,Euronext,2026-09-17,3.0,daily,CURRENT,13.0,13.0,1.0,Euronext (13/13 OK)
-2026-09-20,Xetra,2026-09-17,3.0,daily,CURRENT,19.0,19.0,1.0,Xetra (19/19 OK)
-2026-09-20,BME,2026-09-17,3.0,daily,CURRENT,19.0,19.0,1.0,BME (19/19 OK)
-2026-09-21,Yahoo Finance,2026-09-18,3.0,daily,CURRENT,,,,Precios y métricas sectoriales
-2026-09-21,SSGA ETF Flow,2026-09-18,3.0,daily,CURRENT,12.0,12.0,1.0,Flujo primario
-2026-09-21,CBOE PCR,2026-09-18,3.0,daily,CURRENT,40.0,40.0,1.0,Put/Call ratio
-2026-09-21,FINRA Dark Pool,2026-08-31,21.0,finra,CURRENT,,,,Retraso regulatorio 2-4 semanas
-2026-09-21,CFTC Position Flow,2026-09-15,6.0,cftc,CURRENT,,,,Frescura 30 días
-2026-09-21,SEC N-PORT,,,sec,N/D,,,,Trimestral
-2026-09-21,Macro FRED,2026-09-21,0.0,fred,CURRENT,,,,Datos macro manuales
-2026-09-21,Sector Concentration,2026-09-18,3.0,daily,CURRENT,11.0,11.0,1.0,Concentración y dispersión
-2026-09-21,Sector Breadth Momentum,2026-09-18,3.0,daily,CURRENT,11.0,11.0,1.0,Momentum amplitud
-2026-09-21,Volatility Structure,2026-09-18,3.0,daily,CURRENT,,,,Estructura volatilidad
-2026-09-21,Cross Asset Context,2026-09-18,3.0,daily,CURRENT,11.0,11.0,1.0,Contexto cross-asset
-2026-09-21,Evidence Matrix,2026-09-17,4.0,daily,RECENT,11.0,11.0,1.0,Matriz evidencia
-2026-09-21,Euronext,2026-09-18,3.0,daily,CURRENT,13.0,13.0,1.0,Euronext (13/13 OK)
-2026-09-21,Xetra,2026-09-18,3.0,daily,CURRENT,19.0,19.0,1.0,Xetra (19/19 OK)
+2026-09-18,CBOE PCR,2026-09-18,0.0,daily,CURRENT,40.0,40.0,1.0,Put/Call ratio
+2026-09-18,CFTC Position Flow,2026-09-15,3.0,cftc,CURRENT,,,,Frescura 30 días
+2026-09-18,Cross Asset Context,2026-09-18,0.0,daily,CURRENT,11.0,11.0,1.0,Contexto cross-asset
+2026-09-18,Euronext,2026-09-17,1.0,daily,CURRENT,13.0,13.0,1.0,Euronext (13/13 OK)
+2026-09-18,Evidence Matrix,2026-09-17,1.0,daily,CURRENT,11.0,11.0,1.0,Matriz evidencia
+2026-09-18,FINRA Dark Pool,2026-08-24,25.0,finra,CURRENT,,,,Retraso regulatorio 2-4 semanas
+2026-09-18,Macro FRED,2026-09-18,0.0,fred,CURRENT,,,,Datos macro manuales
+2026-09-18,SEC N-PORT,,,sec,N/D,,,,Trimestral
+2026-09-18,SSGA ETF Flow,2026-09-17,1.0,daily,CURRENT,12.0,12.0,1.0,Flujo primario
+2026-09-18,Sector Breadth Momentum,2026-09-17,1.0,daily,CURRENT,11.0,11.0,1.0,Momentum amplitud
+2026-09-18,Sector Concentration,2026-09-18,0.0,daily,CURRENT,11.0,11.0,1.0,Concentración y dispersión
+2026-09-18,Volatility Structure,2026-09-18,0.0,daily,CURRENT,,,,Estructura volatilidad
+2026-09-18,Xetra,2026-09-17,1.0,daily,CURRENT,19.0,19.0,1.0,Xetra (19/19 OK)
+2026-09-18,Yahoo Finance,2026-09-18,0.0,daily,CURRENT,,,,Precios y métricas sectoriales
 2026-09-21,BME,2026-09-18,3.0,daily,CURRENT,19.0,19.0,1.0,BME (19/19 OK)
-2026-09-23,Yahoo Finance,2026-09-23,0.0,daily,CURRENT,,,,Precios y métricas sectoriales
-2026-09-23,SSGA ETF Flow,2026-09-22,1.0,daily,CURRENT,12.0,12.0,1.0,Flujo primario
-2026-09-23,CBOE PCR,2026-09-22,1.0,daily,CURRENT,41.0,41.0,1.0,Put/Call ratio
-2026-09-23,FINRA Dark Pool,2026-08-31,23.0,finra,CURRENT,,,,Retraso regulatorio 2-4 semanas
-2026-09-23,CFTC Position Flow,2026-09-15,8.0,cftc,CURRENT,,,,Frescura 30 días
-2026-09-23,SEC N-PORT,,,sec,N/D,,,,Trimestral
-2026-09-23,Macro FRED,2026-09-23,0.0,fred,CURRENT,,,,Datos macro manuales
-2026-09-23,Sector Concentration,2026-09-23,0.0,daily,CURRENT,11.0,11.0,1.0,Concentración y dispersión
-2026-09-23,Sector Breadth Momentum,2026-09-23,0.0,daily,CURRENT,11.0,11.0,1.0,Momentum amplitud
-2026-09-23,Volatility Structure,2026-09-23,0.0,daily,CURRENT,,,,Estructura volatilidad
-2026-09-23,Cross Asset Context,2026-09-23,0.0,daily,CURRENT,11.0,11.0,1.0,Contexto cross-asset
-2026-09-23,Evidence Matrix,2026-09-18,5.0,daily,RECENT,11.0,11.0,1.0,Matriz evidencia
-2026-09-23,Euronext,2026-09-18,5.0,daily,RECENT,13.0,13.0,1.0,Euronext (13/13 OK)
-2026-09-23,Xetra,2026-09-18,5.0,daily,RECENT,19.0,19.0,1.0,Xetra (19/19 OK)
+2026-09-21,CBOE PCR,2026-09-18,3.0,daily,CURRENT,40.0,40.0,1.0,Put/Call ratio
+2026-09-21,CFTC Position Flow,2026-09-15,6.0,cftc,CURRENT,,,,Frescura 30 días
+2026-09-21,Cross Asset Context,2026-09-18,3.0,daily,CURRENT,11.0,11.0,1.0,Contexto cross-asset
+2026-09-21,Euronext,2026-09-18,3.0,daily,CURRENT,13.0,13.0,1.0,Euronext (13/13 OK)
+2026-09-21,Evidence Matrix,2026-09-17,4.0,daily,RECENT,11.0,11.0,1.0,Matriz evidencia
+2026-09-21,FINRA Dark Pool,2026-08-31,21.0,finra,CURRENT,,,,Retraso regulatorio 2-4 semanas
+2026-09-21,Macro FRED,2026-09-21,0.0,fred,CURRENT,,,,Datos macro manuales
+2026-09-21,SEC N-PORT,,,sec,N/D,,,,Trimestral
+2026-09-21,SSGA ETF Flow,2026-09-18,3.0,daily,CURRENT,12.0,12.0,1.0,Flujo primario
+2026-09-21,Sector Breadth Momentum,2026-09-18,3.0,daily,CURRENT,11.0,11.0,1.0,Momentum amplitud
+2026-09-21,Sector Concentration,2026-09-18,3.0,daily,CURRENT,11.0,11.0,1.0,Concentración y dispersión
+2026-09-21,Volatility Structure,2026-09-18,3.0,daily,CURRENT,,,,Estructura volatilidad
+2026-09-21,Xetra,2026-09-18,3.0,daily,CURRENT,19.0,19.0,1.0,Xetra (19/19 OK)
+2026-09-21,Yahoo Finance,2026-09-18,3.0,daily,CURRENT,,,,Precios y métricas sectoriales
 2026-09-23,BME,2026-09-18,5.0,daily,RECENT,19.0,19.0,1.0,BME (19/19 OK)
-2026-09-24,Yahoo Finance,2026-09-23,1.0,daily,CURRENT,,,,Precios y métricas sectoriales
-2026-09-24,SSGA ETF Flow,2026-09-23,1.0,daily,CURRENT,12.0,12.0,1.0,Flujo primario
-2026-09-24,CBOE PCR,2026-09-23,1.0,daily,CURRENT,42.0,42.0,1.0,Put/Call ratio
-2026-09-24,FINRA Dark Pool,2026-08-31,24.0,finra,CURRENT,,,,Retraso regulatorio 2-4 semanas
-2026-09-24,CFTC Position Flow,2026-09-15,9.0,cftc,CURRENT,,,,Frescura 30 días
-2026-09-24,SEC N-PORT,,,sec,N/D,,,,Trimestral
-2026-09-24,Macro FRED,2026-09-24,0.0,fred,CURRENT,,,,Datos macro manuales
-2026-09-24,Sector Concentration,2026-09-23,1.0,daily,CURRENT,11.0,11.0,1.0,Concentración y dispersión
-2026-09-24,Sector Breadth Momentum,2026-09-23,1.0,daily,CURRENT,11.0,11.0,1.0,Momentum amplitud
-2026-09-24,Volatility Structure,2026-09-23,1.0,daily,CURRENT,,,,Estructura volatilidad
-2026-09-24,Cross Asset Context,2026-09-23,1.0,daily,CURRENT,11.0,11.0,1.0,Contexto cross-asset
-2026-09-24,Evidence Matrix,2026-09-23,1.0,daily,CURRENT,11.0,11.0,1.0,Matriz evidencia
-2026-09-24,Euronext,2026-09-23,1.0,daily,CURRENT,13.0,13.0,1.0,Euronext (13/13 OK)
-2026-09-24,Xetra,2026-09-23,1.0,daily,CURRENT,19.0,19.0,1.0,Xetra (19/19 OK)
+2026-09-23,CBOE PCR,2026-09-22,1.0,daily,CURRENT,41.0,41.0,1.0,Put/Call ratio
+2026-09-23,CFTC Position Flow,2026-09-15,8.0,cftc,CURRENT,,,,Frescura 30 días
+2026-09-23,Cross Asset Context,2026-09-23,0.0,daily,CURRENT,11.0,11.0,1.0,Contexto cross-asset
+2026-09-23,Euronext,2026-09-18,5.0,daily,RECENT,13.0,13.0,1.0,Euronext (13/13 OK)
+2026-09-23,Evidence Matrix,2026-09-18,5.0,daily,RECENT,11.0,11.0,1.0,Matriz evidencia
+2026-09-23,FINRA Dark Pool,2026-08-31,23.0,finra,CURRENT,,,,Retraso regulatorio 2-4 semanas
+2026-09-23,Macro FRED,2026-09-23,0.0,fred,CURRENT,,,,Datos macro manuales
+2026-09-23,SEC N-PORT,,,sec,N/D,,,,Trimestral
+2026-09-23,SSGA ETF Flow,2026-09-22,1.0,daily,CURRENT,12.0,12.0,1.0,Flujo primario
+2026-09-23,Sector Breadth Momentum,2026-09-23,0.0,daily,CURRENT,11.0,11.0,1.0,Momentum amplitud
+2026-09-23,Sector Concentration,2026-09-23,0.0,daily,CURRENT,11.0,11.0,1.0,Concentración y dispersión
+2026-09-23,Volatility Structure,2026-09-23,0.0,daily,CURRENT,,,,Estructura volatilidad
+2026-09-23,Xetra,2026-09-18,5.0,daily,RECENT,19.0,19.0,1.0,Xetra (19/19 OK)
+2026-09-23,Yahoo Finance,2026-09-23,0.0,daily,CURRENT,,,,Precios y métricas sectoriales
 2026-09-24,BME,2026-09-23,1.0,daily,CURRENT,19.0,19.0,1.0,BME (19/19 OK)
-2026-09-25,Yahoo Finance,2026-09-24,1.0,daily,CURRENT,,,,Precios y métricas sectoriales
-2026-09-25,SSGA ETF Flow,2026-09-24,1.0,daily,CURRENT,12.0,12.0,1.0,Flujo primario
-2026-09-25,CBOE PCR,2026-09-24,1.0,daily,CURRENT,43.0,43.0,1.0,Put/Call ratio
+2026-09-24,CBOE PCR,2026-09-23,1.0,daily,CURRENT,42.0,42.0,1.0,Put/Call ratio
+2026-09-24,CFTC Position Flow,2026-09-15,9.0,cftc,CURRENT,,,,Frescura 30 días
+2026-09-24,Cross Asset Context,2026-09-23,1.0,daily,CURRENT,11.0,11.0,1.0,Contexto cross-asset
+2026-09-24,Euronext,2026-09-23,1.0,daily,CURRENT,13.0,13.0,1.0,Euronext (13/13 OK)
+2026-09-24,Evidence Matrix,2026-09-23,1.0,daily,CURRENT,11.0,11.0,1.0,Matriz evidencia
+2026-09-24,FINRA Dark Pool,2026-08-31,24.0,finra,CURRENT,,,,Retraso regulatorio 2-4 semanas
+2026-09-24,Macro FRED,2026-09-24,0.0,fred,CURRENT,,,,Datos macro manuales
+2026-09-24,SEC N-PORT,,,sec,N/D,,,,Trimestral
+2026-09-24,SSGA ETF Flow,2026-09-23,1.0,daily,CURRENT,12.0,12.0,1.0,Flujo primario
+2026-09-24,Sector Breadth Momentum,2026-09-23,1.0,daily,CURRENT,11.0,11.0,1.0,Momentum amplitud
+2026-09-24,Sector Concentration,2026-09-23,1.0,daily,CURRENT,11.0,11.0,1.0,Concentración y dispersión
+2026-09-24,Volatility Structure,2026-09-23,1.0,daily,CURRENT,,,,Estructura volatilidad
+2026-09-24,Xetra,2026-09-23,1.0,daily,CURRENT,19.0,19.0,1.0,Xetra (19/19 OK)
+2026-09-24,Yahoo Finance,2026-09-23,1.0,daily,CURRENT,,,,Precios y métricas sectoriales
+2026-09-25,BME,2026-09-24,1.0,daily,CURRENT,19.0,19.0,1.0,BME (19/19 OK)
+2026-09-25,CBOE PCR,2026-09-25,0.0,daily,CURRENT,44.0,44.0,1.0,Put/Call ratio
+2026-09-25,CFTC Position Flow,2026-09-22,3.0,cftc,CURRENT,,,,Frescura 30 días
+2026-09-25,Cross Asset Context,2026-09-25,0.0,daily,CURRENT,11.0,11.0,1.0,Contexto cross-asset
+2026-09-25,Euronext,2026-09-24,1.0,daily,CURRENT,13.0,13.0,1.0,Euronext (13/13 OK)
+2026-09-25,Evidence Matrix,2026-09-24,1.0,daily,CURRENT,11.0,11.0,1.0,Matriz evidencia
 2026-09-25,FINRA Dark Pool,2026-08-31,25.0,finra,CURRENT,,,,Retraso regulatorio 2-4 semanas
-2026-09-25,CFTC Position Flow,2026-09-15,10.0,cftc,CURRENT,,,,Frescura 30 días
-2026-09-25,SEC N-PORT,,,sec,N/D,,,,Trimestral
 2026-09-25,Macro FRED,2026-09-25,0.0,fred,CURRENT,,,,Datos macro manuales
-2026-09-25,Sector Concentration,2026-09-24,1.0,daily,CURRENT,11.0,11.0,1.0,Concentración y dispersión
+2026-09-25,SEC N-PORT,,,sec,N/D,,,,Trimestral
+2026-09-25,SSGA ETF Flow,2026-09-24,1.0,daily,CURRENT,12.0,12.0,1.0,Flujo primario
 2026-09-25,Sector Breadth Momentum,2026-09-24,1.0,daily,CURRENT,11.0,11.0,1.0,Momentum amplitud
-2026-09-25,Volatility Structure,2026-09-24,1.0,daily,CURRENT,,,,Estructura volatilidad
-2026-09-25,Cross Asset Context,2026-09-24,1.0,daily,CURRENT,11.0,11.0,1.0,Contexto cross-asset
-2026-09-25,Evidence Matrix,2026-09-23,2.0,daily,CURRENT,11.0,11.0,1.0,Matriz evidencia
-2026-09-25,Euronext,2026-09-23,2.0,daily,CURRENT,13.0,13.0,1.0,Euronext (13/13 OK)
-2026-09-25,Xetra,2026-09-23,2.0,daily,CURRENT,19.0,19.0,1.0,Xetra (19/19 OK)
-2026-09-25,BME,2026-09-23,2.0,daily,CURRENT,19.0,19.0,1.0,BME (19/19 OK)
-2026-09-26,Yahoo Finance,2026-09-25,1.0,daily,CURRENT,,,,Precios y métricas sectoriales
-2026-09-26,SSGA ETF Flow,2026-09-24,2.0,daily,CURRENT,12.0,12.0,1.0,Flujo primario
-2026-09-26,CBOE PCR,2026-09-25,1.0,daily,CURRENT,44.0,44.0,1.0,Put/Call ratio
-2026-09-26,FINRA Dark Pool,2026-08-31,26.0,finra,CURRENT,,,,Retraso regulatorio 2-4 semanas
-2026-09-26,CFTC Position Flow,2026-09-22,4.0,cftc,CURRENT,,,,Frescura 30 días
-2026-09-26,SEC N-PORT,,,sec,N/D,,,,Trimestral
-2026-09-26,Macro FRED,2026-09-25,1.0,fred,CURRENT,,,,Datos macro manuales
-2026-09-26,Sector Concentration,2026-09-25,1.0,daily,CURRENT,11.0,11.0,1.0,Concentración y dispersión
-2026-09-26,Sector Breadth Momentum,2026-09-24,2.0,daily,CURRENT,11.0,11.0,1.0,Momentum amplitud
-2026-09-26,Volatility Structure,2026-09-25,1.0,daily,CURRENT,,,,Estructura volatilidad
-2026-09-26,Cross Asset Context,2026-09-25,1.0,daily,CURRENT,11.0,11.0,1.0,Contexto cross-asset
-2026-09-26,Evidence Matrix,2026-09-24,2.0,daily,CURRENT,11.0,11.0,1.0,Matriz evidencia
-2026-09-26,Euronext,2026-09-24,2.0,daily,CURRENT,13.0,13.0,1.0,Euronext (13/13 OK)
-2026-09-26,Xetra,2026-09-24,2.0,daily,CURRENT,19.0,19.0,1.0,Xetra (19/19 OK)
-2026-09-26,BME,2026-09-24,2.0,daily,CURRENT,19.0,19.0,1.0,BME (19/19 OK)
-2026-09-28,Yahoo Finance,2026-09-28,0.0,daily,CURRENT,,,,Precios y métricas sectoriales
-2026-09-28,SSGA ETF Flow,2026-09-25,3.0,daily,CURRENT,12.0,12.0,1.0,Flujo primario
-2026-09-28,CBOE PCR,2026-09-25,3.0,daily,CURRENT,44.0,44.0,1.0,Put/Call ratio
-2026-09-28,FINRA Dark Pool,2026-09-04,24.0,finra,CURRENT,,,,Retraso regulatorio 2-4 semanas
-2026-09-28,CFTC Position Flow,2026-09-22,6.0,cftc,CURRENT,,,,Frescura 30 días
-2026-09-28,SEC N-PORT,2026-03-31,181.0,sec,STALE,,,,Trimestral
-2026-09-28,Macro FRED,2026-09-28,0.0,fred,CURRENT,,,,Datos macro manuales
-2026-09-28,Sector Concentration,2026-09-25,3.0,daily,CURRENT,11.0,11.0,1.0,Concentración y dispersión
-2026-09-28,Sector Breadth Momentum,2026-09-25,3.0,daily,CURRENT,11.0,11.0,1.0,Momentum amplitud
-2026-09-28,Volatility Structure,2026-09-28,0.0,daily,CURRENT,,,,Estructura volatilidad
-2026-09-28,Cross Asset Context,2026-09-28,0.0,daily,CURRENT,11.0,11.0,1.0,Contexto cross-asset
-2026-09-28,Evidence Matrix,2026-09-25,3.0,daily,CURRENT,11.0,11.0,1.0,Matriz evidencia
-2026-09-28,Euronext,2026-09-28,0.0,daily,CURRENT,13.0,13.0,1.0,Euronext (13/13 OK)
-2026-09-28,Xetra,2026-09-28,0.0,daily,CURRENT,19.0,19.0,1.0,Xetra (19/19 OK)
+2026-09-25,Sector Concentration,2026-09-25,0.0,daily,CURRENT,11.0,11.0,1.0,Concentración y dispersión
+2026-09-25,Volatility Structure,2026-09-25,0.0,daily,CURRENT,,,,Estructura volatilidad
+2026-09-25,Xetra,2026-09-24,1.0,daily,CURRENT,19.0,19.0,1.0,Xetra (19/19 OK)
+2026-09-25,Yahoo Finance,2026-09-25,0.0,daily,CURRENT,,,,Precios y métricas sectoriales
 2026-09-28,BME,2026-09-25,3.0,daily,CURRENT,19.0,19.0,1.0,BME (19/19 OK)
-2026-09-29,Yahoo Finance,2026-09-28,1.0,daily,CURRENT,,,,Precios y métricas sectoriales
-2026-09-29,SSGA ETF Flow,2026-09-25,4.0,daily,RECENT,12.0,12.0,1.0,Flujo primario
-2026-09-29,CBOE PCR,2026-09-28,1.0,daily,CURRENT,45.0,45.0,1.0,Put/Call ratio
-2026-09-29,FINRA Dark Pool,2026-09-04,25.0,finra,CURRENT,,,,Retraso regulatorio 2-4 semanas
-2026-09-29,CFTC Position Flow,2026-09-22,7.0,cftc,CURRENT,,,,Frescura 30 días
-2026-09-29,SEC N-PORT,2026-03-31,182.0,sec,STALE,,,,Trimestral
-2026-09-29,Macro FRED,2026-09-29,0.0,fred,CURRENT,,,,Datos macro manuales
-2026-09-29,Sector Concentration,2026-09-28,1.0,daily,CURRENT,11.0,11.0,1.0,Concentración y dispersión
-2026-09-29,Sector Breadth Momentum,2026-09-28,1.0,daily,CURRENT,11.0,11.0,1.0,Momentum amplitud
-2026-09-29,Volatility Structure,2026-09-28,1.0,daily,CURRENT,,,,Estructura volatilidad
-2026-09-29,Cross Asset Context,2026-09-28,1.0,daily,CURRENT,11.0,11.0,1.0,Contexto cross-asset
-2026-09-29,Evidence Matrix,2026-09-25,4.0,daily,RECENT,11.0,11.0,1.0,Matriz evidencia
-2026-09-29,Euronext,2026-09-28,1.0,daily,CURRENT,13.0,13.0,1.0,Euronext (13/13 OK)
-2026-09-29,Xetra,2026-09-28,1.0,daily,CURRENT,19.0,19.0,1.0,Xetra (19/19 OK)
+2026-09-28,CBOE PCR,2026-09-25,3.0,daily,CURRENT,44.0,44.0,1.0,Put/Call ratio
+2026-09-28,CFTC Position Flow,2026-09-22,6.0,cftc,CURRENT,,,,Frescura 30 días
+2026-09-28,Cross Asset Context,2026-09-28,0.0,daily,CURRENT,11.0,11.0,1.0,Contexto cross-asset
+2026-09-28,Euronext,2026-09-28,0.0,daily,CURRENT,13.0,13.0,1.0,Euronext (13/13 OK)
+2026-09-28,Evidence Matrix,2026-09-25,3.0,daily,CURRENT,11.0,11.0,1.0,Matriz evidencia
+2026-09-28,FINRA Dark Pool,2026-09-04,24.0,finra,CURRENT,,,,Retraso regulatorio 2-4 semanas
+2026-09-28,Macro FRED,2026-09-28,0.0,fred,CURRENT,,,,Datos macro manuales
+2026-09-28,SEC N-PORT,2026-03-31,181.0,sec,STALE,,,,Trimestral
+2026-09-28,SSGA ETF Flow,2026-09-25,3.0,daily,CURRENT,12.0,12.0,1.0,Flujo primario
+2026-09-28,Sector Breadth Momentum,2026-09-25,3.0,daily,CURRENT,11.0,11.0,1.0,Momentum amplitud
+2026-09-28,Sector Concentration,2026-09-25,3.0,daily,CURRENT,11.0,11.0,1.0,Concentración y dispersión
+2026-09-28,Volatility Structure,2026-09-28,0.0,daily,CURRENT,,,,Estructura volatilidad
+2026-09-28,Xetra,2026-09-28,0.0,daily,CURRENT,19.0,19.0,1.0,Xetra (19/19 OK)
+2026-09-28,Yahoo Finance,2026-09-28,0.0,daily,CURRENT,,,,Precios y métricas sectoriales
 2026-09-29,BME,2026-09-25,4.0,daily,RECENT,19.0,19.0,1.0,BME (19/19 OK)
-2026-09-30,Yahoo Finance,2026-09-30,0.0,daily,CURRENT,,,,Precios y métricas sectoriales
-2026-09-30,SSGA ETF Flow,2026-09-29,1.0,daily,CURRENT,12.0,12.0,1.0,Flujo primario
-2026-09-30,CBOE PCR,2026-09-29,1.0,daily,CURRENT,46.0,46.0,1.0,Put/Call ratio
-2026-09-30,FINRA Dark Pool,2026-09-07,23.0,finra,CURRENT,,,,Retraso regulatorio 2-4 semanas
-2026-09-30,CFTC Position Flow,2026-09-22,8.0,cftc,CURRENT,,,,Frescura 30 días
-2026-09-30,SEC N-PORT,2026-03-31,183.0,sec,STALE,,,,Trimestral
-2026-09-30,Macro FRED,2026-09-30,0.0,fred,CURRENT,,,,Datos macro manuales
-2026-09-30,Sector Concentration,2026-09-29,1.0,daily,CURRENT,11.0,11.0,1.0,Concentración y dispersión
-2026-09-30,Sector Breadth Momentum,2026-09-29,1.0,daily,CURRENT,11.0,11.0,1.0,Momentum amplitud
-2026-09-30,Volatility Structure,2026-09-30,0.0,daily,CURRENT,,,,Estructura volatilidad
-2026-09-30,Cross Asset Context,2026-09-30,0.0,daily,CURRENT,11.0,11.0,1.0,Contexto cross-asset
-2026-09-30,Evidence Matrix,2026-09-29,1.0,daily,CURRENT,11.0,11.0,1.0,Matriz evidencia
-2026-09-30,Euronext,2026-09-29,1.0,daily,CURRENT,13.0,13.0,1.0,Euronext (13/13 OK)
-2026-09-30,Xetra,2026-09-30,0.0,daily,CURRENT,19.0,19.0,1.0,Xetra (19/19 OK)
+2026-09-29,CBOE PCR,2026-09-28,1.0,daily,CURRENT,45.0,45.0,1.0,Put/Call ratio
+2026-09-29,CFTC Position Flow,2026-09-22,7.0,cftc,CURRENT,,,,Frescura 30 días
+2026-09-29,Cross Asset Context,2026-09-28,1.0,daily,CURRENT,11.0,11.0,1.0,Contexto cross-asset
+2026-09-29,Euronext,2026-09-28,1.0,daily,CURRENT,13.0,13.0,1.0,Euronext (13/13 OK)
+2026-09-29,Evidence Matrix,2026-09-25,4.0,daily,RECENT,11.0,11.0,1.0,Matriz evidencia
+2026-09-29,FINRA Dark Pool,2026-09-04,25.0,finra,CURRENT,,,,Retraso regulatorio 2-4 semanas
+2026-09-29,Macro FRED,2026-09-29,0.0,fred,CURRENT,,,,Datos macro manuales
+2026-09-29,SEC N-PORT,2026-03-31,182.0,sec,STALE,,,,Trimestral
+2026-09-29,SSGA ETF Flow,2026-09-25,4.0,daily,RECENT,12.0,12.0,1.0,Flujo primario
+2026-09-29,Sector Breadth Momentum,2026-09-28,1.0,daily,CURRENT,11.0,11.0,1.0,Momentum amplitud
+2026-09-29,Sector Concentration,2026-09-28,1.0,daily,CURRENT,11.0,11.0,1.0,Concentración y dispersión
+2026-09-29,Volatility Structure,2026-09-28,1.0,daily,CURRENT,,,,Estructura volatilidad
+2026-09-29,Xetra,2026-09-28,1.0,daily,CURRENT,19.0,19.0,1.0,Xetra (19/19 OK)
+2026-09-29,Yahoo Finance,2026-09-28,1.0,daily,CURRENT,,,,Precios y métricas sectoriales
 2026-09-30,BME,2026-09-28,2.0,daily,CURRENT,19.0,19.0,1.0,BME (19/19 OK)
-2026-10-01,Yahoo Finance,2026-09-30,1.0,daily,CURRENT,,,,Precios y métricas sectoriales
-2026-10-01,SSGA ETF Flow,2026-09-30,1.0,daily,CURRENT,12.0,12.0,1.0,Flujo primario
-2026-10-01,CBOE PCR,2026-09-30,1.0,daily,CURRENT,47.0,47.0,1.0,Put/Call ratio
-2026-10-01,FINRA Dark Pool,2026-09-07,24.0,finra,CURRENT,,,,Retraso regulatorio 2-4 semanas
-2026-10-01,CFTC Position Flow,2026-09-22,9.0,cftc,CURRENT,,,,Frescura 30 días
-2026-10-01,SEC N-PORT,2026-03-31,184.0,sec,STALE,,,,Trimestral
-2026-10-01,Macro FRED,2026-10-01,0.0,fred,CURRENT,,,,Datos macro manuales
-2026-10-01,Sector Concentration,2026-09-30,1.0,daily,CURRENT,11.0,11.0,1.0,Concentración y dispersión
-2026-10-01,Sector Breadth Momentum,2026-09-30,1.0,daily,CURRENT,11.0,11.0,1.0,Momentum amplitud
-2026-10-01,Volatility Structure,2026-09-30,1.0,daily,CURRENT,,,,Estructura volatilidad
-2026-10-01,Cross Asset Context,2026-09-30,1.0,daily,CURRENT,11.0,11.0,1.0,Contexto cross-asset
-2026-10-01,Evidence Matrix,2026-09-30,1.0,daily,CURRENT,11.0,11.0,1.0,Matriz evidencia
-2026-10-01,Euronext,2026-09-30,1.0,daily,CURRENT,13.0,13.0,1.0,Euronext (13/13 OK)
-2026-10-01,Xetra,2026-09-30,1.0,daily,CURRENT,19.0,19.0,1.0,Xetra (19/19 OK)
+2026-09-30,CBOE PCR,2026-09-29,1.0,daily,CURRENT,46.0,46.0,1.0,Put/Call ratio
+2026-09-30,CFTC Position Flow,2026-09-22,8.0,cftc,CURRENT,,,,Frescura 30 días
+2026-09-30,Cross Asset Context,2026-09-30,0.0,daily,CURRENT,11.0,11.0,1.0,Contexto cross-asset
+2026-09-30,Euronext,2026-09-29,1.0,daily,CURRENT,13.0,13.0,1.0,Euronext (13/13 OK)
+2026-09-30,Evidence Matrix,2026-09-29,1.0,daily,CURRENT,11.0,11.0,1.0,Matriz evidencia
+2026-09-30,FINRA Dark Pool,2026-09-07,23.0,finra,CURRENT,,,,Retraso regulatorio 2-4 semanas
+2026-09-30,Macro FRED,2026-09-30,0.0,fred,CURRENT,,,,Datos macro manuales
+2026-09-30,SEC N-PORT,2026-03-31,183.0,sec,STALE,,,,Trimestral
+2026-09-30,SSGA ETF Flow,2026-09-29,1.0,daily,CURRENT,12.0,12.0,1.0,Flujo primario
+2026-09-30,Sector Breadth Momentum,2026-09-29,1.0,daily,CURRENT,11.0,11.0,1.0,Momentum amplitud
+2026-09-30,Sector Concentration,2026-09-29,1.0,daily,CURRENT,11.0,11.0,1.0,Concentración y dispersión
+2026-09-30,Volatility Structure,2026-09-30,0.0,daily,CURRENT,,,,Estructura volatilidad
+2026-09-30,Xetra,2026-09-30,0.0,daily,CURRENT,19.0,19.0,1.0,Xetra (19/19 OK)
+2026-09-30,Yahoo Finance,2026-09-30,0.0,daily,CURRENT,,,,Precios y métricas sectoriales
 2026-10-01,BME,2026-09-30,1.0,daily,CURRENT,19.0,19.0,1.0,BME (19/19 OK)
-2026-10-02,Yahoo Finance,2026-10-01,1.0,daily,CURRENT,,,,Precios y métricas sectoriales
-2026-10-02,SSGA ETF Flow,2026-09-30,2.0,daily,CURRENT,12.0,12.0,1.0,Flujo primario
+2026-10-01,CBOE PCR,2026-09-30,1.0,daily,CURRENT,47.0,47.0,1.0,Put/Call ratio
+2026-10-01,CFTC Position Flow,2026-09-22,9.0,cftc,CURRENT,,,,Frescura 30 días
+2026-10-01,Cross Asset Context,2026-09-30,1.0,daily,CURRENT,11.0,11.0,1.0,Contexto cross-asset
+2026-10-01,Euronext,2026-09-30,1.0,daily,CURRENT,13.0,13.0,1.0,Euronext (13/13 OK)
+2026-10-01,Evidence Matrix,2026-09-30,1.0,daily,CURRENT,11.0,11.0,1.0,Matriz evidencia
+2026-10-01,FINRA Dark Pool,2026-09-07,24.0,finra,CURRENT,,,,Retraso regulatorio 2-4 semanas
+2026-10-01,Macro FRED,2026-10-01,0.0,fred,CURRENT,,,,Datos macro manuales
+2026-10-01,SEC N-PORT,2026-03-31,184.0,sec,STALE,,,,Trimestral
+2026-10-01,SSGA ETF Flow,2026-09-30,1.0,daily,CURRENT,12.0,12.0,1.0,Flujo primario
+2026-10-01,Sector Breadth Momentum,2026-09-30,1.0,daily,CURRENT,11.0,11.0,1.0,Momentum amplitud
+2026-10-01,Sector Concentration,2026-09-30,1.0,daily,CURRENT,11.0,11.0,1.0,Concentración y dispersión
+2026-10-01,Volatility Structure,2026-09-30,1.0,daily,CURRENT,,,,Estructura volatilidad
+2026-10-01,Xetra,2026-09-30,1.0,daily,CURRENT,19.0,19.0,1.0,Xetra (19/19 OK)
+2026-10-01,Yahoo Finance,2026-09-30,1.0,daily,CURRENT,,,,Precios y métricas sectoriales
+2026-10-02,BME,2026-10-01,1.0,daily,CURRENT,19.0,19.0,1.0,BME (19/19 OK)
 2026-10-02,CBOE PCR,2026-10-01,1.0,daily,CURRENT,48.0,48.0,1.0,Put/Call ratio
-2026-10-02,FINRA Dark Pool,2026-09-07,25.0,finra,CURRENT,,,,Retraso regulatorio 2-4 semanas
-2026-10-02,CFTC Position Flow,2026-09-22,10.0,cftc,CURRENT,,,,Frescura 30 días
-2026-10-02,SEC N-PORT,2026-03-31,185.0,sec,STALE,,,,Trimestral
-2026-10-02,Macro FRED,2026-10-02,0.0,fred,CURRENT,,,,Datos macro manuales
-2026-10-02,Sector Concentration,2026-10-01,1.0,daily,CURRENT,11.0,11.0,1.0,Concentración y dispersión
-2026-10-02,Sector Breadth Momentum,2026-10-01,1.0,daily,CURRENT,11.0,11.0,1.0,Momentum amplitud
-2026-10-02,Volatility Structure,2026-10-01,1.0,daily,CURRENT,,,,Estructura volatilidad
-2026-10-02,Cross Asset Context,2026-10-01,1.0,daily,CURRENT,11.0,11.0,1.0,Contexto cross-asset
-2026-10-02,Evidence Matrix,2026-09-30,2.0,daily,CURRENT,11.0,11.0,1.0,Matriz evidencia
+2026-10-02,CFTC Position Flow,2026-09-29,3.0,cftc,CURRENT,,,,Frescura 30 días
+2026-10-02,Cross Asset Context,2026-10-02,0.0,daily,CURRENT,11.0,11.0,1.0,Contexto cross-asset
 2026-10-02,Euronext,2026-10-01,1.0,daily,CURRENT,13.0,13.0,1.0,Euronext (13/13 OK)
+2026-10-02,Evidence Matrix,2026-10-01,1.0,daily,CURRENT,11.0,11.0,1.0,Matriz evidencia
+2026-10-02,FINRA Dark Pool,2026-09-07,25.0,finra,CURRENT,,,,Retraso regulatorio 2-4 semanas
+2026-10-02,Macro FRED,2026-10-02,0.0,fred,CURRENT,,,,Datos macro manuales
+2026-10-02,SEC N-PORT,2026-03-31,185.0,sec,STALE,,,,Trimestral
+2026-10-02,SSGA ETF Flow,2026-10-01,1.0,daily,CURRENT,12.0,12.0,1.0,Flujo primario
+2026-10-02,Sector Breadth Momentum,2026-10-01,1.0,daily,CURRENT,11.0,11.0,1.0,Momentum amplitud
+2026-10-02,Sector Concentration,2026-10-02,0.0,daily,CURRENT,11.0,11.0,1.0,Concentración y dispersión
+2026-10-02,Volatility Structure,2026-10-02,0.0,daily,CURRENT,,,,Estructura volatilidad
 2026-10-02,Xetra,2026-10-01,1.0,daily,CURRENT,19.0,19.0,1.0,Xetra (19/19 OK)
-2026-10-02,BME,2026-09-30,2.0,daily,CURRENT,19.0,19.0,1.0,BME (19/19 OK)
-2026-10-03,Yahoo Finance,2026-10-02,1.0,daily,CURRENT,,,,Precios y métricas sectoriales
-2026-10-03,SSGA ETF Flow,2026-10-01,2.0,daily,CURRENT,12.0,12.0,1.0,Flujo primario
-2026-10-03,CBOE PCR,2026-10-01,2.0,daily,CURRENT,48.0,48.0,1.0,Put/Call ratio
-2026-10-03,FINRA Dark Pool,2026-09-07,26.0,finra,CURRENT,,,,Retraso regulatorio 2-4 semanas
-2026-10-03,CFTC Position Flow,2026-09-29,4.0,cftc,CURRENT,,,,Frescura 30 días
-2026-10-03,SEC N-PORT,2026-03-31,186.0,sec,STALE,,,,Trimestral
-2026-10-03,Macro FRED,2026-10-02,1.0,fred,CURRENT,,,,Datos macro manuales
-2026-10-03,Sector Concentration,2026-10-02,1.0,daily,CURRENT,11.0,11.0,1.0,Concentración y dispersión
-2026-10-03,Sector Breadth Momentum,2026-10-01,2.0,daily,CURRENT,11.0,11.0,1.0,Momentum amplitud
-2026-10-03,Volatility Structure,2026-10-02,1.0,daily,CURRENT,,,,Estructura volatilidad
-2026-10-03,Cross Asset Context,2026-10-02,1.0,daily,CURRENT,11.0,11.0,1.0,Contexto cross-asset
-2026-10-03,Evidence Matrix,2026-10-01,2.0,daily,CURRENT,11.0,11.0,1.0,Matriz evidencia
-2026-10-03,Euronext,2026-10-01,2.0,daily,CURRENT,13.0,13.0,1.0,Euronext (13/13 OK)
-2026-10-03,Xetra,2026-10-01,2.0,daily,CURRENT,19.0,19.0,1.0,Xetra (19/19 OK)
-2026-10-03,BME,2026-10-01,2.0,daily,CURRENT,19.0,19.0,1.0,BME (19/19 OK)
-2026-10-05,Yahoo Finance,2026-10-02,3.0,daily,CURRENT,,,,Precios y métricas sectoriales
-2026-10-05,SSGA ETF Flow,2026-10-02,3.0,daily,CURRENT,12.0,12.0,1.0,Flujo primario
-2026-10-05,CBOE PCR,2026-10-02,3.0,daily,CURRENT,49.0,49.0,1.0,Put/Call ratio
-2026-10-05,FINRA Dark Pool,2026-09-14,21.0,finra,CURRENT,,,,Retraso regulatorio 2-4 semanas
-2026-10-05,CFTC Position Flow,2026-09-29,6.0,cftc,CURRENT,,,,Frescura 30 días
-2026-10-05,SEC N-PORT,2026-03-31,188.0,sec,STALE,,,,Trimestral
-2026-10-05,Macro FRED,2026-10-05,0.0,fred,CURRENT,,,,Datos macro manuales
-2026-10-05,Sector Concentration,2026-10-02,3.0,daily,CURRENT,11.0,11.0,1.0,Concentración y dispersión
-2026-10-05,Sector Breadth Momentum,2026-10-02,3.0,daily,CURRENT,11.0,11.0,1.0,Momentum amplitud
-2026-10-05,Volatility Structure,2026-10-02,3.0,daily,CURRENT,,,,Estructura volatilidad
-2026-10-05,Cross Asset Context,2026-10-02,3.0,daily,CURRENT,11.0,11.0,1.0,Contexto cross-asset
-2026-10-05,Evidence Matrix,2026-10-02,3.0,daily,CURRENT,11.0,11.0,1.0,Matriz evidencia
-2026-10-05,Euronext,2026-10-02,3.0,daily,CURRENT,13.0,13.0,1.0,Euronext (13/13 OK)
-2026-10-05,Xetra,2026-10-02,3.0,daily,CURRENT,19.0,19.0,1.0,Xetra (19/19 OK)
+2026-10-02,Yahoo Finance,2026-10-02,0.0,daily,CURRENT,,,,Precios y métricas sectoriales
 2026-10-05,BME,2026-10-02,3.0,daily,CURRENT,19.0,19.0,1.0,BME (19/19 OK)
-2026-10-06,Yahoo Finance,2026-10-05,1.0,daily,CURRENT,,,,Precios y métricas sectoriales
-2026-10-06,SSGA ETF Flow,2026-10-05,1.0,daily,CURRENT,12.0,12.0,1.0,Flujo primario
-2026-10-06,CBOE PCR,2026-10-05,1.0,daily,CURRENT,50.0,50.0,1.0,Put/Call ratio
-2026-10-06,FINRA Dark Pool,2026-09-14,22.0,finra,CURRENT,,,,Retraso regulatorio 2-4 semanas
-2026-10-06,CFTC Position Flow,2026-09-29,7.0,cftc,CURRENT,,,,Frescura 30 días
-2026-10-06,SEC N-PORT,2026-03-31,189.0,sec,STALE,,,,Trimestral
-2026-10-06,Macro FRED,2026-10-06,0.0,fred,CURRENT,,,,Datos macro manuales
-2026-10-06,Sector Concentration,2026-10-05,1.0,daily,CURRENT,11.0,11.0,1.0,Concentración y dispersión
-2026-10-06,Sector Breadth Momentum,2026-10-05,1.0,daily,CURRENT,11.0,11.0,1.0,Momentum amplitud
-2026-10-06,Volatility Structure,2026-10-05,1.0,daily,CURRENT,,,,Estructura volatilidad
-2026-10-06,Cross Asset Context,2026-10-05,1.0,daily,CURRENT,11.0,11.0,1.0,Contexto cross-asset
-2026-10-06,Evidence Matrix,2026-10-05,1.0,daily,CURRENT,11.0,11.0,1.0,Matriz evidencia
-2026-10-06,Euronext,2026-10-06,0.0,daily,CURRENT,13.0,13.0,1.0,Euronext (13/13 OK)
-2026-10-06,Xetra,2026-10-06,0.0,daily,CURRENT,19.0,19.0,1.0,Xetra (19/19 OK)
+2026-10-05,CBOE PCR,2026-10-02,3.0,daily,CURRENT,49.0,49.0,1.0,Put/Call ratio
+2026-10-05,CFTC Position Flow,2026-09-29,6.0,cftc,CURRENT,,,,Frescura 30 días
+2026-10-05,Cross Asset Context,2026-10-02,3.0,daily,CURRENT,11.0,11.0,1.0,Contexto cross-asset
+2026-10-05,Euronext,2026-10-02,3.0,daily,CURRENT,13.0,13.0,1.0,Euronext (13/13 OK)
+2026-10-05,Evidence Matrix,2026-10-02,3.0,daily,CURRENT,11.0,11.0,1.0,Matriz evidencia
+2026-10-05,FINRA Dark Pool,2026-09-14,21.0,finra,CURRENT,,,,Retraso regulatorio 2-4 semanas
+2026-10-05,Macro FRED,2026-10-05,0.0,fred,CURRENT,,,,Datos macro manuales
+2026-10-05,SEC N-PORT,2026-03-31,188.0,sec,STALE,,,,Trimestral
+2026-10-05,SSGA ETF Flow,2026-10-02,3.0,daily,CURRENT,12.0,12.0,1.0,Flujo primario
+2026-10-05,Sector Breadth Momentum,2026-10-02,3.0,daily,CURRENT,11.0,11.0,1.0,Momentum amplitud
+2026-10-05,Sector Concentration,2026-10-02,3.0,daily,CURRENT,11.0,11.0,1.0,Concentración y dispersión
+2026-10-05,Volatility Structure,2026-10-02,3.0,daily,CURRENT,,,,Estructura volatilidad
+2026-10-05,Xetra,2026-10-02,3.0,daily,CURRENT,19.0,19.0,1.0,Xetra (19/19 OK)
+2026-10-05,Yahoo Finance,2026-10-02,3.0,daily,CURRENT,,,,Precios y métricas sectoriales
 2026-10-06,BME,2026-10-05,1.0,daily,CURRENT,19.0,19.0,1.0,BME (19/19 OK)
-2026-10-07,Yahoo Finance,2026-10-06,1.0,daily,CURRENT,,,,Precios y métricas sectoriales
-2026-10-07,SSGA ETF Flow,2026-10-05,2.0,daily,CURRENT,12.0,12.0,1.0,Flujo primario
-2026-10-07,CBOE PCR,2026-10-06,1.0,daily,CURRENT,51.0,51.0,1.0,Put/Call ratio
-2026-10-07,FINRA Dark Pool,2026-09-14,23.0,finra,CURRENT,,,,Retraso regulatorio 2-4 semanas
-2026-10-07,CFTC Position Flow,2026-09-29,8.0,cftc,CURRENT,,,,Frescura 30 días
-2026-10-07,SEC N-PORT,2026-03-31,190.0,sec,STALE,,,,Trimestral
-2026-10-07,Macro FRED,2026-10-07,0.0,fred,CURRENT,,,,Datos macro manuales
-2026-10-07,Sector Concentration,2026-10-06,1.0,daily,CURRENT,11.0,11.0,1.0,Concentración y dispersión
-2026-10-07,Sector Breadth Momentum,2026-10-06,1.0,daily,CURRENT,11.0,11.0,1.0,Momentum amplitud
-2026-10-07,Volatility Structure,2026-10-06,1.0,daily,CURRENT,,,,Estructura volatilidad
-2026-10-07,Cross Asset Context,2026-10-06,1.0,daily,CURRENT,11.0,11.0,1.0,Contexto cross-asset
-2026-10-07,Evidence Matrix,2026-10-06,1.0,daily,CURRENT,11.0,11.0,1.0,Matriz evidencia
-2026-10-07,Euronext,2026-10-06,1.0,daily,CURRENT,13.0,13.0,1.0,Euronext (13/13 OK)
-2026-10-07,Xetra,2026-10-06,1.0,daily,CURRENT,19.0,19.0,1.0,Xetra (19/19 OK)
+2026-10-06,CBOE PCR,2026-10-05,1.0,daily,CURRENT,50.0,50.0,1.0,Put/Call ratio
+2026-10-06,CFTC Position Flow,2026-09-29,7.0,cftc,CURRENT,,,,Frescura 30 días
+2026-10-06,Cross Asset Context,2026-10-05,1.0,daily,CURRENT,11.0,11.0,1.0,Contexto cross-asset
+2026-10-06,Euronext,2026-10-06,0.0,daily,CURRENT,13.0,13.0,1.0,Euronext (13/13 OK)
+2026-10-06,Evidence Matrix,2026-10-05,1.0,daily,CURRENT,11.0,11.0,1.0,Matriz evidencia
+2026-10-06,FINRA Dark Pool,2026-09-14,22.0,finra,CURRENT,,,,Retraso regulatorio 2-4 semanas
+2026-10-06,Macro FRED,2026-10-06,0.0,fred,CURRENT,,,,Datos macro manuales
+2026-10-06,SEC N-PORT,2026-03-31,189.0,sec,STALE,,,,Trimestral
+2026-10-06,SSGA ETF Flow,2026-10-05,1.0,daily,CURRENT,12.0,12.0,1.0,Flujo primario
+2026-10-06,Sector Breadth Momentum,2026-10-05,1.0,daily,CURRENT,11.0,11.0,1.0,Momentum amplitud
+2026-10-06,Sector Concentration,2026-10-05,1.0,daily,CURRENT,11.0,11.0,1.0,Concentración y dispersión
+2026-10-06,Volatility Structure,2026-10-05,1.0,daily,CURRENT,,,,Estructura volatilidad
+2026-10-06,Xetra,2026-10-06,0.0,daily,CURRENT,19.0,19.0,1.0,Xetra (19/19 OK)
+2026-10-06,Yahoo Finance,2026-10-05,1.0,daily,CURRENT,,,,Precios y métricas sectoriales
 2026-10-07,BME,2026-10-05,2.0,daily,CURRENT,19.0,19.0,1.0,BME (19/19 OK)
-2026-10-08,Yahoo Finance,2026-10-07,1.0,daily,CURRENT,,,,Precios y métricas sectoriales
-2026-10-08,SSGA ETF Flow,2026-10-06,2.0,daily,CURRENT,12.0,12.0,1.0,Flujo primario
-2026-10-08,CBOE PCR,2026-10-07,1.0,daily,CURRENT,52.0,52.0,1.0,Put/Call ratio
-2026-10-08,FINRA Dark Pool,2026-09-14,24.0,finra,RECENT,,,,Retraso regulatorio 2-4 semanas
-2026-10-08,CFTC Position Flow,2026-09-29,9.0,cftc,CURRENT,,,,Frescura 30 días
-2026-10-08,SEC N-PORT,2026-03-31,191.0,sec,STALE,,,,Trimestral
-2026-10-08,Macro FRED,2026-10-08,0.0,fred,CURRENT,,,,Datos macro manuales
-2026-10-08,Sector Concentration,2026-10-07,1.0,daily,CURRENT,11.0,11.0,1.0,Concentración y dispersión
-2026-10-08,Sector Breadth Momentum,2026-10-07,1.0,daily,CURRENT,11.0,11.0,1.0,Momentum amplitud
-2026-10-08,Volatility Structure,2026-10-07,1.0,daily,CURRENT,,,,Estructura volatilidad
-2026-10-08,Cross Asset Context,2026-10-07,1.0,daily,CURRENT,11.0,11.0,1.0,Contexto cross-asset
-2026-10-08,Evidence Matrix,2026-10-07,1.0,daily,CURRENT,11.0,11.0,1.0,Matriz evidencia
-2026-10-08,Euronext,2026-10-06,2.0,daily,CURRENT,13.0,13.0,1.0,Euronext (13/13 OK)
-2026-10-08,Xetra,2026-10-06,2.0,daily,CURRENT,19.0,19.0,1.0,Xetra (19/19 OK)
+2026-10-07,CBOE PCR,2026-10-06,1.0,daily,CURRENT,51.0,51.0,1.0,Put/Call ratio
+2026-10-07,CFTC Position Flow,2026-09-29,8.0,cftc,CURRENT,,,,Frescura 30 días
+2026-10-07,Cross Asset Context,2026-10-06,1.0,daily,CURRENT,11.0,11.0,1.0,Contexto cross-asset
+2026-10-07,Euronext,2026-10-06,1.0,daily,CURRENT,13.0,13.0,1.0,Euronext (13/13 OK)
+2026-10-07,Evidence Matrix,2026-10-06,1.0,daily,CURRENT,11.0,11.0,1.0,Matriz evidencia
+2026-10-07,FINRA Dark Pool,2026-09-14,23.0,finra,CURRENT,,,,Retraso regulatorio 2-4 semanas
+2026-10-07,Macro FRED,2026-10-07,0.0,fred,CURRENT,,,,Datos macro manuales
+2026-10-07,SEC N-PORT,2026-03-31,190.0,sec,STALE,,,,Trimestral
+2026-10-07,SSGA ETF Flow,2026-10-05,2.0,daily,CURRENT,12.0,12.0,1.0,Flujo primario
+2026-10-07,Sector Breadth Momentum,2026-10-06,1.0,daily,CURRENT,11.0,11.0,1.0,Momentum amplitud
+2026-10-07,Sector Concentration,2026-10-06,1.0,daily,CURRENT,11.0,11.0,1.0,Concentración y dispersión
+2026-10-07,Volatility Structure,2026-10-06,1.0,daily,CURRENT,,,,Estructura volatilidad
+2026-10-07,Xetra,2026-10-06,1.0,daily,CURRENT,19.0,19.0,1.0,Xetra (19/19 OK)
+2026-10-07,Yahoo Finance,2026-10-06,1.0,daily,CURRENT,,,,Precios y métricas sectoriales
 2026-10-08,BME,2026-10-06,2.0,daily,CURRENT,19.0,19.0,1.0,BME (19/19 OK)
-2026-10-09,Yahoo Finance,2026-10-08,1.0,daily,CURRENT,,,,Precios y métricas sectoriales
-2026-10-09,SSGA ETF Flow,2026-10-07,2.0,daily,CURRENT,12.0,12.0,1.0,Flujo primario
-2026-10-09,CBOE PCR,2026-10-08,1.0,daily,CURRENT,53.0,53.0,1.0,Put/Call ratio
+2026-10-08,CBOE PCR,2026-10-07,1.0,daily,CURRENT,52.0,52.0,1.0,Put/Call ratio
+2026-10-08,CFTC Position Flow,2026-09-29,9.0,cftc,CURRENT,,,,Frescura 30 días
+2026-10-08,Cross Asset Context,2026-10-07,1.0,daily,CURRENT,11.0,11.0,1.0,Contexto cross-asset
+2026-10-08,Euronext,2026-10-06,2.0,daily,CURRENT,13.0,13.0,1.0,Euronext (13/13 OK)
+2026-10-08,Evidence Matrix,2026-10-07,1.0,daily,CURRENT,11.0,11.0,1.0,Matriz evidencia
+2026-10-08,FINRA Dark Pool,2026-09-14,24.0,finra,RECENT,,,,Retraso regulatorio 2-4 semanas
+2026-10-08,Macro FRED,2026-10-08,0.0,fred,CURRENT,,,,Datos macro manuales
+2026-10-08,SEC N-PORT,2026-03-31,191.0,sec,STALE,,,,Trimestral
+2026-10-08,SSGA ETF Flow,2026-10-06,2.0,daily,CURRENT,12.0,12.0,1.0,Flujo primario
+2026-10-08,Sector Breadth Momentum,2026-10-07,1.0,daily,CURRENT,11.0,11.0,1.0,Momentum amplitud
+2026-10-08,Sector Concentration,2026-10-07,1.0,daily,CURRENT,11.0,11.0,1.0,Concentración y dispersión
+2026-10-08,Volatility Structure,2026-10-07,1.0,daily,CURRENT,,,,Estructura volatilidad
+2026-10-08,Xetra,2026-10-06,2.0,daily,CURRENT,19.0,19.0,1.0,Xetra (19/19 OK)
+2026-10-08,Yahoo Finance,2026-10-07,1.0,daily,CURRENT,,,,Precios y métricas sectoriales
+2026-10-09,BME,2026-10-09,0.0,daily,CURRENT,19.0,19.0,1.0,BME (19/19 OK)
+2026-10-09,CBOE PCR,2026-10-09,0.0,daily,CURRENT,54.0,54.0,1.0,Put/Call ratio
+2026-10-09,CFTC Position Flow,2026-10-06,3.0,cftc,CURRENT,,,,Frescura 30 días
+2026-10-09,Cross Asset Context,2026-10-09,0.0,daily,CURRENT,11.0,11.0,1.0,Contexto cross-asset
+2026-10-09,Euronext,2026-10-09,0.0,daily,CURRENT,13.0,13.0,1.0,Euronext (13/13 OK)
+2026-10-09,Evidence Matrix,2026-10-09,0.0,daily,CURRENT,11.0,11.0,1.0,Matriz evidencia
 2026-10-09,FINRA Dark Pool,2026-09-14,25.0,finra,RECENT,,,,Retraso regulatorio 2-4 semanas
-2026-10-09,CFTC Position Flow,2026-09-29,10.0,cftc,CURRENT,,,,Frescura 30 días
-2026-10-09,SEC N-PORT,2026-03-31,192.0,sec,STALE,,,,Trimestral
+2026-10-09,Leader Representativeness,2026-10-09,0.0,daily,CURRENT,,,,Representatividad del lider
 2026-10-09,Macro FRED,2026-10-09,0.0,fred,CURRENT,,,,Datos macro manuales
-2026-10-09,Sector Concentration,2026-10-08,1.0,daily,CURRENT,11.0,11.0,1.0,Concentración y dispersión
-2026-10-09,Sector Breadth Momentum,2026-10-08,1.0,daily,CURRENT,11.0,11.0,1.0,Momentum amplitud
-2026-10-09,Volatility Structure,2026-10-08,1.0,daily,CURRENT,,,,Estructura volatilidad
-2026-10-09,Cross Asset Context,2026-10-08,1.0,daily,CURRENT,11.0,11.0,1.0,Contexto cross-asset
-2026-10-09,Evidence Matrix,2026-10-08,1.0,daily,CURRENT,11.0,11.0,1.0,Matriz evidencia
-2026-10-09,Euronext,2026-10-07,2.0,daily,CURRENT,13.0,13.0,1.0,Euronext (13/13 OK)
-2026-10-09,Xetra,2026-10-07,2.0,daily,CURRENT,19.0,19.0,1.0,Xetra (19/19 OK)
-2026-10-09,BME,2026-10-07,2.0,daily,CURRENT,19.0,19.0,1.0,BME (19/19 OK)
-2026-10-10,Yahoo Finance,2026-10-09,1.0,daily,CURRENT,,,,Precios y métricas sectoriales
-2026-10-10,SSGA ETF Flow,2026-10-08,2.0,daily,CURRENT,12.0,12.0,1.0,Flujo primario
-2026-10-10,CBOE PCR,2026-10-09,1.0,daily,CURRENT,54.0,54.0,1.0,Put/Call ratio
-2026-10-10,FINRA Dark Pool,2026-09-14,26.0,finra,RECENT,,,,Retraso regulatorio 2-4 semanas
-2026-10-10,CFTC Position Flow,2026-10-06,4.0,cftc,CURRENT,,,,Frescura 30 días
-2026-10-10,SEC N-PORT,2026-03-31,193.0,sec,STALE,,,,Trimestral
-2026-10-10,Macro FRED,2026-10-09,1.0,fred,CURRENT,,,,Datos macro manuales
-2026-10-10,Sector Concentration,2026-10-09,1.0,daily,CURRENT,11.0,11.0,1.0,Concentración y dispersión
-2026-10-10,Sector Breadth Momentum,2026-10-08,2.0,daily,CURRENT,11.0,11.0,1.0,Momentum amplitud
-2026-10-10,Volatility Structure,2026-10-09,1.0,daily,CURRENT,,,,Estructura volatilidad
-2026-10-10,Cross Asset Context,2026-10-09,1.0,daily,CURRENT,11.0,11.0,1.0,Contexto cross-asset
-2026-10-10,Evidence Matrix,2026-10-08,2.0,daily,CURRENT,11.0,11.0,1.0,Matriz evidencia
-2026-10-10,Euronext,2026-10-08,2.0,daily,CURRENT,13.0,13.0,1.0,Euronext (13/13 OK)
-2026-10-10,Xetra,2026-10-08,2.0,daily,CURRENT,19.0,16.0,0.8421052631578947,Xetra (16/19 OK)
-2026-10-10,BME,2026-10-08,2.0,daily,CURRENT,19.0,19.0,1.0,BME (19/19 OK)
-2026-10-11,Yahoo Finance,2026-10-09,2.0,daily,CURRENT,,,,Precios y métricas sectoriales
-2026-10-11,SSGA ETF Flow,2026-10-08,3.0,daily,CURRENT,12.0,12.0,1.0,Flujo primario
-2026-10-11,CBOE PCR,2026-10-09,2.0,daily,CURRENT,54.0,54.0,1.0,Put/Call ratio
-2026-10-11,FINRA Dark Pool,2026-09-14,27.0,finra,RECENT,,,,Retraso regulatorio 2-4 semanas
-2026-10-11,CFTC Position Flow,2026-10-06,5.0,cftc,CURRENT,,,,Frescura 30 días
-2026-10-11,SEC N-PORT,2026-03-31,194.0,sec,STALE,,,,Trimestral
-2026-10-11,Macro FRED,2026-10-09,2.0,fred,CURRENT,,,,Datos macro manuales
-2026-10-11,Sector Concentration,2026-10-09,2.0,daily,CURRENT,11.0,11.0,1.0,Concentración y dispersión
-2026-10-11,Sector Breadth Momentum,2026-10-09,2.0,daily,CURRENT,11.0,11.0,1.0,Momentum amplitud
-2026-10-11,Volatility Structure,2026-10-09,2.0,daily,CURRENT,,,,Estructura volatilidad
-2026-10-11,Cross Asset Context,2026-10-09,2.0,daily,CURRENT,11.0,11.0,1.0,Contexto cross-asset
-2026-10-11,Evidence Matrix,2026-10-09,2.0,daily,CURRENT,11.0,11.0,1.0,Matriz evidencia
-2026-10-11,Sector Breadth,2026-10-09,2.0,daily,CURRENT,11.0,11.0,1.0,Amplitud y salud sectorial
-2026-10-11,Sector Persistence,2026-10-09,2.0,daily,CURRENT,11.0,11.0,1.0,Persistencia sectorial
-2026-10-11,Sector Regime Matrix,2026-10-09,2.0,daily,CURRENT,11.0,11.0,1.0,Matriz de regimen sectorial
-2026-10-11,Leader Representativeness,2026-10-09,2.0,daily,CURRENT,,,,Representatividad del lider
-2026-10-11,Sector Wyckoff Distribution,2026-10-09,2.0,daily,CURRENT,11.0,11.0,1.0,Distribucion Wyckoff sectorial
-2026-10-11,Sector Leader Divergence,2026-10-09,2.0,daily,CURRENT,,,,Divergencia sector-lideres
-2026-10-11,RS Internal,2026-10-09,2.0,daily,CURRENT,,,,Liderazgo relativo interno
-2026-10-11,Sector Rank History,2026-10-09,2.0,daily,CURRENT,,,,Rotacion sectorial historica
-2026-10-11,Sector Dispersion,2026-10-09,2.0,daily,CURRENT,,,,Dispersion entre sectores
-2026-10-11,Sector Correlation Summary,2026-10-09,2.0,daily,CURRENT,,,,Correlacion entre sectores
-2026-10-11,Sector Flow Characteristics,2026-10-08,3.0,daily,CURRENT,11.0,11.0,1.0,Flujo primario sectorial
-2026-10-11,Euronext,2026-10-09,2.0,daily,CURRENT,13.0,13.0,1.0,Euronext (13/13 OK)
-2026-10-11,Xetra,2026-10-09,2.0,daily,CURRENT,19.0,19.0,1.0,Xetra (19/19 OK)
-2026-10-11,BME,2026-10-09,2.0,daily,CURRENT,19.0,19.0,1.0,BME (19/19 OK)
-2026-10-13,Yahoo Finance,2026-10-12,1.0,daily,CURRENT,,,,Precios y métricas sectoriales
-2026-10-13,SSGA ETF Flow,2026-10-09,4.0,daily,RECENT,12.0,12.0,1.0,Flujo primario
-2026-10-13,CBOE PCR,2026-10-12,1.0,daily,CURRENT,55.0,55.0,1.0,Put/Call ratio
-2026-10-13,FINRA Dark Pool,2026-09-21,22.0,finra,RECENT,,,,Retraso regulatorio 2-4 semanas
-2026-10-13,CFTC Position Flow,2026-10-06,7.0,cftc,CURRENT,,,,Frescura 30 días
-2026-10-13,SEC N-PORT,2026-03-31,196.0,sec,STALE,,,,Trimestral
-2026-10-13,Macro FRED,2026-10-13,0.0,fred,CURRENT,,,,Datos macro manuales
-2026-10-13,Sector Concentration,2026-10-12,1.0,daily,CURRENT,11.0,11.0,1.0,Concentración y dispersión
-2026-10-13,Sector Breadth Momentum,2026-10-12,1.0,daily,CURRENT,11.0,11.0,1.0,Momentum amplitud
-2026-10-13,Volatility Structure,2026-10-12,1.0,daily,CURRENT,,,,Estructura volatilidad
-2026-10-13,Cross Asset Context,2026-10-12,1.0,daily,CURRENT,11.0,11.0,1.0,Contexto cross-asset
-2026-10-13,Evidence Matrix,2026-10-12,1.0,daily,CURRENT,11.0,1.0,0.0909090909090909,Matriz evidencia
-2026-10-13,Sector Breadth,2026-10-12,1.0,daily,CURRENT,11.0,11.0,1.0,Amplitud y salud sectorial
-2026-10-13,Sector Persistence,2026-10-12,1.0,daily,CURRENT,11.0,11.0,1.0,Persistencia sectorial
-2026-10-13,Sector Regime Matrix,2026-10-12,1.0,daily,CURRENT,11.0,1.0,0.0909090909090909,Matriz de regimen sectorial
-2026-10-13,Leader Representativeness,2026-10-12,1.0,daily,CURRENT,,,,Representatividad del lider
-2026-10-13,Sector Wyckoff Distribution,2026-10-12,1.0,daily,CURRENT,11.0,11.0,1.0,Distribucion Wyckoff sectorial
-2026-10-13,Sector Leader Divergence,2026-10-12,1.0,daily,CURRENT,,,,Divergencia sector-lideres
-2026-10-13,RS Internal,2026-10-12,1.0,daily,CURRENT,,,,Liderazgo relativo interno
-2026-10-13,Sector Rank History,2026-10-12,1.0,daily,CURRENT,,,,Rotacion sectorial historica
-2026-10-13,Sector Dispersion,2026-10-12,1.0,daily,CURRENT,,,,Dispersion entre sectores
-2026-10-13,Sector Correlation Summary,2026-10-12,1.0,daily,CURRENT,,,,Correlacion entre sectores
-2026-10-13,Sector Flow Characteristics,2026-10-09,4.0,daily,RECENT,11.0,11.0,1.0,Flujo primario sectorial
-2026-10-13,Euronext,2026-10-09,4.0,daily,RECENT,13.0,13.0,1.0,Euronext (13/13 OK)
-2026-10-13,Xetra,2026-10-09,4.0,daily,RECENT,19.0,19.0,1.0,Xetra (19/19 OK)
+2026-10-09,RS Internal,2026-10-09,0.0,daily,CURRENT,,,,Liderazgo relativo interno
+2026-10-09,SEC N-PORT,2026-03-31,192.0,sec,STALE,,,,Trimestral
+2026-10-09,SSGA ETF Flow,2026-10-08,1.0,daily,CURRENT,12.0,12.0,1.0,Flujo primario
+2026-10-09,Sector Breadth,2026-10-09,0.0,daily,CURRENT,11.0,11.0,1.0,Amplitud y salud sectorial
+2026-10-09,Sector Breadth Momentum,2026-10-09,0.0,daily,CURRENT,11.0,11.0,1.0,Momentum amplitud
+2026-10-09,Sector Concentration,2026-10-09,0.0,daily,CURRENT,11.0,11.0,1.0,Concentración y dispersión
+2026-10-09,Sector Correlation Summary,2026-10-09,0.0,daily,CURRENT,,,,Correlacion entre sectores
+2026-10-09,Sector Dispersion,2026-10-09,0.0,daily,CURRENT,,,,Dispersion entre sectores
+2026-10-09,Sector Flow Characteristics,2026-10-08,1.0,daily,CURRENT,11.0,11.0,1.0,Flujo primario sectorial
+2026-10-09,Sector Leader Divergence,2026-10-09,0.0,daily,CURRENT,,,,Divergencia sector-lideres
+2026-10-09,Sector Persistence,2026-10-09,0.0,daily,CURRENT,11.0,11.0,1.0,Persistencia sectorial
+2026-10-09,Sector Rank History,2026-10-09,0.0,daily,CURRENT,,,,Rotacion sectorial historica
+2026-10-09,Sector Regime Matrix,2026-10-09,0.0,daily,CURRENT,11.0,11.0,1.0,Matriz de regimen sectorial
+2026-10-09,Sector Wyckoff Distribution,2026-10-09,0.0,daily,CURRENT,11.0,11.0,1.0,Distribucion Wyckoff sectorial
+2026-10-09,Volatility Structure,2026-10-09,0.0,daily,CURRENT,,,,Estructura volatilidad
+2026-10-09,Xetra,2026-10-09,0.0,daily,CURRENT,19.0,19.0,1.0,Xetra (19/19 OK)
+2026-10-09,Yahoo Finance,2026-10-09,0.0,daily,CURRENT,,,,Precios y métricas sectoriales
 2026-10-13,BME,2026-10-09,4.0,daily,RECENT,19.0,19.0,1.0,BME (19/19 OK)
-2026-10-14,Yahoo Finance,2026-10-13,1.0,daily,CURRENT,,,,Precios y métricas sectoriales
-2026-10-14,SSGA ETF Flow,2026-10-12,2.0,daily,CURRENT,12.0,12.0,1.0,Flujo primario
-2026-10-14,CBOE PCR,2026-10-13,1.0,daily,CURRENT,56.0,56.0,1.0,Put/Call ratio
-2026-10-14,FINRA Dark Pool,2026-09-21,23.0,finra,RECENT,,,,Retraso regulatorio 2-4 semanas
-2026-10-14,CFTC Position Flow,2026-10-06,8.0,cftc,CURRENT,,,,Frescura 30 días
-2026-10-14,SEC N-PORT,2026-03-31,197.0,sec,STALE,,,,Trimestral
-2026-10-14,Macro FRED,2026-10-07,7.0,fred,CURRENT,,,,Datos macro manuales
-2026-10-14,Sector Concentration,2026-10-13,1.0,daily,CURRENT,11.0,11.0,1.0,Concentración y dispersión
-2026-10-14,Sector Breadth Momentum,2026-10-13,1.0,daily,CURRENT,11.0,11.0,1.0,Momentum amplitud
-2026-10-14,Volatility Structure,2026-10-13,1.0,daily,CURRENT,,,,Estructura volatilidad
-2026-10-14,Cross Asset Context,2026-10-13,1.0,daily,CURRENT,11.0,11.0,1.0,Contexto cross-asset
-2026-10-14,Evidence Matrix,2026-10-13,1.0,daily,CURRENT,11.0,11.0,1.0,Matriz evidencia
-2026-10-14,Sector Breadth,2026-10-13,1.0,daily,CURRENT,11.0,11.0,1.0,Amplitud y salud sectorial
-2026-10-14,Sector Persistence,2026-10-13,1.0,daily,CURRENT,11.0,11.0,1.0,Persistencia sectorial
-2026-10-14,Sector Regime Matrix,2026-10-13,1.0,daily,CURRENT,11.0,11.0,1.0,Matriz de regimen sectorial
-2026-10-14,Leader Representativeness,2026-10-13,1.0,daily,CURRENT,,,,Representatividad del lider
-2026-10-14,Sector Wyckoff Distribution,2026-10-13,1.0,daily,CURRENT,11.0,11.0,1.0,Distribucion Wyckoff sectorial
-2026-10-14,Sector Leader Divergence,2026-10-13,1.0,daily,CURRENT,,,,Divergencia sector-lideres
-2026-10-14,RS Internal,2026-10-13,1.0,daily,CURRENT,,,,Liderazgo relativo interno
-2026-10-14,Sector Rank History,2026-10-13,1.0,daily,CURRENT,,,,Rotacion sectorial historica
-2026-10-14,Sector Dispersion,2026-10-13,1.0,daily,CURRENT,,,,Dispersion entre sectores
-2026-10-14,Sector Correlation Summary,2026-10-13,1.0,daily,CURRENT,,,,Correlacion entre sectores
-2026-10-14,Sector Flow Characteristics,2026-10-12,2.0,daily,CURRENT,11.0,11.0,1.0,Flujo primario sectorial
-2026-10-14,Euronext,2026-10-12,2.0,daily,CURRENT,13.0,13.0,1.0,Euronext (13/13 OK)
-2026-10-14,Xetra,2026-10-12,2.0,daily,CURRENT,19.0,19.0,1.0,Xetra (19/19 OK)
+2026-10-13,CBOE PCR,2026-10-12,1.0,daily,CURRENT,55.0,55.0,1.0,Put/Call ratio
+2026-10-13,CFTC Position Flow,2026-10-06,7.0,cftc,CURRENT,,,,Frescura 30 días
+2026-10-13,Cross Asset Context,2026-10-12,1.0,daily,CURRENT,11.0,11.0,1.0,Contexto cross-asset
+2026-10-13,Euronext,2026-10-09,4.0,daily,RECENT,13.0,13.0,1.0,Euronext (13/13 OK)
+2026-10-13,Evidence Matrix,2026-10-12,1.0,daily,CURRENT,11.0,1.0,0.0909090909090909,Matriz evidencia
+2026-10-13,FINRA Dark Pool,2026-09-21,22.0,finra,RECENT,,,,Retraso regulatorio 2-4 semanas
+2026-10-13,Leader Representativeness,2026-10-12,1.0,daily,CURRENT,,,,Representatividad del lider
+2026-10-13,Macro FRED,2026-10-13,0.0,fred,CURRENT,,,,Datos macro manuales
+2026-10-13,RS Internal,2026-10-12,1.0,daily,CURRENT,,,,Liderazgo relativo interno
+2026-10-13,SEC N-PORT,2026-03-31,196.0,sec,STALE,,,,Trimestral
+2026-10-13,SSGA ETF Flow,2026-10-09,4.0,daily,RECENT,12.0,12.0,1.0,Flujo primario
+2026-10-13,Sector Breadth,2026-10-12,1.0,daily,CURRENT,11.0,11.0,1.0,Amplitud y salud sectorial
+2026-10-13,Sector Breadth Momentum,2026-10-12,1.0,daily,CURRENT,11.0,11.0,1.0,Momentum amplitud
+2026-10-13,Sector Concentration,2026-10-12,1.0,daily,CURRENT,11.0,11.0,1.0,Concentración y dispersión
+2026-10-13,Sector Correlation Summary,2026-10-12,1.0,daily,CURRENT,,,,Correlacion entre sectores
+2026-10-13,Sector Dispersion,2026-10-12,1.0,daily,CURRENT,,,,Dispersion entre sectores
+2026-10-13,Sector Flow Characteristics,2026-10-09,4.0,daily,RECENT,11.0,11.0,1.0,Flujo primario sectorial
+2026-10-13,Sector Leader Divergence,2026-10-12,1.0,daily,CURRENT,,,,Divergencia sector-lideres
+2026-10-13,Sector Persistence,2026-10-12,1.0,daily,CURRENT,11.0,11.0,1.0,Persistencia sectorial
+2026-10-13,Sector Rank History,2026-10-12,1.0,daily,CURRENT,,,,Rotacion sectorial historica
+2026-10-13,Sector Regime Matrix,2026-10-12,1.0,daily,CURRENT,11.0,1.0,0.0909090909090909,Matriz de regimen sectorial
+2026-10-13,Sector Wyckoff Distribution,2026-10-12,1.0,daily,CURRENT,11.0,11.0,1.0,Distribucion Wyckoff sectorial
+2026-10-13,Volatility Structure,2026-10-12,1.0,daily,CURRENT,,,,Estructura volatilidad
+2026-10-13,Xetra,2026-10-09,4.0,daily,RECENT,19.0,19.0,1.0,Xetra (19/19 OK)
+2026-10-13,Yahoo Finance,2026-10-12,1.0,daily,CURRENT,,,,Precios y métricas sectoriales
 2026-10-14,BME,2026-10-12,2.0,daily,CURRENT,19.0,19.0,1.0,BME (19/19 OK)
-2026-10-15,Yahoo Finance,2026-10-14,1.0,daily,CURRENT,,,,Precios y métricas sectoriales
-2026-10-15,SSGA ETF Flow,2026-10-13,2.0,daily,CURRENT,12.0,12.0,1.0,Flujo primario
-2026-10-15,CBOE PCR,2026-10-14,1.0,daily,CURRENT,57.0,57.0,1.0,Put/Call ratio
-2026-10-15,FINRA Dark Pool,2026-09-21,24.0,finra,RECENT,,,,Retraso regulatorio 2-4 semanas
-2026-10-15,CFTC Position Flow,2026-10-06,9.0,cftc,CURRENT,,,,Frescura 30 días
-2026-10-15,SEC N-PORT,2026-03-31,198.0,sec,STALE,,,,Trimestral
-2026-10-15,Macro FRED,2026-10-13,2.0,fred,CURRENT,,,,Datos macro manuales
-2026-10-15,Sector Concentration,2026-10-14,1.0,daily,CURRENT,11.0,11.0,1.0,Concentración y dispersión
-2026-10-15,Sector Breadth Momentum,2026-10-14,1.0,daily,CURRENT,11.0,11.0,1.0,Momentum amplitud
-2026-10-15,Volatility Structure,2026-10-14,1.0,daily,CURRENT,,,,Estructura volatilidad
-2026-10-15,Cross Asset Context,2026-10-14,1.0,daily,CURRENT,11.0,11.0,1.0,Contexto cross-asset
-2026-10-15,Evidence Matrix,2026-10-14,1.0,daily,CURRENT,11.0,11.0,1.0,Matriz evidencia
-2026-10-15,Sector Breadth,2026-10-14,1.0,daily,CURRENT,11.0,11.0,1.0,Amplitud y salud sectorial
-2026-10-15,Sector Persistence,2026-10-14,1.0,daily,CURRENT,11.0,11.0,1.0,Persistencia sectorial
-2026-10-15,Sector Regime Matrix,2026-10-14,1.0,daily,CURRENT,11.0,11.0,1.0,Matriz de regimen sectorial
-2026-10-15,Leader Representativeness,2026-10-14,1.0,daily,CURRENT,,,,Representatividad del lider
-2026-10-15,Sector Wyckoff Distribution,2026-10-14,1.0,daily,CURRENT,11.0,11.0,1.0,Distribucion Wyckoff sectorial
-2026-10-15,Sector Leader Divergence,2026-10-14,1.0,daily,CURRENT,,,,Divergencia sector-lideres
-2026-10-15,RS Internal,2026-10-14,1.0,daily,CURRENT,,,,Liderazgo relativo interno
-2026-10-15,Sector Rank History,2026-10-14,1.0,daily,CURRENT,,,,Rotacion sectorial historica
-2026-10-15,Sector Dispersion,2026-10-14,1.0,daily,CURRENT,,,,Dispersion entre sectores
-2026-10-15,Sector Correlation Summary,2026-10-14,1.0,daily,CURRENT,,,,Correlacion entre sectores
-2026-10-15,Sector Flow Characteristics,2026-10-13,2.0,daily,CURRENT,11.0,11.0,1.0,Flujo primario sectorial
-2026-10-15,Euronext,2026-10-13,2.0,daily,CURRENT,13.0,13.0,1.0,Euronext (13/13 OK)
-2026-10-15,Xetra,2026-10-13,2.0,daily,CURRENT,19.0,19.0,1.0,Xetra (19/19 OK)
+2026-10-14,CBOE PCR,2026-10-13,1.0,daily,CURRENT,56.0,56.0,1.0,Put/Call ratio
+2026-10-14,CFTC Position Flow,2026-10-06,8.0,cftc,CURRENT,,,,Frescura 30 días
+2026-10-14,Cross Asset Context,2026-10-13,1.0,daily,CURRENT,11.0,11.0,1.0,Contexto cross-asset
+2026-10-14,Euronext,2026-10-12,2.0,daily,CURRENT,13.0,13.0,1.0,Euronext (13/13 OK)
+2026-10-14,Evidence Matrix,2026-10-13,1.0,daily,CURRENT,11.0,11.0,1.0,Matriz evidencia
+2026-10-14,FINRA Dark Pool,2026-09-21,23.0,finra,RECENT,,,,Retraso regulatorio 2-4 semanas
+2026-10-14,Leader Representativeness,2026-10-13,1.0,daily,CURRENT,,,,Representatividad del lider
+2026-10-14,Macro FRED,2026-10-07,7.0,fred,CURRENT,,,,Datos macro manuales
+2026-10-14,RS Internal,2026-10-13,1.0,daily,CURRENT,,,,Liderazgo relativo interno
+2026-10-14,SEC N-PORT,2026-03-31,197.0,sec,STALE,,,,Trimestral
+2026-10-14,SSGA ETF Flow,2026-10-12,2.0,daily,CURRENT,12.0,12.0,1.0,Flujo primario
+2026-10-14,Sector Breadth,2026-10-13,1.0,daily,CURRENT,11.0,11.0,1.0,Amplitud y salud sectorial
+2026-10-14,Sector Breadth Momentum,2026-10-13,1.0,daily,CURRENT,11.0,11.0,1.0,Momentum amplitud
+2026-10-14,Sector Concentration,2026-10-13,1.0,daily,CURRENT,11.0,11.0,1.0,Concentración y dispersión
+2026-10-14,Sector Correlation Summary,2026-10-13,1.0,daily,CURRENT,,,,Correlacion entre sectores
+2026-10-14,Sector Dispersion,2026-10-13,1.0,daily,CURRENT,,,,Dispersion entre sectores
+2026-10-14,Sector Flow Characteristics,2026-10-12,2.0,daily,CURRENT,11.0,11.0,1.0,Flujo primario sectorial
+2026-10-14,Sector Leader Divergence,2026-10-13,1.0,daily,CURRENT,,,,Divergencia sector-lideres
+2026-10-14,Sector Persistence,2026-10-13,1.0,daily,CURRENT,11.0,11.0,1.0,Persistencia sectorial
+2026-10-14,Sector Rank History,2026-10-13,1.0,daily,CURRENT,,,,Rotacion sectorial historica
+2026-10-14,Sector Regime Matrix,2026-10-13,1.0,daily,CURRENT,11.0,11.0,1.0,Matriz de regimen sectorial
+2026-10-14,Sector Wyckoff Distribution,2026-10-13,1.0,daily,CURRENT,11.0,11.0,1.0,Distribucion Wyckoff sectorial
+2026-10-14,Volatility Structure,2026-10-13,1.0,daily,CURRENT,,,,Estructura volatilidad
+2026-10-14,Xetra,2026-10-12,2.0,daily,CURRENT,19.0,19.0,1.0,Xetra (19/19 OK)
+2026-10-14,Yahoo Finance,2026-10-13,1.0,daily,CURRENT,,,,Precios y métricas sectoriales
 2026-10-15,BME,2026-10-13,2.0,daily,CURRENT,19.0,19.0,1.0,BME (19/19 OK)
-2026-10-16,Yahoo Finance,2026-10-14,2.0,daily,CURRENT,,,,Precios y métricas sectoriales
-2026-10-16,SSGA ETF Flow,2026-10-14,2.0,daily,CURRENT,12.0,12.0,1.0,Flujo primario
-2026-10-16,CBOE PCR,2026-10-14,2.0,daily,CURRENT,57.0,57.0,1.0,Put/Call ratio
+2026-10-15,CBOE PCR,2026-10-14,1.0,daily,CURRENT,57.0,57.0,1.0,Put/Call ratio
+2026-10-15,CFTC Position Flow,2026-10-06,9.0,cftc,CURRENT,,,,Frescura 30 días
+2026-10-15,Cross Asset Context,2026-10-14,1.0,daily,CURRENT,11.0,11.0,1.0,Contexto cross-asset
+2026-10-15,Euronext,2026-10-13,2.0,daily,CURRENT,13.0,13.0,1.0,Euronext (13/13 OK)
+2026-10-15,Evidence Matrix,2026-10-14,1.0,daily,CURRENT,11.0,11.0,1.0,Matriz evidencia
+2026-10-15,FINRA Dark Pool,2026-09-21,24.0,finra,RECENT,,,,Retraso regulatorio 2-4 semanas
+2026-10-15,Leader Representativeness,2026-10-14,1.0,daily,CURRENT,,,,Representatividad del lider
+2026-10-15,Macro FRED,2026-10-13,2.0,fred,CURRENT,,,,Datos macro manuales
+2026-10-15,RS Internal,2026-10-14,1.0,daily,CURRENT,,,,Liderazgo relativo interno
+2026-10-15,SEC N-PORT,2026-03-31,198.0,sec,STALE,,,,Trimestral
+2026-10-15,SSGA ETF Flow,2026-10-13,2.0,daily,CURRENT,12.0,12.0,1.0,Flujo primario
+2026-10-15,Sector Breadth,2026-10-14,1.0,daily,CURRENT,11.0,11.0,1.0,Amplitud y salud sectorial
+2026-10-15,Sector Breadth Momentum,2026-10-14,1.0,daily,CURRENT,11.0,11.0,1.0,Momentum amplitud
+2026-10-15,Sector Concentration,2026-10-14,1.0,daily,CURRENT,11.0,11.0,1.0,Concentración y dispersión
+2026-10-15,Sector Correlation Summary,2026-10-14,1.0,daily,CURRENT,,,,Correlacion entre sectores
+2026-10-15,Sector Dispersion,2026-10-14,1.0,daily,CURRENT,,,,Dispersion entre sectores
+2026-10-15,Sector Flow Characteristics,2026-10-13,2.0,daily,CURRENT,11.0,11.0,1.0,Flujo primario sectorial
+2026-10-15,Sector Leader Divergence,2026-10-14,1.0,daily,CURRENT,,,,Divergencia sector-lideres
+2026-10-15,Sector Persistence,2026-10-14,1.0,daily,CURRENT,11.0,11.0,1.0,Persistencia sectorial
+2026-10-15,Sector Rank History,2026-10-14,1.0,daily,CURRENT,,,,Rotacion sectorial historica
+2026-10-15,Sector Regime Matrix,2026-10-14,1.0,daily,CURRENT,11.0,11.0,1.0,Matriz de regimen sectorial
+2026-10-15,Sector Wyckoff Distribution,2026-10-14,1.0,daily,CURRENT,11.0,11.0,1.0,Distribucion Wyckoff sectorial
+2026-10-15,Volatility Structure,2026-10-14,1.0,daily,CURRENT,,,,Estructura volatilidad
+2026-10-15,Xetra,2026-10-13,2.0,daily,CURRENT,19.0,19.0,1.0,Xetra (19/19 OK)
+2026-10-15,Yahoo Finance,2026-10-14,1.0,daily,CURRENT,,,,Precios y métricas sectoriales
+2026-10-16,BME,2026-10-15,1.0,daily,CURRENT,19.0,19.0,1.0,BME (19/19 OK)
+2026-10-16,CBOE PCR,2026-10-15,1.0,daily,CURRENT,58.0,58.0,1.0,Put/Call ratio
+2026-10-16,CFTC Position Flow,2026-10-13,3.0,cftc,CURRENT,,,,Frescura 30 días
+2026-10-16,Cross Asset Context,2026-10-16,0.0,daily,CURRENT,11.0,11.0,1.0,Contexto cross-asset
+2026-10-16,Euronext,2026-10-15,1.0,daily,CURRENT,13.0,13.0,1.0,Euronext (13/13 OK)
+2026-10-16,Evidence Matrix,2026-10-16,0.0,daily,CURRENT,11.0,11.0,1.0,Matriz evidencia
 2026-10-16,FINRA Dark Pool,2026-09-21,25.0,finra,RECENT,,,,Retraso regulatorio 2-4 semanas
-2026-10-16,CFTC Position Flow,2026-10-06,10.0,cftc,CURRENT,,,,Frescura 30 días
-2026-10-16,SEC N-PORT (posiciones),2026-03-31,199.0,sec,STALE,,,,Posiciones N-PORT trimestrales (latencia ~60d)
+2026-10-16,Leader Representativeness,2026-10-16,0.0,daily,CURRENT,,,,Representatividad del lider
+2026-10-16,Macro FRED,2026-10-15,1.0,fred,CURRENT,,,,Datos macro manuales
+2026-10-16,RS Internal,2026-10-16,0.0,daily,CURRENT,,,,Liderazgo relativo interno
+2026-10-16,SEC N-PORT (posiciones),2026-06-30,108.0,sec,RECENT,,,,Posiciones N-PORT trimestrales (latencia ~60d)
 2026-10-16,SEC N-PORT-P QQQ (flujos),2026-06-30,108.0,sec,RECENT,,,,Flujos trimestrales N-PORT-P QQQ (Item B.6)
-2026-10-16,Macro FRED,2026-10-14,2.0,fred,CURRENT,,,,Datos macro manuales
-2026-10-16,Sector Concentration,2026-10-14,2.0,daily,CURRENT,11.0,11.0,1.0,Concentración y dispersión
-2026-10-16,Sector Breadth Momentum,2026-10-14,2.0,daily,CURRENT,11.0,11.0,1.0,Momentum amplitud
-2026-10-16,Volatility Structure,2026-10-14,2.0,daily,CURRENT,,,,Estructura volatilidad
-2026-10-16,Cross Asset Context,2026-10-14,2.0,daily,CURRENT,11.0,11.0,1.0,Contexto cross-asset
-2026-10-16,Evidence Matrix,2026-10-14,2.0,daily,CURRENT,11.0,11.0,1.0,Matriz evidencia
-2026-10-16,Sector Breadth,2026-10-14,2.0,daily,CURRENT,11.0,11.0,1.0,Amplitud y salud sectorial
-2026-10-16,Sector Persistence,2026-10-14,2.0,daily,CURRENT,11.0,11.0,1.0,Persistencia sectorial
-2026-10-16,Sector Regime Matrix,2026-10-14,2.0,daily,CURRENT,11.0,11.0,1.0,Matriz de regimen sectorial
-2026-10-16,Leader Representativeness,2026-10-14,2.0,daily,CURRENT,,,,Representatividad del lider
-2026-10-16,Sector Wyckoff Distribution,2026-10-14,2.0,daily,CURRENT,11.0,11.0,1.0,Distribucion Wyckoff sectorial
-2026-10-16,Sector Leader Divergence,2026-10-14,2.0,daily,CURRENT,,,,Divergencia sector-lideres
-2026-10-16,RS Internal,2026-10-14,2.0,daily,CURRENT,,,,Liderazgo relativo interno
-2026-10-16,Sector Rank History,2026-10-14,2.0,daily,CURRENT,,,,Rotacion sectorial historica
-2026-10-16,Sector Dispersion,2026-10-14,2.0,daily,CURRENT,,,,Dispersion entre sectores
-2026-10-16,Sector Correlation Summary,2026-10-14,2.0,daily,CURRENT,,,,Correlacion entre sectores
-2026-10-16,Sector Flow Characteristics,2026-10-14,2.0,daily,CURRENT,11.0,11.0,1.0,Flujo primario sectorial
-2026-10-16,Euronext,2026-10-14,2.0,daily,CURRENT,13.0,13.0,1.0,Euronext (13/13 OK)
-2026-10-16,Xetra,2026-10-14,2.0,daily,CURRENT,19.0,19.0,1.0,Xetra (19/19 OK)
-2026-10-16,BME,2026-10-14,2.0,daily,CURRENT,19.0,19.0,1.0,BME (19/19 OK)
-2026-10-17,Yahoo Finance,2026-10-16,1.0,daily,CURRENT,,,,Precios y métricas sectoriales
-2026-10-17,SSGA ETF Flow,2026-10-15,2.0,daily,CURRENT,12.0,12.0,1.0,Flujo primario
-2026-10-17,CBOE PCR,2026-10-15,2.0,daily,CURRENT,58.0,58.0,1.0,Put/Call ratio
-2026-10-17,FINRA Dark Pool,2026-09-21,26.0,finra,RECENT,,,,Retraso regulatorio 2-4 semanas
-2026-10-17,CFTC Position Flow,2026-10-13,4.0,cftc,CURRENT,,,,Frescura 30 días
-2026-10-17,SEC N-PORT (posiciones),2026-06-30,109.0,sec,RECENT,,,,Posiciones N-PORT trimestrales (latencia ~60d)
-2026-10-17,SEC N-PORT-P QQQ (flujos),2026-06-30,109.0,sec,RECENT,,,,Flujos trimestrales N-PORT-P QQQ (Item B.6)
-2026-10-17,Macro FRED,2026-10-15,2.0,fred,CURRENT,,,,Datos macro manuales
-2026-10-17,Sector Concentration,2026-10-16,1.0,daily,CURRENT,11.0,11.0,1.0,Concentración y dispersión
-2026-10-17,Sector Breadth Momentum,2026-10-16,1.0,daily,CURRENT,11.0,11.0,1.0,Momentum amplitud
-2026-10-17,Volatility Structure,2026-10-16,1.0,daily,CURRENT,,,,Estructura volatilidad
-2026-10-17,Cross Asset Context,2026-10-16,1.0,daily,CURRENT,11.0,11.0,1.0,Contexto cross-asset
-2026-10-17,Evidence Matrix,2026-10-16,1.0,daily,CURRENT,11.0,11.0,1.0,Matriz evidencia
-2026-10-17,Sector Breadth,2026-10-16,1.0,daily,CURRENT,11.0,11.0,1.0,Amplitud y salud sectorial
-2026-10-17,Sector Persistence,2026-10-16,1.0,daily,CURRENT,11.0,11.0,1.0,Persistencia sectorial
-2026-10-17,Sector Regime Matrix,2026-10-16,1.0,daily,CURRENT,11.0,11.0,1.0,Matriz de regimen sectorial
-2026-10-17,Leader Representativeness,2026-10-16,1.0,daily,CURRENT,,,,Representatividad del lider
-2026-10-17,Sector Wyckoff Distribution,2026-10-16,1.0,daily,CURRENT,11.0,11.0,1.0,Distribucion Wyckoff sectorial
-2026-10-17,Sector Leader Divergence,2026-10-16,1.0,daily,CURRENT,,,,Divergencia sector-lideres
-2026-10-17,RS Internal,2026-10-16,1.0,daily,CURRENT,,,,Liderazgo relativo interno
-2026-10-17,Sector Rank History,2026-10-16,1.0,daily,CURRENT,,,,Rotacion sectorial historica
-2026-10-17,Sector Dispersion,2026-10-16,1.0,daily,CURRENT,,,,Dispersion entre sectores
-2026-10-17,Sector Correlation Summary,2026-10-16,1.0,daily,CURRENT,,,,Correlacion entre sectores
-2026-10-17,Sector Flow Characteristics,2026-10-15,2.0,daily,CURRENT,11.0,11.0,1.0,Flujo primario sectorial
-2026-10-17,Euronext,2026-10-15,2.0,daily,CURRENT,13.0,13.0,1.0,Euronext (13/13 OK)
-2026-10-17,Xetra,2026-10-15,2.0,daily,CURRENT,19.0,19.0,1.0,Xetra (19/19 OK)
-2026-10-17,BME,2026-10-15,2.0,daily,CURRENT,19.0,19.0,1.0,BME (19/19 OK)
+2026-10-16,SSGA ETF Flow,2026-10-15,1.0,daily,CURRENT,12.0,12.0,1.0,Flujo primario
+2026-10-16,Sector Breadth,2026-10-16,0.0,daily,CURRENT,11.0,11.0,1.0,Amplitud y salud sectorial
+2026-10-16,Sector Breadth Momentum,2026-10-16,0.0,daily,CURRENT,11.0,11.0,1.0,Momentum amplitud
+2026-10-16,Sector Concentration,2026-10-16,0.0,daily,CURRENT,11.0,11.0,1.0,Concentración y dispersión
+2026-10-16,Sector Correlation Summary,2026-10-16,0.0,daily,CURRENT,,,,Correlacion entre sectores
+2026-10-16,Sector Dispersion,2026-10-16,0.0,daily,CURRENT,,,,Dispersion entre sectores
+2026-10-16,Sector Flow Characteristics,2026-10-15,1.0,daily,CURRENT,11.0,11.0,1.0,Flujo primario sectorial
+2026-10-16,Sector Leader Divergence,2026-10-16,0.0,daily,CURRENT,,,,Divergencia sector-lideres
+2026-10-16,Sector Persistence,2026-10-16,0.0,daily,CURRENT,11.0,11.0,1.0,Persistencia sectorial
+2026-10-16,Sector Rank History,2026-10-16,0.0,daily,CURRENT,,,,Rotacion sectorial historica
+2026-10-16,Sector Regime Matrix,2026-10-16,0.0,daily,CURRENT,11.0,11.0,1.0,Matriz de regimen sectorial
+2026-10-16,Sector Wyckoff Distribution,2026-10-16,0.0,daily,CURRENT,11.0,11.0,1.0,Distribucion Wyckoff sectorial
+2026-10-16,Volatility Structure,2026-10-16,0.0,daily,CURRENT,,,,Estructura volatilidad
+2026-10-16,Xetra,2026-10-15,1.0,daily,CURRENT,19.0,19.0,1.0,Xetra (19/19 OK)
+2026-10-16,Yahoo Finance,2026-10-16,0.0,daily,CURRENT,,,,Precios y métricas sectoriales
