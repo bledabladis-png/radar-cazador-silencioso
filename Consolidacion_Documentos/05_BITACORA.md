@@ -44,6 +44,40 @@ Al cerrar una sesion nueva, se anade arriba (las mas recientes primero). Si hay 
 
 ## 3. SESIONES
 
+### 2026-10-18 - Regenerar ESTADO_SISTEMA + items del generador
+
+**Objetivo.** Cerrar la discrepancia entre ESTADO_SISTEMA.md (3641
+passed) y la realidad de la suite (3730 con filtro / 3739 sin filtro),
+detectada al arrancar la sesion. Aprovechar para documentar dos deudas
+del generador.
+
+**Hecho.**
+- Regenerar `ESTADO_SISTEMA.md`: 3641 -> 3739 (pytest sin filtro). La
+  cifra es correcta; la 3730 del HANDOFF es la del filtro
+  `-m "not integration_real_data"`. Nota aclaratoria anadida a HANDOFF
+  (lineas 15 y 118).
+- Abrir `GEN-ESTADO-VALIDATION-VACIO`: `generate_estado_sistema.py`
+  invoca `pytest tests/ validation/` pero `validation/` no contiene
+  `test_*.py`. Ruido, no bug.
+- Abrir `GEN-ESTADO-TESTS-NOT-FAILCLOSED`: `section_tests()` no aborta
+  con `rc != 0`; publica snapshot aunque la suite falle.
+- HANDOFF §1 actualizado: 73 -> 75 items (2 OPEN nuevos).
+- CI verde sobre HEAD final.
+
+**Commits.** `2ca11b5a`, `80ae528b`. Push a `origin/main` en
+`80ae528b`. CI run `39083891160` success.
+
+**Pendiente.**
+- `GEN-ESTADO-VALIDATION-VACIO`: retirar `validation/` o poblarla.
+  Post-scheduled 2026-10-19.
+- `GEN-ESTADO-TESTS-NOT-FAILCLOSED`: anadir comprobacion `rc != 0`.
+  Post-scheduled 2026-10-19.
+- Scheduled lunes 2026-10-19 23:17 UTC: primer run con
+  `target_session=2026-10-19` (certificacion prod v1.1 + v1.2).
+
+**Proximo paso sugerido.** Esperar scheduled del lunes. Si verde,
+marcar items `GEN-ESTADO-*` FIXED en la misma sesion.
+
 ### 2026-10-18 - Cierre residuales dictamen + struct en Rankings/Indices
 
 **Objetivo.** Cerrar los 5 residuales del dictamen original (H5, H7,
