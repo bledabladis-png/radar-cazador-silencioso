@@ -12,10 +12,10 @@ junto con `Consolidacion_Documentos/00_ARRANQUE.md`.
 Rama:           main
 HEAD:           consultar `git log --oneline -1` (no literal; el corpus no fija SHA para evitar deriva)
 Sincronizacion: main == origin/main tras push final
-Tests local:    ver `Consolidacion_Documentos/ESTADO_SISTEMA.md`. Al cierre: 3730 passed + 5 skipped.
+Tests local:    ver `Consolidacion_Documentos/ESTADO_SISTEMA.md`. Al cierre: 3739 passed + 5 skipped (suite completa, sin filtro; es lo que publica ESTADO_SISTEMA.md). Con -m "not integration_real_data": 3730 passed, 5 skipped, 9 deselected. Ambas correctas; la canonica es 3739.
 Validation Gate: 10/10
 Working tree:   limpio (salvo data/ y outputs/ que el bot actualiza)
-Gobernanza:     docs/gobernanza/REGISTRO.yaml. 73 items (6 nuevos hoy, todos FIXED).
+Gobernanza:     docs/gobernanza/REGISTRO.yaml. 75 items (8 nuevos hoy: 6 FIXED + 2 OPEN del generador).
 CI de tests:    .github/workflows/ci_tests.yml (push a main, paths-ignore: data/, outputs/).
                 Ultimo verde en sesion: 39080524860 (head 22392813).
 Certificacion prod: PENDIENTE. Lunes 2026-10-19 23:17 UTC primer scheduled
@@ -115,7 +115,7 @@ Esperado:
 - HEAD = el que devuelva `git log --oneline -1`.
 - ahead 0, behind 0 (o behind N si el bot ha pusheado; `git pull --ff-only`).
 - working tree limpio.
-- Tests: ver `ESTADO_SISTEMA.md`. Referencia: 3730 passed + 5 skipped.
+- Tests: ver `ESTADO_SISTEMA.md`. Referencia: 3739 passed + 5 skipped (sin filtro). Con -m "not integration_real_data": 3730 passed + 5 skipped.
 - Gobernanza: `[OK] Gobernanza coherente`.
 - Indice H1-H18: `[OK] indice actualizado`.
 - Bitacora: `[OK] Bitacora dentro de la regla`.
