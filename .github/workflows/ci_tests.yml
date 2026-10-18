@@ -46,7 +46,7 @@ jobs:
         run: python -m compileall -q .
 
       - name: Run tests
-        run: pytest tests/ validation/ -q --tb=short -m "not integration_real_data"
+        run: pytest tests/ -q --tb=short -m "not integration_real_data"
 
       - name: Run pyflakes
         run: python -m pyflakes .

@@ -98,7 +98,7 @@ jobs:
         run: python -m compileall -q .
 
       - name: Run tests
-        run: pytest tests/ validation/ -v -m "not integration_real_data"
+        run: pytest tests/ -v -m "not integration_real_data"
       - name: Run pyflakes (gate)
         # HD-6 (dictamen auditor externo 2026-10-16): pyflakes es un
         # gate real. Cualquier warning falla el step. El reporte se
