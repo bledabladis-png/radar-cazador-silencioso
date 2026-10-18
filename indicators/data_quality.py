@@ -10,6 +10,7 @@ from config.settings import (
     EXPECTED_SECTOR_COUNT, FRESHNESS_FINRA,
     FRESHNESS_SEC, FRESHNESS_CFTC,
 )
+from src.market_calendar import last_expected_market_date
 from config.tickers import MARKET_TICKERS
 import pandas as pd
 import numpy as np
@@ -308,6 +309,12 @@ def compute_data_quality(reference_date=None):
     de datetime.now(). Fallback legacy cuando es None.
     """
     now = _ref_to_date(reference_date)
+    # REP-AUDIT-20261018-DQ-DATE (2026-10-18): date = sesion bursatil real,
+    # no fecha del run. Evita filas en sabados/domingos/festivos.
+    if reference_date is None:
+        _session_date = last_expected_market_date()
+    else:
+        _session_date = last_expected_market_date(pd.Timestamp(reference_date))
     sources = SOURCES
 
     rows = []
@@ -325,7 +332,7 @@ def compute_data_quality(reference_date=None):
                     last_date = pd.NaT
             except (OSError, json.JSONDecodeError, ValueError, TypeError, KeyError, AttributeError):
                 last_date = pd.NaT
-            age = (now - last_date.date()).days if pd.notna(last_date) else np.nan
+            age = (_session_date - last_date.date()).days if pd.notna(last_date) else np.nan
             freshness = classify_freshness(age, src['frequency'])
             # H2 (2026-10-17): aplicar coverage_logic tambien en la rama
             # especial de Macro FRED. Antes solo escribia NaN aunque el
@@ -346,7 +353,7 @@ def compute_data_quality(reference_date=None):
                     except (OSError, ValueError, pd.errors.ParserError):
                         pass
             rows.append({
-                'date': now.strftime('%Y-%m-%d'),
+                'date': _session_date.strftime('%Y-%m-%d'),
                 'source': src['source'],
                 'last_date': last_date.strftime('%Y-%m-%d') if pd.notna(last_date) else np.nan,
                 'age_calendar_days': age,
@@ -361,7 +368,7 @@ def compute_data_quality(reference_date=None):
         path = Path(src['file'])
         if not path.exists():
             rows.append({
-                'date': now.strftime('%Y-%m-%d'),
+                'date': _session_date.strftime('%Y-%m-%d'),
                 'source': src['source'],
                 'last_date': np.nan,
                 'age_calendar_days': np.nan,
@@ -379,7 +386,7 @@ def compute_data_quality(reference_date=None):
             try:
                 df_pq = pd.read_parquet(path)
                 last_date = _last_market_session(pd.Timestamp(df_pq.index[-1])) if len(df_pq) > 0 else pd.NaT
-                age = (now - last_date.date()).days if pd.notna(last_date) else np.nan
+                age = (_session_date - last_date.date()).days if pd.notna(last_date) else np.nan
                 freshness = classify_freshness(age, src['frequency'])
 
                 n_total = np.nan
@@ -404,7 +411,7 @@ def compute_data_quality(reference_date=None):
                     coverage = n_valid / n_total if n_total else np.nan
 
                 rows.append({
-                    'date': now.strftime('%Y-%m-%d'),
+                    'date': _session_date.strftime('%Y-%m-%d'),
                     'source': src['source'],
                     'last_date': last_date.strftime('%Y-%m-%d') if pd.notna(last_date) else np.nan,
                     'age_calendar_days': age,
@@ -417,7 +424,7 @@ def compute_data_quality(reference_date=None):
                 })
             except (OSError, ValueError, TypeError, KeyError, pd.errors.ParserError) as e:
                 rows.append({
-                    'date': now.strftime('%Y-%m-%d'),
+                    'date': _session_date.strftime('%Y-%m-%d'),
                     'source': src['source'],
                     'last_date': np.nan,
                     'age_calendar_days': np.nan,
@@ -443,7 +450,7 @@ def compute_data_quality(reference_date=None):
                     last_date = _last_market_session(_ld)
                 else:
                     last_date = _ld
-            age = (now - last_date.date()).days if pd.notna(last_date) else np.nan
+            age = (_session_date - last_date.date()).days if pd.notna(last_date) else np.nan
             freshness = classify_freshness(age, src['frequency'])
 
             n_total = np.nan
@@ -515,7 +522,7 @@ def compute_data_quality(reference_date=None):
             # else coverage permanece NaN
 
             rows.append({
-                'date': now.strftime('%Y-%m-%d'),
+                'date': _session_date.strftime('%Y-%m-%d'),
                 'source': src['source'],
                 'last_date': last_date.strftime('%Y-%m-%d') if pd.notna(last_date) else np.nan,
                 'age_calendar_days': age,
@@ -528,7 +535,7 @@ def compute_data_quality(reference_date=None):
             })
         except (OSError, ValueError, TypeError, KeyError, pd.errors.ParserError) as e:
             rows.append({
-                'date': now.strftime('%Y-%m-%d'),
+                'date': _session_date.strftime('%Y-%m-%d'),
                 'source': src['source'],
                 'last_date': np.nan,
                 'age_calendar_days': np.nan,
@@ -546,7 +553,7 @@ def compute_data_quality(reference_date=None):
     _eu_path = Path('outputs/history/european_coverage.csv')
     for _eu_source in ('Euronext', 'Xetra', 'BME'):
         _row = {
-            'date': now.strftime('%Y-%m-%d'),
+            'date': _session_date.strftime('%Y-%m-%d'),
             'source': _eu_source,
             'last_date': np.nan,
             'age_calendar_days': np.nan,
