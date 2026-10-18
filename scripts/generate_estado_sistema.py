@@ -108,7 +108,7 @@ def section_tests():
         for s in skipped:
             lines.append(f'- `{s}`')
     lines.append('')
-    return lines
+    return lines, rc
 
 def section_integridad():
     lines = ['## 3. Integridad del codigo', '']
@@ -120,7 +120,7 @@ def section_integridad():
     else:
         lines.append(f'- **pyflakes:** {len(out_p.splitlines())} warnings (exit {rc_p})')
     lines.append('')
-    return lines
+    return lines, max(rc_c, rc_p)
 
 def section_modulos():
     lines = ['## 4. Modulos IAE', '']
@@ -210,9 +210,14 @@ def main():
     ]
     
     body = []
+    worst_rc = 0
     body += section_git()
-    body += section_tests()
-    body += section_integridad()
+    _lines, _rc = section_tests()
+    body += _lines
+    worst_rc = max(worst_rc, _rc)
+    _lines, _rc = section_integridad()
+    body += _lines
+    worst_rc = max(worst_rc, _rc)
     body += section_modulos()
     body += section_datos()
     body += section_scripts()
@@ -229,6 +234,9 @@ def main():
     OUT.parent.mkdir(parents=True, exist_ok=True)
     OUT.write_text(content, encoding='utf-8', newline='\n')
     print(f"OK escrito: {OUT.relative_to(ROOT)} ({len(content)} caracteres, {len(content.splitlines())} lineas)")
+    if worst_rc != 0:
+        print(f"[FAIL] exit code {worst_rc} (tests o integridad)", file=sys.stderr)
+    return worst_rc
 
 if __name__ == '__main__':
     sys.exit(main() or 0)
