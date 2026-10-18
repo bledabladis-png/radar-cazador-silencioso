@@ -765,12 +765,12 @@ items:
 - id: GEN-ESTADO-VALIDATION-VACIO
   tipo: frente
   ciclo: '2026-10-18'
-  estado: OPEN
+  estado: IN_PROGRESS
   descripcion: generate_estado_sistema.py invoca pytest tests/ validation/ pero validation/ no contiene test_*.py
   siguiente_accion: Retirar validation/ de la invocacion (impacto 0) o poblarla. ROI ~2 min. Post-scheduled 2026-10-19.
 - id: GEN-ESTADO-TESTS-NOT-FAILCLOSED
   tipo: frente
   ciclo: '2026-10-18'
-  estado: OPEN
+  estado: IN_PROGRESS
   descripcion: generate_estado_sistema.py::section_tests no aborta con rc != 0; publica snapshot aunque la suite falle
   siguiente_accion: Anadir comprobacion rc != 0 con abort y test que simule fallo de pytest. Post-scheduled 2026-10-19.
