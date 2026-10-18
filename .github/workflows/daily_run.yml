@@ -299,6 +299,10 @@ jobs:
         if: success()
         run: python scripts/write_completion_receipt.py
 
+      - name: Post-receipt audit
+        if: always()
+        run: python scripts/post_receipt_audit.py
+
       - name: Commit and push hist/state
         run: |
           git config user.name "github-actions[bot]"

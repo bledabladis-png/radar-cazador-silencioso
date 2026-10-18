@@ -777,6 +777,39 @@ def check_expected_session_alignment() -> list:
 # =========================================================
 # ORQUESTACION
 # =========================================================
+def check_receipt_audit() -> list:
+    """REP-AUDIT-20261018: audita receipts vs filas persistidas.
+
+    Lee outputs/history/receipt_audit.csv (generado por
+    scripts/post_receipt_audit.py en cada run). WARN si las ultimas
+    7 sesiones tienen MISSING o CSV_MISSING.
+    """
+    p = PROJECT_ROOT / "outputs" / "history" / "receipt_audit.csv"
+    if not p.exists():
+        return [Result("receipt_audit", SKIP, "sin datos (arranque)")]
+    try:
+        df = pd.read_csv(p)
+    except Exception as e:
+        return [Result("receipt_audit", WARN, f"CSV ilegible: {e}")]
+    if df.empty or "target_session" not in df.columns:
+        return [Result("receipt_audit", SKIP, "CSV vacio")]
+    sessions = sorted(df["target_session"].dropna().astype(str).unique())
+    recent = sessions[-7:]
+    sub = df[df["target_session"].astype(str).isin(recent)]
+    missing = sub[sub["status"].isin(("MISSING", "CSV_MISSING"))]
+    if missing.empty:
+        return [Result("receipt_audit", OK,
+                       f"{len(recent)} sesiones sin anomalias")]
+    detail = ", ".join(
+        f"{row['target_session']}/{row['writer']}({row['status']})"
+        for _, row in missing.head(5).iterrows()
+    )
+    if len(missing) > 5:
+        detail += f" +{len(missing)-5} mas"
+    return [Result("receipt_audit", WARN,
+                   f"{len(missing)} anomalias en {len(recent)} sesiones: {detail}")]
+
+
 def run_all_checks() -> list:
     results = []
     # A
@@ -789,6 +822,8 @@ def run_all_checks() -> list:
     results.extend(check_manifest("market_data"))
     # I - N-C7: alineacion de sesion esperada
     results.extend(check_expected_session_alignment())
+    # REP-AUDIT-20261018: receipts vs filas persistidas
+    results.extend(check_receipt_audit())
     # C-ter: holdings CSVs (Fix D, 2026-10-08)
     results.extend(check_holdings_csvs())
     # C-bis: revision Yahoo (K-LSE-YAHOO-REVISION-01)
