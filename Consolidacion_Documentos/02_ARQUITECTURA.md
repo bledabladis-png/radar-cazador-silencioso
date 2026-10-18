@@ -267,6 +267,7 @@ Si `validation_gate['passed'] == False` -> `sys.exit(1)`.
 - Issue-manager (`scripts/issue_manager.py`) abre/comenta/cierra Issues si los 5 slots fallan.
 - F-IAE-LSE-INTEGRATION: 2 steps antes de "Run Macro Sectorial" (fetch LSE scraper + capture SHA).
 - Fase G: step "Regenerar catalogo radar (IAE)" tras run.py; `update_sec_13f.yml` gana step "Regenerar crosswalk CUSIP".
+- Audit post-receipt (2026-10-18): step `Post-receipt audit` (`if: always()`) tras `Generate completion receipt`. Ejecuta `scripts/post_receipt_audit.py`: compara `writer_receipts.json` con `outputs/history/*.csv`. No bloquea receipts. Anade fila a `receipt_audit.csv`. Consumido por `health_check::check_receipt_audit()`.
 
 **Clasificacion de workflows por validacion local (2026-10-08):**
 
@@ -360,6 +361,18 @@ Si el gate falla, `run.py` aborta con `sys.exit(1)`.
 - Los 5 futuros (BZ=F, CL=F, GC=F, HG=F, NG=F) via Yahoo con OHLCV completo.
 - OilPriceAPI eliminada 2026-09-30: plan free sin futuros, sin historico, sin OHLCV.
 - `settlement_semantics=future_settlement` para los 5. R5 en 00_ARRANQUE.
+
+**data_quality con `date` = sesion bursatil (2026-10-18, REP-AUDIT-20261018-DQ-DATE):**
+- `compute_data_quality` escribe `date = last_expected_market_date(reference_date)`.
+- `age_calendar_days` se mide contra la sesion, no contra el run.
+- `date=None` para snapshots (`sector_rank_deltas`) se mantiene; no viola el contrato.
+- Cierra la clase de bug detectada: runs en sabados, domingos o festivos NYSE escribian filas con `date` no bursatil. Violaba "ningun writer publica filas con date no bursatil" de 00_ARRANQUE §2.
+- Migracion historica deduplicada por `(date, source)` con `keep='last'`. 155 filas -> 9 fechas -> 464 filas totales.
+
+**Audit post-receipt no bloqueante (2026-10-18, REP-AUDIT-20261018-RECEIPT-AUDIT):**
+- `scripts/post_receipt_audit.py` compara escritura declarada vs persistida.
+- Status: `SKIP` (written=False), `NO_DATE_CHECK` (date=None), `OK`, `MISSING` (bug 09-oct), `CSV_MISSING`.
+- No bloquea receipts. Detecta por diferencia, no por regla. Alternativa bloqueante (v1.3 con lista fija) descartada por 3 falsos positivos sistematicos (macro_regime B5, HOLIDAY_MODE, validacion contra un solo run). Alternativa v1.3r (consistencia sin comparar disco) descartada porque no detecta el 09-oct.
 **F-IAE-CRON-02 - Multi-slot:**
 - 5 slots de cron (17 23 / 17 3 / 17 5 / 17 7 / 17 11 UTC) con gate pre-pipeline.
 - Idempotencia por cobertura (no por `last_date`).
@@ -389,6 +402,8 @@ Si el gate falla, `run.py` aborta con `sys.exit(1)`.
 **~31 tickers con DATA ISSUE:** esperado (IPOs recientes).
 
 **Confidence sensible a N componentes:** documentado (C19).
+
+**Audit post-receipt no bloqueante (aceptado 2026-10-18):** durante las primeras 4-8 semanas, `post_receipt_audit` solo registra. No bloquea receipts aunque haya `MISSING`. Motivo: evitar falsos positivos sistematicos (HOLIDAY_MODE en CSVs de stocks, candado B5 en macro_regime). Si en 4-8 semanas la tasa de `MISSING` es 0 en produccion, se puede endurecer a `BLOCKED`. Mientras tanto, la deteccion operativa es via `health_check` semanal (WARN en 7 sesiones con anomalias). Unico caso real observado hasta la fecha: bug 09-oct (receipt emitido, fila sector_breadth perdida, reparada manualmente en `ceb21d8a`).
 
 
 

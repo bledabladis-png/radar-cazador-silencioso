@@ -118,6 +118,31 @@ suite completa en cada push a main (paths-ignore: `data/`, `outputs/`),
 independiente del gate del `daily_run`. Dos tests de prevencion:
 `test_imports_declarados.py` (imports vs requirements) y
 `test_workflow_fetch_depth.py` (fetch-depth: 0 en jobs con pytest).
+
+**Excepcion `datetime.now()` en `run.py:48` (2026-10-18, justificada).**
+`reference_date = datetime.now(ZoneInfo("Europe/Madrid"))` es fecha de
+EJECUCION (para `market_hours.is_session_closed` y `run_id`), no de
+observacion. La fecha de observacion se deriva del dataset (parquet o
+CSV por fuente). No viola la regla dura "nunca datetime.now() para
+observacion". Auditoria 2026-10-18 reviso y confirmo.
+
+**data_quality.csv con `date` = sesion bursatil (2026-10-18).**
+`compute_data_quality` escribe `date = last_expected_market_date(
+reference_date)`. `age_calendar_days` se mide contra la sesion, no
+contra el run. Evita filas en sabados, domingos y festivos NYSE.
+Migracion historica: 155 filas en 9 fechas, 593->464. Commits
+`4ade7384` + `5ef44486`. Ver `REP-AUDIT-20261018-DQ-DATE` en
+REGISTRO.yaml.
+
+**Audit post-receipt no bloqueante (2026-10-18).**
+`scripts/post_receipt_audit.py` compara `writer_receipts.json` (lo que
+el run reporta haber escrito) vs `outputs/history/*.csv` (lo persistido).
+Detecta `MISSING` (receipt con `written=True, date=D`, CSV sin fila D):
+caso del bug 09-oct. No bloquea receipts. Step `if: always()` en
+`daily_run.yml` tras `write_completion_receipt.py`. `health_check.py::
+check_receipt_audit()` lee `receipt_audit.csv` los lunes y WARN si hay
+anomalias en las ultimas 7 sesiones. 4-8 semanas de observacion antes
+de decidir si bloquear. Ver `REP-AUDIT-20261018-RECEIPT-AUDIT`.
 Items `CI-PUSH-NO-VERIF` y `CI-PREVENTION-GAP`: cerrados.
 
 ---
