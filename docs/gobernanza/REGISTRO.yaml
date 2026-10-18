@@ -780,3 +780,84 @@ items:
   commit: cb3253d3
   test: tests/test_generate_estado_failclosed.py
   verificacion: FIXED
+
+- id: REP-AUDIT-20261018-IPS
+  tipo: auditoria_externa
+  ciclo: '2026-10-18'
+  estado: FIXED
+  descripcion: >
+    Analista externo pidio aclarar si IPS/IPI es proxy anticipado de
+    activos o tasa de inflacion observada. Codigo: inflation_pressure_score
+    (scoring.py:340) usa momentum 20d de XLE, ^SPGSCI, TIP y ratio TIP/IEF.
+    No usa CPI/PPI. IPI = (IPS+1)/2*100 (mapeo lineal). Puede divergir de
+    IPC/PPI publicados sin ser error.
+  commit: 8eaecb0a
+  test: tests/test_mte_ips_es_proxy_no_tasa_observada.py
+  verificacion: FIXED
+
+- id: REP-AUDIT-20261018-NIPC
+  tipo: auditoria_externa
+  ciclo: '2026-10-18'
+  estado: FALSE_POSITIVE
+  descripcion: >
+    Analista externo senalo que NIPC total suma acciones de companias
+    distintas, no es medida economica.
+  razon: >
+    El reporte ya declara el contrato completo de NIPC (reporte_diario.md
+    lineas 995 y 1006-1012): unidad shares no dolares, gross observed
+    delta, no flujo economico. El analista cita la declaracion y pide
+    "mas"; es interpretacion, no bug.
+
+- id: REP-AUDIT-20261018-SLPM
+  tipo: auditoria_externa
+  ciclo: '2026-10-18'
+  estado: FALSE_POSITIVE
+  descripcion: >
+    Analista externo senalo cobertura 18.18% en Leader Representativeness
+    y SLPM UNRESOLVED, impidiendo conclusion estructural sobre liderazgo.
+  razon: >
+    El reporte ya declara cobertura 0/5, NO_LEADERS, UNRESOLVED,
+    "candidato no liderazgo validado" (reporte_diario.md lineas 316-323,
+    933). slpm_state.json: state=UNRESOLVED, candidate_state=null. No es
+    bug: el analista pide explicitar lo que ya esta explicito.
+
+- id: REP-AUDIT-20261018-DQ-DATE
+  tipo: auditoria_interna
+  ciclo: '2026-10-18'
+  estado: FIXED
+  descripcion: >
+    compute_data_quality escribia 'date' = reference_date.date() en
+    Madrid. Runs en sabados, domingos y festivos NYSE (incluido Labor
+    Day 07-09) generaban filas con 'date' no bursatil. Violaba contrato
+    del 00_ARRANQUE: "ningun writer publica filas con date no bursatil".
+  commit: 4ade7384
+  test: tests/test_data_quality_date_sesion_bursatil.py
+  evidencia: >
+    date = last_expected_market_date(reference_date). age_calendar_days
+    medido contra sesion, no contra run. Migracion historica (155 filas,
+    9 fechas, 593->464) en commit 5ef44486 con backup y dedup. 11 tests
+    parametrizados: findes, Thanksgiving, manana/noche Madrid, invariante
+    bursatil global, age coherente.
+  verificacion: FIXED
+
+- id: REP-AUDIT-20261018-RECEIPT-AUDIT
+  tipo: auditoria_interna
+  ciclo: '2026-10-18'
+  estado: FIXED
+  descripcion: >
+    El receipt no detectaba CSVs historicos sin fila del target_session.
+    Bug del 09-oct: receipt emitido con sector_breadth.csv sin fila
+    09-10, gate no reintento, fila perdida hasta reparacion manual
+    (ceb21d8a).
+  commit: 400e6c9b
+  test: tests/test_post_receipt_audit.py
+  evidencia: >
+    scripts/post_receipt_audit.py compara writer_receipts.json vs
+    outputs/history/*.csv. Status SKIP/NO_DATE_CHECK/OK/MISSING/
+    CSV_MISSING. No bloquea receipts (audit no bloqueante) pero
+    health_check WARN en 7 sesiones con MISSING. Step if: always() en
+    daily_run.yml. 13 tests hermeticos. Alternativas descartadas: v1.3
+    (lista fija 17) generaba 3 falsos positivos sistematicos; v1.3r
+    (consistencia de receipts sin comparar disco) no detectaba el 09-oct.
+    Commit accesorio 212011f4 (pyflakes).
+  verificacion: FIXED
