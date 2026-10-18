@@ -667,3 +667,98 @@ items:
     liquidity_regime es legitimo (liquidez real). run.py intacto
     (llamada posicional). Suite completa verde, pyflakes limpio.
   verificacion: VERIFIED_IN_CI
+
+- id: REP-AUDIT-20261018-H16
+  tipo: auditoria_interna
+  ciclo: '2026-10-18'
+  estado: FIXED
+  descripcion: >
+    H16: el bloque INFO Cross-Module solo publicaba Financial Stress e
+    Inflation Pressure si el contador era > 0. Si era 0, se omitia,
+    sugiriendo "sin dato" cuando era "cero real".
+  commit: 9d8d8cf9
+  test: tests/test_cross_module_regimes.py
+  evidencia: >
+    Ambos bloques se publican siempre con N/5. Expansion sigue
+    ocultandose si es 0. 2 tests adaptados + 2 nuevos.
+  verificacion: VERIFIED_IN_CI
+
+- id: REP-AUDIT-20261018-H7
+  tipo: auditoria_interna
+  ciclo: '2026-10-18'
+  estado: FIXED
+  descripcion: >
+    H7: _resolve_breadth_effective_date anadia ETFs sectoriales al
+    universo elegible. resolve_effective_date opera sobre df_stocks; los
+    ETFs no estan ahi. Cobertura 305/340=0.897 < 0.90 -> DATA_PENDING falso.
+  commit: 3d8c9689
+  test: tests/test_h7_breadth_eligible_universe.py
+  evidencia: >
+    305/329=0.927 >= 0.90. effective_date=2026-10-16 (antes 15),
+    is_stale=False (antes True), reason=None (antes DATA_PENDING). 4
+    tests nuevos.
+  verificacion: VERIFIED_IN_CI
+
+- id: REP-AUDIT-20261018-H5
+  tipo: auditoria_interna
+  ciclo: '2026-10-18'
+  estado: FIXED
+  descripcion: >
+    H5: CFTC pos_change del proveedor no coincide con net.diff() por
+    redondeo independiente de cada lado (326/853 filas). Diferencia de 1-2
+    unidades publicada como serie homogenea.
+  commit: 37e1f02e
+  test: tests/test_h5_cftc_position_change_coherence.py
+  evidencia: >
+    position_change = net_position.diff() (identidad). El valor del
+    proveedor queda como fallback solo para la primera fila. 4 tests
+    nuevos.
+  verificacion: VERIFIED_IN_CI
+
+- id: REP-AUDIT-20261018-H10-H19
+  tipo: auditoria_interna
+  ciclo: '2026-10-18'
+  estado: FIXED
+  descripcion: >
+    H10/H19: columna "Data Conf" se interpretaba como confianza global.
+    Solo expresa frescura. Fuente reciente con cobertura 18% aparecia
+    como "Alta", sugiriendo fiabilidad inexistente.
+  commit: e7b12feb
+  test: tests/test_h10_h19_conf_frescura_rename.py
+  evidencia: >
+    Renombrada a "Conf. Frescura". Nota explicita: "Se deriva SOLO de la
+    frescura observada, NO de la cobertura." 5 tests nuevos + 1 adaptado.
+  verificacion: VERIFIED_IN_CI
+
+- id: REP-AUDIT-20261018-H11-H12
+  tipo: auditoria_interna
+  ciclo: '2026-10-18'
+  estado: FIXED
+  descripcion: >
+    H11/H12: N-PORT solo publicaba REPORT_DATE. FILING_DATE estaba en el
+    crudo pero se descartaba. Frecuencia origen (mensual) no coincidia con
+    ingesta (trimestral).
+  commit: caa176d1
+  test: tests/test_h11_h12_nport_fecha_publicacion.py
+  evidencia: >
+    Provider lee FILING_DATE defensivo. Render publica Fecha observacion +
+    Fecha presentacion. Nota declara frecuencias. Dispatch run 39074246538
+    confirmo FILING_DATE al 100% del CSV. 5 tests nuevos.
+  verificacion: VERIFIED_IN_CI
+
+- id: REP-AUDIT-20261018-STRUCT
+  tipo: auditoria_interna
+  ciclo: '2026-10-18'
+  estado: FIXED
+  descripcion: >
+    La etiqueta binaria MARKUP/RANGE oculta la magnitud del struct_score.
+    XLK MARKUP +0.4536, ^NDX RANGE +0.3046 (a 0.002 del umbral 0.30),
+    XLP RANGE +0.18 y XLF RANGE +0.23.
+  commit: a226f556
+  test: tests/test_struct_score_sector_indices.py
+  evidencia: >
+    Columnas Struct en Rankings Sectoriales e Indices. compute_sector_scores
+    devuelve struct_scores; compute_indices_intl devuelve
+    index_struct_scores (3 keys). 8 tests nuevos. Cleanup pyflakes 22392813.
+    E2E verificado: XLK +0.45, ^NDX +0.30, XLP +0.18 visibles.
+  verificacion: VERIFIED_IN_CI
