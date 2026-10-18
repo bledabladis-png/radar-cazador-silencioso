@@ -44,6 +44,59 @@ Al cerrar una sesion nueva, se anade arriba (las mas recientes primero). Si hay 
 
 ## 3. SESIONES
 
+### 2026-10-18 - Investigacion frescura + auditoria externa + audit post-receipt
+
+**Objetivo.** Investigar y verificar que el sistema se nutre con datos
+frescos, fiables y consistentes de todas las fuentes de manera
+automatica. Cerrar deudas detectadas. Resolver puntos de auditoria
+externa del reporte 2026-10-17.
+
+**Hecho.**
+
+Fase A - Auditoria externa (4 puntos del analista):
+- IPS/IPI proxy de mercado, no IPC/PPI: `8eaecb0a`. Texto nuevo en
+  `volatility_mte.py` + 2 tests. Los 3 FALSE_POSITIVE (NIPC, SLPM,
+  liderazgo) documentados como falsos positivos porque el reporte ya
+  los declaraba.
+
+Fase B - Deuda validation/ en workflows:
+- `cafc77d8`: quitar validation/ del pytest en ci_tests y daily_run.
+
+Fase C - Deuda data_quality.csv (date no bursatil):
+- `4ade7384`: compute_data_quality escribe `date` =
+  last_expected_market_date(reference_date). `age` contra sesion.
+- `5ef44486`: migracion historica (155 filas, 9 fechas, 593->464).
+  Backup, dedup (date, source), validacion bursatil.
+- 11 tests nuevos en `test_data_quality_date_sesion_bursatil.py`.
+
+Fase D - Deuda receipt (no detecta CSV incompleto):
+- `400e6c9b`: `scripts/post_receipt_audit.py` compara
+  `writer_receipts.json` vs `outputs/history/*.csv`. Status
+  SKIP/NO_DATE_CHECK/OK/MISSING/CSV_MISSING. No bloquea. Append a
+  `receipt_audit.csv`. `daily_run.yml` step `if: always()`.
+  `health_check.py::check_receipt_audit()` lee el CSV y WARN si
+  hay MISSING en ultimas 7 sesiones.
+- 13 tests nuevos.
+- `212011f4`: quitar imports unused (pyflakes).
+
+**Commits.** `8eaecb0a`, `cafc77d8`, `4ade7384`, `5ef44486`,
+`400e6c9b`, `212011f4`. Rebase sobre `0419c5fa` (bot FRED) en un
+punto intermedio.
+
+**Pendiente.**
+- Scheduled lunes 2026-10-19 23:17 UTC: primer run con todos los
+  fixes activos. Observar `receipt_audit.csv` en artifact.
+- Health check lunes 2026-10-26: primera lectura de
+  `check_receipt_audit`.
+- Deudas aceptadas (no accionables): SSGA sin gate (fetch forzado),
+  reporte local en `outputs/report/` (gitignored, auditar via
+  artifact), `run.py:48` con `datetime.now(Madrid)` (excepcion
+  justificada por `is_session_closed`, no viola contrato porque es
+  fecha de ejecucion, no de observacion).
+
+**Proximo paso sugerido.** Verificar scheduled lunes. Si verde,
+observar primer `receipt_audit.csv` y confirmar 0 MISSING. Si hay
+MISSING, investigar antes del 26-oct.
 ### 2026-10-18 - GEN-ESTADO-*: cierre de las dos deudas del generador
 
 **Objetivo.** Cerrar los dos items abiertos al cierre de la sesion
