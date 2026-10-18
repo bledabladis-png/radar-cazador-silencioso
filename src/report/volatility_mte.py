@@ -104,6 +104,18 @@ def render_mte(mte_result):
         ips_val = mte_result.get('ips', 0)
         ips_str = f'{ips_val:.2f}' if pd.notna(ips_val) else 'N/D'
         out.append(f"- **Inflation Pressure Score:** {ips_str}\n\n")
+        # REP-AUDIT-20261018-IPS (2026-10-18): aclarar que IPS/IPI son
+        # proxy de mercado, no tasa de inflacion observada (IPC/PPI).
+        out.append("*Inflation Pressure Score / Index: proxy de mercado "
+                   "de presiones inflacionarias, no una medida de la tasa "
+                   "de inflacion observada (IPC/PPI). Inputs: momentum 20d "
+                   "de XLE (energia), ^SPGSCI (commodities) y TIP (TIPS), "
+                   "y ratio TIP/IEF (proxy de breakeven), normalizados por "
+                   "z-score robusto 60d y comprimidos con tanh; media "
+                   "EWMA(20) en [-1,+1]. IPI = (IPS+1)/2*100, mapeo lineal "
+                   "a [0,100]. Puede divergir de IPC/PPI publicados sin ser "
+                   "error: mide presion via precios de activos, no niveles "
+                   "macro observados.*\n\n")
         # P2.5 (2026-10-13, auditor): nota sin umbrales hardcodeados.
         # Si cambian en scoring.py, esta nota sigue siendo cierta.
         # H15 (2026-10-15, auditoria externa): publicar componentes,
