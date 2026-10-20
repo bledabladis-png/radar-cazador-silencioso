@@ -165,7 +165,13 @@ def compute_evidence_matrix(sector_breadth_df=None,
         if n_valid < 3:
             alignment = 'EVIDENCIA INSUFICIENTE'
         elif n_positive >= 3 and n_positive > n_negative:
-            alignment = 'EVIDENCIA PREDOMINANTEMENTE FAVORABLE'
+            # REP-AUDIT-20261020-REPORT-XLC-EVIDENCE: veto por variables
+            # materiales. Si precio y amplitud son negativos, no se publica
+            # FAVORABLE aunque 3+ votos sean positivos (caso XLC 2026-10-19).
+            if price_ev == -1 and breadth_ev == -1:
+                alignment = 'EVIDENCIA MIXTA'
+            else:
+                alignment = 'EVIDENCIA PREDOMINANTEMENTE FAVORABLE'
         elif n_negative >= 3 and n_negative > n_positive:
             alignment = 'EVIDENCIA PREDOMINANTEMENTE DESFAVORABLE'
         else:
