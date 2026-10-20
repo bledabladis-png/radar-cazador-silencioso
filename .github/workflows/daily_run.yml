@@ -236,7 +236,6 @@ jobs:
             outputs/history/cftc_position_flow.csv
             outputs/history/sec_nport_positions.csv
             outputs/history/sec_nport_position_change_quarterly.csv
-            outputs/history/slpm_history.csv
             outputs/state/slpm_state.json
             outputs/state/mte_state.json
             outputs/state/liquidity_state.json

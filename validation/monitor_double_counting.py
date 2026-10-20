@@ -29,7 +29,6 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 OUTPUT_CSV = PROJECT_ROOT / "outputs" / "history" / "double_counting_monitor.csv"
 
 UMBRALES = {
-    "structural_vs_breadth": 0.85,
     "rs_mom_vs_flow": 0.80,
     "rs_mom_vs_wls": 0.85,
     "stability_vs_wyckoff": 0.85,
@@ -53,7 +52,6 @@ def main() -> None:
     _session = last_expected_market_date().strftime("%Y-%m-%d")
     files = {
         "leaders": PROJECT_ROOT / "outputs" / "report" / "analisis_lideres.csv",
-        "slpm": PROJECT_ROOT / "outputs" / "history" / "slpm_history.csv",
     }
 
     # 1. Líderes sectoriales
@@ -82,27 +80,6 @@ def main() -> None:
                         print(f"{metric}: {value:+.4f} [{status}]")
         except Exception as exc:
             print(f"Error leyendo líderes: {exc}")
-
-    # 2. Structural vs Breadth en histórico SLPM
-    slpm_path = files["slpm"]
-    if slpm_path.exists():
-        try:
-            df = pd.read_csv(slpm_path)
-            if "structural_score" in df.columns and "leader_breadth" in df.columns:
-                value = _spearman(df["structural_score"], df["leader_breadth"])
-                if value is not None:
-                    umbral = UMBRALES["structural_vs_breadth"]
-                    status = "ALERTA" if abs(value) > umbral else "OK"
-                    metrics.append({
-                        "date": _session,
-                        "run_timestamp": _run_iso,
-                        "metric": "structural_vs_breadth",
-                        "value": value,
-                        "status": status,
-                    })
-                    print(f"structural_vs_breadth: {value:+.4f} [{status}]")
-        except Exception as exc:
-            print(f"Error leyendo slpm_history: {exc}")
 
     if not metrics:
         print("No se generaron métricas.")

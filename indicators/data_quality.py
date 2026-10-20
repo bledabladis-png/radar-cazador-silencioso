@@ -227,6 +227,10 @@ SOURCES = [
     # esta congelado desde 2026-07-17 (mtime agosto). Grep no
     # encuentra writer activo. Declarar su frescura sin writer
     # solo anade ruido ARCHIVAL permanente.
+    # 2026-10-20 (REP-AUDIT-20261020-SLPM-FOSSIL): CSV eliminado
+    # del repo. Artifact de daily_run.yml y metrica
+    # structural_vs_breadth de monitor_double_counting.py retirados.
+    # slpm_state.json (JSON de estado) sigue activo via slpm_v12.py.
     {
         'source': 'Sector Regime Matrix',
         'file': 'outputs/history/sector_regime_matrix.csv',
