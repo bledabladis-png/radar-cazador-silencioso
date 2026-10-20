@@ -70,7 +70,11 @@ def render_regimenes(macro_score, macro_regime, macro_conf,
             out.append(
                 f"  *Nota: El modulo financiero detecta estres significativo. "
                 f"El Funding & Liquidity Stress (FLS: {_fls_score:.0f}/100) "
-                f"SI senala estres de corto plazo. La liquidez real (FRED) "
+                f"SI senala estres de corto plazo. "
+                f"Componentes basados en nivel (SOFR, CP, Discount) pueden "
+                f"saturar tras movimientos de tipos; no es comparable con "
+                f"estres absoluto de funding. "
+                f"La liquidez real (FRED) "
                 f"es una dimension distinta y se reporta por separado. "
                 f"No se clasifica como CRISIS sistemica.*\n"
             )

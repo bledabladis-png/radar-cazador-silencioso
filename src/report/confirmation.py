@@ -46,6 +46,9 @@ def render_confirmation(confirmation_data):
             stressed = fls.get('stressed_components', fls_comp)
             out.append(f"- **Funding & Liquidity Stress (FLS):** {fls_score:.0f}/100 ")
             out.append(f"({stressed}/{fls_total} componentes en estres)\n")
+            out.append("  *Componentes basados en nivel (SOFR, CP, Discount) pueden "
+                       "saturar tras movimientos de tipos; FLS alto no implica "
+                       "estres absoluto de funding.*\n")
             fls_detail = fls.get('detail', {})
             if fls_detail:
                 out.append("  - Desglose:\n")

@@ -1053,3 +1053,10 @@ items:
   estado: OPEN
   descripcion: Revision externa del reporte 2026-10-19 identifico 14 inconsistencias. Las 4 criticas se confirman y se arreglan en esta misma rama (STRESS-LABEL, XLC-EVIDENCE, FLOW-RECONCILIATION, STRUCT-COLUMN). Las 10 restantes no se han verificado contra codigo o datos primarios del repo. El analista externo no tuvo acceso a FRED, Tesoro ni CBOE, por lo que las cifras externas de spread y FLS son de prensa, no de fuente primaria.
   siguiente_accion: Investigar en proxima sesion. Prioridad - verificar spread 10Y-3M contra data/macro_manual, verificar FLS contra data/macro_manual, revisar votos Wyckoff (magnitud) en evidence_matrix, revisar SLPM coverage 0/5, verificar fechas reales de FINRA/CFTC/SSGA/NPORT en outputs/history. Las que se confirmen como bug real, abrir item propio. Las que sean falso positivo, cerrar WONT_FIX o FALSE_POSITIVE con razon.
+
+- id: REP-AUDIT-20261020-FLS-COMPONENT-DESIGN
+  tipo: auditoria_interna
+  ciclo: '2026-10-20'
+  estado: OPEN
+  descripcion: FLS usa _zscore_last_over_lookback(nivel) sobre SOFR, CP y Discount, sin distinguir nivel de estres. Tras la subida de tipos de septiembre 2026, SOFR 3.88 esta en extremo de la ventana 252d y el componente satura a ~1.00 con tanh. Resultado FLS=85/100 con credito neutral (HYG/LQD Z=-0.30). WALCL y RRP usan pct_change(252) pero la ventana efectiva difiere (~5 anos vs ~1 ano, series semanales vs diarias).
+  siguiente_accion: Evaluar SOFR-IORB spread como input (mide tension de funding, no nivel de tipos). Evaluar homogeneizar ventanas entre componentes. Requiere justificacion estadistica y re-certificacion (FLS entra en MTE). No se toca hoy; nota aclaratoria publicada en header.py y confirmation.py.
