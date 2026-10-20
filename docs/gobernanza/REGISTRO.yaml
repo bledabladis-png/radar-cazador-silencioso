@@ -1096,5 +1096,22 @@ items:
   tipo: auditoria_interna
   ciclo: '2026-10-20'
   estado: OPEN
-  descripcion: FLS usa _zscore_last_over_lookback(nivel) sobre SOFR, CP y Discount, sin distinguir nivel de estres. Tras la subida de tipos de septiembre 2026, SOFR 3.88 esta en extremo de la ventana 252d y el componente satura a ~1.00 con tanh. Resultado FLS=85/100 con credito neutral (HYG/LQD Z=-0.30). WALCL y RRP usan pct_change(252) pero la ventana efectiva difiere (~5 anos vs ~1 ano, series semanales vs diarias).
-  siguiente_accion: Evaluar SOFR-IORB spread como input (mide tension de funding, no nivel de tipos). Evaluar homogeneizar ventanas entre componentes. Requiere justificacion estadistica y re-certificacion (FLS entra en MTE). No se toca hoy; nota aclaratoria publicada en header.py y confirmation.py.
+  descripcion: |
+    FLS usa _zscore_last_over_lookback(nivel) sobre SOFR, CP y Discount,
+    sin distinguir nivel de estres. Tras la subida de tipos de septiembre
+    2026, SOFR 3.88 estaba en extremo de la ventana 252d y el componente
+    saturaba a ~1.00 con tanh. Resultado FLS=85/100 con credito neutral
+    (HYG/LQD Z=-0.30). WALCL y RRP usan pct_change(252) pero la ventana
+    efectiva difiere (~5 anos vs ~1 ano, series semanales vs diarias).
+    SOFR FIXED (2026-10-20) = sustituido z(nivel SOFR) por z(spread
+    SOFR-IORB). Antes |z|>5 en 17.7% de sesiones, tanh saturado 36.4%,
+    z_ult=+5.17, value=0.9999. Despues |z|>5 en 5.7%, z_ult=-0.67,
+    value=-0.5879 (no stressed). FLS baja de 79/100 a 63/100, stressed
+    de 3/5 a 2/5. Pendiente = WALCL (sigue 1.0000 saturado) y CP (0.89)
+    pueden sufrir el mismo problema.
+  siguiente_accion: |
+    SOFR FIXED. Pendiente proxima sesion = evaluar si WALCL
+    (pct_change_252 semanal, satura 1.0000) y CP (z nivel, satura 0.89)
+    merecen el mismo tratamiento. Medir saturacion con diagnostico
+    rolling 252d. Cualquier cambio adicional requiere re-certificacion
+    (FLS entra en MTE).

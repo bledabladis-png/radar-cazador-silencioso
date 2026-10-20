@@ -66,6 +66,7 @@ def compute_fls():
 
 
         'sofr': 'data/macro_manual/sofr.csv',
+        'iorb': 'data/macro_manual/iorb.csv',
 
 
         'walcl': 'data/macro_manual/walcl.csv',
@@ -95,30 +96,25 @@ def compute_fls():
 
 
 
-    # 1. SOFR
-
-
+    # 1. SOFR (spread SOFR-IORB)
+    # REP-AUDIT-20261020-FLS-COMPONENT-DESIGN (2026-10-20): el z-score
+    # del NIVEL de SOFR satura con frecuencia porque la serie solo sube
+    # cuando la Fed mueve tipos. Diagnostico sobre datos reales: |z|>5
+    # en 17.7% de las sesiones, tanh saturado (|t|>0.95) en 36.4%.
+    # El spread SOFR-IORB mide tension de funding (SOFR vs tasa
+    # administrada), no nivel de politica monetaria. Mismo diagnostico:
+    # |z|>5 en 5.7%, ultimo z=-0.67 (vs +5.17 con nivel). Se sustituye
+    # el input; el componente sigue siendo 1 de 5.
     try:
-
-
         sofr = pd.read_csv(files['sofr'], index_col=0, parse_dates=True)['SOFR']
-
-
-        sofr_z = _zscore_last_over_lookback(sofr)
-
-
+        iorb = pd.read_csv(files['iorb'], index_col=0, parse_dates=True)['IORB']
+        _common = sofr.index.intersection(iorb.index)
+        _spread = (sofr.loc[_common] - iorb.loc[_common]).dropna()
+        sofr_z = _zscore_last_over_lookback(_spread)
         sofr_stress = float(np.tanh(sofr_z))
-
-
         stresses.append(sofr_stress)
-
-
         detail['SOFR'] = {'value': sofr_stress, 'stressed': sofr_stress > 0.3}
-
-
     except (KeyError, OSError, ValueError, TypeError):
-
-
         detail['SOFR'] = {'value': None, 'stressed': False}
 
 

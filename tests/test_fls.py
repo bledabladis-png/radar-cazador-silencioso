@@ -93,6 +93,8 @@ def _write_all_fls_csvs(base, n=300):
     """5 CSVs con datos monotonos crecientes (z distinto de 0)."""
     _write_fls_csv(base, "sofr.csv", "SOFR",
                    np.linspace(1.0, 5.0, n))
+    _write_fls_csv(base, "iorb.csv", "IORB",
+                   np.linspace(0.5, 4.5, n))
     _write_fls_csv(base, "walcl.csv", "WALCL",
                    np.linspace(7e6, 8e6, n))
     _write_fls_csv(base, "rrpp.csv", "RRPONTSYD",
@@ -128,10 +130,14 @@ def test_compute_fls_sin_csvs(tmp_path, monkeypatch):
 
 
 def test_compute_fls_csv_parcial(tmp_path, monkeypatch):
-    """Solo SOFR presente -> 1 componente, los otros None."""
+    """Solo SOFR (con su IORB) presente -> 1 componente, los otros None.
+    Desde REP-AUDIT-20261020-FLS-COMPONENT-DESIGN, SOFR necesita iorb.csv
+    para calcular el spread."""
     monkeypatch.chdir(tmp_path)
     _write_fls_csv(tmp_path, "sofr.csv", "SOFR",
                    np.linspace(1.0, 5.0, 300))
+    _write_fls_csv(tmp_path, "iorb.csv", "IORB",
+                   np.linspace(0.5, 4.5, 300))
     out = compute_fls()
     assert out["components"] == 1
     assert out["detail"]["SOFR"]["value"] is not None
@@ -157,3 +163,35 @@ def test_compute_fls_normalized_rango(tmp_path, monkeypatch):
     _write_all_fls_csvs(tmp_path, n=300)
     out = compute_fls()
     assert 0.0 <= out["fls_normalized"] <= 1.0
+
+
+# ---------- REP-AUDIT-20261020-FLS-COMPONENT-DESIGN (2026-10-20) ----------
+def test_fls_sofr_spread_estable_no_satura(tmp_path, monkeypatch):
+    """Spread SOFR-IORB constante -> MAD=0 -> z=0 -> tanh=0 -> no stressed."""
+    monkeypatch.chdir(tmp_path)
+    n = 300
+    _write_fls_csv(tmp_path, "sofr.csv", "SOFR", [4.0] * n)
+    _write_fls_csv(tmp_path, "iorb.csv", "IORB", [3.9] * n)
+    out = compute_fls()
+    assert out["detail"]["SOFR"]["value"] == 0.0
+    assert out["detail"]["SOFR"]["stressed"] is False
+
+
+def test_fls_sofr_sin_iorb_es_none(tmp_path, monkeypatch):
+    """Sin iorb.csv, SOFR no se calcula (fail-closed)."""
+    monkeypatch.chdir(tmp_path)
+    _write_fls_csv(tmp_path, "sofr.csv", "SOFR",
+                   np.linspace(1.0, 5.0, 300))
+    out = compute_fls()
+    assert out["detail"]["SOFR"]["value"] is None
+    assert out["detail"]["SOFR"]["stressed"] is False
+
+
+def test_fls_sofr_spread_no_satura_por_nivel(tmp_path, monkeypatch):
+    """Spread plano 0.5 -> z=0 aunque el nivel absoluto suba 1->5."""
+    monkeypatch.chdir(tmp_path)
+    n = 300
+    _write_fls_csv(tmp_path, "sofr.csv", "SOFR", np.linspace(1.0, 5.0, n))
+    _write_fls_csv(tmp_path, "iorb.csv", "IORB", np.linspace(0.5, 4.5, n))
+    out = compute_fls()
+    assert abs(out["detail"]["SOFR"]["value"]) < 1e-9
