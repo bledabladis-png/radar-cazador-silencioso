@@ -19,13 +19,18 @@ GAP_THRESHOLD = 7
 
 
 def _ref_to_date(ref):
-    """Normaliza reference_date (None/date/datetime/Timestamp, tz-aware o naive) a date.
+    """Normaliza reference_date a la sesion bursatil NYSE esperada.
 
     A2.2-02: evita TypeError por restar tz-naive y tz-aware.
+    REP-AUDIT-20261020-EU-DATE: antes devolvia run_date (Madrid). Runs
+    en sabados, domingos o madrugada del martes escribian 'date' no
+    bursatil o futura (459 filas detectadas en auditoria 2026-10-20).
+    Ahora delega en last_expected_market_date().
     """
+    from src.market_calendar import last_expected_market_date
     if ref is None:
-        return pd.Timestamp.now().date()
-    return pd.Timestamp(ref).date()
+        return last_expected_market_date()
+    return last_expected_market_date(ref)
 
 
 def _collect(reference_date=None):

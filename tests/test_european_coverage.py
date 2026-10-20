@@ -22,29 +22,39 @@ from src import european_coverage as ec
 
 
 # ---------- _ref_to_date ----------
-def test_ref_to_date_none_devuelve_hoy():
+def test_ref_to_date_none_devuelve_sesion_esperada():
+    """Contrato 2026-10-20: None -> last_expected_market_date() (sesion NYSE)."""
     d = ec._ref_to_date(None)
     assert isinstance(d, dt.date)
+    from src.market_calendar import is_market_day
+    assert is_market_day(d)
 
 
-def test_ref_to_date_date_passthrough():
-    d = dt.date(2026, 9, 30)
-    assert ec._ref_to_date(d) == d
+def test_ref_to_date_date_sin_hora_retrocede():
+    """date(2026-09-30) -> 00:00 < PUBLISH_HOUR -> sesion anterior (2026-09-29)."""
+    assert ec._ref_to_date(dt.date(2026, 9, 30)) == dt.date(2026, 9, 29)
 
 
-def test_ref_to_date_datetime_a_date():
+def test_ref_to_date_datetime_manana_retrocede():
+    """12:00 < PUBLISH_HOUR (23h Madrid) -> sesion anterior."""
     d = dt.datetime(2026, 9, 30, 12, 0, 0)
+    assert ec._ref_to_date(d) == dt.date(2026, 9, 29)
+
+
+def test_ref_to_date_datetime_noche_mismo_dia():
+    """23:30 Madrid: USA cerro -> la sesion del dia es valida."""
+    d = dt.datetime(2026, 9, 30, 23, 30, 0)
     assert ec._ref_to_date(d) == dt.date(2026, 9, 30)
 
 
-def test_ref_to_date_timestamp_a_date():
+def test_ref_to_date_timestamp_sin_hora_retrocede():
     ts = pd.Timestamp("2026-09-30")
-    assert ec._ref_to_date(ts) == dt.date(2026, 9, 30)
+    assert ec._ref_to_date(ts) == dt.date(2026, 9, 29)
 
 
-def test_ref_to_date_tz_aware():
+def test_ref_to_date_tz_aware_manana_retrocede():
     ts = pd.Timestamp("2026-09-30 08:00:00+02:00")
-    assert ec._ref_to_date(ts) == dt.date(2026, 9, 30)
+    assert ec._ref_to_date(ts) == dt.date(2026, 9, 29)
 
 
 # ---------- _render_markdown ----------
@@ -155,7 +165,9 @@ def test_collect_3_estados(monkeypatch):
         XetraProvider=lambda: fake_xe,
         BMEProvider=lambda: fake_bme,
     ):
-        rows = ec._collect(reference_date=dt.date(2026, 9, 30))
+        # Contrato 2026-10-20: post-PUBLISH_HOUR para que 2026-09-30 sea
+        # la sesion esperada (no retroceda a 2026-09-29).
+        rows = ec._collect(reference_date=dt.datetime(2026, 9, 30, 23, 30))
     assert len(rows) == 3
     by_ticker = {r["ticker"]: r for r in rows}
     assert by_ticker["AIR.PA"]["status"] == "OK"
@@ -182,7 +194,7 @@ def test_generate_report_integracion(tmp_path, monkeypatch):
         BMEProvider=lambda: fake_bme,
     ):
         result = ec.generate_european_coverage_report(
-            reference_date=dt.date(2026, 9, 30))
+            reference_date=dt.datetime(2026, 9, 30, 23, 30))
 
     assert result == {"total": 3, "ok": 1, "revisar": 1, "sin_datos": 1}
     assert md_target.exists()
