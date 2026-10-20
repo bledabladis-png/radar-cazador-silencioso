@@ -356,6 +356,21 @@ def _check_one_workflow(yml, meta):
                 delta_days, meta["max_days"], conclusion))
 
     if conclusion in BAD_CONCLUSIONS:
+        # REP-AUDIT-20261020-WARN-TRIMESTRALES (2026-10-20): trimestral
+        # con schedule failure + dispatch success posterior dentro de
+        # max_days -> SKIP. No debilita HD-5: fuera de max_days la rama
+        # anterior decide SKIP/FAIL, y si no hay dispatch success sigue WARN.
+        if meta["max_days"] >= 30 and any_ is not None:
+            if (any_.get("event") == "workflow_dispatch"
+                    and any_.get("conclusion") == "success"):
+                try:
+                    delta_any = _delta_days(any_["createdAt"])
+                except Exception:
+                    delta_any = None
+                if delta_any is not None and delta_any <= meta["max_days"]:
+                    return Result(f"workflow:{yml}", SKIP,
+                        "trimestral, schedule {0} {1:.0f}h, dispatch OK {2:.0f}h".format(
+                            conclusion, delta_days * 24, delta_any * 24))
         return Result(f"workflow:{yml}", WARN,
             "schedule {0} hace {1:.0f}h".format(conclusion, delta_days * 24))
 
