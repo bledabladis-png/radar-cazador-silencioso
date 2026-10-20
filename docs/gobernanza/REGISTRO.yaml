@@ -861,3 +861,110 @@ items:
     (consistencia de receipts sin comparar disco) no detectaba el 09-oct.
     Commit accesorio 212011f4 (pyflakes).
   verificacion: FIXED
+
+- id: REP-AUDIT-20261020-CRON-SLOTS
+  tipo: auditoria_interna
+  ciclo: '2026-10-20'
+  estado: FIXED
+  descripcion: >
+    health_check.py: _cron_slots_status marcaba FAIL con 3+ slots
+    missing. Health check del 19-10 fallo (2/5 slots) con el pipeline
+    operativo: los 2 runs scheduled del dia fueron success con
+    run-system=skipped (target 16-10 ya cubierto). GitHub scheduler
+    best-effort con delays 2-7h.
+  commit: f3efa062
+  test: tests/test_health_check.py
+  evidencia: >
+    Regla nueva: 0/5 -> OK, 1-4/5 -> WARN, 5/5 -> FAIL. Caller pasa
+    n_total=expected. Issue #6 cerrado. Tests: 3_missing FAIL -> WARN,
+    4_missing WARN anadido, n_total configurable.
+  verificacion: FIXED
+
+- id: REP-AUDIT-20261020-EU-DATE
+  tipo: auditoria_interna
+  ciclo: '2026-10-20'
+  estado: FIXED
+  descripcion: >
+    european_coverage.csv escribia date=run_date (Madrid). Runs en
+    findes o madrugada del martes escribian 459 filas con date no
+    bursatil o futura (auditoria 2026-10-20).
+  commit: 6d2278c3
+  test: tests/test_european_coverage_date_sesion.py
+  evidencia: >
+    Fix en _ref_to_date: delega en last_expected_market_date() con
+    lag PUBLISH_HOUR. Migracion en da093a05: 1734 -> 1326 filas, 0
+    no bursatiles, 0 futuras, 0 duplicados. Tests: 4 renombrados al
+    contrato nuevo + 2 nuevos (noche/madrugada) + 7 parametrizados.
+  verificacion: FIXED
+
+- id: REP-AUDIT-20261020-DQ-EU-AGE
+  tipo: auditoria_interna
+  ciclo: '2026-10-20'
+  estado: FIXED
+  descripcion: >
+    compute_data_quality media age de fuentes europeas (Euronext,
+    Xetra, BME) contra `now` (run_date) en vez de _session_date. El
+    fix del 18-10 (4ade7384) solo cubrio la rama general. La rama
+    europea usa _last.date() (guion bajo), no matcheada por replace.
+  commit: f02cebd8
+  test: tests/test_data_quality_age_europeas_sesion.py
+  evidencia: >
+    Detectado en auditoria 2026-10-20: 3 filas de data_quality.csv
+    con age=4 cuando calc_age=3. Fix de una linea. Test verifica
+    reference_date martes 02:50 Madrid -> age=3, no 4.
+  verificacion: FIXED
+
+- id: REP-AUDIT-20261020-MONITOR-DATE
+  tipo: auditoria_interna
+  ciclo: '2026-10-20'
+  estado: FIXED
+  descripcion: >
+    monitor_double_counting.py escribia columna 'date' =
+    datetime.now().isoformat() (timestamp del run). Violaba el
+    contrato del 00_ARRANQUE: 41 filas del CSV con sabados, domingos
+    o fechas futuras (auditoria 2026-10-20).
+  commit: '14838307'
+  test: tests/test_monitor_double_counting_date.py
+  evidencia: >
+    date = last_expected_market_date(), run_timestamp = ISO original
+    en columna separada. Migracion en 5f464729: 225 -> 123 filas
+    (colapso de runs multiples del mismo dia bursatil). 0 no
+    bursatiles, 0 futuras, 0 duplicados.
+  verificacion: FIXED
+
+- id: REP-AUDIT-20261020-SLPM-FOSSIL
+  tipo: auditoria_interna
+  ciclo: '2026-10-20'
+  estado: FIXED
+  descripcion: >
+    slpm_history.csv congelado desde 2026-07-17 (mtime agosto), sin
+    writer activo. El propio data_quality.py:226 ya lo retiro el
+    2026-10-10. Artifact vacio en daily_run.yml y lectura en
+    monitor_double_counting (metrica structural_vs_breadth siempre
+    0.7983, OK permanente, nunca ALERTA).
+  commit: 5ebe1c62
+  evidencia: >
+    CSV eliminado del repo. Artifact retirado de daily_run.yml.
+    Metrica y lectura retiradas de monitor_double_counting.py.
+    slpm_state.json (JSON de estado) sigue activo via slpm_v12.py.
+  verificacion: FIXED
+
+- id: REP-AUDIT-20261020-FALSOS-POSITIVOS-CALENDARIO
+  tipo: auditoria_interna
+  ciclo: '2026-10-20'
+  estado: FALSE_POSITIVE
+  descripcion: >
+    Auditoria 2026-10-20 marco como "fechas no bursatiles" varios
+    CSVs que no siguen calendario NYSE: amundi_lyxi_primary_flow,
+    blackrock_dax_primary_flow, blackrock_isf_primary_flow,
+    blackrock_iwm_historical (parcial), invesco_qqq_nav_* (NAV de
+    fondo con fines de semana), etf_primary_flow (cierres NYSE
+    legitimos como Good Friday y fin de ano), darkpool_history
+    (week=FINRA lunes con walk-back).
+  razon: >
+    Son CSVs de fondos con calendario no-NYSE (europeos, NAVs) o de
+    proveedores con calendario propio (FINRA week). El contrato del
+    00_ARRANQUE "ningun writer publica date no bursatil" aplica a
+    writers del pipeline NYSE, no a datos de proveedor en su propio
+    calendario. Excepcion documentada en 00_ARRANQUE (commit
+    siguiente). No es bug.
