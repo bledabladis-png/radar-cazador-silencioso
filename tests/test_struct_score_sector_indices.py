@@ -75,7 +75,7 @@ def test_rankings_con_struct_publica_columna():
         sector_persistence=None, signal_agreements=None,
         signal_agreements_display=None, shock_sensitivities=None,
     ))
-    assert "| Fase Wyckoff | Struct |" in out
+    assert "| Fase Wyckoff | Struct Score |" in out
     # XLP struct +0.18, XLF +0.23, XLK +0.45
     assert "+0.18" in out
     assert "+0.23" in out
@@ -90,7 +90,7 @@ def test_rankings_sin_struct_publica_nd():
         sector_persistence=None, signal_agreements=None,
         signal_agreements_display=None, shock_sensitivities=None,
     ))
-    assert "| Fase Wyckoff | Struct |" in out
+    assert "| Fase Wyckoff | Struct Score |" in out
     # 3 filas, todas N/D
     assert out.count("N/D") >= 3
 

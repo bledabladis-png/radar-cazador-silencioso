@@ -39,9 +39,9 @@ def render_ranking_sectorial_unificado(sector_results, tactical_scores,
     # Rango [0,1]. Mide la fraccion de la ventana en que el score
     # sectorial se mantuvo con el mismo signo.
     header = ("| # | Sector | Score | Tactical | Structural | Persist "
-              "| Agreement | Signal Cons | Comm Corr | Fase Wyckoff | Struct |\n")
+              "| Agreement | Signal Cons | Comm Corr | Fase Wyckoff | Struct Score |\n")
     sep = ("|---|--------|-------|----------|------------|---------"
-           "|-----------|-------------|-----------|---------------|--------|\n")
+           "|-----------|-------------|-----------|---------------|-------------|\n")
     out.append(header)
     out.append(sep)
     _struct_map = sector_results.get('struct_scores') or {}

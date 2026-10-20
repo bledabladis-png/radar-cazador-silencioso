@@ -91,6 +91,7 @@ def render_alerts(breadth_values, financial_regime, price_flow_divergences, conf
     else:
         out.append("### Alertas de Divergencia (Inicial)\n")
         out.append("*Sin divergencias relevantes.*\n\n")
+    out.append("*Nota: Flow Proxy (retorno x volumen) y Flujo Primario (creacion/destruccion de participaciones SPDR) son capas independientes. Una puede confirmar y la otra no. Ver seccion Flujo Primario ETF para la lectura institucional.*\n\n")
     return out
 
 
