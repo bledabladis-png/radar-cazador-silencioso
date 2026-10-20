@@ -308,7 +308,6 @@ def compute_data_quality(reference_date=None):
     F-UX-03 (2026-09-28): con reference_date, la decision no depende
     de datetime.now(). Fallback legacy cuando es None.
     """
-    now = _ref_to_date(reference_date)
     # REP-AUDIT-20261018-DQ-DATE (2026-10-18): date = sesion bursatil real,
     # no fecha del run. Evita filas en sabados/domingos/festivos.
     if reference_date is None:
@@ -576,7 +575,7 @@ def compute_data_quality(reference_date=None):
                     _n_total = len(_eu_df)
                     _last_raw = pd.to_datetime(_eu_df['last_date'], errors='coerce').max()
                     _last = _last_market_session(_last_raw) if pd.notna(_last_raw) else pd.NaT
-                    _age = (now - _last.date()).days if pd.notna(_last) else np.nan
+                    _age = (_session_date - _last.date()).days if pd.notna(_last) else np.nan
                     _fresh = classify_freshness(_age, 'daily')
                     _row['last_date'] = _last.strftime('%Y-%m-%d') if pd.notna(_last) else np.nan
                     _row['age_calendar_days'] = _age
