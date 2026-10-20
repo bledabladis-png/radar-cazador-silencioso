@@ -13,9 +13,11 @@ lo lee los lunes y alerta si las ultimas 7 sesiones tienen MISSING.
 Status por receipt:
 - SKIP: written=False (skip legitimo: HOLIDAY_MODE, candado B5, etc)
 - NO_DATE_CHECK: written=True pero date=None (snapshot sin fecha)
-- OK: written=True con date=D, CSV tiene fila D
+- OK: written=True con date=D, CSV tiene fila D y D == target_session
 - MISSING: written=True con date=D, CSV no tiene fila D
 - CSV_MISSING: written=True con date=D, CSV no existe
+- LAGGED: written=True con date=D, CSV tiene fila D pero D != target_session
+  (writer con lag de publicacion; caso sector_flow_characteristics)
 """
 from __future__ import annotations
 
@@ -84,10 +86,15 @@ def audit(receipts: list[dict], target_session: str | None) -> pd.DataFrame:
             status = "NO_DATE_CHECK"
         elif path is None or not path.exists():
             status = "CSV_MISSING"
-        elif _has_row(path, date):
-            status = "OK"
-        else:
+        elif not _has_row(path, date):
             status = "MISSING"
+        elif target_session and date != target_session:
+            # REP-AUDIT-20261020-RECEIPT-AUDIT-LAG: el writer escribio una
+            # fila con fecha valida, pero distinta al target_session. Es
+            # lag de publicacion (R1 correcto en el writer), no bug.
+            status = "LAGGED"
+        else:
+            status = "OK"
 
         rows.append({
             "target_session": target_session or "",
@@ -143,7 +150,11 @@ def main() -> int:
 
     counts = df["status"].value_counts().to_dict()
     missing = counts.get("MISSING", 0) + counts.get("CSV_MISSING", 0)
+    lagged = counts.get("LAGGED", 0)
     print(f"[audit] target={target or 'N/D'} writer={len(df)} {counts}")
+    if lagged:
+        print(f"[audit] INFO: {lagged} writer(s) con lag de publicacion "
+              "(date != target_session, fila presente)")
     if missing:
         print(f"[audit] ATENCION: {missing} writer(s) con fila ausente. "
               "Detalle en " + str(AUDIT_CSV.relative_to(ROOT)))

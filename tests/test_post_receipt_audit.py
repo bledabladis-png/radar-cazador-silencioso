@@ -132,3 +132,39 @@ def test_main_json_vacio(tmp_path, monkeypatch):
     monkeypatch.setattr(pra, "RECEIPTS_PATH", rp)
     monkeypatch.setattr(pra, "AUDIT_CSV", tmp_path / "audit.csv")
     assert pra.main() == 0
+
+# ============================================================
+# REP-AUDIT-20261020-RECEIPT-AUDIT-LAG (2026-10-20)
+# Writer con lag: escribio fila con date=D, D != target_session.
+# Antes: OK (falso positivo). Ahora: LAGGED.
+# ============================================================
+
+def test_audit_lagged_caso_sector_flow(tmp_path):
+    """Caso real 2026-10-19: sector_flow_characteristics escribio
+    2026-10-16 (input SSGA), target 2026-10-19. Antes OK, ahora LAGGED."""
+    p = tmp_path / "x.csv"
+    _write_csv(p, ["2026-10-15", "2026-10-16"])
+    receipts = [_receipt("sector_flow_characteristics", True, "2026-10-16", str(p))]
+    df = pra.audit(receipts, "2026-10-19")
+    assert df.iloc[0]["status"] == "LAGGED"
+    assert df.iloc[0]["receipt_date"] == "2026-10-16"
+
+
+def test_audit_sin_target_no_lagged(tmp_path):
+    """Regresion: target_session vacio/None no cambia el comportamiento
+    (sin target no se puede comparar, cae a OK si hay fila)."""
+    p = tmp_path / "x.csv"
+    _write_csv(p, ["2026-10-16"])
+    receipts = [_receipt("x", True, "2026-10-16", str(p))]
+    assert pra.audit(receipts, "")["status"].iloc[0] == "OK"
+    assert pra.audit(receipts, None)["status"].iloc[0] == "OK"
+
+
+def test_audit_missing_prioridad_sobre_lagged(tmp_path):
+    """Si la fila no existe en el CSV, es MISSING, no LAGGED, aunque
+    date != target."""
+    p = tmp_path / "x.csv"
+    _write_csv(p, ["2026-10-14", "2026-10-15"])
+    receipts = [_receipt("x", True, "2026-10-16", str(p))]
+    df = pra.audit(receipts, "2026-10-19")
+    assert df.iloc[0]["status"] == "MISSING"
