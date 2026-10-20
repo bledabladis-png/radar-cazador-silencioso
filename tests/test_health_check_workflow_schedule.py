@@ -107,3 +107,26 @@ def test_ningun_run_diario_warn():
     r = _check(META_DIARIO, [], [])
     assert r.status == hc.WARN
     assert "sin ejecuciones" in r.message
+
+
+# ============================================================
+# REP-AUDIT-20261020-WARN-TRIMESTRALES (bloque A, 2026-10-20)
+# Trimestral con schedule failure + dispatch success posterior
+# dentro de max_days -> SKIP. Sin dispatch -> WARN (no regresion).
+# ============================================================
+
+def test_trimestral_schedule_failure_dispatch_ok_skip():
+    r = _check(META_TRIM,
+               [_run("schedule", 18 * 24, conclusion="failure")],
+               [_run("workflow_dispatch", 18 * 24, conclusion="success")])
+    assert r.status == hc.SKIP
+    assert "trimestral" in r.message
+    assert "dispatch OK" in r.message
+
+
+def test_trimestral_schedule_failure_sin_dispatch_warn():
+    r = _check(META_TRIM,
+               [_run("schedule", 18 * 24, conclusion="failure")],
+               [_run("schedule", 18 * 24, conclusion="failure")])
+    assert r.status == hc.WARN
+    assert "schedule failure" in r.message

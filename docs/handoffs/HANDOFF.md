@@ -27,7 +27,7 @@ Certificacion prod: PRIMER CICLO COMPLETADO. Target 2026-10-19 cubierto por
 
 ---
 
-## 2. SESIONES 2026-10-18
+## 2. SESIONES 2026-10-18 a 2026-10-20
 
 ### 2.1. Sesion manana (7 commits)
 
@@ -147,10 +147,21 @@ Documentados como `REP-AUDIT-20261020-FALSOS-POSITIVOS-CALENDARIO`.
 - validation/ fuera de pytest en workflows (`cafc77d8`).
 - data_quality.csv date = sesion bursatil (`4ade7384` + `5ef44486`).
 - Receipt audit no bloqueante (`400e6c9b` + `212011f4`).
+- REP-AUDIT-20261020-WARN-TRIMESTRALES: FIXED (`47071a51`).
+- REP-AUDIT-20261020-ETF-FLOW-LAG: FALSE_POSITIVE (lag SSGA D+1/D+2).
+- REP-AUDIT-20261020-REPORT-STRESS-LABEL: FIXED (`0aec4ce5`).
+- REP-AUDIT-20261020-REPORT-FLOW-RECONCILIATION: FIXED (`0aec4ce5`).
+- REP-AUDIT-20261020-REPORT-STRUCT-COLUMN: FIXED (`0aec4ce5`).
+- REP-AUDIT-20261020-REPORT-XLC-EVIDENCE: FIXED (`41b1c8bf`).
 
 ---
 
 ## 4. PENDIENTES VIVOS
+
+- **REP-AUDIT-20261020-RECEIPT-AUDIT-LAG** (OPEN): status LAGGED en post_receipt_audit; observacion 4 semanas.
+- **REP-AUDIT-20261020-CRON-SLOTS-OBS** (OPEN): revision 2026-11-10.
+- **REP-AUDIT-20261020-SCHEDULER-DELAYS** (OPEN): revision 2026-11-10.
+- **REP-AUDIT-20261020-REPORT-REVIEW-EXTERNAL** (OPEN): investigar las 10 restantes de la revision externa.
 
 ### 4.1. Certificacion scheduled lunes 2026-10-19 23:17 UTC [COMPLETED 2026-10-20]
 
@@ -200,8 +211,9 @@ Esperado:
 - HEAD = el que devuelva `git log --oneline -1`.
 - ahead 0, behind 0 (o behind N si el bot ha pusheado; `git pull --ff-only`).
 - working tree limpio.
-- Tests: ver `ESTADO_SISTEMA.md`. Referencia: 3761 passed + 5 skipped
-  con filtro. Sin filtro: ver snapshot.
+- Tests: ver `ESTADO_SISTEMA.md`. Referencia con filtro: 3774 passed + 5
+  skipped + 9 deselected. Snapshot sin filtro: 3783 (publicado en
+  ESTADO_SISTEMA.md).
 - Gobernanza: `[OK] Gobernanza coherente`.
 - Indice H1-H18: `[OK] indice actualizado`.
 - Bitacora: `[OK] Bitacora dentro de la regla`.

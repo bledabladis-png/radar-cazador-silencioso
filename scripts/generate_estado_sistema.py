@@ -91,7 +91,7 @@ def section_tests():
         # El wall-clock de pytest no es reproducible entre runs.
         # Nos quedamos solo con los conteos (passed/failed/skipped).
         summary_counts = summary.split(' in ')[0]
-        lines.append(f'- **Resumen:** {summary_counts}')
+        lines.append(f'- **Resumen:** {summary_counts} (sin filtro; suite completa)')
     lines.append(f'- **Exit code:** {rc}')
     # Tests fallidos con nombre completo
     failed = [l.strip() for l in out.splitlines() if l.strip().startswith('FAILED ')]
