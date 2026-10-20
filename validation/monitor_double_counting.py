@@ -18,6 +18,12 @@ from pathlib import Path
 
 import pandas as pd
 
+# REP-AUDIT-20261020-MONITOR-DATE: el CSV escribia date=datetime.now().isoformat()
+# en columna `date`, violando el contrato del 00_ARRANQUE §2. Fix:
+# date = sesion bursatil NYSE, run_timestamp = ISO del run.
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from src.market_calendar import last_expected_market_date
+
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
 OUTPUT_CSV = PROJECT_ROOT / "outputs" / "history" / "double_counting_monitor.csv"
@@ -43,7 +49,8 @@ def _spearman(a, b):
 
 def main() -> None:
     metrics = []
-    timestamp = datetime.now().isoformat(timespec="seconds")
+    _run_iso = datetime.now().isoformat(timespec="seconds")
+    _session = last_expected_market_date().strftime("%Y-%m-%d")
     files = {
         "leaders": PROJECT_ROOT / "outputs" / "report" / "analisis_lideres.csv",
         "slpm": PROJECT_ROOT / "outputs" / "history" / "slpm_history.csv",
@@ -66,7 +73,8 @@ def main() -> None:
                         umbral = UMBRALES.get(metric, 0.85)
                         status = "ALERTA" if abs(value) > umbral else "OK"
                         metrics.append({
-                            "date": timestamp,
+                            "date": _session,
+                            "run_timestamp": _run_iso,
                             "metric": metric,
                             "value": value,
                             "status": status,
@@ -86,7 +94,8 @@ def main() -> None:
                     umbral = UMBRALES["structural_vs_breadth"]
                     status = "ALERTA" if abs(value) > umbral else "OK"
                     metrics.append({
-                        "date": timestamp,
+                        "date": _session,
+                        "run_timestamp": _run_iso,
                         "metric": "structural_vs_breadth",
                         "value": value,
                         "status": status,
