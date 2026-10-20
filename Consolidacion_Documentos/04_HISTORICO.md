@@ -1288,6 +1288,41 @@ El plan original marcaba 5d como bloqueado por 5b.X (~2027). Esa cadena no aplic
 
 **Referencia.** `docs/auditoria/wyckoff/03_plan_migracion.md` (5e pasa a CERRADO).
 
+### Auditoria del reporte 2026-10-09: 15 hallazgos (2 corregidos, 13 falsos positivos)
+
+Revision bloque a bloque del reporte del 2026-10-09 buscando errores,
+incoherencias, ceros/NaN/N-D ocultos. Resultado: 15 hallazgos.
+
+**Corregidos (2).**
+
+- H-07/H-08 (commit 35559c1d): notas de Representatividad del lider y
+  Divergencia sector-lideres declaraban criterios falsos (cobertura /
+  validos >=3). El filtro real es por fase Wyckoff (solo ACCUMULATION o
+  MARKUP).
+- H-09 (commit 4a604b21): `heterogeneity_type` retirado del writer, del
+  render y del test. Valor constante en el historico observado.
+  Redundante con `dispersion_reading`.
+
+**Falsos positivos verificados con codigo (catalogo de referencia).**
+
+- H-02: N/D en VIX3M/VIX es por falta de VIX, no de VIX3M. Fuente
+  distinta.
+- H-04: coberturas 18-25% son top-15/total-ETF. La metrica usa top-15
+  por diseno (`TOP_N_CANDIDATES`). Naming confuso, no bug.
+- H-05: `signal_cons = (pers + agree) / 2`. 38% es matematica, no
+  inconsistencia.
+- H-11: Flujo Proxy en dos secciones mide cosas distintas (z-score vs
+  flow_median). Naming confuso.
+- H-12, H-13: cosmeticos documentados, no bug.
+- Resto hasta 13: verificados contra codigo, sin accion tecnica.
+
+**Correccion de cifra auditoria 2026-09-26.** 205 -> 142 (6 ALTA / 71
+MEDIA / 65 BAJA). Los informes existen en bc656374, borrados de main en
+cdf47ad2.
+
+**Relevancia futura.** Antes de abrir item sobre estos H-*, consultar
+aqui: la mayoria ya fueron descartados con codigo.
+
 ### Regeneracion de CSVs con legacy Wyckoff (2026-10-09)
 
 El clasificador legacy `indicators/wyckoff.py` usaba `robust_zscore(trend, w=60)` para el score continuo. v1.8 usa `tanh(trend/K)`. Los CSVs historicos acumularon filas pre-08-oct calculadas con legacy y post-08-oct con v1.8. Bajo el mismo nombre de columna, dos metricas distintas.

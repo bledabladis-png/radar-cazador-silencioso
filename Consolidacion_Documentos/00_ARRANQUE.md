@@ -57,6 +57,12 @@ Lo que NUNCA haces:
 - Datos reales: si no hay suficiente -> N/D u omitir. No imputar.
 - Toda fecha de observacion se deriva del dataset. Nunca de datetime.now(). La fecha de ejecucion solo se usa como log.
 - Segundo candado temporal: ningun writer publica filas con date no bursatil. Readers exponen walk-back.
+  Excepcion (2026-10-20): el contrato aplica a writers del pipeline NYSE.
+  CSVs de proveedores con calendario no-NYSE estan fuera: fondos europeos
+  (amundi_lyxi, blackrock_dax/isf), NAVs de fondo (invesco_qqq_nav_*,
+  fines de semana), cierres NYSE legitimos (etf_primary_flow con Good
+  Friday/fin de ano), FINRA week (darkpool_history, lunes con walk-back).
+  Ver REP-AUDIT-20261020-FALSOS-POSITIVOS-CALENDARIO en REGISTRO.
 - Los artefactos (parquets) llevan manifest de integridad.
 
 **Gobernanza documental (desde 2026-10-16):**

@@ -44,6 +44,48 @@ Al cerrar una sesion nueva, se anade arriba (las mas recientes primero). Si hay 
 
 ## 3. SESIONES
 
+### 2026-10-20 - Contaminacion fechas + certificacion prod
+
+**Objetivo.** Revisar el scheduled del lunes 19-10. Diagnosticar el fallo
+del health check semanal (FAIL cron_slots). Auditar contaminacion de
+fechas en outputs/history/*.csv.
+
+**Hecho.**
+- Health check (f3efa062): regla cron_slots 3+missing -> 1-4 WARN, 5/5
+  FAIL. Issue #6 cerrado.
+- Auditoria de fechas: 4 bugs reales + 7 falsos positivos.
+  - european_coverage (6d2278c3 + migracion da093a05): _ref_to_date
+    delegaba en run_date. 459 filas contaminadas. 1734 -> 1326 tras
+    migracion.
+  - data_quality rama europea (f02cebd8): age contra now, no contra
+    sesion. El fix del 18-10 solo cubrio rama general.
+  - monitor_double_counting (14838307 + migracion 5f464729): date=
+    datetime.now().isoformat(). 225 -> 123 tras migracion con
+    run_timestamp.
+  - slpm_history (5ebe1c62): fosil desde 2026-07-17, sin writer activo.
+    CSV eliminado + artifact retirado + metrica structural_vs_breadth
+    eliminada del monitor.
+- Certificacion prod: target 2026-10-19 cubierto por run 39355608824
+  (20-10 01:50 UTC, delay 2h33m). Pipeline completo. Receipt emitido.
+  receipt_audit: 18 OK + 1 NO_DATE_CHECK, 0 MISSING. data_quality con
+  date=sesion (sin findes).
+
+**Commits.** f3efa062, 6d2278c3, da093a05, f02cebd8, 14838307,
+5f464729, 5ebe1c62, c98c55f4, 2ba73626.
+
+**Pendiente.**
+- Health check lunes 26-10: primera lectura de check_receipt_audit y
+  primera aplicacion de la regla nueva de cron_slots.
+- Delays del scheduler GitHub (2-7h): observar 2-3 semanas antes de
+  considerar mitigaciones (repository_dispatch externo, cambiar cron).
+- 3 WARN trimestrales (update_sector_holdings/index/european, fallo
+  1-oct): investigacion separada.
+
+**Proximo paso sugerido.** Observar el scheduled del martes 20-10 (ya
+cubierto por run 39355608824) y el del miercoles 21-10 con todos los
+fixes activos. Confirmar 0 MISSING en receipt_audit y 0 filas no
+bursatiles en los 4 CSVs del pipeline.
+
 ### 2026-10-18 - Investigacion frescura + auditoria externa + audit post-receipt
 
 **Objetivo.** Investigar y verificar que el sistema se nutre con datos
@@ -864,85 +906,6 @@ el run aborta con error explicito.
 **Pendiente.** Verificar scheduled 10-oct 23:17 UTC (no debe notar el cambio: ya corria con v1.8).
 
 **Proximo paso sugerido.** Ninguno urgente. H5.3 (20-nov-2026), C2 y SOW v6 bloqueados por terceros.
-
-### 2026-10-09 (noche) - Regeneracion de CSVs contaminados por legacy Wyckoff
-
-**Objetivo.** Tras detectar que el clasificador legacy seguia contaminando CSVs historicos, barrer todos los `outputs/history/*.csv` y regenerar los afectados.
-
-**Detectado.** Columnas derivadas de wyckoff tenian dos metricas bajo el mismo nombre: legacy pre-08-oct, v1.8 post. Discontinuidad medida en XLK `wyckoff_median`: 07-oct=+0.0749 (legacy) -> 08-oct=+0.3776 (v1.8). Ratio 5.04.
-
-**Regenerado.**
-- sector_concentration.csv (80cb03f8). Ratio 07/08 post: 1.92. Continuo.
-- leader_representativeness.csv (440750c1). 442 -> 115 filas, 10 -> 3 sectores.
-- sector_leader_divergence.csv (440750c1). 82 -> 23 filas, 10 -> 3 sectores.
-
-**Diagnosticado como limpio o no-bug.** rs_internal (RS, no wyckoff), sector_rank_history (no guarda fase), sector_breadth/_momentum/_persistence (breadth puro), sector_flow_characteristics (lag SSGA 1-2d), evidence_matrix y sector_regime_matrix (solo ultimo dia).
-
-**Error reconocido.** Primera version del script `regenerate_leader_dfs.py` llamaba a `generate_leader_section` con `fase_dict={}`, dejando `leader_df` vacio. Resultado: CSVs con 5 y 1 filas. Restaurado desde snapshot. Script rehecho construyendo `fase_dict` desde `compute_sector_scores(df_market_cut)`, replicando el flujo real del pipeline.
-
-**Commits.** 80cb03f8, 440750c1.
-
-**Pendiente.** H5.3 (20-nov-2026). C2, SOW v6 (terceros). Wyckoff 5e (bloqueado por cadena 5c/5d).
-
-**Proximo paso sugerido.** Verificar scheduled 2026-10-09 23:17 UTC con los nuevos CSVs.
-
-### 2026-10-09 - Auditoria del reporte diario: 15 hallazgos clasificados
-
-**Objetivo.** Revision bloque a bloque del reporte del 2026-10-09 buscando errores, incoherencias, ceros/NaN/N-D ocultos.
-
-**Resultado.** 15 hallazgos. 2 corregidos, 13 no-bug / falsos positivos / deuda de diseno documentada.
-
-**Corregidos.**
-- H-07/H-08 (commit 35559c1d): notas de Representatividad del lider y Divergencia sector-lideres declaraban criterios falsos (cobertura / validos >=3). El filtro real es por fase Wyckoff (solo ACCUMULATION o MARKUP).
-- H-09 (commit 4a604b21): `heterogeneity_type` se retiro del writer, del render y del test. Valor constante en el historico observado. Redundante con `dispersion_reading`.
-
-**Falsos positivos / no-bug (verificados con codigo).**
-- H-02: N/D en VIX3M/VIX se debe a falta de VIX, no de VIX3M. Fuente distinta.
-- H-04: coberturas 18-25% son top-15/total-ETF. La metrica usa top-15 por diseno (`TOP_N_CANDIDATES`). Naming confuso.
-- H-05: `signal_cons = (pers + agree) / 2`. 38% es matematica.
-- H-11: Flujo Proxy en dos secciones mide cosas distintas (z-score vs flow_median). Naming confuso.
-- H-12, H-13: cosmÃ©ticos documentados.
-- H-14: Q1 en N-PORT es calendario. Q2 llega en el cron del 20-oct.
-- H-15: Indices en RANGE por umbrales (`struct > 0.30 AND t_norm > 0.30`). Ningun indice los supera hoy. No es fallback.
-- H-03: `IPS = -0.39` e `IPI = 31` son la misma metrica en escalas [-1,+1] y [0,100]. No incoherencia.
-- H-01, H-10: cosmeticos ya documentados.
-
-**Deuda declarada.**
-- H-06: `sector_flow_vs_price_div` huerfano en `compute_flow_divergence_v2`. Se documenta con nota en el render + entrada en 04_HISTORICO. WONT FIX hasta tener fuente.
-
-**Commits.** 35559c1d, 4a604b21, este.
-
-**Pendiente.** H5.3 (20-nov-2026). C2 y SOW v6 bloqueados por terceros. Wyckoff 5e tras CI estable.
-
-**Proximo paso sugerido.** Ninguno urgente. Verificar H5.3 el 20-nov-2026.
-
-
-### 2026-10-09 - Continuacion: verificacion E2E fix B + cierres documentales
-
-**Objetivo.** Confirmar en produccion el fix B (`save_regime_history`) y cerrar los frentes abiertos del dia anterior.
-
-**Hecho.**
-
-- Fix B confirmado. El scheduled `37876944887` (2026-10-09 02:56 UTC, headSha `c9b600b1`) corrio `run.py` completo con el fix y produjo `macro_regime.csv` con fila `2026-10-08`, que es el `effective_date` correcto (ultima sesion USA cerrada a esa hora). Sin bug.
-- Aclaracion de regla: el writer escribe con `effective_date`, no con `date.today()`. Nueva seccion en `01_METODO` seccion 4. Mi formulacion previa ("hoy no debe aparecer como fila") era incorrecta y genero una falsa alarma.
-- Precisada la causa raiz del warm-up artefactual Wyckoff en `04_HISTORICO` (las dos ramas silenciosas del legacy: `len(close) < 200` y `score_clean.empty`).
-- Corregida la cifra de la auditoria externa 2026-09-26: 205 -> 142 (6 ALTA / 71 MEDIA / 65 BAJA). Los informes existen en `bc656374`, borrados de main en `cdf47ad2`.
-- Cerrado `sow-v4-validation` como WONT FIX razonado (88 ficheros unicos, 0 consumidores en main).
-- Tests de funciones puras SEC/QQQ (`test_nport_sec_helpers.py`, 9 casos).
-- Documentada la cadena de universos de tickers (`02_ARQUITECTURA` seccion 16).
-
-**Commits.** c9b600b1, 55a45cf4, b5413e8b, 06bec8cc, 634d44d4, fd5f0e9a, 90127936, 815e113b, 6027a943, 0017bf4f, 8e8826f5, d495dc1e, c09a268c, 203b61c7, a356ae1d, mas el de esta sesion.
-
-**Pendiente.**
-
-- H5.3 (cron 13F, 20-nov-2026). Sin accion antes.
-- C2 (920): bloqueado por auditor externo.
-- SOW v6: pendiente firma externa.
-- Wyckoff 5e (retirada legacy): tras 1 CI estable.
-- `00_ARRANQUE` margen del umbral: 248 B. Sin urgencia.
-
-**Proximo paso sugerido.** Ninguno urgente. Verificar H5.3 el 20-nov-2026.
-
 
 ## 4. REFERENCIA A SESIONES ANTERIORES
 
