@@ -7,23 +7,23 @@ junto con `Consolidacion_Documentos/00_ARRANQUE.md`.
 
 ---
 
-## 1. ESTADO AL CIERRE (2026-10-18 noche)
+## 1. ESTADO AL CIERRE (2026-10-20)
 
 Rama:           main
 HEAD:           consultar `git log --oneline -1` (no literal; el corpus no fija SHA para evitar deriva)
 Sincronizacion: main == origin/main tras push final
-Tests local:    ver `Consolidacion_Documentos/ESTADO_SISTEMA.md`. Al cierre: 3761 passed + 5 skipped con -m "not integration_real_data". Sin filtro (raw ESTADO_SISTEMA): ver seccion 2 del snapshot.
+Tests local:    ver `Consolidacion_Documentos/ESTADO_SISTEMA.md`. Al cierre: 3774 passed + 5 skipped con -m "not integration_real_data".
 Validation Gate: 10/10
 Working tree:   limpio (salvo data/ y outputs/ que el bot actualiza)
-Gobernanza:     docs/gobernanza/REGISTRO.yaml. 80 items.
+Gobernanza:     docs/gobernanza/REGISTRO.yaml. 86 items (6 nuevos del 2026-10-20).
 CI de tests:    .github/workflows/ci_tests.yml (push a main, paths-ignore: data/, outputs/).
-                Ultimo verde en sesion: 39154201318 (head 212011f4).
-Certificacion prod: PENDIENTE. Lunes 2026-10-19 23:17 UTC primer scheduled
-                con target_session=2026-10-19. Ciclo completo v1.1+v1.2
-                desde cero: gate READY sin receipt -> pipeline -> guard ->
-                receipt con contract_validation_status -> attempt.
-                Ademas: primer run con post_receipt_audit activo y con
-                data_quality.csv escribiendo date=sesion bursatil.
+Certificacion prod: PRIMER CICLO COMPLETADO. Target 2026-10-19 cubierto por
+                run 39355608824 (20-10 01:50 UTC, delay 2h33m vs slot 23:17
+                del lunes, GitHub scheduler). run-system ejecuto pipeline
+                completo: gate+run-system+issue-manager success, 5 artifacts
+                (receipt, attempt, daily-report, european-coverage, pyflakes).
+                Primer receipt_audit poblado: 18 OK + 1 NO_DATE_CHECK, 0 MISSING.
+                Primer data_quality con date=sesion (2026-10-19, sin findes).
 
 ---
 
@@ -77,6 +77,44 @@ Fase D - Investigacion frescura + deudas del sistema:
 | `400e6c9b` | feat(observability): auditoria post-receipt vs filas persistidas |
 | `212011f4` | Quitar imports unused (pyflakes) |
 
+### 2.4. Sesion 2026-10-20 (8 commits: contaminacion de fechas)
+
+**Contexto.** Revisión del scheduled del lunes 19-10 (target 2026-10-19).
+Health check semanal falló con FAIL `cron_slots` (2/5 slots en 24h) aunque
+el pipeline estaba operativo. Además, auditoría de contaminación de fechas
+en `outputs/history/*.csv` detectó 4 CSVs con filas en sábados/domingos o
+con `date` futura.
+
+| SHA | Contenido |
+|---|---|
+| `f3efa062` | cron_slots FAIL solo si 0/5 slots en 24h (regla 3+ -> 1-4 WARN) |
+| `6d2278c3` | european_coverage `_ref_to_date` = last_expected_market_date() |
+| `da093a05` | migrar european_coverage.csv: 1734 -> 1326 filas, 0 no bursátiles |
+| `f02cebd8` | data_quality: age europeas contra sesión (no contra run) |
+| `14838307` | monitor_double_counting: date=sesion + run_timestamp |
+| `5f464729` | migrar double_counting_monitor.csv: 225 -> 123 filas |
+| `5ebe1c62` | eliminar slpm_history.csv fósil (sin writer activo desde 2026-07-17) |
+| `c98c55f4` | 6 items REP-AUDIT-20261020-* en REGISTRO |
+
+**Hallazgos y falsos positivos.** La auditoría de fechas marcó 11 CSVs como
+`NO_BURSATIL`. 4 son bug real (european_coverage, double_counting_monitor,
+data_quality rama europea, slpm_history). 7 son falsos positivos: CSVs de
+fondos con calendario no-NYSE (amundi_lyxi, blackrock_dax/isf, invesco_qqq_nav,
+etf_primary_flow con cierres NYSE legítimos, darkpool_history week=FINRA).
+Documentados como `REP-AUDIT-20261020-FALSOS-POSITIVOS-CALENDARIO`.
+
+**Lecciones.**
+- El fix del 18-10 (`4ade7384`) solo cubrió la rama general de
+  `compute_data_quality`. La rama europea usa `_last.date()` (con guion
+  bajo), no matcheada por el replace. Bug descubierto en auditoría del 20-10.
+- El contrato del 00_ARRANQUE "ningún writer publica date no bursátil"
+  aplica a writers del pipeline NYSE. Los CSVs de proveedores con
+  calendario propio (fondos europeos, NAVs, FINRA week) están fuera.
+  Excepción documentada en 00_ARRANQUE §2 (pendiente de commit).
+- GitHub scheduler con delays 2-7h. La regla `cron_slots` anterior
+  (FAIL con 3+ missing) marcaba como caído un pipeline operativo. Ahora
+  FAIL solo si 0/5. Issue #6 cerrado.
+
 ### 2.3. Cambios observables en el reporte
 
 - INFO Cross-Module con ambos bloques siempre (Financial Stress: N/5 +
@@ -114,7 +152,12 @@ Fase D - Investigacion frescura + deudas del sistema:
 
 ## 4. PENDIENTES VIVOS
 
-### 4.1. Certificacion scheduled lunes 2026-10-19 23:17 UTC
+### 4.1. Certificacion scheduled lunes 2026-10-19 23:17 UTC [COMPLETED 2026-10-20]
+
+**Estado: COMPLETADA.** Target 2026-10-19 cubierto por run `39355608824`
+(20-10 01:50 UTC, delay 2h33m vs slot 23:17 del lunes, GitHub scheduler).
+`run-system` ejecuto pipeline completo. Receipt emitido. `receipt_audit.csv`
+poblado: 18 OK + 1 NO_DATE_CHECK, 0 MISSING. Detalle en §1 y §2.4.
 
 Primer run scheduled con `target_session=2026-10-19`. Ciclo completo
 v1.1+v1.2 desde cero. Ademas: primer run con post_receipt_audit activo
@@ -202,6 +245,16 @@ Esperado:
   El step de audit lo consume antes del commit del bot.
 
 ---
+
+- **Contrato de fecha: pipeline NYSE vs proveedores con calendario propio.**
+  "Ningun writer publica `date` no bursatil" (00_ARRANQUE §2) aplica a
+  writers del pipeline NYSE. Los CSVs de proveedores con calendario no-NYSE
+  estan fuera: fondos europeos (`amundi_lyxi_primary_flow`,
+  `blackrock_dax_primary_flow`, `blackrock_isf_primary_flow`), NAVs de fondo
+  (`invesco_qqq_nav_*` con fines de semana), `etf_primary_flow` (cierres
+  NYSE legitimos: Good Friday, fin de ano), `darkpool_history` (week=FINRA
+  lunes con walk-back). Documentado en
+  REP-AUDIT-20261020-FALSOS-POSITIVOS-CALENDARIO.
 
 ## 7. REFERENCIAS
 
