@@ -144,15 +144,29 @@ def _expected_slots(cutoff: datetime, now: datetime) -> list:
     return slots
 
 
-def _cron_slots_status(n_missing: int) -> str:
+def _cron_slots_status(n_missing: int, n_total: int = 5) -> str:
     """Severidad de cron_slots segun slots ausentes.
 
-    0 -> OK. 1-2 -> WARN (scheduler best-effort GitHub con delays
-    documentados 2-8h). 3+ -> FAIL (perdida sistematica).
+    Regla 2026-10-20 (post health-check FAIL 19-oct):
+    - 0 missing -> OK (todos los slots dispararon).
+    - 1..n_total-1 missing -> WARN (GitHub perdio algunos slots; el
+      pipeline sigue operativo, resiliencia activa con los que si
+      dispararon).
+    - n_total missing -> FAIL (ningun slot en 24h; pipeline caido).
+
+    Motivo del cambio: el scheduler de GitHub es best-effort (delays
+    2-8h documentados). Los 5 slots existen como resiliencia: 1 solo
+    run scheduled basta para que el gate decida si ejecutar el
+    pipeline. FAIL con 3 missing (regla anterior) marcaba como caido
+    un pipeline que estaba operando con 2 slots success + skip por
+    target cubierto. Unico caso que indica fallo real: 0/5 slots,
+    porque entonces ningun scheduled ha corrido en 24h y el gate no
+    ha podido decidir. Un workflow_dispatch reciente NUNCA oculta ese
+    caso (check_cron_slots filtra --event schedule).
     """
     if n_missing == 0:
         return OK
-    if n_missing <= 2:
+    if n_missing < n_total:
         return WARN
     return FAIL
 
@@ -215,7 +229,7 @@ def check_cron_slots() -> list:
         fmt = ", ".join(m.strftime("%d/%m %H:%M") for m in missing)
         detail += f" (missing: {fmt})"
 
-    status = _cron_slots_status(len(missing))
+    status = _cron_slots_status(len(missing), n_total=expected)
     return [Result("cron_slots", status, detail)]
 
 

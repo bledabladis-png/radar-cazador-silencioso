@@ -186,12 +186,25 @@ def test_cron_slots_status_2_missing_warn():
     assert hc._cron_slots_status(2) == hc.WARN
 
 
-def test_cron_slots_status_3_missing_fail():
-    assert hc._cron_slots_status(3) == hc.FAIL
+def test_cron_slots_status_3_missing_warn():
+    """Regla 2026-10-20: 3 missing = WARN (pipeline operativo con 2 slots)."""
+    assert hc._cron_slots_status(3) == hc.WARN
+
+
+def test_cron_slots_status_4_missing_warn():
+    """Regla 2026-10-20: 4 missing = WARN (resiliencia activa con 1 slot)."""
+    assert hc._cron_slots_status(4) == hc.WARN
 
 
 def test_cron_slots_status_5_missing_fail():
+    """0/5 slots = FAIL (pipeline no corrio en 24h)."""
     assert hc._cron_slots_status(5) == hc.FAIL
+
+
+def test_cron_slots_status_respeta_n_total():
+    """n_total configurable: 2 missing de 3 slots = WARN, 3 de 3 = FAIL."""
+    assert hc._cron_slots_status(2, n_total=3) == hc.WARN
+    assert hc._cron_slots_status(3, n_total=3) == hc.FAIL
 
 
 # ---------- Check A: workflows trimestrales ----------
