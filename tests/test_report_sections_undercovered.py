@@ -445,3 +445,18 @@ def test_flujo_sintesis_nota_europa():
     assert "Nota Europa" in lineas
     assert "media simple" in lineas
     assert "no ponderada por AUM" in lineas
+
+
+# ============================================================
+# REP-AUDIT-20261020-REPORT-FLOW-RECONCILIATION (P1 auditor externo
+# 2026-10-20): la matriz de evidencia tiene nota aclaratoria
+# sobre la diferencia entre Flow Proxy (ETF) y Flow Proxy (mediana).
+# ============================================================
+
+def test_p1_nota_matriz_evidencia_flow_proxy():
+    import inspect
+    from src.report import synthesis
+    src = inspect.getsource(synthesis)
+    assert "mediana del composite de los componentes" in src
+    assert "REP-AUDIT-20261020-REPORT-FLOW-RECONCILIATION" in src
+    assert "discrepar en signo" in src

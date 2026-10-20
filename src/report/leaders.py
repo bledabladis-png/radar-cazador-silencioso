@@ -48,6 +48,19 @@ def render_momentum_sectores(sector_price_rank, sector_flow_rank):
     for i, (ticker, flow) in enumerate(sector_flow_rank[:EXPECTED_SECTOR_COUNT], 1):
         name = SECTOR_NAMES.get(ticker, ticker)
         out.append(f"| {i} | {name} ({ticker}) | {_fmt_num(flow, '{:.2f}')} |\n")
+    if sector_flow_rank:
+        # REP-AUDIT-20261020-REPORT-FLOW-RECONCILIATION (P1 auditor externo
+        # 2026-10-20): esta tabla usa el composite momentum del ETF sectorial
+        # (regimes/sector_regime.py: compute_flow_proxy sobre el ETF). La
+        # columna 'Flujo Proxy' de la Matriz de Evidencia usa otra metrica
+        # (mediana del composite de los componentes del sector, ver
+        # sector_concentration.flow_median). Son metricas distintas y pueden
+        # discrepar en signo. Ejemplo 2026-10-19: XLE -0.50 aqui, +1 en matriz.
+        out.append("\n*Nota: esta tabla usa el composite momentum del ETF "
+                   "sectorial (0.30*flow_smooth + 0.35*obv_z + 0.35*cmf_z). "
+                   "La columna 'Flujo Proxy' de la Matriz de Evidencia usa la "
+                   "mediana del composite de los componentes del sector. "
+                   "Son metricas distintas y pueden discrepar en signo.*\n")
     return out
 
 

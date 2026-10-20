@@ -57,3 +57,19 @@ def test_b1_otros_activos_sin_datos_tambien_renombrado():
     body = "".join(out)
     assert "Institucional" not in body
     assert "Flujo de Mercado - Otros Activos" in body
+
+# ============================================================
+# REP-AUDIT-20261020-REPORT-FLOW-RECONCILIATION (P1 auditor externo
+# 2026-10-20): la tabla de Flujo Proxy (composite ETF) y la matriz
+# (mediana de componentes) son metricas distintas con nota.
+# ============================================================
+
+def test_p1_nota_flow_proxy_etf_vs_mediana():
+    out = render_momentum_sectores(
+        sector_price_rank=[('XLK', 0.01)],
+        sector_flow_rank=[('XLK', 0.5)],
+    )
+    body = "".join(out)
+    assert "composite momentum del ETF sectorial" in body
+    assert "mediana del composite de los componentes" in body
+    assert "pueden discrepar en signo" in body

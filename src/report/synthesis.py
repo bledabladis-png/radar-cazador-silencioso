@@ -181,6 +181,17 @@ def render_matriz_evidencia(evidence_matrix_data):
         #   markdown; en regimenes alcistas los 11 suelen coincidir en +1.
         out.append("*Credito y Volat son contexto global "
                    "(mismo valor para los 11 sectores por diseno).*\n\n")
+        # REP-AUDIT-20261020-REPORT-FLOW-RECONCILIATION (P1 auditor externo
+        # 2026-10-20): aclarar que la columna Flujo Proxy de esta matriz
+        # NO es la misma metrica que la tabla 'Flujo de Mercado - Sectores
+        # (Proxy)'. La matriz usa sector_concentration.flow_median
+        # (mediana del composite de los componentes del sector).
+        out.append("*Nota: la columna 'Flujo Proxy' de esta matriz usa la "
+                   "mediana del composite de los componentes del sector "
+                   "(sector_concentration.flow_median). La tabla 'Flujo de "
+                   "Mercado - Sectores (Proxy)' usa el composite momentum "
+                   "del ETF sectorial. Son metricas distintas y pueden "
+                   "discrepar en signo.*\n\n")
         # B3 (2026-10-13): explicitar que 3 columnas pueden ser constantes.
         # H4 (2026-10-16, auditoria): el texto afirmaba "los 11 sectores
         # coinciden" en Wyckoff. Empiricamente puede haber excepciones
