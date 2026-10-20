@@ -161,11 +161,17 @@ def render_matriz_evidencia(evidence_matrix_data):
         # el horizonte. Se cambia a "Flujo 1º 20d" y se anade nota
         # metodologica. La columna se calcula sobre primary_flow_evidence
         # (flow_20d_sum).
-        out.append("| Sector | Precio | Amplitud | Flujo 1º 20d | Flujo Proxy | Wyckoff | Crédito* | Volat* | Calidad | Lectura |\n")
-        out.append("|--------|--------|----------|----------|-------------|---------|----------|--------|---------|----------|\n")
+        out.append("| Sector | Precio | Amplitud | Flujo 1º 20d | Flujo Proxy | Wyckoff | Crédito* | Volat* | Calidad | Votos P/N/0 | Lectura |\n")
+        out.append("|--------|--------|----------|----------|-------------|---------|----------|--------|---------|-------------|----------|\n")
         for _, row in evidence_matrix_data.iterrows():
+            _pos = row.get('n_sector_evidence_positive', 0)
+            _neg = row.get('n_sector_evidence_negative', 0)
+            _neu = row.get('n_sector_evidence_neutral', 0)
+            _pos = int(_pos) if pd.notna(_pos) else 0
+            _neg = int(_neg) if pd.notna(_neg) else 0
+            _neu = int(_neu) if pd.notna(_neu) else 0
             out.append(
-                f"| {row['sector']} | {_fmt_evidence(row['price_evidence'])} | {_fmt_evidence(row['breadth_evidence'])} | {_fmt_evidence(row['primary_flow_evidence'])} | {_fmt_evidence(row['proxy_flow_evidence'])} | {_fmt_evidence(row['wyckoff_evidence'])} | {_fmt_evidence(row['credit_evidence'])} | {_fmt_evidence(row['volatility_evidence'])} | {row['evidence_quality']} | {row['alignment_reading']} |\n"
+                f"| {row['sector']} | {_fmt_evidence(row['price_evidence'])} | {_fmt_evidence(row['breadth_evidence'])} | {_fmt_evidence(row['primary_flow_evidence'])} | {_fmt_evidence(row['proxy_flow_evidence'])} | {_fmt_evidence(row['wyckoff_evidence'])} | {_fmt_evidence(row['credit_evidence'])} | {_fmt_evidence(row['volatility_evidence'])} | {row['evidence_quality']} | {_pos}/{_neg}/{_neu} | {row['alignment_reading']} |\n"
             )
         out.append("\n*H13 auditoria 2026-10-16: la columna Flujo 1º 20d "
                    "refleja el signo del flujo primario acumulado a 20 "
@@ -203,6 +209,15 @@ def render_matriz_evidencia(evidence_matrix_data):
                    "pueden aparecer excepciones puntuales por sector. La "
                    "variabilidad sectorial real proviene de Precio, "
                    "Amplitud, Flujo 1 y Flujo Proxy.*\n\n")
+        # REP-AUDIT-20261020-REPORT-REVIEW-EXTERNAL (auditor externo
+        # 2026-10-20): explicitar la regla exacta del voto Wyckoff.
+        out.append("*Regla del voto Wyckoff: +1 si "
+                   "(pct_accumulation + pct_markup) > "
+                   "(pct_distribution + pct_markdown); -1 si <; 0 si =. "
+                   "Es un signo agregado del sector, no la fase "
+                   "individual de cada ETF. En regimenes alcistas los "
+                   "11 sectores pueden coincidir en +1 sin que sea un "
+                   "error de calculo.*\n\n")
         # N4 (2026-10-13, auditor) + H9 (2026-10-15, auditor):
         # la agregacion es heuristica de signos (1 voto por variable).
         # H9 pide CUANTIFICAR la doble contabilizacion. Medicion empirica

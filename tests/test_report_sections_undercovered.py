@@ -460,3 +460,45 @@ def test_p1_nota_matriz_evidencia_flow_proxy():
     assert "mediana del composite de los componentes" in src
     assert "REP-AUDIT-20261020-REPORT-FLOW-RECONCILIATION" in src
     assert "discrepar en signo" in src
+
+
+# ============================================================
+# P2 auditor externo 2026-10-20: recuento explicito de votos
+# en la matriz de evidencia (P/N/0).
+# ============================================================
+
+def test_matriz_evidencia_columna_votos_pn0():
+    import pandas as pd
+    from src.report.synthesis import render_matriz_evidencia
+    df = pd.DataFrame([{
+        'sector': 'XLE',
+        'price_evidence': 1, 'breadth_evidence': 1,
+        'primary_flow_evidence': 1, 'proxy_flow_evidence': 1,
+        'wyckoff_evidence': 1, 'credit_evidence': 0,
+        'volatility_evidence': 0,
+        'evidence_quality': 'Alta',
+        'alignment_reading': 'EVIDENCIA PREDOMINANTEMENTE FAVORABLE',
+        'n_sector_evidence_positive': 5,
+        'n_sector_evidence_negative': 0,
+        'n_sector_evidence_neutral': 0,
+    }])
+    joined = "".join(render_matriz_evidencia(df))
+    assert "Votos P/N/0" in joined
+    assert "5/0/0" in joined
+
+
+def test_matriz_evidencia_sin_columnas_counts_no_rompe():
+    """Regresion: DataFrames sin n_sector_evidence_* siguen renderizando.
+    El recuento sale 0/0/0 por default."""
+    import pandas as pd
+    from src.report.synthesis import render_matriz_evidencia
+    df = pd.DataFrame([{
+        'sector': 'XLF',
+        'price_evidence': 0, 'breadth_evidence': 1,
+        'primary_flow_evidence': -1, 'proxy_flow_evidence': 0,
+        'wyckoff_evidence': -1, 'credit_evidence': 1,
+        'volatility_evidence': -1, 'evidence_quality': 'Baja',
+        'alignment_reading': 'MIXTA',
+    }])
+    joined = "".join(render_matriz_evidencia(df))
+    assert "0/0/0" in joined

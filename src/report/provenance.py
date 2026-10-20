@@ -207,4 +207,15 @@ def render_provenance(prov: Optional[dict]) -> list:
         "Permite certificar que la salida corresponde a un commit "
         "concreto y a una sesion objetivo concreta.*\n\n"
     )
+    # REP-AUDIT-20261020-REPORT-REVIEW-EXTERNAL (P2 auditor externo
+    # 2026-10-20): reference_date es la referencia de ejecucion del
+    # pipeline, no el corte estricto de datos. Fuentes externas (CBOE,
+    # FRED, Yahoo) pueden incorporarse despues de esa marca.
+    out.append(
+        "*`reference_date` es la referencia de ejecucion del pipeline, "
+        "no un corte estricto de datos. Fuentes externas (CBOE, FRED, "
+        "Yahoo) pueden incorporarse despues de esa marca. La fecha "
+        "efectiva de cada mercado se declara en `effective_date_equity` "
+        "y en Data Freshness.*\n\n"
+    )
     return out
