@@ -389,3 +389,37 @@ def test_render_sentimiento_usa_reference_date():
     out = render_sentimiento_opciones(pcr_data, reference_date=ref)
     joined = ''.join(out)
     assert '(desfase: 10 dias)' in joined, joined
+
+
+# ============================================================
+# REP-AUDIT-20261020-REPORT-REVIEW-EXTERNAL (C10, 2026-10-20)
+# El ratio con |Z-Score| mas extremo se destaca tras la tabla.
+# ============================================================
+
+def test_confirmation_ratio_mas_extremo_se_destaca():
+    out = render_confirmation({
+        "ratios": {
+            "copper_gold": 0.0123,
+            "copper_gold_zscore": 0.62,
+            "dxy_em": 1.61,
+            "dxy_em_zscore": 2.65,
+            "hyg_lqd": 0.7544,
+            "hyg_lqd_zscore": -0.30,
+        },
+    })
+    lineas = "".join(out)
+    assert "Ratio con |Z-Score| mas extremo" in lineas
+    assert "DXY/EEM" in lineas
+    assert "+2.65" in lineas
+
+
+def test_confirmation_sin_zscores_no_destaca():
+    """Si no hay z-scores validos, no se anade la nota."""
+    out = render_confirmation({
+        "ratios": {
+            "copper_gold": 0.0123,
+            "copper_gold_zscore": None,
+        },
+    })
+    lineas = "".join(out)
+    assert "Ratio con |Z-Score| mas extremo" not in lineas

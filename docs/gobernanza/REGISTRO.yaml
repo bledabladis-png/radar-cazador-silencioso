@@ -1051,8 +1051,32 @@ items:
   tipo: auditoria_interna
   ciclo: '2026-10-20'
   estado: OPEN
-  descripcion: Revision externa del reporte 2026-10-19 identifico 14 inconsistencias. Las 4 criticas se confirman y se arreglan en esta misma rama (STRESS-LABEL, XLC-EVIDENCE, FLOW-RECONCILIATION, STRUCT-COLUMN). Las 10 restantes no se han verificado contra codigo o datos primarios del repo. El analista externo no tuvo acceso a FRED, Tesoro ni CBOE, por lo que las cifras externas de spread y FLS son de prensa, no de fuente primaria.
-  siguiente_accion: Investigar en proxima sesion. Prioridad - verificar spread 10Y-3M contra data/macro_manual, verificar FLS contra data/macro_manual, revisar votos Wyckoff (magnitud) en evidence_matrix, revisar SLPM coverage 0/5, verificar fechas reales de FINRA/CFTC/SSGA/NPORT en outputs/history. Las que se confirmen como bug real, abrir item propio. Las que sean falso positivo, cerrar WONT_FIX o FALSE_POSITIVE con razon.
+  descripcion: |
+    Revision externa del reporte 2026-10-19 identifico 14 inconsistencias.
+    Las 4 criticas se confirman y se arreglan en esta misma rama
+    (STRESS-LABEL, XLC-EVIDENCE, FLOW-RECONCILIATION, STRUCT-COLUMN).
+    C1 (Wyckoff +1) = FALSE_POSITIVE del analista - el sesgo ya esta
+    declarado en evidencia_matrix.py:35 (WONT FIX razonado) y en la
+    nota H9 del reporte L687. C2 (Flow Proxy 30% WLS) = FALSE_POSITIVE
+    parcial - el 30% es real pero el r=0.015 es correlacion de SIGNOS
+    contemporaneos, no de z-scores continuos; el WLS ordena calidad de
+    liderazgo, no predice retorno. C4 (datos desfasados) = FALSE_POSITIVE -
+    todos los CSVs tienen lag de proveedor esperado (FINRA 21d, CFTC 6d,
+    SSGA 3d, N-PORT 60d desde cierre Q2). C5 (NIPC 13F) = FALSE_POSITIVE -
+    BALANCE esta en acciones por diseno del dato N-PORT. C6 (Europa
+    ~0.00% AUM) = FALSE_POSITIVE parcial - los CSV declaran
+    flow_zscore_regime SATURATED/MAD0; el agregado no lo destaca al
+    lector, limitacion de presentacion. C7 (spread 10Y-3M) = FALSE_POSITIVE
+    del analista - su cifra ~109pb es de prensa, FRED marca 0.83 el
+    16-10 y 0.88 el 19-10. C9 (IPI diluye shocks) = FALSE_POSITIVE - la
+    nota L145 del reporte ya declara proxy de mercado, comprimidos con
+    tanh, EWMA(20), puede divergir de IPC/PPI sin ser error. C10 (DXY/EEM
+    +2.65 sin comentar) = FIXED en este commit.
+  siguiente_accion: |
+    Cerrar el item cuando el run 2026-10-20 confirme que los fixes A-1,
+    A-2, A-3, A-6, A-7 y C8/C10 no rompen el ciclo. Investigar en
+    proxima sesion los items que sigan abiertos
+    (FLS-COMPONENT-DESIGN, RECEIPT-AUDIT-LAG).
 
 - id: REP-AUDIT-20261020-FLS-COMPONENT-DESIGN
   tipo: auditoria_interna

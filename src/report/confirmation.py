@@ -126,5 +126,18 @@ def render_confirmation(confirmation_data):
                     delta_str = _fmt_signed(delta*100, '{:+.1f}%', '{:.1f}%') if delta is not None and pd.notna(delta) else 'N/D'
                     z_str = _fmt_signed(z, '{:+.2f}', '{:.2f}') if z is not None and pd.notna(z) else 'N/D'
                     out.append(f"| {label} | {val:.4f} | {delta_str} | {z_str} |\n")
+            # REP-AUDIT-20261020-REPORT-REVIEW-EXTERNAL (C10, 2026-10-20):
+            # destacar el ratio con |Z| mas extremo de la tabla.
+            _zs = [(label, ratios.get(f'{k}_zscore'))
+                   for k, label in ratio_names.items()
+                   if k in ratios and ratios[k] is not None
+                   and ratios.get(f'{k}_zscore') is not None
+                   and pd.notna(ratios.get(f'{k}_zscore'))]
+            if _zs:
+                _ext_label, _ext_z = max(_zs, key=lambda t: abs(t[1]))
+                out.append(
+                    f"\n*Ratio con |Z-Score| mas extremo: {_ext_label} "
+                    f"({_ext_z:+.2f}).*\n"
+                )
         out.append("\n")
     return out
