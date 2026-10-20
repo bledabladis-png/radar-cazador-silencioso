@@ -968,3 +968,88 @@ items:
     writers del pipeline NYSE, no a datos de proveedor en su propio
     calendario. Excepcion documentada en 00_ARRANQUE (commit
     siguiente). No es bug.
+
+- id: REP-AUDIT-20261020-RECEIPT-AUDIT-LAG
+  tipo: auditoria_interna
+  ciclo: '2026-10-20'
+  estado: OPEN
+  descripcion: post_receipt_audit compara written=True con existencia de fila con fecha igual a receipt.date, no con target_session. Writers con lag de publicacion (sector_flow_characteristics con input hasta 2026-10-16, target 2026-10-19) pasan como OK con fecha distinta al target. Mismo patron que el audit del 09-oct debia detectar.
+  siguiente_accion: Anadir status LAGGED cuando written=True y receipt.date distinto de target_session. Observacion 4 semanas antes de decidir si bloquea. Caso testigo sector_flow_characteristics (R1 correcto).
+
+- id: REP-AUDIT-20261020-WARN-TRIMESTRALES
+  tipo: auditoria_interna
+  ciclo: '2026-10-20'
+  estado: FIXED
+  descripcion: Health check 39264650939 (19-10) WARN "schedule failure hace 437h/435h/434h" en update_sector_holdings, update_index_holdings, update_european_holdings. Schedules fallaron 1-oct. Dispatch manual 2-oct exitoso. Causa raiz en health_check.py::_check_one_workflow rama conclusion in BAD_CONCLUSIONS - solo consultaba workflow_dispatch cuando delta_days > max_days. A 18 dias con max_days=100 no entraba en esa rama y emitia WARN aunque el dispatch lo hubiera resuelto. Falso positivo por diseno.
+  commit: '47071a51'
+  test: tests/test_health_check_workflow_schedule.py
+  evidencia: Dos tests nuevos (trimestral con dispatch OK -> SKIP; trimestral sin dispatch -> WARN). 15 tests de health_check verdes. No debilita HD-5.
+  verificacion: FIXED
+
+- id: REP-AUDIT-20261020-ETF-FLOW-LAG
+  tipo: auditoria_interna
+  ciclo: '2026-10-20'
+  estado: FALSE_POSITIVE
+  descripcion: etf_primary_flow.csv sin fila 2026-10-19 pese al run 39355608824. Verificado git show del commit 0ce435b2 y HEAD 7871d484, ambos terminan en 2026-10-16. Diff +12 lineas es recompute rolling de z-scores, no sesion nueva. Downloader SSGA corrio y guardo el historico sin errores.
+  razon: Lag SSGA D+1/D+2. El downloader corrio el 20-10 02:08 UTC y SSGA no publicaba el 19-10 a esa hora. Comportamiento correcto de R1, sin perdida de datos.
+
+- id: REP-AUDIT-20261020-CRON-SLOTS-OBS
+  tipo: auditoria_interna
+  ciclo: '2026-10-20'
+  estado: OPEN
+  descripcion: Seguimiento del fix f3efa062 (cron_slots FAIL solo si 0/5 slots en 24h; 1-4 WARN). Observacion empirica pendiente 2-3 semanas con la nueva regla para confirmar que no enmascara un cron caido de verdad.
+  siguiente_accion: Revisar 2026-11-10 los runs entre 2026-10-20 y 2026-11-10. Si >=2 dias con 5/5 missing o >=5 dias con delay >8h, escalar. Si 0 anomalias, cerrar FIXED.
+
+- id: REP-AUDIT-20261020-SCHEDULER-DELAYS
+  tipo: auditoria_interna
+  ciclo: '2026-10-20'
+  estado: OPEN
+  descripcion: Delays del scheduler de GitHub observados entre 2h y 7h vs slot programado durante la ventana 18-20 oct. No es bug del codigo. Los 5 slots del dia cubren la ventana. Falta criterio de escalado documentado si el delay crece.
+  siguiente_accion: Revisar 2026-11-10. Si delay p95 >8h, evaluar repository_dispatch externo. Si p95 <=8h, cerrar WONT_FIX con razon "scheduler dentro de tolerancia".
+
+- id: REP-AUDIT-20261020-REPORT-STRESS-LABEL
+  tipo: auditoria_interna
+  ciclo: '2026-10-20'
+  estado: FIXED
+  descripcion: Reporte 2026-10-19 linea 936 decia "Condiciones financieras HIGH_STRESS - estres elevado en credito", contradiciendo linea 58 (HYG/LQD Z=-0.30 neutral) y linea 142 (Credit Stress 0.18). El HIGH_STRESS viene de financial_conditions, no de credito. La etiqueta atribuia al credito lo que es condicion financiera.
+  commit: 0aec4ce5
+  test: tests/test_struct_score_sector_indices.py
+  evidencia: Texto del resumen ya no atribuye el estres al credito. Remite a Alertas de Divergencia (HYG/LQD).
+  verificacion: FIXED
+
+- id: REP-AUDIT-20261020-REPORT-FLOW-RECONCILIATION
+  tipo: auditoria_interna
+  ciclo: '2026-10-20'
+  estado: FIXED
+  descripcion: Reporte 2026-10-19 linea 59 decia "Energy Price-Flow - sin confirmacion del Flow Proxy (z=-0.50)". Lineas 733/752 marcaban XLE con Flujo Primario "Confirmacion" (+990M 20d). El lector veia "sin confirmacion" y "Confirmacion" en el mismo documento sin reconciliacion.
+  commit: 0aec4ce5
+  test: tests/test_struct_score_sector_indices.py
+  evidencia: Nota al final del bloque Alertas de Divergencia aclarando que Flow Proxy y Flujo Primario son capas independientes (00_ARRANQUE §2).
+  verificacion: FIXED
+
+- id: REP-AUDIT-20261020-REPORT-STRUCT-COLUMN
+  tipo: auditoria_interna
+  ciclo: '2026-10-20'
+  estado: FIXED
+  descripcion: Reporte 2026-10-19 tabla Rankings Sectoriales tenia dos columnas con nombres casi identicos (Structural y Struct) y valores distintos en la misma fila. XLP - Structural=+0.02, Struct=+0.17. Nomenclatura ambigua.
+  commit: 0aec4ce5
+  test: tests/test_struct_score_sector_indices.py
+  evidencia: Columna Struct renombrada a "Struct Score". 2 tests actualizados. 8 tests del fichero verdes.
+  verificacion: FIXED
+
+- id: REP-AUDIT-20261020-REPORT-XLC-EVIDENCE
+  tipo: auditoria_interna
+  ciclo: '2026-10-20'
+  estado: FIXED
+  descripcion: Reporte 2026-10-19 marcaba XLC como "EVIDENCIA PREDOMINANTEMENTE FAVORABLE" con 3 votos +1 y 2 votos -1, mientras el ranking lo ponia 9/10 con 100% BEARISH. Los 2 votos -1 eran precio y amplitud (variables materiales). La heuristica de signos de evidence_matrix contaba votos sin magnitud.
+  commit: 41b1c8bf
+  test: tests/test_evidence_matrix.py
+  evidencia: Veto por variables materiales (price_ev==-1 and breadth_ev==-1 -> MIXTA). 2 tests nuevos (XLC -> MIXTA; price+breadth positivos -> FAVORABLE). 14 tests verdes.
+  verificacion: FIXED
+
+- id: REP-AUDIT-20261020-REPORT-REVIEW-EXTERNAL
+  tipo: auditoria_interna
+  ciclo: '2026-10-20'
+  estado: OPEN
+  descripcion: Revision externa del reporte 2026-10-19 identifico 14 inconsistencias. Las 4 criticas se confirman y se arreglan en esta misma rama (STRESS-LABEL, XLC-EVIDENCE, FLOW-RECONCILIATION, STRUCT-COLUMN). Las 10 restantes no se han verificado contra codigo o datos primarios del repo. El analista externo no tuvo acceso a FRED, Tesoro ni CBOE, por lo que las cifras externas de spread y FLS son de prensa, no de fuente primaria.
+  siguiente_accion: Investigar en proxima sesion. Prioridad - verificar spread 10Y-3M contra data/macro_manual, verificar FLS contra data/macro_manual, revisar votos Wyckoff (magnitud) en evidence_matrix, revisar SLPM coverage 0/5, verificar fechas reales de FINRA/CFTC/SSGA/NPORT en outputs/history. Las que se confirmen como bug real, abrir item propio. Las que sean falso positivo, cerrar WONT_FIX o FALSE_POSITIVE con razon.
