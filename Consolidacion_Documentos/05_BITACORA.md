@@ -44,6 +44,51 @@ Al cerrar una sesion nueva, se anade arriba (las mas recientes primero). Si hay 
 
 ## 3. SESIONES
 
+### 2026-10-20 (tarde) - Dos auditorias externas + FLS
+
+**Objetivo.** Atender dos auditorias externas del reporte 2026-10-19.
+La primera: 14 items (4 criticas, 10 sospechosas). La segunda: 7 items
+(Flow Proxy, trazabilidad temporal, sintesis credito).
+
+**Hecho.**
+- 14 commits. 11 items FIXED con test. 7 falsos positivos documentados
+  en REVIEW-EXTERNAL.
+- B1/B3/B4 (0aec4ce5): sintesis credito sin atribuir HIGH_STRESS al
+  credito. Nota Flow Proxy vs Flujo Primario. Struct -> Struct Score.
+- B2 (41b1c8bf): veto por variables materiales en evidence_matrix.
+  XLC con price<0 y breadth<0 ya no sale FAVORABLE.
+- A2 (47071a51): health_check no da WARN en trimestrales con dispatch OK
+  dentro de max_days.
+- A1 (9f6afa26): post_receipt_audit status LAGGED cuando receipt.date
+  != target_session. Primer LAGGED real sera en run 2026-10-20.
+- P1 (eaed52a7): nota Flow Proxy tabla (composite ETF) vs matriz
+  (mediana componentes). Son metricas distintas y pueden discrepar.
+- P2 (68e4e40c): nota temporal en provenance, recuento votos P/N/0 en
+  matriz, nota regla Wyckoff.
+- C8 (7475108f): nota FLS saturacion por nivel. Item FLS-COMPONENT-DESIGN
+  OPEN.
+- C10 (33a12a10): ratio |Z| extremo destacado en Cross-Asset.
+- C6 (878ad4fc): nota materialidad Europa (media simple, no AUM).
+- FLS (38f17674): SOFR como spread SOFR-IORB, no nivel. Diagnostico:
+  |z|>5 17.7% de sesiones con nivel, 5.7% con spread. FLS 79 -> 63.
+  stressed 3/5 -> 2/5.
+- Falsos positivos: C1 (Wyckoff +1), C2 (Flow Proxy 30% WLS),
+  C3 (SLPM NO_LEADERS), C4 (datos desfasados), C5 (NIPC 13F),
+  C7 (spread 10Y-3M), C9 (IPI).
+
+**Commits.** 0aec4ce5, 41b1c8bf, 47071a51, 7f329d07, af0be35d,
+9f6afa26, 7475108f, 33a12a10, 878ad4fc, eaed52a7, 2ddc7488,
+68e4e40c, ec641043, 38f17674.
+
+**Pendiente.**
+- Cerrar REVIEW-EXTERNAL tras run 2026-10-20 verde.
+- Diagnostico WALCL/CP (FLS-COMPONENT-DESIGN).
+- RECEIPT-AUDIT-LAG (observacion 4 semanas).
+- CRON-SLOTS-OBS y SCHEDULER-DELAYS (2026-11-10).
+
+**Proximo paso.** Run 23:17 UTC (target 2026-10-20). Verificar
+run-system success, receipt, receipt_audit con primer LAGGED real.
+
 ### 2026-10-20 - Contaminacion fechas + certificacion prod
 
 **Objetivo.** Revisar el scheduled del lunes 19-10. Diagnosticar el fallo

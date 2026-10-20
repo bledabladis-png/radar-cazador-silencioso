@@ -132,6 +132,49 @@ Documentados como `REP-AUDIT-20261020-FALSOS-POSITIVOS-CALENDARIO`.
 - CSV macro_regime: financial_regime + real_liq_regime, sin alias legacy.
 - data_quality.csv: date = sesion bursatil (no fecha del run).
 
+### 2.5. Sesion 2026-10-20 (tarde) - 14 commits: dos auditorias externas + FLS
+
+**Contexto.** Dos auditores externos enviaron revision del reporte 2026-10-19.
+El primero: 14 items (4 criticas + 10 sospechosas). El segundo: 7 items
+enfocados en Flow Proxy, trazabilidad temporal y sintesis credito.
+
+**Cierres (14 commits).**
+
+Auditoria #1:
+- `0aec4ce5` (B1/B3/B4): sintesis sin atribuir HIGH_STRESS al credito,
+  nota Flow Proxy vs Flujo Primario, columna `Struct Score`.
+- `41b1c8bf` (B2): veto por variables materiales en `evidence_matrix`.
+  XLC (100% bearish) ya no sale "FAVORABLE" con price/breadth negativos.
+- `47071a51` (A2): `health_check` no da WARN en trimestrales con dispatch OK.
+- `7f329d07`: 10 items `REP-AUDIT-20261020-*` + HANDOFF + generador
+  `(sin filtro; suite completa)`.
+
+Auditoria #2:
+- `eaed52a7` (P1): nota Flow Proxy tabla (composite ETF) vs matriz
+  (mediana componentes). XLE -0.50 en tabla, +1 en matriz, explicado.
+- `68e4e40c` (P2): nota temporal provenance, recuento votos P/N/0 en
+  matriz, nota regla Wyckoff.
+
+Transversal:
+- `9f6afa26` (A1): `post_receipt_audit` status `LAGGED` cuando
+  `receipt.date != target_session`.
+- `7475108f` (C8): nota FLS saturacion por nivel. Item
+  `FLS-COMPONENT-DESIGN` OPEN.
+- `33a12a10` (C10): ratio |Z| extremo en Cross-Asset.
+- `878ad4fc` (C6): nota materialidad Europa (media simple, no AUM).
+- `38f17674` (FLS): SOFR como spread SOFR-IORB, no nivel. FLS 79 -> 63.
+  stressed 3/5 -> 2/5. Item queda OPEN por WALCL/CP.
+
+**Falsos positivos documentados** (en `REVIEW-EXTERNAL`):
+C1 (Wyckoff +1), C2 (Flow Proxy 30% WLS), C3 (SLPM NO_LEADERS),
+C4 (datos desfasados), C5 (NIPC 13F), C7 (spread 10Y-3M), C9 (IPI).
+
+**Pendiente.** Cerrar `REVIEW-EXTERNAL` tras run 2026-10-20.
+Diagnostico WALCL/CP (`FLS-COMPONENT-DESIGN`). `RECEIPT-AUDIT-LAG`
+(observacion 4 semanas). `CRON-SLOTS-OBS` y `SCHEDULER-DELAYS`
+(revision 2026-11-10).
+
+
 ---
 
 ## 3. FRENTES CERRADOS
@@ -153,6 +196,8 @@ Documentados como `REP-AUDIT-20261020-FALSOS-POSITIVOS-CALENDARIO`.
 - REP-AUDIT-20261020-REPORT-FLOW-RECONCILIATION: FIXED (`0aec4ce5`).
 - REP-AUDIT-20261020-REPORT-STRUCT-COLUMN: FIXED (`0aec4ce5`).
 - REP-AUDIT-20261020-REPORT-XLC-EVIDENCE: FIXED (`41b1c8bf`).
+- REP-AUDIT-20261020-REPORT-REVIEW-EXTERNAL: 13 items atendidos (auditor externo #1). P1, P2 FIXED en `eaed52a7`, `68e4e40c`. C1-C10 verificados (varios FALSE_POSITIVE).
+- REP-AUDIT-20261020-FLS-COMPONENT-DESIGN (SOFR): FIXED (`38f17674`). SOFR pasa de z(nivel) a z(spread SOFR-IORB). WALCL/CP pendientes.
 
 ---
 
@@ -161,7 +206,8 @@ Documentados como `REP-AUDIT-20261020-FALSOS-POSITIVOS-CALENDARIO`.
 - **REP-AUDIT-20261020-RECEIPT-AUDIT-LAG** (OPEN): status LAGGED en post_receipt_audit; observacion 4 semanas.
 - **REP-AUDIT-20261020-CRON-SLOTS-OBS** (OPEN): revision 2026-11-10.
 - **REP-AUDIT-20261020-SCHEDULER-DELAYS** (OPEN): revision 2026-11-10.
-- **REP-AUDIT-20261020-REPORT-REVIEW-EXTERNAL** (OPEN): investigar las 10 restantes de la revision externa.
+- **REP-AUDIT-20261020-REPORT-REVIEW-EXTERNAL** (OPEN): cerrar a FIXED tras run 2026-10-20 verde.
+- **REP-AUDIT-20261020-FLS-COMPONENT-DESIGN** (OPEN): SOFR FIXED. Pendiente WALCL/CP (diagnostico proxima sesion).
 
 ### 4.1. Certificacion scheduled lunes 2026-10-19 23:17 UTC [COMPLETED 2026-10-20]
 
