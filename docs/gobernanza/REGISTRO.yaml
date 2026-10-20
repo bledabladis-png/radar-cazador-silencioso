@@ -1071,7 +1071,7 @@ items:
     16-10 y 0.88 el 19-10. C9 (IPI diluye shocks) = FALSE_POSITIVE - la
     nota L145 del reporte ya declara proxy de mercado, comprimidos con
     tanh, EWMA(20), puede divergir de IPC/PPI sin ser error. C10 (DXY/EEM
-    +2.65 sin comentar) = FIXED en este commit.
+    +2.65 sin comentar) = FIXED en este commit. C3 (SLPM NO_LEADERS) = FALSE_POSITIVE del analista - la lista leader_metrics esta vacia porque no hay tickers en fase MARKUP/ACCUMULATION en el sector #1 (XLP en RANGE); el reporte ya lo declara con ADVERTENCIA explicita en L318. El analista confunde 'bloque de lideres publicado' (XLK, XLE en MARKUP) con 'liderazgo confirmado por SLPM' (0/5). C6 (Europa -0.57 como z-score de ruido) = FIXED - nota de materialidad publicada en flows_international.py: la cifra es media simple de z-scores de 3 fondos, no ponderada por AUM, y los flujos tipicos estan por debajo del umbral de materialidad.
   siguiente_accion: |
     Cerrar el item cuando el run 2026-10-20 confirme que los fixes A-1,
     A-2, A-3, A-6, A-7 y C8/C10 no rompen el ciclo. Investigar en

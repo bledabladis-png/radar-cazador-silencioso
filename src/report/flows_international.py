@@ -378,6 +378,7 @@ def render_flujo_sintesis(flow_synthesis):
         # de empate real 2-2. La regla actual da MEDIA si pos>=2 o neg>=2;
         # en empate 2-2 ambos se cumplen y el resultado es MEDIA sin
         # direccion dominante. La nota lo declara.
-        out.append("*Banda neutral: valores con |s| <= 0.1 cuentan como neutrales, no como capa positiva o negativa. Empate real 2-2 (dos capas positivas y dos negativas): MEDIA - MIXED / SIN DIRECCION DOMINANTE.*\n\n")
+        out.append("*Banda neutral: valores con |s| <= 0.1 cuentan como neutrales, no como capa positiva o negativa. Empate real 2-2 (dos capas positivas y dos negativas): MEDIA - MIXED / SIN DIRECCION DOMINANTE.*\n")
+        out.append("*Nota Europa: la cifra es la media simple de los z-scores de 3 fondos (DAXEX, ISF, LYXI), no ponderada por AUM. Los flujos tipicos estan por debajo del umbral de materialidad; la media puede estar dominada por un solo fondo. Leer como direccion de z-scores, no como flujo agregado.*\n\n")
         out.append("\n*Interpretación descriptiva: concordancia de signos entre capas. No es señal predictiva.*\n\n")
     return out

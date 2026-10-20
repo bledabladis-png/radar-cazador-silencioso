@@ -423,3 +423,25 @@ def test_confirmation_sin_zscores_no_destaca():
     })
     lineas = "".join(out)
     assert "Ratio con |Z-Score| mas extremo" not in lineas
+
+
+# ============================================================
+# C6 (2026-10-20): nota de materialidad en Flujo Sintesis
+# sobre la cifra de Europa Primary Flow.
+# ============================================================
+
+def test_flujo_sintesis_nota_europa():
+    from src.report.flows_international import render_flujo_sintesis
+    out = render_flujo_sintesis({
+        "flow_proxy_sign": 0.17,
+        "etf_primary_flow_sign": 0.19,
+        "cftc_flow_sign": 0.03,
+        "european_flow_sign": -0.57,
+        "confidence": "MEDIA",
+    })
+    lineas = "".join(out)
+    assert "Europa Primary Flow" in lineas
+    assert "-0.57" in lineas
+    assert "Nota Europa" in lineas
+    assert "media simple" in lineas
+    assert "no ponderada por AUM" in lineas
