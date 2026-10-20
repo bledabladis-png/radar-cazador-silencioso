@@ -1078,14 +1078,19 @@ items:
     nuevos. La tabla usa composite momentum del ETF sectorial; la matriz
     usa sector_concentration.flow_median (mediana del composite de los
     componentes del sector). Son metricas distintas y pueden discrepar en
-    signo. P2 trazabilidad temporal (CBOE post reference_date) = OPEN
-    menor, no bloquea decision. Pendiente: actualizar siguiente_accion
-    cuando el run 2026-10-20 cierre el item.
+    signo. P2 trazabilidad temporal CBOE post reference_date = FIXED
+    en 68e4e40c. Nota en provenance.py aclara que reference_date es
+    referencia de ejecucion, no corte de datos. P2 Wyckoff sin
+    trazabilidad publica = FIXED en 68e4e40c. Nota con la regla
+    exacta del voto en synthesis.py. P2 mayoria de signos sin
+    recuento = FIXED en 68e4e40c. Columna Votos P/N/0 publicada en
+    la matriz; counts via row.get con default 0 para no romper tests
+    que construyen DataFrames sin n_sector_evidence_*.
   siguiente_accion: |
-    Cerrar el item cuando el run 2026-10-20 confirme que los fixes A-1,
-    A-2, A-3, A-6, A-7 y C8/C10 no rompen el ciclo. Investigar en
-    proxima sesion los items que sigan abiertos
-    (FLS-COMPONENT-DESIGN, RECEIPT-AUDIT-LAG).
+    Cerrar el item cuando el run 2026-10-20 confirme que los fixes
+    P1/P2 no rompen el ciclo. Investigar en proxima sesion los items
+    que sigan abiertos (FLS-COMPONENT-DESIGN, RECEIPT-AUDIT-LAG,
+    CRON-SLOTS-OBS, SCHEDULER-DELAYS).
 
 - id: REP-AUDIT-20261020-FLS-COMPONENT-DESIGN
   tipo: auditoria_interna
