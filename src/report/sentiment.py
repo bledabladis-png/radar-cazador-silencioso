@@ -38,8 +38,17 @@ def render_sentimiento_opciones(pcr_data, reference_date=None):
                      f"**PCR ETP:** {_fmt_num(pcr_data.get('etp_pcr', np.nan), '{:.2f}')}\n")
         out.append(f"- **PCR VIX:** {_fmt_num(pcr_data.get('vix_pcr', np.nan), '{:.2f}')} | "
                      f"**PCR SPX:** {_fmt_num(pcr_data.get('spx_pcr', np.nan), '{:.2f}')}\n")
-        out.append(f"- **Institutional Hedge Ratio:** {_fmt_num(pcr_data.get('ihr', np.nan), '{:.2f}')} "
+        # P4 (2026-10-21, auditor externo): renombrar. El ratio es
+        # index_pcr / equity_pcr: sesgo relativo put/call entre indices
+        # y acciones. NO identifica participantes institucionales; los
+        # datos de opciones son agregados.
+        out.append(f"- **IHR (Index/Equity PCR Ratio, proxy):** {_fmt_num(pcr_data.get('ihr', np.nan), '{:.2f}')} "
                      f"({pcr_data.get('ihr_state', 'N/A')}, bandas: <1.2 Especulacion, 1.2-1.6 Equilibrado, >1.6 Cobertura institucional)\n")
+        out.append("*Proxy de sesgo de cobertura basado en opciones: "
+                   "index_pcr / equity_pcr. Mide el sesgo relativo put/call "
+                   "entre indices y acciones. Los datos de opciones son "
+                   "agregados: no identifican participantes institucionales "
+                   "ni demuestran intencion de cobertura.*\n")
         out.append(f"- **Volumen en Indices:** {_fmt_num(pcr_data.get('index_volume_share', np.nan), '{:.1%}')} del total\n")
         out.append(f"- **Put Share:** {_fmt_num(pcr_data.get('put_share', np.nan), '{:.1%}')} | "
                      f"**Call Share:** {_fmt_num(pcr_data.get('call_share', np.nan), '{:.1%}')}\n")
