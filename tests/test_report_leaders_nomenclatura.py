@@ -102,3 +102,22 @@ def test_h4_nota_trazabilidad_slpm():
     assert "Nota de trazabilidad" in body
     assert "NO han pasado validacion estructural de SLPM" in body
     assert "stock_leader" in body
+
+
+# ============================================================
+# H3 (2026-10-21): nota de sesgo de seleccion en Liderazgo
+# relativo interno (top-5 por sector).
+# ============================================================
+
+def test_h3_liderazgo_relativo_nota_sesgo_seleccion():
+    import pandas as pd
+    from src.report.market_context import render_liderazgo_interno
+    df = pd.DataFrame([
+        {"date": "2026-10-20", "sector": "XLE", "ticker": "CVX",
+         "price_ret_20d": 0.10, "rs_abs_20d": 0.05, "rs_internal_20d": 0.03,
+         "classification": "Liderazgo relativo doble"},
+    ])
+    body = "".join(render_liderazgo_interno(df))
+    assert "sesgo de seleccion" in body
+    assert "top-5" in body
+    assert "rs_internal.csv" in body

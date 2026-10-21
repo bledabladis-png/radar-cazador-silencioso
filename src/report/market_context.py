@@ -44,6 +44,20 @@ def render_liderazgo_interno(rs_internal_data):
                    "close[t-20] - 1 sobre las 20 sesiones comunes. "
                    "Discrepancias contra ^GSPC en el mismo horizonte son "
                    "diferencias de fuente, no de calculo.*\n\n")
+        # H3 (2026-10-21): sesgo de seleccion. Esta tabla muestra los
+        # top-5 por sector, no el universo completo. Los top-5 baten al
+        # sector por construccion. En el universo completo (rs_internal.csv)
+        # la distribucion es heterogenea: ~50% doble, ~32% debilidad, ~17%
+        # fortaleza sectorial, ~2% interno debil (2026-10-20, 230 tickers).
+        out.append("*Nota de sesgo de seleccion: esta tabla muestra los 5 "
+                   "tickers de mayor retorno 20d de cada sector, no el "
+                   "universo completo. Por construccion, los top-5 baten a "
+                   "su sector y, con frecuencia, al mercado. Una mayoria de "
+                   "'Liderazgo relativo doble' aqui NO significa que la "
+                   "mayoria del universo lo sea: en el CSV completo "
+                   "(rs_internal.csv, ~230 tickers) la distribucion incluye "
+                   "debilidad, fortaleza sectorial y liderazgo interno en "
+                   "sector debil.*\n\n")
     return out
 
 
