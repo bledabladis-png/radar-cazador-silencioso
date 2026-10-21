@@ -1156,3 +1156,59 @@ items:
     Verificacion integra del reporte: 17/17 fixes previos + H1-H7
     confirmados en el output real del run 2026-10-20.
 
+
+- id: REP-AUDIT-20261022-REPORT-REVIEW-4
+  tipo: auditoria_interna
+  ciclo: '2026-10-22'
+  estado: FIXED
+  descripcion: |
+    Auditoria externa #4 sobre el reporte 2026-10-20. 8 hallazgos
+    P1-P8 + 1 descartado por el propio analista (XLK -5.52% en 5d y
+    20d por cierres casi identicos). P1 (RS nominal sesga WLS) =
+    FALSE_POSITIVE: rs_z del WLS deriva de rs_mom (log-retorno
+    relativo 20d), invariante a escala por construccion. El rs
+    nominal solo se usa en LIS, marcado provisional. P2 (cobertura
+    XLK 20% vs 5 lideres) = FALSE_POSITIVE: denominador es el
+    universo completo del ETF (74 tickers), no top-20. 15/74 =
+    20.27% con 5 lideres visibles. P3 (XLF -5.0 con Deterioro=False)
+    = BUG REAL: el umbral se aplicaba al valor bruto
+    (-4.999999999999993), el render muestra redondeado a 1 decimal
+    (-5.0). Contradiccion visible. P4 (Institutional Hedge Ratio sin
+    formula) = FIXED: renombrado a IHR (Index/Equity PCR Ratio,
+    proxy) + formula index_pcr/equity_pcr + nota de no-institucional.
+    P5 (NIPC acciones no economicas) = FALSE_POSITIVE: ya documentado
+    H14. P6 (temporal_coherence no cubre todas las fuentes) = FIXED:
+    nota aclarando alcance (stock_prices y market_data; resto en
+    Data Freshness). P7 (huecos en ventanas moviles) = OPEN en item
+    separado REP-AUDIT-20261022-ROLLING-WINDOW-GAPS. P8 (Voyager
+    residual en N-PORT) = FIXED: nota de posiciones residuales /
+    instrumentos legados.
+  commit: '5ad74e56'
+  test: tests/test_report_auditoria_externa_4.py
+  evidencia: |
+    5 commits en la sesion (bc66ba6f P3, 3a3b06a9 P4, 5ad74e56
+    P1/P2/P6/P8). 3 items FIXED con test. 4 items FALSE_POSITIVE
+    (P1, P2, P5, P8 parcial) documentados. 1 item OPEN (P7) en
+    ROLLING-WINDOW-GAPS. Suite 3817 passed. Sin hardcodeos
+    temporales. Notas derivadas de constantes donde aplica.
+  verificacion: FIXED
+
+- id: REP-AUDIT-20261022-ROLLING-WINDOW-GAPS
+  tipo: auditoria_interna
+  ciclo: '2026-10-22'
+  estado: OPEN
+  descripcion: |
+    Auditoria externa #4 (P7). El reporte declara huecos en el
+    historico de dispersion sectorial (2026-09-21, 22 y 10-05 por
+    input vacio). El fix A-03 previene nuevos huecos pero no rellena
+    los anteriores. Falta verificar que las ventanas moviles
+    (rolling 20 y 60) de modulos derivados no abarcan intervalos
+    temporales distintos al pretendido cuando hay discontinuidades:
+    rolling(N) sobre filas disponibles puede cubrir mas dias
+    naturales que N sesiones esperadas.
+  siguiente_accion: |
+    Test de regresion: comparar rolling(20) sobre serie con huecos
+    vs rolling(20) sobre calendario explicito de sesiones. Si difieren,
+    decidir entre reindexar al calendario (con NaN relleno) o
+    documentar como limitacion conocida. Aplica a sector_dispersion,
+    sector_correlation_summary y modulos con ventanas derivadas.
