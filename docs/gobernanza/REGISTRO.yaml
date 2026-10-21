@@ -1091,7 +1091,7 @@ items:
     P1/P2 no rompen el ciclo. Investigar en proxima sesion los items
     que sigan abiertos (FLS-COMPONENT-DESIGN, RECEIPT-AUDIT-LAG,
     CRON-SLOTS-OBS, SCHEDULER-DELAYS).
-  commit: PENDING
+  commit: 'c073f2a5'
   evidencia: 'Run 39528211520 (target 2026-10-20, head de203871): gate+run-system+issue-manager success. validation_gate 10/10, guard_coverage OK, success_path_reached true. FLS 63/100, SOFR -0.59. Primer LAGGED real: sector_flow_characteristics 2026-10-19 vs target 2026-10-20.'
 
 - id: REP-AUDIT-20261020-FLS-COMPONENT-DESIGN
