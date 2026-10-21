@@ -1112,11 +1112,17 @@ items:
     de 3/5 a 2/5. Pendiente = WALCL (sigue 1.0000 saturado) y CP (0.89)
     pueden sufrir el mismo problema.
   siguiente_accion: |
-    SOFR FIXED. Pendiente proxima sesion = evaluar si WALCL
-    (pct_change_252 semanal, satura 1.0000) y CP (z nivel, satura 0.89)
-    merecen el mismo tratamiento. Medir saturacion con diagnostico
-    rolling 252d. Cualquier cambio adicional requiere re-certificacion
-    (FLS entra en MTE).
+    SOFR FIXED. WALCL y CP EVALUADOS (2026-10-22): WONT_FIX.
+    WALCL -z(pct_change_252): |z|>5 12.3%, tanh_sat 28.2%. Alternativas
+    (-z(pct_change_52): 17.9%/30.3%; -z(diff_52): 21.5%/40.2%) son
+    PEORES. La saturacion es estructural (QT en extremo historico) y la
+    senal es correcta (contraccion = estres). CP z(nivel): |z|>5 4.0%,
+    tanh_sat 27.2%. Alternativa z(pct_change_252) mejora |z|>5 (0.0%)
+    pero empeora z_ult (+1.45 -> +2.19) y apenas mejora tanh_sat
+    (27.2% -> 23.6%). No justifica re-certificacion. CP-IORB spread
+    descartado (unidades incompatibles). Si CP vuelve a ser el
+    componente de swing o WALCL se des-satura, reconsiderar.
+    Investigacion cerrada sin cambio de codigo.
 
 - id: REP-AUDIT-20261021-REPORT-REVIEW-2
   tipo: auditoria_interna
