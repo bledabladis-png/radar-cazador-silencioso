@@ -86,8 +86,15 @@ def render_wyckoff_sectorial(sector_wyckoff_distribution_data):
                        "baja indica que la distribucion no es representativa "
                        "del sector completo. En esos casos la fase sectorial "
                        "del ranking puede diferir de la fase dominante aqui.")
-            out.append("*P2.2 auditor 2026-10-13: la fase sectorial (Rankings) "
-                       "se decide sobre el ETF, no sobre estos componentes.*\n\n")
+    # H6 (2026-10-21): nota P2.2 debe salir siempre, no solo si hay
+    # COB BAJA. La fase sectorial del ranking se decide sobre el ETF,
+    # no sobre estos componentes. Sin esta nota, un sector MARKUP con
+    # mayoria de componentes RANGE parece contradictorio.
+    out.append("*P2.2 auditor 2026-10-13: la fase sectorial (Rankings) "
+               "se decide sobre el ETF, no sobre estos componentes. "
+               "Un sector en fase MARKUP puede tener mayoria de "
+               "componentes en RANGE: la fase sectorial y la distribucion "
+               "de fases por componente miden cosas distintas.*\n\n")
     return out
 
 

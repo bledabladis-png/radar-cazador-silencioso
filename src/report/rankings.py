@@ -79,6 +79,13 @@ def render_ranking_sectorial_unificado(sector_results, tactical_scores,
                "'Struct Wyckoff' es el struct_score interno del ranking "
                "(magnitud Wyckoff: STRUCT_STRONG=0.30). No son comparables "
                "entre si; pueden tener signos distintos para el mismo sector.*\n\n")
+    # H7 (2026-10-21): el orden de la tabla es por Score (columna 3),
+    # no por Struct Wyckoff. Un sector puede ser #11 por Score y tener
+    # Struct Wyckoff alto (+0.44). Son motores distintos.
+    out.append("*Nota de ordenacion: la tabla se ordena por 'Score' "
+               "(columna 3), no por 'Struct Wyckoff'. Un sector en el "
+               "ultimo puesto de Score puede tener Struct Wyckoff alto: "
+               "son motores independientes. No implica contradiccion.*\n\n")
     return out
 
 

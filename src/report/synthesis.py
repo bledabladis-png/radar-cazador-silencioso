@@ -25,6 +25,13 @@ def render_indices_internacionales(index_phases, index_leaders, index_struct_sco
     _struct_map = index_struct_scores or {}
     out.append("| Indice | Ticker | Fase Wyckoff | Struct |\n")
     out.append("|--------|--------|--------------|--------|\n")
+    # H5 (2026-10-21): declarar que mide struct_score para evitar la
+    # confusion "MARKUP con retorno reciente negativo".
+    out.append("*Nota: Struct (struct_score) mide tendencia de fondo "
+               "(MA lenta + compresion ATR), no retorno reciente. Un "
+               "indice en fase MARKUP puede tener retorno de corto plazo "
+               "negativo; la fase y el Struct miden tendencia estructural, "
+               "no momentum inmediato.*\n\n")
     if index_phases:
         for nombre, fase in index_phases.items():
             ticker = INDEX_CONFIG.get(nombre, {}).get('index_ticker', '')
