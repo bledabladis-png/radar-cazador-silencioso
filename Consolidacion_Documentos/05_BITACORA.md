@@ -44,6 +44,70 @@ Al cerrar una sesion nueva, se anade arriba (las mas recientes primero). Si hay 
 
 ## 3. SESIONES
 
+### 2026-10-22 - Auditoria externa #4 + FLS WALCL/CP + docs gobernanza
+
+**Objetivo.** Atender auditoria externa #4 (P1-P8), decidir WALCL
+y CP del componente FLS, cerrar deudas documentales 20-22 oct.
+
+**Hecho.**
+- P1 (RS nominal): FALSE_POSITIVE. rs_z usa rs_mom (log-retorno
+  relativo 20d), invariante a escala. Nota anadida.
+- P2 (cobertura XLK): FALSE_POSITIVE. Denominador = universo
+  completo del ETF (74 tickers), no top-20. Nota anadida.
+- P3 (XLF -5.0): BUG REAL. Umbral deterioro se aplicaba al bruto,
+  render muestra redondeado. FIXED, 9 tests.
+- P4 (IHR): FIXED. Renombrado a "IHR (Index/Equity PCR Ratio,
+  proxy)", formula visible, nota de no-institucional. 4 tests.
+- P5 (NIPC): FALSE_POSITIVE, ya documentado H14.
+- P6 (temporal_coherence): FIXED. Nota de alcance.
+- P7 (rolling window gaps): OPEN en
+  REP-AUDIT-20261022-ROLLING-WINDOW-GAPS. Plan en siguiente sesion.
+- P8 (Voyager N-PORT): FIXED. Nota de residuales.
+- FLS: WALCL y CP WONT_FIX. WALCL -z(pct_change_252) |z|>5 12.3%,
+  alternativas peores (pct_change_52 17.9%/30.3%, diff_52
+  21.5%/40.2%). CP z(nivel) |z|>5 4.0%, pct_change_252 mejora
+  |z|>5 pero empeora z_ult (+1.45 -> +2.19). Item
+  REP-AUDIT-20261020-FLS-COMPONENT-DESIGN cerrado FIXED.
+- Docs: trampas PowerShell adicionales + catalogo EOL/BOM
+  verificado en `01_METODO.md`. `ESTADO_SISTEMA.md` regenerado.
+
+**Commits.** bc66ba6f, 3a3b06a9, 5ad74e56, 07854913, 5a1e0c37,
+2686b154, a4f13d1c, 6dcf637c.
+
+**Pendiente.**
+- Verificar run scheduled 22-10 23:17 UTC (04:00+ UTC del 23-10).
+- Plan expandido de ROLLING-WINDOW-GAPS.
+- HANDOFF automatico (deuda estructural, sin alcance asignado).
+
+**Proximo paso sugerido.** Verificar scheduled 22-10 y disenar el
+test de regresion de ROLLING-WINDOW-GAPS.
+
+### 2026-10-21 - Auditoria externa #3 + REVIEW-EXTERNAL cerrado
+
+**Objetivo.** Atender los 8 hallazgos H1-H8 del reporte 2026-10-20
+(run 39528211520) y cerrar REVIEW-EXTERNAL.
+
+**Hecho.**
+- H1-H8: 7 FIXED con nota o renombrado, 1 FALSE_POSITIVE (H3
+  sesgo de seleccion). H1 = Struct Wyckoff vs struct_score. H2 =
+  edades runtime vs CSV. H4 = SLPM 0/5 trazabilidad. H5 = XLK
+  MARKUP -5.52% (struct_score mide tendencia de fondo). H6 =
+  nota P2.2 XLE siempre visible. H7 = orden por Score, no por
+  Struct Wyckoff. H8 = FRED NEUTRAL -> ABUNDANTE, FALSE_POSITIVE.
+- Notas derivadas de constantes (`STRUCTURAL_WEIGHTS`,
+  `STRUCT_STRONG`, `FLOW_PROXY_WEIGHTS`, `EXPECTED_SECTOR_COUNT`,
+  `TOP_N_CANDIDATES`, `TOP_N_LEADERS`). Protegido con
+  `tests/test_report_notas_derivadas.py` (4 tests monkeypatch).
+- REVIEW-EXTERNAL FIXED. FLS-SOFR confirmado en prod (run
+  39528211520, gate 10/10, FLS 63/100).
+
+**Commits.** bd32577a, ec0e7b8b, 100b55d6, 714fba5a, 9ebfacdd,
+fd9e202d, c073f2a5, 10cf8ea5.
+
+**Pendiente.** Auditoria externa #4 (nueva, 22 oct).
+
+**Proximo paso sugerido.** Recibir auditoria #4 y atenderla.
+
 ### 2026-10-20 (tarde) - Dos auditorias externas + FLS
 
 **Objetivo.** Atender dos auditorias externas del reporte 2026-10-19.
@@ -906,51 +970,6 @@ limpio.
 **Proximo paso sugerido.** Verificar el primer run del cron con
 el contrato activo. Si el verificador caza algo, investigar. Si
 OK, el contrato queda validado en produccion.
-
-### 2026-10-11 - Contrato de persistencia de outputs
-
-**Objetivo.** Cerrar la clase entera de bugs "writer silencioso"
-(el gap 09-oct fue el sintoma). No un parche por CSV.
-
-**Hecho.**
-- Reconocimiento del sistema (estructura, pipeline, 19 writers,
-  contratos temporales).
-- Deuda limpia: retirados 3 scripts one-shot, `sectorial.py.orig`,
-  `outputs/audit` reducido (131 -> 66 MB).
-- Diseno e implementacion del contrato de persistencia: registro +
-  wrapper + verificador + integracion + AST test.
-- 19 writers migrados en 6 commits por fichero.
-- Test AST cazo un `to_csv` residual en `indices_intl.py`.
-
-**Verificacion.** Suite: 3204 -> 3243 passed. 5 skipped. Pyflakes
-limpio.
-
-**Commits.** f0311cdb, 8596690c, c43a6b00, 2593ac91, ceecad70,
-b1237083, ae752882, ab838dbf.
-
-**Pendiente.**
-- Push a origin.
-- Politica de limpieza para `outputs/audit/pre_*` (apunte, sin
-  codificar).
-
-**Proximo paso sugerido.** Push. Cerrar sesion. La proxima sesion
-arranca con el contrato activo: si un writer falla silenciosamente,
-el run aborta con error explicito.
-
-### 2026-10-10 - Retirada del modulo Wyckoff legacy (5e)
-
-**Objetivo.** Cerrar el frente legacy: llevar a termino la retirada que el plan tenia bloqueada por ceremonia de fases.
-
-**Hecho.**
-- Portado el test de regresion I2 / K-INDEX-RANGE-01 a `test_wyckoff_v1_contract.py`.
-- Borrados: `indicators/wyckoff.py`, `tests/test_build_ticker_df_i2.py`, `tests/test_index_phase_range.py`, `scripts/compare_wyckoff_legacy_v18.py`.
-- Actualizados `00_ARRANQUE` y `02_ARQUITECTURA`.
-
-**Verificacion.** Barrido de imports residuales: 0. Suite: 3204+5+0. CI con v1.8 confirmado 09-oct y 10-oct.
-
-**Pendiente.** Verificar scheduled 10-oct 23:17 UTC (no debe notar el cambio: ya corria con v1.8).
-
-**Proximo paso sugerido.** Ninguno urgente. H5.3 (20-nov-2026), C2 y SOW v6 bloqueados por terceros.
 
 ## 4. REFERENCIA A SESIONES ANTERIORES
 
