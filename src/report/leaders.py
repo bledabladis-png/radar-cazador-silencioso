@@ -6,7 +6,7 @@ Extraidos de src/report_generator.py (refactor C1, fase C1-6c1).
 
 from config.settings import (EXPECTED_SECTOR_COUNT, MOMENTUM_PRICE_WINDOW,
                               TOP_N_CANDIDATES, TOP_N_LEADERS)
-from config.weights import WLS_WEIGHTS, WLS_PERSISTENCE_FACTOR
+from config.weights import WLS_WEIGHTS, WLS_PERSISTENCE_FACTOR, FLOW_PROXY_WEIGHTS
 from config.tickers import SECTOR_NAMES
 from src.report.helpers import _fmt_num
 
@@ -56,11 +56,14 @@ def render_momentum_sectores(sector_price_rank, sector_flow_rank):
         # (mediana del composite de los componentes del sector, ver
         # sector_concentration.flow_median). Son metricas distintas y pueden
         # discrepar en signo. Ejemplo 2026-10-19: XLE -0.50 aqui, +1 en matriz.
-        out.append("\n*Nota: esta tabla usa el composite momentum del ETF "
-                   "sectorial (0.30*flow_smooth + 0.35*obv_z + 0.35*cmf_z). "
-                   "La columna 'Flujo Proxy' de la Matriz de Evidencia usa la "
-                   "mediana del composite de los componentes del sector. "
-                   "Son metricas distintas y pueden discrepar en signo.*\n")
+        _fp = FLOW_PROXY_WEIGHTS
+        out.append(f"\n*Nota: esta tabla usa el composite momentum del ETF "
+                   f"sectorial ({_fp['flow_smooth']:.2f}*flow_smooth + "
+                   f"{_fp['obv']:.2f}*obv_z + "
+                   f"{_fp['cmf']:.2f}*cmf_z). "
+                   f"La columna 'Flujo Proxy' de la Matriz de Evidencia usa la "
+                   f"mediana del composite de los componentes del sector. "
+                   f"Son metricas distintas y pueden discrepar en signo.*\n")
     return out
 
 
@@ -143,13 +146,14 @@ def render_acciones_seleccionadas(leader_lines):
         # usa leader_breadth y state machine). Si SLPM reporta
         # NO_LEADERS o cobertura 0/5, estas acciones son candidatos
         # operativos, no lideres estructuralmente validados.
-        out.append("*Nota de trazabilidad: esta seccion usa el universo "
-                   "stock_leader (top-15 por weight, top-5 por WLS). "
-                   "SLPM usa otro universo (leader_breadth + state machine). "
-                   "Las acciones aqui listadas NO han pasado validacion "
-                   "estructural de SLPM. Si SLPM reporta NO_LEADERS o "
-                   "cobertura 0/5, son candidatos operativos, no lideres "
-                   "estructuralmente confirmados.*\n\n")
+        out.append(f"*Nota de trazabilidad: esta seccion usa el universo "
+                   f"stock_leader (top-{TOP_N_CANDIDATES} por weight, "
+                   f"top-{TOP_N_LEADERS} por WLS). "
+                   f"SLPM usa otro universo (leader_breadth + state machine). "
+                   f"Las acciones aqui listadas NO han pasado validacion "
+                   f"estructural de SLPM. Si SLPM reporta NO_LEADERS o "
+                   f"cobertura insuficiente, son candidatos operativos, "
+                   f"no lideres estructuralmente confirmados.*\n\n")
         out.extend(leader_lines)
     else:
         out.append("\n## Acciones Seleccionadas por el Modelo de Liderazgo Sectorial\n")

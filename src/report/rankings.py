@@ -8,6 +8,8 @@ import numpy as np
 
 from config.tickers import SECTOR_NAMES, MARKET_TICKERS
 from config.settings import EXPECTED_SECTOR_COUNT
+from config.weights import STRUCTURAL_WEIGHTS
+from indicators.wyckoff_v1 import STRUCT_STRONG
 from src.utils import safe_mean
 from src.report.helpers import _fmt_num
 from src.report.helpers import _fmt_signed
@@ -74,16 +76,20 @@ def render_ranking_sectorial_unificado(sector_results, tactical_scores,
     out.append("\n")
     # H1 (2026-10-21): distinguir 'Structural' (motor estructural) de
     # 'Struct Wyckoff' (metrica interna del ranking). Son cosas distintas.
-    out.append("*Nota: 'Structural' es el motor estructural "
-               "(0.50*rs_structural + 0.30*flow_structure + 0.20*persistence). "
-               "'Struct Wyckoff' es el struct_score interno del ranking "
-               "(magnitud Wyckoff: STRUCT_STRONG=0.30). No son comparables "
-               "entre si; pueden tener signos distintos para el mismo sector.*\n\n")
+    _sw = STRUCTURAL_WEIGHTS
+    out.append(f"*Nota: 'Structural' es el motor estructural "
+               f"({_sw['rs_structural']:.2f}*rs_structural + "
+               f"{_sw['flow_structure']:.2f}*flow_structure + "
+               f"{_sw['persistence']:.2f}*persistence). "
+               f"'Struct Wyckoff' es el struct_score interno del ranking "
+               f"(magnitud Wyckoff: STRUCT_STRONG={STRUCT_STRONG:.2f}). "
+               f"No son comparables entre si; pueden tener signos distintos "
+               f"para el mismo sector.*\n\n")
     # H7 (2026-10-21): el orden de la tabla es por Score (columna 3),
     # no por Struct Wyckoff. Un sector puede ser #11 por Score y tener
     # Struct Wyckoff alto (+0.44). Son motores distintos.
-    out.append("*Nota de ordenacion: la tabla se ordena por 'Score' "
-               "(columna 3), no por 'Struct Wyckoff'. Un sector en el "
+    out.append("*Nota de ordenacion: la tabla se ordena por 'Score', "
+               "no por 'Struct Wyckoff'. Un sector en el "
                "ultimo puesto de Score puede tener Struct Wyckoff alto: "
                "son motores independientes. No implica contradiccion.*\n\n")
     return out

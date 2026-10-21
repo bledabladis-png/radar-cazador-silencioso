@@ -90,7 +90,7 @@ def render_wyckoff_sectorial(sector_wyckoff_distribution_data):
     # COB BAJA. La fase sectorial del ranking se decide sobre el ETF,
     # no sobre estos componentes. Sin esta nota, un sector MARKUP con
     # mayoria de componentes RANGE parece contradictorio.
-    out.append("*P2.2 auditor 2026-10-13: la fase sectorial (Rankings) "
+    out.append("*La fase sectorial (Rankings) "
                "se decide sobre el ETF, no sobre estos componentes. "
                "Un sector en fase MARKUP puede tener mayoria de "
                "componentes en RANGE: la fase sectorial y la distribucion "

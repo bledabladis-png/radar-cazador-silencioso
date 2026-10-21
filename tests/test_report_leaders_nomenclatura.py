@@ -120,4 +120,4 @@ def test_h3_liderazgo_relativo_nota_sesgo_seleccion():
     body = "".join(render_liderazgo_interno(df))
     assert "sesgo de seleccion" in body
     assert "top-5" in body
-    assert "rs_internal.csv" in body
+    assert "universo completo" in body

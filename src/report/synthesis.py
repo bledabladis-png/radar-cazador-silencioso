@@ -9,7 +9,7 @@ import pandas as pd
 from config.index_tickers import INDEX_CONFIG
 from src.report.helpers import _fmt_num
 from config.tickers import SECTOR_NAMES
-from config.settings import FLOW_ZSCORE_WINDOW
+from config.settings import FLOW_ZSCORE_WINDOW, EXPECTED_SECTOR_COUNT
 
 
 def render_indices_internacionales(index_phases, index_leaders, index_struct_scores=None):
@@ -223,8 +223,8 @@ def render_matriz_evidencia(evidence_matrix_data):
                    "(pct_distribution + pct_markdown); -1 si <; 0 si =. "
                    "Es un signo agregado del sector, no la fase "
                    "individual de cada ETF. En regimenes alcistas los "
-                   "11 sectores pueden coincidir en +1 sin que sea un "
-                   "error de calculo.*\n\n")
+                   f"{EXPECTED_SECTOR_COUNT} sectores pueden coincidir en +1 "
+                   "sin que sea un error de calculo.*\n\n")
         # N4 (2026-10-13, auditor) + H9 (2026-10-15, auditor):
         # la agregacion es heuristica de signos (1 voto por variable).
         # H9 pide CUANTIFICAR la doble contabilizacion. Medicion empirica

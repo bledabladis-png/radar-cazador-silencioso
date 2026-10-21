@@ -22,7 +22,7 @@ def test_provenance_nota_reference_date_no_es_corte():
     })
     joined = "".join(out)
     assert "no un corte estricto de datos" in joined
-    assert "CBOE" in joined
+    assert "fuentes externas" in joined
     assert "effective_date_equity" in joined
 
 

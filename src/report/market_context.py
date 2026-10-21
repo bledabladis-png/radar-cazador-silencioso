@@ -54,10 +54,9 @@ def render_liderazgo_interno(rs_internal_data):
                    "universo completo. Por construccion, los top-5 baten a "
                    "su sector y, con frecuencia, al mercado. Una mayoria de "
                    "'Liderazgo relativo doble' aqui NO significa que la "
-                   "mayoria del universo lo sea: en el CSV completo "
-                   "(rs_internal.csv, ~230 tickers) la distribucion incluye "
-                   "debilidad, fortaleza sectorial y liderazgo interno en "
-                   "sector debil.*\n\n")
+                   "mayoria del universo lo sea: la distribucion del universo "
+                   "completo incluye debilidad, fortaleza sectorial y "
+                   "liderazgo interno en sector debil.*\n\n")
     return out
 
 
