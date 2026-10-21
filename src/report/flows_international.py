@@ -252,6 +252,11 @@ def render_flujo_posicional_nport(nport_position_change_data):
                    "ingesta: trimestral (ZIPs N-PORT). Fecha de observacion "
                    "= cierre del trimestre; fecha de presentacion = dia en "
                    "que SEC recibio el filing.*\n")
+        # P8 (2026-10-22, auditor externo): posiciones residuales.
+        out.append("*Las filas pueden incluir posiciones residuales o "
+                   "instrumentos legados de filings historicos. El "
+                   "reporte no valida cotizacion, negociabilidad ni "
+                   "valor de mercado actual de cada posicion.*\n")
         out.append("| Fecha observacion | Fecha presentacion | Fondo | Activo | ISIN | Balance Previo | Balance Actual | Cambio | % Cambio |\n")
         out.append("|-------------------|---------------------|-------|--------|-------|----------------|----------------|--------|-----------|\n")
         for _, row in nport_position_change_data.iterrows():

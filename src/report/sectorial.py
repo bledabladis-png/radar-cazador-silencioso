@@ -85,6 +85,14 @@ def render_sector_concentration(sector_concentration_data):
             out.append(f"| {row['sector']} | {_fmt_num(row['top1_positive_return_concentration'], '{:.1%}')} | {_fmt_num(row['top3_positive_return_concentration'], '{:.1%}')} | {_fmt_num(row['top5_positive_return_concentration'], '{:.1%}')} | {_fmt_num(row['rs_median'], '{:.4f}')} | {_fmt_num(row['momentum_median'], '{:.2%}')} | {_fmt_num(row['flow_median'], '{:.2f}')} | {_fmt_num(row['wyckoff_median'], '{:.2f}')} | {_fmt_num(row['wls_median'], '{:.2f}')} | {row['leader_ticker']} | {_fmt_num(row['leader_return20'], '{:.2%}')} | {_fmt_num(row['coverage_rs'], '{:.0f}%')} | {_fmt_num(row['coverage_momentum'], '{:.0f}%')} | {_fmt_num(row['coverage_flow'], '{:.0f}%')} | {_fmt_num(row['coverage_wyckoff'], '{:.0f}%')} | {_fmt_num(row['coverage_wls'], '{:.0f}%')} |\n")
         out.append("\n")
         out.append("*Criterio 'Lider': ticker con mayor retorno 20d. Universo: top-20 por weight del ETF sectorial. Coincide con la primera fila de Liderazgo interno (mismo criterio). No coincide con Representatividad, que ordena por WLS.*\n\n")
+        # P2 (2026-10-22, auditor externo): denominador de cobertura.
+        out.append("*Nota: la cobertura (Cob *) se calcula sobre n_total, "
+                   "el universo completo del ETF sectorial (decenas de "
+                   "tickers), no sobre el top-20 mostrado. Un 20% de "
+                   "cobertura con 5 lideres visibles es coherente: son "
+                   "5 de los tickers validos dentro del universo. "
+                   "Denominador exacto en la columna n_total de "
+                   "sector_concentration.csv.*\n\n")
         out.append("*Ret Lider = retorno absoluto 20d del ticker lider (leader_return20). Distinto de 'vs mercado 20d' de Liderazgo interno, que es retorno relativo (rs_abs_20d). Nombre heredado (D-07 auditoria 2026-09-26); ambos se mantienen para no romper series.*\n\n")
         # P2.8 (2026-10-13, auditor): coberturas identicas entre columnas.
         out.append("*Cob RS / Mom / Flow / Wyckoff / WLS son identicas por "

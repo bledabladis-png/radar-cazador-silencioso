@@ -300,6 +300,20 @@ def generate_leader_section(df_market, df_stocks, holdings_df, fase_dict,
         lines.append('\n')
 
     # Filtrar métricas None/vacías y concatenar solo si hay datos válidos
+    # P1 (2026-10-22, auditor externo): la componente rs_z del WLS
+    # deriva de rs_mom (log-retorno relativo 20d), NO de rs nominal.
+    # rs_mom es invariante a escala de precio (splits, precio nominal):
+    # log(k*P_t) - log(k*P_{t-20}) = log(P_t) - log(P_{t-20}).
+    # El rs nominal (ratio de precio accion / precio ETF) solo se usa
+    # en LIS (slpm_v12.py), marcado como provisional.
+    if leader_data:
+        lines.append('*Nota: la componente rs_z del WLS usa RS Mom '
+                     '(log-retorno relativo 20d), no el RS nominal. '
+                     'Es invariante a escala de precio (splits, precio '
+                     'nominal). El RS nominal (ratio de precio accion / '
+                     'precio ETF) solo se usa en LIS, marcado como '
+                     'provisional.*\n')
+
     full_metrics_data = [m for m in full_metrics_data if m is not None and not m.empty]
     if full_metrics_data:
         full_metrics_df = pd.concat(full_metrics_data, ignore_index=True)

@@ -198,6 +198,13 @@ def render_provenance(prov: Optional[dict]) -> list:
     _coh = prov.get("temporal_coherence")
     if _coh and _coh != "N/D":
         out.append("- `temporal_coherence`: {0}\n".format(_coh))
+        # P6 (2026-10-22, auditor externo): aclarar alcance.
+        out.append("*`temporal_coherence` valida solo `stock_prices` y "
+                   "`market_data` (sesion esperada vs ultimo dato). El "
+                   "resto de fuentes (SSGA, BME, Euronext, FINRA, SEC) "
+                   "declara su lag y frescura en Data Freshness. "
+                   "Coherencia temporal de los dos parquets no implica "
+                   "sincronizacion de todas las fuentes.*\n")
     out.append("- `generated_at`: {0} (UTC)\n".format(
         _fmt(prov.get("generated_at"))))
 
