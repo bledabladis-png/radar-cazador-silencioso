@@ -170,7 +170,7 @@ C1 (Wyckoff +1), C2 (Flow Proxy 30% WLS), C3 (SLPM NO_LEADERS),
 C4 (datos desfasados), C5 (NIPC 13F), C7 (spread 10Y-3M), C9 (IPI).
 
 **Pendiente.** Cerrar `REVIEW-EXTERNAL` tras run 2026-10-20.
-Diagnostico WALCL/CP (`FLS-COMPONENT-DESIGN`). `RECEIPT-AUDIT-LAG`
+`RECEIPT-AUDIT-LAG`
 (observacion 4 semanas). `CRON-SLOTS-OBS` y `SCHEDULER-DELAYS`
 (revision 2026-11-10).
 
@@ -197,7 +197,8 @@ Diagnostico WALCL/CP (`FLS-COMPONENT-DESIGN`). `RECEIPT-AUDIT-LAG`
 - REP-AUDIT-20261020-REPORT-STRUCT-COLUMN: FIXED (`0aec4ce5`).
 - REP-AUDIT-20261020-REPORT-XLC-EVIDENCE: FIXED (`41b1c8bf`).
 - REP-AUDIT-20261020-REPORT-REVIEW-EXTERNAL: 13 items atendidos (auditor externo #1). P1, P2 FIXED en `eaed52a7`, `68e4e40c`. C1-C10 verificados (varios FALSE_POSITIVE).
-- REP-AUDIT-20261020-FLS-COMPONENT-DESIGN (SOFR): FIXED (`38f17674`). SOFR pasa de z(nivel) a z(spread SOFR-IORB). WALCL/CP pendientes.
+- REP-AUDIT-20261020-FLS-COMPONENT-DESIGN: FIXED (`5a1e0c37`). SOFR FIXED
+(`38f17674`), WALCL/CP WONT_FIX (saturacion estructural; diagnostico 22-10).
 - REP-AUDIT-20261020-REPORT-REVIEW-EXTERNAL: FIXED. Run 39528211520 verde, validation_gate 10/10, FLS 63/100, primer LAGGED real.
 
 ---
@@ -207,7 +208,6 @@ Diagnostico WALCL/CP (`FLS-COMPONENT-DESIGN`). `RECEIPT-AUDIT-LAG`
 - **REP-AUDIT-20261020-RECEIPT-AUDIT-LAG** (OPEN): status LAGGED en post_receipt_audit; observacion 4 semanas.
 - **REP-AUDIT-20261020-CRON-SLOTS-OBS** (OPEN): revision 2026-11-10.
 - **REP-AUDIT-20261020-SCHEDULER-DELAYS** (OPEN): revision 2026-11-10.
-- **REP-AUDIT-20261020-FLS-COMPONENT-DESIGN** (OPEN): SOFR FIXED. Pendiente WALCL/CP (diagnostico proxima sesion).
 
 ### 4.1. Certificacion scheduled lunes 2026-10-19 23:17 UTC [COMPLETED 2026-10-20]
 
