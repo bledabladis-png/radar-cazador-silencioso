@@ -1117,3 +1117,42 @@ items:
     merecen el mismo tratamiento. Medir saturacion con diagnostico
     rolling 252d. Cualquier cambio adicional requiere re-certificacion
     (FLS entra en MTE).
+
+- id: REP-AUDIT-20261021-REPORT-REVIEW-2
+  tipo: auditoria_interna
+  ciclo: '2026-10-21'
+  estado: FIXED
+  descripcion: |
+    Revision completa del reporte 2026-10-20 (run 39528211520). 8
+    hallazgos H1-H8. H1 = 'Struct' vs 'Struct Score' ambiguos en
+    Rankings: renombrado a 'Struct Wyckoff' + nota que distingue motor
+    estructural (0.50*rs + 0.30*flow + 0.20*persist) de struct_score
+    interno (STRUCT_STRONG=0.30). H2 = edades discrepantes entre
+    tabla compacta (reference_date del runtime) y completa (fecha de
+    sesion del CSV): nota explicita en ambas. H3 = 55/55 'Liderazgo
+    relativo doble' en top-5 por sector: FALSE_POSITIVE del analista,
+    sesgo de seleccion por construccion (top-5 bate al sector); el
+    universo completo de 230 tickers tiene 114 doble, 74 debilidad,
+    38 fortaleza sectorial, 4 interno debil, 0 incoherencias. Nota
+    de sesgo anadida. H4 = SLPM 0/5 vs 10 acciones sin trazabilidad:
+    nota aclarando que stock_leader y SLPM usan universos distintos
+    y las acciones no han pasado validacion SLPM. H5 = XLK MARKUP con
+    -5.52%: nota de que struct_score mide tendencia de fondo (MA lenta
+    + compresion ATR), no retorno reciente. H6 = XLE MARKUP con 55%
+    componentes RANGE: la nota P2.2 solo salia si habia COB BAJA;
+    movida fuera del if para que salga siempre. H7 = XLK #11 con
+    Struct +0.44: nota de que la tabla se ordena por Score, no por
+    Struct Wyckoff. H8 = FRED liquidez NEUTRAL -> ABUNDANTE: FALSE_POSITIVE
+    del analista, revision retrospectiva del proveedor (diff_bp
+    preliminar >= 0 -> revisado -1.0, TENSION_BAJA -> ABUNDANTE,
+    correcto por liquidez_v2.py:14).
+  commit: '100b55d6'
+  test: tests/test_report_leaders_nomenclatura.py
+  evidencia: |
+    8/8 hallazgos atendidos. 7 FIXED con nota o renombrado (commits
+    bd32577a, ec0e7b8b, 100b55d6). 2 FALSE_POSITIVE del analista (H3
+    sesgo de seleccion, H8 revision FRED) con evidencia del CSV y del
+    state.json. Suite completa 3796 passed. CI success en cada commit.
+    Verificacion integra del reporte: 17/17 fixes previos + H1-H7
+    confirmados en el output real del run 2026-10-20.
+
