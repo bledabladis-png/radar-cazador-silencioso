@@ -2,31 +2,31 @@
   "schema_version": 1,
   "artifact": {
     "path": "data/market_data.parquet",
-    "sha256": "abb75b43b0e30555647d7390e0b9db0563700796259db9a2aba8940d20a77206",
-    "bytes": 56824043,
-    "written_at": "2026-10-20T01:58:45.155299"
+    "sha256": "60c3556adf7ab13d54682c1ee238d3446317ec010b882cf1336490e84d758907",
+    "bytes": 56835507,
+    "written_at": "2026-10-21T01:43:27.376839"
   },
   "producer": {
     "module": "src.utils",
     "function": "write_artifact_with_manifest",
-    "run_id": "20261020_035328",
+    "run_id": "20261021_033817",
     "source": "yahoo"
   },
   "content": {
     "rows": 2605,
     "cols": 2815,
     "n_tickers": 563,
-    "date_min": "2016-10-19",
-    "date_max": "2026-10-19"
+    "date_min": "2016-10-20",
+    "date_max": "2026-10-20"
   },
   "temporal": {
     "contract": null
   },
   "quality": {
-    "last_date": "2026-10-19",
-    "expected_session": "2026-10-19",
+    "last_date": "2026-10-20",
+    "expected_session": "2026-10-20",
     "last_date_is_expected_session": true,
-    "pct_dup_last": 0.008929,
+    "pct_dup_last": 0.003571,
     "close_nan_last": 3,
     "n_tickers_expected_last": 563,
     "n_tickers_with_close_last": 560,
@@ -55,7 +55,7 @@
       },
       "US_EQUITY": {
         "n": 563,
-        "last_closed_session": "2026-10-19",
+        "last_closed_session": "2026-10-20",
         "coverage_at_session": 0.994671,
         "status": "VALID"
       },

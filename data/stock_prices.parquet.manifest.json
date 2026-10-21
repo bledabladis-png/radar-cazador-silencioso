@@ -2,29 +2,29 @@
   "schema_version": 1,
   "artifact": {
     "path": "data/stock_prices.parquet",
-    "sha256": "332dec04ef55956cb9a34cbe18e9e742cca8a150ef80c4ac81272035c2c8e77c",
-    "bytes": 15535704,
-    "written_at": "2026-10-20T02:02:04.855668"
+    "sha256": "341bb0017cdf8c59c68c2b0d8e476ea46f6a891c89ef4fdfc8caac95b30b95a3",
+    "bytes": 15531106,
+    "written_at": "2026-10-21T01:46:07.845084"
   },
   "producer": {
     "module": "src.utils",
     "function": "write_artifact_with_manifest",
-    "run_id": "20261020_035328",
+    "run_id": "20261021_033817",
     "source": "yahoo_european_cascade"
   },
   "content": {
     "rows": 1293,
     "cols": 1645,
     "n_tickers": 329,
-    "date_min": "2021-10-19",
-    "date_max": "2026-10-19"
+    "date_min": "2021-10-20",
+    "date_max": "2026-10-20"
   },
   "temporal": {
     "contract": null
   },
   "quality": {
-    "last_date": "2026-10-19",
-    "expected_session": "2026-10-19",
+    "last_date": "2026-10-20",
+    "expected_session": "2026-10-20",
     "last_date_is_expected_session": true,
     "pct_dup_last": 0.003115,
     "close_nan_last": 8,
@@ -37,31 +37,31 @@
     "by_market": {
       "BME": {
         "n": 19,
-        "last_closed_session": "2026-10-19",
+        "last_closed_session": "2026-10-20",
         "coverage_at_session": 1.0,
         "status": "VALID"
       },
       "EURONEXT": {
         "n": 13,
-        "last_closed_session": "2026-10-19",
+        "last_closed_session": "2026-10-20",
         "coverage_at_session": 1.0,
         "status": "VALID"
       },
       "LSE": {
         "n": 20,
-        "last_closed_session": "2026-10-19",
+        "last_closed_session": "2026-10-20",
         "coverage_at_session": 0.8,
         "status": "VALID_WITH_MISSING"
       },
       "US_EQUITY": {
         "n": 255,
-        "last_closed_session": "2026-10-19",
+        "last_closed_session": "2026-10-20",
         "coverage_at_session": 0.996078,
         "status": "VALID"
       },
       "XETRA": {
         "n": 22,
-        "last_closed_session": "2026-10-19",
+        "last_closed_session": "2026-10-20",
         "coverage_at_session": 0.863636,
         "status": "VALID_WITH_MISSING"
       }
