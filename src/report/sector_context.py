@@ -148,7 +148,7 @@ def render_momentum_amplitud(sector_breadth_momentum_data):
         out.append("*Reglas de los flags:*\n")
         out.append("  - *Expansion = True si delta_5d_ema20 >= +5 pp Y "
                    "nivel actual pct_above_ema20 > 60%.*\n")
-        out.append("  - *Deterioro = True si delta_5d_ema20 <= -5 pp.*\n")
+        out.append("  - *Deterioro = True si delta_5d_ema20 (redondeado a 1 decimal, igual que se muestra) <= -5 pp.*\n")
         out.append("  - *Ambos flags pueden ser False simultaneamente; no "
                    "pueden ser True a la vez (umbrales opuestos).*\n")
         out.append("*Fuente: indicators/sector_breadth_momentum.py.*\n\n")

@@ -44,3 +44,45 @@ def test_fechas_no_consecutivas(tmp_path):
     xlk = out[out['sector']=='XLK'].iloc[0]
     # Delta1d entre 01-20 y 01-05 es > 3 días => NaN
     assert pd.isna(xlk['delta_1d_ema20'])
+
+# ============================================================
+# P3 (2026-10-21, auditor externo): umbral aplicado al redondeado
+# ============================================================
+from indicators.sector_breadth_momentum import _is_deterioration, _is_expansion
+
+
+def test_deterioration_caso_xlf_borde():
+    """Caso real 2026-10-20: delta=-4.9999 (display -5.0) -> True."""
+    assert _is_deterioration(-4.9999) is True
+
+
+def test_deterioration_exacto_menos_5():
+    assert _is_deterioration(-5.0) is True
+
+
+def test_deterioration_por_encima():
+    assert _is_deterioration(-4.9) is False
+
+
+def test_deterioration_por_debajo():
+    assert _is_deterioration(-5.2) is True
+
+
+def test_deterioration_nan():
+    assert _is_deterioration(float("nan")) is False
+
+
+def test_expansion_por_encima():
+    assert _is_expansion(5.0, 65.0) is True
+
+
+def test_expansion_por_debajo():
+    assert _is_expansion(4.9, 65.0) is False
+
+
+def test_expansion_nivel_bajo():
+    assert _is_expansion(5.0, 55.0) is False
+
+
+def test_expansion_nan():
+    assert _is_expansion(float("nan"), 65.0) is False

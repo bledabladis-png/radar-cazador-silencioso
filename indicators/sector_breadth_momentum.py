@@ -83,6 +83,28 @@ def classify_delta(delta):
 
 
 
+def _is_expansion(delta_5d, ema20_last):
+    """True si delta_5d (redondeado a 1 decimal) >= +5 pp Y nivel > 60%.
+
+    El umbral se aplica al valor redondeado a 1 decimal, consistente
+    con el render (formato {:.1f}). P3 (2026-10-21, auditor externo).
+    """
+    if pd.isna(delta_5d) or ema20_last is None or pd.isna(ema20_last):
+        return False
+    return round(float(delta_5d), 1) >= 5 and ema20_last > 60
+
+
+def _is_deterioration(delta_5d):
+    """True si delta_5d (redondeado a 1 decimal) <= -5 pp.
+
+    El umbral se aplica al valor redondeado a 1 decimal, consistente
+    con el render (formato {:.1f}). P3 (2026-10-21, auditor externo).
+    """
+    if pd.isna(delta_5d):
+        return False
+    return round(float(delta_5d), 1) <= -5
+
+
 def compute_sector_breadth_momentum(sector_breadth_csv_path):
 
     df = pd.read_csv(sector_breadth_csv_path, parse_dates=['date'])
@@ -143,7 +165,7 @@ def compute_sector_breadth_momentum(sector_breadth_csv_path):
 
         # Expansión 5d sobre EMA20: delta5d >= +5 pp y nivel > 60%
 
-        if pd.notna(d5_20) and d5_20 >= 5 and pd.notna(ema20.iloc[-1]) and ema20.iloc[-1] > 60:
+        if _is_expansion(d5_20, ema20.iloc[-1] if len(ema20) > 0 else None):
 
             expansion = True
 
@@ -155,7 +177,7 @@ def compute_sector_breadth_momentum(sector_breadth_csv_path):
 
         # Deterioro 5d: delta5d <= -5 pp
 
-        if pd.notna(d5_20) and d5_20 <= -5:
+        if _is_deterioration(d5_20):
 
             deterioration = True
 
