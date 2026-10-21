@@ -116,6 +116,8 @@ def render_data_freshness(pcr_data, darkpool_data, sector_results, reference_dat
     # El conteo real puede variar (hoy 28). Se elimina el literal fijo;
     # la tabla de Calidad se refiere a las fuentes efectivamente
     # renderizadas en esa seccion.
+    out.append("*Referencia de edad (vista compacta): fecha de ejecucion "
+               "del pipeline (reference_date).*\n\n")
     out.append("*Vista compacta (runtime): 4 fuentes criticas con columna "
                "Conf. Frescura (derivada de la frescura observada, NO de "
                "la cobertura). La tabla 'Calidad, frescura y cobertura' "
@@ -229,6 +231,9 @@ def render_calidad_datos(data_quality_data):
             if 'source' in data_quality_data.columns
             else len(data_quality_data)
         )
+        out.append("*Referencia de edad (vista completa): fecha de sesion "
+                   "del CSV de data_quality. Puede diferir de la vista "
+                   "compacta (reference_date del runtime).*\n\n")
         out.append("*Vista completa: {0} fuentes del sistema desde "
                    "data_quality.csv. La tabla compacta 'Data Freshness' "
                    "lista las 4 fuentes criticas con columna Conf. "

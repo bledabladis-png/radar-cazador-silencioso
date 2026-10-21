@@ -137,6 +137,19 @@ def render_acciones_seleccionadas(leader_lines):
             "con los WLS sectoriales (suma 1.00): se restringen al universo "
             "de cada indice.*\n\n"
         )
+        # H4 (2026-10-21): trazabilidad entre este listado y SLPM.
+        # Las acciones aqui seleccionadas NO han pasado validacion SLPM
+        # (universo distinto: stock_leader usa WLS intra-sector; SLPM
+        # usa leader_breadth y state machine). Si SLPM reporta
+        # NO_LEADERS o cobertura 0/5, estas acciones son candidatos
+        # operativos, no lideres estructuralmente validados.
+        out.append("*Nota de trazabilidad: esta seccion usa el universo "
+                   "stock_leader (top-15 por weight, top-5 por WLS). "
+                   "SLPM usa otro universo (leader_breadth + state machine). "
+                   "Las acciones aqui listadas NO han pasado validacion "
+                   "estructural de SLPM. Si SLPM reporta NO_LEADERS o "
+                   "cobertura 0/5, son candidatos operativos, no lideres "
+                   "estructuralmente confirmados.*\n\n")
         out.extend(leader_lines)
     else:
         out.append("\n## Acciones Seleccionadas por el Modelo de Liderazgo Sectorial\n")

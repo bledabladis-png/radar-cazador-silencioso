@@ -39,7 +39,7 @@ def render_ranking_sectorial_unificado(sector_results, tactical_scores,
     # Rango [0,1]. Mide la fraccion de la ventana en que el score
     # sectorial se mantuvo con el mismo signo.
     header = ("| # | Sector | Score | Tactical | Structural | Persist "
-              "| Agreement | Signal Cons | Comm Corr | Fase Wyckoff | Struct Score |\n")
+              "| Agreement | Signal Cons | Comm Corr | Fase Wyckoff | Struct Wyckoff |\n")
     sep = ("|---|--------|-------|----------|------------|---------"
            "|-----------|-------------|-----------|---------------|-------------|\n")
     out.append(header)
@@ -72,6 +72,13 @@ def render_ranking_sectorial_unificado(sector_results, tactical_scores,
             f"| {comm_display} | {wyckoff} | {_s_str} |\n"
         )
     out.append("\n")
+    # H1 (2026-10-21): distinguir 'Structural' (motor estructural) de
+    # 'Struct Wyckoff' (metrica interna del ranking). Son cosas distintas.
+    out.append("*Nota: 'Structural' es el motor estructural "
+               "(0.50*rs_structural + 0.30*flow_structure + 0.20*persistence). "
+               "'Struct Wyckoff' es el struct_score interno del ranking "
+               "(magnitud Wyckoff: STRUCT_STRONG=0.30). No son comparables "
+               "entre si; pueden tener signos distintos para el mismo sector.*\n\n")
     return out
 
 
