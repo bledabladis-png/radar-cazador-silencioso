@@ -49,6 +49,17 @@
     Usar `[System.IO.File]::WriteAllText` para el primer chunk y `[System.IO.File]::AppendAllText` para los siguientes.
 17. **Al corregir un valor que puede repetirse en varios sitios del mismo documento, buscar TODAS las ocurrencias antes del patch.**
     Un assert `== 1` solo valida el anchor, no la ausencia de otras ocurrencias.
+18. **Catalogo EOL/BOM de `src/` (verificado 2026-10-22):** excepciones
+    a la regla "UTF-8 sin BOM, LF":
+    - `src/report_generator.py`: **con BOM**, LF (216 lineas).
+    - `src/utils.py`: sin BOM, **CRLF** (876 lineas).
+    - `src/pipeline/finalize.py`: sin BOM, **CRLF** (155 lineas).
+    Resto del codigo productivo: sin BOM, LF (verificar antes de patch
+    multilinea, pueden cambiar por edicion manual). Detectar con
+    `ReadAllBytes` + `ReadAllText` + `[regex]::Matches`.
+19. **`f"string"` sin placeholder = error de `pyflakes`:** si el literal
+    no tiene `{...}`, no usar `f`. Ejemplo: `f"texto"` debe ser `"texto"`.
+    Pyflakes lo detecta y tumba el run.
 
 ---
 
@@ -177,6 +188,28 @@ Tipos: `fix`, `refactor`, `docs`, `data`, `test`, `chore`, `perf`.
   angulares en bloques que el usuario pegara. Cuando un bloque depende
   de un valor de salida del bloque anterior, escribir el valor literal
   o encadenar por variable en el mismo paste.
+- **`<...>` en bloques de comando:** PowerShell interpreta `<` como
+  redireccion reservada. `gh run view <RUN_ID>` falla con error de
+  parser. Usar variable previa: `$rid = "..."`; `gh run view $rid`.
+  Lo mismo con `<STAMP>`, `<DATE>`, etc.
+- **`-ErrorAction` no existe en `git`:** es parametro de cmdlet PS, no
+  de binario. `git checkout -- path -ErrorAction SilentlyContinue`
+  falla como "unknown option". Usar `2>$null` o confiar en que
+  `git status` muestra el estado real tras el intento.
+- **`--jq` en `gh` con PowerShell se come las comillas:** el parser
+  PS interpreta mal los `"..."` dentro del `--jq '...'`. Usar
+  `ConvertFrom-Json` en PS: `$runs = gh run list --json ... | ConvertFrom-Json`.
+  Lo mismo con `>` en PS: es redireccion, no argumento. Filtrar en PS,
+  no en la linea de comandos.
+- **Mojibake por here-string:** el paso de here-string PS 5.1 a
+  `_script.py` corrompe caracteres unicode (dibujo de caja U+251C,
+  tildes). Distinto del artefacto de consola (L159): aqui el fichero
+  escrito queda corrupto. Verificar tras escribir: `'\u251c' in texto`.
+  No fiarse de la vista de consola.
+- **YAML con `:` en `descripcion` rompe `verifica_gobernanza`:** un
+  `:` inline sin comillas altera el parseo. Usar block scalar `|` con
+  sangria 4 espacios, o citar con `'...'`. Evitar `:` sin escapar en
+  valores inline de `REGISTRO.yaml`.
 
 ---
 
@@ -189,11 +222,14 @@ Tipos: `fix`, `refactor`, `docs`, `data`, `test`, `chore`, `perf`.
   pre/post.** Si haces snapshot "pre", corres el E2E, y luego copias
   el fichero como "frozen": el frozen ya tiene los cambios del E2E.
   Caso real 2026-10-08 con `sector_wyckoff_distribution.csv`.
-- **El corpus tiene EOL mixto en disco.** `00_ARRANQUE.md` y
-  `01c_LECCIONES.md` en CRLF. `01_METODO.md`, `05_BITACORA.md`, etc.
-  en LF. `.gitattributes` fuerza LF al commitear, pero el working tree
-  conserva el EOL original. Antes de patch multilinea, detectar EOL
-  con `repr()` del bloque objetivo.
+- **El corpus tiene EOL mixto en disco.** Verificado 2026-10-22:
+  `01_METODO.md` (352 CRLF) y `01c_LECCIONES.md` (61 CRLF) en CRLF;
+  `00_ARRANQUE.md` (257 LF) y `05_BITACORA.md` (974 LF) en LF. El EOL
+  puede cambiar entre sesiones por edicion manual o checkout con
+  `autocrlf`; re-verificar antes de cada patch. `.gitattributes` fuerza
+  LF al commitear pero el working tree conserva el EOL original.
+  Detectar con `ReadAllText` + `[regex]::Matches` (no `Get-Content`,
+  que puede normalizar).
 - **`foreach (...) { ... } | pipe` falla en PowerShell 5.1** con
   `No se permiten elementos de canalización vacíos`. Usar
   `... | ForEach-Object { ... }` o envolver en `$(...)`.
