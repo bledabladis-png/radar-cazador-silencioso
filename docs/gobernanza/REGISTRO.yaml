@@ -1228,7 +1228,7 @@ items:
   tipo: auditoria_interna
   ciclo: '2026-10-22'
   estado: FIXED
-  commit: 'PENDING'
+  commit: 'd405d539'
   test: tests/test_router_fed_data_freshness.py
   descripcion: |
     Bug descubierto durante revision del reporte 2026-10-21 (target)
