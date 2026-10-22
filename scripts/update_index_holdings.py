@@ -179,34 +179,48 @@ def get_state_street_holdings(etf, url):
     if ticker_col is None:
         raise Exception('No se encontró columna Ticker')
 
-    tickers = []
-    names = []
-    weights = []
+    # REFACTOR 2026-10-22 (REP-AUDIT-20261022-INDEX-HOLDINGS-ARRAYS):
+    # antes se construian 3 listas paralelas (tickers, names, weights) y
+    # se pasaban a pd.DataFrame. Si por cualquier razon una fila
+    # intermedia fallaba (Excel de SSGA malformado: "All arrays must be
+    # of the same length", CI 1-oct), las 3 listas quedaban
+    # desbalanceadas y pd.DataFrame fallaba en bloque. Nuevo patron:
+    # acumular dicts por fila (rows.append) con try/except por fila. Una
+    # fila malformada se descarta; no corrompe el resto.
+    rows = []
     for i in range(header_row + 1, len(df_raw)):
         ticker = df_raw.iloc[i, ticker_col]
-        if isinstance(ticker, str):
-            t_norm = normalize_ticker(ticker.strip().upper())
-            if is_valid_holding_ticker(t_norm):
-                tickers.append(t_norm)
-                name = df_raw.iloc[i, name_col] if name_col is not None else ''
-                if not isinstance(name, str):
-                    name = ''
-                names.append(name.strip())
-                if weight_col is not None:
-                    w_raw = df_raw.iloc[i, weight_col]
-                    try:
-                        w = float(str(w_raw).replace(',', '.'))
-                    except (ValueError, TypeError):
-                        w = 0.0
-                    weights.append(w)
-                else:
-                    weights.append(0.0)
+        if not isinstance(ticker, str):
+            continue
+        t_norm = normalize_ticker(ticker.strip().upper())
+        if not is_valid_holding_ticker(t_norm):
+            continue
+        try:
+            name = df_raw.iloc[i, name_col] if name_col is not None else ''
+            if not isinstance(name, str):
+                name = ''
+            weight = 0.0
+            if weight_col is not None:
+                w_raw = df_raw.iloc[i, weight_col]
+                try:
+                    weight = float(str(w_raw).replace(',', '.'))
+                except (ValueError, TypeError):
+                    weight = 0.0
+            rows.append({
+                'etf': etf,
+                'ticker': t_norm,
+                'name': name.strip(),
+                'weight': weight,
+            })
+        except (IndexError, KeyError, TypeError, ValueError) as e:
+            print(f'  [WARN] {etf} fila {i}: {e} (descartada)')
+            continue
 
-    if not tickers:
+    if not rows:
         raise Exception('No se encontraron tickers')
 
-    print(f'  {len(tickers)} tickers extraídos')
-    return pd.DataFrame({'etf': etf, 'ticker': tickers, 'name': names, 'weight': weights})
+    print(f'  {len(rows)} tickers extraídos')
+    return pd.DataFrame(rows)
 
 
 def main():

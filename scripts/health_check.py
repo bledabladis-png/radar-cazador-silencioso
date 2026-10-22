@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env python3
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """Health check del sistema Radar.
 
@@ -726,8 +726,15 @@ def check_iae_section(is_ci: bool = False) -> list:
                 "reporte_diario.md no versionado (outputs/*.md gitignored)")]
         return [Result("iae_section", WARN, "reporte_diario.md no existe")]
     text = p.read_text(encoding="utf-8", errors="replace")
-    heading = "## Acumulacion Institucional (13F)"
-    if heading not in text:
+    # Fix 2026-10-22 (REP-AUDIT-20261022-IAE-SECTION-HEADING): el
+    # reporte usa ahora "## Variacion neta de posiciones declaradas (13F)".
+    # Se acepta cualquier heading de nivel 2 que contenga "13F".
+    heading = None
+    for _line in text.splitlines():
+        if _line.startswith("## ") and "13F" in _line:
+            heading = _line
+            break
+    if heading is None:
         return [Result("iae_section", WARN, "seccion IAE no encontrada")]
     # Extraer solo el bloque de la seccion IAE (desde el heading hasta
     # el siguiente "## " o fin). Antes se buscaba STALE en todo el

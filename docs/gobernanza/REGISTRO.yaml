@@ -1550,3 +1550,102 @@ items:
     sobre parquet real (2026-10-22): 2729 celdas USA antes, 0
     despues, 5504 celdas limpiadas (todas las OHLCV). Suite:
     3849 passed, 5 skipped.
+
+- id: REP-AUDIT-20261022-HEALTH-CHECK-19OCT
+  tipo: auditoria_interna
+  ciclo: '2026-10-22'
+  estado: WONT_FIX
+  razon: |
+    El health_check del 19-oct fallo con exit 1 porque cron_slots
+    marco FAIL con 2/5 slots en 24h. La regla vigente entonces
+    (pre 2026-10-20) marcaba FAIL con 3+ missing. La regla
+    actual (post 20-oct, commit 0103599f) reclasifica: 0 missing
+    = OK, 1-4 missing = WARN, 5/5 missing = FAIL. Con la regla
+    nueva, el mismo caso del 19-oct habria sido WARN (no exit 1).
+    El bug esta cerrado por el commit del 20-oct. No requiere
+    accion adicional. Verificado en el health_check del 22-oct
+    (3/5 slots = WARN, no FAIL).
+
+- id: REP-AUDIT-20261022-ETF-EU-HOLDINGS-1OCT
+  tipo: auditoria_interna
+  ciclo: '2026-10-22'
+  estado: WONT_FIX
+  razon: |
+    Los runs scheduled de update_sector_holdings (09:26 UTC) y
+    update_european_holdings (11:38 UTC) del 1-oct fallaron con
+    ModuleNotFoundError No module named src. El fix sys.path.insert
+    se commiteo en 1bead8ad a las 15:31 UTC del mismo dia.
+    Fallaron 6h y 4h ANTES del fix. Recuperados manualmente por
+    workflow_dispatch a las 15:32 UTC. Los runs scheduled
+    posteriores ejecutaran con sys.path.insert presente.
+    Verificado: parse_ssga_fez.py (invocado por
+    update_european_holdings.py via subprocess) tiene sys.path.insert
+    en L9. No requiere accion.
+
+- id: REP-AUDIT-20261022-INDEX-HOLDINGS-ARRAYS
+  tipo: auditoria_interna
+  ciclo: '2026-10-22'
+  estado: FIXED
+  commit: 'PENDING'
+  descripcion: |
+    update_index_holdings.py:get_state_street_holdings construia
+    3 listas paralelas (tickers, names, weights) y las pasaba a
+    pd.DataFrame al final. Si una fila intermedia fallaba, las 3
+    quedaban desbalanceadas y pd.DataFrame lanzaba All arrays
+    must be of the same length. Caso observado: run scheduled
+    del 1-oct 15:37 UTC fallo con SPY (504 tickers) y DIA (30).
+    El bug no reproduce con los Excel de SSGA actuales (22-oct).
+    Fue transitorio por Excel malformado del proveedor.
+  evidencia: |
+    Refactor defensivo: listas paralelas -> rows.append(dict) con
+    try/except por fila. Una fila malformada se descarta con
+    [WARN] y no corrompe el resto. Elimina la clase de bug. Verificado
+    local 2026-10-22: 4/4 ETFs actualizados (SPY 503, DIA 30,
+    QQQ 98, IWM 1972), exit 0, sin ERROR ni WARN.
+
+- id: REP-AUDIT-20261022-CRON-SLOTS-WARN
+  tipo: auditoria_interna
+  ciclo: '2026-10-22'
+  estado: WONT_FIX
+  razon: |
+    El health_check del 22-oct marca cron_slots WARN con 3/5 slots
+    en 24h (missing 03:17, 05:17). Pero los 5 runs scheduled del
+    22-oct (01:31, 08:40, 10:11, 12:57, 15:52 UTC) son success.
+    Los missing se explican por delays de GitHub scheduler (2-4h
+    documentados). El health_check compara ventanas de 24h con
+    slots teoricos de cron y no con runs reales; delays legitimos
+    aparecen como missing. Comportamiento esperado. Regla actual
+    WARN (no FAIL). No requiere accion.
+
+- id: REP-AUDIT-20261022-MANIFEST-CLOSE-NAN
+  tipo: auditoria_interna
+  ciclo: '2026-10-22'
+  estado: FALSE_POSITIVE
+  razon: |
+    El health_check marca WARN porque los manifests de stock_prices
+    y market_data declaran VALID_WITH_MISSING con close_nan_last=8
+    y 2. Es informativo, no error. Los tickers NaN en la ultima
+    fecha (21-10) son 20: WBD (delisted, 1 obs 2026-10-05) + 19
+    BME (.MC) que siguen calendario BME y no NYSE. La regla del
+    manifest (VALID_WITH_MISSING si close_nan_last>0) es correcta.
+    Ademas, el fix USA-NON-MARKET-DAYS de esta sesion elimina
+    celdas USA en fechas no-bursatiles; los BME son EU y se
+    preservan correctamente.
+
+- id: REP-AUDIT-20261022-IAE-SECTION-HEADING
+  tipo: auditoria_interna
+  ciclo: '2026-10-22'
+  estado: FIXED
+  commit: 'PENDING'
+  descripcion: |
+    check_iae_section en scripts/health_check.py buscaba el
+    heading literal "## Acumulacion Institucional (13F)". El
+    reporte actual usa "## Variacion neta de posiciones declaradas
+    (13F)" (renombrado en alguna sesion). Resultado: WARN
+    permanente "seccion IAE no encontrada".
+  evidencia: |
+    Fix: buscar cualquier heading nivel 2 que contenga "13F"
+    (for line in text.splitlines(): if startswith("## ") and
+    "13F" in line). Verificado local 2026-10-22: health_check
+    pasa de "[WARN] seccion IAE no encontrada" a "[OK] seccion
+    presente".
