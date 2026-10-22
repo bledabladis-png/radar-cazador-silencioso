@@ -1445,7 +1445,7 @@ items:
   tipo: auditoria_interna
   ciclo: '2026-10-22'
   estado: FIXED
-  commit: 'PENDING'
+  commit: '7fcbe05f'
   test: tests/test_cboe_vix3m_no_non_trading_days.py
   descripcion: |
     data/cboe_vix3m.parquet (unico parquet de produccion
