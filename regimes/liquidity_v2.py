@@ -286,7 +286,7 @@ def _score_continuo(diff_bp: float) -> float:
     import numpy as np
     if pd.isna(diff_bp):
         return float("nan")
-    return float(-np.clip(diff_bp / _ESCALA_SCORE, -1.0, 1.0))
+    return float(-np.clip(diff_bp / _ESCALA_SCORE, -1.0, 1.0)) + 0.0
 
 
 def _confidence(stale_flags: list, c1_available: bool) -> float:

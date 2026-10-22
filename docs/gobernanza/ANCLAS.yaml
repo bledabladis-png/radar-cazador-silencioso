@@ -20,7 +20,7 @@ anclas:
     valor: "2018-04-02"
     categoria: serie_fuente
     ubicaciones:
-      - src/pipeline/regimes.py:36
+      - src/pipeline/regimes.py:41
     razon: "Primera fecha de publicacion de SOFR en FRED. No hay dato antes en la fuente."
 
   - id: VERIFY_OUTPUTS_DEFAULT_SINCE

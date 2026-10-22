@@ -1377,3 +1377,44 @@ items:
     real (creado con commit-tree en repo temporal). Suite completa:
     3826 passed, 5 skipped. test_gobernanza.py existente: 14/14 sin
     regresion. verifica_gobernanza sigue [OK] con codigo nuevo.
+
+- id: REP-AUDIT-20261022-LIQ-V2-DATA-SOURCE-FIXED
+  tipo: auditoria_interna
+  ciclo: '2026-10-22'
+  estado: FIXED
+  commit: 'PENDING'
+  test: tests/test_liquidity_v2_csv_first.py
+  descripcion: |
+    Cierra el OPEN REP-AUDIT-20261022-LIQ-V2-DATA-SOURCE. v2 de
+    liquidez leia SOFR y EFFR solo via pandas_datareader (FRED
+    API), con lag de 1-2 dias respecto a los CSVs data/macro_manual
+    pusheados por bot diario. El state v2 quedaba stale (date=2026-
+    10-19 mientras sofr.csv tenia 2026-10-20). Ademas effr.csv no
+    existia: EFFR solo estaba via API.
+  evidencia: |
+    Fix en 3 partes: (a) scripts/update_macro_manual.py anade
+    effr.csv al MACRO_MANUAL_MAP; (b) src/pipeline/regimes.py:
+    _fetch_liquidity_v2_data cambia a CSV-first con interseccion de
+    indices sofr/effr, fallback a API si falta algun CSV; (c)
+    data/macro_manual/effr.csv generado con 2233 filas hasta
+    2026-10-21. p99 NY Fed (diagnostico C1) sigue via API. Test:
+    tests/test_liquidity_v2_csv_first.py (3 tests). Verificado en
+    run real: log dice "[liq_v2] CSVs:" (no API), state.date ==
+    interseccion de CSVs (no lag API).
+
+- id: REP-AUDIT-20261022-LIQ-SCORE-NEGATIVE-ZERO
+  tipo: auditoria_interna
+  ciclo: '2026-10-22'
+  estado: FIXED
+  commit: 'PENDING'
+  test: tests/test_liquidity_v2_csv_first.py
+  descripcion: |
+    regimes/liquidity_v2.py:_score_continuo devolvia -0.0 cuando
+    diff_bp == 0.0 por signo negativo de np.clip(-0.0/30). En
+    Python -0.0 == 0.0 pero str(-0.0) == "-0.0", y json.dumps
+    serializa como -0.0. Cosmetico pero visible en state.
+  evidencia: |
+    Fix: + 0.0 al final del return. Test:
+    test_liquidity_v2_csv_first.py::test_score_continuo_zero_es_cero_positivo
+    verifica score(0.0) == 0.0 y str() == "0.0". Verificado en run
+    real: state.score = 0.0.

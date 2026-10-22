@@ -1,4 +1,4 @@
-﻿"""
+"""
 update_macro_manual.py -- Regenera los CSVs de data/macro_manual/ desde FRED.
 
 Fuente: FRED (Federal Reserve Economic Data), acceso publico via
@@ -43,6 +43,9 @@ MACRO_MANUAL_MAP = {
     ],
     'discount_rate.csv': [
         ('DPRIME', 'DPRIME'),
+    ],
+    'effr.csv': [
+        ('EFFR', 'EFFR'),
     ],
     'empleo.csv': [
         ('NonFarm_Payrolls', 'PAYEMS'),

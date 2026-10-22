@@ -23,33 +23,65 @@ def compute_real_liquidity():
 
 
 def _fetch_liquidity_v2_data():
-    """Descarga SOFR, EFFR y p99 NY Fed por rutas aisladas.
+    """Descarga SOFR, EFFR y p99 NY Fed. CSV-first con fallback a API.
 
-    No usa FredProvider ni modifica FRED_SERIES global.
-    Devuelve (sofr, effr, c1_bp) o (None, None, None) si falla.
+    2026-10-22 (REP-AUDIT-20261022-LIQ-V2-DATA-SOURCE): antes solo
+    usaba pandas_datareader (FRED API). La API va 1-2 dias por detras
+    de los CSVs data/macro_manual/ (pusheados por bot diario). El
+    state v2 quedaba con date=2026-10-19 mientras sofr.csv tenia
+    2026-10-20. Ahora:
+      - Si sofr.csv y effr.csv existen y tienen datos -> CSV-first.
+      - Interseccion de indices SOFR/EFFR para no mezclar fechas.
+      - p99 NY Fed (opcional, diagnostico C1) sigue via API.
+      - Si CSVs faltan o fallan -> fallback a pandas_datareader.
+    Devuelve (sofr, effr, c1_bp) o (None, None, None).
     """
-    try:
-        import pandas_datareader.data as web
-    except ImportError:
-        return None, None, None
+    from pathlib import Path as _P
 
     start = "2018-04-02"
+    sofr = None
+    effr = None
 
-    try:
-        sofr_df = web.DataReader("SOFR", "fred", start=start)
-        sofr = sofr_df.iloc[:, 0].sort_index().dropna()
-    except Exception as e:
-        print(f"  [WARN] SOFR: {e}")
-        return None, None, None
+    # 1) CSV-first
+    sofr_csv = _P("data/macro_manual/sofr.csv")
+    effr_csv = _P("data/macro_manual/effr.csv")
+    if sofr_csv.exists() and effr_csv.exists():
+        try:
+            sofr_df = pd.read_csv(sofr_csv, index_col=0, parse_dates=True)
+            effr_df = pd.read_csv(effr_csv, index_col=0, parse_dates=True)
+            if not sofr_df.empty and not effr_df.empty:
+                s = sofr_df.iloc[:, 0].dropna().sort_index()
+                e = effr_df.iloc[:, 0].dropna().sort_index()
+                # Interseccion: solo fechas donde ambas series tienen dato
+                common = s.index.intersection(e.index)
+                if len(common) > 0:
+                    sofr = s.loc[common]
+                    effr = e.loc[common]
+                    print(f"  [liq_v2] CSVs: sofr+effr hasta {common.max().date()} ({len(common)} fechas comunes)")
+        except Exception as e:
+            print(f"  [WARN] liq_v2 CSV load: {e}")
 
-    try:
-        effr_df = web.DataReader("EFFR", "fred", start=start)
-        effr = effr_df.iloc[:, 0].sort_index().dropna()
-    except Exception as e:
-        print(f"  [WARN] EFFR: {e}")
-        return None, None, None
+    # 2) Fallback: pandas_datareader (API FRED)
+    if sofr is None or effr is None:
+        try:
+            import pandas_datareader.data as web
+        except ImportError:
+            return None, None, None
+        try:
+            sofr_df = web.DataReader("SOFR", "fred", start=start)
+            sofr = sofr_df.iloc[:, 0].sort_index().dropna()
+        except Exception as e:
+            print(f"  [WARN] SOFR API: {e}")
+            return None, None, None
+        try:
+            effr_df = web.DataReader("EFFR", "fred", start=start)
+            effr = effr_df.iloc[:, 0].sort_index().dropna()
+        except Exception as e:
+            print(f"  [WARN] EFFR API: {e}")
+            return None, None, None
+        print(f"  [liq_v2] API FRED: hasta {effr.index.max().date()}")
 
-    # p99 NY Fed (opcional)
+    # 3) p99 NY Fed (opcional, solo diagnostico C1)
     c1_bp = None
     try:
         import requests
@@ -79,8 +111,6 @@ def _fetch_liquidity_v2_data():
         print(f"  [WARN] NY Fed p99: {e}")
 
     return sofr, effr, c1_bp
-
-
 def compute_all_regimes(df_market, df_macro_manual, temporal_meta=None, reference_date=None):
     """Calcula los 4 regimenes del sistema.
 
