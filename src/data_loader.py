@@ -180,6 +180,12 @@ def _postprocess_market_data(data, reference_date, run_id, *, write_manifest):
     from src.cboe_merge import merge_cboe_into_market
     data = merge_cboe_into_market(data)
 
+    # P7-NON-MARKET-DAYS (2026-10-22): NaN en columnas US_EQUITY en
+    # fechas no-bursatiles NYSE. Yahoo devuelve closes sinteticos en
+    # festivos (2021-12-31, etc.). NO toca EU.
+    from src.utils import _nan_usa_on_non_market_days
+    data, _nm_info = _nan_usa_on_non_market_days(data)
+
     if write_manifest:
         from src.utils import write_artifact_with_manifest
         from src.market_calendar import last_expected_market_date

@@ -892,6 +892,12 @@ def download_stock_prices(reference_date=None, run_id=None):
         data, reference_date, run_id, _expected_session
     )
 
+    # P7-NON-MARKET-DAYS (2026-10-22): NaN en columnas US_EQUITY en
+    # fechas no-bursatiles NYSE. Yahoo devuelve closes sinteticos en
+    # festivos (2021-12-31, etc.). NO toca EU.
+    from src.utils import _nan_usa_on_non_market_days
+    data, _nm_info = _nan_usa_on_non_market_days(data)
+
     # G-01 (2026-09-29): truncado pre-write a la ultima sesion NYSE.
     # Ver _truncate_to_expected_session para el contrato completo.
     # Esa fila europea parcial no la consume nadie aguas abajo: leaders.py

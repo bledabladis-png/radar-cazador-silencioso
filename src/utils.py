@@ -874,3 +874,68 @@ def writer_observation_date(temporal_meta, contracts, fallback):
         if _m and _m.get('effective_date') is not None:
             return pd.Timestamp(_m['effective_date'])
     return fallback()
+
+def _nan_usa_on_non_market_days(data):
+    """Filtra datos US_EQUITY en fechas no-bursatiles NYSE.
+
+    Fix 2026-10-22 (REP-AUDIT-20261022-USA-NON-MARKET-DAYS): Yahoo
+    devuelve closes sinteticos para tickers USA en festivos NYSE
+    (ej. 2021-12-31, observacion New Year). El health check lo
+    detecta (WARN fechas_no_bursatiles) pero nada lo corrige. Este
+    filtro limpia en cada run.
+
+    NO toca tickers EU (FRE.DE, etc.): cotizan en sus mercados el
+    31-dic y su dato es legitimo. Solo NaN en columnas US_EQUITY
+    cuando la fecha no es sesion NYSE.
+
+    Idempotente. Devuelve (data_modificado, info).
+    """
+    from src.market_calendar import is_market_day
+    from src.instrument_registry import get_market
+
+    info = {'n_dates': 0, 'n_cells': 0}
+    if data is None or data.empty:
+        return data, info
+    if not isinstance(data.index, pd.DatetimeIndex):
+        return data, info
+
+    non_market_idx = [idx for idx in data.index
+                      if not is_market_day(idx.date())]
+    info['n_dates'] = len(non_market_idx)
+    if not non_market_idx:
+        return data, info
+
+    market_cache = {}
+
+    def _market(t):
+        if t not in market_cache:
+            try:
+                market_cache[t] = get_market(str(t))
+            except Exception:
+                market_cache[t] = 'UNKNOWN'
+        return market_cache[t]
+
+    usa_cols = []
+    for col in data.columns:
+        if isinstance(col, tuple) and len(col) == 2:
+            if _market(col[1]) == 'US_EQUITY':
+                usa_cols.append(col)
+    if not usa_cols:
+        return data, info
+
+    data = data.copy()
+    n_cells = 0
+    for idx in non_market_idx:
+        for col in usa_cols:
+            try:
+                if pd.notna(data.at[idx, col]):
+                    data.at[idx, col] = float('nan')
+                    n_cells += 1
+            except (KeyError, TypeError):
+                continue
+    info['n_cells'] = n_cells
+    if n_cells > 0:
+        print(f"  [P7-NON-MARKET-DAYS] {n_cells} celdas USA set a NaN "
+              f"en {len(non_market_idx)} fechas no-bursatiles NYSE")
+    return data, info
+

@@ -1519,3 +1519,34 @@ items:
     81 passed, 3 skipped (sin regresion). test_audit_contracts_
     rolling_nan: 2 passed (H7 preservado). pyflakes + compileall:
     silencio.
+
+- id: REP-AUDIT-20261022-USA-NON-MARKET-DAYS
+  tipo: auditoria_interna
+  ciclo: '2026-10-22'
+  estado: FIXED
+  commit: 'PENDING'
+  test: tests/test_non_market_days_filter.py
+  descripcion: |
+    data/market_data.parquet y data/stock_prices.parquet contenian
+    datos US_EQUITY de Yahoo en fechas no bursatiles NYSE (2729
+    celdas en 93 fechas en market_data, 2021-12-31 con 269 tickers
+    USA en stock_prices). Yahoo devuelve closes sinteticos en
+    festivos NYSE (ej. 2021-12-31, observacion New Year). El
+    health_check lo detectaba (WARN fechas_no_bursatiles) pero
+    ningun codigo lo corregia en el pipeline. El unico script
+    existente (cleanup_stock_prices_nyse_holidays.py) era one-shot
+    y solo tocaba stock_prices.parquet. La autonomia fallaba:
+    watchdog ve, nadie actua.
+  evidencia: |
+    Fix: nueva funcion _nan_usa_on_non_market_days en src/utils.py.
+    Recolecta fechas no-bursatiles (is_market_day) y columnas
+    US_EQUITY (instrument_registry.get_market), y setea NaN solo
+    en celdas USA. Respeta tickers EU (FRE.DE, etc.) que cotizan
+    en sus mercados. Llamada en dos puntos del pipeline:
+    src/data_loader.py::_postprocess_market_data (market_data) y
+    src/stock_data_loader.py::download_stock_prices (stock_prices),
+    justo antes de write_artifact_with_manifest. Idempotente.
+    Test: tests/test_non_market_days_filter.py (4 tests). Test
+    sobre parquet real (2026-10-22): 2729 celdas USA antes, 0
+    despues, 5504 celdas limpiadas (todas las OHLCV). Suite:
+    3849 passed, 5 skipped.
