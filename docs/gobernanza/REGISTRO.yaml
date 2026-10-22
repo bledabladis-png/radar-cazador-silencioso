@@ -1440,3 +1440,34 @@ items:
     completo 871.7s exit 0, "Verificacion de outputs: OK (20 checks)"
     (antes 19, ahora incluye pcr_history via registry), receipt
     emitido.
+
+- id: REP-AUDIT-20261022-CBOE-VIX3M-NON-TRADING-DAYS
+  tipo: auditoria_interna
+  ciclo: '2026-10-22'
+  estado: FIXED
+  commit: 'PENDING'
+  test: tests/test_cboe_vix3m_no_non_trading_days.py
+  descripcion: |
+    data/cboe_vix3m.parquet (unico parquet de produccion
+    trackeado en git) contenia 2 filas con fechas no bursatiles
+    NYSE: 2010-12-31 y 2021-12-31. Ambas son viernes que NYSE
+    cerro por observacion del New Year (1-ene del ano siguiente
+    caia sabado). CBOE publica filas esos dias aunque NYSE este
+    cerrado, y el provider las persistia sin filtrar. Ambas
+    filas tenian datos OHLC reales (no NaN), asi que el filtro
+    de NaN no las descartaba. Riesgo: consumidores que asumen
+    calendario NYSE estricto pueden leer valores de dias en que
+    el mercado no opero.
+  evidencia: |
+    Fix en 2 partes: (a) scripts/update_cboe.py anade
+    _post_filter_non_trading_days que, tras el fetch y antes del
+    skip-check, elimina filas cuya fecha no es sesion NYSE
+    (segun src.market_calendar.is_market_day) y reescribe el
+    parquet + manifest via write_artifact_with_manifest
+    (idempotente: si no hay nada que limpiar, no-op);
+    (b) parquet limpiado: 4299 -> 4297 filas, sha256 y manifest
+    actualizados. Test: tests/test_cboe_vix3m_no_non_trading_days.py
+    (3 tests: no non-trading, manifest rows match, last date
+    is expected session). Suite: 3838 passed, 5 skipped.
+    Verificacion manual: df.index filter -> 0 fechas no
+    bursatiles; manifest.content.rows == len(df) == 4297.

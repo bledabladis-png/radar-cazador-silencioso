@@ -81,6 +81,37 @@ def _classify_error(exc) -> str:
     return "transient"
 
 
+def _post_filter_non_trading_days(parquet_path, reference_date, run_id):
+    """Filtra filas con fechas no bursatiles del parquet CBOE.
+
+    CBOE publica filas cuando NYSE esta cerrado (observacion del
+    New Year en viernes: 2010-12-31, 2021-12-31). El parquet debe
+    tener solo sesiones NYSE. Funcion idempotente: si no hay nada
+    que limpiar, no-op. Si falla, no rompe el pipeline.
+    """
+    try:
+        from pathlib import Path as _P
+        from src.market_calendar import is_market_day
+        from src.utils import write_artifact_with_manifest
+        if not _P(parquet_path).exists():
+            return
+        df = pd.read_parquet(parquet_path)
+        if not isinstance(df.index, pd.DatetimeIndex) or len(df) == 0:
+            return
+        mask = [is_market_day(d.date()) for d in df.index]
+        if all(mask):
+            return
+        df_filtered = df[mask]
+        n_removed = len(df) - len(df_filtered)
+        print(f'update_cboe: post-filter -> {n_removed} filas no bursatiles eliminadas')
+        write_artifact_with_manifest(
+            df_filtered, parquet_path, 'cboe_vix3m',
+            reference_date, run_id,
+        )
+    except Exception as e:
+        print(f'update_cboe: [WARN] post-filter non-trading-days: {e}')
+
+
 def main():
     reference_date = datetime.now(ZoneInfo('Europe/Madrid'))
     run_id = reference_date.strftime('%Y%m%d_%H%M%S')
@@ -88,6 +119,8 @@ def main():
     expected = _expected_session_date(reference_date)
     print(f'update_cboe: reference={reference_date.date()} '
           f'run_id={run_id} expected_session={expected}')
+
+    _post_filter_non_trading_days(PARQUET_PATH, reference_date, run_id)
 
     if _already_up_to_date(PARQUET_PATH, expected):
         print('update_cboe: parquet ya al dia. Skip fetch.')
@@ -100,6 +133,8 @@ def main():
             run_id=run_id,
             parquet_path=PARQUET_PATH,
         )
+        _post_filter_non_trading_days(PARQUET_PATH, reference_date, run_id)
+
         ok = bool(result)
         print(f'update_cboe: ok={ok}')
         return 0

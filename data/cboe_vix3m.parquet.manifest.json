@@ -2,18 +2,18 @@
   "schema_version": 1,
   "artifact": {
     "path": "data/cboe_vix3m.parquet",
-    "sha256": "bfb0b44963c7379af1ec2af9439576e0503b5b4e94cca7ebf69c92b0560f369f",
-    "bytes": 97060,
-    "written_at": "2026-10-22T01:35:14.754930"
+    "sha256": "a97c2d83ab8e3cb7cbd6497ae1424625f35a746f77a4983dee017959b952dbef",
+    "bytes": 97028,
+    "written_at": "2026-10-22T17:23:49.680767"
   },
   "producer": {
     "module": "src.utils",
     "function": "write_artifact_with_manifest",
-    "run_id": "20261022_033514",
+    "run_id": "20261022_172349",
     "source": "cboe_vix3m"
   },
   "content": {
-    "rows": 4299,
+    "rows": 4297,
     "cols": 5,
     "n_tickers": 1,
     "date_min": "2009-09-18",
