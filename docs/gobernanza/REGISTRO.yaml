@@ -1471,3 +1471,51 @@ items:
     is expected session). Suite: 3838 passed, 5 skipped.
     Verificacion manual: df.index filter -> 0 fechas no
     bursatiles; manifest.content.rows == len(df) == 4297.
+
+- id: REP-AUDIT-20261022-WYCKOFF-P7-B4-B5-B3
+  tipo: auditoria_interna
+  ciclo: '2026-10-22'
+  estado: FIXED
+  commit: 'PENDING'
+  test: tests/test_wyckoff_p7_b4_b5_b3.py
+  descripcion: |
+    Auditoria solicitada del modulo Wyckoff v1.8 (indicators/
+    wyckoff_v1.py). Hallazgos:
+    (1) P7-ROLLING-WINDOW-GAPS aplicado al modulo. Se evaluo si
+        reindexar al calendario NYSE (patron de sector_correlation)
+        mejoraba la semantica de _atr_normalized, _trend_component
+        y wyckoff_stability. Medicion empirica: max|diff|=0.0015,
+        t_norm max|diff|=0.006, 0 fases cambian en muestra. Se
+        aplico reindex + guard EU y se detecto que UN solo gap
+        rompe el score durante N sesiones (todas las ventanas de
+        N contienen el NaN). WONT_FIX razonado: dropna().rolling()
+        ya tiene semantica correcta para medias moviles. Decision
+        documentada en cabecera del modulo.
+    (2) B5: min_periods=1 en detect_spring/detect_sos producia
+        SOS espurios (XLF: 7 SOS en primeras 20 sesiones). Fix:
+        min_periods=EVENT_WINDOW + patron H7 (dropna().rolling().
+        reindex()) para respetar test_audit_contracts_rolling_nan.
+    (3) B3: max_age_m default 10 vs contrato v1.9=30. Fix: default
+        alineado con contrato.
+    (4) B4: fillna(Close) en H/L/O y fillna(0) en Volume. WONT_FIX:
+        contrato v1.8 explicito (docs/auditoria/wyckoff/
+        01_contrato_semantico_v1_8.md), protegido por
+        test_regresion_i2_nan_internos_no_degenera (bug K-INDEX-
+        RANGE-01). Medicion: 0/2512 filas H=L=C en market_data,
+        0 filas Volume=0 en ambos parquets. Riesgo residual
+        mitigado en detect_sow con +1e-9.
+  evidencia: |
+    B5: detect_spring/detect_sos con EVENT_WINDOW (20) como
+    min_periods, patron H7. Test F03 spring actualizado (fila 10
+    -> fila 25, n=30 -> n=50) porque la configuracion anterior
+    dependia de min_periods=1. B3: max_age_m default 30 (contrato
+    v1.9). B2 (P7) WONT_FIX documentado en cabecera con
+    justificacion tecnica (medias moviles vs correlaciones). B4
+    WONT_FIX con nota en build_ticker_df y test que fija el
+    contrato v1.8. Test consolidado: tests/
+    test_wyckoff_p7_b4_b5_b3.py (7 tests: B5 sos/spring baseline,
+    B4 contrato v1.8, B3 default/firma, B2 gap+documentacion).
+    Suite: 3845 passed, 5 skipped. Tests wyckoff existentes:
+    81 passed, 3 skipped (sin regresion). test_audit_contracts_
+    rolling_nan: 2 passed (H7 preservado). pyflakes + compileall:
+    silencio.

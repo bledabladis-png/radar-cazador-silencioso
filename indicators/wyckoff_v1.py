@@ -23,6 +23,17 @@ Cambios respecto a v1.0:
     precedente compatible.
 
 Legacy (indicators/wyckoff.py) permanece intacto.
+
+P7-ROLLING-WINDOW-GAPS (2026-10-22): decision documentada.
+El patron "reindex al calendario NYSE antes del rolling" es correcto
+para CORRELACIONES entre series alineadas (ver sector_correlation.py).
+NO es correcto para medias moviles (ATR, trend, stability): con dropna,
+"rolling(N)" ya significa "ultimos N valores con dato", que es la
+semantica correcta. Aplicar reindex + min_periods=N sobre serie con
+gaps rompe el score durante N sesiones tras cada gap (todas las ventanas
+de N posiciones contienen el NaN). Decision: mantener dropna en estas
+3 funciones (_atr_normalized, _trend_component, wyckoff_stability).
+Ver REP-AUDIT-20261022-WYCKOFF-P7-B4-B5-B3 en REGISTRO.
 """
 from __future__ import annotations
 
@@ -391,7 +402,7 @@ def classify_wyckoff_phase(df, ticker, as_of=None, sow_params=None):
                 atr_window=sow_params.get("atr_window", WYCKOFF_ATR_WINDOW),
             )
             if not sow.empty:
-                max_age = sow_params.get("max_age_m", 10)
+                max_age = sow_params.get("max_age_m", 30)  # B3 (2026-10-22): default alineado con contrato v1.9
                 recent = sow.iloc[-max_age:]
                 if int(recent.sum()) > 0:
                     return FASE_DISTRIBUTION
@@ -413,7 +424,7 @@ def detect_spring(df, ticker):
     close = get_col(df, ticker, 'Close')
     open_ = get_col(df, ticker, 'Open')
     volume = get_col(df, ticker, 'Volume')
-    vol_mean = volume.rolling(EVENT_WINDOW, min_periods=1).mean()
+    vol_mean = volume.dropna().rolling(EVENT_WINDOW, min_periods=EVENT_WINDOW).mean().reindex(volume.index)  # B5+H7 (2026-10-22)
     condition = (
         (low < low.shift(1))
         & (close > open_)
@@ -426,8 +437,8 @@ def detect_sos(df, ticker):
     high = get_col(df, ticker, 'High')
     close = get_col(df, ticker, 'Close')
     volume = get_col(df, ticker, 'Volume')
-    high_max = high.rolling(EVENT_WINDOW, min_periods=1).max().shift(1)
-    vol_mean = volume.rolling(EVENT_WINDOW, min_periods=1).mean()
+    high_max = high.dropna().rolling(EVENT_WINDOW, min_periods=EVENT_WINDOW).max().shift(1).reindex(high.index)  # B5+H7 (2026-10-22)
+    vol_mean = volume.dropna().rolling(EVENT_WINDOW, min_periods=EVENT_WINDOW).mean().reindex(volume.index)  # B5+H7 (2026-10-22)
     condition = (close > high_max) & (volume > vol_mean * SOS_VOLUME_MULT)
     return condition.astype(int)
 
@@ -507,6 +518,13 @@ def build_ticker_df(df, ticker):
         'Close': get_col(df, ticker, 'Close'),
         'Volume': get_col(df, ticker, 'Volume'),
     })
+    # WONT_FIX (2026-10-22): fillna(Close) en H/L/O y fillna(0) en Volume
+    # son contrato v1.8 (ver docs/auditoria/wyckoff/01_contrato_semantico_v1_8.md
+    # y test_regresion_i2_nan_internos_no_degenera). Sin ellos, classify_*
+    # degenera a RANGE con NaN internos (bug K-INDEX-RANGE-01, 2026-09-18).
+    # El riesgo residual (H=L=C -> TR=0) se mitiga en detect_sow con +1e-9
+    # en el denominador del break_depth y se mide como 0/2512 filas en
+    # market_data.parquet (2026-10-22). No se toca sin abrir frente propio.
     raw = raw.dropna(subset=['Close'])
     for col in ('Open', 'High', 'Low'):
         raw[col] = raw[col].fillna(raw['Close'])

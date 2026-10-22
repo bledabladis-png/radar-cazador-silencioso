@@ -1301,21 +1301,28 @@ def test_f03_effort_vs_result_en_rango():
 
 
 def test_f03_detect_spring_positivo():
-    """detect_spring detecta una configuracion construida."""
+    """detect_spring detecta una configuracion construida.
+
+    Actualizado 2026-10-22 (B5): min_periods=EVENT_WINDOW en vol_mean
+    requiere al menos EVENT_WINDOW sesiones de baseline. Antes la fila
+    10 con n=30 disparaba el spring porque min_periods=1 permitia
+    baseline con 1 sola observacion (7 SOS espurios detectados en XLF).
+    """
     from indicators.wyckoff_v1 import detect_spring
-    df = _make_flat_ohlcv(n=30, price=100.0, volume=1000.0)
-    # Fila 10: low cae, cierre > open, volumen alto
-    df.iloc[10, df.columns.get_loc("Low")] = 99.0
-    df.iloc[10, df.columns.get_loc("Open")] = 100.0
-    df.iloc[10, df.columns.get_loc("Close")] = 101.0
-    df.iloc[10, df.columns.get_loc("High")] = 101.0
-    df.iloc[10, df.columns.get_loc("Volume")] = 50000.0
+    from indicators.wyckoff_v1 import EVENT_WINDOW
+    n = EVENT_WINDOW + 30  # 50 sesiones con EVENT_WINDOW=20
+    spring_row = EVENT_WINDOW + 5  # 25, fuera del warm-up
+    df = _make_flat_ohlcv(n=n, price=100.0, volume=1000.0)
+    df.iloc[spring_row, df.columns.get_loc("Low")] = 99.0
+    df.iloc[spring_row, df.columns.get_loc("Open")] = 100.0
+    df.iloc[spring_row, df.columns.get_loc("Close")] = 101.0
+    df.iloc[spring_row, df.columns.get_loc("High")] = 101.0
+    df.iloc[spring_row, df.columns.get_loc("Volume")] = 50000.0
     spring = detect_spring(df, "SYNTH")
     assert spring.dtype == int or spring.dtype == np.int64
-    assert int(spring.iloc[10]) == 1, (
-        f"spring no detectado en fila 10. Valores: {spring.iloc[8:13].tolist()}"
+    assert int(spring.iloc[spring_row]) == 1, (
+        f"spring no detectado en fila {spring_row}. Valores: {spring.iloc[spring_row-2:spring_row+3].tolist()}"
     )
-
 
 def test_f03_detect_spring_serie_plana_no_dispara():
     """detect_spring sobre serie plana devuelve todo 0."""
