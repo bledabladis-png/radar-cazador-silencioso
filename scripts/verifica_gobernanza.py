@@ -43,6 +43,16 @@ def _menciona_id(iid, lineas):
 
 
 def _git_commit_exists(sha):
+    """True si el commit existe Y es alcanzable desde alguna ref.
+
+    2026-10-22 (REP-AUDIT-20261022-GOVERNANCE-SHA-REACHABILITY):
+    `git cat-file -e` acepta objetos huerfanos (post-rebase, aun no
+    recolectados). Un item FIXED con SHA huerfano apunta a un commit
+    que desaparecera al correr git GC. Verificamos tambien
+    reachability desde refs/heads/ o refs/tags/. Si for-each-ref
+    falla, fallback conservador a True (no bloquear por error del
+    subcomando).
+    """
     if not sha or sha == "PENDING":
         return None
     try:
@@ -50,7 +60,16 @@ def _git_commit_exists(sha):
             ["git", "cat-file", "-e", sha],
             cwd=str(ROOT), capture_output=True, timeout=10,
         )
-        return r.returncode == 0
+        if r.returncode != 0:
+            return False
+        r2 = subprocess.run(
+            ["git", "for-each-ref", "--contains", sha,
+             "refs/heads/", "refs/tags/"],
+            cwd=str(ROOT), capture_output=True, timeout=10,
+        )
+        if r2.returncode != 0:
+            return True
+        return bool(r2.stdout.strip())
     except Exception:
         return False
 
@@ -112,7 +131,10 @@ def verificar(registro_path=None, handoff_path=None):
             elif commit != "PENDING":
                 if _git_commit_exists(commit) is False:
                     errores.append(
-                        "[{0}] commit no existe: {1}".format(iid, commit)
+                        "[{0}] commit no existe o es huerfano "
+                        "(no alcanzable desde refs): {1}. Tras "
+                        "rebase, actualizar al SHA actual en main "
+                        "o reclasificar a WONT_FIX.".format(iid, commit)
                     )
             has_test = bool(test)
             has_evid = isinstance(evid, str) and len(evid) >= EVIDENCIA_MIN

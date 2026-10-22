@@ -1347,3 +1347,33 @@ items:
     Bug cosmetico asociado (bajo prioridad): _score_continuo devuelve
     -0.0 cuando diff_bp==0. Normalizar con + 0.0 en el retorno o
     condicional explicita.
+
+- id: REP-AUDIT-20261022-GOVERNANCE-SHA-REACHABILITY
+  tipo: auditoria_interna
+  ciclo: '2026-10-22'
+  estado: FIXED
+  commit: 'PENDING'
+  test: tests/test_verifica_gobernanza_sha_reachability.py
+  descripcion: |
+    verifica_gobernanza._git_commit_exists usaba solo git cat-file -e.
+    Ese comando acepta objetos huerfanos (existentes en la BD de git
+    pero no alcanzables desde ninguna ref). Caso observado 2026-10-22:
+    tras git pull --rebase para integrar un push del bot, 3 items del
+    REGISTRO apuntaban a 0400cda5, SHA que dejo de estar en main
+    (nuevo SHA equivalente: 83f79a93). git cat-file -e 0400cda5
+    devolvia exit 0 porque el objeto aun no habia sido recolectado.
+    El gate pasaba OK pese a que los items apuntaban a un commit que
+    desaparecera en el proximo git GC. Bug de gobernanza: el gate
+    no detecta referencias muertas.
+  evidencia: |
+    Fix: _git_commit_exists anade git for-each-ref --contains <sha>
+    refs/heads/ refs/tags/ despues de cat-file -e. Si el SHA no es
+    alcanzable desde ninguna ref, devuelve False. Mensaje de error
+    ampliado a "commit no existe o es huerfano (no alcanzable desde
+    refs)" con instruccion: actualizar al SHA actual en main o
+    reclasificar a WONT_FIX. Test de regresion:
+    tests/test_verifica_gobernanza_sha_reachability.py (4 tests).
+    Cubre SHA valido, SHA inexistente, PENDING/None y SHA huerfano
+    real (creado con commit-tree en repo temporal). Suite completa:
+    3826 passed, 5 skipped. test_gobernanza.py existente: 14/14 sin
+    regresion. verifica_gobernanza sigue [OK] con codigo nuevo.
