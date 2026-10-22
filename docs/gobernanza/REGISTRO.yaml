@@ -1382,7 +1382,7 @@ items:
   tipo: auditoria_interna
   ciclo: '2026-10-22'
   estado: FIXED
-  commit: 'PENDING'
+  commit: '5375f58b'
   test: tests/test_liquidity_v2_csv_first.py
   descripcion: |
     Cierra el OPEN REP-AUDIT-20261022-LIQ-V2-DATA-SOURCE. v2 de
@@ -1406,7 +1406,7 @@ items:
   tipo: auditoria_interna
   ciclo: '2026-10-22'
   estado: FIXED
-  commit: 'PENDING'
+  commit: '5375f58b'
   test: tests/test_liquidity_v2_csv_first.py
   descripcion: |
     regimes/liquidity_v2.py:_score_continuo devolvia -0.0 cuando
