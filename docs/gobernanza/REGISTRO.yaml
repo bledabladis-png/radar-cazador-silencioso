@@ -1204,26 +1204,35 @@ items:
 - id: REP-AUDIT-20261022-ROLLING-WINDOW-GAPS
   tipo: auditoria_interna
   ciclo: '2026-10-22'
-  estado: OPEN
+  estado: FIXED
+  commit: 'PENDING'
+  test: tests/test_sector_correlation_gaps.py
   descripcion: |
     Auditoria externa #4 (P7). El reporte declara huecos en el
     historico de dispersion sectorial (2026-09-21, 22 y 10-05 por
     input vacio). El fix A-03 previene nuevos huecos pero no rellena
-    los anteriores. Falta verificar que las ventanas moviles
-    (rolling 20 y 60) de modulos derivados no abarcan intervalos
-    temporales distintos al pretendido cuando hay discontinuidades:
-    rolling(N) sobre filas disponibles puede cubrir mas dias
-    naturales que N sesiones esperadas.
-  siguiente_accion: |
-    Plan detallado en docs/auditoria/radar/audits/PLAN_ROLLING_WINDOW_GAPS_2026-10-22.md.
-    Test de regresion: comparar rolling(N) sobre serie con huecos vs
-    rolling(N) sobre calendario explicito de sesiones. Aplica a modulos
-    con .rolling() sin min_periods explicito (ver seccion 2 del plan).
-    Correccion 2026-10-22: sector_dispersion NO usa rolling (calculo
-    cross-sectional puntual). sector_correlation_summary SI existe como
-    writer y CSV (verificado en receipt_audit del run 2026-10-21);
-    pendiente verificar si usa rolling, ver plan seccion 1.
-
+    los anteriores. El hallazgo: rolling(N) o slice iloc[-N:] sobre
+    series con huecos puede cubrir mas dias naturales que N
+    sesiones esperadas.
+  evidencia: |
+    Investigados los 40 usos de rolling() del codigo productivo:
+    la mayoria ya tiene dropna previo (momentum, volatility,
+    wyckoff_v1, src/utils) o ya alinea por interseccion
+    (commodity_market_correlation). El unico patron vulnerable
+    encontrado fue indicators/sector_correlation.py:78:
+    `panel = returns_df.iloc[-window:]` sobre serie cruda con
+    posibles huecos. Fix: reindex al calendario explicito de
+    sesiones NYSE (nueva funcion get_trading_days en
+    src/market_calendar.py: itera bdate_range y filtra con
+    is_market_day, O(1) por lru_cache de festivos). Con reindex,
+    filas faltantes = NaN, y el corr(min_periods) filtra
+    correctamente en lugar de "estirar" la ventana en tiempo real.
+    Tests: 3 en tests/test_sector_correlation_gaps.py (con huecos,
+    sin huecos, get_trading_days excluye festivos). Suite:
+    3835 passed, 5 skipped. py run.py 853.6s exit 0,
+    "Verificacion de outputs: OK (20 checks)". Fila 2026-10-21 de
+    sector_correlation_summary.csv: corr_mean 0.20 (20d) y 0.18
+    (60d), coherente con runs previos sin huecos.
 - id: REP-AUDIT-20261022-LIQUIDITY-ROUTER-PRIORITY
   tipo: auditoria_interna
   ciclo: '2026-10-22'

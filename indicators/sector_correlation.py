@@ -75,7 +75,21 @@ def compute_sector_correlation(df_market, windows=(20, 60), min_obs_ratio=0.75, 
         if len(returns_df) < window:
             continue
         # Ventana común: últimas 'window' filas completas
-        panel = returns_df.iloc[-window:]
+        # P7-ROLLING-WINDOW-GAPS (2026-10-22): reindex al calendario
+        # explicito de sesiones antes del slice. Antes se hacia
+        # returns_df.iloc[-window:], que toma las ultimas N FILAS del
+        # indice. Si la serie tiene huecos (ej: 2026-09-21, 22, 10-05
+        # por input vacio), la ventana cubre mas dias naturales que
+        # N sesiones. Con reindex al calendario: filas faltantes =
+        # NaN, y min_periods del corr filtra correctamente.
+        from src.market_calendar import get_trading_days
+        try:
+            _all_sessions = pd.DatetimeIndex(get_trading_days(
+                returns_df.index.min(), returns_df.index.max()))
+            _aligned = returns_df.reindex(_all_sessions)
+        except Exception:
+            _aligned = returns_df
+        panel = _aligned.iloc[-window:]
         # Eliminar columnas con demasiados NaN dentro de la ventana
         min_obs = int(window * min_obs_ratio)
         panel_clean = panel.dropna(axis=1, thresh=min_obs)

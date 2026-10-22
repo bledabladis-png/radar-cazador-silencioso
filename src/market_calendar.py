@@ -183,6 +183,22 @@ def last_expected_market_date(now=None):
     )
 
 
+def get_trading_days(start, end):
+    """Sesiones NYSE en [start, end] (DatetimeIndex normalizado).
+
+    P7-ROLLING-WINDOW-GAPS (2026-10-22): util para reindexar series
+    a calendario explicito de sesiones. Evita que rolling(N) o
+    slice iloc[-N:] cubra mas dias naturales que N sesiones cuando
+    la serie tiene huecos. is_market_day es O(1) (lru_cache sobre
+    festivos por ano), asi que iterar business days es rapido.
+    """
+    start_ts = pd.Timestamp(start).normalize()
+    end_ts = pd.Timestamp(end).normalize()
+    if end_ts < start_ts:
+        return pd.DatetimeIndex([])
+    bdays = pd.bdate_range(start_ts, end_ts)
+    return pd.DatetimeIndex([d for d in bdays if is_market_day(d.date())])
+
 def _last_market_session(d):
     """FU-007/FU-007-b (2026-09-13): retrocede al ultimo dia bursatil <= d.
 
