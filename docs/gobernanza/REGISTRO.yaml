@@ -1205,7 +1205,7 @@ items:
   tipo: auditoria_interna
   ciclo: '2026-10-22'
   estado: FIXED
-  commit: 'PENDING'
+  commit: '8c40f7e6'
   test: tests/test_sector_correlation_gaps.py
   descripcion: |
     Auditoria externa #4 (P7). El reporte declara huecos en el
