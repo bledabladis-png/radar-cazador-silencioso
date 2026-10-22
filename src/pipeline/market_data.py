@@ -16,7 +16,7 @@ def _compute_pcr():
     pcr_data = None
     try:
         from indicators.options import compute_pcr_signals
-        pcr_data = compute_pcr_signals()
+        pcr_data = compute_pcr_signals(persist_history=True)
         if pcr_data and pcr_data.get('status') == 'OK':
             print(f"  PCR Total: {pcr_data['total_pcr']:.2f} (Z: {pcr_data['z_score']:.2f}, Estado: {pcr_data['state']})")
         elif pcr_data:

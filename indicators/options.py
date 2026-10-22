@@ -1,6 +1,5 @@
 import numpy as np
 
-import os
 import pandas as pd
 
 from datetime import datetime
@@ -59,7 +58,7 @@ def _zscore_last_in_window(series):
 
 
 
-def compute_pcr_signals():
+def compute_pcr_signals(persist_history=False):
 
     provider = CboeProvider()
 
@@ -126,23 +125,24 @@ def compute_pcr_signals():
 
 
 
+    new_row = {col: data.get(col) for col in base_cols}
     if today not in hist.index:
-
-        new_row = {col: data.get(col) for col in base_cols}
-
         new_df = pd.DataFrame([new_row], index=[today])
-
         hist = pd.concat([hist, new_df])
-
         hist.sort_index(inplace=True)
+        _need_persist = True
+    else:
+        _need_persist = False
 
-        # Fix 2026-09-29: escritura atomica. Es historico: leido por
-        # data_quality.py:91 (frescura) y options.py:89 (autoread).
-        # Mismo patron que darkpool_history, sector_rank_history y
-        # state_transition.
-        _tmp = 'outputs/history/pcr_history.csv.tmp'
-        hist.to_csv(_tmp, index_label='date', lineterminator='\n')
-        os.replace(_tmp, 'outputs/history/pcr_history.csv')
+    if persist_history:
+        from src.pipeline.output_writer import persist, skip
+        if _need_persist:
+            _persist_row = {**new_row, 'date': today}
+            persist('pcr_history',
+                    pd.DataFrame([_persist_row]),
+                    date_value=today, sort_by=['date'])
+        else:
+            skip('pcr_history', 'SKIP_CONDITION')
 
 
 

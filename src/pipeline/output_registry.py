@@ -90,6 +90,10 @@ REGISTRY: tuple = (
     OutputSpec('data_quality',
                'outputs/history/data_quality.csv',
                'temporal', 'date', ('date', 'source')),
+    OutputSpec('pcr_history',
+               'outputs/history/pcr_history.csv',
+               'temporal', 'date', ('date',),
+               date_source='upstream'),
 )
 
 REGISTRY_BY_NAME = {s.name: s for s in REGISTRY}

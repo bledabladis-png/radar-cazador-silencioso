@@ -1418,3 +1418,34 @@ items:
     test_liquidity_v2_csv_first.py::test_score_continuo_zero_es_cero_positivo
     verifica score(0.0) == 0.0 y str() == "0.0". Verificado en run
     real: state.score = 0.0.
+
+- id: REP-AUDIT-20261022-PCR-HISTORY-SIDE-EFFECT
+  tipo: auditoria_interna
+  ciclo: '2026-10-22'
+  estado: FIXED
+  commit: 'PENDING'
+  test: tests/test_pcr_history_no_side_effects.py
+  descripcion: |
+    indicators/options.py:compute_pcr_signals() escribia
+    outputs/history/pcr_history.csv como efecto secundario del
+    calculo del z-score: os.replace() directo, sin pasar por
+    output_writer.persist, sin emitir WriteReceipt, sin figurar en
+    writer_receipts.json. Un diagnostico (llamar la funcion para
+    inspeccionar su salida) modificaba el working tree. El writer
+    violaba el contrato de persistencia (todo writer debe tener
+    OutputSpec en output_registry).
+  evidencia: |
+    Fix en 3 partes: (a) pcr_history anadido a output_registry
+    (temporal, date, merge_keys=[date], date_source=upstream);
+    (b) compute_pcr_signals(persist_history=False) por defecto NO
+    escribe; solo con True ejecuta persist(pcr_history, ...) o skip
+    (SKIP_CONDITION) si la fila ya existe, ambos via output_writer
+    con receipt; (c) src/pipeline/market_data.py:_compute_pcr pasa
+    persist_history=True. Eliminado import os huerfano. Test:
+    tests/test_pcr_history_no_side_effects.py (3 tests) +
+    test_output_registry.test_registry_count actualizado 19->20.
+    Verificado manualmente: hash sha256 de pcr_history.csv identico
+    antes/despues de compute_pcr_signals() sin flag; py run.py
+    completo 871.7s exit 0, "Verificacion de outputs: OK (20 checks)"
+    (antes 19, ahora incluye pcr_history via registry), receipt
+    emitido.
