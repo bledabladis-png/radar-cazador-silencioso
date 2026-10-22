@@ -1262,7 +1262,7 @@ items:
   tipo: auditoria_interna
   ciclo: '2026-10-22'
   estado: FIXED
-  commit: 'PENDING'
+  commit: '0400cda5'
   test: tests/test_liquidity_state_separation.py
   descripcion: |
     v1 (regimes/liquidity.py) y v2 (regimes/liquidity_v2.py) escribian
@@ -1286,7 +1286,7 @@ items:
   tipo: auditoria_interna
   ciclo: '2026-10-22'
   estado: FIXED
-  commit: 'PENDING'
+  commit: '0400cda5'
   test: tests/test_liquidity_state_separation.py
   descripcion: |
     El docstring de regimes/liquidity_v2.py declaraba "NO PRODUCCION.
@@ -1305,7 +1305,7 @@ items:
   tipo: auditoria_interna
   ciclo: '2026-10-22'
   estado: FIXED
-  commit: 'PENDING'
+  commit: '0400cda5'
   test: tests/test_liquidity_state_separation.py
   descripcion: |
     src/pipeline/finalize.py:110 referenciaba el item
