@@ -286,6 +286,17 @@ coherencia con la intencion del autor. Lecciones observadas 2026-10-22:
   en -1. Fix: empezar en $idxItem + 1 o excluir explicitamente la
   linea de origen del break. Bug 2026-10-22: busqueda de
   `siguiente_accion:` dentro de un item REGISTRO fallo por esto.
+- **Prioridad de fuentes sin comparación de frescura.** Cuando un
+  consumidor tiene múltiples fuentes (API externa con lag no
+  controlado vs fichero local con SLA conocido), priorizar ciegamente
+  la API es bug de diseño. El consumidor calcula frescura contra
+  datos viejos y produce N/A, mientras otro módulo que lee la fuente
+  fresca publica valores válidos. Contradicción visible en el mismo
+  reporte. Fix: priorizar la fuente con SLA conocido (CSVs
+  versionados, pusheados por bot diario) y usar la API como fallback.
+  Evidencia 2026-10-22: `router.get_fed_data` priorizaba FRED API
+  (lag 5d) sobre CSVs diarios → `liquidity.py` N/A + `fls.py` OK.
+  Item: REP-AUDIT-20261022-LIQUIDITY-ROUTER-PRIORITY.
 
 ---
 
