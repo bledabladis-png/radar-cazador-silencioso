@@ -506,9 +506,9 @@ date,source,last_date,age_calendar_days,frequency,freshness,n_total,n_valid,cove
 2026-10-20,Sector Breadth,2026-10-20,0.0,daily,CURRENT,11.0,11.0,1.0,Amplitud y salud sectorial
 2026-10-20,Sector Persistence,2026-10-20,0.0,daily,CURRENT,11.0,11.0,1.0,Persistencia sectorial
 2026-10-20,Sector Regime Matrix,2026-10-20,0.0,daily,CURRENT,11.0,11.0,1.0,Matriz de regimen sectorial
-2026-10-20,Leader Representativeness,2026-10-20,0.0,daily,CURRENT,11.0,2.0,0.18181818181818182,Representatividad del lider
+2026-10-20,Leader Representativeness,2026-10-20,0.0,daily,CURRENT,11.0,2.0,0.1818181818181818,Representatividad del lider
 2026-10-20,Sector Wyckoff Distribution,2026-10-20,0.0,daily,CURRENT,11.0,11.0,1.0,Distribucion Wyckoff sectorial
-2026-10-20,Sector Leader Divergence,2026-10-20,0.0,daily,CURRENT,11.0,2.0,0.18181818181818182,Divergencia sector-lideres
+2026-10-20,Sector Leader Divergence,2026-10-20,0.0,daily,CURRENT,11.0,2.0,0.1818181818181818,Divergencia sector-lideres
 2026-10-20,RS Internal,2026-10-20,0.0,daily,CURRENT,11.0,11.0,1.0,Liderazgo relativo interno
 2026-10-20,Sector Rank History,2026-10-20,0.0,daily,CURRENT,11.0,11.0,1.0,Rotacion sectorial historica
 2026-10-20,Sector Dispersion,2026-10-20,0.0,daily,CURRENT,11.0,11.0,1.0,Dispersion entre sectores
@@ -517,3 +517,30 @@ date,source,last_date,age_calendar_days,frequency,freshness,n_total,n_valid,cove
 2026-10-20,Euronext,2026-10-19,1.0,daily,CURRENT,13.0,13.0,1.0,Euronext (13/13 OK)
 2026-10-20,Xetra,2026-10-19,1.0,daily,CURRENT,19.0,19.0,1.0,Xetra (19/19 OK)
 2026-10-20,BME,2026-10-19,1.0,daily,CURRENT,19.0,19.0,1.0,BME (19/19 OK)
+2026-10-21,Yahoo Finance,2026-10-21,0.0,daily,CURRENT,11.0,11.0,1.0,Precios y métricas sectoriales
+2026-10-21,SSGA ETF Flow,2026-10-20,1.0,daily,CURRENT,12.0,12.0,1.0,Flujo primario
+2026-10-21,CBOE PCR,2026-10-20,1.0,daily,CURRENT,60.0,60.0,1.0,Put/Call ratio
+2026-10-21,FINRA Dark Pool,2026-09-28,23.0,finra,RECENT,115.0,115.0,1.0,Retraso regulatorio 2-4 semanas
+2026-10-21,CFTC Position Flow,2026-10-13,8.0,cftc,CURRENT,48.0,48.0,1.0,Frescura CFTC (semanal); umbrales en config/settings.FRESHNESS_CFTC
+2026-10-21,SEC N-PORT (posiciones),2026-06-30,113.0,sec,RECENT,26404.0,26404.0,1.0,Posiciones N-PORT. Origen: mensual (SEC); ingesta: trimestral (ZIPs). Latencia ~60d entre cierre y filing. Fecha observacion = cierre trimestre; fecha presentacion = dia del filing
+2026-10-21,SEC N-PORT-P QQQ (flujos),2026-06-30,113.0,sec,RECENT,3.0,3.0,1.0,Flujos trimestrales N-PORT-P QQQ (Item B.6)
+2026-10-21,Macro FRED,2026-10-19,2.0,fred,CURRENT,64.0,57.0,0.890625,Datos macro manuales
+2026-10-21,Sector Concentration,2026-10-21,0.0,daily,CURRENT,11.0,11.0,1.0,Concentración y dispersión
+2026-10-21,Sector Breadth Momentum,2026-10-21,0.0,daily,CURRENT,11.0,11.0,1.0,Momentum amplitud
+2026-10-21,Volatility Structure,2026-10-21,0.0,daily,CURRENT,29.0,29.0,1.0,Estructura volatilidad
+2026-10-21,Cross Asset Context,2026-10-21,0.0,daily,CURRENT,11.0,11.0,1.0,Contexto cross-asset
+2026-10-21,Evidence Matrix,2026-10-21,0.0,daily,CURRENT,11.0,11.0,1.0,Matriz evidencia
+2026-10-21,Sector Breadth,2026-10-21,0.0,daily,CURRENT,11.0,11.0,1.0,Amplitud y salud sectorial
+2026-10-21,Sector Persistence,2026-10-21,0.0,daily,CURRENT,11.0,11.0,1.0,Persistencia sectorial
+2026-10-21,Sector Regime Matrix,2026-10-21,0.0,daily,CURRENT,11.0,11.0,1.0,Matriz de regimen sectorial
+2026-10-21,Leader Representativeness,2026-10-21,0.0,daily,CURRENT,11.0,2.0,0.18181818181818182,Representatividad del lider
+2026-10-21,Sector Wyckoff Distribution,2026-10-21,0.0,daily,CURRENT,11.0,11.0,1.0,Distribucion Wyckoff sectorial
+2026-10-21,Sector Leader Divergence,2026-10-21,0.0,daily,CURRENT,11.0,2.0,0.18181818181818182,Divergencia sector-lideres
+2026-10-21,RS Internal,2026-10-21,0.0,daily,CURRENT,11.0,11.0,1.0,Liderazgo relativo interno
+2026-10-21,Sector Rank History,2026-10-21,0.0,daily,CURRENT,11.0,11.0,1.0,Rotacion sectorial historica
+2026-10-21,Sector Dispersion,2026-10-21,0.0,daily,CURRENT,11.0,11.0,1.0,Dispersion entre sectores
+2026-10-21,Sector Correlation Summary,2026-10-21,0.0,daily,CURRENT,11.0,55.0,0.9962962962962963,Correlacion entre sectores
+2026-10-21,Sector Flow Characteristics,2026-10-20,1.0,daily,CURRENT,11.0,11.0,1.0,Flujo primario sectorial
+2026-10-21,Euronext,2026-10-20,1.0,daily,CURRENT,13.0,13.0,1.0,Euronext (13/13 OK)
+2026-10-21,Xetra,2026-10-20,1.0,daily,CURRENT,19.0,19.0,1.0,Xetra (19/19 OK)
+2026-10-21,BME,2026-10-20,1.0,daily,CURRENT,19.0,19.0,1.0,BME (19/19 OK)
