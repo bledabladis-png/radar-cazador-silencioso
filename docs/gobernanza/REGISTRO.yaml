@@ -1219,6 +1219,41 @@ items:
     Test de regresion: comparar rolling(N) sobre serie con huecos vs
     rolling(N) sobre calendario explicito de sesiones. Aplica a modulos
     con .rolling() sin min_periods explicito (ver seccion 2 del plan).
-    Nota: sector_dispersion no usa rolling y sector_correlation_summary
-    no existe como modulo (verificado 2026-10-22).
-    sector_correlation_summary y modulos con ventanas derivadas.
+    Correccion 2026-10-22: sector_dispersion NO usa rolling (calculo
+    cross-sectional puntual). sector_correlation_summary SI existe como
+    writer y CSV (verificado en receipt_audit del run 2026-10-21);
+    pendiente verificar si usa rolling, ver plan seccion 1.
+
+- id: REP-AUDIT-20261022-LIQUIDITY-ROUTER-PRIORITY
+  tipo: auditoria_interna
+  ciclo: '2026-10-22'
+  estado: FIXED
+  commit: 'PENDING'
+  test: tests/test_router_fed_data_freshness.py
+  descripcion: |
+    Bug descubierto durante revision del reporte 2026-10-21 (target)
+    y diagnosticado 2026-10-22. router.get_fed_data priorizaba FRED
+    API (con lag de ~5 dias) sobre los CSVs de data/macro_manual/
+    (pusheados por bot diario, cron 17 6 * * *). Evidencia: FRED API
+    devolvia datos hasta 2026-10-14 mientras sofr.csv tenia hasta
+    2026-10-19 y rrpp.csv hasta 2026-10-20. liquidity.py leia fed_data
+    del router, calculaba edad contra 2026-10-14 y marcaba sofr y
+    reverse_repo como stale (8d > 4d threshold). Devuelve N/A. En el
+    mismo reporte, fls.py (lectura directa de los mismos CSVs) veia
+    datos frescos y publicaba 67/100 con 3/5 componentes stressed.
+    Contradiccion visible: Resumen de Regimenes decia "Liquidez Real
+    (FRED): N/A" mientras Confirmation Data decia FLS 3/5 stressed
+    con SOFR -0.77, WALCL 1.00, RRP 0.59. El reader pierde confianza
+    en el reporte.
+  evidencia: |
+    Causa raiz: router.get_fed_data() probaba FRED API primero y
+    devolvia su resultado sin comparar frescura. La API tiene lag de
+    ~5 dias; los CSVs son pusheados por workflow diario. Fix: invertir
+    la prioridad. CSVs primero (SLA conocido, versionados en repo),
+    API como fallback. Verificado post-fix: compute_liquidity_score
+    devuelve regime ABUNDANTE, score 0.686 (2026-10-21), confidence
+    0.777. Antes: N/A con score 0.033 (viejo) por Guard 2 del state.
+    Test de regresion: tests/test_router_fed_data_freshness.py, 2
+    tests, ambos pass. Verifica que get_fed_data devuelve fecha
+    >= ultima fecha de sofr.csv, y que incluye las columnas que
+    consume liquidity.py.

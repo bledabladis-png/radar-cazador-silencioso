@@ -93,7 +93,27 @@ class DataRouter:
         return None
 
     def get_fed_data(self):
-        # 1) Intentar primero proveedor automático FRED
+        # 2026-10-22: invertida la prioridad. Los CSVs de
+        # data/macro_manual/ son pusheados por el bot FRED diario
+        # (workflow update_macro_manual, cron 17 6 * * *) y suelen
+        # estar MAS frescos que la API de FRED. Evidencia 2026-10-22:
+        # FRED API devolvia hasta 2026-10-14; los CSVs hasta
+        # 2026-10-19 (sofr) y 2026-10-20 (rrpp). liquidity.py
+        # calculaba stale contra 2026-10-14 y devolvia N/A,
+        # mientras fls.py (que lee los CSVs directos) veia datos
+        # frescos. Contradiccion visible en el reporte. Ver
+        # REP-AUDIT-20261022-LIQUIDITY-ROUTER-PRIORITY.
+        macro_dir = "data/macro_manual"
+        if os.path.exists(macro_dir):
+            try:
+                df = self._load_macro_manual(macro_dir)
+                if df is not None and not df.empty:
+                    print("Usando datos macro manuales locales para liquidez.")
+                    return df
+            except Exception as e:
+                print(f"  [WARN] router: macro_manual fallback: {e}")
+
+        # Fallback a proveedores automaticos (FRED API / Yahoo)
         for name in ["fred", "yahoo"]:
             provider = self.providers[name]
             if provider.is_available():
@@ -105,17 +125,6 @@ class DataRouter:
                 except (RuntimeError, ValueError, KeyError, AttributeError) as e:
                     print(f"  [WARN] router: {provider.get_name()} get_fed_data fallo: {e}")
                     continue
-
-        # 2) Fallback a CSVs manuales
-        macro_dir = 'data/macro_manual'
-        if os.path.exists(macro_dir):
-            try:
-                df = self._load_macro_manual(macro_dir)
-                if df is not None and not df.empty:
-                    print("Usando datos macro manuales locales para liquidez.")
-                    return df
-            except Exception as e:
-                print(f"  [WARN] router: macro_manual fallback: {e}")
 
         return None
     def _load_macro_manual(self, data_dir):
