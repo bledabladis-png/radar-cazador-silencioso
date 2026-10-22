@@ -210,6 +210,14 @@ Tipos: `fix`, `refactor`, `docs`, `data`, `test`, `chore`, `perf`.
   `:` inline sin comillas altera el parseo. Usar block scalar `|` con
   sangria 4 espacios, o citar con `'...'`. Evitar `:` sin escapar en
   valores inline de `REGISTRO.yaml`.
+- **`Where-Object` desenvuelve arrays de 1 elemento a escalar.** Si
+  `$arr = (cmd) | Where-Object { $_ }` devuelve un solo elemento,
+  `$arr` es string, no array. `$arr[0]` devuelve el primer caracter,
+  no el elemento. `$arr.Count` da longitud de la string.
+  Fix: forzar `@(...)` -> `$arr = @(cmd | Where-Object { $_ })`.
+  Uso tipico: guard de staging que comprueba `$staged.Count -ne 1`
+  y `$staged[0] -match ...` falla con un solo fichero sin el
+  `@(...)`. Tropiezo confirmado 2026-10-22.
 
 ---
 
@@ -236,6 +244,41 @@ Tipos: `fix`, `refactor`, `docs`, `data`, `test`, `chore`, `perf`.
 - **`git cherry main <rama>` antes de borrar una rama.** Los `+` son
   commits unicos. Los `-` son duplicados por rebase. Verificar los
   `A` (added) del `git diff --name-status` antes de borrar.
+
+### 6ter. LIMITES DE LOS GATES AUTOMATICOS (2026-10-22)
+
+Los verificadores (`verifica_gobernanza`, `poda_bitacora`, `pyflakes`,
+`compileall`) comprueban **estructura**, no **semantica**. `[OK]` en
+cada uno significa lo que el script declara que comprueba; no implica
+coherencia con la intencion del autor. Lecciones observadas 2026-10-22:
+
+- **Un `[OK]` no valida orden ni contenido semantico.** `poda_bitacora
+  --check` cuenta fechas unicas, no verifica orden de entradas.
+  `verifica_gobernanza` valida que un item FIXED no aparezca en
+  `HANDOFF §4`, pero **no** audita §3 (menciones desactualizadas,
+  lineas perdidas). Asumir "verde" como "correcto" es el error.
+- **No predecir conteos exactos de lineas.** `ReadAllLines` cuenta
+  trailing newline distinto al conteo de `\n` o `\r\n`. Un `throw`
+  con un `esperado 329` (cuando son 330) es ruido que oculta errores
+  reales. Verificar solo "igual" o "mayor", nunca cifra exacta.
+- **Verificar al verificador.** Un check que devuelve "orden
+  descendente OK (1 headers)" cuando hay 11 headers no verifica nada.
+  Antes de confiar en `[OK]`, confirmar que el check se ejecuto sobre
+  el numero esperado de elementos. `-AllMatches` falta en
+  `Select-String ... .Matches.Groups`, `Where-Object` desenvuelve
+  escalar, etc.
+- **`.Replace` no verifica el resultado.** `Count-Occ == 1` prueba
+  que el anchor existe, no que el replacement contiene lo que debe.
+  Post-escritura obligatoria: `if ($text.IndexOf($marker) -lt 0)
+  { throw }` con `$marker` unico del nuevo contenido. Bug 2026-10-22:
+  `.Replace` con here-string vacio borro dos bloques `---` del fichero.
+- **Sintaxis PowerShell rota = no ejecuta nada, pero no se detecta
+  hasta pegar.** Parentesis anidados en expresiones `[regex]::...`
+  son propensos. Comprobar conteo antes de enviar el bloque.
+  Tropiezo confirmado 2026-10-22.
+- **`git checkout HEAD -- file` puede cambiar el EOL del working
+  tree** si `.gitattributes` declara `eol=lf`. No asumir que restore
+  preserva el EOL pre-restore. Re-detectar EOL despues de restore.
 
 ---
 
