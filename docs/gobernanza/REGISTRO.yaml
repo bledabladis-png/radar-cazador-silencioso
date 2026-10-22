@@ -1352,7 +1352,7 @@ items:
   tipo: auditoria_interna
   ciclo: '2026-10-22'
   estado: FIXED
-  commit: 'PENDING'
+  commit: '236c2a64'
   test: tests/test_verifica_gobernanza_sha_reachability.py
   descripcion: |
     verifica_gobernanza._git_commit_exists usaba solo git cat-file -e.
