@@ -1480,3 +1480,96 @@ aqui, pero sus decisiones estan cubiertas por los bloques
 anteriores (`B-06` -> `tests/test_b06_e2e_aggregation.py`;
 `K-HUERFANO` -> tag interno en `src/data_loader.py`;
 `H20` -> "H20-complete", 00_ARRANQUE §4.2; `d608711` -> SHA).
+
+
+---
+
+## Sesion 2026-10-22 - Auditoria externa #4 + 11 bugs + gobernanza
+
+Sesion extensa. Cierra auditoria externa #4 (P1-P8) y deriva en
+auditoria cruzada del sistema que detecta 11 bugs reales. Todos con
+test + verificacion en produccion local (`py run.py`).
+
+### Auditoria externa #4
+
+P1, P2, P5: FALSE_POSITIVE (RS nominal invariante por rs_mom;
+cobertura XLK sobre universo completo; NIPC ya documentado H14).
+P3: BUG REAL (umbral Deterioro aplicado al bruto vs redondeado;
+FIXED, 9 tests). P4: IHR renombrado como proxy (no institucional).
+P6: nota de alcance en temporal_coherence. P7: FIXED en `8c40f7e6`.
+P8: nota de Voyager residual.
+
+### FLS WALCL/CP (WONT_FIX)
+
+Diagnostico estadistico: WALCL `-z(pct_change_252)` |z|>5 12.3%,
+alternativas peores. CP `z(nivel)` |z|>5 4.0%, `pct_change_252`
+mejora |z|>5 pero empeora `z_ult`. Saturacion estructural (QT en
+extremo historico), senal correcta. FLS baja de 79 a 63.
+
+### Los 11 bugs reales
+
+1. **`router.get_fed_data` priorizaba API sobre CSV** (`d405d539`).
+   FRED API lag 5d vs CSVs bot diario. `Liquidez Real: N/A` en
+   reporte, contradiciendo FLS. Fix CSV-first. Verificado: `NEUTRAL 90%`.
+2. **v1 contamina state v2** (`83f79a93`). Tests de v1 sobreescribian
+   `liquidity_state.json` con esquema incompatible. Fix: state v1
+   separado (gitignored).
+3. **Docstring v2 stale** (`83f79a93`). "NO PRODUCCION" siendo
+   productivo desde 14-10.
+4. **Ref rota** (`83f79a93`). `finalize.py:110` citaba item inexistente.
+5. **Verifier acepta SHA huerfanos** (`236c2a64`). `git cat-file -e`
+   acepta objetos huerfanos. `for-each-ref --contains` para
+   reachability.
+6. **v2 liquidez solo API** (`5375f58b`). `effr.csv` no existia. Fix
+   CSV-first con interseccion + generacion de `effr.csv` (2233 filas).
+7. **`-0.0` en `_score_continuo`** (`5375f58b`). Visible en state.
+   Fix: `+ 0.0`.
+8. **`compute_pcr_signals` side effects** (`9a2bddcc`). Escribia
+   `pcr_history.csv` bypassando `persist`/registry. Diagnosticos
+   modificaban el working tree. Fix: flag `persist_history=False`.
+9. **`sector_correlation` P7** (`8c40f7e6`). `iloc[-window:]` sobre
+   serie con huecos. Fix: `get_trading_days` (nueva en
+   `src/market_calendar.py`) + reindex.
+10. **`cboe_vix3m.parquet` no-bursatiles** (`7fcbe05f`). 2 filas en
+    `2010-12-31`, `2021-12-31`. Fix: `_post_filter_non_trading_days`
+    en `update_cboe.py`. Parquet 4299 -> 4297. Verificado en
+    `origin/main`.
+11. **Wyckoff B5/B3** (`1cc8387a`). Spring/SOS con `min_periods=1`
+    disparaban SOS espurios. Fix: `min_periods=EVENT_WINDOW` + patron
+    H7. B3: `max_age_m` default 30 (contrato v1.9). WONT_FIX
+    razonados: B2 (P7 en medias moviles requiere dropna, no reindex);
+    B4 (fillna Close/0 es contrato v1.8, protegido por
+    `test_regresion_i2_nan_internos_no_degenera`).
+
+### Gobernanza
+
+- FLS-COMPONENT-DESIGN: FIXED.
+- LIQ-V2-DATA-SOURCE: SUPERSEDED (duplicado del FIXED).
+- GOVERNANCE-SHA-REACHABILITY: FIXED.
+- CBOE-VIX3M-NON-TRADING-DAYS: FIXED.
+- WYCKOFF-P7-B4-B5-B3: FIXED.
+- Plan ROLLING-WINDOW corregido (error factual: `sector_correlation_summary`
+  si existe como writer y CSV).
+
+### Decisiones tomadas (no revertir sin justificacion)
+
+- **DISTRIBUTION apagada.** `WYCKOFF_SOW_* = None`. Columna `Dist` del
+  reporte siempre 0%. Decision: sesion dedicada de re-diseno SOW (no
+  hay resultados optimos con la especificacion actual).
+- **P7 no es universal.** Reindex al calendario correcto para
+  correlaciones entre series; incorrecto para medias moviles
+  (`dropna().rolling()` ya tiene semantica correcta). WONT_FIX
+  documentado en cabecera de `wyckoff_v1.py`.
+- **B4 WONT_FIX.** `fillna(Close)`/`fillna(0)` en `build_ticker_df` es
+  contrato v1.8. 0/2512 filas con H=L=C en `market_data.parquet`.
+  Riesgo residual mitigado con `+1e-9` en `break_depth`.
+
+### Pendiente
+
+- Verificar scheduled 2026-10-22 con `verify_run_20261022.ps1`.
+- DISTRIBUTION: sesion dedicada.
+- Wyckoff 5b.X / SOW v6: bloqueados externos.
+- HANDOFF automatico: deuda estructural.
+
+Suite final: 3845 passed, 5 skipped.
+

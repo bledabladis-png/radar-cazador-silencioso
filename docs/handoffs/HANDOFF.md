@@ -209,6 +209,18 @@ C4 (datos desfasados), C5 (NIPC 13F), C7 (spread 10Y-3M), C9 (IPI).
 - **REP-AUDIT-20261020-CRON-SLOTS-OBS** (OPEN): revision 2026-11-10.
 - **REP-AUDIT-20261020-SCHEDULER-DELAYS** (OPEN): revision 2026-11-10.
 
+### 4.0. Verificacion scheduled target 2026-10-22
+
+Cuando dispare el bot (slot 23:17 UTC + delays), ejecutar
+`verify_run_20261022.ps1` (gitignored). Criterios:
+- `Liquidez Real` = `NEUTRAL` (no `N/A`). Fix router liquidez.
+- `cboe_vix3m.parquet` sin no-bursatiles. Fix parquet.
+- `writer_receipts.json` con receipt `pcr_history`. Fix side effect.
+- `sector_correlation_summary` con valores coherentes. Fix P7.
+
+Es verificacion de entorno (no de codigo). Los fixes ya estan
+validados en `py run.py` local (suite 3845 passed, 5 skipped).
+
 ### 4.1. Certificacion scheduled lunes 2026-10-19 23:17 UTC [COMPLETED 2026-10-20]
 
 **Estado: COMPLETADA.** Target 2026-10-19 cubierto por run `39355608824`
@@ -240,6 +252,15 @@ Observar en el run:
 - **Ubuntu 26**: workflows pinnen `ubuntu-24.04`.
 
 ---
+
+### 4.3. Cierre sesion 2026-10-22
+
+11 bugs reales cerrados con test + verificacion en produccion local:
+router liquidez, state v1/v2, docstring stale, ref rota, verifier
+reachability, effr.csv, -0.0, pcr side effects, sector_correlation
+P7, cboe_vix3m no-bursatiles, Wyckoff B5/B3. Suite: 3845 passed,
+5 skipped. HEAD al cierre: `1bb56473`. Detalle en `05_BITACORA.md`
+entrada 2026-10-22 y `04_HISTORICO.md` "Sesion 2026-10-22".
 
 ## 5. COMO ARRANCAR
 

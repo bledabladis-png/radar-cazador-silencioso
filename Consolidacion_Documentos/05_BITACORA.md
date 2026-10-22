@@ -44,43 +44,111 @@ Al cerrar una sesion nueva, se anade arriba (las mas recientes primero). Si hay 
 
 ## 3. SESIONES
 
-### 2026-10-22 - Auditoria externa #4 + FLS WALCL/CP + docs gobernanza
+### 2026-10-22 - Auditoria externa #4 + 11 bugs reales + gobernanza
 
-**Objetivo.** Atender auditoria externa #4 (P1-P8), decidir WALCL
-y CP del componente FLS, cerrar deudas documentales 20-22 oct.
+**Objetivo.** Cerrar auditoria externa #4 (P1-P8). Derivado: 11 bugs
+reales detectados en revision cruzada (reporte, liquidez, Wyckoff,
+parquets). Todos con test + verificacion en produccion local.
 
 **Hecho.**
-- P1 (RS nominal): FALSE_POSITIVE. rs_z usa rs_mom (log-retorno
-  relativo 20d), invariante a escala. Nota anadida.
-- P2 (cobertura XLK): FALSE_POSITIVE. Denominador = universo
-  completo del ETF (74 tickers), no top-20. Nota anadida.
-- P3 (XLF -5.0): BUG REAL. Umbral deterioro se aplicaba al bruto,
-  render muestra redondeado. FIXED, 9 tests.
-- P4 (IHR): FIXED. Renombrado a "IHR (Index/Equity PCR Ratio,
-  proxy)", formula visible, nota de no-institucional. 4 tests.
-- P5 (NIPC): FALSE_POSITIVE, ya documentado H14.
+
+*Auditoria externa #4 (P1-P8).*
+- P1 (RS nominal): FALSE_POSITIVE. rs_z usa rs_mom, invariante a escala.
+- P2 (cobertura XLK): FALSE_POSITIVE. Denominador = universo completo
+  del ETF, no top-20.
+- P3 (XLF -5.0): BUG REAL. Umbral aplicaba al bruto, render redondeado.
+  FIXED, 9 tests.
+- P4 (IHR): FIXED. "IHR (Index/Equity PCR Ratio, proxy)", formula,
+  nota de no-institucional. 4 tests.
+- P5 (NIPC): FALSE_POSITIVE, H14.
 - P6 (temporal_coherence): FIXED. Nota de alcance.
-- P7 (rolling window gaps): OPEN en
-  REP-AUDIT-20261022-ROLLING-WINDOW-GAPS. Plan en siguiente sesion.
+- P7 (rolling window gaps): FIXED en `8c40f7e6`. Detalle abajo.
 - P8 (Voyager N-PORT): FIXED. Nota de residuales.
-- FLS: WALCL y CP WONT_FIX. WALCL -z(pct_change_252) |z|>5 12.3%,
-  alternativas peores (pct_change_52 17.9%/30.3%, diff_52
-  21.5%/40.2%). CP z(nivel) |z|>5 4.0%, pct_change_252 mejora
-  |z|>5 pero empeora z_ult (+1.45 -> +2.19). Item
-  REP-AUDIT-20261020-FLS-COMPONENT-DESIGN cerrado FIXED.
-- Docs: trampas PowerShell adicionales + catalogo EOL/BOM
-  verificado en `01_METODO.md`. `ESTADO_SISTEMA.md` regenerado.
+
+*FLS WALCL/CP.* WONT_FIX tras diagnostico estadistico. WALCL
+`-z(pct_change_252)` |z|>5 12.3%; alternativas peores. CP `z(nivel)`
+|z|>5 4.0%; `pct_change_252` mejora |z|>5 pero empeora `z_ult`
+(+1.45 -> +2.19). Item FLS-COMPONENT-DESIGN FIXED.
+
+*Bug 1 - router liquidez (`d405d539`).* `router.get_fed_data`
+priorizaba FRED API (lag 5d) sobre CSVs `data/macro_manual/` (bot
+diario). Resultado: `Liquidez Real: N/A` en reporte, contradiciendo a
+FLS. Fix: CSV-first, API-fallback. Verificado: `NEUTRAL 90%`.
+
+*Bug 2 - v1 contamina state v2 (`83f79a93`).* `regimes/liquidity.py`
+(v1) escribia a `liquidity_state.json` con esquema incompatible. Los
+tests de v1 sobreescribian el state de produccion. Fix: v1 ->
+`liquidity_v1_state.json` (gitignored).
+
+*Bug 3 - docstring v2 stale (`83f79a93`).* v2 declaraba "NO PRODUCCION"
+siendo productivo desde 14-10. Reescrito.
+
+*Bug 4 - ref rota (`83f79a93`).* `finalize.py:110` citaba item
+inexistente `REP-AUDIT-20261017-capa4-commitB`. Fix -> `CAPA4`.
+
+*Bug 5 - verifier acepta SHA huerfanos (`236c2a64`).* `git cat-file -e`
+acepta objetos huerfanos. `for-each-ref --contains` para validar
+reachability. Test con commit huerfano real.
+
+*Bug 6 - v2 liquidez solo API (`5375f58b`).* `effr.csv` no existia;
+v2 leia solo FRED API (lag 2d). Fix: `update_macro_manual.py` anade
+EFFR; `_fetch_liquidity_v2_data` CSV-first con interseccion;
+`effr.csv` con 2233 filas. State pasa a coincidir con CSV.
+
+*Bug 7 - `-0.0` en `_score_continuo` (`5375f58b`).* `score(0.0) = -0.0`
+visible en state. Fix: `+ 0.0`.
+
+*Bug 8 - `compute_pcr_signals` side effects (`9a2bddcc`).* Escribia
+`pcr_history.csv` sin pasar por `persist`/registry, sin receipt.
+Diagnosticos del dia modificaban el working tree. Fix: flag
+`persist_history=False` por defecto; `market_data.py` pasa `True`.
+
+*Bug 9 - sector_correlation P7 (`8c40f7e6`).* `iloc[-window:]` sobre
+serie con huecos: ventana cubre mas dias naturales que N sesiones. Fix:
+nueva `get_trading_days` en `src/market_calendar.py` + reindex antes
+del slice.
+
+*Bug 10 - cboe_vix3m no-bursatiles (`7fcbe05f`).* Unico parquet de
+produccion trackeado. 2 filas en `2010-12-31`, `2021-12-31`
+(observacion New Year en viernes). Fix: `_post_filter_non_trading_days`
+en `update_cboe.py` + parquet limpiado (4299 -> 4297, manifest
+actualizado). Verificado en `origin/main`: 0 no-bursatiles.
+
+*Bug 11 - Wyckoff v1.8 B5/B3 (`1cc8387a`).* B5: spring/SOS con
+`min_periods=1` disparaban SOS espurios (XLF 7 en primeras 20
+sesiones). Fix: `min_periods=EVENT_WINDOW` + patron H7
+(`dropna().rolling().reindex()`). B3: `max_age_m` default 10 vs
+contrato v1.9=30. WONT_FIX razonados: B2 (P7 en
+`_trend_component`/`_atr_normalized`/`wyckoff_stability`: medias
+moviles requieren dropna, no reindex); B4 (`fillna(Close)`/`fillna(0)`
+es contrato v1.8, protegido por `test_regresion_i2_nan_internos_no_degenera`;
+medicion 0/2512 filas H=L=C en `market_data.parquet`).
+
+*Gobernanza.* FLS-COMPONENT-DESIGN OPEN->FIXED; LIQ-V2-DATA-SOURCE
+OPEN->SUPERSEDED (duplicado del FIXED); GOVERNANCE-SHA-REACHABILITY
+nuevo FIXED; CBOE-VIX3M-NON-TRADING-DAYS nuevo FIXED;
+WYCKOFF-P7-B4-B5-B3 nuevo FIXED. Plan ROLLING-WINDOW corregido (error
+factual: `sector_correlation_summary` si existe).
+
+*Docs.* Trampas PowerShell + catalogo EOL/BOM (commit `6dcf637c`);
+lecciones 1-9 en `01_METODO §6ter` (`e5bb6f43`, `d9e2e73c`,
+`e35b314c`).
 
 **Commits.** bc66ba6f, 3a3b06a9, 5ad74e56, 07854913, 5a1e0c37,
-2686b154, a4f13d1c, 6dcf637c.
+2686b154, a4f13d1c, 6dcf637c, 735ee713, e5bb6f43, 8b97089b,
+d9e2e73c, d405d539, 9df5e7b8, e35b314c, 5375f58b, 2ec8abcd,
+9a2bddcc, eae74527, ce9f62a0, 8c40f7e6, b6fba669, 7fcbe05f,
+e26b7c7b, 1cc8387a, 1bb56473.
 
 **Pendiente.**
-- Verificar run scheduled 22-10 23:17 UTC (04:00+ UTC del 23-10).
-- Plan expandido de ROLLING-WINDOW-GAPS.
-- HANDOFF automatico (deuda estructural, sin alcance asignado).
+- Verificar run scheduled target 2026-10-22 (slot 23:17 UTC + delays).
+- DISTRIBUTION apagada: sesion dedicada de re-diseno SOW.
+- Wyckoff 5b.X / SOW v6: bloqueados externos.
+- HANDOFF automatico: deuda estructural.
 
-**Proximo paso sugerido.** Verificar scheduled 22-10 y disenar el
-test de regresion de ROLLING-WINDOW-GAPS.
+**Proximo paso sugerido.** Verificar scheduled 2026-10-22 con
+`verify_run_20261022.ps1` (criterios: liquidez NEUTRAL no N/A,
+`cboe_vix3m` sin no-bursatiles, receipt `pcr_history`).
 
 ### 2026-10-21 - Auditoria externa #3 + REVIEW-EXTERNAL cerrado
 

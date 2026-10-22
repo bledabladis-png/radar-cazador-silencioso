@@ -115,9 +115,15 @@ post-histeresis (STAGFLATION no persiste si IPS<=0.15); (c)
 
 **Wyckoff v1.8 en produccion.** Legacy retirado 2026-10-10. Detalle
 en `04_HISTORICO.md` y `docs/auditoria/wyckoff/`.
+Fixes 2026-10-22 (commit `1cc8387a`): B5 spring/SOS con `min_periods=`
+`EVENT_WINDOW` + patron H7 (`dropna().rolling().reindex()`); B3
+`max_age_m` default 30 (contrato v1.9). WONT_FIX razonados: B2 (P7 en
+`_trend_component`/`_atr_normalized`/`wyckoff_stability`), B4 (fillna
+Close/0 es contrato v1.8). Ver `REP-AUDIT-20261022-WYCKOFF-P7-B4-B5-B3`.
 
 **Contrato de persistencia de outputs (2026-10-11).** Registro +
-wrapper + verificador + test AST, 19 writers. `02_ARQUITECTURA.md` seccion 4.
+wrapper + verificador + test AST, **20 writers** (pcr_history anadido
+2026-10-22, commit `9a2bddcc`). `02_ARQUITECTURA.md` seccion 4.
 
 **CI tests (2026-10-17).** `.github/workflows/ci_tests.yml` corre la
 suite completa en cada push a main (paths-ignore: `data/`, `outputs/`),
@@ -151,6 +157,36 @@ anomalias en las ultimas 7 sesiones. 4-8 semanas de observacion antes
 de decidir si bloquear. Ver `REP-AUDIT-20261018-RECEIPT-AUDIT`.
 Items `CI-PUSH-NO-VERIF` y `CI-PREVENTION-GAP`: cerrados.
 
+**Fixes 2026-10-22 (11 bugs reales cerrados, todos con test).**
+1. `router.get_fed_data` priorizaba API FRED (lag ~5d) sobre CSVs
+   `data/macro_manual/` (bot diario). `Liquidez Real: N/A` en reporte.
+   Fix commit `d405d539`. Verificado en `py run.py`: `NEUTRAL 90%`.
+2. v1 (`regimes/liquidity.py`) contaminaba state v2. Fix
+   `83f79a93`: v1 -> `liquidity_v1_state.json` (gitignored).
+3. Docstring v2 decia "NO PRODUCCION" siendo productivo desde 14-10.
+   Fix `83f79a93`.
+4. `finalize.py:110` referenciaba item inexistente
+   `REP-AUDIT-20261017-capa4-commitB`. Fix `83f79a93`.
+5. `verifica_gobernanza` aceptaba SHA huerfanos (post-rebase). Fix
+   `236c2a64`: `git for-each-ref --contains`.
+6. v2 liquidez leia solo FRED API (sin `effr.csv`, lag 2d). Fix
+   `5375f58b`: CSV-first con interseccion + `effr.csv` (2233 filas).
+7. `_score_continuo` devolvia `-0.0` cuando `diff_bp=0.0`. Fix
+   `5375f58b` (`+ 0.0`).
+8. `compute_pcr_signals()` escribia `pcr_history.csv` sin pasar por
+   `persist`/registry (bypass receipt). Fix `9a2bddcc`: flag
+   `persist_history=False` por defecto.
+9. `sector_correlation.iloc[-window:]` sobre serie con huecos (P7).
+   Fix `8c40f7e6`: `get_trading_days` (nueva funcion en
+   `src/market_calendar.py`) + reindex antes del slice.
+10. `cboe_vix3m.parquet` (unico parquet de produccion trackeado)
+    contenia 2 filas no bursatiles (`2010-12-31`, `2021-12-31`). Fix
+    `7fcbe05f`: `_post_filter_non_trading_days` en `update_cboe.py`.
+11. Wyckoff v1.8 B5/B3. Ver bloque anterior (commit `1cc8387a`).
+
+Items REGISTRO creados/actualizados en cada fix. Suite: **3845
+passed, 5 skipped** (al cierre).
+
 ---
 
 ## 4. PENDIENTE (DESGLOSE)
@@ -173,6 +209,11 @@ A1-A5, A6, B, C, 6, 7, 8, 9, F: CERRADOS. Detalle tematico en
 - **Bloqueado aparte:** 5c.4, 5d. **5e legacy CERRADO 2026-10-10.**
 - **SOW v6:** borrador `48_sow_protocol_v6.md` PENDIENTE FIRMA externa.
   Sin implementacion hasta firma (dictamen 46 rechaza v5 grounded).
+- **DISTRIBUTION apagada (2026-10-22).** `WYCKOFF_SOW_* = None` en
+  `config/settings.py:139-142`. `classify_wyckoff_phase` L382 devuelve
+  `RANGE` si `sow_params is None` (fail-closed por diseno). En el
+  reporte la columna `Dist` siempre es 0%. Decision: mantener apagado
+  hasta sesion dedicada de re-diseno SOW (no hay resultados optimos).
 - Expediente completo: `docs/auditoria/wyckoff/`.
 
 ### 4.3. Pendientes vivos
@@ -181,6 +222,19 @@ A1-A5, A6, B, C, 6, 7, 8, 9, F: CERRADOS. Detalle tematico en
 - **C2 (920)**: bloqueado por auditor externo.
 - **5 tests skipped** (2 network en `test_freshness.py`, 3 fase 5b
   en `test_wyckoff_v1_contract.py`). Diseno, no deuda.
+- **Verificar scheduled target 2026-10-22.** Cuando dispare el bot
+  (slot 23:17 UTC + delays), ejecutar `verify_run_20261022.ps1`
+  (gitignored). Criterio: liquidez `NEUTRAL` (no `N/A`), parquet
+  `cboe_vix3m` sin no-bursatiles, `writer_receipts.json` con receipt
+  `pcr_history`. Es verificacion de entorno, no de codigo.
+- **Wyckoff B2/B4 WONT_FIX razonados (2026-10-22).** B2 (P7 en
+  `_trend_component`/`_atr_normalized`/`wyckoff_stability`):
+  `dropna().rolling()` tiene semantica correcta para medias moviles;
+  reindex + `min_periods=N` rompe el score N sesiones tras cada gap.
+  B4 (`fillna(Close)`/`fillna(0)` en `build_ticker_df`): contrato
+  v1.8, protegido por `test_regresion_i2_nan_internos_no_degenera`.
+  Medicion: 0/2512 filas con H=L=C en `market_data.parquet`. Sujetos
+  a reapertura si aparece evidencia nueva.
 
 ### 4.4. Deudas documentadas (sin accion pendiente)
 

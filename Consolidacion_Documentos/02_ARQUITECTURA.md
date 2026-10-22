@@ -134,6 +134,13 @@ Tests de regresion I2 / K-INDEX-RANGE-01 portados a `test_wyckoff_v1_contract.py
 
 El contrato v1.8 esta en `docs/auditoria/wyckoff/01_contrato_semantico_v1_8.md`. La secuencia completa (5a-5e) en `docs/auditoria/wyckoff/03_plan_migracion.md`.
 
+**Fixes 2026-10-22 (commit `1cc8387a`):** B5 spring/SOS con
+`min_periods=EVENT_WINDOW` + patron H7 (`dropna().rolling().reindex()`);
+B3 `max_age_m` default 30. WONT_FIX razonados: B2 (P7 en
+`_trend_component`/`_atr_normalized`/`wyckoff_stability`); B4
+(`fillna(Close)`/`fillna(0)` en `build_ticker_df` es contrato v1.8).
+Ver `docs/auditoria/wyckoff/39_nota_fixes_2026-10-22.md`.
+
 ## 4. CONTRATO DE MODULOS
 
 - `src/report/*.py`: funciones `render_*(...) -> list[str]`. Sin side effects. Devuelve lista de lineas markdown.
@@ -153,7 +160,7 @@ El contrato v1.8 esta en `docs/auditoria/wyckoff/01_contrato_semantico_v1_8.md`.
 - `data/providers/_fund_flow_utils.py::fund_flow_robust_zscore_with_regime` es el canonico para fund-flow (window=120, min_periods=20, clip +-5, MAD==0 & s==median -> 0.0, MAD==0 & s!=median -> NaN). NO fusionar con el canonico de precios.
 - `src/institutional_accumulation/` es el modulo IAE. Detalle en `03_IAE.md`.
 - `config/tickers.py::MARKET_TICKERS['sectors']` es la fuente unica de los 11 ETFs sectoriales (`['XLK','XLF','XLV','XLE','XLY','XLP','XLI','XLB','XLU','XLRE','XLC']`). Cualquier modulo que necesite la lista, la importa - no la duplica.
-- `src/pipeline/output_writer.py::persist/skip` es la fuente unica de escritura a `outputs/history/`. Toda persistencia pasa por aqui. Registro declarativo en `src/pipeline/output_registry.py` (19 outputs). Verificacion post-run en `src/pipeline/output_verifier.py`. Test AST de contrato en `tests/test_output_contract_ast.py`. Excepcion por diseno: `outputs/report/` (snapshots efimeros).
+- `src/pipeline/output_writer.py::persist/skip` es la fuente unica de escritura a `outputs/history/`. Toda persistencia pasa por aqui. Registro declarativo en `src/pipeline/output_registry.py` (20 outputs, `pcr_history` anadido 2026-10-22). Verificacion post-run en `src/pipeline/output_verifier.py`. Test AST de contrato en `tests/test_output_contract_ast.py`. Excepcion por diseno: `outputs/report/` (snapshots efimeros).
 
 ---
 
@@ -246,6 +253,25 @@ Si `validation_gate['passed'] == False` -> `sys.exit(1)`.
 
 **Convencion de serializacion temporal:** toda fecha de observacion se deriva del dataset. `datetime.now()` solo se usa como (a) `reference_date` en main; (b) execution time para definir rangos de query HTTP; (c) edad de ficheros de cache. Nunca como fecha de observacion.
 ---
+
+### Nota 2026-10-22: piezas nuevas
+
+- **`src/market_calendar.py::get_trading_days(start, end)`**.
+  Nueva funcion. Devuelve `DatetimeIndex` de sesiones NYSE en el rango
+  (itera `bdate_range` y filtra con `is_market_day`, `lru_cache` sobre
+  festivos). Usada por `sector_correlation.py` para reindexar series
+  con huecos antes del slice `iloc[-window:]` (P7). Correcto para
+  correlaciones; NO para medias moviles (ver WONT_FIX en
+  `wyckoff_v1.py`).
+- **`outputs/state/liquidity_v1_state.json`** (gitignored desde
+  2026-10-22). Antes v1 (`regimes/liquidity.py`) y v2
+  (`regimes/liquidity_v2.py`) compartian `liquidity_state.json`. Los
+  tests de v1 sobreescribian el state de produccion. Separados. El
+  consumidor (`freshness.py`) lee solo `liquidity_state.json` (v2).
+- **`data/macro_manual/effr.csv`** (nuevo 2026-10-22). EFFR desde
+  FRED, mismo formato que `sofr.csv`. Antes `_fetch_liquidity_v2_data`
+  leia solo FRED API (lag 2d). Ahora CSV-first con interseccion
+  `sofr`/`effr`.
 
 ## 8. WORKFLOWS GITHUB ACTIONS
 
