@@ -1,4 +1,4 @@
-﻿import pandas as pd
+import pandas as pd
 import numpy as np
 import sys
 sys.path.insert(0, '.')
@@ -103,7 +103,7 @@ def test_liquidity_state_no_retrocede_por_dato_stale(tmp_path, monkeypatch):
 
     # Preparar estructura de directorio y state persistido
     (tmp_path / "outputs" / "state").mkdir(parents=True, exist_ok=True)
-    (tmp_path / "outputs" / "state" / "liquidity_state.json").write_text(
+    (tmp_path / "outputs" / "state" / "liquidity_v1_state.json").write_text(
         json.dumps({"score": 0.29, "date": "2026-10-13"}))
 
     # Router fake: datos stale hasta 2026-10-07
@@ -122,7 +122,7 @@ def test_liquidity_state_no_retrocede_por_dato_stale(tmp_path, monkeypatch):
 
     liq_mod.compute_liquidity_score()
 
-    written = json.loads((tmp_path / "outputs" / "state" / "liquidity_state.json").read_text())
+    written = json.loads((tmp_path / "outputs" / "state" / "liquidity_v1_state.json").read_text())
     assert written["date"] == "2026-10-13", f"state no debe retroceder: {written}"
     assert written["score"] == 0.29
 
@@ -156,7 +156,7 @@ def test_liquidity_state_persiste_trazabilidad(tmp_path, monkeypatch):
 
     liq_mod.compute_liquidity_score()
 
-    written = json.loads((tmp_path / "outputs" / "state" / "liquidity_state.json").read_text())
+    written = json.loads((tmp_path / "outputs" / "state" / "liquidity_v1_state.json").read_text())
     assert "score" in written
     assert "date" in written
     assert "computed_at" in written
@@ -180,7 +180,7 @@ def test_liquidity_state_no_sobreescribe_fresco_con_stale(tmp_path, monkeypatch)
 
     # State previo: score OK, sin stale, con fecha de hace 30 dias
     old_date = (pd.Timestamp.now().normalize() - pd.Timedelta(days=30))
-    (tmp_path / "outputs" / "state" / "liquidity_state.json").write_text(
+    (tmp_path / "outputs" / "state" / "liquidity_v1_state.json").write_text(
         json.dumps({"score": 0.5, "date": str(old_date.date()),
                     "stale": False, "components": {}}))
 
@@ -202,7 +202,7 @@ def test_liquidity_state_no_sobreescribe_fresco_con_stale(tmp_path, monkeypatch)
 
     liq_mod.compute_liquidity_score()
 
-    written = json.loads((tmp_path / "outputs" / "state" / "liquidity_state.json").read_text())
+    written = json.loads((tmp_path / "outputs" / "state" / "liquidity_v1_state.json").read_text())
     # El state debe seguir siendo el anterior (no sobreescrito)
     assert written["score"] == 0.5, f"state no debe sobreescribirse: {written}"
     assert written["date"] == str(old_date.date())

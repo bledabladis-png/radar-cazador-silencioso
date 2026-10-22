@@ -104,7 +104,7 @@ def save_regime_history(macro_score, macro_regime, macro_conf,
         print(f"  [WARN] save_regime_history: obs_date {obs_date_only} no es sesion NYSE. Se omite escritura.")
         skip('macro_regime', 'SKIP_CONDITION')
         return
-    # REP-AUDIT-20261017-capa4-commitB (2026-10-17): esquema del CSV
+    # REP-AUDIT-20261017-CAPA4 (2026-10-17): esquema del CSV
     # renombrado. La columna 'liquidity_regime' historicamente contuvo
     # el regimen FINANCIERO (financial_conditions.py), no el de liquidez
     # real FRED (liquidity_v2.py). A partir de este commit:

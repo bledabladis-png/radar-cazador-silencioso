@@ -1257,3 +1257,63 @@ items:
     tests, ambos pass. Verifica que get_fed_data devuelve fecha
     >= ultima fecha de sofr.csv, y que incluye las columnas que
     consume liquidity.py.
+
+- id: REP-AUDIT-20261022-LIQUIDITY-STATE-SEPARATION
+  tipo: auditoria_interna
+  ciclo: '2026-10-22'
+  estado: FIXED
+  commit: 'PENDING'
+  test: tests/test_liquidity_state_separation.py
+  descripcion: |
+    v1 (regimes/liquidity.py) y v2 (regimes/liquidity_v2.py) escribian
+    ambos a outputs/state/liquidity_state.json con esquemas incompatibles:
+    v1 escribe {score, date, computed_at, components, stale}; v2 escribe
+    {score, date, regime, v2:{...}}. Los tests de v1 (test_regimes.py)
+    invocaban compute_liquidity_score() y sobreescribian el state de
+    produccion con esquema v1. Resultado: state sin "regime" ni "v2".
+    freshness.py:71 lee state["date"] y seguia funcionando, pero el
+    proximo run v2 leia previous_score de esquema distinto.
+  evidencia: |
+    Fix: v1 escribe a outputs/state/liquidity_v1_state.json (gitignored).
+    v2 mantiene liquidity_state.json como fuente de produccion.
+    Test de separacion: tests/test_liquidity_state_separation.py (3 tests).
+    Actualizados 3 tests de test_regimes.py al path de v1. Verificado en
+    run real: state resultante solo tiene schema v2 {score, date, regime,
+    v2:{...}}, sin "components" (v1). Reporte scheduled/prod sigue
+    publicando NEUTRAL 90% desde v2.
+
+- id: REP-AUDIT-20261022-LIQUIDITY-V2-DOCSTRING-STALE
+  tipo: auditoria_interna
+  ciclo: '2026-10-22'
+  estado: FIXED
+  commit: 'PENDING'
+  test: tests/test_liquidity_state_separation.py
+  descripcion: |
+    El docstring de regimes/liquidity_v2.py declaraba "NO PRODUCCION.
+    Modulo sandbox para validacion walk-forward / prospectiva" y
+    "Modulo productivo (intacto): regimes/liquidity.py". Contradiccion
+    con el estado real: v2 esta en produccion desde 2026-10-14 (dictamen
+    N8, Fase J) y es lo que src/pipeline/regimes.py:compute_real_liquidity
+    invoca. El reporte publica v2 (NEUTRAL 90%), no v1.
+  evidencia: |
+    Docstring reescrito: "Modulo PRODUCTIVO de liquidez real FRED desde
+    2026-10-14 (dictamen N8, Fase J). Sustituye a regimes/liquidity.py
+    (v1), que queda mantenido solo para rollback y tests." Anadidas
+    referencias a REP-AUDIT-20261017-CAPA4 y a la separacion de state.
+
+- id: REP-AUDIT-20261022-FINALIZE-CAPA4-REF-BROKEN
+  tipo: auditoria_interna
+  ciclo: '2026-10-22'
+  estado: FIXED
+  commit: 'PENDING'
+  test: tests/test_liquidity_state_separation.py
+  descripcion: |
+    src/pipeline/finalize.py:110 referenciaba el item
+    "REP-AUDIT-20261017-capa4-commitB", que no existe en REGISTRO.yaml.
+    El item real es REP-AUDIT-20261017-CAPA4 (L593). Referencia huerfana
+    que rompia la trazabilidad de gobernanza.
+  evidencia: |
+    Fix: referencia corregida a REP-AUDIT-20261017-CAPA4. verifica_gobernanza
+    no detectaba la referencia rota porque no cruza comentarios de codigo
+    con ids del REGISTRO; el chequeo manual en revision 2026-10-22 la
+    encontro. Candidato a anadir al verificador (futuro).

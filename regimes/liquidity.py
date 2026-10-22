@@ -242,7 +242,7 @@ def compute_liquidity_score():
 
     try:
         import json, os
-        delta_file = 'outputs/state/liquidity_state.json'
+        delta_file = 'outputs/state/liquidity_v1_state.json'
         if os.path.exists(delta_file):
             with open(delta_file, 'r') as f:
                 prev = json.load(f)

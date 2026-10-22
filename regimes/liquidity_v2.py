@@ -1,8 +1,14 @@
 """regimes/liquidity_v2.py
 
-Especificacion experimental B3 CONGELADA — dictamen auditor Fase J (14-oct-2026).
+Modulo PRODUCTIVO de liquidez real FRED desde 2026-10-14 (dictamen N8,
+Fase J). Sustituye a regimes/liquidity.py (v1), que queda mantenido
+solo para rollback y tests. Ver item REP-AUDIT-20261017-CAPA4 en
+docs/gobernanza/REGISTRO.yaml.
 
-NO PRODUCCION. Modulo sandbox para validacion walk-forward / prospectiva.
+Motivo del reemplazo (N8 2026-10-14): v1 daba senales erroneas por
+(a) MAD nula sobre series planas, (b) doble ffill sobre FRED,
+(c) ausencia de guard de frescura. v2 implementa especificacion B3
+congelada.
 
 Arquitectura (3 capas independientes):
   Capa 1: severidad cruda (4 categorias por dia)
@@ -26,10 +32,15 @@ period_context prioridad (una etiqueta exclusiva por dia):
   6. turn_of_month_start    (cualquier mes, primer dia habil)
   7. mid_period
 
+State: outputs/state/liquidity_state.json (v2). v1 escribe a
+outputs/state/liquidity_v1_state.json desde 2026-10-22 para evitar
+que los tests de v1 contaminen el state de produccion. Ver item
+REP-AUDIT-20261022-LIQUIDITY-STATE-SEPARATION.
+
 Referencias:
   - Dictamen N8 Fase J (2026-10-14).
   - Sandbox de pruebas: outputs/audit/liq_backtest/.
-  - Modulo productivo (intacto): regimes/liquidity.py.
+  - Modulo v1 (rollback y tests): regimes/liquidity.py.
 """
 
 from __future__ import annotations
