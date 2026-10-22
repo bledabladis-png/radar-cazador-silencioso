@@ -1524,7 +1524,7 @@ items:
   tipo: auditoria_interna
   ciclo: '2026-10-22'
   estado: FIXED
-  commit: 'PENDING'
+  commit: '7a0a71a8'
   test: tests/test_non_market_days_filter.py
   descripcion: |
     data/market_data.parquet y data/stock_prices.parquet contenian
