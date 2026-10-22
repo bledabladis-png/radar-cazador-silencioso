@@ -1649,3 +1649,31 @@ items:
     "13F" in line). Verificado local 2026-10-22: health_check
     pasa de "[WARN] seccion IAE no encontrada" a "[OK] seccion
     presente".
+
+- id: REP-AUDIT-20261022-AUTONOMY-AUDIT
+  tipo: auditoria_interna
+  ciclo: '2026-10-22'
+  estado: FALSE_POSITIVE
+  razon: |
+    Auditoria completa de autonomia (2026-10-22): ¿el sistema
+    obtiene datos actualizados y los gestiona solo? Verificado
+    con datos reales: (1) workflows — daily_run 5/5 slots success,
+    update_macro_manual 2/2 success hoy, ci_tests verde en cada
+    push, cron trimestrales programados con retry + issue. (2)
+    cadencia por fuente — todos los CSVs FRED dentro de su
+    ventana esperada (diaria≤3d, semanal≤10d, mensual≤60d);
+    parquets produccion age=0d; CSVs history dentro de lag
+    documentado por proveedor. (3) degradacion — FRED caido
+    devuelve None y NO reescribe el CSV (verificado con mock
+    que lanza excepcion). (4) gate — pipeline_gate usa probe
+    live de Yahoo (no parquet local); con parquet 5d stale +
+    Yahoo fresco devuelve READY correcto. No se detecto ningun
+    bug real. Los WARN/FAIL que aparecieron en diagnosticos
+    intermedios fueron artefactos: (a) parseo del CSV
+    qqq_nport_flow.csv usando `month` (int 1,2,3) en lugar de
+    `report_date` (ISO), generando fecha epoch 1970-01-01; (b)
+    threshold de discount_rate.csv mal calibrado — DPRIME solo
+    cambia en decisiones Fed (ultimo 13-10, 7.0%); (c)
+    empleo.csv — ICSA publica jueves 13:30 UTC, bot corre 06:17
+    UTC, age=12d es el desfase de publicacion, no fallo del
+    pipeline.
