@@ -279,6 +279,13 @@ coherencia con la intencion del autor. Lecciones observadas 2026-10-22:
 - **`git checkout HEAD -- file` puede cambiar el EOL del working
   tree** si `.gitattributes` declara `eol=lf`. No asumir que restore
   preserva el EOL pre-restore. Re-detectar EOL despues de restore.
+- **Bucle de busqueda con break en la propia condicion de inicio.**
+  `for ($j = $idxItem; ...) { if ($lines[$j] -match '^\- id:') break }`
+  dispara el break en la linea de origen ($lines[$idxItem]) porque
+  tambien matchea el patron. El loop nunca avanza, el resultado queda
+  en -1. Fix: empezar en $idxItem + 1 o excluir explicitamente la
+  linea de origen del break. Bug 2026-10-22: busqueda de
+  `siguiente_accion:` dentro de un item REGISTRO fallo por esto.
 
 ---
 

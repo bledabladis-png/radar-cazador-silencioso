@@ -91,3 +91,4 @@ _commit_msg.txt
 docs/automatica/
 outputs/state/writer_receipts.json
 outputs/state/guard_coverage_result.json
+verify_run_*.ps1
