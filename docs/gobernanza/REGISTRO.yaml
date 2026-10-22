@@ -1586,7 +1586,7 @@ items:
   tipo: auditoria_interna
   ciclo: '2026-10-22'
   estado: FIXED
-  commit: 'PENDING'
+  commit: 'e54f95b6'
   descripcion: |
     update_index_holdings.py:get_state_street_holdings construia
     3 listas paralelas (tickers, names, weights) y las pasaba a
@@ -1636,7 +1636,7 @@ items:
   tipo: auditoria_interna
   ciclo: '2026-10-22'
   estado: FIXED
-  commit: 'PENDING'
+  commit: 'e54f95b6'
   descripcion: |
     check_iae_section en scripts/health_check.py buscaba el
     heading literal "## Acumulacion Institucional (13F)". El
