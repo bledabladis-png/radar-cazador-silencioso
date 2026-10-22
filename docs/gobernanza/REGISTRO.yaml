@@ -1215,8 +1215,10 @@ items:
     rolling(N) sobre filas disponibles puede cubrir mas dias
     naturales que N sesiones esperadas.
   siguiente_accion: |
-    Test de regresion: comparar rolling(20) sobre serie con huecos
-    vs rolling(20) sobre calendario explicito de sesiones. Si difieren,
-    decidir entre reindexar al calendario (con NaN relleno) o
-    documentar como limitacion conocida. Aplica a sector_dispersion,
+    Plan detallado en docs/auditoria/radar/audits/PLAN_ROLLING_WINDOW_GAPS_2026-10-22.md.
+    Test de regresion: comparar rolling(N) sobre serie con huecos vs
+    rolling(N) sobre calendario explicito de sesiones. Aplica a modulos
+    con .rolling() sin min_periods explicito (ver seccion 2 del plan).
+    Nota: sector_dispersion no usa rolling y sector_correlation_summary
+    no existe como modulo (verificado 2026-10-22).
     sector_correlation_summary y modulos con ventanas derivadas.
