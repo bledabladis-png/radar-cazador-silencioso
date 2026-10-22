@@ -1423,7 +1423,7 @@ items:
   tipo: auditoria_interna
   ciclo: '2026-10-22'
   estado: FIXED
-  commit: 'PENDING'
+  commit: '9a2bddcc'
   test: tests/test_pcr_history_no_side_effects.py
   descripcion: |
     indicators/options.py:compute_pcr_signals() escribia
