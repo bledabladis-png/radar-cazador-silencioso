@@ -1476,7 +1476,7 @@ items:
   tipo: auditoria_interna
   ciclo: '2026-10-22'
   estado: FIXED
-  commit: 'PENDING'
+  commit: '1cc8387a'
   test: tests/test_wyckoff_p7_b4_b5_b3.py
   descripcion: |
     Auditoria solicitada del modulo Wyckoff v1.8 (indicators/
