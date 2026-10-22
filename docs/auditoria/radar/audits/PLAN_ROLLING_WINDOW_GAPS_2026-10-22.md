@@ -13,8 +13,11 @@ Verificacion 2026-10-22:
 - `sector_dispersion.py` **no usa rolling()**. Calcula dispersion
   cross-sectional puntual de retornos 20d (una fila por dia). No es
   vulnerable al problema descrito.
-- `sector_correlation_summary` **no existe como modulo**. Existe
-  `sector_correlation.py`; no se ha verificado que use rolling.
+- `sector_correlation_summary` **existe como writer y CSV**
+  (`outputs/history/sector_correlation_summary.csv`, en
+  `output_registry` desde 2026-10-11). El modulo Python que lo
+  calcula es `indicators/sector_correlation.py`; pendiente verificar
+  si usa rolling() y si es vulnerable al problema descrito.
 - "Modulos con ventanas derivadas": 13 modulos usan `.rolling()` en
   codigo productivo (ver seccion 2).
 

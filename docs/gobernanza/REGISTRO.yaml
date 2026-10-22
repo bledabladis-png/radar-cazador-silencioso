@@ -1321,33 +1321,15 @@ items:
 - id: REP-AUDIT-20261022-LIQ-V2-DATA-SOURCE
   tipo: auditoria_interna
   ciclo: '2026-10-22'
-  estado: OPEN
+  estado: SUPERSEDED
+  razon: 'Duplicado. Este item quedo abierto tras la correccion en sesion; el estado real (FIXED) vive en REP-AUDIT-20261022-LIQ-V2-DATA-SOURCE-FIXED.'
   descripcion: |
-    v2 de liquidez (regimes/liquidity_v2.py) usa pandas_datareader
-    contra FRED API para SOFR y EFFR via src/pipeline/regimes.py:
-    _fetch_liquidity_v2_data. El CSV data/macro_manual/sofr.csv
-    (pusheado por bot diario) suele ir por delante de la API. Caso
-    observado 2026-10-22: state v2 con date=2026-10-19 mientras
-    sofr.csv tiene 2026-10-22. La tabla Data Freshness del reporte
-    muestra FRED (Macro) 2026-10-20 (lee state), no la fecha real
-    del CSV. Ademas data/macro_manual/effr.csv NO existe: EFFR solo
-    esta disponible via API. Sin esa serie local, no se puede hacer
-    el fix completo solo cambiando el loader.
-  siguiente_accion: |
-    Plan en 3 fases. Fase 1: anadir EFFR al workflow
-    .github/workflows/update_macro_manual.yml (cron bot). Nuevo CSV
-    data/macro_manual/effr.csv con mismo esquema que sofr.csv.
-    Fase 2: cambiar _fetch_liquidity_v2_data para preferir CSVs
-    locales (sofr, effr) y usar API como fallback. Si SOFR CSV y EFFR
-    CSV tienen fechas distintas, calcular al dia comun mas fresco
-    (interseccion de indices), no mezclar fechas. Fase 3: test de
-    regresion que verifique state.date >= max(sofr.index, effr.index)
-    cuando ambos CSVs existen. Verificar en run real: state.date debe
-    coincidir con la fecha de los CSVs, no con el lag de la API.
-    Bug cosmetico asociado (bajo prioridad): _score_continuo devuelve
-    -0.0 cuando diff_bp==0. Normalizar con + 0.0 en el retorno o
-    condicional explicita.
-
+    Item original abierto durante la revision del reporte 2026-10-21.
+    Planificaba 3 fases para migrar v2 a CSV-first. El fix se aplico
+    en el mismo dia y se documento bajo
+    REP-AUDIT-20261022-LIQ-V2-DATA-SOURCE-FIXED. Este item queda
+    SUPERSEDED para preservar trazabilidad historica del descubrimiento
+    sin duplicar el estado FIXED.
 - id: REP-AUDIT-20261022-GOVERNANCE-SHA-REACHABILITY
   tipo: auditoria_interna
   ciclo: '2026-10-22'
