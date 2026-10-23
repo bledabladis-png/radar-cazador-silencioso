@@ -84,10 +84,10 @@ completa del sistema. Documentar.
 **Commits.** `e54f95b6`, `cdb93364`, `5bf4b4b3`, `2b5b5341`,
 `41855de6`.
 
-**Pendiente.** Ningun bug abierto. Ver TRASPASO_2026-10-23.md.
+**Pendiente.** Ningun bug abierto. Ver HANDOFF.md.
 
 **Proximo paso sugerido.** Retomar en nuevo chat con
-`docs/handoffs/TRASPASO_2026-10-23.md` pegado al inicio.
+`docs/handoffs/HANDOFF.md` pegado al inicio.
 
 ### 2026-10-22 - Auditoria externa #4 + 11 bugs reales + gobernanza
 
