@@ -434,9 +434,18 @@ items:
 - id: SOW-V6
   tipo: frente
   ciclo: '2026-10-06'
-  estado: BLOCKED_EXTERNAL
+  estado: WONT_FIX
   descripcion: Protocolo SOW v6 pendiente de firma externa
-  dependencia: Firma del auditor externo sobre docs/auditoria/wyckoff/48_sow_protocol_v6.md
+  commit: 'e7327463'
+  razon: |
+    Purged k-fold 2017-2025 sobre C0/v1.9. Veredicto formal
+    INCONCLUSO (mean lift 5.5 pp, IC95 [-2.8, +15.1], 5/9 folds
+    positivos). Placebo B (permutacion intra-ticker) reproduce
+    48-119% del lift real en los 3 folds con senal positiva. El lift
+    es atribuible a heterogeneidad entre tickers, no a la coincidencia
+    temporal SOW->H20. No se detecta senal operativa estable. Cierre
+    definitivo. Reabrir solo con nueva variable Y, nueva candidata con
+    contrato, o nuevo dataset.
 - id: WYCKOFF-5BX
   tipo: frente
   ciclo: '2026-10-03'
