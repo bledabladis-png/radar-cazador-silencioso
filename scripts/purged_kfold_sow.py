@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 """Purged K-Fold temporal de SOW v1.9 (C0).
 
+v2: lift WITHIN-TICKER (elimina efecto tickers volatiles).
 9 folds, TEST = anio natural 2017..2025. TRAIN = todo lo anterior
 con embargo 50. Purga H=20 al final del TEST.
 
@@ -79,17 +80,37 @@ def evaluate_fold(episodes, feats, ts, te, N, boot_b, seed):
         return {"n_conf": n_conf, "n_base": n_base, "lift": None, "ci_lower": None, "ci_upper": None, "placebo_a": None, "placebo_b": None, "n_test": len(df), "n_train": len(train_eps)}
 
     def lift(d):
-        return float(d.loc[d["is_confirmed"], "y"].mean() - d.loc[~d["is_confirmed"], "y"].mean())
+        # v2 within-ticker: elimina el sesgo de tickers volatiles.
+        # El placebo B permuta SOW dentro de ticker. Si el lift within-ticker
+        # sigue > 0 y el placebo B ~ 0, la senal es temporal, no de ticker.
+        tk_u = d["ticker"].unique()
+        ws = 0.0
+        tw = 0.0
+        for _t in tk_u:
+            sub = d[d["ticker"] == _t]
+            c = sub[sub["is_confirmed"]]
+            b = sub[~sub["is_confirmed"]]
+            if len(c) == 0 or len(b) == 0:
+                continue
+            lk = float(c["y"].mean() - b["y"].mean())
+            ws += len(c) * lk
+            tw += len(c)
+        if tw == 0:
+            return None
+        return float(ws / tw)
 
     point = lift(df)
+    if point is None:
+        return {"n_conf": n_conf, "n_base": n_base, "lift": None, "ci_lower": None, "ci_upper": None, "placebo_a": None, "placebo_b": None, "n_test": len(df), "n_train": len(train_eps)}
     rng = np.random.default_rng(seed)
     tks = df["ticker"].unique()
     boots = []
     for _ in range(boot_b):
         samp = rng.choice(tks, size=len(tks), replace=True)
         bdf = pd.concat([df[df["ticker"] == t] for t in samp], ignore_index=True)
-        if bdf["is_confirmed"].any() and (~bdf["is_confirmed"]).any():
-            boots.append(lift(bdf))
+        lv = lift(bdf)
+        if lv is not None:
+            boots.append(lv)
     if boots:
         ci_l, ci_u = float(np.percentile(boots, 2.5)), float(np.percentile(boots, 97.5))
     else:
