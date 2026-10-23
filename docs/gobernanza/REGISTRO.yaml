@@ -1693,3 +1693,68 @@ items:
     0 no-bursatiles. 20 writers, 18 OK + 2 no-OK esperados.
     Contrato temporal integro (data_quality.date y receipt_audit.target
     = 2026-10-22).
+
+
+- id: REP-AUDIT-20261023-SLPM-NO-LEADERS
+  tipo: auditoria_interna
+  ciclo: '2026-10-23'
+  estado: FALSE_POSITIVE
+  descripcion: |
+    SLPM devuelve NO_LEADERS con 22 tickers de XLB en el universo (run
+    39884468711). No es bug de calculo. leader_df (fuente de
+    leader_metrics_for_slpm) contiene solo sectores en ACCUMULATION o
+    MARKUP por diseno (stock_leader.py:258 VALID_FASES). En el run solo
+    XLK y XLE estaban en MARKUP; XLB (top del ranking) estaba en RANGE.
+    _forzar_lideres_slpm("XLB", ...) obtiene leader_df[sector=="XLB"]
+    vacio y devuelve lista vacia. Confirmado en log del run: "Lideres
+    forzados para SLPM (XLB): 0 tickers", sin excepcion.
+  razon: |
+    Comportamiento correcto por diseno. SLPM busca liderazgo estructural
+    y no puede confirmarlo si el top sector no esta en fase alcista. La
+    comunicacion del reporte no explica la causa.
+  siguiente_accion: |
+    Anadir nota en src/report/slpm.py explicando que NO_LEADERS se
+    produce cuando el top sector del ranking esta en fase RANGE. No
+    tocar logica de calculo.
+
+- id: REP-AUDIT-20261023-DARKPOOL-WINDOW
+  tipo: auditoria_interna
+  ciclo: '2026-10-23'
+  estado: WONT_FIX
+  descripcion: |
+    El "Estado ATS" del reporte usa la ventana 104w (2 anos), no la 13w
+    (trimestre). El codigo en indicators/darkpool.py:140-146 declara la
+    decision: "El resumen oficial es la ventana mas larga con z finito".
+    El desglose por ventana (13w, 26w, 52w, 104w) se publica debajo en
+    la seccion, pero la etiqueta principal induce a leer "ahora". En el
+    run 39884468711, 104w Z=-0.84 (baja) mientras 13w Z=-0.07 (normal).
+  razon: |
+    Decision de diseno documentada en el propio codigo. El desglose por
+    ventana esta disponible en el reporte; el estado principal es la
+    vista secular, no la actividad reciente.
+  siguiente_accion: |
+    Anadir nota en src/report/darkpool.py aclarando que el estado
+    principal usa 104w y la actividad reciente es la 13w.
+
+- id: REP-AUDIT-20261023-NOTAS-CRUZADAS
+  tipo: auditoria_interna
+  ciclo: '2026-10-23'
+  estado: OPEN
+  descripcion: |
+    Tres notas de documentacion obsoletas o ausentes detectadas en la
+    auditoria del reporte 2026-10-22 (run 39884468711):
+    (1) src/report/slpm.py L185 referencia slpm_v12.py:124 como origen
+        del None en Flow Divergence 2.0. La linea real es 266 tras el
+        refactor C1-6d1.
+    (2) Falta nota cruzada entre "Divergencia sector-lideres" (top-5 por
+        WLS, sector_leader_divergence.py:47 usa head(5) de leader_df
+        ordenado por WLS) y "Liderazgo relativo interno" (top-5 por
+        retorno 20d). En XLK divergencia muestra 4/1 y liderazgo
+        interno 5/5 positivos: universos distintos.
+    (3) Falta nota en Resumen de Regimenes aclarando que Macro
+        INFLATION SHOCK (CPI/PPI/breakevens) y MTE IPS (XLE, ^SPGSCI,
+        TIP/IEF) usan inputs distintos y pueden discrepar de signo sin
+        ser error.
+  siguiente_accion: |
+    Fix de una linea para (1) y notas cruzadas para (2) y (3) en los
+    modulos de reporte correspondientes.
