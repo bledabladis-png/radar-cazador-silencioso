@@ -1,0 +1,1 @@
+SOW v1.9 Purged K-Fold - Decision\nFecha: 2026-10-23\n\nFolds evaluables: 9/9\nMean lift: 0.0548\nCI95 (media entre folds): [-0.0282, 0.1514]\nFolds con lift > 0: 5/9\n\nVEREDICTO: INCONCLUSO\n\nCriterio:\n  FUNCIONA: mean_lift > 0.05 AND ci_lower > 0 AND folds_positive >= 7\n  NO FUNCIONA: mean_lift <= 0 OR ci_upper < 0.05\n  INCONCLUSO: resto\n
