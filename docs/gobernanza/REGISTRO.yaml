@@ -1682,7 +1682,7 @@ items:
   tipo: auditoria_interna
   ciclo: '2026-10-23'
   estado: FIXED
-  commit: 'PENDING'
+  commit: '49248879'
   evidencia: |
     Run scheduled 39884468711 (23-10 01:31 UTC, slot 22-10 23:17
     UTC, delay 2h14m, run-system success). Verificacion de los 4
