@@ -1,9 +1,9 @@
 {
-  "sector_etf": "XLY",
+  "sector_etf": "XLB",
   "state": "UNRESOLVED",
   "consecutive_count": 1,
   "candidate_state": null,
   "candidate_count": 0,
   "schema_version": 2,
-  "last_updated": "2026-10-22T01:45:05.385019"
+  "last_updated": "2026-10-23T01:44:51.423125"
 }
