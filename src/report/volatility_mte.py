@@ -116,6 +116,7 @@ def render_mte(mte_result):
                    "a [0,100]. Puede divergir de IPC/PPI publicados sin ser "
                    "error: mide presion via precios de activos, no niveles "
                    "macro observados.*\n\n")
+        out.append("*Nota cruzada: puede discrepar de la etiqueta Macro 'INFLATION SHOCK' del Resumen de Regimenes. Motores independientes (macro_regime vs MTE scoring): miden cosas distintas; signos opuestos no son error.*\n\n")
         # P2.5 (2026-10-13, auditor): nota sin umbrales hardcodeados.
         # Si cambian en scoring.py, esta nota sigue siendo cierta.
         # H15 (2026-10-15, auditoria externa): publicar componentes,

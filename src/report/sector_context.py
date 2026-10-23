@@ -118,6 +118,7 @@ def render_divergencia_sector_lideres(sector_leader_divergence_data):
         out.append("\n")
         # F6-12 (2026-09-28): nota sobre el filtro.
         out.append("*Solo se muestran los sectores en fase ACCUMULATION o MARKUP. El resto se omite porque no genera seccion de lideres. Filtro por fase, no por cobertura.*\n\n")
+        out.append("*Universo: top-5 lideres por WLS (leader_df ordenado por WLS). Distinto de 'Liderazgo relativo interno', que ordena por retorno 20d. Mismo sector, distinto subconjunto de tickers.*\n\n")
     return out
 
 
