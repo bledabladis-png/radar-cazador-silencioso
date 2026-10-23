@@ -434,18 +434,38 @@ items:
 - id: SOW-V6
   tipo: frente
   ciclo: '2026-10-06'
-  estado: WONT_FIX
-  descripcion: Cierre empirico de SOW. Purged k-fold 2017-2025 cerro el frente sin activacion (placebo B mata la senal). Ver docs/auditoria/wyckoff/51_purged_kfold_2026-10-23/.
-  commit: 'e7327463'
-  razon: |
-    Purged k-fold 2017-2025 sobre C0/v1.9. Veredicto formal
-    INCONCLUSO (mean lift 5.5 pp, IC95 [-2.8, +15.1], 5/9 folds
-    positivos). Placebo B (permutacion intra-ticker) reproduce
-    48-119% del lift real en los 3 folds con senal positiva. El lift
-    es atribuible a heterogeneidad entre tickers, no a la coincidencia
-    temporal SOW->H20. No se detecta senal operativa estable. Cierre
-    definitivo. Reabrir solo con nueva variable Y, nueva candidata con
-    contrato, o nuevo dataset.
+  estado: IN_PROGRESS
+  descripcion: |
+    Rediseno del detector SOW tras purged k-fold 2017-2025
+    (commit e7327463, evidencia docs/auditoria/wyckoff/51_purged_kfold_2026-10-23/).
+    Diagnostico: el detector actual confunde efecto ticker con efecto SOW.
+    El placebo B (permutacion intra-ticker) reproduce 48-119% del lift real
+    en los 3 folds con senal positiva (2018, 2020, 2024). El detector
+    etiqueta tickers volatiles, no detecta eventos de transicion.
+  plan: |
+    (1) SOW como evento de transicion (primer SOW de cada racha), no estado
+        continuo. Evita doble conteo en tickers volatiles.
+    (2) Target relativo al ticker (deterioro esperado en la ventana), no
+        absoluto. Separa efecto ticker de efecto SOW.
+    (3) Candidata C1 (N=40 M=5 X_ATR=1.00 Y_VOL=1.10), con evidencia temporal
+        historica favorable, como segunda candidata a probar.
+  criterio_revisado: |
+    FUNCIONA si:
+      - lift > 0.05
+      - IC95 lower > 0
+      - lift real > placebo B en >= 7/9 folds
+    El tercer criterio faltaba en el diseno original. Sin el, un detector
+    que etiqueta tickers volatiles parece funcionar.
+  historial: |
+    Cierre previo WONT_FIX (commit bd94dacd) revertido por decision de
+    producto: el sistema debe implementar SOW solido, no cerrar el frente
+    con la primera senal negativa. El diagnostico placebo B es la base
+    del rediseno, no una razon para abandonar.
+  siguiente_accion: |
+    Fase 2: redisenar detect_sow como evento de transicion + target relativo.
+    Re-ejecutar purged k-fold con placebo B. Ver
+    docs/auditoria/wyckoff/51_purged_kfold_2026-10-23/ para el diseno original.
+
 - id: WYCKOFF-5BX
   tipo: frente
   ciclo: '2026-10-03'
