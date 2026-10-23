@@ -209,17 +209,19 @@ C4 (datos desfasados), C5 (NIPC 13F), C7 (spread 10Y-3M), C9 (IPI).
 - **REP-AUDIT-20261020-CRON-SLOTS-OBS** (OPEN): revision 2026-11-10.
 - **REP-AUDIT-20261020-SCHEDULER-DELAYS** (OPEN): revision 2026-11-10.
 
-### 4.0. Verificacion scheduled target 2026-10-22
+### 4.0. Verificacion scheduled target 2026-10-22 [COMPLETED 2026-10-23]
 
-Cuando dispare el bot (slot 23:17 UTC + delays), ejecutar
-`verify_run_20261022.ps1` (gitignored). Criterios:
-- `Liquidez Real` = `NEUTRAL` (no `N/A`). Fix router liquidez.
-- `cboe_vix3m.parquet` sin no-bursatiles. Fix parquet.
-- `writer_receipts.json` con receipt `pcr_history`. Fix side effect.
-- `sector_correlation_summary` con valores coherentes. Fix P7.
+**Estado: COMPLETADO.** Run `39884468711` (23-10 01:31 UTC, slot
+22-10 23:17 UTC, delay 2h14m, `run-system: success`). 4/4 fixes
+criticos confirmados en CI:
+- Liquidez `NEUTRAL (90%)`, no `N/A`.
+- `sector_correlation_summary` receipt OK 2026-10-22.
+- `pcr_history` receipt OK 2026-10-22.
+- `cboe_vix3m` 4298 filas, 0 no-bursatiles.
+- 20 writers, 18 OK + 2 no-OK esperados.
 
-Es verificacion de entorno (no de codigo). Los fixes ya estan
-validados en `py run.py` local (suite 3845 passed, 5 skipped).
+Contrato temporal integro (`data_quality.date` = `receipt_audit.target`
+= 2026-10-22). Ver `REP-AUDIT-20261023-SCHEDULED-VERIFY` en REGISTRO.
 
 ### 4.1. Certificacion scheduled lunes 2026-10-19 23:17 UTC [COMPLETED 2026-10-20]
 

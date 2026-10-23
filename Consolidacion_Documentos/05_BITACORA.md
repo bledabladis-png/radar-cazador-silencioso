@@ -44,6 +44,51 @@ Al cerrar una sesion nueva, se anade arriba (las mas recientes primero). Si hay 
 
 ## 3. SESIONES
 
+### 2026-10-23 - Verificacion scheduled target 2026-10-22 + auditoria autonomia
+
+**Objetivo.** Verificar en CI real los 4 fixes criticos de la sesion
+2026-10-22 (target 2026-10-22 en scheduled). Auditar autonomia
+completa del sistema. Documentar.
+
+**Hecho.**
+- **Scheduled target 2026-10-22 verificado**: run `39884468711`
+  (23-10 01:31 UTC, slot 22-10 23:17 UTC, delay 2h14m, `run-system:
+  success`).
+  - Liquidez: `NEUTRAL (Signal Consistency: 90%)`, no N/A.
+  - `sector_correlation_summary` (P7): receipt OK, 2026-10-22.
+  - `pcr_history` (side effect fix): receipt OK, 2026-10-22.
+  - `cboe_vix3m` en origin/main: 4298 filas, 0 no-bursatiles.
+  - `data_quality.date = 2026-10-22` y `receipt_audit.target =
+    2026-10-22`. Contrato temporal integro. 20 writers, 18 OK + 2
+    no-OK esperados (sector_rank_deltas NO_DATE_CHECK,
+    sector_flow_characteristics LAGGED).
+- **Auditoria autonomia (REP-AUDIT-20261022-AUTONOMY-AUDIT)**:
+  FALSE_POSITIVE. Verificado con datos reales:
+  - FRED caido: `download_series` devuelve `None`, no reescribe CSV.
+  - `pipeline_gate` usa probe live (no parquet local). Parquet stale
+    + Yahoo fresco = READY correcto.
+  - 5/5 slots daily_run success 22-10; 2/2 update_macro_manual success.
+  - Cadencia por fuente dentro de ventana (diaria≤3d, semanal≤10d,
+    mensual≤60d).
+- **5 huecos auditoria dia anterior investigados**:
+  - Health Check 19-oct: FALSE_POSITIVE (regla antigua FAIL con 2/5).
+  - ETF/European Holdings 1-oct: FALSE_POSITIVE (fallaron 6h y 4h
+    antes del commit `1bead8ad` con `sys.path.insert`).
+  - Index Holdings 1-oct: FIXED `e54f95b6` (refactor rows.append
+    defensivo, `All arrays must be of the same length`).
+  - cron_slots WARN 3/5: FALSE_POSITIVE (delays GitHub 2-4h, regla
+    actual clasifica WARN correctamente).
+  - manifest close_nan_last: FALSE_POSITIVE (WBD delisted + 19 BME).
+  - iae_section WARN: FIXED `e54f95b6` (heading flexible 13F).
+
+**Commits.** `e54f95b6`, `cdb93364`, `5bf4b4b3`, `2b5b5341`,
+`41855de6`.
+
+**Pendiente.** Ningun bug abierto. Ver TRASPASO_2026-10-23.md.
+
+**Proximo paso sugerido.** Retomar en nuevo chat con
+`docs/handoffs/TRASPASO_2026-10-23.md` pegado al inicio.
+
 ### 2026-10-22 - Auditoria externa #4 + 11 bugs reales + gobernanza
 
 **Objetivo.** Cerrar auditoria externa #4 (P1-P8). Derivado: 11 bugs
@@ -1000,44 +1045,6 @@ Pyflakes limpio.
 
 **Proximo paso sugerido.** Monitorizar el proximo run del cron.
 Confirmar que B1 mantiene FRED sin fecha sintetica.
-
-### 2026-10-12 - Contrato en prod + triaje auditoria + higiene
-
-**Objetivo.** Cerrar el frente del contrato (verify extendido),
-triage completo de la auditoria externa 2026-09-26, y deudas de
-higiene del corpus.
-
-**Hecho.**
-- `scripts/verify_outputs.py`: verificacion extendida de outputs
-  (ultimas N sesiones). Gap real detectado:
-  `sector_flow_characteristics` 09-oct.
-- Triaje completo auditoria 2026-09-26:
-  ALTA 6/6 cerradas. MEDIA 71/71 clasificadas (0 vivas).
-  BAJA 53/61 triadas (8 F6-* sin informe original).
-- Verificacion run domingo 11-oct: sin anomalia (gate skipeo
-  por diseno).
-- F2-02, F2-03, F2-04, F2-07, A5-57 anotados en `02_ARQUITECTURA`.
-- Politica `outputs/audit/` en `01_METODO` 10.1.
-- Poda `00_ARRANQUE` 11670 -> 10240 B (bajo umbral 11 KB).
-- D-07 cerrado con notas cruzadas. D-04 sin parche (ya renombrado).
-
-**Verificacion.** Suite: 3243 -> 3247 passed. 5 skipped. Pyflakes
-limpio.
-
-**Commits.** 026d182d, 45ec04de, d80cebf8, 0035be38, 06dd6cd6
-  (+ f428bf51, 69506319 del bloque anterior).
-
-**Pendiente.**
-- Primer test del contrato en prod: cron 23:17 UTC hoy.
-- 8 F6-* sin descripcion (informe original no disponible).
-- ~11 BAJA vivas de baja prioridad.
-- Regenerar `sector_flow_characteristics` 09-oct (ROI bajo).
-- Cosmeticos: `render_calidad_datos` ubicacion, divergencia
-  runtime/CSV, `test_render_freshness_d36` fragilidad.
-
-**Proximo paso sugerido.** Verificar el primer run del cron con
-el contrato activo. Si el verificador caza algo, investigar. Si
-OK, el contrato queda validado en produccion.
 
 ## 4. REFERENCIA A SESIONES ANTERIORES
 

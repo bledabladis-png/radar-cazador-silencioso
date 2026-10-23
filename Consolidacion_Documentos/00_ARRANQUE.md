@@ -187,6 +187,13 @@ Items `CI-PUSH-NO-VERIF` y `CI-PREVENTION-GAP`: cerrados.
 Items REGISTRO creados/actualizados en cada fix. Suite: **3845
 passed, 5 skipped** (al cierre).
 
+**Verificado en scheduled target 2026-10-22 (run `39884468711`,
+23-10 01:31 UTC):** 4/4 fixes criticos sobreviven en CI Python
+3.14.7. Liquidez `NEUTRAL (90%)` no `N/A`. `sector_correlation_summary`
+y `pcr_history` con receipt OK. `cboe_vix3m` 0 no-bursatiles. 20
+writers, 18 OK + 2 no-OK esperados (`sector_rank_deltas`
+NO_DATE_CHECK, `sector_flow_characteristics` LAGGED por lag SSGA).
+
 ---
 
 ## 4. PENDIENTE (DESGLOSE)
@@ -222,11 +229,14 @@ A1-A5, A6, B, C, 6, 7, 8, 9, F: CERRADOS. Detalle tematico en
 - **C2 (920)**: bloqueado por auditor externo.
 - **5 tests skipped** (2 network en `test_freshness.py`, 3 fase 5b
   en `test_wyckoff_v1_contract.py`). Diseno, no deuda.
-- **Verificar scheduled target 2026-10-22.** Cuando dispare el bot
-  (slot 23:17 UTC + delays), ejecutar `verify_run_20261022.ps1`
-  (gitignored). Criterio: liquidez `NEUTRAL` (no `N/A`), parquet
-  `cboe_vix3m` sin no-bursatiles, `writer_receipts.json` con receipt
-  `pcr_history`. Es verificacion de entorno, no de codigo.
+- **Verificar scheduled target 2026-10-22: COMPLETADO 2026-10-23.**
+  Run `39884468711` (slot 22-10 23:17 UTC, delay 2h14m, `run-system:
+  success`). 4/4 fixes criticos confirmados en CI: liquidez NEUTRAL
+  90% no N/A, sector_correlation_summary receipt OK, pcr_history
+  receipt OK, cboe_vix3m 0 no-bursatiles. 20 writers, 18 OK + 2
+  no-OK esperados. Contrato temporal integro (`data_quality.date` y
+  `receipt_audit.target` = 2026-10-22). Ver
+  `REP-AUDIT-20261023-SCHEDULED-VERIFY` en REGISTRO.
 - **Wyckoff B2/B4 WONT_FIX razonados (2026-10-22).** B2 (P7 en
   `_trend_component`/`_atr_normalized`/`wyckoff_stability`):
   `dropna().rolling()` tiene semantica correcta para medias moviles;

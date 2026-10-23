@@ -1573,3 +1573,81 @@ extremo historico), senal correcta. FLS baja de 79 a 63.
 
 Suite final: 3845 passed, 5 skipped.
 
+
+---
+
+## Sesion 2026-10-23 - Verificacion scheduled + auditoria autonomia
+
+**Objetivo.** Cerrar Q4 (verificar scheduled target 2026-10-22 en CI
+real) y auditar autonomia completa. Documentar.
+
+### Scheduled target 2026-10-22 verificado
+
+Run `39884468711` (23-10 01:31 UTC, slot 22-10 23:17 UTC, delay
+2h14m, `run-system: success`). 4/4 fixes criticos confirmados en CI
+Python 3.14.7:
+
+1. Router liquidez (`d405d539`): `Liquidez Real: NEUTRAL (Signal
+   Consistency: 90%)`, no `N/A`.
+2. P7 sector_correlation (`8c40f7e6`): `receipt_audit:
+   sector_correlation_summary, OK, 2026-10-22`.
+3. `pcr_history` en registry (`9a2bddcc`): `receipt_audit:
+   pcr_history, OK, 2026-10-22`.
+4. `cboe_vix3m` no-bursatiles (`7fcbe05f`): 4298 filas, 0
+   no-bursatiles, rango 2009-09-18 a 2026-10-22.
+
+Contrato temporal integro. 20 writers, 18 OK + 2 no-OK esperados
+(`sector_rank_deltas` NO_DATE_CHECK, `sector_flow_characteristics`
+LAGGED por lag SSGA).
+
+### Auditoria autonomia (FALSE_POSITIVE)
+
+Verificado con datos reales, no asumido:
+
+- **FRED caido**: `download_series` devuelve `None`, CSV no se
+  reescribe, ultimo dato valido preservado.
+- **pipeline_gate** usa probe live de Yahoo, no parquet local.
+  Parquet stale + Yahoo fresco = READY correcto.
+- **5/5 slots daily_run success 22-10**, 2/2 update_macro_manual
+  success.
+- **Cadencia por fuente** respetada (diaria≤3d, semanal≤10d,
+  mensual≤60d).
+- **Health check** abre issue #7 automaticamente en WARN.
+
+Los "FAIL/WARN" que aparecieron en diagnosticos intermedios eran
+artefactos de medicion: parseo de `month` int en
+`qqq_nport_flow.csv` (epoch 1970), threshold mal calibrado en
+`discount_rate` (DPRIME solo cambia con decisiones Fed), ICSA
+publica jueves 13:30 UTC vs bot corre 06:17 UTC (desfase de
+publicacion).
+
+### 5 huecos auditoria dia anterior - cierre
+
+- Health Check 19-oct: FALSE_POSITIVE (regla antigua FAIL con 2/5
+  slots; regla actual post 20-oct WARN).
+- ETF/European Holdings 1-oct: FALSE_POSITIVE (fallaron 6h y 4h
+  antes del commit `1bead8ad` que añadio `sys.path.insert`).
+- Index Holdings 1-oct: FIXED `e54f95b6` (refactor paralelas ->
+  `rows.append` con try/except por fila, elimina clase de bug `All
+  arrays must be of the same length`).
+- cron_slots WARN 3/5: FALSE_POSITIVE (delays GitHub 2-4h).
+- manifest close_nan_last: FALSE_POSITIVE (WBD delisted + 19 BME).
+- iae_section WARN: FIXED `e54f95b6` (heading flexible `13F`).
+
+### Decisiones
+
+- **Sistema autonomo verificado.** No requiere intervencion manual
+  para mantener datos frescos. Watchdog, gate, workflows, alerta:
+  todo funciona.
+- **Contrato temporal respetado en scheduled.** `data_quality.date`
+  y `receipt_audit.target` alineados con `last_expected_market_date`.
+
+### Pendiente
+
+- 4 items OPEN observacionales (fechas de revision 10-nov, 17-nov,
+  20-nov).
+- 3 BLOCKED_EXTERNAL (C2-920, SOW-V6, WYCKOFF-5BX).
+- 0 bugs abiertos.
+
+Suite final: 3849 passed, 5 skipped.
+

@@ -1677,3 +1677,19 @@ items:
     empleo.csv — ICSA publica jueves 13:30 UTC, bot corre 06:17
     UTC, age=12d es el desfase de publicacion, no fallo del
     pipeline.
+
+- id: REP-AUDIT-20261023-SCHEDULED-VERIFY
+  tipo: auditoria_interna
+  ciclo: '2026-10-23'
+  estado: FIXED
+  commit: 'PENDING'
+  evidencia: |
+    Run scheduled 39884468711 (23-10 01:31 UTC, slot 22-10 23:17
+    UTC, delay 2h14m, run-system success). Verificacion de los 4
+    fixes criticos de 2026-10-22 en CI Python 3.14.7 (no solo
+    local 3.14.3): (1) liquidez NEUTRAL 90% no N/A; (2)
+    sector_correlation_summary receipt OK 2026-10-22; (3)
+    pcr_history receipt OK 2026-10-22; (4) cboe_vix3m 4298 filas,
+    0 no-bursatiles. 20 writers, 18 OK + 2 no-OK esperados.
+    Contrato temporal integro (data_quality.date y receipt_audit.target
+    = 2026-10-22).
