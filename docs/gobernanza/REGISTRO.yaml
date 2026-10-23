@@ -1739,7 +1739,7 @@ items:
 - id: REP-AUDIT-20261023-NOTAS-CRUZADAS
   tipo: auditoria_interna
   ciclo: '2026-10-23'
-  estado: OPEN
+  estado: FIXED
   descripcion: |
     Tres notas de documentacion obsoletas o ausentes detectadas en la
     auditoria del reporte 2026-10-22 (run 39884468711):
@@ -1755,6 +1755,10 @@ items:
         INFLATION SHOCK (CPI/PPI/breakevens) y MTE IPS (XLE, ^SPGSCI,
         TIP/IEF) usan inputs distintos y pueden discrepar de signo sin
         ser error.
+  commit: '7e1582a7'
+  evidencia: |
+    4 notas aplicadas y verificadas con pyflakes + compileall + tests.
+    Ver commit 7e1582a7 y diff de src/report/{slpm,sector_context,market_context,volatility_mte}.py.
   siguiente_accion: |
     Fix de una linea para (1) y notas cruzadas para (2) y (3) en los
     modulos de reporte correspondientes.
