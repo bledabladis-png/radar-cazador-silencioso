@@ -19,6 +19,7 @@ from src.pipeline.flows_secondary import compute_flows_secondary
 from src.pipeline.leaders import compute_leaders
 from src.report.sector_annotations import annotate_sector_titles_with_composition
 from src.pipeline.sector_metrics import compute_sector_metrics
+from src.pipeline.wyckoff_holdings import compute_wyckoff_holdings
 from src.pipeline.breadth_metrics import compute_breadth_metrics
 from src.pipeline.engines import compute_engines
 from src.pipeline.slpm import compute_slpm_v12
@@ -147,6 +148,8 @@ def main():
     rs_internal_df = sm['rs_internal_df']
     sector_concentration_df = sm['sector_concentration_df']
     leader_representativeness_df = sm['leader_representativeness_df']
+
+    compute_wyckoff_holdings(df_stocks, holdings_df)
 
     bm = compute_breadth_metrics(df_stocks, df_market, holdings_df,
                                   reference_date=reference_date,

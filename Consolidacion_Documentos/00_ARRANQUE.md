@@ -122,8 +122,7 @@ Fixes 2026-10-22 (commit `1cc8387a`): B5 spring/SOS con `min_periods=`
 Close/0 es contrato v1.8). Ver `REP-AUDIT-20261022-WYCKOFF-P7-B4-B5-B3`.
 
 **Contrato de persistencia de outputs (2026-10-11).** Registro +
-wrapper + verificador + test AST, **20 writers** (pcr_history anadido
-2026-10-22, commit `9a2bddcc`). `02_ARQUITECTURA.md` seccion 4.
+wrapper + verificador + test AST, **26 writers** (pcr_history anadido 2026-10-22, commit `9a2bddcc`; 6 outputs wyckoff holdings anadidos 2026-10-24, commit C2.1). `02_ARQUITECTURA.md` seccion 4.
 
 **CI tests (2026-10-17).** `.github/workflows/ci_tests.yml` corre la
 suite completa en cada push a main (paths-ignore: `data/`, `outputs/`),
