@@ -1,0 +1,12 @@
+SOW C1-M5 Reserved Cohort - Decision
+Fecha: 2026-10-24
+Cohorte: 268 tickers S&P 500 reservados (no en extended)
+Candidata FROZEN: {'N': 40, 'M': 5, 'X_ATR': 1.0, 'Y_VOL': 1.1}
+
+Folds evaluables: 9/9
+Mean lift: 0.0914
+IC95 (fold-level bootstrap): [0.0243, 0.1747]
+Folds positivos: 8/9
+Folds beat placebo_B: 7/9
+
+VEREDICTO: FUNCIONA
