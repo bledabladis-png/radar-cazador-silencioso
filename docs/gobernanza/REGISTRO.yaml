@@ -1996,7 +1996,19 @@ items:
 - id: VERIFY-LEADER-SELECTION-ROTO
   tipo: deuda_tecnica
   ciclo: '2026-10-24'
-  estado: OPEN
+  estado: FIXED
+  commit: 37bca52d
+  evidencia: |
+    Script validation/verify_leader_selection.py eliminado (git rm).
+    Step "Verify leader selection" retirado de daily_run.yml.
+    Artefactos analisis_lideres*.csv y slpm_state.json retirados del
+    workflow. outputs/state/slpm_state.json eliminado (fosil sin
+    productor desde C3.1). Comentario data_quality.py:233 y bloque
+    SLPM COVERAGE de settings.py corregidos. Fallback muerto de
+    generate_docs.py:214 retirado. run.py:62 sin mencion. Sin test
+    especifico: cambio elimina codigo no cubierto por CI (script
+    standalone del pipeline). Verificado con pyflakes ., compileall,
+    suite 3705 passed 2 skipped, verifica_gobernanza [OK].
   descripcion: |
     validation/verify_leader_selection.py lee
     outputs/report/analisis_lideres.csv y
@@ -2006,11 +2018,3 @@ items:
     daily_run.yml fallara o pasara en falso segun como gestione el
     FileNotFoundError. No esta en CI de tests, solo en el pipeline
     productivo.
-  siguiente_accion: |
-    Opciones. (a) Retirar el step "Verify leader selection" del
-    daily_run.yml. (b) Reescribir el script para validar los 6 CSVs
-    de holdings (wyckoff_usa_sector_acc/dist, etc.). Mi
-    recomendacion: (a) si el script no aporta mas que la validacion
-    de holdings ya cubierta por output_verifier; (b) si aporta
-    chequeos adicionales (composicion, cobertura) que valga la pena
-    preservar. Verificar el step en daily_run.yml antes de decidir.

@@ -44,6 +44,39 @@ Al cerrar una sesion nueva, se anade arriba (las mas recientes primero). Si hay 
 
 ## 3. SESIONES
 
+### 2026-10-25 (sesion 4) - Cierre VERIFY-LEADER-SELECTION-ROTO
+
+**Objetivo.** Cerrar el primer item tras sesion 3.
+
+**Hecho.**
+- `git rm validation/verify_leader_selection.py` (importaba
+  `config.index_tickers`, borrado en C4.4; leia `analisis_lideres*.csv`
+  no generados desde C4.3).
+- Retirados del `daily_run.yml`: step "Verify leader selection"
+  (202-203), artefactos `analisis_lideres*.csv` (226-227) y
+  `slpm_state.json` (239).
+- `git rm outputs/state/slpm_state.json` (fosil sin productor).
+- `data_quality.py:233` comentario corregido.
+- `settings.py:87-90` bloque `# SLPM COVERAGE` huerfano eliminado.
+- `generate_docs.py:214` fallback muerto eliminado.
+- `run.py:62` comentario sin `verify_leader_selection`.
+
+**Commits.** `37bca52d` (codigo).
+
+**Pendiente.**
+- `C4.5-SLPM-STRINGS-RESIDUALES` (siguiente, con run real + auditoria
+  2 dimensiones).
+- `STRUCTURAL-ENGINE-LEADER-BREADTH-ZOMBIE` (cosmetico confirmado:
+  `leader_breadth` no se usa en el cuerpo de `compute_structural_score`).
+- `helpers.py:136` y `run.py:64` (residuales `analisis_lideres`,
+  inocuos, van con C4.5).
+- SOW-BEAR-CONFIRMATION (contrato v1.10).
+
+**Lecciones.** El test de gobernanza exige commit alcanzable en
+`refs/heads/` o `refs/tags/` y evidencia >= 20. No se puede marcar
+`FIXED` en el mismo commit que crea el cambio. Secuencia correcta:
+commit de codigo -> commit documental con hash.
+
 ### 2026-10-24 (sesion 3 continuacion) - C4.4 + bug rotacion + verificacion real
 
 **Objetivo.** Verificar con pipeline real el estado del sistema

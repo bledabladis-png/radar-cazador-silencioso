@@ -159,6 +159,7 @@ LYXI.
   `classify_wyckoff_phase`, sistema legacy de indices: RETIRADOS en
   sesion 3.
 - C4.4: cerrado esta sesion.
+- `VERIFY-LEADER-SELECTION-ROTO`: FIXED 2026-10-25 (commit `37bca52d`).
 
 ## 4. PENDIENTES VIVOS
 
@@ -201,11 +202,6 @@ headers).
   pasa. Retirarlo requiere auditar `STRUCTURAL_WEIGHTS` y rebalancear
   pesos. Deuda preexistente (introducida al retirar
   `compute_leader_breadth_v2` en C3.1).
-- `VERIFY-LEADER-SELECTION-ROTO`: `validation/verify_leader_selection.py`
-  lee `analisis_lideres.csv` y `analisis_lideres_internacionales.csv`,
-  ya no generados desde C4.3/C4.4. El step del daily_run.yml
-  "Verify leader selection" fallara o pasara en falso. Revisar y
-  retirar el step o adaptar el script.
 - `CURRENT-PHASE-BASIS-CSV`: columna `basis` no va al reporte.
 - `ACCUMULATION-ZERO`: estado transitorio por diseno.
 - `VALIDATION-GATE-NO-STANDALONE`: gate no reproducible standalone.

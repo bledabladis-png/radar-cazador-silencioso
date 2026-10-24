@@ -2009,3 +2009,38 @@ La verificacion completa del reporte debe incluir:
 - `VERIFY-LEADER-SELECTION-ROTO`.
 
 **Siguiente paso**: C4.5.
+
+## Sesion 2026-10-25 - Cierre VERIFY-LEADER-SELECTION-ROTO
+
+Commit `37bca52d` cierra el item `VERIFY-LEADER-SELECTION-ROTO`.
+
+**Diagnostico confirmado.** `validation/verify_leader_selection.py`
+importaba `config.index_tickers` (borrado en C4.4) y leia
+`analisis_lideres*.csv` (no generados desde C4.3). El step
+"Verify leader selection" del `daily_run.yml` habria fallado en el
+primer `run-system` real tras C4.4. Los runs de 25-10 (sabado)
+estaban en skipped por gate, no por exito del step.
+
+**Retirado.**
+- `git rm validation/verify_leader_selection.py`.
+- Step "Verify leader selection" de `daily_run.yml` (lineas 202-203).
+- Artefactos `analisis_lideres*.csv` (lineas 226-227) y
+  `slpm_state.json` (linea 239) del workflow.
+- `git rm outputs/state/slpm_state.json` (fosil sin productor desde
+  C3.1; ultimo escritor `slpm_v12.py` retirado en sesion 3).
+- Comentario `data_quality.py:233` ("sigue activo via slpm_v12.py").
+- Bloque `# SLPM COVERAGE` huerfano en `settings.py:87-90`.
+- Fallback muerto en `generate_docs.py:214` (nunca se ejecutaba:
+  `extract_docstring` siempre encuentra el docstring real de
+  `compute_structural_score`).
+- Referencia a `verify_leader_selection` en comentario `run.py:62`.
+
+**Verificacion.** pyflakes ., compileall, suite 3705/2,
+`verifica_gobernanza [OK]`, `git diff --check` limpio, Y4 cero
+residuales de `verify_leader_selection`/`config.index_tickers`/
+`SLPM COVERAGE` en codigo productivo.
+
+**Pendiente del mismo frente (va a C4.5).** `src/report/helpers.py:136`
+lee `analisis_lideres.csv` en `try/except FileNotFoundError` (fallback
+`n_acciones=0`, defensivo); `run.py:64` limpia los CSVs al inicio
+(best-effort). Ambas inocuas, se limpian con C4.5.
