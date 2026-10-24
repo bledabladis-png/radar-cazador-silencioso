@@ -10,7 +10,7 @@ Valida:
 import numpy as np
 import pandas as pd
 
-from indicators.stock_leader import _validate_wls_inputs, WLS_COMPONENTS
+from indicators.stock_metrics import _validate_wls_inputs, WLS_COMPONENTS
 
 
 def _df(rs=0.5, flow=0.3, rws=0.2, stab=0.1, pers=0.7):

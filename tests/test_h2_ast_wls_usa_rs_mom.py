@@ -15,7 +15,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
-STOCK_LEADER = ROOT / "indicators" / "stock_leader.py"
+STOCK_LEADER = ROOT / "indicators" / "stock_metrics.py"
 
 
 def _source_of_fn(name):
