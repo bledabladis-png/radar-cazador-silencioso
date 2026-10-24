@@ -135,8 +135,8 @@ def test_select_index_leaders_normal(tmp_path, monkeypatch):
     with patch("indicators.index_leaders.wyckoff_score") as mw:
         mw.return_value = (pd.Series([0.5] * 300), None, None,
                             None, None, None, None)
-        with patch("indicators.index_leaders.classify_wyckoff_phase",
-                   return_value="MARKUP"):
+        with patch("indicators.index_leaders.classify_phase") as _mcp:
+            _mcp.return_value.phase = "MARKUP"
             with patch("indicators.index_leaders.detect_spring",
                        return_value=pd.Series([0.0] * 300)):
                 with patch("indicators.index_leaders.detect_sos",

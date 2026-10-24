@@ -1,7 +1,8 @@
 # indicators/index_leaders.py - Selecciona las 5 mejores empresas por WLS
 import pandas as pd
 import numpy as np
-from indicators.wyckoff_v1 import build_ticker_df, wyckoff_score, classify_wyckoff_phase, detect_spring, detect_sos
+from indicators.wyckoff_v1 import build_ticker_df, wyckoff_score, detect_spring, detect_sos
+from indicators.wyckoff_orchestrator import classify_phase
 from src.stock_data_loader import normalize_yahoo_ticker
 from src.utils import robust_zscore, get_col
 from config.index_tickers import INDEX_CONFIG
@@ -80,7 +81,7 @@ def compute_stock_metrics_for_index(df_stocks, index_name, stock_list, df_index_
             wyckoff_sc = wyckoff_sc.iloc[-1] if not wyckoff_sc.empty else np.nan
         except (KeyError, ValueError, TypeError, IndexError, AttributeError):
             wyckoff_sc = np.nan
-        wyckoff_ph = classify_wyckoff_phase(ticker_df, ticker)
+        wyckoff_ph = classify_phase(ticker_df, ticker).phase
 
         ret_10 = ret.iloc[-10:]
         persistence_10d = (ret_10 > 0).mean() if len(ret_10) > 0 else 0.5
