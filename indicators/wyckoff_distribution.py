@@ -37,6 +37,10 @@ ST_MAX_WINDOW = 40
 ST_PROXIMITY_PCT = 0.03
 ST_MAX_DRAWDOWN_PCT = 0.05
 
+# Parametros UT/UTAD y Spring - PROVISIONALES, pre-registro pendiente.
+FB_MAX_WINDOW = 15
+FB_CONFIRM_SESSIONS = 2
+
 # Parametros trend context - PROVISIONAL, pre-registro pendiente.
 TREND_CONTEXT_WINDOW = 120
 TREND_CONTEXT_UP_THRESHOLD = 0.2
@@ -983,5 +987,281 @@ def detect_st_dist(df, ticker, bc_event, *, max_window=None,
                   "max_window": int(mw),
                   "proximity_band": proximity_band,
                   "rejection_level": rejection_level},
+    )
+
+
+def detect_false_breakout_up(df, ticker, range_event, *, max_window=None,
+                              confirm_sessions=None, as_of=None) -> WyckoffEvent:
+    """Falsa ruptura alcista (UT o UTAD) desde un rango activo.
+
+    Busca un cierre > resistance + tol_abs (ruptura falsa) seguido de
+    confirm_sessions cierres < resistance (retorno al rango) en <= max_window.
+
+    NO distingue UT de UTAD por si mismo. El consumidor decide cual es
+    segun contexto (UT: antes de SOW; UTAD: cerca de SOW). Ambos son el
+    mismo evento observable: ruptura arriba rechazada.
+
+    - CONFIRMED: event_date = breakout_date, available_at = confirm_date.
+    - NOT_OBSERVED: no hay ruptura arriba en la ventana.
+    - NOT_EVALUABLE: rango no activo o datos insuficientes.
+    """
+    if range_event.state != "RANGE_ACTIVE":
+        return WyckoffEvent(
+            ticker=ticker, event_type="UT",
+            event_date=None, available_at=None,
+            status="NOT_EVALUABLE",
+            range_id=range_event.range_id,
+            evidence={"reason": "range_not_active", "range_state": range_event.state},
+        )
+    if range_event.range_active_at is None:
+        return WyckoffEvent(
+            ticker=ticker, event_type="UT",
+            event_date=None, available_at=None,
+            status="NOT_EVALUABLE",
+            range_id=range_event.range_id,
+            evidence={"reason": "range_active_at_is_none"},
+        )
+
+    mw = max_window if max_window is not None else FB_MAX_WINDOW
+    cs = confirm_sessions if confirm_sessions is not None else FB_CONFIRM_SESSIONS
+
+    try:
+        close = get_col(df, ticker, "Close")
+    except (KeyError, ValueError):
+        return WyckoffEvent(
+            ticker=ticker, event_type="UT",
+            event_date=None, available_at=None,
+            status="NOT_EVALUABLE",
+            range_id=range_event.range_id,
+            evidence={"reason": "missing_close"},
+        )
+
+    if as_of is None:
+        as_of = df.index[-1]
+    if as_of not in df.index or range_event.range_active_at not in df.index:
+        return WyckoffEvent(
+            ticker=ticker, event_type="UT",
+            event_date=None, available_at=None,
+            status="NOT_EVALUABLE",
+            range_id=range_event.range_id,
+            evidence={"reason": "dates_not_in_index"},
+        )
+
+    start_pos = df.index.get_loc(range_event.range_active_at)
+    end_pos = df.index.get_loc(as_of)
+    if end_pos <= start_pos:
+        return WyckoffEvent(
+            ticker=ticker, event_type="UT",
+            event_date=None, available_at=None,
+            status="NOT_OBSERVED",
+            range_id=range_event.range_id,
+            evidence={"reason": "no_bars_after_range_active"},
+        )
+
+    resistance = float(range_event.resistance)
+    tol = float(range_event.tol_abs)
+    breakout_level = resistance + tol
+
+    # Buscar ruptura arriba
+    breakout_pos = None
+    for pos in range(start_pos + 1, end_pos + 1):
+        bar_date = df.index[pos]
+        c = close.loc[bar_date]
+        if pd.isna(c):
+            continue
+        if float(c) > breakout_level:
+            breakout_pos = pos
+            break
+
+    if breakout_pos is None:
+        return WyckoffEvent(
+            ticker=ticker, event_type="UT",
+            event_date=None, available_at=None,
+            status="NOT_OBSERVED",
+            range_id=range_event.range_id,
+            evidence={"reason": "no_breakout_above",
+                      "breakout_level": breakout_level,
+                      "resistance": resistance, "tol_abs": tol},
+        )
+
+    breakout_date = df.index[breakout_pos]
+    max_pos = min(breakout_pos + mw, end_pos)
+
+    # Buscar retorno: N cierres < resistance
+    confirm_count = 0
+    for pos in range(breakout_pos, max_pos + 1):
+        bar_date = df.index[pos]
+        c = close.loc[bar_date]
+        if pd.isna(c):
+            confirm_count = 0
+            continue
+        c = float(c)
+        if c < resistance:
+            confirm_count += 1
+            if confirm_count >= cs:
+                return WyckoffEvent(
+                    ticker=ticker, event_type="UT",
+                    event_date=breakout_date, available_at=bar_date,
+                    status="CONFIRMED",
+                    range_id=range_event.range_id,
+                    evidence={
+                        "resistance": resistance,
+                        "tol_abs": tol,
+                        "breakout_level": breakout_level,
+                        "breakout_close": float(close.loc[breakout_date]),
+                        "confirm_close": c,
+                        "confirm_sessions": int(cs),
+                        "max_window": int(mw),
+                    },
+                )
+        else:
+            confirm_count = 0
+
+    return WyckoffEvent(
+        ticker=ticker, event_type="UT",
+        event_date=breakout_date, available_at=None,
+        status="CANDIDATE",
+        range_id=range_event.range_id,
+        evidence={
+            "resistance": resistance,
+            "tol_abs": tol,
+            "breakout_level": breakout_level,
+            "breakout_close": float(close.loc[breakout_date]),
+            "max_window": int(mw),
+            "reason": "breakout_not_yet_rejected",
+        },
+    )
+
+
+def detect_false_breakout_down(df, ticker, range_event, *, max_window=None,
+                                confirm_sessions=None, as_of=None) -> WyckoffEvent:
+    """Falsa ruptura bajista (Spring) desde un rango activo.
+
+    Simetrico a detect_false_breakout_up. Cierre < support - tol_abs
+    seguido de confirm_sessions cierres > support.
+    """
+    if range_event.state != "RANGE_ACTIVE":
+        return WyckoffEvent(
+            ticker=ticker, event_type="SPRING",
+            event_date=None, available_at=None,
+            status="NOT_EVALUABLE",
+            range_id=range_event.range_id,
+            evidence={"reason": "range_not_active", "range_state": range_event.state},
+        )
+    if range_event.range_active_at is None:
+        return WyckoffEvent(
+            ticker=ticker, event_type="SPRING",
+            event_date=None, available_at=None,
+            status="NOT_EVALUABLE",
+            range_id=range_event.range_id,
+            evidence={"reason": "range_active_at_is_none"},
+        )
+
+    mw = max_window if max_window is not None else FB_MAX_WINDOW
+    cs = confirm_sessions if confirm_sessions is not None else FB_CONFIRM_SESSIONS
+
+    try:
+        close = get_col(df, ticker, "Close")
+    except (KeyError, ValueError):
+        return WyckoffEvent(
+            ticker=ticker, event_type="SPRING",
+            event_date=None, available_at=None,
+            status="NOT_EVALUABLE",
+            range_id=range_event.range_id,
+            evidence={"reason": "missing_close"},
+        )
+
+    if as_of is None:
+        as_of = df.index[-1]
+    if as_of not in df.index or range_event.range_active_at not in df.index:
+        return WyckoffEvent(
+            ticker=ticker, event_type="SPRING",
+            event_date=None, available_at=None,
+            status="NOT_EVALUABLE",
+            range_id=range_event.range_id,
+            evidence={"reason": "dates_not_in_index"},
+        )
+
+    start_pos = df.index.get_loc(range_event.range_active_at)
+    end_pos = df.index.get_loc(as_of)
+    if end_pos <= start_pos:
+        return WyckoffEvent(
+            ticker=ticker, event_type="SPRING",
+            event_date=None, available_at=None,
+            status="NOT_OBSERVED",
+            range_id=range_event.range_id,
+            evidence={"reason": "no_bars_after_range_active"},
+        )
+
+    support = float(range_event.support)
+    tol = float(range_event.tol_abs)
+    breakout_level = support - tol
+
+    breakout_pos = None
+    for pos in range(start_pos + 1, end_pos + 1):
+        bar_date = df.index[pos]
+        c = close.loc[bar_date]
+        if pd.isna(c):
+            continue
+        if float(c) < breakout_level:
+            breakout_pos = pos
+            break
+
+    if breakout_pos is None:
+        return WyckoffEvent(
+            ticker=ticker, event_type="SPRING",
+            event_date=None, available_at=None,
+            status="NOT_OBSERVED",
+            range_id=range_event.range_id,
+            evidence={"reason": "no_breakout_below",
+                      "breakout_level": breakout_level,
+                      "support": support, "tol_abs": tol},
+        )
+
+    breakout_date = df.index[breakout_pos]
+    max_pos = min(breakout_pos + mw, end_pos)
+
+    confirm_count = 0
+    for pos in range(breakout_pos, max_pos + 1):
+        bar_date = df.index[pos]
+        c = close.loc[bar_date]
+        if pd.isna(c):
+            confirm_count = 0
+            continue
+        c = float(c)
+        if c > support:
+            confirm_count += 1
+            if confirm_count >= cs:
+                return WyckoffEvent(
+                    ticker=ticker, event_type="SPRING",
+                    event_date=breakout_date, available_at=bar_date,
+                    status="CONFIRMED",
+                    range_id=range_event.range_id,
+                    evidence={
+                        "support": support,
+                        "tol_abs": tol,
+                        "breakout_level": breakout_level,
+                        "breakout_close": float(close.loc[breakout_date]),
+                        "confirm_close": c,
+                        "confirm_sessions": int(cs),
+                        "max_window": int(mw),
+                    },
+                )
+        else:
+            confirm_count = 0
+
+    return WyckoffEvent(
+        ticker=ticker, event_type="SPRING",
+        event_date=breakout_date, available_at=None,
+        status="CANDIDATE",
+        range_id=range_event.range_id,
+        evidence={
+            "support": support,
+            "tol_abs": tol,
+            "breakout_level": breakout_level,
+            "breakout_close": float(close.loc[breakout_date]),
+            "max_window": int(mw),
+            "reason": "breakout_not_yet_recovered",
+        },
     )
 
