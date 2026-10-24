@@ -95,3 +95,6 @@ verify_run_*.ps1
 outputs/state/liquidity_v1_state.json
 data/stock_prices_reserved_cohort.parquet
 data/stock_prices_reserved_r3000.parquet
+
+# Scripts de diagnostico (investigacion, no repo)
+scripts/diag_*.py

@@ -33,6 +33,11 @@ RANGE_TOLERANCE_FRAC = 0.05
 SOW_CONFIRM_CLOSES = 3
 SOW_TIMEOUT_SESSIONS = 10
 
+# Parametros trend context - PROVISIONAL, pre-registro pendiente.
+TREND_CONTEXT_WINDOW = 120
+TREND_CONTEXT_UP_THRESHOLD = 0.2
+TREND_CONTEXT_DOWN_THRESHOLD = -0.2
+
 
 @dataclass(frozen=True)
 class WyckoffEvent:
@@ -46,7 +51,7 @@ class WyckoffEvent:
 
 
 def detect_bc(df, ticker, *, lookback=None, v_threshold=None,
-              c_threshold=None, t_threshold=None) -> WyckoffEvent:
+              c_threshold=None, t_threshold=None, scan_window=1) -> WyckoffEvent:
     """Buying Climax: high[t] es el maximo del lookback con volumen
     extremo, volatilidad alta y tendencia alcista previa.
 
@@ -93,52 +98,71 @@ def detect_bc(df, ticker, *, lookback=None, v_threshold=None,
             evidence={"reason": f"score_error: {exc}"},
         )
 
-    idx = high.index
-    last = idx[-1]
-    rmax = high_clean.rolling(lb, min_periods=lb).max().reindex(idx).loc[last]
-    h_last = high.loc[last]
-    t_last = t_norm.reindex(idx).loc[last]
-    c_last = c_norm.reindex(idx).loc[last]
-    v_last = v_norm.reindex(idx).loc[last]
+    if scan_window < 1:
+        raise ValueError(f"scan_window({scan_window}) debe ser >= 1")
 
-    if any(pd.isna(x) for x in (h_last, rmax, t_last, c_last, v_last)):
+    idx = high.index
+    n = len(idx)
+    rmax = high_clean.rolling(lb, min_periods=lb).max().reindex(idx)
+    t_al = t_norm.reindex(idx)
+    c_al = c_norm.reindex(idx)
+    v_al = v_norm.reindex(idx)
+
+    if scan_window == 1:
+        positions = [n - 1]
+    else:
+        positions = list(range(max(0, n - scan_window), n))[::-1]
+
+    n_evaluated = 0
+    n_nan = 0
+    for pos in positions:
+        bar_date = idx[pos]
+        h = high.iloc[pos]
+        r = rmax.iloc[pos]
+        t = t_al.iloc[pos]
+        c = c_al.iloc[pos]
+        v = v_al.iloc[pos]
+        if any(pd.isna(x) for x in (h, r, t, c, v)):
+            n_nan += 1
+            continue
+        n_evaluated += 1
+        if (float(h) >= float(r) and float(v) >= vt
+                and float(c) <= ct and float(t) >= tt):
+            return WyckoffEvent(
+                ticker=ticker, event_type="BC",
+                event_date=bar_date, available_at=bar_date,
+                status="CONFIRMED",
+                evidence={
+                    "high": float(h), "roll_max": float(r),
+                    "t_norm": float(t), "c_norm": float(c), "v_norm": float(v),
+                    "lookback": int(lb), "scan_window": int(scan_window),
+                    "bar_pos": int(pos), "bars_scanned": int(n_evaluated),
+                    "nan_bars": int(n_nan),
+                    "is_max": True, "is_vol": True,
+                    "is_volat": True, "is_uptrend": True,
+                },
+            )
+
+    if n_evaluated == 0 and n_nan > 0:
         return WyckoffEvent(
             ticker=ticker, event_type="BC",
             event_date=None, available_at=None,
             status="NOT_EVALUABLE",
-            evidence={"reason": "nan_in_features"},
-        )
-
-    is_max = bool(float(h_last) >= float(rmax))
-    is_vol = bool(float(v_last) >= vt)
-    is_volat = bool(float(c_last) <= ct)
-    is_uptrend = bool(float(t_last) >= tt)
-    evidence = {
-        "high": float(h_last),
-        "roll_max": float(rmax),
-        "t_norm": float(t_last),
-        "c_norm": float(c_last),
-        "v_norm": float(v_last),
-        "lookback": int(lb),
-        "is_max": is_max,
-        "is_vol": is_vol,
-        "is_volat": is_volat,
-        "is_uptrend": is_uptrend,
-    }
-
-    if is_max and is_vol and is_volat and is_uptrend:
-        return WyckoffEvent(
-            ticker=ticker, event_type="BC",
-            event_date=last, available_at=last,
-            status="CONFIRMED",
-            evidence=evidence,
+            evidence={"reason": "nan_in_features", "nan_bars": int(n_nan)},
         )
 
     return WyckoffEvent(
         ticker=ticker, event_type="BC",
         event_date=None, available_at=None,
         status="NOT_OBSERVED",
-        evidence=evidence,
+        evidence={"reason": "no_bc_in_scan_window",
+                  "scan_window": int(scan_window),
+                  "lookback": int(lb),
+                  "bars_scanned": int(n_evaluated),
+                  "nan_bars": int(n_nan),
+                  "v_threshold": float(vt),
+                  "c_threshold": float(ct),
+                  "t_threshold": float(tt)},
     )
 
 
@@ -583,4 +607,242 @@ def detect_sow_in_range(df, ticker, range_event, *, confirm_closes=None,
                   "closes_under": int(count),
                   "reason": "timeout_no_confirm_no_reject"},
     )
+
+
+Classification = Literal[
+    "DISTRIBUTION_CONFIRMED",
+    "REDISTRIBUTION_CONFIRMED",
+    "BREAK_WITHOUT_DISTRIBUTION_CONTEXT",
+    "BREAK_PENDING",
+    "RANGE_ACTIVE_NO_BREAK",
+    "NOT_EVALUABLE",
+]
+
+
+def detect_trend_context(df, ticker, as_of, *, window=None,
+                         up_threshold=None, down_threshold=None):
+    """Detector minimo de tendencia previa a as_of.
+
+    Direccion sobre t_norm promedio en [as_of-window, as_of-1].
+    - UP si mean(t_norm) >= up_threshold
+    - DOWN si mean(t_norm) <= down_threshold
+    - NONE en otro caso
+
+    available_at = as_of (se conoce al cierre).
+    """
+    w = window if window is not None else TREND_CONTEXT_WINDOW
+    ut = up_threshold if up_threshold is not None else TREND_CONTEXT_UP_THRESHOLD
+    dt = down_threshold if down_threshold is not None else TREND_CONTEXT_DOWN_THRESHOLD
+
+    try:
+        _, _, _, t_norm, _, _, _ = wyckoff_score(df, ticker)
+    except (KeyError, ValueError, TypeError, IndexError) as exc:
+        return {"direction": "NONE", "available_at": as_of,
+                "evidence": {"reason": f"score_error: {exc}"}}
+
+    if as_of not in df.index:
+        return {"direction": "NONE", "available_at": as_of,
+                "evidence": {"reason": "as_of_not_in_index"}}
+
+    pos = df.index.get_loc(as_of)
+    if pos < w:
+        return {"direction": "NONE", "available_at": as_of,
+                "evidence": {"reason": "insufficient_warmup", "pos": pos}}
+
+    window_t = t_norm.iloc[pos - w:pos].dropna()
+    if window_t.empty:
+        return {"direction": "NONE", "available_at": as_of,
+                "evidence": {"reason": "all_nan_in_window"}}
+
+    mean_t = float(window_t.mean())
+    if mean_t >= ut:
+        direction = "UP"
+    elif mean_t <= dt:
+        direction = "DOWN"
+    else:
+        direction = "NONE"
+
+    return {
+        "direction": direction,
+        "available_at": as_of,
+        "evidence": {
+            "window": int(w),
+            "n_obs": int(len(window_t)),
+            "mean_t_norm": mean_t,
+            "up_threshold": float(ut),
+            "down_threshold": float(dt),
+        },
+    }
+
+
+@dataclass(frozen=True)
+class ClassifiedBreak:
+    ticker: str
+    as_of: pd.Timestamp
+    range_id: str | None
+    classification: Classification
+    structural_state: str
+    break_direction: Literal["UP", "DOWN"] | None
+    range_type: RangeType | None
+    trend_direction: str | None
+    sow_status: str | None
+    coherence_error: str | None
+    evidence: dict[str, Any] = field(default_factory=dict)
+
+
+def classify_distribution_at(df, ticker, as_of, *,
+                             bc_kwargs=None, ar_kwargs=None,
+                             range_kwargs=None, sow_kwargs=None,
+                             trend_kwargs=None) -> ClassifiedBreak:
+    """Cascada end-to-end: BC -> AR -> Range -> SOW -> clasificacion.
+
+    Solo evalua hasta as_of. No usa datos posteriores.
+
+    Estados posibles:
+    - NOT_EVALUABLE: BC/AR no confirmados, o rango no activo
+    - RANGE_ACTIVE_NO_BREAK: rango activo pero SOW no disparo
+    - BREAK_PENDING: SOW CANDIDATE
+    - DISTRIBUTION_CONFIRMED: SOW CONFIRMED + range_type DISTRIBUTION + trend UP
+    - REDISTRIBUTION_CONFIRMED: analogo con REDISTRIBUTION + DOWN
+    - BREAK_WITHOUT_DISTRIBUTION_CONTEXT: SOW CONFIRMED sin contexto coherente
+    """
+    sub = df.loc[:as_of]
+    if sub.empty:
+        return ClassifiedBreak(
+            ticker=ticker, as_of=as_of, range_id=None,
+            classification="NOT_EVALUABLE",
+            structural_state="NOT_EVALUABLE",
+            break_direction=None, range_type=None,
+            trend_direction=None, sow_status=None,
+            coherence_error=None,
+            evidence={"reason": "empty_df_up_to_as_of"},
+        )
+
+    bck = dict(bc_kwargs or {})
+    if "scan_window" not in bck:
+        bck["scan_window"] = 500
+    bc = detect_bc(sub, ticker, **bck)
+    if bc.status != "CONFIRMED":
+        return ClassifiedBreak(
+            ticker=ticker, as_of=as_of, range_id=None,
+            classification="NOT_EVALUABLE",
+            structural_state="NOT_EVALUABLE",
+            break_direction=None, range_type=None,
+            trend_direction=None, sow_status=None,
+            coherence_error=None,
+            evidence={"reason": "bc_not_confirmed",
+                      "bc_status": bc.status,
+                      "bc_evidence": bc.evidence},
+        )
+
+    ar = detect_ar(sub, ticker, bc, **(ar_kwargs or {}))
+    if ar.status != "CONFIRMED":
+        return ClassifiedBreak(
+            ticker=ticker, as_of=as_of, range_id=None,
+            classification="NOT_EVALUABLE",
+            structural_state="NOT_EVALUABLE",
+            break_direction=None, range_type=None,
+            trend_direction=None, sow_status=None,
+            coherence_error=None,
+            evidence={"reason": "ar_not_confirmed",
+                      "ar_status": ar.status,
+                      "ar_evidence": ar.evidence},
+        )
+
+    trend = detect_trend_context(sub, ticker, bc.event_date, **(trend_kwargs or {}))
+
+    rk = dict(range_kwargs or {})
+    if "range_type" not in rk:
+        if trend["direction"] == "UP":
+            rk["range_type"] = "DISTRIBUTION_CANDIDATE"
+        elif trend["direction"] == "DOWN":
+            rk["range_type"] = "REDISTRIBUTION_CANDIDATE"
+        else:
+            rk["range_type"] = "UNCLASSIFIED"
+    if "trend_context" not in rk:
+        rk["trend_context"] = trend
+
+    rng = build_range_from_bc_ar(sub, ticker, bc, ar, **rk)
+
+    sow = detect_sow_in_range(sub, ticker, rng, as_of=as_of, **(sow_kwargs or {}))
+
+    evidence = {
+        "bc_date": str(bc.event_date),
+        "ar_date": str(ar.event_date),
+        "range_active_at": str(rng.range_active_at),
+        "range_type": rng.range_type,
+        "trend_direction": trend["direction"],
+        "trend_evidence": trend["evidence"],
+        "sow_status": sow.status,
+        "sow_event_date": str(sow.event_date) if sow.event_date else None,
+        "sow_evidence": sow.evidence,
+    }
+
+    if sow.status == "CANDIDATE":
+        return ClassifiedBreak(
+            ticker=ticker, as_of=as_of, range_id=rng.range_id,
+            classification="BREAK_PENDING",
+            structural_state="RANGE_ACTIVE",
+            break_direction="DOWN",
+            range_type=rng.range_type,
+            trend_direction=trend["direction"],
+            sow_status=sow.status,
+            coherence_error=None,
+            evidence=evidence,
+        )
+
+    if sow.status == "CONFIRMED":
+        # Verificar coherencia range_type <-> trend
+        coherence_error = None
+        if rng.range_type == "DISTRIBUTION_CANDIDATE":
+            if trend["direction"] != "UP":
+                coherence_error = (
+                    f"range_type=DISTRIBUTION_CANDIDATE pero "
+                    f"trend_direction={trend['direction']}"
+                )
+                classification: Classification = "BREAK_WITHOUT_DISTRIBUTION_CONTEXT"
+            else:
+                classification = "DISTRIBUTION_CONFIRMED"
+        elif rng.range_type == "REDISTRIBUTION_CANDIDATE":
+            if trend["direction"] != "DOWN":
+                coherence_error = (
+                    f"range_type=REDISTRIBUTION_CANDIDATE pero "
+                    f"trend_direction={trend['direction']}"
+                )
+                classification = "BREAK_WITHOUT_DISTRIBUTION_CONTEXT"
+            else:
+                classification = "REDISTRIBUTION_CONFIRMED"
+        else:
+            classification = "BREAK_WITHOUT_DISTRIBUTION_CONTEXT"
+
+        return ClassifiedBreak(
+            ticker=ticker, as_of=as_of, range_id=rng.range_id,
+            classification=classification,
+            structural_state="RANGE_BROKEN",
+            break_direction="DOWN",
+            range_type=rng.range_type,
+            trend_direction=trend["direction"],
+            sow_status=sow.status,
+            coherence_error=coherence_error,
+            evidence=evidence,
+        )
+
+    # sow.status in NOT_OBSERVED / REJECTED / EXPIRED / NOT_EVALUABLE
+    return ClassifiedBreak(
+        ticker=ticker, as_of=as_of, range_id=rng.range_id,
+        classification="RANGE_ACTIVE_NO_BREAK",
+        structural_state="RANGE_ACTIVE",
+        break_direction=None,
+        range_type=rng.range_type,
+        trend_direction=trend["direction"],
+        sow_status=sow.status,
+        coherence_error=None,
+        evidence=evidence,
+    )
+
+
+def classify_distribution(df, ticker, **kwargs) -> ClassifiedBreak:
+    """Wrapper de classify_distribution_at con as_of = ultima barra del df."""
+    as_of = df.index[-1]
+    return classify_distribution_at(df, ticker, as_of, **kwargs)
 
