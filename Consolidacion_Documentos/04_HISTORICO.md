@@ -1652,7 +1652,7 @@ publicacion).
 Suite final: 3849 passed, 5 skipped.
 
 
-## Sesion 2026-10-24 - Cierre SOW universal + reconstruccion sistema Wyckoff
+## Sesion 2026-10-24 (sesion 2) - Cierre SOW universal + reconstruccion sistema Wyckoff
 
 **Objetivo.** Cerrar el frente SOW universal (Bloque A) y reconstruir
 el sistema Wyckoff por stock con acumulacion y distribucion cableadas
@@ -1749,3 +1749,188 @@ umbral.
 Documentacion completa: `docs/auditoria/wyckoff/62_sistema_completo_2026-10-24.md`.
 
 Suite final: 3946 passed, 5 skipped. Working tree limpio.
+
+---
+
+## Sesion 2026-10-24 (sesion 3) - Plan holdings: demolicion + construccion
+
+**Objetivo.** Ejecutar el plan 63: retirar el sistema de lideres por
+sector basado en fase ETF (SLPM, stock_leader, index_leaders,
+classify_wyckoff_phase) y construir el sistema Wyckoff holdings-based
+con 6 CSVs descargables.
+
+**Decision arquitectonica.** El ETF sectorial suaviza la senal; la
+deteccion de fase se hace directamente sobre los tickers que
+componen cada sector/indice. Se retira toda la maquinaria que
+depende de la fase del ETF.
+
+### Plan 63
+
+`docs/auditoria/wyckoff/63_plan_sistema_holdings_2026-10-24.md`.
+7 commits planificados. Ejecutado como 5 bloques + fix + cierre
+documental:
+
+- C1: modulo holdings.
+- C2.1 + C2.2: cableado pipeline + reporte.
+- C3.1 + C3.2 + C3.3: retirada SLPM + adaptacion Validation Gate.
+- C4.1 + C4.2 + C4.3: extraccion stock_metrics + stocks_data +
+  retirada lideres.
+- C5.1 + C5.2: retirada fase ETF + classify_wyckoff_phase.
+
+### C1 - Modulo holdings (`83187f8c`)
+
+`indicators/wyckoff_holdings_report.py::compute_wyckoff_holdings_report`.
+6 tablas: usa_sector_acc/dist, usa_index_acc/dist, eu_index_acc/dist.
+
+- Iteracion sobre holdings top-20 por weight de cada grupo.
+- Deteccion via `classify_phase` del orquestador.
+- Criterio (iii): ACC+ACC_FORMING+MARKUP para acumulacion,
+  DIST+DIST_FORMING+MARKDOWN para distribucion.
+- Cobertura: >=200 barras para incluir, >=460 para score valido.
+  Entre 200-460: `basis = "warm_up_incompleto (n=N)"`.
+- `coverage_weight_pct` por fila.
+- IWM excluido (top-20 = 6.2% de 1977 holdings, no representativo).
+
+### C2 - Cableado pipeline + render (`a3a63766`, `9b5b34cd`)
+
+- 6 OutputSpec nuevos en `output_registry.py` (24 -> 26).
+- Wrapper `src/pipeline/wyckoff_holdings.py::compute_wyckoff_holdings`.
+- Cableado en `run.py` tras `compute_sector_metrics`.
+- Renderers en `src/report/wyckoff_holdings.py`.
+- 2 secciones nuevas en el reporte ("Tickers en acumulacion" y
+  "Tickers en distribucion"), cada una con 3 sub-tablas.
+
+### C3 - Retirada SLPM (`0c5b7fb3`, `676ab956`, `cf7659fb`)
+
+SLPM dependia de `leader_metrics_for_slpm` (top-5 lideres del sector
+#1 por fase ETF). Con el sistema de lideres retirado, SLPM queda sin
+input.
+
+- Borrados: `slpm_v12.py`, `state_machine.py`, `state_transition.py`,
+  `src/pipeline/slpm.py`, `src/report/slpm.py`.
+- `SLPM_WEIGHTS`, `SLPM_EXPECTED_LEADERS`, `_forzar_lideres_slpm`
+  eliminados.
+- `compute_engines` sin `leader_df`. Tactical/structural/persistence
+  autonomos.
+- Validation Gate adaptado: firma `slpm_v12_data` ->
+  `wyckoff_holdings_data`. 3 checks sustituidos:
+  - SLPM v1.2 -> Wyckoff holdings CSVs.
+  - Opportunity Map -> Cobertura holdings.
+  - Anti-Double-Counting -> Sanity holdings.
+  Gate sigue 10/10 para no romper el contrato del receipt.
+- `scripts/generate_docs.py` limpio.
+
+### C4 - Retirada lideres (`753b7f22`, `2ede0215`, `4bc45fd3`)
+
+- C4.1: `indicators/stock_metrics.py` extraido de `stock_leader.py`.
+  `compute_stock_metrics`, `compute_wls`, `_validate_wls_inputs`,
+  `WLS_COMPONENTS`, `compute_all_stock_metrics`.
+- C4.2: `src/pipeline/stocks_data.py` extraido de `leaders.py`.
+  `load_stocks_data` (df_stocks + effective_meta + holdings_df +
+  HOLIDAY_MODE).
+- C4.3: borrados `stock_leader.py`, `leaders.py`,
+  `leader_representativeness.py`, `sector_leader_divergence.py`,
+  `sector_annotations.py`, `render_acciones_seleccionadas`.
+  `sector_metrics.py` devuelve 3 sub-outputs. Registry 26 -> 24.
+  `run.py` sustituye `compute_leaders` por `load_stocks_data` +
+  `compute_all_stock_metrics`.
+
+### C5 - Retirada fase ETF + classify_wyckoff_phase (`8d9b90a0`, `c47cb420`)
+
+- C5.1: `sector_regime.py` sin `classify_wyckoff_phase` ni
+  `wyckoff_score`/`build_ticker_df` sobre el ETF. Tupla del ranking
+  de 4 a 3 elementos. `sector_regime_matrix.py` deriva
+  `structure_positive` de `sector_wyckoff_distribution_df`
+  (`pct_accumulation + pct_markup >= 50`). `wyckoff_phase` fuera de
+  `sector_rankings.csv`.
+- C5.2: `classify_wyckoff_phase`, `classify_wyckoff_phase_meta`,
+  `_is_distribution_candidate`, `_compute_precedent`,
+  `_has_sufficient_data` borradas de `wyckoff_v1.py`. Constantes
+  huerfanas: `FASE_*` (6), `STRUCT_STRONG/WEAK/BASE/DETERIORO`,
+  `T_NORM_WEAK`, `C_NORM_COMPRESSION`, `PREC_STRUCT_WEAK`.
+  Conservadas: `PRECEDENT_WINDOW`, `PREC_STRUCT_STRONG`,
+  `STRUCT_DETERIORO`, `T_NORM_STRONG` (aun usadas por
+  `detect_sow_v2`). `wyckoff_v1.py` queda como modulo de features
+  y detectores primitivos.
+
+### Fix pyflakes (`96276d05`)
+
+C5.1 paso tests local pero fallo en CI. `test_struct_score_sector_indices.py`
+conservaba un import huerfano (`render_ranking_sectorial_unificado`) al
+borrar 4 tests. En local solo se corrio pyflakes por ficheros tocados,
+no por todo el repo. CI corre `pyflakes .`. Fix + leccion en HANDOFF
+y 00_ARRANQUE: pyflakes sobre `.` siempre.
+
+### Cobertura del sistema holdings
+
+- **USA sectores** (11): top-20 por weight. Peso top-20: XLB 90.1%,
+  XLC 97.7%, XLE 99.0%, XLF 72.8%, XLI 57.2%, XLK 79.6%, XLP 86.7%,
+  XLRE 86.7%, XLU 83.1%, XLV 78.9%, XLY 84.5%.
+- **USA indices**: SPY (49.9%), QQQ (66.8%), DIA (85.0%). IWM excluido
+  (top-20 = 6.2% de 1977 holdings).
+- **EU indices**: FEZ 66.3%, DAXEX 78.4%, ISF.L 60.8%, LYXI 93.2%.
+
+### Pre-registros fallidos (heredados)
+
+Sesion 3 no anade nuevos. Los 60 y 61 siguen vigentes como evidencia
+historica:
+- `60_current_phase_rule_v1.md`: regla de vigencia unidireccional.
+  Fallo C1 (18.6% < 20%) en holdout S&P 500. Reemplazada por regla
+  simetrica (definicion, no umbral).
+- `61_utad_spring_pending_v1.md`: UTAD_PENDING/SPRING_PENDING. Fallo
+  A3 (26 vs 3, ratio 8.67x > 5x). No se ajusto.
+
+### Lo que NO cambia (post sesion 3)
+
+- `detect_sow` (v1.8) intacto.
+- `detect_sow_v2` en codigo, `WYCKOFF_SOW_* = None`. Base del futuro
+  contrato v1.10 (SOW-BEAR-CONFIRMATION).
+- `wyckoff_score`, `_atr_normalized`, `_trend_component`, `_volume_z`,
+  `_effort_vs_result`, `wyckoff_stability`, `build_ticker_df`,
+  `detect_spring`, `detect_sos` intactos.
+- Orquestador `classify_phase` + regla simetrica + FORMING + CONFLICT.
+
+### Casos conocidos
+
+- **TWST = CONFLICT**: "dist formandose y acc formandose
+  simultaneamente". Ambiguedad real, no bug.
+- **ACCUMULATION=0** en produccion: estado transitorio por diseno
+  (requiere SOS confirmado Y precio dentro del rango). No es fallo.
+
+### Pendiente
+
+- `current_phase_basis` en el reporte (hoy solo en CSV).
+- Validar nueva derivacion de `structure_positive` en
+  `sector_regime_matrix.py` (holdings-based desde C5.1).
+- TWST en CONFLICT: documentar como caso conocido en el reporte.
+- `ACCUMULATION=0`: nota en el reporte.
+- IWM fuera: sub-fase de descarga con protocolo de 6 pasos.
+- Cobertura USA incompleta (231/504 holdings): ampliacion futura.
+- Renderizar evidencia pasiva (mSOW/mSOS/LPSY/LPS/ST).
+- Calibrar PSY/PS con pre-registro.
+- Auditoria externa del sistema holdings-based.
+- Contrato v1.10 (SOW-BEAR-CONFIRMATION).
+- Fix `poda_bitacora.py` (item PODA-BITACORA-DIA-EN-CURSO).
+
+### Lecciones operativas
+
+- **`pyflakes .` sobre todo el repo**, no por fichero. CI lo hace y
+  detecta huerfanos que en local escapan.
+- **Antes de cambiar firmas de tuplas/dicts, enumerar TODOS los mocks
+  via AST**, no regex de texto. C5.1 dejo 6 tuplas sin adaptar en
+  `test_report_generator_smoke.py` que solo cazamos con el barrido
+  AST posterior.
+
+### Cierre
+
+Commits clave sesion 3: `977ad888`, `bdc80626`, `f1edc145`, `16f2dd8a`,
+`83187f8c`, `a3a63766`, `9b5b34cd`, `0c5b7fb3`, `676ab956`,
+`cf7659fb`, `753b7f22`, `2ede0215`, `4bc45fd3`, `8d9b90a0`,
+`c47cb420`, `96276d05`, `a100d282`, `813ad19f`, `0a0597b3`,
+`a3471303`, `487e2fbb`, `ebae6fe9`, `30adb4c6`, `00d5e0db`.
+
+Documentacion completa: `docs/auditoria/wyckoff/63_plan_sistema_holdings_2026-10-24.md`
++ `docs/handoffs/HANDOFF.md`.
+
+Suite final: 3776 passed, 2 skipped (filtro estandar). Sin filtro:
+3790 passed, 2 skipped. Working tree limpio. Writers: 24.
