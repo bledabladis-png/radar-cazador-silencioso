@@ -1,4 +1,10 @@
 {
+  "schema_version": 2,
+  "run_utc": "2026-10-24T06:32:47Z",
+  "git_sha": "2dbdadb59b0cfbd16d52c0cf03c61827ae4edc75",
+  "git_dirty": false,
+  "parquet": "D:\\Macro_Sectorial\\data\\stock_prices_extended.parquet",
+  "out_dir": "D:\\Macro_Sectorial\\outputs\\audit\\sow_event_study_20261024",
   "candidate": {
     "N": 40,
     "X_ATR": 1.0,
@@ -106,8 +112,12 @@
   },
   "v2": {
     "mean_lift": 0.12283355606151167,
-    "ci_lower": 0.13653595068517002,
-    "ci_upper": 0.36764024963060954,
+    "ci_lower": -0.015634158557692374,
+    "ci_upper": 0.2700290384930981,
+    "ci_bootstrap_lower": -0.015634158557692374,
+    "ci_bootstrap_upper": 0.2700290384930981,
+    "ci_t_lower": -0.05774857848835413,
+    "ci_t_upper": 0.30341569061137746,
     "folds_positive": 4,
     "n_folds": 9,
     "folds": [
@@ -301,5 +311,17 @@
       -0.06951361904763498
     ]
   },
-  "verdict": "INCONCLUSO"
+  "verdict": "INCONCLUSO",
+  "verdict_basis": {
+    "method": "bootstrap_by_year",
+    "ci_used": "ci_bootstrap_lower > 0 AND mean_lift > 0.05 AND folds_positive >= 7",
+    "ci_bootstrap_interval": [
+      -0.015634158557692374,
+      0.2700290384930981
+    ],
+    "ci_t_interval": [
+      -0.05774857848835413,
+      0.30341569061137746
+    ]
+  }
 }
