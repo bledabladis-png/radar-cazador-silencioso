@@ -8,12 +8,12 @@ sector con struct=+0.45 (MARKUP con margen) es distinto de struct=+0.31
 MARKUP; otro con struct=-0.01 (XLB) esta lejos. El reporte publica ahora
 la columna Struct para que el lector vea el margen sin consultar el CSV.
 
-Struct umbral MARKUP = +0.30 (STRUCT_STRONG en indicators/wyckoff_v1.py).
+La columna Struct se publica para indices internacionales (el sectorial
+se retiro en C5.1 cuando la fase ETF dejo de existir).
 """
 import pandas as pd
 
 from src.report.synthesis import render_indices_internacionales
-from src.report.rankings import render_ranking_sectorial_unificado
 
 
 # ---------- Indices ----------
