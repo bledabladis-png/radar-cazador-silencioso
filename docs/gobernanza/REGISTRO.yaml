@@ -1978,27 +1978,19 @@ items:
 - id: REPORT-ENCODING-MOJIBAKE-ADC
   tipo: deuda_tecnica
   ciclo: '2026-10-25'
-  estado: OPEN
-  descripcion: |
-    Detectado durante la verificacion de C4.5 (run real 2026-10-25):
-    la seccion "Anti-Double-Counting Audit" del reporte contiene
-    mojibake en el bloque de Clasificacion de Evidencia:
-    "ClasificaciÃ³n de evidencia" (deberia ser Clasificacion) y
-    "CrÃ©dito" (deberia ser Credito). Preexistente: los literales en
-    dependency_tracker.py estan en UTF-8 correcto en fuente, pero
-    llegan mal al reporte generado. Afecta solo al bloque de
-    clasificacion de evidencia (tabla de ~14 filas). El chequeo A3
-    del pipeline (Select-String "Ã|â€" sobre el .md) no lo detecto
-    por el encoding del propio PowerShell al filtrar.
-  siguiente_accion: |
-    (1) Confirmar con py -c "print(repr(open('outputs/report/
-    reporte_diario.md', encoding='utf-8').read()[-3000:]))" la
-    region del bloque. (2) Rastrear donde se rompe la cadena:
-    probablemente en el escritor del reporte (encode utf-8 -> latin-1
-    o similar) o en el render. (3) Fix en el escritor, no en los
-    literales. (4) Anadir test de contrato que verifique el substring
-    literal correcto en el .md generado. (5) Extender el chequeo A3
-    del pipeline para incluir bytes UTF-8 mal interpretados.
+  estado: FALSE_POSITIVE
+  razon: |
+    Diagnostico 2026-10-25 (commit posterior a c4.5): el reporte NO
+    tiene mojibake. Bytes verificados en outputs/report/reporte_diario.md:
+    'Clasificación' y 'Crédito' estan en UTF-8 correcto (C3-B3 = ó en
+    ambos). El "mojibake" observado en A5 de la verificacion era la
+    consola de PowerShell interpretando mal el fichero al leerlo con
+    Select-String, no un defecto del .md. El escritor
+    src/report_generator.py:open(..., encoding='utf-8') es correcto.
+    Los literales en src/dependency_tracker.py tambien estan en UTF-8
+    correcto. No hay bug, no hay fix necesario. Se cierra como falso
+    positivo por defecto de observacion (encoding de la consola, no
+    del fichero).
 
 - id: STRUCTURAL-ENGINE-LEADER-BREADTH-ZOMBIE
   tipo: deuda_tecnica

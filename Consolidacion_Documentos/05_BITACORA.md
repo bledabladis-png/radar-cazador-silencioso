@@ -60,7 +60,7 @@ Al cerrar una sesion nueva, se anade arriba (las mas recientes primero). Si hay 
 **Commits.** `7679d3fb`.
 
 **Pendiente.**
-- `REPORT-ENCODING-MOJIBAKE-ADC` (nuevo): mojibake preexistente
+- `REPORT-ENCODING-MOJIBAKE-ADC` (nuevo): mojibake preexistente [FALSE_POSITIVE 2026-10-25: reporte en UTF-8 correcto, mojibake era consola PowerShell]
   en bloque Clasificacion de Evidencia del reporte.
 - `CURRENT-PHASE-BASIS-CSV`, `ACCUMULATION-ZERO`,
   `VALIDATION-GATE-NO-STANDALONE`, `IWM-HOLDINGS-EXPANSION`,
@@ -90,7 +90,7 @@ sesion 3).
 - Commit codigo `c1e4af2e`.
 - Run real 14.4 min, gate 10/10, 24 writers OK, cero menciones
   SLPM en reporte, cero "Acciones lideres".
-- Nueva deuda `REPORT-ENCODING-MOJIBAKE-ADC` (OPEN): mojibake
+- Nueva deuda `REPORT-ENCODING-MOJIBAKE-ADC` (OPEN): mojibake [FALSE_POSITIVE 2026-10-25: reporte en UTF-8 correcto, mojibake era consola PowerShell]
   preexistente en el bloque clasificacion de evidencia del
   Anti-Double-Counting ("ClasificaciÃ³n", "CrÃ©dito"). Detectado
   en A5 del run real. No introducido por C4.5.
@@ -99,7 +99,7 @@ sesion 3).
 
 **Pendiente.**
 - `STRUCTURAL-ENGINE-LEADER-BREADTH-ZOMBIE` (cosmetico confirmado).
-- `REPORT-ENCODING-MOJIBAKE-ADC` (nuevo, verificar fix en escritor
+- `REPORT-ENCODING-MOJIBAKE-ADC` (nuevo, verificar fix en escritor [FALSE_POSITIVE 2026-10-25: reporte en UTF-8 correcto, mojibake era consola PowerShell]
   del reporte).
 - `helpers.py` ya sin `analisis_lideres.csv`, pero la seccion
   "Acciones lideres" desaparecio del reporte: verificar que no
