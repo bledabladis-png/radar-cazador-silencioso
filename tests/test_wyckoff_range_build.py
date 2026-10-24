@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from indicators.wyckoff_range import (
+from indicators.wyckoff_distribution import (
     Range, WyckoffEvent, build_range_from_bc_ar, RANGE_TOLERANCE_FRAC,
 )
 

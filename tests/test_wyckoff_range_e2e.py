@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from indicators.wyckoff_range import (
+from indicators.wyckoff_distribution import (
     WyckoffEvent, classify_distribution, classify_distribution_at,
 )
 
@@ -68,7 +68,7 @@ def test_composition_returns_not_evaluable_without_bc(monkeypatch):
         ticker="TEST", event_type="BC",
         event_date=None, available_at=None, status="NOT_OBSERVED",
     )
-    monkeypatch.setattr("indicators.wyckoff_range.detect_bc", lambda *a, **k: bad_bc)
+    monkeypatch.setattr("indicators.wyckoff_distribution.detect_bc", lambda *a, **k: bad_bc)
     result = classify_distribution_at(df, "TEST", df.index[-1])
     assert result.classification == "NOT_EVALUABLE"
     assert result.evidence["reason"] == "bc_not_confirmed"
@@ -77,13 +77,13 @@ def test_composition_returns_not_evaluable_without_bc(monkeypatch):
 def test_composition_distribution_confirmed(monkeypatch):
     df = _make_df(60)
     idx = df.index
-    monkeypatch.setattr("indicators.wyckoff_range.detect_bc",
+    monkeypatch.setattr("indicators.wyckoff_distribution.detect_bc",
                         lambda *a, **k: _fake_bc(idx))
-    monkeypatch.setattr("indicators.wyckoff_range.detect_ar",
+    monkeypatch.setattr("indicators.wyckoff_distribution.detect_ar",
                         lambda *a, **k: _fake_ar(idx))
-    monkeypatch.setattr("indicators.wyckoff_range.detect_trend_context",
+    monkeypatch.setattr("indicators.wyckoff_distribution.detect_trend_context",
                         lambda *a, **k: _fake_trend("UP"))
-    monkeypatch.setattr("indicators.wyckoff_range.detect_sow_in_range",
+    monkeypatch.setattr("indicators.wyckoff_distribution.detect_sow_in_range",
                         lambda *a, **k: _fake_sow(idx, "CONFIRMED"))
 
     result = classify_distribution_at(df, "TEST", idx[-1])
@@ -98,13 +98,13 @@ def test_composition_distribution_confirmed(monkeypatch):
 def test_composition_break_without_context_on_trend_mismatch(monkeypatch):
     df = _make_df(60)
     idx = df.index
-    monkeypatch.setattr("indicators.wyckoff_range.detect_bc",
+    monkeypatch.setattr("indicators.wyckoff_distribution.detect_bc",
                         lambda *a, **k: _fake_bc(idx))
-    monkeypatch.setattr("indicators.wyckoff_range.detect_ar",
+    monkeypatch.setattr("indicators.wyckoff_distribution.detect_ar",
                         lambda *a, **k: _fake_ar(idx))
-    monkeypatch.setattr("indicators.wyckoff_range.detect_trend_context",
+    monkeypatch.setattr("indicators.wyckoff_distribution.detect_trend_context",
                         lambda *a, **k: _fake_trend("DOWN"))
-    monkeypatch.setattr("indicators.wyckoff_range.detect_sow_in_range",
+    monkeypatch.setattr("indicators.wyckoff_distribution.detect_sow_in_range",
                         lambda *a, **k: _fake_sow(idx, "CONFIRMED"))
 
     # Forzamos range_type DISTRIBUTION_CANDIDATE con trend DOWN -> incoherencia
@@ -120,13 +120,13 @@ def test_composition_break_without_context_on_trend_mismatch(monkeypatch):
 def test_composition_break_pending_on_sow_candidate(monkeypatch):
     df = _make_df(60)
     idx = df.index
-    monkeypatch.setattr("indicators.wyckoff_range.detect_bc",
+    monkeypatch.setattr("indicators.wyckoff_distribution.detect_bc",
                         lambda *a, **k: _fake_bc(idx))
-    monkeypatch.setattr("indicators.wyckoff_range.detect_ar",
+    monkeypatch.setattr("indicators.wyckoff_distribution.detect_ar",
                         lambda *a, **k: _fake_ar(idx))
-    monkeypatch.setattr("indicators.wyckoff_range.detect_trend_context",
+    monkeypatch.setattr("indicators.wyckoff_distribution.detect_trend_context",
                         lambda *a, **k: _fake_trend("UP"))
-    monkeypatch.setattr("indicators.wyckoff_range.detect_sow_in_range",
+    monkeypatch.setattr("indicators.wyckoff_distribution.detect_sow_in_range",
                         lambda *a, **k: _fake_sow(idx, "CANDIDATE"))
 
     result = classify_distribution_at(df, "TEST", idx[-1])

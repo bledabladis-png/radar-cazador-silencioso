@@ -5,7 +5,7 @@ from pathlib import Path
 import pytest
 import pandas as pd
 
-from indicators.wyckoff_range import (
+from indicators.wyckoff_distribution import (
     ClassifiedBreak, classify_distribution_at, classify_distribution,
 )
 

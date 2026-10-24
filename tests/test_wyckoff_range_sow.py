@@ -3,7 +3,7 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 
-from indicators.wyckoff_range import (
+from indicators.wyckoff_distribution import (
     Range, detect_sow_in_range,
 )
 

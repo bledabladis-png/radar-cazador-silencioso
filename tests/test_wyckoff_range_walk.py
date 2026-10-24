@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from indicators.wyckoff_range import walk_distribution
+from indicators.wyckoff_distribution import walk_distribution
 
 
 def _make_df(n, ticker="TEST"):

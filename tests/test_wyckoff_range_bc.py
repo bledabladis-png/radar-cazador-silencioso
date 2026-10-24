@@ -3,7 +3,7 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 
-from indicators.wyckoff_range import detect_bc, WyckoffEvent, MIN_OBS_BC
+from indicators.wyckoff_distribution import detect_bc, WyckoffEvent, MIN_OBS_BC
 
 
 def _make_df(close, high, low, volume, open_=None, ticker="TEST"):
