@@ -145,12 +145,7 @@ def _decide_event_phase(dist: ClassifiedBreak, acc: ClassifiedBreak) -> tuple[Wy
 
 
 def _dist_derived_phase(cb: ClassifiedBreak, price: float | None) -> str | None:
-    """Fase derivada de una cascada de distribucion confirmada:
-    - None si no hay cascada confirmada.
-    - DISTRIBUTION si price dentro del rango.
-    - MARKDOWN si price < support - tol (distribucion consumada).
-    - RANGE si price > resistance + tol (distribucion fallida).
-    """
+    """Fase derivada de una cascada de distribucion confirmada."""
     if cb.classification != "DISTRIBUTION_CONFIRMED":
         return None
     if price is None or cb.range_support is None or cb.range_resistance is None or cb.range_tol_abs is None:
@@ -164,12 +159,7 @@ def _dist_derived_phase(cb: ClassifiedBreak, price: float | None) -> str | None:
 
 
 def _acc_derived_phase(cb: ClassifiedBreak, price: float | None) -> str | None:
-    """Fase derivada de una cascada de acumulacion confirmada:
-    - None si no hay cascada confirmada.
-    - ACCUMULATION si price dentro del rango.
-    - MARKUP si price > resistance + tol (acumulacion consumada).
-    - RANGE si price < support - tol (acumulacion fallida).
-    """
+    """Fase derivada de una cascada de acumulacion confirmada."""
     if cb.classification != "ACCUMULATION_CONFIRMED":
         return None
     if price is None or cb.range_support is None or cb.range_resistance is None or cb.range_tol_abs is None:

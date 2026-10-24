@@ -50,6 +50,7 @@ Classification = Literal[
     "BREAKOUT_PENDING",
     "SPRING_PENDING",
     "BREAKOUT_WITHOUT_ACCUMULATION_CONTEXT",
+    "UTAD_PENDING",
 ]
 
 

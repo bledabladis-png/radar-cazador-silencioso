@@ -778,6 +778,8 @@ def classify_distribution_at(df, ticker, as_of, *,
         )
 
     # sow.status in NOT_OBSERVED / REJECTED / EXPIRED / NOT_EVALUABLE
+    # UTAD_PENDING fue descartado por pre-registro 61 (A3 falló: 26 vs 3).
+    # Los detectores UT/Spring quedan como evidencia pasiva, sin cambiar fase.
     return ClassifiedBreak(
         ticker=ticker, as_of=as_of, range_id=rng.range_id,
         classification="RANGE_ACTIVE_NO_BREAK",

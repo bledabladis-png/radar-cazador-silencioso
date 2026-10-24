@@ -661,6 +661,8 @@ def classify_accumulation_at(df, ticker, as_of, *,
             range_tol_abs=rng.tol_abs,
         )
 
+    # sos.status in NOT_OBSERVED / REJECTED / EXPIRED / NOT_EVALUABLE
+    # SPRING_PENDING fue descartado por pre-registro 61 (A3 falló: 26 vs 3).
     return ClassifiedBreak(
         ticker=ticker, as_of=as_of, range_id=rng.range_id,
         classification="RANGE_ACTIVE_NO_BREAK",
