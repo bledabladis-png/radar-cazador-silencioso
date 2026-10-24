@@ -17,6 +17,11 @@ VALID_CLASSIFICATIONS = {
     "BREAK_PENDING",
     "RANGE_ACTIVE_NO_BREAK",
     "NOT_EVALUABLE",
+    "DISTRIBUTION_FORMING",
+    "ACCUMULATION_FORMING",
+    "ACCUMULATION_CONFIRMED",
+    "BREAKOUT_PENDING",
+    "BREAKOUT_WITHOUT_ACCUMULATION_CONTEXT",
 }
 
 VALID_STRUCTURAL = {
@@ -47,6 +52,17 @@ def _check_invariants(r: ClassifiedBreak):
             v.append(f"DIST_CONFIRMED con coherence_error={r.coherence_error}")
         if r.sow_status != "CONFIRMED":
             v.append(f"DIST_CONFIRMED con sow_status={r.sow_status}")
+
+    if r.classification == "DISTRIBUTION_FORMING":
+        # Rango activo con contexto de distribucion, SOW no confirmado
+        if r.structural_state != "RANGE_ACTIVE":
+            v.append(f"DIST_FORMING con structural={r.structural_state}")
+        if r.range_type != "DISTRIBUTION_CANDIDATE":
+            v.append(f"DIST_FORMING con range_type={r.range_type}")
+        if r.trend_direction != "UP":
+            v.append(f"DIST_FORMING con trend={r.trend_direction}")
+        if r.sow_status not in ("NOT_OBSERVED", "CANDIDATE", "EXPIRED", "NOT_EVALUABLE", "REJECTED"):
+            v.append(f"DIST_FORMING con sow_status={r.sow_status}")
 
     if r.classification == "REDISTRIBUTION_CONFIRMED":
         if r.range_type != "REDISTRIBUTION_CANDIDATE":

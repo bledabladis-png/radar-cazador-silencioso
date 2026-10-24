@@ -215,38 +215,65 @@ estado.
 A1-A5, A6, B, C, 6, 7, 8, 9, F: CERRADOS. Detalle tematico en
 `04_HISTORICO.md`; estado por frente en `ESTADO_SISTEMA.md`.
 
-### 4.2. Frente Wyckoff (SOW universal cerrado, bear-confirmation abierto)
+### 4.2. Frente Wyckoff (SOW cerrado, sistema nuevo cableado)
 
-**Cierre SOW universal (2026-10-24).** 7 experimentos sobre cohortes de
-316, 268 y 3423 tickers, con detectores v1 y v2, estimadores pooled y
-within-ticker, placebos de permutacion y distribucion (100 shifts), y
-bootstrap entre anos. Resultado: senal real vs placebo (lift +0.123 vs
-placebo mean -0.077, 21.5 sd) pero NO universal (4/9 folds positivos,
-IC95 entre anos [-0.058, +0.303] cruza 0). Ningun gate probado (VIX>60,
-market<MA200+DD<-10%) cumple el criterio pre-registrado. `SOW-V6` ->
-WONT_FIX. Evidencia en `docs/auditoria/wyckoff/51-56`.
+**Sesion 2026-10-24.** Dos bloques de trabajo:
 
-**Apertura SOW-BEAR-CONFIRMATION (2026-10-24).** Patron bear real:
-3/3 anos con >10% dias bear funcionan (2018, 2020, 2022; 2025 en el
-limite con 8.8%), 0/5 anos con <10% bear funcionan. 2020 domina la
-muestra bear (473/671 SOW). No es senal autonoma: es etiqueta de
-confirmacion dentro de regimen bear ya identificado por el sistema
-(market proxy < MA200 AND drawdown desde maximo 252d < -10%). No
-activa DISTRIBUTION. Requiere contrato v1.10 firmado por auditor
-externo antes de implementar. Sin codigo en produccion hasta firma.
+**Bloque A - Cierre SOW universal + apertura bear-confirmation.**
+Cierre `SOW-V6` -> WONT_FIX tras 7 experimentos. Senal real vs placebo
+en R3000 (3423 tickers, lift +0.123 vs -0.077, 21.5 sd) pero no
+universal (4/9 folds positivos, IC95 entre anos [-0.058, +0.303] cruza
+0). Ningun gate probado cumple criterio pre-registrado.
+`SOW-BEAR-CONFIRMATION` abierto, requiere contrato v1.10 firmado por
+auditor externo. Ver `docs/auditoria/wyckoff/51-56`.
 
-- **5b.X v3 FIRMADO / FROZEN** (2026-10-03): N=60, M=30, X_ATR=0.25,
-  Y_VOL=1.10. Aplica solo a C0/v1.9. Esperando
-  `n_confirmed_H20_complete >= 550` post-2026-10-02 (~2027). Sujeto
-  a re-evaluacion si SOW-BEAR-CONFIRMATION demuestra que C0 no aporta
-  en bear.
-- **Bloqueado aparte:** 5c.4, 5d. **5e legacy CERRADO 2026-10-10.**
-- **DISTRIBUTION apagada (2026-10-22).** `WYCKOFF_SOW_* = None` en
-  `config/settings.py:139-142`. `classify_wyckoff_phase` L382 devuelve
-  `RANGE` si `sow_params is None` (fail-closed por diseno). En el
-  reporte la columna `Dist` siempre es 0%. Se mantiene hasta firma del
-  contrato v1.10 (SOW-BEAR-CONFIRMATION).
-- Expediente completo: `docs/auditoria/wyckoff/` (51-56 nuevos).
+**Bloque B - Reconstruccion del sistema Wyckoff.**
+Decision: dejar de usar ETFs sectoriales e indices como fuente de
+fases Wyckoff. Construir cascadas por stock con deteccion de
+acumulacion Y distribucion, orquestadas, cableadas al pipeline.
+
+Resultado:
+- 15 detectores en codigo: BC, AR, SOW, SC, SOS, ST (x2), UT/UTAD,
+  Spring, PSY, PS, mSOW, mSOS, LPSY, LPS.
+- Orquestador con regla simetrica de vigencia: un rango esta vigente
+  mientras el precio no lo ha roto por ningun lado. Produce fase
+  actual (DIST/MARKDOWN/ACC/MARKUP + FORMING) y fase historica
+  (event_phase) separadas.
+- Cableado a `sector_wyckoff_distribution.py` (migrado de
+  `classify_wyckoff_phase` a `classify_phase`).
+- Reporte sectorial con columnas AccF/Acc/Markup/Range/DistF/Dist/
+  Markdown/Conflict + N + Cob.
+- Titulos sectoriales anotados con composicion interna: `## Sector:
+  XLK (MARKUP)` -> `*Composicion interna (22 componentes): 3 Markup
+  (14%), 8 Range (36%), 9 DistF (41%)...*`.
+
+Estado en produccion (327 stocks, ultimo bar 2026-10-22):
+219 RANGE, 53 DIST_FORMING, 17 DIST, 17 MARKDOWN, 13 MARKUP,
+7 ACC_FORMING, 1 CONFLICT. Agregado holdings: 157 RANGE,
+35 DIST_FORMING, 12 DIST, 12 MARKDOWN, 8 MARKUP, 6 ACC_FORMING.
+
+**Pre-registros fallidos (no ocultos):**
+- `60_current_phase_rule_v1.md`: regla de vigencia unidireccional
+  fallo C1 (18.6% < 20%) en holdout S&P 500. No se ajusto. Reemplazada
+  por regla simetrica (definicion, no umbral).
+- `61_utad_spring_pending_v1.md`: UTAD_PENDING/SPRING_PENDING fallo
+  A3 (26 vs 3, ratio 8.67x > 5x por asimetria natural). No se ajusto.
+
+**Limitaciones documentadas:**
+- PSY/PS no disparan con umbrales actuales (0/50 en smoke). Deuda de
+  calibracion, no se recalibro post-hoc.
+- `sector_regime.py` (rankings) sigue usando `classify_wyckoff_phase`
+  legacy para el titulo del sector. La anotacion de composicion
+  mitiga. Migrar es decision de producto pendiente.
+- Evidencia pasiva (mSOW, mSOS, LPSY, LPS, ST) esta en `evidence`
+  pero no se renderiza en reporte.
+
+**Bloqueos externos:**
+- `SOW-BEAR-CONFIRMATION`: contrato v1.10 pendiente de auditor.
+- `WYCKOFF-5BX`: esperando `n_confirmed_H20_complete >= 550` (~2027).
+
+Documentacion completa: `docs/auditoria/wyckoff/62_sistema_completo_2026-10-24.md`.
+
 
 ### 4.3. Pendientes vivos
 

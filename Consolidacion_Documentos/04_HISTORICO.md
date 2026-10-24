@@ -1651,3 +1651,101 @@ publicacion).
 
 Suite final: 3849 passed, 5 skipped.
 
+
+## Sesion 2026-10-24 - Cierre SOW universal + reconstruccion sistema Wyckoff
+
+**Objetivo.** Cerrar el frente SOW universal (Bloque A) y reconstruir
+el sistema Wyckoff por stock con acumulacion y distribucion cableadas
+al pipeline (Bloque B).
+
+### Bloque A - Cierre SOW universal
+
+7 experimentos sobre cohortes de 316, 268 y 3423 tickers, con
+detectores v1 y v2, estimadores pooled y within-ticker, placebos de
+permutacion y distribucion (100 shifts), y bootstrap entre anos.
+
+**Resultado:** senal real vs placebo en R3000 (3423 tickers, lift
++0.123 vs -0.077, 21.5 sd) pero NO universal (4/9 folds positivos,
+IC95 entre anos [-0.058, +0.303] cruza 0). Patron bear identificado
+(3/3 anos con >10% dias bear funcionan, 0/5 con <10%), pero 2020
+domina la muestra (473/671 SOW en bear). Ningun gate probado cumple
+criterio pre-registrado.
+
+**Decision:** `SOW-V6` -> WONT_FIX. `SOW-BEAR-CONFIRMATION` abierto
+(IN_PROGRESS), pendiente contrato v1.10 firmado por auditor externo.
+
+Evidencia: `docs/auditoria/wyckoff/51-56`.
+
+### Bloque B - Reconstruccion sistema Wyckoff
+
+**Decision arquitectonica:** dejar de usar ETFs sectoriales e indices
+como fuente de fases Wyckoff. Construir cascadas por stock con
+deteccion de acumulacion Y distribucion, orquestadas.
+
+Motivacion: el sistema previo detectaba 0/327 DISTRIBUTION en stocks
+reales (`_is_distribution_candidate` no disparaba nunca), y la senal
+en ETFs sectoriales era demasiado debil para detectar distribucion
+(0/483 bars en XLK, ^GSPC, AAPL con los umbrales del BC).
+
+**Arquitectura implementada:**
+
+Modulos en `indicators/`:
+- `wyckoff_event.py`: dataclasses (WyckoffEvent, Range, ClassifiedBreak)
+- `wyckoff_distribution.py`: cascada BC -> AR -> Range -> SOW
+- `wyckoff_accumulation.py`: cascada SC -> AR -> Range -> SOS
+- `wyckoff_orchestrator.py`: arbitraje con regla simetrica de vigencia
+
+15 detectores en codigo. 4 utilies integrados como evidencia pasiva
+(mSOW, mSOS, LPSY, LPS). 2 no disparan con umbrales actuales
+(PSY, PS), documentados como deuda de calibracion.
+
+**Regla simetrica de vigencia:** un rango esta vigente mientras el
+precio no lo ha roto por ningun lado. Si rompio por arriba (dist
+fallida -> RANGE; acc consumada -> MARKUP). Si rompio por abajo (dist
+consumada -> MARKDOWN; acc fallida -> RANGE). Definicion de rango, no
+umbral.
+
+**Estado produccion (327 stocks, ultimo bar 2026-10-22):**
+- 219 RANGE, 53 DIST_FORMING, 17 DIST, 17 MARKDOWN, 13 MARKUP,
+  7 ACC_FORMING, 1 CONFLICT.
+- Agregado holdings (11 ETFs): 157 RANGE, 35 DIST_FORMING, 12 DIST,
+  12 MARKDOWN, 8 MARKUP, 6 ACC_FORMING.
+- XLK: 41% holdings en DistF. XLC: 40% DistF.
+
+**Cableado:**
+- `sector_wyckoff_distribution.py` migrado a `classify_phase`.
+- `sector_context.py` con columnas AccF/Acc/Markup/Range/DistF/Dist/
+  Markdown/Conflict.
+- `sector_annotations.py` anota titulos sectoriales con composicion
+  interna (`## Sector: XLK (MARKUP)` + `*Composicion interna (22
+  componentes): 3 Markup (14%), 8 Range (36%), 9 DistF (41%)...*`).
+
+### Pre-registros fallidos (no ocultos)
+
+- `60_current_phase_rule_v1.md`: regla de vigencia unidireccional.
+  Fallo C1 (18.6% < 20%) en holdout S&P 500. No se ajusto.
+  Reemplazada por regla simetrica (definicion, no umbral).
+- `61_utad_spring_pending_v1.md`: UTAD_PENDING/SPRING_PENDING. Fallo
+  A3 (26 vs 3, ratio 8.67x > 5x por asimetria natural del mercado).
+  No se ajusto.
+
+### Lo que NO cambia
+
+- `detect_sow` (v1.8) intacto.
+- `detect_sow_v2` en codigo, `WYCKOFF_SOW_* = None`.
+- `classify_wyckoff_phase` sigue existiendo y se usa en
+  `sector_regime.py` para el titulo del sector. Anotacion de
+  composicion mitiga la incoherencia. Migrarlo es decision de
+  producto pendiente.
+
+### Pendiente
+
+- Migrar `sector_regime.py` al nuevo orquestador.
+- Renderizar evidencia pasiva (mSOW/mSOS/LPSY/LPS/ST) en el reporte.
+- Calibrar PSY/PS con pre-registro.
+- Auditoria externa del sistema completo.
+- Contrato v1.10 (SOW-BEAR-CONFIRMATION).
+
+Documentacion completa: `docs/auditoria/wyckoff/62_sistema_completo_2026-10-24.md`.
+
+Suite final: 3946 passed, 5 skipped. Working tree limpio.

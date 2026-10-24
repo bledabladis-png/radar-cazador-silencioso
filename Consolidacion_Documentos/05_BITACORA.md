@@ -1067,3 +1067,72 @@ Para sesiones anteriores al 2026-09-24, ver `git log --oneline`. Resumen tematic
 ---
 
 **Fin de la bitacora.**
+
+### 2026-10-24 - Cierre SOW universal + reconstruccion completa sistema Wyckoff
+
+**Objetivo.** Cerrar el frente SOW universal tras 7 experimentos
+(Bloque A) y reconstruir el sistema Wyckoff por stock con acumulacion
+y distribucion cableadas al pipeline (Bloque B).
+
+**Hecho (Bloque A).**
+- `SOW-V6` -> WONT_FIX. Senal real vs placebo en R3000 (3423 tickers,
+  lift +0.123 vs -0.077, 21.5 sd), pero no universal (4/9 folds
+  positivos, IC95 entre anos [-0.058, +0.303] cruza 0).
+- `SOW-BEAR-CONFIRMATION` abierto (IN_PROGRESS). Requiere contrato
+  v1.10 firmado por auditor externo.
+- Evidencia en `docs/auditoria/wyckoff/51-56`.
+
+**Hecho (Bloque B).**
+- **Decision arquitectonica**: dejar de usar ETFs sectoriales e
+  indices como fuente de fases Wyckoff. Cascadas por stock con
+  deteccion de acumulacion y distribucion, orquestadas.
+- **15 detectores en codigo**:
+  - Distribucion: BC, AR, SOW + auxiliares ST_dist, PSY, mSOW, LPSY,
+    false_breakout_up (UT/UTAD).
+  - Acumulacion: SC, AR, SOS + auxiliares ST_acc, PS, mSOS, LPS,
+    false_breakout_down (Spring).
+- **Orquestador** (`wyckoff_orchestrator.py`) con regla simetrica de
+  vigencia (rango vigente mientras precio no lo rompio por ningun
+  lado). Estados: DIST/MARKDOWN/ACC/MARKUP + FORMING + CONFLICT +
+  INSUFFICIENT_DATA. Separa `phase` (actual) y `event_phase`
+  (historico).
+- **Cableado al pipeline**: `sector_wyckoff_distribution.py` migrado
+  de `classify_wyckoff_phase` a `classify_phase`.
+- **Reporte**: tabla sectorial con AccF/Acc/Markup/Range/DistF/Dist/
+  Markdown/Conflict + N + Cob.
+- **Anotacion de titulos sectoriales** con composicion interna de
+  holdings: `## Sector: XLK (MARKUP)` -> `*Composicion interna (22
+  componentes): 3 Markup (14%), 8 Range (36%), 9 DistF (41%)...*`.
+- **Estado en produccion**: 219 RANGE, 53 DIST_FORMING, 17 DIST,
+  17 MARKDOWN, 13 MARKUP, 7 ACC_FORMING, 1 CONFLICT (327 stocks).
+
+**Pre-registros fallidos (no ocultos).**
+- `60_current_phase_rule_v1.md`: regla de vigencia unidireccional.
+  Fallo C1 (18.6% < 20%) en holdout S&P 500. No se ajusto.
+  Reemplazada por regla simetrica (definicion, no umbral).
+- `61_utad_spring_pending_v1.md`: UTAD_PENDING/SPRING_PENDING. Fallo
+  A3 (26 vs 3, ratio 8.67x > 5x por asimetria natural del mercado).
+  No se ajusto.
+
+**Limitaciones documentadas.**
+- PSY/PS no disparan con umbrales actuales (0/50 en smoke real).
+  Deuda de calibracion, no se recalibro post-hoc.
+- `sector_regime.py` sigue usando `classify_wyckoff_phase` legacy
+  para el titulo del sector. Anotacion de composicion mitiga.
+- mSOW/mSOS/LPSY/LPS/ST estan en `evidence` pero no se renderizan.
+
+**Commits clave.** `156738cd`, `6a1eff10`, `c45ac6ab`, `3c0b13f3`,
+`37398f54`, `1d502cac`, `a8bd235a`, `17ecbe1d`, `4edba814`,
+`415487ff`, `bd81abe4`, `bfe491bf`, `40ac2d07`, `64432648`.
+
+**Pendiente.**
+- Migrar `sector_regime.py` al nuevo orquestador (decision de
+  producto).
+- Renderizar evidencia pasiva en el reporte.
+- Calibrar PSY/PS con pre-registro.
+- Auditoria externa del sistema completo.
+- Contrato v1.10 (SOW-BEAR-CONFIRMATION).
+
+**Proximo paso sugerido.** Retomar en nuevo chat con
+`docs/handoffs/HANDOFF.md` + `docs/auditoria/wyckoff/62_sistema_completo_2026-10-24.md`
+pegados al inicio.

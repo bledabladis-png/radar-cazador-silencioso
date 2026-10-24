@@ -7,105 +7,183 @@ junto con `Consolidacion_Documentos/00_ARRANQUE.md`.
 
 ---
 
-## 1. ESTADO AL CIERRE (2026-10-24)
+## 1. ESTADO AL CIERRE (2026-10-24, sesion 2)
 
 Rama:           main
 HEAD:           consultar `git log --oneline -1` (no literal; el corpus no fija SHA)
-Sincronizacion: main == origin/main tras push final
+Sincronizacion: main == origin/main
 Tests local:    ver `Consolidacion_Documentos/ESTADO_SISTEMA.md`.
-                Al cierre: 3858 passed, 5 skipped (suite completa).
-                3849 passed, 5 skipped con -m "not integration_real_data".
+                Al cierre: 3946 passed, 5 skipped (suite con -n auto).
 Validation Gate: 10/10
 Working tree:   limpio
-Gobernanza:     docs/gobernanza/REGISTRO.yaml. 124 items.
-CI de tests:    .github/workflows/ci_tests.yml (push a main, paths-ignore: data/, outputs/).
+Gobernanza:     docs/gobernanza/REGISTRO.yaml
+CI de tests:    .github/workflows/ci_tests.yml (push a main, paths-ignore: data/, outputs/)
 
-**Foco de la sesion 2026-10-24:** cierre del frente SOW universal tras
-7 experimentos. `SOW-V6` -> WONT_FIX. Apertura de `SOW-BEAR-CONFIRMATION`
-(IN_PROGRESS, pendiente contrato v1.10 + auditor externo).
-`WYCKOFF_SOW_* = None` sin cambios.
+**Dos bloques de trabajo en esta sesion:**
+
+**Bloque A (cierre SOW universal + apertura bear-confirmation):**
+Cierre `SOW-V6` -> WONT_FIX tras 7 experimentos sin cumplir criterio
+pre-registrado. Apertura `SOW-BEAR-CONFIRMATION` (IN_PROGRESS). Ver
+HANDOFF §2.1 y docs/auditoria/wyckoff/51-56.
+
+**Bloque B (reconstruccion completa del sistema Wyckoff):**
+Decision arquitectonica: dejar de usar ETFs sectoriales e indices como
+fuente de fases Wyckoff. Construir cascadas por stock con deteccion de
+acumulacion Y distribucion, orquestadas, cableadas al pipeline.
+Resultado: 15 detectores en codigo, orquestador con fase actual
+derivada, cableado completo a sector_wyckoff_distribution.py + reporte.
+Ver HANDOFF §2.2 y docs/auditoria/wyckoff/60-62.
 
 ---
 
-## 2. SESIONES 2026-10-22 a 2026-10-24
+## 2. SESIONES 2026-10-24
 
-### 2.1. 2026-10-22: 11 bugs + Wyckoff B5/B3 (cierre tardio)
+### 2.1. Bloque A — Cierre SOW universal + apertura bear-confirmation
 
-Ver `05_BITACORA.md` L92. Commits `d405d539` a `1cc8387a`.
-
-### 2.2. 2026-10-23: scheduled target 2026-10-22 + autonomia + cierre documental
-
-Ver `05_BITACORA.md` L47. Commits:
-- `49248879` — cierre documental 22-23 oct (6 ficheros).
-- `f677acb6` — SHA real en `REP-AUDIT-20261023-SCHEDULED-VERIFY`.
-- `2374b605` — referencias traspaso inexistente -> HANDOFF.
-- `838826af` — 3 items auditoria reporte 2026-10-22.
-- `7e1582a7` — 4 notas cruzadas en `src/report/` (slpm, sector_context, market_context, volatility_mte).
-- `968bcdcc` — cierre `NOTAS-CRUZADAS` con SHA real.
-
-### 2.3. 2026-10-24: cierre SOW universal + apertura bear-confirmation
-
-**Commits clave:**
-- `e7327463` — `purged_kfold_sow.py` con criterio pre-registrado.
-- `520a8db7` — SOW v2 lift within-ticker.
-- `2dcc3325` — C1-M5 con cohorte original.
-- `75ba6945` — C1-M10 (M=10 rompe semantica).
-- `548d2773` — C1-M5: 2 folds significativos (2018, 2020).
-- `b35495c8` — `SOW-V6` IN_PROGRESS tras diagnostico.
-- `be2f7670` — cohorte reservada S&P 500 (268 tickers).
-- `a3987f1c` — placebo_shift adaptativo.
-- `c5485337` — placebo date-shift global.
-- `61556a74`/`0c2455ab` — cohorte R3000 + vectorizacion.
-- `3d1a215d` — resultado R3000 (FUNCIONA por criterio, pero ventana no evento).
-- `b542d381` — `detect_sow_v2` (gate distribution).
-- `260569bc`/`281cb378` — event study.
-- `81962b59` — `SOW-V6` WONT_FIX + `SOW-BEAR-CONFIRMATION` IN_PROGRESS.
-- `1ffc299b` — script descarga R3000 reproducible.
-- `ff8f5a6f` — fix H7 en detect_sow_v2 + anclas cohorte.
+**Commits clave (antes del HEAD actual del bloque B):**
+- `e7327463` — purged_kfold_sow.py con criterio pre-registrado
+- `520a8db7` — SOW v2 lift within-ticker
+- `2dcc3325` — C1-M5 cohorte original
+- `548d2773` — C1-M5: 2 folds significativos (2018, 2020)
+- `be2f7670` — cohorte reservada S&P 500 (268 tickers)
+- `c5485337` — placebo date-shift global
+- `61556a74`/`0c2455ab` — cohorte R3000 + vectorizacion
+- `3d1a215d` — resultado R3000
+- `b542d381` — detect_sow_v2 (gate distribution)
+- `260569bc`/`281cb378` — event study v1 vs v2
+- `81962b59` — SOW-V6 WONT_FIX + SOW-BEAR-CONFIRMATION IN_PROGRESS
+- `ff8f5a6f` — H7 en detect_sow_v2 + anclas
 
 **Descubrimientos:**
-- SOW universal (C1-M5, M=5) tiene senal real vs placebo en 3423 tickers (+0.123 vs -0.077, 21.5 sd).
-- Pero NO es universal: 4/9 folds positivos, IC95 entre anos [-0.058, +0.303].
-- Patron bear real: 3/3 anos con >10% dias bear funcionan, 0/5 con <10%.
-- 2020 domina (473/671 SOW en bear son de 2020).
-- Ningun gate probado (VIX>60, bear) cumple criterio.
+- SOW universal (C1-M5, M=5): senal real vs placebo en R3000 (3423
+  tickers, lift +0.123 vs -0.077, 21.5 sd) pero NO universal (4/9
+  folds positivos, IC95 entre anos [-0.058, +0.303] cruza 0).
+- Patron bear: 3/3 anos con >10% dias bear funcionan, 0/5 con <10%.
+  2020 domina la muestra (473/671 SOW en bear).
+- Ningun gate probado (VIX>60, market bear) cumple criterio
+  pre-registrado.
+- Pre-registro v1 (regla de vigencia unidireccional) fallo en holdout
+  S&P 500 (C1=18.6% < 20%). No se ajusto. Documentado en 60.
 
-**Evidencia archivada:**
-- `docs/auditoria/wyckoff/51_purged_kfold_2026-10-23/` — C0-M30, C1-M5 v1.
-- `docs/auditoria/wyckoff/52_purged_kfold_c1_2026-10-24/` — C1-M5 result.
-- `docs/auditoria/wyckoff/53_dictamen_2026-10-24.md` — dictamen SOW-V6 (pre-SOW).
-- `docs/auditoria/wyckoff/55_reserved_r3000_2026-10-24/` — R3000 result.
-- `docs/auditoria/wyckoff/56_event_study_2026-10-24/` — event study v1 vs v2.
+### 2.2. Bloque B — Reconstruccion completa del sistema Wyckoff
 
-**Cambios en codigo:**
-- `indicators/wyckoff_v1.py`: anadida `detect_sow_v2` (gate distribution). `detect_sow` intacto.
-- `scripts/calibrate_wyckoff_sow_5b4bis.py`: anadida `compute_sow_cache_v2`.
-- `config/settings.py`: `WYCKOFF_SOW_* = None` sin cambios.
-- Tests: 3858 passed, 5 skipped (era 3849 antes). 9 tests nuevos (detect_sow_v2 + H7).
+**Commits clave (rama main, todos pusheados):**
+- `156738cd` — refactor: wyckoff_range -> wyckoff_distribution +
+  extraer dataclasses a wyckoff_event
+- `6a1eff10` — wyckoff_accumulation: SC->AR->Range->SOS->ACCUMULATION
+- `c45ac6ab` — orquestador de fases con CONFLICT explicito
+- `3c0b13f3` — arbitraje por resolution_event_date + range_active_at
+- `37398f54` — regla simetrica de vigencia + MARKUP/MARKDOWN
+- `1d502cac` — ST (Secondary Test) en ambas cascadas
+- `a8bd235a` — detect_false_breakout_up/down (UT/UTAD y Spring)
+- `17ecbe1d` — descartar UTAD_PENDING/SPRING_PENDING tras fallo
+  pre-registro 61
+- `4edba814` — PSY/PS/mSOW/mSOS/LPSY/LPS como evidencia pasiva
+- `415487ff` — cablear pipeline a classify_phase + FORMING
+- `bd81abe4` — integrar mSOW/mSOS/LPSY/LPS como evidencia pasiva
+- `bfe491bf` — ST integrado como evidencia pasiva
+- `40ac2d07` — anotar titulos sectoriales con composicion interna
+- `64432648` — limpieza scripts diagnostico temporales
+
+**Arquitectura nueva:**
+
+Modulos en `indicators/`:
+- `wyckoff_event.py` — dataclasses comunes: WyckoffEvent, Range,
+  ClassifiedBreak, EventStatus, RangeState, RangeType, Classification
+- `wyckoff_distribution.py` — cascada distribucion:
+  BC -> AR -> Range -> SOW + detectores auxiliares (ST_dist, PSY,
+  mSOW, LPSY, false_breakout_up)
+- `wyckoff_accumulation.py` — cascada acumulacion simetrica:
+  SC -> AR -> Range -> SOS + auxiliares (ST_acc, PS, mSOS, LPS,
+  false_breakout_down)
+- `wyckoff_orchestrator.py` — orquestador: corre ambas cascadas,
+  arbitra con regla simetrica de vigencia, emite phase + event_phase
+
+**Estados finales del orquestador:**
+- `phase` (fase ACTUAL, deriva de event_phase + posicion del precio):
+  - `DISTRIBUTION` — dist confirmada, precio dentro del rango
+  - `MARKDOWN` — dist confirmada, precio bajo support-tol (consumada)
+  - `ACCUMULATION` — acc confirmada, precio dentro
+  - `MARKUP` — acc confirmada, precio sobre resistance+tol (consumada)
+  - `DISTRIBUTION_FORMING` — rango activo con contexto dist, sin SOW
+  - `ACCUMULATION_FORMING` — rango activo con contexto acc, sin SOS
+  - `RANGE` — dist fallida / acc fallida / sin cascada activa
+  - `CONFLICT` — dos estructuras compitiendo
+  - `INSUFFICIENT_DATA` — falta de datos real
+- `event_phase` (fase de EVENTO, historica, sin vigencia por precio)
+- `phase_since` — fecha de resolucion del episodio ganador
+- `current_phase_basis` — justificacion textual
+
+**Cableado al pipeline:**
+- `sector_wyckoff_distribution.py` migrado de `classify_wyckoff_phase`
+  (legacy) a `classify_phase` (nuevo orquestador).
+- `VALID_PHASES` ampliado con FORMING.
+- `sector_context.py` renderiza columnas: Sector | AccF | Acc | Markup
+  | Range | DistF | Dist | Markdown | Conflict | N | Cob Wyckoff.
+- `run.py` postprocesa `leader_lines` con
+  `annotate_sector_titles_with_composition`: cada titulo
+  `## Sector: XLK (MARKUP)` se anota con la composicion interna de
+  holdings: `*Composicion interna (22 componentes): 3 Markup (14%),
+  8 Range (36%), 9 DistF (41%), 1 Dist (5%), 1 Markdown (5%)*`.
+
+**Estado en produccion (ultimo bar 2026-10-22, 327 stocks):**
+- 219 RANGE, 53 DISTRIBUTION_FORMING, 17 DISTRIBUTION,
+  17 MARKDOWN, 13 MARKUP, 7 ACCUMULATION_FORMING, 1 CONFLICT.
+- Agregado holdings: 157 RANGE, 35 DISTRIBUTION_FORMING,
+  12 DISTRIBUTION, 12 MARKDOWN, 8 MARKUP, 6 ACCUMULATION_FORMING.
+- XLK: 41% DistF (presion interna fuerte aunque el ETF diga MARKUP).
+- XLC: 40% DistF.
+
+**Pre-registros fallidos (no ocultos):**
+- `60_current_phase_rule_v1.md`: regla de vigencia unidireccional.
+  Fallo C1 (18.6% < 20%) en holdout. No se ajusto. Se reemplazo por
+  regla simetrica (definicion de rango, no umbral).
+- `61_utad_spring_pending_v1.md`: UTAD_PENDING/SPRING_PENDING.
+  Fallo A3 (26 vs 3, ratio 8.67x > 5x por asimetria natural del
+  mercado). No se ajusto. Los detectores quedan en codigo, sin
+  cambiar classification.
+
+**Limitaciones documentadas:**
+- PSY y PS no disparan con umbrales actuales (0/50 en smoke sobre
+  stocks reales). Documentado como deuda de calibracion. NO se
+  recalibro post-hoc (evita overfitting).
+- `sector_regime.py` (rankings) sigue usando `classify_wyckoff_phase`
+  legacy para el titulo del sector. La anotacion de composicion
+  interna del leader_lines mitiga la incoherencia.
+- `mSOW`/`mSOS`/`LPSY`/`LPS` estan en `evidence` de cada cascada
+  pero no se renderizan en el reporte.
 
 ---
 
 ## 3. FRENTES CERRADOS
 
-- **A1-A5, A6, B, C, 6, 7, 8, 9, F, H1-H18**: cerrados.
-- **5e legacy Wyckoff**: cerrado 2026-10-10.
-- **SOW universal (SOW-V6)**: cerrado 2026-10-24 como WONT_FIX.
-  Razon: senal real vs placebo pero no universal. 4/9 folds positivos,
-  IC95 entre anos cruza 0. Ningun gate probado cumple criterio pre-registrado.
-
----
+- H1-H19, A1-A6, B, C, F, E: cerrados.
+- 5e legacy Wyckoff: cerrado 2026-10-10.
+- `SOW-V6`: WONT_FIX 2026-10-24.
+- `REP-AUDIT-20261020-REPORT-REVIEW-EXTERNAL`: FIXED.
+- `UTAD_PENDING`/`SPRING_PENDING`: DESCARTADOS por pre-registro 61.
+- Regla de vigencia unidireccional: DESCARTADA por pre-registro 60.
 
 ## 4. PENDIENTES VIVOS
 
 ### 4.1. SOW-BEAR-CONFIRMATION (IN_PROGRESS)
 
 - Requiere contrato v1.10 firmado por auditor externo antes de implementar.
-- Semantica: etiqueta de confirmacion dentro de regimen bear ya identificado.
-- No activa DISTRIBUTION. No modifica `classify_wyckoff_phase`.
 - Siguiente accion: redactar `docs/auditoria/wyckoff/57_contrato_v1_10.md`.
 - Sin codigo en produccion hasta firma.
 
-### 4.2. Items OPEN observacionales (con fecha)
+### 4.2. Deuda tecnica abierta (nueva, sesion 2026-10-24)
+
+- **Migrar `sector_regime.py`** al nuevo orquestador (decision de producto:
+  ¿fase del ETF legacy o fase dominante de holdings?).
+- **Renderizar evidencia pasiva** (`msow`, `msos`, `lpsy`, `lps`,
+  `st_dist`, `st_acc`) en el reporte. Actualmente estan en `evidence`
+  pero no se muestran.
+- **Calibrar PSY/PS** con pre-registro formal (actualmente 0/50 disparos).
+- **Auditoria externa del sistema Wyckoff nuevo completo** (15
+  detectores + orquestador + cableado).
+
+### 4.3. Items OPEN observacionales (fechas)
 
 | Item | Fecha | Accion |
 |---|---|---|
@@ -114,20 +192,10 @@ Ver `05_BITACORA.md` L47. Commits:
 | REP-AUDIT-20261020-CRON-SLOTS-OBS | 2026-11-10 | Revision runs 20-10 a 10-11 |
 | REP-AUDIT-20261020-SCHEDULER-DELAYS | 2026-11-10 | p95 delays |
 
-### 4.3. BLOCKED_EXTERNAL
+### 4.4. BLOCKED_EXTERNAL
 
 - `C2-920`: discrepancia 920 en baseline IAE. Auditor externo.
 - `WYCKOFF-5BX`: esperando `n_confirmed_H20_complete >= 550` (~2027).
-  Sujeto a re-evaluacion si SOW-BEAR-CONFIRMATION demuestra que C0 no
-  aporta en bear.
-
-### 4.4. Deudas estructurales
-
-- HANDOFF se edita a mano (no hay generador automatico).
-- Modulos no integrados: `target_universe`, `timestamps`, `catalog_pit`,
-  `absence`, `validate_membership`, `cusip_resolver.resolve_cusip`.
-- `reporting_dedup` (P65/P66): capa de diagnostico por diseno.
-- 5 tests skipped: diseno, no deuda.
 
 ---
 
@@ -138,20 +206,17 @@ Ver `05_BITACORA.md` L47. Commits:
     git status -sb
     py scripts\generate_estado_sistema.py
     py scripts\verifica_gobernanza.py
-    py scripts\genera_indice_auditorias.py
     py scripts\poda_bitacora.py --check
-    py -m pytest tests\ -q --tb=line -m "not integration_real_data"
+    py -m pytest tests\ -q --tb=line -m "not integration_real_data and not integration_slow"
     py -m pyflakes . ; py -m compileall . -q
 
 Esperado:
 - HEAD = el que devuelva `git log --oneline -1`.
-- ahead 0, behind 0 (o behind N si el bot ha pusheado; `git pull --ff-only`).
+- ahead 0, behind 0.
 - Working tree limpio.
-- Tests: ver `ESTADO_SISTEMA.md`. Referencia con filtro: 3849 passed + 5
-  skipped + 9 deselected. Snapshot sin filtro: 3858 (publicado en
-  ESTADO_SISTEMA.md).
+- Tests: ver `ESTADO_SISTEMA.md`. Referencia: 3946 passed + 5 skipped
+  (con `-n auto`).
 - Gobernanza: `[OK] Gobernanza coherente`.
-- Indice H1-H18: `[OK] indice actualizado`.
 - Bitacora: `[OK] Bitacora dentro de la regla`.
 - pyflakes silencio, compileall OK.
 
@@ -159,96 +224,54 @@ Esperado:
 
 ## 6. NOTAS CRITICAS
 
-### 6.1. SOW universal cerrado (2026-10-24)
-
-No reabrir SOW-V6 como "SOW universal". Los datos no lo soportan:
-
-Senal real vs placebo en cohorte reservada R3000 (3423 tickers):
-lift +0.123 vs placebo -0.077 (21.5 sd), pero 4/9 folds positivos.
-
-IC95 entre anos: [-0.058, +0.303]. Cruza cero.
-
-3 gates probados (distribution candidate, VIX>60, market bear):
-ninguno cumple criterio pre-registrado (CI95_lower > 0, 7/9 folds).
-
-Reabrir solo con nuevo contrato v1.10 (bear-confirmation) o nueva
-variable Y o nuevo dataset.
-
-### 6.2. SOW-BEAR-CONFIRMATION no es shadow mode
-
-El usuario veta explicitamente shadow mode como "aislado en paralelo
-sin tocar produccion". La semantica de bear-confirmation es distinta:
-es una etiqueta de confirmacion que se integra en el reporte, no una
-senal autonomia que se evalua en paralelo. Requiere contrato v1.10
-y auditor externo antes de implementar.
-
-### 6.3. Regla de los placebos con distribucion
-
-Si en una proxima sesion se testea un detector:
-
-Placebo A: permutacion intra-ticker (B=100).
-
-Placebo B: date-shift global (B=100). No un solo shift.
-
-Criterio: lift real > mean(placebo) + 2*sd(placebo).
-
-Sanity check: pb != lift (raise RuntimeError).
-
-Un solo shift (como en el primer experimento) no es placebo, es ruido.
-
-### 6.4. bootstrap entre anos, no por fecha
-
-block_bootstrap_by_date sesga el IC hacia arriba porque subrepresenta
-anos con lift bajo. El IC oficial para "senal estable entre regimenes"
-debe ser bootstrap_by_year (9 unidades) o t-interval entre anos.
-Ambos producen ICs mas anchos que el bootstrap por ticker.
-
-### 6.5. Anclas temporales obligatorias
-
-Toda fecha literal en src/ o scripts/ (salvo calibrate_*,
-walk_forward_*, validate_wyckoff_*, download_extended_history,
-power_analysis_5bX, iae_*) debe estar en ANCLAS.yaml.
-El test test_anclas_temporales falla si no. Anclas nuevas 2026-10-24:
-RESERVED_COHORT_START, RESERVED_COHORT_END.
-
-### 6.6. H7 patron
-
-test_audit_contracts_rolling_nan inspecciona texto, no ejecucion.
-rolling(N, min_periods=N) debe ir precedido de .dropna() en la misma
-linea o falla aunque la serie ya venga de dropna. Patron documentado
-en cabecera de wyckoff_v1.py.
-
-### 6.7. Scripts de descarga reproducibles
-
-scripts/fetch_reserved_cohort.py (S&P 500 -> 268 tickers) y
-scripts/fetch_reserved_cohort_r3000.py (US-Stock-Symbols -> 3423).
-Los parquets resultantes estan gitignored. Scripts versionados para
-reproducibilidad.
-
----
+- **Verificar en CI, no solo en local.** Tests con `tmp_path` y fixtures
+  sinteticos.
+- **Un cambio = una verificacion = un commit.**
+- **Verificar EOL (LF/CRLF) y BOM antes de cada patch.**
+- **Here-strings >20 lineas o >5 `$` -> fichero temporal.**
+- **Receipt fail-closed (enmienda v1.1).** BLOCKED o UNAVAILABLE -> no
+  se emite receipt.
+- **Contrato EQUITY_EOD `critical=True`.** `coverage_at_session < 0.90`
+  bloquea publicacion.
+- **Gobernanza canonica.** Items a `docs/gobernanza/REGISTRO.yaml`.
+  El HANDOFF es vista derivada.
+- **Anclas temporales.** Fechas literales a `ANCLAS.yaml`.
+- **Wyckoff sistema nuevo:** ver `docs/auditoria/wyckoff/62_sistema_completo_2026-10-24.md`.
+  Cascadas de distribucion y acumulacion independientes, orquestador
+  con regla simetrica de vigencia, FORMING para estados tempranos,
+  MARKUP/MARKDOWN como estados derivados.
+- **Regla simetrica de vigencia:** un rango esta vigente mientras el
+  precio NO lo ha roto por NINGUN lado. Si rompio por arriba (dist
+  fallida, RANGE) o por abajo (dist consumada, MARKDOWN). Definicion
+  de rango, no umbral.
+- **FORMING vs CONFIRMED:** FORMING = rango activo sin SOW/SOS
+  confirmado. Es senal temprana, no confirmacion. El reporte lo
+  distingue (columnas AccF/DistF separadas de Acc/Dist).
+- **CONFLICT es estado honesto:** dos estructuras compitiendo, no se
+  elige una sin mas evidencia.
+- **Pre-registros fallidos NO se ajustan.** Ver 60 y 61. La leccion es
+  que un pre-registro que falla documenta una hipotesis rechazada, no
+  una regla a retocar.
+- **`sector_regime.py` sigue usando `classify_wyckoff_phase` legacy**
+  para el titulo del sector. La anotacion de composicion interna en
+  `leader_lines` mitiga la incoherencia. Migrar es decision de
+  producto pendiente.
 
 ## 7. REFERENCIAS
 
-Consolidacion_Documentos/00_ARRANQUE.md — contexto de arranque.
+Corpus normativo: `Consolidacion_Documentos/` (12 docs).
+Gobernanza: `docs/gobernanza/` (README, REGISTRO.yaml, ANCLAS.yaml).
+Contrato del gate: `docs/auditoria/daily_run_gate_contrato_v1.md` +
+`daily_run_gate_enmienda_v1_1.md` + `daily_run_gate_enmienda_v1_2.md`.
+Expediente Wyckoff: `docs/auditoria/wyckoff/` (51-62 del 2026-10-24).
 
-Consolidacion_Documentos/01_METODO.md — metodo de patch.
+**Documentos clave para el traspaso:**
+- `62_sistema_completo_2026-10-24.md` — mapa tecnico del sistema
+  Wyckoff nuevo (modulos, detectores, orquestador, cableado).
+- `60_current_phase_rule_v1.md` — pre-registro v1 fallido (regla
+  vigencia unidireccional).
+- `61_utad_spring_pending_v1.md` — pre-registro UTAD_PENDING fallido.
 
-Consolidacion_Documentos/01b_PATRONES.md — patrones de bug.
+---
 
-Consolidacion_Documentos/02_ARQUITECTURA.md — mapa del sistema.
-
-Consolidacion_Documentos/03_IAE.md — subsistema IAE.
-
-Consolidacion_Documentos/04_HISTORICO.md — cronologia tematica.
-
-Consolidacion_Documentos/05_BITACORA.md — sesiones recientes.
-
-Consolidacion_Documentos/ESTADO_SISTEMA.md — snapshot auto-generado.
-
-docs/gobernanza/REGISTRO.yaml — items canonicos.
-
-docs/gobernanza/ANCLAS.yaml — anclas temporales.
-
-docs/auditoria/wyckoff/ — 56+ ficheros del expediente.
-
-Fin del HANDOFF.
+**Fin del handoff.**
