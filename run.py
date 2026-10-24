@@ -149,7 +149,7 @@ def main():
     sector_concentration_df = sm['sector_concentration_df']
     leader_representativeness_df = sm['leader_representativeness_df']
 
-    compute_wyckoff_holdings(df_stocks, holdings_df)
+    wh_tables = compute_wyckoff_holdings(df_stocks, holdings_df)
 
     bm = compute_breadth_metrics(df_stocks, df_market, holdings_df,
                                   reference_date=reference_date,
@@ -329,7 +329,8 @@ def main():
                           data_quality_data=data_quality_df,
                           iae_section=iae_section,
 
-                          all_signals=all_signals, provenance=_provenance)
+                          all_signals=all_signals, provenance=_provenance,
+                          wyckoff_holdings_data=wh_tables)
     print("Reporte generado en outputs/report/reporte_diario.md")
 
     # Side effects + cobertura europea (C1-10 + C2-12)
