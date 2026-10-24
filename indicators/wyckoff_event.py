@@ -28,7 +28,8 @@ RangeState = Literal[
 ]
 
 RangeType = Literal[
-    "DISTRIBUTION_CANDIDATE", "REDISTRIBUTION_CANDIDATE", "UNCLASSIFIED",
+    "DISTRIBUTION_CANDIDATE", "REDISTRIBUTION_CANDIDATE",
+    "ACCUMULATION_CANDIDATE", "UNCLASSIFIED",
 ]
 
 FormationPath = Literal["BC_AR", "REPEATED_TESTS"]
@@ -46,6 +47,7 @@ Classification = Literal[
     "NOT_EVALUABLE",
     # Valores exclusivos de la cascada de acumulacion:
     "ACCUMULATION_CONFIRMED",
+    "BREAKOUT_PENDING",
     "SPRING_PENDING",
     "BREAKOUT_WITHOUT_ACCUMULATION_CONTEXT",
 ]
