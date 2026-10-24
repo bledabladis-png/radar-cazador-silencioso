@@ -1814,3 +1814,91 @@ items:
   siguiente_accion: |
     Redactar docs/auditoria/wyckoff/57_contrato_v1_10.md con la
     semantica bear-confirmation. Sin codigo hasta firma del auditor.
+
+- id: CURRENT-PHASE-BASIS-CSV
+  tipo: deuda_tecnica
+  ciclo: '2026-10-24'
+  estado: OPEN
+  descripcion: |
+    Los 6 CSVs de holdings (wyckoff_usa_sector_acc/dist,
+    usa_index_acc/dist, eu_index_acc/dist) tienen columna `basis`
+    con `current_phase_basis` del orquestador (justificacion textual
+    de la fase). El reporte renderiza la tabla sin la columna `basis`.
+    Decision de producto pendiente: añadir la columna al reporte o
+    dejarla solo en el CSV descargable.
+  siguiente_accion: |
+    Decidir si `basis` va al reporte (columna nueva en la tabla) o se
+    deja solo en el CSV. Si va al reporte, puede alargar las filas
+    significativamente ("dist vigente: price 98 dentro del rango").
+    Actualizar `src/report/wyckoff_holdings.py` en consecuencia.
+
+- id: ACCUMULATION-ZERO
+  tipo: documentacion
+  ciclo: '2026-10-24'
+  estado: OPEN
+  descripcion: |
+    En produccion (327 stocks, ultimo bar 2026-10-22) hay 0 tickers
+    con fase actual ACCUMULATION. No es bug: el estado "SOS confirmado
+    Y precio dentro del rango" es transitorio por diseno (dura sesiones,
+    no semanas). La regla simetrica de vigencia lo abandona rapidamente
+    si el precio rompe por abajo (RANGE fallida) o por arriba (MARKUP).
+  siguiente_accion: |
+    Anadir nota en `docs/auditoria/wyckoff/62_sistema_completo_2026-10-24.md`
+    y/o en el reporte explicando que ACCUMULATION=0 es esperado en
+    regimenes alcistas prolongados. No es fallo de deteccion.
+
+- id: VALIDATION-GATE-NO-STANDALONE
+  tipo: deuda_tecnica
+  ciclo: '2026-10-24'
+  estado: OPEN
+  descripcion: |
+    El Validation Gate (10 checks) no es reproducible standalone. No
+    hay script CLI ni target pytest. `run_validation_gate` vive en
+    `src/pipeline/validation_gate.py` y se invoca solo dentro de
+    `run.py::main()` con datos intermedios del pipeline. El "10/10"
+    del corpus es estado del ultimo run productivo, no un comando
+    ejecutable a demanda.
+  siguiente_accion: |
+    Opciones: (a) documentar como "estado del ultimo run" sin wrapper,
+    aceptar que no hay comando reproducible; (b) escribir
+    `scripts/run_validation_gate.py` que reconstruya los inputs desde
+    artefactos (coste alto, dudoso valor porque los checks de holdings
+    necesitan wh_tables en memoria); (c) aceptar (a). Item abierto para
+    decidir.
+
+- id: IWM-HOLDINGS-EXPANSION
+  tipo: frente
+  ciclo: '2026-10-24'
+  estado: OPEN
+  descripcion: |
+    IWM (Russell 2000) excluido del sistema holdings-based. Sus 1977
+    holdings incluyen microcaps; el top-20 por weight representa solo
+    6.2% del peso del indice. Clasificar 20 microcaps y llamarlo
+    "Russell 2000" seria enganoso. Decision 2026-10-24 (plan 63):
+    fuera del sistema hasta que se pueda ampliar la muestra.
+  siguiente_accion: |
+    Sub-fase de descarga: ampliar la lista de holdings de IWM hasta
+    cubrir >=50% del peso. Protocolo obligatorio de 6 pasos:
+    (1) descargar OHLCV del proveedor; (2) filtrar por calendario
+    bursatil NYSE; (3) verificar 0 filas H=L=C; (4) pasar por
+    resolve_effective_date; (5) registrar writer en output_registry;
+    (6) test que verifique 0 fechas no bursatiles. Sin fecha.
+
+- id: SECTOR-REGIME-MATRIX-STRUCTURE-POSITIVE
+  tipo: auditoria_interna
+  ciclo: '2026-10-24'
+  estado: OPEN
+  descripcion: |
+    C5.1 cambio la derivacion de `structure_positive` en
+    `sector_regime_matrix.py`: antes `_phase_positive(phase)` sobre la
+    fase del ETF sectorial, ahora `(pct_accumulation + pct_markup) >= 50`
+    desde `sector_wyckoff_distribution_df`. La semantica de las
+    lecturas (Alineacion positiva / Constructivo / Mixto / Debil /
+    Debilidad alineada) no se ha validado empiricamente contra el
+    nuevo calculo. Posibles cambios de lectura en regimenes mixtos.
+  siguiente_accion: |
+    Comparar un run de referencia: matriz con `structure_positive`
+    viejo (fase ETF) vs nuevo (holdings). Cuantificar cuantos sectores
+    cambian de lectura. Si el cambio es grande, documentar la nueva
+    semantica en 02_ARQUITECTURA §6 o en un doc de auditoria. Sin
+    fecha; no bloquea nada.
