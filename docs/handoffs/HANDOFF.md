@@ -161,16 +161,12 @@ LYXI.
 - C4.4: cerrado esta sesion.
 - `VERIFY-LEADER-SELECTION-ROTO`: FIXED 2026-10-25 (commit `37bca52d`).
 - `C4.5-SLPM-STRINGS-RESIDUALES`: FIXED 2026-10-25 (commit `c1e4af2e`).
+- `STRUCTURAL-ENGINE-LEADER-BREADTH-ZOMBIE`: FIXED 2026-10-25 (commit `7679d3fb`).
 
 ## 4. PENDIENTES VIVOS
 
 ### 4.2. Deudas tecnicas OPEN (sesion 3)
 
-- `STRUCTURAL-ENGINE-LEADER-BREADTH-ZOMBIE`: `compute_structural_score`
-  acepta `leader_breadth=0.5` como parametro con default. Nadie lo
-  pasa. Retirarlo requiere auditar `STRUCTURAL_WEIGHTS` y rebalancear
-  pesos. Deuda preexistente (introducida al retirar
-  `compute_leader_breadth_v2` en C3.1).
 - `CURRENT-PHASE-BASIS-CSV`: columna `basis` no va al reporte.
 - `ACCUMULATION-ZERO`: estado transitorio por diseno.
 - `VALIDATION-GATE-NO-STANDALONE`: gate no reproducible standalone.

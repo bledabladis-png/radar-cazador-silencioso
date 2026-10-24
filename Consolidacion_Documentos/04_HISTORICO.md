@@ -2091,3 +2091,34 @@ detecto por problemas del propio PowerShell al filtrar. Afecta a
 alcance: rastrear donde se rompe la cadena (probablemente el
 escritor del reporte), fix, test de contrato y extension del
 chequeo A3.
+
+## Sesion 2026-10-25 (continuacion 2) - Cierre STRUCTURAL-ENGINE-LEADER-BREADTH-ZOMBIE
+
+Commit `7679d3fb` cierra el item.
+
+**Diagnostico.** En Q1.6 de la auditoria inicial se confirmo que
+el cuerpo de `compute_structural_score` NO usa `leader_breadth`.
+`STRUCTURAL_WEIGHTS` tiene solo 3 claves (rs_structural 0.50,
+flow_structure 0.30, persistence 0.20, suma 1.0). El parametro era
+residual de la retirada de `compute_leader_breadth_v2` en C3.1.
+Cosmetico puro: no sesga el calculo, no hay offset. Frente abierto
+en sesion 3 como prioridad 2 por precaucion; degradado a prioridad 3
+tras verificacion.
+
+**Retirado.**
+- `leader_breadth=0.5` de la firma de
+  `regimes/structural_engine.py::compute_structural_score`.
+
+**Verificacion.** AST de 10 llamadores (9 en tests + engines.py);
+todos args=2 o kwargs explicitos sin `leader_breadth`. Docstring ya
+correcto. 28 tests focalizados verdes, 3705/2 suite completa,
+pyflakes ., compileall, `git diff --check` limpio.
+
+**Estado de la lista de deudas de sesion 3.** C4.5 FIXED,
+VERIFY-LEADER-SELECTION-ROTO FIXED, STRUCTURAL-ENGINE-LEADER-
+BREADTH-ZOMBIE FIXED. Quedan CURRENT-PHASE-BASIS-CSV,
+ACCUMULATION-ZERO, VALIDATION-GATE-NO-STANDALONE,
+IWM-HOLDINGS-EXPANSION, SECTOR-REGIME-MATRIX-STRUCTURE-POSITIVE,
+PODA-BITACORA-DIA-EN-CURSO (todos documentales u observacionales,
+sin codigo pendiente en produccion salvo REPORT-ENCODING-MOJIBAKE-ADC
+nueva deuda).

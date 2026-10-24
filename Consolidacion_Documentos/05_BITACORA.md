@@ -44,6 +44,36 @@ Al cerrar una sesion nueva, se anade arriba (las mas recientes primero). Si hay 
 
 ## 3. SESIONES
 
+### 2026-10-25 (sesion 4 continuacion 2) - Cierre STRUCTURAL-ENGINE-LEADER-BREADTH-ZOMBIE
+
+**Objetivo.** Cerrar la ultima deuda de codigo de sesion 3.
+
+**Hecho.**
+- Retirado `leader_breadth=0.5` de la firma de
+  `regimes/structural_engine.py::compute_structural_score`.
+- Confirmado en auditoria que el cuerpo NO usaba el parametro:
+  `STRUCTURAL_WEIGHTS` = {rs_structural 0.50, flow_structure 0.30,
+  persistence 0.20}, suma 1.0. Cosmetico puro, no sesga el calculo.
+- AST: 10 llamadores, todos sin el kwarg.
+- 28 focalizados + 3705/2 suite verde, pyflakes/compileall limpios.
+
+**Commits.** `7679d3fb`.
+
+**Pendiente.**
+- `REPORT-ENCODING-MOJIBAKE-ADC` (nuevo): mojibake preexistente
+  en bloque Clasificacion de Evidencia del reporte.
+- `CURRENT-PHASE-BASIS-CSV`, `ACCUMULATION-ZERO`,
+  `VALIDATION-GATE-NO-STANDALONE`, `IWM-HOLDINGS-EXPANSION`,
+  `SECTOR-REGIME-MATRIX-STRUCTURE-POSITIVE`,
+  `PODA-BITACORA-DIA-EN-CURSO` (documentales u observacionales).
+- SOW-BEAR-CONFIRMATION (contrato v1.10).
+
+**Lecciones.** Un parametro con default neutro que nadie pasa puede
+parecer sesgo silencioso pero ser cosmetico. La verificacion del
+cuerpo (no solo de la firma) lo confirma en 2 minutos. En este caso
+el frente era prioridad 2 en HANDOFF; debio ser prioridad 3 desde
+el principio.
+
 ### 2026-10-25 (sesion 4 continuacion) - Cierre C4.5-SLPM-STRINGS-RESIDUALES
 
 **Objetivo.** Cerrar C4.5-SLPM-STRINGS-RESIDUALES (deuda de

@@ -2003,25 +2003,28 @@ items:
 - id: STRUCTURAL-ENGINE-LEADER-BREADTH-ZOMBIE
   tipo: deuda_tecnica
   ciclo: '2026-10-24'
-  estado: OPEN
+  estado: FIXED
+  commit: 7679d3fb
+  evidencia: |
+    Auditoria sesion 4: leader_breadth no se usa en el cuerpo de
+    compute_structural_score. STRUCTURAL_WEIGHTS tiene solo 3
+    claves (rs_structural 0.50, flow_structure 0.30, persistence
+    0.20, suma 1.0). AST de llamadores: 10 llamadas, todas con
+    args=2 o kwargs explicitos sin leader_breadth. Retirado de la
+    firma. Sin test especifico: cambio elimina parametro muerto
+    sin logica. Verificado: pyflakes ., compileall, 28 focalizados
+    (test_regimes_low_coverage_d30, test_pipeline_diagnostics_
+    engines, test_double_counting_regression), suite 3705 passed
+    2 skipped. test_double_counting_regression sigue vigente
+    (verifica que leader_breadth NO este en STRUCTURAL_WEIGHTS).
   descripcion: |
     regimes/structural_engine.py::compute_structural_score acepta
-    leader_breadth=0.5 como parametro con default. Nadie lo pasa (ni
-    engines.py::_compute_tactical_structural ni consumidores
+    leader_breadth=0.5 como parametro con default. Nadie lo pasa
+    (ni engines.py::_compute_tactical_structural ni consumidores
     directos). Es deuda preexistente introducida al retirar
-    compute_leader_breadth_v2 en C3.1: el parametro zombie consume
-    un slot en STRUCTURAL_WEIGHTS (25% segun
-    config/weights.py) sin calculo real.
-  siguiente_accion: |
-    Dos opciones. (a) Retirar leader_breadth del signature y
-    rebalancear STRUCTURAL_WEIGHTS (rs_structural 0.35 -> 0.47,
-    flow_structure 0.20 -> 0.27, persistence 0.20 -> 0.26
-    aproximadamente, ajustar exacto). Requiere auditoria porque
-    cambia el calculo del Structural Score. (b) Dejar el parametro
-    con default documentado como "reservado para futuro SOW
-    bear-confirmation". Mi recomendacion: (a) con pre-registro
-    ligero de rebalanceo.
-
+    compute_leader_breadth_v2 en C3.1. Confirmado en sesion 4 que
+    el cuerpo NO usa el parametro: es cosmetico puro, no sesga el
+    calculo.
 - id: VERIFY-LEADER-SELECTION-ROTO
   tipo: deuda_tecnica
   ciclo: '2026-10-24'
