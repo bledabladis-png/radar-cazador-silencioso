@@ -3,7 +3,7 @@
 **Fecha:** 2026-10-24
 **Commit de referencia:** ver `git log --oneline -1`
 **Estado:** IMPLEMENTADO + CABLEADO al pipeline.
-**Tests:** 3946 passed (suite completa) + 5 skipped.
+**Tests:** 3776 passed (suite completa) + 2 skipped.
 
 ## §1 Decision arquitectonica
 
@@ -12,9 +12,14 @@ e indices) por cascadas por stock con deteccion de acumulacion y
 distribucion, orquestadas.
 
 Motivacion: el sistema previo detectaba 0/327 DISTRIBUTION en stocks
-reales (`_is_distribution_candidate` no disparaba nunca), y para los
+reales (el gate de distribucion no disparaba nunca), y para los
 ETFs sectoriales la senal era demasiado debil. La cascada nueva detecta
 eventos reales con evidencia y fase actual derivada.
+
+**Estado (2026-10-24, tras sesion 3):** el sistema esta
+IMPLEMENTADO + CABLEADO. `classify_wyckoff_phase` y su familia
+retirados de `wyckoff_v1.py` (C5.2). El sistema previo (lideres
+por sector, SLPM, fase ETF del ranking) tambien retirado (C3 y C4).
 
 ## §2 Modulos
 
@@ -150,33 +155,40 @@ Conflict | N | Cob Wyckoff.
 
 Notas al pie explican FORMING y Conflict.
 
-### `src/report/sector_annotations.py`
+### `src/report/wyckoff_holdings.py` (nuevo 2026-10-24)
 
-`annotate_sector_titles_with_composition(leader_lines, dist_df)`:
-postprocesa las lineas del reporte generadas por `stock_leader.py`.
-Para cada `## Sector: XLK (MARKUP)`, inserta una linea de composicion
-interna:
+Renderiza 2 secciones en el reporte:
+- **Tickers en acumulacion**: 3 sub-tablas (USA sectores, USA indices,
+  EU indices). Incluye ACC, ACC_FORMING, MARKUP.
+- **Tickers en distribucion**: 3 sub-tablas. Incluye DIST, DIST_FORMING,
+  MARKDOWN.
 
-    *Composicion interna (22 componentes): 3 Markup (14%), 8 Range
-    (36%), 9 DistF (41%), 1 Dist (5%), 1 Markdown (5%)*
-
-Idempotente. No modifica los datos que producen las secciones, solo
-añade contexto textual.
+Columnas: Group | Ticker | Fase | Desde | Peso % | Cob % | Close.
+Los 6 CSVs estan en `outputs/history/` con receipt.
 
 ### `run.py`
 
-En L~280, antes de `generate_daily_report`, anota `leader_lines` con
-`annotate_sector_titles_with_composition`.
+`load_stocks_data` + `compute_all_stock_metrics` sustituyen a
+`compute_leaders`. `compute_wyckoff_holdings(df_stocks, holdings_df)`
+genera los 6 CSVs. `wyckoff_holdings_data` se pasa a
+`generate_daily_report`.
+
+**Retirado en sesion 3:** `src/report/sector_annotations.py` (la
+anotacion de titulos sectoriales vivia de `leader_lines`; sin lideres,
+no aplica).
 
 ## §5 Lo que NO cambia
 
 - `detect_sow` (v1.8) intacto: sigue siendo el detector de breakdown
   con volumen, con su API historica.
 - `detect_sow_v2` (gate distribution) sigue en codigo, `WYCKOFF_SOW_*`
-  sigue en `None`.
-- `classify_wyckoff_phase` sigue existiendo y se usa en
-  `sector_regime.py` (rankings) para el titulo del sector. Migrarlo
-  es decision de producto pendiente.
+  sigue en `None`. Base del futuro contrato v1.10 (SOW-BEAR-CONFIRMATION).
+- `wyckoff_score`, `_atr_normalized`, `_trend_component`, `_volume_z`,
+  `_effort_vs_result`, `wyckoff_stability`, `build_ticker_df`,
+  `detect_spring`, `detect_sos` intactos.
+- **`classify_wyckoff_phase` retirado** (C5.2). La clasificacion vive
+  en `wyckoff_orchestrator.classify_phase`. `sector_regime.py` dejo de
+  usar fase ETF en C5.1; la tupla del ranking es de 3 elementos.
 
 ## §6 Pre-registros fallidos
 
@@ -229,16 +241,42 @@ Agregado holdings (11 ETFs, top-20 cada uno):
 | ACCUMULATION_FORMING | 6 |
 
 XLK: 41% de sus holdings en DISTRIBUTION_FORMING (presion interna
-fuerte). La anotacion en el titulo sectorial lo hace visible.
+fuerte).
 
-## §8 Pendiente
+**Casos conocidos (2026-10-24):**
 
-- Migrar `sector_regime.py` al nuevo orquestador.
+- **TWST = CONFLICT.** Razon: "dist formandose y acc formandose
+  simultaneamente". No es falso positivo, es ambiguedad real (dos
+  estructuras compitiendo). Documentado como caso conocido.
+- **`ACCUMULATION=0`** en produccion. Estado transitorio por diseno:
+  requiere SOS confirmado Y precio dentro del rango. Dura sesiones,
+  no semanas. No es bug.
+
+**Cobertura (2026-10-24, tras C1):**
+- USA sectores: 11, top-20 por weight (peso top-20 entre 57.2% y
+  99.0%).
+- USA indices: SPY, QQQ, DIA. IWM excluido (top-20 = 6.2% de 1977
+  holdings, no representativo).
+- EU indices: FEZ, DAXEX, ISF.L, LYXI (100% cobertura de holdings).
+
+## §8 Pendiente (2026-10-24)
+
+- Calibrar PSY/PS con pre-registro formal (actualmente 0/50 disparos).
 - Renderizar evidencia pasiva (`msow`, `msos`, `lpsy`, `lps`, `st_dist`,
   `st_acc`) en el reporte.
-- Calibrar PSY/PS con pre-registro formal (actualmente 0/50 disparos).
+- `current_phase_basis` en el reporte (hoy solo en CSV).
+- Validar la nueva derivacion de `structure_positive` en
+  `sector_regime_matrix.py` (holdings-based desde C5.1).
+- TWST en CONFLICT: documentar como caso conocido en el reporte.
+- `ACCUMULATION=0`: nota en el reporte.
+- IWM fuera: sub-fase de descarga con protocolo de 6 pasos.
+- Cobertura USA incompleta (231/504 holdings): ampliacion futura.
 - Auditoria externa del sistema completo.
 - Contrato v1.10 para SOW-BEAR-CONFIRMATION.
+
+**Retirado del pendiente (2026-10-24):**
+- ~~Migrar `sector_regime.py` al nuevo orquestador~~: hecho en C5.1.
+- ~~`classify_wyckoff_phase` en `sector_regime.py`~~: retirado en C5.1.
 
 ## §9 Como extender el sistema
 
