@@ -98,19 +98,6 @@ def audit_double_counting():
     lines.append("\n*Esta matriz es informativa. No modifica ningun calculo.*\n")
     
 
-    # Verificación dinámica de la corrección LIS/Breadth
-    try:
-        import inspect
-        from indicators.state_machine import classify_leadership_state
-        sig = inspect.signature(classify_leadership_state)
-        if 'lis' in sig.parameters:
-            lines.append("\n**Verificación SLPM:** [WARN] LIS aún en State Machine (doble conteo activo).\n")
-        else:
-            lines.append("\n**Verificación SLPM:** [OK] LIS excluido de la State Machine. Breadth es el factor decisorio.\n")
-    except Exception:
-        lines.append("\n**Verificación SLPM:** No disponible.\n")
-
-
     lines.append("\n**Clasificación de evidencia:**\n")
     lines.append("| Variable | Tipo |\n")
     lines.append("|----------|------|\n")

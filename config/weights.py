@@ -35,23 +35,6 @@ SECTOR_SCORE_WEIGHTS = {
 }
 
 # ============================================================
-# SLPM WEIGHTS (Leader Breadth & LIS)
-# ============================================================
-
-SLPM_WEIGHTS = {
-    'leader_breadth': {
-        'rs': 0.30,
-        'momentum': 0.25,
-        'flow': 0.25,
-        'wyckoff': 0.20
-    },
-    'lis': {
-        'rs': 0.30,
-        'momentum': 0.25,
-        'flow': 0.25,
-        'wyckoff': 0.20
-    }
-}
 
 # ============================================================
 # TACTICAL ENGINE WEIGHTS
@@ -120,8 +103,6 @@ def validate_weights():
         'IMPORTANT_WEIGHTS': IMPORTANT_WEIGHTS,
         'CONTEXTUAL_WEIGHTS': CONTEXTUAL_WEIGHTS,
         'SECTOR_SCORE_WEIGHTS': SECTOR_SCORE_WEIGHTS,
-        'SLPM_LEADER_BREADTH': SLPM_WEIGHTS['leader_breadth'],
-        'SLPM_LIS': SLPM_WEIGHTS['lis'],
         'TACTICAL_WEIGHTS': TACTICAL_WEIGHTS,
         'STRUCTURAL_WEIGHTS': STRUCTURAL_WEIGHTS,
     }

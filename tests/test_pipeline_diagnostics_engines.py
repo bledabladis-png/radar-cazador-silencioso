@@ -20,7 +20,7 @@ from src.pipeline.diagnostics import (
     SECTOR_ETFS,
 )
 from src.pipeline.engines import (
-    compute_engines, _forzar_lideres_slpm,
+    compute_engines,
     _compute_tactical_structural, _compute_persistence_and_save,
 )
 
@@ -98,38 +98,7 @@ def test_engines_contract_5_keys(tmp_path, monkeypatch):
             leader_df=None,
         )
     assert set(out.keys()) == {
-        "leader_metrics_for_slpm", "top_sector_flow",
         "tactical_scores", "structural_scores", "sector_persistence"}
-
-
-def test_forzar_lideres_slpm_sin_leader_df():
-    metrics, flow = _forzar_lideres_slpm(
-        sector_results={"ranking": [("XLK", "Technology", 0.5, "")]},
-        sector_flow_rank=[("XLK", 0.2)],
-        otros_flow_rank=[],
-        leader_df=None,
-    )
-    assert metrics == []
-    assert flow == 0.2
-
-
-def test_forzar_lideres_slpm_extrae_5_tickers():
-    leader_df = pd.DataFrame([
-        {"sector": "XLK", "ticker": f"T{i}", "rs": 1.0, "rs_mom": 0.1,
-         "flow_proxy_z": 0.3, "wyckoff_phase": "MARKUP"}
-        for i in range(7)
-    ])
-    metrics, flow = _forzar_lideres_slpm(
-        sector_results={"ranking": [("XLK", "Technology", 0.5, "")]},
-        sector_flow_rank=[("XLK", 0.5)],
-        otros_flow_rank=[],
-        leader_df=leader_df,
-    )
-    assert len(metrics) == 5
-    # P1.1 (2026-10-13): rs_ratio_20d anadido (retorno relativo
-    # 20d, correcto para criterio binario de Leader Breadth).
-    for m in metrics:
-        assert set(m.keys()) == {"ticker", "rs", "rs_ratio_20d", "rs_momentum", "flow_proxy_z", "wyckoff_phase"}
 
 
 def test_tactical_structural_degradacion_sin_df():
@@ -186,22 +155,3 @@ def test_persistence_fallo_to_csv_no_pierde_filas(tmp_path, monkeypatch):
         f"CSV original perdio filas: {filas_antes} -> {df.shape[0]}"
     )
     assert df.iloc[0]["date"] == "2026-09-24"
-
-
-# =============================================================================
-# S-02d (2026-10-03): _forzar_lideres_slpm con ranking vacio
-# =============================================================================
-
-def test_forzar_lideres_slpm_ranking_vacio_no_crashea():
-    """Bug latente catalogado 01b: sector_results["ranking"][0][0] sin guard.
-
-    Si ranking queda vacio (datos incompletos, sector_regime falla),
-    IndexError. El catalogo ya lo cita como caso engines.py:25.
-    """
-    from src.pipeline.engines import _forzar_lideres_slpm
-    result, flow = _forzar_lideres_slpm(
-        {"ranking": []}, [], [], None,
-    )
-    assert result == []
-    assert flow == 0.0
-

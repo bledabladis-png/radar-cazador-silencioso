@@ -6,7 +6,7 @@
 - src/report/sectorial.py: 67% -> render_sector_concentration y
   render_sector_dispersion (ramas de iteracion + nota final).
 - src/report/synthesis.py: 66% -> render_indices_internacionales con
-  leaders, render_sintesis_senales con MIXED + dispersion + lider SLPM
+  leaders, render_sintesis_senales con MIXED + dispersion
   + divergencias.
 
 Los tests existentes (test_render_representatividad_lider,
@@ -231,7 +231,7 @@ def test_indices_internacionales_leaders_vacio():
 # ============================================================
 def test_sintesis_senales_recesion():
     out = render_sintesis_senales(
-        "RECESSION", None, "NEUTRAL", None, None, None)
+        "RECESSION", "NEUTRAL", None, None, None)
     joined = "".join(out)
     assert "RECESSION" in joined
     assert "estres elevado" in joined or "estr" in joined.lower()
@@ -241,7 +241,7 @@ def test_sintesis_senales_mixed_con_dispersion():
     """Rama MIXED: lee dispersion_reading del ultimo dia."""
     disp_df = pd.DataFrame([{"dispersion_reading": "MODERADA"}])
     out = render_sintesis_senales(
-        "MIXED", None, "NEUTRAL", disp_df, None, None)
+        "MIXED", "NEUTRAL", disp_df, None, None)
     joined = "".join(out)
     assert "MIXED" in joined
     assert "moderada" in joined.lower()
@@ -249,32 +249,14 @@ def test_sintesis_senales_mixed_con_dispersion():
 
 def test_sintesis_senales_mixed_sin_dispersion():
     out = render_sintesis_senales(
-        "MIXED", None, "NEUTRAL", None, None, None)
+        "MIXED", "NEUTRAL", None, None, None)
     joined = "".join(out)
     assert "variable" in joined.lower()
 
 
-def test_sintesis_senales_lider_slpm_confirmado():
-    slpm = {"sector": "XLK", "state": "CONFIRMED"}
-    out = render_sintesis_senales(
-        "EXPANSION", slpm, "NEUTRAL", None, None, None)
-    joined = "".join(out)
-    assert "XLK" in joined
-    assert "CONFIRMED" in joined
-
-
-def test_sintesis_senales_lider_slpm_unresolved():
-    slpm = {"sector": "XLK", "state": "UNRESOLVED"}
-    out = render_sintesis_senales(
-        "MIXED", slpm, "NEUTRAL", None, None, None)
-    joined = "".join(out)
-    assert "UNRESOLVED" in joined
-    assert "no confirmado" in joined.lower() or "no confirm" in joined.lower()
-
-
 def test_sintesis_senales_liquidez_alta():
     out = render_sintesis_senales(
-        "RECESSION", None, "HIGH_STRESS", None, None, None)
+        "RECESSION", "HIGH_STRESS", None, None, None)
     joined = "".join(out)
     assert "HIGH_STRESS" in joined
 
@@ -284,5 +266,5 @@ def test_sintesis_senales_divergencias_price_flow():
         "XLK": {"status": "PRICE_STRONG_FLOW_UNCONFIRMED"},
     }
     out = render_sintesis_senales(
-        "MIXED", None, "NEUTRAL", None, None, divergences)
+        "MIXED", "NEUTRAL", None, None, divergences)
     assert isinstance(out, list)

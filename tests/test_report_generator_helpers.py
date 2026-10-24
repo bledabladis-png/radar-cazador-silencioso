@@ -190,35 +190,6 @@ class TestGenerateCoverageTable:
 
 
 
-def test_slpm_n_cero_muestra_nd():
-    """FU-013 (2026-09-13): con n=0, Leader Breadth muestra N/D, no 0%."""
-    from src.report.slpm import render_slpm_v12
-    slpm = {
-        'sector': 'XLC',
-        'state': 'UNRESOLVED',
-        'input_scores': {'tactical': 0.0, 'structural': 0.0},
-        'leader_breadth_v2': {
-            'rs_breadth': float('nan'),
-            'rs_breadth_status': 'NO_LEADERS',
-            'leader_breadth_status': 'NO_LEADERS',
-            'momentum_breadth': float('nan'),
-            'flow_breadth': float('nan'),
-            'wyckoff_breadth': float('nan'),
-            'composite': float('nan'),
-            'effective_composite': float('nan'),
-            'n_used': 0,
-            'expected_leaders': 5,
-            'coverage': 0.0,
-        },
-    }
-    lines = render_slpm_v12(slpm)
-    joined = '\n'.join(lines)
-    assert 'Leader Breadth (rs_ratio_20d > 0):** N/D' in joined
-    assert 'Leader Momentum Breadth:** N/D' in joined
-    assert 'Effective Breadth:** N/D' in joined
-    assert 'Leader Breadth (rs_ratio_20d > 0):** 0%' not in joined
-
-
 # ---------- D6b: propagacion de reference_date ----------
 def test_generate_coverage_table_usa_reference_date():
     """D6b (2026-09-30): el age se calcula contra reference_date, no

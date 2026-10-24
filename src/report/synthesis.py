@@ -60,7 +60,7 @@ def render_indices_internacionales(index_phases, index_leaders, index_struct_sco
     return out
 
 
-def render_sintesis_senales(macro_regime, slpm_v12_data, financial_regime,
+def render_sintesis_senales(macro_regime, financial_regime,
                             sector_dispersion_data, breadth_values,
                             price_flow_divergences):
     """Renderiza la seccion Estado Actual - Sintesis de Senales.
@@ -91,18 +91,6 @@ def render_sintesis_senales(macro_regime, slpm_v12_data, financial_regime,
         resumen.append(f"- **Régimen macro: MIXED** — ROTATIONAL / MIXED — rotación sectorial activa con dispersión {disp_txt}.")
     else:
         resumen.append(f"- **Régimen macro: {macro_regime}**.")
-
-    # 2. Liderazgo sectorial (prioridad alta)
-    if slpm_v12_data:
-        leader = slpm_v12_data.get('sector', '')
-        state = slpm_v12_data.get('state', '')
-        if leader and state:
-            if state == 'CONFIRMED':
-                resumen.append(f"- **Liderazgo confirmado: {leader}** (SLPM: CONFIRMED).")
-            elif state == 'UNRESOLVED':
-                resumen.append(f"- **Liderazgo no confirmado: {leader}** (#1 del ranking, SLPM: UNRESOLVED).")
-            else:
-                resumen.append(f"- **Liderazgo sectorial: {leader}** (SLPM: {state}).")
 
     # 3. Condiciones financieras o liquidez (si es relevante)
     if financial_regime in ('HIGH_STRESS', 'EXTREME_STRESS'):

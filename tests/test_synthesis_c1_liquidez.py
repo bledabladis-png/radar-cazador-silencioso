@@ -20,7 +20,6 @@ def test_high_stress_no_menciona_liquidez():
     """HIGH_STRESS -> texto solo habla de credito, no de liquidez."""
     out = render_sintesis_senales(
         macro_regime="SLOWDOWN",
-        slpm_v12_data=None,
         financial_regime="HIGH_STRESS",
         sector_dispersion_data=None,
         breadth_values=None,

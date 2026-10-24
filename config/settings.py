@@ -88,7 +88,6 @@ MTE_STATE_FILE = "outputs/state/mte_state.json"  # archivo de estado del Market 
 # SLPM COVERAGE
 # ============================================================
 
-SLPM_EXPECTED_LEADERS = 5  # número típico de líderes analizados por sector
 
 # ============================================================
 # M3 — CENTRALIZED TIME WINDOWS (v4.0)

@@ -168,25 +168,28 @@ def run_validation_gate(slpm_v12_data, pcr_data, darkpool_data, mte_result,
     except (ImportError, KeyError, ValueError, TypeError, AttributeError, RuntimeError) as e:
         _add_check(validation_checks, validation_errors, "Config pesos", False, str(e))
 
-    # 10. Anti-Double-Counting
+    # 10. Anti-Double-Counting (C3.1: tolerante a retirada de SLPM)
     try:
-        import inspect
         from indicators.state_machine import classify_leadership_state
-        sig = inspect.signature(classify_leadership_state)
-        lis_in_state_machine = 'lis' in sig.parameters
-
-        dc_audit = audit_double_counting()
-        critical_vars = len(dc_audit.get('critical', []))
-        high_vars = len(dc_audit.get('high', []))
-
-        if lis_in_state_machine:
-            _add_check(validation_checks, validation_errors, "Anti-Double-Counting", False, "LIS aun en State Machine")
-        elif critical_vars > 0:
-            _add_check(validation_checks, validation_errors, "Anti-Double-Counting", True, f"correccion LIS activa, {critical_vars} criticas, {high_vars} altas")
-        else:
-            _add_check(validation_checks, validation_errors, "Anti-Double-Counting", True, f"correccion LIS activa, sin criticas, {high_vars} compartidas")
-    except (ImportError, KeyError, ValueError, TypeError, AttributeError, RuntimeError) as e:
-        _add_check(validation_checks, validation_errors, "Anti-Double-Counting", False, str(e))
+    except ImportError:
+        # C3.1: state_machine.py retirado con SLPM. C3.2 elimina este check.
+        _add_check(validation_checks, validation_errors, "Anti-Double-Counting", True, "N/A (SLPM retirado)")
+    else:
+        try:
+            import inspect
+            sig = inspect.signature(classify_leadership_state)
+            lis_in_state_machine = 'lis' in sig.parameters
+            dc_audit = audit_double_counting()
+            critical_vars = len(dc_audit.get('critical', []))
+            high_vars = len(dc_audit.get('high', []))
+            if lis_in_state_machine:
+                _add_check(validation_checks, validation_errors, "Anti-Double-Counting", False, "LIS aun en State Machine")
+            elif critical_vars > 0:
+                _add_check(validation_checks, validation_errors, "Anti-Double-Counting", True, f"correccion LIS activa, {critical_vars} criticas, {high_vars} altas")
+            else:
+                _add_check(validation_checks, validation_errors, "Anti-Double-Counting", True, f"correccion LIS activa, sin criticas, {high_vars} compartidas")
+        except (KeyError, ValueError, TypeError, AttributeError, RuntimeError) as e:
+            _add_check(validation_checks, validation_errors, "Anti-Double-Counting", False, str(e))
 
     # Resultado
     passed = not validation_errors

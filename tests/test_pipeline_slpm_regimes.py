@@ -15,87 +15,12 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from src.pipeline import slpm as pipeline_slpm
 from src.pipeline import regimes as pipeline_regimes
 
 
 # =============================================================================
 # src/pipeline/slpm.py
 # =============================================================================
-
-def _fake_slpm_result():
-    return {
-        'sector': 'Technology',
-        'sector_etf': 'XLK',
-        'state': 'CONFIRMED',
-        'leader_integrity': {'lis': 0.48},
-        'leader_breadth_v2': {'composite': 0.81},
-        'tactical_score': 0.30,
-        'structural_score': 0.11,
-        'validation_errors': [],
-    }
-
-
-def test_slpm_pasa_resultado_a_caller():
-    with patch('indicators.slpm_v12.evaluate_slpm_v12',
-               return_value=_fake_slpm_result()):
-        out = pipeline_slpm.compute_slpm_v12(
-            df_market=pd.DataFrame(),
-            sector_results={},
-            leader_metrics_for_slpm=[],
-            top_sector_flow=None,
-            tactical_scores={},
-            structural_scores={},
-            sector_persistence=None,
-        )
-        assert out['state'] == 'CONFIRMED'
-        assert out['sector_etf'] == 'XLK'
-
-
-def test_slpm_devuelve_none_si_evaluate_lanza():
-    with patch('indicators.slpm_v12.evaluate_slpm_v12',
-               side_effect=RuntimeError("boom")):
-        out = pipeline_slpm.compute_slpm_v12(
-            df_market=pd.DataFrame(),
-            sector_results={},
-            leader_metrics_for_slpm=[],
-            top_sector_flow=None,
-            tactical_scores={},
-            structural_scores={},
-            sector_persistence=None,
-        )
-        assert out is None
-
-
-def test_slpm_devuelve_none_si_evaluate_devuelve_none():
-    with patch('indicators.slpm_v12.evaluate_slpm_v12', return_value=None):
-        out = pipeline_slpm.compute_slpm_v12(
-            df_market=pd.DataFrame(),
-            sector_results={},
-            leader_metrics_for_slpm=[],
-            top_sector_flow=None,
-            tactical_scores={},
-            structural_scores={},
-            sector_persistence=None,
-        )
-        assert out is None
-
-
-def test_slpm_acepta_validation_errors_no_vacio():
-    bad = _fake_slpm_result()
-    bad['validation_errors'] = ['e1', 'e2']
-    with patch('indicators.slpm_v12.evaluate_slpm_v12', return_value=bad):
-        out = pipeline_slpm.compute_slpm_v12(
-            df_market=pd.DataFrame(),
-            sector_results={},
-            leader_metrics_for_slpm=[],
-            top_sector_flow=None,
-            tactical_scores={},
-            structural_scores={},
-            sector_persistence=None,
-        )
-        assert out['validation_errors'] == ['e1', 'e2']
-
 
 # =============================================================================
 # src/pipeline/regimes.py

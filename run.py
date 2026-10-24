@@ -22,7 +22,6 @@ from src.pipeline.sector_metrics import compute_sector_metrics
 from src.pipeline.wyckoff_holdings import compute_wyckoff_holdings
 from src.pipeline.breadth_metrics import compute_breadth_metrics
 from src.pipeline.engines import compute_engines
-from src.pipeline.slpm import compute_slpm_v12
 from src.pipeline.diagnostics import compute_diagnostics
 from src.pipeline.market_data import compute_market_data, _compute_data_quality
 from src.pipeline.mte_confirmation import compute_mte_confirmation
@@ -160,17 +159,9 @@ def main():
     sector_breadth_stale_reason = bm.get('sector_breadth_stale_reason')
 
     en = compute_engines(df_market, sector_results, sector_flow_rank, otros_flow_rank, leader_df, temporal_meta=temporal_meta)
-    leader_metrics_for_slpm = en['leader_metrics_for_slpm']
-    top_sector_flow = en['top_sector_flow']
     tactical_scores = en['tactical_scores']
     structural_scores = en['structural_scores']
     sector_persistence = en['sector_persistence']
-
-    slpm_v12_data = compute_slpm_v12(
-        df_market, sector_results, leader_metrics_for_slpm,
-        top_sector_flow, tactical_scores, structural_scores,
-        sector_persistence, temporal_meta=temporal_meta,
-    )
 
     diag = compute_diagnostics(df_market, tactical_scores, structural_scores, sector_flow_rank, temporal_meta=temporal_meta)
     signal_agreements = diag['signal_agreements']
@@ -207,7 +198,7 @@ def main():
     index_struct_scores = ii.get('index_struct_scores', {})
 
     vg = run_validation_gate(
-        slpm_v12_data, pcr_data, darkpool_data, mte_result,
+        None, pcr_data, darkpool_data, mte_result,
         tactical_scores, structural_scores,
         # D-05 (2026-10-03): propagar reference_date tz-aware (L43).
         reference_date=reference_date,
@@ -309,7 +300,6 @@ def main():
                           pcr_data=pcr_data, darkpool_data=darkpool_data, mte_result=mte_result,
                           confirmation_data=confirmation_data,
                           reference_date=reference_date,
-                          slpm_v12_data=slpm_v12_data,
                           tactical_scores=tactical_scores,
                           structural_scores=structural_scores,
                           sector_persistence=sector_persistence,

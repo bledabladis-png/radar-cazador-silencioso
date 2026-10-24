@@ -18,43 +18,6 @@ from config.tickers import MARKET_TICKERS
 SECTOR_ETFS = MARKET_TICKERS['sectors']
 
 
-def _forzar_lideres_slpm(sector_results, sector_flow_rank, otros_flow_rank, leader_df):
-    """Construye leader_metrics_for_slpm forzando el top sector."""
-    leader_metrics_for_slpm = []
-    # S-02d (2026-10-03): guard ranking vacio. Caso citado en catalogo
-    # 01b (engines.py:25): sector_results['ranking'][0][0] sin guard
-    # -> IndexError si ranking queda vacio (datos incompletos, fallo
-    # aguas arriba de sector_regime). Devuelve lista vacia + flow 0.0.
-    ranking = sector_results.get('ranking') or []
-    if not ranking:
-        return leader_metrics_for_slpm, 0.0
-    top_sector_ticker = ranking[0][0]
-    top_sector_flow = 0.0
-    for t, f in sector_flow_rank + otros_flow_rank:
-        if t == top_sector_ticker:
-            top_sector_flow = f
-            break
-
-    try:
-        if leader_df is not None and not leader_df.empty:
-            top_etf = top_sector_ticker
-            sector1_df = leader_df[leader_df['sector'] == top_etf]
-            for _, row in sector1_df.head(5).iterrows():
-                leader_metrics_for_slpm.append({
-                    'ticker': row['ticker'],
-                    'rs': row['rs'] if pd.notna(row.get('rs')) else None,
-                    'rs_ratio_20d': row['rs_ratio_20d'] if pd.notna(row.get('rs_ratio_20d')) else None,
-                    'rs_momentum': row['rs_mom'] if pd.notna(row.get('rs_mom')) else None,
-                    'flow_proxy_z': row['flow_proxy_z'] if pd.notna(row.get('flow_proxy_z')) else None,
-                    'wyckoff_phase': row['wyckoff_phase'] if pd.notna(row.get('wyckoff_phase')) else ''
-                })
-            print(f"    Lideres forzados para SLPM ({top_etf}): {len(leader_metrics_for_slpm)} tickers")
-    except (KeyError, ValueError, TypeError, IndexError, AttributeError, OSError, RuntimeError, pd.errors.ParserError) as e:
-        print(f"    No se pudieron forzar lideres para SLPM: {e}")
-
-    return leader_metrics_for_slpm, top_sector_flow
-
-
 def _compute_tactical_structural(df_market, temporal_meta=None):
     tactical_scores = {}
     structural_scores = {}
@@ -121,21 +84,15 @@ def _compute_persistence_and_save(df_market, temporal_meta=None):
 
 
 def compute_engines(df_market, sector_results, sector_flow_rank, otros_flow_rank, leader_df, temporal_meta=None):
-    """Ejecuta forzar-lideres-SLPM + tactical/structural + persistence.
+    """Ejecuta tactical/structural + persistence.
 
     Returns:
         dict con keys:
-            leader_metrics_for_slpm, top_sector_flow,
             tactical_scores, structural_scores, sector_persistence
     """
-    leader_metrics_for_slpm, top_sector_flow = _forzar_lideres_slpm(
-        sector_results, sector_flow_rank, otros_flow_rank, leader_df
-    )
     tactical_scores, structural_scores = _compute_tactical_structural(df_market, temporal_meta=temporal_meta)
     sector_persistence = _compute_persistence_and_save(df_market, temporal_meta=temporal_meta)
     return {
-        'leader_metrics_for_slpm': leader_metrics_for_slpm,
-        'top_sector_flow': top_sector_flow,
         'tactical_scores': tactical_scores,
         'structural_scores': structural_scores,
         'sector_persistence': sector_persistence,
