@@ -230,7 +230,7 @@ SOURCES = [
     # 2026-10-20 (REP-AUDIT-20261020-SLPM-FOSSIL): CSV eliminado
     # del repo. Artifact de daily_run.yml y metrica
     # structural_vs_breadth de monitor_double_counting.py retirados.
-    # slpm_state.json (JSON de estado) sigue activo via slpm_v12.py.
+    # slpm_state.json tambien retirado (fosil sin productor desde C3.1).
     {
         'source': 'Sector Regime Matrix',
         'file': 'outputs/history/sector_regime_matrix.csv',

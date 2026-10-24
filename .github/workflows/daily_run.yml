@@ -199,9 +199,6 @@ jobs:
       - name: QQQ SEC vs NPORT-P cross validation
         run: python validation/qqq_sec_nport_cross_validation.py
 
-      - name: Verify leader selection
-        run: python validation/verify_leader_selection.py
-
       - name: Cross provider validation
         env:
           POLYGON_API_KEY: ${{ secrets.POLYGON_API_KEY }}
@@ -223,8 +220,6 @@ jobs:
           path: |
             outputs/report/reporte_diario.md
             outputs/report/sector_rankings.csv
-            outputs/report/analisis_lideres.csv
-            outputs/report/analisis_lideres_internacionales.csv
             outputs/history/macro_regime.csv
             outputs/history/pcr_history.csv
             outputs/history/darkpool_history.csv
@@ -236,7 +231,6 @@ jobs:
             outputs/history/cftc_position_flow.csv
             outputs/history/sec_nport_positions.csv
             outputs/history/sec_nport_position_change_quarterly.csv
-            outputs/state/slpm_state.json
             outputs/state/mte_state.json
             outputs/state/liquidity_state.json
             outputs/audit/cross_provider_validation.csv

@@ -211,7 +211,7 @@ def generate_regimenes():
 
 def generate_motores():
     doc_tactical = extract_docstring('regimes/tactical_engine.py', 'compute_tactical_score') or 'Score de corto plazo (RS20 30%, Momentum20 25%, Flow 20%, Breadth20 15%, Aceleracion 10%).'
-    doc_structural = extract_docstring('regimes/structural_engine.py', 'compute_structural_score') or 'Score de largo plazo (RS multi-ventana 35%, Leader Breadth 25%, Flow Structure 20%, Persistence 20%).'
+    doc_structural = extract_docstring('regimes/structural_engine.py', 'compute_structural_score')
     proposito = "Calculan el Tactical Score (corto plazo) y el Structural Score (largo plazo) para cada sector."
     arquitectura = """
 - 	actical_engine.py: compute_tactical_score().

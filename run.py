@@ -59,7 +59,7 @@ def main():
         os.makedirs(f'outputs/{subdir}', exist_ok=True)
     # Fix C22: limpiar CSVs de lideres previos. Si el run actual no los
     # regenera (sin sectores favorables / sin indices en fase), los
-    # consumidores (report_generator, run_all_audits, verify_leader_selection)
+    # consumidores (report_generator, run_all_audits)
     # no deben leer datos obsoletos de runs anteriores.
     for _csv_name in ['analisis_lideres.csv', 'analisis_lideres_internacionales.csv']:
         _csv_path = os.path.join('outputs', 'report', _csv_name)

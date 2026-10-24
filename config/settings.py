@@ -2,7 +2,7 @@
 Global configuration for Sector Rotation Radar v4.3.
 
 This module centralizes shared constants: time windows,
-data quality thresholds, cache parameters, and SLPM coverage.
+data quality thresholds and cache parameters.
 Model-specific weights remain in config/weights.py.
 """
 
@@ -83,11 +83,6 @@ WYCKOFF_MIN_COVERAGE_PCT = 50.0
 
 DARKPOOL_FULL_HISTORY_WEEKS = 104  # Z-Score completo (2 años)
 MTE_STATE_FILE = "outputs/state/mte_state.json"  # archivo de estado del Market Transition Engine
-
-# ============================================================
-# SLPM COVERAGE
-# ============================================================
-
 
 # ============================================================
 # M3 — CENTRALIZED TIME WINDOWS (v4.0)
