@@ -44,6 +44,159 @@ Al cerrar una sesion nueva, se anade arriba (las mas recientes primero). Si hay 
 
 ## 3. SESIONES
 
+### 2026-10-24 (sesion 3) - Plan holdings: demolicion + construccion
+
+**Objetivo.** Ejecutar el plan 63: retirar el sistema de lideres por
+sector basado en fase ETF (SLPM, stock_leader, index_leaders,
+classify_wyckoff_phase) y construir el sistema Wyckoff holdings-based
+con 6 CSVs descargables.
+
+**Hecho.**
+- **Plan 63** en `docs/auditoria/wyckoff/63_plan_sistema_holdings_2026-10-24.md`.
+- **C1** (`83187f8c`): modulo `indicators/wyckoff_holdings_report.py`.
+  6 tablas (usa_sector_acc/dist, usa_index_acc/dist, eu_index_acc/dist).
+- **C2.1** (`a3a63766`): 6 OutputSpec nuevos. Wrapper
+  `src/pipeline/wyckoff_holdings.py`. Cableado en `run.py`.
+- **C2.2** (`9b5b34cd`): renderers en `src/report/wyckoff_holdings.py`.
+  2 secciones nuevas en el reporte.
+- **C3.1** (`0c5b7fb3`): retirada SLPM. Borrados `slpm_v12.py`,
+  `state_machine.py`, `state_transition.py`, `src/pipeline/slpm.py`,
+  `src/report/slpm.py`. `SLPM_WEIGHTS`, `SLPM_EXPECTED_LEADERS`,
+  `_forzar_lideres_slpm` eliminados.
+- **C3.2** (`676ab956`): Validation Gate adaptado. Firma
+  `slpm_v12_data` -> `wyckoff_holdings_data`. 3 checks sustituidos
+  (SLPM v1.2 -> Wyckoff holdings CSVs; Opportunity Map -> Cobertura
+  holdings; Anti-Double-Counting -> Sanity holdings). Gate 10/10.
+- **C3.3** (`cf7659fb`): `generate_docs.py` limpio.
+- **C4.1** (`753b7f22`): `indicators/stock_metrics.py` extraido de
+  `stock_leader.py`.
+- **C4.2** (`2ede0215`): `src/pipeline/stocks_data.py` extraido de
+  `leaders.py`.
+- **C4.3** (`4bc45fd3`): borrados `stock_leader.py`, `leaders.py`,
+  `leader_representativeness.py`, `sector_leader_divergence.py`,
+  `sector_annotations.py`. Registry 26 -> 24 writers.
+- **C5.1** (`8d9b90a0`): fase ETF retirada del ranking. Tupla de 4 a 3.
+  `classify_wyckoff_phase` fuera de `sector_regime.py`.
+  `sector_regime_matrix.py` deriva `structure_positive` de holdings.
+- **C5.2** (`c47cb420`): `classify_wyckoff_phase` y familia borradas de
+  `wyckoff_v1.py`. 24+4 tests de contrato v1 borrados.
+- **Fix** (`96276d05`): import huerfano en
+  `test_struct_score_sector_indices.py` que pyflakes de CI detecto (en
+  local solo se corrio pyflakes por ficheros tocados).
+- **C6.1** (`a100d282`, `813ad19f`, `0a0597b3`, `a3471303`): HANDOFF,
+  00_ARRANQUE, 02_ARQUITECTURA, 62 actualizados.
+- **C6.2** (parcial): 5 items nuevos en REGISTRO, rama
+  `feature/wyckoff-cascade` borrada, ESTADO_SISTEMA regenerado.
+
+**Decision arquitectonica.** El ETF sectorial suaviza la senal; la
+deteccion de fase se hace directamente sobre los holdings. 6 CSVs
+descargables por sector/indice (USA + EU). Cobertura top-20 por weight
+(57.2%-99.0% del peso del grupo).
+
+**Commits clave.** `977ad888`, `bdc80626`, `f1edc145`, `16f2dd8a`,
+`83187f8c`, `a3a63766`, `9b5b34cd`, `0c5b7fb3`, `676ab956`,
+`cf7659fb`, `753b7f22`, `2ede0215`, `4bc45fd3`, `8d9b90a0`,
+`c47cb420`, `96276d05`, `a100d282`, `813ad19f`, `0a0597b3`,
+`a3471303`, `ebae6fe9`.
+
+**Pre-registros fallidos (heredados).** Sesion 3 no anade nuevos. Los
+60 y 61 siguen vigentes.
+
+**Limitaciones documentadas.**
+- `current_phase_basis` no va al reporte (solo al CSV).
+- `ACCUMULATION=0` en produccion (transitorio por diseno).
+- IWM fuera (top-20 = 6.2% de 1977 holdings).
+- Cobertura USA 231/504 holdings en parquet.
+- Validation Gate no reproducible standalone.
+- TWST en CONFLICT (ambiguedad real).
+- `sector_regime_matrix.py`: `structure_positive` pasa de fase ETF a
+  holdings (C5.1); validacion pendiente.
+
+**Pendiente.**
+- C6.2 residual: `04_HISTORICO.md` (esta sesion).
+- PSY/PS con pre-registro.
+- Renderizar evidencia pasiva (mSOW/mSOS/LPSY/LPS/ST).
+- Contrato v1.10 (SOW-BEAR-CONFIRMATION).
+- Auditoria externa del sistema holdings-based.
+
+**Proximo paso sugerido.** Pegar `HANDOFF.md` + `00_ARRANQUE.md`.
+C6.2 (04_HISTORICO) primero.
+
+**Lecciones operativas.**
+- `pyflakes .` sobre todo el repo, no por fichero.
+- Antes de cambiar firmas de tuplas/dicts, enumerar TODOS los mocks
+  via AST, no regex de texto.
+
+
+### 2026-10-24 (sesion 2) - Cierre SOW universal + reconstruccion completa sistema Wyckoff
+
+**Objetivo.** Cerrar el frente SOW universal tras 7 experimentos
+(Bloque A) y reconstruir el sistema Wyckoff por stock con acumulacion
+y distribucion cableadas al pipeline (Bloque B).
+
+**Hecho (Bloque A).**
+- `SOW-V6` -> WONT_FIX. Senal real vs placebo en R3000 (3423 tickers,
+  lift +0.123 vs -0.077, 21.5 sd), pero no universal (4/9 folds
+  positivos, IC95 entre anos [-0.058, +0.303] cruza 0).
+- `SOW-BEAR-CONFIRMATION` abierto (IN_PROGRESS). Requiere contrato
+  v1.10 firmado por auditor externo.
+- Evidencia en `docs/auditoria/wyckoff/51-56`.
+
+**Hecho (Bloque B).**
+- **Decision arquitectonica**: dejar de usar ETFs sectoriales e
+  indices como fuente de fases Wyckoff. Cascadas por stock con
+  deteccion de acumulacion y distribucion, orquestadas.
+- **15 detectores en codigo**:
+  - Distribucion: BC, AR, SOW + auxiliares ST_dist, PSY, mSOW, LPSY,
+    false_breakout_up (UT/UTAD).
+  - Acumulacion: SC, AR, SOS + auxiliares ST_acc, PS, mSOS, LPS,
+    false_breakout_down (Spring).
+- **Orquestador** (`wyckoff_orchestrator.py`) con regla simetrica de
+  vigencia (rango vigente mientras precio no lo rompio por ningun
+  lado). Estados: DIST/MARKDOWN/ACC/MARKUP + FORMING + CONFLICT +
+  INSUFFICIENT_DATA. Separa `phase` (actual) y `event_phase`
+  (historico).
+- **Cableado al pipeline**: `sector_wyckoff_distribution.py` migrado
+  de `classify_wyckoff_phase` a `classify_phase`.
+- **Reporte**: tabla sectorial con AccF/Acc/Markup/Range/DistF/Dist/
+  Markdown/Conflict + N + Cob.
+- **Anotacion de titulos sectoriales** con composicion interna de
+  holdings: `## Sector: XLK (MARKUP)` -> `*Composicion interna (22
+  componentes): 3 Markup (14%), 8 Range (36%), 9 DistF (41%)...*`.
+- **Estado en produccion**: 219 RANGE, 53 DIST_FORMING, 17 DIST,
+  17 MARKDOWN, 13 MARKUP, 7 ACC_FORMING, 1 CONFLICT (327 stocks).
+
+**Pre-registros fallidos (no ocultos).**
+- `60_current_phase_rule_v1.md`: regla de vigencia unidireccional.
+  Fallo C1 (18.6% < 20%) en holdout S&P 500. No se ajusto.
+  Reemplazada por regla simetrica (definicion, no umbral).
+- `61_utad_spring_pending_v1.md`: UTAD_PENDING/SPRING_PENDING. Fallo
+  A3 (26 vs 3, ratio 8.67x > 5x por asimetria natural del mercado).
+  No se ajusto.
+
+**Limitaciones documentadas.**
+- PSY/PS no disparan con umbrales actuales (0/50 en smoke real).
+  Deuda de calibracion, no se recalibro post-hoc.
+- `sector_regime.py` sigue usando `classify_wyckoff_phase` legacy
+  para el titulo del sector. Anotacion de composicion mitiga.
+- mSOW/mSOS/LPSY/LPS/ST estan en `evidence` pero no se renderizan.
+
+**Commits clave.** `156738cd`, `6a1eff10`, `c45ac6ab`, `3c0b13f3`,
+`37398f54`, `1d502cac`, `a8bd235a`, `17ecbe1d`, `4edba814`,
+`415487ff`, `bd81abe4`, `bfe491bf`, `40ac2d07`, `64432648`.
+
+**Pendiente.**
+- Migrar `sector_regime.py` al nuevo orquestador (decision de
+  producto).
+- Renderizar evidencia pasiva en el reporte.
+- Calibrar PSY/PS con pre-registro.
+- Auditoria externa del sistema completo.
+- Contrato v1.10 (SOW-BEAR-CONFIRMATION).
+
+**Proximo paso sugerido.** Retomar en nuevo chat con
+`docs/handoffs/HANDOFF.md` + `docs/auditoria/wyckoff/62_sistema_completo_2026-10-24.md`
+pegados al inicio.
+
 ### 2026-10-23 - Verificacion scheduled target 2026-10-22 + auditoria autonomia
 
 **Objetivo.** Verificar en CI real los 4 fixes criticos de la sesion
@@ -1067,72 +1220,3 @@ Para sesiones anteriores al 2026-09-24, ver `git log --oneline`. Resumen tematic
 ---
 
 **Fin de la bitacora.**
-
-### 2026-10-24 - Cierre SOW universal + reconstruccion completa sistema Wyckoff
-
-**Objetivo.** Cerrar el frente SOW universal tras 7 experimentos
-(Bloque A) y reconstruir el sistema Wyckoff por stock con acumulacion
-y distribucion cableadas al pipeline (Bloque B).
-
-**Hecho (Bloque A).**
-- `SOW-V6` -> WONT_FIX. Senal real vs placebo en R3000 (3423 tickers,
-  lift +0.123 vs -0.077, 21.5 sd), pero no universal (4/9 folds
-  positivos, IC95 entre anos [-0.058, +0.303] cruza 0).
-- `SOW-BEAR-CONFIRMATION` abierto (IN_PROGRESS). Requiere contrato
-  v1.10 firmado por auditor externo.
-- Evidencia en `docs/auditoria/wyckoff/51-56`.
-
-**Hecho (Bloque B).**
-- **Decision arquitectonica**: dejar de usar ETFs sectoriales e
-  indices como fuente de fases Wyckoff. Cascadas por stock con
-  deteccion de acumulacion y distribucion, orquestadas.
-- **15 detectores en codigo**:
-  - Distribucion: BC, AR, SOW + auxiliares ST_dist, PSY, mSOW, LPSY,
-    false_breakout_up (UT/UTAD).
-  - Acumulacion: SC, AR, SOS + auxiliares ST_acc, PS, mSOS, LPS,
-    false_breakout_down (Spring).
-- **Orquestador** (`wyckoff_orchestrator.py`) con regla simetrica de
-  vigencia (rango vigente mientras precio no lo rompio por ningun
-  lado). Estados: DIST/MARKDOWN/ACC/MARKUP + FORMING + CONFLICT +
-  INSUFFICIENT_DATA. Separa `phase` (actual) y `event_phase`
-  (historico).
-- **Cableado al pipeline**: `sector_wyckoff_distribution.py` migrado
-  de `classify_wyckoff_phase` a `classify_phase`.
-- **Reporte**: tabla sectorial con AccF/Acc/Markup/Range/DistF/Dist/
-  Markdown/Conflict + N + Cob.
-- **Anotacion de titulos sectoriales** con composicion interna de
-  holdings: `## Sector: XLK (MARKUP)` -> `*Composicion interna (22
-  componentes): 3 Markup (14%), 8 Range (36%), 9 DistF (41%)...*`.
-- **Estado en produccion**: 219 RANGE, 53 DIST_FORMING, 17 DIST,
-  17 MARKDOWN, 13 MARKUP, 7 ACC_FORMING, 1 CONFLICT (327 stocks).
-
-**Pre-registros fallidos (no ocultos).**
-- `60_current_phase_rule_v1.md`: regla de vigencia unidireccional.
-  Fallo C1 (18.6% < 20%) en holdout S&P 500. No se ajusto.
-  Reemplazada por regla simetrica (definicion, no umbral).
-- `61_utad_spring_pending_v1.md`: UTAD_PENDING/SPRING_PENDING. Fallo
-  A3 (26 vs 3, ratio 8.67x > 5x por asimetria natural del mercado).
-  No se ajusto.
-
-**Limitaciones documentadas.**
-- PSY/PS no disparan con umbrales actuales (0/50 en smoke real).
-  Deuda de calibracion, no se recalibro post-hoc.
-- `sector_regime.py` sigue usando `classify_wyckoff_phase` legacy
-  para el titulo del sector. Anotacion de composicion mitiga.
-- mSOW/mSOS/LPSY/LPS/ST estan en `evidence` pero no se renderizan.
-
-**Commits clave.** `156738cd`, `6a1eff10`, `c45ac6ab`, `3c0b13f3`,
-`37398f54`, `1d502cac`, `a8bd235a`, `17ecbe1d`, `4edba814`,
-`415487ff`, `bd81abe4`, `bfe491bf`, `40ac2d07`, `64432648`.
-
-**Pendiente.**
-- Migrar `sector_regime.py` al nuevo orquestador (decision de
-  producto).
-- Renderizar evidencia pasiva en el reporte.
-- Calibrar PSY/PS con pre-registro.
-- Auditoria externa del sistema completo.
-- Contrato v1.10 (SOW-BEAR-CONFIRMATION).
-
-**Proximo paso sugerido.** Retomar en nuevo chat con
-`docs/handoffs/HANDOFF.md` + `docs/auditoria/wyckoff/62_sistema_completo_2026-10-24.md`
-pegados al inicio.
