@@ -26,6 +26,9 @@ AR_MIN_DROP_PCT = 0.05
 AR_MIN_BOUNCE_PCT = 0.03
 AR_MAX_WINDOW = 30
 
+# Tolerancia del rango - PROVISIONAL, pre-registro pendiente.
+RANGE_TOLERANCE_FRAC = 0.05
+
 
 @dataclass(frozen=True)
 class WyckoffEvent:
@@ -273,5 +276,124 @@ def detect_ar(df, ticker, bc_event, *, min_drop_pct=None, min_bounce_pct=None,
                   "support": low_val,
                   "bounce_date": str(bounce_date),
                   "bounce_pct": float(recovery.loc[bounce_date])},
+    )
+
+
+RangeState = Literal[
+    "RANGE_FORMING", "RANGE_ACTIVE", "RANGE_BROKEN",
+    "RANGE_INVALIDATED", "RANGE_EXPIRED", "NOT_EVALUABLE",
+]
+RangeType = Literal[
+    "DISTRIBUTION_CANDIDATE", "REDISTRIBUTION_CANDIDATE", "UNCLASSIFIED",
+]
+FormationPath = Literal["BC_AR", "REPEATED_TESTS"]
+
+
+@dataclass(frozen=True)
+class Range:
+    range_id: str
+    ticker: str
+    timeframe: str
+    formation_path: FormationPath
+    range_type: RangeType
+    candidate_start_date: pd.Timestamp
+    start_available_at: pd.Timestamp
+    range_active_at: pd.Timestamp | None
+    support: float
+    resistance: float
+    tolerance_frac: float
+    tol_abs: float
+    state: RangeState
+    end: pd.Timestamp | None = None
+    closed_at: pd.Timestamp | None = None
+    break_direction: Literal["UP", "DOWN"] | None = None
+    trend_context: dict[str, Any] = field(default_factory=dict)
+    evidence: dict[str, Any] = field(default_factory=dict)
+
+
+def build_range_from_bc_ar(df, ticker, bc_event, ar_event, *,
+                           range_id=None, range_type=None,
+                           tolerance_frac=None, trend_context=None,
+                           timeframe="1d") -> Range:
+    """Construye un Range ACTIVO a partir de BC + AR confirmados (camino A).
+
+    - resistance = bc_event.evidence["high"]
+    - support = ar_event.evidence["support"]
+    - candidate_start_date = bc_event.event_date
+    - start_available_at = max(bc.available_at, ar.available_at)
+    - range_active_at = start_available_at (niveles disponibles al confirmar AR)
+    - tol_abs = tolerance_frac * (resistance - support)
+
+    range_type se pasa del caller (evidencia disponible al abrir). Si no se
+    pasa, UNCLASSIFIED. La funcion no infiere range_type.
+
+    Raises:
+        ValueError: BC o AR no CONFIRMED, o support >= resistance.
+    """
+    if bc_event.status != "CONFIRMED":
+        raise ValueError(f"bc_event no CONFIRMED: {bc_event.status}")
+    if ar_event.status != "CONFIRMED":
+        raise ValueError(f"ar_event no CONFIRMED: {ar_event.status}")
+    if bc_event.event_date is None or ar_event.event_date is None:
+        raise ValueError("BC o AR sin event_date")
+    if bc_event.available_at is None or ar_event.available_at is None:
+        raise ValueError("BC o AR sin available_at")
+
+    resistance = bc_event.evidence.get("high")
+    support = ar_event.evidence.get("support")
+    if resistance is None or support is None:
+        raise ValueError("BC sin high o AR sin support en evidence")
+    resistance = float(resistance)
+    support = float(support)
+    if support >= resistance:
+        raise ValueError(
+            f"support({support}) >= resistance({resistance})"
+        )
+
+    tf = tolerance_frac if tolerance_frac is not None else RANGE_TOLERANCE_FRAC
+    width = resistance - support
+    tol_abs = float(tf) * width
+
+    rt: RangeType = range_type if range_type is not None else "UNCLASSIFIED"
+    if rt not in ("DISTRIBUTION_CANDIDATE",
+                  "REDISTRIBUTION_CANDIDATE",
+                  "UNCLASSIFIED"):
+        raise ValueError(f"range_type invalido: {rt}")
+
+    start_available = max(bc_event.available_at, ar_event.available_at)
+
+    if range_id is None:
+        range_id = (
+            f"{ticker}_{timeframe}_{bc_event.event_date.date()}_"
+            f"{ar_event.event_date.date()}"
+        )
+
+    evidence = {
+        "bc_event_date": str(bc_event.event_date),
+        "bc_available_at": str(bc_event.available_at),
+        "bc_high": resistance,
+        "ar_event_date": str(ar_event.event_date),
+        "ar_available_at": str(ar_event.available_at),
+        "ar_support": support,
+        "width": width,
+    }
+    tc = dict(trend_context) if trend_context else {}
+
+    return Range(
+        range_id=range_id,
+        ticker=ticker,
+        timeframe=timeframe,
+        formation_path="BC_AR",
+        range_type=rt,
+        candidate_start_date=bc_event.event_date,
+        start_available_at=start_available,
+        range_active_at=start_available,
+        support=support,
+        resistance=resistance,
+        tolerance_frac=float(tf),
+        tol_abs=tol_abs,
+        state="RANGE_ACTIVE",
+        trend_context=tc,
+        evidence=evidence,
     )
 
