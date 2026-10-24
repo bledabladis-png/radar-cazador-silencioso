@@ -51,6 +51,7 @@ class FinalPhase:
     dist_evidence: dict[str, Any] = field(default_factory=dict)
     acc_evidence: dict[str, Any] = field(default_factory=dict)
     conflict_reason: str | None = None
+    phase_since: pd.Timestamp | None = None
 
 
 def _is_data_insufficient(r: ClassifiedBreak) -> bool:
@@ -67,15 +68,43 @@ def _is_data_insufficient(r: ClassifiedBreak) -> bool:
 
 
 def _decide(dist: ClassifiedBreak, acc: ClassifiedBreak) -> tuple[WyckoffPhase, str | None]:
-    """Aplica la tabla de decision. Devuelve (phase, conflict_reason)."""
+    """Aplica la tabla de decision. Devuelve (phase, conflict_reason).
+
+    Regla:
+    - Ambas confirmadas:
+      - Si ambas tienen rango activo (no roto) en as_of -> CONFLICT
+        (dos estructuras compitiendo ahora mismo)
+      - Si no -> la mas reciente por resolution_event_date
+    - Solo una confirmada -> esa fase
+    - Ninguna confirmada -> RANGE o INSUFFICIENT_DATA
+    """
     dist_conf = dist.classification == "DISTRIBUTION_CONFIRMED"
     acc_conf = acc.classification == "ACCUMULATION_CONFIRMED"
 
     if dist_conf and acc_conf:
+        # Ambos con structural RANGE_ACTIVE simultaneo -> conflicto real
+        if dist.structural_state == "RANGE_ACTIVE" and acc.structural_state == "RANGE_ACTIVE":
+            return "CONFLICT", (
+                f"ambas cascadas con RANGE_ACTIVE en {dist.as_of.date()}"
+            )
+        # Episodios historicos distintos: gana el mas reciente
+        d_res = dist.resolution_event_date
+        a_res = acc.resolution_event_date
+        if d_res is None and a_res is None:
+            return "RANGE", None
+        if d_res is None:
+            return "ACCUMULATION", None
+        if a_res is None:
+            return "DISTRIBUTION", None
+        if d_res > a_res:
+            return "DISTRIBUTION", None
+        if a_res > d_res:
+            return "ACCUMULATION", None
+        # Misma fecha de resolucion -> CONFLICT real (raro, pero posible)
         return "CONFLICT", (
-            f"dist={dist.classification} y acc={acc.classification} "
-            f"confirmados simultaneamente en {dist.as_of.date()}"
+            f"ambas resueltas en {d_res.date()} (misma sesion)"
         )
+
     if dist_conf:
         return "DISTRIBUTION", None
     if acc_conf:
@@ -96,6 +125,14 @@ def classify_phase_at(df, ticker, as_of, *,
     acc = classify_accumulation_at(df, ticker, as_of, **(acc_kwargs or {}))
 
     phase, conflict = _decide(dist, acc)
+
+    # phase_since: fecha de resolucion del episodio que gano (o None si RANGE/INSUFFICIENT)
+    phase_since = None
+    if phase == "DISTRIBUTION":
+        phase_since = dist.resolution_event_date
+    elif phase == "ACCUMULATION":
+        phase_since = acc.resolution_event_date
+
     return FinalPhase(
         ticker=ticker,
         as_of=as_of,
@@ -105,6 +142,7 @@ def classify_phase_at(df, ticker, as_of, *,
         dist_evidence=dist.evidence,
         acc_evidence=acc.evidence,
         conflict_reason=conflict,
+        phase_since=phase_since,
     )
 
 

@@ -634,6 +634,11 @@ def classify_accumulation_at(df, ticker, as_of, *,
         else:
             classification = "BREAKOUT_WITHOUT_ACCUMULATION_CONTEXT"
 
+        res_date_str = sos.evidence.get("resolution_event_date")
+        try:
+            res_date = pd.Timestamp(res_date_str) if res_date_str else None
+        except (ValueError, TypeError):
+            res_date = None
         return ClassifiedBreak(
             ticker=ticker, as_of=as_of, range_id=rng.range_id,
             classification=classification,
@@ -644,6 +649,8 @@ def classify_accumulation_at(df, ticker, as_of, *,
             sow_status=sos.status,
             coherence_error=coherence_error,
             evidence=evidence,
+            range_active_at=rng.range_active_at,
+            resolution_event_date=res_date,
         )
 
     return ClassifiedBreak(

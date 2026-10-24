@@ -746,6 +746,11 @@ def classify_distribution_at(df, ticker, as_of, *,
         else:
             classification = "BREAK_WITHOUT_DISTRIBUTION_CONTEXT"
 
+        res_date_str = sow.evidence.get("resolution_event_date")
+        try:
+            res_date = pd.Timestamp(res_date_str) if res_date_str else None
+        except (ValueError, TypeError):
+            res_date = None
         return ClassifiedBreak(
             ticker=ticker, as_of=as_of, range_id=rng.range_id,
             classification=classification,
@@ -756,6 +761,8 @@ def classify_distribution_at(df, ticker, as_of, *,
             sow_status=sow.status,
             coherence_error=coherence_error,
             evidence=evidence,
+            range_active_at=rng.range_active_at,
+            resolution_event_date=res_date,
         )
 
     # sow.status in NOT_OBSERVED / REJECTED / EXPIRED / NOT_EVALUABLE

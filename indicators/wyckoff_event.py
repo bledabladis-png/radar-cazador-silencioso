@@ -99,3 +99,5 @@ class ClassifiedBreak:
     sow_status: str | None
     coherence_error: str | None
     evidence: dict[str, Any] = field(default_factory=dict)
+    range_active_at: pd.Timestamp | None = None
+    resolution_event_date: pd.Timestamp | None = None
