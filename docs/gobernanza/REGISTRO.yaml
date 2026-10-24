@@ -1902,3 +1902,35 @@ items:
     cambian de lectura. Si el cambio es grande, documentar la nueva
     semantica en 02_ARQUITECTURA §6 o en un doc de auditoria. Sin
     fecha; no bloquea nada.
+
+- id: PODA-BITACORA-DIA-EN-CURSO
+  tipo: deuda_tecnica
+  ciclo: '2026-10-24'
+  estado: OPEN
+  descripcion: |
+    La regla §5 de 05_BITACORA.md dice: "mantiene las ultimas 10
+    sesiones. Ademas, siempre conserva las del dia en curso, aunque
+    superen 10". Ambiguedad: "aunque superen 10" puede leerse como
+    (a) 10 dias totales incluyendo el dia en curso, o (b) 10 dias
+    fuera del dia en curso + dia en curso aparte.
+
+    El script scripts/poda_bitacora.py decide() implementa (a):
+    range(min(keep_n, len(grupos))) conserva los primeros 10 grupos
+    sin eximir el dia en curso. Con 11 dias unicos (2026-10-24 x2 +
+    10 previos) quiere podar 2026-10-13.
+
+    Ademas, 2026-10-13 no tiene respaldo en 04_HISTORICO. Poda =
+    perdida de trazabilidad (viola la regla "antes de eliminar,
+    verificar que sus decisiones clave estan en 04_HISTORICO").
+
+    Decision 2026-10-24: no podar. Item abierto para resolver.
+  siguiente_accion: |
+    Opciones: (a) fix del script para implementar (b) - conservar
+    keep_n + 1 (dia en curso aparte); (b) si la intencion real era
+    (a), actualizar §5 de bitacora para desambiguar; (c) resumir
+    2026-10-13 en 04_HISTORICO antes de podar, para que la poda
+    sea segura bajo cualquier interpretacion.
+
+    Recomendacion: (a) + (c) combinados - fix del script + resumen
+    de 2026-10-13 en historico. La opcion (b) seria aceptar que el
+    dia en curso consume cupo, lo cual contradice la letra de §5.
