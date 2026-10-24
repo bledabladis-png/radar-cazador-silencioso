@@ -23,12 +23,24 @@ from src.pipeline.validation_gate import run_validation_gate
 def _base_kwargs():
     """Datos sinteticos que pasan el Gate sin errores."""
     return dict(
-        slpm_v12_data={
-            "state": "UNRESOLVED",
-            "opportunity_quadrant": "Transition",
-            "sector_etf": "XLK",
-            "sector": "Tech",
-            "validation_errors": [],
+        wyckoff_holdings_data={
+            "usa_sector_acc": pd.DataFrame([
+                {"group": "XLK", "ticker": "AAPL", "phase": "ACCUMULATION",
+                 "close": 100.0, "weight": 50.0},
+                {"group": "XLK", "ticker": "MSFT", "phase": "MARKUP",
+                 "close": 200.0, "weight": 30.0},
+                {"group": "XLK", "ticker": "NVDA", "phase": "ACCUMULATION",
+                 "close": 300.0, "weight": 20.0},
+                {"group": "XLE", "ticker": "XOM", "phase": "MARKUP",
+                 "close": 90.0, "weight": 40.0},
+                {"group": "XLE", "ticker": "CVX", "phase": "ACCUMULATION",
+                 "close": 80.0, "weight": 60.0},
+            ]),
+            "usa_sector_dist": pd.DataFrame(),
+            "usa_index_acc": pd.DataFrame(),
+            "usa_index_dist": pd.DataFrame(),
+            "eu_index_acc": pd.DataFrame(),
+            "eu_index_dist": pd.DataFrame(),
         },
         pcr_data={"total_pcr": 0.85, "last_date": "2026-09-10"},
         darkpool_data={"media_dark_pool": 23.95, "week": "2026-08-18"},
@@ -45,13 +57,28 @@ def test_gate_caso_feliz():
     assert len(result["checks"]) == 10
 
 
-def test_slpm_errors_fallan_gate():
-    """Check 1: si SLPM reporta errores, el Gate debe fallar."""
+def test_wyckoff_holdings_vacio_ok_no_falla_gate():
+    """Check 1/6/10: sin datos holdings, gate tolera (OK no disponible)."""
     kwargs = _base_kwargs()
-    kwargs["slpm_v12_data"]["validation_errors"] = ["LIS fuera de rango"]
+    kwargs["wyckoff_holdings_data"] = None
+    result = run_validation_gate(**kwargs)
+    assert result["passed"] is True, f"errors={result['errors']}"
+    checks_text = " | ".join(result["checks"])
+    assert "Wyckoff holdings CSVs" in checks_text
+    assert "no disponible" in checks_text
+
+
+def test_wyckoff_holdings_sanity_falla_con_close_invalido():
+    """Check 10: close <= 0 rompe el gate."""
+    kwargs = _base_kwargs()
+    df_bad = pd.DataFrame([
+        {"group": "XLK", "ticker": "AAPL", "phase": "ACCUMULATION",
+         "close": -1.0, "weight": 50.0},
+    ])
+    kwargs["wyckoff_holdings_data"]["usa_sector_acc"] = df_bad
     result = run_validation_gate(**kwargs)
     assert result["passed"] is False
-    assert any("SLPM" in e for e in result["errors"])
+    assert any("Sanity holdings" in e for e in result["errors"])
 
 
 def test_check5_sin_sectores_falla():

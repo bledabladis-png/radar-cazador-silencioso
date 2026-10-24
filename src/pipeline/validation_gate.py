@@ -23,7 +23,7 @@ def _add_check(checks, errors, nombre, ok=True, detalle=""):
         errors.append(f"{nombre}: {detalle}".strip())
 
 
-def run_validation_gate(slpm_v12_data, pcr_data, darkpool_data, mte_result,
+def run_validation_gate(wyckoff_holdings_data, pcr_data, darkpool_data, mte_result,
                         tactical_scores, structural_scores,
                         reference_date=None):
     """Ejecuta las 10 comprobaciones del Validation Gate.
@@ -45,16 +45,16 @@ def run_validation_gate(slpm_v12_data, pcr_data, darkpool_data, mte_result,
     validation_errors = []
     validation_checks = []
 
-    # 1. SLPM v1.2
-    if slpm_v12_data:
-        slpm_errors = slpm_v12_data.get('validation_errors', [])
-        if slpm_errors:
-            validation_errors.extend(slpm_errors)
-            _add_check(validation_checks, validation_errors, "SLPM v1.2", False, f"{len(slpm_errors)} errores SLPM")
+    # 1. Wyckoff holdings CSVs (C3.2: sustituye check SLPM v1.2)
+    if wyckoff_holdings_data:
+        n_tables = sum(1 for df in wyckoff_holdings_data.values() if df is not None and not df.empty)
+        n_rows = sum(len(df) for df in wyckoff_holdings_data.values() if df is not None and not df.empty)
+        if n_tables > 0 and n_rows > 0:
+            _add_check(validation_checks, validation_errors, "Wyckoff holdings CSVs", True, f"{n_tables} tablas con datos, {n_rows} filas")
         else:
-            _add_check(validation_checks, validation_errors, "SLPM v1.2", True, "estado validado")
+            _add_check(validation_checks, validation_errors, "Wyckoff holdings CSVs", True, "0 tablas con datos")
     else:
-        _add_check(validation_checks, validation_errors, "SLPM v1.2", True, "no disponible")
+        _add_check(validation_checks, validation_errors, "Wyckoff holdings CSVs", True, "no disponible")
 
     # 2. PCR Total
     if pcr_data:
@@ -110,19 +110,24 @@ def run_validation_gate(slpm_v12_data, pcr_data, darkpool_data, mte_result,
     else:
         _add_check(validation_checks, validation_errors, "Rangos tacticos/estructurales", True, "sin datos")
 
-    # 6. Opportunity Map
-    if slpm_v12_data and tactical_scores and structural_scores:
-        leader_etf = slpm_v12_data.get('sector_etf', '')
-        if leader_etf and leader_etf in tactical_scores:
-            slpm_quadrant = slpm_v12_data.get('opportunity_quadrant', '')
-            if slpm_v12_data.get('state') == 'UNRESOLVED' and slpm_quadrant != 'Transition':
-                _add_check(validation_checks, validation_errors, "Opportunity Map", False, f"inconsistente {slpm_quadrant}")
-            else:
-                _add_check(validation_checks, validation_errors, "Opportunity Map", True, f"{slpm_v12_data.get('sector', '')} -> {slpm_quadrant}")
+    # 6. Cobertura holdings (C3.2: sustituye check Opportunity Map)
+    if wyckoff_holdings_data:
+        groups_counts = {}
+        for _key, _df in wyckoff_holdings_data.items():
+            if _df is None or _df.empty:
+                continue
+            if 'group' in _df.columns:
+                for _g, _cnt in _df.groupby('group').size().items():
+                    groups_counts[_g] = groups_counts.get(_g, 0) + int(_cnt)
+        good_groups = [g for g, c in groups_counts.items() if c >= 5]
+        if good_groups:
+            _add_check(validation_checks, validation_errors, "Cobertura holdings", True, f"{len(good_groups)} grupos con >=5 tickers")
+        elif groups_counts:
+            _add_check(validation_checks, validation_errors, "Cobertura holdings", True, f"0 grupos con >=5 tickers ({len(groups_counts)} con datos)")
         else:
-            _add_check(validation_checks, validation_errors, "Opportunity Map", True, "sin leader_etf")
+            _add_check(validation_checks, validation_errors, "Cobertura holdings", True, "sin grupos con datos")
     else:
-        _add_check(validation_checks, validation_errors, "Opportunity Map", True, "sin datos")
+        _add_check(validation_checks, validation_errors, "Cobertura holdings", True, "no disponible")
 
     # 7. Data Freshness Dark Pool
     if darkpool_data:
@@ -168,28 +173,30 @@ def run_validation_gate(slpm_v12_data, pcr_data, darkpool_data, mte_result,
     except (ImportError, KeyError, ValueError, TypeError, AttributeError, RuntimeError) as e:
         _add_check(validation_checks, validation_errors, "Config pesos", False, str(e))
 
-    # 10. Anti-Double-Counting (C3.1: tolerante a retirada de SLPM)
-    try:
-        from indicators.state_machine import classify_leadership_state
-    except ImportError:
-        # C3.1: state_machine.py retirado con SLPM. C3.2 elimina este check.
-        _add_check(validation_checks, validation_errors, "Anti-Double-Counting", True, "N/A (SLPM retirado)")
+    # 10. Sanity holdings (C3.2: sustituye check Anti-Double-Counting)
+    if wyckoff_holdings_data:
+        issues = []
+        for _key, _df in wyckoff_holdings_data.items():
+            if _df is None or _df.empty:
+                continue
+            if 'close' in _df.columns:
+                _bad_close = pd.to_numeric(_df['close'], errors='coerce')
+                _n_bad = int((_bad_close <= 0).sum())
+                if _n_bad > 0:
+                    issues.append(f"{_key}.close: {_n_bad} valores <= 0")
+            if 'weight' in _df.columns:
+                _bad_w = pd.to_numeric(_df['weight'], errors='coerce')
+                _n_bad = int((_bad_w < 0).sum())
+                if _n_bad > 0:
+                    issues.append(f"{_key}.weight: {_n_bad} valores negativos")
+        if issues:
+            for _iss in issues:
+                validation_errors.append(f"Sanity holdings: {_iss}")
+            _add_check(validation_checks, validation_errors, "Sanity holdings", False, f"{len(issues)} problemas")
+        else:
+            _add_check(validation_checks, validation_errors, "Sanity holdings", True, "valores coherentes")
     else:
-        try:
-            import inspect
-            sig = inspect.signature(classify_leadership_state)
-            lis_in_state_machine = 'lis' in sig.parameters
-            dc_audit = audit_double_counting()
-            critical_vars = len(dc_audit.get('critical', []))
-            high_vars = len(dc_audit.get('high', []))
-            if lis_in_state_machine:
-                _add_check(validation_checks, validation_errors, "Anti-Double-Counting", False, "LIS aun en State Machine")
-            elif critical_vars > 0:
-                _add_check(validation_checks, validation_errors, "Anti-Double-Counting", True, f"correccion LIS activa, {critical_vars} criticas, {high_vars} altas")
-            else:
-                _add_check(validation_checks, validation_errors, "Anti-Double-Counting", True, f"correccion LIS activa, sin criticas, {high_vars} compartidas")
-        except (KeyError, ValueError, TypeError, AttributeError, RuntimeError) as e:
-            _add_check(validation_checks, validation_errors, "Anti-Double-Counting", False, str(e))
+        _add_check(validation_checks, validation_errors, "Sanity holdings", True, "no disponible")
 
     # Resultado
     passed = not validation_errors

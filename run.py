@@ -198,7 +198,7 @@ def main():
     index_struct_scores = ii.get('index_struct_scores', {})
 
     vg = run_validation_gate(
-        None, pcr_data, darkpool_data, mte_result,
+        wh_tables, pcr_data, darkpool_data, mte_result,
         tactical_scores, structural_scores,
         # D-05 (2026-10-03): propagar reference_date tz-aware (L43).
         reference_date=reference_date,
