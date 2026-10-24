@@ -2044,3 +2044,50 @@ residuales de `verify_leader_selection`/`config.index_tickers`/
 lee `analisis_lideres.csv` en `try/except FileNotFoundError` (fallback
 `n_acciones=0`, defensivo); `run.py:64` limpia los CSVs al inicio
 (best-effort). Ambas inocuas, se limpian con C4.5.
+
+## Sesion 2026-10-25 (continuacion) - Cierre C4.5-SLPM-STRINGS-RESIDUALES
+
+Commit `c1e4af2e` cierra el item `C4.5-SLPM-STRINGS-RESIDUALES`.
+
+**Diagnostico.** El grep inicial (sesion 3) habia identificado 3
+notas (sectorial.py, rankings.py x2). Al auditar con grep expandido
+post-Commit A aparecieron 9 ficheros productivos con menciones
+residuales, incluidos 3 no listados en el HANDOFF:
+`src/report/helpers.py` (lectura `analisis_lideres.csv`),
+`run.py` (limpieza CSVs de lideres) y `report_generator.py:169`
+(bloque comentado huerfano).
+
+**Retirado.**
+- `src/dependency_tracker.py` v1.2 -> v1.3:
+  `DIRECT_DEPENDENCIES` sin `slpm_v12.py`/`stock_leader.py`/
+  `Leader Breadth`, `liquidity.py` -> `liquidity_v2.py`, anadido
+  `WLS -> sector_concentration.py`. `INDIRECT_DEPENDENCIES` sin SLPM
+  ni LIS, anadido WLS. `EVIDENCE_CLASSIFICATION` sin Leader Breadth.
+  Nota 3 niveles sin leader breadth.
+- `sectorial.py:54` sin SLPM.
+- `rankings.py:90,145` sin SLPM.
+- `engines.py:2` docstring sin forzar lideres SLPM.
+- `rs_internal.py:6` docstring sin State Machine ni stock_leader.py.
+- `momentum.py:73` sin index_leaders/stock_leader.
+- `report_generator.py:169` bloque `# C3 - LIDERES POR SECTOR`
+  huerfano eliminado.
+- `helpers.py` bloque Acciones lideres (analisis_lideres.csv)
+  eliminado.
+- `run.py` bloque limpieza CSVs de lideres eliminado.
+
+**Verificacion.** Run real 14.4 min, exit 0, gate 10/10,
+24 writers OK. A1: 42 headers sin secciones legacy. A2: cero
+menciones SLPM/slpm_v12/stock_leader/Leader Breadth/leader_breadth/
+analisis_lideres/index_phase/index_leaders/classify_wyckoff_phase.
+A4: 8 secciones clave presentes. A5: Anti-Double-Counting Audit
+con WLS y liquidity_v2.py. A6: cero "Acciones lideres".
+
+**Nueva deuda detectada.** `REPORT-ENCODING-MOJIBAKE-ADC` (OPEN):
+el bloque de clasificacion de evidencia del Anti-Double-Counting
+tiene mojibake preexistente ("ClasificaciÃ³n", "CrÃ©dito"). El
+chequeo A3 del pipeline (Select-String "Ã|â€" sobre el .md) no lo
+detecto por problemas del propio PowerShell al filtrar. Afecta a
+~14 filas de la tabla de clasificacion. Abierto en REGISTRO con
+alcance: rastrear donde se rompe la cadena (probablemente el
+escritor del reporte), fix, test de contrato y extension del
+chequeo A3.

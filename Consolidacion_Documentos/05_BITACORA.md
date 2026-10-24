@@ -44,6 +44,43 @@ Al cerrar una sesion nueva, se anade arriba (las mas recientes primero). Si hay 
 
 ## 3. SESIONES
 
+### 2026-10-25 (sesion 4 continuacion) - Cierre C4.5-SLPM-STRINGS-RESIDUALES
+
+**Objetivo.** Cerrar C4.5-SLPM-STRINGS-RESIDUALES (deuda de
+sesion 3).
+
+**Hecho.**
+- 9 ficheros productivos limpiados: `dependency_tracker.py`
+  (v1.2->v1.3, DIRECT sin SLPM/stock_leader/Leader Breadth,
+  liquidity_v2, +WLS), `sectorial.py:54`, `rankings.py:90,145`,
+  `engines.py:2`, `rs_internal.py:6`, `momentum.py:73`,
+  `report_generator.py:169` (bloque huerfano),
+  `helpers.py` (Acciones lideres), `run.py` (limpieza CSVs de
+  lideres).
+- Commit codigo `c1e4af2e`.
+- Run real 14.4 min, gate 10/10, 24 writers OK, cero menciones
+  SLPM en reporte, cero "Acciones lideres".
+- Nueva deuda `REPORT-ENCODING-MOJIBAKE-ADC` (OPEN): mojibake
+  preexistente en el bloque clasificacion de evidencia del
+  Anti-Double-Counting ("ClasificaciÃ³n", "CrÃ©dito"). Detectado
+  en A5 del run real. No introducido por C4.5.
+
+**Commits.** `c1e4af2e` (codigo).
+
+**Pendiente.**
+- `STRUCTURAL-ENGINE-LEADER-BREADTH-ZOMBIE` (cosmetico confirmado).
+- `REPORT-ENCODING-MOJIBAKE-ADC` (nuevo, verificar fix en escritor
+  del reporte).
+- `helpers.py` ya sin `analisis_lideres.csv`, pero la seccion
+  "Acciones lideres" desaparecio del reporte: verificar que no
+  rompe el contrato de la tabla Data Freshness.
+- SOW-BEAR-CONFIRMATION (contrato v1.10).
+
+**Lecciones.** El grep de C4.5 inicial (sesion 3) habia listado 3
+notas; el grep expandido post-Commit A dio 9 ficheros. La leccion
+de HANDOFF §6 sobre "auditar el reporte en 2 dimensiones" aplica
+tambien al codigo: grep por fichero, no por linea conocida.
+
 ### 2026-10-25 (sesion 4) - Cierre VERIFY-LEADER-SELECTION-ROTO
 
 **Objetivo.** Cerrar el primer item tras sesion 3.

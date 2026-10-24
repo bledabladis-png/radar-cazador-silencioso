@@ -160,40 +160,9 @@ LYXI.
   sesion 3.
 - C4.4: cerrado esta sesion.
 - `VERIFY-LEADER-SELECTION-ROTO`: FIXED 2026-10-25 (commit `37bca52d`).
+- `C4.5-SLPM-STRINGS-RESIDUALES`: FIXED 2026-10-25 (commit `c1e4af2e`).
 
 ## 4. PENDIENTES VIVOS
-
-### 4.1. C4.5 — Limpiar strings residuales a SLPM (siguiente paso)
-
-El run real revelo que **el reporte sigue diciendo que SLPM/lideres
-existen** en 3 sitios, aunque el codigo ya no los tiene:
-
-- `src/dependency_tracker.py`: DIRECT_DEPENDENCIES con `slpm_v12.py`
-  en Structural Score, Persistence, RS, Flow Proxy; `stock_leader.py`
-  en RS y Flow Proxy; `Leader Breadth: [slpm_v12.py]`. INDIRECT con
-  `LIS -> SLPM (corregido)`, `Structural Score -> Opportunity Map +
-  SLPM`. EVIDENCE_CLASSIFICATION con `Leader Breadth: DERIVADA-COMPUESTA`.
-- `src/report/sectorial.py:54`: "Los derivados (SLPM, Opportunity
-  Map, scores)".
-- `src/report/rankings.py:90`: "Opportunity Map (independiente del
-  SLPM)".
-- `src/report/rankings.py:145`: "No implica liderazgo confirmado por
-  SLPM".
-
-Tambien hay 3 menciones residuales en `scripts/generate_docs.py` y
-en `src/report/synthesis.py:214` (esta ultima es valida: la seccion
-Anti-Double-Counting sigue existiendo).
-
-**Alcance C4.5 propuesto**: actualizar el mapeo de
-`dependency_tracker.py` al sistema real (liquidity_v2, sin SLPM,
-sin leader_breadth, añadir WLS: [sector_concentration.py]), reescribir
-las 3 notas de `sectorial.py` y `rankings.py`. Sin tocar
-`structural_engine.py::compute_structural_score(leader_breadth=0.5)`
-que es deuda separada.
-
-**Verificacion obligatoria**: run real del pipeline + auditoria del
-reporte en 2 dimensiones (headers + menciones textuales, no solo
-headers).
 
 ### 4.2. Deudas tecnicas OPEN (sesion 3)
 

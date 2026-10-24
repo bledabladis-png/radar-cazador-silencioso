@@ -1941,35 +1941,64 @@ items:
 - id: C4.5-SLPM-STRINGS-RESIDUALES
   tipo: deuda_tecnica
   ciclo: '2026-10-24'
+  estado: FIXED
+  commit: c1e4af2e
+  evidencia: |
+    C4.5 aplicado en commit c1e4af2e. dependency_tracker.py v1.2 ->
+    v1.3: DIRECT_DEPENDENCIES sin slpm_v12.py, stock_leader.py,
+    Leader Breadth; liquidity.py sustituido por liquidity_v2.py;
+    anadido WLS -> sector_concentration.py. INDIRECT_DEPENDENCIES sin
+    SLPM ni LIS; anadido WLS -> Sector Concentration.
+    EVIDENCE_CLASSIFICATION sin Leader Breadth; nota de 3 niveles sin
+    mencion a leader breadth. sectorial.py:54 sin SLPM. rankings.py:90
+    sin "independiente del SLPM". rankings.py:145 sin "liderazgo
+    confirmado por SLPM". engines.py:2 docstring sin "forzar lideres
+    SLPM". rs_internal.py:6 sin State Machine ni stock_leader.py.
+    momentum.py:73 sin index_leaders/stock_leader.
+    report_generator.py:169 bloque "# C3 - LIDERES POR SECTOR"
+    huerfano eliminado. helpers.py bloque "Acciones lideres"
+    (analisis_lideres.csv) eliminado. run.py bloque limpieza CSVs
+    de lideres eliminado. Sin test especifico: cambio elimina strings
+    en docstrings/comentarios/producto sin logica ejecutable.
+    Verificado en run real 2026-10-25 (14.4 min, gate 10/10,
+    24 writers OK, cero menciones SLPM/slpm_v12/stock_leader/Leader
+    Breadth/leader_breadth/analisis_lideres/index_phase/
+    index_leaders/classify_wyckoff_phase en reporte, cero "Acciones
+    lideres").
+  descripcion: |
+    El run real del pipeline (post C4.4) revelo que el reporte seguia
+    diciendo que SLPM y lideres existen en 3 sitios, aunque el codigo
+    ya no los tiene: (1) src/dependency_tracker.py con slpm_v12.py /
+    stock_leader.py / Leader Breadth; (2) src/report/sectorial.py:54;
+    (3) src/report/rankings.py:90, :145. Menciones residuales
+    adicionales en scripts/generate_docs.py (fallback muerto),
+    helpers.py (lectura analisis_lideres.csv), run.py (limpieza CSVs
+    de lideres) y report_generator.py (bloque huerfano).
+
+- id: REPORT-ENCODING-MOJIBAKE-ADC
+  tipo: deuda_tecnica
+  ciclo: '2026-10-25'
   estado: OPEN
   descripcion: |
-    El run real del pipeline (post C4.4) revelo que el reporte sigue
-    diciendo que SLPM y lideres existen en 3 sitios, aunque el codigo
-    ya no los tiene:
-    (1) src/dependency_tracker.py: DIRECT_DEPENDENCIES con slpm_v12.py
-        en Structural Score / Persistence / RS / Flow Proxy;
-        stock_leader.py en RS / Flow Proxy; Leader Breadth:
-        [slpm_v12.py]. INDIRECT con LIS -> SLPM y Structural Score ->
-        Opportunity Map + SLPM. EVIDENCE_CLASSIFICATION con Leader
-        Breadth: DERIVADA-COMPUESTA.
-    (2) src/report/sectorial.py:54: "Los derivados (SLPM,
-        Opportunity Map, scores)".
-    (3) src/report/rankings.py:90, :145: "Opportunity Map (...,
-        independiente del SLPM)" y "No implica liderazgo confirmado
-        por SLPM".
-    Menciones residuales adicionales en scripts/generate_docs.py (no
-    aparecen en reporte) y en src/report/synthesis.py:214 (esta es
-    valida: la seccion Anti-Double-Counting sigue existiendo).
+    Detectado durante la verificacion de C4.5 (run real 2026-10-25):
+    la seccion "Anti-Double-Counting Audit" del reporte contiene
+    mojibake en el bloque de Clasificacion de Evidencia:
+    "ClasificaciÃ³n de evidencia" (deberia ser Clasificacion) y
+    "CrÃ©dito" (deberia ser Credito). Preexistente: los literales en
+    dependency_tracker.py estan en UTF-8 correcto en fuente, pero
+    llegan mal al reporte generado. Afecta solo al bloque de
+    clasificacion de evidencia (tabla de ~14 filas). El chequeo A3
+    del pipeline (Select-String "Ã|â€" sobre el .md) no lo detecto
+    por el encoding del propio PowerShell al filtrar.
   siguiente_accion: |
-    C4.5: actualizar dependency_tracker.py al sistema real
-    (liquidity_v2 en lugar de liquidity.py, sin slpm_v12.py ni
-    stock_leader.py, sin Leader Breadth, anadir WLS:
-    [sector_concentration.py]). Reescribir las 3 notas de
-    sectorial.py y rankings.py. Sin tocar
-    structural_engine.py::compute_structural_score(leader_breadth=0.5)
-    (item separado). Verificacion obligatoria: run real del pipeline
-    + auditoria del reporte en 2 dimensiones (headers + menciones
-    textuales).
+    (1) Confirmar con py -c "print(repr(open('outputs/report/
+    reporte_diario.md', encoding='utf-8').read()[-3000:]))" la
+    region del bloque. (2) Rastrear donde se rompe la cadena:
+    probablemente en el escritor del reporte (encode utf-8 -> latin-1
+    o similar) o en el render. (3) Fix en el escritor, no en los
+    literales. (4) Anadir test de contrato que verifique el substring
+    literal correcto en el .md generado. (5) Extender el chequeo A3
+    del pipeline para incluir bytes UTF-8 mal interpretados.
 
 - id: STRUCTURAL-ENGINE-LEADER-BREADTH-ZOMBIE
   tipo: deuda_tecnica
