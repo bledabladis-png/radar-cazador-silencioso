@@ -7,262 +7,129 @@ junto con `Consolidacion_Documentos/00_ARRANQUE.md`.
 
 ---
 
-## 1. ESTADO AL CIERRE (2026-10-20)
+## 1. ESTADO AL CIERRE (2026-10-24)
 
 Rama:           main
-HEAD:           consultar `git log --oneline -1` (no literal; el corpus no fija SHA para evitar deriva)
+HEAD:           consultar `git log --oneline -1` (no literal; el corpus no fija SHA)
 Sincronizacion: main == origin/main tras push final
-Tests local:    ver `Consolidacion_Documentos/ESTADO_SISTEMA.md`. Al cierre: 3774 passed + 5 skipped con -m "not integration_real_data".
+Tests local:    ver `Consolidacion_Documentos/ESTADO_SISTEMA.md`.
+                Al cierre: 3858 passed, 5 skipped (suite completa).
+                3849 passed, 5 skipped con -m "not integration_real_data".
 Validation Gate: 10/10
-Working tree:   limpio (salvo data/ y outputs/ que el bot actualiza)
-Gobernanza:     docs/gobernanza/REGISTRO.yaml. 86 items (6 nuevos del 2026-10-20).
+Working tree:   limpio
+Gobernanza:     docs/gobernanza/REGISTRO.yaml. 124 items.
 CI de tests:    .github/workflows/ci_tests.yml (push a main, paths-ignore: data/, outputs/).
-Certificacion prod: PRIMER CICLO COMPLETADO. Target 2026-10-19 cubierto por
-                run 39355608824 (20-10 01:50 UTC, delay 2h33m vs slot 23:17
-                del lunes, GitHub scheduler). run-system ejecuto pipeline
-                completo: gate+run-system+issue-manager success, 5 artifacts
-                (receipt, attempt, daily-report, european-coverage, pyflakes).
-                Primer receipt_audit poblado: 18 OK + 1 NO_DATE_CHECK, 0 MISSING.
-                Primer data_quality con date=sesion (2026-10-19, sin findes).
+
+**Foco de la sesion 2026-10-24:** cierre del frente SOW universal tras
+7 experimentos. `SOW-V6` -> WONT_FIX. Apertura de `SOW-BEAR-CONFIRMATION`
+(IN_PROGRESS, pendiente contrato v1.10 + auditor externo).
+`WYCKOFF_SOW_* = None` sin cambios.
 
 ---
 
-## 2. SESIONES 2026-10-18 a 2026-10-20
+## 2. SESIONES 2026-10-22 a 2026-10-24
 
-### 2.1. Sesion manana (7 commits)
+### 2.1. 2026-10-22: 11 bugs + Wyckoff B5/B3 (cierre tardio)
 
-| SHA | Contenido |
-|---|---|
-| `9d8d8cf9` | H16: contadores 0/5 explicitos en Cross-Module |
-| `3d8c9689` | H7: ETFs fuera del denominador de cobertura breadth |
-| `37e1f02e` | H5: CFTC pos_change = net_position.diff (identidad) |
-| `e7b12feb` | H10/H19: "Data Conf" -> "Conf. Frescura" |
-| `caa176d1` | H11/H12: N-PORT fecha_observacion + fecha_presentacion |
-| `a226f556` | Struct: columnas en Rankings Sectoriales e Indices |
-| `22392813` | Limpieza pyflakes |
+Ver `05_BITACORA.md` L92. Commits `d405d539` a `1cc8387a`.
 
-### 2.2. Sesion tarde (13 commits)
+### 2.2. 2026-10-23: scheduled target 2026-10-22 + autonomia + cierre documental
 
-Fase A - Deudas generador GEN-ESTADO-*:
+Ver `05_BITACORA.md` L47. Commits:
+- `49248879` — cierre documental 22-23 oct (6 ficheros).
+- `f677acb6` — SHA real en `REP-AUDIT-20261023-SCHEDULED-VERIFY`.
+- `2374b605` — referencias traspaso inexistente -> HANDOFF.
+- `838826af` — 3 items auditoria reporte 2026-10-22.
+- `7e1582a7` — 4 notas cruzadas en `src/report/` (slpm, sector_context, market_context, volatility_mte).
+- `968bcdcc` — cierre `NOTAS-CRUZADAS` con SHA real.
 
-| SHA | Contenido |
-|---|---|
-| `2ca11b5a` | Regenerar ESTADO_SISTEMA (3641 -> 3739) |
-| `80ae528b` | Abrir GEN-ESTADO-* + nota doble conteo HANDOFF |
-| `348360f2` | Entrada bitacora 2026-10-18 (rebasada sobre bot FRED) |
-| `7acb327a` | GEN-ESTADO-* OPEN -> IN_PROGRESS |
-| `72659a9f` | GEN-ESTADO-VALIDATION-VACIO: quitar validation/ de pytest |
-| `cb3253d3` | GEN-ESTADO-TESTS-NOT-FAILCLOSED: propagar rc a main |
-| `8dd86e54` | Cierre GEN-ESTADO-* (con placeholders, reparado despues) |
-| `3504480f` | Fix import scripts/ + SHAs reales + verificacion FIXED |
+### 2.3. 2026-10-24: cierre SOW universal + apertura bear-confirmation
 
-Fase B - Auditoria externa del reporte (punto 1):
+**Commits clave:**
+- `e7327463` — `purged_kfold_sow.py` con criterio pre-registrado.
+- `520a8db7` — SOW v2 lift within-ticker.
+- `2dcc3325` — C1-M5 con cohorte original.
+- `75ba6945` — C1-M10 (M=10 rompe semantica).
+- `548d2773` — C1-M5: 2 folds significativos (2018, 2020).
+- `b35495c8` — `SOW-V6` IN_PROGRESS tras diagnostico.
+- `be2f7670` — cohorte reservada S&P 500 (268 tickers).
+- `a3987f1c` — placebo_shift adaptativo.
+- `c5485337` — placebo date-shift global.
+- `61556a74`/`0c2455ab` — cohorte R3000 + vectorizacion.
+- `3d1a215d` — resultado R3000 (FUNCIONA por criterio, pero ventana no evento).
+- `b542d381` — `detect_sow_v2` (gate distribution).
+- `260569bc`/`281cb378` — event study.
+- `81962b59` — `SOW-V6` WONT_FIX + `SOW-BEAR-CONFIRMATION` IN_PROGRESS.
+- `1ffc299b` — script descarga R3000 reproducible.
+- `ff8f5a6f` — fix H7 en detect_sow_v2 + anclas cohorte.
 
-| SHA | Contenido |
-|---|---|
-| `8eaecb0a` | IPS/IPI como proxy de mercado, no IPC/PPI |
+**Descubrimientos:**
+- SOW universal (C1-M5, M=5) tiene senal real vs placebo en 3423 tickers (+0.123 vs -0.077, 21.5 sd).
+- Pero NO es universal: 4/9 folds positivos, IC95 entre anos [-0.058, +0.303].
+- Patron bear real: 3/3 anos con >10% dias bear funcionan, 0/5 con <10%.
+- 2020 domina (473/671 SOW en bear son de 2020).
+- Ningun gate probado (VIX>60, bear) cumple criterio.
 
-Fase C - Deuda validation/ en workflows:
+**Evidencia archivada:**
+- `docs/auditoria/wyckoff/51_purged_kfold_2026-10-23/` — C0-M30, C1-M5 v1.
+- `docs/auditoria/wyckoff/52_purged_kfold_c1_2026-10-24/` — C1-M5 result.
+- `docs/auditoria/wyckoff/53_dictamen_2026-10-24.md` — dictamen SOW-V6 (pre-SOW).
+- `docs/auditoria/wyckoff/55_reserved_r3000_2026-10-24/` — R3000 result.
+- `docs/auditoria/wyckoff/56_event_study_2026-10-24/` — event study v1 vs v2.
 
-| SHA | Contenido |
-|---|---|
-| `cafc77d8` | Quitar validation/ del pytest en ci_tests y daily_run |
-
-Fase D - Investigacion frescura + deudas del sistema:
-
-| SHA | Contenido |
-|---|---|
-| `4ade7384` | data_quality: date = sesion bursatil, no fecha del run |
-| `5ef44486` | Migrar data_quality.csv (155 filas, 9 fechas, 593->464) |
-| `400e6c9b` | feat(observability): auditoria post-receipt vs filas persistidas |
-| `212011f4` | Quitar imports unused (pyflakes) |
-
-### 2.4. Sesion 2026-10-20 (8 commits: contaminacion de fechas)
-
-**Contexto.** Revisión del scheduled del lunes 19-10 (target 2026-10-19).
-Health check semanal falló con FAIL `cron_slots` (2/5 slots en 24h) aunque
-el pipeline estaba operativo. Además, auditoría de contaminación de fechas
-en `outputs/history/*.csv` detectó 4 CSVs con filas en sábados/domingos o
-con `date` futura.
-
-| SHA | Contenido |
-|---|---|
-| `f3efa062` | cron_slots FAIL solo si 0/5 slots en 24h (regla 3+ -> 1-4 WARN) |
-| `6d2278c3` | european_coverage `_ref_to_date` = last_expected_market_date() |
-| `da093a05` | migrar european_coverage.csv: 1734 -> 1326 filas, 0 no bursátiles |
-| `f02cebd8` | data_quality: age europeas contra sesión (no contra run) |
-| `14838307` | monitor_double_counting: date=sesion + run_timestamp |
-| `5f464729` | migrar double_counting_monitor.csv: 225 -> 123 filas |
-| `5ebe1c62` | eliminar slpm_history.csv fósil (sin writer activo desde 2026-07-17) |
-| `c98c55f4` | 6 items REP-AUDIT-20261020-* en REGISTRO |
-
-**Hallazgos y falsos positivos.** La auditoría de fechas marcó 11 CSVs como
-`NO_BURSATIL`. 4 son bug real (european_coverage, double_counting_monitor,
-data_quality rama europea, slpm_history). 7 son falsos positivos: CSVs de
-fondos con calendario no-NYSE (amundi_lyxi, blackrock_dax/isf, invesco_qqq_nav,
-etf_primary_flow con cierres NYSE legítimos, darkpool_history week=FINRA).
-Documentados como `REP-AUDIT-20261020-FALSOS-POSITIVOS-CALENDARIO`.
-
-**Lecciones.**
-- El fix del 18-10 (`4ade7384`) solo cubrió la rama general de
-  `compute_data_quality`. La rama europea usa `_last.date()` (con guion
-  bajo), no matcheada por el replace. Bug descubierto en auditoría del 20-10.
-- El contrato del 00_ARRANQUE "ningún writer publica date no bursátil"
-  aplica a writers del pipeline NYSE. Los CSVs de proveedores con
-  calendario propio (fondos europeos, NAVs, FINRA week) están fuera.
-  Excepción documentada en 00_ARRANQUE §2 (pendiente de commit).
-- GitHub scheduler con delays 2-7h. La regla `cron_slots` anterior
-  (FAIL con 3+ missing) marcaba como caído un pipeline operativo. Ahora
-  FAIL solo si 0/5. Issue #6 cerrado.
-
-### 2.3. Cambios observables en el reporte
-
-- INFO Cross-Module con ambos bloques siempre (Financial Stress: N/5 +
-  Inflation Pressure: M/5, y Expansion si hay).
-- Columna "Conf. Frescura" (no "Data Conf").
-- Bloque volatilidad: "VOLATILIDAD REALIZADA del VIX".
-- Alerta credito: "neutral" si |HYG/LQD Z| < 0.75 (antes 0.5).
-- Bloque FLS: si FLS >= 70, aclara que es estres de corto plazo.
-- Divergencia precio-flujo: sufijo " (debil)" si |ret| < 1%.
-- A/D Line: declara universo (N/N tickers).
-- CFTC Pos Change: identidad net.diff().
-- N-PORT: Fecha observacion + Fecha presentacion (lag ~59d).
-- Rankings Sectoriales + Indices: columna Struct con magnitud.
-- Bloque MTE: aclara que IPS/IPI son proxy de mercado (no IPC/PPI).
-- CSV macro_regime: financial_regime + real_liq_regime, sin alias legacy.
-- data_quality.csv: date = sesion bursatil (no fecha del run).
-
-### 2.5. Sesion 2026-10-20 (tarde) - 14 commits: dos auditorias externas + FLS
-
-**Contexto.** Dos auditores externos enviaron revision del reporte 2026-10-19.
-El primero: 14 items (4 criticas + 10 sospechosas). El segundo: 7 items
-enfocados en Flow Proxy, trazabilidad temporal y sintesis credito.
-
-**Cierres (14 commits).**
-
-Auditoria #1:
-- `0aec4ce5` (B1/B3/B4): sintesis sin atribuir HIGH_STRESS al credito,
-  nota Flow Proxy vs Flujo Primario, columna `Struct Score`.
-- `41b1c8bf` (B2): veto por variables materiales en `evidence_matrix`.
-  XLC (100% bearish) ya no sale "FAVORABLE" con price/breadth negativos.
-- `47071a51` (A2): `health_check` no da WARN en trimestrales con dispatch OK.
-- `7f329d07`: 10 items `REP-AUDIT-20261020-*` + HANDOFF + generador
-  `(sin filtro; suite completa)`.
-
-Auditoria #2:
-- `eaed52a7` (P1): nota Flow Proxy tabla (composite ETF) vs matriz
-  (mediana componentes). XLE -0.50 en tabla, +1 en matriz, explicado.
-- `68e4e40c` (P2): nota temporal provenance, recuento votos P/N/0 en
-  matriz, nota regla Wyckoff.
-
-Transversal:
-- `9f6afa26` (A1): `post_receipt_audit` status `LAGGED` cuando
-  `receipt.date != target_session`.
-- `7475108f` (C8): nota FLS saturacion por nivel. Item
-  `FLS-COMPONENT-DESIGN` OPEN.
-- `33a12a10` (C10): ratio |Z| extremo en Cross-Asset.
-- `878ad4fc` (C6): nota materialidad Europa (media simple, no AUM).
-- `38f17674` (FLS): SOFR como spread SOFR-IORB, no nivel. FLS 79 -> 63.
-  stressed 3/5 -> 2/5. Item queda OPEN por WALCL/CP.
-
-**Falsos positivos documentados** (en `REVIEW-EXTERNAL`):
-C1 (Wyckoff +1), C2 (Flow Proxy 30% WLS), C3 (SLPM NO_LEADERS),
-C4 (datos desfasados), C5 (NIPC 13F), C7 (spread 10Y-3M), C9 (IPI).
-
-**Pendiente.** Cerrar `REVIEW-EXTERNAL` tras run 2026-10-20.
-`RECEIPT-AUDIT-LAG`
-(observacion 4 semanas). `CRON-SLOTS-OBS` y `SCHEDULER-DELAYS`
-(revision 2026-11-10).
-
+**Cambios en codigo:**
+- `indicators/wyckoff_v1.py`: anadida `detect_sow_v2` (gate distribution). `detect_sow` intacto.
+- `scripts/calibrate_wyckoff_sow_5b4bis.py`: anadida `compute_sow_cache_v2`.
+- `config/settings.py`: `WYCKOFF_SOW_* = None` sin cambios.
+- Tests: 3858 passed, 5 skipped (era 3849 antes). 9 tests nuevos (detect_sow_v2 + H7).
 
 ---
 
 ## 3. FRENTES CERRADOS
 
-- H4 report, H5, H6, H7, H10, H11, H12, H14, H15, H16, H17, H19.
-- Capas 1-6 del plan de sostenibilidad.
-- Struct publication (opcion B aprobada por usuario 2026-10-18).
-- Issue #5 health-check cerrado.
-- Dictamen externo Gate 0.5 aprobado con correcciones aplicadas.
-- GEN-ESTADO-VALIDATION-VACIO (`72659a9f`).
-- GEN-ESTADO-TESTS-NOT-FAILCLOSED (`cb3253d3`).
-- Auditoria externa 2026-10-18 punto 1 IPS/IPI proxy (`8eaecb0a`).
-- validation/ fuera de pytest en workflows (`cafc77d8`).
-- data_quality.csv date = sesion bursatil (`4ade7384` + `5ef44486`).
-- Receipt audit no bloqueante (`400e6c9b` + `212011f4`).
-- REP-AUDIT-20261020-WARN-TRIMESTRALES: FIXED (`47071a51`).
-- REP-AUDIT-20261020-ETF-FLOW-LAG: FALSE_POSITIVE (lag SSGA D+1/D+2).
-- REP-AUDIT-20261020-REPORT-STRESS-LABEL: FIXED (`0aec4ce5`).
-- REP-AUDIT-20261020-REPORT-FLOW-RECONCILIATION: FIXED (`0aec4ce5`).
-- REP-AUDIT-20261020-REPORT-STRUCT-COLUMN: FIXED (`0aec4ce5`).
-- REP-AUDIT-20261020-REPORT-XLC-EVIDENCE: FIXED (`41b1c8bf`).
-- REP-AUDIT-20261020-REPORT-REVIEW-EXTERNAL: 13 items atendidos (auditor externo #1). P1, P2 FIXED en `eaed52a7`, `68e4e40c`. C1-C10 verificados (varios FALSE_POSITIVE).
-- REP-AUDIT-20261020-FLS-COMPONENT-DESIGN: FIXED (`5a1e0c37`). SOFR FIXED
-(`38f17674`), WALCL/CP WONT_FIX (saturacion estructural; diagnostico 22-10).
-- REP-AUDIT-20261020-REPORT-REVIEW-EXTERNAL: FIXED. Run 39528211520 verde, validation_gate 10/10, FLS 63/100, primer LAGGED real.
+- **A1-A5, A6, B, C, 6, 7, 8, 9, F, H1-H18**: cerrados.
+- **5e legacy Wyckoff**: cerrado 2026-10-10.
+- **SOW universal (SOW-V6)**: cerrado 2026-10-24 como WONT_FIX.
+  Razon: senal real vs placebo pero no universal. 4/9 folds positivos,
+  IC95 entre anos cruza 0. Ningun gate probado cumple criterio pre-registrado.
 
 ---
 
 ## 4. PENDIENTES VIVOS
 
-- **REP-AUDIT-20261020-RECEIPT-AUDIT-LAG** (OPEN): status LAGGED en post_receipt_audit; observacion 4 semanas.
-- **REP-AUDIT-20261020-CRON-SLOTS-OBS** (OPEN): revision 2026-11-10.
-- **REP-AUDIT-20261020-SCHEDULER-DELAYS** (OPEN): revision 2026-11-10.
+### 4.1. SOW-BEAR-CONFIRMATION (IN_PROGRESS)
 
-### 4.0. Verificacion scheduled target 2026-10-22 [COMPLETED 2026-10-23]
+- Requiere contrato v1.10 firmado por auditor externo antes de implementar.
+- Semantica: etiqueta de confirmacion dentro de regimen bear ya identificado.
+- No activa DISTRIBUTION. No modifica `classify_wyckoff_phase`.
+- Siguiente accion: redactar `docs/auditoria/wyckoff/57_contrato_v1_10.md`.
+- Sin codigo en produccion hasta firma.
 
-**Estado: COMPLETADO.** Run `39884468711` (23-10 01:31 UTC, slot
-22-10 23:17 UTC, delay 2h14m, `run-system: success`). 4/4 fixes
-criticos confirmados en CI:
-- Liquidez `NEUTRAL (90%)`, no `N/A`.
-- `sector_correlation_summary` receipt OK 2026-10-22.
-- `pcr_history` receipt OK 2026-10-22.
-- `cboe_vix3m` 4298 filas, 0 no-bursatiles.
-- 20 writers, 18 OK + 2 no-OK esperados.
+### 4.2. Items OPEN observacionales (con fecha)
 
-Contrato temporal integro (`data_quality.date` = `receipt_audit.target`
-= 2026-10-22). Ver `REP-AUDIT-20261023-SCHEDULED-VERIFY` en REGISTRO.
+| Item | Fecha | Accion |
+|---|---|---|
+| H5.3 | 2026-11-20 06:17 UTC | Verificar cron |
+| REP-AUDIT-20261020-RECEIPT-AUDIT-LAG | 2026-11-17 | Cierre con 4 semanas obs |
+| REP-AUDIT-20261020-CRON-SLOTS-OBS | 2026-11-10 | Revision runs 20-10 a 10-11 |
+| REP-AUDIT-20261020-SCHEDULER-DELAYS | 2026-11-10 | p95 delays |
 
-### 4.1. Certificacion scheduled lunes 2026-10-19 23:17 UTC [COMPLETED 2026-10-20]
+### 4.3. BLOCKED_EXTERNAL
 
-**Estado: COMPLETADA.** Target 2026-10-19 cubierto por run `39355608824`
-(20-10 01:50 UTC, delay 2h33m vs slot 23:17 del lunes, GitHub scheduler).
-`run-system` ejecuto pipeline completo. Receipt emitido. `receipt_audit.csv`
-poblado: 18 OK + 1 NO_DATE_CHECK, 0 MISSING. Detalle en §1 y §2.4.
+- `C2-920`: discrepancia 920 en baseline IAE. Auditor externo.
+- `WYCKOFF-5BX`: esperando `n_confirmed_H20_complete >= 550` (~2027).
+  Sujeto a re-evaluacion si SOW-BEAR-CONFIRMATION demuestra que C0 no
+  aporta en bear.
 
-Primer run scheduled con `target_session=2026-10-19`. Ciclo completo
-v1.1+v1.2 desde cero. Ademas: primer run con post_receipt_audit activo
-y con data_quality.csv escribiendo date=sesion bursatil.
+### 4.4. Deudas estructurales
 
-Si a las 23:35 UTC no ha disparado: `gh workflow run daily_run.yml`
-(sin inputs; target_session se calcula internamente). Los 5 slots
-cubren la ventana.
-
-Observar en el run:
-- `receipt_audit.csv` en el artifact de outputs/history.
-- Status de cada writer en el audit (esperado: todo OK salvo
-  date=None en sector_rank_deltas).
-- Health check del lunes 26-oct con `check_receipt_audit` WARN si
-  hay anomalias.
-
-### 4.2. Otros frentes
-
-- **H5.3** (OPEN): cron 20-nov-2026 06:17 UTC. Sin accion antes.
-- **C2 (920)**: bloqueado por auditor externo.
-- **Wyckoff 5b.X v3**: bloqueado por datos (~2027).
-- **SOW v6**: pendiente firma externa.
-- **Ubuntu 26**: workflows pinnen `ubuntu-24.04`.
+- HANDOFF se edita a mano (no hay generador automatico).
+- Modulos no integrados: `target_universe`, `timestamps`, `catalog_pit`,
+  `absence`, `validate_membership`, `cusip_resolver.resolve_cusip`.
+- `reporting_dedup` (P65/P66): capa de diagnostico por diseno.
+- 5 tests skipped: diseno, no deuda.
 
 ---
-
-### 4.3. Cierre sesion 2026-10-22
-
-11 bugs reales cerrados con test + verificacion en produccion local:
-router liquidez, state v1/v2, docstring stale, ref rota, verifier
-reachability, effr.csv, -0.0, pcr side effects, sector_correlation
-P7, cboe_vix3m no-bursatiles, Wyckoff B5/B3. Suite: 3845 passed,
-5 skipped. HEAD al cierre: `1bb56473`. Detalle en `05_BITACORA.md`
-entrada 2026-10-22 y `04_HISTORICO.md` "Sesion 2026-10-22".
 
 ## 5. COMO ARRANCAR
 
@@ -273,15 +140,15 @@ entrada 2026-10-22 y `04_HISTORICO.md` "Sesion 2026-10-22".
     py scripts\verifica_gobernanza.py
     py scripts\genera_indice_auditorias.py
     py scripts\poda_bitacora.py --check
-    py -m pytest tests/ -q --tb=line -m "not integration_real_data"
+    py -m pytest tests\ -q --tb=line -m "not integration_real_data"
     py -m pyflakes . ; py -m compileall . -q
 
 Esperado:
 - HEAD = el que devuelva `git log --oneline -1`.
 - ahead 0, behind 0 (o behind N si el bot ha pusheado; `git pull --ff-only`).
-- working tree limpio.
-- Tests: ver `ESTADO_SISTEMA.md`. Referencia con filtro: 3774 passed + 5
-  skipped + 9 deselected. Snapshot sin filtro: 3783 (publicado en
+- Working tree limpio.
+- Tests: ver `ESTADO_SISTEMA.md`. Referencia con filtro: 3849 passed + 5
+  skipped + 9 deselected. Snapshot sin filtro: 3858 (publicado en
   ESTADO_SISTEMA.md).
 - Gobernanza: `[OK] Gobernanza coherente`.
 - Indice H1-H18: `[OK] indice actualizado`.
@@ -292,62 +159,96 @@ Esperado:
 
 ## 6. NOTAS CRITICAS
 
-- **Verificar en CI, no solo en local.** Tests con `tmp_path` y fixtures
-  sinteticos. No leer `data/` ni `outputs/`.
-- **Un cambio = una verificacion = un commit.**
-- **Verificar EOL (LF/CRLF) y BOM antes de cada patch.** `report_generator.py`
-  tiene BOM. `utils.py` y `finalize.py` son CRLF. Resto LF. HANDOFF,
-  REGISTRO, BITACORA, 00_ARRANQUE, 02_ARQUITECTURA: LF puro.
-- **Here-strings >20 lineas o >5 `$` -> fichero temporal**
-  (`[IO.File]::WriteAllText` + `py`).
-- **Receipt fail-closed (enmienda v1.1).** BLOCKED o UNAVAILABLE ->
-  no se emite receipt.
-- **Contrato EQUITY_EOD `critical=True`.** `coverage_at_session < 0.90`
-  bloquea publicacion.
-- **Schedule vs Dispatch.** Un dispatch reciente NUNCA oculta ausencia
-  de schedule.
-- **Gobernanza canonica.** Items a `docs/gobernanza/REGISTRO.yaml`.
-  El HANDOFF es vista derivada.
-- **Anclas temporales.** Fechas literales a `ANCLAS.yaml`.
-- **Wyckoff phase (MARKUP/RANGE) es tendencia de fondo, no retorno
-  reciente.** struct > 0.30 (umbral) para MARKUP. Columna Struct
-  publica la magnitud para evitar lectura binaria.
-- **date = sesion bursatil.** `data_quality.csv` escribe `date` =
-  `last_expected_market_date(reference_date)`. Evita filas en sabados,
-  domingos y festivos NYSE. `age_calendar_days` se mide contra la
-  sesion, no contra el run. Verificado 2026-10-18.
-- **Receipt audit no bloqueante.** `scripts/post_receipt_audit.py`
-  compara `writer_receipts.json` con los CSV persistidos. Status
-  `MISSING` = receipt dijo escrito pero CSV no tiene la fila (bug
-  09-oct). No bloquea receipts. `health_check` lo lee los lunes y
-  WARN si hay anomalias. Se observa 4-8 semanas antes de decidir si
-  bloquear.
-- **writer_receipts.json gitignored.** Output de estado del pipeline.
-  El step de audit lo consume antes del commit del bot.
+### 6.1. SOW universal cerrado (2026-10-24)
+
+No reabrir SOW-V6 como "SOW universal". Los datos no lo soportan:
+
+Senal real vs placebo en cohorte reservada R3000 (3423 tickers):
+lift +0.123 vs placebo -0.077 (21.5 sd), pero 4/9 folds positivos.
+
+IC95 entre anos: [-0.058, +0.303]. Cruza cero.
+
+3 gates probados (distribution candidate, VIX>60, market bear):
+ninguno cumple criterio pre-registrado (CI95_lower > 0, 7/9 folds).
+
+Reabrir solo con nuevo contrato v1.10 (bear-confirmation) o nueva
+variable Y o nuevo dataset.
+
+### 6.2. SOW-BEAR-CONFIRMATION no es shadow mode
+
+El usuario veta explicitamente shadow mode como "aislado en paralelo
+sin tocar produccion". La semantica de bear-confirmation es distinta:
+es una etiqueta de confirmacion que se integra en el reporte, no una
+senal autonomia que se evalua en paralelo. Requiere contrato v1.10
+y auditor externo antes de implementar.
+
+### 6.3. Regla de los placebos con distribucion
+
+Si en una proxima sesion se testea un detector:
+
+Placebo A: permutacion intra-ticker (B=100).
+
+Placebo B: date-shift global (B=100). No un solo shift.
+
+Criterio: lift real > mean(placebo) + 2*sd(placebo).
+
+Sanity check: pb != lift (raise RuntimeError).
+
+Un solo shift (como en el primer experimento) no es placebo, es ruido.
+
+### 6.4. bootstrap entre anos, no por fecha
+
+block_bootstrap_by_date sesga el IC hacia arriba porque subrepresenta
+anos con lift bajo. El IC oficial para "senal estable entre regimenes"
+debe ser bootstrap_by_year (9 unidades) o t-interval entre anos.
+Ambos producen ICs mas anchos que el bootstrap por ticker.
+
+### 6.5. Anclas temporales obligatorias
+
+Toda fecha literal en src/ o scripts/ (salvo calibrate_*,
+walk_forward_*, validate_wyckoff_*, download_extended_history,
+power_analysis_5bX, iae_*) debe estar en ANCLAS.yaml.
+El test test_anclas_temporales falla si no. Anclas nuevas 2026-10-24:
+RESERVED_COHORT_START, RESERVED_COHORT_END.
+
+### 6.6. H7 patron
+
+test_audit_contracts_rolling_nan inspecciona texto, no ejecucion.
+rolling(N, min_periods=N) debe ir precedido de .dropna() en la misma
+linea o falla aunque la serie ya venga de dropna. Patron documentado
+en cabecera de wyckoff_v1.py.
+
+### 6.7. Scripts de descarga reproducibles
+
+scripts/fetch_reserved_cohort.py (S&P 500 -> 268 tickers) y
+scripts/fetch_reserved_cohort_r3000.py (US-Stock-Symbols -> 3423).
+Los parquets resultantes estan gitignored. Scripts versionados para
+reproducibilidad.
 
 ---
-
-- **Contrato de fecha: pipeline NYSE vs proveedores con calendario propio.**
-  "Ningun writer publica `date` no bursatil" (00_ARRANQUE §2) aplica a
-  writers del pipeline NYSE. Los CSVs de proveedores con calendario no-NYSE
-  estan fuera: fondos europeos (`amundi_lyxi_primary_flow`,
-  `blackrock_dax_primary_flow`, `blackrock_isf_primary_flow`), NAVs de fondo
-  (`invesco_qqq_nav_*` con fines de semana), `etf_primary_flow` (cierres
-  NYSE legitimos: Good Friday, fin de ano), `darkpool_history` (week=FINRA
-  lunes con walk-back). Documentado en
-  REP-AUDIT-20261020-FALSOS-POSITIVOS-CALENDARIO.
 
 ## 7. REFERENCIAS
 
-Corpus normativo: `Consolidacion_Documentos/` (12 docs).
-Gobernanza: `docs/gobernanza/` (README, REGISTRO.yaml, ANCLAS.yaml).
-Contrato del gate: `docs/auditoria/daily_run_gate_contrato_v1.md` +
-`docs/auditoria/daily_run_gate_enmienda_v1_1.md` +
-`docs/auditoria/daily_run_gate_enmienda_v1_2.md`.
-Indice auditoria externa: `docs/auditoria/radar/audits/INDEX_H1_H18.md`.
-Expedientes: `docs/auditoria/wyckoff/`, `docs/auditoria/iae/golden/`,
-`docs/auditoria/s03_deep/`, `docs/auditoria/regimenes/`.
+Consolidacion_Documentos/00_ARRANQUE.md — contexto de arranque.
 
----
+Consolidacion_Documentos/01_METODO.md — metodo de patch.
 
-**Fin del handoff.**
+Consolidacion_Documentos/01b_PATRONES.md — patrones de bug.
+
+Consolidacion_Documentos/02_ARQUITECTURA.md — mapa del sistema.
+
+Consolidacion_Documentos/03_IAE.md — subsistema IAE.
+
+Consolidacion_Documentos/04_HISTORICO.md — cronologia tematica.
+
+Consolidacion_Documentos/05_BITACORA.md — sesiones recientes.
+
+Consolidacion_Documentos/ESTADO_SISTEMA.md — snapshot auto-generado.
+
+docs/gobernanza/REGISTRO.yaml — items canonicos.
+
+docs/gobernanza/ANCLAS.yaml — anclas temporales.
+
+docs/auditoria/wyckoff/ — 56+ ficheros del expediente.
+
+Fin del HANDOFF.

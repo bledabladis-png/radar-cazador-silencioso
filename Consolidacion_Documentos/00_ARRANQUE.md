@@ -193,6 +193,14 @@ passed, 5 skipped** (al cierre).
 y `pcr_history` con receipt OK. `cboe_vix3m` 0 no-bursatiles. 20
 writers, 18 OK + 2 no-OK esperados (`sector_rank_deltas`
 NO_DATE_CHECK, `sector_flow_characteristics` LAGGED por lag SSGA).
+**Cierre SOW universal y apertura bear-confirmation (2026-10-24).**
+7 experimentos sobre cohortes de 316, 268 y 3423 tickers. Senal real
+vs placebo (lift +0.123 vs placebo -0.077, 21.5 sd) pero no universal
+(4/9 folds positivos, IC95 entre anos cruza 0). Ningun gate probado
+cumple criterio pre-registrado. `SOW-V6` -> WONT_FIX. Apertura
+`SOW-BEAR-CONFIRMATION` (IN_PROGRESS, pendiente contrato v1.10 + auditor
+externo). `WYCKOFF_SOW_* = None` sin cambios. Evidencia en
+`docs/auditoria/wyckoff/51-56`. Ver `04_HISTORICO.md` y REGISTRO.
 
 ---
 
@@ -207,21 +215,38 @@ estado.
 A1-A5, A6, B, C, 6, 7, 8, 9, F: CERRADOS. Detalle tematico en
 `04_HISTORICO.md`; estado por frente en `ESTADO_SISTEMA.md`.
 
-### 4.2. Frente Wyckoff (rediseno modulo)
+### 4.2. Frente Wyckoff (SOW universal cerrado, bear-confirmation abierto)
+
+**Cierre SOW universal (2026-10-24).** 7 experimentos sobre cohortes de
+316, 268 y 3423 tickers, con detectores v1 y v2, estimadores pooled y
+within-ticker, placebos de permutacion y distribucion (100 shifts), y
+bootstrap entre anos. Resultado: senal real vs placebo (lift +0.123 vs
+placebo mean -0.077, 21.5 sd) pero NO universal (4/9 folds positivos,
+IC95 entre anos [-0.058, +0.303] cruza 0). Ningun gate probado (VIX>60,
+market<MA200+DD<-10%) cumple el criterio pre-registrado. `SOW-V6` ->
+WONT_FIX. Evidencia en `docs/auditoria/wyckoff/51-56`.
+
+**Apertura SOW-BEAR-CONFIRMATION (2026-10-24).** Patron bear real:
+3/3 anos con >10% dias bear funcionan (2018, 2020, 2022; 2025 en el
+limite con 8.8%), 0/5 anos con <10% bear funcionan. 2020 domina la
+muestra bear (473/671 SOW). No es senal autonoma: es etiqueta de
+confirmacion dentro de regimen bear ya identificado por el sistema
+(market proxy < MA200 AND drawdown desde maximo 252d < -10%). No
+activa DISTRIBUTION. Requiere contrato v1.10 firmado por auditor
+externo antes de implementar. Sin codigo en produccion hasta firma.
 
 - **5b.X v3 FIRMADO / FROZEN** (2026-10-03): N=60, M=30, X_ATR=0.25,
-  Y_VOL=1.10. SOW a None / fail-closed. v3 aplica solo a C0/v1.9.
-- **Bloqueado por datos:** `n_confirmed_H20_complete >= 550` post-2026-10-02
-  (~2027). Script y protocolo inmutables (T7/T7b).
+  Y_VOL=1.10. Aplica solo a C0/v1.9. Esperando
+  `n_confirmed_H20_complete >= 550` post-2026-10-02 (~2027). Sujeto
+  a re-evaluacion si SOW-BEAR-CONFIRMATION demuestra que C0 no aporta
+  en bear.
 - **Bloqueado aparte:** 5c.4, 5d. **5e legacy CERRADO 2026-10-10.**
-- **SOW v6:** borrador `48_sow_protocol_v6.md` PENDIENTE FIRMA externa.
-  Sin implementacion hasta firma (dictamen 46 rechaza v5 grounded).
 - **DISTRIBUTION apagada (2026-10-22).** `WYCKOFF_SOW_* = None` en
   `config/settings.py:139-142`. `classify_wyckoff_phase` L382 devuelve
   `RANGE` si `sow_params is None` (fail-closed por diseno). En el
-  reporte la columna `Dist` siempre es 0%. Decision: mantener apagado
-  hasta sesion dedicada de re-diseno SOW (no hay resultados optimos).
-- Expediente completo: `docs/auditoria/wyckoff/`.
+  reporte la columna `Dist` siempre es 0%. Se mantiene hasta firma del
+  contrato v1.10 (SOW-BEAR-CONFIRMATION).
+- Expediente completo: `docs/auditoria/wyckoff/` (51-56 nuevos).
 
 ### 4.3. Pendientes vivos
 
