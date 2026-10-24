@@ -8,7 +8,8 @@ Por eso v1 y v2 dan identicos n_conf. No puede distinguir detectores.
 
 Este script evalua cada SOW individual: y = struct[t+H] < struct[t], con
 control = toda fecha sin SOW con struct valido. Lift within-ticker. Placebo
-con distribucion (N=100 shifts). Bootstrap block por fecha (no por ticker).
+con distribucion (N=100 shifts). CI per-fold: block bootstrap por fecha.
+CI agregado (pre-registrado): bootstrap_by_year (9 unidades) + t-interval.
 
 Criterio PRE-REGISTRADO:
   FUNCIONA_V2 si:
@@ -25,9 +26,12 @@ No se modifica el criterio tras ver resultados.
 Read-only: solo lee stock_prices_extended.parquet, escribe en outputs/audit/.
 """
 from __future__ import annotations
+import argparse
 import json
+import subprocess
 import sys
 import time
+from datetime import datetime, timezone
 from pathlib import Path
 
 import numpy as np
@@ -38,8 +42,8 @@ sys.path.insert(0, str(ROOT))
 
 from indicators import wyckoff_v1 as w1
 
-PARQUET = ROOT / "data" / "stock_prices_extended.parquet"
-OUT_DIR = ROOT / "outputs" / "audit" / "sow_event_study_20261024"
+DEFAULT_PARQUET = ROOT / "data" / "stock_prices_extended.parquet"
+DEFAULT_OUT_DIR = ROOT / "outputs" / "audit" / "sow_event_study_20261024"
 
 N = 40
 X_ATR = 1.00
@@ -200,16 +204,31 @@ def classify_v2(mean_lift_v2, ci_low_v2, lift_v2, lift_v1, folds_pos, placebo_me
     return "INCONCLUSO"
 
 
-def main() -> int:
+def parse_args(argv=None):
+    p = argparse.ArgumentParser(description="SOW event study v1 vs v2")
+    p.add_argument("--parquet", type=Path, default=DEFAULT_PARQUET,
+                   help="Parquet OHLCV multi-ticker (default: extended)")
+    p.add_argument("--out-dir", type=Path, default=DEFAULT_OUT_DIR,
+                   help="Directorio de salida (default: sow_event_study_20261024)")
+    return p.parse_args(argv)
+
+
+def main(argv=None) -> int:
+    args = parse_args(argv)
+    parquet = args.parquet
+    out_dir = args.out_dir
     print("== SOW Event Study (v1 vs v2) ==")
     print(f"Candidata: N={N} X_ATR={X_ATR} Y_VOL={Y_VOL} H={H}")
     print(f"Placebos: {N_PLACEBO_SHIFTS} shifts | Bootstrap: B={N_BOOTSTRAP} block={BLOCK_SESSIONS}")
 
-    if not PARQUET.exists():
-        print(f"ERROR: no existe {PARQUET}")
+    print(f"Parquet: {parquet}")
+    print(f"Out dir: {out_dir}")
+
+    if not parquet.exists():
+        print(f"ERROR: no existe {parquet}")
         return 1
 
-    df = pd.read_parquet(PARQUET)
+    df = pd.read_parquet(parquet)
     close = df.xs("Close", axis=1, level=0)
     tickers = sorted(close.columns.tolist())
     print(f"Tickers: {len(tickers)}")
@@ -307,22 +326,61 @@ def main() -> int:
 
     verdict = classify_v2(mean_v2, ci_l_v2, mean_v2, mean_v1, folds_pos_v2, placebo_mean, placebo_sd)
 
+    try:
+        git_sha = subprocess.run(
+            ["git", "rev-parse", "HEAD"],
+            capture_output=True, text=True, check=False, cwd=str(ROOT),
+        ).stdout.strip() or "unknown"
+    except Exception:
+        git_sha = "unknown"
+    try:
+        dirty_out = subprocess.run(
+            ["git", "status", "--porcelain"],
+            capture_output=True, text=True, check=False, cwd=str(ROOT),
+        ).stdout.strip()
+        git_dirty = bool(dirty_out)
+    except Exception:
+        git_dirty = None
+    run_utc = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
     summary = {
+        "schema_version": 2,
+        "run_utc": run_utc,
+        "git_sha": git_sha,
+        "git_dirty": git_dirty,
+        "parquet": str(parquet),
+        "out_dir": str(out_dir),
         "candidate": {"N": N, "X_ATR": X_ATR, "Y_VOL": Y_VOL, "H": H},
         "folds": FOLDS,
         "v1": {"mean_lift": mean_v1, "folds_positive": int((lifts_v1 > 0).sum()),
                "n_folds": len(valid_v1), "folds": valid_v1},
-        "v2": {"mean_lift": mean_v2, "ci_lower": ci_l_v2, "ci_upper": ci_u_v2,
-               "folds_positive": folds_pos_v2, "n_folds": len(valid_v2), "folds": valid_v2},
+        "v2": {
+            "mean_lift": mean_v2,
+            "ci_lower": ci_l_v2,
+            "ci_upper": ci_u_v2,
+            "ci_bootstrap_lower": ci_l_v2,
+            "ci_bootstrap_upper": ci_u_v2,
+            "ci_t_lower": t_lo,
+            "ci_t_upper": t_hi,
+            "folds_positive": folds_pos_v2,
+            "n_folds": len(valid_v2),
+            "folds": valid_v2,
+        },
         "placebo": {"n_shifts": len(placebo_lifts), "mean": placebo_mean,
                     "sd": placebo_sd, "raw": placebo_lifts},
         "verdict": verdict,
+        "verdict_basis": {
+            "method": "bootstrap_by_year",
+            "ci_used": "ci_bootstrap_lower > 0 AND mean_lift > 0.05 AND folds_positive >= 7",
+            "ci_bootstrap_interval": [ci_l_v2, ci_u_v2],
+            "ci_t_interval": [t_lo, t_hi],
+        },
     }
 
-    OUT_DIR.mkdir(parents=True, exist_ok=True)
-    pd.DataFrame(folds_v1).to_csv(OUT_DIR / "folds_v1.csv", index=False)
-    pd.DataFrame(folds_v2).to_csv(OUT_DIR / "folds_v2.csv", index=False)
-    (OUT_DIR / "summary.json").write_text(
+    out_dir.mkdir(parents=True, exist_ok=True)
+    pd.DataFrame(folds_v1).to_csv(out_dir / "folds_v1.csv", index=False)
+    pd.DataFrame(folds_v2).to_csv(out_dir / "folds_v2.csv", index=False)
+    (out_dir / "summary.json").write_text(
         json.dumps(summary, indent=2, ensure_ascii=False, default=str), encoding="utf-8")
 
     print("\n== RESULTADO ==")
@@ -332,9 +390,9 @@ def main() -> int:
     print(f"lift_v2 - lift_v1: {mean_v2 - mean_v1:+.4f}")
     print(f"lift_v2 - placebo_threshold: {mean_v2 - (placebo_mean + 2*placebo_sd) if placebo_mean is not None else 'N/A'}")
     print(f"VEREDICTO: {verdict}")
-    print(f"Escrito: {OUT_DIR}")
+    print(f"Escrito: {out_dir}")
     return 0
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    sys.exit(main(sys.argv[1:]))
