@@ -17,6 +17,7 @@ from src.pipeline.sectors_base import compute_sectors_base
 from src.pipeline.flows_primary import compute_flows_primary
 from src.pipeline.flows_secondary import compute_flows_secondary
 from src.pipeline.leaders import compute_leaders
+from src.report.sector_annotations import annotate_sector_titles_with_composition
 from src.pipeline.sector_metrics import compute_sector_metrics
 from src.pipeline.breadth_metrics import compute_breadth_metrics
 from src.pipeline.engines import compute_engines
@@ -275,6 +276,13 @@ def main():
         effective_date_equity=_prov_effective,
         validation_gate_result=vg,
     )
+
+    # Anotar titulos sectoriales con composicion interna de holdings.
+    # Solo si hay leader_lines y el df de distribucion esta disponible.
+    if leader_lines is not None and sector_wyckoff_distribution_df is not None:
+        leader_lines = annotate_sector_titles_with_composition(
+            leader_lines, sector_wyckoff_distribution_df,
+        )
 
     generate_daily_report(macro_score, macro_regime, macro_conf,
                           financial_score, financial_regime, liq_conf,
