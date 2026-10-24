@@ -54,7 +54,9 @@ def compute_sectors_base(df_market, temporal_meta=None):
             skip('sector_rank_deltas', 'NO_DATA')
             sector_rank_deltas_df = None
     except (KeyError, ValueError, TypeError, IndexError, AttributeError, OSError, RuntimeError) as e:
+        import traceback
         print(f"  Rotacion sectorial omitida: {e}")
+        traceback.print_exc()
         skip('sector_rank_deltas', 'NO_DATA')
         sector_rank_deltas_df = None
 

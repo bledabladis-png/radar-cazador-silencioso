@@ -177,7 +177,7 @@ def test_sector_dispersion_sin_reference_date_valueerror():
 # ============================================================
 
 def test_sector_rank_history_sin_date_valueerror(tmp_path):
-    ranking = [('XLK', 'Tech', 0.5, 'RANGE')] * 3
+    ranking = [('XLK', 'Tech', 0.5)] * 3
     sector_results = {'ranking': ranking}
     with pytest.raises(ValueError, match='date'):
         update_rank_history(sector_results, str(tmp_path / 'hist.csv'))

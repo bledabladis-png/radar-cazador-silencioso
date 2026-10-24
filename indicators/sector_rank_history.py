@@ -51,7 +51,7 @@ def update_rank_history(sector_results, history_csv_path, date=None):
 
     current = []
 
-    for i, (ticker, name, score, fase) in enumerate(ranking[:len(SECTORS)], 1):
+    for i, (ticker, name, score) in enumerate(ranking[:len(SECTORS)], 1):
 
         if ticker in SECTORS:
 
