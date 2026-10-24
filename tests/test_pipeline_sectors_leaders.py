@@ -276,7 +276,7 @@ def test_sectors_base_cas_fallo_to_csv_no_pierde_filas(tmp_path, monkeypatch):
 
 def test_leaders_contract_6_keys(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
-    with patch("src.pipeline.leaders.download_stock_prices", return_value=None):
+    with patch("src.pipeline.stocks_data.download_stock_prices", return_value=None):
         out = compute_leaders(pd.DataFrame(), sector_results={"ranking": []})
     # El contrato real tiene 6 keys (docstring menciona 5)
     assert set(out.keys()) == {
@@ -286,7 +286,7 @@ def test_leaders_contract_6_keys(tmp_path, monkeypatch):
 
 def test_leaders_sin_df_stocks_devuelve_todo_none(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
-    with patch("src.pipeline.leaders.download_stock_prices", return_value=None):
+    with patch("src.pipeline.stocks_data.download_stock_prices", return_value=None):
         out = compute_leaders(pd.DataFrame(), sector_results={"ranking": []})
     assert out["df_stocks"] is None
     assert out["leader_lines"] is None
@@ -318,8 +318,8 @@ def test_leaders_holiday_mode_cuando_cobertura_baja(tmp_path, monkeypatch):
         "n_observed": 4,
         "n_eligible": 4,
     }
-    with patch("src.pipeline.leaders.download_stock_prices", return_value=df), \
-         patch("src.pipeline.leaders.resolve_effective_date", return_value=fake_eff):
+    with patch("src.pipeline.stocks_data.download_stock_prices", return_value=df), \
+         patch("src.pipeline.stocks_data.resolve_effective_date", return_value=fake_eff):
         out = compute_leaders(pd.DataFrame(), sector_results={"ranking": []})
     assert out["df_stocks"] is None
     assert out["leader_lines"] is None
@@ -342,8 +342,8 @@ def test_leaders_insufficient_coverage_omite_df(tmp_path, monkeypatch):
         "n_observed": 1,
         "n_eligible": 2,
     }
-    with patch("src.pipeline.leaders.download_stock_prices", return_value=df), \
-         patch("src.pipeline.leaders.resolve_effective_date", return_value=fake_eff):
+    with patch("src.pipeline.stocks_data.download_stock_prices", return_value=df), \
+         patch("src.pipeline.stocks_data.resolve_effective_date", return_value=fake_eff):
         out = compute_leaders(pd.DataFrame(), sector_results={"ranking": []})
     assert out["df_stocks"] is None
     assert out["leader_lines"] is None
