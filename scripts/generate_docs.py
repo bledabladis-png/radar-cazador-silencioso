@@ -97,7 +97,6 @@ def generate_readme():
         ('06_indicadores_momentum.md', 'Indicadores: Momentum y Flujo', 'momentum.py, trend.py, flow proxy'),
         ('06_indicadores_breadth.md', 'Indicadores: Breadth', 'breadth.py, breadth_equity.py'),
         ('06_indicadores_wyckoff.md', 'Indicadores: Wyckoff', 'wyckoff.py, fases, ATR, estabilidad'),
-        ('06_indicadores_slpm.md', 'Indicadores: SLPM', 'slpm_v12.py, state_machine.py, LIS, Breadth'),
         ('06_indicadores_opciones.md', 'Indicadores: Opciones (OMS)', 'options.py, PCR, IHR'),
         ('06_indicadores_darkpool.md', 'Indicadores: Dark Pools', 'darkpool.py, FINRA ATS, Z-Scores'),
         ('06_indicadores_mte.md', 'Indicadores: MTE', 'mte.py, Market Transition Engine'),
@@ -218,7 +217,7 @@ def generate_motores():
     arquitectura = """
 - 	actical_engine.py: compute_tactical_score().
 - structural_engine.py: compute_structural_score().
-Ambos se usan en el Opportunity Map y en el SLPM.
+Ambos se usan en el Opportunity Map.
 """
     formulas = f"""
 **Tactical Score:** {doc_tactical}
@@ -243,7 +242,7 @@ def generate_momentum():
 """
     formulas = f"**Flow Proxy:** {doc_flow}"
     salidas = """
-- Flow Proxy: z-score utilizado en rankings sectoriales y en el SLPM.
+- Flow Proxy: z-score utilizado en rankings sectoriales.
 - Momentum de precio: retorno a 20 dias mostrado en tablas del reporte.
 """
     return template(proposito, arquitectura, formulas, salidas) + f"\n## Constantes de Flujo\n{table}\n"
@@ -290,31 +289,6 @@ def generate_wyckoff():
 - Confianza y dispersion de componentes en metadatos.
 """
     return template(proposito, arquitectura, formulas, salidas) + f"\n## Constantes Configurables\n{table}\n"
-
-def generate_slpm():
-    doc_state = extract_docstring('indicators/state_machine.py', 'classify_leadership_state')
-    state_machine_content = read_file('indicators/state_machine.py')
-    thresholds = {}
-    for match in re.finditer(r"'(\w+)':\s*([\d.]+)", state_machine_content):
-        thresholds[match.group(1)] = match.group(2)
-    rows = [[f'{k}', f'{v}'] for k, v in sorted(thresholds.items())]
-    table = format_table(['Parametro', 'Valor'], rows)
-    proposito = "Audita la calidad del liderazgo del sector #1 del ranking. No es otro ranking: evalua si el lider es estructuralmente solido."
-    arquitectura = """
-- compute_leader_breadth_v2(): amplitud del liderazgo (RS, momentum, flujo, Wyckoff).
-- compute_leader_integrity(): LIS (intensidad/calidad de los lideres individuales).
-- compute_flow_divergence_v2(): divergencias entre flujo de lideres y sector.
-- classify_leadership_state(): State Machine con 6 estados + UNRESOLVED.
-- confirm_transition(): histeresis temporal.
-"""
-    formulas = f"**State Machine:** {doc_state or 'Jerarquia de umbrales documentada en state_machine.py.'}"
-    salidas = """
-- Estado (CONFIRMED, EMERGING, TACTICAL_CORRECTION, STRUCTURAL_DECAY, LOST, UNRESOLVED).
-- Leader Breadth, LIS, Flow Divergence 2.0, Effective Breadth.
-- LQ Dimensions (P, C, S, Cf).
-- Seccion completa en el reporte bajo 'Structural Leadership (SLPM v1.2)'.
-"""
-    return template(proposito, arquitectura, formulas, salidas) + f"\n## Umbrales de la State Machine\n{table}\n"
 
 def generate_opciones():
     proposito = "Calcula el PCR (Put/Call Ratio) y el IHR (Institutional Hedge Ratio) a partir de datos de CBOE."
@@ -407,7 +381,7 @@ def generate_reporte():
     proposito = "Genera el reporte diario en formato Markdown con todas las secciones del radar."
     arquitectura = """
 - generate_daily_report(): funcion principal con mas de 20 parametros.
-- Secciones: Resumen de Regimenes, Data Freshness, Divergencias, Breadth, Momentum, Flujo, Rankings, Opportunity Map, SLPM, Lideres, Opciones, MTE, Dark Pools, Cross-Asset, Anti-Double-Counting.
+- Secciones: Resumen de Regimenes, Data Freshness, Divergencias, Breadth, Momentum, Flujo, Rankings, Opportunity Map, Lideres, Opciones, MTE, Dark Pools, Cross-Asset, Anti-Double-Counting.
 """
     formulas = "No aplica (formato de salida)."
     salidas = "Archivo outputs/report/reporte_diario.md generado en cada ejecucion."
@@ -422,11 +396,8 @@ def generate_auditorias():
         ('montecarlo_perturbacion_ranking.py', 'Perturbacion del ranking global con ruido gaussiano'),
         ('montecarlo_ranking_global.py', 'Monte Carlo del ranking sectorial global'),
         ('backtest_pesos_historicos.py', 'Backtest historico de estabilidad temporal del ranking'),
-        ('slpm_ablation.py', 'Ablacion de componentes del SLPM'),
         ('forward_test_auto.py', 'Registro semanal del forward test'),
         ('sensitivity_persistence.py', 'Sensibilidad de Persistence a umbral y lookback'),
-        ('sensitivity_coverage.py', 'Sensibilidad de Coverage en SLPM'),
-        ('regresion_base_vs_lis.py', 'Regresión BASE vs BASE+LIS'),
         ('audit_rs_flow_channels.py', 'Auditoría de canales RS/Flow'),
         ('redundancia_mte_fc.py', 'Redundancia MTE vs Financial Conditions'),
         ('solapamiento_fls_liquidity.py', 'Solapamiento FLS vs Liquidity'),
@@ -551,7 +522,6 @@ def main():
         '06_indicadores_momentum.md': generate_momentum,
         '06_indicadores_breadth.md': generate_breadth,
         '06_indicadores_wyckoff.md': generate_wyckoff,
-        '06_indicadores_slpm.md': generate_slpm,
         '06_indicadores_opciones.md': generate_opciones,
         '06_indicadores_darkpool.md': generate_darkpool,
         '06_indicadores_mte.md': generate_mte,
