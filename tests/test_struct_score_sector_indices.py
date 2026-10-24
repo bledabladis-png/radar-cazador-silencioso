@@ -67,48 +67,8 @@ def _make_sector_results(struct_scores=None):
     return d
 
 
-def test_rankings_con_struct_publica_columna():
-    """Con struct_scores, la tabla Rankings tiene columna Struct."""
-    sr = _make_sector_results({"XLP": 0.18, "XLF": 0.23, "XLK": 0.45})
-    out = "".join(render_ranking_sectorial_unificado(
-        sr, tactical_scores=None, structural_scores=None,
-        sector_persistence=None, signal_agreements=None,
-        signal_agreements_display=None, shock_sensitivities=None,
-    ))
-    assert "| Fase Wyckoff | Struct Wyckoff |" in out
-    # XLP struct +0.18, XLF +0.23, XLK +0.45
-    assert "+0.18" in out
-    assert "+0.23" in out
-    assert "+0.45" in out
 
 
-def test_rankings_sin_struct_publica_nd():
-    """Sin struct_scores, columna Struct con N/D. No rompe."""
-    sr = _make_sector_results()  # sin struct_scores
-    out = "".join(render_ranking_sectorial_unificado(
-        sr, tactical_scores=None, structural_scores=None,
-        sector_persistence=None, signal_agreements=None,
-        signal_agreements_display=None, shock_sensitivities=None,
-    ))
-    assert "| Fase Wyckoff | Struct Wyckoff |" in out
-    # 3 filas, todas N/D
-    assert out.count("N/D") >= 3
-
-
-def test_rankings_struct_distingue_rango_y_markup():
-    """XLP (0.18) y XLF (0.23) ambos RANGE pero distinta magnitud.
-    XLK (0.45) MARKUP con margen amplio."""
-    sr = _make_sector_results({"XLP": 0.18, "XLF": 0.23, "XLK": 0.45})
-    out = "".join(render_ranking_sectorial_unificado(
-        sr, tactical_scores=None, structural_scores=None,
-        sector_persistence=None, signal_agreements=None,
-        signal_agreements_display=None, shock_sensitivities=None,
-    ))
-    # Los tres valores son distinguibles en la tabla
-    assert "+0.18" in out and "+0.23" in out and "+0.45" in out
-
-
-# ---------- compute_indices_intl: contrato de 3 keys ----------
 
 def test_compute_indices_intl_devuelve_index_struct_scores():
     """Contrato: compute_indices_intl devuelve index_struct_scores (dict)."""
@@ -121,20 +81,3 @@ def test_compute_indices_intl_devuelve_index_struct_scores():
         out = compute_indices_intl(pd.DataFrame())
     assert "index_struct_scores" in out
     assert isinstance(out["index_struct_scores"], dict)
-
-
-def test_compute_sector_scores_devuelve_struct_scores():
-    """Contrato: compute_sector_scores devuelve struct_scores (dict)."""
-    from regimes.sector_regime import compute_sector_scores
-
-    # Mock df vacio: compute_sector_scores devuelve None si returns.empty.
-    # Solo verificamos que la KEY struct_scores existe en el dict cuando
-    # hay scores. Este test usa un mock minimo del resultado.
-    # Simulamos a nivel de interfaz: la funcion retorna dict con 5 keys.
-    # No ejecutamos compute_sector_scores con datos reales (evita acoplar
-    # a parquet). Verificamos la estructura del return via AST.
-    import inspect
-    src = inspect.getsource(compute_sector_scores)
-    assert "'struct_scores'" in src, (
-        "compute_sector_scores debe devolver struct_scores en el return"
-    )

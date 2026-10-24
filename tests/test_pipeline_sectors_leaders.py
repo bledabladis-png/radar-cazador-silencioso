@@ -45,7 +45,7 @@ def test_sectors_base_contract_keys(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
     (tmp_path / "outputs" / "history").mkdir(parents=True)
     with patch("src.pipeline.sectors_base.compute_sector_scores",
-               return_value={"ranking": [("XLK", "Technology", 0.5, "ACCUMULATION")],
+               return_value={"ranking": [("XLK", "Technology", 0.5)],
                              "regime": "NARROW RALLY"}), \
          patch("src.pipeline.sectors_base.compute_price_flow_rankings",
                return_value=([], [], [], [])), \

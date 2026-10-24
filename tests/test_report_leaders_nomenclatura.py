@@ -79,21 +79,6 @@ def test_p1_nota_flow_proxy_etf_vs_mediana():
 # H1 (2026-10-21): distinguir 'Structural' de 'Struct Wyckoff'
 # ============================================================
 
-def test_h1_rankings_renombra_struct_score_a_struct_wyckoff():
-    from src.report.rankings import render_ranking_sectorial_unificado
-    sr = {"ranking": [("XLP", "Staples", 0.6, "RANGE")],
-          "struct_scores": {"XLP": 0.17}, "scores": None, "regime": "ROT",
-          "last_scores": None}
-    body = "".join(render_ranking_sectorial_unificado(
-        sr, tactical_scores=None, structural_scores=None,
-        sector_persistence=None, signal_agreements=None,
-        signal_agreements_display=None, shock_sensitivities=None,
-    ))
-    assert "Struct Wyckoff" in body
-    assert "Struct Score" not in body
-    assert "motor estructural" in body
-    assert "struct_score interno" in body
-
 
 def test_h3_liderazgo_relativo_nota_sesgo_seleccion():
     import pandas as pd

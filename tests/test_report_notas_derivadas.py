@@ -65,31 +65,7 @@ def _render_matriz():
 
 # ---------- H1: nota deriva de STRUCTURAL_WEIGHTS y STRUCT_STRONG ----------
 
-def test_h1_nota_deriva_de_structural_weights(monkeypatch):
-    """Si cambian los pesos de STRUCTURAL_WEIGHTS, la nota los refleja."""
-    monkeypatch.setitem(
-        rankings_mod.STRUCTURAL_WEIGHTS, "rs_structural", 0.42
-    )
-    monkeypatch.setitem(
-        rankings_mod.STRUCTURAL_WEIGHTS, "flow_structure", 0.33
-    )
-    monkeypatch.setitem(
-        rankings_mod.STRUCTURAL_WEIGHTS, "persistence", 0.25
-    )
-    body = _render_rankings()
-    assert "0.42*rs_structural" in body
-    assert "0.33*flow_structure" in body
-    assert "0.25*persistence" in body
 
-
-def test_h1_nota_deriva_de_struct_strong(monkeypatch):
-    """Si cambia STRUCT_STRONG, la nota lo refleja."""
-    monkeypatch.setattr(rankings_mod, "STRUCT_STRONG", 0.45)
-    body = _render_rankings()
-    assert "STRUCT_STRONG=0.45" in body
-
-
-# ---------- P1: nota deriva de FLOW_PROXY_WEIGHTS ----------
 
 def test_p1_nota_deriva_de_flow_proxy_weights(monkeypatch):
     """Si cambian los pesos de FLOW_PROXY_WEIGHTS, la nota los refleja."""

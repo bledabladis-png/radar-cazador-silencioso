@@ -69,7 +69,7 @@ def test_sector_faltante_no_rompe():
 
     res = compute_sector_scores(df)
     assert res is not None
-    got = {t for t, _, _, _ in res["ranking"]}
+    got = {t for t, _, _ in res["ranking"]}
     assert not (got & set(drop)), f"sectores borrados aparecen: {got & set(drop)}"
 
 
@@ -90,7 +90,7 @@ def test_regime_es_uno_de_los_conocidos():
 def test_ranking_ordenado_descendente():
     df = _make_df(_all_tickers())
     res = compute_sector_scores(df)
-    scores = [s for _, _, s, _ in res["ranking"]]
+    scores = [s for _, _, s in res["ranking"]]
     assert scores == sorted(scores, reverse=True)
 
 
@@ -104,7 +104,7 @@ def test_scores_series_no_vacia():
 def test_top3_es_prefijo_de_ranking():
     df = _make_df(_all_tickers())
     res = compute_sector_scores(df)
-    ranking_top3 = [t for t, _, _, _ in res["ranking"][:3]]
+    ranking_top3 = [t for t, _, _ in res["ranking"][:3]]
     top3_last_scores = [str(s) for s in res["last_scores"].head(3).index]
     assert ranking_top3 == top3_last_scores
 

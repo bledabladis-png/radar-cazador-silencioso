@@ -35,8 +35,8 @@ def compute_sectors_base(df_market, temporal_meta=None):
     if sector_results:
         top3 = sector_results['ranking'][:3]
         print("  Top 3 sectores:")
-        for i, (t, n, s, w) in enumerate(top3, 1):
-            print(f"    {i}. {n} ({t}): {s:.2f} [{w}]")
+        for i, (t, n, s) in enumerate(top3, 1):
+            print(f"    {i}. {n} ({t}): {s:.2f}")
         print(f"  Regimen sectorial: {sector_results['regime']}")
 
     # --- Rotacion sectorial historica reciente v1.0 ---

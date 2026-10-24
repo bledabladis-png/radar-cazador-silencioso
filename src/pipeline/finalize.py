@@ -31,7 +31,8 @@ def compute_final_matrices(sector_breadth_df, sector_concentration_df,
     try:
         from indicators.sector_regime_matrix import build_sector_regime_matrix
         sector_regime_matrix_df = build_sector_regime_matrix(
-            sector_breadth_df, sector_flow_characteristics_df, sector_results
+            sector_breadth_df, sector_flow_characteristics_df, sector_results,
+            sector_wyckoff_distribution_df=sector_wyckoff_distribution_df,
         )
         if sector_regime_matrix_df is not None and not sector_regime_matrix_df.empty:
             persist('sector_regime_matrix', sector_regime_matrix_df)
@@ -134,7 +135,7 @@ def save_sector_rankings(sector_results):
     """
     sector_df = pd.DataFrame(
         sector_results["ranking"],
-        columns=["ticker", "name", "score", "wyckoff_phase"],
+        columns=["ticker", "name", "score"],
     )
     _sr_path = Path("outputs/report/sector_rankings.csv")
     _sr_path.parent.mkdir(parents=True, exist_ok=True)

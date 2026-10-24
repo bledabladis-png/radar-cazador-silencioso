@@ -26,17 +26,17 @@ def _make_minimal_fixture():
     sector_results = {
         'regime': 'NARROW RALLY',
         'ranking': [
-            ('XLK', 'Technology', 0.61, 'RANGE'),
-            ('XLE', 'Energy', 0.19, 'RANGE'),
-            ('XLF', 'Financials', -0.00, 'RANGE'),
-            ('XLV', 'Healthcare', -0.00, 'RANGE'),
-            ('XLP', 'Consumer Staples', -0.00, 'RANGE'),
-            ('XLI', 'Industrials', -0.00, 'RANGE'),
-            ('XLY', 'Consumer Discretionary', -0.02, 'RANGE'),
-            ('XLB', 'Materials', -0.26, 'RANGE'),
-            ('XLU', 'Utilities', -0.00, 'RANGE'),
-            ('XLRE', 'Real Estate', -0.00, 'RANGE'),
-            ('XLC', 'Communication Services', -0.00, 'RANGE'),
+            ('XLK', 'Technology', 0.61),
+            ('XLE', 'Energy', 0.19),
+            ('XLF', 'Financials', -0.00),
+            ('XLV', 'Healthcare', -0.00),
+            ('XLP', 'Consumer Staples', -0.00),
+            ('XLI', 'Industrials', -0.00),
+            ('XLY', 'Consumer Discretionary', -0.02),
+            ('XLB', 'Materials', -0.26),
+            ('XLU', 'Utilities', -0.00),
+            ('XLRE', 'Real Estate', -0.00),
+            ('XLC', 'Communication Services', -0.00),
         ],
     }
 

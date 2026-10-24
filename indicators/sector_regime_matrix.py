@@ -21,20 +21,53 @@ def _phase_positive(phase):
     else:
         return False  # DISTRIBUTION, MARKDOWN, etc.
 
-def build_sector_regime_matrix(sector_breadth_df, sector_flow_df, sector_results):
+def build_sector_regime_matrix(sector_breadth_df, sector_flow_df, sector_results, sector_wyckoff_distribution_df=None):
     """
     Combina datos existentes y devuelve DataFrame con la matriz.
     """
     if sector_breadth_df is None or sector_flow_df is None or sector_results is None:
         return pd.DataFrame()
 
-    # Mapear fase Wyckoff desde sector_results['ranking']
+    # C5.1: fase y estructura desde holdings (sector_wyckoff_distribution_df).
     phase_map = {}
-    if 'ranking' in sector_results and sector_results['ranking']:
-        for item in sector_results['ranking']:
-            if len(item) >= 4:
-                ticker, _, _, phase = item[0], item[1], item[2], item[3]
-                phase_map[ticker] = phase
+    structure_map = {}
+    if sector_wyckoff_distribution_df is not None and not sector_wyckoff_distribution_df.empty:
+        _dist = sector_wyckoff_distribution_df.copy()
+        if 'date' in _dist.columns:
+            try:
+                _dist = _dist.sort_values('date').drop_duplicates('sector', keep='last')
+            except (KeyError, ValueError, TypeError):
+                pass
+        _phase_cols = ('pct_accumulation', 'pct_markup', 'pct_range',
+                       'pct_distribution', 'pct_markdown')
+        _phase_names = {'pct_accumulation': 'ACCUMULATION', 'pct_markup': 'MARKUP',
+                        'pct_range': 'RANGE', 'pct_distribution': 'DISTRIBUTION',
+                        'pct_markdown': 'MARKDOWN'}
+        for _, _row in _dist.iterrows():
+            _sector = _row.get('sector')
+            if _sector is None:
+                continue
+            _acc = _row.get('pct_accumulation')
+            _mkp = _row.get('pct_markup')
+            try:
+                _acc_f = float(_acc) if _acc is not None and pd.notna(_acc) else None
+                _mkp_f = float(_mkp) if _mkp is not None and pd.notna(_mkp) else None
+            except (ValueError, TypeError):
+                _acc_f, _mkp_f = None, None
+            if _acc_f is None and _mkp_f is None:
+                structure_map[_sector] = None
+            else:
+                structure_map[_sector] = ((_acc_f or 0.0) + (_mkp_f or 0.0)) >= 50.0
+            # fase dominante
+            _candidates = []
+            for _col in _phase_cols:
+                _v = _row.get(_col)
+                if _v is not None and pd.notna(_v):
+                    try:
+                        _candidates.append((_phase_names[_col], float(_v)))
+                    except (ValueError, TypeError):
+                        pass
+            phase_map[_sector] = max(_candidates, key=lambda x: x[1])[0] if _candidates else 'N/D'
 
     # Unificar por sector tomando la última fila si hay histórico
     breadth = sector_breadth_df.drop_duplicates(subset='sector', keep='last').set_index('sector')
@@ -50,8 +83,14 @@ def build_sector_regime_matrix(sector_breadth_df, sector_flow_df, sector_results
         flow_sum = flow.loc[sector, 'flow_20d_sum']
         phase = phase_map.get(sector, None)
 
+        # C5.1: structure_pos desde holdings (o fallback a _phase_positive)
+        if sector_wyckoff_distribution_df is not None:
+            structure_pos = structure_map.get(sector)
+        else:
+            structure_pos = _phase_positive(phase) if phase else None
+
         # Validar que no falte ninguno
-        if pd.isna(price_ret) or pd.isna(pct_above) or pd.isna(flow_sum) or phase is None:
+        if pd.isna(price_ret) or pd.isna(pct_above) or pd.isna(flow_sum) or structure_pos is None:
             rows.append({
                 'date': _observation_date_from_df(sector_breadth_df, col='date'),
                 'sector': sector,
@@ -72,7 +111,6 @@ def build_sector_regime_matrix(sector_breadth_df, sector_flow_df, sector_results
         price_pos = price_ret > 0
         breadth_pos = pct_above > 50.0
         flow_pos = flow_sum > 0
-        structure_pos = _phase_positive(phase)
 
         positives = sum([price_pos, breadth_pos, flow_pos, structure_pos])
 

@@ -92,7 +92,7 @@ def test_engines_contract_5_keys(tmp_path, monkeypatch):
                return_value={}):
         out = compute_engines(
             df_market=pd.DataFrame(),
-            sector_results={"ranking": [("XLK", "Technology", 0.5, "")]},
+            sector_results={"ranking": [("XLK", "Technology", 0.5)]},
             sector_flow_rank=[("XLK", 0.2)],
             otros_flow_rank=[],
         )

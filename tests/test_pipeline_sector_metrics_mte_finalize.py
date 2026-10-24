@@ -209,7 +209,7 @@ def test_final_matrices_contract(tmp_path, monkeypatch):
             sector_concentration_df=pd.DataFrame(),
             sector_flow_characteristics_df=pd.DataFrame(),
             sector_wyckoff_distribution_df=pd.DataFrame(),
-            sector_results={"ranking": [("XLK", "Technology", 0.5, "ACCUMULATION")]},
+            sector_results={"ranking": [("XLK", "Technology", 0.5)]},
             financial_regime="ABUNDANTE",
             real_liq_regime="ESTRECHA",
             vol_regime="NORMAL",
@@ -282,12 +282,12 @@ def test_save_regime_history_fallo_to_csv_no_pierde_filas(tmp_path, monkeypatch)
 def test_save_sector_rankings_escribe_csv(tmp_path, monkeypatch):
     _setup_tmp(tmp_path, monkeypatch)
     fin.save_sector_rankings(
-        {"ranking": [("XLK", "Technology", 0.5, "ACCUMULATION")]}
+        {"ranking": [("XLK", "Technology", 0.5)]}
     )
     p = tmp_path / "outputs" / "report" / "sector_rankings.csv"
     assert p.exists()
     df = pd.read_csv(p)
-    assert list(df.columns) == ["ticker", "name", "score", "wyckoff_phase"]
+    assert list(df.columns) == ["ticker", "name", "score"]
     assert df.iloc[0]["ticker"] == "XLK"
 
 
