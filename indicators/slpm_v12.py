@@ -31,6 +31,8 @@ def _safe_mean(values):
 
 _VALID_WYCKOFF_PHASES = frozenset({
     "MARKUP", "ACCUMULATION", "RANGE", "DISTRIBUTION", "MARKDOWN",
+    "DISTRIBUTION_FORMING", "ACCUMULATION_FORMING", "CONFLICT",
+    "INSUFFICIENT_DATA",
 })
 
 
@@ -224,7 +226,12 @@ def compute_leader_integrity(leader_metrics):
         if flow is None:
             flow = np.nan
         flow_norm = np.tanh(flow / 2)
-        wyckoff_map = {'MARKUP': 1.0, 'ACCUMULATION': 0.75, 'RANGE': 0.0, 'DISTRIBUTION': -0.75, 'MARKDOWN': -1.0}
+        wyckoff_map = {
+            'MARKUP': 1.0, 'ACCUMULATION': 0.75, 'RANGE': 0.0,
+            'DISTRIBUTION': -0.75, 'MARKDOWN': -1.0,
+            'DISTRIBUTION_FORMING': 0.0, 'ACCUMULATION_FORMING': 0.0,
+            'CONFLICT': 0.0, 'INSUFFICIENT_DATA': 0.0,
+        }
         wyckoff_score = wyckoff_map.get(m.get('wyckoff_phase', ''), 0.0)
         individual = SLPM_WEIGHTS["lis"]["rs"] * rs_norm + SLPM_WEIGHTS["lis"]["momentum"] * mom_norm + SLPM_WEIGHTS["lis"]["flow"] * flow_norm + SLPM_WEIGHTS["lis"]["wyckoff"] * wyckoff_score
         scores.append(individual)

@@ -669,3 +669,38 @@ def test_e2e_n1_caso_valido_no_se_convierte_a_cero(_mock_confirm):
     assert breadth["leader_breadth_status"] == "OK"
     assert math.isfinite(breadth["composite"])
     assert breadth["composite"] > 0
+
+
+def test_valid_phases_cubre_todas_las_fases_del_pipeline():
+    """_VALID_WYCKOFF_PHASES debe cubrir todas las fases que el pipeline
+    puede emitir (legacy + orquestador nuevo). Si falta una, breadth
+    se anula silenciosamente (fail-closed por componente)."""
+    from indicators.slpm_v12 import _VALID_WYCKOFF_PHASES
+    expected = {
+        "MARKUP", "ACCUMULATION", "RANGE", "DISTRIBUTION", "MARKDOWN",
+        "DISTRIBUTION_FORMING", "ACCUMULATION_FORMING", "CONFLICT",
+        "INSUFFICIENT_DATA",
+    }
+    assert _VALID_WYCKOFF_PHASES == expected
+
+
+def test_formings_y_conflict_no_anulan_leader_breadth():
+    """Fases nuevas (FORMING, CONFLICT, INSUFFICIENT_DATA) no deben
+    anular leader_breadth. Se comportan como RANGE: validas, no
+    favorables (0.0 en wyckoff_map, False en _wyckoff_favorable)."""
+    leaders = [
+        {"rs_ratio_20d": 0.01, "rs_momentum": 0.01, "flow_proxy_z": 0.5,
+         "wyckoff_phase": "DISTRIBUTION_FORMING"},
+        {"rs_ratio_20d": 0.01, "rs_momentum": 0.01, "flow_proxy_z": 0.5,
+         "wyckoff_phase": "ACCUMULATION_FORMING"},
+        {"rs_ratio_20d": 0.01, "rs_momentum": 0.01, "flow_proxy_z": 0.5,
+         "wyckoff_phase": "CONFLICT"},
+        {"rs_ratio_20d": 0.01, "rs_momentum": 0.01, "flow_proxy_z": 0.5,
+         "wyckoff_phase": "INSUFFICIENT_DATA"},
+    ]
+    r = compute_leader_breadth_v2(leaders, expected_leaders=4)
+    assert r["leader_breadth_status"] == "OK"
+    assert r["wyckoff_breadth"] == 0.0
+    assert r["wyckoff_breadth_missing"] == 0
+    # composite debe ser numerico, no NaN
+    assert r["composite"] == r["composite"]

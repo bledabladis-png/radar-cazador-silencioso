@@ -154,7 +154,7 @@ def compute_stock_metrics(df_market, df_stocks, etf_ticker, stock_list, temporal
             sos = detect_sos(ticker_df, ticker).iloc[-1]
         else:
             wyckoff_sc = np.nan
-            wyckoff_ph = 'INSUFICIENTE'
+            wyckoff_ph = 'INSUFFICIENT_DATA'
             stability = 0.0
             spring = 0
             sos = 0

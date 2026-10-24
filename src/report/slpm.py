@@ -139,7 +139,7 @@ def render_slpm_v12(slpm_v12_data):
                 out.append(f"- **Leader Flow Support:** {_pct(breadth.get('flow_breadth'))}\n")
                 out.append(f"- **Leader Wyckoff Health:** {_pct(breadth.get('wyckoff_breadth'))}\n")
 
-            out.append("  - *Scoring Wyckoff: MARKUP=1.0, ACCUMULATION=0.75, RANGE=0.0, DISTRIBUTION=-0.75, MARKDOWN=-1.0*\n")
+            out.append("  - *Scoring Wyckoff: MARKUP=1.0, ACCUMULATION=0.75, RANGE=0.0, DISTRIBUTION=-0.75, MARKDOWN=-1.0, DISTRIBUTION_FORMING=0.0, ACCUMULATION_FORMING=0.0, CONFLICT=0.0, INSUFFICIENT_DATA=0.0*\n")
 
             comp_v = breadth.get('composite')
             comp_valid = (lb_status == 'OK' and _is_finite(comp_v))
