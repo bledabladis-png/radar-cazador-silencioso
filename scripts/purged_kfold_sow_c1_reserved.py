@@ -91,34 +91,23 @@ def lift_within(d):
 
 
 def placebo_shift(d, seed):
-    """Circular shift intra-ticker con offset adaptado a n_tk.
+    """Date-shift global del fold: roll de is_confirmed por 30-60 sesiones.
 
-    Rompe la asociacion temporal SOW->H20 preservando la composicion por
-    ticker. Offset uniforme en [max(1, n//4), n - max(1, n//4)].
+    Rompe la contemporaneidad SOW->H20 preservando la distribucion marginal
+    del fold. Sustituye el shift intra-ticker (no viable con n_tk ~2.6: los
+    tickers que contribuyen al lift no reciben variacion).
 
-    Falla ruidosamente si no aplica shift a ningun ticker o si el placebo
-    coincide con el lift real (bug de placebo silencioso).
+    Si el lift desaparece tras el shift, la asociacion temporal es real.
+    Si persiste, la senal no depende de la contemporaneidad.
     """
     p = d.copy().reset_index(drop=True)
     rng = np.random.default_rng(seed)
-    shifted = 0
-    total = 0
-    for tk in p["ticker"].unique():
-        mask = (p["ticker"] == tk).values
-        n_tk = int(mask.sum())
-        total += 1
-        if n_tk < 4:
-            continue
-        labels = p.loc[mask, "is_confirmed"].values.copy()
-        min_s = max(1, n_tk // 4)
-        offset = int(rng.integers(min_s, n_tk - min_s + 1))
-        p.loc[mask, "is_confirmed"] = np.roll(labels, offset)
-        shifted += 1
-    if shifted == 0:
-        raise RuntimeError(
-            f"placebo_shift: 0 tickers recibieron shift (total={total}). "
-            f"Cohorte sin tickers con >=4 episodios; placebo invalido."
-        )
+    offset = int(rng.integers(30, 61))
+    p = p.sort_values("L_idx").reset_index(drop=True)
+    labels = p["is_confirmed"].values.copy()
+    if len(labels) < 2 * offset:
+        offset = max(1, len(labels) // 4)
+    p["is_confirmed"] = np.roll(labels, offset)
     return p
 
 
