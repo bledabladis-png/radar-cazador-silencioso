@@ -7,141 +7,142 @@ junto con `Consolidacion_Documentos/00_ARRANQUE.md`.
 
 ---
 
-## 1. ESTADO AL CIERRE (2026-10-24, sesion 3)
+## 1. ESTADO AL CIERRE (2026-10-24, sesion 3 extendida)
 
 Rama:           main
-HEAD:           consultar `git log --oneline -1` (no literal; el corpus no fija SHA)
+HEAD:           consultar `git log --oneline -1` (no literal; al cierre f7fdbeba)
 Sincronizacion: main == origin/main
-Tests local:    ver `Consolidacion_Documentos/ESTADO_SISTEMA.md`.
-                Al cierre: 3776 passed, 2 skipped (suite con -n auto,
-                filtro not integration_real_data and not integration_slow).
-CI HEAD:        verde (run del commit de cierre).
-Validation Gate: 10/10 (no reproducible standalone, ver §4.2).
-Working tree:   limpio
-Gobernanza:     docs/gobernanza/REGISTRO.yaml
-Writers:        24 (output_registry.py)
-Sistema Wyckoff: holdings-based (6 CSVs en outputs/history/).
+Tests:          3705 passed, 2 skipped (filtro estandar).
+                Sin filtro: 3719 passed, 2 skipped.
+CI HEAD:        verde.
+Validation Gate: 10/10 (no reproducible standalone; ver §4.3).
+Working tree:   limpio.
+Gobernanza:     docs/gobernanza/REGISTRO.yaml.
+Writers:        24 (output_registry.py).
+Sistema Wyckoff: holdings-based. 6 CSVs en outputs/history/.
 
-**Sesion 3 completa el plan de demolicion + construccion del sistema
-Wyckoff por holdings.** 16 commits: plan 63 + C1 a C5 + 1 fix.
-SLPM, lideres por sector, fase ETF del ranking y `classify_wyckoff_phase`
-retirados. El sistema clasifica fase directamente sobre los holdings
-(US sectores, US indices, EU indices) y produce 6 CSVs descargables
-con receipt.
+**Sesion 3 con dos fases:**
+
+**Fase A (primera parte)** — plan 63 ejecutado casi completo: C1, C2,
+C3, C4.1-C4.3, C5, C6.1, C6.2. Retirados SLPM, lideres por sector,
+fase ETF del ranking, classify_wyckoff_phase. Sistema holdings-based
+construido y cableado.
+
+**Fase B (continuacion, este documento)** — al verificar con pipeline
+real se detectaron dos problemas que invalidaban el "cierre" de la
+fase A: (1) C4.4 (retirada del sistema legacy de indices) se habia
+saltado, dejando 2 secciones legacy en el reporte con mojibake; (2) la
+rotacion sectorial llevaba sin actualizarse desde el run del 10:44
+porque sector_rank_history.py aun hacia unpacking de la tupla de 4
+(tras C5.1 la tupla paso a 3) y el except lo silenciaba. Ambos
+arreglados. Ademas se ha detectado deuda residual pendiente (C4.5).
 
 ---
 
-## 2. SESION 2026-10-24 (SESION 3)
+## 2. SESION 2026-10-24 (sesion 3)
 
-### 2.1. Plan aprobado (commit `16f2dd8a`, doc 63)
+### 2.1. Plan 63 — primera parte (fase A)
 
 `docs/auditoria/wyckoff/63_plan_sistema_holdings_2026-10-24.md`.
-7 commits planificados. Ejecutados como:
 
-- **C1** `83187f8c`: modulo `indicators/wyckoff_holdings_report.py`
-  (compute_wyckoff_holdings_report). 6 tablas (usa_sector_acc/dist,
-  usa_index_acc/dist, eu_index_acc/dist). Criterio (iii): ACC+FORMING+
-  MARKUP y DIST+FORMING+MARKDOWN. Cobertura: >=200 barras para
-  incluir, >=460 para score valido. IWM fuera (top-20 = 6.2% peso).
-- **C2.1** `a3a63766`: 6 OutputSpec nuevos en `output_registry.py`
-  (26 total). Wrapper `src/pipeline/wyckoff_holdings.py`. Cableado en
-  `run.py` tras `compute_sector_metrics`.
-- **C2.2** `9b5b34cd`: renderers en `src/report/wyckoff_holdings.py`.
-  2 secciones nuevas en el reporte ("Tickers en acumulacion" y
-  "Tickers en distribucion"). Cableado en `report_generator.py`.
-- **C3.1** `0c5b7fb3`: retirada SLPM. Borrados `slpm_v12.py`,
-  `state_machine.py`, `state_transition.py`, `src/pipeline/slpm.py`,
-  `src/report/slpm.py`. `SLPM_WEIGHTS`, `SLPM_EXPECTED_LEADERS`,
-  `_forzar_lideres_slpm`, `render_slpm_*` eliminados. `leader_df`/`top_sector_flow` fuera de `compute_engines`.
-- **C3.2** `676ab956`: Validation Gate adaptado. Firma
-  `slpm_v12_data` -> `wyckoff_holdings_data`. 3 checks sustituidos
-  (SLPM v1.2 -> Wyckoff holdings CSVs; Opportunity Map -> Cobertura
-  holdings; Anti-Double-Counting -> Sanity holdings). Gate sigue 10/10,
-  receipt sin cambios.
-- **C3.3** `cf7659fb`: `scripts/generate_docs.py` limpio. Sin
-  `06_indicadores_slpm.md` ni referencias SLPM.
-- **C4.1** `753b7f22`: `indicators/stock_metrics.py` extraido de
-  `stock_leader.py`. `compute_stock_metrics`, `compute_wls`,
-  `_validate_wls_inputs`, `WLS_COMPONENTS`, `compute_all_stock_metrics`.
-- **C4.2** `2ede0215`: `src/pipeline/stocks_data.py` extraido de
-  `leaders.py`. `load_stocks_data` (df_stocks + effective_meta +
-  holdings_df + HOLIDAY_MODE).
-- **C4.3** `4bc45fd3`: borrados `stock_leader.py`, `leaders.py`,
-  `leader_representativeness.py`, `sector_leader_divergence.py`,
-  `sector_annotations.py`, `render_acciones_seleccionadas`.
-  `sector_metrics.py` devuelve 3 sub-outputs (wyckoff, rs_internal,
-  concentration). Registry 26 -> 24 writers. `run.py` sustituye
-  `compute_leaders` por `load_stocks_data` + `compute_all_stock_metrics`.
-- **C5.1** `8d9b90a0`: fase ETF retirada del ranking. Tupla del
-  ranking de 4 a 3 elementos. `sector_regime.py` sin
-  `classify_wyckoff_phase` ni `wyckoff_score`/`build_ticker_df` sobre
-  el ETF. `sector_regime_matrix.py` deriva `structure_positive` de
-  `sector_wyckoff_distribution_df` (pct_accumulation + pct_markup
-  >= 50%). `wyckoff_phase` fuera de `sector_rankings.csv`.
-- **C5.2** `c47cb420`: `classify_wyckoff_phase`,
-  `classify_wyckoff_phase_meta`, `_is_distribution_candidate`,
-  `_compute_precedent`, `_has_sufficient_data` borradas de
-  `wyckoff_v1.py`. Constantes huerfanas: `FASE_*` (6),
-  `STRUCT_STRONG/WEAK/BASE/DETERIORO`, `T_NORM_WEAK`, `C_NORM_COMPRESSION`,
-  `PREC_STRUCT_WEAK`. Conservadas: `PRECEDENT_WINDOW`,
-  `PREC_STRUCT_STRONG`, `STRUCT_DETERIORO`, `T_NORM_STRONG` (aun usadas
-  por `detect_sow_v2`). `wyckoff_v1.py` queda como modulo de features
-  y detectores primitivos.
-- **Fix** `96276d05`: import huerfano en
-  `test_struct_score_sector_indices.py` que pyflakes en CI detecto
-  (local no, porque solo corri pyflakes por ficheros tocados).
+- C1 `83187f8c`: `indicators/wyckoff_holdings_report.py`. 6 tablas.
+- C2.1 `a3a63766`: 6 OutputSpec. Wrapper `wyckoff_holdings.py`.
+- C2.2 `9b5b34cd`: 2 secciones nuevas en el reporte.
+- C3.1 `0c5b7fb3`: retirada SLPM.
+- C3.2 `676ab956`: Validation Gate adaptado (10/10, 3 checks sustituidos).
+- C3.3 `cf7659fb`: `generate_docs.py` limpio.
+- C4.1 `753b7f22`: `stock_metrics.py` extraido.
+- C4.2 `2ede0215`: `stocks_data.py` extraido.
+- C4.3 `4bc45fd3`: retirada lideres por sector.
+- C5.1 `8d9b90a0`: fase ETF fuera del ranking. Tupla 4 -> 3.
+- C5.2 `c47cb420`: `classify_wyckoff_phase` y familia retiradas.
+- Fix `96276d05`: import huerfano en test.
+- C6.1 (a-d): HANDOFF, 00_ARRANQUE, 02_ARQUITECTURA, 62 actualizados.
+- C6.2: REGISTRO items, rama feature/wyckoff-cascade borrada.
 
-### 2.2. Sistema Wyckoff en produccion (post sesion 3)
+### 2.2. C4.4 — Retirada sistema legacy de indices (`f7fdbeba`)
 
-**Modulos:**
-- `indicators/wyckoff_event.py` - dataclasses comunes.
-- `indicators/wyckoff_distribution.py` - cascada distribucion.
-- `indicators/wyckoff_accumulation.py` - cascada acumulacion.
-- `indicators/wyckoff_orchestrator.py` - orquestador (`classify_phase`).
-- `indicators/wyckoff_v1.py` - features y detectores primitivos
-  (`wyckoff_score`, `detect_spring`, `detect_sos`, `detect_sow`,
-  `detect_sow_v2`, `build_ticker_df`, `_atr_normalized`,
+El sistema legacy (classify_phase sobre ^GSPC/^DJI/^NDX + top-5
+lideres por indice) coexistia con el holdings-based en el reporte.
+2 secciones redundantes, con mojibake en el titulo.
+
+**Borrados**: `index_phase.py`, `index_leaders.py`, `indices_intl.py`,
+`config/index_tickers.py`, `render_indices_internacionales` (en
+synthesis.py), 12 ficheros de test.
+
+**Adaptados**: `run.py` (sin compute_indices_intl), `report_generator.py`
+(sin 3 kwargs + render), `synthesis.py` (sin INDEX_CONFIG, _fmt_num,
+FLOW_ZSCORE_WINDOW), `test_output_contract_ast.py`,
+`test_render_modules_low_coverage_d29.py`, `generate_docs.py`.
+
+**REGISTRO**: 4 items FIXED (REP-AUDIT-20261018-STRUCT,
+REPORT-STRESS-LABEL, FLOW-RECONCILIATION, STRUCT-COLUMN) referenciaban
+`test_struct_score_sector_indices.py` (borrado). Quitado el test,
+anotada la retirada en evidencia.
+
+### 2.3. Bug rotacion sectorial (`8819ba70`)
+
+`sector_rank_history.py:54` hacia `for (ticker, name, score, fase)`
+pero C5.1 dejo la tupla del ranking en 3 elementos. El except de
+`sectors_base.py:56` lo capturaba (`Rotacion sectorial omitida: not
+enough values to unpack (expected 4, got 3)`) y skipeaba
+`sector_rank_deltas` con NO_DATA. La seccion "Rotacion sectorial
+reciente" del reporte llevaba desde el run del 10:44 sin actualizarse.
+
+Fix: unpacking 4 -> 3. Tests adaptados. `sectors_base.py` con
+`traceback.print_exc()` en el except para que futuros fallos no se
+silencien. Verificado en run real: rotacion calculada, seccion
+presente en el reporte con 11 sectores.
+
+### 2.4. Verificacion con pipeline real
+
+3 runs completos del pipeline (exit 0, gate 10/10, 24 writers OK,
+cero mojibake). Los DATA ISSUE (NaNs >10%) de ~35 tickers son
+preexistentes (IPOs recientes con historico parcial en Yahoo).
+
+### 2.5. Sistema Wyckoff en produccion (estado actual)
+
+Modulos:
+- `wyckoff_event.py`, `wyckoff_distribution.py`,
+  `wyckoff_accumulation.py`, `wyckoff_orchestrator.py` (classify_phase
+  + regla simetrica + FORMING + CONFLICT).
+- `wyckoff_v1.py`: features (`wyckoff_score`, `_atr_normalized`,
   `_trend_component`, `_volume_z`, `_effort_vs_result`,
-  `wyckoff_stability`).
-- `indicators/sector_wyckoff_distribution.py` - distribucion por
-  sector (columnas pct_*, count_*).
-- `indicators/wyckoff_holdings_report.py` - 6 tablas descargables.
-- `indicators/stock_metrics.py` - metricas per-ticker + WLS.
-- `src/pipeline/stocks_data.py` - carga df_stocks + holdings.
-- `src/pipeline/wyckoff_holdings.py` - wrapper persistencia 6 CSVs.
-- `src/report/wyckoff_holdings.py` - render 2 secciones nuevas.
+  `wyckoff_stability`) + detectores (`detect_spring`, `detect_sos`,
+  `detect_sow`, `detect_sow_v2`, `build_ticker_df`). Sin
+  `classify_wyckoff_phase`.
+- `wyckoff_holdings_report.py`: 6 tablas.
+- `stock_metrics.py`: metricas per-ticker + WLS.
+- `sector_wyckoff_distribution.py`: agregado por sector.
 
-**Artifacts descargables (outputs/history/):**
-- `wyckoff_usa_sector_accumulation.csv`
-- `wyckoff_usa_sector_distribution.csv`
-- `wyckoff_usa_index_accumulation.csv`
-- `wyckoff_usa_index_distribution.csv`
-- `wyckoff_eu_index_accumulation.csv`
-- `wyckoff_eu_index_distribution.csv`
+Pipeline:
+- `stocks_data.py`: `load_stocks_data`.
+- `wyckoff_holdings.py`: wrapper persistencia 6 CSVs.
+- `sector_metrics.py`: 3 sub-outputs (wyckoff, rs_internal,
+  concentration).
+- `engines.py`: tactical/structural/persistence (sin leader_df).
+- `validation_gate.py`: 10 checks (3 sustituidos por holdings).
 
-**Cobertura (2026-10-24):**
-- USA sectores (11): top-20 por weight. Peso top-20: XLB 90.1%,
-  XLC 97.7%, XLE 99.0%, XLF 72.8%, XLI 57.2%, XLK 79.6%, XLP 86.7%,
-  XLRE 86.7%, XLU 83.1%, XLV 78.9%, XLY 84.5%.
-- USA indices: SPY (49.9%), QQQ (66.8%), DIA (85.0%). IWM excluido
-  (top-20 = 6.2% de 1977 holdings, no representativo).
-- EU indices: FEZ 66.3%, DAXEX 78.4%, ISF.L 60.8%, LYXI 93.2%.
+Reporte:
+- `src/report/wyckoff_holdings.py`: 2 secciones nuevas.
+- Sin SLPM, sin lideres, sin indices legacy.
 
-### 2.3. Lo que se retiro
+6 CSVs descargables (`outputs/history/`):
+- `wyckoff_usa_sector_acc/dist`, `wyckoff_usa_index_acc/dist`,
+  `wyckoff_eu_index_acc/dist`.
 
-- **SLPM** completo: `slpm_v12.py`, `state_machine.py`,
-  `state_transition.py`, `src/pipeline/slpm.py`, `src/report/slpm.py`,
-  `SLPM_WEIGHTS`, `SLPM_EXPECTED_LEADERS`, tests asociados.
-- **Lideres por sector**: `stock_leader.py`, `leaders.py`,
-  `leader_representativeness.py`, `sector_leader_divergence.py`,
-  `sector_annotations.py`, `render_acciones_seleccionadas`,
-  tests asociados. `analisis_lideres.csv` deja de escribirse
-  (historico con receipt previo se conserva).
-- **Fase ETF del ranking**: `sector_regime.py` sin
-  `classify_wyckoff_phase` sobre el ETF. Tupla de 3 elementos.
-  `struct_scores` fuera del return.
-- **`classify_wyckoff_phase`** y familia: borradas de `wyckoff_v1.py`.
-  La clasificacion vive en el orquestador.
+Cobertura: top-20 por weight (57.2%-99.0% del peso del grupo). USA
+indices: SPY, QQQ, DIA (IWM excluido). EU indices: FEZ, DAXEX, ISF.L,
+LYXI.
+
+### 2.6. Lo que se retiro (acumulado sesion 3)
+
+- SLPM completo.
+- Lideres por sector (`stock_leader.py`, `leaders.py`, etc.).
+- Fase ETF del ranking.
+- `classify_wyckoff_phase` y familia.
+- Sistema legacy de indices (`index_phase.py`, `index_leaders.py`,
+  `indices_intl.py`, `config/index_tickers.py`).
 
 ---
 
@@ -151,78 +152,98 @@ con receipt.
 - 5e legacy Wyckoff: cerrado 2026-10-10.
 - `SOW-V6`: WONT_FIX 2026-10-24.
 - `REP-AUDIT-20261020-REPORT-REVIEW-EXTERNAL`: FIXED.
-- `UTAD_PENDING`/`SPRING_PENDING`: DESCARTADOS por pre-registro 61.
-- Regla de vigencia unidireccional: DESCARTADA por pre-registro 60.
 - `REP-AUDIT-20261020-CRON-SLOTS`: FIXED.
-- Sistema de lideres por sector (todo): retirado en sesion 3.
-- SLPM v1.2 (todo): retirado en sesion 3.
-- `classify_wyckoff_phase` (legacy): retirado en sesion 3.
+- `UTAD_PENDING`/`SPRING_PENDING`: DESCARTADOS pre-registro 61.
+- Regla de vigencia unidireccional: DESCARTADA pre-registro 60.
+- SLPM completo, lideres por sector, fase ETF del ranking,
+  `classify_wyckoff_phase`, sistema legacy de indices: RETIRADOS en
+  sesion 3.
+- C4.4: cerrado esta sesion.
 
 ## 4. PENDIENTES VIVOS
 
-### 4.1. SOW-BEAR-CONFIRMATION (IN_PROGRESS)
+### 4.1. C4.5 — Limpiar strings residuales a SLPM (siguiente paso)
 
-- Requiere contrato v1.10 firmado por auditor externo antes de implementar.
+El run real revelo que **el reporte sigue diciendo que SLPM/lideres
+existen** en 3 sitios, aunque el codigo ya no los tiene:
+
+- `src/dependency_tracker.py`: DIRECT_DEPENDENCIES con `slpm_v12.py`
+  en Structural Score, Persistence, RS, Flow Proxy; `stock_leader.py`
+  en RS y Flow Proxy; `Leader Breadth: [slpm_v12.py]`. INDIRECT con
+  `LIS -> SLPM (corregido)`, `Structural Score -> Opportunity Map +
+  SLPM`. EVIDENCE_CLASSIFICATION con `Leader Breadth: DERIVADA-COMPUESTA`.
+- `src/report/sectorial.py:54`: "Los derivados (SLPM, Opportunity
+  Map, scores)".
+- `src/report/rankings.py:90`: "Opportunity Map (independiente del
+  SLPM)".
+- `src/report/rankings.py:145`: "No implica liderazgo confirmado por
+  SLPM".
+
+Tambien hay 3 menciones residuales en `scripts/generate_docs.py` y
+en `src/report/synthesis.py:214` (esta ultima es valida: la seccion
+Anti-Double-Counting sigue existiendo).
+
+**Alcance C4.5 propuesto**: actualizar el mapeo de
+`dependency_tracker.py` al sistema real (liquidity_v2, sin SLPM,
+sin leader_breadth, añadir WLS: [sector_concentration.py]), reescribir
+las 3 notas de `sectorial.py` y `rankings.py`. Sin tocar
+`structural_engine.py::compute_structural_score(leader_breadth=0.5)`
+que es deuda separada.
+
+**Verificacion obligatoria**: run real del pipeline + auditoria del
+reporte en 2 dimensiones (headers + menciones textuales, no solo
+headers).
+
+### 4.2. Deudas tecnicas OPEN (sesion 3)
+
+- `STRUCTURAL-ENGINE-LEADER-BREADTH-ZOMBIE`: `compute_structural_score`
+  acepta `leader_breadth=0.5` como parametro con default. Nadie lo
+  pasa. Retirarlo requiere auditar `STRUCTURAL_WEIGHTS` y rebalancear
+  pesos. Deuda preexistente (introducida al retirar
+  `compute_leader_breadth_v2` en C3.1).
+- `VERIFY-LEADER-SELECTION-ROTO`: `validation/verify_leader_selection.py`
+  lee `analisis_lideres.csv` y `analisis_lideres_internacionales.csv`,
+  ya no generados desde C4.3/C4.4. El step del daily_run.yml
+  "Verify leader selection" fallara o pasara en falso. Revisar y
+  retirar el step o adaptar el script.
+- `CURRENT-PHASE-BASIS-CSV`: columna `basis` no va al reporte.
+- `ACCUMULATION-ZERO`: estado transitorio por diseno.
+- `VALIDATION-GATE-NO-STANDALONE`: gate no reproducible standalone.
+- `IWM-HOLDINGS-EXPANSION`: sub-fase descarga, protocolo 6 pasos.
+- `SECTOR-REGIME-MATRIX-STRUCTURE-POSITIVE`: validacion empirica de la
+  nueva derivacion (holdings-based desde C5.1).
+- `PODA-BITACORA-DIA-EN-CURSO`: script cuenta dia en curso contra
+  limite. Bug + ambiguedad en §5.
+
+### 4.3. SOW-BEAR-CONFIRMATION (IN_PROGRESS)
+
+- Requiere contrato v1.10 firmado por auditor externo antes de
+  implementar.
 - Siguiente accion: redactar `docs/auditoria/wyckoff/57_contrato_v1_10.md`.
 - Sin codigo en produccion hasta firma.
-- `detect_sow_v2` sigue en codigo y con tests: base del futuro contrato.
-- `WYCKOFF_SOW_*` = None, protegido por test de invariante
-  (`test_wyckoff_v1_contract.py`).
+- `detect_sow_v2` en codigo con tests. `WYCKOFF_SOW_*` = None.
 
-### 4.2. Deuda tecnica abierta (post sesion 3)
+### 4.4. Deuda documental residual
 
-- **`current_phase_basis` no va al CSV**: los 6 CSVs de holdings
-  tienen columna `basis` pero el reporte no la pinta. Decision de
-  producto: añadir columna `basis` al reporte o dejarla solo en CSV.
-- **`ACCUMULATION=0` en produccion**: estado transitorio por diseño
-  (SOS confirmado + precio dentro del rango). Documentar en 62 o en
-  HANDOFF. No es bug.
-- **Validation Gate no reproducible standalone**: no hay script ni
-  target pytest. El "10/10" es estado del ultimo run productivo. Item
-  OPEN. Opciones: documentar (a), escribir wrapper (b, coste alto),
-  aceptar (c).
-- **Caso TWST en CONFLICT**: documentar en 62 como caso conocido
-  (dist formandose + acc formandose simultaneamente). No es falso
-  positivo, es ambiguedad real.
-- **IWM fuera**: sub-fase de descarga (top-200/300 por peso). Protocolo
-  de 6 pasos obligatorio: calendario bursatil, 0 filas H=L=C, receipt,
-  test. Decision tomada: fuera hasta que se aborde.
-- **Cobertura USA incompleta**: 231/504 holdings en parquet.
-  Ampliacion futura con el mismo protocolo.
-- **Historia corta**: 14 tickers entre 200-460 barras. Completar
-  historico si procede.
-- **Render de `wyckoff_holdings_data`**: las 2 secciones nuevas
-  renderizan tabla plana. Evaluar si se necesita paginacion o
-  agrupacion visual cuando el volumen crezca.
-- **`detect_spring`/`detect_sos` legacy**: siguen en `index_leaders.py`,
-  `stock_metrics.py`. Decision separada sobre si migrar al sistema
-  nuevo (range-anchored) o mantener.
+- `04_HISTORICO` + `05_BITACORA`: sesion 3 documentada. C4.4 + bug
+  rotacion anadidos como sub-seccion.
+- `62_sistema_completo_2026-10-24.md`: parcialmente obsoleto (no
+  menciona C4.4). Correccion diferida.
+- `02_ARQUITECTURA` corregido (index_tickers fuera del arbol).
 
-### 4.3. Items OPEN observacionales (fechas)
+### 4.5. Items OPEN observacionales (fechas)
 
 | Item | Fecha | Accion |
 |---|---|---|
 | H5.3 | 2026-11-20 06:17 UTC | Verificar cron trimestral 13F |
-| REP-AUDIT-20261020-RECEIPT-AUDIT-LAG | 2026-11-17 | Cierre con 4 semanas obs |
-| REP-AUDIT-20261020-CRON-SLOTS-OBS | 2026-11-10 | Revision runs 20-10 a 10-11 |
-| REP-AUDIT-20261020-SCHEDULER-DELAYS | 2026-11-10 | p95 delays |
+| RECEIPT-AUDIT-LAG | 2026-11-17 | Cierre con 4 semanas obs |
+| CRON-SLOTS-OBS | 2026-11-10 | Revision runs 20-10 a 10-11 |
+| SCHEDULER-DELAYS | 2026-11-10 | p95 delays |
 
-### 4.4. BLOCKED_EXTERNAL
+### 4.6. BLOCKED_EXTERNAL
 
-- `C2-920`: discrepancia 920 en baseline IAE. Auditor externo.
-- `WYCKOFF-5BX`: esperando `n_confirmed_H20_complete >= 550` (~2027).
-
-### 4.5. Documentacion pendiente (C6 sesion 3, no completado)
-
-- `00_ARRANQUE.md`: §3 (estado), §4.2 (frente Wyckoff completo),
-  L235 "15 detectores" -> 16, L242/L264 `classify_wyckoff_phase`.
-- `02_ARQUITECTURA.md`: arbol de directorios (§2), §6 (SLPM),
-  §7 (fases 8a/8b), §10 (decisiones), §14 (alcance), §16 (universos).
-- `62_sistema_completo_2026-10-24.md`: L10/L135/L177
-  `classify_wyckoff_phase`, L156 `stock_leader.py`, L235 "15" -> 16,
-  añadir TWST, `ACCUMULATION=0`, `detect_sow_v2`.
-- `04_HISTORICO.md` + `05_BITACORA.md`: entrada de sesion 3.
-- Abrir items nuevos en REGISTRO (los de §4.2).
+- `C2-920`: discrepancia 920 baseline IAE. Auditor externo.
+- `WYCKOFF-5BX`: `n_confirmed_H20_complete >= 550` (~2027).
 
 ---
 
@@ -240,78 +261,74 @@ con receipt.
     py -m compileall . -q
 
 Esperado:
-- HEAD = el que devuelva `git log --oneline -1`.
+- HEAD = `git log --oneline -1`.
 - ahead 0, behind 0.
 - Working tree limpio.
-- Tests: ver `ESTADO_SISTEMA.md`. Referencia al cierre: 3776 passed
-  + 2 skipped (con `-n auto`).
+- Tests: ver `ESTADO_SISTEMA.md`. Al cierre: 3705 passed, 2 skipped
+  (con `-n auto`).
 - Gobernanza: `[OK] Gobernanza coherente`.
-- Bitacora: `[OK] Bitacora dentro de la regla`.
-- **pyflakes sobre `.` (todo el repo), no por fichero.** CI corre
-  `python -m pyflakes .`. Si solo se corre por fichero tocado, se
-  escapan imports huerfanos en otros ficheros (fallo C5.1 sesion 3).
+- Bitacora: **FALLA con PODA-BITACORA-DIA-EN-CURSO abierto**. Es
+  esperado mientras el item siga OPEN. No bloquea trabajo.
+- pyflakes sobre `.` silencio absoluto.
 - compileall OK.
 
 ---
 
 ## 6. NOTAS CRITICAS
 
-- **Verificar en CI, no solo en local.** Tests con `tmp_path` y fixtures
-  sinteticos.
+- **Verificar en CI, no solo en local.**
 - **Un cambio = una verificacion = un commit.**
 - **Verificar EOL (LF/CRLF) y BOM antes de cada patch.**
 - **Here-strings >20 lineas o >5 `$` -> fichero temporal.**
-- **pyflakes sobre todo el repo (`.`), no por fichero.** Leccion sesion
-  3: el import huerfano de `test_struct_score_sector_indices.py` paso
-  local y fallo en CI porque `pyflakes .` corre sobre todo el repo.
+- **Here-strings con `@\"...\"@` de PowerShell: los backticks rompen el
+  triple-quote de Python.** Usar `@'...'@` (single-quote) o escribir el
+  script a fichero con `[System.IO.File]::WriteAllText`. Leccion
+  sesion 3: 2 fallos por esto.
+- **pyflakes sobre todo el repo (`.`), no por fichero.** CI corre
+  `python -m pyflakes .`. Un import huerfano en un fichero que no se
+  toca sigue fallando en CI aunque `pyflakes <fichero>` de local este
+  limpio.
 - **Antes de cambiar firmas de tuplas o diccionarios, enumerar TODOS
-  los mocks y fixtures que los construyen.** Leccion sesion 3: la
-  tupla del ranking paso de 4 a 3, y el primer barrido dejo 6 tuplas
-  sin adaptar en `test_report_generator_smoke.py`. Usar AST sobre
-  los tests, no regex de texto.
-- **`git diff --check` despues de cualquier borrado por regex**, por
-  si queda blank line at EOF.
+  los consumidores via AST, no regex de texto.**
+- **Cuando un `except` captura y sigue, verificar si el problema esta
+  silenciado.** Un `print` + `skip(NO_DATA)` oculta fallos reales. El
+  bug de rotacion sectorial duro desde C5.1 hasta la sesion 3 por un
+  `except` que solo imprimia.
+- **Auditar el reporte en 2 dimensiones**: headers `^## ` Y menciones
+  textuales (strings dentro de notas). La auditoria por headers dejo
+  pasar 11 menciones a SLPM en el reporte post C4.4.
+- **Scripts de patch: no abortar al primer fallo. Acumular errores.**
+  Si un replace falla en el item 2 de 4, no se aplica nada pero los
+  items 3 y 4 tampoco. Mejor procesar todos e informar.
+- **`git diff --check` despues de cualquier borrado por regex.**
 - **Receipt fail-closed (enmienda v1.1).** BLOCKED o UNAVAILABLE -> no
   se emite receipt.
-- **Contrato EQUITY_EOD `critical=True`.** `coverage_at_session < 0.90`
-  bloquea publicacion.
+- **Contrato EQUITY_EOD `critical=True`.** coverage < 0.90 bloquea.
 - **Gobernanza canonica.** Items a `docs/gobernanza/REGISTRO.yaml`.
   El HANDOFF es vista derivada.
-- **Anclas temporales.** Fechas literales a `ANCLAS.yaml`.
 - **Sistema Wyckoff vigente**: holdings-based. ETFs solo como precio
-  de referencia para RS. `classify_wyckoff_phase` retirado;
-  clasificacion via `classify_phase` (orquestador).
-- **Regla simetrica de vigencia**: un rango esta vigente mientras el
-  precio NO lo ha roto por NINGUN lado. Definicion de rango, no
-  umbral.
-- **FORMING vs CONFIRMED**: FORMING = rango activo sin SOW/SOS
-  confirmado. Senal temprana.
-- **CONFLICT es estado honesto**: dos estructuras compitiendo.
-  Documentado en 62 (pendiente añadir TWST).
-- **Pre-registros fallidos NO se ajustan.** Ver 60 y 61.
-- **`sector_regime_matrix.py` deriva `structure_positive` de holdings**
-  (`sector_wyckoff_distribution_df`). Pendiente validar que las
-  lecturas (`Alineacion positiva`, `Constructivo`, etc.) siguen
-  coherentes con la nueva derivacion.
-- **Receipt del gate sigue siendo 10/10.** `pipeline_gate.py`,
-  `write_completion_receipt.py` y `provenance.py` sin tocar. Los 3
-  checks sustituidos mantienen el conteo.
-- **Nombres de writers**: 24. `output_registry.py` es la fuente.
+  de referencia. `classify_wyckoff_phase` retirado. Indices legacy
+  retirados.
+- **`sector_regime_matrix.py`** deriva `structure_positive` de holdings
+  (`sector_wyckoff_distribution_df`). Pendiente validacion empirica
+  (item `SECTOR-REGIME-MATRIX-STRUCTURE-POSITIVE`).
+- **`structural_engine.py::compute_structural_score`** tiene un
+  parametro zombie `leader_breadth=0.5`. Item OPEN.
 
 ## 7. REFERENCIAS
 
 Corpus normativo: `Consolidacion_Documentos/` (12 docs).
 Gobernanza: `docs/gobernanza/` (README, REGISTRO.yaml, ANCLAS.yaml).
 Contrato del gate: `docs/auditoria/daily_run_gate_contrato_v1.md` +
-`daily_run_gate_enmienda_v1_1.md` + `daily_run_gate_enmienda_v1_2.md`.
-Expediente Wyckoff: `docs/auditoria/wyckoff/` (51-63 del 2026-10-24).
+enmiendas v1.1 y v1.2.
+Expediente Wyckoff: `docs/auditoria/wyckoff/` (51-63).
 
 **Documentos clave para el traspaso:**
-- `63_plan_sistema_holdings_2026-10-24.md` - plan del sistema actual.
-- `62_sistema_completo_2026-10-24.md` - mapa tecnico (parcialmente
-  obsoleto; corregir en C6).
-- `60_current_phase_rule_v1.md` - pre-registro v1 fallido.
-- `61_utad_spring_pending_v1.md` - pre-registro UTAD_PENDING fallido.
+- `63_plan_sistema_holdings_2026-10-24.md`: plan del sistema actual.
+- `62_sistema_completo_2026-10-24.md`: mapa tecnico (parcialmente
+  obsoleto; no menciona C4.4).
+- `60_current_phase_rule_v1.md`: pre-registro v1 fallido.
+- `61_utad_spring_pending_v1.md`: pre-registro UTAD_PENDING fallido.
 
 ---
 

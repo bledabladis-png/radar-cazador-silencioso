@@ -44,6 +44,64 @@ Al cerrar una sesion nueva, se anade arriba (las mas recientes primero). Si hay 
 
 ## 3. SESIONES
 
+### 2026-10-24 (sesion 3 continuacion) - C4.4 + bug rotacion + verificacion real
+
+**Objetivo.** Verificar con pipeline real el estado del sistema
+holdings-based. Al ejecutar el primer run completo se detectaron 2
+fallos que invalidaban el "cierre" de la primera parte de la sesion.
+
+**Hallazgo 1: C4.4 nunca se ejecuto.** El reporte tenia 2 secciones
+legacy de indices con mojibake (`## Ãndices`). El sistema legacy de
+`index_phase`/`index_leaders` coexistia con el holdings-based.
+
+**Hallazgo 2: rotacion sectorial silenciada.** El `except` de
+`sectors_base.py:56` capturaba un `ValueError: not enough values to
+unpack (expected 4, got 3)` en `sector_rank_history.py:54`. La tupla
+del ranking paso a 3 en C5.1; el consumidor seguia esperando 4. El
+CSV `sector_rank_deltas.csv` no se actualizaba desde el 10:44.
+
+**Hecho.**
+- C4.4: retirados `index_phase.py`, `index_leaders.py`,
+  `indices_intl.py`, `config/index_tickers.py`,
+  `render_indices_internacionales`, 12 ficheros de test. Adaptados
+  `run.py`, `report_generator.py`, `synthesis.py`,
+  `test_output_contract_ast.py`,
+  `test_render_modules_low_coverage_d29.py`, `generate_docs.py`.
+  REGISTRO: 4 items FIXED sin test (test retirado).
+- Bug rotacion: unpacking 4 -> 3 en `sector_rank_history.py`. Tests
+  adaptados. `traceback.print_exc()` anadido en el except de
+  `sectors_base.py`.
+- 3 runs completos del pipeline verificados (exit 0, gate 10/10,
+  24 writers, cero mojibake, cero secciones legacy, rotacion
+  calculada, 6 CSVs holdings con fecha).
+- Deudas nuevas en REGISTRO: `C4.5-SLPM-STRINGS-RESIDUALES`,
+  `STRUCTURAL-ENGINE-LEADER-BREADTH-ZOMBIE`,
+  `VERIFY-LEADER-SELECTION-ROTO`.
+
+**Commits.** `8819ba70` (fix rotacion), `b8f0a4b9` (artefactos del
+run), `f7fdbeba` (C4.4).
+
+**Lecciones.**
+- `pyflakes .` sobre todo el repo, no por fichero.
+- Here-strings `@"..."@` de PowerShell rompen los triple-quote de
+  Python con backticks. Usar `@'...'@`.
+- Auditar reporte en 2 dimensiones: headers `^## ` + menciones
+  textuales + mojibake + N/D. La auditoria por headers dejo pasar 11
+  menciones a SLPM.
+- Cuando un except captura y sigue, verificar si el problema esta
+  silenciado. Bug de rotacion duro desde C5.1 por un except con
+  print + skip(NO_DATA).
+
+**Pendiente.**
+- C4.5: limpiar strings SLPM residuales en reporte.
+- `structural_engine.py::compute_structural_score` zombie
+  `leader_breadth=0.5`.
+- `validation/verify_leader_selection.py` roto desde C4.3/C4.4.
+- SOW-BEAR-CONFIRMATION (contrato v1.10).
+- Items observacionales con fecha (H5.3, etc.).
+
+**Proximo paso sugerido.** C4.5 con verificacion por pipeline real.
+
 ### 2026-10-24 (sesion 3) - Plan holdings: demolicion + construccion
 
 **Objetivo.** Ejecutar el plan 63: retirar el sistema de lideres por

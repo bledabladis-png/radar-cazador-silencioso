@@ -23,8 +23,8 @@ Verificada el 2026-09-28 en la auditoria interna A0.
 
     D:\Macro_Sectorial
     +-- run.py                      (231 LOC)
-    +-- config/                     (11 ficheros)
-    |   +-- settings.py, tickers.py, weights.py, index_tickers.py, __init__.py
+    +-- config/                     (10 ficheros)
+    |   +-- settings.py, tickers.py, weights.py, __init__.py
     |   +-- bme_ticker_map.csv, euronext_ticker_map.csv, xetra_ticker_map.csv
     |   +-- instrument_exclusions.csv, market_close_exceptions.csv, market_close_regular.csv
     +-- regimes/                    (8 ficheros)

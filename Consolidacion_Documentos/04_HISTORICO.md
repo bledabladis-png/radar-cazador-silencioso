@@ -1934,3 +1934,78 @@ Documentacion completa: `docs/auditoria/wyckoff/63_plan_sistema_holdings_2026-10
 
 Suite final: 3776 passed, 2 skipped (filtro estandar). Sin filtro:
 3790 passed, 2 skipped. Working tree limpio. Writers: 24.
+
+### C4.4 - Retirada sistema legacy de indices (2026-10-24, continuacion)
+
+Verificacion con pipeline real revelo que C4.4 se habia saltado en la
+primera parte de la sesion: el reporte contenia 2 secciones del
+sistema legacy de indices (`Indices (USA + Europa) - Fases Wyckoff` y
+`- Oportunidades de Acumulacion y Markup`) con mojibake en el titulo
+(`## Ãndices`), coexistiendo con el sistema holdings-based.
+
+**Borrados**: `indicators/index_phase.py`, `indicators/index_leaders.py`,
+`src/pipeline/indices_intl.py`, `config/index_tickers.py` (solo lo
+usaban los anteriores), `render_indices_internacionales` de
+`src/report/synthesis.py`, 12 ficheros de test.
+
+**Adaptados**: `run.py` (sin `compute_indices_intl`),
+`src/report_generator.py` (sin los 3 kwargs ni el render),
+`src/report/synthesis.py` (sin `INDEX_CONFIG`, `_fmt_num`,
+`FLOW_ZSCORE_WINDOW`), `tests/test_output_contract_ast.py`,
+`tests/test_render_modules_low_coverage_d29.py`,
+`scripts/generate_docs.py`.
+
+**REGISTRO**: 4 items FIXED (REP-AUDIT-20261018-STRUCT,
+REPORT-STRESS-LABEL, FLOW-RECONCILIATION, STRUCT-COLUMN) referenciaban
+`test_struct_score_sector_indices.py` (borrado en C4.4). Quitado el
+test, anotada la retirada en evidencia. Fix historico vigente.
+
+Commit `f7fdbeba`.
+
+### Bug de rotacion sectorial (2026-10-24, continuacion)
+
+`sector_rank_history.py:54` hacia
+`for (ticker, name, score, fase) in enumerate(...)` pero C5.1 dejo la
+tupla del ranking en 3 elementos. El `except` de `sectors_base.py:56`
+lo capturaba (`Rotacion sectorial omitida: not enough values to unpack
+(expected 4, got 3)`) y skipeaba `sector_rank_deltas` con NO_DATA. La
+seccion "Rotacion sectorial reciente" del reporte llevaba desde el run
+del 10:44 sin actualizarse (bug silenciado desde C5.1).
+
+Fix `8819ba70`: unpacking 4 -> 3, tests adaptados,
+`traceback.print_exc()` anadido en el `except` para que futuros fallos
+no se silencien. Verificado en run real: rotacion calculada, seccion
+presente en el reporte con 11 sectores.
+
+### Leccion: auditar el reporte en 2 dimensiones
+
+La auditoria por headers `^## ` no detecto 11 menciones textuales a
+SLPM/`slpm_v12.py`/`stock_leader.py`/LIS/State Machine en notas y en
+la seccion Anti-Double-Counting Audit. Esas menciones siguen en el
+reporte, aunque el codigo ya no tiene el sistema. Se abre item
+`C4.5-SLPM-STRINGS-RESIDUALES` para limpiarlas.
+
+La verificacion completa del reporte debe incluir:
+- Headers `^## `.
+- Menciones textuales a modulos/componentes retirados.
+- Mojibake (`Ã`, `â€`).
+- Conteo de N/D.
+- Presencia de las secciones clave.
+
+### Estado al cierre de la sesion extendida
+
+- Suite: 3705 passed, 2 skipped (filtro).
+- Sin filtro: 3719 passed, 2 skipped.
+- Working tree limpio.
+- Cero secciones legacy de indices.
+- Cero mojibake.
+- 6 CSVs de holdings con fecha del ultimo run (23:19).
+- Gate 10/10, 24 writers OK.
+- Rotacion sectorial calculada.
+
+**Deudas nuevas abiertas**:
+- `C4.5-SLPM-STRINGS-RESIDUALES`.
+- `STRUCTURAL-ENGINE-LEADER-BREADTH-ZOMBIE`.
+- `VERIFY-LEADER-SELECTION-ROTO`.
+
+**Siguiente paso**: C4.5.
