@@ -37,6 +37,11 @@ RANGE_TOLERANCE_FRAC = 0.05
 SOS_CONFIRM_CLOSES = 3
 SOS_TIMEOUT_SESSIONS = 10
 
+# Parametros ST (Secondary Test) - PROVISIONALES, pre-registro pendiente.
+ST_MAX_WINDOW = 40
+ST_PROXIMITY_PCT = 0.03
+ST_MAX_RALLY_PCT = 0.05
+
 
 def detect_sc(df, ticker, *, lookback=None, v_threshold=None,
               c_threshold=None, t_threshold=None, scan_window=1) -> WyckoffEvent:
@@ -673,3 +678,106 @@ def classify_accumulation(df, ticker, **kwargs) -> ClassifiedBreak:
     """Wrapper de classify_accumulation_at con as_of = ultima barra del df."""
     as_of = df.index[-1]
     return classify_accumulation_at(df, ticker, as_of, **kwargs)
+
+
+def detect_st_acc(df, ticker, sc_event, *, max_window=None,
+                  proximity_pct=None, max_rally_pct=None) -> WyckoffEvent:
+    """Secondary Test tras SC confirmado (acumulacion).
+
+    Simetrico a detect_st_dist. Busca un segundo acercamiento a la zona del
+    SC (low del SC +- proximity). Confirma cuando:
+    - low[t] <= sc_low * (1 + proximity_pct)  (retest de la zona por abajo)
+    - close[t] > sc_low * (1 + max_rally_pct)  (rechazo, no cierre abajo)
+    """
+    if sc_event.status != "CONFIRMED" or sc_event.event_date is None:
+        return WyckoffEvent(
+            ticker=ticker, event_type="ST_ACC",
+            event_date=None, available_at=None,
+            status="NOT_EVALUABLE",
+            evidence={"reason": "sc_not_confirmed", "sc_status": sc_event.status},
+        )
+
+    mw = max_window if max_window is not None else ST_MAX_WINDOW
+    px = proximity_pct if proximity_pct is not None else ST_PROXIMITY_PCT
+    rl = max_rally_pct if max_rally_pct is not None else ST_MAX_RALLY_PCT
+
+    try:
+        low = get_col(df, ticker, "Low")
+        close = get_col(df, ticker, "Close")
+    except (KeyError, ValueError):
+        return WyckoffEvent(
+            ticker=ticker, event_type="ST_ACC",
+            event_date=None, available_at=None,
+            status="NOT_EVALUABLE",
+            evidence={"reason": "missing_low_close"},
+        )
+
+    sc_date = sc_event.event_date
+    sc_low = sc_event.evidence.get("low")
+    if sc_low is None or pd.isna(sc_low) or float(sc_low) <= 0:
+        return WyckoffEvent(
+            ticker=ticker, event_type="ST_ACC",
+            event_date=None, available_at=None,
+            status="NOT_EVALUABLE",
+            evidence={"reason": "sc_low_invalid"},
+        )
+    sc_low = float(sc_low)
+
+    if sc_date not in df.index:
+        return WyckoffEvent(
+            ticker=ticker, event_type="ST_ACC",
+            event_date=None, available_at=None,
+            status="NOT_EVALUABLE",
+            evidence={"reason": "sc_date_not_in_df"},
+        )
+
+    sc_pos = df.index.get_loc(sc_date)
+    if sc_pos >= len(df) - 1:
+        return WyckoffEvent(
+            ticker=ticker, event_type="ST_ACC",
+            event_date=None, available_at=None,
+            status="NOT_OBSERVED",
+            evidence={"reason": "no_post_sc_bars"},
+        )
+
+    end_pos = min(sc_pos + mw, len(df) - 1)
+    proximity_band = sc_low * (1.0 + px)
+    rejection_level = sc_low * (1.0 + rl)
+
+    for pos in range(sc_pos + 1, end_pos + 1):
+        bar_date = df.index[pos]
+        lo = low.loc[bar_date]
+        c = close.loc[bar_date]
+        if pd.isna(lo) or pd.isna(c):
+            continue
+        lo = float(lo)
+        c = float(c)
+        if lo <= proximity_band and c > rejection_level:
+            return WyckoffEvent(
+                ticker=ticker, event_type="ST_ACC",
+                event_date=bar_date, available_at=bar_date,
+                status="CONFIRMED",
+                evidence={
+                    "sc_date": str(sc_date),
+                    "sc_low": sc_low,
+                    "st_low": lo,
+                    "st_close": c,
+                    "proximity_pct": float(px),
+                    "max_rally_pct": float(rl),
+                    "proximity_band": proximity_band,
+                    "rejection_level": rejection_level,
+                },
+            )
+
+    return WyckoffEvent(
+        ticker=ticker, event_type="ST_ACC",
+        event_date=None, available_at=None,
+        status="NOT_OBSERVED",
+        evidence={"reason": "no_st_in_window",
+                  "sc_date": str(sc_date),
+                  "sc_low": sc_low,
+                  "max_window": int(mw),
+                  "proximity_band": proximity_band,
+                  "rejection_level": rejection_level},
+    )
+

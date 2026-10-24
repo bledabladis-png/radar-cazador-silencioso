@@ -32,6 +32,11 @@ RANGE_TOLERANCE_FRAC = 0.05
 SOW_CONFIRM_CLOSES = 3
 SOW_TIMEOUT_SESSIONS = 10
 
+# Parametros ST (Secondary Test) - PROVISIONALES, pre-registro pendiente.
+ST_MAX_WINDOW = 40
+ST_PROXIMITY_PCT = 0.03
+ST_MAX_DRAWDOWN_PCT = 0.05
+
 # Parametros trend context - PROVISIONAL, pre-registro pendiente.
 TREND_CONTEXT_WINDOW = 120
 TREND_CONTEXT_UP_THRESHOLD = 0.2
@@ -871,4 +876,112 @@ def walk_distribution(df, ticker, *, start=None, end=None,
             "coherence_error", "is_first", "is_transition",
         ])
     return pd.DataFrame(rows)
+
+
+def detect_st_dist(df, ticker, bc_event, *, max_window=None,
+                   proximity_pct=None, max_drawdown_pct=None) -> WyckoffEvent:
+    """Secondary Test tras BC confirmado (distribucion).
+
+    Busca un segundo acercamiento a la zona del BC (high del BC +- proximity)
+    en el rango (bc_date+1, bc_date+max_window]. Se confirma cuando:
+    - high[t] >= bc_high * (1 - proximity_pct)  (retest de la zona)
+    - close[t] < bc_high * (1 - max_drawdown_pct)  (rechazo, no cierre arriba)
+
+    No exige volumen inferior (esa condicion no es universal segun Wyckoff).
+
+    - CONFIRMED: event_date = fecha del retest, available_at = mismo (observable al cierre).
+    - NOT_OBSERVED: ventana sin retest.
+    - NOT_EVALUABLE: BC no confirmado o datos insuficientes.
+    """
+    if bc_event.status != "CONFIRMED" or bc_event.event_date is None:
+        return WyckoffEvent(
+            ticker=ticker, event_type="ST_DIST",
+            event_date=None, available_at=None,
+            status="NOT_EVALUABLE",
+            evidence={"reason": "bc_not_confirmed", "bc_status": bc_event.status},
+        )
+
+    mw = max_window if max_window is not None else ST_MAX_WINDOW
+    px = proximity_pct if proximity_pct is not None else ST_PROXIMITY_PCT
+    dd = max_drawdown_pct if max_drawdown_pct is not None else ST_MAX_DRAWDOWN_PCT
+
+    try:
+        high = get_col(df, ticker, "High")
+        close = get_col(df, ticker, "Close")
+    except (KeyError, ValueError):
+        return WyckoffEvent(
+            ticker=ticker, event_type="ST_DIST",
+            event_date=None, available_at=None,
+            status="NOT_EVALUABLE",
+            evidence={"reason": "missing_high_close"},
+        )
+
+    bc_date = bc_event.event_date
+    bc_high = bc_event.evidence.get("high")
+    if bc_high is None or pd.isna(bc_high) or float(bc_high) <= 0:
+        return WyckoffEvent(
+            ticker=ticker, event_type="ST_DIST",
+            event_date=None, available_at=None,
+            status="NOT_EVALUABLE",
+            evidence={"reason": "bc_high_invalid"},
+        )
+    bc_high = float(bc_high)
+
+    if bc_date not in df.index:
+        return WyckoffEvent(
+            ticker=ticker, event_type="ST_DIST",
+            event_date=None, available_at=None,
+            status="NOT_EVALUABLE",
+            evidence={"reason": "bc_date_not_in_df"},
+        )
+
+    bc_pos = df.index.get_loc(bc_date)
+    if bc_pos >= len(df) - 1:
+        return WyckoffEvent(
+            ticker=ticker, event_type="ST_DIST",
+            event_date=None, available_at=None,
+            status="NOT_OBSERVED",
+            evidence={"reason": "no_post_bc_bars"},
+        )
+
+    end_pos = min(bc_pos + mw, len(df) - 1)
+    proximity_band = bc_high * (1.0 - px)
+    rejection_level = bc_high * (1.0 - dd)
+
+    for pos in range(bc_pos + 1, end_pos + 1):
+        bar_date = df.index[pos]
+        h = high.loc[bar_date]
+        c = close.loc[bar_date]
+        if pd.isna(h) or pd.isna(c):
+            continue
+        h = float(h)
+        c = float(c)
+        if h >= proximity_band and c < rejection_level:
+            return WyckoffEvent(
+                ticker=ticker, event_type="ST_DIST",
+                event_date=bar_date, available_at=bar_date,
+                status="CONFIRMED",
+                evidence={
+                    "bc_date": str(bc_date),
+                    "bc_high": bc_high,
+                    "st_high": h,
+                    "st_close": c,
+                    "proximity_pct": float(px),
+                    "max_drawdown_pct": float(dd),
+                    "proximity_band": proximity_band,
+                    "rejection_level": rejection_level,
+                },
+            )
+
+    return WyckoffEvent(
+        ticker=ticker, event_type="ST_DIST",
+        event_date=None, available_at=None,
+        status="NOT_OBSERVED",
+        evidence={"reason": "no_st_in_window",
+                  "bc_date": str(bc_date),
+                  "bc_high": bc_high,
+                  "max_window": int(mw),
+                  "proximity_band": proximity_band,
+                  "rejection_level": rejection_level},
+    )
 
