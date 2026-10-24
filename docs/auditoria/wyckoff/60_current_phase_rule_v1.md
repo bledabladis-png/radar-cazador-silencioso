@@ -85,3 +85,67 @@ El problema original (falsos positivos por deteccion historica) NO esta
 resuelto. Se deja documentado. Cualquier intento de resolverlo requiere
 nuevo pre-registro con umbrales fijados antes de ver holdout, y
 aceptacion del resultado sin retoques.
+
+
+---
+
+## ENMIENDA v2 — Regla simetrica + MARKUP/MARKDOWN
+
+La regla v1 solo miraba un lado del rango (recuperacion alcista para dist,
+caida para acc). Eso dejaba pasar dos tipos de fantasmas:
+
+- Distribuciones consumadas: precio rompio el soporte y cayo. Sigue
+  etiquetada DISTRIBUTION en `event_classification`, pero la fase ya
+  termino. Deberia ser MARKDOWN.
+- Acumulaciones consumadas: precio rompio la resistencia y subio.
+  Deberia ser MARKUP.
+
+Ademas, los conflictos VSAT/TPL no eran conflictos: eran dos rangos en
+momentos distintos con precio fuera de ambos.
+
+### Regla v2
+
+El estado `phase` (fase actual) se DERIVA del hecho historico
+(`event_classification`) + la posicion del precio respecto al rango:
+
+- dist confirmada:
+  - price > resistance + tol       -> RANGE (distribucion fallida)
+  - price < support - tol          -> MARKDOWN (distribucion consumada)
+  - price dentro                   -> DISTRIBUTION (vigente)
+
+- acc confirmada:
+  - price < support - tol          -> RANGE (acumulacion fallida)
+  - price > resistance + tol       -> MARKUP (acumulacion consumada)
+  - price dentro                   -> ACCUMULATION (vigente)
+
+La simetria es definicion de rango, no umbral. Un rango esta vigente
+mientras el precio no lo ha roto por ningun lado. Si rompio, termino —
+y el lado de la ruptura dice que fase viene despues.
+
+`event_phase` se conserva como historia (que se detecto y cuando).
+`phase` es lo que pasa hoy. El reporte debe mostrar ambos.
+
+### Matriz sobre 327 stocks (2026-10-22)
+
+| event_phase | phase | count |
+|---|---|---|
+| ACCUMULATION | MARKUP | 13 |
+| ACCUMULATION | RANGE | 1 |
+| DISTRIBUTION | DISTRIBUTION | 16 |
+| DISTRIBUTION | MARKDOWN | 18 |
+| DISTRIBUTION | RANGE | 16 |
+| RANGE | RANGE | 263 |
+
+CONFLICT = 0. Total = 327. Coherente con la logica v2.
+
+### Leccion
+
+La regla v1 falló el pre-registro porque medía solo un lado. La v2 mide
+los dos lados. No es un umbral estadistico — es simetria de definicion.
+Se acepta como enmienda porque es completitud de un contrato previo, no
+un ajuste numerico post-hoc.
+
+MARKUP y MARKDOWN quedan como estados de primera clase. No son detectores
+nuevos: son lo que pasa despues de un SOW (markdown) o SOS (markup)
+confirmado, cuando el precio ha abandonado el rango en la direccion
+esperada.

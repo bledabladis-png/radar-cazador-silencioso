@@ -41,6 +41,38 @@ _INSUFFICIENT_DATA_REASONS = frozenset({
 })
 
 
+def _is_dist_current(cb: ClassifiedBreak, current_price: float | None) -> bool:
+    """Distribucion vigente si el precio esta DENTRO del rango +- tolerancia.
+
+    Un rango esta vigente mientras el precio no lo ha roto por NINGUN lado:
+    - Rotura alcista (price > resistance + tol): la distribucion fracaso.
+    - Rotura bajista (price < support - tol): la distribucion se consumio.
+    En ambos casos, el rango ya no describe la situacion actual.
+
+    Definicion simetrica de rango, no umbral estadistico."""
+    if current_price is None:
+        return False
+    if cb.range_support is None or cb.range_resistance is None or cb.range_tol_abs is None:
+        return False
+    price = float(current_price)
+    tol = float(cb.range_tol_abs)
+    return (float(cb.range_support) - tol) <= price <= (float(cb.range_resistance) + tol)
+
+
+def _is_acc_current(cb: ClassifiedBreak, current_price: float | None) -> bool:
+    """Acumulacion vigente si el precio esta DENTRO del rango +- tolerancia.
+
+    Simetrica a _is_dist_current. Simetria de definicion: un rango esta
+    vigente mientras el precio no lo ha roto por ningun lado."""
+    if current_price is None:
+        return False
+    if cb.range_support is None or cb.range_resistance is None or cb.range_tol_abs is None:
+        return False
+    price = float(current_price)
+    tol = float(cb.range_tol_abs)
+    return (float(cb.range_support) - tol) <= price <= (float(cb.range_resistance) + tol)
+
+
 @dataclass(frozen=True)
 class FinalPhase:
     ticker: str
@@ -52,6 +84,8 @@ class FinalPhase:
     acc_evidence: dict[str, Any] = field(default_factory=dict)
     conflict_reason: str | None = None
     phase_since: pd.Timestamp | None = None
+    event_phase: WyckoffPhase | None = None
+    current_phase_basis: str | None = None
 
 
 def _is_data_insufficient(r: ClassifiedBreak) -> bool:
@@ -67,17 +101,9 @@ def _is_data_insufficient(r: ClassifiedBreak) -> bool:
     return False
 
 
-def _decide(dist: ClassifiedBreak, acc: ClassifiedBreak) -> tuple[WyckoffPhase, str | None]:
-    """Aplica la tabla de decision. Devuelve (phase, conflict_reason).
-
-    Regla:
-    - Ambas confirmadas:
-      - Si ambas tienen rango activo (no roto) en as_of -> CONFLICT
-        (dos estructuras compitiendo ahora mismo)
-      - Si no -> la mas reciente por resolution_event_date
-    - Solo una confirmada -> esa fase
-    - Ninguna confirmada -> RANGE o INSUFFICIENT_DATA
-    """
+def _decide_event_phase(dist: ClassifiedBreak, acc: ClassifiedBreak) -> tuple[WyckoffPhase, str | None]:
+    """Fase de EVENTO (historica): sin regla de vigencia por precio.
+    Refleja 'que paso', no 'que pasa ahora'."""
     dist_conf = dist.classification == "DISTRIBUTION_CONFIRMED"
     acc_conf = acc.classification == "ACCUMULATION_CONFIRMED"
 
@@ -118,6 +144,107 @@ def _decide(dist: ClassifiedBreak, acc: ClassifiedBreak) -> tuple[WyckoffPhase, 
     return "RANGE", None
 
 
+def _dist_derived_phase(cb: ClassifiedBreak, price: float | None) -> str | None:
+    """Fase derivada de una cascada de distribucion confirmada:
+    - None si no hay cascada confirmada.
+    - DISTRIBUTION si price dentro del rango.
+    - MARKDOWN si price < support - tol (distribucion consumada).
+    - RANGE si price > resistance + tol (distribucion fallida).
+    """
+    if cb.classification != "DISTRIBUTION_CONFIRMED":
+        return None
+    if price is None or cb.range_support is None or cb.range_resistance is None or cb.range_tol_abs is None:
+        return None
+    tol = float(cb.range_tol_abs)
+    if float(price) > float(cb.range_resistance) + tol:
+        return "RANGE"
+    if float(price) < float(cb.range_support) - tol:
+        return "MARKDOWN"
+    return "DISTRIBUTION"
+
+
+def _acc_derived_phase(cb: ClassifiedBreak, price: float | None) -> str | None:
+    """Fase derivada de una cascada de acumulacion confirmada:
+    - None si no hay cascada confirmada.
+    - ACCUMULATION si price dentro del rango.
+    - MARKUP si price > resistance + tol (acumulacion consumada).
+    - RANGE si price < support - tol (acumulacion fallida).
+    """
+    if cb.classification != "ACCUMULATION_CONFIRMED":
+        return None
+    if price is None or cb.range_support is None or cb.range_resistance is None or cb.range_tol_abs is None:
+        return None
+    tol = float(cb.range_tol_abs)
+    if float(price) < float(cb.range_support) - tol:
+        return "RANGE"
+    if float(price) > float(cb.range_resistance) + tol:
+        return "MARKUP"
+    return "ACCUMULATION"
+
+
+def _decide_current_phase(
+    dist: ClassifiedBreak, acc: ClassifiedBreak, current_price: float | None
+) -> tuple[WyckoffPhase, str | None, str]:
+    """Fase ACTUAL derivada de cascadas confirmadas + posicion del precio."""
+    d_phase = _dist_derived_phase(dist, current_price)
+    a_phase = _acc_derived_phase(acc, current_price)
+
+    if d_phase is None and a_phase is None:
+        dist_ins = _is_data_insufficient(dist)
+        acc_ins = _is_data_insufficient(acc)
+        if dist_ins and acc_ins:
+            return ("INSUFFICIENT_DATA", None, "ambas cascadas sin datos suficientes")
+        return ("RANGE", None, "sin cascada activa")
+
+    if a_phase is None:
+        return (d_phase, None, _basis_for(d_phase, "dist", current_price, dist))
+    if d_phase is None:
+        return (a_phase, None, _basis_for(a_phase, "acc", current_price, acc))
+
+    if d_phase == "DISTRIBUTION" and a_phase == "ACCUMULATION":
+        return ("CONFLICT",
+                f"dist y acc vigentes en {dist.as_of.date()}",
+                "ambas dentro del rango")
+
+    if d_phase == "RANGE" and a_phase == "RANGE":
+        return ("RANGE", None, "ambas cascadas fallidas (precio fuera por lado opuesto)")
+
+    if d_phase == "RANGE":
+        return (a_phase, None, _basis_for(a_phase, "acc", current_price, acc) + " (dist fallida)")
+    if a_phase == "RANGE":
+        return (d_phase, None, _basis_for(d_phase, "dist", current_price, dist) + " (acc fallida)")
+
+    d_res = dist.resolution_event_date
+    a_res = acc.resolution_event_date
+    if d_res is None and a_res is None:
+        return ("CONFLICT", f"ambas sin fecha ({d_phase} vs {a_phase})", "empate sin fecha")
+    if d_res is None:
+        return (a_phase, None, f"acc mas reciente: {a_phase}")
+    if a_res is None:
+        return (d_phase, None, f"dist mas reciente: {d_phase}")
+    if d_res > a_res:
+        return (d_phase, None, f"dist mas reciente ({d_res.date()}) que acc ({a_res.date()}): {d_phase}")
+    if a_res > d_res:
+        return (a_phase, None, f"acc mas reciente ({a_res.date()}) que dist ({d_res.date()}): {a_phase}")
+    return ("CONFLICT", f"ambas resueltas en {d_res.date()}", "misma fecha")
+
+
+def _basis_for(phase: str, side: str, price: float | None, cb: ClassifiedBreak) -> str:
+    if phase == "DISTRIBUTION":
+        return f"dist vigente: price {price} dentro del rango"
+    if phase == "ACCUMULATION":
+        return f"acc vigente: price {price} dentro del rango"
+    if phase == "MARKDOWN":
+        return f"markdown: price {price} < support-tol {cb.range_support}-{cb.range_tol_abs}"
+    if phase == "MARKUP":
+        return f"markup: price {price} > resistance+tol {cb.range_resistance}+{cb.range_tol_abs}"
+    if phase == "RANGE":
+        if side == "dist":
+            return f"dist fallida: price {price} > resistance+tol {cb.range_resistance}+{cb.range_tol_abs}"
+        return f"acc fallida: price {price} < support-tol {cb.range_support}-{cb.range_tol_abs}"
+    return phase
+
+
 def classify_phase_at(df, ticker, as_of, *,
                       dist_kwargs=None, acc_kwargs=None) -> FinalPhase:
     """Ejecuta ambas cascadas hasta as_of y emite la fase final."""
@@ -135,7 +262,12 @@ def classify_phase_at(df, ticker, as_of, *,
         dist.evidence["current_price"] = current_price
         acc.evidence["current_price"] = current_price
 
-    phase, conflict = _decide(dist, acc)
+    # Fase de EVENTO (historica, sin vigencia)
+    event_phase, event_conflict = _decide_event_phase(dist, acc)
+
+    # Fase ACTUAL (aplica regla de vigencia por precio)
+    current_price = dist.evidence.get("current_price")
+    phase, conflict, basis = _decide_current_phase(dist, acc, current_price)
 
     # phase_since: fecha de resolucion del episodio que gano (o None si RANGE/INSUFFICIENT)
     phase_since = None
@@ -154,6 +286,8 @@ def classify_phase_at(df, ticker, as_of, *,
         acc_evidence=acc.evidence,
         conflict_reason=conflict,
         phase_since=phase_since,
+        event_phase=event_phase,
+        current_phase_basis=basis,
     )
 
 
