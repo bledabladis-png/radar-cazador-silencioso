@@ -103,7 +103,7 @@ def detect_bc(df, ticker, *, lookback=None, v_threshold=None,
 
     idx = high.index
     n = len(idx)
-    rmax = high_clean.rolling(lb, min_periods=lb).max().reindex(idx)
+    rmax = high_clean.dropna().rolling(lb, min_periods=lb).max().reindex(idx)
     t_al = t_norm.reindex(idx)
     c_al = c_norm.reindex(idx)
     v_al = v_norm.reindex(idx)
