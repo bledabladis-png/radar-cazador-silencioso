@@ -434,37 +434,27 @@ items:
 - id: SOW-V6
   tipo: frente
   ciclo: '2026-10-06'
-  estado: IN_PROGRESS
+  estado: WONT_FIX
   descripcion: |
-    Rediseno del detector SOW tras purged k-fold 2017-2025
-    (commit e7327463, evidencia docs/auditoria/wyckoff/51_purged_kfold_2026-10-23/).
-    Diagnostico: el detector actual confunde efecto ticker con efecto SOW.
-    El placebo B (permutacion intra-ticker) reproduce 48-119% del lift real
-    en los 3 folds con senal positiva (2018, 2020, 2024). El detector
-    etiqueta tickers volatiles, no detecta eventos de transicion.
-  plan: |
-    (1) SOW como evento de transicion (primer SOW de cada racha), no estado
-        continuo. Evita doble conteo en tickers volatiles.
-    (2) Target relativo al ticker (deterioro esperado en la ventana), no
-        absoluto. Separa efecto ticker de efecto SOW.
-    (3) Candidata C1 (N=40 M=5 X_ATR=1.00 Y_VOL=1.10), con evidencia temporal
-        historica favorable, como segunda candidata a probar.
-  criterio_revisado: |
-    FUNCIONA si:
-      - lift > 0.05
-      - IC95 lower > 0
-      - lift real > placebo B en >= 7/9 folds
-    El tercer criterio faltaba en el diseno original. Sin el, un detector
-    que etiqueta tickers volatiles parece funcionar.
-  historial: |
-    Cierre previo WONT_FIX (commit bd94dacd) revertido por decision de
-    producto: el sistema debe implementar SOW solido, no cerrar el frente
-    con la primera senal negativa. El diagnostico placebo B es la base
-    del rediseno, no una razon para abandonar.
+    Validacion del SOW universal (C1-M5, gate distribution). 7 experimentos
+    sobre datos historicos, 2 cohortes reservadas (268 y 3423 tickers),
+    2 detectores (v1 y v2), 2 estimadores (pooled y within-ticker),
+    2 placebos (permutacion y distribucion de 100 shifts). Evidencia en
+    docs/auditoria/wyckoff/51-56.
+  razon: |
+    El detector SOW v2 tiene senal real vs placebo (lift real +0.123 vs
+    placebo mean -0.077, sd 0.009, 21.5 sd de separacion) pero NO es
+    universal: 4/9 folds positivos, IC95 entre anos [-0.058, +0.303] cruza 0.
+    Patron: 3/3 anos con >10% dias bear funcionan (2018, 2020, 2022, 2025
+    con 2025 en el limite), 0/5 anos con <10% bear funcionan. 2020 domina
+    la muestra bear (473/671 SOW en bear). Ningun gate probado (VIX>60,
+    market<MA200+DD<-10%) cumple el criterio pre-registrado: ambos bajan
+    la media global (+0.217 -> +0.104 y +0.217 -> +0.126). El SOW universal
+    muere como senal autonoma. Cierre de validacion, no de hipotesis:
+    el patron bear real justifica un frente distinto (SOW-BEAR-CONFIRMATION).
   siguiente_accion: |
-    Fase 2: redisenar detect_sow como evento de transicion + target relativo.
-    Re-ejecutar purged k-fold con placebo B. Ver
-    docs/auditoria/wyckoff/51_purged_kfold_2026-10-23/ para el diseno original.
+    Ninguna. Frente cerrado. Reabrir solo con nuevo contrato (bear-confirmation)
+    o nueva variable Y.
 
 - id: WYCKOFF-5BX
   tipo: frente
@@ -1791,3 +1781,36 @@ items:
   siguiente_accion: |
     Fix de una linea para (1) y notas cruzadas para (2) y (3) en los
     modulos de reporte correspondientes.
+
+- id: SOW-BEAR-CONFIRMATION
+  tipo: frente
+  ciclo: '2026-10-24'
+  estado: IN_PROGRESS
+  descripcion: |
+    Nuevo frente tras cierre del SOW universal (SOW-V6 -> WONT_FIX).
+    El patron bear es real: 3/3 anos con >10% dias bear funcionan (2018,
+    2020, 2022; 2025 en el limite con 8.8%), 0/5 anos con <10% bear
+    funcionan. Evidencia en docs/auditoria/wyckoff/56_event_study_2026-10-24/.
+    SOW-BEAR-CONFIRMATION no es una senal autonoma. Es una confirmacion
+    de deterioro DENTRO de un regimen bear ya identificado por el sistema
+    (market proxy < MA200 AND drawdown desde maximo 252d < -10%). No
+    activa DISTRIBUTION por si solo. Anade una etiqueta de confirmacion
+    al reporte en sectores que ya cumplen regimen bear.
+  plan: |
+    (1) Nuevo contrato semantico v1.10: define SOW-BEAR-CONFIRMATION con
+        semantica de etiqueta de confirmacion, no fase. SOW v1.8 (evento
+        de ruptura) se mantiene intacto. SOW v2 (gate distribution) se
+        reutiliza como condicion necesaria pero no suficiente.
+    (2) Regla de activacion: solo emite la etiqueta si market proxy esta
+        en bear (MA200 + DD) Y SOW v2 dispara en las ultimas M sesiones.
+        M = 5 por coherencia con C1.
+    (3) Tests de contrato: el detector NO modifica classify_wyckoff_phase.
+        La etiqueta es solo informativa en el reporte.
+    (4) Auditor externo revisa el contrato v1.10 antes de implementar.
+        Si rechaza, el frente se cierra como WONT_FIX con razon.
+  dependencia: |
+    Redaccion del contrato v1.10 + revision externa. No se implementa
+    nada en produccion hasta firma del contrato.
+  siguiente_accion: |
+    Redactar docs/auditoria/wyckoff/57_contrato_v1_10.md con la
+    semantica bear-confirmation. Sin codigo hasta firma del auditor.
