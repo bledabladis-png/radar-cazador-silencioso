@@ -637,6 +637,25 @@ def detect_trend_context(df, ticker, as_of, *, window=None,
     }
 
 
+def _enrich_dist_evidence(evidence, sub, ticker, sow, rng):
+    """Muta evidence in-place añadiendo mSOW y (si aplica) LPSY.
+    No cambia classification, solo evidencia pasiva."""
+    try:
+        msow = detect_msow(sub, ticker)
+        evidence["msow"] = {"status": msow.status,
+                            "event_date": str(msow.event_date) if msow.event_date else None}
+    except Exception as exc:
+        evidence["msow"] = {"status": "ERROR", "error": str(exc)}
+    if sow is not None and sow.status == "CONFIRMED" and rng is not None:
+        try:
+            lpsy = detect_lpsy(sub, ticker, sow, rng)
+            evidence["lpsy"] = {"status": lpsy.status,
+                                "event_date": str(lpsy.event_date) if lpsy.event_date else None}
+        except Exception as exc:
+            evidence["lpsy"] = {"status": "ERROR", "error": str(exc)}
+    return evidence
+
+
 def classify_distribution_at(df, ticker, as_of, *,
                              bc_kwargs=None, ar_kwargs=None,
                              range_kwargs=None, sow_kwargs=None,
@@ -724,6 +743,8 @@ def classify_distribution_at(df, ticker, as_of, *,
         "sow_event_date": str(sow.event_date) if sow.event_date else None,
         "sow_evidence": sow.evidence,
     }
+    # Evidencia pasiva: mSOW siempre, LPSY si sow confirmado.
+    _enrich_dist_evidence(evidence, sub, ticker, sow, rng)
 
     if sow.status == "CANDIDATE":
         return ClassifiedBreak(
