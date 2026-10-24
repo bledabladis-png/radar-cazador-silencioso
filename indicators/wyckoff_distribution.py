@@ -41,6 +41,13 @@ ST_MAX_DRAWDOWN_PCT = 0.05
 FB_MAX_WINDOW = 15
 FB_CONFIRM_SESSIONS = 2
 
+# Parametros PSY/mSOW/LPSY - PROVISIONALES, pre-registro pendiente.
+MSOW_X_ATR = 0.5
+MSOW_Y_VOL = 0.8
+LPS_MAX_REBOUND_PCT = 0.7  # rebote <= 70% de la distancia soporte-resistencia
+LPS_MAX_WINDOW = 15
+PSY_LOOKBACK = 20
+
 # Parametros trend context - PROVISIONAL, pre-registro pendiente.
 TREND_CONTEXT_WINDOW = 120
 TREND_CONTEXT_UP_THRESHOLD = 0.2
@@ -1273,5 +1280,430 @@ def detect_false_breakout_down(df, ticker, range_event, *, max_window=None,
             "max_window": int(mw),
             "reason": "breakout_not_yet_recovered",
         },
+    )
+
+
+def detect_psy(df, ticker, *, lookback=None) -> WyckoffEvent:
+    """Preliminary Supply (PSY): primeras ventas institucionales en tendencia alcista.
+
+    Detecta una barra con:
+    - t_norm >= 0.3 (tendencia alcista previa)
+    - high nuevo del lookback (extension)
+    - cierre debil: close < (high+low)/2 (rechazo dentro de la barra)
+    - v_norm >= 0.5 (volumen elevado)
+
+    Evidencia de techo temprano, ANTES del BC. No confirma distribucion.
+
+    Solo escanea la ultima barra del df. El consumidor puede escanear por
+    scan_window si lo necesita.
+    """
+    from indicators.wyckoff_v1 import wyckoff_score
+    lb = lookback if lookback is not None else PSY_LOOKBACK
+    try:
+        high = get_col(df, ticker, "High")
+        low = get_col(df, ticker, "Low")
+        close = get_col(df, ticker, "Close")
+    except (KeyError, ValueError):
+        return WyckoffEvent(
+            ticker=ticker, event_type="PSY",
+            event_date=None, available_at=None,
+            status="NOT_EVALUABLE",
+            evidence={"reason": "missing_ohlc"},
+        )
+    if len(high.dropna()) < lb + 20:
+        return WyckoffEvent(
+            ticker=ticker, event_type="PSY",
+            event_date=None, available_at=None,
+            status="NOT_EVALUABLE",
+            evidence={"reason": "insufficient_data"},
+        )
+    try:
+        _, _, _, t_norm, _, v_norm, _ = wyckoff_score(df, ticker)
+    except (KeyError, ValueError, TypeError, IndexError) as exc:
+        return WyckoffEvent(
+            ticker=ticker, event_type="PSY",
+            event_date=None, available_at=None,
+            status="NOT_EVALUABLE",
+            evidence={"reason": f"score_error: {exc}"},
+        )
+    idx = high.index
+    last = idx[-1]
+    h = high.loc[last]; l = low.loc[last]; c = close.loc[last]
+    t = t_norm.reindex(idx).loc[last]
+    v = v_norm.reindex(idx).loc[last]
+    if any(pd.isna(x) for x in (h, l, c, t, v)):
+        return WyckoffEvent(
+            ticker=ticker, event_type="PSY",
+            event_date=None, available_at=None,
+            status="NOT_EVALUABLE",
+            evidence={"reason": "nan_in_features"},
+        )
+    h = float(h); l = float(l); c = float(c)
+    t = float(t); v = float(v)
+    rmax = float(high.dropna().rolling(lb, min_periods=lb).max().reindex(idx).loc[last])
+    mid = (h + l) / 2.0
+    is_new_high = h >= rmax
+    is_weak_close = c < mid
+    is_uptrend = t >= 0.3
+    is_vol = v >= 0.5
+    evidence = {
+        "high": h, "low": l, "close": c, "t_norm": t, "v_norm": v,
+        "roll_max": rmax, "mid": mid,
+        "is_new_high": is_new_high, "is_weak_close": is_weak_close,
+        "is_uptrend": is_uptrend, "is_vol": is_vol,
+    }
+    if is_new_high and is_weak_close and is_uptrend and is_vol:
+        return WyckoffEvent(
+            ticker=ticker, event_type="PSY",
+            event_date=last, available_at=last,
+            status="CONFIRMED",
+            evidence=evidence,
+        )
+    return WyckoffEvent(
+        ticker=ticker, event_type="PSY",
+        event_date=None, available_at=None,
+        status="NOT_OBSERVED",
+        evidence=evidence,
+    )
+
+
+def detect_msow(df, ticker, *, window=None, x_atr=None, y_vol=None,
+                atr_window=None) -> WyckoffEvent:
+    """Minor Sign of Weakness (mSOW): SOW con umbrales reducidos.
+
+    Es una version mas laxa del SOW: debilidad interna del rango, no
+    ruptura confirmada. Se detecta como SOW con X_ATR=MSOW_X_ATR, Y_VOL=MSOW_Y_VOL.
+    """
+    from indicators.wyckoff_v1 import WYCKOFF_ATR_WINDOW, detect_sow
+    w = window if window is not None else 40
+    xa = x_atr if x_atr is not None else MSOW_X_ATR
+    yv = y_vol if y_vol is not None else MSOW_Y_VOL
+    aw = atr_window if atr_window is not None else WYCKOFF_ATR_WINDOW
+    try:
+        raw = detect_sow(df, ticker, window=w, x_atr=xa, y_vol=yv, atr_window=aw)
+    except (KeyError, ValueError, TypeError, IndexError) as exc:
+        return WyckoffEvent(
+            ticker=ticker, event_type="mSOW",
+            event_date=None, available_at=None,
+            status="NOT_EVALUABLE",
+            evidence={"reason": f"sow_error: {exc}"},
+        )
+    if int(raw.iloc[-1]) == 1:
+        return WyckoffEvent(
+            ticker=ticker, event_type="mSOW",
+            event_date=df.index[-1], available_at=df.index[-1],
+            status="CONFIRMED",
+            evidence={"window": w, "x_atr": xa, "y_vol": yv},
+        )
+    return WyckoffEvent(
+        ticker=ticker, event_type="mSOW",
+        event_date=None, available_at=None,
+        status="NOT_OBSERVED",
+        evidence={"window": w, "x_atr": xa, "y_vol": yv},
+    )
+
+
+def detect_lpsy(df, ticker, sow_event, range_event=None, *,
+                max_rebound_pct=None, max_window=None) -> WyckoffEvent:
+    """Last Point of Supply (LPSY): rebote debil post-SOW que no alcanza
+    la resistencia del rango.
+
+    Se evalua solo si sow_event.status == CONFIRMED. Busca un rebote
+    desde el minimo tras SOW que no supere max_rebound_pct * (resistance - support).
+    """
+    if sow_event.status != "CONFIRMED" or sow_event.event_date is None:
+        return WyckoffEvent(
+            ticker=ticker, event_type="LPSY",
+            event_date=None, available_at=None,
+            status="NOT_EVALUABLE",
+            evidence={"reason": "sow_not_confirmed"},
+        )
+    if range_event is None:
+        return WyckoffEvent(
+            ticker=ticker, event_type="LPSY",
+            event_date=None, available_at=None,
+            status="NOT_EVALUABLE",
+            evidence={"reason": "no_range_reference"},
+        )
+    mrp = max_rebound_pct if max_rebound_pct is not None else LPS_MAX_REBOUND_PCT
+    mw = max_window if max_window is not None else LPS_MAX_WINDOW
+    try:
+        close = get_col(df, ticker, "Close")
+    except (KeyError, ValueError):
+        return WyckoffEvent(
+            ticker=ticker, event_type="LPSY",
+            event_date=None, available_at=None,
+            status="NOT_EVALUABLE",
+            evidence={"reason": "missing_close"},
+        )
+    sow_date = sow_event.event_date
+    if sow_date not in df.index:
+        return WyckoffEvent(
+            ticker=ticker, event_type="LPSY",
+            event_date=None, available_at=None,
+            status="NOT_EVALUABLE",
+            evidence={"reason": "sow_date_not_in_df"},
+        )
+    sow_pos = df.index.get_loc(sow_date)
+    end_pos = min(sow_pos + mw, len(df) - 1)
+    if end_pos <= sow_pos:
+        return WyckoffEvent(
+            ticker=ticker, event_type="LPSY",
+            event_date=None, available_at=None,
+            status="NOT_OBSERVED",
+            evidence={"reason": "no_post_sow_bars"},
+        )
+    window = close.iloc[sow_pos:end_pos + 1].dropna()
+    if window.empty:
+        return WyckoffEvent(
+            ticker=ticker, event_type="LPSY",
+            event_date=None, available_at=None,
+            status="NOT_OBSERVED",
+            evidence={"reason": "no_close_data"},
+        )
+    low_after = window.min()
+    low_date = window.idxmin()
+    rebound_window = close.loc[low_date:].dropna()
+    if len(rebound_window) < 2:
+        return WyckoffEvent(
+            ticker=ticker, event_type="LPSY",
+            event_date=None, available_at=None,
+            status="NOT_OBSERVED",
+            evidence={"reason": "no_rebound_data"},
+        )
+    high_after = rebound_window.max()
+    support = float(range_event.support)
+    resistance = float(range_event.resistance)
+    rango = resistance - support
+    max_allowed = float(low_after) + mrp * rango
+    is_weak = float(high_after) <= max_allowed
+    evidence = {
+        "sow_date": str(sow_date),
+        "support": support, "resistance": resistance,
+        "low_after": float(low_after), "high_after": float(high_after),
+        "max_allowed": max_allowed,
+        "max_rebound_pct": float(mrp),
+    }
+    if is_weak:
+        return WyckoffEvent(
+            ticker=ticker, event_type="LPSY",
+            event_date=low_date,
+            available_at=None,
+            status="CONFIRMED",
+            evidence=evidence,
+        )
+    return WyckoffEvent(
+        ticker=ticker, event_type="LPSY",
+        event_date=None, available_at=None,
+        status="NOT_OBSERVED",
+        evidence=evidence,
+    )
+
+
+def detect_ps(df, ticker, *, lookback=None) -> WyckoffEvent:
+    """Preliminary Support (PS): simetrico a PSY en tendencia bajista.
+
+    - t_norm <= -0.3
+    - low nuevo del lookback
+    - cierre fuerte: close > (high+low)/2
+    - v_norm >= 0.5
+    """
+    from indicators.wyckoff_v1 import wyckoff_score
+    lb = lookback if lookback is not None else PSY_LOOKBACK
+    try:
+        high = get_col(df, ticker, "High")
+        low = get_col(df, ticker, "Low")
+        close = get_col(df, ticker, "Close")
+    except (KeyError, ValueError):
+        return WyckoffEvent(
+            ticker=ticker, event_type="PS",
+            event_date=None, available_at=None,
+            status="NOT_EVALUABLE",
+            evidence={"reason": "missing_ohlc"},
+        )
+    if len(low.dropna()) < lb + 20:
+        return WyckoffEvent(
+            ticker=ticker, event_type="PS",
+            event_date=None, available_at=None,
+            status="NOT_EVALUABLE",
+            evidence={"reason": "insufficient_data"},
+        )
+    try:
+        _, _, _, t_norm, _, v_norm, _ = wyckoff_score(df, ticker)
+    except (KeyError, ValueError, TypeError, IndexError) as exc:
+        return WyckoffEvent(
+            ticker=ticker, event_type="PS",
+            event_date=None, available_at=None,
+            status="NOT_EVALUABLE",
+            evidence={"reason": f"score_error: {exc}"},
+        )
+    idx = low.index
+    last = idx[-1]
+    h = high.loc[last]; l = low.loc[last]; c = close.loc[last]
+    t = t_norm.reindex(idx).loc[last]
+    v = v_norm.reindex(idx).loc[last]
+    if any(pd.isna(x) for x in (h, l, c, t, v)):
+        return WyckoffEvent(
+            ticker=ticker, event_type="PS",
+            event_date=None, available_at=None,
+            status="NOT_EVALUABLE",
+            evidence={"reason": "nan_in_features"},
+        )
+    h = float(h); l = float(l); c = float(c)
+    t = float(t); v = float(v)
+    rmin = float(low.dropna().rolling(lb, min_periods=lb).min().reindex(idx).loc[last])
+    mid = (h + l) / 2.0
+    is_new_low = l <= rmin
+    is_strong_close = c > mid
+    is_downtrend = t <= -0.3
+    is_vol = v >= 0.5
+    evidence = {
+        "high": h, "low": l, "close": c, "t_norm": t, "v_norm": v,
+        "roll_min": rmin, "mid": mid,
+        "is_new_low": is_new_low, "is_strong_close": is_strong_close,
+        "is_downtrend": is_downtrend, "is_vol": is_vol,
+    }
+    if is_new_low and is_strong_close and is_downtrend and is_vol:
+        return WyckoffEvent(
+            ticker=ticker, event_type="PS",
+            event_date=last, available_at=last,
+            status="CONFIRMED",
+            evidence=evidence,
+        )
+    return WyckoffEvent(
+        ticker=ticker, event_type="PS",
+        event_date=None, available_at=None,
+        status="NOT_OBSERVED",
+        evidence=evidence,
+    )
+
+
+def detect_msos(df, ticker, *, window=None, x_atr=None, y_vol=None,
+                atr_window=None) -> WyckoffEvent:
+    """Minor Sign of Strength (mSOS): version laxa de SOS, umbrales reducidos."""
+    from indicators.wyckoff_v1 import WYCKOFF_ATR_WINDOW
+    w = window if window is not None else 40
+    xa = x_atr if x_atr is not None else MSOW_X_ATR
+    yv = y_vol if y_vol is not None else MSOW_Y_VOL
+    aw = atr_window if atr_window is not None else WYCKOFF_ATR_WINDOW
+    try:
+        # SOS simetrico: close > rolling max con volumen
+        close = get_col(df, ticker, "Close")
+        high = get_col(df, ticker, "High")
+        volume = get_col(df, ticker, "Volume")
+        # Formula simetrica a detect_sow pero al alza
+        resistance = high.dropna().rolling(w, min_periods=w).max().shift(1).reindex(high.index)
+        prev_c = close.shift(1)
+        tr_vals = pd.concat([
+            high - close.shift(1),
+            (high - prev_c).abs(),
+            (close - prev_c).abs(),
+        ], axis=1).max(axis=1)
+        atr = tr_vals.dropna().rolling(aw, min_periods=aw).mean().shift(1).reindex(tr_vals.index)
+        vol_base = volume.dropna().rolling(w, min_periods=w).mean().shift(1).reindex(volume.index)
+        break_up = (close - resistance) / (atr + 1e-9)
+        vol_ratio = volume / (vol_base + 1e-9)
+        cond = (close > resistance) & (break_up >= xa) & (vol_ratio >= yv)
+        if int(cond.fillna(False).iloc[-1]) == 1:
+            return WyckoffEvent(
+                ticker=ticker, event_type="mSOS",
+                event_date=df.index[-1], available_at=df.index[-1],
+                status="CONFIRMED",
+                evidence={"window": w, "x_atr": xa, "y_vol": yv},
+            )
+        return WyckoffEvent(
+            ticker=ticker, event_type="mSOS",
+            event_date=None, available_at=None,
+            status="NOT_OBSERVED",
+            evidence={"window": w, "x_atr": xa, "y_vol": yv},
+        )
+    except (KeyError, ValueError, TypeError, IndexError) as exc:
+        return WyckoffEvent(
+            ticker=ticker, event_type="mSOS",
+            event_date=None, available_at=None,
+            status="NOT_EVALUABLE",
+            evidence={"reason": f"mSOS_error: {exc}"},
+        )
+
+
+def detect_lps(df, ticker, sos_event, range_event=None, *,
+               max_pullback_pct=None, max_window=None) -> WyckoffEvent:
+    """Last Point of Support (LPS): simetrico a LPSY. Caida post-SOS debil."""
+    if sos_event.status != "CONFIRMED" or sos_event.event_date is None:
+        return WyckoffEvent(
+            ticker=ticker, event_type="LPS",
+            event_date=None, available_at=None,
+            status="NOT_EVALUABLE",
+            evidence={"reason": "sos_not_confirmed"},
+        )
+    if range_event is None:
+        return WyckoffEvent(
+            ticker=ticker, event_type="LPS",
+            event_date=None, available_at=None,
+            status="NOT_EVALUABLE",
+            evidence={"reason": "no_range_reference"},
+        )
+    mpp = max_pullback_pct if max_pullback_pct is not None else LPS_MAX_REBOUND_PCT
+    mw = max_window if max_window is not None else LPS_MAX_WINDOW
+    try:
+        close = get_col(df, ticker, "Close")
+    except (KeyError, ValueError):
+        return WyckoffEvent(
+            ticker=ticker, event_type="LPS",
+            event_date=None, available_at=None,
+            status="NOT_EVALUABLE",
+            evidence={"reason": "missing_close"},
+        )
+    sos_date = sos_event.event_date
+    if sos_date not in df.index:
+        return WyckoffEvent(
+            ticker=ticker, event_type="LPS",
+            event_date=None, available_at=None,
+            status="NOT_EVALUABLE",
+            evidence={"reason": "sos_date_not_in_df"},
+        )
+    sos_pos = df.index.get_loc(sos_date)
+    end_pos = min(sos_pos + mw, len(df) - 1)
+    if end_pos <= sos_pos:
+        return WyckoffEvent(
+            ticker=ticker, event_type="LPS",
+            event_date=None, available_at=None,
+            status="NOT_OBSERVED",
+            evidence={"reason": "no_post_sos_bars"},
+        )
+    window = close.iloc[sos_pos:end_pos + 1].dropna()
+    if window.empty:
+        return WyckoffEvent(
+            ticker=ticker, event_type="LPS",
+            event_date=None, available_at=None,
+            status="NOT_OBSERVED",
+            evidence={"reason": "no_close_data"},
+        )
+    high_after = window.max()
+    low_after = window.min()
+    support = float(range_event.support)
+    resistance = float(range_event.resistance)
+    rango = resistance - support
+    min_allowed = float(high_after) - mpp * rango
+    is_weak = float(low_after) >= min_allowed
+    evidence = {
+        "sos_date": str(sos_date),
+        "support": support, "resistance": resistance,
+        "high_after": float(high_after), "low_after": float(low_after),
+        "min_allowed": min_allowed, "max_pullback_pct": float(mpp),
+    }
+    if is_weak:
+        return WyckoffEvent(
+            ticker=ticker, event_type="LPS",
+            event_date=df.index[sos_pos],
+            available_at=None,
+            status="CONFIRMED",
+            evidence=evidence,
+        )
+    return WyckoffEvent(
+        ticker=ticker, event_type="LPS",
+        event_date=None, available_at=None,
+        status="NOT_OBSERVED",
+        evidence=evidence,
     )
 
