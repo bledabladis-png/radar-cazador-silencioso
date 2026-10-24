@@ -70,8 +70,7 @@ def compute_flow_proxy(df, ticker, window=FLOW_ZSCORE_WINDOW):
     # publique N/D, no 0.00. Distinto de "volume real cero" (ticker
     # suspendido un dia): el criterio es "0 sostenido en todo el
     # historico". No altera robust_zscore (compartido con MTE, credit,
-    # cross_asset, darkpool, index_leaders, options, stock_leader,
-    # wyckoff_v1).
+    # cross_asset, darkpool, options, wyckoff_v1).
     _vol_hist = get_col(df, ticker, 'Volume').dropna()
     if len(_vol_hist) == 0 or bool((_vol_hist == 0).all()):
         return pd.Series(np.nan, index=close.index)

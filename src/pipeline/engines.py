@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Fase 8a del pipeline: forzar lideres SLPM + tactical/structural engines
-+ persistence sectorial.
+"""Fase 8a del pipeline: tactical/structural engines + persistence sectorial.
 
 Extraido de run.py (refactor C2, fase C2-8a).
 """

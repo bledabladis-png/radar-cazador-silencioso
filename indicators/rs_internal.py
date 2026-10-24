@@ -2,8 +2,8 @@
 """
 RS Interno y Absoluto v1.0
 Descompone la fortaleza relativa de cada accion frente al mercado y frente a su sector.
-No alimenta motores, scores, pesos ni State Machine.
-No recalcula el RS oficial de stock_leader.py.
+No alimenta motores, scores ni pesos.
+No recalcula el RS oficial de stock_metrics.py.
 """
 import pandas as pd
 import numpy as np

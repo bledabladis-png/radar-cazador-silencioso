@@ -128,21 +128,6 @@ def _generate_coverage_table(pcr_data, darkpool_data, sector_results, reference_
     if sector_results and 'ranking' in sector_results:
         sectores_validos = len([s for s in sector_results['ranking'] if s[1] is not None])
     lines.append(f"| Sectores | {sectores_validos}/{sectores_total} ({sectores_validos/sectores_total:.0%}) | - |\n")
-    # Fix C22b: fallback 0 (no 110) cuando no hay CSV. El numero real
-    # viene del CSV que run.py regenera solo si hay sectores favorables.
-    n_acciones = 0
-    try:
-        import pandas as pd
-        df = pd.read_csv('outputs/report/analisis_lideres.csv')
-        if 'ticker' in df.columns:
-            n_acciones = len(df['ticker'].unique())
-    except FileNotFoundError:
-        # FU-005 (2026-09-13): sin sectores favorables no se genera el CSV.
-        # Es estado esperado, no un WARN.
-        pass
-    except (OSError, ValueError, KeyError, pd.errors.ParserError) as e:
-        print(f"  [WARN] report_generator: analisis_lideres.csv: {e}")
-    lines.append(f"| Acciones lideres (sectores activos) | {n_acciones} tickers | - |\n")
     # D36 (2026-09-30): try/except para strings no parseables.
     # Bug: render_data_freshness protegia pcr_data['last_date'] con
     # try/except, pero esta tabla no. Con un last_date invalido

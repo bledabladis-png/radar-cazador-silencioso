@@ -87,7 +87,7 @@ def render_opportunity_map(tactical_scores, structural_scores,
     Devuelve lista de lineas markdown. Sin side effects.
     """
     out = []
-    out.append("## Opportunity Map (basado en medianas Tactical/Structural, independiente del SLPM)\n\n")
+    out.append("## Opportunity Map (basado en medianas Tactical/Structural)\n\n")
     tact_values = [v for v in tactical_scores.values() if v is not None] if tactical_scores else [0]
     struct_values = [v for v in structural_scores.values() if v is not None] if structural_scores else [0]
     tact_median = np.median(tact_values) if tact_values else 0
@@ -142,5 +142,5 @@ def render_opportunity_map(tactical_scores, structural_scores,
         else:
             out.append(f"| {icon} **{quadrant}** | -- | -- |\n")
     out.append("\n")
-    out.append("*Nota: 'Structural Strength' en Opportunity Map identifica posicion relativa en el eje Structural. No implica liderazgo confirmado por SLPM.*\n\n")
+    out.append("*Nota: 'Structural Strength' en Opportunity Map identifica posicion relativa en el eje Structural. No implica confirmacion de liderazgo sectorial.*\n\n")
     return out

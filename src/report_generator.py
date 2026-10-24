@@ -166,10 +166,6 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
     lines.extend(render_momentum_otros(otros_price_rank, otros_flow_rank))
 
     # =========================================================================
-    # C3 - LIDERES POR SECTOR
-    # =========================================================================
-
-    # =========================================================================
     # C4 - CONFIRMACION
     # =========================================================================
     lines.extend(render_matriz_evidencia(evidence_matrix_data))
