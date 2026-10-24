@@ -29,6 +29,10 @@ AR_MAX_WINDOW = 30
 # Tolerancia del rango - PROVISIONAL, pre-registro pendiente.
 RANGE_TOLERANCE_FRAC = 0.05
 
+# Parametros SOW in range - PROVISIONALES, pre-registro pendiente.
+SOW_CONFIRM_CLOSES = 3
+SOW_TIMEOUT_SESSIONS = 10
+
 
 @dataclass(frozen=True)
 class WyckoffEvent:
@@ -395,5 +399,188 @@ def build_range_from_bc_ar(df, ticker, bc_event, ar_event, *,
         state="RANGE_ACTIVE",
         trend_context=tc,
         evidence=evidence,
+    )
+
+
+def detect_sow_in_range(df, ticker, range_event, *, confirm_closes=None,
+                        timeout_sessions=None, as_of=None) -> WyckoffEvent:
+    """SOW anclado a un rango activo.
+
+    - Candidato: primer cierre < support - tol_abs en (range_active_at, as_of].
+    - Confirmacion: confirm_closes cierres < support - tol_abs en
+      [candidate_date, candidate_date + timeout_sessions].
+    - Rechazo: algun cierre > support + tol_abs antes de confirmar.
+    - Expiracion: pasan timeout_sessions sin confirmar ni rechazar.
+
+    Devuelve un unico WyckoffEvent. event_date = candidate_date.
+    available_at = candidate_date. resolution_event_date y
+    resolution_available_at solo poblados si CONFIRMED/REJECTED/EXPIRED.
+    """
+    if range_event.state != "RANGE_ACTIVE":
+        return WyckoffEvent(
+            ticker=ticker, event_type="SOW",
+            event_date=None, available_at=None,
+            status="NOT_EVALUABLE",
+            range_id=range_event.range_id,
+            evidence={"reason": "range_not_active",
+                      "range_state": range_event.state},
+        )
+    if range_event.range_active_at is None:
+        return WyckoffEvent(
+            ticker=ticker, event_type="SOW",
+            event_date=None, available_at=None,
+            status="NOT_EVALUABLE",
+            range_id=range_event.range_id,
+            evidence={"reason": "range_active_at_is_none"},
+        )
+
+    mc = confirm_closes if confirm_closes is not None else SOW_CONFIRM_CLOSES
+    tw = timeout_sessions if timeout_sessions is not None else SOW_TIMEOUT_SESSIONS
+    if mc < 1 or tw < 1:
+        raise ValueError(f"confirm_closes({mc}) o timeout({tw}) invalidos")
+
+    try:
+        close = get_col(df, ticker, "Close")
+    except (KeyError, ValueError):
+        return WyckoffEvent(
+            ticker=ticker, event_type="SOW",
+            event_date=None, available_at=None,
+            status="NOT_EVALUABLE",
+            range_id=range_event.range_id,
+            evidence={"reason": "missing_close"},
+        )
+
+    if as_of is None:
+        as_of = df.index[-1]
+    if as_of not in df.index:
+        return WyckoffEvent(
+            ticker=ticker, event_type="SOW",
+            event_date=None, available_at=None,
+            status="NOT_EVALUABLE",
+            range_id=range_event.range_id,
+            evidence={"reason": "as_of_not_in_index"},
+        )
+    if range_event.range_active_at not in df.index:
+        return WyckoffEvent(
+            ticker=ticker, event_type="SOW",
+            event_date=None, available_at=None,
+            status="NOT_EVALUABLE",
+            range_id=range_event.range_id,
+            evidence={"reason": "range_active_at_not_in_index"},
+        )
+    if as_of <= range_event.range_active_at:
+        return WyckoffEvent(
+            ticker=ticker, event_type="SOW",
+            event_date=None, available_at=None,
+            status="NOT_OBSERVED",
+            range_id=range_event.range_id,
+            evidence={"reason": "no_bars_after_range_active",
+                      "as_of": str(as_of),
+                      "range_active_at": str(range_event.range_active_at)},
+        )
+
+    start_pos = df.index.get_loc(range_event.range_active_at)
+    end_pos = df.index.get_loc(as_of)
+    window = close.iloc[start_pos + 1:end_pos + 1].dropna()
+    if window.empty:
+        return WyckoffEvent(
+            ticker=ticker, event_type="SOW",
+            event_date=None, available_at=None,
+            status="NOT_OBSERVED",
+            range_id=range_event.range_id,
+            evidence={"reason": "no_close_data_in_window"},
+        )
+
+    support = float(range_event.support)
+    tol = float(range_event.tol_abs)
+    upper_break = support - tol
+    upper_recover = support + tol
+
+    candidates = window[window < upper_break]
+    if candidates.empty:
+        return WyckoffEvent(
+            ticker=ticker, event_type="SOW",
+            event_date=None, available_at=None,
+            status="NOT_OBSERVED",
+            range_id=range_event.range_id,
+            evidence={"reason": "no_close_below_support_minus_tol",
+                      "support": support, "tol_abs": tol,
+                      "upper_break": upper_break,
+                      "upper_recover": upper_recover},
+        )
+
+    candidate_date = candidates.index[0]
+    cand_pos = df.index.get_loc(candidate_date)
+    c_close = float(close.loc[candidate_date])
+
+    evidence_base = {
+        "support": support,
+        "tol_abs": tol,
+        "upper_break": upper_break,
+        "upper_recover": upper_recover,
+        "candidate_close": c_close,
+        "confirm_closes": int(mc),
+        "timeout_sessions": int(tw),
+    }
+
+    count = 0
+    max_pos = min(cand_pos + tw, len(df) - 1)
+    for pos in range(cand_pos, max_pos + 1):
+        bar_date = df.index[pos]
+        c = close.loc[bar_date]
+        if pd.isna(c):
+            continue
+        c = float(c)
+        if c < upper_break:
+            count += 1
+            if count >= mc:
+                return WyckoffEvent(
+                    ticker=ticker, event_type="SOW",
+                    event_date=candidate_date, available_at=candidate_date,
+                    status="CONFIRMED",
+                    range_id=range_event.range_id,
+                    evidence={**evidence_base,
+                              "resolution_event_date": str(bar_date),
+                              "resolution_available_at": str(bar_date),
+                              "closes_under": int(count),
+                              "resolution_close": c},
+                )
+        else:
+            if c > upper_recover:
+                return WyckoffEvent(
+                    ticker=ticker, event_type="SOW",
+                    event_date=candidate_date, available_at=candidate_date,
+                    status="REJECTED",
+                    range_id=range_event.range_id,
+                    evidence={**evidence_base,
+                              "resolution_event_date": str(bar_date),
+                              "resolution_available_at": str(bar_date),
+                              "closes_under": int(count),
+                              "resolution_close": c,
+                              "reason": "close_above_support_plus_tol"},
+                )
+
+    timeout_pos = min(cand_pos + tw, len(df) - 1)
+    timeout_date = df.index[timeout_pos]
+    if timeout_pos >= len(df) - 1 and (cand_pos + tw) > len(df) - 1:
+        return WyckoffEvent(
+            ticker=ticker, event_type="SOW",
+            event_date=candidate_date, available_at=candidate_date,
+            status="CANDIDATE",
+            range_id=range_event.range_id,
+            evidence={**evidence_base, "closes_under": int(count),
+                      "reason": "pending_as_of"},
+        )
+
+    return WyckoffEvent(
+        ticker=ticker, event_type="SOW",
+        event_date=candidate_date, available_at=candidate_date,
+        status="EXPIRED",
+        range_id=range_event.range_id,
+        evidence={**evidence_base,
+                  "resolution_event_date": str(timeout_date),
+                  "resolution_available_at": str(timeout_date),
+                  "closes_under": int(count),
+                  "reason": "timeout_no_confirm_no_reject"},
     )
 
