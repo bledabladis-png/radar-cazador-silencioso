@@ -1,38 +1,27 @@
 # -*- coding: utf-8 -*-
-"""Modulo Wyckoff v1.8 - Fases estructurales con SOW ATR-normalizado.
+"""Modulo Wyckoff - funciones primitivas y detectores.
+
+C5.2: retirada la familia classify_wyckoff_phase[_meta]. La
+clasificacion de fase vive ahora en:
+  - indicators/wyckoff_distribution.py (cascada distribucion)
+  - indicators/wyckoff_accumulation.py (cascada acumulacion)
+  - indicators/wyckoff_orchestrator.py (orquestador + regla simetrica)
+
+Este modulo conserva:
+  - Features y score: _atr_normalized, _trend_component, _volume_z,
+    _effort_vs_result, wyckoff_score, wyckoff_stability.
+  - Detectores standalone: detect_spring, detect_sos, detect_sow,
+    detect_sow_v2.
+  - Helper: build_ticker_df (contrato v1.8: fillna Close/0).
 
 Contrato: docs/auditoria/wyckoff/01_contrato_semantico_v1_8.md
-Historico v1.7: docs/auditoria/wyckoff/01_contrato_semantico_v1_7.md
-Expediente: docs/auditoria/wyckoff/21_expediente_5b3_aclaraciones.md
-
-Cambios v1.7 -> v1.8 (dictamen 5b.3):
-  - detect_sow fail-closed: window/x_atr/y_vol obligatorios (keyword-only).
-    Sin default. Config los mantiene en None hasta que cierre 5b.3.
-  - classify_wyckoff_phase[_meta] acepta sow_params opcional. Sin el,
-    no se emite DISTRIBUTION (solo candidate flag). Invariante I36.
-
-Cambios respecto a v1.0:
-  - D1: MARKUP sin condicion c_norm < 0.30 (incompatible con bull market
-        ordenado).
-  - D2: MARKUP sin veto de combined. Usa struct_score como umbral.
-  - D3: ACCUMULATION sin exigir tact > 0 (opcional).
-  - Maquina de estados con precedente estructural historico.
-  - Precedente sobre variables continuas (struct_score, t_norm), NO sobre
-    etiquetas de fase previas. Evita circularidad.
-  - Regla de continuidad: MARKUP -> ACCUMULATION no permitida sin
-    precedente compatible.
-
-Legacy (indicators/wyckoff.py) permanece intacto.
 
 P7-ROLLING-WINDOW-GAPS (2026-10-22): decision documentada.
 El patron "reindex al calendario NYSE antes del rolling" es correcto
 para CORRELACIONES entre series alineadas (ver sector_correlation.py).
 NO es correcto para medias moviles (ATR, trend, stability): con dropna,
 "rolling(N)" ya significa "ultimos N valores con dato", que es la
-semantica correcta. Aplicar reindex + min_periods=N sobre serie con
-gaps rompe el score durante N sesiones tras cada gap (todas las ventanas
-de N posiciones contienen el NaN). Decision: mantener dropna en estas
-3 funciones (_atr_normalized, _trend_component, wyckoff_stability).
+semantica correcta. Decision: mantener dropna en estas 3 funciones.
 Ver REP-AUDIT-20261022-WYCKOFF-P7-B4-B5-B3 en REGISTRO.
 """
 from __future__ import annotations
@@ -70,25 +59,12 @@ EVENT_WINDOW = 20
 
 # Umbrales estructurales actuales
 T_NORM_STRONG = 0.30                     # t_norm fuerte
-T_NORM_WEAK = 0.30                       # t_norm lateral (banda)
-C_NORM_COMPRESSION = 0.30                # compresion alta
-STRUCT_STRONG = 0.30                     # struct_score fuerte
-STRUCT_WEAK = -0.30                      # struct_score debil
-STRUCT_BASE_LOW = -0.20                  # banda de base: limite inferior
-STRUCT_BASE_HIGH = 0.20                  # banda de base: limite superior
 STRUCT_DETERIORO = -0.10                 # para DISTRIBUTION
 
 # Umbrales de precedente (PROPUESTOS, calibrar Fase 5b)
-PREC_STRUCT_WEAK = -0.20                 # hubo debilidad reciente
 PREC_STRUCT_STRONG = 0.30                # hubo fortaleza reciente
 
 # Constantes de fase
-FASE_INSUFFICIENT_DATA = "INSUFFICIENT_DATA"
-FASE_ACCUMULATION = "ACCUMULATION"
-FASE_MARKUP = "MARKUP"
-FASE_DISTRIBUTION = "DISTRIBUTION"
-FASE_MARKDOWN = "MARKDOWN"
-FASE_RANGE = "RANGE"
 
 
 # =====================================================================
@@ -185,235 +161,9 @@ def wyckoff_stability(combined, window=STABILITY_MAD_WINDOW, K=STABILITY_K):
 # Precedente estructural (contrato v1.1 §4)
 # =====================================================================
 
-def _compute_precedent(struct_clean, t_norm_clean, window=PRECEDENT_WINDOW):
-    """Calcula variables de precedente sobre ventana [t-N, t-1].
-
-    Contrato v1.5 §4 (formalizacion): struct_max(t) := max(struct_score
-    en [t-N, t-1]). Estrictamente historico, sin usar datos posteriores
-    a t-1. Test de no-look-ahead en test_distribution_no_lookahead.
-
-    Solo usa datos <= t-1 (excluye t).
-
-    Args:
-        struct_clean: Series de struct_score sin NaN.
-        t_norm_clean: Series de t_norm sin NaN.
-        window: N (ventana de precedente).
-
-    Returns:
-        dict con struct_min, struct_max, struct_mean, t_norm_min, t_norm_max.
-        None si no hay suficientes datos (< window+1).
-    """
-    n_struct = len(struct_clean)
-    if n_struct < window + 1:
-        return None
-
-    # [t-N, t-1]: excluye la ultima observacion (t)
-    struct_window = struct_clean.iloc[-(window + 1):-1]
-    t_norm_window = t_norm_clean.iloc[-(window + 1):-1] if len(t_norm_clean) >= window + 1 else pd.Series(dtype=float)
-
-    out = {
-        'struct_min': float(struct_window.min()),
-        'struct_max': float(struct_window.max()),
-        'struct_mean': float(struct_window.mean()),
-        't_norm_min': float(t_norm_window.min()) if not t_norm_window.empty else np.nan,
-        't_norm_max': float(t_norm_window.max()) if not t_norm_window.empty else np.nan,
-    }
-    return out
-
-
 # =====================================================================
 # Clasificacion v1.1
 # =====================================================================
-
-def _has_sufficient_data(df, ticker):
-    try:
-        close = get_col(df, ticker, 'Close')
-    except (KeyError, ValueError, TypeError):
-        return False
-    return close.dropna().shape[0] >= WYCKOFF_TREND_SLOW_MA
-
-
-def classify_wyckoff_phase_meta(df, ticker, as_of=None, sow_params=None):
-    """Clasifica la fase y devuelve metadata (dict).
-
-    Contrato v1.6:
-        phase ∈ {MARKUP, ACCUMULATION, RANGE, DISTRIBUTION, MARKDOWN,
-                 INSUFFICIENT_DATA}
-        distribution_candidate ∈ {True, False}
-
-    DISTRIBUTION_CANDIDATE NO es una fase. Es un flag que indica que
-    existe deterioro tras fortaleza. Solo se eleva a DISTRIBUTION si
-    ademas hay un SOW reciente.
-    """
-    phase = classify_wyckoff_phase(df, ticker, as_of=as_of, sow_params=sow_params)
-    candidate = False
-    if phase == FASE_DISTRIBUTION:
-        candidate = True
-    elif phase == FASE_RANGE:
-        # Podria ser candidato no confirmado. Comprobar.
-        # F-02 (frente F, 2026-10-02): except acotado. Antes era
-        # except Exception que silenciaba RuntimeError. La regla
-        # 01_METODO seccion 8 pide tuplas explicitas; el sistema usa
-        # RuntimeError como idiom de fallo simulado en tests.
-        try:
-            df_used = df.loc[:as_of] if as_of is not None else df
-            candidate = _is_distribution_candidate(df_used, ticker)
-        except (KeyError, ValueError, TypeError, IndexError):
-            candidate = False
-    return {
-        "phase": phase,
-        "distribution_candidate": bool(candidate),
-    }
-
-
-def _is_distribution_candidate(df, ticker):
-    """True si el estado actual cumple las condiciones de CANDIDATE.
-
-    Definicion v1.6: perdida estructural de fuerza tras subida previa.
-        struct_t < STRUCT_DETERIORO
-        AND t_norm_t > -T_NORM_STRONG
-        AND struct_max > PREC_STRUCT_STRONG
-    """
-    if not _has_sufficient_data(df, ticker):
-        return False
-    try:
-        combined, struct_s, tact_s, t_norm, c_norm, v_norm, e_norm = (
-            wyckoff_score(df, ticker)
-        )
-    except (KeyError, ValueError, TypeError, IndexError):
-        return False
-    struct_c = struct_s.dropna()
-    t_c = t_norm.dropna()
-    if struct_c.empty or t_c.empty:
-        return False
-    s = float(struct_c.iloc[-1])
-    t = float(t_c.iloc[-1])
-    prec = _compute_precedent(struct_c, t_c, window=PRECEDENT_WINDOW)
-    if prec is None:
-        return False
-    return (
-        s < STRUCT_DETERIORO
-        and t > -T_NORM_STRONG
-        and prec["struct_max"] > PREC_STRUCT_STRONG
-    )
-
-
-def classify_wyckoff_phase(df, ticker, as_of=None, sow_params=None):
-    """Clasifica la fase segun contrato v1.6 (§5).
-
-    Args:
-        df: DataFrame OHLCV (MultiIndex o flat).
-        ticker: str.
-        as_of: timestamp opcional. Si se pasa, clasifica en esa fecha
-            usando exclusivamente datos <= as_of. Util para tests de
-            no-look-ahead. Si None, usa el ultimo valor disponible.
-
-    Returns:
-        Uno de: MARKUP | ACCUMULATION | RANGE | DISTRIBUTION | MARKDOWN
-                INSUFFICIENT_DATA
-    """
-    if as_of is not None:
-        df = df.loc[:as_of]
-
-    if not _has_sufficient_data(df, ticker):
-        return FASE_INSUFFICIENT_DATA
-
-    try:
-        combined, struct_score, tact_score, t_norm, c_norm, v_norm, e_norm = (
-            wyckoff_score(df, ticker)
-        )
-    except (KeyError, ValueError, TypeError, IndexError):
-        return FASE_INSUFFICIENT_DATA
-
-    struct_clean = struct_score.dropna()
-    t_norm_clean = t_norm.dropna()
-    c_norm_clean = c_norm.dropna()
-
-    if struct_clean.empty or t_norm_clean.empty or c_norm_clean.empty:
-        return FASE_INSUFFICIENT_DATA
-
-    last_struct = float(struct_clean.iloc[-1])
-    last_t = float(t_norm_clean.iloc[-1])
-    last_c = float(c_norm_clean.iloc[-1])
-
-    # ---------------- MARKUP (contrato v1.2 §5.3) ----------------
-    # Estado direccional alcista. Sin precedente. Sin veto tactico.
-    if (
-        last_struct > STRUCT_STRONG
-        and last_t > T_NORM_STRONG
-    ):
-        return FASE_MARKUP
-
-    # ---------------- MARKDOWN (contrato v1.2 §5.5) ----------------
-    # Estado direccional bajista. Sin precedente. Con expansion (c_norm < 0).
-    if (
-        last_struct < STRUCT_WEAK
-        and last_t < -T_NORM_STRONG
-        and last_c < 0
-    ):
-        return FASE_MARKDOWN
-
-    # Precedente estructural (solo para ACCUMULATION y DISTRIBUTION)
-    prec = _compute_precedent(struct_clean, t_norm_clean, window=PRECEDENT_WINDOW)
-    if prec is None:
-        return FASE_INSUFFICIENT_DATA
-
-    struct_min = prec['struct_min']
-    struct_max = prec['struct_max']
-
-    # ---------------- ACCUMULATION (contrato v1.2 §5.2) ----------------
-    # Requiere precedente (formacion de base).
-    trend_weak = (last_t < 0) or (abs(last_t) < T_NORM_WEAK)
-    in_base_band = STRUCT_BASE_LOW <= last_struct <= STRUCT_BASE_HIGH
-    compression = last_c > C_NORM_COMPRESSION
-    prec_weak = struct_min < PREC_STRUCT_WEAK
-    if trend_weak and in_base_band and compression and prec_weak:
-        # Regla de continuidad: MARKUP -> ACCUMULATION directa prohibida.
-        if struct_max >= PREC_STRUCT_STRONG:
-            return FASE_RANGE
-        return FASE_ACCUMULATION
-
-    # ---------------- DISTRIBUTION (contrato v1.6 §5.4) ----------------
-    # Perdida estructural de fuerza tras subida previa, CONFIRMADA por
-    # un Sign of Weakness (SOW) reciente.
-    #
-    # Condiciones candidate:
-    #   struct_score_t < STRUCT_DETERIORO (-0.10)
-    #   AND t_norm_t > -T_NORM_STRONG (-0.30)
-    #   AND struct_max (historico [t-W+1, t-1]) > PREC_STRUCT_STRONG (0.30)
-    #
-    # Confirmacion: SOW en las ultimas WYCKOFF_SOW_MAX_AGE_M sesiones.
-    trend_dist = last_t > -T_NORM_STRONG
-    deterioration = last_struct < STRUCT_DETERIORO
-    prec_strong = struct_max > PREC_STRUCT_STRONG
-    if trend_dist and deterioration and prec_strong:
-        # Candidate cumple.
-        # v1.8 (dictamen P6): sin sow_params explicitos NO se emite
-        # DISTRIBUTION. Solo candidate flag via meta.
-        if sow_params is None:
-            return FASE_RANGE
-        try:
-            df_used = df.loc[:as_of] if as_of is not None else df
-            sow = detect_sow(
-                df_used, ticker,
-                window=sow_params["window"],
-                x_atr=sow_params["x_atr"],
-                y_vol=sow_params["y_vol"],
-                atr_window=sow_params.get("atr_window", WYCKOFF_ATR_WINDOW),
-            )
-            if not sow.empty:
-                max_age = sow_params.get("max_age_m", 30)  # B3 (2026-10-22): default alineado con contrato v1.9
-                recent = sow.iloc[-max_age:]
-                if int(recent.sum()) > 0:
-                    return FASE_DISTRIBUTION
-        except (KeyError, ValueError, TypeError, IndexError):
-            pass
-        # Candidate sin confirmar -> RANGE (segun dictamen: no es fase).
-        return FASE_RANGE
-
-    # ---------------- RANGE (contrato v1.2 §5.6) ----------------
-    return FASE_RANGE
-
 
 # =====================================================================
 # Eventos

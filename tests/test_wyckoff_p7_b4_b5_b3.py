@@ -72,19 +72,6 @@ def test_b4_wont_fix_contrato_v1_8():
     assert built.loc[built.index[10], 'Volume'] == 0.0
 
 
-def test_b3_sow_default_max_age_30():
-    """B3: classify con sow_params sin max_age_m no rompe (usa default 30)."""
-    df = _synth(200, seed=7)
-    mi = _to_multi(df)
-    from indicators.wyckoff_v1 import classify_wyckoff_phase
-    p = classify_wyckoff_phase(
-        mi, 'T',
-        sow_params={'window': 20, 'x_atr': 0.25, 'y_vol': 1.10},
-    )
-    assert p in ('MARKUP', 'ACCUMULATION', 'RANGE', 'DISTRIBUTION',
-                 'MARKDOWN', 'INSUFFICIENT_DATA')
-
-
 def test_b3_detect_sow_firma_estable():
     """B3: detect_sow ejecuta sin max_age_m."""
     df = _synth(200, seed=7)

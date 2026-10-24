@@ -27,7 +27,6 @@ Invariantes cubiertas:
 """
 from __future__ import annotations
 
-import ast
 from pathlib import Path
 
 import numpy as np
@@ -169,58 +168,13 @@ def test_i6_stability_in_range(synthetic_df):
 # I7 - ALL_NAN != RANGE
 # =====================================================================
 
-def test_i7_all_nan_not_range():
-    """Sin observacion valida -> INSUFFICIENT_DATA, no RANGE.
-
-    Construye un df con 300 filas todas NaN. El clasificador debe devolver
-    INSUFFICIENT_DATA. Bajo contrato v1.0 (implementacion actual) devuelve
-    RANGE. Este test FALLA hasta que wyckoff_v1.py implemente v1.1.
-    """
-    n = 300
-    dates = pd.date_range("2024-01-01", periods=n, freq="B")
-    df = pd.DataFrame({
-        'Open': [np.nan] * n, 'High': [np.nan] * n, 'Low': [np.nan] * n,
-        'Close': [np.nan] * n, 'Volume': [np.nan] * n,
-    }, index=dates)
-    phase = w1.classify_wyckoff_phase(df, 'SYNTH')
-    assert phase == "INSUFFICIENT_DATA", (
-        f"Esperado INSUFFICIENT_DATA, obtenido {phase}. "
-        "Contrato v1.1 §5.1 e invariante I7."
-    )
-
-
-def test_i7b_short_series_insufficient():
-    """Series de <200 filas -> INSUFFICIENT_DATA."""
-    n = 100
-    dates = pd.date_range("2024-01-01", periods=n, freq="B")
-    df = pd.DataFrame({
-        'Open': 100.0, 'High': 101.0, 'Low': 99.0,
-        'Close': 100.5, 'Volume': 1_000_000.0,
-    }, index=dates)
-    phase = w1.classify_wyckoff_phase(df, 'SYNTH')
-    assert phase == "INSUFFICIENT_DATA"
-
-
 # =====================================================================
 # I8 - Determinismo
 # =====================================================================
 
-def test_i8_determinism(synthetic_df):
-    """Mismo input -> mismo output."""
-    p1 = w1.classify_wyckoff_phase(synthetic_df, 'SYNTH')
-    p2 = w1.classify_wyckoff_phase(synthetic_df.copy(), 'SYNTH')
-    assert p1 == p2
-
-
 # =====================================================================
 # I9 - Sin look-ahead (requiere API as_of)
 # =====================================================================
-
-@pytest.mark.skip(reason="Requiere API as_of en classify_wyckoff_phase. Fase 5b.")
-def test_i9_no_lookahead(synthetic_df):
-    """Fase en t no cambia si se anaden datos > t. Requiere as_of."""
-    pass
-
 
 # =====================================================================
 # I10 - Pesos suman 1.00
@@ -237,73 +191,13 @@ def test_i10_weights_sum_to_one():
 # I11, I12 - Precedente (requiere implementacion v1.1)
 # =====================================================================
 
-@pytest.mark.skip(reason="Requiere precedente estructural. Fase 5b.")
-def test_i11_precedente_no_lookahead():
-    pass
-
-
-@pytest.mark.skip(reason="Requiere API as_of. Fase 5b.")
-def test_i12_independiente_datos_futuros():
-    pass
-
-
 # =====================================================================
 # I13 - No circularidad (AST)
 # =====================================================================
 
-def test_i13_no_circular():
-    """classify_wyckoff_phase no invoca classify_wyckoff_phase.
-
-    Verificacion AST: dentro del cuerpo de la funcion, no debe haber
-    llamada recursiva.
-    """
-    src = (ROOT / "indicators" / "wyckoff_v1.py").read_text(encoding="utf-8")
-    tree = ast.parse(src)
-
-    def find_func(name, node):
-        for child in ast.walk(node):
-            if isinstance(child, ast.FunctionDef) and child.name == name:
-                return child
-        return None
-
-    fn = find_func("classify_wyckoff_phase", tree)
-    assert fn is not None, "classify_wyckoff_phase no encontrada"
-
-    # Buscar llamadas a classify_wyckoff_phase dentro del cuerpo
-    for node in ast.walk(fn):
-        if isinstance(node, ast.Call):
-            f = node.func
-            if isinstance(f, ast.Name) and f.id == "classify_wyckoff_phase":
-                pytest.fail("classify_wyckoff_phase se invoca a si misma (circularidad)")
-
-
 # =====================================================================
 # I14 - Continuidad de fase (informativa)
 # =====================================================================
-
-def test_i14_transiciones_observables(synthetic_df):
-    """Serie larga produce mas de una fase distinta.
-
-    Test informativo: NO verifica transiciones especificas (para no
-    calibrar con el fixture). Solo verifica que no devuelve siempre
-    el mismo estado.
-    """
-    # Clasificar en distintos puntos de la serie
-    fases = []
-    for t in (210, 240, 270, 299):
-        df_slice = synthetic_df.iloc[:t+1]
-        try:
-            fase = w1.classify_wyckoff_phase(df_slice, 'SYNTH')
-            fases.append(fase)
-        except Exception:
-            fases.append("ERROR")
-    # Informativo: registrar el hallazgo, pero no forzar que haya 2+ fases.
-    # Si solo hay RANGE, es senal de que falta semantica temporal (v1.1).
-    # Por eso NO hacemos assert; imprimimos para diagnostico.
-    print(f"\n[I14] fases en t=210,240,270,299: {fases}")
-    # Un minimo assert defensivo: no debe crashear
-    assert all(not f.startswith("ERROR") for f in fases), f"crasheo: {fases}"
-
 
 # =====================================================================
 # Tests adicionales: forma de la salida
@@ -315,14 +209,6 @@ def test_score_returns_7_series(synthetic_df):
     assert len(result) == 7
     for s in result:
         assert isinstance(s, pd.Series)
-
-
-def test_classify_returns_valid_string(synthetic_df):
-    """classify_wyckoff_phase devuelve uno de los 6 estados del contrato."""
-    phase = w1.classify_wyckoff_phase(synthetic_df, 'SYNTH')
-    valid = {"MARKUP", "ACCUMULATION", "RANGE", "DISTRIBUTION",
-             "MARKDOWN", "INSUFFICIENT_DATA"}
-    assert phase in valid, f"Fase desconocida: {phase}"
 
 
 def test_build_ticker_df_handles_nan(synthetic_df):
@@ -398,111 +284,6 @@ def _make_uptrend_series(n=600, seed=1):
         'Close': close, 'Volume': volume,
     })
 
-
-def test_v12_t1_mas_historia_alcista_sigue_markup():
-    """Test 1 (dictamen §10): mas historia alcista no rompe MARKUP.
-
-    v1.3 resuelve P1. Se usa el fixture determinista (sin ruido) porque
-    T1 aísla el efecto de "persistencia de tendencia sobre t_norm". Un
-    fixture con volatilidad variable puede dar RANGE por composicion
-    struct (c_norm muy negativo), no por t_norm. Ese es un caso distinto
-    y no debe mezclarse con T1.
-    """
-    df = _make_constant_slope_series(n=600, total_log_ret=1.2)
-    fase = w1.classify_wyckoff_phase(df, 'SYNTH')
-    assert fase == "MARKUP", (
-        f"Esperado MARKUP en tendencia alcista sostenida, obtenido {fase}. "
-        "Si falla, P1 ha reaparecido."
-    )
-
-
-def test_v12_t2_tactical_negativo_no_veta_markup():
-    """I17: tactical negativo no invalida MARKUP (dictamen §10, Test 2)."""
-    from unittest import mock
-    n = 500
-    dates = pd.date_range("2024-01-01", periods=n, freq="B")
-    struct = pd.Series(np.full(n, 0.65), index=dates)
-    tact = pd.Series(np.full(n, -0.50), index=dates)
-    t_norm = pd.Series(np.full(n, 0.80), index=dates)
-    c_norm = pd.Series(np.full(n, 0.30), index=dates)
-    v_norm = pd.Series(np.full(n, 0.0), index=dates)
-    e_norm = pd.Series(np.full(n, -1.0), index=dates)
-    combined = 0.70 * struct + 0.30 * tact
-    df = pd.DataFrame({
-        'Open': 100.0, 'High': 101.0, 'Low': 99.0,
-        'Close': 100.0, 'Volume': 1_000_000.0,
-    }, index=dates)
-    with mock.patch.object(
-        w1, 'wyckoff_score',
-        return_value=(combined, struct, tact, t_norm, c_norm, v_norm, e_norm),
-    ):
-        fase = w1.classify_wyckoff_phase(df, 'SYNTH')
-    assert fase == "MARKUP", (
-        f"Tactical negativo veto MARKUP. Fase: {fase}. "
-        "Regresion contra D2-v1.1."
-    )
-
-
-def test_v12_t3_tactical_negativo_no_veta_accumulation():
-    """I17: tactical negativo no invalida ACCUMULATION (dictamen §10, Test 3)."""
-    from unittest import mock
-    n = 500
-    dates = pd.date_range("2024-01-01", periods=n, freq="B")
-    # Base: 30 valores finales. Deterioro previo: 470 valores.
-    # La ventana de precedente (60) captura 30 de base + 30 del final
-    # del deterioro (struct_min=-0.50 < -0.20 -> prec_weak).
-    struct_vals = np.concatenate([
-        np.linspace(-0.50, -0.30, n - 30),  # deterioro
-        np.full(30, 0.00),                  # base corta
-    ])
-    struct = pd.Series(struct_vals, index=dates)
-    tact = pd.Series(np.full(n, -0.50), index=dates)
-    t_norm_vals = np.concatenate([
-        np.linspace(-0.60, -0.40, n - 30),
-        np.full(30, -0.10),
-    ])
-    t_norm = pd.Series(t_norm_vals, index=dates)
-    c_norm = pd.Series(np.full(n, 0.50), index=dates)
-    v_norm = pd.Series(np.full(n, 0.0), index=dates)
-    e_norm = pd.Series(np.full(n, -1.0), index=dates)
-    combined = 0.70 * struct + 0.30 * tact
-    df = pd.DataFrame({
-        'Open': 100.0, 'High': 101.0, 'Low': 99.0,
-        'Close': 100.0, 'Volume': 1_000_000.0,
-    }, index=dates)
-    with mock.patch.object(
-        w1, 'wyckoff_score',
-        return_value=(combined, struct, tact, t_norm, c_norm, v_norm, e_norm),
-    ):
-        fase = w1.classify_wyckoff_phase(df, 'SYNTH')
-    assert fase == "ACCUMULATION", (
-        f"Tactical negativo veto ACCUMULATION. Fase: {fase}. "
-        "Regresion contra D3-v1.1."
-    )
-
-
-def test_v12_t4_no_lookahead_datos_futuros(synthetic_df):
-    """Test 4 (dictamen §10): datos futuros no cambian fase en t."""
-    t_idx = synthetic_df.index[420]
-    fase_ref = w1.classify_wyckoff_phase(synthetic_df, 'SYNTH', as_of=t_idx)
-    # Modificar datos futuros despues de t_idx
-    df_mod = synthetic_df.copy()
-    df_mod.loc[df_mod.index > t_idx, 'Close'] = 999999.0
-    df_mod.loc[df_mod.index > t_idx, 'High'] = 1000000.0
-    df_mod.loc[df_mod.index > t_idx, 'Low'] = 999998.0
-    fase_mod = w1.classify_wyckoff_phase(df_mod, 'SYNTH', as_of=t_idx)
-    assert fase_mod == fase_ref, (
-        f"Look-ahead detectado: fase en t={t_idx} cambio al modificar "
-        f"datos futuros. ref={fase_ref}, mod={fase_mod}"
-    )
-
-
-def test_v12_i15_markup_no_requiere_precedente(synthetic_df):
-    """I15: MARKUP no requiere precedente (invariante v1.2)."""
-    df = _make_uptrend_series(n=600, seed=1)
-    # Verificar que la clasificacion no cae en RANGE por struct_max alto.
-    fase = w1.classify_wyckoff_phase(df, 'SYNTH')
-    assert fase != "INSUFFICIENT_DATA"
 
 # =====================================================================
 # Tests v1.3 (dictamen §14, P1 resuelto)
@@ -585,25 +366,6 @@ def test_v13_t_norm_bounds():
     assert clean.abs().max() <= 1.0 + 1e-9
 
 
-def test_v13_markup_not_rejected_by_stable_trend():
-    """I22: subida sostenida puede ser MARKUP (T1 formalizado)."""
-    df = _make_constant_slope_series(n=600, total_log_ret=1.2)
-    phase = w1.classify_wyckoff_phase(df, 'SYNTH')
-    assert phase == "MARKUP", (
-        f"Subida sostenida devolvio {phase}. I22 exige MARKUP. "
-        "Si falla, P1 ha reaparecido."
-    )
-
-
-def test_v13_no_lookahead_equivalente_a_T4(synthetic_df):
-    """I23: datos futuros no cambian la fase en t (via as_of)."""
-    t_idx = synthetic_df.index[420]
-    fase_ref = w1.classify_wyckoff_phase(synthetic_df, 'SYNTH', as_of=t_idx)
-    df_mod = synthetic_df.copy()
-    df_mod.loc[df_mod.index > t_idx, 'Close'] = 999999.0
-    fase_mod = w1.classify_wyckoff_phase(df_mod, 'SYNTH', as_of=t_idx)
-    assert fase_mod == fase_ref
-
 # =====================================================================
 # I24 - Monotonicidad de t_norm (dictamen 5b 2026-10-02)
 # =====================================================================
@@ -651,329 +413,13 @@ def test_distribution_algebraic_conditions():
     assert abs(t_norm) < 0.30 + 1e-9
 
 
-def test_distribution_is_reachable(monkeypatch):
-    """I25b: DISTRIBUTION alcanzable con mock de wyckoff_score.
-
-    Construye sinteticamente un df cuyas condiciones cumplan §5.4 v1.4.
-    """
-    from unittest import mock
-    n = 500
-    dates = pd.date_range("2024-01-01", periods=n, freq="B")
-    # Estructura: 470 con precedente fuerte, 30 con deterioro reciente.
-    # Razon: la ventana de precedente (60) ve los 60 valores antes del
-    # ultimo. Si el deterioro fuera de 200, la ventana no veria el +0.40.
-    # Con 30 de deterioro, la ventana captura 30 de deterioro + 30 de
-    # precedente fuerte -> struct_max = +0.40 > 0.30.
-    struct_vals = np.concatenate([
-        np.full(n - 30, 0.40),        # precedente fuerte
-        np.full(30, -0.20),           # deterioro reciente
-    ])
-    t_norm_vals = np.concatenate([
-        np.full(n - 30, 0.50),
-        np.full(30, -0.15),           # |t| < 0.30
-    ])
-    c_norm_vals = np.full(n, 0.10)    # > -0.10
-    struct = pd.Series(struct_vals, index=dates)
-    tact = pd.Series(np.full(n, 0.0), index=dates)
-    t_norm = pd.Series(t_norm_vals, index=dates)
-    c_norm = pd.Series(c_norm_vals, index=dates)
-    v_norm = pd.Series(np.zeros(n), index=dates)
-    e_norm = pd.Series(np.zeros(n), index=dates)
-    combined = 0.70 * struct + 0.30 * tact
-    df = pd.DataFrame({
-        'Open': 100.0, 'High': 101.0, 'Low': 99.0,
-        'Close': 100.0, 'Volume': 1_000_000.0,
-    }, index=dates)
-    # v1.6: DISTRIBUTION requiere candidate + SOW reciente.
-    sow_vals = np.zeros(n); sow_vals[-1] = 1
-    sow = pd.Series(sow_vals, index=dates)
-    sow_params = {"window": 30, "x_atr": 0.5, "y_vol": 1.2, "max_age_m": 10}
-    with mock.patch.object(
-        w1, 'wyckoff_score',
-        return_value=(combined, struct, tact, t_norm, c_norm, v_norm, e_norm),
-    ), mock.patch.object(w1, 'detect_sow', return_value=sow):
-        phase = w1.classify_wyckoff_phase(df, 'SYNTH', sow_params=sow_params)
-    assert phase == "DISTRIBUTION", (
-        f"Esperado DISTRIBUTION alcanzable, obtenido {phase}. "
-        "Si falla, I25 rota (contrato imposible)."
-    )
-
 # =====================================================================
 # I26-I28 - DISTRIBUTION v1.5 (dictamen O1)
 # =====================================================================
 
-def test_distribution_requires_prior_strength():
-    """I18 + I26: DISTRIBUTION exige precedente fuerte (struct_max > 0.30).
-
-    Casos:
-      1) struct_max <= 0.30 + deterioro actual -> NO DISTRIBUTION.
-      2) struct_max > 0.30 + deterioro actual + t_norm > -0.30 -> DISTRIBUTION.
-    """
-    from unittest import mock
-    n = 500
-    dates = pd.date_range("2024-01-01", periods=n, freq="B")
-    df = pd.DataFrame({
-        'Open': 100.0, 'High': 101.0, 'Low': 99.0,
-        'Close': 100.0, 'Volume': 1_000_000.0,
-    }, index=dates)
-
-    # Caso 1: sin precedente fuerte
-    struct_vals_no = np.concatenate([
-        np.full(n - 30, 0.10),         # NO fuerte
-        np.full(30, -0.20),            # deterioro actual
-    ])
-    t_norm_vals = np.concatenate([
-        np.full(n - 30, 0.15),
-        np.full(30, -0.10),
-    ])
-    c_norm_vals = np.full(n, 0.10)
-    struct = pd.Series(struct_vals_no, index=dates)
-    tact = pd.Series(np.zeros(n), index=dates)
-    t_norm = pd.Series(t_norm_vals, index=dates)
-    c_norm = pd.Series(c_norm_vals, index=dates)
-    v_norm = pd.Series(np.zeros(n), index=dates)
-    e_norm = pd.Series(np.zeros(n), index=dates)
-    combined = 0.70 * struct + 0.30 * tact
-    with mock.patch.object(w1, 'wyckoff_score',
-                            return_value=(combined, struct, tact, t_norm, c_norm, v_norm, e_norm)):
-        phase_no = w1.classify_wyckoff_phase(df, 'SYNTH')
-    assert phase_no != "DISTRIBUTION", (
-        f"Sin precedente fuerte, no debe dar DISTRIBUTION. Obtenido: {phase_no}"
-    )
-
-    # Caso 2: con precedente fuerte
-    struct_vals_si = np.concatenate([
-        np.full(n - 30, 0.40),         # SI fuerte
-        np.full(30, -0.20),            # deterioro actual
-    ])
-    struct2 = pd.Series(struct_vals_si, index=dates)
-    t_norm2 = pd.Series(t_norm_vals, index=dates)
-    c_norm2 = pd.Series(c_norm_vals, index=dates)
-    combined2 = 0.70 * struct2 + 0.30 * tact
-    # v1.6: anadir SOW reciente para confirmar DISTRIBUTION.
-    sow_vals = np.zeros(n); sow_vals[-1] = 1
-    sow = pd.Series(sow_vals, index=dates)
-    sow_params = {"window": 30, "x_atr": 0.5, "y_vol": 1.2, "max_age_m": 10}
-    with mock.patch.object(w1, 'wyckoff_score',
-                            return_value=(combined2, struct2, tact, t_norm2, c_norm2, v_norm, e_norm)), \
-         mock.patch.object(w1, 'detect_sow', return_value=sow):
-        phase_si = w1.classify_wyckoff_phase(df, 'SYNTH', sow_params=sow_params)
-    assert phase_si == "DISTRIBUTION", (
-        f"Con precedente fuerte + deterioro + t>-0.30 + SOW, debe ser DISTRIBUTION. "
-        f"Obtenido: {phase_si}"
-    )
-
-
-def test_distribution_vs_markdown_boundary():
-    """I16 + I27: frontera DISTRIBUTION vs MARKDOWN.
-
-    Con struct_max > 0.30:
-      - struct_actual en (-0.30, -0.10) y t > -0.30 -> DISTRIBUTION.
-      - struct_actual < -0.30 y t < -0.30 (con c < 0) -> MARKDOWN.
-    """
-    from unittest import mock
-    n = 500
-    dates = pd.date_range("2024-01-01", periods=n, freq="B")
-    df = pd.DataFrame({
-        'Open': 100.0, 'High': 101.0, 'Low': 99.0,
-        'Close': 100.0, 'Volume': 1_000_000.0,
-    }, index=dates)
-
-    # Caso DISTRIBUTION: struct en (-0.30, -0.10), t > -0.30
-    struct_dist = np.concatenate([np.full(n - 30, 0.40), np.full(30, -0.20)])
-    t_dist = np.concatenate([np.full(n - 30, 0.50), np.full(30, -0.15)])
-    c_dist = np.full(n, 0.10)
-    struct = pd.Series(struct_dist, index=dates)
-    t_norm = pd.Series(t_dist, index=dates)
-    c_norm = pd.Series(c_dist, index=dates)
-    tact = pd.Series(np.zeros(n), index=dates)
-    v_norm = pd.Series(np.zeros(n), index=dates)
-    e_norm = pd.Series(np.zeros(n), index=dates)
-    combined = 0.70 * struct + 0.30 * tact
-    sow_vals = np.zeros(n); sow_vals[-1] = 1
-    sow = pd.Series(sow_vals, index=dates)
-    sow_params = {"window": 30, "x_atr": 0.5, "y_vol": 1.2, "max_age_m": 10}
-    with mock.patch.object(w1, 'wyckoff_score',
-                            return_value=(combined, struct, tact, t_norm, c_norm, v_norm, e_norm)), \
-         mock.patch.object(w1, 'detect_sow', return_value=sow):
-        phase = w1.classify_wyckoff_phase(df, 'SYNTH', sow_params=sow_params)
-    assert phase == "DISTRIBUTION", f"Esperado DISTRIBUTION, obtenido {phase}"
-
-    # Caso MARKDOWN: struct < -0.30, t < -0.30, c < 0
-    struct_md = np.full(n, -0.40)
-    t_md = np.full(n, -0.50)
-    c_md = np.full(n, -0.20)
-    struct2 = pd.Series(struct_md, index=dates)
-    t_norm2 = pd.Series(t_md, index=dates)
-    c_norm2 = pd.Series(c_md, index=dates)
-    combined2 = 0.70 * struct2 + 0.30 * tact
-    with mock.patch.object(w1, 'wyckoff_score',
-                            return_value=(combined2, struct2, tact, t_norm2, c_norm2, v_norm, e_norm)):
-        phase2 = w1.classify_wyckoff_phase(df, 'SYNTH')
-    assert phase2 == "MARKDOWN", f"Esperado MARKDOWN, obtenido {phase2}"
-
-
-def test_distribution_no_lookahead(synthetic_df):
-    """I28: la fase en t es invariante a datos posteriores.
-
-    Test con datos reales (sin mock). Clasifica en t = idx[420] con
-    as_of. Luego anade ruido futuro. La fase en t debe coincidir.
-    """
-    t_idx = synthetic_df.index[420]
-    fase_ref = w1.classify_wyckoff_phase(synthetic_df, 'SYNTH', as_of=t_idx)
-
-    # Anadir datos futuros muy distintos
-    df_fut = synthetic_df.copy()
-    df_fut.loc[df_fut.index > t_idx, 'Close'] = 999999.0
-    df_fut.loc[df_fut.index > t_idx, 'High'] = 1000000.0
-    df_fut.loc[df_fut.index > t_idx, 'Low'] = 999998.0
-
-    fase_mod = w1.classify_wyckoff_phase(df_fut, 'SYNTH', as_of=t_idx)
-    assert fase_mod == fase_ref, (
-        f"Look-ahead detectado: fase en t={t_idx} cambio al modificar "
-        f"datos futuros. ref={fase_ref}, mod={fase_mod}"
-    )
-
 # =====================================================================
 # v1.6 - DISTRIBUTION_CANDIDATE vs DISTRIBUTION
 # =====================================================================
-
-def test_v16_candidate_no_implica_distribution():
-    """T1 (dictamen v1.6): candidate sin SOW no es DISTRIBUTION."""
-    from unittest import mock
-    n = 500
-    dates = pd.date_range("2024-01-01", periods=n, freq="B")
-    df = pd.DataFrame({
-        'Open': 100.0, 'High': 101.0, 'Low': 99.0,
-        'Close': 100.0, 'Volume': 1_000_000.0,
-    }, index=dates)
-    struct_vals = np.concatenate([
-        np.full(n - 30, 0.40),
-        np.full(30, -0.20),
-    ])
-    struct = pd.Series(struct_vals, index=dates)
-    t_norm = pd.Series(np.concatenate([
-        np.full(n - 30, 0.50), np.full(30, -0.15)
-    ]), index=dates)
-    c_norm = pd.Series(np.full(n, 0.10), index=dates)
-    tact = pd.Series(np.zeros(n), index=dates)
-    v_norm = pd.Series(np.zeros(n), index=dates)
-    e_norm = pd.Series(np.zeros(n), index=dates)
-    combined = 0.70 * struct + 0.30 * tact
-
-    # SOW siempre 0 (df plano no dispara SOW)
-    sow_zeros = pd.Series(np.zeros(n), index=dates)
-    with mock.patch.object(w1, 'wyckoff_score',
-                            return_value=(combined, struct, tact, t_norm, c_norm, v_norm, e_norm)), \
-         mock.patch.object(w1, 'detect_sow', return_value=sow_zeros):
-        phase = w1.classify_wyckoff_phase(df, 'SYNTH')
-    # Candidate cumple condiciones pero sin SOW -> no DISTRIBUTION
-    assert phase != "DISTRIBUTION", (
-        f"Candidate sin SOW no debe ser DISTRIBUTION. Obtenido: {phase}"
-    )
-    assert phase == "RANGE", f"Esperado RANGE, obtenido: {phase}"
-
-
-def test_v16_candidate_con_sow_es_distribution():
-    """T3 (dictamen v1.6): candidate + SOW reciente -> DISTRIBUTION."""
-    from unittest import mock
-    n = 500
-    dates = pd.date_range("2024-01-01", periods=n, freq="B")
-    df = pd.DataFrame({
-        'Open': 100.0, 'High': 101.0, 'Low': 99.0,
-        'Close': 100.0, 'Volume': 1_000_000.0,
-    }, index=dates)
-    struct_vals = np.concatenate([
-        np.full(n - 30, 0.40),
-        np.full(30, -0.20),
-    ])
-    struct = pd.Series(struct_vals, index=dates)
-    t_norm = pd.Series(np.concatenate([
-        np.full(n - 30, 0.50), np.full(30, -0.15)
-    ]), index=dates)
-    c_norm = pd.Series(np.full(n, 0.10), index=dates)
-    tact = pd.Series(np.zeros(n), index=dates)
-    v_norm = pd.Series(np.zeros(n), index=dates)
-    e_norm = pd.Series(np.zeros(n), index=dates)
-    combined = 0.70 * struct + 0.30 * tact
-
-    # SOW en la ultima posicion (dentro de M=10)
-    sow_vals = np.zeros(n)
-    sow_vals[-1] = 1
-    sow = pd.Series(sow_vals, index=dates)
-    sow_params = {"window": 30, "x_atr": 0.5, "y_vol": 1.2, "max_age_m": 10}
-    with mock.patch.object(w1, 'wyckoff_score',
-                            return_value=(combined, struct, tact, t_norm, c_norm, v_norm, e_norm)), \
-         mock.patch.object(w1, 'detect_sow', return_value=sow):
-        phase = w1.classify_wyckoff_phase(df, 'SYNTH', sow_params=sow_params)
-    assert phase == "DISTRIBUTION", (
-        f"Candidate + SOW reciente debe ser DISTRIBUTION. Obtenido: {phase}"
-    )
-
-
-def test_v16_sow_aislado_no_es_distribution():
-    """T2 (dictamen v1.6): SOW sin candidate no es DISTRIBUTION."""
-    from unittest import mock
-    n = 500
-    dates = pd.date_range("2024-01-01", periods=n, freq="B")
-    df = pd.DataFrame({
-        'Open': 100.0, 'High': 101.0, 'Low': 99.0,
-        'Close': 100.0, 'Volume': 1_000_000.0,
-    }, index=dates)
-    # struct positivo (no candidate)
-    struct = pd.Series(np.full(n, 0.40), index=dates)
-    t_norm = pd.Series(np.full(n, 0.50), index=dates)
-    c_norm = pd.Series(np.full(n, 0.10), index=dates)
-    tact = pd.Series(np.zeros(n), index=dates)
-    v_norm = pd.Series(np.zeros(n), index=dates)
-    e_norm = pd.Series(np.zeros(n), index=dates)
-    combined = 0.70 * struct + 0.30 * tact
-    sow_vals = np.zeros(n)
-    sow_vals[-1] = 1
-    sow = pd.Series(sow_vals, index=dates)
-    with mock.patch.object(w1, 'wyckoff_score',
-                            return_value=(combined, struct, tact, t_norm, c_norm, v_norm, e_norm)), \
-         mock.patch.object(w1, 'detect_sow', return_value=sow):
-        phase = w1.classify_wyckoff_phase(df, 'SYNTH')
-    assert phase != "DISTRIBUTION", (
-        f"SOW aislado (sin candidate) no debe ser DISTRIBUTION. Obtenido: {phase}"
-    )
-
-
-def test_v16_sow_antiguo_no_confirma():
-    """T4 (dictamen v1.6): SOW fuera de M no confirma."""
-    from unittest import mock
-    n = 500
-    dates = pd.date_range("2024-01-01", periods=n, freq="B")
-    df = pd.DataFrame({
-        'Open': 100.0, 'High': 101.0, 'Low': 99.0,
-        'Close': 100.0, 'Volume': 1_000_000.0,
-    }, index=dates)
-    struct_vals = np.concatenate([
-        np.full(n - 30, 0.40),
-        np.full(30, -0.20),
-    ])
-    struct = pd.Series(struct_vals, index=dates)
-    t_norm = pd.Series(np.concatenate([
-        np.full(n - 30, 0.50), np.full(30, -0.15)
-    ]), index=dates)
-    c_norm = pd.Series(np.full(n, 0.10), index=dates)
-    tact = pd.Series(np.zeros(n), index=dates)
-    v_norm = pd.Series(np.zeros(n), index=dates)
-    e_norm = pd.Series(np.zeros(n), index=dates)
-    combined = 0.70 * struct + 0.30 * tact
-    # SOW en posicion n-50 (fuera de M=10)
-    sow_vals = np.zeros(n)
-    sow_vals[-50] = 1
-    sow = pd.Series(sow_vals, index=dates)
-    with mock.patch.object(w1, 'wyckoff_score',
-                            return_value=(combined, struct, tact, t_norm, c_norm, v_norm, e_norm)), \
-         mock.patch.object(w1, 'detect_sow', return_value=sow):
-        phase = w1.classify_wyckoff_phase(df, 'SYNTH')
-    assert phase != "DISTRIBUTION", (
-        f"SOW fuera de M no confirma DISTRIBUTION. Obtenido: {phase}"
-    )
-
 
 def test_v16_sow_no_lookahead(synthetic_df):
     """T5 (dictamen v1.6): SOW_t no depende de datos posteriores a t."""
@@ -988,15 +434,6 @@ def test_v16_sow_no_lookahead(synthetic_df):
                              window=30, x_atr=0.5, y_vol=1.2)
     pd.testing.assert_series_equal(sow_ref, sow_mod, check_names=False)
 
-
-def test_v16_classify_meta_devuelve_campos():
-    """I29: classify_wyckoff_phase_meta devuelve dict con phase + flag."""
-    df = _make_constant_slope_series(n=600, total_log_ret=1.2)
-    meta = w1.classify_wyckoff_phase_meta(df, 'SYNTH')
-    assert isinstance(meta, dict)
-    assert "phase" in meta
-    assert "distribution_candidate" in meta
-    assert isinstance(meta["distribution_candidate"], bool)
 
 # =====================================================================
 # v1.7 - SOW con ATR-normalizacion + umbrales
@@ -1127,111 +564,9 @@ def test_i35_config_sow_params_son_none():
     assert settings.WYCKOFF_SOW_Y_VOL is None
 
 
-def test_i36_sin_sow_params_no_emite_distribution():
-    """I36: classify_wyckoff_phase sin sow_params nunca emite DISTRIBUTION.
-
-    Con candidate_conditions=True y sin sow_params, debe devolver RANGE.
-    Con sow_params explicitos, debe devolver DISTRIBUTION.
-    """
-    from unittest import mock
-    n = 500
-    dates = pd.date_range("2024-01-01", periods=n, freq="B")
-    df = pd.DataFrame({
-        'Open': 100.0, 'High': 101.0, 'Low': 99.0,
-        'Close': 100.0, 'Volume': 1_000_000.0,
-    }, index=dates)
-    struct_vals = np.concatenate([np.full(n - 30, 0.40), np.full(30, -0.20)])
-    struct = pd.Series(struct_vals, index=dates)
-    t_norm = pd.Series(np.concatenate([
-        np.full(n - 30, 0.50), np.full(30, -0.15)
-    ]), index=dates)
-    c_norm = pd.Series(np.full(n, 0.10), index=dates)
-    tact = pd.Series(np.zeros(n), index=dates)
-    v_norm = pd.Series(np.zeros(n), index=dates)
-    e_norm = pd.Series(np.zeros(n), index=dates)
-    combined = 0.70 * struct + 0.30 * tact
-    sow_vals = np.zeros(n); sow_vals[-1] = 1
-    sow = pd.Series(sow_vals, index=dates)
-    with mock.patch.object(w1, 'wyckoff_score',
-                            return_value=(combined, struct, tact, t_norm, c_norm, v_norm, e_norm)), \
-         mock.patch.object(w1, 'detect_sow', return_value=sow):
-        phase = w1.classify_wyckoff_phase(df, 'SYNTH')
-    assert phase == "RANGE", (
-        f"Sin sow_params, no debe emitir DISTRIBUTION. Obtenido: {phase}"
-    )
-    sow_params = {"window": 30, "x_atr": 0.5, "y_vol": 1.2, "max_age_m": 10}
-    with mock.patch.object(w1, 'wyckoff_score',
-                            return_value=(combined, struct, tact, t_norm, c_norm, v_norm, e_norm)), \
-         mock.patch.object(w1, 'detect_sow', return_value=sow):
-        phase2 = w1.classify_wyckoff_phase(df, 'SYNTH', sow_params=sow_params)
-    assert phase2 == "DISTRIBUTION", (
-        f"Con sow_params, debe emitir DISTRIBUTION. Obtenido: {phase2}"
-    )
-
-
-def test_i36b_meta_propaga_sow_params():
-    """I36b: classify_wyckoff_phase_meta propaga sow_params a classify."""
-    from unittest import mock
-    n = 500
-    dates = pd.date_range("2024-01-01", periods=n, freq="B")
-    df = pd.DataFrame({
-        'Open': 100.0, 'High': 101.0, 'Low': 99.0,
-        'Close': 100.0, 'Volume': 1_000_000.0,
-    }, index=dates)
-    struct_vals = np.concatenate([np.full(n - 30, 0.40), np.full(30, -0.20)])
-    struct = pd.Series(struct_vals, index=dates)
-    t_norm = pd.Series(np.concatenate([
-        np.full(n - 30, 0.50), np.full(30, -0.15)
-    ]), index=dates)
-    c_norm = pd.Series(np.full(n, 0.10), index=dates)
-    tact = pd.Series(np.zeros(n), index=dates)
-    v_norm = pd.Series(np.zeros(n), index=dates)
-    e_norm = pd.Series(np.zeros(n), index=dates)
-    combined = 0.70 * struct + 0.30 * tact
-    sow_vals = np.zeros(n); sow_vals[-1] = 1
-    sow = pd.Series(sow_vals, index=dates)
-    sow_params = {"window": 30, "x_atr": 0.5, "y_vol": 1.2, "max_age_m": 10}
-    with mock.patch.object(w1, 'wyckoff_score',
-                            return_value=(combined, struct, tact, t_norm, c_norm, v_norm, e_norm)), \
-         mock.patch.object(w1, 'detect_sow', return_value=sow):
-        meta = w1.classify_wyckoff_phase_meta(df, 'SYNTH', sow_params=sow_params)
-    assert meta["phase"] == "DISTRIBUTION"
-    assert meta["distribution_candidate"] is True
-
 # =====================================================================
 # Frente F - QA interno de componentes no-SOW
 # =====================================================================
-
-def test_f02_meta_no_traga_runtime_error():
-    """F-02: classify_wyckoff_phase_meta no debe silenciar RuntimeError.
-
-    Regla 01_METODO seccion 8: RuntimeError va en tuplas acotadas.
-    Un except Exception lo traga silenciosamente. Con el fix (acotar
-    except a tuplas), un RuntimeError de _is_distribution_candidate
-    debe propagar.
-
-    Test rojo sin el fix. Verde tras acotar el except.
-    """
-    from unittest import mock
-    import pandas as pd
-
-    # df minimo que devuelve RANGE para llegar al bloque con el
-    # except. Con mock sobre _is_distribution_candidate forzamos
-    # que lance RuntimeError.
-    n = 500
-    dates = pd.date_range("2024-01-01", periods=n, freq="B")
-    df = pd.DataFrame({
-        "Open": 100.0, "High": 101.0, "Low": 99.0,
-        "Close": 100.0, "Volume": 1_000_000.0,
-    }, index=dates)
-
-    # Mock: classify devuelve RANGE (fuerza entrar al except) y
-    # _is_distribution_candidate lanza RuntimeError.
-    with mock.patch.object(w1, "classify_wyckoff_phase", return_value="RANGE"), \
-         mock.patch.object(w1, "_is_distribution_candidate",
-                           side_effect=RuntimeError("fallo simulado")):
-        with pytest.raises(RuntimeError, match="fallo simulado"):
-            w1.classify_wyckoff_phase_meta(df, "SYNTH")
 
 # =====================================================================
 # Frente F - F-03: cobertura directa de funciones puras no-SOW
@@ -1367,25 +702,21 @@ def test_f03_detect_sos_no_lookahead():
 
 
 def test_regresion_i2_nan_internos_no_degenera():
-    """Regresion I2 + K-INDEX-RANGE-01 (2026-09-18). Portada de los
-    tests legacy test_build_ticker_df_i2.py y test_index_phase_range.py
-    a v1.8 al retirar el modulo legacy 2026-10-10.
-
-    Bug original: classify_wyckoff_phase degeneraba a RANGE (fallback
-    silencioso) cuando recibia un df con NaN internos, sin aplicar
-    build_ticker_df primero. Afectaba a indices internacionales y
-    ETFs sectoriales.
+    """Regresion I2 (2026-09-18). Portada de tests legacy al retirar
+    el modulo legacy 2026-10-10.
 
     Contrato v1.8: build_ticker_df rellena Open/High/Low desde Close
-    y Volume con 0, evitando que los NaN internos propaguen al
-    clasificador. Este test verifica que con NaN internos + el helper,
-    classify_wyckoff_phase produce una fase valida (no colapsa).
+    y Volume con 0, evitando que los NaN internos propaguen. Este
+    test verifica que con NaN internos el helper no deja NaN y
+    wyckoff_score produce series validas.
+
+    C5.2: retirada la parte de classify_wyckoff_phase. La
+    clasificacion vive ahora en el orquestador.
     """
     import numpy as np
     rng = np.random.default_rng(20261010)
     n = 300
     dates = pd.date_range('2025-01-01', periods=n, freq='B')
-    # Ticker con tendencia alcista clara + NaN internos
     base = 100 + rng.standard_normal(n).cumsum() + np.linspace(0, 20, n)
     df = pd.DataFrame({
         ('Open', 'TST'): base + rng.standard_normal(n) * 0.5,
@@ -1397,10 +728,9 @@ def test_regresion_i2_nan_internos_no_degenera():
     df.loc[df.index[50:70], ('Close', 'TST')] = np.nan
     df.loc[df.index[100:105], ('Volume', 'TST')] = np.nan
 
-    # Contrato: build_ticker_df + classify no colapsa a RANGE por los NaN
     tdf = w1.build_ticker_df(df, 'TST')
     assert not tdf.empty, 'build_ticker_df devolvio vacio con NaN internos'
     assert tdf.notna().all().all(), 'build_ticker_df dejo NaN'
-    phase = w1.classify_wyckoff_phase(tdf, 'TST')
-    valid = {'MARKUP', 'ACCUMULATION', 'RANGE', 'DISTRIBUTION', 'MARKDOWN', 'INSUFFICIENT_DATA'}
-    assert phase in valid, f'fase inesperada: {phase}'
+    # Score no colapsa
+    combined, struct_s, tact_s, t_norm, c_norm, v_norm, e_norm = w1.wyckoff_score(tdf, 'TST')
+    assert len(combined) == len(tdf)
