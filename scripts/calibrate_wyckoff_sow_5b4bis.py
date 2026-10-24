@@ -161,6 +161,25 @@ def compute_sow_cache(feats, N, X, Y):
     return cache
 
 
+def compute_sow_cache_v2(feats, N, X, Y, candidate_lookback=5):
+    """SOW v2 (gate por distribution candidate) por ticker.
+
+    Ver indicators/wyckoff_v1.py::detect_sow_v2 para la formula.
+    El gate usa la logica de _is_distribution_candidate (ya existente).
+    """
+    cache = {}
+    for tk, feat in feats.items():
+        try:
+            sow = w1.detect_sow_v2(
+                feat["tdf"], tk, window=N, x_atr=X, y_vol=Y,
+                candidate_lookback=candidate_lookback,
+            )
+        except (ValueError, KeyError, TypeError):
+            sow = None
+        cache[tk] = sow.values if sow is not None else None
+    return cache
+
+
 def first_sow_in_window(sow_arr, start_idx, end_idx):
     """Primer indice en [start_idx, end_idx] con SOW=1. None si no hay."""
     if sow_arr is None:

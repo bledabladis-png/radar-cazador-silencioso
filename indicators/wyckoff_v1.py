@@ -506,6 +506,71 @@ def detect_sow(df, ticker, *, window=None, x_atr=None, y_vol=None,
     return condition.astype(int)
 
 
+def detect_sow_v2(df, ticker, *, window=None, x_atr=None, y_vol=None,
+                  atr_window=WYCKOFF_ATR_WINDOW, candidate_lookback=5):
+    """SOW v2: raw SOW gated por contexto de distribucion.
+
+    El SOW clasico (Wyckoff) es el paso 3 de una estructura:
+        (1) tendencia alcista previa
+        (2) weakening / distribucion
+        (3) SOW: ruptura de soporte con volumen
+        (4) LPSY: rally fallido (opcional)
+
+    detect_sow (v1.8) solo implementa (3). Por eso dispara en cualquier
+    ticker que caiga rapido, sin importar el contexto. Eso hace que en
+    el purged k-fold 2023-2024 el SOW seleccione tickers ya debiles
+    (efecto ticker), no eventos de distribucion real.
+
+    detect_sow_v2 anade el gate (1)+(2) reutilizando la logica de
+    _is_distribution_candidate (que ya existe en este modulo, L269).
+    Formula:
+        raw_sow[t]        = detect_sow[t] (sin cambios)
+        candidate[t]      = struct[t] < -0.10
+                            AND t_norm[t] > -0.30
+                            AND max(struct[t-60, t-1]) > 0.30
+        candidate_recent[t] = any candidate[t-K .. t]
+        SOW_v2[t]         = raw_sow[t] AND candidate_recent[t]
+
+    Args:
+        candidate_lookback: K sesiones hacia atras para el candidate.
+            Default 5 (= M de C1-M5).
+    """
+    raw_sow = detect_sow(df, ticker, window=window, x_atr=x_atr,
+                         y_vol=y_vol, atr_window=atr_window)
+    try:
+        _, struct_s, _, t_norm, _, _, _ = wyckoff_score(df, ticker)
+    except (KeyError, ValueError, TypeError, IndexError):
+        return pd.Series(0, index=raw_sow.index, dtype=int)
+
+    struct_clean = struct_s.dropna()
+    t_clean = t_norm.dropna()
+    if struct_clean.empty or t_clean.empty:
+        return pd.Series(0, index=raw_sow.index, dtype=int)
+
+    # struct_max_prev[t] = max(struct_clean[t-W, t-1]). Patron H7.
+    struct_max_prev = (
+        struct_clean
+        .rolling(PRECEDENT_WINDOW, min_periods=PRECEDENT_WINDOW)
+        .max()
+        .shift(1)
+        .reindex(struct_s.index)
+    )
+    candidate = (
+        (struct_s < STRUCT_DETERIORO)
+        & (t_norm > -T_NORM_STRONG)
+        & (struct_max_prev > PREC_STRUCT_STRONG)
+    )
+    candidate_recent = (
+        candidate.astype(float)
+        .rolling(candidate_lookback + 1, min_periods=1)
+        .max()
+        .fillna(0.0)
+        .astype(bool)
+    )
+    sow_v2 = raw_sow.astype(int) * candidate_recent.astype(int)
+    return sow_v2.astype(int)
+
+
 # =====================================================================
 # Preparacion de input
 # =====================================================================
