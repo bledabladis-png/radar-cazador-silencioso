@@ -57,3 +57,19 @@ anclas:
     ubicaciones:
       - scripts/update_macro_manual.py:24
     razon: "Inicio de descarga de las series macro de FRED. Ancla de cobertura historica."
+
+  - id: RESERVED_COHORT_START
+    valor: "2015-01-02"
+    categoria: serie_fuente
+    ubicaciones:
+      - scripts/fetch_reserved_cohort.py:20
+      - scripts/fetch_reserved_cohort_r3000.py:19
+    razon: "Inicio de la serie del parquet extendido (stock_prices_extended.parquet). Coherente con purged k-fold 2017-2025."
+
+  - id: RESERVED_COHORT_END
+    valor: "2026-10-24"
+    categoria: frontera_contrato
+    ubicaciones:
+      - scripts/fetch_reserved_cohort.py:21
+      - scripts/fetch_reserved_cohort_r3000.py:20
+    razon: "Fecha de descarga de la cohorte reservada. Fija el corte de datos para reproducibilidad del experimento."

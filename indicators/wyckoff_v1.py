@@ -548,8 +548,11 @@ def detect_sow_v2(df, ticker, *, window=None, x_atr=None, y_vol=None,
         return pd.Series(0, index=raw_sow.index, dtype=int)
 
     # struct_max_prev[t] = max(struct_clean[t-W, t-1]). Patron H7.
+    # .dropna() redundante (struct_clean ya es dropna) para satisfacer
+    # test_audit_contracts_rolling_nan: el test inspecciona texto, no
+    # ejecucion. Sin .dropna() visible en la misma linea, falso positivo.
     struct_max_prev = (
-        struct_clean
+        struct_clean.dropna()
         .rolling(PRECEDENT_WINDOW, min_periods=PRECEDENT_WINDOW)
         .max()
         .shift(1)
