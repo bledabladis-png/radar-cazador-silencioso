@@ -131,3 +131,6 @@ date,run_timestamp,metric,value,status
 2026-10-22,2026-10-23T01:54:02,rs_mom_vs_flow,-0.1879,OK
 2026-10-22,2026-10-23T01:54:02,rs_mom_vs_wls,0.5636,OK
 2026-10-22,2026-10-23T01:54:02,stability_vs_wyckoff,0.903,ALERTA
+2026-10-23,2026-10-24T08:33:44,rs_mom_vs_flow,-0.4061,OK
+2026-10-23,2026-10-24T08:33:44,rs_mom_vs_wls,0.7212,OK
+2026-10-23,2026-10-24T08:33:44,stability_vs_wyckoff,0.2606,OK

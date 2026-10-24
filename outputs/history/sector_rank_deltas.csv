@@ -1,12 +1,12 @@
 sector,rank_actual,rank_change_5d,rank_change_10d,rank_change_20d,lectura_5d,lectura_10d,lectura_20d
-XLK,11,7,10,9,Fuerte deterioro,Fuerte deterioro,Fuerte deterioro
-XLF,5,-4,-6,-3,Fuerte mejora,Fuerte mejora,Fuerte mejora
-XLV,4,1,1,1,Estable,Estable,Estable
-XLE,6,4,4,2,Fuerte deterioro,Fuerte deterioro,Estable
-XLY,2,-4,-3,-4,Fuerte mejora,Fuerte mejora,Fuerte mejora
-XLP,3,2,-4,-6,Estable,Fuerte mejora,Fuerte mejora
-XLI,9,1,1,-1,Estable,Estable,Estable
-XLB,1,-9,-8,-6,Fuerte mejora,Fuerte mejora,Fuerte mejora
-XLU,7,2,3,2,Estable,Fuerte deterioro,Estable
-XLRE,8,-3,-2,-3,Fuerte mejora,Estable,Fuerte mejora
-XLC,10,3,4,9,Fuerte deterioro,Fuerte deterioro,Fuerte deterioro
+XLK,10,-1,9,8,Estable,Fuerte deterioro,Fuerte deterioro
+XLF,5,-1,-5,-2,Estable,Fuerte mejora,Estable
+XLV,3,1,-2,0,Estable,Estable,Estable
+XLE,4,0,0,0,Estable,Estable,Estable
+XLY,8,1,1,2,Estable,Estable,Estable
+XLP,2,1,-1,-7,Estable,Estable,Fuerte mejora
+XLI,9,-1,1,1,Estable,Estable,Estable
+XLB,1,-2,-8,-10,Estable,Fuerte mejora,Fuerte mejora
+XLU,7,2,1,2,Estable,Estable,Estable
+XLRE,6,-3,-5,-4,Fuerte mejora,Fuerte mejora,Fuerte mejora
+XLC,11,3,9,10,Fuerte deterioro,Fuerte deterioro,Fuerte deterioro
