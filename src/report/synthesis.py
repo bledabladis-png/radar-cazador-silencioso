@@ -1,63 +1,18 @@
 # -*- coding: utf-8 -*-
-"""Índices (USA + Europa), Sintesis de Senales y Matriz de Evidencia.
+"""Sintesis de Senales y Matriz de Evidencia.
 
 Extraidos de src/report_generator.py (refactor C1, fase C1-6d6).
+
+C4.4 (2026-10-24): retirada la seccion Indices (USA + Europa). El
+sistema legacy de indices (classify_phase sobre ^GSPC/^DJI/^NDX +
+top-5 lideres por indice) se sustituyo por el sistema holdings-based
+que clasifica los tickers de cada indice en los 6 CSVs descargables.
 """
 
 import pandas as pd
 
-from config.index_tickers import INDEX_CONFIG
-from src.report.helpers import _fmt_num
 from config.tickers import SECTOR_NAMES
-from config.settings import FLOW_ZSCORE_WINDOW, EXPECTED_SECTOR_COUNT
-
-
-def render_indices_internacionales(index_phases, index_leaders, index_struct_scores=None):
-    """Renderiza las tablas de Índices (USA + Europa) (Wyckoff + Oportunidades).
-
-    Devuelve lista de lineas markdown. Sin side effects.
-    """
-    out = []
-    out.append("\n## Índices (USA + Europa) — Fases Wyckoff\n")
-    # struct_score: magnitud ademas de la etiqueta binaria. Una RANGE
-    # con struct cerca de 0.30 esta proxima a MARKUP. El lector ve
-    # el margen sin tener que consultar el CSV.
-    _struct_map = index_struct_scores or {}
-    out.append("| Indice | Ticker | Fase Wyckoff | Struct |\n")
-    out.append("|--------|--------|--------------|--------|\n")
-    # H5 (2026-10-21): declarar que mide struct_score para evitar la
-    # confusion "MARKUP con retorno reciente negativo".
-    out.append("*Nota: Struct (struct_score) mide tendencia de fondo "
-               "(MA lenta + compresion ATR), no retorno reciente. Un "
-               "indice en fase MARKUP puede tener retorno de corto plazo "
-               "negativo; la fase y el Struct miden tendencia estructural, "
-               "no momentum inmediato.*\n\n")
-    if index_phases:
-        for nombre, fase in index_phases.items():
-            ticker = INDEX_CONFIG.get(nombre, {}).get('index_ticker', '')
-            _s = _struct_map.get(nombre)
-            _s_str = _fmt_num(_s, '{:+.2f}') if _s is not None else 'N/D'
-            out.append(f"| {nombre} | {ticker} | {fase} | {_s_str} |\n")
-    else:
-        out.append("| No disponible | No disponible | No disponible | N/D |\n")
-    out.append("\n")
-
-    out.append("\n## Índices (USA + Europa) — Oportunidades de Acumulación y Markup\n")
-    out.append("*Nota: Los componentes se obtienen de ETFs proxy que replican el indice de referencia. USA: SPY (S&P 500), DIA (Dow Jones), QQQ (Nasdaq-100), IWM (Russell 2000). Europa: FEZ (Euro Stoxx 50), LYXI (Ibex 35), DAXEX (DAX 40), ISF.L (FTSE 100). Solo se muestran indices en fase ACCUMULATION o MARKUP.*\n\n")
-    out.append(f"*Nota: Flujo (z) es un z-score robusto sobre {FLOW_ZSCORE_WINDOW} dias. Valores extremos pueden deberse a eventos corporativos o volúmenes inusuales. Para el WLS se usa una versión normalizada limitada a ±3.*\n\n")
-    if index_leaders:
-        for nombre, top5 in index_leaders.items():
-            if top5 is None or top5.empty:
-                continue
-            out.append(f"### {nombre}\n")
-            out.append("| # | Ticker | RS | RS Mom | Flujo (z) | WLS | Fase Wyckoff |\n")
-            out.append("|---|--------|----|--------|-----------|-----|---------------|\n")
-            for i, (_, row) in enumerate(top5.iterrows(), 1):
-                out.append(f"| {i} | {row['ticker']} | {_fmt_num(row['rs'], '{:.2f}')} | {_fmt_num(row['rs_mom'], '{:.2%}')} | {_fmt_num(row['flow_proxy_z'], '{:.2f}')} | {_fmt_num(row['wls'], '{:.2f}')} | {row['wyckoff_phase']} |\n")
-            out.append("\n")
-    else:
-        out.append("*Ningún indice en fase de acumulación o markup en esta ejecución.*\n\n")
-    return out
+from config.settings import EXPECTED_SECTOR_COUNT
 
 
 def render_sintesis_senales(macro_regime, financial_regime,

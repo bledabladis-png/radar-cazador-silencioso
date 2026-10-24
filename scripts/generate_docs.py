@@ -100,7 +100,6 @@ def generate_readme():
         ('06_indicadores_opciones.md', 'Indicadores: Opciones (OMS)', 'options.py, PCR, IHR'),
         ('06_indicadores_darkpool.md', 'Indicadores: Dark Pools', 'darkpool.py, FINRA ATS, Z-Scores'),
         ('06_indicadores_mte.md', 'Indicadores: MTE', 'mte.py, Market Transition Engine'),
-        ('07_lideres.md', 'Lideres Sectoriales e Internacionales', 'stock_leader.py, WLS, indices'),
         ('08_reporte.md', 'Generacion del Reporte', 'report_generator.py, estructura del reporte diario'),
         ('09_auditorias.md', 'Scripts de Auditoria', 'validacion, Monte Carlo, ablacion, correlaciones'),
         ('10_flujo_primario_etf.md', 'Flujo Primario ETF', 'ETF Primary Flow desde SSGA, BlackRock, Amundi'),
@@ -357,26 +356,6 @@ def generate_mte():
     limitaciones = "El escenario se marca como (UNCONFIRMED) si la confianza es inferior al 50%. La confianza no esta calibrada historicamente."
     return template(proposito, arquitectura, formulas, salidas, limitaciones)
 
-def generate_lideres():
-    proposito = "Selecciona las mejores empresas de cada sector/indice en fase favorable (ACCUMULATION o MARKUP) usando el Wyckoff Leadership Score (WLS)."
-    arquitectura = """
-- stock_leader.py: compute_stock_metrics(), compute_wls(), generate_leader_section().
-- index_leaders.py: analogo para indices internacionales.
-- Fuente de holdings: data/etf_holdings.csv (sectores) y data/index_holdings.csv (indices).
-- Actualizacion trimestral automatica via GitHub Actions.
-"""
-    formulas = """
-- **WLS:** 0.35*rs_z + 0.25*flow_proxy_z_norm + 0.25*rws_z + 0.10*stab_z, con bonus por persistencia.
-- **RWS:** Relative Wyckoff Score (normalizacion intra-sector/indice).
-"""
-    salidas = """
-- Tablas 'Acciones Seleccionadas por el Modelo de Liderazgo Sectorial' en el reporte.
-- Tablas 'Indices Internacionales - Oportunidades de Acumulacion' en el reporte.
-- Archivos CSV: analisis_lideres.csv y analisis_lideres_internacionales.csv.
-"""
-    limitaciones = "Solo se muestran sectores/indices en fase ACCUMULATION o MARKUP. El resto se omiten por no cumplir criterios de liderazgo estructural."
-    return template(proposito, arquitectura, formulas, salidas, limitaciones)
-
 def generate_reporte():
     proposito = "Genera el reporte diario en formato Markdown con todas las secciones del radar."
     arquitectura = """
@@ -525,7 +504,6 @@ def main():
         '06_indicadores_opciones.md': generate_opciones,
         '06_indicadores_darkpool.md': generate_darkpool,
         '06_indicadores_mte.md': generate_mte,
-        '07_lideres.md': generate_lideres,
         '08_reporte.md': generate_reporte,
         '09_auditorias.md': generate_auditorias,
         '10_flujo_primario_etf.md': generate_etf_primary_flow,

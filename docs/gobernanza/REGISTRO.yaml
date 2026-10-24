@@ -774,12 +774,12 @@ items:
     XLK MARKUP +0.4536, ^NDX RANGE +0.3046 (a 0.002 del umbral 0.30),
     XLP RANGE +0.18 y XLF RANGE +0.23.
   commit: a226f556
-  test: tests/test_struct_score_sector_indices.py
   evidencia: >
     Columnas Struct en Rankings Sectoriales e Indices. compute_sector_scores
     devuelve struct_scores; compute_indices_intl devuelve
     index_struct_scores (3 keys). 8 tests nuevos. Cleanup pyflakes 22392813.
     E2E verificado: XLK +0.45, ^NDX +0.30, XLP +0.18 visibles.
+    Test tests/test_struct_score_sector_indices.py retirado en C4.4 (2026-10-24) con el sistema legacy de indices. Fix historico vigente.
   verificacion: VERIFIED_IN_CI
 - id: GEN-ESTADO-VALIDATION-VACIO
   tipo: frente
@@ -1032,8 +1032,9 @@ items:
   estado: FIXED
   descripcion: Reporte 2026-10-19 linea 936 decia "Condiciones financieras HIGH_STRESS - estres elevado en credito", contradiciendo linea 58 (HYG/LQD Z=-0.30 neutral) y linea 142 (Credit Stress 0.18). El HIGH_STRESS viene de financial_conditions, no de credito. La etiqueta atribuia al credito lo que es condicion financiera.
   commit: 0aec4ce5
-  test: tests/test_struct_score_sector_indices.py
-  evidencia: Texto del resumen ya no atribuye el estres al credito. Remite a Alertas de Divergencia (HYG/LQD).
+  evidencia: >
+    Texto del resumen ya no atribuye el estres al credito. Remite a Alertas de Divergencia (HYG/LQD).
+    Test tests/test_struct_score_sector_indices.py retirado en C4.4 (2026-10-24) con el sistema legacy de indices. Fix historico vigente.
   verificacion: FIXED
 
 - id: REP-AUDIT-20261020-REPORT-FLOW-RECONCILIATION
@@ -1042,8 +1043,9 @@ items:
   estado: FIXED
   descripcion: Reporte 2026-10-19 linea 59 decia "Energy Price-Flow - sin confirmacion del Flow Proxy (z=-0.50)". Lineas 733/752 marcaban XLE con Flujo Primario "Confirmacion" (+990M 20d). El lector veia "sin confirmacion" y "Confirmacion" en el mismo documento sin reconciliacion.
   commit: 0aec4ce5
-  test: tests/test_struct_score_sector_indices.py
-  evidencia: Nota al final del bloque Alertas de Divergencia aclarando que Flow Proxy y Flujo Primario son capas independientes (00_ARRANQUE §2).
+  evidencia: >
+    Nota al final del bloque Alertas de Divergencia aclarando que Flow Proxy y Flujo Primario son capas independientes (00_ARRANQUE §2).
+    Test tests/test_struct_score_sector_indices.py retirado en C4.4 (2026-10-24) con el sistema legacy de indices. Fix historico vigente.
   verificacion: FIXED
 
 - id: REP-AUDIT-20261020-REPORT-STRUCT-COLUMN
@@ -1052,8 +1054,9 @@ items:
   estado: FIXED
   descripcion: Reporte 2026-10-19 tabla Rankings Sectoriales tenia dos columnas con nombres casi identicos (Structural y Struct) y valores distintos en la misma fila. XLP - Structural=+0.02, Struct=+0.17. Nomenclatura ambigua.
   commit: 0aec4ce5
-  test: tests/test_struct_score_sector_indices.py
-  evidencia: Columna Struct renombrada a "Struct Score". 2 tests actualizados. 8 tests del fichero verdes.
+  evidencia: >
+    Columna Struct renombrada a "Struct Score". 2 tests actualizados. 8 tests del fichero verdes.
+    Test tests/test_struct_score_sector_indices.py retirado en C4.4 (2026-10-24) con el sistema legacy de indices. Fix historico vigente.
   verificacion: FIXED
 
 - id: REP-AUDIT-20261020-REPORT-XLC-EVIDENCE

@@ -26,7 +26,6 @@ ALLOWED_FUNCTIONS = {
     # outputs/report/: snapshots efimeros sin dimension temporal,
     # fuera del registro por diseno.
     ('finalize.py', 'save_sector_rankings'),
-    ('indices_intl.py', 'compute_indices_intl'),
 }
 
 

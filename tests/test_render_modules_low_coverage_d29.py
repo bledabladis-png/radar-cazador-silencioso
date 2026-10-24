@@ -5,9 +5,8 @@
   (render_matriz_regimen, render_wyckoff_sectorial, render_momentum_amplitud).
 - src/report/sectorial.py: 67% -> render_sector_concentration y
   render_sector_dispersion (ramas de iteracion + nota final).
-- src/report/synthesis.py: 66% -> render_indices_internacionales con
-  leaders, render_sintesis_senales con MIXED + dispersion
-  + divergencias.
+- src/report/synthesis.py: render_sintesis_senales con MIXED +
+  dispersion + divergencias.
 
 Los tests existentes (test_render_representatividad_lider,
 test_render_aclaraciones_d2c_d3_e1_a1, etc.) cubren el camino vacio.
@@ -24,10 +23,7 @@ from src.report.sectorial import (
     render_sector_concentration,
     render_sector_dispersion,
 )
-from src.report.synthesis import (
-    render_indices_internacionales,
-    render_sintesis_senales,
-)
+from src.report.synthesis import render_sintesis_senales
 
 
 # ============================================================
@@ -198,34 +194,6 @@ def test_sector_dispersion_nota_percentiles():
 # ============================================================
 # synthesis.render_indices_internacionales
 # ============================================================
-def test_indices_internacionales_con_phases_y_leaders():
-    phases = {"DAX 40": "MARKUP", "FTSE 100": "ACCUMULATION"}
-    leaders = {
-        "DAX 40": pd.DataFrame([{
-            "ticker": "SIE.DE", "rs": 1.05, "rs_mom": 0.03,
-            "flow_proxy_z": 1.5, "wls": 1.2, "wyckoff_phase": "MARKUP",
-        }]),
-    }
-    out = render_indices_internacionales(phases, leaders)
-    joined = "".join(out)
-    assert "DAX 40" in joined
-    assert "SIE.DE" in joined
-
-
-def test_indices_internacionales_sin_leaders():
-    phases = {"DAX 40": "MARKUP"}
-    out = render_indices_internacionales(phases, None)
-    joined = "".join(out)
-    assert "Ning" in joined or "ning" in joined.lower()
-
-
-def test_indices_internacionales_leaders_vacio():
-    """Leaders con DataFrame vacio -> skip, no crashea."""
-    leaders = {"DAX 40": pd.DataFrame()}
-    out = render_indices_internacionales({}, leaders)
-    assert isinstance(out, list)
-
-
 # ============================================================
 # synthesis.render_sintesis_senales
 # ============================================================

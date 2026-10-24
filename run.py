@@ -25,7 +25,6 @@ from src.pipeline.engines import compute_engines
 from src.pipeline.diagnostics import compute_diagnostics
 from src.pipeline.market_data import compute_market_data, _compute_data_quality
 from src.pipeline.mte_confirmation import compute_mte_confirmation
-from src.pipeline.indices_intl import compute_indices_intl
 from src.pipeline.validation_gate import run_validation_gate
 from src.pipeline.iae_section import compute_iae_section
 from src.pipeline.finalize import (
@@ -189,11 +188,6 @@ def main():
     cross_module_conflict = mc['cross_module_conflict']
     confirmation_data = mc['confirmation_data']
 
-    ii = compute_indices_intl(df_market, reference_date=reference_date, run_id=run_id, temporal_meta=temporal_meta)
-    index_phases = ii['index_phases']
-    index_leaders = ii['index_leaders']
-    index_struct_scores = ii.get('index_struct_scores', {})
-
     vg = run_validation_gate(
         wh_tables, pcr_data, darkpool_data, mte_result,
         tactical_scores, structural_scores,
@@ -299,7 +293,7 @@ def main():
                           shock_sensitivities=shock_sensitivities,
                           price_flow_divergences=price_flow_divergences,
                           dc_summary=dc_summary,
-                          real_liq_prev=real_liq_prev, index_leaders=index_leaders, index_phases=index_phases, index_struct_scores=index_struct_scores, sector_breadth_data=sector_breadth_df, sector_breadth_is_stale=sector_breadth_is_stale,
+                          real_liq_prev=real_liq_prev, sector_breadth_data=sector_breadth_df, sector_breadth_is_stale=sector_breadth_is_stale,
                           sector_breadth_stale_reason=sector_breadth_stale_reason, sector_concentration_data=sector_concentration_df, sector_flow_characteristics_data=sector_flow_characteristics_df, rs_internal_data=rs_internal_df, sector_rank_deltas_data=sector_rank_deltas_df, sector_regime_matrix_data=sector_regime_matrix_df, sector_wyckoff_distribution_data=sector_wyckoff_distribution_df, sector_breadth_momentum_data=sector_breadth_momentum_df,
                           evidence_matrix_data=evidence_matrix_df,
                           sector_dispersion_data=sector_dispersion_df,
