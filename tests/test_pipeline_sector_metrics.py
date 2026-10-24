@@ -45,52 +45,6 @@ def _df_fake(extra_cols=None):
 
 
 # =============================================================================
-# _compute_divergencia
-# =============================================================================
-
-def test_divergencia_df_stocks_none():
-    out = sm._compute_divergencia(None, pd.DataFrame(), _df_leader(), pd.DataFrame())
-    assert out is None
-
-
-def test_divergencia_leader_df_none():
-    out = sm._compute_divergencia(_df_stocks(), pd.DataFrame(), None, pd.DataFrame())
-    assert out is None
-
-
-def test_divergencia_ok(tmp_path, monkeypatch):
-    _setup_tmp(tmp_path, monkeypatch)
-    with patch("src.pipeline.sector_metrics.compute_sector_leader_divergence",
-               return_value=_df_fake({"ret_sector": 0.1})):
-        out = sm._compute_divergencia(_df_stocks(), pd.DataFrame(),
-                                       _df_leader(), pd.DataFrame())
-    assert out is not None
-    p = tmp_path / "outputs" / "history" / "sector_leader_divergence.csv"
-    assert p.exists()
-
-
-def test_divergencia_empty_result_no_persiste(tmp_path, monkeypatch):
-    _setup_tmp(tmp_path, monkeypatch)
-    with patch("src.pipeline.sector_metrics.compute_sector_leader_divergence",
-               return_value=pd.DataFrame()):
-        out = sm._compute_divergencia(_df_stocks(), pd.DataFrame(),
-                                       _df_leader(), pd.DataFrame())
-    assert out is not None
-    assert out.empty
-    p = tmp_path / "outputs" / "history" / "sector_leader_divergence.csv"
-    assert not p.exists()
-
-
-def test_divergencia_error_devuelve_none(tmp_path, monkeypatch):
-    _setup_tmp(tmp_path, monkeypatch)
-    with patch("src.pipeline.sector_metrics.compute_sector_leader_divergence",
-               side_effect=RuntimeError("x")):
-        out = sm._compute_divergencia(_df_stocks(), pd.DataFrame(),
-                                       _df_leader(), pd.DataFrame())
-    assert out is None
-
-
-# =============================================================================
 # _compute_wyckoff
 # =============================================================================
 
@@ -151,7 +105,7 @@ def test_rs_internal_pasa_benchmark_spy(tmp_path, monkeypatch):
 # =============================================================================
 
 def test_concentration_df_stocks_none():
-    assert sm._compute_concentration(None, pd.DataFrame(), _df_leader(),
+    assert sm._compute_concentration(None, pd.DataFrame(),
                                        pd.DataFrame()) is None
 
 
@@ -161,7 +115,7 @@ def test_concentration_no_depende_de_leader_df(tmp_path, monkeypatch):
     with patch("src.pipeline.sector_metrics.compute_sector_concentration",
                return_value=_df_fake()):
         out = sm._compute_concentration(_df_stocks(), pd.DataFrame(),
-                                          None, pd.DataFrame(),
+                                          pd.DataFrame(),
                                           reference_date=pd.Timestamp("2026-09-25"))
     assert out is not None
     p = tmp_path / "outputs" / "history" / "sector_concentration.csv"
@@ -178,7 +132,7 @@ def test_concentration_dropea_filas_sin_date(tmp_path, monkeypatch):
     with patch("src.pipeline.sector_metrics.compute_sector_concentration",
                return_value=fake):
         out = sm._compute_concentration(_df_stocks(), pd.DataFrame(),
-                                          None, pd.DataFrame(),
+                                          pd.DataFrame(),
                                           reference_date=pd.Timestamp("2026-09-25"))
     assert out is not None
     # Solo la fila con date valida
@@ -186,27 +140,3 @@ def test_concentration_dropea_filas_sin_date(tmp_path, monkeypatch):
 
 
 # =============================================================================
-# _compute_representativeness
-# =============================================================================
-
-def test_representativeness_leader_df_none():
-    assert sm._compute_representativeness(None) is None
-
-
-def test_representativeness_ok(tmp_path, monkeypatch):
-    _setup_tmp(tmp_path, monkeypatch)
-    with patch("src.pipeline.sector_metrics.compute_leader_representativeness",
-               return_value=_df_fake({"ticker": "AAA"})):
-        out = sm._compute_representativeness(_df_leader(),
-                                               reference_date=pd.Timestamp("2026-09-25"))
-    assert out is not None
-    p = tmp_path / "outputs" / "history" / "leader_representativeness.csv"
-    assert p.exists()
-
-
-def test_representativeness_error_devuelve_none(tmp_path, monkeypatch):
-    _setup_tmp(tmp_path, monkeypatch)
-    with patch("src.pipeline.sector_metrics.compute_leader_representativeness",
-               side_effect=RuntimeError("x")):
-        out = sm._compute_representativeness(_df_leader())
-    assert out is None

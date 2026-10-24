@@ -62,17 +62,3 @@ def test_wls_index_igual_a_formula_con_df_sintetico():
     # numerico. La suma de pesos = 0.95 significa que si todos los
     # z-scores fueran 1.0, el wls sin persistencia seria 0.95.
     assert out["wls"].notna().all()
-
-
-def test_nota_leaders_declara_suma():
-    """La nota en leaders.py debe declarar los pesos y su justificacion."""
-    from src.report import leaders as lr
-    import inspect
-    src = inspect.getsource(lr)
-    assert "0.35/0.25/0.25/0.10" in src
-    assert "flow 25% en vez de 30%" in src
-    # H14 (auditor 2026-10-16): declarar 0.95 y no comparabilidad.
-    assert "0.95" in src, "nota debe mencionar la suma 0.95"
-    assert "NO son comparables" in src, (
-        "nota debe declarar no comparabilidad con WLS sectorial"
-    )

@@ -240,28 +240,12 @@ SOURCES = [
         'notes': 'Matriz de regimen sectorial'
     },
     {
-        'source': 'Leader Representativeness',
-        'file': 'outputs/history/leader_representativeness.csv',
-        'date_cols': ['date'],
-        'frequency': 'daily',
-        'coverage_logic': 'sectorial',
-        'notes': 'Representatividad del lider'
-    },
-    {
         'source': 'Sector Wyckoff Distribution',
         'file': 'outputs/history/sector_wyckoff_distribution.csv',
         'date_cols': ['date'],
         'frequency': 'daily',
         'coverage_logic': 'sectorial',
         'notes': 'Distribucion Wyckoff sectorial'
-    },
-    {
-        'source': 'Sector Leader Divergence',
-        'file': 'outputs/history/sector_leader_divergence.csv',
-        'date_cols': ['date'],
-        'frequency': 'daily',
-        'coverage_logic': 'sectorial',
-        'notes': 'Divergencia sector-lideres'
     },
     {
         'source': 'RS Internal',

@@ -16,8 +16,8 @@ from src.pipeline.regimes import compute_all_regimes
 from src.pipeline.sectors_base import compute_sectors_base
 from src.pipeline.flows_primary import compute_flows_primary
 from src.pipeline.flows_secondary import compute_flows_secondary
-from src.pipeline.leaders import compute_leaders
-from src.report.sector_annotations import annotate_sector_titles_with_composition
+from src.pipeline.stocks_data import load_stocks_data
+from indicators.stock_metrics import compute_all_stock_metrics
 from src.pipeline.sector_metrics import compute_sector_metrics
 from src.pipeline.wyckoff_holdings import compute_wyckoff_holdings
 from src.pipeline.breadth_metrics import compute_breadth_metrics
@@ -133,20 +133,17 @@ def main():
     qqq_performance_data = fs['qqq_performance_data']
     qqq_nport_flow_data = fs['qqq_nport_flow_data']
 
-    ldr = compute_leaders(df_market, sector_results, reference_date=reference_date, run_id=run_id, temporal_meta=temporal_meta)
-    df_stocks = ldr['df_stocks']
-    df_stocks_effective_meta = ldr.get('df_stocks_effective_meta')
-    holdings_df = ldr['holdings_df']
-    leader_lines = ldr['leader_lines']
-    leader_df = ldr['leader_df']
-    full_metrics_df = ldr['full_metrics_df']
+    sd = load_stocks_data(reference_date=reference_date, run_id=run_id)
+    df_stocks = sd['df_stocks']
+    df_stocks_effective_meta = sd['df_stocks_effective_meta']
+    holdings_df = sd['holdings_df']
 
-    sm = compute_sector_metrics(df_stocks, holdings_df, leader_df, full_metrics_df, df_market, effective_meta=df_stocks_effective_meta, temporal_meta=temporal_meta)
-    sector_leader_divergence_df = sm['sector_leader_divergence_df']
+    full_metrics_df = compute_all_stock_metrics(df_market, df_stocks, holdings_df, temporal_meta=temporal_meta)
+
+    sm = compute_sector_metrics(df_stocks, holdings_df, full_metrics_df, df_market, effective_meta=df_stocks_effective_meta, temporal_meta=temporal_meta)
     sector_wyckoff_distribution_df = sm['sector_wyckoff_distribution_df']
     rs_internal_df = sm['rs_internal_df']
     sector_concentration_df = sm['sector_concentration_df']
-    leader_representativeness_df = sm['leader_representativeness_df']
 
     wh_tables = compute_wyckoff_holdings(df_stocks, holdings_df)
 
@@ -158,7 +155,7 @@ def main():
     sector_breadth_is_stale = bm.get('sector_breadth_is_stale', False)
     sector_breadth_stale_reason = bm.get('sector_breadth_stale_reason')
 
-    en = compute_engines(df_market, sector_results, sector_flow_rank, otros_flow_rank, leader_df, temporal_meta=temporal_meta)
+    en = compute_engines(df_market, sector_results, sector_flow_rank, otros_flow_rank, temporal_meta=temporal_meta)
     tactical_scores = en['tactical_scores']
     structural_scores = en['structural_scores']
     sector_persistence = en['sector_persistence']
@@ -271,19 +268,12 @@ def main():
         validation_gate_result=vg,
     )
 
-    # Anotar titulos sectoriales con composicion interna de holdings.
-    # Solo si hay leader_lines y el df de distribucion esta disponible.
-    if leader_lines is not None and sector_wyckoff_distribution_df is not None:
-        leader_lines = annotate_sector_titles_with_composition(
-            leader_lines, sector_wyckoff_distribution_df,
-        )
-
     generate_daily_report(macro_score, macro_regime, macro_conf,
                           financial_score, financial_regime, liq_conf,
                           vol_score, vol_regime, vol_conf,
                           sector_results,
                           sector_price_rank, sector_flow_rank, otros_price_rank, otros_flow_rank,
-                          leader_lines=leader_lines, breadth_values=breadth_values,
+                          breadth_values=breadth_values,
                             etf_primary_flow_data=etf_primary_flow_data,
                             blackrock_dax_flow=blackrock_dax_flow,
                             blackrock_isf_flow=blackrock_isf_flow,
@@ -310,7 +300,7 @@ def main():
                           price_flow_divergences=price_flow_divergences,
                           dc_summary=dc_summary,
                           real_liq_prev=real_liq_prev, index_leaders=index_leaders, index_phases=index_phases, index_struct_scores=index_struct_scores, sector_breadth_data=sector_breadth_df, sector_breadth_is_stale=sector_breadth_is_stale,
-                          sector_breadth_stale_reason=sector_breadth_stale_reason, sector_concentration_data=sector_concentration_df, sector_flow_characteristics_data=sector_flow_characteristics_df, rs_internal_data=rs_internal_df, sector_rank_deltas_data=sector_rank_deltas_df, sector_regime_matrix_data=sector_regime_matrix_df, leader_representativeness_data=leader_representativeness_df, sector_wyckoff_distribution_data=sector_wyckoff_distribution_df, sector_leader_divergence_data=sector_leader_divergence_df, sector_breadth_momentum_data=sector_breadth_momentum_df,
+                          sector_breadth_stale_reason=sector_breadth_stale_reason, sector_concentration_data=sector_concentration_df, sector_flow_characteristics_data=sector_flow_characteristics_df, rs_internal_data=rs_internal_df, sector_rank_deltas_data=sector_rank_deltas_df, sector_regime_matrix_data=sector_regime_matrix_df, sector_wyckoff_distribution_data=sector_wyckoff_distribution_df, sector_breadth_momentum_data=sector_breadth_momentum_df,
                           evidence_matrix_data=evidence_matrix_df,
                           sector_dispersion_data=sector_dispersion_df,
                           sector_correlation_summary_data=sector_corr_summary_df,

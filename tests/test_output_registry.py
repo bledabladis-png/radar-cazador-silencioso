@@ -9,7 +9,7 @@ from src.pipeline.output_registry import (
 
 
 def test_registry_count():
-    assert len(REGISTRY) == 26
+    assert len(REGISTRY) == 24
 
 
 def test_registry_unique_names():

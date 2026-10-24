@@ -95,7 +95,6 @@ def test_engines_contract_5_keys(tmp_path, monkeypatch):
             sector_results={"ranking": [("XLK", "Technology", 0.5, "")]},
             sector_flow_rank=[("XLK", 0.2)],
             otros_flow_rank=[],
-            leader_df=None,
         )
     assert set(out.keys()) == {
         "tactical_scores", "structural_scores", "sector_persistence"}

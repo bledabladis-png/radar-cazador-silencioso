@@ -50,13 +50,6 @@ def test_p8_nport_residual_note():
     assert "legados" in body.lower()
 
 
-def test_p1_wls_rs_note_in_source():
-    from indicators import stock_leader
-    src = inspect.getsource(stock_leader)
-    assert "la componente rs_z del WLS usa RS Mom" in src
-    assert "invariante a escala" in src
-
-
 def test_p2_coverage_note_in_source():
     from src.report import sectorial
     src = inspect.getsource(sectorial)

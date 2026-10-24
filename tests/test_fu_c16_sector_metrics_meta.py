@@ -32,56 +32,44 @@ def _minimal_df_stocks():
 def test_c16_uses_effective_meta_date_when_provided():
     captured = {}
 
-    def fake_conc(df_stocks, holdings_df, leader_df, full_metrics_df, reference_date=None, sc_path=None):
+    def fake_conc(df_stocks, holdings_df, full_metrics_df, reference_date=None, sc_path=None):
         captured['concentration_ref'] = reference_date
         return pd.DataFrame()
 
-    def fake_repr(leader_df, reference_date=None):
-        captured['repr_ref'] = reference_date
-        return pd.DataFrame()
 
     meta = {'date': pd.Timestamp('2026-09-14'), 'coverage': 0.98}
 
     with patch.object(sm_mod, '_compute_concentration', fake_conc), \
-         patch.object(sm_mod, '_compute_representativeness', fake_repr), \
-         patch.object(sm_mod, '_compute_divergencia', lambda *a, **k: None), \
          patch.object(sm_mod, '_compute_wyckoff', lambda *a, **k: None), \
          patch.object(sm_mod, '_compute_rs_internal', lambda *a, **k: None):
         sm_mod.compute_sector_metrics(
-            _minimal_df_stocks(), None, None, None, None,
+            _minimal_df_stocks(), None, None, None,
             effective_meta=meta,
         )
 
     assert captured['concentration_ref'] == pd.Timestamp('2026-09-14')
-    assert captured['repr_ref'] == pd.Timestamp('2026-09-14')
 
 
 def test_c16_falls_back_to_index_last_when_meta_absent():
     captured = {}
 
-    def fake_conc(df_stocks, holdings_df, leader_df, full_metrics_df, reference_date=None, sc_path=None):
+    def fake_conc(df_stocks, holdings_df, full_metrics_df, reference_date=None, sc_path=None):
         captured['concentration_ref'] = reference_date
         return pd.DataFrame()
 
-    def fake_repr(leader_df, reference_date=None):
-        captured['repr_ref'] = reference_date
-        return pd.DataFrame()
 
     df_stocks = _minimal_df_stocks()
     expected = df_stocks.index[-1]
 
     with patch.object(sm_mod, '_compute_concentration', fake_conc), \
-         patch.object(sm_mod, '_compute_representativeness', fake_repr), \
-         patch.object(sm_mod, '_compute_divergencia', lambda *a, **k: None), \
          patch.object(sm_mod, '_compute_wyckoff', lambda *a, **k: None), \
          patch.object(sm_mod, '_compute_rs_internal', lambda *a, **k: None):
         sm_mod.compute_sector_metrics(
-            df_stocks, None, None, None, None,
+            df_stocks, None, None, None,
             effective_meta=None,
         )
 
     assert captured['concentration_ref'] == expected
-    assert captured['repr_ref'] == expected
 
 
 def test_c16_signature_accepts_effective_meta():
@@ -93,4 +81,4 @@ def test_c16_signature_accepts_effective_meta():
 
 def test_c16_run_py_propagates_effective_meta():
     src = Path('run.py').read_text(encoding='utf-8-sig')
-    assert 'compute_sector_metrics(df_stocks, holdings_df, leader_df, full_metrics_df, df_market, effective_meta=df_stocks_effective_meta' in src
+    assert 'compute_sector_metrics(df_stocks, holdings_df, full_metrics_df, df_market, effective_meta=df_stocks_effective_meta' in src

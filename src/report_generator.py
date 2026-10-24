@@ -13,7 +13,6 @@ from src.report.sectorial import (
 from src.report.leaders import (
     render_momentum_sectores,
     render_momentum_otros,
-    render_acciones_seleccionadas,
 )
 from src.report.rankings import (
     render_ranking_sectorial_unificado,
@@ -37,9 +36,7 @@ from src.report.wyckoff_holdings import (
 )
 from src.report.sector_context import (
     render_matriz_regimen,
-    render_representatividad_lider,
     render_wyckoff_sectorial,
-    render_divergencia_sector_lideres,
     render_momentum_amplitud,
 )
 from src.report.flows_international import (
@@ -74,12 +71,12 @@ INDICATORS_VERSION = "2"
 def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score, financial_regime, liq_conf,
                           volatility_score, vol_regime, vol_conf, sector_results,
                           sector_price_rank, sector_flow_rank, otros_price_rank, otros_flow_rank,
-                          leader_lines=None, breadth_values=None, real_liquidity_regime=None, real_liquidity_conf=None,
+                          breadth_values=None, real_liquidity_regime=None, real_liquidity_conf=None,
                           pcr_data=None, darkpool_data=None, mte_result=None, confirmation_data=None,
                           tactical_scores=None, structural_scores=None,
                           sector_persistence=None, signal_agreements=None, signal_agreements_display=None,
                           cross_module_conflict=None, shock_sensitivities=None, price_flow_divergences=None,
-                          dc_summary="", all_signals=None, real_liq_score=None, real_liq_prev=None, index_leaders=None, index_phases=None, index_struct_scores=None, etf_primary_flow_data=None, cftc_position_flow_data=None, flow_synthesis=None, blackrock_dax_flow=None, blackrock_isf_flow=None, amundi_lyxi_flow=None, blackrock_iwm_flow=None, nport_position_change_data=None, qqq_performance_data=None, qqq_nport_flow_data=None, qqq_sec_flow=None, sector_breadth_data=None, sector_breadth_is_stale=False, sector_breadth_stale_reason=None, sector_concentration_data=None, sector_flow_characteristics_data=None, rs_internal_data=None, sector_rank_deltas_data=None, sector_regime_matrix_data=None, leader_representativeness_data=None, sector_wyckoff_distribution_data=None, sector_leader_divergence_data=None, sector_breadth_momentum_data=None, evidence_matrix_data=None, sector_dispersion_data=None, sector_correlation_summary_data=None, cross_asset_context_data=None, volatility_structure_data=None, data_quality_data=None, iae_section=None, output_path='outputs/report/reporte_diario.md',
+                          dc_summary="", all_signals=None, real_liq_score=None, real_liq_prev=None, index_leaders=None, index_phases=None, index_struct_scores=None, etf_primary_flow_data=None, cftc_position_flow_data=None, flow_synthesis=None, blackrock_dax_flow=None, blackrock_isf_flow=None, amundi_lyxi_flow=None, blackrock_iwm_flow=None, nport_position_change_data=None, qqq_performance_data=None, qqq_nport_flow_data=None, qqq_sec_flow=None, sector_breadth_data=None, sector_breadth_is_stale=False, sector_breadth_stale_reason=None, sector_concentration_data=None, sector_flow_characteristics_data=None, rs_internal_data=None, sector_rank_deltas_data=None, sector_regime_matrix_data=None, sector_wyckoff_distribution_data=None, sector_breadth_momentum_data=None, evidence_matrix_data=None, sector_dispersion_data=None, sector_correlation_summary_data=None, cross_asset_context_data=None, volatility_structure_data=None, data_quality_data=None, iae_section=None, output_path='outputs/report/reporte_diario.md',
                           reference_date=None, provenance=None,
                           wyckoff_holdings_data=None):
     lines = []
@@ -155,11 +152,9 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
     ))
     # C2 - contexto sectorial interno
     lines.extend(render_matriz_regimen(sector_regime_matrix_data))
-    lines.extend(render_representatividad_lider(leader_representativeness_data))
     lines.extend(render_wyckoff_sectorial(sector_wyckoff_distribution_data))
     lines.extend(render_wyckoff_holdings_acc(wyckoff_holdings_data))
     lines.extend(render_wyckoff_holdings_dist(wyckoff_holdings_data))
-    lines.extend(render_divergencia_sector_lideres(sector_leader_divergence_data))
     lines.extend(render_momentum_amplitud(sector_breadth_momentum_data))
     lines.extend(render_liderazgo_interno(rs_internal_data))
     lines.extend(render_rotacion_reciente(sector_rank_deltas_data))
@@ -174,7 +169,6 @@ def generate_daily_report(macro_score, macro_regime, macro_conf, liquidity_score
     # =========================================================================
     # C3 - LIDERES POR SECTOR
     # =========================================================================
-    lines.extend(render_acciones_seleccionadas(leader_lines))
 
     # =========================================================================
     # C4 - CONFIRMACION

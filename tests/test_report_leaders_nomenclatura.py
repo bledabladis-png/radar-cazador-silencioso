@@ -95,20 +95,6 @@ def test_h1_rankings_renombra_struct_score_a_struct_wyckoff():
     assert "struct_score interno" in body
 
 
-def test_h4_nota_trazabilidad_slpm():
-    from src.report.leaders import render_acciones_seleccionadas
-    out = render_acciones_seleccionadas(["fake_line\n"])
-    body = "".join(out)
-    assert "Nota de trazabilidad" in body
-    assert "NO han pasado validacion estructural de SLPM" in body
-    assert "stock_leader" in body
-
-
-# ============================================================
-# H3 (2026-10-21): nota de sesgo de seleccion en Liderazgo
-# relativo interno (top-5 por sector).
-# ============================================================
-
 def test_h3_liderazgo_relativo_nota_sesgo_seleccion():
     import pandas as pd
     from src.report.market_context import render_liderazgo_interno

@@ -67,7 +67,7 @@ def test_compute_concentration_corre_sin_lideres(tmp_path):
     })
     target = tmp_path / 'sector_concentration.csv'
     result = _compute_concentration(
-        df_stocks, holdings, pd.DataFrame(), metrics,
+        df_stocks, holdings, metrics,
         reference_date=df_stocks.index[-1],
         sc_path=target,
     )

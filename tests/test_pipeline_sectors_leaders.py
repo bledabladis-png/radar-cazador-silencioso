@@ -14,7 +14,6 @@ import sys
 from pathlib import Path
 from unittest.mock import patch
 
-import numpy as np
 import pandas as pd
 import pytest
 
@@ -23,7 +22,6 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from src.pipeline.sectors_base import compute_sectors_base
-from src.pipeline.leaders import compute_leaders
 
 
 def _df_market_min():
@@ -273,77 +271,3 @@ def test_sectors_base_cas_fallo_to_csv_no_pierde_filas(tmp_path, monkeypatch):
 # =============================================================================
 # leaders.py
 # =============================================================================
-
-def test_leaders_contract_6_keys(tmp_path, monkeypatch):
-    monkeypatch.chdir(tmp_path)
-    with patch("src.pipeline.stocks_data.download_stock_prices", return_value=None):
-        out = compute_leaders(pd.DataFrame(), sector_results={"ranking": []})
-    # El contrato real tiene 6 keys (docstring menciona 5)
-    assert set(out.keys()) == {
-        "df_stocks", "df_stocks_effective_meta", "holdings_df",
-        "leader_lines", "leader_df", "full_metrics_df"}
-
-
-def test_leaders_sin_df_stocks_devuelve_todo_none(tmp_path, monkeypatch):
-    monkeypatch.chdir(tmp_path)
-    with patch("src.pipeline.stocks_data.download_stock_prices", return_value=None):
-        out = compute_leaders(pd.DataFrame(), sector_results={"ranking": []})
-    assert out["df_stocks"] is None
-    assert out["leader_lines"] is None
-    assert out["leader_df"] is None
-    assert out["full_metrics_df"] is None
-
-
-def test_leaders_holiday_mode_cuando_cobertura_baja(tmp_path, monkeypatch):
-    """df_stocks con < 50% Close validos en la ultima fila -> HOLIDAY_MODE."""
-    monkeypatch.chdir(tmp_path)
-    # leaders lee data/etf_holdings.csv en ruta relativa
-    (tmp_path / "data").mkdir()
-    (tmp_path / "data" / "etf_holdings.csv").write_text(
-        "etf,ticker,weight\nXLK,AAA,10.0\n", encoding="utf-8")
-    idx = pd.date_range("2026-09-20", periods=5, freq="D")
-    cols = pd.MultiIndex.from_tuples(
-        [("Close", "AAA"), ("Close", "BBB"), ("Close", "CCC"), ("Close", "DDD")],
-        names=["field", "ticker"],
-    )
-    df = pd.DataFrame(np.ones((5, 4)), index=idx, columns=cols)
-    df.iloc[-1, :] = np.nan  # 0/4 validos -> cobertura 0.0
-
-    fake_eff = {
-        "status": "OK",
-        "date": idx[-1],
-        "requested_date": idx[-1],
-        "lag_days": 0,
-        "coverage": 1.0,
-        "n_observed": 4,
-        "n_eligible": 4,
-    }
-    with patch("src.pipeline.stocks_data.download_stock_prices", return_value=df), \
-         patch("src.pipeline.stocks_data.resolve_effective_date", return_value=fake_eff):
-        out = compute_leaders(pd.DataFrame(), sector_results={"ranking": []})
-    assert out["df_stocks"] is None
-    assert out["leader_lines"] is None
-    assert out["leader_df"] is None
-
-
-def test_leaders_insufficient_coverage_omite_df(tmp_path, monkeypatch):
-    """resolve_effective_date con status != OK -> df_stocks = None."""
-    monkeypatch.chdir(tmp_path)
-    idx = pd.date_range("2026-09-20", periods=3, freq="D")
-    cols = pd.MultiIndex.from_tuples([("Close", "AAA")], names=["field", "ticker"])
-    df = pd.DataFrame([1.0, 1.0, 1.0], index=idx, columns=cols)
-
-    fake_eff = {
-        "status": "INSUFFICIENT_COVERAGE",
-        "date": None,
-        "requested_date": idx[-1],
-        "lag_days": 0,
-        "coverage": 0.5,
-        "n_observed": 1,
-        "n_eligible": 2,
-    }
-    with patch("src.pipeline.stocks_data.download_stock_prices", return_value=df), \
-         patch("src.pipeline.stocks_data.resolve_effective_date", return_value=fake_eff):
-        out = compute_leaders(pd.DataFrame(), sector_results={"ranking": []})
-    assert out["df_stocks"] is None
-    assert out["leader_lines"] is None

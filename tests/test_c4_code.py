@@ -20,7 +20,6 @@ from src.utils import _observation_date_from_df
 from src.pipeline.finalize import save_regime_history
 from indicators.sector_dispersion import compute_sector_dispersion
 from indicators.sector_rank_history import update_rank_history
-from indicators.leader_representativeness import compute_leader_representativeness
 
 
 # ============================================================
@@ -188,35 +187,6 @@ def test_sector_rank_history_sin_date_valueerror(tmp_path):
 # leader_representativeness
 # ============================================================
 
-def test_leader_representativeness_sin_reference_date_valueerror(tmp_path):
-    with pytest.raises(ValueError, match='reference_date'):
-        compute_leader_representativeness(pd.DataFrame(), str(tmp_path / 'c.csv'))
-
-
-def test_leader_representativeness_con_reference_date(tmp_path):
-    # Construir un sector_concentration.csv minimo
-    conc = tmp_path / 'sector_concentration.csv'
-    pd.DataFrame([{
-        'date': '2026-09-11', 'sector': 'XLK',
-        'rs_median': 1.0, 'momentum_median': 0.01,
-        'flow_median': 0.5, 'wls_median': 0.3,
-        'wyckoff_median': 0.5,
-        'n_valid_rs': 20, 'n_valid_momentum': 20,
-    }]).to_csv(conc, index=False)
-
-    leader_df = pd.DataFrame([{
-        'sector': 'XLK', 'ticker': 'AAPL',
-        'rs_mom': 1.1, 'flow_proxy_z': 0.6, 'wls': 0.4,
-        'sector_rank_pct': 0.9,
-    }])
-
-    df = compute_leader_representativeness(
-        leader_df, str(conc), reference_date='2026-09-11')
-
-    if not df.empty:
-        assert pd.Timestamp(df.iloc[0]['date']) == pd.Timestamp('2026-09-11')
-
-
 # ============================================================
 # T-C4-code-10: writer nunca usa execution date como observation date
 # ============================================================
@@ -255,7 +225,6 @@ def test_t_c4_code_9_writers_b2_sin_now():
         'indicators/sector_correlation.py',
         'indicators/sector_dispersion.py',
         'indicators/sector_regime_matrix.py',
-        'indicators/leader_representativeness.py',
         'indicators/rs_internal.py',
         'indicators/sector_concentration.py',
         'indicators/sector_leader_divergence.py',

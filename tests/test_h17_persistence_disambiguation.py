@@ -42,12 +42,3 @@ def test_etf_flows_documenta_pers_5d_20d():
     assert "Pers 5d / Pers 20d" in out
     assert "pos / (pos+neg)" in out or "fraccion de la ventana" in out.lower()
     assert "Structural Ranking" in out
-
-
-def test_stock_leader_documenta_pers_por_ticker():
-    """La tabla de lideres debe aclarar Pers 5d/10d/20d."""
-    from pathlib import Path
-    r = Path(__file__).resolve().parent.parent / "indicators" / "stock_leader.py"
-    src = r.read_text(encoding="utf-8")
-    assert "H17" in src
-    assert "retorno POSITIVO" in src or "retorno positivo" in src.lower()

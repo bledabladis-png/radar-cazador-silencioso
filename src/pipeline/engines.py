@@ -83,7 +83,7 @@ def _compute_persistence_and_save(df_market, temporal_meta=None):
     return sector_persistence
 
 
-def compute_engines(df_market, sector_results, sector_flow_rank, otros_flow_rank, leader_df, temporal_meta=None):
+def compute_engines(df_market, sector_results, sector_flow_rank, otros_flow_rank, temporal_meta=None):
     """Ejecuta tactical/structural + persistence.
 
     Returns:

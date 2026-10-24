@@ -28,14 +28,12 @@ from indicators import data_quality as dq
 TARGETS = {
     "CFTC Position Flow": ("rows", "net_position"),
     "FINRA Dark Pool": ("rows", "ratio"),
-    "Leader Representativeness": ("sectorial", None),
     "Macro FRED": ("rows", "macro_score"),
     "RS Internal": ("sectorial", None),
     "SEC N-PORT (posiciones)": ("rows", "POSITION_CHANGE"),
     "SEC N-PORT-P QQQ (flujos)": ("rows", "net_flow"),
     "Sector Correlation Summary": ("from_row", None),
     "Sector Dispersion": ("from_row", None),
-    "Sector Leader Divergence": ("sectorial", None),
     "Sector Rank History": ("sectorial", None),
     "Volatility Structure": ("rows", "vix_level"),
 }

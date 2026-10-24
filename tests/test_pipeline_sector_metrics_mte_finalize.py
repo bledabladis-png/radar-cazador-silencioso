@@ -34,27 +34,22 @@ def _setup_tmp(tmp_path, monkeypatch):
     (tmp_path / "outputs" / "report").mkdir(parents=True)
 
 
-def test_sector_metrics_contract_5_keys(tmp_path, monkeypatch):
+def test_sector_metrics_contract_3_keys(tmp_path, monkeypatch):
     _setup_tmp(tmp_path, monkeypatch)
-    with patch("src.pipeline.sector_metrics.compute_sector_leader_divergence",
-               return_value=pd.DataFrame()), \
-         patch("src.pipeline.sector_metrics.compute_sector_wyckoff_distribution",
+    with patch("src.pipeline.sector_metrics.compute_sector_wyckoff_distribution",
                return_value=pd.DataFrame()), \
          patch("src.pipeline.sector_metrics.compute_rs_internal",
                return_value=pd.DataFrame()), \
          patch("src.pipeline.sector_metrics.compute_sector_concentration",
-               return_value=pd.DataFrame()), \
-         patch("src.pipeline.sector_metrics.compute_leader_representativeness",
                return_value=pd.DataFrame()):
         out = sm.compute_sector_metrics(
             df_stocks=pd.DataFrame(), holdings_df=pd.DataFrame(),
-            leader_df=pd.DataFrame(), full_metrics_df=pd.DataFrame(),
+            full_metrics_df=pd.DataFrame(),
             df_market=pd.DataFrame(),
         )
     assert set(out.keys()) == {
-        "sector_leader_divergence_df", "sector_wyckoff_distribution_df",
-        "rs_internal_df", "sector_concentration_df",
-        "leader_representativeness_df"}
+        "sector_wyckoff_distribution_df",
+        "rs_internal_df", "sector_concentration_df"}
 
 
 def test_sector_metrics_usa_ref_date_de_df_stocks(tmp_path, monkeypatch):
@@ -63,22 +58,18 @@ def test_sector_metrics_usa_ref_date_de_df_stocks(tmp_path, monkeypatch):
     idx = pd.date_range("2026-09-25", periods=1, freq="D")
     df_stocks = pd.DataFrame([1.0], index=idx)
     captured = {}
-    def _fake_repr(leader_df, reference_date=None):
+    def _fake_conc(df_stocks_arg, holdings_df_arg, full_metrics_df_arg, reference_date=None, sc_path=None):
         captured["ref"] = reference_date
         return pd.DataFrame()
-    with patch("src.pipeline.sector_metrics.compute_sector_leader_divergence",
-               return_value=pd.DataFrame()), \
-         patch("src.pipeline.sector_metrics.compute_sector_wyckoff_distribution",
+    with patch("src.pipeline.sector_metrics.compute_sector_wyckoff_distribution",
                return_value=pd.DataFrame()), \
          patch("src.pipeline.sector_metrics.compute_rs_internal",
                return_value=pd.DataFrame()), \
-         patch("src.pipeline.sector_metrics.compute_sector_concentration",
-               return_value=pd.DataFrame()), \
-         patch("src.pipeline.sector_metrics._compute_representativeness",
-               side_effect=_fake_repr):
+         patch("src.pipeline.sector_metrics._compute_concentration",
+               side_effect=_fake_conc):
         sm.compute_sector_metrics(
             df_stocks=df_stocks, holdings_df=pd.DataFrame(),
-            leader_df=pd.DataFrame(), full_metrics_df=pd.DataFrame(),
+            full_metrics_df=pd.DataFrame(),
             df_market=pd.DataFrame(),
         )
     assert captured["ref"] == idx[-1]
@@ -86,22 +77,18 @@ def test_sector_metrics_usa_ref_date_de_df_stocks(tmp_path, monkeypatch):
 
 def test_sector_metrics_degrada_si_sub_bloque_lanza(tmp_path, monkeypatch):
     _setup_tmp(tmp_path, monkeypatch)
-    with patch("src.pipeline.sector_metrics.compute_sector_leader_divergence",
+    with patch("src.pipeline.sector_metrics.compute_sector_wyckoff_distribution",
                side_effect=RuntimeError("x")), \
-         patch("src.pipeline.sector_metrics.compute_sector_wyckoff_distribution",
-               return_value=pd.DataFrame()), \
          patch("src.pipeline.sector_metrics.compute_rs_internal",
                return_value=pd.DataFrame()), \
          patch("src.pipeline.sector_metrics.compute_sector_concentration",
-               return_value=pd.DataFrame()), \
-         patch("src.pipeline.sector_metrics.compute_leader_representativeness",
                return_value=pd.DataFrame()):
         out = sm.compute_sector_metrics(
             df_stocks=pd.DataFrame(), holdings_df=pd.DataFrame(),
-            leader_df=pd.DataFrame(), full_metrics_df=pd.DataFrame(),
+            full_metrics_df=pd.DataFrame(),
             df_market=pd.DataFrame(),
         )
-    assert out["sector_leader_divergence_df"] is None
+    assert out["sector_wyckoff_distribution_df"] is None
 
 
 def _fake_to_csv_that_fails():
@@ -118,20 +105,6 @@ def _ne_df():
     """df_stocks NO vacio para pasar el guard de los helpers."""
     return pd.DataFrame({"x": [1.0]})
 
-
-def test_sm_sld_fallo_to_csv_no_pierde_filas(tmp_path, monkeypatch):
-    _setup_tmp(tmp_path, monkeypatch)
-    csv = tmp_path / "outputs" / "history" / "sector_leader_divergence.csv"
-    pd.DataFrame([{"date": "2026-09-24", "sector": "XLK", "v": 0.1}]).to_csv(csv, index=False)
-    filas_antes = pd.read_csv(csv).shape[0]
-    fake_df = pd.DataFrame([{"date": "2026-09-25", "sector": "XLK", "v": 0.2}])
-    with patch.object(pd.DataFrame, "to_csv", _fake_to_csv_that_fails()), \
-         patch("src.pipeline.sector_metrics.compute_sector_leader_divergence",
-               return_value=fake_df):
-        sm._compute_divergencia(_ne_df(), pd.DataFrame(), _ne_df(), pd.DataFrame())
-    df = pd.read_csv(csv)
-    assert df.shape[0] == filas_antes, f"perdio filas: {filas_antes} -> {df.shape[0]}"
-    assert df.iloc[0]["date"] == "2026-09-24"
 
 
 def test_sm_wy_fallo_to_csv_no_pierde_filas(tmp_path, monkeypatch):
@@ -178,20 +151,6 @@ def test_sm_sc_fallo_to_csv_no_pierde_filas(tmp_path, monkeypatch):
     assert df.shape[0] == filas_antes, f"perdio filas: {filas_antes} -> {df.shape[0]}"
     assert df.iloc[0]["date"] == "2026-09-24"
 
-
-def test_sm_lr_fallo_to_csv_no_pierde_filas(tmp_path, monkeypatch):
-    _setup_tmp(tmp_path, monkeypatch)
-    csv = tmp_path / "outputs" / "history" / "leader_representativeness.csv"
-    pd.DataFrame([{"date": "2026-09-24", "sector": "XLK", "ticker": "AAPL", "v": 0.1}]).to_csv(csv, index=False)
-    filas_antes = pd.read_csv(csv).shape[0]
-    fake_df = pd.DataFrame([{"date": "2026-09-25", "sector": "XLK", "ticker": "AAPL", "v": 0.2}])
-    with patch.object(pd.DataFrame, "to_csv", _fake_to_csv_that_fails()), \
-         patch("src.pipeline.sector_metrics.compute_leader_representativeness",
-               return_value=fake_df):
-        sm._compute_representativeness(_ne_df())
-    df = pd.read_csv(csv)
-    assert df.shape[0] == filas_antes, f"perdio filas: {filas_antes} -> {df.shape[0]}"
-    assert df.iloc[0]["date"] == "2026-09-24"
 
 
 # =============================================================================
