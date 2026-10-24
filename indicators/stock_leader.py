@@ -1,7 +1,8 @@
 import os
 import pandas as pd
 import numpy as np
-from indicators.wyckoff_v1 import wyckoff_score, classify_wyckoff_phase, detect_spring, detect_sos
+from indicators.wyckoff_v1 import wyckoff_score, detect_spring, detect_sos
+from indicators.wyckoff_orchestrator import classify_phase
 from src.utils import robust_zscore, get_col
 from src.report.helpers import _fmt_num
 from config.settings import TOP_N_CANDIDATES, TOP_N_LEADERS
@@ -135,7 +136,7 @@ def compute_stock_metrics(df_market, df_stocks, etf_ticker, stock_list, temporal
         if len(ticker_df) >= 60:
             wyckoff_series, struct_score, tact_score, t_n, c_n, v_n, e_n = wyckoff_score(ticker_df, ticker)
             wyckoff_sc = wyckoff_series.iloc[-1]
-            wyckoff_ph = classify_wyckoff_phase(ticker_df, ticker)
+            wyckoff_ph = classify_phase(ticker_df, ticker).phase
             score_median = wyckoff_series.rolling(10).median().iloc[-1]
             # 2026-10-02: filtrar NaN antes de calcular mad. Mismo patron
             # que options.py y que robust_intra (2f956ed). Con NaN en la
