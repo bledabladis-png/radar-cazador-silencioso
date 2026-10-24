@@ -846,3 +846,88 @@ def classify_distribution(df, ticker, **kwargs) -> ClassifiedBreak:
     as_of = df.index[-1]
     return classify_distribution_at(df, ticker, as_of, **kwargs)
 
+
+def walk_distribution(df, ticker, *, start=None, end=None,
+                      progress=False, **kwargs):
+    """Recorre bar a bar entre start y end, emitendo una fila por transicion.
+
+    Emite solo cuando cambia classification, structural_state, range_id,
+    range_type, trend_direction, sow_status o coherence_error respecto a
+    la fila anterior. Primera fila siempre se emite.
+
+    Coste: O(n_bars x coste_classify). Lento por diseno (~130s/ticker real).
+    Aceptable para tests de estabilidad temporal, no para produccion diaria.
+
+    Devuelve DataFrame con columnas:
+      date, classification, structural_state, range_id, range_type,
+      trend_direction, sow_status, coherence_error, is_first, is_transition
+    """
+    if start is None:
+        start = df.index[0]
+    if end is None:
+        end = df.index[-1]
+    if start not in df.index or end not in df.index:
+        raise ValueError("start o end no en df.index")
+    if end < start:
+        raise ValueError("end < start")
+
+    start_pos = df.index.get_loc(start)
+    end_pos = df.index.get_loc(end)
+
+    _STATE_FIELDS = (
+        "classification", "structural_state", "range_id", "range_type",
+        "trend_direction", "sow_status", "coherence_error",
+    )
+
+    rows = []
+    prev_state = None
+
+    for i, pos in enumerate(range(start_pos, end_pos + 1)):
+        bar_date = df.index[pos]
+        try:
+            r = classify_distribution_at(df, ticker, bar_date, **kwargs)
+        except Exception as exc:
+            rows.append({
+                "date": bar_date,
+                "classification": f"__EXCEPTION__:{type(exc).__name__}",
+                "structural_state": "NOT_EVALUABLE",
+                "range_id": None, "range_type": None,
+                "trend_direction": None, "sow_status": None,
+                "coherence_error": str(exc),
+                "is_first": False,
+                "is_transition": True,
+            })
+            if progress and (i + 1) % 100 == 0:
+                print(f"  walk {ticker}: {i+1} bars procesados")
+            continue
+
+        state = tuple(getattr(r, f) for f in _STATE_FIELDS)
+        is_first = prev_state is None
+        is_transition = state != prev_state
+
+        if is_transition:
+            rows.append({
+                "date": bar_date,
+                "classification": r.classification,
+                "structural_state": r.structural_state,
+                "range_id": r.range_id,
+                "range_type": r.range_type,
+                "trend_direction": r.trend_direction,
+                "sow_status": r.sow_status,
+                "coherence_error": r.coherence_error,
+                "is_first": is_first,
+                "is_transition": is_transition,
+            })
+
+        prev_state = state
+        if progress and (i + 1) % 100 == 0:
+            print(f"  walk {ticker}: {i+1} bars procesados")
+
+    if not rows:
+        return pd.DataFrame(columns=[
+            "date", "classification", "structural_state", "range_id",
+            "range_type", "trend_direction", "sow_status",
+            "coherence_error", "is_first", "is_transition",
+        ])
+    return pd.DataFrame(rows)
+
