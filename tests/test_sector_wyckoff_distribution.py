@@ -28,9 +28,7 @@ def _make_holdings(tickers, etf="XLK"):
 
 def _patch_chain(monkeypatch, phase="ACCUMULATION"):
     from indicators import sector_wyckoff_distribution as swd
-    monkeypatch.setattr(swd, "build_ticker_df", lambda *a, **k: pd.DataFrame())
-    monkeypatch.setattr(swd, "classify_wyckoff_phase",
-                        lambda *a, **k: phase)
+    monkeypatch.setattr(swd, "_safe_classify", lambda *a, **k: phase)
 
 
 def test_coverage_y_pct_calculados_por_la_funcion(monkeypatch):

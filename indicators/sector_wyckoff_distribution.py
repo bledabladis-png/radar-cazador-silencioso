@@ -1,18 +1,45 @@
 # -*- coding: utf-8 -*-
 """
-Distribución de fases Wyckoff por sector v1.0
-Consume classify_wyckoff_phase de indicators/wyckoff.py.
+Distribucion de fases Wyckoff por sector v2.0
+
+Consume classify_phase de indicators/wyckoff_orchestrator.py (cascada
+nueva: BC/SC -> AR -> Range -> SOW/SOS + fase derivada por vigencia).
+
+Sustituye classify_wyckoff_phase v1 (que detectaba 0/327 DISTRIBUTION).
+
+Fases validas: ACCUMULATION, MARKUP, RANGE, DISTRIBUTION, MARKDOWN, CONFLICT.
+INSUFFICIENT_DATA se cuenta como n_insufficient (no es una fase).
+
 No alimenta motores, scores, pesos ni State Machine.
 """
 import pandas as pd
 import numpy as np
 from src.utils import get_col, _observation_date_from_df
-from indicators.wyckoff_v1 import build_ticker_df, classify_wyckoff_phase
+from indicators.wyckoff_orchestrator import classify_phase
 
 from config.tickers import MARKET_TICKERS
 
 SECTORS = MARKET_TICKERS['sectors']
-VALID_PHASES = ['ACCUMULATION','MARKUP','RANGE','DISTRIBUTION','MARKDOWN']
+VALID_PHASES = [
+    'ACCUMULATION', 'ACCUMULATION_FORMING', 'MARKUP',
+    'RANGE',
+    'DISTRIBUTION', 'DISTRIBUTION_FORMING', 'MARKDOWN',
+    'CONFLICT',
+]
+
+
+def _safe_classify(df_stocks, ticker):
+    """Wrapper: devuelve string de fase o None si no evaluable.
+
+    Separado para permitir mocking en tests y centralizar el manejo de
+    excepciones del orquestador.
+    """
+    try:
+        result = classify_phase(df_stocks, ticker)
+    except (KeyError, ValueError, TypeError, IndexError, AttributeError):
+        return None
+    return result.phase
+
 
 def compute_sector_wyckoff_distribution(df_stocks, holdings_df):
     rows = []
@@ -34,13 +61,10 @@ def compute_sector_wyckoff_distribution(df_stocks, holdings_df):
                 n_insufficient += 1
                 continue
 
-            try:
-                ticker_df = build_ticker_df(df_stocks, ticker)
-                phase = classify_wyckoff_phase(ticker_df, ticker)
-            except (KeyError, ValueError, TypeError, IndexError, AttributeError):
+            phase = _safe_classify(df_stocks, ticker)
+            if phase is None or phase == "INSUFFICIENT_DATA":
                 n_insufficient += 1
                 continue
-
             if phase in VALID_PHASES:
                 phase_counts[phase] += 1
                 n_valid += 1

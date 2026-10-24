@@ -62,8 +62,8 @@ def render_wyckoff_sectorial(sector_wyckoff_distribution_data):
     out = []
     if sector_wyckoff_distribution_data is not None and not sector_wyckoff_distribution_data.empty:
         out.append("## Distribución Wyckoff sectorial\n")
-        out.append("| Sector | Acc | Markup | Range | Dist | Markdown | N | Cob Wyckoff |\n")
-        out.append("|--------|-----|--------|-------|------|----------|---|-----------|\n")
+        out.append("| Sector | AccF | Acc | Markup | Range | DistF | Dist | Markdown | Conflict | N | Cob Wyckoff |\n")
+        out.append("|--------|------|-----|--------|-------|-------|------|----------|----------|---|-----------|\n")
         # Mostrar solo la última fecha para evitar duplicados históricos
         df_wy = sector_wyckoff_distribution_data.copy()
         if 'date' in df_wy.columns and df_wy['date'].notna().any():
@@ -76,7 +76,13 @@ def render_wyckoff_sectorial(sector_wyckoff_distribution_data):
             if pd.notna(_cov) and _cov < WYCKOFF_MIN_COVERAGE_PCT:
                 _cov_label += " [COB BAJA]"
                 _hay_baja = True
-            out.append(f"| {row['sector']} | {row['pct_accumulation']:.0f}% | {row['pct_markup']:.0f}% | {row['pct_range']:.0f}% | {row['pct_distribution']:.0f}% | {row['pct_markdown']:.0f}% | {row['n_valid_wyckoff']} | {_cov_label} |\n")
+            _conflict_pct = row.get('pct_conflict', float('nan'))
+            _conflict_str = f"{_conflict_pct:.0f}%" if pd.notna(_conflict_pct) else "-"
+            _accf_pct = row.get('pct_accumulation_forming', float('nan'))
+            _distf_pct = row.get('pct_distribution_forming', float('nan'))
+            _accf_str = f"{_accf_pct:.0f}%" if pd.notna(_accf_pct) else "-"
+            _distf_str = f"{_distf_pct:.0f}%" if pd.notna(_distf_pct) else "-"
+            out.append(f"| {row['sector']} | {_accf_str} | {row['pct_accumulation']:.0f}% | {row['pct_markup']:.0f}% | {row['pct_range']:.0f}% | {_distf_str} | {row['pct_distribution']:.0f}% | {row['pct_markdown']:.0f}% | {_conflict_str} | {row['n_valid_wyckoff']} | {_cov_label} |\n")
         out.append("\n")
         if _hay_baja:
             out.append(f"*[COB BAJA] = cobertura de componentes < "
@@ -85,11 +91,18 @@ def render_wyckoff_sectorial(sector_wyckoff_distribution_data):
                        "con datos suficientes (>=60 sesiones). Una cobertura "
                        "baja indica que la distribucion no es representativa "
                        "del sector completo. En esos casos la fase sectorial "
-                       "del ranking puede diferir de la fase dominante aqui.")
+                       "del ranking puede diferir de la fase dominante aqui.*\n\n")
     # H6 (2026-10-21): nota P2.2 debe salir siempre, no solo si hay
     # COB BAJA. La fase sectorial del ranking se decide sobre el ETF,
     # no sobre estos componentes. Sin esta nota, un sector MARKUP con
     # mayoria de componentes RANGE parece contradictorio.
+    out.append("*AccF / DistF = fase en formacion: rango identificado con contexto "
+               "de acumulacion o distribucion, pero sin SOS/SOW confirmado todavia. "
+               "Es señal temprana, no confirmacion.*\n\n")
+    out.append("*Conflict = el activo esta simultaneamente dentro de un rango de "
+               "distribucion y de uno de acumulacion (precio dentro de ambos). "
+               "Es un estado honesto: dos estructuras compitiendo. No se "
+               "elige una sin mas evidencia.*\n\n")
     out.append("*La fase sectorial (Rankings) "
                "se decide sobre el ETF, no sobre estos componentes. "
                "Un sector en fase MARKUP puede tener mayoria de "

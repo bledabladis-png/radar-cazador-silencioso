@@ -778,11 +778,15 @@ def classify_distribution_at(df, ticker, as_of, *,
         )
 
     # sow.status in NOT_OBSERVED / REJECTED / EXPIRED / NOT_EVALUABLE
-    # UTAD_PENDING fue descartado por pre-registro 61 (A3 falló: 26 vs 3).
-    # Los detectores UT/Spring quedan como evidencia pasiva, sin cambiar fase.
+    # Si el rango tiene contexto de distribucion (trend previo UP), la
+    # distribucion esta FORMANDOSE (aun sin SOW confirmado).
+    if rng.range_type == "DISTRIBUTION_CANDIDATE":
+        cls = "DISTRIBUTION_FORMING"
+    else:
+        cls = "RANGE_ACTIVE_NO_BREAK"
     return ClassifiedBreak(
         ticker=ticker, as_of=as_of, range_id=rng.range_id,
-        classification="RANGE_ACTIVE_NO_BREAK",
+        classification=cls,
         structural_state="RANGE_ACTIVE",
         break_direction=None,
         range_type=rng.range_type,
@@ -790,6 +794,10 @@ def classify_distribution_at(df, ticker, as_of, *,
         sow_status=sow.status,
         coherence_error=None,
         evidence=evidence,
+        range_active_at=rng.range_active_at,
+        range_support=rng.support,
+        range_resistance=rng.resistance,
+        range_tol_abs=rng.tol_abs,
     )
 
 
