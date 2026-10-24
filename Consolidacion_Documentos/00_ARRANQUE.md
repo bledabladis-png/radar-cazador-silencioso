@@ -113,8 +113,17 @@ post-histeresis (STAGFLATION no persiste si IPS<=0.15); (c)
 `futures_status` del state lee `temporal_meta.FUTURE_SETTLEMENT`
 (no literal).
 
-**Wyckoff v1.8 en produccion.** Legacy retirado 2026-10-10. Detalle
-en `04_HISTORICO.md` y `docs/auditoria/wyckoff/`.
+**Wyckoff holdings-based en produccion (2026-10-24, sesion 3).**
+La clasificacion de fase se hace directamente sobre los tickers que
+componen cada sector/indice, no sobre el ETF. Modulos:
+`wyckoff_event.py` (dataclasses), `wyckoff_distribution.py`,
+`wyckoff_accumulation.py`, `wyckoff_orchestrator.py` (classify_phase
++ regla simetrica de vigencia), `wyckoff_v1.py` (features y detectores
+primitivos). Cableado: `sector_wyckoff_distribution.py` (agregado por
+sector) + `wyckoff_holdings_report.py` (6 CSVs descargables).
+`classify_wyckoff_phase` (legacy) retirado. SLPM, lideres por sector
+y fase ETF del ranking retirados. Detalle en `04_HISTORICO.md` y
+`docs/auditoria/wyckoff/62-63`.
 Fixes 2026-10-22 (commit `1cc8387a`): B5 spring/SOS con `min_periods=`
 `EVENT_WINDOW` + patron H7 (`dropna().rolling().reindex()`); B3
 `max_age_m` default 30 (contrato v1.9). WONT_FIX razonados: B2 (P7 en
@@ -122,7 +131,7 @@ Fixes 2026-10-22 (commit `1cc8387a`): B5 spring/SOS con `min_periods=`
 Close/0 es contrato v1.8). Ver `REP-AUDIT-20261022-WYCKOFF-P7-B4-B5-B3`.
 
 **Contrato de persistencia de outputs (2026-10-11).** Registro +
-wrapper + verificador + test AST, **26 writers** (pcr_history anadido 2026-10-22, commit `9a2bddcc`; 6 outputs wyckoff holdings anadidos 2026-10-24, commit C2.1). `02_ARQUITECTURA.md` seccion 4.
+wrapper + verificador + test AST, **24 writers** (pcr_history anadido 2026-10-22, commit `9a2bddcc`; 6 outputs wyckoff holdings anadidos 2026-10-24, commit C2.1; sector_leader_divergence y leader_representativeness retirados 2026-10-24, commit C4.3). `02_ARQUITECTURA.md` seccion 4.
 
 **CI tests (2026-10-17).** `.github/workflows/ci_tests.yml` corre la
 suite completa en cada push a main (paths-ignore: `data/`, `outputs/`),
@@ -214,78 +223,111 @@ estado.
 A1-A5, A6, B, C, 6, 7, 8, 9, F: CERRADOS. Detalle tematico en
 `04_HISTORICO.md`; estado por frente en `ESTADO_SISTEMA.md`.
 
-### 4.2. Frente Wyckoff (SOW cerrado, sistema nuevo cableado)
+### 4.2. Frente Wyckoff (sistema holdings, sesion 3 cerrada)
 
-**Sesion 2026-10-24.** Dos bloques de trabajo:
+**Sesion 2026-10-24 (sesion 3). Plan 63 ejecutado completo.**
 
-**Bloque A - Cierre SOW universal + apertura bear-confirmation.**
-Cierre `SOW-V6` -> WONT_FIX tras 7 experimentos. Senal real vs placebo
-en R3000 (3423 tickers, lift +0.123 vs -0.077, 21.5 sd) pero no
-universal (4/9 folds positivos, IC95 entre anos [-0.058, +0.303] cruza
-0). Ningun gate probado cumple criterio pre-registrado.
-`SOW-BEAR-CONFIRMATION` abierto, requiere contrato v1.10 firmado por
-auditor externo. Ver `docs/auditoria/wyckoff/51-56`.
+Bloque A (cerrado): `SOW-V6` -> WONT_FIX (7 experimentos, senal real vs
+placebo pero no universal). `SOW-BEAR-CONFIRMATION` abierto IN_PROGRESS,
+requiere contrato v1.10 firmado por auditor externo antes de implementar.
 
-**Bloque B - Reconstruccion del sistema Wyckoff.**
-Decision: dejar de usar ETFs sectoriales e indices como fuente de
-fases Wyckoff. Construir cascadas por stock con deteccion de
-acumulacion Y distribucion, orquestadas, cableadas al pipeline.
+Bloque B (cerrado): sistema Wyckoff completo por holdings. Decision
+arquitectonica: dejar de usar ETFs sectoriales e indices como fuente de
+fase. Pasar los holdings directamente por el detector.
 
-Resultado:
-- 15 detectores en codigo: BC, AR, SOW, SC, SOS, ST (x2), UT/UTAD,
-  Spring, PSY, PS, mSOW, mSOS, LPSY, LPS.
-- Orquestador con regla simetrica de vigencia: un rango esta vigente
-  mientras el precio no lo ha roto por ningun lado. Produce fase
-  actual (DIST/MARKDOWN/ACC/MARKUP + FORMING) y fase historica
-  (event_phase) separadas.
-- Cableado a `sector_wyckoff_distribution.py` (migrado de
-  `classify_wyckoff_phase` a `classify_phase`).
-- Reporte sectorial con columnas AccF/Acc/Markup/Range/DistF/Dist/
-  Markdown/Conflict + N + Cob.
-- Titulos sectoriales anotados con composicion interna: `## Sector:
-  XLK (MARKUP)` -> `*Composicion interna (22 componentes): 3 Markup
-  (14%), 8 Range (36%), 9 DistF (41%)...*`.
+**Modulos del sistema (indicators/):**
+- `wyckoff_event.py` - dataclasses comunes.
+- `wyckoff_distribution.py` - cascada distribucion (BC, AR, SOW, ST,
+  PSY, mSOW, LPSY, PS, mSOS, LPS, UT/UTAD).
+- `wyckoff_accumulation.py` - cascada acumulacion (SC, AR, SOS, ST,
+  Spring).
+- `wyckoff_orchestrator.py` - `classify_phase` (fase actual + event_phase,
+  regla simetrica de vigencia, FORMING, CONFLICT).
+- `wyckoff_v1.py` - features (`wyckoff_score`, `_atr_normalized`,
+  `_trend_component`, `_volume_z`, `_effort_vs_result`,
+  `wyckoff_stability`) y detectores primitivos (`detect_spring`,
+  `detect_sos`, `detect_sow`, `detect_sow_v2`, `build_ticker_df`).
+  `classify_wyckoff_phase` y familia retirados.
+- `sector_wyckoff_distribution.py` - agregado por sector (pct_*, count_*).
+- `wyckoff_holdings_report.py` - 6 tablas descargables (usa_sector_acc,
+  usa_sector_dist, usa_index_acc, usa_index_dist, eu_index_acc,
+  eu_index_dist).
+- `stock_metrics.py` - metricas per-ticker + WLS (extraido de
+  stock_leader.py).
 
-Estado en produccion (327 stocks, ultimo bar 2026-10-22):
-219 RANGE, 53 DIST_FORMING, 17 DIST, 17 MARKDOWN, 13 MARKUP,
-7 ACC_FORMING, 1 CONFLICT. Agregado holdings: 157 RANGE,
-35 DIST_FORMING, 12 DIST, 12 MARKDOWN, 8 MARKUP, 6 ACC_FORMING.
+**Pipeline (src/pipeline/):**
+- `stocks_data.py` - `load_stocks_data` (df_stocks + effective_meta +
+  holdings_df + HOLIDAY_MODE).
+- `wyckoff_holdings.py` - wrapper de persistencia de los 6 CSVs.
+- `sector_metrics.py` - 3 sub-outputs (wyckoff, rs_internal,
+  concentration). Sin divergencia/representativeness.
+- `engines.py` - tactical/structural/persistence. Sin leader_df.
+- `validation_gate.py` - 10 checks. 3 sustituidos por checks de
+  holdings ("Wyckoff holdings CSVs", "Cobertura holdings", "Sanity
+  holdings"). Firma: `wyckoff_holdings_data` en vez de
+  `slpm_v12_data`.
+
+**Reporte (src/report/):**
+- `wyckoff_holdings.py` - 2 secciones nuevas ("Tickers en acumulacion"
+  y "Tickers en distribucion"), cada una con 3 sub-tablas (USA sectores,
+  USA indices, EU indices).
+- Sin SLPM, sin acciones seleccionadas, sin indices internacionales.
+
+**Retirado en sesion 3:**
+- SLPM completo: `slpm_v12.py`, `state_machine.py`, `state_transition.py`,
+  `src/pipeline/slpm.py`, `src/report/slpm.py`, `SLPM_WEIGHTS`,
+  `SLPM_EXPECTED_LEADERS`, `_forzar_lideres_slpm`.
+- Lideres por sector: `stock_leader.py`, `leaders.py`,
+  `leader_representativeness.py`, `sector_leader_divergence.py`,
+  `sector_annotations.py`, `render_acciones_seleccionadas`.
+- Fase ETF del ranking: tupla de 3 elementos. `wyckoff_phase` fuera
+  de `sector_rankings.csv`. `struct_scores` fuera del return.
+- `classify_wyckoff_phase` y familia de `wyckoff_v1.py`.
+
+**Cobertura (2026-10-24):**
+- USA sectores: 11 sectores, top-20 por weight. Peso top-20: XLB 90.1%,
+  XLC 97.7%, XLE 99.0%, XLF 72.8%, XLI 57.2%, XLK 79.6%, XLP 86.7%,
+  XLRE 86.7%, XLU 83.1%, XLV 78.9%, XLY 84.5%.
+- USA indices: SPY (49.9%), QQQ (66.8%), DIA (85.0%). IWM excluido
+  (top-20 = 6.2% de 1977 holdings).
+- EU indices: FEZ 66.3%, DAXEX 78.4%, ISF.L 60.8%, LYXI 93.2%.
 
 **Pre-registros fallidos (no ocultos):**
 - `60_current_phase_rule_v1.md`: regla de vigencia unidireccional
-  fallo C1 (18.6% < 20%) en holdout S&P 500. No se ajusto. Reemplazada
-  por regla simetrica (definicion, no umbral).
+  fallo C1 (18.6% < 20%) en holdout S&P 500. Reemplazada por regla
+  simetrica (definicion, no umbral).
 - `61_utad_spring_pending_v1.md`: UTAD_PENDING/SPRING_PENDING fallo
-  A3 (26 vs 3, ratio 8.67x > 5x por asimetria natural). No se ajusto.
+  A3 (26 vs 3, ratio 8.67x > 5x). No se ajusto.
 
 **Limitaciones documentadas:**
-- PSY/PS no disparan con umbrales actuales (0/50 en smoke). Deuda de
-  calibracion, no se recalibro post-hoc.
-- `sector_regime.py` (rankings) sigue usando `classify_wyckoff_phase`
-  legacy para el titulo del sector. La anotacion de composicion
-  mitiga. Migrar es decision de producto pendiente.
-- Evidencia pasiva (mSOW, mSOS, LPSY, LPS, ST) esta en `evidence`
-  pero no se renderiza en reporte.
+- PSY/PS no disparan con umbrales actuales (0/50). Deuda de calibracion.
+- `current_phase_basis` no va al CSV del reporte (solo al CSV descargable).
+- `ACCUMULATION=0` en produccion: estado transitorio por diseno.
+- Validation Gate no reproducible standalone.
+- TWST en CONFLICT (ambiguedad real, documentar en 62).
+- Cobertura USA 231/504 holdings. Ampliacion futura con protocolo de
+  6 pasos.
 
 **Bloqueos externos:**
 - `SOW-BEAR-CONFIRMATION`: contrato v1.10 pendiente de auditor.
 - `WYCKOFF-5BX`: esperando `n_confirmed_H20_complete >= 550` (~2027).
 
-Documentacion completa: `docs/auditoria/wyckoff/62_sistema_completo_2026-10-24.md`.
-
+Documentacion completa: `docs/auditoria/wyckoff/62_sistema_completo_2026-10-24.md`
+(parcialmente obsoleto, corregir en C6) y `63_plan_sistema_holdings_2026-10-24.md`.
 
 ### 4.3. Pendientes vivos
 
 - **H5.3**: cron 20-nov-2026 06:17 UTC. Sin accion antes.
 - **C2 (920)**: bloqueado por auditor externo.
-- **5 tests skipped** (2 network en `test_freshness.py`, 3 fase 5b
-  en `test_wyckoff_v1_contract.py`). Diseno, no deuda.
+- **2 tests skipped** (2 network en `test_freshness.py`). Los 3
+  de fase 5b en `test_wyckoff_v1_contract.py` se borraron en C5.2
+  al retirar `classify_wyckoff_phase`.
 - **Verificar scheduled target 2026-10-22: COMPLETADO 2026-10-23.**
   Run `39884468711` (slot 22-10 23:17 UTC, delay 2h14m, `run-system:
   success`). 4/4 fixes criticos confirmados en CI: liquidez NEUTRAL
   90% no N/A, sector_correlation_summary receipt OK, pcr_history
-  receipt OK, cboe_vix3m 0 no-bursatiles. 20 writers, 18 OK + 2
-  no-OK esperados. Contrato temporal integro (`data_quality.date` y
+  receipt OK, cboe_vix3m 0 no-bursatiles. En el momento
+  del check eran 20 writers (hoy 24 tras C2.1+C4.3). Contrato temporal integro (`data_quality.date` y
   `receipt_audit.target` = 2026-10-22). Ver
   `REP-AUDIT-20261023-SCHEDULED-VERIFY` en REGISTRO.
 - **Wyckoff B2/B4 WONT_FIX razonados (2026-10-22).** B2 (P7 en
