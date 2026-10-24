@@ -101,3 +101,6 @@ class ClassifiedBreak:
     evidence: dict[str, Any] = field(default_factory=dict)
     range_active_at: pd.Timestamp | None = None
     resolution_event_date: pd.Timestamp | None = None
+    range_support: float | None = None
+    range_resistance: float | None = None
+    range_tol_abs: float | None = None

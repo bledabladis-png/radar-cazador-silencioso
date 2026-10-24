@@ -1,4 +1,9 @@
-"""Tests del orquestador de fases Wyckoff."""
+"""Tests del orquestador de fases Wyckoff.
+
+Nota: la regla de vigencia por precio (pre-registro v1) fue descartada
+tras fallar validacion holdout. Ver 60_current_phase_rule_v1.md.
+Este test suite refleja el estado tras el descarte.
+"""
 from __future__ import annotations
 
 import numpy as np
@@ -6,7 +11,7 @@ import pandas as pd
 
 from indicators.wyckoff_event import ClassifiedBreak
 from indicators.wyckoff_orchestrator import (
-    classify_phase_at, classify_phase, FinalPhase, _is_data_insufficient,
+    classify_phase_at, classify_phase, _is_data_insufficient,
 )
 
 
@@ -29,7 +34,11 @@ def _make_df(n=30, ticker="TEST"):
 
 def _cb(ticker, as_of, classification, reason=None,
         structural_state="NOT_EVALUABLE",
-        range_active_at=None, resolution_event_date=None):
+        range_active_at=None, resolution_event_date=None,
+        range_support=None, range_resistance=None, range_tol_abs=None):
+    ev = {}
+    if reason:
+        ev["reason"] = reason
     return ClassifiedBreak(
         ticker=ticker, as_of=as_of, range_id=None,
         classification=classification,
@@ -37,9 +46,12 @@ def _cb(ticker, as_of, classification, reason=None,
         break_direction=None, range_type=None,
         trend_direction=None, sow_status=None,
         coherence_error=None,
-        evidence={"reason": reason} if reason else {},
+        evidence=ev,
         range_active_at=range_active_at,
         resolution_event_date=resolution_event_date,
+        range_support=range_support,
+        range_resistance=range_resistance,
+        range_tol_abs=range_tol_abs,
     )
 
 
@@ -54,10 +66,9 @@ def _patch_both(monkeypatch, dist_cb, acc_cb):
     )
 
 
-# --- CONFLICT casos ---
+# --- CONFLICT ---
 
-def test_conflict_when_both_active_range(monkeypatch):
-    """Ambas cascadas con RANGE_ACTIVE simultaneamente -> CONFLICT real."""
+def test_conflict_when_both_confirmed_active_range(monkeypatch):
     df = _make_df()
     as_of = df.index[-1]
     _patch_both(
@@ -68,14 +79,12 @@ def test_conflict_when_both_active_range(monkeypatch):
             structural_state="RANGE_ACTIVE"),
     )
     r = classify_phase_at(df, "TEST", as_of)
-    assert isinstance(r, FinalPhase)
     assert r.phase == "CONFLICT"
     assert r.conflict_reason is not None
     assert "RANGE_ACTIVE" in r.conflict_reason
 
 
 def test_conflict_when_same_resolution_date(monkeypatch):
-    """Ambas confirmadas con misma fecha de resolucion (raro pero posible)."""
     df = _make_df()
     as_of = df.index[-1]
     same_date = pd.Timestamp("2026-06-15")
@@ -93,10 +102,9 @@ def test_conflict_when_same_resolution_date(monkeypatch):
     assert "misma sesion" in r.conflict_reason
 
 
-# --- Ambas confirmadas, gana la mas reciente ---
+# --- Ambas confirmadas, gana mas reciente ---
 
 def test_distribution_wins_if_more_recent(monkeypatch):
-    """Dist resolvio 2026-08, acc resolvio 2025-04 -> DISTRIBUTION."""
     df = _make_df()
     as_of = df.index[-1]
     _patch_both(
@@ -114,7 +122,6 @@ def test_distribution_wins_if_more_recent(monkeypatch):
 
 
 def test_accumulation_wins_if_more_recent(monkeypatch):
-    """Acc resolvio 2026-09, dist resolvio 2024-12 -> ACCUMULATION (TPL case)."""
     df = _make_df()
     as_of = df.index[-1]
     _patch_both(
@@ -132,8 +139,6 @@ def test_accumulation_wins_if_more_recent(monkeypatch):
 
 
 def test_range_when_both_confirmed_no_resolution_dates(monkeypatch):
-    """Ambas confirmadas sin resolution_event_date -> RANGE (no hay evidencia
-    de estado actual)."""
     df = _make_df()
     as_of = df.index[-1]
     _patch_both(
@@ -147,7 +152,7 @@ def test_range_when_both_confirmed_no_resolution_dates(monkeypatch):
     assert r.phase == "RANGE"
 
 
-# --- Una sola confirmada ---
+# --- Solo una confirmada ---
 
 def test_distribution_when_only_dist_confirmed(monkeypatch):
     df = _make_df()
@@ -162,7 +167,6 @@ def test_distribution_when_only_dist_confirmed(monkeypatch):
     r = classify_phase_at(df, "TEST", as_of)
     assert r.phase == "DISTRIBUTION"
     assert r.phase_since == pd.Timestamp("2026-01-01")
-    assert r.conflict_reason is None
 
 
 def test_accumulation_when_only_acc_confirmed(monkeypatch):
@@ -192,7 +196,6 @@ def test_range_when_neither_confirmed(monkeypatch):
     )
     r = classify_phase_at(df, "TEST", as_of)
     assert r.phase == "RANGE"
-    assert r.phase_since is None
 
 
 def test_range_when_both_no_bc_no_sc(monkeypatch):

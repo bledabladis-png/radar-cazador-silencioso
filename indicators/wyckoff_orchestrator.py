@@ -121,8 +121,19 @@ def _decide(dist: ClassifiedBreak, acc: ClassifiedBreak) -> tuple[WyckoffPhase, 
 def classify_phase_at(df, ticker, as_of, *,
                       dist_kwargs=None, acc_kwargs=None) -> FinalPhase:
     """Ejecuta ambas cascadas hasta as_of y emite la fase final."""
+    from src.utils import get_col as _get_col
     dist = classify_distribution_at(df, ticker, as_of, **(dist_kwargs or {}))
     acc = classify_accumulation_at(df, ticker, as_of, **(acc_kwargs or {}))
+
+    # Añadir current_price al evidence (para la regla de vigencia)
+    try:
+        close = _get_col(df, ticker, "Close")
+        current_price = float(close.loc[as_of]) if as_of in close.index else None
+    except (KeyError, ValueError):
+        current_price = None
+    if current_price is not None:
+        dist.evidence["current_price"] = current_price
+        acc.evidence["current_price"] = current_price
 
     phase, conflict = _decide(dist, acc)
 

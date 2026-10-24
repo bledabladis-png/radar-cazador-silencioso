@@ -651,6 +651,9 @@ def classify_accumulation_at(df, ticker, as_of, *,
             evidence=evidence,
             range_active_at=rng.range_active_at,
             resolution_event_date=res_date,
+            range_support=rng.support,
+            range_resistance=rng.resistance,
+            range_tol_abs=rng.tol_abs,
         )
 
     return ClassifiedBreak(
