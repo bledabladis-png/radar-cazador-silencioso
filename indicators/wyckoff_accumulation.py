@@ -535,8 +535,8 @@ def detect_sos_in_range(df, ticker, range_event, *, confirm_closes=None,
     )
 
 
-def _enrich_acc_evidence(evidence, sub, ticker, sos, rng):
-    """Muta evidence in-place añadiendo mSOS y (si aplica) LPS.
+def _enrich_acc_evidence(evidence, sub, ticker, sos, rng, sc_event=None):
+    """Muta evidence in-place añadiendo mSOS, ST y (si aplica) LPS.
     No cambia classification, solo evidencia pasiva."""
     from indicators.wyckoff_distribution import detect_msos, detect_lps
     try:
@@ -545,6 +545,13 @@ def _enrich_acc_evidence(evidence, sub, ticker, sos, rng):
                             "event_date": str(msos.event_date) if msos.event_date else None}
     except Exception as exc:
         evidence["msos"] = {"status": "ERROR", "error": str(exc)}
+    if sc_event is not None and sc_event.status == "CONFIRMED":
+        try:
+            st = detect_st_acc(sub, ticker, sc_event)
+            evidence["st_acc"] = {"status": st.status,
+                                  "event_date": str(st.event_date) if st.event_date else None}
+        except Exception as exc:
+            evidence["st_acc"] = {"status": "ERROR", "error": str(exc)}
     if sos is not None and sos.status == "CONFIRMED" and rng is not None:
         try:
             lps = detect_lps(sub, ticker, sos, rng)
@@ -631,8 +638,8 @@ def classify_accumulation_at(df, ticker, as_of, *,
         "sos_event_date": str(sos.event_date) if sos.event_date else None,
         "sos_evidence": sos.evidence,
     }
-    # Evidencia pasiva: mSOS siempre, LPS si sos confirmado.
-    _enrich_acc_evidence(evidence, sub, ticker, sos, rng)
+    # Evidencia pasiva: mSOS siempre, ST si SC confirmado, LPS si SOS confirmado.
+    _enrich_acc_evidence(evidence, sub, ticker, sos, rng, sc_event=sc)
 
     if sos.status == "CANDIDATE":
         return ClassifiedBreak(
