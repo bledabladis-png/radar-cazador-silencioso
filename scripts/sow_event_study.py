@@ -88,7 +88,10 @@ def lift_within(events_df):
 
 
 def block_bootstrap_by_date(events_df, B=N_BOOTSTRAP, block=BLOCK_SESSIONS, seed=42):
-    """Bootstrap por bloques de sesiones (fechas). Captura dependencia temporal."""
+    """DEPRECATED. Bootstrap por fecha con bloques de sesiones. Sesga el IC
+    porque subrepresenta los anos con menos senal (lift bajo). Se mantiene
+    por compatibilidad pero el IC oficial usa bootstrap_by_year.
+    """
     if events_df.empty:
         return None, None
     unique_dates = np.array(sorted(events_df["date"].unique()))
@@ -114,6 +117,28 @@ def block_bootstrap_by_date(events_df, B=N_BOOTSTRAP, block=BLOCK_SESSIONS, seed
     if not lifts:
         return None, None
     return float(np.percentile(lifts, 2.5)), float(np.percentile(lifts, 97.5))
+
+
+def bootstrap_by_year(folds_list, B=N_BOOTSTRAP, seed=44):
+    """Bootstrap entre anos. 9 unidades (2017..2025). Captura la incertidumbre
+    sobre la media entre regimenes, que es lo que el criterio pre-registrado
+    pide (IC95_lower > 0 sobre el agregado de folds).
+
+    Si el IC cruza cero, la media entre anos no es distinguible de 0, aunque
+    la senal intra-ano sea fuerte.
+    """
+    lifts = [r["lift"] for r in folds_list if r.get("lift") is not None]
+    if len(lifts) < 3:
+        return None, None
+    lifts_arr = np.array(lifts, dtype=float)
+    rng = np.random.default_rng(seed)
+    means = []
+    for _ in range(B):
+        samp = rng.choice(lifts_arr, size=len(lifts_arr), replace=True)
+        means.append(float(samp.mean()))
+    if not means:
+        return None, None
+    return float(np.percentile(means, 2.5)), float(np.percentile(means, 97.5))
 
 
 def placebo_lift_series(per_ticker_data, h, n_shifts=N_PLACEBO_SHIFTS, seed=43):
@@ -264,10 +289,21 @@ def main() -> int:
     print(f"placebo lifts: n={len(placebo_lifts)} mean={placebo_mean} sd={placebo_sd} ({time.time()-t0:.1f}s)")
 
     # CI de v2 con block bootstrap sobre el agregado
-    print("\n== Bootstrap block por fecha (v2 agregado) ==")
+    print("\n== Bootstrap entre anos (v2 agregado, 9 unidades) ==")
     t0 = time.time()
-    ci_l_v2, ci_u_v2 = block_bootstrap_by_date(df_v2)
-    print(f"CI95 v2: [{ci_l_v2}, {ci_u_v2}] ({time.time()-t0:.1f}s)")
+    ci_l_v2, ci_u_v2 = bootstrap_by_year(valid_v2)
+    print(f"CI95 v2 entre anos: [{ci_l_v2}, {ci_u_v2}] ({time.time()-t0:.1f}s)")
+    t_lo = None
+    t_hi = None
+    lifts_v2_list = [r["lift"] for r in valid_v2 if r.get("lift") is not None]
+    if len(lifts_v2_list) >= 3:
+        import scipy.stats as st
+        n = len(lifts_v2_list)
+        m = float(np.mean(lifts_v2_list))
+        se = float(np.std(lifts_v2_list, ddof=1) / np.sqrt(n))
+        t_crit = st.t.ppf(0.975, df=n-1)
+        t_lo, t_hi = m - t_crit*se, m + t_crit*se
+    print(f"CI95 v2 t-interval: [{t_lo}, {t_hi}]")
 
     verdict = classify_v2(mean_v2, ci_l_v2, mean_v2, mean_v1, folds_pos_v2, placebo_mean, placebo_sd)
 
