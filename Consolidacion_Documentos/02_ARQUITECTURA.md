@@ -30,25 +30,29 @@ Verificada el 2026-09-28 en la auditoria interna A0.
     +-- regimes/                    (8 ficheros)
     |   +-- financial_conditions.py, liquidity.py, macro_regime.py, sector_regime.py
     |   +-- structural_engine.py, tactical_engine.py, volatility_regime.py, __init__.py
-    +-- indicators/                 (50 ficheros)
+    +-- indicators/                 (ficheros del sistema holdings-based, 2026-10-24)
     |   +-- breadth.py, breadth_core.py, breadth_equity.py
     |   +-- commodity_market_correlation.py, credit.py
     |   +-- cross_asset.py, cross_asset_context.py
     |   +-- darkpool.py, darkpool_history.py, darkpool_io.py, darkpool_scoring.py
     |   +-- data_quality.py, evidence_matrix.py, fls.py
-    |   +-- index_leaders.py, index_phase.py
-    |   +-- leader_representativeness.py, macro_fundamental.py, momentum.py
+    |   +-- macro_fundamental.py, momentum.py
     |   +-- options.py, options_metrics.py, persistence.py
     |   +-- price_flow_divergence.py, rs_internal.py
     |   +-- sector_breadth.py, sector_breadth_momentum.py, sector_concentration.py
     |   +-- sector_correlation.py, sector_dispersion.py, sector_flow_characteristics.py
-    |   +-- sector_leader_divergence.py, sector_rank_history.py, sector_regime_matrix.py
+    |   +-- sector_rank_history.py, sector_regime_matrix.py
     |   +-- sector_wyckoff_distribution.py, signal_agreement.py
-    |   +-- slpm_v12.py, state_machine.py, state_transition.py
-    |   +-- stock_leader.py, trend.py
+    |   +-- stock_metrics.py  (metricas per-ticker + WLS; extraido 2026-10-24)
+    |   +-- trend.py
     |   +-- volatility.py, volatility_structure.py, vol_metrics.py
+    |   +-- wyckoff_event.py            (dataclasses comunes)
+    |   +-- wyckoff_distribution.py     (cascada distribucion)
+    |   +-- wyckoff_accumulation.py     (cascada acumulacion)
+    |   +-- wyckoff_orchestrator.py     (classify_phase + regla simetrica)
+    |   +-- wyckoff_holdings_report.py  (6 tablas descargables)
     |   +-- wyckoff.py      (legacy v4.2, sin consumidores productivos desde 2026-10-08)
-    |   +-- wyckoff_v1.py   (v1.8 core, productivo desde 2026-10-08)
+    |   +-- wyckoff_v1.py   (features + detectores primitivos; classify_wyckoff_phase retirado 2026-10-24)
     |   +-- __init__.py
     |   +-- mte/ (paquete: __init__ + engine + state + scoring + decision)
     +-- src/
@@ -59,18 +63,22 @@ Verificada el 2026-09-28 en la auditoria interna A0.
     |   +-- market_calendar.py, market_hours.py
     |   +-- report_generator.py, stock_data_loader.py, utils.py, __init__.py
     |   +-- external/               (2 ficheros: lse_scraper_loader.py + __init__.py)
-    |   +-- report/                 (20 ficheros)
+    |   +-- report/                 (ficheros post sesion 3)
     |   |   +-- helpers.py, header.py, freshness.py, alerts.py, breadth.py
-    |   |   +-- sectorial.py, leaders.py, rankings.py, slpm.py, sentiment.py
+    |   |   +-- sectorial.py, leaders.py, rankings.py, sentiment.py
     |   |   +-- etf_flows.py, market_context.py, sector_context.py
     |   |   +-- flows_international.py, volatility_mte.py, confirmation.py
-    |   |   +-- darkpool.py, synthesis.py, iae.py, __init__.py
-    |   +-- pipeline/               (18 ficheros: 17 modulos + __init__)
+    |   |   +-- darkpool.py, synthesis.py, iae.py
+    |   |   +-- wyckoff_holdings.py (2 secciones holdings; nuevo 2026-10-24)
+    |   |   +-- __init__.py
+    |   +-- pipeline/               (ficheros post sesion 3)
     |   |   +-- data_load.py, regimes.py, sectors_base.py
     |   |   +-- flows_primary.py, flows_secondary.py
-    |   |   +-- leaders.py, sector_metrics.py, breadth_metrics.py
-    |   |   +-- engines.py, slpm.py, diagnostics.py, market_data.py
-    |   |   +-- mte_confirmation.py, indices_intl.py
+    |   |   +-- stocks_data.py     (carga df_stocks + holdings; extraido 2026-10-24)
+    |   |   +-- sector_metrics.py, breadth_metrics.py
+    |   |   +-- engines.py, diagnostics.py, market_data.py
+    |   |   +-- mte_confirmation.py
+    |   |   +-- wyckoff_holdings.py (wrapper 6 CSVs; nuevo 2026-10-24)
     |   |   +-- validation_gate.py, finalize.py, iae_section.py
     |   +-- temporal_contracts/     (12 ficheros: 9 contratos + base + consolidate)
     |   |   +-- base.py, registry.py, _common.py, consolidate.py, __init__.py
@@ -103,7 +111,7 @@ Verificada el 2026-09-28 en la auditoria interna A0.
     |   +-- auditoria/              (parcialmente conservada: iae/evidence + iae/golden en uso)
     +-- outputs/
     |   +-- history/                (versionado)
-    |   +-- state/                  (versionado: mte_state.json, slpm_state.json, liquidity_state.json)
+    |   +-- state/                  (versionado: mte_state.json, liquidity_state.json)
     |   +-- report/                 (NO versionado)
     |   +-- audit/                  (NO versionado)
     +-- .github/workflows/          (9 workflows)
@@ -197,9 +205,9 @@ Tres capas independientes que NO deben confundirse:
 
 **Structural Score (3 componentes):** RS multi-ventana / Flow structure / Persistence. Pesos en `STRUCTURAL_WEIGHTS`.
 
-**SLPM v1.2:** Leader Breadth + LIS + Effective Breadth. State Machine: CONFIRMED | EMERGING | STRUCTURAL_DECAY | LOST | UNRESOLVED | TACTICAL_CORRECTION (declarado pero inalcanzable, WONT FIX razonado A3.3-05). Con n=0, los campos se muestran como N/D.
+**Sistema Wyckoff holdings-based (2026-10-24, sesion 3):** clasificacion de fase directamente sobre los tickers de cada sector/indice, orquestada por `wyckoff_orchestrator.classify_phase`. Estados actuales: DISTRIBUTION, MARKDOWN, ACCUMULATION, MARKUP, DISTRIBUTION_FORMING, ACCUMULATION_FORMING, RANGE, CONFLICT, INSUFFICIENT_DATA. Regla simetrica de vigencia: un rango esta vigente mientras el precio no lo haya roto por ningun lado. Detalle en `docs/auditoria/wyckoff/62-63`.
 
-**Effective Breadth - discontinuidad en coverage=0.5** (F2-07, 2026-10-12): la formula es `effective_composite = composite * coverage if coverage < 0.5 else composite`. En `coverage=0.5` el salto es x2.04. Comportamiento intencional: degrada proporcionalmente cuando la cobertura cae por debajo del umbral. Documentado tras auditoria externa 2026-09-26.
+**Retirado (sesion 3):** SLPM v1.2 (Leader Breadth + LIS + Effective Breadth), State Machine de liderazgo, fase Wyckoff del ETF sectorial (`classify_wyckoff_phase` legacy). Ver C3 y C5 en `04_HISTORICO.md`.
 
 **Robust Z-Score canonico (precios/RS):**
 
@@ -234,15 +242,14 @@ Orden ejecutado por `run.py::main()`:
 | 3 | pipeline/sectors_base.py | Rankings sectoriales + rotacion + dispersion + correlacion + cross-asset + breadth |
 | 4 | pipeline/flows_primary.py | SSGA + BlackRock (DAXEX, ISF, IWM) + Amundi + QQQ SEC + CFTC |
 | 5 | pipeline/flows_secondary.py | Sintesis + N-PORT + QQQ Yahoo + QQQ NPORT-P |
-| 6a | pipeline/leaders.py | df_stocks + lideres sectoriales |
-| 6b | pipeline/sector_metrics.py | Divergencia + Wyckoff + RS interno + concentracion + representatividad |
+| 6a | pipeline/stocks_data.py | Carga df_stocks + effective_meta + holdings_df |
+| 6b | pipeline/sector_metrics.py | Wyckoff sectorial + RS interno + concentracion |
 | 6c | pipeline/breadth_metrics.py | Sector Breadth & Health + Momentum amplitud |
-| 8a | pipeline/engines.py | Forzar lideres SLPM + tactical/structural + persistence |
-| 8b | pipeline/slpm.py | SLPM v1.2 State Machine |
+| 8a | pipeline/engines.py | tactical/structural + persistence |
 | 9a | pipeline/diagnostics.py | Directional Agreement + Price-Flow + Shock Sensitivity |
 | 9b | pipeline/market_data.py | PCR + Dark Pools + Volatilidad estructural + Calidad datos |
 | 10a | pipeline/mte_confirmation.py | MTE + Cross-Module Conflict + Confirmation Data |
-| 10b | pipeline/indices_intl.py | Indices internacionales (fases Wyckoff + lideres) |
+| 10b | pipeline/wyckoff_holdings.py | 6 CSVs holdings (usa_sector_acc/dist, usa_index_acc/dist, eu_index_acc/dist) |
 | 11 | pipeline/validation_gate.py | Validation Gate 10/10 + audit double-counting |
 | 12 | pipeline/finalize.py | Matrices finales + side effects + cobertura europea |
 | IAE | pipeline/iae_section.py | NIPC contractual (13F) |
@@ -308,21 +315,25 @@ Si `validation_gate['passed'] == False` -> `sys.exit(1)`.
 
 **Suite completa:** ver `Consolidacion_Documentos/ESTADO_SISTEMA.md` (fuente autoritativa, regenerado con `py scripts/generate_estado_sistema.py`). El corpus no fija el literal para evitar deriva.
 
-**Los 3 tests `test_freshness`** (ambientales) pasan tras un `py run.py` que refresca los parquets; vuelven a fallar si pasan >4 dias sin ejecutar el pipeline.
+**Tests `test_freshness`** (ambientales): 2 tests dependen de red y se
+skipean por defecto (`--run-network` requerido). No requieren refresco
+manual del pipeline.
 
-**Validation Gate (10/10):**
-1. SLPM v1.2 (sin errores de validacion).
+**Validation Gate (10/10, adaptado a holdings en C3.2):**
+1. Wyckoff holdings CSVs (>=1 tabla con filas).
 2. PCR Total (no NaN).
 3. Dark Pool medio (no NaN).
 4. MTE MSI/IPI (no NaN).
 5. Rangos Tactical/Structural en [-1, +1].
-6. Opportunity Map consistente.
+6. Cobertura holdings (>=1 grupo con >=5 tickers en las tablas).
 7. Freshness Dark Pool.
 8. Freshness PCR.
 9. Config pesos (`validate_weights()`).
-10. Anti-Double-Counting (LIS fuera de State Machine).
+10. Sanity holdings (close > 0, weight >= 0 en todas las filas).
 
-Si el gate falla, `run.py` aborta con `sys.exit(1)`.
+Si el gate falla, `run.py` aborta con `sys.exit(1)`. El gate mantiene
+10/10 para no romper el contrato del receipt (`pipeline_gate.VALID_RECEIPT_VALIDATION_GATES`,
+`write_completion_receipt.VG_MIN_CHECKS`).
 ---
 
 ## 10. DECISIONES ARQUITECTONICAS VIGENTES
@@ -358,7 +369,7 @@ Si el gate falla, `run.py` aborta con `sys.exit(1)`.
 
 **Writers historicos (C4-code):**
 - `_observation_date_from_df(df, col=None)`: `None`/vacio -> `None`; index no-DatetimeIndex -> `None`.
-- Writers con `reference_date` obligatorio: `compute_sector_dispersion`, `compute_sector_concentration`, `compute_leader_representativeness`.
+- Writers con `reference_date` obligatorio: `compute_sector_dispersion`, `compute_sector_concentration`.
 - `save_regime_history(...)`: candado `is_market_day(obs_date)`.
 
 **Saneamiento historico (C4-data):**
@@ -519,7 +530,7 @@ consumidor especifico de esa fecha. Documentado por
 
 ## 14. ALCANCE DEL SISTEMA
 
-**Incluye:** regimenes macro y sectoriales, scores tacticos y estructurales, SLPM v1.2, MTE, dark pools, opciones, flows primarios y secundarios, IAE (institucional 13F), cobertura europea, cobertura internacional (indices).
+**Incluye:** regimenes macro y sectoriales, scores tacticos y estructurales, sistema Wyckoff holdings-based (6 CSVs descargables), MTE, dark pools, opciones, flows primarios y secundarios, IAE (institucional 13F), cobertura europea.
 
 **No incluye:** trading, recomendaciones, timing, ML predictivo, optimizacion de parametros, construccion de superindicadores.
 
@@ -550,7 +561,7 @@ Cuatro cifras distintas de "universo" conviven en el sistema. Cada una responde 
 
 | Universo | Tamano | Fuente | Consumer |
 |---|---:|---|---|
-| `get_usa_tickers()` | 220 | `etf_holdings.csv`, top-20 por weight y sector | metricas intra-sectoriales (SLPM, breadth, stock_leader) |
+| `get_usa_tickers()` | 220 | `etf_holdings.csv`, top-20 por weight y sector | metricas intra-sectoriales (breadth, stock_metrics, wyckoff_holdings) |
 | `_ticker_list()` (`data_loader`) | 504 | `etf_holdings.csv` completo + `MARKET_TICKERS` | descarga. Despues se filtra con `_is_equity_ticker` al leer Close. |
 | `darkpool_io` | 504 + `MARKET_TICKERS` | `etf_holdings.csv` + `config/tickers.py` | concentracion ATS. Reporte declara `n=534` explicito. |
 | `get_stock_list()` | 329 | 4 fuentes: top-20 sector + top-20 indices + `radar_target_catalog` + europeos de providers | descarga completa del pipeline |
