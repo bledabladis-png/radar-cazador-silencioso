@@ -90,18 +90,35 @@ def lift_within(d):
     return float(ws / tw)
 
 
-def placebo_shift(d, seed, min_shift=25):
-    """Circular shift de is_confirmed por ticker. Preserva autocorrelacion."""
+def placebo_shift(d, seed):
+    """Circular shift intra-ticker con offset adaptado a n_tk.
+
+    Rompe la asociacion temporal SOW->H20 preservando la composicion por
+    ticker. Offset uniforme en [max(1, n//4), n - max(1, n//4)].
+
+    Falla ruidosamente si no aplica shift a ningun ticker o si el placebo
+    coincide con el lift real (bug de placebo silencioso).
+    """
     p = d.copy().reset_index(drop=True)
     rng = np.random.default_rng(seed)
+    shifted = 0
+    total = 0
     for tk in p["ticker"].unique():
         mask = (p["ticker"] == tk).values
         n_tk = int(mask.sum())
-        if n_tk < 2 * min_shift:
+        total += 1
+        if n_tk < 4:
             continue
         labels = p.loc[mask, "is_confirmed"].values.copy()
-        offset = int(rng.integers(min_shift, n_tk - min_shift))
+        min_s = max(1, n_tk // 4)
+        offset = int(rng.integers(min_s, n_tk - min_s + 1))
         p.loc[mask, "is_confirmed"] = np.roll(labels, offset)
+        shifted += 1
+    if shifted == 0:
+        raise RuntimeError(
+            f"placebo_shift: 0 tickers recibieron shift (total={total}). "
+            f"Cohorte sin tickers con >=4 episodios; placebo invalido."
+        )
     return p
 
 
@@ -154,6 +171,11 @@ def evaluate_fold(episodes, feats, ts, te, N, boot_b, seed):
     ci_u = float(np.percentile(boots, 97.5)) if boots else None
     pa_lift = lift_within(placebo_perm(df, seed + 100))
     pb_lift = lift_within(placebo_shift(df, seed + 200))
+    if pb_lift is not None and abs(pb_lift - point) < 1e-9:
+        raise RuntimeError(
+            f"placebo_b identico a lift real (fold). Bug en placebo_shift. "
+            f"lift={point} pb={pb_lift} n_tk_medio={len(df)/max(1, df['ticker'].nunique()):.1f}"
+        )
     return {"n_conf": n_conf, "n_base": n_base, "lift": point,
             "ci_lower": ci_l, "ci_upper": ci_u,
             "placebo_a": pa_lift, "placebo_b": pb_lift,
