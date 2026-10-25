@@ -593,7 +593,7 @@ date,source,last_date,age_calendar_days,frequency,freshness,n_total,n_valid,cove
 2026-10-23,RS Internal,2026-10-23,0.0,daily,CURRENT,11.0,11.0,1.0,Liderazgo relativo interno,1.0
 2026-10-23,Sector Rank History,2026-10-23,0.0,daily,CURRENT,11.0,11.0,1.0,Rotacion sectorial historica,
 2026-10-23,Sector Dispersion,2026-10-23,0.0,daily,CURRENT,11.0,11.0,1.0,Dispersion entre sectores,1.0
-2026-10-23,Sector Correlation Summary,2026-10-23,0.0,daily,CURRENT,11.0,55.0,0.9944444444444444,Correlacion entre sectores,1.0
+2026-10-23,Sector Correlation Summary,2026-10-23,0.0,daily,CURRENT,11.0,55.0,0.9962962962962963,Correlacion entre sectores,1.0
 2026-10-23,Sector Flow Characteristics,2026-10-22,1.0,daily,CURRENT,11.0,11.0,1.0,Flujo primario sectorial,1.0
 2026-10-23,Euronext,2026-10-23,0.0,daily,CURRENT,13.0,13.0,1.0,Euronext (13/13 OK),
 2026-10-23,Xetra,2026-10-23,0.0,daily,CURRENT,19.0,19.0,1.0,Xetra (19/19 OK),

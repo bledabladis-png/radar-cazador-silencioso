@@ -46,7 +46,7 @@ REGISTRY: tuple = (
                'temporal', 'date', ('date', 'sector')),
     OutputSpec('sector_regime_matrix',
                'outputs/history/sector_regime_matrix.csv',
-               'temporal', 'date', ('date', 'sector')),
+               'temporal', 'date', ('date', 'sector'), schema_version=2),
     OutputSpec('evidence_matrix',
                'outputs/history/evidence_matrix.csv',
                'temporal', 'date', ('date', 'sector')),
