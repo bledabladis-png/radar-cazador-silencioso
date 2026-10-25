@@ -2070,3 +2070,30 @@ items:
   siguiente_accion: |
     CERRADO. Fase 2 (data_quality con schema_v en tabla frescura)
     pendiente como nuevo item. Fase 3-6 en HANDOFF seccion 4.
+
+- id: WYCKOFF-ESTRUCTURA-UNIFICADA
+  tipo: deuda_tecnica
+  ciclo: '2026-10-25'
+  estado: FIXED
+  commit: 9960cdac
+  evidencia: |
+    Fase 4 de 6. compute_wyckoff_snapshot unifica los 4 caminos de
+    estructura sectorial. Una sola pasada de classify_phase (top-20,
+    >=200 barras, contrato doc 63 §2.6). Consumidores:
+    sector_wyckoff_distribution v3.0, 6 CSVs via _tables_from_snapshot,
+    sector_regime_matrix (deriva del agregado), run.py orquesta.
+    phase_since ISO date. n_bars + evaluable en snapshot.
+    test_wyckoff_holdings_coherence.py: 3 tests. test_sector_wyckoff_
+    distribution.py::test_coherence_snapshot_vs_csvs: el test que habria
+    cazado la divergencia XLC/XLK/XLP. Run real 14.4 min, gate 11/11,
+    Snapshot=357 tickers, suite 3717/2. .v1.csv recuperado tras incidente
+    de fixture que lo sobrescribia (hotfix en persist + conftest).
+  descripcion: |
+    Antes de Fase 4, sector_wyckoff_distribution iteraba TODOS los
+    holdings con umbral 60 barras, divergiendo de los 6 CSVs (top-20,
+    200 barras) en XLC/XLK/XLP. structure_positive heredaba la
+    violacion. Detectado en auditoria sesion 5.
+  siguiente_accion: |
+    CERRADO. Fase 4b (renombrar compute_sector_scores) pendiente. Fase 5
+    (structure_score continuo) y Fase 6 (descarga) pendientes.
+

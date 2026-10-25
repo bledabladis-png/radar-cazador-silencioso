@@ -33,6 +33,7 @@ defecto de observacion (mojibake en consola PowerShell, no en el
 fichero):
 - `REPORT-ENCODING-MOJIBAKE-ADC` -> FALSE_POSITIVE
 - `SCHEMA-VERSIONING-OUTPUTS`: FIXED 2026-10-25 (commit `c9a848b5`).
+- `WYCKOFF-ESTRUCTURA-UNIFICADA`: FIXED 2026-10-25 (commit `9960cdac`).
 
 7 commits, CI verde en cada push. 4 frentes de codigo cerrados.
 
@@ -148,10 +149,10 @@ volver a `structure_score` y a la descarga:
   por fuente en la tabla de frescura del reporte.
 - **Fase 3 (diferida):** regeneracion historica completa con protocolo
   de validacion 30 dias. Doc `65_regeneracion_historico.md` pendiente.
-- **Fase 4 (critica):** unificacion de los 4 caminos de "estructura
-  sectorial" (`sector_regime.compute_sector_scores` / agregado /
-  `wyckoff_holdings_report` / `sector_regime_matrix.structure_positive`).
-  Divergen en XLC, XLK, XLP hoy.
+- ~~**Fase 4 (critica):** unificacion de los 4 caminos de estructura~~
+  HECHA 2026-10-25 (`9960cdac`). Snapshot unico en
+  `compute_wyckoff_snapshot`. Agregado v3.0 y 6 CSVs derivan del mismo
+  snapshot. Test de coherencia en CI.
 - **Fase 5:** `structure_score` continuo con datos coherentes.
 - **Fase 6:** descarga unificada (`Router` con politica unica para
   fed_data + treasury_data; auditar `b30a9182`, `4bb54f80`).

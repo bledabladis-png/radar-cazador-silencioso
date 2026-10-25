@@ -2147,3 +2147,30 @@ CSV nuevo 11 filas v2, backup `.v1.csv` 342 filas (untracked).
 **Pendiente.** Fases 2-6 (data_quality schema_v, regeneracion
 historica, unificacion de estructura, structure_score, descarga).
 Ver HANDOFF seccion 4.1.
+
+## Sesion 2026-10-25 (continuacion 4) - Fase 4: unificacion estructura
+
+Commit `9960cdac` cierra `WYCKOFF-ESTRUCTURA-UNIFICADA`.
+
+**Diagnostico.** `sector_wyckoff_distribution` iteraba TODOS los holdings
+con umbral 60 barras. Los 6 CSVs usaban top-20 + 200 barras. Divergian
+en XLC/XLK/XLP. `structure_positive` heredaba la violacion. Contrato doc
+63 §2.6 dice top-20 + 200 barras.
+
+**Implementado.** `compute_wyckoff_snapshot`: una pasada de
+`classify_phase`, DataFrame long con 14 columnas (12 del contrato §4 +
+`n_bars` + `evaluable`). `sector_wyckoff_distribution` v3.0 consume el
+snapshot. 6 CSVs como proyecciones. `run.py` calcula una vez, pasa a
+los 2 consumidores. `phase_since` ISO. Test de coherencia en CI.
+
+**Verificacion.** Suite 3717/2. Run real 14.4 min, gate 11/11,
+`Snapshot Wyckoff holdings: 357 tickers evaluados`. Coherencia agregado
+vs CSVs en los 11 sectores. `structure_positive` 0/11 (baseline ya era
+0/11).
+
+**Incidente hotfix.** Fixture de tests borraba `.schema` reales,
+sobrescribia `.v1.csv` (342 filas). Recuperado desde `7d223b63`. Fix:
+`persist` no sobrescribe backup existente, fixture con mtime cutoff.
+
+**Pendiente.** Fase 4b (renombrar `compute_sector_scores`), Fase 5
+(`structure_score`), Fase 6 (descarga).

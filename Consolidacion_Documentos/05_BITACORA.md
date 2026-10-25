@@ -44,6 +44,35 @@ Al cerrar una sesion nueva, se anade arriba (las mas recientes primero). Si hay 
 
 ## 3. SESIONES
 
+### 2026-10-25 (sesion 6) - Fase 4: unificacion estructura
+
+**Objetivo.** Cerrar la divergencia agregado vs CSVs detectada en
+auditoria: 4 caminos paralelos de estructura sectorial.
+
+**Hecho.**
+- `compute_wyckoff_snapshot`: una pasada de `classify_phase`, top-20
+  por grupo + 200 barras. 14 columnas (12 contrato + n_bars + evaluable).
+- `sector_wyckoff_distribution` v3.0: consume snapshot. Universo pasa
+  de "todos + 60" a "top-20 + 200".
+- 6 CSVs: proyecciones del mismo snapshot.
+- `run.py`: calcula una vez, pasa a los 2 consumidores.
+- `phase_since` ISO date (antes timestamp con hora).
+- Test coherencia: agregado == CSVs por fase, 11 sectores.
+- Hotfix urgente: fixture de tests borraba `.schema` reales y
+  sobrescribia `.v1.csv`. Recuperado desde git. `persist` endurecido.
+
+**Commits.** `9960cdac` (codigo). Hotfix y datos en commits siguientes.
+
+**Pendiente.**
+- Fase 4b: renombrar `compute_sector_scores` (mide tendencia, no estructura).
+- Fase 5: `structure_score` continuo. `>=50` sigue dando 0/11.
+- Fase 6: descarga unificada (Router fed/treasury).
+
+**Lecciones.** Una fixture de test que limpia artefactos de produccion
+es un bug estructural, no un detalle. El `.v1.csv` (historico 342 filas)
+se recupero desde git solo porque estaba en un commit. Si no, se pierde
+permanentemente. Los tests de integracion con path real requieren
+mtime cutoff o path_override.
 ### 2026-10-25 (sesion 5) - Fase 1: schema versioning outputs
 
 **Objetivo.** Cerrar el incidente de schema mezclado detectado en
