@@ -14,7 +14,7 @@ stock_leader.py::generate_leader_section y se retira en C4.3.
 import pandas as pd
 import numpy as np
 
-from indicators.wyckoff_v1 import wyckoff_score, detect_spring, detect_sos
+from indicators.wyckoff_v1 import wyckoff_score, wyckoff_stability, detect_spring, detect_sos
 from indicators.wyckoff_orchestrator import classify_phase
 from src.utils import robust_zscore, get_col
 from config.settings import TOP_N_CANDIDATES
@@ -146,20 +146,20 @@ def compute_stock_metrics(df_market, df_stocks, etf_ticker, stock_list, temporal
             wyckoff_series, struct_score, tact_score, t_n, c_n, v_n, e_n = wyckoff_score(ticker_df, ticker)
             wyckoff_sc = wyckoff_series.iloc[-1]
             wyckoff_ph = classify_phase(ticker_df, ticker).phase
-            score_median = wyckoff_series.rolling(10).median().iloc[-1]
-            # 2026-10-02: filtrar NaN antes de calcular mad. Mismo patron
-            # que options.py y que robust_intra (2f956ed). Con NaN en la
-            # ventana rolling, np.median propaga NaN a score_mad.
-            def _mad_filtrado(x):
-                v = x[~np.isnan(x)]
-                if len(v) < 2:
-                    return 0.0
-                m = np.median(v)
-                return float(np.median(np.abs(v - m)))
-            score_mad = wyckoff_series.rolling(10).apply(_mad_filtrado).iloc[-1]
-            if pd.isna(score_mad):
-                score_mad = 0.0
-            stability = np.tanh(score_median / (score_mad + 1e-9))
+            # H-06 (auditoria externa 2026-10-25): usar wyckoff_stability
+            # (definicion correcta: 1 - 2*tanh(MAD(combined)/(K+eps))) en
+            # lugar de tanh(median/MAD). La version previa:
+            #   (a) incluia el signo de la mediana (convicion direccional,
+            #       no estabilidad). corr(stab_sm, t_norm) = +0.49 vs
+            #       corr(stab_v1, t_norm) = +0.16.
+            #   (b) saturaba al 36% de tickers en +-1.0 (mad+1e-9 explota
+            #       cuando med=0).
+            #   (c) 43% de signos opuestos vs wyckoff_stability sobre
+            #       muestra de 108 tickers.
+            # El peso se llama WLS_WEIGHTS['stability']. Debe medir
+            # estabilidad, no conviccion. Doc 68.
+            _stab_series = wyckoff_stability(wyckoff_series).dropna()
+            stability = float(_stab_series.iloc[-1]) if len(_stab_series) > 0 else 0.0
             spring = detect_spring(ticker_df, ticker).iloc[-1]
             sos = detect_sos(ticker_df, ticker).iloc[-1]
         else:
