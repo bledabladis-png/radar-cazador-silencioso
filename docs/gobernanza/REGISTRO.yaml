@@ -2096,3 +2096,21 @@ items:
   siguiente_accion: |
     CERRADO. Fase 4b (renombrar compute_sector_scores) pendiente. Fase 5
     (structure_score continuo) y Fase 6 (descarga) pendientes.
+
+- id: DATA-QUALITY-SCHEMA-V
+  tipo: deuda_tecnica
+  ciclo: '2026-10-25'
+  estado: FIXED
+  commit: c3d1b18a
+  evidencia: |
+    Fase 2 de 6. _read_schema_version() lee <path>.schema (entero).
+    compute_data_quality anade schema_v a cada fila. render_calidad_datos
+    publica columna Schema entre Cobertura y Notas. Fuentes sin .schema
+    (parquet, state JSON, europeas) -> v1 implicito. Nota al pie con
+    semantica. Suite 3717/2. Run real verificado.
+  descripcion: |
+    Fase 1 introdujo .schema pero la tabla de frescura no lo publicaba.
+    Asimetria con gate check 11 (valida schema sin exponerlo). Fase 2
+    cierra el ciclo: cada output declara su version en el reporte.
+  siguiente_accion: |
+    CERRADO.

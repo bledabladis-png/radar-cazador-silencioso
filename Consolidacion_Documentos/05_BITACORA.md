@@ -44,6 +44,28 @@ Al cerrar una sesion nueva, se anade arriba (las mas recientes primero). Si hay 
 
 ## 3. SESIONES
 
+### 2026-10-25 (sesion 7) - Fase 2: schema_v en frescura
+
+**Objetivo.** Cerrar asimetria Fase 1: `.schema` existia pero el
+reporte no lo publicaba.
+
+**Hecho.**
+- `_read_schema_version()` lee `<path>.schema` (entero).
+- `compute_data_quality` anade `schema_v` por fila post-loop.
+- `render_calidad_datos` publica columna Schema entre Cobertura y Notas.
+- Nota al pie con semantica (vN de `.schema`, v1 implicito, doc 64).
+
+**Commits.** Codigo en este commit.
+
+**Pendiente.**
+- Fase 3: regeneracion historica (proyecto separado).
+- Fase 4b: renombrar `compute_sector_scores` (trend, no estructura).
+- Fase 5: `structure_score` con pre-registro.
+- Fase 6: descarga unificada.
+
+**Lecciones.** Simetria: un contrato que se valida internamente (gate
+check 11) debe exponerse al operador (reporte). Si no, el gate sabe
+algo que el usuario no ve.
 ### 2026-10-25 (sesion 6) - Fase 4: unificacion estructura
 
 **Objetivo.** Cerrar la divergencia agregado vs CSVs detectada en

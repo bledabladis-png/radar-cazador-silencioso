@@ -2174,3 +2174,18 @@ sobrescribia `.v1.csv` (342 filas). Recuperado desde `7d223b63`. Fix:
 
 **Pendiente.** Fase 4b (renombrar `compute_sector_scores`), Fase 5
 (`structure_score`), Fase 6 (descarga).
+
+## Sesion 2026-10-25 (continuacion 5) - Fase 2: schema_v en frescura
+
+Fase 2 de 6. Cierra la asimetria de Fase 1: `.schema` existia pero el
+reporte no lo publicaba. `_read_schema_version()` lee `<path>.schema`,
+`compute_data_quality` anade `schema_v` por fila, `render_calidad_datos`
+publica columna Schema entre Cobertura y Notas. Fuentes sin `.schema`
+(parquet, state JSON, europeas) -> v1 implicito. Nota al pie con
+semantica y referencia a doc 64.
+
+Suite 3717/2. Run real verificado (columna visible: `v2` para
+sector_wyckoff_distribution, `v1` para el resto).
+
+Pendiente: Fase 3 (regeneracion historica), Fase 4b (renombrar
+compute_sector_scores), Fase 5 (structure_score), Fase 6 (descarga).

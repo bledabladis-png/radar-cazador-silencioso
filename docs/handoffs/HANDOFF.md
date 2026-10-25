@@ -34,6 +34,7 @@ fichero):
 - `REPORT-ENCODING-MOJIBAKE-ADC` -> FALSE_POSITIVE
 - `SCHEMA-VERSIONING-OUTPUTS`: FIXED 2026-10-25 (commit `c9a848b5`).
 - `WYCKOFF-ESTRUCTURA-UNIFICADA`: FIXED 2026-10-25 (commit `9960cdac`).
+- `DATA-QUALITY-SCHEMA-V`: FIXED 2026-10-25.
 
 7 commits, CI verde en cada push. 4 frentes de codigo cerrados.
 
@@ -145,8 +146,9 @@ Fase 1 (`SCHEMA-VERSIONING-OUTPUTS`, commit `c9a848b5`) cierra el
 incidente de schema mezclado. Quedan 5 fases estructurales antes de
 volver a `structure_score` y a la descarga:
 
-- **Fase 2 (documental):** `data_quality.SOURCES` reporta `schema_v`
-  por fuente en la tabla de frescura del reporte.
+- ~~**Fase 2 (documental):** `data_quality.SOURCES` reporta schema_v~~
+  HECHA 2026-10-25. Columna Schema vN en tabla 'Calidad, frescura y
+  cobertura'. `_read_schema_version` lee `.schema` lateral.
 - **Fase 3 (diferida):** regeneracion historica completa con protocolo
   de validacion 30 dias. Doc `65_regeneracion_historico.md` pendiente.
 - ~~**Fase 4 (critica):** unificacion de los 4 caminos de estructura~~
