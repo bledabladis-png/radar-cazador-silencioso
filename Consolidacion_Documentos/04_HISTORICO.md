@@ -2189,3 +2189,21 @@ sector_wyckoff_distribution, `v1` para el resto).
 
 Pendiente: Fase 3 (regeneracion historica), Fase 4b (renombrar
 compute_sector_scores), Fase 5 (structure_score), Fase 6 (descarga).
+
+## Sesion 2026-10-25 (continuacion 6) - Fase 4b: rename compute_sector_scores
+
+Fase 4b de 6. `compute_sector_scores` -> `compute_sector_rank_score`.
+El score es un continuo de 6 componentes (rs_mom_20/50/126, trend,
+vol_inv, breadth) sobre el ETF. NO es estructura Wyckoff. El nombre
+era ambiguo: confundia con `STRUCTURAL_WEIGHTS` del motor
+`structural_engine` y con el ranking "Score" del reporte. Ambos
+aparecen como columnas distintas en `Rankings Sectoriales` pero
+miden cosas distintas.
+
+31 reemplazos en 7 ficheros (1 en `sector_regime.py`, 2 en
+`sectors_base.py`, 28 en tests). Sin cambio de contrato. Suite
+3717/2. Run real verificado.
+
+Pendiente: Fase 3 (regeneracion historica, diferida), Fase 5
+(structure_score con pre-registro), Fase 6 (descarga unificada,
+bloqueada por falta de 4 ficheros).

@@ -44,6 +44,27 @@ Al cerrar una sesion nueva, se anade arriba (las mas recientes primero). Si hay 
 
 ## 3. SESIONES
 
+### 2026-10-25 (sesion 8) - Fase 4b: rename compute_sector_scores
+
+**Objetivo.** Resolver confusion de nombres entre dos 'scores' del
+reporte: `compute_sector_scores` (6 componentes sobre el ETF) y
+`compute_structural_score` (3 componentes via STRUCTURAL_WEIGHTS).
+
+**Hecho.**
+- Rename `compute_sector_scores` -> `compute_sector_rank_score`.
+- 31 reemplazos en 7 ficheros.
+- Sin cambio de contrato ni calculo.
+- Suite 3717/2. Run real verificado.
+
+**Commits.** Codigo en este commit.
+
+**Pendiente.**
+- Fase 3: regeneracion historica (proyecto separado).
+- Fase 5: structure_score con pre-registro (>=50 da 0/11).
+- Fase 6: descarga unificada (bloqueada por 4 ficheros).
+
+**Lecciones.** Un nombre generico ('sector_scores') oculta la
+ambiguedad. Renombrar explicita lo que el codigo hace.
 ### 2026-10-25 (sesion 7) - Fase 2: schema_v en frescura
 
 **Objetivo.** Cerrar asimetria Fase 1: `.schema` existia pero el

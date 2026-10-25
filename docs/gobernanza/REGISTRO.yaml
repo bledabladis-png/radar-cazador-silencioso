@@ -2114,3 +2114,24 @@ items:
     cierra el ciclo: cada output declara su version en el reporte.
   siguiente_accion: |
     CERRADO.
+
+- id: SECTOR-REGIME-RENAME-RANK
+  tipo: deuda_tecnica
+  ciclo: '2026-10-25'
+  estado: FIXED
+  commit: 34930b81
+  evidencia: |
+    Fase 4b de 6. compute_sector_scores -> compute_sector_rank_score.
+    Score continuo de 6 componentes sobre el ETF (rs_mom_20/50/126,
+    trend, vol_inv, breadth). NO es estructura Wyckoff. El nombre
+    'sector_scores' era ambiguo (confundia con STRUCTURAL_WEIGHTS del
+    motor structural_engine, y con el ranking 'Score' del reporte).
+    31 reemplazos en 7 ficheros. Suite 3717/2. Run real verificado.
+  descripcion: |
+    Confusion de nombres en el reporte: dos 'scores' distintos
+    (compute_sector_rank_score de 6 componentes sobre el ETF, y
+    compute_structural_score de 3 componentes via STRUCTURAL_WEIGHTS).
+    Ambas columnas coexisten en el ranking pero miden cosas distintas.
+    Detectado en auditoria sesion 5.
+  siguiente_accion: |
+    CERRADO.

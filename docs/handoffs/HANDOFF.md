@@ -35,6 +35,7 @@ fichero):
 - `SCHEMA-VERSIONING-OUTPUTS`: FIXED 2026-10-25 (commit `c9a848b5`).
 - `WYCKOFF-ESTRUCTURA-UNIFICADA`: FIXED 2026-10-25 (commit `9960cdac`).
 - `DATA-QUALITY-SCHEMA-V`: FIXED 2026-10-25.
+- `SECTOR-REGIME-RENAME-RANK`: FIXED 2026-10-25 (Fase 4b).
 
 7 commits, CI verde en cada push. 4 frentes de codigo cerrados.
 
