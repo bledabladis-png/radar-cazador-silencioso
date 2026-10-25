@@ -108,3 +108,7 @@ outputs/**/*.schema
 # Backups de schema (creados por persist al migrar). Se quedan en
 # disco para analisis/referencia, NO se trackean.
 outputs/history/*.v[0-9]*.csv
+# Regeneracion Wyckoff (scripts/regenerate_wyckoff_history.py)
+outputs/history/*.pre_h03*
+outputs/history/_regen_*.log*
+outputs/history/_regen_checkpoint.json
