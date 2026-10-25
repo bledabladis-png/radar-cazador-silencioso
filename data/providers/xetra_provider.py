@@ -6,6 +6,19 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 import pandas as pd
+
+
+def _as_date(x):
+    """Normaliza date/datetime/Timestamp a date. None -> hoy.
+
+    BUG 2026-10-25: reference_date puede llegar como datetime.date (no
+    Timestamp) desde ciertas rutas (auditoria externa, run.py paths,
+    tests). Las llamadas X.date() fallaban con AttributeError.
+    pd.Timestamp(x).date() funciona para date, datetime y Timestamp.
+    """
+    if x is None:
+        return pd.Timestamp.now().date()
+    return pd.Timestamp(x).date()
 import requests
 import websocket
 
@@ -329,7 +342,7 @@ class XetraProvider:
             return df
         last_dt = pd.to_datetime(df["date"]).iloc[-1]
         last_date = last_dt.date() if hasattr(last_dt, "date") else last_dt
-        ref_date = reference_date.date()
+        ref_date = _as_date(reference_date)
 
         if last_date < ref_date:
             return df
@@ -395,7 +408,7 @@ class XetraProvider:
                 df_cached = self._load_cache(t)
                 if not df_cached.empty:
                     last_date = pd.to_datetime(df_cached["date"]).max()
-                    ref_d = reference_date.date() if reference_date is not None else pd.Timestamp.now().date()
+                    ref_d = _as_date(reference_date)
                     days_gap = (ref_d - last_date.date()).days
                     if days_gap > 7:
                         print(f"  [XETRA] CACHE VIEJA: {t} sin datos desde {last_date.date()} ({days_gap} dias)")
@@ -418,9 +431,9 @@ class XetraProvider:
                             str(_limit) + " dias consecutivos desde " +
                             str(last_date.date())
                         )
-                    today_norm = reference_date.date() if reference_date is not None else pd.Timestamp.now().date()
+                    today_norm = _as_date(reference_date)
                     if next_day.date() > today_norm:
-                        print(f"  [XETRA] {t} sin nuevas sesiones (next={next_day.date()}, today={today_norm.date()})")
+                        print(f"  [XETRA] {t} sin nuevas sesiones (next={next_day.date()}, today={today_norm})")
                         frames.append(self._to_multiindex(df_cached, t))
                         continue
                     start_iso = next_day.strftime("%Y-%m-%dT00:00:00.000Z")
