@@ -2207,3 +2207,23 @@ miden cosas distintas.
 Pendiente: Fase 3 (regeneracion historica, diferida), Fase 5
 (structure_score con pre-registro), Fase 6 (descarga unificada,
 bloqueada por falta de 4 ficheros).
+
+## Sesion 2026-10-25 (continuacion 7) - Fase 3: regeneracion historica
+
+`scripts/regenerate_wyckoff_history.py` regenera el historico completo de
+`sector_wyckoff_distribution`: 11946 filas, 1086 fechas (2022-08-11 ->
+2026-10-23), 11 sectores. Paralelizado (12 workers), 49.8 min, checkpoint
+cada 25 tickers. Validacion obligatoria contra el `.csv` activo: 11 filas,
+20 columnas identicas en 2026-10-23.
+
+`.v1.csv` (342 filas, 330 v1 + 11 v2 mix): backup no-comparable,
+gitignored. `.csv.v1_mixed` eliminado.
+
+**Hallazgo critico para Fase 5.** `structure_positive = (pct_acc +
+pct_markup) >= 50` da 0/11946 en todo el historico. `pct_range` domina
+(media por sector 47.4%-91.6%). El umbral es estructuralmente
+inalcanzable. No es calibracion: la metrica no discrimina. Fase 5
+requiere rediseño como score continuo, con pre-registro previo.
+`SECTOR-REGIME-MATRIX-STRUCTURE-POSITIVE` confirmado roto empiricamente.
+
+Doc 66. Pendiente: Fase 5 (rediseño), Fase 6 (descarga).

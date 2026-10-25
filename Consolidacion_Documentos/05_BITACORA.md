@@ -44,6 +44,35 @@ Al cerrar una sesion nueva, se anade arriba (las mas recientes primero). Si hay 
 
 ## 3. SESIONES
 
+### 2026-10-25 (sesion 9) - Fase 3: regeneracion historica
+
+**Objetivo.** Regenerar `sector_wyckoff_distribution` con el universo
+correcto (top-20, >=200 barras) sobre todo el historico.
+
+**Hecho.**
+- `scripts/regenerate_wyckoff_history.py`: 12 workers, checkpoint,
+  validacion obligatoria contra `.csv` activo.
+- 11946 filas (1086 fechas), 2022-08-11 -> 2026-10-23.
+- 49.8 min, 234.197 invocaciones classify_phase_at.
+- Validacion: 11 filas x 20 columnas identicas en 2026-10-23.
+- Swap: `.csv` activo = regenerado. `.v1.csv` (342) queda como backup.
+
+**Hallazgo critico.**
+`structure_positive = (pct_acc + pct_markup) >= 50` da 0/11946 en el
+historico completo. `pct_range` domina (media por sector 47.4%-91.6%).
+El umbral es inalcanzable. Fase 5 requiere rediseño de la metrica.
+
+**Commits.** Codigo/datos en este commit. Doc en commit siguiente.
+
+**Pendiente.**
+- Fase 5: rediseño de structure_score con pre-registro. El umbral `>=50`
+  no se toca hasta tener evidencia empirica sobre la que decidir.
+- Fase 6: descarga unificada (bloqueada por falta de 4 ficheros).
+
+**Lecciones.** Una metrica binaria con umbral fijo puede estar muerta
+durante meses sin que nadie lo note, si el test no mide su discriminacion
+temporal. Con 1086 fechas x 11 sectores, 0/11946 es evidencia solida de
+que `>=50` no discrimina.
 ### 2026-10-25 (sesion 8) - Fase 4b: rename compute_sector_scores
 
 **Objetivo.** Resolver confusion de nombres entre dos 'scores' del

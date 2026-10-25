@@ -36,6 +36,7 @@ fichero):
 - `WYCKOFF-ESTRUCTURA-UNIFICADA`: FIXED 2026-10-25 (commit `9960cdac`).
 - `DATA-QUALITY-SCHEMA-V`: FIXED 2026-10-25.
 - `SECTOR-REGIME-RENAME-RANK`: FIXED 2026-10-25 (Fase 4b).
+- `WYCKOFF-HISTORICO-REGENERADO`: FIXED 2026-10-25 (Fase 3).
 
 7 commits, CI verde en cada push. 4 frentes de codigo cerrados.
 
@@ -150,8 +151,11 @@ volver a `structure_score` y a la descarga:
 - ~~**Fase 2 (documental):** `data_quality.SOURCES` reporta schema_v~~
   HECHA 2026-10-25. Columna Schema vN en tabla 'Calidad, frescura y
   cobertura'. `_read_schema_version` lee `.schema` lateral.
-- **Fase 3 (diferida):** regeneracion historica completa con protocolo
-  de validacion 30 dias. Doc `65_regeneracion_historico.md` pendiente.
+- ~~**Fase 3 (diferida):** regeneracion historica completa~~
+  HECHA 2026-10-25. 11946 filas (1086 fechas), validacion exacta
+  contra .csv activo. Doc 66. **Hallazgo critico:** structure_positive
+  = 0/11946 con el universo correcto (pct_range domina 47-92%). Fase 5
+  requiere rediseño, no calibracion.
 - ~~**Fase 4 (critica):** unificacion de los 4 caminos de estructura~~
   HECHA 2026-10-25 (`9960cdac`). Snapshot unico en
   `compute_wyckoff_snapshot`. Agregado v3.0 y 6 CSVs derivan del mismo

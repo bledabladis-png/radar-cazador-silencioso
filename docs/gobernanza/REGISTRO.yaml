@@ -2135,3 +2135,23 @@ items:
     Detectado en auditoria sesion 5.
   siguiente_accion: |
     CERRADO.
+
+- id: WYCKOFF-HISTORICO-REGENERADO
+  tipo: deuda_tecnica
+  ciclo: '2026-10-25'
+  estado: FIXED
+  commit: 9f4c729d
+  evidencia: |
+    Fase 3 de 6. Script scripts/regenerate_wyckoff_history.py
+    (paralelizado, checkpoint, validacion contra .csv activo). Regenerado
+    historico completo: 11946 filas, 1086 fechas (2022-08-11 -> 2026-10-23),
+    11 sectores. Validacion exacta en 2026-10-23 (11 filas, 20 columnas
+    identicas). 49.8 min. .v1.csv (342 filas mix) queda como backup
+    no-comparable. .csv.v1_mixed eliminado (ya en git).
+  descripcion: |
+    Historico de sector_wyckoff_distribution arrastraba dos esquemas
+    mezclados (Fase 1 documento el commit 415487ff). Tras Fase 1 (schema
+    versioning) y Fase 4 (universo alineado), faltaba regenerar el
+    historico con el codigo actual.
+  siguiente_accion: |
+    CERRADO.
