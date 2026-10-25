@@ -588,7 +588,7 @@ date,source,last_date,age_calendar_days,frequency,freshness,n_total,n_valid,cove
 2026-10-23,Evidence Matrix,2026-10-23,0.0,daily,CURRENT,11.0,11.0,1.0,Matriz evidencia,1.0
 2026-10-23,Sector Breadth,2026-10-23,0.0,daily,CURRENT,11.0,11.0,1.0,Amplitud y salud sectorial,1.0
 2026-10-23,Sector Persistence,2026-10-23,0.0,daily,CURRENT,11.0,11.0,1.0,Persistencia sectorial,1.0
-2026-10-23,Sector Regime Matrix,2026-10-23,0.0,daily,CURRENT,11.0,11.0,1.0,Matriz de regimen sectorial,1.0
+2026-10-23,Sector Regime Matrix,2026-10-23,0.0,daily,CURRENT,11.0,11.0,1.0,Matriz de regimen sectorial,2.0
 2026-10-23,Sector Wyckoff Distribution,2026-10-23,0.0,daily,CURRENT,11.0,11.0,1.0,Distribucion Wyckoff sectorial,2.0
 2026-10-23,RS Internal,2026-10-23,0.0,daily,CURRENT,11.0,11.0,1.0,Liderazgo relativo interno,1.0
 2026-10-23,Sector Rank History,2026-10-23,0.0,daily,CURRENT,11.0,11.0,1.0,Rotacion sectorial historica,
