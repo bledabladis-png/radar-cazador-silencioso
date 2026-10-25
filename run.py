@@ -21,6 +21,7 @@ from indicators.stock_metrics import compute_all_stock_metrics
 from indicators.wyckoff_holdings_report import compute_wyckoff_snapshot, USA_INDEX_ETFS, EU_INDEX_ETFS
 from src.pipeline.sector_metrics import compute_sector_metrics
 from src.pipeline.wyckoff_holdings import compute_wyckoff_holdings
+from src.pipeline.holdings_snapshot import compute_and_persist_holdings_snapshot
 from src.pipeline.breadth_metrics import compute_breadth_metrics
 from src.pipeline.engines import compute_engines
 from src.pipeline.diagnostics import compute_diagnostics
@@ -122,6 +123,17 @@ def main():
     df_stocks = sd['df_stocks']
     df_stocks_effective_meta = sd['df_stocks_effective_meta']
     holdings_df = sd['holdings_df']
+
+    # PIT-fix (auditoria externa 2026-10-25): registrar composicion
+    # vigente con la sesion del dia si cambio respecto al ultimo snapshot.
+    # En 6-12 meses habra historia PIT real para regeneraciones futuras.
+    try:
+        compute_and_persist_holdings_snapshot(
+            reference_date=reference_date,
+            etf_holdings_df=holdings_df,
+        )
+    except (RuntimeError, ValueError, TypeError, KeyError, OSError) as _hs_e:
+        print(f"  [WARN] holdings snapshot omitido: {_hs_e}")
 
     full_metrics_df = compute_all_stock_metrics(df_market, df_stocks, holdings_df, temporal_meta=temporal_meta)
 

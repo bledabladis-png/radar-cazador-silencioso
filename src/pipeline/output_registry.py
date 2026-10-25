@@ -113,6 +113,10 @@ REGISTRY: tuple = (
                'outputs/history/wyckoff_eu_index_distribution.csv',
                'temporal', 'date',
                ('date', 'group', 'group_type', 'ticker')),
+    OutputSpec('holdings_snapshots',
+               'outputs/history/holdings_snapshots.csv',
+               'temporal', 'date',
+               ('date', 'source_file', 'etf', 'ticker')),
 )
 
 REGISTRY_BY_NAME = {s.name: s for s in REGISTRY}
