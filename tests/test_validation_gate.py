@@ -54,7 +54,7 @@ def test_gate_caso_feliz():
     """Regresion: con datos normales el Gate pasa."""
     result = run_validation_gate(**_base_kwargs())
     assert result["passed"] is True, f"errors={result['errors']}"
-    assert len(result["checks"]) == 10
+    assert len(result["checks"]) == 11
 
 
 def test_wyckoff_holdings_vacio_ok_no_falla_gate():

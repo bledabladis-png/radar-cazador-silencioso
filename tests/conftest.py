@@ -33,3 +33,22 @@ def df_stocks_real():
             f"CI: {_STOCK_PARQUET} no disponible (gitignored)."
         )
     return pd.read_parquet(_STOCK_PARQUET)
+
+
+@pytest.fixture(autouse=True)
+def _cleanup_schema_files():
+    """Limpia .schema generados por tests que escriben al path real.
+
+    `save_regime_history` escribe `outputs/history/macro_regime.csv.schema`
+    como side-effect cuando el test no pasa `path_override`. El .schema es
+    metadata local (gitignored) y no debe sobrevivir entre tests ni tras
+    la suite. No se borra el CSV (forma parte del repo).
+    """
+    yield
+    _history = Path(__file__).parent.parent / "outputs" / "history"
+    if _history.exists():
+        for _schema in _history.glob("*.schema"):
+            try:
+                _schema.unlink()
+            except OSError:
+                pass

@@ -198,6 +198,56 @@ def run_validation_gate(wyckoff_holdings_data, pcr_data, darkpool_data, mte_resu
     else:
         _add_check(validation_checks, validation_errors, "Sanity holdings", True, "no disponible")
 
+    # 11. Schema versioning (Fase 1): todos los outputs temporales con
+    #     .schema deben coincidir con spec.schema_version. Si hay .v*.csv
+    #     al lado, se reporta MIGRATED (informativo, no falla).
+    try:
+        from src.pipeline.output_registry import REGISTRY
+        from pathlib import Path as _P
+        _schema_issues = []
+        _migrated_count = 0
+        _checked = 0
+        for _spec in REGISTRY:
+            if getattr(_spec, "kind", None) != "temporal":
+                continue
+            _csv = _P(_spec.path)
+            _schema_f = _csv.with_suffix(_csv.suffix + ".schema")
+            _expected = getattr(_spec, "schema_version", 1)
+            _checked += 1
+            if _schema_f.exists():
+                try:
+                    _actual = int(_schema_f.read_text(encoding="utf-8").strip())
+                except (OSError, ValueError):
+                    _actual = None
+                if _actual is not None and _actual != _expected:
+                    _schema_issues.append(
+                        f"{_spec.name}: schema={_actual} != spec={_expected}"
+                    )
+            # Buscar .v*.csv al lado
+            for _sib in _csv.parent.glob(_csv.stem + ".v*" + _csv.suffix):
+                _migrated_count += 1
+                break
+        if _schema_issues:
+            for _iss in _schema_issues:
+                validation_errors.append(f"Schema: {_iss}")
+            _add_check(
+                validation_checks, validation_errors, "Schema versioning",
+                False, f"{len(_schema_issues)} outputs con schema mismatch",
+            )
+        else:
+            _detail = f"{_checked} outputs v"
+            if _migrated_count:
+                _detail += f", {_migrated_count} MIGRATED"
+            _add_check(
+                validation_checks, validation_errors, "Schema versioning",
+                True, _detail,
+            )
+    except Exception as _e:
+        _add_check(
+            validation_checks, validation_errors, "Schema versioning",
+            True, f"no evaluable: {_e}",
+        )
+
     # Resultado
     passed = not validation_errors
     if passed:

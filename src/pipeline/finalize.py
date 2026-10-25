@@ -79,7 +79,7 @@ def compute_final_matrices(sector_breadth_df, sector_concentration_df,
 def save_regime_history(macro_score, macro_regime, macro_conf,
                         financial_regime, vol_regime, sector_results,
                         df_macro_manual=None, effective_date=None,
-                        real_liq_regime=None):
+                        real_liq_regime=None, path_override=None):
     """Persiste la fila del regimen actual en outputs/history/macro_regime.csv.
 
     Movido de report_generator.py (C1-10) y consolidado aqui (C2-12).
@@ -95,7 +95,7 @@ def save_regime_history(macro_score, macro_regime, macro_conf,
         obs_date = _observation_date_from_df(df_macro_manual, col='date')
     if obs_date is None:
         print("  [WARN] save_regime_history: sin fecha macro valida. Se omite escritura.")
-        skip('macro_regime', 'SKIP_CONDITION')
+        skip('macro_regime', 'SKIP_CONDITION', path_override=path_override)
         return
     # B5-followup (2026-09-12): segundo candado. El bot FRED publica iorb.csv con
     # fecha del dia natural (incluye sabado/domingo). Si obs_date no es sesion NYSE,
@@ -103,7 +103,7 @@ def save_regime_history(macro_score, macro_regime, macro_conf,
     obs_date_only = pd.Timestamp(obs_date).date()
     if not is_market_day(obs_date_only):
         print(f"  [WARN] save_regime_history: obs_date {obs_date_only} no es sesion NYSE. Se omite escritura.")
-        skip('macro_regime', 'SKIP_CONDITION')
+        skip('macro_regime', 'SKIP_CONDITION', path_override=path_override)
         return
     # REP-AUDIT-20261017-CAPA4 (2026-10-17): esquema del CSV
     # renombrado. La columna 'liquidity_regime' historicamente contuvo
@@ -125,7 +125,8 @@ def save_regime_history(macro_score, macro_regime, macro_conf,
         "volatility_regime": [vol_regime],
         "sector_regime": [sector_results["regime"]],
     })
-    persist('macro_regime', new_row, date_value=obs_date)
+    persist('macro_regime', new_row, date_value=obs_date,
+            path_override=path_override)
 
 
 def save_sector_rankings(sector_results):

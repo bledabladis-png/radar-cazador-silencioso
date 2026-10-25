@@ -16,6 +16,7 @@ automaticamente. Si no hay collector activo, funciona igual sin acumular.
 """
 from __future__ import annotations
 
+import shutil
 from pathlib import Path
 
 import pandas as pd
@@ -91,14 +92,53 @@ def persist(name, df, *, date_value=None, sort_by=None, collector=None,
 
     path.parent.mkdir(parents=True, exist_ok=True)
 
+    # --- Schema versioning (Fase 1) ---
+    # Detecta la version del CSV existente y actua:
+    #  - Sin CSV previo: escribe normal, anota .schema con spec.schema_version.
+    #  - CSV con mismo schema: append normal.
+    #  - CSV con schema distinto: renombra a .v{old}.csv, borra .schema,
+    #    arranca CSV nuevo. Evita append ciego entre schemas incompatibles.
+    schema_file = path.with_suffix(path.suffix + ".schema")
+    _current_schema = getattr(spec, "schema_version", 1)
+    _migrated_this_call = False
+    if path.exists():
+        if schema_file.exists():
+            try:
+                _existing = int(schema_file.read_text(encoding="utf-8").strip())
+            except (OSError, ValueError):
+                _existing = 1
+        else:
+            _existing = 1
+        if _existing != _current_schema:
+            # Migracion: COPIAR CSV a .v{old}.csv (backup). El original
+            # NO se toca hasta que la escritura atomica (tmp -> replace)
+            # tenga exito. Preserva la garantia de "si to_csv falla, el
+            # CSV viejo sigue intacto".
+            _migrated_name = path.with_name(
+                path.stem + ".v" + str(_existing) + path.suffix
+            )
+            try:
+                if _migrated_name.exists():
+                    _migrated_name.unlink()
+                shutil.copy2(path, _migrated_name)
+                _migrated_this_call = True
+                print(f"  [SCHEMA] {name}: backup v{_existing} -> {_migrated_name.name} (v{_current_schema} activo)")
+            except OSError as _e:
+                print(f"  [WARN] schema backup fallo {name}: {_e}")
+            # NO borrar .schema aqui. Se sobreescribe al final si el
+            # write tiene exito.
+        # si _existing == _current_schema: append normal
+
     if spec.kind == 'temporal' and spec.merge_keys:
-        if path.exists():
+        if path.exists() and not _migrated_this_call:
             hist = pd.read_csv(path)
             df_out = append_dedup(
                 hist, df, list(spec.merge_keys),
                 sort_by=list(sort_by) if sort_by else None,
             )
         else:
+            # Sin historico (primer run) o migracion (no mezclar v1 con v2).
+            # El historico previo ya esta en el backup .v{old}.csv.
             df_out = df.copy()
     else:
         df_out = df.copy()
@@ -106,6 +146,10 @@ def persist(name, df, *, date_value=None, sort_by=None, collector=None,
     tmp = path.with_suffix(path.suffix + '.tmp')
     df_out.to_csv(tmp, index=False, encoding='utf-8', lineterminator='\n')
     tmp.replace(path)
+    try:
+        path.with_suffix(path.suffix + '.schema').write_text(str(_current_schema), encoding='utf-8')
+    except OSError:
+        pass
 
     receipt = WriteReceipt(
         name=name, written=True, reason='OK',

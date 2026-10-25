@@ -98,3 +98,10 @@ data/stock_prices_reserved_r3000.parquet
 
 # Scripts de diagnostico (investigacion, no repo)
 scripts/diag_*.py
+
+# Schema versioning (Fase 1, 2026-10-25): los .schema son
+# metadata local (que version tiene el CSV en disco), NO se
+# trackean. Fresh checkout = sin .schema = asume v1 = migra en
+# el primer run si spec.schema_version > 1. Determinista y
+# agnostico al entorno.
+outputs/**/*.schema

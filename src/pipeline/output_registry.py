@@ -27,6 +27,7 @@ class OutputSpec:
     #                 alimenta (p. ej. SSGA con lag T+1). No
     #                 verificable contra el target_session; solo se
     #                 comprueba presencia en el CSV.
+    schema_version: int = 1
 
 
 REGISTRY: tuple = (
@@ -71,7 +72,7 @@ REGISTRY: tuple = (
                ('date', 'window', 'sector', 'asset_class')),
     OutputSpec('sector_wyckoff_distribution',
                'outputs/history/sector_wyckoff_distribution.csv',
-               'temporal', 'date', ('date', 'sector')),
+               'temporal', 'date', ('date', 'sector'), schema_version=2),
     OutputSpec('rs_internal',
                'outputs/history/rs_internal.csv',
                'temporal', 'date', ('date', 'sector', 'ticker')),
