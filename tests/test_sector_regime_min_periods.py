@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """F3-05-quinquies (2026-09-30): regresion del min_periods relajado
-en compute_sector_scores.
+en compute_sector_rank_score.
 
 Bug: rs_ret usa pct_change(fill_method=None), que genera 2-3 NaN
 consecutivos por festivo NYSE (dia + siguiente por pct_change).
@@ -24,14 +24,14 @@ import pandas as pd
 from regimes import sector_regime
 
 
-def test_compute_sector_scores_usa_min_periods_relajado():
+def test_compute_sector_rank_score_usa_min_periods_relajado():
     """Regresion: los 3 rolling del score sectorial deben usar
     min_periods relajado (15/40/100) para tolerar gaps de festivos.
 
     Sin esto, rs_mom_20/50/126 son NaN 20/50/126 sesiones tras
     cada festivo NYSE, y el score cae a -0.0 en 5-6 sectores.
     """
-    src = inspect.getsource(sector_regime.compute_sector_scores)
+    src = inspect.getsource(sector_regime.compute_sector_rank_score)
     assert 'rolling(20, min_periods=15)' in src, (
         'Falta min_periods=15 en rolling(20). Ver F3-05-quinquies.'
     )

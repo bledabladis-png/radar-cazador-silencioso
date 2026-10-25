@@ -29,7 +29,7 @@ def _dispersion(row):
     return float(pd.Series(vals).std(ddof=0))
 
 
-def compute_sector_scores(df, benchmark='^GSPC', df_stocks=None, holdings_df=None):
+def compute_sector_rank_score(df, benchmark='^GSPC', df_stocks=None, holdings_df=None):
 
     sectors = MARKET_TICKERS['sectors']
 

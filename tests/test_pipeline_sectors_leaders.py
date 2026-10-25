@@ -44,7 +44,7 @@ def _empty_breadth_series():
 def test_sectors_base_contract_keys(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
     (tmp_path / "outputs" / "history").mkdir(parents=True)
-    with patch("src.pipeline.sectors_base.compute_sector_scores",
+    with patch("src.pipeline.sectors_base.compute_sector_rank_score",
                return_value={"ranking": [("XLK", "Technology", 0.5)],
                              "regime": "NARROW RALLY"}), \
          patch("src.pipeline.sectors_base.compute_price_flow_rankings",
@@ -76,7 +76,7 @@ def test_sectors_base_breadth_values_derivados(tmp_path, monkeypatch):
     (tmp_path / "outputs" / "history").mkdir(parents=True)
     idx = pd.date_range("2026-09-20", periods=2, freq="D")
     s = pd.Series([0.5, 0.5], index=idx)
-    with patch("src.pipeline.sectors_base.compute_sector_scores",
+    with patch("src.pipeline.sectors_base.compute_sector_rank_score",
                return_value={"ranking": [], "regime": "MIXED"}), \
          patch("src.pipeline.sectors_base.compute_price_flow_rankings",
                return_value=([], [], [], [])), \
@@ -104,7 +104,7 @@ def test_sectors_base_degrada_sub_bloque_dispersion(tmp_path, monkeypatch):
     (tmp_path / "outputs" / "history").mkdir(parents=True)
     idx = pd.date_range("2026-09-20", periods=2, freq="D")
     s = pd.Series([0.5, 0.5], index=idx)
-    with patch("src.pipeline.sectors_base.compute_sector_scores",
+    with patch("src.pipeline.sectors_base.compute_sector_rank_score",
                return_value={"ranking": [], "regime": "MIXED"}), \
          patch("src.pipeline.sectors_base.compute_price_flow_rankings",
                return_value=([], [], [], [])), \
@@ -146,7 +146,7 @@ def test_sectors_base_sd_fallo_to_csv_no_pierde_filas(tmp_path, monkeypatch):
 
     fake_df = pd.DataFrame([{"date": "2026-09-25", "v": 0.2}])
     with patch.object(pd.DataFrame, "to_csv", _fake_to_csv_that_fails()), \
-        patch("src.pipeline.sectors_base.compute_sector_scores",
+        patch("src.pipeline.sectors_base.compute_sector_rank_score",
                return_value={"ranking": [], "regime": "MIXED"}), \
          patch("src.pipeline.sectors_base.compute_price_flow_rankings",
                return_value=([], [], [], [])), \
@@ -179,7 +179,7 @@ def test_sectors_base_cs_fallo_to_csv_no_pierde_filas(tmp_path, monkeypatch):
 
     fake_df = pd.DataFrame([{"date": "2026-09-25", "window": 20, "v": 0.2}])
     with patch.object(pd.DataFrame, "to_csv", _fake_to_csv_that_fails()), \
-        patch("src.pipeline.sectors_base.compute_sector_scores",
+        patch("src.pipeline.sectors_base.compute_sector_rank_score",
                return_value={"ranking": [], "regime": "MIXED"}), \
          patch("src.pipeline.sectors_base.compute_price_flow_rankings",
                return_value=([], [], [], [])), \
@@ -212,7 +212,7 @@ def test_sectors_base_cad_fallo_to_csv_no_pierde_filas(tmp_path, monkeypatch):
 
     fake_cad = pd.DataFrame([{"date": "2026-09-25", "window": 20, "sector": "XLK", "asset": "SPY", "v": 0.2}])
     with patch.object(pd.DataFrame, "to_csv", _fake_to_csv_that_fails()), \
-        patch("src.pipeline.sectors_base.compute_sector_scores",
+        patch("src.pipeline.sectors_base.compute_sector_rank_score",
                return_value={"ranking": [], "regime": "MIXED"}), \
          patch("src.pipeline.sectors_base.compute_price_flow_rankings",
                return_value=([], [], [], [])), \
@@ -245,7 +245,7 @@ def test_sectors_base_cas_fallo_to_csv_no_pierde_filas(tmp_path, monkeypatch):
 
     fake_cas = pd.DataFrame([{"date": "2026-09-25", "window": 20, "sector": "XLK", "asset_class": "EQ", "v": 0.2}])
     with patch.object(pd.DataFrame, "to_csv", _fake_to_csv_that_fails()), \
-        patch("src.pipeline.sectors_base.compute_sector_scores",
+        patch("src.pipeline.sectors_base.compute_sector_rank_score",
                return_value={"ranking": [], "regime": "MIXED"}), \
          patch("src.pipeline.sectors_base.compute_price_flow_rankings",
                return_value=([], [], [], [])), \

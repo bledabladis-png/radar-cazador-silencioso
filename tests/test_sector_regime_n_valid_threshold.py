@@ -15,7 +15,7 @@ import numpy as np
 import pandas as pd
 
 from config.tickers import MARKET_TICKERS
-from regimes.sector_regime import compute_sector_scores
+from regimes.sector_regime import compute_sector_rank_score
 
 
 def _make_df_one_sector_short():
@@ -56,7 +56,7 @@ def _make_df_one_sector_short():
 def test_sector_con_n_valid_bajo_es_nan():
     """XLE con close solo en 60 sesiones no puede publicar score."""
     df = _make_df_one_sector_short()
-    res = compute_sector_scores(df)
+    res = compute_sector_rank_score(df)
     assert res is not None
     last = res["last_scores"]
     assert pd.isna(last.get("XLE")), (
@@ -67,7 +67,7 @@ def test_sector_con_n_valid_bajo_es_nan():
 def test_sector_con_n_valid_alto_publica_score():
     """XLK con 300 sesiones publica score normal."""
     df = _make_df_one_sector_short()
-    res = compute_sector_scores(df)
+    res = compute_sector_rank_score(df)
     assert res is not None
     last = res["last_scores"]
     assert pd.notna(last.get("XLK")), (

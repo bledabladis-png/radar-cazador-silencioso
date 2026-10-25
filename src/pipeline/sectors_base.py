@@ -9,7 +9,7 @@ from pathlib import Path
 
 from src.utils import writer_observation_date
 from src.pipeline.output_writer import persist, skip
-from regimes.sector_regime import compute_sector_scores, compute_price_flow_rankings
+from regimes.sector_regime import compute_sector_rank_score, compute_price_flow_rankings
 from indicators.breadth import compute_breadth
 from config.settings import EXPECTED_SECTOR_COUNT
 
@@ -31,7 +31,7 @@ def compute_sectors_base(df_market, temporal_meta=None):
     _obs_date = writer_observation_date(
         temporal_meta, ['EQUITY_EOD'],
         lambda: df_market.index[-1])
-    sector_results = compute_sector_scores(df_market)
+    sector_results = compute_sector_rank_score(df_market)
     if sector_results:
         top3 = sector_results['ranking'][:3]
         print("  Top 3 sectores:")

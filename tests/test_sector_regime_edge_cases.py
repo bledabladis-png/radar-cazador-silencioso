@@ -9,7 +9,7 @@ import numpy as np
 import pandas as pd
 
 from config.tickers import MARKET_TICKERS
-from regimes.sector_regime import compute_sector_scores, compute_price_flow_rankings
+from regimes.sector_regime import compute_sector_rank_score, compute_price_flow_rankings
 
 
 def _make_df(tickers, n=300, seed=42):
@@ -33,24 +33,24 @@ def _all_tickers():
     return ["^GSPC"] + list(MARKET_TICKERS["sectors"])
 
 
-# --- compute_sector_scores ---
+# --- compute_sector_rank_score ---
 
 def test_df_vacio_devuelve_none():
     df = pd.DataFrame(
         columns=pd.MultiIndex.from_tuples([("Close", "^GSPC")], names=["f", "t"])
     )
-    assert compute_sector_scores(df) is None
+    assert compute_sector_rank_score(df) is None
 
 
 def test_sin_benchmark_devuelve_none():
     sectors = MARKET_TICKERS["sectors"]
     df = _make_df(sectors)  # sin ^GSPC
-    assert compute_sector_scores(df) is None
+    assert compute_sector_rank_score(df) is None
 
 
 def test_sin_sectores_suficientes_devuelve_none():
     df = _make_df(["^GSPC"])  # solo benchmark
-    res = compute_sector_scores(df)
+    res = compute_sector_rank_score(df)
     # Sin sectores no puede haber scores -> None o scores vacio con ranking vacio
     # Documentamos el comportamiento real observado.
     assert res is None or not res.get("ranking")
@@ -67,7 +67,7 @@ def test_sector_faltante_no_rompe():
     df = df.drop(columns=[("Low", t) for t in drop], errors="ignore")
     df = df.drop(columns=[("Volume", t) for t in drop], errors="ignore")
 
-    res = compute_sector_scores(df)
+    res = compute_sector_rank_score(df)
     assert res is not None
     got = {t for t, _, _ in res["ranking"]}
     assert not (got & set(drop)), f"sectores borrados aparecen: {got & set(drop)}"
@@ -75,7 +75,7 @@ def test_sector_faltante_no_rompe():
 
 def test_regime_es_uno_de_los_conocidos():
     df = _make_df(_all_tickers())
-    res = compute_sector_scores(df)
+    res = compute_sector_rank_score(df)
     valid = {
         "BROAD PARTICIPATION",
         "NARROW RALLY",
@@ -89,21 +89,21 @@ def test_regime_es_uno_de_los_conocidos():
 
 def test_ranking_ordenado_descendente():
     df = _make_df(_all_tickers())
-    res = compute_sector_scores(df)
+    res = compute_sector_rank_score(df)
     scores = [s for _, _, s in res["ranking"]]
     assert scores == sorted(scores, reverse=True)
 
 
 def test_scores_series_no_vacia():
     df = _make_df(_all_tickers())
-    res = compute_sector_scores(df)
+    res = compute_sector_rank_score(df)
     assert isinstance(res["scores"], pd.DataFrame)
     assert not res["scores"].empty
 
 
 def test_top3_es_prefijo_de_ranking():
     df = _make_df(_all_tickers())
-    res = compute_sector_scores(df)
+    res = compute_sector_rank_score(df)
     ranking_top3 = [t for t, _, _ in res["ranking"][:3]]
     top3_last_scores = [str(s) for s in res["last_scores"].head(3).index]
     assert ranking_top3 == top3_last_scores

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""FU-020/R2: compute_sector_scores debe resolver effective_date.
+"""FU-020/R2: compute_sector_rank_score debe resolver effective_date.
 
 Contrato: cuando el df tiene un festivo (o dia no bursatil) al final
 con close NaN, el score publicado NO debe ser el del festivo. Debe
@@ -13,7 +13,7 @@ import numpy as np
 import pandas as pd
 
 from config.tickers import MARKET_TICKERS
-from regimes.sector_regime import compute_sector_scores
+from regimes.sector_regime import compute_sector_rank_score
 
 
 def _make_df_with_trailing_holiday():
@@ -48,7 +48,7 @@ def _make_df_with_trailing_holiday():
 def test_scores_index_no_incluye_festivo_final():
     """El ultimo indice de scores no puede ser el festivo."""
     df, holiday = _make_df_with_trailing_holiday()
-    res = compute_sector_scores(df)
+    res = compute_sector_rank_score(df)
     assert res is not None
     last_idx = res["scores"].index[-1]
     assert last_idx != holiday, (
@@ -59,7 +59,7 @@ def test_scores_index_no_incluye_festivo_final():
 def test_last_scores_corresponde_a_dia_con_datos():
     """last_scores debe tener valores validos (no todo NaN)."""
     df, holiday = _make_df_with_trailing_holiday()
-    res = compute_sector_scores(df)
+    res = compute_sector_rank_score(df)
     assert res is not None
     ls = res["last_scores"]
     assert ls.notna().all(), (
@@ -87,6 +87,6 @@ def test_sin_festivo_final_no_hay_efecto():
     df = pd.DataFrame(data, index=bdays)
     df.columns = pd.MultiIndex.from_tuples(df.columns)
 
-    res = compute_sector_scores(df)
+    res = compute_sector_rank_score(df)
     assert res is not None
     assert res["scores"].index[-1] == pd.Timestamp("2025-08-29")
