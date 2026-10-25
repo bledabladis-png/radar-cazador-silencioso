@@ -205,8 +205,8 @@ def render_calidad_datos(data_quality_data):
     out = []
     if data_quality_data is not None and not data_quality_data.empty:
         out.append("## Calidad, frescura y cobertura de datos\n")
-        out.append("| Fuente | Último dato | Edad (días) | Frecuencia | Frescura | Cobertura | Notas |\n")
-        out.append("|--------|-------------|--------------|------------|----------|-----------|-------|\n")
+        out.append("| Fuente | Último dato | Edad (días) | Frecuencia | Frescura | Cobertura | Schema | Notas |\n")
+        out.append("|--------|-------------|--------------|------------|----------|-----------|--------|-------|\n")
         # Mostrar solo la fila más reciente por fuente para evitar duplicados históricos
         dq = data_quality_data.copy()
         if 'date' in dq.columns and 'source' in dq.columns:
@@ -220,7 +220,17 @@ def render_calidad_datos(data_quality_data):
             fresh = row['freshness'] if pd.notna(row['freshness']) else 'N/D'
             cov = f"{row['coverage']:.2%}" if pd.notna(row['coverage']) else 'N/D'
             notes = row['notes'] if pd.notna(row['notes']) else ''
-            out.append(f"| {row['source']} | {last} | {age} | {freq} | {fresh} | {cov} | {notes} |\n")
+            # Fase 2: schema_v desde .schema lateral (None -> v1 implicito)
+            _sv = None
+            if 'schema_v' in row.index:
+                try:
+                    _raw = row['schema_v']
+                    if pd.notna(_raw):
+                        _sv = int(_raw)
+                except (TypeError, ValueError):
+                    _sv = None
+            schema_str = ("v{0}".format(_sv) if _sv is not None else "v1")
+            out.append(f"| {row['source']} | {last} | {age} | {freq} | {fresh} | {cov} | {schema_str} | {notes} |\n")
         out.append("\n")
         out.append("*No todas las variables tienen la misma actualidad. Los datos se muestran sin interpolación.*\n\n")
         # H6 (2026-10-16, auditoria): sustituido literal "26 fuentes" por
@@ -252,6 +262,10 @@ def render_calidad_datos(data_quality_data):
         # Un 9.09% en Evidence Matrix significa 1 de 11 sectores con
         # lectura != EVIDENCIA INSUFICIENTE, no fallo del render.
         # Fuente: indicators/data_quality.py lineas 375-403.
+        out.append("*Schema vN: version del output segun <path>.schema. "
+                   "v1 implicito si no existe .schema. Cambios de schema "
+                   "se migran con backup .v{old}.csv (ver docs/auditoria/"
+                   "wyckoff/64_schema_versions_outputs.md).*\n\n")
         out.append("*Cobertura por fuente: cada fuente declara su "
                    "numerador/denominador (ver indicators/data_quality.py). "
                    "'sectorial': sectores unicos / 11. 'sectorial_evidence': "

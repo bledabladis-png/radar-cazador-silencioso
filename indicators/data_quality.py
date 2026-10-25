@@ -60,6 +60,19 @@ def classify_freshness(age_days, frequency):
         elif age_days <= 14: return 'STALE'
         else: return 'ARCHIVAL'
 
+def _read_schema_version(csv_path):
+    """Lee <path>.schema (entero). Retorna None si no existe o invalido.
+
+    Fresh checkout sin .schema = v1 implicito = None. No se inventa.
+    """
+    try:
+        p = Path(str(csv_path) + ".schema")
+        if p.exists():
+            return int(p.read_text(encoding="utf-8").strip())
+    except (OSError, ValueError):
+        pass
+    return None
+
 def _read_date_col(df, possible_cols):
     for col in possible_cols:
         if col in df.columns:
@@ -576,4 +589,17 @@ def compute_data_quality(reference_date=None):
             _row['notes'] = f'Error lectura european_coverage.csv: {_e}'
         rows.append(_row)
 
+    # Fase 2: anadir schema_v por fuente leyendo .schema lateral.
+    # Parquet no lleva .schema (es .csv.schema solo para CSV). Fuentes
+    # sin .schema: None -> v1 implicito en presentacion.
+    _path_by_source = {}
+    for _src in sources:
+        _path_by_source[_src['source']] = _src['file']
+    for _row in rows:
+        _src_name = _row.get('source')
+        _csv_path = _path_by_source.get(_src_name)
+        if _csv_path is None:
+            _row['schema_v'] = None
+            continue
+        _row['schema_v'] = _read_schema_version(_csv_path)
     return pd.DataFrame(rows)
