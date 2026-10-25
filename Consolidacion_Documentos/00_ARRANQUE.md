@@ -93,7 +93,7 @@ Fuente autoritativa de tests, integridad y cobertura: `Consolidacion_Documentos/
 Snapshot al cierre del ultimo commit:
 - HEAD: `git log --oneline -1`
 - Tests: fuente autoritativa en `Consolidacion_Documentos/ESTADO_SISTEMA.md` (seccion 2).
-- Validation Gate: 10/10
+- Validation Gate: 11/11
 - Working tree: limpio
 - Corpus documental: v3 (Consolidacion_Documentos/00-08, 2026-09-30)
 - Universo USA (stock_prices): 255 tickers; total (US+EU): 329. Fuente: `ESTADO_SISTEMA.md`.
@@ -131,7 +131,7 @@ Fixes 2026-10-22 (commit `1cc8387a`): B5 spring/SOS con `min_periods=`
 Close/0 es contrato v1.8). Ver `REP-AUDIT-20261022-WYCKOFF-P7-B4-B5-B3`.
 
 **Contrato de persistencia de outputs (2026-10-11).** Registro +
-wrapper + verificador + test AST, **24 writers** (pcr_history anadido 2026-10-22, commit `9a2bddcc`; 6 outputs wyckoff holdings anadidos 2026-10-24, commit C2.1; sector_leader_divergence y leader_representativeness retirados 2026-10-24, commit C4.3). `02_ARQUITECTURA.md` seccion 4.
+wrapper + verificador + test AST, **25 writers** (pcr_history anadido 2026-10-22, commit `9a2bddcc`; 6 outputs wyckoff holdings anadidos 2026-10-24, commit C2.1; sector_leader_divergence y leader_representativeness retirados 2026-10-24, commit C4.3). `02_ARQUITECTURA.md` seccion 4.
 
 **CI tests (2026-10-17).** `.github/workflows/ci_tests.yml` corre la
 suite completa en cada push a main (paths-ignore: `data/`, `outputs/`),
@@ -209,6 +209,17 @@ cumple criterio pre-registrado. `SOW-V6` -> WONT_FIX. Apertura
 `SOW-BEAR-CONFIRMATION` (IN_PROGRESS, pendiente contrato v1.10 + auditor
 externo). `WYCKOFF_SOW_* = None` sin cambios. Evidencia en
 `docs/auditoria/wyckoff/51-56`. Ver `04_HISTORICO.md` y REGISTRO.
+
+**Dictamen externo Wyckoff 2026-10-25 (sesion 10).** 9 hallazgos
+aceptados. Cerrados end-to-end: PIT holdings (snapshot append-only
+en holdings_snapshots.csv; writers 24 -> 25), H-03 (FORMING invalida
+si rompe rango + historico 1086 fechas regenerado), H-06 (WLS
+stability = wyckoff_stability, no tanh(median/MAD)), structure_ratio
+continua + n_estructuras en sector_regime_matrix v2 (structure_positive
+retirada), fix Xetra (reference_date.date() -> _as_date()), gate check
+11 distingue migracion pendiente (WARN) de regresion (BLOCKED).
+Abiertos: DICT3-H04-INTERVALS, DICT3-H05-FILLNA-FUTURE,
+DICT3-TOP20-COBERTURA, DICT3-REACCUMULATION. Doc 68.
 
 ---
 

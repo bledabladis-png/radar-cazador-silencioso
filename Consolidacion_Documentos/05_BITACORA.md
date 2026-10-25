@@ -44,6 +44,32 @@ Al cerrar una sesion nueva, se anade arriba (las mas recientes primero). Si hay 
 
 ## 3. SESIONES
 
+### 2026-10-25 (actualizacion de traspaso)
+
+**Objetivo.** Actualizar HANDOFF + 00_ARRANQUE + 04_HISTORICO +
+05_BITACORA para replicar el trabajo en otra IA con contexto completo.
+
+**Hecho.**
+- HANDOFF reescrito sesion 10. Estado real: HEAD f5cb8834, 3755/2
+  tests, gate 11/11, 25 writers, PIT activo, structure_ratio continua,
+  sector_regime_matrix v2.
+- 00_ARRANQUE §3: gate 10/10 -> 11/11, 24 writers -> 25, bloque
+  dictamen anadido.
+- 04_HISTORICO: seccion sesion 10 con detalle por hallazgo.
+- 05_BITACORA: esta entrada.
+
+**Commits.** pendiente.
+
+**Pendiente.**
+- DICT3-H04-INTERVALS, DICT3-H05-FILLNA-FUTURE, DICT3-TOP20-COBERTURA,
+  DICT3-REACCUMULATION.
+- SOW-BEAR-CONFIRMATION (contrato v1.10).
+- Deuda documental: 62 (Tests 3776 -> 3755), 00_ARRANQUE (writers
+  20 -> 25).
+
+**Proximo paso sugerido.** DICT3-H05-FILLNA-FUTURE (acotado) o cerrar
+deuda documental residual (62 + 00_ARRANQUE).
+
 ### 2026-10-25 (sesion 10) - Respuesta al dictamen externo (doc 68)
 
 **Objetivo.** Cerrar los huecos documentales del dictamen externo

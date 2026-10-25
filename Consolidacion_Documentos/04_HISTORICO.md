@@ -2227,3 +2227,49 @@ requiere rediseño como score continuo, con pre-registro previo.
 `SECTOR-REGIME-MATRIX-STRUCTURE-POSITIVE` confirmado roto empiricamente.
 
 Doc 66. Pendiente: Fase 5 (rediseño), Fase 6 (descarga).
+
+## Sesion 2026-10-25 (sesion 10) - Dictamen externo + cierres
+
+Dictamen externo sobre el modulo Wyckoff: NO APROBABLE como sistema
+de señales, APROBABLE CONDICIONADO como herramienta descriptiva.
+9 hallazgos aceptados. Doc 68.
+
+**Cerrados end-to-end:**
+- PIT holdings: snapshot append-only diario (holdings_snapshots.csv).
+  etf_holdings.csv/index_holdings.csv estaticos sin fecha; regenerar
+  historico con composicion 2026Q4 introduce sesgo de supervivencia.
+  Fix: hash SHA256 de tickers ordenados por (source_file, etf),
+  comparar con ultimo snapshot, escribir si cambia. daily_run + 3
+  scripts update. 14 tests.
+- H-03: FORMING invalidaba si el precio rompia el rango.
+  wyckoff_orchestrator._dist_derived_phase y _acc_derived_phase.
+  Historico 1086 fechas regenerado (script con 12 workers, checkpoint,
+  validacion contra .csv activo). 52.3% filas cambian solo FORMING y
+  RANGE; confirmadas 0. 9 tests.
+- H-06: stock_metrics.py usaba tanh(score_median/MAD) para stability
+  (conviccion direccional, arrastra t_norm). Cambio a
+  wyckoff_stability = 1-2*tanh(MAD/K). 43% signos opuestos. 3 tests.
+- structure_ratio continua + n_estructuras en sector_regime_matrix
+  (Bloque 2). structure_positive binaria (0/11946 en el universo
+  correcto) retirada. Render con Struct y N est + nota H-01.
+- sector_regime_matrix migrada a schema v2: .csv -> .v1.csv (91 lineas
+  historico) + fresh start (12 lineas).
+- Gate check 11: migracion pendiente (spec > CSV) es WARN, regresion
+  (spec < CSV) es BLOCKED. Antes ambos BLOCKED.
+- Bug Xetra: 'datetime.date' object has no attribute 'date'. Helper
+  _as_date(x) normaliza date/datetime/Timestamp/string/None.
+  4 usos directos corregidos. 19 tickers DE recuperados. 10 tests.
+
+**Abiertos (DICT3-*):**
+- DICT3-H04-INTERVALS: ICs por cohorte anual, solapamiento temporal,
+  correlacion cross-sector.
+- DICT3-H05-FILLNA-FUTURE: bar_flags en build_ticker_df (calidad por
+  fila) sin romper contrato v1.8.
+- DICT3-TOP20-COBERTURA: universo dinamico 80-90% peso (XLI 57.2%,
+  SPY 49.9% actuales).
+- DICT3-REACCUMULATION: detector de re-acumulacion de continuacion en
+  tendencia alcista. Frente nuevo con pre-registro propio.
+
+**SECTOR-REGIME-MATRIX-STRUCTURE-POSITIVE -> SUPERSEDED** por Bloque 2.
+
+20+ commits. CI verde en cada push. Al cierre: 3755 passed, 2 skipped.
