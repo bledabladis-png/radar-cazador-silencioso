@@ -158,6 +158,18 @@ def _dist_derived_phase(cb: ClassifiedBreak, price: float | None) -> str | None:
     - RANGE si confirmada y precio > resistance + tol (fallida).
     """
     if cb.classification == "DISTRIBUTION_FORMING":
+        # H-03 (auditor externo 2026-10-25): FORMING solo vigente si el
+        # precio permanece dentro del rango. Si rompio por cualquier
+        # lado sin SOW confirmado, la fase actual es RANGE.
+        if (price is not None
+                and cb.range_support is not None
+                and cb.range_resistance is not None
+                and cb.range_tol_abs is not None):
+            tol = float(cb.range_tol_abs)
+            p = float(price)
+            if (p > float(cb.range_resistance) + tol
+                    or p < float(cb.range_support) - tol):
+                return "RANGE"
         return "DISTRIBUTION_FORMING"
     if cb.classification != "DISTRIBUTION_CONFIRMED":
         return None
@@ -181,6 +193,18 @@ def _acc_derived_phase(cb: ClassifiedBreak, price: float | None) -> str | None:
     - RANGE si confirmada y precio < support - tol (fallida).
     """
     if cb.classification == "ACCUMULATION_FORMING":
+        # H-03 (auditor externo 2026-10-25): simetrico. Si el precio rompio
+        # el rango (por arriba o abajo) sin SOS confirmado, la fase
+        # actual es RANGE.
+        if (price is not None
+                and cb.range_support is not None
+                and cb.range_resistance is not None
+                and cb.range_tol_abs is not None):
+            tol = float(cb.range_tol_abs)
+            p = float(price)
+            if (p < float(cb.range_support) - tol
+                    or p > float(cb.range_resistance) + tol):
+                return "RANGE"
         return "ACCUMULATION_FORMING"
     if cb.classification != "ACCUMULATION_CONFIRMED":
         return None
