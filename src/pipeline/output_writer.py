@@ -118,11 +118,23 @@ def persist(name, df, *, date_value=None, sort_by=None, collector=None,
                 path.stem + ".v" + str(_existing) + path.suffix
             )
             try:
+                # NO sobrescribir backup existente con contenido (preserva
+                # historico). Solo crear si no existe o esta vacio.
+                _should_copy = True
                 if _migrated_name.exists():
-                    _migrated_name.unlink()
-                shutil.copy2(path, _migrated_name)
+                    try:
+                        _backup_lines = sum(1 for _ in _migrated_name.open("r", encoding="utf-8", errors="ignore"))
+                    except OSError:
+                        _backup_lines = 0
+                    if _backup_lines > 1:
+                        _should_copy = False
+                        print(f"  [SCHEMA] {name}: backup v{_existing} ya existe ({_backup_lines} lineas), no se sobrescribe")
+                if _should_copy:
+                    if _migrated_name.exists():
+                        _migrated_name.unlink()
+                    shutil.copy2(path, _migrated_name)
+                    print(f"  [SCHEMA] {name}: backup v{_existing} -> {_migrated_name.name} (v{_current_schema} activo)")
                 _migrated_this_call = True
-                print(f"  [SCHEMA] {name}: backup v{_existing} -> {_migrated_name.name} (v{_current_schema} activo)")
             except OSError as _e:
                 print(f"  [WARN] schema backup fallo {name}: {_e}")
             # NO borrar .schema aqui. Se sobreescribe al final si el

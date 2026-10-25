@@ -37,18 +37,28 @@ def df_stocks_real():
 
 @pytest.fixture(autouse=True)
 def _cleanup_schema_files():
-    """Limpia .schema generados por tests que escriben al path real.
+    """Limpia .schema CREADOS POR EL TEST en outputs/history/ (mtime).
 
-    `save_regime_history` escribe `outputs/history/macro_regime.csv.schema`
-    como side-effect cuando el test no pasa `path_override`. El .schema es
-    metadata local (gitignored) y no debe sobrevivir entre tests ni tras
-    la suite. No se borra el CSV (forma parte del repo).
+    Los tests que escriben al path real (save_regime_history sin
+    path_override) dejan `.schema` como residuo. Esta fixture los borra,
+    pero SOLO si fueron creados durante el test (mtime > start). Los
+    `.schema` de produccion (mas antiguos) NO se tocan.
+
+    Incidente 2026-10-25: version anterior borraba TODOS los `.schema` de
+    outputs/history/, incluido el de sector_wyckoff_distribution. El run
+    posterior veia `.schema` ausente -> asumia v1 -> sobrescribia el
+    backup `.v1.csv` con 11 filas (destruia las 330 originales). Ver
+    `persist()` endurecido en output_writer.py.
     """
+    import time as _time
+    _start = _time.time()
     yield
     _history = Path(__file__).parent.parent / "outputs" / "history"
-    if _history.exists():
-        for _schema in _history.glob("*.schema"):
-            try:
+    if not _history.exists():
+        return
+    for _schema in _history.glob("*.schema"):
+        try:
+            if _schema.stat().st_mtime >= _start:
                 _schema.unlink()
-            except OSError:
-                pass
+        except OSError:
+            pass
