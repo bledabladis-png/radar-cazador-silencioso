@@ -35,7 +35,7 @@ EU_INDEX_ETFS = ("FEZ", "DAXEX", "ISF.L", "LYXI")
 OUTPUT_COLUMNS = [
     "date", "group", "group_type", "ticker", "name", "weight",
     "phase", "event_phase", "phase_since", "close", "basis",
-    "coverage_weight_pct",
+    "coverage_weight_pct", "n_bars", "evaluable",
 ]
 
 
@@ -44,56 +44,99 @@ def compute_wyckoff_holdings_report(
     usa_sectors_df,
     usa_indices_df,
     eu_indices_df,
+    snapshot=None,
 ):
-    """Genera las 6 tablas: (usa_sector|usa_index|eu_index)_(acc|dist)."""
-    usa_sector_acc, usa_sector_dist = _build_group_tables(
-        df_stocks, usa_sectors_df, USA_SECTOR_GROUP_TYPE, has_name=False,
-    )
-    usa_index_acc, usa_index_dist = _build_group_tables(
-        df_stocks, usa_indices_df, USA_INDEX_GROUP_TYPE, has_name=True,
-    )
-    eu_index_acc, eu_index_dist = _build_group_tables(
-        df_stocks, eu_indices_df, EU_INDEX_GROUP_TYPE, has_name=True,
-    )
-    return {
-        "usa_sector_acc": usa_sector_acc,
-        "usa_sector_dist": usa_sector_dist,
-        "usa_index_acc": usa_index_acc,
-        "usa_index_dist": usa_index_dist,
-        "eu_index_acc": eu_index_acc,
-        "eu_index_dist": eu_index_dist,
-    }
+    """Genera las 6 tablas: (usa_sector|usa_index|eu_index)_(acc|dist).
+
+    Si snapshot se pasa, lo usa. Si no, lo calcula. El snapshot es la
+    fuente unica de holdings evaluados (Fase 4).
+    """
+    if snapshot is None:
+        snapshot = compute_wyckoff_snapshot(
+            df_stocks, usa_sectors_df, usa_indices_df, eu_indices_df,
+        )
+    return _tables_from_snapshot(snapshot)
+
+
+def _tables_from_snapshot(snapshot):
+    """Proyecta el snapshot en las 6 tablas por fase y grupo."""
+    if snapshot is None or snapshot.empty:
+        return {
+            "usa_sector_acc": _empty_table(), "usa_sector_dist": _empty_table(),
+            "usa_index_acc": _empty_table(), "usa_index_dist": _empty_table(),
+            "eu_index_acc": _empty_table(), "eu_index_dist": _empty_table(),
+        }
+
+    out = {}
+    for gt, prefix in (
+        (USA_SECTOR_GROUP_TYPE, "usa_sector"),
+        (USA_INDEX_GROUP_TYPE, "usa_index"),
+        (EU_INDEX_GROUP_TYPE, "eu_index"),
+    ):
+        sub = snapshot[snapshot["group_type"] == gt]
+        out[f"{prefix}_acc"] = _sort_rows(
+            sub[sub["phase"].isin(ACC_PHASES)].to_dict("records"),
+            PHASE_ORDER_ACC,
+        )
+        out[f"{prefix}_dist"] = _sort_rows(
+            sub[sub["phase"].isin(DIST_PHASES)].to_dict("records"),
+            PHASE_ORDER_DIST,
+        )
+    return out
+
+
+def compute_wyckoff_snapshot(df_stocks, usa_sectors_df, usa_indices_df, eu_indices_df):
+    """Snapshot unico de holdings evaluados (Fase 4).
+
+    Devuelve DataFrame long con TODOS los tickers evaluados (top-20 por
+    grupo, n_bars >= MIN_BARS_THEORETICAL). Columnas = OUTPUT_COLUMNS.
+
+    Consumidores:
+    - compute_wyckoff_holdings_report: filtra por fase para los 6 CSVs.
+    - sector_wyckoff_distribution: agrega pct_* por sector (top-20).
+    - sector_regime_matrix: deriva structure_positive (via el agregado).
+
+    Una sola pasada de classify_phase. Test de coherencia en
+    tests/test_wyckoff_holdings_coherence.py.
+    """
+    rows = []
+    for holdings_df, group_type, has_name in (
+        (usa_sectors_df, USA_SECTOR_GROUP_TYPE, False),
+        (usa_indices_df, USA_INDEX_GROUP_TYPE, True),
+        (eu_indices_df, EU_INDEX_GROUP_TYPE, True),
+    ):
+        if holdings_df is None or holdings_df.empty:
+            continue
+        obs_date = _observation_date_from_df(df_stocks)
+        for group_key, group in holdings_df.groupby("etf"):
+            top = group.nlargest(TOP_N_HOLDINGS, "weight")
+            coverage_pct = float(top["weight"].sum())
+            for _, hrow in top.iterrows():
+                row = _evaluate_holding(
+                    df_stocks, group_key, hrow, group_type, has_name,
+                    obs_date, coverage_pct,
+                )
+                if row is not None:
+                    rows.append(row)
+    if not rows:
+        return pd.DataFrame(columns=OUTPUT_COLUMNS)
+    return pd.DataFrame(rows, columns=OUTPUT_COLUMNS)
 
 
 def _empty_table():
     return pd.DataFrame(columns=OUTPUT_COLUMNS)
 
 
-def _build_group_tables(df_stocks, holdings_df, group_type, has_name):
-    if holdings_df is None or holdings_df.empty:
-        return _empty_table(), _empty_table()
+def _phase_since_iso(value):
+    """Formatea phase_since como ISO date (YYYY-MM-DD) o '' si vacio.
 
-    obs_date = _observation_date_from_df(df_stocks)
-    acc_rows = []
-    dist_rows = []
-
-    for group_key, group in holdings_df.groupby("etf"):
-        top = group.nlargest(TOP_N_HOLDINGS, "weight")
-        coverage_pct = float(top["weight"].sum())
-        for _, hrow in top.iterrows():
-            row = _evaluate_holding(
-                df_stocks, group_key, hrow, group_type, has_name,
-                obs_date, coverage_pct,
-            )
-            if row is None:
-                continue
-            phase = row["phase"]
-            if phase in ACC_PHASES:
-                acc_rows.append(row)
-            elif phase in DIST_PHASES:
-                dist_rows.append(row)
-
-    return _sort_rows(acc_rows, PHASE_ORDER_ACC), _sort_rows(dist_rows, PHASE_ORDER_DIST)
+    Contrato doc 63 §4: phase_since es fecha, no timestamp."""
+    if value is None:
+        return ""
+    try:
+        return pd.Timestamp(value).strftime("%Y-%m-%d")
+    except (ValueError, TypeError):
+        return ""
 
 
 def _evaluate_holding(df_stocks, group_key, hrow, group_type, has_name, obs_date, coverage_pct):
@@ -116,10 +159,12 @@ def _evaluate_holding(df_stocks, group_key, hrow, group_type, has_name, obs_date
 
     if n_bars >= MIN_BARS_VALID:
         basis = fp.current_phase_basis or ""
+        evaluable = True
     else:
         basis = "warm_up_incompleto (n={}): {}".format(
             n_bars, fp.current_phase_basis or ""
         )
+        evaluable = False
 
     name = hrow["name"] if has_name and "name" in hrow.index else ticker
 
@@ -132,10 +177,12 @@ def _evaluate_holding(df_stocks, group_key, hrow, group_type, has_name, obs_date
         "weight": float(hrow["weight"]),
         "phase": fp.phase,
         "event_phase": fp.event_phase or "",
-        "phase_since": fp.phase_since if fp.phase_since is not None else "",
+        "phase_since": _phase_since_iso(fp.phase_since),
         "close": float(close_series.iloc[-1]),
         "basis": basis,
         "coverage_weight_pct": coverage_pct,
+        "n_bars": int(n_bars),
+        "evaluable": bool(evaluable),
     }
 
 

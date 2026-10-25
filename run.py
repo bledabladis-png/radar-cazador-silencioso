@@ -18,6 +18,7 @@ from src.pipeline.flows_primary import compute_flows_primary
 from src.pipeline.flows_secondary import compute_flows_secondary
 from src.pipeline.stocks_data import load_stocks_data
 from indicators.stock_metrics import compute_all_stock_metrics
+from indicators.wyckoff_holdings_report import compute_wyckoff_snapshot, USA_INDEX_ETFS, EU_INDEX_ETFS
 from src.pipeline.sector_metrics import compute_sector_metrics
 from src.pipeline.wyckoff_holdings import compute_wyckoff_holdings
 from src.pipeline.breadth_metrics import compute_breadth_metrics
@@ -124,12 +125,36 @@ def main():
 
     full_metrics_df = compute_all_stock_metrics(df_market, df_stocks, holdings_df, temporal_meta=temporal_meta)
 
-    sm = compute_sector_metrics(df_stocks, holdings_df, full_metrics_df, df_market, effective_meta=df_stocks_effective_meta, temporal_meta=temporal_meta)
+    # Fase 4: snapshot unico de holdings evaluados (top-20 por grupo, >=200 barras).
+    # Una sola pasada de classify_phase. Ambos consumidores (agregado + 6 CSVs)
+    # derivan de aqui para evitar divergencia.
+    import os as _os
+    _idx_holdings_df = None
+    _idx_path = "data/index_holdings.csv"
+    if _os.path.exists(_idx_path):
+        try:
+            import pandas as _pd
+            _idx_holdings_df = _pd.read_csv(_idx_path)
+        except Exception:
+            _idx_holdings_df = None
+    _usa_idx_df = None
+    _eu_idx_df = None
+    if _idx_holdings_df is not None and "etf" in _idx_holdings_df.columns:
+        _usa_idx_df = _idx_holdings_df[_idx_holdings_df["etf"].isin(USA_INDEX_ETFS)].copy()
+        _eu_idx_df = _idx_holdings_df[_idx_holdings_df["etf"].isin(EU_INDEX_ETFS)].copy()
+        if _usa_idx_df.empty:
+            _usa_idx_df = None
+        if _eu_idx_df.empty:
+            _eu_idx_df = None
+    wyckoff_snapshot = compute_wyckoff_snapshot(df_stocks, holdings_df, _usa_idx_df, _eu_idx_df)
+    print(f"  Snapshot Wyckoff holdings: {len(wyckoff_snapshot)} tickers evaluados.")
+
+    sm = compute_sector_metrics(df_stocks, holdings_df, full_metrics_df, df_market, effective_meta=df_stocks_effective_meta, temporal_meta=temporal_meta, wyckoff_snapshot=wyckoff_snapshot)
     sector_wyckoff_distribution_df = sm['sector_wyckoff_distribution_df']
     rs_internal_df = sm['rs_internal_df']
     sector_concentration_df = sm['sector_concentration_df']
 
-    wh_tables = compute_wyckoff_holdings(df_stocks, holdings_df)
+    wh_tables = compute_wyckoff_holdings(df_stocks, holdings_df, snapshot=wyckoff_snapshot)
 
     bm = compute_breadth_metrics(df_stocks, df_market, holdings_df,
                                   reference_date=reference_date,

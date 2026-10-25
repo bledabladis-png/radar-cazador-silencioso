@@ -16,10 +16,12 @@ from indicators.rs_internal import compute_rs_internal
 from indicators.sector_concentration import compute_sector_concentration
 
 
-def _compute_wyckoff(df_stocks, holdings_df):
+def _compute_wyckoff(df_stocks, holdings_df, snapshot=None):
     try:
         if df_stocks is not None and not df_stocks.empty:
-            sector_wyckoff_distribution_df = compute_sector_wyckoff_distribution(df_stocks, holdings_df)
+            sector_wyckoff_distribution_df = compute_sector_wyckoff_distribution(
+                df_stocks, holdings_df, snapshot=snapshot,
+            )
             if not sector_wyckoff_distribution_df.empty:
                 date_val = sector_wyckoff_distribution_df["date"].max()
                 persist("sector_wyckoff_distribution", sector_wyckoff_distribution_df, date_value=date_val)
@@ -77,7 +79,7 @@ def _compute_concentration(df_stocks, holdings_df, full_metrics_df, reference_da
     return sector_concentration_df
 
 
-def compute_sector_metrics(df_stocks, holdings_df, full_metrics_df, df_market, effective_meta=None, temporal_meta=None):
+def compute_sector_metrics(df_stocks, holdings_df, full_metrics_df, df_market, effective_meta=None, temporal_meta=None, wyckoff_snapshot=None):
     """Calcula las metricas sectoriales derivadas de df_stocks.
 
     Returns:
@@ -91,7 +93,7 @@ def compute_sector_metrics(df_stocks, holdings_df, full_metrics_df, df_market, e
     if _ref_date is None and df_stocks is not None and not df_stocks.empty:
         _ref_date = df_stocks.index[-1]
     return {
-        "sector_wyckoff_distribution_df": _compute_wyckoff(df_stocks, holdings_df),
+        "sector_wyckoff_distribution_df": _compute_wyckoff(df_stocks, holdings_df, snapshot=wyckoff_snapshot),
         "rs_internal_df": _compute_rs_internal(df_stocks, holdings_df, df_market, temporal_meta=temporal_meta),
         "sector_concentration_df": _compute_concentration(df_stocks, holdings_df, full_metrics_df, reference_date=_ref_date),
     }

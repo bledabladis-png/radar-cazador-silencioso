@@ -56,7 +56,7 @@ def _split_indices(index_holdings_df):
             eu if not eu.empty else None)
 
 
-def compute_wyckoff_holdings(df_stocks, holdings_df, index_holdings_path=None):
+def compute_wyckoff_holdings(df_stocks, holdings_df, index_holdings_path=None, snapshot=None):
     """Calcula y persiste los 6 CSVs de tablas Wyckoff por holdings.
 
     Args:
@@ -85,6 +85,7 @@ def compute_wyckoff_holdings(df_stocks, holdings_df, index_holdings_path=None):
     try:
         tables = compute_wyckoff_holdings_report(
             df_stocks, holdings_df, usa_idx_df, eu_idx_df,
+            snapshot=snapshot,
         )
     except (KeyError, ValueError, TypeError, IndexError, AttributeError,
             OSError, RuntimeError) as e:
