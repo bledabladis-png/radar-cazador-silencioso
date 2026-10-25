@@ -105,3 +105,6 @@ scripts/diag_*.py
 # el primer run si spec.schema_version > 1. Determinista y
 # agnostico al entorno.
 outputs/**/*.schema
+# Backups de schema (creados por persist al migrar). Se quedan en
+# disco para analisis/referencia, NO se trackean.
+outputs/history/*.v[0-9]*.csv
