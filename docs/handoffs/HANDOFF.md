@@ -32,6 +32,7 @@ Y se abrio + cerro como falso positivo un item que resulto ser un
 defecto de observacion (mojibake en consola PowerShell, no en el
 fichero):
 - `REPORT-ENCODING-MOJIBAKE-ADC` -> FALSE_POSITIVE
+- `SCHEMA-VERSIONING-OUTPUTS`: FIXED 2026-10-25 (commit `c9a848b5`).
 
 7 commits, CI verde en cada push. 4 frentes de codigo cerrados.
 

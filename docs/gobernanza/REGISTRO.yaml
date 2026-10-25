@@ -2070,4 +2070,3 @@ items:
   siguiente_accion: |
     CERRADO. Fase 2 (data_quality con schema_v en tabla frescura)
     pendiente como nuevo item. Fase 3-6 en HANDOFF seccion 4.
-
