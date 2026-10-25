@@ -1526,6 +1526,11 @@ items:
         RANGE-01). Medicion: 0/2512 filas H=L=C en market_data,
         0 filas Volume=0 en ambos parquets. Riesgo residual
         mitigado en detect_sow con +1e-9.
+        NOTA (2026-10-25, auditoria externa): B4 = H-05 del dictamen
+        externo. El auditor acepta que la politica esta justificada
+        por contrato v1.8 y test de regresion, pero advierte que
+        0/2512 filas no prueba seguridad futura. Ver item
+        DICT3-H05-FILLNA-FUTURE para accion futura y doc 68.
   evidencia: |
     B5: detect_spring/detect_sos con EVENT_WINDOW (20) como
     min_periods, patron H7. Test F03 spring actualizado (fila 10
@@ -1890,7 +1895,15 @@ items:
 - id: SECTOR-REGIME-MATRIX-STRUCTURE-POSITIVE
   tipo: auditoria_interna
   ciclo: '2026-10-24'
-  estado: OPEN
+  estado: SUPERSEDED
+  razon: |
+    SUPERSEDED por Bloque 2 (commit 1589e079) + doc 68:
+    structure_positive retirada. Publicada en su lugar
+    structure_ratio continua con n_estructuras. El item
+    original pedia validacion empirica de la derivacion
+    holdings-based; la investigacion (11 pruebas en
+    sesion 2026-10-25) mostro que el binario no discrimina
+    robustamente. Ver DICT3-WYCKOFF-AUDIT-2026-10-25.
   descripcion: |
     C5.1 cambio la derivacion de `structure_positive` en
     `sector_regime_matrix.py`: antes `_phase_positive(phase)` sobre la
@@ -2155,3 +2168,120 @@ items:
     historico con el codigo actual.
   siguiente_accion: |
     CERRADO.
+
+- id: DICT3-WYCKOFF-AUDIT-2026-10-25
+  tipo: dictamen_externo
+  ciclo: '2026-10-25'
+  estado: FIXED
+  commit: c13cd3a5
+  evidencia: |
+    Dictamen externo sobre commit e491906c. 9 hallazgos (H-01 a H-06,
+    PIT holdings, top-20 cobertura, re-acumulacion). Aceptados todos
+    como validos tecnicamente. Cerrados end-to-end con codigo + tests
+    + run real:
+      - H-03 (FORMING invalida si rompe rango): fix wyckoff_orchestrator
+        + historico 1086 fechas regenerado. 6244/11946 filas cambian
+        en FORMING/RANGE. Confirmadas 0 cambios. 9 tests.
+      - H-06 (WLS stability): stock_metrics.py usa wyckoff_stability,
+        no tanh(median/MAD). 43% signos opuestos -> misma metrica.
+        3 tests.
+      - PIT holdings: snapshot append-only diario (holdings_snapshots
+        .csv). Daily_run + 3 scripts. 14 tests.
+    Parciales / abiertos (ver items separados):
+      - H-01 (periodo): corregido en render.
+      - H-02 (SOW 3 cierres): codigo OK, pseudocodigo del informe era
+        abreviado. 3 tests.
+      - H-04 (respaldo estadistico): parcial. structure_ratio continuo
+        + N est. ICs pendientes. DICT3-H04-INTERVALS.
+      - H-05 (fillna): WONT_FIX con razonamiento. DICT3-H05-FILLNA-
+        FUTURE abierto.
+      - Top-20: abierto. DICT3-TOP20-COBERTURA.
+      - Re-acumulacion: abierto. DICT3-REACCUMULATION.
+    Respuesta detallada en docs/auditoria/wyckoff/68_respuesta_
+    dictamen_2026-10-25.md.
+  descripcion: |
+    Dictamen externo de 2026-10-25 sobre el modulo Wyckoff. Separa
+    correccion del software, coherencia de clasificacion, validez
+    estadistica y utilidad financiera. Dictamen provisional NO
+    APROBABLE como sistema de senales de inversion; APROBACION
+    CONDICIONADA como herramienta descriptiva.
+  siguiente_accion: |
+    CERRADO como frente global. Los 3 items parciales/abiertos
+    (H-04, H-05, top-20, re-acumulacion) viven como items separados
+    para cierre individual.
+
+- id: DICT3-H04-INTERVALS
+  tipo: deuda_tecnica
+  ciclo: '2026-10-25'
+  estado: OPEN
+  descripcion: |
+    H-04 del dictamen externo: la metrica structure_ratio (continuo,
+    publicado en sector_regime_matrix v2 desde Bloque 2) no tiene
+    intervalos de confianza por cohorte anual, tamanos muestrales
+    por estado, criterios de inclusion explicitos, ni tratamiento de
+    observaciones solapadas / correlacion entre sectores. Sin esto,
+    la metrica es descriptiva, no inferencial. Doc 68 seccion H-04.
+  siguiente_accion: |
+    Antes de cualquier prueba inferencial sobre structure_ratio:
+      (1) Publicar formula exacta, numerador, denominador, criterios
+          de inclusion y exclusion.
+      (2) Calcular ICs por cohorte anual con correccion por
+          solapamiento (block bootstrap o similar).
+      (3) Tratar correlacion cross-sector (no tratar como obs
+          independientes).
+      (4) Congelar protocolo antes de evaluacion out-of-sample.
+    No es bloqueante para uso descriptivo actual.
+
+- id: DICT3-H05-FILLNA-FUTURE
+  tipo: deuda_tecnica
+  ciclo: '2026-10-25'
+  estado: OPEN
+  descripcion: |
+    H-05 del dictamen externo. build_ticker_df hace fillna(Close) en
+    Open/High/Low y fillna(0) en Volume. Justificado por contrato v1.8
+    y protegido por test_regresion_i2_nan_internos_no_degenera.
+    Medicion: 0/2512 filas H=L=C en market_data, 0 filas Volume=0 en
+    ambos parquets. El auditor razona que esto no prueba seguridad
+    futura: una barra con datos incompletos reales en el futuro
+    quedaria enmascarada como "vela sin rango intradia" o "volumen 0".
+    Doc 68 seccion H-05.
+  siguiente_accion: |
+    Anadir columna de calidad por fila (bar_flags: [OK, NO_RANGE,
+    ZERO_VOLUME, MISSING_OHLC]) en build_ticker_df, sin romper el
+    contrato v1.8. Los detectores existentes siguen operando sobre
+    los valores rellenados; el flag permite auditar. Mencionar en
+    doc 68 seccion H-05 cuando se implemente.
+
+- id: DICT3-TOP20-COBERTURA
+  tipo: deuda_tecnica
+  ciclo: '2026-10-25'
+  estado: OPEN
+  descripcion: |
+    Top-20 cobertura: XLI 57.2%, SPY 49.9%, IWM excluido (6.2%). El
+    auditor externo razona que top-20 por peso no basta para sostener
+    una afirmacion representativa del sector o indice. Doc 68 seccion
+    top-20.
+  siguiente_accion: |
+    Universo dinamico por grupo (objetivo 80-90% peso), minimo de
+    componentes validos. Requiere descarga adicional de tickers,
+    protocolo de 6 pasos (calendario, 0 H=L=C, resolve_effective_date,
+    output_registry, test), regeneracion del historico.
+    No bloqueante para uso actual (cobertura declarada en cada fila
+    con coverage_weight_pct).
+
+- id: DICT3-REACCUMULATION
+  tipo: deuda_tecnica
+  ciclo: '2026-10-25'
+  estado: OPEN
+  descripcion: |
+    Re-acumulacion de continuacion: el detector actual solo detecta
+    reversion (SC->AR->Range->SOS, BC->AR->Range->SOW). Re-acumulacion
+    (rango en tendencia alcista sana que se rompe al alza) no se
+    detecta. XLI sube 2023-2026 sin capitulacion -> 0 acumulaciones
+    por diseno Wyckoff clasico. Doc 68 seccion re-acumulacion.
+  siguiente_accion: |
+    Frente nuevo con pre-registro propio. Detector de re-acumulacion
+    en tendencia alcista (no requiere SC previo): consolidacion con
+    contexto UP, prueba de oferta/demanda, ruptura confirmada al alza.
+    Familia separada de las cascadas actuales. No toca las cascadas
+    existentes. Sin fecha.

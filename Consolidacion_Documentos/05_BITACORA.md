@@ -44,6 +44,47 @@ Al cerrar una sesion nueva, se anade arriba (las mas recientes primero). Si hay 
 
 ## 3. SESIONES
 
+### 2026-10-25 (sesion 10) - Respuesta al dictamen externo (doc 68)
+
+**Objetivo.** Cerrar los huecos documentales del dictamen externo
+2026-10-25 tras los cierres de codigo (H-03, H-06, PIT, structure_ratio
+continuo, Xetra).
+
+**Hecho.**
+- `docs/auditoria/wyckoff/68_respuesta_dictamen_2026-10-25.md`: doc
+  formal de respuesta. Detalle por hallazgo, pruebas aportadas, pruebas
+  pendientes, cambios estructurales.
+- REGISTRO:
+  - `DICT3-WYCKOFF-AUDIT-2026-10-25` FIXED (frente global).
+  - `DICT3-H04-INTERVALS` OPEN (ICs, tamanos muestrales, solapamiento).
+  - `DICT3-H05-FILLNA-FUTURE` OPEN (bar_flags sin romper v1.8).
+  - `DICT3-TOP20-COBERTURA` OPEN (universo dinamico 80-90%).
+  - `DICT3-REACCUMULATION` OPEN (re-acumulacion continuacion).
+  - `SECTOR-REGIME-MATRIX-STRUCTURE-POSITIVE` -> SUPERSEDED por Bloque 2.
+  - Nota en REP-AUDIT-20261022-WYCKOFF-P7-B4-B5-B3 (B4 = H-05 dictamen).
+- HANDOFF: §3 CERRADOS con DICT3 FIXED + SUPERSEDED. §4.2 anade los
+  4 DICT3 OPEN. Arreglada numeracion §4 (habia dos 4.1 duplicados).
+- Bug menor: doc 67 no existe como fichero (el analisis se hizo en
+  chat). Doc 68 lo sustituye.
+
+**Commits.** pendiente.
+
+**Pendiente.**
+- `DICT3-H04-INTERVALS`: congelar protocolo antes de inferencia.
+- `DICT3-H05-FILLNA-FUTURE`: bar_flags en build_ticker_df.
+- `DICT3-TOP20-COBERTURA`: universo dinamico.
+- `DICT3-REACCUMULATION`: frente nuevo con pre-registro.
+- `SOW-BEAR-CONFIRMATION`: contrato v1.10 pendiente auditor.
+- `WYCKOFF-5BX`: ~2027.
+- Deuda documental residual: 62 (Tests 3776 vs 3705), 00_ARRANQUE
+  writers 20 vs 24.
+
+**Lecciones.** "10 anos" del informe preliminar era error propio:
+el parquet market_data tiene 2021-10-04 pero el historico Wyckoff
+regenerado empieza en 2022-08-11 (1086 sesiones, ~4.2 anos). El
+doc 67 que se menciono en mensajes previos nunca se commiteo; doc 68
+lo sustituye con las cifras correctas.
+
 ### 2026-10-25 (sesion 9) - Fase 3: regeneracion historica
 
 **Objetivo.** Regenerar `sector_wyckoff_distribution` con el universo

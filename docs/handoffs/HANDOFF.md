@@ -137,6 +137,11 @@ Cerrado como FALSE_POSITIVE en el mismo dia.
 - `C4.5-SLPM-STRINGS-RESIDUALES`: FIXED 2026-10-25 (commit c1e4af2e).
 - `STRUCTURAL-ENGINE-LEADER-BREADTH-ZOMBIE`: FIXED 2026-10-25 (commit 7679d3fb).
 - `REPORT-ENCODING-MOJIBAKE-ADC`: FALSE_POSITIVE 2026-10-25.
+- `DICT3-WYCKOFF-AUDIT-2026-10-25`: FIXED 2026-10-25 (commit c13cd3a5).
+  H-03, H-06, PIT holdings cerrados. H-01, H-02 documentales.
+  H-04, H-05, top-20, re-acumulacion abiertos como DICT3-*.
+- `SECTOR-REGIME-MATRIX-STRUCTURE-POSITIVE`: SUPERSEDED 2026-10-25
+  por Bloque 2 (structure_ratio continuo + doc 68).
 
 ---
 
@@ -164,7 +169,7 @@ volver a `structure_score` y a la descarga:
 - **Fase 6:** descarga unificada (`Router` con politica unica para
   fed_data + treasury_data; auditar `b30a9182`, `4bb54f80`).
 
-### 4.1. Deudas tecnicas OPEN
+### 4.2. Deudas tecnicas OPEN
 
 - `CURRENT-PHASE-BASIS-CSV`: columna `basis` no va al reporte (solo al
   CSV descargable). Alcance pequeno.
@@ -173,21 +178,34 @@ volver a `structure_score` y a la descarga:
   Solo se ve dentro de `py run.py` con `Select-String "VALIDATION GATE"`.
 - `IWM-HOLDINGS-EXPANSION`: sub-fase de descarga, protocolo de 6 pasos.
   IWM excluido del holdings-based (top-20 = 6.2% de 1977 holdings).
-- `SECTOR-REGIME-MATRIX-STRUCTURE-POSITIVE`: validacion empirica de la
-  nueva derivacion de `structure_positive` (holdings-based desde C5.1).
 - `PODA-BITACORA-DIA-EN-CURSO`: mensaje del script opaco. El script
   reporta "1 heading(s) a podar (de 11 sesiones unicas): 2026-10-13"
   sin mencionar "dia en curso". Bug + ambiguedad en seccion 5 de
   bitacora.
 
-### 4.2. SOW-BEAR-CONFIRMATION (IN_PROGRESS)
+**Del dictamen externo 2026-10-25 (doc 68):**
+
+- `DICT3-H04-INTERVALS` (OPEN): structure_ratio continuo publicado;
+  falta ICs por cohorte anual, criterios de inclusion, tratamiento
+  de solapamiento temporal y correlacion cross-sector. Sin esto es
+  descriptivo, no inferencial.
+- `DICT3-H05-FILLNA-FUTURE` (OPEN): anadir columna de calidad por
+  fila en build_ticker_df (bar_flags) para distinguir barra-sin-
+  negociacion de barra-incompleta, sin romper contrato v1.8.
+- `DICT3-TOP20-COBERTURA` (OPEN): universo dinamico por grupo
+  (objetivo 80-90% peso). XLI 57.2%, SPY 49.9% actuales.
+- `DICT3-REACCUMULATION` (OPEN): detector de re-acumulacion de
+  continuacion en tendencia alcista. Frente nuevo con pre-registro
+  propio.
+
+### 4.3. SOW-BEAR-CONFIRMATION (IN_PROGRESS)
 
 - Requiere contrato v1.10 firmado por auditor externo antes de implementar.
 - Siguiente accion: redactar `docs/auditoria/wyckoff/57_contrato_v1_10.md`.
 - Sin codigo en produccion hasta firma.
 - `detect_sow_v2` en codigo con tests. `WYCKOFF_SOW_*` = None.
 
-### 4.3. Deuda documental residual
+### 4.4. Deuda documental residual
 
 - `62_sistema_completo_2026-10-24.md`: parcialmente obsoleto (no menciona
   C4.4). Cabecera dice "Tests: 3776 passed" (real 3705/2). Correccion
@@ -198,7 +216,7 @@ volver a `structure_score` y a la descarga:
 - HANDOFF seccion 4: renumerada en sesion 4 (era 4.2-4.6, ahora
   4.1-4.5). Cosmetico.
 
-### 4.4. Items OPEN observacionales (fechas)
+### 4.5. Items OPEN observacionales (fechas)
 
 | Item | Fecha | Accion |
 |---|---|---|
@@ -207,7 +225,7 @@ volver a `structure_score` y a la descarga:
 | CRON-SLOTS-OBS | 2026-11-10 | Revision runs 20-10 a 10-11 |
 | SCHEDULER-DELAYS | 2026-11-10 | p95 delays |
 
-### 4.5. BLOCKED_EXTERNAL
+### 4.6. BLOCKED_EXTERNAL
 
 - `C2-920`: discrepancia 920 baseline IAE. Auditor externo.
 - `WYCKOFF-5BX`: `n_confirmed_H20_complete >= 550` (~2027).
