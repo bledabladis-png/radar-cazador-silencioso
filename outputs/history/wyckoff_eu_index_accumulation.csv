@@ -1,3 +1,3 @@
-date,group,group_type,ticker,name,weight,phase,event_phase,close,basis,coverage_weight_pct,phase_since
-2026-10-23,ISF.L,index_eu,REL.L,RELX PLC,1.72,ACCUMULATION_FORMING,RANGE,3039.0,"acc formandose: rango activo con contexto de acumulacion, price 3039.0 dentro",60.8,
-2026-10-23,ISF.L,index_eu,GLEN.L,GLENCORE PLC,2.22,MARKUP,ACCUMULATION,537.5,markup: price 537.5 > resistance+tol 275.5726164146101+3.533714159718311 (prevalece sobre dist forming/sin señal),60.8,
+date,group,group_type,ticker,name,weight,phase,event_phase,close,basis,coverage_weight_pct,phase_since,n_bars,evaluable
+2026-10-23,ISF.L,index_eu,REL.L,RELX PLC,1.72,ACCUMULATION_FORMING,RANGE,3039.0,"acc formandose: rango activo con contexto de acumulacion, price 3039.0 dentro",60.8,,1262.0,True
+2026-10-23,ISF.L,index_eu,GLEN.L,GLENCORE PLC,2.22,MARKUP,ACCUMULATION,537.5,markup: price 537.5 > resistance+tol 275.5726164146101+3.533714159718311 (prevalece sobre dist forming/sin señal),60.8,,1259.0,True
