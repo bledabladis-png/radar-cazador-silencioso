@@ -11,6 +11,8 @@ import os
 
 import pandas as pd
 
+from src.pipeline.holdings_snapshot import compute_and_persist_holdings_snapshot
+
 
 def _run(args):
     """Ejecuta un subcomando y devuelve exit code. Sin shell=True."""
@@ -62,6 +64,15 @@ def main():
     nuevo_df = nuevo_df.drop_duplicates(subset=['etf','ticker'], keep='last')
     nuevo_df.to_csv(index_path, index=False)
     print(f"\nindex_holdings.csv actualizado con FEZ, DAXEX, ISF.L y LYXI. Total: {len(nuevo_df)}")
+    # PIT-fix (auditoria externa 2026-10-25): snapshot append-only.
+    try:
+        compute_and_persist_holdings_snapshot(
+            reference_date=None,
+            etf_holdings_df=None,
+            index_holdings_df=nuevo_df,
+        )
+    except (RuntimeError, ValueError, TypeError, KeyError, OSError) as _hs_e:
+        print(f"  [WARN] holdings snapshot omitido: {_hs_e}")
     return 0
 
 

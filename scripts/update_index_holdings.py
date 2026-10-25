@@ -16,6 +16,7 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
 from src.holdings_filter import is_valid_holding_ticker
+from src.pipeline.holdings_snapshot import compute_and_persist_holdings_snapshot
 
 # ETFs de EE.UU. que se actualizan desde State Street (Excel)
 US_ETFS = {
@@ -303,6 +304,15 @@ def main():
             print(f'  Dedup: {n_removed} filas duplicadas eliminadas (de {n_before})')
         df_final.to_csv(OUTPUT_FILE, index=False)
         print(f'\nArchivo guardado: {OUTPUT_FILE}')
+        # PIT-fix (auditoria externa 2026-10-25): snapshot append-only.
+        try:
+            compute_and_persist_holdings_snapshot(
+                reference_date=None,
+                etf_holdings_df=None,
+                index_holdings_df=df_final,
+            )
+        except (RuntimeError, ValueError, TypeError, KeyError, OSError) as _hs_e:
+            print(f'  [WARN] holdings snapshot omitido: {_hs_e}')
         print(f'Actualizados: {len(updated)} ETFs ({", ".join(updated)})')
         if failed:
             print(f'Fallidos (usan datos anteriores): {len(failed)} ETFs ({", ".join(failed)})')
