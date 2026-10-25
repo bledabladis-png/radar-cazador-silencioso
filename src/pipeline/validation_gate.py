@@ -220,19 +220,43 @@ def run_validation_gate(wyckoff_holdings_data, pcr_data, darkpool_data, mte_resu
                 except (OSError, ValueError):
                     _actual = None
                 if _actual is not None and _actual != _expected:
-                    _schema_issues.append(
-                        f"{_spec.name}: schema={_actual} != spec={_expected}"
-                    )
+                    _schema_issues.append((_spec.name, _actual, _expected))
             # Buscar .v*.csv al lado
             for _sib in _csv.parent.glob(_csv.stem + ".v*" + _csv.suffix):
                 _migrated_count += 1
                 break
-        if _schema_issues:
-            for _iss in _schema_issues:
-                validation_errors.append(f"Schema: {_iss}")
+        # Bloque 2 auditoria externa (2026-10-25): distinguir migracion
+        # pendiente (spec > actual: el CSV aun no se ha reescrito con el
+        # nuevo schema, se hara en el siguiente persist() de ese output)
+        # de regresion (spec < actual: el codigo espera un schema mas
+        # antiguo que el CSV). Migracion = WARN, regresion = BLOCKED.
+        _pending = []
+        _regressions = []
+        for _iss_tuple in _schema_issues:
+            _name, _actual, _expected = _iss_tuple
+            if _expected > _actual:
+                _pending.append((_name, _actual, _expected))
+            else:
+                _regressions.append((_name, _actual, _expected))
+        if _regressions:
+            for _name, _actual, _expected in _regressions:
+                validation_errors.append(
+                    f"Schema regression: {_name} espera v{_expected} pero CSV es v{_actual}"
+                )
             _add_check(
                 validation_checks, validation_errors, "Schema versioning",
-                False, f"{len(_schema_issues)} outputs con schema mismatch",
+                False, f"{len(_regressions)} regresiones",
+            )
+        elif _pending:
+            # Migracion pendiente: WARN, no bloquea. Se completa en el
+            # siguiente persist() del output.
+            _detail = f"{_checked} outputs v, {len(_pending)} migracion pendiente"
+            if _migrated_count:
+                _detail += f", {_migrated_count} MIGRATED"
+            print(f"    [WARN] Schema versioning: {len(_pending)} migraciones pendientes (no bloquea)")
+            _add_check(
+                validation_checks, validation_errors, "Schema versioning",
+                True, _detail,
             )
         else:
             _detail = f"{_checked} outputs v"

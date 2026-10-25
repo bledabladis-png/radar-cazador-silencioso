@@ -124,8 +124,10 @@ def test_sector_wyckoff_distribution_schema_2():
 def test_resto_outputs_schema_1():
     """Los demas outputs temporal mantienen schema_version=1 por defecto."""
     from src.pipeline.output_registry import REGISTRY
+    # Outputs con schema_version > 1 (bumpeados por cambios estructurales)
+    EXCLUIDOS = {"sector_wyckoff_distribution", "sector_regime_matrix"}
     for spec in REGISTRY:
-        if spec.name == "sector_wyckoff_distribution":
+        if spec.name in EXCLUIDOS:
             continue
         if getattr(spec, "kind", None) != "temporal":
             continue
