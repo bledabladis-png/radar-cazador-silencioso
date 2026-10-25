@@ -44,6 +44,42 @@ Al cerrar una sesion nueva, se anade arriba (las mas recientes primero). Si hay 
 
 ## 3. SESIONES
 
+### 2026-10-25 (sesion 5) - Fase 1: schema versioning outputs
+
+**Objetivo.** Cerrar el incidente de schema mezclado detectado en
+auditoria post-sesion-4 (auditoria completa solicitada por el usuario:
+descarga, fuentes, Wyckoff, arquitectura).
+
+**Diagnostico.** Commit `415487ff` (sesion 3) anadio FORMING/CONFLICT
+a `sector_wyckoff_distribution` sin versionar. CSV con 330 filas v1 +
+11 filas v2 sin senal. `persist()` ciego, gate y data_quality no
+detectaban.
+
+**Hecho.**
+- `OutputSpec.schema_version` (default 1, sector_wyckoff_distribution=2).
+- `persist()`: COPIAR backup v{old} si schema difiere, escribir nuevo
+  sin appendear, escribir `.schema` lateral.
+- Gate check 11: schema CSV vs spec, reporta MIGRATED.
+- `.gitignore`: `outputs/**/*.schema` + `outputs/history/*.v[0-9]*.csv`.
+- `finalize.save_regime_history`: path_override (retrocompatible).
+- `conftest.py`: fixture autouse limpia `.schema` tras tests.
+- `test_output_schema.py`: 6 tests.
+- Run real 15 min, gate 11/11, CSV regenerado (11 filas v2).
+
+**Commits.** `c9a848b5` (codigo), `a88e85da` (CSV).
+
+**Pendiente (Fase 2-6).**
+- Fase 2: data_quality con schema_v en frescura.
+- Fase 3: regeneracion historica (proyecto separado).
+- Fase 4: unificacion de 4 caminos de estructura sectorial.
+- Fase 5: structure_score continuo.
+- Fase 6: descarga unificada (Router).
+
+**Lecciones.** Un cambio de schema sin version explicita se convierte
+en historico envenenado silencioso. El append ciego es la causa raiz
+del bug. `git log -p` + analisis de columnas por fecha fue como se
+detecto. Requirio ~3h de auditoria para localizar el commit `415487ff`.
+
 ### 2026-10-25 (sesion 4 continuacion 2) - Cierre STRUCTURAL-ENGINE-LEADER-BREADTH-ZOMBIE
 
 **Objetivo.** Cerrar la ultima deuda de codigo de sesion 3.

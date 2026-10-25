@@ -137,6 +137,24 @@ Cerrado como FALSE_POSITIVE en el mismo dia.
 
 ## 4. PENDIENTES VIVOS
 
+### 4.1. Fases 2-6 del refactor de outputs (post Fase 1)
+
+Fase 1 (`SCHEMA-VERSIONING-OUTPUTS`, commit `c9a848b5`) cierra el
+incidente de schema mezclado. Quedan 5 fases estructurales antes de
+volver a `structure_score` y a la descarga:
+
+- **Fase 2 (documental):** `data_quality.SOURCES` reporta `schema_v`
+  por fuente en la tabla de frescura del reporte.
+- **Fase 3 (diferida):** regeneracion historica completa con protocolo
+  de validacion 30 dias. Doc `65_regeneracion_historico.md` pendiente.
+- **Fase 4 (critica):** unificacion de los 4 caminos de "estructura
+  sectorial" (`sector_regime.compute_sector_scores` / agregado /
+  `wyckoff_holdings_report` / `sector_regime_matrix.structure_positive`).
+  Divergen en XLC, XLK, XLP hoy.
+- **Fase 5:** `structure_score` continuo con datos coherentes.
+- **Fase 6:** descarga unificada (`Router` con politica unica para
+  fed_data + treasury_data; auditar `b30a9182`, `4bb54f80`).
+
 ### 4.1. Deudas tecnicas OPEN
 
 - `CURRENT-PHASE-BASIS-CSV`: columna `basis` no va al reporte (solo al

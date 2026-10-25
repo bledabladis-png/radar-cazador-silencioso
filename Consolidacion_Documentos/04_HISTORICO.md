@@ -2122,3 +2122,28 @@ IWM-HOLDINGS-EXPANSION, SECTOR-REGIME-MATRIX-STRUCTURE-POSITIVE,
 PODA-BITACORA-DIA-EN-CURSO (todos documentales u observacionales,
 sin codigo pendiente en produccion salvo REPORT-ENCODING-MOJIBAKE-ADC
 nueva deuda).
+
+## Sesion 2026-10-25 (continuacion 3) - Fase 1: schema versioning outputs
+
+Commit `c9a848b5` (codigo) + `a88e85da` (CSV regenerado) cierran el
+incidente de schema mezclado detectado en auditoria.
+
+**Diagnostico.** El commit `415487ff` (sesion 3, 24-oct) anadio
+`ACCUMULATION_FORMING`, `DISTRIBUTION_FORMING` y `CONFLICT` al schema
+de `sector_wyckoff_distribution.csv` sin bumpear version. El CSV
+quedo con 330 filas v1 + 11 filas v2 mezcladas. `persist()` hacia
+`append_dedup` ciego, gate no detectaba mismatch, `data_quality` no
+reportaba schema. Detectado 2026-10-25.
+
+**Implementado.** `OutputSpec.schema_version` (default 1,
+`sector_wyckoff_distribution=2`). `persist()` detecta schema via
+`.schema` lateral; si difiere, COPIAR el CSV a `.v{old}.csv` (backup),
+escribir nuevo SIN appendear (evita mezclar). Gate check 11. Tests
+nuevos. `.gitignore` blinda `.schema` y `.v*.csv` como metadata local.
+
+**Verificacion.** Suite 3711/2. Run real 15 min, gate 11/11 (antes 10).
+CSV nuevo 11 filas v2, backup `.v1.csv` 342 filas (untracked).
+
+**Pendiente.** Fases 2-6 (data_quality schema_v, regeneracion
+historica, unificacion de estructura, structure_score, descarga).
+Ver HANDOFF seccion 4.1.
