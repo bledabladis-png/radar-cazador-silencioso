@@ -13,14 +13,6 @@ from config.tickers import MARKET_TICKERS
 
 SECTORS = MARKET_TICKERS['sectors']
 
-def _phase_positive(phase):
-    if phase in ('ACCUMULATION', 'MARKUP'):
-        return True
-    elif phase == 'RANGE':
-        return False  # neutral, no cuenta como positivo
-    else:
-        return False  # DISTRIBUTION, MARKDOWN, etc.
-
 def build_sector_regime_matrix(sector_breadth_df, sector_flow_df, sector_results, sector_wyckoff_distribution_df=None):
     """
     Combina datos existentes y devuelve DataFrame con la matriz.
@@ -28,9 +20,14 @@ def build_sector_regime_matrix(sector_breadth_df, sector_flow_df, sector_results
     if sector_breadth_df is None or sector_flow_df is None or sector_results is None:
         return pd.DataFrame()
 
-    # C5.1: fase y estructura desde holdings (sector_wyckoff_distribution_df).
+    # C5.1 + Bloque 2 auditoria externa 2026-10-25: phase_map (fase dominante)
+    # + structure_ratio CONTINUO (no binario) + n_estructuras. Formula:
+    #   estructura_clara = acc + acc_forming + markup + dist + dist_forming + markdown
+    #   structure_ratio  = (acc + acc_forming + markup) / estructura_clara
+    # Null si estructura_clara == 0. NO es senal predictiva.
     phase_map = {}
-    structure_map = {}
+    structure_ratio_map = {}
+    n_estructuras_map = {}
     if sector_wyckoff_distribution_df is not None and not sector_wyckoff_distribution_df.empty:
         _dist = sector_wyckoff_distribution_df.copy()
         if 'date' in _dist.columns:
@@ -47,17 +44,21 @@ def build_sector_regime_matrix(sector_breadth_df, sector_flow_df, sector_results
             _sector = _row.get('sector')
             if _sector is None:
                 continue
-            _acc = _row.get('pct_accumulation')
-            _mkp = _row.get('pct_markup')
+            # Bloque 2: structure_ratio continuo + n_estructuras
             try:
-                _acc_f = float(_acc) if _acc is not None and pd.notna(_acc) else None
-                _mkp_f = float(_mkp) if _mkp is not None and pd.notna(_mkp) else None
+                _acc = float(_row.get('count_accumulation', 0) or 0)
+                _accf = float(_row.get('count_accumulation_forming', 0) or 0)
+                _mup = float(_row.get('count_markup', 0) or 0)
+                _dst = float(_row.get('count_distribution', 0) or 0)
+                _dstf = float(_row.get('count_distribution_forming', 0) or 0)
+                _mdn = float(_row.get('count_markdown', 0) or 0)
+                _alcista = _acc + _accf + _mup
+                _clara = _alcista + _dst + _dstf + _mdn
+                n_estructuras_map[_sector] = int(_clara)
+                structure_ratio_map[_sector] = (_alcista / _clara) if _clara > 0 else None
             except (ValueError, TypeError):
-                _acc_f, _mkp_f = None, None
-            if _acc_f is None and _mkp_f is None:
-                structure_map[_sector] = None
-            else:
-                structure_map[_sector] = ((_acc_f or 0.0) + (_mkp_f or 0.0)) >= 50.0
+                n_estructuras_map[_sector] = 0
+                structure_ratio_map[_sector] = None
             # fase dominante
             _candidates = []
             for _col in _phase_cols:
@@ -83,14 +84,10 @@ def build_sector_regime_matrix(sector_breadth_df, sector_flow_df, sector_results
         flow_sum = flow.loc[sector, 'flow_20d_sum']
         phase = phase_map.get(sector, None)
 
-        # C5.1: structure_pos desde holdings (o fallback a _phase_positive)
-        if sector_wyckoff_distribution_df is not None:
-            structure_pos = structure_map.get(sector)
-        else:
-            structure_pos = _phase_positive(phase) if phase else None
-
-        # Validar que no falte ninguno
-        if pd.isna(price_ret) or pd.isna(pct_above) or pd.isna(flow_sum) or structure_pos is None:
+        # Bloque 2: structure_pos retirada (era binaria, no robusta).
+        # structure_ratio continua se publica como columna.
+        # Validar solo las 3 condiciones que el sistema si produce robustas.
+        if pd.isna(price_ret) or pd.isna(pct_above) or pd.isna(flow_sum):
             rows.append({
                 'date': _observation_date_from_df(sector_breadth_df, col='date'),
                 'sector': sector,
@@ -98,10 +95,13 @@ def build_sector_regime_matrix(sector_breadth_df, sector_flow_df, sector_results
                 'pct_above_ema50': pct_above,
                 'flow_20d_sum': flow_sum,
                 'wyckoff_phase': phase,
+                'structure_ratio': (structure_ratio_map.get(sector)
+                                     if sector_wyckoff_distribution_df is not None else None),
+                'n_estructuras': (n_estructuras_map.get(sector, 0)
+                                  if sector_wyckoff_distribution_df is not None else 0),
                 'price_positive': np.nan,
                 'breadth_positive': np.nan,
                 'flow_positive': np.nan,
-                'structure_positive': np.nan,
                 'positive_conditions': np.nan,
                 'data_complete': False,
                 'regime_reading': 'N/D',
@@ -112,16 +112,14 @@ def build_sector_regime_matrix(sector_breadth_df, sector_flow_df, sector_results
         breadth_pos = pct_above > 50.0
         flow_pos = flow_sum > 0
 
-        positives = sum([price_pos, breadth_pos, flow_pos, structure_pos])
+        positives = sum([price_pos, breadth_pos, flow_pos])
 
-        if positives == 4:
+        if positives == 3:
             lectura = 'Alineación positiva'
-        elif positives == 3:
-            lectura = 'Constructivo'
         elif positives == 2:
-            lectura = 'Mixto'
+            lectura = 'Constructivo'
         elif positives == 1:
-            lectura = 'Débil'
+            lectura = 'Mixto'
         else:
             lectura = 'Debilidad alineada'
 
@@ -132,10 +130,13 @@ def build_sector_regime_matrix(sector_breadth_df, sector_flow_df, sector_results
             'pct_above_ema50': pct_above,
             'flow_20d_sum': flow_sum,
             'wyckoff_phase': phase,
+            'structure_ratio': (structure_ratio_map.get(sector)
+                                 if sector_wyckoff_distribution_df is not None else None),
+            'n_estructuras': (n_estructuras_map.get(sector, 0)
+                              if sector_wyckoff_distribution_df is not None else 0),
             'price_positive': price_pos,
             'breadth_positive': breadth_pos,
             'flow_positive': flow_pos,
-            'structure_positive': structure_pos,
             'positive_conditions': positives,
             'data_complete': True,
             'regime_reading': lectura,

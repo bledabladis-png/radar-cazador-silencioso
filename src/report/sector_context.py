@@ -18,11 +18,22 @@ def render_matriz_regimen(sector_regime_matrix_data):
     out = []
     if sector_regime_matrix_data is not None and not sector_regime_matrix_data.empty:
         out.append("## Matriz de Régimen Sectorial\n")
-        out.append("| Sector | Precio 20d | % > EMA50 | Flujo 20d | Fase Wyckoff | Positivas | Lectura |\n")
-        out.append("|--------|------------|-----------|-----------|--------------|-----------|---------|\n")
+        out.append("| Sector | Precio 20d | % > EMA50 | Flujo 20d | Fase Wyckoff | Struct | N est | Positivas | Lectura |\n")
+        out.append("|--------|------------|-----------|-----------|--------------|--------|-------|-----------|---------|\n")
         for _, row in sector_regime_matrix_data.iterrows():
-            out.append(f"| {row['sector']} | {row['price_ret_20d']:.2%} | {row['pct_above_ema50']:.1f}% | {_fmt_signed(row['flow_20d_sum'], '{:+,.0f}', '{:,.0f}')} | {row['wyckoff_phase']} | {row['positive_conditions']:.0f} | {row['regime_reading']} |\n")
+            _sr = row.get('structure_ratio')
+            _sr_str = "N/D" if (_sr is None or pd.isna(_sr)) else f"{float(_sr):.2f}"
+            _ne = row.get('n_estructuras', 0)
+            _ne_str = str(int(_ne)) if pd.notna(_ne) else "0"
+            out.append(f"| {row['sector']} | {row['price_ret_20d']:.2%} | {row['pct_above_ema50']:.1f}% | {_fmt_signed(row['flow_20d_sum'], '{:+,.0f}', '{:,.0f}')} | {row['wyckoff_phase']} | {_sr_str} | {_ne_str} | {row['positive_conditions']:.0f} | {row['regime_reading']} |\n")
         out.append("\n")
+        out.append("*Struct = proporcion de holdings con estructura alcista clara*\n")
+        out.append("*(ACC + ACC_FORMING + MARKUP) / (todas las fases claras).*\n")
+        out.append("*N est = numero de holdings con estructura clara (no-RANGE, no-CONFLICT).*\n")
+        out.append("*NO es senal predictiva de retorno. Describe estado estructural actual.*\n")
+        out.append("*Struct=1.00 con N est=1 es fragil; Struct=0.60 con N est=15 es robusto.*\n")
+        out.append("*H-01 auditor externo 2026-10-25: periodo del historico Wyckoff*\n")
+        out.append("*= 2022-08-11 a hoy (aprox. 4.2 anos, 1086 sesiones), NO 10 anos.*\n\n")
     return out
 
 
