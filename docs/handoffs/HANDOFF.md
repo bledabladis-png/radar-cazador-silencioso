@@ -28,7 +28,7 @@ structure_ratio: continuo (no binario) en sector_regime_matrix v2
 Tras un dictamen externo NO APROBABLE como sistema de señales y
 APROBABLE CONDICIONADO como herramienta descriptiva, se aceptaron
 los 9 hallazgos. 6 cerrados end-to-end con codigo + tests + run real,
-3 abiertos como items DICT3-*.
+4 abiertos como items DICT3-*.
 
 Cerrados end-to-end:
 - PIT holdings: snapshot append-only diario (holdings_snapshots.csv)
@@ -215,7 +215,7 @@ Del dictamen externo 2026-10-25 (doc 68):
 ### 4.4. Deuda documental residual
 
 - `62_sistema_completo_2026-10-24.md`: parcialmente obsoleto.
-  Cabecera dice "Tests: 3776 passed" (real 3755/2). Correccion
+  Cabecera dice "Tests: 3776 passed" (real 3755/2 con filtro estandar; 3769/2 sin filtro). Correccion
   diferida.
 - `00_ARRANQUE.md` §3: bloque scheduled-verify dice "20 writers"
   (actual 25). Foto historica. Correccion diferida.
