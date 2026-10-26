@@ -4,10 +4,9 @@ Cuantifica la diferencia entre:
   - seleccionado: los N tickers que devuelve _select_target_holdings.
   - con datos: el ticker esta en stock_prices.parquet con n_bars >= 200
     (MIN_BARS_THEORETICAL). Es el filtro primario de _evaluate_holding.
-  - evaluable: fila en compute_wyckoff_snapshot. Requiere classify_phase.
-    Este script NO lo calcula (classify_phase cuelga con al menos un
-    ticker, bug conocido). Se reporta con_datos como proxy y se declara
-    la limitacion en columna 'evaluable_metodo'.
+  - evaluable: fila en compute_wyckoff_snapshot. Requiere classify_phase
+    exitoso y phase != INSUFFICIENT_DATA. Calculado via la funcion
+    canonica compute_wyckoff_snapshot.
   - publicado: fila en alguno de los 6 CSVs de outputs/history/.
 
 Cobertura ponderada (peso del ticker, no conteo):
@@ -29,7 +28,8 @@ if str(ROOT) not in sys.path:
 import pandas as pd
 
 from indicators.wyckoff_holdings_report import (
-    _select_target_holdings, get_col, MIN_BARS_THEORETICAL,
+    compute_wyckoff_snapshot, _select_target_holdings, get_col,
+    MIN_BARS_THEORETICAL,
 )
 from src.instrument_registry import normalize_yahoo_ticker
 from src.pipeline.wyckoff_holdings import (
@@ -82,6 +82,12 @@ def main():
     usa_idx, eu_idx = _split_indices(_load_index_holdings())
     pub = _published_by_group()
 
+    print("Calculando snapshot (~35s, 527 filas)...")
+    snap = compute_wyckoff_snapshot(
+        df_stocks, etf_h, usa_idx, eu_idx, selection_mode="target_weight",
+    )
+    print("snapshot:", len(snap), "filas")
+
     rows = []
     sin_datos = []
     for df_h, gt in ((etf_h, "sector_usa"),
@@ -105,14 +111,18 @@ def main():
                         "ticker": r["ticker"], "ticker_norm": tn,
                         "weight": float(r["weight"]), "n_bars": nb,
                     })
+            sub_snap = snap[
+                (snap["group"] == g) & (snap["group_type"] == gt)
+            ]
+            ev_n = int(len(sub_snap))
+            ev_peso = float(sub_snap["weight"].sum()) if ev_n else 0.0
             pr = pub.get((gt, g), {"n": 0, "peso": 0.0})
             rows.append({
                 "group": g, "gt": gt, "estado": estado,
                 "wt": round(wt, 2),
                 "sel_n": len(sel), "sel_peso": round(sel_peso, 2),
                 "cd_n": cd_n, "cd_peso": round(cd_peso, 2),
-                "ev_n_proxy": cd_n, "ev_peso_proxy": round(cd_peso, 2),
-                "evaluable_metodo": "proxy=con_datos (classify_phase omitido)",
+                "ev_n": ev_n, "ev_peso": round(ev_peso, 2),
                 "pub_n": pr["n"], "pub_peso": round(pr["peso"], 2),
                 "cov_vs_sel_pct": round(cd_peso / sel_peso * 100, 2) if sel_peso else 0.0,
                 "cov_vs_grupo_pct": round(cd_peso / wt * 100, 2) if wt else 0.0,
@@ -125,7 +135,6 @@ def main():
     print(df.to_string(index=False))
     print()
     print("Total grupos:", len(df))
-    print("Nota: 'ev_*' es proxy (con_datos); classify_phase omitido por hang conocido.")
     print()
 
     df_sd = pd.DataFrame(sin_datos)
