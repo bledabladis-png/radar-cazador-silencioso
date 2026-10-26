@@ -2389,6 +2389,26 @@ items:
       cubiertos: grupo vacio, todos NaN, total cero nunca conformes.
     - Suite: 3826 passed, 2 skipped. CI verde (40379993886).
     Dictamen §5 punto 1 (contrato del selector) satisfecho.
+
+    P1-H03 CERRADO (2026-10-26, doc 72):
+    - Verificados 6 invariantes del backfill (1086 fechas x 11 sectores).
+    - 5 OK, 0 FAIL, 1 SKIP:
+      (1) Cuadricula: OK (11946 filas, 0 duplicados).
+      (2) Fase por ticker: SKIP (bloqueado por hang de classify_phase,
+          bug preexistente ajeno a este frente).
+      (3) Counts reconcilian: OK (sum(count_*)==n_valid;
+          n_valid+n_insuff==n_total, 11946/11946).
+      (4) Pcts reproducibles: OK (denominador n_total, 0 violaciones).
+      (5) CSV vs snapshot: OK (v2_full.csv.bak, 0 celdas distintas).
+      (6) Diferencias explicadas: OK (delta por sector XLI+24, XLF+3,
+          XLK+2, resto 0; 0 regresiones por fila).
+    - Afirmacion 'cero regresiones' respaldada por 5/6 invariantes.
+      Invariante 2 pendiente de arreglar classify_phase.
+    - Artefacto v2_full_target_only.csv identificado como intermedio
+      defectuoso (pre-fixes, n_total mean 20.75 vs real 22.24). No
+      usar como base de comparacion. Recomendacion: eliminar o marcar
+      obsoleto.
+    - Script reproducible: scripts/audit/p1_h03_invariantes.py.
   descripcion: |
     H-07 del dictamen externo 2026-10-25. El universo de holdings por
     grupo se limitaba al top-20 por peso (TOP_N_HOLDINGS=20). Objetivo
@@ -2418,7 +2438,7 @@ items:
       (4) P1-H04: sesgo PIT visible en artefactos consumidos.
       (5) P1-H02: cobertura efectiva ponderada (seleccionado /
           con datos / evaluable / publicado).
-      (6) P1-H03: invariantes del backfill por fila.
+      (6) P1-H03 [HECHO 2026-10-26, doc 72, 5/6 OK + 1 SKIP]: invariantes del backfill por fila.
       (7) P1-H05: DICT3-H04-INTERVALS separado.
     Estado OPEN no es deuda productiva: el sistema funciona con
     target_weight desde e7f27cd0.
