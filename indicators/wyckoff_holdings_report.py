@@ -24,7 +24,7 @@ MIN_BARS_VALID = 460
 # seleccion por grupo (se conserva TOP_N_HOLDINGS por compatibilidad
 # hasta Fase A.2). Objetivo 0.85 dentro del rango 80-90% del dictamen.
 TARGET_WEIGHT_COVERAGE = 0.85
-MIN_TICKERS_PER_GROUP = 10
+MIN_TICKERS_PER_GROUP = TOP_N_HOLDINGS  # baseline top-20 preservado (P0-H01, v2)
 MAX_TICKERS_PER_GROUP = 300
 
 ACC_PHASES = frozenset({"ACCUMULATION", "ACCUMULATION_FORMING", "MARKUP"})

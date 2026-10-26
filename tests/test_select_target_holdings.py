@@ -81,7 +81,7 @@ def test_denominador_peso_total_grupo_no_de_seleccion():
     # Si se usara peso de la seleccion como denominador, 17 tickers al 85%
     # real serian (17*5)/(17*5)=100% y no 85%. El correcto es 17*5/100=0.85.
     g = _grupo([5.0] * 20)
-    out, cob, ok = _select_target_holdings(g, target_weight=0.85)
+    out, cob, ok = _select_target_holdings(g, target_weight=0.85, min_tickers=1)
     assert len(out) == 17
     assert cob == pytest.approx(0.85, abs=1e-9)
 
