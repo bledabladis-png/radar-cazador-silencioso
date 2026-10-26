@@ -36,50 +36,30 @@ def _fetch_liquidity_v2_data():
       - Si CSVs faltan o fallan -> fallback a pandas_datareader.
     Devuelve (sofr, effr, c1_bp) o (None, None, None).
     """
-    from pathlib import Path as _P
-
     start = "2018-04-02"
     sofr = None
     effr = None
 
-    # 1) CSV-first
-    sofr_csv = _P("data/macro_manual/sofr.csv")
-    effr_csv = _P("data/macro_manual/effr.csv")
-    if sofr_csv.exists() and effr_csv.exists():
-        try:
-            sofr_df = pd.read_csv(sofr_csv, index_col=0, parse_dates=True)
-            effr_df = pd.read_csv(effr_csv, index_col=0, parse_dates=True)
-            if not sofr_df.empty and not effr_df.empty:
-                s = sofr_df.iloc[:, 0].dropna().sort_index()
-                e = effr_df.iloc[:, 0].dropna().sort_index()
-                # Interseccion: solo fechas donde ambas series tienen dato
-                common = s.index.intersection(e.index)
-                if len(common) > 0:
-                    sofr = s.loc[common]
-                    effr = e.loc[common]
-                    print(f"  [liq_v2] CSVs: sofr+effr hasta {common.max().date()} ({len(common)} fechas comunes)")
-        except Exception as e:
-            print(f"  [WARN] liq_v2 CSV load: {e}")
+    # Fase 6 (2026-10-26): unificacion via router. La politica CSV-first
+    # sobre data/macro_manual vive ahora en
+    # data.providers.router.DataRouter.get_fed_data(columns=...), que
+    # gestiona frescura (bot diario) y fallback a la API FRED. Elimina
+    # la doble implementacion que existia aqui.
+    try:
+        from data.providers.router import DataRouter
+        _df = DataRouter().get_fed_data(columns=["sofr", "effr"])
+        if _df is not None and not _df.empty and "sofr" in _df.columns and "effr" in _df.columns:
+            _df = _df[["sofr", "effr"]].dropna()
+            _df = _df[_df.index >= pd.Timestamp(start)]
+            if len(_df) > 0:
+                sofr = _df["sofr"].sort_index()
+                effr = _df["effr"].sort_index()
+                print(f"  [liq_v2] router: sofr+effr hasta {sofr.index.max().date()} ({len(sofr)} fechas comunes)")
+    except Exception as e:
+        print(f"  [WARN] liq_v2 router: {e}")
 
-    # 2) Fallback: pandas_datareader (API FRED)
     if sofr is None or effr is None:
-        try:
-            import pandas_datareader.data as web
-        except ImportError:
-            return None, None, None
-        try:
-            sofr_df = web.DataReader("SOFR", "fred", start=start)
-            sofr = sofr_df.iloc[:, 0].sort_index().dropna()
-        except Exception as e:
-            print(f"  [WARN] SOFR API: {e}")
-            return None, None, None
-        try:
-            effr_df = web.DataReader("EFFR", "fred", start=start)
-            effr = effr_df.iloc[:, 0].sort_index().dropna()
-        except Exception as e:
-            print(f"  [WARN] EFFR API: {e}")
-            return None, None, None
-        print(f"  [liq_v2] API FRED: hasta {effr.index.max().date()}")
+        return None, None, None
 
     # 3) p99 NY Fed (opcional, solo diagnostico C1)
     c1_bp = None

@@ -92,7 +92,15 @@ class DataRouter:
                     continue
         return None
 
-    def get_fed_data(self):
+    def get_fed_data(self, columns=None):
+        """Datos macro de la Fed (SOFR, EFFR, balance, etc.).
+
+        Politica (Fase 6, 2026-10-26): CSV-first sobre data/macro_manual
+        (bot diario, mas frescos que la API FRED). Fallback a providers
+        automaticos (FRED API). Si `columns` se especifica, filtra las
+        columnas devueltas y hace dropna(how='all'). Uso:
+        get_fed_data(columns=['sofr','effr']) para liquidez v2.
+        """
         # 2026-10-22: invertida la prioridad. Los CSVs de
         # data/macro_manual/ son pusheados por el bot FRED diario
         # (workflow update_macro_manual, cron 17 6 * * *) y suelen
@@ -109,7 +117,7 @@ class DataRouter:
                 df = self._load_macro_manual(macro_dir)
                 if df is not None and not df.empty:
                     print("Usando datos macro manuales locales para liquidez.")
-                    return df
+                    return self._apply_columns_filter(df, columns)
             except Exception as e:
                 print(f"  [WARN] router: macro_manual fallback: {e}")
 
@@ -121,12 +129,27 @@ class DataRouter:
                     data = provider.get_fed_data()
                     if data is not None and not data.empty:
                         print(f"Usando {provider.get_name()} para datos de liquidez.")
-                        return data
+                        return self._apply_columns_filter(data, columns)
                 except (RuntimeError, ValueError, KeyError, AttributeError) as e:
                     print(f"  [WARN] router: {provider.get_name()} get_fed_data fallo: {e}")
                     continue
 
-        return None
+        return self._apply_columns_filter(None, columns)
+
+    def _apply_columns_filter(self, df, columns):
+        # Fase 6: filtro comun de columnas para get_fed_data/get_treasury_data.
+        if df is None or not columns:
+            return df
+        try:
+            present = [c for c in columns if c in df.columns]
+            if not present:
+                return None
+            out = df[present].dropna(how='all')
+            return out if len(out) > 0 else None
+        except Exception as e:
+            print(f"  [WARN] router: _apply_columns_filter: {e}")
+            return df
+
     def _load_macro_manual(self, data_dir):
         dfs = []
         for fname in os.listdir(data_dir):
@@ -160,8 +183,10 @@ class DataRouter:
                 rename_map[col] = 'fed_funds'
             elif col.startswith('iorb_'):
                 rename_map[col] = 'iorb'
+            elif col.startswith('effr_'):
+                rename_map[col] = 'effr'
         combined.rename(columns=rename_map, inplace=True)
-        target_cols = ['fed_balance', 'reverse_repo', 'sofr', 'fed_funds', 'iorb']
+        target_cols = ['fed_balance', 'reverse_repo', 'sofr', 'fed_funds', 'iorb', 'effr']
         existing = [c for c in target_cols if c in combined.columns]
         if existing:
             combined = combined[existing]
