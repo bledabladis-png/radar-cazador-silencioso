@@ -168,6 +168,11 @@ Commit f5cb8834.
 - `SECTOR-REGIME-MATRIX-STRUCTURE-POSITIVE`: SUPERSEDED 2026-10-25.
 - `PODA-BITACORA-DIA-EN-CURSO`: FIXED 2026-10-26 (b52df895 + be280bc1).
 - `DICT3-H05-FILLNA-FUTURE`: FIXED 2026-10-26 (053f1a7a).
+- `FASE-6-ROUTER-UNIFICADO`: FIXED 2026-10-26 (54ce5d69). La
+  divergencia real era `regimes._fetch_liquidity_v2_data`
+  duplicando la politica CSV-first de `router.get_fed_data`;
+  `b30a9182` y `4bb54f80` citados antes son de fund-flow y
+  market-hours, no de fed_data.
 
 ---
 
@@ -176,13 +181,11 @@ Commit f5cb8834.
 ### 4.1. Fases del refactor de outputs (2-6)
 
 Fase 1 cerrada (schema versioning). Fases 2, 3, 4, 4b cerradas en
-sesion 10. Quedan:
+sesion 10. Fase 6 cerrada 2026-10-26. Queda:
 
 - **Fase 5:** `structure_score` continuo con datos coherentes. Ya
   hay `structure_ratio` continua en sector_regime_matrix; falta
   diseñar el score compuesto final y su validacion empirica.
-- **Fase 6:** descarga unificada (`Router` con politica unica para
-  fed_data + treasury_data; auditar `b30a9182`, `4bb54f80`).
 
 ### 4.2. Deudas tecnicas OPEN
 
