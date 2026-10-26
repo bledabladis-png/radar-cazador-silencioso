@@ -2409,6 +2409,18 @@ items:
       usar como base de comparacion. Recomendacion: eliminar o marcar
       obsoleto.
     - Script reproducible: scripts/audit/p1_h03_invariantes.py.
+
+    P1-H04 CERRADO (2026-10-26, commit f967985d):
+    - Nota PIT visible en reporte diario, no solo en doc de auditoria.
+    - src/report/sector_context.py::render_wyckoff_sectorial: nota
+      incondicional sobre composicion 2026Q4 aplicada retrospectivamente.
+      No es point-in-time. Se emite con o sin tabla (coherente con H6).
+    - tests/test_sector_context_pit_nota.py: 2 tests.
+    - Alcance: solo reporte. NO se toca persist() ni sidecar JSON.
+      El dictamen permite 'reportes o metadatos'. Si el auditor quiere
+      sidecar en CSV, ticket aparte.
+    - CI verde: 40393879229.
+    Dictamen §5 punto 4 (sesgo PIT visible) satisfecho por via reporte.
   descripcion: |
     H-07 del dictamen externo 2026-10-25. El universo de holdings por
     grupo se limitaba al top-20 por peso (TOP_N_HOLDINGS=20). Objetivo
@@ -2435,7 +2447,7 @@ items:
           INVALID_UNIVERSE. Tests nuevos. Consumidores adaptados.
       (3) P1-H06: tickets de gobernanza (PERSIST, PCR, indices
           USA/EU, IWM). Puede fusionarse con (1).
-      (4) P1-H04: sesgo PIT visible en artefactos consumidos.
+      (4) P1-H04 [HECHO 2026-10-26, commit f967985d]: sesgo PIT visible en artefactos consumidos.
       (5) P1-H02: cobertura efectiva ponderada (seleccionado /
           con datos / evaluable / publicado).
       (6) P1-H03 [HECHO 2026-10-26, doc 72, 5/6 OK + 1 SKIP]: invariantes del backfill por fila.
