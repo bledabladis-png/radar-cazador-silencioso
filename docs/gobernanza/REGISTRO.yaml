@@ -2376,7 +2376,7 @@ items:
     H-07 del dictamen externo 2026-10-25. El universo de holdings por
     grupo se limitaba al top-20 por peso (TOP_N_HOLDINGS=20). Objetivo
     del dictamen: cobertura 80-90% por grupo. Afectados por debajo
-    del 80%: XLI 57.2%, SPY 49.9%, ISH.L 60.8%, QQQ 66.8%, FEZ 66.3%,
+    del 80%: XLI 57.2%, SPY 49.9%, ISF.L 60.8%, QQQ 66.8%, FEZ 66.3%,
     XLF 72.8%, XLK 79.6%, XLV 78.9%.
 
     A.2c cambia el criterio de seleccion a acumular por peso hasta
@@ -2538,3 +2538,43 @@ items:
     Depende de TOP20-EU-HOLDINGS-INCOMPLETOS. Sin holdings
     completos, un selector por peso no es comparable al de
     sectores USA.
+
+- id: SOW-HOLDOUT-IMMUTABLE
+  tipo: deuda_tecnica
+  ciclo: '2026-10-26'
+  estado: OPEN
+  descripcion: |
+    No hay declaracion formal de que stock_prices_reserved_cohort.parquet
+    y stock_prices_reserved_r3000.parquet sean holdout inmutable para
+    validacion SOW. Hoy se infiere de su uso en
+    scripts/purged_kfold_sow_c1_*.py. Sin contrato explicito, promover
+    tickers a produccion desde ahi es ambiguo.
+  evidencia: |
+    Consumidos por purged_kfold_sow_c1_reserved.py y
+    purged_kfold_sow_c1_r3000.py. TOP20-FALTANTES-DATOS depende de
+    esta distincion: 7/8 tickers (BSX, CAH, CI, CNP, COR, HCA, NKE)
+    estan solo en holdout, no se promueven. MRNA ausente en todos.
+  siguiente_accion: |
+    Redactar contrato (docs/auditoria/wyckoff/ o docs/gobernanza/)
+    declarando inmutabilidad y condiciones de promocion. Citar en
+    TOP20-FALTANTES-DATOS una vez exista. Bloqueante suave de
+    P1-H02 (cobertura efectiva).
+
+- id: GOVERNANZA-CI-NO-STEP
+  tipo: deuda_tecnica
+  ciclo: '2026-10-26'
+  estado: OPEN
+  descripcion: |
+    py scripts/verifica_gobernanza.py no corre en CI. Solo hay
+    comentario en .github/workflows/ci_tests.yml:7 sobre
+    fetch-depth. Hueco: un REGISTRO malformado en un commit
+    pusheado no lo detecta el gate de CI.
+  evidencia: |
+    Verificado 2026-10-26: Select-String "verifica_gobernanza" en
+    ci_tests.yml devuelve solo el comentario de fetch-depth. La
+    deteccion depende de py scripts/generate_estado_sistema.py,
+    que corre integridad pero no gobernanza.
+  siguiente_accion: |
+    Anadir step a .github/workflows/ci_tests.yml:
+    "py scripts/verifica_gobernanza.py" tras pyflakes. Coste
+    ~1s. Sin impacto en duracion (ya ~3 min).
