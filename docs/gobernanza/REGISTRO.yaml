@@ -2238,14 +2238,19 @@ items:
     observaciones solapadas / correlacion entre sectores. Sin esto,
     la metrica es descriptiva, no inferencial. Doc 68 seccion H-04.
   siguiente_accion: |
-    Antes de cualquier prueba inferencial sobre structure_ratio:
-      (1) Publicar formula exacta, numerador, denominador, criterios
-          de inclusion y exclusion.
-      (2) Calcular ICs por cohorte anual con correccion por
-          solapamiento (block bootstrap o similar).
-      (3) Tratar correlacion cross-sector (no tratar como obs
-          independientes).
-      (4) Congelar protocolo antes de evaluacion out-of-sample.
+    2026-10-26: pre-registro congelado en doc 69. Implementacion en
+    scripts/h04_intervals.py + tests (7 passed). Resultados anadidos
+    como doc 69 seccion 12. Hallazgos:
+      (a) rho_bar cross-sector = 0.5243; IC multiway 2.4x mas ancho
+          que naive en ALL. Valida la eleccion de §6.
+      (b) 71% de celdas con n_estructuras <= 4; metrica granular a
+          nivel sector individual. Agregado si, signal sector no.
+      (c) Criterio §9 (IC cruza 0) no discrimino por construccion
+          (ratio en [0,1], media 0.5). Defecto del pre-registro,
+          reconocido en §12.4.
+    Pendiente: revision del auditor externo del doc 69 completo
+    (protocolo + §12). Decision de FIXED o de nuevo pre-registro
+    queda fuera de este item hasta revision.
     No es bloqueante para uso descriptivo actual.
 
 - id: DICT3-H05-FILLNA-FUTURE
