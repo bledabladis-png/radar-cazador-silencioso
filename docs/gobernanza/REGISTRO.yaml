@@ -2358,6 +2358,20 @@ items:
     - Re-verificacion H-03 y H-04 sobre nueva base (criterios
       congelados intactos).
     - Revision externa antes de cerrar como FIXED.
+
+    2026-10-26 (post-dictamen):
+    - Doc 70-v2 commiteado en ebdeac02. Respondio los 7 hallazgos
+      P0-H01..P0-H07 del dictamen anterior.
+    - Dictamen posterior 2026-10-26: APROBACION CONDICIONADA de A.2c.
+      NO aprobacion del cierre global de DICT3-TOP20-COBERTURA. 6
+      acciones pendientes (P1-H01..P1-H06), ver doc 70-v2b.
+    - Bug persist corregido (f4528b49). Bug PCR corregido (affdc5c8).
+      Handoff sesion 11 citaba SHA 9338dcd4 (typo, no existe).
+    - Reserva SOW confirmada: 7/8 tickers de TOP20-FALTANTES-DATOS
+      estan en stock_prices_reserved_cohort.parquet y
+      stock_prices_reserved_r3000.parquet (holdout de validacion
+      SOW). MRNA no esta en ningun parquet. No se promueven:
+      requieren parquet de produccion nuevo.
   descripcion: |
     H-07 del dictamen externo 2026-10-25. El universo de holdings por
     grupo se limitaba al top-20 por peso (TOP_N_HOLDINGS=20). Objetivo
@@ -2377,26 +2391,20 @@ items:
     backfill) creaba discontinuidad de base en 2026-10-27, peor.
 
   siguiente_accion: |
-    Fase A.2c commiteada. Pendiente antes de cerrar:
-      (1) Doc 70-v2 respondiendo dictamen externo 2026-10-26 (7
-          hallazgos P0 + 2 nuevos detectados en verificacion:
-          sesgo PIT en backfill, granularidad n_estructuras <=4 en
-          71% de celdas).
-      (2) Re-ejecutar H-03 (muestreo 30 FORMING->RANGE + tests
-          deterministas) sobre la serie target_weight regenerada.
-      (3) Re-ejecutar H-04 (scripts/h04_intervals.py) sobre la
-          nueva base. Criterios pre-registrados intactos: si el IC95%
-          cruza 0 en >50% cohortes, H-04 se reabre como descriptiva
-          pura, no se reinterpreta.
-      (4) Revision del auditor externo del doc 70-v2.
-    Solo entonces decision de FIXED vs mantener OPEN con nueva
-    accion. El estado OPEN de este item NO es deuda productiva: el
-    sistema funciona con target_weight desde e7f27cd0. Es deuda
-    documental/verificacion pendiente de revision externa.
-    Indicadores USA (SPY, QQQ, DIA) y EU siguen con nlargest: frente
-    separado si el auditor lo requiere tras revisar doc 70-v2.
-
-
+    2026-10-26 (post-dictamen): 6 acciones aceptadas en doc 70-v2b.
+    Orden de ejecucion:
+      (1) Doc 70-v2b + REGISTRO (este commit).
+      (2) P1-H01: selector con estados REACHED/UNREACHABLE/
+          INVALID_UNIVERSE. Tests nuevos. Consumidores adaptados.
+      (3) P1-H06: tickets de gobernanza (PERSIST, PCR, indices
+          USA/EU, IWM). Puede fusionarse con (1).
+      (4) P1-H04: sesgo PIT visible en artefactos consumidos.
+      (5) P1-H02: cobertura efectiva ponderada (seleccionado /
+          con datos / evaluable / publicado).
+      (6) P1-H03: invariantes del backfill por fila.
+      (7) P1-H05: DICT3-H04-INTERVALS separado.
+    Estado OPEN no es deuda productiva: el sistema funciona con
+    target_weight desde e7f27cd0.
 - id: DICT3-REACCUMULATION
   tipo: deuda_tecnica
   ciclo: '2026-10-25'
@@ -2413,3 +2421,120 @@ items:
     contexto UP, prueba de oferta/demanda, ruptura confirmada al alza.
     Familia separada de las cascadas actuales. No toca las cascadas
     existentes. Sin fecha.
+
+- id: PERSIST-REPLACE-DATE
+  tipo: auditoria_interna
+  ciclo: '2026-10-26'
+  estado: FIXED
+  descripcion: persist() append-only por merge_keys deja huerfanas en writers de subconjunto filtrado por fase (6 CSVs wyckoff holdings)
+  commit: f4528b49
+  test: tests/test_persist_replace_date.py
+  evidencia: |
+    Bug detectado en XLI con GE/PWR/VRT: 14 filas en CSV vs 11 en
+    snapshot. Causa: append_dedup solo anade/reemplaza, no elimina
+    filas del historico no presentes en el df nuevo. Fix: parametro
+    replace_date=True borra filas de la fecha a reescribir antes del
+    append. Solo lo activan los 6 CSVs de holdings.
+    Post-fix: sum(count)=n_total en 100% de filas, 0 huerfanas.
+  verificacion: FIXED
+
+- id: PCR-SKIP-NO-DATA
+  tipo: auditoria_interna
+  ciclo: '2026-10-26'
+  estado: FIXED
+  descripcion: compute_pcr_signals retornaba None sin skip() cuando CBOE no responde, rompiendo el gate por "sin receipt pcr_history"
+  commit: affdc5c8
+  test: tests/test_pcr_skip_no_data.py
+  evidencia: |
+    Bug detectado en run post-A.2c: el gate detectaba "sin receipt
+    pcr_history" y fallaba el run completo. Fix: skip('pcr_history',
+    'NO_DATA') en los dos return None tempranos (provider no
+    disponible, get_options_data vacio). 4 tests en
+    test_pcr_skip_no_data.py.
+    Nota: handoff sesion 11 cita SHA 9338dcd4 (typo, no existe).
+    SHA real affdc5c8.
+  verificacion: FIXED
+
+- id: TOP20-FALTANTES-DATOS
+  tipo: deuda_tecnica
+  ciclo: '2026-10-26'
+  estado: OPEN
+  descripcion: |
+    8 tickers seleccionados por A.2c no estan en stock_prices.parquet
+    (produccion). XLV: CI, MRNA, BSX, HCA, COR, CAH. XLU: CNP. XLY:
+    NKE. XLV/XLU/XLY quedan por debajo del 85% de cobertura efectiva
+    aunque el selector los incluya.
+  evidencia: |
+    Verificado 2026-10-26 via introspeccion de parquets:
+    - 7 de 8 tickers (BSX, CAH, CI, CNP, COR, HCA, NKE) estan en
+      stock_prices_reserved_cohort.parquet y
+      stock_prices_reserved_r3000.parquet. Estos parquets son
+      holdout de validacion SOW (consumidos por
+      scripts/purged_kfold_sow_c1_reserved.py y
+      scripts/purged_kfold_sow_c1_r3000.py). NO se promueven:
+      contaminaria el holdout.
+    - MRNA no esta en ningun parquet.
+    Estimacion: "1 sesion" (doc 70-v2) se mantiene, pero el trabajo
+    es descarga a parquet de produccion, no promocion de datos
+    existentes.
+  siguiente_accion: |
+    Descargar los 8 tickers a parquet de produccion nuevo
+    (no reutilizar reserved_cohort/reserved_r3000). Protocolo de
+    6 pasos (identico a IWM-HOLDINGS-EXPANSION): (1) descargar
+    OHLCV; (2) filtrar por calendario bursatil NYSE; (3) verificar
+    0 filas H=L=C; (4) pasar por resolve_effective_date; (5)
+    registrar writer en output_registry; (6) test que verifique 0
+    fechas no bursatiles. Sin fecha.
+
+- id: TOP20-EU-HOLDINGS-INCOMPLETOS
+  tipo: deuda_tecnica
+  ciclo: '2026-10-26'
+  estado: OPEN
+  descripcion: |
+    FEZ/DAXEX/ISF.L tienen peso_total_csv < 100% (66.3%, 78.4%,
+    60.8%). Un "85% de cobertura" en esos ETFs es 85% del subset
+    del CSV, no del ETF real (56% del ETF para FEZ). El target no
+    es comparable al de los sectores USA.
+  evidencia: |
+    Doc 70-v2 P0-H03. Bloquea TOP20-EU-INDICES: sin holdings
+    completos, un selector por peso en EU no es homologo al de
+    sectores USA.
+  siguiente_accion: |
+    Obtener holdings completos de FEZ/DAXEX/ISF.L desde el
+    proveedor. Requiere decision sobre proveedor (SSGA, BlackRock,
+    Amundi) y contrato de descarga. Sin fecha.
+
+- id: TOP20-USA-INDICES
+  tipo: frente
+  ciclo: '2026-10-26'
+  estado: OPEN
+  descripcion: |
+    Indices USA (SPY 49.9%, QQQ 66.8%, DIA 85.0%) siguen con
+    nlargest(20). A.2c se limito a sectores USA. Frente separado
+    tras dictamen 2026-10-26.
+  evidencia: |
+    Doc 70-v2 P0-H02 confirma division de alcance. SPY y QQQ por
+    debajo del 85% requieren extension analoga a A.2c. DIA ya
+    cumple.
+  siguiente_accion: |
+    Pendiente de revision externa de doc 70-v2b. Si el auditor
+    confirma la division, planificar extension a indices USA con
+    protocolo equivalente a A.2c (selector por peso + regeneracion
+    historica + invariantes P1-H03).
+
+- id: TOP20-EU-INDICES
+  tipo: frente
+  ciclo: '2026-10-26'
+  estado: OPEN
+  descripcion: |
+    Indices EU (FEZ 66.3%, DAXEX 78.4%, ISF.L 60.8%, LYXI 93.2%)
+    siguen con nlargest(20). Frente separado tras dictamen
+    2026-10-26.
+  evidencia: |
+    Ademas del gap de cobertura, FEZ/DAXEX/ISF.L tienen
+    peso_total_csv < 100% (ver TOP20-EU-HOLDINGS-INCOMPLETOS).
+    Bloqueado por esa deuda.
+  siguiente_accion: |
+    Depende de TOP20-EU-HOLDINGS-INCOMPLETOS. Sin holdings
+    completos, un selector por peso no es comparable al de
+    sectores USA.
