@@ -116,3 +116,5 @@ outputs/history/_regen_checkpoint.json
 # DICT3-TOP20-COBERTURA A.2b: artefactos de regeneracion (no versionar)
 outputs/history/sector_wyckoff_distribution.v2_full.csv
 *.log.err
+
+outputs/history/sector_wyckoff_distribution.v2_full.csv.bak

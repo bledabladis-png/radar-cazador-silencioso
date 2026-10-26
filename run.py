@@ -158,7 +158,10 @@ def main():
             _usa_idx_df = None
         if _eu_idx_df.empty:
             _eu_idx_df = None
-    wyckoff_snapshot = compute_wyckoff_snapshot(df_stocks, holdings_df, _usa_idx_df, _eu_idx_df)
+    wyckoff_snapshot = compute_wyckoff_snapshot(
+        df_stocks, holdings_df, _usa_idx_df, _eu_idx_df,
+        selection_mode="target_weight",
+    )
     print(f"  Snapshot Wyckoff holdings: {len(wyckoff_snapshot)} tickers evaluados.")
 
     sm = compute_sector_metrics(df_stocks, holdings_df, full_metrics_df, df_market, effective_meta=df_stocks_effective_meta, temporal_meta=temporal_meta, wyckoff_snapshot=wyckoff_snapshot)
