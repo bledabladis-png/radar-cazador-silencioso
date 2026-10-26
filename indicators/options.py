@@ -63,7 +63,9 @@ def compute_pcr_signals(persist_history=False):
     provider = CboeProvider()
 
     if not provider.is_available():
-
+        if persist_history:
+            from src.pipeline.output_writer import skip
+            skip('pcr_history', 'NO_DATA')
         return None
 
 
@@ -71,7 +73,9 @@ def compute_pcr_signals(persist_history=False):
     data = provider.get_options_data()
 
     if not data or 'total_pcr' not in data:
-
+        if persist_history:
+            from src.pipeline.output_writer import skip
+            skip('pcr_history', 'NO_DATA')
         return None
 
 
