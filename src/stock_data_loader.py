@@ -126,6 +126,25 @@ _cat['radar_ticker'].dropna().astype(str).tolist()])
     except ImportError as _e:
         print(f"  [WARN] get_stock_list: providers europeos no disponibles: {_e}")
 
+    # 5) Expansiones declarativas (data/universe_expansions.yaml).
+    # DICT3-TOP20-COBERTURA (2026-10-26): grupos con cola larga
+    # (XLI, SPY) anaden tickers por encima del top-20 sin cambiar
+    # TOP_N_SECTOR_COMPONENTS, que sigue controlando el corte global.
+    # El yaml documenta por bloque la cobertura objetivo y alcanzada.
+    try:
+        import yaml as _yaml
+        _exp_path = Path("data/universe_expansions.yaml")
+        if _exp_path.exists():
+            _exp = _yaml.safe_load(_exp_path.read_text(encoding="utf-8")) or {}
+            for _key, _block in _exp.items():
+                if isinstance(_block, dict) and "tickers" in _block:
+                    _tk_list = _block.get("tickers") or []
+                    if _tk_list:
+                        tickers.extend(
+                            [normalize_yahoo_ticker(t) for t in _tk_list])
+    except (OSError, ValueError, TypeError) as e:
+        print(f"  [WARN] get_stock_list: universe_expansions.yaml: {e}")
+
     # Eliminar duplicados preservando orden
     seen = set()
     result = []
