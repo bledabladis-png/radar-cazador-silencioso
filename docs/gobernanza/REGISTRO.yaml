@@ -2310,18 +2310,83 @@ items:
   tipo: deuda_tecnica
   ciclo: '2026-10-25'
   estado: OPEN
+  commit: e7f27cd0
+  evidencia: |
+    Fase A.2c commiteada 2026-10-26. Base target_weight activa en
+    produccion. Cambios principales:
+
+    - Selector por cobertura de peso (TARGET_WEIGHT_COVERAGE=0.85,
+      MIN_TICKERS_PER_GROUP=TOP_N_HOLDINGS para no regresar grupos
+      >85%). Tests: 15 en test_select_target_holdings.py.
+    - expansion declarativa via data/universe_expansions.yaml
+      (XLI: 28 tickers, 57.2%->89.0%).
+    - compute_wyckoff_snapshot(selection_mode="nlargest"|"target_weight").
+      Default nlargest; run.py pasa target_weight. Tests: 4.
+    - Regeneracion historica completa (1086 fechas) con
+      target_weight: 265691 filas ticker x fecha, 11946 agregadas,
+      0 regresiones vs base top-20 (verificado por fila date+sector).
+    - Fix persist replace_date=True en los 6 CSVs wyckoff_holdings
+      (subconjuntos filtrados por fase dejan huerfanas sin esto).
+      Bug detectado con GE/PWR/VRT en XLI: 14 filas en CSV vs 11 en
+      snapshot; fix retira las 3 huerfanas. Tests: 2.
+    - Fix PCR (bug gate 2026-10-26): compute_pcr_signals emitia
+      return None sin skip cuando proveedor no responde. Run fallaba
+      por "sin receipt pcr_history". Fix emite skip NO_DATA. Tests: 4.
+
+    Resultado post-A.2c:
+    - XLI n_total 20->44 (cobertura 57.2%->85.8%).
+    - XLF 19->22, XLK 20->22. Resto sin cambio (ya cumplian).
+    - 0 regresiones globales (11946 filas verificadas).
+    - 6 CSVs de holdings sin huerfanas (sum(count)=n_total en 100%).
+    - Evidencia de base top-20 preservada en
+      outputs/history/sector_wyckoff_distribution.pre_top20_target.csv
+      (hash 7D988C841C06E567...).
+
+    Pendiente (no bloquea uso productivo):
+    - Doc 70-v2 respondiendo dictamen externo 2026-10-26 (7 hallazgos
+      + 2 nuevos: PIT historico, granularidad n_estructuras <=4 en
+      71% celdas).
+    - Re-verificacion H-03 y H-04 sobre nueva base (criterios
+      congelados intactos).
+    - Revision externa antes de cerrar como FIXED.
   descripcion: |
-    Top-20 cobertura: XLI 57.2%, SPY 49.9%, IWM excluido (6.2%). El
-    auditor externo razona que top-20 por peso no basta para sostener
-    una afirmacion representativa del sector o indice. Doc 68 seccion
-    top-20.
+    H-07 del dictamen externo 2026-10-25. El universo de holdings por
+    grupo se limitaba al top-20 por peso (TOP_N_HOLDINGS=20). Objetivo
+    del dictamen: cobertura 80-90% por grupo. Afectados por debajo
+    del 80%: XLI 57.2%, SPY 49.9%, ISH.L 60.8%, QQQ 66.8%, FEZ 66.3%,
+    XLF 72.8%, XLK 79.6%, XLV 78.9%.
+
+    A.2c cambia el criterio de seleccion a acumular por peso hasta
+    TARGET_WEIGHT_COVERAGE=0.85, manteniendo MIN_TICKERS_PER_GROUP=20
+    para no regresar grupos ya >85%. Aplica a los 11 sectores USA
+    (indices USA y EU quedan con nlargest hasta el proximo frente).
+
+    Advertencia estructural (H-04 auditor): el backfill historico se
+    hace con composicion 2026Q4 sobre las 1086 fechas. Es el mismo
+    sesgo de supervivencia ya reconocido en el sistema desde sesion 3
+    (commit a655fc95). No introduce sesgo nuevo; la alternativa (no
+    backfill) creaba discontinuidad de base en 2026-10-27, peor.
+
   siguiente_accion: |
-    Universo dinamico por grupo (objetivo 80-90% peso), minimo de
-    componentes validos. Requiere descarga adicional de tickers,
-    protocolo de 6 pasos (calendario, 0 H=L=C, resolve_effective_date,
-    output_registry, test), regeneracion del historico.
-    No bloqueante para uso actual (cobertura declarada en cada fila
-    con coverage_weight_pct).
+    Fase A.2c commiteada. Pendiente antes de cerrar:
+      (1) Doc 70-v2 respondiendo dictamen externo 2026-10-26 (7
+          hallazgos P0 + 2 nuevos detectados en verificacion:
+          sesgo PIT en backfill, granularidad n_estructuras <=4 en
+          71% de celdas).
+      (2) Re-ejecutar H-03 (muestreo 30 FORMING->RANGE + tests
+          deterministas) sobre la serie target_weight regenerada.
+      (3) Re-ejecutar H-04 (scripts/h04_intervals.py) sobre la
+          nueva base. Criterios pre-registrados intactos: si el IC95%
+          cruza 0 en >50% cohortes, H-04 se reabre como descriptiva
+          pura, no se reinterpreta.
+      (4) Revision del auditor externo del doc 70-v2.
+    Solo entonces decision de FIXED vs mantener OPEN con nueva
+    accion. El estado OPEN de este item NO es deuda productiva: el
+    sistema funciona con target_weight desde e7f27cd0. Es deuda
+    documental/verificacion pendiente de revision externa.
+    Indicadores USA (SPY, QQQ, DIA) y EU siguen con nlargest: frente
+    separado si el auditor lo requiere tras revisar doc 70-v2.
+
 
 - id: DICT3-REACCUMULATION
   tipo: deuda_tecnica
