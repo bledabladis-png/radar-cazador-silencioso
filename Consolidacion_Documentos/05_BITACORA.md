@@ -1516,51 +1516,6 @@ produccion.
 **Proximo paso sugerido.** Verificar el run del cron al dia siguiente.
 Si v2 en CI va bien, el frente N8 queda cerrado tecnicamente.
 
-### 2026-10-13 - Verificacion del contrato en prod + revision del reporte
-
-**Objetivo.** Verificar el run de la madrugada (primer run con el
-contrato de persistencia activo) + revision linea a linea del
-reporte diario.
-
-**Verificacion del contrato en prod (38342330518).** Pipeline
-ejecuto completo (17m48s). `Verificacion de outputs: OK (19
-checks)`. Target session 2026-10-12. Receipt emitido. Contrato
-validado en produccion.
-
-**Revision del reporte (10 hallazgos).**
-- B1 (fix): FRED en `data/providers/fred.py` extendia el indice
-  hasta hoy con ffill, contaminando la fecha del `liquidity_state.json`.
-  Bug visible en el reporte (FRED decia '0 dias / CURRENT' cuando
-  el dato real era 3 dias). Fix: `end=s.index[-1]` en vez de
-  `end=today`.
-- B2 (nota): 'Breadth de Mercado' cuenta ETFs sobre EMA; 'Sector
-  Breadth & Health' cuenta componentes por sector. Distintas metricas.
-- B3 (nota): 3 columnas de Matriz de Evidencia tienden a constante
-  (Wyckoff, Credito, Volat). Explicito en el render.
-- B4 (nota): z-score de flujos internacionales clipeado a [-5, +5].
-- B6 (nota): lag de proveedores (BlackRock T+1, Amundi T+1/T+2).
-- B8 (nota): `n_total` (universo completo ETF) vs `rs_internal`
-  (top-20 por sector) miden cosas distintas. Documentado.
-- B10 (nota): SSGA devuelve ETFs no sectoriales (FEZ). Aclarado.
-- B5, B7, B9: descartados (falsos positivos verificados).
-
-**Fix colateral (upstream).** `OutputSpec.date_source='upstream'`
-para outputs con lag de proveedor (sector_flow_characteristics).
-El verificador extendido ya no reporta gap cuando el CSV tiene la
-ultima publicacion real aunque no coincida con la sesion.
-
-**Verificacion.** Suite: 3251 -> 3253 passed. 5 skipped.
-Pyflakes limpio.
-
-**Commits.** 3542d29d, 89331321, 1ea34ac7, 43f10428, 8b441a7a.
-
-**Pendiente.**
-- Deudas bloqueadas por terceros/datos (C2, SOW v6, Wyckoff 5b.X).
-- ~11 BAJA vivas de baja prioridad (IAE rendimiento, MTE limpieza).
-
-**Proximo paso sugerido.** Monitorizar el proximo run del cron.
-Confirmar que B1 mantiene FRED sin fecha sintetica.
-
 ## 4. REFERENCIA A SESIONES ANTERIORES
 
 Para sesiones anteriores al 2026-09-24, ver `git log --oneline`. Resumen tematico en `04_HISTORICO.md`.

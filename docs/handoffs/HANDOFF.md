@@ -163,6 +163,7 @@ Commit f5cb8834.
 - `SECTOR-REGIME-RENAME-RANK` (Fase 4b): FIXED 2026-10-25 (34930b81).
 - `DICT3-WYCKOFF-AUDIT-2026-10-25`: FIXED 2026-10-25 (c13cd3a5).
 - `SECTOR-REGIME-MATRIX-STRUCTURE-POSITIVE`: SUPERSEDED 2026-10-25.
+- `PODA-BITACORA-DIA-EN-CURSO`: FIXED 2026-10-26 (b52df895 + be280bc1).
 
 ---
 
@@ -189,8 +190,6 @@ Generales:
   Solo se ve dentro de `py run.py`.
 - `IWM-HOLDINGS-EXPANSION`: sub-fase descarga, protocolo 6 pasos.
   IWM excluido (top-20 = 6.2% de 1977 holdings).
-- `PODA-BITACORA-DIA-EN-CURSO`: mensaje opaco del script. Pendiente
-  fix + aclarar seccion 5 de bitacora.
 
 Del dictamen externo 2026-10-25 (doc 68):
 - `DICT3-H04-INTERVALS` (OPEN): ICs por cohorte anual, criterios de
@@ -256,8 +255,7 @@ Esperado:
 - Tests: ver ESTADO_SISTEMA.md (fuente autoritativa). Al cierre
   sesion 10: 3755 passed, 2 skipped (con -n auto).
 - Gobernanza: [OK] Gobernanza coherente.
-- Bitacora: FALLA con PODA-BITACORA-DIA-EN-CURSO abierto. Esperado
-  mientras el item siga OPEN. No bloquea trabajo.
+- Bitacora: [OK] dentro de la regla (11 sesiones unicas, keep=10 + dia en curso).
 - pyflakes sobre . silencio absoluto.
 - compileall OK.
 
