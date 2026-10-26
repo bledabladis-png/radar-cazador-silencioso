@@ -2198,6 +2198,9 @@ items:
         en FORMING/RANGE. Confirmadas 0 cambios. 9 tests. Verificacion
         empirica 2026-10-26: 30/30 casos confirman (precio fuera del
         rango), 0 bugs, 0 errores de reconstruccion.
+        Re-verificado sobre base target_weight post-A.2c (commit
+        e7f27cd0): 30/30 casos, 0 errores. H-03 opera sobre el parquet,
+        no depende de la base de agregacion.
       - H-06 (WLS stability): stock_metrics.py usa wyckoff_stability,
         no tanh(median/MAD). 43% signos opuestos -> misma metrica.
         3 tests.
@@ -2248,9 +2251,15 @@ items:
       (c) Criterio §9 (IC cruza 0) no discrimino por construccion
           (ratio en [0,1], media 0.5). Defecto del pre-registro,
           reconocido en §12.4.
+    RE-EJECUTADO sobre base target_weight post-A.2c (commit
+    e7f27cd0), anadido como doc 69 seccion 13. Numeros: rho_bar
+    0.5243->0.4708 (mas diversidad cross-sector), ALL annual
+    [0.268,0.754]->[0.294,0.765], ancho multiway/naive se mantiene
+    2.4x, estrato [11-20] 129->278 celdas. Criterio §9 sigue sin
+    discriminar (§12.4 + §13.3). Conclusion §12.6/§13.4 sin cambios.
     Pendiente: revision del auditor externo del doc 69 completo
-    (protocolo + §12). Decision de FIXED o de nuevo pre-registro
-    queda fuera de este item hasta revision.
+    (protocolo §2-§10 + §12 + §13). Decision de FIXED o de nuevo
+    pre-registro queda fuera de este item hasta revision.
     No es bloqueante para uso descriptivo actual.
 
 - id: DICT3-H05-FILLNA-FUTURE
