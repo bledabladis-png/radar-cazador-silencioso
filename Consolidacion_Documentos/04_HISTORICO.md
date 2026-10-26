@@ -1484,6 +1484,32 @@ anteriores (`B-06` -> `tests/test_b06_e2e_aggregation.py`;
 
 ---
 
+## Sesion 2026-10-13 - Contrato en prod + revision del reporte diario
+
+Primera verificacion del contrato de persistencia activo en prod
+(run 38342330518, 17m48s, 19 checks OK, target session 2026-10-12,
+receipt emitido).
+
+Revision linea a linea del reporte (10 hallazgos):
+- **B1 (FIX):** `data/providers/fred.py` extendia el indice con
+  ffill hasta hoy, contaminando la fecha de `liquidity_state.json`
+  (FRED reportaba '0 dias / CURRENT' cuando el dato real era 3
+  dias). Fix: `end=s.index[-1]` en vez de `end=today`.
+- **Fix colateral:** `OutputSpec.date_source='upstream'` para
+  outputs con lag de proveedor (`sector_flow_characteristics`).
+  Evita gap falso cuando el CSV tiene la ultima publicacion real
+  aunque no coincida con la sesion.
+- B2, B3, B4, B6, B8, B10: notas (metricas distintas, constantes
+  de render, clip z-score, lag de proveedores, universo ETF vs
+  rs_internal, SSGA devuelve no sectoriales). B5, B7, B9:
+  descartados (falsos positivos verificados).
+
+Tests: 3251 -> 3253 passed. 5 skipped. Pyflakes limpio.
+
+Commits: 3542d29d, 89331321, 1ea34ac7, 43f10428, 8b441a7a.
+
+---
+
 ## Sesion 2026-10-22 - Auditoria externa #4 + 11 bugs + gobernanza
 
 Sesion extensa. Cierra auditoria externa #4 (P1-P8) y deriva en
