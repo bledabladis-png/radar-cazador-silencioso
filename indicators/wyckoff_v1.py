@@ -343,8 +343,24 @@ def build_ticker_df(df, ticker):
     # El riesgo residual (H=L=C -> TR=0) se mitiga en detect_sow con +1e-9
     # en el denominador del break_depth y se mide como 0/2512 filas en
     # market_data.parquet (2026-10-22). No se toca sin abrir frente propio.
+    # DICT3-H05 (2026-10-26): columna `bar_flags` (auditoria de calidad
+    # por barra) calculada antes del fillna para los flags pre-fill y
+    # despues para NO_RANGE. Los detectores y el scoring no leen
+    # `bar_flags`; las columnas Open/High/Low/Close/Volume del df
+    # devuelto son identicas al contrato v1.8.
     raw = raw.dropna(subset=['Close'])
+    missing_ohlc = raw[['Open', 'High', 'Low']].isna().any(axis=1)
+    zero_volume = raw['Volume'].isna() | (raw['Volume'] == 0.0)
     for col in ('Open', 'High', 'Low'):
         raw[col] = raw[col].fillna(raw['Close'])
     raw['Volume'] = raw['Volume'].fillna(0.0)
+    no_range = raw['High'] == raw['Low']
+    parts = pd.DataFrame({
+        'MISSING_OHLC': missing_ohlc.map({True: 'MISSING_OHLC', False: ''}),
+        'ZERO_VOLUME': zero_volume.map({True: 'ZERO_VOLUME', False: ''}),
+        'NO_RANGE': no_range.map({True: 'NO_RANGE', False: ''}),
+    }, index=raw.index)
+    raw['bar_flags'] = parts.apply(
+        lambda r: ';'.join(x for x in r if x) or 'OK', axis=1
+    )
     return raw
