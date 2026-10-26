@@ -72,7 +72,9 @@ def check_2_tickers():
     return {
         "id": 2, "name": "fase_por_ticker",
         "status": "SKIP",
-        "detail": "no snapshot pre/post por ticker. classify_phase cuelga.",
+        "detail": "no existe snapshot pre/post por ticker. classify_phase "
+                  "funciona (360/360 OK en 21.6s, verificado 2026-10-26); "
+                  "falta la base de comparacion, no el detector.",
     }
 
 

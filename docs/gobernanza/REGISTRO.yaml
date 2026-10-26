@@ -2707,31 +2707,44 @@ items:
 - id: WYCKOFF-CLASSIFY-PHASE-HANG
   tipo: deuda_tecnica
   ciclo: '2026-10-26'
-  estado: OPEN
+  estado: FALSE_POSITIVE
   descripcion: |
-    classify_phase cuelga (hang, no exception) con al menos un ticker
-    del universo actual. Detectado durante P1-H02 (auditoria de
-    cobertura efectiva). Traza: _trend_component en
-    indicators/wyckoff_v1.py:99 alinea Series con indices
-    incompatibles al sumar ma_slow + 1e-9. Bug preexistente, no
-    introducido por el dictamen 2026-10-26.
+    FALSO POSITIVO confirmado 2026-10-26. Se creyo que classify_phase
+    colgaba (hang, no exception) con al menos un ticker. La traza
+    original (_arith_method -> Series.add bloqueando) fue en realidad
+    un KeyboardInterrupt manual durante una ejecucion larga de
+    compute_wyckoff_snapshot (~40s con 360 tickers). No hay cuelgue.
   evidencia: |
-    Reproduccion: py scripts/audit/p1_h02_cobertura_efectiva.py con
-    compute_wyckoff_snapshot activado (linea 29 del script original).
-    Stack: _arith_method -> Series.add -> IndexOpsMixin -> Base.__len__
-    bloquea. No hay exception, es un cuelgue que requiere
-    KeyboardInterrupt. Consecuencias:
-    - invariante 2 de P1-H03 (fase por ticker) queda SKIP.
-    - columna evaluable del CSV de P1-H02 usa con_datos como proxy.
-    - compute_wyckoff_snapshot no es invocable hoy con el universo
-      completo; run.py no lo usa directamente (usa el agregado), por
-      lo que el pipeline productivo no esta roto.
+    Probe exhaustivo 2026-10-26 sobre los 360 tickers unicos
+    seleccionados por _select_target_holdings (11 sectores USA +
+    SPY/QQQ/DIA + FEZ/DAXEX/ISF.L/LYXI):
+    - classify_phase: 360/360 OK, 0 TIMEOUT (>5s), 0 excepciones.
+    - Tiempo total 21.6s, medio 0.0601s, max 0.117s.
+    - wyckoff_score: 30/30 OK en 0.02s cada uno.
+    - Extension: los 527 seleccionados (con duplicados) tardan
+      ~40s, coherente con el KeyboardInterrupt original del
+      usuario durante P1-H02.
+
+    El bug preexistente que SI existe es solo la lentitud
+    (~0.06s/ticker, ~40s para 527), no un cuelgue. No requiere fix
+    de codigo.
+
+    Consecuencias corregidas:
+    - invariante 2 de P1-H03 sigue SKIP, pero por razon distinta:
+      falta snapshot pre/post por ticker (no por hang). Corregido
+      en scripts/audit/p1_h03_invariantes.py.
+    - columna evaluable del CSV de P1-H02 puede calcularse con
+      classify_phase real sin proxy. Se hara en el siguiente
+      pase de P1-H02 si el auditor lo requiere.
+  razon: |
+    Probe exhaustivo 2026-10-26 sobre los 360 tickers unicos
+    seleccionados por _select_target_holdings: classify_phase
+    360/360 OK, 0 TIMEOUT (>5s), 0 excepciones, 21.6s total
+    (medio 0.0601s, max 0.117s). wyckoff_score 30/30 OK en 0.02s.
+    El KeyboardInterrupt original fue cancelacion manual de un
+    proceso de ~40s, no un cuelgue. Sin bug de codigo.
+  verificacion: FALSE_POSITIVE
   siguiente_accion: |
-    Fix candidato: _trend_component debe operar sobre arrays NumPy
-    (usar .to_numpy() o .values antes de la aritmetica) en lugar de
-    Series pandas, para evitar alineacion implicita. Verificar
-    tambien _atr_normalized y wyckoff_stability por si tienen el
-    mismo patron (B2 WONT_FIX en 2026-10-22 razono que dropna().rolling
-    era correcto, pero no cubre esta alineacion).
-    Pre-requisito para reabrir invariante 2 de P1-H03.
-    Sin fecha. No bloqueante de A.2c.
+    Sin accion. Falso positivo. Si en el futuro aparece un cuelgue
+    real de classify_phase, abrir ticket nuevo con ticker concreto
+    y traza reproducible.
