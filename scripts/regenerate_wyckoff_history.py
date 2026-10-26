@@ -103,7 +103,7 @@ def _get_tickers(selection_mode="nlargest"):
     elif selection_mode == "target_weight":
         partes = []
         for _etf, _g in h.groupby("etf"):
-            _sel, _cob, _ok = _select_target_holdings(_g)
+            _sel, _cob, _estado = _select_target_holdings(_g)
             partes.append(_sel)
         top = pd.concat(partes, ignore_index=True) if partes else h.iloc[0:0]
     else:

@@ -47,28 +47,39 @@ OUTPUT_COLUMNS = [
 ]
 
 
+# Estados de seleccion (P1-H01 dictamen 2026-10-26)
+SELECTION_REACHED = "REACHED"
+SELECTION_UNREACHABLE = "UNREACHABLE"
+SELECTION_INVALID_UNIVERSE = "INVALID_UNIVERSE"
+DEFAULT_MAX_MISSING_WEIGHT_RATIO = 0.0
+
+
 def _select_target_holdings(
     group,
     target_weight=None,
     min_tickers=None,
     max_tickers=None,
+    max_missing_weight_ratio=None,
 ):
     """Selecciona holdings por peso descendente hasta cubrir target_weight
-    del peso total del grupo (P0-H01 dictamen externo 2026-10-26).
+    del peso total del grupo (P1-H01 dictamen externo 2026-10-26).
 
     Contrato:
     - Busqueda explicita de posicion sobre cumsum; nunca idxmax().
-    - Denominador: peso total del grupo completo (no el de la seleccion).
-    - Objetivo inalcanzable (cumsum nunca alcanza target_abs): devuelve
-      hasta max_tickers y alcanzado=False. Nunca finge conformidad.
-    - weight NaN se descarta antes del calculo (no se imputa).
-    - Grupo vacio o peso total <= 0: devuelve seleccion vacia,
-      cobertura 0.0, alcanzado=True (no hay objetivo que incumplir).
+    - Denominador: peso total de los pesos conocidos (no NaN).
+    - Estados (str):
+        REACHED: objetivo alcanzado con n en [min_tickers, max_tickers].
+        UNREACHABLE: objetivo no alcanzado con los limites disponibles.
+        INVALID_UNIVERSE: grupo None/vacio, todos weight NaN, total<=0,
+                          o ratio de NaN en weight > max_missing_weight_ratio.
+    - max_missing_weight_ratio: fraccion de pesos NaN admitida. Default 0.0
+      (cualquier NaN invalida el universo). Si el denominador esta
+      incompleto, la cobertura seria artificialmente alta.
     - min_tickers y max_tickers se validan (min>=1, max>=min).
     - target_weight se valida en (0, 1].
 
     Returns:
-        (DataFrame seleccionado, cobertura_frac en [0,1], alcanzado: bool)
+        (DataFrame seleccionado, cobertura_frac en [0,1], estado: str)
     """
     if target_weight is None:
         target_weight = TARGET_WEIGHT_COVERAGE
@@ -76,6 +87,8 @@ def _select_target_holdings(
         min_tickers = MIN_TICKERS_PER_GROUP
     if max_tickers is None:
         max_tickers = MAX_TICKERS_PER_GROUP
+    if max_missing_weight_ratio is None:
+        max_missing_weight_ratio = DEFAULT_MAX_MISSING_WEIGHT_RATIO
 
     if not (0.0 < float(target_weight) <= 1.0):
         raise ValueError(
@@ -87,19 +100,29 @@ def _select_target_holdings(
         raise ValueError(
             "max_tickers={} < min_tickers={}".format(
                 max_tickers, min_tickers))
+    if not (0.0 <= float(max_missing_weight_ratio) < 1.0):
+        raise ValueError(
+            "max_missing_weight_ratio={} fuera de [0,1)".format(
+                max_missing_weight_ratio))
 
     if group is None or len(group) == 0:
         empty = group.iloc[0:0] if group is not None else pd.DataFrame()
-        return empty, 0.0, True
+        return empty, 0.0, SELECTION_INVALID_UNIVERSE
+
+    n_total = len(group)
+    n_missing = int(group["weight"].isna().sum())
+    missing_ratio = float(n_missing) / float(n_total) if n_total else 0.0
+    if missing_ratio > float(max_missing_weight_ratio):
+        return group.iloc[0:0], 0.0, SELECTION_INVALID_UNIVERSE
 
     g = group.dropna(subset=["weight"]).copy()
     if len(g) == 0:
-        return g, 0.0, True
+        return g, 0.0, SELECTION_INVALID_UNIVERSE
 
     g = g.sort_values("weight", ascending=False).reset_index(drop=True)
     total = float(g["weight"].sum())
     if total <= 0:
-        return g.iloc[0:0], 0.0, True
+        return g.iloc[0:0], 0.0, SELECTION_INVALID_UNIVERSE
 
     target_abs = float(target_weight) * total
     cum = g["weight"].cumsum().to_numpy(dtype=float)
@@ -113,19 +136,18 @@ def _select_target_holdings(
     if idx is None:
         n = min(len(g), int(max_tickers))
         cob = float(cum[n - 1] / total) if n > 0 else 0.0
-        return g.head(n), cob, False
+        return g.head(n), cob, SELECTION_UNREACHABLE
 
     n = idx + 1
     if n < int(min_tickers):
         n = min(int(min_tickers), len(g))
-    alcanzado = True
+    estado = SELECTION_REACHED
     if n > int(max_tickers):
         n = int(max_tickers)
-        alcanzado = False
+        estado = SELECTION_UNREACHABLE
 
     cob = float(cum[n - 1] / total)
-    return g.head(n), cob, alcanzado
-
+    return g.head(n), cob, estado
 
 def compute_wyckoff_holdings_report(
     df_stocks,
@@ -213,7 +235,7 @@ def compute_wyckoff_snapshot(
                 top = group.nlargest(TOP_N_HOLDINGS, "weight")
                 coverage_pct = float(top["weight"].sum())
             elif selection_mode == "target_weight":
-                top, cob_frac, _alcanzado = _select_target_holdings(group)
+                top, cob_frac, _estado = _select_target_holdings(group)
                 coverage_pct = float(cob_frac) * 100.0
             else:
                 raise ValueError(
