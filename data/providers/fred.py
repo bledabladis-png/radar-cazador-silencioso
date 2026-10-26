@@ -27,6 +27,7 @@ def _log_fred_download(record: dict) -> None:
 FRED_SERIES = {
     "fed_balance": "WALCL",
     "sofr": "SOFR",
+    "effr": "EFFR",
     "reverse_repo": "RRPONTSYD",
     "fed_funds": "FEDFUNDS",
     "treasury_3m": "DTB3",
@@ -118,7 +119,7 @@ class FredProvider(MarketDataProvider):
         return df
 
     def get_fed_data(self, index=None) -> pd.DataFrame:
-        series_ids = ["fed_balance", "sofr", "reverse_repo", "fed_funds"]
+        series_ids = ["fed_balance", "sofr", "effr", "reverse_repo", "fed_funds"]
         df = pd.DataFrame()
         for key in series_ids:
             if key in FRED_SERIES:
