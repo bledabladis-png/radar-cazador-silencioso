@@ -2477,32 +2477,51 @@ items:
   ciclo: '2026-10-26'
   estado: OPEN
   descripcion: |
-    8 tickers seleccionados por A.2c no estan en stock_prices.parquet
-    (produccion). XLV: CI, MRNA, BSX, HCA, COR, CAH. XLU: CNP. XLY:
-    NKE. XLV/XLU/XLY quedan por debajo del 85% de cobertura efectiva
-    aunque el selector los incluya.
+    52 tickers seleccionados por A.2c (target_weight=0.85) no tienen
+    datos en stock_prices.parquet con n_bars >= 200. 9 grupos
+    afectados. Correccion respecto al handoff sesion 11: el universo
+    era 8, no 52. El universo original solo contaba XLV/XLU/XLY y
+    omitia XLF, XLK, XLC, XLI, QQQ y SPY.
   evidencia: |
-    Verificado 2026-10-26 via introspeccion de parquets:
-    - 7 de 8 tickers (BSX, CAH, CI, CNP, COR, HCA, NKE) estan en
-      stock_prices_reserved_cohort.parquet y
-      stock_prices_reserved_r3000.parquet. Estos parquets son
-      holdout de validacion SOW (consumidos por
-      scripts/purged_kfold_sow_c1_reserved.py y
-      scripts/purged_kfold_sow_c1_r3000.py). NO se promueven:
-      contaminaria el holdout.
-    - MRNA no esta en ningun parquet.
-    Estimacion: "1 sesion" (doc 70-v2) se mantiene, pero el trabajo
-    es descarga a parquet de produccion, no promocion de datos
-    existentes.
-  siguiente_accion: |
-    Descargar los 8 tickers a parquet de produccion nuevo
-    (no reutilizar reserved_cohort/reserved_r3000). Protocolo de
-    6 pasos (identico a IWM-HOLDINGS-EXPANSION): (1) descargar
-    OHLCV; (2) filtrar por calendario bursatil NYSE; (3) verificar
-    0 filas H=L=C; (4) pasar por resolve_effective_date; (5)
-    registrar writer en output_registry; (6) test que verifique 0
-    fechas no bursatiles. Sin fecha.
+    Auditoria P1-H02 (doc 71, script scripts/audit/p1_h02_cobertura_efectiva.py)
+    sobre 18 grupos (11 sectores USA + 3 indices USA + 4 indices EU):
 
+    Brecha por grupo (peso faltante / peso total grupo):
+    - XLF  11 tickers, 9.05 peso, 9.1% del grupo, 10.6% de la seleccion
+    - QQQ   6 tickers, 6.30 peso, 6.4% del grupo, 7.5% de la seleccion
+    - XLV   6 tickers, 6.18 peso, 6.2% del grupo, 7.3% de la seleccion
+    - XLC   1 ticker,  4.95 peso, 5.0% del grupo (WBD, 1 barra)
+    - SPY  22 tickers, 3.75 peso, 3.8% del grupo
+    - XLK   3 tickers, 3.39 peso, 3.4% del grupo
+    - XLU   1 ticker,  1.95 peso, 2.0% del grupo
+    - XLY   1 ticker,  1.19 peso, 1.2% del grupo
+    - XLI   1 ticker,  0.92 peso, 0.9% del grupo (HONA, 92 barras)
+
+    Distribucion de los 52:
+    - 7 en reserved_cohort/reserved_r3000 (holdout SOW): BSX, CAH,
+      CI, CNP, COR, HCA, NKE. No se promueven. Ver SOW-HOLDOUT-IMMUTABLE.
+    - 1 ausente en cualquier parquet: MRNA.
+    - 44 en ningun parquet conocido: requiere descarga nueva.
+    - 4 con n_bars<200 preexistente por IPO reciente: WBD(1), HONA(92),
+      SPCX(93). Ademas de los 52 principales.
+
+    Detalle completo en outputs/audit/p1_h02_tickers_sin_datos.csv
+    (gitignored, regenerable). Cobertura efectiva por grupo en doc 71
+    seccion 2: peor sector USA XLF 76.19% sobre grupo; peores EU
+    FEZ 66.26%, ISF.L 60.80% (peso_total_csv < 100%).
+  siguiente_accion: |
+    Dos frentes independientes:
+    (A) Descargar los 44 tickers ausentes (protocolo de 6 pasos
+        identico a IWM-HOLDINGS-EXPANSION): descargar OHLCV, filtrar
+        calendario NYSE, verificar 0 H=L=C, resolve_effective_date,
+        registrar writer en output_registry, test 0 no bursatiles.
+        Estimacion 1-2 sesiones.
+    (B) Decision sobre los 7 en holdout SOW: o bien descarga nueva
+        paralela (no promocion), o bien reduccion explicita del
+        alcance. Depende de SOW-HOLDOUT-IMMUTABLE.
+    Sin fecha. Bloqueante para cerrar A.2c segun dictamen P1-H02
+    ("el objetivo no debe validarse solo mediante recuentos de
+    tickers").
 - id: TOP20-EU-HOLDINGS-INCOMPLETOS
   tipo: deuda_tecnica
   ciclo: '2026-10-26'
