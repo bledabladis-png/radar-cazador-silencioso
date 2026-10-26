@@ -2763,13 +2763,15 @@ items:
 - id: WYCKOFF-TICKER-NORMALIZATION
   tipo: deuda_tecnica
   ciclo: '2026-10-26'
-  estado: OPEN
+  estado: FIXED
   descripcion: |
     Holdings usa tickers con punto (BRK.B), parquet usa guion
     (BRK-B). _evaluate_holding y regenerate_wyckoff_history
     hacian lookup sin normalizar, descartando la fila
     silenciosamente. Detectado durante el probe de
     WYCKOFF-CLASSIFY-PHASE-HANG (que resulto falso positivo).
+  commit: 4e94bf2e
+  test: tests/test_wyckoff_holdings_report.py
   evidencia: |
     Fix 4e94bf2e: normalizar en _evaluate_holding, _get_tickers
     y _procesar_ticker. Test test_dotted_ticker_normalized_before_
@@ -2778,12 +2780,19 @@ items:
     historico regenerado (1086 fechas). Post-fix: snapshot
     527 -> 528, XLF ev_n 22 -> 23, ev_peso 63.74 -> 76.05.
     Solo 1 ticker afectado en el universo actual.
+
+    REGENERACION HISTORICA 2026-10-27 (commit f71eb49c):
+    - 1086 fechas x 11 sectores regeneradas con el fix aplicado.
+    - 56.5 min, 12 workers, 248 tickers x 1308 fechas.
+    - XLF n_total 22 -> 23 en las 1086 fechas (BRK.B recuperado).
+    - Resto de sectores sin cambio. 0 regresiones.
+    - Invariantes P1-H03 post-swap: 5 OK, 0 FAIL, 1 SKIP (check 2).
+    - delta_total 31494 -> 32580 (+1086 = XLF x 1086 fechas).
+    - Backup pre-fix versionado como v3.csv (gitignored).
+    - check_5 de p1_h03_invariantes.py reformulado: compara
+      activo vs v2_full.csv post-swap, no vs .bak pre-swap.
+    ESTADO FIXED. Bug resuelto end-to-end en produccion e historico.
   siguiente_accion: |
-    Confirmar si el historico regenerado (1086 fechas) requiere
-    regeneracion completa con el fix, o basta el snapshot
-    actualizado. El historico previo excluye BRK.B de XLF por
-    el mismo motivo. Decision: regenerar es costoso (~35-50 min
-    con 12 workers), pero la inconsistencia historico-vs-actual
-    queda registrada si no se regenera. Bloqueante suave: no
-    afecta el uso descriptivo actual, solo la trazabilidad
-    historica.
+    Ninguna. Bug resuelto en produccion (4e94bf2e) e historico
+    (f71eb49c). Si aparece otro ticker con formato divergente en
+    holdings, aplicar el mismo patron de normalizacion.
