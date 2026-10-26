@@ -44,6 +44,88 @@ Al cerrar una sesion nueva, se anade arriba (las mas recientes primero). Si hay 
 
 ## 3. SESIONES
 
+### 2026-10-26 (sesion 11) - A.2c TOP20 + dictamen condicionado + 2 bugs colaterales
+
+**Objetivo.** Cerrar `DICT3-TOP20-COBERTURA` fases A.2a-c: cambio de
+selector de holdings por sector USA de `nlargest(20)` a acumular por
+peso hasta 85%, con regeneracion completa del historico. Primera
+respuesta al dictamen externo 2026-10-26 sobre doc 70 v1.
+
+**Cambios en produccion:**
+
+1. Expansion declarativa (`404dc7c5`): `data/universe_expansions.yaml`
+   con 28 tickers XLI. `get_stock_list()` fuente 5. Tests: 8.
+2. Selector `_select_target_holdings` (`557048f8`): sin `idxmax()`,
+   denominador = peso total grupo, `MIN_TICKERS_PER_GROUP=20` evita
+   regresion de grupos >85%. Tests: 15.
+3. `selection_mode` en `compute_wyckoff_snapshot` (`0c14a8a3`).
+   `run.py` pasa `target_weight`. Tests: 4.
+4. `regenerate_wyckoff_history` parametrizado (`5e4fe2fc`).
+5. Backfill completo: 1086 fechas × 11 sectores, 50 min. 0 regresiones
+   por fila (date, sector) en 11946 filas. Swap a activo + backup
+   `pre_top20_target.csv` (hash 7D988C841C06E567..., versionado).
+6. A.2c completo (`e7f27cd0`): 21 ficheros regenerados.
+
+**Bugs colaterales corregidos:**
+
+- `persist()` es append-only por merge_keys. Los 6 CSVs de holdings
+  son subconjuntos filtrados por fase: un ticker que sale deja su
+  fila vieja huerfana. Detectado con GE/PWR/VRT en XLI (14 filas CSV
+  vs 11 snapshot). Fix: `replace_date=True` en `persist` + flag en
+  `wyckoff_holdings`. Tests: 2. Commit `f4528b49`.
+- `compute_pcr_signals` retornaba `None` sin `skip()` cuando CBOE
+  no responde. El gate detectaba "sin receipt pcr_history" y fallaba
+  el run entero. Fix: `skip('pcr_history', 'NO_DATA')` en los dos
+  return None tempranos. Tests: 4. Commit `9338dcd4`.
+
+**Efecto en cobertura:**
+
+- XLI: 20→44 (57.2% → 85.8%).
+- XLF: 19→22 (72.8% → 85+%).
+- XLK: 20→22 (79.6% → 85+%).
+- XLE, XLC, XLB, XLP, XLRE: sin cambio (ya cumplian >85%, el
+  min_tickers=20 evita regresion).
+- XLU, XLV, XLY: seleccionan tickers extra pero NO estan en parquet
+  (CNP, CI/MRNA/BSX/HCA/COR/CAH, NKE). Cobertura efectiva sin cambio.
+  Ticket `TOP20-FALTANTES-DATOS` abierto.
+
+**Re-ejecucion H-03/H-04 sobre nueva base:**
+
+Doc 69 §13 (anexo, no modifica §2-§10):
+- H-03: 30/30 (identico, opera sobre parquet).
+- H-04: `rho_bar` 0.524→0.471, ALL annual IC [0.268,0.754]→
+  [0.294,0.765], ancho multiway/naive 2.4×. Criterio §9 sigue sin
+  discriminar. `DICT3-H04-INTERVALS` OPEN.
+
+**Dictamen externo 2026-10-26 sobre doc 70-v2:**
+
+APROBACION CONDICIONADA de A.2c. NO aprobacion del cierre global
+de `DICT3-TOP20-COBERTURA` (sigue OPEN). 6 acciones pendientes:
+P1-H01 (selector con estados REACHED/UNREACHABLE/INVALID_UNIVERSE),
+P1-H02 (tabla cobertura efectiva ponderada), P1-H03 (6 invariantes
+backfill), P1-H04 (sesgo PIT visible en artefactos consumidos),
+P1-H06 (gobernanza separada + tickets índices USA/EU/IWM),
+P1-H05 (H-04 separado, no mezclar con A.2c).
+
+**Correccion documental detectada por auditor:** el resumen decia
+"resto no cambia porque ya cumplia". Falso: XLU 83.1%, XLV 78.9%,
+XLY 84.5% NO cumplian nominalmente. No cambian materialmente porque
+sus tickers extra no estan en parquet. Doc 70-v2b debe corregirlo.
+
+**Incidente durante la sesion:** `git checkout -- outputs/` revertis
+el CSV regenerado (52 min de backfill perdidos). Re-ejecutado. Leccion:
+backup `.bak` antes de revertir.
+
+**Commits (11):** 404dc7c5, 557048f8, 0c14a8a3, 5e4fe2fc, efd53cfe,
+f4528b49, 9338dcd4, e7f27cd0, a14b463b, 8a0a8b1d. Suite: 3809
+passed, 2 skipped. CI verde en cada push.
+
+**Estado al cierre:** A.2c en produccion con target_weight sectores
+USA. DICT3-TOP20-COBERTURA sigue OPEN (deuda: 6 acciones del
+dictamen). DICT3-H04-INTERVALS OPEN. 4 frentes nuevos abiertos
+como tickets: P1-H01 a P1-H06, TOP20-FALTANTES-DATOS,
+TOP20-EU-HOLDINGS-INCOMPLETOS, indices USA/EU/IWM.
+
 ### 2026-10-25 (actualizacion de traspaso)
 
 **Objetivo.** Actualizar HANDOFF + 00_ARRANQUE + 04_HISTORICO +
@@ -1476,45 +1558,6 @@ reporte del 15-oct. Tres niveles: critico / alto / medio.
 
 **Proximo paso sugerido.** Barrido de corpus en sesion propia. Los
 15 items son deuda transversal que reaparecen en cada sesion.
-
-### 2026-10-14 - N8 completo: forense + rediseno + sustitucion v1->v2
-
-**Objetivo.** Cerrar el frente N8 (rediseno del score de liquidez)
-tras varias rondas de auditoria externa. Sustituir v1 por v2 en
-produccion.
-
-**Hecho.**
-
-- Forense del CRISIS 14-oct: state stale (retrocedio de 2026-10-13
-  a 2026-10-07). Causa: run con datos FRED de 6 dias antes. No era
-  artefacto del fix F5.6-06b como decia el HANDOFF anterior.
-- Guard de monotonicidad en `liquidity_state.json` (4291593f).
-- Trazabilidad de fechas + guard de frescura por serie (3d1a1fb6).
-- Instrumentacion FRED en JSONL (456f3a28).
-- Especificacion B3 congelada en `regimes/liquidity_v2.py` (c51372fb):
-  senal A (SOFR-EFFR pb, umbrales 0/5/20), persistencia 3/3,
-  alerta >=100pb, diagnostico C1, contexto calendario.
-- C1-bis con episodios independientes: repo 2019 detectado, Q4-2025
-  detectado (46/62), COVID y carry trade yen no detectados (correcto),
-  0 falsas alarmas en 1024 dias.
-- Sustitucion v1 -> v2 en pipeline (84f46dd3). Adaptador 4-tuple,
-  consumidores sin cambios, rollback disponible.
-- Verificacion en run.py local: exit=0, Gate 10/10, NEUTRAL (conf 90%).
-- Cierre N1 (SLPM fail-closed) en 6 commits previos.
-- Alineacion de comandos pytest documentados con el filtro CI.
-
-**Commits (17).** 27c12671, 953b7fee, f49c85f0, 05b70686, 31f9c00a,
-0fe4e3e2, 4291593f, 3d1a1fb6, 456f3a28, c51372fb, 786b3fc2,
-84f46dd3, e19ba091, 5babc8e3, e8c26d4c.
-
-**Pendiente.**
-- Verificacion del cron 23:17 UTC con v2 en CI.
-- Dictamen auditor sobre sustitucion (fase sombra saltada).
-- Corpus documental (~15 items de deriva).
-- 8 F6-* sin descripcion.
-
-**Proximo paso sugerido.** Verificar el run del cron al dia siguiente.
-Si v2 en CI va bien, el frente N8 queda cerrado tecnicamente.
 
 ## 4. REFERENCIA A SESIONES ANTERIORES
 

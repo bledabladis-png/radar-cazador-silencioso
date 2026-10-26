@@ -193,7 +193,7 @@ Items `CI-PUSH-NO-VERIF` y `CI-PREVENTION-GAP`: cerrados.
 11. Wyckoff v1.8 B5/B3. Ver bloque anterior (commit `1cc8387a`).
 
 Items REGISTRO creados/actualizados en cada fix. Suite: **3845
-passed, 5 skipped** (al cierre).
+passed, 5 skipped** (al cierre sesion 3; cifra actual en ESTADO_SISTEMA.md).
 
 **Verificado en scheduled target 2026-10-22 (run `39884468711`,
 23-10 01:31 UTC):** 4/4 fixes criticos sobreviven en CI Python

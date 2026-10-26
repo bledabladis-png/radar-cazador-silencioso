@@ -1510,6 +1510,49 @@ Commits: 3542d29d, 89331321, 1ea34ac7, 43f10428, 8b441a7a.
 
 ---
 
+## Sesion 2026-10-14 - N8 completo: liquidez v1 -> v2
+
+Cierre del frente N8 (rediseno del score de liquidez) tras varias
+rondas de auditoria externa. Sustitucion de v1 por v2 en produccion.
+
+**Forense del CRISIS 14-oct.** State stale (retrocedio de 2026-10-13
+a 2026-10-07). Causa: run con datos FRED de 6 dias antes. No era
+artefacto del fix F5.6-06b como decia el HANDOFF anterior.
+
+**Cambios.**
+
+- Guard de monotonicidad en `liquidity_state.json` (4291593f).
+- Trazabilidad de fechas + guard de frescura por serie (3d1a1fb6).
+- Instrumentacion FRED en JSONL (456f3a28).
+- Especificacion B3 congelada en `regimes/liquidity_v2.py` (c51372fb):
+  senal A (SOFR-EFFR pb, umbrales 0/5/20), persistencia 3/3,
+  alerta >=100pb, diagnostico C1, contexto calendario.
+- C1-bis con episodios independientes: repo 2019 detectado, Q4-2025
+  detectado (46/62), COVID y carry trade yen no detectados (correcto),
+  0 falsas alarmas en 1024 dias.
+- Sustitucion v1 -> v2 en pipeline (84f46dd3). Adaptador 4-tuple,
+  consumidores sin cambios, rollback disponible.
+- Verificacion en run.py local: exit=0, Gate 10/10, NEUTRAL
+  (conf 90%).
+- Cierre N1 (SLPM fail-closed) en 6 commits previos.
+- Alineacion de comandos pytest documentados con el filtro CI.
+
+**Commits (17).** 27c12671, 953b7fee, f49c85f0, 05b70686, 31f9c00a,
+0fe4e3e2, 4291593f, 3d1a1fb6, 456f3a28, c51372fb, 786b3fc2,
+84f46dd3, e19ba091, 5babc8e3, e8c26d4c.
+
+**Pendiente al cierre de la sesion.**
+- Verificacion del cron 23:17 UTC con v2 en CI.
+- Dictamen auditor sobre sustitucion (fase sombra saltada).
+- Corpus documental (~15 items de deriva).
+- 8 F6-* sin descripcion.
+
+Nota: los pendientes de esta sesion se resolvieron en sesiones
+posteriores. `liquidity_v2` sigue en produccion (verificado en
+runs de 2026-10-22 en adelante).
+
+---
+
 ## Sesion 2026-10-22 - Auditoria externa #4 + 11 bugs + gobernanza
 
 Sesion extensa. Cierra auditoria externa #4 (P1-P8) y deriva en
