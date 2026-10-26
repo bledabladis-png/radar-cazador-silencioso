@@ -106,6 +106,7 @@ def compute_wyckoff_holdings(df_stocks, holdings_df, index_holdings_path=None, s
         persist(
             name, df, date_value=date_val,
             sort_by=["date", "group", "phase", "ticker"],
+            replace_date=True,
         )
     print("  Tablas Wyckoff por holdings calculadas (6 CSVs).")
     return tables

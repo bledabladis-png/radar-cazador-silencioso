@@ -57,7 +57,7 @@ def _fmt_date(value):
 
 
 def persist(name, df, *, date_value=None, sort_by=None, collector=None,
-            path_override=None):
+            path_override=None, replace_date=False):
     """Persiste df en el CSV del registro.
 
     Args:
@@ -144,6 +144,31 @@ def persist(name, df, *, date_value=None, sort_by=None, collector=None,
     if spec.kind == 'temporal' and spec.merge_keys:
         if path.exists() and not _migrated_this_call:
             hist = pd.read_csv(path)
+            # replace_date (2026-10-26): elimina del historico TODAS las
+            # filas de la fecha que se va a reescribir, antes del append.
+            # Necesario para writers cuyo df es un SUBCONJUNTO filtrado
+            # del estado del dia (ej. wyckoff_*_distribution solo incluye
+            # DIST_PHASES). Sin esto, un ticker que sale de la fase deja
+            # su fila vieja huerfana en el CSV (append_dedup solo añade/
+            # reemplaza, no elimina). Ver dictamen externo 2026-10-26
+            # P0-H06 y bug detectado con GE/PWR/VRT en XLI.
+            if replace_date and spec.date_column:
+                _dv = None
+                if date_value is not None:
+                    _dv = pd.Timestamp(date_value).strftime('%Y-%m-%d')
+                elif spec.date_column in df.columns:
+                    _d = df[spec.date_column].dropna()
+                    if len(_d) > 0:
+                        _dv = pd.Timestamp(_d.max()).strftime('%Y-%m-%d')
+                if _dv is not None and spec.date_column in hist.columns:
+                    _n_before = len(hist)
+                    hist = hist[
+                        hist[spec.date_column].astype(str) != _dv
+                    ].copy()
+                    _removed = _n_before - len(hist)
+                    if _removed > 0:
+                        print(f"  [PERSIST] {name}: replace_date {_dv}, "
+                              f"retiradas {_removed} filas previas")
             df_out = append_dedup(
                 hist, df, list(spec.merge_keys),
                 sort_by=list(sort_by) if sort_by else None,
