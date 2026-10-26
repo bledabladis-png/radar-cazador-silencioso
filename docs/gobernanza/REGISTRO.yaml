@@ -2241,27 +2241,50 @@ items:
     observaciones solapadas / correlacion entre sectores. Sin esto,
     la metrica es descriptiva, no inferencial. Doc 68 seccion H-04.
   siguiente_accion: |
-    2026-10-26: pre-registro congelado en doc 69. Implementacion en
-    scripts/h04_intervals.py + tests (7 passed). Resultados anadidos
-    como doc 69 seccion 12. Hallazgos:
-      (a) rho_bar cross-sector = 0.5243; IC multiway 2.4x mas ancho
-          que naive en ALL. Valida la eleccion de §6.
-      (b) 71% de celdas con n_estructuras <= 4; metrica granular a
-          nivel sector individual. Agregado si, signal sector no.
-      (c) Criterio §9 (IC cruza 0) no discrimino por construccion
-          (ratio en [0,1], media 0.5). Defecto del pre-registro,
-          reconocido en §12.4.
-    RE-EJECUTADO sobre base target_weight post-A.2c (commit
-    e7f27cd0), anadido como doc 69 seccion 13. Numeros: rho_bar
-    0.5243->0.4708 (mas diversidad cross-sector), ALL annual
-    [0.268,0.754]->[0.294,0.765], ancho multiway/naive se mantiene
-    2.4x, estrato [11-20] 129->278 celdas. Criterio §9 sigue sin
-    discriminar (§12.4 + §13.3). Conclusion §12.6/§13.4 sin cambios.
-    Pendiente: revision del auditor externo del doc 69 completo
-    (protocolo §2-§10 + §12 + §13). Decision de FIXED o de nuevo
-    pre-registro queda fuera de este item hasta revision.
-    No es bloqueante para uso descriptivo actual.
+    2026-10-26 (post-dictamen externo H-04): DICTAMEN RECIBIDO.
+    Veredicto: NO APROBADO para publicar IC95 como inferencia validada.
+    Mantener OPEN. structure_ratio aceptada como descriptiva.
 
+    5 hallazgos aceptados (todos en doc 73 seccion 1):
+      P0-H04-01 bootstrap mal especificado: unidad remuestreada ambigua
+        (ratio[y,s] vs observaciones diarias), identidad de sector no
+        preservada, dependencia temporal dentro de cada ano no
+        demostrada. El protocolo §2-§10 no aporta informacion suficiente
+        para validar la implementacion. No afirmacion de que el codigo
+        real este mal: afirmacion de que el protocolo no lo demuestra.
+      P0-H04-02 cinco anos no son base solida. Tres completos + dos
+        parciales. Variacion estructural 0.784->0.212 requiere justificar
+        interpretacion comun.
+      P0-H04-03 criterio §9 no discrimina por construccion. Declarado
+        metodologicamente no concluyente. NO se reinterpreta como
+        superado. NO se reemplaza por 0.5 post hoc.
+      P1-H04-04 ALL annual no reconciliado. Media aritmetica de anuales
+        0.5252 != ALL 0.510. Estimador probablemente pondera por dia
+        pero no se declara. Hasta documentarlo, ALL annual no auditable.
+      P1-H04-05 anchura 2.4x no valida multiway. Que naive y multiway
+        discrepen no demuestra cobertura. La insuficiencia de naive se
+        mantiene; la validacion de multiway por anchura se retira.
+
+    Verificacion de no incumplimiento actual (doc 73 seccion 2):
+    - Reporte diario: 0 hits de ci_lo/ci_hi/intervalo/IC95/bootstrap.
+    - structure_ratio solo descriptiva en sector_context.py:24.
+    - structure_positive retirada (sesion 10). sector_regime_matrix v2
+      publica structure_ratio continua + n_estructuras, no booleana.
+    Sin cambios de codigo necesarios para cumplir.
+
+    Acciones pendientes (nuevo frente DICT3-H04-INFERENCE-V2, OPEN):
+    - Decision 1: elegir estimando (ventana observada / poblacion de anos
+      / regimenes futuros). El pre-registro actual mezcla los tres.
+    - Decision 2: remuestreo coherente con estimando. Resolver unidad,
+      identidad de sector, dependencia temporal, ponderacion.
+    - Decision 3: criterio discriminante. Test de equivalencia o
+      contraste contra referencia justificada. No basta con IC.
+    - Decision 4: validacion independiente. Los datos 2022-2026 ya se
+      han visto; protocolo nuevo es exploratorio. Propuesta: usar 2027
+      como holdout prospectivo con protocolo congelado antes de
+      2027-01-01.
+    Sin codigo hasta aprobacion del diseno por auditor externo.
+    No bloqueante para uso descriptivo actual.
 - id: DICT3-H05-FILLNA-FUTURE
   tipo: deuda_tecnica
   ciclo: '2026-10-25'
@@ -2646,3 +2669,37 @@ items:
     Anadir step a .github/workflows/ci_tests.yml:
     "py scripts/verifica_gobernanza.py" tras pyflakes. Coste
     ~1s. Sin impacto en duracion (ya ~3 min).
+
+- id: DICT3-H04-INFERENCE-V2
+  tipo: deuda_tecnica
+  ciclo: '2026-10-26'
+  estado: OPEN
+  descripcion: |
+    Nuevo diseno inferencial para structure_ratio. El pre-registro
+    doc 69 §2-§10 queda congelado, con criterio §9 declarado no
+    concluyente. Este ticket NO corrige §2-§10; crea un protocolo
+    nuevo con las 4 decisiones que exige el dictamen H-04.
+  evidencia: |
+    Dictamen externo H-04 (2026-10-26) sobre doc 70-v2c. Respuesta
+    formal en doc 73. Los resultados de §12-§13 ya estan observados:
+    cualquier protocolo nuevo basado en ellos es exploratorio, no
+    confirmatorio. La validacion confirmatoria requiere datos futuros
+    o muestra independiente definida antes de mirar resultados.
+  siguiente_accion: |
+    Cuatro decisiones de diseno antes de codigo:
+    (1) Estimando: ventana observada vs poblacion de anos vs
+        regimenes futuros. El pre-registro actual mezcla los tres.
+        Elegir uno, justificar.
+    (2) Remuestreo: unidad en cada dimension, identidad del sector,
+        dependencia temporal dentro de ano, tratamiento de anos
+        parciales/sectores ausentes, ponderacion (por dia vs por
+        ano) coherente con estimando.
+    (3) Criterio discriminante: test de equivalencia (TOST) o
+        contraste contra referencia justificada. Distinguir
+        evidencia insuficiente de evidencia de equivalencia. No
+        basta con IC contiene/excluye.
+    (4) Validacion independiente: propuesta usar 2027 como holdout
+        prospectivo, con protocolo congelado antes de 2027-01-01.
+    Sin codigo hasta aprobacion del diseno por auditor externo.
+    Bloqueante suave: no afecta uso descriptivo actual de
+    structure_ratio.
