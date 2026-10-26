@@ -80,6 +80,9 @@ cambian solo en FORMING y RANGE. Confirmadas (ACC, MARKUP, DIST,
 MARKDOWN): 0 cambios.
 Commits 3046990c + a655fc95.
 Tests: `test_wyckoff_audit_2026_10_25.py` (9: H-02 SOW, H-03 FORMING).
+Verificacion empirica 2026-10-26: 554 pares (ticker,fecha) muestreados
+sobre stock_prices.parquet, 30 casos H-03 aislados, 30/30 confirman
+(precio fuera del rango), 0 bugs. Doc 68 actualizado.
 
 ### 2.3. H-06 WLS stability (cerrado)
 

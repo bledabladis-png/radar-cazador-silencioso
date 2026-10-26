@@ -80,6 +80,20 @@ solo en `count_accumulation_forming`, `count_distribution_forming`,
 DIST, MARKDOWN): 0 cambios. Tests en
 `tests/test_wyckoff_audit_2026_10_25.py::test_h03_*`.
 
+**Verificacion empirica (2026-10-26).** Muestreo aleatorio sobre
+`data/stock_prices.parquet` (329 tickers x 1308 fechas,
+2021-10-04 .. 2026-10-23): 554 pares (ticker, fecha) evaluados, 483
+devuelven fase RANGE post-fix, de los cuales 30 cumplen el patron
+H-03 (post-fix RANGE con ClassifiedBreak subyacente
+DISTRIBUTION_FORMING o ACCUMULATION_FORMING). Para cada uno se
+reconstruyo el ClassifiedBreak de dist y acc por separado y se
+comprobo que el precio de cierre estaba fuera de
+`[support-tol, resistance+tol]`. Resultado: **30/30 confirman**
+(precio fuera del rango), 0 bugs, 0 errores de reconstruccion. La
+invalidacion de FORMING no se aplica a ningun caso con precio dentro
+del rango. Script reproducible: muestreo aleatorio con seed=42,
+max 800 muestras.
+
 ### H-04. respaldo estadistico de ratio_pos
 
 Publicado como `structure_ratio` continuo en

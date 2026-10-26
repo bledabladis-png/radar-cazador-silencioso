@@ -2195,7 +2195,9 @@ items:
     + run real:
       - H-03 (FORMING invalida si rompe rango): fix wyckoff_orchestrator
         + historico 1086 fechas regenerado. 6244/11946 filas cambian
-        en FORMING/RANGE. Confirmadas 0 cambios. 9 tests.
+        en FORMING/RANGE. Confirmadas 0 cambios. 9 tests. Verificacion
+        empirica 2026-10-26: 30/30 casos confirman (precio fuera del
+        rango), 0 bugs, 0 errores de reconstruccion.
       - H-06 (WLS stability): stock_metrics.py usa wyckoff_stability,
         no tanh(median/MAD). 43% signos opuestos -> misma metrica.
         3 tests.
@@ -2207,8 +2209,8 @@ items:
         abreviado. 3 tests.
       - H-04 (respaldo estadistico): parcial. structure_ratio continuo
         + N est. ICs pendientes. DICT3-H04-INTERVALS.
-      - H-05 (fillna): WONT_FIX con razonamiento. DICT3-H05-FILLNA-
-        FUTURE abierto.
+      - H-05 (fillna): contrato v1.8 protegido, ampliado con columna
+        bar_flags. DICT3-H05-FILLNA-FUTURE FIXED 2026-10-26 (053f1a7a).
       - Top-20: abierto. DICT3-TOP20-COBERTURA.
       - Re-acumulacion: abierto. DICT3-REACCUMULATION.
     Respuesta detallada en docs/auditoria/wyckoff/68_respuesta_
