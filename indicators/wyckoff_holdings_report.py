@@ -19,6 +19,14 @@ TOP_N_HOLDINGS = 20
 MIN_BARS_THEORETICAL = 200
 MIN_BARS_VALID = 460
 
+# DICT3-TOP20-COBERTURA (2026-10-26): criterio de seleccion por cobertura
+# de peso, no por numero fijo. Reemplaza a TOP_N_HOLDINGS para la
+# seleccion por grupo (se conserva TOP_N_HOLDINGS por compatibilidad
+# hasta Fase A.2). Objetivo 0.85 dentro del rango 80-90% del dictamen.
+TARGET_WEIGHT_COVERAGE = 0.85
+MIN_TICKERS_PER_GROUP = 10
+MAX_TICKERS_PER_GROUP = 300
+
 ACC_PHASES = frozenset({"ACCUMULATION", "ACCUMULATION_FORMING", "MARKUP"})
 DIST_PHASES = frozenset({"DISTRIBUTION", "DISTRIBUTION_FORMING", "MARKDOWN"})
 
@@ -37,6 +45,86 @@ OUTPUT_COLUMNS = [
     "phase", "event_phase", "phase_since", "close", "basis",
     "coverage_weight_pct", "n_bars", "evaluable",
 ]
+
+
+def _select_target_holdings(
+    group,
+    target_weight=None,
+    min_tickers=None,
+    max_tickers=None,
+):
+    """Selecciona holdings por peso descendente hasta cubrir target_weight
+    del peso total del grupo (P0-H01 dictamen externo 2026-10-26).
+
+    Contrato:
+    - Busqueda explicita de posicion sobre cumsum; nunca idxmax().
+    - Denominador: peso total del grupo completo (no el de la seleccion).
+    - Objetivo inalcanzable (cumsum nunca alcanza target_abs): devuelve
+      hasta max_tickers y alcanzado=False. Nunca finge conformidad.
+    - weight NaN se descarta antes del calculo (no se imputa).
+    - Grupo vacio o peso total <= 0: devuelve seleccion vacia,
+      cobertura 0.0, alcanzado=True (no hay objetivo que incumplir).
+    - min_tickers y max_tickers se validan (min>=1, max>=min).
+    - target_weight se valida en (0, 1].
+
+    Returns:
+        (DataFrame seleccionado, cobertura_frac en [0,1], alcanzado: bool)
+    """
+    if target_weight is None:
+        target_weight = TARGET_WEIGHT_COVERAGE
+    if min_tickers is None:
+        min_tickers = MIN_TICKERS_PER_GROUP
+    if max_tickers is None:
+        max_tickers = MAX_TICKERS_PER_GROUP
+
+    if not (0.0 < float(target_weight) <= 1.0):
+        raise ValueError(
+            "target_weight={} fuera de (0,1]".format(target_weight))
+    if int(min_tickers) < 1:
+        raise ValueError(
+            "min_tickers={} debe ser >=1".format(min_tickers))
+    if int(max_tickers) < int(min_tickers):
+        raise ValueError(
+            "max_tickers={} < min_tickers={}".format(
+                max_tickers, min_tickers))
+
+    if group is None or len(group) == 0:
+        empty = group.iloc[0:0] if group is not None else pd.DataFrame()
+        return empty, 0.0, True
+
+    g = group.dropna(subset=["weight"]).copy()
+    if len(g) == 0:
+        return g, 0.0, True
+
+    g = g.sort_values("weight", ascending=False).reset_index(drop=True)
+    total = float(g["weight"].sum())
+    if total <= 0:
+        return g.iloc[0:0], 0.0, True
+
+    target_abs = float(target_weight) * total
+    cum = g["weight"].cumsum().to_numpy(dtype=float)
+
+    idx = None
+    for i, v in enumerate(cum):
+        if v >= target_abs:
+            idx = i
+            break
+
+    if idx is None:
+        n = min(len(g), int(max_tickers))
+        cob = float(cum[n - 1] / total) if n > 0 else 0.0
+        return g.head(n), cob, False
+
+    n = idx + 1
+    if n < int(min_tickers):
+        n = min(int(min_tickers), len(g))
+    alcanzado = True
+    if n > int(max_tickers):
+        n = int(max_tickers)
+        alcanzado = False
+
+    cob = float(cum[n - 1] / total)
+    return g.head(n), cob, alcanzado
 
 
 def compute_wyckoff_holdings_report(
