@@ -63,12 +63,13 @@ def test_decide_agrupa_mismo_dia():
     ranges = _ranges(lines)
     assert len(ranges) == 4
     keep, remove = pb.decide(ranges, keep_n=1)
-    # keep=1 sesion + dia en curso (16) => headings 0,1
-    assert keep == [0, 1]
-    assert remove == [2, 3]
+    # dia en curso (16) + 1 sesion fuera (15) => headings 0,1,2
+    assert keep == [0, 1, 2]
+    assert remove == [3]
 
 
 def test_decide_keep_n():
+    """Semantica (b): keep_n sesiones fuera del dia en curso + dia en curso aparte."""
     lines = [
         "### 2026-10-16\n",
         "### 2026-10-15\n",
@@ -77,8 +78,38 @@ def test_decide_keep_n():
     ]
     ranges = _ranges(lines)
     keep, remove = pb.decide(ranges, keep_n=2)
-    assert keep == [0, 1]
-    assert remove == [2, 3]
+    # 16 (dia en curso) + 15 + 14 = 3 conservadas; 13 eliminada
+    assert keep == [0, 1, 2]
+    assert remove == [3]
+
+
+def test_decide_dia_en_curso_aparte_caso_real():
+    """12 fechas unicas, keep=10 => conservar 11 grupos (dia en curso
+    aparte), podar solo la mas antigua (2026-10-13)."""
+    fechas = [
+        "2026-10-25", "2026-10-24", "2026-10-23", "2026-10-22",
+        "2026-10-21", "2026-10-20", "2026-10-18", "2026-10-17",
+        "2026-10-16", "2026-10-15", "2026-10-14", "2026-10-13",
+    ]
+    lines = [f"### {d}\n" for d in fechas]
+    ranges = _ranges(lines)
+    keep, remove = pb.decide(ranges, keep_n=10)
+    assert keep == list(range(11))
+    assert remove == [11]
+
+
+def test_decide_11_fechas_1_en_curso_keep_10():
+    """11 fechas (1 dia en curso + 10 fuera), keep=10 => conservar todas."""
+    fechas = [
+        "2026-10-25", "2026-10-24", "2026-10-23", "2026-10-22",
+        "2026-10-21", "2026-10-20", "2026-10-18", "2026-10-17",
+        "2026-10-16", "2026-10-15", "2026-10-14",
+    ]
+    lines = [f"### {d}\n" for d in fechas]
+    ranges = _ranges(lines)
+    keep, remove = pb.decide(ranges, keep_n=10)
+    assert keep == list(range(11))
+    assert remove == []
 
 
 def test_contar_sesiones_unicas():

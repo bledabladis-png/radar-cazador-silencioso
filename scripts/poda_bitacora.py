@@ -84,27 +84,25 @@ def contar_sesiones(ranges):
 
 
 def decide(ranges, keep_n):
-    """Conservar: las primeras keep_n sesiones (por fecha) + las del dia
-    mas reciente. Devuelve (indices_headings_a_conservar,
-    indices_headings_a_eliminar).
+    """Conservar: las primeras keep_n sesiones (por fecha) FUERA del dia
+    en curso + todas las del dia en curso (aparte, no consumen cupo).
+    Regla 5 de 05_BITACORA.md: "mantiene las ultimas 10 sesiones. Ademas,
+    siempre conserva las del dia en curso, aunque superen 10".
+    Devuelve (indices_headings_a_conservar, indices_headings_a_eliminar).
     """
     if not ranges:
         return [], []
     grupos = agrupar_por_fecha(ranges)
-    newest = grupos[0][2]
-    grupos_conservar = set()
-    for i in range(min(keep_n, len(grupos))):
-        grupos_conservar.add(i)
-    for i, (_, _, d, _) in enumerate(grupos):
-        if d == newest:
-            grupos_conservar.add(i)
-    keep = set()
-    for i in grupos_conservar:
-        for h in grupos[i][3]:
-            keep.add(h)
-    keep_sorted = sorted(keep)
+    conservar = {0}  # dia en curso siempre
+    count = 0
+    for i in range(1, len(grupos)):
+        if count >= keep_n:
+            break
+        conservar.add(i)
+        count += 1
+    keep = sorted(h for i in conservar for h in grupos[i][3])
     remove = [i for i in range(len(ranges)) if i not in keep]
-    return keep_sorted, remove
+    return keep, remove
 
 
 def _hash(path=None):
