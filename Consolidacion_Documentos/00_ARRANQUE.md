@@ -193,7 +193,7 @@ Items `CI-PUSH-NO-VERIF` y `CI-PREVENTION-GAP`: cerrados.
 11. Wyckoff v1.8 B5/B3. Ver bloque anterior (commit `1cc8387a`).
 
 Items REGISTRO creados/actualizados en cada fix. Suite: **3845
-passed, 5 skipped** (al cierre sesion 3; cifra actual en ESTADO_SISTEMA.md).
+passed, 5 skipped** (foto historica sesion 3; cifra actual en ESTADO_SISTEMA.md).
 
 **Verificado en scheduled target 2026-10-22 (run `39884468711`,
 23-10 01:31 UTC):** 4/4 fixes criticos sobreviven en CI Python
@@ -220,6 +220,28 @@ retirada), fix Xetra (reference_date.date() -> _as_date()), gate check
 11 distingue migracion pendiente (WARN) de regresion (BLOCKED).
 Abiertos: DICT3-H04-INTERVALS, DICT3-H05-FILLNA-FUTURE,
 DICT3-TOP20-COBERTURA, DICT3-REACCUMULATION. Doc 68.
+
+**Dictamenes externos 2026-10-26 (sesion 12).** Dos dictamenes
+recibidos y respondidos:
+
+*Dictamen 70-v2 (A.2c TOP20):* 6 acciones. 4 ejecutables cerradas:
+P1-H01 selector con estados (`b3793d7c`); P1-H02 cobertura efectiva
+doc 71 (`2d84ae82`); P1-H03 invariantes backfill doc 72 (`adfbb69b`);
+P1-H04 sesgo PIT visible en reporte (`f967985d`). P1-H06 gobernanza
+`46a5bfe3`+`6a591e67`. P1-H05 (separacion A.2c vs H-04) registrada
+en doc 73. Solicitud de cierre de A.2c en doc 70-v2d (`fc0b695b`).
+Universo real de tickers sin datos: **52** (no 8; `TOP20-FALTANTES-DATOS`
+expandido).
+
+*Dictamen H-04 (structure_ratio):* NO APROBADO para IC95 inferencial.
+`DICT3-H04-INTERVALS` sigue OPEN. Nuevo ticket `DICT3-H04-INFERENCE-V2`
+(4 decisiones de diseno). Doc 73 (`5b855ce5`). Verificado: sistema
+NO publica IC95 en reporte; `structure_ratio` solo descriptiva.
+
+*Bug detectado:* `WYCKOFF-CLASSIFY-PHASE-HANG` (`74b09c7e`).
+`classify_phase` cuelga con al menos un ticker (`_trend_component`
+en `wyckoff_v1.py:99` alinea Series). Preexistente. Bloquea
+invariante 2 de P1-H03 y columna `evaluable` real de P1-H02.
 
 ---
 
@@ -302,6 +324,11 @@ fase. Pasar los holdings directamente por el detector.
 - USA indices: SPY (49.9%), QQQ (66.8%), DIA (85.0%). IWM excluido
   (top-20 = 6.2% de 1977 holdings).
 - EU indices: FEZ 66.3%, DAXEX 78.4%, ISF.L 60.8%, LYXI 93.2%.
+- **Actualizado 2026-10-26 (doc 71):** cobertura efectiva real por
+  grupo. Peor sector USA: XLF 76.19% sobre grupo (11 tickers sin
+  datos, 9.05 peso). Peores EU: FEZ 66.26% e ISF.L 60.80% sobre ETF
+  real (peso_total_csv<100%). Detalle en `71_p1_h02_*`. Universo real
+  de tickers sin datos: 52.
 
 **Pre-registros fallidos (no ocultos):**
 - `60_current_phase_rule_v1.md`: regla de vigencia unidireccional
@@ -328,6 +355,23 @@ Documentacion completa: `docs/auditoria/wyckoff/62_sistema_completo_2026-10-24.m
 
 ### 4.3. Pendientes vivos
 
+- **Dictamen 70-v2:** solicitar cierre de `DICT3-TOP20-COBERTURA` como
+  FIXED a A.2c (doc 70-v2d). Pendiente respuesta auditor.
+- **DICT3-H04-INTERVALS:** OPEN, rechazado el IC95 inferencial.
+  Decision sobre nuevo protocolo (doc 73).
+- **DICT3-H04-INFERENCE-V2:** OPEN, 4 decisiones de diseno
+  (estimando, remuestreo, criterio, validacion independiente).
+  Sin codigo hasta aprobacion.
+- **TOP20-FALTANTES-DATOS:** 52 tickers. 7 en holdout SOW, 1 MRNA
+  ausente total, 44 requieren descarga nueva. Bloqueante de
+  cobertura efectiva 85%.
+- **TOP20-EU-HOLDINGS-INCOMPLETOS:** FEZ 66.26%, DAXEX 78.43%,
+  ISF.L 60.80% `peso_total_csv`.
+- **TOP20-USA-INDICES**, **TOP20-EU-INDICES**, **SOW-HOLDOUT-IMMUTABLE**,
+  **GOVERNANZA-CI-NO-STEP**: OPEN, no bloqueantes de A.2c.
+- **WYCKOFF-CLASSIFY-PHASE-HANG:** `classify_phase` cuelga. Fix
+  candidato: `.to_numpy()` en `_trend_component`. Desbloquea
+  invariante 2 de P1-H03.
 - **H5.3**: cron 20-nov-2026 06:17 UTC. Sin accion antes.
 - **C2 (920)**: bloqueado por auditor externo.
 - **2 tests skipped** (2 network en `test_freshness.py`). Los 3
@@ -338,7 +382,7 @@ Documentacion completa: `docs/auditoria/wyckoff/62_sistema_completo_2026-10-24.m
   success`). 4/4 fixes criticos confirmados en CI: liquidez NEUTRAL
   90% no N/A, sector_correlation_summary receipt OK, pcr_history
   receipt OK, cboe_vix3m 0 no-bursatiles. En el momento
-  del check eran 20 writers (hoy 24 tras C2.1+C4.3). Contrato temporal integro (`data_quality.date` y
+  del check eran 20 writers (hoy 25; ver ESTADO_SISTEMA.md). Contrato temporal integro (`data_quality.date` y
   `receipt_audit.target` = 2026-10-22). Ver
   `REP-AUDIT-20261023-SCHEDULED-VERIFY` en REGISTRO.
 - **Wyckoff B2/B4 WONT_FIX razonados (2026-10-22).** B2 (P7 en

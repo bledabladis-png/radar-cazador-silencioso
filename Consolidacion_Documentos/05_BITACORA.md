@@ -44,6 +44,89 @@ Al cerrar una sesion nueva, se anade arriba (las mas recientes primero). Si hay 
 
 ## 3. SESIONES
 
+### 2026-10-26 (sesion 12) - Dictamen 70-v2 (6 acciones) + dictamen H-04
+
+**Objetivo.** Ejecutar las 6 acciones del dictamen externo 2026-10-26
+sobre doc 70-v2, y responder al dictamen H-04 recibido al final de la
+sesion.
+
+**Hecho.**
+
+Dictamen 70-v2 (4 acciones ejecutables + 1 separacion + gobernanza):
+- P1-H01: selector con estados REACHED/UNREACHABLE/INVALID_UNIVERSE.
+  `max_missing_weight_ratio=0.0` default. 15->18 tests. Consumidores
+  adaptados (`_alcanzado`/`_ok` -> `_estado`), ninguno leia el tercer
+  elemento (verificado por AST).
+- P1-H02: cobertura efectiva por grupo (18 grupos). Script
+  `p1_h02_cobertura_efectiva.py` + doc 71. Universo real de tickers
+  sin datos: 52, no 8 (handoff subestimaba x6.5). Peor sector USA
+  XLF 76.19% sobre grupo; peores EU FEZ 66.26%, ISF.L 60.80%.
+  TOP20-FALTANTES-DATOS expandido.
+- P1-H03: invariantes del backfill. Script `p1_h03_invariantes.py` +
+  doc 72. 5/6 OK, 1 SKIP (bloqueado por hang de classify_phase).
+  Correccion: `v2_full_target_only.csv` es artefacto intermedio
+  defectuoso; base valida `v2_full.csv.bak`.
+- P1-H04: nota PIT visible en reporte. `render_wyckoff_sectorial` +
+  2 tests. Solo reporte (no sidecar JSON).
+- P1-H06: 6 tickets gobernanza (PERSIST-REPLACE-DATE, PCR-SKIP-NO-DATA,
+  TOP20-USA-INDICES, TOP20-EU-INDICES, SOW-HOLDOUT-IMMUTABLE,
+  GOVERNANZA-CI-NO-STEP).
+- P1-H05: separacion A.2c vs H-04 hecha. P1-H05 no se cierra: el
+  dictamen H-04 rechaza la inferencia, pero la separacion esta
+  registrada.
+
+Dictamen H-04 (recibido al final de la sesion):
+- Doc 73: respuesta formal. 5 hallazgos aceptados (P0-H04-01..03,
+  P1-H04-04..05). Criterio §9 declarado no concluyente, no
+  reinterpretado.
+- DICT3-H04-INTERVALS: OPEN sin cambio de estado. siguiente_accion
+  reescrito con los 5 hallazgos y las 4 decisiones.
+- Nuevo DICT3-H04-INFERENCE-V2: 4 decisiones de diseno, sin codigo
+  hasta aprobacion del auditor.
+- Verificado: sistema NO publica IC95 en reporte (0 hits en
+  src/report/). structure_ratio solo descriptiva. Sin cambios de
+  codigo necesarios.
+
+Ciclo documental 70-v2: v2b (aceptacion), v2c (solicitud
+reconsideracion), v2d (cierre 5/6 acciones).
+
+Bug detectado: classify_phase cuelga con al menos un ticker. Traza:
+_trend_component en wyckoff_v1.py:99 alinea Series con indices
+incompatibles. Bug preexistente, no introducido. Registrado como
+WYCKOFF-CLASSIFY-PHASE-HANG (OPEN).
+
+**Commits.** Rango `ebdeac02..74b09c7e` (13 commits):
+- b6b75e55 doc 70-v2b
+- 46a5bfe3 REGISTRO 6 items
+- 6a591e67 correcciones post-saliente
+- b3793d7c P1-H01 selector
+- c080761d P1-H01 en REGISTRO
+- 2d84ae82 P1-H02
+- adfbb69b P1-H03
+- f967985d P1-H04
+- edd4cbf0 P1-H04 en REGISTRO
+- 52a7ce8d doc 70-v2c
+- 5b855ce5 doc 73 + REGISTRO H-04
+- fc0b695b doc 70-v2d
+- 74b09c7e WYCKOFF-CLASSIFY-PHASE-HANG
+
+**Pendiente.**
+- DICT3-TOP20-COBERTURA: solicitar cierre como FIXED a A.2c
+  (doc 70-v2d). Auditor externo.
+- DICT3-H04-INTERVALS: OPEN, decision sobre nuevo protocolo.
+- DICT3-H04-INFERENCE-V2: OPEN, 4 decisiones de diseno.
+- TOP20-FALTANTES-DATOS: 52 tickers (7 holdout SOW, 1 MRNA ausente,
+  44 descarga nueva).
+- TOP20-EU-HOLDINGS-INCOMPLETOS, TOP20-USA-INDICES, TOP20-EU-INDICES.
+- SOW-HOLDOUT-IMMUTABLE, GOVERNANZA-CI-NO-STEP.
+- WYCKOFF-CLASSIFY-PHASE-HANG: fix candidato `.to_numpy()` en
+  _trend_component.
+
+**Proximo paso sugerido.** Confirmar WYCKOFF-CLASSIFY-PHASE-HANG
+como ticket prioritario (desbloquea invariante 2 de P1-H03 y columna
+evaluable real de P1-H02). Alternativa: arrancar TOP20-FALTANTES-DATOS
+(descarga de los 44 + decision sobre los 7 holdout SOW).
+
 ### 2026-10-26 (sesion 11) - A.2c TOP20 + dictamen condicionado + 2 bugs colaterales
 
 **Objetivo.** Cerrar `DICT3-TOP20-COBERTURA` fases A.2a-c: cambio de
