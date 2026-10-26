@@ -12,6 +12,7 @@ from __future__ import annotations
 import pandas as pd
 
 from indicators.wyckoff_orchestrator import classify_phase
+from src.instrument_registry import normalize_yahoo_ticker
 from src.utils import get_col, _observation_date_from_df
 
 
@@ -273,8 +274,12 @@ def _phase_since_iso(value):
 
 def _evaluate_holding(df_stocks, group_key, hrow, group_type, has_name, obs_date, coverage_pct):
     ticker = hrow["ticker"]
+    # WYCKOFF-TICKER-NORMALIZATION (2026-10-26, P1-H02): holdings usa
+    # BRK.B pero parquet usa BRK-B. Sin normalizar, BRK.B se descarta
+    # silenciosamente de XLF (12.32% peso). Ver REP-AUDIT-P1H02-NORM.
+    ticker_norm = normalize_yahoo_ticker(ticker)
     try:
-        close_series = get_col(df_stocks, ticker, "Close").dropna()
+        close_series = get_col(df_stocks, ticker_norm, "Close").dropna()
     except (KeyError, ValueError, TypeError):
         return None
     n_bars = len(close_series)
@@ -282,7 +287,7 @@ def _evaluate_holding(df_stocks, group_key, hrow, group_type, has_name, obs_date
         return None
 
     try:
-        fp = classify_phase(df_stocks, ticker)
+        fp = classify_phase(df_stocks, ticker_norm)
     except (KeyError, ValueError, TypeError, IndexError):
         return None
 

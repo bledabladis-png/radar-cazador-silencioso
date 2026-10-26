@@ -26,6 +26,7 @@ sys.path.insert(0, str(ROOT))
 
 from indicators.wyckoff_orchestrator import classify_phase_at
 from indicators.wyckoff_holdings_report import TOP_N_HOLDINGS, MIN_BARS_THEORETICAL
+from src.instrument_registry import normalize_yahoo_ticker
 from config.tickers import MARKET_TICKERS
 
 PARQUET = ROOT / "data" / "stock_prices.parquet"
@@ -61,17 +62,24 @@ def _phase_since_iso(val):
 
 
 def _procesar_ticker(ticker):
-    """Devuelve lista de dicts: una fila por (ticker, fecha)."""
+    """Devuelve lista de dicts: una fila por (ticker, fecha).
+
+    WYCKOFF-TICKER-NORMALIZATION (2026-10-26): ticker es el nombre
+    original de holdings (ej. BRK.B). Se normaliza para parquet
+    (BRK-B) pero se preserva el original en el output para que
+    mapping (ticker->sector) resuelva.
+    """
+    ticker_norm = normalize_yahoo_ticker(ticker)
     rows = []
     for f in _FECHAS:
         try:
-            fp = classify_phase_at(_DF, ticker, as_of=f)
+            fp = classify_phase_at(_DF, ticker_norm, as_of=f)
         except (KeyError, ValueError, TypeError, IndexError):
             continue
         if fp is None or fp.phase is None or fp.phase == "INSUFFICIENT_DATA":
             continue
         try:
-            close_series = _DF.loc[:f, ("Close", ticker)].dropna()
+            close_series = _DF.loc[:f, ("Close", ticker_norm)].dropna()
             n_bars = len(close_series)
             close_val = float(close_series.iloc[-1]) if n_bars > 0 else float("nan")
         except (KeyError, TypeError):
@@ -118,8 +126,12 @@ def _get_tickers(selection_mode="nlargest"):
     df = pd.read_parquet(PARQUET)
     validos = []
     for t in mapping.keys():
+        # WYCKOFF-TICKER-NORMALIZATION (2026-10-26): holdings usa BRK.B,
+        # parquet usa BRK-B. Normalizar solo para el lookup, conservar
+        # el nombre original en validos (para mapping y output).
+        t_norm = normalize_yahoo_ticker(t)
         try:
-            n = int(df[("Close", t)].dropna().shape[0])
+            n = int(df[("Close", t_norm)].dropna().shape[0])
             if n >= MIN_BARS_THEORETICAL:
                 validos.append(t)
         except (KeyError, TypeError):

@@ -205,3 +205,42 @@ def test_eu_index_type_and_ordering(monkeypatch):
     dist = out["eu_index_dist"]
     assert set(dist["group_type"]) == {"index_eu"}
     assert list(dist["ticker"]) == ["ASML.AS", "SAP.DE"]
+
+
+def test_dotted_ticker_normalized_before_parquet_lookup(monkeypatch):
+    """Regresion P1-H02 2026-10-26: holdings trae BRK.B, parquet tiene
+    BRK-B. _evaluate_holding debe normalizar antes de get_col y
+    classify_phase; si no, la fila se pierde (12.32% de XLF)."""
+    from indicators import wyckoff_holdings_report as wr
+
+    calls = {"get_col": [], "classify_phase": []}
+
+    def fake_get_col(df, ticker, col):
+        calls["get_col"].append(ticker)
+        import pandas as pd
+        idx = pd.date_range("2025-01-01", periods=500, freq="B")
+        return pd.Series(100.0, index=idx)
+
+    class FakeFP:
+        phase = "RANGE"
+        event_phase = None
+        phase_since = None
+        current_phase_basis = ""
+
+    def fake_classify_phase(df, ticker):
+        calls["classify_phase"].append(ticker)
+        return FakeFP()
+
+    monkeypatch.setattr(wr, "get_col", fake_get_col)
+    monkeypatch.setattr(wr, "classify_phase", fake_classify_phase)
+
+    import pandas as pd
+    hrow = pd.Series({"ticker": "BRK.B", "weight": 12.32})
+    row = wr._evaluate_holding(
+        None, "XLF", hrow, "sector_usa", False,
+        pd.Timestamp("2026-10-23"), 85.0,
+    )
+    assert row is not None, "BRK.B debe producir fila, no None"
+    assert calls["get_col"] == ["BRK-B"], "get_col debe recibir BRK-B (normalizado)"
+    assert calls["classify_phase"] == ["BRK-B"], "classify_phase debe recibir BRK-B"
+    assert row["ticker"] == "BRK.B", "row.ticker debe preservar nombre original (holdings)"
