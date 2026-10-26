@@ -53,7 +53,7 @@ Lo que NUNCA haces:
 - Respetar rate limiting y circuit breaker.
 - No usar Stooq (bloqueado por WAF).
 - Normalizar tickers con src/instrument_registry.py.
-- Mantener la Validation Gate en 10/10.
+- Mantener la Validation Gate en 11/11.
 - Datos reales: si no hay suficiente -> N/D u omitir. No imputar.
 - Toda fecha de observacion se deriva del dataset. Nunca de datetime.now(). La fecha de ejecucion solo se usa como log.
 - Segundo candado temporal: ningun writer publica filas con date no bursatil. Readers exponen walk-back.
@@ -273,7 +273,7 @@ fase. Pasar los holdings directamente por el detector.
 - `sector_metrics.py` - 3 sub-outputs (wyckoff, rs_internal,
   concentration). Sin divergencia/representativeness.
 - `engines.py` - tactical/structural/persistence. Sin leader_df.
-- `validation_gate.py` - 10 checks. 3 sustituidos por checks de
+- `validation_gate.py` - 11 checks. 3 sustituidos por checks de
   holdings ("Wyckoff holdings CSVs", "Cobertura holdings", "Sanity
   holdings"). Firma: `wyckoff_holdings_data` en vez de
   `slpm_v12_data`.
