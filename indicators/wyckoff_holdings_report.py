@@ -173,7 +173,19 @@ def _tables_from_snapshot(snapshot):
     return out
 
 
-def compute_wyckoff_snapshot(df_stocks, usa_sectors_df, usa_indices_df, eu_indices_df):
+def compute_wyckoff_snapshot(
+    df_stocks, usa_sectors_df, usa_indices_df, eu_indices_df,
+    selection_mode="nlargest",
+):
+    """Snapshot unico de holdings evaluados.
+
+    Args:
+        selection_mode: "nlargest" (comportamiento historico, top-20 por
+            grupo) o "target_weight" (acumular hasta TARGET_WEIGHT_COVERAGE).
+            Default "nlargest" para compatibilidad. Los consumidores solo
+            cambian a "target_weight" cuando el historico se ha regenerado
+            con la nueva base (dictamen externo 2026-10-26).
+    """
     """Snapshot unico de holdings evaluados (Fase 4).
 
     Devuelve DataFrame long con TODOS los tickers evaluados (top-20 por
@@ -197,8 +209,18 @@ def compute_wyckoff_snapshot(df_stocks, usa_sectors_df, usa_indices_df, eu_indic
             continue
         obs_date = _observation_date_from_df(df_stocks)
         for group_key, group in holdings_df.groupby("etf"):
-            top = group.nlargest(TOP_N_HOLDINGS, "weight")
-            coverage_pct = float(top["weight"].sum())
+            if selection_mode == "nlargest":
+                top = group.nlargest(TOP_N_HOLDINGS, "weight")
+                coverage_pct = float(top["weight"].sum())
+            elif selection_mode == "target_weight":
+                top, cob_frac, _alcanzado = _select_target_holdings(group)
+                coverage_pct = float(cob_frac) * 100.0
+            else:
+                raise ValueError(
+                    "selection_mode desconocido: {!r}. "
+                    "Valores validos: 'nlargest', 'target_weight'.".format(
+                        selection_mode)
+                )
             for _, hrow in top.iterrows():
                 row = _evaluate_holding(
                     df_stocks, group_key, hrow, group_type, has_name,
