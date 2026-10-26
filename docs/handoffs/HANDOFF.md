@@ -134,9 +134,9 @@ Commit 06391801. Tests: `test_xetra_provider_regression.py` (10).
 ### 2.8. Doc 68 + items DICT3 (cerrado)
 
 Doc 68 = respuesta formal al dictamen. 1 item FIXED global
-(`DICT3-WYCKOFF-AUDIT-2026-10-25`) + 4 items OPEN
-(`DICT3-H04-INTERVALS`, `DICT3-H05-FILLNA-FUTURE`,
-`DICT3-TOP20-COBERTURA`, `DICT3-REACCUMULATION`).
+(`DICT3-WYCKOFF-AUDIT-2026-10-25`) + 3 items OPEN
+(`DICT3-H04-INTERVALS`, `DICT3-TOP20-COBERTURA`,
+`DICT3-REACCUMULATION`). H05 FIXED 2026-10-26 (053f1a7a).
 `SECTOR-REGIME-MATRIX-STRUCTURE-POSITIVE` -> SUPERSEDED (Bloque 2 + doc 68).
 Commit f5cb8834.
 
@@ -164,6 +164,7 @@ Commit f5cb8834.
 - `DICT3-WYCKOFF-AUDIT-2026-10-25`: FIXED 2026-10-25 (c13cd3a5).
 - `SECTOR-REGIME-MATRIX-STRUCTURE-POSITIVE`: SUPERSEDED 2026-10-25.
 - `PODA-BITACORA-DIA-EN-CURSO`: FIXED 2026-10-26 (b52df895 + be280bc1).
+- `DICT3-H05-FILLNA-FUTURE`: FIXED 2026-10-26 (053f1a7a).
 
 ---
 
@@ -196,8 +197,6 @@ Del dictamen externo 2026-10-25 (doc 68):
   inclusion, tratamiento de solapamiento temporal y correlacion
   cross-sector. Sin esto `structure_ratio` es descriptivo, no
   inferencial.
-- `DICT3-H05-FILLNA-FUTURE` (OPEN): añadir columna de calidad por
-  fila en `build_ticker_df` (`bar_flags`) sin romper contrato v1.8.
 - `DICT3-TOP20-COBERTURA` (OPEN): universo dinamico por grupo
   (objetivo 80-90% peso). XLI 57.2%, SPY 49.9% actuales.
 - `DICT3-REACCUMULATION` (OPEN): detector de re-acumulacion de

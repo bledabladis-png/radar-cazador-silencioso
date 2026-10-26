@@ -2249,7 +2249,46 @@ items:
 - id: DICT3-H05-FILLNA-FUTURE
   tipo: deuda_tecnica
   ciclo: '2026-10-25'
-  estado: OPEN
+  estado: FIXED
+  commit: 053f1a7a
+  evidencia: |
+    Resuelto 2026-10-26 con opcion (a) del REGISTRO: bar_flags como
+    columna adicional en el df devuelto por build_ticker_df,
+    compatible con contrato v1.8 (los fillna se mantienen intactos).
+
+    Implementacion: columna `bar_flags` con codigos separados por
+    ';' (orden fijo MISSING_OHLC, ZERO_VOLUME, NO_RANGE). 'OK' si
+    ninguno. Calculado: MISSING_OHLC y ZERO_VOLUME antes del fillna
+    (pre-fill); NO_RANGE despues del fillna (post-fill, H==L).
+    Commit 053f1a7a.
+
+    Tests: 7 nuevos en test_h05_bar_flags.py.
+    - test_ok_bar, test_missing_ohlc, test_zero_volume, test_no_range,
+      test_combinacion_missing_no_range: cubren los 4 codigos y una
+      combinacion.
+    - test_detectores_no_cambian_output: detect_spring y detect_sow
+      identicos con/sin bar_flags.
+    - test_wyckoff_score_no_cambia_output: tupla de scoring identica.
+    Contrato v1.8: test_wyckoff_v1_contract.py + test_wyckoff_p7_b4_b5_b3.py
+    siguen pasando: 41 passed.
+
+    Run real 2026-10-26 (py run.py): EXIT=0, Validation Gate 11/11
+    OK, Verificacion de outputs OK (25 checks). Los 6 CSVs
+    wyckoff_holdings byte-a-byte identicos pre/post run:
+      wyckoff_eu_index_accumulation.csv    4b63976d9c9cb0e0
+      wyckoff_eu_index_distribution.csv    65e3059ae3f2f65c
+      wyckoff_usa_index_accumulation.csv   331e5ae1d0e2749d
+      wyckoff_usa_index_distribution.csv   9b18a71c1654ae2a
+      wyckoff_usa_sector_accumulation.csv  817712555cbdad13
+      wyckoff_usa_sector_distribution.csv  49c64f59439625cc
+
+    Nota: el run del 2026-10-26 usa effective=2026-10-23 (viernes),
+    por lo que los CSVs no cambian de fecha. Verificacion con date
+    nuevo diferida al proximo run diario del bot, sin deuda residual:
+    el comportamiento date-independiente ya esta cubierto por los
+    7 tests unitarios.
+
+    Doc 68 seccion H-05 actualizada con la resolucion.
   descripcion: |
     H-05 del dictamen externo. build_ticker_df hace fillna(Close) en
     Open/High/Low y fillna(0) en Volume. Justificado por contrato v1.8
@@ -2259,12 +2298,6 @@ items:
     futura: una barra con datos incompletos reales en el futuro
     quedaria enmascarada como "vela sin rango intradia" o "volumen 0".
     Doc 68 seccion H-05.
-  siguiente_accion: |
-    Anadir columna de calidad por fila (bar_flags: [OK, NO_RANGE,
-    ZERO_VOLUME, MISSING_OHLC]) en build_ticker_df, sin romper el
-    contrato v1.8. Los detectores existentes siguen operando sobre
-    los valores rellenados; el flag permite auditar. Mencionar en
-    doc 68 seccion H-05 cuando se implemente.
 
 - id: DICT3-TOP20-COBERTURA
   tipo: deuda_tecnica

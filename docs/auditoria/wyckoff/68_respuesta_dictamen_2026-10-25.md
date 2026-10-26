@@ -37,8 +37,9 @@ items abiertos:
   inclusion por estado. Item `DICT3-H04-INTERVALS` abierto.
 - H-05 (fillna Close/0): contrato v1.8, protegido por test de
   regresion. El dictamen razona correctamente que 0/2512 filas no
-  prueba seguridad futura. Item `DICT3-H05-FILLNA-FUTURE` abierto
-  con razonamiento y accion.
+  prueba seguridad futura. RESUELTO 2026-10-26: columna `bar_flags`
+  anadida en `build_ticker_df` (commit 053f1a7a). Item
+  `DICT3-H05-FILLNA-FUTURE` FIXED. Ver seccion H-05 ampliada.
 - Top-20 cobertura (XLI 57.2%, SPY 49.9%): sin ampliar. Item
   `DICT3-TOP20-COBERTURA` abierto.
 - Re-acumulacion de continuacion: frente nuevo. Item
@@ -99,6 +100,25 @@ riesgo residual no es 0 si en el futuro aparece una barra con datos
 incompletos reales. Item `DICT3-H05-FILLNA-FUTURE` abierto para
 distinguir barra-sin-negociacion de barra-incompleta (indicador de
 calidad por fila) sin romper el contrato v1.8.
+
+**Resolucion (2026-10-26).** Anadida columna `bar_flags` en el df
+devuelto por `build_ticker_df`, con codigos separados por `;` en orden
+fijo:
+
+- `MISSING_OHLC`: alguno de Open/High/Low era NaN pre-fill.
+- `ZERO_VOLUME`: Volume era NaN o 0 pre-fill.
+- `NO_RANGE`: High == Low post-fill (TR=0).
+- `OK`: ninguno de los anteriores.
+
+Los detectores (`detect_spring`, `detect_sow`, `detect_sow_v2`) y el
+scoring (`wyckoff_score`) NO leen `bar_flags`. Los fillna del contrato
+v1.8 se mantienen intactos. Los CSVs persistidos no llevan
+`bar_flags`: es una columna de auditoria en memoria, no un cambio de
+schema.
+
+Evidencia: commit 053f1a7a, 7 tests en `tests/test_h05_bar_flags.py`,
+41 tests de contrato v1.8 sin regresion, run real 2026-10-26 con
+EXIT=0 y 6 CSVs wyckoff_holdings byte-a-byte identicos pre/post.
 
 ### H-06. WLS stability
 
