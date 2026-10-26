@@ -28,6 +28,7 @@ import pandas as pd
 HIST = ROOT / "outputs" / "history"
 ACTIVE = HIST / "sector_wyckoff_distribution.csv"
 PRE = HIST / "sector_wyckoff_distribution.pre_top20_target.csv"
+V2 = HIST / "sector_wyckoff_distribution.v2_full.csv"
 V2_BAK = HIST / "sector_wyckoff_distribution.v2_full.csv.bak"
 V2_ONLY = HIST / "sector_wyckoff_distribution.v2_full_target_only.csv"
 OUT = ROOT / "outputs" / "audit" / "p1_h03_invariantes.csv"
@@ -125,11 +126,14 @@ def check_4_pcts(df):
 
 
 def check_5_csv_vs_snapshot():
-    if not V2_BAK.exists():
+    """Verifica que el CSV activo coincide con el artefacto regenerado
+    v2_full.csv. Post-swap: activo == v2_full (swap correcto). Pre-swap:
+    activo != v2_full (swap pendiente, FAIL util)."""
+    if not V2.exists():
         return {"id": 5, "name": "csv_vs_snapshot", "status": "SKIP",
-                "detail": "no existe v2_full.csv.bak (pre-swap)"}
+                "detail": "no existe v2_full.csv (nunca se regenero)"}
     df_a = pd.read_csv(ACTIVE)
-    df_v = pd.read_csv(V2_BAK)
+    df_v = pd.read_csv(V2)
     if list(df_a.columns) != list(df_v.columns):
         return {"id": 5, "name": "csv_vs_snapshot", "status": "FAIL",
                 "detail": "columnas distintas entre activo y v2_full"}
@@ -189,6 +193,7 @@ def check_6_expansion(df_act, df_pre):
 def _artifact_diag():
     out = []
     for name, p in (
+        ("v2", V2),
         ("v2_bak", V2_BAK),
         ("v2_only", V2_ONLY),
     ):
