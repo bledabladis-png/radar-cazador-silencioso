@@ -2703,3 +2703,35 @@ items:
     Sin codigo hasta aprobacion del diseno por auditor externo.
     Bloqueante suave: no afecta uso descriptivo actual de
     structure_ratio.
+
+- id: WYCKOFF-CLASSIFY-PHASE-HANG
+  tipo: deuda_tecnica
+  ciclo: '2026-10-26'
+  estado: OPEN
+  descripcion: |
+    classify_phase cuelga (hang, no exception) con al menos un ticker
+    del universo actual. Detectado durante P1-H02 (auditoria de
+    cobertura efectiva). Traza: _trend_component en
+    indicators/wyckoff_v1.py:99 alinea Series con indices
+    incompatibles al sumar ma_slow + 1e-9. Bug preexistente, no
+    introducido por el dictamen 2026-10-26.
+  evidencia: |
+    Reproduccion: py scripts/audit/p1_h02_cobertura_efectiva.py con
+    compute_wyckoff_snapshot activado (linea 29 del script original).
+    Stack: _arith_method -> Series.add -> IndexOpsMixin -> Base.__len__
+    bloquea. No hay exception, es un cuelgue que requiere
+    KeyboardInterrupt. Consecuencias:
+    - invariante 2 de P1-H03 (fase por ticker) queda SKIP.
+    - columna evaluable del CSV de P1-H02 usa con_datos como proxy.
+    - compute_wyckoff_snapshot no es invocable hoy con el universo
+      completo; run.py no lo usa directamente (usa el agregado), por
+      lo que el pipeline productivo no esta roto.
+  siguiente_accion: |
+    Fix candidato: _trend_component debe operar sobre arrays NumPy
+    (usar .to_numpy() o .values antes de la aritmetica) en lugar de
+    Series pandas, para evitar alineacion implicita. Verificar
+    tambien _atr_normalized y wyckoff_stability por si tienen el
+    mismo patron (B2 WONT_FIX en 2026-10-22 razono que dropna().rolling
+    era correcto, pero no cubre esta alineacion).
+    Pre-requisito para reabrir invariante 2 de P1-H03.
+    Sin fecha. No bloqueante de A.2c.
