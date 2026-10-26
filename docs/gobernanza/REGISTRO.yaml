@@ -2372,6 +2372,23 @@ items:
       stock_prices_reserved_r3000.parquet (holdout de validacion
       SOW). MRNA no esta en ningun parquet. No se promueven:
       requieren parquet de produccion nuevo.
+
+    P1-H01 CERRADO (2026-10-26, commit b3793d7c):
+    - Selector sustituye 'alcanzado: bool' por 'estado: str' con
+      REACHED / UNREACHABLE / INVALID_UNIVERSE (constantes
+      SELECTION_* en wyckoff_holdings_report.py).
+    - Nuevo parametro max_missing_weight_ratio (default 0.0).
+      Grupo vacio, todos NaN, total<=0 o NaN ratio > umbral devuelven
+      INVALID_UNIVERSE. Hoy 0 NaN en 11 sectores USA (verificado
+      sobre data/etf_holdings.csv): el default no altera produccion.
+    - n>max_tickers tras alcanzar target -> UNREACHABLE.
+    - Consumidores (wyckoff_holdings_report.py:216,
+      regenerate_wyckoff_history.py:106): _alcanzado/_ok -> _estado.
+      Ninguno leia el tercer elemento; sin impacto funcional.
+    - Tests: 15 -> 18. Criterios de aceptacion del dictamen P1-H01
+      cubiertos: grupo vacio, todos NaN, total cero nunca conformes.
+    - Suite: 3826 passed, 2 skipped. CI verde (40379993886).
+    Dictamen §5 punto 1 (contrato del selector) satisfecho.
   descripcion: |
     H-07 del dictamen externo 2026-10-25. El universo de holdings por
     grupo se limitaba al top-20 por peso (TOP_N_HOLDINGS=20). Objetivo
@@ -2394,7 +2411,7 @@ items:
     2026-10-26 (post-dictamen): 6 acciones aceptadas en doc 70-v2b.
     Orden de ejecucion:
       (1) Doc 70-v2b + REGISTRO (este commit).
-      (2) P1-H01: selector con estados REACHED/UNREACHABLE/
+      (2) P1-H01 [HECHO 2026-10-26, commit b3793d7c]: selector con estados REACHED/UNREACHABLE/
           INVALID_UNIVERSE. Tests nuevos. Consumidores adaptados.
       (3) P1-H06: tickets de gobernanza (PERSIST, PCR, indices
           USA/EU, IWM). Puede fusionarse con (1).
