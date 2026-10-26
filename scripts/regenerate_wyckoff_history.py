@@ -94,10 +94,22 @@ def _procesar_ticker(ticker):
     return rows
 
 
-def _get_tickers():
+def _get_tickers(selection_mode="nlargest"):
+    from indicators.wyckoff_holdings_report import _select_target_holdings
     h = pd.read_csv(HOLDINGS)
     h = h.sort_values(["etf", "weight"], ascending=[True, False])
-    top = h.groupby("etf").head(TOP_N_HOLDINGS)
+    if selection_mode == "nlargest":
+        top = h.groupby("etf", group_keys=False).head(TOP_N_HOLDINGS)
+    elif selection_mode == "target_weight":
+        partes = []
+        for _etf, _g in h.groupby("etf"):
+            _sel, _cob, _ok = _select_target_holdings(_g)
+            partes.append(_sel)
+        top = pd.concat(partes, ignore_index=True) if partes else h.iloc[0:0]
+    else:
+        raise ValueError(
+            "selection_mode desconocido: {!r}. Valores: 'nlargest', 'target_weight'.".format(
+                selection_mode))
     top = top[top["etf"].isin(SECTORS)]
     # Mapear ticker -> sector
     mapping = {}
@@ -164,9 +176,47 @@ def _construir_agregado(rows_por_ticker, mapping):
     return pd.DataFrame(out_rows).sort_values(["date", "sector"]).reset_index(drop=True)
 
 
-def _validate_against_active(regen_df):
-    """Valida que el 23-10 regenerado coincida con el .csv activo (11 filas).
-    Devuelve (ok: bool, diff_msg: str)."""
+def _validate_against_active(regen_df, mode="strict"):
+    """Valida el CSV regenerado contra el activo.
+
+    mode="strict": exige coincidencia exacta en la fecha mas reciente
+    (comportamiento historico, valido cuando la base no cambia).
+    mode="informative": reporta diffs pero NO aborta. Se usa cuando se
+    cambia la base (dictamen TOP20) y las diferencias son el objetivo.
+    Aun en informative, se valida estructura (11 sectores, sin NaN en
+    columnas obligatorias, n_total = n_valid + n_insufficient).
+    """
+    if mode == "informative":
+        return _validate_informative(regen_df)
+    return _validate_strict(regen_df)
+
+
+def _validate_informative(regen_df):
+    """Validacion estructural cuando la base cambia (no compara contra activo)."""
+    if regen_df is None or regen_df.empty:
+        return False, "regen vacio"
+    last_date = regen_df["date"].max()
+    last = regen_df[regen_df["date"] == last_date]
+    n_sectores = last["sector"].nunique()
+    if n_sectores != 11:
+        return False, "sectores en {}: {} (esperado 11)".format(last_date, n_sectores)
+    # n_total = n_valid + n_insufficient
+    bad = last[last["n_total"] != last["n_valid_wyckoff"] + last["n_insufficient_wyckoff"]]
+    if len(bad) > 0:
+        return False, "n_total != n_valid + n_insuf en {} filas".format(len(bad))
+    # count_* suma = n_valid
+    count_cols = [c for c in last.columns if c.startswith("count_")]
+    if count_cols:
+        sum_counts = last[count_cols].sum(axis=1)
+        bad = last[sum_counts != last["n_valid_wyckoff"]]
+        if len(bad) > 0:
+            return False, "suma count_* != n_valid en {} filas".format(len(bad))
+    return True, "informative OK: {} filas, {} sectores en {}".format(
+        len(last), n_sectores, last_date)
+
+
+def _validate_strict(regen_df):
+    """Validacion historica: coincidencia exacta con el CSV activo."""
     if not OUT_ACTIVE.exists():
         return False, "activo no existe"
     active = pd.read_csv(OUT_ACTIVE)
@@ -218,11 +268,11 @@ def _dbg(msg):
     print(msg, flush=True)
 
 
-def run(full=False, test=False):
+def run(full=False, test=False, selection_mode="nlargest", validate_mode="strict"):
     _dbg("[1] cargando parquet...")
     df = pd.read_parquet(PARQUET)
-    _dbg("[2] obteniendo tickers...")
-    tickers, mapping = _get_tickers()
+    _dbg("[2] obteniendo tickers (selection_mode={})...".format(selection_mode))
+    tickers, mapping = _get_tickers(selection_mode=selection_mode)
     _dbg("[3] obteniendo fechas...")
     fechas = _get_fechas(df)
     _dbg(f"[4] tickers={len(tickers)} fechas={len(fechas)}")
@@ -282,8 +332,8 @@ def run(full=False, test=False):
     print(f"Agregado: {len(regen)} filas ({regen['date'].nunique() if not regen.empty else 0} fechas, {regen['sector'].nunique() if not regen.empty else 0} sectores)")
 
     print("\nValidando contra el .csv activo...")
-    ok, msg = _validate_against_active(regen)
-    print(f"  Validacion: {'[OK]' if ok else '[FALLO]'} {msg}")
+    ok, msg = _validate_against_active(regen, mode=validate_mode)
+    print(f"  Validacion [{validate_mode}]: {'[OK]' if ok else '[FALLO]'} {msg}")
 
     if test:
         print("\n[TEST] output:")
@@ -308,5 +358,10 @@ if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     ap.add_argument("--full", action="store_true")
     ap.add_argument("--test", action="store_true")
+    ap.add_argument("--selection-mode", choices=["nlargest", "target_weight"],
+                    default="nlargest", help="Criterio de seleccion de holdings")
+    ap.add_argument("--validate", choices=["strict", "informative"],
+                    default="strict", help="Modo de validacion contra el CSV activo")
     args = ap.parse_args()
-    run(full=args.full, test=args.test)
+    run(full=args.full, test=args.test,
+        selection_mode=args.selection_mode, validate_mode=args.validate)
