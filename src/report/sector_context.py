@@ -119,6 +119,17 @@ def render_wyckoff_sectorial(sector_wyckoff_distribution_data):
                "Un sector en fase MARKUP puede tener mayoria de "
                "componentes en RANGE: la fase sectorial y la distribucion "
                "de fases por componente miden cosas distintas.*\n\n")
+    # P1-H04 dictamen 2026-10-26: la serie historica se ha regenerado con
+    # la composicion 2026Q4 de cada ETF aplicada retrospectivamente. No es
+    # reconstruccion point-in-time. Debe ser visible en el reporte, no solo
+    # en doc de auditoria.
+    out.append("*Composicion de holdings: la serie historica "
+               "(2022-08-11 a la fecha de observacion) se ha regenerado "
+               "con la composicion 2026Q4 de cada ETF aplicada "
+               "retrospectivamente. No es reconstruccion point-in-time. "
+               "El comportamiento mostrado es el de los componentes "
+               "actuales, no el de la composicion historica de cada "
+               "fecha.*\n\n")
     return out
 
 
