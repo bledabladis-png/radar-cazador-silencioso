@@ -2564,6 +2564,17 @@ items:
     (gitignored, regenerable). Cobertura efectiva por grupo en doc 71
     seccion 2: peor sector USA XLF 76.19% sobre grupo; peores EU
     FEZ 66.26%, ISF.L 60.80% (peso_total_csv < 100%).
+
+    ACTUALIZACION 2026-10-26 (WYCKOFF-TICKER-NORMALIZATION):
+    XLF tenia 11 tickers sin datos antes y despues del fix.
+    BRK.B nunca estuvo en esa lista: era un ticker CON datos,
+    pero con nombre distinto en holdings vs parquet, por lo que
+    _evaluate_holding lo descartaba silenciosamente. Tras el
+    fix 4e94bf2e (normalizar BRK.B -> BRK-B), XLF recupera
+    BRK.B del snapshot. El universo de 52 se mantiene: lo que
+    cambia es ev_n de XLF: 22 -> 23.
+    Cobertura efectiva XLF post-fix: cov_vs_sel 89.36%,
+    cov_vs_grupo 76.19% (antes: 74.89%/63.86% por el bug).
   siguiente_accion: |
     Dos frentes independientes:
     (A) Descargar los 44 tickers ausentes (protocolo de 6 pasos
@@ -2748,3 +2759,31 @@ items:
     Sin accion. Falso positivo. Si en el futuro aparece un cuelgue
     real de classify_phase, abrir ticket nuevo con ticker concreto
     y traza reproducible.
+
+- id: WYCKOFF-TICKER-NORMALIZATION
+  tipo: deuda_tecnica
+  ciclo: '2026-10-26'
+  estado: OPEN
+  descripcion: |
+    Holdings usa tickers con punto (BRK.B), parquet usa guion
+    (BRK-B). _evaluate_holding y regenerate_wyckoff_history
+    hacian lookup sin normalizar, descartando la fila
+    silenciosamente. Detectado durante el probe de
+    WYCKOFF-CLASSIFY-PHASE-HANG (que resulto falso positivo).
+  evidencia: |
+    Fix 4e94bf2e: normalizar en _evaluate_holding, _get_tickers
+    y _procesar_ticker. Test test_dotted_ticker_normalized_before_
+    parquet_lookup. Impacto: XLF perdia BRK.B (12.32% de peso,
+    el mayor del grupo) del snapshot, de los 6 CSVs y del
+    historico regenerado (1086 fechas). Post-fix: snapshot
+    527 -> 528, XLF ev_n 22 -> 23, ev_peso 63.74 -> 76.05.
+    Solo 1 ticker afectado en el universo actual.
+  siguiente_accion: |
+    Confirmar si el historico regenerado (1086 fechas) requiere
+    regeneracion completa con el fix, o basta el snapshot
+    actualizado. El historico previo excluye BRK.B de XLF por
+    el mismo motivo. Decision: regenerar es costoso (~35-50 min
+    con 12 workers), pero la inconsistencia historico-vs-actual
+    queda registrada si no se regenera. Bloqueante suave: no
+    afecta el uso descriptivo actual, solo la trazabilidad
+    historica.

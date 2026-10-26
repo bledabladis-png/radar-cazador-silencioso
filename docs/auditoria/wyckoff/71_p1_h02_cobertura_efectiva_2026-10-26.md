@@ -46,6 +46,13 @@ Ambas necesarias: `cov_vs_sel` mide fidelidad del selector, `cov_vs_grupo` mide 
 | XLC | sector_usa | REACHED | 99.79 | 20 | 97.66 | 19 | 92.71 | 94.94 | 92.91 |
 | XLE | sector_usa | REACHED | 99.80 | 20 | 99.02 | 20 | 99.02 | 100.00 | 99.22 |
 | XLF | sector_usa | REACHED | 99.82 | 34 | 85.11 | 23 | 76.05 | **89.36** | **76.19** |
+
+> **Actualizacion 2026-10-26 (WYCKOFF-TICKER-NORMALIZATION):** la
+> tabla anterior asumia `cd_n == ev_n`. Con el fix `4e94bf2e`, XLF
+> recupera BRK.B (holdings usa `BRK.B`, parquet `BRK-B`). Pre-fix
+> `ev_n=22`, `ev_peso=63.74`. Post-fix `ev_n=23`, `ev_peso=76.05`.
+> Los valores de esta tabla son ya post-fix. En los otros 17 grupos
+> `cd_n == ev_n` antes y despues del fix.
 | XLI | sector_usa | REACHED | 99.85 | 45 | 85.66 | 44 | 84.73 | 98.92 | 84.86 |
 | XLK | sector_usa | REACHED | 99.94 | 25 | 85.19 | 22 | 81.80 | 96.02 | 81.85 |
 | XLP | sector_usa | REACHED | 99.62 | 20 | 86.75 | 20 | 86.75 | 100.00 | 87.08 |
@@ -111,7 +118,16 @@ El dictamen P1-H02 pide "aportar la cobertura ponderada efectiva". Esta entregad
 
 ## 5. Limitaciones de esta auditoria
 
-1. **`classify_phase` cuelga con al menos un ticker**. Traza: `_trend_component` en `indicators/wyckoff_v1.py:99` alinea Series con indices incompatibles. Es un bug preexistente, no introducido por esta auditoria. Consecuencia: "evaluable" real no calculado; se usa `con_datos` como proxy. Declarado en el CSV y en este doc.
+1. **~~`classify_phase` cuelga~~** — RESUELTO, falso positivo.
+   `WYCKOFF-CLASSIFY-PHASE-HANG` cerrado como `FALSE_POSITIVE`
+   (`842c9aaf`). Probe 360 tickers: 0 timeouts, 21.6s total. La
+   limitacion real detectada fue distinta: **tickers con punto**
+   (`BRK.B` en holdings vs `BRK-B` en parquet). `_evaluate_holding`
+   no normalizaba y descartaba la fila silenciosamente. XLF perdia
+   BRK.B (12.32% de peso). Fix `4e94bf2e` + test
+   `test_dotted_ticker_normalized_before_parquet_lookup`. Solo 1
+   ticker afectado en el universo actual. Este doc fue actualizado
+   post-fix. Ticket abierto: `WYCKOFF-TICKER-NORMALIZATION`.
 
 2. **`publicado` no es cobertura**. Refleja regimen de fase direccional. El doc 70-v2 lo trato como cobertura y genero confusion (FEZ 6 evaluables/16 publicados). Corregido aqui.
 
@@ -125,7 +141,8 @@ El dictamen P1-H02 pide "aportar la cobertura ponderada efectiva". Esta entregad
 - No descarga tickers.
 - No promueve tickers de `reserved_cohort` a produccion.
 - No cierra `TOP20-EU-HOLDINGS-INCOMPLETOS`.
-- No arregla el hang de `classify_phase`.
+- No regenera el historico (1086 fechas). Pendiente commit aparte
+  tras confirmar el fix con snapshot (528 filas).
 - No verifica invariantes del backfill (eso es P1-H03).
 
 ---

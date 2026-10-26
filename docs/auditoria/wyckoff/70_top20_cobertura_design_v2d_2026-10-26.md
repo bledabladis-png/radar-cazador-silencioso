@@ -117,21 +117,41 @@ instruccion de **separar los dos juicios**. Separacion hecha.
 Tres items que emergieron durante la ejecucion de las 4 acciones y que
 no estaban registrados:
 
-### 5.1. `WYCKOFF-CLASSIFY-PHASE-HANG`
+### 5.1. `WYCKOFF-CLASSIFY-PHASE-HANG` — CERRADO como FALSE_POSITIVE
 
-`classify_phase` cuelga con al menos un ticker del universo actual.
-Traza: `_trend_component` en `indicators/wyckoff_v1.py:99` alinea Series
-con indices incompatibles al sumar `ma_slow + 1e-9`. Bug preexistente,
-no introducido por esta sesion.
+Ticket registrado como `OPEN` en `74b09c7e` (sesion 12) tras un
+`KeyboardInterrupt` durante P1-H02. Reclasificado a `FALSE_POSITIVE`
+en `842c9aaf`:
 
-Detectado al intentar calcular `compute_wyckoff_snapshot` en P1-H02.
-Consecuencia: el invariante 2 de P1-H03 queda SKIP; la columna
-`evaluable` del CSV de P1-H02 usa `con_datos` como proxy.
+- Probe exhaustivo sobre 360 tickers unicos seleccionados:
+  `classify_phase` 360/360 OK, 0 TIMEOUT (>5s), 0 excepciones.
+- 21.6s total, medio 0.0601s, max 0.117s.
+- El `KeyboardInterrupt` original fue cancelacion manual de un
+  proceso de ~40s.
 
-**No registrado aun.** Debe abrirse ticket propio con reproduccion
-minima y fix candidato (`_trend_component` debe usar `.to_numpy()` o
-`.values` en lugar de operar Series alineadas).
+Sin bug de cuelgue. Si en el futuro aparece un cuelgue real,
+abrir ticket nuevo con ticker concreto y traza reproducible.
 
+### 5.2. `WYCKOFF-TICKER-NORMALIZATION` — bug real detectado
+
+Durante el probe de 5.1 aparecio un bug **real** en produccion:
+
+- Holdings usa `BRK.B`, parquet usa `BRK-B`.
+- `_evaluate_holding` (`wyckoff_holdings_report.py:274`) llamaba
+  `get_col(df, 'BRK.B')` → `KeyError` → fila descartada.
+- `regenerate_wyckoff_history.py::_get_tickers` y `_procesar_ticker`
+  tenian el mismo patron.
+- Consecuencia: XLF perdia BRK.B (12.32% de peso, el mayor del
+  grupo) del snapshot, de los 6 CSVs y del historico regenerado
+  (1086 fechas).
+
+Fix `4e94bf2e`: normalizar `ticker` antes de cualquier lookup en
+parquet, preservar nombre original en `row['ticker']` y en
+`mapping`. Test `test_dotted_ticker_normalized_before_parquet_lookup`.
+Snapshot: 527 → 528 filas. XLF `ev_n` 22 → 23, `ev_peso` 63.74 →
+76.05. Solo 1 ticker afectado en el universo actual.
+
+La tabla de cobertura de doc 71 §2 ya refleja el fix (XLF 23, 76.05).
 ### 5.2. `v2_full_target_only.csv` obsoleto
 
 Artefacto intermedio pre-fixes (`f4528b49`, `affdc5c8`) con `n_total`
@@ -163,9 +183,11 @@ Se solicita:
    bloqueante** de A.2c, o se acepta 5/6 con SKIP documentado por el
    hang de `classify_phase`.
 
-3. **Confirmar si `WYCKOFF-CLASSIFY-PHASE-HANG` debe abrirse como
-   ticket propio** en REGISTRO antes del cierre de sesion, o se
-   documenta solo aqui.
+3. **Confirmar si `WYCKOFF-TICKER-NORMALIZATION`** (bug real
+   detectado durante el probe del hang) requiere regeneracion del
+   historico completo (1086 fechas) o basta el fix + snapshot
+   actualizado. El historico regenerado previo excluye BRK.B de
+   XLF por el mismo motivo.
 
 ---
 
