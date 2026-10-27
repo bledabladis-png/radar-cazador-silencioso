@@ -62,3 +62,24 @@ xli_extra:
     - URI
     - WAB
     - WM
+xlk_extra:
+  etf: XLK
+  fecha: "2026-10-27"
+  cobertura_top20_actual: 79.60
+  cobertura_top20_mas_extra: 80.12
+  cobertura_tras_expansion: 80.12
+  cobertura_objetivo: 80.00
+  n_tickers: 1
+  tickers:
+    - DDOG
+
+xlv_extra:
+  etf: XLV
+  fecha: "2026-10-27"
+  cobertura_top20_actual: 79.08
+  cobertura_top20_mas_extra: 80.25
+  cobertura_tras_expansion: 80.25
+  cobertura_objetivo: 80.00
+  n_tickers: 1
+  tickers:
+    - MRNA
