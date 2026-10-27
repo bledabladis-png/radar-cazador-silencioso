@@ -20,6 +20,7 @@ SCRIPTS_DIR = Path(__file__).resolve().parents[1] / "scripts"
 SCRIPTS_CON_SRC = [
     "update_sector_holdings.py",
     "update_index_holdings.py",
+    "update_european_holdings.py",
     "parse_ssga_fez.py",
     "parse_blackrock_final.py",
 ]

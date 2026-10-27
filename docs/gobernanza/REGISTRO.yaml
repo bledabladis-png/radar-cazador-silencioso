@@ -2624,8 +2624,11 @@ items:
         MBG.DE, ADYEN.AS, AD.DE, ADS.DE, BMW.DE, ARGX.BR, NDA FI
         excluido por D11) + validacion Yahoo en el parser.
     (3) ee7aac87: sys.path fix en update_european_holdings.py
-        (import roto desde c4f99795; workflow schedule llevaba
-        26 dias fallando, run 36856598857).
+        (regresion de c4f99795, 25-oct: anadio import a src.*
+        sin sys.path. NO llevaba 26 dias fallando: el schedule
+        del 1-oct fallo por otra causa y se arreglo ese dia en
+        1bead8ad; la regresion de c4f99795 no se habia manifestado
+        porque el proximo schedule trimestral es 2027-01-01).
     (4) data/index_holdings.csv regenerado:
         - FEZ: 20 -> 47 (66.26% -> 95.09%)
         - DAXEX: 20 -> 32 (78.43% -> 85.20%)
