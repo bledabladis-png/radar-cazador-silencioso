@@ -2800,7 +2800,19 @@ items:
 - id: PCT-FLOAT-ROUNDING-DIVERGENCE
   tipo: deuda_tecnica
   ciclo: '2026-10-27'
-  estado: OPEN
+  estado: IN_PROGRESS
+  commit: ffd3c401
+  test: tests/test_regenerate_wyckoff_history_agregado.py
+  evidencia: |
+    Fix aplicado: round(pct_*, 8) consistente en
+    regenerate_wyckoff_history.py:186 y
+    sector_wyckoff_distribution.py:99 (commit ffd3c401).
+    3 tests verifican redondeo exacto (16.66666667 vs
+    16.666666666666664). CI verde (run 40436984418).
+    Falta verificacion empirica byte-identica: relanzar
+    regenerate o py run.py y comprobar que
+    sector_wyckoff_distribution.csv no cambia por ULP.
+    Sin esa verificacion NO se declara FIXED.
   descripcion: |
     Ruido de float ULP entre regenerate_wyckoff_history.py
     (_construir_agregado) y sector_metrics.py al escribir pct_*
