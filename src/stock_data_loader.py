@@ -35,6 +35,16 @@ from zoneinfo import ZoneInfo
 import os
 import time
 
+# 2026-10-27 (EU-HOLDINGS-DOWNLOAD-CAP): indices EU sin cap head(20).
+# El CSV tiene holdings completos (FEZ 47, DAXEX 32, ISF.L 88, LYXI 35)
+# pero get_stock_list() solo descargaba 20 por grupo, dejando 112
+# tickers EU fuera del parquet. Medido: 112 tickers en 2.8s via
+# YahooProvider.get_prices. Sin impacto en rate-limit.
+# Los ETFs USA (SPY, QQQ, DIA, IWM) siguen con head(20): SPY 504 e
+# IWM 1977 holdings harian el parquet inmanejable y no aportan al
+# sistema holdings-based (IWM excluido por diseno, no representativo).
+EU_INDEX_ETFS_NO_CAP = ("FEZ", "DAXEX", "ISF.L", "LYXI")
+
 
 
 def get_usa_tickers():
@@ -87,7 +97,13 @@ def get_stock_list():
         if 'weight' in df_idx.columns:
             df_idx = df_idx.sort_values(['etf', 'weight'], ascending=[True, False])
         for etf, group in df_idx.groupby('etf'):
-            tickers.extend([normalize_yahoo_ticker(t) for t in group['ticker'].head(TOP_N_SECTOR_COMPONENTS).tolist()])
+            if etf in EU_INDEX_ETFS_NO_CAP:
+                # Sin cap: el CSV ya tiene holdings completos y el
+                # coste de descarga es bajo (medido 2026-10-27).
+                sel = group['ticker'].tolist()
+            else:
+                sel = group['ticker'].head(TOP_N_SECTOR_COMPONENTS).tolist()
+            tickers.extend([normalize_yahoo_ticker(t) for t in sel])
     except (OSError, ValueError, KeyError, pd.errors.ParserError) as e:
         print(f"  [WARN] get_stock_list: index_holdings.csv: {e}")
 
