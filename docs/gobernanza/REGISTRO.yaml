@@ -2966,3 +2966,38 @@ items:
     Si OK -> FIXED. Si no -> investigar cache-check de
     download_stock_prices (deberia forzar descarga por
     _missing != empty).
+
+- id: GOVERNANZA-HANDOFF-OBSOLETO
+  tipo: deuda_tecnica
+  ciclo: '2026-10-27'
+  estado: OPEN
+  descripcion: |
+    verifica_gobernanza.py lee docs/handoffs/HANDOFF.md (linea 14:
+    HANDOFF = ROOT / "docs" / "handoffs" / "HANDOFF.md") para
+    validar la Regla 10 (items cerrados no aparecen como pendientes).
+    Pero ese fichero esta marcado OBSOLETO desde 2026-10-27
+    (commit a9a90cfa). El HANDOFF canonico es
+    "HANDOFF - Radar de Rotacion Sectorial.txt" en la raiz.
+    Consecuencia: el check de gobernanza valida contra un fichero
+    que ya declaramos no-fuente. Detectado al cerrar
+    CURRENT-PHASE-BASIS-CSV como WONT_FIX: el validador seguia
+    viendo la mencion en docs/handoffs/HANDOFF.md, no en el HANDOFF
+    raiz donde ya la habia eliminado.
+  evidencia: |
+    Detectado 2026-10-27 al cerrar CURRENT-PHASE-BASIS-CSV.
+    Pasos: (1) quitar mencion del HANDOFF raiz. (2) verifica
+    seguia fallando. (3) grep descubre mencion tambien en
+    docs/handoffs/HANDOFF.md. (4) verifica_gobernanza.py:14 apunta
+    explicitamente a ese fichero. Solucion temporal: quitar la
+    mencion de ambos. Solucion real pendiente: apuntar el validador
+    al HANDOFF canonico.
+  siguiente_accion: |
+    (a) Cambiar verifica_gobernanza.py:14 a
+        HANDOFF = ROOT / "HANDOFF - Radar de Rotacion Sectorial.txt".
+    (b) Verificar que _collect_handoff_pendientes() funciona con el
+        formato del HANDOFF raiz (seccion 4 PENDIENTES VIVOS).
+    (c) Anadir test que verifique que el validador lee el fichero
+        canonico, no el obsoleto.
+    (d) Considerar borrar docs/handoffs/HANDOFF.md del repo
+        (historico en git) o mantener como archivo con cabecera
+        OBSOLETO (estado actual).
