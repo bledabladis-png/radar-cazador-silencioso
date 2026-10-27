@@ -50,3 +50,6 @@ jobs:
 
       - name: Run pyflakes
         run: python -m pyflakes .
+
+      - name: Verify governance
+        run: python scripts/verifica_gobernanza.py
