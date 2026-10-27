@@ -110,6 +110,7 @@ outputs/**/*.schema
 outputs/history/*.v[0-9]*.csv
 # Regeneracion Wyckoff (scripts/regenerate_wyckoff_history.py)
 outputs/history/*.pre_h03*
+outputs/history/*.pre_ulp_fix*
 outputs/history/_regen_*.log*
 outputs/history/_regen_checkpoint.json
 
