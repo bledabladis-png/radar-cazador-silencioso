@@ -2504,19 +2504,32 @@ items:
   tipo: deuda_tecnica
   ciclo: '2026-10-25'
   estado: OPEN
+  commit: 0bff883f
   descripcion: |
     Re-acumulacion de continuacion: el detector actual solo detecta
     reversion (SC->AR->Range->SOS, BC->AR->Range->SOW). Re-acumulacion
     (rango en tendencia alcista sana que se rompe al alza) no se
     detecta. XLI sube 2023-2026 sin capitulacion -> 0 acumulaciones
     por diseno Wyckoff clasico. Doc 68 seccion re-acumulacion.
+  evidencia: |
+    Pre-registro congelado 0bff883f:
+    docs/auditoria/wyckoff/59_pre_registro_reaccumulation.md.
+    Define reglas R1-R5 (contexto UP, consolidacion, prueba de
+    oferta, ruptura confirmada, volumen) y criterios C1-C3
+    (frecuencia 1-30%, acierto >=60%, no canibaliza <10%).
+    Parametros anclados a constantes existentes (SC_LOOKBACK,
+    SOS_CONFIRM_CLOSES, etc.). NO se ajusta tras ver resultados.
   siguiente_accion: |
-    Frente nuevo con pre-registro propio. Detector de re-acumulacion
-    en tendencia alcista (no requiere SC previo): consolidacion con
-    contexto UP, prueba de oferta/demanda, ruptura confirmada al alza.
-    Familia separada de las cascadas actuales. No toca las cascadas
-    existentes. Sin fecha.
-
+    (1) Implementar detector en indicators/ (familia separada,
+        sin tocar cascadas existentes ni classify_wyckoff_phase).
+    (2) Tests de contrato T1-T6 (uno por regla R1-R5 + test
+        negativo).
+    (3) Correr holdout reserved_cohort (268 tickers). Si C1-C3 OK
+        -> aplicar al pipeline. Si falla -> WONT_FIX con razon
+        medida en doc 59 (RESULTADO).
+    (4) Auditor externo revisa pre-registro ANTES de codificar.
+    Actualmente (1)-(4) pendientes. Pre-registro listo para
+    revision.
 - id: PERSIST-REPLACE-DATE
   tipo: auditoria_interna
   ciclo: '2026-10-26'
