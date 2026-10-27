@@ -243,6 +243,27 @@ NO publica IC95 en reporte; `structure_ratio` solo descriptiva.
 en `wyckoff_v1.py:99` alinea Series). Preexistente. Bloquea
 invariante 2 de P1-H03 y columna `evaluable` real de P1-H02.
 
+**Sesion 13 (2026-10-27): normalizacion de tickers.**
+
+`WYCKOFF-CLASSIFY-PHASE-HANG` cerrado como `FALSE_POSITIVE`
+(`842c9aaf`): probe 360/360 OK, 21.6s. `classify_phase` no cuelga.
+
+Bug real detectado y corregido: `WYCKOFF-TICKER-NORMALIZATION`
+(`4e94bf2e`). Holdings usa `BRK.B`, parquet usa `BRK-B`. 3 sitios
+afectados (`_evaluate_holding`, `_get_tickers`, `_procesar_ticker`).
+XLF perdia BRK.B (12.32% de peso). Fix: normalizar antes de lookup,
+preservar nombre original en output. Test
+`test_dotted_ticker_normalized_before_parquet_lookup`.
+
+Regeneracion historica (1086 fechas, 56.5 min): solo XLF cambia
+(`n_total` 22 -> 23). 0 regresiones. Invariantes P1-H03 5/6 OK
+(`f71eb49c`). Snapshot diario 527 -> 528.
+
+`py run.py` manual: `data_quality.csv` a 2026-10-26 (624 filas).
+Gate 11/11. 6 CSVs holdings regenerados. `sector_wyckoff_distribution.csv`
+revertido a HEAD (ruido de float ULP sin cambio semantico).
+`e86d6f04`.
+
 ---
 
 ## 4. PENDIENTE (DESGLOSE)
@@ -369,9 +390,13 @@ Documentacion completa: `docs/auditoria/wyckoff/62_sistema_completo_2026-10-24.m
   ISF.L 60.80% `peso_total_csv`.
 - **TOP20-USA-INDICES**, **TOP20-EU-INDICES**, **SOW-HOLDOUT-IMMUTABLE**,
   **GOVERNANZA-CI-NO-STEP**: OPEN, no bloqueantes de A.2c.
-- **WYCKOFF-CLASSIFY-PHASE-HANG:** `classify_phase` cuelga. Fix
-  candidato: `.to_numpy()` en `_trend_component`. Desbloquea
-  invariante 2 de P1-H03.
+- **PCT-FLOAT-ROUNDING-DIVERGENCE:** (nuevo sesion 13) ruido de
+  float ULP entre `regenerate_wyckoff_history.py` y `sector_metrics.py`
+  en `pct_*` (`95.238095...23` vs `...24`). Sin cambio semantico,
+  pero reescribe `sector_wyckoff_distribution.csv` en cada
+  `py run.py` post-regeneracion. Candidato a redondeo consistente
+  a N decimales en ambos caminos. `WYCKOFF-CLASSIFY-PHASE-HANG`
+  cerrado como `FALSE_POSITIVE` en `842c9aaf`.
 - **H5.3**: cron 20-nov-2026 06:17 UTC. Sin accion antes.
 - **C2 (920)**: bloqueado por auditor externo.
 - **2 tests skipped** (2 network en `test_freshness.py`). Los 3

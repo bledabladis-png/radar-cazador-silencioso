@@ -44,6 +44,61 @@ Al cerrar una sesion nueva, se anade arriba (las mas recientes primero). Si hay 
 
 ## 3. SESIONES
 
+### 2026-10-27 (sesion 13) - Normalizacion tickers + regen historico + run.py
+
+**Objetivo.** Cerrar `WYCKOFF-CLASSIFY-PHASE-HANG`, arreglar el bug real
+detectado durante el probe (WYCKOFF-TICKER-NORMALIZATION), regenerar
+el historico con el fix y actualizar `data_quality.csv`.
+
+**Hecho.**
+- WYCKOFF-CLASSIFY-PHASE-HANG: probe 360/360 OK, 21.6s. Falso positivo.
+  `classify_phase` no cuelga. REGISTRO OPEN -> FALSE_POSITIVE.
+- WYCKOFF-TICKER-NORMALIZATION descubierto: holdings usa `BRK.B`,
+  parquet usa `BRK-B`. 3 sitios afectados (`_evaluate_holding`,
+  `_get_tickers`, `_procesar_ticker`). XLF perdia BRK.B (12.32%
+  de peso). Fix `4e94bf2e` + 1 test regresion.
+- Snapshot diario: 527 -> 528 filas. XLF `ev_n` 22 -> 23,
+  `ev_peso` 63.74 -> 76.05. Resto de grupos sin cambio.
+- p1_h02 calcula `evaluable` real via `compute_wyckoff_snapshot`
+  (era proxy con_datos). `68e64e6b`.
+- Regeneracion historica (1086 fechas, 56.5 min, 248 tickers):
+  solo XLF cambia (`n_total` 22 -> 23 en las 1086 fechas). 0
+  regresiones. Invariantes P1-H03 post-swap 5/6 OK. `f71eb49c`.
+- `p1_h03_invariantes.py::check_5` reformulado: compara activo
+  contra `v2_full.csv` post-swap, no contra `.bak` pre-swap.
+- `py run.py` manual (~23 min): `data_quality.csv` a 2026-10-26
+  (624 filas). Gate 11/11. 6 CSVs holdings regenerados.
+  `sector_wyckoff_distribution.csv` revertido a HEAD (ruido de
+  float ULP sin cambio semantico). `e86d6f04`.
+
+**Commits.** Rango `4dba82d2..e86d6f04` (3 commits):
+- 4dba82d2 REGISTRO WYCKOFF-TICKER-NORMALIZATION -> FIXED + doc 72 §7.
+- f71eb49c Regeneracion historica con BRK.B en XLF.
+- e86d6f04 data(outputs): run 2026-10-27.
+Mas en el mismo dia (sesion 12 continuada):
+- 842c9aaf WYCKOFF-CLASSIFY-PHASE-HANG -> FALSE_POSITIVE.
+- 4e94bf2e fix normalizacion tickers.
+- 68e64e6b p1_h02 calcula evaluable real.
+- 89e24705 REGISTRO WYCKOFF-TICKER-NORMALIZATION registrado.
+
+**Pendiente.**
+- DICT3-TOP20-COBERTURA: solicitar cierre a A.2c (doc 70-v2d). Auditor.
+- DICT3-H04-INTERVALS: OPEN, rechazado por auditor H-04.
+- DICT3-H04-INFERENCE-V2: OPEN, 4 decisiones de diseno.
+- TOP20-FALTANTES-DATOS: 52 tickers (7 holdout SOW, 1 MRNA
+  ausente, 44 descarga nueva).
+- TOP20-EU-HOLDINGS-INCOMPLETOS, TOP20-USA-INDICES, TOP20-EU-INDICES.
+- SOW-HOLDOUT-IMMUTABLE, GOVERNANZA-CI-NO-STEP.
+- Ruido de float ULP entre regenerate_wyckoff_history.py y
+  sector_metrics.py (candidato a ticket `PCT-FLOAT-ROUNDING-
+  DIVERGENCE`).
+
+**Proximo paso sugerido.** Prioridad tecnica: ticket de redondeo
+de `pct_*` (evita ruido en cada `py run.py` post-regeneracion
+historica). Prioridad datos: TOP20-FALTANTES-DATOS (descarga de los
+44 + decision sobre 7 holdout SOW). Prioridad gobernanza: GOVERNANZA-
+CI-NO-STEP (5 min, cierra el hueco de verificacion en CI).
+
 ### 2026-10-26 (sesion 12) - Dictamen 70-v2 (6 acciones) + dictamen H-04
 
 **Objetivo.** Ejecutar las 6 acciones del dictamen externo 2026-10-26
@@ -1612,35 +1667,6 @@ no de impacto operativo. Aplicado:
 **Proximo hito.** Slot del cron 23:17 UTC (target_session=2026-10-16)
 ejecutara el pipeline con la enmienda v1.1 por primera vez en
 produccion. Verificar `completion_attempt.jsonl` como artifact.
-
-### 2026-10-15 - Auditoria externa H1-H18 del reporte
-
-**Objetivo.** Atender los 18 hallazgos de la auditoria externa del
-reporte del 15-oct. Tres niveles: critico / alto / medio.
-
-**Hecho.**
-
-- H1 (critico): alerta HYG/LQD dependiente del Z real.
-- H2 (critico): FALSO POSITIVO. rs_mom (WLS) es invariante a escala
-  (verificado con split 10:1 simulado). Solo afecta a LIS (N2).
-- H3 (critico): separadas frescura SEC N-PORT (posiciones) y
-  N-PORT-P QQQ (flujos).
-- H7 (critico): BUG REAL. rolling(N, min_periods=N) roto con NaN
-  dispersos -> 289/329 tickers con NH/NL=0. Fix en 5 sitios + AST.
-- H4, H5, H6, H8, H10 (altos): documentacion + exposicion de valores.
-- H9, H11-H18 (medios): documentacion, cuantificaciones, notas.
-- 17 commits. Suite 3335 -> 3388 passed.
-
-**Commits.** edabdb52, 804968b1, db0462c2, 4d905104, 3bd5f68a,
-47b34d82, 3540218b, 0f990fdf, 7e621ea4, e9cefaeb, bb7fd03b,
-16e064f4, fdbc7ccf, fbcfe4cd.
-
-**Pendiente.**
-- Corpus documental (~15 items de deriva).
-- Verificacion del cron 23:17 UTC.
-
-**Proximo paso sugerido.** Barrido de corpus en sesion propia. Los
-15 items son deuda transversal que reaparecen en cada sesion.
 
 ## 4. REFERENCIA A SESIONES ANTERIORES
 

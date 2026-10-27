@@ -7,17 +7,17 @@ junto con `Consolidacion_Documentos/00_ARRANQUE.md`.
 
 ---
 
-## 1. ESTADO AL CIERRE (2026-10-26, sesion 12)
+## 1. ESTADO AL CIERRE (2026-10-27, sesion 13)
 
 Rama:            main
 HEAD:            consultar `git log --oneline -1` (no literal)
 Sincronizacion:  main == origin/main al cierre del ultimo commit.
-Tests:           3828 passed, 2 skipped (sin filtro; suite completa).
+Tests:           3829 passed, 2 skipped (sin filtro; suite completa).
                  Fuente autoritativa: Consolidacion_Documentos/ESTADO_SISTEMA.md
-CI HEAD:         verde (40397901315).
-Validation Gate: 11/11 (no reproducible standalone; ver seccion 6).
+CI HEAD:         verde.
+Validation Gate: 11/11 (py run.py manual sesion 13).
 Working tree:    limpio.
-Gobernanza:      docs/gobernanza/REGISTRO.yaml. 154 items.
+Gobernanza:      docs/gobernanza/REGISTRO.yaml. 155 items.
 Writers:         25 (output_registry.py).
 Sistema Wyckoff: holdings-based + snapshot PIT append-only
                  (holdings_snapshots.csv).
@@ -27,174 +27,132 @@ Seleccion holdings sector USA: target_weight 0.85 (A.2c, aprobada
                  condicionada, 4 acciones ejecutables cerradas).
 Indices USA y EU: nlargest(20) hasta nuevo frente.
 
-**Sesion 12 (2026-10-26): dictamen 2026-10-26 sobre doc 70-v2 + dictamen H-04.**
+**Sesion 13 (2026-10-27): normalizacion de tickers + regeneracion historica + run.py.**
 
-Trabajo principal: las 4 acciones ejecutables del dictamen 2026-10-26
-sobre doc 70-v2, y respuesta al dictamen H-04 recibido al final de la
-sesion. Commits principales:
+Trabajo principal: cerrar `WYCKOFF-CLASSIFY-PHASE-HANG` como falso
+positivo, descubrir y arreglar `WYCKOFF-TICKER-NORMALIZATION`
+(BRK.B en XLF), regenerar historico (1086 fechas) con el fix,
+ejecutar `py run.py` manual para actualizar `data_quality.csv`.
 
-Dictamen 70-v2 (6 acciones):
-- `b3793d7c` P1-H01: selector con estados REACHED/UNREACHABLE/
-  INVALID_UNIVERSE. Reemplaza bool 'alcanzado'. 18 tests.
-- `2d84ae82` P1-H02: cobertura efectiva por grupo. Doc 71 + script
-  scripts/audit/p1_h02_cobertura_efectiva.py. Universo real 52.
-- `adfbb69b` P1-H03: invariantes del backfill. Doc 72 + script
-  scripts/audit/p1_h03_invariantes.py. 5/6 OK, 1 SKIP.
-- `f967985d` P1-H04: nota PIT visible en reporte. 2 tests.
-- `46a5bfe3` P1-H06: 6 tickets gobernanza (PERSIST, PCR, indices,
-  TOP20-FALTANTES, TOP20-EU-HOLDINGS, SOW-HOLDOUT, GOVERNANZA-CI).
-- `6a591e67` correcciones post-respuesta saliente (ISF.L, 2 tickets).
-- `c080761d` P1-H01 registrado en REGISTRO.
-- `edd4cbf0` P1-H04 registrado en REGISTRO.
+Commits principales:
+- `842c9aaf` WYCKOFF-CLASSIFY-PHASE-HANG: OPEN -> FALSE_POSITIVE.
+  Probe 360/360 OK, 21.6s. `classify_phase` no cuelga.
+- `4e94bf2e` WYCKOFF-TICKER-NORMALIZATION fix. `_evaluate_holding`,
+  `_get_tickers`, `_procesar_ticker` normalizan antes de lookup.
+  XLF perdia BRK.B (12.32% peso). 1 test regresion.
+- `68e64e6b` p1_h02 calcula `evaluable` real via compute_wyckoff_snapshot
+  (era proxy). Post-fix: snapshot 528 filas.
+- `89e24705` REGISTRO: WYCKOFF-TICKER-NORMALIZATION + docs actualizados.
+- `f71eb49c` Regeneracion historica con BRK.B en XLF. 56.5 min,
+  1086 fechas. XLF n_total 22 -> 23. 0 regresiones. Invariantes
+  post-swap 5/6 OK.
+- `4dba82d2` REGISTRO: WYCKOFF-TICKER-NORMALIZATION -> FIXED + doc 72
+  §7 anexo.
+- `e86d6f04` data(outputs): run 2026-10-27. `data_quality.csv` a
+  2026-10-26 (624 filas). 6 CSVs holdings regenerados.
 
-Ciclo documental 70-v2:
-- `b6b75e55` doc 70-v2b (aceptacion del dictamen).
-- `52a7ce8d` doc 70-v2c (solicitud de reconsideracion).
-- `fc0b695b` doc 70-v2d (cierre del ciclo, 5/6 acciones).
-
-Dictamen H-04 (recibido al final de la sesion):
-- `5b855ce5` doc 73 + REGISTRO. Dictamen: NO APROBADO para IC95
-  inferencial. Mantener DICT3-H04-INTERVALS OPEN. Nuevo ticket
-  DICT3-H04-INFERENCE-V2 (4 decisiones de diseno pendientes).
-
-Bug detectado:
-- `74b09c7e` WYCKOFF-CLASSIFY-PHASE-HANG registrado. classify_phase
-  cuelga con al menos un ticker. Bug preexistente.
-
-**Estado del dictamen 70-v2 al cierre:**
-- P1-H01: HECHO (b3793d7c).
-- P1-H02: HECHO (2d84ae82).
-- P1-H03: HECHO (adfbb69b).
-- P1-H04: HECHO (f967985d).
-- P1-H05: SEPARADO (no cerrado: el auditor rechazo la inferencia
-  de H-04, pero la separacion A.2c vs H-04 esta hecha).
-- P1-H06: HECHO (46a5bfe3 + 6a591e67).
-
-**Estado del dictamen H-04 al cierre:**
-- DICT3-H04-INTERVALS: OPEN (sin cambio de estado).
-- structure_ratio: descriptiva, sin IC en reporte.
-- DICT3-H04-INFERENCE-V2: OPEN (nuevo diseno, 4 decisiones).
-- Doc 73: respuesta formal, 5 hallazgos aceptados.
-- Verificado: sistema NO publica IC95 en reporte (0 hits en src/report/).
+**Estado del bloque tecnicos:**
+- `WYCKOFF-CLASSIFY-PHASE-HANG`: FALSE_POSITIVE.
+- `WYCKOFF-TICKER-NORMALIZATION`: FIXED. Fix en produccion
+  (`4e94bf2e`) e historico (`f71eb49c`).
+- Invariantes P1-H03: 5/6 OK, 1 SKIP (invariante 2 sigue SKIP por
+  falta de snapshot pre/post por ticker; classify_phase funciona
+  360/360 OK).
+- Cobertura efectiva XLF: cov_vs_sel 89.36%, cov_vs_grupo 76.19%
+  (eran 74.89% / 63.86% por el bug).
 
 ---
 
-## 2. SESION 2026-10-26 (sesion 12): detalle
+## 2. SESION 2026-10-27 (sesion 13): detalle
 
-### 2.1. P1-H01: selector con estados explicitos (`b3793d7c`)
+### 2.1. WYCKOFF-CLASSIFY-PHASE-HANG -> FALSE_POSITIVE (`842c9aaf`)
 
-`_select_target_holdings` retorna `(df, cob, estado: str)`.
-Estados: `SELECTION_REACHED`, `SELECTION_UNREACHABLE`,
-`SELECTION_INVALID_UNIVERSE` (constantes en wyckoff_holdings_report.py).
-Nuevo parametro `max_missing_weight_ratio` (default 0.0). Grupo vacio,
-todos NaN, total<=0, o NaN ratio > umbral devuelven INVALID_UNIVERSE.
-Hoy 0 NaN en 11 sectores USA (verificado). n>max_tickers -> UNREACHABLE.
-Consumidores (wyckoff_holdings_report.py:216,
-regenerate_wyckoff_history.py:106): `_alcanzado`/`_ok` -> `_estado`.
-Ninguno leia el tercer elemento (verificado por AST).
+Hipotesis inicial (sesion 12): `classify_phase` cuelga con al menos
+un ticker. Traza: `_trend_component` en `wyckoff_v1.py:99` alinea
+Series con indices incompatibles.
 
-Tests: 15 -> 18. Nuevos: todos_pesos_ausentes, nan_sin_permiso,
-nan_descartado_con_max_missing_explicito, max_missing_weight_ratio_invalido.
+Probe exhaustivo sobre 360 tickers unicos seleccionados:
+- `classify_phase`: 360/360 OK, 0 TIMEOUT (>5s), 0 excepciones.
+- 21.6s total, medio 0.0601s, max 0.117s.
+- `wyckoff_score`: 30/30 OK en 0.02s.
 
-### 2.2. P1-H02: cobertura efectiva por grupo (`2d84ae82`, doc 71)
+El `KeyboardInterrupt` original (P1-H02 sesion 12) fue cancelacion
+manual de un proceso de ~40s. Sin bug de cuelgue.
 
-Script `scripts/audit/p1_h02_cobertura_efectiva.py` (read-only).
-Tabla por 18 grupos (11 sectores USA + 3 indices USA + 4 indices EU).
+REGISTRO: OPEN -> FALSE_POSITIVE + razon + verificacion + commit + test.
 
-Definiciones formales (doc 71 seccion 1):
-- seleccionado: los N de _select_target_holdings.
-- con datos: n_bars >= MIN_BARS_THEORETICAL=200 en stock_prices.parquet.
-- evaluable: fila en compute_wyckoff_snapshot (proxy=con_datos por
-  hang de classify_phase, documentado).
-- publicado: fila en los 6 CSVs, filtrada por fase direccional.
-  NO es cobertura. Refleja regimen de fase.
+### 2.2. WYCKOFF-TICKER-NORMALIZATION descubierto y arreglado (`4e94bf2e`)
 
-Hallazgo principal: universo real de tickers sin datos es **52**, no 8.
-9 grupos afectados. Peor sector USA: XLF 76.19% sobre grupo (11 tickers,
-9.05 peso). Peores EU: FEZ 66.26%, ISF.L 60.80% (peso_total_csv<100%,
-confirma TOP20-EU-HOLDINGS-INCOMPLETOS).
+Tras el probe de 2.1, detectado bug real: holdings usa `BRK.B`,
+parquet usa `BRK-B`.
 
-`TOP20-FALTANTES-DATOS` actualizado en REGISTRO con universo 52.
+Sitios afectados (3):
+- `wyckoff_holdings_report.py::_evaluate_holding`: `get_col(df, 'BRK.B')`
+  -> KeyError -> fila descartada.
+- `regenerate_wyckoff_history.py::_get_tickers`: `df[('Close', 'BRK.B')]`
+  -> KeyError -> BRK.B no entra en `validos`.
+- `regenerate_wyckoff_history.py::_procesar_ticker`:
+  `classify_phase_at(_DF, 'BRK.B')` -> KeyError -> fila omitida.
 
-### 2.3. P1-H03: invariantes del backfill (`adfbb69b`, doc 72)
+Fix: normalizar `ticker` antes de cualquier lookup en parquet;
+preservar nombre original en `row['ticker']` y en `mapping`.
 
-Script `scripts/audit/p1_h03_invariantes.py` (read-only).
-6 invariantes verificados sobre 1086 fechas x 11 sectores:
-- (1) Cuadricula: OK.
-- (2) Fase por ticker: SKIP (bloqueado por hang de classify_phase).
-- (3) Counts reconcilian: OK (11946/11946).
-- (4) Pcts reproducibles: OK (denominador n_total).
-- (5) CSV vs snapshot: OK (contra v2_full.csv.bak).
-- (6) Diferencias explicadas: OK (delta XLI+24, XLF+3, XLK+2, resto 0;
-  0 regresiones por fila).
+Impacto verificado:
+- Snapshot: 527 -> 528 filas.
+- XLF: `ev_n` 22 -> 23, `ev_peso` 63.74 -> 76.05.
+- BRK.B phase RANGE, weight 12.32, n_bars 1254.
+- Resto de grupos sin cambio.
+- Solo 1 ticker afectado en el universo actual.
 
-Resultado: 5 OK, 0 FAIL, 1 SKIP.
+Test: `test_dotted_ticker_normalized_before_parquet_lookup`.
 
-Correccion documentada en doc 72 seccion 3: primer intento comparo
-contra v2_full_target_only.csv (artefacto intermedio defectuoso, mean
-n_total 20.75 vs 22.24 real) y dio FAIL masivo. Base correcta:
-v2_full.csv.bak (pre-swap, post-fixes).
+### 2.3. Regeneracion historica (`f71eb49c`)
 
-### 2.4. P1-H04: sesgo PIT visible (`f967985d`)
+`py scripts/regenerate_wyckoff_history.py --full --selection-mode
+target_weight --validate informative`. 56.5 min, 12 workers, 248
+tickers x 1308 fechas.
 
-Nota en src/report/sector_context.py::render_wyckoff_sectorial
-(incondicional, con o sin tabla). "Composicion 2026Q4 aplicada
-retrospectivamente. No es point-in-time."
+Diff post vs pre:
+- Solo XLF cambia: `n_total` 22 -> 23 en las 1086 fechas.
+  `count_range` +1 sistematico; `pct_*` redistribuye por denominador
+  22 -> 23.
+- Resto de sectores (10): sin cambio.
+- 0 regresiones por fila.
+- 5806 celdas cambiadas, todas en XLF.
 
-Alcance: solo reporte. NO se toca persist() ni sidecar JSON.
-Tests: 2 en tests/test_sector_context_pit_nota.py.
+Invariantes P1-H03 post-swap: 5 OK, 0 FAIL, 1 SKIP.
+`delta_total` 31494 -> 32580 (+1086 = XLF x 1086 fechas).
 
-### 2.5. P1-H06: tickets gobernanza (`46a5bfe3`, `6a591e67`)
+Cambio en `p1_h03_invariantes.py::check_5`: compara activo contra
+`v2_full.csv` (artefacto a swapear), no contra `v2_full.csv.bak`
+(referencia del swap anterior). Post-swap: activo == v2_full.
 
-6 items nuevos en REGISTRO:
-- PERSIST-REPLACE-DATE (FIXED, f4528b49).
-- PCR-SKIP-NO-DATA (FIXED, affdc5c8).
-- TOP20-USA-INDICES (OPEN).
-- TOP20-EU-INDICES (OPEN).
-- TOP20-FALTANTES-DATOS (OPEN, expandido a 52).
-- TOP20-EU-HOLDINGS-INCOMPLETOS (OPEN).
-- SOW-HOLDOUT-IMMUTABLE (OPEN).
-- GOVERNANZA-CI-NO-STEP (OPEN).
+Backups versionados: `v3.csv` (= pre_brk_b_fix) y `pre_brk_b_fix.csv`
+(gitignored, patron `*.v[0-9]*.csv`).
 
-IWM-HOLDINGS-EXPANSION: sin cambios (ya existia).
+### 2.4. `py run.py` manual (`e86d6f04`)
 
-### 2.6. Dictamen H-04 (`5b855ce5`, doc 73)
+Motivo: `test_data_quality_recent` fallaba (age 4 dias, max 3) al
+regenerar `ESTADO_SISTEMA.md`. `data_quality.csv` con fecha 2026-10-23,
+hoy 2026-10-27.
 
-Recibido tras doc 70-v2c. Veredicto: NO APROBADO para publicar IC95
-como inferencia validada. Mantener DICT3-H04-INTERVALS OPEN.
+Ejecucion: ~23 min. Gate 11/11. Receipt COMPLETED via workflow.
 
-5 hallazgos aceptados:
-- P0-H04-01: bootstrap mal especificado (unidad remuestreada ambigua).
-- P0-H04-02: cinco anos no son base solida.
-- P0-H04-03: criterio §9 no discrimina por construccion. Declarado
-  metodologicamente no concluyente. NO reinterpretado.
-- P1-H04-04: ALL annual no reconciliado (0.5252 aritmetico != 0.510).
-- P1-H04-05: anchura 2.4x no valida multiway.
+Cambios:
+- `data_quality.csv`: 599 -> 624 filas, ultima fecha 2026-10-23
+  -> 2026-10-26.
+- 6 CSVs holdings regenerados (replace_date 2026-10-23 por
+  FU-020 effective=2026-10-23).
+- `european_coverage.csv`: 51 OK, 0 REVISAR, 0 SIN_DATOS.
+- Resto de outputs del ciclo diario.
 
-Verificacion de no incumplimiento (doc 73 seccion 2): reporte 0 hits
-de ci_lo/ci_hi/intervalo/IC95/bootstrap. structure_ratio solo
-descriptiva. structure_positive retirada. Sin cambios de codigo.
+Nota: BRK.B no aparece en los 6 CSVs diarios porque esta en RANGE,
+y filtran ACC/DIST. El snapshot si lo incluye (528 evaluados).
 
-Nuevo ticket DICT3-H04-INFERENCE-V2 (OPEN) con 4 decisiones:
-(1) estimando, (2) remuestreo, (3) criterio discriminante,
-(4) validacion independiente (propuesta: 2027 como holdout prospectivo).
-
-### 2.7. Bug detectado: classify_phase hang (`74b09c7e`)
-
-classify_phase cuelga (no exception) con al menos un ticker del
-universo actual. Traza: _trend_component en indicators/wyckoff_v1.py:99
-alinea Series con indices incompatibles al sumar ma_slow + 1e-9.
-
-Bug preexistente, no introducido por esta sesion. Detectado al
-intentar compute_wyckoff_snapshot en P1-H02.
-Consecuencias: invariante 2 de P1-H03 SKIP; columna evaluable de P1-H02
-usa con_datos como proxy. run.py no usa compute_wyckoff_snapshot
-directamente (usa el agregado), pipeline productivo no roto.
-
-Fix candidato: .to_numpy() o .values antes de la aritmetica en
-_trend_component. Verificar _atr_normalized y wyckoff_stability.
-
-Registrado como WYCKOFF-CLASSIFY-PHASE-HANG (OPEN).
+NO incluido: `sector_wyckoff_distribution.csv` revertido a HEAD
+(f71eb49c). El run lo regenera con ruido de float ULP
+(`95.238095...23` vs `...24`) sin cambio semantico. La version de
+HEAD es la verificada por P1-H03 (5/6 OK).
 
 ---
 
@@ -233,7 +191,12 @@ Sesion 12 (2026-10-26):
 - P1-H06 tickets gobernanza: HECHO.
 - P1-H05 separacion A.2c vs H-04: HECHO (H-04 rechazado).
 - Dictamen H-04 respondido: doc 73 + DICT3-H04-INFERENCE-V2.
-- WYCKOFF-CLASSIFY-PHASE-HANG registrado: OPEN.
+
+Sesion 13 (2026-10-27):
+- WYCKOFF-CLASSIFY-PHASE-HANG: FALSE_POSITIVE.
+- WYCKOFF-TICKER-NORMALIZATION: FIXED (bug real, BRK.B en XLF).
+- Regeneracion historica con BRK.B: HECHO (f71eb49c).
+- `data_quality.csv` a 2026-10-26: HECHO (run manual).
 
 ---
 
@@ -244,8 +207,7 @@ Sesion 12 (2026-10-26):
 Fases 1-4b y 6 cerradas. Queda:
 - **Fase 5:** structure_score continuo. Ya hay structure_ratio
   continua; falta disenar score compuesto y validacion empirica.
-  Nota: depende de DICT3-H04-INFERENCE-V2 para criterios
-  inferenciales.
+  Depende de DICT3-H04-INFERENCE-V2.
 
 ### 4.2. Deudas tecnicas OPEN
 
@@ -254,8 +216,6 @@ Generales:
 - ACCUMULATION-ZERO: estado transitorio por diseno.
 - VALIDATION-GATE-NO-STANDALONE: gate solo dentro de py run.py.
 - IWM-HOLDINGS-EXPANSION: sub-fase descarga, protocolo 6 pasos.
-- WYCKOFF-CLASSIFY-PHASE-HANG: nuevo (74b09c7e). classify_phase
-  cuelga con al menos un ticker. Fix candidato: to_numpy().
 
 Del dictamen 2026-10-25 (doc 68):
 - DICT3-H04-INTERVALS (OPEN): rechazado por auditor H-04.
@@ -264,37 +224,36 @@ Del dictamen 2026-10-25 (doc 68):
 
 Del dictamen 2026-10-26 (doc 70-v2):
 - DICT3-TOP20-COBERTURA (OPEN): 4 acciones ejecutables cerradas.
-  Solicitud de cierre en doc 70-v2d. Pendiente de respuesta del
-  auditor.
-- TOP20-FALTANTES-DATOS (OPEN): 52 tickers sin datos. 7 en
-  holdout SOW, 1 ausente total (MRNA), 44 requieren descarga nueva.
-- TOP20-EU-HOLDINGS-INCOMPLETOS (OPEN): FEZ 66.26% peso_total_csv,
-  DAXEX 78.43%, ISF.L 60.80%.
+  Solicitud de cierre en doc 70-v2d. Pendiente respuesta auditor.
+- TOP20-FALTANTES-DATOS (OPEN): 52 tickers sin datos. 7 en holdout
+  SOW, 1 ausente total (MRNA), 44 requieren descarga nueva.
+- TOP20-EU-HOLDINGS-INCOMPLETOS (OPEN): FEZ 66.26%, DAXEX 78.43%,
+  ISF.L 60.80% `peso_total_csv`.
 - TOP20-USA-INDICES (OPEN): SPY 49.9%, QQQ 66.8%, DIA 85%.
 - TOP20-EU-INDICES (OPEN): depende de TOP20-EU-HOLDINGS-INCOMPLETOS.
-- SOW-HOLDOUT-IMMUTABLE (OPEN): falta declaracion formal de
-  inmutabilidad de reserved_cohort/reserved_r3000.
+- SOW-HOLDOUT-IMMUTABLE (OPEN): falta declaracion formal.
 - GOVERNANZA-CI-NO-STEP (OPEN): verifica_gobernanza no corre en CI.
 
 Del dictamen H-04 (2026-10-26):
-- DICT3-H04-INFERENCE-V2 (OPEN): 4 decisiones de diseno.
-  Sin codigo hasta aprobacion del auditor.
+- DICT3-H04-INFERENCE-V2 (OPEN): 4 decisiones de diseno. Sin
+  codigo hasta aprobacion del auditor.
 
-### 4.3. SOW-BEAR-CONFIRMATION (IN_PROGRESS)
+### 4.3. Deudas detectadas sesion 13 (sin ticket)
+
+- **Ruido de float ULP entre regenerate_wyckoff_history.py y
+  sector_metrics.py.** Al ejecutar `py run.py`, `sector_wyckoff_distribution.csv`
+  se reescribe con `95.238095...23` vs `...24` en `pct_*` sin cambio
+  semantico. Revertido a HEAD. Candidato a ticket
+  `PCT-FLOAT-ROUNDING-DIVERGENCE`: redondear `pct_*` a N decimales
+  en ambos caminos, o hacer que `_construir_agregado` use el mismo
+  redondeo que `persist append_dedup`.
+
+### 4.4. SOW-BEAR-CONFIRMATION (IN_PROGRESS)
 
 - Requiere contrato v1.10 firmado por auditor externo.
-- Siguiente accion: redactar docs/auditoria/wyckoff/57_contrato_v1_10.md.
+- Siguiente accion: redactar `docs/auditoria/wyckoff/57_contrato_v1_10.md`.
 - Sin codigo en produccion hasta firma.
-- detect_sow_v2 en codigo con tests. WYCKOFF_SOW_* = None.
-
-### 4.4. Deuda documental residual
-
-- 00_ARRANQUE.md linea 196: dice "5 skipped" (real 2). Foto historica.
-- 62_sistema_completo_2026-10-24.md: parcialmente obsoleto.
-- 00_ARRANQUE §3: bloque scheduled-verify dice "20 writers" (actual 25).
-  Foto historica.
-- v2_full_target_only.csv: artefacto obsoleto, confundio P1-H03.
-  Recomendacion: eliminar o mover a outputs/audit/_obsoleto/.
+- `detect_sow_v2` en codigo con tests. `WYCKOFF_SOW_*` = None.
 
 ### 4.5. Items OPEN observacionales (fechas)
 
@@ -308,7 +267,7 @@ Del dictamen H-04 (2026-10-26):
 ### 4.6. BLOCKED_EXTERNAL
 
 - C2-920: discrepancia 920 baseline IAE. Auditor externo.
-- WYCKOFF-5BX: n_confirmed_H20_complete >= 550 (~2027).
+- WYCKOFF-5BX: `n_confirmed_H20_complete >= 550` (~2027).
 
 ---
 
@@ -329,10 +288,9 @@ Esperado:
 - HEAD = git log --oneline -1.
 - ahead 0, behind 0.
 - Working tree limpio.
-- Tests: ver ESTADO_SISTEMA.md. Al cierre sesion 12: 3828 passed,
-  2 skipped.
-- Gobernanza: [OK] Gobernanza coherente.
-- Bitacora: [OK] Bitacora dentro de la regla.
+- Tests: 3829 passed, 2 skipped.
+- Gobernanza: [OK].
+- Bitacora: [OK].
 - pyflakes silencio, compileall OK.
 
 ---
@@ -342,89 +300,81 @@ Esperado:
 Verificacion:
 - Verificar en CI, no solo en local.
 - Un cambio = una verificacion = un commit.
-- pyflakes sobre todo el repo (.), no por fichero.
-- git diff --check despues de cualquier borrado por regex.
-- Antes de cambiar firmas de tuplas/dicts, enumerar TODOS los
-  consumidores via AST, no regex de texto.
-- Cuando un except captura y sigue, verificar si el problema esta
-  silenciado.
+- pyflakes sobre todo el repo (.).
+- `git diff --check` tras borrados por regex.
+- Cambios de firma: enumerar consumidores via AST, no regex.
+- Excepciones que capturan y siguen: verificar si silencian bug.
 - Auditar en 2 dimensiones: headers Y menciones textuales.
-- Schema bump: gate distingue migracion pendiente (WARN) de
-  regresion (BLOCKED).
-- **git checkout -- outputs/ puede borrar trabajo no commiteado**.
-- **Worktree antes que lanzar procesos largos**.
-- **Scripts auxiliares untracked (_*.py) se eliminan antes de
-  regenerar ESTADO_SISTEMA.md**, porque pyflakes . los barre.
-  Alternativa: scripts/tmp/ gitignored.
-
-Herramientas:
-- @'...'@ (single-quote) en PowerShell: no interpola, seguro.
-- Commit msg: usar [System.IO.File]::WriteAllText(path, msg,
-  [System.Text.UTF8Encoding]::new($false)). Set-Content -Encoding UTF8
-  anade BOM en PS 5.1. Verificar bytes[0..2] != 239,187,191.
+- Schema bump: migracion WARN vs regresion BLOCKED.
+- `git checkout -- outputs/` borra trabajo no commiteado.
+- Worktree antes de procesos largos.
+- **Scripts auxiliares untracked (`_*.py`) se eliminan antes de
+  regenerar `ESTADO_SISTEMA.md`** (pyflakes . los barre).
+- **Procesos largos con `Start-Process -WindowStyle Hidden`** (sin
+  `-NoNewWindow`), o mueren con la consola padre. Monitorizar
+  `python.exe` hijo, no `py.exe` launcher (CPU del launcher ~0).
+- **stdout bufferizado en `Start-Process -RedirectStandardOutput`**:
+  el log no crece hasta el final. Usar checkpoint, no log, para
+  monitorizar `regenerate_wyckoff_history.py`.
+- **`Set-Content -Encoding UTF8` en PS 5.1 anade BOM**. Usar
+  `[System.IO.File]::WriteAllText(..., [System.Text.UTF8Encoding]::new($false))`
+  para mensajes de commit y ficheros parseables.
 - Heredoc multilinea en consola interactiva: no fiable. Preferir
-  Set-Content a fichero o editor.
-- Mojibake en consola != mojibake en fichero.
-- pytest xdist: fallos muestran "gwN" (worker). Normal.
+  `Set-Content` a fichero o editor.
 
 Contratos:
-- Receipt fail-closed (enmienda v1.1). BLOCKED o UNAVAILABLE -> no
-  se emite receipt.
+- Receipt fail-closed (enmienda v1.1).
 - Contrato EQUITY_EOD critical=True. coverage < 0.90 bloquea.
-- Gobernanza canonica. Items a docs/gobernanza/REGISTRO.yaml.
-- sector_regime_matrix.py publica structure_ratio continua +
+- Gobernanza canonica. Items a `docs/gobernanza/REGISTRO.yaml`.
+- `sector_regime_matrix.py` publica structure_ratio continua +
   n_estructuras. NO structure_positive (retirada).
-- **structure_ratio es DESCRIPTIVO, NO INFERENCIAL**. IC95 no
-  autorizados en reporte. Dictamen H-04 (2026-10-26). Ver doc 73.
-- holdings_snapshots.csv append-only.
-- persist(..., replace_date=True): necesario para writers cuyo df es
-  subconjunto filtrado (wyckoff_holdings 6 CSVs).
-- compute_pcr_signals(persist_history=True): emite skip NO_DATA cuando
-  CBOE no responde.
-- Selector _select_target_holdings: usa MIN_TICKERS_PER_GROUP=
-  TOP_N_HOLDINGS=20. TARGET_WEIGHT_COVERAGE=0.85. max_missing_weight_
-  ratio=0.0 default. Retorna (df, cob, estado: str).
-- **classify_phase cuelga con al menos un ticker** (WYCKOFF-CLASSIFY-
-  PHASE-HANG). No invocar compute_wyckoff_snapshot con universo
-  completo hasta fix.
-- daily_run con gate.should_run=false (finde/festivo): runs de 1 min
-  en skipped. No es fallo del pipeline.
+- **structure_ratio DESCRIPTIVO, NO INFERENCIAL**. IC95 no
+  autorizados en reporte. Dictamen H-04 (2026-10-26). Doc 73.
+- `holdings_snapshots.csv` append-only.
+- `persist(..., replace_date=True)` para subconjuntos filtrados
+  (wyckoff_holdings 6 CSVs).
+- `compute_pcr_signals(persist_history=True)` emite skip NO_DATA
+  cuando CBOE no responde.
+- Selector `_select_target_holdings`: `MIN_TICKERS_PER_GROUP=
+  TOP_N_HOLDINGS=20`, `TARGET_WEIGHT_COVERAGE=0.85`,
+  `max_missing_weight_ratio=0.0` default. Retorna `(df, cob, estado:
+  str)`.
+- **`normalize_yahoo_ticker` antes de cualquier lookup en parquet**
+  (`BRK.B` -> `BRK-B`). Preservar nombre original en output.
+  Contrato WYCKOFF-TICKER-NORMALIZATION.
+- `daily_run` con `gate.should_run=false` (finde/festivo): runs
+  de 1 min skipped. No es fallo.
 - NaNs >10% en ~35 tickers (ABNB, APP, BE, CARR, CASY, CEG, COIN,
   CRWD, CTVA, DASH, DDOG, DOW, EXE, FDXF, FOX, FOXA, GEHC, GEV,
   HONA, HOOD, KVUE, MRNA, OTIS, PLTR, PSKY, Q, RDDT, SNDK, SOLV,
-  UBER, VICI, VLTO, VRT, VYLR, WBD, XLC) son preexistentes.
+  UBER, VICI, VLTO, VRT, VYLR, WBD, XLC) preexistentes.
 
 ---
 
 ## 7. REFERENCIAS
 
-Corpus normativo: Consolidacion_Documentos/ (12 docs).
-Gobernanza: docs/gobernanza/ (README, REGISTRO.yaml, ANCLAS.yaml).
-Contrato del gate: docs/auditoria/daily_run_gate_contrato_v1.md +
+Corpus normativo: `Consolidacion_Documentos/` (12 docs).
+Gobernanza: `docs/gobernanza/` (README, REGISTRO.yaml, ANCLAS.yaml).
+Contrato del gate: `docs/auditoria/daily_run_gate_contrato_v1.md` +
 enmiendas v1.1 y v1.2.
-Expediente Wyckoff: docs/auditoria/wyckoff/ (51-73).
+Expediente Wyckoff: `docs/auditoria/wyckoff/` (51-73).
 
-Documentos clave (sesion 12):
-- 70_top20_cobertura_design_v2d_2026-10-26.md: cierre del ciclo.
-  5/6 acciones. Deuda detectada (WYCKOFF-CLASSIFY-PHASE-HANG).
-- 73_respuesta_dictamen_h04_2026-10-26.md: aceptacion de los 5
-  hallazgos. No cierra. Nuevo DICT3-H04-INFERENCE-V2.
-- 72_p1_h03_invariantes_2026-10-26.md: 6 invariantes del backfill.
-- 71_p1_h02_cobertura_efectiva_2026-10-26.md: cobertura por grupo,
-  universo 52 tickers sin datos.
-- 70_top20_cobertura_design_v2c_2026-10-26.md: solicitud de
-  reconsideracion.
+Documentos clave (sesion 13):
+- `73_respuesta_dictamen_h04_2026-10-26.md`: 5 hallazgos aceptados.
+- `72_p1_h03_invariantes_2026-10-26.md` §7: regeneracion con BRK.B.
+- `71_p1_h02_cobertura_efectiva_2026-10-26.md`: cobertura por grupo.
+- `70_top20_cobertura_design_v2d_2026-10-26.md`: cierre del ciclo.
 
 Documentos clave (sesiones anteriores):
-- 70_top20_cobertura_design_v2b_2026-10-26.md: aceptacion del
-  dictamen 2026-10-26.
-- 70_top20_cobertura_design_v2_2026-10-26.md: respuesta a 7 hallazgos.
-- 69_h04_intervals_2026-10-26.md: pre-registro + §12 + §13.
-- 68_respuesta_dictamen_2026-10-25.md: respuesta al dictamen previo.
-- 66_regeneracion_historico_2026-10-25.md: regeneracion H-03.
-- 65_unificacion_estructura_2026-10-25.md: Bloque 4, snapshot unico.
-- 64_schema_versions_outputs.md: Fase 1, schema versioning.
-- 63_plan_sistema_holdings_2026-10-24.md: plan sistema holdings.
+- `70_top20_cobertura_design_v2c_2026-10-26.md`: solicitud reconsideracion.
+- `70_top20_cobertura_design_v2b_2026-10-26.md`: aceptacion dictamen.
+- `70_top20_cobertura_design_v2_2026-10-26.md`: respuesta 7 hallazgos.
+- `69_h04_intervals_2026-10-26.md`: pre-registro + §12 + §13.
+- `68_respuesta_dictamen_2026-10-25.md`.
+- `66_regeneracion_historico_2026-10-25.md`.
+- `65_unificacion_estructura_2026-10-25.md`.
+- `64_schema_versions_outputs.md`.
+- `63_plan_sistema_holdings_2026-10-24.md`.
 
 ---
 
