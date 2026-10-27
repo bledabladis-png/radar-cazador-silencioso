@@ -2799,35 +2799,29 @@ items:
 - id: PCT-FLOAT-ROUNDING-DIVERGENCE
   tipo: deuda_tecnica
   ciclo: '2026-10-27'
-  estado: IN_PROGRESS
-  commit: ffd3c401
+  estado: FIXED
+  commit: dbdbf5c5
   test: tests/test_regenerate_wyckoff_history_agregado.py
-  evidencia: |
-    Fix aplicado: round(pct_*, 8) consistente en
-    regenerate_wyckoff_history.py:186 y
-    sector_wyckoff_distribution.py:99 (commit ffd3c401).
-    3 tests verifican redondeo exacto (16.66666667 vs
-    16.666666666666664). CI verde (run 40436984418).
-    Falta verificacion empirica de estabilidad: el CSV activo
-    esta PRE-FIX (valores 15-16 decimales, ej. 63.1578947368421),
-    porque se revirtio a HEAD en sesion 13. La verificacion
-    correcta NO es byte-identico vs CSV actual (cambiara por
-    diseno), sino: relanzar py run.py DOS veces tras el fix y
-    comprobar que (a) primera ejecucion pasa de 15-16 a 8
-    decimales (esperado), (b) segunda ejecucion produce CSV
-    byte-identico a la primera (estabilidad). Sin (b), NO FIXED.
   descripcion: |
     Ruido de float ULP entre regenerate_wyckoff_history.py
     (_construir_agregado) y sector_metrics.py al escribir pct_*
     en sector_wyckoff_distribution.csv (95.238095...23 vs ...24).
-    Sin cambio semantico, pero reescribe el CSV en cada py run.py
+    Sin cambio semantico, pero reescribia el CSV en cada py run.py
     post-regeneracion, ensuciando el diff con 1000+ lineas.
-    Detectado en sesion 13 (2026-10-27), revertido a HEAD.
+  evidencia: |
+    Fix ffd3c401: round(pct_*, 8) en ambos caminos. 2 tests
+    unitarios verifican el contrato.
+    Verificacion empirica 2026-10-27 (commit dbdbf5c5): doble
+    ejecucion de py run.py consecutiva en horario bursatil.
+    - Hash CSV completo pre-run2 = post-run2: 70CEA25F58264F5A
+      D58A14953366C3FB5217A5576AFEA8953FCF40ECC9FC2581.
+    - Hash bloque 2026-10-26 pre-run2 = post-run2: 44ee79c2
+      4d6114cb396ea49a16d6d1c602df6d7f7cb0b9c48e8bda5ee2735e39.
+    - Max decimales en pct_* post-fix: 8 (antes 15-16).
+    - Gate 11/11. 25 outputs checks OK.
+    Ambas ejecuciones byte-identicas: estabilidad confirmada.
   siguiente_accion: |
-    Redondear pct_* a 8 decimales de forma consistente en ambos
-    caminos con round(x, 8). Test: comparar CSV regenerado vs
-    py run.py en fecha de control, byte-identico.
-
+    Ninguna. Deuda cerrada end-to-end.
 - id: ARRANQUE-C6-GHOST
   tipo: deuda_tecnica
   ciclo: '2026-10-27'
