@@ -1819,10 +1819,19 @@ items:
   dependencia: |
     Redaccion del contrato v1.10 + revision externa. No se implementa
     nada en produccion hasta firma del contrato.
+  evidencia: |
+    Borrador redactado 2026-10-27 (commit caa0ec9e):
+    docs/auditoria/wyckoff/57_contrato_v1_10.md. 10 secciones:
+    proposito, alcance, definiciones (market proxy, bear, SOW v2,
+    ventana M=5, etiqueta), contrato de salida (3 columnas en
+    sector_regime_matrix schema v3), invariantes I1-I6, tests
+    T1-T7, parametros, diferencias con v1.9, condiciones de firma,
+    estado normativo. Pendiente revision del auditor externo.
   siguiente_accion: |
-    Redactar docs/auditoria/wyckoff/57_contrato_v1_10.md con la
-    semantica bear-confirmation. Sin codigo hasta firma del auditor.
-
+    Enviar 57_contrato_v1_10.md al auditor externo por el canal
+    habitual. Sin respuesta, el frente sigue IN_PROGRESS y no se
+    toca codigo. Si rechaza -> WONT_FIX con razon. Si aprueba ->
+    implementar en sesion posterior con T1-T7 primero.
 - id: CURRENT-PHASE-BASIS-CSV
   tipo: deuda_tecnica
   ciclo: '2026-10-24'
