@@ -16,7 +16,7 @@ Tests:           3829 passed, 2 skipped (sin filtro; suite completa).
                  Fuente autoritativa: Consolidacion_Documentos/ESTADO_SISTEMA.md
 CI HEAD:         verde.
 Validation Gate: 11/11 (py run.py manual sesion 13).
-Working tree:    limpio.
+Working tree:    limpio salvo `outputs/_session13_pre_run/` (untracked, backup obsoleto post-commit; pendiente borrar).
 Gobernanza:      docs/gobernanza/REGISTRO.yaml. 155 items.
 Writers:         25 (output_registry.py).
 Sistema Wyckoff: holdings-based + snapshot PIT append-only
