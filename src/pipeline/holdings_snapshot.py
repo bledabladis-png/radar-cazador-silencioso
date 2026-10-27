@@ -173,11 +173,16 @@ def compute_and_persist_holdings_snapshot(
         skip(OUTPUT_NAME, "SKIP_CONDITION", path_override=path_override)
         return None
 
+    # 2026-10-27: sin sort_by. PIT append-only exige que el historico
+    # previo NO se reordene. sort_by reescribia las 3193 filas de
+    # 2026-10-23 en orden alfabetico (diff git de 3000+3000 lineas
+    # cosmeticas). Ningun consumidor asume orden: _load_latest_hashes
+    # ya hace grp.sort_values('date').iloc[-1]. Las filas nuevas van
+    # al final del CSV.
     persist(
         OUTPUT_NAME,
         new_rows,
         date_value=pd.Timestamp(session_str),
-        sort_by=["source_file", "etf", "ticker"],
         path_override=path_override,
     )
     return new_rows

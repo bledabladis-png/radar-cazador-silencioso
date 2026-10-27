@@ -145,3 +145,62 @@ def test_inputs_vacios_skip(tmp_path):
     )
     assert out is None
     assert not path.exists()
+
+
+def test_snapshot_no_reordena_historico(tmp_path):
+    """Contrato PIT append-only: una segunda escritura anade filas al
+    final sin reordenar el historico previo (fix 2026-10-27).
+
+    Antes del fix, sort_by=['source_file','etf','ticker'] reescribia
+    todo el CSV en orden alfabetico en cada llamada, generando un
+    diff git de 3000+3000 lineas cosmeticas aunque el contenido
+    fuera identico."""
+    from src.pipeline.holdings_snapshot import compute_and_persist_holdings_snapshot
+    import pandas as pd
+
+    path = tmp_path / "holdings_snapshots.csv"
+
+    etf1 = pd.DataFrame({
+        "etf": ["XLK", "XLK", "XLK"],
+        "ticker": ["NVDA", "AAPL", "MSFT"],
+        "name": ["NVIDIA", "APPLE", "MICROSOFT"],
+        "weight": [15.0, 13.0, 10.0],
+    })
+    idx1 = pd.DataFrame({"etf": [], "ticker": [], "name": [], "weight": []})
+
+    compute_and_persist_holdings_snapshot(
+        reference_date="2026-10-23",
+        etf_holdings_df=etf1,
+        index_holdings_df=idx1,
+        path_override=str(path),
+    )
+    df1 = pd.read_csv(path)
+    orden_original = df1["ticker"].tolist()
+    fecha_resuelta_1 = df1["date"].iloc[0]  # pd.Timestamp naive -> sesion anterior por lag
+
+    # Segunda escritura con composicion distinta (nuevo ticker).
+    etf2 = pd.DataFrame({
+        "etf": ["XLK", "XLK", "XLK", "XLK"],
+        "ticker": ["NVDA", "AAPL", "MSFT", "AMD"],
+        "name": ["NVIDIA", "APPLE", "MICROSOFT", "ADVANCED MICRO"],
+        "weight": [15.0, 13.0, 10.0, 5.0],
+    })
+    # datetime(2026,10,27,14:00) resuelve a sesion 2026-10-26.
+    # reference_date="2026-10-26" a las 00:00 Madrid resuelve a
+    # 2026-10-23 por el lag de publicacion (PUBLISH_HOUR).
+    from datetime import datetime
+    compute_and_persist_holdings_snapshot(
+        reference_date=datetime(2026, 10, 27, 14, 0),
+        etf_holdings_df=etf2,
+        index_holdings_df=idx1,
+        path_override=str(path),
+    )
+    df2 = pd.read_csv(path)
+
+    # El bloque de la primera sesion debe conservar el orden original.
+    bloque_previo = df2[df2["date"] == fecha_resuelta_1]["ticker"].tolist()
+    assert bloque_previo == orden_original, (
+        f"historico reordenado: {bloque_previo} != {orden_original}"
+    )
+    # Las filas nuevas van al final.
+    assert df2.iloc[-1]["date"] == "2026-10-26"
