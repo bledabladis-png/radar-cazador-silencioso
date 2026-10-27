@@ -27,6 +27,11 @@ def render_wyckoff_holdings_acc(tables):
             "*Acumulacion = ACCUMULATION (confirmada), ACCUMULATION_FORMING "
             "(senal temprana) o MARKUP (acumulacion consumada, precio sobre "
             "resistencia). Detalle completo en outputs/history/.*\n\n"
+            "*Nota: ACCUMULATION puro es transitorio por diseno (sesiones, "
+            "no semanas): requiere SOS confirmado Y precio dentro del rango. "
+            "En regimenes alcistas prolongados es esperado ver 0 ACCUMULATION "
+            "confirmadas; las acumulaciones en curso aparecen como "
+            "ACCUMULATION_FORMING o ya consumadas como MARKUP.*\n\n"
         ),
     )
 
