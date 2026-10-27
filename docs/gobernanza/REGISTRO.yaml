@@ -1835,20 +1835,34 @@ items:
 - id: CURRENT-PHASE-BASIS-CSV
   tipo: deuda_tecnica
   ciclo: '2026-10-24'
-  estado: OPEN
+  estado: WONT_FIX
+  razon: |
+    El CSV descargable ya expone basis (77-128 chars, media ~100).
+    Como columna de tabla en el reporte diario haria filas de 200+
+    caracteres (ilegible en markdown). Como sub-linea por fila
+    inflaria el reporte ~150 lineas por subseccion. El caso de uso
+    de basis es auditoria de un ticker concreto, y para eso el CSV
+    es la herramienta adecuada. El reporte diario debe priorizar
+    legibilidad. Reabrir solo con caso de uso concreto.
   descripcion: |
-    Los 6 CSVs de holdings (wyckoff_usa_sector_acc/dist,
-    usa_index_acc/dist, eu_index_acc/dist) tienen columna `basis`
-    con `current_phase_basis` del orquestador (justificacion textual
-    de la fase). El reporte renderiza la tabla sin la columna `basis`.
-    Decision de producto pendiente: añadir la columna al reporte o
-    dejarla solo en el CSV descargable.
+    Los 6 CSVs de holdings tienen columna basis con
+    current_phase_basis del orquestador (justificacion textual de
+    la fase). El reporte renderiza la tabla sin esa columna.
+  evidencia: |
+    Medido 2026-10-27 sobre los 6 CSVs:
+    - usa_sector_accumulation: n=18, long 37-128, media 107.2
+    - usa_sector_distribution: n=91, long 78-126, media 102.4
+    - usa_index_accumulation: n=18, long 84-127, media 112.3
+    - usa_index_distribution: n=88, long 78-126, media 101.5
+    - eu_index_accumulation: n=2, long 113-125, media 119.0
+    - eu_index_distribution: n=40, long 77-107, media 88.9
+    Ejemplo: "dist vigente: price 108.87 dentro del rango
+    (prevalece sobre acc forming)".
   siguiente_accion: |
-    Decidir si `basis` va al reporte (columna nueva en la tabla) o se
-    deja solo en el CSV. Si va al reporte, puede alargar las filas
-    significativamente ("dist vigente: price 98 dentro del rango").
-    Actualizar `src/report/wyckoff_holdings.py` en consecuencia.
-
+    Ninguna. Deuda cerrada como WONT_FIX. El CSV sigue siendo la
+    fuente de verdad para auditoria. Si en el futuro se necesita
+    basis en el reporte, reabrir con caso de uso documentado
+    (que ticker, que decision se toma con esa informacion).
 - id: ACCUMULATION-ZERO
   tipo: documentacion
   ciclo: '2026-10-24'

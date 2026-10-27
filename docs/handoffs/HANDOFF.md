@@ -209,7 +209,6 @@ Fases 1-4b y 6 cerradas. Queda:
 ### 4.2. Deudas técnicas OPEN
 
 Generales:
-- `CURRENT-PHASE-BASIS-CSV`: `basis` no va al reporte, solo al CSV.
 - `ACCUMULATION-ZERO`: estado transitorio por diseño. No es bug.
 - `VALIDATION-GATE-NO-STANDALONE`: gate solo dentro de `py run.py`.
 - `IWM-HOLDINGS-EXPANSION`: sub-fase descarga, protocolo 6 pasos.
