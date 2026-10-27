@@ -2539,64 +2539,43 @@ items:
 - id: TOP20-FALTANTES-DATOS
   tipo: deuda_tecnica
   ciclo: '2026-10-26'
-  estado: OPEN
+  estado: IN_PROGRESS
   descripcion: |
-    52 tickers seleccionados por A.2c (target_weight=0.85) no tienen
-    datos en stock_prices.parquet con n_bars >= 200. 9 grupos
-    afectados. Correccion respecto al handoff sesion 11: el universo
-    era 8, no 52. El universo original solo contaba XLV/XLU/XLY y
-    omitia XLF, XLK, XLC, XLI, QQQ y SPY.
+    Tickers del universo A.2c (target_weight=0.85) que no estaban
+    en stock_prices.parquet con n_bars >= 200. El ticket original
+    reportaba "52 filas, 7 holdout, 1 ausente, 44 requieren
+    descarga". Analisis 2026-10-27 sobre los parquets actuales:
+    40 unicos (52 filas por duplicacion entre grupos). Division
+    real: 35 en holdout, 2 nadie (DDOG, MRNA), 3 con pocas
+    barras por IPO reciente (WBD, HONA, SPCX).
   evidencia: |
-    Auditoria P1-H02 (doc 71, script scripts/audit/p1_h02_cobertura_efectiva.py)
-    sobre 18 grupos (11 sectores USA + 3 indices USA + 4 indices EU):
+    Correccion 2026-10-27 (verificado con py -c sobre parquets):
+    - "7 holdout" -> 35 (cohort/r3000). El script
+      p1_h02_cobertura_efectiva.py solo lee stock_prices.parquet;
+      su CSV p1_h02_tickers_sin_datos.csv es correcto en su
+      definicion, pero el ticket lo interpretaba como "no en
+      ningun sitio".
+    - "44 requieren descarga nueva" -> 2 reales (DDOG, MRNA).
+    - "1 ausente total" -> 2 (DDOG, MRNA).
+    - 3 con pocas barras (WBD 1, HONA 92, SPCX 93): problema de
+      IPO reciente, no de descarga. Se resuelve solo con sesiones.
 
-    Brecha por grupo (peso faltante / peso total grupo):
-    - XLF  11 tickers, 9.05 peso, 9.1% del grupo, 10.6% de la seleccion
-    - QQQ   6 tickers, 6.30 peso, 6.4% del grupo, 7.5% de la seleccion
-    - XLV   6 tickers, 6.18 peso, 6.2% del grupo, 7.3% de la seleccion
-    - XLC   1 ticker,  4.95 peso, 5.0% del grupo (WBD, 1 barra)
-    - SPY  22 tickers, 3.75 peso, 3.8% del grupo
-    - XLK   3 tickers, 3.39 peso, 3.4% del grupo
-    - XLU   1 ticker,  1.95 peso, 2.0% del grupo
-    - XLY   1 ticker,  1.19 peso, 1.2% del grupo
-    - XLI   1 ticker,  0.92 peso, 0.9% del grupo (HONA, 92 barras)
-
-    Distribucion de los 52:
-    - 7 en reserved_cohort/reserved_r3000 (holdout SOW): BSX, CAH,
-      CI, CNP, COR, HCA, NKE. No se promueven. Ver SOW-HOLDOUT-IMMUTABLE.
-    - 1 ausente en cualquier parquet: MRNA.
-    - 44 en ningun parquet conocido: requiere descarga nueva.
-    - 4 con n_bars<200 preexistente por IPO reciente: WBD(1), HONA(92),
-      SPCX(93). Ademas de los 52 principales.
-
-    Detalle completo en outputs/audit/p1_h02_tickers_sin_datos.csv
-    (gitignored, regenerable). Cobertura efectiva por grupo en doc 71
-    seccion 2: peor sector USA XLF 76.19% sobre grupo; peores EU
-    FEZ 66.26%, ISF.L 60.80% (peso_total_csv < 100%).
-
-    ACTUALIZACION 2026-10-26 (WYCKOFF-TICKER-NORMALIZATION):
-    XLF tenia 11 tickers sin datos antes y despues del fix.
-    BRK.B nunca estuvo en esa lista: era un ticker CON datos,
-    pero con nombre distinto en holdings vs parquet, por lo que
-    _evaluate_holding lo descartaba silenciosamente. Tras el
-    fix 4e94bf2e (normalizar BRK.B -> BRK-B), XLF recupera
-    BRK.B del snapshot. El universo de 52 se mantiene: lo que
-    cambia es ev_n de XLF: 22 -> 23.
-    Cobertura efectiva XLF post-fix: cov_vs_sel 89.36%,
-    cov_vs_grupo 76.19% (antes: 74.89%/63.86% por el bug).
+    DDOG y MRNA anadidos a universe_expansions.yaml (commit
+    3d1365e7, CI verde 40559026398). get_stock_list() los
+    devuelve (359 tickers). El proximo run programado de
+    daily_run.yml (5 slots/dia: 23:17, 03:17, 05:17, 07:17,
+    11:17 UTC) detectara los tickers faltantes en el parquet
+    via cache-check y forzara descarga completa. Sin
+    intervencion manual.
   siguiente_accion: |
-    Dos frentes independientes:
-    (A) Descargar los 44 tickers ausentes (protocolo de 6 pasos
-        identico a IWM-HOLDINGS-EXPANSION): descargar OHLCV, filtrar
-        calendario NYSE, verificar 0 H=L=C, resolve_effective_date,
-        registrar writer en output_registry, test 0 no bursatiles.
-        Estimacion 1-2 sesiones.
-    (B) Decision sobre los 7 en holdout SOW: o bien descarga nueva
-        paralela (no promocion), o bien reduccion explicita del
-        alcance. Depende de SOW-HOLDOUT-IMMUTABLE.
-    Sin fecha. Bloqueante para cerrar A.2c segun dictamen P1-H02
-    ("el objetivo no debe validarse solo mediante recuentos de
-    tickers").
+    (a) 2 nadie (DDOG, MRNA): en curso via autonomia. Cerrar
+        tras confirmar que aparecen en stock_prices.parquet en
+        un run posterior.
+    (b) 35 holdout: bloqueados por SOW-HOLDOUT-IMMUTABLE
+        (IN_PROGRESS, borrador 58_contrato_holdout_inmutable.md
+        commit 46b36409, pendiente firma auditor). No se
+        promueven hasta P1+P2.
+    (c) 3 pocas barras: sin accion posible (esperar sesiones).
 - id: TOP20-EU-HOLDINGS-INCOMPLETOS
   tipo: deuda_tecnica
   ciclo: '2026-10-26'
