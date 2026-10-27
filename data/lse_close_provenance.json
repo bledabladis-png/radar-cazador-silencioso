@@ -1,14 +1,14 @@
 {
-  "lse_expected_session": "2026-10-23",
+  "lse_expected_session": "2026-10-26",
   "reason": "sin observacion para sesion LSE esperada",
-  "run_id": "20261025_225219",
+  "run_id": "20261027_014811",
   "scraper_available": true,
   "scraper_used": false,
   "source_commit": null,
   "source_ref": "main",
   "source_repo": "bledabladis-png/lse-close-scraper",
   "status": "NO_COVERAGE",
-  "target_session": "2026-10-23",
+  "target_session": "2026-10-26",
   "tickers_from_scraper": [],
   "tickers_from_yahoo": [
     "AAL.L",
