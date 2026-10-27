@@ -2917,37 +2917,38 @@ items:
 - id: EU-HOLDINGS-DOWNLOAD-CAP
   tipo: deuda_tecnica
   ciclo: '2026-10-27'
-  estado: OPEN
+  estado: IN_PROGRESS
+  commit: d6c3ebb4
   descripcion: |
-    get_stock_list() hace .head(20) sobre index_holdings.csv, por
-    lo que solo descarga 20 tickers por ETF EU aunque el CSV ya
-    tenga 47 (FEZ), 32 (DAXEX), 88 (ISF.L), 35 (LYXI). La
-    cobertura efectiva del SISTEMA esta limitada a esos 20, no al
-    CSV. TOP20-EU-HOLDINGS-INCOMPLETOS (FIXED) completo el CSV;
-    este ticket es el siguiente eslabon: que el pipeline descargue
-    todo el CSV.
+    get_stock_list() hacia .head(20) sobre index_holdings.csv, por
+    lo que solo descargaba 20 tickers por ETF EU aunque el CSV ya
+    tuviera holdings completos (FEZ 47, DAXEX 32, ISF.L 88,
+    LYXI 35). La cobertura efectiva del SISTEMA estaba limitada
+    a esos 20.
   evidencia: |
-    Detectado 2026-10-27 al verificar cobertura real:
-    - FEZ: 48 holdings en CSV, 22 en stock_prices.parquet (45.8%)
-    - DAXEX: 32 en CSV, 21 en prod (65.6%)
-    - ISF.L: 88 en CSV, 20 en prod (22.7%)
-    - LYXI: 35 en CSV, 20 en prod (57.1%)
-    Causa: src/stock_data_loader.py:get_stock_list() linea ~87:
-    "group['ticker'].head(TOP_N_SECTOR_COMPONENTS)" para index_holdings.
-    Mismo patron que etf_holdings: head(20) por grupo.
+    Fix aplicado 2026-10-27 (d6c3ebb4): EU_INDEX_ETFS_NO_CAP en
+    src/stock_data_loader.py. Los 4 ETFs EU saltan el head(20).
+    SPY/QQQ/DIA/IWM siguen con cap (IWM excluido por diseno,
+    SPY 504 e IWM 1977 holdings harian el parquet inmanejable).
+    Medido antes de aplicar: 112 tickers en 2.8s via YahooProvider
+    (sin impacto en rate-limit). get_stock_list: 359 -> 471.
+    Verificado: FEZ 47/47, DAXEX 32/32, ISF.L 88/88, LYXI 35/35
+    en get_stock_list. Suite: 3832 passed, 2 skipped. CI verde
+    40575425898.
+    PENDIENTE DE VERIFICACION END-TO-END: el parquet productivo
+    (data/stock_prices.parquet) aun no tiene los 112 tickers EU
+    hasta que corra el proximo run autonomo (daily_run.yml,
+    5 slots/dia). Sin esa verificacion NO se declara FIXED.
   siguiente_accion: |
-    Opciones:
-    (a) Subir TOP_N_SECTOR_COMPONENTS para indices EU (mas
-        descargas, mas rate-limit Yahoo, mas peso en el parquet).
-        Requiere medir impacto en run.py (duracion, tasa de fallos
-        Yahoo) antes.
-    (b) Anadir los tickers EU a universe_expansions.yaml (mismo
-        patron que xli_extra, xlk_extra, xlv_extra). Sin tocar
-        codigo compartido. Mas limpio pero mas ficheros que
-        mantener.
-    (c) Descargar los EU solo en el workflow trimestral
-        update_european_holdings.yml, no en el diario. Menos carga
-        sobre Yahoo.
-    Decision pendiente de auditor. Sin fecha. No bloqueante:
-    cobertura actual es suficiente para el sistema holdings-based
-    (top-20 ya cubre los pesos principales de cada ETF).
+    Verificar en el proximo run autonomo (o workflow_dispatch
+    manual) que data/stock_prices.parquet contiene los 112
+    tickers EU nuevos (FEZ +18, DAXEX +11, ISF.L +68, LYXI +15).
+    Cobertura esperada tras el run:
+    - FEZ: 45.8% -> ~95%
+    - DAXEX: 65.6% -> ~85%
+    - ISF.L: 22.7% -> ~84%
+    - LYXI: 57.1% -> ~99%
+    Confirmar con py scripts/audit/p1_h02_cobertura_efectiva.py.
+    Si OK -> FIXED. Si no -> investigar cache-check de
+    download_stock_prices (deberia forzar descarga por
+    _missing != empty).
