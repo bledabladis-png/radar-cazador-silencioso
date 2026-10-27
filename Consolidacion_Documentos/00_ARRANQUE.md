@@ -266,6 +266,33 @@ revertido a HEAD (ruido de float ULP sin cambio semantico).
 
 ---
 
+**Sesion 14 (2026-10-27): 9 tickets cerrados, 5 bugs reales, 3 docs.**
+
+Tickets cerrados: PCT-FLOAT-ROUNDING-DIVERGENCE (FIXED con doble run
+byte-identico), ARRANQUE-C6-GHOST (renombrado de DOC-62-OBSOLETO por
+premisa falsa), HANDOFF-MD-OBSOLETO, GOVERNANZA-CI-NO-STEP (step en
+CI), GOVERNANZA-HANDOFF-OBSOLETO, TOP20-EU-HOLDINGS-INCOMPLETOS,
+CURRENT-PHASE-BASIS-CSV (WONT_FIX medido), ACCUMULATION-ZERO (nota en
+reporte), VALIDATION-GATE-NO-STANDALONE (WONT_FIX), YAHOO-PARTIAL-
+HISTORY-PREEXISTING (WONT_FIX).
+
+Bugs reales: (1) FEZ 27 tickers sin sufijo (Yahoo resolvia a ADRs
+erroneos); (2) sys.path roto en update_european_holdings.py (regresion
+de c4f99795); (3) PIT snapshot no era append-only real (sort_by
+reescribia historico); (4) truncamiento [:20] en 3 parsers EU;
+(5) head(20) en get_stock_list para EU (112 tickers fuera del parquet).
+
+Docs redactados: `57_contrato_v1_10.md` (SOW-BEAR-CONFIRMATION),
+`58_contrato_holdout_inmutable.md` (SOW-HOLDOUT-IMMUTABLE),
+`59_pre_registro_reaccumulation.md` (DICT3-REACCUMULATION congelado).
+
+Nuevos tickets abiertos: EU-HOLDINGS-DOWNLOAD-CAP (IN_PROGRESS,
+verificacion proximo run), TOP20-USA-INDICES (medicion real: SPY n=167,
+QQQ n=41, DIA n=20).
+
+Suite: 3845 passed, 2 skipped (sin filtro). Con filtro: 3832 passed.
+
+---
 ## 4. PENDIENTE (DESGLOSE)
 
 **Indice de frentes.** El detalle vive en `05_BITACORA.md` (cronologia
@@ -380,45 +407,51 @@ Documentacion completa: `docs/auditoria/wyckoff/62_sistema_completo_2026-10-24.m
   FIXED a A.2c (doc 70-v2d). Pendiente respuesta auditor.
 - **DICT3-H04-INTERVALS:** OPEN, rechazado el IC95 inferencial.
   Decision sobre nuevo protocolo (doc 73).
-- **DICT3-H04-INFERENCE-V2:** OPEN, 4 decisiones de diseno
-  (estimando, remuestreo, criterio, validacion independiente).
+- **DICT3-H04-INFERENCE-V2:** OPEN, 4 decisiones de diseno.
   Sin codigo hasta aprobacion.
-- **TOP20-FALTANTES-DATOS:** 52 tickers. 7 en holdout SOW, 1 MRNA
-  ausente total, 44 requieren descarga nueva. Bloqueante de
-  cobertura efectiva 85%.
-- **TOP20-EU-HOLDINGS-INCOMPLETOS:** FEZ 66.26%, DAXEX 78.43%,
-  ISF.L 60.80% `peso_total_csv`.
-- **TOP20-USA-INDICES**, **TOP20-EU-INDICES**, **SOW-HOLDOUT-IMMUTABLE**,
-  **GOVERNANZA-CI-NO-STEP**: OPEN, no bloqueantes de A.2c.
-- **PCT-FLOAT-ROUNDING-DIVERGENCE:** (nuevo sesion 13) ruido de
-  float ULP entre `regenerate_wyckoff_history.py` y `sector_metrics.py`
-  en `pct_*` (`95.238095...23` vs `...24`). Sin cambio semantico,
-  pero reescribe `sector_wyckoff_distribution.csv` en cada
-  `py run.py` post-regeneracion. Candidato a redondeo consistente
-  a N decimales en ambos caminos. `WYCKOFF-CLASSIFY-PHASE-HANG`
-  cerrado como `FALSE_POSITIVE` en `842c9aaf`.
+- **DICT3-REACCUMULATION:** OPEN. Pre-registro congelado 2026-10-27
+  (doc 59, commit `0bff883f`). Pendiente revision auditor ANTES de
+  codificar. Reglas R1-R5, criterios C1-C3.
+- **TOP20-FALTANTES-DATOS:** IN_PROGRESS. 40 unicos (no 52 filas),
+  division real 35 holdout / 2 nadie (DDOG, MRNA) / 3 pocas barras
+  (WBD, HONA, SPCX). DDOG y MRNA en marcha por autonomia (yaml).
+  35 holdout bloqueados por SOW-HOLDOUT-IMMUTABLE (pendiente firma).
+- **TOP20-USA-INDICES:** OPEN. Medicion real 2026-10-27: SPY nlargest20
+  49.9%, target_weight 85% requiere n=167 (faltan 21 en parquet);
+  QQQ n=41 (faltan 5); DIA n=20 (ya cumple). Bloqueado por revision
+  externa de doc 70-v2b.
+- **TOP20-EU-INDICES:** OPEN. Depende de EU-HOLDINGS-DOWNLOAD-CAP.
+- **EU-HOLDINGS-DOWNLOAD-CAP:** IN_PROGRESS (fix `d6c3ebb4`).
+  Head(20) eliminado en EU (FEZ/DAXEX/ISF.L/LYXI). Verificacion
+  end-to-end pendiente del proximo run autonomo (daily_run.yml,
+  5 slots/dia). Confirmar con `py scripts/audit/p1_h02_cobertura_efectiva.py`.
+- **SOW-BEAR-CONFIRMATION:** IN_PROGRESS. Borrador contrato v1.10
+  (doc 57, commit `caa0ec9e`). Pendiente firma auditor externo. Sin
+  codigo hasta firma.
+- **SOW-HOLDOUT-IMMUTABLE:** IN_PROGRESS. Borrador contrato (doc 58,
+  commit `46b36409`). Pendiente firma auditor externo. Sin promocion
+  de tickers hasta firma.
+- **IWM-HOLDINGS-EXPANSION:** OPEN. Medido 2026-10-27: top-20 cubre
+  ~6.8% del peso. Para llegar a 50% haria falta descargar ~700
+  tickers. Decision de producto pendiente (el sistema holdings-based
+  no gana nada con microcaps).
+- **Fase 5 del refactor de outputs:** structure_score continuo.
+  Depende de DICT3-H04-INFERENCE-V2.
 - **H5.3**: cron 20-nov-2026 06:17 UTC. Sin accion antes.
 - **C2 (920)**: bloqueado por auditor externo.
-- **2 tests skipped** (2 network en `test_freshness.py`). Los 3
-  de fase 5b en `test_wyckoff_v1_contract.py` se borraron en C5.2
-  al retirar `classify_wyckoff_phase`.
-- **Verificar scheduled target 2026-10-22: COMPLETADO 2026-10-23.**
-  Run `39884468711` (slot 22-10 23:17 UTC, delay 2h14m, `run-system:
-  success`). 4/4 fixes criticos confirmados en CI: liquidez NEUTRAL
-  90% no N/A, sector_correlation_summary receipt OK, pcr_history
-  receipt OK, cboe_vix3m 0 no-bursatiles. En el momento
-  del check eran 20 writers (hoy 25; ver ESTADO_SISTEMA.md). Contrato temporal integro (`data_quality.date` y
-  `receipt_audit.target` = 2026-10-22). Ver
-  `REP-AUDIT-20261023-SCHEDULED-VERIFY` en REGISTRO.
-- **Wyckoff B2/B4 WONT_FIX razonados (2026-10-22).** B2 (P7 en
-  `_trend_component`/`_atr_normalized`/`wyckoff_stability`):
-  `dropna().rolling()` tiene semantica correcta para medias moviles;
-  reindex + `min_periods=N` rompe el score N sesiones tras cada gap.
-  B4 (`fillna(Close)`/`fillna(0)` en `build_ticker_df`): contrato
-  v1.8, protegido por `test_regresion_i2_nan_internos_no_degenera`.
-  Medicion: 0/2512 filas con H=L=C en `market_data.parquet`. Sujetos
-  a reapertura si aparece evidencia nueva.
+- **WYCKOFF-5BX:** BLOCKED_EXTERNAL. `n_confirmed_H20_complete >= 550`
+  (~2027).
+- **2 tests skipped** (2 network en `test_freshness.py`).
 
+**Cerrados en sesion 14 (2026-10-27):** PCT-FLOAT-ROUNDING-DIVERGENCE
+(FIXED con doble run byte-identico), ARRANQUE-C6-GHOST (renombrado de
+DOC-62-OBSOLETO por premisa falsa), HANDOFF-MD-OBSOLETO,
+GOVERNANZA-CI-NO-STEP (step en CI), GOVERNANZA-HANDOFF-OBSOLETO,
+TOP20-EU-HOLDINGS-INCOMPLETOS (fix `ee7aac87`), CURRENT-PHASE-BASIS-CSV
+(WONT_FIX medido), ACCUMULATION-ZERO (nota en reporte),
+VALIDATION-GATE-NO-STANDALONE (WONT_FIX), YAHOO-PARTIAL-HISTORY-
+PREEXISTING (WONT_FIX). `WYCKOFF-CLASSIFY-PHASE-HANG` cerrado como
+FALSE_POSITIVE en `842c9aaf`.
 ### 4.4. Deudas documentadas (sin accion pendiente)
 
 - Modulos no integrados al pipeline: `target_universe`, `timestamps`,

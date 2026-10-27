@@ -44,6 +44,77 @@ Al cerrar una sesion nueva, se anade arriba (las mas recientes primero). Si hay 
 
 ## 3. SESIONES
 
+### 2026-10-27 (sesion 14) - 9 tickets cerrados + 5 bugs reales + 3 docs contrato
+
+**Objetivo.** Aprovechar nucleos del procesador para tests (derivado
+a: cerrar deuda acumulada y endurecer CI).
+
+**Hecho.**
+- Paralelizacion: pytest-xdist==3.8.0, -n auto --dist loadfile.
+  Suite 246s -> 120s. Comando de arranque actualizado con dos variantes
+  (smoke check + suite autoritativa).
+- 9 tickets cerrados: PCT-FLOAT-ROUNDING-DIVERGENCE (FIXED con doble
+  run byte-identico), ARRANQUE-C6-GHOST (renombrado, premisa falsa),
+  HANDOFF-MD-OBSOLETO, GOVERNANZA-CI-NO-STEP (step Verify governance
+  en CI), GOVERNANZA-HANDOFF-OBSOLETO (verificador lee HANDOFF raiz),
+  TOP20-EU-HOLDINGS-INCOMPLETOS, CURRENT-PHASE-BASIS-CSV (WONT_FIX
+  medido), ACCUMULATION-ZERO (nota en reporte), VALIDATION-GATE-NO-
+  STANDALONE (WONT_FIX), YAHOO-PARTIAL-HISTORY-PREEXISTING (WONT_FIX).
+- 5 bugs reales destapados y corregidos:
+  1. FEZ 27 tickers sin sufijo (Yahoo resolvia a ADRs erroneos:
+     DG=Dollar General, EL=Estee Lauder, BN=Brookfield, AD=Kroger).
+     27 mapeos verificados + validacion Yahoo. NDA FI excluido por D11.
+  2. sys.path roto en update_european_holdings.py. Regresion de
+     c4f99795 (25-oct). Test test_scripts_sys_path.py ampliado a 5
+     scripts. Diagnostico inicial "26 dias fallando" era FALSO:
+     corregido en REGISTRO.
+  3. PIT snapshot no era append-only real. sort_by global reescribia
+     el historico entero en orden alfabetico (diff 3000+3000 lineas
+     cosmeticas). Fix: sort_by=None. Test de contrato anadido.
+  4. Truncamiento [:20] en 3 parsers EU. Causa raiz de
+     TOP20-EU-HOLDINGS-INCOMPLETOS. FEZ 20->47, DAXEX 20->32,
+     ISF.L 20->88, LYXI 20->35. Cobertura 95/85/84/99%.
+  5. head(20) en get_stock_list para indices EU. 112 tickers fuera
+     del parquet aunque el CSV estuviera completo. Fix:
+     EU_INDEX_ETFS_NO_CAP. get_stock_list 359 -> 471.
+- 3 documentos redactados: 57_contrato_v1_10.md (SOW-BEAR-CONFIRMATION),
+  58_contrato_holdout_inmutable.md (SOW-HOLDOUT-IMMUTABLE, corrige
+  cifra 7/8 -> 35/40), 59_pre_registro_reaccumulation.md
+  (DICT3-REACCUMULATION, R1-R5 + C1-C3).
+- 2 tickets nuevos: EU-HOLDINGS-DOWNLOAD-CAP (IN_PROGRESS,
+  verificacion proximo run), TOP20-USA-INDICES (medicion real:
+  SPY n=167, QQQ n=41, DIA n=20).
+
+**Commits.** 20+ commits: dc809efd, e5d1cc6b, ffd3c401, a390494a,
+af811cfc, 353bcea8, a9a90cfa, 6fd537f8, f29a44f6, a1dbb692,
+dbdbf5c5, 678a9a8d, ee7aac87, f939fb7e, 194f77dd, f31dbd8b,
+17619aa9, 46a3b370, 3a682884, 3a383592, 14feb408, 0bff883f,
+2683ed68, 57bdaa52, 1a719507, b31b878a, ea7f45df, 49fa3a82.
+
+**Lecciones aprendidas.**
+- `git add` selectivo omitio scripts en varios commits. Local pasaba
+  (working tree con fix), CI fallaba (version antigua). Antes de cada
+  commit de gobernanza: `git status -sb` completo.
+- `AppendAllLines` no acepta encoding. Leer + concatenar + WriteAllLines.
+- Here-string multilinea en consola interactiva rompe el parser. Usar
+  arrays de lineas.
+- Diagnostico "26 dias fallando" en REGISTRO era falso; corregido tras
+  verificar cronologia de runs con gh. Leccion: verificar premisas del
+  ticket antes de actuar.
+- Runs locales SIEMPRE en consola visible, nunca Start-Process Hidden
+  (instruccion del usuario).
+
+**Pendiente.**
+- Verificar EU-HOLDINGS-DOWNLOAD-CAP end-to-end en proximo run autonomo.
+- Enviar 3 docs al auditor externo (57, 58, 59).
+- IWM-HOLDINGS-EXPANSION: decision de producto pendiente (top-20 cubre
+  6.8%, llegar a 50% requiere ~700 tickers).
+
+**Proximo paso sugerido.** Verificar autonomia de EU en proximo run
+(2026-10-28 11:17 UTC). Confirmar cobertura FEZ/DAXEX/ISF.L/LYXI
+~95/85/84/99% con `py scripts/audit/p1_h02_cobertura_efectiva.py`.
+Si OK: EU-HOLDINGS-DOWNLOAD-CAP -> FIXED. Si no: investigar
+cache-check de download_stock_prices.
 ### 2026-10-27 (sesion 13) - Normalizacion tickers + regen historico + run.py
 
 **Objetivo.** Cerrar `WYCKOFF-CLASSIFY-PHASE-HANG`, arreglar el bug real
