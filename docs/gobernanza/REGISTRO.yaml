@@ -1866,18 +1866,26 @@ items:
 - id: ACCUMULATION-ZERO
   tipo: documentacion
   ciclo: '2026-10-24'
-  estado: OPEN
+  estado: FIXED
+  commit: 1a719507
   descripcion: |
-    En produccion (327 stocks, ultimo bar 2026-10-22) hay 0 tickers
-    con fase actual ACCUMULATION. No es bug: el estado "SOS confirmado
-    Y precio dentro del rango" es transitorio por diseno (dura sesiones,
-    no semanas). La regla simetrica de vigencia lo abandona rapidamente
-    si el precio rompe por abajo (RANGE fallida) o por arriba (MARKUP).
+    En produccion hay 0 tickers con fase actual ACCUMULATION. No es
+    bug: el estado "SOS confirmado Y precio dentro del rango" es
+    transitorio por diseno (dura sesiones, no semanas). La regla
+    simetrica de vigencia lo abandona rapidamente si el precio
+    rompe por abajo (RANGE fallida) o por arriba (MARKUP).
+  evidencia: |
+    Nota anadida al section_note de "Tickers en acumulacion" en
+    src/report/wyckoff_holdings.py (commit 1a719507). Explica que
+    ACCUMULATION puro es transitorio y que en regimenes alcistas
+    prolongados es esperado ver 0 confirmadas; las acumulaciones
+    en curso aparecen como ACCUMULATION_FORMING o ya consumadas
+    como MARKUP.
+    Verificado 2026-10-27: los 3 CSVs de acumulacion tienen 0
+    filas ACCUMULATION puras. Coherente con la nota.
+    Tests del reporte: 9/9 verde. Suite: 3832 passed, 2 skipped.
   siguiente_accion: |
-    Anadir nota en `docs/auditoria/wyckoff/62_sistema_completo_2026-10-24.md`
-    y/o en el reporte explicando que ACCUMULATION=0 es esperado en
-    regimenes alcistas prolongados. No es fallo de deteccion.
-
+    Ninguna. Deuda cerrada.
 - id: VALIDATION-GATE-NO-STANDALONE
   tipo: deuda_tecnica
   ciclo: '2026-10-24'
