@@ -183,7 +183,7 @@ def _construir_agregado(rows_por_ticker, mapping):
         }
         for ph in VALID_PHASES:
             row[f"count_{ph.lower()}"] = counts[ph]
-            row[f"pct_{ph.lower()}"] = (counts[ph] / n_valid * 100) if n_valid >= 5 else float("nan")
+            row[f"pct_{ph.lower()}"] = (round(counts[ph] / n_valid * 100, 8)) if n_valid >= 5 else float("nan")
         out_rows.append(row)
     return pd.DataFrame(out_rows).sort_values(["date", "sector"]).reset_index(drop=True)
 

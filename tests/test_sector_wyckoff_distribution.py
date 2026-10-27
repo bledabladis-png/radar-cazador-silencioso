@@ -12,6 +12,7 @@ sesion 3 y Fase 4 (agregado con todos los holdings + 60 barras,
 CSVs con top-20 + 200 barras).
 """
 import pandas as pd
+from indicators.sector_wyckoff_distribution import compute_sector_wyckoff_distribution
 import pytest
 
 
@@ -179,3 +180,17 @@ def test_coherence_snapshot_vs_csvs():
         )])
         assert acc_count == acc_from_snap, f"{sector} acc: {acc_count} vs {acc_from_snap}"
         assert dist_count == dist_from_snap, f"{sector} dist: {dist_count} vs {dist_from_snap}"
+
+
+def test_pct_redondeado_a_8_decimales():
+    """Post-fix PCT-FLOAT-ROUNDING-DIVERGENCE (2026-10-27): pct_* con
+    8 decimales exactos. 1 ACC + 5 RANGE en XLK -> 16.66666667 /
+    83.33333333, no 16.666666666666664 / 83.33333333333333."""
+    snap = _make_snapshot(
+        {"T0": "ACCUMULATION", **{f"T{i}": "RANGE" for i in range(1, 6)}},
+        group="XLK",
+    )
+    df = compute_sector_wyckoff_distribution(None, None, snapshot=snap)
+    row = df[df["sector"] == "XLK"].iloc[0]
+    assert row["pct_accumulation"] == round(1 / 6 * 100, 8)
+    assert row["pct_range"] == round(5 / 6 * 100, 8)

@@ -96,7 +96,7 @@ def compute_sector_wyckoff_distribution(df_stocks, holdings_df, snapshot=None):
         if n_valid >= 5:
             for phase in VALID_PHASES:
                 row[f"count_{phase.lower()}"] = phase_counts[phase]
-                row[f"pct_{phase.lower()}"] = phase_counts[phase] / n_valid * 100
+                row[f"pct_{phase.lower()}"] = round(phase_counts[phase] / n_valid * 100, 8)
         else:
             for phase in VALID_PHASES:
                 row[f"count_{phase.lower()}"] = phase_counts[phase]
