@@ -2809,10 +2809,14 @@ items:
     sector_wyckoff_distribution.py:99 (commit ffd3c401).
     3 tests verifican redondeo exacto (16.66666667 vs
     16.666666666666664). CI verde (run 40436984418).
-    Falta verificacion empirica byte-identica: relanzar
-    regenerate o py run.py y comprobar que
-    sector_wyckoff_distribution.csv no cambia por ULP.
-    Sin esa verificacion NO se declara FIXED.
+    Falta verificacion empirica de estabilidad: el CSV activo
+    esta PRE-FIX (valores 15-16 decimales, ej. 63.1578947368421),
+    porque se revirtio a HEAD en sesion 13. La verificacion
+    correcta NO es byte-identico vs CSV actual (cambiara por
+    diseno), sino: relanzar py run.py DOS veces tras el fix y
+    comprobar que (a) primera ejecucion pasa de 15-16 a 8
+    decimales (esperado), (b) segunda ejecucion produce CSV
+    byte-identico a la primera (estabilidad). Sin (b), NO FIXED.
   descripcion: |
     Ruido de float ULP entre regenerate_wyckoff_history.py
     (_construir_agregado) y sector_metrics.py al escribir pct_*
