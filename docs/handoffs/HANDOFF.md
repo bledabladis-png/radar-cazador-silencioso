@@ -5,6 +5,11 @@ junto con `Consolidacion_Documentos/00_ARRANQUE.md`.
 
 **Este fichero se sobrescribe cada sesion.** Historico en git.
 
+**OBSOLETO desde 2026-10-27 (sesion 13).** El HANDOFF canonico vive
+en la raiz del repo: `HANDOFF - Radar de Rotacion Sectorial.txt`.
+Este fichero se conserva como historico de sesion 11. No usar como
+fuente de estado.
+
 ---
 
 ## 1. ESTADO AL CIERRE (2026-10-26, sesion 11)

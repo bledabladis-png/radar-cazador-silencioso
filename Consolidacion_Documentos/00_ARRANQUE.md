@@ -372,7 +372,7 @@ fase. Pasar los holdings directamente por el detector.
 - `WYCKOFF-5BX`: esperando `n_confirmed_H20_complete >= 550` (~2027).
 
 Documentacion completa: `docs/auditoria/wyckoff/62_sistema_completo_2026-10-24.md`
-(parcialmente obsoleto, corregir en C6) y `63_plan_sistema_holdings_2026-10-24.md`.
+(estado 24-oct; pendientes vivos en doc 72 + REGISTRO) y `63_plan_sistema_holdings_2026-10-24.md`.
 
 ### 4.3. Pendientes vivos
 
