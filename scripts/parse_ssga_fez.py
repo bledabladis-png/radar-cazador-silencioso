@@ -8,6 +8,10 @@ from io import BytesIO
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
+import time
+
+import yfinance as yf
+
 from src.holdings_filter import is_valid_holding_ticker
 
 URL = 'https://www.ssga.com/us/en/intermediary/library-content/products/fund-data/etfs/us/holdings-daily-us-en-fez.xlsx'
@@ -32,7 +36,41 @@ FEZ_TICKER_MAP = {
     'ISP': 'ISP.MI',
     'DTE': 'DTE.DE',
     'OR': 'OR.PA',
-    'INGA': 'INGA.AS'
+    'INGA': 'INGA.AS',
+    # 2026-10-27: 27 tickers FEZ sin sufijo de mercado. Verificados
+    # contra Yahoo con period=5d. Sin sufijo, Yahoo los resolvia a
+    # ADRs americanos erroneos (DG=Dollar General, EL=Estee Lauder,
+    # BN=Brookfield, AD=Kroger, ABI/ARGX/RACE sin sufijo).
+    'CS': 'CS.PA',
+    'ENEL': 'ENEL.MI',
+    'IFX': 'IFX.DE',
+    'ITX': 'ITX.MC',
+    'DHL': 'DHL.DE',
+    'ENI': 'ENI.MI',
+    'DBK': 'DBK.DE',
+    # 'NDA FI': 'NDA-FI.HE',  # 2026-10-27: excluido. Yahoo lo resuelve
+    # pero viola D11 (2 separadores: - y .). Sin alternativa valida
+    # (NDA1V.HE, NDA.FI, NDAFI.HE, NDA.HE no resuelven). Nordea queda
+    # fuera de FEZ (-1.20% de peso; FEZ 96.29 -> 95.09).
+    'RHM': 'RHM.DE',
+    'BAS': 'BAS.DE',
+    'ENGI': 'ENGI.PA',
+    'RMS': 'RMS.PA',
+    'BAYN': 'BAYN.DE',
+    'PRX': 'PRX.AS',
+    'NOKIA': 'NOKIA.HE',
+    'SGO': 'SGO.PA',
+    'MBG': 'MBG.DE',
+    'ADYEN': 'ADYEN.AS',
+    'ADS': 'ADS.DE',
+    'BMW': 'BMW.DE',
+    'ABI': 'ABI.BR',
+    'DG': 'DG.PA',
+    'EL': 'EL.PA',
+    'ARGX': 'ARGX.BR',
+    'RACE': 'RACE.MI',
+    'BN': 'BN.PA',
+    'AD': 'AD.AS',
 }
 
 # Overrides por nombre cuando SSGA exporta tickers ambiguos
@@ -41,6 +79,15 @@ FEZ_NAME_OVERRIDE = {
     'SANOFI': 'SAN.PA',           # Sanofi -> Euronext Paris
     'BANCO SANTANDER': 'SAN.MC',  # Santander -> BME Madrid
 }
+
+def validate_yahoo(ticker):
+    """True si Yahoo resuelve el ticker con 5d de historico."""
+    try:
+        h = yf.Ticker(ticker).history(period='5d', auto_adjust=False)
+        return not h.empty
+    except (ValueError, TypeError, KeyError, IndexError, AttributeError):
+        return False
+
 
 def resolve_fez_ticker(raw_ticker, name):
     name_upper = (name or '').upper()
@@ -92,9 +139,18 @@ def main():
                     weight = cell
                     break
             if weight is not None:
+                yahoo_ticker = resolve_fez_ticker(ticker, name if isinstance(name, str) else '')
+                # 2026-10-27: validar contra Yahoo (como BlackRock).
+                # Sin validacion, tickers sin mapear salen crudos y
+                # rompen la descarga. Los fallos se excluyen.
+                if not validate_yahoo(yahoo_ticker):
+                    print(f'FAIL: {ticker:8s} -> {yahoo_ticker} [excluido]')
+                    time.sleep(0.1)
+                    continue
+                time.sleep(0.1)
                 holdings.append({
                     'etf': 'FEZ',
-                    'ticker': resolve_fez_ticker(ticker, name if isinstance(name, str) else ''),
+                    'ticker': yahoo_ticker,
                     'identifier': identifier,
                     'name': name if isinstance(name, str) else '',
                     'weight': weight
