@@ -2653,24 +2653,25 @@ items:
 - id: SOW-HOLDOUT-IMMUTABLE
   tipo: deuda_tecnica
   ciclo: '2026-10-26'
-  estado: OPEN
+  estado: IN_PROGRESS
   descripcion: |
-    No hay declaracion formal de que stock_prices_reserved_cohort.parquet
-    y stock_prices_reserved_r3000.parquet sean holdout inmutable para
-    validacion SOW. Hoy se infiere de su uso en
-    scripts/purged_kfold_sow_c1_*.py. Sin contrato explicito, promover
-    tickers a produccion desde ahi es ambiguo.
+    Declaracion formal de que stock_prices_reserved_cohort.parquet y
+    stock_prices_reserved_r3000.parquet son holdout inmutable para
+    validacion SOW. Sin contrato explicito, promover tickers a
+    produccion desde ahi es ambiguo.
   evidencia: |
-    Consumidos por purged_kfold_sow_c1_reserved.py y
-    purged_kfold_sow_c1_r3000.py. TOP20-FALTANTES-DATOS depende de
-    esta distincion: 7/8 tickers (BSX, CAH, CI, CNP, COR, HCA, NKE)
-    estan solo en holdout, no se promueven. MRNA ausente en todos.
+    Borrador redactado 2026-10-27 (commit 46b36409):
+    docs/auditoria/wyckoff/58_contrato_holdout_inmutable.md.
+    11 secciones: proposito, definiciones, consumidores declarados
+    (2 generadores + 2 validadores con pre-registro congelado),
+    reglas I1-I4, estado real de la lista de faltantes (35 holdout,
+    2 nadie, 3 pocas barras; corrige el 7/44/1 del ticket previo),
+    condiciones de promocion P1-P4, tests T1-T5, procedimiento,
+    firma, impacto en TOP20-FALTANTES-DATOS, estado normativo.
   siguiente_accion: |
-    Redactar contrato (docs/auditoria/wyckoff/ o docs/gobernanza/)
-    declarando inmutabilidad y condiciones de promocion. Citar en
-    TOP20-FALTANTES-DATOS una vez exista. Bloqueante suave de
-    P1-H02 (cobertura efectiva).
-
+    Enviar 58_contrato_holdout_inmutable.md al auditor externo.
+    Sin firma, no se promueve ningun ticker desde holdout. Si
+    aprueba -> FIXED con SHA. Si rechaza -> WONT_FIX con razon.
 - id: GOVERNANZA-CI-NO-STEP
   tipo: deuda_tecnica
   ciclo: '2026-10-26'
