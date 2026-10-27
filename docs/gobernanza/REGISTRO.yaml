@@ -2665,22 +2665,21 @@ items:
 - id: GOVERNANZA-CI-NO-STEP
   tipo: deuda_tecnica
   ciclo: '2026-10-26'
-  estado: OPEN
+  estado: FIXED
+  commit: 6fd537f8
   descripcion: |
-    py scripts/verifica_gobernanza.py no corre en CI. Solo hay
-    comentario en .github/workflows/ci_tests.yml:7 sobre
-    fetch-depth. Hueco: un REGISTRO malformado en un commit
-    pusheado no lo detecta el gate de CI.
+    py scripts/verifica_gobernanza.py no corre en CI. Hueco: un
+    REGISTRO malformado en un commit pusheado no lo detecta el
+    gate de CI.
   evidencia: |
-    Verificado 2026-10-26: Select-String "verifica_gobernanza" en
-    ci_tests.yml devuelve solo el comentario de fetch-depth. La
-    deteccion depende de py scripts/generate_estado_sistema.py,
-    que corre integridad pero no gobernanza.
+    Step "Verify governance" anadido tras pyflakes en
+    ci_tests.yml. Verificado en run 40439390448: step pasa,
+    job completo verde. Detectado en primera ejecucion:
+    validador exige SHA real en FIXED (no PENDIENTE) y razon
+    >= 20 chars en WONT_FIX — ya ha cazado 3 errores en esta
+    sesion.
   siguiente_accion: |
-    Anadir step a .github/workflows/ci_tests.yml:
-    "py scripts/verifica_gobernanza.py" tras pyflakes. Coste
-    ~1s. Sin impacto en duracion (ya ~3 min).
-
+    Ninguna. Deuda cerrada.
 - id: DICT3-H04-INFERENCE-V2
   tipo: deuda_tecnica
   ciclo: '2026-10-26'
