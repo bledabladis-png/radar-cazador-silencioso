@@ -11,7 +11,7 @@ import yaml
 
 ROOT = Path(__file__).resolve().parent.parent
 REGISTRO = ROOT / "docs" / "gobernanza" / "REGISTRO.yaml"
-HANDOFF = ROOT / "docs" / "handoffs" / "HANDOFF.md"
+HANDOFF = ROOT / "HANDOFF - Radar de Rotacion Sectorial.txt"
 
 VALID_ESTADOS = frozenset({
     "OPEN", "IN_PROGRESS", "BLOCKED_EXTERNAL",
