@@ -2637,18 +2637,29 @@ items:
   ciclo: '2026-10-26'
   estado: OPEN
   descripcion: |
-    Indices EU (FEZ 66.3%, DAXEX 78.4%, ISF.L 60.8%, LYXI 93.2%)
-    siguen con nlargest(20). Frente separado tras dictamen
-    2026-10-26.
+    Indices EU (FEZ, DAXEX, ISF.L, LYXI) siguen con nlargest(20)
+    o target_weight segun el consumidor. Frente separado tras
+    dictamen 2026-10-26.
   evidencia: |
-    Ademas del gap de cobertura, FEZ/DAXEX/ISF.L tienen
-    peso_total_csv < 100% (ver TOP20-EU-HOLDINGS-INCOMPLETOS).
-    Bloqueado por esa deuda.
+    Actualizacion 2026-10-27: TOP20-EU-HOLDINGS-INCOMPLETOS ya
+    esta FIXED. data/index_holdings.csv tiene holdings completos:
+    FEZ 47 (95.09%), DAXEX 32 (85.20%), ISF.L 88 (83.86%),
+    LYXI 35 (99.56%). Cero invalidos segun D11.
+    _select_target_holdings SI ve los holdings completos del CSV
+    (agrupa por etf sobre holdings_df).
+    PERO la cobertura efectiva en produccion sigue limitada:
+    stock_prices.parquet solo descarga head(20) por ETF EU.
+    Efecto medido (p1_h02_cobertura_efectiva.py, 2026-10-27):
+    - FEZ: peso_faltante=12.31 sobre_grupo=12.9%
+    - ISF.L: peso_faltante=10.31 sobre_grupo=12.3%
+    (el resto de grupos USA/EU ya estables)
+    El bloqueo ya no es el CSV, es el cap de descarga.
   siguiente_accion: |
-    Depende de TOP20-EU-HOLDINGS-INCOMPLETOS. Sin holdings
-    completos, un selector por peso no es comparable al de
-    sectores USA.
-
+    Depende ahora de EU-HOLDINGS-DOWNLOAD-CAP (no de
+    TOP20-EU-HOLDINGS-INCOMPLETOS, que se cerro). Una vez que el
+    pipeline descargue todo el CSV (opcion a/b/c en el ticket de
+    cap), el selector por peso en indices EU sera homologo al de
+    sectores USA. Sin fecha hasta entonces.
 - id: SOW-HOLDOUT-IMMUTABLE
   tipo: deuda_tecnica
   ciclo: '2026-10-26'
