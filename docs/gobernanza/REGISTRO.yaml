@@ -2829,24 +2829,45 @@ items:
     caminos con round(x, 8). Test: comparar CSV regenerado vs
     py run.py en fecha de control, byte-identico.
 
-- id: DOC-62-OBSOLETO
+- id: ARRANQUE-C6-GHOST
   tipo: deuda_tecnica
   ciclo: '2026-10-27'
-  estado: OPEN
+  estado: FIXED
+  commit: 353bcea8
+  evidencia: |
+    Opcion A aplicada: 00_ARRANQUE.md:375 ya no dice
+    "(parcialmente obsoleto, corregir en C6)"; dice
+    "(estado 24-oct; pendientes vivos en doc 72 + REGISTRO)".
+    Opcion B (ejecutar C6 completo, cerrar doc 62 §8) queda
+    como frente futuro no ticketado.
   descripcion: |
-    docs/auditoria/wyckoff/62_sistema_completo_2026-10-24.md
-    contiene referencia "corregir en C6", fase del plan de sesion 3
-    que nunca llego. Doc parcialmente obsoleto; sustituido por
-    doc 72 + handoffs. TWST CONFLICT ya documentado en 62
-    (lineas 248 y 270), no requiere accion.
+    Consolidacion_Documentos/00_ARRANQUE.md:375 dice de doc 62
+    "parcialmente obsoleto, corregir en C6". C6 era una fase del
+    plan de sesion 3 (doc 63:162, "cierre documental: HANDOFF,
+    00_ARRANQUE, 04_HISTORICO, 62, REGISTRO, correccion 15->16
+    detectores, TWST, ACCUMULATION=0, Validation Gate, borrar
+    feature/wyckoff-cascade") que NO se completo: doc 62 §8 sigue
+    con pendientes del 24-oct sin cerrar. El propio 00_ARRANQUE
+    arrastra la referencia fantasma a C6.
+    (Nota: version previa de este ticket decia erroneamente que
+    "corregir en C6" estaba dentro de doc 62. Falso: doc 62 no
+    contiene "C6" en ninguna linea. Corregido 2026-10-27.)
   siguiente_accion: |
-    Retirar mencion "corregir en C6" de doc 62 y sustituir por
-    "sustituido por doc 72 + handoffs; historico conservado".
+    Opcion A (minima): reemplazar en 00_ARRANQUE.md:375 la
+    mencion "(parcialmente obsoleto, corregir en C6)" por
+    "(estado 24-oct; ver pendientes vivos en doc 72 + REGISTRO)".
+    Opcion B (completa): ejecutar C6 — cerrar §8 de doc 62 con
+    estado actual de cada pendiente. Requiere ~1 sesion.
 
 - id: HANDOFF-MD-OBSOLETO
   tipo: deuda_tecnica
   ciclo: '2026-10-27'
-  estado: OPEN
+  estado: FIXED
+  commit: 353bcea8
+  evidencia: |
+    docs/handoffs/HANDOFF.md marcado OBSOLETO en cabecera
+    (sesion 11; fuente canonica es HANDOFF - Radar de Rotacion
+    Sectorial.txt en raiz). Historico conservado en git.
   descripcion: |
     Dos HANDOFF en el repo con el mismo proposito:
     - HANDOFF - Radar de Rotacion Sectorial.txt (raiz, sesion 13,
