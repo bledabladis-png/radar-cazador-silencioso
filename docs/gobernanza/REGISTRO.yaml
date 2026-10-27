@@ -2796,3 +2796,70 @@ items:
     Ninguna. Bug resuelto en produccion (4e94bf2e) e historico
     (f71eb49c). Si aparece otro ticker con formato divergente en
     holdings, aplicar el mismo patron de normalizacion.
+
+- id: PCT-FLOAT-ROUNDING-DIVERGENCE
+  tipo: deuda_tecnica
+  ciclo: '2026-10-27'
+  estado: OPEN
+  descripcion: |
+    Ruido de float ULP entre regenerate_wyckoff_history.py
+    (_construir_agregado) y sector_metrics.py al escribir pct_*
+    en sector_wyckoff_distribution.csv (95.238095...23 vs ...24).
+    Sin cambio semantico, pero reescribe el CSV en cada py run.py
+    post-regeneracion, ensuciando el diff con 1000+ lineas.
+    Detectado en sesion 13 (2026-10-27), revertido a HEAD.
+  siguiente_accion: |
+    Redondear pct_* a 8 decimales de forma consistente en ambos
+    caminos con round(x, 8). Test: comparar CSV regenerado vs
+    py run.py en fecha de control, byte-identico.
+
+- id: DOC-62-OBSOLETO
+  tipo: deuda_tecnica
+  ciclo: '2026-10-27'
+  estado: OPEN
+  descripcion: |
+    docs/auditoria/wyckoff/62_sistema_completo_2026-10-24.md
+    contiene referencia "corregir en C6", fase del plan de sesion 3
+    que nunca llego. Doc parcialmente obsoleto; sustituido por
+    doc 72 + handoffs. TWST CONFLICT ya documentado en 62
+    (lineas 248 y 270), no requiere accion.
+  siguiente_accion: |
+    Retirar mencion "corregir en C6" de doc 62 y sustituir por
+    "sustituido por doc 72 + handoffs; historico conservado".
+
+- id: HANDOFF-MD-OBSOLETO
+  tipo: deuda_tecnica
+  ciclo: '2026-10-27'
+  estado: OPEN
+  descripcion: |
+    Dos HANDOFF en el repo con el mismo proposito:
+    - HANDOFF - Radar de Rotacion Sectorial.txt (raiz, sesion 13,
+      canónico, actualizado en 24debe13).
+    - docs/handoffs/HANDOFF.md (sesion 11, obsoleto desde ebdeac02,
+      sin marcar como tal).
+    Quien pegue el .md parte de contexto de hace dos sesiones.
+  siguiente_accion: |
+    Marcar docs/handoffs/HANDOFF.md como obsoleto en cabecera
+    (una sola fuente de verdad = .txt raiz) o eliminarlo del repo
+    conservando historico en git.
+
+- id: YAHOO-PARTIAL-HISTORY-PREEXISTING
+  tipo: deuda_tecnica
+  ciclo: '2026-10-27'
+  estado: WONT_FIX
+  razon: |
+    Historico parcial en Yahoo para IPOs recientes. Imposible
+    descargar pre-IPO; imputar prohibido por reglas duras. No
+    accionable sin violar el contrato de datos reales.
+  descripcion: |
+    35 tickers con NaNs >10% en stock_prices (ABNB, APP, BE, CARR,
+    CASY, CEG, COIN, CRWD, CTVA, DASH, DDOG, DOW, EXE, FDXF, FOX,
+    FOXA, GEHC, GEV, HONA, HOOD, KVUE, MRNA, OTIS, PLTR, PSKY, Q,
+    RDDT, SNDK, SOLV, UBER, VICI, VLTO, VRT, VYLR, WBD). IPOs
+    recientes con historico parcial en Yahoo. Atacarlos requiere
+    descargar historico pre-IPO (imposible) o imputar (prohibido
+    por reglas duras).
+  siguiente_accion: |
+    Ninguna. Deuda documentada, no accionable sin violar contrato
+    de datos reales. Reabrir solo si Yahoo publica historico
+    extendido o si un ticker deja de ser relevante.
