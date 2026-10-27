@@ -1889,22 +1889,47 @@ items:
 - id: VALIDATION-GATE-NO-STANDALONE
   tipo: deuda_tecnica
   ciclo: '2026-10-24'
-  estado: OPEN
+  estado: WONT_FIX
+  razon: |
+    Opcion (a) del ticket. Reconstruir inputs desde artefactos
+    para un wrapper standalone (opcion b) daria falsa confianza
+    con datos stale: los checks 1, 6 y 10 necesitan
+    wyckoff_holdings_data (wh_tables en memoria) con close/weight
+    del run. Un wrapper que lea CSVs de outputs/history diria
+    "11/11" aunque el ultimo run fuese de hace una semana. El
+    "estado del ultimo run" ya se publica en
+    outputs/state/validation_gate_result.json con written_at
+    (fuente de verdad). No hay comando reproducible standalone
+    porque el gate es un control INTRA-run.
   descripcion: |
-    El Validation Gate (10 checks) no es reproducible standalone. No
-    hay script CLI ni target pytest. `run_validation_gate` vive en
-    `src/pipeline/validation_gate.py` y se invoca solo dentro de
-    `run.py::main()` con datos intermedios del pipeline. El "10/10"
-    del corpus es estado del ultimo run productivo, no un comando
-    ejecutable a demanda.
+    El Validation Gate (11 checks) no es reproducible standalone.
+    run_validation_gate vive en src/pipeline/validation_gate.py y
+    se invoca solo dentro de run.py::main() con datos intermedios
+    del pipeline.
+  evidencia: |
+    Medido 2026-10-27: run_validation_gate(wyckoff_holdings_data,
+    pcr_data, darkpool_data, mte_result, tactical_scores,
+    structural_scores, reference_date). 11 checks:
+    1. Wyckoff holdings CSVs (necesita wh_tables)
+    2. PCR Total (necesita pcr_data)
+    3. Dark Pool medio (necesita darkpool_data)
+    4. MTE MSI/IPI (necesita mte_result)
+    5. Rangos tacticos/estructurales (necesita scores)
+    6. Cobertura holdings (necesita wh_tables)
+    7. Freshness Dark Pool (necesita darkpool_data + ref_date)
+    8. Freshness PCR (necesita pcr_data + ref_date)
+    9. Config pesos (reproducible)
+    10. Sanity holdings (necesita wh_tables)
+    11. Schema versioning (reproducible)
+    Solidos 9 y 11. Los otros 9 dependen de datos en memoria del
+    run. validation_gate_result.json expone passed/checks_n/
+    errors_n/written_at para consulta a posteriori.
   siguiente_accion: |
-    Opciones: (a) documentar como "estado del ultimo run" sin wrapper,
-    aceptar que no hay comando reproducible; (b) escribir
-    `scripts/run_validation_gate.py` que reconstruya los inputs desde
-    artefactos (coste alto, dudoso valor porque los checks de holdings
-    necesitan wh_tables en memoria); (c) aceptar (a). Item abierto para
-    decidir.
-
+    Ninguna. Deuda cerrada. Consultar estado del ultimo gate con:
+    Get-Content outputs/state/validation_gate_result.json.
+    Si en el futuro se necesita un gate POST-run sobre artefactos,
+    es un frente nuevo con contrato propio (checks especificos
+    para datos persistidos, no reutilizacion del gate intra-run).
 - id: IWM-HOLDINGS-EXPANSION
   tipo: frente
   ciclo: '2026-10-24'
