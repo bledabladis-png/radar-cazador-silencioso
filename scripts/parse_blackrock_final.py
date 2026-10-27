@@ -125,15 +125,14 @@ def main():
 
         # Ordenar por peso descendente y tomar top 10
         holdings.sort(key=lambda x: x['weight'], reverse=True)
-        top20 = holdings[:20]
 
         out = f'outputs/holdings/{etf}_final_holdings.csv'
         with open(out, 'w', newline='', encoding='utf-8') as f:
             escritor = csv.writer(f)
             escritor.writerow(['etf','ticker','name','weight'])
-            for h in top20:
+            for h in holdings:
                 escritor.writerow([h['etf'], h['ticker'], h['name'], f'{h["weight"]:.6f}'])
-        print(f'Guardado: {out} ({len(holdings)} validos, top20 exportado)')
+        print(f'Guardado: {out} ({len(holdings)} validos, sin truncar)')
     return 0
 
 if __name__ == '__main__':

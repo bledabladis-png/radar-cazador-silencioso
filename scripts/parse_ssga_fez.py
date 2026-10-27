@@ -1,4 +1,4 @@
-﻿import sys
+import sys
 from pathlib import Path
 
 import requests
@@ -101,12 +101,11 @@ def main():
                 })
 
     holdings.sort(key=lambda x: x['weight'], reverse=True)
-    top20 = holdings[:20]
 
     out = 'outputs/holdings/FEZ_final_holdings.csv'
-    pd.DataFrame(top20, columns=['etf','ticker','identifier','name','weight']).to_csv(out, index=False)
-    print(f'Guardado: {out}')
-    print(pd.DataFrame(top20).to_string(index=False))
+    pd.DataFrame(holdings, columns=['etf','ticker','identifier','name','weight']).to_csv(out, index=False)
+    print(f'Guardado: {out} ({len(holdings)} holdings, sin truncar)')
+    print(pd.DataFrame(holdings).to_string(index=False))
     return 0
 
 if __name__ == '__main__':

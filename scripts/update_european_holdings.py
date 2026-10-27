@@ -1,4 +1,4 @@
-﻿# update_european_holdings.py
+# update_european_holdings.py
 #
 # A6.3-01 (2026-09-29): refactor para no ejecutar al importar.
 # Antes: script sin `if __name__ == "__main__"` -> cualquier import
@@ -50,7 +50,7 @@ def main():
     fez = pd.read_csv('outputs/holdings/FEZ_final_holdings.csv')
     daxex = pd.read_csv('outputs/holdings/DAXEX_final_holdings.csv')
     isf = pd.read_csv('outputs/holdings/ISF.L_final_holdings.csv')
-    amundi = pd.read_csv('outputs/holdings/amundi_lyxi_holdings.csv').sort_values('weight', ascending=False).head(20)
+    amundi = pd.read_csv('outputs/holdings/amundi_lyxi_holdings.csv').sort_values('weight', ascending=False)
     amundi['etf'] = 'LYXI'
 
     # Schema de index_holdings.csv (sin identifier)
