@@ -2579,39 +2579,41 @@ items:
 - id: TOP20-EU-HOLDINGS-INCOMPLETOS
   tipo: deuda_tecnica
   ciclo: '2026-10-26'
-  estado: IN_PROGRESS
-  commit: d3c3e032
+  estado: FIXED
+  commit: ee7aac87
   descripcion: |
-    FEZ/DAXEX/ISF.L tienen peso_total_csv < 100% (66.3%, 78.4%,
+    FEZ/DAXEX/ISF.L tenian peso_total_csv < 100% (66.3%, 78.4%,
     60.8%). Causa raiz: los parsers truncaban a [:20] antes de
     escribir el CSV. Un "85% de cobertura" en esos ETFs era 85%
     del subset del CSV, no del ETF real.
   evidencia: |
-    Causa localizada 2026-10-27: 3 sitios truncaban a top-20:
-    - parse_ssga_fez.py:104 (FEZ)
-    - parse_blackrock_final.py:128 (DAXEX, ISF.L)
-    - update_european_holdings.py:59 (LYXI via Amundi)
-    Fix commit d3c3e032: eliminar los 3 truncamientos. Suite
-    3831 passed, 2 skipped. CI verde 40562176661.
-
-    Estado actual del CSV data/index_holdings.csv: AUN
-    truncado (los parsers escriben a outputs/holdings/*, luego
-    update_european_holdings.py fusiona a index_holdings.csv).
-    Requiere ejecutar update_european_holdings.py para
-    regenerar. Proximo workflow automatico:
-    update_european_holdings.yml (cron 17 5 1 1,4,7,10 *),
-    proximo 2027-01-01.
+    Fix end-to-end 2026-10-27:
+    (1) d3c3e032: eliminar truncamiento [:20] en parse_ssga_fez.py,
+        parse_blackrock_final.py y update_european_holdings.py.
+    (2) ee7aac87: 27 mapeos FEZ verificados contra Yahoo
+        (ABI.BR, CS.PA, ENEL.MI, IFX.DE, ITX.MC, DG.PA, DHL.DE,
+        ENI.MI, EL.PA, DBK.DE, RHM.DE, BAS.DE, ENGI.PA, RMS.PA,
+        BAYN.DE, PRX.AS, RACE.MI, NOKIA.HE, BN.PA, SGO.PA,
+        MBG.DE, ADYEN.AS, AD.DE, ADS.DE, BMW.DE, ARGX.BR, NDA FI
+        excluido por D11) + validacion Yahoo en el parser.
+    (3) ee7aac87: sys.path fix en update_european_holdings.py
+        (import roto desde c4f99795; workflow schedule llevaba
+        26 dias fallando, run 36856598857).
+    (4) data/index_holdings.csv regenerado:
+        - FEZ: 20 -> 47 (66.26% -> 95.09%)
+        - DAXEX: 20 -> 32 (78.43% -> 85.20%)
+        - ISF.L: 20 -> 88 (60.80% -> 83.86%)
+        - LYXI: 20 -> 35 (93.24% -> 99.56%)
+        Cero tickers invalidos segun D11.
+    Suite: 3832 passed, 2 skipped. CI verde 40571351514.
   siguiente_accion: |
-    (a) Verificacion empirica local: ejecutar
-        py scripts/update_european_holdings.py
-        y comprobar que index_holdings.csv pasa de 20 a
-        ~50/40/100/35 filas por ETF y peso_total_csv sube a
-        ~100%. Requiere conectividad a SSGA/BlackRock/Amundi.
-    (b) Si (a) OK: commit del index_holdings.csv regenerado
-        + FIXED. Si (a) falla por proveedor: dejar IN_PROGRESS
-        y esperar workflow trimestral.
-    (c) Tras el fix: revisar TOP20-EU-INDICES, que dependia de
-        este ticket.
+    Deuda residual NO cubierta por este ticket: get_stock_list()
+    sigue haciendo head(20) sobre index_holdings.csv. Aunque el
+    CSV tiene 47 FEZ, el pipeline solo descarga 20. Eso limita
+    la cobertura efectiva del SISTEMA a ~los 20 primeros.
+    Ticket nuevo EU-HOLDINGS-DOWNLOAD-CAP creado para eso.
+    TOP20-EU-INDICES desbloqueado para disenar selector por peso
+    con holdings completos en el CSV.
 - id: TOP20-USA-INDICES
   tipo: frente
   ciclo: '2026-10-26'
@@ -2900,3 +2902,41 @@ items:
     Ninguna. Deuda documentada, no accionable sin violar contrato
     de datos reales. Reabrir solo si Yahoo publica historico
     extendido o si un ticker deja de ser relevante.
+
+- id: EU-HOLDINGS-DOWNLOAD-CAP
+  tipo: deuda_tecnica
+  ciclo: '2026-10-27'
+  estado: OPEN
+  descripcion: |
+    get_stock_list() hace .head(20) sobre index_holdings.csv, por
+    lo que solo descarga 20 tickers por ETF EU aunque el CSV ya
+    tenga 47 (FEZ), 32 (DAXEX), 88 (ISF.L), 35 (LYXI). La
+    cobertura efectiva del SISTEMA esta limitada a esos 20, no al
+    CSV. TOP20-EU-HOLDINGS-INCOMPLETOS (FIXED) completo el CSV;
+    este ticket es el siguiente eslabon: que el pipeline descargue
+    todo el CSV.
+  evidencia: |
+    Detectado 2026-10-27 al verificar cobertura real:
+    - FEZ: 48 holdings en CSV, 22 en stock_prices.parquet (45.8%)
+    - DAXEX: 32 en CSV, 21 en prod (65.6%)
+    - ISF.L: 88 en CSV, 20 en prod (22.7%)
+    - LYXI: 35 en CSV, 20 en prod (57.1%)
+    Causa: src/stock_data_loader.py:get_stock_list() linea ~87:
+    "group['ticker'].head(TOP_N_SECTOR_COMPONENTS)" para index_holdings.
+    Mismo patron que etf_holdings: head(20) por grupo.
+  siguiente_accion: |
+    Opciones:
+    (a) Subir TOP_N_SECTOR_COMPONENTS para indices EU (mas
+        descargas, mas rate-limit Yahoo, mas peso en el parquet).
+        Requiere medir impacto en run.py (duracion, tasa de fallos
+        Yahoo) antes.
+    (b) Anadir los tickers EU a universe_expansions.yaml (mismo
+        patron que xli_extra, xlk_extra, xlv_extra). Sin tocar
+        codigo compartido. Mas limpio pero mas ficheros que
+        mantener.
+    (c) Descargar los EU solo en el workflow trimestral
+        update_european_holdings.yml, no en el diario. Menos carga
+        sobre Yahoo.
+    Decision pendiente de auditor. Sin fecha. No bloqueante:
+    cobertura actual es suficiente para el sistema holdings-based
+    (top-20 ya cubre los pesos principales de cada ETF).
