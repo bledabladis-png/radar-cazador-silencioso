@@ -330,13 +330,24 @@ date,sector,delta_1d_ema20,delta_5d_ema20,delta_20d_ema20,delta_1d_ema50,delta_5
 2026-10-22,XLRE,5.0,50.0,70.0,30.0,40.0,65.0,0.0,20.0,15.0,Expansión fuerte,Expansión fuerte,Expansión fuerte,True,False
 2026-10-22,XLC,5.2631578947368425,10.52631578947368,27.105263157894733,-5.263157894736839,0.0,11.578947368421051,-5.2631578947368425,-5.2631578947368425,-13.15789473684211,Expansión fuerte,Estable,Deterioro fuerte,False,False
 2026-10-23,XLK,15.0,15.0,-50.0,5.0,15.0,-40.0,-5.0,-10.0,-25.0,Expansión fuerte,Expansión fuerte,Deterioro fuerte,False,False
-2026-10-23,XLF,-20.0,-15.0,50.0,-10.000000000000007,5.0,30.0,-9.999999999999993,-9.999999999999993,-4.999999999999993,Deterioro fuerte,Expansión fuerte,Deterioro fuerte,False,True
+2026-10-23,XLF,-20.0,-15.0,50.0,-10.000000000000009,5.0,30.0,-9.999999999999991,-9.999999999999991,-4.999999999999993,Deterioro fuerte,Expansión fuerte,Deterioro fuerte,False,True
 2026-10-23,XLV,-5.0,10.0,39.99999999999999,0.0,15.0,35.0,0.0,0.0,10.0,Expansión fuerte,Expansión fuerte,Estable,True,False
 2026-10-23,XLE,5.0,5.0,65.0,10.0,10.0,45.0,5.0,5.0,10.0,Expansión fuerte,Expansión fuerte,Expansión fuerte,True,False
 2026-10-23,XLY,-10.0,-10.0,40.0,-10.0,0.0,45.0,-20.000000000000007,-5.0,5.0,Deterioro fuerte,Estable,Deterioro fuerte,False,True
 2026-10-23,XLP,-5.0,-5.0,70.0,-10.0,-10.0,60.0,0.0,0.0,45.0,Deterioro fuerte,Deterioro fuerte,Estable,False,True
-2026-10-23,XLI,0.0,-10.0,5.0,-5.0,0.0,5.0,0.0,-20.0,-10.000000000000007,Deterioro fuerte,Estable,Deterioro fuerte,False,True
+2026-10-23,XLI,0.0,-10.0,5.0,-5.0,0.0,5.0,0.0,-20.0,-10.000000000000009,Deterioro fuerte,Estable,Deterioro fuerte,False,True
 2026-10-23,XLB,-15.0,-15.0,55.0,0.0,0.0,45.0,0.0,10.0,25.0,Deterioro fuerte,Estable,Expansión fuerte,False,True
-2026-10-23,XLU,0.0,-10.0,85.0,0.0,15.0,85.0,0.0,9.999999999999993,65.0,Deterioro fuerte,Expansión fuerte,Expansión fuerte,False,True
+2026-10-23,XLU,0.0,-10.0,85.0,0.0,15.0,85.0,0.0,9.999999999999991,65.0,Deterioro fuerte,Expansión fuerte,Expansión fuerte,False,True
 2026-10-23,XLRE,0.0,5.0,75.0,0.0,30.0,60.0,5.000000000000007,5.000000000000007,20.000000000000007,Expansión fuerte,Expansión fuerte,Expansión fuerte,True,False
-2026-10-23,XLC,-10.526315789473681,0.0,16.57894736842105,-5.2631578947368425,-5.2631578947368425,1.3157894736842088,-10.526315789473681,-21.052631578947366,-28.6842105263158,Estable,Deterioro fuerte,Deterioro fuerte,False,False
+2026-10-23,XLC,-10.52631578947368,0.0,16.57894736842105,-5.2631578947368425,-5.2631578947368425,1.3157894736842088,-10.52631578947368,-21.052631578947366,-28.6842105263158,Estable,Deterioro fuerte,Deterioro fuerte,False,False
+2026-10-26,XLK,10.0,20.0,-40.0,0.0,15.0,-45.0,10.0,0.0,-15.0,Expansión fuerte,Expansión fuerte,Estable,False,False
+2026-10-26,XLF,15.0,15.0,55.0,0.0,5.0,25.0,0.0,0.0,-4.999999999999993,Expansión fuerte,Expansión fuerte,Estable,True,False
+2026-10-26,XLV,0.0,15.0,39.99999999999999,-5.0,10.0,30.0,5.0,0.0,10.0,Expansión fuerte,Expansión fuerte,Estable,True,False
+2026-10-26,XLE,5.0,15.0,75.0,5.0,15.0,60.0,0.0,10.0,10.0,Expansión fuerte,Expansión fuerte,Expansión fuerte,True,False
+2026-10-26,XLY,10.0,-10.0,50.0,10.0,10.0,55.0,15.0,-5.000000000000007,20.0,Deterioro fuerte,Expansión fuerte,Deterioro fuerte,False,True
+2026-10-26,XLP,-5.0,-5.0,50.0,0.0,0.0,45.0,0.0,0.0,50.0,Deterioro fuerte,Estable,Estable,False,True
+2026-10-26,XLI,0.0,-5.0,-15.0,5.0,5.0,0.0,5.0,-15.0,-15.0,Deterioro fuerte,Expansión fuerte,Deterioro fuerte,False,True
+2026-10-26,XLB,0.0,0.0,45.0,-10.0,-5.0,35.0,0.0,15.0,19.999999999999993,Estable,Deterioro fuerte,Expansión fuerte,False,False
+2026-10-26,XLU,0.0,15.0,85.0,0.0,35.0,85.0,-5.0,40.0,60.0,Expansión fuerte,Expansión fuerte,Expansión fuerte,True,False
+2026-10-26,XLRE,5.0,35.0,80.0,5.0,40.0,70.0,0.0,25.000000000000007,30.000000000000007,Expansión fuerte,Expansión fuerte,Expansión fuerte,True,False
+2026-10-26,XLC,0.0,0.0,11.578947368421051,-5.2631578947368425,-5.2631578947368425,1.0526315789473664,0.0,-15.789473684210524,-28.6842105263158,Estable,Deterioro fuerte,Deterioro fuerte,False,False
