@@ -215,6 +215,8 @@ Generales:
 - ACCUMULATION-ZERO: estado transitorio por diseno.
 - VALIDATION-GATE-NO-STANDALONE: gate solo dentro de py run.py.
 - IWM-HOLDINGS-EXPANSION: sub-fase descarga, protocolo 6 pasos.
+  docs/handoffs/HANDOFF.md (obsoleto) en vez del HANDOFF raiz
+  canonico.
 
 Del dictamen 2026-10-25 (doc 68):
 - DICT3-H04-INTERVALS (OPEN): rechazado por auditor H-04.
@@ -224,19 +226,25 @@ Del dictamen 2026-10-25 (doc 68):
 Del dictamen 2026-10-26 (doc 70-v2):
 - DICT3-TOP20-COBERTURA (OPEN): 4 acciones ejecutables cerradas.
   Solicitud de cierre en doc 70-v2d. Pendiente respuesta auditor.
-- TOP20-FALTANTES-DATOS (OPEN): 52 tickers sin datos. 7 en holdout
-  SOW, 1 ausente total (MRNA), 44 requieren descarga nueva.
-- TOP20-EU-HOLDINGS-INCOMPLETOS (OPEN): FEZ 66.26%, DAXEX 78.43%,
-  ISF.L 60.80% `peso_total_csv`.
+- TOP20-FALTANTES-DATOS (IN_PROGRESS): 40 unicos (no 52 filas),
+  division real 35 holdout / 2 nadie (DDOG, MRNA) / 3 pocas barras
+  (WBD, HONA, SPCX). DDOG y MRNA en marcha por autonomia.
 - TOP20-USA-INDICES (OPEN): SPY 49.9%, QQQ 66.8%, DIA 85%.
-- TOP20-EU-INDICES (OPEN): depende de TOP20-EU-HOLDINGS-INCOMPLETOS.
-- SOW-HOLDOUT-IMMUTABLE (OPEN): falta declaracion formal.
-- GOVERNANZA-CI-NO-STEP (OPEN): verifica_gobernanza no corre en CI.
+- TOP20-EU-INDICES (OPEN): depende de EU-HOLDINGS-DOWNLOAD-CAP
+  (holdings CSV completos ya, falta descarga).
 
 Del dictamen H-04 (2026-10-26):
 - DICT3-H04-INFERENCE-V2 (OPEN): 4 decisiones de diseno. Sin
   codigo hasta aprobacion del auditor.
 
+Nuevos 2026-10-27:
+- EU-HOLDINGS-DOWNLOAD-CAP (IN_PROGRESS): fix d6c3ebb4. Head(20)
+  eliminado en EU (FEZ/DAXEX/ISF.L/LYXI). Verificacion end-to-end
+  pendiente proximo run autonomo.
+- SOW-BEAR-CONFIRMATION (IN_PROGRESS): borrador contrato v1.10
+  (caa0ec9e). Pendiente firma auditor externo.
+- SOW-HOLDOUT-IMMUTABLE (IN_PROGRESS): borrador contrato
+  (46b36409). Pendiente firma auditor externo.
 ### 4.3. Deudas detectadas sesion 13 (sin ticket)
 
 - **Ruido de float ULP entre regenerate_wyckoff_history.py y
