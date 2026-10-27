@@ -2633,19 +2633,28 @@ items:
   ciclo: '2026-10-26'
   estado: OPEN
   descripcion: |
-    Indices USA (SPY 49.9%, QQQ 66.8%, DIA 85.0%) siguen con
+    Indices USA (SPY 49.9%, QQQ 67.9%, DIA 85.0%) siguen con
     nlargest(20). A.2c se limito a sectores USA. Frente separado
     tras dictamen 2026-10-26.
   evidencia: |
     Doc 70-v2 P0-H02 confirma division de alcance. SPY y QQQ por
     debajo del 85% requieren extension analoga a A.2c. DIA ya
     cumple.
+    Medicion real 2026-10-27 (index_holdings vs parquet):
+    - SPY: nlargest20 = 49.9%. target_weight 85% requiere n=167
+      tickers, de los que 146 ya en parquet, faltan 21.
+    - QQQ: nlargest20 = 67.9%. target_weight 85% requiere n=41,
+      de los que 36 ya en parquet, faltan 5.
+    - DIA: nlargest20 = 85.0%. target_weight n=20, mismos 20,
+      ya cumple.
+    Total: 26 tickers nuevos (descarga trivial, medido en EU
+    similar en ~3s para 112).
   siguiente_accion: |
     Pendiente de revision externa de doc 70-v2b. Si el auditor
     confirma la division, planificar extension a indices USA con
     protocolo equivalente a A.2c (selector por peso + regeneracion
-    historica + invariantes P1-H03).
-
+    historica + invariantes P1-H03). Medido: 26 tickers adicionales,
+    coste bajo. Sin fecha hasta respuesta del auditor.
 - id: TOP20-EU-INDICES
   tipo: frente
   ciclo: '2026-10-26'
