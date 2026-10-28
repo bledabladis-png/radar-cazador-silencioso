@@ -954,5 +954,6 @@ def download_stock_prices(reference_date=None, run_id=None):
         source='yahoo_european_cascade',
         reference_date=reference_date,
         run_id=run_id,
+        fail_on_invalid=True,
     )
     return data

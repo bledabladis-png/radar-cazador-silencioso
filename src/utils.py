@@ -843,8 +843,21 @@ def write_artifact_with_manifest(df, parquet_path, source,
         return manifest
 
     except Exception as e:
-        print(f"  [WARN] manifest {parquet_path}: {e}")
         _try_cleanup(tmp_parquet, tmp_manifest)
+        if fail_on_invalid:
+            # Fail-close (2026-10-28): si el caller es el pipeline, un
+            # fallo de manifest NO puede quedar silencioso. El parquet
+            # puede haberse escrito ya; un parquet sin manifest rompe
+            # el contrato `write_artifact_with_manifest` y el guard de
+            # `write_completion_attempt` lo detecta como BLOCKED en el
+            # proximo run. Mejor abortar el run actual: `run.py` muere,
+            # el bot no commitea, el siguiente scheduled reescribe todo
+            # en limpio. Si `fail_on_invalid=False` (default, p.ej.
+            # scripts de mantenimiento como update_cboe.py),
+            # comportamiento previo: print + return {} (best-effort).
+            print(f"  [ERROR] manifest {parquet_path}: {e}")
+            raise
+        print(f"  [WARN] manifest {parquet_path}: {e}")
         return {}
 
 def get_effective_meta(temporal_meta, contracts):

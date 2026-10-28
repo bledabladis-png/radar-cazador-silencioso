@@ -249,8 +249,14 @@ def main():
                 "errors_n": len(vg.get("errors") or []),
                 "written_at": _written_at,
             }, _f)
-    except Exception:
-        pass
+    except Exception as _e_vg_write:
+        # Fail-soft (2026-10-28): validation_gate_result.json es
+        # observabilidad, no bloquea el run. Pero `pass` ocultaba el
+        # fallo por completo. Print visible para que el step lo
+        # capture; el receipt script detecta JSON residual por
+        # written_at, y write_completion_attempt lo marca BLOCKED
+        # en el proximo run.
+        print(f"  [WARN] validation_gate_result.json: {_e_vg_write}")
 
     mats = compute_final_matrices(
         sector_breadth_df, sector_concentration_df,
@@ -349,8 +355,13 @@ def main():
         os.makedirs(os.path.dirname(_rr_path), exist_ok=True)
         with open(_rr_path, 'w', encoding='utf-8') as _f:
             json.dump(_receipts.to_dict(), _f, indent=2)
-    except Exception:
-        pass
+    except Exception as _e_rr_write:
+        # Fail-soft (2026-10-28): writer_receipts.json es post-mortem
+        # (gitignored). Pero `pass` ocultaba el fallo. Print visible;
+        # verify() al final del run sigue leyendo del collector en
+        # memoria y aborta si hay incoherencia, asi que el contrato
+        # del run no depende de este fichero.
+        print(f"  [WARN] writer_receipts.json: {_e_rr_write}")
 
     # Verificacion post-run: todos los outputs registrados deben tener
     # receipt coherente con lo escrito en disco. Si falta alguno o hay

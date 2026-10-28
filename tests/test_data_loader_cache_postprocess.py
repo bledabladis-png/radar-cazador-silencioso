@@ -49,8 +49,11 @@ def patched_pipeline(monkeypatch):
 
     monkeypatch.setattr(_cboemerge, 'merge_cboe_into_market', _merge_cboe)
 
-    def _writer(d, path, source, reference_date, run_id):
-        calls['writer'].append({'path': path, 'source': source, 'run_id': run_id})
+    def _writer(d, path, source, reference_date, run_id, **kwargs):
+        # **kwargs para aceptar fail_on_invalid=True (fix 2026-10-28).
+        # El fixture no simula el writer real, solo registra la llamada.
+        calls['writer'].append({'path': path, 'source': source, 'run_id': run_id,
+                                'fail_on_invalid': kwargs.get('fail_on_invalid', False)})
 
     monkeypatch.setattr(_utils, 'write_artifact_with_manifest', _writer)
 

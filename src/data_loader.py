@@ -212,6 +212,7 @@ def _postprocess_market_data(data, reference_date, run_id, *, write_manifest):
             source='yahoo',
             reference_date=reference_date,
             run_id=run_id,
+            fail_on_invalid=True,
         )
 
     try:
@@ -343,7 +344,7 @@ def download_market_data(reference_date=None, run_id=None):
             except Exception as be:
                 print(f"  Error en respaldo: {be}")
                 batches_failed.append(batch)
-                batch_errors.append(str(e))
+                batch_errors.append(str(be))
         if i + batch_size < len(tickers):
             time.sleep(delay)
 
