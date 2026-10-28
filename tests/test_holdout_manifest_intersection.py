@@ -9,11 +9,29 @@ import json
 import sys
 from pathlib import Path
 
+import pytest
+
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
 from scripts.audit import holdout_manifest as hm
 from scripts.audit import holdout_intersection as hi
+
+# Los parquets reservados estan gitignored. En CI no existen.
+# Tests que hashean/leen los parquets directamente se skipan alli.
+_PARQUETS = (
+    ROOT / "data" / "stock_prices_reserved_cohort.parquet",
+    ROOT / "data" / "stock_prices_reserved_r3000.parquet",
+)
+
+def _parquets_disponibles():
+    return all(p.exists() for p in _PARQUETS)
+
+
+_skip_sin_parquets = pytest.mark.skipif(
+    not _parquets_disponibles(),
+    reason="parquets reservados gitignored (no disponibles en CI)",
+)
 
 
 # --- H-01: manifest ---
@@ -84,8 +102,13 @@ def test_canonical_sha256_cambia_con_un_ticker():
     assert hm._canonical_sha256(base) != hm._canonical_sha256(otro)
 
 
+@_skip_sin_parquets
 def test_verify_actual_pasa():
-    """El manifest actual coincide con los parquets. --verify debe pasar."""
+    """El manifest actual coincide con los parquets. --verify debe pasar.
+
+    Solo corre si los parquets reservados estan presentes (local). En
+    CI no existen (gitignored).
+    """
     rc = hm.main(["--verify"])
     assert rc == 0, "manifest no coincide con parquets (regenerar con --update)"
 
@@ -144,7 +167,8 @@ def test_intersection_nota_auditor():
 
 # --- Integracion: script completo ---
 
+@_skip_sin_parquets
 def test_intersection_main_devuelve_0(tmp_path, monkeypatch):
-    """main() ejecuta sin error."""
+    """main() ejecuta sin error. Solo con parquets presentes (local)."""
     rc = hi.main()
     assert rc == 0
