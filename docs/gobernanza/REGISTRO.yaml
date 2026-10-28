@@ -3032,10 +3032,15 @@ items:
     Bloque 4.2 reescrito con estado actual.
     Suite: 3832 passed, 2 skipped.
   siguiente_accion: |
-    Ninguna. El validador lee el fichero correcto.- id: AUTONOMY-RADAR-CATALOG-MAX-NEW-TOO-LOW
+    Ninguna. El validador lee el fichero correcto.
+
+- id: AUTONOMY-RADAR-CATALOG-MAX-NEW-TOO-LOW
   tipo: deuda_tecnica
   ciclo: '2026-10-28'
-  estado: IN_PROGRESS
+  estado: FIXED
+  commit: '64866361'
+  test: tests/test_regenerate_radar_catalog.py
+  verificacion: VERIFIED_IN_PRODUCTION
   descripcion: |
     El sanity check MAX_NEW=20 en scripts/regenerate_radar_catalog.py
     aborta cuando el diff entre stock_prices.parquet y el catalogo
@@ -3044,29 +3049,15 @@ items:
     xlv_extra (MRNA) introdujeron 28 tickers declarados como nuevos
     legitimos, que el sanity no distingue de anomalia.
   evidencia: |
-    Reproducido en local (2026-10-28) con py
-    scripts/regenerate_radar_catalog.py:
-      [ABORT] nuevos=28 > MAX_NEW=20
-      Exit code: 1
-    El parquet tiene 283 tickers USA; el catalogo, 255. Los 28
-    coinciden exactamente con data/universe_expansions.yaml:xli_extra.
-    DDOG y MRNA ya estaban en parquet antes del yaml: no aparecen
-    en el diff.
-    Historial:
-    - 0066a643 (script original), 1f93267f (chequeo defensivo):
-      fijan MAX_NEW=20.
-    - 404dc7c5 (xli_extra 28 tickers) y 3d1365e7 (xlk_extra DDOG,
-      xlv_extra MRNA): introducen los declarados despues.
-    - 8a0a8b1d (26-10 17:23Z): ultimo daily_run success.
-    - 5 runs failure del 27-10 en adelante, todos en el step
-      "Regenerar catalogo radar (IAE)".
+    Fix 64866361 (2026-10-28): _load_declared_tickers() lee
+    data/universe_expansions.yaml; main() separa nuevos_declarados
+    de nuevos_no_declarados; solo aborta si los no declarados
+    superan MAX_NEW. Verificado end-to-end en run 40685731619
+    (workflow_dispatch, head_sha 64866361, conclusion success):
+    step "Regenerar catalogo radar (IAE)" success, "Commit and push
+    hist/state" success, receipt escrito.
   siguiente_accion: |
-    Fix: leer data/universe_expansions.yaml y excluir los tickers
-    declarados del conteo de nuevos que dispara el abort. Abortar
-    solo si nuevos_no_declarados > MAX_NEW. Test de regresion:
-    caso 28 declarados -> no aborta; caso 21 no declarados -> aborta;
-    caso mixto (15 declarados + 10 no) -> no aborta.
-    Si OK -> FIXED con SHA tras el run scheduled exitoso.
+    Ninguna. Bug corregido y verificado en produccion.
 
 - id: COMPLETION-ATTEMPT-NO-STEP-AWARENESS
   tipo: deuda_tecnica

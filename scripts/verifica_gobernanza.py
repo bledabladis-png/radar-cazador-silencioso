@@ -128,6 +128,19 @@ def verificar(registro_path=None, handoff_path=None):
             evid = it.get("evidencia")
             if not commit:
                 errores.append("[{0}] FIXED sin commit".format(iid))
+            elif not isinstance(commit, str):
+                # Bug 2026-10-28: YAML convierte SHAs solo-digitos
+                # (p.ej. 64866361) a int. _git_commit_exists(int)
+                # hace subprocess con int y cae en TypeError
+                # capturado por except Exception, devolviendo False.
+                # El item se reportaba erroneamente como "commit no
+                # existe o es huerfano". El SHA debe ir entrecomillado.
+                errores.append(
+                    "[{0}] commit no es string (SHA entrecomillado "
+                    "en YAML): {1!r} ({2})".format(
+                        iid, commit, type(commit).__name__
+                    )
+                )
             elif commit != "PENDING":
                 if _git_commit_exists(commit) is False:
                     errores.append(
@@ -181,6 +194,22 @@ def verificar(registro_path=None, handoff_path=None):
                     "[{0}] estado={1} aparece como pendiente en HANDOFF "
                     "(reabre un item cerrado)".format(iid, estado)
                 )
+
+    # Check 2026-10-28: detectar "- id:" embebidos dentro de un
+    # valor de string. Bug real: en b2f3e30f, el append de items al
+    # final del REGISTRO no dejo linea en blanco. El "- id:
+    # AUTONOMY..." quedo pegado al final de un siguiente_accion: |,
+    # y las claves siguientes sobreescribieron el mapping del
+    # anterior (PyYAML conserva el ultimo valor). GOVERNANZA-
+    # HANDOFF-OBSOLETO quedo corrupto y AUTONOMY desaparecio.
+    _texto = registro_path.read_text(encoding="utf-8")
+    for _ln_no, _ln in enumerate(_texto.splitlines(), start=1):
+        if "- id:" in _ln and not _ln.lstrip().startswith("- id:"):
+            errores.append(
+                "linea {0}: '- id:' embebido (no al inicio de "
+                "linea, probable concatenacion sin separador): "
+                "{1!r}".format(_ln_no, _ln.strip()[:100])
+            )
 
     return errores
 
