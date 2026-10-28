@@ -2553,32 +2553,20 @@ items:
     Parametros anclados a constantes existentes (SC_LOOKBACK,
     SOS_CONFIRM_CLOSES, etc.). NO se ajusta tras ver resultados.
   siguiente_accion: |
-    (1) Implementar detector en indicators/ (familia separada,
-        sin tocar cascadas existentes ni classify_wyckoff_phase).
-    (2) Tests de contrato T1-T6 (uno por regla R1-R5 + test
-        negativo).
-    (3) Correr holdout reserved_cohort (268 tickers). Si C1-C3 OK
-        -> aplicar al pipeline. Si falla -> WONT_FIX con razon
-        medida en doc 59 (RESULTADO).
-    (4) Auditor externo revisa pre-registro ANTES de codificar.
-    Actualmente (1)-(4) pendientes. Pre-registro listo para
-    revision.
-- id: PERSIST-REPLACE-DATE
-  tipo: auditoria_interna
-  ciclo: '2026-10-26'
-  estado: FIXED
-  descripcion: persist() append-only por merge_keys deja huerfanas en writers de subconjunto filtrado por fase (6 CSVs wyckoff holdings)
-  commit: f4528b49
-  test: tests/test_persist_replace_date.py
-  evidencia: |
-    Bug detectado en XLI con GE/PWR/VRT: 14 filas en CSV vs 11 en
-    snapshot. Causa: append_dedup solo anade/reemplaza, no elimina
-    filas del historico no presentes en el df nuevo. Fix: parametro
-    replace_date=True borra filas de la fecha a reescribir antes del
-    append. Solo lo activan los 6 CSVs de holdings.
-    Post-fix: sum(count)=n_total en 100% de filas, 0 huerfanas.
-  verificacion: FIXED
-
+    (1) Enviar 59_pre_registro_reaccumulation.md al auditor
+        externo para revision. Sin firma, no se codifica. Esta
+        restriccion la fija el HANDOFF sesion 14 y prevalece
+        sobre cualquier plan previo de implementacion.
+    (2) Tras firma: implementar detector en indicators/ (familia
+        separada, sin tocar cascadas existentes ni
+        classify_wyckoff_phase).
+    (3) Tras firma: tests de contrato T1-T6 (uno por regla R1-R5
+        + test negativo).
+    (4) Tras firma: correr holdout reserved_cohort (268 tickers).
+        Si C1-C3 OK -> aplicar al pipeline. Si falla -> WONT_FIX
+        con razon medida en doc 59 (RESULTADO).
+    Estado actual: (1) pendiente. (2)-(4) bloqueados por (1).
+    Pre-registro listo para revision.
 - id: PCR-SKIP-NO-DATA
   tipo: auditoria_interna
   ciclo: '2026-10-26'
@@ -3044,4 +3032,131 @@ items:
     Bloque 4.2 reescrito con estado actual.
     Suite: 3832 passed, 2 skipped.
   siguiente_accion: |
-    Ninguna. El validador lee el fichero correcto.
+    Ninguna. El validador lee el fichero correcto.- id: AUTONOMY-RADAR-CATALOG-MAX-NEW-TOO-LOW
+  tipo: deuda_tecnica
+  ciclo: '2026-10-28'
+  estado: IN_PROGRESS
+  descripcion: |
+    El sanity check MAX_NEW=20 en scripts/regenerate_radar_catalog.py
+    aborta cuando el diff entre stock_prices.parquet y el catalogo
+    radar supera 20 nuevos. El cambio rompe el pipeline daily_run
+    desde 2026-10-27: xli_extra (28 tickers) + xlk_extra (DDOG) +
+    xlv_extra (MRNA) introdujeron 28 tickers declarados como nuevos
+    legitimos, que el sanity no distingue de anomalia.
+  evidencia: |
+    Reproducido en local (2026-10-28) con py
+    scripts/regenerate_radar_catalog.py:
+      [ABORT] nuevos=28 > MAX_NEW=20
+      Exit code: 1
+    El parquet tiene 283 tickers USA; el catalogo, 255. Los 28
+    coinciden exactamente con data/universe_expansions.yaml:xli_extra.
+    DDOG y MRNA ya estaban en parquet antes del yaml: no aparecen
+    en el diff.
+    Historial:
+    - 0066a643 (script original), 1f93267f (chequeo defensivo):
+      fijan MAX_NEW=20.
+    - 404dc7c5 (xli_extra 28 tickers) y 3d1365e7 (xlk_extra DDOG,
+      xlv_extra MRNA): introducen los declarados despues.
+    - 8a0a8b1d (26-10 17:23Z): ultimo daily_run success.
+    - 5 runs failure del 27-10 en adelante, todos en el step
+      "Regenerar catalogo radar (IAE)".
+  siguiente_accion: |
+    Fix: leer data/universe_expansions.yaml y excluir los tickers
+    declarados del conteo de nuevos que dispara el abort. Abortar
+    solo si nuevos_no_declarados > MAX_NEW. Test de regresion:
+    caso 28 declarados -> no aborta; caso 21 no declarados -> aborta;
+    caso mixto (15 declarados + 10 no) -> no aborta.
+    Si OK -> FIXED con SHA tras el run scheduled exitoso.
+
+- id: COMPLETION-ATTEMPT-NO-STEP-AWARENESS
+  tipo: deuda_tecnica
+  ciclo: '2026-10-28'
+  estado: OPEN
+  descripcion: |
+    write_completion_attempt.py emite outcome=INCOMPLETE con reason
+    sin receipt y sin causa identificada cuando el pipeline
+    falla, aunque haya un step en failure con causa observable en
+    el log. La causa real (step Regenerar catalogo radar, ABORT
+    por MAX_NEW) queda invisible en completion_attempt.jsonl.
+  evidencia: |
+    Run 40542990972 (27-10 16:39Z): completion_attempt.jsonl dice
+    reasons: [sin receipt y sin causa identificada].
+    Pero el step Regenerar catalogo radar (IAE) fallo con
+    [ABORT] nuevos=28 > MAX_NEW=20 y el resto de steps post-fallo
+    quedaron skipped por cascada.
+    Write_completion_attempt corre con if: always() y no consulta
+    el estado de los steps del job, solo contratos y guard_coverage.
+  siguiente_accion: |
+    Anadir al script: leer los jobs/steps del run via API de
+    GitHub (GH_TOKEN en el env del workflow) o desde el propio
+    entorno del job (GITHUB_ACTIONS env vars). Si hay algun step
+    en failure distinto de Write completion attempt, anotarlo
+    en reasons como FAILED_STEP:<name>. Test con mock de
+    job con step failed -> reasons lo refleja.
+
+- id: PARSE-SSGA-FEZ-TEST-MISSING
+  tipo: deuda_tecnica
+  ciclo: '2026-10-28'
+  estado: OPEN
+  descripcion: |
+    Los 27 mapeos ticker->Yahoo de parse_ssga_fez.py (commit
+    ee7aac87) no tienen test. Si un ticker nuevo entra en el CSV
+    FEZ sin mapeo, el parser lo pasa crudo a Yahoo y puede resolver
+    a un ADR americano erroneo (bug FEZ sesion 14). El test actual
+    test_scripts_sys_path.py solo verifica que el script importa
+    src.* desde cwd=scripts, no los mapeos.
+  evidencia: |
+    Grep sobre tests/: no hay test que verifique el mapeo
+    FEZ_TICKER_MAP ni la resolucion Yahoo de los 27. Solo el
+    generico test_generico_get_stock_list_incluye_tickers verifica
+    DDOG y MRNA, no FEZ.
+    Bug original: DG->Dollar General, EL->Estee Lauder,
+    BN->Brookfield, AD->Kroger. NDA-FI.HE excluido por D11.
+  siguiente_accion: |
+    Test que cargue el parser, lea el CSV FEZ actual, y falle si
+    algun ticker no tiene mapeo verificado contra Yahoo. Dataset
+    minimo: los 27 del commit ee7aac87 + NDA.FI excluido.
+
+- id: EU-INDEX-NO-CAP-TEST-MISSING
+  tipo: deuda_tecnica
+  ciclo: '2026-10-28'
+  estado: OPEN
+  descripcion: |
+    EU_INDEX_ETFS_NO_CAP en src/stock_data_loader.py hace que
+    FEZ, DAXEX, ISF.L y LYXI salten el .head(20) en get_stock_list.
+    No hay test que verifique que get_stock_list devuelve >20
+    tickers para los 4 ETFs EU, ni que SPY/QQQ/DIA/IWM siguen
+    con cap.
+  evidencia: |
+    Grep sobre tests/: EU_INDEX_ETFS_NO_CAP no aparece en ningun
+    test. Solo se verifico manualmente con py -c (commit d6c3ebb4):
+    get_stock_list 359 -> 471.
+    Regresion potencial: si alguien toca get_stock_list y no
+    preserva la excepcion, el bug solo 20 EU vuelve sin que
+    ningun test lo note.
+  siguiente_accion: |
+    Test unitario: mock de index_holdings.csv con 47 FEZ + 32 DAXEX
+    + 88 ISF.L + 35 LYXI. assert get_stock_list devuelve len>20
+    para los 4. assert SPY/QQQ/DIA/IWM siguen en 20.
+
+- id: TEST-SCRIPTS-SYS-PATH-DYNAMIC
+  tipo: deuda_tecnica
+  ciclo: '2026-10-28'
+  estado: OPEN
+  descripcion: |
+    tests/test_scripts_sys_path.py hardcodea 5 scripts. Si un sexto
+    script con import src.* sin sys.path entra al repo, el test no
+    lo detecta. La regresion c4f99795 (update_european_holdings.py
+    roto por falta de sys.path) no se manifesto hasta el schedule
+    trimestral.
+  evidencia: |
+    SCRIPTS_CON_SRC = [update_sector_holdings, update_index_holdings,
+    update_european_holdings, parse_ssga_fez, parse_blackrock_final].
+    El test ejecuta subprocess con cwd=scripts, runpy, y falla si
+    import src.* no resuelve. Hardcoded.
+  siguiente_accion: |
+    Hacer dinamico: escanear scripts/*.py via AST o regex buscando
+    from src. o import src. y que no tengan sys.path. Test que corra
+    el mismo subprocess por cada script encontrado.
+    Coste/beneficio bajo pero deuda real.
+
