@@ -156,7 +156,8 @@ def _compute_sector_breadth_health(df_stocks, df_market, holdings_df,
     # el propio except Exception de esta funcion lo silencia y
     # devuelve (None, False). Bug detectado en test_fase4.
     from src.utils import resolve_observation_date
-    reference_date = resolve_observation_date(reference_date)
+    # Regresion a6a8f017: mismo patron que data_loader. Valida, no reasigna.
+    _ = resolve_observation_date(reference_date)
 
     try:
         sb_path = (Path(output_path) if output_path is not None

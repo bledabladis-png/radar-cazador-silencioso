@@ -257,7 +257,9 @@ def download_market_data(reference_date=None, run_id=None):
     # FU-002 (2026-09-15): reference_date y run_id inyectados desde run.py:main().
     # Fase 4b P7 (2026-10-28): observacion. Raise si reference_date=None.
     from src.utils import resolve_observation_date
-    reference_date = resolve_observation_date(reference_date)
+    # Regresion a6a8f017: valida None (raise) pero NO reasigna a naive.
+    # download_market_data pasa tz-aware aguas abajo (is_session_closed).
+    _ = resolve_observation_date(reference_date)
     if run_id is None:
         run_id = reference_date.strftime('%Y%m%d_%H%M%S')
     parquet_path = 'data/market_data.parquet'
