@@ -11,7 +11,8 @@ Salidas:
   data/mappings/radar_target_catalog.csv  (vista del snapshot activo)
 
 Sanity checks (aborta sin escribir):
-  - nuevos > MAX_NEW (20)
+  - nuevos NO declarados > MAX_NEW (20). Los tickers en
+    data/universe_expansions.yaml son declarados y no cuentan.
   - desaparecidos > MAX_GONE (10)
   - todos los nuevos con status=MISS
 
@@ -28,6 +29,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 import pandas as pd
+import yaml
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
@@ -50,11 +52,39 @@ CATALOG_CSV = MAPPINGS / "radar_target_catalog.csv"
 MAX_NEW = 20
 MAX_GONE = 10
 
+UNIVERSE_EXPANSIONS = ROOT / "data" / "universe_expansions.yaml"
+
 def _load_current_catalog(path: Path) -> pd.DataFrame:
     """Carga el catalogo actual. Vacio si no existe."""
     if not path.exists():
         return pd.DataFrame(columns=list(COLUMNS))
     return pd.read_csv(path, dtype=str, keep_default_na=False)
+
+
+def _load_declared_tickers(path: Path | None = None) -> set:
+    """Tickers declarados en universe_expansions.yaml.
+
+    Estas expansiones son incorporaciones aprobadas y conocidas
+    (XLI, XLK, XLV...). No son anomalia y no deben disparar el
+    sanity MAX_NEW. El sanity aborta solo si los nuevos NO
+    declarados superan el umbral.
+    """
+    target = path if path is not None else UNIVERSE_EXPANSIONS
+    if not target.exists():
+        return set()
+    with target.open("r", encoding="utf-8") as f:
+        data = yaml.safe_load(f) or {}
+    declared = set()
+    for block in data.values():
+        if not isinstance(block, dict):
+            continue
+        tickers = block.get("tickers")
+        if not isinstance(tickers, list):
+            continue
+        for t in tickers:
+            if isinstance(t, str) and t:
+                declared.add(t)
+    return declared
 
 
 def _compute_diff(radar_tickers: list, catalog_df: pd.DataFrame) -> dict:
@@ -170,8 +200,13 @@ def main() -> int:
     print("  desaparecidos: " + str(len(diff["desaparecidos"])) + "  " + str(diff["desaparecidos"][:10]))
     print("  estables:      " + str(len(diff["estables"])))
 
-    if len(diff["nuevos"]) > MAX_NEW:
-        print(f"\n[ABORT] nuevos={len(diff['nuevos'])} > MAX_NEW={MAX_NEW}")
+    declarados = _load_declared_tickers()
+    nuevos_declarados = [t for t in diff["nuevos"] if t in declarados]
+    nuevos_no_declarados = [t for t in diff["nuevos"] if t not in declarados]
+    if nuevos_declarados:
+        print("  declarados:    " + str(len(nuevos_declarados)) + "  " + str(nuevos_declarados[:10]))
+    if len(nuevos_no_declarados) > MAX_NEW:
+        print(f"\n[ABORT] nuevos no declarados={len(nuevos_no_declarados)} > MAX_NEW={MAX_NEW}")
         return 1
     if len(diff["desaparecidos"]) > MAX_GONE:
         print(f"\n[ABORT] desaparecidos={len(diff['desaparecidos'])} > MAX_GONE={MAX_GONE}")

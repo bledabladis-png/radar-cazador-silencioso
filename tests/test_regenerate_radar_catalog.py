@@ -128,6 +128,9 @@ def _setup_env(tmp_path, monkeypatch):
     monkeypatch.setattr(rrc, "SNAPSHOTS", snapshots)
     monkeypatch.setattr(rrc, "MANIFEST", manifest)
     monkeypatch.setattr(rrc, "CATALOG_CSV", cat_path)
+    exp = mappings / "universe_expansions.yaml"
+    exp.write_text("", encoding="utf-8")
+    monkeypatch.setattr(rrc, "UNIVERSE_EXPANSIONS", exp)
     return mappings, snapshots, manifest, cat_path
 
 
@@ -229,3 +232,69 @@ def test_check_equity_only_ignora_status_no_ok():
 def test_check_equity_only_vacio():
     assert rrc._check_equity_only(pd.DataFrame()) == []
     assert rrc._check_equity_only(pd.DataFrame(columns=list(rrc.COLUMNS))) == []
+
+
+# --- _load_declared_tickers (fix MAX_NEW vs xli_extra) -------------
+
+def test_load_declared_tickers_sin_fichero(tmp_path):
+    p = tmp_path / "no_existe.yaml"
+    assert rrc._load_declared_tickers(p) == set()
+
+
+def test_load_declared_tickers_lee_bloques(tmp_path):
+    p = tmp_path / "exp.yaml"
+    p.write_text("xli_extra:\n  tickers:\n    - AME\n    - AXON\nxlk_extra:\n  tickers:\n    - DDOG\n", encoding="utf-8")
+    assert rrc._load_declared_tickers(p) == {"AME", "AXON", "DDOG"}
+
+
+def test_load_declared_tickers_ignora_bloques_invalidos(tmp_path):
+    p = tmp_path / "exp.yaml"
+    p.write_text("xli_extra:\n  fecha: x\nxlk_extra:\n  tickers: not-a-list\nxlv_extra:\n  tickers: [MRNA]\n", encoding="utf-8")
+    assert rrc._load_declared_tickers(p) == {"MRNA"}
+
+
+def test_main_28_declarados_no_aborta(tmp_path, monkeypatch):
+    """Caso real xli_extra: 28 tickers declarados -> no aborta."""
+    mappings, snapshots, manifest, cat_path = _setup_env(tmp_path, monkeypatch)
+    declarados = [f"D{i:03d}" for i in range(28)]
+    exp = mappings / "universe_expansions.yaml"
+    lines = ["xli_extra:", "  tickers:"] + [f"    - {t}" for t in declarados]
+    exp.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    monkeypatch.setattr(rrc, "load_radar_tickers", lambda p: ["T000", "T001"] + declarados)
+    monkeypatch.setattr(rrc, "map_identifiers", lambda *a, **k: {t: _hit_ok(t) for t in declarados})
+    monkeypatch.setattr("sys.argv", ["regenerate_radar_catalog.py", "--source-date", "2026-09-24"])
+    assert rrc.main() == 0
+
+
+def test_main_21_no_declarados_aborta(tmp_path, monkeypatch):
+    """21 no declarados > MAX_NEW=20 -> aborta."""
+    mappings, snapshots, manifest, cat_path = _setup_env(tmp_path, monkeypatch)
+    no_decl = [f"N{i:03d}" for i in range(21)]
+    monkeypatch.setattr(rrc, "load_radar_tickers", lambda p: ["T000", "T001"] + no_decl)
+    monkeypatch.setattr("sys.argv", ["regenerate_radar_catalog.py", "--source-date", "2026-09-24"])
+    assert rrc.main() == 1
+    assert not list(snapshots.glob("*.csv"))
+
+
+def test_main_20_no_declarados_boundary_no_aborta(tmp_path, monkeypatch):
+    """20 no declarados == MAX_NEW -> no aborta (boundary)."""
+    mappings, snapshots, manifest, cat_path = _setup_env(tmp_path, monkeypatch)
+    no_decl = [f"N{i:03d}" for i in range(20)]
+    monkeypatch.setattr(rrc, "load_radar_tickers", lambda p: ["T000", "T001"] + no_decl)
+    monkeypatch.setattr(rrc, "map_identifiers", lambda *a, **k: {t: _hit_ok(t) for t in no_decl})
+    monkeypatch.setattr("sys.argv", ["regenerate_radar_catalog.py", "--source-date", "2026-09-24"])
+    assert rrc.main() == 0
+
+
+def test_main_mixto_15_decl_y_10_no_decl_no_aborta(tmp_path, monkeypatch):
+    """15 declarados + 10 no declarados -> no aborta (solo cuenta 10)."""
+    mappings, snapshots, manifest, cat_path = _setup_env(tmp_path, monkeypatch)
+    declarados = [f"D{i:03d}" for i in range(15)]
+    no_decl = [f"N{i:03d}" for i in range(10)]
+    exp = mappings / "universe_expansions.yaml"
+    lines = ["xli_extra:", "  tickers:"] + [f"    - {t}" for t in declarados]
+    exp.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    monkeypatch.setattr(rrc, "load_radar_tickers", lambda p: ["T000", "T001"] + declarados + no_decl)
+    monkeypatch.setattr(rrc, "map_identifiers", lambda *a, **k: {t: _hit_ok(t) for t in declarados + no_decl})
+    monkeypatch.setattr("sys.argv", ["regenerate_radar_catalog.py", "--source-date", "2026-09-24"])
+    assert rrc.main() == 0
