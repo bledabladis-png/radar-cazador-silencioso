@@ -12,7 +12,7 @@ junto con `Consolidacion_Documentos/00_ARRANQUE.md`.
 Rama:            main
 HEAD:            consultar `git log --oneline -1` (no literal)
 Sincronizacion:  main == origin/main al cierre del ultimo commit.
-Tests:           3938 passed, 2 skipped (sin filtro; suite completa).
+Tests:           3956 passed, 2 skipped (sin filtro; suite completa).
                  Fuente autoritativa: Consolidacion_Documentos/ESTADO_SISTEMA.md
 CI HEAD:         verde (run mas reciente al cierre).
 Validation Gate: 11/11. Fuente: outputs/state/validation_gate_result.json.
@@ -44,9 +44,14 @@ Bug hunt codigo: 5 frentes cerrados sesion 15. P7 look-ahead (4
                  AST), except silenciosos (1, fail-close manifest),
                  cache freshness (1, tickers + CSV legacy), rate
                  limit (1, backoff + sleep). 14 bugs reales.
-Auditor externo: 4 docs con seccion de firma (57, 58, 59, 70-v2b,
-                 70-v2d, 73). 7 mensajes de envio preparados. Canal
-                 pendiente de decision del usuario.
+Auditor externo: SOW-HOLDOUT-IMMUTABLE v1.1 redactada (a5a26bdb)
+                 + doc 74 H-04/H-07 (93bc595d) + infraestructura
+                 H-01/H-02/H-03 en main (45d48c5d, d90f2600). Listo
+                 para enviar. SOW-BEAR v1.10.1 NO redactada.
+Backlog externo: docs/gobernanza/BACKLOG_BLOQUEADO_EXTERNO.md
+                 (43bf21e0). Vista unica de los 12 items bloqueados.
+                 Fuente canonica: REGISTRO.yaml. Regla: no se
+                 preparan mas versiones de contratos por si acaso.
 Parser EU:       FEZ con 27 mapeos Yahoo verificados + validacion
                  Yahoo (fix ee7aac87). NDA-FI.HE excluido por D11.
 
@@ -222,6 +227,61 @@ repo, decision del usuario).
 impacto bajo en src/, mas en scripts/), race conditions en
 escrituras atomicas (mitigado por fail-close de manifest).
 
+### 2.9. SOW-HOLDOUT-IMMUTABLE: H-01/H-02/H-03 resueltos + v1.1 (6 commits)
+
+**Dictamen externo 2026-10-28 (APROBADO CON CAMBIOS, requiere v1.1).**
+4 P0 + 4 hallazgos. Resueltos tecnicamente y redactada v1.1 en la
+misma sesion.
+
+**Infraestructura H-01/H-03 (45d48c5d):**
+- `scripts/audit/holdout_manifest.py`: SHA-256 + hash canonico +
+  tickers_sha256. Modos default/--verify/--update. No sobrescritura
+  silenciosa. Manifest versionado en `data/mappings/holdout_manifest.json`.
+- `scripts/audit/holdout_intersection.py`: interseccion exacta de
+  universos. `data/mappings/holdout_intersection.json`.
+- Datos reales: cohort 268, r3000 3423, interseccion 266, solo_cohort 2.
+- 11 tests en `tests/test_holdout_manifest_intersection.py`.
+
+**Fix CI (f7749f69):** los parquets reservados estan gitignored,
+no existen en CI. Skipif en los 2 tests que los hashean/leen.
+
+**Doc 74 H-04/H-07 (93bc595d):**
+- 5 hechos del analisis: SOW-V6 ya consumio la reserva (268/3423);
+  hueco temporal 2026-10-24 (parquets) vs 2026-10-06 (SOW-V6);
+  r3000 no es Russell 3000 (all_tickers.txt generico); cohort es
+  S&P 500 actual aplicado retroactivamente; docs 51-56 no mencionan
+  268/3423.
+- Decisiones auditor: H-04 opcion B (1 item por holdout con historial
+  de experimentos consumidos). H-07 opcion 1 (declarar poblacion
+  real + limitaciones, sin reconstruir historico).
+- Condiciones: hash actual verificable desde 2026-10-28, NUNCA como
+  hash historico de SOW-V6. SOW-BEAR-CONFIRMATION no puede figurar
+  como SEALED_UNRUN (diseno ya informado por SOW-V6).
+
+**H-02 capture_experiment_env.py (d90f2600):**
+- Captura: commit, prereg ancestro de HEAD (evidencia temporal),
+  requirements SHA-256, validators, modules, params por validador
+  via AST, sow_params, seed, holdout manifest.
+- Precondiciones fail-close: dirty sin --allow-dirty, prereg no
+  ancestro, holdout manifest ausente.
+- 7 tests en `tests/test_capture_experiment_env.py`.
+- Smoke real: 5 validators, cada uno con CANDIDATE={N:40,M:5,X_ATR:1.0,Y_VOL:1.1},
+  EMBARGO=50, H=20, 23 folds. Los 4 WYCKOFF_SOW_* en null (candidata
+  no activada en produccion).
+
+**Contrato v1.1 (a5a26bdb):**
+- Doc 58 v1.0 (259 lineas) -> v1.1 (482 lineas). 14 secciones.
+- H-01/H-03 referenciados. H-02/H-04/H-05/H-06/H-07/H-08 redactados.
+- Tests T6-T10 definidos en §9.2 (no implementados; el auditor no
+  los exige escritos para firmar v1.1, solo definidos).
+- SOW-HOLDOUT-IMMUTABLE sigue IN_PROGRESS hasta firma.
+
+**Consolidacion backlog (43bf21e0):**
+- `docs/gobernanza/BACKLOG_BLOQUEADO_EXTERNO.md`: 12 items bloqueados
+  en una tabla. Indice, no fuente canonica.
+- Regla: no se redactan mas versiones por si acaso. Solo envio cuando
+  el usuario decida canal.
+
 ## 3. FRENTES CERRADOS (acumulado)
 
 Sesiones previas (resumen):
@@ -344,12 +404,20 @@ Del dictamen H-04 (2026-10-26):
   scheduled que data/stock_prices.parquet contiene los 112.
   No verificable hasta que el pipeline complete un run scheduled
   exitoso con el step build_catalog_csvs ya añadido.
-- SOW-BEAR-CONFIRMATION (IN_PROGRESS): borrador contrato v1.10
-  (doc 57, caa0ec9e). Pendiente firma auditor externo. Sin
-  codigo hasta firma.
-- SOW-HOLDOUT-IMMUTABLE (IN_PROGRESS): borrador contrato (doc 58,
-  46b36409). Pendiente firma auditor externo. Sin promocion de
-  tickers hasta firma.
+- SOW-BEAR-CONFIRMATION (IN_PROGRESS): dictamen externo 2026-10-28
+  (APROBADO CON CAMBIOS, requiere v1.10.1). 3 P0 nuevos: universo
+  ETF vs constituyentes, parametros SOW explicitos, market proxy
+  fijo. v1.10.1 NO redactada. Pendiente decision del usuario.
+- SOW-HOLDOUT-IMMUTABLE (IN_PROGRESS): v1.1 redactada (a5a26bdb).
+  H-01/H-02/H-03 resueltos tecnicamente. Decisiones H-04/H-07 en
+  doc 74 (93bc595d). PENDIENTE: enviar v1.1 + doc 74 al auditor
+  externo. Sin firma v1.1, no se promueve ningun ticker desde
+  holdout.
+
+**Indice completo de bloqueos externos:**
+`docs/gobernanza/BACKLOG_BLOQUEADO_EXTERNO.md` (43bf21e0).
+12 items: 8 esperan auditor, 1 datos futuros, 1 decision de
+producto, 2 items internos. Ninguno bloquea el pipeline diario.
 
 ### 4.3. Deudas detectadas en sesion 15 (sin ticket)
 
@@ -406,8 +474,8 @@ Esperado:
 - HEAD = git log --oneline -1.
 - ahead 0, behind 0.
 - Working tree limpio.
-- Tests con filtro: ~3890 passed, 2 skipped, 13 deselected.
-- Tests sin filtro (autoritativo): 3938 passed, 2 skipped.
+- Tests con filtro: ~3908 passed, 2 skipped, 13 deselected.
+- Tests sin filtro (autoritativo): 3956 passed, 2 skipped.
 - Gobernanza: [OK].
 - Indice H1-H18: [OK].
 - Bitacora: [OK].

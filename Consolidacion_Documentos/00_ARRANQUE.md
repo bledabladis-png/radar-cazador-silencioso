@@ -292,6 +292,44 @@ QQQ n=41, DIA n=20).
 
 Suite: 3845 passed, 2 skipped (sin filtro). Con filtro: 3832 passed.
 
+**Sesion 15 (2026-10-28): saneamiento + bug hunt + gobernanza.**
+
+4 bugs P0 del pipeline resueltos: MAX_NEW vs xli_extra (64866361),
+.schema gitignored -> migracion en CI (b246154c), daily_run sin
+build_catalog_csvs (9e456745), REGISTRO corrompido por append sin
+separador (61de4d7a). Validador de gobernanza reforzado: 2 checks
+nuevos (ids embebidos, SHA no-string). 4 tickets de deuda cerrados:
+PARSE-SSGA-FEZ, EU-INDEX-NO-CAP, TEST-SCRIPTS-SYS-PATH,
+COMPLETION-ATTEMPT-NO-STEP-AWARENESS.
+
+Bug hunt de codigo: 5 frentes cerrados, 14 bugs reales.
+- P7 look-ahead (1cd608bc, 86ff433c, cee53c02, a4a28d9e,
+  a6a8f017): iloc[-N:] con huecos, endDate NY Fed, resolve_
+  observation_date vs resolve_reference_date (7 funciones
+  migradas), bug de propagacion del raise.
+- Except silenciosos (b8b0de96): fail-close manifest, str(be),
+  run.py pass->print.
+- Cache freshness (4150a68e): validacion de tickers en cache-hit,
+  CSV legacy eliminado, CACHE_MIN_COVERAGE.
+- Rate limiting (780930e6): backoff desde attempt+1, sleep entre
+  retries individuales.
+Guards AST en tests/test_p7_ast_guard.py, test_fase4_observacion_
+vs_formato.py, test_write_artifact_fail_on_invalid.py, test_cache_
+freshness_audit.py, test_retry_rate_limit_audit.py.
+
+SOW-HOLDOUT-IMMUTABLE: dictamen externo recibido (APROBADO CON
+CAMBIOS, requiere v1.1). H-01/H-02/H-03 resueltos tecnicamente.
+Doc 74 con decisiones H-04/H-07. v1.1 redactada. Doc 58 v1.0
+(259 lineas) -> v1.1 (482 lineas). Pendiente envio al auditor.
+SOW-BEAR-CONFIRMATION: dictamen externo recibido (APROBADO CON
+CAMBIOS, requiere v1.10.1). v1.10.1 NO redactada (3 P0 nuevos).
+
+Backlog bloqueado externo consolidado en
+`docs/gobernanza/BACKLOG_BLOQUEADO_EXTERNO.md` (43bf21e0): 12
+items, ninguno bloquea el pipeline diario.
+
+Suite: 3880 -> 3956 passed. CI verde al cierre.
+
 ---
 ## 4. PENDIENTE (DESGLOSE)
 

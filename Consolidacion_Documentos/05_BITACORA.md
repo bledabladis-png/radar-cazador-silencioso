@@ -83,6 +83,56 @@ Al cerrar una sesion nueva, se anade arriba (las mas recientes primero). Si hay 
 2. Verificar el step Regenerar catalog CSVs en el scheduled.
 3. Si ambos OK: EU-HOLDINGS-DOWNLOAD-CAP verificable -> cerrar.
 
+### 2026-10-28 (continuacion) - Sesion 15 parte 2: bug hunt + SOW-HOLDOUT
+
+**Objetivo.** Continuar el saneamiento iniciado en la primera mitad
+del dia. Derivado a: bug hunt de codigo + respuesta a 2 dictamenes
+externos del mismo dia.
+
+**Hecho.**
+
+Bug hunt de codigo (5 frentes, 14 bugs reales, guards AST):
+- P7 look-ahead (4 commits): iloc[-N:] con huecos
+  (slice_last_n_sessions), endDate NY Fed determinista,
+  resolve_observation_date vs resolve_reference_date (7 funciones
+  migradas), bug de propagacion del raise en 3 funciones.
+- Except silenciosos (1): fail-close manifest, str(be),
+  run.py pass->print.
+- Cache freshness (1): validacion de tickers en cache-hit, CSV
+  legacy eliminado, CACHE_MIN_COVERAGE.
+- Rate limiting (1): backoff desde attempt+1, sleep entre retries
+  individuales (try/finally).
+
+SOW-HOLDOUT-IMMUTABLE (6 commits):
+- Infraestructura H-01/H-03: holdout_manifest.py (SHA-256 +
+  hash canonico), holdout_intersection.py (interseccion 266/268).
+- Fix CI: skipif en tests que hashean parquets gitignored.
+- Doc 74: 5 hechos del analisis + decisiones H-04 (opcion B con
+  historial) y H-07 (declarar poblacion real).
+- H-02: capture_experiment_env.py (commit, prereg ancestro de
+  HEAD, requirements SHA, validators, modules, params, seed,
+  holdout manifest).
+- Contrato v1.1 redactado: doc 58 de 259 -> 482 lineas, 14
+  secciones, H-01..H-08.
+- Backlog bloqueado externo consolidado en 1 documento (12 items,
+  indice unico).
+
+**Commits (parte 2).** 1cd608bc, 86ff433c, cee53c02, a4a28d9e,
+a6a8f017, b8b0de96, 4150a68e, 780930e6, 45d48c5d, f7749f69,
+93bc595d, d90f2600, a5a26bdb, 43bf21e0.
+
+**Pendiente.**
+- Enviar v1.1 SOW-HOLDOUT + doc 74 al auditor externo (canal).
+- SOW-BEAR v1.10.1: no redactar hasta decision del usuario.
+- Tests T6-T10 de SOW-HOLDOUT: no implementar hasta firma v1.1.
+- Verificar proximo run scheduled (~04-06Z): .schema append,
+  Regenerar catalog CSVs, EU-HOLDINGS-DOWNLOAD-CAP.
+
+**Proximo paso sugerido.**
+1. Enviar v1.1 + doc 74 al auditor (usuario).
+2. Verificar proximo run scheduled (operativo).
+3. Backlog externo en BACKLOG_BLOQUEADO_EXTERNO.md como indice.
+
 ### 2026-10-27 (sesion 14) - 9 tickets cerrados + 5 bugs reales + 3 docs contrato
 
 **Objetivo.** Aprovechar nucleos del procesador para tests (derivado
