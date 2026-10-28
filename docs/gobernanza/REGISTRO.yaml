@@ -2738,10 +2738,54 @@ items:
     2 nadie, 3 pocas barras; corrige el 7/44/1 del ticket previo),
     condiciones de promocion P1-P4, tests T1-T5, procedimiento,
     firma, impacto en TOP20-FALTANTES-DATOS, estado normativo.
+
+    --- 2026-10-28: dictamen externo recibido (APROBADO CON
+    CAMBIOS, requiere v1.1). 4 P0 (H-01..H-04) + 4 hallazgos
+    (H-05..H-08). H-01 y H-03 resueltos tecnicamente:
+
+    - scripts/audit/holdout_manifest.py + data/mappings/holdout_
+      manifest.json (commit 45d48c5d): SHA-256 + hash canonico +
+      tickers_sha256. Modos default/--verify/--update. No
+      sobrescritura silenciosa.
+    - scripts/audit/holdout_intersection.py + data/mappings/
+      holdout_intersection.json (commit 45d48c5d): interseccion
+      exacta. Interseccion 266/268, solo_cohort=2.
+    - 11 tests (tests/test_holdout_manifest_intersection.py).
+      CI verde (f7749f69).
+
+    Decisiones H-04 y H-07 registradas en doc 74:
+
+    - H-04 opcion B: 1 item por holdout con historial de
+      experimentos consumidos. Estados derivados SEALED (lista
+      vacia) / CONSUMED (lista no vacia) / RETIRED.
+    - H-07 opcion 1: declarar poblacion real, sin reconstruir
+      historico. cohort = S&P 500 actual (2026-10-24) aplicado
+      retrospectivamente. r3000 = all_tickers.txt (generica US)
+      menos extended; nombre heredado, no es Russell 3000.
+
+    Dos condiciones del auditor sobre H-04:
+    1. Hash actual verificable desde 2026-10-28, NUNCA como hash
+       historico de SOW-V6.
+    2. SOW-BEAR-CONFIRMATION no puede figurar como SEALED_UNRUN:
+       su diseno ya esta informado por resultados de SOW-V6.
+       Distinguir uso exploratorio de ejecucion confirmatoria.
+
+    Hechos registrados en doc 74 (secciones 3.1-3.5):
+    - SOW-V6 ya consumio la reserva (268/3423).
+    - Hueco temporal: parquets 2026-10-24 vs SOW-V6 2026-10-06.
+    - "r3000" no es Russell 3000.
+    - "cohort" es composicion actual aplicada retroactivamente.
+    - Docs 51-56 no mencionan 268/3423/cohort/r3000 (hueco de
+      trazabilidad documental).
+
+    SOW-HOLDOUT-IMMUTABLE sigue IN_PROGRESS hasta firma v1.1.
   siguiente_accion: |
-    Enviar 58_contrato_holdout_inmutable.md al auditor externo.
-    Sin firma, no se promueve ningun ticker desde holdout. Si
-    aprueba -> FIXED con SHA. Si rechaza -> WONT_FIX con razon.
+    Redactar v1.1 del contrato (doc 58 revisado) con H-02, H-04,
+    H-05, H-06, H-07, H-08 resueltos. Referenciar H-01 y H-03
+    (infraestructura ya en main, commit 45d48c5d). Decisiones
+    H-04 y H-07 registradas en doc 74. Enviar v1.1 al auditor.
+    Sin firma v1.1, no se promueve ningun ticker desde holdout.
+    Si aprueba v1.1 -> FIXED con SHA. Si rechaza -> WONT_FIX.
 - id: GOVERNANZA-CI-NO-STEP
   tipo: deuda_tecnica
   ciclo: '2026-10-26'
