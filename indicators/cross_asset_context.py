@@ -69,9 +69,10 @@ def compute_cross_asset_context(df_market, windows=(20, 60), min_obs_ratio=0.75,
     detail_rows = []
     summary_rows = []
 
+    from src.market_calendar import slice_last_n_sessions
     for window in windows:
         min_obs = max(int(window * min_obs_ratio), 5)
-        panel = returns_df.iloc[-window:]
+        panel = slice_last_n_sessions(returns_df, window)
 
         for sector in SECTORS:
             if sector not in panel.columns:

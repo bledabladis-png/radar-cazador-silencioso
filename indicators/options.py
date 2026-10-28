@@ -168,9 +168,12 @@ def compute_pcr_signals(persist_history=False):
 
         momentum = z_series.ewm(span=5).mean().iloc[-1]
 
-        percentile = (pcr_ewm.iloc[-window:] < pcr_ewm.iloc[-1]).mean() * 100
+        from src.market_calendar import slice_last_n_sessions
+        _pcr_window = slice_last_n_sessions(pcr_ewm, window)
+        percentile = (_pcr_window < pcr_ewm.iloc[-1]).mean() * 100
         if len(pcr_ewm) >= 15:
-            percentile_20d = (pcr_ewm.iloc[-20:] < pcr_ewm.iloc[-1]).mean() * 100
+            _pcr_20 = slice_last_n_sessions(pcr_ewm, 20)
+            percentile_20d = (_pcr_20 < pcr_ewm.iloc[-1]).mean() * 100
         else:
             percentile_20d = np.nan
         state = classify_pcr(z)

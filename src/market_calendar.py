@@ -199,6 +199,50 @@ def get_trading_days(start, end):
     bdays = pd.bdate_range(start_ts, end_ts)
     return pd.DatetimeIndex([d for d in bdays if is_market_day(d.date())])
 
+def slice_last_n_sessions(df, n):
+    """Ultimas `n` SESIONES de `df`, reindexando al calendario NYSE.
+
+    P7-ROLLING-WINDOW-GAPS (2026-10-28): helper extraido del fix previo
+    de sector_correlation.py. Sin reindex, `df.iloc[-n:]` toma las
+    ultimas n FILAS. Si `df` tiene huecos (festivos cruzados US/EU,
+    input vacio, ticker suspendido), esas n filas cubren mas de n
+    dias naturales y la ventana no es homogenea entre ejecuciones.
+
+    Contrato:
+    - `df` puede ser pd.DataFrame o pd.Series.
+    - Reindexa al calendario NYSE entre `df.index.min()` y
+      `df.index.max()`. Filas faltantes = NaN. Devuelve las ultimas
+      `n` sesiones.
+    - Si `df` es None o vacio, lo devuelve tal cual.
+    - Si el indice no es DatetimeIndex (o get_trading_days falla por
+      tz rara), fallback conservador a `df.iloc[-n:]`.
+    - No lanza. El caller puede confiar en que el shape es
+      `min(n, len(df_alineado))`.
+
+    Uso:
+        panel = slice_last_n_sessions(returns_df, 60)
+        # equivale a reindex al calendario + iloc[-60:] sobre sesiones
+    """
+    if df is None or len(df) == 0:
+        return df
+    if n <= 0:
+        return df.iloc[0:0]
+    if not isinstance(df.index, pd.DatetimeIndex):
+        # Indice no temporal: no tiene sentido reindexar al calendario.
+        # Fallback: comportamiento anterior (iloc[-n:]).
+        return df.iloc[-n:]
+    try:
+        start = df.index.min()
+        end = df.index.max()
+        sessions = get_trading_days(start, end)
+        if len(sessions) == 0:
+            return df.iloc[-n:]
+        return df.reindex(sessions).iloc[-n:]
+    except Exception:
+        # tz-aware vs naive, calendario vacio, etc. Fallback conservador.
+        return df.iloc[-n:]
+
+
 def _last_market_session(d):
     """FU-007/FU-007-b (2026-09-13): retrocede al ultimo dia bursatil <= d.
 
