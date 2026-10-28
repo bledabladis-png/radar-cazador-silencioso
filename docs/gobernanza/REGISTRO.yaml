@@ -2780,12 +2780,14 @@ items:
 
     SOW-HOLDOUT-IMMUTABLE sigue IN_PROGRESS hasta firma v1.1.
   siguiente_accion: |
-    Redactar v1.1 del contrato (doc 58 revisado) con H-02, H-04,
-    H-05, H-06, H-07, H-08 resueltos. Referenciar H-01 y H-03
-    (infraestructura ya en main, commit 45d48c5d). Decisiones
-    H-04 y H-07 registradas en doc 74. Enviar v1.1 al auditor.
-    Sin firma v1.1, no se promueve ningun ticker desde holdout.
-    Si aprueba v1.1 -> FIXED con SHA. Si rechaza -> WONT_FIX.
+    2026-10-28 (sesion 15): v1.1 redactada (commit a5a26bdb).
+    Infraestructura H-01/H-03 en main (45d48c5d). H-02 resuelto
+    con capture_experiment_env.py (d90f2600). Decisiones H-04/H-07
+    en doc 74 (93bc595d). PENDIENTE: enviar v1.1 + doc 74 al
+    auditor externo por el canal habitual. Sin firma v1.1, no se
+    promueve ningun ticker desde holdout. Si aprueba v1.1 ->
+    FIXED con SHA. Si rechaza -> WONT_FIX. Si aprueba con cambios
+    -> v1.2.
 - id: GOVERNANZA-CI-NO-STEP
   tipo: deuda_tecnica
   ciclo: '2026-10-26'
