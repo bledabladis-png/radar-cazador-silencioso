@@ -1,4 +1,4 @@
-from src.utils import resolve_reference_date
+from src.utils import resolve_observation_date
 # -*- coding: utf-8 -*-
 """Fase 11 del pipeline: Validation Gate (10 comprobaciones) + audit
 double-counting.
@@ -40,7 +40,7 @@ def run_validation_gate(wyckoff_holdings_data, pcr_data, darkpool_data, mte_resu
     # reference_date tz-aware (ZoneInfo Europe/Madrid). pd.Timestamp(week)
     # y pd.Timestamp(last_date) son naive. Sin replace(tzinfo=None),
     # _ref - d lanza TypeError, capturado por los except de L129 y L147.
-    _ref = resolve_reference_date(reference_date)
+    _ref = resolve_observation_date(reference_date)
     print("Ejecutando Validation Gate...")
     validation_errors = []
     validation_checks = []

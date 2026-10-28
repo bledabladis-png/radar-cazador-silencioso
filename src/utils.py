@@ -31,6 +31,44 @@ def resolve_reference_date(reference_date):
         return reference_date.replace(tzinfo=None)
     return reference_date
 
+def resolve_observation_date(reference_date):
+    """Devuelve reference_date normalizado (naive) o raise si None.
+
+    Fase 4 P7 (2026-10-28): separacion observacion vs formato.
+    - resolve_reference_date (fallback a now si None): funciones de
+      formato/render. El "now" solo afecta al timestamp del texto
+      renderizado, no a datos del sistema. Ejemplo: la fecha que
+      aparece en el reporte, o la antiguedad de una fuente en una
+      tabla de frescura.
+    - resolve_observation_date (raise si None): funciones de
+      OBSERVACION. Su output alimenta CSVs/parquet/state persistente
+      y debe ser determinista dado un snapshot. Si reference_date
+      no llega, el resultado dependeria de now() y rompe el contrato
+      "toda fecha de observacion se deriva del dataset".
+
+    Contrato:
+    - reference_date con tz -> normalizado a naive (coherente con
+      resolve_reference_date, mismo tratamiento).
+    - reference_date sin tz -> tal cual.
+    - reference_date None -> ValueError.
+
+    Regla: si una funcion escribe un fichero versionado/gitignored
+    en outputs/history, outputs/state, data/*.parquet, o data/*.csv,
+    debe usar resolve_observation_date. Si solo formatea texto, puede
+    usar resolve_reference_date.
+    """
+    if reference_date is None:
+        raise ValueError(
+            "resolve_observation_date: reference_date=None. "
+            "Fase 4 P7: la observacion no puede derivarse de now(). "
+            "Todo caller del pipeline debe pasar reference_date "
+            "explicito derivado del run (run.py:main)."
+        )
+    if getattr(reference_date, "tzinfo", None) is not None:
+        return reference_date.replace(tzinfo=None)
+    return reference_date
+
+
 def _last_row_coverage_ok(df, min_coverage=0.90):
     """Fix M (2026-10-01): True si la ultima fila tiene cobertura >= min.
 

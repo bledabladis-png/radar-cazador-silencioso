@@ -9,6 +9,7 @@ Sub-llamadas mockeadas. Se verifica:
 """
 import sys
 from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo
 from pathlib import Path
 from unittest.mock import patch
 
@@ -317,6 +318,8 @@ def test_compute_mte_ok(tmp_path, monkeypatch):
         out = mc._compute_mte(
             df_market=pd.DataFrame(), financial_score=0.5,
             all_signals=pd.DataFrame(), pcr_data=None, darkpool_data=None,
+            # Fase 4 P7: _compute_mte es observacion (state MTE).
+            reference_date=datetime.now(ZoneInfo("Europe/Madrid")),
         )
     assert out == fake
 
@@ -334,6 +337,9 @@ def test_compute_mte_darkpool_archival_excluido(tmp_path, monkeypatch):
             df_market=pd.DataFrame(), financial_score=0.5,
             all_signals=pd.DataFrame(), pcr_data=None,
             darkpool_data={"week": old_week},
+            # Fase 4 P7: _compute_mte es observacion (state MTE).
+            # Fecha actual para que old_week (now-30d) sea > 14d.
+            reference_date=datetime.now(ZoneInfo("Europe/Madrid")),
         )
     assert captured["darkpool"] is None
 

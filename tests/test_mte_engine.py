@@ -15,6 +15,8 @@ from pathlib import Path
 
 import pandas as pd
 import pytest
+from datetime import datetime
+from zoneinfo import ZoneInfo
 
 
 FIXTURES = Path(__file__).resolve().parent / "fixtures"
@@ -112,6 +114,8 @@ class TestComputeMteAgainstGolden:
         result = _compute_mte(
             input_df, financial_score, all_signals,
             pcr_data, darkpool_data, temporal_meta=temporal_meta,
+            # Fase 4 P7: _compute_mte es observacion (state MTE).
+            reference_date=datetime.now(ZoneInfo("Europe/Madrid")),
         )
 
         assert result is not None, "compute_mte devolvio None"

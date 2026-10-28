@@ -212,6 +212,10 @@ def test_flows_secondary_qqq_performance_omitido_si_antiguo(tmp_path, monkeypatc
         sector_flow_rank=None, etf_primary_flow_data=None,
         cftc_position_flow_data=None, blackrock_dax_flow=None,
         blackrock_isf_flow=None, amundi_lyxi_flow=None,
+        # Fase 4 P7: compute_flows_secondary es observacion
+        # (escribe flows_secondary.csv). reference_date required.
+        # Fecha actual para que fresh_ts (now) sea <= 7d.
+        reference_date=datetime.now(),
     )
     assert out["qqq_performance_data"] is None
 
@@ -227,6 +231,10 @@ def test_flows_secondary_qqq_performance_cargado_si_reciente(tmp_path, monkeypat
         sector_flow_rank=None, etf_primary_flow_data=None,
         cftc_position_flow_data=None, blackrock_dax_flow=None,
         blackrock_isf_flow=None, amundi_lyxi_flow=None,
+        # Fase 4 P7: compute_flows_secondary es observacion
+        # (escribe flows_secondary.csv). reference_date required.
+        # Fecha actual para que fresh_ts (now) sea <= 7d.
+        reference_date=datetime.now(),
     )
     assert out["qqq_performance_data"] is not None
 

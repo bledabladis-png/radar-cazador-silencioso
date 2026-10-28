@@ -20,6 +20,10 @@ import pandas as pd
 from src.pipeline.validation_gate import run_validation_gate
 
 
+from zoneinfo import ZoneInfo
+_REF_GATE = __import__('datetime').datetime(2026, 9, 10, tzinfo=ZoneInfo('Europe/Madrid'))
+
+
 def _base_kwargs():
     """Datos sinteticos que pasan el Gate sin errores."""
     return dict(
@@ -47,6 +51,11 @@ def _base_kwargs():
         mte_result={"msi": 35.0, "ipi": 70.0},
         tactical_scores={"XLK": 0.5, "XLE": 0.2},
         structural_scores={"XLK": 0.6, "XLE": 0.3},
+        # Fase 4 P7 (2026-10-28): run_validation_gate es observacion
+        # (escribe validation_gate_result.json). reference_date required.
+        # Coherente con pcr_data.last_date (2026-09-10) y darkpool.week
+        # (2026-08-18) del propio fixture.
+        reference_date=_REF_GATE,
     )
 
 

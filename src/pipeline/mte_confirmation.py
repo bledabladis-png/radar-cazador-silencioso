@@ -6,7 +6,7 @@ Extraido de run.py (refactor C2, fase C2-10a).
 
 import pandas as pd
 
-from src.utils import detect_cross_module_conflict, resolve_reference_date
+from src.utils import detect_cross_module_conflict, resolve_observation_date
 
 
 def _compute_mte(df_market, financial_score, all_signals, pcr_data, darkpool_data, temporal_meta=None, reference_date=None):
@@ -35,7 +35,7 @@ def _compute_mte(df_market, financial_score, all_signals, pcr_data, darkpool_dat
         # reference_date tz-aware (ZoneInfo Europe/Madrid). pd.Timestamp
         # (week) es naive. Sin replace(tzinfo=None), _ref - d lanza
         # TypeError, capturado por el except de L48 -> skip silencioso.
-        _ref = resolve_reference_date(reference_date)
+        _ref = resolve_observation_date(reference_date)
         if darkpool_data:
             week = darkpool_data.get('week', '')
             if week:
