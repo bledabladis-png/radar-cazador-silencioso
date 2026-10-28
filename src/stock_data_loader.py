@@ -788,6 +788,16 @@ def download_stock_prices(reference_date=None, run_id=None):
                         classification_reasons[ticker] = reason
             except Exception as e:
                 print(f'  [WARN] stock_data_loader: {ticker}: {e}')
+            finally:
+                # Fix 2026-10-28 (rate-limit-audit): sin sleep entre
+                # retries individuales. Si N tickers fallan en el
+                # batch pass, se hacian N requests single-ticker
+                # back-to-back -> Yahoo 429 garantizado. finally:
+                # se ejecuta tambien con `continue` (ticker empty,
+                # sin close, UNKNOWN market, etc.). Con try/except a
+                # secas, el continue saltaria el sleep y volveria al
+                # rate-limit.
+                time.sleep(delay)
 
     # Cascada europea: descarga los europeos desde fuentes oficiales.
     # Yahoo ya NO los ha descargado (Europa primero), asi que no hay
