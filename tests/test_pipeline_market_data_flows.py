@@ -8,6 +8,7 @@ argumentos y sintesis de flujo.
 import os
 import sys
 from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo
 from pathlib import Path
 from unittest.mock import patch
 
@@ -97,6 +98,7 @@ def test_flows_secondary_devuelve_4_keys(tmp_path, monkeypatch):
         blackrock_dax_flow=None,
         blackrock_isf_flow=None,
         amundi_lyxi_flow=None,
+        reference_date=datetime(2026, 10, 27, tzinfo=ZoneInfo('Europe/Madrid')),
     )
     assert set(out.keys()) == {
         "flow_synthesis", "nport_position_change_data",
@@ -112,6 +114,7 @@ def test_flows_secondary_confidence_alta_cuando_3_signos_coinciden(tmp_path, mon
         blackrock_dax_flow=None,
         blackrock_isf_flow=None,
         amundi_lyxi_flow=None,
+        reference_date=datetime(2026, 10, 27, tzinfo=ZoneInfo('Europe/Madrid')),
     )
     assert out["flow_synthesis"]["confidence"] == "ALTA"
 
@@ -125,6 +128,7 @@ def test_flows_secondary_confidence_media_cuando_2_coinciden(tmp_path, monkeypat
         blackrock_dax_flow=None,
         blackrock_isf_flow=None,
         amundi_lyxi_flow=None,
+        reference_date=datetime(2026, 10, 27, tzinfo=ZoneInfo('Europe/Madrid')),
     )
     assert out["flow_synthesis"]["confidence"] == "MEDIA"
 
@@ -138,6 +142,7 @@ def test_flows_secondary_confidence_baja_sin_coincidencias(tmp_path, monkeypatch
         blackrock_dax_flow=None,
         blackrock_isf_flow=None,
         amundi_lyxi_flow=None,
+        reference_date=datetime(2026, 10, 27, tzinfo=ZoneInfo('Europe/Madrid')),
     )
     assert out["flow_synthesis"]["confidence"] == "BAJA"
 
@@ -151,6 +156,7 @@ def test_flows_secondary_cftc_sign_promedio(tmp_path, monkeypatch):
         blackrock_dax_flow=None,
         blackrock_isf_flow=None,
         amundi_lyxi_flow=None,
+        reference_date=datetime(2026, 10, 27, tzinfo=ZoneInfo('Europe/Madrid')),
     )
     assert out["flow_synthesis"]["cftc_flow_sign"] == pytest.approx(0.4)
 
@@ -164,6 +170,7 @@ def test_flows_secondary_european_sign_promedio(tmp_path, monkeypatch):
         blackrock_dax_flow=pd.DataFrame({"flow_zscore": [0.1, 0.3]}),
         blackrock_isf_flow=pd.DataFrame({"flow_zscore": [-0.2, -0.4]}),
         amundi_lyxi_flow=pd.DataFrame({"flow_zscore": [0.2, 0.5]}),
+        reference_date=datetime(2026, 10, 27, tzinfo=ZoneInfo('Europe/Madrid')),
     )
     # ultimos: 0.3, -0.4, 0.5 -> mean = 0.4/3 ≈ 0.1333
     assert out["flow_synthesis"]["european_flow_sign"] == pytest.approx(0.4 / 3, abs=1e-6)
@@ -180,6 +187,7 @@ def test_flows_secondary_european_sign_ignora_nan(tmp_path, monkeypatch):
         blackrock_dax_flow=pd.DataFrame({"flow_zscore": [0.1, 0.5]}),
         blackrock_isf_flow=pd.DataFrame({"flow_zscore": [-0.3, -0.5]}),
         amundi_lyxi_flow=pd.DataFrame({"flow_zscore": [0.2, float("nan")]}),
+        reference_date=datetime(2026, 10, 27, tzinfo=ZoneInfo('Europe/Madrid')),
     )
     # ultimos: 0.5, -0.5, NaN -> solo 2 validos -> mean = 0.0
     assert out["flow_synthesis"]["european_flow_sign"] == pytest.approx(0.0, abs=1e-6)
@@ -196,6 +204,7 @@ def test_flows_secondary_european_sign_todos_nan(tmp_path, monkeypatch):
         blackrock_dax_flow=pd.DataFrame({"flow_zscore": [0.1, float("nan")]}),
         blackrock_isf_flow=pd.DataFrame({"flow_zscore": [-0.2, float("nan")]}),
         amundi_lyxi_flow=pd.DataFrame({"flow_zscore": [0.2, float("nan")]}),
+        reference_date=datetime(2026, 10, 27, tzinfo=ZoneInfo('Europe/Madrid')),
     )
     import math
     assert math.isnan(out["flow_synthesis"]["european_flow_sign"])

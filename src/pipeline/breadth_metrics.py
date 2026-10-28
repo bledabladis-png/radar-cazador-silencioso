@@ -4,8 +4,6 @@
 Extraido de run.py (refactor C2, fase C2-7c).
 """
 
-from datetime import datetime
-from zoneinfo import ZoneInfo
 from pathlib import Path
 
 import pandas as pd
@@ -147,16 +145,20 @@ def _compute_sector_breadth_health(df_stocks, df_market, holdings_df,
         output_path: ruta alternativa para tests. Por defecto
                      'outputs/history/sector_breadth.csv'.
     """
+    # Early return: df_stocks vacio no es observacion. No requiere
+    # reference_date. Va ANTES del raise (sino test_sbh_df_stocks_none
+    # y test_sbh_df_stocks_vacio rompen: pasan df=None con ref=None
+    # esperando early-return).
+    if df_stocks is None or df_stocks.empty:
+        return (None, False, None) if return_reason else (None, False)
+
+    # Fase 4b P7 (2026-10-28): el raise va ANTES del try. Si no,
+    # el propio except Exception de esta funcion lo silencia y
+    # devuelve (None, False). Bug detectado en test_fase4.
+    from src.utils import resolve_observation_date
+    reference_date = resolve_observation_date(reference_date)
+
     try:
-        if df_stocks is None or df_stocks.empty:
-            return (None, False, None) if return_reason else (None, False)
-
-        if reference_date is None:
-            # S-02c (2026-10-03): tz-aware por coherencia con run.py:43.
-            # El caller productivo (run.py:140) siempre pasa reference_date;
-            # este fallback solo se activa en tests o uso aislado.
-            reference_date = datetime.now(ZoneInfo("Europe/Madrid"))
-
         sb_path = (Path(output_path) if output_path is not None
                    else Path('outputs/history/sector_breadth.csv'))
 

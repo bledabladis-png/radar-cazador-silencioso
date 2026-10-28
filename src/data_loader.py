@@ -1,6 +1,5 @@
 ﻿import pandas as pd
 from datetime import datetime, timedelta
-from zoneinfo import ZoneInfo
 import os
 import time
 from config.tickers import MARKET_TICKERS
@@ -256,8 +255,9 @@ def _check_khuerfano(data_batch, batch, expected_session):
 
 def download_market_data(reference_date=None, run_id=None):
     # FU-002 (2026-09-15): reference_date y run_id inyectados desde run.py:main().
-    if reference_date is None:
-        reference_date = datetime.now(ZoneInfo("Europe/Madrid"))
+    # Fase 4b P7 (2026-10-28): observacion. Raise si reference_date=None.
+    from src.utils import resolve_observation_date
+    reference_date = resolve_observation_date(reference_date)
     if run_id is None:
         run_id = reference_date.strftime('%Y%m%d_%H%M%S')
     parquet_path = 'data/market_data.parquet'

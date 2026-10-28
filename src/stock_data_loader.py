@@ -32,7 +32,6 @@ from src.external.lse_scraper_loader import (
     aplicar_override_close,
     write_lse_provenance,
 )
-from zoneinfo import ZoneInfo
 import os
 import time
 
@@ -579,9 +578,15 @@ def download_stock_prices(reference_date=None, run_id=None):
     # B1 (2026-09-12): reference_date se normaliza UNA vez al inicio.
     # FU-018-3c (2026-09-15): tz-aware en horario Madrid. Requerido por
     # market_hours.is_session_closed. Default Madrid-aware para callers
-    # que no pasan argumento. Si no se pasa, se resuelve a now() Madrid.
+    # que no pasan argumento.
+    # Fase 4b P7 (2026-10-28): observacion. Raise si reference_date=None.
+    from src.utils import resolve_observation_date
     if reference_date is None:
-        reference_date = datetime.now(ZoneInfo("Europe/Madrid"))
+        # resolve_observation_date(None) lanza ValueError con mensaje
+        # claro. Aqui se invoca solo por la rama None para que el raise
+        # sea el mismo helper (consistencia de mensaje). Si llega,
+        # se mantiene la validacion tz-aware especifica de esta funcion.
+        resolve_observation_date(reference_date)
     elif reference_date.tzinfo is None:
         raise ValueError(
             "reference_date must be timezone-aware. "

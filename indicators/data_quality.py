@@ -311,10 +311,10 @@ def compute_data_quality(reference_date=None):
     """
     # REP-AUDIT-20261018-DQ-DATE (2026-10-18): date = sesion bursatil real,
     # no fecha del run. Evita filas en sabados/domingos/festivos.
-    if reference_date is None:
-        _session_date = last_expected_market_date()
-    else:
-        _session_date = last_expected_market_date(pd.Timestamp(reference_date))
+    # Fase 4b P7 (2026-10-28): observacion. Raise si None.
+    from src.utils import resolve_observation_date
+    _ref_obs = resolve_observation_date(reference_date)
+    _session_date = last_expected_market_date(pd.Timestamp(_ref_obs))
     sources = SOURCES
 
     rows = []

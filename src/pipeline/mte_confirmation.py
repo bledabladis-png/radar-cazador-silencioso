@@ -11,6 +11,11 @@ from src.utils import detect_cross_module_conflict, resolve_observation_date
 
 def _compute_mte(df_market, financial_score, all_signals, pcr_data, darkpool_data, temporal_meta=None, reference_date=None):
     print("Calculando Market Transition Engine...")
+    # Fase 4b P7 (2026-10-28): el raise va ANTES del try. Si no,
+    # el propio except Exception de esta funcion lo silencia y
+    # devuelve None. Bug detectado en test_fase4.
+    # resolve_observation_date: import top-level (linea 9).
+    _ref = resolve_observation_date(reference_date)
     mte_result = None
     try:
         from indicators.mte import compute_mte
@@ -29,13 +34,8 @@ def _compute_mte(df_market, financial_score, all_signals, pcr_data, darkpool_dat
 
         # Verificar frescura de Dark Pool antes de pasarlo al MTE
         mte_darkpool = darkpool_data
-        # D23 (2026-09-30): age calculado contra reference_date,
-        # no datetime.now(). Mismo patron que D6b/D16.
-        # D-05 (2026-10-03): normalizar tzinfo. run.py:43 construye
-        # reference_date tz-aware (ZoneInfo Europe/Madrid). pd.Timestamp
-        # (week) es naive. Sin replace(tzinfo=None), _ref - d lanza
-        # TypeError, capturado por el except de L48 -> skip silencioso.
-        _ref = resolve_observation_date(reference_date)
+        # _ref resuelto arriba, antes del try. La normalizacion tz
+        # sigue siendo necesaria: pd.Timestamp(week) es naive.
         if darkpool_data:
             week = darkpool_data.get('week', '')
             if week:

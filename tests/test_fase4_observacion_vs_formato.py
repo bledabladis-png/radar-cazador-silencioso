@@ -72,9 +72,15 @@ def test_reference_date_normaliza_tz():
 
 OBSERVACION_MODULOS = (
     # (ruta, funcion que debe usar resolve_observation_date)
+    # Fase 4a (2026-10-28): sitios via resolve_reference_date.
     ("src/pipeline/flows_secondary.py", "compute_flows_secondary"),
     ("src/pipeline/mte_confirmation.py", "_compute_mte"),
     ("src/pipeline/validation_gate.py", "run_validation_gate"),
+    # Fase 4b (2026-10-28): fallback directo a now() en el cuerpo.
+    ("src/data_loader.py", "download_market_data"),
+    ("src/stock_data_loader.py", "download_stock_prices"),
+    ("src/pipeline/breadth_metrics.py", "_compute_sector_breadth_health"),
+    ("indicators/data_quality.py", "compute_data_quality"),
 )
 
 
@@ -104,6 +110,34 @@ def test_observacion_usa_resolve_observation_date(rel, func):
             encontrado = True
             break
     assert encontrado, f"{func} no encontrada en {rel}"
+
+
+# --- Fase 4b: contrato raise en las 4 funciones nuevas ---
+
+def test_download_market_data_raise_si_none():
+    from src.data_loader import download_market_data
+    with pytest.raises(ValueError, match="reference_date=None"):
+        download_market_data(reference_date=None)
+
+
+def test_download_stock_prices_raise_si_none():
+    from src.stock_data_loader import download_stock_prices
+    with pytest.raises(ValueError, match="reference_date=None"):
+        download_stock_prices(reference_date=None)
+
+
+def test_compute_sector_breadth_health_raise_si_none():
+    from src.pipeline.breadth_metrics import _compute_sector_breadth_health
+    import pandas as pd
+    df = pd.DataFrame({"Close": [1.0, 2.0]}, index=pd.DatetimeIndex(["2026-10-23", "2026-10-26"]))
+    with pytest.raises(ValueError, match="reference_date=None"):
+        _compute_sector_breadth_health(df, df, pd.DataFrame(), reference_date=None)
+
+
+def test_compute_data_quality_raise_si_none():
+    from indicators.data_quality import compute_data_quality
+    with pytest.raises(ValueError, match="reference_date=None"):
+        compute_data_quality(reference_date=None)
 
 
 def test_formato_sigue_usando_reference_date():

@@ -24,6 +24,13 @@ def compute_flows_secondary(sector_flow_rank, etf_primary_flow_data,
             flow_synthesis, nport_position_change_data,
             qqq_performance_data, qqq_nport_flow_data
     """
+    # Fase 4b P7 (2026-10-28): el raise va ANTES del try. Si no,
+    # el propio except Exception de esta funcion lo silencia y
+    # devuelve el dict con valores por defecto. Bug detectado en
+    # test_fase4.
+    # resolve_observation_date: import top-level (linea 1).
+    _ref_obs = resolve_observation_date(reference_date)
+
     # Sintesis descriptiva de flujo (sin superindicador)
     flow_synthesis = {}
     nport_position_change_data = None
@@ -107,7 +114,7 @@ def compute_flows_secondary(sector_flow_rank, etf_primary_flow_data,
                 # tz usa la TZ local del runner (UTC en GitHub Actions,
                 # Madrid en dev). _ref es wall-clock Madrid. Sin fijar
                 # UTC, la diferencia inflaba ~2h en CI.
-                _ref = resolve_observation_date(reference_date)
+                _ref = _ref_obs  # resuelto arriba, antes del try
                 age = _ref - mtime
                 if age <= timedelta(days=7):
                     qqq_performance_data = pd.read_csv(perf_path)
