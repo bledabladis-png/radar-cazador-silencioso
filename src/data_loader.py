@@ -4,7 +4,7 @@ from zoneinfo import ZoneInfo
 import os
 import time
 from config.tickers import MARKET_TICKERS
-from config.settings import CACHE_HOURS, CACHE_VALIDATE_TRADING_DATE
+from config.settings import CACHE_HOURS, CACHE_VALIDATE_TRADING_DATE, CACHE_MIN_COVERAGE
 from data.providers.router import DataRouter
 from data.providers.backup_providers import BackupProvider
 from src.effective_date import resolve_effective_date
@@ -141,7 +141,7 @@ def _trim_market_data_to_equity_eod(data):
     ]
     if not _equity_tickers:
         return data, None
-    meta = resolve_effective_date(data, _equity_tickers, min_coverage=0.90)
+    meta = resolve_effective_date(data, _equity_tickers)
     if (meta['status'] == 'OK'
             and meta['date'] is not None
             and meta['lag_days'] is not None
@@ -260,26 +260,39 @@ def download_market_data(reference_date=None, run_id=None):
         reference_date = datetime.now(ZoneInfo("Europe/Madrid"))
     if run_id is None:
         run_id = reference_date.strftime('%Y%m%d_%H%M%S')
-    cache_path = 'data/market_data.csv'
     parquet_path = 'data/market_data.parquet'
-    # D3 Fase 2: elegir cache disponible (parquet o csv, el mas reciente)
-    _candidates = []
+    # 2026-10-28 (cache-audit): se elimina la rama CSV legacy. Ningun
+    # codigo escribe data/market_data.csv (gitignored). El cache-hit
+    # antiguo elegia el mas reciente por mtime, asi que un CSV residual
+    # (touch manual, restore de backup) ganaba sobre el parquet y
+    # resucitaba datos obsoletos. Solo parquet.
     if os.path.exists(parquet_path):
-        _candidates.append((parquet_path, 'parquet'))
-    if os.path.exists(cache_path):
-        _candidates.append((cache_path, 'csv'))
-    if _candidates:
-        _path, _fmt = max(_candidates, key=lambda t: os.path.getmtime(t[0]))
+        _path = parquet_path
         mtime = datetime.fromtimestamp(os.path.getmtime(_path))
         if datetime.now() - mtime < timedelta(hours=CACHE_HOURS):
             _df = None
-            if _fmt == 'parquet':
-                try:
-                    _df = pd.read_parquet(_path)
-                except Exception as e:
-                    print(f'  [WARN] Error leyendo Parquet: {e}')
-            else:
-                _df = pd.read_csv(_path, header=[0,1], index_col=0, parse_dates=True)
+            try:
+                _df = pd.read_parquet(_path)
+            except Exception as e:
+                print(f'  [WARN] Error leyendo Parquet: {e}')
+            # 2026-10-28 (cache-audit): validar que el parquet contiene
+            # todos los tickers de _ticker_list(). Sin esto, un ETF
+            # anadido a etf_holdings.csv no se descarga hasta que el
+            # parquet caduque por mtime. Mismo patron que
+            # stock_data_loader.py.
+            if _df is not None:
+                if isinstance(_df.columns, pd.MultiIndex):
+                    _cached_tickers = set(
+                        c[1] for c in _df.columns
+                        if len(c) == 2 and c[0] == 'Close')
+                else:
+                    _cached_tickers = set()
+                _missing = set(_ticker_list()) - _cached_tickers
+                if _missing:
+                    print(f'  [CACHE] faltan {len(_missing)} tickers en '
+                          f'market_data.parquet (p.ej. {sorted(_missing)[:5]}). '
+                          f'Forzando descarga.')
+                    _df = None
             # CACHE_VALIDATE_TRADING_DATE: verificar que el cache cubre
             # el ultimo dia de mercado esperado. Si no, forzar descarga.
             if _df is not None and CACHE_VALIDATE_TRADING_DATE and len(_df) > 0:
@@ -288,10 +301,9 @@ def download_market_data(reference_date=None, run_id=None):
                 _df_last = _df.index[-1].date() if hasattr(_df.index[-1], 'date') else _df.index[-1]
                 if _df_last < _last_exp:
                     print(f'  [CACHE] datos hasta {_df_last}, esperado >= {_last_exp}. Forzando descarga.')
-                elif not _last_row_coverage_ok(_df, min_coverage=0.90):
-                    # Fix M (2026-10-01): mismo gate que stock_data_loader.
+                elif not _last_row_coverage_ok(_df, min_coverage=CACHE_MIN_COVERAGE):
                     print(f'  [CACHE] datos hasta {_df_last} pero cobertura '
-                          f'< 90% en ultima fila. Forzando descarga.')
+                          f'< {CACHE_MIN_COVERAGE:.0%} en ultima fila. Forzando descarga.')
                 else:
                     return _postprocess_market_data(_df, reference_date, run_id, write_manifest=False)
             elif _df is not None:

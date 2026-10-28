@@ -111,6 +111,11 @@ def test_download_cache_hit_applies_postprocess(monkeypatch, tmp_path, patched_p
     df.to_parquet(tmp_path / 'data' / 'market_data.parquet')
 
     monkeypatch.setattr(dl, 'CACHE_VALIDATE_TRADING_DATE', False)
+    # 2026-10-28 (cache-audit): data_loader.py ahora valida que el
+    # parquet cacheado tenga todos los tickers de _ticker_list(). El
+    # DataFrame de prueba solo tiene 2 tickers; sin este mock, _missing
+    # no esta vacio y el cache-hit se rechaza -> descarga real (29s).
+    monkeypatch.setattr(dl, '_ticker_list', lambda: ['TICK0', 'TICK1', 'TICK2'])
 
     ref = datetime.now(ZoneInfo('Europe/Madrid'))
     out = dl.download_market_data(reference_date=ref, run_id='rid_cache_hit')

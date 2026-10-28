@@ -24,6 +24,7 @@ VOLATILITY_BASELINE_WINDOW = 756  # ~3 años (252 * 3)
 
 CACHE_HOURS = 23              # regenerar caché tras 23 horas
 CACHE_VALIDATE_TRADING_DATE = True  # verificar que la caché cubre el último día de mercado
+CACHE_MIN_COVERAGE = 0.90  # cobertura minima de la ultima fila del cache para aceptar cache-hit
 
 # ============================================================
 # FRESHNESS THRESHOLDS (src/report/helpers.py)

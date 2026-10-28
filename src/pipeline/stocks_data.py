@@ -39,7 +39,7 @@ def load_stocks_data(reference_date=None, run_id=None):
         df_stocks = download_stock_prices(reference_date=reference_date, run_id=run_id)
         if df_stocks is not None and not df_stocks.empty:
             _eligible = [c[1] for c in df_stocks.columns if c[0] == "Close"]
-            _eff = resolve_effective_date(df_stocks, _eligible, min_coverage=0.90)
+            _eff = resolve_effective_date(df_stocks, _eligible)
             if _eff["status"] == "OK" and _eff["date"] is not None:
                 df_stocks = df_stocks.loc[:_eff["date"]]
                 df_stocks_effective_meta = _eff

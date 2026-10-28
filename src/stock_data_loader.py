@@ -5,6 +5,7 @@ from pathlib import Path
 from config.settings import (
     CACHE_HOURS,
     CACHE_VALIDATE_TRADING_DATE,
+    CACHE_MIN_COVERAGE,
     TOP_N_SECTOR_COMPONENTS,
     LSE_SCRAPER_DATOS_DIR,
     LSE_SCRAPER_PROVENANCE_PATH,
@@ -602,26 +603,21 @@ def download_stock_prices(reference_date=None, run_id=None):
     if not all_tickers:
         return None
 
-    cache_path = 'data/stock_prices.csv'
     parquet_path = 'data/stock_prices.parquet'
-    # D3 Fase 2: elegir cache disponible (parquet o csv, el mas reciente)
-    _candidates = []
+    # 2026-10-28 (cache-audit): se elimina la rama CSV legacy. Ningun
+    # codigo escribe data/stock_prices.csv (gitignored). El cache-hit
+    # antiguo elegia el mas reciente por mtime, asi que un CSV residual
+    # (touch manual, restore de backup) ganaba sobre el parquet y
+    # resucitaba datos obsoletos. Solo parquet.
     if os.path.exists(parquet_path):
-        _candidates.append((parquet_path, 'parquet'))
-    if os.path.exists(cache_path):
-        _candidates.append((cache_path, 'csv'))
-    if _candidates:
-        _path, _fmt = max(_candidates, key=lambda t: os.path.getmtime(t[0]))
+        _path = parquet_path
         mtime = datetime.fromtimestamp(os.path.getmtime(_path))
         if datetime.now() - mtime < timedelta(hours=CACHE_HOURS):
             _df = None
-            if _fmt == 'parquet':
-                try:
-                    _df = pd.read_parquet(_path)
-                except (OSError, ValueError, pd.errors.ParserError) as e:
-                    print(f'  [WARN] Error leyendo Parquet: {e}')
-            else:
-                _df = pd.read_csv(_path, header=[0,1], index_col=0, parse_dates=True)
+            try:
+                _df = pd.read_parquet(_path)
+            except (OSError, ValueError, pd.errors.ParserError) as e:
+                print(f'  [WARN] Error leyendo Parquet: {e}')
             # 2026-10-06: validar que el parquet contiene todos los
             # tickers de all_tickers. Si falta alguno, forzar descarga
             # para que el cascade (Yahoo + europeos) lo rellene.
@@ -645,7 +641,7 @@ def download_stock_prices(reference_date=None, run_id=None):
                 _df_last = _df.index[-1].date() if hasattr(_df.index[-1], 'date') else _df.index[-1]
                 if _df_last < _last_exp:
                     print(f'  [CACHE] datos hasta {_df_last}, esperado >= {_last_exp}. Forzando descarga.')
-                elif not _last_row_coverage_ok(_df, min_coverage=0.90):
+                elif not _last_row_coverage_ok(_df, min_coverage=CACHE_MIN_COVERAGE):
                     # Fix M (2026-10-01): la fecha es la esperada pero la
                     # cobertura de la ultima fila < 90%. Puede faltar
                     # cualquier ticker (europeos con cache stale, fallos
