@@ -3122,24 +3122,38 @@ items:
 - id: EU-INDEX-NO-CAP-TEST-MISSING
   tipo: deuda_tecnica
   ciclo: '2026-10-28'
-  estado: OPEN
+  estado: FIXED
+  commit: '62e04dba'
+  test: tests/test_eu_index_etfs_no_cap.py
+  verificacion: VERIFIED_IN_PRODUCTION
   descripcion: |
     EU_INDEX_ETFS_NO_CAP en src/stock_data_loader.py hace que
     FEZ, DAXEX, ISF.L y LYXI salten el .head(20) en get_stock_list.
-    No hay test que verifique que get_stock_list devuelve >20
+    No habia test que verificase que get_stock_list devuelve >20
     tickers para los 4 ETFs EU, ni que SPY/QQQ/DIA/IWM siguen
     con cap.
   evidencia: |
-    Grep sobre tests/: EU_INDEX_ETFS_NO_CAP no aparece en ningun
-    test. Solo se verifico manualmente con py -c (commit d6c3ebb4):
-    get_stock_list 359 -> 471.
-    Regresion potencial: si alguien toca get_stock_list y no
-    preserva la excepcion, el bug solo 20 EU vuelve sin que
-    ningun test lo note.
+    Test nuevo tests/test_eu_index_etfs_no_cap.py (5 tests):
+    - test_eu_index_etfs_no_cap_contiene_los_4_esperados:
+      constante == ("FEZ","DAXEX","ISF.L","LYXI"). Si cambia,
+      falla con mensaje que obliga a actualizar constante +
+      documentacion + test.
+    - test_usa_etfs_no_estan_en_no_cap: SPY/QQQ/DIA/IWM fuera
+      (holdings masivos, poco aporte al sistema holdings-based).
+    - test_cap_usa_y_no_cap_eu_con_csv_sintetico: funcional con
+      chdir a tmp_path. 30 tickers por ETF USA -> 20 devueltos;
+      25 por ETF EU -> 25 devueltos. Aislado del repo.
+    - test_csv_real_eu_tienen_mas_de_20_por_etf: sanity sobre
+      CSV real. Si los 4 EU tuvieran <=20, el end-to-end no
+      probaria nada.
+    - test_csv_real_eu_todos_en_get_stock_list: end-to-end.
+      Si el cap se reintroduce, falla con listado exacto de
+      tickers ausentes por ETF.
+    Suite: 3872 passed, 2 skipped.
   siguiente_accion: |
-    Test unitario: mock de index_holdings.csv con 47 FEZ + 32 DAXEX
-    + 88 ISF.L + 35 LYXI. assert get_stock_list devuelve len>20
-    para los 4. assert SPY/QQQ/DIA/IWM siguen en 20.
+    Ninguna. Cap/no-cap blindado por tests. Si EU_INDEX_ETFS_NO_CAP
+    cambia, test_eu_index_etfs_no_cap_contiene_los_4_esperados
+    falla exigiendo actualizar constante + docs + test.
 
 - id: TEST-SCRIPTS-SYS-PATH-DYNAMIC
   tipo: deuda_tecnica
