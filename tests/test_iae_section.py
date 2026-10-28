@@ -170,27 +170,20 @@ def test_iae_section_helpers_manifest(tmp_path):
              "valid_to": None, "rows": 255},
         ]
     }), encoding="utf-8")
-    # _get_catalog_total lee de ROOT/data/mappings/... - parchear ROOT
-    with patch.object(iae_section, "ROOT", tmp_path):
-        # Crear la estructura esperada
-        (tmp_path / "data" / "mappings").mkdir(parents=True)
-        (tmp_path / "data" / "mappings" / "catalog_manifest.json").write_text(
-            m.read_text(encoding="utf-8"), encoding="utf-8"
-        )
+    with patch.object(iae_section, "MAPPINGS_DIR", tmp_path):
         assert iae_section._get_catalog_total() == 255
 
 
 def test_iae_section_helpers_manifest_sin_vigente(tmp_path):
     """_get_catalog_total devuelve None si no hay snapshot con valid_to=null."""
     import json
-    with patch.object(iae_section, "ROOT", tmp_path):
-        (tmp_path / "data" / "mappings").mkdir(parents=True)
-        (tmp_path / "data" / "mappings" / "catalog_manifest.json").write_text(
-            json.dumps({"snapshots": [
-                {"version_id": "v1", "valid_from": "2026-01-01",
-                 "valid_to": "2026-06-01", "rows": 200},
-            ]}), encoding="utf-8"
-        )
+    (tmp_path / "catalog_manifest.json").write_text(
+        json.dumps({"snapshots": [
+            {"version_id": "v1", "valid_from": "2026-01-01",
+             "valid_to": "2026-06-01", "rows": 200},
+        ]}), encoding="utf-8"
+    )
+    with patch.object(iae_section, "MAPPINGS_DIR", tmp_path):
         assert iae_section._get_catalog_total() is None
 
 
@@ -292,18 +285,65 @@ def test_iae_section_coverage_warning_true_si_bajo_umbral(tmp_path):
     assert r["catalog_coverage_warning"] is True
 
 
+def _mappings_env_with_catalog(tmp_path, rows=240, version_id="2026-10-01_01"):
+    """Crea tmp_path/mappings/catalog_manifest.json con snapshot live de N filas."""
+    import json
+    m = tmp_path / "mappings"
+    m.mkdir()
+    manifest = {
+        "schema_version": 1,
+        "snapshots": [{
+            "version_id": version_id,
+            "valid_from": "2026-10-01",
+            "valid_to": None,
+            "rows": rows,
+            "csv_path": "catalog_snapshots/snapshot_" + version_id + ".csv",
+        }],
+    }
+    (m / "catalog_manifest.json").write_text(json.dumps(manifest), encoding="utf-8")
+    return m
+
+
 def test_iae_section_coverage_warning_false_si_sobre_umbral(tmp_path):
-    """Con cobertura >= 90%, warning=False."""
+    """Con cobertura >= 90%, warning=False.
+
+    Lee el catalogo de tmp_path/mappings, no del repo real (bug
+    2026-10-28: el catalogo real paso a 287 filas y este test fijaba
+    240/240 = 100%).
+    """
     d = _ok_env(tmp_path)
+    m = _mappings_env_with_catalog(tmp_path, rows=240)
     fake = _fake_result()
     fake["target_q4_size"] = 240
     fake["target_q1_size"] = 240
     with patch.object(iae_section, "DATA_DIR", d), \
+         patch.object(iae_section, "MAPPINGS_DIR", m), \
          patch("src.institutional_accumulation.pipeline_contractual"
                ".run_contractual_nipc", return_value=fake):
         r = iae_section.compute_iae_section(None, "TEST")
     assert r["status"] == "OK"
     assert r["catalog_coverage_warning"] is False
+
+
+def test_iae_section_warning_true_si_catalogo_excede_umbral(tmp_path):
+    """Regresion: si el catalogo real crece, la cobertura baja y salta WARN.
+
+    Garantiza que la logica del warning sigue funcionando con MAPPINGS_DIR
+    monkeypatcheado y no depende del estado del repo.
+    """
+    d = _ok_env(tmp_path)
+    m = _mappings_env_with_catalog(tmp_path, rows=300)
+    fake = _fake_result()
+    fake["target_q4_size"] = 240
+    fake["target_q1_size"] = 240
+    with patch.object(iae_section, "DATA_DIR", d), \
+         patch.object(iae_section, "MAPPINGS_DIR", m), \
+         patch("src.institutional_accumulation.pipeline_contractual"
+               ".run_contractual_nipc", return_value=fake):
+        r = iae_section.compute_iae_section(None, "TEST")
+    assert r["catalog_coverage_warning"] is True
+    assert r["catalog_keys_total"] == 300
+    assert r["catalog_keys_observed"] == 240
 
 
 def test_iae_section_coverage_warning_none_en_stale(tmp_path):

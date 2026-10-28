@@ -145,16 +145,68 @@ def test_predecessor_coherente_con_uid():
 
 # --- Idempotencia ---
 
-def test_idempotencia():
-    df_before_a = pd.read_csv(ASSIGN, dtype=str, keep_default_na=False)
-    df_before_m = pd.read_csv(MEMBER, dtype=str, keep_default_na=False)
+def _setup_gen_env(tmp_path, monkeypatch):
+    """Copia data/mappings real a tmp_path y monkeypatchea constantes.
+
+    Sustituye la version anterior que leia data/mappings real y por
+    tanto contaminaba el repo y fallaba si el bot cambiaba el universo
+    (bug 2026-10-28: 255 -> 287).
+    """
+    import json, shutil
+    src = Path(__file__).resolve().parent.parent / "data" / "mappings"
+    dst = tmp_path / "mappings"
+    dst.mkdir()
+    shutil.copy2(src / "catalog_manifest.json", dst / "catalog_manifest.json")
+    shutil.copy2(src / "catalog_assignments.csv", dst / "catalog_assignments.csv")
+    shutil.copy2(src / "catalog_membership.csv", dst / "catalog_membership.csv")
+    snaps_dst = dst / "catalog_snapshots"
+    snaps_dst.mkdir()
+    manifest = json.loads((src / "catalog_manifest.json").read_text(encoding="utf-8"))
+    for s in manifest.get("snapshots", []):
+        rel = s["csv_path"]
+        shutil.copy2(src / rel, dst / rel)
+    monkeypatch.setattr(gen, "MAPPINGS_DIR", dst)
+    monkeypatch.setattr(gen, "SNAPSHOT_DIR", snaps_dst)
+    monkeypatch.setattr(gen, "MANIFEST_PATH", dst / "catalog_manifest.json")
+    monkeypatch.setattr(gen, "ASSIGNMENTS_PATH", dst / "catalog_assignments.csv")
+    monkeypatch.setattr(gen, "MEMBERSHIP_PATH", dst / "catalog_membership.csv")
+    return dst
+
+
+def test_idempotencia(tmp_path, monkeypatch):
+    """gen.main() es idempotente: 2a ejecucion produce lo mismo que 1a.
+
+    Semantica correcta: si el repo llega con CSV desincronizados respecto
+    al manifest (caso real 2026-10-28: manifest 287, CSV 255), gen.main()
+    los sincroniza en la 1a ejecucion. La 2a no debe cambiar nada. Ese es
+    el invariante de idempotencia.
+
+    Corre sobre copia en tmp_path. No toca data/mappings real.
+    """
+    dst = _setup_gen_env(tmp_path, monkeypatch)
+    gen.main()
+    df_after1_a = pd.read_csv(dst / "catalog_assignments.csv", dtype=str, keep_default_na=False)
+    df_after1_m = pd.read_csv(dst / "catalog_membership.csv", dtype=str, keep_default_na=False)
 
     gen.main()
 
-    df_after_a = pd.read_csv(ASSIGN, dtype=str, keep_default_na=False)
-    df_after_m = pd.read_csv(MEMBER, dtype=str, keep_default_na=False)
-    pd.testing.assert_frame_equal(df_before_a, df_after_a, check_dtype=False)
-    pd.testing.assert_frame_equal(df_before_m, df_after_m, check_dtype=False)
+    df_after2_a = pd.read_csv(dst / "catalog_assignments.csv", dtype=str, keep_default_na=False)
+    df_after2_m = pd.read_csv(dst / "catalog_membership.csv", dtype=str, keep_default_na=False)
+    pd.testing.assert_frame_equal(df_after1_a, df_after2_a, check_dtype=False)
+    pd.testing.assert_frame_equal(df_after1_m, df_after2_m, check_dtype=False)
+
+
+def test_gen_main_no_escribe_en_repo_real(tmp_path, monkeypatch):
+    """Regresion: gen.main() con MAPPINGS_DIR monkeypatcheado no toca
+    data/mappings real."""
+    real_a = Path(__file__).resolve().parent.parent / "data" / "mappings" / "catalog_assignments.csv"
+    real_m = Path(__file__).resolve().parent.parent / "data" / "mappings" / "catalog_membership.csv"
+    before_a = real_a.read_bytes()
+    before_m = real_m.read_bytes()
+    _setup_gen_env(tmp_path, monkeypatch)
+    gen.main()
+    assert real_a.read_bytes() == before_a, "test contamino catalog_assignments.csv real"
+    assert real_m.read_bytes() == before_m, "test contamino catalog_membership.csv real"
 
 
 # --- Serializacion canonica ---

@@ -20,6 +20,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent.parent
 DATA_DIR = ROOT / "data" / "sec_13f" / "processed"
+MAPPINGS_DIR = ROOT / "data" / "mappings"
 
 _QUARTER_RE = re.compile(r"^(20\d\d)Q([1-4])$")
 _QUARTER_END = {"Q1": "03-31", "Q2": "06-30", "Q3": "09-30", "Q4": "12-31"}
@@ -56,7 +57,7 @@ def _get_catalog_total():
     valid_to=null y devuelve su campo 'rows'. None si falla.
     """
     import json
-    mp = ROOT / "data" / "mappings" / "catalog_manifest.json"
+    mp = MAPPINGS_DIR / "catalog_manifest.json"
     if not mp.exists():
         return None
     try:

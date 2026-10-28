@@ -39,10 +39,11 @@ from src.institutional_accumulation.identity.catalog_key import (
     MEMBERSHIP_COLUMNS as CK_MEMBERSHIP_COLUMNS,
 )
 
-SNAPSHOT_DIR = ROOT / "data" / "mappings" / "catalog_snapshots"
-MANIFEST_PATH = ROOT / "data" / "mappings" / "catalog_manifest.json"
-ASSIGNMENTS_PATH = ROOT / "data" / "mappings" / "catalog_assignments.csv"
-MEMBERSHIP_PATH = ROOT / "data" / "mappings" / "catalog_membership.csv"
+MAPPINGS_DIR = ROOT / "data" / "mappings"
+SNAPSHOT_DIR = MAPPINGS_DIR / "catalog_snapshots"
+MANIFEST_PATH = MAPPINGS_DIR / "catalog_manifest.json"
+ASSIGNMENTS_PATH = MAPPINGS_DIR / "catalog_assignments.csv"
+MEMBERSHIP_PATH = MAPPINGS_DIR / "catalog_membership.csv"
 
 CATALOG_KEY_PREFIX = "radar"
 ENTITY_ID_PREFIX = "radar_entity"
@@ -57,7 +58,9 @@ def load_snapshot(snapshot_path):
     return pd.read_csv(snapshot_path, dtype=str, keep_default_na=False)
 
 
-def load_manifest(manifest_path=MANIFEST_PATH):
+def load_manifest(manifest_path=None):
+    if manifest_path is None:
+        manifest_path = MANIFEST_PATH
     return json.loads(Path(manifest_path).read_text(encoding="utf-8"))
 
 
@@ -77,7 +80,7 @@ def _pick_snapshot():
     live.sort(key=lambda s: s["valid_from"], reverse=True)
     s = live[0]
     version_id = s["version_id"]
-    csv_path = ROOT / "data" / "mappings" / s["csv_path"]
+    csv_path = MAPPINGS_DIR / s["csv_path"]
     alta_date = str(s["valid_from"]).replace("-", "")
     return csv_path, version_id, alta_date
 
@@ -86,7 +89,7 @@ def _snapshot_path_for_version(version_id):
     manifest = load_manifest()
     for s in manifest["snapshots"]:
         if s["version_id"] == version_id:
-            return ROOT / "data" / "mappings" / s["csv_path"]
+            return MAPPINGS_DIR / s["csv_path"]
     raise RuntimeError("version_id no en manifest: " + version_id)
 
 
@@ -326,7 +329,7 @@ def backfill_missing_versions(mem_prev, asg):
             continue
 
         # Version faltante: generar filas
-        snap = load_snapshot(ROOT / "data" / "mappings" / s["csv_path"])
+        snap = load_snapshot(MAPPINGS_DIR / s["csv_path"])
         cols = list(snap.columns)
         new_uid_by_key = {}
         for _, row in snap.iterrows():

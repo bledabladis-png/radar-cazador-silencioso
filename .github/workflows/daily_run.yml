@@ -196,6 +196,18 @@ jobs:
           OPENFIGI_API_KEY: ${{ secrets.OPENFIGI_API_KEY }}
         run: python scripts/regenerate_radar_catalog.py
 
+      - name: Regenerar catalog CSVs (IAE)
+        # Consume data/mappings/catalog_manifest.json + snapshots (
+        # generados por el step anterior) y materializa
+        # catalog_assignments.csv + catalog_membership.csv. Sin
+        # este step, el manifest avanza pero los CSV derivados
+        # quedan desincronizados (bug 2026-10-28: manifest 287,
+        # assignments 255, membership 739 -> el bot actualizaba
+        # solo el manifest). Test contrato:
+        # tests/test_daily_run_yaml_catalog.py.
+        if: success()
+        run: python scripts/build_catalog_csvs.py
+
       - name: QQQ SEC vs NPORT-P cross validation
         run: python validation/qqq_sec_nport_cross_validation.py
 
