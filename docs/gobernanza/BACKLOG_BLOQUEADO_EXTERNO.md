@@ -41,7 +41,6 @@ canal del auditor (no definido en el repo).
 
 | Item | Documento | Version | Commit | Que pide |
 |---|---|---|---|---|
-| SOW-BEAR-CONFIRMATION | `docs/auditoria/wyckoff/57_contrato_v1_10.md` | v1.10 | caa0ec9e | Firma contrato |
 | SOW-HOLDOUT-IMMUTABLE | `docs/auditoria/wyckoff/58_contrato_holdout_inmutable.md` | **v1.1** | a5a26bdb | Firma contrato |
 | DICT3-REACCUMULATION | `docs/auditoria/wyckoff/59_pre_registro_reaccumulation.md` | v1 | 0bff883f | Firma pre-registro |
 | DICT3-TOP20-COBERTURA | `docs/auditoria/wyckoff/70_top20_cobertura_design_v2d_2026-10-26.md` | v2d | fc0b695b | Cierre A.2c |

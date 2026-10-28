@@ -3252,3 +3252,30 @@ items:
     Ninguna. Si un script nuevo con src.* sin sys.path entra,
     test_todos_los_scripts_con_src_tienen_syspath falla con el
     listado exacto.
+
+- id: P7-FASE-4B-TZINFO-REGRESSION
+  tipo: deuda_tecnica
+  ciclo: '2026-10-28'
+  estado: FIXED
+  commit: 4a19880d
+  test: tests/test_p7_fase4b_tzinfo_regression.py
+  descripcion: |
+    Regresion introducida por a6a8f017 (Fase 4b P7). Dos sitios
+    mutaban reference_date de tz-aware a naive reasignando el
+    resultado de resolve_observation_date:
+      - src/data_loader.py (download_market_data)
+      - src/pipeline/breadth_metrics.py (_compute_sector_breadth_health)
+    El naive llegaba a is_session_closed, que lanza ValueError
+    "reference_date must be timezone-aware". Bloqueaba el pipeline
+    en run.py:62. Detectado en run 40787015709.
+  evidencia: |
+    Traceback: is_session_closed <- _filter_non_eod_equity <-
+    _postprocess_market_data <- download_market_data <-
+    load_all_data <- run.py:62.
+    CI verde porque ci_tests.yml no ejecuta run.py end-to-end.
+    4 tests nuevos, incluido guard AST contra el patron en toda
+    la lista OBSERVACION_MODULOS.
+  siguiente_accion: |
+    Verificar en proximo run scheduled o workflow_dispatch que
+    run-system completa >15min sin ValueError. Si success -> FIXED
+    confirmado. Si falla -> reabrir.
