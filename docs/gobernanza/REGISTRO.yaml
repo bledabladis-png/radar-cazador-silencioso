@@ -3158,21 +3158,38 @@ items:
 - id: TEST-SCRIPTS-SYS-PATH-DYNAMIC
   tipo: deuda_tecnica
   ciclo: '2026-10-28'
-  estado: OPEN
+  estado: FIXED
+  commit: '90080ff8'
+  test: tests/test_scripts_sys_path.py
+  verificacion: VERIFIED_IN_PRODUCTION
   descripcion: |
-    tests/test_scripts_sys_path.py hardcodea 5 scripts. Si un sexto
-    script con import src.* sin sys.path entra al repo, el test no
-    lo detecta. La regresion c4f99795 (update_european_holdings.py
-    roto por falta de sys.path) no se manifesto hasta el schedule
-    trimestral.
+    tests/test_scripts_sys_path.py hardcodeaba 5 scripts. Si un
+    sexto script con import src.* sin sys.path entraba al repo,
+    el test no lo detectaba. La regresion c4f99795 (update_
+    european_holdings.py roto por falta de sys.path) no se
+    manifesto hasta el schedule trimestral.
   evidencia: |
-    SCRIPTS_CON_SRC = [update_sector_holdings, update_index_holdings,
-    update_european_holdings, parse_ssga_fez, parse_blackrock_final].
-    El test ejecuta subprocess con cwd=scripts, runpy, y falla si
-    import src.* no resuelve. Hardcoded.
+    Test reescrito dinamico (4 tests, 27 scripts a fecha
+    2026-10-28):
+    - Fuente de verdad: git ls-files scripts/. Solo versionados.
+      Excluye diag_* (gitignored, no repo).
+    - Descubrimiento via AST (ast.walk) en lugar de regex. Cubre
+      imports dentro de try, no solo top-level.
+    - utf-8-sig para tolerar BOM (update_index_holdings.py
+      y otros lo tienen; ast.parse con utf-8 falla).
+    - Deteccion de sys.path con alias (import sys as _sys,
+      from sys import path) y forma if X not in sys.path.
+      Cubre audit_artifacts.py, que usa _sys.
+    - Verificacion real via subprocess cwd=scripts + runpy
+      run_name!='__main__'. 27 scripts importan OK.
+    - test_scanner_encuentra_los_5_originales (sanity del
+      scanner).
+    - test_scanner_encuentra_al_menos_20 (umbral).
+    - test_todos_los_scripts_con_src_tienen_syspath.
+    - test_todos_los_scripts_con_src_se_importan_desde_cwd_
+      scripts.
+    Suite: 3875 passed, 2 skipped.
   siguiente_accion: |
-    Hacer dinamico: escanear scripts/*.py via AST o regex buscando
-    from src. o import src. y que no tengan sys.path. Test que corra
-    el mismo subprocess por cada script encontrado.
-    Coste/beneficio bajo pero deuda real.
-
+    Ninguna. Si un script nuevo con src.* sin sys.path entra,
+    test_todos_los_scripts_con_src_tienen_syspath falla con el
+    listado exacto.
