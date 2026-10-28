@@ -99,12 +99,19 @@ data/stock_prices_reserved_r3000.parquet
 # Scripts de diagnostico (investigacion, no repo)
 scripts/diag_*.py
 
-# Schema versioning (Fase 1, 2026-10-25): los .schema son
-# metadata local (que version tiene el CSV en disco), NO se
-# trackean. Fresh checkout = sin .schema = asume v1 = migra en
-# el primer run si spec.schema_version > 1. Determinista y
-# agnostico al entorno.
-outputs/**/*.schema
+# Schema versioning (Fase 1, 2026-10-25, revisado 2026-10-28):
+# los .schema de outputs/history SI se trackean. Razon: persist
+# los usa para no migrar cuando el CSV ya esta en la version
+# actual; sin ellos, un fresh checkout en CI migra en cada run
+# y trunca el historico (bug 2026-10-28:
+# sector_wyckoff_distribution 1087 fechas -> 1). El resto de
+# directorios (state, audit, holdings, cache) mantiene .schema
+# ignorado: no son CSV de outputs/history y no participan en
+# persist.
+outputs/state/*.schema
+outputs/audit/*.schema
+outputs/holdings/*.schema
+outputs/cache/*.schema
 # Backups de schema (creados por persist al migrar). Se quedan en
 # disco para analisis/referencia, NO se trackean.
 outputs/history/*.v[0-9]*.csv
