@@ -3088,25 +3088,36 @@ items:
 - id: PARSE-SSGA-FEZ-TEST-MISSING
   tipo: deuda_tecnica
   ciclo: '2026-10-28'
-  estado: OPEN
+  estado: FIXED
+  commit: '290f7977'
+  test: tests/test_parse_ssga_fez_ticker_map.py
+  verificacion: VERIFIED_IN_PRODUCTION
   descripcion: |
-    Los 27 mapeos ticker->Yahoo de parse_ssga_fez.py (commit
-    ee7aac87) no tienen test. Si un ticker nuevo entra en el CSV
-    FEZ sin mapeo, el parser lo pasa crudo a Yahoo y puede resolver
-    a un ADR americano erroneo (bug FEZ sesion 14). El test actual
-    test_scripts_sys_path.py solo verifica que el script importa
-    src.* desde cwd=scripts, no los mapeos.
+    Los mapeos ticker->Yahoo de parse_ssga_fez.py (commit ee7aac87)
+    no tenian test. Si un ticker nuevo entra en el CSV FEZ sin
+    mapeo, el parser lo pasa crudo a Yahoo y puede resolver a un
+    ADR americano erroneo (bug FEZ sesion 14: DG -> Dollar General,
+    EL -> Estee Lauder, BN -> Brookfield, AD -> Kroger).
   evidencia: |
-    Grep sobre tests/: no hay test que verifique el mapeo
-    FEZ_TICKER_MAP ni la resolucion Yahoo de los 27. Solo el
-    generico test_generico_get_stock_list_incluye_tickers verifica
-    DDOG y MRNA, no FEZ.
-    Bug original: DG->Dollar General, EL->Estee Lauder,
-    BN->Brookfield, AD->Kroger. NDA-FI.HE excluido por D11.
+    Test nuevo tests/test_parse_ssga_fez_ticker_map.py (6 tests):
+    - test_mapa_contiene_todos_los_tickers_verificados: los 46
+      mapeos verificados en ee7aac87 estan presentes y correctos.
+    - test_resolve_ticker_usa_mapa: resolve_fez_ticker(raw, '')
+      devuelve el mapeo para cada ticker.
+    - test_resolve_ticker_override_por_nombre: FEZ_NAME_OVERRIDE
+      desambigua SANOFI vs BANCO SANTANDER (comparten SAN).
+    - test_ndafi_excluido_por_d11: NDA FI y variantes fuera del
+      mapa (D11: 2 separadores - y . prohibidos).
+    - test_adrs_del_bug_original_resuelven_a_europa: DG/EL/BN/AD
+      resuelven a Europa, no a USA.
+    - test_csv_fez_real_todos_mapeados: end-to-end sobre el CSV FEZ
+      actual. Si aparece ticker sin mapeo ni sufijo europeo, falla
+      con listado exacto.
+    Suite: 3867 passed, 2 skipped.
   siguiente_accion: |
-    Test que cargue el parser, lea el CSV FEZ actual, y falle si
-    algun ticker no tiene mapeo verificado contra Yahoo. Dataset
-    minimo: los 27 del commit ee7aac87 + NDA.FI excluido.
+    Ninguna. Bug blindado. Si un ticker nuevo entra en FEZ sin
+    mapeo, test_csv_fez_real_todos_mapeados falla con el ticker
+    concreto.
 
 - id: EU-INDEX-NO-CAP-TEST-MISSING
   tipo: deuda_tecnica
