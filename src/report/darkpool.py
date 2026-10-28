@@ -1,3 +1,4 @@
+from src.utils import resolve_reference_date
 # -*- coding: utf-8 -*-
 """Dark Pools (FINRA ATS Transparency Data).
 
@@ -11,7 +12,6 @@ Rediseno K-DT3-AUDIT-01 (2026-10-06):
 - `momentum` eliminado (era copia exacta de z_score).
 - `n_tickers_ats`/`n_tickers_total` -> `n_tickers` (siempre iguales).
 """
-from datetime import datetime
 
 import pandas as pd
 
@@ -28,7 +28,7 @@ def render_darkpool(darkpool_data, reference_date=None):
     if not darkpool_data:
         return out
 
-    _ref = reference_date.replace(tzinfo=None) if reference_date is not None else datetime.now()
+    _ref = resolve_reference_date(reference_date)
 
     out.append("## Actividad en ATS - Dark Pools (FINRA v1.0)\n")
     out.append("*Nota: FINRA publica datos de ATS con retraso regulatorio de 2 a 4 semanas. Los datos pueden estar desfasados por diseno.*\n")

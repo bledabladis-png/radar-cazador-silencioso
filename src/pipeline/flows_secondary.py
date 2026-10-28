@@ -1,3 +1,4 @@
+from src.utils import resolve_reference_date
 # -*- coding: utf-8 -*-
 """Fase 5 del pipeline: sintesis de flujo + N-PORT + QQQ Yahoo + QQQ NPORT-P.
 
@@ -106,7 +107,7 @@ def compute_flows_secondary(sector_flow_rank, etf_primary_flow_data,
                 # tz usa la TZ local del runner (UTC en GitHub Actions,
                 # Madrid en dev). _ref es wall-clock Madrid. Sin fijar
                 # UTC, la diferencia inflaba ~2h en CI.
-                _ref = reference_date.replace(tzinfo=None) if reference_date is not None else datetime.now()
+                _ref = resolve_reference_date(reference_date)
                 age = _ref - mtime
                 if age <= timedelta(days=7):
                     qqq_performance_data = pd.read_csv(perf_path)

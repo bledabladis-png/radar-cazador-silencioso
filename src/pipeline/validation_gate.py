@@ -1,3 +1,4 @@
+from src.utils import resolve_reference_date
 # -*- coding: utf-8 -*-
 """Fase 11 del pipeline: Validation Gate (10 comprobaciones) + audit
 double-counting.
@@ -8,7 +9,6 @@ IMPORTANTE: el original hacia sys.exit(1) si habia errores. Aqui se
 devuelve un dict con 'passed'. run.py decide si abortar.
 """
 
-from datetime import datetime
 
 import numpy as np
 import pandas as pd
@@ -40,7 +40,7 @@ def run_validation_gate(wyckoff_holdings_data, pcr_data, darkpool_data, mte_resu
     # reference_date tz-aware (ZoneInfo Europe/Madrid). pd.Timestamp(week)
     # y pd.Timestamp(last_date) son naive. Sin replace(tzinfo=None),
     # _ref - d lanza TypeError, capturado por los except de L129 y L147.
-    _ref = reference_date.replace(tzinfo=None) if reference_date is not None else datetime.now()
+    _ref = resolve_reference_date(reference_date)
     print("Ejecutando Validation Gate...")
     validation_errors = []
     validation_checks = []

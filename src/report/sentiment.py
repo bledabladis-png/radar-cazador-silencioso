@@ -1,10 +1,10 @@
+from src.utils import resolve_reference_date
 # -*- coding: utf-8 -*-
 """Sentimiento de Opciones (CBOE PCR).
 
 Extraido de src/report_generator.py (refactor C1, fase C1-6d2).
 """
 
-from datetime import datetime
 
 import numpy as np
 import pandas as pd
@@ -18,7 +18,7 @@ def render_sentimiento_opciones(pcr_data, reference_date=None):
     Devuelve lista de lineas markdown. Sin side effects.
     """
     out = []
-    _ref = reference_date.replace(tzinfo=None) if reference_date is not None else datetime.now()
+    _ref = resolve_reference_date(reference_date)
     if pcr_data:
         out.append("## Sentimiento de Opciones\n")
         out.append(f"- **PCR Total:** {_fmt_num(pcr_data.get('total_pcr', np.nan), '{:.2f}')} ")

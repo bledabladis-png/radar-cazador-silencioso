@@ -1,3 +1,4 @@
+from src.utils import resolve_reference_date
 # -*- coding: utf-8 -*-
 """Helpers de formateo y clasificacion para el reporte diario.
 
@@ -117,8 +118,7 @@ def _classify_finra_freshness(age_days):
 
 
 def _generate_coverage_table(pcr_data, darkpool_data, sector_results, reference_date=None):
-    from datetime import datetime
-    _ref = reference_date.replace(tzinfo=None) if reference_date is not None else datetime.now()
+    _ref = resolve_reference_date(reference_date)
     lines = []
     lines.append("### Cobertura de Datos\n")
     lines.append("| Fuente | Cobertura | Antigüedad |\n")

@@ -1,10 +1,10 @@
+from src.utils import resolve_reference_date
 # -*- coding: utf-8 -*-
 """Seccion Data Freshness del reporte diario.
 
 Extraido de src/report_generator.py (refactor C1, fase C1-6a1).
 """
 
-from datetime import datetime
 
 import pandas as pd
 
@@ -32,7 +32,7 @@ def render_data_freshness(pcr_data, darkpool_data, sector_results, reference_dat
     out.append("### Data Freshness\n")
     out.append("| Fuente | Ultimo dato | Antigüedad | Estado | Conf. Frescura |\n")
     out.append("|--------|-------------|------------|--------|----------|\n")
-    _ref = reference_date.replace(tzinfo=None) if reference_date is not None else datetime.now()
+    _ref = resolve_reference_date(reference_date)
     
     if pcr_data and pcr_data.get('last_date', 'N/A') != 'N/A':
         try:

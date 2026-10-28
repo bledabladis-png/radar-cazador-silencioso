@@ -1,6 +1,35 @@
 import numpy as np
 import pandas as pd
 
+def resolve_reference_date(reference_date):
+    """Devuelve reference_date normalizado (naive) o now() si no llega.
+
+    Patron comun (7 sitios pre-refactor, 2026-10-28): los modulos de
+    report/observacion hacian `reference_date.replace(tzinfo=None) if
+    reference_date is not None else datetime.now()`. Esto es el fallback
+    defensivo: si run.py no pasa reference_date, se usa now(). En
+    produccion run.py siempre lo pasa, pero el fallback disperso por
+    el codigo impedia que el test AST anti-P7 (test_p7_ast_guard.py)
+    pudiera cerrar la puerta a `datetime.now()`.
+
+    Centralizar en una sola funcion permite:
+    - Whitelistear 1 sitio (este) en vez de 7.
+    - Que la Fase 4 (reference_date required en todos los modulos) sea
+      un cambio de 1 sitio.
+
+    Semantica:
+    - reference_date con tz -> se pasa a naive (remove tzinfo). El
+      consumidor lo compara con timestamps naive (mtime, fechas de
+      parquet). Coherente con el codigo pre-refactor.
+    - reference_date sin tz -> se devuelve tal cual.
+    - reference_date None -> datetime.now() (naive, zona del runner).
+    """
+    from datetime import datetime as _dt
+    if reference_date is None:
+        return _dt.now()
+    if getattr(reference_date, "tzinfo", None) is not None:
+        return reference_date.replace(tzinfo=None)
+    return reference_date
 
 def _last_row_coverage_ok(df, min_coverage=0.90):
     """Fix M (2026-10-01): True si la ultima fila tiene cobertura >= min.
