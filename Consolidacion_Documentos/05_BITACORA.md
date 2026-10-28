@@ -44,6 +44,45 @@ Al cerrar una sesion nueva, se anade arriba (las mas recientes primero). Si hay 
 
 ## 3. SESIONES
 
+### 2026-10-28 — Sesion 15: saneamiento pipeline + 4 tickets deuda
+
+**Objetivo.** Arrancar con estado limpio y atacar tickets de deuda.
+
+**Hecho.**
+- 3 bugs P0 corregidos:
+  - MAX_NEW vs universe_expansions (64866361). Desbloquea pipeline.
+  - .schema gitignored -> migracion en CI (b246154c).
+  - daily_run.yml sin build_catalog_csvs (9e456745).
+- 1 bug P0 de gobernanza: REGISTRO corrompido por append sin
+  separador (61de4d7a). Validador reforzado con 2 checks nuevos.
+- 4 tickets de deuda cerrados (2 commits por ticket: test +
+  REGISTRO):
+  - PARSE-SSGA-FEZ-TEST-MISSING (290f7977 + a04d259d): 6 tests.
+  - EU-INDEX-NO-CAP-TEST-MISSING (62e04dba + c98feba1): 5 tests.
+  - TEST-SCRIPTS-SYS-PATH-DYNAMIC (90080ff8 + 01e1cdf0): 4 tests.
+  - COMPLETION-ATTEMPT-NO-STEP-AWARENESS (206702f9 + 76983040):
+    5 tests.
+- Tests: 3845 -> 3880 (+35). Gobernanza: 164 -> 165 items.
+- 13 commits pusheados. HEAD al cierre: 76983040.
+
+**Commits.** b2f3e30f..76983040 (13 commits: 5 de saneamiento,
+8 de cierre de los 4 tickets de deuda).
+
+**Pendiente.**
+- Verificar proximo run scheduled (~04-06Z del 29/10): append de
+  sector_wyckoff_distribution.csv (no regresion a 12 lineas),
+  sector_regime_matrix.csv, receipt escrito.
+- EU-HOLDINGS-DOWNLOAD-CAP: verificar en proximo run que el
+  parquet tiene los 112 tickers EU.
+- Deudas externas: SOW-BEAR-CONFIRMATION, SOW-HOLDOUT-IMMUTABLE,
+  DICT3-*, TOP20-*, IWM-HOLDINGS-EXPANSION, C2-920, WYCKOFF-5BX.
+
+**Proximo paso sugerido.**
+1. Verificar el primer run scheduled con el .schema versionado:
+   confirmar append de sector_wyckoff_distribution. Si no, ticket.
+2. Verificar el step Regenerar catalog CSVs en el scheduled.
+3. Si ambos OK: EU-HOLDINGS-DOWNLOAD-CAP verificable -> cerrar.
+
 ### 2026-10-27 (sesion 14) - 9 tickets cerrados + 5 bugs reales + 3 docs contrato
 
 **Objetivo.** Aprovechar nucleos del procesador para tests (derivado
@@ -1505,239 +1544,6 @@ punta.
   enmienda v1.1 + v1.2 desde cero con target_session nuevo.
 - H5.3 (20-nov), C2/SOW/Wyckoff (bloqueados), Issue #5.
 
-
-### 2026-10-16 - Auditoria CI + dictamen externo + fases 1-7 + gobernanza
-
-**Objetivo.** (a) Auditar el workflow `daily_run.yml`. (b) Recibir
-dictamen externo sobre los hallazgos. (c) Implementar las 7 fases del
-dictamen en 3 bloques: 1-3, 4-7, cierre documental.
-
-**Hecho.**
-
-- **Auditoria workflow CI.** 9 hallazgos (HD-1..HD-9). Corregidos los
-  8 accionables + precision 02_ARQUITECTURA §6.
-- **Dictamen externo.** 7 frentes aprobados con condiciones. Orden
-  estricto. Criterio triple.
-- **Fases 1-3.** Schedule vs Dispatch (health_check); receipt con
-  evidencia del Guard (fail-closed); pyflakes como gate real.
-- **Fases 4-7.**
-  - Fase 4: registro canonico de gobernanza
-    (`docs/gobernanza/REGISTRO.yaml`) + verificador con 11 reglas.
-  - Fase 5: indice H1-H18 derivado del registro.
-  - Fase 6: catalogo de anclas temporales
-    (`docs/gobernanza/ANCLAS.yaml`) + test selectivo.
-  - Fase 7: `poda_bitacora.py --check` sin mutacion + agrupacion por
-    fecha.
-- **Poda bitacora.** 21 -> 9 sesiones unicas. Bloque indice en
-  04_HISTORICO.
-- **Precision corpus.** `02_ARQUITECTURA §6` (bonos MTE + fallback
-  SPY->^GSPC). HANDOFF reescrito con estado real.
-
-**Commits.** 8269d671, fd42010d, c8a16f06, 2dda7986, 083cfd39,
-3e8d2828, 433da326, 7b790b12, 66179b90, 529f4ed2e1ab037940e88f65449cd82f2080a615.
-
-**Pendiente.**
-- Frentes bloqueados: C2, SOW v6, Wyckoff 5b.X, H5.3.
-- Verificar cron post-Fase 2 (receipt fail-closed).
-- Anadir `verifica_gobernanza.py` como gate de CI.
-
-**Proximo paso sugerido.** Anadir el verificador de gobernanza al
-workflow de CI (health_check semanal o daily_run).
-
-
-**Objetivo.** (a) Auditar el workflow `daily_run.yml` tras el cierre
-del 15-oct. (b) Recibir dictamen del auditor externo sobre los
-hallazgos. (c) Implementar las dos primeras fases del dictamen.
-
-**Hecho.**
-
-- **Auditoria interna del workflow.** 9 hallazgos detectados
-  (HD-1..HD-9). Corregidos los 8 accionables: drift test ampliado a
-  `health_check.py`, comentarios "4 slots" -> 5, docstrings
-  justificativos en `resolve_target_session` y
-  `write_completion_receipt`, comentario `--limit 20`. HD-9
-  descartado (tiene ~8 tests + contrato).
-- **Informe al auditor externo.** 3 debilidades de diseno del CI
-  (HD-4 receipt hardcoded, HD-5 schedule vs dispatch, HD-6 pyflakes
-  sin gate) + 4 consultas de metodo (P-A gobernanza HANDOFF, P-B
-  anclas temporales, P-C trazabilidad normativa, P-D poda bitacora).
-- **Dictamen recibido.** Los 7 frentes aprobados con condiciones.
-  Orden estricto de implementacion, una fase por sesion. Criterio
-  de calidad triple: estado inequivoco + evidencia verificable +
-  test de regresion.
-- **Fase 1 implementada (HD-5).** `check_workflows` refactorizado:
-  `_check_one_workflow` pura + helpers. Schedule Health separado de
-  Dispatch Health. `workflow_dispatch` reciente NUNCA oculta ausencia
-  de schedule. 8 tests nuevos. Commit `3e8d2828`.
-- **Fase 2 implementada (HD-4).** Receipt con evidencia del Guard.
-  `run.py` escribe `written_at`. `write_completion_receipt.py`
-  valida estrictamente antes de emitir: passed=True, errors_n=0,
-  checks_n>=10, written_at reciente (<=6h). Si falla -> no emite
-  (fail-closed). Anadidos `success_path_reached`,
-  `validation_gate_checks_n`, `validation_gate_errors_n`. Compat
-  schema v1. 9 tests nuevos. Commit `433da326`.
-- **Poda bitacora** ejecutada: 21 -> 10 sesiones. Script
-  `poda_bitacora.py` creado. Bloque indice en 04_HISTORICO.
-- **Precision 02_ARQUITECTURA Â§6.** Bonos MTE secundarios + fallback
-  SPY->^GSPC.
-- **HANDOFF reescrito.** Â§4.1 RESUELTO. Â§4.2 y Â§6 corregidos (la
-  version anterior tenia deriva interna: Â§4.1 decia RESUELTO pero
-  Â§6 decia "15 items de deriva pendientes").
-
-**Commits.** 8269d671, fd42010d, c8a16f06, 2dda7986, 083cfd39,
-3e8d2828, 433da326.
-
-**Pendiente.**
-- Fases 3-7 del dictamen (una por sesion).
-- Verificar primer run del cron tras Fase 2 (receipt fail-closed).
-- Issue #5 (health-check WARN): decidir.
-- Aviso GitHub: ubuntu-latest -> Ubuntu 26 el 19-oct.
-
-**Proximo paso sugerido.** Fase 3 del dictamen: pyflakes como gate
-real de CI.
-
-
----
-
-### 2026-10-16 (cierre del dia) - Auditoria del reporte + dictamen + enmienda v1.1
-
-**Objetivo.** Tras la sesion 15-oct y la primera del 16-oct, auditar
-el reporte diario del run 38834597307 (16-oct 01:20 UTC). Detectados
-10 hallazgos (5 criticos + C2 + 4 menores). Elevado informe al
-auditor externo. Recibido segundo dictamen. Aplicadas las fases
-aprobadas por el auditor.
-
-**Hallazgos auditados.** N-C1 a N-C7:
-- N-C1: `market_data` con `last_date=2026-10-14` y
-  `US_EQUITY.coverage_at_session=0.0` (contrato EQUITY_EOD con
-  `max_lag_days=0`). El pipeline no aborto.
-- N-C2: `guard_coverage.py` solo verifica `last > expected`, no
-  `last < expected`.
-- N-C3: `guard_coverage.py` ignora `by_market` cuando la cobertura
-  global pasa el threshold.
-- N-C4: `write_completion_receipt.py` no verifica `last_date` del
-  manifest contra `expected_session`.
-- N-C5: el receipt emitido sobre un pipeline desfasado impidio la
-  recuperacion por slots posteriores.
-- N-C6: `breadth_metrics.py` usaba `df_stocks.index[-1]` (posicion
-  fisica), violando R2.
-- N-C7: sin control explicito de alineacion de sesion esperada en
-  `health_check.py`.
-- C2: STAGFLATION ganaba el `argmax` sin que `IPS > 0.15`.
-- C3: asterisco de saturacion ausente en el reporte CI.
-- M1, M2, M3: alerta H1 categorica con |Z| pequeno; FLOW_CONFIDENCE
-  empate; Data Freshness vs Sector Breadth.
-
-**Dictamen recibido (segunda ronda).** El auditor acepto los 7 frentes
-con precisiones:
-1. Criticidad explicita por contrato (no umbral dinamico).
-2. Validacion compartida en `src/temporal_contracts/validation.py`.
-3. Registro de intentos como artifact por ejecucion.
-4. Test R3 explicito.
-5. Guard semantico STAGFLATION con `IPS > 0.15 AND SRS > 0`.
-6. Enmienda contractual v1.1 publicada antes de tocar el guard.
-
-**Implementado en esta sesion.** Commits `4b7caba6` a `df5b6974`:
-- M1 (banda neutral H1), M2 (regla FLOW_CONFIDENCE), M3 (alineacion
-  sesion esperada en Data Freshness).
-- C3 (provider SSGA: `primary_flow_z_raw` propagado al df in-memory).
-- N-C7 (check explicito de alineacion + mercados INVALID).
-- N-C6 (breadth: fecha efectiva canonica R2 + cap R4).
-- Enmienda contractual v1.1 (`docs/auditoria/daily_run_gate_enmienda_v1_1.md`).
-- `src/temporal_contracts/validation.py` con `validate_artifact_contracts()`.
-- Campo `critical: bool` en `registry.py`.
-- Integracion de la validacion en `guard_coverage.py` y
-  `write_completion_receipt.py`.
-
-**Nota propia (autocritica).** En esta sesion pusheé 3 veces con
-tests en rojo (`4ac3ec0c`, y las dos iteraciones previas). Los he
-corregido (`a4f19514`, `df5b6974`), pero violé el protocolo
-"suite verde antes de commit". Motivo: prisa por cerrar bloques.
-No repetir. El protocolo es no negociable.
-
-**Pendiente.**
-- Commit 4 (dictamen): registro de intentos incompletos como
-  artifact (`outputs/state/completion_attempt.jsonl` +
-  `write_completion_attempt.py` + subida como artifact en
-  `daily_run.yml` con `if: always()`).
-- Commit 5 (dictamen): test R3 explicito que verifique fecha
-  efectiva comun entre `sector_breadth.csv` y
-  `sector_breadth_momentum.csv`, no solo igualdad entre max(date).
-- Commit 6 (dictamen): guard semantico STAGFLATION en
-  `indicators/mte/decision.py::classify_mte`. Casos del auditor:
-  IPS=-0.41 (No), 0.149 (No), 0.15 (No), 0.16+SRS=0 (No),
-  0.16+SRS>0 (Si), IPS invalido (No). Sin sustituir los tests de
-  `score_scenarios`.
-
-**Proximo paso sugerido.** Arrancar con Commit 4 (registro de
-intentos como artifact). Despues Commit 5 (test R3). Despues
-Commit 6 (guard semantico MTE). Sin abrir mas frentes hasta
-cerrarlos.
-
-**Commits del dia (segunda parte).** 4b7caba6, a4f19514, e6b2fc0b,
-e87f94f1, 79a24106, 1859a143, db5cc2db, 4ac3ec0c, df5b6974.
-
-
-**Commits finales (segundo dictamen).** Tras el dictamen del auditor
-sobre las precisiones, se aplicaron los 3 commits pendientes:
-
-- **Commit 4** (`97c00097`): registro de intentos como artifact.
-  `scripts/write_completion_attempt.py` + `outputs/state/completion_attempt.jsonl`
-  subido con `if: always()` en `daily_run.yml`. 5 tests.
-- **Commit 5** (`daac0003`): test R3 explicito. Descubrio un bug real
-  en `resolve_effective_date`: usaba `index[-1]` sin ordenar el indice
-  (violacion de R2). Corregido con `sort_index()`. 5 tests.
-- **Commit 6** (`3023d2d2`): guard semantico de STAGFLATION.
-  `classify_mte` descarta STAGFLATION si no cumple `IPS > 0.15 AND SRS > 0`.
-  8 tests, incluyendo los 6 casos del auditor.
-
-**Estado final de la sesion:** HEAD `3023d2d2`. Suite: 3511 passed
-+ 5 skipped. Verificador de gobernanza: 53 items, `[OK]`. Todos los
-commits pusheados a `origin/main`.
-
-**Nota autocritica final.** En esta sesion pusheé varias veces sin
-que todos los validadores estuvieran verdes. La causa fue prisa por
-cerrar bloques antes de verificar pyflakes, gobernanza y suite
-completa. Todas las roturas fueron corregidas, pero el patron no
-debe repetirse. Protocolo no negociable: **verificar todos los
-validadores antes de cada commit.**
-
-
----
-
-### 2026-10-16 (ultima tanda) - Pinning Ubuntu + fix resolve_target_session
-
-**Objetivo.** Cerrar dos hallazgos descubiertos al verificar el cron:
-pinning del runner de CI y el contrato de `resolve_target_session`.
-
-**Hallazgo 1 - Ubuntu 26.** GitHub migra `ubuntu-latest` a Ubuntu 26
-el 19-oct-2026. Los 9 workflows usaban el alias flotante. Con wheels
-pinned (numpy, pyarrow, lxml, curl_cffi) el `pip install` puede
-romperse. Aplicado:
-- Pinning a `ubuntu-24.04` LTS en los 9 workflows (11 runs-on).
-- Test de contrato `test_workflows_runs_on_pinned.py` que prohibe
-  alias flotantes en el futuro.
-- Nota `docs/auditoria/ubuntu_runner_pinning.md` con procedimiento
-  de migracion a 26 (esperar, verificar wheels, dispatch manual).
-
-**Hallazgo 2 - resolve_target_session.** La funcion documentaba
-"default: UTC" pero pasaba naive a `last_expected_market_date`, que
-lo interpreta como Madrid. Ventana de divergencia: 21:00-22:00 UTC
-(2h/dia). Falso positivo inicial (creí que era N-C8 critico) corregido
-al verificar el contrato de la funcion: el bug real es de contrato,
-no de impacto operativo. Aplicado:
-- `resolve_target_session` pasa siempre UTC-aware.
-- Test `test_pipeline_gate_target_session_hours.py`: 24 horas naive
-  == 24 horas aware en viernes y sabado; ventana cerrada.
-
-**Verificacion.** Suite: 3520 passed + 5 skipped. Gobernanza: 55 items,
-`[OK]`. pyflakes silencio. compileall OK.
-
-**Commits.** 7c913031, e3eb2fe0.
-
-**Proximo hito.** Slot del cron 23:17 UTC (target_session=2026-10-16)
-ejecutara el pipeline con la enmienda v1.1 por primera vez en
-produccion. Verificar `completion_attempt.jsonl` como artifact.
 
 ## 4. REFERENCIA A SESIONES ANTERIORES
 

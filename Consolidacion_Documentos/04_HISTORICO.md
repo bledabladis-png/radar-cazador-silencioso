@@ -2342,3 +2342,29 @@ de señales, APROBABLE CONDICIONADO como herramienta descriptiva.
 **SECTOR-REGIME-MATRIX-STRUCTURE-POSITIVE -> SUPERSEDED** por Bloque 2.
 
 20+ commits. CI verde en cada push. Al cierre: 3755 passed, 2 skipped.
+
+## Resumen bitacora podada 28-oct-2026 (sesiones 16-oct)
+
+Resumen de las 3 sesiones del 2026-10-16, podadas de
+05_BITACORA.md el 2026-10-28 al exceder la retencion
+(keep=10 + dia en curso). Contenido completo recuperable
+con `git show <SHA>:Consolidacion_Documentos/05_BITACORA.md`
+para cualquier SHA anterior al commit de poda.
+
+### 2026-10-16 - Auditoria CI + dictamen externo + fases 1-7 + gobernanza
+
+**Objetivo.** (a) Auditar el workflow `daily_run.yml`. (b) Recibir dictamen externo sobre los hallazgos. (c) Implementar las 7 fases del dictamen en 3 bloques: 1-3, 4-7, cierre documental.
+
+**Commits.** 8269d671, fd42010d, c8a16f06, 2dda7986, 083cfd39, 3e8d2828, 433da326, 7b790b12, 66179b90, 529f4ed2e1ab037940e88f65449cd82f2080a615.
+
+### 2026-10-16 (cierre del dia) - Auditoria del reporte + dictamen + enmienda v1.1
+
+**Objetivo.** Tras la sesion 15-oct y la primera del 16-oct, auditar el reporte diario del run 38834597307 (16-oct 01:20 UTC). Detectados 10 hallazgos (5 criticos + C2 + 4 menores). Elevado informe al auditor externo. Recibido segundo dictamen. Aplicadas las fases aprobadas por el auditor.
+
+### 2026-10-16 (ultima tanda) - Pinning Ubuntu + fix resolve_target_session
+
+**Objetivo.** Cerrar dos hallazgos descubiertos al verificar el cron: pinning del runner de CI y el contrato de `resolve_target_session`.
+
+**Commits.** 7c913031, e3eb2fe0.
+
+
