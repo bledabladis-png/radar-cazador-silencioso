@@ -12,7 +12,7 @@ junto con `Consolidacion_Documentos/00_ARRANQUE.md`.
 Rama:            main
 HEAD:            consultar `git log --oneline -1` (no literal)
 Sincronizacion:  main == origin/main al cierre del ultimo commit.
-Tests:           3880 passed, 2 skipped (sin filtro; suite completa).
+Tests:           3938 passed, 2 skipped (sin filtro; suite completa).
                  Fuente autoritativa: Consolidacion_Documentos/ESTADO_SISTEMA.md
 CI HEAD:         verde (run mas reciente al cierre).
 Validation Gate: 11/11. Fuente: outputs/state/validation_gate_result.json.
@@ -38,6 +38,15 @@ Indices EU:      SIN cap head(20) (fix d6c3ebb4). FEZ 47, DAXEX 32,
                  scheduled los descargara via step build_catalog_
                  csvs anadido al workflow.
 Indices USA:     nlargest(20) hasta nuevo frente (TOP20-USA-INDICES).
+Bug hunt codigo: 5 frentes cerrados sesion 15. P7 look-ahead (4
+                 commits, guard AST 4 patrones), P7 Fase 4 observacion
+                 vs formato (2 commits, 7 funciones migradas, guard
+                 AST), except silenciosos (1, fail-close manifest),
+                 cache freshness (1, tickers + CSV legacy), rate
+                 limit (1, backoff + sleep). 14 bugs reales.
+Auditor externo: 4 docs con seccion de firma (57, 58, 59, 70-v2b,
+                 70-v2d, 73). 7 mensajes de envio preparados. Canal
+                 pendiente de decision del usuario.
 Parser EU:       FEZ con 27 mapeos Yahoo verificados + validacion
                  Yahoo (fix ee7aac87). NDA-FI.HE excluido por D11.
 
@@ -156,6 +165,62 @@ Cada uno con test + cierre en REGISTRO (2 commits):
   escapadas.
 - Here-string multilinea en consola interactiva: no fiable.
   Preferir arrays de lineas. Repetido de sesion 14.
+
+### 2.8. Bug hunt de codigo (9 commits): P7 + except + cache + rate limit
+
+**P7 look-ahead (4 commits).** Auditoria AST de 164 ficheros.
+`iloc[-N:]` sobre series con huecos: 3 bugs reales (1cd608bc,
+helper `slice_last_n_sessions`). `endDate` NY Fed con
+`Timestamp.now()`: determinismo roto (86ff433c). `resolve_reference_
+date` centraliza el fallback (cee53c02), guard AST de 4 patrones
+(iloc, shift(-N), fillna bfill, datetime.now no whitelisted).
+18 entries whitelist documentadas.
+
+**P7 Fase 4 observacion vs formato (2 commits, a4a28d9e + a6a8f017).**
+Separacion `resolve_observation_date` (raise si None, 7 funciones
+de observacion) vs `resolve_reference_date` (fallback, funciones
+de formato/render). 7 funciones migradas: flows_secondary,
+mte_confirmation, validation_gate, download_market_data,
+download_stock_prices, sector_breadth, data_quality.
+
+**Bug de propagacion (a6a8f017).** 3 de las 7 funciones tenian
+el raise DENTRO de su propio `try/except Exception`. Se capturaba,
+se imprimia "omitido" y se devolvia None. Silencio, el bug
+original. Movido el raise antes del try en _compute_mte,
+compute_flows_secondary y _compute_sector_breadth_health (con
+early-return de df_stocks vacio antes del raise). Detectado por
+test de contrato `test_compute_sector_breadth_health_raise_si_
+none`. Sin el, el raise era fe.
+
+**Except silenciosos (b8b0de96).** 164 ficheros, 51 `except
+Exception`. 0 bare_except. 4 bugs reales: write_artifact_with_
+manifest (fail-close con fail_on_invalid, callers de pipeline
+pasan True), str(e) en except anidado (str(be)),
+run.py:252/352 pass→print. 46 except restantes clasificados
+(fail-soft intencional, log, fallback de helpers).
+
+**Cache freshness (4150a68e).** 3 bugs: data_loader no validaba
+tickers en cache-hit (ETF nuevo sin descargar hasta 23h);
+CSV legacy (market_data.csv, stock_prices.csv) resucitaba por
+mtime (eliminado, solo parquet); min_coverage=0.90 hardcoded
+(CACHE_MIN_COVERAGE en config.settings).
+
+**Rate limiting (780930e6).** 2 bugs: retry_utils.retry_call con
+`backoff * attempt` daba sleep(0) en el primer retry (primer
+reintento inmediato, agrava 429); stock_data_loader retry
+individual sin sleep entre tickers fallidos (N requests
+back-to-back, 429 garantizado). Fix: `backoff * (attempt + 1)`
+y `try/finally` con `time.sleep(delay)` en el bucle de retry.
+
+**Docs firma auditor (68e9701b).** 4 docs con seccion de firma
+nueva (59 §8, 70-v2b §6, 70-v2d §7, 73 §7). Formato unificado:
+Aprobado / Aprobado con cambios / Rechazado. 7 mensajes de
+envio preparados. Pendiente: canal de envio (no documentado en
+repo, decision del usuario).
+
+**Deudas menores no auditadas**: resource leaks (open sin with,
+impacto bajo en src/, mas en scripts/), race conditions en
+escrituras atomicas (mitigado por fail-close de manifest).
 
 ## 3. FRENTES CERRADOS (acumulado)
 
@@ -306,6 +371,23 @@ Del dictamen H-04 (2026-10-26):
 - C2-920: discrepancia 920 baseline IAE. Auditor externo.
 - WYCKOFF-5BX: `n_confirmed_H20_complete >= 550` (~2027).
 
+### 4.6. Auditoria de codigo (sesion 15, cerrada)
+
+5 frentes cerrados con 14 bugs reales y guard AST:
+
+| Frente | Commits | Guard |
+|---|---|---|
+| P7 look-ahead (iloc, shift, fillna, datetime.now) | 1cd608bc, 86ff433c, cee53c02 | test_p7_ast_guard.py (4 patrones) |
+| P7 Fase 4 observacion vs formato | a4a28d9e, a6a8f017 | test_fase4_observacion_vs_formato.py (7 funciones AST + contrato) |
+| Except silenciosos | b8b0de96 | test_write_artifact_fail_on_invalid.py (5) |
+| Cache freshness | 4150a68e | test_cache_freshness_audit.py (7) |
+| Rate limiting | 780930e6 | test_retry_rate_limit_audit.py (4) |
+
+Deudas menores no auditadas (ROI decreciente, ticket si
+aparece sintoma): resource leaks (`open` sin `with`, mas en
+`scripts/`), race conditions en escrituras atomicas (ventana
+entre 2 `os.replace` parquet/manifest, mitigado por fail-close).
+
 ## 5. COMO ARRANCAR
 
     Set-Location D:\Macro_Sectorial
@@ -324,8 +406,8 @@ Esperado:
 - HEAD = git log --oneline -1.
 - ahead 0, behind 0.
 - Working tree limpio.
-- Tests con filtro: 3832 passed, 2 skipped, 13 deselected.
-- Tests sin filtro (autoritativo): 3845 passed, 2 skipped.
+- Tests con filtro: ~3890 passed, 2 skipped, 13 deselected.
+- Tests sin filtro (autoritativo): 3938 passed, 2 skipped.
 - Gobernanza: [OK].
 - Indice H1-H18: [OK].
 - Bitacora: [OK].
