@@ -199,4 +199,50 @@ f967985d); P1-H05 queda documentada aqui y en doc 70-v2d.
 
 ---
 
+## 7. Decisiones solicitadas al auditor (DICT3-H04-INFERENCE-V2)
+
+Se solicita al auditor externo que decida explicitamente las 4
+decisiones de diseno que bloquean el nuevo protocolo inferencial
+de `structure_ratio`. No se codifica nada hasta que las 4 esten
+decididas y firmadas.
+
+**Decision 1 - Estimando.** Cual de los tres se elige:
+- (a) ventana observada (los datos 2022-2026 ya vistos),
+- (b) poblacion de anos (extrapolar a un universo mas amplio),
+- (c) regimenes futuros (validacion prospectiva).
+El pre-registro actual mezcla los tres. Elegir uno y justificar.
+
+**Decision 2 - Remuestreo.** Resolver:
+- unidad remuestreada en cada dimension (dias vs sectores vs
+  medias anuales por sector),
+- identidad del sector a traves de anos remuestreados,
+- dependencia temporal dentro de ano,
+- tratamiento de anos parciales y sectores ausentes,
+- ponderacion (por dia vs por sector).
+
+**Decision 3 - Criterio discriminante.** No basta con IC.
+Elegir entre:
+- test de equivalencia (margen pre-registrado),
+- contraste contra referencia justificada (que referencia,
+  por que).
+
+**Decision 4 - Validacion independiente.** Los datos 2022-2026
+ya se han visto; cualquier protocolo nuevo basado en ellos es
+exploratorio, no confirmatorio. Propuesta del sistema: usar 2027
+como holdout prospectivo con protocolo congelado antes de
+2027-01-01. Aprobar o proponer alternativa.
+
+**Formato de respuesta esperado:**
+
+- Decision 1: (a) | (b) | (c) + justificacion en 2-3 lineas.
+- Decision 2: cada subpunto resuelto explicitamente.
+- Decision 3: una de las dos opciones + parametros.
+- Decision 4: aprobada la propuesta | alternativa (describir).
+
+Hasta que las 4 esten decididas y firmadas, `DICT3-H04-INFERENCE-V2`
+permanece OPEN y `structure_ratio` sigue como metrica descriptiva
+(no inferencial, no predictiva).
+
+---
+
 **Preparado 2026-10-26. Pendiente de envio al auditor externo.**

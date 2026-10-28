@@ -117,9 +117,36 @@ Ninguno se optimiza. Cualquier cambio requiere v2 del pre-registro.
 
 ## 7. Estado normativo
 
-Borrador congelado. Sin validez hasta que exista el detector en
-codigo y el holdout se corra contra este pre-registro. Cualquier
-desviacion entre el codigo y este documento invalida el resultado.
+Borrador congelado. Pendiente de revision y firma del auditor
+externo ANTES de codificar. Sin firma, no se implementa nada. El
+pre-registro se congela en su version actual: cualquier cambio
+posterior a la firma requiere v2. Cualquier desviacion entre el
+codigo y este documento invalida el resultado (aunque el resultado
+sea favorable).
+
+La restriccion "sin firma, no se codifica" la fija el HANDOFF
+sesion 14 y prevalece sobre cualquier plan previo de implementacion.
+
+---
+
+## 8. Condiciones de firma
+
+El pre-registro se considera firmado si el auditor externo responde
+explicitamente con:
+
+- **Aprobado:** se implementa en una sesion posterior. Tests de
+  contrato T1-T6 escritos antes del codigo de produccion. El
+  resultado del holdout (C1-C3) se publica tal cual, favorable o
+  no.
+- **Aprobado con cambios:** se anotan los cambios, se versiona
+  como v2 del pre-registro, se re-revisa. Sin firma v2, no se
+  codifica.
+- **Rechazado:** el frente se cierra como `WONT_FIX` con la razon
+  del auditor registrada en `REGISTRO.yaml`. Doc 68 seccion
+  re-acumulacion se conserva como referencia historica.
+
+Sin respuesta explicita del auditor, el frente permanece OPEN y
+no se toca codigo.
 
 ---
 

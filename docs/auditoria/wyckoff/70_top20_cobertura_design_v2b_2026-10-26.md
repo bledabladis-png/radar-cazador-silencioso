@@ -125,4 +125,27 @@ Las 6 acciones se ejecutaran en commits separados, en orden:
 
 ---
 
+## 6. Condiciones de confirmacion
+
+La division de alcance (sectores USA via A.2c, indices USA como
+frente separado) se considera confirmada si el auditor externo
+responde explicitamente con:
+
+- **Confirmada:** `TOP20-USA-INDICES` queda desbloqueado para
+  planificar la extension a SPY/QQQ con protocolo equivalente al
+  de A.2c (selector por peso + regeneracion historica + fix
+  persist). No se implementa nada hasta que se abra la sesion
+  correspondiente.
+- **Confirmada con cambios:** se anotan los cambios en el alcance
+  o en el protocolo, se versiona el documento, se re-revisa. Sin
+  confirmacion v2, el frente sigue OPEN sin accion.
+- **Rechazada:** `TOP20-USA-INDICES` se cierra como `WONT_FIX`
+  con la razon del auditor registrada en `REGISTRO.yaml`. Los
+  indices USA siguen con `nlargest(20)` como hasta ahora.
+
+Sin respuesta explicita, `TOP20-USA-INDICES` permanece OPEN y no
+se planifica la extension.
+
+---
+
 **Preparado 2026-10-26 para revision externa. Pendiente de firma del auditor.**

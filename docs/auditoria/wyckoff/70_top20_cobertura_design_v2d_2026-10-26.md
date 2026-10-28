@@ -191,4 +191,34 @@ Se solicita:
 
 ---
 
+## 7. Condiciones de cierre
+
+`DICT3-TOP20-COBERTURA` se considera cerrable como `FIXED` si el
+auditor externo responde explicitamente con:
+
+- **Cerrado:** se acepta el cierre de A.2c con las 4 acciones
+  ejecutables cerradas (b3793d7c, 2d84ae82, adfbb69b, f967985d) y
+  el invariante 2 de P1-H03 aceptado como SKIP documentado por el
+  hang de `classify_phase` (posteriormente cerrado como
+  FALSE_POSITIVE en 842c9aaf). El ticket pasa a `FIXED` con SHA
+  del commit del cierre en REGISTRO. Los frentes abiertos
+  (tickers sin datos, indices, IWM, H-04) viven como tickets
+  independientes.
+- **Cerrado con condiciones:** se anotan las condiciones. El
+  ticket pasa a `FIXED` cuando las condiciones se cumplan y se
+  documenten.
+- **No cerrado:** el ticket sigue OPEN. Se anota la razon del
+  auditor en `REGISTRO.yaml`.
+
+Preguntas abiertas para el auditor (respuesta binaria):
+
+- El invariante 2 de P1-H03 (fase por ticker) se acepta como
+  SKIP documentado, o se considera bloqueante de A.2c?
+- `WYCKOFF-TICKER-NORMALIZATION` (fix 4e94bf2e) requiere
+  regeneracion del historico completo (1086 fechas, hecho en
+  f71eb49c) o basta el fix + snapshot actualizado? El historico
+  regenerado previo excluye BRK.B de XLF por el mismo motivo.
+
+---
+
 **Preparado 2026-10-26. Pendiente de envio al auditor externo.**
