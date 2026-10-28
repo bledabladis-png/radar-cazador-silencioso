@@ -14,16 +14,29 @@ from regimes.liquidity_v2 import compute_liquidity_score_v2
 from regimes.volatility_regime import compute_volatility_regime
 from regimes.macro_regime import compute_macro_regime
 from src.utils import get_col
+from src.market_calendar import last_expected_market_date
 
 
-def compute_real_liquidity():
-    """Descarga FRED + NY Fed y evalua v2. Contrato: 4-tuple v1."""
-    _sofr, _effr, _c1 = _fetch_liquidity_v2_data()
+def compute_real_liquidity(reference_date=None):
+    """Descarga FRED + NY Fed y evalua v2. Contrato: 4-tuple v1.
+
+    reference_date (opcional): se propaga a _fetch_liquidity_v2_data
+    para que la query a NY Fed sea determinista respecto al run.
+    """
+    _sofr, _effr, _c1 = _fetch_liquidity_v2_data(reference_date=reference_date)
     return compute_liquidity_score_v2(_sofr, _effr, _c1)
 
 
-def _fetch_liquidity_v2_data():
+def _fetch_liquidity_v2_data(reference_date=None):
     """Descarga SOFR, EFFR y p99 NY Fed. CSV-first con fallback a API.
+
+    reference_date (opcional): fecha de ejecucion del run. Si se pasa,
+    se usa para calcular `endDate` de la query a NY Fed via
+    last_expected_market_date. Antes se usaba pd.Timestamp.now().date()
+    directo: re-ejecutar otro dia con los mismos CSVs daba otro
+    `endDate`, rompiendo el determinismo dado un snapshot. Con
+    reference_date, dos runs con el mismo `reference_date` producen
+    el mismo `endDate`.
 
     2026-10-22 (REP-AUDIT-20261022-LIQ-V2-DATA-SOURCE): antes solo
     usaba pandas_datareader (FRED API). La API va 1-2 dias por detras
@@ -66,7 +79,14 @@ def _fetch_liquidity_v2_data():
     try:
         import requests
         url = "https://markets.newyorkfed.org/api/rates/secured/sofr/search.json"
-        params = {"startDate": start, "endDate": str(pd.Timestamp.now().date()), "type": "rate,volume"}
+        if reference_date is not None:
+            try:
+                _end = last_expected_market_date(reference_date).strftime("%Y-%m-%d")
+            except (TypeError, ValueError):
+                _end = str(pd.Timestamp.now().date())
+        else:
+            _end = str(pd.Timestamp.now().date())
+        params = {"startDate": start, "endDate": _end, "type": "rate,volume"}
         r = requests.get(url, params=params, timeout=20)
         if r.status_code == 200:
             refs = r.json().get("refRates", [])
@@ -111,7 +131,7 @@ def compute_all_regimes(df_market, df_macro_manual, temporal_meta=None, referenc
     # sobre FRED, ausencia de guard de frescura. v2 implementa la especificacion
     # B3 congelada (dictamen N8 Fase J).
     # Rollback: cambiar a _compute_real_liquidity_v1().
-    real_liq_score, real_liq_regime, real_liq_conf, real_liq_prev = compute_real_liquidity()
+    real_liq_score, real_liq_regime, real_liq_conf, real_liq_prev = compute_real_liquidity(reference_date=reference_date)
     if real_liq_score is None:
         real_liq_regime, real_liq_conf = 'N/A', 0.0
         print("  Liquidez real: no disponible (sin datos FRED)")
