@@ -436,3 +436,83 @@ def test_guard_ausente_no_bloquea(tmp_path, monkeypatch):
     entry = _entry(tmp_path)
     assert entry["outcome"] == "INCOMPLETE"
     assert entry["failed_contracts"] == []
+
+
+
+# --- COMPLETION-ATTEMPT-NO-STEP-AWARENESS (2026-10-28) ---
+
+def test_collect_failed_steps_sin_gh_token_devuelve_vacio(monkeypatch):
+    monkeypatch.delenv("GH_TOKEN", raising=False)
+    monkeypatch.delenv("GITHUB_TOKEN", raising=False)
+    monkeypatch.setenv("GITHUB_RUN_ID", "12345")
+    assert wca._collect_failed_steps() == []
+
+
+def test_collect_failed_steps_sin_run_id_devuelve_vacio(monkeypatch):
+    monkeypatch.setenv("GH_TOKEN", "fake-token")
+    monkeypatch.setenv("GITHUB_RUN_ID", "not-a-number")
+    assert wca._collect_failed_steps() == []
+
+
+def test_collect_failed_steps_gh_falla_devuelve_vacio(monkeypatch):
+    monkeypatch.setenv("GH_TOKEN", "fake-token")
+    monkeypatch.setenv("GITHUB_RUN_ID", "12345")
+    class _FakeRun:
+        returncode = 1
+        stdout = ""
+        stderr = "boom"
+    monkeypatch.setattr(wca.subprocess, "run", lambda *a, **k: _FakeRun())
+    assert wca._collect_failed_steps() == []
+
+
+def test_collect_failed_steps_parsea_y_excluye_upload_attempt(monkeypatch):
+    monkeypatch.setenv("GH_TOKEN", "fake-token")
+    monkeypatch.setenv("GITHUB_RUN_ID", "12345")
+    fake_payload = {
+        "jobs": [
+            {"name": "run-system", "steps": [
+                {"name": "Checkout repo", "conclusion": "success"},
+                {"name": "Regenerar catalogo radar (IAE)", "conclusion": "failure"},
+                {"name": "Upload completion attempt", "conclusion": "failure"},
+                {"name": "Post Checkout repo", "conclusion": "success"},
+            ]},
+        ]
+    }
+    class _FakeRun:
+        returncode = 0
+        stdout = json.dumps(fake_payload)
+        stderr = ""
+    monkeypatch.setattr(wca.subprocess, "run", lambda *a, **k: _FakeRun())
+    fallos = wca._collect_failed_steps()
+    assert "Regenerar catalogo radar (IAE)" in fallos
+    assert "Upload completion attempt" not in fallos
+
+
+def test_attempt_incluye_failed_steps_en_reasons(tmp_path, monkeypatch):
+    """End-to-end: si hay step fallido observable, el attempt lo
+    registra como FAILED_STEP:<name> y no cae en 'sin causa identificada'.
+    """
+    _setup_env(monkeypatch, tmp_path)
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(wca, "ROOT", tmp_path)
+    monkeypatch.setattr(wca, "MANIFESTS", ())
+    monkeypatch.setenv("GH_TOKEN", "fake-token")
+    fake_payload = {
+        "jobs": [
+            {"name": "run-system", "steps": [
+                {"name": "Regenerar catalogo radar (IAE)", "conclusion": "failure"},
+            ]},
+        ]
+    }
+    class _FakeRun:
+        returncode = 0
+        stdout = json.dumps(fake_payload)
+        stderr = ""
+    monkeypatch.setattr(wca.subprocess, "run", lambda *a, **k: _FakeRun())
+
+    wca.main()
+    entry = _entry(tmp_path)
+    assert entry["outcome"] == "INCOMPLETE"
+    assert "FAILED_STEP:Regenerar catalogo radar (IAE)" in entry["failed_contracts"]
+    assert any("Regenerar catalogo radar (IAE)" in r for r in entry["reasons"])
+    assert "sin receipt y sin causa identificada" not in entry["reasons"]

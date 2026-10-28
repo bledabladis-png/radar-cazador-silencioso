@@ -16,6 +16,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import subprocess
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
@@ -179,6 +180,54 @@ def _read_guard_result():
     return {"state": "failed", "reason": "", "failures": [str(f) for f in failures]}
 
 
+def _collect_failed_steps():
+    """Devuelve lista de nombres de steps fallidos del run actual.
+
+    Consulta la API de GitHub via `gh run view <id> --json jobs`.
+    Requiere GH_TOKEN (o GITHUB_TOKEN) y GITHUB_RUN_ID validos.
+    Silencioso: cualquier fallo (sin token, gh no instalado, API
+    error, timeout) devuelve [] en lugar de romper el attempt.
+
+    Motivacion (COMPLETION-ATTEMPT-NO-STEP-AWARENESS, 2026-10-28):
+    cuando el pipeline falla en un step con causa observable
+    (e.g. "Regenerar catalogo radar (IAE)" con [ABORT] nuevos>MAX),
+    el attempt decia "sin receipt y sin causa identificada" y la
+    causa real quedaba invisible en completion_attempt.jsonl.
+    """
+    token = os.environ.get("GH_TOKEN") or os.environ.get("GITHUB_TOKEN")
+    run_id = os.environ.get("GITHUB_RUN_ID", "")
+    if not token or not run_id.isdigit():
+        return []
+    try:
+        r = subprocess.run(
+            ["gh", "run", "view", run_id, "--json", "jobs"],
+            capture_output=True, text=True, timeout=30,
+            env={**os.environ, "GH_TOKEN": token},
+        )
+        if r.returncode != 0:
+            return []
+        data = json.loads(r.stdout)
+    except Exception:
+        return []
+    jobs = data.get("jobs") or []
+    # Steps del propio attempt que no son causa raiz: el que escribe
+    # o sube el attempt puede fallar como consecuencia de otro fallo
+    # previo, o por un fallo propio ya cubierto por el propio attempt.
+    excluir = {
+        "Write completion attempt (always)",
+        "Upload completion attempt",
+        "Upload completion receipt",
+    }
+    fallos = []
+    for job in jobs:
+        for step in job.get("steps") or []:
+            if step.get("conclusion") == "failure":
+                name = step.get("name") or "<unnamed>"
+                if name not in excluir and name not in fallos:
+                    fallos.append(name)
+    return fallos
+
+
 def _detect_outcome():
     """Determina el outcome segun el estado de los manifests y del receipt."""
     receipt_path = ROOT / "outputs" / "state" / "completion_receipt.json"
@@ -224,6 +273,19 @@ def _detect_outcome():
 
     if failed:
         return "BLOCKED", failed, reasons, hashes
+
+    # Nueva rama (COMPLETION-ATTEMPT-NO-STEP-AWARENESS, 2026-10-28):
+    # sin receipt, sin contratos rotos, sin guard. Antes de devolver
+    # INCOMPLETE generico, consultar los steps fallidos via API de
+    # GitHub. Si el run fallo en un step concreto, esa es la causa
+    # observable (bug del step "Regenerar catalogo radar (IAE)"
+    # con ABORT MAX_NEW en 2026-10-27).
+    failed_steps = _collect_failed_steps()
+    if failed_steps:
+        for step in failed_steps:
+            failed.append("FAILED_STEP:" + step)
+            reasons.append("step failed: " + step)
+        return "INCOMPLETE", failed, reasons, hashes
 
     return "INCOMPLETE", [], reasons or ["sin receipt y sin causa identificada"], hashes
 

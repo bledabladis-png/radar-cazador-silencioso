@@ -360,9 +360,14 @@ jobs:
       - name: Write completion attempt (always)
         # Enmienda v1.1 (2026-10-16): registro diagnostico por ejecucion.
         # Se escribe SIEMPRE (exitoso o no) tras intentar emitir receipt.
+        # 2026-10-28 (COMPLETION-ATTEMPT-NO-STEP-AWARENESS): GH_TOKEN
+        # permite consultar via gh API los steps fallidos del run. Si
+        # hay alguno, se anota en reasons como FAILED_STEP:<name>. Sin
+        # token, el comportamiento es el anterior (INCOMPLETE generico).
         if: always()
         env:
           TARGET_SESSION: ${{ needs.gate.outputs.expected_session }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: python scripts/write_completion_attempt.py
 
       - name: Upload completion attempt
