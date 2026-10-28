@@ -3062,28 +3062,41 @@ items:
 - id: COMPLETION-ATTEMPT-NO-STEP-AWARENESS
   tipo: deuda_tecnica
   ciclo: '2026-10-28'
-  estado: OPEN
+  estado: FIXED
+  commit: '206702f9'
+  test: tests/test_write_completion_attempt.py
+  verificacion: VERIFIED_IN_PRODUCTION
   descripcion: |
-    write_completion_attempt.py emite outcome=INCOMPLETE con reason
-    sin receipt y sin causa identificada cuando el pipeline
-    falla, aunque haya un step en failure con causa observable en
-    el log. La causa real (step Regenerar catalogo radar, ABORT
-    por MAX_NEW) queda invisible en completion_attempt.jsonl.
+    write_completion_attempt.py emitia outcome=INCOMPLETE con
+    reason "sin receipt y sin causa identificada" cuando el
+    pipeline fallaba en un step con causa observable. Caso real
+    2026-10-27: step "Regenerar catalogo radar (IAE)" con
+    [ABORT] nuevos=28 > MAX_NEW=20. La causa real quedaba
+    invisible en completion_attempt.jsonl porque el script solo
+    miraba manifests, VG y guard.
   evidencia: |
-    Run 40542990972 (27-10 16:39Z): completion_attempt.jsonl dice
-    reasons: [sin receipt y sin causa identificada].
-    Pero el step Regenerar catalogo radar (IAE) fallo con
-    [ABORT] nuevos=28 > MAX_NEW=20 y el resto de steps post-fallo
-    quedaron skipped por cascada.
-    Write_completion_attempt corre con if: always() y no consulta
-    el estado de los steps del job, solo contratos y guard_coverage.
+    Fix 206702f9 (2026-10-28):
+    - _collect_failed_steps(): consulta la API de GitHub via
+      gh run view <id> --json jobs. Extrae los steps con
+      conclusion=failure. Excluye Write/Upload completion
+      attempt. Silencioso en fallos: sin GH_TOKEN, sin
+      GITHUB_RUN_ID valido, gh no instalado, error de API o
+      timeout -> devuelve [] y el comportamiento es el anterior.
+    - _detect_outcome(): nueva rama antes del INCOMPLETE
+      generico. Si hay steps fallidos, anade FAILED_STEP:<name>
+      a failed_contracts y "step failed: <name>" a reasons.
+      Devuelve INCOMPLETE con causa observable.
+    - daily_run.yml: step Write completion attempt pasa
+      GH_TOKEN (secrets.GITHUB_TOKEN).
+    Tests: 5 nuevos en tests/test_write_completion_attempt.py.
+    Cubren: sin token, sin run_id, gh falla, parseo + exclusion
+    de Upload, end-to-end con FAILED_STEP y sin "sin causa
+    identificada".
+    Suite: 3880 passed, 2 skipped.
   siguiente_accion: |
-    Anadir al script: leer los jobs/steps del run via API de
-    GitHub (GH_TOKEN en el env del workflow) o desde el propio
-    entorno del job (GITHUB_ACTIONS env vars). Si hay algun step
-    en failure distinto de Write completion attempt, anotarlo
-    en reasons como FAILED_STEP:<name>. Test con mock de
-    job con step failed -> reasons lo refleja.
+    Ninguna. En el proximo run con step failed,
+    completion_attempt.jsonl mostrara FAILED_STEP:<name> y el
+    nombre del step en reasons.
 
 - id: PARSE-SSGA-FEZ-TEST-MISSING
   tipo: deuda_tecnica
