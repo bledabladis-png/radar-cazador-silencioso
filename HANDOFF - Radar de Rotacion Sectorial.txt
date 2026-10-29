@@ -416,7 +416,7 @@ Del dictamen H-04 (2026-10-26):
 `docs/gobernanza/BACKLOG_BLOQUEADO_EXTERNO.md` (43bf21e0).
 12 items: 8 esperan auditor, 1 datos futuros, 1 decision de
 producto, 2 items internos. Ninguno bloquea el pipeline diario.
-- TOP20-EU-INDICES (OPEN): dependencia resuelta (EU-HOLDINGS-DOWNLOAD-CAP FIXED 73ea9b13). Listo para disenar selector por peso (protocolo A.2c) sin bloqueo.
+- TOP20-EU-INDICES (OPEN): dependencia del cap de descarga EU ya resuelta (73ea9b13). Listo para disenar selector por peso (protocolo A.2c) sin bloqueo.
 
 ### 4.3. Deudas detectadas en sesion 15 (sin ticket)
 
