@@ -2938,6 +2938,17 @@ items:
     Sin codigo hasta aprobacion del diseno por auditor externo.
     Bloqueante suave: no afecta uso descriptivo actual de
     structure_ratio.
+    Documento redactado 2026-10-29 (commit c98367bf):
+    docs/auditoria/wyckoff/76_h04_inference_v2_2026-10-29.md.
+    4 decisiones congeladas: (1) estimando = ventana observada
+    2022-2026, sin extrapolar a poblacion ni regimenes; (2)
+    bootstrap por mes calendario, matriz completa por fecha,
+    B=1000, seed=42, min 36 meses; (3) criterio TOST contra 0.5
+    con margen 0.05, tres veredictos EQUIVALENTE/DIFERENTE/
+    INSUFICIENTE; (4) validacion prospectiva 2027 con protocolo
+    congelado antes del 2027-01-01. Pendiente: enviar al
+    auditor. Sin firma, no se registra la ventana 2027.
+
 
 - id: WYCKOFF-CLASSIFY-PHASE-HANG
   tipo: deuda_tecnica
