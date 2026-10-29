@@ -7,432 +7,223 @@ junto con `Consolidacion_Documentos/00_ARRANQUE.md`.
 
 ---
 
-## 1. ESTADO AL CIERRE (2026-10-28, sesion 15)
+## 1. ESTADO AL CIERRE (2026-10-29, sesion 16)
 
-Rama:            main
-HEAD:            consultar `git log --oneline -1` (no literal)
-Sincronizacion:  main == origin/main al cierre del ultimo commit.
-Tests:           3956 passed, 2 skipped (sin filtro; suite completa).
-                 Fuente autoritativa: Consolidacion_Documentos/ESTADO_SISTEMA.md
-CI HEAD:         verde (run mas reciente al cierre).
-Validation Gate: 11/11. Fuente: outputs/state/validation_gate_result.json.
-Working tree:    limpio.
-Gobernanza:      docs/gobernanza/REGISTRO.yaml. 165 items.
-                 Validador reforzado 2026-10-28: detecta items
-                 embebidos (concatenacion sin separador) y SHA
-                 no-string (YAML convierte SHAs solo-digitos a int).
-Writers:         25 (output_registry.py).
-Schema versioning: los .schema de outputs/history SI se versionan
-                 desde 2026-10-28 (fix b246154c). En CI, sin
-                 .schema, persist migraba v1->v2 en cada run y
-                 regresionaba el historico (sector_wyckoff_
-                 distribution 1087 fechas -> 1). Ya no.
+HEAD: `47df44ed` (consultar `git log --oneline -1` para el actual).
+Sincronizacion: main == origin/main al cierre del commit.
+Tests: fuente autoritativa Consolidacion_Documentos/ESTADO_SISTEMA.md.
+       Ultimo run: 4021 passed, 2 skipped (sin filtro).
+CI HEAD: verde.
+Validation Gate: 11/11 (outputs/state/validation_gate_result.json).
+Working tree: limpio.
+Gobernanza: docs/gobernanza/REGISTRO.yaml, 169 items. Validador reforzado
+            (detecta ids embebidos, SHA no-string, WONT_FIX en HANDOFF).
+Writers: 25 (output_registry.py).
+
 Sistema Wyckoff: holdings-based + snapshot PIT append-only REAL.
-structure_ratio: continuo en sector_regime_matrix v2. Descriptivo.
-                 IC95 NO autorizados como inferencia (dictamen H-04).
-Seleccion holdings sector USA: target_weight 0.85 (A.2c, aprobada
-                 condicionada).
-Indices EU:      SIN cap head(20) (fix d6c3ebb4). FEZ 47, DAXEX 32,
-                 ISF.L 88, LYXI 35 descargados completos. Parquet
-                 productivo aun no los tiene: el proximo run
-                 scheduled los descargara via step build_catalog_
-                 csvs anadido al workflow.
-Indices USA:     nlargest(20) hasta nuevo frente (TOP20-USA-INDICES).
-Bug hunt codigo: 5 frentes cerrados sesion 15. P7 look-ahead (4
-                 commits, guard AST 4 patrones), P7 Fase 4 observacion
-                 vs formato (2 commits, 7 funciones migradas, guard
-                 AST), except silenciosos (1, fail-close manifest),
-                 cache freshness (1, tickers + CSV legacy), rate
-                 limit (1, backoff + sleep). 14 bugs reales.
-Auditor externo: SOW-HOLDOUT-IMMUTABLE v1.1 redactada (a5a26bdb)
-                 + doc 74 H-04/H-07 (93bc595d) + infraestructura
-                 H-01/H-02/H-03 en main (45d48c5d, d90f2600). Listo
-                 para enviar. SOW-BEAR v1.10.1 NO redactada.
-Backlog externo: docs/gobernanza/BACKLOG_BLOQUEADO_EXTERNO.md
-                 (43bf21e0). Vista unica de los 12 items bloqueados.
-                 Fuente canonica: REGISTRO.yaml. Regla: no se
-                 preparan mas versiones de contratos por si acaso.
-Parser EU:       FEZ con 27 mapeos Yahoo verificados + validacion
-                 Yahoo (fix ee7aac87). NDA-FI.HE excluido por D11.
+structure_ratio: continuo en sector_regime_matrix v2. DESCRIPTIVO.
+                 IC95 NO autorizados (dictamen H-04).
+                 DICT3-H04-INFERENCE-V2 cerrado WONT_FIX 2026-10-29.
+Seleccion holdings sector USA: target_weight 0.85 (A.2c).
+Seleccion holdings indices USA/EU: target_weight 0.85 desde e7f27cd0.
+                                  TOP20-USA/EU-INDICES WONT_FIX (ya cubierto).
 
-## 2. SESION 2026-10-28 (sesion 15): detalle
+SOW-HOLDOUT-IMMUTABLE: WONT_FIX 2026-10-29. Razon: cohort es 99.3%
+  S&P 500 actual (266/268), no holdout virgen. Los 20 tickers que el
+  contrato bloqueaba son 100% S&P 500/QQQ actuales (19 SPY + SHOP QQQ).
+  Promocionados a universe_expansions.yaml (spy_extra + qqq_extra).
+  Pendiente descarga en proximo scheduled (23:17 UTC 29-10 o 03:17 UTC).
+  Cobertura esperada post-scheduled: SPY 81.5% -> ~85%, QQQ 79% -> ~85%.
 
-**Objetivo inicial:** arrancar con estado limpio y atacar
-tickets de deuda. **Derivado a:** sesion de saneamiento
-profundo. 3 bugs P0 destapados y corregidos, 4 tickets de
-deuda cerrados, 2 bugs del validador de gobernanza cerrados.
+DICT3-REACCUMULATION: WONT_FIX 2026-10-29. Detector implementado, 18 tests
+  T1-T7 verdes, ejecutado sobre cohort (1185 episodios, 1171 evaluables).
+  C1 FALLA (2017 51.9%, 2021 36.6%, 2024 36.2% > 30% -> captura bull
+  market general). C2 FALLA (38.43% exito, umbral 60%). No se recalibra.
+  Informe: docs/auditoria/wyckoff/60_resultado_reaccumulation_2026-10-29.md.
 
-### 2.1. Contexto de arranque
+DICT3-H04-INFERENCE-V2: WONT_FIX 2026-10-29. 2 versiones rechazadas por
+  el auditor. v3 inviable (checklist 10 puntos, validacion prospectiva
+  real tarda 3 anos). structure_ratio permanece descriptivo.
 
-HEAD al inicio: b8aa2bf9 (sesion 14). Tests: 3845 passed.
-Pipeline scheduled caido desde el 27-10 02:04Z (5 runs
-consecutivos en failure). Alerta de contaminacion por mercado
-abierto EU: evaluada y descartada (manifest coherente:
-last_date=2026-10-27, expected_session=2026-10-27).
+Autonomia externa: retry 3x backoff exponencial en SSGA, BlackRock,
+  Invesco, Amundi. health_check: holdings stale/ausentes/incompletos
+  WARN -> FAIL (alerta automatica via issue GitHub). Centinela
+  test_schemas_integrity.py vigila que tests no borren .schema tracked.
 
-### 2.2. Bug P0 #1: MAX_NEW vs universe_expansions
+22 tickers nuevos en universe_expansions.yaml (spy_extra 19 + qqq_extra 1
++ DDOG/MRNA ya en xlk/xlv_extra). Verificado: Yahoo sirve los 20 nuevos
+con 2513 sesiones, US_EQUITY, get_market OK. Proximo scheduled los descarga.
 
-`regenerate_radar_catalog.py` abortaba con `[ABORT] nuevos=28
-> MAX_NEW=20` desde el 27-10. Causa: `xli_extra` (28 tickers)
-+ `xlk_extra` (DDOG) + `xlv_extra` (MRNA) introdujeron 28
-tickers declarados que el sanity no distinguia de anomalia.
+---
 
-Fix 64866361: `_load_declared_tickers()` lee `data/universe_
-expansions.yaml`. Solo aborta si los NO declarados superan
-MAX_NEW. Verificado en run 40685731619 (workflow_dispatch):
-step `Regenerar catalogo radar` success, `Commit and push`
-success, receipt escrito. Ticket AUTONOMY-RADAR-CATALOG-MAX-
-NEW-TOO-LOW -> FIXED.
+## 2. SESION 2026-10-29 (sesion 16): detalle
 
-### 2.3. Bug P0 #2: .schema gitignored -> migracion en CI
+**Objetivo inicial:** verificar EU-HOLDINGS-DOWNLOAD-CAP tras fix.
+**Derivado a:** saneamiento P0, autonomia externa, cierre de 5 frentes
+con evidencia empirica, no con firma externa.
 
-`outputs/**/*.schema` estaba gitignored. En cada fresh checkout
-de CI, `persist` no veia el .schema, asumia v1, y si el spec
-era v2 migraba: renombraba el CSV a .v1.csv (tambien gitignored)
-y escribia un CSV nuevo solo con el df del dia. Efecto:
-`sector_wyckoff_distribution.csv` 11958 -> 12 lineas (11946
-filas perdidas), `sector_regime_matrix.csv` 23 -> 12.
+### 2.1. Bugs P0 del pipeline
 
-Fix b246154c: versionar los 24 .schema de outputs/history.
-Reescribir `.gitignore` para dejar solo los de state/audit/
-holdings/cache ignorados. Restaurar los 2 CSVs regresados al
-estado pre-run 64866361.
+1. **tzinfo mutado a naive** (regresion a6a8f017): download_market_data
+   reasignaba reference_date con resolve_observation_date() (devuelve
+   naive). Llegaba a is_session_closed -> ValueError. Bloqueaba run.py.
+   Fix 4a19880d: `_ = resolve_observation_date(...)` (valida, no muta).
+   Tests test_p7_fase4b_tzinfo_regression.py. Verificado run 40869678709.
 
-### 2.4. Bug P0 #3: daily_run.yml no invocaba build_catalog_csvs
+2. **YAML roto por indentacion** en daily_run.yml step Commit: 6 espacios
+   dentro de run: | (debe ser 10). HTTP 422 al workflow_dispatch. Fix
+   68d988db. Aprendizaje: yaml.safe_load antes de commit en workflows.
 
-El step `Regenerar catalogo radar` actualizaba catalog_manifest.
-json + snapshots, pero nadie materializaba los CSV derivados
-(catalog_assignments.csv, catalog_membership.csv). Manifest
-avanzaba (287), CSV congelados (255, 739). Test de integridad
-`test_membership_versiones_completas` fallaba legitimamente.
+3. **git add -u no stagea .schema nuevos**. macro_regime.csv.schema
+   untracked tumbaba el step Commit. Fix 7f6d229d: `git add -A outputs/history`
+   + `git add -u outputs/state` (preserva exclusion de receipt.json).
 
-Fix 9e456745:
-- Anadir step `Regenerar catalog CSVs (IAE)` a daily_run.yml
-  justo tras `Regenerar catalogo radar`.
-- `MAPPINGS_DIR` en `build_catalog_csvs.py` y `iae_section.py`
-  para permitir monkeypatch en tests.
-- 4 tests reformulados (test_idempotencia, helpers_manifest x2,
-  coverage_warning) y 1 test nuevo de contrato YAML.
-- Sincronizar el repo: manifest 287, assignments 287,
-  membership 1026.
+4. **conftest._cleanup_schema_files borraba tracked**: filtraba solo por
+   mtime, no distinguia tracked de untracked. Fix 4fc2e6bf: tracked ->
+   `git checkout --`, untracked -> unlink. Centinela test_schemas_integrity.py.
 
-### 2.5. Bug P0 #4: REGISTRO corrompido por append sin separador
+### 2.2. Autonomia externa (3 commits)
 
-`b2f3e30f` inserto 5 items al final del REGISTRO sin `\r\n`
-de separacion. El `- id: AUTONOMY...` quedo embebido en un
-`siguiente_accion: |` y las claves posteriores sobreescribieron
-el mapping anterior. Resultado: `GOVERNANZA-HANDOFF-OBSOLETO`
-corrupto (FIXED -> IN_PROGRESS) y `AUTONOMY-RADAR-CATALOG`
-desaparecido como item.
+- 6632976a: retry 3x backoff exponencial (429/5xx/ConnectionError) en
+  update_sector_holdings.py, update_index_holdings.py, parse_ssga_fez.py,
+  parse_blackrock_final.py. Sin urllib3, mockeable con requests.get.
+- 53d1c523: health_check holdings stale/ausentes/incompletos WARN -> FAIL.
+  Un workflow trimestral roto 4 ciclos abre issue automaticamente.
+- cf7d9a0c: retry en amundi_holdings.py (requests.post + session.get).
 
-Fix 61de4d7a:
-- REGISTRO reconstruido: GOVERNANZA restaurado, AUTONOMY
-  recreado como FIXED con SHA y verificacion.
-- `verifica_gobernanza.py` extendido con 2 checks nuevos:
-  * Deteccion de `- id:` embebido en valor de string.
-  * Deteccion de `commit: <int>` (YAML convierte SHAs
-    solo-digitos como 64866361 a int; subprocess.run falla
-    con TypeError, except lo convierte a False, item reportado
-    como 'no existe o huerfano' erroneamente).
-- 4 tests de regresion en test_verifica_gobernanza_regresiones.py.
+### 2.3. Infraestructura de verificacion
 
-### 2.6. Deuda cerrada (4 tickets, 8 commits)
+- workflow_dispatch con input force (6f3ee2dd) para saltar el gate
+  CURRENT. **REGLA: no lanzar force=true entre 13:30-20:00 UTC** (US
+  market open). Solo pre-apertura o post-cierre.
+- Steps nuevos en CI: "Calcular cobertura efectiva P1-H02 (post-run)" +
+  "Upload cobertura efectiva P1-H02" con 2 CSVs (efectiva + faltantes).
+  Permite verificar cobertura del parquet del runner sin depender del local.
 
-Cada uno con test + cierre en REGISTRO (2 commits):
-- PARSE-SSGA-FEZ-TEST-MISSING: 6 tests (290f7977 + a04d259d).
-  Blinda los 46 mapeos del FEZ_TICKER_MAP y los 4 ADRs del bug
-  FEZ sesion 14 (DG, EL, BN, AD).
-- EU-INDEX-NO-CAP-TEST-MISSING: 5 tests (62e04dba + c98feba1).
-  Estructural (constante == 4 EU), funcional (CSV sintetico
-  30 USA -> 20 devueltos, 25 EU -> 25) y end-to-end.
-- TEST-SCRIPTS-SYS-PATH-DYNAMIC: 4 tests (90080ff8 + 01e1cdf0).
-  Scanner AST dinamico via git ls-files, tolerante a BOM
-  (utf-8-sig), detecta alias (import sys as _sys), cubre
-  imports en try. 27 scripts detectados.
-- COMPLETION-ATTEMPT-NO-STEP-AWARENESS: 5 tests (206702f9 +
-  76983040). `_collect_failed_steps()` consulta API GitHub
-  via gh, anade `FAILED_STEP:<name>` a failed_contracts y
-  `step failed: <name>` a reasons. Silencioso en fallos.
+### 2.4. Cierres por evidencia empirica
 
-### 2.7. Lecciones aprendidas
+**TOP20-EU-INDICES / TOP20-USA-INDICES** -> WONT_FIX. Razón: run.py ya
+pasa selection_mode="target_weight" a compute_wyckoff_snapshot desde
+e7f27cd0. Esa funcion aplica selector uniforme a usa_sectors_df,
+usa_indices_df y eu_indices_df. Confirmado en artifact p1-h02 del run
+40877139685: SPY sel_n=167, QQQ sel_n=41, DIA sel_n=20. Los tickets
+describian el estado pre-e7f27cd0.
 
-- Tests que leen `data/` real rompen en cuanto el bot cambia
-  el universo (255 -> 287). Solucion: MAPPINGS_DIR + tmp_path,
-  no relajar los asserts.
-- `git add` selectivo sin `git status -sb` completo puede dejar
-  ficheros fuera del commit (bug reincidente, ya en HANDOFF
-  sesion 14 §6.2).
-- `verifica_gobernanza.py` solo validaba 'el YAML parsea'.
-  Duplicados de clave, ids embebidos y tipos incorrectos se
-  colaban. 2 checks nuevos cierran esa puerta.
-- Scripts PowerShell con `'<placeholder>'` interpolado rompen
-  si el SHA es numerico. Usar `chr(39)` o comillas simples
-  escapadas.
-- Here-string multilinea en consola interactiva: no fiable.
-  Preferir arrays de lineas. Repetido de sesion 14.
+**P1-H02-EU-VERIFICACION** -> FIXED. FEZ cov_vs_sel=100%, ISF.L=100%,
+DAXEX=100%, LYXI=100%. Los 22 tickers que p1_h02 local veía ausentes
+están en el parquet del runner (artefacto del propio run). La medición
+previa usaba parquet local pre-fix (357 tickers, 2026-10-26).
 
-### 2.8. Bug hunt de codigo (9 commits): P7 + except + cache + rate limit
+**DICT3-REACCUMULATION** -> WONT_FIX. Detector implementado (T1-T7 verdes),
+ejecutado sobre cohort: 1185 episodios, 1171 evaluables. C1 falla (3 años
+>30%), C2 falla (38.43% < 60%). Informe 60_resultado_reaccumulation.
 
-**P7 look-ahead (4 commits).** Auditoria AST de 164 ficheros.
-`iloc[-N:]` sobre series con huecos: 3 bugs reales (1cd608bc,
-helper `slice_last_n_sessions`). `endDate` NY Fed con
-`Timestamp.now()`: determinismo roto (86ff433c). `resolve_reference_
-date` centraliza el fallback (cee53c02), guard AST de 4 patrones
-(iloc, shift(-N), fillna bfill, datetime.now no whitelisted).
-18 entries whitelist documentadas.
+**DICT3-H04-INFERENCE-V2** -> WONT_FIX. 2 versiones rechazadas. v3 exige
+checklist 10 puntos, validacion prospectiva 3 años. ROI inviable.
 
-**P7 Fase 4 observacion vs formato (2 commits, a4a28d9e + a6a8f017).**
-Separacion `resolve_observation_date` (raise si None, 7 funciones
-de observacion) vs `resolve_reference_date` (fallback, funciones
-de formato/render). 7 funciones migradas: flows_secondary,
-mte_confirmation, validation_gate, download_market_data,
-download_stock_prices, sector_breadth, data_quality.
+**SOW-HOLDOUT-IMMUTABLE** -> WONT_FIX. Diagnostico empirico: cohort es
+99.3% S&P 500 actual, los 20 tickers bloqueados son 100% SPY/QQQ
+actuales. Ningun consumidor futuro necesita cohort como holdout limpio:
+SOW-V6 cerrado WONT_FIX, SOW-BEAR no menciona cohort en v1.10, validadores
+existentes ya ejecutaron. Se promueven los 20 a universe_expansions.yaml.
+Contrato v1.2 conservado como documento, sin valor normativo nuevo.
+Informe: docs/auditoria/wyckoff/78_cierre_holdout_2026-10-29.md.
 
-**Bug de propagacion (a6a8f017).** 3 de las 7 funciones tenian
-el raise DENTRO de su propio `try/except Exception`. Se capturaba,
-se imprimia "omitido" y se devolvia None. Silencio, el bug
-original. Movido el raise antes del try en _compute_mte,
-compute_flows_secondary y _compute_sector_breadth_health (con
-early-return de df_stocks vacio antes del raise). Detectado por
-test de contrato `test_compute_sector_breadth_health_raise_si_
-none`. Sin el, el raise era fe.
+### 2.5. Reglas operativas aprendidas
 
-**Except silenciosos (b8b0de96).** 164 ficheros, 51 `except
-Exception`. 0 bare_except. 4 bugs reales: write_artifact_with_
-manifest (fail-close con fail_on_invalid, callers de pipeline
-pasan True), str(e) en except anidado (str(be)),
-run.py:252/352 pass→print. 46 except restantes clasificados
-(fail-soft intencional, log, fallback de helpers).
+1. **force=true workflow_dispatch NO entre 13:30-20:00 UTC**. Verificar
+   `(Get-Date).ToUniversalTime()` antes. Si hora entre 13 y 20, abortar.
 
-**Cache freshness (4150a68e).** 3 bugs: data_loader no validaba
-tickers en cache-hit (ETF nuevo sin descargar hasta 23h);
-CSV legacy (market_data.csv, stock_prices.csv) resucitaba por
-mtime (eliminado, solo parquet); min_coverage=0.90 hardcoded
-(CACHE_MIN_COVERAGE en config.settings).
+2. **yaml.safe_load antes de commit** en cualquier cambio de daily_run.yml.
+   Una indentacion de 6 espacios en `run: |` (debe ser 10) rompe el YAML
+   y GitHub rechaza workflow_dispatch con HTTP 422.
 
-**Rate limiting (780930e6).** 2 bugs: retry_utils.retry_call con
-`backoff * attempt` daba sleep(0) en el primer retry (primer
-reintento inmediato, agrava 429); stock_data_loader retry
-individual sin sleep entre tickers fallidos (N requests
-back-to-back, 429 garantizado). Fix: `backoff * (attempt + 1)`
-y `try/finally` con `time.sleep(delay)` en el bucle de retry.
+3. **git push siempre con `if ($LASTEXITCODE -ne 0)`**. Sin eso, el commit
+   falla silenciosamente si el bot ha pusheado concurrentemente. Tras un
+   push fallido, `git pull --rebase origin main` y reintentar.
 
-**Docs firma auditor (68e9701b).** 4 docs con seccion de firma
-nueva (59 §8, 70-v2b §6, 70-v2d §7, 73 §7). Formato unificado:
-Aprobado / Aprobado con cambios / Rechazado. 7 mensajes de
-envio preparados. Pendiente: canal de envio (no documentado en
-repo, decision del usuario).
+4. **Here-string simple `@...@`** para bloques largos. `@"..."@` expande
+   variables y rompe `"` en f-strings. Verificar tamaño tras escribir.
 
-**Deudas menores no auditadas**: resource leaks (open sin with,
-impacto bajo en src/, mas en scripts/), race conditions en
-escrituras atomicas (mitigado por fail-close de manifest).
+5. **Antes de patch en tests**: leer el fichero para ver qué comportamientos
+   ancla. `01_METODO.md §7`: "el test es el contrato". Cambiarlo requiere
+   decisión explícita, no relajar asserts.
 
-### 2.9. SOW-HOLDOUT-IMMUTABLE: H-01/H-02/H-03 resueltos + v1.1 (6 commits)
-
-**Dictamen externo 2026-10-28 (APROBADO CON CAMBIOS, requiere v1.1).**
-4 P0 + 4 hallazgos. Resueltos tecnicamente y redactada v1.1 en la
-misma sesion.
-
-**Infraestructura H-01/H-03 (45d48c5d):**
-- `scripts/audit/holdout_manifest.py`: SHA-256 + hash canonico +
-  tickers_sha256. Modos default/--verify/--update. No sobrescritura
-  silenciosa. Manifest versionado en `data/mappings/holdout_manifest.json`.
-- `scripts/audit/holdout_intersection.py`: interseccion exacta de
-  universos. `data/mappings/holdout_intersection.json`.
-- Datos reales: cohort 268, r3000 3423, interseccion 266, solo_cohort 2.
-- 11 tests en `tests/test_holdout_manifest_intersection.py`.
-
-**Fix CI (f7749f69):** los parquets reservados estan gitignored,
-no existen en CI. Skipif en los 2 tests que los hashean/leen.
-
-**Doc 74 H-04/H-07 (93bc595d):**
-- 5 hechos del analisis: SOW-V6 ya consumio la reserva (268/3423);
-  hueco temporal 2026-10-24 (parquets) vs 2026-10-06 (SOW-V6);
-  r3000 no es Russell 3000 (all_tickers.txt generico); cohort es
-  S&P 500 actual aplicado retroactivamente; docs 51-56 no mencionan
-  268/3423.
-- Decisiones auditor: H-04 opcion B (1 item por holdout con historial
-  de experimentos consumidos). H-07 opcion 1 (declarar poblacion
-  real + limitaciones, sin reconstruir historico).
-- Condiciones: hash actual verificable desde 2026-10-28, NUNCA como
-  hash historico de SOW-V6. SOW-BEAR-CONFIRMATION no puede figurar
-  como SEALED_UNRUN (diseno ya informado por SOW-V6).
-
-**H-02 capture_experiment_env.py (d90f2600):**
-- Captura: commit, prereg ancestro de HEAD (evidencia temporal),
-  requirements SHA-256, validators, modules, params por validador
-  via AST, sow_params, seed, holdout manifest.
-- Precondiciones fail-close: dirty sin --allow-dirty, prereg no
-  ancestro, holdout manifest ausente.
-- 7 tests en `tests/test_capture_experiment_env.py`.
-- Smoke real: 5 validators, cada uno con CANDIDATE={N:40,M:5,X_ATR:1.0,Y_VOL:1.1},
-  EMBARGO=50, H=20, 23 folds. Los 4 WYCKOFF_SOW_* en null (candidata
-  no activada en produccion).
-
-**Contrato v1.1 (a5a26bdb):**
-- Doc 58 v1.0 (259 lineas) -> v1.1 (482 lineas). 14 secciones.
-- H-01/H-03 referenciados. H-02/H-04/H-05/H-06/H-07/H-08 redactados.
-- Tests T6-T10 definidos en §9.2 (no implementados; el auditor no
-  los exige escritos para firmar v1.1, solo definidos).
-- SOW-HOLDOUT-IMMUTABLE sigue IN_PROGRESS hasta firma.
-
-**Consolidacion backlog (43bf21e0):**
-- `docs/gobernanza/BACKLOG_BLOQUEADO_EXTERNO.md`: 12 items bloqueados
-  en una tabla. Indice, no fuente canonica.
-- Regla: no se redactan mas versiones por si acaso. Solo envio cuando
-  el usuario decida canal.
+---
 
 ## 3. FRENTES CERRADOS (acumulado)
 
-Sesiones previas (resumen):
-- H1-H19, A1-A6, B, C, F, E: cerrados.
-- SLPM, lideres por sector, fase ETF del ranking, classify_wyckoff_phase,
-  sistema legacy de indices: RETIRADOS en sesion 3 (2026-10-24).
-- SOW-V6: WONT_FIX 2026-10-24.
-- UTAD_PENDING/SPRING_PENDING: DESCARTADOS pre-registro 61.
-- Regla de vigencia unidireccional: DESCARTADA pre-registro 60.
-
-Sesion 10 (2026-10-25):
-- PIT holdings (holdings_snapshots.csv append-only).
-- H-03 FORMING invalida si rompe rango.
-- H-06 WLS stability.
-- structure_ratio continua + n_estructuras.
-- sector_regime_matrix schema v2.
-- Fix Xetra (date has no attribute date).
-- Gate check 11 (migracion WARN vs regresion BLOCKED).
-
-Sesion 11 (2026-10-26):
-- PODA-BITACORA-DIA-EN-CURSO: FIXED.
-- DICT3-H05-FILLNA-FUTURE: FIXED (bar_flags en build_ticker_df).
-- FASE-6-ROUTER-UNIFICADO: FIXED.
-- A.2c TOP20 sectores USA: APROBADA CONDICIONADA por auditor.
-- PERSIST-REPLACE-DATE: FIXED (bug huerfanas en subconjuntos).
-- PCR-SKIP-NO-DATA: FIXED (bug receipt ausente).
-
-Sesion 12 (2026-10-26):
-- P1-H01 selector
-
-2026-10-28 (sesion 15):
-- AUTONOMY-RADAR-CATALOG-MAX-NEW-TOO-LOW: FIXED 64866361.
-  MAX_NEW excluye tickers declarados en universe_expansions.
-- COMPLETION-ATTEMPT-NO-STEP-AWARENESS: FIXED 206702f9.
-  attempt registra FAILED_STEP:<name>.
-- PARSE-SSGA-FEZ-TEST-MISSING: FIXED 290f7977. 6 tests.
-- EU-INDEX-NO-CAP-TEST-MISSING: FIXED 62e04dba. 5 tests.
-- TEST-SCRIPTS-SYS-PATH-DYNAMIC: FIXED 90080ff8. 4 tests.
-
- con estados: HECHO.
-- P1-H02 cobertura efectiva: HECHO.
-- P1-H03 invariantes backfill: HECHO (5/6).
-- P1-H04 sesgo PIT visible: HECHO.
-- P1-H06 tickets gobernanza: HECHO.
-- P1-H05 separacion A.2c vs H-04: HECHO (H-04 rechazado).
-- Dictamen H-04 respondido: doc 73 + DICT3-H04-INFERENCE-V2.
-
-Sesion 13 (2026-10-27):
-- WYCKOFF-CLASSIFY-PHASE-HANG: FALSE_POSITIVE.
-- WYCKOFF-TICKER-NORMALIZATION: FIXED (bug real, BRK.B en XLF).
-- Regeneracion historica con BRK.B: HECHO (f71eb49c).
-- `data_quality.csv` a 2026-10-26: HECHO (run manual).
-
-Sesion 14 (2026-10-27):
-- PCT-FLOAT-ROUNDING-DIVERGENCE: FIXED (dbdbf5c5, doble run byte-identico).
-- ARRANQUE-C6-GHOST: FIXED (renombrado, premisa falsa).
-- HANDOFF-MD-OBSOLETO: FIXED.
-- GOVERNANZA-CI-NO-STEP: FIXED (step Verify governance en CI).
-- GOVERNANZA-HANDOFF-OBSOLETO: FIXED (ea7f45df).
-- TOP20-EU-HOLDINGS-INCOMPLETOS: FIXED (ee7aac87).
-- CURRENT-PHASE-BASIS-CSV: WONT_FIX (medido, ilegible).
-- ACCUMULATION-ZERO: FIXED (nota en reporte).
-- VALIDATION-GATE-NO-STANDALONE: WONT_FIX (opcion a).
-- YAHOO-PARTIAL-HISTORY-PREEXISTING: WONT_FIX (35 tickers IPOs).
+H1-H19, A1-A6, B, C, F, E: cerrados. Detalle en 04_HISTORICO.md.
+Sesion 3 (2026-10-24): SLPM, lideres por sector, fase ETF, classify_wyckoff_phase
+  y sistema legacy de indices retirados. Sistema holdings-based en produccion.
+Sesion 10 (2026-10-25): PIT holdings append-only, H-03, H-06, structure_ratio
+  continua, sector_regime_matrix v2, gate check 11.
+Sesion 11 (2026-10-26): PODA-BITACORA, DICT3-H05, FASE-6-ROUTER, A.2c,
+  PERSIST-REPLACE-DATE, PCR-SKIP-NO-DATA.
+Sesion 12 (2026-10-26): P1-H01 selector con estados, P1-H02 cobertura,
+  P1-H03 invariantes, P1-H04 sesgo PIT, P1-H06 gobernanza, P1-H05 separacion.
+Sesion 13 (2026-10-27): WYCKOFF-CLASSIFY-PHASE-HANG FALSE_POSITIVE,
+  WYCKOFF-TICKER-NORMALIZATION FIXED, regeneracion historica BRK.B.
+Sesion 14 (2026-10-27): PCT-FLOAT, ARRANQUE-C6, HANDOFF, GOVERNANZA-CI,
+  TOP20-EU-HOLDINGS-INCOMPLETOS, CURRENT-PHASE-BASIS-CSV, ACCUMULATION-ZERO,
+  VALIDATION-GATE-NO-STANDALONE, YAHOO-PARTIAL-HISTORY.
+Sesion 15 (2026-10-28): 4 P0 pipeline (MAX_NEW, .schema, catalog CSV, REGISTRO),
+  4 tickets deuda (PARSE-SSGA-FEZ, EU-INDEX-NO-CAP, TEST-SCRIPTS, COMPLETION-
+  ATTEMPT), 5 frentes bug hunt (P7, except, cache, rate limit).
+Sesion 16 (2026-10-29): 4 P0 pipeline (tzinfo, YAML, .schema staging, conftest),
+  autonomia externa (retry + health FAIL + amundi), P1-H02-EU-VERIFICACION
+  FIXED, TOP20-EU/USA-INDICES WONT_FIX, DICT3-REACCUMULATION WONT_FIX,
+  DICT3-H04-INFERENCE-V2 WONT_FIX, SOW-HOLDOUT-IMMUTABLE WONT_FIX.
 
 ---
 
 ## 4. PENDIENTES VIVOS
 
-Indice de frentes. El detalle vive en `05_BITACORA.md`
-(cronologia reciente) y `04_HISTORICO.md` (tematica). Este
-documento solo lista estado.
+### 4.1. Bloqueados por auditor externo (3)
 
-### 4.1. Fases del refactor de outputs
+- **DICT3-TOP20-COBERTURA**: A.2c desplegado condicionado. 6 acciones:
+  4 cerradas (P1-H01, P1-H02, P1-H03, P1-H04), 1 abierta (P1-H05 ya en
+  doc 73), 1 pendiente (P1-H06 gobernanza). Solicitud de cierre enviada
+  en doc 70-v2d. Pendiente respuesta.
 
-Fases 1-4b y 6 cerradas. Queda:
-- **Fase 5:** structure_score continuo. Depende de
+- **C2-920**: discrepancia 920 baseline IAE. Auditor debe publicar comando
+  + HEAD del valor externo (-4.264.449.932). Sin eso, no reproducible.
 
-### 4.2. Deudas tecnicas OPEN
+- **SOW-BEAR-CONFIRMATION**: v1.10.1 sin redactar. 3 P0 del dictamen
+  2026-10-28 (universo ETF vs constituyentes, parametros SOW explicitos,
+  market proxy fijo). NO depende de cohort (a diferencia de v1.10).
 
-Generales:
-- IWM-HOLDINGS-EXPANSION: sub-fase descarga, protocolo 6 pasos.
-  Medido 2026-10-27: IWM tiene 1977 holdings; el top-20 cubre
-  ~6.8% del peso. Para llegar a 50% haria falta descargar ~700
-  tickers. Decision de producto pendiente (el sistema holdings-
-  based no gana nada con microcaps).
+### 4.2. Datos futuros (2)
 
-Del dictamen 2026-10-25 (doc 68):
-- DICT3-H04-INTERVALS (OPEN): rechazado por auditor H-04.
+- **WYCKOFF-5BX**: n_confirmed_H20_complete >= 550 (~2027).
+- **TOP20-FALTANTES-DATOS**: 3 IPOs (WBD, HONA, SPCX) resueltas con
+  sesiones. 20 tickers del cierre SOW-HOLDOUT en proximo scheduled.
+  Verificable con artifact p1-h02-coverage.
 
-Del dictamen 2026-10-26 (doc 70-v2):
-- DICT3-TOP20-COBERTURA (OPEN): 4 acciones ejecutables cerradas.
-  Solicitud de cierre en doc 70-v2d. Pendiente respuesta auditor.
-- TOP20-FALTANTES-DATOS (IN_PROGRESS): 40 unicos (no 52 filas),
-  35 holdout / 2 nadie (DDOG, MRNA) / 3 pocas barras (WBD,
-  HONA, SPCX). DDOG y MRNA en marcha por autonomia (yaml).
-
-Del dictamen H-04 (2026-10-26):
-
-2026-10-28 (sesion 15):
-  cap EU). Parquet productivo aun no tiene los 112 tickers EU.
-  Criterio de cierre (REGISTRO): verificar en el proximo run
-  scheduled que data/stock_prices.parquet contiene los 112.
-  No verificable hasta que el pipeline complete un run scheduled
-  exitoso con el step build_catalog_csvs ya añadido.
-- SOW-BEAR-CONFIRMATION (IN_PROGRESS): dictamen externo 2026-10-28
-  (APROBADO CON CAMBIOS, requiere v1.10.1). 3 P0 nuevos: universo
-  ETF vs constituyentes, parametros SOW explicitos, market proxy
-  fijo. v1.10.1 NO redactada. Pendiente decision del usuario.
-
-**Indice completo de bloqueos externos:**
-`docs/gobernanza/BACKLOG_BLOQUEADO_EXTERNO.md` (43bf21e0).
-12 items: 8 esperan auditor, 1 datos futuros, 1 decision de
-producto, 2 items internos. Ninguno bloquea el pipeline diario.
-
-### 4.3. Deudas detectadas en sesion 15 (sin ticket)
-
-- Ninguna. Los 4 tickets abiertos al arrancar (PARSE-SSGA-FEZ,
-  EU-INDEX-NO-CAP, TEST-SCRIPTS-SYS-PATH, COMPLETION-ATTEMPT)
-  estan cerrados con test + evidencia en REGISTRO.
-
-### 4.4. Items OPEN observacionales (fechas)
+### 4.3. Items OPEN observacionales (fechas)
 
 | Item | Fecha | Accion |
 |---|---|---|
-| H5.3 | 2026-11-20 06:17 UTC | Verificar cron trimestral 13F |
+| H5.3 | 2026-11-20 | Verificar cron trimestral 13F |
 | RECEIPT-AUDIT-LAG | 2026-11-17 | Cierre con 4 semanas obs |
 | CRON-SLOTS-OBS | 2026-11-10 | Revision runs 20-10 a 10-11 |
 | SCHEDULER-DELAYS | 2026-11-10 | p95 delays |
 
-### 4.5. BLOCKED_EXTERNAL
+### 4.4. Decision de producto (1)
 
-- C2-920: discrepancia 920 baseline IAE. Auditor externo.
-- WYCKOFF-5BX: `n_confirmed_H20_complete >= 550` (~2027).
+- **IWM-HOLDINGS-EXPANSION**: IWM tiene 1977 holdings, top-20 cubre
+  ~6.8% del peso. Para 50% haría falta descargar ~700 tickers. El
+  sistema holdings-based no gana nada con microcaps. Cerrar como
+  WONT_FIX razonado o abrir trabajo de descarga.
 
-### 4.6. Auditoria de codigo (sesion 15, cerrada)
+### 4.5. Pendiente de verificacion (proximo scheduled)
 
-5 frentes cerrados con 14 bugs reales y guard AST:
+- **20 tickers nuevos** (19 SPY + SHOP QQQ) descargados en proximo
+  scheduled (23:17 UTC 29-10 o 03:17 UTC 30-10). Verificar con:
+  `gh run download <rid> -n p1-h02-coverage -D tmp` + inspeccionar CSV.
+  SPY esperado ~85%, QQQ esperado ~85%.
 
-| Frente | Commits | Guard |
-|---|---|---|
-| P7 look-ahead (iloc, shift, fillna, datetime.now) | 1cd608bc, 86ff433c, cee53c02 | test_p7_ast_guard.py (4 patrones) |
-| P7 Fase 4 observacion vs formato | a4a28d9e, a6a8f017 | test_fase4_observacion_vs_formato.py (7 funciones AST + contrato) |
-| Except silenciosos | b8b0de96 | test_write_artifact_fail_on_invalid.py (5) |
-| Cache freshness | 4150a68e | test_cache_freshness_audit.py (7) |
-| Rate limiting | 780930e6 | test_retry_rate_limit_audit.py (4) |
-
-Deudas menores no auditadas (ROI decreciente, ticket si
-aparece sintoma): resource leaks (`open` sin `with`, mas en
-`scripts/`), race conditions en escrituras atomicas (ventana
-entre 2 `os.replace` parquet/manifest, mitigado por fail-close).
+---
 
 ## 5. COMO ARRANCAR
 
@@ -440,23 +231,18 @@ entre 2 `os.replace` parquet/manifest, mitigado por fail-close).
     git log --oneline -5
     git status -sb
     py scripts\generate_estado_sistema.py
-    py scripts\verifica_gobernanza.py
+    py scriptserifica_gobernanza.py
     py scripts\genera_indice_auditorias.py
     py scripts\poda_bitacora.py --check
-    py -m pytest tests\ -q --tb=line -m "not integration_real_data" -n auto --dist loadfile
     py -m pytest tests\ -q --tb=line -n auto
-    py -m pyflakes .
-    py -m compileall . -q
+    py -m pyflakes . ; py -m compileall . -q
 
 Esperado:
-- HEAD = git log --oneline -1.
+- HEAD = `git log --oneline -1`.
 - ahead 0, behind 0.
 - Working tree limpio.
-- Tests con filtro: ~3908 passed, 2 skipped, 13 deselected.
-- Tests sin filtro (autoritativo): 3956 passed, 2 skipped.
-- Gobernanza: [OK].
-- Indice H1-H18: [OK].
-- Bitacora: [OK].
+- Tests: ~4021 passed, 2 skipped.
+- Gobernanza: [OK]. Indice H1-H18: [OK]. Bitacora: [OK].
 - pyflakes silencio, compileall OK.
 
 ---
@@ -465,117 +251,100 @@ Esperado:
 
 ### 6.1. Operativas (PowerShell / Windows)
 
-- **Runs locales SIEMPRE en consola visible.** Nunca
-  `Start-Process -WindowStyle Hidden`. El usuario lo exige desde
-  sesion 14.
-- Worktree antes de procesos largos.
-- `python` sin ruta resuelve al alias Microsoft Store. Usar la ruta
-  real: `C:\Users\marta\AppData\Local\Python\pythoncore-3.14-64\python.exe`.
-  O `py` (launcher).
-- stdout bufferizado en `Start-Process -RedirectStandardOutput`: el log
-  no crece hasta el final. Usar checkpoint, no log, para monitorizar.
-- `Set-Content -Encoding UTF8` en PS 5.1 anade BOM. Usar
-  `[System.IO.File]::WriteAllText(..., [System.Text.UTF8Encoding]::new($false))`.
-- `AppendAllLines` no acepta encoding. Leer + concatenar + WriteAllLines.
-- CRLF en el repo: `Replace` con `\n` falla. Usar arrays de lineas o
-  `ReadAllLines` + `WriteAllLines`.
-- `$var:` en here-string se interpreta como referencia a unidad. Usar
-  `${var}`.
-- Here-string multilinea en consola interactiva: no fiable. Preferir
-  arrays de lineas.
+- Runs locales SIEMPRE en consola visible.
+- python sin ruta resuelve a Microsoft Store. Usar py o ruta real.
+- Here-string simple `@...@` para bloques largos. `@"..."@` expande
+  variables y rompe `"` en f-strings.
+- Verificar tamaño tras WriteAllText (protege contra truncación silenciosa).
+- `$var:` en here-string se interpreta como referencia a unidad. Usar `${var}`.
 
 ### 6.2. Git
 
-- **`git add` selectivo omitio scripts en varios commits.** Local pasaba
-  (working tree con el fix), CI fallaba (usaba la version antigua).
-  Antes de cada commit de gobernanza: `git status -sb` y revisar que
-  TODOS los ficheros modificados relevantes estan staged.
-- Workflow de commits: 1 cambio = 1 verificacion = 1 commit. No mezclar.
-- Si el bot pushea a main durante la sesion: `git fetch` + `git rebase
-  origin/main` (commits locales no pusheados, seguro). Nunca `git merge`.
-- Commit SHA para REGISTRO: `git rev-parse --short HEAD` DESPUES del
-  commit. Para FIXED que necesita SHA, primero commit docs sin REGISTRO,
-  luego SHA, luego commit REGISTRO.
+- **git push SIEMPRE con `if ($LASTEXITCODE -ne 0)`**. Sin eso, falsos
+  positivos si el bot pushea concurrentemente.
+- Tras push rechazado: `git fetch + git pull --rebase origin main` y push.
+- `git add` selectivo + `git status -sb` completo antes de commit.
+- 1 cambio = 1 verificacion = 1 commit.
+- Para FIXED con SHA: commit sin REGISTRO, luego SHA, luego commit REGISTRO.
 
-### 6.3. Verificacion
+### 6.3. Workflow_dispatch
 
-- Verificar en CI, no solo en local.
-- pyflakes sobre todo el repo (`.`). Pasarle un `.yaml` da error falso.
-- Cambios de firma: enumerar consumidores via AST, no regex.
-- Excepciones que capturan y siguen: verificar si silencian bug.
-- Auditar en 2 dimensiones: headers Y menciones textuales.
-- Schema bump: migracion WARN vs regresion BLOCKED.
-- `git checkout -- outputs/` borra trabajo no commiteado.
+- **REGLA NUEVA**: force=true NO entre 13:30-20:00 UTC (US market open).
+  Verificar con `(Get-Date).ToUniversalTime()` antes. Lanzar a 19:19 UTC
+  el 29-10 fue error, cancelado antes de Commit.
+- Slots seguros: pre-13:30 UTC o post-23:00 UTC.
+- Scheduled slots: 17 23, 17 3, 17 5, 17 7, 17 11 (todos UTC).
 
 ### 6.4. Contratos
 
-- Receipt fail-closed (enmienda v1.1).
+- Receipt fail-closed.
 - Contrato EQUITY_EOD critical=True. coverage < 0.90 bloquea.
-- Gobernanza canonica. Items a `docs/gobernanza/REGISTRO.yaml`.
-- `verifica_gobernanza.py` en CI (step Verify governance). Lee
-  HANDOFF raiz canonico, no docs/handoffs/HANDOFF.md (obsoleto).
-- `sector_regime_matrix.py` publica structure_ratio continua +
-  n_estructuras. NO structure_positive (retirada).
-- **structure_ratio DESCRIPTIVO, NO INFERENCIAL**. IC95 no
-  autorizados en reporte. Dictamen H-04 (2026-10-26). Doc 73.
-- `holdings_snapshots.csv` append-only REAL (sin sort_by global,
-  fix f939fb7e).
-- `persist(..., replace_date=True)` para subconjuntos filtrados
-  (wyckoff_holdings 6 CSVs).
-- `compute_pcr_signals(persist_history=True)` emite skip NO_DATA
-  cuando CBOE no responde.
-- Selector `_select_target_holdings`: `MIN_TICKERS_PER_GROUP=
-  TOP_N_HOLDINGS=20`, `TARGET_WEIGHT_COVERAGE=0.85`,
-  `max_missing_weight_ratio=0.0` default. Retorna `(df, cob, estado: str)`.
-- **`normalize_yahoo_ticker` antes de cualquier lookup en parquet**
-  (`BRK.B` -> `BRK-B`). Preservar nombre original en output.
-  Contrato WYCKOFF-TICKER-NORMALIZATION.
-- `daily_run` con `gate.should_run=false` (finde/festivo): runs
-  de 1 min skipped. No es fallo.
-- NaNs >10% en ~35 tickers (ABNB, APP, BE, CARR, CASY, CEG, COIN,
-  CRWD, CTVA, DASH, DDOG, DOW, EXE, FDXF, FOX, FOXA, GEHC, GEV,
-  HONA, HOOD, KVUE, MRNA, OTIS, PLTR, PSKY, Q, RDDT, SNDK, SOLV,
-  UBER, VICI, VLTO, VRT, VYLR, WBD, XLC) preexistentes.
-- **EU_INDEX_ETFS_NO_CAP** en `src/stock_data_loader.py`: FEZ,
-  DAXEX, ISF.L, LYXI saltan head(20). USA sin cambios.
-- **parse_ssga_fez.py** valida contra Yahoo (como BlackRock).
-  `NDA-FI.HE` excluido por D11.
-- **Autonomia**: el sistema corre en GitHub (daily_run.yml, 5
-  slots/dia). Cualquier cambio en `get_stock_list()` o en
-  `universe_expansions.yaml` se aplica SOLO en el proximo run
-  programado. No hace falta run local para activar.
+- Gobernanza canonica. Items a docs/gobernanza/REGISTRO.yaml.
+- `verifica_gobernanza.py` en CI. Exige:
+  * FIXED con `commit:` alcanzable desde refs.
+  * FIXED NO aparece en HANDOFF §4 (reabre item cerrado).
+  * Sin ids embebidos, sin SHA convertido a int.
+- structure_ratio DESCRIPTIVO. IC95 no autorizados.
+- holdings_snapshots.csv append-only REAL.
+- persist(..., replace_date=True) para subconjuntos filtrados.
+- normalize_yahoo_ticker antes de lookup en parquet (BRK.B -> BRK-B).
+- daily_run con gate.should_run=false (finde/festivo): runs de 1 min.
+- EU_INDEX_ETFS_NO_CAP en stock_data_loader: FEZ/DAXEX/ISF.L/LYXI.
+- parse_ssga_fez.py valida contra Yahoo. NDA-FI.HE excluido por D11.
+
+### 6.5. Autonomia
+
+- El sistema corre en GitHub (daily_run.yml, 5 slots/dia). Cualquier cambio
+  en get_stock_list() o universe_expansions.yaml se aplica en proximo run.
+- universe_expansions.yaml: xli_extra, xlk_extra, xlv_extra,
+  spy_extra (19), qqq_extra (1: SHOP). SPY/QQQ en next scheduled.
+- Retry 3x backoff en SSGA/BlackRock/Invesco/Amundi.
+- health_check holdings: stale/ausentes/incompletos -> FAIL -> issue.
+- SOW-HOLDOUT WONT_FIX: cohort = 99.3% S&P 500, no holdout. Parquets
+  reservados conservados como evidencia historica, sin valor contractual.
 
 ---
 
 ## 7. REFERENCIAS
 
-Corpus normativo: `Consolidacion_Documentos/` (12 docs).
-Gobernanza: `docs/gobernanza/` (README, REGISTRO.yaml, ANCLAS.yaml).
-Contrato del gate: `docs/auditoria/daily_run_gate_contrato_v1.md` +
-enmiendas v1.1 y v1.2.
-Expediente Wyckoff: `docs/auditoria/wyckoff/` (51-73).
+Corpus normativo: Consolidacion_Documentos/ (00-08).
+Gobernanza: docs/gobernanza/ (README, REGISTRO.yaml, ANCLAS.yaml,
+  BACKLOG_BLOQUEADO_EXTERNO.md).
+Contrato del gate: docs/auditoria/daily_run_gate_contrato_v1.md +
+  enmiendas v1.1 y v1.2.
 
-Documentos clave (sesion 14):
-- `docs/auditoria/wyckoff/57_contrato_v1_10.md`: contrato SOW-BEAR-CONFIRMATION.
-- `docs/auditoria/wyckoff/58_contrato_holdout_inmutable.md`: contrato holdout.
-- `docs/auditoria/wyckoff/59_pre_registro_reaccumulation.md`: pre-registro
-  DICT3-REACCUMULATION congelado.
+Expediente Wyckoff (docs/auditoria/wyckoff/):
+  51-56: SOW-V6 (7 experimentos, cerrado WONT_FIX).
+  57: SOW-BEAR v1.10 (sin redactar v1.10.1).
+  58: SOW-HOLDOUT v1.2 (WONT_FIX 2026-10-29).
+  59: DICT3-REACCUMULATION v4 (WONT_FIX 2026-10-29).
+  60: Resultado REACCUMULATION (informe empirico).
+  62-63: Sistema holdings completo.
+  69: DICT3-H04-INTERVALS (pre-registro original, rechazado).
+  70-v2b/v2d: TOP20-USA-INDICES division de alcance.
+  73: Respuesta dictamen H-04 (5 hallazgos aceptados).
+  74: Decisiones H-04/H-07 sobre holdout.
+  75: Dictamen externo TOP20-USA (confirmacion division de alcance).
+  76: DICT3-H04-INFERENCE-V2 propuesta (rechazada).
+  77: Dictamen externo H-04-INFERENCE-V2 (rechazado, requiere v3).
+  78: Cierre tecnico SOW-HOLDOUT (informe empirico).
 
-Documentos clave (sesion 13):
-- `73_respuesta_dictamen_h04_2026-10-26.md`: 5 hallazgos aceptados.
-- `72_p1_h03_invariantes_2026-10-26.md`: invariantes + regeneracion BRK.B.
-- `71_p1_h02_cobertura_efectiva_2026-10-26.md`: cobertura por grupo.
-- `70_top20_cobertura_design_v2d_2026-10-26.md`: cierre del ciclo.
+Scripts nuevos sesion 16:
+  - scripts/audit/holdout_registry.py
+  - scripts/audit/reaccumulation_detector.py
+  - scripts/_holdout_write.py
+  - data/mappings/holdout_registry.json
 
-Documentos clave (sesiones anteriores):
-- `69_h04_intervals_2026-10-26.md`: pre-registro + §12 + §13.
-- `68_respuesta_dictamen_2026-10-25.md`.
-- `66_regeneracion_historico_2026-10-25.md`.
-- `65_unificacion_estructura_2026-10-25.md`.
-- `64_schema_versions_outputs.md`.
-- `63_plan_sistema_holdings_2026-10-24.md`.
+Tests nuevos sesion 16:
+  - tests/test_p7_fase4b_tzinfo_regression.py
+  - tests/test_semantic_sha256_h01.py
+  - tests/test_h03_confirmatory_mode.py
+  - tests/test_holdout_registry_h05_h06_h07.py
+  - tests/test_h08_t6_no_sobrescritura.py
+  - tests/test_schemas_integrity.py
+  - tests/test_cierre_holdout_2026_10_29.py
+  - tests/test_reaccumulation_detector.py
 
 ---
 
 **Fin del handoff.**
-

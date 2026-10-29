@@ -22,12 +22,13 @@ porque el commit que lo contiene cambia HEAD.
 
 ## 2. Tests (pytest real)
 
-- **Resumen:** 3956 passed, 2 skipped (sin filtro; suite completa)
+- **Resumen:** 4020 passed, 3 skipped (sin filtro; suite completa)
 - **Exit code:** 0
 
 **Tests skip:**
 - `SKIPPED [1] tests\test_freshness.py:382: requiere --run-network`
 - `SKIPPED [1] tests\test_freshness.py:405: requiere --run-network`
+- `SKIPPED [1] tests\test_h03_confirmatory_mode.py:88: repo clean; no se puede probar dirty path en este entorno`
 
 ## 3. Integridad del codigo
 
