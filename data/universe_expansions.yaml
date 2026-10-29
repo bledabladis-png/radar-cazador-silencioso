@@ -1,85 +1,100 @@
-# Expansiones declarativas del universo de descarga.
-#
-# DICT3-TOP20-COBERTURA: la cobertura de holdings por grupo se limita al
-# top-N por peso (TOP_N_SECTOR_COMPONENTS = 20). Para grupos con cola larga
-# (XLI, SPY, IWM) el top-20 no alcanza el 80-90% del peso. Este fichero
-# declara tickers adicionales por grupo, descargados SIEMPRE sin cambiar
-# TOP_N_SECTOR_COMPONENTS (que sigue controlando el corte global).
-#
-# Reglas:
-# - Solo tickers que NO estan ya cubiertos por las fuentes 1-4 de
-#   get_stock_list() (top-20 sector, top-20 indice, catalogo radar,
-#   providers europeos).
-# - Cada bloque documenta: fecha, cobertura top-20 actual, cobertura
-#   objetivo, cobertura tras expansion, y los tickers anadidos.
-# - Cambios requieren test en tests/test_universe_expansions.py.
-#
-# Fuente del calculo: data/etf_holdings.csv, ordenado por weight desc.
-#
-# Metricas de cobertura:
-# - cobertura_top20_actual: peso del top-20 actual (antes de la expansion).
-# - cobertura_top20_mas_extra: peso de (top-20 UNION tickers de este
-#   bloque). Verificable contra etf_holdings.csv sin depender de parquet.
-#   Es la cobertura que aporta ESTE fichero de forma aislada.
-# - cobertura_tras_expansion: peso del top-50 XLI completo. Tras la
-#   descarga, el parquet contendra los 50 (22 ya existentes + 28 nuevos).
-#   Es la cobertura efectiva del grupo en el sistema.
-
 xli_extra:
   etf: XLI
-  fecha: "2026-10-26"
+  fecha: '2026-10-26'
   cobertura_top20_actual: 57.17
   cobertura_top20_mas_extra: 86.15
   cobertura_tras_expansion: 88.99
-  cobertura_objetivo: 80.00
+  cobertura_objetivo: 80.0
   n_tickers: 28
   tickers:
-    - AME
-    - AXON
-    - BE
-    - CARR
-    - CMI
-    - CTAS
-    - DAL
-    - EME
-    - FAST
-    - FDX
-    - FERG
-    - FIX
-    - GWW
-    - HONA
-    - ITW
-    - LHX
-    - NOC
-    - NSC
-    - ODFL
-    - PCAR
-    - ROK
-    - RSG
-    - TDG
-    - UAL
-    - UPS
-    - URI
-    - WAB
-    - WM
+  - AME
+  - AXON
+  - BE
+  - CARR
+  - CMI
+  - CTAS
+  - DAL
+  - EME
+  - FAST
+  - FDX
+  - FERG
+  - FIX
+  - GWW
+  - HONA
+  - ITW
+  - LHX
+  - NOC
+  - NSC
+  - ODFL
+  - PCAR
+  - ROK
+  - RSG
+  - TDG
+  - UAL
+  - UPS
+  - URI
+  - WAB
+  - WM
 xlk_extra:
   etf: XLK
-  fecha: "2026-10-27"
-  cobertura_top20_actual: 79.60
+  fecha: '2026-10-27'
+  cobertura_top20_actual: 79.6
   cobertura_top20_mas_extra: 80.12
   cobertura_tras_expansion: 80.12
-  cobertura_objetivo: 80.00
+  cobertura_objetivo: 80.0
   n_tickers: 1
   tickers:
-    - DDOG
-
+  - DDOG
 xlv_extra:
   etf: XLV
-  fecha: "2026-10-27"
+  fecha: '2026-10-27'
   cobertura_top20_actual: 79.08
   cobertura_top20_mas_extra: 80.25
   cobertura_tras_expansion: 80.25
-  cobertura_objetivo: 80.00
+  cobertura_objetivo: 80.0
   n_tickers: 1
   tickers:
-    - MRNA
+  - MRNA
+spy_extra:
+  etf: SPY
+  fecha: '2026-10-29'
+  motivo: 'Cierre SOW-HOLDOUT-IMMUTABLE: cohort es 99.3% S&P 500 actual y los 24 tickers
+    bloqueados son 100% S&P 500/QQQ actuales. No son holdout virgen, son universo
+    productivo natural. Promocion tecnica sin contrato, ver informe 78.'
+  n_tickers: 19
+  tickers:
+  - APH
+  - QCOM
+  - ADI
+  - WDC
+  - DELL
+  - NOW
+  - GLW
+  - ACN
+  - FTNT
+  - ADBE
+  - CDNS
+  - LITE
+  - ICE
+  - HPE
+  - SNPS
+  - MRSH
+  - INTU
+  - MSI
+  - CI
+  cobertura_top20_actual: 49.94
+  cobertura_top20_mas_extra: 53.33
+  cobertura_tras_expansion: 85.0
+  cobertura_objetivo: 85.0
+qqq_extra:
+  etf: QQQ
+  fecha: '2026-10-29'
+  motivo: 'Cierre SOW-HOLDOUT-IMMUTABLE: SHOP es holding QQQ actual. No es holdout,
+    es universo productivo.'
+  n_tickers: 1
+  tickers:
+  - SHOP
+  cobertura_top20_actual: 67.93
+  cobertura_top20_mas_extra: 68.7
+  cobertura_tras_expansion: 85.43
+  cobertura_objetivo: 85.0

@@ -13,6 +13,24 @@ import yaml
 
 EXP_PATH = Path("data/universe_expansions.yaml")
 ETF_HOLDINGS = Path("data/etf_holdings.csv")
+INDEX_HOLDINGS = Path("data/index_holdings.csv")
+
+
+def _holdings_for_etf(etf):
+    """Devuelve DataFrame de holdings del ETF (sector o indice).
+
+    Sectores en etf_holdings.csv. Indices (SPY/QQQ/DIA/IWM, FEZ...)
+    en index_holdings.csv. Devuelve None si no se encuentra.
+    """
+    if ETF_HOLDINGS.exists():
+        h = pd.read_csv(ETF_HOLDINGS)
+        if (h["etf"] == etf).any():
+            return h
+    if INDEX_HOLDINGS.exists():
+        h = pd.read_csv(INDEX_HOLDINGS)
+        if (h["etf"] == etf).any():
+            return h
+    return None
 
 
 def _cargar_yaml():
@@ -150,9 +168,9 @@ def _todos_bloques():
 @_pytest.mark.parametrize("key,block", _todos_bloques())
 def test_generico_no_esta_en_top20_del_etf(key, block):
     """Los tickers del bloque NO estan en top-20 del ETF (redundancia)."""
-    if not ETF_HOLDINGS.exists():
-        _pytest.skip("etf_holdings.csv no disponible")
-    h = pd.read_csv(ETF_HOLDINGS)
+    h = _holdings_for_etf(block["etf"])
+    if h is None:
+        _pytest.skip("holdings no disponibles para " + block["etf"])
     etf = block["etf"]
     sub = h[h["etf"] == etf].sort_values("weight", ascending=False)
     top20 = set(sub.head(20)["ticker"].tolist())
@@ -163,9 +181,9 @@ def test_generico_no_esta_en_top20_del_etf(key, block):
 @_pytest.mark.parametrize("key,block", _todos_bloques())
 def test_generico_cobertura_top20_coincide(key, block):
     """cobertura_top20_actual declarada == calculada desde etf_holdings."""
-    if not ETF_HOLDINGS.exists():
-        _pytest.skip("etf_holdings.csv no disponible")
-    h = pd.read_csv(ETF_HOLDINGS)
+    h = _holdings_for_etf(block["etf"])
+    if h is None:
+        _pytest.skip("holdings no disponibles para " + block["etf"])
     etf = block["etf"]
     sub = h[h["etf"] == etf].sort_values("weight", ascending=False).reset_index(drop=True)
     tot = sub["weight"].sum()
@@ -178,9 +196,9 @@ def test_generico_cobertura_top20_coincide(key, block):
 @_pytest.mark.parametrize("key,block", _todos_bloques())
 def test_generico_cobertura_top20_mas_extra_coincide(key, block):
     """cobertura_top20_mas_extra == peso(top-20 UNION tickers del bloque)."""
-    if not ETF_HOLDINGS.exists():
-        _pytest.skip("etf_holdings.csv no disponible")
-    h = pd.read_csv(ETF_HOLDINGS)
+    h = _holdings_for_etf(block["etf"])
+    if h is None:
+        _pytest.skip("holdings no disponibles para " + block["etf"])
     etf = block["etf"]
     sub = h[h["etf"] == etf].sort_values("weight", ascending=False).reset_index(drop=True)
     tot = sub["weight"].sum()
