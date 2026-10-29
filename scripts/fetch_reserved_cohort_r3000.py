@@ -13,6 +13,7 @@ import sys
 from pathlib import Path
 import pandas as pd
 import requests
+from scripts._holdout_write import safe_write_parquet
 
 ROOT = Path(__file__).resolve().parent.parent
 OUT = ROOT / "data" / "stock_prices_reserved_r3000.parquet"
@@ -21,7 +22,7 @@ END = "2026-10-24"
 MIN_SESSIONS = 2000
 
 
-def main() -> int:
+def main(promote=False, allow_hash_change=False) -> int:
     print("== Cohort reservada Russell 3000 ==")
     df_act = pd.read_parquet(ROOT / "data" / "stock_prices_extended.parquet")
     actuales = {str(t).upper() for t in df_act.xs("Close", axis=1, level=0).columns}
@@ -106,10 +107,26 @@ def main() -> int:
             combined[field] = pd.DataFrame(sd)
     out = pd.concat(combined, axis=1).sort_index()
     out.index.name = "Date"
-    out.to_parquet(OUT)
+    _res = safe_write_parquet(
+        out, OUT,
+        promote=promote,
+        allow_hash_change=allow_hash_change,
+    )
+    print("[holdout] action=" + _res["action"] + " match=" + str(_res["semantic_match"]))
+    if _res["action"] == "refused":
+        print("[holdout] " + _res["message"])
+        return 1
     print(f"Guardado: {OUT} ({out.shape[0]} sesiones, {len(frames)} tickers)")
     return 0
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    import argparse
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--promote", action="store_true",
+                    help="sustituye el sellado")
+    ap.add_argument("--allow-hash-change", action="store_true",
+                    help="permite --promote aunque difiera el contenido")
+    args = ap.parse_args()
+    sys.exit(main(promote=args.promote,
+                  allow_hash_change=args.allow_hash_change))
