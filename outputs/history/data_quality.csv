@@ -655,7 +655,7 @@ date,source,last_date,age_calendar_days,frequency,freshness,n_total,n_valid,cove
 2026-10-28,CFTC Position Flow,2026-10-20,8.0,cftc,CURRENT,60.0,60.0,1.0,Frescura CFTC (semanal); umbrales en config/settings.FRESHNESS_CFTC,
 2026-10-28,SEC N-PORT (posiciones),2026-06-30,120.0,sec,RECENT,26404.0,26404.0,1.0,Posiciones N-PORT. Origen: mensual (SEC); ingesta: trimestral (ZIPs). Latencia ~60d entre cierre y filing. Fecha observacion = cierre trimestre; fecha presentacion = dia del filing,
 2026-10-28,SEC N-PORT-P QQQ (flujos),2026-06-30,120.0,sec,RECENT,3.0,3.0,1.0,Flujos trimestrales N-PORT-P QQQ (Item B.6),
-2026-10-28,Macro FRED,2026-10-27,1.0,fred,CURRENT,69.0,62.0,0.8985507246376812,Datos macro manuales,
+2026-10-28,Macro FRED,2026-10-27,1.0,fred,CURRENT,70.0,63.0,0.9,Datos macro manuales,
 2026-10-28,Sector Concentration,2026-10-28,0.0,daily,CURRENT,11.0,11.0,1.0,Concentración y dispersión,1.0
 2026-10-28,Sector Breadth Momentum,2026-10-28,0.0,daily,CURRENT,11.0,11.0,1.0,Momentum amplitud,1.0
 2026-10-28,Volatility Structure,2026-10-28,0.0,daily,CURRENT,34.0,34.0,1.0,Estructura volatilidad,1.0
@@ -670,6 +670,6 @@ date,source,last_date,age_calendar_days,frequency,freshness,n_total,n_valid,cove
 2026-10-28,Sector Dispersion,2026-10-28,0.0,daily,CURRENT,11.0,11.0,1.0,Dispersion entre sectores,1.0
 2026-10-28,Sector Correlation Summary,2026-10-28,0.0,daily,CURRENT,11.0,55.0,0.9962962962962963,Correlacion entre sectores,1.0
 2026-10-28,Sector Flow Characteristics,2026-10-28,0.0,daily,CURRENT,11.0,11.0,1.0,Flujo primario sectorial,1.0
-2026-10-28,Euronext,2026-10-27,1.0,daily,CURRENT,13.0,13.0,1.0,Euronext (13/13 OK),
-2026-10-28,Xetra,2026-10-27,1.0,daily,CURRENT,19.0,19.0,1.0,Xetra (19/19 OK),
-2026-10-28,BME,2026-10-27,1.0,daily,CURRENT,19.0,19.0,1.0,BME (19/19 OK),
+2026-10-28,Euronext,2026-10-28,0.0,daily,CURRENT,13.0,13.0,1.0,Euronext (13/13 OK),
+2026-10-28,Xetra,2026-10-28,0.0,daily,CURRENT,19.0,19.0,1.0,Xetra (19/19 OK),
+2026-10-28,BME,2026-10-28,0.0,daily,CURRENT,19.0,19.0,1.0,BME (19/19 OK),
