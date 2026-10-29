@@ -32,6 +32,12 @@ def render_wyckoff_holdings_acc(tables):
             "En regimenes alcistas prolongados es esperado ver 0 ACCUMULATION "
             "confirmadas; las acumulaciones en curso aparecen como "
             "ACCUMULATION_FORMING o ya consumadas como MARKUP.*\n\n"
+            "*Nota PIT (2026-10-29): la composicion de holdings es la "
+            "vigente a la fecha del run (2026Q4), aplicada "
+            "retrospectivamente a todo el historico. No es "
+            "point-in-time: los tickers y pesos son los actuales, no "
+            "los de cada fecha historica. Sesgo de supervivencia "
+            "conocido del sistema desde sesion 3.*\n\n"
         ),
     )
 
@@ -47,6 +53,12 @@ def render_wyckoff_holdings_dist(tables):
             "*Distribucion = DISTRIBUTION (confirmada), DISTRIBUTION_FORMING "
             "(senal temprana) o MARKDOWN (distribucion consumada, precio bajo "
             "soporte). Detalle completo en outputs/history/.*\n\n"
+            "*Nota PIT (2026-10-29): la composicion de holdings es la "
+            "vigente a la fecha del run (2026Q4), aplicada "
+            "retrospectivamente a todo el historico. No es "
+            "point-in-time: los tickers y pesos son los actuales, no "
+            "los de cada fecha historica. Sesgo de supervivencia "
+            "conocido del sistema desde sesion 3.*\n\n"
         ),
     )
 
