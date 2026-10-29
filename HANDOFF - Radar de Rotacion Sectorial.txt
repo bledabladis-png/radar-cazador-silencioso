@@ -385,12 +385,6 @@ Del dictamen 2026-10-26 (doc 70-v2):
   HONA, SPCX). DDOG y MRNA en marcha por autonomia (yaml).
   35 holdout bloqueados por SOW-HOLDOUT-IMMUTABLE (pendiente
   firma).
-- TOP20-USA-INDICES (OPEN): medicion real. SPY nlargest20 49.9%,
-  target_weight 85% requiere n=167 (faltan 21). QQQ n=41
-  (faltan 5). DIA ya cumple. Bloqueado por revision externa de
-  doc 70-v2b. 2026-10-28: confirmado que los 26 tickers USA
-  (SPY 21 + QQQ 5) NO estan en universe_expansions.yaml, por lo
-  que no se descargan solos en el proximo run.
 
 Del dictamen H-04 (2026-10-26):
 - DICT3-H04-INFERENCE-V2 (OPEN): 4 decisiones de diseno.

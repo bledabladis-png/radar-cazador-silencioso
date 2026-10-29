@@ -2668,7 +2668,26 @@ items:
 - id: TOP20-USA-INDICES
   tipo: frente
   ciclo: '2026-10-26'
-  estado: OPEN
+  estado: WONT_FIX
+  razon: |
+    Funcionalidad ya cubierta por A.2c. run.py pasa
+    selection_mode="target_weight" a compute_wyckoff_snapshot desde
+    e7f27cd0. Esa funcion aplica el selector uniformemente a
+    usa_sectors_df, usa_indices_df y eu_indices_df. Confirmado en
+    produccion: artifact p1-h02-coverage del run 40877139685
+    muestra SPY sel_n=167 (no 20), QQQ sel_n=41 (no 20), DIA
+    sel_n=20 cov=85.02%. El selector por peso esta operando sobre
+    indices USA. La cobertura efectiva resultante (SPY 81.5%,
+    QQQ 79.0%) es por tickers reservados no promovidos, no por
+    el selector. Ese gap vive en SOW-HOLDOUT-IMMUTABLE y en la
+    condicion F del dictamen doc 75 (control de promocion).
+    El ticket describia el estado pre-e7f27cd0, como paso con
+    TOP20-EU-INDICES. Se cierra WONT_FIX con la misma logica.
+    Dictamen externo 2026-10-29 (doc 75): planificacion autorizada
+    limitada a SPY y QQQ; implementacion ya hecha por A.2c, no
+    requiere cambios de codigo adicionales. El bloqueo restante
+    es de gobernanza de datos reservados (F), no de codigo.
+
   descripcion: |
     Indices USA (SPY 49.9%, QQQ 67.9%, DIA 85.0%) siguen con
     nlargest(20). A.2c se limito a sectores USA. Frente separado
@@ -2797,6 +2816,15 @@ items:
     promueve ningun ticker desde holdout. Si aprueba v1.1 ->
     FIXED con SHA. Si rechaza -> WONT_FIX. Si aprueba con cambios
     -> v1.2.
+    Nota 2026-10-29: la cobertura efectiva de SPY (81.5%) y QQQ
+    (79.0%) en el artifact del run 40877139685 es inferior al 85%
+    target. Causa: tickers reservados (cohort + r3000) no
+    promovidos. Inventario: 27 tickers reservados en SPY + 5 en
+    QQQ segun condicion B del dictamen doc 75. Sin firma de este
+    contrato, no se pueden promover y la cobertura no sube. Es el
+    bloqueo efectivo de TOP20-USA-INDICES una vez implementado el
+    selector. Condicion F del dictamen.
+
 - id: GOVERNANZA-CI-NO-STEP
   tipo: deuda_tecnica
   ciclo: '2026-10-26'
