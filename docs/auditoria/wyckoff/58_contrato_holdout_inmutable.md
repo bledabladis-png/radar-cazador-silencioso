@@ -1,12 +1,14 @@
-# CONTRATO SOW-HOLDOUT-IMMUTABLE v1.1
+# CONTRATO SOW-HOLDOUT-IMMUTABLE v1.2
 
-**Estado:** BORRADOR v1.1. Pendiente de revision y firma del auditor
+**Estado:** BORRADOR v1.2. Pendiente de revision y firma del auditor
 externo. No normativo hasta firma.
-**Fecha:** 2026-10-28.
-**Ciclo:** sesion 15.
+**Fecha:** 2026-10-29.
+**Ciclo:** sesion 16.
 **Frente:** SOW-HOLDOUT-IMMUTABLE (REGISTRO.yaml, IN_PROGRESS).
-**Base:** v1.0 (commit 46b36409) + dictamen externo 2026-10-28 +
-doc 74 (informe H-04/H-07).
+**Base:** v1.1 (commit a5a26bdb) + dictamen externo 2026-10-29
+(doc 76).
+**Evidencia de implementacion:** H-01 (commit `20ae7f3c`),
+H-03 (`57d5cbb9`), H-05/H-06/H-07 (`241cd3ab`), H-08 (`0d5ce224`).
 
 ---
 
@@ -127,21 +129,56 @@ Ambos declaran en su codigo parametros congelados verificables por
 `capture_experiment_env.py`:
 
 - CANDIDATE = {"N": 40, "M": 5, "X_ATR": 1.0, "Y_VOL": 1.1}.
-- EMBARGO = 50, H = 20, 23 folds.
+- EMBARGO = 50, H = 20.
+- FOLDS = list(range(2017, 2026)) = 9 folds anuales.
 - Criterio FUNCIONA (definido en el propio script): mean(lift) > 0.05
-  AND IC95_lower > 0 AND folds_positive >= 7/9 AND
-  folds_beat_placebo_B >= 7/9.
+  AND IC95_lower > 0 AND folds_positive >= 7 AND
+  folds_beat_placebo_B >= 7, ambos sobre los folds ELEGIBLES
+  (`len(valid)`), no sobre un denominador fijo. Si algun año no
+  tiene muestra suficiente, no cuenta como elegible y el umbral
+  efectivo baja proporcionalmente. Los `print()` de los validadores
+  muestran `/9` como referencia nominal del maximo teorico, no como
+  denominador efectivo.
+- Evidencia H-02 (dictamen doc 76): la v1.1 decia "23 folds". El
+  codigo congelado usa `FOLDS = list(range(2017, 2026))` = 9 folds
+  anuales (2017..2025). El "23" era un error de redaccion de v1.1;
+  se corrige aqui.
 
 Cualquier cambio en esos scripts invalida el holdout como tal y
 requiere nueva version del contrato (§11).
 
-### 3.3. Consumidores NO declarados
+### 3.3. Inventario de consumidores (H-04, revisado v1.2)
 
-Cualquier otro script o modulo que lea de estos parquets debe:
+Tabla completa de consumidores reales detectados en el repositorio
+(actualizada 2026-10-29, commit `241cd3ab`, según grep de
+`stock_prices_reserved_(cohort|r3000)` sobre `scripts/`, `src/`,
+`indicators/`, `tests/`, `validation/`, `config/`).
 
-- Declararse en este contrato antes de usarlo.
-- Justificar por que necesita el holdout y no produccion.
-- No modificar el parquet.
+#### 3.3.1. Lectores del parquet
+
+| Tipo | Fichero | Modo |
+|---|---|---|
+| generator | `scripts/fetch_reserved_cohort.py` | escribe cohort |
+| generator | `scripts/fetch_reserved_cohort_r3000.py` | escribe r3000 |
+| validator | `scripts/purged_kfold_sow_c1_reserved.py` | lee cohort |
+| validator | `scripts/purged_kfold_sow_c1_r3000.py` | lee r3000 |
+| audit | `scripts/audit/holdout_manifest.py` | lee ambos (hash + verify) |
+| audit | `scripts/audit/holdout_intersection.py` | lee ambos (interseccion) |
+| test | `tests/test_holdout_manifest_intersection.py` | lee ambos (hash + interseccion) |
+
+#### 3.3.2. Herramientas que NO leen el parquet
+
+| Fichero | Funcion |
+|---|---|
+| `scripts/audit/holdout_registry.py` | registra estado por holdout en `holdout_registry.json` |
+| `tests/test_semantic_sha256_h01.py` | test unitario del hash semantico con DataFrame sintetico |
+| `tests/test_h03_confirmatory_mode.py` | invoca `capture_experiment_env`, que a su vez invoca `holdout_manifest --verify` |
+| `tests/test_h08_t6_no_sobrescritura.py` | test del helper `safe_write_parquet` con `tmp_path` |
+| `tests/test_holdout_registry_h05_h06_h07.py` | test unitario del registro |
+
+Cualquier otro fichero que lea los parquets reservados debe
+declararse aqui antes de usarlo, justificar por que necesita el
+holdout y no produccion, y no modificar el parquet.
 
 ---
 
@@ -221,20 +258,40 @@ de una hipotesis derivada de ellos.
 Antes de cada ejecucion confirmatoria sobre un holdout, el
 experimento debe quedar congelado y verificable:
 
-### 6.1. Huella del holdout (H-01)
+### 6.1. Huella del holdout (H-01, revisado v1.2)
 
 `data/mappings/holdout_manifest.json` (versionado) contiene, por
 cada parquet:
 
-- SHA-256 del fichero entero (`sha256`).
-- Hash canonico del esqueleto (`content_sha256`): rango temporal,
-  n_rows, n_tickers, n_fields, fields ordenados, tickers ordenados.
-- Hash de la lista de tickers (`tickers_sha256`).
+- `sha256`: SHA-256 del fichero entero. Identifica el artefacto
+  exacto. Cambia si cambia la codificacion Parquet aunque el
+  contenido sea identico.
+- `content_sha256`: hash canonico del ESQUELETO (metadatos):
+  date_min, date_max, n_rows, n_tickers, n_fields, fields
+  ordenados, tickers ordenados. NO identifica los valores OHLCV.
+- `semantic_content_sha256`: hash canonico del CONTENIDO real
+  (valores OHLCV). Ordena filas por indice y columnas por
+  (field, ticker), aplica `pd.util.hash_pandas_object` con
+  `index=True` y encadena `sha256`. Estable entre ejecuciones y
+  maquinas. Inmune a re-codificacion Parquet. Cambia con un solo
+  valor OHLCV distinto.
+- `tickers_sha256`: hash de la lista de tickers ordenada.
 - n_tickers, date_min, date_max, generator, source.
 
 Antes de cada ejecucion confirmatoria:
 `py scripts/audit/holdout_manifest.py --verify` debe pasar (exit 0).
-Si falla, el experimento NO se ejecuta.
+`--verify` compara los cuatro hashes entre el manifest y los parquets
+actuales. Si alguno difiere, el experimento NO se ejecuta.
+
+Para verificar identidad de REGENERACION (que un nuevo parquet
+conserva los datos), usar `semantic_content_sha256`. `sha256` y
+`content_sha256` son auxiliares: el primero detecta cambios de
+codificacion, el segundo cambios de esqueleto. Ninguno de los dos
+por si solo garantiza identidad de contenido (H-01 dictamen doc 76).
+
+Evidencia de implementacion: commit `20ae7f3c`, tests
+`tests/test_semantic_sha256_h01.py` (7 tests: cambio de valor ->
+cambia hash; re-codificacion -> mismo hash; NaN no rompe).
 
 ### 6.2. Congelacion del entorno
 
@@ -268,7 +325,7 @@ la ejecucion y su SHA debe pasarse a `--prereg-commit`.
 
 ---
 
-## 7. Condiciones de promocion holdout -> produccion (H-08)
+## 7. Condiciones de promocion holdout -> produccion (H-08, H-09)
 
 Un ticker del holdout puede promoverse a produccion (anadirse a
 `data/stock_prices.parquet` o a `data/universe_expansions.yaml`) si y
@@ -283,8 +340,7 @@ P2. El auditor externo ha firmado explicitamente la promocion. La
 
     - **Tickers concretos** (lista explicita, no "los 35").
     - **Grupo(s) productivo(s) de destino** (e.g. XLI, SPY).
-    - **Uso permitido** (e.g. "descarga diaria y clasificacion
-      Wyckoff", no "rediseno del detector").
+    - **Uso permitido** (ver P8).
     - **Version del contrato** y **version del codigo**
       (`HEAD` SHA) vigentes en la promocion.
     - **Estado de la validacion SOW** y referencia al informe
@@ -304,6 +360,29 @@ P4. La promocion se registra en `REGISTRO.yaml` con: SHA del commit
 P5. La firma de este contrato **no constituye autorizacion
     anticipada** para incorporar los 35 tickers a produccion. Esa
     aprobacion debe emitirse separadamente.
+
+P6 (H-09). El veredicto historico de SOW-V6 (`WONT_FIX`) no habilita
+    por si solo la promocion. `WONT_FIX` significa que el frente de
+    validacion se cerro sin aprobar la hipotesis. No es un resultado
+    `FUNCIONA` (§8) y no autoriza promocion.
+
+P7 (H-09). Una nueva candidata disenada a partir de los resultados
+    de SOW-V6 (e.g. SOW-BEAR-CONFIRMATION) no puede presentarse como
+    validacion confirmatoria independiente. Se registra en
+    `holdout_registry` como `EXPLORATORY_DESIGN_INFLUENCE`
+    (H-06, §5).
+
+P8 (H-09). La autorizacion de promocion debe declarar el USO
+    CONCRETO:
+
+    - `descriptive_only`: descarga diaria y clasificacion Wyckoff,
+      sin funcionalidad SOW activa.
+    - `sow_functional`: habilita alguna funcionalidad SOW (e.g.
+      gate de confirmacion bear, selector). Requiere validacion
+      `FUNCIONA` para la candidata pertinente y firma especifica
+      separada.
+
+    La firma de v1.2 de este contrato NO autoriza `sow_functional`.
 
 ---
 
@@ -419,16 +498,20 @@ T10. **Git.** Los parquets estan ignorados y no estan versionados.
 El contrato se considera firmado si el auditor externo responde
 explicitamente con:
 
-- **Aprobado:** la v1.1 pasa a `FIXED` con SHA del commit del
-  contrato. SOW-HOLDOUT-IMMUTABLE cierra. Los 35 tickers siguen sin
-  promocion hasta la firma especifica de P2 (§7).
+- **Aprobado:** la v1.2 pasa a `FIXED` con SHA del commit del
+  contrato. SOW-HOLDOUT-IMMUTABLE cierra. Los tickers siguen sin
+  promocion hasta la firma especifica de P2 (§7) y, si aplica, P8.
 - **Aprobado con cambios:** se anotan los cambios, se versiona como
-  v1.2, se re-revisa. Sin firma v1.2, no se promociona ningun
+  v1.3, se re-revisa. Sin firma v1.3, no se promociona ningun
   ticker.
 - **Rechazado:** el frente se cierra como `WONT_FIX` con la razon
   del auditor. Los parquets siguen usandose por los validadores
   existentes, pero no se declaran holdout formalmente. El frente
   `TOP20-FALTANTES-DATOS` queda bloqueado en su parte de holdout.
+
+La firma de v1.2 (en cualquiera de sus modalidades) no constituye
+autorizacion anticipada para incorporar tickers a produccion. Cada
+promocion requiere su propio acto de aprobacion (§7 P2).
 
 Sin respuesta explicita, el ticket sigue `IN_PROGRESS` y no se
 promueve ningun ticker desde holdout.
@@ -479,4 +562,24 @@ holdout a produccion.
 
 ---
 
-Fin del contrato SOW-HOLDOUT-IMMUTABLE v1.1 (borrador).
+## 15. Resumen de cambios v1.1 -> v1.2
+
+La v1.2 responde al dictamen externo 2026-10-29 (doc 76) que exige
+version v1.2 obligatoria antes de la firma normativa. Cierra los 9
+hallazgos: 6 con implementacion en codigo y commit verificable
+(H-01, H-03, H-05, H-06, H-07, H-08), 3 con redaccion contractual
+explicita (H-02, H-04, H-09).
+
+| Hallazgo | Cambio en v1.2 | Evidencia |
+|---|---|---|
+| H-01 | §6.1 distingue `sha256` / `content_sha256` / `semantic_content_sha256`. Solo el semantico verifica identidad de regeneracion. | commit `20ae7f3c`, 7 tests `test_semantic_sha256_h01.py` |
+| H-02 | §3.2 corrige: `FOLDS = list(range(2017, 2026))` = 9 folds anuales. Criterio `folds_positive >= 7` sobre elegibles. El "23" era error. | inspeccion de `scripts/purged_kfold_sow_c1_*.py` |
+| H-03 | §6.2 exige `--confirmatory`: dirty -> exit 1; holdout verify OK; pip freeze efectivo registrado. | commit `57d5cbb9`, 4 tests `test_h03_confirmatory_mode.py` |
+| H-04 | §3.3 tabla completa: 7 lectores + 5 herramientas auxiliares. | grep `stock_prices_reserved_(cohort\|r3000)` |
+| H-05 | §5.1 `experiment_manifest: null`, `identity_status: UNVERIFIABLE_PRE_MANIFEST`, nota sobre regeneracion 24/10. | commit `241cd3ab`, `holdout_registry.json`, 13 tests |
+| H-06 | §5 anade `event_type: CONFIRMATORY_EXECUTION \| EXPLORATORY_DESIGN_INFLUENCE`. | commit `241cd3ab`, `holdout_registry.py` |
+| H-07 | §2.3 `independence_note` global. T8 verifica la restriccion. | commit `241cd3ab` |
+| H-08 | §9.2 T6 reforzado: `safe_write_parquet` (staging + `--promote`). Sin flag, sellado intacto. | commit `0d5ce224`, helper `scripts/_holdout_write.py`, 7 tests |
+| H-09 | §7 P6/P7/P8: `WONT_FIX` no autoriza; candidata informada no es independiente; uso `descriptive_only` vs `sow_functional`. | este contrato |
+
+Fin del contrato SOW-HOLDOUT-IMMUTABLE v1.2 (borrador).
