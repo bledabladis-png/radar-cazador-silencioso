@@ -2537,7 +2537,7 @@ items:
   tipo: deuda_tecnica
   ciclo: '2026-10-25'
   estado: OPEN
-  commit: e479eca6
+  commit: 375f06bf
   descripcion: |
     Re-acumulacion de continuacion: el detector actual solo detecta
     reversion (SC->AR->Range->SOS, BC->AR->Range->SOW). Re-acumulacion
@@ -2583,6 +2583,18 @@ items:
     completa; H-05 interfaz detect_trend_context declarada;
     H-06 elegibilidad exige R1-R5; H-07 anadido T7 end-to-end.
     Pendiente: enviar v3 al auditor. Sin firma, no se codifica.
+    v4 redactada 2026-10-29 (commit 375f06bf). Resuelve los 6
+    hallazgos del tercer dictamen: P0-H01 H_R1=400 antes de b-60
+    y T7 con 400+100+40 sesiones + assert UP; P1-H02 algoritmo
+    cronologico con t++/t=b+3 y dedup por date_start; P1-H03
+    bootstrap estacionario Politis-Romano (bloques L~Geometric
+    1/63, B=1000, N>=63, B_validas>=800); P1-H04 tres estados
+    PASS/NOT_TRIGGERED/NOT_EVALUABLE; P1-H05 T6 permite read-only
+    detect_trend_context y prohibe src.pipeline.* + escritura fuera
+    del CSV; P1-H06 warm-up separado de evaluacion, episodios con
+    date_start < firma NO confirmatorios.
+    Pendiente: enviar v4 al auditor. Sin firma, no se codifica.
+
 
 
 - id: PCR-SKIP-NO-DATA
