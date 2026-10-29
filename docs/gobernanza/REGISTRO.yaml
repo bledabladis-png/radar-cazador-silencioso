@@ -2537,7 +2537,7 @@ items:
   tipo: deuda_tecnica
   ciclo: '2026-10-25'
   estado: OPEN
-  commit: 69baa2c2
+  commit: e479eca6
   descripcion: |
     Re-acumulacion de continuacion: el detector actual solo detecta
     reversion (SC->AR->Range->SOS, BC->AR->Range->SOW). Re-acumulacion
@@ -2575,6 +2575,15 @@ items:
     C2 N>=30 + IC95 Wilson; C3 solapamiento con denominador
     explicito; T6 invariante de aislamiento; salida aislada.
     Pendiente: enviar v2 al auditor. Sin firma, no se codifica.
+    v3 redactada 2026-10-29 (commit e479eca6). Resuelve los 7
+    hallazgos del segundo dictamen: H-01 R3 movido a [b-W, b-1]
+    (elimina contradiccion con R4); H-02 C1 por chunks de 252
+    sesiones, ventana futura 504 sesiones; H-03 C2 congelado a
+    bootstrap por mes-bloque (seed 42); H-04 v_norm formula
+    completa; H-05 interfaz detect_trend_context declarada;
+    H-06 elegibilidad exige R1-R5; H-07 anadido T7 end-to-end.
+    Pendiente: enviar v3 al auditor. Sin firma, no se codifica.
+
 
 - id: PCR-SKIP-NO-DATA
   tipo: auditoria_interna
