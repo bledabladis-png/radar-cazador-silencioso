@@ -12,7 +12,7 @@ junto con `Consolidacion_Documentos/00_ARRANQUE.md`.
 HEAD: `47df44ed` (consultar `git log --oneline -1` para el actual).
 Sincronizacion: main == origin/main al cierre del commit.
 Tests: fuente autoritativa Consolidacion_Documentos/ESTADO_SISTEMA.md.
-       Ultimo run: 4020 passed, 3 skipped (sin filtro; +1 skip condicional test_h03).
+       Conteo exacto en ESTADO_SISTEMA.md seccion 2 (no literal aqui: cambia con cada commit de test).
 CI HEAD: verde.
 Validation Gate: 11/11 (outputs/state/validation_gate_result.json).
 Working tree: limpio.
@@ -248,7 +248,7 @@ Esperado:
 - HEAD = `git log --oneline -1`.
 - ahead 0, behind 0.
 - Working tree limpio.
-- Tests: 4020 passed, 3 skipped.
+- Tests: fuente autoritativa ESTADO_SISTEMA.md (no literal aqui).
 - Gobernanza: [OK]. Indice H1-H18: [OK]. Bitacora: [OK].
 - pyflakes silencio, compileall OK.
 
