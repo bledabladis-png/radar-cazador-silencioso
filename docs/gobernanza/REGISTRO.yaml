@@ -2537,7 +2537,7 @@ items:
   tipo: deuda_tecnica
   ciclo: '2026-10-25'
   estado: OPEN
-  commit: 0bff883f
+  commit: 69baa2c2
   descripcion: |
     Re-acumulacion de continuacion: el detector actual solo detecta
     reversion (SC->AR->Range->SOS, BC->AR->Range->SOW). Re-acumulacion
@@ -2567,6 +2567,15 @@ items:
         con razon medida en doc 59 (RESULTADO).
     Estado actual: (1) pendiente. (2)-(4) bloqueados por (1).
     Pre-registro listo para revision.
+    v2 redactada 2026-10-29 (commit 69baa2c2). Resuelve los 9
+    hallazgos del dictamen: P0-H01 holdout consumido y periodo
+    futuro reservado; P0-H02 anclaje en b; P0-H03 umbrales
+    corregidos; H-04 formulas; H-05 pullback misma sesion;
+    H-06 contexto en b-60; C1 denominador evaluables;
+    C2 N>=30 + IC95 Wilson; C3 solapamiento con denominador
+    explicito; T6 invariante de aislamiento; salida aislada.
+    Pendiente: enviar v2 al auditor. Sin firma, no se codifica.
+
 - id: PCR-SKIP-NO-DATA
   tipo: auditoria_interna
   ciclo: '2026-10-26'
