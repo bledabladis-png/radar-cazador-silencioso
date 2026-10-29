@@ -231,9 +231,17 @@ def main(argv=None):
     ap.add_argument("--allow-missing-holdout", action="store_true",
                     help="permite capturar sin holdout_manifest.json. Solo "
                          "para tests.")
+    ap.add_argument("--confirmatory", action="store_true",
+                    help="modo confirmatorio. Exige working tree clean, "
+                         "holdout verify OK y registra pip freeze efectivo. "
+                         "Incompatible con --allow-dirty / --allow-missing-holdout.")
     args = ap.parse_args(argv)
 
     errores = []
+    if args.confirmatory and args.allow_dirty:
+        errores.append("--confirmatory incompatible con --allow-dirty")
+    if args.confirmatory and args.allow_missing_holdout:
+        errores.append("--confirmatory incompatible con --allow-missing-holdout")
     warnings = []
 
     head = _git_head()
@@ -251,6 +259,33 @@ def main(argv=None):
         )
     elif dirty:
         warnings.append("working tree dirty (--allow-dirty)")
+
+    # H-03 dictamen 2026-10-29: en modo confirmatorio se exige holdout
+    # verify OK y se registra pip freeze efectivo.
+    holdout_verify = {"checked": False, "ok": None, "detail": None}
+    pip_freeze_list = []
+    mode = "confirmatory" if args.confirmatory else "exploratory"
+
+    if args.confirmatory and not errores:
+        r = subprocess.run(
+            [sys.executable, "scripts/audit/holdout_manifest.py", "--verify"],
+            capture_output=True, text=True, timeout=120,
+        )
+        holdout_verify["checked"] = True
+        holdout_verify["ok"] = (r.returncode == 0)
+        holdout_verify["detail"] = (r.stdout or r.stderr)[:800]
+        if r.returncode != 0:
+            errores.append(
+                "holdout_manifest.py --verify fallo en modo confirmatorio"
+            )
+        r2 = subprocess.run(
+            [sys.executable, "-m", "pip", "freeze"],
+            capture_output=True, text=True, timeout=120,
+        )
+        if r2.returncode == 0:
+            pip_freeze_list = [ln for ln in r2.stdout.splitlines() if ln.strip()]
+        else:
+            errores.append("pip freeze fallo en modo confirmatorio")
 
     prereg = {"commit": args.prereg_commit, "checked": False}
     if args.prereg_commit:
@@ -314,6 +349,9 @@ def main(argv=None):
         "sow_params": _sow_params(),
         "seed": args.seed,
         "holdout": holdout,
+        "mode": mode,
+        "holdout_verify": holdout_verify,
+        "pip_freeze": pip_freeze_list,
         "warnings": warnings,
         "errors": errores,
     }
@@ -340,6 +378,11 @@ def main(argv=None):
     if args.prereg_commit:
         print("  prereg: " + args.prereg_commit + " ancestro=" + str(
             prereg.get("is_ancestor_of_head")))
+    print("  mode: " + mode)
+    if holdout_verify["checked"]:
+        print("  holdout_verify: " + ("OK" if holdout_verify["ok"] else "FAIL"))
+    if pip_freeze_list:
+        print("  pip_freeze: " + str(len(pip_freeze_list)) + " paquetes registrados")
     for w in warnings:
         print("  [WARN] " + w)
 
