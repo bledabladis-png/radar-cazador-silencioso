@@ -2536,7 +2536,7 @@ items:
 - id: DICT3-REACCUMULATION
   tipo: deuda_tecnica
   ciclo: '2026-10-25'
-  estado: OPEN
+  estado: WONT_FIX
   commit: 375f06bf
   descripcion: |
     Re-acumulacion de continuacion: el detector actual solo detecta
@@ -2594,6 +2594,19 @@ items:
     del CSV; P1-H06 warm-up separado de evaluacion, episodios con
     date_start < firma NO confirmatorios.
     Pendiente: enviar v4 al auditor. Sin firma, no se codifica.
+  razon: |
+    Resultado experimental 2026-10-29 (informe 2e559e0f):
+    detector v4 ejecutado sobre cohort (268 tickers, 2015-2026).
+    C1 FALLA: 3 años por encima del 30% (2017 51.9%, 2021 36.6%,
+    2024 36.2%); ratio >30% indica que el detector captura bull
+    market general, no solo reacumulacion. C2 FALLA: tasa de
+    exito 38.43% (umbral 60%). 1185 episodios, 1171 evaluables.
+    Veredicto: NO_FUNCIONA con parametros congelados. No se
+    recalibran umbrales (regla v4 §9). Sin confirmacion futura
+    no procede v5. DICT3-REACCUMULATION pasa a WONT_FIX razonado:
+    el sistema no gana nada con reacumulacion que no tenga ya
+    con el detector de reversion, con la parametrizacion actual.
+
 
 
 
