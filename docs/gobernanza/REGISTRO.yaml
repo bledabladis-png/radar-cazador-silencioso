@@ -3324,7 +3324,33 @@ items:
 - id: P1-H02-EU-VERIFICACION
   tipo: deuda_tecnica
   ciclo: '2026-10-29'
-  estado: OPEN
+  estado: FIXED
+  commit: '6f3ee2dd'
+  verificacion: VERIFIED_IN_PRODUCTION
+  verificacion_run: '40877139685'
+  evidencia: |
+    Artifact p1-h02-coverage del run 40877139685 (workflow_dispatch
+    con input force, duracion 18.7 min):
+      DAXEX cov_vs_grupo=91.76% cov_vs_sel=100.00%
+      FEZ   cov_vs_grupo=85.25% cov_vs_sel=100.00%
+      ISF.L cov_vs_grupo=85.42% cov_vs_sel=100.00%
+      LYXI  cov_vs_grupo=93.57% cov_vs_sel=100.00%
+    cov_vs_sel=100% en los 4: el selector opera sobre datos
+    reales, cero tickers seleccionados sin datos. Deltas vs
+    parquet pre-fix (357 tickers):
+      FEZ   72.30% -> 85.25%  (+12.95)
+      ISF.L 73.12% -> 85.42%  (+12.30)
+      DAXEX 91.76% -> 91.76%  (=, ya en techo)
+      LYXI  93.57% -> 93.57%  (=, ya en techo)
+    El cap de descarga EU esta efectivamente eliminado en el
+    parquet del runner (manifest 471 tickers, todos los mercados
+    EU VALID cov=1.0000, commit 73ea9b13).
+    Los pesos restantes que faltan (FEZ ~10% en 8 tickers,
+    ISF.L ~2% en 14 tickers) son simbolos que Yahoo no sirve
+    con ese sufijo. Listado en p1_h02_tickers_sin_datos.csv.
+    Fuera del alcance; si se quiere abordar, ticket separado
+    (DICT3-EU-MISSING-TICKERS).
+
   descripcion: |
     El fix d6c3ebb4 esta confirmado por el manifest (471 tickers,
     todos los mercados EU VALID cov=1.0). Falta verificar la
