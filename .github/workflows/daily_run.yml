@@ -316,6 +316,11 @@ jobs:
           git status --porcelain
           git add -u
           git add -u outputs/history outputs/state
+      # P0-SCHEMA-NUEVOS-NO-STAGED (2026-10-29): -u solo anade
+      # modificados (tracked), no untracked. Un .schema nuevo
+      # (macro_regime.csv.schema en run 40854280818) tumba el
+      # guard de untracked. Anadir explicitamente .schema.
+      git add outputs/history/*.schema outputs/state/*.schema 2>/dev/null || true
           # Completion Receipt v1: no commitear; es evidencia efimera
           # que se sube como artifact. Excluir del staging.
           git reset -q HEAD outputs/state/completion_receipt.json 2>/dev/null || true
