@@ -3284,7 +3284,7 @@ items:
   tipo: deuda_tecnica
   ciclo: '2026-10-29'
   estado: FIXED
-  commit: b1dabd37
+  commit: 68d988db
   descripcion: |
     Complemento de P0 #2 sesion 15. El step Commit and push
     hist/state hacia git add -u outputs/history outputs/state,
