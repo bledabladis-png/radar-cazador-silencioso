@@ -391,14 +391,12 @@ Del dictamen 2026-10-26 (doc 70-v2):
   doc 70-v2b. 2026-10-28: confirmado que los 26 tickers USA
   (SPY 21 + QQQ 5) NO estan en universe_expansions.yaml, por lo
   que no se descargan solos en el proximo run.
-- TOP20-EU-INDICES (OPEN): depende de EU-HOLDINGS-DOWNLOAD-CAP.
 
 Del dictamen H-04 (2026-10-26):
 - DICT3-H04-INFERENCE-V2 (OPEN): 4 decisiones de diseno.
   Sin codigo hasta aprobacion del auditor.
 
 2026-10-28 (sesion 15):
-- EU-HOLDINGS-DOWNLOAD-CAP (IN_PROGRESS): fix d6c3ebb4 (sin
   cap EU). Parquet productivo aun no tiene los 112 tickers EU.
   Criterio de cierre (REGISTRO): verificar en el proximo run
   scheduled que data/stock_prices.parquet contiene los 112.
