@@ -9,6 +9,36 @@ from typing import Any
 import requests
 import yfinance as yf
 
+
+def _http_with_retry(call, *args, **kwargs):
+    """Retry exponencial para requests.post/session.get (Amundi, Yahoo).
+
+    3 retries (4 intentos) con backoff 1s, 2s, 4s sobre
+    429/500/502/503/504 y ConnectionError/Timeout. Usa el callable
+    pasado para preservar mockeabilidad en tests.
+    """
+    import time
+    last = None
+    for attempt in range(4):
+        try:
+            r = call(*args, **kwargs)
+            code = getattr(r, 'status_code', 200)
+            if isinstance(code, int) and code in (429, 500, 502, 503, 504):
+                if attempt < 3:
+                    time.sleep(2 ** attempt)
+                    continue
+            return r
+        except (requests.ConnectionError, requests.Timeout) as e:
+            last = e
+            if attempt < 3:
+                time.sleep(2 ** attempt)
+                continue
+            raise
+    if last is not None:
+        raise last
+    return r
+
+
 # Adaptación local
 AMUNDI_URL = "https://www.amundietf.es/mapi/ProductAPI/getProductsData"
 BASE_DIR = Path(__file__).resolve().parents[1]
@@ -112,7 +142,7 @@ def get_amundi_product(isin: str) -> dict[str, Any]:
             "Chrome/151.0.0.0 Safari/537.36"
         ),
     }
-    response = requests.post(AMUNDI_URL, json=body, headers=headers, timeout=30)
+    response = _http_with_retry(requests.post, AMUNDI_URL, json=body, headers=headers, timeout=30)
     response.raise_for_status()
     data = response.json()
     products = data.get("products")
@@ -170,7 +200,7 @@ def yahoo_search(query: str, session: requests.Session | None = None) -> list[di
     session = session or requests.Session()
     url = "https://query1.finance.yahoo.com/v1/finance/search"
     params = {"q": query, "quotesCount": 10, "newsCount": 0}
-    response = session.get(url, params=params, timeout=15, headers={"User-Agent": "Mozilla/5.0"})
+    response = _http_with_retry(session.get, url, params=params, timeout=15, headers={"User-Agent": "Mozilla/5.0"})
     response.raise_for_status()
     data = response.json()
     return data.get("quotes", [])
