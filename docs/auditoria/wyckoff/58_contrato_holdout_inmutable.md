@@ -139,7 +139,7 @@ Ambos declaran en su codigo parametros congelados verificables por
   efectivo baja proporcionalmente. Los `print()` de los validadores
   muestran `/9` como referencia nominal del maximo teorico, no como
   denominador efectivo.
-- Evidencia H-02 (dictamen doc 76): la v1.1 decia "9 folds anuales (2017..2025)". El
+- Evidencia H-02 (dictamen doc 76): la v1.1 decia "23 folds"; el codigo real son 9 folds anuales (2017..2025). El
   codigo congelado usa `FOLDS = list(range(2017, 2026))` = 9 folds
   anuales (2017..2025). El "23" era un error de redaccion de v1.1;
   se corrige aqui.
