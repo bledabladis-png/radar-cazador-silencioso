@@ -189,6 +189,11 @@ Sesion 16 (2026-10-29): 4 P0 pipeline (tzinfo, YAML, .schema staging, conftest),
 - **C2-920**: discrepancia 920 baseline IAE. Auditor debe publicar comando
   + HEAD del valor externo (-4.264.449.932). Sin eso, no reproducible.
 
+- **DICT3-H04-INTERVALS**: OPEN sin accion propia. Registro historico
+  del rechazo del IC95 inferencial por el auditor (dictamen H-04
+  2026-10-26). Se mantiene OPEN como evidencia del rechazo; el frente
+  que lo sustituyo (DICT3-H04-INFERENCE-V2) se cerro WONT_FIX 2026-10-29.
+
 - **SOW-BEAR-CONFIRMATION**: v1.10.1 sin redactar. 3 P0 del dictamen
   2026-10-28 (universo ETF vs constituyentes, parametros SOW explicitos,
   market proxy fijo). NO depende de cohort (a diferencia de v1.10).
