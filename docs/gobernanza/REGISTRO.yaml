@@ -3345,11 +3345,21 @@ items:
     El cap de descarga EU esta efectivamente eliminado en el
     parquet del runner (manifest 471 tickers, todos los mercados
     EU VALID cov=1.0000, commit 73ea9b13).
-    Los pesos restantes que faltan (FEZ ~10% en 8 tickers,
-    ISF.L ~2% en 14 tickers) son simbolos que Yahoo no sirve
-    con ese sufijo. Listado en p1_h02_tickers_sin_datos.csv.
-    Fuera del alcance; si se quiere abordar, ticket separado
-    (DICT3-EU-MISSING-TICKERS).
+    Correccion 2026-10-29 (tarde): los 22 tickers EU que en
+    runs pre-fix figuraban como no descargados (SAN.PA, ABI.BR,
+    CS.PA, ENEL.MI, IFX.DE, DG.PA, ENI.MI, EL.PA, TSCO.L, EXPN.L,
+    III.L, PRU.L, VOD.L, IMB.L, IHG.L, NXT.L, CCEP.L, LGEN.L,
+    IAG.L, HLMA.L, SGRO.L, INF.L) ESTAN en el parquet del runner.
+    Evidencia: cd_n=sel_n=ev_n en los 4 ETFs EU (100% de los
+    seleccionados con datos), y probe con yfinance confirma que
+    los 22 responden en Yahoo. La cobertura cov_vs_grupo=85.25%
+    (FEZ) / 85.42% (ISF.L) / 91.76% (DAXEX) / 93.57% (LYXI)
+    cumple EXACTAMENTE el target_weight=0.85 del diseno A.2c
+    sobre el peso total del grupo: FEZ 81.06/95.09=85.25%,
+    ISF.L 71.63/83.86=85.42%. El gap restante es de diseno, no
+    de datos. NO se abre DICT3-EU-MISSING-TICKERS: era un
+    artefacto de medir con el parquet local pre-fix (357 tickers,
+    2026-10-26) en lugar del parquet del runner (471, 2026-10-28).
 
   descripcion: |
     El fix d6c3ebb4 esta confirmado por el manifest (471 tickers,

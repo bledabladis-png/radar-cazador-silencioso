@@ -281,7 +281,9 @@ jobs:
 
           name: p1-h02-coverage
 
-          path: outputs/audit/p1_h02_cobertura_efectiva.csv
+          path: |
+            outputs/audit/p1_h02_cobertura_efectiva.csv
+            outputs/audit/p1_h02_tickers_sin_datos.csv
 
           if-no-files-found: warn
 
