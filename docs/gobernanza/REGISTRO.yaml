@@ -3279,3 +3279,24 @@ items:
     Verificar en proximo run scheduled o workflow_dispatch que
     run-system completa >15min sin ValueError. Si success -> FIXED
     confirmado. Si falla -> reabrir.
+
+- id: P0-SCHEMA-NUEVOS-NO-STAGED
+  tipo: deuda_tecnica
+  ciclo: '2026-10-29'
+  estado: FIXED
+  commit: b1dabd37
+  descripcion: |
+    Complemento de P0 #2 sesion 15. El step Commit and push
+    hist/state hacia git add -u outputs/history outputs/state,
+    que solo stagea tracked modificados, no untracked nuevos.
+    Un .schema nuevo (macro_regime.csv.schema en run 40854280818)
+    tumba el guard de untracked con exit 1.
+  evidencia: |
+    Run 40854280818 (schedule 29-10 03:17 UTC). Steps 17-32
+    success. Step 33 falla:
+      ERROR: untracked files in outputs/history or outputs/state:
+      ?? outputs/history/macro_regime.csv.schema
+    Fix tzinfo (4a19880d) funciona: close_nan=1/471, coverage OK.
+  siguiente_accion: |
+    Fix: git add outputs/history/*.schema outputs/state/*.schema.
+    Verificar en proximo scheduled que step 33 success.
