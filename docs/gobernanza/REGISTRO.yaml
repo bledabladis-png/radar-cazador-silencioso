@@ -2908,7 +2908,24 @@ items:
 - id: DICT3-H04-INFERENCE-V2
   tipo: deuda_tecnica
   ciclo: '2026-10-26'
-  estado: OPEN
+  estado: WONT_FIX
+  razon: |
+    Dos versiones rechazadas por el auditor externo:
+    v1 (doc 76, commit c98367bf) rechazada el 2026-10-29 con
+    14 hallazgos (4 CRITICOS: H-01 incompatibilidad temporal
+    holdout 2027 vs minimo 36 bloques; H-02 estimandos no
+    coinciden; H-03 TOST incompleto; H-04 bootstrap sin
+    justificacion). Auditoria completa en doc 77 (commit 937c5ecb).
+    El auditor exige v3 con checklist de 10 puntos. Varios
+    requieren datos no disponibles (estabilidad numerica del
+    bootstrap, validez de longitud de bloque, integridad entre
+    capas). La validacion prospectiva real tarda 3 anos
+    (36 meses). structure_ratio permanece DESCRIPTIVO en
+    produccion, que es el estado actual y valido. Fase 5 del
+    refactor (structure_score continuo) queda aparcada. Si
+    surge caso de uso operativo concreto que requiera
+    inferencia, se abre frente nuevo con pregunta especifica.
+
   descripcion: |
     Nuevo diseno inferencial para structure_ratio. El pre-registro
     doc 69 §2-§10 queda congelado, con criterio §9 declarado no
