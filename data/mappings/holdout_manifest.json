@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-10-28T20:46:24Z",
+  "generated_at": "2026-10-29T17:03:34Z",
   "holdouts": {
     "cohort": {
       "path": "data/stock_prices_reserved_cohort.parquet",
@@ -10,6 +10,7 @@
       "sha256": "9b06b748f64bf83011441770951e39e0372452010acc491df6445b62ced2fb52",
       "bytes": 25713659,
       "content_sha256": "1443487cc15a56d8a764f68d109398b96f22088b529d5584a087b713e9e529ac",
+      "semantic_content_sha256": "f4c49a8cd82b7c5c6b60dc4993003bfd3580fbf05fdd73852685d435dd13fa56",
       "tickers_sha256": "49c7de9ee673e6b81cbc1c55dadbbeae501cd13254401a544d93d04f95063aef",
       "index_name": "Date",
       "date_min": "2015-01-02",
@@ -33,6 +34,7 @@
       "sha256": "7795c968f109e100ea37728c0bc75f1952c0fd1d9690c8c6559f135795ba11ab",
       "bytes": 236012003,
       "content_sha256": "e105a98380bb92241c88e04cdae069900f793f7807dcf1d4a4f47822fb32e3f3",
+      "semantic_content_sha256": "2c1e039355f8aa8d3414857ee66641310b106120104d7fbdf2da5056a2d74731",
       "tickers_sha256": "2dc7bcd0dbe1c532f8d5ce0ed6e6f4c32c8e95990eefe7ecb172815dd057b108",
       "index_name": "Date",
       "date_min": "2015-01-02",

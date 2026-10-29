@@ -99,6 +99,31 @@ def _canonical_sha256(meta):
     return hashlib.sha256(canonical).hexdigest()
 
 
+def _semantic_content_sha256(df):
+    """Hash semantico del CONTENIDO real del parquet (valores OHLCV).
+
+    H-01 dictamen 2026-10-29: content_sha256 actual es solo esqueleto
+    (metadatos). Dos parquets con mismos metadatos pero valores distintos
+    colisionan. Esta funcion hashea todos los valores.
+
+    Determinismo:
+      - Orden filas por indice (fechas ascendentes).
+      - Orden columnas por (field, ticker) lexicografico.
+      - pd.util.hash_pandas_object: estable entre ejecuciones y
+        maquinas para el mismo contenido pandas.
+      - NaN, NaT, None manejados por pandas.
+
+    Invariante: cambiar un valor OHLCV cambia el hash; cambiar la
+    codificacion Parquet (compresion, version) NO lo cambia si el
+    contenido canonico es identico.
+    """
+    if df is None or len(df) == 0:
+        return None
+    df_sorted = df.sort_index(axis=0).sort_index(axis=1)
+    row_hashes = pd.util.hash_pandas_object(df_sorted, index=True)
+    return hashlib.sha256(row_hashes.values.tobytes()).hexdigest()
+
+
 def _tickers_sha256(tickers):
     payload = "\n".join(sorted(tickers)).encode("utf-8")
     return hashlib.sha256(payload).hexdigest()
@@ -118,6 +143,7 @@ def _build_entry(rel_path, universe_name, generator, source):
         "sha256": _sha256_file(p),
         "bytes": int(p.stat().st_size),
         "content_sha256": _canonical_sha256(meta),
+        "semantic_content_sha256": _semantic_content_sha256(df),
         "tickers_sha256": _tickers_sha256(meta["tickers"]),
         "index_name": meta["index_name"],
         "date_min": meta["date_min"],
@@ -159,8 +185,9 @@ def compare(existing, current):
             errores.append(key + ": desaparece del current")
             continue
         for campo in (
-            "sha256", "bytes", "content_sha256", "tickers_sha256",
-            "date_min", "date_max", "n_rows", "n_tickers", "n_fields",
+            "sha256", "bytes", "content_sha256", "semantic_content_sha256",
+            "tickers_sha256", "date_min", "date_max", "n_rows",
+            "n_tickers", "n_fields",
         ):
             old = ex[key].get(campo)
             new = cu[key].get(campo)
