@@ -25,6 +25,11 @@ on:
     - cron: '17 7 * * *'
     - cron: '17 11 * * *'
   workflow_dispatch:
+    inputs:
+      force:
+        description: "Forzar run-system aunque gate=CURRENT"
+        type: boolean
+        default: false
 
 concurrency:
   # F-IAE-CRON-02: queue: max permite hasta 100 pendientes y evita que un
@@ -67,7 +72,7 @@ jobs:
 
   run-system:
     needs: gate
-    if: needs.gate.outputs.should_run == 'true'
+    if: needs.gate.outputs.should_run == 'true' || github.event.inputs.force == 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 90
     permissions:
