@@ -12,7 +12,7 @@ junto con `Consolidacion_Documentos/00_ARRANQUE.md`.
 HEAD: `47df44ed` (consultar `git log --oneline -1` para el actual).
 Sincronizacion: main == origin/main al cierre del commit.
 Tests: fuente autoritativa Consolidacion_Documentos/ESTADO_SISTEMA.md.
-       Ultimo run: 4021 passed, 2 skipped (sin filtro).
+       Ultimo run: 4020 passed, 3 skipped (sin filtro; +1 skip condicional test_h03).
 CI HEAD: verde.
 Validation Gate: 11/11 (outputs/state/validation_gate_result.json).
 Working tree: limpio.
@@ -201,9 +201,11 @@ Sesion 16 (2026-10-29): 4 P0 pipeline (tzinfo, YAML, .schema staging, conftest),
 ### 4.2. Datos futuros (2)
 
 - **WYCKOFF-5BX**: n_confirmed_H20_complete >= 550 (~2027).
-- **TOP20-FALTANTES-DATOS**: 3 IPOs (WBD, HONA, SPCX) resueltas con
-  sesiones. 20 tickers del cierre SOW-HOLDOUT en proximo scheduled.
-  Verificable con artifact p1-h02-coverage.
+- **TOP20-FALTANTES-DATOS**: IN_PROGRESS. WBD=1 barra local (no resuelto);
+  HONA=93 y SPCX=94 barras locales, no verificadas contra runner. 20
+  tickers del cierre SOW-HOLDOUT pendientes de scheduled verde post-fix
+  7f6d229d (29-10 11:59Z). Verificable con artifact p1-h02-coverage del
+  primer scheduled post-fix.
 
 ### 4.3. Items OPEN observacionales (fechas)
 
@@ -246,7 +248,7 @@ Esperado:
 - HEAD = `git log --oneline -1`.
 - ahead 0, behind 0.
 - Working tree limpio.
-- Tests: ~4021 passed, 2 skipped.
+- Tests: 4020 passed, 3 skipped.
 - Gobernanza: [OK]. Indice H1-H18: [OK]. Bitacora: [OK].
 - pyflakes silencio, compileall OK.
 

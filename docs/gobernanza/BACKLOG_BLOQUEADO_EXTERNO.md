@@ -13,11 +13,17 @@ REGISTRO.yaml. Si discrepa, manda el REGISTRO.
 
 | Categoria | N | Quien bloquea |
 |---|---:|---|
-| Esperando auditor externo | 3 | Auditor |
+| Pendiente de auditor externo | 4 | Auditor |
 | Esperando datos futuros | 1 | Proveedor / tiempo |
 | Esperando decision de producto | 1 | Usuario |
 
-**Total items bloqueados: 5.**
+**Total items bloqueados: 6.**
+
+**Nota (29-10):** en REGISTRO, solo `C2-920` y `WYCKOFF-5BX` son
+`BLOCKED_EXTERNAL`. `DICT3-TOP20-COBERTURA` y `DICT3-H04-INTERVALS`
+son `OPEN`; `SOW-BEAR-CONFIRMATION` es `IN_PROGRESS`. Los cuatro
+esperan algo del auditor; el conteo funcional (4) y el estricto
+`BLOCKED_EXTERNAL` (2) no coinciden.
 
 **Ninguno bloquea el pipeline diario.** Los bloqueos afectan a
 mejoras opcionales (validacion estadistica SOW, activacion SOW)
@@ -25,7 +31,7 @@ y a una decision de producto (IWM).
 
 ---
 
-## 1. Esperando auditor externo (3 items)
+## 1. Pendiente de auditor externo (4 items)
 
 ### 1.1. Documentos listos para enviar
 

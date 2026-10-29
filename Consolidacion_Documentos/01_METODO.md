@@ -439,7 +439,7 @@ El corpus consolidado vive en `Consolidacion_Documentos/`. Indice vigente en `00
 
 **`ESTADO_SISTEMA.md`:** NO se edita a mano. Se regenera con `py scripts/generate_estado_sistema.py`.
 
-**`docs/handoffs/HANDOFF.md`:** un solo fichero. **Se sobrescribe** al cierre de cada sesion (no se acumulan variantes con fecha). El historico queda en git. Sustituye a la convencion anterior `HANDOFF_YYYY-MM-DD.md`.
+**`HANDOFF - Radar de Rotacion Sectorial.txt`** (raiz del repo): un solo fichero. **Se sobrescribe** al cierre de cada sesion (no se acumulan variantes con fecha). El historico queda en git. Sustituye a la convencion anterior `HANDOFF_YYYY-MM-DD.md`. El antiguo `docs/handoffs/HANDOFF.md` se conserva como historico de sesion 11 y esta marcado obsoleto en su propio contenido.
 
 **Reglas duras del corpus:**
 - Nada duplica lo que otro documento ya cubre. Si un concepto aparece en dos sitios, uno de los dos sobra.
