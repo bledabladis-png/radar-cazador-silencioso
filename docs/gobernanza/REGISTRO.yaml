@@ -2794,7 +2794,29 @@ items:
 - id: SOW-HOLDOUT-IMMUTABLE
   tipo: deuda_tecnica
   ciclo: '2026-10-26'
-  estado: IN_PROGRESS
+  estado: WONT_FIX
+  razon: |
+    Cierre tecnico 2026-10-29 (commit d452208b, informe
+    docs/auditoria/wyckoff/78_cierre_holdout_2026-10-29.md).
+    Verificacion empirica: cohort es 99.3% S&P 500 actual
+    (266/268), no un holdout virgen. Los 22 tickers que el
+    contrato bloqueaba son 100% S&P 500/QQQ actuales (APH,
+    QCOM, ADI, WDC, DELL, NOW, GLW, ACN, FTNT, ADBE, CDNS,
+    LITE, ICE, HPE, SNPS, MRSH, INTU, MSI, CI, SHOP).
+    DDOG/MRNA ya estaban en xlk_extra/xlv_extra.
+    Ningun consumidor futuro necesita cohort como holdout
+    limpio. SOW-V6 cerrado WONT_FIX, SOW-BEAR-CONFIRMATION no
+    menciona cohort en v1.10, validadores existentes ya
+    ejecutaron. El contrato v1.2 admite en §5.1 que SOW-V6
+    consumio la reserva sin manifest historico. El auditor
+    pide v1.3 (maquina de estados, cadena criptografica) que
+    no resuelve el problema de fondo: cohort = S&P 500 actual.
+    Decision: no se itera v1.3. Los 20 tickers bloqueados
+    (19 SPY + 1 QQQ) pasan a universe_expansions.yaml.
+    Parquets reservados se conservan como evidencia historica
+    de SOW-V6. TOP20-FALTANTES-DATOS se cierra en proximo
+    scheduled. Cobertura SPY 81.5% -> ~85%, QQQ 79% -> ~85%.
+
   descripcion: |
     Declaracion formal de que stock_prices_reserved_cohort.parquet y
     stock_prices_reserved_r3000.parquet son holdout inmutable para
