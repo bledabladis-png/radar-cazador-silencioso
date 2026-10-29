@@ -373,9 +373,6 @@ Generales:
 Del dictamen 2026-10-25 (doc 68):
 - DICT3-H04-INTERVALS (OPEN): rechazado por auditor H-04.
   Ver DICT3-H04-INFERENCE-V2.
-- DICT3-REACCUMULATION (OPEN): pre-registro congelado 2026-10-27
-  (doc 59, commit 0bff883f). Pendiente revision auditor ANTES
-  de codificar.
 
 Del dictamen 2026-10-26 (doc 70-v2):
 - DICT3-TOP20-COBERTURA (OPEN): 4 acciones ejecutables cerradas.
