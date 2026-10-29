@@ -2695,7 +2695,16 @@ items:
 - id: TOP20-EU-INDICES
   tipo: frente
   ciclo: '2026-10-26'
-  estado: OPEN
+  estado: WONT_FIX
+  razon: |
+    Funcionalidad ya cubierta por A.2c. run.py pasa
+    selection_mode="target_weight" a compute_wyckoff_snapshot desde
+    e7f27cd0, y esa funcion aplica el selector uniformemente a
+    usa_sectors_df, usa_indices_df y eu_indices_df. Los indices EU
+    no estan en nlargest(20) en produccion. El ticket describia el
+    estado pre-e7f27cd0. La verificacion de cobertura efectiva real
+    sigue en P1-H02-EU-VERIFICACION (artifact p1-h02-coverage).
+
   descripcion: |
     Indices EU (FEZ, DAXEX, ISF.L, LYXI) siguen con nlargest(20)
     o target_weight segun el consumidor. Frente separado tras
