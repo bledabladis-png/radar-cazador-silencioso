@@ -35,30 +35,58 @@ def df_stocks_real():
     return pd.read_parquet(_STOCK_PARQUET)
 
 
+_TRACKED_SCHEMAS_CACHE = None
+
+
+def _get_tracked_schemas():
+    """Schemas de outputs/history/ trackeados en git (cache por sesion)."""
+    global _TRACKED_SCHEMAS_CACHE
+    if _TRACKED_SCHEMAS_CACHE is None:
+        import subprocess as _sp
+        r = _sp.run(
+            ["git", "ls-files", "outputs/history/*.schema"],
+            capture_output=True, text=True, check=False,
+        )
+        _TRACKED_SCHEMAS_CACHE = set(
+            line.replace("\\", "/").strip()
+            for line in r.stdout.splitlines() if line.strip()
+        )
+    return _TRACKED_SCHEMAS_CACHE
+
+
 @pytest.fixture(autouse=True)
 def _cleanup_schema_files():
-    """Limpia .schema CREADOS POR EL TEST en outputs/history/ (mtime).
+    """Limpia/restaura .schema modificados por el test en outputs/history/.
 
-    Los tests que escriben al path real (save_regime_history sin
-    path_override) dejan `.schema` como residuo. Esta fixture los borra,
-    pero SOLO si fueron creados durante el test (mtime > start). Los
-    `.schema` de produccion (mas antiguos) NO se tocan.
+    Contrato (revisado 2026-10-29):
+      - mtime < start -> no tocar (produccion antigua intacta).
+      - tracked en git -> `git checkout --` restaura version del bot.
+      - untracked -> unlink() (residuo real de test).
 
-    Incidente 2026-10-25: version anterior borraba TODOS los `.schema` de
-    outputs/history/, incluido el de sector_wyckoff_distribution. El run
-    posterior veia `.schema` ausente -> asumia v1 -> sobrescribia el
-    backup `.v1.csv` con 11 filas (destruia las 330 originales). Ver
-    `persist()` endurecido en output_writer.py.
+    Incidente 2026-10-25: version previa borraba TODOS los .schema
+    de outputs/history/, rompia sector_wyckoff_distribution.
+
+    Incidente 2026-10-29: filtro por mtime dejaba pasar
+    macro_regime.csv.schema (tracked, reescrito por test).
+    unlink -> D en git status tras la suite. Fix: tracked ->
+    checkout, untracked -> unlink.
     """
+    import subprocess as _sp
     import time as _time
     _start = _time.time()
     yield
     _history = Path(__file__).parent.parent / "outputs" / "history"
     if not _history.exists():
         return
+    tracked = _get_tracked_schemas()
     for _schema in _history.glob("*.schema"):
         try:
-            if _schema.stat().st_mtime >= _start:
+            if _schema.stat().st_mtime < _start:
+                continue
+            _rel = str(_schema.relative_to(_history.parent.parent)).replace("\\", "/")
+            if _rel in tracked:
+                _sp.run(["git", "checkout", "--", _rel], check=False, capture_output=True)
+            else:
                 _schema.unlink()
         except OSError:
             pass
