@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "independence_note": "Los universos cohort y r3000 comparten 266 de los 268 tickers de cohort (interseccion calculada por holdout_intersection.py). Sus resultados NO pueden contabilizarse como dos confirmaciones independientes ni combinarse como observaciones independientes sin tratamiento de la poblacion compartida. Ver doc 76 H-07.",
+  "holdouts": {
+    "cohort": {
+      "history": [
+        {
+          "candidata": "SOW-V6",
+          "fecha_consumo": "2026-10-06",
+          "informe": "docs/auditoria/wyckoff/51-56",
+          "event_type": "EXPLORATORY_DESIGN_INFLUENCE",
+          "experiment_manifest": null,
+          "identity_status": "UNVERIFIABLE_PRE_MANIFEST",
+          "manifest_sha256_en_consumo": null,
+          "note": "SOW-V6 consumio la reserva antes de holdout_manifest. Parquets actuales son regeneraciones 2026-10-24. Identidad byte a byte no demostrable. Se consideran consumidos por gobernanza conservadora (H-05)."
+        }
+      ],
+      "state": "EXPLORATORY_CONSUMED"
+    },
+    "r3000": {
+      "history": [
+        {
+          "candidata": "SOW-V6",
+          "fecha_consumo": "2026-10-06",
+          "informe": "docs/auditoria/wyckoff/51-56",
+          "event_type": "EXPLORATORY_DESIGN_INFLUENCE",
+          "experiment_manifest": null,
+          "identity_status": "UNVERIFIABLE_PRE_MANIFEST",
+          "manifest_sha256_en_consumo": null,
+          "note": "r3000 es nombre heredado de lista generica US. Misma limitacion de identidad que cohort."
+        }
+      ],
+      "state": "EXPLORATORY_CONSUMED"
+    }
+  }
+}
