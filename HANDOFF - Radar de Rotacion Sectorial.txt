@@ -359,7 +359,6 @@ documento solo lista estado.
 
 Fases 1-4b y 6 cerradas. Queda:
 - **Fase 5:** structure_score continuo. Depende de
-  DICT3-H04-INFERENCE-V2.
 
 ### 4.2. Deudas tecnicas OPEN
 
@@ -372,7 +371,6 @@ Generales:
 
 Del dictamen 2026-10-25 (doc 68):
 - DICT3-H04-INTERVALS (OPEN): rechazado por auditor H-04.
-  Ver DICT3-H04-INFERENCE-V2.
 
 Del dictamen 2026-10-26 (doc 70-v2):
 - DICT3-TOP20-COBERTURA (OPEN): 4 acciones ejecutables cerradas.
@@ -384,8 +382,6 @@ Del dictamen 2026-10-26 (doc 70-v2):
   firma).
 
 Del dictamen H-04 (2026-10-26):
-- DICT3-H04-INFERENCE-V2 (OPEN): 4 decisiones de diseno.
-  Sin codigo hasta aprobacion del auditor.
 
 2026-10-28 (sesion 15):
   cap EU). Parquet productivo aun no tiene los 112 tickers EU.
