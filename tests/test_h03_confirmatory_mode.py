@@ -77,16 +77,15 @@ def test_modo_exploratorio_por_defecto(ce_mod):
     assert d.get("pip_freeze") == []
 
 
-def test_confirmatory_sobre_repo_dirty_falla(ce_mod):
-    """En repo dirty, --confirmatory debe fallar con mensaje claro."""
-    import subprocess
-    dirty = subprocess.run(
-        ["git", "status", "--porcelain"],
-        capture_output=True, text=True, cwd=str(ROOT),
-    )
-    if not dirty.stdout.strip():
-        pytest.skip("repo clean; no se puede probar dirty path en este entorno")
+def test_confirmatory_sobre_repo_dirty_falla(ce_mod, monkeypatch):
+    """En repo dirty, --confirmatory debe fallar con mensaje claro.
+
+    Monkeypatch de _git_is_dirty para inyectar el estado dirty sin
+    depender del working tree real. El test original hacia skip en CI
+    (arbol siempre limpio) y nunca ejercia el camino bajo prueba.
+    """
     ce, out_dir = ce_mod
+    monkeypatch.setattr(ce, "_git_is_dirty", lambda: True)
     rc, stdout, out_path = _run(ce, [
         "--experiment-id", "test_dirty",
         "--candidate", "C1-M5",
