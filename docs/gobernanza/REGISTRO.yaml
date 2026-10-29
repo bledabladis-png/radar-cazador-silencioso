@@ -2825,6 +2825,25 @@ items:
     bloqueo efectivo de TOP20-USA-INDICES una vez implementado el
     selector. Condicion F del dictamen.
 
+    NOTA 2026-10-29: dictamen externo v1.1 doc 76 (2026-10-29) recibido.
+    Veredicto: APROBADO CON CAMBIOS, requiere v1.2 obligatoria.
+    9 hallazgos (H-01..H-09): 6 cerrados en codigo con commit
+    verificable + 3 cerrados en el contrato v1.2.
+
+    Evidencia de implementacion (commits en main):
+      - H-01 (hash semantico): 20ae7f3c
+      - H-03 (--confirmatory): 57d5cbb9
+      - H-08 (safe_write_parquet + T6): 0d5ce224
+      - H-05/H-06/H-07 (registry): 241cd3ab
+
+    Contrato v1.2: 58_contrato_holdout_inmutable.md
+      - commits b46f9cc6, f048f1af, d5de47f6
+      - cierra H-02, H-04, H-09 contractualmente
+
+    Estado: IN_PROGRESS hasta firma de v1.2. Pendiente enviar
+    v1.2 + 4 commits de evidencia al auditor. Sin firma, no se
+    promociona ningun ticker desde holdout.
+
 - id: GOVERNANZA-CI-NO-STEP
   tipo: deuda_tecnica
   ciclo: '2026-10-26'
@@ -3399,3 +3418,28 @@ items:
     'Upload cobertura efectiva P1-H02' ya en workflow (67336854).
     Esperar scheduled 17:17 UTC 29-10. Descargar artifact
     p1-h02-coverage. Si FEZ >= 90 e ISF.L >= 78, cerrar FIXED.
+
+- id: DICTAMEN-SOW-HOLDOUT-V11-2026-10-29
+  tipo: dictamen_externo
+  ciclo: '2026-10-29'
+  estado: FIXED
+  commit: d5de47f6
+  descripcion: |
+    Dictamen externo sobre SOW-HOLDOUT-IMMUTABLE v1.1. Veredicto:
+    APROBADO CON CAMBIOS, requiere v1.2 obligatoria antes de la
+    firma normativa. 9 hallazgos: 3 P0 (H-01 content_sha256 no
+    es hash del contenido; H-02 discrepancia 23 folds vs 7/9;
+    H-03 captura de entorno no garantiza reproducibilidad) y 6
+    P1/P2 (H-04 consumidores incompletos, H-05 trazabilidad SOW-V6,
+    H-06 influencia exploratoria vs confirmatoria, H-07 interseccion
+    266 como salvaguarda, H-08 T6 no sobrescritura sellado, H-09
+    promocion condicionada).
+  evidencia: |
+    6 hallazgos cerrados en codigo con commit verificable (ver
+    SOW-HOLDOUT-IMMUTABLE), 3 cerrados en el contrato v1.2
+    (58_contrato_holdout_inmutable.md, commits b46f9cc6 +
+    f048f1af + d5de47f6). Suite 3992 passed, gobernanza coherente.
+  siguiente_accion: |
+    Enviar al auditor externo: v1.2 (b46f9cc6) + commits de
+    evidencia (20ae7f3c, 57d5cbb9, 0d5ce224, 241cd3ab). Sin firma
+    v1.2, no se promociona ningun ticker desde holdout.
