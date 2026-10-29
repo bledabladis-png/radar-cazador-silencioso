@@ -259,6 +259,28 @@ jobs:
           retention-days: 7
           if-no-files-found: ignore
 
+      - name: Calcular cobertura efectiva P1-H02 (post-run)
+
+        if: always()
+
+        run: python scripts/audit/p1_h02_cobertura_efectiva.py
+
+
+      - name: Upload cobertura efectiva P1-H02
+
+        if: always()
+
+        uses: actions/upload-artifact@v4
+
+        with:
+
+          name: p1-h02-coverage
+
+          path: outputs/audit/p1_h02_cobertura_efectiva.csv
+
+          if-no-files-found: warn
+
+
       - name: Upload european coverage artifact
         uses: actions/upload-artifact@v4
         with:
