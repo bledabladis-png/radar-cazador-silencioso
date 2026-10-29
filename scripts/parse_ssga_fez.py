@@ -5,6 +5,39 @@ import requests
 import pandas as pd
 from io import BytesIO
 
+def _get_with_retry(url, **kwargs):
+    """GET con retry exponencial para proveedores de holdings.
+
+    Los workflows trimestrales corren UNA vez por trimestre. Un 429 o
+    5xx transitorio en ese unico intento dejaria el sistema con
+    holdings de hace 90+ dias sin avisar. Retry 3 veces (4 intentos
+    totales) con backoff 1s, 2s, 4s sobre 429/500/502/503/504 y sobre
+    ConnectionError/Timeout. Usa requests.get directo para preservar
+    la interfaz mockeable en tests.
+    """
+    import time
+    last_exc = None
+    for attempt in range(4):
+        try:
+            r = requests.get(url, **kwargs)
+            code = getattr(r, 'status_code', 200)
+            if isinstance(code, int) and code in (429, 500, 502, 503, 504):
+                if attempt < 3:
+                    time.sleep(2 ** attempt)
+                    continue
+            return r
+        except (requests.ConnectionError, requests.Timeout) as e:
+            last_exc = e
+            if attempt < 3:
+                time.sleep(2 ** attempt)
+                continue
+            raise
+    if last_exc is not None:
+        raise last_exc
+    return r
+
+
+
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
@@ -98,7 +131,7 @@ def resolve_fez_ticker(raw_ticker, name):
 
 def main():
     print('Descargando FEZ desde SSGA...')
-    resp = requests.get(URL, allow_redirects=True, timeout=30)
+    resp = _get_with_retry(URL, allow_redirects=True, timeout=30)
     resp.raise_for_status()
 
     df = pd.read_excel(BytesIO(resp.content), header=None)
