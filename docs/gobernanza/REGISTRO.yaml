@@ -3023,8 +3023,19 @@ items:
 - id: EU-HOLDINGS-DOWNLOAD-CAP
   tipo: deuda_tecnica
   ciclo: '2026-10-27'
-  estado: IN_PROGRESS
+  estado: FIXED
   commit: d6c3ebb4
+  verificacion: VERIFIED_IN_PRODUCTION
+  verificacion_run: '73ea9b13'
+  evidencia_run: '40869678709'
+  evidencia: |
+    Manifest parquet runner 40869678709 (commit 73ea9b13):
+    n_tickers=471, coverage_pct_last=0.9979, close_nan=1/471.
+    BME n=34 cov=1.0000 VALID, EURONEXT n=27 cov=1.0000 VALID,
+    LSE n=86 cov=1.0000 VALID, US_EQUITY n=287 cov=0.9965
+    VALID, XETRA n=34 cov=1.0000 VALID. 112 EU (FEZ 47,
+    DAXEX 32, ISF.L 88, LYXI 35 con solapamiento) ya en el
+    parquet del runner. Fix d6c3ebb4 activo antes del 28-10.
   descripcion: |
     get_stock_list() hacia .head(20) sobre index_holdings.csv, por
     lo que solo descargaba 20 tickers por ETF EU aunque el CSV ya
@@ -3300,3 +3311,18 @@ items:
   siguiente_accion: |
     Fix: git add outputs/history/*.schema outputs/state/*.schema.
     Verificar en proximo scheduled que step 33 success.
+
+- id: P1-H02-EU-VERIFICACION
+  tipo: deuda_tecnica
+  ciclo: '2026-10-29'
+  estado: OPEN
+  descripcion: |
+    El fix d6c3ebb4 esta confirmado por el manifest (471 tickers,
+    todos los mercados EU VALID cov=1.0). Falta verificar la
+    metrica derivada p1_h02 calculada SOBRE EL PARQUET DEL RUNNER
+    (471), no sobre el parquet local (357, pre-fix, gitignored).
+  siguiente_accion: |
+    Steps 'Calcular cobertura efectiva P1-H02 (post-run)' y
+    'Upload cobertura efectiva P1-H02' ya en workflow (67336854).
+    Esperar scheduled 17:17 UTC 29-10. Descargar artifact
+    p1-h02-coverage. Si FEZ >= 90 e ISF.L >= 78, cerrar FIXED.
