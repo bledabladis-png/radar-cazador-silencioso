@@ -69,19 +69,19 @@ def test_columna_etf_ausente_es_fail(tmp_path, monkeypatch):
     assert "etf" in etf_res.message
 
 
-def test_etf_esperado_ausente_es_warn(tmp_path, monkeypatch):
+def test_etf_esperado_ausente_es_fail(tmp_path, monkeypatch):
     rows = [r for r in _rows_for(SECTORIALES, 20) if r["etf"] != "XLY"]
     _make_csv(tmp_path, monkeypatch, "etf_holdings.csv", rows)
     _make_csv(tmp_path, monkeypatch, "index_holdings.csv",
               _rows_for(INDICES, 20))
     res = check_holdings_csvs()
     etf_res = [r for r in res if "etf_holdings" in r.name][0]
-    assert etf_res.status == "WARN"
+    assert etf_res.status == "FAIL"
     assert "ausentes" in etf_res.message
     assert "XLY" in etf_res.message
 
 
-def test_etf_con_pocos_tickers_es_warn(tmp_path, monkeypatch):
+def test_etf_con_pocos_tickers_es_fail(tmp_path, monkeypatch):
     # XLB con solo 5 tickers (min_tickers=15)
     rows = [r for r in _rows_for(SECTORIALES, 20) if r["etf"] != "XLB"]
     rows += _rows_for(("XLB",), 5)
@@ -90,17 +90,17 @@ def test_etf_con_pocos_tickers_es_warn(tmp_path, monkeypatch):
               _rows_for(INDICES, 20))
     res = check_holdings_csvs()
     etf_res = [r for r in res if "etf_holdings" in r.name][0]
-    assert etf_res.status == "WARN"
+    assert etf_res.status == "FAIL"
     assert "tickers" in etf_res.message
     assert "XLB" in etf_res.message
 
 
-def test_edad_excesiva_es_warn(tmp_path, monkeypatch):
+def test_edad_excesiva_es_fail(tmp_path, monkeypatch):
     _make_csv(tmp_path, monkeypatch, "etf_holdings.csv",
               _rows_for(SECTORIALES, 20), age_days=200)
     _make_csv(tmp_path, monkeypatch, "index_holdings.csv",
               _rows_for(INDICES, 20))
     res = check_holdings_csvs()
     etf_res = [r for r in res if "etf_holdings" in r.name][0]
-    assert etf_res.status == "WARN"
+    assert etf_res.status == "FAIL"
     assert "edad" in etf_res.message

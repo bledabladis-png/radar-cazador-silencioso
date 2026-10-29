@@ -498,12 +498,18 @@ def check_holdings_csvs() -> list:
     (security_identity.py). Un fallo parcial del workflow trimestral
     deja el CSV con datos mixtos sin senal.
 
-    Contrato por fichero:
+    Contrato por fichero (2026-10-29: stale -> FAIL):
       - Existe y es CSV legible -> sino FAIL.
       - Columna 'etf' presente -> sino FAIL.
-      - Todos los ETFs esperados presentes -> sino WARN.
-      - Cada ETF con >= min_tickers -> sino WARN.
-      - mtime <= HOLDINGS_MAX_AGE_DAYS -> sino WARN.
+      - Todos los ETFs esperados presentes -> sino FAIL.
+      - Cada ETF con >= min_tickers -> sino FAIL.
+      - mtime <= HOLDINGS_MAX_AGE_DAYS -> sino FAIL.
+
+    Razon del cambio (2026-10-29): el sistema debe ser autonomo.
+    Un CSV stale de 120+d significa que el workflow trimestral
+    lleva >= 4 ciclos fallando sin senal (retry 3x no suficiente).
+    El canal que garantiza que el fallo llega al operador es
+    exit 1 -> issue abierta automaticamente por _update_issue.
 
     La edad se mide por mtime (los CSVs no tienen columna de fecha).
     """
@@ -527,23 +533,24 @@ def check_holdings_csvs() -> list:
         present = set(df["etf"].astype(str).unique())
         missing = sorted(expected - present)
         if missing:
-            results.append(Result(tag, WARN,
+            results.append(Result(tag, FAIL,
                 f"ETFs ausentes: {missing}"))
             continue
         min_t = spec["min_tickers"]
         by_etf = df.groupby("etf").size().to_dict()
         low = {e: by_etf.get(e, 0) for e in expected if by_etf.get(e, 0) < min_t}
         if low:
-            results.append(Result(tag, WARN,
+            results.append(Result(tag, FAIL,
                 f"ETFs con <{min_t} tickers: {low}"))
             continue
         age_days = (datetime.now() - datetime.fromtimestamp(path.stat().st_mtime)).days
         n_etfs = len(present)
         n_rows = len(df)
         if age_days > HOLDINGS_MAX_AGE_DAYS:
-            results.append(Result(tag, WARN,
-                f"{n_etfs} ETFs, {n_rows} filas, edad {age_days}d "
-                f"(>{HOLDINGS_MAX_AGE_DAYS}d)"))
+            results.append(Result(tag, FAIL,
+                f"STALE: {n_etfs} ETFs, {n_rows} filas, edad {age_days}d "
+                f"(>{HOLDINGS_MAX_AGE_DAYS}d). Workflow trimestral "
+                f"posiblemente roto sin retry suficiente."))
         else:
             results.append(Result(tag, OK,
                 f"{n_etfs} ETFs, {n_rows} filas, {age_days}d"))
