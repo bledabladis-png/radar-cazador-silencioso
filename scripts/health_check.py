@@ -71,6 +71,16 @@ COVERAGE_OK_THRESHOLD = 0.95
 # en esa sesion. Solo 36 llegaron (los top de cada sector).
 CONFIRMED_INCOMPLETE_DATES = {"2026-09-22"}
 
+# F4 (2026-10-30): deteccion de tickers stale no clasificados.
+# Un ticker ACTIVE (sin registro en ticker_health.yaml) cuyo ultimo
+# dato es anterior a N sesiones respecto al ultimo del parquet dispara
+# WARN. Es el canal que detecta futuros WBD automaticamente: el
+# operador clasifica en data/mappings/ticker_health.yaml y el WARN
+# desaparece en el siguiente run. WARN, no FAIL: la cobertura agregada
+# (check_coverage_last_5) mide el pipeline, no la salud de un ticker.
+HEALTH_STALE_SESSIONS = 10
+
+
 WORKFLOW_EXPECTATIONS = {
     "daily_run.yml": {"max_days": 2},
     "update_macro_manual.yml": {"max_days": 2},
@@ -557,6 +567,78 @@ def check_holdings_csvs() -> list:
     return results
 
 
+def check_ticker_health(df: pd.DataFrame) -> list:
+    """Detecta tickers ACTIVE con datos stale no clasificados.
+
+    F4 (2026-10-30). El pipeline trata WBD (DELISTED 2026-10-06 por
+    adquisicion) como un activo mas: get_stock_list lo excluye (F2),
+    p1_h02 lo reporta como n_excluidos (F3), pero nada alerta de un
+    ticker NUEVO que Yahoo deje de servir. Este check cierra ese gap.
+
+    Contrato:
+      - df: stock_prices.parquet ya cargado.
+      - Tickers clasificados en ticker_health.yaml (DELISTED, STALE,
+        TRUNCATED_IPO): ignorados. El operador ya los ha revisado.
+      - Tickers ACTIVE (sin registro) cuyo ultimo dato es anterior a
+        la sesion idx[-HEALTH_STALE_SESSIONS]: candidatos a WARN.
+      - Si hay >=1 candidato: WARN con lista (max 10). Dispara issue
+        automatico via _update_issue -> el operador clasifica en el
+        yaml -> siguiente run sin WARN.
+      - Si no hay candidatos: OK.
+    """
+    if df is None or getattr(df, "empty", True):
+        return [Result("ticker_health", SKIP, "df vacio")]
+    try:
+        idx = df.index
+        n_sessions = len(idx)
+        if n_sessions < HEALTH_STALE_SESSIONS:
+            return [Result("ticker_health", SKIP,
+                           f"parquet con pocas sesiones ({n_sessions})")]
+        cutoff = idx[-HEALTH_STALE_SESSIONS]
+    except Exception as e:
+        return [Result("ticker_health", SKIP, f"error indice: {e}")]
+
+    close_cols = [c for c in df.columns
+                  if isinstance(c, tuple) and c[0] == "Close"]
+    if not close_cols:
+        return [Result("ticker_health", FAIL, "no hay columnas Close")]
+
+    try:
+        from src.ticker_health import _load_registry
+        registry = _load_registry()
+    except Exception as e:
+        return [Result("ticker_health", SKIP,
+                       f"ticker_health no disponible: {e}")]
+    classified = set(registry.keys())
+
+    stale_active = []
+    for c in close_cols:
+        t = c[1]
+        if t in classified:
+            continue
+        s = df[c].dropna()
+        if len(s) == 0:
+            continue
+        last = s.index.max()
+        if last < cutoff:
+            stale_active.append((t, str(pd.Timestamp(last).date()), len(s)))
+
+    if not stale_active:
+        return [Result("ticker_health", OK,
+                       f"{len(classified)} tickers clasificados, "
+                       f"0 ACTIVE stale")]
+
+    detalle = "; ".join(f"{t} last={d} n={n}"
+                        for t, d, n in stale_active[:10])
+    if len(stale_active) > 10:
+        detalle += f" (+{len(stale_active) - 10} mas)"
+    return [Result(
+        "ticker_health", WARN,
+        f"{len(stale_active)} tickers ACTIVE stale sin clasificar: "
+        f"{detalle}. Anadir a data/mappings/ticker_health.yaml.",
+    )]
+
+
 def check_yahoo_revision() -> list:
     """Detecta revision retrospectiva de Yahoo comparando manifest vs HEAD."""
     manifest_path = PROJECT_ROOT / "data" / "market_data.parquet.manifest.json"
@@ -879,6 +961,7 @@ def run_all_checks() -> list:
             results.extend(check_coverage_last_5(df))
             results.extend(check_non_market_days(df))
             results.extend(check_eu_usa_pattern(df))
+            results.extend(check_ticker_health(df))
         except Exception as e:
             results.append(Result("parquet", FAIL, f"error leyendo parquet: {e}"))
     else:
