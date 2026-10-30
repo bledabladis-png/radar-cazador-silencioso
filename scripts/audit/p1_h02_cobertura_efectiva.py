@@ -8,6 +8,9 @@ Cuantifica la diferencia entre:
     exitoso y phase != INSUFFICIENT_DATA. Calculado via la funcion
     canonica compute_wyckoff_snapshot.
   - publicado: fila en alguno de los 6 CSVs de outputs/history/.
+  - excluidos: holdings con estado != ACTIVE en ticker_health.yaml (p.ej.
+    WBD DELISTED 2026-10-06). No cuentan como "sin datos" (no confundir
+    con fallo de Yahoo). cov_vs_sel no cambia.
 
 Cobertura ponderada (peso del ticker, no conteo):
   - cov_vs_sel_pct: con_datos_peso / seleccionado_peso.
@@ -32,6 +35,7 @@ from indicators.wyckoff_holdings_report import (
     MIN_BARS_THEORETICAL,
 )
 from src.instrument_registry import normalize_yahoo_ticker
+from src.ticker_health import is_eligible
 from src.pipeline.wyckoff_holdings import (
     _load_index_holdings, _split_indices,
 )
@@ -100,7 +104,15 @@ def main():
             sel, _, estado = _select_target_holdings(sub)
             sel_peso = float(sel["weight"].sum()) if len(sel) else 0.0
             cd_n, cd_peso = 0, 0.0
+            n_excluidos = 0
             for _, r in sel.iterrows():
+                # F3 (2026-10-30): DELISTED no es "sin datos hoy", es
+                # "no existe". No aparece en sin_datos (evita confusion con
+                # fallos de Yahoo). Cuenta en n_excluidos. cov_vs_sel NO
+                # cambia: el denominador sigue siendo el holdings del ETF.
+                if not is_eligible(r["ticker"]):
+                    n_excluidos += 1
+                    continue
                 ok, nb, tn = _has_data(df_stocks, r["ticker"])
                 if ok:
                     cd_n += 1
@@ -124,6 +136,7 @@ def main():
                 "cd_n": cd_n, "cd_peso": round(cd_peso, 2),
                 "ev_n": ev_n, "ev_peso": round(ev_peso, 2),
                 "pub_n": pr["n"], "pub_peso": round(pr["peso"], 2),
+                "n_excluidos": n_excluidos,
                 "cov_vs_sel_pct": round(cd_peso / sel_peso * 100, 2) if sel_peso else 0.0,
                 "cov_vs_grupo_pct": round(cd_peso / wt * 100, 2) if wt else 0.0,
             })
