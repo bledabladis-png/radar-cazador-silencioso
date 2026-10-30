@@ -122,7 +122,16 @@ def render_iae_section(iae_section):
     cov_s = f"{cov:.2%}" if isinstance(cov, (int, float)) else "N/D"
     out.append(f"- Cobertura observable: **{obs} / {tot} ({cov_s})**\n")
     if iae_section.get("catalog_coverage_warning"):
-        out.append("**[WARN] Cobertura del catalogo por debajo del 90%.**\n")
+        out.append("**[WARN] Cobertura del catalogo por debajo del 90% "
+                   "(coverage_quality != COMPLETE).**\n")
+    elif (iae_section.get("catalog_coverage_declared") is not None
+          and iae_section["catalog_coverage_declared"] < 0.90
+          and iae_section.get("coverage_quality") == "COMPLETE"):
+        out.append("*[INFO] Cobertura del catalogo por debajo del 90%, "
+                   "pero coverage_quality=COMPLETE: el catalogo ha "
+                   "crecido mas rapido que el 13F trimestral. No es "
+                   "regresion del pipeline (catalogo daily vs 13F "
+                   "trimestral).*\n")
     out.append(f"- TARGET construido: **{obs}/{obs} (100%, por construccion)**\n")
     out.append(f"- Estado contractual: "
                f"{iae_section.get('coverage_status') or 'N/D'}\n")

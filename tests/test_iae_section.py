@@ -131,7 +131,12 @@ def test_iae_section_ok_cobertura_catalogo(tmp_path):
     fake = _fake_result()
     fake["target_q4_size"] = 242
     fake["target_q1_size"] = 242
+    # 2026-10-30: MAPPINGS_DIR sin radar_target_catalog.csv para que
+    # _n_delisted_in_catalog=0 (aislado del estado real del repo).
+    empty_mappings = tmp_path / "empty_mappings"
+    empty_mappings.mkdir()
     with patch.object(iae_section, "DATA_DIR", d), \
+         patch.object(iae_section, "MAPPINGS_DIR", empty_mappings), \
          patch.object(iae_section, "_get_catalog_total", return_value=242), \
          patch("src.institutional_accumulation.pipeline_contractual"
                ".run_contractual_nipc", return_value=fake):
@@ -147,7 +152,10 @@ def test_iae_section_cobertura_usa_manifest(tmp_path):
     fake = _fake_result()
     fake["target_q4_size"] = 240
     fake["target_q1_size"] = 240
+    empty_mappings = tmp_path / "empty_mappings"
+    empty_mappings.mkdir()
     with patch.object(iae_section, "DATA_DIR", d), \
+         patch.object(iae_section, "MAPPINGS_DIR", empty_mappings), \
          patch.object(iae_section, "_get_catalog_total", return_value=255), \
          patch("src.institutional_accumulation.pipeline_contractual"
                ".run_contractual_nipc", return_value=fake):
@@ -271,12 +279,17 @@ def test_iae_section_ok_stale_reason_none(tmp_path):
 # --- catalog_coverage_warning (Fase 3.1) --------------------------------
 
 def test_iae_section_coverage_warning_true_si_bajo_umbral(tmp_path):
-    """Con cobertura < 90%, warning=True."""
+    """2026-10-30: warning=True solo si ademas coverage_quality != COMPLETE.
+
+    Si COMPLETE y cov<0.90 es deuda estructural (catalogo daily vs 13F
+    trimestral), se emite [INFO], no [WARN]. Este test cubre la
+    regresion real (coverage_quality=PARTIAL + cov bajo).
+    """
     d = _ok_env(tmp_path)
     fake = _fake_result()
-    # 220/242 = 90.9% -> NO warning. Bajamos a 200/242 = 82.6% -> SI warning.
     fake["target_q4_size"] = 200
     fake["target_q1_size"] = 200
+    fake["coverage_quality"] = "PARTIAL"
     with patch.object(iae_section, "DATA_DIR", d), \
          patch("src.institutional_accumulation.pipeline_contractual"
                ".run_contractual_nipc", return_value=fake):
@@ -336,6 +349,8 @@ def test_iae_section_warning_true_si_catalogo_excede_umbral(tmp_path):
     fake = _fake_result()
     fake["target_q4_size"] = 240
     fake["target_q1_size"] = 240
+    # 2026-10-30: warning solo si coverage_quality != COMPLETE.
+    fake["coverage_quality"] = "PARTIAL"
     with patch.object(iae_section, "DATA_DIR", d), \
          patch.object(iae_section, "MAPPINGS_DIR", m), \
          patch("src.institutional_accumulation.pipeline_contractual"
@@ -364,3 +379,74 @@ def test_iae_section_coverage_warning_none_en_error(tmp_path):
         r = iae_section.compute_iae_section(None, "TEST")
     assert r["status"] == "ERROR"
     assert r["catalog_coverage_warning"] is None
+
+
+# --- 2026-10-30: contrato nuevo WARN vs INFO + DELISTED ---
+
+def test_iae_section_complete_no_warn_aunque_cov_baja(tmp_path):
+    """COMPLETE + cov<0.90 = deuda estructural, no regresion -> no WARN.
+
+    Es el caso real del run 41037457375: 241/287 = 83.97% con
+    coverage_quality=COMPLETE. Antes disparaba [WARN] perpetuo. Ahora
+    warning=False y el reporte emite [INFO].
+    """
+    d = _ok_env(tmp_path)
+    fake = _fake_result()
+    fake["target_q4_size"] = 200
+    fake["target_q1_size"] = 200
+    fake["coverage_quality"] = "COMPLETE"
+    with patch.object(iae_section, "DATA_DIR", d), \
+         patch("src.institutional_accumulation.pipeline_contractual"
+               ".run_contractual_nipc", return_value=fake):
+        r = iae_section.compute_iae_section(None, "TEST")
+    assert r["status"] == "OK"
+    assert r["catalog_coverage_warning"] is False
+
+
+def test_iae_section_delisted_no_cuenta_en_denominador(tmp_path):
+    """Un ticker DELISTED en el catalogo reduce cat_total_eff.
+
+    WBD esta en radar_target_catalog.csv y en ticker_health.yaml como
+    DELISTED. No debe contar como 'faltante' en el denominador.
+    """
+    d = _ok_env(tmp_path)
+    m = tmp_path / "mappings_with_delisted"
+    m.mkdir()
+    (m / "radar_target_catalog.csv").write_text(
+        "radar_ticker\nWBD\nAAPL\n", encoding="utf-8"
+    )
+    fake = _fake_result()
+    fake["target_q4_size"] = 2
+    fake["target_q1_size"] = 2
+    with patch.object(iae_section, "DATA_DIR", d), \
+         patch.object(iae_section, "MAPPINGS_DIR", m), \
+         patch.object(iae_section, "_get_catalog_total", return_value=2), \
+         patch("src.institutional_accumulation.pipeline_contractual"
+               ".run_contractual_nipc", return_value=fake):
+        r = iae_section.compute_iae_section(None, "TEST")
+    # 2 del catalogo - 1 DELISTED (WBD) = 1 efectivo
+    assert r["catalog_keys_total"] == 1
+    assert r["catalog_keys_observed"] == 2
+    # cobertura 2/1 = 200% (WBD fuera del denominador)
+    assert r["catalog_coverage_declared"] > 1.0
+
+
+def test_iae_section_delisted_sin_health_no_filtra(tmp_path):
+    """Si ticker_health.yaml no existe o no carga, cat_total_eff == cat_total.
+
+    Degradacion limpia: si el filtro de DELISTED no esta disponible,
+    no se altera el denominador. Mejor un WARN de mas que un crash.
+    """
+    d = _ok_env(tmp_path)
+    empty_mappings = tmp_path / "empty_mappings_no_health"
+    empty_mappings.mkdir()
+    fake = _fake_result()
+    fake["target_q4_size"] = 240
+    fake["target_q1_size"] = 240
+    with patch.object(iae_section, "DATA_DIR", d), \
+         patch.object(iae_section, "MAPPINGS_DIR", empty_mappings), \
+         patch.object(iae_section, "_get_catalog_total", return_value=242), \
+         patch("src.institutional_accumulation.pipeline_contractual"
+               ".run_contractual_nipc", return_value=fake):
+        r = iae_section.compute_iae_section(None, "TEST")
+    assert r["catalog_keys_total"] == 242

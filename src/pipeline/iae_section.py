@@ -199,10 +199,34 @@ def compute_iae_section(reference_date, run_id, *, official_dir=None):
         cat_total = _get_catalog_total() or 242
     cat_obs = max(int(r.get("target_q4_size") or 0),
                   int(r.get("target_q1_size") or 0))
-    catalog_cov = (cat_obs / cat_total) if cat_total else None
+    # Fix 2026-10-30: excluir DELISTED del denominador. Un ticker
+    # DELISTED no es "faltante", es "no existe hoy". Contarlo en el
+    # denominador infla artificialmente la cobertura faltante.
+    _n_delisted_in_catalog = 0
+    try:
+        from src.ticker_health import is_eligible as _is_eligible
+        import csv as _csv
+        _cat_p = MAPPINGS_DIR / "radar_target_catalog.csv"
+        if _cat_p.exists():
+            with _cat_p.open(encoding="utf-8") as _cf:
+                for _row in _csv.DictReader(_cf):
+                    _t = (_row.get("radar_ticker") or "").strip()
+                    if _t and not _is_eligible(_t):
+                        _n_delisted_in_catalog += 1
+    except (OSError, ValueError, KeyError, ImportError):
+        pass
+    cat_total_eff = max(cat_total - _n_delisted_in_catalog, 0) or cat_total
+    catalog_cov = (cat_obs / cat_total_eff) if cat_total_eff else None
+    # Fix 2026-10-30: si coverage_quality == COMPLETE, el catalogo ha
+    # crecido mas rapido que el 13F trimestral. Es deuda de
+    # observabilidad estructural (catalogo daily vs 13F trimestral),
+    # no regresion del pipeline. Solo WARN si coverage_quality !=
+    # COMPLETE (regresion real de cobertura interna).
+    _cq = r.get("coverage_quality") or ""
     catalog_warn = (
         catalog_cov is not None
         and catalog_cov < COVERAGE_WARNING_THRESHOLD
+        and _cq != "COMPLETE"
     ) if catalog_cov is not None else None
 
     print("  Periodo: " + f_prev + " -> " + f_curr)
@@ -233,7 +257,7 @@ def compute_iae_section(reference_date, run_id, *, official_dir=None):
         "coverage_status": r.get("coverage_status"),
         "coverage_quality": r.get("coverage_quality"),
         "catalog_coverage_declared": catalog_cov,
-        "catalog_keys_total": cat_total,
+        "catalog_keys_total": cat_total_eff,
         "catalog_keys_observed": cat_obs,
         "evidence_class": r.get("evidence_class"),
         "error": None,
