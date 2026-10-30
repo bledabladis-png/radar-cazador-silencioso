@@ -44,6 +44,51 @@ Al cerrar una sesion nueva, se anade arriba (las mas recientes primero). Si hay 
 
 ## 3. SESIONES
 
+### 2026-10-30 — Sesion 19: cierre deuda del reporte 41037457375
+
+**Objetivo.** Leer el reporte del run 41037457375 (primer scheduled
+verde sobre 89b6e0a) y cerrar cada hallazgo, no documentarlo.
+
+**Hecho.** 9 fixes + 1 WONT_FIX razonado, cada uno con test:
+- VALIDATION-GATE-LITERAL-10-10 (090a3439): receipt "10/10" con 11
+  checks reales. N/N dinamico en provenance, receipt y pipeline_gate.
+  32 tests en 3 ficheros.
+- MTE-FUTURES-STATUS-OCULTO (1fb791ab): mte_state.json STALE sin
+  publicar. Linea en render_mte.
+- LIQUIDITY-SEVERIDAD-OCULTA (1fb791ab): severidad_cruda y diff_bp
+  ocultos. Linea en render_regimenes.
+- CROSS-PROVIDER-VALIDATION-MUERTO (fac7d5f1): script que solo
+  consultaba Yahoo con 2 tickers hardcoded. Eliminado con step y
+  upload. Las 5 API keys restantes (POLYGON, ALPHA_VANTAGE,
+  TWELVE_DATA, FINNHUB, FMP) tienen consumidores reales (DataRouter +
+  BackupProvider), no son deuda.
+- CATALOG-COVERAGE-WARN-PERPETUO (55a63833): WARN 83.97% con
+  coverage_quality=COMPLETE. INFO si COMPLETE, WARN solo si regresion.
+  DELISTED fuera del denominador. 12 -> 26 tests en test_iae_section.py.
+- FASE-WYCKOFF-SEMANTICA (2c2a1c3e): header "Fase Wyckoff" -> "Fase
+  dominante" (es moda de holdings, no fase del ETF) + nota.
+- SECTOR-CONCENTRATION-LOW-COVERAGE (2c2a1c3e): columna "N valid" en
+  Concentracion (Cob 18-25% sobre 4-5 tickers era invisible).
+- NH-NL-N-VALID-OBSERVABILITY (2c2a1c3e): columna "N valid NH/NL" en
+  Sector Breadth (NH=0/NL=0 sin n_valid visible).
+- NEGATIVE-ZERO-CROSS-ASSET (71371872): -0.00 en XLE 60d FX. _fmt
+  local -> _fmt_signed (FU-003a).
+- LIDERAZGO-DOBLE-TAUTOLOGICO: WONT_FIX razonado (top-5 por retorno
+  siempre bate; nota de sesgo ya en reporte).
+
+**Commits.** 090a3439, 1fb791ab, fac7d5f1, 55a63833, 2c2a1c3e,
+71371872 + este docs. Suite 4097 passed al cierre.
+
+**Pendiente.**
+- Verificacion empirica en proximo scheduled (23:17 UTC 30-10 o
+  03:17 UTC 31-10): Fase dominante, N valid, Futures Status STALE,
+  Severidad TENSION_ELEVADA, [INFO] catalogo, 0.00 XLE 60d FX.
+- H5.3 (20-nov), C2, SOW-BEAR, WYCKOFF-5BX: sin cambios.
+
+**Proximo paso sugerido.** Verificar scheduled. Si verde, cerrar
+items observacionales con fecha. Decidir pre-registro IWM. Documentar
+reglas force=true y push en 07_RUNBOOK.
+
 ### 2026-10-30 — Sesion 18: ticker health (WBD) + 15 tickers expansions
 
 **Objetivo.** Cerrar el frente WBD (adquirida por Paramount Skydance)

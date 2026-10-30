@@ -206,6 +206,12 @@ Tipos: `fix`, `refactor`, `docs`, `data`, `test`, `chore`, `perf`.
   tildes). Distinto del artefacto de consola (L159): aqui el fichero
   escrito queda corrupto. Verificar tras escribir: `'\u251c' in texto`.
   No fiarse de la vista de consola.
+- **SHA puramente numerico en YAML se parsea como int.** `commit:
+  71371872` sin comillas -> `verifica_gobernanza` falla con "SHA
+  entrecomillado en YAML: ... (int)". Los SHAs con letras (p.ej.
+  `090a3439`) no fallan porque no son parseables como int. Regla: en
+  REGISTRO, todo `commit:` se entrecomilla SIEMPRE (`commit:
+  '71371872'`). Aplicado 2026-10-30 en commit cierre-19.
 - **YAML con `:` en `descripcion` rompe `verifica_gobernanza`:** un
   `:` inline sin comillas altera el parseo. Usar block scalar `|` con
   sangria 4 espacios, o citar con `'...'`. Evitar `:` sin escapar en

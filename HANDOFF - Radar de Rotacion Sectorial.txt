@@ -7,16 +7,16 @@ junto con `Consolidacion_Documentos/00_ARRANQUE.md`.
 
 ---
 
-## 1. ESTADO AL CIERRE (2026-10-30, sesion 18)
+## 1. ESTADO AL CIERRE (2026-10-30, sesion 19)
 
-HEAD: `78ce37a2` (consultar `git log --oneline -1` para el actual).
+HEAD: `71371872` (consultar `git log --oneline -1` para el actual).
 Sincronizacion: main == origin/main al cierre del commit.
 Tests: fuente autoritativa Consolidacion_Documentos/ESTADO_SISTEMA.md.
        Conteo exacto en ESTADO_SISTEMA.md seccion 2 (no literal aqui: cambia con cada commit de test).
 CI HEAD: verde.
 Validation Gate: 11/11 (outputs/state/validation_gate_result.json).
 Working tree: limpio.
-Gobernanza: docs/gobernanza/REGISTRO.yaml, 171 items. Validador reforzado
+Gobernanza: docs/gobernanza/REGISTRO.yaml, 181 items. Validador reforzado
             (detecta ids embebidos, SHA no-string, WONT_FIX en HANDOFF).
 Writers: 25 (output_registry.py).
 
@@ -47,6 +47,33 @@ Ticker health (autonomia ante eventos corporativos): F1-F4
   (>=10 sesiones) -> issue automatico -> operador clasifica en yaml
   -> siguiente run OK. Invariante: ningun ticker ACTIVE pasa 10
   sesiones sin datos sin que el operador lo sepa.
+
+Cierre deuda del reporte 41037457375 (sesion 19): 9 fixes +
+  1 WONT_FIX razonado. Hallazgos al leer el reporte del run del
+  30-10 manana:
+  - VALIDATION-GATE-LITERAL-10-10 (090a3439): receipt decia
+    "10/10" con 11 checks reales. Fix: N/N dinamico en provenance,
+    receipt y pipeline_gate.
+  - MTE-FUTURES-STATUS-OCULTO (1fb791ab): mte_state.json STALE pero
+    no se publicaba. Fix: linea en render_mte.
+  - LIQUIDITY-SEVERIDAD-OCULTA (1fb791ab): severidad_cruda=
+    TENSION_ELEVADA oculta. Fix: linea en render_regimenes.
+  - CROSS-PROVIDER-VALIDATION-MUERTO (fac7d5f1): script que solo
+    consultaba Yahoo con 2 tickers hardcoded. Eliminado con step y
+    upload.
+  - CATALOG-COVERAGE-WARN-PERPETUO (55a63833): WARN 83.97% con
+    coverage_quality=COMPLETE. Fix: INFO si COMPLETE, WARN solo si
+    regresion + DELISTED fuera del denominador.
+  - FASE-WYCKOFF-SEMANTICA (2c2a1c3e): header renombrado a "Fase
+    dominante" + nota (es moda de holdings, no fase del ETF).
+  - SECTOR-CONCENTRATION-LOW-COVERAGE (2c2a1c3e): columna N valid
+    en Concentracion (18-25% Cob sobre 4-5 tickers era invisible).
+  - NH-NL-N-VALID-OBSERVABILITY (2c2a1c3e): columna N valid NH/NL
+    en Sector Breadth (NH=0/NL=0 sin n_valid visible).
+  - NEGATIVE-ZERO-CROSS-ASSET (71371872): -0.00 en XLE 60d FX. Fix:
+    _fmt_signed (FU-003a).
+  - LIDERAZGO-DOBLE-TAUTOLOGICO: WONT_FIX razonado (top-5 por
+    retorno siempre bate; nota de sesgo ya en reporte).
 
 DICT3-REACCUMULATION: WONT_FIX 2026-10-29. Detector implementado, 18 tests
   T1-T7 verdes, ejecutado sobre cohort (1185 episodios, 1171 evaluables).

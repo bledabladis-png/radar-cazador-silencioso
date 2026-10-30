@@ -3600,3 +3600,204 @@ items:
     con WBD fuera de get_stock_list. Si Yahoo rompe otro ticker
     futuro, ticker_health [WARN] + issue automatico -> clasificar en
     yaml en 2 min -> siguiente run OK.
+
+- id: VALIDATION-GATE-LITERAL-10-10
+  tipo: bug
+  ciclo: '2026-10-30'
+  estado: FIXED
+  commit: 090a3439
+  test: tests/test_report_provenance.py
+  descripcion: |
+    El receipt del run 41037457375 declaraba validation_gate: "10/10"
+    pero validation_gate_checks_n: 11. El gate paso 11/11. El literal
+    "10/10" estaba hardcoded en 3 sitios desde que el gate crecio de
+    10 a 11 checks el 2026-10-17. Cualquier consumidor que validara
+    "10/10" quedaba ciego al check 11.
+  evidencia: |
+    Fix en 3 sitios:
+    - src/report/provenance.py::_compute_validation_gate:
+      return "{0}/{0}".format(checks_n) (siempre N/N dinamico).
+    - scripts/write_completion_receipt.py: validation_gate =
+      "{0}/{0}".format(checks_n).
+    - scripts/pipeline_gate.py: _valid_validation_gate(gate) acepta
+      "N/N" con N >= 10. Retrocompatible "10/10" y actual "11/11".
+    Tests: 32 nuevos en 3 ficheros (test_build_validation_gate_11_11,
+    5 _is_gate_passed, test_vg_pass_11_checks_emite_11_11, 2
+    _valid_validation_gate). Suite 4081 passed.
+
+- id: MTE-FUTURES-STATUS-OCULTO
+  tipo: observabilidad
+  ciclo: '2026-10-30'
+  estado: FIXED
+  commit: 1fb791ab
+  test: tests/test_report_mte_futures_liquidity_visibles.py
+  descripcion: |
+    outputs/state/mte_state.json del run 41037457375 declaraba
+    futures_status: "STALE" pero el bloque MTE del reporte solo
+    publicaba scenario, confidence, MSI, IPI, SRS, SHS, CLS, IPS.
+    Un lector del reporte creia que los inputs de futuros estaban
+    frescos. No lo estaban.
+  evidencia: |
+    Fix en src/report/volatility_mte.py::render_mte: si
+    futures_status != "OK", se anade linea
+    "- **Futures Status:** STALE *(inputs de futuros no frescos o
+    ausentes; la confidence del scenario NO se degrada por este
+    estado)*". Solo visual, sin cambios en scoring ni confidence.
+    10 tests.
+
+- id: LIQUIDITY-SEVERIDAD-OCULTA
+  tipo: observabilidad
+  ciclo: '2026-10-30'
+  estado: FIXED
+  commit: 1fb791ab
+  test: tests/test_report_mte_futures_liquidity_visibles.py
+  descripcion: |
+    outputs/state/liquidity_state.json del run 41037457375 declaraba
+    severidad_cruda: "TENSION_ELEVADA", diff_bp: 6.0. El bloque
+    "Resumen de Regimenes" solo publicaba el regimen agregado
+    "ESTRECHA" y el Signal Consistency. La severidad cruda y el
+    diferencial en puntos basicos no se veian.
+  evidencia: |
+    Fix en src/report/header.py::render_regimenes: si
+    severity != "OK", se anade "  - *Severidad: TENSION_ELEVADA
+    (diff_bp=+6.0)*". Solo visual. 10 tests (5 MTE + 5 liquidity).
+
+- id: CROSS-PROVIDER-VALIDATION-MUERTO
+  tipo: deuda_tecnica
+  ciclo: '2026-10-30'
+  estado: FIXED
+  commit: fac7d5f1
+  descripcion: |
+    validation/cross_provider_validation.py no era cross-provider:
+    consultaba solo YahooProvider, las env vars POLYGON_API_KEY y
+    ALPHA_VANTAGE_API_KEY se pasaban sin usar, solo validaba 2
+    tickers hardcoded (SPY, AAPL) del universo de 505, y su artifact
+    tenia 71 bytes. Duplicaba peor check_yahoo_revision de
+    health_check. El step pasaba en verde con 2/2 OK, dando falsa
+    sensacion de validacion cross-provider.
+  evidencia: |
+    Eliminado: validation/cross_provider_validation.py, step "Cross
+    provider validation" de daily_run.yml, linea del upload de
+    artifacts. 0 hits en src/, scripts/, tests/, run.py tras el
+    cambio. yaml.safe_load OK, 36 steps en run-system. Las 5 API
+    keys (POLYGON, ALPHA_VANTAGE, TWELVE_DATA, FINNHUB, FMP) siguen
+    en el step "Run Macro Sectorial" y tienen consumidores reales
+    (DataRouter + BackupProvider), no son deuda.
+
+- id: CATALOG-COVERAGE-WARN-PERPETUO
+  tipo: bug
+  ciclo: '2026-10-30'
+  estado: FIXED
+  commit: 55a63833
+  test: tests/test_iae_section.py
+  descripcion: |
+    El reporte del run 41037457375 publicaba "241 / 287 (83.97%)"
+    con "[WARN] Cobertura del catalogo por debajo del 90%" pero
+    tambien "Calidad de cobertura: COMPLETE". El WARN contradecia
+    el estado: COMPLETE = catalogo observado internamente valido.
+    El ratio cae estructuralmente porque el catalogo crece a diario
+    (bot Daily hist/state; hoy 307 filas) y el 13F observa
+    trimestralmente. WARN perpetuo por diseno, no accionable.
+  evidencia: |
+    Fix en src/pipeline/iae_section.py y src/report/iae.py:
+    - catalog_warn = True solo si (cov < 0.90 AND coverage_quality
+      != COMPLETE). COMPLETE + cov bajo = deuda estructural (INFO).
+    - cat_total_eff excluye DELISTED (WBD) del denominador. Mismo
+      criterio que F2 (get_stock_list) y F3 (p1_h02).
+    - Reporte: [WARN] con sufijo "(coverage_quality != COMPLETE)"
+      si es regresion; [INFO] explicando deuda estructural si
+      COMPLETE + cov bajo.
+    Tests: 12 -> 26 en test_iae_section.py (4 adaptados al contrato
+    nuevo + 3 nuevos: COMPLETE sin WARN, DELISTED reduce cat_total,
+    sin ticker_health no filtra). Suite 4084 passed.
+
+- id: FASE-WYCKOFF-SEMANTICA
+  tipo: observabilidad
+  ciclo: '2026-10-30'
+  estado: FIXED
+  commit: 2c2a1c3e
+  test: tests/test_report_fase_dominante_n_valid.py
+  descripcion: |
+    La columna "Fase Wyckoff" en Matriz de Regimen Sectorial decia
+    "Fase Wyckoff" pero el valor es la moda de la distribucion de
+    fases de los holdings del sector, no la fase del ETF sectorial
+    (esa se retiro en sesion 3). Los 11 sectores salian como RANGE,
+    coherente con pct_range 70-95%, pero el nombre sugiere
+    clasificacion ETF.
+  evidencia: |
+    Fix en src/report/sector_context.py: header "Fase Wyckoff" ->
+    "Fase dominante" + nota aclaratoria. 2 tests.
+
+- id: SECTOR-CONCENTRATION-LOW-COVERAGE
+  tipo: observabilidad
+  ciclo: '2026-10-30'
+  estado: FIXED
+  commit: 2c2a1c3e
+  test: tests/test_report_fase_dominante_n_valid.py
+  descripcion: |
+    Concentracion del liderazgo medía medianas sobre 4-5 tickers
+    (Cob 18-25% en XLK/XLF/XLI/XLV) sin declarar cuantos tickers.
+    El lector no sabia si "Cob RS=18%" eran 4 de 22 o 4 de 76.
+  evidencia: |
+    Fix en src/report/sectorial.py::render_sector_concentration:
+    columna "N valid" con n_valid_rs (== n_valid_momentum == flow ==
+    wyckoff == wls por diseno, interseccion dropna). Degradacion:
+    row.get() + "N/D" si df sin la columna. 4 tests.
+
+- id: NH-NL-N-VALID-OBSERVABILITY
+  tipo: observabilidad
+  ciclo: '2026-10-30'
+  estado: FIXED
+  commit: 2c2a1c3e
+  test: tests/test_report_fase_dominante_n_valid.py
+  descripcion: |
+    Sector Breadth & Health publicaba NH=0 / NL=0 sin declarar
+    cuantos componentes tenian historial suficiente. La nota decia
+    "si n_valid_nhnl < n_total" pero n_valid_nhnl no se publicaba.
+  evidencia: |
+    Fix en src/report/sectorial.py::render_sector_breadth: columna
+    "N valid NH/NL". Degradacion "N/D" si df no trae el campo.
+    Nota actualizada. 4 tests.
+
+- id: NEGATIVE-ZERO-CROSS-ASSET
+  tipo: bug
+  ciclo: '2026-10-30'
+  estado: FIXED
+  commit: '71371872'
+  test: tests/test_report_cross_asset_neg_zero.py
+  descripcion: |
+    El renderer local de "Contexto transversal de mercado" usaba
+    f"{v:.2f}" directo. mean_corr ~ -1e-17 se formateaba como
+    "-0.00" visible (XLE 60d FX en el run 41037457375). Ruido de
+    coma flotante con signo visual enganoso.
+  evidencia: |
+    Fix en src/report/market_context.py::render_contexto_cross_asset:
+    _fmt local usa _fmt_signed de src/report/helpers (FU-003a: cero
+    visual sin signo, no-cero con signo). 3 tests: -1e-17 -> "0.00",
+    -0.38/+0.20/+0.40 mantienen signo, NaN -> N/D.
+
+- id: LIDERAZGO-DOBLE-TAUTOLOGICO
+  tipo: deuda_tecnica
+  ciclo: '2026-10-30'
+  estado: WONT_FIX
+  descripcion: |
+    La tabla "Liderazgo relativo interno" muestra 55/55 tickers (5
+    por sector x 11 sectores) como "Liderazgo relativo doble" (vs
+    mercado Y vs sector). Es tautologico: los top-5 por retorno 20d
+    casi siempre baten ambos. La columna "Clasificacion" no aporta
+    informacion util.
+  razon: |
+    Ya documentado en el propio reporte (nota de sesgo de seleccion
+    bajo la tabla): "los top-5 baten a su sector y, con frecuencia,
+    al mercado. Una mayoria de 'Liderazgo relativo doble' aqui NO
+    significa que la mayoria del universo lo sea". El diseno es
+    correcto: la tabla muestra el top-5, no el universo completo.
+    Eliminar la columna no aportaria informacion; mantenerla con la
+    nota de sesgo ya visible es honesto. Cambiar el criterio (p.ej.
+    mostrar solo tickers que baten ambos por margen X) es cambio de
+    producto, no fix de bug.
+  reabrir_si: |
+    Se decide cambiar el criterio de seleccion de la tabla (no
+    top-5 por retorno, sino otro filtro) como decision de producto
+    documentada.
+

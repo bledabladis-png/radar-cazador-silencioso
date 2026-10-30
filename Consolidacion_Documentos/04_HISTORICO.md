@@ -2491,3 +2491,69 @@ AFL), XLV 4 (BSX HCA COR CAH, MRNA ya estaba), XLU 1 (CNP), XLY 1
 **Commits.** c879df71, fc6232d8, 38bc1c42, 90e269ff, 78ce37a2.
 Suite 4062 passed, 2 skipped al cierre.
 
+## 2026-10-30 (sesion 19) - Cierre deuda del reporte 41037457375
+
+**Objetivo.** Leer el reporte del primer scheduled verde post-fix
+(41037457375 sobre 89b6e0a) y cerrar cada hallazgo, no documentarlo.
+La sesion 18 habia cerrado WBD y los 15 tickers de expansions. Esta
+sesion cierra 9 hallazgos adicionales que el reporte del run
+41037457375 exponia pero que solo eran visibles al abrirlo.
+
+**Metodo.** Leer el reporte seccion por seccion (1173 lineas, 40
+secciones) + abrir los CSVs del artifact (sector_rankings.csv,
+european_coverage.md, mte_state.json, liquidity_state.json,
+macro_regime.csv, cross_provider_validation.csv). Cada hallazgo:
+
+1. Diagnostico en codigo (leer el renderer, el state, los tests).
+2. Distinguir bug real de deuda de semantica / observabilidad.
+3. Fix + test nuevo o adaptado.
+4. Suite completa + gobernanza antes de commitear.
+5. Si CI rojo, diagnostico. No commitear con suite roja (regla §3).
+
+**Hallazgos y decisiones.**
+
+- #3 gate 10/10 hardcoded con 11 checks. Bug de contrato. N/N
+  dinamico en 3 sitios. 32 tests. (090a3439)
+- N1 mte_state.json con futures_status STALE oculto en el reporte.
+  Linea explicita. La confidence no se degrada (es decision de
+  scoring, no de reporte). (1fb791ab)
+- N3 liquidity_state.json con severidad_cruda TENSION_ELEVADA y
+  diff_bp 6.0 ocultos. Linea explicita. (1fb791ab)
+- N2 cross_provider_validation.py que solo consultaba Yahoo con 2
+  tickers hardcoded, con 2 env vars sin uso. Deuda muerta disfrazada
+  de validacion. Eliminado con step y upload. Las otras 5 API keys
+  (POLYGON, ALPHA_VANTAGE, TWELVE_DATA, FINNHUB, FMP) tienen
+  consumidores reales (DataRouter + BackupProvider). No son deuda.
+  (fac7d5f1)
+- #4 WARN catalogo 83.97% con coverage_quality=COMPLETE. WARN
+  perpetuo por deuda estructural (catalogo daily vs 13F trimestral).
+  INFO si COMPLETE, WARN solo si regresion. DELISTED (WBD) fuera del
+  denominador. Mismo criterio que F2 y F3. (55a63833)
+- #2 "Fase Wyckoff" renombrado a "Fase dominante". Es moda de
+  holdings, no fase del ETF (esa se retiro en sesion 3). Los 11
+  sectores salian RANGE, coherente con pct_range 70-95%. (2c2a1c3e)
+- A Concentracion medía medianas sobre 4-5 tickers (Cob 18-25%) sin
+  declarar cuantos. Columna "N valid" expuesta. (2c2a1c3e)
+- B Sector Breadth publicaba NH=0/NL=0 sin declarar n_valid_nhnl.
+  Columna "N valid NH/NL" expuesta. (2c2a1c3e)
+- H -0.00 en XLE 60d FX. Ruido de coma flotante con signo visible.
+  _fmt_signed (FU-003a). (71371872)
+- E Liderazgo relativo doble en 55/55. Tautologico por diseno (top-5
+  por retorno siempre bate). WONT_FIX razonado: la nota de sesgo ya
+  esta en el reporte, cambiar el criterio es decision de producto.
+
+**Lecciones.**
+- Un WARN que siempre esta encendido y no requiere accion degrada
+  la senal de los WARN reales. Dos casos (catalogo, Fase Wyckoff).
+- Una columna con nombre heredado puede mentir. Dos casos (Fase
+  Wyckoff, Liderazgo doble). Si el nombre sugiere X pero el valor es
+  Y, renombrar o documentar en la nota.
+- Metricas sobre universo minimo (4-5 tickers) sin declararlo no son
+  honestas. La columna "N valid" cierra la ambiguedad.
+- Un script que solo consulta el proveedor principal no es "cross-
+  provider". Si el nombre miente, eliminar es mas honesto que
+  ampliarlo.
+
+**Commits.** 090a3439, 1fb791ab, fac7d5f1, 55a63833, 2c2a1c3e,
+71371872 + este docs. Suite 4097 passed, 2 skipped al cierre.
+
