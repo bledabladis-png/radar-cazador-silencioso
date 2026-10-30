@@ -126,3 +126,43 @@ def test_liquidity_severidad_no_altera_regimen(tmp_path, monkeypatch):
     out = "".join(_regimenes(tmp_path, liq_state=state, monkeypatch=monkeypatch))
     assert "**Liquidez Real (FRED):** ESTRECHA" in out
     assert "Signal Consistency: 90%" in out
+
+
+# ============================================================
+# Pending transition (2026-10-30, clase 1fb791ab)
+# ============================================================
+def test_mte_pending_pinta_linea():
+    """pending != None -> linea "Pending transition: X" visible.
+
+    Caso real: run 41037457375 tenia scenario=SOFT LANDING con
+    pending=RECESSION. El run siguiente (local 20261030_201420)
+    confirmo RECESSION. Sin la linea, el lector ve dos dias con
+    mismos indices (msi, ipi, srs, shs, cls, ips) y distinto
+    scenario sin explicacion.
+    """
+    out = "".join(render_mte(_mte_base(pending="RECESSION")))
+    assert "**Pending transition:** RECESSION" in out
+    assert "se confirmara" in out
+
+
+def test_mte_pending_none_no_pinta_linea():
+    """pending=None -> no se pinta linea. Caso normal."""
+    out = "".join(render_mte(_mte_base(pending=None)))
+    assert "Pending transition" not in out
+
+
+def test_mte_pending_sin_clave_no_pinta_linea():
+    """Sin clave pending (state antiguo) -> no rompe, no pinta."""
+    out = "".join(render_mte(_mte_base()))  # sin pending
+    assert "Pending transition" not in out
+
+
+def test_mte_pending_no_altera_scenario():
+    """El fix es solo visual: el scenario publicado no cambia."""
+    out_sin = "".join(render_mte(_mte_base(pending=None)))
+    out_con = "".join(render_mte(_mte_base(pending="RECESSION")))
+    assert "Escenario:**" in out_sin
+    assert "Escenario:**" in out_con
+    # El scenario (SOFT LANDING) es el mismo en ambos casos
+    assert "SOFT LANDING" in out_sin
+    assert "SOFT LANDING" in out_con
