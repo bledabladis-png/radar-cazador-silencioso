@@ -42,14 +42,14 @@ def render_sector_breadth(sector_breadth_data, is_stale=False, stale_reason=None
             else:
                 # MARKET_CLOSED o legacy (None): texto historico.
                 out.append(f"*Sin actualizacion - mercado cerrado. Ultima observacion: {_latest_str}.*\n\n")
-        out.append("| Sector | EMA20 | EMA50 | EMA200 | RS+ | Mom+ | NH | NL | A/D | Cob EMA200 |\n")
-        out.append("|--------|-------|-------|--------|-----|------|----|----|-----|-----------|\n")
+        out.append("| Sector | EMA20 | EMA50 | EMA200 | RS+ | Mom+ | NH | NL | A/D | N valid NH/NL | Cob EMA200 |\n")
+        out.append("|--------|-------|-------|--------|-----|------|----|----|-----|---------------|-----------|\n")
         for _, row in breadth_latest.iterrows():
             cobertura = (row['n_valid_ema200'] / row['n_total'] * 100) if row['n_total'] else 0
             cov_label = f"{cobertura:.0f}%"
             if (cobertura / 100) < MIN_SECTOR_COVERAGE:
                 cov_label += " [BAJA]"
-            out.append(f"| {row['sector']} | {_fmt_num(row['pct_above_ema20'], '{:.1f}%')} | {_fmt_num(row['pct_above_ema50'], '{:.1f}%')} | {_fmt_num(row['pct_above_ema200'], '{:.1f}%')} | {_fmt_num(row['pct_rs_positive'], '{:.1f}%')} | {_fmt_num(row['pct_momentum_positive'], '{:.1f}%')} | {_fmt_num(row['new_highs'], '{:.0f}')} | {_fmt_num(row['new_lows'], '{:.0f}')} | {_fmt_ad_net(row['advances'], row['declines'], row['ad_net'])} | {cov_label} |\n")
+            out.append(f"| {row['sector']} | {_fmt_num(row['pct_above_ema20'], '{:.1f}%')} | {_fmt_num(row['pct_above_ema50'], '{:.1f}%')} | {_fmt_num(row['pct_above_ema200'], '{:.1f}%')} | {_fmt_num(row['pct_rs_positive'], '{:.1f}%')} | {_fmt_num(row['pct_momentum_positive'], '{:.1f}%')} | {_fmt_num(row['new_highs'], '{:.0f}')} | {_fmt_num(row['new_lows'], '{:.0f}')} | {_fmt_ad_net(row['advances'], row['declines'], row['ad_net'])} | {int(row['n_valid_nhnl']) if pd.notna(row.get('n_valid_nhnl')) else 'N/D'} | {cov_label} |\n")
         out.append("\n")
         out.append(f"*[BAJA] = cobertura < {MIN_SECTOR_COVERAGE:.0%} del universo del sector. Los ratios se calculan sobre la parte valida; el valor puede no ser representativo del sector completo. Los derivados (Opportunity Map, scores) usan estos mismos ratios sin invalidacion automatica.*\n\n")
         out.append("*La columna A/D de esta tabla agrega solo top-20 por sector "
@@ -60,8 +60,10 @@ def render_sector_breadth(sector_breadth_data, is_stale=False, stale_reason=None
         out.append("*NH/NL = componentes que marcan maximo/minimo de 52 "
                    "semanas (252 sesiones previas). Un 0 es resultado real "
                    "(ningun componente bate su extremo anual), no ausencia "
-                   "de dato. Si n_valid_nhnl < n_total, la metrica se "
-                   "calcula sobre menos componentes.*\n\n")
+                   "de dato. 'N valid NH/NL' es el numero de componentes con "
+                   "historial suficiente (>=253 sesiones). Si N valid NH/NL < "
+                   "n_total, la metrica se calcula sobre menos componentes. "
+                   "N/D indica que el campo no esta en el df (df antiguo).*\n\n")
         # F6-04 (2026-09-28): WONT FIX razonado. Cobertura ~100% es el
         # objetivo tras A1 (2026-09-24, commit 8c6330f). n_total cuenta
         # los top-20 reales descargados (config TOP_N_SECTOR_COMPONENTS),
@@ -79,12 +81,17 @@ def render_sector_concentration(sector_concentration_data):
         latest_date = pd.to_datetime(sector_concentration_data['date']).max()
         conc_latest = sector_concentration_data[pd.to_datetime(sector_concentration_data['date']) == latest_date]
         out.append("## Concentración del liderazgo\n")
-        out.append("| Sector | Top1 | Top3 | Top5 | RS med | Mom med | Flow med | Wyckoff med | WLS med | Líder | Ret Líder | Cob RS | Cob Mom | Cob Flow | Cob Wyckoff | Cob WLS |\n")
-        out.append("|--------|------|------|------|--------|---------|----------|-------------|---------|-------|----------|--------|---------|----------|-------------|---------|\n")
+        out.append("| Sector | Top1 | Top3 | Top5 | RS med | Mom med | Flow med | Wyckoff med | WLS med | Líder | Ret Líder | N valid | Cob RS | Cob Mom | Cob Flow | Cob Wyckoff | Cob WLS |\n")
+        out.append("|--------|------|------|------|--------|---------|----------|-------------|---------|-------|----------|---------|--------|---------|----------|-------------|---------|\n")
         for _, row in conc_latest.iterrows():
-            out.append(f"| {row['sector']} | {_fmt_num(row['top1_positive_return_concentration'], '{:.1%}')} | {_fmt_num(row['top3_positive_return_concentration'], '{:.1%}')} | {_fmt_num(row['top5_positive_return_concentration'], '{:.1%}')} | {_fmt_num(row['rs_median'], '{:.4f}')} | {_fmt_num(row['momentum_median'], '{:.2%}')} | {_fmt_num(row['flow_median'], '{:.2f}')} | {_fmt_num(row['wyckoff_median'], '{:.2f}')} | {_fmt_num(row['wls_median'], '{:.2f}')} | {row['leader_ticker']} | {_fmt_num(row['leader_return20'], '{:.2%}')} | {_fmt_num(row['coverage_rs'], '{:.0f}%')} | {_fmt_num(row['coverage_momentum'], '{:.0f}%')} | {_fmt_num(row['coverage_flow'], '{:.0f}%')} | {_fmt_num(row['coverage_wyckoff'], '{:.0f}%')} | {_fmt_num(row['coverage_wls'], '{:.0f}%')} |\n")
+            out.append(f"| {row['sector']} | {_fmt_num(row['top1_positive_return_concentration'], '{:.1%}')} | {_fmt_num(row['top3_positive_return_concentration'], '{:.1%}')} | {_fmt_num(row['top5_positive_return_concentration'], '{:.1%}')} | {_fmt_num(row['rs_median'], '{:.4f}')} | {_fmt_num(row['momentum_median'], '{:.2%}')} | {_fmt_num(row['flow_median'], '{:.2f}')} | {_fmt_num(row['wyckoff_median'], '{:.2f}')} | {_fmt_num(row['wls_median'], '{:.2f}')} | {row['leader_ticker']} | {_fmt_num(row['leader_return20'], '{:.2%}')} | {int(row['n_valid_rs']) if pd.notna(row.get('n_valid_rs')) else 'N/D'} | {_fmt_num(row['coverage_rs'], '{:.0f}%')} | {_fmt_num(row['coverage_momentum'], '{:.0f}%')} | {_fmt_num(row['coverage_flow'], '{:.0f}%')} | {_fmt_num(row['coverage_wyckoff'], '{:.0f}%')} | {_fmt_num(row['coverage_wls'], '{:.0f}%')} |\n")
         out.append("\n")
         out.append("*Criterio 'Lider': ticker con mayor retorno 20d. Universo: top-20 por weight del ETF sectorial. Coincide con la primera fila de Liderazgo interno (mismo criterio). No coincide con Representatividad, que ordena por WLS.*\n\n")
+        out.append("*N valid = numero de tickers del universo del ETF con datos "
+                   "suficientes para las metricas de la tabla (interseccion comun de "
+                   "rs, momentum, flow, wyckoff y wls). Coincide con n_valid_rs del "
+                   "CSV. Una Cob baja con N valid bajo indica que las medianas "
+                   "describen a pocos tickers, no al sector completo.*\n\n")
         # P2 (2026-10-22, auditor externo): denominador de cobertura.
         out.append("*Nota: la cobertura (Cob *) se calcula sobre n_total, "
                    "el universo completo del ETF sectorial (decenas de "

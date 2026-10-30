@@ -18,7 +18,7 @@ def render_matriz_regimen(sector_regime_matrix_data):
     out = []
     if sector_regime_matrix_data is not None and not sector_regime_matrix_data.empty:
         out.append("## Matriz de Régimen Sectorial\n")
-        out.append("| Sector | Precio 20d | % > EMA50 | Flujo 20d | Fase Wyckoff | Struct | N est | Positivas | Lectura |\n")
+        out.append("| Sector | Precio 20d | % > EMA50 | Flujo 20d | Fase dominante | Struct | N est | Positivas | Lectura |\n")
         out.append("|--------|------------|-----------|-----------|--------------|--------|-------|-----------|---------|\n")
         for _, row in sector_regime_matrix_data.iterrows():
             _sr = row.get('structure_ratio')
@@ -30,6 +30,12 @@ def render_matriz_regimen(sector_regime_matrix_data):
         out.append("*Struct = proporcion de holdings con estructura alcista clara*\n")
         out.append("*(ACC + ACC_FORMING + MARKUP) / (todas las fases claras).*\n")
         out.append("*N est = numero de holdings con estructura clara (no-RANGE, no-CONFLICT).*\n")
+        out.append("*Fase dominante = fase con mayor porcentaje de holdings del sector "
+                   "(pct_accumulation / pct_markup / pct_range / pct_distribution / "
+                   "pct_markdown). NO es la fase del ETF sectorial (esa se retiro en "
+                   "sesion 3): es la moda de la distribucion de fases de los holdings. "
+                   "Un sector puede tener fase dominante RANGE y mayoria de holdings "
+                   "en distribucion: son cosas distintas.*\n")
         out.append("*NO es senal predictiva de retorno. Describe estado estructural actual.*\n")
         out.append("*Struct=1.00 con N est=1 es fragil; Struct=0.60 con N est=15 es robusto.*\n")
         out.append("*H-01 auditor externo 2026-10-25: periodo del historico Wyckoff*\n")
