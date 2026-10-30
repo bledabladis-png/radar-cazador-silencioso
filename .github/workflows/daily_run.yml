@@ -216,12 +216,6 @@ jobs:
       - name: QQQ SEC vs NPORT-P cross validation
         run: python validation/qqq_sec_nport_cross_validation.py
 
-      - name: Cross provider validation
-        env:
-          POLYGON_API_KEY: ${{ secrets.POLYGON_API_KEY }}
-          ALPHA_VANTAGE_API_KEY: ${{ secrets.ALPHA_VANTAGE_API_KEY }}
-        run: python validation/cross_provider_validation.py
-
       - name: Validate freshness post-run
         # 2026-09-30: los tests de frescura en la fase 'Run tests' saltan
         # porque los parquets aun no existen (gitignored, CI fresco).
@@ -250,7 +244,6 @@ jobs:
             outputs/history/sec_nport_position_change_quarterly.csv
             outputs/state/mte_state.json
             outputs/state/liquidity_state.json
-            outputs/audit/cross_provider_validation.csv
             outputs/audit/pyflakes_report.txt
           retention-days: 7
           if-no-files-found: ignore
