@@ -168,7 +168,14 @@ _cat['radar_ticker'].dropna().astype(str).tolist()])
         if t and t not in seen:
             seen.add(t)
             result.append(t)
-    return result
+
+    # F2 (2026-10-30): excluir tickers DELISTED (WBD y futuros eventos
+    # corporativos). Fuente de verdad: data/mappings/ticker_health.yaml.
+    # Sin este filtro, WBD se pide a Yahoo cada dia y nunca devuelve datos
+    # post-2026-10-06 (adquirida por Paramount Skydance). Ver
+    # src/ticker_health.py.
+    from src.ticker_health import filter_eligible
+    return filter_eligible(result)
 
 def _get_yf_session():
     try:
