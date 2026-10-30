@@ -210,6 +210,51 @@ Causas tipicas:
 Accion: si es cancelled, ignorar. Si es failure sin jobs, revisar el
 YAML. Si sigue sin explicacion, workflow_dispatch manual.
 
+### 4.5. workflow_dispatch force=true fuera de horario de mercado
+
+Sintoma: run lanzado con `gh workflow run daily_run.yml -f force=true`
+a media sesion USA contamina `outputs/` con un snapshot distinto al
+que publicara el scheduled de la noche.
+
+Causa: el gate `pipeline_gate.py` con force=true bypassea `should_run`.
+Si se lanza entre 13:30 y 20:00 UTC (apertura y cierre NYSE), el run
+procesa datos a medio dia: precios intradiarios, Yahoo sin cierre
+definitivo, FRED con lag indeterminado. El snapshot no es el definitivo
+de la sesion.
+
+Accion: **no lanzar force=true entre 13:30 y 20:00 UTC**. Verificar
+`(Get-Date).ToUniversalTime()` antes. Ventanas seguras: pre-apertura
+(< 13:30 UTC) o post-cierre (> 20:00 UTC).
+
+Caso real: 2026-10-29 19:19 UTC. Lanzado y cancelado a los pocos
+minutos tras detectar el error. Sin side effects (el step Commit no
+llego a ejecutarse).
+
+### 4.6. git push sin verificacion de exit code
+
+Sintoma: commit exitoso en local, push fallido silencioso (el bot
+pusheo concurrentemente y el push local fue rechazado con "fetch
+first"). El commit queda huerfano en local, CI no corre.
+
+Causa: `git push` sin `if ($LASTEXITCODE -ne 0)` trata el rechazo como
+warning. El script sigue. La sesion cierra con `git log --oneline -1`
+mostrando el commit local, pero `origin/main` apunta al commit del bot.
+
+Accion: cualquier bloque de push debe usar:
+
+    git push
+    if ($LASTEXITCODE -ne 0) {
+        git fetch origin
+        git pull --rebase origin main
+        if ($LASTEXITCODE -ne 0) { throw "rebase conflicto" }
+        git push
+        if ($LASTEXITCODE -ne 0) { throw "push fallido" }
+    }
+
+Caso real: 2026-10-30, push de `c879df71` rechazado por el bot.
+El bloque tenia el guard; fetch + rebase + retry resolvio. Sin el guard
+habria quedado huerfano.
+
 ---
 
 ## 5. COMPLETION RECEIPT (contrato v1, 2026-10-01)

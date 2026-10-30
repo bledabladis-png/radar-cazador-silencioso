@@ -2557,3 +2557,59 @@ macro_regime.csv, cross_provider_validation.csv). Cada hallazgo:
 **Commits.** 090a3439, 1fb791ab, fac7d5f1, 55a63833, 2c2a1c3e,
 71371872 + este docs. Suite 4097 passed, 2 skipped al cierre.
 
+## 2026-10-30 (sesion 19b) - Contrato bidireccional MTE
+
+**Objetivo.** Cerrar la clase de bug 1fb791ab, no solo la
+instancia. El bug original no era que faltara futures_status en el
+return; era que state y return eran fuentes divergentes sin
+contrato que lo impidiera. Cualquier campo nuevo que se anadiera
+solo al state (o solo al return) repetia el ciclo.
+
+**Metodo.**
+1. Diagnostico del bug real: re-run local del run 41037457375
+   (post 1fb791ab) dio 7/8. Fallo [4]: state tenia futures_status=
+   STALE, render_mte no lo pintaba. Rastreo: render_mte lee
+   mte_result.get('futures_status'), return de _compute_mte no
+   incluia la clave. Bug.
+2. Reconocer el patron: test unitario mockeado verde, integracion
+   real no ejercitada. La misma clase que el commit 1fb791ab
+   original (render anadido, return no exponia la clave).
+3. Cerrar la instancia: futures_status en return (5637d45e) + test
+   de integracion real.
+4. Identificar la siguiente instancia: pending. State tenia
+   pending=RECESSION, reporte no lo comunicaba. Mismo patron.
+5. Cerrar la instancia pending: pending en return + render + 4
+   tests (5b96192f, db1e0a0f).
+6. Cerrar la CLASE: AST guard bidireccional (fc6f63c4). No basta
+   con que render lea solo lo que return expone (downstream). Hay
+   que garantizar que state publica solo lo que return expone, o
+   esta en whitelist justificada (upstream).
+
+**Decision estructural.** AST guard bidireccional como contrato
+preventivo entre modulos que comparten un dict. Aplicable a otros
+contratos del sistema (data_quality, evidence_matrix, mte_state,
+liquidity_state, sector_regime_matrix). Patron:
+
+- Modulo A produce dict con claves K_A.
+- Modulo B consume K_B via A_output.get(X).
+- Contrato: K_B subset K_A (downstream) + K_A - whitelist subset K_B
+  (upstream) + whitelist justificada por test.
+
+Sin el upstream, un campo funcional puede vivir en el state durante
+meses (visible al operador que lee el JSON, invisible al reporte).
+Caso real: futures_status, desde 2026-09-30 (R5: Yahoo futures)
+hasta 2026-10-30.
+
+**Lecciones (tambien en 01c_LECCIONES).**
+- Test unitario con dict mockeado NO valida integracion real. El
+  fix 1fb791ab parecia correcto por test; el run real lo detecto.
+- AST guard no solo previene: define el contrato. Si el contrato
+  cambia (nuevo campo, nueva direccion), el test falla y obliga a
+  revisar la relacion completa.
+- Whitelist explicita con test anti-creep: si alguien anade un
+  campo a la whitelist para evitar el test, falla
+  test_whitelist_state_only_justificada y obliga a justificar.
+
+**Commits.** 5637d45e, 5b96192f, db1e0a0f, fc6f63c4 + este docs.
+Suite 4108 passed, 2 skipped.
+

@@ -44,6 +44,47 @@ Al cerrar una sesion nueva, se anade arriba (las mas recientes primero). Si hay 
 
 ## 3. SESIONES
 
+### 2026-10-30 — Sesion 19b: contrato bidireccional MTE (clase 1fb791ab)
+
+**Objetivo.** Cerrar la clase 1fb791ab, no solo la instancia. Bug
+original: state tiene X, return no, render no lo ve. 1fb791ab
+anadio el render de futures_status pero no expuso la clave en el
+return; run local 20261030_201420 lo detecto (7/8, faltaba [4]).
+No bastaba con arreglar futures_status: pending repetia el patron.
+
+**Hecho.**
+- 5637d45e: futures_status en return de _compute_mte (integracion).
+  Test unitario con dict mockeado pasaba; integracion real no
+  ejercitada. Bug de proceso.
+- 5b96192f: pending en return + render_mte anade "Pending
+  transition" + AST guard downstream (render lee X => X en return).
+- db1e0a0f: 4 tests de render de pending (pinta, no pinta si None,
+  no rompe si ausente, no altera scenario).
+- fc6f63c4: AST guard bidireccional. Upstream (state X no whitelist
+  => X en return) + whitelist justificada + regresion de los 2
+  campos. Cierra la clase en las 4 direcciones.
+
+**Verificacion empirica.**
+- Re-run local 19: 7/8. Fallo [4] Futures Status.
+- Re-run local 19b (post 5637d45e): 8/8, "Futures Status: STALE"
+  visible en L153.
+- Re-run local 19c no se ejecuto: la transicion SOFT LANDING ->
+  RECESSION ya esta confirmada en state (pending=null). El punto
+  "Pending transition visible" no se puede ejercitar en un run
+  real hoy. Cubierto por test unitario test_mte_pending_pinta_linea.
+- Suite 4108 passed, 2 skipped.
+
+**Commits.** 5637d45e, 5b96192f, db1e0a0f, fc6f63c4 + este docs.
+
+**Pendiente.**
+- Verificacion en scheduled real (proximo run-system con HEAD >=
+  fc6f63c4). Los 8 fixes previos siguen verificados en local;
+  pending solo en tests (state transitorio).
+- H5.3 (20-nov), C2, SOW-BEAR, WYCKOFF-5BX: sin cambios.
+
+**Proximo paso sugerido.** Verificar scheduled. Si verde, cerrar
+items observacionales con fecha. Decidir pre-registro IWM.
+
 ### 2026-10-30 — Sesion 19: cierre deuda del reporte 41037457375
 
 **Objetivo.** Leer el reporte del run 41037457375 (primer scheduled

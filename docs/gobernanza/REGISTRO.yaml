@@ -3629,7 +3629,7 @@ items:
   tipo: observabilidad
   ciclo: '2026-10-30'
   estado: FIXED
-  commit: 1fb791ab
+  commit: '5637d45e'
   test: tests/test_report_mte_futures_liquidity_visibles.py
   descripcion: |
     outputs/state/mte_state.json del run 41037457375 declaraba
@@ -3638,12 +3638,19 @@ items:
     Un lector del reporte creia que los inputs de futuros estaban
     frescos. No lo estaban.
   evidencia: |
-    Fix en src/report/volatility_mte.py::render_mte: si
-    futures_status != "OK", se anade linea
-    "- **Futures Status:** STALE *(inputs de futuros no frescos o
-    ausentes; la confidence del scenario NO se degrada por este
-    estado)*". Solo visual, sin cambios en scoring ni confidence.
-    10 tests.
+    Fix completo requirio 2 commits (el intento 1fb791ab estaba
+    incompleto; lo detecto el run local 20261030_201420):
+    - 1fb791ab: render_mte anade linea
+      "- **Futures Status:** STALE *(inputs de futuros no frescos
+      o ausentes; la confidence del scenario NO se degrada por
+      este estado)*".
+    - 5637d45e: _compute_mte devuelve futures_status en el dict de
+      retorno. El fix inicial solo anadia el render pero el return
+      no exponia la clave (solo estaba en el JSON del state). El
+      test unitario mockeado pasaba; integracion real nunca se
+      ejercito. Bug de proceso documentado en 01c_LECCIONES.
+    Contrato AST que previene la clase entera en 5b96192f +
+    fc6f63c4. 10 tests en el fichero, 8 en el contrato.
 
 - id: LIQUIDITY-SEVERIDAD-OCULTA
   tipo: observabilidad
@@ -3801,3 +3808,70 @@ items:
     top-5 por retorno, sino otro filtro) como decision de producto
     documentada.
 
+- id: MTE-PENDING-TRANSITION-OCULTA
+  tipo: observabilidad
+  ciclo: '2026-10-30'
+  estado: FIXED
+  commit: 'db1e0a0f'
+  test: tests/test_report_mte_futures_liquidity_visibles.py
+  descripcion: |
+    Misma clase que MTE-FUTURES-STATUS-OCULTO. El state
+    mte_state.json del run 41037457375 tenia pending="RECESSION"
+    con scenario="SOFT LANDING". El run local siguiente
+    (20261030_201420) confirmo RECESSION con scores identicos
+    (msi=51, ipi=48, srs=0.33, shs=0.32, cls=0.22, ips=-0.05).
+    El reporte no comunicaba la transicion en curso. Un lector ve
+    dos dias con mismos indices y distinto scenario sin
+    explicacion.
+  evidencia: |
+    - 5b96192f: pending en el return de _compute_mte + render_mte
+      anade "**Pending transition:** X *(condiciones apuntan a
+      este escenario; se confirmara en el siguiente run si
+      persisten. El scenario actual refleja el estado
+      consolidado)*" cuando pending != None.
+    - db1e0a0f: 4 tests de render de pending (pinta si != None,
+      no pinta si None, no rompe si ausente, no altera scenario).
+    El re-run local posterior no muestra "Pending transition"
+    porque el state tenia pending=null (transicion confirmada).
+    Correcto por diseno.
+
+- id: MTE-STATE-RETURN-CONTRACT
+  tipo: contrato
+  ciclo: '2026-10-30'
+  estado: FIXED
+  commit: fc6f63c4
+  test: tests/test_mte_return_contract.py
+  descripcion: |
+    Contrato AST que cierra la clase 1fb791ab en las 2
+    direcciones. Prevencion de futuras regresiones de la misma
+    familia: cualquier campo que viva solo en el state JSON y no
+    en el return es invisible desde el render, y cualquier campo
+    que render lea sin estar en el return rompe en silencio (solo
+    con .get() devolviendo None).
+
+    Tres direcciones cubiertas:
+    - Downstream: render lee X => X en return.
+    - Upstream: state publica X (no whitelist) => X en return.
+    - Whitelist justificada: no crece sin justificar.
+  evidencia: |
+    5 tests en tests/test_mte_return_contract.py:
+    - test_render_mte_no_lee_campos_ausentes_en_return: parsea
+      render_mte y compute_mte, falla si render lee X y return no
+      lo tiene.
+    - test_render_mte_lee_futures_status_y_pending: regresion
+      explicita de los 2 campos que ya fallaron.
+    - test_compute_mte_state_no_omite_campos_en_return: parsea
+      json.dump({...}) y return {...}, falla si state tiene X (no
+      whitelist) y return no.
+    - test_whitelist_state_only_justificada: STATE_ONLY_WHITELIST
+      es {schema_version, temporal_contract_version,
+      effective_date, expected_date, coverage}. Si crece, falla.
+    - test_state_y_return_comparten_campos_funcionales:
+      futures_status y pending en state Y return.
+
+    Caso real que motiva el upstream: futures_status vivia en
+    mte_state.json desde hacia semanas (visible en JSON,
+    invisible en reporte). Solo se detecto al anadir el render en
+    1fb791ab. Si el upstream guard hubiera existido, 1fb791ab
+    habria fallado en CI con "state publica futures_status,
+    return no".

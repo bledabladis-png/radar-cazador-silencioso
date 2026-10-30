@@ -35,6 +35,26 @@ Estas son las reglas que hemos aprendido rompiendo cosas. Se aplican.
 - **Un test que asume un comportamiento generico (p.ej. `except Exception`) es un contrato.** Antes de acotar, verificar si el test lo ejercita con excepcion generica. Si lo hace, adaptar la tupla o mantener el generico.
 - **Los tests anclados a numero de linea son fragiles.** Cualquier refactor de whitespace los rompe. Preferir busqueda por estructura.
 - **En el pipeline, `RuntimeError` va SIEMPRE en la tupla de except acotados.** Los tests lo usan como idiom para "fallo simulado en provider/loader/CSV".
+- **Test unitario verde con mock no verifica integracion.** Un
+  test que mockea el dict de entrada (p.ej. `render_mte({...})` con
+  `mte_result={'futures_status': 'STALE'}`) verifica el render
+  aislado, no el contrato real. Caso 2026-10-30 (commit 1fb791ab):
+  el render anadio la linea "Futures Status" pero el return de
+  _compute_mte no incluia la clave. Test unitario verde; integracion
+  real no ejercitada. El bug se detecto 8h despues en un run local.
+  Regla: si el fix toca el contrato entre modulos (render lee del
+  dict de A), el test debe ejercitar la produccion real del dict.
+- **AST guard bidireccional para contratos dict entre modulos.**
+  Cuando un modulo A produce un dict (return o state JSON) y un
+  modulo B lo consume via `A_output.get(X)`, el contrato debe
+  verificarse en las 2 direcciones:
+  - Downstream: B lee X => X en A.
+  - Upstream: A publica X (no whitelist) => X en B.
+  - Whitelist justificada por test anti-creep.
+  Patron en `tests/test_mte_return_contract.py` (2026-10-30).
+  Sin el upstream, un campo funcional puede vivir en el state
+  durante meses sin que el reporte lo vea. El downstream solo lo
+  detecta si B intenta leerlo.
 
 **Sobre refactors:**
 - **Antes de unificar una constante, grep de consumidores indirectos via config, no solo literales.** Si un modulo importa `MARKET_TICKERS['sectors']`, no aparece buscando `SECTORS = [...]`. Dos fallos en A3.2 por esto.
