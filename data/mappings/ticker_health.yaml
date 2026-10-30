@@ -1,0 +1,21 @@
+schema_version: 1
+# Fuente canonica de exclusiones por evento corporativo.
+# Estados validos: ACTIVE (default, no listar), DELISTED, STALE, TRUNCATED_IPO.
+# - DELISTED: activo no existe. Excluido del universo (get_stock_list,
+#   p1_h02, breadth).
+# - STALE: sin datos recientes, no confirmado. WARN, no excluido.
+# - TRUNCATED_IPO: IPO reciente. No alerta.
+# Cualquier exclusion hardcodeada en codigo es deuda: debe vivir aqui.
+
+tickers:
+  WBD:
+    estado: DELISTED
+    detectado: '2026-10-30'
+    evento: 'Adquirida por Paramount Skydance (cierre 2026-10-06)'
+    evidencia: 'Ultima cotizacion 2026-10-05 en Nasdaq a USD 30.95. Yahoo
+      solo sirve esa barra bajo WBD y cross-listings (WBD.MX, J5A.SG,
+      J5A.DU, J5A.HM, J5A.HA), todos terminan 2026-10-05. SKYD es la
+      entidad fusionada (ticker y marketCap distintos, sin continuidad
+      de CUSIP).'
+    reabrir_si: 'Yahoo sirve precios post-2026-10-06 bajo WBD; o SKYD
+      hereda el CUSIP de WBD.'
