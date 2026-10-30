@@ -157,3 +157,42 @@ def test_render_confirmation_lee_mte_scenario():
         "el RECESSION CAPITULATION SIGNAL. Si es intencional, borrar "
         "este test con justificacion."
     )
+
+
+# --- 2o consumidor de confirmation_data: render_alerts ---
+
+ALERTS = REPO_ROOT / "src" / "report" / "alerts.py"
+
+
+def test_render_alerts_lee_subset_schema():
+    """render_alerts lee confirmation_data.ratios para la alerta
+    Financial Stress vs Credit.
+
+    Es 2o consumidor del mismo productor (_compute_confirmation).
+    Sin este test, la heuristica de manifiesto detecta el par como
+    "dict sin contrato".
+    """
+    reads = consumer_read_keys(
+        ALERTS, "render_alerts", "confirmation_data")
+    missing = reads - CONFIRMATION_DATA_SCHEMA
+    assert not missing, (
+        f"render_alerts lee {sorted(missing)} de confirmation_data "
+        f"pero no estan en CONFIRMATION_DATA_SCHEMA. Bug clase "
+        f"1fb791ab: el render pediria un campo que el producer no "
+        f"escribe."
+    )
+
+
+def test_render_alerts_lee_ratios():
+    """Regresion: render_alerts sigue leyendo ratios.
+
+    Si un refactor elimina la lectura, el reporte pierde la alerta
+    "Financial Stress vs Credit" en HIGH_STRESS.
+    """
+    reads = consumer_read_keys(
+        ALERTS, "render_alerts", "confirmation_data")
+    assert "ratios" in reads, (
+        "render_alerts dejo de leer 'ratios'. El reporte perderia la "
+        "alerta Financial Stress vs Credit (HYG/LQD z-score). Si es "
+        "intencional, borrar este test con justificacion."
+    )
