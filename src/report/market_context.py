@@ -143,8 +143,12 @@ def render_contexto_cross_asset(cross_asset_context_data):
             commodities = row.get('commodities', None)
             fx = row.get('fx', None)
             volatility = row.get('volatility', None)
+            # 2026-10-30: _fmt_signed normaliza -0.00 a 0.00. El _fmt
+            # local con f"{v:.2f}" directo dejaba "-0.00" visible en
+            # XLE 60d FX (mean_corr ~ -1e-17). Mismo contrato que el
+            # resto del reporte (FU-003a).
             def _fmt(v):
-                return f"{v:.2f}" if pd.notna(v) else "N/D"
+                return _fmt_signed(v, '{:+.2f}', '{:.2f}') if pd.notna(v) else "N/D"
             out.append(f"| {sector} | {int(window)}d | {_fmt(equity)} | {_fmt(rates)} | {_fmt(credit)} | {_fmt(commodities)} | {_fmt(fx)} | {_fmt(volatility)} |\n")
         out.append("\n")
         out.append("*Contexto descriptivo basado en correlaciones sector-activo transversal. No implica confirmación ni causalidad.*\n\n")
