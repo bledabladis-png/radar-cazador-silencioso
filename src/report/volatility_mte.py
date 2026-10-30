@@ -103,7 +103,20 @@ def render_mte(mte_result):
         out.append(" (orientacion: positivo = mayor estres crediticio)\n")
         ips_val = mte_result.get('ips', 0)
         ips_str = f'{ips_val:.2f}' if pd.notna(ips_val) else 'N/D'
-        out.append(f"- **Inflation Pressure Score:** {ips_str}\n\n")
+        out.append(f"- **Inflation Pressure Score:** {ips_str}\n")
+        # Fix 2026-10-30: exponer futures_status si no es OK. El state
+        # interno (outputs/state/mte_state.json) declara STALE/UNAVAILABLE
+        # cuando los precios de futuros no estan frescos, pero el reporte
+        # no lo publicaba. El escenario MTE usa futuros como input; el
+        # lector debe saber si estan frescos o no. La confidence no se
+        # degrada por este estado (fix queda fuera del scoring).
+        _fut_status = mte_result.get('futures_status')
+        if _fut_status and _fut_status != 'OK':
+            out.append(
+                f"- **Futures Status:** {_fut_status} "
+                "*(inputs de futuros no frescos o ausentes; "
+                "la confidence del escenario NO se degrada por este estado)*\n")
+        out.append("\n")
         # REP-AUDIT-20261018-IPS (2026-10-18): aclarar que IPS/IPI son
         # proxy de mercado, no tasa de inflacion observada (IPC/PPI).
         out.append("*Inflation Pressure Score / Index: proxy de mercado "

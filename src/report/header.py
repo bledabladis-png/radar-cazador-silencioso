@@ -83,6 +83,26 @@ def render_regimenes(macro_score, macro_regime, macro_conf,
     
     if real_liquidity_regime is not None:
         out.append(f"- **Liquidez Real (FRED):** {real_liquidity_regime} (Signal Consistency: {real_liquidity_conf:.0%})\n")
+        # Fix 2026-10-30: exponer severidad_cruda y diff_bp cuando no son
+        # OK. El state (outputs/state/liquidity_state.json) tiene
+        # v2.severidad_cruda = TENSION_ELEVADA y v2.diff_bp = 6.0 hoy, pero
+        # el reporte solo publicaba el regimen agregado. El lector debe
+        # saber si la severidad cruda es alta aunque el regimen se resuma
+        # como ESTRECHA.
+        try:
+            import json as _json
+            from pathlib import Path as _Path
+            _liq_path = _Path('outputs/state/liquidity_state.json')
+            if _liq_path.exists():
+                _liq = _json.loads(_liq_path.read_text(encoding='utf-8'))
+                _v2 = _liq.get('v2') or {}
+                _sev = _v2.get('severidad_cruda')
+                _diff = _v2.get('diff_bp')
+                if _sev and _sev != 'OK':
+                    _diff_str = f"{float(_diff):+.1f}" if isinstance(_diff, (int, float)) else 'N/D'
+                    out.append(f"  - *Severidad: {_sev} (diff_bp={_diff_str})*\n")
+        except (OSError, ValueError, TypeError, KeyError):
+            pass
     if real_liq_prev is not None:
         try:
             delta = float(real_liq_score.iloc[-1]) - float(real_liq_prev)
