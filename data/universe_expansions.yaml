@@ -47,14 +47,19 @@ xlk_extra:
   - DDOG
 xlv_extra:
   etf: XLV
-  fecha: '2026-10-27'
+  fecha: '2026-10-30'
+  motivo: 'Ampliacion 2026-10-30 (cov efectiva p1_h02 41037457375 = 81.43% < 85% objetivo A.2c). TOP_N_SECTOR_COMPONENTS=20 corta pos 23-26 del CSV (4 tickers nuevos, 3.85% peso del ETF). El objetivo 85% se alcanza en cobertura efectiva: top-20 + este bloque + CI (pos 21, ya cubierto por spy_extra). top20+extra aqui es 84.11 (peso CSV teorico).'
   cobertura_top20_actual: 79.08
-  cobertura_top20_mas_extra: 80.25
-  cobertura_tras_expansion: 80.25
-  cobertura_objetivo: 80.0
-  n_tickers: 1
+  cobertura_top20_mas_extra: 84.11
+  cobertura_tras_expansion: 98.31
+  cobertura_objetivo: 85.0
+  n_tickers: 5
   tickers:
   - MRNA
+  - BSX
+  - HCA
+  - COR
+  - CAH
 spy_extra:
   etf: SPY
   fecha: '2026-10-29'
@@ -98,3 +103,44 @@ qqq_extra:
   cobertura_top20_mas_extra: 68.7
   cobertura_tras_expansion: 85.43
   cobertura_objetivo: 85.0
+xlf_extra:
+  etf: XLF
+  fecha: '2026-10-30'
+  motivo: 'Ampliacion 2026-10-30 (cov efectiva p1_h02 41037457375 = 78.40% < 85% objetivo A.2c). TOP_N_SECTOR_COMPONENTS=20 corta pos 26-34 del CSV (9 tickers, 6.86% peso del ETF). El objetivo 85% se alcanza en cobertura efectiva: top-20 + este bloque + PNC/ICE/BX/MRSH/TRV (pos 21-25, ya cubiertos por otras fuentes del universo). top20+extra aqui es 79.76 (peso CSV teorico).'
+  cobertura_top20_actual: 72.90
+  cobertura_top20_mas_extra: 79.76
+  cobertura_tras_expansion: 93.48
+  cobertura_objetivo: 85.0
+  n_tickers: 9
+  tickers:
+  - MCO
+  - KKR
+  - AON
+  - AJG
+  - TFC
+  - ALL
+  - APO
+  - MET
+  - AFL
+xlu_extra:
+  etf: XLU
+  fecha: '2026-10-30'
+  motivo: 'Ampliacion 2026-10-30 (cov efectiva p1_h02 41037457375 = 83.31% < 85% objetivo A.2c). TOP_N_SECTOR_COMPONENTS=20 corta pos 21 del CSV (CNP, 1.96% peso del ETF). top20+extra = 85.27 (peso CSV teorico).'
+  cobertura_top20_actual: 83.31
+  cobertura_top20_mas_extra: 85.27
+  cobertura_tras_expansion: 100.00
+  cobertura_objetivo: 85.0
+  n_tickers: 1
+  tickers:
+  - CNP
+xly_extra:
+  etf: XLY
+  fecha: '2026-10-30'
+  motivo: 'Ampliacion 2026-10-30 (cov efectiva p1_h02 41037457375 = 84.62% < 85% objetivo A.2c). TOP_N_SECTOR_COMPONENTS=20 corta pos 21 del CSV (NKE, 1.19% peso del ETF). top20+extra = 85.81 (peso CSV teorico).'
+  cobertura_top20_actual: 84.62
+  cobertura_top20_mas_extra: 85.81
+  cobertura_tras_expansion: 100.00
+  cobertura_objetivo: 85.0
+  n_tickers: 1
+  tickers:
+  - NKE
