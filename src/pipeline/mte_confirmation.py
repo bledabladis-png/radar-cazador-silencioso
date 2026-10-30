@@ -159,6 +159,15 @@ def compute_mte_confirmation(df_market, df_stocks, financial_score, all_signals,
         df_market, df_stocks, df_stocks_effective_meta=df_stocks_effective_meta,
         temporal_meta=temporal_meta,
     )
+    # Fix 2026-10-30 (clase 1fb791ab): render_confirmation L94 lee
+    # confirmation_data.get('mte_scenario', '') para disparar
+    # "RECESSION CAPITULATION SIGNAL" (si MTE scenario == RECESSION y
+    # NH/NL < 0). Ningun productor escribia esa clave, la rama nunca
+    # se ejecutaba. Bug real: consumer lee X, producer no lo emite.
+    if confirmation_data is not None and mte_result:
+        _scenario = mte_result.get('scenario')
+        if _scenario:
+            confirmation_data['mte_scenario'] = _scenario
     return {
         'mte_result': mte_result,
         'cross_module_conflict': cross_module_conflict,

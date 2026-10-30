@@ -246,6 +246,36 @@ def consumer_read_keys(module_path, fn_name, var_name):
     return keys
 
 
+def producer_subscript_keys(module_path, fn_name, var_name):
+    """Claves asignadas a `var_name['X'] = ...` dentro de fn_name.
+
+    Para productores que mutan un dict via subindice (no literal).
+    Caso tipico: `flow_synthesis['X'] = ...`,
+    `confirmation_data['X'] = ...`.
+
+    No detecta:
+    - `var_name.update(other_dict)` (dinamico, declarar en schema).
+    - `var_name.setdefault('X', ...)` (raro, anadir si aparece).
+    - `var_name[k] = ...` con k variable (no soportado).
+    """
+    p = _as_path(module_path)
+    tree = ast.parse(p.read_text(encoding="utf-8-sig"))
+    fn = _find_function(tree, fn_name)
+    if fn is None:
+        raise AssertionError(f"{fn_name} no encontrado en {p}.")
+    keys = set()
+    for node in ast.walk(fn):
+        if isinstance(node, ast.Assign):
+            for target in node.targets:
+                if (isinstance(target, ast.Subscript)
+                        and isinstance(target.value, ast.Name)
+                        and target.value.id == var_name
+                        and isinstance(target.slice, ast.Constant)
+                        and isinstance(target.slice.value, str)):
+                    keys.add(target.slice.value)
+    return keys
+
+
 def assert_render_subset_return(
         producer_module, producer_fn,
         consumer_module, consumer_fn, consumer_var,
