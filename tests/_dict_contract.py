@@ -97,6 +97,40 @@ def producer_return_keys(module_path, fn_name):
     return keys
 
 
+def producer_all_return_keys(module_path, fn_name):
+    """Lista de sets, uno por cada `return { ... }` de la funcion.
+
+    `producer_return_keys` une los returns en un solo set (util para
+    el contrato downstream). Esta funcion devuelve cada return
+    individual para tests de consistencia entre ramas: si una rama
+    nueva (p.ej. STALE) no tiene las mismas claves que las demas, el
+    render puede romperse en runs que caigan en esa rama.
+
+    Orden de aparicion en el AST (pre-order, no garantiza orden
+    semantico). Si len < 1, AssertionError.
+    """
+    p = _as_path(module_path)
+    tree = ast.parse(p.read_text(encoding="utf-8-sig"))
+    fn = _find_function(tree, fn_name)
+    if fn is None:
+        raise AssertionError(
+            f"{fn_name} no encontrado en {p}."
+        )
+    sets = []
+    for node in ast.walk(fn):
+        if isinstance(node, ast.Return) and isinstance(node.value, ast.Dict):
+            keys = set()
+            for k in node.value.keys:
+                if isinstance(k, ast.Constant) and isinstance(k.value, str):
+                    keys.add(k.value)
+            sets.append(keys)
+    if not sets:
+        raise AssertionError(
+            f"return {{ ... }} no encontrado en {fn_name} ({p})."
+        )
+    return sets
+
+
 def producer_state_keys(module_path, fn_name):
     """Claves del dict de json.dump({...}) dentro de `fn_name`.
 
