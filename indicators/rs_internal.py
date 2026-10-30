@@ -8,6 +8,7 @@ No recalcula el RS oficial de stock_metrics.py.
 import pandas as pd
 import numpy as np
 from src.utils import get_col, _observation_date_from_df, writer_observation_date, get_effective_meta
+from src.instrument_registry import normalize_yahoo_ticker
 
 def _ret_20d(close):
     if len(close) < 21:
@@ -45,8 +46,15 @@ def compute_rs_internal(df_stocks, holdings_df, df_market, benchmark='SPY', temp
             continue
 
         for ticker in tickers:
+            # 2026-10-30 (coherencia con c879df71): holdings usa
+            # BRK.B, parquet usa BRK-B. Sin normalizar, get_col lanza
+            # KeyError y el ticker se pierde silenciosamente. Bug
+            # medido en XLF: 33 tickers en rs_internal vs 34 en
+            # sector_concentration (O2). Preset en
+            # WYCKOFF-TICKER-NORMALIZATION (2026-10-27, sesion 13).
+            ticker_norm = normalize_yahoo_ticker(ticker)
             try:
-                close = get_col(df_stocks, ticker, 'Close').dropna()
+                close = get_col(df_stocks, ticker_norm, 'Close').dropna()
             except KeyError:
                 continue
             if len(close) < 21:
