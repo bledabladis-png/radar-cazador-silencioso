@@ -120,6 +120,18 @@ def compute_mte(df_market, financial_conditions_score, credit_signal,
         scenario, confidence, pending_out, temporal_reset = classify_mte(srs, shs, cls, ips)
 
 
+        # 2026-10-30: futures_status se calcula aqui y se usa en dos
+        # sitios: el JSON del state (persistencia) y el return (para
+        # que render_mte lo pueda pintar). Antes solo estaba en el
+        # JSON, por lo que el reporte no lo veia aunque el state lo
+        # tuviera (STALE en run 41037457375 y run local 20261030_201420).
+        futures_status = (
+            (temporal_meta or {}).get('by_contract', {})
+            .get('FUTURE_SETTLEMENT', {}).get('status')
+            or 'UNAVAILABLE'
+        )
+
+
         # Guardar estado en JSON para trazabilidad
 
 
@@ -146,11 +158,7 @@ def compute_mte(df_market, financial_conditions_score, credit_signal,
                     # ausencia de dato. UNAVAILABLE es el estado del sistema
                     # para evidencia insuficiente (src/temporal_contracts/
                     # validation.py, STATUS_UNAVAILABLE).
-                    'futures_status': (
-                        (temporal_meta or {}).get('by_contract', {})
-                        .get('FUTURE_SETTLEMENT', {}).get('status')
-                        or 'UNAVAILABLE'
-                    ),
+                    'futures_status': futures_status,
                     'scenario': scenario,
                     'confidence': confidence,
 
@@ -205,7 +213,8 @@ def compute_mte(df_market, financial_conditions_score, credit_signal,
             'cls': cls,
 
 
-            'ips': ips
+            'ips': ips,
+            'futures_status': futures_status
 
 
         }

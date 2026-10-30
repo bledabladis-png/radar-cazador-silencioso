@@ -185,3 +185,65 @@ def test_futures_status_refleja_temporal_meta(tmp_path, monkeypatch):
     assert saved["futures_status"] == "OK", (
         "futures_status debe reflejar temporal_meta.FUTURE_SETTLEMENT.status"
     )
+
+
+# --- Regresion 2026-10-30: futures_status en el RETURN de _compute_mte ---
+def test_compute_mte_return_incluye_futures_status(tmp_path, monkeypatch):
+    """El return de _compute_mte incluye futures_status.
+
+    Bug 2026-10-30: futures_status se escribia solo en el JSON del state
+    (mte_state.json), no en el dict de retorno. render_mte recibia
+    mte_result sin futures_status y no podia pintarlo aunque el state
+    lo tuviera. Detectado en run local 20261030_201420: state con
+    futures_status=STALE, reporte sin linea "Futures Status".
+
+    Fix: engine.py calcula futures_status una vez (tras classify_mte)
+    y lo usa en el JSON del state Y en el return.
+
+    Este test ejercita la integracion real: _compute_mte lee
+    mte_temporal_meta.json (FUTURE_SETTLEMENT.status = STALE) y debe
+    devolver futures_status=STALE en el dict de retorno.
+    """
+    input_df = pd.read_parquet(FIXTURES / "mte_input_df.parquet")
+    prev_state_str = (FIXTURES / "mte_previous_state.json").read_text(
+        encoding="utf-8"
+    )
+    financial_score = pd.read_csv(
+        FIXTURES / "mte_financial_score.csv",
+        index_col=0, parse_dates=True,
+    ).iloc[:, 0]
+    all_signals = pd.read_csv(
+        FIXTURES / "mte_all_signals.csv", index_col=0
+    )
+    pcr_data = json.loads(
+        (FIXTURES / "mte_pcr_data.json").read_text(encoding="utf-8")
+    )
+    darkpool_data = json.loads(
+        (FIXTURES / "mte_darkpool_data.json").read_text(encoding="utf-8")
+    )
+    temporal_meta = json.loads(
+        (FIXTURES / "mte_temporal_meta.json").read_text(encoding="utf-8")
+    )
+
+    tmp_state = tmp_path / "mte_state.json"
+    tmp_state.write_text(prev_state_str, encoding="utf-8")
+    monkeypatch.setattr(
+        "indicators.mte.state.MTE_STATE_FILE", str(tmp_state)
+    )
+
+    from src.pipeline.mte_confirmation import _compute_mte
+    result = _compute_mte(
+        input_df, financial_score, all_signals,
+        pcr_data, darkpool_data, temporal_meta=temporal_meta,
+        reference_date=datetime.now(ZoneInfo("Europe/Madrid")),
+    )
+
+    assert result is not None, "compute_mte devolvio None"
+    assert "futures_status" in result, (
+        "return de _compute_mte no incluye futures_status. "
+        "Bug 2026-10-30: render_mte no puede pintarlo."
+    )
+    # El fixture mte_temporal_meta.json tiene FUTURE_SETTLEMENT.status = STALE
+    assert result["futures_status"] == "STALE", (
+        f"futures_status esperado STALE, es {result['futures_status']!r}"
+    )
