@@ -247,3 +247,62 @@ def test_compute_mte_return_incluye_futures_status(tmp_path, monkeypatch):
     assert result["futures_status"] == "STALE", (
         f"futures_status esperado STALE, es {result['futures_status']!r}"
     )
+
+
+# --- Regresion 2026-10-30: pending en el RETURN de compute_mte ---
+def test_compute_mte_return_incluye_pending(tmp_path, monkeypatch):
+    """El return de compute_mte incluye pending (transicion en curso).
+
+    Bug clase 1fb791ab: state tenia pending, return no, render no lo
+    podia pintar. El fix 5637d45e anadio futures_status al return; este
+    test anade pending al mismo contrato.
+
+    pending != None significa "estamos transitando a este escenario,
+    se confirmara en el siguiente run". Sin esta clave en el return,
+    el reporte no puede avisar de la transicion (dos dias con los
+    mismos indices y distinto scenario sin explicacion visible).
+    """
+    input_df = pd.read_parquet(FIXTURES / "mte_input_df.parquet")
+    prev_state_str = (FIXTURES / "mte_previous_state.json").read_text(
+        encoding="utf-8"
+    )
+    financial_score = pd.read_csv(
+        FIXTURES / "mte_financial_score.csv",
+        index_col=0, parse_dates=True,
+    ).iloc[:, 0]
+    all_signals = pd.read_csv(
+        FIXTURES / "mte_all_signals.csv", index_col=0
+    )
+    pcr_data = json.loads(
+        (FIXTURES / "mte_pcr_data.json").read_text(encoding="utf-8")
+    )
+    darkpool_data = json.loads(
+        (FIXTURES / "mte_darkpool_data.json").read_text(encoding="utf-8")
+    )
+    temporal_meta = json.loads(
+        (FIXTURES / "mte_temporal_meta.json").read_text(encoding="utf-8")
+    )
+
+    tmp_state = tmp_path / "mte_state.json"
+    tmp_state.write_text(prev_state_str, encoding="utf-8")
+    monkeypatch.setattr(
+        "indicators.mte.state.MTE_STATE_FILE", str(tmp_state)
+    )
+
+    from src.pipeline.mte_confirmation import _compute_mte
+    result = _compute_mte(
+        input_df, financial_score, all_signals,
+        pcr_data, darkpool_data, temporal_meta=temporal_meta,
+        reference_date=datetime.now(ZoneInfo("Europe/Madrid")),
+    )
+
+    assert result is not None, "compute_mte devolvio None"
+    assert "pending" in result, (
+        "return de compute_mte no incluye pending. "
+        "Bug clase 1fb791ab: render_mte no puede avisar de la "
+        "transicion de escenario."
+    )
+    # pending puede ser None o un nombre de escenario. Si es None,
+    # significa "no hay transicion pendiente". Si es un str, es el
+    # escenario hacia el que se transita.
+    assert result["pending"] is None or isinstance(result["pending"], str)

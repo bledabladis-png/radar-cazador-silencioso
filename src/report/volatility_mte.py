@@ -116,6 +116,22 @@ def render_mte(mte_result):
                 f"- **Futures Status:** {_fut_status} "
                 "*(inputs de futuros no frescos o ausentes; "
                 "la confidence del escenario NO se degrada por este estado)*\n")
+        # Fix 2026-10-30 (clase 1fb791ab): pending_out es el escenario
+        # al que se esta transitando. Si no es None, el scenario actual
+        # es el estado consolidado y pending es la transicion en curso
+        # que se confirmara en el siguiente run si persisten las
+        # condiciones. Sin esta linea, un lector ve dos dias con los
+        # mismos indices (msi, ipi, srs, shs, cls, ips) y distinto
+        # scenario sin saber por que (ejemplo: run 41037457375 tenia
+        # pending=RECESSION con scenario=SOFT LANDING; run local
+        # siguiente confirmo RECESSION).
+        _pending = mte_result.get('pending')
+        if _pending:
+            out.append(
+                f"- **Pending transition:** {_pending} "
+                "*(condiciones apuntan a este escenario; se confirmara "
+                "en el siguiente run si persisten. El scenario actual "
+                "refleja el estado consolidado)*\n")
         out.append("\n")
         # REP-AUDIT-20261018-IPS (2026-10-18): aclarar que IPS/IPI son
         # proxy de mercado, no tasa de inflacion observada (IPC/PPI).

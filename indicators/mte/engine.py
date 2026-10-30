@@ -214,7 +214,8 @@ def compute_mte(df_market, financial_conditions_score, credit_signal,
 
 
             'ips': ips,
-            'futures_status': futures_status
+            'futures_status': futures_status,
+            'pending': pending_out
 
 
         }
