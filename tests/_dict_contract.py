@@ -131,6 +131,50 @@ def producer_state_keys(module_path, fn_name):
     )
 
 
+def producer_assign_dict_keys(module_path, fn_name, var_name):
+    """Claves de las asignaciones `var_name = {...}` dentro de fn_name.
+
+    Para productores que construyen un dict local y lo persisten con
+    `path.write_text(json.dumps(var_name))` (en lugar de json.dump
+    inline). Caso tipico: state JSON en un modulo que separa
+    construccion y persistencia.
+
+    Si hay varias asignaciones `var_name = {...}`, une las claves.
+    No detecta `var_name['X'] = ...` (mutacion posterior) ni
+    dict comprehension (`{k: v for ...}`). Si el productor muta el
+    dict tras crearlo, el contrato AST es parcial; usar test de
+    integracion.
+    """
+    p = _as_path(module_path)
+    tree = ast.parse(p.read_text(encoding="utf-8-sig"))
+    fn = _find_function(tree, fn_name)
+    if fn is None:
+        raise AssertionError(
+            f"{fn_name} no encontrado en {p}."
+        )
+    keys = set()
+    found = False
+    for node in ast.walk(fn):
+        if isinstance(node, ast.Assign):
+            for target in node.targets:
+                if (isinstance(target, ast.Name)
+                        and target.id == var_name
+                        and isinstance(node.value, ast.Dict)):
+                    found = True
+                    for k in node.value.keys:
+                        if (isinstance(k, ast.Constant)
+                                and isinstance(k.value, str)):
+                            keys.add(k.value)
+    if not found:
+        raise AssertionError(
+            f"Asignacion {var_name} = {{...}} no encontrada en "
+            f"{fn_name} ({p}). Si el dict se construye dinamicamente "
+            f"(mutacion, dict comprehension, return de otra funcion), "
+            f"el contrato AST no aplica: usar test de integracion."
+        )
+    return keys
+
+
 def consumer_read_keys(module_path, fn_name, var_name):
     """Claves que `fn_name` lee via `var_name.get('X')` o `var_name['X']`.
 
@@ -171,13 +215,22 @@ def consumer_read_keys(module_path, fn_name, var_name):
 def assert_render_subset_return(
         producer_module, producer_fn,
         consumer_module, consumer_fn, consumer_var,
-        whitelist=frozenset()):
-    """Downstream: consumer lee X => X en producer return.
+        whitelist=frozenset(), producer_var=None):
+    """Downstream: consumer lee X => X en producer dict.
+
+    producer_var=None (default): parsea el `return { ... }` del
+    producer (patron MTE).
+    producer_var="state": parsea `state = {...}` del producer
+    (patron liquidity_state: dict local + json.dumps aparte).
 
     Devuelve (reads, returns) para que el test pueda verificar
     regresiones explicitas (p.ej. "futures_status sigue en reads").
     """
-    returns = producer_return_keys(producer_module, producer_fn)
+    if producer_var is not None:
+        returns = producer_assign_dict_keys(
+            producer_module, producer_fn, producer_var)
+    else:
+        returns = producer_return_keys(producer_module, producer_fn)
     reads = consumer_read_keys(consumer_module, consumer_fn, consumer_var)
 
     if not reads:
