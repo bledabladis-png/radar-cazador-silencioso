@@ -155,3 +155,56 @@ def test_validate_wls_inputs_contrato():
 
 def test_wls_components_contrato():
     assert WLS_COMPONENTS == ("rs_z", "flow_proxy_z_norm", "rws_z", "stab_z")
+
+
+def test_compute_all_stock_metrics_incluye_fuera_de_top15():
+    """O2 coherencia analisis=descarga (2026-10-30).
+
+    Antes: compute_all_stock_metrics hacia head(TOP_N_CANDIDATES=15),
+    excluyendo tickers descargados que estaban en parquet por
+    universe_expansions (XLF pos 26-34, etc.). Sintoma: n_valid_rs=14
+    en XLF cuando hay 34 descargados.
+
+    Este test: 20 tickers en holdings, 20 en df_stocks. Los 20 deben
+    estar en full_metrics_df (no solo 15).
+    """
+    tickers = [f"T{i:02d}" for i in range(20)]
+    df_stocks = _make_stock_df(tickers)
+    df_market = _make_market_df_multi(["XLK"])
+    holdings = pd.DataFrame({
+        "etf": ["XLK"] * 20,
+        "ticker": tickers,
+        "weight": [100.0 - i for i in range(20)],  # descending
+    })
+    out = compute_all_stock_metrics(df_market, df_stocks, holdings)
+    assert not out.empty
+    n_tickers_out = out["ticker"].nunique()
+    assert n_tickers_out == 20, (
+        f"O2: esperado 20 tickers en out (todos los holdings descargados), "
+        f"obtenidos {n_tickers_out}. Si es 15, el cap TOP_N_CANDIDATES "
+        f"sigue activo."
+    )
+
+
+def test_compute_all_stock_metrics_normaliza_tickers():
+    """Holdings con BRK.B (dot) y df_stocks con BRK-B (dash).
+
+    WYCKOFF-TICKER-NORMALIZATION (sesion 13): holdings usa BRK.B,
+    parquet usa BRK-B. Sin normalizar, get_col lanza KeyError y el
+    ticker se pierde silenciosamente. Este test garantiza que el
+    patch normaliza antes de lookup.
+    """
+    df_stocks = _make_stock_df(["BRK-B", "AAPL"])
+    df_market = _make_market_df_multi(["XLK"])
+    holdings = pd.DataFrame({
+        "etf": ["XLK", "XLK"],
+        "ticker": ["BRK.B", "AAPL"],  # dot, como en etf_holdings.csv
+        "weight": [50.0, 50.0],
+    })
+    out = compute_all_stock_metrics(df_market, df_stocks, holdings)
+    assert not out.empty
+    # El ticker normalizado BRK-B debe estar en output
+    assert "BRK-B" in set(out["ticker"]), (
+        f"BRK.B de holdings no se normalizo a BRK-B. "
+        f"Tickers en out: {sorted(set(out['ticker']))}"
+    )

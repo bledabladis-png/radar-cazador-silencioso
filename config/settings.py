@@ -203,6 +203,16 @@ TOP_N_SECTOR_COMPONENTS = 20  # componentes por sector descargados y considerado
 SEC_13F_QUARTER_LAG_DAYS = 50
 TOP_N_LEADERS = 5       # cuantos se muestran en el reporte
 
+# 2026-10-30 (O2 coherencia analisis=descarga): compute_all_stock_metrics
+# usaba TOP_N_CANDIDATES=15 como cap de analisis por sector. Tras
+# universe_expansions.yaml (c879df71) + get_stock_list(), el parquet
+# tiene mas holdings del top-15 por sector (XLF 34, XLV 26, XLU 21,
+# XLY 21). El cap 15 dejaba fuera tickers descargados: incoherencia
+# "descarga vs analisis". Este guard reemplaza el cap rigido por uno
+# defensivo, para no procesar ETFs gigantes si alguna vez se anade
+# el universo completo (IWM 1977 holdings).
+MAX_CANDIDATES_PER_SECTOR = 100
+
 # ============================================================
 # CONFIDENCE (C19)
 # ============================================================
