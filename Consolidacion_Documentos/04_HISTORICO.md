@@ -2613,3 +2613,61 @@ hasta 2026-10-30.
 **Commits.** 5637d45e, 5b96192f, db1e0a0f, fc6f63c4 + este docs.
 Suite 4108 passed, 2 skipped.
 
+## 2026-10-30 (sesion 20) - Contrato dict framework: cerrar clase en codigo
+
+**Objetivo.** Convertir el parche de la clase 1fb791ab en framework
+preventivo. La clase no es "un campo falta en un dict"; es "modulo A
+produce dict, modulo B lo consume via .get(X), A no publica X, B
+obtiene None silenciosamente". Test unitario con dict mockeado
+verde; integracion real no ejercita. Leccion repetida 3 veces en
+octubre (mte futures_status, mte pending, confirmation mte_scenario).
+
+**Decision estructural.** Framework en 4 capas:
+1. Helper AST (tests/_dict_contract.py): producer_return_keys,
+   producer_state_keys, producer_assign_dict_keys,
+   producer_subscript_keys, producer_all_return_keys,
+   consumer_read_keys. 2 assert: downstream (render lee X => X en
+   return) y upstream (state publica X => X en return).
+2. Contrato por par: un fichero de test por productor principal
+   (MTE, liquidity, IAE, darkpool, cross_module) + un fichero
+   combinado (flows + confirmation) donde el productor muta el
+   dict dinamicamente o hay composicion.
+3. Schema constante cuando el AST no llega: flow_synthesis
+   (subindice + update dinamico) y confirmation_data (subindice +
+   update + composicion via compute_mte_confirmation).
+4. Manifiesto + heuristico: DICT_CONTRACT_PAIRS declara los 9
+   pares cubiertos. test_heuristico_render_dict_detecta_nuevos_
+   pares enumera todos los render_* con clasificador df_attrs
+   (distingue DataFrame de dict real). Falla si aparece un dict
+   real sin manifiesto ni whitelist.
+
+**Descubrimientos del inventario.**
+- 32 render_* con dict-like. 10 DataFrames disfrazados (regex
+  inicial los contaba como dict; df.empty es Attribute, no Call).
+  2 dicts reales cubiertos en este plan. 2 en whitelist. 2
+  consumidores del mismo productor.
+- Bug real de la clase: render_confirmation leia
+  confirmation_data.get('mte_scenario') pero ningun productor lo
+  escribia. La rama RECESSION CAPITULATION estaba muerta. Fix en
+  compute_mte_confirmation. Detectado por el inventario, no por
+  run. Si el heuristico hubiera existido, se habria detectado
+  antes.
+- Whitelist justificada + test anti-creep: si alguien anade un
+  par a la whitelist para evitar el test, falla
+  test_whitelist_justificada y obliga a justificar.
+
+**Lecciones.**
+- Una clase de bug repetida 3 veces en un mes no se resuelve con
+  parches. Se resuelve con un contrato en el codigo que lo haga
+  visible en CI.
+- El AST no lo ve todo: mutation por subindice, .update(dict),
+  composicion entre funciones. Schema constante explicito donde
+  AST no llega.
+- Clasificador df_attrs: distinguir DataFrame de dict real es
+  heuristica, no certeza. Pero reduce falsos positivos de 10 a 0.
+- Whitelist con razon + test de conteo: la unica defensa contra
+  whitelist creep.
+
+**Commits.** d100ba01, f364ad2e, 053db86c, 457742f7, 4056c033,
+e8a2a4ba + este docs. Suite 4133 passed, 2 skipped.
+

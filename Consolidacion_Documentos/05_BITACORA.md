@@ -44,6 +44,60 @@ Al cerrar una sesion nueva, se anade arriba (las mas recientes primero). Si hay 
 
 ## 3. SESIONES
 
+### 2026-10-30 — Sesion 20: contrato dict framework (plan de cierre clase 1fb791ab)
+
+**Objetivo.** Cerrar la clase 1fb791ab en el codigo, no en el proceso
+humano. Cualquier modulo A que produce un dict (return o state JSON)
+y modulo B que lo consume via A_output.get(X): si A no publica X,
+B obtiene None silenciosamente. Aplicar el patron a todos los pares
+productor-consumidor del sistema que el AST/schema puedan cubrir.
+
+**Hecho.** 6 commits:
+- d100ba01: helper AST generico (tests/_dict_contract.py) +
+  refactor MTE. 16 tests refactorizados (comportamiento identico).
+- f364ad2e: liquidity_state (top-level bidireccional + nested
+  regression + whitelist justificada). 5 tests.
+- 053db86c: iae_section (downstream + consistencia 4 ramas). 3
+  tests.
+- 457742f7: darkpool (AST puro + top-level exacto). 3 tests.
+- 4056c033: fix BUG REAL mte_scenario (render leia
+  confirmation_data.get('mte_scenario') pero ningun productor lo
+  escribia, rama RECESSION CAPITULATION muerta) + schemas
+  flows_secondary y confirmation. 6 tests.
+- e8a2a4ba: manifiesto + heuristico + cross_module. 3 tests.
+
+**Descubrimientos.**
+- Inventario de 32 render_* con dict-like: 10 DataFrames
+  disfrazados (clasificador df_attrs los distingue), 2 dicts reales
+  cubiertos, 2 en whitelist (PCR-CONTRACT, SECTOR-RESULTS-CONTRACT),
+  2 consumidores del mismo productor (render_alerts lee ratios de
+  confirmation_data).
+- Bug real de la clase: render_confirmation leia mte_scenario sin
+  productor. Rama RECESSION CAPITULATION nunca ejecutada. Detectado
+  por inventario, no por run.
+- Heuristico con clasificador df_attrs (df.empty es Attribute, no
+  Call) evita 10 falsos positivos por DataFrame.
+
+**Commits.** d100ba01, f364ad2e, 053db86c, 457742f7, 4056c033,
+e8a2a4ba + este docs. Suite 4133 passed, 2 skipped.
+
+**Pendiente.**
+- PCR-CONTRACT (OPEN): productor indicators/options.py::
+  compute_pcr_signals, consumer render_sentimiento_opciones (21
+  lecturas). Cubrir sesion 20+ si ROI.
+- SECTOR-RESULTS-CONTRACT (OPEN): productor indicators/
+  sector_rank_score.py::compute_sector_rank_score, consumer
+  render_ranking_sectorial_unificado. Cubrir sesion 20+ si ROI.
+- Verificacion scheduled. WBD fuera de get_stock_list; 15
+  expansions descargados; fixes semanticos del reporte (Fase
+  dominante, N valid, Futures Status, Severidad, INFO catalogo,
+  0.00 sin -0.00).
+
+**Proximo paso sugerido.** Verificar scheduled. Cerrar items
+observacionales con fecha (H5.3 20-nov, RECEIPT-AUDIT-LAG 17-nov,
+CRON-SLOTS-OBS 10-nov, SCHEDULER-DELAYS 10-nov). Decidir ROI de
+PCR-CONTRACT y SECTOR-RESULTS-CONTRACT.
+
 ### 2026-10-30 — Sesion 19b: contrato bidireccional MTE (clase 1fb791ab)
 
 **Objetivo.** Cerrar la clase 1fb791ab, no solo la instancia. Bug

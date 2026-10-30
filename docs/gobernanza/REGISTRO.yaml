@@ -3875,3 +3875,111 @@ items:
     1fb791ab. Si el upstream guard hubiera existido, 1fb791ab
     habria fallado en CI con "state publica futures_status,
     return no".
+
+- id: MTE-SCENARIO-CAPITULATION
+  tipo: bug
+  ciclo: '2026-10-30'
+  estado: FIXED
+  commit: '4056c033'
+  test: tests/test_flows_confirmation_contract.py
+  descripcion: |
+    render_confirmation L94 lee confirmation_data.get('mte_scenario',
+    '') para disparar "RECESSION CAPITULATION SIGNAL" (si MTE
+    scenario == RECESSION y NH/NL < 0). Ningun productor escribia
+    esa clave. La rama nunca se ejecutaba en produccion. Clase
+    1fb791ab pura: consumer lee X, producer no lo emite. Detectado
+    por el inventario del plan de cierre, no por run real.
+  evidencia: |
+    Fix en src/pipeline/mte_confirmation.py::compute_mte_confirmation:
+    tras _compute_confirmation, si mte_result tiene scenario, asigna
+    confirmation_data['mte_scenario'] = scenario. Sin cambios de
+    firma. Feature util (capitulacion en recesion) ahora alcanzable.
+    Test: test_compute_mte_confirmation_popula_mte_scenario
+    (detecta regresion) + test_render_confirmation_lee_mte_scenario
+    (regresion de la lectura).
+
+- id: DICT-CONTRACT-FRAMEWORK
+  tipo: test_infra
+  ciclo: '2026-10-30'
+  estado: FIXED
+  commit: 'e8a2a4ba'
+  test: tests/test_dict_contract_manifest.py
+  descripcion: |
+    Plan de cierre de la clase 1fb791ab. Cualquier modulo A que
+    produce un dict (return o state JSON) y modulo B que lo consume
+    via A_output.get(X): si A no publica X, B obtiene None
+    silenciosamente. Test unitario con dict mockeado pasa;
+    integracion real no ejercita. Framework AST + schema + heuristico
+    que cierra la clase en el codigo, no en el proceso humano.
+
+    8 pares cubiertos (mas 1 con 2 consumidores = 9 tests de par):
+    - MTE: AST bidireccional + whitelist justificada.
+    - Liquidity state: AST bidireccional top-level + nested regression.
+    - IAE section: AST + consistencia 4 ramas.
+    - Darkpool: AST puro.
+    - Flows_secondary: schema constante (mutacion por subindice).
+    - Confirmation: schema constante + composicion dinamica.
+    - Cross_module: AST puro.
+    - Alerts (2o consumidor de confirmation_data): AST subset.
+
+    Framework (tests/_dict_contract.py):
+    - producer_return_keys, producer_state_keys, producer_assign_
+      dict_keys, producer_subscript_keys, producer_all_return_keys.
+    - consumer_read_keys.
+    - assert_render_subset_return (downstream, acepta producer_var).
+    - assert_state_subset_return (upstream).
+
+    Manifiesto (DICT_CONTRACT_PAIRS) con los 9 pares cubiertos.
+    Whitelist (DICT_CONTRACT_WHITELIST) con 2 pares identificados
+    pero no cubiertos (ver PCR-CONTRACT, SECTOR-RESULTS-CONTRACT).
+
+    Heuristico (test_heuristico_render_dict_detecta_nuevos_pares):
+    enumera todos los render_*(X_data|section|result|synthesis|
+    conflict) con clasificador df_attrs que distingue DataFrame de
+    dict real. Falla si un dict real sin manifiesto ni whitelist
+    aparece. Cierra la clase en el ORIGEN (par nuevo no detectado).
+  evidencia: |
+    6 commits: d100ba01 (helper + refactor MTE), f364ad2e
+    (liquidity_state), 053db86c (iae_section), 457742f7 (darkpool),
+    4056c033 (fix mte_scenario + schemas flows/confirmation),
+    e8a2a4ba (manifiesto + heuristico + cross_module). Suite 4133
+    passed, 2 skipped. 22 tests de contrato + 14 del commit 5.
+
+- id: PCR-CONTRACT
+  tipo: deuda_tecnica
+  ciclo: '2026-10-30'
+  estado: OPEN
+  siguiente_accion: |
+    Cubrir contrato AST entre indicators/options.py::
+    compute_pcr_signals (productor real) y src/report/sentiment.py::
+    render_sentimiento_opciones (consumer, 21 lecturas de pcr_data).
+    El wrapper _compute_pcr (market_data.py) solo propaga el dict;
+    el productor esta en indicators/options.py, no analizado en el
+    plan 2026-10-30. Cubrir en sesion 20 si ROI.
+  descripcion: |
+    Par identificado por el heuristico del DICT-CONTRACT-FRAMEWORK
+    (2026-10-30) como "dict real sin contrato". En whitelist
+    justificada con razon "productor en modulo distinto, no
+    analizado en plan 2026-10-30". Riesgo: si compute_pcr_signals
+    deja de publicar una clave que render_sentimiento_opciones lee,
+    el reporte pierde la linea silenciosamente. 21 lecturas es
+    superficie alta; contrato AST aporta.
+
+- id: SECTOR-RESULTS-CONTRACT
+  tipo: deuda_tecnica
+  ciclo: '2026-10-30'
+  estado: OPEN
+  siguiente_accion: |
+    Cubrir contrato AST entre indicators/sector_rank_score.py::
+    compute_sector_rank_score (productor real de sector_results) y
+    src/report/rankings.py::render_ranking_sectorial_unificado
+    (consumer, lee sector_results['ranking'][:EXPECTED_SECTOR_COUNT]).
+    El productor esta en indicators/, no analizado en el plan
+    2026-10-30. Cubrir en sesion 20 si ROI.
+  descripcion: |
+    Par identificado por el heuristico del DICT-CONTRACT-FRAMEWORK
+    (2026-10-30). render lee sector_results['ranking'] (lista de
+    tuplas ticker, name, score). Si compute_sector_rank_score deja
+    de publicar 'ranking' o cambia su estructura, el render falla
+    con KeyError o pinta tabla vacia. Contrato AST + shape
+    declarada aporta.

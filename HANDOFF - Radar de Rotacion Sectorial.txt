@@ -7,16 +7,16 @@ junto con `Consolidacion_Documentos/00_ARRANQUE.md`.
 
 ---
 
-## 1. ESTADO AL CIERRE (2026-10-30, sesion 19)
+## 1. ESTADO AL CIERRE (2026-10-30, sesion 20)
 
-HEAD: `fc6f63c4` (consultar `git log --oneline -1` para el actual).
+HEAD: `e8a2a4ba` (consultar `git log --oneline -1` para el actual).
 Sincronizacion: main == origin/main al cierre del commit.
 Tests: fuente autoritativa Consolidacion_Documentos/ESTADO_SISTEMA.md.
        Conteo exacto en ESTADO_SISTEMA.md seccion 2 (no literal aqui: cambia con cada commit de test).
 CI HEAD: verde.
 Validation Gate: 11/11 (outputs/state/validation_gate_result.json).
 Working tree: limpio.
-Gobernanza: docs/gobernanza/REGISTRO.yaml, 183 items. Validador reforzado
+Gobernanza: docs/gobernanza/REGISTRO.yaml, 187 items. Validador reforzado
             (detecta ids embebidos, SHA no-string, WONT_FIX en HANDOFF).
 Writers: 25 (output_registry.py).
 
@@ -82,6 +82,24 @@ Cierre deuda del reporte 41037457375 (sesion 19): 9 fixes +
     _fmt_signed (FU-003a).
   - LIDERAZGO-DOBLE-TAUTOLOGICO: WONT_FIX razonado (top-5 por
     retorno siempre bate; nota de sesgo ya en reporte).
+
+DICT-CONTRACT-FRAMEWORK: FIXED 2026-10-30 (e8a2a4ba). Plan de
+  cierre de la clase 1fb791ab en el codigo, no en el proceso humano.
+  8 pares productor-consumidor cubiertos con AST o schema constante:
+  MTE (bidireccional), liquidity_state (bidireccional top-level),
+  IAE (4 ramas), darkpool (AST puro), flows_secondary (schema),
+  confirmation (schema), cross_module (AST puro), alerts (2o
+  consumidor). Manifiesto (DICT_CONTRACT_PAIRS) + whitelist
+  justificada (2 pares identificados, no cubiertos) + heuristico
+  (test_heuristico_render_dict_detecta_nuevos_pares) que falla si
+  aparece un dict real sin contrato. Cierra la clase en el ORIGEN:
+  par nuevo no detectado -> CI falla -> revisar. 6 commits: d100ba01,
+  f364ad2e, 053db86c, 457742f7, 4056c033, e8a2a4ba.
+  Sub-item: MTE-SCENARIO-CAPITULATION (4056c033): render_confirmation
+  leia confirmation_data.get('mte_scenario') pero ningun productor
+  lo escribia. Bug real de la clase (consumer lee X, producer no lo
+  emite). Feature util (RECESSION CAPITULATION SIGNAL) ahora
+  alcanzable.
 
 DICT3-REACCUMULATION: WONT_FIX 2026-10-29. Detector implementado, 18 tests
   T1-T7 verdes, ejecutado sobre cohort (1185 episodios, 1171 evaluables).
