@@ -2,29 +2,29 @@
   "schema_version": 1,
   "artifact": {
     "path": "data/cboe_vix3m.parquet",
-    "sha256": "327321b996854ce2c22ee0718850d5ff685238ac0c86c71a7e2f0db53d293a87",
-    "bytes": 97069,
-    "written_at": "2026-10-29T12:03:49.850484"
+    "sha256": "cd5a2566ae7891a24709f98b161892e1ca8ca135c8381b3e862dc7b4a2008430",
+    "bytes": 97077,
+    "written_at": "2026-10-30T10:03:16.553350"
   },
   "producer": {
     "module": "src.utils",
     "function": "write_artifact_with_manifest",
-    "run_id": "20261029_130349",
+    "run_id": "20261030_110316",
     "source": "cboe_vix3m"
   },
   "content": {
-    "rows": 4302,
+    "rows": 4303,
     "cols": 5,
     "n_tickers": 1,
     "date_min": "2009-09-18",
-    "date_max": "2026-10-28"
+    "date_max": "2026-10-29"
   },
   "temporal": {
     "contract": null
   },
   "quality": {
-    "last_date": "2026-10-28",
-    "expected_session": "2026-10-28",
+    "last_date": "2026-10-29",
+    "expected_session": "2026-10-29",
     "last_date_is_expected_session": true,
     "pct_dup_last": 0.0,
     "close_nan_last": 0,
@@ -55,7 +55,7 @@
       },
       "US_EQUITY": {
         "n": 1,
-        "last_closed_session": "2026-10-28",
+        "last_closed_session": "2026-10-29",
         "coverage_at_session": 1.0,
         "status": "VALID"
       },

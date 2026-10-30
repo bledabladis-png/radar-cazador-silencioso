@@ -1,17 +1,17 @@
 {
   "schema_version": 1,
   "temporal_contract_version": "FU-021-5-v2",
-  "effective_date": "2026-10-28",
-  "expected_date": "2026-10-28",
+  "effective_date": "2026-10-29",
+  "expected_date": "2026-10-29",
   "coverage": 0.9962962962962963,
   "futures_status": "STALE",
   "scenario": "SOFT LANDING",
-  "confidence": 0.5000175266412004,
-  "msi": 45.44546997727409,
-  "ipi": 46.93284884473091,
-  "srs": 0.10161538825720934,
-  "shs": 0.415780929586942,
-  "cls": 0.16331144549408924,
-  "ips": -0.06134302310538181,
-  "pending": null
+  "confidence": 0.5586380110843793,
+  "msi": 50.91568964163022,
+  "ipi": 47.706562652141436,
+  "srs": 0.3339310629225628,
+  "shs": 0.3230186456058479,
+  "cls": 0.2199810089458818,
+  "ips": -0.045868746957171296,
+  "pending": "RECESSION"
 }
