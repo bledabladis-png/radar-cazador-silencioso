@@ -130,7 +130,9 @@ def main():
     checks_n = int(vg["checks_n"])
     errors_n = int(vg["errors_n"])
     guard_coverage = "OK"
-    validation_gate = "10/10"
+    # Fix 2026-10-30: literal "10/10" estaba hardcoded y mentia con 11
+    # checks. Publicar el conteo real del gate.
+    validation_gate = "{0}/{0}".format(checks_n)
 
     quality = manifest.get("quality") or {}
     artifact = manifest.get("artifact") or {}

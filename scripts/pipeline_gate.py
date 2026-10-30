@@ -87,7 +87,25 @@ GH_API_TIMEOUT = 15
 GH_API_ZIP_TIMEOUT = 30
 VALID_RECEIPT_STATUS = frozenset({"COMPLETED"})
 VALID_RECEIPT_WORKFLOWS = frozenset({"daily_run"})
-VALID_RECEIPT_VALIDATION_GATES = frozenset({"10/10"})
+# Fix 2026-10-30: el gate crecio de 10 a 11 checks el 2026-10-17
+# sin actualizar este contrato. Se valida dinamicamente: cualquier
+# "N/N" con N >= 10 es valido (nunca "10/10" hardcoded).
+VALID_RECEIPT_VALIDATION_GATES_MIN_N = 10
+
+
+def _valid_validation_gate(gate):
+    """True si gate es 'N/N' con N >= VALID_RECEIPT_VALIDATION_GATES_MIN_N."""
+    if not isinstance(gate, str):
+        return False
+    parts = gate.split("/")
+    if len(parts) != 2 or parts[0] != parts[1]:
+        return False
+    try:
+        n = int(parts[0])
+    except ValueError:
+        return False
+    return n >= VALID_RECEIPT_VALIDATION_GATES_MIN_N
+
 VALID_RECEIPT_PIPELINE_CONCLUSIONS = frozenset({"success"})
 
 
@@ -304,7 +322,7 @@ def _validate_receipt_schema(receipt, target_session):
         return False
     if not isinstance(receipt.get("run_id"), int):
         return False
-    if receipt.get("validation_gate") not in VALID_RECEIPT_VALIDATION_GATES:
+    if not _valid_validation_gate(receipt.get("validation_gate")):
         return False
     if receipt.get("pipeline_conclusion") not in VALID_RECEIPT_PIPELINE_CONCLUSIONS:
         return False

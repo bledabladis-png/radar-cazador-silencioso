@@ -200,3 +200,15 @@ def test_receipt_incluye_contract_validation_status(tmp_path, monkeypatch):
     assert wcr.main() == 0
     r = json.loads(opath.read_text(encoding="utf-8"))
     assert r.get("contract_validation_status") == "OK"
+
+
+def test_vg_pass_11_checks_emite_11_11(tmp_path, monkeypatch):
+    """2026-10-30: checks_n=11 -> receipt.validation_gate == "11/11".
+    Antes estaba hardcoded a "10/10" y mentia."""
+    vg = _vg_pass()
+    vg["checks_n"] = 11
+    opath = _setup(tmp_path, monkeypatch, _manifest(), vg)
+    assert wcr.main() == 0
+    r = json.loads(opath.read_text(encoding="utf-8"))
+    assert r["validation_gate"] == "11/11"
+    assert r["validation_gate_checks_n"] == 11

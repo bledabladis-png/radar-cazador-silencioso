@@ -452,3 +452,19 @@ def test_download_receipt_json_zip_sin_fichero_falla(monkeypatch):
     monkeypatch.setattr(gate.requests, "get", lambda *a, **k: _R())
     monkeypatch.setenv("GH_TOKEN", "fake")
     assert gate._download_receipt_json(1) is None
+
+
+def test_valid_validation_gate_acepta_11_11():
+    """2026-10-30: el contrato "10/10" estaba hardcoded. Ahora acepta
+    cualquier "N/N" con N >= 10."""
+    assert gate._valid_validation_gate("10/10")
+    assert gate._valid_validation_gate("11/11")
+    assert gate._valid_validation_gate("12/12")
+
+
+def test_valid_validation_gate_rechaza_9_10():
+    assert not gate._valid_validation_gate("9/10")
+    assert not gate._valid_validation_gate("10/11")
+    assert not gate._valid_validation_gate("9/9")  # N < 10
+    assert not gate._valid_validation_gate("10")
+    assert not gate._valid_validation_gate(None)

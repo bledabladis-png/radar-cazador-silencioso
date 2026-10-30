@@ -15,6 +15,7 @@ from src.report.provenance import (
     render_provenance,
     build_provenance,
     _compute_validation_gate,
+    _is_gate_passed,
 )
 
 
@@ -102,6 +103,15 @@ def test_build_validation_gate_10_10():
     vg = {"passed": True, "checks": ["a"] * 10, "errors": []}
     p = build_provenance(reference_date=None, validation_gate_result=vg)
     assert p["validation_gate"] == "10/10"
+
+
+def test_build_validation_gate_11_11():
+    """2026-10-30: el gate crecio a 11 checks. El literal "10/10" era
+    hardcoded y mentia. Ahora debe emitir "11/11"."""
+    vg = {"passed": True, "checks": ["a"] * 11, "errors": []}
+    p = build_provenance(reference_date=None, validation_gate_result=vg)
+    assert p["validation_gate"] == "11/11"
+    assert _compute_validation_gate(vg) == "11/11"
 
 
 def test_build_validation_gate_fallida():
@@ -257,3 +267,27 @@ def test_render_incluye_temporal_coherence():
     }
     body = "".join(render_provenance(prov))
     assert "`temporal_coherence`: INCOHERENT" in body
+
+
+# ============================================================
+# _is_gate_passed (2026-10-30)
+# ============================================================
+def test_is_gate_passed_10_10():
+    assert _is_gate_passed("10/10")
+
+
+def test_is_gate_passed_11_11():
+    assert _is_gate_passed("11/11")
+
+
+def test_is_gate_passed_9_10_false():
+    assert not _is_gate_passed("9/10")
+
+
+def test_is_gate_passed_none_false():
+    assert not _is_gate_passed(None)
+
+
+def test_is_gate_passed_basura_false():
+    assert not _is_gate_passed("10")
+    assert not _is_gate_passed("10/10/10")

@@ -54,8 +54,11 @@ def _compute_validation_gate(vg):
     passed = bool(vg.get("passed"))
     errors_n = len(vg.get("errors") or [])
     checks_n = len(vg.get("checks") or [])
+    # Fix 2026-10-30: el literal "10/10" era hardcoded y mentia cuando
+    # el gate tenia 11 checks (2026-10-17). Ahora se publica el conteo
+    # real. Contrato: N/N con N = numero actual de checks del gate.
     if passed and errors_n == 0:
-        return "10/10" if checks_n >= 10 else "{0}/{0}".format(checks_n)
+        return "{0}/{0}".format(checks_n)
     return "{0}/{1}".format(checks_n - errors_n, checks_n)
 
 
@@ -94,6 +97,17 @@ def _make_local_run_id(reference_date, commit, generated_at):
         ref_str = str(reference_date or "NONE")
     seed = "{0}|{1}|{2}".format(ref_str, commit or "NO_COMMIT", generated_at)
     return "local-{0}".format(hashlib.sha256(seed.encode("utf-8")).hexdigest()[:8])
+
+
+def _is_gate_passed(gate_str):
+    """True si el string es 'N/N' (passed). Formato emitido por
+    _compute_validation_gate. Acepta cualquier N >= 1."""
+    if not isinstance(gate_str, str):
+        return False
+    parts = gate_str.split("/")
+    if len(parts) != 2:
+        return False
+    return parts[0] == parts[1]
 
 
 def build_provenance(
@@ -139,8 +153,8 @@ def build_provenance(
     # H8 (2026-10-16, auditor): coherencia temporal. Si INCOHERENT con
     # validation_gate=10/10, es contradiccion: el gate no deberia haber
     # pasado. Se marca explicitamente para que el consumidor lo vea.
-    if _coh == "INCOHERENT" and _gate == "10/10":
-        _gate = "10/10 (INCOHERENT)"
+    if _coh == "INCOHERENT" and _gate and _is_gate_passed(_gate):
+        _gate = _gate + " (INCOHERENT)"
     return {
         "commit_sha": commit,
         "run_id": run_id,
