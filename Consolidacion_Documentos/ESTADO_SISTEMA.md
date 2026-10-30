@@ -22,13 +22,12 @@ porque el commit que lo contiene cambia HEAD.
 
 ## 2. Tests (pytest real)
 
-- **Resumen:** 4020 passed, 3 skipped (sin filtro; suite completa)
+- **Resumen:** 4062 passed, 2 skipped (sin filtro; suite completa)
 - **Exit code:** 0
 
 **Tests skip:**
 - `SKIPPED [1] tests\test_freshness.py:382: requiere --run-network`
 - `SKIPPED [1] tests\test_freshness.py:405: requiere --run-network`
-- `SKIPPED [1] tests\test_h03_confirmatory_mode.py:88: repo clean; no se puede probar dirty path en este entorno`
 
 ## 3. Integridad del codigo
 
@@ -80,9 +79,9 @@ porque el commit que lo contiene cambia HEAD.
 ## 5. Datos IAE
 
 - `data/mappings/radar_target_catalog.csv`
-  - sha256: `8d7c88b5ed535a18613502986fc98687135455dfaf19cf1533d8d272aa27e0be`
-  - bytes: 35618
-  - lineas: 288
+  - sha256: `ff25844ed506f110fdca0495e4ea5759899331c134026e73a383c3494d293fab`
+  - bytes: 38105
+  - lineas: 308
 - `data/mappings/cusip_radar_crosswalk.csv`
   - sha256: `c344bee55fa5149853ed029e59ee2acbccd94d39990f1b493048ea0cb06a60cc`
   - bytes: 22491

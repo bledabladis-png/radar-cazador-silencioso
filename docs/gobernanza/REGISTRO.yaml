@@ -2630,43 +2630,41 @@ items:
 - id: TOP20-FALTANTES-DATOS
   tipo: deuda_tecnica
   ciclo: '2026-10-26'
-  estado: IN_PROGRESS
+  estado: FIXED
+  commit: c879df71
   descripcion: |
-    Tickers del universo A.2c (target_weight=0.85) que no estaban
-    en stock_prices.parquet con n_bars >= 200. El ticket original
-    reportaba "52 filas, 7 holdout, 1 ausente, 44 requieren
-    descarga". Analisis 2026-10-27 sobre los parquets actuales:
-    40 unicos (52 filas por duplicacion entre grupos). Division
-    real: 35 en holdout, 2 nadie (DDOG, MRNA), 3 con pocas
-    barras por IPO reciente (WBD, HONA, SPCX).
+    Tickers del universo A.2c (target_weight=0.85) sin datos en
+    stock_prices.parquet. Cierre 2026-10-30 con diagnostico
+    definitivo por clase:
+    (1) 15 tickers fuera de top-20 (XLF 9, XLV 4, XLU 1, XLY 1):
+        causa raiz TOP_N_SECTOR_COMPONENTS=20 + get_stock_list()
+        head(20). Ninguna de las 5 fuentes los capturaba.
+    (2) WBD (XLC 4.945%, SPY 0.118%): DELISTED 2026-10-06
+        (adquirida por Paramount Skydance). Ticket propio
+        WBD-DELISTED-2026-10-06.
+    (3) HONA (XLI 0.92%), SPCX (QQQ 2.71%): IPOs recientes con
+        n_bars=93/94. Se resuelven solas con sesiones.
+    (4) DDOG, MRNA: cubiertos por universe_expansions.yaml
+        (commit 3d1365e7, ya en produccion).
+    (5) 35 holdout: cerrados por SOW-HOLDOUT-IMMUTABLE (WONT_FIX
+        2026-10-29, cohort 99.3% S&P 500 actual, no holdout
+        virgen).
   evidencia: |
-    Correccion 2026-10-27 (verificado con py -c sobre parquets):
-    - "7 holdout" -> 35 (cohort/r3000). El script
-      p1_h02_cobertura_efectiva.py solo lee stock_prices.parquet;
-      su CSV p1_h02_tickers_sin_datos.csv es correcto en su
-      definicion, pero el ticket lo interpretaba como "no en
-      ningun sitio".
-    - "44 requieren descarga nueva" -> 2 reales (DDOG, MRNA).
-    - "1 ausente total" -> 2 (DDOG, MRNA).
-    - 3 con pocas barras (WBD 1, HONA 92, SPCX 93): problema de
-      IPO reciente, no de descarga. Se resuelve solo con sesiones.
-
-    DDOG y MRNA anadidos a universe_expansions.yaml (commit
-    3d1365e7, CI verde 40559026398). get_stock_list() los
-    devuelve (359 tickers). El proximo run programado de
-    daily_run.yml (5 slots/dia: 23:17, 03:17, 05:17, 07:17,
-    11:17 UTC) detectara los tickers faltantes en el parquet
-    via cache-check y forzara descarga completa. Sin
-    intervencion manual.
+    Diagnostico 2026-10-30 sobre p1_h02 del run 41037457375
+    (primer scheduled verde post-fix 7f6d229d). Antes del fix:
+    XLF 78.40%, XLV 81.43%, XLU 83.31%, XLY 84.62%.
+    Verificado en get_stock_list(): los 15 estaban AUSENTES
+    antes de c879df71, PRESENTES despues (506 -> 505 por
+    exclusion WBD, +15).
+    Tests: tests/test_universe_expansions.py 40/40 verde
+    (coberturas declaradas en yaml coinciden con calculo real
+    desde etf_holdings.csv +/- 0.5).
+    Cobertura esperada post-scheduled: XLF 85.11% (sel_peso),
+    XLV 85.28%, XLU 85.27%, XLY 85.80%.
   siguiente_accion: |
-    (a) 2 nadie (DDOG, MRNA): en curso via autonomia. Cerrar
-        tras confirmar que aparecen en stock_prices.parquet en
-        un run posterior.
-    (b) 35 holdout: bloqueados por SOW-HOLDOUT-IMMUTABLE
-        (IN_PROGRESS, borrador 58_contrato_holdout_inmutable.md
-        commit 46b36409, pendiente firma auditor). No se
-        promueven hasta P1+P2.
-    (c) 3 pocas barras: sin accion posible (esperar sesiones).
+    Verificacion empirica en artifact p1-h02 del proximo
+    scheduled verde. WBD movido a WBD-DELISTED-2026-10-06.
+    HONA/SPCX se resuelven con sesiones (sin accion).
 - id: TOP20-EU-HOLDINGS-INCOMPLETOS
   tipo: deuda_tecnica
   ciclo: '2026-10-26'
@@ -3536,3 +3534,69 @@ items:
     Enviar al auditor externo: v1.2 (b46f9cc6) + commits de
     evidencia (20ae7f3c, 57d5cbb9, 0d5ce224, 241cd3ab). Sin firma
     v1.2, no se promociona ningun ticker desde holdout.
+
+- id: WBD-DELISTED-2026-10-06
+  tipo: evento_corporativo
+  ciclo: '2026-10-30'
+  estado: WONT_FIX
+  descripcion: |
+    WBD (Warner Bros. Discovery) fue adquirida por Paramount
+    Skydance. Cierre 2026-10-06, ultima cotizacion 2026-10-05 en
+    Nasdaq a USD 30.95. Accionistas recibieron ~USD 31.02 cash por
+    accion. El ticker esta delisted. Yahoo solo sirve la ultima
+    barra pre-cierre (2026-10-05) en WBD y en todos los
+    cross-listings (WBD.MX, J5A.SG, J5A.DU, J5A.HM, J5A.HA), todos
+    terminan 2026-10-05. La entidad fusionada cotiza como SKYD
+    (NYSE, marketCap distinto, sin continuidad de CUSIP).
+  razon: |
+    No es arreglable desde el codigo. El activo no existe. Mapear
+    WBD -> SKYD seria inventar una continuidad que el mercado no
+    reconoce (marketCap, negocio y CUSIP distintos). La fuente
+    Yahoo no sirve precios post-2026-10-06 bajo ningun ticker
+    relacionado con WBD. El sistema hace lo correcto: descarga la
+    unica barra que existe, la persiste, la clasifica como DELISTED
+    en data/mappings/ticker_health.yaml, la excluye de
+    get_stock_list() y la reporta como n_excluidos en p1_h02.
+  reabrir_si: |
+    Yahoo sirve precios post-2026-10-06 bajo WBD, o SKYD hereda el
+    CUSIP de WBD.
+  evidencia: |
+    F1 (fc6232d8) crea src/ticker_health.py + yaml con WBD DELISTED.
+    F2 (38bc1c42) excluye WBD de get_stock_list() (506 -> 505).
+    F3 (90e269ff) reporta n_excluidos=1 en XLC y SPY del p1_h02.
+    F4 (78ce37a2) check_ticker_health no alerta de WBD porque esta
+    clasificado. SSGA/BlackRock retiraran WBD de etf_holdings.csv e
+    index_holdings.csv en el proximo rebalanceo trimestral.
+
+- id: TICKER-HEALTH-AUTONOMIA
+  tipo: diseno_autonomo
+  ciclo: '2026-10-30'
+  estado: FIXED
+  commit: 78ce37a2
+  test: tests/test_ticker_health.py
+  descripcion: |
+    Diseno autonomo para detectar y clasificar eventos corporativos
+    (delisting, fusion, adquisicion) sin intervencion manual. Cierra
+    el ciclo "Yahoo rompe un ticker -> alguien lo descubre semanas
+    despues mirando un artifact p1_h02". Origen: WBD, detectado a
+    mano 6h despues del scheduled.
+  evidencia: |
+    5 capas, 4 commits:
+    - F1 fc6232d8: data/mappings/ticker_health.yaml +
+      src/ticker_health.py (API: get_estado, is_eligible,
+      filter_eligible, exclusion_reason). Estados ACTIVE / DELISTED /
+      STALE / TRUNCATED_IPO. 16 tests.
+    - F2 38bc1c42: get_stock_list() aplica filter_eligible al
+      return. WBD fuera del universo (505 tickers).
+    - F3 90e269ff: p1_h02 reporta n_excluidos. Distingue "sin datos
+      hoy" de "no existe". 3 tests AST.
+    - F4 78ce37a2: check_ticker_health() en health_check.py. WARN
+      si ticker ACTIVE stale no clasificado (>=10 sesiones sin
+      datos). Dispara issue automatico via _update_issue ->
+      operador clasifica en yaml -> siguiente run OK. 7 tests.
+    Suite 4062 passed, 2 skipped. Gobernanza coherente.
+  siguiente_accion: |
+    Verificacion empirica en proximo scheduled: ticker_health [OK]
+    con WBD fuera de get_stock_list. Si Yahoo rompe otro ticker
+    futuro, ticker_health [WARN] + issue automatico -> clasificar en
+    yaml en 2 min -> siguiente run OK.

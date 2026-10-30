@@ -2368,3 +2368,126 @@ para cualquier SHA anterior al commit de poda.
 **Commits.** 7c913031, e3eb2fe0.
 
 
+## Resumen bitacora podada 30-oct-2026 (sesiones 17-oct)
+
+### 2026-10-17 - Sostenibilidad: 10 capas de fixes al reporte + auditoria externa
+
+**Objetivo.** Tras auditoria externa del reporte del 2026-10-17, aplicar
+10 capas de fixes con tests contractuales. Eliminar textos categoricos
+sin soporte, literales desincronizados de config, clasificacion de
+regimenes por substring accidental, naming enganoso del CSV.
+
+**Decisiones estructurales.**
+- Clasificacion exacta de regimenes: CSV financial_regime +
+  real_liq_regime (antes substring accidental). Dictamen Gate 0.5
+  aprobado con correcciones (ba4fca3a, a92f52e9, 5d21b45d).
+- Eliminado alias legacy liquidity_regime del CSV + script migracion
+  idempotente (f2dec91f, aa82a549).
+- Renombrado parametros liquidity_regime -> financial_regime en
+  render_alerts/regimenes/sintesis y generate_daily_report (a6adeacd).
+- Literales ventana/umbral desde config (0d58c5ae).
+- Bandas HYG/LQD 0.5->0.75 (781da474), umbral materialidad 1% en
+  divergencia precio-flujo (9b3d5b33).
+- local_run_id determinista `local-<8hex>` (c2d6b604).
+- A/D Line declara recalculo por run + universo (85b79cd9).
+- Flow proxy N/D para tickers sin volumen (FX, DX-Y, SPGSCI) (09f32770).
+- 9 items nuevos FIXED en REGISTRO (86963d56).
+- Issue #5 cerrado: update_sec_13f cancelled = FALSE_POSITIVE,
+  cron_slots 3/5 = WONT_FIX.
+
+**Commits.** 0d58c5ae, 781da474, 9b3d5b33, c2d6b604, 85b79cd9,
+ba4fca3a, a92f52e9, 5d21b45d, f2dec91f, aa82a549, a6adeacd, 86963d56,
+09f32770.
+
+**Pendiente al cierre.** Certificacion scheduled lunes 2026-10-19 23:17
+UTC (target_session nuevo).
+
+### 2026-10-17 - Fix CI (pyyaml, fetch-depth) + verificacion en produccion enmienda v1.1
+
+**Objetivo.** Diagnosticar y corregir los fallos de CI de los runs
+23:17 UTC (16-oct, exit 2) y 01:19 UTC (17-oct, exit 1). Verificar
+la enmienda v1.1 en produccion.
+
+**Decisiones estructurales.**
+- P0-A pyyaml: commit 529f4ed2 introdujo `import yaml` en 4 ficheros
+  sin anadir pyyaml a requirements.txt. En local pasaba por dependencia
+  transitiva de optuna; en CI exit 2. Fix 4be5a90c (pyyaml==6.0.3).
+- P0-B shallow clone: test_registro_real_pasa verifica existencia de
+  37 SHAs contra git. actions/checkout@v4 hace fetch-depth:1. Fix
+  bd30aecb (fetch-depth: 0 en run-system).
+- Prevencion: tests/test_imports_declarados.py (import vs requirements,
+  30bb02c4) y tests/test_workflow_fetch_depth.py (fetch-depth: 0 en
+  todo job con pytest, 0c862502). .github/workflows/ci_tests.yml corre
+  suite completa en cada push a main (042033a4).
+- Bug fix confirmado con probe: _collect_failed_contracts duplicaba
+  failed_contracts si un manifest generaba N razones BLOCKED (8e96531c).
+- 12 items VERIFIED_IN_CI_PENDING -> VERIFIED_IN_PRODUCTION (4e2822b5).
+- 00_ARRANQUE.md: eliminada cifra literal ~3388 (drift con
+  ESTADO_SISTEMA). Fix 8ec3fbd7.
+- HANDOFF reescrito con el ciclo 17-oct (33550d82).
+
+**Commits.** 4be5a90c, bd30aecb, 4e2822b5, 33550d82, 8ec3fbd7,
+b63df200, ccff8fca, c91cb76d, a792fa91, d8c42736, 5ef37d34, 81f8b90f,
+93df396f, 3aa67a31, 8e96531c, 30bb02c4, 0c862502, 3c92cdfd, 019adbdc,
+042033a4, 161964a3.
+
+**Verificacion.** Run 38994345784 success (02:17 UTC 17-oct): receipt
+COMPLETED, contract_validation_status: OK, manifest_coverage_pct: 0.9757,
+guard_coverage: OK, validation_gate 10/10, pipeline_conclusion: success.
+
+**Pendiente al cierre.** Verificacion completa de la enmienda v1.1 desde
+cero: primer run con target_session nuevo (lunes 19-oct 23:17 UTC).
+
+## 2026-10-30 - Ticker health autonomo + WBD + 15 expansions
+
+**Objetivo.** Resolver dos problemas detectados en sesion 17: (a) 15
+tickers fuera de top-20 sin datos (XLF 78.40%, XLV 81.43%, XLU 83.31%,
+XLY 84.62% de cobertura efectiva); (b) WBD con n_bars=1 sin diagnostico
+claro. Convertir el descubrimiento manual (via artifact p1_h02) en
+sistema autonomo.
+
+**Decision estructural.** Eventos corporativos (delisting, fusion,
+adquisicion) requieren clasificacion explicita, no tolerancia
+implicita. Diseno de 5 capas: (1) data/mappings/ticker_health.yaml
+como fuente canonica de estados por ticker (ACTIVE/DELISTED/STALE/
+TRUNCATED_IPO); (2) src/ticker_health.py como API unica de consulta;
+(3) consumidores filtran DELISTED (get_stock_list, p1_h02,
+breadth_metrics via parquet); (4) check_ticker_health WARN si ticker
+ACTIVE stale no clasificado, dispara issue; (5) REGISTRO + reabrir_si
+documentan cada clasificacion. Invariante: ningun ticker ACTIVE pasa
+10 sesiones sin datos sin que el operador lo sepa.
+
+**WBD diagnostico final.** Warner Bros. Discovery adquirida por
+Paramount Skydance (cierre 2026-10-06, ultima cotizacion 2026-10-05
+a USD 30.95). Yahoo solo sirve esa barra en WBD y todos los
+cross-listings (WBD.MX, J5A.SG, J5A.DU, J5A.HM, J5A.HA). SKYD es
+entidad fusionada distinta (marketCap 11B vs 77.6B, sin continuidad
+de CUSIP). No hay fix tecnico: el activo no existe. SSGA/BlackRock
+retiraran WBD de sus holdings en el rebalanceo trimestral.
+
+**15 tickers fuera de top-20.** Causa raiz: TOP_N_SECTOR_COMPONENTS=20
+en get_stock_list() + head(20). Ninguna de las 5 fuentes del universo
+(etf_holdings top-20, index_holdings top-20, radar_target_catalog,
+providers EU, universe_expansions) los capturaba. Anadidos a
+universe_expansions.yaml: XLF 9 (MCO KKR AON AJG TFC ALL APO MET
+AFL), XLV 4 (BSX HCA COR CAH, MRNA ya estaba), XLU 1 (CNP), XLY 1
+(NKE). Mecanismo existente, sin tocar codigo.
+
+**Lecciones operativas.**
+- 4 trampas de PowerShell pisadas 1+ vez: Find -Filter "HANDOFF*.md"
+  excluye .txt; ReadAllBytes con ruta relativa resuelve CWD .NET
+  (C:\WINDOWS\system32), no PS; @() + ConvertFrom-Json no
+  desenvuelve Object[] en PS 5.1, Where-Object no filtra;
+  Select-String -SimpleMatch desactiva regex (\b se busca literal).
+- Ancla temporal: insertar HEALTH_STALE_SESSIONS antes de
+  CONFIRMED_INCOMPLETE_DATES desplazo el ancla
+  HEALTH_CHECK_CONFIRMED_INCOMPLETE en ANCLAS.yaml:37 de la linea
+  72 a la 81. Solucion: reordenar F4 DESPUES de
+  CONFIRMED_INCOMPLETE_DATES. Amend + force-with-lease.
+- Predecir el error: la comprobacion "cobertura efectiva del p1_h02"
+  != "peso de holdings del CSV" casi rompe el yaml de expansions.
+  El test contractual detecto el error antes del commit.
+
+**Commits.** c879df71, fc6232d8, 38bc1c42, 90e269ff, 78ce37a2.
+Suite 4062 passed, 2 skipped al cierre.
+

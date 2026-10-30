@@ -7,16 +7,16 @@ junto con `Consolidacion_Documentos/00_ARRANQUE.md`.
 
 ---
 
-## 1. ESTADO AL CIERRE (2026-10-29, sesion 16)
+## 1. ESTADO AL CIERRE (2026-10-30, sesion 18)
 
-HEAD: `47df44ed` (consultar `git log --oneline -1` para el actual).
+HEAD: `78ce37a2` (consultar `git log --oneline -1` para el actual).
 Sincronizacion: main == origin/main al cierre del commit.
 Tests: fuente autoritativa Consolidacion_Documentos/ESTADO_SISTEMA.md.
        Conteo exacto en ESTADO_SISTEMA.md seccion 2 (no literal aqui: cambia con cada commit de test).
 CI HEAD: verde.
 Validation Gate: 11/11 (outputs/state/validation_gate_result.json).
 Working tree: limpio.
-Gobernanza: docs/gobernanza/REGISTRO.yaml, 169 items. Validador reforzado
+Gobernanza: docs/gobernanza/REGISTRO.yaml, 171 items. Validador reforzado
             (detecta ids embebidos, SHA no-string, WONT_FIX en HANDOFF).
 Writers: 25 (output_registry.py).
 
@@ -34,6 +34,19 @@ SOW-HOLDOUT-IMMUTABLE: WONT_FIX 2026-10-29. Razon: cohort es 99.3%
   Promocionados a universe_expansions.yaml (spy_extra + qqq_extra).
   Pendiente descarga en proximo scheduled (23:17 UTC 29-10 o 03:17 UTC).
   Cobertura esperada post-scheduled: SPY 81.5% -> ~85%, QQQ 79% -> ~85%.
+
+Ticker health (autonomia ante eventos corporativos): F1-F4
+  2026-10-30. Causa raiz: WBD adquirida por Paramount Skydance
+  (cierre 2026-10-06), delisted, Yahoo solo sirve ultima barra
+  pre-cierre. Detectado a mano 6h despues. Diseno autonomo:
+  (F1 fc6232d8) data/mappings/ticker_health.yaml + src/ticker_health.py
+  con estados ACTIVE/DELISTED/STALE/TRUNCATED_IPO; (F2 38bc1c42)
+  get_stock_list filtra DELISTED (506 -> 505); (F3 90e269ff) p1_h02
+  reporta n_excluidos (WBD fuera de sin_datos); (F4 78ce37a2)
+  check_ticker_health WARN si ticker ACTIVE stale no clasificado
+  (>=10 sesiones) -> issue automatico -> operador clasifica en yaml
+  -> siguiente run OK. Invariante: ningun ticker ACTIVE pasa 10
+  sesiones sin datos sin que el operador lo sepa.
 
 DICT3-REACCUMULATION: WONT_FIX 2026-10-29. Detector implementado, 18 tests
   T1-T7 verdes, ejecutado sobre cohort (1185 episodios, 1171 evaluables).
@@ -198,14 +211,9 @@ Sesion 16 (2026-10-29): 4 P0 pipeline (tzinfo, YAML, .schema staging, conftest),
   2026-10-28 (universo ETF vs constituyentes, parametros SOW explicitos,
   market proxy fijo). NO depende de cohort (a diferencia de v1.10).
 
-### 4.2. Datos futuros (2)
+### 4.2. Datos futuros (1)
 
 - **WYCKOFF-5BX**: n_confirmed_H20_complete >= 550 (~2027).
-- **TOP20-FALTANTES-DATOS**: IN_PROGRESS. WBD=1 barra local (no resuelto);
-  HONA=93 y SPCX=94 barras locales, no verificadas contra runner. 20
-  tickers del cierre SOW-HOLDOUT pendientes de scheduled verde post-fix
-  7f6d229d (29-10 11:59Z). Verificable con artifact p1-h02-coverage del
-  primer scheduled post-fix.
 
 ### 4.3. Items OPEN observacionales (fechas)
 

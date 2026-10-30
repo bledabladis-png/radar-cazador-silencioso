@@ -44,6 +44,54 @@ Al cerrar una sesion nueva, se anade arriba (las mas recientes primero). Si hay 
 
 ## 3. SESIONES
 
+### 2026-10-30 — Sesion 18: ticker health (WBD) + 15 tickers expansions
+
+**Objetivo.** Cerrar el frente WBD (adquirida por Paramount Skydance)
+y los 15 tickers fuera de top-20 sin datos. Pasar de diagnostico
+manual a sistema autonomo.
+
+**Hecho.**
+- Paquete minimo previo: 3 commits de saneamiento docs/tests
+  (b9d7aee7 contrato workflow, db1713fe HANDOFF/BACKLOG/METODO,
+  e3400a88 rediseno test_h03). 4024 passed.
+- 15 tickers fuera de top-20 anadidos a universe_expansions.yaml
+  (c879df71): XLF 9, XLV 4, XLU 1, XLY 1. Causa raiz:
+  TOP_N_SECTOR_COMPONENTS=20 + head(20) en get_stock_list.
+- WBD diagnostico cerrado: adquirida por Paramount Skydance
+  (cierre 2026-10-06), delisted, Yahoo solo sirve ultima barra
+  pre-cierre (2026-10-05). Cross-listings tambien terminan alli.
+  No hay fix tecnico dentro de las reglas (Yahoo, no imputar).
+- Sistema autonomo ticker_health F1-F4:
+  - F1 fc6232d8: yaml + modulo (estados ACTIVE/DELISTED/STALE/
+    TRUNCATED_IPO). 16 tests.
+  - F2 38bc1c42: get_stock_list filtra DELISTED (506 -> 505).
+  - F3 90e269ff: p1_h02 reporta n_excluidos, WBD fuera de
+    sin_datos. 3 tests AST.
+  - F4 78ce37a2: check_ticker_health en health_check WARN si ticker
+    ACTIVE stale no clasificado. Dispara issue automatico. 7 tests.
+- Lecciones de proceso: 4 trampas de PowerShell pisadas (Find
+  -Filter excluye .txt, ReadAllBytes resuelve CWD .NET,
+  @()+ConvertFrom-Json no desenvuelve, Select-String -SimpleMatch
+  desactiva regex). Ancla temporal HEALTH_CHECK_CONFIRMED_INCOMPLETE
+  rota por insertar bloque antes de tiempo (amend 78ce37a2).
+
+**Commits.** b9d7aee7, db1713fe, e3400a88, 89b6e0a2 (paquete
+minimo), c879df71 (15 expansions), fc6232d8, 38bc1c42, 90e269ff,
+78ce37a2 (ticker_health F1-F4).
+
+**Pendiente.**
+- Verificacion empirica del scheduled: artifact p1-h02 con XLF
+  85.11%, XLV 85.28%, XLU 85.27%, XLY 85.80%. WBD en n_excluidos.
+- ticker_health [OK] con WBD fuera de get_stock_list.
+- 35 holdout cerrados por SOW-HOLDOUT WONT_FIX.
+- HONA/SPCX se resuelven con sesiones.
+
+**Proximo paso sugerido.** Verificar scheduled. Cerrar los items
+observacionales con fecha (H5.3, RECEIPT-AUDIT-LAG,
+CRON-SLOTS-OBS, SCHEDULER-DELAYS). Considerar pre-registro IWM
+(texto ya consensuado con auditor). Documentar reglas force=true
+y push en 07_RUNBOOK.
+
 ### 2026-10-28 — Sesion 15: saneamiento pipeline + 4 tickets deuda
 
 **Objetivo.** Arrancar con estado limpio y atacar tickets de deuda.
@@ -1347,253 +1395,6 @@ en Cross-Module, Struct en Rankings/Indices, N-PORT dos fechas, CFTC Pos
 Change identidad) deben ser coherentes con los commits listados.
 
 ---
-
-### 2026-10-17 - Sostenibilidad: 10 capas de fixes al reporte + auditoria externa
-
-**Objetivo.** Tras auditoria externa del reporte del 2026-10-17, aplicar
-10 capas de fixes con tests contractuales. Eliminar textos categoricos
-sin soporte, literales desincronizados de config, clasificacion de
-regimenes por substring accidental, naming enganoso del CSV. Todo
-pusheado con CI verde.
-
-**Hecho.**
-- Capa 1 (`0d58c5ae`): literales ventana/umbral desde config. 3 tests.
-- Capa 2a (`781da474`): H14 (banda HYG/LQD 0.5->0.75), H15 (texto FLS
-  modular). 8 tests.
-- Capa 2b (`9b3d5b33`): H17 (umbral materialidad 1% en divergencia
-  precio-flujo) + mojibake Confirmacion. 8 tests.
-- Capa 3 (`c2d6b604`): H1 (Referencia:/Generado:, no Fecha: ambiguo),
-  H2 (local_run_id determinista `local-<8hex>`). 11 tests.
-- Capa 5 (`85b79cd9`): H6 (A/D Line declara recalculo por run + universo).
-  6 tests.
-- Capa 4 (`ba4fca3a`, `a92f52e9`, `5d21b45d`): clasificacion exacta de
-  regimenes, CSV financial_regime + real_liq_regime, Expansion: N/5 en
-  INFO Cross-Module. 23 tests. Dictamen Gate 0.5 aprobado con correcciones.
-- Capa 6 (`f2dec91f`, `aa82a549`): eliminar alias legacy liquidity_regime
-  del CSV + script de migracion idempotente, corregir texto de regimen de
-  volatilidad (VELOCIDAD -> VOLATILIDAD REALIZADA). 18 tests.
-- Commit F (`a6adeacd`): renombrar parametros liquidity_regime ->
-  financial_regime en render_alerts/regimenes/sintesis y
-  generate_daily_report. 8 tests adaptados. detect_cross_module_conflict
-  intacto.
-- H4 report (`09f32770`): flow proxy N/D para tickers sin volumen
-  (FX, DX-Y, SPGSCI). E2E con run.py. 4 tests.
-- Gobernanza (`86963d56`): 9 items nuevos FIXED en REGISTRO.yaml.
-- Issue #5 cerrado: `update_sec_13f cancelled` = FALSE_POSITIVE (doble
-  dispatch manual 24-sep, run 36014839961); `cron_slots 3/5` = WONT_FIX
-  (delay GitHub, cubierto por los 5 slots del daily_run).
-
-**Commits.** `09f32770`, `0d58c5ae`, `781da474`, `9b3d5b33`, `c2d6b604`,
-`85b79cd9`, `ba4fca3a`, `a92f52e9`, `5d21b45d`, `f2dec91f`, `aa82a549`,
-`a6adeacd`, `86963d56`.
-
-**Pendiente.**
-- Certificacion scheduled lunes 2026-10-19 23:17 UTC (target_session nuevo).
-- H5.3, C2, Wyckoff 5b.X, SOW v6: sin cambios.
-
-**Proximo paso sugerido.** Verificar scheduled del lunes 23:17 UTC. Si
-a las 23:35 no ha disparado, `gh workflow run daily_run.yml`. Comparar
-bloque INFO Cross-Module del reporte del lunes con el del sabado:
-cambios esperados (Expansion: N/5 si hay modulos en expansion,
-VOLATILIDAD REALIZADA en lugar de VELOCIDAD) deben ser coherentes con
-los commits de la sesion.
-
----
-
-### 2026-10-17 - Fix CI (pyyaml, fetch-depth) + verificacion en produccion enmienda v1.1
-
-**Objetivo.** Diagnosticar y corregir los fallos de CI de los runs
-23:17 UTC (16-oct, exit 2) y 01:19 UTC (17-oct, exit 1). Verificar
-la enmienda v1.1 en produccion.
-
-**Hecho.**
-- P0-A pyyaml: el commit 529f4ed2 introdujo `import yaml` en 4
-  ficheros (2 scripts gobernanza + 2 tests) sin anadir `pyyaml` a
-  requirements.txt. En local pasaba porque `optuna` lo traia como
-  dependencia transitiva. En CI los 3 modulos fallaban en
-  collection, exit 2. Fix `4be5a90c`: `pyyaml==6.0.3`.
-- P0-B shallow clone: tras el fix pyyaml, `test_gobernanza.py::
-  test_registro_real_pasa` fallo (exit 1). `actions/checkout@v4`
-  hace fetch-depth:1; el test verifica existencia de 37 SHAs del
-  REGISTRO contra git. Fix `bd30aecb`: `fetch-depth: 0` en el
-  checkout del job `run-system`. Los otros 3 checkouts no se tocan.
-- P1 US_EQUITY INVALID: no era causa, era estado heredado del
-  ultimo run valido. Se resuelve con un run valido.
-- Verificacion: dispatch 02:17 UTC, run `38994345784`, success.
-  Receipt `COMPLETED` con `contract_validation_status: OK`,
-  `manifest_coverage_pct: 0.9757`, `guard_coverage: OK`,
-  `validation_gate: 10/10`, `pipeline_conclusion: success`.
-  Attempt: `outcome: SUCCESS`, `failed_contracts: []`.
-- 12 items `VERIFIED_IN_CI_PENDING` -> `VERIFIED_IN_PRODUCTION`
-  en REGISTRO (`4e2822b5`). Recuento: 19 FIXED, 1 FALSE_POSITIVE,
-  1 VERIFIED_IN_CI, 13 VERIFIED_IN_PRODUCTION, 21 sin campo.
-- `00_ARRANQUE.md`: eliminar cifra literal ~3388 (drift con
-  ESTADO_SISTEMA), `8ec3fbd7`. Linea 89: 11571 -> 11528 B.
-- HANDOFF reescrito con el ciclo 17-oct: `33550d82`.
-
-**Ampliacion 03:00-04:00 UTC (prevencion).**
-- Fix code smell confirmado con probe: `_collect_failed_contracts`
-  duplicaba `failed_contracts` si un manifest generaba N razones
-  BLOCKED. Movido el append fuera del bucle. `8e96531c`.
-- `tests/test_imports_declarados.py`: import top-level vs
-  requirements.txt, + negativo con mock. Habria cazado pyyaml en
-  0.5s. `30bb02c4`.
-- `tests/test_workflow_fetch_depth.py`: todo job con pytest exige
-  `fetch-depth: 0`. 5 tests (1 positivo + 4 negativos). Habria
-  cazado shallow clone. `0c862502`.
-- `.github/workflows/ci_tests.yml`: suite completa en cada push a
-  main (paths-ignore: data/, outputs/), independiente del gate.
-  Verificado en runs `39000723877` y `39000887521`. `042033a4`.
-- `CI-PREVENTION-GAP`: OPEN -> FIXED -> VERIFIED_IN_PRODUCTION
-  con `042033a4` y los 2 runs como evidencia. `019adbdc`,
-  `161964a3`.
-- `CI-PUSH-NO-VERIF`: `siguiente_accion` incorrecto retirado
-  (`a792fa91`); pyflakes y gobernanza ya eran gates del daily_run.
-
-**Commits (ampliacion).** 8e96531c, 30bb02c4, 0c862502, 019adbdc,
-042033a4, 161964a3.
-
-**Commits totales sesion.** 8ec3fbd7, 4be5a90c, bd30aecb, 4e2822b5,
-33550d82, b63df200, ccff8fca, c91cb76d, a792fa91, d8c42736,
-5ef37d34, 81f8b90f, 93df396f, 3aa67a31, 8e96531c, 30bb02c4,
-0c862502, 3c92cdfd, 019adbdc, 042033a4, 161964a3.
-
-**Pendiente.**
-- Verificacion completa de la enmienda v1.1 desde cero: primer
-  run con target_session nuevo (lunes 2026-10-19 23:17 UTC).
-- H5.3 (cron 20-nov-2026). Sin accion antes.
-- C2 (920), SOW v6, Wyckoff 5b.X: bloqueados.
-- Issue #5.
-
-**Proximo paso sugerido.** Verificar el run del lunes 19-oct
-(target_session nuevo). Si emite receipt COMPLETED con
-contract_validation_status=OK, la enmienda v1.1 queda verificada
-de punta a punta.
-
-**Ampliacion 04:15-05:00 UTC (addendum v1.2).**
-- Verificacion forzada del pipeline (workflow verify_v11.yml,
-  retirado despues): run 39001863568 fallo en Guard coverage con
-  `stock_prices.parquet: coverage_pct_last=0.927 < 0.95`. Es
-  latencia de Yahoo a las 04:15 UTC, no bug. Pipeline real OK en
-  11m35s.
-- El attempt quedo ciego: `outcome: INCOMPLETE` con `reasons: ["sin
-  receipt y sin causa identificada"]` cuando la causa real estaba
-  en el log del guard.
-- Fix: `guard_coverage.py` escribe
-  `outputs/state/guard_coverage_result.json`. `write_completion_attempt`
-  lo lee y emite BLOCKED con la causa. Prioridad: receipt > VG
-  fail > guard fail > contrato fallido > INCOMPLETE sin causa.
-- Addendum v1.2 publicado: `docs/auditoria/daily_run_gate_enmienda_v1_2.md`.
-- `00_ARRANQUE`: mencion del addendum.
-- Tests: +2 guard (result ok/fail) +2 attempt (BLOCKED por guard,
-  VG prioritario). 15 + 11 en los dos ficheros.
-
-**Ampliacion 04:40-05:30 UTC (auditoria del reporte).**
-- Auditoria del reporte del run 38994345784. Hallazgos:
-  - A: STAGFLATION publicado con `ips=-0.387` (guard C2 solo
-    aplicaba al argmax, no post-histeresis). Fix en
-    `indicators/mte/decision.py`: guard post-hist. Si final ==
-    STAGFLATION y no cumple IPS>0.15 AND SRS>0, forzar MIXED.
-    +2 tests.
-  - B: `futures_status: 'BLOCKED'` hardcoded en `engine.py:143`,
-    vestigio de F3-05 (cerrado 2026-09-30). Fix: leer
-    `temporal_meta.by_contract.FUTURE_SETTLEMENT.status`. +1 test.
-  - C (pendiente): sintesis mezcla `macro_regime` (16) con
-    `liquidity_state` (15) sin declararlo. Coberturas N/D en 12
-    fuentes ambiguas (aplica/no aplica vs falta dato). Cross
-    provider validation solo 2 tickers (SPY, AAPL).
-- Addendum v1.2 ampliado: secciones 3.4 (guard C2 post-hist,
-  futures_status real).
-- 00_ARRANQUE: mencion ampliada.
-
-**Ampliacion 05:30-06:00 UTC (verificacion en reporte real).**
-- `py run.py` local (2026-10-17 05:35 UTC, 20 min). El reporte
-  regenerado confirma los 7 fixes:
-  - H1: Yahoo Finance 100.00% cobertura (antes N/D).
-  - H2: 0 lineas N/D en columna Cobertura (antes 13).
-  - H3: FEZ dShares=0 explicito (antes N/D).
-  - H4: LYXI Z-score `N/D (MAD0)` con nota (antes N/D sin motivo).
-  - H5: Spring/SOS 0/0 (antes vacio/[v]).
-  - A: MTE MIXED con ips=-0.387 (antes STAGFLATION).
-  - B: futures_status OK (antes BLOCKED hardcoded).
-- `git checkout -- data/ outputs/` tras verificar (politica
- 01_METODO seccion 4: run manual no es publicacion).
-- Item gobernanza `REP-AUDIT-20261017` (agrupado, 1 item por los 7
-  hallazgos). Verificacion: VERIFIED_IN_PRODUCTION.
-
-**Ampliacion 06:00-06:10 UTC (CI roto y reparado).**
-- Los 5 commits desde H3 (2fef491e, 5dd68152, 65ed84c6, a662d882,
-  27f48986) pushearon con CI rojo. Causa: los tests H1 (Yahoo) y
-  H2 (12 fuentes) leian `data/market_data.parquet` y
-  `outputs/history/*.csv`, ambos gitignored. En local pasaban, en
-  CI no. Patron "verificar en local, no en CI" repetido tras la
-  autocritica de la manana.
-- Deteccion: runs 39005974500, 39006131075, 39006407799,
-  39006745624 (1 failed cada uno), 39006311775 (cancelled por
-  push posterior).
-- Fix 237b080a: reescribir ambos tests con fixtures sinteticos en
-  tmp_path (parquet de 11 sectores + CSVs de rows/sectorial/from_row)
-  + test estructural (declaracion de coverage_logic).
-- Verificacion: simulacion CI (ocultando parquets gitignored +
-  outputs/): 6/6 passed. Local: 6/6 passed. Run CI real 39008384072:
-  3574 passed + 33 skipped + 9 deselected en 80.93s.
-- HANDOFF actualizado al estado 06:06 UTC (5 tramos).
-
-**Commits (ampliacion).** 237b080a (fix tests), b1645634 (HANDOFF).
-
-**Ampliacion 06:10-06:40 UTC (dictamen externo H19-H23).**
-- Recibido dictamen externo sobre addendum v1.2. Aprobado el fondo
-  con 5 precisiones H19-H23.
-- H19: guard_coverage_result con identidad de ejecucion, escritura
-  atomica, placeholder running, excepciones capturadas. 8 tests.
-  Commit c8a265ff.
-- H20: _read_guard_result valida identidad; failed_contracts con
-  GUARD_COVERAGE / GUARD_COVERAGE_UNAVAILABLE. 7 nuevos + 2
-  actualizados. Commit 00c70f4a.
-- H22: tests de persistencia del state MTE (scenario, pending,
-  confidence). 5 tests. Commit 5dbdce8e.
-- H23: futures_status UNAVAILABLE si falta metadato. 6 tests.
-  Commit 20c21c2b.
-- Escenario 5 + I3/I8 extendidos: guard leido antes de VG (ambas
-  causas), orden estricto de steps en yml, guard ok=true no produce
-  CURRENT. 4 tests. Commit 745df9ed.
-- Addendum v1.2 actualizado: seccion 5 con rollback por grupos
-  A/B/C (H21), seccion 6 con APROBADO 2026-10-17 + evidencia de
-  cada condicion.
-- HANDOFF, 00_ARRANQUE y este tramo reflejan APROBADO.
-- ESTADO_SISTEMA regenerado: 3641 passed + 5 skipped (35fcdef7).
-- CI verde: run 39009989796 (head 745df9ed), 3604 passed + 33
-  skipped + 9 deselected.
-
-**Commits (ampliacion).** c8a265ff, 00c70f4a, 5dbdce8e, 20c21c2b,
-745df9ed, 35fcdef7, este commit.
-
-**Nota de proceso.** "Verificar en CI, no solo en local" se ha
-repetido 3 veces en 24h (import yaml, shallow clone, gitignored).
-Regla anotada en 01_METODO seccion 3 (commit bf9a9014). Detector
-AST descartado (6 falsos positivos en 6 casos). La regla queda
-documental + ci_tests.yml en cada push.
-
-**Deuda de proceso reconocida.** "Verificar en CI, no solo en local"
-se ha repetido 3 veces en 24h: 16-oct (import yaml), 17-oct
-madrugada (shallow clone), 17-oct manana (gitignored). Candidato a
-regla en 01_METODO: "si el test lee archivos del repo, comprobar que
-no estan en .gitignore antes de pushear".
-
-**Proximo paso sugerido.** Verificar run scheduled del lunes
-2026-10-19 23:17 UTC (target_session nuevo) con todos los fixes en
-CI. Si emite receipt COMPLETED con contract_validation_status=OK,
-la enmienda v1.1 + addendum v1.2 quedan verificadas de punta a
-punta.
-
-**Commits (ampliacion).** d34c15bb (retirar verify_v11.yml).
-
-**Pendiente.**
-- Addendum v1.2: APROBADO 2026-10-17 (dictamen externo con H19-H23).
-- Run del lunes 19-oct 23:17 UTC: verificacion completa de la
-  enmienda v1.1 + v1.2 desde cero con target_session nuevo.
-- H5.3 (20-nov), C2/SOW/Wyckoff (bloqueados), Issue #5.
-
 
 ## 4. REFERENCIA A SESIONES ANTERIORES
 
