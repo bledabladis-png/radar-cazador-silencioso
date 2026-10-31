@@ -6078,21 +6078,13 @@ items:
 - id: B6-NO-MOJIBAKE-DOCSTRING-COSMETIC
   tipo: deuda_tecnica
   ciclo: '2026-10-31'
-  estado: OPEN
-  descripcion: 'tests/test_no_mojibake.py tiene mojibake cosmetico en su
-
-    docstring (caracteres de doble codificacion por pegado en
-
-    PowerShell). No afecta al test: solo recorre dirs productivos,
-
-    no tests/.
-
-    '
-  siguiente_accion: 'Editar docstring con editor que preserve UTF-8 (VS Code).
-
-    No urgente.
-
-    '
+  estado: FIXED
+  commit: 5d3bdcf2
+  test: tests/test_no_mojibake.py
+  evidencia: |
+    Cerrado en sesion 23 con H13. Docstring del centinela
+    reescrito sin caracteres especiales; el propio test se
+    ejecuta sin mojibake en su docstring. Suite verde.
 - id: B6-H5.1-SENTIMENT-HEADER
   tipo: deuda_tecnica
   ciclo: '2026-10-31'
@@ -6149,7 +6141,11 @@ items:
 - id: B6-H5.4-PERCENTILE-DUP
   tipo: deuda_tecnica
   ciclo: '2026-10-31'
-  estado: OPEN
+  estado: FIXED
+  commit: 5d3bdcf2
+  test: tests/test_options_metrics_classify.py
+  evidencia: |
+    Cerrado en sesion 23 con H13. Eliminada la primera de las dos asignaciones percentile = np.nan en compute_pcr_signals rama else. Suite options verde.
   descripcion: 'indicators/options.py::compute_pcr_signals rama else:
 
     percentile = np.nan declarado dos veces (lineas contiguas).
@@ -6490,7 +6486,11 @@ items:
 - id: B6-PARITY-DARKPOOL-CODING-HEADER
   tipo: deuda_tecnica
   ciclo: 2026-10-31
-  estado: OPEN
+  estado: FIXED
+  commit: 5d3bdcf2
+  test: tests/test_parity_guards_h12.py
+  evidencia: |
+    Cerrado en sesion 23 con H13. darkpool.py y freshness.py con import reubicado debajo de coding declaration. Validador pasa, suite completa verde.
   descripcion: 'darkpool.py: from src.utils import ... en linea 1 antes de
 
     coding declaration. Mismo artefacto en freshness.py.
