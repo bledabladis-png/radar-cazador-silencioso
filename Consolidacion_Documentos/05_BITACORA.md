@@ -202,6 +202,30 @@ ARTIFACT (WONT_FIX razonado), HOLDINGS-SNAPSHOTS-XLF-VACIO
 (WONT_FIX razonado). DICT3-TOP20-COBERTURA queda OPEN con 3/5
 condiciones hechas. P1-H03 invariante 2 atendido con matiz.
 
+**SOW-BEAR-CONFIRMATION cerrado WONT_FIX (sesion 22, tarde):**
+
+Contrato v1.10.1 reescrito (corrige 3 errores de v1.10: usa
+detect_sow_in_range, agrega por holdings con N=3, fija SPY). Modulo
+indicators/sow_bear.py + 12 tests T1-T10 implementados. Probe
+empirico antes del wiring:
+
+- 9 fechas bear historicas (2022-05-17 a 2022-12-28, muestreo
+  cada 20 sesiones): 0/9 con >=1 sector disparando.
+- Hoy (2026-10-30, SPY no bear): 0/11 sectores con >=3 SOW
+  CONFIRMED en M=5.
+
+Causa: la cascada BC->AR->Range->SOW solo completa en minoria de
+holdings (XLF 6/34, XLRE 2/20, XLU 3/21). SOW es evento de ruptura
+puntual (~1/ano/holding). Pedir 3 coincidentes en M=5 sesiones es
+estadisticamente casi imposible. La metrica esta mal elegida para
+el sustrato.
+
+Rollback: revert f043b87e (modulo + tests + doc 57 v1.10.1
+eliminados). Contrato v1.10 original conservado como referencia del
+error de diseno. Idea valida, metrica incorrecta. Si en el futuro
+se redefine para medir estado (fases DISTRIBUTION/MARKDOWN) en vez
+de evento puntual, pre-registro nuevo.
+
 ### 2026-10-31 — Sesion 21: coherencia analisis vs descarga + BRK.B residual
 
 **Objetivo.** Auditar el reporte generado por el run local

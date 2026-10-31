@@ -1793,7 +1793,26 @@ items:
 - id: SOW-BEAR-CONFIRMATION
   tipo: frente
   ciclo: '2026-10-24'
-  estado: IN_PROGRESS
+  estado: WONT_FIX
+  razon: |
+    Probe empirico 2026-10-31 (sesion 22) sobre 9 fechas bear
+    historicas (2022-05-17 a 2022-12-28, muestreo cada 20 sesiones):
+    0 sectores disparan la etiqueta con N=3. Ademas, hoy (2026-10-30,
+    SPY no bear) 0 de 11 sectores tienen >=3 holdings con SOW
+    CONFIRMED en ventana M=5. Causa: el sustrato no permite que la
+    etiqueta dispare. La cascada BC->AR->Range->SOW solo completa en
+    una minoria de holdings (XLF: 6/34, XLRE: 2/20, XLU: 3/21).
+    SOW es un evento de ruptura puntual que ocurre ~1 vez por ano
+    por holding; pedir 3 coincidentes en M=5 sesiones es
+    estadisticamente casi imposible. El contrato v1.10.1 esta bien
+    escrito pero la metrica esta mal elegida para el sustrato. No se
+    implementa. Modulo sow_bear.py revertido (commit f043b87e
+    revertido). Doc 57 v1.10.1 eliminado. El contrato v1.10 original
+    (caa0ec9e) se conserva como referencia historica del error de
+    diseno. Si en el futuro se redefine la metrica para medir estado
+    (p.ej. >=3 holdings en phase=DISTRIBUTION/MARKDOWN) en vez de
+    evento puntual, pre-registro nuevo. Idea valida, metrica
+    incorrecta.
   descripcion: |
     Nuevo frente tras cierre del SOW universal (SOW-V6 -> WONT_FIX).
     El patron bear es real: 3/3 anos con >10% dias bear funcionan (2018,

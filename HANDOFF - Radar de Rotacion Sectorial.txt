@@ -362,10 +362,6 @@ Sesion 16 (2026-10-29): 4 P0 pipeline (tzinfo, YAML, .schema staging, conftest),
   2026-10-26). Se mantiene OPEN como evidencia del rechazo; el frente
   que lo sustituyo (DICT3-H04-INFERENCE-V2) se cerro WONT_FIX 2026-10-29.
 
-- **SOW-BEAR-CONFIRMATION**: v1.10.1 sin redactar. 3 P0 del dictamen
-  2026-10-28 (universo ETF vs constituyentes, parametros SOW explicitos,
-  market proxy fijo). NO depende de cohort (a diferencia de v1.10).
-
 ### 4.2. Datos futuros (1)
 
 - **WYCKOFF-5BX**: n_confirmed_H20_complete >= 550 (~2027).
@@ -485,7 +481,7 @@ Contrato del gate: docs/auditoria/daily_run_gate_contrato_v1.md +
 
 Expediente Wyckoff (docs/auditoria/wyckoff/):
   51-56: SOW-V6 (7 experimentos, cerrado WONT_FIX).
-  57: SOW-BEAR v1.10 (sin redactar v1.10.1).
+  57: SOW-BEAR v1.10 (WONT_FIX 2026-10-31, metrica incorrecta).
   58: SOW-HOLDOUT v1.2 (WONT_FIX 2026-10-29).
   59: DICT3-REACCUMULATION v4 (WONT_FIX 2026-10-29).
   60: Resultado REACCUMULATION (informe empirico).
