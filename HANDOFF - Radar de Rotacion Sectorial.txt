@@ -9,14 +9,14 @@ junto con `Consolidacion_Documentos/00_ARRANQUE.md`.
 
 ## 1. ESTADO AL CIERRE (2026-10-31, sesion 22)
 
-HEAD: `898cee63` (consultar `git log --oneline -1` para el actual).
+HEAD: `3cde52bc` (consultar `git log --oneline -1` para el actual).
 Sincronizacion: main == origin/main al cierre del commit.
 Tests: fuente autoritativa Consolidacion_Documentos/ESTADO_SISTEMA.md.
        Conteo exacto en ESTADO_SISTEMA.md seccion 2 (no literal aqui: cambia con cada commit de test).
-CI HEAD: verde (run 41213132185 sobre 898cee63).
+CI HEAD: verde (run 41221924046 sobre 8e1a0ccf; 3cde52bc = bitacora).
 Validation Gate: 11/11 (outputs/state/validation_gate_result.json).
 Working tree: limpio.
-Gobernanza: docs/gobernanza/REGISTRO.yaml, 210 items. Validador reforzado
+Gobernanza: docs/gobernanza/REGISTRO.yaml, 219 items. Validador reforzado
             (detecta ids embebidos, SHA no-string, WONT_FIX en HANDOFF).
 Writers: 25 (output_registry.py).
 DICT-CONTRACT: 10 pares cubiertos (PCR + SECTOR-RESULTS cross-module
@@ -185,6 +185,29 @@ Autonomia externa: retry 3x backoff exponencial en SSGA, BlackRock,
 22 tickers nuevos en universe_expansions.yaml (spy_extra 19 + qqq_extra 1
 + DDOG/MRNA ya en xlk/xlv_extra). Verificado: Yahoo sirve los 20 nuevos
 con 2513 sesiones, US_EQUITY, get_market OK. Proximo scheduled los descarga.
+
+FASE 2 - Auditoria por bloques tematicos (2026-10-31, sesion 22):
+  Plan original 8 bloques (B1-B8) con los 13 patrones de
+  01b_PATRONES + 5 nuevos (dead code funcional, cascada abortada,
+  literal fragil, fuente de verdad duplicada, fallback silencioso
+  sin WARN). Cerrados hoy B5 y B1. Pendientes B2, B3, B4, B6,
+  B7, B8.
+  - B5 (outputs/persistencia) completo, 3 bugs + 2 deudas:
+    B5.1 writer schema fail-closed (afada0ea), B5.2 4 WARN en
+    utils (6146f5c4), B5.3 check 11 fail-closed + B5.4 guard
+    macro_score (d1097ab0). Deuda MACRO-SCORE-EMPTY-LATENTE
+    OPEN (render no verificado).
+  - B1 (temporal) completo, 2 bugs + 2 deudas:
+    B1-FX-PER-PAIR (88964dbf) bug real con datos (EURUSD/USDJPY
+    lag 1 vs max 0, agregado decia STALE), B1-RUN-IMPORT-
+    REGRESION (88964dbf) regresion propia destapada por E2E
+    (run.py:21 importaba constantes movidas), B1-PER-TICKER-LAG-
+    DECORATIVO WONT_FIX (5 contratos, discrepancia real solo en
+    INDEX_EOD_EUROPA), FASE2-BARRIDO-CONSUMIDORES-ROTOS OPEN
+    (CI no verifica entry points).
+  CI no detecta imports rotos en entry points (run.py, scripts/):
+  solo E2E los destapa. Test centinela test_run_module_import.py
+  cubre run.py; falta por scripts/.
 
 ---
 
@@ -367,7 +390,7 @@ Sesion 16 (2026-10-29): 4 P0 pipeline (tzinfo, YAML, .schema staging, conftest),
 
 ## 4. PENDIENTES VIVOS
 
-### 4.1. Bloqueados por auditor externo (3)
+### 4.1. Bloqueados por auditor externo (2)
 
 - **C2-920**: discrepancia 920 baseline IAE. Auditor debe publicar comando
   + HEAD del valor externo (-4.264.449.932). Sin eso, no reproducible.
@@ -395,14 +418,49 @@ Sesion 16 (2026-10-29): 4 P0 pipeline (tzinfo, YAML, .schema staging, conftest),
 - **IWM-HOLDINGS-EXPANSION**: IWM tiene 1977 holdings, top-20 cubre
   ~6.8% del peso. Para 50% haría falta descargar ~700 tickers. El
   sistema holdings-based no gana nada con microcaps. Cerrar como
-  WONT_FIX razonado o abrir trabajo de descarga.
+  WONT_FIX razonado o abrir trabajo de descarga. Recomendacion
+  WONT_FIX razonado pendiente de decision.
 
-### 4.5. Pendiente de verificacion (proximo scheduled)
+### 4.5. Fase 2 pendiente (bloques por auditar)
 
-- **20 tickers nuevos** (19 SPY + SHOP QQQ) descargados en proximo
-  scheduled (23:17 UTC 29-10 o 03:17 UTC 30-10). Verificar con:
-  `gh run download <rid> -n p1-h02-coverage -D tmp` + inspeccionar CSV.
-  SPY esperado ~85%, QQQ esperado ~85%.
+Plan original: 8 bloques (B1-B8) con los 13 patrones de
+01b_PATRONES + 5 nuevos. Cerrados hoy B5 y B1. Pendientes:
+
+- **B2 (pipelines descarga)**: stock_data_loader, data_loader,
+  data/providers/, scripts/update_*_holdings.py. Rate limiting,
+  cache, retry, proveedores externos. Bugs ambientales.
+- **B3 (Wyckoff)**: indicators/wyckoff_*.py + sector_wyckoff_
+  distribution. Sistema holdings-based. Ya muy trabajado hoy
+  (600+ tests, E2E); ROI inmediato bajo.
+- **B4 (motores/regimen)**: regimes/*, indicators/sector_regime_
+  matrix.py, sector_rank_score.py, engines.py, evidence_matrix.py.
+  Feed del reporte. Prioridad alta: el fix XLC del MTE (fc07b634)
+  no ha sido acompanado de auditoria de los otros motores.
+- **B6 (reporte)**: src/report/* (20 modulos) + report_generator.py.
+  Render, PIT, doble conteo. Prioridad alta: por FASE2-BARRIDO-
+  CONSUMIDORES-ROTOS (pendiente) + MACRO-SCORE-EMPTY-LATENTE
+  (pendiente de B5.4).
+- **B7 (IAE)**: src/institutional_accumulation/* (36 ficheros).
+  Subsistema con su propio contrato.
+- **B8 (scripts audit)**: scripts/audit/*, guard_coverage.py,
+  write_completion_receipt.py, pipeline_gate.py. Bugs afectan
+  a CI.
+
+Orden sugerido: B6, B4, B3, B2, B7, B8.
+
+### 4.6. Deudas Fase 0/2 abiertas (solo OPEN)
+
+- **FASE0-BARRIDO-SCRIPTS**: 441 hits en scripts/, prioridad
+  baja. Mayoría calibracion legitima.
+- **MACRO-SCORE-EMPTY-LATENTE**: writer guard OK en B5.4,
+  render no verificado para macro_score vacio. B6.
+- **FASE2-BARRIDO-CONSUMIDORES-ROTOS**: CI no verifica entry
+  points (run.py, scripts/). Test centinela cubre run.py; falta
+  scripts/. B6/B8.
+
+Items Fase 0/2 cerrados (FIXED/WONT_FIX): ver bitacora sesion 22
+y REGISTRO.yaml. No se listan aqui (regla gobernanza: items
+cerrados no aparecen como pendientes en HANDOFF).
 
 ---
 
