@@ -61,6 +61,18 @@ Estas son las reglas que hemos aprendido rompiendo cosas. Se aplican.
 - **Al regenerar un golden, probe de invariancia ANTES.** Si el test no es invariante al cambio, el test esta mal diseñado — se arregla el test, no se regenera a ciegas.
 - **AST check bloqueante para refactors de whitespace.** `ast.dump(ast.parse(antes)) == ast.dump(ast.parse(despues))`. Sin eso, un colapso puede alterar semantica silenciosamente.
 
+- **Normalizar holdings en origen, no en cada consumidor.**
+  `holdings_df` se carga de `etf_holdings.csv` sin normalizar. Cada
+  modulo hijo (`stock_metrics`, `rs_internal`, `sector_concentration`,
+  `wyckoff_holdings_report`) normaliza por su cuenta. Si un modulo
+  nuevo olvida normalizar, BRK.B (holdings) vs BRK-B (parquet) se
+  pierde silenciosamente. Caso 2026-10-31 (commit `e04b53ff`): O2
+  expuso gap n_valid_return20=33 < n_valid_rs=34 en XLF por BRK.B.
+  Fix estructural pendiente: normalizar UNA VEZ en `load_stocks_data`
+  y anadir `assert all(normalize(t) == t for t in holdings_df["ticker"])`.
+  Elimina la clase entera. Deuda: `HOLDINGS-NORMALIZACION-EN-ORIGEN`
+  OPEN en REGISTRO.
+
 **Sobre auditoria:**
 - **"El sistema prevalece sobre la documentacion."** Un comentario que dice una cosa y el codigo otra: manda el codigo.
 - **Un dump de consola no es evidencia.** Para bugs, probes reproducibles. Para encoding, `read_bytes` + `repr`.
