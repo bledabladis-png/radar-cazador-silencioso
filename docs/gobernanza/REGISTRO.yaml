@@ -4537,3 +4537,85 @@ items:
   evidencia: |
     Detectado al cerrar B5.4. El writer ya no crashea; el render no
     esta verificado para ese caso.
+- id: B1-FX-PER-PAIR
+  tipo: bug
+  ciclo: '2026-10-31'
+  estado: FIXED
+  commit: '88964dbf'
+  test: tests/test_temporal_contracts_remaining.py
+  evidencia: |
+    Fase 2 B1 (temporal). FX_DAILY_CUT declaraba per_pair_max_lag
+    {EURUSD:0, USDJPY:0, USDCNY:1} pero resolve() colapsaba a max()
+    via compute_status. Bug real con datos 2026-10-30: EURUSD lag 1
+    (max 0) e USDJPY lag 1 (max 0) violaban contrato pero el
+    agregado decia STALE. Fix: resolver per-par, cada par con su
+    status, agregado = peor (BLOCKED > INSUFFICIENT > STALE > OK),
+    per_member relleno con detalle. Verificado: EURUSD/USDJPY
+    INSUFFICIENT, USDCNY STALE, agregado INSUFFICIENT. E2E: py
+    run.py exit=0 (14.6 min), FX_DAILY_CUT=INSUFFICIENT (antes
+    STALE). 4 tests nuevos (TestFxDailyCutPerPair).
+- id: B1-RUN-IMPORT-REGRESION
+  tipo: bug
+  ciclo: '2026-10-31'
+  estado: FIXED
+  commit: '88964dbf'
+  test: tests/test_run_module_import.py
+  evidencia: |
+    Regresion introducida por 3aa51d51 (fix ticker_hardcoded): al
+    mover USA_INDEX_ETFS/EU_INDEX_ETFS de wyckoff_holdings_report a
+    config.tickers, run.py:21 seguia importando del modulo antiguo.
+    CI verde porque NINGUN test importa run.py. E2E (primer intento
+    del fix FX_DAILY_CUT) lo destapo: ImportError al arrancar el
+    pipeline. Misma clase que 1fb791ab (consumidor no verificado).
+    Fix: import de config.tickers. Test centinela nuevo
+    test_run_module_import.py: import run + AST check de origen de
+    las constantes. Cierra la clase para run.py.
+- id: B1-PER-TICKER-LAG-DECORATIVO
+  tipo: auditoria_interna
+  ciclo: '2026-10-31'
+  estado: WONT_FIX
+  razon: |
+    Fase 2 B1. 5 contratos declaran per_ticker_lag pero solo usan
+    max_lag_days (colapsado a max o valor uniforme):
+    INDEX_EOD_USA (max 1, per_ticker todos 1), INDEX_EOD_EUROPA
+    (max 5, per_ticker ^FTSE 1, ^GDAXI 2, ^IBEX 2, ^STOXX50E 2),
+    FUTURE_SETTLEMENT (max 1, per_ticker todos 1),
+    RATE_YIELD (max 1, per_ticker todos 1),
+    VOLATILITY_INDEX (max 1, per_ticker todos 1).
+    Solo INDEX_EOD_EUROPA tiene lags heterogeneos reales (^FTSE 1 vs
+    resto 2), y su max_lag_days=5 es mas permisivo que cualquier
+    per_ticker. Un ^FTSE con lag 3 (deberia INSUFFICIENT con max 1)
+    pasaria como STALE (max 5). Mismo bug que FX_DAILY_CUT pero sin
+    impacto medido: el contrato no es critico y el estado agregado
+    ya es STALE/OK en produccion, no BLOCKED. ROI bajo de fix
+    comparado con FX (que tenia lag 1 vs max 0, discrepancia > 0 en
+    el mismo run). Si el auditor pide granularidad per-ticker,
+    generalizar compute_status. No se toca hoy. WONT_FIX razonado.
+- id: FASE2-BARRIDO-CONSUMIDORES-ROTOS
+  tipo: deuda_tecnica
+  ciclo: '2026-10-31'
+  estado: OPEN
+  descripcion: |
+    B1-RUN-IMPORT-REGRESION (88964dbf) expuso que 3aa51d51 rompio
+    run.py sin que CI lo detectara. La suite no importa run.py,
+    scripts de produccion ni otros puntos de entrada. Cualquier
+    refactor de firma o movimiento de constante puede romper un
+    consumidor no verificado. Es la clase 1fb791ab aplicada a
+    entry points (no a dicts internos).
+  siguiente_accion: |
+    Barrido en B6 (reporte) y B8 (scripts): para cada constante o
+    funcion movida/cambiada en los ultimos 2 dias, verificar que
+    TODOS los consumidores (incluidos entry points, scripts,
+    workflows CI) siguen funcionando. Candidatos iniciales:
+    - Constantes movidas a config.tickers en 3aa51d51 (verificar
+      scripts/ y .github/workflows/).
+    - Firma de persist() en output_writer (B5.1 fail-closed).
+    - resolve_effective_date en manifest (B5.2 WARN).
+    Estrategia: import de modulo + AST de imports. Test centinela
+    por entry point (ya hay uno para run.py; falta para
+    scripts/*.py que se invocan desde CI).
+  evidencia: |
+    Detectado al cerrar B1. El test test_run_module_import.py cubre
+    run.py; los 34 scripts de scripts/ no estan cubiertos por
+    import-check. Prioridad media (no hay bugs activos conocidos,
+    pero el patron se puede repetir).
