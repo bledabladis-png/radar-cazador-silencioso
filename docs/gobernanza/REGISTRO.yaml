@@ -4955,3 +4955,27 @@ items:
     NaN -> nan% porque isinstance(NaN, float) = True. Fix:
     pd.notna. I3 resuelto con I1. I4 descartado (productor emite
     dict o None). 8 tests.
+# --- B3 Wyckoff, hallazgo sesion 23, 2026-10-31 ---
+- id: WYCKOFF-RENDERS-HUERFANOS
+  tipo: deuda_tecnica
+  ciclo: '2026-10-31'
+  estado: OPEN
+  descripcion: |
+    Dos renders de src/report/sector_context.py quedaron huerfanos
+    tras el refactor Wyckoff sesion 3 (commit 4bc45fd3, C4.3):
+    - render_representatividad_lider
+    - render_divergencia_sector_lideres
+    Sus productores (indicators/leader_representativeness.py y
+    indicators/sector_leader_divergence.py) fueron retirados en
+    ese mismo commit. Los renders sobreviven en sector_context.py,
+    con tests propios, pero report_generator.py no los importa ni
+    invoca. No estan rompiendo produccion (nadie los llama), pero
+    son dead code funcional: si alguien los cablea pensando que
+    siguen siendo validos, reciben None/DataFrame vacio y degradan
+    silenciosamente. Detectado al auditar sector_context.py en B6.
+  siguiente_accion: |
+    Eliminar en B3 (Wyckoff): los 2 renders + sus tests asociados.
+    Los tests que los cubren (test_sector_context.py si existe,
+    test_report_leaders_* restantes, etc.) se eliminan o adaptan
+    segun corresponda. No re-cablear: la funcionalidad se retiro
+    conscientemente en sesion 3.
