@@ -40,7 +40,7 @@ def _to_ts(v):
         pass
     try:
         return pd.Timestamp(v).normalize()
-    except Exception:
+    except (ValueError, TypeError):
         return None
 
 

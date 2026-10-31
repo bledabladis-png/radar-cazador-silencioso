@@ -110,7 +110,7 @@ def resolve_cusip(cusip, report_period, exceptions_df):
     cusip_str = str(cusip).strip()
     try:
         period = pd.Timestamp(report_period).normalize()
-    except Exception:
+    except (ValueError, TypeError):
         return None
 
     sub = exceptions_df[exceptions_df["CUSIP"].astype(str).str.strip() == cusip_str]

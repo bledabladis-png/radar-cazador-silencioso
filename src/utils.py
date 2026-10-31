@@ -195,7 +195,7 @@ def _observation_date_from_df(df, col=None):
             return None
         try:
             idx = pd.to_datetime(df.index, errors='coerce')
-        except Exception:
+        except (ValueError, TypeError):
             return None
         idx = pd.DatetimeIndex(idx)
     idx = idx.dropna()

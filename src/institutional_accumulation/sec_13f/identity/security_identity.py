@@ -323,7 +323,7 @@ def _find_active_equivalence(cusip, report_period, eq_df):
         return []
     try:
         period = pd.Timestamp(report_period).normalize()
-    except Exception:
+    except (ValueError, TypeError):
         return []
     active = sub[
         (sub["valid_from"] <= period)
@@ -396,7 +396,7 @@ def _find_active_crosswalk(cusip, report_period, cw_df):
         return []
     try:
         period = pd.Timestamp(report_period).normalize()
-    except Exception:
+    except (ValueError, TypeError):
         return []
     active = sub[
         (sub["valid_from"].isna() | (sub["valid_from"] <= period))

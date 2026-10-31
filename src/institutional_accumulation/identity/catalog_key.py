@@ -98,7 +98,7 @@ def _to_date(v):
         return None
     try:
         return pd.Timestamp(s).normalize()
-    except Exception:
+    except (ValueError, TypeError):
         return None
 
 
