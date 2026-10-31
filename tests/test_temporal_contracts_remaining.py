@@ -14,6 +14,8 @@ from src.temporal_contracts import (
     VALID_STATUSES,
     STATUS_BLOCKED,
     STATUS_INSUFFICIENT,
+    STATUS_OK,
+    STATUS_STALE,
 )
 
 
@@ -190,3 +192,101 @@ class TestGetContractAll9:
         for name in names:
             c = get_contract(name)
             assert c.name == name
+
+
+# =============================================================================
+# FX-PER-PAIR (2026-10-31, Fase 2 B1)
+# =============================================================================
+
+class TestFxDailyCutPerPair:
+    """Fix: FX_DAILY_CUT resolvia per-par, no agregado.
+
+    Antes compute_status colapsaba per_pair_max_lag a max(). Bug real:
+    EURUSD con lag 1 (max 0) se clasificaba STALE en el agregado. Ahora
+    cada par tiene su propio status y el agregado es el peor.
+    """
+
+    def _make_df(self, fechas_por_par):
+        """fechas_por_par: {pair: last_date_str}. Todos con Close no-NaN."""
+        idx = pd.date_range("2026-10-01", "2026-10-31", freq="B")
+        data = {}
+        for pair, last in fechas_por_par.items():
+            series = pd.Series(float("nan"), index=idx)
+            series.loc[:last] = 1.0
+            data[("Close", pair)] = series
+        return pd.DataFrame(data, index=idx)
+
+    def test_todos_mismo_lag_cero_ok(self):
+        # Todos los pares con ultima fecha = expected -> OK
+        df = self._make_df({
+            "EURUSD=X": "2026-10-30",
+            "USDJPY=X": "2026-10-30",
+            "USDCNY=X": "2026-10-30",
+        })
+        ref = pd.Timestamp("2026-10-30").to_pydatetime()
+        r = FxDailyCut().resolve(df, ref)
+        assert r.status == STATUS_OK, r.status
+        for pair, info in r.per_member.items():
+            assert info["status"] == STATUS_OK, f"{pair}: {info['status']}"
+
+    def test_eurusd_lag1_insufficient(self):
+        """T1: EURUSD (max 0) con lag 1 -> INSUFFICIENT, no STALE."""
+        df = self._make_df({
+            "EURUSD=X": "2026-10-29",
+            "USDJPY=X": "2026-10-30",
+            "USDCNY=X": "2026-10-30",
+        })
+        ref = pd.Timestamp("2026-10-30").to_pydatetime()
+        r = FxDailyCut().resolve(df, ref)
+        # EURUSD con lag 1 y max 0 -> INSUFFICIENT
+        assert r.per_member["EURUSD=X"]["status"] == STATUS_INSUFFICIENT
+        assert r.per_member["EURUSD=X"]["max_lag_days"] == 0
+        # Los otros OK
+        assert r.per_member["USDJPY=X"]["status"] == STATUS_OK
+        assert r.per_member["USDCNY=X"]["status"] == STATUS_OK
+        # Agregado: peor = INSUFFICIENT
+        assert r.status == STATUS_INSUFFICIENT
+
+    def test_usdcny_lag1_stale(self):
+        """T2: USDCNY (max 1) con lag 1 -> STALE, correcto."""
+        df = self._make_df({
+            "EURUSD=X": "2026-10-30",
+            "USDJPY=X": "2026-10-30",
+            "USDCNY=X": "2026-10-29",
+        })
+        ref = pd.Timestamp("2026-10-30").to_pydatetime()
+        r = FxDailyCut().resolve(df, ref)
+        assert r.per_member["USDCNY=X"]["status"] == STATUS_STALE
+        assert r.per_member["USDCNY=X"]["max_lag_days"] == 1
+        assert r.per_member["EURUSD=X"]["status"] == STATUS_OK
+        assert r.per_member["USDJPY=X"]["status"] == STATUS_OK
+        # Agregado: peor = STALE
+        assert r.status == STATUS_STALE
+
+    def test_agregado_es_peor_estado(self):
+        """T3: si un par es INSUFFICIENT y otro STALE, agregado = INSUFFICIENT."""
+        df = self._make_df({
+            "EURUSD=X": "2026-10-28",  # lag 2, max 0 -> INSUFFICIENT
+            "USDJPY=X": "2026-10-30",  # OK
+            "USDCNY=X": "2026-10-29",  # lag 1, max 1 -> STALE
+        })
+        ref = pd.Timestamp("2026-10-30").to_pydatetime()
+        r = FxDailyCut().resolve(df, ref)
+        assert r.status == STATUS_INSUFFICIENT, (
+            f"INSUFFICIENT debe dominar a STALE. status={r.status}"
+        )
+
+    def test_per_member_tiene_las_tres_claves(self):
+        """T4: per_member expone los 3 pares con sus status."""
+        df = self._make_df({
+            "EURUSD=X": "2026-10-30",
+            "USDJPY=X": "2026-10-30",
+            "USDCNY=X": "2026-10-30",
+        })
+        ref = pd.Timestamp("2026-10-30").to_pydatetime()
+        r = FxDailyCut().resolve(df, ref)
+        assert set(r.per_member.keys()) == {"EURUSD=X", "USDJPY=X", "USDCNY=X"}
+        for pair, info in r.per_member.items():
+            for k in ("effective_date", "lag_days", "coverage",
+                      "max_lag_days", "status"):
+                assert k in info, f"{pair} sin clave {k}"

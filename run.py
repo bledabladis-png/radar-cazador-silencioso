@@ -18,7 +18,8 @@ from src.pipeline.flows_primary import compute_flows_primary
 from src.pipeline.flows_secondary import compute_flows_secondary
 from src.pipeline.stocks_data import load_stocks_data
 from indicators.stock_metrics import compute_all_stock_metrics
-from indicators.wyckoff_holdings_report import compute_wyckoff_snapshot, USA_INDEX_ETFS, EU_INDEX_ETFS
+from indicators.wyckoff_holdings_report import compute_wyckoff_snapshot
+from config.tickers import USA_INDEX_ETFS, EU_INDEX_ETFS
 from src.pipeline.sector_metrics import compute_sector_metrics
 from src.pipeline.wyckoff_holdings import compute_wyckoff_holdings
 from src.pipeline.holdings_snapshot import compute_and_persist_holdings_snapshot

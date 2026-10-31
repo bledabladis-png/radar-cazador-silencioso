@@ -4,8 +4,6 @@ Cutoff 17:00 ET. Lag heterogeneo por par (per_pair_max_lag).
 """
 from __future__ import annotations
 
-from typing import Optional
-
 import pandas as pd
 
 from src.temporal_contracts._common import (
@@ -17,6 +15,11 @@ from src.temporal_contracts.base import (
     TemporalContract,
     TemporalResolution,
     compute_status,
+    STATUS_BLOCKED,
+    STATUS_INSUFFICIENT,
+    STATUS_OK,
+    STATUS_PENDING,
+    STATUS_STALE,
 )
 
 
@@ -34,35 +37,64 @@ class FxDailyCut(TemporalContract):
     def resolve(
         self, df_market: pd.DataFrame, reference_date
     ) -> TemporalResolution:
-        res = resolve_universe(
-            df_market, self.eligible_universe, self.min_coverage
-        )
-        effective = to_date(res.get("date"))
+        """Resuelve per-par (FX-PER-PAIR 2026-10-31, Fase 2 B1).
+
+        Antes colapsaba per_pair_max_lag a max() y todos los pares
+        heredaban el lag mas permisivo. Bug: EURUSD con lag 1 (max 0)
+        se clasificaba STALE en el agregado. Ahora cada par tiene su
+        propio status, y el agregado es el peor (BLOCKED > INSUFFICIENT
+        > STALE > OK). per_member devuelve el detalle por par.
+        """
         expected = fx_expected(reference_date)
-        if effective is not None and expected is not None:
-            lag = (expected - effective).days
-        else:
-            lag = res.get("lag_days")
-        coverage = res.get("coverage")
-        status = compute_status(
-            effective_date=effective,
-            expected_date=expected,
-            lag_days=lag,
-            coverage=coverage,
-            max_lag_days=self.max_lag_days,
-            min_coverage=self.min_coverage,
-        )
+        per_member = {}
+        _rank = {STATUS_BLOCKED: 4, STATUS_INSUFFICIENT: 3,
+                 STATUS_STALE: 2, STATUS_PENDING: 1, STATUS_OK: 0}
+        worst_status = STATUS_OK
+        worst_effective = None
+        worst_lag = None
+        worst_coverage = None
+        for pair in self.eligible_universe:
+            res = resolve_universe(df_market, [pair], self.min_coverage)
+            effective = to_date(res.get("date"))
+            if effective is not None and expected is not None:
+                lag = (expected - effective).days
+            else:
+                lag = res.get("lag_days")
+            coverage = res.get("coverage")
+            if isinstance(self.max_lag_days, dict):
+                max_lag_pair = self.max_lag_days.get(pair)
+            else:
+                max_lag_pair = self.max_lag_days
+            status_pair = compute_status(
+                effective_date=effective,
+                expected_date=expected,
+                lag_days=lag,
+                coverage=coverage,
+                max_lag_days=max_lag_pair,
+                min_coverage=self.min_coverage,
+            )
+            per_member[pair] = {
+                "effective_date": effective,
+                "lag_days": lag,
+                "coverage": coverage,
+                "max_lag_days": max_lag_pair,
+                "status": status_pair,
+            }
+            if _rank.get(status_pair, 0) > _rank.get(worst_status, 0):
+                worst_status = status_pair
+                worst_effective = effective
+                worst_lag = lag
+                worst_coverage = coverage
+            elif worst_effective is None and effective is not None:
+                worst_effective = effective
+                worst_lag = lag
+                worst_coverage = coverage
         return TemporalResolution(
             contract_name=self.name,
-            effective_date=effective,
+            effective_date=worst_effective,
             expected_date=expected,
-            lag_days=lag,
-            coverage=coverage,
-            status=status,
-            per_member=self._per_member(res),
+            lag_days=worst_lag,
+            coverage=worst_coverage,
+            status=worst_status,
+            per_member=per_member,
         )
-
-    @staticmethod
-    def _per_member(res: dict) -> Optional[dict]:
-        # Placeholder para futura descomposicion por par.
-        return None
