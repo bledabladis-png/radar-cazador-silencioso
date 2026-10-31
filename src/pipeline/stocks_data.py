@@ -21,6 +21,9 @@ HOLIDAY_MODE_COVERAGE_THRESHOLD = 0.5
 def load_stocks_data(reference_date=None, run_id=None):
     """Carga df_stocks, effective_meta y holdings_df.
 
+    holdings_df trae ticker (original) y ticker_norm (Yahoo)
+    desde 2026-10-31. Contrato en docs/auditoria/wyckoff/79_*.md.
+
     Returns:
         dict con keys:
             df_stocks (DataFrame | None),
@@ -70,6 +73,16 @@ def load_stocks_data(reference_date=None, run_id=None):
             else:
                 HOLIDAY_MODE = True
             holdings_df = pd.read_csv(ETF_HOLDINGS_PATH)
+            # HOLDINGS-NORMALIZACION-EN-ORIGEN (2026-10-31).
+            # ticker_norm para lookup en parquet; ticker (original)
+            # para output. Contrato: docs/auditoria/wyckoff/79_*.md.
+            from src.instrument_registry import (
+                normalize_yahoo_ticker as _norm_yh,
+            )
+            holdings_df["ticker_norm"] = holdings_df["ticker"].apply(_norm_yh)
+            assert holdings_df["ticker_norm"].apply(_norm_yh).equals(
+                holdings_df["ticker_norm"]
+            ), "load_stocks_data: ticker_norm no idempotente."
 
             if HOLIDAY_MODE:
                 df_stocks = None

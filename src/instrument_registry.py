@@ -759,6 +759,61 @@ def normalize_yahoo_ticker(t):
     return YAHOO_TICKER_MAP.get(t, t)
 
 
+def ensure_ticker_norm(df):
+    """Garantiza columna ticker_norm en un holdings_df. Idempotente.
+
+    Contrato HOLDINGS-NORMALIZACION-EN-ORIGEN (2026-10-31,
+    docs/auditoria/wyckoff/79_*.md). load_stocks_data ya anade
+    ticker_norm al cargar. Este helper es la red de seguridad
+    para consumidores que reciben holdings_df desde tests u otros
+    caminos. Si ticker_norm ya existe, cero overhead (retorno
+    inmediato). Si no, calcula desde ticker via
+    normalize_yahoo_ticker.
+
+    Reglas:
+    - df None o sin columna 'ticker': devuelve df tal cual.
+    - df con 'ticker_norm': devuelve df sin tocar (idempotente).
+    - df con 'ticker' sin 'ticker_norm': copia + anade columna.
+      No muta el df original.
+    """
+    if df is None or "ticker" not in getattr(df, "columns", []):
+        return df
+    if "ticker_norm" in df.columns:
+        return df
+    df = df.copy()
+    df["ticker_norm"] = df["ticker"].apply(normalize_yahoo_ticker)
+    return df
+
+
+def get_ticker_norm(row):
+    """Extrae ticker_norm de una fila (Series, dict) con fallback.
+
+    Contrato HOLDINGS-NORMALIZACION-EN-ORIGEN (2026-10-31).
+    Para consumidores que iteran filas individuales (no DataFrames
+    completos). Si la fila trae ticker_norm, lo devuelve. Si no,
+    calcula desde ticker via normalize_yahoo_ticker.
+
+    Acepta pandas.Series (usa .index) o dict (usa .keys()).
+    Uso tipico en _evaluate_holding de wyckoff_holdings_report:
+    hrow puede venir de un holdings_df que paso por
+    ensure_ticker_norm (produccion) o de un test sintetico con solo
+    ticker.
+    """
+    idx = getattr(row, "index", None)
+    if idx is not None:
+        if "ticker_norm" in idx:
+            return row["ticker_norm"]
+        return normalize_yahoo_ticker(row["ticker"])
+    if isinstance(row, dict):
+        if "ticker_norm" in row:
+            return row["ticker_norm"]
+        return normalize_yahoo_ticker(row["ticker"])
+    raise TypeError(
+        "get_ticker_norm: se esperaba Series o dict, recibido {!r}".format(
+            type(row).__name__)
+    )
+
+
 def resolve_symbol(canonical_ticker: str, provider: str):
     """Devuelve el simbolo del proveedor para un ticker canonico.
 

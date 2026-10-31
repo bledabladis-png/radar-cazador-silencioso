@@ -8,7 +8,7 @@ No alimenta motores, scores, pesos ni State Machine.
 import pandas as pd
 import numpy as np
 from src.utils import get_col
-from src.instrument_registry import normalize_yahoo_ticker
+from src.instrument_registry import ensure_ticker_norm
 
 def _get_series(df, ticker, field):
     try:
@@ -44,19 +44,21 @@ def compute_sector_concentration(df_stocks, holdings_df, full_metrics_df,
     if full_metrics_df is None or full_metrics_df.empty:
         return pd.DataFrame()
 
+    holdings_df = ensure_ticker_norm(holdings_df)
     for sector_etf in holdings_df['etf'].unique():
-        tickers = holdings_df[holdings_df['etf'] == sector_etf]['ticker'].tolist()
+        _sh = holdings_df[holdings_df['etf'] == sector_etf]
+        tickers = _sh['ticker'].tolist()
+        ticker_norms = _sh['ticker_norm'].tolist()
         sector_full = full_metrics_df[full_metrics_df['sector'] == sector_etf]
 
         # Retornos 20d para concentración positiva
         ret20_list = []
-        for ticker in tickers:
+        for ticker, ticker_norm in zip(tickers, ticker_norms):
             # 2026-10-30: holdings usa BRK.B, parquet BRK-B. Sin
             # normalizar, _get_series devuelve Series vacia (KeyError
             # silencioso) y el ticker cae de ret_df. Bug medido en
             # XLF: n_valid_return20=33 vs n_valid_rs=34. Preset en
             # WYCKOFF-TICKER-NORMALIZATION (2026-10-27).
-            ticker_norm = normalize_yahoo_ticker(ticker)
             close = _get_series(df_stocks, ticker_norm, 'Close').dropna()
             if close.empty:
                 continue

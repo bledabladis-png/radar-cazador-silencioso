@@ -12,7 +12,9 @@ from __future__ import annotations
 import pandas as pd
 
 from indicators.wyckoff_orchestrator import classify_phase
-from src.instrument_registry import normalize_yahoo_ticker
+from src.instrument_registry import (
+    ensure_ticker_norm, get_ticker_norm,
+)
 from src.utils import get_col, _observation_date_from_df
 
 
@@ -230,6 +232,7 @@ def compute_wyckoff_snapshot(
     ):
         if holdings_df is None or holdings_df.empty:
             continue
+        holdings_df = ensure_ticker_norm(holdings_df)
         obs_date = _observation_date_from_df(df_stocks)
         for group_key, group in holdings_df.groupby("etf"):
             if selection_mode == "nlargest":
@@ -277,7 +280,7 @@ def _evaluate_holding(df_stocks, group_key, hrow, group_type, has_name, obs_date
     # WYCKOFF-TICKER-NORMALIZATION (2026-10-26, P1-H02): holdings usa
     # BRK.B pero parquet usa BRK-B. Sin normalizar, BRK.B se descarta
     # silenciosamente de XLF (12.32% peso). Ver REP-AUDIT-P1H02-NORM.
-    ticker_norm = normalize_yahoo_ticker(ticker)
+    ticker_norm = get_ticker_norm(hrow)
     try:
         close_series = get_col(df_stocks, ticker_norm, "Close").dropna()
     except (KeyError, ValueError, TypeError):

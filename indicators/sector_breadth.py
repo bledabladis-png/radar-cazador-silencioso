@@ -8,7 +8,7 @@ import pandas as pd
 import numpy as np
 from src.utils import get_col
 from src.market_calendar import is_market_day, previous_market_day
-from src.stock_data_loader import normalize_yahoo_ticker
+from src.instrument_registry import ensure_ticker_norm
 from config.settings import TOP_N_SECTOR_COMPONENTS
 
 def _get_series(df, ticker, field):
@@ -54,13 +54,13 @@ def compute_sector_breadth(df_market, df_stocks, holdings_df, as_of_date=None, t
             )
 
     rows = []
+    holdings_df = ensure_ticker_norm(holdings_df)
     for sector_etf, group in holdings_df.groupby('etf'):
         # A1 fix 2026-09-24: replicar el cap de get_stock_list() para
         # que n_total mida el universo real (top-N por weight), no el ETF completo.
         if 'weight' in group.columns:
             group = group.sort_values('weight', ascending=False)
-        tickers = [normalize_yahoo_ticker(t)
-                   for t in group['ticker'].head(TOP_N_SECTOR_COMPONENTS).tolist()]
+        tickers = group['ticker_norm'].head(TOP_N_SECTOR_COMPONENTS).tolist()
         # Métricas por ticker
         ema20_above = []
         ema50_above = []

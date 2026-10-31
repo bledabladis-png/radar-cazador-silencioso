@@ -17,7 +17,7 @@ import numpy as np
 from indicators.wyckoff_v1 import wyckoff_score, wyckoff_stability, detect_spring, detect_sos
 from indicators.wyckoff_orchestrator import classify_phase
 from src.utils import robust_zscore, get_col
-from src.instrument_registry import normalize_yahoo_ticker
+from src.instrument_registry import ensure_ticker_norm
 from config.settings import MAX_CANDIDATES_PER_SECTOR
 from config.weights import WLS_WEIGHTS, WLS_PERSISTENCE_FACTOR
 
@@ -286,13 +286,13 @@ def compute_all_stock_metrics(df_market, df_stocks, holdings_df, temporal_meta=N
     # el universo completo de algun ETF (IWM 1977 holdings).
     _available = {c[1] for c in df_stocks.columns if c[0] == "Close"}
     full_metrics_data = []
+    holdings_df = ensure_ticker_norm(holdings_df)
     for sector_etf, group in holdings_df.groupby("etf"):
         sector_holdings = group.copy()
         if "weight" in sector_holdings.columns:
             sector_holdings = sector_holdings.sort_values("weight", ascending=False)
         stocks = []
-        for _t_raw in sector_holdings["ticker"].tolist():
-            _tn = normalize_yahoo_ticker(_t_raw)
+        for _tn in sector_holdings["ticker_norm"].tolist():
             if _tn in _available:
                 stocks.append(_tn)
                 if len(stocks) >= MAX_CANDIDATES_PER_SECTOR:
