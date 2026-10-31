@@ -175,7 +175,81 @@ Rollback de `outputs/history` y `outputs/state` al cerrar.
 ~4.5-5h. Pre-registro (30 min) + wireado PSY/PS (30 min) + schema bump
 en report (1h) + tests (1.5h) + E2E (30 min) + docs (30 min).
 
-## 10. Decisiones
+## 10. Estado del contrato (2026-10-31, tras auditoria)
+
+**WONT_FIX razonado. No se implementa.**
+
+Durante la fase de wireado (sesion 22) se descubrio que el diseno
+del pre-registro era incorrecto. La implementacion se detuvo antes
+del schema bump. Rollback de `indicators/wyckoff_distribution.py` y
+`indicators/wyckoff_accumulation.py` (sin diff en `main`).
+
+### 10.1. Por que B completo no aporta valor
+
+**Hallazgo 1: la cascada aborta antes de enriquecer en la mayoria de
+tickers.**
+
+`_enrich_dist_evidence` / `_enrich_acc_evidence` solo se invocan si
+la cascada de clasificacion (BC -> AR -> Range -> SOW/SOS) llega
+hasta el final. Bench 2026-10-31 sobre 4 tickers:
+
+    AAPL: PSY=None, mSOW=None, lpsy=None, st_dist=None, ... (cascada abortada)
+    NVDA: idem
+    JPM:  idem
+    XOM:  PSY=NOT_OBSERVED, mSOW=NOT_OBSERVED, ... (cascada completa)
+
+Tres de cuatro no tienen cascada completa. Los 6 detectores que ya
+existian tampoco se ejecutan para ellos. Anadir columnas al CSV
+habria metido 16 columnas vacias en el 75% de las filas.
+
+**Hallazgo 2: los detectores solo miran la ultima barra.**
+
+Doc 62 lo decia: "Solo escanea la ultima barra del df. El consumidor
+puede escanear por scan_window si lo necesita."
+
+PSY es un evento de UNA barra especifica (rechazo + volumen + nuevo
+high). En produccion seria siempre "hoy". Un PSY ocurre ~1 vez cada
+50 sesiones por ticker. En `df.loc[:hoy]` con una sola barra,
+`NOT_OBSERVED` es el resultado esperado el 98% de los dias.
+
+**Consecuencia:** incluso con wireado + schema bump, PSY/PS y los 6
+eventos existentes aparecerian casi siempre vacios o NOT_OBSERVED.
+El CSV ganaria 16 columnas sin informacion. El "0/50" del ARRANQUE
+era correcto en produccion, aunque los detectores funcionen en
+backtest.
+
+**Probe 2026-10-31 (backtest, no produccion):** PSY 35/3843, PS
+8/3960 en 20 holdings con 200+ fechas historicas. Ese resultado no
+se transfiere a produccion porque el diseno solo evalua la ultima
+barra.
+
+### 10.2. Lo que haria falta para que PSY/PS aporten valor
+
+Escaneo por ventana en produccion: evaluar N sesiones (20-60) por
+ticker en cada run. Coste estimado: +30-45 min al run (de 15 a
+45-60). Decision de producto importante.
+
+Pre-registro propio (doc 81) si se decide. No se hace ahora.
+
+### 10.3. Deudas que este item cierra
+
+- Doc 62 linea 264: "Calibrar PSY/PS con pre-registro formal". El
+  probe demuestra que la calibracion no es el problema: el problema
+  es que no se escanean ventanas. Rectificado.
+- Doc 62 linea 265: "Renderizar evidencia pasiva". No se implementa
+  por los hallazgos anteriores. Si en el futuro se hace escaneo por
+  ventana, esta deuda se reabre con contexto correcto.
+
+### 10.4. Lo que este item NO cierra
+
+- `detect_psy` / `detect_ps` siguen sin wirearse. Siguen siendo dead
+  code funcional.
+- Los 6 detectores (mSOW, mSOS, LPSY, LPS, ST_dist, ST_acc) siguen
+  calculandose y descartandose en los tickers con cascada completa.
+  Ineficiencia (~20ms/ticker) pero no defecto.
+- ARRANQUE seccion 4.2 se rectifica en el mismo commit.
+
+## 11. Decisiones
 
 - **B sobre B1 (columnas vs columna unica con eventos)**: pandas
   filtra directamente, sin parsear strings. Mas limpio para analisis.

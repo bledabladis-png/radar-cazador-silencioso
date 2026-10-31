@@ -9,14 +9,14 @@ junto con `Consolidacion_Documentos/00_ARRANQUE.md`.
 
 ## 1. ESTADO AL CIERRE (2026-10-31, sesion 22)
 
-HEAD: `771f5ecc` (consultar `git log --oneline -1` para el actual).
+HEAD: `167a4587` (consultar `git log --oneline -1` para el actual).
 Sincronizacion: main == origin/main al cierre del commit.
 Tests: fuente autoritativa Consolidacion_Documentos/ESTADO_SISTEMA.md.
        Conteo exacto en ESTADO_SISTEMA.md seccion 2 (no literal aqui: cambia con cada commit de test).
-CI HEAD: verde (run 41168189797 sobre 771f5ecc).
+CI HEAD: verde (run 41168566035 sobre 4b5e3c5f; 167a4587 solo docs).
 Validation Gate: 11/11 (outputs/state/validation_gate_result.json).
 Working tree: limpio.
-Gobernanza: docs/gobernanza/REGISTRO.yaml, 199 items. Validador reforzado
+Gobernanza: docs/gobernanza/REGISTRO.yaml, 200 items. Validador reforzado
             (detecta ids embebidos, SHA no-string, WONT_FIX en HANDOFF).
 Writers: 25 (output_registry.py).
 DICT-CONTRACT: 10 pares cubiertos (PCR + SECTOR-RESULTS cross-module
@@ -33,6 +33,13 @@ DICT3-TOP20-COBERTURA: OPEN, condiciones 1-3 del dictamen externo
   2026-10-31 atendidas en 771f5ecc (invariante 2 ejecutado con
   matiz, evidencia f71eb49c, renumeracion doc 70-v2d). Condiciones
   4-5 pendientes.
+WYCKOFF-EVENTS-ARTIFACT: WONT_FIX. Pre-registro doc 80 firmado
+  167a4587. Hallazgo: la cascada de clasificacion aborta antes de
+  _enrich_*_evidence en la mayoria de tickers y los detectores solo
+  evaluan la ultima barra; anadir 16 columnas al CSV habria metido
+  vacios en 75% de filas. PSY/PS disparan en backtest (probe
+  2026-10-31) pero solo aportan con escaneo por ventana (feature
+  pendiente, +30-45 min/run). Ver doc 80 seccion 10.
 
 Sistema Wyckoff: holdings-based + snapshot PIT append-only REAL.
 structure_ratio: continuo en sector_regime_matrix v2. DESCRIPTIVO.

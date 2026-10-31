@@ -4124,24 +4124,61 @@ items:
     XLK 25/25, XLV 26/26, todos REACHED). Sin relacion con el fix
     HOLDINGS 0e3b0dd3. Siguiente scheduled (lunes 2026-11-02) debe
     pasar con el fix a692fafb.
+- id: WYCKOFF-EVENTS-ARTIFACT
+  tipo: deuda_tecnica
+  ciclo: '2026-10-31'
+  estado: WONT_FIX
+  razon: |
+    Pre-registro doc 80 v1 firmado (commit 167a4587), pero la
+    implementacion se detuvo durante el wireado: la cascada de
+    clasificacion aborta antes de _enrich_*_evidence en la mayoria
+    de tickers (bench: 3 de 4 tickers). Anadir 16 columnas de
+    eventos al CSV habria metido columnas vacias en el 75% de las
+    filas. Ademas los detectores solo evaluan la ultima barra: en
+    produccion PSY ocurre ~1 vez cada 50 sesiones por ticker, asi
+    que NOT_OBSERVED seria el valor esperado el 98% de los dias.
+    Para que PSY/PS aporten valor hace falta escaneo por ventana en
+    produccion (evaluar N sesiones por ticker). Coste: +30-45 min
+    al run. Decision de producto pendiente. Doc 80 seccion 10
+    documenta el hallazgo completo.
+- id: HOLDINGS-SNAPSHOTS-XLF-VACIO
+  tipo: auditoria_interna
+  ciclo: '2026-10-31'
+  estado: WONT_FIX
+  razon: |
+    Observacion: holdings_snapshots.csv tiene 0 filas para XLF en
+    2026-10-26 (fecha con 4 ETFs europeos escritos: ISF.L, FEZ,
+    LYXI, DAXEX). Diagnostico: NO es bug. Es diseno PIT append-only
+    documentado en holdings_snapshot.py: "Solo se anade si la
+    composicion de algun (source_file, etf) cambia respecto al
+    ultimo snapshot registrado". Los 15 ETFs USA (incluido XLF) no
+    cambiaron entre 2026-10-23 y 2026-10-26, asi que no se
+    reescribieron. Comportamiento correcto. Si en el futuro se
+    necesita snapshot diario de todos los ETFs (no solo cambios),
+    es feature nueva con coste de espacio (15 ETFs x 500 tickers x
+    N dias). No hay accion hoy.
+
 - id: PSY-PS-PROBE-HISTORICO
   tipo: deuda_tecnica
   ciclo: '2026-10-31'
-  estado: OPEN
-  descripcion: |
-    PSY/PS no disparan (0/50) en el historico actual 2022-08-11 ->
-    2026-10-30 (4.2 anos en bull). Hipotesis sin verificar: umbral
-    alto + regimen. Alternativa: bug de condicion en
-    wyckoff_distribution.py. Derivado de C.12 de
-    HANDOFF-SIN-RESPUESTA-ENTRANTE-21.
-  siguiente_accion: |
-    Probe historico: correr el detector PSY/PS sobre 2020-2022
-    (COVID crash + bear 2022) y verificar si dispara. Si dispara,
-    transitorio (regimen actual). Si no dispara, bug de umbral o
-    condicion. Test + doc del probe en sesion dedicada.
+  estado: FIXED
+  commit: '167a4587'
   evidencia: |
-    HANDOFF §2.3 declara 0/50 en el historico actual. Respuestas
-    del saliente (2026-10-31) reconocen que no se ha verificado.
+    Probe ejecutado 2026-10-31 (sesion 22). Scripts en
+    outputs/audit/_probe_psy_ps_*.py. Resultados:
+    - ETFs sectoriales (11, market_data.parquet 2016-2026):
+      bear_2022: PSY 0/495, PS 2/495.
+      bull_2022-26: PSY 10/2035, PS 0/2035.
+    - Holdings (20 tickers muestra, stock_prices.parquet):
+      bear_2022: PSY 0/374, PS 2/374.
+      bull_2022-26: PSY 35/3843, PS 8/3960.
+    Conclusion: los detectores FUNCIONAN. El "0/50" del ARRANQUE
+    era correcto en produccion pero enganoso: los detectores no
+    estan wireados (dead code) y, aunque lo estuvieran, solo
+    evaluan la ultima barra + dependen de cascada completa. El
+    problema real es de diseno (escaneo por ventana), no de
+    calibracion de umbrales. Ver doc 80 seccion 10 y item
+    WYCKOFF-EVENTS-ARTIFACT.
 - id: DAILY-RUN-FAIL-40992758129
   tipo: frente
   ciclo: '2026-10-31'

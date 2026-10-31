@@ -183,7 +183,13 @@ Datos exactos: `sector_concentration.csv` (`n_valid_rs`, `n_total`, `coverage_rs
 - `61_utad_spring_pending_v1.md`: UTAD_PENDING/SPRING_PENDING fallo A3 (ratio 8.67x > 5x). No se ajusto.
 
 **Limitaciones documentadas:**
-- PSY/PS no disparan con umbrales actuales (0/50).
+- PSY/PS: dead code funcional. Detectores implementados y testeados,
+  disparan en backtest (probe 2026-10-31: PSY 35/3843, PS 8/3960 en
+  20 holdings 2022-26), pero no estan wireados en produccion. Aunque
+  se wirearan, no aportarian valor visible: los detectores solo
+  evaluan la ultima barra y la mayoria de tickers no completan la
+  cascada BC->AR->Range->SOW. Visibles solo si se hiciera escaneo
+  por ventana (feature pendiente, doc 80 seccion 10).
 - `current_phase_basis` no va al CSV del reporte (solo al CSV descargable).
 - `ACCUMULATION=0` en produccion: transitorio por diseno.
 - Validation Gate no reproducible standalone (WONT_FIX razonado).

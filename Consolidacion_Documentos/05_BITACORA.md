@@ -158,6 +158,50 @@ PARCIAL, DAILY-RUN-FAIL-41159854920, HANDOFF-SIN-RESPUESTA-
 ENTRANTE-21. DICT3-TOP20-COBERTURA queda OPEN con 3/5 condiciones
 hechas. P1-H03 invariante 2 atendido con matiz.
 
+**Cierre tardio (misma fecha, tras probar WYCKOFF-EVENTS-ARTIFACT):**
+
+Se intento B completo para el frente WYCKOFF-EVENTS-ARTIFACT
+(doc 80): wirear PSY/PS + exponer 8 detectores de evidencia pasiva
+al CSV (16 columnas nuevas, schema v1->v2). Pre-registro firmado en
+167a4587. Wireado aplicado en local, benchmark 62->70ms/ticker.
+**Detectado durante la verificacion: 3 de 4 tickers (AAPL, JPM,
+NVDA) no completan la cascada BC->AR->Range->SOW; los 8 detectores
+no se ejecutan para ellos. XOM si. Esto invalida el diseno del
+pre-registro.**
+
+Ademas los detectores solo evaluan la ultima barra (doc 62
+explicito). En produccion PSY ocurre ~1 vez cada 50 sesiones por
+ticker; NOT_OBSERVED seria el valor esperado el 98% de los dias.
+
+Rollback del wireado (`git checkout -- indicators/wyckoff_*.py`,
+sin diff en main). Reclasificado WYCKOFF-EVENTS-ARTIFACT a
+WONT_FIX. Doc 80 seccion 10 documenta el hallazgo completo.
+PSY-PS-PROBE-HISTORICO pasa a FIXED con el probe:
+- ETFs sectoriales (11): bear PSY 0/495 PS 2/495; bull PSY 10/2035
+  PS 0/2035.
+- Holdings (20 tickers): bear PSY 0/374 PS 2/374; bull PSY 35/3843
+  PS 8/3960.
+Conclusion: los detectores funcionan. El problema es de diseno (solo
+ultima barra + cascada condicional), no de calibracion.
+
+HOLDINGS-SNAPSHOTS-XLF-VACIO (observacion de sesion 22):
+WONT_FIX razonado. No es bug, es diseno PIT append-only: solo se
+escribe (source_file, etf) cuando cambia el hash. 2026-10-26 solo
+cambiaron 4 ETFs europeos; los 15 USA (XLF incluido) no cambiaron
+respecto al 23-oct.
+
+ARRANQUE seccion 4.2 rectificado: "PSY/PS no disparan" era enganoso.
+Ahora describe el estado real (dead code funcional, sin wirear,
+diseno de ultima barra impide aportacion visible).
+
+**Frentes cerrados hoy (recuento final):** DICT-CONTRACT-FRAMEWORK
+100%, HOLDINGS-NORMALIZACION-EN-ORIGEN, GUARD-COVERAGE-LAST-DATE-
+PARCIAL, DAILY-RUN-FAIL-41159854920, HANDOFF-SIN-RESPUESTA-
+ENTRANTE-21, PSY-PS-PROBE-HISTORICO (FIXED), WYCKOFF-EVENTS-
+ARTIFACT (WONT_FIX razonado), HOLDINGS-SNAPSHOTS-XLF-VACIO
+(WONT_FIX razonado). DICT3-TOP20-COBERTURA queda OPEN con 3/5
+condiciones hechas. P1-H03 invariante 2 atendido con matiz.
+
 ### 2026-10-31 — Sesion 21: coherencia analisis vs descarga + BRK.B residual
 
 **Objetivo.** Auditar el reporte generado por el run local
