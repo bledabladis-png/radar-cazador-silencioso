@@ -192,8 +192,6 @@ Datos exactos: `sector_concentration.csv` (`n_valid_rs`, `n_total`, `coverage_rs
 
 ### 4.3. Pendientes vivos
 
-- **PCR-CONTRACT:** OPEN. Productor `indicators/options.py::compute_pcr_signals`, consumer `src/report/sentiment.py::render_sentimiento_opciones` (21 lecturas). No cubierto por DICT-CONTRACT-FRAMEWORK (productor en modulo distinto). Cubrir sesion 22+ si ROI.
-- **SECTOR-RESULTS-CONTRACT:** OPEN. Productor `indicators/sector_rank_score.py::compute_sector_rank_score`, consumer `src/report/rankings.py::render_ranking_sectorial_unificado`. Idem.
 - **DICT3-TOP20-COBERTURA:** OPEN, pendiente respuesta del auditor a doc 70-v2d. A.2c desplegado condicionado (4 de 6 acciones cerradas).
 - **DICT3-H04-INTERVALS:** OPEN, registro del rechazo del IC95 inferencial. Evidencia del rechazo, no accionable.
 - **C2 (920):** BLOCKED_EXTERNAL. Auditor debe publicar comando + HEAD del valor externo (-4.264.449.932). Sin eso, no reproducible.

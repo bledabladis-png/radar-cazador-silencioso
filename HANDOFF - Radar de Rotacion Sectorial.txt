@@ -9,18 +9,18 @@ junto con `Consolidacion_Documentos/00_ARRANQUE.md`.
 
 ## 1. ESTADO AL CIERRE (2026-10-31, sesion 22)
 
-HEAD: `78a0e106` (consultar `git log --oneline -1` para el actual).
+HEAD: `5a976288` (consultar `git log --oneline -1` para el actual).
 Sincronizacion: main == origin/main al cierre del commit.
 Tests: fuente autoritativa Consolidacion_Documentos/ESTADO_SISTEMA.md.
        Conteo exacto en ESTADO_SISTEMA.md seccion 2 (no literal aqui: cambia con cada commit de test).
-CI HEAD: verde (run 41152251740 sobre 78a0e106).
+CI HEAD: verde (run 41153727309 sobre 5a976288).
 Validation Gate: 11/11 (outputs/state/validation_gate_result.json).
 Working tree: limpio.
 Gobernanza: docs/gobernanza/REGISTRO.yaml, 195 items. Validador reforzado
             (detecta ids embebidos, SHA no-string, WONT_FIX en HANDOFF).
 Writers: 25 (output_registry.py).
-DICT-CONTRACT: 9 pares cubiertos (PCR cross-module anadido 2026-10-31).
-               Whitelist 1 par (SECTOR-RESULTS pendiente).
+DICT-CONTRACT: 10 pares cubiertos (PCR + SECTOR-RESULTS cross-module
+               anadidos 2026-10-31). Whitelist 0 pares.
 
 Sistema Wyckoff: holdings-based + snapshot PIT append-only REAL.
 structure_ratio: continuo en sector_regime_matrix v2. DESCRIPTIVO.

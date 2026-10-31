@@ -3948,14 +3948,15 @@ items:
 - id: PCR-CONTRACT
   tipo: deuda_tecnica
   ciclo: '2026-10-30'
-  estado: OPEN
-  siguiente_accion: |
-    Cubrir contrato AST entre indicators/options.py::
-    compute_pcr_signals (productor real) y src/report/sentiment.py::
-    render_sentimiento_opciones (consumer, 21 lecturas de pcr_data).
-    El wrapper _compute_pcr (market_data.py) solo propaga el dict;
-    el productor esta en indicators/options.py, no analizado en el
-    plan 2026-10-30. Cubrir en sesion 20 si ROI.
+  estado: FIXED
+  commit: '78a0e106'
+  test: tests/test_pcr_contract.py
+  verificacion: |
+    Cerrado 2026-10-31 (sesion 22). Productor real
+    indicators/options.py::compute_pcr_signals (23 claves tras
+    eliminar duplicado en 623b5dd3). Consumer lee 20. Contrato
+    honrado; no habia bug, solo hueco de contrato. Par anadido a
+    DICT_CONTRACT_PAIRS; whitelist 2 -> 1.
   descripcion: |
     Par identificado por el heuristico del DICT-CONTRACT-FRAMEWORK
     (2026-10-30) como "dict real sin contrato". En whitelist
@@ -3968,14 +3969,16 @@ items:
 - id: SECTOR-RESULTS-CONTRACT
   tipo: deuda_tecnica
   ciclo: '2026-10-30'
-  estado: OPEN
-  siguiente_accion: |
-    Cubrir contrato AST entre indicators/sector_rank_score.py::
-    compute_sector_rank_score (productor real de sector_results) y
-    src/report/rankings.py::render_ranking_sectorial_unificado
-    (consumer, lee sector_results['ranking'][:EXPECTED_SECTOR_COUNT]).
-    El productor esta en indicators/, no analizado en el plan
-    2026-10-30. Cubrir en sesion 20 si ROI.
+  estado: FIXED
+  commit: '5a976288'
+  test: tests/test_sector_results_contract.py
+  verificacion: |
+    Cerrado 2026-10-31 (sesion 22). Productor real es
+    regimes/sector_regime.py::compute_sector_rank_score (4 claves:
+    scores, ranking, regime, last_scores). La whitelist apuntaba al
+    wrapper sectors_base.py::compute_sectors_base; ruta corregida.
+    Consumer lee 1 clave (ranking). Par anadido a
+    DICT_CONTRACT_PAIRS; whitelist 1 -> 0.
   descripcion: |
     Par identificado por el heuristico del DICT-CONTRACT-FRAMEWORK
     (2026-10-30). render lee sector_results['ranking'] (lista de

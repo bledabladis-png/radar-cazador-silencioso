@@ -95,10 +95,16 @@ PCR-CONTRACT (OPEN desde sesion 20).
 - HOLDINGS-NORMALIZACION-EN-ORIGEN: E2E obligatorio por METODO §4.
 - Verificar scheduled con HEAD actual: primer run real lunes
   2026-11-02.
-- HANDOFF a HEAD 78a0e106 (tras este commit).
+- HANDOFF a HEAD 5a976288.
 
-**Proximo paso sugerido.** Sesion 23: SECTOR-RESULTS-CONTRACT
-(cierra whitelist a 0) + actualizar HANDOFF a HEAD actual.
+**Cierre real.** 5a976288 (SECTOR-RESULTS-CONTRACT FIXED). HANDOFF
+y bitacora alineados a HEAD 5a976288 tras commit de cierre. CI verde
+en 41153727309. DICT-CONTRACT: 10 pares, whitelist 0.
+
+**Proximo paso sugerido.** Sesion 23: HOLDINGS-NORMALIZACION-EN-
+ORIGEN (E2E obligatorio, METODO seccion 4) o cerrar HANDOFF-SIN-
+RESPUESTA-ENTRANTE-21 con decision del operador sobre las 6 sin
+canal. Verificar daily_run real del lunes 2026-11-02.
 
 ### 2026-10-31 — Sesion 21: coherencia analisis vs descarga + BRK.B residual
 
