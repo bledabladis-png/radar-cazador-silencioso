@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """Manifiesto y heuristica de contratos dict productor-consumidor.
 
-Cierra el plan de cierre de la clase 1fb791ab (2026-10-30). Los 8
+Cierra el plan de cierre de la clase 1fb791ab (2026-10-30). Los 9
 pares cubiertos por contrato AST o schema estan en DICT_CONTRACT_PAIRS.
 Los pares identificados pero no cubiertos estan en
 DICT_CONTRACT_WHITELIST con su razon.
@@ -61,6 +61,11 @@ DICT_CONTRACT_PAIRS = {
     ("src/pipeline/mte_confirmation.py", "_compute_confirmation",
      "src/report/alerts.py", "render_alerts"):
         "tests/test_flows_confirmation_contract.py",
+    # Cross-module: producer en indicators/options.py::compute_pcr_signals.
+    # Antes en whitelist; cubierto por test_pcr_contract.py (2026-10-31).
+    ("indicators/options.py", "compute_pcr_signals",
+     "src/report/sentiment.py", "render_sentimiento_opciones"):
+        "tests/test_pcr_contract.py",
 }
 
 # Pares identificados pero NO cubiertos en el plan 2026-10-30. Razon:
@@ -68,10 +73,6 @@ DICT_CONTRACT_PAIRS = {
 # indicators/sector_rank_score.py) que no ha pasado por el analisis
 # de AST/schema del plan. Cubrir en sesion 20 si ROI.
 DICT_CONTRACT_WHITELIST = frozenset({
-    ("src/pipeline/market_data.py", "_compute_pcr",
-     "src/report/sentiment.py", "render_sentimiento_opciones",
-     "producer real indicators/options.py::compute_pcr_signals; "
-     "no analizado en plan 2026-10-30"),
     ("src/pipeline/sectors_base.py", "compute_sectors_base",
      "src/report/rankings.py", "render_ranking_sectorial_unificado",
      "sector_results nested de compute_sector_rank_score; no analizado "
@@ -103,9 +104,9 @@ def test_manifest_pares_tienen_test_correspondiente():
 def test_whitelist_justificada():
     """La whitelist no crece sin justificacion (anti whitelist creep)."""
     # Si crece, actualizar este numero y justificar en commit.
-    assert len(DICT_CONTRACT_WHITELIST) == 2, (
+    assert len(DICT_CONTRACT_WHITELIST) == 1, (
         f"La whitelist tiene {len(DICT_CONTRACT_WHITELIST)} pares "
-        f"(esperado 2). Si es una decision consciente, actualizar "
+        f"(esperado 1). Si es una decision consciente, actualizar "
         f"este test con el nuevo conteo y justificar en el mensaje "
         f"del commit. Si no, revisar si el nuevo par debe estar "
         f"cubierto por contrato AST/schema."
