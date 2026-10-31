@@ -11,7 +11,6 @@ N3 - liquidity_state.json declara severidad_cruda=TENSION_ELEVADA y
 
 Los fixes NO degradan confidence ni scores. Solo visibilizan.
 """
-import json
 
 from src.report.volatility_mte import render_mte
 from src.report.header import render_regimenes
@@ -72,15 +71,8 @@ def test_mte_futures_status_no_altera_confidence():
 # N3: render_regimenes debe publicar severidad_cruda si no es OK
 # ============================================================
 def _regimenes(tmp_path, liq_state=None, monkeypatch=None):
-    """Helper: renderiza regimenes con un liquidity_state.json controlado."""
-    state_dir = tmp_path / "outputs" / "state"
-    state_dir.mkdir(parents=True)
-    if liq_state is not None:
-        (state_dir / "liquidity_state.json").write_text(
-            json.dumps(liq_state), encoding="utf-8"
-        )
-    # Cambiar CWD al tmp_path para que la ruta relativa funcione
-    monkeypatch.chdir(tmp_path)
+    """Helper: renderiza regimenes con liquidity_state inyectado como kwarg."""
+    # H4 B6 (2026-10-31): render_regimenes ya no lee el fichero.
     return render_regimenes(
         macro_score=[-0.22], macro_regime="SLOWDOWN", macro_conf=0.39,
         liquidity_score=[-0.44], financial_regime="HIGH_STRESS", liq_conf=0.31,
@@ -88,6 +80,7 @@ def _regimenes(tmp_path, liq_state=None, monkeypatch=None):
         real_liquidity_regime="ESTRECHA", real_liquidity_conf=0.90,
         real_liq_score=[-0.20], real_liq_prev=None,
         sector_regime="BROAD PARTICIPATION",
+        liquidity_state=liq_state,
     )
 
 

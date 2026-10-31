@@ -294,6 +294,18 @@ def main():
         validation_gate_result=vg,
     )
 
+    # H4 B6 (2026-10-31): leer liquidity_state.json una sola vez en el pipeline,
+    # pasar como kwarg. render_regimenes ya no lee el fichero.
+    _liquidity_state = None
+    try:
+        import json as _json
+        from pathlib import Path as _Path
+        _liq_p = _Path('outputs/state/liquidity_state.json')
+        if _liq_p.exists():
+            _liquidity_state = _json.loads(_liq_p.read_text(encoding='utf-8'))
+    except (OSError, ValueError, TypeError):
+        pass
+
     generate_daily_report(macro_score, macro_regime, macro_conf,
                           financial_score, financial_regime, liq_conf,
                           vol_score, vol_regime, vol_conf,
@@ -336,7 +348,8 @@ def main():
                           iae_section=iae_section,
 
                           all_signals=all_signals, provenance=_provenance,
-                          wyckoff_holdings_data=wh_tables)
+                          wyckoff_holdings_data=wh_tables,
+                          liquidity_state=_liquidity_state)
     print("Reporte generado en outputs/report/reporte_diario.md")
 
     # Side effects + cobertura europea (C1-10 + C2-12)

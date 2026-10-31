@@ -56,7 +56,7 @@ def test_header_regimenes_lee_campos_presentes_en_state():
         producer_fn="compute_liquidity_score_v2",
         consumer_module=HEADER,
         consumer_fn="render_regimenes",
-        consumer_var="_liq",
+        consumer_var="liquidity_state",
         producer_var="state",
     )
 
@@ -85,7 +85,7 @@ def test_header_regimenes_lee_v2():
     (LIQUIDITY-SEVERIDAD-OCULTA, 1fb791ab).
     """
     reads = consumer_read_keys(
-        HEADER, "render_regimenes", "_liq")
+        HEADER, "render_regimenes", "liquidity_state")
     assert "v2" in reads, (
         "render_regimenes dejo de leer 'v2' del state. El reporte "
         "perderia la linea de Severidad (TENSION_ELEVADA). Si es "

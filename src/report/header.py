@@ -15,7 +15,7 @@ def render_regimenes(macro_score, macro_regime, macro_conf,
                      volatility_score, vol_regime, vol_conf,
                      real_liquidity_regime, real_liquidity_conf,
                      real_liq_score, real_liq_prev,
-                     sector_regime, confirmation_data=None):
+                     sector_regime, confirmation_data=None, liquidity_state=None):
     """Renderiza la seccion 'Resumen de Regimenes'.
 
     Devuelve lista de lineas markdown. Sin side effects.
@@ -35,8 +35,11 @@ def render_regimenes(macro_score, macro_regime, macro_conf,
     else:
         score_str = f"{score_value:.2f}"
 
-    out.append(f"- **Macro:** {macro_regime} (Score: {score_str}, Signal Consistency: {macro_conf:.0%})\n")
-    if macro_conf < 0.30:
+    # H3 B6 (2026-10-31): simetria con liq_conf. Antes: macro_conf=None crasheaba
+    # con TypeError en f-string; macro_conf=nan pintaba 'nan%'. Ahora N/D.
+    macro_conf_str = f"{macro_conf:.0%}" if pd.notna(macro_conf) else "N/D"
+    out.append(f"- **Macro:** {macro_regime} (Score: {score_str}, Signal Consistency: {macro_conf_str})\n")
+    if pd.notna(macro_conf) and macro_conf < 0.30:
         out.append("  *Signal Consistency baja: señales contradictorias en el entorno actual.*\n")
     
     try:
@@ -89,20 +92,19 @@ def render_regimenes(macro_score, macro_regime, macro_conf,
         # el reporte solo publicaba el regimen agregado. El lector debe
         # saber si la severidad cruda es alta aunque el regimen se resuma
         # como ESTRECHA.
-        try:
-            import json as _json
-            from pathlib import Path as _Path
-            _liq_path = _Path('outputs/state/liquidity_state.json')
-            if _liq_path.exists():
-                _liq = _json.loads(_liq_path.read_text(encoding='utf-8'))
-                _v2 = _liq.get('v2') or {}
-                _sev = _v2.get('severidad_cruda')
-                _diff = _v2.get('diff_bp')
-                if _sev and _sev != 'OK':
-                    _diff_str = f"{float(_diff):+.1f}" if isinstance(_diff, (int, float)) else 'N/D'
-                    out.append(f"  - *Severidad: {_sev} (diff_bp={_diff_str})*\n")
-        except (OSError, ValueError, TypeError, KeyError):
-            pass
+        # H4 B6 (2026-10-31): el state se pasa como kwarg (side-channel eliminado).
+        # Antes: render leia outputs/state/liquidity_state.json directamente.
+        # Bug: si el fichero no existe (sandbox, test, primer run), degradaba
+        # silenciosamente sin WARN. Ahora: fallback explicito cuando falta.
+        if liquidity_state is None:
+            out.append("  - *Severidad no disponible (liquidity_state no cargado).*\n")
+        else:
+            _v2 = liquidity_state.get('v2') or {}
+            _sev = _v2.get('severidad_cruda')
+            _diff = _v2.get('diff_bp')
+            if _sev and _sev != 'OK':
+                _diff_str = f"{float(_diff):+.1f}" if isinstance(_diff, (int, float)) else 'N/D'
+                out.append(f"  - *Severidad: {_sev} (diff_bp={_diff_str})*\n")
     if real_liq_prev is not None:
         try:
             delta = float(real_liq_score.iloc[-1]) - float(real_liq_prev)
