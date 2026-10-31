@@ -19,9 +19,11 @@ def render_alerts(breadth_values, financial_regime, price_flow_divergences, conf
     alerts = []
     
     if breadth_values:
-        ema200 = breadth_values.get('% sobre EMA200', 0)
-        ema20 = breadth_values.get('% sobre EMA20', 0)
-        if ema200 > 0.70 and ema20 < 0.60:
+        ema200 = breadth_values.get('% sobre EMA200')
+        ema20 = breadth_values.get('% sobre EMA20')
+        # A2 B6 (2026-10-31): pd.notna. Antes None > 0.70 -> TypeError.
+        # NaN > 0.70 ya daba False, pero None crasheaba.
+        if pd.notna(ema200) and pd.notna(ema20) and ema200 > 0.70 and ema20 < 0.60:
             alerts.append(f"- **Breadth Divergence:** Breadth EMA200: {ema200:.0%}; Breadth EMA20: {ema20:.0%}. La amplitud de corto plazo es inferior a la de largo plazo.")
     
     if financial_regime == 'HIGH_STRESS':
@@ -75,6 +77,10 @@ def render_alerts(breadth_values, financial_regime, price_flow_divergences, conf
     
     if price_flow_divergences:
         for ticker, div in price_flow_divergences.items():
+            # A3 B6 (2026-10-31): guard div None. Productor puede emitir
+            # None si detect_price_flow_divergence falla para un ticker.
+            if div is None or not isinstance(div, dict):
+                continue
             if div.get('status') != 'ALIGNED':
                 name = SECTOR_NAMES.get(ticker, ticker)
                 # Fix F (2026-09-30): usar el message del detector, no
@@ -102,7 +108,14 @@ def render_cross_module(cross_module_conflict):
     """
     out = []
     if cross_module_conflict:
+        # A5 B6 (2026-10-31): default MIXED enmascaraba nivel desconocido.
+        # Si el productor anade un nivel nuevo (WARN real), caia en INFO
+        # silencioso. Ahora: default MIXED (comportamiento previo) pero
+        # WARN explicito si el nivel no es uno de los conocidos.
         level = cross_module_conflict.get('conflict_level', 'MIXED')
+        _known_levels = ('CONSENSUS', 'CONFLICT', 'DIVERGENCE', 'MIXED')
+        if level not in _known_levels:
+            out.append(f"*[WARN] cross_module: nivel desconocido {level!r}; se interpreta como INFO. Revisar productor (utils.build_cross_module_conflict).*\n")
         icon = 'OK' if level == 'CONSENSUS' else 'WARN' if level in ('CONFLICT', 'DIVERGENCE') else 'INFO'
         out.append(f"### {icon} Cross-Module: {level}\n")
         out.append(f"**Mensaje:** {cross_module_conflict.get('message', '')}\n")
