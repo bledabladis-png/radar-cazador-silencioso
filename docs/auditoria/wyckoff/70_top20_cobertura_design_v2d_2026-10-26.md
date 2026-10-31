@@ -152,7 +152,7 @@ Snapshot: 527 → 528 filas. XLF `ev_n` 22 → 23, `ev_peso` 63.74 →
 76.05. Solo 1 ticker afectado en el universo actual.
 
 La tabla de cobertura de doc 71 §2 ya refleja el fix (XLF 23, 76.05).
-### 5.2. `v2_full_target_only.csv` obsoleto
+### 5.3. `v2_full_target_only.csv` obsoleto
 
 Artefacto intermedio pre-fixes (`f4528b49`, `affdc5c8`) con `n_total`
 sistematicamente menor que el activo (mean 20.75 vs 22.24). Confundio
@@ -161,7 +161,7 @@ el primer intento de P1-H03. Doc 72 §3 lo documenta.
 **Recomendacion:** eliminar o mover a `outputs/audit/_obsoleto/`. No es
 ticket de gobernanza, es limpieza de outputs locales.
 
-### 5.3. `GOVERNANZA-CI-NO-STEP` (ya registrado)
+### 5.4. `GOVERNANZA-CI-NO-STEP` (ya registrado)
 
 Ticket creado en `6a591e67`. Sigue OPEN. Anadir `py
 scripts/verifica_gobernanza.py` a `ci_tests.yml`. ~5 min, commit
@@ -218,6 +218,53 @@ Preguntas abiertas para el auditor (respuesta binaria):
   regeneracion del historico completo (1086 fechas, hecho en
   f71eb49c) o basta el fix + snapshot actualizado? El historico
   regenerado previo excluye BRK.B de XLF por el mismo motivo.
+
+---
+
+---
+
+## 6. Evidencia de regeneracion historica post-fix `4e94bf2e` (2026-10-31)
+
+**Contexto.** El dictamen externo 2026-10-31 pide evidencia auditable
+de la regeneracion completa posterior a `4e94bf2e`. El commit
+`f71eb49c` es la regeneracion, pero su contenido no estaba
+consolidado como evidencia. Se verifica contra su padre inmediato
+(`89e24705`).
+
+**Metodo.** `git show f71eb49c:outputs/history/sector_wyckoff_distribution.csv`
+vs `git show f71eb49c^:outputs/history/sector_wyckoff_distribution.csv`.
+Comparacion por `(date, sector)` y por `n_total` + `count_range`.
+
+**Resultado (fechas comunes = 1086).**
+
+| Sector | delta n_total | delta count_range | Conclusion |
+|---|---|---|---|
+| XLF | **+1 en 1086 fechas** | **+1 en 1086 fechas** | BRK.B recuperado (RANGE) |
+| XLB | 0 | 0 | Sin cambio |
+| XLC | 0 | 0 | Sin cambio |
+| XLE | 0 | 0 | Sin cambio |
+| XLI | 0 | 0 | Sin cambio |
+| XLK | 0 | 0 | Sin cambio |
+| XLP | 0 | 0 | Sin cambio |
+| XLRE | 0 | 0 | Sin cambio |
+| XLU | 0 | 0 | Sin cambio |
+| XLV | 0 | 0 | Sin cambio |
+| XLY | 0 | 0 | Sin cambio |
+
+XLF post: `n_total=23` en todas las 1086 fechas (antes 22).
+`count_range` sube en 1 en cada fecha. Coincide exactamente con
+lo que el commit `f71eb49c` declara en su mensaje.
+
+**Nota sobre el CSV activo.** El fichero
+`outputs/history/sector_wyckoff_distribution.csv` actual (2026-10-31)
+muestra XLF `n_total ∈ {23, 25}` en 1089 fechas. Eso NO es una
+regresion de `f71eb49c`: son los efectos posteriores de
+`c879df71` (universe_expansions, XLF +9 tickers) y `1cb15d52` (O2,
+coherencia analisis=descarga). El commit `f71eb49c` en su momento
+produjo exactamente lo que declaro (verificado contra su padre).
+
+**Veredicto: condicion 2 del dictamen atendida.** La evidencia es
+reproducible con `git show` y confirma la declaracion del commit.
 
 ---
 
