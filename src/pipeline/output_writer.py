@@ -136,7 +136,18 @@ def persist(name, df, *, date_value=None, sort_by=None, collector=None,
                     print(f"  [SCHEMA] {name}: backup v{_existing} -> {_migrated_name.name} (v{_current_schema} activo)")
                 _migrated_this_call = True
             except OSError as _e:
-                print(f"  [WARN] schema backup fallo {name}: {_e}")
+                # FAIL-CLOSED (2026-10-31, Fase 2 B5.1): antes se
+                # silenciaba y continuaba como append normal. Bug real
+                # detectado por test_output_writer_schema.py::test_t5:
+                # el CSV quedaba mezclando v{_existing} con v{_current_schema}
+                # (schemas incompatibles). Receipt fail-closed del
+                # sistema exige abortar, no mezclar.
+                raise OSError(
+                    f"output_writer: migracion schema de {name} fallo "
+                    f"(v{_existing} -> v{_current_schema}). Backup "
+                    f"{_migrated_name.name}: {_e}. CSV y .schema viejos "
+                    f"intactos. Revisar permisos o disco."
+                ) from _e
             # NO borrar .schema aqui. Se sobreescribe al final si el
             # write tiene exito.
         # si _existing == _current_schema: append normal
@@ -185,8 +196,14 @@ def persist(name, df, *, date_value=None, sort_by=None, collector=None,
     tmp.replace(path)
     try:
         path.with_suffix(path.suffix + '.schema').write_text(str(_current_schema), encoding='utf-8')
-    except OSError:
-        pass
+    except OSError as _e:
+        # OBSERVABILIDAD (2026-10-31): antes silencioso. Si falla escribir
+        # .schema, el proximo run lee default 1 y trata el CSV v2 como v1
+        # -> migracion falsa positiva. El CSV queda correcto pero el
+        # .schema miente.
+        print(f"  [WARN] output_writer: no se pudo escribir .schema de "
+              f"{name} ({type(_e).__name__}: {_e}). El proximo run asumira "
+              f"schema_version=1 y migrara en falso.")
 
     receipt = WriteReceipt(
         name=name, written=True, reason='OK',
