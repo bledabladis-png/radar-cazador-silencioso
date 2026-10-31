@@ -227,6 +227,14 @@ Tipos: `fix`, `refactor`, `docs`, `data`, `test`, `chore`, `perf`.
 
 ---
 
+- **`cancelled` por concurrency NO es `failure`.** GitHub cancela
+  runs con `cancel-in-progress` cuando entra otro push al mismo
+  branch. El icono X en `gh run list` es ambiguo. Regla: `gh run
+  view <rid> --json conclusion` antes de declarar rojo. Y verificar
+  cobertura por ancestro: `git merge-base --is-ancestor <cancelado>
+  <sucesor_success>`. Pisado 4 veces (b9d7aee7, e3400a88, 5b96192f,
+  e8a2a4ba). Leccion sesion 21.
+
 ### 6bis. TRAMPAS ADICIONALES (2026-10-08)
 
 - **`git show <sha>:<path> > file` en PowerShell escribe UTF-16 con
@@ -429,7 +437,7 @@ Ademas:
 
 El corpus consolidado vive en `Consolidacion_Documentos/`. Indice vigente en `00_ARRANQUE.md` seccion 6 (+ snapshot auto-generado). Reglas de actualizacion:
 
-**`00_ARRANQUE.md`:** se actualiza cuando cambia el estado del sistema (tests, integridad, pendientes) o las reglas duras. El HEAD se consulta con `git log`; el arranque no lo declara. Es el unico documento que se pega al arrancar — su tamano importa (<=11 KB = 11264 B; subido el 2026-10-08 desde 10 KB).
+**`00_ARRANQUE.md`:** se actualiza cuando cambia el estado del sistema (tests, integridad, pendientes) o las reglas duras. El HEAD se consulta con `git log`; el arranque no lo declara. Es el unico documento que se pega al arrancar — su tamano importa (<=20 KB = 20480 B; subido 2026-10-08 de 10 a 11 KB, subido 2026-10-31 de 11 a 20 KB. Razon: el ARRANQUE actual es 19.5 KB con snapshot + 10 contratos + pendientes vivos; comprimirlo mas rompe "autosuficiente para empezar a trabajar").
 
 **`01_METODO.md` (este documento):** se actualiza cuando se aprende una leccion nueva. Crece lentamente. Si supera 20 KB, dividir.
 
