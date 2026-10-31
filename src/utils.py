@@ -457,14 +457,19 @@ def _confidence_range_row(row, divisor=2.0):
 # ============================================================
 
 def _try_cleanup(*paths):
-    """Borra ficheros temporales silenciosamente (uso interno FU-002)."""
+    """Borra ficheros temporales. Uso interno FU-002."""
     import os as _os
     for p in paths:
         try:
             if _os.path.exists(p):
                 _os.remove(p)
-        except Exception:
-            pass
+        except Exception as _e:
+            # OBSERVABILIDAD (2026-10-31, Fase 2 B5.2): antes silencioso.
+            # Si falla el cleanup, el .tmp se acumula en disco (nombre
+            # con run_id, no se sobreescribe). Deuda abierta:
+            # TMP-ORPHAN-CLEANUP si empieza a pasar en CI.
+            print(f"  [WARN] _try_cleanup: no se pudo borrar {p} "
+                  f"({type(_e).__name__}: {_e})")
 
 
 def _latest_closed_session(market, reference_date):
@@ -541,7 +546,14 @@ def _compute_by_market(df, reference_date):
         ticker = col[1]
         try:
             market = get_market(ticker)
-        except Exception:
+        except Exception as _e:
+            # OBSERVABILIDAD (2026-10-31, Fase 2 B5.2): antes silencioso.
+            # get_market es determinista via instrument_registry; un
+            # fallo aqui es raro (registro corrupto). WARN por ticker,
+            # no agregado, para localizar la entrada.
+            print(f"  [WARN] _compute_by_market: get_market({ticker!r}) "
+                  f"fallo ({type(_e).__name__}: {_e}). Se clasifica como "
+                  f"UNKNOWN.")
             market = "UNKNOWN"
         by_market_cols.setdefault(market, []).append(col)
 
@@ -844,8 +856,18 @@ def write_artifact_with_manifest(df, parquet_path, source,
                     coverage_pct_effective = float(_eff["coverage"])
                     effective_session_is_fallback = False
             except (ImportError, KeyError, ValueError, TypeError,
-                    AttributeError):
-                pass
+                    AttributeError) as _e:
+                # OBSERVABILIDAD (2026-10-31, Fase 2 B5.2): antes silencioso.
+                # Si resolve_effective_date falla, effective_session cae al
+                # fallback (last_date + coverage_pct_last). El manifest sigue
+                # siendo correcto pero pierde la resolucion por walk-back.
+                # Razon tipica: pandas raro, import roto, df con index
+                # no-DatetimeIndex. WARN para que quede en el log del run.
+                print(f"  [WARN] manifest {parquet_path}: "
+                      f"resolve_effective_date fallo "
+                      f"({type(_e).__name__}: {_e}). effective_session "
+                      f"cae a last_date (coverage_pct_effective = "
+                      f"coverage_pct_last).")
         if effective_session is None:
             effective_session = (
                 last_date.strftime('%Y-%m-%d') if last_date else None)
@@ -1041,7 +1063,16 @@ def _nan_usa_on_non_market_days(data):
         if t not in market_cache:
             try:
                 market_cache[t] = get_market(str(t))
-            except Exception:
+            except Exception as _e:
+                # OBSERVABILIDAD (2026-10-31, Fase 2 B5.2): antes
+                # silencioso. Mismo patron que _compute_by_market. Si
+                # get_market falla, el ticker se clasifica UNKNOWN y no
+                # se marca como US_EQUITY: un cierre sintetico de Yahoo
+                # en festivo NYSE se colaria como dato valido.
+                print(f"  [WARN] _nan_usa_on_non_market_days: "
+                      f"get_market({t!r}) fallo "
+                      f"({type(_e).__name__}: {_e}). Se clasifica como "
+                      f"UNKNOWN (no se aplica NaN-patch de festivos).")
                 market_cache[t] = 'UNKNOWN'
         return market_cache[t]
 
