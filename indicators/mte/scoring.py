@@ -14,6 +14,7 @@ import numpy as np
 import pandas as pd
 
 from src.utils import robust_zscore, get_col
+from config.tickers import CYCLICAL_SECTORS, DEFENSIVE_SECTORS
 
 
 # F2.4-05 (2026-10-13): WONT FIX razonado. Wrapper trivial
@@ -52,10 +53,14 @@ def _get_last(x):
 def sector_rotation_score(df_market):
 
 
-    cyclical = ['XLK', 'XLY', 'XLI', 'XLF', 'XLB', 'XLE']
-
-
-    defensive = ['XLU', 'XLP', 'XLV', 'XLRE', 'XLC']
+    # MTE-SECTOR-LISTS-DIVERGENTES (2026-10-31): antes hardcodeado.
+    # v3.15 (2026-10-20) reclasifico XLC como ciclico en
+    # config/tickers.py, pero el MTE mantenia la lista vieja
+    # (XLC defensivo). Divergencia real desde v3.15. Alineado a
+    # config: fuente unica de verdad. Test centinela en
+    # tests/test_mte_scoring.py verifica consistencia.
+    cyclical = list(CYCLICAL_SECTORS)
+    defensive = list(DEFENSIVE_SECTORS)
 
 
     sectors = cyclical + defensive
@@ -181,13 +186,17 @@ def sector_rotation_score(df_market):
 # ============================================================
 
 
+# MTE-SECTOR-LISTS-DIVERGENTES (2026-10-31): constantes nombradas
+# para listas propias del MTE (no en config). Evita literales sueltos.
+HARD_HAVENS = ['GLD', 'SLV', 'TLT']
+DEFENSIVE_HAVENS = ['XLP', 'XLV', 'XLU', 'QUAL', 'IEF', 'BIL']
+
+
 def safe_haven_score(df_market):
 
 
-    hard_havens = ['GLD', 'SLV', 'TLT']
-
-
-    defensive_havens = ['XLP', 'XLV', 'XLU', 'QUAL', 'IEF', 'BIL']
+    hard_havens = HARD_HAVENS
+    defensive_havens = DEFENSIVE_HAVENS
 
 
     def haven_subscore(tickers):

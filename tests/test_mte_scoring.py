@@ -173,3 +173,48 @@ class TestCreditStressScore:
         )
         if not np.isnan(result):
             assert 0.0 <= result <= 1.0
+
+
+# ---------- MTE-SECTOR-LISTS-DIVERGENTES (2026-10-31) ----------
+
+def test_sector_lists_consistency_with_config():
+    """Las listas del MTE deben coincidir con config.tickers.
+
+    Contrato: config/tickers.py es la fuente unica de verdad para
+    CYCLICAL_SECTORS y DEFENSIVE_SECTORS. v3.15 reclasifico XLC
+    como ciclico. Si alguien vuelve a hardcodear una lista en el
+    MTE con valores distintos, este test falla.
+    """
+    from config.tickers import CYCLICAL_SECTORS, DEFENSIVE_SECTORS
+    import inspect
+    from indicators.mte import scoring as mte_scoring
+
+    src = inspect.getsource(mte_scoring.sector_rotation_score)
+    assert "CYCLICAL_SECTORS" in src, (
+        "sector_rotation_score debe importar CYCLICAL_SECTORS de "
+        "config.tickers. Si tiene literales, es divergencia."
+    )
+    assert "DEFENSIVE_SECTORS" in src, (
+        "sector_rotation_score debe importar DEFENSIVE_SECTORS de "
+        "config.tickers."
+    )
+    assert "XLC" in CYCLICAL_SECTORS, (
+        "XLC debe estar en CYCLICAL_SECTORS (v3.15). Si alguien lo "
+        "mueve a DEFENSIVE, este test falla."
+    )
+    assert "XLC" not in DEFENSIVE_SECTORS, (
+        "XLC no debe estar en DEFENSIVE_SECTORS (v3.15)."
+    )
+
+
+def test_defensive_havens_constante_nombrada():
+    """DEFENSIVE_HAVENS debe ser constante modulo-level, no literal."""
+    from indicators.mte import scoring as mte_scoring
+    assert hasattr(mte_scoring, "DEFENSIVE_HAVENS"), (
+        "DEFENSIVE_HAVENS debe existir como constante en mte/scoring.py"
+    )
+    assert isinstance(mte_scoring.DEFENSIVE_HAVENS, list)
+    assert "XLP" in mte_scoring.DEFENSIVE_HAVENS
+    assert hasattr(mte_scoring, "HARD_HAVENS")
+    assert isinstance(mte_scoring.HARD_HAVENS, list)
+    assert "GLD" in mte_scoring.HARD_HAVENS
