@@ -90,14 +90,15 @@ Lo que NUNCA haces:
 
 Fuente autoritativa de tests, integridad y cobertura: `Consolidacion_Documentos/ESTADO_SISTEMA.md` (regenerado con `py scripts/generate_estado_sistema.py`). El HEAD se consulta con `git log`.
 
-Snapshot al cierre del ultimo commit (2026-10-31, sesion 21):
+Snapshot al cierre del ultimo commit (2026-10-31, sesion 22):
 - HEAD: `git log --oneline -1`
-- Tests: fuente autoritativa en `Consolidacion_Documentos/ESTADO_SISTEMA.md` (seccion 2). Al cierre sesion 21: 4137 passed, 2 skipped.
+- Tests: fuente autoritativa en `Consolidacion_Documentos/ESTADO_SISTEMA.md` (seccion 2). Al cierre sesion 22: 4144 passed, 2 skipped.
 - Validation Gate: 11/11
 - Working tree: limpio
-- Gobernanza: `docs/gobernanza/REGISTRO.yaml`, 189 items. Validador reforzado.
+- Gobernanza: `docs/gobernanza/REGISTRO.yaml`, 200 items. Validador reforzado.
 - Corpus documental: v3 (Consolidacion_Documentos/00-08)
 - Universo USA (stock_prices): 505 tickers Close. Total (US+EU+expansions): ver `ESTADO_SISTEMA.md`.
+- Scheduled: run 41189491153 (2026-10-31 09:38 UTC) exitoso con HEAD 37482e0a. Guard coverage OK (coverage_pct=0.9964). Fixes de sesion 22 verificados en produccion.
 
 **Contratos vigentes y decisiones estructurales** (los detalles viven en `04_HISTORICO.md`; aqui solo lo que no se puede olvidar):
 

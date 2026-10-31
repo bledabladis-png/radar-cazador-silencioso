@@ -9,11 +9,11 @@ junto con `Consolidacion_Documentos/00_ARRANQUE.md`.
 
 ## 1. ESTADO AL CIERRE (2026-10-31, sesion 22)
 
-HEAD: `167a4587` (consultar `git log --oneline -1` para el actual).
+HEAD: `ab083af9` (consultar `git log --oneline -1` para el actual).
 Sincronizacion: main == origin/main al cierre del commit.
 Tests: fuente autoritativa Consolidacion_Documentos/ESTADO_SISTEMA.md.
        Conteo exacto en ESTADO_SISTEMA.md seccion 2 (no literal aqui: cambia con cada commit de test).
-CI HEAD: verde (run 41168566035 sobre 4b5e3c5f; 167a4587 solo docs).
+CI HEAD: verde (run 41174326456 sobre 37482e0a; ab083af9 = Daily hist/state).
 Validation Gate: 11/11 (outputs/state/validation_gate_result.json).
 Working tree: limpio.
 Gobernanza: docs/gobernanza/REGISTRO.yaml, 200 items. Validador reforzado
@@ -42,6 +42,13 @@ WYCKOFF-EVENTS-ARTIFACT: WONT_FIX. Pre-registro doc 80 firmado
   vacios en 75% de filas. PSY/PS disparan en backtest (probe
   2026-10-31) pero solo aportan con escaneo por ventana (feature
   pendiente, +30-45 min/run). Ver doc 80 seccion 10.
+SOW-BEAR-CONFIRMATION: WONT_FIX. Probe 2026-10-31 (9 fechas bear
+  2022, 0/9 sectores disparan; 0/11 hoy con SPY no bear). Causa: la
+  cascada BC->AR->Range->SOW solo completa en minoria de holdings
+  (XLF 6/34, XLRE 2/20, XLU 3/21). SOW es evento puntual (~1/ano/
+  holding); pedir 3 coincidentes en M=5 es casi imposible. Idea
+  valida, metrica incorrecta. Contrato v1.10 original conservado
+  como referencia. Modulo revertido (62b27dfb).
 
 Sistema Wyckoff: holdings-based + snapshot PIT append-only REAL.
 structure_ratio: continuo en sector_regime_matrix v2. DESCRIPTIVO.
