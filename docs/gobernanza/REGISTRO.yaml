@@ -4031,4 +4031,99 @@ items:
     Verificado con run local 20261031_003442: gap ret20 vs rs = 0 en
     los 11 sectores (antes +1 en XLF). XLF: ret20=34, rs=34 (antes
     33/34).
-
+- id: HOLDINGS-NORMALIZACION-EN-ORIGEN
+  tipo: auditoria_interna
+  ciclo: '2026-10-31'
+  estado: OPEN
+  descripcion: |
+    holdings_df se carga sin normalizar; cada consumidor normaliza
+    por su cuenta. BRK.B (holdings) vs BRK-B (parquet) se pierde
+    silenciosamente si un modulo nuevo olvida normalizar.
+  siguiente_accion: |
+    Normalizar holdings_df ticker UNA VEZ en load_stocks_data +
+    assert all(normalize(t) == t for t in holdings_df["ticker"]).
+    Requiere E2E por METODO seccion 4 (toca src/pipeline).
+  evidencia: |
+    O2 (1cb15d52) + e04b53ff cerraron sintoma en rs_internal y
+    sector_concentration; causa raiz sigue viva. Run local
+    20261031_003442: gap ret20 vs rs = 0 en 11 sectores.
+    Leccion anadida en 01c_LECCIONES (bfba1763).
+- id: HANDOFF-SIN-RESPUESTA-ENTRANTE-21
+  tipo: frente
+  ciclo: '2026-10-31'
+  estado: OPEN
+  descripcion: |
+    6 preguntas del cuestionario al saliente (Bloque B/C/D: 6, 9,
+    10, 12, 14, 15) sin respuesta o con respuesta parcial. Heredado
+    de sesion 21.
+  siguiente_accion: |
+    Obtener respuesta del usuario o marcar WONT_FIX razonado las
+    que no tengan canal. En particular B.6 (DICT3-TOP20-COBERTURA)
+    sigue BLOCKED_EXTERNAL sin canal documentado: el auditor puede
+    o no estar activo.
+  evidencia: |
+    Respuestas del saliente (2026-10-31): 6 sin canal, 9 matizada,
+    10 sin verificar, 12 sin verificar, 14 sin auditar, 15 sin
+    verificar.
+- id: DAILY-RUN-FAIL-40992758129
+  tipo: frente
+  ciclo: '2026-10-31'
+  estado: OPEN
+  descripcion: |
+    Run daily_run 40992758129 fallo hace ~21h (2026-10-30). Runs
+    posteriores OK, incluido 41037457375 (19m7s, real). Hipotesis:
+    rate limit o fallo puntual de proveedor externo.
+  siguiente_accion: |
+    Verificar si reaparece. Si no reaparece en 7 dias, cerrar
+    WONT_FIX razonado.
+  evidencia: |
+    gh run list --workflow=daily_run.yml --limit 5 (2026-10-31):
+    40992758129 X (24m28s), 41037457375 OK (19m7s), siguientes
+    gate=false por fin de semana.
+- id: VERIFICAR-SCHEDULED-387938E6-2026-11-02
+  tipo: frente
+  ciclo: '2026-10-31'
+  estado: OPEN
+  descripcion: |
+    13 fixes verificados en local (sesiones 20-21), 0 en run
+    scheduled real desde HEAD 387938e6. Primer daily_run real sera
+    lunes 2026-11-02 (sabado/domingo gate=false, 1 min).
+  siguiente_accion: |
+    Lunes 2026-11-02 (o primer run real con HEAD 387938e6+):
+    gh run list --workflow=daily_run.yml --limit 3 y verificar
+    conclusion=success con headSha >= 387938e6. Si falla,
+    diagnostico prioritario (fixes 20-21 no verificados en prod).
+  evidencia: |
+    gh run list (2026-10-31): ultimo run real OK 41037457375 con
+    HEAD anterior. Ninguno real con 387938e6 aun.
+- id: METODO-EXCEDE-LIMITE-PROPIO
+  tipo: auditoria_interna
+  ciclo: '2026-10-31'
+  estado: OPEN
+  descripcion: |
+    01_METODO.md pesa 28.3 KB, pero su propia seccion 11 exige
+    dividir si supera 20 KB. Nunca se dividio. Contradiccion
+    interna del corpus.
+  siguiente_accion: |
+    Dividir 01_METODO (extraer secciones 6-6ter a 01d_POWERSHELL.md
+    y seccion 7 a 01e_AUDITORIA.md, por ejemplo), o WONT_FIX
+    razonado reconociendo que el limite ya no aplica.
+  evidencia: |
+    01_METODO.md = 29646 bytes tras commit af019902. Seccion 11:
+    "Si supera 20 KB, dividir".
+- id: README-DESFASE-FUENTES-DATOS
+  tipo: auditoria_interna
+  ciclo: '2026-10-31'
+  estado: OPEN
+  descripcion: |
+    README bloque Fuentes de datos sigue listando OilPriceAPI
+    (eliminada 2026-09-30 segun ARRANQUE seccion 2 R5) y
+    "Yahoo: 262 tickers" (real: 505 en stock_prices). Commit
+    18ca4405 elimino el bloque Resumen pero no este.
+  siguiente_accion: |
+    Actualizar bloque Fuentes o eliminarlo remitiendo a
+    ESTADO_SISTEMA.md. Decision de producto: informativo vs
+    durable.
+  evidencia: |
+    README.md pre-18ca4405 lineas 28-32; commit 18ca4405 solo
+    toco bloque Resumen. OilPriceAPI eliminada: ARRANQUE R5.
