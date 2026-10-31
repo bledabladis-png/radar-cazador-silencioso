@@ -61,12 +61,16 @@ def render_sintesis_senales(macro_regime, financial_regime,
     # Divergencias relevantes (solo si no están ya en el resumen)
     divergencias = []
     if breadth_values:
-        ema200 = breadth_values.get('% sobre EMA200', 0)
-        ema20 = breadth_values.get('% sobre EMA20', 0)
-        if ema200 > 0.70 and ema20 < 0.60:
+        # H12 B6 (2026-10-31): paridad con alerts.py H9 (A2).
+        ema200 = breadth_values.get('% sobre EMA200')
+        ema20 = breadth_values.get('% sobre EMA20')
+        if pd.notna(ema200) and pd.notna(ema20) and ema200 > 0.70 and ema20 < 0.60:
             divergencias.append(f"- **Breadth Divergence:** Breadth EMA200: {ema200:.0%}; Breadth EMA20: {ema20:.0%}. La amplitud de corto plazo es inferior a la de largo plazo.")
     if price_flow_divergences:
         for ticker, div in price_flow_divergences.items():
+            # H12 B6 (2026-10-31): paridad con alerts.py H9 (A3).
+            if div is None or not isinstance(div, dict):
+                continue
             if div.get('status') == 'PRICE_STRONG_FLOW_UNCONFIRMED':
                 name = SECTOR_NAMES.get(ticker, ticker)
                 divergencias.append(f"- **{name}**: precio fuerte sin confirmación del Flow Proxy.")

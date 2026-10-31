@@ -124,7 +124,7 @@ def render_sector_dispersion(sector_concentration_data):
         out.append("| Sector | RS P25 | RS Med | RS P75 | Mom P25 | Mom Med | Mom P75 |\n")
         out.append("|--------|--------|--------|--------|---------|---------|---------|\n")
         for _, row in disp_latest.iterrows():
-            out.append(f"| {row['sector']} | {row['rs_p25']:.4f} | {row['rs_median']:.4f} | {row['rs_p75']:.4f} | {row['momentum_p25']:.2%} | {row['momentum_median']:.2%} | {row['momentum_p75']:.2%} |\n")
+            out.append(f"| {row['sector']} | {_fmt_num(row['rs_p25'], '{:.4f}')} | {_fmt_num(row['rs_median'], '{:.4f}')} | {_fmt_num(row['rs_p75'], '{:.4f}')} | {_fmt_num(row['momentum_p25'], '{:.2%}')} | {_fmt_num(row['momentum_median'], '{:.2%}')} | {_fmt_num(row['momentum_p75'], '{:.2%}')} |\n")
         out.append("\n")
         out.append("*Los percentiles de Flow y WLS están disponibles en outputs/history/sector_concentration.csv.*\n\n")
     return out

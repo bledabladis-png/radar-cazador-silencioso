@@ -28,7 +28,7 @@ def render_liderazgo_interno(rs_internal_data):
         out.append("| Sector | Ticker | vs mercado 20d | vs sector 20d | Clasificación |\n")
         out.append("|--------|--------|----------------|---------------|----------------|\n")
         for _, row in report_df.iterrows():
-            out.append(f"| {row['sector']} | {row['ticker']} | {row['rs_abs_20d']:.2%} | {row['rs_internal_20d']:.2%} | {row['classification']} |\n")
+            out.append(f"| {row['sector']} | {row['ticker']} | {_fmt_num(row['rs_abs_20d'], '{:.2%}')} | {_fmt_num(row['rs_internal_20d'], '{:.2%}')} | {row['classification']} |\n")
         out.append("\n")
         out.append("*Criterio: los 5 tickers de mayor price_ret_20d del sector, ordenados desc. La primera fila de cada sector coincide con la columna Lider de Concentracion del liderazgo (mismo criterio: retorno 20d maximo). No coincide con la primera fila de Representatividad, que ordena por WLS.*\n\n")
         out.append("*No coincide con 'Divergencia sector-lideres', que usa top-5 por WLS (mismo sector, distinto subconjunto de tickers).*\n\n")
