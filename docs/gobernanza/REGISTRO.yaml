@@ -4842,3 +4842,53 @@ items:
     filtros, signal_cons_str y avg_conf_str explicitos N/A cuando
     faltan datos. Coherente con header.py H3. Falso positivo
     descartado: safe_mean hace dropna() y no propaga NaN.
+# --- B6 volatility_mte.py, sesion 23, 2026-10-31 ---
+- id: B6-H7-SCENARIO-NOTE-DRIFT
+  tipo: bug
+  ciclo: '2026-10-31'
+  estado: FIXED
+  commit: '09a74ac4'
+  test: tests/test_mte_scoring_golden.py
+  evidencia: |
+    ALTA. Nota del scoring en render_mte hardcoded con umbrales que
+    ya divergian de score_scenarios: omitia cls>0.7 -> +3, SOFT
+    LANDING entero, EXPANSION entero, confundia umbrales entre
+    escenarios (CRISIS usa shs>0.3, RECESSION usa shs>0.2). El
+    comentario P2.5 decia "nota sin umbrales hardcodeados" pero
+    era lo contrario. Refactor completo: SCENARIO_RULES dict
+    data-driven en scoring.py; score_scenarios lo consume;
+    helpers._fmt_scenario_rules_note() deriva la nota. Golden
+    con 10 combinaciones capturado ANTES del refactor (score
+    exacto identico). Test H15 paso sin cambios (el helper
+    cumple el contrato: uppercase, 0.20/0.10, suma +N).
+
+- id: B6-H7-RENDER-NAN-GUARDS
+  tipo: bug
+  ciclo: '2026-10-31'
+  estado: FIXED
+  commit: '09a74ac4'
+  test: tests/test_volatility_mte_nan_guards.py
+  evidencia: |
+    render_mte (volatility_mte.py): (V2) mte_conf=NaN caia al
+    else "Escenario confirmado" con confianza N/D - contradiccion
+    (pintaba confirmado sin confianza). Fix: _confirmed = pd.notna
+    (conf) and conf >= 0.5. (V3) msi/ipi/cls sin guard pd.notna:
+    "nan" literal. Fix: helper local _f(v, fmt). (V4) sustitucion
+    de f-strings por helpers. 8 tests NaN.
+
+- id: B6-MTE-CLS-INF-LATENTE
+  tipo: deuda_tecnica
+  ciclo: '2026-10-31'
+  estado: OPEN
+  descripcion: |
+    score_scenarios (indicators/mte/scoring.py): con cls=inf,
+    el CRISIS pre_invalid solo captura no finito con np.isfinite
+    (False), pero el +3 de cls>0.85 se suma FUERA del else previo,
+    dando -996 en vez de -999. Bug latente: cls=inf no ocurre en
+    produccion hoy, pero si apareciera (overflow, division por
+    cero en calculo de CLS), la etiqueta dice CRISIS=-996, no
+    bloqueado. Preservado identico en el refactor H7.
+  siguiente_accion: |
+    Fix en B4: mover +3 de cls>0.85 dentro del bloque finite o
+    bloquear tras pre_invalid con return temprano. Anadir caso
+    al golden test.
