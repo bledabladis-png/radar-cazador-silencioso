@@ -110,10 +110,53 @@ tests existentes intactos, causa raiz cerrada via assert +
 centinela AST que prohibe normalize_yahoo_ticker en los 5
 consumidores. E2E verificado contra baseline 20261031_003442.
 
-**Proximo paso sugerido.** Sesion 23: HOLDINGS ya cerrado. Prioridad:
-verificar daily_run real del lunes 2026-11-02 (headSha 0e3b0dd3) y
-cerrar HANDOFF-SIN-RESPUESTA-ENTRANTE-21 con decision del operador
-sobre las 6 sin canal.
+**Proximo paso sugerido.** Sesion 23: verificar daily_run real del
+lunes 2026-11-02 (headSha 771f5ecc) y cerrar condiciones 4-5 de
+DICT3-TOP20-COBERTURA (SHA en REGISTRO, mantener frentes
+paralelos).
+
+**Extension de sesion (misma fecha, 2026-10-31):**
+
+1. Scheduled 41159854920 fallo en guard_coverage (coverage_pct_last=
+   0.760396 a las 02:24 UTC). run.py paso (18 min, Gate 11/11).
+   Diagnostico: coverage_pct_last media la ULTIMA fila fisica del
+   parquet, que a esa hora era del 30-oct con Close parcial. Fix
+   a692fafb: walk-back via resolve_effective_date (min 0.90);
+   manifest publica effective_session + coverage_pct_effective;
+   guard_coverage/receipt/pipeline_gate prefieren effective con
+   fallback. coverage_pct_last intacto (tests ancla no rotos).
+   CI verde 41162803916. Item: GUARD-COVERAGE-LAST-DATE-PARCIAL.
+
+2. Invariante 2 de P1-H03 ejecutado (dictamen externo 2026-10-31).
+   Script scripts/audit/p1_h03_invariante2.py. 272 tickers x 1313
+   fechas, 290.694 filas. Resultado: 0 violaciones, 0 solo-A, 1
+   solo-B (BRK.B, 1086 filas RANGE via BRK-B). 62.5 min, 12
+   workers. Matiz documentado en doc 72 seccion 8: los 269 comunes
+   no son duales, no hay comparacion pre/post literal por falta de
+   snapshot pre-fix por ticker. Mas fuerte que SKIP original, mas
+   debil que contrato literal.
+
+3. Evidencia f71eb49c verificada contra padre: XLF n_total 22->23
+   en 1086 fechas, count_range +1 en 1086, resto 0. Doc 70-v2d
+   seccion 6.
+
+4. Numeracion seccion 5 de doc 70-v2d corregida (5.2 duplicado ->
+   5.3, 5.3 -> 5.4). Commit 771f5ecc.
+
+5. Cuestionario al saliente resuelto: C.9 (25/25 receipts = 25
+   writers), C.10 (autonomia funciona, #7 WARN no bloqueante),
+   D.14 (01b vigente, 13 patrones), D.15 (poda segura). C.12
+   PSY/PS derivado a item nuevo PSY-PS-PROBE-HISTORICO. B.6
+   derivado a DICT3-TOP20-COBERTURA (canal activo).
+
+**Commits de la extension:** a692fafb (guard fix), 771f5ecc
+(invariante 2 + doc 70-v2d + doc 72), + este docs(cierre-22d).
+
+**Frentes cerrados hoy (recuento):** DICT-CONTRACT-FRAMEWORK
+100%, HOLDINGS-NORMALIZACION-EN-ORIGEN, GUARD-COVERAGE-LAST-DATE-
+PARCIAL, DAILY-RUN-FAIL-41159854920, HANDOFF-SIN-RESPUESTA-
+ENTRANTE-21. DICT3-TOP20-COBERTURA queda OPEN con 3/5 condiciones
+hechas. P1-H03 invariante 2 atendido con matiz.
 
 ### 2026-10-31 — Sesion 21: coherencia analisis vs descarga + BRK.B residual
 
