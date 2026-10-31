@@ -4443,3 +4443,97 @@ items:
     Barrido Fase 0.1: 662 hits totales, 221 en productivo (cerrados),
     441 en scripts/. Muestra: compare_sow_candidates.py (21),
     walk_forward_sow_anual.py (19), purged_kfold_* (16 cada uno).
+- id: B5-1-WRITER-SCHEMA-FAIL-CLOSED
+  tipo: bug
+  ciclo: '2026-10-31'
+  estado: FIXED
+  commit: 'afada0ea'
+  test: tests/test_output_writer_schema.py
+  evidencia: |
+    Fase 2 B5.1 (outputs/persistencia). Clase 1fb791ab aplicada al
+    writer: todo el bloque de migracion de schema v1->v2 (backup
+    .vN.csv, _migrated_this_call, no sobrescribir backup, no borrar
+    .schema hasta exito) no tenia ningun test. Grep de schema_version|
+    _migrated|.v1.csv en tests/: cero resultados. Test verde con mock,
+    integracion no ejercitada. T5 destapo bug real: si shutil.copy2
+    fallaba, el codigo silenciaba y continuaba como append normal
+    -> CSV mezclaba v1 con v2 (schemas incompatibles). Fix fail-closed
+    (raise OSError con contexto, CSV y .schema viejos intactos) +
+    WARN si falla escribir .schema. T1-T6 nuevos.
+- id: B5-2-UTILS-WARN-SILENCIOSOS
+  tipo: deuda_tecnica
+  ciclo: '2026-10-31'
+  estado: FIXED
+  commit: '6146f5c4'
+  test: tests/test_utils.py
+  evidencia: |
+    Fase 2 B5.2 (src/utils.py: manifest, coverage, helpers temporales).
+    5 funciones auditadas, 0 bugs funcionales, 4 fallbacks silenciosos
+    con WARN anadido:
+    - _try_cleanup: si falla borrar .tmp, el fichero se acumula en
+      disco (nombre con run_id, no se sobreescribe).
+    - _compute_by_market: get_market(ticker) silenciado. Ticker se
+      clasifica UNKNOWN.
+    - write_artifact_with_manifest: resolve_effective_date silenciado.
+      effective_session cae al fallback (last_date + coverage_pct_last).
+    - _nan_usa_on_non_market_days: get_market(t) silenciado en _market().
+      Ticker no se marca US_EQUITY, un cierre sintetico Yahoo en
+      festivo NYSE se cuela como valido.
+    Fixes de ayer (coverage_pct_effective, effective_session) siguen
+    coherentes. append_dedup, _last_row_coverage_ok,
+    truncate_to_expected_session, get_effective_meta y
+    writer_observation_date: auditados sin bug.
+- id: B5-3-CHECK11-FAIL-CLOSED
+  tipo: bug
+  ciclo: '2026-10-31'
+  estado: FIXED
+  commit: 'd1097ab0'
+  test: tests/test_validation_gate.py
+  evidencia: |
+    Fase 2 B5.3 (validation_gate.py). Check 11 (Schema versioning)
+    envuelto en except Exception que reportaba _add_check(..., True,
+    'no evaluable'). Un import roto de REGISTRY (circular, OSError),
+    un REGISTRY vacio por bug, o cualquier excepcion en el glob dejaba
+    pasar el gate sin auditar los schemas. Misma clase que
+    GUARD-COVERAGE-LAST-DATE-PARCIAL. Fix: except especifico
+    (ImportError, OSError, AttributeError, KeyError, TypeError) +
+    _add_check(..., False, ...). Test centinela: forzar REGISTRY
+    inaccesible via sys.modules y verificar que el gate falla.
+    NO tocados: wyckoff_holdings_data=None -> OK 'no disponible' en
+    checks 1/6/10 es contrato documentado (holiday mode,
+    test_wyckoff_holdings_vacio_ok_no_falla_gate).
+- id: B5-4-SAVE-REGIME-GUARD
+  tipo: bug
+  ciclo: '2026-10-31'
+  estado: FIXED
+  commit: 'd1097ab0'
+  test: tests/test_pipeline_sector_metrics_mte_finalize.py
+  evidencia: |
+    Fase 2 B5.4 (finalize.py). save_regime_history hacia
+    macro_score.iloc[-1] sin guard. run.py:344 llama directamente
+    sin try/except. Si macro_score es None o Series vacia (all_signals
+    vacio por fallo masivo de senales), IndexError tumba el run sin
+    contexto. Bug latente (no ocurre en produccion actual, pero si el
+    bloque de senales falla completamente). Fix: guard
+    if macro_score is None or len==0 -> skip NO_DATA (razon legitima,
+    sin escritura). Test: macro_score None + Series vacia, ningun CSV
+    creado.
+- id: MACRO-SCORE-EMPTY-LATENTE
+  tipo: deuda_tecnica
+  ciclo: '2026-10-31'
+  estado: OPEN
+  descripcion: |
+    B5.4 cerro el crash de save_regime_history con macro_score vacio
+    (skip NO_DATA en el writer). Pero el reporte no maneja ese caso:
+    render_regimenes / render_macro probablemente asumen macro_score
+    presente. Si el bloque de senales fallara completamente en
+    produccion, finalize skipearia el CSV pero el reporte pintaria
+    con campos ausentes o fallaria.
+  siguiente_accion: |
+    Auditar src/report/header.py::render_regimenes y el bloque de
+    macro_score del reporte. Guard if macro_score vacio -> 'N/D' con
+    nota. Cubrir con test. Bajo ROI: escenario de fallo masivo, no
+    ocurre hoy. Diferible a B6 (reporte).
+  evidencia: |
+    Detectado al cerrar B5.4. El writer ya no crashea; el render no
+    esta verificado para ese caso.
