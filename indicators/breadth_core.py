@@ -68,6 +68,10 @@ def validate_coverage(prices, expected_count, module_name="Breadth"):
     Returns:
         valid_count: numero de tickers con datos en la ultima fecha.
     """
+    # H1 B6 (2026-10-31): guard df vacio/None. Antes .iloc[-1] lanzaba IndexError
+    # cuando df_market no tenia filas (fallo masivo de proveedor, primer run).
+    if prices is None or len(prices) == 0:
+        return 0
     valid_count = int(prices.notna().sum(axis=1).iloc[-1])
     if valid_count < expected_count:
         missing = prices.columns[prices.iloc[-1].isna()].tolist()

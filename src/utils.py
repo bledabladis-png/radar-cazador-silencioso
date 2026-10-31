@@ -246,6 +246,9 @@ def tanh_normalize(series):
     return np.tanh(z)
 
 def get_col(df, ticker, field='Close'):
+    # H1 B6 (2026-10-31): guard df None. Antes AttributeError en df.columns.
+    if df is None:
+        raise KeyError(f'DataFrame None: no se puede buscar columna ({field}, {ticker})')
     if isinstance(df.columns, pd.MultiIndex):
         # Recorrer todas las columnas y buscar la que coincida
         for col in df.columns:

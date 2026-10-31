@@ -6,6 +6,10 @@ from indicators.macro_fundamental import fundamental_signals
 from src.utils import tanh_normalize, get_col, confidence_from_range
 
 def compute_macro_signals(df_market, df_macro_manual=None, liquidity_score=None, vol_regime_score=None, real_liquidity_score=None, temporal_meta=None, reference_date=None):
+    # H1 B6 (2026-10-31): guard df_market None. Antes AttributeError en df_market.index.
+    # Downstream (compute_macro_regime) detecta all_signals vacio -> NO_DATA.
+    if df_market is None:
+        return pd.DataFrame()
     market_signals = {}
 
     # --- Crecimiento ---
@@ -186,13 +190,31 @@ def compute_macro_regime(df_market, df_macro_manual, liquidity_score, vol_score,
     all_signals = compute_macro_signals(df_market, df_macro_manual, liquidity_score, vol_score, temporal_meta=temporal_meta, reference_date=reference_date)
     macro_score = compute_macro_score(all_signals)
 
+    # H1 B6 (2026-10-31): guard input vacio. Antes .iloc[-1] lanzaba IndexError
+    # con all_signals/macro_score vacios. Contrato: NO_DATA + WARN + conf 0.0.
+    if all_signals is None or len(all_signals) == 0 or macro_score is None or len(macro_score) == 0:
+        print("  [WARN] compute_macro_regime: input vacio. regime=NO_DATA")
+        return pd.Series(dtype=float), "NO_DATA", 0.0, (all_signals if all_signals is not None else pd.DataFrame())
+
+    # H1 B6 (2026-10-31) tolerancia: market_strength, curve y otras son opcionales
+    # por diseno en compute_macro_signals (dependen de tickers concretos).
+    # .get() con default NaN hace que las ramas que las usan no disparen y el
+    # regimen caiga a MIXED (conservador), en vez de crashear con KeyError.
+    def _last_sig(col, default=float("nan")):
+        if col not in all_signals.columns or len(all_signals) == 0:
+            return default
+        try:
+            return all_signals[col].iloc[-1]
+        except (IndexError, KeyError):
+            return default
+
     last = macro_score.iloc[-1]
-    last_volatility = all_signals['volatility'].iloc[-1]
-    last_credit = all_signals['credit'].iloc[-1]
-    last_market_strength = all_signals['market_strength'].iloc[-1]
-    last_inflation = all_signals.get('inflation', pd.Series(0)).iloc[-1]
-    last_liquidity = all_signals['liquidity'].iloc[-1]
-    last_curve = all_signals['curve'].iloc[-1]
+    last_volatility = _last_sig("volatility")
+    last_credit = _last_sig("credit")
+    last_market_strength = _last_sig("market_strength")
+    last_inflation = _last_sig("inflation", 0.0)
+    last_liquidity = _last_sig("liquidity")
+    last_curve = _last_sig("curve")
 
     # Reglas de precedencia
     if last_volatility < -2.0:
