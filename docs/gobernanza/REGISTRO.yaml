@@ -4892,3 +4892,34 @@ items:
     Fix en B4: mover +3 de cls>0.85 dentro del bloque finite o
     bloquear tras pre_invalid con return temprano. Anadir caso
     al golden test.
+# --- B6 confirmation.py, sesion 23, 2026-10-31 ---
+- id: B6-H8-CONFIRMATION-NAN-GUARDS
+  tipo: bug
+  ciclo: '2026-10-31'
+  estado: FIXED
+  commit: 'd072e6b8'
+  test: tests/test_confirmation_nan_guards.py
+  evidencia: |
+    Clase H3-style (.get is not None no captura NaN) en
+    render_confirmation. Seis puntos con NaN literal: (C1) t10y3m
+    pintaba nan%; (C2) fls_score nan/100; (C3) conteos ad
+    (advances/declines/new_highs/new_lows) como nan avances/nan
+    descensos; (C4) ad_line como nan; (C6) val:.4f en ratios
+    como nan. Fix: pd.notna + helpers _ad_int/_ad_float/_fls_
+    score_str/val_str. rv_21d/rv_60d/vrp_21d/vrp_60d ya tenian
+    pd.notna interno, no requieren fix. 7 tests NaN.
+
+- id: B6-RATIO-NAMES-FUENTE-DUPLICADA
+  tipo: deuda_tecnica
+  ciclo: '2026-10-31'
+  estado: OPEN
+  descripcion: |
+    Dict ratio_names en src/report/confirmation.py duplica las
+    12 claves del dict ratios de indicators/cross_asset.py::
+    compute_cross_asset_ratios. Si el productor anade o retira
+    uno, el render lo ignora silenciosamente. Alineados hoy
+    (12=12). Vigilado por test_confirmation_ratios_parity.py.
+  siguiente_accion: |
+    Fix completo: mover ratio_names al productor (cross_asset.py)
+    como RATIO_LABELS y que render importe del productor. Elimina
+    la duplicacion. Preservado hasta B4 (donde vive cross_asset).
