@@ -163,7 +163,7 @@ def test_index_etfs_una_sola_fuente_de_verdad():
     importan de config.tickers. Si alguien reintroduce un literal en
     cualquiera de los 3 sitios, este test falla.
     """
-    from config.tickers import USA_INDEX_ETFS, EU_INDEX_ETFS
+    from config.tickers import EU_INDEX_ETFS
     import src.stock_data_loader as sdl
     # src/stock_data_loader expone el alias EU_INDEX_ETFS_NO_CAP.
     assert sdl.EU_INDEX_ETFS_NO_CAP == EU_INDEX_ETFS
