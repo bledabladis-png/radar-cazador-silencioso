@@ -4689,3 +4689,85 @@ items:
     Fix: reemplazado VT por backslash literal. Nota: prohibido
     here-string en bloques para pegar en PowerShell por fragilidad
     de pegado.
+
+# --- B6 (reporte) sesion 23, 2026-10-31 ---
+- id: B6-H1-MACRO-REGIME-EMPTY-INPUT
+  tipo: bug
+  ciclo: '2026-10-31'
+  estado: FIXED
+  commit: '22bef269'
+  test: tests/test_macro_regime_empty_input.py
+  evidencia: |
+    compute_macro_regime crasheaba con input vacio por 3 rutas:
+    (1) indicators/breadth_core.py:71 .iloc[-1] sobre Series vacia,
+    (2) src/utils.py::get_col AttributeError con df=None,
+    (3) compute_macro_signals df_market.index con None. Ademas
+    con all_signals sin columnas opcionales (market_strength,
+    curve) lineas 194-204 lanzaban KeyError. Fix: guards en los
+    4 puntos + helper _last_sig (NaN para columnas opcionales,
+    MIXED conservador). Contrato: vacio -> (Series vacia, NO_DATA,
+    0.0, all_signals). Test: 5 casos (vacio, None, NaN sin
+    opcionales, camino feliz, source-level).
+
+- id: B6-H3-MACRO-CONF-GUARD
+  tipo: bug
+  ciclo: '2026-10-31'
+  estado: FIXED
+  commit: 'ddcdd0fb'
+  test: tests/test_header_macro_conf_guard.py
+  evidencia: |
+    render_regimenes (header.py) pintaba macro_conf sin guard.
+    macro_conf=None -> TypeError en f-string (crash no capturado);
+    macro_conf=nan -> nan% visible en output. Asimetria con
+    liq_conf, que ya tenia pd.notna guard desde C2. Fix: pd.notna
+    (macro_conf) -> N/D, y no dispara aviso <0.30. 5 tests.
+
+- id: B6-H4-LIQUIDITY-STATE-SIDECHANNEL
+  tipo: bug
+  ciclo: '2026-10-31'
+  estado: FIXED
+  commit: 'ddcdd0fb'
+  test: tests/test_report_mte_futures_liquidity_visibles.py
+  evidencia: |
+    render_regimenes leia outputs/state/liquidity_state.json
+    directamente para severidad_cruda y diff_bp. Si el fichero
+    no existia (sandbox, test, primer run), degradaba
+    silenciosamente sin WARN. Fuente de verdad duplicada: el
+    state ya se producia en el pipeline. Fix: kwarg liquidity_
+    state: dict | None = None. Sin state -> Severidad no
+    disponible explicita. run.py lee el JSON una vez y lo pasa.
+    Docstring Sin side effects ahora correcto. Tests MTE +
+    contrato AST adaptados.
+
+- id: B6-ILOC-SIN-GUARD-BARRIDO
+  tipo: deuda_tecnica
+  ciclo: '2026-10-31'
+  estado: OPEN
+  descripcion: |
+    Barrido .iloc[-1] en regimes/ e indicators/ (B6-H1).
+    Detectados ~50 hits con riesgo similar: indicators/
+    breadth_equity.py (advances/declines/nh/nl/breadth_thrust),
+    darkpool_scoring.py, sector_regime.py (scores/mom/flow),
+    tactical_engine.py (rs20/mom20), structural_engine.py
+    (rs[-window]), commodity_market_correlation.py, options.py
+    (z_series). No todos son bugs: varios tienen guards parciales
+    (len>0). Pero el patron .iloc[-1] sin guard es la clase
+    1fb791ab.
+  siguiente_accion: |
+    Tratar en B3 (Wyckoff) y B4 (motores). Para cada .iloc[-1],
+    verificar si hay len>0 o si la serie puede estar vacia en
+    produccion. Fix minimo: guard + retorno NaN/0 coherente con
+    consumidores.
+
+- id: B6-NO-MOJIBAKE-DOCSTRING-COSMETIC
+  tipo: deuda_tecnica
+  ciclo: '2026-10-31'
+  estado: OPEN
+  descripcion: |
+    tests/test_no_mojibake.py tiene mojibake cosmetico en su
+    docstring (caracteres de doble codificacion por pegado en
+    PowerShell). No afecta al test: solo recorre dirs productivos,
+    no tests/.
+  siguiente_accion: |
+    Editar docstring con editor que preserve UTF-8 (VS Code).
+    No urgente.
