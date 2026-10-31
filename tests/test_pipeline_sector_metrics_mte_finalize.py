@@ -438,3 +438,30 @@ def test_compute_mte_confirmation_propaga_reference_date():
         "compute_mte_confirmation no propaga reference_date a _compute_mte"
     )
 
+
+def test_save_regime_history_macro_score_vacio_skip(tmp_path, monkeypatch):
+    """Fase 2 B5.4 (2026-10-31): guard macro_score vacio.
+
+    Antes: macro_score.iloc[-1] lanzaba IndexError con Series vacia
+    o None. Bug latente: run.py llamaba sin try/except. Ahora skip
+    NO_DATA, sin escritura.
+    """
+    monkeypatch.chdir(tmp_path)
+    # macro_score None
+    fin.save_regime_history(
+        None, "RECESSION", 0.5, "HIGH_STRESS", "NORMAL",
+        {"regime": "BROAD PARTICIPATION"},
+        effective_date=None,
+    )
+    # No crashea, devuelve None (skip retorna receipt pero no se
+    # inspecciona aqui para no acoplar al contrato interno)
+    csv = tmp_path / "outputs/history/macro_regime.csv"
+    assert not csv.exists(), "no debe escribir con macro_score=None"
+
+    # macro_score Series vacia
+    fin.save_regime_history(
+        pd.Series(dtype=float), "RECESSION", 0.5, "HIGH_STRESS",
+        "NORMAL", {"regime": "BROAD PARTICIPATION"},
+        effective_date=None,
+    )
+    assert not csv.exists(), "no debe escribir con Series vacia"

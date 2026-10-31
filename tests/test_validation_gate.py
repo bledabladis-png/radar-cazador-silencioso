@@ -165,3 +165,33 @@ def test_validation_gate_tz_aware_no_silencia_freshness():
         f"PCR con last_date valido no debe decir sin fecha: {pcr_line}"
     )
 
+
+def test_check11_schema_versioning_import_roto_falla_gate():
+    """Fase 2 B5.3 (2026-10-31): check 11 fail-closed.
+
+    Antes: except Exception reportaba True "no evaluable". Un import
+    roto de REGISTRY (circular, OSError) dejaba pasar el gate sin
+    auditar los schemas. Ahora debe fallar el gate.
+    """
+    import sys
+    kwargs = _base_kwargs()
+
+    # Romper el import de src.pipeline.output_registry forzando
+    # ImportError en el import interno del check 11.
+    _orig = sys.modules.get("src.pipeline.output_registry")
+    sys.modules["src.pipeline.output_registry"] = None
+    try:
+        result = run_validation_gate(**kwargs)
+    finally:
+        if _orig is not None:
+            sys.modules["src.pipeline.output_registry"] = _orig
+        else:
+            sys.modules.pop("src.pipeline.output_registry", None)
+
+    assert result["passed"] is False, (
+        f"el gate debe fallar con REGISTRY inaccesible. "
+        f"errors={result['errors']}"
+    )
+    assert any("Schema versioning" in e for e in result["errors"]), (
+        f"debe reportar Schema versioning en errores: {result['errors']}"
+    )

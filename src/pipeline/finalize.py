@@ -84,6 +84,16 @@ def save_regime_history(macro_score, macro_regime, macro_conf,
 
     Movido de report_generator.py (C1-10) y consolidado aqui (C2-12).
     """
+    # Fase 2 B5.4 (2026-10-31): guard de macro_score vacio. Antes
+    # macro_score.iloc[-1] lanzaba IndexError con Series vacia o None.
+    # Bug latente: en produccion all_signals siempre tiene datos, pero
+    # si fallara todo el bloque de senales, el run moriria sin contexto.
+    # skip explicito con razon NO_DATA (legitima). El reporte no pinta
+    # regimen con macro_score ausente.
+    if macro_score is None or len(macro_score) == 0:
+        print("  [WARN] save_regime_history: macro_score vacio. Se omite escritura.")
+        skip('macro_regime', 'NO_DATA', path_override=path_override)
+        return
     # Fix 2026-10-08: prioridad a effective_date (resuelto por
     # resolve_effective_date sobre el universo de equities). El fallback
     # a df_macro_manual.date se mantiene para retrocompatibilidad, pero

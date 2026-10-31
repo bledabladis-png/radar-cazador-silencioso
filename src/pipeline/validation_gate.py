@@ -266,10 +266,16 @@ def run_validation_gate(wyckoff_holdings_data, pcr_data, darkpool_data, mte_resu
                 validation_checks, validation_errors, "Schema versioning",
                 True, _detail,
             )
-    except Exception as _e:
+    except (ImportError, OSError, AttributeError, KeyError, TypeError) as _e:
+        # FAIL-CLOSED (2026-10-31, Fase 2 B5.3): antes except Exception
+        # reportaba True "no evaluable". Un check que existe pero no
+        # verifica es peor que no tenerlo: un import roto, un REGISTRY
+        # vacio por bug o un OSError en el glob dejaba pasar el gate sin
+        # auditar los schemas. Misma clase que GUARD-COVERAGE-LAST-DATE-
+        # PARCIAL y que la clase 1fb791ab.
         _add_check(
             validation_checks, validation_errors, "Schema versioning",
-            True, f"no evaluable: {_e}",
+            False, f"no evaluable: {_e}",
         )
 
     # Resultado
