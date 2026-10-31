@@ -4619,3 +4619,73 @@ items:
     run.py; los 34 scripts de scripts/ no estan cubiertos por
     import-check. Prioridad media (no hay bugs activos conocidos,
     pero el patron se puede repetir).
+# --- Desfases de vistas derivadas (arranque sesion 23, 2026-10-31) ---
+- id: TEST-COUNT-HARDCODE-DRIFT
+  tipo: deuda_tecnica
+  ciclo: '2026-10-31'
+  estado: FIXED
+  commit: '47efd34d'
+  evidencia: |
+    ARRANQUE seccion 3 fijaba "4161 passed, 2 skipped" al cierre sesion
+    22. La fuente autoritativa (ESTADO_SISTEMA.md seccion 2, regenerado
+    2026-10-31) reporta 4176 passed, 2 skipped. Los 15 tests de
+    diferencia se anadieron en 88964dbf, d1097ab0 y afada0ea (Fase 2
+    B1/B5) sin propagar al literal. Commit 899fa179 arrastra el mismo
+    literal en su mensaje. Clase: numero de test hardcodeado en
+    documentacion (patron Fase 0). Fix: ARRANQUE delega el conteo a
+    ESTADO_SISTEMA.md seccion 2; no fija literal.
+
+- id: DICT-CONTRACT-COUNT-DRIFT
+  tipo: deuda_tecnica
+  ciclo: '2026-10-31'
+  estado: FIXED
+  commit: '47efd34d'
+  evidencia: |
+    ARRANQUE seccion 3 citaba "8 pares productor-consumidor" (estado
+    al cierre sesion 20, e8a2a4ba). HANDOFF seccion 1 citaba "10 pares".
+    Real: 11 pares en tests/test_dict_contract_manifest.py::
+    DICT_CONTRACT_PAIRS, whitelist vacia. Par 10 (PCR, 78a0e106) y par
+    11 (SECTOR-RESULTS, 5a976288) anadidos sesion 22 sin propagar a
+    HANDOFF ni ARRANQUE. Fix: ambos docs actualizados a 11 pares;
+    ARRANQUE enumera los pares por nombre (MTE, liquidity_state x2,
+    IAE, darkpool, flows_secondary, confirmation x2, cross_module,
+    PCR, SECTOR-RESULTS).
+
+- id: HANDOFF-DESFASE-SIN-RESPUESTA-21
+  tipo: deuda_tecnica
+  ciclo: '2026-10-31'
+  estado: FIXED
+  commit: '47efd34d'
+  evidencia: |
+    HANDOFF seccion 2.4 listaba HANDOFF-SIN-RESPUESTA-ENTRANTE-21 como
+    OPEN. REGISTRO lo tiene FIXED con commit 771f5ecc. Viola HANDOFF
+    seccion 6.4 ("FIXED no aparece en HANDOFF seccion 4"). El validador
+    no lo detecto porque el HANDOFF es texto libre, no YAML. Fix:
+    eliminado bullet de seccion 2.4.
+
+- id: ARRANQUE-SOW-BEAR-DESFASADO
+  tipo: deuda_tecnica
+  ciclo: '2026-10-31'
+  estado: FIXED
+  commit: '47efd34d'
+  evidencia: |
+    ARRANQUE seccion 4.3 listaba SOW-BEAR-CONFIRMATION como IN_PROGRESS
+    (v1.10.1 sin redactar). REGISTRO lo tiene WONT_FIX con razon
+    empirica (probe 2026-10-31: 0/9 fechas bear historicas disparan,
+    0/11 sectores hoy con SPY no bear). Modulo revertido en 62b27dfb.
+    Fix: eliminado bullet de seccion 4.3.
+
+- id: HANDOFF-ERRATA-PY-SCRIPTS
+  tipo: deuda_tecnica
+  ciclo: '2026-10-31'
+  estado: FIXED
+  commit: '47efd34d'
+  evidencia: |
+    HANDOFF seccion 5 (bloque de arranque) contenia un caracter VT
+    (0x0B) en lugar de backslash entre "py scripts" y
+    "verifica_gobernanza.py". En PowerShell se ejecutaba como
+    "py scripts" (modulo inexistente) seguido de un comando invalido.
+    Detectado al arrancar sesion 23: el bloque fallaba silenciosamente.
+    Fix: reemplazado VT por backslash literal. Nota: prohibido
+    here-string en bloques para pegar en PowerShell por fragilidad
+    de pegado.
