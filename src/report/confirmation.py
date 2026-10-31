@@ -18,9 +18,10 @@ def render_confirmation(confirmation_data):
         out.append("## Confirmation Data (Nivel 2)\n")
         out.append("> *Indicadores de confirmación. No modifican el macro_score.*\n\n")
         
-        if confirmation_data.get('t10y3m') is not None:
-            sign = '+' if confirmation_data['t10y3m'] >= 0 else ''
-            out.append(f"- **10Y-3M Spread:** {sign}{confirmation_data['t10y3m']:.2f}%\n")
+        _t10y3m = confirmation_data.get('t10y3m')
+        if pd.notna(_t10y3m):
+            sign = '+' if _t10y3m >= 0 else ''
+            out.append(f"- **10Y-3M Spread:** {sign}{_t10y3m:.2f}%\n")
         if confirmation_data.get('rv_21d') is not None:
             rv21 = confirmation_data['rv_21d']
             rv21_str = f'{rv21*100:.2f}%' if pd.notna(rv21) else 'N/D'
@@ -40,11 +41,13 @@ def render_confirmation(confirmation_data):
 
         fls = confirmation_data.get('fls', {})
         if fls:
-            fls_score = fls.get('fls_normalized', 0)*100
+            _fls_norm = fls.get('fls_normalized')
+            fls_score = _fls_norm * 100 if pd.notna(_fls_norm) else float('nan')
             fls_comp = fls.get('components', 0)
             fls_total = fls.get('total_components', 5)
             stressed = fls.get('stressed_components', fls_comp)
-            out.append(f"- **Funding & Liquidity Stress (FLS):** {fls_score:.0f}/100 ")
+            _fls_score_str = f'{fls_score:.0f}' if pd.notna(fls_score) else 'N/D'
+            out.append(f"- **Funding & Liquidity Stress (FLS):** {_fls_score_str}/100 ")
             out.append(f"({stressed}/{fls_total} componentes en estres)\n")
             out.append("  *Algunos componentes del FLS pueden saturar "
                        "tras movimientos de tipos; FLS alto no implica "
@@ -60,12 +63,16 @@ def render_confirmation(confirmation_data):
 
         ad = confirmation_data.get('ad', {})
         if ad:
-            out.append(f"- **Advance/Decline Net (universo completo):** {_fmt_signed(ad.get('ad_net', 0), '{:+d}', '{:d}')} ({ad.get('advances', 0)} avances / {ad.get('declines', 0)} descensos)\n")
-            out.append(f"- **New Highs/Lows (mercado):** {ad.get('new_highs', 0)} maximos / {ad.get('new_lows', 0)} minimos (NH-NL: {_fmt_signed(ad.get('nh_nl', 0), '{:+d}', '{:d}')})\n")
+            def _ad_int(v):
+                return str(int(v)) if v is not None and pd.notna(v) else "N/D"
+            def _ad_float(v, fmt):
+                return format(v, fmt) if v is not None and pd.notna(v) else "N/D"
+            out.append(f"- **Advance/Decline Net (universo completo):** {_fmt_signed(ad.get('ad_net', 0), '{:+d}', '{:d}')} ({_ad_int(ad.get('advances'))} avances / {_ad_int(ad.get('declines'))} descensos)\n")
+            out.append(f"- **New Highs/Lows (mercado):** {_ad_int(ad.get('new_highs'))} maximos / {_ad_int(ad.get('new_lows'))} minimos (NH-NL: {_fmt_signed(ad.get('nh_nl', 0), '{:+d}', '{:d}')})\n")
             thrust = ad.get('breadth_thrust', 0.5)
             if thrust > 0.70 or thrust < 0.30:
                 out.append(f"- **Breadth Thrust extremo:** {thrust*100:.1f}%\n")
-            out.append(f"- **A/D Line (acumulada):** {ad.get('ad_line', 0):.0f}\n")
+            out.append(f"- **A/D Line (acumulada):** {_ad_float(ad.get('ad_line'), '.0f')}\n")
             # H6 (2026-10-17, REP-AUDIT-20261017-capa5): la A/D Line
             # se recalcula en cada run sobre el universo actual de
             # df_stocks. NO es una serie incremental persistida. Si
@@ -123,9 +130,10 @@ def render_confirmation(confirmation_data):
                     z_key = f'{key}_zscore'
                     delta = ratios.get(delta_key, None)
                     z = ratios.get(z_key, None)
+                    val_str = format(val, '.4f') if pd.notna(val) else 'N/D'
                     delta_str = _fmt_signed(delta*100, '{:+.1f}%', '{:.1f}%') if delta is not None and pd.notna(delta) else 'N/D'
                     z_str = _fmt_signed(z, '{:+.2f}', '{:.2f}') if z is not None and pd.notna(z) else 'N/D'
-                    out.append(f"| {label} | {val:.4f} | {delta_str} | {z_str} |\n")
+                    out.append(f"| {label} | {val_str} | {delta_str} | {z_str} |\n")
             # REP-AUDIT-20261020-REPORT-REVIEW-EXTERNAL (C10, 2026-10-20):
             # destacar el ratio con |Z| mas extremo de la tabla.
             _zs = [(label, ratios.get(f'{k}_zscore'))
