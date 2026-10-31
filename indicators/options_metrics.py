@@ -84,16 +84,27 @@ def classify_pcr(z):
     else:
         return "Euforia"
 
+# H5.3 B6 (2026-10-31): fuente unica de labels IHR. classify_ihr
+# y el texto de bandas del reporte (helpers._fmt_ihr_bands) leen de aqui.
+IHR_LABELS = {
+    'cobertura_extrema': "Cobertura institucional extrema",
+    'cobertura_alta': "Cobertura institucional alta",
+    'equilibrado': "Equilibrado",
+    'especulacion_alta': "Especulación alta",
+    'especulacion_extrema': "Especulación extrema",
+}
+
+
 def classify_ihr(ihr):
     if ihr is None or np.isnan(ihr):
         return "N/A"
     if ihr >= IHR_THRESHOLDS['cobertura_extrema']:
-        return "Cobertura institucional extrema"
+        return IHR_LABELS['cobertura_extrema']
     elif ihr >= IHR_THRESHOLDS['cobertura_alta']:
-        return "Cobertura institucional alta"
+        return IHR_LABELS['cobertura_alta']
     elif ihr >= IHR_THRESHOLDS['equilibrado']:
-        return "Equilibrado"
+        return IHR_LABELS['equilibrado']
     elif ihr >= IHR_THRESHOLDS['especulacion_alta']:
-        return "Especulación alta"
+        return IHR_LABELS['especulacion_alta']
     else:
-        return "Especulación extrema"
+        return IHR_LABELS['especulacion_extrema']

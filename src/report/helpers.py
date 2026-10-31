@@ -164,3 +164,27 @@ def _classify_fred_freshness(age_days):
     elif age_days <= max_stale:
         return 'STALE'
     return 'ARCHIVAL'
+
+def _fmt_ihr_bands():
+    """Texto de bandas IHR derivado de IHR_THRESHOLDS + IHR_LABELS."""
+    # H5.3 B6 (2026-10-31): antes era un literal hardcoded en sentiment.py
+    # con 3 bandas que ya divergian de classify_ihr (5 categorias reales).
+    from config.settings import IHR_THRESHOLDS
+    from indicators.options_metrics import IHR_LABELS
+    ordenados = sorted(IHR_THRESHOLDS.items(), key=lambda kv: -kv[1])
+    segmentos = []
+    for i, (cat, thr) in enumerate(ordenados):
+        label = IHR_LABELS.get(cat, cat)
+        if i == 0:
+            segmentos.append(f">={thr:g} {label}")
+        else:
+            thr_prev = ordenados[i-1][1]
+            segmentos.append(f"{thr:g}-{thr_prev:g} {label}")
+    # Fallback: categoria de IHR_LABELS ausente de IHR_THRESHOLDS (else de classify_ihr).
+    cats_en_thr = {cat for cat, _ in ordenados}
+    cats_fallback = [c for c in IHR_LABELS if c not in cats_en_thr]
+    if len(cats_fallback) == 1:
+        min_thr = ordenados[-1][1]
+        segmentos.append(f"<{min_thr:g} {IHR_LABELS[cats_fallback[0]]}")
+    segmentos.reverse()
+    return ", ".join(segmentos)

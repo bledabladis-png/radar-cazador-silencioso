@@ -1,15 +1,14 @@
-from src.utils import resolve_reference_date
 # -*- coding: utf-8 -*-
 """Sentimiento de Opciones (CBOE PCR).
 
 Extraido de src/report_generator.py (refactor C1, fase C1-6d2).
 """
 
-
 import numpy as np
 import pandas as pd
 
-from src.report.helpers import _fmt_num
+from src.report.helpers import _fmt_num, _fmt_ihr_bands
+from src.utils import resolve_reference_date
 
 
 def render_sentimiento_opciones(pcr_data, reference_date=None):
@@ -43,7 +42,7 @@ def render_sentimiento_opciones(pcr_data, reference_date=None):
         # y acciones. NO identifica participantes institucionales; los
         # datos de opciones son agregados.
         out.append(f"- **IHR (Index/Equity PCR Ratio, proxy):** {_fmt_num(pcr_data.get('ihr', np.nan), '{:.2f}')} "
-                     f"({pcr_data.get('ihr_state', 'N/A')}, bandas: <1.2 Especulacion, 1.2-1.6 Equilibrado, >1.6 Cobertura institucional)\n")
+                     f"({pcr_data.get('ihr_state', 'N/A')}, bandas: {_fmt_ihr_bands()})\n")
         out.append("*Proxy de sesgo de cobertura basado en opciones: "
                    "index_pcr / equity_pcr. Mide el sesgo relativo put/call "
                    "entre indices y acciones. Los datos de opciones son "
@@ -62,7 +61,10 @@ def render_sentimiento_opciones(pcr_data, reference_date=None):
                 age = (_ref - data_date).days
                 out.append(f" (desfase: {age} dias)")
             except (ValueError, TypeError):
-                pass
+                # H5.2 B6 (2026-10-31): antes pass silencioso. Si last_date es
+                # string invalido (no N/A), el reporte omitia la edad sin avisar.
+                # Ahora fallback visible: lector sabe que el desfase no es calculable.
+                out.append(" (desfase: N/D - fecha no parseable)")
         out.append("\n")
         out.append(f"\n*Fuente: CBOE Official Data. Timestamp: {pcr_data.get('timestamp', 'N/A')}.*\n\n")
     return out
