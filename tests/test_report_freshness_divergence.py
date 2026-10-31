@@ -25,13 +25,12 @@ def _joined(out):
 def test_ambas_mencionan_la_otra_tabla(tmp_path, monkeypatch):
     """Las dos tablas se referencian cruzadamente en sus notas."""
     monkeypatch.chdir(tmp_path)
-    (tmp_path / "outputs" / "state").mkdir(parents=True)
-    (tmp_path / "outputs" / "state" / "liquidity_state.json").write_text(
-        json.dumps({"date": "2026-09-29"}), encoding="utf-8")
+    # H4-bis B6 (2026-10-31): state como kwarg, no por fichero.
+    _state = {"date": "2026-09-29"}
 
     # Side runtime
     ref = datetime(2026, 9, 30, 12, 0)
-    out_runtime = render_data_freshness(None, None, None, reference_date=ref)
+    out_runtime = render_data_freshness(None, None, None, reference_date=ref, liquidity_state=_state)
     joined_runtime = _joined(out_runtime)
 
     # Side CSV
@@ -56,12 +55,11 @@ def test_divergencia_documentada_cuando_csv_stale(tmp_path, monkeypatch):
     Ambas fechas aparecen en la salida. La divergencia es observable,
     no se oculta."""
     monkeypatch.chdir(tmp_path)
-    (tmp_path / "outputs" / "state").mkdir(parents=True)
-    (tmp_path / "outputs" / "state" / "liquidity_state.json").write_text(
-        json.dumps({"date": "2026-09-29"}), encoding="utf-8")
+    # H4-bis B6 (2026-10-31): state como kwarg, no por fichero.
+    _state = {"date": "2026-09-29"}
 
     ref = datetime(2026, 9, 30, 12, 0)
-    out_runtime = render_data_freshness(None, None, None, reference_date=ref)
+    out_runtime = render_data_freshness(None, None, None, reference_date=ref, liquidity_state=_state)
     joined_runtime = _joined(out_runtime)
 
     # CSV con FRED congelado en 2026-09-10 (20 dias de antiguedad)

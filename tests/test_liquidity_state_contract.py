@@ -70,7 +70,7 @@ def test_freshness_lee_campos_presentes_en_state():
         producer_fn="compute_liquidity_score_v2",
         consumer_module=FRESHNESS,
         consumer_fn="render_data_freshness",
-        consumer_var="liq_state",
+        consumer_var="liquidity_state",
         producer_var="state",
     )
 
@@ -100,7 +100,7 @@ def test_freshness_lee_date():
     N/D). "
     """
     reads = consumer_read_keys(
-        FRESHNESS, "render_data_freshness", "liq_state")
+        FRESHNESS, "render_data_freshness", "liquidity_state")
     assert "date" in reads, (
         "render_data_freshness dejo de leer 'date' del state. El "
         "reporte perderia la frescura de FRED. Si es intencional, "

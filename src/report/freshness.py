@@ -23,7 +23,7 @@ from src.report.helpers import (
 )
 
 
-def render_data_freshness(pcr_data, darkpool_data, sector_results, reference_date=None):
+def render_data_freshness(pcr_data, darkpool_data, sector_results, reference_date=None, liquidity_state=None):
     """Renderiza la seccion 'Data Freshness' + tabla de cobertura.
 
     Devuelve lista de lineas markdown. Sin side effects.
@@ -60,26 +60,21 @@ def render_data_freshness(pcr_data, darkpool_data, sector_results, reference_dat
         else:
             out.append("| FINRA (Dark Pools) | N/D | N/D | N/D | N/D |\n")
     
-    # FRED: intentar obtener fecha real desde liquidity_state.json
-    try:
-        import json
-        from pathlib import Path as _Path
-        liq_state_path = _Path('outputs/state/liquidity_state.json')
-        if liq_state_path.exists():
-            with liq_state_path.open('r', encoding='utf-8') as f:
-                liq_state = json.load(f)
-            last_fred = liq_state.get('date', 'N/A')
-            if last_fred != 'N/A':
-                d = _last_market_session(last_fred)  # FU-007: walk back a ultimo dia bursatil
-                age = (_ref - d).days
-                fred_status = _classify_fred_freshness(age)
-                fred_conf = 'Alta' if fred_status in ('CURRENT', 'RECENT') else 'Baja'
-                out.append(f"| FRED (Macro) | {d.strftime('%Y-%m-%d')} | {age} dias | {fred_status} | {fred_conf} |\n")
-            else:
-                out.append("| FRED (Macro) | N/D | N/D | N/D | N/D |\n")
-        else:
-            out.append("| FRED (Macro) | N/D | N/D | N/D | N/D |\n")
-    except (json.JSONDecodeError, OSError, ValueError, TypeError, AttributeError):
+    # H4-bis B6 (2026-10-31): simetria con header.py H4. El state
+    # llega por kwarg desde run.py, no se lee fichero aqui.
+    last_fred = 'N/A'
+    if liquidity_state:
+        last_fred = liquidity_state.get('date', 'N/A')
+    if last_fred != 'N/A':
+        try:
+            d = _last_market_session(last_fred)  # FU-007
+            age = (_ref - d).days
+            fred_status = _classify_fred_freshness(age)
+            fred_conf = 'Alta' if fred_status in ('CURRENT', 'RECENT') else 'Baja'
+            out.append(f"| FRED (Macro) | {d.strftime('%Y-%m-%d')} | {age} dias | {fred_status} | {fred_conf} |\n")
+        except (ValueError, TypeError):
+            out.append("| FRED (Macro) | {last_fred} | N/D | N/D | N/D |\n")
+    else:
         out.append("| FRED (Macro) | N/D | N/D | N/D | N/D |\n")
     # Yahoo Finance: leer fecha real desde Parquet (coherencia total)
     _yahoo_last = None

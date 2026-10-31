@@ -101,10 +101,10 @@ def test_fred_con_liquidity_state(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
     (tmp_path / "outputs" / "state").mkdir(parents=True)
     state = {"date": "2026-09-29"}
-    (tmp_path / "outputs" / "state" / "liquidity_state.json").write_text(
-        json.dumps(state), encoding="utf-8")
+    # H4-bis B6 (2026-10-31): state como kwarg, no por fichero.
+    _state = state
     ref = datetime(2026, 9, 30, 12, 0)
-    out = render_data_freshness(None, None, None, reference_date=ref)
+    out = render_data_freshness(None, None, None, reference_date=ref, liquidity_state=_state)
     joined = _joined(out)
     # FRED debe tener la fecha (via walk-back al ultimo dia bursatil)
     fred_lines = [l for l in joined.split(chr(10)) if "FRED" in l]
