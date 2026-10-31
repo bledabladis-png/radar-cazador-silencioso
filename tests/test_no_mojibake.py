@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
-"""Centinela: prohibe mojibake UTF-8->Latin1 en strings de codigo productivo.
+"""Centinela: prohibe mojibake UTF-8->Latin1 en strings productivos.
 
-Detecta la clase: string guardado como UTF-8 dos veces (e.g. "seÃ±ales"
-en vez de "señales"). Bug observado en src/report/header.py (sesion 23).
+Detecta la clase: string guardado como UTF-8 dos veces (la enie
+aparece doble-codificada en lugar del caracter correcto).
+Bug observado en src/report/header.py (sesion 23).
 
-Patron: Ã*, Â*, â€*. Si aparece un mojibake nuevo no catalogado, ampliar
-PARES en el helper de deteccion.
+Patron: prefijos de byte UTF-8 doble-codificado. Si aparece uno
+nuevo no catalogado, ampliar PARES_MOJIBAKE.
 """
 
 import ast

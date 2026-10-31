@@ -1,4 +1,3 @@
-from src.utils import resolve_reference_date
 # -*- coding: utf-8 -*-
 """Seccion Data Freshness del reporte diario.
 
@@ -6,6 +5,7 @@ Extraido de src/report_generator.py (refactor C1, fase C1-6a1).
 """
 
 
+from src.utils import resolve_reference_date
 import pandas as pd
 
 from src.market_calendar import _last_market_session

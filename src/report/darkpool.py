@@ -1,4 +1,3 @@
-from src.utils import resolve_reference_date
 # -*- coding: utf-8 -*-
 """Dark Pools (FINRA ATS Transparency Data).
 
@@ -13,6 +12,7 @@ Rediseno K-DT3-AUDIT-01 (2026-10-06):
 - `n_tickers_ats`/`n_tickers_total` -> `n_tickers` (siempre iguales).
 """
 
+from src.utils import resolve_reference_date
 import pandas as pd
 
 from src.report.helpers import _classify_finra_freshness, _fmt_num

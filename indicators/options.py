@@ -192,7 +192,6 @@ def compute_pcr_signals(persist_history=False):
 
         score = np.nan
 
-        percentile = np.nan
         percentile_20d = np.nan
     return {
 
