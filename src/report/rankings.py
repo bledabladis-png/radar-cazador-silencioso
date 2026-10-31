@@ -5,6 +5,7 @@ Extraidos de src/report_generator.py (refactor C1, fase C1-6c2).
 """
 
 import numpy as np
+import pandas as pd
 
 from config.tickers import SECTOR_NAMES, MARKET_TICKERS
 from config.settings import EXPECTED_SECTOR_COUNT
@@ -50,12 +51,19 @@ def render_ranking_sectorial_unificado(sector_results, tactical_scores,
         t_score = tactical_scores.get(ticker, 0.0) if tactical_scores else 0.0
         s_score = structural_scores.get(ticker, 0.0) if structural_scores else 0.0
         pers_raw = sector_persistence.get(ticker) if sector_persistence else None
-        pers_val = pers_raw if pers_raw is not None else 0.0
-        pers_str = f"{pers_raw:.0%}" if pers_raw is not None else "N/A"
+        # H6 B6 (2026-10-31): pd.notna en vez de is not None (NaN != None).
+        if pd.notna(pers_raw):
+            pers_str = f"{pers_raw:.0%}"
+        else:
+            pers_str = "N/A"
         agree = signal_agreements.get(ticker, 0.5) if signal_agreements else 0.5
         agree_display = (signal_agreements_display.get(ticker, f'{agree:.0%}')
                          if signal_agreements_display else f'{agree:.0%}')
-        signal_cons = (pers_val + agree) / 2
+        # H6 B6 (2026-10-31): N/A si falta persistencia o agreement.
+        if pd.notna(pers_raw) and pd.notna(agree):
+            signal_cons_str = f"{((pers_raw + agree) / 2):.0%}"
+        else:
+            signal_cons_str = "N/A"
         shock = shock_sensitivities.get(ticker, {}) if shock_sensitivities else {}
         comm_level = shock.get('commodity_level', 'N/A') if shock else 'N/A'
         comm_val = shock.get('commodity_corr_value', None) if shock else None
@@ -66,7 +74,7 @@ def render_ranking_sectorial_unificado(sector_results, tactical_scores,
             f"| {i} | {name} ({ticker}) | {_fmt_num(score, '{:.2f}')} "
             f"| {_fmt_signed(t_score, '{:+.2f}', '{:.2f}')} "
             f"| {_fmt_signed(s_score, '{:+.2f}', '{:.2f}')} "
-            f"| {pers_str} | {agree_display} | {signal_cons:.0%} "
+            f"| {pers_str} | {agree_display} | {signal_cons_str} "
             f"| {comm_display} |\n"
         )
     out.append("\n")
@@ -88,8 +96,9 @@ def render_opportunity_map(tactical_scores, structural_scores,
     """
     out = []
     out.append("## Opportunity Map (basado en medianas Tactical/Structural)\n\n")
-    tact_values = [v for v in tactical_scores.values() if v is not None] if tactical_scores else [0]
-    struct_values = [v for v in structural_scores.values() if v is not None] if structural_scores else [0]
+    # H6 B6 (2026-10-31): pd.notna en vez de is not None (NaN != None).
+    tact_values = [v for v in tactical_scores.values() if pd.notna(v)] if tactical_scores else []
+    struct_values = [v for v in structural_scores.values() if pd.notna(v)] if structural_scores else []
     tact_median = np.median(tact_values) if tact_values else 0
     struct_median = np.median(struct_values) if struct_values else 0
     
@@ -110,9 +119,12 @@ def render_opportunity_map(tactical_scores, structural_scores,
         s = structural_scores.get(ticker, 0) if structural_scores else 0
         name = SECTOR_NAMES.get(ticker, ticker)
         pers_raw = sector_persistence.get(ticker) if sector_persistence else None
-        pers_val = pers_raw if pers_raw is not None else 0.0
         agree = signal_agreements.get(ticker, 0.5) if signal_agreements else 0.5
-        conf = (pers_val + agree) / 2
+        # H6 B6 (2026-10-31): no mezclar None con 0.0. Si falta algo, conf=NaN.
+        if pd.notna(pers_raw) and pd.notna(agree):
+            conf = (pers_raw + agree) / 2
+        else:
+            conf = float("nan")
         
         if s > struct_median and t > tact_median:
             quadrants['Structural Strength'].append((name, conf))
@@ -137,8 +149,11 @@ def render_opportunity_map(tactical_scores, structural_scores,
         icon = icons.get(quadrant, '?')
         if sector_list:
             sector_names = [s[0] for s in sector_list]
-            avg_conf = safe_mean([s[1] for s in sector_list])
-            out.append(f"| {icon} **{quadrant}** | {', '.join(sector_names)} | {avg_conf:.0%} |\n")
+            # H6 B6 (2026-10-31): N/A si no hay confs validas.
+            valid_confs = [s[1] for s in sector_list if pd.notna(s[1])]
+            avg_conf = safe_mean(valid_confs) if valid_confs else float('nan')
+            avg_conf_str = f"{avg_conf:.0%}" if not pd.isna(avg_conf) else "N/A"
+            out.append(f"| {icon} **{quadrant}** | {', '.join(sector_names)} | {avg_conf_str} |\n")
         else:
             out.append(f"| {icon} **{quadrant}** | -- | -- |\n")
     out.append("\n")
