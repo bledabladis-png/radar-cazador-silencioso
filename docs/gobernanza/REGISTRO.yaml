@@ -4771,3 +4771,55 @@ items:
   siguiente_accion: |
     Editar docstring con editor que preserve UTF-8 (VS Code).
     No urgente.
+# --- B6 sentiment.py, sesion 23, 2026-10-31 ---
+- id: B6-H5.1-SENTIMENT-HEADER
+  tipo: deuda_tecnica
+  ciclo: '2026-10-31'
+  estado: FIXED
+  commit: '5e5d7286'
+  test: tests/test_sentiment_ihr_bands.py
+  evidencia: |
+    src/report/sentiment.py tenia import antes de la coding declaration
+    (PEP 263: debe ir en linea 1 o 2). El docstring del modulo no era
+    __doc__. Artefacto de refactor C1. Fix: mover el import debajo del
+    docstring.
+
+- id: B6-H5.2-SENTIMENT-AGE-SILENT
+  tipo: bug
+  ciclo: '2026-10-31'
+  estado: FIXED
+  commit: '5e5d7286'
+  test: tests/test_sentiment_age_invalid_date.py
+  evidencia: |
+    sentiment.py bloque "desfase dias": except (ValueError, TypeError):
+    pass. Si last_date es string invalido (distinto de N/A), el reporte
+    omitia la edad sin avisar (fallback silencioso sin WARN). Fix:
+    pintar N/D - fecha no parseable explicito. 3 tests.
+
+- id: B6-H5.3-IHR-BANDS-DIVERGENT
+  tipo: bug
+  ciclo: '2026-10-31'
+  estado: FIXED
+  commit: '5e5d7286'
+  test: tests/test_sentiment_ihr_bands.py
+  evidencia: |
+    ALTA. Texto de bandas IHR hardcoded en sentiment.py con 3 bandas
+    (<1.2 Especulacion, 1.2-1.6 Equilibrado, >1.6 Cobertura). Logica
+    real (classify_ihr) tiene 5 categorias: IHR_THRESHOLDS = {0.8,
+    1.2, 1.6, 2.5}. Un IHR de 0.5 se pinta "Especulacion extrema"
+    pero el texto dice <1.2 Especulacion. Fuente de verdad duplicada
+    que ya divergio. Fix: IHR_LABELS dict extraido (fuente unica),
+    helpers._fmt_ihr_bands() deriva el texto de IHR_THRESHOLDS +
+    IHR_LABELS, sentiment.py invoca el helper. 5 tests centinela.
+
+- id: B6-H5.4-PERCENTILE-DUP
+  tipo: deuda_tecnica
+  ciclo: '2026-10-31'
+  estado: OPEN
+  descripcion: |
+    indicators/options.py::compute_pcr_signals rama else:
+    percentile = np.nan declarado dos veces (lineas contiguas).
+    Dead code funcional (segunda asignacion sobrescribe la primera
+    con el mismo valor).
+  siguiente_accion: |
+    Limpiar en B4. Fix: eliminar una de las dos lineas.
