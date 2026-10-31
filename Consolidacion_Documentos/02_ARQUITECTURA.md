@@ -9,7 +9,7 @@
 
     OHLCV -> Regimenes -> Motores -> Indicadores -> Scores -> Reporte Markdown
                                                                    |
-                                                        Validation Gate 10/10
+                                                        Validation Gate N/N dinamico
                                                                    |
                                                         Side effects + IAE
 
@@ -250,7 +250,7 @@ Orden ejecutado por `run.py::main()`:
 | 9b | pipeline/market_data.py | PCR + Dark Pools + Volatilidad estructural + Calidad datos |
 | 10a | pipeline/mte_confirmation.py | MTE + Cross-Module Conflict + Confirmation Data |
 | 10b | pipeline/wyckoff_holdings.py | 6 CSVs holdings (usa_sector_acc/dist, usa_index_acc/dist, eu_index_acc/dist) |
-| 11 | pipeline/validation_gate.py | Validation Gate 10/10 + audit double-counting |
+| 11 | pipeline/validation_gate.py | Validation Gate N/N dinamico + audit double-counting |
 | 12 | pipeline/finalize.py | Matrices finales + side effects + cobertura europea |
 | IAE | pipeline/iae_section.py | NIPC contractual (13F) |
 
@@ -319,21 +319,25 @@ Si `validation_gate['passed'] == False` -> `sys.exit(1)`.
 skipean por defecto (`--run-network` requerido). No requieren refresco
 manual del pipeline.
 
-**Validation Gate (10/10, adaptado a holdings en C3.2):**
-1. Wyckoff holdings CSVs (>=1 tabla con filas).
-2. PCR Total (no NaN).
-3. Dark Pool medio (no NaN).
-4. MTE MSI/IPI (no NaN).
-5. Rangos Tactical/Structural en [-1, +1].
-6. Cobertura holdings (>=1 grupo con >=5 tickers en las tablas).
+**Validation Gate (N/N dinamico desde `090a3439`, actualmente 11/11):**
+Checks vigentes en `src/pipeline/validation_gate.py::run_validation_gate`:
+1. Wyckoff holdings CSVs.
+2. PCR Total.
+3. Dark Pool medio.
+4. MTE (MSI/IPI).
+5. Rangos Tactical/Structural.
+6. Cobertura holdings.
 7. Freshness Dark Pool.
 8. Freshness PCR.
-9. Config pesos (`validate_weights()`).
-10. Sanity holdings (close > 0, weight >= 0 en todas las filas).
+9. Config pesos.
+10. Sanity holdings.
+11. Schema versioning (Fase 1).
 
-Si el gate falla, `run.py` aborta con `sys.exit(1)`. El gate mantiene
-10/10 para no romper el contrato del receipt (`pipeline_gate.VALID_RECEIPT_VALIDATION_GATES`,
-`write_completion_receipt.VG_MIN_CHECKS`).
+Si el gate falla, `run.py` aborta con `sys.exit(1)`. El numero de checks
+es dinamico desde `090a3439`: el receipt lee `checks_n` del resultado
+(no hardcodea 10/10). `pipeline_gate.VALID_RECEIPT_VALIDATION_GATES` y
+`write_completion_receipt.VG_MIN_CHECKS` se actualizan con el commit
+que cambia `checks_n`.
 ---
 
 ## 10. DECISIONES ARQUITECTONICAS VIGENTES

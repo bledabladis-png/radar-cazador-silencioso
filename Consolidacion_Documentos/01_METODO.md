@@ -137,7 +137,7 @@ Corolario: si un run intradiario produce una fila con la fecha del dia natural Y
 3. **Snapshot post:** copiar los mismos a `outputs/audit/post_<bloque>_<stamp>/`.
 4. **Criterios de aceptacion:**
    - exit=0.
-   - Validation Gate 10/10.
+   - Validation Gate N/N dinamico (actualmente 11/11; ver ESTADO_SISTEMA.md).
    - Secciones `##` del reporte: identicas o con delta justificado.
    - Lineas del reporte: solo ruido conocido (timestamps, liquidez FRED).
    - CSVs historicos: solo append de la fecha del run, 0 reescritura retroactiva.

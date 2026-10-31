@@ -226,9 +226,9 @@ Pega este bloque al inicio de cada sesion:
     py scripts\genera_indice_auditorias.py
     py scripts\poda_bitacora.py --check
     py -m pytest tests/ -q --tb=line -m "not integration_real_data" -n auto --dist loadfile
-    # ^ smoke check rapido (~2 min, 3816 passed)
+    # ^ smoke check rapido (~2 min, sin integracion real)
     py -m pytest tests/ -q --tb=line -n auto
-    # ^ suite completa autoritativa (coincide con ESTADO_SISTEMA.md: 3829 passed, 2 skipped)
+    # ^ suite completa autoritativa (conteo vigente en ESTADO_SISTEMA.md seccion 2)
     py -m pyflakes . ; py -m compileall . -q
 
 Esperado:

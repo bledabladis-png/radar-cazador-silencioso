@@ -23,12 +23,6 @@ Ese documento es autosuficiente para empezar. Referencia on-demand:
 Snapshot autoritativo: `Consolidacion_Documentos/ESTADO_SISTEMA.md`
 (regenerable con `py scripts/generate_estado_sistema.py`).
 
-Resumen:
-- Tests: 2267 passed + 2 skipped.
-- Validation Gate: 10/10.
-- Cobertura configurada: 313 tickers.
-- Working tree limpio.
-
 ---
 
 ## Comandos de arranque
