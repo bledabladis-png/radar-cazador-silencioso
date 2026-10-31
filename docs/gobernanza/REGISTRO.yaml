@@ -4992,3 +4992,84 @@ items:
     Dos renders con la misma fuente, uno por kwarg y otro por
     fichero. Fix: kwarg liquidity_state=None; sin state -> N/D.
     report_generator.py propaga. 3 tests adaptados.
+# --- B6 paridad de guards y drift de nombres (acumulados sesion 23) ---
+- id: B6-PARITY-SYNTHESIS-ALERTS
+  tipo: deuda_tecnica
+  ciclo: 2026-10-31
+  estado: OPEN
+  descripcion: |
+    synthesis.py::render_sintesis_senales consume breadth_values y
+    price_flow_divergences sin los guards que alerts.py recibio en H9
+    (ema200 > 0.70 con None, div.get sin guard div None). Inconsistencia
+    interna: dos renders, mismo productor, uno blindado y otro no.
+    Produccion no crashea (productor emite NaN, no None).
+  siguiente_accion: |
+    Portar guards A2/A3 equivalentes de alerts.py a synthesis.py.
+    Bajo coste, cierra paridad.
+
+- id: B6-PARITY-BREADTH-ALERTS
+  tipo: deuda_tecnica
+  ciclo: 2026-10-31
+  estado: OPEN
+  descripcion: |
+    breadth.py: b20_pct:.2% y similares sin pd.notna. sectors_base.py
+    filtra NaN aguas arriba, pero el render es fragil a futuro.
+  siguiente_accion: |
+    Aplicar _sf-style guard a los 5 .2% del render.
+
+- id: B6-PARITY-MARKET-CONTEXT-GUARDS
+  tipo: deuda_tecnica
+  ciclo: 2026-10-31
+  estado: OPEN
+  descripcion: |
+    market_context.py: rs_abs_20d y rs_internal_20d con .2% sin guard.
+    Produccion limpia (CSV sin NaN).
+  siguiente_accion: |
+    _fmt_num o _sf en los 2 campos.
+
+- id: B6-PARITY-SECTORIAL-GUARDS
+  tipo: deuda_tecnica
+  ciclo: 2026-10-31
+  estado: OPEN
+  descripcion: |
+    sectorial.py::render_sector_dispersion: 6 formatters (.4f/.2%)
+    sin guard. Produccion limpia.
+  siguiente_accion: |
+    Aplicar _fmt_num a rs_p25/rs_median/rs_p75/momentum_p25/
+    momentum_median/momentum_p75.
+
+- id: B6-PARITY-DARKPOOL-CODING-HEADER
+  tipo: deuda_tecnica
+  ciclo: 2026-10-31
+  estado: OPEN
+  descripcion: |
+    darkpool.py: from src.utils import ... en linea 1 antes de
+    coding declaration. Mismo artefacto en freshness.py.
+  siguiente_accion: |
+    Barrido coding-decl-line-1 en src/report/*.py.
+
+- id: B6-FLOWS-CURRENCY-COLUMN-NAME
+  tipo: deuda_tecnica
+  ciclo: 2026-10-31
+  estado: OPEN
+  descripcion: |
+    data/providers/_blackrock_base.py:227 escribe estimated_flow_eur
+    = shares_change * nav. Para ISF.L el NAV esta en GBP (URL
+    FTSE-100-UCITS-ETF-INC-GBP), para IWM en USD. Columna con
+    3 monedas etiquetada como eur. Render etiqueta correctamente
+    (GBP/USD segun fondo). Bug cosmetico de mantenimiento.
+  siguiente_accion: |
+    B5: renombrar a estimated_flow_native o anadir columna currency.
+
+- id: B6-FLOWS-REGISTRY-COVERAGE
+  tipo: deuda_tecnica
+  ciclo: 2026-10-31
+  estado: OPEN
+  descripcion: |
+    7 outputs internacionales (blackrock_dax/isf/iwm, amundi_lyxi,
+    qqq_sec_primary_flow, nport_position_change_quarterly) no estan
+    en output_registry.py (25 OutputSpec). Se escriben via
+    flows_primary.py::persist() o to_csv() directo. Receipt y schema
+    validation no los cubren.
+  siguiente_accion: |
+    B5: extender output_registry con los 7 outputs.
