@@ -97,14 +97,23 @@ PCR-CONTRACT (OPEN desde sesion 20).
   2026-11-02.
 - HANDOFF a HEAD 5a976288.
 
-**Cierre real.** 5a976288 (SECTOR-RESULTS-CONTRACT FIXED). HANDOFF
-y bitacora alineados a HEAD 5a976288 tras commit de cierre. CI verde
-en 41153727309. DICT-CONTRACT: 10 pares, whitelist 0.
+**Cierre real.** 0e3b0dd3 (HOLDINGS-NORMALIZACION-EN-ORIGEN
+FIXED tras rollback + B'). CI verde 41157786156. La sesion cerro
+2 frentes grandes (DICT-CONTRACT-FRAMEWORK al 100%, HOLDINGS
+causa raiz) y dejo 6 deudas de handoff OPEN.
 
-**Proximo paso sugerido.** Sesion 23: HOLDINGS-NORMALIZACION-EN-
-ORIGEN (E2E obligatorio, METODO seccion 4) o cerrar HANDOFF-SIN-
-RESPUESTA-ENTRANTE-21 con decision del operador sobre las 6 sin
-canal. Verificar daily_run real del lunes 2026-11-02.
+**Reintento HOLDINGS (contexto).** El primer intento (B explicito)
+rompio 16 tests con KeyError ticker_norm porque los tests sinteticos
+no pasaban por load_stocks_data. Rollback. Segundo intento (B')
+con ensure_ticker_norm + get_ticker_norm como red de seguridad:
+tests existentes intactos, causa raiz cerrada via assert +
+centinela AST que prohibe normalize_yahoo_ticker en los 5
+consumidores. E2E verificado contra baseline 20261031_003442.
+
+**Proximo paso sugerido.** Sesion 23: HOLDINGS ya cerrado. Prioridad:
+verificar daily_run real del lunes 2026-11-02 (headSha 0e3b0dd3) y
+cerrar HANDOFF-SIN-RESPUESTA-ENTRANTE-21 con decision del operador
+sobre las 6 sin canal.
 
 ### 2026-10-31 — Sesion 21: coherencia analisis vs descarga + BRK.B residual
 

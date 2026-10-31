@@ -4037,20 +4037,20 @@ items:
 - id: HOLDINGS-NORMALIZACION-EN-ORIGEN
   tipo: auditoria_interna
   ciclo: '2026-10-31'
-  estado: OPEN
-  descripcion: |
-    holdings_df se carga sin normalizar; cada consumidor normaliza
-    por su cuenta. BRK.B (holdings) vs BRK-B (parquet) se pierde
-    silenciosamente si un modulo nuevo olvida normalizar.
-  siguiente_accion: |
-    Normalizar holdings_df ticker UNA VEZ en load_stocks_data +
-    assert all(normalize(t) == t for t in holdings_df["ticker"]).
-    Requiere E2E por METODO seccion 4 (toca src/pipeline).
-  evidencia: |
-    O2 (1cb15d52) + e04b53ff cerraron sintoma en rs_internal y
-    sector_concentration; causa raiz sigue viva. Run local
-    20261031_003442: gap ret20 vs rs = 0 en 11 sectores.
-    Leccion anadida en 01c_LECCIONES (bfba1763).
+  estado: FIXED
+  commit: '0e3b0dd3'
+  test: tests/test_holdings_contract.py
+  verificacion: |
+    Cerrado 2026-10-31 (sesion 22, tras rollback + B'). holdings_df
+    sale de load_stocks_data con ticker (original) y ticker_norm
+    (Yahoo). 5 consumidores acceden via ensure_ticker_norm (df) o
+    get_ticker_norm (row). Centinela AST prohibe
+    normalize_yahoo_ticker en los 5. E2E verificado: run.py exit=0,
+    Gate 11/11, gap ret20 vs rs = 0 en 11 sectores, XLF 34/34,
+    XLV 26/26, XLI 50/50, XLK 39/39 (coincide baseline 20261031_003442).
+    BRK.B preservado en rs_internal y sector_wyckoff_distribution
+    (XLF 34/34). Ausencia en tablas ACCUM/DIST esperada (BRK.B en
+    RANGE). CI verde 41157786156.
 - id: HANDOFF-SIN-RESPUESTA-ENTRANTE-21
   tipo: frente
   ciclo: '2026-10-31'

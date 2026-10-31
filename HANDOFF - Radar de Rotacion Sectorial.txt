@@ -9,11 +9,11 @@ junto con `Consolidacion_Documentos/00_ARRANQUE.md`.
 
 ## 1. ESTADO AL CIERRE (2026-10-31, sesion 22)
 
-HEAD: `5a976288` (consultar `git log --oneline -1` para el actual).
+HEAD: `0e3b0dd3` (consultar `git log --oneline -1` para el actual).
 Sincronizacion: main == origin/main al cierre del commit.
 Tests: fuente autoritativa Consolidacion_Documentos/ESTADO_SISTEMA.md.
        Conteo exacto en ESTADO_SISTEMA.md seccion 2 (no literal aqui: cambia con cada commit de test).
-CI HEAD: verde (run 41153727309 sobre 5a976288).
+CI HEAD: verde (run 41157786156 sobre 0e3b0dd3).
 Validation Gate: 11/11 (outputs/state/validation_gate_result.json).
 Working tree: limpio.
 Gobernanza: docs/gobernanza/REGISTRO.yaml, 195 items. Validador reforzado
@@ -21,6 +21,10 @@ Gobernanza: docs/gobernanza/REGISTRO.yaml, 195 items. Validador reforzado
 Writers: 25 (output_registry.py).
 DICT-CONTRACT: 10 pares cubiertos (PCR + SECTOR-RESULTS cross-module
                anadidos 2026-10-31). Whitelist 0 pares.
+HOLDINGS-NORMALIZACION-EN-ORIGEN: FIXED 0e3b0dd3. load_stocks_data
+  emite ticker (original) y ticker_norm (Yahoo); 5 consumidores
+  acceden via ensure_ticker_norm / get_ticker_norm; centinela AST
+  prohibe normalize_yahoo_ticker en consumidores.
 
 Sistema Wyckoff: holdings-based + snapshot PIT append-only REAL.
 structure_ratio: continuo en sector_regime_matrix v2. DESCRIPTIVO.
