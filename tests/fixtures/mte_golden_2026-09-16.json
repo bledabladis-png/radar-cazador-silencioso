@@ -58,12 +58,13 @@
   },
   "expected_output": {
     "scenario": "MIXED",
-    "confidence": 0.6505953724652309,
-    "msi": 33.81689074201192,
+    "confidence": 0.651907878133175,
+    "msi": 30.719743783326948,
     "ipi": 62.23399368821223,
-    "srs": 0.2299456026036154,
+    "srs": 0.07508825466936671,
     "shs": -0.6528589462845729,
     "cls": 0.1393918719570505,
     "ips": 0.24467987376424463
-  }
+  },
+  "note": "Actualizado 2026-10-31 (sesion 22). MTE-SECTOR-LISTS-DIVERGENTES: XLC reclasificado de defensivo a ciclico en config/tickers.py v3.15. El MTE mantuvo la lista vieja hasta el fix. Alineado. El fixture tiene XLC subiendo +2.3% mientras 10 sectores caen (pct_change 20d): con XLC defensivo el 'defensivo sube' empujaba srs a 0.23; con XLC ciclico el 'ciclico sube' lo deja en 0.075. Scenario MIXED se mantiene. Commit original del golden: 38092ed. Commit del fix: fc07b634."
 }
