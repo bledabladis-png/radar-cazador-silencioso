@@ -206,8 +206,6 @@ def compute_pcr_signals(persist_history=False):
 
         'momentum': momentum,
 
-        'percentile': percentile,
-
         'state': state,
 
         'score': score,
