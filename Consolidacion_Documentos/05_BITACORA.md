@@ -271,6 +271,128 @@ Deuda abierta: OBSERVABILIDAD-SILENCIOSA (7 fallbacks sin
 WARN), DT-NOW-HELPER-HUERFANO, FASE0-BARRIDO-SCRIPTS (441
 hits en scripts/ calibracion, prioridad baja).
 
+
+**Fase 2 - Auditoria por bloques tematicos (misma fecha, sesion 22):**
+
+Plan original: 8 bloques (B1-B8) para auditar el sistema modulo a
+modulo con los 13 patrones de 01b_PATRONES + 5 nuevos (dead code
+funcional, cascada abortada, literal fragil, fuente de verdad
+duplicada, fallback silencioso sin WARN). Cerrados hoy B5 y B1.
+
+B5 (outputs/persistencia) - 4 sub-bloques, 3 bugs + 2 deudas:
+
+- B5.1 (afada0ea) output_registry + output_writer. Bug ALTA: todo
+  el bloque de migracion schema v1->v2 (backup .vN.csv,
+  _migrated_this_call, no sobrescribir, no borrar .schema hasta
+  exito) no tenia tests. Grep de schema_version|_migrated|.v1.csv
+  en tests/: cero. Misma clase 1fb791ab (test verde con mock,
+  integracion no ejercitada). T5 destapo bug real: si
+  shutil.copy2 fallaba, el codigo silenciaba y continuaba como
+  append normal -> CSV mezclaba v1 con v2. Fix fail-closed (raise
+  OSError con contexto) + WARN si falla escribir .schema. T1-T6
+  nuevos.
+
+- B5.2 (6146f5c4) src/utils.py (manifest, coverage, helpers
+  temporales). 5 funciones auditadas, 0 bugs funcionales, 4
+  fallbacks silenciosos con WARN anadido: _try_cleanup (tmp
+  huerfano), _compute_by_market (get_market UNKNOWN),
+  write_artifact_with_manifest (resolve_effective_date cae a
+  fallback), _nan_usa_on_non_market_days (get_market silenciado).
+  Fixes de ayer (coverage_pct_effective, effective_session)
+  siguen coherentes. append_dedup, _last_row_coverage_ok,
+  truncate_to_expected_session, get_effective_meta,
+  writer_observation_date: auditados sin bug.
+
+- B5.3 (d1097ab0) validation_gate.py. Bug ALTA: check 11 (Schema
+  versioning) envuelto en except Exception que reportaba
+  _add_check(..., True, 'no evaluable'). Un import roto de
+  REGISTRY, un REGISTRY vacio por bug o cualquier excepcion en el
+  glob dejaba pasar el gate sin auditar schemas. Misma clase que
+  GUARD-COVERAGE-LAST-DATE-PARCIAL. Fix: except especifico +
+  _add_check(..., False, ...). Test centinela: forzar REGISTRY
+  inaccesible via sys.modules. NO tocados: wyckoff_holdings_data=
+  None -> OK 'no disponible' en checks 1/6/10 es contrato
+  documentado (holiday mode).
+
+- B5.4 (d1097ab0) finalize.py. Bug MEDIA: save_regime_history
+  hacia macro_score.iloc[-1] sin guard. run.py:344 llama
+  directamente sin try/except. Si macro_score es None o Series
+  vacia (all_signals vacio por fallo masivo), IndexError tumba el
+  run sin contexto. Bug latente. Fix: guard -> skip NO_DATA.
+  Test. Deuda MACRO-SCORE-EMPTY-LATENTE OPEN: el writer ya no
+  crashea, el render del reporte no verificado para ese caso.
+  Diferible a B6.
+
+B1 (temporal) - 2 bugs + 2 deudas:
+
+- B1-FX-PER-PAIR (88964dbf) FX_DAILY_CUT declaraba
+  per_pair_max_lag {EURUSD:0, USDJPY:0, USDCNY:1} pero resolve()
+  colapsaba a max() via compute_status. Bug real con datos
+  2026-10-30: EURUSD lag 1 (max 0) e USDJPY lag 1 (max 0)
+  violaban contrato pero el agregado decia STALE. Fix: resolver
+  per-par, agregado = peor (BLOCKED > INSUFFICIENT > STALE > OK),
+  per_member con detalle. Verificado: EURUSD/USDJPY INSUFFICIENT,
+  USDCNY STALE, agregado INSUFFICIENT. 4 tests nuevos. E2E: py
+  run.py exit=0 (14.6 min), FX_DAILY_CUT=INSUFFICIENT (antes
+  STALE).
+
+- B1-RUN-IMPORT-REGRESION (88964dbf) regresion introducida por
+  3aa51d51 (fix ticker_hardcoded): al mover USA_INDEX_ETFS/
+  EU_INDEX_ETFS de wyckoff_holdings_report a config.tickers,
+  run.py:21 seguia importando del modulo antiguo. CI verde porque
+  NINGUN test importa run.py. E2E (primer intento del fix FX)
+  lo destapo: ImportError al arrancar el pipeline. Misma clase
+  1fb791ab aplicada a entry points. Fix: import de config.tickers.
+  Test centinela test_run_module_import.py (import run + AST check
+  de origen de constantes). Cierra la clase para run.py.
+
+- B1-PER-TICKER-LAG-DECORATIVO (WONT_FIX) 5 contratos declaran
+  per_ticker_lag pero solo usan max_lag_days (colapsado a max).
+  Solo INDEX_EOD_EUROPA tiene discrepancia real (^FTSE 1 vs max
+  5). Mismo bug que FX pero sin impacto medido: contrato no
+  critico, agregado ya STALE/OK. ROI bajo. Generalizar
+  compute_status si el auditor lo pide.
+
+- FASE2-BARRIDO-CONSUMIDORES-ROTOS (OPEN) B1-RUN-IMPORT-REGRESION
+  expuso que CI no verifica entry points (run.py, scripts/). Un
+  refactor de firma o movimiento de constante puede romper un
+  consumidor no verificado. Barrido diferido a B6/B8.
+
+**Regresiones propias del dia (autocritica):**
+
+Dos regresiones introducidas por fixes propios, ambas destapadas
+por E2E, no por CI:
+
+1. HOLDINGS B explicito (0004caec, revertido): normalizar en
+   origen rompio 16 tests porque los fixtures sinteticos no
+   pasaban por load_stocks_data. Rollback a B' (ensure_ticker_norm
+   + get_ticker_norm como red). Leccion: pre-registro subestimo
+   los tests afectados (10 ficheros vs 20+ tests).
+
+2. run.py import (3aa51d51, fix en 88964dbf): mover constantes
+   sin actualizar consumidor. CI verde, E2E rojo. Leccion: CI no
+   verifica entry points. Test centinela nuevo cierra la clase.
+
+Patron comun: "fix aplicado, consumidor no verificado". Es la
+clase 1fb791ab en su forma mas pura. El framework dict_contract
+ya la cubre para dicts internos; falta para entry points
+(FASE2-BARRIDO-CONSUMIDORES-ROTOS OPEN).
+
+**Frentes cerrados hoy (acumulado final):**
+
+Fase 0 hardcodes completa (15 bugs fix en 6 commits), Fase 2 B5
+completo (3 bugs + 2 deudas), Fase 2 B1 completo (2 bugs + 2
+deudas). Total sesion 22: 28 commits en origin/main, 20 bugs
+reales fix (15 de Fase 0 + 3 de B5 + 2 de B1), 7 items WONT_FIX
+razonados, 5 deudas OPEN con siguiente_accion. REGISTRO 189 ->
+219 items.
+
+Pendiente proxima sesion: B2 (pipelines descarga), B3 (Wyckoff),
+B4 (motores/regimen), B6 (reporte), B7 (IAE), B8 (scripts audit).
+Orden sugerido: B6 (por FASE2-BARRIDO-CONSUMIDORES-ROTOS pendiente
++ MACRO-SCORE-EMPTY-LATENTE), despues B4 (por fix XLC del MTE, no
+auditados los otros motores), despues B3/B2/B7/B8.
+
 ### 2026-10-31 — Sesion 21: coherencia analisis vs descarga + BRK.B residual
 
 **Objetivo.** Auditar el reporte generado por el run local
