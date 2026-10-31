@@ -22,7 +22,7 @@ porque el commit que lo contiene cambia HEAD.
 
 ## 2. Tests (pytest real)
 
-- **Resumen:** 4157 passed, 2 skipped (sin filtro; suite completa)
+- **Resumen:** 4176 passed, 2 skipped (sin filtro; suite completa)
 - **Exit code:** 0
 
 **Tests skip:**
@@ -65,7 +65,7 @@ porque el commit que lo contiene cambia HEAD.
 | `src/institutional_accumulation/sec_13f/identity/relationships.py` | 377 |
 | `src/institutional_accumulation/sec_13f/identity/sec13f_list.py` | 315 |
 | `src/institutional_accumulation/sec_13f/identity/security_identity.py` | 711 |
-| `src/institutional_accumulation/sec_13f/identity/temporal_filter.py` | 100 |
+| `src/institutional_accumulation/sec_13f/identity/temporal_filter.py` | 112 |
 | `src/institutional_accumulation/sec_13f/ingest.py` | 131 |
 | `src/institutional_accumulation/sec_13f/manifest.py` | 150 |
 | `src/institutional_accumulation/sec_13f/parser.py` | 142 |
@@ -74,7 +74,7 @@ porque el commit que lo contiene cambia HEAD.
 | `src/institutional_accumulation/security_type.py` | 407 |
 | `src/institutional_accumulation/temporal_validity.py` | 92 |
 | `src/institutional_accumulation/timestamps.py` | 162 |
-| **TOTAL** | **36 ficheros, 8451 LOC** |
+| **TOTAL** | **36 ficheros, 8463 LOC** |
 
 ## 5. Datos IAE
 
