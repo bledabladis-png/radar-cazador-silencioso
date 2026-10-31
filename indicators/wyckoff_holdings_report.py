@@ -40,8 +40,9 @@ USA_SECTOR_GROUP_TYPE = "sector_usa"
 USA_INDEX_GROUP_TYPE = "index_usa"
 EU_INDEX_GROUP_TYPE = "index_eu"
 
-USA_INDEX_ETFS = ("SPY", "QQQ", "DIA")
-EU_INDEX_ETFS = ("FEZ", "DAXEX", "ISF.L", "LYXI")
+# FASE0 (2026-10-31): USA_INDEX_ETFS y EU_INDEX_ETFS viven en
+# config.tickers (fuente unica). Los consumidores
+# (src/pipeline/wyckoff_holdings.py) importan de alli.
 
 OUTPUT_COLUMNS = [
     "date", "group", "group_type", "ticker", "name", "weight",

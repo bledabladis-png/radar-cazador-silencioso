@@ -152,3 +152,40 @@ def test_csv_real_eu_todos_en_get_stock_list():
         "Tickers EU del CSV no estan en get_stock_list (cap reintroducido "
         "o provider caido?): " + str(fallos)
     )
+
+
+def test_index_etfs_una_sola_fuente_de_verdad():
+    """USA_INDEX_ETFS y EU_INDEX_ETFS viven en config.tickers.
+
+    FASE0 (2026-10-31): antes estaban duplicadas en
+    indicators/wyckoff_holdings_report.py y src/stock_data_loader.py
+    (esta ultima como EU_INDEX_ETFS_NO_CAP). Ahora las 3 fuentes
+    importan de config.tickers. Si alguien reintroduce un literal en
+    cualquiera de los 3 sitios, este test falla.
+    """
+    from config.tickers import USA_INDEX_ETFS, EU_INDEX_ETFS
+    import src.stock_data_loader as sdl
+    # src/stock_data_loader expone el alias EU_INDEX_ETFS_NO_CAP.
+    assert sdl.EU_INDEX_ETFS_NO_CAP == EU_INDEX_ETFS
+    # Los consumidores importan las constantes de config, no las
+    # redeclaran. AST check: buscar asignacion literal en los modulos.
+    import ast
+    from pathlib import Path
+    for rel in ("indicators/wyckoff_holdings_report.py",
+                "src/pipeline/wyckoff_holdings.py",
+                "src/stock_data_loader.py"):
+        src = Path(rel).read_text(encoding="utf-8")
+        tree = ast.parse(src)
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Assign):
+                for t in node.targets:
+                    if isinstance(t, ast.Name) and t.id in (
+                        "USA_INDEX_ETFS", "EU_INDEX_ETFS",
+                        "EU_INDEX_ETFS_NO_CAP",
+                    ):
+                        if isinstance(node.value, (ast.Tuple, ast.List)):
+                            raise AssertionError(
+                                f"{rel}:{node.lineno} redefine {t.id} "
+                                f"con un literal. Debe importarse de "
+                                f"config.tickers."
+                            )

@@ -7,6 +7,7 @@ Extraidos de src/report_generator.py (refactor C1, fase C1-6d3a).
 import pandas as pd
 
 from config.settings import ETF_PRIMARY_FLOW_ZSCORE_WINDOW
+from config.tickers import MARKET_TICKERS
 from src.report.helpers import _fmt_num, _fmt_signed
 
 
@@ -80,8 +81,11 @@ def render_flujo_spdr(etf_primary_flow_data):
         # B10 (2026-10-13): SSGA devuelve tambien ETFs no sectoriales
         # (p. ej. FEZ = SPDR EURO STOXX 50). Aclaracion explicita.
         _tickers = set(etf_primary_flow_data['ticker'].astype(str).str.upper())
-        _no_sectoriales = _tickers - {'XLB','XLC','XLE','XLF','XLI','XLK','XLP',
-                                        'XLRE','XLU','XLV','XLY'}
+        # FASE0 (2026-10-31): lista de sectores hardcodeada sustituida
+        # por MARKET_TICKERS['sectors'] (fuente unica). Antes anadir
+        # un sector nuevo en config lo dejaba fuera de esta comparacion
+        # y aparecia como "no sectorial".
+        _no_sectoriales = _tickers - set(MARKET_TICKERS['sectors'])
         if _no_sectoriales:
             out.append("*ETFs no sectoriales presentes en la fuente SSGA "
                        "(no alimentan el analisis sectorial): " +

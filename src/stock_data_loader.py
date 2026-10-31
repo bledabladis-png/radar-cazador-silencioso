@@ -43,7 +43,11 @@ import time
 # Los ETFs USA (SPY, QQQ, DIA, IWM) siguen con head(20): SPY 504 e
 # IWM 1977 holdings harian el parquet inmanejable y no aportan al
 # sistema holdings-based (IWM excluido por diseno, no representativo).
-EU_INDEX_ETFS_NO_CAP = ("FEZ", "DAXEX", "ISF.L", "LYXI")
+# FASE0 (2026-10-31): EU_INDEX_ETFS_NO_CAP duplicaba
+# indicators/wyckoff_holdings_report.EU_INDEX_ETFS. Ahora ambos
+# importan la misma constante de config.tickers. El nombre antiguo
+# se conserva como alias (test_eu_index_etfs_no_cap.py lo verifica).
+from config.tickers import EU_INDEX_ETFS as EU_INDEX_ETFS_NO_CAP
 
 
 

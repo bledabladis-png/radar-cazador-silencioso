@@ -14,9 +14,8 @@ import pandas as pd
 
 from indicators.wyckoff_holdings_report import (
     compute_wyckoff_holdings_report,
-    USA_INDEX_ETFS,
-    EU_INDEX_ETFS,
 )
+from config.tickers import USA_INDEX_ETFS, EU_INDEX_ETFS
 from src.pipeline.output_writer import persist, skip
 
 

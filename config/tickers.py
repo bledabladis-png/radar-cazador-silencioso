@@ -39,6 +39,15 @@ CYCLICAL_SECTORS = ['XLK', 'XLY', 'XLI', 'XLF', 'XLB', 'XLE', 'XLC']
 DEFENSIVE_SECTORS = ['XLU', 'XLP', 'XLV', 'XLRE']
 
 
+# FASE0 (2026-10-31): constante unica para ETFs de indices USA/EU.
+# Antes duplicadas en indicators/wyckoff_holdings_report.py y
+# src/stock_data_loader.py (esta ultima como EU_INDEX_ETFS_NO_CAP).
+# Si se anade/quita un ETF, editar SOLO aqui. Test centinela:
+# tests/test_eu_index_etfs_no_cap.py::test_index_etfs_una_sola_fuente_de_verdad.
+USA_INDEX_ETFS = ("SPY", "QQQ", "DIA")
+EU_INDEX_ETFS = ("FEZ", "DAXEX", "ISF.L", "LYXI")
+
+
 def validate_sector_universe():
     """
     Valida la coherencia estructural del universo sectorial.
