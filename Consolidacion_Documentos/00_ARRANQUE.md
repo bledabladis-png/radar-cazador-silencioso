@@ -92,7 +92,7 @@ Fuente autoritativa de tests, integridad y cobertura: `Consolidacion_Documentos/
 
 Snapshot al cierre del ultimo commit (2026-10-31, sesion 22):
 - HEAD: `git log --oneline -1`
-- Tests: fuente autoritativa en `Consolidacion_Documentos/ESTADO_SISTEMA.md` (seccion 2). Al cierre sesion 22: 4161 passed, 2 skipped.
+- Tests: fuente autoritativa en `Consolidacion_Documentos/ESTADO_SISTEMA.md` (seccion 2). No fijar literal aqui (cambia con cada commit de test); ver ESTADO_SISTEMA.md seccion 2.
 - Validation Gate: 11/11
 - Working tree: limpio
 - Gobernanza: `docs/gobernanza/REGISTRO.yaml`, 219 items. Validador reforzado.
@@ -111,7 +111,7 @@ Snapshot al cierre del ultimo commit (2026-10-31, sesion 22):
 
 - **Coherencia analisis = descarga (2026-10-31, sesion 21).** `compute_all_stock_metrics` consume el universo de `get_stock_list()` (holdings del sector presentes en `df_stocks.Close`), sin cap rigido por numero. Guard `MAX_CANDIDATES_PER_SECTOR=100` para ETFs gigantes. Normalizacion obligatoria de tickers (BRK.B -> BRK-B) en todos los modulos que hacen lookup por holdings (`stock_metrics`, `rs_internal`, `sector_concentration`, `wyckoff_holdings_report`).
 
-- **DICT-CONTRACT-FRAMEWORK (2026-10-30, sesion 20).** Framework AST + schema que cierra la clase 1fb791ab (consumer lee X, producer no lo emite). 8 pares productor-consumidor cubiertos con AST o schema constante: MTE, liquidity_state, IAE, darkpool, flows_secondary, confirmation, cross_module, alerts. Manifiesto `DICT_CONTRACT_PAIRS` + whitelist justificada + heuristico `test_heuristico_render_dict_detecta_nuevos_pares` que falla si aparece un dict real sin contrato. Helper en `tests/_dict_contract.py`.
+- **DICT-CONTRACT-FRAMEWORK (2026-10-30, sesion 20).** Framework AST + schema que cierra la clase 1fb791ab (consumer lee X, producer no lo emite). 11 pares productor-consumidor cubiertos con AST o schema constante: MTE, liquidity_state (x2), IAE, darkpool, flows_secondary, confirmation (x2), cross_module, PCR, SECTOR-RESULTS. Manifiesto `DICT_CONTRACT_PAIRS` + whitelist justificada + heuristico `test_heuristico_render_dict_detecta_nuevos_pares` que falla si aparece un dict real sin contrato. Helper en `tests/_dict_contract.py`.
 
 - **Contrato de persistencia de outputs (2026-10-11).** Registro + wrapper + verificador + test AST, **25 writers** en `output_registry.py`. Detalle en `02_ARQUITECTURA.md` seccion 4.
 
@@ -203,7 +203,6 @@ Datos exactos: `sector_concentration.csv` (`n_valid_rs`, `n_total`, `coverage_rs
 - **DICT3-TOP20-COBERTURA:** OPEN, pendiente respuesta del auditor a doc 70-v2d. A.2c desplegado condicionado (4 de 6 acciones cerradas).
 - **DICT3-H04-INTERVALS:** OPEN, registro del rechazo del IC95 inferencial. Evidencia del rechazo, no accionable.
 - **C2 (920):** BLOCKED_EXTERNAL. Auditor debe publicar comando + HEAD del valor externo (-4.264.449.932). Sin eso, no reproducible.
-- **SOW-BEAR-CONFIRMATION:** IN_PROGRESS. v1.10.1 sin redactar. 3 P0 del dictamen 2026-10-28. No bloquea pipeline.
 - **WYCKOFF-5BX:** BLOCKED_EXTERNAL. `n_confirmed_H20_complete >= 550` (~2027).
 - **IWM-HOLDINGS-EXPANSION:** decision de producto. Top-20 cubre ~6.8% del peso de 1977 holdings. Para 50%, ~700 tickers. Microcaps no aportan al sistema holdings-based.
 - **H5.3:** cron 20-nov-2026 06:17 UTC.
