@@ -9,14 +9,14 @@ junto con `Consolidacion_Documentos/00_ARRANQUE.md`.
 
 ## 1. ESTADO AL CIERRE (2026-10-31, sesion 22)
 
-HEAD: `ab083af9` (consultar `git log --oneline -1` para el actual).
+HEAD: `898cee63` (consultar `git log --oneline -1` para el actual).
 Sincronizacion: main == origin/main al cierre del commit.
 Tests: fuente autoritativa Consolidacion_Documentos/ESTADO_SISTEMA.md.
        Conteo exacto en ESTADO_SISTEMA.md seccion 2 (no literal aqui: cambia con cada commit de test).
-CI HEAD: verde (run 41174326456 sobre 37482e0a; ab083af9 = Daily hist/state).
+CI HEAD: verde (run 41213132185 sobre 898cee63).
 Validation Gate: 11/11 (outputs/state/validation_gate_result.json).
 Working tree: limpio.
-Gobernanza: docs/gobernanza/REGISTRO.yaml, 200 items. Validador reforzado
+Gobernanza: docs/gobernanza/REGISTRO.yaml, 210 items. Validador reforzado
             (detecta ids embebidos, SHA no-string, WONT_FIX en HANDOFF).
 Writers: 25 (output_registry.py).
 DICT-CONTRACT: 10 pares cubiertos (PCR + SECTOR-RESULTS cross-module
@@ -49,6 +49,14 @@ SOW-BEAR-CONFIRMATION: WONT_FIX. Probe 2026-10-31 (9 fechas bear
   holding); pedir 3 coincidentes en M=5 es casi imposible. Idea
   valida, metrica incorrecta. Contrato v1.10 original conservado
   como referencia. Modulo revertido (62b27dfb).
+FASE-0-HARDCODES: cerrada 2026-10-31. Barrido mecanico de 662 hits
+  en productivo (src, indicators, regimes). 15 bugs reales fix en
+  6 commits (fc07b634, f3a7270e, a7a0c7b8, c5d6fa25, 3aa51d51,
+  898cee63). Detalle por item en REGISTRO (FASE0-*). Grupos
+  auditados: lista_sectores, io, fecha_iso, datetime_now,
+  except_exception, ticker_hardcoded, threshold_sin_const. Deuda
+  abierta: OBSERVABILIDAD-SILENCIOSA, DT-NOW-HELPER-HUERFANO,
+  FASE0-BARRIDO-SCRIPTS (441 hits en scripts/, prioridad baja).
 
 Sistema Wyckoff: holdings-based + snapshot PIT append-only REAL.
 structure_ratio: continuo en sector_regime_matrix v2. DESCRIPTIVO.

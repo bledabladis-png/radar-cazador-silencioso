@@ -226,6 +226,51 @@ error de diseno. Idea valida, metrica incorrecta. Si en el futuro
 se redefine para medir estado (fases DISTRIBUTION/MARKDOWN) en vez
 de evento puntual, pre-registro nuevo.
 
+**Fase 0 hardcodes cerrada (misma fecha, sesion 22):**
+
+Barrido mecanico completo del codigo productivo (src, indicators,
+regimes) en busca de hardcodes que pierdan consistencia en el
+tiempo. 662 hits brutos, 221 en productivo, 15 bugs reales fix
+en 6 commits (fc07b634, f3a7270e, a7a0c7b8, c5d6fa25, 3aa51d51,
+898cee63). Detalle por item en REGISTRO (FASE0-*).
+
+Bugs cerrados por grupo:
+
+1. lista_sectores (2): MTE sector lists divergentes con
+   config.tickers (XLC); etf_flows lista de 11 sectores
+   hardcodeada. Impacto medido: srs 0.4057 -> 0.4202, MSI
+   53.28 -> 53.68, escenario RECESSION sin cambio. Golden
+   actualizado. +2 tests centinela.
+
+2. io (2): open('r') sin encoding en 2 sitios sobre
+   liquidity_state.json (UTF-8 leido con cp1252 en Windows,
+   UnicodeDecodeError silenciado).
+
+3. fecha_iso_string (1): temporal_filter FULL_PERIOD
+   hardcodeado a '2026-03-31' (2 trimestres desfasado). Fix:
+   None + raise explicito. Ancla IAE_FULL_PERIOD eliminada.
+
+4. except_exception (8): 6 except Exception -> except
+   (ValueError, TypeError) en bloques pd.Timestamp/to_datetime
+   (patron 1 de 01b_PATRONES). 2 dead code eliminados.
+
+5. ticker_hardcoded (2): etf_flows lista sectores hardcodeada;
+   EU_INDEX_ETFS duplicada en 3 sitios. Fuente unica en
+   config.tickers. +1 test centinela AST.
+
+6. threshold_sin_const (0 fixes): 53 candidatos revisados uno
+   a uno. 0 duplicacion real. Los umbrales 0.05/0.1/0.2/0.3
+   que se repiten tienen significados distintos. WONT_FIX
+   razonado.
+
+7. datetime_now (0 fixes): 8 llamadas reales en productivo, 7
+   justificadas (ejecucion/metadato). 1 helper huerfano
+   (_ref_to_date en data_quality) anotado como OPEN.
+
+Deuda abierta: OBSERVABILIDAD-SILENCIOSA (7 fallbacks sin
+WARN), DT-NOW-HELPER-HUERFANO, FASE0-BARRIDO-SCRIPTS (441
+hits en scripts/ calibracion, prioridad baja).
+
 ### 2026-10-31 — Sesion 21: coherencia analisis vs descarga + BRK.B residual
 
 **Objetivo.** Auditar el reporte generado por el run local

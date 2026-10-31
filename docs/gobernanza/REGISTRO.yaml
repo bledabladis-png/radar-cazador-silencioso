@@ -4282,3 +4282,159 @@ items:
   evidencia: |
     README.md pre-18ca4405 lineas 28-32; commit 18ca4405 solo
     toco bloque Resumen. OilPriceAPI eliminada: ARRANQUE R5.
+- id: FASE0-MTE-SECTOR-LISTS
+  tipo: bug
+  ciclo: '2026-10-31'
+  estado: FIXED
+  commit: 'fc07b634'
+  test: tests/test_mte_scoring.py
+  evidencia: |
+    Fase 0 hardcodes. MTE-SECTOR-LISTS-DIVERGENTES: v3.15 (2026-10-20)
+    reclasifico XLC de defensivo a ciclico en config/tickers.py, pero
+    mte/scoring.py mantuvo la lista vieja (XLC defensivo). Divergencia
+    de meses. Impacto medido en datos reales (2026-10-30): srs 0.4057
+    -> 0.4202 (+0.0145), MSI 53.28 -> 53.68 (+0.40), escenario
+    RECESSION sin cambio. tanh() satura el z_spread explosivo.
+    Fix: sector_rotation_score usa CYCLICAL_SECTORS/DEFENSIVE_SECTORS
+    de config. +2 tests centinela. Golden actualizado en f3a7270e.
+- id: FASE0-ENCODING-2SITES
+  tipo: bug
+  ciclo: '2026-10-31'
+  estado: FIXED
+  commit: 'a7a0c7b8'
+  test: tests/test_report_freshness_divergence.py
+  evidencia: |
+    open('r') sin encoding en src/report/freshness.py:69 y
+    indicators/data_quality.py:327 sobre liquidity_state.json. En
+    Windows lee con cp1252 por defecto; el JSON es UTF-8.
+    UnicodeDecodeError silenciado por el except. Fix: encoding='utf-8'.
+- id: FASE0-FULL-PERIOD
+  tipo: bug
+  ciclo: '2026-10-31'
+  estado: FIXED
+  commit: 'a7a0c7b8'
+  test: tests/test_sec_13f_temporal_filter.py
+  evidencia: |
+    temporal_filter.py:22 FULL_PERIOD='2026-03-31' hardcodeado (2
+    trimestres desfasado). Caller que omita period filtra por marzo
+    2026. Fix: FULL_PERIOD=None + raise ValueError explicito en
+    filter_by_period. Contrato nuevo: 'period REQUERIDO'. Ancla
+    IAE_FULL_PERIOD de ANCLAS.yaml eliminada (literal ISO ya no
+    existe en codigo). Unico caller (pipeline_contractual) siempre
+    pasa periodo, ningun consumidor afectado. +1 test.
+- id: FASE0-EXCEPT-DEAD-CODE
+  tipo: bug
+  ciclo: '2026-10-31'
+  estado: FIXED
+  commit: 'c5d6fa25'
+  test: tests/test_utils.py
+  evidencia: |
+    Grupo C+D del triaje de 32 except Exception sospechosos.
+    Grupo D (6): except Exception -> except (ValueError, TypeError)
+    en bloques que solo envuelven pd.Timestamp()/pd.to_datetime().
+    Esas funciones solo lanzan ValueError/TypeError; el except
+    Exception capturaba KeyboardInterrupt, SystemExit, MemoryError.
+    Patron 1 de 01b_PATRONES. Ficheros: utils.py, temporal_validity.py,
+    catalog_key.py, cusip_resolver.py, security_identity.py (x2).
+    Grupo C (2): dead code eliminado en utils.py:172 (len(df) no
+    lanza) y security_identity.py:144 (math.isnan sobre float no
+    lanza; sustituido por value != value). 15 legítimos no tocados.
+- id: FASE0-TICKER-ETF-FLOWS
+  tipo: bug
+  ciclo: '2026-10-31'
+  estado: FIXED
+  commit: '3aa51d51'
+  test: tests/test_h12_primary_flow_disclaimer.py
+  evidencia: |
+    src/report/etf_flows.py:83 lista de 11 sectores hardcodeada. Si
+    se anadia un sector en config.tickers, esta comparacion no lo
+    detectaba y aparecia como 'no sectorial'. Fix:
+    set(MARKET_TICKERS['sectors']).
+- id: FASE0-EU-INDEX-ETFS-DUPLICADA
+  tipo: bug
+  ciclo: '2026-10-31'
+  estado: FIXED
+  commit: '3aa51d51'
+  test: tests/test_eu_index_etfs_no_cap.py
+  evidencia: |
+    EU_INDEX_ETFS duplicada en 3 sitios: wyckoff_holdings_report.py,
+    pipeline/wyckoff_holdings.py (re-export), stock_data_loader.py
+    (como EU_INDEX_ETFS_NO_CAP). Si una cambiaba, las otras se
+    desfasaban. Fix: fuente unica en config/tickers.py. Los 3
+    consumidores importan de alli. Alias EU_INDEX_ETFS_NO_CAP
+    conservado. +1 test centinela AST.
+- id: THRESHOLD-SIN-CONST-AUDITADO
+  tipo: auditoria_interna
+  ciclo: '2026-10-31'
+  estado: WONT_FIX
+  razon: |
+    Fase 0 barrido de 79 hits de threshold_sin_const en productivo
+    (src, indicators, regimes). Tras filtrado de ruido (comparaciones
+    contra 0/1/100, contra constantes UPPER_CASE, asignaciones
+    falsas), 53 candidatos reales revisados uno a uno. Resultado:
+    0 duplicacion real. Los umbrales 0.05/0.1/0.2/0.3/0.15/0.25
+    que se repiten en varios sitios tienen significados distintos
+    (delta liquidez, signo de flujo, percentil VIX, bonus RECESSION,
+    correlacion MODERATE, etc.). Cada uno documentado en su modulo.
+    No hay configuracion disfrazada ni riesgo de divergencia. Los
+    que ya tienen constante (WYCKOFF_THRESHOLD_MARKUP) no coinciden
+    semanticamente con los del MTE/liquidez/macro. WONT_FIX razonado
+    sin accion. Si en el futuro dos umbrales con el mismo significado
+    aparecen en sitios distintos, anadir test centinela AST.
+- id: OBSERVABILIDAD-SILENCIOSA
+  tipo: deuda_tecnica
+  ciclo: '2026-10-31'
+  estado: OPEN
+  descripcion: |
+    Fase 0 triaje. 7 except Exception en productivo manejan el fallo
+    con un fallback pero no emiten WARN: european_coverage.py:151,
+    market_calendar.py:241, sector_correlation.py:90, utils.py:597,
+    temporal_validity.py:43, helpers.py:35,60,81. Son legitimos
+    (el fallback es correcto), pero opacos: si el fallback se dispara
+    en produccion, no queda rastro.
+  siguiente_accion: |
+    Anadir print('[WARN] ...') o skip() en cada uno. Antes:
+    grep de tests que anclan stdout exacto (capsys) para no romper
+    contratos de salida. Ejecutar por bloques (european_coverage,
+    market_calendar, etc.) con tests entre cada uno.
+  evidencia: |
+    Triaje de 32 except Exception sospechosos (grupo B). 15 legitimos
+    no tocados, 8 cerrados como FASE0-EXCEPT-DEAD-CODE. Estos 7
+    quedan como deuda de observabilidad.
+- id: DT-NOW-HELPER-HUERFANO
+  tipo: deuda_tecnica
+  ciclo: '2026-10-31'
+  estado: OPEN
+  descripcion: |
+    indicators/data_quality.py:82 _ref_to_date() tiene fallback
+    datetime.now().date() si ref is None. Pero NADIE llama a la
+    funcion (grep vacio). Es codigo muerto con el fallback mas
+    peligroso del sistema: si alguien la empieza a usar sin
+    pasar reference_date, escribe data_quality.csv con fecha de
+    hoy en vez de ultima sesion.
+  siguiente_accion: |
+    Eliminar _ref_to_date() o convertir el fallback a raise
+    ValueError explicito. Bajo riesgo (nadie la usa). Test de
+    contrato: la funcion no debe existir con fallback a now().
+  evidencia: |
+    Fase 0 datetime_now: 8 llamadas reales en productivo. 7
+    justificadas (ejecucion/metadato). Esta es la 8a, huerfana.
+- id: FASE0-BARRIDO-SCRIPTS
+  tipo: deuda_tecnica
+  ciclo: '2026-10-31'
+  estado: OPEN
+  descripcion: |
+    Fase 0 barrido mecanico: 441 hits en scripts/ (calibracion,
+    auditoria, K-fold). Mayoría son legitimas: fechas del
+    experimento congeladas, listas de sectores por claridad,
+    thresholds del estudio. Sin auditar uno a uno: no son codigo
+    productivo y no afectan al run diario.
+  siguiente_accion: |
+    Sesion dedicada si se quiere limpiar. Prioridad: baja.
+    Filtrado: excluir scripts de calibracion (ya excluidos en
+    test_anclas_temporales.py) y auditar solo los que participan
+    en CI o generan artefactos publicados.
+  evidencia: |
+    Barrido Fase 0.1: 662 hits totales, 221 en productivo (cerrados),
+    441 en scripts/. Muestra: compare_sow_candidates.py (21),
+    walk_forward_sow_anual.py (19), purged_kfold_* (16 cada uno).
