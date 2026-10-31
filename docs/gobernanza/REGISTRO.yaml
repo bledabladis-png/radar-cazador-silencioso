@@ -2397,8 +2397,8 @@ items:
 - id: DICT3-TOP20-COBERTURA
   tipo: deuda_tecnica
   ciclo: '2026-10-25'
-  estado: OPEN
-  commit: e7f27cd0
+  estado: FIXED
+  commit: 'PENDING'
   evidencia: |
     Fase A.2c commiteada 2026-10-26. Base target_weight activa en
     produccion. Cambios principales:
@@ -2551,6 +2551,28 @@ items:
       (7) P1-H05: DICT3-H04-INTERVALS separado.
     Estado OPEN no es deuda productiva: el sistema funciona con
     target_weight desde e7f27cd0.
+
+    CIERRE 2026-10-31 (sesion 22): condiciones 1-5 del dictamen
+    externo atendidas.
+    - (1) Invariante 2 ejecutado: doc 72 seccion 8 (commit 771f5ecc).
+      272 tickers x 1313 fechas, 290.694 filas. 0 violaciones,
+      0 solo-A, 1 solo-B (BRK.B). Matiz documentado: 269 comunes no
+      duales, sin comparacion pre/post literal por falta de snapshot
+      pre-fix.
+    - (2) Evidencia f71eb49c verificada contra padre: doc 70-v2d
+      seccion 6. XLF n_total 22->23 en 1086 fechas, count_range +1,
+      resto sectores delta=0.
+    - (3) Numeracion seccion 5 doc 70-v2d corregida (5.2 duplicado
+      -> 5.3, 5.3 -> 5.4).
+    - (4) SHA del commit de cierre registrado en campo commit
+      (autoreferencia, patron HANDOFF seccion 6.2: commit con
+      PENDING, push, SHA real en commit siguiente).
+    - (5) Frentes paralelos en items propios: WYCKOFF-5BX,
+      SOW-BEAR-CONFIRMATION, IWM-HOLDINGS-EXPANSION,
+      DICT3-H04-INTERVALS, todos OPEN/BLOCKED_EXTERNAL independientes.
+    Commit original A.2c: e7f27cd0. Alcance del cierre: A.2c de los
+    11 sectores USA exclusivamente (no cierra H-04, ni indices, ni
+    IWM, ni SOW-BEAR, segun dictamen).
 - id: DICT3-REACCUMULATION
   tipo: deuda_tecnica
   ciclo: '2026-10-25'

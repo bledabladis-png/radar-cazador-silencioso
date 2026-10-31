@@ -29,10 +29,12 @@ GUARD-COVERAGE-LAST-DATE-PARCIAL: FIXED a692fafb. Manifest publica
   effective_session + coverage_pct_effective (walk-back min 0.90);
   guard_coverage, receipt y pipeline_gate prefieren effective con
   fallback. coverage_pct_last intacto.
-DICT3-TOP20-COBERTURA: OPEN, condiciones 1-3 del dictamen externo
-  2026-10-31 atendidas en 771f5ecc (invariante 2 ejecutado con
-  matiz, evidencia f71eb49c, renumeracion doc 70-v2d). Condiciones
-  4-5 pendientes.
+DICT3-TOP20-COBERTURA: FIXED. Condiciones 1-5 del dictamen externo
+  2026-10-31 atendidas. (1) invariante 2 en doc 72 seccion 8
+  (771f5ecc); (2) evidencia f71eb49c en doc 70-v2d seccion 6;
+  (3) numeracion doc 70-v2d corregida; (4) SHA registrado en este
+  commit; (5) frentes paralelos en items propios. Alcance: A.2c de
+  los 11 sectores USA exclusivamente.
 WYCKOFF-EVENTS-ARTIFACT: WONT_FIX. Pre-registro doc 80 firmado
   167a4587. Hallazgo: la cascada de clasificacion aborta antes de
   _enrich_*_evidence en la mayoria de tickers y los detectores solo
@@ -351,11 +353,6 @@ Sesion 16 (2026-10-29): 4 P0 pipeline (tzinfo, YAML, .schema staging, conftest),
 ## 4. PENDIENTES VIVOS
 
 ### 4.1. Bloqueados por auditor externo (3)
-
-- **DICT3-TOP20-COBERTURA**: A.2c desplegado condicionado. 6 acciones:
-  4 cerradas (P1-H01, P1-H02, P1-H03, P1-H04), 1 abierta (P1-H05 ya en
-  doc 73), 1 pendiente (P1-H06 gobernanza). Solicitud de cierre enviada
-  en doc 70-v2d. Pendiente respuesta.
 
 - **C2-920**: discrepancia 920 baseline IAE. Auditor debe publicar comando
   + HEAD del valor externo (-4.264.449.932). Sin eso, no reproducible.
