@@ -4979,3 +4979,16 @@ items:
     test_report_leaders_* restantes, etc.) se eliminan o adaptan
     segun corresponda. No re-cablear: la funcionalidad se retiro
     conscientemente en sesion 3.
+# --- B6 freshness.py, sesion 23, 2026-10-31 ---
+- id: B6-H11-FRESHNESS-SIDECHANNEL
+  tipo: bug
+  ciclo: 2026-10-31
+  estado: FIXED
+  commit: b69c17fe
+  test: tests/test_liquidity_state_contract.py
+  evidencia: |
+    render_data_freshness leia outputs/state/liquidity_state.json
+    directamente, mientras header.py ya lo recibia por kwarg (H4).
+    Dos renders con la misma fuente, uno por kwarg y otro por
+    fichero. Fix: kwarg liquidity_state=None; sin state -> N/D.
+    report_generator.py propaga. 3 tests adaptados.
