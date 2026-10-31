@@ -40,10 +40,19 @@
     {
       "version_id": "2026-10-30_01",
       "valid_from": "2026-10-30",
-      "valid_to": null,
+      "valid_to": "2026-10-31",
       "sha256": "ff25844ed506f110fdca0495e4ea5759899331c134026e73a383c3494d293fab",
       "csv_path": "catalog_snapshots/snapshot_2026-10-30_01.csv",
       "rows": 307,
+      "producer": "regenerate_radar_catalog.py"
+    },
+    {
+      "version_id": "2026-10-31_01",
+      "valid_from": "2026-10-31",
+      "valid_to": null,
+      "sha256": "15de5526e62ae640d964a113c1d4eefb5cc4410a2d9db656bbdfefd524be8e6c",
+      "csv_path": "catalog_snapshots/snapshot_2026-10-31_01.csv",
+      "rows": 322,
       "producer": "regenerate_radar_catalog.py"
     }
   ]
