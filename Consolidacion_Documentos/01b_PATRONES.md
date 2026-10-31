@@ -98,3 +98,14 @@ Cosas que **parecen** un hallazgo pero no lo son. Antes de declarar, aplicar el 
 **Regla anti-falso-positivo del test (D38, 2026-09-30).** Antes de aceptar un verde, comprobar que el test falla con el fix revertido. Si pasa con y sin fix, el test no mide el cambio. Evidencia empirica: `test_load_radar_index_descarta_vacios_y_nan` (rojo sin fix -> verde con fix, destapo bug latente de simetria en `_load_radar_index`); `test_calculate_returns_ytd_nan_sin_prev_year` (mal disenado, rojo por error propio, corregido antes de commitear). Los casos frontera son obligatorios: toda frontera (lag, threshold, borde de ventana, primer/ultimo valor) necesita un caso que la cruce y otro que no.
 
 **Regla dura:** antes de proponer un patch por un "hallazgo", verificar que no cae en uno de estos casos. Un falso positivo documentado vale mas que un patch a ciegas.
+
+## Patrones nuevos (Fase 2)
+
+Identificados en sesion 22 (2026-10-31). Cierran la clase 1fb791ab en el origen.
+
+1. **Dead code funcional.** Funcion implementada y testeada pero sin wiring en produccion. Ejemplo: PSY/PS en Wyckoff (disparan en backtest, no se invocan). El test verde no prueba que el codigo se ejecute.
+2. **Cascada abortada.** Funcion que devuelve antes de llegar al final por una condicion que en la mayoria de inputs se cumple. Ejemplo: SOW-BEAR-CONFIRMATION. El test con input ideal pasa; el real no llega.
+3. **Literal fragil.** Numero/test/fecha hardcodeado que se desfaso. Ejemplo: "4161 passed" en ARRANQUE (real 4176), "8 pares" DICT-CONTRACT (real 11), "10/10" en receipt (real 11). Fix: delegar a fuente autoritativa.
+4. **Fuente de verdad duplicada.** Dos sitios que dicen lo mismo y pueden divergir. Ejemplo: SECTORS en config vs MARKET_TICKERS, EXPECTED_SECTOR_COUNT manual vs len(). Fix: constante unica + test centinela.
+5. **Fallback silencioso sin WARN.** Funcion que devuelve valor por defecto sin loguear el fallo. Ejemplo: render con dict vacio que pinta 0 en vez de N/D. Fix: WARN + N/D explicito.
+
