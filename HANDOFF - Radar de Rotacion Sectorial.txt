@@ -7,18 +7,20 @@ junto con `Consolidacion_Documentos/00_ARRANQUE.md`.
 
 ---
 
-## 1. ESTADO AL CIERRE (2026-10-31, sesion 21)
+## 1. ESTADO AL CIERRE (2026-10-31, sesion 22)
 
-HEAD: `e04b53ff` (consultar `git log --oneline -1` para el actual).
+HEAD: `78a0e106` (consultar `git log --oneline -1` para el actual).
 Sincronizacion: main == origin/main al cierre del commit.
 Tests: fuente autoritativa Consolidacion_Documentos/ESTADO_SISTEMA.md.
        Conteo exacto en ESTADO_SISTEMA.md seccion 2 (no literal aqui: cambia con cada commit de test).
-CI HEAD: verde.
+CI HEAD: verde (run 41152251740 sobre 78a0e106).
 Validation Gate: 11/11 (outputs/state/validation_gate_result.json).
 Working tree: limpio.
-Gobernanza: docs/gobernanza/REGISTRO.yaml, 189 items. Validador reforzado
+Gobernanza: docs/gobernanza/REGISTRO.yaml, 195 items. Validador reforzado
             (detecta ids embebidos, SHA no-string, WONT_FIX en HANDOFF).
 Writers: 25 (output_registry.py).
+DICT-CONTRACT: 9 pares cubiertos (PCR cross-module anadido 2026-10-31).
+               Whitelist 1 par (SECTOR-RESULTS pendiente).
 
 Sistema Wyckoff: holdings-based + snapshot PIT append-only REAL.
 structure_ratio: continuo en sector_regime_matrix v2. DESCRIPTIVO.
@@ -150,7 +152,63 @@ con 2513 sesiones, US_EQUITY, get_market OK. Proximo scheduled los descarga.
 
 ---
 
-## 2. SESION 2026-10-29 (sesion 16): detalle
+## 2. SESION 2026-10-31 (sesion 22): detalle
+
+**Objetivo inicial:** verificar estado real tras 387938e6 y
+alinear el corpus con ESTADO_SISTEMA.md.
+**Derivado a:** cierre de PCR-CONTRACT.
+
+### 2.1. Hallazgos documentales (todos corregidos en 18ca4405)
+
+1. **ARRANQUE §5** literales 3816/3829 obsoletos (real 4124/4137).
+2. **METODO §4** 'Validation Gate 10/10' obsoleto (real 11/11 dinamico
+   desde 090a3439).
+3. **METODO §11** limite 11 KB superado (ARRANQUE real 19.5 KB).
+4. **README** bloque Resumen desfasado (2267 tests, 10/10, 313 tickers).
+5. **02_ARQUITECTURA** bloque de 10 checks; real 11 (faltaba Schema
+   versioning Fase 1).
+
+Los 5 se corrigieron con 18ca4405. La ruta `data/mappings/universe_expansions.yaml`
+que el cuestionario al saliente cito como errata documental NO existe:
+el fichero siempre estuvo en `data/universe_expansions.yaml`. El error
+de ruta lo introdujo el entrante, no el corpus.
+
+### 2.2. Trampa cancelled != failure validada en vivo
+
+af019902 documento la trampa. El mismo dia, 3 pushes consecutivos
+(18ca4405, af019902, bfba1763) salieron X en `gh run list` por
+cancel-in-progress, no por failure. Verificado con
+`gh run view <rid> --json conclusion` + `git merge-base --is-ancestor`:
+los 3 son ancestros del run success 41152251740 (78a0e106). CI OK.
+
+### 2.3. PCR-CONTRACT cerrado (2 commits)
+
+- 623b5dd3: eliminado `'percentile': percentile` duplicado en el
+  return de compute_pcr_signals. Dead code, F601 no lo detecta
+  (valores identicos). Detectado al auditar el contrato.
+- 78a0e106: nuevo tests/test_pcr_contract.py (3 tests: downstream
+  subset, top-level exacto 23 claves, regresion de 6 campos
+  criticos). Par PCR anadido a DICT_CONTRACT_PAIRS (9 pares).
+  Par retirado de whitelist (2 -> 1). La whitelist declaraba
+  producer src/pipeline/market_data.py::_compute_pcr (passthrough);
+  el par real apunta a indicators/options.py::compute_pcr_signals.
+
+Contrato honrado: compute_pcr_signals emite las 20 claves que
+render_sentimiento_opciones lee. No habia bug real, solo hueco
+de contrato.
+
+### 2.4. Deudas registradas (ca9cd95e, 189 -> 195 items)
+
+- HOLDINGS-NORMALIZACION-EN-ORIGEN (OPEN, requiere E2E).
+- HANDOFF-SIN-RESPUESTA-ENTRANTE-21 (OPEN, 6 sin canal del saliente).
+- DAILY-RUN-FAIL-40992758129 (OPEN, verificar 7 dias).
+- VERIFICAR-SCHEDULED-387938E6-2026-11-02 (OPEN, primer run real lunes).
+- METODO-EXCEDE-LIMITE-PROPIO (OPEN, 28.3 KB vs 20 KB).
+- README-DESFASE-FUENTES-DATOS (OPEN, OilPriceAPI + Yahoo 262).
+
+---
+
+## 2bis. SESION 2026-10-29 (sesion 16): detalle
 
 **Objetivo inicial:** verificar EU-HOLDINGS-DOWNLOAD-CAP tras fix.
 **Derivado a:** saneamiento P0, autonomia externa, cierre de 5 frentes

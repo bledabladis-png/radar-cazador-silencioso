@@ -44,6 +44,62 @@ Al cerrar una sesion nueva, se anade arriba (las mas recientes primero). Si hay 
 
 ## 3. SESIONES
 
+### 2026-10-31 — Sesion 22: diagnostico de estado + cierre PCR-CONTRACT
+
+**Objetivo.** Verificar el estado real del sistema tras el commit
+387938e6 (docs arranque-21). Alinear el corpus documental con la
+fuente autoritativa (ESTADO_SISTEMA.md). Cerrar el frente
+PCR-CONTRACT (OPEN desde sesion 20).
+
+**Hecho.**
+- Diagnostico de estado: 4 documentos leidos (00, 01, 01c, HANDOFF),
+  cuestionario de 23 preguntas al saliente. Hallazgos:
+  - ARRANQUE §5 con literales 3816/3829 obsoletos.
+  - METODO §4 con 'Validation Gate 10/10' obsoleto (real 11/11
+    dinamico desde 090a3439).
+  - METODO §11 con limite 11 KB ya superado (ARRANQUE real 19.5 KB).
+  - README con bloque Resumen desfasado (2267 tests, 10/10, 313
+    tickers).
+  - 02_ARQUITECTURA con bloque de 10 checks; real 11 (faltaba
+    Schema versioning Fase 1).
+- Alineacion documental (3 commits docs + 1 lecciones):
+  - 18ca4405: Validation Gate N/N dinamico en 4 docs (ARRANQUE,
+    METODO, 02_ARQUITECTURA, README).
+  - af019902: limite ARRANQUE 11->20 KB + trampa cancelled != failure
+    en METODO §6.
+  - bfba1763: leccion 'holdings se normaliza en origen' en 01c.
+- Gobernanza: 6 deudas registradas (ca9cd95e), REGISTRO 189 -> 195:
+  HOLDINGS-NORMALIZACION-EN-ORIGEN, HANDOFF-SIN-RESPUESTA-ENTRANTE-21,
+  DAILY-RUN-FAIL-40992758129, VERIFICAR-SCHEDULED-387938e6-2026-11-02,
+  METODO-EXCEDE-LIMITE-PROPIO, README-DESFASE-FUENTES-DATOS.
+- PCR-CONTRACT cerrado:
+  - 623b5dd3: eliminar 'percentile' duplicado en return de
+    compute_pcr_signals (dead code, F601 no lo detecta).
+  - 78a0e106: nuevo test_pcr_contract.py (3 tests) + par PCR al
+    manifiesto DICT_CONTRACT_PAIRS (9 pares). Par eliminado de
+    whitelist (2 -> 1). La whitelist declaraba producer
+    src/pipeline/market_data.py::_compute_pcr (passthrough), el
+    par real es indicators/options.py::compute_pcr_signals.
+- CI: 6 pushes. 3 X en gh run list eran cancelled por concurrency
+  (cancel-in-progress), no failure. Confirmado por ancestro contra
+  78a0e106 (success). Trampa #5 (af019902) validada en vivo el
+  mismo dia que se documento.
+
+**Commits.** 18ca4405, af019902, bfba1763, ca9cd95e, 623b5dd3,
+78a0e106 (6 commits).
+
+**Pendiente.**
+- SECTOR-RESULTS-CONTRACT: whitelist 1 -> 0. Producer declarado
+  compute_sectors_base no coincide con el descrito en HANDOFF
+  (compute_sector_rank_score). Merece analisis propio, sesion 23.
+- HOLDINGS-NORMALIZACION-EN-ORIGEN: E2E obligatorio por METODO §4.
+- Verificar scheduled con HEAD actual: primer run real lunes
+  2026-11-02.
+- HANDOFF a HEAD 78a0e106 (tras este commit).
+
+**Proximo paso sugerido.** Sesion 23: SECTOR-RESULTS-CONTRACT
+(cierra whitelist a 0) + actualizar HANDOFF a HEAD actual.
+
 ### 2026-10-31 — Sesion 21: coherencia analisis vs descarga + BRK.B residual
 
 **Objetivo.** Auditar el reporte generado por el run local
