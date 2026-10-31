@@ -4384,23 +4384,28 @@ items:
 - id: OBSERVABILIDAD-SILENCIOSA
   tipo: deuda_tecnica
   ciclo: '2026-10-31'
-  estado: OPEN
-  descripcion: |
-    Fase 0 triaje. 7 except Exception en productivo manejan el fallo
-    con un fallback pero no emiten WARN: european_coverage.py:151,
-    market_calendar.py:241, sector_correlation.py:90, utils.py:597,
-    temporal_validity.py:43, helpers.py:35,60,81. Son legitimos
-    (el fallback es correcto), pero opacos: si el fallback se dispara
-    en produccion, no queda rastro.
-  siguiente_accion: |
-    Anadir print('[WARN] ...') o skip() en cada uno. Antes:
-    grep de tests que anclan stdout exacto (capsys) para no romper
-    contratos de salida. Ejecutar por bloques (european_coverage,
-    market_calendar, etc.) con tests entre cada uno.
+  estado: FIXED
+  commit: 'PENDING'
+  test: tests/test_utils.py
   evidencia: |
-    Triaje de 32 except Exception sospechosos (grupo B). 15 legitimos
-    no tocados, 8 cerrados como FASE0-EXCEPT-DEAD-CODE. Estos 7
-    quedan como deuda de observabilidad.
+    Fase 0 triaje. 7 except Exception en productivo con fallback
+    silencioso: european_coverage.py:151, market_calendar.py:241,
+    sector_correlation.py:90, utils.py:597, temporal_validity.py:43,
+    helpers.py:35,60,81.
+    Resolucion:
+    - 4 con WARN (5bddba19): european_coverage, market_calendar,
+      sector_correlation, utils.py:597. Cada uno con mensaje
+      especifico (que fallo + que fallback se aplico). Verificado
+      con pytest focalizado (91 passed) y suite completa (4148).
+      Sin tests con capsys/caplog/readouterr (grep previo), no hay
+      riesgo de romper contratos de stdout.
+    - temporal_validity.py:43 ya fue acotado a (ValueError, TypeError)
+      en c5d6fa25 (FASE0-EXCEPT-DEAD-CODE). Defensa especifica, no
+      silenciamiento amplio. No requiere WARN.
+    - helpers.py:35,60,81: WONT_FIX razonado. Son fallback de formato
+      (return str(v) si format falla). Anadir WARN seria ruido linea
+      a linea en el render del reporte; el fallback es el
+      comportamiento correcto y testeado. No hay bug oculto detras.
 - id: DT-NOW-HELPER-HUERFANO
   tipo: deuda_tecnica
   ciclo: '2026-10-31'

@@ -87,7 +87,15 @@ def compute_sector_correlation(df_market, windows=(20, 60), min_obs_ratio=0.75, 
             _all_sessions = pd.DatetimeIndex(get_trading_days(
                 returns_df.index.min(), returns_df.index.max()))
             _aligned = returns_df.reindex(_all_sessions)
-        except Exception:
+        except Exception as e:
+            # OBSERVABILIDAD-SILENCIOSA (2026-10-31): antes silencioso.
+            # Sin reindex, iloc[-window:] toma filas, no sesiones. Si
+            # hay huecos (feriados, input vacio), la ventana cubre mas
+            # dias naturales que window sesiones. Afecta a la
+            # correlacion reportada.
+            print(f"  [WARN] sector_correlation: reindex a calendario "
+                  f"fallo para window={window} ({type(e).__name__}: {e}). "
+                  f"Ventana por filas, no por sesiones.")
             _aligned = returns_df
         panel = _aligned.iloc[-window:]
         # Eliminar columnas con demasiados NaN dentro de la ventana

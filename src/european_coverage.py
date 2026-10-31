@@ -148,7 +148,13 @@ def _append_csv(rows, today_str):
             df = pd.concat([df_old, df_new], ignore_index=True)
             df = df.drop_duplicates(subset=['date', 'ticker'], keep='last')
             df = df.sort_values(['date', 'source', 'ticker']).reset_index(drop=True)
-        except Exception:
+        except Exception as e:
+            # OBSERVABILIDAD-SILENCIOSA (2026-10-31): antes silencioso.
+            # El fallback (sobreescribir con df_new) es aceptable, pero
+            # perder el historico del CSV sin traza es opaco.
+            print(f"  [WARN] european_coverage: no se pudo concatenar "
+                  f"{OUTPUT_CSV}: {type(e).__name__}: {e}. Se sobreescribe "
+                  f"con df_new (se pierde historico previo).")
             df = df_new
     else:
         df = df_new

@@ -238,8 +238,15 @@ def slice_last_n_sessions(df, n):
         if len(sessions) == 0:
             return df.iloc[-n:]
         return df.reindex(sessions).iloc[-n:]
-    except Exception:
-        # tz-aware vs naive, calendario vacio, etc. Fallback conservador.
+    except Exception as e:
+        # OBSERVABILIDAD-SILENCIOSA (2026-10-31): antes silencioso.
+        # Fallback conservador (iloc por filas, no por sesiones). El
+        # resultado es distinto si el df tiene huecos (feriados NYSE):
+        # la ventana cubre mas dias naturales que N sesiones. Callers
+        # que dependan de "ultimas N sesiones" deben saberlo.
+        print(f"  [WARN] slice_last_n_sessions: reindex a calendario "
+              f"fallo ({type(e).__name__}: {e}). Fallback a df.iloc[-{n}:] "
+              f"(ventana por filas, no por sesiones).")
         return df.iloc[-n:]
 
 

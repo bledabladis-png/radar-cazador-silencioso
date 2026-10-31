@@ -594,7 +594,14 @@ def _compute_by_market(df, reference_date):
                 n_valid = int(row[cols].notna().sum())
             else:
                 n_valid = 0
-        except Exception:
+        except Exception as e:
+            # OBSERVABILIDAD-SILENCIOSA (2026-10-31): antes silencioso.
+            # Si el conteo de cobertura falla, el mercado se reporta
+            # como 0/N. Un bug de indexacion (tz, shape) quedaria
+            # enmascarado como "sin datos".
+            print(f"  [WARN] _compute_by_market: fallo contando cobertura "
+                  f"de {market} ({type(e).__name__}: {e}). Se reporta "
+                  f"n_valid=0.")
             n_valid = 0
 
         coverage = n_valid / n if n > 0 else None
