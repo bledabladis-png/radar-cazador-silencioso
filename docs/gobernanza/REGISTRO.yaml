@@ -4823,3 +4823,22 @@ items:
     con el mismo valor).
   siguiente_accion: |
     Limpiar en B4. Fix: eliminar una de las dos lineas.
+# --- B6 rankings.py, sesion 23, 2026-10-31 ---
+- id: B6-H6-RANKINGS-NAN-GUARDS
+  tipo: bug
+  ciclo: '2026-10-31'
+  estado: FIXED
+  commit: '1c30c571'
+  test: tests/test_rankings_nan_guards.py
+  evidencia: |
+    Clase H3-style (is not None no captura NaN) + fallback que
+    mezclaba None con 0.0. Tres sub-bugs en src/report/rankings.py:
+    (1) pers_str pintaba "nan%" con NaN; (2) signal_cons=(pers_val
+    + agree)/2 con pers_val=0.0 cuando None, promedio falso (columna
+    Persist decia N/A pero Signal Cons fingia persistencia 0);
+    (3) tact_values/struct_values con is not None dejaban NaN ->
+    np.median([nan, nan])=nan -> todas las comparaciones > nan =
+    False -> todo en Transition. Fix: pd.notna en todos los
+    filtros, signal_cons_str y avg_conf_str explicitos N/A cuando
+    faltan datos. Coherente con header.py H3. Falso positivo
+    descartado: safe_mean hace dropna() y no propaga NaN.
