@@ -4923,3 +4923,19 @@ items:
     Fix completo: mover ratio_names al productor (cross_asset.py)
     como RATIO_LABELS y que render importe del productor. Elimina
     la duplicacion. Preservado hasta B4 (donde vive cross_asset).
+# --- B6 alerts.py, sesion 23, 2026-10-31 ---
+- id: B6-H9-ALERTS-NONE-GUARDS
+  tipo: bug
+  ciclo: '2026-10-31'
+  estado: FIXED
+  commit: '127848db'
+  test: tests/test_alerts_nan_guards.py
+  evidencia: |
+    A2: ema200/ema20 con None crasheaba con TypeError en
+    comparacion >. Fix: pd.notna. A3: div=None en price_flow_
+    divergences.items() crasheaba con AttributeError. Fix:
+    guard div is None or not isinstance(dict) -> continue.
+    A5: conflict_level desconocido caia en INFO silencioso.
+    Fix: WARN explicito con _known_levels. Falsos positivos
+    descartados: A1 (NaN ya daba False), A4 (bias solo -1/0/1).
+    7 tests.
