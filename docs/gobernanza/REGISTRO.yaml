@@ -3983,3 +3983,52 @@ items:
     de publicar 'ranking' o cambia su estructura, el render falla
     con KeyError o pinta tabla vacia. Contrato AST + shape
     declarada aporta.
+
+- id: O2-COHERENCIA-ANALISIS
+  tipo: bug
+  ciclo: '2026-10-31'
+  estado: FIXED
+  commit: '1cb15d52'
+  test: tests/test_stock_metrics.py
+  descripcion: |
+    Cap desincronizado analisis vs descarga. compute_all_stock_metrics
+    (stock_metrics.py:282) usaba head(TOP_N_CANDIDATES=15) como cap por
+    sector. Tras c879df71 (universe_expansions, sesion 19) +
+    get_stock_list(), el parquet tiene mas holdings que el top-15:
+    XLF 34, XLV 26, XLU 22, XLY 22. El fix c879df71 llego a descarga
+    y rs_internal pero no a stock_metrics. Efecto: n_valid_rs de XLF
+    = 14 con 34 tickers descargados. Cobertura real 18% vs 45%.
+  evidencia: |
+    Fix en config/settings.py (MAX_CANDIDATES_PER_SECTOR=100 guard
+    defensivo) + indicators/stock_metrics.py::compute_all_stock_
+    metrics (universo = holdings del sector presentes en df_stocks.
+    Close, con normalize_yahoo_ticker antes de lookup, guard 100).
+    Test test_compute_all_stock_metrics_incluye_fuera_de_top15 +
+    test_compute_all_stock_metrics_normaliza_tickers. Verificado con
+    run local 20261030_230703: n_valid_rs de XLF 14->34, XLV 14->26,
+    XLU 15->22, XLY 15->22, XLI 42->50, XLK 33->39.
+
+- id: BRK-NORMALIZACION-RESIDUAL
+  tipo: bug
+  ciclo: '2026-10-31'
+  estado: FIXED
+  commit: 'e04b53ff'
+  test: tests/test_sector_concentration.py
+  descripcion: |
+    Bug de normalizacion residual expuesto por O2. O2 subio
+    n_valid_rs de XLF de 14 a 34, pero expuso incoherencia interna:
+    n_valid_return20=33 < n_valid_rs=34. Causa: BRK.B. holdings_df
+    usa BRK.B; parquet usa BRK-B. Preset en WYCKOFF-TICKER-
+    NORMALIZATION (2026-10-27) resuelto en wyckoff_holdings_report.py
+    y stock_metrics.py (O2), pero NO en indicators/rs_internal.py:47
+    (get_col) ni indicators/sector_concentration.py:52 (_get_series).
+  evidencia: |
+    Fix en indicators/rs_internal.py y indicators/sector_concentration.py:
+    normalize_yahoo_ticker antes de get_col/_get_series. Mantener
+    ticker ORIGINAL en el output (el reporte espera BRK.B, no BRK-B).
+    Tests test_compute_rs_internal_normaliza_ticker_de_holdings y
+    test_sector_concentration_normaliza_ticker_de_holdings.
+    Verificado con run local 20261031_003442: gap ret20 vs rs = 0 en
+    los 11 sectores (antes +1 en XLF). XLF: ret20=34, rs=34 (antes
+    33/34).
+

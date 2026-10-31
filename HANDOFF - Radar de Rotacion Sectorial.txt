@@ -7,16 +7,16 @@ junto con `Consolidacion_Documentos/00_ARRANQUE.md`.
 
 ---
 
-## 1. ESTADO AL CIERRE (2026-10-30, sesion 20)
+## 1. ESTADO AL CIERRE (2026-10-31, sesion 21)
 
-HEAD: `e8a2a4ba` (consultar `git log --oneline -1` para el actual).
+HEAD: `e04b53ff` (consultar `git log --oneline -1` para el actual).
 Sincronizacion: main == origin/main al cierre del commit.
 Tests: fuente autoritativa Consolidacion_Documentos/ESTADO_SISTEMA.md.
        Conteo exacto en ESTADO_SISTEMA.md seccion 2 (no literal aqui: cambia con cada commit de test).
 CI HEAD: verde.
 Validation Gate: 11/11 (outputs/state/validation_gate_result.json).
 Working tree: limpio.
-Gobernanza: docs/gobernanza/REGISTRO.yaml, 187 items. Validador reforzado
+Gobernanza: docs/gobernanza/REGISTRO.yaml, 189 items. Validador reforzado
             (detecta ids embebidos, SHA no-string, WONT_FIX en HANDOFF).
 Writers: 25 (output_registry.py).
 
@@ -100,6 +100,34 @@ DICT-CONTRACT-FRAMEWORK: FIXED 2026-10-30 (e8a2a4ba). Plan de
   lo escribia. Bug real de la clase (consumer lee X, producer no lo
   emite). Feature util (RECESSION CAPITULATION SIGNAL) ahora
   alcanzable.
+
+Coherencia analisis vs descarga (2026-10-31, sesion 21): 2 bugs
+  cerrados con test + run local verificado.
+
+  - O2-COHERENCIA-ANALISIS (1cb15d52): compute_all_stock_metrics
+    usaba head(TOP_N_CANDIDATES=15) por sector. Tras c879df71
+    (universe_expansions) + get_stock_list(), el parquet tiene mas
+    holdings que el top-15 (XLF 34, XLV 26, XLU 22, XLY 22). El fix
+    llego a descarga y rs_internal, pero no a stock_metrics. Efecto:
+    n_valid_rs de XLF=14 con 34 descargados. Fix: universo = holdings
+    del sector presentes en df_stocks.Close, normalizar ticker,
+    guard MAX_CANDIDATES_PER_SECTOR=100. Verificado con run local
+    20261030_230703: XLF 14->34, XLV 14->26, XLU 15->22, XLY 15->22.
+
+  - BRK-NORMALIZACION-RESIDUAL (e04b53ff): O2 expuso incoherencia
+    interna en XLF (n_valid_return20=33 < n_valid_rs=34) por BRK.B.
+    holdings usa BRK.B, parquet BRK-B. WYCKOFF-TICKER-NORMALIZATION
+    (2026-10-27) resuelto en wyckoff_holdings_report y stock_metrics
+    (O2), pero NO en rs_internal.py ni sector_concentration.py. Fix:
+    normalize_yahoo_ticker antes de get_col/_get_series, mantener
+    ticker original en output. Verificado con run local 20261031_003442:
+    gap ret20 vs rs = 0 en los 11 sectores.
+
+  Sesion 20 cerro el DICT-CONTRACT-FRAMEWORK (8 pares AST/schema +
+  manifiesto + heuristico, ver bloque siguiente). Sesion 21 cierra
+  el 2o y 3er bug de la clase "coherencia analisis vs descarga"
+  (cap desincronizado + normalizacion residual). Ambas sesiones con
+  run local end-to-end, no solo tests.
 
 DICT3-REACCUMULATION: WONT_FIX 2026-10-29. Detector implementado, 18 tests
   T1-T7 verdes, ejecutado sobre cohort (1185 episodios, 1171 evaluables).

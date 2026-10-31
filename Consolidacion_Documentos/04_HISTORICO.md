@@ -2671,3 +2671,136 @@ octubre (mte futures_status, mte pending, confirmation mte_scenario).
 **Commits.** d100ba01, f364ad2e, 053db86c, 457742f7, 4056c033,
 e8a2a4ba + este docs. Suite 4133 passed, 2 skipped.
 
+## 2026-10-31 (sesion 21) - Coherencia analisis vs descarga: 2 bugs estructurales
+
+**Objetivo.** Auditar el reporte del run local 20261030_224230 en busca
+de errores, inconsistencias o bugs silenciosos no detectados por tests.
+Foco especial: el gap n_valid_return20=33 < n_valid_rs=34 en XLF tras
+el fix O2 (1cb15d52).
+
+**Metodo.**
+1. Run local + snapshot pre/post + diff contra baseline (post_verify19b).
+2. Auditoria automatizada del reporte: formatos sospechosos, cambios
+   esperados, cambios condicionales, secciones faltantes, contradicciones
+   cruzadas, N/D regresiones.
+3. Auditoria fina contra CSVs fuente: n_valid_* vs CSV, JSON raw, gates.
+4. Cruce de gaps: n_valid_return20 vs n_valid_rs por sector.
+
+**Hallazgos.**
+- O2 (1cb15d52): el cap head(TOP_N_CANDIDATES=15) en compute_all_stock_
+  metrics contradecia el universo de descarga (universe_expansions +
+  get_stock_list). Los 9 tickers XLF anadidos en c879df71 (sesion 19)
+  estaban descargados (1253 barras) y en rs_internal (33 XLF) pero
+  fuera de stock_metrics (15 XLF). n_valid_rs de XLF = 14 cuando hay 34.
+- BRK.B (e04b53ff): O2 expuso incoherencia interna. holdings usa BRK.B,
+  parquet BRK-B. WYCKOFF-TICKER-NORMALIZATION (2026-10-27) resuelto
+  en wyckoff_holdings_report y stock_metrics, pero no en rs_internal
+  ni sector_concentration. El gap ret20 (33) vs rs (34) delataba el
+  bug: BRK.B (peso 12.32% de XLF) caia silenciosamente en
+  _compute_concentration._get_series.
+
+**Decision estructural.** "Coherencia analisis = descarga" como
+principio: si el sistema descarga un ticker (parquet), debe analizarlo
+(metricas por sector); si lo excluye, debe ser por decision explicita
+(delisted, guard defensivo). Un cap rigido por numero (top-15) es
+incompatible con universe_expansions. Sustituido por universo dinamico
+(holdings presentes en df_stocks.Close) con guard MAX_CANDIDATES_PER_
+SECTOR=100 para ETFs gigantes (IWM 1977).
+
+**Verificacion empirica.**
+- Run local 20261030_230703: O2 aplicado. XLF n_valid_rs 14->34, XLV
+  14->26, XLU 15->22, XLY 15->22, XLI 42->50, XLK 33->39.
+- Run local 20261031_003442: BRK aplicado. Gap ret20 vs rs = 0 en los
+  11 sectores. XLF ret20=34, rs=34.
+
+**Lecciones.**
+- Un fix de datos (c879df71) requiere auditar todos sus consumidores.
+  Llego a descarga y rs_internal, no a stock_metrics. Sintoma: cobertura
+  distinta segun la metrica.
+- Los gaps entre metricas del mismo universo delatan bugs silenciosos.
+  n_valid_return20 vs n_valid_rs diferentes en el mismo sector = un
+  ticker se pierde en una ruta y no en otra.
+- El AST guard del DICT-CONTRACT-FRAMEWORK no detecto BRK.B porque el
+  dict se construye via lookup individual (get_col, _get_series) sin
+  claves literales. El gap ret20 vs rs lo expuso.
+
+**Commits.** 1cb15d52 (O2), e04b53ff (BRK) + este docs. Suite 4137
+passed, 2 skipped.
+
+## Resumen bitacora podada 31-oct-2026 (4 sesiones 2026-10-18)
+
+### 2026-10-18 - Investigacion frescura + auditoria externa + audit post-receipt
+
+**Objetivo.** Verificar que el sistema se nutre con datos frescos de
+forma automatica. Cerrar deudas detectadas y puntos de auditoria
+externa del reporte 2026-10-17.
+
+**Decisiones.**
+- IPS/IPI son proxy de mercado (no IPC/PPI): texto nuevo en
+  volatility_mte.py + 2 tests (8eaecb0a). 3 falsos positivos
+  documentados (NIPC, SLPM, liderazgo).
+- Deuda validation/ en workflows: quitar validation/ del pytest en
+  ci_tests y daily_run (cafc77d8).
+- data_quality.csv con date = sesion bursatil (4ade7384 + 5ef44486):
+  migracion historica 155 filas en 9 fechas, 593->464 filas. 11 tests
+  nuevos en test_data_quality_date_sesion_bursatil.py.
+- Audit post-receipt no bloqueante: scripts/post_receipt_audit.py
+  compara writer_receipts.json vs outputs/history/*.csv.
+
+**Commits.** 8eaecb0a, cafc77d8, 4ade7384, 5ef44486.
+
+### 2026-10-18 - GEN-ESTADO-*: cierre de las dos deudas del generador
+
+**Objetivo.** Cerrar GEN-ESTADO-VALIDATION-VACIO y GEN-ESTADO-TESTS-
+NOT-FAILCLOSED, adelantandolos al mismo dia.
+
+**Decisiones.**
+- GEN-ESTADO-VALIDATION-VACIO (72659a9f): retirar validation/ del cmd
+  de pytest. Test AST que verifica el cmd del run().
+- GEN-ESTADO-TESTS-NOT-FAILCLOSED (cb3253d3): propagar rc de
+  section_tests() y section_integridad() a main(). Snapshot se
+  escribe siempre; exit code 1 si tests/compileall/pyflakes fallan.
+  4 tests hermeticos con tmp_path + monkeypatch.
+
+**Commits.** 72659a9f, cb3253d3.
+
+### 2026-10-18 - Regenerar ESTADO_SISTEMA + items del generador
+
+**Objetivo.** Cerrar la discrepancia entre ESTADO_SISTEMA.md (3641
+passed) y la realidad de la suite (3730 con filtro / 3739 sin filtro).
+Aprovechar para documentar dos deudas del generador.
+
+**Decisiones.**
+- Regenerar ESTADO_SISTEMA.md: 3641 -> 3739 (pytest sin filtro). La
+  cifra 3730 del HANDOFF es la del filtro `-m "not integration_real_data"`.
+  Nota aclaratoria anadida a HANDOFF.
+- Abrir GEN-ESTADO-VALIDATION-VACIO y GEN-ESTADO-TESTS-NOT-FAILCLOSED
+  (cerrados en la sesion siguiente).
+- HANDOFF §1 actualizado: 73 -> 75 items (2 OPEN nuevos).
+
+**Commits.** 2ca11b5a, 80ae528b. CI run 39083891160 success.
+
+### 2026-10-18 - Cierre residuales dictamen + struct en Rankings/Indices
+
+**Objetivo.** Cerrar los 5 residuales del dictamen original (H5, H7,
+H10/H19, H11/H12, H16) y publicar struct_score en Rankings Sectoriales
+e Indices (opcion B aprobada) para evitar lecturas binarias de fase
+Wyckoff.
+
+**Decisiones.**
+- H16 (9d8d8cf9): Financial Stress e Inflation Pressure siempre con N/5.
+- H7 (3d8c9689): ETFs fuera del denominador de cobertura. 305/340=0.897
+  -> 305/329=0.927. WARN falso eliminado.
+- H5 (37e1f02e): pos_change = net_position.diff() en CFTC. Identidad.
+- H10/H19 (e7b12feb): "Data Conf" -> "Conf. Frescura". Aclara que solo
+  expresa frescura, NO cobertura.
+- H11/H12 (caa176d1): provider lee FILING_DATE. Render publica Fecha
+  observacion + presentacion. Dispatch 39074246538 confirmo FILING_DATE
+  al 100%.
+- Struct (a226f556 + 22392813): columnas Struct en Rankings e Indices.
+  XLK +0.45 MARKUP, ^NDX +0.30 RANGE a 0.002 del umbral, XLP +0.18 RANGE.
+- E2E run.py verificado: los 5 fixes en el reporte real + Struct.
+
+**Commits.** 9d8d8cf9, 3d8c9689, 37e1f02e, e7b12feb, caa176d1,
+a226f556, 22392813.
+

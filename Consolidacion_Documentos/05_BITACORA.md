@@ -44,6 +44,48 @@ Al cerrar una sesion nueva, se anade arriba (las mas recientes primero). Si hay 
 
 ## 3. SESIONES
 
+### 2026-10-31 — Sesion 21: coherencia analisis vs descarga + BRK.B residual
+
+**Objetivo.** Auditar el reporte generado por el run local
+20261030_224230 en busca de errores, inconsistencias, bugs silenciosos.
+Encontrar la causa del gap `n_valid_return20=33 < n_valid_rs=34` en XLF
+(expuesto por O2).
+
+**Hecho.**
+- Diagnostico: dos bugs estructurales, ambos en la clase
+  "el sistema descarga X pero analiza Y":
+  1. Cap desincronizado (O2): compute_all_stock_metrics usaba
+     head(TOP_N_CANDIDATES=15) mientras get_stock_list descargaba 34
+     XLF por universe_expansions. Fix 1cb15d52: universo = holdings
+     en df_stocks.Close, normalizar, guard 100.
+  2. BRK.B residual: holdings usa BRK.B, parquet BRK-B. WYCKOFF-
+     TICKER-NORMALIZATION (2026-10-27) resuelto en 2 modulos pero no
+     en rs_internal.py y sector_concentration.py. Fix e04b53ff.
+
+**Verificacion empirica.**
+- Run local 20261030_230703 (pre O2): n_valid_rs XLF=14 (33 descargados).
+- Run local 20261031_003442 (post O2 + BRK): n_valid_rs XLF=34,
+  ret20=34, gap=0 en los 11 sectores.
+- XLF cobertura 18% -> 45%. XLV 14->26. XLU 15->22. XLY 15->22.
+  XLI 42->50. XLK 33->39.
+
+**Commits.** 1cb15d52 (O2), e04b53ff (BRK) + este docs.
+
+**Pendiente.**
+- Verificacion en scheduled real (proximo run-system con HEAD
+  e04b53ff o posterior).
+- PCR-CONTRACT, SECTOR-RESULTS-CONTRACT (whitelist justificada,
+  sesion 22+).
+- 4 observacionales con fecha (H5.3 20-nov, RECEIPT-AUDIT-LAG
+  17-nov, CRON-SLOTS-OBS / SCHEDULER-DELAYS 10-nov).
+- Decision IWM-HOLDINGS-EXPANSION.
+
+**Proximo paso sugerido.** Verificar scheduled con e04b53ff.
+Confirmar los 11 fixes del reporte (Fase dominante, N valid,
+Futures Status, Severidad, [INFO] catalogo, 0.00, gate 11/11,
+pending inactivo por nh_nl>0) + los 2 fixes de analisis (O2,
+BRK). Si todo verde, cerrar el ciclo del reporte 41037457375.
+
 ### 2026-10-30 — Sesion 20: contrato dict framework (plan de cierre clase 1fb791ab)
 
 **Objetivo.** Cerrar la clase 1fb791ab en el codigo, no en el proceso
@@ -1390,151 +1432,6 @@ fechas en outputs/history/*.csv.
 cubierto por run 39355608824) y el del miercoles 21-10 con todos los
 fixes activos. Confirmar 0 MISSING en receipt_audit y 0 filas no
 bursatiles en los 4 CSVs del pipeline.
-
-### 2026-10-18 - Investigacion frescura + auditoria externa + audit post-receipt
-
-**Objetivo.** Investigar y verificar que el sistema se nutre con datos
-frescos, fiables y consistentes de todas las fuentes de manera
-automatica. Cerrar deudas detectadas. Resolver puntos de auditoria
-externa del reporte 2026-10-17.
-
-**Hecho.**
-
-Fase A - Auditoria externa (4 puntos del analista):
-- IPS/IPI proxy de mercado, no IPC/PPI: `8eaecb0a`. Texto nuevo en
-  `volatility_mte.py` + 2 tests. Los 3 FALSE_POSITIVE (NIPC, SLPM,
-  liderazgo) documentados como falsos positivos porque el reporte ya
-  los declaraba.
-
-Fase B - Deuda validation/ en workflows:
-- `cafc77d8`: quitar validation/ del pytest en ci_tests y daily_run.
-
-Fase C - Deuda data_quality.csv (date no bursatil):
-- `4ade7384`: compute_data_quality escribe `date` =
-  last_expected_market_date(reference_date). `age` contra sesion.
-- `5ef44486`: migracion historica (155 filas, 9 fechas, 593->464).
-  Backup, dedup (date, source), validacion bursatil.
-- 11 tests nuevos en `test_data_quality_date_sesion_bursatil.py`.
-
-Fase D - Deuda receipt (no detecta CSV incompleto):
-- `400e6c9b`: `scripts/post_receipt_audit.py` compara
-  `writer_receipts.json` vs `outputs/history/*.csv`. Status
-  SKIP/NO_DATE_CHECK/OK/MISSING/CSV_MISSING. No bloquea. Append a
-  `receipt_audit.csv`. `daily_run.yml` step `if: always()`.
-  `health_check.py::check_receipt_audit()` lee el CSV y WARN si
-  hay MISSING en ultimas 7 sesiones.
-- 13 tests nuevos.
-- `212011f4`: quitar imports unused (pyflakes).
-
-**Commits.** `8eaecb0a`, `cafc77d8`, `4ade7384`, `5ef44486`,
-`400e6c9b`, `212011f4`. Rebase sobre `0419c5fa` (bot FRED) en un
-punto intermedio.
-
-**Pendiente.**
-- Scheduled lunes 2026-10-19 23:17 UTC: primer run con todos los
-  fixes activos. Observar `receipt_audit.csv` en artifact.
-- Health check lunes 2026-10-26: primera lectura de
-  `check_receipt_audit`.
-- Deudas aceptadas (no accionables): SSGA sin gate (fetch forzado),
-  reporte local en `outputs/report/` (gitignored, auditar via
-  artifact), `run.py:48` con `datetime.now(Madrid)` (excepcion
-  justificada por `is_session_closed`, no viola contrato porque es
-  fecha de ejecucion, no de observacion).
-
-**Proximo paso sugerido.** Verificar scheduled lunes. Si verde,
-observar primer `receipt_audit.csv` y confirmar 0 MISSING. Si hay
-MISSING, investigar antes del 26-oct.
-### 2026-10-18 - GEN-ESTADO-*: cierre de las dos deudas del generador
-
-**Objetivo.** Cerrar los dos items abiertos al cierre de la sesion
-anterior (GEN-ESTADO-VALIDATION-VACIO y GEN-ESTADO-TESTS-NOT-FAILCLOSED),
-adelantandolos al mismo dia en lugar de esperar al scheduled del lunes.
-
-**Hecho.**
-- GEN-ESTADO-VALIDATION-VACIO (72659a9f): retirar validation/ del
-  cmd de pytest. Test estatico AST que verifica el cmd del run().
-- GEN-ESTADO-TESTS-NOT-FAILCLOSED (cb3253d3): propagar rc de
-  section_tests() y section_integridad() a main(). Snapshot se
-  escribe siempre; exit code 1 si tests/compileall/pyflakes fallan.
-  4 tests hermeticos con tmp_path + monkeypatch.
-- Snapshot ESTADO_SISTEMA.md sin cambios (raw 3739).
-
-**Commits.** 72659a9f, cb3253d3.
-
-**Pendiente.**
-- Scheduled lunes 2026-10-19 23:17 UTC (certificacion prod v1.1+v1.2).
-- C2, H5.3, Wyckoff 5b.X, SOW v6: sin accion antes del lunes.
-
-**Proximo paso sugerido.** Verificar scheduled del lunes. Si verde,
-marcar VERIFIED_IN_PRODUCTION los items que corresponda.
-
-### 2026-10-18 - Regenerar ESTADO_SISTEMA + items del generador
-
-**Objetivo.** Cerrar la discrepancia entre ESTADO_SISTEMA.md (3641
-passed) y la realidad de la suite (3730 con filtro / 3739 sin filtro),
-detectada al arrancar la sesion. Aprovechar para documentar dos deudas
-del generador.
-
-**Hecho.**
-- Regenerar `ESTADO_SISTEMA.md`: 3641 -> 3739 (pytest sin filtro). La
-  cifra es correcta; la 3730 del HANDOFF es la del filtro
-  `-m "not integration_real_data"`. Nota aclaratoria anadida a HANDOFF
-  (lineas 15 y 118).
-- Abrir `GEN-ESTADO-VALIDATION-VACIO`: `generate_estado_sistema.py`
-  invoca `pytest tests/ validation/` pero `validation/` no contiene
-  `test_*.py`. Ruido, no bug.
-- Abrir `GEN-ESTADO-TESTS-NOT-FAILCLOSED`: `section_tests()` no aborta
-  con `rc != 0`; publica snapshot aunque la suite falle.
-- HANDOFF §1 actualizado: 73 -> 75 items (2 OPEN nuevos).
-- CI verde sobre HEAD final.
-
-**Commits.** `2ca11b5a`, `80ae528b`. Push a `origin/main` en
-`80ae528b`. CI run `39083891160` success.
-
-**Pendiente.**
-- `GEN-ESTADO-VALIDATION-VACIO`: retirar `validation/` o poblarla.
-  Post-scheduled 2026-10-19.
-- `GEN-ESTADO-TESTS-NOT-FAILCLOSED`: anadir comprobacion `rc != 0`.
-  Post-scheduled 2026-10-19.
-- Scheduled lunes 2026-10-19 23:17 UTC: primer run con
-  `target_session=2026-10-19` (certificacion prod v1.1 + v1.2).
-
-**Proximo paso sugerido.** Esperar scheduled del lunes. Si verde,
-marcar items `GEN-ESTADO-*` FIXED en la misma sesion.
-
-### 2026-10-18 - Cierre residuales dictamen + struct en Rankings/Indices
-
-**Objetivo.** Cerrar los 5 residuales del dictamen original (H5, H7,
-H10/H19, H11/H12, H16) y publicar struct_score en Rankings Sectoriales e
-Indices (opcion B aprobada) para evitar lecturas binarias de fase Wyckoff.
-
-**Hecho.**
-- H16 (`9d8d8cf9`): Financial Stress e Inflation Pressure siempre con N/5.
-- H7 (`3d8c9689`): ETFs fuera del denominador de cobertura. 305/340=0.897
-  -> 305/329=0.927. WARN falso eliminado.
-- H5 (`37e1f02e`): pos_change = net_position.diff() en CFTC. Identidad.
-- H10/H19 (`e7b12feb`): "Data Conf" -> "Conf. Frescura". Aclara que solo
-  expresa frescura, NO cobertura.
-- H11/H12 (`caa176d1`): provider lee FILING_DATE. Render publica Fecha
-  observacion + presentacion. Dispatch 39074246538 confirmo FILING_DATE
-  al 100%.
-- Struct (`a226f556` + `22392813`): columnas Struct en Rankings e Indices.
-  XLK +0.45 MARKUP, ^NDX +0.30 RANGE a 0.002 del umbral, XLP +0.18 RANGE.
-- E2E run.py verificado: los 5 fixes en el reporte real + Struct.
-
-**Commits.** `9d8d8cf9`, `3d8c9689`, `37e1f02e`, `e7b12feb`, `caa176d1`,
-`a226f556`, `22392813`.
-
-**Pendiente.**
-- Certificacion scheduled lunes 2026-10-19 23:17 UTC.
-- H5.3, C2, Wyckoff 5b.X, SOW v6: sin cambios.
-
-**Proximo paso sugerido.** Verificar scheduled del lunes. Comparar reporte
-del lunes con el del sabado: cambios esperados (Conf. Frescura, Expansion
-en Cross-Module, Struct en Rankings/Indices, N-PORT dos fechas, CFTC Pos
-Change identidad) deben ser coherentes con los commits listados.
-
----
 
 ## 4. REFERENCIA A SESIONES ANTERIORES
 
