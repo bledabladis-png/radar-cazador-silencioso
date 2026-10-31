@@ -10,11 +10,17 @@ from __future__ import annotations
 
 
 def _fmt_int(v):
-    if v is None:
+    # I1 B6 (2026-10-31): pd.notna. NaN -> int(NaN) -> ValueError -> str = nan;
+    # inf -> OverflowError no capturado -> crash. Ahora ambos -> N/D.
+    import math
+    import pandas as pd
+    if v is None or not pd.notna(v):
+        return "N/D"
+    if isinstance(v, float) and not math.isfinite(v):
         return "N/D"
     try:
         return f"{int(v):,}".replace(",", ".")
-    except (TypeError, ValueError):
+    except (TypeError, ValueError, OverflowError):
         return str(v)
 
 
@@ -119,7 +125,9 @@ def render_iae_section(iae_section):
     obs = iae_section.get("catalog_keys_observed")
     tot = iae_section.get("catalog_keys_total")
     cov = iae_section.get("catalog_coverage_declared")
-    cov_s = f"{cov:.2%}" if isinstance(cov, (int, float)) else "N/D"
+    # I2 B6 (2026-10-31): pd.notna. isinstance(NaN, float) = True -> nan%.
+    import pandas as _pd
+    cov_s = f"{cov:.2%}" if isinstance(cov, (int, float)) and _pd.notna(cov) else "N/D"
     out.append(f"- Cobertura observable: **{obs} / {tot} ({cov_s})**\n")
     if iae_section.get("catalog_coverage_warning"):
         out.append("**[WARN] Cobertura del catalogo por debajo del 90% "
