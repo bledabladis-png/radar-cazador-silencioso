@@ -2398,7 +2398,7 @@ items:
   tipo: deuda_tecnica
   ciclo: '2026-10-25'
   estado: FIXED
-  commit: 'PENDING'
+  commit: '0ab436d9'
   evidencia: |
     Fase A.2c commiteada 2026-10-26. Base target_weight activa en
     produccion. Cambios principales:
