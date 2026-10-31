@@ -4385,7 +4385,7 @@ items:
   tipo: deuda_tecnica
   ciclo: '2026-10-31'
   estado: FIXED
-  commit: 'PENDING'
+  commit: 'db3fa825'
   test: tests/test_utils.py
   evidencia: |
     Fase 0 triaje. 7 except Exception en productivo con fallback
