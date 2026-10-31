@@ -38,7 +38,9 @@ def _mk_dfs(sub_rows):
 
 def test_imports_publicos():
     assert tf.CANONICAL_PERIOD_FIELD == "PERIODOFREPORT"
-    assert tf.FULL_PERIOD == "2026-03-31"
+    # FA-2.1 (2026-10-31): FULL_PERIOD dejo de ser un trimestre
+    # hardcodeado. Ahora None; filter_by_period exige period.
+    assert tf.FULL_PERIOD is None
     assert callable(tf.filter_by_period)
 
 
@@ -165,3 +167,15 @@ def test_uses_periodofreport_no_reporcalendar():
     dfs = {"SUBMISSION": sub, "COVERPAGE": cov}
     out = tf.filter_by_period(dfs, "2026-03-31")
     assert len(out["SUBMISSION"]) == 2
+
+def test_filter_by_period_sin_period_raises():
+    """filter_by_period() sin period explicito -> ValueError.
+
+    FA-2.1 (2026-10-31): antes FULL_PERIOD tenia "2026-03-31" hardcodeado
+    y un caller que omitia period filtraba por un trimestre viejo.
+    Ahora raise explicito.
+    """
+    import pandas as pd
+    dfs = {"SUBMISSION": pd.DataFrame({"PERIODOFREPORT": []})}
+    with pytest.raises(ValueError, match="period es requerido"):
+        tf.filter_by_period(dfs)

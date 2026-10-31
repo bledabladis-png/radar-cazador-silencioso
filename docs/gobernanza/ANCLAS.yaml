@@ -37,13 +37,6 @@ anclas:
       - scripts/health_check.py:72
     razon: "Fallo puntual de Yahoo: 206/313 tickers USA sin Close. Excluida de los controles como defecto conocido."
 
-  - id: IAE_FULL_PERIOD
-    valor: "2026-03-31"
-    categoria: periodo_congelado
-    ubicaciones:
-      - src/institutional_accumulation/sec_13f/identity/temporal_filter.py:22
-    razon: "Periodo contractual congelado del IAE. Cualquier cambio requiere nuevo dictamen externo."
-
   - id: IAE_PIPELINE_PERIODS
     valor: "2025-12-31"
     categoria: periodo_congelado

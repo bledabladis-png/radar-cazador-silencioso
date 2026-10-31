@@ -66,7 +66,7 @@ def render_data_freshness(pcr_data, darkpool_data, sector_results, reference_dat
         from pathlib import Path as _Path
         liq_state_path = _Path('outputs/state/liquidity_state.json')
         if liq_state_path.exists():
-            with liq_state_path.open('r') as f:
+            with liq_state_path.open('r', encoding='utf-8') as f:
                 liq_state = json.load(f)
             last_fred = liq_state.get('date', 'N/A')
             if last_fred != 'N/A':

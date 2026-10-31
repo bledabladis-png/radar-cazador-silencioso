@@ -6,8 +6,9 @@ FA-2.1 - Dictamen auditor FA-2.0 (2026-09-19):
   - NO introducir: CUSIP resolver, manager graph, NIPC, economic owner.
 
 Contrato:
-  filter_by_period(dfs, period="2026-03-31") -> dict[str, DataFrame]
-    - Filtra los 7 TSVs al periodo indicado.
+  filter_by_period(dfs, period) -> dict[str, DataFrame]
+    - Filtra los 7 TSVs al periodo indicado (str "YYYY-MM-DD").
+    - period es REQUERIDO. No hay default.
     - Propagacion por ACCESSION_NUMBER.
     - Un ACCESSION_NUMBER solo se conserva si su filing esta en el
       periodo.
@@ -19,7 +20,12 @@ import pandas as pd
 
 CANONICAL_PERIOD_FIELD = "PERIODOFREPORT"
 COHERENCE_PERIOD_FIELD = "REPORTCALENDARORQUARTER"
-FULL_PERIOD = "2026-03-31"
+# FA-2.1 (2026-10-31): FULL_PERIOD era "2026-03-31" hardcodeado.
+# Bug latente: si un caller omitia `period`, filtraba por un trimestre
+# 2 atras. Ahora FULL_PERIOD = None; filter_by_period exige period
+# explicito. El caller real (pipeline_contractual.load_canonical)
+# siempre pasa el periodo, asi que no hay consumidor afectado.
+FULL_PERIOD = None
 TABLES_WITH_ACCESSION = (
     "SUBMISSION", "COVERPAGE", "SUMMARYPAGE",
     "OTHERMANAGER", "OTHERMANAGER2", "SIGNATURE", "INFOTABLE",
@@ -54,7 +60,7 @@ def filter_by_period(dfs, period=FULL_PERIOD, *, return_stats=False):
     """Filtra los 7 TSVs al periodo canonico.
 
     dfs: dict[str, DataFrame] con los 7 TSVs.
-    period: str "YYYY-MM-DD". Default: FULL_PERIOD = "2026-03-31".
+    period: str "YYYY-MM-DD". Requerido, no hay default.
     return_stats: si True, devuelve (dfs_filtrados, stats).
 
     Devuelve dict[str, DataFrame] filtrado. Preserva las columnas.
@@ -65,6 +71,12 @@ def filter_by_period(dfs, period=FULL_PERIOD, *, return_stats=False):
       KeyError si dfs no contiene SUBMISSION.
       ValueError si period no es parseable.
     """
+    if period is None:
+        raise ValueError(
+            "filter_by_period: period es requerido. FULL_PERIOD es None "
+            "por diseno (no hay trimestre por defecto). Pasa explicitamente "
+            "el periodo del filing, p.ej. \"2026-09-30\"."
+        )
     if "SUBMISSION" not in dfs:
         raise KeyError("dfs debe contener SUBMISSION")
     sub = dfs["SUBMISSION"]

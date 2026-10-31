@@ -324,7 +324,7 @@ def compute_data_quality(reference_date=None):
                 import json
                 liq_state_path = Path('outputs/state/liquidity_state.json')
                 if liq_state_path.exists():
-                    with liq_state_path.open('r') as _f:
+                    with liq_state_path.open('r', encoding='utf-8') as _f:
                         _state = json.load(_f)
                     _ld = pd.to_datetime(_state.get('date'))
                     last_date = _last_market_session(_ld) if pd.notna(_ld) else pd.NaT
