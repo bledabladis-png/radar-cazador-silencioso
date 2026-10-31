@@ -4939,3 +4939,19 @@ items:
     Fix: WARN explicito con _known_levels. Falsos positivos
     descartados: A1 (NaN ya daba False), A4 (bias solo -1/0/1).
     7 tests.
+# --- B6 iae.py, sesion 23, 2026-10-31 ---
+- id: B6-H10-IAE-NAN-GUARDS
+  tipo: bug
+  ciclo: '2026-10-31'
+  estado: FIXED
+  commit: 'b62e645e'
+  test: tests/test_iae_nan_guards.py
+  evidencia: |
+    I1 (ALTA): _fmt_int con NaN -> int(NaN) -> ValueError ->
+    str(NaN) = nan; inf -> OverflowError NO capturado -> crash
+    del run. Afecta a nipc_*, n_delta_observable, n_both/new/
+    exit, n_unresolved_identity. Fix: math.isfinite + pd.notna;
+    ambos -> N/D. OverflowError al except. I2 (MEDIA): cov_s con
+    NaN -> nan% porque isinstance(NaN, float) = True. Fix:
+    pd.notna. I3 resuelto con I1. I4 descartado (productor emite
+    dict o None). 8 tests.
