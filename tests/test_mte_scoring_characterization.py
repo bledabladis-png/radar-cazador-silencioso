@@ -56,27 +56,26 @@ class TestScoreScenariosContrato:
         assert r["CRISIS"] == -999
 
 class TestF24_01_NoDuplicado:
-    """F2.4-01: el bonus cls > 0.7 aparece UNA sola vez en CRISIS."""
+    """F2.4-01: el bonus cls > 0.7 aparece UNA sola vez en CRISIS.
+
+    H7 B6 (2026-10-31): el refactor a SCENARIO_RULES movio las reglas del
+    cuerpo procedural de score_scenarios al dict. El contrato es el mismo:
+    la regla cls>0.7 esta en CRISIS una sola vez. Se verifica contra el dict.
+    """
 
     def test_una_sola_condicion_cls_07(self):
-        tree = ast.parse(SCORING_PATH.read_text(encoding="utf-8-sig"))
-        for fn in tree.body:
-            if isinstance(fn, ast.FunctionDef) and fn.name == "score_scenarios":
-                hits = []
-                for node in ast.walk(fn):
-                    if isinstance(node, ast.Compare):
-                        if (isinstance(node.left, ast.Name)
-                                and node.left.id == "cls"
-                                and len(node.comparators) == 1
-                                and isinstance(node.comparators[0], ast.Constant)
-                                and node.comparators[0].value == 0.7):
-                            hits.append(node.lineno)
-                assert len(hits) == 1, (
-                    f"cls > 0.7 aparece {len(hits)} veces en score_scenarios "
-                    f"(lineas: {hits}); debe ser 1"
-                )
-                return
-        pytest.fail("score_scenarios no encontrado")
+        from indicators.mte.scoring import SCENARIO_RULES
+        reglas = SCENARIO_RULES["CRISIS"]["rules"]
+        hits = [
+            r for r in reglas
+            if any(
+                c[0] == "cls" and c[1] == ">" and c[2] == 0.7
+                for c in r["cond"]
+            )
+        ]
+        assert len(hits) == 1, (
+            "cls > 0.7 aparece " + str(len(hits)) + " veces en CRISIS; debe ser 1"
+        )
 
 
 class TestF24_02_SinBareExcept:

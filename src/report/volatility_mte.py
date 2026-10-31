@@ -83,27 +83,26 @@ def render_mte(mte_result):
     out = []
     if mte_result:
         out.append("## Market Transition Engine (MTE v1.0)\n")
-        mte_conf = mte_result.get('confidence', 0)
-        mte_conf_str = f'{mte_conf:.2f}' if pd.notna(mte_conf) else 'N/D'
-        mte_scenario = mte_result.get('scenario', 'N/A')
-        if mte_conf < 0.5:
+        # H7 B6 (2026-10-31): V2/V3/V4. conf NaN -> UNCONFIRMED; msi/ipi/cls con guard; helpers locales.
+        def _f(v, fmt):
+            return format(v, fmt) if pd.notna(v) else "N/D"
+        def _pct(v):
+            return format(v, ".0%") if pd.notna(v) else "N/D"
+        mte_conf = mte_result.get("confidence", 0)
+        mte_conf_str = _f(mte_conf, ".2f")
+        mte_scenario = mte_result.get("scenario", "N/A")
+        _confirmed = pd.notna(mte_conf) and mte_conf >= 0.5
+        if not _confirmed:
             out.append(f"- **Escenario (UNCONFIRMED):** {mte_scenario} (Confidence Score no calibrado: {mte_conf_str}) - *No se considera confirmado.*\n")
         else:
             out.append(f"- **Escenario:** {mte_scenario} (Confidence Score no calibrado: {mte_conf_str})\n")
         out.append("*Nota: Confidence Score (no calibrado, escala 0-1) representa la distancia a los umbrales y el consenso entre motores. No debe interpretarse como probabilidad.*\n")
-        out.append(f"- **Market Stress Index (MSI):** {mte_result.get('msi', 0):.0f}\n")
-        out.append(f"- **Inflation Pressure Index (IPI):** {mte_result.get('ipi', 0):.0f}\n")
-        val_srs = mte_result.get('srs', 0)
-        val_srs_str = f'{val_srs:.2f}' if pd.notna(val_srs) else 'N/D'
-        out.append(f"- **Sector Rotation Score:** {val_srs_str}\n")
-        val_shs = mte_result.get('shs', 0)
-        val_shs_str = f'{val_shs:.2f}' if pd.notna(val_shs) else 'N/D'
-        out.append(f"- **Safe Haven Score:** {val_shs_str}\n")
-        out.append(f"- **Credit Stress Score:** {mte_result.get('cls', 0):.2f}")
-        out.append(" (orientacion: positivo = mayor estres crediticio)\n")
-        ips_val = mte_result.get('ips', 0)
-        ips_str = f'{ips_val:.2f}' if pd.notna(ips_val) else 'N/D'
-        out.append(f"- **Inflation Pressure Score:** {ips_str}\n")
+        out.append(f"- **Market Stress Index (MSI):** {_f(mte_result.get("msi", 0), ".0f")}\n")
+        out.append(f"- **Inflation Pressure Index (IPI):** {_f(mte_result.get("ipi", 0), ".0f")}\n")
+        out.append(f"- **Sector Rotation Score:** {_f(mte_result.get("srs", 0), ".2f")}\n")
+        out.append(f"- **Safe Haven Score:** {_f(mte_result.get("shs", 0), ".2f")}\n")
+        out.append(f"- **Credit Stress Score:** {_f(mte_result.get("cls", 0), ".2f")} (orientacion: positivo = mayor estres crediticio)\n")
+        out.append(f"- **Inflation Pressure Score:** {_f(mte_result.get("ips", 0), ".2f")}\n")
         # Fix 2026-10-30: exponer futures_status si no es OK. El state
         # interno (outputs/state/mte_state.json) declara STALE/UNAVAILABLE
         # cuando los precios de futuros no estan frescos, pero el reporte
@@ -146,22 +145,7 @@ def render_mte(mte_result):
                    "error: mide presion via precios de activos, no niveles "
                    "macro observados.*\n\n")
         out.append("*Nota cruzada: puede discrepar de la etiqueta Macro 'INFLATION SHOCK' del Resumen de Regimenes. Motores independientes (macro_regime vs MTE scoring): miden cosas distintas; signos opuestos no son error.*\n\n")
-        # P2.5 (2026-10-13, auditor): nota sin umbrales hardcodeados.
-        # Si cambian en scoring.py, esta nota sigue siendo cierta.
-        # H15 (2026-10-15, auditoria externa): publicar componentes,
-        # pesos y umbrales del scoring de escenarios.
-        out.append("*El escenario se asigna por suma ponderada de "
-                   "condiciones. Pesos (SCENARIO_WEIGHTS): CLS=3, "
-                   "SHS=2, SRS=2, IPS=3. MIXED es una constante interna "
-                   "(=2). Umbrales de activacion: CLS>0.20 suma su peso; "
-                   "SHS>0.20; SRS>0.10; IPS>0.15. Bonos adicionales: "
-                   "CLS>0.50 suma +6 a CRISIS; CLS>0.85 suma +3; "
-                   "IPS>0.50 suma +2 a STAGFLATION. STAGFLATION se "
-                   "activa cuando IPS>0.15 AND SRS>0; CLS<0.30 refuerza. "
-                   "La etiqueta se publica como UNCONFIRMED cuando la "
-                   "confidence < 0.50. Fuente: "
-                   "indicators/mte/scoring.py::score_scenarios y "
-                   "SCENARIO_WEIGHTS. 'Inflation Pressure: N/5' es un "
-                   "contador de componentes en presion, distinto del "
-                   "score agregado Inflation Pressure Score.*\n\n")
+        # H7 B6 (2026-10-31): nota derivada de SCENARIO_RULES.
+        from src.report.helpers import _fmt_scenario_rules_note
+        out.append(_fmt_scenario_rules_note())
     return out

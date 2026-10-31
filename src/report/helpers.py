@@ -155,6 +155,49 @@ def _generate_coverage_table(pcr_data, darkpool_data, sector_results, reference_
     return lines
 
 
+def _fmt_scenario_rules_note():
+    """Nota del scoring MTE derivada de SCENARIO_RULES (H7 B6)."""
+    from indicators.mte.scoring import (
+        SCENARIO_RULES, SCENARIO_WEIGHTS, MIXED_BASE,
+    )
+
+    def _fmt_cond(cond):
+        return " AND ".join(
+            v.upper() + op + format(thr, ".2f") for v, op, thr in cond
+        )
+
+    def _fmt_bonus(rule):
+        if "bonus" in rule:
+            return "suma +" + str(rule["bonus"])
+        ref = rule["bonus_ref"]
+        return "suma +" + ref + "(=" + str(SCENARIO_WEIGHTS[ref]["weight"]) + ")"
+
+    def _fmt_rule(rule):
+        txt = _fmt_cond(rule["cond"]) + " " + _fmt_bonus(rule)
+        finite = rule.get("finite", [])
+        if finite:
+            txt += " (si " + ", ".join(f.upper() for f in finite) + " finito)"
+        return txt
+
+    partes = []
+    for scenario, spec in SCENARIO_RULES.items():
+        reglas = " | ".join(_fmt_rule(r) for r in spec["rules"])
+        pre = spec.get("pre_invalid")
+        if pre is not None:
+            reglas = "si " + pre["var"].upper() + " no finito suma " + str(pre["value"]) + " (luego: " + reglas + ")"
+        partes.append(scenario + ": " + reglas)
+    pesos = ", ".join(k + "=" + str(v["weight"]) for k, v in SCENARIO_WEIGHTS.items())
+    txt = (
+        "*El escenario se asigna por suma ponderada de condiciones. "
+        "Pesos (SCENARIO_WEIGHTS): " + pesos + ". MIXED=" + str(MIXED_BASE) + ". "
+        "Reglas por escenario (derivadas de SCENARIO_RULES): " + "; ".join(partes) + ". "
+        "La etiqueta se publica como UNCONFIRMED cuando confidence < 0.50. "
+        "Fuente: indicators/mte/scoring.py (SCENARIO_RULES, SCENARIO_WEIGHTS). "
+        "Inflation Pressure: N/5 es un contador de componentes en presion, "
+        "distinto del score agregado Inflation Pressure Score.*\n\n"
+    )
+    return txt
+
 def _classify_fred_freshness(age_days):
     max_current, max_recent, max_stale = FRESHNESS_FRED
     if age_days <= max_current:

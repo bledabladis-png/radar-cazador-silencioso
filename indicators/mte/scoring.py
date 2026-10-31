@@ -475,153 +475,102 @@ SCENARIO_WEIGHTS = {
 }
 
 
+# H7 B6 (2026-10-31): SCENARIO_RULES data-driven (v2 con finite y pre_invalid).
+# score_scenarios y la nota del reporte (render_mte) derivan de aqui.
+# finite: la regla solo se evalua si esas variables son finitas (bug
+# latente de inf>0.85 se preserva hasta item separado).
+# pre_invalid: si la variable no es finita, base=value; luego se siguen
+# aplicando las reglas sin finite (comportamiento exacto del codigo previo).
+SCENARIO_RULES = {
+    "CRISIS": {
+        "pre_invalid": {"var": "cls", "value": -999},
+        "rules": [
+            {"cond": [("cls", ">", 0.5)], "bonus": 6, "finite": ["cls"]},
+            {"cond": [("cls", ">", 0.7)], "bonus": 3, "finite": ["cls"]},
+            {"cond": [("shs", ">", 0.3)], "bonus_ref": "SHS", "finite": ["cls"]},
+            {"cond": [("srs", ">", 0.3)], "bonus_ref": "SRS", "finite": ["cls"]},
+            {"cond": [("cls", ">", 0.85)], "bonus": 3},
+        ],
+    },
+    "RECESSION": {
+        "pre_invalid": {"var": "cls", "value": 0},
+        "rules": [
+            {"cond": [("cls", ">", 0.25), ("srs", ">", 0.1), ("cls", "<=", 0.5)], "bonus": 1, "finite": ["cls"]},
+            {"cond": [("cls", ">", 0.2)], "bonus_ref": "CLS", "finite": ["cls"]},
+            {"cond": [("cls", ">", 0.4), ("cls", "<=", 0.5)], "bonus": 1, "finite": ["cls"]},
+            {"cond": [("shs", ">", 0.2)], "bonus_ref": "SHS"},
+            {"cond": [("srs", ">", 0.2)], "bonus_ref": "SRS"},
+        ],
+    },
+    "STAGFLATION": {
+        "pre_invalid": None,
+        "rules": [
+            {"cond": [("ips", ">", 0.15), ("srs", ">", 0)], "bonus": 1},
+            {"cond": [("ips", ">", 0.15)], "bonus_ref": "IPS"},
+            {"cond": [("srs", ">", 0)], "bonus_ref": "SRS"},
+            {"cond": [("cls", "<", 0.3)], "bonus_ref": "CLS"},
+            {"cond": [("ips", ">", 0.5)], "bonus": 2},
+        ],
+    },
+    "SOFT LANDING": {
+        "pre_invalid": None,
+        "rules": [
+            {"cond": [("srs", ">", 0.1), ("shs", ">", 0.1)], "bonus": 1},
+            {"cond": [("srs", ">", 0.1)], "bonus_ref": "SRS"},
+            {"cond": [("shs", ">", 0.1)], "bonus_ref": "SHS"},
+            {"cond": [("cls", "<", 0)], "bonus_ref": "CLS"},
+            {"cond": [("cls", "<", -0.2)], "bonus": 1},
+        ],
+    },
+    "EXPANSION": {
+        "pre_invalid": None,
+        "rules": [
+            {"cond": [("srs", "<", -0.1)], "bonus_ref": "SRS"},
+            {"cond": [("cls", "<", -0.1)], "bonus_ref": "CLS"},
+            {"cond": [("shs", "<", 0)], "bonus_ref": "SHS"},
+            {"cond": [("srs", "<", -0.3)], "bonus": 1},
+        ],
+    },
+}
+
+MIXED_BASE = 2
+
+
+def _eval_cond(var_value, op, thr):
+    """Evaluador de condicion (var, op, thr). Opcionalmente NaN-safe."""
+    if op == ">":
+        return var_value > thr
+    if op == "<":
+        return var_value < thr
+    if op == ">=":
+        return var_value >= thr
+    if op == "<=":
+        return var_value <= thr
+    raise ValueError("operador desconocido: " + op)
+
+
 def score_scenarios(srs, shs, cls, ips):
-
-
+    """Scores por escenario derivados de SCENARIO_RULES."""
+    values = {"srs": srs, "shs": shs, "cls": cls, "ips": ips}
     scores = {}
-
-
-    # CRISIS (prioridad máxima: bonus base por cumplir condiciones)
-
-
-    crisis = 0
-
-
-    if not np.isfinite(cls):
-
-
-        crisis = -999  # CLS inválido ? CRISIS bloqueado
-
-
-    else:
-
-
-        if cls > 0.5:
-
-
-            crisis += 6  # CLS > 0.5 ya indica estrés financiero extremo
-
-
-        if cls > 0.7: crisis += 3  # Bonus adicional por estrés severo
-
-
-        if shs > 0.3: crisis += SCENARIO_WEIGHTS["SHS"]["weight"]
-
-
-        if srs > 0.3: crisis += SCENARIO_WEIGHTS["SRS"]["weight"]
-
-
-    if cls > 0.85: crisis += 3
-
-
-    scores['CRISIS'] = crisis
-
-
-    # RECESSION
-
-
-    recession = 0
-
-
-    if np.isfinite(cls):
-
-
-        if cls > 0.25 and srs > 0.1 and cls <= 0.5: recession += 1  # bonus base
-
-
-        if cls > 0.2: recession += SCENARIO_WEIGHTS["CLS"]["weight"]
-
-
-        if cls > 0.4 and cls <= 0.5: recession += 1
-
-
-    if shs > 0.2: recession += SCENARIO_WEIGHTS["SHS"]["weight"]
-
-
-    if srs > 0.2: recession += SCENARIO_WEIGHTS["SRS"]["weight"]
-
-
-    scores['RECESSION'] = recession
-
-
-    # STAGFLATION
-
-
-    stagflation = 0
-
-
-    # F2.4-07 (2026-10-12): ips>0.15 es umbral de activacion del
-    # bonus base, no 'reducido'. El peso real es 1 (bonus base),
-    # ademas del SCENARIO_WEIGHTS['IPS'] posterior.
-    if ips > 0.15 and srs > 0: stagflation += 1
-
-
-    if ips > 0.15: stagflation += SCENARIO_WEIGHTS["IPS"]["weight"]  # IPS es el factor distintivo de STAGFLATION
-
-
-    if srs > 0: stagflation += SCENARIO_WEIGHTS["SRS"]["weight"]
-
-
-    if cls < 0.3: stagflation += SCENARIO_WEIGHTS["CLS"]["weight"]
-
-
-    if ips > 0.5: stagflation += 2
-
-
-    scores['STAGFLATION'] = stagflation
-
-
-    # SOFT LANDING
-
-
-    soft = 0
-
-
-    if srs > 0.1 and shs > 0.1: soft += 1  # bonus base
-
-
-    if srs > 0.1: soft += SCENARIO_WEIGHTS["SRS"]["weight"]
-
-
-    if shs > 0.1: soft += SCENARIO_WEIGHTS["SHS"]["weight"]
-
-
-    if cls < 0: soft += SCENARIO_WEIGHTS["CLS"]["weight"]
-
-
-    if cls < -0.2: soft += 1
-
-
-    scores['SOFT LANDING'] = soft
-
-
-    # EXPANSION
-
-
-    expansion = 0
-
-
-    if srs < -0.1: expansion += SCENARIO_WEIGHTS["SRS"]["weight"]
-
-
-    if cls < -0.1: expansion += SCENARIO_WEIGHTS["CLS"]["weight"]
-
-
-    if shs < 0: expansion += SCENARIO_WEIGHTS["SHS"]["weight"]
-
-
-    if srs < -0.3: expansion += 1
-
-
-    scores['EXPANSION'] = expansion
-
-
-    # F2.4-08 (2026-10-13): WONT FIX razonado. 'MIXED' = 2 es el
-    # peso interno del escenario MIXED en el sistema de scoring
-    # (mismo orden de magnitud que RECESSION=3, CRISIS=4). No es
-    # una constante magica: es parte del modelo de pesos. Alterarlo
-    # cambiaria la clasificacion final del MTE.
-    scores['MIXED'] = 2
-
-
+    for scenario, spec in SCENARIO_RULES.items():
+        base = 0
+        pre = spec.get("pre_invalid")
+        if pre is not None:
+            if not np.isfinite(values[pre["var"]]):
+                base = pre["value"]
+        for rule in spec["rules"]:
+            finite_vars = rule.get("finite", [])
+            if any(not np.isfinite(values[v]) for v in finite_vars):
+                continue
+            ok = all(_eval_cond(values[v], op, thr) for v, op, thr in rule["cond"])
+            if not ok:
+                continue
+            if "bonus" in rule:
+                base += rule["bonus"]
+            else:
+                base += SCENARIO_WEIGHTS[rule["bonus_ref"]]["weight"]
+        scores[scenario] = base
+    scores["MIXED"] = MIXED_BASE
     return scores
+

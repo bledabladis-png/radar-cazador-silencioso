@@ -35,4 +35,11 @@ def test_render_mte_no_rompe_bloque_de_pesos():
     assert "IPS=3" in lineas
     assert "IPS>0.15" in lineas
     assert "IPS>0.50 suma +2" in lineas
-    assert "STAGFLATION se activa cuando IPS>0.15 AND SRS>0" in lineas
+    # H7 B6 (2026-10-31): la nota ahora deriva de SCENARIO_RULES.
+    # El contrato es que STAGFLATION documenta IPS>0.15 AND SRS>0.
+    import re
+    m = re.search(r"STAGFLATION: ([^;]*)", lineas)
+    assert m, "STAGFLATION no aparece en la nota"
+    bloque_stag = m.group(1)
+    assert "IPS>0.15" in bloque_stag
+    assert "SRS>0" in bloque_stag
