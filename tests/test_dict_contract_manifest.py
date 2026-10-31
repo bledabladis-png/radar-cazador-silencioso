@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """Manifiesto y heuristica de contratos dict productor-consumidor.
 
-Cierra el plan de cierre de la clase 1fb791ab (2026-10-30). Los 9
+Cierra el plan de cierre de la clase 1fb791ab (2026-10-30). Los 10
 pares cubiertos por contrato AST o schema estan en DICT_CONTRACT_PAIRS.
 Los pares identificados pero no cubiertos estan en
 DICT_CONTRACT_WHITELIST con su razon.
@@ -66,18 +66,20 @@ DICT_CONTRACT_PAIRS = {
     ("indicators/options.py", "compute_pcr_signals",
      "src/report/sentiment.py", "render_sentimiento_opciones"):
         "tests/test_pcr_contract.py",
+    # Cross-module: producer real regimes/sector_regime.py::
+    # compute_sector_rank_score. Antes en whitelist apuntando al
+    # wrapper sectors_base.py::compute_sectors_base; corregido
+    # 2026-10-31 a producer real.
+    ("regimes/sector_regime.py", "compute_sector_rank_score",
+     "src/report/rankings.py", "render_ranking_sectorial_unificado"):
+        "tests/test_sector_results_contract.py",
 }
 
-# Pares identificados pero NO cubiertos en el plan 2026-10-30. Razon:
-# productor en modulo distinto (indicators/options.py,
-# indicators/sector_rank_score.py) que no ha pasado por el analisis
-# de AST/schema del plan. Cubrir en sesion 20 si ROI.
-DICT_CONTRACT_WHITELIST = frozenset({
-    ("src/pipeline/sectors_base.py", "compute_sectors_base",
-     "src/report/rankings.py", "render_ranking_sectorial_unificado",
-     "sector_results nested de compute_sector_rank_score; no analizado "
-     "en plan 2026-10-30"),
-})
+# Pares identificados pero NO cubiertos por contrato AST/schema.
+# Vacia a 2026-10-31: los 2 pares originales (PCR y SECTOR-RESULTS)
+# se cerraron con test_pcr_contract.py y test_sector_results_contract.py.
+# Si crece, justificar en commit y actualizar test_whitelist_justificada.
+DICT_CONTRACT_WHITELIST = frozenset()
 
 # Atributos que indican DataFrame (no dict). Distingue df.empty (attr)
 # de df.empty() (call). Incluye los mas frecuentes; si un falso positivo
@@ -104,9 +106,9 @@ def test_manifest_pares_tienen_test_correspondiente():
 def test_whitelist_justificada():
     """La whitelist no crece sin justificacion (anti whitelist creep)."""
     # Si crece, actualizar este numero y justificar en commit.
-    assert len(DICT_CONTRACT_WHITELIST) == 1, (
+    assert len(DICT_CONTRACT_WHITELIST) == 0, (
         f"La whitelist tiene {len(DICT_CONTRACT_WHITELIST)} pares "
-        f"(esperado 1). Si es una decision consciente, actualizar "
+        f"(esperado 0). Si es una decision consciente, actualizar "
         f"este test con el nuevo conteo y justificar en el mensaje "
         f"del commit. Si no, revisar si el nuevo par debe estar "
         f"cubierto por contrato AST/schema."
