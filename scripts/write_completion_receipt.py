@@ -143,7 +143,12 @@ def main():
         return 1
 
     manifest_sha = artifact.get("sha256") or ""
-    coverage = quality.get("coverage_pct_last")
+    # GUARD-COVERAGE-LAST-DATE-PARCIAL (2026-10-31): preferir
+    # coverage_pct_effective (walk-back) sobre coverage_pct_last
+    # (ultima fila fisica). Fallback a last para manifests pre-fix.
+    coverage = quality.get("coverage_pct_effective")
+    if not isinstance(coverage, (int, float)):
+        coverage = quality.get("coverage_pct_last")
     if not isinstance(coverage, (int, float)):
         coverage = 0.0
 

@@ -814,6 +814,36 @@ def write_artifact_with_manifest(df, parquet_path, source,
         )
         last_row_is_partial = (close_nan_last > 0)
 
+        # GUARD-COVERAGE-LAST-DATE-PARCIAL (2026-10-31): coverage_pct_last
+        # mide la ULTIMA fila fisica del parquet. Si el run corre
+        # intradiario, esa fila puede ser del dia en curso con Close
+        # parcial (76%) aunque la sesion anterior este completa.
+        # effective_session se resuelve por walk-back (min 0.90) y se
+        # publica junto a coverage_pct_effective. Aditivo: no rompe
+        # consumidores ni tests ancla de coverage_pct_last.
+        effective_session = None
+        coverage_pct_effective = None
+        effective_session_is_fallback = True
+        if close_cols:
+            try:
+                from src.effective_date import resolve_effective_date
+                _eligible = [c[1] for c in close_cols]
+                _eff = resolve_effective_date(
+                    df, _eligible, min_coverage=0.90)
+                if (_eff.get("status") == "OK"
+                        and _eff.get("date") is not None):
+                    effective_session = pd.Timestamp(
+                        _eff["date"]).strftime('%Y-%m-%d')
+                    coverage_pct_effective = float(_eff["coverage"])
+                    effective_session_is_fallback = False
+            except (ImportError, KeyError, ValueError, TypeError,
+                    AttributeError):
+                pass
+        if effective_session is None:
+            effective_session = (
+                last_date.strftime('%Y-%m-%d') if last_date else None)
+            coverage_pct_effective = coverage_pct_last
+
         manifest = {
             'schema_version': schema_version,
             'artifact': {
@@ -850,6 +880,14 @@ def write_artifact_with_manifest(df, parquet_path, source,
                 'n_tickers_missing_close_last': n_tickers_missing_close_last,
                 'coverage_pct_last': round(coverage_pct_last, 6),
                 'last_row_is_partial': last_row_is_partial,
+                # GUARD-COVERAGE-LAST-DATE-PARCIAL (2026-10-31):
+                # effective_session resuelta por walk-back (>=0.90) o
+                # fallback a last_date si no hay sesion con cobertura.
+                'effective_session': effective_session,
+                'coverage_pct_effective': (
+                    round(coverage_pct_effective, 6)
+                    if coverage_pct_effective is not None else None),
+                'effective_session_is_fallback': effective_session_is_fallback,
                 'status': status,
                 'by_market': by_market,
             },
@@ -872,6 +910,11 @@ def write_artifact_with_manifest(df, parquet_path, source,
         print(f"    rows={rows}, tickers={n_tickers}")
         print(f"    pct_dup={pct_dup_last:.3f}, close_nan={close_nan_last}, n_close_observed={_n_close_observed}")
         print(f"    coverage_pct={_coverage_pct:.4f}")
+        _eff_cov_str = (f"{coverage_pct_effective:.4f}"
+                        if coverage_pct_effective is not None else "N/A")
+        _eff_fb_str = "fallback" if effective_session_is_fallback else "resolved"
+        print(f"    effective_session={effective_session} "
+              f"(coverage={_eff_cov_str}, {_eff_fb_str})")
         print(f"    last_date={date_max}, expected={expected_session}")
         print(f"    last_date_is_expected_session={last_date_is_expected}")
         if temporal_contract is None:

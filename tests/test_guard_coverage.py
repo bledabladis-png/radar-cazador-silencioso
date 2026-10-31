@@ -191,3 +191,58 @@ def test_guard_escribe_result_fallo(tmp_path, monkeypatch):
     d = json.loads(result_path.read_text(encoding="utf-8"))
     assert d["ok"] is False
     assert any("0.927" in f for f in d["failures"])
+
+
+# --- GUARD-COVERAGE-LAST-DATE-PARCIAL (2026-10-31) ---
+
+def _write_manifest_eff(tmp_path, name,
+                        coverage_last=1.0, coverage_eff=None,
+                        effective_session=None,
+                        last_date="2026-09-17", expected="2026-09-17",
+                        status="VALID", parquet_bytes=b"dummy-parquet"):
+    """Variante que anade coverage_pct_effective y effective_session."""
+    parquet = tmp_path / (name + ".parquet")
+    parquet.write_bytes(parquet_bytes)
+    sha = hashlib.sha256(parquet_bytes).hexdigest()
+    quality = {
+        "coverage_pct_last": coverage_last,
+        "status": status,
+        "last_date": last_date,
+        "expected_session": expected,
+    }
+    if coverage_eff is not None:
+        quality["coverage_pct_effective"] = coverage_eff
+    if effective_session is not None:
+        quality["effective_session"] = effective_session
+    manifest = {
+        "schema_version": 1,
+        "artifact": {"sha256": sha},
+        "quality": quality,
+    }
+    p = tmp_path / (name + ".parquet.manifest.json")
+    p.write_text(json.dumps(manifest), encoding="utf-8")
+    return str(p)
+
+
+def test_guard_usa_effective_sobre_last(tmp_path):
+    """coverage_pct_effective=0.99 gana a coverage_pct_last=0.5."""
+    path = _write_manifest_eff(
+        tmp_path, "eff_ok",
+        coverage_last=0.5, coverage_eff=0.99,
+        effective_session="2026-09-16",
+    )
+    reasons = _check_manifest(path, DEFAULT_THRESHOLD)
+    assert reasons == [], (
+        "El guard debe preferir coverage_pct_effective=0.99 sobre "
+        "coverage_pct_last=0.5. Razon detectada: {0}".format(reasons))
+
+
+def test_guard_fallback_last_si_no_effective(tmp_path):
+    """Sin coverage_pct_effective, guard usa coverage_pct_last (backward compat)."""
+    path = _write_manifest_eff(
+        tmp_path, "no_eff",
+        coverage_last=0.5, coverage_eff=None,
+    )
+    reasons = _check_manifest(path, DEFAULT_THRESHOLD)
+    assert len(reasons) == 1
+    assert "coverage_pct_last=0.5" in reasons[0]

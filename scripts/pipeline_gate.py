@@ -143,7 +143,12 @@ def _manifest_satisfies(manifest, target_session):
         return False
     if q.get("expected_session") != target_session:
         return False
-    cov = q.get("coverage_pct_last")
+    # GUARD-COVERAGE-LAST-DATE-PARCIAL (2026-10-31): preferir
+    # coverage_pct_effective (walk-back). Fallback a last para
+    # manifests pre-fix.
+    cov = q.get("coverage_pct_effective")
+    if not isinstance(cov, (int, float)):
+        cov = q.get("coverage_pct_last")
     if not isinstance(cov, (int, float)):
         return False
     if cov < MANIFEST_THRESHOLD:

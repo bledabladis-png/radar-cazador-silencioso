@@ -151,19 +151,38 @@ def _check_manifest(path, threshold):
     elif not isinstance(status, str):
         reasons.append("{0}: status missing or non-string".format(path))
 
-    cov = quality.get("coverage_pct_last")
+    # GUARD-COVERAGE-LAST-DATE-PARCIAL (2026-10-31): preferir
+    # coverage_pct_effective (walk-back a sesion con cobertura real)
+    # sobre coverage_pct_last (ultima fila fisica del parquet, puede
+    # ser parcial si el run corre intradiario). Fallback si el
+    # manifest es pre-fix (compatibilidad backward).
+    cov_eff = quality.get("coverage_pct_effective")
+    cov_last = quality.get("coverage_pct_last")
+    if isinstance(cov_eff, (int, float)):
+        cov = cov_eff
+        cov_field = "coverage_pct_effective"
+    elif isinstance(cov_last, (int, float)):
+        cov = cov_last
+        cov_field = "coverage_pct_last"
+    else:
+        cov = None
+        cov_field = "coverage_pct_effective/coverage_pct_last"
     if not isinstance(cov, (int, float)):
-        reasons.append("{0}: coverage_pct_last missing or non-numeric".format(path))
+        reasons.append(
+            "{0}: {1} missing or non-numeric".format(path, cov_field))
     elif cov < threshold:
         by_market = quality.get("by_market")
         if status == "VALID_WITH_MISSING" and _all_markets_valid(by_market, threshold):
-            print("[EXEMPT] {0}: coverage_pct_last={1} < {2} "
+            print("[EXEMPT] {0}: {1}={2} < {3} "
                   "pero todos los mercados activos cumplen el threshold "
-                  "en su ultima sesion cerrada".format(path, cov, threshold))
+                  "en su ultima sesion cerrada".format(
+                      path, cov_field, cov, threshold))
         else:
-            reasons.append("{0}: coverage_pct_last={1} < {2}".format(path, cov, threshold))
+            reasons.append(
+                "{0}: {1}={2} < {3}".format(path, cov_field, cov, threshold))
 
-    last = quality.get("last_date")
+    # last_date/expected_session: comparar effective_session si existe
+    last = quality.get("effective_session") or quality.get("last_date")
     expected = quality.get("expected_session")
     if not isinstance(last, str) or not isinstance(expected, str):
         reasons.append("{0}: last_date or expected_session missing".format(path))

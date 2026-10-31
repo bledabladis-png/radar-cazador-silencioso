@@ -327,3 +327,51 @@ def _make_df_single_row(last_date='2026-09-15', n_tickers=2):
         data[('Low', t)] = [base - 2]
         data[('Volume', t)] = [1_000_000]
     return pd.DataFrame(data, index=dates)
+
+
+# --- GUARD-COVERAGE-LAST-DATE-PARCIAL (2026-10-31) ---
+
+def test_manifest_effective_session_walkback(tmp_path):
+    """Ultima fila parcial (76%) -> effective_session es la anterior (100%)."""
+    df = _make_df(last_date='2026-09-15', n_tickers=5, add_nan_last=False)
+    # Convertir 3 de 5 Close a NaN en la ultima fila (cobertura 40%)
+    close_cols = [c for c in df.columns if c[0] == 'Close']
+    for c in close_cols[:3]:
+        df.loc[df.index[-1], c] = np.nan
+    parquet_path = tmp_path / 'walkback.parquet'
+    ref_date = datetime(2026, 9, 15, 23, 30)
+
+    manifest = write_artifact_with_manifest(
+        df, str(parquet_path), source='test',
+        reference_date=ref_date, run_id='walkback001',
+    )
+
+    q = manifest['quality']
+    assert q['last_date'] == '2026-09-15'
+    assert q['coverage_pct_last'] < 0.5  # ultima fila parcial
+    # effective_session debe retroceder al dia anterior (100%)
+    assert q['effective_session'] == '2026-09-14'
+    assert q['coverage_pct_effective'] >= 0.99
+    assert q['effective_session_is_fallback'] is False
+
+
+def test_manifest_effective_session_fallback_sin_cobertura(tmp_path):
+    """Todas las filas <0.90 -> effective_session == last_date + fallback=True."""
+    df = _make_df(last_date='2026-09-15', n_tickers=5, add_nan_last=False)
+    close_cols = [c for c in df.columns if c[0] == 'Close']
+    # 4 de 5 NaN en todas las filas => cobertura 20% siempre
+    for c in close_cols[:4]:
+        for i in range(len(df)):
+            df.loc[df.index[i], c] = np.nan
+    parquet_path = tmp_path / 'fallback.parquet'
+    ref_date = datetime(2026, 9, 15, 23, 30)
+
+    manifest = write_artifact_with_manifest(
+        df, str(parquet_path), source='test',
+        reference_date=ref_date, run_id='fb001',
+    )
+
+    q = manifest['quality']
+    assert q['effective_session'] == q['last_date']
+    assert q['effective_session_is_fallback'] is True
+    assert q['coverage_pct_effective'] == q['coverage_pct_last']
