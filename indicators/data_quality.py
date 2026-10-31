@@ -14,7 +14,6 @@ from src.market_calendar import last_expected_market_date
 from config.tickers import MARKET_TICKERS
 import pandas as pd
 import numpy as np
-from datetime import datetime
 from pathlib import Path
 
 from src.market_calendar import _last_market_session
@@ -78,16 +77,6 @@ def _read_date_col(df, possible_cols):
         if col in df.columns:
             return col
     return None
-
-def _ref_to_date(ref):
-    """Normaliza reference_date (None/date/datetime/Timestamp, tz-aware o naive) a date.
-
-    A2.2-03: evita TypeError por restar tz-naive y tz-aware.
-    """
-    if ref is None:
-        return datetime.now().date()
-    return pd.Timestamp(ref).date()
-
 
 # H3 (2026-10-15): la lista de fuentes se eleva a constante de
 # modulo para permitir tests contractuales sin invocar compute.

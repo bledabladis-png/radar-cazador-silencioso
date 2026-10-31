@@ -102,10 +102,6 @@ DATETIME_NOW_WHITELIST = {
     # Ticket P7-CLASSIFY-TICKER-NOW si se decide migrar a reference_date.
     ("src/stock_data_loader.py", "_classify_ticker"):
         "Aceptado por diseno: classify freshness contra now(); no derivable del dataset.",
-    # data_quality.py:88 _ref_to_date(None) = hoy. Fallback. Caller
-    # productivo siempre pasa ref.
-    ("indicators/data_quality.py", "_ref_to_date"):
-        "Fallback a now() si ref es None; el caller productivo siempre pasa ref.",
     # validate_history_quality.py:154 mide antiguedad de la historia
     # contra now(). Correcto: es su proposito.
     ("validation/validate_history_quality.py", "main"):
