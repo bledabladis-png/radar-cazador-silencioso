@@ -1803,3 +1803,49 @@ Para sesiones anteriores al 2026-09-24, ver `git log --oneline`. Resumen tematic
 ---
 
 **Fin de la bitacora.**
+
+---
+
+### 2026-11-01 — B6 (auditoria reporte): 20 FIXED, 5 OPEN heredados
+
+**Objetivo.** Auditar los 21 modulos de `src/report/*` + `report_generator.py`
+con los 18 patrones de `01b_PATRONES.md` + 5 nuevos. Cerrar hallazgos de
+B6 con test + evidencia + item REGISTRO.
+
+**Hecho.**
+- 21 modulos auditados. 20 items B6 FIXED (13 hallazgos H1-H13 + 7
+  paridad guards). 5 OPEN heredados a B4 (3) y B5 (2).
+- Hallazgos H1-H13: ver HANDOFF seccion 2. Resumen: input vacio macro,
+  side-channel liquidity_state x2 (header + freshness), mojibake/header
+  coding decl x3, IHR bands derivadas, MTE SCENARIO_RULES data-driven,
+  guards NaN en confirmation/alerts/iae, paridad de guards con alerts
+  en synthesis/breadth/market_context/sectorial, fixes mecanicos.
+- Refactor data-driven en `indicators/mte/scoring.py`: `SCENARIO_RULES`
+  dict con pre_invalid/finite/rules. Golden test pre-refactor (10
+  combinaciones). Nota del scoring derivada via `_fmt_scenario_rules_note`.
+- IHR bands derivadas: `_fmt_ihr_bands()` en helpers + `IHR_LABELS` en
+  `options_metrics.py`. Antes 3 bandas hardcoded que ya divergian de
+  `classify_ihr` (5 categorias).
+- 2 renders huerfanos detectados (WYCKOFF-RENDERS-HUERFANOS, B3):
+  `render_representatividad_lider` y `render_divergencia_sector_lideres`
+  con productores retirados en `4bc45fd3` (sesion 3).
+- Revertidos S1-S5 sobre `sector_context.py`: parcheaban NaN que solo
+  existian en tests artificiales, no en CSV de produccion.
+
+**Commits.** `22bef269`, `ddcdd0fb`, `74e2e446`, `466198ff`, `5e5d7286`,
+`f4757230`, `1c30c571`, `98548787`, `09a74ac4`, `a2e4ac94`, `d072e6b8`,
+`72e9dee2`, `127848db`, `66c75262`, `b62e645e`, `6981f19a`, `b69c17fe`,
+`56f6c867`, `f3b34202`, `a4994a91`, `48b78253`, `ebc9ac5d`, `5d3bdcf2`,
+`bcbddbbf`.
+
+**Pendiente.**
+- B4 (motores/regimen): 3 items heredados de B6 + auditoria completa.
+- B3 (Wyckoff): 1 item heredado (renders huerfanos) + auditoria completa.
+- B5 (outputs/persistencia): 2 items heredados de B6 (currency column,
+  registry coverage).
+- B2, B7, B8: sin auditar.
+
+**Proximo paso sugerido.** B4: cerrar los 3 items heredados de B6
+(ILOC-BARRIDO, MTE-CLS-INF-LATENTE, RATIO-NAMES-DUPLICADA) + auditar
+`regimes/*`, `sector_regime_matrix`, `sector_rank_score`, `engines`,
+`evidence_matrix`.

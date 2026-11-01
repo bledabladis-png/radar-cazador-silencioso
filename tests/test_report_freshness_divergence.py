@@ -10,7 +10,6 @@ Si el CSV esta desactualizado, ambas tablas pueden declarar fechas
 distintas para la misma fuente. Estos tests documentan el
 comportamiento y la nota cruzada que las conecta.
 """
-import json
 from datetime import datetime
 
 import pandas as pd
