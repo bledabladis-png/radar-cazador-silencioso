@@ -6787,3 +6787,29 @@ items:
     tests) fuerza que el registro coincida con el codigo: si un
     refactor retira un uso, el test falla y obliga a actualizar el
     registro (documenta lo que hay, no lo que quisiéramos).
+- id: FASE-A-IAE-PER-TICKER
+  tipo: frente
+  ciclo: '2026-11-01'
+  estado: FIXED
+  commit: 'c0f2a204fe941fc178a1fb8559f3ca368d0c44bf'
+  test: tests/test_iae_per_ticker.py
+  evidencia: |
+    Fix en c0f2a204fe941fc178a1fb8559f3ca368d0c44bf. El analista del reporte 30-oct pide identificar los
+    tickers exactos que acumulan, no solo un numero global. Gate 0:
+    243 de 322 tickers del radar tienen datos 13F cruzados. Minimo
+    353 gestores por ticker, mediana 1919. Densidad alta, dato
+    solido. Nuevo modulo aggregation/per_ticker.py con
+    aggregate_by_ticker + top_accumulating + top_distributing +
+    excluded_anomalies. Filtros de anomalia por ratio (no lista de
+    tickers): pct_new>=0.50 -> MOSTLY_NEW_POSITIONS (captura IPO
+    como SPCX 12-jun-2026); pct_exit>=0.50 -> MOSTLY_EXITS (captura
+    spin-offs HON/SOLS oct-2025, DD/Qnity nov-2025);
+    pct_increase>=0.99 o <=0.01 -> ANOMALOUS_ONE_SIDED. Ranking por
+    consenso de gestores (n_increase), no por sum_delta bruto (que
+    favorece tickers de precio alto). Render en src/report/iae.py
+    con 2 tablas (Top 20 acumulando/distribuyendo) + nota de
+    exclusiones derivada del propio DataFrame. Sin hardcode: si
+    manana hay otro IPO o spin-off, cae por el mismo filtro.
+    Verificacion: 78 focalizados + full suite 4322 passed + 2
+    skipped. Los 3 excluidos (SPCX/HON/DD) con filter_reason
+    trazable.
