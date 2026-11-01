@@ -107,6 +107,12 @@ FALSE_POSITIVE con 1 commit.
 - **FASE-A-COBERTURA-DUAL**: FIXED (2026-11-01). n_descargados +
   coverage_rs_sobre_descarga + peso_total_etf + coverage_peso en
   sector_concentration. Cero constantes de porcentaje.
+- **FASE-A-FLUJOS-CAPAS-DERIVADAS**: FIXED (2026-11-01). Nota
+  de capas derivada del dict; FLOW_SYNTHESIS_LABELS como fuente
+  unica. Test centinela falla si productor anade capa sin label.
+- **FASE-A-INDEPENDENCIA-ESTADISTICA**: FIXED (2026-11-01).
+  config/shared_inputs.py con 6 variables verificadas. 13 tests
+  fuerzan coherencia registro-codigo.
 - **FASE-A-AMPLIAR-UNIVERSO-PESO**: OPEN, pre-registro pendiente
   con el analista. Subir de 85% a 95-100% del peso del ETF
   (~250-300 tickers adicionales). Pendiente decidir alcance.

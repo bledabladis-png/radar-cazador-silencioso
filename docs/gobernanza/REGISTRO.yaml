@@ -6749,3 +6749,41 @@ items:
     ~250-300 tickers por debajo del corte A.2c. No es bug: es
     decision de producto. WONT_FIX hasta que el analista confirme
     que necesita cobertura real (no solo metrico).
+- id: FASE-A-FLUJOS-CAPAS-DERIVADAS
+  tipo: frente
+  ciclo: '2026-11-01'
+  estado: FIXED
+  commit: '180f0ad6e7ffed8ac85167e2a0be64d1150a1830'
+  test: tests/test_flows_confirmation_contract.py
+  evidencia: |
+    Fix en 180f0ad6e7ffed8ac85167e2a0be64d1150a1830. El analista del reporte 30-oct marca que la tabla
+    "Sintesis de flujos" presenta 4 capas con una "Confianza MEDIA"
+    sin avisar de que no son confirmaciones independientes. Fix: la
+    nota de la regla y la nota de no-sumabilidad se derivan del dict
+    flow_synthesis en runtime. Nuevo FLOW_SYNTHESIS_LABELS dict como
+    fuente unica de etiquetas (mismo patron que RATIO_LABELS). La
+    regla lista capas de flow_synthesis.keys(), no un literal. La
+    nota menciona N = len(_sign keys) capas. Si manana se anade una
+    5a capa, la nota se actualiza sola y el test centinela
+    test_labels_cubren_todas_las_capas_del_schema falla si falta
+    label (decision de producto forzada).
+- id: FASE-A-INDEPENDENCIA-ESTADISTICA
+  tipo: frente
+  ciclo: '2026-11-01'
+  estado: FIXED
+  commit: '180f0ad6e7ffed8ac85167e2a0be64d1150a1830'
+  test: tests/test_shared_inputs.py
+  evidencia: |
+    Fix en 180f0ad6e7ffed8ac85167e2a0be64d1150a1830. El analista marca que varios modulos usan las
+    mismas variables (VIX en 3, credit_signal en 3, HYG/LQD en 2,
+    SOFR en 2, rs_mom en 2, flow_proxy_z en 2) y que eso introduce
+    doble conteo al interpretar senales. Fix: config/shared_inputs.py
+    con SHARED_INPUTS declarando la asociacion variable -> modulos,
+    verificado por Gate 0 (solo variables con grep confirmado en
+    >=2 modulos productivos; WALCL y RRP excluidos por estar solo
+    en fls.py). _shared_vars_note(module) en helpers.py lee el
+    registro y genera la nota en runtime. Aplicada en
+    render_sector_concentration. Test test_shared_inputs.py (13
+    tests) fuerza que el registro coincida con el codigo: si un
+    refactor retira un uso, el test falla y obliga a actualizar el
+    registro (documenta lo que hay, no lo que quisiéramos).
