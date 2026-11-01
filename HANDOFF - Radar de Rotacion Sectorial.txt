@@ -206,6 +206,11 @@ Plan original: 8 bloques (B1-B8) con los 13 patrones de
 
 Orden de ejecucion: **B4 -> B3 -> B2 -> B7 -> B8**.
 
+Fase 1 (frente consistencia temporal, 2026-11-01): barrido
+mecanico de 302 hits en 15 tipos, clasificados. 2 fixes
+(336b48ab: ssga SECTOR_TICKERS + arranque 8->11 pares).
+Resto NO_BUG razonado (item FASE1-CENSO FIXED).
+
 ---
 
 ## 4. COMO ARRANCAR

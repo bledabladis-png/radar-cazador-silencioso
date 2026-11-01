@@ -6647,3 +6647,46 @@ items:
     firma lo permite, pero el contrato del pipeline esta testeado
     (test_iae_section.py, 13 tests que mockean run_contractual_nipc
     verificando que se llama con folders/periods). WONT_FIX razonado.
+- id: FASE1-CENSO
+  tipo: auditoria
+  ciclo: '2026-11-01'
+  estado: FIXED
+  commit: '336b48ab'
+  test: tests/test_ssga_sector_tickers_deriva_de_config.py
+  evidencia: |
+    Fase 1 del frente consistencia temporal (2026-11-01). Barrido
+    mecanico de 302 hits en 15 tipos sobre src/, indicators/,
+    regimes/, config/, data/ y 5 docs. Clasificacion:
+    - 2 fixes reales aplicados en 336b48ab:
+      (a) ssga_fund_data.py:15 SECTOR_TICKERS lista literal
+      duplicada de MARKET_TICKERS['sectors'] + FEZ (patron 15 de
+      01b_PATRONES: fuente de verdad duplicada). Ahora deriva de
+      config. Test centinela AST + equivalencia set.
+      (b) 00_ARRANQUE.md:143 "8 pares AST/schema" -> "11 pares"
+      (doc desfasada de sesion 20; real 11 pares verificado en
+      L114 y HANDOFF; 25 OutputSpec en output_registry).
+    - 43 NO_BUG clasificados:
+      date_literal (7), date_yq (7): docstrings/defaults doc de
+      pipeline_contractual.run_contractual_nipc, no usados por el
+      consumidor productivo (iae_section L133-145).
+      string_10_10 (2): docstring + comentario del fix H7 de
+      provenance.py.
+      validation_gate_NN (1): docstring.
+      except_bare (1): mencion historica.
+      writer_count (1): "25 writers" en ARRANQUE, correcto (25
+      OutputSpec confirmados).
+      dict_pairs_count (4): 1 docstring interno synthesis.py:185
+      correcto, 1 HANDOFF correcto (11 pares), 1 ARRANQUE L114
+      correcto, 1 ARRANQUE L143 corregido arriba.
+      sector_list (6): config.tickers fuente unica (3), MTE
+      DEFENSIVE_HAVENS (lista propia), ssga fixed, doc.
+      ticker_spy_qqq (16): constantes de modulo / params.
+      expected_sector_count_11 (98): 0 literales reales (regex no
+      matcheo, todo anos o conteos ya cubiertos).
+      datetime_now (77): 59 fuera de ficheros ya auditados, todos
+      en docstrings de contrato "no usa datetime.now()" o
+      manifests (generation timestamp).
+      except_Exception (82): 53 en ficheros pendientes, todos con
+      WARN explicito + fallback documentado.
+    Verificacion: 16 focalizados verdes, full suite 4269 passed
+    + 2 skipped, pyflakes/compileall silencio.
