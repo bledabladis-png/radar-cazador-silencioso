@@ -8,8 +8,8 @@
 - src/report/synthesis.py: render_sintesis_senales con MIXED +
   dispersion + divergencias.
 
-Los tests existentes (test_render_representatividad_lider,
-test_render_aclaraciones_d2c_d3_e1_a1, etc.) cubren el camino vacio.
+Los tests existentes (test_render_aclaraciones_d2c_d3_e1_a1, etc.)
+cubren el camino vacio.
 Aqui van los caminos con datos.
 """
 import pandas as pd

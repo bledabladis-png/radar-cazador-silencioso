@@ -41,32 +41,6 @@ def render_matriz_regimen(sector_regime_matrix_data):
         out.append("*H-01 auditor externo 2026-10-25: periodo del historico Wyckoff*\n")
         out.append("*= 2022-08-11 a hoy (aprox. 4.2 anos, 1086 sesiones), NO 10 anos.*\n\n")
     return out
-
-
-def render_representatividad_lider(leader_representativeness_data):
-    """Renderiza la tabla Representatividad del lider.
-
-    Devuelve lista de lineas markdown. Sin side effects.
-    """
-    out = []
-    if leader_representativeness_data is not None and not leader_representativeness_data.empty:
-        out.append("## Representatividad del líder\n")
-        out.append("| Sector | Líder | RS ΔMed | Mom ΔMed | Flow ΔMed | WLS ΔMed | Rank pct |\n")
-        out.append("|--------|-------|---------|----------|-----------|----------|----------|\n")
-        # C2 fix 2026-09-24: filtrar a la ultima fecha para no concatenar dias
-        df_rep = leader_representativeness_data.copy()
-        if 'date' in df_rep.columns and df_rep['date'].notna().any():
-            latest = pd.to_datetime(df_rep['date']).max()
-            df_rep = df_rep[pd.to_datetime(df_rep['date']) == latest]
-        for _, row in df_rep.iterrows():
-            out.append(f"| {row['sector']} | {row['ticker']} | {_fmt_signed(row['rs_distance_to_median'], '{:+.4f}', '{:.4f}')} | {_fmt_signed(row['mom_distance_to_median'], '{:+.4f}', '{:.4f}')} | {_fmt_signed(row['flow_distance_to_median'], '{:+.2f}', '{:.2f}')} | {_fmt_signed(row['wls_distance_to_median'], '{:+.2f}', '{:.2f}')} | {row['sector_rank_pct']:.0%} |\n")
-        out.append("\n")
-        out.append("*Criterio: los tickers del sector ordenados por WLS desc. La primera fila de cada sector es el 'lider por WLS'. No coincide con Concentracion del liderazgo ni con Liderazgo interno, que priorizan por retorno 20d.*\n\n")
-        # F6-12 (2026-09-28): nota sobre el filtro de sectores.
-        out.append("*Solo se muestran los sectores en fase ACCUMULATION o MARKUP. El resto (RANGE, DISTRIBUTION, MARKDOWN) se omite porque no genera seccion de lideres. Filtro por fase, no por cobertura ni rendimiento.*\n\n")
-    return out
-
-
 # P2.2 (2026-10-13, auditor): la distribucion de fases por sector
 # se calcula sobre los componentes con datos suficientes. Coberturas
 # por debajo del 50% se anotan explicitamente. Regla: cobertura < 50%
@@ -137,32 +111,6 @@ def render_wyckoff_sectorial(sector_wyckoff_distribution_data):
                "actuales, no el de la composicion historica de cada "
                "fecha.*\n\n")
     return out
-
-
-def render_divergencia_sector_lideres(sector_leader_divergence_data):
-    """Renderiza la tabla Divergencia sector-lideres.
-
-    Devuelve lista de lineas markdown. Sin side effects.
-    """
-    out = []
-    if sector_leader_divergence_data is not None and not sector_leader_divergence_data.empty:
-        out.append("## Divergencia sector-líderes\n")
-        out.append("| Sector | Ret sector | Líderes + | Líderes - | Líderes > Sector | Válidos | Lectura |\n")
-        out.append("|--------|------------|-----------|-----------|------------------|---------|---------|\n")
-        # C3 fix 2026-09-24: filtrar a la ultima fecha para no concatenar dias
-        df_div = sector_leader_divergence_data.copy()
-        if 'date' in df_div.columns and df_div['date'].notna().any():
-            latest = pd.to_datetime(df_div['date']).max()
-            df_div = df_div[pd.to_datetime(df_div['date']) == latest]
-        for _, row in df_div.iterrows():
-            out.append(f"| {row['sector']} | {row['sector_ret_20d']:.2%} | {row['n_leaders_positive']} | {row['n_leaders_negative']} | {row['n_leaders_beating_sector']} | {row['n_leaders_valid']} | {row['classification']} |\n")
-        out.append("\n")
-        # F6-12 (2026-09-28): nota sobre el filtro.
-        out.append("*Solo se muestran los sectores en fase ACCUMULATION o MARKUP. El resto se omite porque no genera seccion de lideres. Filtro por fase, no por cobertura.*\n\n")
-        out.append("*Universo: top-5 lideres por WLS (leader_df ordenado por WLS). Distinto de 'Liderazgo relativo interno', que ordena por retorno 20d. Mismo sector, distinto subconjunto de tickers.*\n\n")
-    return out
-
-
 def render_momentum_amplitud(sector_breadth_momentum_data):
     """Renderiza la tabla Momentum de amplitud.
 
