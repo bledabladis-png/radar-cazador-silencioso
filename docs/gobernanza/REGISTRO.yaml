@@ -6046,35 +6046,21 @@ items:
 - id: B6-ILOC-SIN-GUARD-BARRIDO
   tipo: deuda_tecnica
   ciclo: '2026-10-31'
-  estado: OPEN
-  descripcion: 'Barrido .iloc[-1] en regimes/ e indicators/ (B6-H1).
-
-    Detectados ~50 hits con riesgo similar: indicators/
-
-    breadth_equity.py (advances/declines/nh/nl/breadth_thrust),
-
-    darkpool_scoring.py, sector_regime.py (scores/mom/flow),
-
-    tactical_engine.py (rs20/mom20), structural_engine.py
-
-    (rs[-window]), commodity_market_correlation.py, options.py
-
-    (z_series). No todos son bugs: varios tienen guards parciales
-
-    (len>0). Pero el patron .iloc[-1] sin guard es la clase
-
-    1fb791ab.
-
-    '
-  siguiente_accion: 'Tratar en B3 (Wyckoff) y B4 (motores). Para cada .iloc[-1],
-
-    verificar si hay len>0 o si la serie puede estar vacia en
-
-    produccion. Fix minimo: guard + retorno NaN/0 coherente con
-
-    consumidores.
-
-    '
+  estado: FIXED
+  commit: 'b661a0d6'
+  test: tests/test_stock_metrics.py
+  evidencia: |
+    Censo completo en B4 sesion 24 (2026-11-01). 147 hits de .iloc[
+    en regimes/*.py y indicators/*.py clasificados individualmente:
+    1 BUG real, 146 NO_BUG razonados (guards explicitos, guards
+    inline, try/except que capturan IndexError, comentarios,
+    slices negativos iloc[-N:] que no son indices).
+    Bug: stock_metrics.py:178 'rs': rs.iloc[-1] sin guard. Si
+    price_etf es todo NaN, rs queda vacio y .iloc[-1] lanza
+    IndexError, capturado por compute_all_stock_metrics:306 ->
+    sector completo se pierde. Fix: rs_last = float(rs.iloc[-1])
+    if len(rs) > 0 else np.nan. D38 valido (IndexError sin fix,
+    verde con fix). 4242 passed + 2 skipped.
 - id: B6-NO-MOJIBAKE-DOCSTRING-COSMETIC
   tipo: deuda_tecnica
   ciclo: '2026-10-31'
