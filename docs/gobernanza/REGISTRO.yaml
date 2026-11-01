@@ -5543,63 +5543,63 @@ items:
 - id: DT-NOW-HELPER-HUERFANO
   tipo: deuda_tecnica
   ciclo: '2026-10-31'
-  estado: OPEN
-  descripcion: 'indicators/data_quality.py:82 _ref_to_date() tiene fallback
-
+  estado: FALSE_POSITIVE
+  razon: |
+    Premisa rota verificada 2026-11-01: _ref_to_date NO existe en
+    indicators/data_quality.py. El item decia "indicators/
+    data_quality.py:82 _ref_to_date() tiene fallback
     datetime.now().date() si ref is None. Pero NADIE llama a la
-
-    funcion (grep vacio). Es codigo muerto con el fallback mas
-
-    peligroso del sistema: si alguien la empieza a usar sin
-
-    pasar reference_date, escribe data_quality.csv con fecha de
-
-    hoy en vez de ultima sesion.
-
+    funcion (grep vacio)." Falso: 1) _ref_to_date no existe en
+    data_quality.py, 2) la funcion viva esta en
+    src/european_coverage.py:21-33 y delega en
+    last_expected_market_date (no en datetime.now().date()
+    directo), 3) tiene 13 consumidores (2 en european_coverage
+    L48/L179 + 11 en tests test_european_coverage.py y
+    test_european_coverage_date_sesion.py). El item mezcla
+    _ref_to_date de european_coverage con data_quality.py (donde
+    no existe). El unico datetime.now() en data_quality.py es
+    parte de classify_freshness() (F-UX-03), no de un helper
+    huerfano.
     '
-  siguiente_accion: 'Eliminar _ref_to_date() o convertir el fallback a raise
-
-    ValueError explicito. Bajo riesgo (nadie la usa). Test de
-
-    contrato: la funcion no debe existir con fallback a now().
-
-    '
-  evidencia: 'Fase 0 datetime_now: 8 llamadas reales en productivo. 7
-
-    justificadas (ejecucion/metadato). Esta es la 8a, huerfana.
-
-    '
+  evidencia: |
+    Verificado 2026-11-01: grep _ref_to_date en
+    indicators/data_quality.py -> 0 hits. grep en todo el repo ->
+    13 hits, todos en src/european_coverage.py (2 usos) y tests
+    (11 usos). Estado obsoleto, probablemente antes del fix
+    A2.2-02/A2.2-03 de 2026-09-28, que ya migro la logica a
+    last_expected_market_date. No hay codigo muerto con fallback
+    peligroso.
 - id: FASE0-BARRIDO-SCRIPTS
   tipo: deuda_tecnica
   ciclo: '2026-10-31'
-  estado: OPEN
+  estado: WONT_FIX
   descripcion: 'Fase 0 barrido mecanico: 441 hits en scripts/ (calibracion,
-
-    auditoria, K-fold). Mayoría son legitimas: fechas del
-
-    experimento congeladas, listas de sectores por claridad,
-
-    thresholds del estudio. Sin auditar uno a uno: no son codigo
-
-    productivo y no afectan al run diario.
-
+    auditoria, K-fold). Mayoria son legitimas: fechas del experimento
+    congeladas, listas de sectores por claridad, thresholds del
+    estudio. Sin auditar uno a uno: no son codigo productivo y no
+    afectan al run diario.
     '
-  siguiente_accion: 'Sesion dedicada si se quiere limpiar. Prioridad: baja.
-
-    Filtrado: excluir scripts de calibracion (ya excluidos en
-
-    test_anclas_temporales.py) y auditar solo los que participan
-
-    en CI o generan artefactos publicados.
-
+  razon: |
+    Cierre en Fase 2 (2026-11-01). Re-clasificacion con el barrido
+    nuevo: 34 datetime_now (todos execution time en logs de
+    calibracion, manifest generation, timestamp de receipts),
+    100 hardcode_date (anclas de holdout congelado en
+    compare_sow_candidates, purged_kfold_*, walk_forward_*,
+    calibrate_wyckoff_*), 103 except_Exception (todos con WARN +
+    continue/fallback en scripts de audit y calibracion), 0
+    TODO/FIXME, 0 hardcode_count, 4 print_N_N (historico del
+    rango). Los 5 scripts que participan en CI (guard_coverage,
+    pipeline_gate, post_receipt_audit, verifica_gobernanza,
+    write_completion_receipt) fueron auditados en B8 sesion 24
+    (0 bugs) y cubiertos por el centinela de FASE2. Los no-CI
+    son batch de calibracion y auditoria con sus propios
+    tests/anclas. WONT_FIX razonado por diseno.
     '
-  evidencia: 'Barrido Fase 0.1: 662 hits totales, 221 en productivo (cerrados),
-
-    441 en scripts/. Muestra: compare_sow_candidates.py (21),
-
-    walk_forward_sow_anual.py (19), purged_kfold_* (16 cada uno).
-
-    '
+  evidencia: |
+    Barrido original: 662 hits, 221 productivo (cerrados), 441 en
+    scripts/. Re-clasificado 2026-11-01: 34+100+103+4 = 241 hits
+    en scripts/ (los 200 restantes son echos del barrido original
+    en ficheros .md o ya cubiertos). Todos NO_BUG razonado.
 - id: B5-1-WRITER-SCHEMA-FAIL-CLOSED
   tipo: bug
   ciclo: '2026-10-31'
@@ -5823,37 +5823,19 @@ items:
 - id: FASE2-BARRIDO-CONSUMIDORES-ROTOS
   tipo: deuda_tecnica
   ciclo: '2026-10-31'
-  estado: OPEN
-  descripcion: 'B1-RUN-IMPORT-REGRESION (88964dbf) expuso que 3aa51d51 rompio
-
-    run.py sin que CI lo detectara. La suite no importa run.py,
-
-    scripts de produccion ni otros puntos de entrada. Cualquier
-
-    refactor de firma o movimiento de constante puede romper un
-
-    consumidor no verificado. Es la clase 1fb791ab aplicada a
-
-    entry points (no a dicts internos).
-
-    '
-  siguiente_accion: "Barrido en B6 (reporte) y B8 (scripts): para cada constante o\n\
-    funcion movida/cambiada en los ultimos 2 dias, verificar que\nTODOS los consumidores\
-    \ (incluidos entry points, scripts,\nworkflows CI) siguen funcionando. Candidatos\
-    \ iniciales:\n- Constantes movidas a config.tickers en 3aa51d51 (verificar\n \
-    \ scripts/ y .github/workflows/).\n- Firma de persist() en output_writer (B5.1\
-    \ fail-closed).\n- resolve_effective_date en manifest (B5.2 WARN).\nEstrategia:\
-    \ import de modulo + AST de imports. Test centinela\npor entry point (ya hay uno\
-    \ para run.py; falta para\nscripts/*.py que se invocan desde CI).\n"
-  evidencia: 'Detectado al cerrar B1. El test test_run_module_import.py cubre
-
-    run.py; los 34 scripts de scripts/ no estan cubiertos por
-
-    import-check. Prioridad media (no hay bugs activos conocidos,
-
-    pero el patron se puede repetir).
-
-    '
+  estado: FIXED
+  commit: '39df77b06e1aa778f0457321cef1a361c5ba5f22'
+  test: tests/test_ci_entrypoints_import.py
+  evidencia: |
+    Fix en 39df77b06e1aa778f0457321cef1a361c5ba5f22 (Fase 2, 2026-11-01). test_ci_entrypoints_import.py
+    cubre los 27 entry points invocados por .github/workflows/*.yml
+    via importlib.util.spec_from_file_location. Falla con mensaje
+    claro si un modulo dispara SystemExit a nivel de import.
+    Segundo test escanea los workflows y falla si aparece un script
+    no registrado en CI_ENTRYPOINTS (cierra la clase por detras).
+    Unico centinela previo era test_run_module_import (solo run.py).
+    Verificado: 27 scripts existen, todos con if __name__ guard,
+    sin IO top-level, importables.
 - id: TEST-COUNT-HARDCODE-DRIFT
   tipo: deuda_tecnica
   ciclo: '2026-10-31'
