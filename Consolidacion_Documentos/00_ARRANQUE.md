@@ -140,7 +140,7 @@ A1-A5, A6, B, C, 6, 7, 8, 9, F: CERRADOS. Detalle tematico en `04_HISTORICO.md`;
 - **MTE pending** (`5b96192f` + `db1e0a0f`): "Pending transition" cuando pending != None.
 - **MTE state<->return<->render contract** (`fc6f63c4`): AST guard bidireccional.
 - **MTE-SCENARIO-CAPITULATION** (`4056c033`): render_confirmation leia `mte_scenario` pero ningun productor lo escribia. Bug real. Fix en `compute_mte_confirmation`.
-- **DICT-CONTRACT-FRAMEWORK** (`d100ba01`, `f364ad2e`, `053db86c`, `457742f7`, `4056c033`, `e8a2a4ba`): 8 pares AST/schema + manifiesto + heuristico.
+- **DICT-CONTRACT-FRAMEWORK** (`d100ba01`, `f364ad2e`, `053db86c`, `457742f7`, `4056c033`, `e8a2a4ba`): 11 pares AST/schema + manifiesto + heuristico.
 - **VALIDATION-GATE-LITERAL-10-10** (`090a3439`): N/N dinamico.
 - **LIQUIDITY-SEVERIDAD-OCULTA** (`1fb791ab`): render pinta severity != OK.
 - **CROSS-PROVIDER-VALIDATION-MUERTO** (`fac7d5f1`): script muerto eliminado con step y upload.

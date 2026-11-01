@@ -9,10 +9,15 @@ from datetime import datetime
 from pathlib import Path
 
 from src.utils import append_dedup
+from config.tickers import MARKET_TICKERS
 
 from ._fund_flow_utils import fund_flow_robust_zscore_with_regime
 
-SECTOR_TICKERS = ['XLK','XLF','XLV','XLE','XLY','XLP','XLI','XLB','XLRE','XLU','XLC','FEZ']
+# FASE1 (2026-11-01): SECTOR_TICKERS derivado de config.tickers + FEZ.
+# Antes era lista literal duplicada (patron 15: fuente de verdad
+# duplicada). Si config.tickers cambiaba, SSGA descargaba los ETFs
+# viejos silenciosamente. FEZ (europeo) esta fuera de MARKET_TICKERS.
+SECTOR_TICKERS = list(MARKET_TICKERS['sectors']) + ['FEZ']
 CACHE_DIR = Path('data/cache/ssga_navhist')
 HISTORY_PATH = Path('outputs/history/etf_primary_flow.csv')
 
