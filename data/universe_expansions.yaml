@@ -144,3 +144,125 @@ xly_extra:
   n_tickers: 1
   tickers:
   - NKE
+
+xlf_extra_90:
+  etf: XLF
+  fecha: "2026-11-01"
+  motivo: "FASE-A-UNIVERSO-90: XLF 85.3% -> 90.3% (9 tickers, banca mediana y pagos)."
+  cobertura_actual: 85.3
+  cobertura_top20_actual: 72.9
+  cobertura_top20_mas_extra: 77.99
+  cobertura_objetivo: 90.0
+  cobertura_tras_expansion: 90.3
+  n_tickers: 9
+  tickers:
+  - STT
+  - FITB
+  - PYPL
+  - AMP
+  - COIN
+  - NDAQ
+  - XYZ
+  - PRU
+  - MSCI
+
+xli_extra_90:
+  etf: XLI
+  fecha: "2026-11-01"
+  motivo: "FASE-A-UNIVERSO-90: XLI 89.1% -> 90.2% (2 tickers)."
+  cobertura_actual: 89.1
+  cobertura_top20_actual: 57.25
+  cobertura_top20_mas_extra: 58.33
+  cobertura_objetivo: 90.0
+  cobertura_tras_expansion: 90.2
+  n_tickers: 2
+  tickers:
+  - PAYX
+  - IR
+
+xlp_extra_90:
+  etf: XLP
+  fecha: "2026-11-01"
+  motivo: "FASE-A-UNIVERSO-90: XLP 88.6% -> 90.0% (1 ticker)."
+  cobertura_actual: 88.6
+  cobertura_top20_actual: 87.08
+  cobertura_top20_mas_extra: 88.55
+  cobertura_objetivo: 90.0
+  cobertura_tras_expansion: 90.0
+  n_tickers: 1
+  tickers:
+  - CHD
+
+xlre_extra_90:
+  etf: XLRE
+  fecha: "2026-11-01"
+  motivo: "FASE-A-UNIVERSO-90: XLRE 88.7% -> 90.3% (1 ticker)."
+  cobertura_actual: 88.7
+  cobertura_top20_actual: 87.05
+  cobertura_top20_mas_extra: 88.67
+  cobertura_objetivo: 90.0
+  cobertura_tras_expansion: 90.3
+  n_tickers: 1
+  tickers:
+  - DOC
+
+xlu_extra_90:
+  etf: XLU
+  fecha: "2026-11-01"
+  motivo: "FASE-A-UNIVERSO-90: XLU 87.2% -> 90.7% (2 tickers)."
+  cobertura_actual: 87.2
+  cobertura_top20_actual: 83.31
+  cobertura_top20_mas_extra: 86.8
+  cobertura_objetivo: 90.0
+  cobertura_tras_expansion: 90.7
+  n_tickers: 2
+  tickers:
+  - FE
+  - EIX
+
+xlv_extra_90:
+  etf: XLV
+  fecha: "2026-11-01"
+  motivo: "FASE-A-UNIVERSO-90: XLV 85.3% -> 90.6% (7 tickers, farma grande)."
+  cobertura_actual: 85.3
+  cobertura_top20_actual: 79.08
+  cobertura_top20_mas_extra: 84.38
+  cobertura_objetivo: 90.0
+  cobertura_tras_expansion: 90.6
+  n_tickers: 7
+  tickers:
+  - EW
+  - BDX
+  - A
+  - HUM
+  - IQV
+  - WAT
+  - VEEV
+
+xly_extra_90:
+  etf: XLY
+  fecha: "2026-11-01"
+  motivo: "FASE-A-UNIVERSO-90: XLY 86.9% -> 90.1% (3 tickers)."
+  cobertura_actual: 86.9
+  cobertura_top20_actual: 84.62
+  cobertura_top20_mas_extra: 87.81
+  cobertura_objetivo: 90.0
+  cobertura_tras_expansion: 90.1
+  n_tickers: 3
+  tickers:
+  - EBAY
+  - YUM
+  - DHI
+
+xlc_extra_90:
+  etf: XLC
+  fecha: "2026-11-01"
+  motivo: "FASE-A-UNIVERSO-90: XLC 93.9% sin cambios. WBD declarado para documentar delisted (2026-10-06, Paramount Skydance). filter_eligible lo descarta."
+  cobertura_actual: 93.9
+  cobertura_top20_actual: 97.86
+  cobertura_top20_mas_extra: 97.86
+  cobertura_objetivo: 90.0
+  cobertura_tras_expansion: 93.9
+  n_tickers: 1
+  tickers:
+  - WBD

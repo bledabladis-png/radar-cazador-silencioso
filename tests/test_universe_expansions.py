@@ -167,14 +167,19 @@ def _todos_bloques():
 
 @_pytest.mark.parametrize("key,block", _todos_bloques())
 def test_generico_no_esta_en_top20_del_etf(key, block):
-    """Los tickers del bloque NO estan en top-20 del ETF (redundancia)."""
+    """Los tickers ELEGIBLES del bloque NO estan en top-20 del ETF.
+
+    Tickers DELISTED declarados en el bloque (documentacion de caso
+    conocido, p.ej. WBD en xlc_extra_90) se excluyen."""
     h = _holdings_for_etf(block["etf"])
     if h is None:
         _pytest.skip("holdings no disponibles para " + block["etf"])
+    from src.ticker_health import is_eligible
     etf = block["etf"]
     sub = h[h["etf"] == etf].sort_values("weight", ascending=False)
     top20 = set(sub.head(20)["ticker"].tolist())
-    redundantes = top20 & set(block["tickers"])
+    elegibles = {t for t in block["tickers"] if is_eligible(t)}
+    redundantes = top20 & elegibles
     assert not redundantes, f"{key}: redundantes con top-20: {sorted(redundantes)}"
 
 
@@ -212,8 +217,13 @@ def test_generico_cobertura_top20_mas_extra_coincide(key, block):
 
 @_pytest.mark.parametrize("key,block", _todos_bloques())
 def test_generico_get_stock_list_incluye_tickers(key, block):
-    """get_stock_list devuelve todos los tickers del bloque."""
+    """get_stock_list devuelve todos los tickers ELEGIBLES del bloque.
+
+    Tickers DELISTED declarados en el bloque (documentacion de caso
+    conocido) NO estan en get_stock_list por diseno."""
     from src.stock_data_loader import get_stock_list
+    from src.ticker_health import is_eligible
     tickers = set(get_stock_list())
-    faltantes = [t for t in block["tickers"] if t not in tickers]
+    faltantes = [t for t in block["tickers"]
+                 if is_eligible(t) and t not in tickers]
     assert not faltantes, f"{key}: get_stock_list NO incluye: {faltantes}"
