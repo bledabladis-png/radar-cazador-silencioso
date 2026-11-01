@@ -5345,51 +5345,31 @@ items:
 - id: METODO-EXCEDE-LIMITE-PROPIO
   tipo: auditoria_interna
   ciclo: '2026-10-31'
-  estado: OPEN
-  descripcion: '01_METODO.md pesa 28.3 KB, pero su propia seccion 11 exige
-
-    dividir si supera 20 KB. Nunca se dividio. Contradiccion
-
-    interna del corpus.
-
-    '
-  siguiente_accion: 'Dividir 01_METODO (extraer secciones 6-6ter a 01d_POWERSHELL.md
-
-    y seccion 7 a 01e_AUDITORIA.md, por ejemplo), o WONT_FIX
-
-    razonado reconociendo que el limite ya no aplica.
-
-    '
-  evidencia: '01_METODO.md = 29646 bytes tras commit af019902. Seccion 11:
-
-    "Si supera 20 KB, dividir".
-
-    '
+  estado: FIXED
+  commit: '5675d7206d527200ef305a9caf09466af4bc7fba'
+  test: tests/test_anclas_temporales.py
+  evidencia: |
+    Fix en 5675d7206d527200ef305a9caf09466af4bc7fba (Fase 1, 2026-11-01). 01_METODO.md pesaba
+    29677 B (limite propio: 20 KB en seccion 11). Extraidas
+    secciones 6, 6bis, 6ter (POWERSHELL) y 7 (AUDITORIA) a
+    01d_POWERSHELL_AUDITORIA.md. METODO queda 17769 B
+    (<20480) con referencias cortas a 6 y 7. 00_ARRANQUE §6
+    anade 01d al indice. Verificado: pytest test_anclas_temporales,
+    test_audit_contracts, test_poda_bitacora verde.
 - id: README-DESFASE-FUENTES-DATOS
   tipo: auditoria_interna
   ciclo: '2026-10-31'
-  estado: OPEN
-  descripcion: 'README bloque Fuentes de datos sigue listando OilPriceAPI
-
-    (eliminada 2026-09-30 segun ARRANQUE seccion 2 R5) y
-
-    "Yahoo: 262 tickers" (real: 505 en stock_prices). Commit
-
-    18ca4405 elimino el bloque Resumen pero no este.
-
-    '
-  siguiente_accion: 'Actualizar bloque Fuentes o eliminarlo remitiendo a
-
-    ESTADO_SISTEMA.md. Decision de producto: informativo vs
-
-    durable.
-
-    '
-  evidencia: 'README.md pre-18ca4405 lineas 28-32; commit 18ca4405 solo
-
-    toco bloque Resumen. OilPriceAPI eliminada: ARRANQUE R5.
-
-    '
+  estado: FIXED
+  commit: '5675d7206d527200ef305a9caf09466af4bc7fba'
+  test: tests/test_anclas_temporales.py
+  evidencia: |
+    Fix en 5675d7206d527200ef305a9caf09466af4bc7fba (Fase 1, 2026-11-01). README bloque "Fuentes
+    de datos" listaba OilPriceAPI (eliminada 2026-09-30 segun
+    R5) y "Yahoo: 262 tickers" (real: 505 en stock_prices).
+    Nueva version: columna Tickers eliminada (cifras caducas),
+    remitido a ESTADO_SISTEMA.md para conteos autoritativos.
+    Yahoo anotado con "indices, sectores, commodities via
+    futuros BZ/CL/GC/HG/NG". OilPriceAPI eliminada.
 - id: FASE0-MTE-SECTOR-LISTS
   tipo: bug
   ciclo: '2026-10-31'
