@@ -6238,29 +6238,42 @@ items:
 - id: B6-MTE-CLS-INF-LATENTE
   tipo: deuda_tecnica
   ciclo: '2026-10-31'
+  estado: FIXED
+  commit: 'ba1f2eac'
+  test: tests/test_mte_scoring_golden.py
+  evidencia: |
+    Fix aplicado en ba1f2eac. Regla cls>0.85 en
+    SCENARIO_RULES["CRISIS"]["rules"] anade "finite": ["cls"].
+    Con cls=inf, las reglas 0.5/0.7 se saltaban por finite, la
+    0.85 no, y sumaba +3 sobre pre_invalid=-999 -> -996. Ahora
+    se salta y queda -999. Bug latente (cls=inf no ocurre hoy
+    en produccion). Verificacion: D38 rojo sin fix (-996),
+    verde con fix (-999); probe de equivalencia 9 inputs cls
+    finito identicos; suite 4240 passed + 2 skipped. Item
+    derivado B6-MTE-INF-NO-FINITE-RESTANTES abierto para el
+    patron general en otros escenarios.
+- id: B6-MTE-INF-NO-FINITE-RESTANTES
+  tipo: deuda_tecnica
+  ciclo: '2026-10-31'
   estado: OPEN
-  descripcion: 'score_scenarios (indicators/mte/scoring.py): con cls=inf,
-
-    el CRISIS pre_invalid solo captura no finito con np.isfinite
-
-    (False), pero el +3 de cls>0.85 se suma FUERA del else previo,
-
-    dando -996 en vez de -999. Bug latente: cls=inf no ocurre en
-
-    produccion hoy, pero si apareciera (overflow, division por
-
-    cero en calculo de CLS), la etiqueta dice CRISIS=-996, no
-
-    bloqueado. Preservado identico en el refactor H7.
-
-    '
-  siguiente_accion: 'Fix en B4: mover +3 de cls>0.85 dentro del bloque finite o
-
-    bloquear tras pre_invalid con return temprano. Anadir caso
-
-    al golden test.
-
-    '
+  descripcion: |
+    Derivado de B6-MTE-CLS-INF-LATENTE (B4, 2026-11-01).
+    SCENARIO_RULES tiene mas reglas sin "finite" que pueden
+    sumar bonus con variables no finitas:
+    - RECESSION: reglas shs>0.2 y srs>0.2 sin finite.
+      pre_invalid solo protege cls. Con shs=inf o srs=inf
+      ambas disparan y suman.
+    - STAGFLATION, SOFT LANDING, EXPANSION: pre_invalid=None
+      y todas las reglas sin finite. Cualquier inf en
+      ips/srs/shs/cls puede sumar bonus.
+    Mismo patron que el bug cerrado en ba1f2eac, no cubierto
+    por el fix acotado a CRISIS.
+  siguiente_accion: |
+    B4: decidir politica (anadir finite a cada regla afectada
+    vs validacion temprana de finitud en score_scenarios).
+    Golden test con casos inf en cada variable y escenario.
+    Pre-registro: comportamiento esperado por escenario
+    (bloqueo -999 como CRISIS, o skip de regla afectada).
 - id: B6-H8-CONFIRMATION-NAN-GUARDS
   tipo: bug
   ciclo: '2026-10-31'
