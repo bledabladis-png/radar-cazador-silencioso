@@ -102,6 +102,15 @@ FALSE_POSITIVE con 1 commit.
   del rechazo del IC95 inferencial (dictamen H-04 2026-10-26).
   Se mantiene OPEN como evidencia.
 
+### 3.2.bis. Frentes del analista (FASE-A)
+
+- **FASE-A-COBERTURA-DUAL**: FIXED (2026-11-01). n_descargados +
+  coverage_rs_sobre_descarga + peso_total_etf + coverage_peso en
+  sector_concentration. Cero constantes de porcentaje.
+- **FASE-A-AMPLIAR-UNIVERSO-PESO**: OPEN, pre-registro pendiente
+  con el analista. Subir de 85% a 95-100% del peso del ETF
+  (~250-300 tickers adicionales). Pendiente decidir alcance.
+
 ### 3.3. Items OPEN observacionales (fechas)
 
 | Item | Fecha | Accion |

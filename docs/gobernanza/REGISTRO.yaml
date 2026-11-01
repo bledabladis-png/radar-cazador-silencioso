@@ -6697,3 +6697,55 @@ items:
     verifica_gobernanza en CI verde continuo, write_completion_receipt
     produce receipts consumidos por scheduled. Si alguno tuviera bug,
     la CI ya lo habría expuesto (los 8 runs de hoy pasan).
+- id: FASE-A-COBERTURA-DUAL
+  tipo: frente
+  ciclo: '2026-11-01'
+  estado: FIXED
+  commit: '50ab0e1ff71823140ee3799cb31af138221ab76c'
+  test: tests/test_sector_concentration_dual_coverage.py
+  evidencia: |
+    Fix en 50ab0e1ff71823140ee3799cb31af138221ab76c (2026-11-01). El analista del reporte 30-oct marca
+    que las medianas de Concentracion (XLF 45%, XLV 43%, XLK 53%...)
+    parecen "muestra pequena". Diagnostico: n_total es el universo
+    del ETF (76 XLF, 60 XLV, 74 XLK), no el universo descargado
+    (34, 26, 39). Gate 0: in_universe == in_parquet == con_60+ por
+    sector (XLF 34/34/34, XLV 26/26/26, XLK 39/39/39, XLI 50/50/50).
+    El cuello de botella es el universo de descarga (85% del peso
+    por A.2c), no la calidad de datos. Fix aditivo: 4 columnas
+    derivadas del df (n_descargados, coverage_rs_sobre_descarga,
+    peso_total_etf, coverage_peso). El render muestra Cob descarga
+    y Cob peso con nota derivada de datos. Cero constantes de
+    porcentaje en el codigo: si manana se amplia el universo, las
+    metricas se recalculan solas. Verificacion: 31 focalizados +
+    full suite 4299 passed + 2 skipped.
+- id: FASE-A-AMPLIAR-UNIVERSO-PESO
+  tipo: frente
+  ciclo: '2026-11-01'
+  estado: OPEN
+  descripcion: |
+    Tras FASE-A-COBERTURA-DUAL (cobertura derivada de datos), el
+    cuello de botella real es el universo de descarga: 34/76 tickers
+    de XLF, 26/60 XLV, 39/74 XLK. Las expansiones de sesion 18 y O2
+    cubren el 85% del peso (objetivo A.2c). Subir a 95-100% del
+    peso requiere ~250-300 tickers adicionales en etf_holdings,
+    con impacto medido: parquet de 505 a ~750-800 tickers, tiempo
+    de run (14 min -> estimado 25-30 min), microcaps con H=L=C
+    frecuentes, TRUNCATED_IPO. Pre-registro obligatorio antes de
+    implementar: alcance, metricas de aceptacion, impacto en rate
+    limits (Yahoo/SSGE/Euronext), cobertura efectiva esperada por
+    ETF. No se toca sin pre-registro firmado.
+  siguiente_accion: |
+    Pre-registro con el analista. Preguntar: (a) 95% o 100% de peso;
+    (b) acepta microcaps iliquidas con H=L=C frecuentes; (c) acepta
+    duplicar tiempo de run; (d) criterio de "dato valido" para
+    microcaps (>=60 barras sigue siendo el minimo). Si pre-registro
+    aprueba: anadir a etf_holdings y a get_stock_list() los tickers
+    por debajo del top-85% de peso, medir impacto en primer run,
+    decidir si se mantiene o se revierte.
+  evidencia: |
+    Gate 0 2026-11-01: XLF falta 42 de 76 tickers (58% del peso
+    restante), XLV falta 34 de 60, XLK falta 35 de 74, XLY falta
+    25 de 47, XLI falta 33 de 83, XLP falta 12 de 33. Total
+    ~250-300 tickers por debajo del corte A.2c. No es bug: es
+    decision de producto. WONT_FIX hasta que el analista confirme
+    que necesita cobertura real (no solo metrico).
