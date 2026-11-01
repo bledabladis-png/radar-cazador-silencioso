@@ -41,7 +41,7 @@ anclas:
     valor: "2025-12-31"
     categoria: periodo_congelado
     ubicaciones:
-      - src/institutional_accumulation/pipeline_contractual.py:103
+      - src/institutional_accumulation/pipeline_contractual.py:104
     razon: "Par contractual congelado del IAE (Q4-2025 -> Q1-2026). Ambos periodos en la misma linea."
 
   - id: MACRO_MANUAL_START_DATE

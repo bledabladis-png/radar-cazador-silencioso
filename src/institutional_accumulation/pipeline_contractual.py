@@ -35,6 +35,7 @@ from .aggregation import catalog_p38_adapter as ca
 from .aggregation.delta_shares import (
     compute_reported_position_units, compute_delta_shares)
 from .aggregation.nipc import compute_nipc_contractual
+from .aggregation.per_ticker import aggregate_by_ticker
 
 ROOT = Path(__file__).resolve().parent.parent.parent
 DEFAULT_DATA = ROOT / "data" / "sec_13f" / "processed"
@@ -258,4 +259,7 @@ def run_contractual_nipc(
     out["target_q4_size"] = int(len(t_prev))
     out["target_q1_size"] = int(len(t_curr))
     out["feasibility"] = str(feas)
+    # FASE-A-IAE-PER-TICKER (2026-11-01): agregacion por ticker del
+    # delta_shares. Aditivo.
+    out["per_ticker"] = aggregate_by_ticker(delta)
     return out

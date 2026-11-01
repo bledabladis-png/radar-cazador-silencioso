@@ -98,6 +98,7 @@ def compute_iae_section(reference_date, run_id, *, official_dir=None):
             catalog_keys_observed (int)
             catalog_coverage_warning (bool | None)
             evidence_class (str): CONTRACTUAL
+            per_ticker (pd.DataFrame | None): agregacion por ticker del delta_shares (solo status=OK; None si STALE/ERROR). Ver docstring del modulo aggregation/per_ticker.py para las columnas.
             stale_reason (str | None): insufficient_quarters | official_list_pending
             error (str | None)
     """
@@ -127,6 +128,7 @@ def compute_iae_section(reference_date, run_id, *, official_dir=None):
             "catalog_keys_total": None,
             "catalog_keys_observed": None,
             "evidence_class": None,
+            "per_ticker": None,
             "error": None,
         }
 
@@ -164,6 +166,7 @@ def compute_iae_section(reference_date, run_id, *, official_dir=None):
                 "catalog_keys_total": None,
                 "catalog_keys_observed": None,
                 "evidence_class": None,
+                "per_ticker": None,
                 "error": msg,
             }
         raise
@@ -186,6 +189,7 @@ def compute_iae_section(reference_date, run_id, *, official_dir=None):
             "catalog_keys_total": None,
             "catalog_keys_observed": None,
             "evidence_class": None,
+            "per_ticker": None,
             "error": str(type(e).__name__) + ": " + str(e),
         }
 
@@ -260,5 +264,6 @@ def compute_iae_section(reference_date, run_id, *, official_dir=None):
         "catalog_keys_total": cat_total_eff,
         "catalog_keys_observed": cat_obs,
         "evidence_class": r.get("evidence_class"),
+        "per_ticker": r.get("per_ticker"),
         "error": None,
     }

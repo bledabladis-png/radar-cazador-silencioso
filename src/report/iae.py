@@ -120,6 +120,72 @@ def render_iae_section(iae_section):
                "externa de corporate actions, no disponible en 13F). "
                "Tampoco es flujo economico.*\n\n")
 
+    # FASE-A-IAE-PER-TICKER (2026-11-01): tabla por ticker derivada
+    # del DataFrame per_ticker. Solo tickers que pasan filtros de
+    # anomalia. Los excluidos van a nota al final, con razon visible.
+    # Sin hardcode: los 20 top son parametro; los excluidos dependen
+    # del propio DataFrame.
+    _per_ticker = iae_section.get("per_ticker")
+    if _per_ticker is not None and not _per_ticker.empty:
+        from src.institutional_accumulation.aggregation.per_ticker import (
+            top_accumulating, top_distributing, excluded_anomalies,
+        )
+        _top_acc = top_accumulating(_per_ticker, n=20)
+        _top_dis = top_distributing(_per_ticker, n=20)
+        _excl = excluded_anomalies(_per_ticker)
+        if not _top_acc.empty or not _top_dis.empty:
+            out.append("### Cambio neto por ticker (13F)\n")
+            out.append("*Top por consenso de gestores (cuantos aumentan vs "
+                       "cuantos reducen), no por suma bruta de acciones. "
+                       "Un ticker con 500 gestores aumentando tiene mas "
+                       "consenso que uno con 50 aumentando mas acciones.*\n\n")
+            if not _top_acc.empty:
+                out.append("**Acumulando** (mas gestores aumentan que reducen)\n\n")
+                out.append("| Ticker | Gestores | Aumentan | Reducen | New | Exit | Delta (M acciones) | % aumento |\n")
+                out.append("|---|---:|---:|---:|---:|---:|---:|---:|\n")
+                for _, _r in _top_acc.iterrows():
+                    out.append(
+                        f"| {_r['ticker']} | {int(_r['n_managers'])} | "
+                        f"{int(_r['n_increase'])} | {int(_r['n_decrease'])} | "
+                        f"{int(_r['n_new'])} | {int(_r['n_exit'])} | "
+                        f"{_fmt_int(_r['sum_delta'] / 1e6)} | "
+                        f"{_r['pct_increase']:.2%} |\n"
+                    )
+                out.append("\n")
+            if not _top_dis.empty:
+                out.append("**Distribuyendo** (mas gestores reducen que aumentan)\n\n")
+                out.append("| Ticker | Gestores | Aumentan | Reducen | New | Exit | Delta (M acciones) | % aumento |\n")
+                out.append("|---|---:|---:|---:|---:|---:|---:|---:|\n")
+                for _, _r in _top_dis.iterrows():
+                    out.append(
+                        f"| {_r['ticker']} | {int(_r['n_managers'])} | "
+                        f"{int(_r['n_increase'])} | {int(_r['n_decrease'])} | "
+                        f"{int(_r['n_new'])} | {int(_r['n_exit'])} | "
+                        f"{_fmt_int(_r['sum_delta'] / 1e6)} | "
+                        f"{_r['pct_increase']:.2%} |\n"
+                    )
+                out.append("\n")
+            if not _excl.empty:
+                # Nota derivada: agrupa por filter_reason sin lista de tickers.
+                _by_reason = {}
+                for _, _r in _excl.iterrows():
+                    _by_reason.setdefault(_r["filter_reason"], []).append(_r["ticker"])
+                _labels = {
+                    "MOSTLY_NEW_POSITIONS": "posiciones nuevas masivas (posible IPO o rebalanceo)",
+                    "MOSTLY_EXITS": "salidas masivas (posible spin-off o delisting)",
+                    "ANOMALOUS_ONE_SIDED": "movimiento unidireccional >=99% (posible evento corporativo)",
+                }
+                _parts = []
+                for _reason, _tickers in sorted(_by_reason.items()):
+                    _label = _labels.get(_reason, _reason)
+                    _tlist = ", ".join(sorted(_tickers)[:8])
+                    if len(_tickers) > 8:
+                        _tlist += "..."
+                    _parts.append(f"{len(_tickers)} {_label}: {_tlist}")
+                out.append("*Excluidos de las tablas por evento societario o IPO "
+                           "(filtros de ratio, no lista de tickers): "
+                           + "; ".join(_parts) + ".*\n\n")
+
     # Cobertura
     out.append("### Cobertura del catalogo radar\n")
     obs = iae_section.get("catalog_keys_observed")
