@@ -6241,25 +6241,25 @@ items:
 - id: B6-MTE-INF-NO-FINITE-RESTANTES
   tipo: deuda_tecnica
   ciclo: '2026-10-31'
-  estado: OPEN
-  descripcion: |
-    Derivado de B6-MTE-CLS-INF-LATENTE (B4, 2026-11-01).
-    SCENARIO_RULES tiene mas reglas sin "finite" que pueden
-    sumar bonus con variables no finitas:
-    - RECESSION: reglas shs>0.2 y srs>0.2 sin finite.
-      pre_invalid solo protege cls. Con shs=inf o srs=inf
-      ambas disparan y suman.
-    - STAGFLATION, SOFT LANDING, EXPANSION: pre_invalid=None
-      y todas las reglas sin finite. Cualquier inf en
-      ips/srs/shs/cls puede sumar bonus.
-    Mismo patron que el bug cerrado en ba1f2eac, no cubierto
-    por el fix acotado a CRISIS.
-  siguiente_accion: |
-    B4: decidir politica (anadir finite a cada regla afectada
-    vs validacion temprana de finitud en score_scenarios).
-    Golden test con casos inf en cada variable y escenario.
-    Pre-registro: comportamiento esperado por escenario
-    (bloqueo -999 como CRISIS, o skip de regla afectada).
+  estado: FIXED
+  commit: 'ac0a607e'
+  test: tests/test_mte_inf_no_finite_restantes.py
+  evidencia: |
+    Fix aplicado en ac0a607e. Gate 0 empirico: probar (escenario,
+    variable, +-inf) en score_scenarios y comparar con nan. 4
+    escenarios afectados (RECESSION, STAGFLATION, SOFT LANDING,
+    EXPANSION), 16 reglas. Ejemplos confirmados sin fix:
+    RECESSION srs=inf -> 0 a 2; STAGFLATION ips=inf -> 3 a 8;
+    SOFT LANDING cls=-inf -> 0 a 4; EXPANSION srs=-inf -> 0 a 3.
+    Fix: finite:[vars] por regla (mismo patron que CRISIS desde
+    ba1f2eac). Test nuevo parametrizado (4x4x2 = 32 casos) valida
+    score[scenario] con var=inf == con var=nan; test estructural
+    verifica que 0 reglas de esos 4 escenarios quedan sin finite.
+    D38: 11/32 combinaciones fallan sin fix (las otras 21 no
+    cambian: signo del inf vs signo de la regla). Full suite 4275
+    passed + 2 skipped. CRISIS no se toca (sus reglas tienen
+    finite=['cls'] por diseno del refactor H7; ampliarlo seria otro
+    item).
 - id: B6-H8-CONFIRMATION-NAN-GUARDS
   tipo: bug
   ciclo: '2026-10-31'

@@ -20,10 +20,9 @@ Gobernanza: docs/gobernanza/REGISTRO.yaml, 250 items. Validador reforzado.
 Writers: 25 (output_registry.py).
 DICT-CONTRACT: 11 pares cubiertos. Whitelist 0 pares.
 
-B6 (auditoria reporte) CERRADA con 20 FIXED y 3 OPEN heredados a B4/B5
-(RATIO-NAMES cerrado en B4 sesion 24: 3d21264a; MTE-CLS-INF cerrado en B4 sesion 24: ba1f2eac; ILOC-BARRIDO cerrado en B4 sesion 24: b661a0d6).
-Los 3 OPEN de B6 son de otros bloques y no bloquean pipeline:
-  - B6-MTE-INF-NO-FINITE-RESTANTES (B4, RECESSION/STAGFLATION/SOFT LANDING/EXPANSION sin finite)
+B6 (auditoria reporte) CERRADA con 20 FIXED y 2 OPEN heredados a B4/B5
+(RATIO-NAMES cerrado en B4 sesion 24: 3d21264a; MTE-CLS-INF cerrado en B4 sesion 24: ba1f2eac; ILOC-BARRIDO cerrado en B4 sesion 24: b661a0d6; MTE-INF-NO-FINITE cerrado en B4 sesion 24: ac0a607e).
+Los 2 OPEN de B6 son de otros bloques y no bloquean pipeline:
   - B6-FLOWS-CURRENCY-COLUMN-NAME (B5, _blackrock_base estimated_flow_eur)
   - B6-FLOWS-REGISTRY-COVERAGE (B5, 7 outputs fuera de output_registry)
 
@@ -55,7 +54,7 @@ Detalle de la sesion 23 en seccion 2.
 
 **Hecho:**
 - 21 modulos de `src/report/*` auditados (18 con hallazgos o cierre).
-- 20 items B6 FIXED, 3 OPEN heredados a otros bloques (2 cerrados en B4 sesion 24: RATIO-NAMES, MTE-CLS-INF).
+- 20 items B6 FIXED, 2 OPEN heredados a otros bloques (3 cerrados en B4 sesion 24: RATIO-NAMES, MTE-CLS-INF, MTE-INF-NO-FINITE).
 - 1 item B3 nuevo (`WYCKOFF-RENDERS-HUERFANOS`) por el refactor
   Wyckoff sesion 3 (`4bc45fd3`): 2 renders con productor retirado.
 
@@ -119,10 +118,6 @@ Productores retirados en `4bc45fd3` (C4.3, sesion 3). Los renders
 sobreviven con tests pero sin cableado en `report_generator.py`.
 Registrado como `WYCKOFF-RENDERS-HUERFANOS` (OPEN, B3).
 
-**Bugs latentes residuales (documentados como OPEN):**
-- Derivado de B6-MTE-CLS-INF: `B6-MTE-INF-NO-FINITE-RESTANTES`
-  (B4). Otras reglas de SCENARIO_RULES sin finite en RECESSION,
-  STAGFLATION, SOFT LANDING, EXPANSION.
 
 **Descubrimientos operativos sesion 23:**
 - Here-strings PowerShell (`@"..."@` y `@'@`) rotos al pegar en esta
@@ -165,11 +160,8 @@ Registrado como `WYCKOFF-RENDERS-HUERFANOS` (OPEN, B3).
 | CRON-SLOTS-OBS | 2026-11-10 | Revision runs 20-10 a 10-11 |
 | SCHEDULER-DELAYS | 2026-11-10 | p95 delays |
 
-### 3.4. Items OPEN heredados de B6 a otros bloques (3)
+### 3.4. Items OPEN heredados de B6 a otros bloques (2)
 
-- **B6-MTE-INF-NO-FINITE-RESTANTES** (B4): reglas sin finite en
-  RECESSION/STAGFLATION/SOFT LANDING/EXPANSION. Derivado de
-  B6-MTE-CLS-INF (cerrado ba1f2eac).
 - **B6-FLOWS-CURRENCY-COLUMN-NAME** (B5): `estimated_flow_eur` con
   GBP/USD segun fondo en `data/providers/_blackrock_base.py:227`.
 - **B6-FLOWS-REGISTRY-COVERAGE** (B5): 7 outputs internacionales
@@ -209,10 +201,10 @@ Plan original: 8 bloques (B1-B8) con los 13 patrones de
   liquidity_v2, tactical_engine, volatility_regime,
   structural_engine, financial_conditions. 0 bugs (0 ALTA, 0 MEDIA,
   5 BAJA: except Exception outer con WARN + observabilidad cubierta
-  en caller/test). 1 OPEN heredado: B6-MTE-INF-NO-FINITE-RESTANTES.
+  en caller/test). Sin OPEN heredados tecnicos.
 - **B5 (outputs/persistencia)**: cerrado con fixes puntuales, NO
-  checklist completo. 2 de los 3 OPEN de B6 viven aqui.
-- **B6 (reporte)**: CERRADO sesion 23. 20 FIXED, 3 OPEN heredados.
+  checklist completo. Los 2 OPEN heredados de B6 viven aqui.
+- **B6 (reporte)**: CERRADO sesion 23. 20 FIXED, 2 OPEN heredados.
 - **B7 (IAE)**: sin auditar.
 - **B8 (scripts audit)**: sin auditar. Afectan CI.
 
